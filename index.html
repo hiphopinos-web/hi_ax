@@ -67,6 +67,19 @@
   #entryForm button:active { transform: scale(0.98); }
   .note { text-align: center; font-size: calc(12.5px * var(--fs)); line-height: 1.5; color: var(--muted); }
 
+  /* ───────── 입장 전환 · 약 1초 (KV 문법: 점 하나(01)가 자라 화면을 오렌지로 덮고, 점 고리(02)가 한 번 반짝인 뒤
+     오렌지 면이 홈 히어로 카드 자리로 내려앉는다. 카드 색이 같아 면이 곧 히어로가 된다) ───────── */
+  #xition { position: fixed; inset: 0; z-index: 200; pointer-events: none; overflow: hidden; }
+  #xition .xdot { position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: var(--mint); transform: scale(0); animation: xgrow 0.42s cubic-bezier(0.55, 0, 0.85, 0.25) forwards; }
+  @keyframes xgrow { from { transform: scale(0); } to { transform: scale(var(--xs, 120)); } }
+  #xition .xplane { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: var(--mint); opacity: 0; }
+  #xition.full .xdot { display: none; }
+  #xition.full .xplane { opacity: 1; }
+  #xition.land .xplane { transition: left 0.44s cubic-bezier(0.2, 0.8, 0.2, 1), top 0.44s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.44s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.44s cubic-bezier(0.2, 0.8, 0.2, 1), border-radius 0.44s, opacity 0.16s 0.42s; opacity: 0; }
+  #xition .xring { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+  #xition .xring i { position: absolute; left: -4px; top: -4px; width: 8px; height: 8px; border-radius: 50%; background: #fff; opacity: 0; animation: xpop 0.55s ease-out forwards; }
+  @keyframes xpop { 0% { opacity: 0; scale: 0; } 35% { opacity: 1; scale: 1.25; } 100% { opacity: 0; scale: 1; } }
+
   /* 홈 화면에 추가 · 로그인 직후 전용 단계 화면 (풀스크린) */
   #a2hs { position: fixed; inset: 0; z-index: 120; background: var(--paper); overflow-y: auto; animation: fadeIn 0.3s; }
   #a2hs[hidden] { display: none; }
@@ -4840,10 +4853,46 @@ function kvMountAll() {
   }
 }
 
+/* ════════════════ 입장 전환 · 약 1초 ════════════════
+   0~0.42s 점이 자라 화면을 덮는다 → 그 아래에서 화면을 홈으로 바꾼다 → 0.42~0.9s 오렌지 면이 히어로 카드 자리로
+   내려앉으며 사라진다. 모션 최소화 설정·캡처·데모 훅에서는 바로 전환한다. */
+function xitionRun(switchNow) {
+  var rm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (rm || document.getElementById("xition") || (/cap|demo/.test(location.hash) && !/xt/.test(location.hash))) { switchNow(); return; }
+  var ov = document.createElement("div"); ov.id = "xition";
+  var W = window.innerWidth, H = window.innerHeight;
+  var dot = document.createElement("i"); dot.className = "xdot";
+  dot.style.setProperty("--xs", Math.ceil(Math.sqrt(W * W + H * H) / 16 * 1.15));
+  var plane = document.createElement("div"); plane.className = "xplane";
+  var ring = document.createElement("div"); ring.className = "xring";
+  for (var i = 0; i < 12; i++) {
+    var d = document.createElement("i");
+    d.style.transform = "rotate(" + (i * 30) + "deg) translateY(-54px)";
+    d.style.animationDelay = (400 + i * 16) + "ms";
+    ring.appendChild(d);
+  }
+  ov.appendChild(dot); ov.appendChild(plane); ov.appendChild(ring);
+  document.body.appendChild(ov);
+  setTimeout(function () {
+    switchNow();                                   /* 오렌지가 화면을 다 덮은 뒤에 바꾼다 */
+    ov.classList.add("full");
+    var hero = document.querySelector("#view .hero");
+    var r = hero ? hero.getBoundingClientRect() : { left: W / 2 - 48, top: H / 2 - 48, width: 96, height: 96 };
+    requestAnimationFrame(function () { requestAnimationFrame(function () {
+      plane.style.left = r.left + "px"; plane.style.top = r.top + "px";
+      plane.style.width = r.width + "px"; plane.style.height = r.height + "px";
+      plane.style.borderRadius = "24px";
+      ov.classList.add("land");
+    }); });
+    setTimeout(function () { if (ov.parentNode) ov.parentNode.removeChild(ov); }, 640);
+  }, 420);
+}
+
 /* ════════════════ 스플래시 → 앱 진입 ════════════════ */
 (function () {
   var splash = el("splash");
-  function enterApp() {
+  function enterApp() { xitionRun(enterNow); }
+  function enterNow() {
     splash.classList.add("gone");
     el("frame").classList.remove("splash-mode");
     el("app").hidden = false;
@@ -4900,6 +4949,7 @@ function kvMountAll() {
     el("app").hidden = false;
     /* 캐프처 전용 진입점 · qr = 내 QR 패널, lec_<세션id> = 소개 영상이 붙은 프로그램 상세 */
     if (target === "qr") { App.go("home"); qrPanelOpen("mine"); return; }
+    if (/xt/.test(location.hash)) { splash.classList.remove("gone"); xitionRun(function () { splash.classList.add("gone"); App.go(target); }); return; }
     var ml = target.match(/^lec_(\w+)$/);
     if (ml) { sessOpen(ml[1]); return; }
     App.go(target);
