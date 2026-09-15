@@ -394,13 +394,15 @@
   .wallcard .wbar i { display: block; height: 100%; background: var(--mint); }
   /* 홈 히어로 = 「지금 행사가 어떤 상태인가」 (260915 UX 피드백 · 화면만 보고 행사 상태를 읽는다).
      오렌지 스테이지 + 흰 점 고리(KV 02 Connection)가 카드 모서리에 걸쳐 잘린다(design.md §4 원칙 5). 글자는 정지. */
-  .hero { position: relative; overflow: hidden; background: var(--mint); border-radius: 24px; padding: 15px 16px 14px; margin-bottom: 9px; color: #fff; cursor: pointer; }
-  .hero .kv { position: absolute; right: -30px; top: -26px; width: 168px; height: 168px; pointer-events: none; }
+  .hero { position: relative; overflow: hidden; background: var(--mint); border-radius: 24px; padding: 15px 14px 14px 16px; margin-bottom: 9px; color: #fff; cursor: pointer;
+    display: grid; grid-template-columns: minmax(0, 1fr) 96px; grid-template-rows: auto auto auto auto; column-gap: 6px; align-items: start; }
+  .hero > * { grid-column: 1; }
+  .hero .kv { grid-column: 2; grid-row: 1 / 5; width: 96px; height: 96px; justify-self: end; align-self: center; pointer-events: none; }
   .hero .eb { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: calc(12px * var(--fs)); font-weight: 800; letter-spacing: 0.06em; }
   .hero .eb .live { display: flex; align-items: center; gap: 7px; }
   .hero .eb .live i { width: 8px; height: 8px; border-radius: 50%; background: #fff; animation: pulse 1.6s infinite; }
   .hero .eb .tm { font-family: var(--disp); font-weight: 800; letter-spacing: 0; opacity: 0.95; }
-  .hero .ttl { position: relative; margin-top: 9px; max-width: 74%; font-size: calc(21px * var(--fs)); font-weight: 800; line-height: 1.28; letter-spacing: -0.01em; }
+  .hero .ttl { position: relative; margin-top: 9px; font-size: calc(21px * var(--fs)); font-weight: 800; line-height: 1.28; letter-spacing: -0.01em; }
   .hero .pl { position: relative; margin-top: 4px; font-size: calc(13.5px * var(--fs)); font-weight: 700; opacity: 0.92; }
   .hero .next { position: relative; display: flex; align-items: center; gap: 9px; margin-top: 12px; background: rgba(255,255,255,0.18); border-radius: 12px; padding: 9px 12px; font-size: calc(13.5px * var(--fs)); font-weight: 700; }
   .hero .next .lb { font-size: calc(11.5px * var(--fs)); font-weight: 800; letter-spacing: 0.06em; opacity: 0.85; }
@@ -2501,7 +2503,7 @@ function evPhase() {
 /* 홈 히어로 = 지금 진행 중 (한 화면 안에 들어가야 하므로 시간·제목·장소·다음 일정만). 눌러서 타임라인으로 */
 function nowCardHtml() {
   var ph = evPhase();
-  var kv = '<canvas class="kv" data-kv="1" data-kv-mode="ring" data-kv-color="#fff" data-kv-grid="0" data-kv-cx="0.5" data-kv-cy="0.5" data-kv-r="0.36" aria-hidden="true"></canvas>';
+  var kv = '<canvas class="kv" data-kv="1" data-kv-mode="ring" data-kv-color="#fff" data-kv-grid="0" data-kv-cx="0.5" data-kv-cy="0.5" data-kv-r="0.42" aria-hidden="true"></canvas>';
   if (ph === "before") {
     var d = Math.max(1, Math.ceil((EV_START - new Date()) / 86400000));
     return '<div class="hero" onclick="App.go(\'guide\')">' + kv +
@@ -4708,7 +4710,7 @@ function kvShape(name, t, cx0, cy0, R) {
     var M = 16, rot = t * 0.12;
     for (i = 0; i < N; i++) {
       a = rot + (i / M) * 6.2832;
-      var big = i < M, sz = big ? R * (i % 3 === 0 ? 0.075 : i % 3 === 1 ? 0.05 : 0.035) : 0;
+      var big = i < M, sz = big ? R * (i % 4 === 0 ? 0.085 : 0.058) : 0;
       var rr = big ? R : R * (0.92 + ((i * 7919) % 100) / 900);
       out[i] = [cx0 + Math.cos(a) * rr, cy0 + Math.sin(a) * rr, sz, big ? 1 : 0];
     }
