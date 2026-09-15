@@ -398,6 +398,10 @@
     display: grid; grid-template-columns: minmax(0, 1fr) 96px; grid-template-rows: auto auto auto auto; column-gap: 6px; align-items: start; }
   .hero > * { grid-column: 1; }
   .hero .kv { grid-column: 2; grid-row: 1 / 5; width: 96px; height: 96px; justify-self: end; align-self: center; pointer-events: none; }
+  /* 포스터 모션 썸네일 · 흰 면 위 오렌지 점 오브젝트가 오렌지 스테이지 위에 흰 칩으로 앉는다 (그레이 카드 위 흰 칩과 같은 문법) */
+  .hero .kvbox { height: 108px; border-radius: 14px; overflow: hidden; background: #fff; }
+  .hero .kvbox video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .hero .kvbox[data-off] { background: rgba(255,255,255,0.18); }
   .hero .eb { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: calc(12px * var(--fs)); font-weight: 800; letter-spacing: 0.06em; }
   .hero .eb .live { display: flex; align-items: center; gap: 7px; }
   .hero .eb .live i { width: 8px; height: 8px; border-radius: 50%; background: #fff; animation: pulse 1.6s infinite; }
@@ -2503,7 +2507,10 @@ function evPhase() {
 /* 홈 히어로 = 지금 진행 중 (한 화면 안에 들어가야 하므로 시간·제목·장소·다음 일정만). 눌러서 타임라인으로 */
 function nowCardHtml() {
   var ph = evPhase();
-  var kv = '<canvas class="kv" data-kv="1" data-kv-mode="ring" data-kv-color="#fff" data-kv-grid="0" data-kv-cx="0.5" data-kv-cy="0.5" data-kv-r="0.42" aria-hidden="true"></canvas>';
+  /* 오른쪽 열 = 홍보부 포스터 모션 루프. 영상이 없거나 못 열면 흰 점 고리(KV 02) 캔버스가 그 자리를 맡는다 */
+  var kv = /\.mp4$/i.test(KV_MEDIA.hero || "")
+    ? '<div class="kv kvbox"><video autoplay muted loop playsinline preload="metadata" poster="assets/kv_poster.webp" src="' + KV_MEDIA.hero + '" onerror="this.parentNode.dataset.off=1"></video></div>'
+    : '<canvas class="kv" data-kv="1" data-kv-mode="ring" data-kv-color="#fff" data-kv-grid="0" data-kv-cx="0.5" data-kv-cy="0.5" data-kv-r="0.42" aria-hidden="true"></canvas>';
   if (ph === "before") {
     var d = Math.max(1, Math.ceil((EV_START - new Date()) / 86400000));
     return '<div class="hero" onclick="App.go(\'guide\')">' + kv +
@@ -4688,7 +4695,8 @@ function gcEnd() {
    글자는 움직이지 않는다. 오브젝트만 점으로 모였다 흩어진다. 스플래시·홈 히어로·라이브 보드가 같은 엔진을 쓴다.
    홍보부의 모션 원본(mp4 · Lottie JSON · HTML/JS)이 오면 KV_MEDIA 에 경로를 넣는다.
    그러면 그 자리에 원본이 재생되고 이 캔버스 엔진은 원본이 없는 자리의 폴백으로 남는다. */
-var KV_MEDIA = { splash: "", live: "" };   /* "assets/kv_opening.mp4" | "assets/kv_opening.json" | "assets/kv_opening.html" */
+var KV_MEDIA = { splash: "", live: "", hero: "assets/kv_poster.mp4" };   /* "assets/kv_opening.mp4" | "assets/kv_opening.json" | "assets/kv_opening.html" */
+/* hero = 홍보부 메인 포스터 모션(Poster.mp4)에서 헤더를 뺀 오브젝트 영역만 240px 로 잘라 만든 64초 루프 (673KB). 원본 교체 시 같은 크롭 규칙 */
 var KV = { N: 180, live: {} };
 function kvMediaHtml(key, id, cls) {
   var src = KV_MEDIA[key] || "";
