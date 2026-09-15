@@ -4735,7 +4735,7 @@ function kvMount(cv, opts) {
   var rnd = kvRnd(20261026), scat = [];
   for (var i = 0; i < KV.N; i++) scat.push([rnd() * 2 - 1, rnd() * 2 - 1, rnd()]);
   var rm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var st = { raf: null, t0: performance.now() };
+  var st = { raf: null, T: 0, last: 0 };
   function size() {
     var w = cv.clientWidth, h = cv.clientHeight;
     if (!w || !h) return false;
@@ -4746,7 +4746,9 @@ function kvMount(cv, opts) {
   function draw(now) {
     if (!cv.isConnected) { kvStop(cv); return; }
     if (!size()) { st.raf = requestAnimationFrame(draw); return; }
-    var T = (now - st.t0) / 1000, W = cv.width, H = cv.height, cx = cv.getContext("2d");
+    if (st.last) st.T += Math.min(0.05, Math.max(0, (now - st.last) / 1000));
+    st.last = now;
+    var T = st.T, W = cv.width, H = cv.height, cx = cv.getContext("2d");
     cx.setTransform(1, 0, 0, 1, 0, 0);
     cx.clearRect(0, 0, W, H);
     /* 도트 격자 · 28px 간격, 1.5% 는 오렌지로 켜져 있다(켜질 수 있는 자리). 격자는 움직이지 않는다 */
