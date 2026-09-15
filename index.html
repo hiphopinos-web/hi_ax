@@ -325,7 +325,9 @@
   .chain-box .next { margin-top: 8px; font-size: calc(14.5px * var(--fs)); opacity: 0.9; }
   .chain-box .next b { color: var(--mint-deep); font-size: calc(16.5px * var(--fs)); }
   .gmsg { min-height: 18px; font-size: calc(14.5px * var(--fs)); font-weight: 700; color: #e11d48; margin-top: 6px; }
-  @keyframes popIn { from { opacity: 0; transform: translate(-50%,-50%) scale(0.9); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
+  /* 모달 등장 = 제자리에서 페이드 + 살짝 확대 (일반적인 다이얼로그). 위치를 옮기는 translate 는 쓰지 않는다 */
+  @keyframes popIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+  @keyframes dimIn { from { opacity: 0; } to { opacity: 1; } }
   /* 게임 A 「AX 링크」 · 끝말 타일 연결 → 문장 완성 */
   .sline { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; background: var(--ink); border: 0; border-radius: 16px; padding: 13px 12px; margin-bottom: 12px; }
   .sline .cap { width: 100%; text-align: center; font-size: calc(12.5px * var(--fs)); font-weight: 800; letter-spacing: 0.1em; color: rgba(255,255,255,0.55); margin-bottom: 2px; }
@@ -359,8 +361,8 @@
   .rstep span.done { background: var(--tint); color: var(--acc2); }
   .rstep span.on { background: var(--mint); color: #fff; }
   /* 공용 모달 */
-  #modal { position: fixed; inset: 0; z-index: 96; display: flex; align-items: center; justify-content: center; background: rgba(30,33,36,0.5); padding: 24px; }
-  #modal .mcard { width: 100%; max-width: 360px; max-height: 82dvh; overflow-y: auto; background: var(--paper); border: 0; border-radius: 20px; padding: 20px; position: relative; animation: popIn 0.25s ease-out; }
+  #modal { position: fixed; inset: 0; z-index: 96; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.45); padding: 24px; animation: dimIn 0.18s ease-out; }
+  #modal .mcard { width: 100%; max-width: 360px; max-height: 82dvh; overflow-y: auto; background: var(--paper); border: 0; border-radius: 20px; padding: 20px; position: relative; animation: popIn 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
   #modal .mx { position: absolute; top: 6px; right: 8px; border: 0; background: none; color: var(--muted); font-size: 22px; cursor: pointer; width: 36px; height: 36px; }
   .tlstep { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
   .tlstep .pill { min-width: 78px; text-align: center; font-family: var(--disp); font-weight: 800; font-size: calc(14.5px * var(--fs)); padding: 8px 0; border-radius: 999px; background: var(--card); color: var(--hi); }
