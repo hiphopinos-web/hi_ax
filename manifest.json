@@ -1,12 +1,12 @@
 {
-  "name": "AX FESTIVAL 2026",
-  "short_name": "AX FESTIVAL",
-  "description": "AX : ME to WE — 나의 업무 혁신, 우리 회사의 AX가 되다",
+  "name": "AX Festival 2026",
+  "short_name": "AX Festival",
+  "description": "AX : ME to WE · 나의 업무 혁신, 우리 회사의 AX가 되다",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#001F5B",
+  "background_color": "#FFFFFF",
   "theme_color": "#FFFFFF",
   "lang": "ko",
   "icons": [
