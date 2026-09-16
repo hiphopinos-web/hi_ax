@@ -231,21 +231,25 @@
   .wall { background: var(--ink); border-radius: 10px; padding: 16px; color: #fff; margin-bottom: 14px; }
   /* ── 시간·층 라벨 뱃지 tok (v3.9 공용) · 옅은 주황 필 + 짙은 주황 볼드 (사용자 확정 260917 · 라벨 용법, 상태 아님)
      상태 변형: dim = 지나감(회색) · act = 지금 진행(검정+흰 글자, 화면당 검정 1곳) · mine = 틴트 행 위 대비용 O25 ── */
-  .tok { display: inline-flex; align-items: center; justify-content: center; min-width: 62px; padding: 6px 6px 5px; border-radius: 999px; background: var(--tint); color: var(--acc2); font-family: var(--disp); font-weight: 800; font-size: calc(14px * var(--fs)); line-height: 1.1; }
+  .tok { display: inline-flex; align-items: center; justify-content: center; min-width: 64px; padding: 6px 9px 5px; border-radius: 999px; background: var(--tint); color: var(--acc2); font-family: var(--disp); font-weight: 800; font-size: calc(14px * var(--fs)); line-height: 1.1; }
+  .tok b { font-weight: 800; }
   .tok.dim { background: var(--dim); color: var(--faint); }
   .tok.act { background: var(--ink); color: #fff; }
   .tok.mine { background: var(--tint2); }
+  /* v3.17 두 줄 변형 · 시작(크게) + 종료(작게, 같은 상태 색의 옅은 톤) · 두 줄이라 라운드 사각으로 */
+  .tok.two { flex-direction: column; padding: 8px 10px 6px; border-radius: 13px; }
+  .tok.two small { display: block; margin-top: 2px; font-size: calc(11px * var(--fs)); font-weight: 700; opacity: 0.62; letter-spacing: 0; }
+  .tok.act small { color: rgba(255,255,255,0.75); opacity: 1; }
   /* ── 일정 탭 행 (v3.5 · v3.9 시간 뱃지) · 좌측 시간 뱃지(고정폭, 세로 정렬) + 우측 제목 · 설명은 접힘 ── */
   .trow { border-bottom: 1px solid #EFEFEF; }
   .trow:last-child { border-bottom: 0; }
-  .trow .rh { display: flex; align-items: center; gap: 12px; padding: 11px 6px; cursor: pointer; }
-  .trow .tcol { flex: none; width: 66px; text-align: center; }
-  .trow .tcol .tok { width: 100%; }
-  .trow .tcol small { display: block; margin-top: 3px; font-size: calc(11px * var(--fs)); font-weight: 700; color: var(--faint); }
+  .trow .rh { display: flex; align-items: center; gap: 14px; padding: 15px 6px; cursor: pointer; }
+  .trow .tcol { flex: none; width: 72px; text-align: center; }
+  .trow .tcol .tok { width: 100%; min-height: 48px; }
   .trow .tt { flex: 1; min-width: 0; font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.45; }
   .trow .tt .badge { margin-left: 4px; vertical-align: 2px; }
   .trow .chev { flex: none; color: var(--faint); font-weight: 800; font-size: 11px; }
-  .trow .tb { padding: 0 6px 13px 84px; }
+  .trow .tb { padding: 0 6px 14px 92px; }
   .trow .tb .pl { font-size: calc(13.5px * var(--fs)); font-weight: 800; color: var(--muted); }
   .trow .tb .ds { margin-top: 4px; font-size: calc(13.5px * var(--fs)); color: var(--muted); line-height: 1.65; }
   .trow .tb .btn { margin-top: 10px; padding: 11px; }
@@ -2693,15 +2697,16 @@ function myCouponHtml() {
 var SCHED = { open: {}, mine: false };
 function schedToggle(k) { SCHED.open[k] = !SCHED.open[k]; App.render(); }
 function schedMine(v) { SCHED.mine = !!v; App.render(); }
-/* 시간·층 라벨 뱃지 (v3.9 공용) · state: "" 기본(옅은 주황+짙은 주황) / dim 지나감 / act 진행 중(검정) / mine 틴트 행 대비용 O25 */
-function tokBadge(text, state) {
-  return '<span class="tok' + (state ? " " + state : "") + '">' + text + "</span>";
+/* 시간·층 라벨 뱃지 (v3.9 공용) · state: "" 기본(옅은 주황+짙은 주황) / dim 지나감 / act 진행 중(검정) / mine 틴트 행 대비용 O25.
+   v3.17: sub 를 주면 두 줄 변형(시작 크게 + 종료 작게, 같은 뱃지 배경·상태 색 안) · 한 줄 사용처는 그대로 */
+function tokBadge(text, state, sub) {
+  return '<span class="tok' + (state ? " " + state : "") + (sub ? " two" : "") + '"><b>' + text + "</b>" + (sub ? "<small>" + sub + "</small>" : "") + "</span>";
 }
 function schedRow(key, cls, tok, t0, t1, titleHtml, bodyHtml) {
   var open = !!SCHED.open[key];
   return '<div class="trow' + cls + '">' +
     '<div class="rh" onclick="schedToggle(\'' + key + '\')">' +
-    '<span class="tcol">' + tokBadge(t0, tok) + (t1 ? "<small>– " + t1 + "</small>" : "") + "</span>" +
+    '<span class="tcol">' + tokBadge(t0, tok, t1 ? "~" + t1 : null) + "</span>" +
     '<span class="tt">' + titleHtml + "</span>" +
     '<span class="chev">' + (open ? "▲" : "▼") + "</span></div>" +
     (open ? '<div class="tb">' + bodyHtml + "</div>" : "") + "</div>";
