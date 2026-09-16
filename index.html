@@ -174,7 +174,7 @@
   .card { background: var(--card); border: 0; border-radius: 20px; padding: 16px; }
   .card.soft { background: var(--card); }
   /* 그레이 카드 안의 기본 버튼은 흰 채움 (design.md v29 §6 · 리스트 카드 버튼) */
-  .card .btn:not(.mint):not(.line):not(.gray), .sess .btn:not(.mint):not(.line), .chal .btn { background: var(--white); }
+  .card .btn:not(.mint):not(.line):not(.gray), .sess .btn:not(.mint):not(.line) { background: var(--white); }
   .mb8 { margin-bottom: 8px; } .mb12 { margin-bottom: 12px; } .mb16 { margin-bottom: 16px; } .mt16 { margin-top: 16px; }
   .sub-label { font-size: calc(14.5px * var(--fs)); font-weight: 800; color: var(--hi); margin: 18px 0 8px; }
   .muted { color: var(--muted); font-size: calc(14.5px * var(--fs)); line-height: 1.55; }
@@ -232,30 +232,28 @@
   .tl li { position: relative; padding: 0 0 18px 20px; }
   .tl li::before { content: ""; position: absolute; left: -7px; top: 6px; width: 12px; height: 12px; border-radius: 999px; background: var(--paper); border: 2px solid var(--line); }
   .tl li.now::before { background: var(--mint); border-color: var(--mint); }
-  /* ── 스탬프 트레일 (v47) · 6칸 그리드를 01→06 세로 경로로 · 노드 탭 = 인라인 카드 ── */
-  .trail { background: var(--card); border-radius: 20px; padding: 16px 15px 6px; margin-bottom: 12px; }
-  .trail .tnode { position: relative; padding: 0 0 18px 58px; min-height: 52px; }
-  .trail .tnode::before { content: ""; position: absolute; left: 21px; top: 47px; bottom: -1px; width: 0; border-left: 2px dashed var(--line); }
-  .trail .tnode.segdone::before { border-left: 2px solid var(--mint); }
-  .trail .tnode.lastnode::before { display: none; }
-  .trail .ico { position: absolute; left: 0; top: 0; width: 44px; height: 44px; border: 2px solid var(--line); border-radius: 50%; background: var(--white); color: var(--faint); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
-  .trail .ico svg { width: 22px; height: 22px; display: block; }
-  .trail .tnode.done .ico { background: var(--tint2); border-color: var(--mint); color: var(--acc2); }
-  .trail .tnode.next .ico { border-color: var(--mint); color: var(--acc2); animation: trailPulse 2.2s ease-in-out infinite; }
-  .trail .ico .ck { position: absolute; right: -3px; bottom: -3px; width: 17px; height: 17px; border-radius: 50%; background: var(--mint); color: #fff; font-size: 10.5px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
-  .trail .ico .ring { position: absolute; inset: -5px; border: 2.5px solid var(--mint); border-radius: 50%; pointer-events: none; animation: trailRing 0.8s ease-out 0.2s both; }
-  .trail .tnode.punch .ico svg { animation: trailPunch 0.62s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
-  .trail .bd { cursor: pointer; padding-right: 20px; }
-  .trail .bd .no { font-family: var(--disp); font-size: calc(11.5px * var(--fs)); font-weight: 700; color: var(--faint); letter-spacing: 0.06em; }
-  .trail .tnode.done .bd .no, .trail .tnode.next .bd .no { color: var(--acc2); }
-  .trail .bd .tt { margin-top: 1px; font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.35; }
-  .trail .bd .wh { margin-top: 1px; font-size: calc(12.5px * var(--fs)); font-weight: 700; color: var(--faint); }
-  .trail .chev { position: absolute; right: 2px; top: 14px; color: var(--faint); font-weight: 800; font-size: 12px; pointer-events: none; }
-  .trail .tcard { margin-top: 9px; background: var(--white); border-radius: 14px; padding: 12px 13px; }
-  .trail .tcard .d { font-size: calc(13.5px * var(--fs)); color: var(--muted); line-height: 1.6; }
-  .trail .tcard .nt { margin-top: 6px; font-size: calc(12.5px * var(--fs)); font-weight: 700; color: var(--acc2); line-height: 1.55; }
-  .trail .tcard .btn { margin: 0; padding: 11px; }
-  .trail .tcard .lnk { margin-top: 9px; font-size: calc(12.5px * var(--fs)); font-weight: 800; color: var(--acc2); cursor: pointer; }
+  /* ── 스탬프 카드 아코디언 (v3.2) · 경로 메타포 폐기, 전폭 개별 카드 · 각자 독립 개폐 ── */
+  .scard { position: relative; background: var(--card); border-radius: 20px; padding: 13px 15px; margin-bottom: 8px; }
+  .scard .shead { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .scard .ico { position: relative; flex: none; width: 42px; height: 42px; border: 2px solid var(--line); border-radius: 50%; background: var(--white); color: var(--faint); display: flex; align-items: center; justify-content: center; }
+  .scard .ico svg { width: 22px; height: 22px; display: block; }
+  .scard.done .ico { background: var(--tint2); border-color: var(--mint); color: var(--acc2); }
+  .scard.next .ico { border-color: var(--mint); color: var(--acc2); animation: trailPulse 2.2s ease-in-out infinite; }
+  .scard .ico .ck { position: absolute; right: -3px; bottom: -3px; width: 17px; height: 17px; border-radius: 50%; background: var(--mint); color: #fff; font-size: 10.5px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
+  .scard .ico .ring { position: absolute; inset: -5px; border: 2.5px solid var(--mint); border-radius: 50%; pointer-events: none; animation: trailRing 0.8s ease-out 0.2s both; }
+  .scard.punch .ico svg { animation: trailPunch 0.62s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  .scard .bd { flex: 1; min-width: 0; }
+  .scard .bd .no { display: block; font-family: var(--disp); font-size: calc(11.5px * var(--fs)); font-weight: 700; color: var(--faint); letter-spacing: 0.06em; }
+  .scard.done .bd .no, .scard.next .bd .no { color: var(--acc2); }
+  .scard .bd .tt { display: block; margin-top: 1px; font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.35; }
+  .scard .bd .wh { display: block; margin-top: 1px; font-size: calc(12.5px * var(--fs)); font-weight: 700; color: var(--faint); }
+  .scard .chev { flex: none; color: var(--faint); font-weight: 800; font-size: 12px; }
+  .scap { margin: 13px 2px 7px; font-size: calc(11.5px * var(--fs)); font-weight: 800; letter-spacing: 0.04em; color: var(--faint); }
+  .scard .tcard { margin-top: 11px; background: var(--white); border-radius: 14px; padding: 12px 13px; }
+  .scard .tcard .d { font-size: calc(13.5px * var(--fs)); color: var(--muted); line-height: 1.6; }
+  .scard .tcard .nt { margin-top: 6px; font-size: calc(12.5px * var(--fs)); font-weight: 700; color: var(--acc2); line-height: 1.55; }
+  .scard .tcard .btn { margin: 0; padding: 11px; }
+  .scard .tcard .lnk { margin-top: 9px; font-size: calc(12.5px * var(--fs)); font-weight: 800; color: var(--acc2); cursor: pointer; }
   @keyframes trailPunch { 0% { transform: scale(2.2) rotate(-9deg); opacity: 0; } 45% { opacity: 1; } 72% { transform: scale(0.94) rotate(1.5deg); } 100% { transform: scale(1) rotate(0deg); } }
   @keyframes trailRing { 0% { transform: scale(0.55); opacity: 0.9; } 100% { transform: scale(2); opacity: 0; } }
   @keyframes trailPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,126,49,0.32); } 50% { box-shadow: 0 0 0 7px rgba(255,126,49,0); } }
@@ -446,20 +444,7 @@
   .mine .r .tm { flex: none; font-family: var(--disp); font-size: calc(15.5px * var(--fs)); color: var(--acc2); }
   .mine .r .tx { flex: 1; font-size: calc(14.5px * var(--fs)); font-weight: 700; color: var(--hi); line-height: 1.45; }
   .mine .r .arw { flex: none; color: var(--acc2); font-weight: 800; }
-  /* 홈 · 스탬프 챌린지 = 내 보상 (O10 틴트 카드 · 채움 O100은 히어로 하나뿐이므로 여기 CTA는 흰 채움) */
-  .chal { background: var(--tint); border-radius: 20px; padding: 13px 15px 12px; margin-bottom: 8px; }
-  .chal .hd { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-  .chal .hd .nm { font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); }
-  .chal .hd .cnt { font-family: var(--disp); font-weight: 800; font-size: calc(15.5px * var(--fs)); color: var(--acc2); }
-  .chal .p5 { display: flex; gap: 4px; margin-top: 9px; }
-  .chal .p5 span { flex: 1; height: 8px; border-radius: 2px; background: var(--white); }
-  .chal .p5 span.on { background: var(--mint); }
-  .chal .cpill { display: flex; align-items: center; gap: 8px; margin-top: 9px; background: var(--white); border-radius: 11px; padding: 8px 11px; }
-  .chal .cpill .nm { font-size: calc(14px * var(--fs)); font-weight: 800; color: var(--hi); }
-  .chal .cpill .pl { flex: 1; font-size: calc(12.5px * var(--fs)); font-weight: 700; color: var(--muted); }
-  .chal .cpill .st { flex: none; font-size: calc(12px * var(--fs)); font-weight: 800; color: var(--acc2); white-space: nowrap; }
-  .chal .cta { display: block; width: 100%; margin-top: 9px; border: 0; cursor: pointer; background: var(--white); color: var(--acc2); border-radius: 12px; padding: 12px; font-family: inherit; font-size: calc(15px * var(--fs)); font-weight: 800; }
-  .chal .cta:active { transform: scale(0.99); }
+  /* 홈 스탬프 카드(.chal)는 v3.2 폐지 · 홈도 스탬프 탭과 같은 railHtml 공용 컴포넌트를 쓴다 */
   /* 공지 한 줄 */
   /* 내 참여 현황 */
   /* 문장형 섹션 헤드 (공식 앱 "유지 중인 계약이 11건 있어요." 문법 · 숫자에 밑줄) */
@@ -478,6 +463,10 @@
   .rail .mk { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 27px; height: 27px; border-radius: 999px; border: 2px solid var(--tint2); background: var(--white); color: var(--faint); font-family: var(--disp); font-size: 12.5px; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
   .rail .mk.on { background: var(--mint); border-color: var(--mint); color: #fff; }
   .rail .mk.glow { animation: coupGlow 1.7s ease-out 2; }
+  .rail .tick { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 9px; height: 9px; border-radius: 999px; background: var(--white); border: 1.5px solid var(--line); pointer-events: none; }
+  .rail .tick.on { background: #fff; border-color: var(--mint); }
+  .rail .cta { display: block; width: 100%; margin-top: 10px; border: 0; cursor: pointer; background: var(--white); color: var(--acc2); border-radius: 12px; padding: 12px; font-family: inherit; font-size: calc(15px * var(--fs)); font-weight: 800; }
+  .rail .cta:active { transform: scale(0.99); }
   .rail .lbls { position: relative; height: 15px; margin: 6px 13px 0; }
   .rail .lbls span { position: absolute; transform: translateX(-50%); font-size: calc(10.5px * var(--fs)); font-weight: 800; color: var(--muted); white-space: nowrap; }
   .rail .cap { margin-top: 7px; font-size: calc(12px * var(--fs)); font-weight: 700; color: var(--faint); line-height: 1.5; }
@@ -689,7 +678,7 @@ var FESTIVAL = {
    구 p6(포토부스)·p8(미니게임 별도 칸)은 폐지 · 미니게임은 04 라이브 챌린지에 통합.
    v47: tap = 스탬프 카드의 바로가기 · cta = 버튼 문구 · note = 카드 안 행동 안내.
    층별 안내(progOpenFl) 폐기로 p1은 QR 스캔, p3은 강연 신청 리스트가 목적지다.
-   v3.1: p4는 카드 안에서 AX 링크·초성퀴즈·다시 풀기 3버튼을 직접 그린다(trailHtml 특례). */
+   v3.1: p4는 카드 안에서 AX 링크·초성퀴즈·다시 풀기 3버튼을 직접 그린다(stampInnerHtml 특례). */
 var STAMPS = [
   { id: "p1", no: "01", title: "1F 전시", short: "1F 전시", desc: "1F 전시존 QR 스캔", how: "현장 QR", where: "1F · 약 5분", site: 1, tap: "qrScanOpen()", cta: "QR 스캔", note: "1F 전시존 끝 QR 입간판을 스캔하세요." },
   { id: "p2", no: "02", title: "AX Now! 체험", short: "부스 체험", desc: "HiDI-Q 또는 HI-Helper 부스 1곳 체험", how: "현장 QR", where: "1F · 약 5분", site: 1, tap: "App.go('booth')", cta: "부스 안내 보기", note: "체험을 마치면 스태프가 보여주는 완료 QR을 스캔합니다." },
@@ -2122,7 +2111,7 @@ var BELL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 var QR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><path d="M13.5 13.5h3.2v3.2h-3.2z"/><path d="M20.5 13.5v3.2"/><path d="M13.5 20.5h3.2"/><path d="M18.6 17.4v3.1h1.9"/></svg>';
 var App = {
   current: "home",
-  /* v47 3탭+FAB · 홈(지금) / 스탬프(트레일·보상, 라우트 id는 passport 유지) / [QR FAB] / 프로그램(신청).
+  /* v47 3탭+FAB · 홈(지금) / 스탬프(카드·보상, 라우트 id는 passport 유지) / [QR FAB] / 프로그램(신청).
      구 이벤트(join) 탭은 스탬프 탭으로 흡수 · v3.1: 탭 이름은 현장 인쇄물과 같은 「스탬프」 */
   TABS: [
     ["home", "홈"], ["passport", "스탬프"], ["guide", "프로그램"]
@@ -2137,7 +2126,7 @@ var App = {
   /* Lv2 → 소속 탭 / 뒤로가기 목적지 */
   PARENT: {
     notices: "home",
-    /* 스탬프 · 트레일 노드가 유일한 입구 (v3.1: ev_games·ev_draw·wallv 참여자 화면 폐지) */
+    /* 스탬프 · 스탬프 카드가 유일한 입구 (v3.1: ev_games·ev_draw·wallv 참여자 화면 폐지) */
     ideas: "passport", booth: "passport", wq_list: "passport", ev_replay: "passport",
     wq_play: "wq_list", game_word: "passport", game_cho: "passport",
     ideas_mine: "passport",
@@ -2548,26 +2537,17 @@ function myScheduleHtml() {
     "</div>";
 }
 
-/* 홈 · 스탬프 카드 (260909 보상 체계 유지 · v3.1 스탬프 탭으로 연결: 3개=룰렛 1회, 4~6개=사후 추첨 응모 1~3장.
-   히어로 자리는 「지금 진행 중」이 맡고 여기는 O10 틴트 카드. 진행은 도트로만, 수치는 우측 한 번만) */
+/* 홈 · 스탬프 블록 (v3.2): 홈도 스탬프 탭과 같은 railHtml 공용 컴포넌트를 쓴다 (design.md 컴포넌트 일관성).
+   홈용은 컴팩트 변형(캡션 축약 + 하단 CTA)일 뿐 레일의 시각 문법은 동일 · 마커 탭 동작(모달)도 동일하다. */
 function myCouponHtml() {
-  var n = stampCount();
-  var t = raffleTickets(n);
-  var dots = [1, 2, 3, 4, 5, 6].map(function (i) { return '<span class="' + (n >= i ? "on" : "") + '"></span>'; }).join("");
-  var cst = t >= 3 ? "응모 3장 · 끝" : t > 0 ? "응모 " + t + "장 자동" : n >= 3 ? "룰렛 열림" : (3 - n) + "개 남음";
   return '<div class="sect" style="margin-top:12px"><b>스탬프</b>' +
     '<span onclick="App.go(\'passport\')">스탬프 탭 ›</span></div>' +
-    '<div class="chal">' +
-    '<div class="hd"><span class="nm">스탬프 3개면 룰렛 1회</span><span class="cnt">' + n + ' / 6</span></div>' +
-    '<div class="p5">' + dots + '</div>' +
-    '<div class="cpill"><span class="nm">사후 추첨 응모</span><span class="pl">4개부터 1장씩 · 최대 3장</span><span class="st">' + cst + '</span></div>' +
-    '<button class="cta" onclick="App.go(\'passport\')">' +
-    (n >= 3 ? "내 보상 확인하기" : "다음 스탬프 모으기") + '</button></div>';
+    railHtml(stampCount(), false, null, true);
 }
 
-/* ════════════════ 스탬프 트레일 (v47, v3.1 어휘 정리) · 01→06 경로 · 노드 탭 = 인라인 카드 ════════════════ */
-var PP = { open: null, animOn: false };
-function ppToggle(id) { PP.open = PP.open === id ? null : id; App.render(); }
+/* ════════════════ 스탬프 카드 아코디언 (v3.2 · 경로 메타포 폐기) · 전폭 카드 · 각자 독립 개폐 ════════════════ */
+var PP = { open: {}, animOn: false };
+function ppToggle(id) { PP.open[id] = !PP.open[id]; App.render(); }
 /* 적립 연출은 인라인만 (v47 확정 · 풀스크린 오버레이 금지).
    「본 적 있는 스탬프」는 pp_seen 으로 추적해 새 것에만 도장 펀치·잉크 링을 건다.
    S.set 은 동기 이벤트로 재렌더를 부르므로 seen 갱신은 애니가 끝난 뒤로 미룬다. */
@@ -2594,62 +2574,80 @@ function ppAfterRender(n, oldN, glow) {
     if (glow) S.set("pp_glow3", true);
   }, 2000);
 }
-function trailHtml(st, newly) {
-  var next = null;
-  for (var i = 0; i < STAMPS.length; i++) if (st.indexOf(STAMPS[i].id) < 0) { next = STAMPS[i].id; break; }
-  var rows = STAMPS.map(function (s, i) {
-    var got = st.indexOf(s.id) >= 0;
-    var open = PP.open === s.id;
-    var cls = (got ? " done" : s.id === next ? " next" : "") +
-      (newly.indexOf(s.id) >= 0 ? " punch" : "") +
-      (i === STAMPS.length - 1 ? " lastnode" : got ? " segdone" : "");
-    var card = "";
-    if (open) {
-      var inner = '<p class="d">' + s.desc + " · " + s.where + "</p>" +
-        (s.note ? '<p class="nt">' + s.note + "</p>" : "");
-      if (s.id === "p4") {
-        /* v3.1: 미니게임 허브(ev_games) 폐지 · 세 가지 방법을 카드가 직접 연다 */
-        var qs4 = S.get("quiz_state", INITIAL_QUIZ_STATE), an4 = S.get("quiz_answers", {});
-        var replayN = QUIZZES.filter(function (q) { return qs4.finishedIds.indexOf(q.id) >= 0 && !an4[q.id]; }).length;
-        inner += '<div class="row" style="margin-top:10px;gap:8px">' +
-          '<button class="btn mint" style="flex:1" onclick="App.go(\'game_word\')">AX 링크</button>' +
-          '<button class="btn mint" style="flex:1" onclick="App.go(\'game_cho\')">초성퀴즈</button></div>' +
-          (replayN ? '<button class="btn line" style="margin-top:8px" onclick="App.go(\'ev_replay\')">라이브 퀴즈 다시 풀기 · ' + replayN + "문제</button>" : "");
-      } else {
-        inner += '<div class="row" style="margin-top:10px;gap:8px">' +
-          '<span class="badge ' + (s.inapp ? "mint" : "gray") + '" style="flex:none">' + (s.inapp ? "앱에서 바로" : s.how) + "</span>" +
-          '<button class="btn mint" style="flex:1" onclick="' + s.tap + '">' + s.cta + "</button></div>";
-        if (s.site) {
-          /* v3.1: 현장 적립형(01·02·03)은 QR 스캔·담당자 적립을 카드 안에서 바로 (보조 카드 폐지) */
-          if (s.tap !== "qrScanOpen()") inner += '<button class="btn line" style="margin-top:8px" onclick="qrScanOpen()">QR 스캔</button>';
-          inner += '<p class="lnk" onclick="staffStampOpen()">QR이 안 되면 담당자 적립 요청 ›</p>';
-        }
-        if (s.id === "p5") {
-          var mine5 = S.get("ideas", []).filter(function (x) { return x.empId === (S.get("user", {}) || {}).empId; }).length;
-          if (mine5) inner += '<p class="lnk" onclick="App.go(\'ideas_mine\')">내가 낸 아이디어 ' + mine5 + "건 제출 ›</p>";
-        }
-      }
-      card = '<div class="tcard">' + inner + "</div>";
+/* 기본 순서 = 장소 그룹순: 1F 3건(01 전시·02 부스·06 QR퀴즈) → 17F(03) → 앱(04·05).
+   완료 카드는 위로 올라온다(완료 그룹 상단, 그 안에서 기본 순서 유지) · 그룹 캡션은 미완료 구간에만 얇게. */
+var PP_ORDER = [["p1", "1F"], ["p2", "1F"], ["p7", "1F"], ["p3", "17F"], ["p4", "앱"], ["p5", "앱"]];
+function stampInnerHtml(s) {
+  var inner = '<p class="d">' + s.desc + " · " + s.where + "</p>" +
+    (s.note ? '<p class="nt">' + s.note + "</p>" : "");
+  if (s.id === "p4") {
+    /* v3.1: 미니게임 허브(ev_games) 폐지 · 세 가지 방법을 카드가 직접 연다 */
+    var qs4 = S.get("quiz_state", INITIAL_QUIZ_STATE), an4 = S.get("quiz_answers", {});
+    var replayN = QUIZZES.filter(function (q) { return qs4.finishedIds.indexOf(q.id) >= 0 && !an4[q.id]; }).length;
+    inner += '<div class="row" style="margin-top:10px;gap:8px">' +
+      '<button class="btn mint" style="flex:1" onclick="App.go(\'game_word\')">AX 링크</button>' +
+      '<button class="btn mint" style="flex:1" onclick="App.go(\'game_cho\')">초성퀴즈</button></div>' +
+      (replayN ? '<button class="btn line" style="margin-top:8px" onclick="App.go(\'ev_replay\')">라이브 퀴즈 다시 풀기 · ' + replayN + "문제</button>" : "");
+  } else {
+    inner += '<div class="row" style="margin-top:10px;gap:8px">' +
+      '<span class="badge ' + (s.inapp ? "mint" : "gray") + '" style="flex:none">' + (s.inapp ? "앱에서 바로" : s.how) + "</span>" +
+      '<button class="btn mint" style="flex:1" onclick="' + s.tap + '">' + s.cta + "</button></div>";
+    if (s.site) {
+      /* v3.1: 현장 적립형(01·02·03)은 QR 스캔·담당자 적립을 카드 안에서 바로 (보조 카드 폐지) */
+      if (s.tap !== "qrScanOpen()") inner += '<button class="btn line" style="margin-top:8px" onclick="qrScanOpen()">QR 스캔</button>';
+      inner += '<p class="lnk" onclick="staffStampOpen()">QR이 안 되면 담당자 적립 요청 ›</p>';
     }
-    return '<div class="tnode' + cls + '">' +
-      '<button class="ico" onclick="ppToggle(\'' + s.id + '\')" aria-label="' + s.title + '">' + STAMP_ICONS[s.id] +
-      (got ? '<span class="ck">✓</span>' : "") +
-      (newly.indexOf(s.id) >= 0 ? '<span class="ring"></span>' : "") + "</button>" +
-      '<div class="bd" onclick="ppToggle(\'' + s.id + '\')">' +
-      '<p class="no">' + s.no + (got ? " · 완료" : s.id === next ? " · 다음 추천" : "") + "</p>" +
-      '<p class="tt">' + s.title + '</p>' +
-      '<p class="wh">' + s.where + "</p></div>" +
-      '<span class="chev">' + (open ? "▲" : "▼") + "</span>" + card + "</div>";
-  }).join("");
-  return '<div class="sect" style="margin-top:14px"><b>스탬프 트레일</b><span>칸을 누르면 방법이 열려요</span></div>' +
-    '<div class="trail">' + rows + "</div>";
+    if (s.id === "p5") {
+      var mine5 = S.get("ideas", []).filter(function (x) { return x.empId === (S.get("user", {}) || {}).empId; }).length;
+      if (mine5) inner += '<p class="lnk" onclick="App.go(\'ideas_mine\')">내가 낸 아이디어 ' + mine5 + "건 제출 ›</p>";
+    }
+  }
+  return '<div class="tcard">' + inner + "</div>";
 }
-/* 보상 레일 (v3.1) · 사다리 카드+룰렛 쿠폰 카드를 한 줄로. 마커 3=룰렛(탭=쿠폰 모달) · 4~6=응모(탭=추첨 안내 모달) */
-function railHtml(n, glow, dispN) {
+function scardHtml(s, got, isNext, newly) {
+  var open = !!PP.open[s.id];
+  var isNew = newly.indexOf(s.id) >= 0;
+  return '<div class="scard' + (got ? " done" : "") + (isNext ? " next" : "") + (isNew ? " punch" : "") + '">' +
+    '<div class="shead" onclick="ppToggle(\'' + s.id + '\')">' +
+    '<span class="ico">' + STAMP_ICONS[s.id] +
+    (got ? '<span class="ck">✓</span>' : "") +
+    (isNew ? '<span class="ring"></span>' : "") + "</span>" +
+    '<span class="bd"><span class="no">' + s.no + (got ? " · 완료" : isNext ? " · 다음 추천" : "") + "</span>" +
+    '<span class="tt">' + s.title + '</span>' +
+    '<span class="wh">' + s.where + "</span></span>" +
+    '<span class="chev">' + (open ? "▲" : "▼") + "</span></div>" +
+    (open ? stampInnerHtml(s) : "") + "</div>";
+}
+function stampCardsHtml(st, newly) {
+  var by = {};
+  STAMPS.forEach(function (s) { by[s.id] = s; });
+  var done = [], todo = [];
+  PP_ORDER.forEach(function (e) {
+    var s = by[e[0]];
+    if (!s) return;
+    (st.indexOf(s.id) >= 0 ? done : todo).push([s, e[1]]);
+  });
+  var next = todo.length ? todo[0][0].id : null;   /* 다음 추천 = 미완료 그룹 첫 카드 */
+  var out = '<div class="sect" style="margin-top:14px"><b>스탬프 6종</b><span>카드를 누르면 방법이 열려요</span></div>';
+  done.forEach(function (e) { out += scardHtml(e[0], true, false, newly); });
+  var cap = null;
+  todo.forEach(function (e) {
+    if (e[1] !== cap) { cap = e[1]; out += '<p class="scap">' + cap + "</p>"; }
+    out += scardHtml(e[0], false, e[0].id === next, newly);
+  });
+  return out;
+}
+/* 보상 레일 (v3.1) · 사다리 카드+룰렛 쿠폰 카드를 한 줄로. 마커 3=룰렛(탭=쿠폰 모달) · 4~6=응모(탭=추첨 안내 모달).
+   v3.2: 레일은 6단이다. 1·2 지점에도 보상 없는 회색 틱을 둬서 1~2개인 사용자도 진행이 레일 위에 찍혀 보이게 한다.
+   홈·스탬프 탭 공용 컴포넌트 (design.md 컴포넌트 일관성) · home=true 는 컴팩트 변형(캡션 축약 + 하단 CTA)일 뿐 시각 문법은 동일. */
+function railHtml(n, glow, dispN, home) {
   if (dispN == null) dispN = n;   /* 새 스탬프 연출 중엔 카운트만 이전 값에서 굴러 올라간다 */
   var used = S.get("roulette_used", false);
   var marks = [[3, used ? "룰렛 사용" : "룰렛", "ppRouletteOpen()"], [4, "응모 1", "ppDrawOpen()"], [5, "응모 2", "ppDrawOpen()"], [6, "응모 3", "ppDrawOpen()"]];
   var mk = "", lb = "";
+  [1, 2].forEach(function (k) {
+    mk += '<span class="tick' + (n >= k ? " on" : "") + '" style="left:' + (k / 6 * 100).toFixed(1) + '%"></span>';
+  });
   marks.forEach(function (m) {
     var pos = (m[0] / 6 * 100).toFixed(1) + "%";
     mk += '<button class="mk' + (n >= m[0] ? " on" : "") + (m[0] === 3 && glow ? " glow" : "") + '" style="left:' + pos + '" onclick="' + m[2] + '" aria-label="' + m[1] + '">' + m[0] + "</button>";
@@ -2659,7 +2657,11 @@ function railHtml(n, glow, dispN) {
     '<div class="hd"><span class="nm">스탬프 보상</span><span class="cnt"><span id="ppCnt">' + dispN + "</span><small> / 6</small></span></div>" +
     '<div class="rb"><i style="width:' + Math.min(100, n / 6 * 100) + '%"></i>' + mk + "</div>" +
     '<div class="lbls">' + lb + "</div>" +
-    '<p class="cap">3개 = 1F 룰렛 1회 · 4개부터 사후 추첨 응모 1장씩 · 마커를 누르면 자세히</p></div>';
+    (home
+      ? '<p class="cap">3개 = 룰렛 1회 · 4개부터 응모 1장씩</p>' +
+        '<button class="cta" onclick="App.go(\'passport\')">스탬프 탭으로</button>'
+      : '<p class="cap">3개 = 1F 룰렛 1회 · 4개부터 사후 추첨 응모 1장씩 · 마커를 누르면 자세히</p>') +
+    "</div>";
 }
 /* 룰렛 쿠폰 모달 · 내 QR + 사용 여부 (사용 여부는 서버 my.roulette 가 정본, sync 가 roulette_used 로 받아쓴다) */
 function ppRouletteOpen() {
@@ -2746,8 +2748,8 @@ var Views = {
       '<div class="row" style="justify-content:space-between;padding:4px 2px;cursor:pointer" onclick="App.go(\'guide\')"><span style="font-size:calc(14.5px * var(--fs));font-weight:800;color:var(--muted)">프로그램 신청 · 전체 목록</span><span style="color:var(--faint);font-weight:800">›</span></div>';
   },
 
-  /* ═══ 스탬프 탭 (라우트 id는 passport 유지) · v3.1: 얇은 보상 레일 한 줄 + 트레일 6노드, 그 외 없음.
-     구 헤더(skb)·사다리·룰렛 쿠폰 카드·이벤트 메뉴·월 카드는 레일 마커·트레일 카드가 흡수했다. ═══ */
+  /* ═══ 스탬프 탭 (라우트 id는 passport 유지) · v3.2: 보상 레일 한 줄 + 전폭 카드 아코디언 6장, 그 외 없음.
+     정렬은 완료 그룹 상단 · 그 안에서는 기본 순서(1F 3건 → 17F → 앱) · 캡션은 미완료 구간에만. ═══ */
   passport: function () {
     var st = S.get("stamps", []);
     var n = stampCount();
@@ -2757,7 +2759,7 @@ var Views = {
     });
     var glow = n >= 3 && !S.get("roulette_used", false) && !S.get("pp_glow3", false);
     if (newly.length || glow) ppAfterRender(n, n - newly.length, glow);
-    return railHtml(n, glow, newly.length ? n - newly.length : n) + trailHtml(st, newly);
+    return railHtml(n, glow, newly.length ? n - newly.length : n) + stampCardsHtml(st, newly);
   },
 
   ideas: function () {
@@ -2911,7 +2913,7 @@ var Views = {
       '<button class="btn line" style="margin-top:10px" onclick="cchatCancel()">신청 취소</button></div>';
   },
 
-  /* 미니게임 허브(ev_games)는 v3.1 폐지 · 스탬프 트레일 04 카드가 AX 링크·초성퀴즈·다시 풀기를 직접 연다 */
+  /* 미니게임 허브(ev_games)는 v3.1 폐지 · 스탬프 04 카드가 AX 링크·초성퀴즈·다시 풀기를 직접 연다 */
 
   ev_replay: function () {
     var st = S.get("quiz_state", INITIAL_QUIZ_STATE);
