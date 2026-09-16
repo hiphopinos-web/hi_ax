@@ -298,6 +298,8 @@
   .scard .tcard .nt { margin-top: 6px; font-size: calc(12.5px * var(--fs)); font-weight: 700; color: var(--acc2); line-height: 1.55; }
   .scard .tcard .btn { margin: 0; padding: 11px; }
   .scard .tcard .lnk { margin-top: 9px; font-size: calc(12.5px * var(--fs)); font-weight: 800; color: var(--acc2); cursor: pointer; }
+  /* v3.19 테스트 버튼 · 회색 점선 = 운영(테스트) 요소임이 보이게, 위계 최하위 */
+  .btn.test { margin-top: 8px; background: transparent; border: 1.5px dashed var(--dimln); color: var(--faint); font-size: calc(12.5px * var(--fs)); font-weight: 700; padding: 9px; }
   /* ── 프로그램 탭 층 아코디언 (v3.4) · scard 문법 재사용 · 층 안 = 신청형 행(무겁게) + 상시형 행(얇게) ── */
   /* v3.6 상태 위계: 평상 행 = 기본(흰 면 + 헤어라인) · 신청 완료 = O10(내 것) · 만석·종료 = 회색 */
   .srow { background: var(--white); border: 1px solid var(--dimln); border-radius: 14px; padding: 11px 13px; margin-top: 8px; }
@@ -1285,7 +1287,7 @@ function awardStamp(id) {
   var sd = STAMPS.find(function (s) { return s.id === id; });
   /* v3.16 적립 확정 순간 도장 오버레이 · 스탬프 탭이면 인라인 펀치가 맡고 토스트만 */
   if (!stampOverlay(id)) toast("스탬프 적립 · " + (sd ? sd.title : id) + " · 스탬프 " + stampCount() + "개");
-  bePush("stamp:" + id, sd ? sd.title : id, true);
+  if (!testEmp()) bePush("stamp:" + id, sd ? sd.title : id, true);   /* v3.19 테스트 사번은 서버에 적립하지 않는다 */
   checkRewards();
 }
 function scheduleCoffeechat() {
@@ -2708,6 +2710,24 @@ function schedRow(key, cls, tok, t0, t1, titleHtml, bodyHtml) {
 /* ════════════════ 스탬프 카드 아코디언 (v3.2 · 경로 메타포 폐기) · 전폭 카드 · 각자 독립 개폐 ════════════════ */
 var PP = { open: {}, animOn: false };
 function ppToggle(id) { PP.open[id] = !PP.open[id]; App.render(); }
+/* ── 테스트 모드 (v3.19) · 노출 = 데모(#demo, BE off) 또는 테스트 사번 로그인.
+   관리자 인증만으로는 노출하지 않는다: 실서버 stamp_grant 완료 버튼은 사후 추첨 원장 오염 위험이 있어 제외(310555 로 충족).
+   310555 = 하이브리드 테스트 계정: 서버 로그인·공지·신청은 실제로 동작하되 스탬프·보상만 이 기기 로컬. */
+var TEST_EMP = ["310555"];
+function testEmp() { return TEST_EMP.indexOf(String((S.get("user", {}) || {}).empId || "")) >= 0; }
+function testMode() { return !BE.on || testEmp(); }
+function testStamp(id) {
+  if (!testMode()) return;
+  awardStamp(id);
+  App.render();
+}
+function testStampReset() {
+  if (!testMode()) return;
+  S.set("stamps", []); S.set("pp_seen", []);
+  S.set("pp_glow3", false); S.set("roulette_used", false); S.set("roulette_open", false); S.set("raffle_seen", 0);
+  toast("테스트 · 스탬프 상태를 초기화했어요");
+  App.render();
+}
 /* 완료 도장 마크 (v3.16 공용 · 카드와 오버레이가 같은 함수로 그린다) */
 function stampMarkHtml(withRing) {
   return '<span class="stampmk">완료' + (withRing ? '<span class="ring"></span>' : "") + "</span>";
@@ -2807,6 +2827,10 @@ function stampInnerHtml(s) {
       var mine5 = S.get("ideas", []).filter(function (x) { return x.empId === (S.get("user", {}) || {}).empId; }).length;
       if (mine5) inner += '<p class="lnk" onclick="App.go(\'ideas_mine\')">내가 낸 아이디어 ' + mine5 + "건 제출 ›</p>";
     }
+  }
+  /* v3.19 테스트 · 완료 처리 (데모·테스트 사번에서만, 미완료 카드 한정) */
+  if (testMode() && S.get("stamps", []).indexOf(s.id) < 0) {
+    inner += '<button class="btn test" onclick="testStamp(\'' + s.id + '\')">테스트 · 완료 처리</button>';
   }
   return '<div class="tcard">' + inner + "</div>";
 }
@@ -2967,7 +2991,10 @@ var Views = {
     });
     var glow = n >= 3 && !S.get("roulette_used", false) && !S.get("pp_glow3", false);
     if (newly.length || glow) ppAfterRender(n, n - newly.length, glow);
-    return railHtml(n, glow, newly.length ? n - newly.length : n) + stampCardsHtml(st, newly);
+    /* v3.19 테스트 표시·초기화 (데모·테스트 사번 전용) */
+    var testBar = !testMode() ? "" :
+      '<p class="scap" style="margin:0 2px 8px">테스트 ' + (BE.on ? "계정" : "모드") + ' · 스탬프는 이 기기에만 기록됩니다 · <span style="cursor:pointer;text-decoration:underline" onclick="testStampReset()">스탬프 초기화</span></p>';
+    return testBar + railHtml(n, glow, newly.length ? n - newly.length : n) + stampCardsHtml(st, newly);
   },
 
   ideas: function () {
@@ -3971,7 +3998,7 @@ function beSync() {
          내 차례가 되면 한 번만 알린다 · 폴링마다 토스트가 뜨지 않게 직전 상태와 비교. */
       if (res.my.checkin) S.set("checkin", res.my.checkin);
       if (res.my.stamps) stampSync(res.my.stamps);   /* 스탬프는 서버가 정본 */
-      if ("roulette" in res.my) S.set("roulette_used", !!res.my.roulette);   /* 룰렛 사용 여부도 서버가 정본 (260909) */
+      if ("roulette" in res.my && !testEmp()) S.set("roulette_used", !!res.my.roulette);   /* 룰렛 사용 여부도 서버가 정본 (260909) · 테스트 사번은 로컬 */
       if (res.my.queue) {
         var was = S.get("queue", {}), nowQ = res.my.queue, kq;
         for (kq in nowQ) {
@@ -4121,6 +4148,8 @@ function qrHtml() {
 function stampByCode(v) {
   v = String(v || "").trim();
   if (!v) return false;
+  /* v3.19 테스트 사번: 코드→스탬프 매핑이 서버 전용(보안 설계)이라 로컬 판정이 불가능 · 원장 오염을 막기 위해 차단 */
+  if (testEmp()) { toast("테스트 계정은 스탬프 카드의 「테스트 · 완료 처리」 버튼을 쓰세요."); return false; }
   if (!BE.on) { toast("서버에 연결되지 않아 적립할 수 없어요. 잠시 후 다시 시도해주세요."); return false; }
   var u = S.get("user", {}) || {};
   if (!u.empId) { toast("사번으로 입장한 뒤 적립할 수 있어요."); return false; }
@@ -4157,6 +4186,7 @@ function stampClaimDone(res) {
 /* 서버가 준 목록으로 로컬을 맞춘다 (sync 응답에서도 같은 함수를 쓴다).
    정의 밖 id(구 p6·p8, 계단 p9 등)는 버린다 · 표시·보상 계산과 어긋나지 않게 (260909) */
 function stampSync(list) {
+  if (testEmp()) return;   /* v3.19 테스트 사번: 서버 stamps 가 로컬 테스트 적립을 덮지 않는다 */
   if (!list || !list.length) return;
   list = list.filter(function (id) { return STAMPS.some(function (s) { return s.id === id; }); });
   if (!list.length) return;
