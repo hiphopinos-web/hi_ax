@@ -104,6 +104,20 @@ select.in{min-width:120px}
 #lock input{width:100%;text-align:center;font-size:20px;letter-spacing:.2em;padding:12px}
 #lock .err{color:var(--bad);font-size:12.5px;min-height:18px;margin-top:8px}
 
+/* 확인 창 · 총무전용공간 관리자맵의 overlay 문법(어두운 배경, 위쪽에 뜨는 카드, 제목·설명·대상·오른쪽 버튼)을
+   콘솔 토큰으로 옮겼다. 잠금 화면(50)보다 아래, 표(0)보다 위. */
+.overlay{position:fixed;inset:0;background:rgba(17,17,17,.45);z-index:40;display:none;align-items:flex-start;justify-content:center;padding:72px 16px;overflow:auto}
+.overlay.on{display:flex}
+.ocard{background:#fff;border-radius:var(--r);width:min(480px,100%);padding:24px 26px;box-shadow:0 12px 28px rgba(0,0,0,.14)}
+.ot{font-size:16px;font-weight:800;margin-bottom:4px}
+.os{font-size:13px;color:var(--tx2);line-height:1.6}
+.os b{color:var(--tx)}
+.who{margin-top:14px;padding:12px 14px;background:var(--o5);border-radius:var(--rs);font-size:15px;font-weight:700}
+.who span{display:block;font-size:12.5px;font-weight:600;color:var(--tx2);margin-top:2px}
+.oa{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+.oa .btn{padding:9px 16px}
+.tdr{text-align:right;white-space:nowrap}
+
 /* 알림 */
 #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--tx);color:#fff;
   padding:10px 16px;border-radius:999px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s;z-index:60}
@@ -137,6 +151,14 @@ select.in{min-width:120px}
 </header>
 <main id="view"></main>
 <div id="toast"></div>
+<div id="dlg" class="overlay" role="dialog" aria-modal="true" aria-labelledby="dlgT">
+  <div class="ocard">
+    <div class="ot" id="dlgT"></div>
+    <div class="os" id="dlgS"></div>
+    <div class="who" id="dlgWho"></div>
+    <div class="oa"><button class="btn" id="dlgCancel" onclick="dlgClose()">취소</button><button class="btn pri" id="dlgOk" onclick="dlgGo()">확인</button></div>
+  </div>
+</div>
 
 <script>
 /* ══════════════════ 0. 설정 ══════════════════ */
@@ -170,6 +192,27 @@ function el(id){ return document.getElementById(id); }
 function key(){ try{ return sessionStorage.getItem("axf_adm_key")||""; }catch(e){ return window.__k||""; } }
 function setKey(v){ try{ sessionStorage.setItem("axf_adm_key",v); }catch(e){ window.__k=v; } }
 function toast(m){ var t=el("toast"); t.textContent=m; t.className="on"; clearTimeout(t._t); t._t=setTimeout(function(){t.className="";},2200); }
+/* 확인 창. 브라우저 confirm() 과 달리 대상(이름·사번)을 크게 보여 주고, 처리 중에는 버튼을 잠근다.
+   onOk 가 없으면 안내 전용(확인 버튼 하나). 배경 클릭·Esc 로 닫히되 처리 중에는 안 닫힌다. */
+var DLG={ onOk:null };
+function dialog(o){
+  DLG.onOk=o.onOk||null;
+  el("dlgT").textContent=o.t||""; el("dlgS").innerHTML=o.s||"";
+  el("dlgWho").innerHTML=o.who||""; el("dlgWho").style.display=o.who?"":"none";
+  var ok=el("dlgOk"); ok.textContent=o.ok||"확인"; ok.disabled=false;
+  el("dlgCancel").style.display=o.onOk?"":"none";
+  el("dlg").className="overlay on";
+  setTimeout(function(){ ok.focus(); },30);
+}
+function dlgBusy(){ return el("dlgOk").disabled; }
+function dlgClose(){ if(dlgBusy()) return; el("dlg").className="overlay"; DLG.onOk=null; }
+function dlgGo(){
+  if(!DLG.onOk){ dlgClose(); return; }
+  var ok=el("dlgOk"); ok.disabled=true; ok.innerHTML='<span class="spin" style="border-color:rgba(255,255,255,.4);border-top-color:#fff"></span>처리 중';
+  var fn=DLG.onOk; DLG.onOk=null; fn();
+}
+el("dlg").addEventListener("click",function(e){ if(e.target===el("dlg")) dlgClose(); });
+document.addEventListener("keydown",function(e){ if(e.key==="Escape"&&el("dlg").className.indexOf("on")>=0) dlgClose(); });
 function hhmm(s){ s=String(s||""); var m=s.match(/(\d{1,2}):(\d{2})/); return m?(("0"+m[1]).slice(-2)+":"+m[2]):s; }
 function short(ts){ ts=String(ts||""); var m=ts.match(/(\d{2}):(\d{2}):?\d{0,2}$/); var d=ts.match(/(\d{2})-(\d{2}) /); return (d?d[1]+"/"+d[2]+" ":"")+(m?m[1]+":"+m[2]:ts); }
 function pct(a,b){ return b>0?Math.min(100,Math.round(a/b*100)):0; }
@@ -325,14 +368,37 @@ function viewAcct(){
   rows.sort(function(a,b){ return (b.last||"")<(a.last||"")?-1:1; });
   var shown=rows.filter(function(r){ return match(r,["emp","name","dept"]); });
   var byDept={}; rows.forEach(function(r){ byDept[r.dept||"(미상)"]=(byDept[r.dept||"(미상)"]||0)+1; });
-  var h='<h1>계정<small>로그인한 사람. 명부에 있고 비밀번호를 등록한 계정입니다.</small></h1>';
-  h+='<div class="grid g3">'+kpi("가입 계정",rows.length,"명")+kpi("명부",(ST.data.acct||{}).roster||0,"명","가입률 "+pct(rows.length,(ST.data.acct||{}).roster||0)+"%")+kpi("부문 수",Object.keys(byDept).length,"개")+'</div>';
+  /* pw===false 만 「초기화 대기」. 필드가 없으면(옛 백엔드) 등록으로 본다. */
+  var waiting=rows.filter(function(r){ return r.pw===false; }).length;
+  var h='<h1>계정<small>로그인한 사람. 명부에 있고 PIN을 등록한 계정입니다. PIN을 잊은 사람은 여기서 초기화합니다.</small></h1>';
+  h+='<div class="grid g4">'+kpi("가입 계정",rows.length,"명")+kpi("명부",(ST.data.acct||{}).roster||0,"명","가입률 "+pct(rows.length,(ST.data.acct||{}).roster||0)+"%")+kpi("부문 수",Object.keys(byDept).length,"개")+kpi("PIN 초기화 대기",waiting,"명",waiting?"본인이 앱에서 새 PIN을 입력하면 풀립니다":"")+'</div>';
   h+='<div class="card"><div class="tools"><input class="in" placeholder="사번 · 이름 · 부문 검색" value="'+esc(ST.q)+'" oninput="setQ(this.value)"><span class="src">'+shown.length+' / '+rows.length+'명</span></div>';
-  h+='<div class="wrap"><table class="tb"><tr><th>사번</th><th>이름</th><th>부문</th><th>가입</th><th>최근 접속</th></tr>'+
-    shown.slice(0,500).map(function(r){ return '<tr><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td><td>'+esc(r.dept)+'</td><td class="n src">'+esc(short(r.joined))+'</td><td class="n">'+esc(short(r.last))+'</td></tr>'; }).join("")+
-    (shown.length>500?'<tr><td colspan="5" class="src">500명까지만 표시합니다. 검색으로 좁혀 주세요.</td></tr>':'')+'</table></div></div>';
+  h+='<div class="wrap"><table class="tb"><tr><th>사번</th><th>이름</th><th>부문</th><th>가입</th><th>최근 접속</th><th>PIN</th><th></th></tr>'+
+    shown.slice(0,500).map(function(r){ var wait=r.pw===false;
+      return '<tr><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td><td>'+esc(r.dept)+'</td><td class="n src">'+esc(short(r.joined))+'</td><td class="n">'+esc(short(r.last))+'</td>'+
+        '<td>'+(wait?'<span class="pill">초기화 대기</span>':'<span class="pill off">사용 중</span>')+'</td>'+
+        '<td class="tdr">'+(wait?'<span class="src">새 PIN 입력 대기</span>':'<button class="btn sm" data-emp="'+esc(r.emp)+'" data-name="'+esc(r.name)+'" onclick="pwReset(this)">PIN 초기화</button>')+'</td></tr>'; }).join("")+
+    (shown.length>500?'<tr><td colspan="7" class="src">500명까지만 표시합니다. 검색으로 좁혀 주세요.</td></tr>':'')+'</table></div>';
+  h+='<p class="note mt12">PIN 초기화는 지금 PIN을 지우고, 본인이 앱에서 다음에 입력하는 4자리를 새 PIN으로 등록합니다. 스탬프·신청 기록은 그대로입니다. 운영 로그에 남습니다.</p></div>';
   h+='<div class="card soft"><h2>부문별 가입</h2><div class="row">'+Object.keys(byDept).sort(function(a,b){return byDept[b]-byDept[a];}).map(function(d){ return '<span class="pill">'+esc(d)+' <b class="n">'+byDept[d]+'</b></span>'; }).join("")+'</div></div>';
   return h;
+}
+/* PIN 초기화 · acct_pwreset. 서버는 행을 남기고 비번해시만 비운다. 다음 로그인의 4자리가 새 PIN 이 된다. */
+function pwReset(btn){
+  var emp=btn.getAttribute("data-emp")||"", name=btn.getAttribute("data-name")||"";
+  dialog({ t:"PIN을 초기화할까요?",
+    s:"지금 PIN은 지워지고, <b>본인이 앱에서 다음에 입력하는 4자리가 새 PIN</b>으로 등록됩니다. 스탬프·신청 기록은 그대로이고, 운영 로그에 남습니다.",
+    who:esc(name)+'<span>사번 '+esc(emp)+'</span>', ok:"초기화",
+    onOk:function(){
+      call("acct_pwreset",{emp:emp},function(r){
+        if(r&&r.ok){
+          load();
+          el("dlgOk").disabled=false;
+          dialog({ t:"초기화했습니다", who:esc(r.name||name)+'<span>사번 '+esc(r.emp||emp)+'</span>', ok:"확인했습니다",
+            s:"본인에게 이렇게 안내해 주세요. <b>「앱에서 사번·이름을 넣고 새 PIN 4자리를 입력하면 그 번호로 다시 등록됩니다」</b><br>초기화 직후에는 사번·이름만으로 새 PIN을 정할 수 있으니, 본인이 바로 입장하도록 해 주세요."+(r.already?'<br><span class="src">이미 초기화 상태였습니다.</span>':"") });
+        } else { el("dlgOk").disabled=false; dlgClose(); toast("실패: "+(r&&r.reason==="notfound"?"계정에 없는 사번입니다":(r&&r.reason)||"")); }
+      },function(){ el("dlgOk").disabled=false; dlgClose(); toast("서버 응답 없음"); });
+    }});
 }
 
 /* ══════════════════ 6. 스탬프 ══════════════════ */
