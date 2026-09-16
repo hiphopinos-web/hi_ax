@@ -792,7 +792,9 @@ var TIMELINE = [
   { time: "09:30", end: "09:40", title: "Intro · 개회", short: "CEO 개회 안내로 하루가 열립니다", place: "17F 대강당", desc: "CEO · 2026 AX Festival 행사 개회 안내.", tag: "전직원" },
   { time: "09:40", end: "11:20", title: "Keynote", short: "CTO 키노트 · 파트가 끝날 때마다 라이브 퀴즈가 열립니다", place: "17F 대강당", desc: "CTO · 「데이터 비즈니스 컴퍼니로서의 현대해상과 AX」. ⓪AX란 무엇인가 → ①걱정에 먼저 답하기 → ②당사 AX 로드맵 → ③현업의 노력(DAP). 파트가 끝날 때마다 라이브 퀴즈!", tag: "전직원" },
   { time: "11:20", end: "13:10", title: "점심 · 자유 관람", short: "1F 전시 3분 코스로 스탬프를 채워보세요", place: "1F 전시 상시", desc: "점심 시간과 자유 관람. 1F 전시 3분 코스로 스탬프를 채워보세요.", tag: "휴식" },
-  { time: "13:00", end: "16:30", title: "AX 커피챗", short: "아이디어를 낸 분들을 30분 간격으로 매칭합니다", place: "18F 라운지", desc: "아이디어 제출자 매칭 · 30분 간격 × 2테이블. 매칭되면 앱 알림으로 자리·시간을 알려드려요.", tag: "매칭제" },
+  /* always=1 (v3.18): 기간이 길어서가 아니라 「그 시간 안에 아무 때나 들르는」 참여 방식이라 상시 묶음.
+     10F 오후 세션(내내 참석)·점심(시간대 구분 역할)은 시간표 유지 */
+  { time: "13:00", end: "16:30", title: "AX 커피챗", short: "아이디어를 낸 분들을 30분 간격으로 매칭합니다", place: "18F 라운지", desc: "아이디어 제출자 매칭 · 30분 간격 × 2테이블. 매칭되면 앱 알림으로 자리·시간을 알려드려요.", tag: "매칭제", always: 1 },
   { time: "13:10", end: "14:40", title: "강연1 · AI Agentic 시대의 일하는 방식 변화", short: "구태훈 박사(AWS) · 오후 메인 강연", place: "17F 대강당", desc: "구태훈 박사(AWS) · AI Agent가 바꾸는 일하는 방식. 사전 지식 없이 편하게 들을 수 있는 오후 메인 강연.", tag: "전직원" },
   { time: "13:10", end: "16:30", title: "10F 오후 세션", short: "Track A·B 실습 · 바이브코딩 · 현장 프로그램 · 신청제", place: "10F Heart · 컨퍼런스룸", desc: "통계·리서치 자동화 실습(Track A·B) · 바이브코딩 실습(AWS) · 현장 프로그램(사내강사 세션+실습). 프로그램 탭에서 잔여석 확인 후 신청하세요.", tag: "신청제" },
   { time: "15:00", end: "16:30", title: "강연2 · 확정 시 공지", short: "내용이 확정되면 앱으로 안내드립니다", place: "17F 대강당", desc: "강연 내용이 확정되는 대로 이 자리에서 안내드립니다.", tag: "전직원" },
@@ -2614,7 +2616,9 @@ function nowCardHtml() {
       '<div class="next"><span class="lb">보상</span><span class="nm">스탬프 경품 · 추첨 결과는 개별 안내</span><span class="arw">›</span></div></div>';
   }
   var now = TIMELINE[NOW_INDEX];
-  var nx = TIMELINE[NOW_INDEX + 1];
+  /* 다음 일정에서 상시 항목(always)은 건너뛴다 (v3.18) */
+  var nx = null;
+  for (var xi = NOW_INDEX + 1; xi < TIMELINE.length; xi++) if (!TIMELINE[xi].always) { nx = TIMELINE[xi]; break; }
   return '<div class="hero" onclick="App.go(\'guide_time\')">' + kv +
     '<div class="eb"><span class="live"><i></i>지금 진행 중</span><span class="tm">' + now.time + " – " + now.end + "</span></div>" +
     '<p class="ttl">' + esc(now.title) + '</p><p class="pl">' + esc(now.place) + "</p>" +
@@ -3044,15 +3048,23 @@ var Views = {
      시간순 병합: 같은 시각이면 전체 일정 다음에 내 항목 · 대기열(시간 없음)은 「지금」으로 맨 위. ═══ */
   guide_time: function () {
     var rows = [];   /* [분, 정렬보조(전체 0 · 내 것 1), 내것 여부, html] */
+    var alwaysRows = [];   /* v3.18 상시 = 그 시간 안에 아무 때나 들르는 것 · 타임라인 아래 별도 묶음 */
     /* v3.6 상태 위계: 지나간 행 = 회색 · 진행 중 = 검정 · 기준은 evPhase(데모·당일 모두 NOW_INDEX 포인터) */
     var ph = evPhase();
     TIMELINE.forEach(function (t, i) {
+      var body = '<p class="pl">' + esc(t.place) + '</p><p class="ds">' + esc(t.desc) + "</p>";
+      if (t.always) {
+        /* 상시 행에는 진행 중 검정 강조를 쓰지 않는다(오후 내내 검정이면 화면당 검정 1곳 원칙과 충돌) */
+        var pastA = ph === "after";
+        alwaysRows.push(schedRow("t" + i, pastA ? " past" : "", pastA ? "dim" : "", t.time, t.end,
+          esc(t.title) + ' <span class="badge gray">' + t.tag + "</span>", body));
+        return;
+      }
       var now = ph === "live" && i === NOW_INDEX;
       var past = ph === "after" || (ph === "live" && i < NOW_INDEX);
       var badges = ' <span class="badge ' + (now ? "mint" : "gray") + '">' + t.tag + "</span>" + (now ? ' <span class="badge ink">진행 중</span>' : "");
       rows.push([t2m(t.time), 0, false,
-        schedRow("t" + i, now ? " now" : past ? " past" : "", now ? "act" : past ? "dim" : "", t.time, t.end, esc(t.title) + badges,
-          '<p class="pl">' + esc(t.place) + '</p><p class="ds">' + esc(t.desc) + "</p>")]);
+        schedRow("t" + i, now ? " now" : past ? " past" : "", now ? "act" : past ? "dim" : "", t.time, t.end, esc(t.title) + badges, body)]);
     });
     /* 내 일정 수집 · 홈 「나의 스케줄」과 같은 규칙 (대기열 → 상담 → 커피챗 → 신청 세션) */
     var my = [];   /* [분, 시각 라벨, 제목, 상세, onclick] */
@@ -3085,10 +3097,14 @@ var Views = {
       '<button class="' + (SCHED.mine ? "" : "on") + '" onclick="schedMine(false)">전체 일정</button>' +
       '<button class="' + (SCHED.mine ? "on" : "") + '" onclick="schedMine(true)">내 일정 ' + my.length + "건</button></div>";
     var shown = SCHED.mine ? rows.filter(function (r) { return r[2]; }) : rows;
+    /* 상시 그룹은 전체 보기에만 · 내 일정 필터에는 표시하지 않는다 (v3.18) */
+    var alwaysHtml = (!SCHED.mine && alwaysRows.length)
+      ? '<p class="scap" style="margin-top:16px">상시 프로그램 · 시간 안에 아무 때나</p><div class="tlist">' + alwaysRows.join("") + "</div>"
+      : "";
     if (!shown.length) {
-      return seg + '<div class="card soft" style="text-align:center"><p class="muted">아직 신청·배정된 일정이 없어요.<br>프로그램 탭에서 신청하면 여기에 모입니다.</p></div>';
+      return seg + '<div class="card soft" style="text-align:center"><p class="muted">아직 신청·배정된 일정이 없어요.<br>프로그램 탭에서 신청하면 여기에 모입니다.</p></div>' + alwaysHtml;
     }
-    return seg + '<div class="tlist">' + shown.map(function (r) { return r[3]; }).join("") + "</div>";
+    return seg + '<div class="tlist">' + shown.map(function (r) { return r[3]; }).join("") + "</div>" + alwaysHtml;
   },
 
   /* ═══ 프로그램 상세 · 소개 영상 · 잔여석 · 신청 ═══ */
