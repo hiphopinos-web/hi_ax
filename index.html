@@ -3679,8 +3679,9 @@ var AdminTabs = {
       NOTICE_TEMPLATES.map(function (t, i) {
         return '<div class="card soft mb8" style="cursor:pointer" onclick="sendTemplate(' + i + ')"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">' + esc(t[0]) + '</b><p class="muted" style="margin-top:2px;font-size:calc(14.5px * var(--fs))">' + esc(t[1]) + "</p></div>";
       }).join("") +
-      (notices.length ? '<p class="sub-label">발송 내역</p>' + notices.map(function (n) {
-        return '<div class="card soft mb8"><div class="row" style="justify-content:space-between"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">' + esc(n.title) + '</b><button class="tag-btn" style="color:#e11d48" onclick="delNotice(\'' + n.id + '\')">삭제</button></div><p style="font-size:calc(12.5px * var(--fs));color:var(--faint)">' + fmtTime(n.ts) + "</p></div>";
+      (notices.length ? '<p class="sub-label">발송 내역 · 최신 1건이 서버에서 전 기기로 송출됩니다</p>' + notices.map(function (n, i) {
+        /* v3.14 공지 중지: 로컬 삭제만으로는 sync 가 같은 공지를 되살렸다(운영 테스트 버그) → 서버 notice_clear 호출 */
+        return '<div class="card soft mb8"><div class="row" style="justify-content:space-between"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">' + esc(n.title) + (i === 0 ? ' <span class="badge ink">송출 중</span>' : "") + '</b><button class="tag-btn" style="color:#e11d48" onclick="noticeStop(\'' + n.id + '\')">공지 중지</button></div><p style="font-size:calc(12.5px * var(--fs));color:var(--faint)">' + fmtTime(n.ts) + "</p></div>";
       }).join("") : "");
   },
   ideas: function () {
@@ -3843,7 +3844,15 @@ function beSync() {
         }
       }
     }
-    if (res.notice && res.notice.id) {
+    /* v3.14 공지 중지: 서버가 내려준 중지 id 는 로컬에서도 지운다(LED 띠·뱃지·목록·팝업이 자연 소멸).
+       중지 목록에 든 공지는 다시 추가하지 않는다 · notice 가 null 이면 신규 추가 없음 */
+    var nOff = res.noticeOff || [];
+    if (nOff.length) {
+      var nz0 = S.get("notices", []);
+      var kept = nz0.filter(function (x) { return nOff.indexOf(x.id) < 0; });
+      if (kept.length !== nz0.length) S.set("notices", kept);
+    }
+    if (res.notice && res.notice.id && nOff.indexOf(res.notice.id) < 0) {
       var nz = S.get("notices", []);
       if (!nz.some(function (x) { return x.id === res.notice.id; })) {
         nz.unshift({ id: res.notice.id, title: res.notice.title || "", body: res.notice.body || "", ts: res.notice.ts || Date.now() });
@@ -4528,7 +4537,14 @@ function endSession(i) {
   adminNotice("엘리베이터 혼잡 안내", name + " 교육이 방금 종료되었습니다. 엘리베이터가 혼잡할 수 있으니 양해 바랍니다.");
   toast("종료 안내 발송. " + name);
 }
-function delNotice(id) { S.set("notices", S.get("notices", []).filter(function (n) { return n.id !== id; })); }
+/* v3.14 공지 중지 · 서버 notice_clear (관리코드) → sync noticeOff 로 전 기기 로컬에서도 소멸. BE 꺼진 데모는 로컬 삭제 폴백 */
+function noticeStop(id) {
+  S.set("notices", S.get("notices", []).filter(function (n) { return n.id !== id; }));
+  if (!BE.on) { toast("공지를 삭제했어요 (데모 · 이 기기만)"); return; }
+  beCall({ action: "notice_clear", key: admKey(), id: id },
+    function (res) { toast(res && res.ok ? "공지 중지 · 다음 동기화 때 전 기기에서 사라집니다" : "중지 실패 · 관리코드를 확인하세요"); },
+    function () { toast("서버 연결 실패 · 다시 시도해주세요"); });
+}
 function toggleIdea(id) { S.set("ideas", S.get("ideas", []).map(function (i) { return i.id === id ? Object.assign({}, i, { hidden: !i.hidden }) : i; })); }
 function exportIdeas() {
   var rows = S.get("ideas", []).map(function (i) {
