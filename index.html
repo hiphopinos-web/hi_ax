@@ -265,9 +265,13 @@
   .scard .ico svg { width: 22px; height: 22px; display: block; }
   .scard.done .ico { background: var(--tint2); border-color: var(--mint); color: var(--acc2); }
   .scard.next .ico { border-color: var(--mint); color: var(--acc2); animation: trailPulse 2.2s ease-in-out infinite; }
-  .scard .ico .ck { position: absolute; right: -3px; bottom: -3px; width: 17px; height: 17px; border-radius: 50%; background: var(--mint); color: #fff; font-size: 10.5px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
-  .scard .ico .ring { position: absolute; inset: -5px; border: 2.5px solid var(--mint); border-radius: 50%; pointer-events: none; animation: trailRing 0.8s ease-out 0.2s both; }
-  .scard.punch .ico svg { animation: trailPunch 0.62s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  /* v3.8 완료 도장 · 우측에 기울어진 고무도장(이중 테두리 라운드 사각 + 「완료」) · 체크 표시 대체.
+     잉크 질감 필터는 저사양 기기 부담으로 생략(형태·기울기·이중 테두리로 도장성을 만든다) */
+  .scard .stampmk { position: relative; flex: none; padding: 5px 10px 4px; border: 2px solid var(--acc2); border-radius: 8px; color: var(--acc2); font-size: calc(14.5px * var(--fs)); font-weight: 900; letter-spacing: 0.1em; line-height: 1.2; transform: rotate(-12deg); }
+  .scard .stampmk::before { content: ""; position: absolute; inset: 2px; border: 1px solid var(--acc2); border-radius: 5px; opacity: 0.55; pointer-events: none; }
+  .scard .stampmk .ring { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border: 2.5px solid var(--mint); border-radius: 999px; pointer-events: none; animation: trailRing 0.8s ease-out 0.3s both; }
+  .scard.punch .stampmk { animation: stampPunch 0.62s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  @keyframes stampPunch { 0% { transform: scale(2.2) rotate(4deg) translateY(-6px); opacity: 0; } 45% { opacity: 1; } 72% { transform: scale(0.94) rotate(-14deg) translateY(0); } 100% { transform: scale(1) rotate(-12deg); } }
   .scard .bd { flex: 1; min-width: 0; }
   .scard .bd .no { display: block; font-family: var(--disp); font-size: calc(11.5px * var(--fs)); font-weight: 700; color: var(--faint); letter-spacing: 0.06em; }
   .scard.done .bd .no, .scard.next .bd .no { color: var(--acc2); }
@@ -731,12 +735,12 @@ var FESTIVAL = {
    층별 안내(progOpenFl) 폐기로 p1은 QR 스캔, p3은 강연 신청 리스트가 목적지다.
    v3.1: p4는 카드 안에서 AX 링크·초성퀴즈·다시 풀기 3버튼을 직접 그린다(stampInnerHtml 특례). */
 var STAMPS = [
-  { id: "p1", no: "01", title: "1F 전시", short: "1F 전시", desc: "1F 전시존 QR 스캔", how: "현장 QR", where: "1F · 약 5분", site: 1, tap: "qrScanOpen()", cta: "QR 스캔", note: "1F 전시존 끝 QR 입간판을 스캔하세요." },
-  { id: "p2", no: "02", title: "AX Now! 체험", short: "부스 체험", desc: "HiDI-Q 또는 HI-Helper 부스 1곳 체험", how: "현장 QR", where: "1F · 약 5분", site: 1, tap: "App.go('booth')", cta: "부스 안내 보기", note: "체험을 마치면 스태프가 보여주는 완료 QR을 스캔합니다." },
-  { id: "p3", no: "03", title: "17F 강의", short: "17F 강의", desc: "17F 오후 강의 1회 참석 (10F 제외)", how: "현장 QR", where: "17F · 90분", site: 1, tap: "progGoFl(17)", cta: "강연 신청하러 가기", note: "17F 대강당 강연은 프로그램 탭에서 신청합니다. 입장 시 좌석 QR을 스캔하세요." },
-  { id: "p4", no: "04", title: "라이브 챌린지", short: "라이브 챌린지", desc: "키노트 라이브 퀴즈 응답 또는 미니게임(AX 링크·초성퀴즈) 1개 클리어", how: "앱 자동", where: "앱 · 30초", inapp: 1 },
-  { id: "p5", no: "05", title: "아이디어 한 줄", short: "아이디어", desc: "아이디어 1건 제출", how: "앱 자동", where: "앱 · 1분", inapp: 1, tap: "App.go('ideas')", cta: "아이디어 쓰기" },
-  { id: "p7", no: "06", title: "전시 QR 퀴즈", short: "QR 퀴즈", desc: "DAP Wall QR 퀴즈 1세트 통과 (60점 이상)", how: "앱 자동", where: "1F DAP Wall · 약 10분", tap: "App.go('wq_list')", cta: "QR 퀴즈 풀기" }
+  { id: "p1", title: "1F 전시", short: "1F 전시", desc: "1F 전시존 QR 스캔", how: "현장 QR", where: "1F · 약 5분", site: 1, tap: "qrScanOpen()", cta: "QR 스캔", note: "1F 전시존 끝 QR 입간판을 스캔하세요." },
+  { id: "p2", title: "AX Now! 체험", short: "부스 체험", desc: "HiDI-Q 또는 HI-Helper 부스 1곳 체험", how: "현장 QR", where: "1F · 약 5분", site: 1, tap: "App.go('booth')", cta: "부스 안내 보기", note: "체험을 마치면 스태프가 보여주는 완료 QR을 스캔합니다." },
+  { id: "p3", title: "17F 강의", short: "17F 강의", desc: "17F 오후 강의 1회 참석 (10F 제외)", how: "현장 QR", where: "17F · 90분", site: 1, tap: "progGoFl(17)", cta: "강연 신청하러 가기", note: "17F 대강당 강연은 프로그램 탭에서 신청합니다. 입장 시 좌석 QR을 스캔하세요." },
+  { id: "p4", title: "라이브 챌린지", short: "라이브 챌린지", desc: "키노트 라이브 퀴즈 응답 또는 미니게임(AX 링크·초성퀴즈) 1개 클리어", how: "앱 자동", where: "앱 · 30초", inapp: 1 },
+  { id: "p5", title: "아이디어 한 줄", short: "아이디어", desc: "아이디어 1건 제출", how: "앱 자동", where: "앱 · 1분", inapp: 1, tap: "App.go('ideas')", cta: "아이디어 쓰기" },
+  { id: "p7", title: "전시 QR 퀴즈", short: "QR 퀴즈", desc: "DAP Wall QR 퀴즈 1세트 통과 (60점 이상)", how: "앱 자동", where: "1F DAP Wall · 약 10분", tap: "App.go('wq_list')", cta: "QR 퀴즈 풀기" }
 ];
 /* 스탬프 픽토그램 · 탭 아이콘과 같은 기하 라인(stroke=currentColor) · 이모지 금지 원칙 유지 */
 var SICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">';
@@ -1275,7 +1279,7 @@ function awardStamp(id) {
   if (st.indexOf(id) >= 0) return;
   st.push(id); S.set("stamps", st);
   var sd = STAMPS.find(function (s) { return s.id === id; });
-  toast("PASSPORT " + (sd ? sd.no : "") + " 적립 · " + (sd ? sd.title : id) + " · 스탬프 " + stampCount() + "개");
+  toast("스탬프 적립 · " + (sd ? sd.title : id) + " · 스탬프 " + stampCount() + "개");
   bePush("stamp:" + id, sd ? sd.title : id, true);
   checkRewards();
 }
@@ -2350,7 +2354,7 @@ function quizCardHtml() {
   var quiz = QUIZZES.find(function (q) { return q.id === st.activeId; });
   if (!quiz || st.phase === "idle") {
     return '<div class="quiz-wait"><p style="font-size:calc(15.5px * var(--fs));font-weight:800;color:var(--hi)">LIVE QUIZ 대기 중</p>' +
-      '<p class="muted" style="margin-top:5px">키노트 파트가 끝날 때마다 여기에 퀴즈가 열립니다.<br>놓쳐도 스탬프 탭 04 카드에서 다시 풀 수 있어요.</p></div>';
+      '<p class="muted" style="margin-top:5px">키노트 파트가 끝날 때마다 여기에 퀴즈가 열립니다.<br>놓쳐도 스탬프 탭 「라이브 챌린지」 카드에서 다시 풀 수 있어요.</p></div>';
   }
   var answers = S.get("quiz_answers", {});
   var my = answers[quiz.id];
@@ -2374,7 +2378,7 @@ function quizCardHtml() {
         '<div class="lbl"><span>' + (isAns ? "◈ " : "") + esc(o) + (isMine ? " · 내 선택" : "") + "</span><b>" + quiz.mockDist[i] + "%</b></div></div>";
     }).join("");
     h += '<div class="info">' + (my ? (my.correct ? "정답! 패스포트 「라이브 챌린지」 칸이 적립됐어요." : "아쉽지만 오답. 결과는 나만 볼 수 있으니 걱정 마세요.") :
-      "이번 퀴즈를 놓쳤어도 스탬프 탭 04 카드에서 참여할 수 있어요.") + " · " + esc(quiz.explain) + "</div>";
+      "이번 퀴즈를 놓쳤어도 스탬프 탭 「라이브 챌린지」 카드에서 참여할 수 있어요.") + " · " + esc(quiz.explain) + "</div>";
   }
   return h + "</div>";
 }
@@ -2538,7 +2542,7 @@ function flListHtml(n) {
     acts.map(function (a) {
       var sd = a.sid ? STAMPS.filter(function (x) { return x.id === a.sid; })[0] : null;
       var tap = a.sid ? "ppGoCard('" + a.sid + "')" : a.tap || "";
-      var badge = sd ? '<span class="badge mint">스탬프 ' + sd.no + "</span>" : a.tag ? '<span class="badge mint">' + a.tag + "</span>" : "";
+      var badge = sd ? '<span class="badge mint">스탬프</span>' : a.tag ? '<span class="badge mint">' + a.tag + "</span>" : "";
       return '<div class="orow"' + (tap ? ' onclick="' + tap + '" style="cursor:pointer"' : "") + ">" +
         '<span class="bd"><b>' + a.nm + '</b><small>' + a.d + "</small></span>" + badge +
         (tap ? '<span class="arw">›</span>' : "") + "</div>";
@@ -2744,14 +2748,14 @@ function stampInnerHtml(s) {
 function scardHtml(s, got, isNext, newly) {
   var open = !!PP.open[s.id];
   var isNew = newly.indexOf(s.id) >= 0;
+  /* v3.8: 번호 표시 삭제(순서 개념 없음) · 완료 = 우측 「완료」 고무도장 (체크 대체 · 펀치 애니는 도장에서 재생) */
   return '<div class="scard' + (got ? " done" : "") + (isNext ? " next" : "") + (isNew ? " punch" : "") + '">' +
     '<div class="shead" onclick="ppToggle(\'' + s.id + '\')">' +
-    '<span class="ico">' + STAMP_ICONS[s.id] +
-    (got ? '<span class="ck">✓</span>' : "") +
-    (isNew ? '<span class="ring"></span>' : "") + "</span>" +
-    '<span class="bd"><span class="no">' + s.no + (got ? " · 완료" : isNext ? " · 다음 추천" : "") + "</span>" +
+    '<span class="ico">' + STAMP_ICONS[s.id] + "</span>" +
+    '<span class="bd">' + (isNext ? '<span class="no">다음 추천</span>' : "") +
     '<span class="tt">' + s.title + '</span>' +
     '<span class="wh">' + s.where + "</span></span>" +
+    (got ? '<span class="stampmk">완료' + (isNew ? '<span class="ring"></span>' : "") + "</span>" : "") +
     '<span class="chev">' + (open ? "▲" : "▼") + "</span></div>" +
     (open ? stampInnerHtml(s) : "") + "</div>";
 }
@@ -3087,7 +3091,7 @@ var Views = {
     var replayable = QUIZZES.filter(function (q) { return st.finishedIds.indexOf(q.id) >= 0 && !answers[q.id]; });
     if (!replayable.length) return '<div class="card soft" style="text-align:center"><p class="muted">지금 다시 풀 수 있는 퀴즈가 없어요.<br>라이브 퀴즈가 끝나면 여기로 옵니다.</p></div>';
     return replayable.map(function (q) {
-      return '<div class="card soft mb8"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">Replay · ' + esc(q.part) + '</b><p class="muted" style="font-size:calc(13.5px * var(--fs));margin-top:2px">정답 시 스탬프 04 「라이브 챌린지」 적립</p>' +
+      return '<div class="card soft mb8"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">Replay · ' + esc(q.part) + '</b><p class="muted" style="font-size:calc(13.5px * var(--fs));margin-top:2px">정답 시 「라이브 챌린지」 스탬프 적립</p>' +
         '<p style="margin-top:10px;font-size:calc(15.5px * var(--fs));font-weight:700">' + esc(q.question) + "</p>" +
         q.options.map(function (o, i) {
           return '<button class="input" style="text-align:left;margin-top:6px;cursor:pointer" onclick="replayQuiz(\'' + q.id + "'," + i + ')">' + (i + 1) + ". " + esc(o) + "</button>";
@@ -3166,7 +3170,7 @@ var Views = {
     return '' +
       '<div class="card mb12" style="background:var(--ink)"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.1em;color:var(--mint)">AX NOW! · 1F 부스 2종</p>' +
       '<p style="margin-top:6px;font-size:calc(19px * var(--fs));font-weight:800;color:#fff;line-height:1.4">설명이 아닌,<br>체험으로 증명합니다</p>' +
-      '<p class="muted" style="margin-top:6px;font-size:calc(14.5px * var(--fs))">부스 1곳만 체험해도 패스포트 02가 채워져요.</p></div>' +
+      '<p class="muted" style="margin-top:6px;font-size:calc(14.5px * var(--fs))">부스 1곳만 체험해도 「AX Now! 체험」 스탬프가 채워져요.</p></div>' +
       '<div class="card mb8"><div class="row" style="justify-content:space-between"><b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">① HI-Helper</b><span class="badge blue">10.1 OPEN</span></div>' +
       '<p class="muted" style="margin-top:4px;font-size:calc(14.5px * var(--fs))">보험 설계를 돕는 LLM 비서</p>' +
       '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));line-height:1.8;color:var(--tx)">STEP 1 · 내 보험 설계해보기 (상품 증정)<br>STEP 2 · HiDI-Helper 시연·체험<br>STEP 3 · 피드백 + 체험 완료 스탬프</p></div>' +
@@ -3174,7 +3178,7 @@ var Views = {
       '<p class="muted" style="margin-top:4px;font-size:calc(14.5px * var(--fs))">업무 문서 AI 비서 · 5분 3-STEP · 문서 3개, 질문 3개로 확인</p>' +
       '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));line-height:1.8;color:var(--tx)">STEP 1 · 부서 키트 + 질문 셋 수령 (1분)<br>STEP 2 · 업로드 → 질의응답 → 초안 생성 (5분)<br>STEP 3 · 2027 로드맵 확인 + Passport 발급</p>' +
       '<p style="margin-top:6px;font-size:calc(12.5px * var(--fs));color:var(--faint)">&ldquo;초안까지는 AI, 판단은 담당자&rdquo; · 세션 종료 시 자료 삭제</p></div>' +
-      '<div class="card mb12" style="border-color:var(--mint-deep)"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">체험 완료 스탬프 (PASSPORT 02)</b>' +
+      '<div class="card mb12" style="border-color:var(--mint-deep)"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">체험 완료 스탬프</b>' +
       '<p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">체험을 마치면 스태프가 완료 QR을 보여드려요. 스캔하면 적립됩니다.</p>' +
       '<button class="btn' + (got2 ? " gray" : " mint") + '" style="margin-top:10px" onclick="boothStamp()">' + (got2 ? "적립 완료 ✔" : "완료 QR 스캔 (시연)") + "</button></div>" +
       '<div class="card mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">30초 피드백</b><p class="muted" style="margin-top:3px;font-size:calc(13.5px * var(--fs))">2문항 · 서비스 개선 우선순위에 바로 반영돼요.' + (fb.length ? " (제출 " + fb.length + "건)" : "") + "</p>" +
@@ -3232,7 +3236,7 @@ var Views = {
       '<p style="margin-top:9px;font-size:calc(12.5px * var(--fs));color:var(--faint);line-height:1.55">지금 문제를 풀면 우리 부문 점수가 올라갑니다. 1F Special Wall 화면과 같은 집계예요.</p></div>';
     return deptCard + setCards + rankCard +
       '<div class="card soft mt16"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">참여 방법</b>' +
-      '<p class="muted" style="margin-top:6px;font-size:calc(14.5px * var(--fs));line-height:1.8">① 1F DAP Wall·Special Wall의 QR 발견 → ② 스캔하면 5문항 오픈 → ③ 정답은 벽 전시 안에서 탐색 → ④ 평균 <b style="color:var(--hi)">' + pass + '점 이상</b>이면 패스포트 스탬프 06 「전시 QR 퀴즈」 적립!</p>' +
+      '<p class="muted" style="margin-top:6px;font-size:calc(14.5px * var(--fs));line-height:1.8">① 1F DAP Wall·Special Wall의 QR 발견 → ② 스캔하면 5문항 오픈 → ③ 정답은 벽 전시 안에서 탐색 → ④ 평균 <b style="color:var(--hi)">' + pass + '점 이상</b>이면 「전시 QR 퀴즈」 스탬프 적립!</p>' +
       '<p class="muted" style="margin-top:6px;font-size:calc(13.5px * var(--fs))">' + pass + '점 미만은 <b>무제한 재응시</b> (문항·보기 순서가 바뀌어요) · 키노트 라이브 퀴즈와는 별개예요. 테스트 버전은 QR 없이 세트를 바로 열 수 있습니다.</p></div>';
   },
 
@@ -3247,7 +3251,7 @@ var Views = {
         '<p class="disp" style="font-size:44px;margin-top:6px;color:' + (r.passed ? "var(--mint)" : "#FF6B61") + '">' + r.score + '점</p>' +
         '<p class="hint">' + (r.passed ? "통과! (" + r.correct + "/" + WQ.qs.length + " 정답 · 커트라인 " + wqPassScore() + "점)" :
           r.correct + "/" + WQ.qs.length + " 정답 · 커트라인 " + wqPassScore() + "점. 정답은 전부 1F 벽에 있어요. 다시 도전!") + "</p></div>" +
-        (r.passed ? '<div class="card mb8" style="border-color:var(--mint-deep)"><p style="font-size:calc(14.5px * var(--fs));color:var(--tx)">패스포트 스탬프 06 「전시 QR 퀴즈」 적립 완료 · 지금 <b style="color:var(--hi)">스탬프 ' + stampCount() + '개</b>예요.</p></div>' : "") +
+        (r.passed ? '<div class="card mb8" style="border-color:var(--mint-deep)"><p style="font-size:calc(14.5px * var(--fs));color:var(--tx)">「전시 QR 퀴즈」 스탬프 적립 완료 · 지금 <b style="color:var(--hi)">스탬프 ' + stampCount() + '개</b>예요.</p></div>' : "") +
         '<button class="btn mint mb8" style="padding:15px" onclick="wqRetry(\'' + WQ.set + '\')">' + (r.passed ? "한 번 더 (기록 갱신)" : "재응시 · 순서 셔플") + "</button>" +
         '<button class="btn line" onclick="App.go(\'wq_list\')">세트 목록으로</button>';
     }
@@ -4383,7 +4387,7 @@ function staffStampOpen() {
     /* .btn line = 전역 클래스. 설정 시트 전용 스코프 클래스(.fs-admin)는 여기서 스타일이 빠진다 */
     return '<button class="btn line" style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:10px' +
       (done ? ";opacity:0.45" : "") + '"' + (done ? " disabled" : ' onclick="staffStampGive(\'' + s.id + '\')"') + ">" +
-      "<span>" + s.no + " · " + s.title + "</span>" +
+      "<span>" + s.title + "</span>" +
       '<span style="font-weight:800;color:' + (done ? "var(--faint)" : "var(--acc2)") + '">' + (done ? "적립 완료" : "적립 ›") + "</span></button>";
   }).join("");
   modalOpen('<b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">담당자 적립</b>' +
