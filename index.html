@@ -258,6 +258,21 @@
   .scard .tcard .nt { margin-top: 6px; font-size: calc(12.5px * var(--fs)); font-weight: 700; color: var(--acc2); line-height: 1.55; }
   .scard .tcard .btn { margin: 0; padding: 11px; }
   .scard .tcard .lnk { margin-top: 9px; font-size: calc(12.5px * var(--fs)); font-weight: 800; color: var(--acc2); cursor: pointer; }
+  /* ── 프로그램 탭 층 아코디언 (v3.4) · scard 문법 재사용 · 층 안 = 신청형 행(무겁게) + 상시형 행(얇게) ── */
+  .scard .ico.flno { font-family: var(--disp); font-size: 14.5px; font-weight: 700; color: var(--acc2); border-color: var(--tint2); }
+  .srow { background: var(--white); border-radius: 14px; padding: 11px 13px; margin-top: 8px; }
+  .srow .rh { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .srow .tm { flex: none; font-family: var(--disp); font-size: calc(14.5px * var(--fs)); color: var(--hi); }
+  .srow .tt { flex: 1; min-width: 0; font-size: calc(14.5px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.35; }
+  .srow .st { flex: none; font-size: calc(12.5px * var(--fs)); font-weight: 800; color: var(--acc2); }
+  .srow .chev { flex: none; color: var(--faint); font-weight: 800; font-size: 11px; }
+  .srow .tcard { background: var(--card); }
+  .srow .sq { font-size: calc(13px * var(--fs)); font-weight: 700; color: var(--muted); line-height: 1.55; }
+  .orow { display: flex; align-items: center; gap: 10px; background: var(--white); border-radius: 12px; padding: 9px 13px; margin-top: 6px; }
+  .orow .bd { flex: 1; min-width: 0; }
+  .orow .bd b { display: block; font-size: calc(13.5px * var(--fs)); font-weight: 800; color: var(--hi); }
+  .orow .bd small { display: block; margin-top: 1px; font-size: calc(12px * var(--fs)); font-weight: 700; color: var(--faint); }
+  .orow .arw { flex: none; color: var(--faint); font-weight: 800; }
   @keyframes trailPunch { 0% { transform: scale(2.2) rotate(-9deg); opacity: 0; } 45% { opacity: 1; } 72% { transform: scale(0.94) rotate(1.5deg); } 100% { transform: scale(1) rotate(0deg); } }
   @keyframes trailRing { 0% { transform: scale(0.55); opacity: 0.9; } 100% { transform: scale(2); opacity: 0; } }
   @keyframes trailPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,126,49,0.32); } 50% { box-shadow: 0 0 0 7px rgba(255,126,49,0); } }
@@ -773,7 +788,28 @@ var LEC_MEDIA = { key: "assets/lec_key.html", l1: "assets/lec_l1.html", ta: "ass
 /* v47: 층별 안내(PROG_FL 존 목록·동선 영상) 전면 삭제 · 안내는 타임라인과 현장 사이니지가 맡는다.
    프로그램 상세의 위치 표기용 존 이름만 남긴다. */
 var ZONE_NM = { hall: "대강당", heart18: "Heart 1 · 7~8", heart56: "Heart 5 · 6", conf: "컨퍼런스룸", promo: "포토부스 · 홍보존", lounge: "라운지", dap: "DAP ZONE" };
-var PROG = { sid: null, slot: null };
+/* ═══ 프로그램 탭 = 층별 아코디언 (v3.4) · 공간축은 프로그램 탭, 시간축은 일정 탭 ═══
+   FL_OPEN = 층별 상시 활동. 참가자가 가서 「하는 것」만 · 존 설명·시설·동선·운영 정보는 넣지 않는다(v3.0 삭제 유지).
+   스탬프가 걸린 활동은 sid 로 스탬프 탭 해당 카드에 위임한다(적립 UI 중복 구현 금지). */
+var FLTAG = { 1: "전시·체험·상담", 10: "실습 강의", 17: "키노트·강연", 18: "커피챗·라운지" };
+var FL_OPEN = {
+  1: [
+    { nm: "1F 전시", d: "AX Wall 관람 · 약 5분", sid: "p1" },
+    { nm: "AX Now! 부스", d: "HI-Helper · HIDI-Q 체험", sid: "p2" },
+    { nm: "DAP Wall QR 퀴즈", d: "5문항 · 60점 이상 통과", sid: "p7" },
+    { nm: "이벤트존 룰렛", d: "스탬프 3개 · 1인 1회", tap: "ppRouletteOpen()", tag: "보상" },
+    { nm: "우리 부문 우선 관람", d: "이벤트존 시간표 보기", tap: "App.go('guide_slots')" }
+  ],
+  10: [
+    { nm: "챔피언십 리더보드", d: "AX 프롬프트 챔피언십 현장 점수", tap: "App.go('ev_rank')" }
+  ],
+  17: [],
+  18: [
+    { nm: "커피 나눔 바", d: "선착순 500잔 · 11:30~16:30 (키노트 중 미운영)" },
+    { nm: "폴라로이드 포토스팟", d: "옥외 정원 · 상시" }
+  ]
+};
+var PROG = { sid: null, slot: null, openFl: {}, openSess: {}, slotSel: {} };
 
 var IDEA_TAGS = ["영업", "보상", "마케팅", "본사·통계", "기타"];
 var QUIZZES = [
@@ -2405,28 +2441,84 @@ function sessCancel(id) {
 function sessOpen(id) { PROG.sid = id; PROG.slot = null; App.go("sess_d"); }
 function sessPickSlot(t) { PROG.slot = t; App.render(); }
 /* 층별 안내(progOpenFl·층 칩·존 스크롤)는 v47에서 폐기 · 안내는 타임라인과 현장 사이니지가 맡는다 */
-/* 세션 카드 · 리스트·존 상세 공용 */
 function seatRowHtml(s) {
   var rem = sessRemain(s), pct = Math.round((s.cap - rem) / s.cap * 100);
   return '<div class="seatrow' + (rem <= 0 ? " full" : "") + '"><div class="sb"><i style="width:' + pct + '%"></i></div><span class="sn">' + (rem <= 0 ? "만석" : "잔여 " + rem + "석 / " + s.cap) + "</span></div>";
 }
-function sessCard(s) {
+
+/* ═══ 프로그램 탭 = 층별 아코디언 (v3.4) · 스탬프 탭과 같은 아코디언 문법(scard) 재사용 ═══
+   층 카드(전부 닫힘 기본) 안에 신청형(세션 행 · 열면 인라인 신청)과 상시형(얇은 행 · 바로가기)을 무게 다르게 담는다.
+   시간순 평면 리스트는 폐기 · 시간축은 일정 탭이 맡는다. */
+function progFlToggle(n) { PROG.openFl[n] = !PROG.openFl[n]; App.render(); }
+function progSessToggle(id) { PROG.openSess[id] = !PROG.openSess[id]; App.render(); }
+function progPickSlot(sid, t) { PROG.slotSel[sid] = PROG.slotSel[sid] === t ? null : t; App.render(); }
+/* 상시형 중 스탬프가 걸린 활동은 스탬프 탭 해당 카드로 위임한다 · 카드를 열어 둔 채 진입 */
+function ppGoCard(id) { PP.open[id] = true; App.go("passport"); }
+/* 신청형 인라인 신청 UI · sess_d 의 핵심(잔여석·슬롯 선택·신청/취소)만 흡수.
+   소개 영상·실습 단계 같은 무거운 상세는 sess_d 가 계속 맡고 「자세히」로 넘긴다(통일감 우선). */
+function sessInlineHtml(s) {
   var mine = sessMine(s.id);
-  var mineBadge = mine ? '<span class="badge mint">' + (mine.slot ? mine.slot + " " : "") + "신청 완료</span>" : "";
-  var cta = s.kind === "link" ?
-    '<button class="btn" onclick="App.go(\'' + s.go + '\')">' + (s.id === "dap" ? "상담 신청하기" : "커피챗 신청하기") + "</button>" :
-    mine ? '<button class="btn line" onclick="sessOpen(\'' + s.id + '\')">내 신청 보기 · 취소</button>' :
-      '<button class="btn line" style="font-weight:800" onclick="sessOpen(\'' + s.id + '\')">' + (s.kind === "slot" ? "시간 선택 · 신청" : "신청하기") + "</button>";
-  return '<div class="sess">' +
-    '<div class="top"><span class="tm">' + s.tm + '</span><span class="row" style="gap:5px">' +
-    (s.kind === "slot" ? '<span class="badge gray">' + s.per + "분 단위</span>" : "") +
-    '<span class="badge blue">' + s.fl + "F</span>" + mineBadge + "</span></div>" +
-    '<p class="ttl" onclick="sessOpen(\'' + s.id + '\')">' + esc(s.ttl) + "</p>" +
-    '<p class="who">' + esc((s.sub ? s.sub + " · " : "") + s.who) + "</p>" +
-    (s.kind === "seat" ? seatRowHtml(s) : "") +
-    '<div class="btns">' + (s.video || LEC_MEDIA[s.id] ? '<button class="btn vid" onclick="sessOpen(\'' + s.id + '\')">소개 영상</button>' : "") + cta + "</div></div>";
+  var h = '<p class="sq">' + esc((s.sub ? s.sub + " · " : "") + s.who) + "</p>";
+  if (s.kind === "link") {
+    h += '<p class="sq" style="margin-top:4px">' + esc(s.desc) + "</p>" +
+      '<button class="btn mint" style="margin-top:10px" onclick="App.go(\'' + s.go + '\')">' + (s.id === "dap" ? "상담 신청 화면으로" : "커피챗 신청 화면으로") + "</button>";
+  } else if (s.kind === "seat") {
+    h += seatRowHtml(s) +
+      (mine ? '<button class="btn line" style="margin-top:10px" onclick="sessCancel(\'' + s.id + '\')">신청 취소</button>' :
+        sessRemain(s) <= 0 ? '<button class="btn" style="margin-top:10px" disabled>만석 · 취소되면 열립니다</button>' :
+          '<button class="btn mint" style="margin-top:10px" onclick="sessBook(\'' + s.id + '\')">신청하기</button>');
+  } else {
+    var sel = PROG.slotSel[s.id] || null;
+    h += '<p class="sq" style="margin-top:4px">' + s.per + "분 단위 · 회당 " + s.cap + '명</p>' +
+      '<div class="slotgrid" style="margin-top:9px">' + sessSlots(s).map(function (t) {
+        var rem = slotRemain(s, t), on = sel === t, mySlot = mine && mine.slot === t;
+        if (mySlot) return '<button class="slot on">' + t + "</button>";
+        if (rem <= 0) return '<button class="slot off">' + t + "</button>";
+        return '<button class="slot' + (on ? " on" : "") + '" onclick="progPickSlot(\'' + s.id + "','" + t + '\')">' + t + "</button>";
+      }).join("") + "</div>" +
+      (mine ? '<button class="btn line" style="margin-top:10px" onclick="sessCancel(\'' + s.id + '\')">' + mine.slot + " 신청 취소</button>" :
+        '<button class="btn mint" style="margin-top:10px"' + (sel ? ' onclick="sessBook(\'' + s.id + "', PROG.slotSel['" + s.id + "'])\"" : " disabled") + ">" + (sel ? sel + " 신청하기" : "시간을 선택하세요") + "</button>");
+  }
+  h += '<p class="lnk" onclick="sessOpen(\'' + s.id + '\')">자세히' + (s.video || LEC_MEDIA[s.id] ? " · 소개 영상" : "") + " ›</p>";
+  return '<div class="tcard">' + h + "</div>";
 }
-/* 층별 평면도(260830)·동선 영상(assets/fl_*.html)·존 목록은 모두 폐기(v47). 안내는 타임라인·현장 사이니지 몫이다. */
+function sessRowHtml(s) {
+  var open = !!PROG.openSess[s.id];
+  var mine = sessMine(s.id);
+  var st = mine ? '<span class="badge mint">' + (mine.slot ? mine.slot + " " : "") + "신청 완료</span>" :
+    s.kind === "seat" ? (sessRemain(s) <= 0 ? '<span class="badge gray">만석</span>' : '<span class="st">잔여 ' + sessRemain(s) + "석</span>") :
+      s.kind === "slot" ? '<span class="st">시간 선택</span>' : '<span class="st">신청제</span>';
+  return '<div class="srow">' +
+    '<div class="rh" onclick="progSessToggle(\'' + s.id + '\')">' +
+    '<span class="tm">' + s.tm.split("~")[0] + '</span>' +
+    '<span class="tt">' + esc(s.ttl) + "</span>" + st +
+    '<span class="chev">' + (open ? "▲" : "▼") + "</span></div>" +
+    (open ? sessInlineHtml(s) : "") + "</div>";
+}
+function flCardHtml(n) {
+  var open = !!PROG.openFl[n];
+  var sess = SESSIONS.filter(function (s) { return s.fl === n; }).sort(function (a, b) { return sessStartMin(a.tm) - sessStartMin(b.tm); });
+  var acts = FL_OPEN[n] || [];
+  var body = "";
+  if (open) {
+    body = sess.map(sessRowHtml).join("");
+    body += acts.map(function (a) {
+      var sd = a.sid ? STAMPS.filter(function (x) { return x.id === a.sid; })[0] : null;
+      var tap = a.sid ? "ppGoCard('" + a.sid + "')" : a.tap || "";
+      var badge = sd ? '<span class="badge mint">스탬프 ' + sd.no + "</span>" : a.tag ? '<span class="badge mint">' + a.tag + "</span>" : "";
+      return '<div class="orow"' + (tap ? ' onclick="' + tap + '" style="cursor:pointer"' : "") + ">" +
+        '<span class="bd"><b>' + a.nm + '</b><small>' + a.d + "</small></span>" + badge +
+        (tap ? '<span class="arw">›</span>' : "") + "</div>";
+    }).join("");
+  }
+  return '<div class="scard">' +
+    '<div class="shead" onclick="progFlToggle(' + n + ')">' +
+    '<span class="ico flno">' + n + "F</span>" +
+    '<span class="bd"><span class="no">' + FLTAG[n] + '</span>' +
+    '<span class="tt">' + n + "F</span>" +
+    '<span class="wh">신청 ' + sess.length + "개" + (acts.length ? " · 상시 " + acts.length + "개" : "") + "</span></span>" +
+    '<span class="chev">' + (open ? "▲" : "▼") + "</span></div>" + body + "</div>";
+}
 
 function menuItem(target, no, title, desc, badge) {
   return '<div class="mi" onclick="App.go(\'' + target + '\')"><span class="no">' + no + '</span>' +
@@ -2793,27 +2885,12 @@ var Views = {
 
   /* ═══ 프로그램 = 신청 전용 (v47 층별 안내 폐기) · 내 신청 → 시간순 신청 카드 리스트.
      동선 안내는 타임라인(guide_time)과 현장 사이니지가 맡는다 · 혼잡도는 홈 스트립. ═══ */
+  /* ═══ 프로그램 탭 = 층별 아코디언 (v3.4 사용자 확정) · 4층 전부 닫힘 기본.
+     내 신청 요약 블록은 일정 탭이 맡으므로 제거(신청 상태는 각 세션 행에 표시) ·
+     리더보드는 10F 안 · 부문별 우선 관람은 1F 안의 상시 행으로 이동. ═══ */
   guide: function () {
-    var mine = sessMineList();
-    var myHtml = !mine.length ? "" :
-      '<div class="mine mb12">' + mine.map(function (x) {
-        var tmLbl = x.slot || x.s.tm.split("~")[0];
-        return '<div class="r" onclick="sessOpen(\'' + x.s.id + '\')"><span class="tm">' + tmLbl + '</span><span class="tx">' + esc(x.s.ttl) + " · " + x.s.fl + 'F</span><span class="arw">›</span></div>';
-      }).join("") + "</div>";
-    var list = SESSIONS.slice().sort(function (a, b) { return sessStartMin(a.tm) - sessStartMin(b.tm); });
-    /* 전체 타임라인 링크는 v3.3 일정 탭이 맡는다 */
-    var head = '<div class="sect" style="margin-top:2px"><b>신청 프로그램 ' + list.length + '개 · 시간순</b></div>';
-    var cards = list.map(function (s) { return sessCard(s); }).join("");
-    /* 챔피언십 리더보드 · 10F 현장 프로그램의 점수판이라 신청 리스트 곁에 둔다 (v3.1 스탬프 탭에서 이관) */
-    var rankLink = '<div class="card soft" style="display:flex;align-items:center;gap:10px;padding:13px 15px;cursor:pointer;margin-top:14px" onclick="App.go(\'ev_rank\')">' +
-      '<span style="flex:1;font-size:calc(14.5px * var(--fs));font-weight:800;color:var(--hi)">챔피언십 리더보드</span>' +
-      '<span style="font-size:calc(12.5px * var(--fs));font-weight:700;color:var(--muted)">10F 현장 점수</span>' +
-      '<span style="color:var(--faint);font-weight:800">›</span></div>';
-    var slotLink = '<div class="card soft" style="display:flex;align-items:center;gap:10px;padding:13px 15px;cursor:pointer;margin-top:8px" onclick="App.go(\'guide_slots\')">' +
-      '<span style="flex:1;font-size:calc(14.5px * var(--fs));font-weight:800;color:var(--hi)">우리 부문 우선 관람 시간</span>' +
-      '<span style="font-size:calc(12.5px * var(--fs));font-weight:700;color:var(--muted)">1F 이벤트존</span>' +
-      '<span style="color:var(--faint);font-weight:800">›</span></div>';
-    return myHtml + head + cards + rankLink + slotLink;
+    return '<div class="sect" style="margin-top:2px"><b>층을 누르면 프로그램이 열려요</b></div>' +
+      [1, 10, 17, 18].map(flCardHtml).join("");
   },
 
   /* ═══ 일정 탭 (v3.3 · guide_time 승격) · 전체 타임라인 + 내 일정 통합.
