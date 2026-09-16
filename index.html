@@ -228,14 +228,23 @@
   #ledbar .led-track { display: inline-block; padding-left: 100%; animation: ledflow 32s linear infinite; font-weight: 800; color: var(--mint-deep); font-size: calc(15.5px * var(--fs)); letter-spacing: 0.02em; will-change: transform; }
   @keyframes ledflow { from { transform: translateX(0); } to { transform: translateX(-100%); } }
   .wall { background: var(--ink); border-radius: 10px; padding: 16px; color: #fff; margin-bottom: 14px; }
-  .tl { position: relative; margin-left: 10px; border-left: 2px solid var(--line); list-style: none; }
-  .tl li { position: relative; padding: 0 0 18px 20px; }
-  .tl li::before { content: ""; position: absolute; left: -7px; top: 6px; width: 12px; height: 12px; border-radius: 999px; background: var(--paper); border: 2px solid var(--line); }
-  .tl li.now::before { background: var(--mint); border-color: var(--mint); }
-  /* 일정 탭 내 항목 (v3.3) · 같은 타임라인 카드 문법 + 오렌지 액센트만 */
-  .tl li.my::before { background: var(--tint2); border-color: var(--mint); }
-  .tl .myit { border-left: 3px solid var(--mint); border-radius: 20px; cursor: pointer; }
-  .tl .myit:active { background: var(--surface2); }
+  /* ── 일정 탭 행 (v3.5) · 좌측 시간 레일(고정폭, 세로 정렬) + 우측 제목 · 설명은 접힘 ── */
+  .trow { border-bottom: 1px solid #EFEFEF; }
+  .trow:last-child { border-bottom: 0; }
+  .trow .rh { display: flex; align-items: flex-start; gap: 12px; padding: 12px 6px; cursor: pointer; }
+  .trow .tcol { flex: none; width: 58px; }
+  .trow .tcol b { display: block; font-family: var(--disp); font-weight: 700; font-size: calc(16.5px * var(--fs)); color: var(--hi); line-height: 1.15; }
+  .trow .tcol small { display: block; margin-top: 2px; font-size: calc(11px * var(--fs)); font-weight: 700; color: var(--faint); }
+  .trow .tt { flex: 1; min-width: 0; padding-top: 1px; font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.45; }
+  .trow .tt .badge { margin-left: 4px; vertical-align: 2px; }
+  .trow .chev { flex: none; padding-top: 5px; color: var(--faint); font-weight: 800; font-size: 11px; }
+  .trow .tb { padding: 0 6px 13px 76px; }
+  .trow .tb .pl { font-size: calc(13.5px * var(--fs)); font-weight: 800; color: var(--muted); }
+  .trow .tb .ds { margin-top: 4px; font-size: calc(13.5px * var(--fs)); color: var(--muted); line-height: 1.65; }
+  .trow .tb .btn { margin-top: 10px; padding: 11px; }
+  .trow.my { background: var(--tint); border-left: 3px solid var(--mint); border-radius: 14px; border-bottom: 0; margin: 5px 0; }
+  .trow.my .tcol b { color: var(--acc2); }
+  .trow.now { border: 1.5px solid var(--mint-deep); border-radius: 14px; margin: 5px 0; }
   /* ── 스탬프 카드 아코디언 (v3.2) · 경로 메타포 폐기, 전폭 개별 카드 · 각자 독립 개폐 ── */
   .scard { position: relative; background: var(--card); border-radius: 20px; padding: 13px 15px; margin-bottom: 8px; }
   .scard .shead { display: flex; align-items: center; gap: 12px; cursor: pointer; }
@@ -2642,6 +2651,20 @@ function myCouponHtml() {
     railHtml(stampCount(), false, null, true);
 }
 
+/* ════════════════ 일정 탭 행 (v3.5) · 좌측 시간 레일 + 우측 제목 · 부가 설명은 공용 아코디언 접힘 ════════════════ */
+var SCHED = { open: {}, mine: false };
+function schedToggle(k) { SCHED.open[k] = !SCHED.open[k]; App.render(); }
+function schedMine(v) { SCHED.mine = !!v; App.render(); }
+function schedRow(key, cls, t0, t1, titleHtml, bodyHtml) {
+  var open = !!SCHED.open[key];
+  return '<div class="trow' + cls + '">' +
+    '<div class="rh" onclick="schedToggle(\'' + key + '\')">' +
+    '<span class="tcol"><b>' + t0 + "</b>" + (t1 ? "<small>– " + t1 + "</small>" : "") + "</span>" +
+    '<span class="tt">' + titleHtml + "</span>" +
+    '<span class="chev">' + (open ? "▲" : "▼") + "</span></div>" +
+    (open ? '<div class="tb">' + bodyHtml + "</div>" : "") + "</div>";
+}
+
 /* ════════════════ 스탬프 카드 아코디언 (v3.2 · 경로 메타포 폐기) · 전폭 카드 · 각자 독립 개폐 ════════════════ */
 var PP = { open: {}, animOn: false };
 function ppToggle(id) { PP.open[id] = !PP.open[id]; App.render(); }
@@ -2893,44 +2916,51 @@ var Views = {
       [1, 10, 17, 18].map(flCardHtml).join("");
   },
 
-  /* ═══ 일정 탭 (v3.3 · guide_time 승격) · 전체 타임라인 + 내 일정 통합.
-     내 항목은 같은 타임라인 카드 문법에 오렌지 액센트(좌측 보더 + 「내 일정」 뱃지)만 얹는다 (design.md 컴포넌트 일관성).
-     시간순 병합: 같은 시각이면 전체 일정 카드 다음에 내 항목 · 대기열(시간 없음)은 「지금」으로 맨 위. ═══ */
+  /* ═══ 일정 탭 (v3.3 신설 · v3.5 가독성 재설계) · 좌측 시간 레일 + 우측 제목, 부가 설명은 아코디언 접힘.
+     닫힌 행 = 시간 + 제목 + 태그 (+ 내 일정 뱃지)만 · 장소·설명은 펼침에 (시간·주제만 세로로 스캔되게).
+     내 일정 행 = O10 틴트 채움 + 좌보더 O100 + 오렌지 시간 · 상세 진입은 펼침 안 「바로가기」.
+     시간순 병합: 같은 시각이면 전체 일정 다음에 내 항목 · 대기열(시간 없음)은 「지금」으로 맨 위. ═══ */
   guide_time: function () {
-    var rows = [];   /* [분, 정렬보조(전체 0 · 내 것 1), html] */
+    var rows = [];   /* [분, 정렬보조(전체 0 · 내 것 1), 내것 여부, html] */
     TIMELINE.forEach(function (t, i) {
       var now = i === NOW_INDEX;
-      rows.push([t2m(t.time), 0,
-        '<li class="' + (now ? "now" : "") + '"><div class="card' + (now ? "" : " soft") + '"' + (now ? ' style="border-color:var(--mint-deep)"' : "") + '>' +
-        '<div class="row"><b class="disp" style="color:var(--hi);font-size:calc(16.5px * var(--fs))">' + t.time + '</b><span style="font-size:calc(12.5px * var(--fs));color:var(--faint);font-weight:700">– ' + t.end + '</span><span class="badge ' + (now ? "mint" : "gray") + '">' + t.tag + "</span>" + (now ? '<span class="badge ink">진행 중</span>' : "") + "</div>" +
-        '<p style="margin-top:5px;font-weight:800;font-size:calc(16.5px * var(--fs));color:var(--hi)">' + esc(t.title) + " <span style='font-size:calc(14.5px * var(--fs));font-weight:700;color:var(--muted)'>· " + esc(t.place) + "</span></p>" +
-        '<p class="muted" style="margin-top:5px;font-size:calc(14.5px * var(--fs))">' + esc(t.desc) + "</p></div></li>"]);
+      var badges = ' <span class="badge ' + (now ? "mint" : "gray") + '">' + t.tag + "</span>" + (now ? ' <span class="badge ink">진행 중</span>' : "");
+      rows.push([t2m(t.time), 0, false,
+        schedRow("t" + i, now ? " now" : "", t.time, t.end, esc(t.title) + badges,
+          '<p class="pl">' + esc(t.place) + '</p><p class="ds">' + esc(t.desc) + "</p>")]);
     });
     /* 내 일정 수집 · 홈 「나의 스케줄」과 같은 규칙 (대기열 → 상담 → 커피챗 → 신청 세션) */
-    var my = [];   /* [분, onclick, 시각 라벨, 내용] */
+    var my = [];   /* [분, 시각 라벨, 제목, 상세, onclick] */
     var q = S.get("queue", {}), qk;
     for (qk in q) {
       var sp = scanSpot(qk), r = q[qk];
       if (!sp || !r || r.status === "done") continue;
-      my.push([-1, "qrPanelOpen('mine')", "지금",
-        sp.nm + (r.status === "call" ? " · 지금 입장하세요" : " · " + r.no + "번 대기 중" + (r.ahead ? " (앞 " + r.ahead + "명)" : ""))]);
+      my.push([-1, "지금", sp.nm,
+        r.status === "call" ? "지금 입장하세요" : r.no + "번 대기 중" + (r.ahead ? " (앞 " + r.ahead + "명)" : ""),
+        "qrPanelOpen('mine')"]);
     }
     var mr = myResv();
-    if (mr && RESV_LIVE.indexOf(mr.status) >= 0) my.push([sessStartMin(mr.slot), "App.go('dap')", mr.slot, "과제상담 · 1F DAP존 미팅룸 " + mr.room]);
+    if (mr && RESV_LIVE.indexOf(mr.status) >= 0) my.push([sessStartMin(mr.slot), mr.slot, "과제상담", "1F DAP존 미팅룸 " + mr.room + " · 30분 1:1", "App.go('dap')"]);
     var cc = S.get("cchat", null);
-    if (cc && cc.status === "matched") my.push([sessStartMin(cc.round), "App.go('ev_cchat')", cc.round, "AX 커피챗 · 18F 라운지 TABLE " + cc.table]);
+    if (cc && cc.status === "matched") my.push([sessStartMin(cc.round), cc.round, "AX 커피챗", "18F 라운지 TABLE " + cc.table + " · 20분", "App.go('ev_cchat')"]);
     sessMineList().forEach(function (x) {
       var tmLbl = x.slot || x.s.tm.split("~")[0];
-      my.push([sessStartMin(tmLbl), "sessOpen('" + x.s.id + "')", tmLbl, x.s.ttl + " · " + x.s.fl + "F"]);
+      my.push([sessStartMin(tmLbl), tmLbl, x.s.ttl, x.s.fl + "F · " + x.s.tm + (x.slot ? " · 내 시간 " + x.slot : ""), "sessOpen('" + x.s.id + "')"]);
     });
-    my.forEach(function (m) {
-      rows.push([m[0], 1,
-        '<li class="my"><div class="card soft myit" onclick="' + m[1] + '">' +
-        '<div class="row"><b class="disp" style="color:var(--acc2);font-size:calc(16.5px * var(--fs))">' + esc(m[2]) + '</b><span class="badge mint">내 일정</span></div>' +
-        '<p style="margin-top:5px;font-weight:800;font-size:calc(15.5px * var(--fs));color:var(--hi)">' + esc(m[3]) + '</p></div></li>']);
+    my.forEach(function (m, j) {
+      rows.push([m[0], 1, true,
+        schedRow("m" + j, " my", m[1], null, esc(m[2]) + ' <span class="badge mint">내 일정</span>',
+          '<p class="pl">' + esc(m[3]) + '</p><button class="btn mint" onclick="' + m[4] + '">바로가기</button>')]);
     });
-    rows.sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
-    return '<ol class="tl">' + rows.map(function (r) { return r[2]; }).join("") + "</ol>";
+    rows.sort(function (a, b) { return a[0] - b[0] || (a[1] === b[1] ? 0 : a[1] - b[1]); });
+    var seg = '<div class="qseg" style="margin-bottom:10px">' +
+      '<button class="' + (SCHED.mine ? "" : "on") + '" onclick="schedMine(false)">전체 일정</button>' +
+      '<button class="' + (SCHED.mine ? "on" : "") + '" onclick="schedMine(true)">내 일정 ' + my.length + "건</button></div>";
+    var shown = SCHED.mine ? rows.filter(function (r) { return r[2]; }) : rows;
+    if (!shown.length) {
+      return seg + '<div class="card soft" style="text-align:center"><p class="muted">아직 신청·배정된 일정이 없어요.<br>프로그램 탭에서 신청하면 여기에 모입니다.</p></div>';
+    }
+    return seg + '<div class="tlist">' + shown.map(function (r) { return r[3]; }).join("") + "</div>";
   },
 
   /* ═══ 프로그램 상세 · 소개 영상 · 잔여석 · 신청 ═══ */
