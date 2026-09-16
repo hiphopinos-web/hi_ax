@@ -33,6 +33,7 @@
     --purple: #E6CCFF;                  /* Light Purple · 연사 역할 뱃지 전용 */
     --tint: #FFEBE0; --tint2: #FFD8C1;  /* O10 틴트 면(=카드) / O25 = 획득·선택 상태 채움·강조 보더 */
     --acc2: #D64524;                    /* 밝은 면 위 작은 오렌지 글자 (가독 농도) */
+    --dim: #F3F2F0; --dimln: #E5E3E0;   /* v3.6 상태 위계 · 회색 면/헤어라인 = 지나감·미완료·잠김 (O10 은 완료·내 것 전용으로) */
     --hi: #000000;                      /* 제목·주요 텍스트 = 블랙 */
     --tx: #464C53; --muted: #6D7882; --faint: #98A2AC;
     --fs: 1;                            /* 글자 크기 배율 (설정에서 1 / 1.12 / 1.25) */
@@ -244,11 +245,24 @@
   .trow .tb .btn { margin-top: 10px; padding: 11px; }
   .trow.my { background: var(--tint); border-left: 3px solid var(--mint); border-radius: 14px; border-bottom: 0; margin: 5px 0; }
   .trow.my .tcol b { color: var(--acc2); }
-  .trow.now { border: 1.5px solid var(--mint-deep); border-radius: 14px; margin: 5px 0; }
-  /* ── 스탬프 카드 아코디언 (v3.2) · 경로 메타포 폐기, 전폭 개별 카드 · 각자 독립 개폐 ── */
-  .scard { position: relative; background: var(--card); border-radius: 20px; padding: 13px 15px; margin-bottom: 8px; }
+  /* v3.6 상태 위계: 지나간 행 = 회색 저채도 · 지금 진행 중 = 검정 스테이지(화면당 검정 1곳) */
+  .trow.past .tcol b, .trow.past .tt { color: var(--faint); }
+  .trow.past .tt .badge, .trow.past .ico { opacity: 0.55; }
+  .trow.now { background: var(--ink); border-radius: 14px; border-bottom: 0; margin: 5px 0; }
+  .trow.now .tcol b, .trow.now .tt { color: #fff; }
+  .trow.now .tcol small, .trow.now .chev { color: rgba(255,255,255,0.6); }
+  .trow.now .tt .badge.ink { background: #fff; color: var(--ink); }
+  .trow.now .tt .badge.mint { background: var(--mint); color: #fff; }
+  .trow.now .tb .pl { color: rgba(255,255,255,0.85); }
+  .trow.now .tb .ds { color: rgba(255,255,255,0.72); }
+  /* ── 스탬프 카드 아코디언 (v3.2 · v3.6 상태 위계) ·
+     미완료 = 회색(--dim, 저채도) / 완료 = O10 틴트(내 것) / 다음 추천 = 회색 기조 + 오렌지 보더 / 층 컨테이너(.fl) = 기본(흰 면 + 헤어라인) ── */
+  .scard { position: relative; background: var(--dim); border-radius: 20px; padding: 13px 15px; margin-bottom: 8px; }
+  .scard.done { background: var(--tint); }
+  .scard.next { box-shadow: 0 0 0 1.5px var(--mint); }
+  .scard.fl { background: var(--white); border: 1px solid var(--dimln); }
   .scard .shead { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-  .scard .ico { position: relative; flex: none; width: 42px; height: 42px; border: 2px solid var(--line); border-radius: 50%; background: var(--white); color: var(--faint); display: flex; align-items: center; justify-content: center; }
+  .scard .ico { position: relative; flex: none; width: 42px; height: 42px; border: 2px solid var(--dimln); border-radius: 50%; background: var(--white); color: var(--faint); display: flex; align-items: center; justify-content: center; }
   .scard .ico svg { width: 22px; height: 22px; display: block; }
   .scard.done .ico { background: var(--tint2); border-color: var(--mint); color: var(--acc2); }
   .scard.next .ico { border-color: var(--mint); color: var(--acc2); animation: trailPulse 2.2s ease-in-out infinite; }
@@ -258,7 +272,8 @@
   .scard .bd { flex: 1; min-width: 0; }
   .scard .bd .no { display: block; font-family: var(--disp); font-size: calc(11.5px * var(--fs)); font-weight: 700; color: var(--faint); letter-spacing: 0.06em; }
   .scard.done .bd .no, .scard.next .bd .no { color: var(--acc2); }
-  .scard .bd .tt { display: block; margin-top: 1px; font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.35; }
+  .scard .bd .tt { display: block; margin-top: 1px; font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--muted); line-height: 1.35; }
+  .scard.done .bd .tt, .scard.next .bd .tt, .scard.fl .bd .tt { color: var(--hi); }
   .scard .bd .wh { display: block; margin-top: 1px; font-size: calc(12.5px * var(--fs)); font-weight: 700; color: var(--faint); }
   .scard .chev { flex: none; color: var(--faint); font-weight: 800; font-size: 12px; }
   .scap { margin: 13px 2px 7px; font-size: calc(11.5px * var(--fs)); font-weight: 800; letter-spacing: 0.04em; color: var(--faint); }
@@ -269,15 +284,20 @@
   .scard .tcard .lnk { margin-top: 9px; font-size: calc(12.5px * var(--fs)); font-weight: 800; color: var(--acc2); cursor: pointer; }
   /* ── 프로그램 탭 층 아코디언 (v3.4) · scard 문법 재사용 · 층 안 = 신청형 행(무겁게) + 상시형 행(얇게) ── */
   .scard .ico.flno { font-family: var(--disp); font-size: 14.5px; font-weight: 700; color: var(--acc2); border-color: var(--tint2); }
-  .srow { background: var(--white); border-radius: 14px; padding: 11px 13px; margin-top: 8px; }
+  /* v3.6 상태 위계: 평상 행 = 기본(흰 면 + 헤어라인) · 신청 완료 = O10(내 것) · 만석·종료 = 회색 */
+  .srow { background: var(--white); border: 1px solid var(--dimln); border-radius: 14px; padding: 11px 13px; margin-top: 8px; }
+  .srow.mine { background: var(--tint); border-color: var(--tint2); }
+  .srow.off { background: var(--dim); }
+  .srow.off .tt, .srow.off .tm { color: var(--faint); }
   .srow .rh { display: flex; align-items: center; gap: 10px; cursor: pointer; }
   .srow .tm { flex: none; font-family: var(--disp); font-size: calc(14.5px * var(--fs)); color: var(--hi); }
   .srow .tt { flex: 1; min-width: 0; font-size: calc(14.5px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.35; }
   .srow .st { flex: none; font-size: calc(12.5px * var(--fs)); font-weight: 800; color: var(--acc2); }
   .srow .chev { flex: none; color: var(--faint); font-weight: 800; font-size: 11px; }
-  .srow .tcard { background: var(--card); }
+  .srow .tcard { background: var(--dim); }
+  .srow.mine .tcard { background: var(--white); }
   .srow .sq { font-size: calc(13px * var(--fs)); font-weight: 700; color: var(--muted); line-height: 1.55; }
-  .orow { display: flex; align-items: center; gap: 10px; background: var(--white); border-radius: 12px; padding: 9px 13px; margin-top: 6px; }
+  .orow { display: flex; align-items: center; gap: 10px; background: var(--white); border: 1px solid var(--dimln); border-radius: 12px; padding: 9px 13px; margin-top: 6px; }
   .orow .bd { flex: 1; min-width: 0; }
   .orow .bd b { display: block; font-size: calc(13.5px * var(--fs)); font-weight: 800; color: var(--hi); }
   .orow .bd small { display: block; margin-top: 1px; font-size: calc(12px * var(--fs)); font-weight: 700; color: var(--faint); }
@@ -488,10 +508,12 @@
   .rail .hd .cnt small { font-size: calc(12.5px * var(--fs)); color: var(--muted); font-weight: 700; }
   .rail .rb { position: relative; height: 10px; border-radius: 999px; background: var(--white); margin: 21px 13px 0; }
   .rail .rb i { display: block; height: 100%; border-radius: 999px; background: var(--mint); }
-  .rail .mk { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 27px; height: 27px; border-radius: 999px; border: 2px solid var(--tint2); background: var(--white); color: var(--faint); font-family: var(--disp); font-size: 12.5px; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  /* v3.6 상태 위계: 미도달 마커·틱 = 회색 · 도달 = 오렌지 · 사용 가능한 룰렛 = 검정(행동할 것, 화면당 검정 1곳) */
+  .rail .mk { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 27px; height: 27px; border-radius: 999px; border: 2px solid var(--dimln); background: var(--dim); color: var(--faint); font-family: var(--disp); font-size: 12.5px; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
   .rail .mk.on { background: var(--mint); border-color: var(--mint); color: #fff; }
+  .rail .mk.act { background: var(--ink); border-color: var(--ink); color: #fff; }
   .rail .mk.glow { animation: coupGlow 1.7s ease-out 2; }
-  .rail .tick { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 9px; height: 9px; border-radius: 999px; background: var(--white); border: 1.5px solid var(--line); pointer-events: none; }
+  .rail .tick { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 9px; height: 9px; border-radius: 999px; background: var(--dim); border: 1.5px solid var(--dimln); pointer-events: none; }
   .rail .tick.on { background: #fff; border-color: var(--mint); }
   .rail .cta { display: block; width: 100%; margin-top: 10px; border: 0; cursor: pointer; background: var(--white); color: var(--acc2); border-radius: 12px; padding: 12px; font-family: inherit; font-size: calc(15px * var(--fs)); font-weight: 800; }
   .rail .cta:active { transform: scale(0.99); }
@@ -2494,10 +2516,11 @@ function sessInlineHtml(s) {
 function sessRowHtml(s) {
   var open = !!PROG.openSess[s.id];
   var mine = sessMine(s.id);
+  var full = s.kind === "seat" && sessRemain(s) <= 0;
   var st = mine ? '<span class="badge mint">' + (mine.slot ? mine.slot + " " : "") + "신청 완료</span>" :
-    s.kind === "seat" ? (sessRemain(s) <= 0 ? '<span class="badge gray">만석</span>' : '<span class="st">잔여 ' + sessRemain(s) + "석</span>") :
+    s.kind === "seat" ? (full ? '<span class="badge gray">만석</span>' : '<span class="st">잔여 ' + sessRemain(s) + "석</span>") :
       s.kind === "slot" ? '<span class="st">시간 선택</span>' : '<span class="st">신청제</span>';
-  return '<div class="srow">' +
+  return '<div class="srow' + (mine ? " mine" : full ? " off" : "") + '">' +
     '<div class="rh" onclick="progSessToggle(\'' + s.id + '\')">' +
     '<span class="tm">' + s.tm.split("~")[0] + '</span>' +
     '<span class="tt">' + esc(s.ttl) + "</span>" + st +
@@ -2520,7 +2543,7 @@ function flCardHtml(n) {
         (tap ? '<span class="arw">›</span>' : "") + "</div>";
     }).join("");
   }
-  return '<div class="scard">' +
+  return '<div class="scard fl">' +
     '<div class="shead" onclick="progFlToggle(' + n + ')">' +
     '<span class="ico flno">' + n + "F</span>" +
     '<span class="bd"><span class="no">' + FLTAG[n] + '</span>' +
@@ -2770,7 +2793,9 @@ function railHtml(n, glow, dispN, home) {
   });
   marks.forEach(function (m) {
     var pos = (m[0] / 6 * 100).toFixed(1) + "%";
-    mk += '<button class="mk' + (n >= m[0] ? " on" : "") + (m[0] === 3 && glow ? " glow" : "") + '" style="left:' + pos + '" onclick="' + m[2] + '" aria-label="' + m[1] + '">' + m[0] + "</button>";
+    /* 사용 가능해진 룰렛(3 도달·미사용)은 검정 = 지금 행동할 것 (v3.6 상태 위계) */
+    var cls = m[0] === 3 && n >= 3 && !used ? " act" : n >= m[0] ? " on" : "";
+    mk += '<button class="mk' + cls + (m[0] === 3 && glow ? " glow" : "") + '" style="left:' + pos + '" onclick="' + m[2] + '" aria-label="' + m[1] + '">' + m[0] + "</button>";
     lb += '<span style="left:' + pos + '">' + m[1] + "</span>";
   });
   return '<div class="rail">' +
@@ -2922,11 +2947,14 @@ var Views = {
      시간순 병합: 같은 시각이면 전체 일정 다음에 내 항목 · 대기열(시간 없음)은 「지금」으로 맨 위. ═══ */
   guide_time: function () {
     var rows = [];   /* [분, 정렬보조(전체 0 · 내 것 1), 내것 여부, html] */
+    /* v3.6 상태 위계: 지나간 행 = 회색 · 진행 중 = 검정 · 기준은 evPhase(데모·당일 모두 NOW_INDEX 포인터) */
+    var ph = evPhase();
     TIMELINE.forEach(function (t, i) {
-      var now = i === NOW_INDEX;
+      var now = ph === "live" && i === NOW_INDEX;
+      var past = ph === "after" || (ph === "live" && i < NOW_INDEX);
       var badges = ' <span class="badge ' + (now ? "mint" : "gray") + '">' + t.tag + "</span>" + (now ? ' <span class="badge ink">진행 중</span>' : "");
       rows.push([t2m(t.time), 0, false,
-        schedRow("t" + i, now ? " now" : "", t.time, t.end, esc(t.title) + badges,
+        schedRow("t" + i, now ? " now" : past ? " past" : "", t.time, t.end, esc(t.title) + badges,
           '<p class="pl">' + esc(t.place) + '</p><p class="ds">' + esc(t.desc) + "</p>")]);
     });
     /* 내 일정 수집 · 홈 「나의 스케줄」과 같은 규칙 (대기열 → 상담 → 커피챗 → 신청 세션) */
