@@ -229,32 +229,31 @@
   #ledbar .led-track { display: inline-block; padding-left: 100%; animation: ledflow 32s linear infinite; font-weight: 800; color: var(--mint-deep); font-size: calc(15.5px * var(--fs)); letter-spacing: 0.02em; will-change: transform; }
   @keyframes ledflow { from { transform: translateX(0); } to { transform: translateX(-100%); } }
   .wall { background: var(--ink); border-radius: 10px; padding: 16px; color: #fff; margin-bottom: 14px; }
-  /* ── 일정 탭 행 (v3.5) · 좌측 시간 레일(고정폭, 세로 정렬) + 우측 제목 · 설명은 접힘 ── */
+  /* ── 시간·층 라벨 뱃지 tok (v3.9 공용) · 옅은 주황 필 + 짙은 주황 볼드 (사용자 확정 260917 · 라벨 용법, 상태 아님)
+     상태 변형: dim = 지나감(회색) · act = 지금 진행(검정+흰 글자, 화면당 검정 1곳) · mine = 틴트 행 위 대비용 O25 ── */
+  .tok { display: inline-flex; align-items: center; justify-content: center; min-width: 62px; padding: 6px 6px 5px; border-radius: 999px; background: var(--tint); color: var(--acc2); font-family: var(--disp); font-weight: 800; font-size: calc(14px * var(--fs)); line-height: 1.1; }
+  .tok.dim { background: var(--dim); color: var(--faint); }
+  .tok.act { background: var(--ink); color: #fff; }
+  .tok.mine { background: var(--tint2); }
+  /* ── 일정 탭 행 (v3.5 · v3.9 시간 뱃지) · 좌측 시간 뱃지(고정폭, 세로 정렬) + 우측 제목 · 설명은 접힘 ── */
   .trow { border-bottom: 1px solid #EFEFEF; }
   .trow:last-child { border-bottom: 0; }
-  .trow .rh { display: flex; align-items: flex-start; gap: 12px; padding: 12px 6px; cursor: pointer; }
-  .trow .tcol { flex: none; width: 58px; }
-  .trow .tcol b { display: block; font-family: var(--disp); font-weight: 700; font-size: calc(16.5px * var(--fs)); color: var(--hi); line-height: 1.15; }
-  .trow .tcol small { display: block; margin-top: 2px; font-size: calc(11px * var(--fs)); font-weight: 700; color: var(--faint); }
-  .trow .tt { flex: 1; min-width: 0; padding-top: 1px; font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.45; }
+  .trow .rh { display: flex; align-items: center; gap: 12px; padding: 11px 6px; cursor: pointer; }
+  .trow .tcol { flex: none; width: 66px; text-align: center; }
+  .trow .tcol .tok { width: 100%; }
+  .trow .tcol small { display: block; margin-top: 3px; font-size: calc(11px * var(--fs)); font-weight: 700; color: var(--faint); }
+  .trow .tt { flex: 1; min-width: 0; font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.45; }
   .trow .tt .badge { margin-left: 4px; vertical-align: 2px; }
-  .trow .chev { flex: none; padding-top: 5px; color: var(--faint); font-weight: 800; font-size: 11px; }
-  .trow .tb { padding: 0 6px 13px 76px; }
+  .trow .chev { flex: none; color: var(--faint); font-weight: 800; font-size: 11px; }
+  .trow .tb { padding: 0 6px 13px 84px; }
   .trow .tb .pl { font-size: calc(13.5px * var(--fs)); font-weight: 800; color: var(--muted); }
   .trow .tb .ds { margin-top: 4px; font-size: calc(13.5px * var(--fs)); color: var(--muted); line-height: 1.65; }
   .trow .tb .btn { margin-top: 10px; padding: 11px; }
-  .trow.my { background: var(--tint); border-left: 3px solid var(--mint); border-radius: 14px; border-bottom: 0; margin: 5px 0; }
-  .trow.my .tcol b { color: var(--acc2); }
-  /* v3.6 상태 위계: 지나간 행 = 회색 저채도 · 지금 진행 중 = 검정 스테이지(화면당 검정 1곳) */
-  .trow.past .tcol b, .trow.past .tt { color: var(--faint); }
-  .trow.past .tt .badge, .trow.past .ico { opacity: 0.55; }
-  .trow.now { background: var(--ink); border-radius: 14px; border-bottom: 0; margin: 5px 0; }
-  .trow.now .tcol b, .trow.now .tt { color: #fff; }
-  .trow.now .tcol small, .trow.now .chev { color: rgba(255,255,255,0.6); }
-  .trow.now .tt .badge.ink { background: #fff; color: var(--ink); }
-  .trow.now .tt .badge.mint { background: var(--mint); color: #fff; }
-  .trow.now .tb .pl { color: rgba(255,255,255,0.85); }
-  .trow.now .tb .ds { color: rgba(255,255,255,0.72); }
+  /* v3.6 위계 + v3.9 뱃지 + v3.11 테두리: 내 것 = O10 채움 + 오렌지 전체 테두리 · 진행 중 = 검정 뱃지 + 검정 테두리 · 지나감 = 회색 저채도 */
+  .trow.my { background: var(--tint); border: 2px solid var(--mint); border-radius: 14px; margin: 5px 0; }
+  .trow.past .tt { color: var(--faint); }
+  .trow.past .tt .badge { opacity: 0.55; }
+  .trow.now { border: 1.5px solid var(--ink); border-radius: 14px; border-bottom-width: 1.5px; margin: 5px 0; }
   /* ── 스탬프 카드 아코디언 (v3.2 · v3.6 상태 위계) ·
      미완료 = 회색(--dim, 저채도) / 완료 = O10 틴트(내 것) / 다음 추천 = 회색 기조 + 오렌지 보더 / 층 컨테이너(.fl) = 기본(흰 면 + 헤어라인) ── */
   .scard { position: relative; background: var(--dim); border-radius: 20px; padding: 13px 15px; margin-bottom: 8px; }
@@ -2676,11 +2675,15 @@ function myCouponHtml() {
 var SCHED = { open: {}, mine: false };
 function schedToggle(k) { SCHED.open[k] = !SCHED.open[k]; App.render(); }
 function schedMine(v) { SCHED.mine = !!v; App.render(); }
-function schedRow(key, cls, t0, t1, titleHtml, bodyHtml) {
+/* 시간·층 라벨 뱃지 (v3.9 공용) · state: "" 기본(옅은 주황+짙은 주황) / dim 지나감 / act 진행 중(검정) / mine 틴트 행 대비용 O25 */
+function tokBadge(text, state) {
+  return '<span class="tok' + (state ? " " + state : "") + '">' + text + "</span>";
+}
+function schedRow(key, cls, tok, t0, t1, titleHtml, bodyHtml) {
   var open = !!SCHED.open[key];
   return '<div class="trow' + cls + '">' +
     '<div class="rh" onclick="schedToggle(\'' + key + '\')">' +
-    '<span class="tcol"><b>' + t0 + "</b>" + (t1 ? "<small>– " + t1 + "</small>" : "") + "</span>" +
+    '<span class="tcol">' + tokBadge(t0, tok) + (t1 ? "<small>– " + t1 + "</small>" : "") + "</span>" +
     '<span class="tt">' + titleHtml + "</span>" +
     '<span class="chev">' + (open ? "▲" : "▼") + "</span></div>" +
     (open ? '<div class="tb">' + bodyHtml + "</div>" : "") + "</div>";
@@ -2696,7 +2699,8 @@ function ppAfterRender(n, oldN, glow) {
   if (PP.animOn) return;
   PP.animOn = true;
   setTimeout(function () {
-    if (navigator.vibrate) { try { navigator.vibrate(35); } catch (e) {} }
+    /* userActivation 가드: 상호작용 전 vibrate 는 브라우저가 콘솔 경고를 내며 차단한다 (첫 진입 자동 연출 케이스) */
+    if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) { try { navigator.vibrate(35); } catch (e) {} }
     var c = el("ppCnt");
     if (c && n > oldN) {
       var t0 = performance.now();
@@ -2954,7 +2958,7 @@ var Views = {
       var past = ph === "after" || (ph === "live" && i < NOW_INDEX);
       var badges = ' <span class="badge ' + (now ? "mint" : "gray") + '">' + t.tag + "</span>" + (now ? ' <span class="badge ink">진행 중</span>' : "");
       rows.push([t2m(t.time), 0, false,
-        schedRow("t" + i, now ? " now" : past ? " past" : "", t.time, t.end, esc(t.title) + badges,
+        schedRow("t" + i, now ? " now" : past ? " past" : "", now ? "act" : past ? "dim" : "", t.time, t.end, esc(t.title) + badges,
           '<p class="pl">' + esc(t.place) + '</p><p class="ds">' + esc(t.desc) + "</p>")]);
     });
     /* 내 일정 수집 · 홈 「나의 스케줄」과 같은 규칙 (대기열 → 상담 → 커피챗 → 신청 세션) */
@@ -2965,7 +2969,7 @@ var Views = {
       if (!sp || !r || r.status === "done") continue;
       my.push([-1, "지금", sp.nm,
         r.status === "call" ? "지금 입장하세요" : r.no + "번 대기 중" + (r.ahead ? " (앞 " + r.ahead + "명)" : ""),
-        "qrPanelOpen('mine')"]);
+        "qrPanelOpen('mine')", r.status === "call"]);   /* 호출 = 검정 뱃지 (지금 행동할 것) */
     }
     var mr = myResv();
     if (mr && RESV_LIVE.indexOf(mr.status) >= 0) my.push([sessStartMin(mr.slot), mr.slot, "과제상담", "1F DAP존 미팅룸 " + mr.room + " · 30분 1:1", "App.go('dap')"]);
@@ -2975,9 +2979,12 @@ var Views = {
       var tmLbl = x.slot || x.s.tm.split("~")[0];
       my.push([sessStartMin(tmLbl), tmLbl, x.s.ttl, x.s.fl + "F · " + x.s.tm + (x.slot ? " · 내 시간 " + x.slot : ""), "sessOpen('" + x.s.id + "')"]);
     });
+    /* 진행 중 시간대에 든 내 일정 = 오렌지 테두리·틴트 유지, 시간 뱃지만 검정 (v3.11 조합 규칙) */
+    var nowT = ph === "live" ? [t2m(TIMELINE[NOW_INDEX].time), t2m(TIMELINE[NOW_INDEX].end)] : null;
     my.forEach(function (m, j) {
+      var nowish = m[5] || (nowT && m[0] >= 0 && m[0] >= nowT[0] && m[0] < nowT[1]);
       rows.push([m[0], 1, true,
-        schedRow("m" + j, " my", m[1], null, esc(m[2]) + ' <span class="badge mint">내 일정</span>',
+        schedRow("m" + j, " my", nowish ? "act" : "mine", m[1], null, esc(m[2]) + ' <span class="badge mint">내 일정</span>',
           '<p class="pl">' + esc(m[3]) + '</p><button class="btn mint" onclick="' + m[4] + '">바로가기</button>')]);
     });
     rows.sort(function (a, b) { return a[0] - b[0] || (a[1] === b[1] ? 0 : a[1] - b[1]); });
