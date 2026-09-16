@@ -307,7 +307,7 @@
   /* ── 프로그램 탭 층 아코디언 (v3.4) · scard 문법 재사용 · 층 안 = 신청형 행(무겁게) + 상시형 행(얇게) ── */
   /* v3.6 상태 위계: 평상 행 = 기본(흰 면 + 헤어라인) · 신청 완료 = O10(내 것) · 만석·종료 = 회색 */
   .srow { background: var(--white); border: 1px solid var(--dimln); border-radius: 14px; padding: 11px 13px; margin-top: 8px; }
-  .srow.mine { background: var(--tint); border-color: var(--tint2); }
+  .srow.mine { background: var(--tint); border: 2px solid var(--mint); }   /* v3.11 오렌지 전체 테두리 = 내 것 (일정 탭 내 일정 행과 통일) */
   .srow.off { background: var(--dim); }
   .srow.off .tt, .srow.off .tm { color: var(--faint); }
   .srow .rh { display: flex; align-items: center; gap: 10px; cursor: pointer; }
