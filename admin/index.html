@@ -169,7 +169,8 @@ var TABS = [
   { id:"dash",  n:"대시보드" },
   { id:"acct",  n:"계정" },
   { id:"stamp", n:"스탬프" },
-  { id:"apply", n:"신청" }
+  { id:"apply", n:"신청" },
+  { id:"notice", n:"공지" }
 ];
 /* 앱 STAMPS(v46, 6종)와 맞춘다. 폐기된 ID 는 옛 로그에 남아 있을 수 있어 표기만 한다. */
 var STAMP_META = {
@@ -181,7 +182,7 @@ var STAMP_ORDER = ["p1","p2","p3","p4","p5","p7"];
 /* 백엔드 SESS_META · SESS_CAP 과 같은 id */
 var SESS_NAME = {
   key:"Intro · Keynote", l1:"강연 1", l2:"강연 2", ta:"Track A", tb:"Track B",
-  aws:"바이브코딩 실습", fld:"현장 프로그램", photo:"AI 포토부스", kring:"키링 DIY"
+  aws:"바이브코딩 실습", fld:"현장 프로그램", photo:"AI 포토부스", kring:"키링 DIY (260917 폐기)"
 };
 /* 상담 상태 · 시트 드롭다운과 같은 목록 */
 var RESV_STATUS = ["신청","승인","체크인","완료","노쇼","취소"];
@@ -272,7 +273,8 @@ var NEED={
   dash:[{k:"stats",a:"stats"},{k:"acct",a:"acct_list"},{k:"stamp",a:"stamp_people"},{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"}],
   acct:[{k:"acct",a:"acct_list"}],
   stamp:[{k:"stamp",a:"stamp_people"}],
-  apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"}]
+  apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"}],
+  notice:[{k:"noti",a:"sync",p:{emp:""}}]
 };
 /* 탭을 빨리 바꾸면 앞선 요청이 뒤에 도착한다. 최신 요청만 화면에 반영한다. */
 ST.seq=0;
@@ -301,7 +303,7 @@ function render(){
   if(missing.length&&ST.busy){
     h='<h1>'+esc((TABS.filter(function(t){return t.id===ST.tab;})[0]||{}).n||"")+'</h1><div class="card"><p class="muted"><span class="spin"></span>서버에서 불러오는 중입니다. 보통 2~5초 걸립니다.</p></div>';
   } else {
-    try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():viewApply(); }
+    try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="notice"?viewNotice():viewApply(); }
     catch(e){ h='<div class="err-banner">화면을 그리는 중 오류가 났습니다: '+esc(e.message)+'</div>'; }
   }
   if(ST.err) h='<div class="err-banner">일부 데이터를 못 받았습니다('+esc(ST.err.reason||"")+'). 새로고침을 눌러 주세요. 표시된 값은 마지막으로 받은 것입니다.</div>'+h;
@@ -515,6 +517,56 @@ function viewSess(){
     (!shown.length?'<tr><td colspan="6" class="src">신청이 없습니다.</td></tr>':'')+'</table></div>';
   h+='<p class="note mt12">강의신청은 정원 선착순이라 승인 단계가 없습니다. 정원을 바꾸려면 백엔드 SESS_CAP 을 수정해야 합니다.</p></div>';
   return h;
+}
+
+/* ══════════════════ 7-4. 공지 (v3.14) · 발송 notice_set · 중지 notice_clear · 현재 공지는 sync 로 읽는다 ══════════════════ */
+/* 앱 NOTICE_TEMPLATES 와 같은 목록 */
+var NOTICE_TPL=[
+  ["지금, 17F 키노트 시작","곧 라이브 퀴즈가 열립니다. 홈 화면을 열어두세요!"],
+  ["1F 전시, 지금 한산해요","3분 코스로 둘러보고 패스포트 한 칸 채워가세요."],
+  ["부문 우선 관람 10분 전","곧 우리 부문 슬롯이 시작됩니다. 1F 이벤트존에서 만나요!"]
+];
+function viewNotice(){
+  var d=(ST.data.noti&&ST.data.noti.ok)?ST.data.noti:{}, cur=d.notice||null;
+  var h='<h1>공지</h1>';
+  h+='<div class="card"><h2>지금 송출 중</h2>'+
+    (cur
+      ?'<p style="margin-top:6px"><b>'+esc(cur.title)+'</b> <span class="pill on">송출 중</span></p><p class="muted" style="margin-top:4px">'+esc(cur.body)+'</p><p class="muted" style="margin-top:4px;font-size:12px">'+esc(cur.id)+'</p>'+
+       '<button class="btn danger" style="margin-top:10px" onclick="noticeStopC(\''+esc(cur.id)+'\')">공지 중지 (전 기기)</button>'
+      :'<p class="muted" style="margin-top:6px">송출 중인 공지가 없습니다.</p>')+
+    '<p class="note mt12">발송하면 참가자 앱의 LED 띠(30분)·실시간 안내에 나갑니다. 중지하면 다음 동기화(10초 주기)에 전 기기에서 사라집니다.</p></div>';
+  h+='<div class="card"><h2>새 공지 발송</h2>'+
+    '<input class="in" id="ntT" placeholder="제목" style="width:100%;margin-top:8px">'+
+    '<input class="in" id="ntB" placeholder="내용" style="width:100%;margin-top:8px">'+
+    '<button class="btn pri" style="margin-top:10px" onclick="noticeSend()">전체 발송</button></div>';
+  h+='<div class="card"><h2>템플릿 · 확인 후 발송</h2>'+NOTICE_TPL.map(function(t,i){
+    return '<div class="row" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px"><div style="flex:1;min-width:0"><b>'+esc(t[0])+'</b><p class="muted" style="margin-top:2px">'+esc(t[1])+'</p></div><button class="btn sm pri" onclick="noticeTpl('+i+')">발송</button></div>';
+  }).join("")+'</div>';
+  return h;
+}
+function noticeSendGo(t,b){
+  call("notice_set",{title:t,body:b},function(r){
+    if(r&&r.ok){ toast("발송했습니다 · "+t); load(); } else toast("발송 실패: "+(r&&r.reason||""));
+  },function(){ toast("서버 응답 없음"); });
+}
+function noticeSend(){
+  var t=(el("ntT").value||"").trim(), b=(el("ntB").value||"").trim();
+  if(!t){ toast("제목을 입력하세요"); el("ntT").focus(); return; }
+  dialog({ t:"공지를 발송할까요?", s:"모든 참가자 기기의 LED 띠·실시간 안내에 나갑니다.", who:"<b>"+esc(t)+"</b><br>"+esc(b), ok:"발송",
+    onOk:function(){ dlgClose(); noticeSendGo(t,b); } });
+}
+function noticeTpl(i){
+  var t=NOTICE_TPL[i]; if(!t) return;
+  dialog({ t:"템플릿을 발송할까요?", s:"모든 참가자 기기에 나갑니다.", who:"<b>"+esc(t[0])+"</b><br>"+esc(t[1]), ok:"발송",
+    onOk:function(){ dlgClose(); noticeSendGo(t[0],t[1]); } });
+}
+function noticeStopC(id){
+  dialog({ t:"공지를 중지할까요?", s:"서버 송출을 멈추고, 다음 동기화 때 전 기기 화면에서 사라집니다.", ok:"중지",
+    onOk:function(){ dlgClose();
+      call("notice_clear",{id:id},function(r){
+        if(r&&r.ok){ toast("공지를 중지했습니다"); load(); } else toast("중지 실패: "+(r&&r.reason||""));
+      },function(){ toast("서버 응답 없음"); });
+    } });
 }
 
 /* ══════════════════ 8. 시작 ══════════════════ */
