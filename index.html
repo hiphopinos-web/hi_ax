@@ -232,6 +232,10 @@
   .tl li { position: relative; padding: 0 0 18px 20px; }
   .tl li::before { content: ""; position: absolute; left: -7px; top: 6px; width: 12px; height: 12px; border-radius: 999px; background: var(--paper); border: 2px solid var(--line); }
   .tl li.now::before { background: var(--mint); border-color: var(--mint); }
+  /* 일정 탭 내 항목 (v3.3) · 같은 타임라인 카드 문법 + 오렌지 액센트만 */
+  .tl li.my::before { background: var(--tint2); border-color: var(--mint); }
+  .tl .myit { border-left: 3px solid var(--mint); border-radius: 20px; cursor: pointer; }
+  .tl .myit:active { background: var(--surface2); }
   /* ── 스탬프 카드 아코디언 (v3.2) · 경로 메타포 폐기, 전폭 개별 카드 · 각자 독립 개폐 ── */
   .scard { position: relative; background: var(--card); border-radius: 20px; padding: 13px 15px; margin-bottom: 8px; }
   .scard .shead { display: flex; align-items: center; gap: 12px; cursor: pointer; }
@@ -2111,17 +2115,18 @@ var BELL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 var QR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><path d="M13.5 13.5h3.2v3.2h-3.2z"/><path d="M20.5 13.5v3.2"/><path d="M13.5 20.5h3.2"/><path d="M18.6 17.4v3.1h1.9"/></svg>';
 var App = {
   current: "home",
-  /* v47 3탭+FAB · 홈(지금) / 스탬프(카드·보상, 라우트 id는 passport 유지) / [QR FAB] / 프로그램(신청).
-     구 이벤트(join) 탭은 스탬프 탭으로 흡수 · v3.1: 탭 이름은 현장 인쇄물과 같은 「스탬프」 */
+  /* v3.3 4탭+FAB(2+2 균형) · 홈 / 스탬프(라우트 id는 passport 유지) / [QR FAB] / 일정(라우트 id는 guide_time 유지) / 프로그램(신청).
+     일정 탭 = 전체 타임라인 + 내 일정 통합 · 신청 0건이어도 전체 타임라인이 보인다 */
   TABS: [
-    ["home", "홈"], ["passport", "스탬프"], ["guide", "프로그램"]
+    ["home", "홈"], ["passport", "스탬프"], ["guide_time", "일정"], ["guide", "프로그램"]
   ],
   /* 탭 픽토그램 · 기하 라인 스타일 (stroke=currentColor로 활성 색 자동 적용) */
   ICONS: {
     home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 11.2 12 4l8.5 7.2"/><path d="M6 9.8V20h12V9.8"/><path d="M10 20v-5.4h4V20"/></svg>',
     passport: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M9 16.5h6"/></svg>',
     ideas: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 1 6 6c0 2.3-1.3 3.6-2.3 4.7-.6.7-.9 1.3-1 2.3h-5.4c-.1-1-.4-1.6-1-2.3C7.3 12.6 6 11.3 6 9a6 6 0 0 1 6-6z"/><path d="M9.8 19.5h4.4"/><path d="M10.6 22h2.8"/></svg>',
-    guide: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="3.5" width="15" height="17" rx="2"/><path d="M4.5 9.2h15"/><path d="M4.5 14.9h15"/><path d="M9.5 20v-5.1"/></svg>'
+    guide: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="3.5" width="15" height="17" rx="2"/><path d="M4.5 9.2h15"/><path d="M4.5 14.9h15"/><path d="M9.5 20v-5.1"/></svg>',
+    guide_time: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.3V12l3.2 2.1"/></svg>'
   },
   /* Lv2 → 소속 탭 / 뒤로가기 목적지 */
   PARENT: {
@@ -2130,18 +2135,18 @@ var App = {
     ideas: "passport", booth: "passport", wq_list: "passport", ev_replay: "passport",
     wq_play: "wq_list", game_word: "passport", game_cho: "passport",
     ideas_mine: "passport",
-    /* 프로그램 · 신청 전용 (리더보드는 10F 세션 곁으로, v3.1) */
+    /* 프로그램 · 신청 전용 (리더보드는 10F 세션 곁으로, v3.1) · 일정(guide_time)은 v3.3부터 탭 루트라 PARENT 없음 */
     dap: "guide", ev_cchat: "guide", ev_rank: "guide",
-    guide_time: "guide", sess_d: "guide", guide_slots: "guide", crowd: "home",
+    sess_d: "guide", guide_slots: "guide", crowd: "home",
     admin: "home", screen: "admin",
     wall_quiz: "admin", wall_wave: "admin", wall_live: "admin", wall_metowe: "admin", wall_rank: "admin", wall_tv: "wall_metowe"
   },
   TITLES: {
-    home: "", passport: "스탬프", guide: "프로그램",
+    home: "", passport: "스탬프", guide_time: "일정", guide: "프로그램",
     notices: "실시간 안내", dap: "과제상담 신청", crowd: "층별 혼잡도",
     booth: "AX Now! 부스",
     ideas: "아이디어 한 줄", ideas_mine: "내가 낸 아이디어",
-    guide_time: "타임라인", sess_d: "프로그램 신청", guide_slots: "부문별 우선 관람",
+    sess_d: "프로그램 신청", guide_slots: "부문별 우선 관람",
     ev_cchat: "내 커피챗", ev_replay: "퀴즈 다시 풀기", ev_rank: "챔피언십 리더보드",
     wq_list: "DAP Wall QR 퀴즈", wq_play: "문제 풀이",
     admin: "관리자 콘솔", screen: "송출용 화면", game_word: "AX 링크", game_cho: "로드맵 초성퀴즈",
@@ -2519,7 +2524,7 @@ function myScheduleHtml() {
   });
   rows.sort(function (a, b) { return a[0] - b[0]; });
   var head = '<div class="sect"><b>나의 스케줄</b>' +
-    '<span onclick="App.go(\'guide_time\')">전체 타임라인 ›</span></div>';
+    '<span onclick="App.go(\'guide_time\')">일정 탭 ›</span></div>';
   if (!rows.length) {
     return head + '<div class="mine empty" onclick="App.go(\'guide\')">' +
       '<div class="r"><span class="tx">신청한 프로그램이 없습니다</span>' +
@@ -2533,7 +2538,7 @@ function myScheduleHtml() {
       '<span class="tx">' + esc(r[3]) + '</span><span class="arw">›</span></div>';
   }).join("") +
     (more > 0 ? '<div class="r" onclick="App.go(\'guide_time\')"><span class="tm">+' + more + "</span>" +
-      '<span class="tx">외 ' + more + '건 · 전체 타임라인에서 보기</span><span class="arw">›</span></div>' : "") +
+      '<span class="tx">외 ' + more + '건 · 일정 탭에서 보기</span><span class="arw">›</span></div>' : "") +
     "</div>";
 }
 
@@ -2796,7 +2801,8 @@ var Views = {
         return '<div class="r" onclick="sessOpen(\'' + x.s.id + '\')"><span class="tm">' + tmLbl + '</span><span class="tx">' + esc(x.s.ttl) + " · " + x.s.fl + 'F</span><span class="arw">›</span></div>';
       }).join("") + "</div>";
     var list = SESSIONS.slice().sort(function (a, b) { return sessStartMin(a.tm) - sessStartMin(b.tm); });
-    var head = '<div class="sect" style="margin-top:2px"><b>신청 프로그램 ' + list.length + '개 · 시간순</b><span onclick="App.go(\'guide_time\')">전체 타임라인 ›</span></div>';
+    /* 전체 타임라인 링크는 v3.3 일정 탭이 맡는다 */
+    var head = '<div class="sect" style="margin-top:2px"><b>신청 프로그램 ' + list.length + '개 · 시간순</b></div>';
     var cards = list.map(function (s) { return sessCard(s); }).join("");
     /* 챔피언십 리더보드 · 10F 현장 프로그램의 점수판이라 신청 리스트 곁에 둔다 (v3.1 스탬프 탭에서 이관) */
     var rankLink = '<div class="card soft" style="display:flex;align-items:center;gap:10px;padding:13px 15px;cursor:pointer;margin-top:14px" onclick="App.go(\'ev_rank\')">' +
@@ -2810,15 +2816,44 @@ var Views = {
     return myHtml + head + cards + rankLink + slotLink;
   },
 
+  /* ═══ 일정 탭 (v3.3 · guide_time 승격) · 전체 타임라인 + 내 일정 통합.
+     내 항목은 같은 타임라인 카드 문법에 오렌지 액센트(좌측 보더 + 「내 일정」 뱃지)만 얹는다 (design.md 컴포넌트 일관성).
+     시간순 병합: 같은 시각이면 전체 일정 카드 다음에 내 항목 · 대기열(시간 없음)은 「지금」으로 맨 위. ═══ */
   guide_time: function () {
-    return '<ol class="tl">' +
-      TIMELINE.map(function (t, i) {
-        var now = i === NOW_INDEX;
-        return '<li class="' + (now ? "now" : "") + '"><div class="card' + (now ? "" : " soft") + '"' + (now ? ' style="border-color:var(--mint-deep)"' : "") + '>' +
-          '<div class="row"><b class="disp" style="color:var(--hi);font-size:calc(16.5px * var(--fs))">' + t.time + '</b><span style="font-size:calc(12.5px * var(--fs));color:var(--faint);font-weight:700">– ' + t.end + '</span><span class="badge ' + (now ? "mint" : "gray") + '">' + t.tag + "</span>" + (now ? '<span class="badge ink">진행 중</span>' : "") + "</div>" +
-          '<p style="margin-top:5px;font-weight:800;font-size:calc(16.5px * var(--fs));color:var(--hi)">' + esc(t.title) + " <span style='font-size:calc(14.5px * var(--fs));font-weight:700;color:var(--muted)'>· " + esc(t.place) + "</span></p>" +
-          '<p class="muted" style="margin-top:5px;font-size:calc(14.5px * var(--fs))">' + esc(t.desc) + "</p></div></li>";
-      }).join("") + "</ol>";
+    var rows = [];   /* [분, 정렬보조(전체 0 · 내 것 1), html] */
+    TIMELINE.forEach(function (t, i) {
+      var now = i === NOW_INDEX;
+      rows.push([t2m(t.time), 0,
+        '<li class="' + (now ? "now" : "") + '"><div class="card' + (now ? "" : " soft") + '"' + (now ? ' style="border-color:var(--mint-deep)"' : "") + '>' +
+        '<div class="row"><b class="disp" style="color:var(--hi);font-size:calc(16.5px * var(--fs))">' + t.time + '</b><span style="font-size:calc(12.5px * var(--fs));color:var(--faint);font-weight:700">– ' + t.end + '</span><span class="badge ' + (now ? "mint" : "gray") + '">' + t.tag + "</span>" + (now ? '<span class="badge ink">진행 중</span>' : "") + "</div>" +
+        '<p style="margin-top:5px;font-weight:800;font-size:calc(16.5px * var(--fs));color:var(--hi)">' + esc(t.title) + " <span style='font-size:calc(14.5px * var(--fs));font-weight:700;color:var(--muted)'>· " + esc(t.place) + "</span></p>" +
+        '<p class="muted" style="margin-top:5px;font-size:calc(14.5px * var(--fs))">' + esc(t.desc) + "</p></div></li>"]);
+    });
+    /* 내 일정 수집 · 홈 「나의 스케줄」과 같은 규칙 (대기열 → 상담 → 커피챗 → 신청 세션) */
+    var my = [];   /* [분, onclick, 시각 라벨, 내용] */
+    var q = S.get("queue", {}), qk;
+    for (qk in q) {
+      var sp = scanSpot(qk), r = q[qk];
+      if (!sp || !r || r.status === "done") continue;
+      my.push([-1, "qrPanelOpen('mine')", "지금",
+        sp.nm + (r.status === "call" ? " · 지금 입장하세요" : " · " + r.no + "번 대기 중" + (r.ahead ? " (앞 " + r.ahead + "명)" : ""))]);
+    }
+    var mr = myResv();
+    if (mr && RESV_LIVE.indexOf(mr.status) >= 0) my.push([sessStartMin(mr.slot), "App.go('dap')", mr.slot, "과제상담 · 1F DAP존 미팅룸 " + mr.room]);
+    var cc = S.get("cchat", null);
+    if (cc && cc.status === "matched") my.push([sessStartMin(cc.round), "App.go('ev_cchat')", cc.round, "AX 커피챗 · 18F 라운지 TABLE " + cc.table]);
+    sessMineList().forEach(function (x) {
+      var tmLbl = x.slot || x.s.tm.split("~")[0];
+      my.push([sessStartMin(tmLbl), "sessOpen('" + x.s.id + "')", tmLbl, x.s.ttl + " · " + x.s.fl + "F"]);
+    });
+    my.forEach(function (m) {
+      rows.push([m[0], 1,
+        '<li class="my"><div class="card soft myit" onclick="' + m[1] + '">' +
+        '<div class="row"><b class="disp" style="color:var(--acc2);font-size:calc(16.5px * var(--fs))">' + esc(m[2]) + '</b><span class="badge mint">내 일정</span></div>' +
+        '<p style="margin-top:5px;font-weight:800;font-size:calc(15.5px * var(--fs));color:var(--hi)">' + esc(m[3]) + '</p></div></li>']);
+    });
+    rows.sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
+    return '<ol class="tl">' + rows.map(function (r) { return r[2]; }).join("") + "</ol>";
   },
 
   /* ═══ 프로그램 상세 · 소개 영상 · 잔여석 · 신청 ═══ */
