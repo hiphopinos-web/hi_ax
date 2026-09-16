@@ -163,7 +163,7 @@
   #tabbar .fab svg { width: 24px; height: 24px; display: block; }
   #tabbar .fab:active { transform: scale(0.95); }
 
-  /* ───────── 브랜드 배너 (패스포트·응모권 히어로) ───────── */
+  /* ───────── 브랜드 배너 (패스포트 히어로) ───────── */
   .skb { margin-bottom: 16px; }
   .skb .r1 { background: var(--ink); color: #fff; padding: 14px 16px 12px; border-radius: 14px; }
   .skb .r1 .big { font-family: var(--disp); font-size: 34px; letter-spacing: 0.02em; line-height: 1; }
@@ -239,7 +239,7 @@
   .tl li { position: relative; padding: 0 0 18px 20px; }
   .tl li::before { content: ""; position: absolute; left: -7px; top: 6px; width: 12px; height: 12px; border-radius: 999px; background: var(--paper); border: 2px solid var(--line); }
   .tl li.now::before { background: var(--mint); border-color: var(--mint); }
-  .stamp5 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .stamp5 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .stamp5 .cell { position: relative; aspect-ratio: 1; border: 0; border-radius: 14px; background: var(--white); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 4px; color: var(--tx); cursor: pointer; }
   .stamp5 .cell:active { background: var(--surface2); }
   .stamp5 .cell.got { background: var(--tint2); color: var(--acc2); }
@@ -247,8 +247,11 @@
   .stamp5 .cell .ic svg { width: 24px; height: 24px; display: block; }
   .stamp5 .cell.got .ic { color: var(--acc2); }
   .stamp5 .cell .ck { position: absolute; top: 5px; right: 7px; font-size: calc(11px * var(--fs)); font-weight: 900; color: var(--acc2); }
+  .stamp5 .cell .ck.app { top: 5px; right: 5px; font-size: 8.5px; font-weight: 800; letter-spacing: 0.05em; color: #fff; background: var(--mint); border-radius: 6px; padding: 2px 5px; }  /* 앱에서 바로 되는 칸 구분 뱃지 · 파랑 금지라 O100 (260909) */
   .stamp5 .cell .t { font-size: calc(10px * var(--fs)); font-weight: 700; text-align: center; line-height: 1.25; color: var(--muted); }
+  .stamp5 .cell .w { font-size: calc(9px * var(--fs)); font-weight: 700; text-align: center; line-height: 1.2; color: var(--faint); }  /* 층·소요시간 (260909) */
   .stamp5 .cell.got .t { color: var(--acc2); }
+  .stamp5 .cell.got .w { color: var(--acc2); opacity: 0.7; }
   .coupon { border-radius: 20px; overflow: hidden; margin-bottom: 12px; border: 0; }
   .coupon .head { background: var(--tint2); color: var(--hi); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
   .coupon .head b { font-size: calc(15.5px * var(--fs)); }
@@ -685,19 +688,18 @@ var FESTIVAL = {
   floors: "1F · 10F · 17F · 18F",
   coffeeTotal: 500, coffeeClaimedMock: 287,
   mockOnline: 1842, mockIdeas: 214, mockQuizPlayers: 2087, mockHeart: 168,
-  mockFinishers: 61, mockWave: 1128, mockWe: 1013
+  mockStamp3: 61, mockWave: 1128, mockWe: 1013
 };
-/* 적립 경로 8종 · 이 중 STAMP_GOAL(5)개를 채우면 완주.
-   short = 스탬프 그리드처럼 좁은 자리에 쓰는 짧은 이름 */
+/* 적립 경로 6종 (260909 확정) · 완주 개념 폐기, 모은 개수가 그대로 보상 기준.
+   short = 좁은 자리용 짧은 이름 · where = 층·소요시간 · inapp = 앱에서 바로 되는 칸(구분 뱃지)
+   구 p6(포토부스)·p8(미니게임 별도 칸)은 폐지 · 미니게임은 04 라이브 챌린지에 통합 */
 var STAMPS = [
-  { id: "p1", no: "01", title: "1F 전시", short: "1F 전시", desc: "1F 전시존 QR 스캔", how: "현장 QR", site: 1, tap: "progOpenFl(1,'wall')" },
-  { id: "p2", no: "02", title: "AX Now! 체험", short: "부스 체험", desc: "HiDI-Q 또는 HI-Helper 부스 1곳 체험", how: "현장 QR", site: 1, tap: "App.go('booth')" },
-  { id: "p3", no: "03", title: "17F 강의", short: "17F 강의", desc: "17F 오후 강의 1회 참석 (10F 제외)", how: "현장 QR", site: 1, tap: "progOpenFl(17,'hall')" },
-  { id: "p4", no: "04", title: "라이브 퀴즈", short: "라이브 퀴즈", desc: "키노트 퀴즈 1회 이상 응답", how: "자동 적립", tap: "App.go('home')" },
-  { id: "p5", no: "05", title: "아이디어 한 줄", short: "아이디어", desc: "아이디어 1건 제출", how: "자동 적립", tap: "App.go('ideas')" },
-  { id: "p6", no: "06", title: "AI 포토부스", short: "포토부스", desc: "1F AI 포토부스 촬영 완료", how: "현장 QR", site: 1, tap: "sessOpen('photo')" },
-  { id: "p7", no: "07", title: "QR 퀴즈 통과", short: "QR 퀴즈", desc: "DAP Wall QR 퀴즈 1세트 통과 (60점 이상)", how: "자동 적립", tap: "App.go('wq_list')" },
-  { id: "p8", no: "08", title: "미니게임 클리어", short: "미니게임", desc: "AX 링크 또는 초성퀴즈 1종 클리어", how: "자동 적립", tap: "App.go('ev_games')" }
+  { id: "p1", no: "01", title: "1F 전시", short: "1F 전시", desc: "1F 전시존 QR 스캔", how: "현장 QR", where: "1F · 약 5분", site: 1, tap: "progOpenFl(1,'wall')" },
+  { id: "p2", no: "02", title: "AX Now! 체험", short: "부스 체험", desc: "HiDI-Q 또는 HI-Helper 부스 1곳 체험", how: "현장 QR", where: "1F · 약 5분", site: 1, tap: "App.go('booth')" },
+  { id: "p3", no: "03", title: "17F 강의", short: "17F 강의", desc: "17F 오후 강의 1회 참석 (10F 제외)", how: "현장 QR", where: "17F · 90분", site: 1, tap: "progOpenFl(17,'hall')" },
+  { id: "p4", no: "04", title: "라이브 챌린지", short: "라이브 챌린지", desc: "키노트 라이브 퀴즈 응답 또는 미니게임(AX 링크·초성퀴즈) 1개 클리어", how: "앱 자동", where: "앱 · 30초", inapp: 1, tap: "App.go('ev_games')" },
+  { id: "p5", no: "05", title: "아이디어 한 줄", short: "아이디어", desc: "아이디어 1건 제출", how: "앱 자동", where: "앱 · 1분", inapp: 1, tap: "App.go('ideas')" },
+  { id: "p7", no: "06", title: "전시 QR 퀴즈", short: "QR 퀴즈", desc: "DAP Wall QR 퀴즈 1세트 통과 (60점 이상)", how: "앱 자동", where: "1F DAP Wall · 약 10분", tap: "App.go('wq_list')" }
 ];
 /* 스탬프 픽토그램 · 탭 아이콘과 같은 기하 라인(stroke=currentColor) · 이모지 금지 원칙 유지 */
 var SICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">';
@@ -707,21 +709,26 @@ var STAMP_ICONS = {
   p3: SICO + '<rect x="3" y="4" width="18" height="11.5" rx="2"/><path d="M12 15.5v4"/><path d="M8 19.5h8"/><path d="M7.5 11.8l3.2-3.3 2.6 2.6 3.2-3.8"/></svg>',
   p4: SICO + '<path d="M4 5h16v10.5h-7.2L8.6 19.6V15.5H4z"/><path d="M9.9 8.6a2.2 2.2 0 0 1 4.3.7c0 1.5-2.1 1.6-2.1 2.9"/><path d="M12.1 13.4h.01"/></svg>',
   p5: SICO + '<path d="M12 3a6 6 0 0 1 6 6c0 2.3-1.3 3.6-2.3 4.7-.6.7-.9 1.3-1 2.3h-5.4c-.1-1-.4-1.6-1-2.3C7.3 12.6 6 11.3 6 9a6 6 0 0 1 6-6z"/><path d="M9.8 19.5h4.4"/><path d="M10.6 22h2.8"/></svg>',
-  p6: SICO + '<path d="M3.5 7.8h3.9l1.5-2.3h6.2l1.5 2.3h3.9v11.4h-17z"/><circle cx="12" cy="13.4" r="3.3"/></svg>',
-  p7: SICO + '<rect x="3.2" y="3.2" width="7" height="7" rx="1.4"/><rect x="13.8" y="3.2" width="7" height="7" rx="1.4"/><rect x="3.2" y="13.8" width="7" height="7" rx="1.4"/><path d="M13.8 13.8h3.1v3.1h-3.1z"/><path d="M20.8 13.8v1.8M17.9 20.8h2.9M13.8 20.8h1.4"/></svg>',
-  p8: SICO + '<rect x="2.5" y="7.2" width="19" height="9.6" rx="4.3"/><path d="M6.6 10.6v3.2M5 12.2h3.2"/><path d="M15.6 11.4h.01M18 13.4h.01"/></svg>'
+  p7: SICO + '<rect x="3.2" y="3.2" width="7" height="7" rx="1.4"/><rect x="13.8" y="3.2" width="7" height="7" rx="1.4"/><rect x="3.2" y="13.8" width="7" height="7" rx="1.4"/><path d="M13.8 13.8h3.1v3.1h-3.1z"/><path d="M20.8 13.8v1.8M17.9 20.8h2.9M13.8 20.8h1.4"/></svg>'
 };
-/* 스탬프 단계별 보상 사다리 (260829 사용자 확정) · 1개부터 매 칸 보상, 5개에서 극적 보상 + 대형경품 응모권
-   2~4단계 품목은 미정. 확정되면 nm/d만 바꾸면 전 화면에 반영된다 */
+/* 보상 (260909 확정) · 확정지급 사다리·즉석경품 응모권 폐지, 스탬프 개수 하나로만 계산한다.
+   3개 = 1F 이벤트존 실물 룰렛 1회 (1인 1회 · 내 QR 제시 → 운영자 스캔 차감)
+   4~6개 = 사후 추첨 응모 1~3장 (자동 계산 · 별도 행동 불필요 · 결과는 행사 종료 후 개별 안내) */
 var REWARD_LADDER = [
-  { n: 1, nm: "커피 나눔권", d: "18F 라운지 수령 · 커피 + 쿠키, 선착순 500잔", go: "pp_reward" },
-  { n: 2, nm: "마우스패드", d: "1F 수령" },
-  { n: 3, nm: "CU 상품권", d: "1F 수령" },
-  { n: 4, nm: "키캡", d: "1F 수령" },
-  { n: 5, nm: "완주 스페셜권 + 대형경품 응모권", d: "스페셜권은 1F 수령 · 추첨 결과는 행사 종료 후 개별 안내", go: "pp_reward" }
+  { n: 3, nm: "룰렛 1회", d: "1F 이벤트존 실물 룰렛 · 1인 1회 · 내 QR 제시" },
+  { n: 4, nm: "사후 추첨 응모 1장", d: "자동 응모 · 결과는 행사 종료 후 개별 안내" },
+  { n: 5, nm: "사후 추첨 응모 2장", d: "자동 응모" },
+  { n: 6, nm: "사후 추첨 응모 3장", d: "자동 응모" }
 ];
-/* 완주 = 8개 경로 중 5개 · 전부 돌 필요 없이 내 동선에 맞는 5개면 완주 (260828 사용자 확정) */
-var STAMP_GOAL = 5;
+var STAMP_TOTAL = 6;
+/* 서버가 준 stamps 배열에는 정의 밖 id(구 p6·p8, 계단 p9 등)가 남아 있을 수 있다.
+   표시·보상 계산은 전부 이 함수로 센다. */
+function stampCount() {
+  return S.get("stamps", []).filter(function (id) {
+    return STAMPS.some(function (s) { return s.id === id; });
+  }).length;
+}
+function raffleTickets(n) { return n >= 6 ? 3 : n >= 5 ? 2 : n >= 4 ? 1 : 0; }
 var TIMELINE = [
   { time: "09:30", end: "09:40", title: "Intro · 개회", short: "CEO 개회 안내로 하루가 열립니다", place: "17F 대강당", desc: "CEO · 2026 AX Festival 행사 개회 안내.", tag: "전직원" },
   { time: "09:40", end: "11:20", title: "Keynote", short: "CTO 키노트 · 파트가 끝날 때마다 라이브 퀴즈가 열립니다", place: "17F 대강당", desc: "CTO · 「데이터 비즈니스 컴퍼니로서의 현대해상과 AX」. ⓪AX란 무엇인가 → ①걱정에 먼저 답하기 → ②당사 AX 로드맵 → ③현업의 노력(DAP). 파트가 끝날 때마다 라이브 퀴즈!", tag: "전직원" },
@@ -730,7 +737,7 @@ var TIMELINE = [
   { time: "13:10", end: "14:40", title: "강연1 · AI Agentic 시대의 일하는 방식 변화", short: "구태훈 박사(AWS) · 오후 메인 강연", place: "17F 대강당", desc: "구태훈 박사(AWS) · AI Agent가 바꾸는 일하는 방식. 사전 지식 없이 편하게 들을 수 있는 오후 메인 강연.", tag: "전직원" },
   { time: "13:10", end: "16:30", title: "10F 오후 세션", short: "Track A·B 실습 · 바이브코딩 · 현장 프로그램 · 신청제", place: "10F Heart · 컨퍼런스룸", desc: "통계·리서치 자동화 실습(Track A·B) · 바이브코딩 실습(AWS) · 현장 프로그램(사내강사 세션+실습). 프로그램 탭에서 잔여석 확인 후 신청하세요.", tag: "신청제" },
   { time: "15:00", end: "16:30", title: "강연2 · 확정 시 공지", short: "내용이 확정되면 앱으로 안내드립니다", place: "17F 대강당", desc: "강연 내용이 확정되는 대로 이 자리에서 안내드립니다.", tag: "전직원" },
-  { time: "16:50", end: "17:30", title: "Outro · DAP 시상", short: "Wrap up · DAP 시상 · 대형경품 추첨", place: "17F 대강당", desc: "CSO · Wrap up, DAP 우수 성과자 시상, 패스포트 완주 대형경품 추첨 발표!", tag: "피날레" }
+  { time: "16:50", end: "17:30", title: "Outro · DAP 시상", short: "Wrap up · DAP 시상 · 스탬프 경품 추첨", place: "17F 대강당", desc: "CSO · Wrap up, DAP 우수 성과자 시상, 스탬프 경품 추첨. 추첨 결과는 행사 종료 후 개별 안내드립니다.", tag: "피날레" }
 ];
 var NOW_INDEX = 1;
 var FLOORS = [
@@ -1215,37 +1222,31 @@ function toast(msg) {
 
 /* ── 보상·커피챗 ── */
 function coffeeLeft() {
-  return FESTIVAL.coffeeTotal - FESTIVAL.coffeeClaimedMock - Math.floor(tick / 6) - (S.get("coffee_used", null) ? 1 : 0);
+  return FESTIVAL.coffeeTotal - FESTIVAL.coffeeClaimedMock - Math.floor(tick / 6);
 }
+/* 스탬프 개수로 열리는 보상 안내 (260909) · 3개=룰렛 1회, 4~6개=사후 추첨 응모 1~3장 */
 function checkRewards() {
-  var st = S.get("stamps", []);
-  var ideas = S.get("ideas", []);
-  if ((st.length >= 1 || ideas.length >= 1) && !S.get("coffee_issued", false)) {
-    S.set("coffee_issued", true);
-    setTimeout(function () { toast("18F 커피 나눔권 발급. 패스포트 › 나의 보상에서 확인 (선착순 " + FESTIVAL.coffeeTotal + "잔)"); }, 1200);
+  var n = stampCount();
+  if (n >= 3 && !S.get("roulette_open", false)) {
+    S.set("roulette_open", true);
+    setTimeout(function () { toast("★ 스탬프 3개! 1F 이벤트존 룰렛 1회가 열렸어요. 패스포트에서 내 QR을 보여주세요."); }, 1200);
   }
-  if (st.length >= STAMP_GOAL && !S.get("raffle_entered", false)) {
-    S.set("raffle_entered", true);
-    setTimeout(function () { toast("★ 패스포트 완주! 완주 스페셜권 발급 + 대형경품 응모 완료. 추첨 결과는 행사 종료 후 개별 안내드립니다."); }, 1500);
+  var t = raffleTickets(n);
+  if (t > S.get("raffle_seen", 0)) {
+    S.set("raffle_seen", t);
+    setTimeout(function () { toast("사후 추첨 응모 " + t + "장 · 자동 응모 완료. 추첨 결과는 행사 종료 후 개별 안내드립니다."); }, 1500);
   }
 }
-/* 앱 안 행동으로 붙는 4종(라이브퀴즈·아이디어·QR퀴즈·미니게임) 전용.
+/* 앱 안 행동으로 붙는 3종(라이브 챌린지·아이디어·전시 QR 퀴즈) 전용.
    현장 QR 은 stampByCode 가 서버로 보내므로 여기를 타지 않는다. */
 function awardStamp(id) {
   var st = S.get("stamps", []);
   if (st.indexOf(id) >= 0) return;
   st.push(id); S.set("stamps", st);
   var sd = STAMPS.find(function (s) { return s.id === id; });
-  toast("PASSPORT " + (sd ? sd.no : "") + " 적립 · " + (sd ? sd.title : id) + (st.length >= STAMP_GOAL ? " · 완주 달성!" : " (" + st.length + "/" + STAMP_GOAL + " 완주)"));
+  toast("PASSPORT " + (sd ? sd.no : "") + " 적립 · " + (sd ? sd.title : id) + " · 스탬프 " + stampCount() + "개");
   bePush("stamp:" + id, sd ? sd.title : id, true);
   checkRewards();
-}
-function redeemCoffee() {
-  if (!S.get("coffee_issued", false)) { toast("패스포트 1칸 또는 아이디어 1건을 채우면 나눔권이 발급돼요."); return; }
-  if (S.get("coffee_used", null)) { toast("이미 사용한 나눔권이에요."); return; }
-  S.set("coffee_used", Date.now());
-  bePush("coffee", "", true);
-  toast("교환 완료. 커피와 쿠키를 가져가세요. 오늘도 ME to WE");
 }
 function scheduleCoffeechat() {
   if (S.get("cchat", null)) return;
@@ -1506,23 +1507,10 @@ function wqSubmit() {
   S.set("wq_attempts", at);
   WQ.submitted = true;
   WQ.result = { score: score, correct: correct, passed: passed };
-  if (firstPass) {
-    entryAdd("quiz", WQ.set);
-    awardStamp("p7");
-    setTimeout(function () { toast("즉석경품 응모권 발급. 이벤트 › 응모권에서 확인하세요."); }, 300);
-    if (wqPassedCount() >= 3 && !S.get("wq_bonus", false)) {
-      S.set("wq_bonus", true);
-      entryAdd("bonus", "3세트");
-      setTimeout(function () { toast("★ 3세트 모두 통과! 보너스 응모권이 발급됐어요."); }, 1500);
-    }
-  }
+  /* 260909: 응모권 발급 폐지 · 통과 = 스탬프 06(전시 QR 퀴즈)만 적립 */
+  if (firstPass) awardStamp("p7");
   waveBump();
   App.render();
-}
-function entryAdd(source, set) {
-  var e = S.get("entries", []);
-  e.push({ id: uid(), code: "E-" + String(1000 + Math.floor(Math.random() * 9000)), source: source, set: set, ts: Date.now() });
-  S.set("entries", e);
 }
 function pickDept(d) { S.set("dept", d); toast("부문 선택 완료. " + d + "의 정답률에 반영됩니다."); }
 function deptStats() {
@@ -2185,7 +2173,7 @@ var App = {
     booth: "join", wq_list: "join", ev_replay: "join", ev_games: "join", ev_rank: "join",
     wq_play: "wq_list", game_word: "ev_games", game_cho: "ev_games",
     /* 패스포트 · 내가 모은 것 */
-    pp_reward: "passport", pp_code: "passport", entries: "passport",
+    pp_code: "passport",
     ideas_mine: "passport", ev_draw: "passport",
     /* 프로그램 · 어디로 갈지 */
     guide_time: "guide", sess_d: "guide", guide_slots: "guide", crowd: "guide",
@@ -2195,11 +2183,11 @@ var App = {
   TITLES: {
     home: "", join: "이벤트", passport: "AX 패스포트", guide: "프로그램",
     notices: "실시간 안내", wallv: "ME to WE 라이브 월", dap: "과제상담 신청", crowd: "층별 혼잡도",
-    pp_reward: "나의 보상", pp_code: "스탬프 적립하기", booth: "AX Now! 부스",
+    pp_code: "스탬프 적립하기", booth: "AX Now! 부스",
     ideas: "아이디어 한 줄", ideas_mine: "내가 낸 아이디어",
     guide_time: "타임라인", sess_d: "프로그램 신청", guide_slots: "부문별 우선 관람",
-    ev_cchat: "내 커피챗", ev_games: "미니게임", ev_replay: "퀴즈 다시 풀기", ev_rank: "챔피언십 리더보드", ev_draw: "당첨 발표",
-    wq_list: "DAP Wall QR 퀴즈", wq_play: "문제 풀이", entries: "즉석경품 응모권",
+    ev_cchat: "내 커피챗", ev_games: "미니게임", ev_replay: "퀴즈 다시 풀기", ev_rank: "챔피언십 리더보드", ev_draw: "추첨 안내",
+    wq_list: "DAP Wall QR 퀴즈", wq_play: "문제 풀이",
     admin: "관리자 콘솔", screen: "송출용 화면", game_word: "AX 링크", game_cho: "로드맵 초성퀴즈",
     wall_quiz: "", wall_wave: "", wall_live: "", wall_metowe: "", wall_rank: "", wall_tv: ""
   },
@@ -2356,7 +2344,7 @@ function quizCardHtml() {
       return '<div class="bar"><div class="fill' + (isAns ? " ans" : "") + '" style="width:' + quiz.mockDist[i] + '%"></div>' +
         '<div class="lbl"><span>' + (isAns ? "◈ " : "") + esc(o) + (isMine ? " · 내 선택" : "") + "</span><b>" + quiz.mockDist[i] + "%</b></div></div>";
     }).join("");
-    h += '<div class="info">' + (my ? (my.correct ? "정답! 패스포트 「라이브 퀴즈」 칸이 적립됐어요." : "아쉽지만 오답. 결과는 나만 볼 수 있으니 걱정 마세요.") :
+    h += '<div class="info">' + (my ? (my.correct ? "정답! 패스포트 「라이브 챌린지」 칸이 적립됐어요." : "아쉽지만 오답. 결과는 나만 볼 수 있으니 걱정 마세요.") :
       "이번 퀴즈를 놓쳤어도 이벤트 › Replay로 참여할 수 있어요.") + " · " + esc(quiz.explain) + "</div>";
   }
   return h + "</div>";
@@ -2376,7 +2364,7 @@ function replayQuiz(qid, choice) {
   answers[qid] = { choice: choice, correct: choice === quiz.answerIndex, replay: true, ts: Date.now() };
   S.set("quiz_answers", answers);
   awardStamp("p4");
-  toast(choice === quiz.answerIndex ? "정답! 패스포트 「라이브 퀴즈」 칸이 적립됐어요." : "아쉽게 오답. 해설을 확인해보세요.");
+  toast(choice === quiz.answerIndex ? "정답! 패스포트 「라이브 챌린지」 칸이 적립됐어요." : "아쉽게 오답. 해설을 확인해보세요.");
 }
 
 /* ═══ 프로그램 신청 · seat(좌석)·slot(시간대)·link(기존 시스템) ═══ */
@@ -2534,10 +2522,10 @@ function nowCardHtml() {
       '<div class="next"><span class="lb">미리 보기</span><span class="nm">프로그램과 층별 추천 동선</span><span class="arw">›</span></div></div>';
   }
   if (ph === "after") {
-    return '<div class="hero" onclick="App.go(\'pp_reward\')">' + kv +
+    return '<div class="hero" onclick="App.go(\'passport\')">' + kv +
       '<div class="eb"><span>AX Festival 2026</span><span class="tm">마무리</span></div>' +
       '<p class="ttl">오늘 함께해 주셔서<br>고맙습니다</p>' +
-      '<div class="next"><span class="lb">보상</span><span class="nm">내 보상 확인 · 대형경품 추첨 결과는 개별 안내</span><span class="arw">›</span></div></div>';
+      '<div class="next"><span class="lb">보상</span><span class="nm">스탬프 경품 · 추첨 결과는 개별 안내</span><span class="arw">›</span></div></div>';
   }
   var now = TIMELINE[NOW_INDEX];
   var nx = TIMELINE[NOW_INDEX + 1];
@@ -2611,22 +2599,21 @@ function myScheduleHtml() {
     "</div>";
 }
 
-/* 홈 · 스탬프 챌린지 = 내 보상 (260915: 히어로 자리를 「지금 진행 중」에 내주고 O10 틴트 카드로.
-   챌린지가 후킹이고 커피 나눔권이 그 보상이라 한 카드에 둔다. 진행은 도트로만, 수치는 우측 한 번만) */
+/* 홈 · 스탬프 챌린지 (260909 개편: 완주·커피권 폐기 → 3개=룰렛 1회, 4~6개=사후 추첨 응모 1~3장.
+   히어로 자리는 「지금 진행 중」이 맡고 여기는 O10 틴트 카드. 진행은 도트로만, 수치는 우측 한 번만) */
 function myCouponHtml() {
-  var n = S.get("stamps", []).length;
-  var issued = S.get("coffee_issued", false);
-  var used = S.get("coffee_used", null);
-  var cst = used ? "사용 완료" : issued ? "사용 가능" : "스탬프 1개면 발급";
-  var dots = [1, 2, 3, 4, 5].map(function (i) { return '<span class="' + (n >= i ? "on" : "") + '"></span>'; }).join("");
+  var n = stampCount();
+  var t = raffleTickets(n);
+  var dots = [1, 2, 3, 4, 5, 6].map(function (i) { return '<span class="' + (n >= i ? "on" : "") + '"></span>'; }).join("");
+  var cst = t >= 3 ? "응모 3장 · 끝" : t > 0 ? "응모 " + t + "장 자동" : n >= 3 ? "룰렛 열림" : (3 - n) + "개 남음";
   return '<div class="sect" style="margin-top:12px"><b>스탬프 챌린지</b>' +
-    '<span onclick="App.go(\'pp_reward\')">보상 전체 ›</span></div>' +
+    '<span onclick="App.go(\'passport\')">패스포트 ›</span></div>' +
     '<div class="chal">' +
-    '<div class="hd"><span class="nm">5개 완주까지</span><span class="cnt">' + n + ' / ' + STAMP_GOAL + '</span></div>' +
+    '<div class="hd"><span class="nm">스탬프 3개면 룰렛 1회</span><span class="cnt">' + n + ' / 6</span></div>' +
     '<div class="p5">' + dots + '</div>' +
-    '<div class="cpill"><span class="nm">커피 나눔권</span><span class="pl">18F 라운지</span><span class="st">' + cst + '</span></div>' +
-    '<button class="cta" onclick="App.go(\'' + (n >= STAMP_GOAL ? "pp_reward" : "pp_code") + '\')">' +
-    (n >= STAMP_GOAL ? "내 보상 확인하기" : "스탬프 적립하기") + '</button></div>';
+    '<div class="cpill"><span class="nm">사후 추첨 응모</span><span class="pl">4개부터 1장씩 · 최대 3장</span><span class="st">' + cst + '</span></div>' +
+    '<button class="cta" onclick="App.go(\'' + (n >= 3 ? "passport" : "pp_code") + '\')">' +
+    (n >= 3 ? "내 보상 확인하기" : "스탬프 적립하기") + '</button></div>';
 }
 
 /* ════════════════ 화면 (Lv1) ════════════════ */
@@ -2692,66 +2679,55 @@ var Views = {
       '<div class="row" style="justify-content:space-between;padding:4px 2px;cursor:pointer" onclick="App.go(\'guide\')"><span style="font-size:calc(14.5px * var(--fs));font-weight:800;color:var(--muted)">층별 안내 · 전체 프로그램</span><span style="color:var(--faint);font-weight:800">›</span></div>';
   },
 
-  /* ═══ 패스포트 · 내가 모은 것 전부 (스탬프·응모권·보상) ═══ */
+  /* ═══ 패스포트 · 스탬프와 보상을 한 화면에 (260909 통합: 나의 보상·응모권 화면 폐지) ═══ */
   passport: function () {
     var u = S.get("user", {});
     var st = S.get("stamps", []);
-    var entered = S.get("raffle_entered", false);
-    var used = S.get("coffee_used", null);
-    var issued = S.get("coffee_issued", false);
-    var en = S.get("entries", []).length;
+    var n = stampCount();
+    var t = raffleTickets(n);
     var mineN = S.get("ideas", []).filter(function (i) { return i.empId === u.empId; }).length;
-    var rewardBadge = used ? '<span class="badge gray">커피 사용 완료</span>' : issued ? '<span class="badge mint">커피 나눔권 1</span>' : '<span class="badge gray">잠김</span>';
     return "" +
       '<div class="skb" style="margin-bottom:14px">' +
       '<div class="r1" style="display:flex;justify-content:space-between;align-items:flex-end"><span class="big" style="font-size:26px">AX PASSPORT</span>' +
-      '<span class="disp" style="font-size:24px;color:var(--mint)">' + st.length + '<span style="font-size:calc(14.5px * var(--fs));color:#fff;opacity:0.6">/' + STAMP_GOAL + ' 완주</span></span></div>' +
+      '<span class="disp" style="font-size:24px;color:var(--mint)">' + n + '<span style="font-size:calc(14.5px * var(--fs));color:#fff;opacity:0.6"> / 6 스탬프</span></span></div>' +
       '<div class="r3" style="margin-top:0;padding:13px 16px;display:block">' +
-      '<div class="progress5" style="margin-top:0">' + [1, 2, 3, 4, 5].map(function (i) { return '<span class="' + (st.length >= i ? "on" : "") + '"></span>'; }).join("") + "</div>" +
-      '<p style="margin-top:11px;font-size:calc(13.5px * var(--fs));font-weight:700;opacity:0.85;line-height:1.55">8개 경로 중 5개만 채우면 완주,<br>대형경품 추첨에 자동 응모됩니다</p>' +
-      (entered ? '<p style="margin-top:9px;background:rgba(255,158,27,0.15);border:1px solid var(--mint);border-radius:8px;padding:9px 12px;font-size:calc(14.5px * var(--fs));font-weight:800;color:var(--mint)">완주! 대형경품 응모 완료</p>' : "") +
+      '<div class="progress5" style="margin-top:0">' + [1, 2, 3, 4, 5, 6].map(function (i) { return '<span class="' + (n >= i ? "on" : "") + '"></span>'; }).join("") + "</div>" +
+      '<p style="margin-top:11px;font-size:calc(13.5px * var(--fs));font-weight:700;opacity:0.85;line-height:1.55">스탬프 3개면 1F 룰렛 1회,<br>4개부터 사후 추첨 응모가 1장씩 늘어납니다</p>' +
       "</div></div>" +
+      ladderHtml() +
+      rouletteHtml() +
       '<div class="stamp5 mb12">' + STAMPS.map(function (s) {
         var got = st.indexOf(s.id) >= 0;
         /* 칸 자체가 해당 활동으로 가는 입구 · 적립된 칸도 눌러 다시 확인할 수 있게 둔다 */
         return '<div class="cell' + (got ? " got" : "") + '" onclick="' + s.tap + '">' +
-          (got ? '<span class="ck">✔</span>' : "") +
+          (got ? '<span class="ck">✔</span>' : (s.inapp ? '<span class="ck app">APP</span>' : "")) +
           '<span class="ic">' + STAMP_ICONS[s.id] + '</span>' +
-          '<span class="t">' + (s.short || s.title) + "</span></div>";
+          '<span class="t">' + (s.short || s.title) + '</span>' +
+          '<span class="w">' + s.where + "</span></div>";
       }).join("") + "</div>" +
-      '<p style="margin:-6px 2px 14px;font-size:calc(12.5px * var(--fs));color:var(--faint)">칸을 누르면 해당 활동으로 이동합니다</p>' +
+      '<p style="margin:-6px 2px 14px;font-size:calc(12.5px * var(--fs));color:var(--faint)">칸을 누르면 해당 활동으로 이동합니다 · APP 표시 칸은 앱에서 바로 적립됩니다</p>' +
       '<div class="menu">' +
-      menuItem("pp_code", "01", "스탬프 적립하기", "QR 스캔 · 8개 경로 · 담당자 적립", "") +
-      menuItem("pp_reward", "02", "나의 보상", "커피 나눔권 · 완주 스페셜권", rewardBadge) +
-      menuItem("entries", "03", "즉석경품 응모권", en ? "1F 이벤트존 가챠에서 사용" : "QR 퀴즈 통과 시 발급", en ? '<span class="badge mint">' + en + "장</span>" : "") +
-      menuItem("ideas_mine", "04", "내가 낸 아이디어", mineN ? mineN + "건 제출" : "아직 없음", "") +
-      menuItem("ev_draw", "05", "당첨 발표", "행사 종료 후 개별 안내", "") +
+      menuItem("pp_code", "01", "스탬프 적립하기", "QR 스캔 · 6개 경로 · 담당자 적립", "") +
+      menuItem("ideas_mine", "02", "내가 낸 아이디어", mineN ? mineN + "건 제출" : "아직 없음", "") +
+      menuItem("ev_draw", "03", "추첨 안내", "결과는 행사 종료 후 개별 안내", t ? '<span class="badge mint">응모 ' + t + "장</span>" : "") +
       "</div>";
   },
 
   pp_code: function () {
     var st = S.get("stamps", []);
     return '<button class="btn mint mb8" style="padding:15px" onclick="qrScanOpen()">부스 QR 스캔하기</button>' +
-      '<div class="card soft mb8"><p class="muted" style="font-size:calc(14.5px * var(--fs))">현장 스탬프는 부스 QR을 찍으면 바로 적립됩니다. 8개 경로 중 <b style="color:var(--hi)">5개</b>면 완주.</p></div>' + STAMPS.map(function (s) {
+      '<div class="card soft mb8"><p class="muted" style="font-size:calc(14.5px * var(--fs))">현장 스탬프는 부스 QR을 찍으면 바로 적립됩니다. <b style="color:var(--hi)">3개</b>면 룰렛 1회, <b style="color:var(--hi)">4개</b>부터 사후 추첨 응모.</p></div>' + STAMPS.map(function (s) {
         var got = st.indexOf(s.id) >= 0;
         var tap = !got && s.tap;   /* 미적립 경로는 카드 탭 = 해당 기능으로 진입 */
         return '<div class="card soft mb8" style="display:flex;align-items:center;gap:12px;padding:12px 14px' + (tap ? ";cursor:pointer\" onclick=\"" + s.tap : "") + '">' +
           '<span class="disp" style="font-size:calc(19px * var(--fs));color:' + (got ? "var(--mint-deep)" : "var(--faint)") + '">' + s.no + "</span>" +
-          '<div style="flex:1"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">' + s.title + '</b><p class="muted" style="font-size:calc(13.5px * var(--fs));margin-top:1px">' + s.desc + "</p></div>" +
+          '<div style="flex:1"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">' + s.title + '</b><p class="muted" style="font-size:calc(13.5px * var(--fs));margin-top:1px">' + s.desc + '</p><p style="font-size:calc(12px * var(--fs));font-weight:700;color:var(--faint);margin-top:2px">' + s.where + "</p></div>" +
           (got ? '<span class="badge ink">적립 ✔</span>' :
-            '<span class="badge gray">' + s.how + "</span>" + (tap ? '<span style="color:var(--hi);font-weight:800;margin-left:2px">›</span>' : "")) + "</div>";
+            (s.inapp ? '<span class="badge mint">앱에서 바로</span>' : '<span class="badge gray">' + s.how + "</span>") + (tap ? '<span style="color:var(--hi);font-weight:800;margin-left:2px">›</span>' : "")) + "</div>";
       }).join("") +
       '<div class="card mt16"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">QR이 안 될 때</b>' +
       '<p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">부스 담당자에게 화면을 보여주시면 대신 적립해 드립니다.</p>' +
       '<button class="btn line" style="margin-top:10px" onclick="staffStampOpen()">담당자 적립 요청</button></div>';
-  },
-
-  pp_reward: function () {
-    return ladderHtml() + coffeeCouponHtml() + specialHtml() +
-      '<div class="card soft"><b style="font-size:calc(14.5px * var(--fs));color:var(--hi)">수령 장소</b>' +
-      '<p class="muted" style="margin-top:5px;line-height:1.75">커피 나눔권은 <b style="color:var(--hi)">18F 라운지</b>에서 무인 QR로 교환합니다 (선착순 ' + FESTIVAL.coffeeTotal + '잔).<br>' +
-      '마우스패드 · CU 상품권 · 키캡 · 완주 스페셜권은 <b style="color:var(--hi)">1F</b>에서 이 화면을 보여주고 받으시면 됩니다.<br>' +
-      '대형경품 추첨 결과는 <b style="color:var(--hi)">17F 행사가 끝난 뒤 개별 안내</b>드립니다.</p></div>';
   },
 
   ideas: function () {
@@ -2912,13 +2888,13 @@ var Views = {
       '<p class="grp">체험하고 겨루기</p>' +
       '<div class="menu">' +
       menuItem("booth", "01", "AX Now! 부스", "HI-Helper · HIDI-Q 직접 써보기 · 1F", S.get("stamps", []).indexOf("p2") >= 0 ? '<span class="badge mint">스탬프 02</span>' : "") +
-      menuItem("wq_list", "02", "DAP Wall QR 퀴즈", "통과하면 즉석경품 응모권 · 무제한 재응시", wqN ? '<span class="badge mint">' + wqN + "/3 통과</span>" : "") +
+      menuItem("wq_list", "02", "DAP Wall QR 퀴즈", "통과하면 스탬프 06 · 무제한 재응시", wqN ? '<span class="badge mint">' + wqN + "/3 통과</span>" : "") +
       menuItem("ev_replay", "03", "퀴즈 다시 풀기", (replayN ? "놓친 라이브 퀴즈를 지금 풀 수 있어요" : "라이브 퀴즈가 끝나면 열려요"), replayN ? '<span class="badge blue">' + replayN + "문제</span>" : "") +
-      menuItem("ev_games", "04", "미니게임", "AX 링크 · 로드맵 초성퀴즈", games ? '<span class="badge mint">' + games + "/2 클리어</span>" : "") +
+      menuItem("ev_games", "04", "미니게임", "AX 링크 · 로드맵 초성퀴즈 · 클리어=스탬프 04", games ? '<span class="badge mint">' + games + "/2 클리어</span>" : "") +
       menuItem("ev_rank", "05", "챔피언십 리더보드", "10F AX 프롬프트 챔피언십 현장 점수", "") +
       "</div>" +
       '<p style="margin-top:12px;font-size:calc(12.5px * var(--fs));color:var(--faint);text-align:center">과제상담 · 커피챗 · 강의 신청은 프로그램 탭에 있습니다</p>' +
-      '<div class="card soft mt16"><p class="muted">다시 풀기는 복습용이에요. 키노트에서 라이브 퀴즈에 한 번이라도 응답했다면 패스포트 <b style="color:var(--hi)">「라이브 퀴즈」</b> 칸은 이미 적립돼 있습니다.</p></div>';
+      '<div class="card soft mt16"><p class="muted">다시 풀기는 복습용이에요. 키노트에서 라이브 퀴즈에 한 번이라도 응답했다면 패스포트 <b style="color:var(--hi)">「라이브 챌린지」</b> 칸은 이미 적립돼 있습니다.</p></div>';
   },
 
   /* 과제상담(dap)과 같은 구조로 맞춘다 (260830 사용자 지적).
@@ -2994,9 +2970,10 @@ var Views = {
   },
 
   ev_draw: function () {
+    var n = stampCount(), t = raffleTickets(n);
     return '<div class="skb" style="margin-bottom:12px"><div class="r1"><span class="big" style="font-size:22px">17:00 OUTRO</span></div>' +
-      '<div class="r2"><span class="s" style="padding:10px 14px"><span class="t" style="font-size:calc(14.5px * var(--fs))">대형경품 추첨 · DAP 시상 · 오늘의 숫자</span></span></div></div>' +
-      '<div class="card soft"><p class="muted">응모 경로는 2개예요. ① <b>패스포트 완주 · 8개 경로 중 5개</b> = 대형경품 자동 응모, <b style="color:var(--hi)">추첨 결과와 수령 방법은 17F 행사가 끝난 뒤 개별 안내</b>드립니다. ② <b>QR 퀴즈 응모권</b> = 1F 이벤트존에서 바로 즉석 추첨(가챠).</p></div>';
+      '<div class="r2"><span class="s" style="padding:10px 14px"><span class="t" style="font-size:calc(14.5px * var(--fs))">스탬프 경품 추첨 · DAP 시상 · 오늘의 숫자</span></span></div></div>' +
+      '<div class="card soft"><p class="muted">스탬프 <b>4개=응모 1장 · 5개=2장 · 6개=3장</b>이 자동 응모됩니다 · 별도 행동은 없어요. 지금 내 응모는 <b style="color:var(--hi)">' + t + '장</b> (스탬프 ' + n + '개). <b style="color:var(--hi)">추첨 결과와 수령 방법은 행사 종료 후 개별 안내</b>드립니다. 스탬프 3개 룰렛은 1F 이벤트존에서 당일 바로 돌립니다.</p></div>';
   },
 
   /* ── v10 【신규 A】 과제상담 신청 · 구성은 v5 p25 목업, 룩은 앱 공통 다크·민트 ── */
@@ -3125,8 +3102,8 @@ var Views = {
       '<p style="margin-top:9px;font-size:calc(12.5px * var(--fs));color:var(--faint);line-height:1.55">지금 문제를 풀면 우리 부문 점수가 올라갑니다. 1F Special Wall 화면과 같은 집계예요.</p></div>';
     return deptCard + setCards + rankCard +
       '<div class="card soft mt16"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">참여 방법</b>' +
-      '<p class="muted" style="margin-top:6px;font-size:calc(14.5px * var(--fs));line-height:1.8">① 1F DAP Wall·Special Wall의 QR 발견 → ② 스캔하면 5문항 오픈 → ③ 정답은 벽 전시 안에서 탐색 → ④ 평균 <b style="color:var(--hi)">' + pass + '점 이상</b> 즉석경품 응모권 → ⑤ 이벤트존에서 즉석 추첨!</p>' +
-      '<p class="muted" style="margin-top:6px;font-size:calc(13.5px * var(--fs))">' + pass + '점 미만은 <b>무제한 재응시</b> (문항·보기 순서가 바뀌어요) · 3세트 모두 통과 = 보너스 응모권 · 키노트 라이브 퀴즈와는 별개예요. 테스트 버전은 QR 없이 세트를 바로 열 수 있습니다.</p></div>';
+      '<p class="muted" style="margin-top:6px;font-size:calc(14.5px * var(--fs));line-height:1.8">① 1F DAP Wall·Special Wall의 QR 발견 → ② 스캔하면 5문항 오픈 → ③ 정답은 벽 전시 안에서 탐색 → ④ 평균 <b style="color:var(--hi)">' + pass + '점 이상</b>이면 패스포트 스탬프 06 「전시 QR 퀴즈」 적립!</p>' +
+      '<p class="muted" style="margin-top:6px;font-size:calc(13.5px * var(--fs))">' + pass + '점 미만은 <b>무제한 재응시</b> (문항·보기 순서가 바뀌어요) · 키노트 라이브 퀴즈와는 별개예요. 테스트 버전은 QR 없이 세트를 바로 열 수 있습니다.</p></div>';
   },
 
   wq_play: function () {
@@ -3136,12 +3113,11 @@ var Views = {
     }
     if (WQ.submitted) {
       var r = WQ.result;
-      var entryN = S.get("entries", []).length;
       return '<div class="cho-box" style="padding:26px 18px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' + esc(WQ.name) + " · " + WQ.qs.length + '문항</p>' +
         '<p class="disp" style="font-size:44px;margin-top:6px;color:' + (r.passed ? "var(--mint)" : "#FF6B61") + '">' + r.score + '점</p>' +
         '<p class="hint">' + (r.passed ? "통과! (" + r.correct + "/" + WQ.qs.length + " 정답 · 커트라인 " + wqPassScore() + "점)" :
           r.correct + "/" + WQ.qs.length + " 정답 · 커트라인 " + wqPassScore() + "점. 정답은 전부 1F 벽에 있어요. 다시 도전!") + "</p></div>" +
-        (r.passed ? '<div class="card mb8" style="border-color:var(--mint-deep)"><p style="font-size:calc(14.5px * var(--fs));color:var(--tx)">응모권 지갑: <b style="color:var(--hi)">' + entryN + '장</b> · 1F 이벤트존 즉석 추첨(가챠)에서 사용하세요.</p></div>' : "") +
+        (r.passed ? '<div class="card mb8" style="border-color:var(--mint-deep)"><p style="font-size:calc(14.5px * var(--fs));color:var(--tx)">패스포트 스탬프 06 「전시 QR 퀴즈」 적립 완료 · 지금 <b style="color:var(--hi)">스탬프 ' + stampCount() + '개</b>예요.</p></div>' : "") +
         '<button class="btn mint mb8" style="padding:15px" onclick="wqRetry(\'' + WQ.set + '\')">' + (r.passed ? "한 번 더 (기록 갱신)" : "재응시 · 순서 셔플") + "</button>" +
         '<button class="btn line" onclick="App.go(\'wq_list\')">세트 목록으로</button>';
     }
@@ -3155,21 +3131,6 @@ var Views = {
           }).join("") + "</div>";
       }).join("") +
       '<button class="btn mint" style="padding:15px;margin-top:4px" onclick="wqSubmit()">제출하고 채점 (' + n + "/" + WQ.qs.length + ")</button>";
-  },
-
-  entries: function () {
-    var e = S.get("entries", []);
-    if (!e.length) {
-      return '<div class="card soft" style="text-align:center"><p class="muted">아직 응모권이 없어요.<br>DAP Wall QR 퀴즈에서 ' + wqPassScore() + '점 이상이면 1장!</p>' +
-        '<button class="btn mint" style="margin-top:12px" onclick="App.go(\'wq_list\')">QR 퀴즈 풀러 가기</button></div>';
-    }
-    return e.slice().reverse().map(function (x) {
-      var label = x.source === "bonus" ? "3세트 완주 보너스" : "QR 퀴즈 통과 (" + (x.set || "") + ")";
-      return '<div class="coupon mb8"><div class="head"><b>즉석경품 응모권</b><span class="badge ink">' + esc(label) + "</span></div>" +
-        '<div class="body"><p style="text-align:center;font-family:var(--disp);font-size:26px;letter-spacing:0.1em;color:var(--hi)">' + esc(x.code) + "</p>" +
-        '<p class="muted" style="margin-top:6px;text-align:center;font-size:calc(13.5px * var(--fs))">1F 이벤트존 부스에 보여주면 즉석 추첨(가챠) 1회 · ' + fmtTime(x.ts) + "</p></div></div>";
-    }).join("") +
-      '<div class="card soft mt16"><p class="muted" style="font-size:calc(13.5px * var(--fs))">응모 경로는 2개 · <b>패스포트 완주(경로 5개)</b>는 대형경품 추첨(결과는 행사 종료 후 개별 안내), <b>QR 퀴즈 응모권</b>은 현장 즉석 추첨이에요.</p></div>';
   },
 
   /* ── v10 【신규 D】 사이니지 3종 · 프로토타입 (정식판: 무인 10시간·오프라인 캐시·키오스크) ── */
@@ -3208,7 +3169,7 @@ var Views = {
     var real = S.get("ideas", []).filter(function (i) { return !i.hidden; }).slice(-4).reverse()
       .map(function (i) { return { text: i.text, tag: i.tag }; });
     var feed = real.concat(MOCK_FEED).slice(0, 4);
-    var finishers = FESTIVAL.mockFinishers + (S.get("raffle_entered", false) ? 1 : 0) + Math.floor(tick / 9);
+    var stamp3 = FESTIVAL.mockStamp3 + (stampCount() >= 3 ? 1 : 0) + Math.floor(tick / 9);
     return '<div class="sg"><div class="row" style="justify-content:space-between;padding-top:8px">' +
       '<div><p class="sg-title">AX Festival <span style="color:var(--mint-deep)">LIVE</span></p><p class="sg-sub">1F 이벤트존 라이브 보드 · 세로 55&quot; 2대</p></div>' +
       '<div class="row" style="gap:6px">' + tvBtns() + '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button></div></div>' +
@@ -3216,7 +3177,7 @@ var Views = {
       kvMediaHtml("live", "kvLive").replace('data-kv="1"', 'data-kv="1" data-kv-dark="1" data-kv-cx="0.72" data-kv-cy="0.5" data-kv-r="0.38"') +
       '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-start;padding-left:22px"><b class="disp" style="font-size:24px;color:#fff;letter-spacing:-0.01em">AX : ME to <span style="color:var(--mint-deep)">WE</span></b></div></div>' +
       '<div class="screen-wrap" style="padding-bottom:0"><div class="counters" style="margin-bottom:10px">' +
-      [["함께하는 사람", c.online], ["모인 아이디어", c.ideas], ["패스포트 완주", finishers], ["마음펀드 나눔", c.heart]].map(function (x) {
+      [["함께하는 사람", c.online], ["모인 아이디어", c.ideas], ["스탬프 3개 이상", stamp3], ["마음펀드 나눔", c.heart]].map(function (x) {
         return '<div><div class="v">' + x[1].toLocaleString() + '</div><div class="l">' + x[0] + "</div></div>";
       }).join("") + "</div></div>" +
       '<p style="font-size:calc(13.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:var(--mint-deep);margin-top:4px">지금 올라온 아이디어 · 운영자 승인분</p>' +
@@ -3382,7 +3343,7 @@ var ADM_CC = [
   ["wq",    "QR 퀴즈",       "DAP Wall 문항 운영"],
   ["ideas", "아이디어",      "수집 현황 · 보드 수기 입력 · CSV"],
   ["qr",    "부스 QR",       "스탬프 QR 인쇄"],
-  ["dash",  "현황·사이니지", "집계 · 사이니지 6종 · 대형경품 추첨"]
+  ["dash",  "현황·사이니지", "집계 · 사이니지 6종 · 스탬프 경품 추첨"]
 ];
 var ADM_META = {};
 ADM_STAFF.concat(ADM_CC).forEach(function (t) { ADM_META[t[0]] = [t[1], t[2]]; });
@@ -3512,7 +3473,7 @@ var AdminTabs = {
     var act = S.get("wq_active", { wall1: true, wall2: true, wall3: true });
     var editKey = S.get("wq_edit", null);
     var h = '<div class="card mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">통과 커트라인</b>' +
-      '<div class="row" style="margin-top:10px"><input id="wqPass" class="input" inputmode="numeric" value="' + pass + '" style="max-width:90px;text-align:center"><span style="font-size:calc(14.5px * var(--fs));font-weight:700;color:var(--muted)">점 이상 → 응모권 발급 (기본 60)</span></div>' +
+      '<div class="row" style="margin-top:10px"><input id="wqPass" class="input" inputmode="numeric" value="' + pass + '" style="max-width:90px;text-align:center"><span style="font-size:calc(14.5px * var(--fs));font-weight:700;color:var(--muted)">점 이상 → 스탬프 06 적립 (기본 60)</span></div>' +
       '<button class="btn" style="margin-top:10px" onclick="wqPassSave()">적용</button></div>';
     h += wqSets().map(function (s) {
       var at = wqAttempts(s.id);
@@ -3643,14 +3604,12 @@ var AdminTabs = {
 
   dash: function () {
     var c = counters();
-    var st = S.get("stamps", []);
     var winner = S.get("draw_winner", null);
-    var used = S.get("coffee_used", null);
     var resv2 = resvAll().filter(function (r) { return r.room === 2 && RESV_HOLD.indexOf(r.status) >= 0; }).length;
     return '<div class="grid2 mb12">' +
       [["동시 접속", c.online.toLocaleString()], ["아이디어", c.ideas.toLocaleString()], ["퀴즈 참여", c.quiz.toLocaleString()], ["마음펀드 나눔", c.heart.toLocaleString() + "건"],
-       ["커피 나눔 잔여", coffeeLeft() + "/" + FESTIVAL.coffeeTotal], ["패스포트(내 기기)", st.length + "/" + STAMP_GOAL],
-       ["상담 예약 (룸②)", resv2 + "/" + resvSlots().length], ["QR퀴즈 통과(내 기기)", wqPassedCount() + "/3 · 응모권 " + S.get("entries", []).length]].map(function (x) {
+       ["커피 나눔 잔여", coffeeLeft() + "/" + FESTIVAL.coffeeTotal], ["스탬프(내 기기)", stampCount() + "/6"],
+       ["상담 예약 (룸②)", resv2 + "/" + resvSlots().length], ["QR퀴즈 통과(내 기기)", wqPassedCount() + "/3"]].map(function (x) {
         return '<div class="card soft"><p class="muted" style="font-size:calc(12.5px * var(--fs))">' + x[0] + '</p><p class="disp" style="margin-top:4px;font-size:20px;color:var(--hi)">' + x[1] + "</p></div>";
       }).join("") + "</div>" +
       '<div class="card mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">사이니지 미리보기 · 1F 16대 + 17F</b>' +
@@ -3663,8 +3622,8 @@ var AdminTabs = {
       '<button class="btn" onclick="App.go(\'wall_rank\')">챔피언십 랭킹 /wall/rank</button>' +
       '<button class="btn" onclick="App.go(\'screen\')">17F 송출뷰 /screen</button></div>' +
       '<p style="margin-top:8px;font-size:calc(12.5px * var(--fs));color:var(--faint);line-height:1.6">정식판 공통 요건: 무인 10시간 · 1시간 자가 새로고침 · 네트워크 끊김 시 캐시 표시(에러 화면 금지) · 키오스크 자동 재실행 · 집계는 캐시 API만 · 배포 단계에서 적용 (기획서 v2 §5-3)</p></div>' +
-      '<p style="font-size:calc(12.5px * var(--fs));color:var(--faint);line-height:1.6">※ 프로토타입 v10 (260822 · 기획서 v2 반영): 전사 수치는 시뮬레이션. KPI 목표(v16): 200명 멈춤 · 120명 아이디어 · 60명 완주 · 20건 과제화 검토. 부스 피드백 ' + S.get("booth_fb", []).length + "건 · 시연 신청 " + S.get("demo_reqs", []).length + "건.</p>" +
-      '<div class="card mt16"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">대형경품 추첨</b><p class="muted" style="margin-top:3px;font-size:calc(14.5px * var(--fs))">조건: 패스포트 완주 · 8개 경로 중 5개 (자동 응모)</p>' +
+      '<p style="font-size:calc(12.5px * var(--fs));color:var(--faint);line-height:1.6">※ 프로토타입 v10 (260822 · 기획서 v2 반영): 전사 수치는 시뮬레이션. KPI 목표(v16): 200명 멈춤 · 120명 아이디어 · 60명 스탬프 3개 이상 · 20건 과제화 검토. 부스 피드백 ' + S.get("booth_fb", []).length + "건 · 시연 신청 " + S.get("demo_reqs", []).length + "건.</p>" +
+      '<div class="card mt16"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">스탬프 경품 추첨 (사후)</b><p class="muted" style="margin-top:3px;font-size:calc(14.5px * var(--fs))">조건: 스탬프 4개 이상 자동 응모 · 4개=1장, 5개=2장, 6개=3장. 결과는 행사 종료 후 개별 안내</p>' +
       /* 추첨 로직이 아직 없다(260830). 이 버튼은 가짜 이름 3개 중에서 뽑아 보여줬고,
          당일 무대에서 누르면 존재하지 않는 사람을 전사 앞에서 발표하게 된다.
          실제 추첨이 서버에 붙기 전까지 잠근다. 붙으면 이 블록을 되돌린다. */
@@ -3673,7 +3632,8 @@ var AdminTabs = {
       '당일 사용 금지. 추첨 로직이 아직 만들어지지 않았고, 이 버튼은 예시 이름 중에서 뽑아 보여주기만 합니다.<br>' +
       '무대에서 누르면 실재하지 않는 당첨자를 발표하게 됩니다.</p>' +
       (winner ? '<p style="margin-top:10px;background:var(--surface2);border-radius:6px;padding:12px;text-align:center;font-weight:800;color:var(--faint)">이전 예시 결과(무효): ' + esc(winner) + "</p>" : "") + "</div>" +
-      '<div class="card mt16 soft"><b style="font-size:calc(14.5px * var(--fs));color:var(--hi)">18F 커피 나눔 (무인)</b><p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">내 기기 나눔권: ' + (used ? "사용 완료 " + fmtTime(used) : S.get("coffee_issued", false) ? "발급됨 (미사용)" : "미발급") + "</p></div>";
+      '<div class="card mt16 soft"><b style="font-size:calc(14.5px * var(--fs));color:var(--hi)">1F 룰렛 차감</b><p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">스탬프 3개 = 룰렛 1회 (1인 1회). 차감은 <b style="color:var(--hi)">현장 스캔 › 1F 이벤트존 룰렛</b>에서 참가자 QR을 찍으면 서버가 개수·중복을 판정합니다.' +
+      (S.get("roulette_used", false) ? "<br>내 기기: 사용 완료" : "") + "</p></div>";
   }
 };
 
@@ -3800,6 +3760,7 @@ function beSync() {
          내 차례가 되면 한 번만 알린다 · 폴링마다 토스트가 뜨지 않게 직전 상태와 비교. */
       if (res.my.checkin) S.set("checkin", res.my.checkin);
       if (res.my.stamps) stampSync(res.my.stamps);   /* 스탬프는 서버가 정본 */
+      if ("roulette" in res.my) S.set("roulette_used", !!res.my.roulette);   /* 룰렛 사용 여부도 서버가 정본 (260909) */
       if (res.my.queue) {
         var was = S.get("queue", {}), nowQ = res.my.queue, kq;
         for (kq in nowQ) {
@@ -3938,53 +3899,42 @@ function qrHtml() {
   }
   return '<div class="qrbox">' + cells + "</div>";
 }
-function coffeeCouponHtml() {
-  var issued = S.get("coffee_issued", false);
-  var used = S.get("coffee_used", null);
-  var u = S.get("user", {});
-  if (used) {
-    return '<div class="coupon used"><div class="head"><b>커피 나눔권 · 사용 완료</b><span class="badge gray">' + fmtTime(used) + "</span></div>" +
-      '<div class="body">' + qrHtml() + '<p style="text-align:center;font-size:calc(13.5px * var(--fs));color:var(--muted)">맛있게 드세요 · 오늘도 ME to WE</p></div></div>';
-  }
-  if (!issued) {
-    return '<div class="coupon locked"><div class="head"><b>18F 커피 나눔권</b><span class="badge tint">잔여 ' + coffeeLeft() + "잔</span></div>" +
-      '<div class="body"><p class="muted" style="font-size:calc(14.5px * var(--fs))">패스포트 <b>1칸</b> 또는 아이디어 <b>1건</b>이면 자동 발급 · 18F 라운지에서 커피+쿠키로 교환 (선착순 ' + FESTIVAL.coffeeTotal + "잔, 11:30~16:30)</p></div></div>";
-  }
-  return '<div class="coupon"><div class="head"><b>커피 나눔권 · 사용 가능</b><span class="badge ink">잔여 ' + coffeeLeft() + "잔</span></div>" +
-    '<div class="body">' + qrHtml() +
-    '<p style="text-align:center;font-size:calc(13.5px * var(--fs));font-weight:800;letter-spacing:0.06em;color:var(--hi)">AXCOFFEE-' + esc(u.empId || "") + "</p>" +
-    '<p class="muted" style="margin-top:8px;text-align:center;font-size:calc(13.5px * var(--fs))">18F 입간판 QR을 스캔하면 사용 처리 · 무인 셀프 픽업. 개인 컵을 가져오면 바로 따라드려요.</p>' +
-    '<button class="btn mint" style="margin-top:12px" onclick="redeemCoffee()">18F 입간판 QR 스캔 (시연)</button></div></div>';
-}
-/* 보상 사다리 카드 · 지금 몇 칸이고 다음에 뭐가 열리는지를 한 화면에 */
+/* 보상 카드 (260909) · 3/4/5/6 네 칸이 한 카드에 · 달성/다음/잠김을 뱃지로 구분 */
 function ladderHtml() {
-  var n = S.get("stamps", []).length;
+  var n = stampCount();
   var next = null;
   for (var i = 0; i < REWARD_LADDER.length; i++) if (REWARD_LADDER[i].n > n) { next = REWARD_LADDER[i]; break; }
   var head = next
-    ? "지금 <b class=\"u\">" + n + "개</b> 적립, <b class=\"u\">" + (next.n - n) + "개</b> 더 모으면 다음 보상이 열려요."
-    : "5개 완주. 모든 보상이 열렸어요.";
+    ? "지금 <b class=\"u\">" + n + "개</b> 적립, <b class=\"u\">" + (next.n - n) + "개</b> 더 모으면 " + next.nm + "."
+    : "6개 다 모았어요. 룰렛 1회 + 사후 추첨 응모 3장.";
   return '<div class="card ldr mb12" style="padding:16px">' +
     '<p style="font-size:calc(15.5px * var(--fs));font-weight:700;color:var(--tx);line-height:1.5">' + head + "</p>" +
-    '<div class="lg"><i style="width:' + Math.min(100, n / STAMP_GOAL * 100) + '%"></i></div>' +
-    '<div class="lgl"><span>스탬프 1개부터 보상</span><span>5개 완주 · 대형경품 응모</span></div>' +
+    '<div class="lg"><i style="width:' + Math.min(100, n / STAMP_TOTAL * 100) + '%"></i></div>' +
+    '<div class="lgl"><span>3개 · 룰렛 1회</span><span>6개 · 응모 3장</span></div>' +
     REWARD_LADDER.map(function (r) {
       var got = n >= r.n;
+      var isNext = next && r.n === next.n;
       return '<div class="lrow ' + (got ? "got" : "lock") + '">' +
         '<span class="ln">' + r.n + "</span>" +
         '<span class="lb"><b>' + r.nm + "</b><p>" + r.d + "</p></span>" +
-        (got ? '<span class="badge mint">열림</span>' : '<span class="badge gray">잠김</span>') +
+        (got ? '<span class="badge mint">달성</span>' : isNext ? '<span class="badge tint">다음</span>' : '<span class="badge gray">잠김</span>') +
         "</div>";
     }).join("") + "</div>";
 }
-function specialHtml() {
-  var st = S.get("stamps", []);
-  if (st.length < STAMP_GOAL) {
-    return '<div class="coupon locked"><div class="head"><b>★ 완주 스페셜권</b><span class="badge gray">' + st.length + "/5</span></div>" +
-      '<div class="body"><p class="muted" style="font-size:calc(14.5px * var(--fs))">사다리의 마지막 칸 · 5개를 채우면 열리는 프리미엄 보상(1F 수령) + 대형경품 자동 응모.</p></div></div>';
+/* 룰렛 1회권 · 실물 룰렛은 1F 이벤트존, 차감은 내 QR 제시 → 운영자 스캔 (v37 양방향 QR 재사용) */
+function rouletteHtml() {
+  var n = stampCount();
+  if (S.get("roulette_used", false)) {
+    return '<div class="coupon used"><div class="head"><b>룰렛 1회 · 사용 완료</b><span class="badge gray">1인 1회</span></div>' +
+      '<div class="body"><p class="muted" style="font-size:calc(14.5px * var(--fs))">오늘의 룰렛은 여기까지. 스탬프 4개부터는 사후 추첨 응모가 1장씩 늘어납니다.</p></div></div>';
   }
-  return '<div class="coupon" style="border-color:var(--tint2)"><div class="head" style="background:var(--ink);color:var(--mint-deep)"><b>★ 완주 스페셜권</b><span class="badge mint">완주</span></div>' +
-    '<div class="body"><p class="muted" style="font-size:calc(14.5px * var(--fs))">패스포트 완주자 전용 · <b style="color:var(--hi)">1F</b>에서 이 화면을 보여주고 수령하세요. 대형경품 응모도 완료됐고, 추첨 결과는 17F 행사가 끝난 뒤 개별 안내드립니다.</p></div></div>';
+  if (n < 3) {
+    return '<div class="coupon locked"><div class="head"><b>룰렛 1회권</b><span class="badge gray">' + n + "/3</span></div>" +
+      '<div class="body"><p class="muted" style="font-size:calc(14.5px * var(--fs))">스탬프 <b>3개</b>를 모으면 1F 이벤트존 실물 룰렛 1회 (1인 1회). 1~4등 실물 경품, 5등은 그 자리에서 한 번 더!</p></div></div>';
+  }
+  return '<div class="coupon" style="border-color:var(--tint2)"><div class="head"><b>룰렛 1회권 · 사용 가능</b><span class="badge ink">1인 1회</span></div>' +
+    '<div class="body"><p class="muted" style="font-size:calc(14.5px * var(--fs))"><b style="color:var(--hi)">1F 이벤트존</b> 룰렛 부스에서 아래 버튼으로 <b style="color:var(--hi)">내 QR</b>을 보여주세요. 운영자가 스캔하면 차감되고 바로 돌립니다. 1~4등 실물 경품, 5등은 그 자리에서 한 번 더.</p>' +
+    '<button class="btn mint" style="margin-top:12px" onclick="qrPanelOpen(\'mine\')">내 QR 보여주기</button></div></div>';
 }
 
 /* 스탬프 적립 · 판정은 서버가 한다 (260830).
@@ -4018,18 +3968,24 @@ function stampClaimDone(res) {
     return;
   }
   stampSync(res.stamps);
+  /* 260909: 스탬프 6종 밖 지점(구 p6 포토부스 등)이 시트에 남아 있어도 앱은 세지 않는다 */
+  if (!STAMPS.some(function (s) { return s.id === res.id; })) {
+    toast("이 QR은 스탬프 대상이 아니에요 · " + (res.name || res.id));
+    return;
+  }
   if (res.dup) { toast("이미 적립한 스탬프예요 · " + (res.name || res.id)); return; }
-  var n = (res.stamps || []).length;
-  toast("적립 완료 · " + (res.name || res.id) +
-    (n >= STAMP_GOAL ? " · 완주 달성!" : " (" + n + "/" + STAMP_GOAL + ")"));
+  toast("적립 완료 · " + (res.name || res.id) + " · 스탬프 " + stampCount() + "개");
   checkRewards();
 }
-/* 서버가 준 목록으로 로컬을 맞춘다 (sync 응답에서도 같은 함수를 쓴다) */
+/* 서버가 준 목록으로 로컬을 맞춘다 (sync 응답에서도 같은 함수를 쓴다).
+   정의 밖 id(구 p6·p8, 계단 p9 등)는 버린다 · 표시·보상 계산과 어긋나지 않게 (260909) */
 function stampSync(list) {
   if (!list || !list.length) return;
+  list = list.filter(function (id) { return STAMPS.some(function (s) { return s.id === id; }); });
+  if (!list.length) return;
   var cur = S.get("stamps", []), chg = list.length !== cur.length;
   if (!chg) for (var i = 0; i < list.length; i++) if (cur.indexOf(list[i]) < 0) { chg = true; break; }
-  if (chg) S.set("stamps", list.slice());
+  if (chg) { S.set("stamps", list.slice()); checkRewards(); }
 }
 
 /* ═══════════════ 양방향 QR (260830) ═══════════════
@@ -4138,6 +4094,9 @@ function qrMineStateHtml() {
     if (sp) out.push('<div class="qst"><span class="l">' + esc(sp.nm) + '</span><b>' +
       (ck[k] === "done" ? "참여 완료" : "입장 확인") + "</b></div>");
   });
+  /* 룰렛 1회권 · QR을 내미는 가장 흔한 순간이라 여기서도 상태를 같이 보여준다 (260909) */
+  if (stampCount() >= 3) out.push('<div class="qst"><span class="l">1F 룰렛 1회권</span><b>' +
+    (S.get("roulette_used", false) ? "사용 완료" : "스캔하면 차감") + "</b></div>");
   return out.length ? '<div class="qstate">' + out.join("") + "</div>" : "";
 }
 
@@ -4231,7 +4190,8 @@ var SCAN_SPOTS = [
   { id: "fld", nm: "10F 현장 프로그램", kind: "sess" },
   { id: "q_dap", nm: "1F DAP 과제상담", kind: "queue" },
   { id: "q_cchat", nm: "18F AX 커피챗", kind: "queue" },
-  { id: "coffee", nm: "18F 커피 나눔 바", kind: "coupon" }
+  { id: "coffee", nm: "18F 커피 나눔 바", kind: "coupon" },
+  { id: "roulette", nm: "1F 이벤트존 룰렛", kind: "roulette" }   /* 260909 · 스탬프 3개=1회, 판정은 서버 */
 ];
 function scanSpot(id) { return SCAN_SPOTS.filter(function (s) { return s.id === id; })[0] || null; }
 var SCAN = { spot: "", act: "in", log: [], last: "", lastT: 0, on: false };
@@ -4243,6 +4203,7 @@ function scanActs(id) {
   if (!sp) return [];
   if (sp.kind === "sess") return [["in", "입장 체크인"], ["out", "퇴장 · 쿠폰 지급"]];
   if (sp.kind === "queue") return [["take", "대기 접수"], ["call", "다음 호출"], ["done", "완료 처리"]];
+  if (sp.kind === "roulette") return [["use", "룰렛 1회 차감"]];
   return [["use", "쿠폰 사용 처리"]];
 }
 function scanStart() {
@@ -4264,6 +4225,7 @@ function scanHit(raw) {
   var params = { key: admKey(), emp: emp, spot: sp.id, act: act };
   if (sp.kind === "sess") { params.action = act === "in" ? "sess_in" : "sess_out"; params.sess = sp.id; }
   else if (sp.kind === "queue") params.action = "q_" + act;
+  else if (sp.kind === "roulette") params.action = "roulette_redeem";
   else params.action = "coupon_use";
   scanLog(emp, "처리 중...", null);
   beCall(params, function (res) { scanDone(emp, sp, act, res); },
@@ -4286,15 +4248,18 @@ function scanDone(emp, sp, act, res) {
         why === "already" ? "이미 처리된 참가자입니다" :
           why === "empty" ? "대기 중인 사람이 없습니다" :
             why === "nocoupon" ? "쓸 수 있는 쿠폰이 없습니다" :
-              why === "notfound" ? "대기 목록에 없습니다" :
-                why === "auth" ? "관리코드 불일치 · 설정 시트를 확인하세요" :
-                  why === "dup" ? "이미 접수됨" : "처리 실패" + (why || err ? " (" + (why || err.slice(0, 40)) + ")" : "");
+              why === "need" ? "스탬프 3개 미만 · 차감 불가 (현재 " + (res.n || 0) + "개)" :
+                why === "used" ? "이미 룰렛을 사용한 참가자입니다" :
+                  why === "notfound" ? "대기 목록에 없습니다" :
+                    why === "auth" ? "관리코드 불일치 · 설정 시트를 확인하세요" :
+                      why === "dup" ? "이미 접수됨" : "처리 실패" + (why || err ? " (" + (why || err.slice(0, 40)) + ")" : "");
     scanLog(emp, msg, false, true);
     return;
   }
   var msg = sp.kind === "sess" ? (act === "in" ? (res.dup ? "이미 입장 처리됨" : "입장 확인") : "퇴장 · 쿠폰 " + (res.coupon || 1) + "장") :
     sp.kind === "queue" ? (act === "take" ? res.no + "번 접수 (앞 " + (res.waiting || 0) + "명)" : act === "call" ? res.no + "번 호출" : "완료 처리") :
-      "쿠폰 사용 처리";
+      sp.kind === "roulette" ? "룰렛 1회 차감 · 바로 돌리세요 (스탬프 " + (res.n || "") + "개)" :
+        "쿠폰 사용 처리";
   scanLog(emp, (res.name ? res.name + " · " : "") + msg, true, true);
 }
 function scanLog(emp, msg, ok, redraw) {
@@ -4490,7 +4455,7 @@ function drawWinner() {
   if (true) return;
   var pool = ["김○희 (디지털전략)", "박○영 (장기보험)", "이○준 (자동차보상)"];
   var u = S.get("user", {});
-  if (S.get("raffle_entered", false)) pool.push(u.name + " (이 기기 참여자)");
+  if (raffleTickets(stampCount()) > 0) pool.push(u.name + " (이 기기 참여자)");
   S.set("draw_winner", pool[Math.floor(Math.random() * pool.length)]);
 }
 
@@ -4499,8 +4464,8 @@ function gameClear(flagKey) {
   if (!S.get(flagKey, false)) {
     S.set(flagKey, true);
     bePush("game:" + flagKey, "", true);
-    awardStamp("p8");
-    setTimeout(function () { toast("게임 클리어! 패스포트 「미니게임」 칸이 적립됐어요."); }, 300);
+    awardStamp("p4");   /* 260909: 미니게임 별도 칸 폐지 · 04 라이브 챌린지로 통합 (라이브 퀴즈와 중복 적립 없음) */
+    setTimeout(function () { toast("게임 클리어! 패스포트 「라이브 챌린지」 칸이 적립됐어요."); }, 300);
   }
 }
 
@@ -4646,7 +4611,7 @@ function gwPaintEnd() {
     '<div class="chain-box" style="padding:26px 18px">' +
     '<p class="disp" style="font-size:34px;color:' + (cleared ? "var(--mint)" : "rgba(255,255,255,0.55)") + '">' + (allDone ? "ALL CLEAR!" : cleared ? "CLEAR!" : "TIME UP") + "</p>" +
     '<p class="next" style="margin-top:8px">' + GW.score + "점 · 문장 " + GW.done.length + "/" + LINK_ROUNDS.length + " 완성 · 최고 " + S.get("gw_best", 0) + '점</p>' +
-    (cleared ? '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));opacity:0.9">패스포트 「미니게임」 칸 적립 완료' + (allDone ? " · 전 라운드 완주" : "") + "</p>" :
+    (cleared ? '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));opacity:0.9">패스포트 「라이브 챌린지」 칸 적립 완료' + (allDone ? " · 전 라운드 클리어" : "") + "</p>" :
       '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));opacity:0.9">문장 1개만 완성해도 클리어! 6초 헤매면 정답이 반짝여요.</p>') + "</div>" +
     doneList +
     '<button class="btn mint mb8" style="padding:15px" onclick="gwStart()">다시 도전</button>' +
@@ -4906,13 +4871,10 @@ function xitionRun(switchNow) {
       }, 3200);
     } catch (e) {}
     var m = location.hash.match(/^#s=(\w+)/i);
-    var mc = location.hash.match(/^#c=(\w+)/i);
     var mq = location.hash.match(/^#q=(wall[1-3])/i);
     App.go("home");
     /* 스캔값을 그대로 서버에 넘긴다 · 앱은 어느 스탬프인지 모른다 (260830) */
     if (m) setTimeout(function () { stampByCode(m[1]); }, 400);
-    /* 커피 나눔권 사용(#c=코드)도 담당자만 · 코드 검증을 서버에 맡긴다 */
-    if (mc) admVerify(mc[1], function () { setTimeout(function () { redeemCoffee(); }, 300); });
     if (mq) {
       setTimeout(function () { wqOpen(mq[1].toLowerCase()); }, 400);
     }
@@ -4931,8 +4893,8 @@ function xitionRun(switchNow) {
     /* 서버 sync 가 시드를 덮어 화면마다 스탬프 수가 달라졌다. 데모는 결정적이어야 한다 */
     GAS_URL = ""; BE.on = false;
     S.set("user", { empId: "1234", name: "박형동" });
-    S.set("stamps", ["p1", "p4", "p5"]);
-    S.set("coffee_issued", true);
+    S.set("stamps", ["p1", "p4", "p7"]);   /* 3/6 = 룰렛 열림 · p7은 아래 wq 통과 시드와 정합 */
+    S.set("roulette_open", true);
     S.set("quiz_answers", { q1: { choice: 1, correct: true, replay: false, ts: Date.now() } });
     S.set("quiz_state", dm[1] === "home_quiz"
       ? { activeId: "q1", phase: "revealed", openedAt: Date.now() - 60000, finishedIds: ["q1"] }
@@ -4942,7 +4904,6 @@ function xitionRun(switchNow) {
     S.set("dept", "보상부문");
     S.set("ev_phase", "live");
     S.set("wq_attempts", [{ set: "wall1", score: 80, passed: true, attemptNo: 1, dept: "보상부문", ts: Date.now() }]);
-    S.set("entries", [{ id: "e1", code: "E-4821", source: "quiz", set: "wall1", ts: Date.now() }]);
     var target = dm[1] || "home";
     if (target === "home_quiz") target = "home";
     if (["admin", "screen", "wall_quiz", "wall_wave", "wall_live", "wall_metowe", "wall_rank", "wall_tv"].indexOf(target) >= 0) S.set("admin_authed", true);
