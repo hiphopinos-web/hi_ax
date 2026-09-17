@@ -313,23 +313,49 @@
   /* 완료 도장 (v3.20 A안) · 칸 안에 맞춘다(넘침 제거) · -12도 기울기는 SVG 안에서 · 잉크 질감 필터는 생략 유지(작은 크기 가독) */
   .stampmk { position: relative; flex: none; display: flex; align-items: center; justify-content: center; }
   .stampmk svg { display: block; }
-  .stampmk .ring { position: absolute; left: 50%; top: 50%; width: 58px; height: 58px; margin: -29px 0 0 -29px; border: 2.5px solid var(--mint); border-radius: 999px; pointer-events: none; animation: trailRing 0.8s ease-out 0.3s both; }
-  .rc.punch .stampmk { animation: stampPunch 0.62s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
-  @keyframes stampPunch { 0% { transform: scale(2.2) rotate(14deg) translateY(-6px); opacity: 0; } 45% { opacity: 1; } 72% { transform: scale(0.94) rotate(-3deg) translateY(0); } 100% { transform: scale(1) rotate(0deg); } }
+  /* v3.47 도장 연출 강화 (사용자 요청 260917 · 더 또렷하게) · 문법: 낙하(3.3배·0.6→1) → 착지 찌그러짐 0.92 → 잉크 링 2겹 · 잉크 튐 · 흔들림 · 잔광 · 전체 0.5초 착지, 1초 안에 원상태
+     transform·opacity 만 움직인다 · 튐 입자는 보일 때만 만들고 끝나면 DOM 에서 지운다 */
+  .stampmk .ring { position: absolute; left: 0; top: 0; width: 100%; height: 100%; border: 2.5px solid var(--mint); border-radius: 999px; pointer-events: none; opacity: 0; animation: inkRing 0.55s ease-out var(--land, 0.3s) both; }
+  .stampmk .ring.r2 { border-width: 2px; border-color: #FFA46E; animation: inkRing2 0.62s ease-out calc(var(--land, 0.3s) + 0.08s) both; }
+  .stampmk .sglow { position: absolute; inset: 0; pointer-events: none; opacity: 0; animation: sealGlow 0.3s ease-out var(--land, 0.3s) both; }
+  .stampmk .sglow svg { display: block; }
+  .stampmk .spl { position: absolute; left: 50%; top: 50%; width: var(--sz); height: var(--sz); margin: calc(var(--sz) / -2) 0 0 calc(var(--sz) / -2); border-radius: 50%; background: var(--c); pointer-events: none; opacity: 0; animation: inkSplash 0.4s cubic-bezier(0.2, 0.7, 0.3, 1) var(--land, 0.3s) both; }
+  .rc.punch { overflow: hidden; animation: cardShakeS 0.18s linear 0.3s; }
+  .rc.punch .stampmk { --land: 0.3s; animation: stampPunch 0.5s cubic-bezier(0.3, 0.9, 0.4, 1) both; }
+  @keyframes stampPunch { 0% { transform: scale(3.3) rotate(14deg); opacity: 0.6; } 60% { transform: scale(1) rotate(-6deg); opacity: 1; } 76% { transform: scale(0.92) rotate(-3deg); } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+  @keyframes inkRing { 0% { transform: scale(0.7); opacity: 0.95; } 100% { transform: scale(1.9); opacity: 0; } }
+  @keyframes inkRing2 { 0% { transform: scale(0.8); opacity: 0.8; } 100% { transform: scale(2.6); opacity: 0; } }
+  @keyframes sealGlow { 0% { opacity: 0; } 35% { opacity: 0.6; } 100% { opacity: 0; } }
+  @keyframes inkSplash { 0% { transform: translate(var(--sx), var(--sy)) scale(1); opacity: 1; } 55% { opacity: 1; } 100% { transform: translate(var(--ex), var(--ey)) scale(0.45); opacity: 0; } }
+  @keyframes cardShake { 0%, 100% { transform: translateX(0); } 12.5% { transform: translateX(5px); } 37.5% { transform: translateX(-5px); } 62.5% { transform: translateX(5px); } 87.5% { transform: translateX(-5px); } }
+  @keyframes cardShakeS { 0%, 100% { transform: translateX(0); } 12.5% { transform: translateX(2.5px); } 37.5% { transform: translateX(-2.5px); } 62.5% { transform: translateX(2.5px); } 87.5% { transform: translateX(-2.5px); } }
+  @keyframes dimPulse { 0% { opacity: 0; } 45% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes glowIn { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0.55; } }
+  @keyframes cntPop { 0% { transform: scale(1.3); opacity: 0; } 40% { opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes fadeUp { 0% { opacity: 0; transform: translateY(3px); } 100% { opacity: 1; transform: translateY(0); } }
   /* ── 미션 완료 순간 오버레이 (v3.16 · v3.20 큰 도장 세로 배치) · 카드 크기만, 얕은 딤 · 탭=닫기 ── */
-  #ppov { position: fixed; inset: 0; z-index: 95; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.12); animation: dimIn 0.18s ease-out; }
-  #ppov .pcard { position: relative; display: flex; flex-direction: column; align-items: center; gap: 12px; width: min(300px, 84vw); background: var(--tint); border: 2px solid var(--mint); border-radius: 20px; padding: 20px 18px 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.18); animation: popIn 0.2s ease-out; }
+  #ppov { --land: 0.42s; position: fixed; inset: 0; z-index: 95; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.12); animation: dimIn 0.18s ease-out; }
+  #ppov::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(255,126,49,0.34) 0, rgba(255,126,49,0.12) 32%, rgba(255,126,49,0) 60%); opacity: 0; pointer-events: none; animation: glowIn 0.6s ease-out 0.3s both; }
+  #ppov::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.16); opacity: 0; pointer-events: none; animation: dimPulse 0.2s ease-out var(--land) both; }
+  #ppov .pcard { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 12px; width: min(300px, 84vw); background: var(--tint); border: 2px solid var(--mint); border-radius: 20px; padding: 20px 18px 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.18); animation: popIn 0.2s ease-out, cardShake 0.18s linear var(--land); }
+  #ppov .pcard .cntn { display: inline-block; animation: cntPop 0.26s ease-out calc(var(--land) + 0.05s) both; }
+  #ppov .pcard .cnth { display: inline-block; animation: fadeUp 0.2s ease-out calc(var(--land) + 0.2s) both; }
   #ppov .pcard .hd2 { display: flex; align-items: center; gap: 10px; max-width: 100%; }
   #ppov .pcard .ico { position: relative; flex: none; width: 38px; height: 38px; border: 2px solid var(--mint); border-radius: 50%; background: var(--tint2); color: var(--acc2); display: flex; align-items: center; justify-content: center; }
   #ppov .pcard .ico svg { width: 20px; height: 20px; display: block; }
   #ppov .pcard .tt { font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.35; }
   #ppov .pcard .cnt { font-size: calc(12.5px * var(--fs)); font-weight: 800; color: var(--acc2); }
-  #ppov .pcard .stampmk { animation: stampDrop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) 0.18s both; }
-  #ppov .pcard .stampmk::after { content: ""; position: absolute; inset: -6px; border: 2.5px solid var(--mint); border-radius: 999px; animation: trailRing 0.8s ease-out 0.62s both; }
-  @keyframes stampDrop { 0% { transform: scale(2.4) rotate(14deg); opacity: 0; } 50% { opacity: 1; } 75% { transform: scale(0.93) rotate(-3deg); } 100% { transform: scale(1) rotate(0deg); } }
-  #ppov.rm .pcard, #ppov.rm { animation: none; }
+  #ppov .pcard .stampmk { animation: stampDrop 0.5s cubic-bezier(0.3, 0.9, 0.4, 1) 0.12s both; }
+  @keyframes stampDrop { 0% { transform: scale(3.3) rotate(14deg); opacity: 0.6; } 60% { transform: scale(1) rotate(-6deg); opacity: 1; } 76% { transform: scale(0.92) rotate(-3deg); } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+  /* 모션 줄이기 · 찍힌 정지 상태만 (진동은 짧게 한 번) */
+  #ppov.rm .pcard, #ppov.rm, #ppov.rm::before, #ppov.rm::after, #ppov.rm .pcard .cntn, #ppov.rm .pcard .cnth { animation: none; }
+  #ppov.rm::before, #ppov.rm::after { display: none; }
   #ppov.rm .pcard .stampmk { animation: none; }
-  #ppov.rm .pcard .stampmk::after { animation: none; opacity: 0; }
+  #ppov.rm .stampmk .ring, #ppov.rm .stampmk .sglow, #ppov.rm .stampmk .spl { display: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .rc.punch, .rc.punch .stampmk { animation: none; }
+    .rc.punch .stampmk .ring, .rc.punch .stampmk .sglow, .rc.punch .stampmk .spl { display: none; }
+  }
   .scap { margin: 13px 2px 7px; font-size: calc(11.5px * var(--fs)); font-weight: 800; letter-spacing: 0.04em; color: var(--faint); }
   /* v3.19 테스트 버튼 · 회색 점선 = 운영(테스트) 요소임이 보이게, 위계 최하위 */
   .btn.test { margin-top: 8px; background: transparent; border: 1.5px dashed var(--dimln); color: var(--faint); font-size: calc(12.5px * var(--fs)); font-weight: 700; padding: 9px; }
@@ -3096,9 +3122,9 @@ function testStampResetGo() {
 /* 완료 도장 (v3.20 사용자 확정 A안) · 카드 56px·오버레이 148px 같은 SVG 함수.
    textPath 의 path id 는 인스턴스마다 유일하게(한 화면 도장 여러 개 = id 충돌 시 글자 소실) · href+xlink:href 병기(iOS 구버전) */
 var SEAL_N = 0;
-function stampSealSvg(size) {
+function stampSealSvg(size, color) {
   var u = "seal" + (++SEAL_N);
-  var C = "#D64524";
+  var C = color || "#D64524";
   return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
     '<g transform="rotate(-12 50 50)">' +
     '<defs><path id="' + u + 't" d="M17,50 A33,33 0 0 1 83,50"/><path id="' + u + 'b" d="M9,50 A41,41 0 0 0 91,50"/></defs>' +
@@ -3114,8 +3140,28 @@ function stampSealSvg(size) {
 }
 function stampMarkHtml(withRing, size) {
   size = size || 56;
+  /* v3.47 · 새로 찍히는 도장 = 잉크 링 2겹 + 잔광(같은 도장을 밝은 오렌지로 겹쳐 잠깐 올렸다 내린다) */
   return '<span class="stampmk" style="width:' + size + 'px;height:' + size + 'px">' + stampSealSvg(size) +
-    (withRing ? '<span class="ring"></span>' : "") + "</span>";
+    (withRing ? '<span class="sglow">' + stampSealSvg(size, "#FF7E31") + '</span><span class="ring"></span><span class="ring r2"></span>' : "") + "</span>";
+}
+/* 잉크 튐 · 도장 가장자리에서 바깥으로 · O100~O30 사다리 · 보일 때만 만들고 0.9초 뒤 지운다 · scale 0.5 = 카드 인라인(절반 크기) */
+var INK_COLS = ["#FF7E31", "#FF7E31", "#FFA46E", "#FFB284", "#FFCFB0"];
+function inkSplash(mk, count, scale) {
+  if (!mk) return;
+  var r = mk.offsetWidth / 2, made = [];
+  for (var i = 0; i < count; i++) {
+    var a = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
+    var d0 = r * 0.86, d1 = r + (24 + Math.random() * 22) * scale, sz = Math.round((6 + Math.random() * 5) * scale * 10) / 10;
+    var p = document.createElement("span");
+    p.className = "spl";
+    p.style.cssText = "--sz:" + Math.max(2, sz) + "px;--c:" + INK_COLS[i % INK_COLS.length] + ";--sx:" + (Math.cos(a) * d0).toFixed(1) + "px;--sy:" + (Math.sin(a) * d0).toFixed(1) + "px;--ex:" + (Math.cos(a) * d1).toFixed(1) + "px;--ey:" + (Math.sin(a) * d1).toFixed(1) + "px";
+    mk.appendChild(p); made.push(p);
+  }
+  setTimeout(function () { made.forEach(function (p) { if (p.parentNode) p.parentNode.removeChild(p); }); }, 1400);
+}
+/* 진동 · 지원 기기만 (iOS 는 미지원) · 상호작용 전에는 브라우저가 막으므로 가드 유지 */
+function stampBuzz(pattern) {
+  if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) { try { navigator.vibrate(pattern); } catch (e) {} }
 }
 /* ── 미션 완료 순간 연출 (v3.16) · 적립 확정 순간 카드 크기 오버레이에 도장이 내려찍힌다.
    스탬프 탭을 보고 있으면 기존 카드 인라인 펀치가 맡는다(중복 금지) · 연출한 스탬프는 pp_seen 에 즉시 기록 ·
@@ -3146,15 +3192,21 @@ function stampOverlayNext() {
   d.innerHTML = '<div class="pcard">' +
     '<span class="hd2"><span class="ico">' + STAMP_ICONS[sd.id] + "</span>" +
     '<span class="tt">' + sd.title + "</span></span>" +
-    stampMarkHtml(false, 148) +
-    '<span class="cnt">스탬프 ' + Math.min(REWARD_CAP, n) + " / " + REWARD_CAP + (hint ? " · " + hint : "") + "</span></div>";
+    stampMarkHtml(!rm, 148) +
+    '<span class="cnt"><b class="cntn">스탬프 ' + Math.min(STAMP_TOTAL, n) + " / " + STAMP_TOTAL + "</b>" + (hint ? '<span class="cnth">&nbsp;· ' + hint + "</span>" : "") + "</span></div>";
   d.onclick = function () { stampOverlayClose(); };
   document.body.appendChild(d);
-  if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) { try { navigator.vibrate(35); } catch (e) {} }
-  PPOV.timer = setTimeout(stampOverlayClose, rm ? 1200 : 1900);
+  /* v3.47 · 착지 순간(0.42초)에 진동과 잉크 튐 10개 · 모션 줄이기면 짧은 진동만 */
+  if (rm) stampBuzz(25);
+  else {
+    inkSplash(d.querySelector(".stampmk"), 10, 1);
+    PPOV.buzz = setTimeout(function () { PPOV.buzz = null; stampBuzz([25, 40, 70]); }, 420);
+  }
+  PPOV.timer = setTimeout(stampOverlayClose, rm ? 1200 : 2400);
 }
 function stampOverlayClose() {
   if (PPOV.timer) { clearTimeout(PPOV.timer); PPOV.timer = null; }
+  if (PPOV.buzz) { clearTimeout(PPOV.buzz); PPOV.buzz = null; }
   var d = el("ppov");
   if (d && d.parentNode) d.parentNode.removeChild(d);
   if (PPOV.q.length) setTimeout(stampOverlayNext, 120); else PPOV.on = false;
@@ -3165,9 +3217,12 @@ function stampOverlayClose() {
 function ppAfterRender(n, oldN, glow) {
   if (PP.animOn) return;
   PP.animOn = true;
+  /* v3.47 · 카드 인라인 펀치도 같은 문법 · 튐은 절반 크기(카드 안에서 잘린다) · 착지 0.3초에 진동 */
+  var rmI = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!rmI) Array.prototype.forEach.call(document.querySelectorAll(".rc.punch .stampmk"), function (mk) { inkSplash(mk, 6, 0.5); });
   setTimeout(function () {
     /* userActivation 가드: 상호작용 전 vibrate 는 브라우저가 콘솔 경고를 내며 차단한다 (첫 진입 자동 연출 케이스) */
-    if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) { try { navigator.vibrate(35); } catch (e) {} }
+    stampBuzz(rmI ? 25 : [25, 40, 70]);
     var c = el("ppCnt");
     if (c && n > oldN) {
       var t0 = performance.now();
@@ -3178,7 +3233,7 @@ function ppAfterRender(n, oldN, glow) {
       };
       requestAnimationFrame(stepFn);
     }
-  }, 80);
+  }, rmI ? 0 : 300);
   /* 핸들을 남긴다 · 테스트 되돌리기·초기화가 이 2초 사이에 일어나면 취소해야 pp_glow3·pp_seen 이 되살아나지 않는다 (v3.28) */
   PP.seenT = setTimeout(function () {
     PP.animOn = false; PP.seenT = null;
