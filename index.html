@@ -632,10 +632,18 @@
   /* 홈 히어로는 v3.13 폐지 · 「지금·다음」은 나의 일정 첫 줄(tok 뱃지), 연출은 하단 광고판이 맡는다 */
   /* v3.24 홈 광고판 배너 · 스탬프 바로 위 · 브랜드 오렌지 스테이지(상태 색 아님, 화면당 1개) · 공용 카드 격자 2칸(64+8+64=136px) · 라운드 20px */
   .bill { position: relative; display: flex; height: 136px; border-radius: 20px; overflow: hidden; background: var(--mint); margin-bottom: 8px; color: #fff; }
-  .bill .bc { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 0 0 0 18px; }
-  .bill .bh { font-size: calc(22px * var(--fs)); font-weight: 900; line-height: 1.2; letter-spacing: -0.01em; }
-  .bill .bs { margin-top: 6px; font-size: calc(12.5px * var(--fs)); font-weight: 700; opacity: 0.9; }
-  .bill canvas { flex: none; width: 46%; height: 100%; display: block; }
+  .bill .bc { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 0 6px 0 18px; perspective: 520px; }
+  /* v3.71 뒤집히는 낱말 카드 · 앞 ME / WE · 뒤 우리말 슬로건 · transform 만 움직인다 */
+  .bill .bfc { position: relative; display: block; height: 30px; transform-style: preserve-3d; transform-origin: center;
+    animation: axFlip 8s cubic-bezier(0.45, 0, 0.2, 1) infinite; will-change: transform; }
+  .bill .bfc .f, .bill .bfc .b { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: flex; align-items: center;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden; white-space: nowrap; }
+  .bill .bfc .f { font-size: calc(24px * var(--fs)); font-weight: 900; letter-spacing: -0.01em; }
+  .bill .bfc .b { font-size: calc(14px * var(--fs)); font-weight: 800; transform: rotateY(180deg); }
+  .bill .bto { display: block; height: 16px; font-size: calc(13px * var(--fs)); font-weight: 800; opacity: 0.75; }
+  @keyframes axFlip { 0%, 30% { transform: rotateY(0deg); } 38%, 80% { transform: rotateY(-180deg); } 88%, 100% { transform: rotateY(0deg); } }
+  @media (prefers-reduced-motion: reduce) { .bill .bfc { animation: none; transform: rotateY(-180deg); } }
+  .bill canvas { flex: none; width: 42%; height: 100%; display: block; }
   /* 층별 혼잡도 압축 스트립 · 막대 4개라 높이는 내용 기준, 라운드·면·테두리·좌우 패딩·최소 높이는 공용 행 카드(.rc)와 동일 (v3.22) */
   /* 홈 나의 일정 목록형(.mine .r)은 v3.22 폐지 · 개별 공용 행 카드(.rc)로 */
   /* 홈 스탬프 카드(.chal)는 v3.2 폐지 · 홈도 스탬프 탭과 같은 railHtml 공용 컴포넌트를 쓴다 */
@@ -2956,6 +2964,7 @@ function menuItem(target, no, title, desc, badge) {
 /* 행사 국면 · 홈 히어로가 「지금 행사가 어떤 상태인가」를 첫눈에 말한다 (260915 UX 피드백).
    before = 행사 전(D-day) / live = 당일 진행 중 / after = 종료 후(감사 인사 + 보상 안내, 카카오 if 종료 화면 문법).
    관리자·데모는 S "ev_phase" 로 강제할 수 있다. */
+var BILL_LOOP = 8;   /* v3.71 광고판 뒤집기 한 바퀴(초) · CSS axFlip 과 같은 값 */
 var EV_START = new Date(2026, 9, 26, 9, 0), EV_END = new Date(2026, 9, 26, 18, 0);
 function evPhase() {
   var o = S.get("ev_phase", null);
@@ -2968,10 +2977,8 @@ function evPhase() {
 function schedNowRow() {
   var ph = evPhase(), go = "App.go('guide_time')";
   /* v3.22 공용 행 카드 · 한 줄 말줄임(one) · 진행 중 뱃지만 검정 */
-  if (ph === "before") {
-    var d = Math.max(1, Math.ceil((EV_START - new Date()) / 86400000));
-    return rcHtml({ cls: "", onclick: go, link: true, left: tokBadge("D-" + d), title: "10. 26 (월) 09:30 시작", sub: "광화문 본사" });
-  }
+  /* v3.71 (사용자 확정 260918) 행사 전 D-N 줄 삭제 · 날짜·장소는 홈 머리에 이미 있다 */
+  if (ph === "before") return "";
   if (ph === "after") {
     return rcHtml({ cls: " past", onclick: go, link: true, left: tokBadge("종료", "dim"), title: "행사가 끝났습니다", sub: "추첨 결과는 개별 안내" });
   }
@@ -2987,15 +2994,23 @@ function schedNowRow() {
    공용 시계(AXF.t0)라 재렌더에도 시퀀스가 이어진다 · isConnected 검사로 화면을 떠나면 raf 정지 ·
    reduced-motion 은 엔진이 자체 처리 · 장식 전용(탭 없음 · 링크 금지) */
 function billboardHtml() {
-  /* data-axf="loop" = 같은 axfSeqMount 엔진에 캔버스 전체를 무대로(band:false). "seq" 경로는 스플래시의 kvTop·panel 위치로
-     무대 띠를 재므로 홈 카드에서는 오브젝트가 어긋난다. 시퀀스 값은 AXF_SEQ 와 동일하게 명시 */
+  /* v3.71 (사용자 확정 260918) 왼쪽 = 뒤집히는 메시지 · 오른쪽 = 기존 AXF 시퀀스 모션.
+     ME / WE 두 장이 왼쪽으로 돌아 뒷면의 우리말 슬로건을 보여 준다 (to 는 가운데 고정 · 카드 수를 줄여 저사양에서도 가볍게).
+     홈은 4초마다 다시 그려진다 → 애니메이션이 처음부터 다시 시작하지 않도록 공용 시계(AXF.t0)로 음수 delay 를 준다.
+     날짜·장소 줄은 홈 머리에 이미 있어 넣지 않는다 (v3.54 문구 규칙). */
   var sq = AXF_SEQ.map(function (x) { return x[0] + ":" + x[1]; }).join(",");
-  /* v3.24 스탬프 위 배너 · 브랜드 오렌지 스테이지 + 좌측 카피 + 우측 흰 모션(엔진 색 지정 data-axf-colors · 격자 점 data-axf-stage) */
-  /* v3.54 날짜·장소는 홈 머리에 이미 있다 · 종료 후 인사만 */
-  var sub = evPhase() === "after" ? "함께해 주셔서 고맙습니다" : "";
-  return '<div class="bill" aria-hidden="true"><div class="bc"><p class="bh">ME to WE</p>' + (sub ? '<p class="bs">' + sub + "</p>" : "") + "</div>" +
+  var off = ((Date.now() - (window.AXF && AXF.t0 ? AXF.t0 : Date.now())) / 1000) % BILL_LOOP;
+  var card = function (front, back, delay) {
+    return '<span class="bfc" style="animation-delay:' + (-(off) + delay).toFixed(2) + 's">' +
+      '<span class="f">' + esc(front) + '</span><span class="b">' + esc(back) + "</span></span>";
+  };
+  return '<div class="bill" aria-hidden="true"><div class="bc">' +
+    card("ME", "나의 업무 혁신", 0) +
+    '<span class="bto">to</span>' +
+    card("WE", "우리 회사의 AX가 되다", 0.25) + "</div>" +
     '<canvas data-axf="loop" data-axf-seq="' + sq + '" data-axf-zoom="0.95" data-axf-stage="orange" data-axf-colors="#FFFFFF,rgba(255,255,255,0.78),#FFFFFF"></canvas></div>';
 }
+
 
 /* 나의 스케줄 · 내가 신청한 것만 담는다 (260830 사용자 지시).
    자유 참석인 17F 강연(v3.29 kind open)이라도 자동으로 채우지 않는다. 「모두가 가는 것」을 미리 넣어 두면
