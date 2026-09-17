@@ -6462,7 +6462,6 @@ function sndChoose(on, key) {
 var AX_PRE = {
   pang: "ME to WE · 나의 업무 혁신, 우리 회사의 AX가 되다",
   jump: "AX 로드맵 2026의 키워드는 「공감과 참여」예요",
-  type: "떨어지는 단어는 오늘 프로그램 안내와 AX 로드맵에서 골랐어요",
   word: "2026 공감과 참여 → 2027 확산과 체화 → 2028 혁신과 연결"
 };
 var AX_TODAY = [
@@ -6482,6 +6481,8 @@ var AX_TODAY = [
   "10F 세션 E · MS Copilot을 활용한 문서 작성 실습 (MS)",
   "17:00 Outro · DAP 우수 성과자 시상"
 ];
+/* v3.55 휴면 · 「오늘의 AX 한 줄」은 게임 결과 카드에서 삭제 (사용자 확정 260918 · 결과와 무관하고 일정 탭과 중복)
+   문장 풀 AX_TODAY 와 axToday()·axTodayHtml() 은 되살릴 수 있게 남겨 두고, 부르는 곳은 없다. */
 function axToday() { var i = S.get("ax_line_i", 0) || 0; S.set("ax_line_i", (i + 1) % AX_TODAY.length); return AX_TODAY[i % AX_TODAY.length]; }
 function axPreHtml(key, dark) { return AX_PRE[key] ? '<p class="ax-line' + (dark ? " dk" : "") + '"><b>AX 한 줄</b>' + esc(AX_PRE[key]) + "</p>" : ""; }
 function axTodayHtml(dark) { return '<p class="ax-line' + (dark ? " dk" : "") + '"><b>오늘의 AX 한 줄</b>' + esc(axToday()) + "</p>"; }
@@ -6539,8 +6540,8 @@ function olySubmit(key, score) {
 function olyMedalHtml(m) { return m ? '<span class="medal m' + m + '">' + OLY_MEDAL[m] + "</span>" : ""; }
 function olyResultLine(key, score) {
   var me = olyMe(), e = me.ev[key];
-  return "올림픽 환산 " + olyFmt(olyPts(score, key)) + "점" + (e && e.best > score ? " · 최고 기록 기준 " + olyFmt(e.pts) + "점" : "") +
-    " · 총점 " + olyFmt(me.total) + " / " + olyMax() + (me.left ? " · 종합 순위까지 " + me.left + "종목" : me.rank ? " · 종합 " + me.rank + "위" : "");
+  return "환산 " + olyFmt(olyPts(score, key)) + "점 · 총점 " + olyFmt(me.total) + " / " + olyMax() +
+    (me.left ? " · 종합 순위까지 " + me.left + "종목" : me.rank ? " · 종합 " + me.rank + "위" : "");
 }
 /* 스탬프 04 카드 펼침 = 올림픽 허브 */
 function olyHubHtml() {
@@ -6785,8 +6786,7 @@ function gsResultHtml(key, r) {
     esc(g.name) + " · " + (r.why === "time" ? "TIME UP" : "GAME OVER") + " · " + esc(typeNick() || "익명 참가자") + "</p>" +
     (r.reason ? '<p style="margin-top:6px;font-size:calc(15px * var(--fs));font-weight:800">' + esc(r.reason) + "</p>" : "") +
     '<p class="disp" style="font-size:44px;color:var(--mint);margin-top:6px">' + Number(r.score).toLocaleString() + "</p>" +
-    '<p class="hint">' + r.stats + "<br>" + (r.rankLine || "") + "</p>" +
-    axTodayHtml(true) + "</div>" +
+    '<p class="hint">' + r.stats + "<br>" + (r.rankLine || "") + "</p>" + "</div>" +
     (r.banner || "") +
     '<button class="btn mint mb8" style="padding:15px" onclick="' + g.start + '">다시 하기</button>' +
     '<button class="btn line mb8" onclick="' + gsRankGo(key) + '">순위판 보기</button>' +
@@ -7621,8 +7621,7 @@ function gwFinish() {
     '<p class="mem-stars">' + st + "</p>" +
     '<p class="disp" style="font-size:40px;color:var(--mint);margin-top:4px">' + GW.score.toLocaleString() + "</p>" +
     '<p class="next">문장 ' + GW.done + "개 완성 · 틀린 탭 " + GW.wrongs + "번 · 남은 시간 보너스 +" + bonus + "<br>최고 " + S.get("gw_best", 0).toLocaleString() + "점</p>" +
-    '<p class="next" style="margin-top:6px">' + olyResultLine("word", GW.score) + "</p>" +
-    axTodayHtml(true) + "</div>" +
+    '<p class="next" style="margin-top:6px">' + olyResultLine("word", GW.score) + "</p>" + "</div>" +
     MEM_ROUNDS.map(function (R) {
       return '<div class="card soft mb8"><p style="font-size:calc(15.5px * var(--fs));font-weight:800;color:var(--hi)">' + (R.kind === "order" ? R.pairs.map(function (p) { return esc(p[0] + " " + p[1]); }).join(" · ") : esc(R.words.join(" "))) + "</p>" +
         '<p class="muted" style="font-size:calc(13px * var(--fs));margin-top:3px">' + esc(R.mean) + "</p></div>";
