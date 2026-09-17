@@ -440,6 +440,9 @@
   #rgPlay .rgp-pause .btn { width: 200px; }
   #rgPlay .rg-form { flex: none; margin: 0; padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)); background: #fff; border-top: 2px solid #000; }
   #rgPlay .rg-form .input { font-size: 17px; }
+  /* v3.45 공용 틀 · 밀기·탭 게임은 브라우저 제스처(스크롤·당겨서 새로고침)를 끈다 */
+  #rgPlay .rgp-mid.nogest, #rgPlay .rgp-mid.nogest canvas { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  #rgPlay .gs-foot { flex: none; padding: 12px 10px calc(12px + env(safe-area-inset-bottom, 0px)); background: #fff; border-top: 2px solid #000; text-align: center; font-weight: 800; font-size: 13.5px; color: #000; touch-action: none; user-select: none; -webkit-user-select: none; }
   .rg-form .input { flex: 1; font-size: 18px; border: 2px solid #000; }
   .rg-form .btn { width: auto; padding: 12px 18px; }
   .ty-rank { display: flex; align-items: center; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--line); }
@@ -2292,6 +2295,7 @@ var App = {
     /* 스탬프 · 스탬프 카드가 유일한 입구 (v3.1: ev_games·ev_draw·wallv 참여자 화면 폐지) */
     ideas: "passport", booth: "passport", wq_list: "passport", ev_replay: "passport",
     wq_play: "wq_list", game_word: "passport", game_cho: "passport", game_type: "passport", type_rank: "game_type",
+    game_pilot: "passport", game_pang: "game_pilot", game_jump: "game_pilot", gs_rank: "game_pilot",
     ideas_mine: "passport", survey: "passport",
     /* 프로그램 · 신청 전용 (리더보드는 10F 세션 곁으로, v3.1) · 일정(guide_time)은 v3.3부터 탭 루트라 PARENT 없음 */
     dap: "guide", ev_cchat: "guide",
@@ -2308,6 +2312,7 @@ var App = {
     ev_cchat: "내 커피챗", ev_replay: "퀴즈 다시 풀기",
     wq_list: "DAP Wall QR 퀴즈", wq_play: "문제 풀이",
     admin: "관리자 콘솔", screen: "송출용 화면", screen_survey: "", screen_words: "", game_word: "AX 링크", game_cho: "로드맵 초성퀴즈", game_type: "타자 게임", type_rank: "타자 순위",
+    game_pilot: "게임 선호도 조사", game_pang: "AX 팡", game_jump: "ME to WE 점프", gs_rank: "게임 순위",
     wall_quiz: "", wall_wave: "", wall_live: "", wall_metowe: "", wall_tv: ""
   },
   tabOf: function (v) {
@@ -2318,13 +2323,15 @@ var App = {
   go: function (v) {
     if (this.current === "game_word" && v !== "game_word") gwStop();
     if (this.current === "game_type" && v !== "game_type") rgStop();
+    if (this.current === "game_pang" && v !== "game_pang") pgStop();
+    if (this.current === "game_jump" && v !== "game_jump") jpStop();
     if (this.current === "wall_wave" && v !== "wall_wave") wvStop();
     modalClose();
     this.current = v;
     /* v3.15 새로 고침 복귀 · 현재 화면의 소속 Lv1 탭을 sessionStorage 에 기억(같은 브라우저 탭에서만, 다음 방문은 홈).
        관리자·사이니지·게임 전체화면은 저장하지 않는다 · Lv2 는 부모 탭으로 저장된다 */
     try {
-      if (SIGNAGE.indexOf(v) < 0 && ["admin", "screen", "game_word", "game_cho", "game_type"].indexOf(v) < 0) {
+      if (SIGNAGE.indexOf(v) < 0 && ["admin", "screen", "game_word", "game_cho", "game_type", "game_pang", "game_jump"].indexOf(v) < 0) {
         var lt = this.tabOf(v);
         if (["home", "passport", "guide_time", "guide"].indexOf(lt) >= 0) {
           sessionStorage.setItem("axf_last_tab", lt);
@@ -2371,7 +2378,7 @@ var App = {
     /* 헤더 높이를 실측해 sticky 기준선으로 넘긴다 (홈/탭루트/서브 화면마다 높이가 다르다) */
     el("frame").style.setProperty("--stick", tb.offsetHeight + "px");
     var nav = el("tabbar");
-    nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "game_word" || v === "game_cho" || v === "game_type") ? "none" : "flex";
+    nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "game_word" || v === "game_cho" || v === "game_type" || v === "game_pang" || v === "game_jump") ? "none" : "flex";
     var activeTab = this.tabOf(v);
     var icons = this.ICONS;
     var tabBtns = this.TABS.map(function (t) {
@@ -2391,7 +2398,7 @@ var LED_TTL = 30 * 60000;
 function updateLed() {
   var bar = el("ledbar"), tr = el("ledTrack");
   if (!bar || !tr) return;
-  if (SIGNAGE.indexOf(App.current) >= 0 || App.current === "game_word" || App.current === "game_cho" || App.current === "game_type") { bar.style.display = "none"; return; }
+  if (SIGNAGE.indexOf(App.current) >= 0 || App.current === "game_word" || App.current === "game_cho" || App.current === "game_type" || App.current === "game_pang" || App.current === "game_jump") { bar.style.display = "none"; return; }
   var ns = S.get("notices", []);
   var latest = null;
   for (var i = 0; i < ns.length; i++) {
@@ -2410,13 +2417,13 @@ window.addEventListener("scroll", function () {
   var b = el("topbtn");
   if (!b) return;
   var ok = window.scrollY > 400 && !el("app").hidden &&
-    SIGNAGE.indexOf(App.current) < 0 && App.current !== "game_word" && App.current !== "game_cho" && App.current !== "game_type";
+    SIGNAGE.indexOf(App.current) < 0 && App.current !== "game_word" && App.current !== "game_cho" && App.current !== "game_type" && App.current !== "game_pang" && App.current !== "game_jump";
   b.classList.toggle("on", ok);
 }, { passive: true });
 window.addEventListener("axf-store", function () {
   checkMyState();
   updateLed();
-  if (["game_word", "game_cho", "game_type", "wall_wave", "wall_metowe"].indexOf(App.current) >= 0) return;
+  if (["game_word", "game_cho", "game_type", "game_pang", "game_jump", "wall_wave", "wall_metowe"].indexOf(App.current) >= 0) return;
   App.render();
 });
 
@@ -3209,6 +3216,7 @@ function stampInnerHtml(s) {
       '<button class="btn mint" style="flex:1" onclick="App.go(\'game_word\')">AX 링크</button>' +
       '<button class="btn mint" style="flex:1" onclick="App.go(\'game_cho\')">초성퀴즈</button>' +
       '<button class="btn mint" style="flex:1" onclick="App.go(\'game_type\')">타자 게임</button></div>' +
+      (pilotOn() ? '<button class="btn line" style="margin-top:8px" onclick="App.go(\'game_pilot\')">파일럿 · 미니게임 선호도 조사</button>' : "") +
       (replayN ? '<button class="btn line" style="margin-top:8px" onclick="App.go(\'ev_replay\')">라이브 퀴즈 다시 풀기 · ' + replayN + "문제</button>" : "");
   } else {
     /* v3.12: 적립방식(how) 뱃지 삭제 · 참여자에게 필요한 건 desc 와 바로가기뿐 */
@@ -3922,28 +3930,57 @@ var Views = {
   /* ═══ v3.36b 타자 게임 · 닉네임(최초 1회) → 시작 화면 → 게임 → 결과 ═══ */
   game_type: function () {
     rgStop();
-    var nick = typeNick(), sound = S.get("rain_sound", false);
-    if (!nick || S.get("type_nick_edit", false)) {
-      return '<div id="tgRoot"><div class="cho-box"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">AX 단어 소나기</p>' +
-        '<p class="word disp" style="font-size:24px;margin-top:4px">닉네임 정하기</p>' +
-        '<p class="hint">순위판에는 닉네임만 나와요.<br>한글·영문·숫자 2~8자 · 공백·기호 불가</p></div>' +
-        '<div class="card mb12"><input id="tnIn" class="input" maxlength="8" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="예: 타자요정" value="' + esc(nick) + '" oninput="typeNickInput(this.value)">' +
-        '<p class="muted" id="tnMsg" style="margin-top:6px;font-size:calc(12.5px * var(--fs))">' + (nick ? "지금 닉네임 · " + esc(nick) : "2~8자로 정해 주세요") + "</p>" +
-        '<button class="btn mint" style="margin-top:10px" onclick="typeNickSave()">이 닉네임으로</button>' +
-        (nick ? '<button class="btn line" style="margin-top:8px" onclick="S.set(\'type_nick_edit\', false); App.render()">그대로 두기</button>' : "") + "</div></div>";
-    }
+    if (gsNeedNick()) return gsNickHtml("type");
     setTimeout(rgPreview, 0);
-    return '<div id="tgRoot">' +
-      '<div class="cho-box" style="padding:16px 14px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">MINI GAME</p>' +
-      '<p class="word disp" style="font-size:24px;margin-top:2px">AX 단어 소나기</p>' +
-      '<div class="rg-wrap" style="margin-top:10px"><canvas id="rgPrev" width="180" height="110"></canvas></div>' +
-      '<p class="hint">떨어지는 단어를 그대로 치고 Enter · 단어가 바닥에 닿으면 하트 -1<br>하트 5개를 다 잃거나 60초가 지나면 끝 · 연속으로 맞히면 콤보 · 끝까지 하면 <b>라이브 챌린지 스탬프</b></p></div>' +
-      '<div class="row mb8" style="justify-content:space-between"><span class="muted" style="font-size:calc(13.5px * var(--fs))">닉네임 <b style="color:var(--hi)">' + esc(nick) + '</b> · <span style="text-decoration:underline;cursor:pointer" onclick="S.set(\'type_nick_edit\', true); App.render()">변경</span></span>' +
-      '<span class="muted" style="font-size:calc(13.5px * var(--fs))">최고 ' + S.get("type_best", 0).toLocaleString() + "</span></div>" +
-      '<button class="btn mint mb8" style="padding:16px;font-size:calc(17px * var(--fs))" onclick="rgStart(\'app\')">START</button>' +
-      '<div class="row" style="gap:8px"><button class="btn line" style="flex:1" onclick="S.set(\'rain_sound\', ' + (sound ? "false" : "true") + '); App.render()">소리 ' + (sound ? "켜짐" : "꺼짐") + "</button>" +
-      '<button class="btn line" style="flex:1" onclick="App.go(\'type_rank\')">순위판</button></div>' +
-      '<p class="muted" style="margin-top:10px;font-size:calc(12px * var(--fs));text-align:center">경품은 1F 현장 타자왕전(같은 키보드)에서만 · 붙여넣기는 막혀 있어요</p></div>';
+    return gsStartHtml("type", { rootId: "tgRoot", previewId: "rgPrev", pw: 180, ph: 110,
+      rules: "떨어지는 단어를 그대로 치고 Enter · 단어가 바닥에 닿으면 하트 -1<br>하트 5개를 다 잃거나 60초가 지나면 끝 · 연속으로 맞히면 콤보 · 끝까지 하면 <b>라이브 챌린지 스탬프</b>",
+      foot: "경품은 1F 현장 타자왕전(같은 키보드)에서만 · 붙여넣기는 막혀 있어요" });
+  },
+  /* ═══ v3.45 파일럿 미니게임 · AX 팡 · ME to WE 점프 (선호도 조사 전용 · 참여자 동선에는 없다) ═══ */
+  game_pang: function () {
+    pgStop();
+    if (gsNeedNick()) return gsNickHtml("pang");
+    setTimeout(pgPreview, 0);
+    return gsStartHtml("pang", { rootId: "pgRoot", previewId: "pgPrev", pw: 180, ph: 174,
+      rules: "이웃한 두 칸을 바꿔 같은 그림 3개를 한 줄로 · 연달아 터지면 연쇄 배수<br>4개 이상 한 줄이면 줄 지우기 블록 · 60초 · 지는 조건 없음 · 끝까지 하면 <b>라이브 챌린지 스탬프</b>" });
+  },
+  game_jump: function () {
+    jpStop();
+    if (gsNeedNick()) return gsNickHtml("jump");
+    setTimeout(jpPreview, 0);
+    return gsStartHtml("jump", { rootId: "jpRoot", previewId: "jpPrev", pw: 180, ph: 110,
+      rules: "탭 = 점프 · 공중에서 한 번 더 탭 = 2단 점프 · 코인은 AX 토큰<br>부딪히면 하트 -1 (1초 무적) · 하트 3개를 다 잃거나 60초가 지나면 끝 · 끝까지 하면 <b>라이브 챌린지 스탬프</b>" });
+  },
+  game_pilot: function () {
+    if (!pilotOn()) return '<div class="card"><p class="muted">파일럿 테스터 전용 화면이에요</p></div>';
+    var m = gvMine();
+    var cards = ["type", "pang", "jump"].map(function (k) {
+      var g = GS_GAMES[k], v = m[k] || 0;
+      return '<div class="card mb8"><div class="row" style="justify-content:space-between;align-items:center;gap:10px;flex-wrap:nowrap"><div style="min-width:0;flex:1">' +
+        '<b style="font-size:calc(16px * var(--fs));color:var(--hi)">' + esc(g.name) + "</b>" +
+        '<p class="muted" style="margin-top:3px;font-size:calc(13px * var(--fs));line-height:1.45">' + esc(g.line) + "</p>" +
+        '<p class="muted" style="margin-top:3px;font-size:calc(12.5px * var(--fs))">' + (v ? "재미 " + v + "점 · 최고 " + S.get(g.best, 0).toLocaleString() : "아직 점수를 안 남겼어요") + "</p></div>" +
+        '<button class="btn mint" style="width:auto;flex:none;padding:12px 16px" onclick="App.go(\'' + g.view + '\')">플레이</button></div></div>';
+    }).join("");
+    var opts = ["type", "pang", "jump"].map(function (k) {
+      return '<button class="btn ' + (m.choice === k ? "mint" : "line") + ' mb8" onclick="gvChoose(\'' + k + '\')">' + esc(GS_GAMES[k].name) + "</button>";
+    }).join("");
+    return '<div class="cho-box" style="padding:18px 16px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">PILOT</p>' +
+      '<p class="word disp" style="font-size:22px;margin-top:2px">미니게임 선호도 조사</p>' +
+      '<p class="hint">세 게임을 한 판씩 하고, 끝나면 재미 점수(1~5)를 눌러 주세요.<br>마지막에 앱에 넣을 게임 하나를 골라 주세요 · 다시 내면 덮어써요</p></div>' +
+      cards +
+      '<div class="card mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">앱에 넣을 게임은?</b><div style="margin-top:10px">' + opts + "</div>" +
+      '<input id="gvCmt" class="input" maxlength="120" placeholder="한 줄 의견 (선택)" value="' + esc(m.comment || "") + '">' +
+      '<button class="btn mint" style="margin-top:10px" onclick="gvSubmit()">' + (m.sent ? "다시 제출" : "제출") + "</button>" +
+      (m.sent && GS_GAMES[m.choice] ? '<p class="muted" style="margin-top:8px;font-size:calc(12.5px * var(--fs))">제출했어요 · ' + esc(GS_GAMES[m.choice].name) + "</p>" : "") +
+      (!BE.on ? '<p class="muted" style="margin-top:8px;font-size:calc(12.5px * var(--fs))">데모 화면은 서버에 저장하지 않아요</p>' : "") + "</div>";
+  },
+  gs_rank: function () {
+    var key = S.get("gs_rank_key", "pang") === "jump" ? "jump" : "pang";
+    return '<div class="qseg" style="margin-bottom:10px"><button class="' + (key === "pang" ? "on" : "") + '" onclick="S.set(\'gs_rank_key\', \'pang\'); App.render()">AX 팡</button>' +
+      '<button class="' + (key === "jump" ? "on" : "") + '" onclick="S.set(\'gs_rank_key\', \'jump\'); App.render()">ME to WE 점프</button></div>' +
+      '<p class="scap" style="margin:0 2px 8px">테스트 순위판 · 가짜 닉네임과 내 최고 기록만 보여요 (서버 순위는 게임을 정한 뒤 연결)</p>' +
+      '<div class="card">' + typeRankHtml(gsRankTop(key)) + "</div>";
   },
   type_rank: function () {
     var mode = S.get("type_rank_tab", "app");
@@ -4482,7 +4519,7 @@ function notifyUser(title, body, target) {
   try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate([80, 40, 80]); } catch (e) {}   /* 상호작용 전 차단 경고 방지 */
   if (notifOK()) { try { new Notification(title, { body: body }); } catch (e) {} }
   if (el("modal")) { toast(title); return; }        /* 팝업 위에 팝업 금지 · 뒤 알림은 토스트로 */
-  if (App.current === "game_word" || App.current === "game_cho" || App.current === "game_type") { toast(title); return; }
+  if (App.current === "game_word" || App.current === "game_cho" || App.current === "game_type" || App.current === "game_pang" || App.current === "game_jump") { toast(title); return; }
   var askBtn = (notifDesktop() && !notifOK() && Notification.permission !== "denied")
     ? '<button class="btn line" style="margin-top:8px" onclick="notifAsk()">브라우저 알림 켜기</button>' +
       '<p class="muted" style="margin-top:6px;font-size:calc(12.5px * var(--fs));text-align:center">앱을 열어 둔 동안에만 알려드려요</p>' : "";
@@ -5502,43 +5539,16 @@ function rgStop() { RG.on = false; if (RG.raf) cancelAnimationFrame(RG.raf); RG.
 function rgMobile() {
   try { return (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) || window.innerWidth < 600; } catch (e) { return window.innerWidth < 600; }
 }
-var RGP = { on: false, vvh: null, onVis: null };
+var RGP = { on: false };
+/* v3.45 · 오버레이·일시정지·이탈 감지는 공용 틀(gsOverlayOpen)로 옮겼다 */
 function rgPlayOpen() {
-  rgPlayClose();
   RGP.on = true;   /* 입력창 안내 문구가 휴대폰용으로 나오게 먼저 켠다 */
-  var d = document.createElement("div");
-  d.id = "rgPlay";
-  d.innerHTML = '<div class="rgp-top"><span class="rgp-t">AX 단어 소나기</span><button class="rgp-x" type="button" onpointerdown="event.preventDefault()" onclick="rgPauseToggle()">일시정지</button></div>' +
-    '<div class="rgp-mid" onpointerdown="event.preventDefault(); rgFocus()"><canvas id="rgCv" width="' + RAIN_W + '" height="' + RAIN_H + '"></canvas><div class="rgp-pause" id="rgPause" hidden><p>일시정지</p><button class="btn mint" type="button" onclick="rgResume()">계속하기</button><button class="btn line" type="button" onclick="rgQuit()">그만하기</button></div></div>' +
-    rgFormHtml();
-  document.body.appendChild(d);
-  document.documentElement.classList.add("rg-lock");
-  RGP.vvh = function () {
-    var vv = window.visualViewport, h = vv ? vv.height : window.innerHeight, top = vv ? vv.offsetTop : 0;
-    d.style.height = Math.round(h) + "px"; d.style.top = Math.round(top) + "px";
-    var mid = d.querySelector(".rgp-mid"), cv = el("rgCv");
-    if (!mid || !cv) return;
-    var mh = mid.clientHeight - 8, mw = mid.clientWidth - 16;
-    var w = Math.min(mw, mh * RAIN_W / RAIN_H);
-    cv.style.width = Math.floor(w) + "px"; cv.style.height = Math.floor(w * RAIN_H / RAIN_W) + "px";
-  };
-  if (window.visualViewport) { window.visualViewport.addEventListener("resize", RGP.vvh); window.visualViewport.addEventListener("scroll", RGP.vvh); }
-  window.addEventListener("resize", RGP.vvh);
-  RGP.onVis = function () { if (document.hidden && RG.on && !RG.paused && !RG.ending) rgPause(); };
-  document.addEventListener("visibilitychange", RGP.onVis);
-  RGP.vvh();
+  gsOverlayOpen({ key: "type", title: "AX 단어 소나기", cw: RAIN_W, ch: RAIN_H, canvasId: "rgCv", bottom: rgFormHtml(),
+    down: function (e) { e.preventDefault(); rgFocus(); },
+    running: function () { return RG.on && !RG.paused && !RG.ending; }, isPaused: function () { return !!RG.paused; },
+    pause: rgPause, resume: rgResume, quit: rgQuit });
 }
-function rgPlayClose() {
-  var d = el("rgPlay");
-  if (RGP.vvh) {
-    if (window.visualViewport) { window.visualViewport.removeEventListener("resize", RGP.vvh); window.visualViewport.removeEventListener("scroll", RGP.vvh); }
-    window.removeEventListener("resize", RGP.vvh);
-  }
-  if (RGP.onVis) document.removeEventListener("visibilitychange", RGP.onVis);
-  RGP.vvh = null; RGP.onVis = null; RGP.on = false;
-  if (d && d.parentNode) d.parentNode.removeChild(d);
-  document.documentElement.classList.remove("rg-lock");
-}
+function rgPlayClose() { RGP.on = false; gsOverlayClose("type"); }
 function rgFormHtml() {
   return '<form class="rg-form" id="rgForm" onsubmit="event.preventDefault(); rgEnter()">' + rgInputHtml() +
     '<button class="btn mint" type="submit" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" ontouchstart="event.preventDefault(); rgEnter()">쏘기</button></form>';
@@ -5587,20 +5597,17 @@ function rgPause() {
   if (!RG.on || RG.paused) return;
   RG.paused = true; RG.pauseAt = performance.now();
   if (RG.raf) cancelAnimationFrame(RG.raf); RG.raf = 0;
-  var p = el("rgPause"); if (p) p.hidden = false;
-  var x = document.querySelector("#rgPlay .rgp-x"); if (x) x.textContent = "계속하기";
+  gsPauseUi(true);
 }
 function rgResume() {
   if (!RG.on || !RG.paused) return;
   var gap = performance.now() - (RG.pauseAt || performance.now());
   if (RG.t0) RG.t0 += gap;
   RG.paused = false; RG.last = performance.now();
-  var p = el("rgPause"); if (p) p.hidden = true;
-  var x = document.querySelector("#rgPlay .rgp-x"); if (x) x.textContent = "일시정지";
+  gsPauseUi(false);
   rgFocus();
   RG.raf = requestAnimationFrame(rgFrame);
 }
-function rgPauseToggle() { if (RG.paused) rgResume(); else rgPause(); }
 function rgQuit() { rgStop(); App.render(); }
 function rgPickWord() {
   var st = RG.stage, pool = TYPE_WORDS.filter(function (w) {
@@ -5843,17 +5850,10 @@ function rgEndFinal(why) {
 function rgResultPaint() {
   var root = el("tgRoot"), r = RG.res; if (!root || !r) return;
   var rank = r.me ? r.me.rank : testMode() ? typeTestRank(r.score) : null;
-  root.innerHTML =
-    '<div class="cho-box" style="padding:24px 18px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' + (r.why === "time" ? "TIME UP" : "GAME OVER") + " · " + esc(typeNick() || "익명 참가자") + "</p>" +
-    '<p style="margin-top:6px;font-size:calc(15px * var(--fs));font-weight:800">' + (r.why === "time" ? "60초를 다 버텼어요" : "단어 5개를 놓쳐서 끝났어요") + "</p>" +
-    '<p class="disp" style="font-size:44px;color:var(--mint);margin-top:6px">' + r.score.toLocaleString() + "</p>" +
-    '<p class="hint">터뜨린 단어 ' + r.hits + "개 · 최고 콤보 " + r.combo + " · 정확도 " + r.acc + "%<br>" +
-    (r.send === "sending" ? "순위 반영 중" : rank ? "앱 순위 " + rank + "위" + (testMode() ? " (테스트)" : "") : r.send === "range" ? "기록이 상식 범위를 넘어 순위에 넣지 않았어요" : "") + "</p>" +
-    '<p class="hint" style="margin-top:6px">라이브 챌린지 스탬프는 끝까지 하면 적립돼요</p></div>' +
-    (rank && rank <= 10 ? '<div class="tipbanner mb12">상위권이에요. 1F 현장 타자왕전에 도전하세요 · 같은 키보드로 겨루고 1·2등은 Outro에서 호명합니다</div>' : "") +
-    '<button class="btn mint mb8" style="padding:15px" onclick="rgStart(\'app\')">다시 하기</button>' +
-    '<button class="btn line mb8" onclick="App.go(\'type_rank\')">순위판 보기</button>' +
-    '<button class="btn line" onclick="App.go(\'passport\')">스탬프 탭으로</button>';
+  root.innerHTML = gsResultHtml("type", { why: r.why, reason: r.why === "time" ? "60초를 다 버텼어요" : "단어 5개를 놓쳐서 끝났어요", score: r.score,
+    stats: "터뜨린 단어 " + r.hits + "개 · 최고 콤보 " + r.combo + " · 정확도 " + r.acc + "%",
+    rankLine: r.send === "sending" ? "순위 반영 중" : rank ? "앱 순위 " + rank + "위" + (testMode() ? " (테스트)" : "") : r.send === "range" ? "기록이 상식 범위를 넘어 순위에 넣지 않았어요" : "",
+    banner: rank && rank <= 10 ? '<div class="tipbanner mb12">상위권이에요. 1F 현장 타자왕전에 도전하세요 · 같은 키보드로 겨루고 1·2등은 Outro에서 호명합니다</div>' : "" });
 }
 /* ── 닉네임 · 순위판 ── */
 function typeNick() { return S.get("type_nick", ""); }
@@ -5922,6 +5922,821 @@ function gameClear(flagKey) {
     awardStamp("p4");   /* 260909: 미니게임 별도 칸 폐지 · 04 라이브 챌린지로 통합 (라이브 퀴즈와 중복 적립 없음) */
     setTimeout(function () { toast("게임 클리어! 패스포트 「라이브 챌린지」 칸이 적립됐어요."); }, 300);
   }
+}
+
+/* ════════════════ v3.45 휴대폰 미니게임 공통 틀 (사용자 결정 260917 · 세 게임을 만들어 선호도 조사) ════════════════
+   세 게임(AX 단어 소나기 · AX 팡 · ME to WE 점프)이 같은 틀을 쓴다:
+   전체화면 오버레이(visualViewport 높이) · 앱 이탈 시 자동 일시정지 · 3초 카운트다운 · 끝나는 순간 1.2초 멈춤 · 같은 결과 화면 ·
+   게임 닉네임(타자 게임 닉네임 공용) · 끝까지 하면 라이브 챌린지 스탬프(gameClear). 점수는 숫자 하나.
+   AX 팡·점프 순위판은 지금은 로컬 테스트용(가짜 닉네임 + 내 최고 기록) · 서버 순위는 게임이 정해진 뒤 연결한다.
+   비주얼: 오렌지 사다리 · 검정 · 흰색 · 16비트 도트 · 마스코트 미위 · 이모지 없음. */
+var GS_GAMES = {
+  type: { name: "AX 단어 소나기", view: "game_type", start: "rgStart('app')", best: "type_best", line: "떨어지는 단어를 쳐서 터뜨려요 · 키보드로 입력" },
+  pang: { name: "AX 팡", view: "game_pang", start: "pgStart()", best: "pang_best", line: "같은 그림 3개를 한 줄로 맞춰 터뜨려요 · 밀어서 바꾸기" },
+  jump: { name: "ME to WE 점프", view: "game_jump", start: "jpStart()", best: "jump_best", line: "달리는 미위를 탭해서 점프 · 공중에서 한 번 더 탭은 2단 점프" }
+};
+var GS = { cur: null, vvh: null, onVis: null, onKey: null };
+/* o = { key, title, cw, ch, canvasId, bottom, noGesture, down(e), move(e), up(e), keydown(e), running(), isPaused(), pause(), resume(), quit() } */
+function gsOverlayOpen(o) {
+  gsOverlayClose();
+  GS.cur = o;
+  var d = document.createElement("div");
+  d.id = "rgPlay";
+  d.innerHTML = '<div class="rgp-top"><span class="rgp-t">' + esc(o.title) + '</span><button class="rgp-x" type="button" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">일시정지</button></div>' +
+    '<div class="rgp-mid' + (o.noGesture ? " nogest" : "") + '" id="gsMid"><canvas id="' + o.canvasId + '" width="' + o.cw + '" height="' + o.ch + '"></canvas>' +
+    '<div class="rgp-pause" id="rgPause" hidden><p>일시정지</p><button class="btn mint" type="button" onclick="gsResume()">계속하기</button><button class="btn line" type="button" onclick="gsQuit()">그만하기</button></div></div>' +
+    (o.bottom || "");
+  document.body.appendChild(d);
+  document.documentElement.classList.add("rg-lock");
+  var mid = d.querySelector(".rgp-mid");
+  mid.addEventListener("pointerdown", function (e) {
+    if (e.target.closest && e.target.closest(".rgp-pause")) return;
+    if (o.down) o.down(e);
+  });
+  if (o.move) mid.addEventListener("pointermove", function (e) { o.move(e); });
+  if (o.up) { mid.addEventListener("pointerup", function (e) { o.up(e); }); mid.addEventListener("pointercancel", function (e) { o.up(e, true); }); }
+  GS.vvh = function () {
+    var vv = window.visualViewport, h = vv ? vv.height : window.innerHeight, top = vv ? vv.offsetTop : 0;
+    d.style.height = Math.round(h) + "px"; d.style.top = Math.round(top) + "px";
+    var cv = el(o.canvasId);
+    if (!cv) return;
+    var mh = mid.clientHeight - 8, mw = mid.clientWidth - 16;
+    var w = Math.min(mw, mh * o.cw / o.ch);
+    cv.style.width = Math.floor(w) + "px"; cv.style.height = Math.floor(w * o.ch / o.cw) + "px";
+  };
+  if (window.visualViewport) { window.visualViewport.addEventListener("resize", GS.vvh); window.visualViewport.addEventListener("scroll", GS.vvh); }
+  window.addEventListener("resize", GS.vvh);
+  GS.onVis = function () { if (document.hidden && GS.cur && GS.cur.running()) GS.cur.pause(); };
+  document.addEventListener("visibilitychange", GS.onVis);
+  GS.onKey = function (e) { if (GS.cur && GS.cur.keydown) GS.cur.keydown(e); };
+  document.addEventListener("keydown", GS.onKey);
+  GS.vvh();
+}
+/* key 를 주면 그 게임이 연 오버레이일 때만 닫는다(다른 게임 오버레이를 잘못 닫지 않게) */
+function gsOverlayClose(key) {
+  if (key && (!GS.cur || GS.cur.key !== key)) return;
+  if (GS.vvh) {
+    if (window.visualViewport) { window.visualViewport.removeEventListener("resize", GS.vvh); window.visualViewport.removeEventListener("scroll", GS.vvh); }
+    window.removeEventListener("resize", GS.vvh);
+  }
+  if (GS.onVis) document.removeEventListener("visibilitychange", GS.onVis);
+  if (GS.onKey) document.removeEventListener("keydown", GS.onKey);
+  GS.vvh = null; GS.onVis = null; GS.onKey = null; GS.cur = null;
+  var d = el("rgPlay");
+  if (d && d.parentNode) d.parentNode.removeChild(d);
+  document.documentElement.classList.remove("rg-lock");
+}
+function gsPauseUi(on) {
+  var p = el("rgPause"); if (p) p.hidden = !on;
+  var x = document.querySelector("#rgPlay .rgp-x"); if (x) x.textContent = on ? "계속하기" : "일시정지";
+}
+function gsPauseToggle() { if (!GS.cur) return; if (GS.cur.isPaused()) GS.cur.resume(); else GS.cur.pause(); }
+function gsResume() { if (GS.cur) GS.cur.resume(); }
+function gsQuit() { if (GS.cur) GS.cur.quit(); }
+/* 게임 상태 객체 공용 일시정지 · 멈춘 시간은 60초에서 빠지지 않는다 */
+function gsPauseState(G) {
+  if (!G.on || G.paused || G.ending) return;
+  G.paused = true; G.pauseAt = performance.now();
+  if (G.raf) cancelAnimationFrame(G.raf); G.raf = 0;
+  gsPauseUi(true);
+}
+function gsResumeState(G, frame) {
+  if (!G.on || !G.paused) return;
+  var gap = performance.now() - (G.pauseAt || performance.now());
+  if (G.t0) G.t0 += gap;
+  G.paused = false; G.last = performance.now();
+  gsPauseUi(false);
+  G.raf = requestAnimationFrame(frame);
+}
+/* 캔버스 좌표 · CSS 크기로 늘어난 캔버스에서 원래 픽셀 좌표로 */
+function gsXY(e, cv) {
+  var r = cv.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * cv.width / r.width, y: (e.clientY - r.top) * cv.height / r.height };
+}
+function gsBurst(G, x, y, n, cols) {
+  if (rgReduced()) n = Math.min(n, 4);
+  for (var i = 0; i < n && G.parts.length < 80; i++) {
+    var a = (Math.PI * 2 * i) / n + Math.random() * 0.3, sp = 30 + Math.random() * 40;
+    G.parts.push({ x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 20, t: 0.5 + Math.random() * 0.3, c: cols[i % cols.length] });
+  }
+}
+function gsFx(G, dt) {
+  G.parts = G.parts.filter(function (p) { p.t -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 90 * dt; return p.t > 0; });
+  G.pops = G.pops.filter(function (p) { p.t -= dt; p.y -= 16 * dt; return p.t > 0; });
+  if (G.banner) { G.banner.t -= dt; if (G.banner.t <= 0) G.banner = null; }
+  if (G.shake > 0) G.shake -= dt;
+}
+function gsFxDraw(ctx, G, W) {
+  G.parts.forEach(function (p) { ctx.fillStyle = p.c; ctx.fillRect(Math.round(p.x), Math.round(p.y), 2, 2); });
+  ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = "bold 9px sans-serif";
+  G.pops.forEach(function (p) { rgStroke(ctx, p.text, Math.round(Math.max(28, Math.min(W - 28, p.x))), Math.round(p.y), p.c, RAIN_PAL.ink, 3); });
+}
+/* HUD 공용 · 흰 박스 + 점수 + 모래시계 막대 */
+function gsHud(ctx, W, label, score, frac) {
+  rgBox(ctx, 2, 2, W - 4, 15, RAIN_PAL.w);
+  ctx.font = "bold 9px sans-serif"; ctx.textBaseline = "middle";
+  ctx.fillStyle = RAIN_PAL.deep; ctx.textAlign = "left"; ctx.fillText(label, 6, 10);
+  ctx.fillStyle = RAIN_PAL.ink; ctx.textAlign = "right"; ctx.fillText(String(score), W - 6, 10);
+  rgBox(ctx, 14, 20, W - 18, 7, RAIN_PAL.w);
+  ctx.fillStyle = frac < 0.2 ? RAIN_PAL.deep : RAIN_PAL.o100; ctx.fillRect(15, 21, Math.round((W - 20) * frac), 5);
+  ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(4, 19, 7, 1); ctx.fillRect(4, 28, 7, 1); ctx.fillRect(5, 20, 5, 1); ctx.fillRect(6, 21, 3, 2); ctx.fillRect(7, 23, 1, 2); ctx.fillRect(6, 25, 3, 1); ctx.fillRect(5, 26, 5, 2);
+}
+function gsHeart(ctx, hx, y, state, jy) {
+  jy = jy || 0;
+  ctx.fillStyle = state === "on" ? RAIN_PAL.o100 : state === "blink" ? RAIN_PAL.o25 : state === "hit" ? RAIN_PAL.deep : RAIN_PAL.o25;
+  ctx.fillRect(hx, y + jy, 3, 2); ctx.fillRect(hx + 4, y + jy, 3, 2); ctx.fillRect(hx, y + 2 + jy, 7, 2); ctx.fillRect(hx + 1, y + 4 + jy, 5, 1); ctx.fillRect(hx + 2, y + 5 + jy, 3, 1);
+  if (state === "off" || state === "hit") { ctx.fillStyle = RAIN_PAL.w; ctx.fillRect(hx + 3, y + 1 + jy, 1, 4); }
+}
+function gsBannerDraw(ctx, G, W, y) {
+  if (!G.banner) return;
+  rgBox(ctx, W / 2 - 50, y, 100, 22, RAIN_PAL.w); ctx.font = "bold 12px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillStyle = RAIN_PAL.deep; ctx.fillText(G.banner.text, W / 2, y + 11);
+}
+function gsCountDraw(ctx, cd, W, y0, y1) {
+  if (cd <= 0) return;
+  ctx.fillStyle = "rgba(255,255,255,0.55)"; ctx.fillRect(0, y0, W, y1 - y0);
+  ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = "bold 42px sans-serif";
+  rgStroke(ctx, cd > 1 ? String(Math.ceil(cd - 0.2)) : "GO", W / 2, (y0 + y1) / 2, RAIN_PAL.o100, RAIN_PAL.ink, 6);
+}
+function gsEndDraw(ctx, ending, W, y0, y1, small) {
+  if (!ending) return;
+  var cy = (y0 + y1) / 2;
+  ctx.fillStyle = "rgba(255,255,255,0.6)"; ctx.fillRect(0, y0, W, y1 - y0);
+  rgBox(ctx, 12, cy - 25, W - 24, 50, RAIN_PAL.w);
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.font = "bold 16px sans-serif"; ctx.fillStyle = ending.why === "time" ? RAIN_PAL.o100 : RAIN_PAL.deep;
+  ctx.fillText(ending.why === "time" ? "TIME UP" : "GAME OVER", W / 2, cy - 9);
+  ctx.font = "bold 10px sans-serif"; ctx.fillStyle = RAIN_PAL.ink;
+  ctx.fillText(small, W / 2, cy + 11);
+}
+/* ── 공용 화면 조각 · 닉네임 · 시작 · 결과 ── */
+function gsNickHtml(key) {
+  var nick = typeNick();
+  return '<div class="gs-root"><div class="cho-box"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' + esc(GS_GAMES[key].name) + "</p>" +
+    '<p class="word disp" style="font-size:24px;margin-top:4px">닉네임 정하기</p>' +
+    '<p class="hint">순위판에는 닉네임만 나와요 · 세 게임이 같은 닉네임을 써요<br>한글·영문·숫자 2~8자 · 공백·기호 불가</p></div>' +
+    '<div class="card mb12"><input id="tnIn" class="input" maxlength="8" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="예: 타자요정" value="' + esc(nick) + '" oninput="typeNickInput(this.value)">' +
+    '<p class="muted" id="tnMsg" style="margin-top:6px;font-size:calc(12.5px * var(--fs))">' + (nick ? "지금 닉네임 · " + esc(nick) : "2~8자로 정해 주세요") + "</p>" +
+    '<button class="btn mint" style="margin-top:10px" onclick="typeNickSave()">이 닉네임으로</button>' +
+    (nick ? '<button class="btn line" style="margin-top:8px" onclick="S.set(\'type_nick_edit\', false); App.render()">그대로 두기</button>' : "") + "</div></div>";
+}
+function gsNeedNick() { return !typeNick() || S.get("type_nick_edit", false); }
+/* o = { rootId, previewId, pw, ph, rules, foot } */
+function gsStartHtml(key, o) {
+  var g = GS_GAMES[key], sound = S.get("rain_sound", false), nick = typeNick();
+  return '<div id="' + o.rootId + '" class="gs-root">' +
+    '<div class="cho-box" style="padding:16px 14px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">MINI GAME</p>' +
+    '<p class="word disp" style="font-size:24px;margin-top:2px">' + esc(g.name) + "</p>" +
+    '<div class="rg-wrap" style="margin-top:10px"><canvas id="' + o.previewId + '" width="' + o.pw + '" height="' + o.ph + '"></canvas></div>' +
+    '<p class="hint">' + o.rules + "</p></div>" +
+    '<div class="row mb8" style="justify-content:space-between"><span class="muted" style="font-size:calc(13.5px * var(--fs))">닉네임 <b style="color:var(--hi)">' + esc(nick) + '</b> · <span style="text-decoration:underline;cursor:pointer" onclick="S.set(\'type_nick_edit\', true); App.render()">변경</span></span>' +
+    '<span class="muted" style="font-size:calc(13.5px * var(--fs))">최고 ' + S.get(g.best, 0).toLocaleString() + "</span></div>" +
+    '<button class="btn mint mb8" style="padding:16px;font-size:calc(17px * var(--fs))" onclick="' + g.start + '">START</button>' +
+    '<div class="row" style="gap:8px"><button class="btn line" style="flex:1" onclick="S.set(\'rain_sound\', ' + (sound ? "false" : "true") + '); App.render()">소리 ' + (sound ? "켜짐" : "꺼짐") + "</button>" +
+    '<button class="btn line" style="flex:1" onclick="' + gsRankGo(key) + '">순위판</button></div>' +
+    (o.foot ? '<p class="muted" style="margin-top:10px;font-size:calc(12px * var(--fs));text-align:center">' + o.foot + "</p>" : "") + "</div>";
+}
+function gsRankGo(key) { return key === "type" ? "App.go('type_rank')" : "S.set('gs_rank_key', '" + key + "'); App.go('gs_rank')"; }
+/* r = { why, reason, score, stats, rankLine, banner } · 세 게임 결과 화면 형식이 같다 */
+function gsResultHtml(key, r) {
+  var g = GS_GAMES[key];
+  return '<div class="cho-box" style="padding:24px 18px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' +
+    esc(g.name) + " · " + (r.why === "time" ? "TIME UP" : "GAME OVER") + " · " + esc(typeNick() || "익명 참가자") + "</p>" +
+    '<p style="margin-top:6px;font-size:calc(15px * var(--fs));font-weight:800">' + esc(r.reason) + "</p>" +
+    '<p class="disp" style="font-size:44px;color:var(--mint);margin-top:6px">' + Number(r.score).toLocaleString() + "</p>" +
+    '<p class="hint">' + r.stats + "<br>" + (r.rankLine || "") + "</p>" +
+    '<p class="hint" style="margin-top:6px">라이브 챌린지 스탬프는 끝까지 하면 적립돼요</p></div>' +
+    (r.banner || "") +
+    (pilotOn() ? gvRateHtml(key) : "") +
+    '<button class="btn mint mb8" style="padding:15px" onclick="' + g.start + '">다시 하기</button>' +
+    '<button class="btn line mb8" onclick="' + gsRankGo(key) + '">순위판 보기</button>' +
+    (pilotOn() ? '<button class="btn line" onclick="App.go(\'game_pilot\')">게임 3종 목록으로</button>'
+      : '<button class="btn line" onclick="App.go(\'passport\')">스탬프 탭으로</button>');
+}
+/* 로컬 테스트 순위판 · 가짜 닉네임 + 내 최고 기록 (서버 연결 전 · 실제 순위 아님) */
+var GS_FAKE = {
+  pang: [["팡팡요정", 4200], ["연쇄장인", 3700], ["전구수집가", 3150], ["톱니바퀴", 2700], ["차트왕", 2300], ["말풍선러", 1900], ["미위팬", 1550], ["반짝반짝", 1200], ["공감참여", 880], ["혁신연결", 600]],
+  jump: [["점프요정", 2950], ["2단점프왕", 2600], ["코인수집가", 2250], ["달리기러", 1950], ["미위팬", 1700], ["상자넘기", 1450], ["콘피하기", 1200], ["계단왕", 950], ["공감참여", 700], ["혁신연결", 450]]
+};
+function gsRankTop(key) {
+  var g = GS_GAMES[key], best = S.get(g.best, 0);
+  var list = (GS_FAKE[key] || []).map(function (x) { return { name: x[0], score: x[1] }; });
+  if (best) list.push({ name: (typeNick() || "나") + " (나)", score: best, me: true });
+  list.sort(function (a, b) { return b.score - a.score; });
+  var meRank = null;
+  list.forEach(function (x, i) { x.rank = i + 1; if (x.me) meRank = i + 1; });
+  return { top: list.slice(0, 10), me: meRank ? { rank: meRank, score: best } : null, total: list.length };
+}
+function gsRankOf(key, score) { var r = 1; (GS_FAKE[key] || []).forEach(function (x) { if (x[1] > score) r++; }); return r; }
+
+/* ═══ 파일럿 선호도 조사 · 행사 전 테스터 전용 (참여자에게는 안 보인다) ═══
+   노출: 테스트 모드(310555 · 데모) 또는 파일럿 주소 #pilot=games 로 한 번 연 기기.
+   게임마다 결과 화면에서 재미 1~5 · 목록 화면에서 최종 선택 1개 + 한 줄 · 서버 game_vote (같은 투표자는 덮어쓰기) */
+function pilotOn() { return testMode() || S.get("pilot_games", false); }
+function gvMine() { return S.get("gv_mine", { type: 0, pang: 0, jump: 0, choice: "", comment: "", sent: false }); }
+function gvWho() {
+  var u = S.get("user", {}) || {};
+  if (u.empId && !testEmp() && /^[0-9A-Za-z]{1,20}$/.test(String(u.empId))) return String(u.empId);
+  var d = S.get("gs_dev", "");
+  if (!d) { d = Math.random().toString(36).slice(2, 12); S.set("gs_dev", d); }
+  return "d:" + d;
+}
+function gvSend(params, done) {
+  if (!BE.on) { if (done) done("local"); return; }
+  var u = S.get("user", {}) || {};
+  params.action = "game_vote"; params.who = gvWho(); params.emp = String(u.empId || "");
+  beCall(params, function (r) { if (done) done(r && r.ok ? "ok" : "fail"); }, function () { if (done) done("fail"); });
+}
+function gvRateHtml(key) {
+  var m = gvMine(), v = m[key] || 0, b = "";
+  for (var i = 1; i <= 5; i++) b += '<button class="btn ' + (v === i ? "mint" : "line") + '" style="flex:1;padding:12px 0" onclick="gvRate(\'' + key + "', " + i + ')">' + i + "</button>";
+  return '<div class="card mb12" id="gvRate"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">얼마나 재밌었나요?</b>' +
+    '<div class="row" style="gap:6px;margin-top:10px">' + b + "</div>" +
+    '<p class="muted" style="margin-top:6px;font-size:calc(12.5px * var(--fs))">1 = 별로예요 · 5 = 아주 재밌어요' + (v ? " · " + v + "점으로 저장했어요" : "") + "</p></div>";
+}
+function gvRate(key, n) {
+  var m = gvMine(); m[key] = n; S.set("gv_mine", m);
+  var box = el("gvRate"); if (box) box.outerHTML = gvRateHtml(key);
+  var p = { game: key, rating: n };
+  gvSend(p, function (st) { if (st === "fail") toast("저장하지 못했어요. 다시 눌러 주세요."); else if (st === "local") toast("데모 화면이라 이 기기에만 저장했어요"); });
+}
+function gvChoose(key) { var m = gvMine(); m.choice = key; S.set("gv_mine", m); App.render(); }
+function gvSubmit() {
+  var m = gvMine();
+  if (!m.choice) { toast("앱에 넣을 게임을 하나 골라 주세요"); return; }
+  m.comment = ((el("gvCmt") || {}).value || "").trim().slice(0, 120);
+  S.set("gv_mine", m);
+  gvSend({ choice: m.choice, comment: m.comment }, function (st) {
+    if (st === "fail") { toast("저장하지 못했어요. 다시 눌러 주세요."); return; }
+    m.sent = true; S.set("gv_mine", m);
+    toast(st === "local" ? "데모 화면이라 이 기기에만 저장했어요" : "고마워요. 투표가 저장됐어요");
+    App.render();
+  });
+}
+
+/* ════════════════ AX 팡 · 7×7 같은 그림 3개 맞추기 (60초 · 지는 조건 없음) ════════════════
+   조작: 이웃한 두 칸을 밀어서 바꾸기 또는 한 칸 탭 → 옆 칸 탭. 맞는 줄이 안 생기면 제자리로 돌아간다.
+   3개 이상 한 줄 = 터짐 → 위 그림이 떨어짐(연쇄) · 점수 = 터진 칸 × 10 × 연쇄 배수(1~5).
+   4개 이상 한 줄 = 그 자리에 특수 블록(가로 줄로 만들면 가로 한 줄, 세로면 세로 한 줄을 지운다 · 한 종류만).
+   움직일 수가 없으면 자동으로 섞고 · 5초 입력이 없으면 가능한 수 두 칸이 반짝인다.
+   그림 5종(색이 아니라 모양으로 구분): 말풍선 · 톱니 · 막대 차트 · 전구 · 반짝임. 코드 안 14×14 픽셀 배열. */
+var PG_N = 7, PG_TS = 24, PG_W = 180, PG_H = 244, PG_OX = 6, PG_OY = 42, PG_KINDS = 5, PG_SEC = 60;
+var PG_ICON = [
+  ["..............", "..............", ".KKKKKKKKKKKK.", "KWWWWWWWWWWWWK", "KWWWWWWWWWWWWK", "KWOOWWOOWWOOWK", "KWOOWWOOWWOOWK", "KWWWWWWWWWWWWK", ".KKKWWKKKKKKK.", "...KWK........", "...KK.........", "..............", "..............", ".............."],
+  ["..............", "......KK......", "...K..KK..K...", "..KKKKKKKKKK..", "...KKKKKKKK...", "..KKKKWWKKKK..", "KKKKKWWWWKKKKK", "KKKKKWWWWKKKKK", "..KKKKWWKKKK..", "...KKKKKKKK...", "..KKKKKKKKKK..", "...K..KK..K...", "......KK......", ".............."],
+  ["..............", ".K............", ".K........KKK.", ".K........KOK.", ".K....KKK.KOK.", ".K....KOK.KOK.", ".K....KOK.KOK.", ".KKKK.KOK.KOK.", ".KKOK.KOK.KOK.", ".KKOK.KOK.KOK.", ".KKOK.KOK.KOK.", ".KKKKKKKKKKKKK", "..............", ".............."],
+  ["..............", "....KKKKK.....", "...KLLLLLK....", "..KLLWLLLLK...", "..KLWLLLLLK...", "..KLLLLLLLK...", "..KLLLLLLLK...", "...KLLLLLK....", "....KLLLK.....", "....KKKKK.....", "....KWWWK.....", "....KKKKK.....", ".....KKK......", ".............."],
+  ["..............", "......KK......", ".....KDDK.....", ".....KDDK.....", "....KDDDDK....", "KKKKDDWWDDKKKK", "KDDDDWWWWDDDDK", "KDDDDWWWWDDDDK", "KKKKDDWWDDKKKK", "....KDDDDK....", ".....KDDK.....", ".....KDDK.....", "......KK......", ".............."]
+];
+var PG_ICON_NAME = ["말풍선", "톱니", "차트", "전구", "반짝임"];
+var PG_ICV = [];
+function pgIcon(t) {
+  if (PG_ICV[t]) return PG_ICV[t];
+  var c = document.createElement("canvas"); c.width = 14; c.height = 14;
+  rgSprite(c.getContext("2d"), PG_ICON[t], 0, 0, { K: RAIN_PAL.ink, W: RAIN_PAL.w, O: RAIN_PAL.o100, D: RAIN_PAL.deep, L: RAIN_PAL.o50 });
+  return (PG_ICV[t] = c);
+}
+var PG = { on: false, raf: 0, parts: [], pops: [] };
+function pgRand() { return Math.floor(Math.random() * PG_KINDS); }
+function pgNew(t) { return { t: t, sp: "", ox: 0, oy: 0, clr: 0 }; }
+/* 같은 그림 3개 이상 줄 목록 · 가로 먼저 */
+function pgRuns(b) {
+  var runs = [], r, c, e, k, cells;
+  for (r = 0; r < PG_N; r++) for (c = 0; c < PG_N; c = e) {
+    for (e = c + 1; e < PG_N && b[r][e].t === b[r][c].t; e++);
+    if (e - c >= 3) { cells = []; for (k = c; k < e; k++) cells.push([r, k]); runs.push({ cells: cells, dir: "h" }); }
+  }
+  for (c = 0; c < PG_N; c++) for (r = 0; r < PG_N; r = e) {
+    for (e = r + 1; e < PG_N && b[e][c].t === b[r][c].t; e++);
+    if (e - r >= 3) { cells = []; for (k = r; k < e; k++) cells.push([k, c]); runs.push({ cells: cells, dir: "v" }); }
+  }
+  return runs;
+}
+function pgSwapRaw(b, a, z) { var t = b[a[0]][a[1]]; b[a[0]][a[1]] = b[z[0]][z[1]]; b[z[0]][z[1]] = t; }
+/* 가능한 수 하나 · 없으면 null */
+function pgFindMove(b) {
+  for (var r = 0; r < PG_N; r++) for (var c = 0; c < PG_N; c++) {
+    var nb = [[r, c + 1], [r + 1, c]];
+    for (var i = 0; i < 2; i++) {
+      var z = nb[i]; if (z[0] >= PG_N || z[1] >= PG_N) continue;
+      if (b[r][c].t === b[z[0]][z[1]].t) continue;
+      pgSwapRaw(b, [r, c], z);
+      var ok = pgRuns(b).length > 0;
+      pgSwapRaw(b, [r, c], z);
+      if (ok) return [[r, c], z];
+    }
+  }
+  return null;
+}
+/* 시작 판 · 이미 맞춰진 줄 없음 + 가능한 수 1개 이상 */
+function pgBoardInit() {
+  var b;
+  for (var tries = 0; tries < 100; tries++) {
+    b = [];
+    for (var r = 0; r < PG_N; r++) {
+      b.push([]);
+      for (var c = 0; c < PG_N; c++) {
+        var t;
+        do { t = pgRand(); } while ((c >= 2 && b[r][c - 1].t === t && b[r][c - 2].t === t) || (r >= 2 && b[r - 1][c].t === t && b[r - 2][c].t === t));
+        b[r].push(pgNew(t));
+      }
+    }
+    if (pgFindMove(b)) return b;
+  }
+  return b;
+}
+/* 움직일 수 없을 때 · 특수 블록은 그대로 두고 자리만 섞는다 */
+function pgShuffle() {
+  var b = PG.b, all = [];
+  b.forEach(function (row) { row.forEach(function (t) { all.push(t); }); });
+  for (var tries = 0; tries < 200; tries++) {
+    shuf(all);
+    for (var i = 0; i < all.length; i++) b[Math.floor(i / PG_N)][i % PG_N] = all[i];
+    if (!pgRuns(b).length && pgFindMove(b)) break;
+  }
+  if (pgRuns(b).length || !pgFindMove(b)) PG.b = pgBoardInit();
+  PG.b.forEach(function (row) { row.forEach(function (t) { t.ox = 0; t.oy = -6; }); });
+  PG.banner = { text: "다시 섞었어요", t: 1.0 };
+  PG.shuffles++;
+}
+function pgStop() { PG.on = false; if (PG.raf) cancelAnimationFrame(PG.raf); PG.raf = 0; gsOverlayClose("pang"); }
+function pgStart() {
+  pgStop();
+  PG = { on: true, paused: false, ending: null, raf: 0, cd: 3.2, t0: 0, last: performance.now(), b: pgBoardInit(), phase: "idle", sel: null, pair: null, drag: null,
+    idle: 0, hint: null, chain: 0, clrT: 0, lines: [], parts: [], pops: [], banner: null, shake: 0, score: 0, tiles: 0, maxChain: 0, specials: 0, moves: 0, shuffles: 0 };
+  gsOverlayOpen({ key: "pang", title: "AX 팡", cw: PG_W, ch: PG_H, canvasId: "pgCv", noGesture: true,
+    bottom: '<div class="gs-foot">이웃한 두 칸을 밀어서 바꾸거나, 한 칸 누르고 옆 칸을 누르세요</div>',
+    down: pgDown, move: pgMove, up: pgUp,
+    running: function () { return PG.on && !PG.paused && !PG.ending; }, isPaused: function () { return !!PG.paused; },
+    pause: function () { gsPauseState(PG); }, resume: function () { gsResumeState(PG, pgFrame); },
+    quit: function () { pgStop(); App.render(); } });
+  PG.raf = requestAnimationFrame(pgFrame);
+}
+function pgFrame() {
+  if (!PG.on || PG.paused) return;
+  var now = performance.now(), dt = Math.min(0.05, (now - PG.last) / 1000);
+  PG.last = now;
+  pgUpdate(dt, now);
+  var cv = el("pgCv");
+  if (!cv) { pgStop(); return; }
+  pgDraw(cv.getContext("2d"), now);
+  if (PG.on && !PG.paused) PG.raf = requestAnimationFrame(pgFrame);
+}
+function pgCell(p) {
+  var c = Math.floor((p.x - PG_OX) / PG_TS), r = Math.floor((p.y - PG_OY) / PG_TS);
+  return r >= 0 && r < PG_N && c >= 0 && c < PG_N ? [r, c] : null;
+}
+function pgDown(e) {
+  e.preventDefault();
+  if (!PG.on || PG.paused || PG.ending || PG.cd > 0) return;
+  var cv = el("pgCv"); if (!cv) return;
+  var p = gsXY(e, cv), cell = pgCell(p);
+  PG.drag = cell ? { cell: cell, x: p.x, y: p.y, id: e.pointerId } : null;
+  try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {}
+}
+function pgMove(e) {
+  var d = PG.drag; if (!d || d.id !== e.pointerId) return;
+  var cv = el("pgCv"); if (!cv) return;
+  var p = gsXY(e, cv), dx = p.x - d.x, dy = p.y - d.y;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < 8) return;
+  PG.drag = null;
+  var z = Math.abs(dx) > Math.abs(dy) ? [d.cell[0], d.cell[1] + (dx > 0 ? 1 : -1)] : [d.cell[0] + (dy > 0 ? 1 : -1), d.cell[1]];
+  if (z[0] < 0 || z[0] >= PG_N || z[1] < 0 || z[1] >= PG_N) return;
+  PG.sel = null;
+  pgTrySwap(d.cell, z);
+}
+function pgUp(e, cancel) {
+  var d = PG.drag; PG.drag = null;
+  if (!d || cancel || d.id !== e.pointerId) return;
+  pgTap(d.cell);
+}
+/* 탭 두 번 방식 · 옆 칸이면 바꾸고, 아니면 선택을 옮긴다 */
+function pgTap(cell) {
+  if (!PG.on || PG.paused || PG.ending || PG.cd > 0 || PG.phase !== "idle") return;
+  var s = PG.sel;
+  if (s && s[0] === cell[0] && s[1] === cell[1]) { PG.sel = null; return; }
+  if (s && Math.abs(s[0] - cell[0]) + Math.abs(s[1] - cell[1]) === 1) { PG.sel = null; pgTrySwap(s, cell); return; }
+  PG.sel = cell; rgBeep(520, 0.04);
+}
+function pgTrySwap(a, z) {
+  if (!PG.on || PG.paused || PG.ending || PG.cd > 0 || PG.phase !== "idle") return false;
+  if (Math.abs(a[0] - z[0]) + Math.abs(a[1] - z[1]) !== 1) return false;
+  PG.hint = null; PG.idle = 0; PG.moves++;
+  pgSwapAnim(a, z);
+  PG.pair = [a, z]; PG.phase = "swap"; PG.chain = 0;
+  return true;
+}
+function pgSwapAnim(a, z) {
+  var b = PG.b, ta = b[a[0]][a[1]], tz = b[z[0]][z[1]];
+  pgSwapRaw(b, a, z);
+  tz.ox = (z[1] - a[1]) * PG_TS; tz.oy = (z[0] - a[0]) * PG_TS;
+  ta.ox = (a[1] - z[1]) * PG_TS; ta.oy = (a[0] - z[0]) * PG_TS;
+}
+function pgSettle(dt, speed) {
+  var moving = false, st = speed * dt;
+  PG.b.forEach(function (row) { row.forEach(function (t) {
+    if (t.ox) { t.ox = Math.abs(t.ox) <= st ? 0 : t.ox - Math.sign(t.ox) * st; moving = true; }
+    if (t.oy) { t.oy = Math.abs(t.oy) <= st ? 0 : t.oy - Math.sign(t.oy) * st; moving = true; }
+  }); });
+  return moving;
+}
+/* 터뜨리기 · 4개 이상 줄은 그 자리(바꾼 칸이 있으면 그 칸)에 특수 블록 · 특수 블록이 터지면 그 줄 전체 */
+function pgClear(runs) {
+  PG.chain++;
+  var mult = Math.min(PG.chain, 5), b = PG.b, kill = {}, makes = [];
+  runs.forEach(function (run) {
+    run.cells.forEach(function (p) { kill[p[0] + "," + p[1]] = 1; });
+    if (run.cells.length >= 4) {
+      var pos = run.cells[Math.floor(run.cells.length / 2)];
+      if (PG.pair) PG.pair.forEach(function (q) { run.cells.forEach(function (p) { if (p[0] === q[0] && p[1] === q[1]) pos = p; }); });
+      makes.push({ r: pos[0], c: pos[1], t: b[pos[0]][pos[1]].t, sp: run.dir });
+    }
+  });
+  var queue = Object.keys(kill), seen = {};
+  while (queue.length) {
+    var k = queue.pop(); if (seen[k]) continue; seen[k] = 1;
+    var rc = k.split(","), r = +rc[0], c = +rc[1], tile = b[r][c];
+    if (tile.sp) {
+      PG.lines.push({ r: r, c: c, dir: tile.sp, t: 0.3 });
+      rgBeep(330, 0.18, "sawtooth", 0.05);
+      for (var i = 0; i < PG_N; i++) {
+        var kk = tile.sp === "h" ? r + "," + i : i + "," + c;
+        if (!kill[kk]) { kill[kk] = 1; queue.push(kk); }
+      }
+    }
+  }
+  makes.forEach(function (m) { delete kill[m.r + "," + m.c]; });
+  var n = 0, sx = 0, sy = 0;
+  Object.keys(kill).forEach(function (k2) {
+    var rc2 = k2.split(","), t2 = b[+rc2[0]][+rc2[1]];
+    t2.clr = 1; n++;
+    var px = PG_OX + +rc2[1] * PG_TS + 12, py = PG_OY + +rc2[0] * PG_TS + 12;
+    sx += px; sy += py;
+    gsBurst(PG, px, py, 3, [RAIN_PAL.o100, RAIN_PAL.w, RAIN_PAL.ink]);
+  });
+  makes.forEach(function (m) { var t3 = b[m.r][m.c]; t3.t = m.t; t3.sp = m.sp; t3.clr = 0; PG.specials++; });
+  var cnt = n + makes.length, gain = cnt * 10 * mult;
+  PG.score += gain; PG.tiles += cnt; PG.maxChain = Math.max(PG.maxChain, PG.chain);
+  if (n) PG.pops.push({ x: sx / n, y: sy / n, text: "+" + gain, t: 0.8, c: RAIN_PAL.o100 });
+  if (PG.chain >= 2) PG.banner = { text: "연쇄 x" + mult, t: 0.8 };
+  else if (makes.length) PG.banner = { text: "특수 블록", t: 0.8 };
+  rgBeep(560 + PG.chain * 90, 0.1, "square", 0.05);
+  PG.pair = null; PG.clrT = 0.18; PG.phase = "clear";
+}
+/* 터진 칸을 비우고 위 그림을 떨어뜨린다 · 새 그림은 위에서 들어온다 */
+function pgCollapse() {
+  var b = PG.b;
+  for (var c = 0; c < PG_N; c++) {
+    var w = PG_N - 1;
+    for (var r = PG_N - 1; r >= 0; r--) {
+      var t = b[r][c];
+      if (!t.clr) { if (w !== r) { b[w][c] = t; t.oy += (r - w) * PG_TS; } w--; }
+    }
+    var miss = w + 1;
+    for (var r2 = w; r2 >= 0; r2--) { var nt = pgNew(pgRand()); nt.oy = -miss * PG_TS; b[r2][c] = nt; }
+  }
+}
+function pgEl(now) { return PG.t0 ? (now - PG.t0) / 1000 : 0; }
+function pgUpdate(dt, now) {
+  if (PG.ending) {
+    PG.ending.t -= dt; gsFx(PG, dt);
+    if (PG.ending.t <= 0) pgEndFinal(PG.ending.why);
+    return;
+  }
+  if (PG.cd > 0) {
+    var before = Math.ceil(PG.cd); PG.cd -= dt;
+    if (Math.ceil(PG.cd) !== before && PG.cd > 0) rgBeep(440, 0.08);
+    if (PG.cd <= 0) { PG.t0 = now; rgBeep(880, 0.15); }
+    return;
+  }
+  if (pgEl(now) >= PG_SEC) { pgEnd("time"); return; }
+  gsFx(PG, dt);
+  PG.lines = PG.lines.filter(function (l) { l.t -= dt; return l.t > 0; });
+  if (PG.phase === "idle") {
+    PG.idle += dt;
+    pgSettle(dt, 120);
+    if (PG.idle > 5 && !PG.hint) PG.hint = pgFindMove(PG.b);
+  } else if (PG.phase === "swap") {
+    if (!pgSettle(dt, 220)) {
+      var runs = pgRuns(PG.b);
+      if (runs.length) pgClear(runs);
+      else { pgSwapAnim(PG.pair[0], PG.pair[1]); PG.pair = null; PG.phase = "back"; rgBeep(160, 0.08, "square", 0.04); }
+    }
+  } else if (PG.phase === "back") {
+    if (!pgSettle(dt, 220)) PG.phase = "idle";
+  } else if (PG.phase === "clear") {
+    PG.clrT -= dt;
+    if (PG.clrT <= 0) { pgCollapse(); PG.phase = "fall"; }
+  } else if (PG.phase === "fall") {
+    if (!pgSettle(dt, 320)) {
+      var runs2 = pgRuns(PG.b);
+      if (runs2.length) pgClear(runs2);
+      else { PG.phase = "idle"; PG.chain = 0; PG.idle = 0; if (!pgFindMove(PG.b)) pgShuffle(); }
+    }
+  }
+}
+function pgEnd(why) {
+  if (!PG.on || PG.ending) return;
+  PG.ending = { t: 1.2, why: why }; PG.sel = null; PG.hint = null; PG.drag = null;
+  rgBeep(784, 0.3, "triangle", 0.07);
+}
+function pgEndFinal(why) {
+  if (!PG.on) return;
+  PG.ending = null;
+  pgStop();
+  S.set("pang_best", Math.max(S.get("pang_best", 0), PG.score));
+  gameClear("pang_cleared");
+  var root = el("pgRoot"); if (!root) return;
+  var rank = gsRankOf("pang", PG.score);
+  root.innerHTML = gsResultHtml("pang", { why: why, reason: "60초 동안 " + PG.tiles + "칸을 터뜨렸어요", score: PG.score,
+    stats: "터뜨린 칸 " + PG.tiles + "개 · 최고 연쇄 " + PG.maxChain + " · 특수 블록 " + PG.specials + "개", rankLine: "앱 순위 " + rank + "위 (테스트)" });
+  window.scrollTo(0, 0);
+}
+function pgDraw(ctx, now) {
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = RAIN_PAL.o10; ctx.fillRect(0, 0, PG_W, PG_H);
+  if (PG.shake > 0) ctx.translate(Math.round((Math.random() - 0.5) * 3), Math.round((Math.random() - 0.5) * 3));
+  var frac = PG.t0 ? Math.max(0, 1 - pgEl(now) / PG_SEC) : 1;
+  gsHud(ctx, PG_W, PG.chain >= 2 ? "연쇄 x" + Math.min(PG.chain, 5) : "AX 팡", PG.score, frac);
+  pgBoardDraw(ctx, PG.b, now, true);
+  /* 아래 띠 · 마스코트 · 연쇄가 이어지면 친구가 붙는다 */
+  var bob = Math.floor(now / 300) % 2;
+  ctx.drawImage(rgSprCv(PG.phase === "clear" ? "open" : "closed"), 8, PG_H - 26 + bob, 24, 22);
+  if (PG.chain >= 2) ctx.drawImage(rgSprCv("buddy"), 34, PG_H - 20 + (1 - bob), 16, 16);
+  ctx.font = "bold 9px sans-serif"; ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillStyle = RAIN_PAL.ink;
+  ctx.fillText(PG.hint ? "반짝이는 두 칸을 바꿔요" : "4개 이상이면 줄 지우기", PG_W - 6, PG_H - 14);
+  gsFxDraw(ctx, PG, PG_W);
+  gsBannerDraw(ctx, PG, PG_W, 112);
+  gsEndDraw(ctx, PG.ending, PG_W, 30, PG_OY + PG_N * PG_TS + 2, "60초 완주");
+  gsCountDraw(ctx, PG.cd, PG_W, 30, PG_OY + PG_N * PG_TS + 2);
+  ctx.restore();
+}
+function pgBoardDraw(ctx, b, now, live) {
+  var bw = PG_N * PG_TS;
+  ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(PG_OX - 2, PG_OY - 2, bw + 4, bw + 4);
+  ctx.save();
+  ctx.beginPath(); ctx.rect(PG_OX, PG_OY, bw, bw); ctx.clip();
+  for (var r = 0; r < PG_N; r++) for (var c = 0; c < PG_N; c++) {
+    ctx.fillStyle = (r + c) % 2 ? RAIN_PAL.o25 : RAIN_PAL.w;
+    ctx.fillRect(PG_OX + c * PG_TS, PG_OY + r * PG_TS, PG_TS, PG_TS);
+  }
+  var hintOn = live && PG.hint && Math.floor(now / 250) % 2 === 0;
+  for (r = 0; r < PG_N; r++) for (c = 0; c < PG_N; c++) {
+    var t = b[r][c], x = Math.round(PG_OX + c * PG_TS + t.ox), y = Math.round(PG_OY + r * PG_TS + t.oy);
+    if (t.clr) {
+      var k = live ? Math.max(0, PG.clrT / 0.18) : 1, s = Math.round(20 * k);
+      ctx.fillStyle = RAIN_PAL.w; ctx.fillRect(x + 12 - s / 2, y + 12 - s / 2, s, s);
+      continue;
+    }
+    if (t.sp) {
+      ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(x + 1, y + 1, PG_TS - 2, PG_TS - 2);
+      ctx.fillStyle = RAIN_PAL.ink;
+      if (t.sp === "h") { ctx.fillRect(x + 1, y + 11, 2, 2); ctx.fillRect(x + 2, y + 10, 1, 4); ctx.fillRect(x + PG_TS - 3, y + 11, 2, 2); ctx.fillRect(x + PG_TS - 3, y + 10, 1, 4); }
+      else { ctx.fillRect(x + 11, y + 1, 2, 2); ctx.fillRect(x + 10, y + 2, 4, 1); ctx.fillRect(x + 11, y + PG_TS - 3, 2, 2); ctx.fillRect(x + 10, y + PG_TS - 3, 4, 1); }
+    }
+    ctx.drawImage(pgIcon(t.t), x + 5, y + 5);
+  }
+  if (live) {
+    var box = function (p, col) { var x2 = PG_OX + p[1] * PG_TS, y2 = PG_OY + p[0] * PG_TS; ctx.fillStyle = col; ctx.fillRect(x2, y2, PG_TS, 2); ctx.fillRect(x2, y2 + PG_TS - 2, PG_TS, 2); ctx.fillRect(x2, y2, 2, PG_TS); ctx.fillRect(x2 + PG_TS - 2, y2, 2, PG_TS); };
+    if (PG.sel) box(PG.sel, RAIN_PAL.ink);
+    if (hintOn) { box(PG.hint[0], RAIN_PAL.deep); box(PG.hint[1], RAIN_PAL.deep); }
+    PG.lines.forEach(function (l) {
+      ctx.fillStyle = "rgba(255,255,255," + (l.t / 0.3).toFixed(2) + ")";
+      if (l.dir === "h") ctx.fillRect(PG_OX, PG_OY + l.r * PG_TS + 6, bw, 12); else ctx.fillRect(PG_OX + l.c * PG_TS + 6, PG_OY, 12, bw);
+    });
+  }
+  ctx.restore();
+}
+function pgPreview() {
+  var cv = el("pgPrev"); if (!cv) return;
+  var ctx = cv.getContext("2d"); ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = RAIN_PAL.o10; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.save(); ctx.translate(0, -38);
+  var b = pgBoardInit();
+  b[1][3].sp = "h";
+  pgBoardDraw(ctx, b, 0, false);
+  ctx.restore();
+}
+
+/* ════════════════ ME to WE 점프 · 탭 점프 러너 (60초 · 하트 3) ════════════════
+   미위가 자동으로 달린다 · 탭 = 점프 · 공중에서 한 번 더 탭 = 2단 점프 (PC 는 스페이스·위 화살표도).
+   장애물(상자 · 러버콘 · 계단 블록)에 부딪히면 하트 -1 후 1초 무적(깜빡임) · 첫 충돌로 끝나지 않는다.
+   끝 = 60초 완주 또는 하트 3개 소진. 처음 10초는 장애물이 드물고 느리다 → 이후 조금씩 빨라진다.
+   코인 = AX 토큰. 점수 = 코인 × 30 + 넘은 장애물 × 20 + 버틴 초 × 5. 장애물 이름·모양은 중립적인 사물만(회사·동료를 부정적으로 그리지 않는다). */
+var JP_W = 180, JP_H = 240, JP_GY = 196, JP_PX = 30, JP_SEC = 60, JP_HEARTS = 3, JP_G = 820, JP_JV = 300, JP_JV2 = 245, JP_INV = 1.0;
+/* 장애물 판정 사각형 [가로 시작, 폭, 높이] · 바닥에 붙어 있다 */
+var JP_OBS = { box: { w: 16, rects: [[0, 16, 16]] }, cone: { w: 14, rects: [[3, 8, 17]] }, step: { w: 22, rects: [[0, 11, 8], [11, 11, 15]] } };
+var JP_COIN = ["...KKKK...", ".KKOOOOKK.", ".KOWOOWOK.", "KOOOWWOOOK", "KOOOWWOOOK", ".KOWOOWOK.", ".KKOOOOKK.", "...KKKK..."];
+var JP_COINCV = null;
+var JP = { on: false, raf: 0, parts: [], pops: [] };
+function jpStop() { JP.on = false; if (JP.raf) cancelAnimationFrame(JP.raf); JP.raf = 0; gsOverlayClose("jump"); }
+function jpStart() {
+  jpStop();
+  JP = { on: true, paused: false, ending: null, raf: 0, cd: 3.2, t0: 0, last: performance.now(), py: JP_GY, vy: 0, jumps: 0, hearts: JP_HEARTS, inv: 0, heartHit: 0,
+    obs: [], coins: [], parts: [], pops: [], banner: null, shake: 0, dist: 0, nextObs: 150, coinN: 0, dodged: 0, hits: 0, jumpsN: 0, score: 0, speedUp: 0 };
+  gsOverlayOpen({ key: "jump", title: "ME to WE 점프", cw: JP_W, ch: JP_H, canvasId: "jpCv", noGesture: true,
+    bottom: '<div class="gs-foot">화면 아무 곳이나 탭 = 점프 · 공중에서 한 번 더 = 2단 점프</div>',
+    down: function (e) { e.preventDefault(); jpTap(); },
+    keydown: function (e) { if (e.code === "Space" || e.key === " " || e.key === "ArrowUp") { e.preventDefault(); if (!e.repeat) jpTap(); } },
+    running: function () { return JP.on && !JP.paused && !JP.ending; }, isPaused: function () { return !!JP.paused; },
+    pause: function () { gsPauseState(JP); }, resume: function () { gsResumeState(JP, jpFrame); },
+    quit: function () { jpStop(); App.render(); } });
+  var foot = document.querySelector("#rgPlay .gs-foot");
+  if (foot) foot.addEventListener("pointerdown", function (e) { e.preventDefault(); jpTap(); });
+  JP.raf = requestAnimationFrame(jpFrame);
+}
+function jpFrame() {
+  if (!JP.on || JP.paused) return;
+  var now = performance.now(), dt = Math.min(0.05, (now - JP.last) / 1000);
+  JP.last = now;
+  jpUpdate(dt, now);
+  var cv = el("jpCv");
+  if (!cv) { jpStop(); return; }
+  jpDraw(cv.getContext("2d"), now);
+  if (JP.on && !JP.paused) JP.raf = requestAnimationFrame(jpFrame);
+}
+function jpEl(now) { return JP.t0 ? (now - JP.t0) / 1000 : 0; }
+function jpTap() {
+  if (!JP.on || JP.paused || JP.ending || JP.cd > 0) return;
+  if (JP.jumps === 0 && JP.py >= JP_GY) { JP.vy = -JP_JV; JP.jumps = 1; JP.jumpsN++; rgBeep(620, 0.07); }
+  else if (JP.jumps < 2) {
+    JP.vy = -JP_JV2; JP.jumps = 2; JP.jumpsN++; rgBeep(820, 0.07);
+    gsBurst(JP, JP_PX + 14, JP.py, 5, [RAIN_PAL.w, RAIN_PAL.o50]);
+  }
+}
+function jpSpeed(t) { return t < 10 ? 55 : Math.min(125, 62 + (t - 10) * 1.3); }
+function jpBody() { return { x: JP_PX + 8, y: JP.py - 20, w: 12, h: 18 }; }
+function jpOverlap(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
+/* 부딪힘 · 무적 중이면 무시 · 1초 무적 */
+function jpHit(o) {
+  if (JP.inv > 0 || JP.ending) return false;
+  o.hit = true;
+  JP.hearts--; JP.hits++; JP.inv = JP_INV; JP.heartHit = 0.5; JP.shake = rgReduced() ? 0 : 0.25;
+  JP.pops.push({ x: JP_PX + 14, y: JP.py - 30, text: "하트 -1", t: 0.9, c: RAIN_PAL.deep });
+  rgBeep(140, 0.2, "sawtooth", 0.05);
+  if (JP.hearts === 1) JP.banner = { text: "마지막 하트", t: 1.0 };
+  if (JP.hearts <= 0) jpEnd("lives");
+  return true;
+}
+function jpUpdate(dt, now) {
+  if (JP.ending) {
+    JP.ending.t -= dt; gsFx(JP, dt);
+    if (JP.ending.t <= 0) jpEndFinal(JP.ending.why);
+    return;
+  }
+  if (JP.cd > 0) {
+    var before = Math.ceil(JP.cd); JP.cd -= dt;
+    if (Math.ceil(JP.cd) !== before && JP.cd > 0) rgBeep(440, 0.08);
+    if (JP.cd <= 0) { JP.t0 = now; rgBeep(880, 0.15); }
+    return;
+  }
+  var t = jpEl(now);
+  if (t >= JP_SEC) { jpEnd("time"); return; }
+  gsFx(JP, dt);
+  if (JP.inv > 0) JP.inv = Math.max(0, JP.inv - dt);
+  if (JP.heartHit > 0) JP.heartHit -= dt;
+  var su = t >= 40 ? 3 : t >= 25 ? 2 : t >= 10 ? 1 : 0;
+  if (su > JP.speedUp) { JP.speedUp = su; JP.banner = { text: "속도 UP", t: 1.0 }; rgBeep(660, 0.1); }
+  var dx = jpSpeed(t) * dt;
+  JP.dist += dx;
+  JP.vy += JP_G * dt; JP.py += JP.vy * dt;
+  if (JP.py >= JP_GY) { JP.py = JP_GY; JP.vy = 0; JP.jumps = 0; }
+  JP.nextObs -= dx;
+  if (JP.nextObs <= 0) {
+    var kinds = t < 10 ? ["box", "cone"] : ["box", "cone", "step"], k = kinds[Math.floor(Math.random() * kinds.length)];
+    JP.obs.push({ k: k, x: JP_W + 4, w: JP_OBS[k].w, passed: false, hit: false });
+    var gMin = t < 10 ? 190 : Math.max(100, 170 - (t - 10) * 1.5), gMax = gMin + (t < 10 ? 70 : 60);
+    JP.nextObs = gMin + Math.random() * (gMax - gMin);
+    if (Math.random() < 0.75) {
+      var cx0 = JP_W + 4 + JP_OBS[k].w + 28 + Math.random() * 12, hg = 10 + Math.random() * 36;
+      for (var i = 0; i < 3; i++) JP.coins.push({ x: cx0 + i * 14, y: JP_GY - hg - (i === 1 ? 8 : 0) - 8, got: false });
+    }
+  }
+  var body = jpBody();
+  JP.obs.forEach(function (o) {
+    o.x -= dx;
+    JP_OBS[o.k].rects.forEach(function (rc) {
+      if (!o.hit && jpOverlap(body, { x: o.x + rc[0], y: JP_GY - rc[2], w: rc[1], h: rc[2] })) jpHit(o);
+    });
+    if (!o.passed && o.x + o.w < body.x) {
+      o.passed = true;
+      if (!o.hit) { JP.dodged++; JP.pops.push({ x: JP_PX + 14, y: JP.py - 28, text: "+20", t: 0.6, c: RAIN_PAL.o100 }); }
+    }
+  });
+  JP.obs = JP.obs.filter(function (o) { return o.x + o.w > -8; });
+  JP.coins.forEach(function (c) {
+    c.x -= dx;
+    if (!c.got && jpOverlap(body, { x: c.x, y: c.y, w: 10, h: 8 })) {
+      c.got = true; JP.coinN++;
+      JP.pops.push({ x: c.x + 5, y: c.y - 4, text: "+30", t: 0.6, c: RAIN_PAL.o100 });
+      gsBurst(JP, c.x + 5, c.y + 4, 4, [RAIN_PAL.o100, RAIN_PAL.w]);
+      rgBeep(1180, 0.06, "square", 0.04);
+    }
+  });
+  JP.coins = JP.coins.filter(function (c) { return !c.got && c.x > -12; });
+  JP.score = JP.coinN * 30 + JP.dodged * 20 + Math.floor(t) * 5;
+}
+function jpEnd(why) {
+  if (!JP.on || JP.ending) return;
+  JP.ending = { t: 1.2, why: why }; JP.banner = null;
+  rgBeep(why === "time" ? 784 : 220, 0.3, "triangle", 0.07);
+}
+function jpEndFinal(why) {
+  if (!JP.on) return;
+  JP.ending = null;
+  jpStop();
+  S.set("jump_best", Math.max(S.get("jump_best", 0), JP.score));
+  gameClear("jump_cleared");
+  var root = el("jpRoot"); if (!root) return;
+  var rank = gsRankOf("jump", JP.score);
+  root.innerHTML = gsResultHtml("jump", { why: why, reason: why === "time" ? "60초를 다 달렸어요" : "하트 3개를 모두 잃어서 끝났어요", score: JP.score,
+    stats: "모은 코인 " + JP.coinN + "개 · 넘은 장애물 " + JP.dodged + "개 · 부딪힘 " + JP.hits + "번", rankLine: "앱 순위 " + rank + "위 (테스트)" });
+  window.scrollTo(0, 0);
+}
+function jpObsDraw(ctx, o) {
+  var x = Math.round(o.x), g = JP_GY;
+  if (o.k === "box") {
+    rgBox(ctx, x, g - 16, 16, 16, RAIN_PAL.o60);
+    ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(x + 1, g - 9, 14, 1);
+    for (var i = 0; i < 12; i++) { ctx.fillRect(x + 2 + i, g - 14 + Math.floor(i / 2), 1, 1); }
+    ctx.fillStyle = RAIN_PAL.o30; ctx.fillRect(x + 2, g - 14, 4, 2);
+  } else if (o.k === "cone") {
+    for (var r = 0; r < 15; r++) {
+      var w = 2 + Math.floor(r * 8 / 14), cx = x + 7 - Math.floor(w / 2);
+      ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(cx - 1, g - 17 + r, w + 2, 1);
+      ctx.fillStyle = r >= 6 && r <= 8 ? RAIN_PAL.w : RAIN_PAL.o100; ctx.fillRect(cx, g - 17 + r, w, 1);
+    }
+    rgBox(ctx, x, g - 3, 14, 3, RAIN_PAL.deep);
+  } else {
+    rgBox(ctx, x, g - 8, 12, 8, RAIN_PAL.o30);
+    rgBox(ctx, x + 11, g - 15, 11, 15, RAIN_PAL.o30);
+    ctx.fillStyle = RAIN_PAL.o50; ctx.fillRect(x + 1, g - 7, 10, 2); ctx.fillRect(x + 12, g - 14, 9, 2);
+  }
+}
+function jpWorld(ctx, dist) {
+  var off = Math.floor(dist * 0.3) % 20;
+  for (var ty = 0; ty < JP_GY; ty += 10) for (var tx = -20; tx < JP_W + 20; tx += 10) {
+    ctx.fillStyle = ((tx + ty) / 10) % 2 ? RAIN_PAL.o25 : RAIN_PAL.o10; ctx.fillRect(tx - off, ty, 10, 10);
+  }
+  var toff = Math.floor(dist * 0.6) % 120;
+  for (var k = 0; k < 3; k++) {
+    var tx2 = 20 + k * 120 - toff;
+    ctx.fillStyle = RAIN_PAL.trunk; ctx.fillRect(tx2 + 4, JP_GY - 10, 3, 10);
+    ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(tx2, JP_GY - 22, 11, 13);
+    ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(tx2 + 1, JP_GY - 21, 9, 11);
+    ctx.fillStyle = RAIN_PAL.o50; ctx.fillRect(tx2 + 2, JP_GY - 20, 4, 3);
+  }
+  ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(0, JP_GY, JP_W, 1);
+  ctx.fillStyle = RAIN_PAL.o50; ctx.fillRect(0, JP_GY + 1, JP_W, 3);
+  var goff = Math.floor(dist) % 6;
+  for (var gx = -6; gx < JP_W + 6; gx += 6) { ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(gx + 2 - goff, JP_GY + 1, 2, 2); }
+  for (var dy = JP_GY + 4; dy < JP_H; dy += 6) for (var dx = -6; dx < JP_W + 6; dx += 6) {
+    ctx.fillStyle = ((dx + 6 + dy) / 6) % 2 ? RAIN_PAL.soil : RAIN_PAL.soil2; ctx.fillRect(dx - goff, dy, 6, 6);
+  }
+}
+function jpCoinCv() {
+  if (JP_COINCV) return JP_COINCV;
+  var c = document.createElement("canvas"); c.width = 10; c.height = 8;
+  rgSprite(c.getContext("2d"), JP_COIN, 0, 0, { K: RAIN_PAL.ink, W: RAIN_PAL.w, O: RAIN_PAL.o100 });
+  return (JP_COINCV = c);
+}
+function jpDraw(ctx, now) {
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  if (JP.shake > 0) ctx.translate(Math.round((Math.random() - 0.5) * 4), Math.round((Math.random() - 0.5) * 4));
+  jpWorld(ctx, JP.dist);
+  JP.coins.forEach(function (c) { ctx.drawImage(jpCoinCv(), Math.round(c.x), Math.round(c.y + (Math.floor(now / 200 + c.x) % 2))); });
+  JP.obs.forEach(function (o) { jpObsDraw(ctx, o); });
+  /* 미위 · 무적 중 깜빡임 · 공중이면 입을 벌린다 */
+  var blink = JP.inv > 0 && Math.floor(now / 90) % 2 === 0;
+  if (!blink) {
+    var air = JP.py < JP_GY, step = !air && Math.floor(now / 140) % 2;
+    ctx.drawImage(rgSprCv(air ? "open" : "closed"), JP_PX, Math.round(JP.py) - 26 - (step ? 1 : 0), 28, 26);
+  }
+  var frac = JP.t0 ? Math.max(0, 1 - jpEl(now) / JP_SEC) : 1;
+  gsHud(ctx, JP_W, "ME to WE", JP.score, frac);
+  var blinkLast = JP.hearts === 1 && Math.floor(now / 250) % 2 === 0;
+  for (var h = 0; h < JP_HEARTS; h++) {
+    var on = h < JP.hearts, justLost = h === JP.hearts && JP.heartHit > 0;
+    var jy = justLost && !rgReduced() ? Math.round((Math.random() - 0.5) * 3) : 0;
+    gsHeart(ctx, 74 + h * 11, 7, on ? (blinkLast ? "blink" : "on") : justLost ? "hit" : "off", jy);
+  }
+  gsFxDraw(ctx, JP, JP_W);
+  gsBannerDraw(ctx, JP, JP_W, 70);
+  gsEndDraw(ctx, JP.ending, JP_W, 30, JP_GY, JP.ending && JP.ending.why === "time" ? "60초 완주" : "하트 3개를 모두 잃었어요");
+  gsCountDraw(ctx, JP.cd, JP_W, 30, JP_GY);
+  ctx.restore();
+}
+function jpPreview() {
+  var cv = el("jpPrev"); if (!cv) return;
+  var ctx = cv.getContext("2d"); ctx.imageSmoothingEnabled = false;
+  ctx.save(); ctx.translate(0, 110 - JP_H + 8);
+  jpWorld(ctx, 0);
+  jpObsDraw(ctx, { k: "box", x: 92 }); jpObsDraw(ctx, { k: "cone", x: 150 });
+  ctx.drawImage(jpCoinCv(), 118, JP_GY - 44); ctx.drawImage(jpCoinCv(), 132, JP_GY - 50);
+  ctx.drawImage(rgSprCv("open"), 40, JP_GY - 58, 28, 26);
+  ctx.restore();
 }
 
 /* ════════════════ 게임 A: AX 링크 · v3.42 빈칸 채우기 (사용자 확정 260917) ════════════════
@@ -6473,6 +7288,8 @@ function xitionRun(switchNow) {
 /* ════════════════ 스플래시 → 앱 진입 ════════════════ */
 (function () {
   var splash = el("splash");
+  /* v3.45 파일럿 주소 · 한 번 열면 이 기기에서 선호도 조사 입구가 보인다 */
+  if (/^#pilot=games/i.test(location.hash)) S.set("pilot_games", true);
   function enterApp() { xitionRun(enterNow); }
   function enterNow() {
     splash.classList.add("gone");
@@ -6495,6 +7312,7 @@ function xitionRun(switchNow) {
       var lf = parseInt(sessionStorage.getItem("axf_last_fl"), 10);
       if ([1, 10, 17, 18].indexOf(lf) >= 0) PROG.fl = lf;
     } catch (e) {}
+    if (/^#pilot=games/i.test(location.hash)) target = "game_pilot";
     App.go(m || mq ? "home" : target);
     /* 스캔값을 그대로 서버에 넘긴다 · 앱은 어느 스탬프인지 모른다 (260830) */
     if (m) setTimeout(function () { stampByCode(m[1]); }, 400);
