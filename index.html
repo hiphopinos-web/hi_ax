@@ -754,7 +754,7 @@
   .tytv .tytv-row .nm small, .tytv .tytv-row .sc small { display: block; font-size: 14px; font-weight: 700; opacity: 0.65; margin-top: 2px; }
   .tytv .tytv-row .sc { flex: none; font-family: var(--disp); text-align: right; }
   .tytv .tytv-foot { margin-top: 14px; font-size: 15px; opacity: 0.6; line-height: 1.6; }
-  /* v3.50 AX 올림픽 · 허브 · 메달 · 메달표 */
+  /* v3.50 AX 올림픽 · 허브 · 메달 */
   .oly-hub { margin-top: 10px; }
   .p3-go { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
   /* v3.50C AX 한 줄 · 검정 무대 위 한 줄 */
@@ -778,9 +778,6 @@
   .medal.m2 { background: #8A817B; }
   .medal.m3 { background: #7A3E1C; }
   .oly-pts { display: block; font-size: calc(11.5px * var(--fs)); font-weight: 700; color: var(--muted); text-align: right; }
-  .oly-mt { display: grid; grid-template-columns: 1fr 34px 34px 34px 44px; gap: 4px; padding: 8px 2px; border-bottom: 1px solid var(--line); font-size: calc(13.5px * var(--fs)); align-items: center; }
-  .oly-mt span { text-align: center; font-variant-numeric: tabular-nums; font-weight: 700; }
-  .oly-mt:first-of-type { color: var(--muted); font-weight: 800; font-size: calc(12px * var(--fs)); }
   .screen-wrap .counters { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center; margin: 16px 0; }
   .screen-wrap .counters div { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 12px 4px; }
   .screen-wrap .counters .v { font-family: var(--disp); font-size: 21px; color: var(--mint-deep); }
@@ -4079,6 +4076,7 @@ var Views = {
 
   game_word: function () {
     gwStop();
+    if (gsNeedNick()) return gsNickHtml("word");   /* v3.50d 네 게임 모두 같은 닉네임(type_nick) · 이미 있으면 묻지 않는다 */
     return '<div id="gwRoot">' +
       '<div class="chain-box"><p class="who">MINI GAME</p>' +
       '<p class="word disp" style="letter-spacing:0.02em">ME to WE 기억력</p>' +
@@ -4114,12 +4112,13 @@ var Views = {
     return gsStartHtml("jump", { rootId: "jpRoot", previewId: "jpPrev", pw: 180, ph: 110,
       rules: "탭 = 점프 · 공중에서 한 번 더 탭 = 2단 점프 · 코인은 AX 토큰<br>부딪히면 하트 -1 (1초 무적) · 하트 3개를 다 잃거나 60초가 지나면 끝 · 끝까지 하면 <b>미니게임 스탬프</b>" });
   },
-  /* ═══ v3.50 AX 올림픽 순위판 · 종합(전 종목 완주자) · 종목별(금은동) · 부문 메달표 ═══ */
+  /* ═══ v3.50 AX 올림픽 순위판 · 종합(전 종목 완주자) · 종목별(금은동) ═══
+     v3.50d 부문 정보 전면 삭제 (사용자 확정 260917·260918 · 부문 메달표·부문 라벨·부문 평균 금지) */
   oly_rank: function () {
     olyPull();
-    var b = OLY.board, tab = S.get("oly_tab", "all"), evk = S.get("oly_ev", OLY_EVENTS[0].key), me = olyMe();
+    var b = OLY.board, tab = S.get("oly_tab", "all") === "event" ? "event" : "all", evk = S.get("oly_ev", OLY_EVENTS[0].key), me = olyMe();
     if (!OLY_EVENTS.some(function (e) { return e.key === evk; })) evk = OLY_EVENTS[0].key;
-    var seg = '<div class="qseg" style="margin-bottom:10px">' + [["all", "종합"], ["event", "종목별"], ["dept", "부문 메달"]].map(function (t) {
+    var seg = '<div class="qseg" style="margin-bottom:10px">' + [["all", "종합"], ["event", "종목별"]].map(function (t) {
       return '<button class="' + (tab === t[0] ? "on" : "") + '" onclick="S.set(\'oly_tab\', \'' + t[0] + '\'); App.render()">' + t[1] + "</button>";
     }).join("") + "</div>";
     var h = seg + (b && b.test ? '<p class="scap" style="margin:0 2px 8px">테스트 순위판 · 가짜 닉네임이 섞여 있어요</p>' : "");
@@ -4133,17 +4132,13 @@ var Views = {
       h += '<div class="card"><b style="color:var(--hi)">' + esc(ev.name) + ' · 한 사람 전원</b><p class="muted" style="margin:2px 0 6px;font-size:calc(12.5px * var(--fs))">최고 기록 순 · 1~3위 금·은·동 · 목표 ' + (olyTarget()[evk] || 0).toLocaleString() + "점 = 100</p>" +
         olyRows(b.perEvent && b.perEvent[evk], f) +
         (mv ? '<p class="muted" style="margin-top:10px">내 기록 ' + mv.best.toLocaleString() + " · 환산 " + olyFmt(mv.pts) + "점" + (mv.rank ? " · " + mv.rank + "위" : "") + "</p>" : '<button class="btn mint" style="margin-top:10px" onclick="App.go(\'' + ev.view + '\')">' + esc(ev.name) + " 한 판</button>") + "</div>";
-    } else if (tab === "dept") {
-      h += '<div class="card"><b style="color:var(--hi)">부문 메달표</b><p class="muted" style="margin:2px 0 8px;font-size:calc(12.5px * var(--fs))">종목별 1~3위 금·은·동을 부문별로 · 완주 = 전 종목을 끝낸 사람</p>' +
-        '<div class="oly-mt"><span>부문</span><span>금</span><span>은</span><span>동</span><span>완주</span></div>' +
-        ((b.medals || []).length ? b.medals.map(function (d) { return '<div class="oly-mt"><b>' + esc(d.dept) + "</b><span>" + d.gold + "</span><span>" + d.silver + "</span><span>" + d.bronze + "</span><span>" + d.finishers + "</span></div>"; }).join("") : '<p class="muted">아직 기록이 없어요</p>') + "</div>";
     } else {
       var f2 = function (x) { return olyFmt(x.total) + '<small class="oly-pts">/ ' + (b.max || olyMax()) + "</small>"; };
       h += '<div class="card mb8"><b style="color:var(--hi)">내 총점 ' + olyFmt(me.total) + " / " + olyMax() + "</b>" +
         '<p class="muted" style="margin-top:3px">' + (me.left ? "종합 순위까지 " + me.left + "종목 남음 · 모든 종목을 한 판씩 끝내면 올라가요" : me.rank ? "종합 " + me.rank + "위" : "종합 순위 집계 중") + "</p></div>" +
         '<div class="card"><b style="color:var(--hi)">종합 상위 10</b><p class="muted" style="margin:2px 0 6px;font-size:calc(12.5px * var(--fs))">전 종목 완주자 ' + (b.finishers || 0) + "명 · 동점은 전 종목 완료가 이른 쪽</p>" + olyRows(b.overall, f2) + "</div>";
     }
-    return h + '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">명예 순위 · 경품 없음 · 닉네임으로 표시 · 경품은 1F 현장 타자왕전(노트북)에서만 · Outro 에서 종합 1~3위 호명</p>';
+    return h + '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">경품 없음 · Outro에서 종합 1~3위 호명</p>';
   },
   type_rank: function () {
     var mode = S.get("type_rank_tab", "app");
@@ -6581,21 +6576,21 @@ function olyHubHtml() {
 }
 /* 테스트 모드 순위판 · 가짜 참가자 + 이 기기 기록 · 서버와 같은 규칙으로 계산 */
 var OLY_FAKE = [
-  ["팡팡요정", "보상부문", { pang: 4200, jump: 1500, type: 3300, word: 430 }],
-  ["점프왕", "장기보험부문", { pang: 2600, jump: 2100, type: 2900, word: 470 }],
-  ["타자요정", "디지털전략부문", { pang: 1900, jump: 1200, type: 4380, word: 400 }],
-  ["기억의신", "보상부문", { pang: 2100, jump: 1300, type: 2500, word: 540 }],
-  ["연쇄장인", "자동차보험부문", { pang: 3800, jump: 900, type: 2100, word: 350 }],
-  ["미위팬", "장기보험부문", { pang: 2400, jump: 1700, type: 2010, word: 380 }],
-  ["코인수집가", "디지털전략부문", { pang: 1500, jump: 1900, word: 300 }],
-  ["공감참여", "보상부문", { pang: 900, type: 980 }],
-  ["혁신연결", "자동차보험부문", { jump: 700, word: 260 }],
-  ["로드맵러", "장기보험부문", { pang: 3100, jump: 1600, type: 3120, word: 410 }]
+  ["팡팡요정", { pang: 4200, jump: 1500, type: 3300, word: 430 }],
+  ["점프왕", { pang: 2600, jump: 2100, type: 2900, word: 470 }],
+  ["타자요정", { pang: 1900, jump: 1200, type: 4380, word: 400 }],
+  ["기억의신", { pang: 2100, jump: 1300, type: 2500, word: 540 }],
+  ["연쇄장인", { pang: 3800, jump: 900, type: 2100, word: 350 }],
+  ["미위팬", { pang: 2400, jump: 1700, type: 2010, word: 380 }],
+  ["코인수집가", { pang: 1500, jump: 1900, word: 300 }],
+  ["공감참여", { pang: 900, type: 980 }],
+  ["혁신연결", { jump: 700, word: 260 }],
+  ["로드맵러", { pang: 3100, jump: 1600, type: 3120, word: 410 }]
 ];
 function olyTestBoard() {
-  var people = OLY_FAKE.map(function (x, i) { return { name: x[0], dept: x[1], best: x[2], doneAt: "2026-10-26 1" + (i % 10) + ":00:00" }; });
+  var people = OLY_FAKE.map(function (x, i) { return { name: x[0], best: x[1], doneAt: "2026-10-26 1" + (i % 10) + ":00:00" }; });
   var mine = {}; OLY_EVENTS.forEach(function (e) { var b = S.get(e.best, 0); if (b > 0) mine[e.key] = b; });
-  people.push({ name: (typeNick() || "나") + " (나)", dept: S.get("dept", "") || "내 부문", best: mine, doneAt: "2026-10-26 12:30:00", me: true });
+  people.push({ name: (typeNick() || "나") + " (나)", best: mine, doneAt: "2026-10-26 12:30:00", me: true });
   var tgt = OLY_TARGET, keys = OLY_EVENTS.map(function (e) { return e.key; });
   people.forEach(function (p) {
     p.pts = {}; p.total = 0; p.done = 0;
@@ -6603,16 +6598,13 @@ function olyTestBoard() {
     p.total = Math.round(p.total * 10) / 10;
   });
   var overall = people.filter(function (p) { return p.done === keys.length; }).sort(function (a, b) { return b.total - a.total || (a.doneAt < b.doneAt ? -1 : 1); });
-  var per = {}, depts = {};
+  var per = {};
   keys.forEach(function (k) { per[k] = people.filter(function (p) { return p.best[k] > 0; }).sort(function (a, b) { return b.best[k] - a.best[k]; }); });
-  people.forEach(function (p) { var d = depts[p.dept] || (depts[p.dept] = { dept: p.dept, gold: 0, silver: 0, bronze: 0, finishers: 0 }); if (p.done === keys.length) d.finishers++; });
-  keys.forEach(function (k) { per[k].slice(0, 3).forEach(function (p, i) { depts[p.dept][["gold", "silver", "bronze"][i]]++; }); });
   var meP = people[people.length - 1], meEv = {};
   keys.forEach(function (k) { var r = per[k].indexOf(meP) + 1; meEv[k] = meP.best[k] > 0 ? { best: meP.best[k], pts: meP.pts[k], rank: r, medal: r >= 1 && r <= 3 ? r : 0 } : null; });
   return { ok: true, test: true, events: keys, max: keys.length * 100, target: tgt, players: people.length, finishers: overall.length,
     overall: overall.slice(0, 10).map(function (p, i) { return { rank: i + 1, name: p.name, total: p.total, me: !!p.me }; }),
     perEvent: keys.reduce(function (o, k) { o[k] = per[k].slice(0, 10).map(function (p, i) { return { rank: i + 1, name: p.name, score: p.best[k], pts: p.pts[k], me: !!p.me }; }); return o; }, {}),
-    medals: Object.keys(depts).map(function (k) { return depts[k]; }).sort(function (a, b) { return b.gold - a.gold || b.silver - a.silver || b.bronze - a.bronze || b.finishers - a.finishers; }),
     me: { total: meP.total, done: meP.done, left: keys.length - meP.done, rank: overall.indexOf(meP) + 1, ev: meEv } };
 }
 function olyRows(list, valFn) {
@@ -6631,7 +6623,8 @@ function olyRows(list, valFn) {
 var GS_GAMES = {
   type: { name: "AX 단어 소나기", view: "game_type", start: "rgStart('app')", best: "type_best", line: "떨어지는 단어를 쳐서 터뜨려요 · 키보드로 입력" },
   pang: { name: "AX 팡", view: "game_pang", start: "pgStart()", best: "pang_best", line: "같은 그림 3개를 한 줄로 맞춰 터뜨려요 · 밀어서 바꾸기" },
-  jump: { name: "ME to WE 점프", view: "game_jump", start: "jpStart()", best: "jump_best", line: "달리는 미위를 탭해서 점프 · 공중에서 한 번 더 탭은 2단 점프" }
+  jump: { name: "ME to WE 점프", view: "game_jump", start: "jpStart()", best: "jump_best", line: "달리는 미위를 탭해서 점프 · 공중에서 한 번 더 탭은 2단 점프" },
+  word: { name: "ME to WE 기억력", view: "game_word", start: "gwStart(false)", best: "gw_best", line: "문장을 외워 단어 타일을 순서대로" }
 };
 var GS = { cur: null, vvh: null, onVis: null, onKey: null };
 /* o = { key, title, top(v3.36d 위 줄 HTML 교체), fill(v3.36d 캔버스 꽉 채움), cls, cw, ch, canvasId, bottom, noGesture, flat(v3.48 플랫 스타일 오버레이), resized(cv, cssW, cssH), down(e), move(e), up(e), keydown(e), running(), isPaused(), pause(), resume(), quit() } */
@@ -6780,9 +6773,9 @@ function gsNickHtml(key) {
   var nick = typeNick();
   return '<div class="gs-root"><div class="cho-box"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' + esc(GS_GAMES[key].name) + "</p>" +
     '<p class="word disp" style="font-size:24px;margin-top:4px">닉네임 정하기</p>' +
-    '<p class="hint">순위판에는 닉네임만 나와요 · 세 게임이 같은 닉네임을 써요<br>한글·영문·숫자 2~8자 · 공백·기호 불가</p></div>' +
+    '<p class="hint">순위판에는 닉네임만 나와요</p></div>' +
     '<div class="card mb12"><input id="tnIn" class="input" maxlength="8" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="예: 타자요정" value="' + esc(nick) + '" oninput="typeNickInput(this.value)">' +
-    '<p class="muted" id="tnMsg" style="margin-top:6px;font-size:calc(12.5px * var(--fs))">' + (nick ? "지금 닉네임 · " + esc(nick) : "2~8자로 정해 주세요") + "</p>" +
+    '<p class="muted" id="tnMsg" style="margin-top:6px;font-size:calc(12.5px * var(--fs))">' + (nick ? "지금 닉네임 · " + esc(nick) : "한글·영문·숫자 2~8자") + "</p>" +
     '<button class="btn mint" style="margin-top:10px" onclick="typeNickSave()">이 닉네임으로</button>' +
     (nick ? '<button class="btn line" style="margin-top:8px" onclick="S.set(\'type_nick_edit\', false); App.render()">그대로 두기</button>' : "") + "</div></div>";
 }
