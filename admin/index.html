@@ -171,6 +171,7 @@ var TABS = [
   { id:"stamp", n:"스탬프" },
   { id:"apply", n:"신청" },
   { id:"survey", n:"설문" },
+  { id:"typing", n:"타자 게임" },
   { id:"notice", n:"공지" },
   { id:"photo", n:"포토부스" }
 ];
@@ -284,6 +285,7 @@ var NEED={
   stamp:[{k:"stamp",a:"stamp_people"},{k:"stair",a:"stair_list"},{k:"sy",a:"sync",p:{emp:""}}],
   apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"},{k:"pre",a:"pre_list"}],
   survey:[{k:"survey",a:"survey_list"}],
+  typing:[{k:"nick",a:"type_nick_list"},{k:"tres",a:"type_result"}],
   notice:[{k:"noti",a:"sync",p:{emp:""}}],
   photo:[{k:"photo",a:"photo_list"}]
 };
@@ -314,7 +316,7 @@ function render(){
   if(missing.length&&ST.busy){
     h='<h1>'+esc((TABS.filter(function(t){return t.id===ST.tab;})[0]||{}).n||"")+'</h1><div class="card"><p class="muted"><span class="spin"></span>서버에서 불러오는 중입니다. 보통 2~5초 걸립니다.</p></div>';
   } else {
-    try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="notice"?viewNotice():ST.tab==="survey"?viewSurvey():ST.tab==="photo"?viewPhoto():viewApply(); }
+    try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="notice"?viewNotice():ST.tab==="survey"?viewSurvey():ST.tab==="typing"?viewTyping():ST.tab==="photo"?viewPhoto():viewApply(); }
     catch(e){ h='<div class="err-banner">화면을 그리는 중 오류가 났습니다: '+esc(e.message)+'</div>'; }
   }
   if(ST.err) h='<div class="err-banner">일부 데이터를 못 받았습니다('+esc(ST.err.reason||"")+'). 새로고침을 눌러 주세요. 표시된 값은 마지막으로 받은 것입니다.</div>'+h;
@@ -764,6 +766,26 @@ function viewSurvey(){
     '<div class="wrap"><table class="tb"><tr><th style="width:130px">시각(10분 단위)</th><th>한 줄</th></tr>'+(lines.length?lines.slice().reverse().slice(0,500).map(function(x){ return '<tr><td class="n src">'+esc(short(x.t))+'</td><td>'+esc(x.line)+'</td></tr>'; }).join(""):'<tr><td colspan="2" class="src">의견이 없습니다.</td></tr>')+'</table></div></div>';
   return h;
 }
+
+/* ══════════════════ 7-6. 타자 게임 (v3.36b) ══════════════════
+ * 순위판은 닉네임만 공개한다. 여기는 운영자 전용이라 사번·실명을 함께 본다(부적절한 닉네임 숨김·초기화, 현장 시상 확인). */
+function viewTyping(){
+  var rows=((ST.data.nick||{}).rows||[]).filter(function(r){ return match(r,["emp","nick","name","dept"]); });
+  var tr=ST.data.tres||{top:[],win:[]};
+  var h='<h1>타자 게임<small>AX 단어 소나기 · 닉네임은 2~8자 · 중복·금칙어·명부 실명은 서버가 거부 · 여기서 숨기면 순위판에 「이름 숨김」</small></h1>';
+  h+='<div class="card"><h2>1F 현장 타자왕전 상위 5 · Outro 호명용</h2><p class="src">결선 시간대 '+esc((tr.win||[]).join(" · "))+' · 1인 1회 · 동점은 정확도, 그다음 먼저 기록한 쪽</p>'+
+    '<div class="wrap"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th>부문</th><th class="tdr">점수</th><th class="tdr">정확도</th><th>기록 시각</th></tr>'+
+    ((tr.top||[]).length?tr.top.map(function(r){ return '<tr><td class="n"><b>'+r.rank+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name)+'</td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.dept)+'</td><td class="n tdr">'+r.score+'</td><td class="n tdr">'+r.acc+'%</td><td class="n src">'+esc(short(r.ts))+'</td></tr>'; }).join(""):'<tr><td colspan="8" class="src">아직 현장 기록이 없습니다.</td></tr>')+'</table></div></div>';
+  h+='<div class="card"><div class="tools"><input class="in" placeholder="닉네임 · 사번 · 이름 검색" value="'+esc(ST.q)+'" oninput="setQ(this.value)"><span class="src">'+rows.length+'명</span></div>'+
+    '<div class="wrap"><table class="tb"><tr><th>닉네임</th><th>상태</th><th>사번</th><th>이름</th><th>부문</th><th class="tdr">앱 최고</th><th class="tdr">현장</th><th>처리</th></tr>'+
+    (rows.length?rows.map(function(r){ var k=esc(r.emp).replace(/'/g,"");
+      return '<tr><td><b>'+esc(r.nick||"(초기화됨)")+'</b></td><td>'+(r.hidden?'<span class="pill off">숨김</span>':'<span class="pill ok">공개</span>')+'</td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.dept)+'</td><td class="n tdr">'+(r.app||0)+'</td><td class="n tdr">'+(r.site||0)+'</td>'+
+        '<td><div class="row" style="gap:6px"><button class="btn sm" onclick="nickHide(\''+k+'\','+(r.hidden?0:1)+')">'+(r.hidden?"숨김 해제":"숨기기")+'</button><button class="btn sm danger" onclick="nickReset(\''+k+'\')">초기화</button></div></td></tr>'; }).join(""):'<tr><td colspan="8" class="src">닉네임이 없습니다.</td></tr>')+'</table></div>'+
+    '<p class="note mt12">초기화하면 닉네임이 지워지고 순위판에 「익명 참가자」로 나옵니다. 참가자는 앱에서 새 닉네임을 다시 정할 수 있습니다. 기록 점수는 지우지 않습니다.</p></div>';
+  return h;
+}
+function nickHide(emp,on){ call("type_nick_hide",{emp:emp,on:on},function(r){ if(r&&r.ok){ toast(on?"닉네임을 숨겼습니다":"숨김을 해제했습니다"); load(); } else toast("실패: "+(r&&r.reason||"")); },function(){ toast("서버 응답 없음"); }); }
+function nickReset(emp){ if(!confirm(emp+" 님의 닉네임을 초기화할까요? 기록 점수는 남습니다.")) return; call("type_nick_reset",{emp:emp},function(r){ if(r&&r.ok){ toast("초기화했습니다"); load(); } else toast("실패: "+(r&&r.reason||"")); },function(){ toast("서버 응답 없음"); }); }
 
 /* ══════════════════ 7-4. 공지 (v3.14) · 발송 notice_set · 중지 notice_clear · 현재 공지는 sync 로 읽는다 ══════════════════ */
 /* 앱 NOTICE_TEMPLATES 와 같은 목록 */
