@@ -852,6 +852,8 @@ function viewTyping(){
     (rows.length?rows.map(function(r){ var k=esc(r.emp).replace(/'/g,"");
       return '<tr><td><b>'+esc(r.nick||"(초기화됨)")+'</b></td><td>'+(r.hidden?'<span class="pill off">숨김</span>':'<span class="pill ok">공개</span>')+'</td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.name)+'</td><td class="n tdr">'+(r.app||0)+'</td><td class="n tdr">'+(r.site||0)+'</td>'+
         '<td><div class="row" style="gap:6px"><button class="btn sm" onclick="nickHide(\''+k+'\','+(r.hidden?0:1)+')">'+(r.hidden?"숨김 해제":"숨기기")+'</button><button class="btn sm danger" onclick="nickReset(\''+k+'\')">초기화</button></div></td></tr>'; }).join(""):'<tr><td colspan="7" class="src">닉네임이 없습니다.</td></tr>')+'</table></div>'+
+    '<p class="note mt12">리허설 기록 지우기 · 테스트 사번(310555)만 지울 수 있습니다. 앱 게임기록과 현장 타자왕전 기록을 함께 지웁니다. 실제 참가자 사번은 거부됩니다.</p>'+
+    '<div class="row mt12" style="gap:8px"><input class="in" id="gwEmp" style="width:160px" placeholder="테스트 사번" value="310555"><button class="btn danger" onclick="gameWipe()">기록 삭제</button></div>'+
     '<p class="note mt12">초기화하면 닉네임이 지워지고 순위판에 「익명 참가자」로 나옵니다. 참가자는 앱에서 새 닉네임을 다시 정할 수 있습니다. 기록 점수는 지우지 않습니다.</p></div>';
   return h;
 }
@@ -873,6 +875,16 @@ function olySave(){
   (d.events||[]).forEach(function(g){ var v=Number((el("olyT_"+g)||{}).value); if(!(v>0)||Math.round(v)!==v) bad=g; t[g]=v; });
   if(bad){ toast("목표 점수는 1 이상 정수 · "+(OLY_NAME[bad]||bad)); return; }
   call("oly_cfg",{target:JSON.stringify(t)},function(r){ if(r&&r.ok){ toast("목표 점수를 저장했습니다"); load(); } else toast("실패: "+(r&&r.reason||"")); },function(){ toast("서버 응답 없음"); });
+}
+/* v3.70 테스트 사번 기록 삭제 · 서버가 테스트 목록을 다시 확인한다 */
+function gameWipe(){
+  var emp=((el("gwEmp")||{}).value||"").trim();
+  if(!emp){ toast("사번을 입력하세요"); return; }
+  if(!confirm(emp+" 의 게임·타자 기록을 지울까요? 되돌릴 수 없습니다.")) return;
+  call("game_wipe",{emp:emp},function(r){
+    if(r&&r.ok) { toast("삭제 · 게임 "+r.game+"행 · 타자 "+r.type+"행"); load(); }
+    else toast(r&&r.reason==="notest"?"테스트 사번만 지울 수 있습니다":"삭제 실패"+((r&&r.reason)?" ("+r.reason+")":""));
+  },function(){ toast("서버 연결 실패"); });
 }
 function nickHide(emp,on){ call("type_nick_hide",{emp:emp,on:on},function(r){ if(r&&r.ok){ toast(on?"닉네임을 숨겼습니다":"숨김을 해제했습니다"); load(); } else toast("실패: "+(r&&r.reason||"")); },function(){ toast("서버 응답 없음"); }); }
 function nickReset(emp){ if(!confirm(emp+" 님의 닉네임을 초기화할까요? 기록 점수는 남습니다.")) return; call("type_nick_reset",{emp:emp},function(r){ if(r&&r.ok){ toast("초기화했습니다"); load(); } else toast("실패: "+(r&&r.reason||"")); },function(){ toast("서버 응답 없음"); }); }
