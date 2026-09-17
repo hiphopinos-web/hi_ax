@@ -413,10 +413,10 @@
   .ltile.hint { animation: hintPulse 1s ease-in-out infinite; }
   @keyframes hintPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,126,49,0); } 50% { box-shadow: 0 0 0 4px rgba(255,126,49,0.35); } }
   /* v3.36b 타자 게임 · 저해상도 캔버스를 도트로 확대 */
-  .rg-wrap { border-radius: 14px; overflow: hidden; background: #140B06; line-height: 0; }
+  .rg-wrap { border-radius: 14px; overflow: hidden; background: #FFEBE0; line-height: 0; border: 2px solid #000; }
   .rg-wrap canvas { width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
   .rg-form { display: flex; gap: 8px; margin-top: 10px; }
-  .rg-form .input { flex: 1; font-size: 18px; }
+  .rg-form .input { flex: 1; font-size: 18px; border: 2px solid #000; }
   .rg-form .btn { width: auto; padding: 12px 18px; }
   .ty-rank { display: flex; align-items: center; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--line); }
   .ty-rank.me { background: var(--tint); border-radius: 10px; padding-left: 8px; }
@@ -5405,10 +5405,12 @@ function drawWinner() {
    한 판 60초 · 목숨 5 · 바닥선에 닿으면 목숨 -1(벽돌 하나 깨짐) · 12초마다 단계 상승(낙하 속도·동시 개수 증가).
    점수 = 글자 수 × 10 × 콤보 배수(1 + 0.2 × min(콤보-1, 10), 최대 3배) · 정확도 = 제출 중 명중 비율.
    끝까지 하면(시간 종료 또는 목숨 소진) 04 라이브 챌린지 적립(점수 무관). 소리는 기본 꺼짐(WebAudio 8비트 효과음 · 음원 파일 없음).
-   비주얼: 180×300 저해상도 캔버스를 pixelated 로 확대 · 팔레트는 오렌지 사다리 + 검정 + 흰색 + 웜그레이만.
+   비주얼: 180×300 저해상도 캔버스를 pixelated 로 확대 · 팔레트는 오렌지 사다리 + 검정 + 흰색 + 웜그레이·웜브라운만.
+   참고(사용자 제공 · 문법만, 에셋·글꼴·음원 미포함): 한컴타자 오락실 산성비 화면 구성 → 두 톤 체크무늬 배경 · 도트 흙 지면과 나무 ·
+   두꺼운 검정 외곽선의 흰 말풍선 단어와 HUD · 모래시계 진행 막대. 노랑·청록·초록·파랑은 오렌지 사다리와 웜브라운으로 번역.
    마스코트 「미위」: 오렌지 도트 몸통 · 세로로 벌어지는 입 · 발 · 콤보 5 이상이면 작은 친구가 옆에 붙는다(ME 가 WE 가 되는 연출). 스프라이트는 코드 안 픽셀 배열. */
-var RAIN_W = 180, RAIN_H = 300, RAIN_SEC = 60, RAIN_LIVES = 5, RAIN_FLOOR = 244;
-var RAIN_PAL = { bg: "#140B06", dot: "rgba(255,126,49,0.10)", o100: "#FF7E31", o60: "#FFA46E", o30: "#FFCFB0", o10: "#FFF0E6", deep: "#D64524", ink: "#000000", w: "#FFFFFF", gray: "#8A817B", dim: "#3A302A" };
+var RAIN_W = 180, RAIN_H = 300, RAIN_SEC = 60, RAIN_LIVES = 5, RAIN_FLOOR = 236, RAIN_GROUND = 262;
+var RAIN_PAL = { o100: "#FF7E31", o60: "#FFA46E", o50: "#FFB284", o30: "#FFCFB0", o25: "#FFD8C1", o10: "#FFEBE0", deep: "#D64524", ink: "#000000", w: "#FFFFFF", gray: "#B8AEA6", dim: "#8A817B", soil: "#7A3E1C", soil2: "#6A3417", trunk: "#5E3218" };
 var MEWE_SPR = {
   closed: ["...OOOOOO...", ".OOOOOOOOOO.", ".OOWOOOOWOO.", ".OOKOOOOKOO.", "OOOOOOOOOOOO", "OOOOOOOOOOOO", "OODDDDDDDDOO", "OOOOOOOOOOOO", ".OOOOOOOOOO.", "..OOOOOOOO..", "..OO....OO.."],
   open: ["...OOOOOO...", ".OOOOOOOOOO.", ".OOWOOOOWOO.", ".OOKOOOOKOO.", "OOOOOOOOOOOO", "OOKKKKKKKKOO", "OOKKKKKKKKOO", "OOKKWWWWKKOO", ".OOOOOOOOOO.", "..OOOOOOOO..", "..OO....OO.."],
@@ -5427,8 +5429,16 @@ function rgSprCv(name) {
   if (RG_SPR[name]) return RG_SPR[name];
   var rows = MEWE_SPR[name], c = document.createElement("canvas");
   c.width = rows[0].length; c.height = rows.length;
-  rgSprite(c.getContext("2d"), rows, 0, 0, { O: RAIN_PAL.o100, W: RAIN_PAL.w, K: RAIN_PAL.ink, D: RAIN_PAL.deep, L: RAIN_PAL.o60 });
-  return (RG_SPR[name] = c);
+  var g = c.getContext("2d");
+  rgSprite(g, rows, 0, 0, { O: RAIN_PAL.o100, W: RAIN_PAL.w, K: RAIN_PAL.ink, D: RAIN_PAL.deep, L: RAIN_PAL.o60 });
+  /* 외곽선 · 한 칸 키운 캔버스에 검정 실루엣을 네 방향으로 찍고 그 위에 원본 */
+  var o = document.createElement("canvas"); o.width = c.width + 2; o.height = c.height + 2;
+  var og = o.getContext("2d");
+  var sil = document.createElement("canvas"); sil.width = c.width; sil.height = c.height;
+  var sg = sil.getContext("2d"); sg.drawImage(c, 0, 0); sg.globalCompositeOperation = "source-in"; sg.fillStyle = RAIN_PAL.ink; sg.fillRect(0, 0, c.width, c.height);
+  [[0, 1], [2, 1], [1, 0], [1, 2]].forEach(function (d) { og.drawImage(sil, d[0], d[1]); });
+  og.drawImage(c, 1, 1);
+  return (RG_SPR[name] = o);
 }
 function rgBeep(freq, dur, type, vol) {
   if (!S.get("rain_sound", false)) return;
@@ -5489,7 +5499,7 @@ function rgUpdate(dt, now) {
     var text = rgPickWord(), cv = el("rgCv"), ctx = cv && cv.getContext("2d");
     if (ctx) ctx.font = "bold 11px sans-serif";
     var w = ctx ? Math.ceil(ctx.measureText(text).width) : text.length * 11;
-    RG.words.push({ text: text, w: w, x: 4 + Math.random() * Math.max(1, RAIN_W - 8 - w), y: 22, v: 11 + RG.stage * 5 + Math.random() * 4 });
+    RG.words.push({ text: text, w: w, x: 6 + Math.random() * Math.max(1, RAIN_W - 12 - w), y: 40, v: 11 + RG.stage * 5 + Math.random() * 4 });
     RG.spawnT = Math.max(0.75, 2.1 - RG.stage * 0.28);
   }
   for (var i = RG.words.length - 1; i >= 0; i--) {
@@ -5498,7 +5508,7 @@ function rgUpdate(dt, now) {
     if (wd.y >= RAIN_FLOOR) {
       RG.words.splice(i, 1);
       RG.lives--; RG.combo = 0; RG.shake = rgReduced() ? 0 : 0.22;
-      rgBurst(wd.x + wd.w / 2, RAIN_FLOOR, 6, [RAIN_PAL.gray, RAIN_PAL.dim]);
+      rgBurst(wd.x + wd.w / 2, RAIN_FLOOR, 6, [RAIN_PAL.dim, RAIN_PAL.ink]);
       rgBeep(120, 0.2, "sawtooth", 0.05);
       if (RG.lives <= 0) { rgEnd("lives"); return; }
     }
@@ -5529,7 +5539,7 @@ function rgSubmit() {
   RG.words.forEach(function (w, i) { if (w.text === v && (hit < 0 || w.y > RG.words[hit].y)) hit = i; });
   if (hit < 0) {
     RG.combo = 0;
-    RG.pops.push({ x: RG.mas.x, y: RAIN_FLOOR + 8, text: "MISS", t: 0.6, c: RAIN_PAL.gray });
+    RG.pops.push({ x: RG.mas.x, y: RAIN_GROUND - 28, text: "MISS", t: 0.6, c: RAIN_PAL.gray });
     rgBeep(180, 0.1, "square", 0.04);
     return;
   }
@@ -5539,59 +5549,92 @@ function rgSubmit() {
   RG.score += pts;
   var cx = wd.x + wd.w / 2, cy = wd.y - 4;
   RG.mas.tx = Math.max(12, Math.min(RAIN_W - 12, cx)); RG.mas.open = 0.25;
-  RG.shot = { x0: RG.mas.tx, y0: RAIN_FLOOR + 8, x1: cx, y1: cy, t: 0.12 };
-  rgBurst(cx, cy, 16, [RAIN_PAL.o100, RAIN_PAL.w, RAIN_PAL.o60, RAIN_PAL.o30]);
+  RG.shot = { x0: RG.mas.tx, y0: RAIN_GROUND - 12, x1: cx, y1: cy, t: 0.12 };
+  rgBurst(cx, cy, 16, [RAIN_PAL.o100, RAIN_PAL.ink, RAIN_PAL.w, RAIN_PAL.o50]);
   RG.pops.push({ x: cx, y: cy, text: "+" + pts, t: 0.8, c: RAIN_PAL.w });
   if (RG.combo >= 3) RG.pops.push({ x: cx, y: cy - 12, text: "COMBO x" + RG.combo, t: 0.9, c: RAIN_PAL.o60 });
   if (!rgReduced()) RG.shake = Math.max(RG.shake, 0.06);
   rgBeep(520 + Math.min(RG.combo, 10) * 40, 0.07); rgBeep(1040 + Math.min(RG.combo, 10) * 40, 0.05);
 }
+function rgBox(ctx, x, y, w, h, fill) {
+  x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
+  ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = fill || RAIN_PAL.w; ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
+}
+function rgStroke(ctx, text, x, y, fill, line, lw) {
+  ctx.lineWidth = lw || 3; ctx.strokeStyle = line || RAIN_PAL.ink; ctx.lineJoin = "round";
+  ctx.strokeText(text, x, y); ctx.fillStyle = fill; ctx.fillText(text, x, y);
+}
+/* 배경 · 오렌지 두 톤 체크무늬 · 웜 흙 지면 · 도트 나무 (레퍼런스의 문법만 · 에셋 없음) */
+function rgWorld(ctx, h) {
+  for (var ty = 0; ty < RAIN_GROUND; ty += 10) for (var tx = 0; tx < RAIN_W; tx += 10) {
+    ctx.fillStyle = ((tx + ty) / 10) % 2 ? RAIN_PAL.o25 : RAIN_PAL.o10; ctx.fillRect(tx, ty, 10, 10);
+  }
+  [[10, RAIN_GROUND], [160, RAIN_GROUND]].forEach(function (t) {
+    ctx.fillStyle = RAIN_PAL.trunk; ctx.fillRect(t[0] + 4, t[1] - 10, 3, 10);
+    ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(t[0], t[1] - 22, 11, 13);
+    ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(t[0] + 1, t[1] - 21, 9, 11);
+    ctx.fillStyle = RAIN_PAL.o50; ctx.fillRect(t[0] + 2, t[1] - 20, 4, 3);
+  });
+  ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(0, RAIN_GROUND, RAIN_W, 1);
+  ctx.fillStyle = RAIN_PAL.o50; ctx.fillRect(0, RAIN_GROUND + 1, RAIN_W, 3);
+  for (var gx = 0; gx < RAIN_W; gx += 6) { ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(gx + 2, RAIN_GROUND + 1, 2, 2); }
+  for (var dy = RAIN_GROUND + 4; dy < h; dy += 6) for (var dx = 0; dx < RAIN_W; dx += 6) {
+    ctx.fillStyle = ((dx + dy) / 6) % 2 ? RAIN_PAL.soil : RAIN_PAL.soil2; ctx.fillRect(dx, dy, 6, 6);
+  }
+}
 function rgDraw(ctx, now) {
   ctx.save();
   ctx.imageSmoothingEnabled = false;
   if (RG.shake > 0) ctx.translate(Math.round((Math.random() - 0.5) * 4), Math.round((Math.random() - 0.5) * 4));
-  ctx.fillStyle = RAIN_PAL.bg; ctx.fillRect(-4, -4, RAIN_W + 8, RAIN_H + 8);
-  ctx.fillStyle = RAIN_PAL.dot;
-  for (var gx = 5; gx < RAIN_W; gx += 10) for (var gy = 25; gy < RAIN_FLOOR; gy += 10) ctx.fillRect(gx, gy, 1, 1);
-  /* HUD */
-  var left = RG.t0 ? Math.max(0, Math.ceil(RAIN_SEC - rgElapsed(now))) : RAIN_SEC;
-  ctx.font = "bold 9px sans-serif"; ctx.textBaseline = "top";
-  ctx.fillStyle = RAIN_PAL.o100; ctx.textAlign = "left"; ctx.fillText("LV " + RG.stage, 4, 5);
-  ctx.fillStyle = RAIN_PAL.w; ctx.textAlign = "center"; ctx.fillText(String(left), RAIN_W / 2, 5);
-  ctx.textAlign = "right"; ctx.fillText(String(RG.score), RAIN_W - 4, 5);
-  ctx.fillStyle = RAIN_PAL.dim; ctx.fillRect(0, 18, RAIN_W, 1);
-  /* 바닥선 · 벽돌(목숨) */
-  ctx.fillStyle = RAIN_PAL.deep; ctx.fillRect(0, RAIN_FLOOR, RAIN_W, 1);
+  rgWorld(ctx, RAIN_H + 4);
+  /* 목숨 = 흙 속 벽돌 5개 */
   for (var b = 0; b < RAIN_LIVES; b++) {
     var bx = 6 + b * 34, alive = b < RG.lives;
-    ctx.fillStyle = alive ? RAIN_PAL.o100 : RAIN_PAL.dim; ctx.fillRect(bx, RAIN_H - 14, 30, 8);
-    ctx.fillStyle = alive ? RAIN_PAL.o60 : RAIN_PAL.bg; ctx.fillRect(bx + 1, RAIN_H - 13, 28, 2);
-    if (!alive) { ctx.fillStyle = RAIN_PAL.bg; ctx.fillRect(bx + 13, RAIN_H - 14, 2, 8); }
+    rgBox(ctx, bx, RAIN_H - 16, 30, 10, alive ? RAIN_PAL.o100 : RAIN_PAL.gray);
+    if (alive) { ctx.fillStyle = RAIN_PAL.o50; ctx.fillRect(bx + 2, RAIN_H - 14, 26, 2); }
+    else { ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(bx + 14, RAIN_H - 15, 2, 8); ctx.fillRect(bx + 11, RAIN_H - 12, 3, 1); }
   }
-  /* 단어 */
-  ctx.font = "bold 11px sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  /* 위험선 (점선) */
+  ctx.fillStyle = RAIN_PAL.deep;
+  for (var lx = 0; lx < RAIN_W; lx += 6) ctx.fillRect(lx, RAIN_FLOOR, 3, 1);
+  /* HUD · 흰 박스 + 검정 외곽선 · 모래시계 진행 막대 */
+  rgBox(ctx, 2, 2, RAIN_W - 4, 15, RAIN_PAL.w);
+  ctx.font = "bold 9px sans-serif"; ctx.textBaseline = "middle";
+  ctx.fillStyle = RAIN_PAL.deep; ctx.textAlign = "left"; ctx.fillText("LV " + RG.stage, 6, 10);
+  ctx.fillStyle = RAIN_PAL.ink; ctx.textAlign = "right"; ctx.fillText(String(RG.score), RAIN_W - 6, 10);
+  for (var hh = 0; hh < RAIN_LIVES; hh++) {
+    var hx = 62 + hh * 11, on = hh < RG.lives;
+    ctx.fillStyle = on ? RAIN_PAL.o100 : RAIN_PAL.o25;
+    ctx.fillRect(hx, 7, 3, 2); ctx.fillRect(hx + 4, 7, 3, 2); ctx.fillRect(hx, 9, 7, 2); ctx.fillRect(hx + 1, 11, 5, 1); ctx.fillRect(hx + 2, 12, 3, 1);
+  }
+  var frac = RG.t0 ? Math.max(0, 1 - rgElapsed(now) / RAIN_SEC) : 1;
+  rgBox(ctx, 14, 20, RAIN_W - 18, 7, RAIN_PAL.w);
+  ctx.fillStyle = frac < 0.2 ? RAIN_PAL.deep : RAIN_PAL.o100; ctx.fillRect(15, 21, Math.round((RAIN_W - 20) * frac), 5);
+  ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(4, 19, 7, 1); ctx.fillRect(4, 28, 7, 1); ctx.fillRect(5, 20, 5, 1); ctx.fillRect(6, 21, 3, 2); ctx.fillRect(7, 23, 1, 2); ctx.fillRect(6, 25, 3, 1); ctx.fillRect(5, 26, 5, 2);
+  /* 단어 · 흰 말풍선 박스 */
+  ctx.font = "bold 11px sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
   RG.words.forEach(function (w) {
-    var danger = w.y > RAIN_FLOOR - 40;
-    ctx.lineWidth = 3; ctx.strokeStyle = "#2A1509"; ctx.strokeText(w.text, Math.round(w.x), Math.round(w.y));
-    ctx.fillStyle = danger ? RAIN_PAL.o30 : RAIN_PAL.w; ctx.fillText(w.text, Math.round(w.x), Math.round(w.y));
+    var danger = w.y > RAIN_FLOOR - 34, x = Math.round(w.x) - 3, y = Math.round(w.y) - 8;
+    rgBox(ctx, x, y, w.w + 6, 15, danger ? RAIN_PAL.o25 : RAIN_PAL.w);
+    ctx.fillStyle = RAIN_PAL.ink; ctx.fillText(w.text, x + 3, y + 8);
   });
-  /* 발사 */
   if (RG.shot) {
     var k = 1 - RG.shot.t / 0.12, sx = RG.shot.x0 + (RG.shot.x1 - RG.shot.x0) * k, sy = RG.shot.y0 + (RG.shot.y1 - RG.shot.y0) * k;
-    ctx.fillStyle = RAIN_PAL.w; ctx.fillRect(Math.round(sx) - 1, Math.round(sy) - 1, 3, 3);
+    ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(Math.round(sx) - 2, Math.round(sy) - 2, 5, 5);
+    ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(Math.round(sx) - 1, Math.round(sy) - 1, 3, 3);
   }
-  /* 마스코트 미위 · 2배 픽셀 */
+  /* 마스코트 미위 */
   var bob = Math.floor(now / 300) % 2;
-  ctx.drawImage(rgSprCv(RG.mas.open > 0 ? "open" : "closed"), Math.round(RG.mas.x - 12), RAIN_FLOOR + 5 + bob, 24, 22);
-  if (RG.combo >= 5) ctx.drawImage(rgSprCv("buddy"), Math.round(RG.mas.x + 12), RAIN_FLOOR + 11 + (1 - bob), 16, 16);
-  /* 파편 · 팝업 */
+  ctx.drawImage(rgSprCv(RG.mas.open > 0 ? "open" : "closed"), Math.round(RG.mas.x - 12), RAIN_GROUND - 22 + bob, 24, 22);
+  if (RG.combo >= 5) ctx.drawImage(rgSprCv("buddy"), Math.round(RG.mas.x + 12), RAIN_GROUND - 16 + (1 - bob), 16, 16);
   RG.parts.forEach(function (p) { ctx.fillStyle = p.c; ctx.fillRect(Math.round(p.x), Math.round(p.y), 2, 2); });
   ctx.textAlign = "center"; ctx.font = "bold 9px sans-serif";
-  RG.pops.forEach(function (p) { ctx.fillStyle = p.c; ctx.fillText(p.text, Math.round(Math.max(28, Math.min(RAIN_W - 28, p.x))), Math.round(p.y)); });   /* 가장자리에서 잘리지 않게 */
-  if (RG.banner) { ctx.font = "bold 16px sans-serif"; ctx.fillStyle = RAIN_PAL.o100; ctx.fillText(RG.banner.text, RAIN_W / 2, 120); }
+  RG.pops.forEach(function (p) { rgStroke(ctx, p.text, Math.round(Math.max(28, Math.min(RAIN_W - 28, p.x))), Math.round(p.y), p.c, RAIN_PAL.ink, 3); });
+  if (RG.banner) { rgBox(ctx, RAIN_W / 2 - 40, 108, 80, 22, RAIN_PAL.w); ctx.font = "bold 13px sans-serif"; ctx.fillStyle = RAIN_PAL.deep; ctx.fillText(RG.banner.text, RAIN_W / 2, 119); }
   if (RG.cd > 0) {
-    ctx.fillStyle = "rgba(0,0,0,0.45)"; ctx.fillRect(0, 19, RAIN_W, RAIN_FLOOR - 19);
-    ctx.font = "bold 40px sans-serif"; ctx.fillStyle = RAIN_PAL.o100; ctx.fillText(RG.cd > 1 ? String(Math.ceil(RG.cd - 0.2)) : "GO", RAIN_W / 2, 140);
+    ctx.fillStyle = "rgba(255,255,255,0.55)"; ctx.fillRect(0, 30, RAIN_W, RAIN_FLOOR - 30);
+    ctx.font = "bold 42px sans-serif"; rgStroke(ctx, RG.cd > 1 ? String(Math.ceil(RG.cd - 0.2)) : "GO", RAIN_W / 2, 135, RAIN_PAL.o100, RAIN_PAL.ink, 6);
   }
   ctx.restore();
 }
@@ -5680,13 +5723,18 @@ function typeRankHtml(r, mode, big) {
 function rgPreview() {
   var cv = el("rgPrev"); if (!cv) return;
   var ctx = cv.getContext("2d"); ctx.imageSmoothingEnabled = false;
-  ctx.fillStyle = RAIN_PAL.bg; ctx.fillRect(0, 0, 180, 110);
-  ctx.fillStyle = RAIN_PAL.dot; for (var gx = 5; gx < 180; gx += 10) for (var gy = 5; gy < 110; gy += 10) ctx.fillRect(gx, gy, 1, 1);
-  ctx.font = "bold 11px sans-serif"; ctx.lineWidth = 3; ctx.strokeStyle = "#2A1509";
-  [["에이전트", 14, 26], ["공감", 110, 40], ["데이터", 60, 62]].forEach(function (w) { ctx.strokeText(w[0], w[1], w[2]); ctx.fillStyle = RAIN_PAL.w; ctx.fillText(w[0], w[1], w[2]); });
-  ctx.drawImage(rgSprCv("open"), 78, 78, 24, 22);
-  ctx.drawImage(rgSprCv("buddy"), 104, 84, 16, 16);
+  ctx.save(); ctx.translate(0, 110 - RAIN_H + 10);
+  rgWorld(ctx, RAIN_H + 4);
+  ctx.font = "bold 11px sans-serif"; ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  [["에이전트", 30, 210], ["공감", 118, 226], ["데이터", 70, 244]].forEach(function (w) {
+    var tw = Math.ceil(ctx.measureText(w[0]).width);
+    rgBox(ctx, w[1] - 3, w[2] - 8, tw + 6, 15, RAIN_PAL.w); ctx.fillStyle = RAIN_PAL.ink; ctx.fillText(w[0], w[1], w[2]);
+  });
+  ctx.drawImage(rgSprCv("open"), 78, RAIN_GROUND - 22, 24, 22);
+  ctx.drawImage(rgSprCv("buddy"), 104, RAIN_GROUND - 16, 16, 16);
+  ctx.restore();
 }
+/* v3.36b 마스코트 외곽선 · 밝은 배경 위에서 오렌지 몸통이 묻히지 않게 검정 1px 테두리를 스프라이트에 굽는다 */
 function gameClear(flagKey) {
   if (!S.get(flagKey, false)) {
     S.set(flagKey, true);
