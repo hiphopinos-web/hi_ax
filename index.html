@@ -412,6 +412,17 @@
   @keyframes tileShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-3px); } }
   .ltile.hint { animation: hintPulse 1s ease-in-out infinite; }
   @keyframes hintPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,126,49,0); } 50% { box-shadow: 0 0 0 4px rgba(255,126,49,0.35); } }
+  /* v3.36 타자 게임 · 틀린 글자는 빨강이 아니라 회색 밑줄(앱 색 원칙) */
+  .ty-line { font-size: calc(21px * var(--fs)); font-weight: 800; line-height: 1.55; letter-spacing: 0.01em; word-break: keep-all; margin-top: 10px; min-height: 66px; }
+  .ty-line .ok { color: #fff; }
+  .ty-line .ng { color: rgba(255,255,255,0.55); text-decoration: underline; text-decoration-color: rgba(255,255,255,0.55); text-underline-offset: 4px; }
+  .ty-line .todo { color: rgba(255,255,255,0.38); }
+  .ty-next { margin-top: 8px; font-size: calc(13px * var(--fs)); color: rgba(255,255,255,0.45); }
+  .ty-rank { display: flex; align-items: center; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--line); }
+  .ty-rank .no { width: 26px; font-family: var(--disp); color: var(--acc2); }
+  .ty-rank .nm { flex: 1; min-width: 0; font-weight: 800; color: var(--hi); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ty-rank .dp { font-size: calc(12.5px * var(--fs)); color: var(--faint); font-weight: 700; }
+  .ty-rank .sc { font-family: var(--disp); color: var(--hi); }
   .cho-box { background: var(--ink); border: 0; color: #fff; border-radius: 20px; padding: 22px 18px; text-align: center; margin-bottom: 12px; }
   .cho-box .cho { font-family: var(--disp); font-size: 32px; letter-spacing: 0.18em; color: var(--mint-deep); }
   .cho-box .hint { margin-top: 10px; font-size: calc(15.5px * var(--fs)); line-height: 1.65; opacity: 0.92; }
@@ -919,6 +930,44 @@ var CHOSEONG_QUIZ = [
   { cho: "ㄷㅇㅌ", a: "데이터", alts: [], hint: "AI의 연료 · 많이 모일수록 똑똑해집니다" }
 ];
 var GC_PASS = 6;
+/* ═══ v3.36 타자 게임 문장 풀 · 여기 한 곳 (사용자 확인 대상 초안) ═══
+   확정 문서에 있는 문장만: 슬로건(ME to WE, 「AX : 」 접두 없음) · 3개년 로드맵 키워드 · 공식 공지 붙임1·2의 프로그램·세션 문장.
+   DAP 실명 사례는 당사자 동의 전이라 넣지 않는다. 판마다 섞는다. 가운뎃점·괄호처럼 폰에서 치기 어려운 기호는 뺐다. */
+var TYPE_LINES = [
+  "ME to WE",
+  "나의 업무 혁신, 우리 회사의 AX가 되다",
+  "AX Festival 2026",
+  "2026 공감과 참여",
+  "2027 확산과 체화",
+  "2028 혁신과 연결",
+  "AX 선포 및 Festival 개최 안내",
+  "AI 환경과 전략",
+  "현대해상 AX 로드맵",
+  "Agentic AI 시대의 일하는 방식 변화",
+  "AI와 친해지기",
+  "대강당 키노트 및 파트너사 강연",
+  "DAP 우수 성과자 시상",
+  "전 임직원 자유 참석",
+  "소규모 아이디어 논의",
+  "5개 세션 중 한 개만 선택 가능",
+  "영업 및 보상 현장 우수 사례 강연 및 실습",
+  "내 데이터로 만드는 통계 현황 리포팅 실습",
+  "내가 보는 자료로 만드는 외부자료 리서치 자동화 실습",
+  "Claude Code를 활용한 바이브 코딩 실습",
+  "MS Copilot을 활용한 문서 작성 실습",
+  "동료 활용 사례 공유 및 AI활용 교안 제공",
+  "원하는 주제 선택 및 개발 실습 진행",
+  "실제 업무 정기 데이터의 AI 활용 분석",
+  "분석 결과 리포트 개발 반복 작업 자동화",
+  "대시보드 작성 HTML앱",
+  "최신 갱신 외부자료 검색 및 수집",
+  "수집된 자료 자동 정리",
+  "주기적인 새정보 업데이트 알림 봇 개발",
+  "영업 현장 활용 가능 HTML앱",
+  "내부망에서 활용 가능한 데이터분석 파이썬 코드",
+  "AX 적용 아이디어 정리표"
+];
+var TYPE_SEC = 60;
 
 /* ════════════════ v10 신규 데이터 · 기획서 v2(260822 1층 반영) ════════════════ */
 /* A. 과제상담 예약 · 슬롯은 하드코딩 금지, 콘솔 설정값으로 생성 (v5 p23~25) */
@@ -2215,7 +2264,7 @@ var App = {
     notices: "home",
     /* 스탬프 · 스탬프 카드가 유일한 입구 (v3.1: ev_games·ev_draw·wallv 참여자 화면 폐지) */
     ideas: "passport", booth: "passport", wq_list: "passport", ev_replay: "passport",
-    wq_play: "wq_list", game_word: "passport", game_cho: "passport",
+    wq_play: "wq_list", game_word: "passport", game_cho: "passport", game_type: "passport", type_rank: "game_type",
     ideas_mine: "passport", survey: "passport",
     /* 프로그램 · 신청 전용 (리더보드는 10F 세션 곁으로, v3.1) · 일정(guide_time)은 v3.3부터 탭 루트라 PARENT 없음 */
     dap: "guide", ev_cchat: "guide",
@@ -2231,7 +2280,7 @@ var App = {
     sess_d: "프로그램 신청",
     ev_cchat: "내 커피챗", ev_replay: "퀴즈 다시 풀기",
     wq_list: "DAP Wall QR 퀴즈", wq_play: "문제 풀이",
-    admin: "관리자 콘솔", screen: "송출용 화면", screen_survey: "", screen_words: "", game_word: "AX 링크", game_cho: "로드맵 초성퀴즈",
+    admin: "관리자 콘솔", screen: "송출용 화면", screen_survey: "", screen_words: "", game_word: "AX 링크", game_cho: "로드맵 초성퀴즈", game_type: "타자 게임", type_rank: "타자 순위",
     wall_quiz: "", wall_wave: "", wall_live: "", wall_metowe: "", wall_tv: ""
   },
   tabOf: function (v) {
@@ -2241,13 +2290,14 @@ var App = {
   },
   go: function (v) {
     if (this.current === "game_word" && v !== "game_word") gwStop();
+    if (this.current === "game_type" && v !== "game_type") tgStop();
     if (this.current === "wall_wave" && v !== "wall_wave") wvStop();
     modalClose();
     this.current = v;
     /* v3.15 새로 고침 복귀 · 현재 화면의 소속 Lv1 탭을 sessionStorage 에 기억(같은 브라우저 탭에서만, 다음 방문은 홈).
        관리자·사이니지·게임 전체화면은 저장하지 않는다 · Lv2 는 부모 탭으로 저장된다 */
     try {
-      if (SIGNAGE.indexOf(v) < 0 && ["admin", "screen", "game_word", "game_cho"].indexOf(v) < 0) {
+      if (SIGNAGE.indexOf(v) < 0 && ["admin", "screen", "game_word", "game_cho", "game_type"].indexOf(v) < 0) {
         var lt = this.tabOf(v);
         if (["home", "passport", "guide_time", "guide"].indexOf(lt) >= 0) {
           sessionStorage.setItem("axf_last_tab", lt);
@@ -2294,7 +2344,7 @@ var App = {
     /* 헤더 높이를 실측해 sticky 기준선으로 넘긴다 (홈/탭루트/서브 화면마다 높이가 다르다) */
     el("frame").style.setProperty("--stick", tb.offsetHeight + "px");
     var nav = el("tabbar");
-    nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "game_word" || v === "game_cho") ? "none" : "flex";
+    nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "game_word" || v === "game_cho" || v === "game_type") ? "none" : "flex";
     var activeTab = this.tabOf(v);
     var icons = this.ICONS;
     var tabBtns = this.TABS.map(function (t) {
@@ -2314,7 +2364,7 @@ var LED_TTL = 30 * 60000;
 function updateLed() {
   var bar = el("ledbar"), tr = el("ledTrack");
   if (!bar || !tr) return;
-  if (SIGNAGE.indexOf(App.current) >= 0 || App.current === "game_word" || App.current === "game_cho") { bar.style.display = "none"; return; }
+  if (SIGNAGE.indexOf(App.current) >= 0 || App.current === "game_word" || App.current === "game_cho" || App.current === "game_type") { bar.style.display = "none"; return; }
   var ns = S.get("notices", []);
   var latest = null;
   for (var i = 0; i < ns.length; i++) {
@@ -2333,13 +2383,13 @@ window.addEventListener("scroll", function () {
   var b = el("topbtn");
   if (!b) return;
   var ok = window.scrollY > 400 && !el("app").hidden &&
-    SIGNAGE.indexOf(App.current) < 0 && App.current !== "game_word" && App.current !== "game_cho";
+    SIGNAGE.indexOf(App.current) < 0 && App.current !== "game_word" && App.current !== "game_cho" && App.current !== "game_type";
   b.classList.toggle("on", ok);
 }, { passive: true });
 window.addEventListener("axf-store", function () {
   checkMyState();
   updateLed();
-  if (["game_word", "game_cho", "wall_wave", "wall_metowe"].indexOf(App.current) >= 0) return;
+  if (["game_word", "game_cho", "game_type", "wall_wave", "wall_metowe"].indexOf(App.current) >= 0) return;
   App.render();
 });
 
@@ -3023,7 +3073,8 @@ function stampInnerHtml(s) {
     var replayN = QUIZZES.filter(function (q) { return qs4.finishedIds.indexOf(q.id) >= 0 && !an4[q.id]; }).length;
     inner += '<div class="row" style="margin-top:10px;gap:8px">' +
       '<button class="btn mint" style="flex:1" onclick="App.go(\'game_word\')">AX 링크</button>' +
-      '<button class="btn mint" style="flex:1" onclick="App.go(\'game_cho\')">초성퀴즈</button></div>' +
+      '<button class="btn mint" style="flex:1" onclick="App.go(\'game_cho\')">초성퀴즈</button>' +
+      '<button class="btn mint" style="flex:1" onclick="App.go(\'game_type\')">타자 게임</button></div>' +
       (replayN ? '<button class="btn line" style="margin-top:8px" onclick="App.go(\'ev_replay\')">라이브 퀴즈 다시 풀기 · ' + replayN + "문제</button>" : "");
   } else {
     /* v3.12: 적립방식(how) 뱃지 삭제 · 참여자에게 필요한 건 desc 와 바로가기뿐 */
@@ -3757,6 +3808,34 @@ var Views = {
       '<button class="btn mint" style="padding:15px" onclick="gwStart()">게임 시작</button></div>';
   },
 
+  /* ═══ v3.36 타자 게임 · 시작 · 동의(최초 1회) ═══ */
+  game_type: function () {
+    tgStop();
+    var cons = S.get("type_consent", null);
+    return '<div id="tgRoot">' +
+      '<div class="cho-box"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">MINI GAME</p>' +
+      '<p class="word disp" style="font-size:26px;margin-top:4px">타자 게임</p>' +
+      '<p class="hint">60초 동안 AX 문장을 그대로 쳐 보세요.<br>끝까지 마치면 <b>라이브 챌린지 스탬프</b> (점수 무관)</p></div>' +
+      '<div class="card soft mb12"><ul style="margin:0 0 0 18px;font-size:calc(14px * var(--fs));line-height:1.8;color:var(--muted)">' +
+      '<li>점수 = 정확히 친 글자 기준 분당 타수 × 정확도</li><li>틀린 글자는 회색 밑줄 · Enter 로 다음 문장</li>' +
+      '<li>붙여넣기·추천 단어로 한 줄을 통째로 넣으면 그 줄은 무효</li><li>경품은 1F 현장 타자왕전(같은 키보드)에서만</li></ul></div>' +
+      (cons == null ?
+        '<div class="card mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">순위판에 이름이 나와요</b><p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">이름 가운데 글자를 가리고(김*하) 부문과 함께 표시됩니다. 동의하지 않으면 「익명 참가자」로 나와요.</p>' +
+          '<button class="btn mint" style="margin-top:10px" onclick="tgConsent(true)">동의하고 시작 준비</button><button class="btn line" style="margin-top:8px" onclick="tgConsent(false)">익명으로</button></div>' :
+        '<button class="btn mint mb8" style="padding:15px" onclick="tgStart(\'app\')">게임 시작 · 60초</button>' +
+          '<p class="muted mb8" style="text-align:center;font-size:calc(12.5px * var(--fs))">순위판 표시 · ' + (cons ? "가린 이름" : "익명 참가자") + ' · <span style="text-decoration:underline;cursor:pointer" onclick="S.set(\'type_consent\', null); App.render()">바꾸기</span></p>') +
+      '<button class="btn line" onclick="App.go(\'type_rank\')">순위판 보기</button></div>';
+  },
+  type_rank: function () {
+    var mode = S.get("type_rank_tab", "app");
+    var cached = BE.on ? S.get("type_rank_" + mode, null) : TYPE_MOCK[mode];
+    typeRankPull(mode, function () { if (App.current === "type_rank") { var b = el("tyRankBody"); if (b) b.innerHTML = typeRankHtml(BE.on ? S.get("type_rank_" + mode, null) : TYPE_MOCK[mode], mode); } });
+    return '<div class="qseg" style="margin-bottom:10px"><button class="' + (mode === "app" ? "on" : "") + '" onclick="S.set(\'type_rank_tab\', \'app\'); App.render()">앱 순위 상위 10</button>' +
+      '<button class="' + (mode === "site" ? "on" : "") + '" onclick="S.set(\'type_rank_tab\', \'site\'); App.render()">1F 현장 상위 5</button></div>' +
+      '<div class="card" id="tyRankBody">' + typeRankHtml(cached, mode) + "</div>" +
+      '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">' + (mode === "app" ? "내 폰 기록 · 무제한 도전 · 최고 기록만 · 경품 없음" : "1F 현장 타자왕전 · 결선 시간대 1인 1회 · 동점은 정확도, 그다음 먼저 기록한 쪽 · 1·2등 Outro 호명") + "</p>";
+  },
+
   game_cho: function () {
     return '<div id="gcRoot">' +
       '<div class="cho-box"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">MINI GAME</p>' +
@@ -4274,7 +4353,7 @@ function notifyUser(title, body, target) {
   try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate([80, 40, 80]); } catch (e) {}   /* 상호작용 전 차단 경고 방지 */
   if (notifOK()) { try { new Notification(title, { body: body }); } catch (e) {} }
   if (el("modal")) { toast(title); return; }        /* 팝업 위에 팝업 금지 · 뒤 알림은 토스트로 */
-  if (App.current === "game_word" || App.current === "game_cho") { toast(title); return; }
+  if (App.current === "game_word" || App.current === "game_cho" || App.current === "game_type") { toast(title); return; }
   var askBtn = (!notifOK() && ("Notification" in window) && Notification.permission !== "denied")
     ? '<button class="btn line" style="margin-top:8px" onclick="notifAsk()">브라우저 알림 켜기</button>' : "";
   modalOpen('<b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">' + esc(title) + '</b>' +
@@ -5229,6 +5308,139 @@ function drawWinner() {
 }
 
 /* ════════════════ 게임 공통 ════════════════ */
+/* ═══ v3.36 타자 게임 ═══
+   한 판 60초 · 문장 한 줄씩 · 점수 = 정확히 친 글자 수 기준 분당 타수 × 정확도.
+   완성된 글자와 원문을 위치별로 비교한다(키 이벤트 단위로 세지 않는다 · 한글 조합 입력은 기종마다 키 이벤트가 다르다).
+   부정 방지: 붙여넣기·끌어놓기 차단, 자동완성·자동수정·맞춤법 끔, 한 줄을 1초 안에 통째로 넣으면 그 줄은 무효, 한 번에 4글자 이상 늘면 붙여넣기로 보고 무효.
+   완주(60초)하면 점수와 무관하게 04 라이브 챌린지 적립. */
+var TG = { on: false, mode: "app", order: [], li: 0, t0: 0, lt0: 0, lf: 0, correct: 0, typed: 0, bad: 0, last: 0, timer: null, res: null, emp: "", empName: "" };
+var TYPE_MOCK = { app: { top: [{ rank: 1, name: "박*영", dept: "장기보험부문", score: 412, acc: 98 }, { rank: 2, name: "이*준", dept: "자동차보상부문", score: 388, acc: 96 }, { rank: 3, name: "익명 참가자", dept: "디지털전략부문", score: 351, acc: 97 }, { rank: 4, name: "정*수", dept: "일반보험부문", score: 330, acc: 94 }, { rank: 5, name: "최*아", dept: "마케팅부문", score: 302, acc: 95 }],
+  depts: [{ dept: "장기보험부문", avg: 301, n: 12 }, { dept: "자동차보상부문", avg: 288, n: 18 }, { dept: "디지털전략부문", avg: 270, n: 9 }], total: 64 },
+  site: { top: [{ rank: 1, name: "김*나", dept: "보상부문", score: 455, acc: 99 }, { rank: 2, name: "한*별", dept: "마케팅부문", score: 431, acc: 97 }], depts: [], total: 2, win: ["12:00~13:00", "15:00~16:00"] } };
+function tgShuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function tgLine() { return TG.order[TG.li % TG.order.length]; }
+function tgStop() { if (TG.timer) clearInterval(TG.timer); TG.timer = null; TG.on = false; }
+function tgConsent(v) { S.set("type_consent", v); App.render(); }
+function tgStart(mode) {
+  tgStop();
+  TG.mode = mode || "app"; TG.order = tgShuffle(TYPE_LINES); TG.li = 0; TG.correct = 0; TG.typed = 0; TG.bad = 0; TG.res = null;
+  TG.on = true; TG.t0 = Date.now(); TG.lt0 = 0; TG.last = 0;
+  tgPaint();
+  TG.timer = setInterval(tgTick, 250);
+}
+/* 한 줄 비교 · 위치별로 같은 글자 수 · 친 글자 수는 입력 길이 */
+function tgCompare(v, line) {
+  var c = 0;
+  for (var i = 0; i < Math.min(v.length, line.length); i++) if (v.charAt(i) === line.charAt(i)) c++;
+  return c;
+}
+function tgCommit(final) {
+  var inp = el("tgIn"); if (!inp) return;
+  var v = inp.value, line = tgLine();
+  if (!v) return;
+  var c = tgCompare(v, line);
+  var tooFast = TG.lt0 && Date.now() - TG.lt0 < 1000 && c >= line.length * 0.8;
+  if (TG.lf || tooFast) { TG.bad++; }   /* 무효 줄 · 글자도 타수도 세지 않는다 */
+  else { TG.correct += c; TG.typed += Math.max(v.length, final ? v.length : line.length); }
+  if (final) return;
+  TG.li++; TG.lt0 = 0; TG.lf = 0; TG.last = 0;
+  inp.value = "";
+  tgPaintLine();
+}
+function tgInput(e) {
+  var inp = el("tgIn"); if (!inp || !TG.on) return;
+  var v = inp.value;
+  if (!TG.lt0 && v) TG.lt0 = Date.now();
+  if (v.length - TG.last >= 4 && !(e && e.isComposing)) TG.lf = 1;   /* 한 번에 4글자 이상 = 붙여넣기·추천 단어 통째 입력 */
+  TG.last = v.length;
+  tgPaintLine();
+  if (!(e && e.isComposing) && v === tgLine()) tgCommit(false);
+}
+function tgKey(e) { if (e.key === "Enter") { e.preventDefault(); tgCommit(false); } }
+function tgTick() {
+  if (!TG.on) return;
+  var left = Math.max(0, TYPE_SEC - Math.floor((Date.now() - TG.t0) / 1000));
+  var h = el("tgLeft"); if (h) h.textContent = left;
+  var sp = el("tgCpm"); if (sp) sp.textContent = Math.round(TG.correct / Math.max(1, (Date.now() - TG.t0) / 60000));
+  if (left <= 0) tgEnd();
+}
+function tgLineHtml() {
+  var line = tgLine(), v = (el("tgIn") || {}).value || "", h = "";
+  for (var i = 0; i < line.length; i++) {
+    var ch = esc(line.charAt(i)).replace(" ", "&nbsp;");
+    h += i >= v.length ? '<span class="todo">' + ch + "</span>" : v.charAt(i) === line.charAt(i) ? '<span class="ok">' + ch + "</span>" : '<span class="ng">' + ch + "</span>";
+  }
+  return h;
+}
+function tgPaintLine() {
+  var l = el("tgLine"); if (l) l.innerHTML = tgLineHtml();
+  var n = el("tgNext"); if (n) n.textContent = "다음 · " + TG.order[(TG.li + 1) % TG.order.length];
+}
+function tgPaint() {
+  var root = el("tgRoot"); if (!root) return;
+  root.innerHTML =
+    '<div class="game-hud"><div class="hud"><div class="v" id="tgLeft">' + TYPE_SEC + '</div><div class="l">남은 초</div></div>' +
+    '<div class="hud"><div class="v" id="tgCpm">0</div><div class="l">분당 타수</div></div></div>' +
+    '<div class="cho-box" style="text-align:left"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' + (TG.mode === "site" ? "1F 현장 타자왕전" : "타자 게임") + " · 문장을 그대로 치고 Enter</p>" +
+    '<p class="ty-line" id="tgLine"></p><p class="ty-next" id="tgNext"></p></div>' +
+    '<input id="tgIn" class="input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="text" enterkeyhint="next" placeholder="여기에 입력" ' +
+    'onpaste="event.preventDefault()" ondrop="event.preventDefault()" oninput="tgInput(event)" onkeydown="tgKey(event)" style="font-size:18px">' +
+    '<button class="btn line" style="margin-top:8px" onclick="tgCommit(false)">다음 문장</button>';
+  tgPaintLine();
+  var inp = el("tgIn"); if (inp) inp.focus();
+}
+function tgEnd() {
+  if (!TG.on) return;
+  tgCommit(true);
+  tgStop();
+  var cpm = Math.round(TG.correct * 60 / TYPE_SEC), acc = TG.typed ? Math.round(TG.correct / TG.typed * 100) : 0;
+  acc = Math.max(0, Math.min(100, acc));
+  var score = Math.round(cpm * acc / 100);
+  TG.res = { cpm: cpm, acc: acc, score: score, bad: TG.bad, me: null, send: "" };
+  if (TG.mode === "app") {
+    S.set("type_best", Math.max(S.get("type_best", 0), score));
+    gameClear("type_cleared");   /* 완주 = 04 라이브 챌린지 (점수 무관 · 이미 있으면 조용히) */
+    var u = S.get("user", {}) || {};
+    if (BE.on && !testEmp() && u.empId) {
+      TG.res.send = "sending";
+      beCall({ action: "type_submit", emp: u.empId, name: u.name || "", score: score, cpm: cpm, acc: acc, consent: S.get("type_consent", false) ? "1" : "0" },
+        function (r) { if (TG.res) { TG.res.send = r && r.ok ? "ok" : (r && r.reason) || "fail"; TG.res.me = r && r.me; } if (App.current === "game_type") tgResultPaint(); },
+        function () { if (TG.res) TG.res.send = "fail"; if (App.current === "game_type") tgResultPaint(); });
+    }
+    tgResultPaint();
+  } else if (typeof tsSiteDone === "function") tsSiteDone(TG.res);
+}
+function tgResultPaint() {
+  var root = el("tgRoot"), r = TG.res; if (!root || !r) return;
+  var rank = r.me ? r.me.rank : null;
+  root.innerHTML =
+    '<div class="cho-box" style="padding:26px 18px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">내 기록</p>' +
+    '<p class="disp" style="font-size:42px;color:var(--mint);margin-top:6px">' + r.score + "</p>" +
+    '<p class="hint">분당 ' + r.cpm + "타 · 정확도 " + r.acc + "%" + (r.bad ? " · 무효 " + r.bad + "줄" : "") + "<br>" +
+    (r.send === "sending" ? "순위 반영 중" : rank ? "앱 순위 " + rank + "위" : r.send === "range" ? "기록이 상식 범위를 넘어 순위에 넣지 않았어요" : testMode() ? "테스트 모드 · 순위에 반영하지 않아요" : "") + "</p>" +
+    '<p class="hint" style="margin-top:6px">라이브 챌린지 스탬프는 완주만 하면 적립돼요</p></div>' +
+    (rank && rank <= 10 ? '<div class="tipbanner mb12">상위권이에요. 1F 현장 타자왕전에 도전하세요 · 같은 키보드로 겨루고 1·2등은 Outro에서 호명합니다</div>' : "") +
+    '<button class="btn mint mb8" style="padding:15px" onclick="tgStart(\'app\')">다시 하기</button>' +
+    '<button class="btn line mb8" onclick="App.go(\'type_rank\')">순위판 보기</button>' +
+    '<button class="btn line" onclick="App.go(\'passport\')">스탬프 탭으로</button>';
+}
+function typeRankPull(mode, cb) {
+  if (!BE.on) { cb(TYPE_MOCK[mode]); return; }
+  var u = S.get("user", {}) || {};
+  beCall({ action: "type_rank", mode: mode, emp: u.empId || "", n: mode === "site" ? 5 : 10 }, function (r) { if (r && r.ok) { S.set("type_rank_" + mode, r); cb(r); } }, function () {});
+}
+function typeRankHtml(r, mode, big) {
+  if (!r) return '<p class="muted">순위를 불러오는 중입니다</p>';
+  var top = r.top || [];
+  var mx = Math.max.apply(null, (r.depts || []).map(function (d) { return d.avg; }).concat([1]));
+  return (top.length ? top.map(function (x) {
+      return '<div class="ty-rank"><span class="no">' + x.rank + '</span><span class="nm">' + esc(x.name) + ' <span class="dp">' + esc(x.dept || "") + '</span></span><span class="sc">' + x.score + "</span></div>";
+    }).join("") : '<p class="muted">아직 기록이 없어요</p>') +
+    (r.depts && r.depts.length ? '<p class="sub-label" style="margin-top:14px">부문별 평균</p>' + r.depts.slice(0, big ? 8 : 5).map(function (d) {
+      return '<div class="seatrow"><div class="sb"><i style="width:' + Math.round(d.avg / mx * 100) + '%"></i></div><span class="sn">' + esc(d.dept) + " " + d.avg + "</span></div>";
+    }).join("") : "") +
+    (r.me ? '<p class="muted" style="margin-top:10px">내 순위 ' + r.me.rank + "위 · " + r.me.score + "점</p>" : "");
+}
 function gameClear(flagKey) {
   if (!S.get(flagKey, false)) {
     S.set(flagKey, true);
