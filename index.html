@@ -1589,6 +1589,12 @@ var S = {
     MEM[k] = j;
     if (LS_OK) { try { localStorage.setItem("axf_" + k, j); } catch (e) {} }
     window.dispatchEvent(new CustomEvent("axf-store", { detail: k }));
+  },
+  /* v3.70 키를 아예 지운다 (null 을 넣으면 기본값이 안 나온다) */
+  del: function (k) {
+    delete MEM[k];
+    if (LS_OK) { try { localStorage.removeItem("axf_" + k); } catch (e) {} }
+    window.dispatchEvent(new CustomEvent("axf-store", { detail: k }));
   }
 };
 /* 다른 탭의 변경(관리자 승인 등)을 실시간 수신 */
@@ -3291,6 +3297,33 @@ function testStampReset() {
     '<p class="muted" style="margin-top:8px">이 기기의 테스트 스탬프와 룰렛·응모권 상태를 0으로 되돌립니다. 서버에는 아무것도 보내지 않습니다.</p>' +
     '<button class="btn mint" style="margin-top:14px" onclick="modalClose(); testStampResetGo()">초기화</button>' +
     '<button class="btn line" style="margin-top:8px" onclick="modalClose()">취소</button>');
+}
+/* v3.70 (사용자 확정 260918) 테스트 사번·데모에서 미니게임을 한 번도 안 한 상태로 되돌린다.
+   이 기기 기록만 지운다 · 순위판에 올라간 서버 기록은 관리 콘솔에서 지운다(참여자 앱에 삭제 기능을 두지 않는다). */
+var GAME_KEYS = ["pang_best", "jump_best", "gw_best", "type_best", "pang_cleared", "jump_cleared", "gw_cleared", "type_cleared",
+  "oly_tab", "oly_ev", "mem_seen", "type_rank_app", "type_rank_site", "game_sound", "type_nick_edit", "art_demo_n"];
+function testGameReset(withNick) {
+  if (!testMode()) return;
+  modalOpen('<b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">' + (withNick ? "게임 기록과 닉네임을 초기화할까요?" : "게임 기록을 초기화할까요?") + "</b>" +
+    '<p class="muted" style="margin-top:8px">이 기기의 미니게임 최고 기록·올림픽 점수·미니게임 스탬프를 지웁니다' + (withNick ? " (닉네임도 지웁니다)" : "") +
+    '. 순위판에 올라간 서버 기록은 관리 콘솔에서 지웁니다.</p>' +
+    '<button class="btn mint" style="margin-top:14px" onclick="modalClose(); testGameResetGo(' + (withNick ? "true" : "false") + ')">초기화</button>' +
+    '<button class="btn line" style="margin-top:8px" onclick="modalClose()">취소</button>');
+}
+function testGameResetGo(withNick) {
+  if (!testMode()) return;
+  testOverlayDrop(null);
+  GAME_KEYS.forEach(function (k) { S.del(k); });
+  if (withNick) S.del("type_nick");
+  /* 미니게임 스탬프(p4)와 그 도장 기록만 뺀다 · 다른 스탬프는 그대로 */
+  S.set("stamps", S.get("stamps", []).filter(function (id) { return id !== "p4"; }));
+  S.set("pp_seen", S.get("pp_seen", []).filter(function (id) { return id !== "p4"; }));
+  OLY.board = null; OLY.t = 0;
+  TYAW.data = null; TYTV.app = null; TYTV.site = null;
+  GW = { on: false, timer: null, nextT: null }; PG.on = false; JP.on = false; RG.on = false;
+  gsOverlayClose();
+  toast(withNick ? "테스트 · 게임 기록과 닉네임을 초기화했어요" : "테스트 · 게임 기록을 초기화했어요");
+  App.render();
 }
 function testStampResetGo() {
   if (!testMode()) return;
@@ -6867,7 +6900,9 @@ function olyHubHtml() {
         sub: v ? "최고 " + v.best.toLocaleString() + (v.rank ? " · 종목 " + v.rank + "위" : "") : "",   /* 오른쪽 숫자 = 환산 점수 */
         right: '<span class="st">' + (v ? olyFmt(v.pts) : "-") + "</span>" });
     }).join("") +
-    '<button class="btn line" style="margin-top:4px" onclick="App.go(\'oly_rank\')">AX 올림픽 순위판</button>';
+    '<button class="btn line" style="margin-top:4px" onclick="App.go(\'oly_rank\')">AX 올림픽 순위판</button>' +
+    (testMode() ? '<button class="btn test" style="margin-top:8px" onclick="testGameReset(false)">테스트 · 게임 기록만 초기화</button>' +
+      '<button class="btn test" style="margin-top:6px" onclick="testGameReset(true)">테스트 · 닉네임까지 초기화</button>' : "");
 }
 /* 테스트 모드 순위판 · 가짜 참가자 + 이 기기 기록 · 서버와 같은 규칙으로 계산 */
 var OLY_FAKE = [
