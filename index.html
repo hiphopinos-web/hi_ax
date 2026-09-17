@@ -7228,13 +7228,18 @@ function gsResultHtml(key, r) {
 var PG_N = 7, PG_TS = 24, PG_W = 180, PG_H = 236, PG_OX = 6, PG_OY = 38, PG_KINDS = 5, PG_SEC = 60;
 var PG_HINT_FIRST = 3, PG_HINT_AGAIN = 5;   /* v3.66 힌트 · 첫 3초 · 이후 5초마다 (판이 그대로라 같은 수를 다시 보여 준다) */
 var PG_C = { o100: "#FF7E31", o50: "#FFB284", o10: "#FFEBE0", ink: "#111111", w: "#FFFFFF", line: "#E6E0DB", track: "#EFEDEB", muted: "#8A817B", tx: "#1A1A1A" };
+/* v3.73 (사용자 확정 260918) 타일마다 AI 기본 소양 낱말을 붙인다 · 그림과 뜻이 맞는 쪽으로 배치.
+   말풍선=프롬프트(묻는 말) · 톱니=자동화(대신 돌아가는 일) · 차트=데이터 · 전구=아이디어 · 반짝임=생성 · 특수 블록=에이전트.
+   문구 규칙은 v3.67과 같다(제품·회사 홍보 금지 · 확인 안 된 숫자 금지 · 과장·겁주는 말 금지). */
 var PG_TILE = [
-  { name: "말풍선", fill: PG_C.w, ic: PG_C.ink, line: "#D9D2CC" },
-  { name: "톱니", fill: PG_C.ink, ic: PG_C.w, line: PG_C.ink },
-  { name: "차트", fill: PG_C.o100, ic: PG_C.w, line: PG_C.o100 },
-  { name: "전구", fill: PG_C.o10, ic: PG_C.ink, line: "#FFD3BA" },
-  { name: "반짝임", fill: PG_C.o50, ic: PG_C.ink, line: PG_C.o50 }
+  { name: "말풍선", term: "프롬프트", line: "프롬프트 · 주고 싶은 질문이나 지시", fill: PG_C.w, ic: PG_C.ink, line2: "#D9D2CC" },
+  { name: "톱니", term: "자동화", line: "자동화 · 반복 일을 대신 돌게 만드는 것", fill: PG_C.ink, ic: PG_C.w, line2: PG_C.ink },
+  { name: "차트", term: "데이터", line: "데이터 · 판단의 바탕이 되는 기록", fill: PG_C.o100, ic: PG_C.w, line2: PG_C.o100 },
+  { name: "전구", term: "아이디어", line: "아이디어 · 업무에 써 볼 생각 한 줄", fill: PG_C.o10, ic: PG_C.ink, line2: "#FFD3BA" },
+  { name: "반짝임", term: "생성", line: "생성 · 새 글과 그림을 만들어 내는 일", fill: PG_C.o50, ic: PG_C.ink, line2: PG_C.o50 }
 ];
+var PG_AGENT_LINE = "에이전트 · 맡기면 여러 단계를 알아서 처리";
+var PG_LINE_EVERY = 5;   /* 다섯 번 맞출 때마다 · 타일 종류별 첫 매치에도 한 줄 */
 var PG_FONT = '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif';
 function pgRR(ctx, x, y, w, h, r) {
   ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
@@ -7353,7 +7358,7 @@ function pgStart() {
   pgStop();
   SFX.site = false;
   PG = { on: true, paused: false, ending: null, raf: 0, cd: 3.2, t0: 0, last: performance.now(), b: pgBoardInit(), phase: "idle", sel: null, pair: null, drag: null, k: 1,
-    idle: 0, hint: null, hintN: 0, hintT: 0, chain: 0, clrT: 0, lines: [], parts: [], pops: [], banner: null, combo: null, score: 0, tiles: 0, maxChain: 0, specials: 0, moves: 0, shuffles: 0 };
+    idle: 0, hint: null, hintN: 0, hintT: 0, hits5: 0, seenT: {}, chain: 0, clrT: 0, lines: [], parts: [], pops: [], banner: null, combo: null, score: 0, tiles: 0, maxChain: 0, specials: 0, moves: 0, shuffles: 0 };
   gsOverlayOpen({ key: "pang", title: "AX 팡", cw: PG_W, ch: PG_H, canvasId: "pgCv", noGesture: true, flat: true,
     bottom: '<div class="gs-foot">이웃한 두 칸을 밀어서 바꾸거나, 한 칸 누르고 옆 칸을 누르세요</div>',
     down: pgDown, move: pgMove, up: pgUp, resized: pgFit,
@@ -7463,6 +7468,7 @@ function pgClear(runs) {
     var rc = k.split(","), r = +rc[0], c = +rc[1], tile = b[r][c];
     if (tile.sp) {
       PG.lines.push({ r: r, c: c, dir: tile.sp, t: 0.28 });
+      PG.banner = { text: PG_AGENT_LINE, t: 1.5 };   /* v3.73 줄 지우기 블록이 터질 때 = 에이전트 */
       sfx("kwang");
       for (var i = 0; i < PG_N; i++) {
         var kk = tile.sp === "h" ? r + "," + i : i + "," + c;
@@ -7483,8 +7489,21 @@ function pgClear(runs) {
   var cnt = n + makes.length, gain = cnt * 10 * mult;
   PG.score += gain; PG.tiles += cnt; PG.maxChain = Math.max(PG.maxChain, PG.chain);
   if (n) PG.pops.push({ x: sx / n, y: sy / n, text: "+" + gain, t: 0, life: 0.7 });
+  /* v3.73 무엇을 맞췄는지 낱말로 · 점수 팝과 겹치지 않게 아래 · 한 번에 여러 종류면 한 종류만 */
+  var big = null;
+  runs.forEach(function (run) { var t4 = b[run.cells[0][0]] && b[run.cells[0][0]][run.cells[0][1]]; if (!big && t4) big = PG_TILE[t4.t]; });
+  if (n && big) {
+    PG.pops.push({ x: sx / n, y: sy / n + 14, text: big.term, t: 0, life: 0.8, small: 1 });
+    PG.hits5 = (PG.hits5 || 0) + 1;
+    PG.seenT = PG.seenT || {};
+    var firstOfKind = !PG.seenT[big.term];
+    if (firstOfKind || PG.hits5 % PG_LINE_EVERY === 0) {
+      PG.seenT[big.term] = 1;
+      PG.banner = { text: big.line, t: 1.5 };
+    }
+  }
   if (PG.chain >= 2) PG.combo = { n: mult, t: 0 };
-  else if (makes.length) PG.banner = { text: "줄 지우기 블록", t: 0.9 };
+  else if (makes.length) PG.banner = { text: PG_AGENT_LINE, t: 1.5 };   /* v3.73 특수 블록 = 에이전트 */
   sfx(PG.chain >= 2 ? "cascade" : "ppok", PG.chain);
   PG.pair = null; PG.clrT = 0.18; PG.phase = "clear";
 }
@@ -7605,17 +7624,19 @@ function pgDraw(ctx, now) {
   PG.pops.forEach(function (p) {
     var q = p.t / p.life;
     ctx.globalAlpha = q < 0.6 ? 1 : 1 - (q - 0.6) / 0.4;
-    ctx.font = "800 9px " + PG_FONT; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.font = (p.small ? "800 8px " : "800 9px ") + PG_FONT; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.lineWidth = 2.4; ctx.lineJoin = "round"; ctx.strokeStyle = PG_C.w; ctx.strokeText(p.text, p.x, p.y - 8 * pgEase(q, "out"));
-    ctx.fillStyle = PG_C.ink; ctx.fillText(p.text, p.x, p.y - 8 * pgEase(q, "out"));
+    ctx.fillStyle = p.small ? PG_C.o100 : PG_C.ink; ctx.fillText(p.text, p.x, p.y - 8 * pgEase(q, "out"));
   });
   ctx.globalAlpha = 1;
   var by = PG_OY + PG_N * PG_TS;
   pgText(ctx, "4개 이상 맞추면 줄 지우기 블록", PG_W / 2, by + 11, 8, 600, PG_C.muted, "center");
   if (PG.banner) {
-    ctx.font = "700 9px " + PG_FONT; var bw = ctx.measureText(PG.banner.text).width + 20;
-    pgRR(ctx, PG_W / 2 - bw / 2, PG_OY + 72, bw, 20, 10); ctx.fillStyle = PG_C.ink; ctx.fill();
-    pgText(ctx, PG.banner.text, PG_W / 2, PG_OY + 82, 9, 700, PG_C.w, "center");
+    /* v3.73 안내 줄은 판 아래 정보 줄 자리에 · 타일을 가리거나 판을 밀지 않는다 */
+    ctx.font = "700 9px " + PG_FONT;
+    var bw = Math.min(PG_W - 8, ctx.measureText(PG.banner.text).width + 18), by2 = PG_OY + PG_N * PG_TS + 2;
+    pgRR(ctx, PG_W / 2 - bw / 2, by2, bw, 17, 8); ctx.fillStyle = PG_C.ink; ctx.fill();
+    pgText(ctx, PG.banner.text, PG_W / 2, by2 + 9, 9, 700, PG_C.w, "center");
   }
   if (PG.ending || PG.cd > 0) {
     ctx.fillStyle = "rgba(255,255,255,0.82)"; ctx.fillRect(0, PG_OY - 4, PG_W, PG_N * PG_TS + 8);
@@ -7663,7 +7684,7 @@ function pgBoardDraw(ctx, b, now, live) {
       ctx.restore();
       pgIconDraw(ctx, t.t, t.sp === "v" ? -5.2 : 0, t.sp === "v" ? 0 : -5.2, 7.5, PG_C.w);
     } else {
-      ctx.fillStyle = st.fill; ctx.fill(); ctx.lineWidth = 0.75; ctx.strokeStyle = st.line; ctx.stroke();
+      ctx.fillStyle = st.fill; ctx.fill(); ctx.lineWidth = 0.75; ctx.strokeStyle = st.line2; ctx.stroke();
       pgIconDraw(ctx, t.t, 0, 0, 13.5, st.ic);
     }
     if (sel) { pgRR(ctx, -half - 1.4, -half - 1.4, half * 2 + 2.8, half * 2 + 2.8, 5.4); ctx.lineWidth = 1.6; ctx.strokeStyle = PG_C.o100; ctx.stroke(); }
