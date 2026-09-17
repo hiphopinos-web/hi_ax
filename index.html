@@ -337,9 +337,6 @@
   .qrbox span { aspect-ratio: 1; background: #fff; }
   .qrbox span.b { background: var(--ink); }
   .coupon.used .qrbox { opacity: 0.25; }
-  .rank { display: flex; align-items: center; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--line); }
-  .rank .no { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-family: var(--disp); font-size: calc(14.5px * var(--fs)); background: var(--surface2); color: var(--muted); border-radius: 8px; }
-  .rank.top .no { background: var(--tint2); color: var(--acc2); }
   .tag-btn { border: 1px solid var(--line); cursor: pointer; border-radius: 10px; background: var(--white); color: var(--muted); padding: 7px 12px; font-size: calc(14.5px * var(--fs)); font-weight: 700; }
   .tag-btn.on { background: var(--mint); color: #fff; border-color: var(--mint); }
   #toast { position: fixed; left: 50%; bottom: 104px; transform: translateX(-50%) translateY(20px); z-index: 90; background: var(--hi); color: #fff; font-size: calc(14.5px * var(--fs)); font-weight: 700; padding: 12px 20px; border-radius: 12px; opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; max-width: 88%; text-align: center; }
@@ -384,10 +381,6 @@
   .sess .btns { display: flex; gap: 8px; margin-top: 12px; }
   .sess .btns .btn { padding: 11px; }
   .sess .btns .btn.vid { background: var(--surface2); color: var(--hi); }
-.vhero { position: relative; border-radius: 20px; overflow: hidden; background: var(--ink); margin-bottom: 12px; aspect-ratio: 16 / 9; display: flex; align-items: center; justify-content: center; text-align: center; color: #fff; }
-  .vhero .vt { font-family: var(--disp); font-size: 21px; letter-spacing: 0.03em; padding: 0 22px; line-height: 1.3; }
-  .vhero .vs { position: absolute; bottom: 11px; left: 0; right: 0; font-size: calc(12.5px * var(--fs)); font-weight: 700; color: rgba(255,255,255,0.55); }
-  .vhero video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; }
   /* 미니게임 */
   .game-hud { display: flex; gap: 8px; margin-bottom: 12px; }
   .game-hud .hud { flex: 1; background: var(--card); border: 0; border-radius: 14px; padding: 9px 6px; text-align: center; }
@@ -777,7 +770,7 @@ var TIMELINE = [
      10F 오후 세션(내내 참석)·점심(시간대 구분 역할)은 시간표 유지 */
   { time: "13:00", end: "16:30", title: "AX 커피챗", short: "아이디어를 낸 분들을 30분 간격으로 매칭합니다", place: "18F 라운지", desc: "아이디어 제출자 매칭 · 30분 간격 × 2테이블. 매칭되면 앱 알림으로 자리·시간을 알려드려요.", tag: "매칭제", always: 1 },
   { time: "13:30", end: "15:00", title: "파트너사 강연 · AWS", short: "Agentic AI 시대의 일하는 방식 변화 · 구태훈 박사(AWS)", place: "17F 대강당", desc: "구태훈 박사(AWS) · Agentic AI 시대의 일하는 방식 변화. 신청 없이 자유 참석. 세부 시간은 변동될 수 있습니다.", tag: "자유 참석" },
-  { time: "13:30", end: "16:30", title: "10F 실습형 세션 A~E", short: "사전 신청자 · 5개 세션 중 1개", place: "10F", desc: "세션 A 영업 및 보상 현장 우수 사례 · 세션 B 통계 현황 리포팅 · 세션 C 외부자료 리서치 자동화 · 세션 D 바이브 코딩(AWS) · 세션 E MS Copilot 문서 작성(MS). 사전 신청한 세션 1개에 참석합니다(세션 A는 16:40 종료).", tag: "신청제" },
+  { time: "13:30", end: "16:30", title: "10F 실습형 세션 A~E", short: "사전 신청자 · 5개 세션 중 1개", place: "10F", desc: "세션 A 영업 및 보상 현장 우수 사례 · 세션 B 통계 현황 리포팅 · 세션 C 외부자료 리서치 자동화 · 세션 D 바이브 코딩(AWS) · 세션 E MS Copilot 문서 작성(MS, 2회 진행 13:30 · 15:00). 사전 신청한 세션 1개에 참석합니다(세션 A는 16:40 종료).", tag: "신청제" },
   { time: "15:10", end: "16:40", title: "파트너사 강연 · MS", short: "AI와 친해지기 · MS", place: "17F 대강당", desc: "MS · AI와 친해지기. 신청 없이 자유 참석. 세부 시간은 변동될 수 있습니다.", tag: "자유 참석" },
   { time: "17:00", end: "17:30", title: "Outro · DAP 시상", short: "DAP 우수 성과자 시상 · 경품 추첨", place: "17F 대강당", desc: "CSO · DAP 우수 성과자 시상, 경품 추첨. 추첨 결과는 행사 종료 후 개별 안내드립니다.", tag: "피날레" }
 ];
@@ -785,7 +778,7 @@ var NOW_INDEX = 1;
 var FLOORS = [
   { no: "18", nm: "AX 커피챗", items: ["AX 커피챗 · 소규모 아이디어 논의"] },
   { no: "17", nm: "키노트 · 파트너사 강연", items: ["대강당 · Intro · 기조연설 · 내부 강연 · 파트너사 강연(AWS · MS) · Outro", "전 임직원 자유 참석 · 신청 없음"] },
-  { no: "10", nm: "실습형 세션 A~E", items: ["세션 A · 영업 및 보상 현장 우수 사례 강연 및 실습 (62명)", "세션 B · 통계 현황 리포팅 실습 (최대 32명)", "세션 C · 외부자료 리서치 자동화 실습 (20명)", "세션 D · Claude Code 바이브 코딩 실습 · AWS (20명)", "세션 E · MS Copilot 문서 작성 실습 · MS (2회 · 회당 20명)"] },
+  { no: "10", nm: "실습형 세션 A~E", items: ["세션 A · 영업 및 보상 현장 우수 사례 강연 및 실습 (62명)", "세션 B · 통계 현황 리포팅 실습 (최대 32명)", "세션 C · 외부자료 리서치 자동화 실습 (20명)", "세션 D · Claude Code 바이브 코딩 실습 · AWS (20명)", "세션 E · MS Copilot 문서 작성 실습 · MS (2회 진행 · 1회차 13:30 · 2회차 15:00 · 회당 20명)"] },
   { no: "01", nm: "AX 전시·체험존", items: ["이벤트존 · INFO 데스크 · 「내 3시간을 돌려줘」 보드 · 라이브 스크린 · 참가상(1F 한정 200개)", "DAP존 (미니 강의 · 과제 상담)", "기술지원부문 부스 · AX 헬프데스크", "체크인 (외부 주차장) · 웰컴키트"] }
 ];
 var SLOTS = [
@@ -797,50 +790,54 @@ var SLOTS = [
    kind: seat=좌석 신청 / queue=원격 대기열 / link=기존 신청 시스템 연결 / open=자유 참석(신청 없음)
    17F 강연은 open · cap·seed 는 신청제로 되돌릴 때를 위해 남긴다(kind 만 seat 로 바꾸면 신청 UI 가 돌아온다).
    10F 실습형 세션은 5개 중 1개만(sessConflict · 백엔드 sessBook_ reason ten). id 는 기존 유지:
-   fld=세션 A · ta=세션 B · tb=세션 C · aws=세션 D · ms=세션 E(신설).
+   fld=세션 A · ta=세션 B · tb=세션 C · aws=세션 D · ms1·ms2=세션 E 1·2회차(v3.31 회차 분리 · 80분 × 2회, 사이 10분).
+   세션 E 는 회차마다 행 하나(공용 행 카드 · 인라인 신청 그대로). 회차 선택 UI 를 따로 두지 않는 이유:
+   시간 뱃지·잔여석·신청 버튼이 회차마다 다르고, 두 회차 사이 교체는 10F 1인 1세션 교체 모달이 그대로 처리한다.
    info = 상세 표 [구분, 내용] · 붙임2 문장 그대로 · capNote = 정원 보조 문구 */
 var TEN_GIFT = "참가자 전원 사은품 (세션 A·B·C는 AI 구독권 포함)";
 var TEN_RERUN = "당일 참석이 어려운 구성원을 위한 사내 교육프로그램 재운영 시기는 추후 별도 공지 예정입니다.";
 var TIME_TBD = "세부 시간은 변동될 수 있습니다.";
 var SESSIONS = [
-  { id: "key", fl: 17, zone: "hall", kind: "open", ttl: "기조연설", sub: "AI 환경 · 전략", who: "CTO", tm: "09:40~10:20", cap: 235, seed: 187, video: 1,
+  { id: "key", fl: 17, zone: "hall", kind: "open", ttl: "기조연설", sub: "AI 환경 · 전략", who: "CTO", tm: "09:40~10:20", cap: 235, seed: 187,
     desc: "Intro(CEO · AX 선포 및 Festival 개최 안내)에 이어지는 기조연설. 강연 중 라이브 퀴즈가 열립니다." },
-  { id: "road", fl: 17, zone: "hall", kind: "open", ttl: "내부 강연", sub: "현대해상 AX 로드맵", who: "디지털전략본부장", tm: "10:30~11:00", cap: 235, seed: 120, video: 0,
+  { id: "road", fl: 17, zone: "hall", kind: "open", ttl: "내부 강연", sub: "현대해상 AX 로드맵", who: "디지털전략본부장", tm: "10:30~11:00", cap: 235, seed: 120,
     desc: "현대해상 AX 로드맵을 디지털전략본부장이 소개합니다." },
-  { id: "l1", fl: 17, zone: "hall", kind: "open", ttl: "파트너사 강연 · AWS", sub: "Agentic AI 시대의 일하는 방식 변화", who: "구태훈 박사 (AWS)", tm: "13:30~15:00", cap: 235, seed: 141, video: 1,
+  { id: "l1", fl: 17, zone: "hall", kind: "open", ttl: "파트너사 강연 · AWS", sub: "Agentic AI 시대의 일하는 방식 변화", who: "구태훈 박사 (AWS)", tm: "13:30~15:00", cap: 235, seed: 141,
     desc: "파트너사 초청 강연. " + TIME_TBD },
-  { id: "l2", fl: 17, zone: "hall", kind: "open", ttl: "파트너사 강연 · MS", sub: "AI와 친해지기", who: "MS", tm: "15:10~16:40", cap: 235, seed: 96, video: 0,
+  { id: "l2", fl: 17, zone: "hall", kind: "open", ttl: "파트너사 강연 · MS", sub: "AI와 친해지기", who: "MS", tm: "15:10~16:40", cap: 235, seed: 96,
     desc: "파트너사 초청 강연. " + TIME_TBD },
-  { id: "fld", fl: 10, zone: "conf", kind: "seat", ttl: "세션 A", sub: "영업 및 보상 현장 우수 사례 강연 및 실습", who: "현장 실습 프로그램", tm: "13:30~16:40", cap: 62, seed: 50, video: 1,
+  { id: "fld", fl: 10, zone: "conf", kind: "seat", ttl: "세션 A", sub: "영업 및 보상 현장 우수 사례 강연 및 실습", who: "현장 실습 프로그램", tm: "13:30~16:40", cap: 62, seed: 50,
     capNote: "62명",
     desc: "영업(개인, AM), 전략채널, 보상(자동차, 장기) 직원 대상.",
     info: [["주요내용", "동료 활용 사례 공유 및 AI활용 교안 제공 · 원하는 주제 선택 및 개발 실습 진행"], ["교육환경", "Claude, 1인 1노트북 배정"], ["산출물", "영업 현장 활용 가능 HTML앱 · 보상 업무 전체 활용 가능한 agent HTML앱"], ["비고", "브로슈어 제공(현업 복귀 후 활용 가능)"]] },
-  { id: "ta", fl: 10, zone: "heart18", kind: "seat", ttl: "세션 B", sub: "“내 데이터”로 만드는 통계 현황 리포팅 실습", who: "본사 실습 프로그램", tm: "13:30~16:30", cap: 32, seed: 24, video: 1,
+  { id: "ta", fl: 10, zone: "heart18", kind: "seat", ttl: "세션 B", sub: "“내 데이터”로 만드는 통계 현황 리포팅 실습", who: "본사 실습 프로그램", tm: "13:30~16:30", cap: 32, seed: 24,
     capNote: "최대 32명 (신청현황에 따라 변동)",
     desc: "실제 업무 정기 데이터로 분석, 리포트 자동화, 대시보드 개발까지 실습합니다.",
     info: [["주요내용", "데이터 분석: 실제 업무 정기 데이터의 AI 활용 분석(기초, 증감, 예측모델) · 리포트 자동화: 분석 결과 리포트 개발 반복 작업 자동화 코드 작성 · 대시보드 개발: 데이터 삽입 → 실시간 결과 반영 HTML앱 개발"], ["교육환경", "Claude, Python, 1인 1노트북 배정"], ["산출물", "내부망에서 활용 가능한 데이터분석 파이썬 코드 · 대시보드 작성 HTML앱"], ["비고", "사전에 본인 업무 데이터를 받아 교육 실습 때 활용 예정"]] },
-  { id: "tb", fl: 10, zone: "heart18", kind: "seat", ttl: "세션 C", sub: "“내가 보는 자료”로 만드는 외부자료 리서치 자동화 실습", who: "본사 실습 프로그램", tm: "13:30~16:30", cap: 20, seed: 15, video: 1,
+  { id: "tb", fl: 10, zone: "heart18", kind: "seat", ttl: "세션 C", sub: "“내가 보는 자료”로 만드는 외부자료 리서치 자동화 실습", who: "본사 실습 프로그램", tm: "13:30~16:30", cap: 20, seed: 15,
     capNote: "20명 (신청현황에 따라 변동)",
     desc: "외부자료 리서치, 요약 및 정리, 자동 알림 시스템 개발까지 실습합니다.",
     info: [["주요내용", "외부자료 리서치: 최신 갱신 외부자료 검색 및 수집(법령, 뉴스, 공시 등) · 요약 및 정리: 수집된 자료 자동 정리(중복 또는 예전 자료 제외 등) · 자동 알림 시스템 개발: 주기적인 새정보 업데이트 알림 봇 개발"], ["교육환경", "Claude, 1인 1노트북 배정"], ["산출물", "자동알림 봇 · AX 적용 아이디어 정리표"], ["비고", "사전에 본인이 검색 및 활용하는 웹사이트 조사하여 실습 구성 예정"]] },
-  { id: "aws", fl: 10, zone: "heart56", kind: "seat", ttl: "세션 D", sub: "Claude Code를 활용한 바이브 코딩 실습 (AWS)", who: "파트너사 진행 · AWS", tm: "13:30~16:30", cap: 20, seed: 16, video: 1,
+  { id: "aws", fl: 10, zone: "heart56", kind: "seat", ttl: "세션 D", sub: "Claude Code를 활용한 바이브 코딩 실습 (AWS)", who: "파트너사 진행 · AWS", tm: "13:30~16:30", cap: 20, seed: 16,
     capNote: "20명",
     desc: "파트너사(AWS)가 진행하는 Claude Code 바이브 코딩 실습입니다.",
     info: [["교육환경", "Claude Code"], ["비고", "상황에 따라 프로그램 변경 가능"]] },
-  { id: "ms", fl: 10, zone: "tbd", kind: "seat", ttl: "세션 E", sub: "MS Copilot을 활용한 문서 작성 실습 (MS)", who: "파트너사 진행 · MS", tm: "13:30~16:30", cap: 40, seed: 22, video: 0,
-    capNote: "회당 20명 · 2회 진행 · 회차는 추후 안내",
-    desc: "파트너사(MS)가 진행하는 MS Copilot 문서 작성 실습입니다. 2회 진행되며 회차 시간은 추후 안내드립니다.",
-    info: [["교육환경", "MS Copilot"], ["비고", "상황에 따라 프로그램 변경 가능"]] },
+  { id: "ms1", fl: 10, zone: "tbd", kind: "seat", ttl: "세션 E · 1회차", sub: "MS Copilot을 활용한 문서 작성 실습 (MS)", who: "파트너사 진행 · MS", tm: "13:30~14:50", cap: 20, seed: 12,
+    capNote: "20명 (2회 진행 중 1회차)",
+    desc: "파트너사(MS)가 진행하는 MS Copilot 문서 작성 실습입니다. 2회 진행되며 1회차(13:30~14:50)와 2회차(15:00~16:20)는 같은 내용입니다. 두 회차 중 하나만 신청할 수 있습니다.",
+    info: [["교육환경", "MS Copilot"], ["진행", "2회 진행 · 1회차 13:30~14:50 · 2회차 15:00~16:20 · 회당 20명"], ["비고", "상황에 따라 프로그램 변경 가능"]] },
+  { id: "ms2", fl: 10, zone: "tbd", kind: "seat", ttl: "세션 E · 2회차", sub: "MS Copilot을 활용한 문서 작성 실습 (MS)", who: "파트너사 진행 · MS", tm: "15:00~16:20", cap: 20, seed: 9,
+    capNote: "20명 (2회 진행 중 2회차)",
+    desc: "파트너사(MS)가 진행하는 MS Copilot 문서 작성 실습입니다. 2회 진행되며 1회차(13:30~14:50)와 2회차(15:00~16:20)는 같은 내용입니다. 두 회차 중 하나만 신청할 수 있습니다.",
+    info: [["교육환경", "MS Copilot"], ["진행", "2회 진행 · 1회차 13:30~14:50 · 2회차 15:00~16:20 · 회당 20명"], ["비고", "상황에 따라 프로그램 변경 가능"]] },
   /* v3.21 B: 시간대 슬롯 신청(kind slot) → 원격 대기열(kind queue) · 번호표를 받고 자리에서 기다린다 */
-  { id: "photo", fl: 1, zone: "promo", kind: "queue", ttl: "AI 포토부스", sub: "ME to WE 프레임", who: "1F 홍보존", tm: "10:00~17:00", video: 0,
+  { id: "photo", fl: 1, zone: "promo", kind: "queue", ttl: "AI 포토부스", sub: "ME to WE 프레임", who: "1F 홍보존", tm: "10:00~17:00",
     desc: "촬영 2~3분, 결과물은 ME to WE 프레임으로 출력해 바로 드립니다. 번호표를 받고 자리에서 기다리다 차례가 가까워지면 내려오세요." },
-  { id: "dap", fl: 1, zone: "dap", kind: "link", go: "dap", ttl: "DAP ZONE 과제상담", sub: "1:1 30분", who: "데이터사이언스파트", tm: "09:30~16:30", video: 0,
+  { id: "dap", fl: 1, zone: "dap", kind: "link", go: "dap", ttl: "DAP ZONE 과제상담", sub: "1:1 30분", who: "데이터사이언스파트", tm: "09:30~16:30",
     desc: "내 업무에 AI를 어떻게 적용할지, 데이터사이언스파트와 마주 앉아 30분. 상담 완료 시 사은품." },
-  { id: "cchat", fl: 18, zone: "lounge", kind: "link", go: "ev_cchat", ttl: "AX 커피챗", sub: "같은 고민끼리 20분", who: "18F 라운지", tm: "13:00~16:30", video: 0,
+  { id: "cchat", fl: 18, zone: "lounge", kind: "link", go: "ev_cchat", ttl: "AX 커피챗", sub: "같은 고민끼리 20분", who: "18F 라운지", tm: "13:00~16:30",
     desc: "아이디어 한 줄을 제출하면 비슷한 주제의 동료와 매칭해 드립니다." }
 ];
-/* 강의 소개 영상 · 파일이 도착하면 여기에 경로만 채우면 카드에서 재생됩니다 (웹배포용/assets/) */
-var LEC_MEDIA = { key: "assets/lec_key.html", l1: "assets/lec_l1.html", ta: "assets/lec_ta.html", tb: "assets/lec_tb.html", aws: "assets/lec_aws.html", fld: "assets/lec_fld.html" };   /* road·l2·ms 는 영상 없음 */
 /* v47: 층별 안내(PROG_FL 존 목록·동선 영상) 전면 삭제 · 안내는 타임라인과 현장 사이니지가 맡는다.
    프로그램 상세의 위치 표기용 존 이름만 남긴다. */
 var ZONE_NM = { hall: "대강당", heart18: "Heart 1 · 7~8", heart56: "Heart 5 · 6", conf: "컨퍼런스룸", tbd: "장소 추후 안내", promo: "포토부스 · 홍보존", lounge: "라운지", dap: "DAP ZONE" };
@@ -856,9 +853,7 @@ var FL_OPEN = {
     { nm: "이벤트존 룰렛", d: "스탬프 3개 · 1인 1회", tap: "ppRouletteOpen()", tag: "보상" },
     { nm: "우리 부문 우선 관람", d: "이벤트존 시간표 보기", tap: "App.go('guide_slots')" }
   ],
-  10: [
-    { nm: "챔피언십 리더보드", d: "AX 프롬프트 챔피언십 현장 점수", tap: "App.go('ev_rank')" }
-  ],
+  10: [],
   17: [],
   18: []
 };
@@ -879,11 +874,6 @@ var NOTICE_TEMPLATES = [
   ["지금, 17F 기조연설 시작", "곧 라이브 퀴즈가 열립니다. 홈 화면을 열어두세요!"],
   ["1F 전시, 지금 한산해요", "3분 코스로 둘러보고 패스포트 한 칸 채워가세요."],
   ["부문 우선 관람 10분 전", "곧 우리 부문 슬롯이 시작됩니다. 1F 이벤트존에서 만나요!"]
-];
-var LEADERBOARD = [
-  { rank: 1, name: "박○영 (장기보험)", score: 940 }, { rank: 2, name: "이○준 (자동차보상)", score: 915 },
-  { rank: 3, name: "김○희 (디지털전략)", score: 880 }, { rank: 4, name: "정○수 (일반보험)", score: 855 },
-  { rank: 5, name: "최○아 (마케팅)", score: 820 }
 ];
 var QUIZ_SECONDS = 20;
 var INITIAL_QUIZ_STATE = { activeId: null, phase: "idle", openedAt: 0, finishedIds: [] };
@@ -910,7 +900,7 @@ var CHOSEONG_QUIZ = [
   { cho: "ㄱㄱ", a: "공감", alts: [], hint: "2026 로드맵 키워드: 'OO과 참여'" },
   { cho: "ㅎㅅ", a: "확산", alts: [], hint: "2027 로드맵 키워드: 'OO과 체화'" },
   { cho: "ㅇㄱ", a: "연결", alts: [], hint: "2028 로드맵 키워드: '혁신과 OO'" },
-  { cho: "ㅍㄹㅍㅌ", a: "프롬프트", alts: [], hint: "AI에게 일을 시키는 문장 · 10F 챔피언십 종목이기도 하죠" },
+  { cho: "ㅍㄹㅍㅌ", a: "프롬프트", alts: [], hint: "AI에게 일을 시키는 문장" },
   { cho: "영문 3글자", a: "DAP", alts: ["dap", "디에이피"], hint: "현업이 직접 발굴한 과제로 진행하는 디지털 가속 프로그램" },
   { cho: "ㄷㅇㅌ", a: "데이터", alts: [], hint: "AI의 연료 · 많이 모일수록 똑똑해집니다" }
 ];
@@ -2166,7 +2156,7 @@ function mtDemoPaint() {
 
 /* ════════════════ 카운터 ════════════════ */
 var tick = 0;
-setInterval(function () { tick++; if (["home", "screen", "wall_quiz", "wall_live", "wall_rank", "crowd"].indexOf(App.current) >= 0) App.render(); }, 4000);
+setInterval(function () { tick++; if (["home", "screen", "wall_quiz", "wall_live", "crowd"].indexOf(App.current) >= 0) App.render(); }, 4000);
 /* 백엔드 연결 · GAS_URL 이 채워져 있으면 서버 모드로 전환하고 월 집계를 주기적으로 받는다 */
 BE.on = !!GAS_URL;
 if (BE.on) { beStats(); beSync(); setInterval(beSync, BE_POLL_MS); setInterval(beStats, 60000); }
@@ -2191,7 +2181,7 @@ function counters() {
 }
 
 /* ════════════════ 라우터 (Lv1 탭 → Lv2 상세) ════════════════ */
-var SIGNAGE = ["screen", "wall_quiz", "wall_wave", "wall_live", "wall_metowe", "wall_rank", "wall_tv"];
+var SIGNAGE = ["screen", "wall_quiz", "wall_wave", "wall_live", "wall_metowe", "wall_tv"];
 /* 설정 톱니 · 글자 크기·관리자 모드를 한 곳에 모은 진입점 */
 var GEAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
   '<circle cx="12" cy="12" r="3.1"/>' +
@@ -2222,10 +2212,10 @@ var App = {
     wq_play: "wq_list", game_word: "passport", game_cho: "passport",
     ideas_mine: "passport",
     /* 프로그램 · 신청 전용 (리더보드는 10F 세션 곁으로, v3.1) · 일정(guide_time)은 v3.3부터 탭 루트라 PARENT 없음 */
-    dap: "guide", ev_cchat: "guide", ev_rank: "guide",
+    dap: "guide", ev_cchat: "guide",
     sess_d: "guide", guide_slots: "guide", crowd: "home",
     admin: "home", screen: "admin",
-    wall_quiz: "admin", wall_wave: "admin", wall_live: "admin", wall_metowe: "admin", wall_rank: "admin", wall_tv: "wall_metowe"
+    wall_quiz: "admin", wall_wave: "admin", wall_live: "admin", wall_metowe: "admin", wall_tv: "wall_metowe"
   },
   TITLES: {
     home: "", passport: "스탬프", guide_time: "일정", guide: "프로그램",
@@ -2233,10 +2223,10 @@ var App = {
     booth: "AX Now! 부스",
     ideas: "아이디어 한 줄", ideas_mine: "내가 낸 아이디어",
     sess_d: "프로그램 신청", guide_slots: "부문별 우선 관람",
-    ev_cchat: "내 커피챗", ev_replay: "퀴즈 다시 풀기", ev_rank: "챔피언십 리더보드",
+    ev_cchat: "내 커피챗", ev_replay: "퀴즈 다시 풀기",
     wq_list: "DAP Wall QR 퀴즈", wq_play: "문제 풀이",
     admin: "관리자 콘솔", screen: "송출용 화면", game_word: "AX 링크", game_cho: "로드맵 초성퀴즈",
-    wall_quiz: "", wall_wave: "", wall_live: "", wall_metowe: "", wall_rank: "", wall_tv: ""
+    wall_quiz: "", wall_wave: "", wall_live: "", wall_metowe: "", wall_tv: ""
   },
   tabOf: function (v) {
     var cur = v, hop = 0;
@@ -2514,7 +2504,7 @@ function progSessToggle(id) { PROG.openSess[id] = !PROG.openSess[id]; App.render
 /* 상시형 중 스탬프가 걸린 활동은 스탬프 탭 해당 카드로 위임한다 · 카드를 열어 둔 채 진입 */
 function ppGoCard(id) { PP.open[id] = true; App.go("passport"); }
 /* 신청형 인라인 신청 UI · sess_d 의 핵심(잔여석·슬롯 선택·신청/취소)만 흡수.
-   소개 영상·실습 단계 같은 무거운 상세는 sess_d 가 계속 맡고 「자세히」로 넘긴다(통일감 우선). */
+   붙임2 상세 표(주요내용·교육환경·산출물·비고) 같은 무거운 상세는 sess_d 가 계속 맡고 「자세히」로 넘긴다(통일감 우선). */
 function sessInlineHtml(s) {
   var mine = sessMine(s.id);
   var h = '<p class="sq">' + esc((s.sub ? s.sub + " · " : "") + s.who) + "</p>";
@@ -2525,7 +2515,7 @@ function sessInlineHtml(s) {
     /* v3.29 자유 참석 · 신청·잔여석 UI 없음 */
     h += '<p class="sq" style="margin-top:4px">' + esc(s.desc) + "</p>" +
       '<p class="sq" style="margin-top:6px"><b>자유 참석 · 신청 없음</b></p>';
-    if (!(s.video || LEC_MEDIA[s.id])) return h;
+    return h;   /* v3.31 소개 영상 폐지 · 자유 참석 카드는 펼침 안내로 충분 */
   } else if (s.kind === "seat") {
     h += (s.capNote ? '<p class="sq" style="margin-top:4px">정원 ' + esc(s.capNote) + "</p>" : "") + seatRowHtml(s) +
       (mine ? '<button class="btn line" style="margin-top:10px" onclick="sessCancel(\'' + s.id + '\')">신청 취소</button>' :
@@ -2536,7 +2526,7 @@ function sessInlineHtml(s) {
     /* v3.21 B 원격 대기열 · 번호표 UI 는 일정 탭 상시 행·상세 화면과 같은 photoQueueHtml 하나 */
     return h + photoQueueHtml();
   }
-  h += '<p class="lnk" onclick="sessOpen(\'' + s.id + '\')">자세히' + (s.video || LEC_MEDIA[s.id] ? " · 소개 영상" : "") + " ›</p>";
+  h += '<p class="lnk" onclick="sessOpen(\'' + s.id + '\')">자세히 ›</p>';
   return h;
 }
 /* 프로그램 신청형 행 = 공용 행 카드 · 시간이 있는 행은 일정 탭과 같은 좌측 두 줄 시간 뱃지 (v3.22)
@@ -3368,23 +3358,12 @@ var Views = {
     return seg + '<div class="tlist">' + rows.map(function (r) { return r[1]; }).join("") + "</div>";
   },
 
-  /* ═══ 프로그램 상세 · 소개 영상 · 잔여석 · 신청 ═══ */
+  /* ═══ 프로그램 상세 · 붙임2 표 · 잔여석 · 신청 (v3.31 소개 영상 폐지) ═══ */
   sess_d: function () {
     var s = sessById(PROG.sid);
     if (!s) return '<div class="card">프로그램을 찾을 수 없습니다.</div>';
-    var media = LEC_MEDIA[s.id];
     var mine = sessMine(s.id);
-    var hero = !(s.video || media) ? "" :
-      '<div class="vhero">' + (media ?
-        (/\.html$/.test(media) ?
-          '<iframe src="' + media + '" title="소개 영상" scrolling="no" loading="lazy" style="width:100%;height:100%;border:0;display:block;pointer-events:none"></iframe>' :
-          '<video controls playsinline preload="metadata" src="' + media + '"></video>') :
-        '<p class="vt">' + esc(s.ttl) + '</p><p class="vs">소개 영상 준비 중 · 완성되면 이 자리에서 재생됩니다</p>') + "</div>";
     var zn = ZONE_NM[s.zone] || "";
-    var steps = !s.steps ? "" : '<div style="margin-top:11px;border-top:1px solid var(--line);padding-top:11px">' +
-      s.steps.map(function (st2, i) {
-        return '<div class="row" style="padding:4px 0"><span class="badge tint">' + (i + 1) + '</span><span style="flex:1;font-size:calc(14px * var(--fs));font-weight:700;color:var(--tx)">' + st2[0] + '</span><span style="font-size:calc(12.5px * var(--fs));font-weight:800;color:var(--faint)">' + st2[1] + "</span></div>";
-      }).join("") + "</div>";
     /* v3.29 · 붙임2 상세 표(주요내용·교육환경·산출물·비고) */
     var infoT = !s.info ? "" : '<div style="margin-top:11px;border-top:1px solid var(--line);padding-top:11px">' +
       s.info.map(function (it) {
@@ -3394,7 +3373,7 @@ var Views = {
       '<div class="row" style="gap:5px;flex-wrap:wrap"><span class="badge blue">' + s.fl + 'F</span><span class="badge gray">' + esc(zn) + '</span><span class="badge gray">' + s.tm + "</span></div>" +
       '<p style="margin-top:9px;font-size:calc(17px * var(--fs));font-weight:800;color:var(--hi);line-height:1.4">' + esc(s.ttl + (s.sub ? " · " + s.sub : "")) + "</p>" +
       '<p class="who" style="margin-top:4px">' + esc(s.who) + "</p>" +
-      '<p class="muted" style="margin-top:9px;font-size:calc(14px * var(--fs))">' + esc(s.desc) + "</p>" + steps + infoT + "</div>";
+      '<p class="muted" style="margin-top:9px;font-size:calc(14px * var(--fs))">' + esc(s.desc) + "</p>" + infoT + "</div>";
     var act = "";
     if (s.kind === "link") {
       act = '<button class="btn mint mb12" style="padding:15px" onclick="App.go(\'' + s.go + '\')">' + (s.id === "dap" ? "상담 신청 화면으로" : "커피챗 신청 화면으로") + "</button>";
@@ -3413,7 +3392,7 @@ var Views = {
       act = '<div class="card mb12">' + photoQueueHtml() + "</div>";
     }
     var loc = '<div class="card soft"><span style="font-size:calc(14px * var(--fs));font-weight:700;color:var(--muted)">위치 · ' + s.fl + "F " + esc(zn) + "</span></div>";
-    return hero + info + act + loc;
+    return info + act + loc;
   },
 
   guide_slots: function () {
@@ -3475,15 +3454,6 @@ var Views = {
           return '<button class="input" style="text-align:left;margin-top:6px;cursor:pointer" onclick="replayQuiz(\'' + q.id + "'," + i + ')">' + (i + 1) + ". " + esc(o) + "</button>";
         }).join("") + "</div>";
     }).join("");
-  },
-
-  ev_rank: function () {
-    return '<div class="card soft" style="padding:4px 0">' +
-      LEADERBOARD.map(function (r) {
-        return '<div class="rank' + (r.rank <= 3 ? " top" : "") + '"><span class="no">' + r.rank + '</span><span style="flex:1;font-size:calc(15.5px * var(--fs));font-weight:700">' + r.name + '</span><b class="disp" style="color:var(--hi);font-size:calc(16.5px * var(--fs))">' + r.score + "</b></div>";
-      }).join("") + "</div>" +
-      '<p style="margin-top:6px;font-size:calc(12.5px * var(--fs));color:var(--faint)">10F 챔피언십 현장 점수 · 운영진 실시간 갱신</p>' +
-      (S.get("admin_authed", false) ? '<button class="btn line" style="margin-top:12px" onclick="App.go(\'wall_rank\')">TV 송출 화면 열기 (운영자)</button>' : "");
   },
 
   /* 추첨 안내 화면(ev_draw)은 v3.1 폐지 · 보상 레일 응모 마커의 ppDrawOpen 모달이 흡수 */
@@ -3716,23 +3686,6 @@ var Views = {
       '<div class="mt-demo" id="mtDemoRow"><span class="lb">관리자 미리보기 · 상태 바로 확인</span>' +
       [0, 25, 50, 80, 100].map(function (p) { return '<button data-p="' + p + '" onclick="mtSet(' + p + ')">' + p + "%</button>"; }).join("") +
       '<button data-p="live" onclick="mtSet(null)">실시간</button></div></div>';
-  },
-
-  /* 챔피언십 리더보드 · 10F 부스 옆 TV 송출용 (55" 가로) */
-  wall_rank: function () {
-    var rows = LEADERBOARD.map(function (r) {
-      var live = r.score + ((tick * 3 + r.rank * 7) % 5);
-      return '<div style="display:flex;align-items:center;gap:18px;padding:16px 20px;border-radius:14px;margin-top:10px;background:' + (r.rank <= 3 ? "rgba(255,158,27,0.10)" : "rgba(255,255,255,0.05)") + ';border:1px solid ' + (r.rank <= 3 ? "rgba(255,158,27,0.45)" : "rgba(255,255,255,0.12)") + '">' +
-        '<span class="disp" style="font-size:34px;width:52px;text-align:center;color:' + (r.rank <= 3 ? "var(--mint-deep)" : "rgba(255,255,255,0.5)") + '">' + r.rank + "</span>" +
-        '<span style="flex:1;font-size:24px;font-weight:800">' + esc(r.name) + "</span>" +
-        '<b class="disp" style="font-size:34px">' + live.toLocaleString() + "</b></div>";
-    }).join("");
-    return '<div class="sg"><div class="row" style="justify-content:space-between;padding-top:8px">' +
-      '<div><p class="sg-title">AX PROMPT <span style="color:var(--mint-deep)">CHAMPIONSHIP</span></p><p class="sg-sub">10F 챔피언십 현장 점수 · 실시간 리더보드</p></div>' +
-      '<div class="row" style="gap:6px"><span style="display:flex;align-items:center;gap:7px;font-size:14px;font-weight:800;letter-spacing:0.08em;color:var(--mint-deep)"><span style="width:9px;height:9px;border-radius:99px;background:#ff5a4e;animation:pulse 1.2s infinite"></span>LIVE</span>' + tvBtns() +
-      '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button></div></div>' +
-      rows +
-      '<p style="text-align:center;font-size:calc(12.5px * var(--fs));opacity:0.5;margin-top:16px">운영진 실시간 갱신 · 30~60초 지연 집계 · 상위 3인 시상은 17:00 Outro</p></div>';
   },
 
   game_word: function () {
@@ -4183,7 +4136,6 @@ var AdminTabs = {
       '<button class="btn" onclick="App.go(\'wall_wave\')">AX Wave /wall/wave</button>' +
       '<button class="btn" onclick="App.go(\'wall_live\')">라이브 보드 /wall/live</button>' +
       '<button class="btn" onclick="App.go(\'wall_metowe\')">ME to WE 월 /wall/metowe</button>' +
-      '<button class="btn" onclick="App.go(\'wall_rank\')">챔피언십 랭킹 /wall/rank</button>' +
       '<button class="btn" onclick="App.go(\'screen\')">17F 송출뷰 /screen</button></div>' +
       '<p style="margin-top:8px;font-size:calc(12.5px * var(--fs));color:var(--faint);line-height:1.6">정식판 공통 요건: 무인 10시간 · 1시간 자가 새로고침 · 네트워크 끊김 시 캐시 표시(에러 화면 금지) · 키오스크 자동 재실행 · 집계는 캐시 API만 · 배포 단계에서 적용 (기획서 v2 §5-3)</p></div>' +
       '<p style="font-size:calc(12.5px * var(--fs));color:var(--faint);line-height:1.6">※ 프로토타입 v10 (260822 · 기획서 v2 반영): 전사 수치는 시뮬레이션. KPI 목표(v16): 200명 멈춤 · 120명 아이디어 · 60명 스탬프 3개 이상 · 20건 과제화 검토. 부스 피드백 ' + S.get("booth_fb", []).length + "건 · 시연 신청 " + S.get("demo_reqs", []).length + "건.</p>" +
@@ -4745,7 +4697,8 @@ var SCAN_SPOTS = [
   { id: "ta", nm: "10F 세션 B", kind: "sess" },
   { id: "tb", nm: "10F 세션 C", kind: "sess" },
   { id: "aws", nm: "10F 세션 D", kind: "sess" },
-  { id: "ms", nm: "10F 세션 E", kind: "sess" },
+  { id: "ms1", nm: "10F 세션 E 1회차", kind: "sess" },
+  { id: "ms2", nm: "10F 세션 E 2회차", kind: "sess" },
   { id: "q_dap", nm: "1F DAP 과제상담", kind: "queue" },
   { id: "q_cchat", nm: "18F AX 커피챗", kind: "queue" },
   { id: "q_photo", nm: "1F AI 포토부스", kind: "queue" },   /* v3.21 B · 번호는 참가자가 앱에서 받고, 데스크는 호출·건너뛰기·완료 */
@@ -4987,7 +4940,8 @@ function sendTemplate(i) {
   toast("템플릿 발송 완료");
 }
 /* 교육 종료 원터치 · 혼잡 안내가 LED 띠·실시간 안내로 나간다 */
-var SESSION_LIST = ["17F 기조연설", "17F 내부 강연", "17F AWS 강연", "17F MS 강연", "10F 세션 A", "10F 세션 B·C", "10F 세션 D·E"];
+/* v3.31 · 끝나는 시각 순 (세션 E 는 회차별 버튼) */
+var SESSION_LIST = ["17F 기조연설", "17F 내부 강연", "10F 세션 E 1회차", "17F AWS 강연", "10F 세션 E 2회차", "10F 세션 B·C", "10F 세션 D", "17F MS 강연", "10F 세션 A"];
 function endSession(i) {
   var name = SESSION_LIST[i];
   adminNotice("엘리베이터 혼잡 안내", name + " 교육이 방금 종료되었습니다. 엘리베이터가 혼잡할 수 있으니 양해 바랍니다.");
@@ -5647,15 +5601,13 @@ function xitionRun(switchNow) {
     S.set("wq_attempts", [{ set: "wall1", score: 80, passed: true, attemptNo: 1, dept: "보상부문", ts: Date.now() }]);
     var target = dm[1] || "home";
     if (target === "home_quiz") target = "home";
-    if (["admin", "screen", "wall_quiz", "wall_wave", "wall_live", "wall_metowe", "wall_rank", "wall_tv"].indexOf(target) >= 0) S.set("admin_authed", true);
+    if (["admin", "screen", "wall_quiz", "wall_wave", "wall_live", "wall_metowe", "wall_tv"].indexOf(target) >= 0) S.set("admin_authed", true);
     splash.classList.add("gone");
     el("frame").classList.remove("splash-mode");
     el("app").hidden = false;
-    /* 캐프처 전용 진입점 · qr = 내 QR 패널, lec_<세션id> = 소개 영상이 붙은 프로그램 상세 */
+    /* 캡처 전용 진입점 · qr = 내 QR 패널 (lec_<세션id> 훅은 v3.31 소개 영상 폐지로 삭제) */
     if (target === "qr") { App.go("home"); qrPanelOpen("mine"); return; }
     if (/xt/.test(location.hash)) { splash.classList.remove("gone"); xitionRun(function () { splash.classList.add("gone"); App.go(target); }); return; }
-    var ml = target.match(/^lec_(\w+)$/);
-    if (ml) { sessOpen(ml[1]); return; }
     App.go(target);
     return;
   }
