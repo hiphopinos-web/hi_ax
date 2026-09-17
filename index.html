@@ -506,16 +506,20 @@
   .rail .cta:active { transform: scale(0.99); }
   /* v3.12 응모권 번호 칩 · 내 것 = 옅은 주황 · 미발급 자리는 회색 플레이스홀더 */
   .tkts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-  /* v3.31c 레일 하단 내 응모 번호 · 모달 티켓 칩과 같은 문법의 작은 변형 (최대 3개 · 360px 한 줄) */
+  /* v3.31c 레일 하단 내 응모 번호 · 4칸 균등 격자 고정(칩이 1~3개여도 칸 크기 불변, 빈 칸은 비움)
+     숫자는 칸 폭(360px 기준 70px)에 맞춰 최대한 크게 · 4자리 글자 폭 58px@21px · 큰글씨 모드도 같은 21px(더 키우면 칸을 넘는다) · 좁은 폰은 5.9vw 로 줄어든다 */
   .rail .rnum { margin-top: 9px; padding-top: 9px; border-top: 1px dashed var(--tint2); }
   .rail .rnum .lb { font-size: calc(12px * var(--fs)); font-weight: 800; color: var(--acc2); }
-  .rail .rnum .tkts { margin-top: 6px; gap: 6px; flex-wrap: nowrap; }
-  .rail .rnum .tkt { font-size: calc(15px * var(--fs)); padding: 5px 10px; border-radius: 10px; background: var(--white); }
-  .rail .rnum .tkt.wait { font-size: calc(12px * var(--fs)); }
+  .rail .rnum .tkts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 6px; }
+  .rail .rnum .tkt { display: flex; align-items: center; justify-content: center; min-width: 0; height: 40px; padding: 0; border-radius: 10px; background: var(--white); font-size: min(21px, 5.9vw); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; }
+  .rail .rnum .tkt.wait { font-size: min(calc(12px * var(--fs)), 13px); letter-spacing: 0; }
+  .rail .rnum .gap { height: 40px; }
   .tkt { background: var(--tint); border: 1.5px dashed var(--tint2); color: var(--acc2); font-family: var(--disp); font-weight: 800; font-size: calc(20px * var(--fs)); letter-spacing: 0.1em; padding: 9px 14px; border-radius: 12px; }
   .tkt.wait { background: var(--dim); border-color: var(--dimln); color: var(--faint); font-size: calc(13px * var(--fs)); font-weight: 700; letter-spacing: 0; display: flex; align-items: center; }
-  .rail .lbls { position: relative; height: 15px; margin: 6px 13px 0; }
-  .rail .lbls span { position: absolute; transform: translateX(-50%); font-size: calc(10.5px * var(--fs)); font-weight: 800; color: var(--muted); white-space: nowrap; }
+  .rail .lbls { position: relative; height: calc(15px * var(--fs)); margin: 6px 13px 0; }
+  .rail .lbls span { position: absolute; top: 0; transform: translateX(-50%); font-size: calc(10.5px * var(--fs)); font-weight: 800; color: var(--muted); white-space: nowrap; }
+  /* v3.31c · 칸마다 라벨을 달면 360px 에서 「룰렛·응모 1·응모 2」가 서로 씹힌다(마커 간격 약 45px) · 4~6 은 한 라벨로 묶는다 */
+  .rail .lbls span.rg { transform: none; left: 58.5%; right: -13px; text-align: center; }
   .rail .cap { margin-top: 7px; font-size: calc(12px * var(--fs)); font-weight: 700; color: var(--faint); line-height: 1.5; }
   /* 섹션 제목 (카드 바깥) */
   .sect { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 9px 2px 6px; }
@@ -3112,7 +3116,7 @@ function railHtml(n, glow, dispN, home) {
   n = Math.min(REWARD_CAP, n); dispN = Math.min(REWARD_CAP, dispN);   /* v3.33 · 8칸 중 6개면 보상 끝 */
   var out0 = S.get("roulette_out", false);
   var used = S.get("roulette_used", false);
-  var marks = [[3, used ? "룰렛 사용" : "룰렛", "ppRouletteOpen()"], [4, "응모 1", "ppDrawOpen()"], [5, "응모 2", "ppDrawOpen()"], [6, "응모 3", "ppDrawOpen()"]];
+  var marks = [[3, used ? "룰렛 사용" : "룰렛", "ppRouletteOpen()"], [4, "추첨 응모 1장", "ppDrawOpen()"], [5, "추첨 응모 2장", "ppDrawOpen()"], [6, "추첨 응모 3장", "ppDrawOpen()"]];
   var mk = "", lb = "";
   [1, 2].forEach(function (k) {
     mk += '<span class="tick' + (n >= k ? " on" : "") + '" style="left:' + (k / 6 * 100).toFixed(1) + '%"></span>';
@@ -3123,8 +3127,9 @@ function railHtml(n, glow, dispN, home) {
     /* v3.25 · 사용 가능한 룰렛이 검정을 못 받으면 오렌지 채움 + 틴트 링(avail)으로 한 단계 낮춘다 */
     var cls = m[0] === 3 && n >= 3 && !used ? (isBlack("roulette") ? " act" : " on avail") : n >= m[0] ? " on" : "";
     mk += '<button class="mk' + cls + (m[0] === 3 && glow ? " glow" : "") + '" style="left:' + pos + '" onclick="' + m[2] + '" aria-label="' + m[1] + '">' + m[0] + "</button>";
-    lb += '<span style="left:' + pos + '">' + m[1] + "</span>";
+    if (m[0] === 3) lb += '<span style="left:' + pos + '">룰렛</span>';   /* 사용 여부는 마커 색·쿠폰 창이 말한다 (라벨 길이 고정) */
   });
+  lb += '<span class="rg">추첨 응모 1·2·3장</span>';
   return '<div class="rail">' +
     '<div class="hd"><span class="nm">스탬프 보상</span><span class="cnt"><span id="ppCnt">' + dispN + "</span><small> / 6</small></span></div>" +
     '<div class="rb"><i style="width:' + Math.min(100, n / 6 * 100) + '%"></i>' + mk + "</div>" +
@@ -3140,12 +3145,13 @@ function railHtml(n, glow, dispN, home) {
     "</div>";
 }
 /* v3.31c 내 응모 번호 · 응모권 1장 이상일 때만 · 서버 번호가 아직 없으면 「발급 중」 회색 (v3.12 모달과 같은 규칙) */
-function raffleNums() { return testMode() ? ["1026", "2026", "3026"] : S.get("raffle_nums", []); }
+function raffleNums() { return testMode() ? ["1026", "2026", "3026", "4026"] : S.get("raffle_nums", []); }
 function raffleNumsHtml(n) {
   var t = raffleTickets(Math.min(REWARD_CAP, n));
+  if (testMode() && S.get("raffle_ui4", false)) t = 4;   /* 레이아웃 확인 전용 목업 · 보상 규칙은 최대 3장 그대로 */
   if (!t) return "";
   var nums = raffleNums(), chips = "";
-  for (var i = 0; i < t; i++) chips += i < nums.length ? '<span class="tkt">' + esc(nums[i]) + "</span>" : '<span class="tkt wait">발급 중</span>';
+  for (var i = 0; i < 4; i++) chips += i >= t ? '<span class="gap"></span>' : i < nums.length ? '<span class="tkt">' + esc(nums[i]) + "</span>" : '<span class="tkt wait">발급 중</span>';
   return '<div class="rnum"><p class="lb">내 응모 번호</p><div class="tkts">' + chips + "</div></div>";
 }
 /* 룰렛 쿠폰 모달 · 내 QR + 사용 여부 (사용 여부는 서버 my.roulette 가 정본, sync 가 roulette_used 로 받아쓴다) */
