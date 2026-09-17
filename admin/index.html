@@ -171,7 +171,7 @@ var TABS = [
   { id:"stamp", n:"스탬프" },
   { id:"apply", n:"신청" },
   { id:"survey", n:"설문" },
-  { id:"typing", n:"타자 게임" },
+  { id:"typing", n:"게임" },
   { id:"notice", n:"공지" },
   { id:"photo", n:"포토부스" }
 ];
@@ -285,7 +285,7 @@ var NEED={
   stamp:[{k:"stamp",a:"stamp_people"},{k:"stair",a:"stair_list"},{k:"sy",a:"sync",p:{emp:""}}],
   apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"},{k:"pre",a:"pre_list"}],
   survey:[{k:"survey",a:"survey_list"}],
-  typing:[{k:"nick",a:"type_nick_list"},{k:"tres",a:"type_result"}],
+  typing:[{k:"nick",a:"type_nick_list"},{k:"tres",a:"type_result"},{k:"gvote",a:"game_vote_list"}],
   notice:[{k:"noti",a:"sync",p:{emp:""}}],
   photo:[{k:"photo",a:"photo_list"}]
 };
@@ -772,7 +772,9 @@ function viewSurvey(){
 function viewTyping(){
   var rows=((ST.data.nick||{}).rows||[]).filter(function(r){ return match(r,["emp","nick","name","dept"]); });
   var tr=ST.data.tres||{top:[],win:[]};
-  var h='<h1>타자 게임<small>AX 단어 소나기 · 닉네임은 2~8자 · 중복·금칙어·명부 실명은 서버가 거부 · 여기서 숨기면 순위판에 「이름 숨김」</small></h1>';
+  var h='<h1>게임<small>휴대폰 미니게임 선호도(파일럿) · AX 단어 소나기 닉네임·현장 타자왕전</small></h1>';
+  h+=viewGameVote();
+  h+='<h1 style="margin-top:18px">타자 게임<small>AX 단어 소나기 · 닉네임은 2~8자 · 중복·금칙어·명부 실명은 서버가 거부 · 여기서 숨기면 순위판에 「이름 숨김」</small></h1>';
   h+='<div class="card"><h2>1F 현장 타자왕전 상위 5 · Outro 호명용</h2><p class="src">결선 시간대 '+esc((tr.win||[]).join(" · "))+' · 1인 1회 · 동점은 정확도, 그다음 먼저 기록한 쪽</p>'+
     '<div class="wrap"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th>부문</th><th class="tdr">점수</th><th class="tdr">정확도</th><th>기록 시각</th></tr>'+
     ((tr.top||[]).length?tr.top.map(function(r){ return '<tr><td class="n"><b>'+r.rank+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name)+'</td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.dept)+'</td><td class="n tdr">'+r.score+'</td><td class="n tdr">'+r.acc+'%</td><td class="n src">'+esc(short(r.ts))+'</td></tr>'; }).join(""):'<tr><td colspan="8" class="src">아직 현장 기록이 없습니다.</td></tr>')+'</table></div></div>';
@@ -784,6 +786,28 @@ function viewTyping(){
     '<p class="note mt12">초기화하면 닉네임이 지워지고 순위판에 「익명 참가자」로 나옵니다. 참가자는 앱에서 새 닉네임을 다시 정할 수 있습니다. 기록 점수는 지우지 않습니다.</p></div>';
   return h;
 }
+/* v3.45 선호도 · 행사 전 파일럿 테스터 전용 · 게임마다 재미 평균(1~5)·응답 수·최종 선택 수·한 줄 의견 */
+var GV_NAME={ type:"AX 단어 소나기", pang:"AX 팡", jump:"ME to WE 점프" };
+function viewGameVote(){
+  var d=ST.data.gvote||{};
+  if(!d.ok) return '<div class="card"><h2>선호도</h2><p class="src">'+(d.reason?"불러오지 못했습니다 · "+esc(d.reason):"아직 불러오지 않았습니다.")+'</p></div>';
+  var g=d.games||{}, keys=["type","pang","jump"];
+  var maxPick=Math.max(1,keys.reduce(function(m,k){ return Math.max(m,(g[k]||{}).pick||0); },0));
+  var h='<div class="card"><h2>선호도 · 파일럿 '+(d.voters||0)+'명</h2><p class="src">참여자 대상 아님 · 파일럿 주소 #pilot=games 또는 테스트 계정 · 같은 사람(사번 또는 기기)이 다시 내면 덮어씀 · '+esc(short(d.t||""))+'</p>'+
+    '<div class="wrap"><table class="tb"><tr><th>게임</th><th class="tdr">재미 평균</th><th class="tdr">응답 수</th><th>점수 분포 1·2·3·4·5</th><th>최종 선택</th></tr>'+
+    keys.map(function(k){ var o=g[k]||{avg:0,n:0,dist:[0,0,0,0,0],pick:0};
+      return '<tr><td><b>'+esc(GV_NAME[k])+'</b></td><td class="n tdr"><b>'+(o.n?Number(o.avg).toFixed(2):"-")+'</b></td><td class="n tdr">'+o.n+'</td><td class="n">'+(o.dist||[]).join(" · ")+'</td>'+
+        '<td><div class="row" style="gap:8px;align-items:center"><div class="bar" style="flex:1;min-width:80px"><i style="width:'+pct(o.pick||0,maxPick)+'%"></i></div><b class="n">'+(o.pick||0)+'</b></div></td></tr>'; }).join("")+
+    '</table></div>';
+  var cm=[]; keys.forEach(function(k){ ((g[k]||{}).comments||[]).forEach(function(c){ cm.push({k:k,t:c.t,c:c.c}); }); });
+  cm.sort(function(a,b){ return a.t<b.t?1:-1; });
+  h+='<h2 style="margin-top:14px">한 줄 의견 '+cm.length+'</h2>'+
+    (cm.length?'<div class="wrap"><table class="tb"><tr><th>고른 게임</th><th>의견</th><th>시각</th></tr>'+cm.map(function(x){ return '<tr><td>'+esc(GV_NAME[x.k])+'</td><td>'+esc(x.c)+'</td><td class="n src">'+esc(short(x.t))+'</td></tr>'; }).join("")+'</table></div>':'<p class="src">아직 의견이 없습니다.</p>')+
+    '<div class="row mt12" style="gap:8px"><button class="btn sm danger" onclick="gvReset()">파일럿 응답 전체 비우기</button></div>'+
+    '<p class="note mt12">파일럿이 끝나면 전체 비우기로 시트를 정리하세요. 앱 결과 화면의 재미 점수와 목록 화면의 최종 선택이 여기에 모입니다.</p></div>';
+  return h;
+}
+function gvReset(){ if(!confirm("파일럿 선호도 응답을 모두 비울까요? 되돌릴 수 없습니다.")) return; call("game_vote_reset",{all:"1"},function(r){ if(r&&r.ok){ toast(r.n+"건을 비웠습니다"); load(); } else toast("실패: "+(r&&r.reason||"")); },function(){ toast("서버 응답 없음"); }); }
 function nickHide(emp,on){ call("type_nick_hide",{emp:emp,on:on},function(r){ if(r&&r.ok){ toast(on?"닉네임을 숨겼습니다":"숨김을 해제했습니다"); load(); } else toast("실패: "+(r&&r.reason||"")); },function(){ toast("서버 응답 없음"); }); }
 function nickReset(emp){ if(!confirm(emp+" 님의 닉네임을 초기화할까요? 기록 점수는 남습니다.")) return; call("type_nick_reset",{emp:emp},function(r){ if(r&&r.ok){ toast("초기화했습니다"); load(); } else toast("실패: "+(r&&r.reason||"")); },function(){ toast("서버 응답 없음"); }); }
 
