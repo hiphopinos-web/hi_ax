@@ -426,6 +426,20 @@
   .rg-wrap { border-radius: 14px; overflow: hidden; background: #FFEBE0; line-height: 0; border: 2px solid #000; }
   .rg-wrap canvas { width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
   .rg-form { display: flex; gap: 8px; margin-top: 10px; }
+  /* v3.36c 휴대폰 전체화면 플레이 */
+  html.rg-lock, html.rg-lock body { overflow: hidden; overscroll-behavior: none; }
+  #rgPlay { position: fixed; left: 0; right: 0; top: 0; height: 100%; z-index: 300; display: flex; flex-direction: column; background: #FFEBE0; touch-action: manipulation; overscroll-behavior: none; }
+  #rgPlay .rgp-top { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; }
+  #rgPlay .rgp-t { font-weight: 800; font-size: 14px; color: #000; }
+  #rgPlay .rgp-x { border: 2px solid #000; background: #fff; border-radius: 999px; padding: 4px 12px; font-weight: 800; font-size: 13px; }
+  #rgPlay .rgp-mid { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+  #rgPlay .rgp-mid canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; border: 2px solid #000; border-radius: 12px; background: #FFEBE0; }
+  #rgPlay .rgp-pause { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: rgba(255,255,255,0.86); }
+  #rgPlay .rgp-pause[hidden] { display: none; }
+  #rgPlay .rgp-pause p { font-weight: 900; font-size: 22px; }
+  #rgPlay .rgp-pause .btn { width: 200px; }
+  #rgPlay .rg-form { flex: none; margin: 0; padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)); background: #fff; border-top: 2px solid #000; }
+  #rgPlay .rg-form .input { font-size: 17px; }
   .rg-form .input { flex: 1; font-size: 18px; border: 2px solid #000; }
   .rg-form .btn { width: auto; padding: 12px 18px; }
   .ty-rank { display: flex; align-items: center; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--line); }
@@ -3923,7 +3937,7 @@ var Views = {
       '<div class="cho-box" style="padding:16px 14px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">MINI GAME</p>' +
       '<p class="word disp" style="font-size:24px;margin-top:2px">AX 단어 소나기</p>' +
       '<div class="rg-wrap" style="margin-top:10px"><canvas id="rgPrev" width="180" height="110"></canvas></div>' +
-      '<p class="hint">떨어지는 단어를 그대로 치고 Enter · 바닥에 닿으면 벽돌이 깨져요<br>60초 · 목숨 5 · 연속으로 맞히면 콤보 · 끝까지 하면 <b>라이브 챌린지 스탬프</b></p></div>' +
+      '<p class="hint">떨어지는 단어를 그대로 치고 Enter · 단어가 바닥에 닿으면 하트 -1<br>하트 5개를 다 잃거나 60초가 지나면 끝 · 연속으로 맞히면 콤보 · 끝까지 하면 <b>라이브 챌린지 스탬프</b></p></div>' +
       '<div class="row mb8" style="justify-content:space-between"><span class="muted" style="font-size:calc(13.5px * var(--fs))">닉네임 <b style="color:var(--hi)">' + esc(nick) + '</b> · <span style="text-decoration:underline;cursor:pointer" onclick="S.set(\'type_nick_edit\', true); App.render()">변경</span></span>' +
       '<span class="muted" style="font-size:calc(13.5px * var(--fs))">최고 ' + S.get("type_best", 0).toLocaleString() + "</span></div>" +
       '<button class="btn mint mb8" style="padding:16px;font-size:calc(17px * var(--fs))" onclick="rgStart(\'app\')">START</button>' +
@@ -5477,7 +5491,117 @@ function rgBeep(freq, dur, type, vol) {
     o.connect(g); g.connect(RG.ac.destination); o.start(t); o.stop(t + dur);
   } catch (e) {}
 }
-function rgStop() { RG.on = false; if (RG.raf) cancelAnimationFrame(RG.raf); RG.raf = 0; }
+function rgStop() { RG.on = false; if (RG.raf) cancelAnimationFrame(RG.raf); RG.raf = 0; rgPlayClose(); }
+/* ═══ v3.36c 휴대폰 전체화면 플레이 (사용자 피드백 · 키보드가 바닥선·입력창을 가림) ═══
+   터치·좁은 화면에서만(현장 노트북 모드는 기존 레이아웃): position fixed 오버레이를 visualViewport 높이에 맞춘다.
+   위 = 캔버스(높이 우선으로 비율 유지 축소) · 아래 = 입력 막대(키보드 바로 위) · 헤더·탭바·FAB 가림 · 본문 스크롤 잠금.
+   입력: 쏘기 버튼은 누르는 순간 기본 동작을 막아 키보드가 닫히지 않게 · 캔버스를 눌러도 입력창 포커스.
+   한글 조합: compositionstart/end 추적 · 조합 중 Enter 는 조합이 끝난 뒤 한 틱 뒤 판정 · 입력창 비우기는 새 입력창으로 바꿔 끼워 남은 글자 방지.
+   실시간 판정(휴대폰만): 입력이 떨어지는 단어와 정확히 같아지는 순간 Enter 없이 터진다 · PC 는 Enter 판정 유지.
+   탭이 뒤로 가면 자동 일시정지 · 돌아오면 계속하기. */
+function rgMobile() {
+  try { return (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) || window.innerWidth < 600; } catch (e) { return window.innerWidth < 600; }
+}
+var RGP = { on: false, vvh: null, onVis: null };
+function rgPlayOpen() {
+  rgPlayClose();
+  RGP.on = true;   /* 입력창 안내 문구가 휴대폰용으로 나오게 먼저 켠다 */
+  var d = document.createElement("div");
+  d.id = "rgPlay";
+  d.innerHTML = '<div class="rgp-top"><span class="rgp-t">AX 단어 소나기</span><button class="rgp-x" type="button" onpointerdown="event.preventDefault()" onclick="rgPauseToggle()">일시정지</button></div>' +
+    '<div class="rgp-mid" onpointerdown="event.preventDefault(); rgFocus()"><canvas id="rgCv" width="' + RAIN_W + '" height="' + RAIN_H + '"></canvas><div class="rgp-pause" id="rgPause" hidden><p>일시정지</p><button class="btn mint" type="button" onclick="rgResume()">계속하기</button><button class="btn line" type="button" onclick="rgQuit()">그만하기</button></div></div>' +
+    rgFormHtml();
+  document.body.appendChild(d);
+  document.documentElement.classList.add("rg-lock");
+  RGP.vvh = function () {
+    var vv = window.visualViewport, h = vv ? vv.height : window.innerHeight, top = vv ? vv.offsetTop : 0;
+    d.style.height = Math.round(h) + "px"; d.style.top = Math.round(top) + "px";
+    var mid = d.querySelector(".rgp-mid"), cv = el("rgCv");
+    if (!mid || !cv) return;
+    var mh = mid.clientHeight - 8, mw = mid.clientWidth - 16;
+    var w = Math.min(mw, mh * RAIN_W / RAIN_H);
+    cv.style.width = Math.floor(w) + "px"; cv.style.height = Math.floor(w * RAIN_H / RAIN_W) + "px";
+  };
+  if (window.visualViewport) { window.visualViewport.addEventListener("resize", RGP.vvh); window.visualViewport.addEventListener("scroll", RGP.vvh); }
+  window.addEventListener("resize", RGP.vvh);
+  RGP.onVis = function () { if (document.hidden && RG.on && !RG.paused && !RG.ending) rgPause(); };
+  document.addEventListener("visibilitychange", RGP.onVis);
+  RGP.vvh();
+}
+function rgPlayClose() {
+  var d = el("rgPlay");
+  if (RGP.vvh) {
+    if (window.visualViewport) { window.visualViewport.removeEventListener("resize", RGP.vvh); window.visualViewport.removeEventListener("scroll", RGP.vvh); }
+    window.removeEventListener("resize", RGP.vvh);
+  }
+  if (RGP.onVis) document.removeEventListener("visibilitychange", RGP.onVis);
+  RGP.vvh = null; RGP.onVis = null; RGP.on = false;
+  if (d && d.parentNode) d.parentNode.removeChild(d);
+  document.documentElement.classList.remove("rg-lock");
+}
+function rgFormHtml() {
+  return '<form class="rg-form" id="rgForm" onsubmit="event.preventDefault(); rgEnter()">' + rgInputHtml() +
+    '<button class="btn mint" type="submit" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" ontouchstart="event.preventDefault(); rgEnter()">쏘기</button></form>';
+}
+function rgInputHtml() {
+  return '<input id="rgIn" class="input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" inputmode="text" maxlength="12" placeholder="' + (RGP.on ? "단어를 치면 바로 터져요" : "떨어지는 단어를 치고 Enter") + '" ' +
+    'onpaste="event.preventDefault()" ondrop="event.preventDefault()" oninput="rgLive(event)">';
+}
+/* compositionstart/end 는 인라인 속성이 없어 리스너로 붙인다 · 떼어낸 옛 입력창의 늦은 compositionend 는 무시 */
+function rgBindInput(inp) {
+  if (!inp || inp._rgb) return; inp._rgb = 1;
+  inp.addEventListener("compositionstart", function () { if (inp === el("rgIn")) RG.composing = true; });
+  inp.addEventListener("compositionend", function () { if (inp === el("rgIn")) rgCompEnd(); });
+}
+function rgFocus() { var i = el("rgIn"); if (i && document.activeElement !== i) i.focus(); }
+function rgCompEnd() {
+  RG.composing = false;
+  if (RG.pendingEnter) { RG.pendingEnter = false; setTimeout(rgSubmit, 0); }
+  else if (RGP.on) setTimeout(function () { rgLive(null); }, 0);
+}
+/* Enter · 조합 중이면 조합이 끝난 뒤 판정 */
+function rgEnter() {
+  if (RG.composing) { RG.pendingEnter = true; return; }
+  setTimeout(rgSubmit, 0);
+}
+/* 실시간 판정 (휴대폰 전체화면에서만) · 정확히 같은 단어가 있을 때만 · 틀림 판정은 Enter 로만 */
+function rgLive(e) {
+  if (!RGP.on || !RG.on || RG.cd > 0 || RG.ending || RG.paused) return;
+  var inp = el("rgIn"); if (!inp) return;
+  var v = inp.value.trim();
+  if (v && RG.words.some(function (w) { return w.text === v; })) rgSubmit();
+}
+/* 입력창 비우기 · 조합 버퍼가 남지 않게 새 입력창으로 바꿔 끼우고 같은 틱에 포커스를 옮긴다(키보드는 열린 채) */
+function rgClearInput() {
+  var old = el("rgIn"); if (!old) return;
+  if (!RGP.on) { old.value = ""; old.focus(); return; }
+  var tmp = document.createElement("span"); tmp.innerHTML = rgInputHtml();
+  var fresh = tmp.firstChild;
+  old.parentNode.insertBefore(fresh, old);
+  rgBindInput(fresh);
+  fresh.focus();
+  old.parentNode.removeChild(old);
+  RG.composing = false;
+}
+function rgPause() {
+  if (!RG.on || RG.paused) return;
+  RG.paused = true; RG.pauseAt = performance.now();
+  if (RG.raf) cancelAnimationFrame(RG.raf); RG.raf = 0;
+  var p = el("rgPause"); if (p) p.hidden = false;
+  var x = document.querySelector("#rgPlay .rgp-x"); if (x) x.textContent = "계속하기";
+}
+function rgResume() {
+  if (!RG.on || !RG.paused) return;
+  var gap = performance.now() - (RG.pauseAt || performance.now());
+  if (RG.t0) RG.t0 += gap;
+  RG.paused = false; RG.last = performance.now();
+  var p = el("rgPause"); if (p) p.hidden = true;
+  var x = document.querySelector("#rgPlay .rgp-x"); if (x) x.textContent = "일시정지";
+  rgFocus();
+  RG.raf = requestAnimationFrame(rgFrame);
+}
+function rgPauseToggle() { if (RG.paused) rgResume(); else rgPause(); }
+function rgQuit() { rgStop(); App.render(); }
 function rgPickWord() {
   var st = RG.stage, pool = TYPE_WORDS.filter(function (w) {
     var n = w.length;
@@ -5490,17 +5614,20 @@ function rgPickWord() {
 function rgStart(mode) {
   rgStop();
   RG.mode = mode || "app"; RG.words = []; RG.parts = []; RG.pops = []; RG.lives = RAIN_LIVES; RG.score = 0; RG.hits = 0; RG.tries = 0;
-  RG.combo = 0; RG.maxCombo = 0; RG.stage = 1; RG.spawnT = 0.3; RG.shake = 0; RG.banner = null; RG.shot = null; RG.res = null;
+  RG.combo = 0; RG.maxCombo = 0; RG.stage = 1; RG.spawnT = 0.3; RG.shake = 0; RG.banner = null; RG.shot = null; RG.res = null; RG.ending = null; RG.heartHit = 0;
   RG.mas = { x: 90, tx: 90, open: 0 }; RG.cd = 3.2; RG.t0 = 0; RG.on = true; RG.last = performance.now();
-  var root = el("tgRoot"); if (!root) return;
-  root.innerHTML = '<div class="rg-wrap"><canvas id="rgCv" width="' + RAIN_W + '" height="' + RAIN_H + '"></canvas></div>' +
-    '<form class="rg-form" onsubmit="event.preventDefault(); rgSubmit()"><input id="rgIn" class="input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" maxlength="12" placeholder="떨어지는 단어를 치고 Enter" onpaste="event.preventDefault()" ondrop="event.preventDefault()">' +
-    '<button class="btn mint" type="submit">쏘기</button></form>';
-  var inp = el("rgIn"); if (inp) inp.focus();
+  RG.paused = false; RG.composing = false; RG.pendingEnter = false;
+  if (RG.mode === "app" && rgMobile()) {
+    rgPlayOpen();   /* v3.36c 휴대폰 전체화면 */
+  } else {
+    var root = el("tgRoot"); if (!root) return;
+    root.innerHTML = '<div class="rg-wrap" onclick="rgFocus()"><canvas id="rgCv" width="' + RAIN_W + '" height="' + RAIN_H + '"></canvas></div>' + rgFormHtml();
+  }
+  var inp = el("rgIn"); rgBindInput(inp); if (inp) inp.focus();
   RG.raf = requestAnimationFrame(rgFrame);
 }
 function rgFrame() {
-  if (!RG.on) return;
+  if (!RG.on || RG.paused) return;
   var now = performance.now(), dt = Math.min(0.05, (now - RG.last) / 1000);
   RG.last = now;
   rgUpdate(dt, now);
@@ -5511,6 +5638,14 @@ function rgFrame() {
 }
 function rgElapsed(now) { return RG.t0 ? (now - RG.t0) / 1000 : 0; }
 function rgUpdate(dt, now) {
+  if (RG.ending) {   /* v3.36c 끝나는 순간 1.2초 멈춰 이유를 보여 준다 */
+    RG.ending.t -= dt;
+    RG.parts = RG.parts.filter(function (p) { p.t -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 90 * dt; return p.t > 0; });
+    if (RG.shake > 0) RG.shake -= dt;
+    if (RG.ending.t <= 0) rgEndFinal(RG.ending.why);
+    return;
+  }
+  if (RG.heartHit > 0) RG.heartHit -= dt;
   if (RG.cd > 0) {
     var before = Math.ceil(RG.cd);
     RG.cd -= dt;
@@ -5534,9 +5669,11 @@ function rgUpdate(dt, now) {
     wd.y += wd.v * dt;
     if (wd.y >= RAIN_FLOOR) {
       RG.words.splice(i, 1);
-      RG.lives--; RG.combo = 0; RG.shake = rgReduced() ? 0 : 0.22;
+      RG.lives--; RG.combo = 0; RG.shake = rgReduced() ? 0 : 0.22; RG.heartHit = 0.5;
       rgBurst(wd.x + wd.w / 2, RAIN_FLOOR, 6, [RAIN_PAL.dim, RAIN_PAL.ink]);
+      RG.pops.push({ x: wd.x + wd.w / 2, y: RAIN_FLOOR - 6, text: "놓침 · 하트 -1", t: 0.9, c: RAIN_PAL.deep });
       rgBeep(120, 0.2, "sawtooth", 0.05);
+      if (RG.lives === 1) RG.banner = { text: "마지막 목숨", t: 1.0 };
       if (RG.lives <= 0) { rgEnd("lives"); return; }
     }
   }
@@ -5552,15 +5689,17 @@ function rgUpdate(dt, now) {
 }
 function rgBurst(x, y, n, cols) {
   if (rgReduced()) n = Math.min(n, 4);
-  for (var i = 0; i < n && RG.parts.length < 140; i++) {
+  var cap = RGP.on ? 80 : 140;   /* 저사양 휴대폰 대비 */
+  for (var i = 0; i < n && RG.parts.length < cap; i++) {
     var a = (Math.PI * 2 * i) / n + Math.random() * 0.3, sp = 30 + Math.random() * 40;
     RG.parts.push({ x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 20, t: 0.5 + Math.random() * 0.3, c: cols[i % cols.length] });
   }
 }
 function rgSubmit() {
-  var inp = el("rgIn"); if (!inp || !RG.on || RG.cd > 0) return;
-  var v = inp.value.trim(); inp.value = "";
+  var inp = el("rgIn"); if (!inp || !RG.on || RG.cd > 0 || RG.ending || RG.paused) return;
+  var v = inp.value.trim();
   if (!v) return;
+  rgClearInput();
   RG.tries++;
   var hit = -1;
   RG.words.forEach(function (w, i) { if (w.text === v && (hit < 0 || w.y > RG.words[hit].y)) hit = i; });
@@ -5615,12 +5754,11 @@ function rgDraw(ctx, now) {
   ctx.imageSmoothingEnabled = false;
   if (RG.shake > 0) ctx.translate(Math.round((Math.random() - 0.5) * 4), Math.round((Math.random() - 0.5) * 4));
   rgWorld(ctx, RAIN_H + 4);
-  /* 목숨 = 흙 속 벽돌 5개 */
+  /* 흙 속 벽돌 · 장식 (v3.36c 목숨은 HUD 하트 하나로만 보여 준다) */
   for (var b = 0; b < RAIN_LIVES; b++) {
-    var bx = 6 + b * 34, alive = b < RG.lives;
-    rgBox(ctx, bx, RAIN_H - 16, 30, 10, alive ? RAIN_PAL.o100 : RAIN_PAL.gray);
-    if (alive) { ctx.fillStyle = RAIN_PAL.o50; ctx.fillRect(bx + 2, RAIN_H - 14, 26, 2); }
-    else { ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(bx + 14, RAIN_H - 15, 2, 8); ctx.fillRect(bx + 11, RAIN_H - 12, 3, 1); }
+    var bx = 6 + b * 34;
+    rgBox(ctx, bx, RAIN_H - 16, 30, 10, RAIN_PAL.o100);
+    ctx.fillStyle = RAIN_PAL.o50; ctx.fillRect(bx + 2, RAIN_H - 14, 26, 2);
   }
   /* 위험선 (점선) */
   ctx.fillStyle = RAIN_PAL.deep;
@@ -5630,10 +5768,13 @@ function rgDraw(ctx, now) {
   ctx.font = "bold 9px sans-serif"; ctx.textBaseline = "middle";
   ctx.fillStyle = RAIN_PAL.deep; ctx.textAlign = "left"; ctx.fillText("LV " + RG.stage, 6, 10);
   ctx.fillStyle = RAIN_PAL.ink; ctx.textAlign = "right"; ctx.fillText(String(RG.score), RAIN_W - 6, 10);
+  var blinkOff = RG.lives === 1 && Math.floor(now / 250) % 2 === 0;   /* 마지막 목숨 깜빡임 */
   for (var hh = 0; hh < RAIN_LIVES; hh++) {
-    var hx = 62 + hh * 11, on = hh < RG.lives;
-    ctx.fillStyle = on ? RAIN_PAL.o100 : RAIN_PAL.o25;
-    ctx.fillRect(hx, 7, 3, 2); ctx.fillRect(hx + 4, 7, 3, 2); ctx.fillRect(hx, 9, 7, 2); ctx.fillRect(hx + 1, 11, 5, 1); ctx.fillRect(hx + 2, 12, 3, 1);
+    var hx = 62 + hh * 11, on = hh < RG.lives, justLost = hh === RG.lives && RG.heartHit > 0;
+    var jy = justLost && !rgReduced() ? Math.round((Math.random() - 0.5) * 3) : 0;
+    ctx.fillStyle = on ? (blinkOff ? RAIN_PAL.o25 : RAIN_PAL.o100) : justLost ? RAIN_PAL.deep : RAIN_PAL.o25;
+    ctx.fillRect(hx, 7 + jy, 3, 2); ctx.fillRect(hx + 4, 7 + jy, 3, 2); ctx.fillRect(hx, 9 + jy, 7, 2); ctx.fillRect(hx + 1, 11 + jy, 5, 1); ctx.fillRect(hx + 2, 12 + jy, 3, 1);
+    if (!on) { ctx.fillStyle = RAIN_PAL.w; ctx.fillRect(hx + 3, 8 + jy, 1, 4); }   /* 금 간 빈 하트 */
   }
   var frac = RG.t0 ? Math.max(0, 1 - rgElapsed(now) / RAIN_SEC) : 1;
   rgBox(ctx, 14, 20, RAIN_W - 18, 7, RAIN_PAL.w);
@@ -5658,7 +5799,15 @@ function rgDraw(ctx, now) {
   RG.parts.forEach(function (p) { ctx.fillStyle = p.c; ctx.fillRect(Math.round(p.x), Math.round(p.y), 2, 2); });
   ctx.textAlign = "center"; ctx.font = "bold 9px sans-serif";
   RG.pops.forEach(function (p) { rgStroke(ctx, p.text, Math.round(Math.max(28, Math.min(RAIN_W - 28, p.x))), Math.round(p.y), p.c, RAIN_PAL.ink, 3); });
-  if (RG.banner) { rgBox(ctx, RAIN_W / 2 - 40, 108, 80, 22, RAIN_PAL.w); ctx.font = "bold 13px sans-serif"; ctx.fillStyle = RAIN_PAL.deep; ctx.fillText(RG.banner.text, RAIN_W / 2, 119); }
+  if (RG.banner) { rgBox(ctx, RAIN_W / 2 - 46, 108, 92, 22, RAIN_PAL.w); ctx.font = "bold 13px sans-serif"; ctx.fillStyle = RAIN_PAL.deep; ctx.fillText(RG.banner.text, RAIN_W / 2, 119); }
+  if (RG.ending) {
+    ctx.fillStyle = "rgba(255,255,255,0.6)"; ctx.fillRect(0, 30, RAIN_W, RAIN_FLOOR - 30);
+    rgBox(ctx, 12, 104, RAIN_W - 24, 50, RAIN_PAL.w);
+    ctx.font = "bold 16px sans-serif"; ctx.fillStyle = RG.ending.why === "time" ? RAIN_PAL.o100 : RAIN_PAL.deep;
+    ctx.fillText(RG.ending.why === "time" ? "TIME UP" : "GAME OVER", RAIN_W / 2, 120);
+    ctx.font = "bold 10px sans-serif"; ctx.fillStyle = RAIN_PAL.ink;
+    ctx.fillText(RG.ending.why === "time" ? "60초 완주" : "단어 5개를 놓쳤어요", RAIN_W / 2, 140);
+  }
   if (RG.cd > 0) {
     ctx.fillStyle = "rgba(255,255,255,0.55)"; ctx.fillRect(0, 30, RAIN_W, RAIN_FLOOR - 30);
     ctx.font = "bold 42px sans-serif"; rgStroke(ctx, RG.cd > 1 ? String(Math.ceil(RG.cd - 0.2)) : "GO", RAIN_W / 2, 135, RAIN_PAL.o100, RAIN_PAL.ink, 6);
@@ -5666,11 +5815,18 @@ function rgDraw(ctx, now) {
   ctx.restore();
 }
 function rgEnd(why) {
+  if (!RG.on || RG.ending) return;
+  RG.ending = { t: 1.2, why: why };
+  RG.words = []; RG.banner = null;
+  rgBeep(why === "time" ? 784 : 220, 0.3, "triangle", 0.07);
+  var inp = el("rgIn"); if (inp) inp.disabled = true;
+}
+function rgEndFinal(why) {
   if (!RG.on) return;
+  RG.ending = null;
   rgStop();
   var acc = RG.tries ? Math.round(RG.hits / RG.tries * 100) : 0;
   RG.res = { why: why, score: RG.score, hits: RG.hits, combo: RG.maxCombo, acc: acc, me: null, send: "" };
-  rgBeep(why === "time" ? 784 : 220, 0.3, "triangle", 0.07);
   if (RG.mode === "app") {
     S.set("type_best", Math.max(S.get("type_best", 0), RG.score));
     gameClear("type_cleared");   /* 끝까지 하면 04 라이브 챌린지 (점수 무관 · 이미 있으면 조용히) */
@@ -5689,6 +5845,7 @@ function rgResultPaint() {
   var rank = r.me ? r.me.rank : testMode() ? typeTestRank(r.score) : null;
   root.innerHTML =
     '<div class="cho-box" style="padding:24px 18px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' + (r.why === "time" ? "TIME UP" : "GAME OVER") + " · " + esc(typeNick() || "익명 참가자") + "</p>" +
+    '<p style="margin-top:6px;font-size:calc(15px * var(--fs));font-weight:800">' + (r.why === "time" ? "60초를 다 버텼어요" : "단어 5개를 놓쳐서 끝났어요") + "</p>" +
     '<p class="disp" style="font-size:44px;color:var(--mint);margin-top:6px">' + r.score.toLocaleString() + "</p>" +
     '<p class="hint">터뜨린 단어 ' + r.hits + "개 · 최고 콤보 " + r.combo + " · 정확도 " + r.acc + "%<br>" +
     (r.send === "sending" ? "순위 반영 중" : rank ? "앱 순위 " + rank + "위" + (testMode() ? " (테스트)" : "") : r.send === "range" ? "기록이 상식 범위를 넘어 순위에 넣지 않았어요" : "") + "</p>" +
@@ -5726,7 +5883,7 @@ function typeTestTop(mode) {
   list.sort(function (a, b) { return b.score - a.score; });
   var n = mode === "site" ? 5 : 10, meRank = null;
   list.forEach(function (x, i) { x.rank = i + 1; if (x.me) meRank = i + 1; });
-  return { top: list.slice(0, n), me: meRank ? { rank: meRank, score: S.get("type_best", 0) } : null, depts: [{ dept: "보상부문", avg: 3420, n: 12 }, { dept: "장기보험부문", avg: 3180, n: 9 }, { dept: "디지털전략부문", avg: 2950, n: 7 }], total: list.length };
+  return { top: list.slice(0, n), me: meRank ? { rank: meRank, score: S.get("type_best", 0) } : null, total: list.length };
 }
 function typeTestRank(score) { var r = 1; TYPE_TEST_NICKS.forEach(function (x) { if (x[1] > score) r++; }); return r; }
 function typeRankPull(mode, cb) {
@@ -5737,13 +5894,9 @@ function typeRankPull(mode, cb) {
 function typeRankHtml(r, mode, big) {
   if (!r) return '<p class="muted">순위를 불러오는 중입니다</p>';
   var top = r.top || [];
-  var mx = Math.max.apply(null, (r.depts || []).map(function (d) { return d.avg; }).concat([1]));
   return (top.length ? top.map(function (x) {
       return '<div class="ty-rank' + (x.me ? " me" : "") + '"><span class="no">' + x.rank + '</span><span class="nm">' + esc(x.name) + '</span><span class="sc">' + Number(x.score).toLocaleString() + "</span></div>";
     }).join("") : '<p class="muted">아직 기록이 없어요</p>') +
-    (r.depts && r.depts.length ? '<p class="sub-label" style="margin-top:14px">부문별 평균</p>' + r.depts.slice(0, big ? 8 : 5).map(function (d) {
-      return '<div class="seatrow"><div class="sb"><i style="width:' + Math.round(d.avg / mx * 100) + '%"></i></div><span class="sn">' + esc(d.dept) + " " + d.avg.toLocaleString() + "</span></div>";
-    }).join("") : "") +
     (r.me ? '<p class="muted" style="margin-top:10px">내 순위 ' + r.me.rank + "위 · " + Number(r.me.score).toLocaleString() + "점</p>" : "");
 }
 /* 시작 화면 미리보기 캔버스 · 마스코트와 떨어지는 단어 몇 개 (정지 화면) */
