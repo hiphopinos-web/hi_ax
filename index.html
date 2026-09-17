@@ -412,13 +412,14 @@
   @keyframes tileShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-3px); } }
   .ltile.hint { animation: hintPulse 1s ease-in-out infinite; }
   @keyframes hintPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,126,49,0); } 50% { box-shadow: 0 0 0 4px rgba(255,126,49,0.35); } }
-  /* v3.36 타자 게임 · 틀린 글자는 빨강이 아니라 회색 밑줄(앱 색 원칙) */
-  .ty-line { font-size: calc(21px * var(--fs)); font-weight: 800; line-height: 1.55; letter-spacing: 0.01em; word-break: keep-all; margin-top: 10px; min-height: 66px; }
-  .ty-line .ok { color: #fff; }
-  .ty-line .ng { color: rgba(255,255,255,0.55); text-decoration: underline; text-decoration-color: rgba(255,255,255,0.55); text-underline-offset: 4px; }
-  .ty-line .todo { color: rgba(255,255,255,0.38); }
-  .ty-next { margin-top: 8px; font-size: calc(13px * var(--fs)); color: rgba(255,255,255,0.45); }
+  /* v3.36b 타자 게임 · 저해상도 캔버스를 도트로 확대 */
+  .rg-wrap { border-radius: 14px; overflow: hidden; background: #140B06; line-height: 0; }
+  .rg-wrap canvas { width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+  .rg-form { display: flex; gap: 8px; margin-top: 10px; }
+  .rg-form .input { flex: 1; font-size: 18px; }
+  .rg-form .btn { width: auto; padding: 12px 18px; }
   .ty-rank { display: flex; align-items: center; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--line); }
+  .ty-rank.me { background: var(--tint); border-radius: 10px; padding-left: 8px; }
   .ty-rank .no { width: 26px; font-family: var(--disp); color: var(--acc2); }
   .ty-rank .nm { flex: 1; min-width: 0; font-weight: 800; color: var(--hi); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ty-rank .dp { font-size: calc(12.5px * var(--fs)); color: var(--faint); font-weight: 700; }
@@ -956,44 +957,16 @@ var CHOSEONG_QUIZ = [
   { cho: "ㄷㅇㅌ", a: "데이터", alts: [], hint: "AI의 연료 · 많이 모일수록 똑똑해집니다" }
 ];
 var GC_PASS = 6;
-/* ═══ v3.36 타자 게임 문장 풀 · 여기 한 곳 (사용자 확인 대상 초안) ═══
-   확정 문서에 있는 문장만: 슬로건(ME to WE, 「AX : 」 접두 없음) · 3개년 로드맵 키워드 · 공식 공지 붙임1·2의 프로그램·세션 문장.
-   DAP 실명 사례는 당사자 동의 전이라 넣지 않는다. 판마다 섞는다. 가운뎃점·괄호처럼 폰에서 치기 어려운 기호는 뺐다. */
-var TYPE_LINES = [
-  "ME to WE",
-  "나의 업무 혁신, 우리 회사의 AX가 되다",
-  "AX Festival 2026",
-  "2026 공감과 참여",
-  "2027 확산과 체화",
-  "2028 혁신과 연결",
-  "AX 선포 및 Festival 개최 안내",
-  "AI 환경과 전략",
-  "현대해상 AX 로드맵",
-  "Agentic AI 시대의 일하는 방식 변화",
-  "AI와 친해지기",
-  "대강당 키노트 및 파트너사 강연",
-  "DAP 우수 성과자 시상",
-  "전 임직원 자유 참석",
-  "소규모 아이디어 논의",
-  "5개 세션 중 한 개만 선택 가능",
-  "영업 및 보상 현장 우수 사례 강연 및 실습",
-  "내 데이터로 만드는 통계 현황 리포팅 실습",
-  "내가 보는 자료로 만드는 외부자료 리서치 자동화 실습",
-  "Claude Code를 활용한 바이브 코딩 실습",
-  "MS Copilot을 활용한 문서 작성 실습",
-  "동료 활용 사례 공유 및 AI활용 교안 제공",
-  "원하는 주제 선택 및 개발 실습 진행",
-  "실제 업무 정기 데이터의 AI 활용 분석",
-  "분석 결과 리포트 개발 반복 작업 자동화",
-  "대시보드 작성 HTML앱",
-  "최신 갱신 외부자료 검색 및 수집",
-  "수집된 자료 자동 정리",
-  "주기적인 새정보 업데이트 알림 봇 개발",
-  "영업 현장 활용 가능 HTML앱",
-  "내부망에서 활용 가능한 데이터분석 파이썬 코드",
-  "AX 적용 아이디어 정리표"
+/* ═══ v3.36b 타자 게임 단어 풀 · 여기 한 곳 (사용자 확정 대상 초안) ═══
+   확정 문서·앱에 이미 있는 어휘에서 짧은 단어 위주 · 공백이 든 말(ME to WE 등)은 판정이 어려워 뺐다 · 영문은 모바일 자판 전환 부담으로 3개만.
+   단계가 오를수록 긴 단어 비중이 커진다(1단계 3자 이하 · 2단계 4자 이하 · 4단계부터 3자 이상). */
+var TYPE_WORDS = [
+  "AX", "AI", "DAP",
+  "공감", "참여", "확산", "체화", "혁신", "연결", "실습", "전시", "체험", "상담", "강연", "세션", "설문", "계단", "퀴즈", "경품", "추첨", "시상", "분석", "요약", "현장", "영업", "보상", "전략", "채널", "교안", "동료", "업무", "본사", "룰렛",
+  "데이터", "로드맵", "자동화", "커피챗", "스탬프", "리포트", "응모권", "대강당", "광화문", "파이썬", "노트북", "클로드", "키노트", "알림봇", "정리표", "산출물", "체크인", "라이브", "챌린지", "리서치", "실시간", "새정보",
+  "에이전트", "프롬프트", "대시보드", "아이디어", "코파일럿", "하이디큐", "기조연설", "예측모델", "포토부스", "우수사례", "파트너사", "외부자료", "문서작성", "통계현황", "반복작업",
+  "바이브코딩", "업무혁신", "내부강연"
 ];
-var TYPE_SEC = 60;
 
 /* ════════════════ v10 신규 데이터 · 기획서 v2(260822 1층 반영) ════════════════ */
 /* A. 과제상담 예약 · 슬롯은 하드코딩 금지, 콘솔 설정값으로 생성 (v5 p23~25) */
@@ -2316,7 +2289,7 @@ var App = {
   },
   go: function (v) {
     if (this.current === "game_word" && v !== "game_word") gwStop();
-    if (this.current === "game_type" && v !== "game_type") tgStop();
+    if (this.current === "game_type" && v !== "game_type") rgStop();
     if (this.current === "wall_wave" && v !== "wall_wave") wvStop();
     modalClose();
     this.current = v;
@@ -3886,32 +3859,41 @@ var Views = {
       '<button class="btn mint" style="padding:15px" onclick="gwStart()">게임 시작</button></div>';
   },
 
-  /* ═══ v3.36 타자 게임 · 시작 · 동의(최초 1회) ═══ */
+  /* ═══ v3.36b 타자 게임 · 닉네임(최초 1회) → 시작 화면 → 게임 → 결과 ═══ */
   game_type: function () {
-    tgStop();
-    var cons = S.get("type_consent", null);
+    rgStop();
+    var nick = typeNick(), sound = S.get("rain_sound", false);
+    if (!nick || S.get("type_nick_edit", false)) {
+      return '<div id="tgRoot"><div class="cho-box"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">AX 단어 소나기</p>' +
+        '<p class="word disp" style="font-size:24px;margin-top:4px">닉네임 정하기</p>' +
+        '<p class="hint">순위판에는 닉네임만 나와요.<br>한글·영문·숫자 2~8자 · 공백·기호 불가</p></div>' +
+        '<div class="card mb12"><input id="tnIn" class="input" maxlength="8" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="예: 타자요정" value="' + esc(nick) + '" oninput="typeNickInput(this.value)">' +
+        '<p class="muted" id="tnMsg" style="margin-top:6px;font-size:calc(12.5px * var(--fs))">' + (nick ? "지금 닉네임 · " + esc(nick) : "2~8자로 정해 주세요") + "</p>" +
+        '<button class="btn mint" style="margin-top:10px" onclick="typeNickSave()">이 닉네임으로</button>' +
+        (nick ? '<button class="btn line" style="margin-top:8px" onclick="S.set(\'type_nick_edit\', false); App.render()">그대로 두기</button>' : "") + "</div></div>";
+    }
+    setTimeout(rgPreview, 0);
     return '<div id="tgRoot">' +
-      '<div class="cho-box"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">MINI GAME</p>' +
-      '<p class="word disp" style="font-size:26px;margin-top:4px">타자 게임</p>' +
-      '<p class="hint">60초 동안 AX 문장을 그대로 쳐 보세요.<br>끝까지 마치면 <b>라이브 챌린지 스탬프</b> (점수 무관)</p></div>' +
-      '<div class="card soft mb12"><ul style="margin:0 0 0 18px;font-size:calc(14px * var(--fs));line-height:1.8;color:var(--muted)">' +
-      '<li>점수 = 정확히 친 글자 기준 분당 타수 × 정확도</li><li>틀린 글자는 회색 밑줄 · Enter 로 다음 문장</li>' +
-      '<li>붙여넣기·추천 단어로 한 줄을 통째로 넣으면 그 줄은 무효</li><li>경품은 1F 현장 타자왕전(같은 키보드)에서만</li></ul></div>' +
-      (cons == null ?
-        '<div class="card mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">순위판에 이름이 나와요</b><p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">이름 가운데 글자를 가리고(김*하) 부문과 함께 표시됩니다. 동의하지 않으면 「익명 참가자」로 나와요.</p>' +
-          '<button class="btn mint" style="margin-top:10px" onclick="tgConsent(true)">동의하고 시작 준비</button><button class="btn line" style="margin-top:8px" onclick="tgConsent(false)">익명으로</button></div>' :
-        '<button class="btn mint mb8" style="padding:15px" onclick="tgStart(\'app\')">게임 시작 · 60초</button>' +
-          '<p class="muted mb8" style="text-align:center;font-size:calc(12.5px * var(--fs))">순위판 표시 · ' + (cons ? "가린 이름" : "익명 참가자") + ' · <span style="text-decoration:underline;cursor:pointer" onclick="S.set(\'type_consent\', null); App.render()">바꾸기</span></p>') +
-      '<button class="btn line" onclick="App.go(\'type_rank\')">순위판 보기</button></div>';
+      '<div class="cho-box" style="padding:16px 14px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">MINI GAME</p>' +
+      '<p class="word disp" style="font-size:24px;margin-top:2px">AX 단어 소나기</p>' +
+      '<div class="rg-wrap" style="margin-top:10px"><canvas id="rgPrev" width="180" height="110"></canvas></div>' +
+      '<p class="hint">떨어지는 단어를 그대로 치고 Enter · 바닥에 닿으면 벽돌이 깨져요<br>60초 · 목숨 5 · 연속으로 맞히면 콤보 · 끝까지 하면 <b>라이브 챌린지 스탬프</b></p></div>' +
+      '<div class="row mb8" style="justify-content:space-between"><span class="muted" style="font-size:calc(13.5px * var(--fs))">닉네임 <b style="color:var(--hi)">' + esc(nick) + '</b> · <span style="text-decoration:underline;cursor:pointer" onclick="S.set(\'type_nick_edit\', true); App.render()">변경</span></span>' +
+      '<span class="muted" style="font-size:calc(13.5px * var(--fs))">최고 ' + S.get("type_best", 0).toLocaleString() + "</span></div>" +
+      '<button class="btn mint mb8" style="padding:16px;font-size:calc(17px * var(--fs))" onclick="rgStart(\'app\')">START</button>' +
+      '<div class="row" style="gap:8px"><button class="btn line" style="flex:1" onclick="S.set(\'rain_sound\', ' + (sound ? "false" : "true") + '); App.render()">소리 ' + (sound ? "켜짐" : "꺼짐") + "</button>" +
+      '<button class="btn line" style="flex:1" onclick="App.go(\'type_rank\')">순위판</button></div>' +
+      '<p class="muted" style="margin-top:10px;font-size:calc(12px * var(--fs));text-align:center">경품은 1F 현장 타자왕전(같은 키보드)에서만 · 붙여넣기는 막혀 있어요</p></div>';
   },
   type_rank: function () {
     var mode = S.get("type_rank_tab", "app");
-    var cached = BE.on ? S.get("type_rank_" + mode, null) : TYPE_MOCK[mode];
-    typeRankPull(mode, function () { if (App.current === "type_rank") { var b = el("tyRankBody"); if (b) b.innerHTML = typeRankHtml(BE.on ? S.get("type_rank_" + mode, null) : TYPE_MOCK[mode], mode); } });
+    var cached = testMode() ? typeTestTop(mode) : S.get("type_rank_" + mode, null);
+    typeRankPull(mode, function (r) { if (App.current === "type_rank") { var b = el("tyRankBody"); if (b) b.innerHTML = typeRankHtml(r, mode); } });
     return '<div class="qseg" style="margin-bottom:10px"><button class="' + (mode === "app" ? "on" : "") + '" onclick="S.set(\'type_rank_tab\', \'app\'); App.render()">앱 순위 상위 10</button>' +
       '<button class="' + (mode === "site" ? "on" : "") + '" onclick="S.set(\'type_rank_tab\', \'site\'); App.render()">1F 현장 상위 5</button></div>' +
+      (testMode() ? '<p class="scap" style="margin:0 2px 8px">테스트 순위판 · 가짜 닉네임이 섞여 있어요(실서버 순위와 무관)</p>' : "") +
       '<div class="card" id="tyRankBody">' + typeRankHtml(cached, mode) + "</div>" +
-      '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">' + (mode === "app" ? "내 폰 기록 · 무제한 도전 · 최고 기록만 · 경품 없음" : "1F 현장 타자왕전 · 결선 시간대 1인 1회 · 동점은 정확도, 그다음 먼저 기록한 쪽 · 1·2등 Outro 호명") + "</p>";
+      '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">' + (mode === "app" ? "내 폰 기록 · 무제한 도전 · 최고 기록만 · 닉네임으로 표시 · 경품 없음" : "1F 현장 타자왕전 · 결선 시간대 1인 1회 · 동점은 정확도, 그다음 먼저 기록한 쪽 · 1·2등 Outro 호명") + "</p>";
   },
 
   game_cho: function () {
@@ -5388,124 +5370,267 @@ function drawWinner() {
 }
 
 /* ════════════════ 게임 공통 ════════════════ */
-/* ═══ v3.36 타자 게임 ═══
-   한 판 60초 · 문장 한 줄씩 · 점수 = 정확히 친 글자 수 기준 분당 타수 × 정확도.
-   완성된 글자와 원문을 위치별로 비교한다(키 이벤트 단위로 세지 않는다 · 한글 조합 입력은 기종마다 키 이벤트가 다르다).
-   부정 방지: 붙여넣기·끌어놓기 차단, 자동완성·자동수정·맞춤법 끔, 한 줄을 1초 안에 통째로 넣으면 그 줄은 무효, 한 번에 4글자 이상 늘면 붙여넣기로 보고 무효.
-   완주(60초)하면 점수와 무관하게 04 라이브 챌린지 적립. */
-var TG = { on: false, mode: "app", order: [], li: 0, t0: 0, lt0: 0, lf: 0, correct: 0, typed: 0, bad: 0, last: 0, timer: null, res: null, emp: "", empName: "" };
-var TYPE_MOCK = { app: { top: [{ rank: 1, name: "박*영", dept: "장기보험부문", score: 412, acc: 98 }, { rank: 2, name: "이*준", dept: "자동차보상부문", score: 388, acc: 96 }, { rank: 3, name: "익명 참가자", dept: "디지털전략부문", score: 351, acc: 97 }, { rank: 4, name: "정*수", dept: "일반보험부문", score: 330, acc: 94 }, { rank: 5, name: "최*아", dept: "마케팅부문", score: 302, acc: 95 }],
-  depts: [{ dept: "장기보험부문", avg: 301, n: 12 }, { dept: "자동차보상부문", avg: 288, n: 18 }, { dept: "디지털전략부문", avg: 270, n: 9 }], total: 64 },
-  site: { top: [{ rank: 1, name: "김*나", dept: "보상부문", score: 455, acc: 99 }, { rank: 2, name: "한*별", dept: "마케팅부문", score: 431, acc: 97 }], depts: [], total: 2, win: ["12:00~13:00", "15:00~16:00"] } };
-function tgShuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
-function tgLine() { return TG.order[TG.li % TG.order.length]; }
-function tgStop() { if (TG.timer) clearInterval(TG.timer); TG.timer = null; TG.on = false; }
-function tgConsent(v) { S.set("type_consent", v); App.render(); }
-function tgStart(mode) {
-  tgStop();
-  TG.mode = mode || "app"; TG.order = tgShuffle(TYPE_LINES); TG.li = 0; TG.correct = 0; TG.typed = 0; TG.bad = 0; TG.res = null;
-  TG.on = true; TG.t0 = Date.now(); TG.lt0 = 0; TG.last = 0;
-  tgPaint();
-  TG.timer = setInterval(tgTick, 250);
-}
-/* 한 줄 비교 · 위치별로 같은 글자 수 · 친 글자 수는 입력 길이 */
-function tgCompare(v, line) {
-  var c = 0;
-  for (var i = 0; i < Math.min(v.length, line.length); i++) if (v.charAt(i) === line.charAt(i)) c++;
-  return c;
-}
-function tgCommit(final) {
-  var inp = el("tgIn"); if (!inp) return;
-  var v = inp.value, line = tgLine();
-  if (!v) return;
-  var c = tgCompare(v, line);
-  var tooFast = TG.lt0 && Date.now() - TG.lt0 < 1000 && c >= line.length * 0.8;
-  if (TG.lf || tooFast) { TG.bad++; }   /* 무효 줄 · 글자도 타수도 세지 않는다 */
-  else { TG.correct += c; TG.typed += Math.max(v.length, final ? v.length : line.length); }
-  if (final) return;
-  TG.li++; TG.lt0 = 0; TG.lf = 0; TG.last = 0;
-  inp.value = "";
-  tgPaintLine();
-}
-function tgInput(e) {
-  var inp = el("tgIn"); if (!inp || !TG.on) return;
-  var v = inp.value;
-  if (!TG.lt0 && v) TG.lt0 = Date.now();
-  if (v.length - TG.last >= 4 && !(e && e.isComposing)) TG.lf = 1;   /* 한 번에 4글자 이상 = 붙여넣기·추천 단어 통째 입력 */
-  TG.last = v.length;
-  tgPaintLine();
-  if (!(e && e.isComposing) && v === tgLine()) tgCommit(false);
-}
-function tgKey(e) { if (e.key === "Enter") { e.preventDefault(); tgCommit(false); } }
-function tgTick() {
-  if (!TG.on) return;
-  var left = Math.max(0, TYPE_SEC - Math.floor((Date.now() - TG.t0) / 1000));
-  var h = el("tgLeft"); if (h) h.textContent = left;
-  var sp = el("tgCpm"); if (sp) sp.textContent = Math.round(TG.correct / Math.max(1, (Date.now() - TG.t0) / 60000));
-  if (left <= 0) tgEnd();
-}
-function tgLineHtml() {
-  var line = tgLine(), v = (el("tgIn") || {}).value || "", h = "";
-  for (var i = 0; i < line.length; i++) {
-    var ch = esc(line.charAt(i)).replace(" ", "&nbsp;");
-    h += i >= v.length ? '<span class="todo">' + ch + "</span>" : v.charAt(i) === line.charAt(i) ? '<span class="ok">' + ch + "</span>" : '<span class="ng">' + ch + "</span>";
+/* ═══ v3.36b 타자 게임 = AX 단어 소나기 (사용자 피드백 260917 · 떨어지는 단어를 쳐서 터뜨리는 60초 게임) ═══
+   판정: 입력창의 완성 문자열을 Enter(모바일 완료)로 제출 · 화면 단어와 정확히 같으면 터짐(같은 단어가 여럿이면 가장 아래) · 키 이벤트 단위 판정 없음.
+   한 판 60초 · 목숨 5 · 바닥선에 닿으면 목숨 -1(벽돌 하나 깨짐) · 12초마다 단계 상승(낙하 속도·동시 개수 증가).
+   점수 = 글자 수 × 10 × 콤보 배수(1 + 0.2 × min(콤보-1, 10), 최대 3배) · 정확도 = 제출 중 명중 비율.
+   끝까지 하면(시간 종료 또는 목숨 소진) 04 라이브 챌린지 적립(점수 무관). 소리는 기본 꺼짐(WebAudio 8비트 효과음 · 음원 파일 없음).
+   비주얼: 180×300 저해상도 캔버스를 pixelated 로 확대 · 팔레트는 오렌지 사다리 + 검정 + 흰색 + 웜그레이만.
+   마스코트 「미위」: 오렌지 도트 몸통 · 세로로 벌어지는 입 · 발 · 콤보 5 이상이면 작은 친구가 옆에 붙는다(ME 가 WE 가 되는 연출). 스프라이트는 코드 안 픽셀 배열. */
+var RAIN_W = 180, RAIN_H = 300, RAIN_SEC = 60, RAIN_LIVES = 5, RAIN_FLOOR = 244;
+var RAIN_PAL = { bg: "#140B06", dot: "rgba(255,126,49,0.10)", o100: "#FF7E31", o60: "#FFA46E", o30: "#FFCFB0", o10: "#FFF0E6", deep: "#D64524", ink: "#000000", w: "#FFFFFF", gray: "#8A817B", dim: "#3A302A" };
+var MEWE_SPR = {
+  closed: ["...OOOOOO...", ".OOOOOOOOOO.", ".OOWOOOOWOO.", ".OOKOOOOKOO.", "OOOOOOOOOOOO", "OOOOOOOOOOOO", "OODDDDDDDDOO", "OOOOOOOOOOOO", ".OOOOOOOOOO.", "..OOOOOOOO..", "..OO....OO.."],
+  open: ["...OOOOOO...", ".OOOOOOOOOO.", ".OOWOOOOWOO.", ".OOKOOOOKOO.", "OOOOOOOOOOOO", "OOKKKKKKKKOO", "OOKKKKKKKKOO", "OOKKWWWWKKOO", ".OOOOOOOOOO.", "..OOOOOOOO..", "..OO....OO.."],
+  buddy: ["..LLLL..", ".LLLLLL.", "LLWLLWLL", "LLKLLKLL", "LLLLLLLL", "LLDDDDLL", ".LLLLLL.", ".LL..LL."]
+};
+var RG = { on: false, mode: "app", raf: 0, last: 0, t0: 0, cd: 0, words: [], parts: [], pops: [], lives: RAIN_LIVES, score: 0, hits: 0, tries: 0, combo: 0, maxCombo: 0, stage: 1, spawnT: 0, shake: 0, banner: null, shot: null, mas: { x: 90, tx: 90, open: 0 }, res: null, ac: null };
+function rgReduced() { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); }
+function rgSprite(ctx, rows, x, y, pal) {
+  for (var r = 0; r < rows.length; r++) for (var c = 0; c < rows[r].length; c++) {
+    var k = rows[r].charAt(c); if (k === ".") continue;
+    ctx.fillStyle = pal[k]; ctx.fillRect(x + c, y + r, 1, 1);
   }
-  return h;
 }
-function tgPaintLine() {
-  var l = el("tgLine"); if (l) l.innerHTML = tgLineHtml();
-  var n = el("tgNext"); if (n) n.textContent = "다음 · " + TG.order[(TG.li + 1) % TG.order.length];
+var RG_SPR = {};
+function rgSprCv(name) {
+  if (RG_SPR[name]) return RG_SPR[name];
+  var rows = MEWE_SPR[name], c = document.createElement("canvas");
+  c.width = rows[0].length; c.height = rows.length;
+  rgSprite(c.getContext("2d"), rows, 0, 0, { O: RAIN_PAL.o100, W: RAIN_PAL.w, K: RAIN_PAL.ink, D: RAIN_PAL.deep, L: RAIN_PAL.o60 });
+  return (RG_SPR[name] = c);
 }
-function tgPaint() {
+function rgBeep(freq, dur, type, vol) {
+  if (!S.get("rain_sound", false)) return;
+  try {
+    if (!RG.ac) RG.ac = new (window.AudioContext || window.webkitAudioContext)();
+    var o = RG.ac.createOscillator(), g = RG.ac.createGain(), t = RG.ac.currentTime;
+    o.type = type || "square"; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(vol || 0.06, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(RG.ac.destination); o.start(t); o.stop(t + dur);
+  } catch (e) {}
+}
+function rgStop() { RG.on = false; if (RG.raf) cancelAnimationFrame(RG.raf); RG.raf = 0; }
+function rgPickWord() {
+  var st = RG.stage, pool = TYPE_WORDS.filter(function (w) {
+    var n = w.length;
+    return st <= 1 ? n <= 3 : st === 2 ? n <= 4 : st === 3 ? n >= 2 : n >= 3;
+  });
+  var onScreen = RG.words.map(function (w) { return w.text; });
+  for (var k = 0; k < 8; k++) { var w = pool[Math.floor(Math.random() * pool.length)]; if (onScreen.indexOf(w) < 0) return w; }
+  return pool[0];
+}
+function rgStart(mode) {
+  rgStop();
+  RG.mode = mode || "app"; RG.words = []; RG.parts = []; RG.pops = []; RG.lives = RAIN_LIVES; RG.score = 0; RG.hits = 0; RG.tries = 0;
+  RG.combo = 0; RG.maxCombo = 0; RG.stage = 1; RG.spawnT = 0.3; RG.shake = 0; RG.banner = null; RG.shot = null; RG.res = null;
+  RG.mas = { x: 90, tx: 90, open: 0 }; RG.cd = 3.2; RG.t0 = 0; RG.on = true; RG.last = performance.now();
   var root = el("tgRoot"); if (!root) return;
-  root.innerHTML =
-    '<div class="game-hud"><div class="hud"><div class="v" id="tgLeft">' + TYPE_SEC + '</div><div class="l">남은 초</div></div>' +
-    '<div class="hud"><div class="v" id="tgCpm">0</div><div class="l">분당 타수</div></div></div>' +
-    '<div class="cho-box" style="text-align:left"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' + (TG.mode === "site" ? "1F 현장 타자왕전" : "타자 게임") + " · 문장을 그대로 치고 Enter</p>" +
-    '<p class="ty-line" id="tgLine"></p><p class="ty-next" id="tgNext"></p></div>' +
-    '<input id="tgIn" class="input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="text" enterkeyhint="next" placeholder="여기에 입력" ' +
-    'onpaste="event.preventDefault()" ondrop="event.preventDefault()" oninput="tgInput(event)" onkeydown="tgKey(event)" style="font-size:18px">' +
-    '<button class="btn line" style="margin-top:8px" onclick="tgCommit(false)">다음 문장</button>';
-  tgPaintLine();
-  var inp = el("tgIn"); if (inp) inp.focus();
+  root.innerHTML = '<div class="rg-wrap"><canvas id="rgCv" width="' + RAIN_W + '" height="' + RAIN_H + '"></canvas></div>' +
+    '<form class="rg-form" onsubmit="event.preventDefault(); rgSubmit()"><input id="rgIn" class="input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" maxlength="12" placeholder="떨어지는 단어를 치고 Enter" onpaste="event.preventDefault()" ondrop="event.preventDefault()">' +
+    '<button class="btn mint" type="submit">쏘기</button></form>';
+  var inp = el("rgIn"); if (inp) inp.focus();
+  RG.raf = requestAnimationFrame(rgFrame);
 }
-function tgEnd() {
-  if (!TG.on) return;
-  tgCommit(true);
-  tgStop();
-  var cpm = Math.round(TG.correct * 60 / TYPE_SEC), acc = TG.typed ? Math.round(TG.correct / TG.typed * 100) : 0;
-  acc = Math.max(0, Math.min(100, acc));
-  var score = Math.round(cpm * acc / 100);
-  TG.res = { cpm: cpm, acc: acc, score: score, bad: TG.bad, me: null, send: "" };
-  if (TG.mode === "app") {
-    S.set("type_best", Math.max(S.get("type_best", 0), score));
-    gameClear("type_cleared");   /* 완주 = 04 라이브 챌린지 (점수 무관 · 이미 있으면 조용히) */
+function rgFrame() {
+  if (!RG.on) return;
+  var now = performance.now(), dt = Math.min(0.05, (now - RG.last) / 1000);
+  RG.last = now;
+  rgUpdate(dt, now);
+  var cv = el("rgCv");
+  if (!cv) { rgStop(); return; }
+  rgDraw(cv.getContext("2d"), now);
+  if (RG.on) RG.raf = requestAnimationFrame(rgFrame);
+}
+function rgElapsed(now) { return RG.t0 ? (now - RG.t0) / 1000 : 0; }
+function rgUpdate(dt, now) {
+  if (RG.cd > 0) {
+    var before = Math.ceil(RG.cd);
+    RG.cd -= dt;
+    if (Math.ceil(RG.cd) !== before && RG.cd > 0) rgBeep(440, 0.08);
+    if (RG.cd <= 0) { RG.t0 = now; rgBeep(880, 0.15); }
+    return;
+  }
+  var el0 = rgElapsed(now);
+  var st = Math.min(5, 1 + Math.floor(el0 / 12));
+  if (st > RG.stage) { RG.stage = st; RG.banner = { text: "LEVEL " + st, t: 1.3 }; rgBeep(660, 0.12); rgBeep(990, 0.12); }
+  RG.spawnT -= dt;
+  if (RG.spawnT <= 0 && RG.words.length < 2 + RG.stage) {
+    var text = rgPickWord(), cv = el("rgCv"), ctx = cv && cv.getContext("2d");
+    if (ctx) ctx.font = "bold 11px sans-serif";
+    var w = ctx ? Math.ceil(ctx.measureText(text).width) : text.length * 11;
+    RG.words.push({ text: text, w: w, x: 4 + Math.random() * Math.max(1, RAIN_W - 8 - w), y: 22, v: 11 + RG.stage * 5 + Math.random() * 4 });
+    RG.spawnT = Math.max(0.75, 2.1 - RG.stage * 0.28);
+  }
+  for (var i = RG.words.length - 1; i >= 0; i--) {
+    var wd = RG.words[i];
+    wd.y += wd.v * dt;
+    if (wd.y >= RAIN_FLOOR) {
+      RG.words.splice(i, 1);
+      RG.lives--; RG.combo = 0; RG.shake = rgReduced() ? 0 : 0.22;
+      rgBurst(wd.x + wd.w / 2, RAIN_FLOOR, 6, [RAIN_PAL.gray, RAIN_PAL.dim]);
+      rgBeep(120, 0.2, "sawtooth", 0.05);
+      if (RG.lives <= 0) { rgEnd("lives"); return; }
+    }
+  }
+  RG.parts = RG.parts.filter(function (p) { p.t -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 90 * dt; return p.t > 0; });
+  RG.pops = RG.pops.filter(function (p) { p.t -= dt; p.y -= 16 * dt; return p.t > 0; });
+  if (RG.banner) { RG.banner.t -= dt; if (RG.banner.t <= 0) RG.banner = null; }
+  if (RG.shot) { RG.shot.t -= dt; if (RG.shot.t <= 0) RG.shot = null; }
+  if (RG.shake > 0) RG.shake -= dt;
+  if (RG.mas.open > 0) RG.mas.open -= dt;
+  RG.mas.x += (RG.mas.tx - RG.mas.x) * Math.min(1, dt * 8);
+  if (!RG.mas.open) RG.mas.tx += (90 - RG.mas.tx) * Math.min(1, dt * 1.5);
+  if (el0 >= RAIN_SEC) rgEnd("time");
+}
+function rgBurst(x, y, n, cols) {
+  if (rgReduced()) n = Math.min(n, 4);
+  for (var i = 0; i < n && RG.parts.length < 140; i++) {
+    var a = (Math.PI * 2 * i) / n + Math.random() * 0.3, sp = 30 + Math.random() * 40;
+    RG.parts.push({ x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 20, t: 0.5 + Math.random() * 0.3, c: cols[i % cols.length] });
+  }
+}
+function rgSubmit() {
+  var inp = el("rgIn"); if (!inp || !RG.on || RG.cd > 0) return;
+  var v = inp.value.trim(); inp.value = "";
+  if (!v) return;
+  RG.tries++;
+  var hit = -1;
+  RG.words.forEach(function (w, i) { if (w.text === v && (hit < 0 || w.y > RG.words[hit].y)) hit = i; });
+  if (hit < 0) {
+    RG.combo = 0;
+    RG.pops.push({ x: RG.mas.x, y: RAIN_FLOOR + 8, text: "MISS", t: 0.6, c: RAIN_PAL.gray });
+    rgBeep(180, 0.1, "square", 0.04);
+    return;
+  }
+  var wd = RG.words.splice(hit, 1)[0];
+  RG.combo++; RG.hits++; RG.maxCombo = Math.max(RG.maxCombo, RG.combo);
+  var mult = 1 + 0.2 * Math.min(RG.combo - 1, 10), pts = Math.round(wd.text.length * 10 * mult);
+  RG.score += pts;
+  var cx = wd.x + wd.w / 2, cy = wd.y - 4;
+  RG.mas.tx = Math.max(12, Math.min(RAIN_W - 12, cx)); RG.mas.open = 0.25;
+  RG.shot = { x0: RG.mas.tx, y0: RAIN_FLOOR + 8, x1: cx, y1: cy, t: 0.12 };
+  rgBurst(cx, cy, 16, [RAIN_PAL.o100, RAIN_PAL.w, RAIN_PAL.o60, RAIN_PAL.o30]);
+  RG.pops.push({ x: cx, y: cy, text: "+" + pts, t: 0.8, c: RAIN_PAL.w });
+  if (RG.combo >= 3) RG.pops.push({ x: cx, y: cy - 12, text: "COMBO x" + RG.combo, t: 0.9, c: RAIN_PAL.o60 });
+  if (!rgReduced()) RG.shake = Math.max(RG.shake, 0.06);
+  rgBeep(520 + Math.min(RG.combo, 10) * 40, 0.07); rgBeep(1040 + Math.min(RG.combo, 10) * 40, 0.05);
+}
+function rgDraw(ctx, now) {
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  if (RG.shake > 0) ctx.translate(Math.round((Math.random() - 0.5) * 4), Math.round((Math.random() - 0.5) * 4));
+  ctx.fillStyle = RAIN_PAL.bg; ctx.fillRect(-4, -4, RAIN_W + 8, RAIN_H + 8);
+  ctx.fillStyle = RAIN_PAL.dot;
+  for (var gx = 5; gx < RAIN_W; gx += 10) for (var gy = 25; gy < RAIN_FLOOR; gy += 10) ctx.fillRect(gx, gy, 1, 1);
+  /* HUD */
+  var left = RG.t0 ? Math.max(0, Math.ceil(RAIN_SEC - rgElapsed(now))) : RAIN_SEC;
+  ctx.font = "bold 9px sans-serif"; ctx.textBaseline = "top";
+  ctx.fillStyle = RAIN_PAL.o100; ctx.textAlign = "left"; ctx.fillText("LV " + RG.stage, 4, 5);
+  ctx.fillStyle = RAIN_PAL.w; ctx.textAlign = "center"; ctx.fillText(String(left), RAIN_W / 2, 5);
+  ctx.textAlign = "right"; ctx.fillText(String(RG.score), RAIN_W - 4, 5);
+  ctx.fillStyle = RAIN_PAL.dim; ctx.fillRect(0, 18, RAIN_W, 1);
+  /* 바닥선 · 벽돌(목숨) */
+  ctx.fillStyle = RAIN_PAL.deep; ctx.fillRect(0, RAIN_FLOOR, RAIN_W, 1);
+  for (var b = 0; b < RAIN_LIVES; b++) {
+    var bx = 6 + b * 34, alive = b < RG.lives;
+    ctx.fillStyle = alive ? RAIN_PAL.o100 : RAIN_PAL.dim; ctx.fillRect(bx, RAIN_H - 14, 30, 8);
+    ctx.fillStyle = alive ? RAIN_PAL.o60 : RAIN_PAL.bg; ctx.fillRect(bx + 1, RAIN_H - 13, 28, 2);
+    if (!alive) { ctx.fillStyle = RAIN_PAL.bg; ctx.fillRect(bx + 13, RAIN_H - 14, 2, 8); }
+  }
+  /* 단어 */
+  ctx.font = "bold 11px sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  RG.words.forEach(function (w) {
+    var danger = w.y > RAIN_FLOOR - 40;
+    ctx.lineWidth = 3; ctx.strokeStyle = "#2A1509"; ctx.strokeText(w.text, Math.round(w.x), Math.round(w.y));
+    ctx.fillStyle = danger ? RAIN_PAL.o30 : RAIN_PAL.w; ctx.fillText(w.text, Math.round(w.x), Math.round(w.y));
+  });
+  /* 발사 */
+  if (RG.shot) {
+    var k = 1 - RG.shot.t / 0.12, sx = RG.shot.x0 + (RG.shot.x1 - RG.shot.x0) * k, sy = RG.shot.y0 + (RG.shot.y1 - RG.shot.y0) * k;
+    ctx.fillStyle = RAIN_PAL.w; ctx.fillRect(Math.round(sx) - 1, Math.round(sy) - 1, 3, 3);
+  }
+  /* 마스코트 미위 · 2배 픽셀 */
+  var bob = Math.floor(now / 300) % 2;
+  ctx.drawImage(rgSprCv(RG.mas.open > 0 ? "open" : "closed"), Math.round(RG.mas.x - 12), RAIN_FLOOR + 5 + bob, 24, 22);
+  if (RG.combo >= 5) ctx.drawImage(rgSprCv("buddy"), Math.round(RG.mas.x + 12), RAIN_FLOOR + 11 + (1 - bob), 16, 16);
+  /* 파편 · 팝업 */
+  RG.parts.forEach(function (p) { ctx.fillStyle = p.c; ctx.fillRect(Math.round(p.x), Math.round(p.y), 2, 2); });
+  ctx.textAlign = "center"; ctx.font = "bold 9px sans-serif";
+  RG.pops.forEach(function (p) { ctx.fillStyle = p.c; ctx.fillText(p.text, Math.round(Math.max(28, Math.min(RAIN_W - 28, p.x))), Math.round(p.y)); });   /* 가장자리에서 잘리지 않게 */
+  if (RG.banner) { ctx.font = "bold 16px sans-serif"; ctx.fillStyle = RAIN_PAL.o100; ctx.fillText(RG.banner.text, RAIN_W / 2, 120); }
+  if (RG.cd > 0) {
+    ctx.fillStyle = "rgba(0,0,0,0.45)"; ctx.fillRect(0, 19, RAIN_W, RAIN_FLOOR - 19);
+    ctx.font = "bold 40px sans-serif"; ctx.fillStyle = RAIN_PAL.o100; ctx.fillText(RG.cd > 1 ? String(Math.ceil(RG.cd - 0.2)) : "GO", RAIN_W / 2, 140);
+  }
+  ctx.restore();
+}
+function rgEnd(why) {
+  if (!RG.on) return;
+  rgStop();
+  var acc = RG.tries ? Math.round(RG.hits / RG.tries * 100) : 0;
+  RG.res = { why: why, score: RG.score, hits: RG.hits, combo: RG.maxCombo, acc: acc, me: null, send: "" };
+  rgBeep(why === "time" ? 784 : 220, 0.3, "triangle", 0.07);
+  if (RG.mode === "app") {
+    S.set("type_best", Math.max(S.get("type_best", 0), RG.score));
+    gameClear("type_cleared");   /* 끝까지 하면 04 라이브 챌린지 (점수 무관 · 이미 있으면 조용히) */
     var u = S.get("user", {}) || {};
     if (BE.on && !testEmp() && u.empId) {
-      TG.res.send = "sending";
-      beCall({ action: "type_submit", emp: u.empId, name: u.name || "", score: score, cpm: cpm, acc: acc, consent: S.get("type_consent", false) ? "1" : "0" },
-        function (r) { if (TG.res) { TG.res.send = r && r.ok ? "ok" : (r && r.reason) || "fail"; TG.res.me = r && r.me; } if (App.current === "game_type") tgResultPaint(); },
-        function () { if (TG.res) TG.res.send = "fail"; if (App.current === "game_type") tgResultPaint(); });
+      RG.res.send = "sending";
+      beCall({ action: "type_submit", emp: u.empId, name: u.name || "", score: RG.res.score, hits: RG.res.hits, combo: RG.res.combo, acc: acc, consent: "1" },
+        function (r) { if (RG.res) { RG.res.send = r && r.ok ? "ok" : (r && r.reason) || "fail"; RG.res.me = r && r.me; } if (App.current === "game_type") rgResultPaint(); },
+        function () { if (RG.res) RG.res.send = "fail"; if (App.current === "game_type") rgResultPaint(); });
     }
-    tgResultPaint();
-  } else if (typeof tsSiteDone === "function") tsSiteDone(TG.res);
+    rgResultPaint();
+  } else if (typeof tsSiteDone === "function") tsSiteDone(RG.res);
 }
-function tgResultPaint() {
-  var root = el("tgRoot"), r = TG.res; if (!root || !r) return;
-  var rank = r.me ? r.me.rank : null;
+function rgResultPaint() {
+  var root = el("tgRoot"), r = RG.res; if (!root || !r) return;
+  var rank = r.me ? r.me.rank : testMode() ? typeTestRank(r.score) : null;
   root.innerHTML =
-    '<div class="cho-box" style="padding:26px 18px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">내 기록</p>' +
-    '<p class="disp" style="font-size:42px;color:var(--mint);margin-top:6px">' + r.score + "</p>" +
-    '<p class="hint">분당 ' + r.cpm + "타 · 정확도 " + r.acc + "%" + (r.bad ? " · 무효 " + r.bad + "줄" : "") + "<br>" +
-    (r.send === "sending" ? "순위 반영 중" : rank ? "앱 순위 " + rank + "위" : r.send === "range" ? "기록이 상식 범위를 넘어 순위에 넣지 않았어요" : testMode() ? "테스트 모드 · 순위에 반영하지 않아요" : "") + "</p>" +
-    '<p class="hint" style="margin-top:6px">라이브 챌린지 스탬프는 완주만 하면 적립돼요</p></div>' +
+    '<div class="cho-box" style="padding:24px 18px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' + (r.why === "time" ? "TIME UP" : "GAME OVER") + " · " + esc(typeNick() || "익명 참가자") + "</p>" +
+    '<p class="disp" style="font-size:44px;color:var(--mint);margin-top:6px">' + r.score.toLocaleString() + "</p>" +
+    '<p class="hint">터뜨린 단어 ' + r.hits + "개 · 최고 콤보 " + r.combo + " · 정확도 " + r.acc + "%<br>" +
+    (r.send === "sending" ? "순위 반영 중" : rank ? "앱 순위 " + rank + "위" + (testMode() ? " (테스트)" : "") : r.send === "range" ? "기록이 상식 범위를 넘어 순위에 넣지 않았어요" : "") + "</p>" +
+    '<p class="hint" style="margin-top:6px">라이브 챌린지 스탬프는 끝까지 하면 적립돼요</p></div>' +
     (rank && rank <= 10 ? '<div class="tipbanner mb12">상위권이에요. 1F 현장 타자왕전에 도전하세요 · 같은 키보드로 겨루고 1·2등은 Outro에서 호명합니다</div>' : "") +
-    '<button class="btn mint mb8" style="padding:15px" onclick="tgStart(\'app\')">다시 하기</button>' +
+    '<button class="btn mint mb8" style="padding:15px" onclick="rgStart(\'app\')">다시 하기</button>' +
     '<button class="btn line mb8" onclick="App.go(\'type_rank\')">순위판 보기</button>' +
     '<button class="btn line" onclick="App.go(\'passport\')">스탬프 탭으로</button>';
 }
+/* ── 닉네임 · 순위판 ── */
+function typeNick() { return S.get("type_nick", ""); }
+function typeNickValid(v) {
+  if (!v) return "2~8자로 정해 주세요";
+  if (!/^[0-9A-Za-z가-힣]{2,8}$/.test(v)) return "한글·영문·숫자 2~8자만 쓸 수 있어요 (공백·기호 불가)";
+  return "";
+}
+function typeNickInput(v) { var m = el("tnMsg"); if (m) m.textContent = typeNickValid(v.trim()) || "사용할 수 있는 형식이에요"; }
+var TYPE_NICK_WHY = { format: "한글·영문·숫자 2~8자만 쓸 수 있어요", dup: "이미 쓰는 닉네임이에요", ban: "쓸 수 없는 단어가 들어 있어요", realname: "임직원 실명과 같은 닉네임은 쓸 수 없어요", param: "사번으로 입장한 뒤 정할 수 있어요" };
+function typeNickSave() {
+  var v = ((el("tnIn") || {}).value || "").trim(), bad = typeNickValid(v);
+  if (bad) { toast(bad); return; }
+  if (testMode() || !BE.on) { S.set("type_nick", v); S.set("type_nick_edit", false); App.render(); return; }
+  var u = S.get("user", {}) || {};
+  beCall({ action: "type_nick_set", emp: u.empId || "", nick: v }, function (r) {
+    if (r && r.ok) { S.set("type_nick", r.nick); S.set("type_nick_edit", false); App.render(); }
+    else toast(TYPE_NICK_WHY[r && r.reason] || "저장하지 못했어요. 다시 눌러 주세요.");
+  }, function () { toast("서버에 연결할 수 없어요"); });
+}
+/* 테스트 순위판 오버레이 (testMode 전용 · 실서버 순위에 섞지 않는다) · 내 테스트 최고 기록이 사이에 끼어 보인다 */
+/* 점수 규모 참고 · 자동 입력으로 60초 내내 가장 아래 단어를 0.4초마다 맞히면 52개 · 4,536점 */
+var TYPE_TEST_NICKS = [["타자요정", 4380], ["에이전트왕", 3960], ["프롬프트장인", 3510], ["로드맵러", 3120], ["데이터덕후", 2740], ["코파일럿", 2380], ["미위팬", 2010], ["커피챗러", 1650], ["혁신연결", 1320], ["공감참여", 980]];
+function typeTestTop(mode) {
+  var list = TYPE_TEST_NICKS.map(function (x) { return { name: x[0], score: mode === "site" ? Math.round(x[1] * 1.08) : x[1] }; });
+  if (mode === "app" && S.get("type_best", 0)) list.push({ name: (typeNick() || "나") + " (나)", score: S.get("type_best", 0), me: true });
+  list.sort(function (a, b) { return b.score - a.score; });
+  var n = mode === "site" ? 5 : 10, meRank = null;
+  list.forEach(function (x, i) { x.rank = i + 1; if (x.me) meRank = i + 1; });
+  return { top: list.slice(0, n), me: meRank ? { rank: meRank, score: S.get("type_best", 0) } : null, depts: [{ dept: "보상부문", avg: 3420, n: 12 }, { dept: "장기보험부문", avg: 3180, n: 9 }, { dept: "디지털전략부문", avg: 2950, n: 7 }], total: list.length };
+}
+function typeTestRank(score) { var r = 1; TYPE_TEST_NICKS.forEach(function (x) { if (x[1] > score) r++; }); return r; }
 function typeRankPull(mode, cb) {
-  if (!BE.on) { cb(TYPE_MOCK[mode]); return; }
+  if (testMode()) { cb(typeTestTop(mode)); return; }
   var u = S.get("user", {}) || {};
   beCall({ action: "type_rank", mode: mode, emp: u.empId || "", n: mode === "site" ? 5 : 10 }, function (r) { if (r && r.ok) { S.set("type_rank_" + mode, r); cb(r); } }, function () {});
 }
@@ -5514,12 +5639,23 @@ function typeRankHtml(r, mode, big) {
   var top = r.top || [];
   var mx = Math.max.apply(null, (r.depts || []).map(function (d) { return d.avg; }).concat([1]));
   return (top.length ? top.map(function (x) {
-      return '<div class="ty-rank"><span class="no">' + x.rank + '</span><span class="nm">' + esc(x.name) + ' <span class="dp">' + esc(x.dept || "") + '</span></span><span class="sc">' + x.score + "</span></div>";
+      return '<div class="ty-rank' + (x.me ? " me" : "") + '"><span class="no">' + x.rank + '</span><span class="nm">' + esc(x.name) + '</span><span class="sc">' + Number(x.score).toLocaleString() + "</span></div>";
     }).join("") : '<p class="muted">아직 기록이 없어요</p>') +
     (r.depts && r.depts.length ? '<p class="sub-label" style="margin-top:14px">부문별 평균</p>' + r.depts.slice(0, big ? 8 : 5).map(function (d) {
-      return '<div class="seatrow"><div class="sb"><i style="width:' + Math.round(d.avg / mx * 100) + '%"></i></div><span class="sn">' + esc(d.dept) + " " + d.avg + "</span></div>";
+      return '<div class="seatrow"><div class="sb"><i style="width:' + Math.round(d.avg / mx * 100) + '%"></i></div><span class="sn">' + esc(d.dept) + " " + d.avg.toLocaleString() + "</span></div>";
     }).join("") : "") +
-    (r.me ? '<p class="muted" style="margin-top:10px">내 순위 ' + r.me.rank + "위 · " + r.me.score + "점</p>" : "");
+    (r.me ? '<p class="muted" style="margin-top:10px">내 순위 ' + r.me.rank + "위 · " + Number(r.me.score).toLocaleString() + "점</p>" : "");
+}
+/* 시작 화면 미리보기 캔버스 · 마스코트와 떨어지는 단어 몇 개 (정지 화면) */
+function rgPreview() {
+  var cv = el("rgPrev"); if (!cv) return;
+  var ctx = cv.getContext("2d"); ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = RAIN_PAL.bg; ctx.fillRect(0, 0, 180, 110);
+  ctx.fillStyle = RAIN_PAL.dot; for (var gx = 5; gx < 180; gx += 10) for (var gy = 5; gy < 110; gy += 10) ctx.fillRect(gx, gy, 1, 1);
+  ctx.font = "bold 11px sans-serif"; ctx.lineWidth = 3; ctx.strokeStyle = "#2A1509";
+  [["에이전트", 14, 26], ["공감", 110, 40], ["데이터", 60, 62]].forEach(function (w) { ctx.strokeText(w[0], w[1], w[2]); ctx.fillStyle = RAIN_PAL.w; ctx.fillText(w[0], w[1], w[2]); });
+  ctx.drawImage(rgSprCv("open"), 78, 78, 24, 22);
+  ctx.drawImage(rgSprCv("buddy"), 104, 84, 16, 16);
 }
 function gameClear(flagKey) {
   if (!S.get(flagKey, false)) {
