@@ -562,12 +562,20 @@
   .rail .hd .nm { font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); }
   .rail .hd .cnt { font-family: var(--disp); font-weight: 800; font-size: calc(17px * var(--fs)); color: var(--acc2); }
   .rail .hd .cnt small { font-size: calc(12.5px * var(--fs)); color: var(--muted); font-weight: 700; }
-  .rail .rb { position: relative; height: 10px; border-radius: 999px; background: var(--white); margin: 21px 13px 0; }
+  .rail .rb { position: relative; height: 10px; border-radius: 999px; background: var(--white); margin: calc(22px + 12px * var(--fs)) 15px 0; }
   .rail .rb i { display: block; height: 100%; border-radius: 999px; background: var(--mint); }
   /* v3.6 상태 위계: 미도달 마커·틱 = 회색 · 도달 = 오렌지 · 사용 가능한 룰렛 = 검정(행동할 것, 화면당 검정 1곳) */
-  .rail .mk { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 27px; height: 27px; border-radius: 999px; border: 2px solid var(--dimln); background: var(--dim); color: var(--faint); font-family: var(--disp); font-size: 12.5px; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  /* v3.44c 마커 = 아이콘(3 룰렛 · 4~7 응모권) · 필요한 개수는 마커 위 작은 숫자 · 상태는 색으로만: 잠김 회색 · 다음 목표 옅은 주황 링 + 은은한 맥박(화면에 하나) · 도달 O100 채움 흰 아이콘 */
+  .rail .mk { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 30px; height: 30px; border-radius: 999px; border: 2px solid var(--dimln); background: var(--dim); color: #B9B2AC; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .rail .mk svg { width: 17px; height: 17px; display: block; }
+  .rail .mk .no { position: absolute; left: 50%; bottom: calc(100% + 3px); transform: translateX(-50%); font-family: var(--disp); font-size: calc(10.5px * var(--fs)); font-weight: 800; line-height: 1; color: var(--faint); white-space: nowrap; pointer-events: none; }
+  .rail .mk.next { background: var(--white); border-color: #FFB284; color: #FFA46E; animation: railNext 2.2s ease-in-out infinite; }
+  .rail .mk.next .no { color: var(--acc2); }
   .rail .mk.on { background: var(--mint); border-color: var(--mint); color: #fff; }
+  .rail .mk.on .no, .rail .mk.act .no { color: var(--acc2); }
   .rail .mk.act { background: var(--ink); border-color: var(--ink); color: #fff; }
+  @keyframes railNext { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,164,110,0.5); } 50% { box-shadow: 0 0 0 6px rgba(255,164,110,0); } }
+  @media (prefers-reduced-motion: reduce) { .rail .mk.next { animation: none; box-shadow: 0 0 0 3px rgba(255,178,132,0.45); } }
   .rail .mk.avail { box-shadow: 0 0 0 3px var(--tint2); }   /* v3.25 검정을 못 받은 사용 가능 룰렛 · 오렌지 채움 + 틴트 링 */
   .rail .mk.glow { animation: coupGlow 1.7s ease-out 2; }
   .rail .tick { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 9px; height: 9px; border-radius: 999px; background: var(--dim); border: 1.5px solid var(--dimln); pointer-events: none; }
@@ -587,10 +595,10 @@
   .tkt { background: var(--tint); border: 1.5px dashed var(--tint2); color: var(--acc2); font-family: var(--disp); font-weight: 800; font-size: calc(20px * var(--fs)); letter-spacing: 0.1em; padding: 9px 14px; border-radius: 12px; }
   .tkt.wait { background: var(--dim); border-color: var(--dimln); color: var(--faint); font-size: calc(13px * var(--fs)); font-weight: 700; letter-spacing: 0; display: flex; align-items: center; }
   /* v3.39 · 마커(27px)는 막대(10px) 아래로 8.5px 나오고 사용 가능 룰렛은 3px 링이 더 붙는다 · 라벨은 그 아래 7px 띄운다 */
-  .rail .lbls { position: relative; height: calc(15px * var(--fs)); margin: 19px 13px 0; }
-  .rail .lbls span { position: absolute; top: 0; transform: translateX(-50%); font-size: calc(10.5px * var(--fs)); font-weight: 800; color: var(--muted); white-space: nowrap; }
-  /* v3.31c · 칸마다 라벨을 달면 360px 에서 「룰렛·응모 1·응모 2」가 서로 씹힌다(마커 간격 약 45px) · 4~6 은 한 라벨로 묶는다 */
-  .rail .lbls span.rg { transform: none; left: 53%; right: -13px; text-align: center; }   /* v3.39 7단 · 4~7 구간(57~100%) 가운데 */
+  .rail .lbls { position: relative; height: calc(15px * var(--fs)); margin: 20px 15px 2px; }
+  .rail .lbls span { position: absolute; top: 0; transform: translateX(-50%); font-size: calc(10.5px * var(--fs)); font-weight: 800; color: var(--faint); white-space: nowrap; }
+  .rail .lbls span.next { color: var(--muted); }
+  .rail .lbls span.on { color: var(--acc2); }
   .rail .cap { margin-top: 7px; font-size: calc(12px * var(--fs)); font-weight: 700; color: var(--faint); line-height: 1.5; }
   /* 섹션 제목 (카드 바깥) */
   .sect { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 9px 2px 6px; }
@@ -3339,37 +3347,38 @@ function stampCardsHtml(st, newly) {
 /* 보상 레일 (v3.1) · 사다리 카드+룰렛 쿠폰 카드를 한 줄로. 마커 3=룰렛(탭=쿠폰 모달) · 4~6=응모(탭=추첨 안내 모달).
    v3.2: 레일은 6단이다(v3.39 부터 7단). 1·2 지점에도 보상 없는 회색 틱을 둬서 1~2개인 사용자도 진행이 레일 위에 찍혀 보이게 한다.
    홈·스탬프 탭 공용 컴포넌트 (design.md 컴포넌트 일관성) · home=true 는 컴팩트 변형(캡션 축약 + 하단 CTA)일 뿐 시각 문법은 동일. */
+/* v3.44c 레일 아이콘 · SICO 선 아이콘 문법 · 룰렛 판(바늘 + 살 3개) · 응모권(양옆 홈 + 절취선) */
+var RAIL_ICO = {
+  wheel: SICO + '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V6M12 13.5l6.5 3.75M12 13.5l-6.5 3.75"/><path d="M10 2.5h4L12 5z" fill="currentColor" stroke-width="1.2"/></svg>',
+  ticket: SICO + '<path d="M3.5 7h17v3.2a1.8 1.8 0 0 0 0 3.6V17h-17v-3.2a1.8 1.8 0 0 0 0-3.6z"/><path d="M14.5 7.5v1.6M14.5 11.2v1.6M14.5 14.9v1.6"/></svg>'
+};
+/* v3.44c (사용자 요청 260917 · 규칙 문장이 많다) · 설명 줄 삭제 · 라벨은 짧게(룰렛 · 1장~4장) · 규칙 설명은 마커를 누르면 뜨는 모달에만 */
 function railHtml(n, glow, dispN, home) {
   if (dispN == null) dispN = n;   /* 새 스탬프 연출 중엔 카운트만 이전 값에서 굴러 올라간다 */
   n = Math.min(REWARD_CAP, n); dispN = Math.min(REWARD_CAP, dispN);   /* v3.39 · 8칸 중 7개면 보상 끝 */
   var out0 = S.get("roulette_out", false);
   var used = S.get("roulette_used", false);
-  var marks = [[3, used ? "룰렛 사용" : "룰렛", "ppRouletteOpen()"], [4, "추첨 응모 1장", "ppDrawOpen()"], [5, "추첨 응모 2장", "ppDrawOpen()"], [6, "추첨 응모 3장", "ppDrawOpen()"], [7, "추첨 응모 4장", "ppDrawOpen()"]];
+  var marks = [[3, "룰렛", "ppRouletteOpen()", "wheel", used ? "룰렛 사용 완료" : "룰렛 1회"], [4, "1장", "ppDrawOpen()", "ticket", "추첨 응모 1장"], [5, "2장", "ppDrawOpen()", "ticket", "추첨 응모 2장"], [6, "3장", "ppDrawOpen()", "ticket", "추첨 응모 3장"], [7, "4장", "ppDrawOpen()", "ticket", "추첨 응모 4장"]];
+  var nextAt = n < REWARD_CAP ? Math.max(3, n + 1) : 0;   /* 다음 목표 마커 하나만 강조 */
   var mk = "", lb = "";
   [1, 2].forEach(function (k) {
     mk += '<span class="tick' + (n >= k ? " on" : "") + '" style="left:' + (k / REWARD_CAP * 100).toFixed(1) + '%"></span>';
   });
   marks.forEach(function (m) {
     var pos = (m[0] / REWARD_CAP * 100).toFixed(1) + "%";
-    /* 사용 가능해진 룰렛(3 도달·미사용)은 검정 = 지금 행동할 것 (v3.6 상태 위계) */
-    /* v3.25 · 사용 가능한 룰렛이 검정을 못 받으면 오렌지 채움 + 틴트 링(avail)으로 한 단계 낮춘다 */
-    var cls = m[0] === 3 && n >= 3 && !used ? (isBlack("roulette") ? " act" : " on avail") : n >= m[0] ? " on" : "";
-    mk += '<button class="mk' + cls + (m[0] === 3 && glow ? " glow" : "") + '" style="left:' + pos + '" onclick="' + m[2] + '" aria-label="' + m[1] + '">' + m[0] + "</button>";
-    if (m[0] === 3) lb += '<span style="left:' + pos + '">룰렛</span>';   /* 사용 여부는 마커 색·쿠폰 창이 말한다 (라벨 길이 고정) */
+    /* 사용 가능해진 룰렛(3 도달·미사용)은 검정 = 지금 행동할 것 (v3.6 상태 위계) · 검정을 못 받으면 오렌지 채움 + 틴트 링(avail) */
+    var st = m[0] === 3 && n >= 3 && !used ? (isBlack("roulette") ? " act" : " on avail") : n >= m[0] ? " on" : m[0] === nextAt ? " next" : "";
+    mk += '<button class="mk' + st + (m[0] === 3 && glow ? " glow" : "") + '" style="left:' + pos + '" onclick="' + m[2] + '" aria-label="스탬프 ' + m[0] + "개 · " + m[4] + '">' +
+      RAIL_ICO[m[3]] + '<span class="no">' + m[0] + "</span></button>";
+    lb += '<span class="' + (n >= m[0] ? "on" : m[0] === nextAt ? "next" : "") + '" style="left:' + pos + '">' + m[1] + "</span>";
   });
-  lb += '<span class="rg">추첨 응모 1·2·3·4장</span>';
   return '<div class="rail">' +
     '<div class="hd"><span class="nm">스탬프 보상</span><span class="cnt"><span id="ppCnt">' + dispN + "</span><small> / " + REWARD_CAP + "</small></span></div>" +
     '<div class="rb"><i style="width:' + Math.min(100, n / REWARD_CAP * 100) + '%"></i>' + mk + "</div>" +
     '<div class="lbls">' + lb + "</div>" +
-    (home
-      ? '<p class="cap">3개 = 룰렛 1회 · 4개부터 응모 1장씩 · 8개 중 7개면 보상 끝</p>' +
-        (out0 ? '<p class="cap">오늘 준비한 룰렛이 모두 소진되었습니다</p>' : "") +
-        raffleNumsHtml(n) +
-        '<button class="cta" onclick="App.go(\'passport\')">스탬프 탭으로</button>'
-      : '<p class="cap">3개 = 1F 룰렛 1회 · 4개부터 사후 추첨 응모 1장씩 · 8개 중 7개를 모으면 보상 끝 · 마커를 누르면 자세히</p>' +
-        (out0 ? '<p class="cap">오늘 준비한 룰렛이 모두 소진되었습니다</p>' : "") +
-        raffleNumsHtml(n)) +
+    (out0 ? '<p class="cap">오늘 준비한 룰렛이 모두 소진되었습니다</p>' : "") +
+    raffleNumsHtml(n) +
+    (home ? '<button class="cta" onclick="App.go(\'passport\')">스탬프 탭으로</button>' : "") +
     "</div>";
 }
 /* v3.31c 내 응모 번호 · 응모권 1장 이상일 때만 · 서버 번호가 아직 없으면 「발급 중」 회색 (v3.12 모달과 같은 규칙) */
