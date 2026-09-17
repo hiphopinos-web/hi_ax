@@ -752,6 +752,21 @@
   .tytv .tytv-row .nm small, .tytv .tytv-row .sc small { display: block; font-size: 14px; font-weight: 700; opacity: 0.65; margin-top: 2px; }
   .tytv .tytv-row .sc { flex: none; font-family: var(--disp); text-align: right; }
   .tytv .tytv-foot { margin-top: 14px; font-size: 15px; opacity: 0.6; line-height: 1.6; }
+  /* v3.50 AX 올림픽 · 허브 · 메달 · 메달표 */
+  .oly-hub { margin-top: 10px; }
+  .oly-sum { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: var(--ink); color: #fff; border-radius: 16px; padding: 12px 14px; margin-bottom: 8px; }
+  .oly-sum small { display: block; font-size: calc(11.5px * var(--fs)); font-weight: 700; opacity: 0.7; }
+  .oly-sum b { font-family: var(--disp); font-size: calc(24px * var(--fs)); font-weight: 900; }
+  .oly-sum b em { font-style: normal; font-size: calc(13px * var(--fs)); opacity: 0.6; }
+  .oly-sum > span { text-align: right; font-size: calc(12.5px * var(--fs)); font-weight: 700; line-height: 1.5; opacity: 0.9; }
+  .medal { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px; font-size: calc(12px * var(--fs)); font-weight: 900; color: #fff; }
+  .medal.m1 { background: #FF7E31; }
+  .medal.m2 { background: #8A817B; }
+  .medal.m3 { background: #7A3E1C; }
+  .oly-pts { display: block; font-size: calc(11.5px * var(--fs)); font-weight: 700; color: var(--muted); text-align: right; }
+  .oly-mt { display: grid; grid-template-columns: 1fr 34px 34px 34px 44px; gap: 4px; padding: 8px 2px; border-bottom: 1px solid var(--line); font-size: calc(13.5px * var(--fs)); align-items: center; }
+  .oly-mt span { text-align: center; font-variant-numeric: tabular-nums; font-weight: 700; }
+  .oly-mt:first-of-type { color: var(--muted); font-weight: 800; font-size: calc(12px * var(--fs)); }
   .screen-wrap .counters { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center; margin: 16px 0; }
   .screen-wrap .counters div { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 12px 4px; }
   .screen-wrap .counters .v { font-family: var(--disp); font-size: 21px; color: var(--mint-deep); }
@@ -2350,7 +2365,7 @@ var App = {
     /* 스탬프 · 스탬프 카드가 유일한 입구 (v3.1: ev_games·ev_draw·wallv 참여자 화면 폐지) */
     ideas: "passport", booth: "passport", wq_list: "passport",
     wq_play: "wq_list", game_word: "passport", game_type: "passport", type_rank: "game_type",
-    game_pang: "passport", game_jump: "passport", gs_rank: "passport",
+    game_pang: "passport", game_jump: "passport", oly_rank: "passport",
     ideas_mine: "passport", survey: "passport",
     /* 프로그램 · 신청 전용 (리더보드는 10F 세션 곁으로, v3.1) · 일정(guide_time)은 v3.3부터 탭 루트라 PARENT 없음 */
     dap: "guide", ev_cchat: "guide",
@@ -2367,7 +2382,7 @@ var App = {
     ev_cchat: "내 커피챗",
     wq_list: "DAP Wall QR 퀴즈", wq_play: "문제 풀이",
     admin: "관리자 콘솔", screen: "송출용 화면", screen_survey: "", screen_words: "", game_word: "ME to WE 기억력", game_type: "타자 게임", type_site: "현장 타자왕전", wall_type: "", type_award: "", type_rank: "타자 순위",
-    game_pang: "AX 팡", game_jump: "ME to WE 점프", gs_rank: "게임 순위",
+    game_pang: "AX 팡", game_jump: "ME to WE 점프", oly_rank: "AX 올림픽",
     wall_quiz: "", wall_wave: "", wall_live: "", wall_metowe: "", wall_tv: ""
   },
   tabOf: function (v) {
@@ -3312,12 +3327,8 @@ function stampInnerHtml(s) {
       '<button class="btn mint" style="margin-top:10px" onclick="qrScanOpen()">QR 스캔</button>' +
       '<p class="lnk sub" onclick="staffStampOpen()">QR이 안 되면 담당자 적립 요청 ›</p>';
   } else if (s.id === "p4") {
-    /* v3.50 · 휴대폰 게임 4종 전원 공개  */
-    inner += '<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch">' +
-      '<button class="btn mint" onclick="App.go(\'game_pang\')">AX 팡</button>' +
-      '<button class="btn mint" onclick="App.go(\'game_jump\')">ME to WE 점프</button>' +
-      '<button class="btn mint" onclick="App.go(\'game_type\')">단어 소나기</button>' +
-      '<button class="btn mint" onclick="App.go(\'game_word\')">ME to WE 기억력</button></div>';
+    /* v3.50 · AX 올림픽 허브 · 종목 행 카드 · 내 환산 점수·메달 · 총점 */
+    inner += '<div class="oly-hub">' + olyHubHtml() + "</div>";
   } else {
     /* v3.12: 적립방식(how) 뱃지 삭제 · 참여자에게 필요한 건 desc 와 바로가기뿐 */
     inner += '<button class="btn mint" style="margin-top:10px" onclick="' + s.tap + '">' + s.cta + "</button>";
@@ -3501,19 +3512,22 @@ var Views = {
   wall_type: function () {
     tyTvPull();
     if (!TYTV.flip) TYTV.flip = setInterval(tyTvTick, 12000);
-    var site = TYTV.show === "site", r = site ? TYTV.site : TYTV.app;
+    olyPull();
+    var site = TYTV.show === "site", oly = TYTV.show === "oly", r = site ? TYTV.site : TYTV.app;
     var winTxt = TYTV.site && TYTV.site.win ? TYTV.site.win.join(" · ") : "";
+    var ob = OLY.board, orows = { top: ((ob && ob.overall) || []).map(function (x) { return { name: x.name, score: olyFmt(x.total) }; }) };
     return '<div class="screen-wrap tytv"><div class="row" style="justify-content:space-between;padding-top:8px">' +
       '<b class="disp" style="font-size:24px;letter-spacing:0.03em">AX Festival <span style="color:var(--mint-deep)">2026</span></b>' +
       '<div class="row" style="gap:6px">' + tvBtns() + (S.get("admin_authed", false) ? '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button>' : "") + "</div></div>" +
-      '<p class="tytv-k">AX 단어 소나기 · 타자 순위</p>' +
-      '<p class="tytv-t">' + (site ? "1F 현장 타자왕전 상위 5" : "앱 순위 상위 10") + "</p>" +
-      '<div class="tytv-seg"><span class="' + (site ? "" : "on") + '">앱 상위 10</span><span class="' + (site ? "on" : "") + '">현장 상위 5</span></div>' +
-      '<div class="tytv-list' + (site ? " five" : "") + '">' + tyTvRows(r, site ? 5 : 10) + "</div>" +
-      '<p class="tytv-foot">' + (site ? "결선 " + esc(winTxt) + " · 1인 1회 · 같은 키보드 · 1·2등은 17:00 Outro에서 호명" : "앱 스탬프 탭 → 미니게임 → 타자 게임 · 닉네임으로 표시 · 도전은 무제한, 최고 기록만") + "</p>" +
+      '<p class="tytv-k">' + (oly ? "AX 올림픽 · 종합 순위" : "AX 단어 소나기 · 타자 순위") + "</p>" +
+      '<p class="tytv-t">' + (oly ? "종합 상위 10 · 4종목 " + olyMax() + "점 만점" : site ? "1F 현장 타자왕전 상위 5" : "앱 순위 상위 10") + "</p>" +
+      '<div class="tytv-seg"><span class="' + (site || oly ? "" : "on") + '">앱 타자 10</span><span class="' + (site ? "on" : "") + '">현장 타자 5</span><span class="' + (oly ? "on" : "") + '">AX 올림픽</span></div>' +
+      '<div class="tytv-list' + (site ? " five" : "") + '">' + (oly ? tyTvRows(orows, 10) : tyTvRows(r, site ? 5 : 10)) + "</div>" +
+      '<p class="tytv-foot">' + (oly ? "앱 스탬프 탭 → 미니게임 → 4종목을 한 판씩 · 종목마다 최고 기록을 100점 만점으로 환산 · 명예 순위" : site ? "결선 " + esc(winTxt) + " · 1인 1회 · 같은 키보드 · 1·2등은 17:00 Outro에서 호명" : "앱 스탬프 탭 → 미니게임 → 타자 게임 · 닉네임으로 표시 · 도전은 무제한, 최고 기록만") + "</p>" +
       (testMode() ? '<p class="tytv-foot" style="opacity:0.4">테스트 화면 · 가짜 닉네임</p>' : "") + "</div>";
   },
   type_award: function () {
+    if (S.get("tyaw_tab", "type") === "oly" && S.get("admin_authed", false)) return olyAwardHtml();
     if (!S.get("admin_authed", false)) return '<div class="screen-wrap"><p style="padding:40px 8px">관리자 콘솔에 로그인한 뒤 열어 주세요</p><button class="btn mint" onclick="App.go(\'admin\')">관리자 콘솔</button></div>';
     tyAwardPull();
     var d = TYAW.data, hide = S.get("tyaw_hide", false), top = (d && d.top) || [];
@@ -3523,6 +3537,7 @@ var Views = {
       '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="tyAwardPull(true)">새로고침</button>' +
       '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="S.set(\'tyaw_hide\', ' + (hide ? "false" : "true") + ')">실명 ' + (hide ? "보이기" : "가리기") + "</button>" +
       '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'type_site\')">← 진행 화면</button></div></div>' +
+      olyAwardTabs("type") +
       '<p class="tytv-k">17:00 OUTRO · 시상</p><p class="tytv-t">1F 현장 타자왕전 결과</p>' +
       '<div class="tytv-list five">' + (top.length ? top.map(function (x) {
         return '<div class="tytv-row' + (x.rank <= 2 ? " top" : "") + '"><span class="no">' + x.rank + '</span><span class="nm">' + esc(x.nick || "익명 참가자") +
@@ -4074,12 +4089,36 @@ var Views = {
     return gsStartHtml("jump", { rootId: "jpRoot", previewId: "jpPrev", pw: 180, ph: 110,
       rules: "탭 = 점프 · 공중에서 한 번 더 탭 = 2단 점프 · 코인은 AX 토큰<br>부딪히면 하트 -1 (1초 무적) · 하트 3개를 다 잃거나 60초가 지나면 끝 · 끝까지 하면 <b>미니게임 스탬프</b>" });
   },
-  gs_rank: function () {
-    var key = S.get("gs_rank_key", "pang") === "jump" ? "jump" : "pang";
-    return '<div class="qseg" style="margin-bottom:10px"><button class="' + (key === "pang" ? "on" : "") + '" onclick="S.set(\'gs_rank_key\', \'pang\'); App.render()">AX 팡</button>' +
-      '<button class="' + (key === "jump" ? "on" : "") + '" onclick="S.set(\'gs_rank_key\', \'jump\'); App.render()">ME to WE 점프</button></div>' +
-      '<p class="scap" style="margin:0 2px 8px">테스트 순위판 · 가짜 닉네임과 내 최고 기록만 보여요 (서버 순위는 게임을 정한 뒤 연결)</p>' +
-      '<div class="card">' + typeRankHtml(gsRankTop(key)) + "</div>";
+  /* ═══ v3.50 AX 올림픽 순위판 · 종합(전 종목 완주자) · 종목별(금은동) · 부문 메달표 ═══ */
+  oly_rank: function () {
+    olyPull();
+    var b = OLY.board, tab = S.get("oly_tab", "all"), evk = S.get("oly_ev", OLY_EVENTS[0].key), me = olyMe();
+    if (!OLY_EVENTS.some(function (e) { return e.key === evk; })) evk = OLY_EVENTS[0].key;
+    var seg = '<div class="qseg" style="margin-bottom:10px">' + [["all", "종합"], ["event", "종목별"], ["dept", "부문 메달"]].map(function (t) {
+      return '<button class="' + (tab === t[0] ? "on" : "") + '" onclick="S.set(\'oly_tab\', \'' + t[0] + '\'); App.render()">' + t[1] + "</button>";
+    }).join("") + "</div>";
+    var h = seg + (b && b.test ? '<p class="scap" style="margin:0 2px 8px">테스트 순위판 · 가짜 닉네임이 섞여 있어요</p>' : "");
+    if (!b) return h + '<div class="card"><p class="muted">순위를 불러오는 중입니다</p></div>';
+    if (tab === "event") {
+      h += '<div class="fl-chips" style="margin-bottom:10px">' + OLY_EVENTS.map(function (e) {
+        return '<button class="' + (e.key === evk ? "on" : "") + '" onclick="S.set(\'oly_ev\', \'' + e.key + '\'); App.render()">' + esc(e.short) + "</button>";
+      }).join("") + "</div>";
+      var ev = OLY_EVENTS.filter(function (e) { return e.key === evk; })[0], mv = me.ev[evk];
+      var f = function (x) { return Number(x.score).toLocaleString() + '<small class="oly-pts">' + olyFmt(x.pts) + "점</small>"; }; f.medal = true;
+      h += '<div class="card"><b style="color:var(--hi)">' + esc(ev.name) + ' · 한 사람 전원</b><p class="muted" style="margin:2px 0 6px;font-size:calc(12.5px * var(--fs))">최고 기록 순 · 1~3위 금·은·동 · 목표 ' + (olyTarget()[evk] || 0).toLocaleString() + "점 = 100</p>" +
+        olyRows(b.perEvent && b.perEvent[evk], f) +
+        (mv ? '<p class="muted" style="margin-top:10px">내 기록 ' + mv.best.toLocaleString() + " · 환산 " + olyFmt(mv.pts) + "점" + (mv.rank ? " · " + mv.rank + "위" : "") + "</p>" : '<button class="btn mint" style="margin-top:10px" onclick="App.go(\'' + ev.view + '\')">' + esc(ev.name) + " 한 판</button>") + "</div>";
+    } else if (tab === "dept") {
+      h += '<div class="card"><b style="color:var(--hi)">부문 메달표</b><p class="muted" style="margin:2px 0 8px;font-size:calc(12.5px * var(--fs))">종목별 1~3위 금·은·동을 부문별로 · 완주 = 전 종목을 끝낸 사람</p>' +
+        '<div class="oly-mt"><span>부문</span><span>금</span><span>은</span><span>동</span><span>완주</span></div>' +
+        ((b.medals || []).length ? b.medals.map(function (d) { return '<div class="oly-mt"><b>' + esc(d.dept) + "</b><span>" + d.gold + "</span><span>" + d.silver + "</span><span>" + d.bronze + "</span><span>" + d.finishers + "</span></div>"; }).join("") : '<p class="muted">아직 기록이 없어요</p>') + "</div>";
+    } else {
+      var f2 = function (x) { return olyFmt(x.total) + '<small class="oly-pts">/ ' + (b.max || olyMax()) + "</small>"; };
+      h += '<div class="card mb8"><b style="color:var(--hi)">내 총점 ' + olyFmt(me.total) + " / " + olyMax() + "</b>" +
+        '<p class="muted" style="margin-top:3px">' + (me.left ? "종합 순위까지 " + me.left + "종목 남음 · 모든 종목을 한 판씩 끝내면 올라가요" : me.rank ? "종합 " + me.rank + "위" : "종합 순위 집계 중") + "</p></div>" +
+        '<div class="card"><b style="color:var(--hi)">종합 상위 10</b><p class="muted" style="margin:2px 0 6px;font-size:calc(12.5px * var(--fs))">전 종목 완주자 ' + (b.finishers || 0) + "명 · 동점은 전 종목 완료가 이른 쪽</p>" + olyRows(b.overall, f2) + "</div>";
+    }
+    return h + '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">명예 순위 · 경품 없음 · 닉네임으로 표시 · 경품은 1F 현장 타자왕전(노트북)에서만 · Outro 에서 종합 1~3위 호명</p>';
   },
   type_rank: function () {
     var mode = S.get("type_rank_tab", "app");
@@ -5949,6 +5988,7 @@ function rgEndFinal(why) {
   RG.res = { why: why, score: RG.score, hits: RG.hits, combo: RG.maxCombo, acc: acc, me: null, send: "" };
   if (RG.mode === "app") {
     S.set("type_best", Math.max(S.get("type_best", 0), RG.score));
+    OLY.t = 0;
     gameClear("type_cleared");   /* 끝까지 하면 04 미니게임 (점수 무관 · 이미 있으면 조용히) */
     var u = S.get("user", {}) || {};
     if (BE.on && !testEmp() && u.empId) {
@@ -5964,7 +6004,7 @@ function rgResultPaint() {
   var root = el("tgRoot"), r = RG.res; if (!root || !r) return;
   var rank = r.me ? r.me.rank : testMode() ? typeTestRank(r.score) : null;
   root.innerHTML = gsResultHtml("type", { why: r.why, reason: r.why === "time" ? "60초를 다 버텼어요" : "단어 5개를 놓쳐서 끝났어요", score: r.score,
-    stats: "터뜨린 단어 " + r.hits + "개 · 최고 콤보 " + r.combo + " · 정확도 " + r.acc + "%",
+    stats: "터뜨린 단어 " + r.hits + "개 · 최고 콤보 " + r.combo + " · 정확도 " + r.acc + "%<br>" + olyResultLine("type", r.score),
     rankLine: r.send === "sending" ? "순위 반영 중" : rank ? "앱 순위 " + rank + "위" + (testMode() ? " (테스트)" : "") : r.send === "range" ? "기록이 상식 범위를 넘어 순위에 넣지 않았어요" : "",
     banner: rank && rank <= 10 ? '<div class="tipbanner mb12">상위권이에요. 1F 현장 타자왕전에 도전하세요 · 같은 키보드로 겨루고 1·2등은 Outro에서 호명합니다</div>' : "" });
 }
@@ -6161,8 +6201,8 @@ function tyTvPull() {
 }
 function tyTvTick() {
   if (App.current !== "wall_type") { clearInterval(TYTV.flip); TYTV.flip = null; return; }
-  TYTV.show = TYTV.show === "app" ? "site" : "app";
-  tyTvPull();
+  TYTV.show = TYTV.show === "app" ? "site" : TYTV.show === "site" ? "oly" : "app";   /* v3.50 올림픽 종합을 같이 돌린다 */
+  tyTvPull(); olyPull();
   App.render();
 }
 function tyTvRows(r, n) {
@@ -6174,6 +6214,43 @@ function tyTvRows(r, n) {
   return h;
 }
 
+/* v3.50 시상 · AX 올림픽 탭 · 종합 1~3위 호명(닉네임 + 실명) · 관리코드 oly_result · 데모는 테스트 순위 + 예시 이름 */
+var OLYAW = { data: null, t: 0 };
+function olyAwardTabs(cur) {
+  var st = "background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap";
+  return '<div class="row" style="gap:6px;margin-top:12px">' + [["type", "타자왕전"], ["oly", "AX 올림픽"]].map(function (t) {
+    return '<button class="chip" style="' + (cur === t[0] ? "background:var(--mint);color:#fff;border-color:var(--mint);white-space:nowrap" : st) + '" onclick="S.set(\'tyaw_tab\', \'' + t[0] + '\')">' + t[1] + "</button>";
+  }).join("") + "</div>";
+}
+function olyAwardPull(force) {
+  if (!BE.on) {
+    if (!OLYAW.data) { var tb = olyTestBoard(); OLYAW.data = { demo: true, overall: tb.overall.map(function (x, i) { return { rank: x.rank, nick: x.name, name: ["예시일", "예시이", "예시삼", "예시사", "예시오", "예시육", "예시칠", "예시팔", "예시구", "예시십"][i] || "", dept: "데모부문", total: x.total }; }), medals: tb.medals }; }
+    return;
+  }
+  if (!force && Date.now() - OLYAW.t < 20000) return;
+  OLYAW.t = Date.now();
+  beCall({ action: "oly_result", key: admKey() }, function (r) {
+    if (r && r.ok) { OLYAW.data = r; if (App.current === "type_award") App.render(); }
+    else toast(r && r.reason === "auth" ? "관리코드 불일치 · 콘솔에 다시 로그인하세요" : "결과를 불러오지 못했습니다");
+  }, function () { toast("서버 응답 없음"); });
+}
+function olyAwardHtml() {
+  olyAwardPull();
+  var d = OLYAW.data, hide = S.get("tyaw_hide", false), top = ((d && d.overall) || []).slice(0, 3), st = "background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap";
+  return '<div class="screen-wrap tytv"><div class="row" style="justify-content:space-between;padding-top:8px;flex-wrap:wrap;gap:6px">' +
+    '<b class="disp" style="font-size:24px;letter-spacing:0.03em">AX Festival <span style="color:var(--mint-deep)">2026</span></b>' +
+    '<div class="row" style="gap:6px;flex-wrap:wrap">' + tvBtns() +
+    '<button class="chip" style="' + st + '" onclick="olyAwardPull(true)">새로고침</button>' +
+    '<button class="chip" style="' + st + '" onclick="S.set(\'tyaw_hide\', ' + (hide ? "false" : "true") + ')">실명 ' + (hide ? "보이기" : "가리기") + "</button>" +
+    '<button class="chip" style="' + st + '" onclick="App.go(\'type_site\')">← 진행 화면</button></div></div>' +
+    olyAwardTabs("oly") +
+    '<p class="tytv-k">17:00 OUTRO · 명예 시상</p><p class="tytv-t">AX 올림픽 종합 1~3위</p>' +
+    '<div class="tytv-list five">' + (top.length ? top.map(function (x) {
+      return '<div class="tytv-row top"><span class="no">' + x.rank + '</span><span class="nm">' + esc(x.nick || "익명 참가자") +
+        (hide ? "" : "<small>" + esc(x.name || "") + (x.dept ? " · " + esc(x.dept) : "") + "</small>") + '</span><span class="sc">' + olyFmt(x.total) + "<small>/ " + olyMax() + "</small></span></div>";
+    }).join("") : '<p style="padding:24px 4px;opacity:0.7">' + (d ? "아직 전 종목 완주자가 없습니다" : "불러오는 중") + "</p>") + "</div>" +
+    '<p class="tytv-foot">명예 시상 · 경품 없음 · 전 종목 완주자만 · 동점은 전 종목 완료가 이른 쪽' + (d && d.demo ? " · 데모 예시 이름" : "") + "</p></div>";
+}
 /* 시상 화면 데이터 · 관리코드 type_result · 데모는 테스트 순위 + 예시 이름 */
 var TYAW = { data: null, t: 0 };
 function tyAwardPull(force) {
@@ -6197,6 +6274,120 @@ function tyWinSave() {
   beCall({ action: "type_cfg", key: admKey(), win: v }, function (r) {
     if (r && r.ok) { toast("결선 시간대 저장 · " + r.win); TYTV.pullT = 0; tyTvPull(); } else toast("저장하지 못했습니다 · " + ((r && r.reason) || ""));
   }, function () { toast("서버 응답 없음"); });
+}
+
+/* ════════════════ v3.50 AX 올림픽 (사용자 확정 260917) ════════════════
+   종목 = OLY_EVENTS 한 곳(한 줄 추가·삭제 · 서버 OLY_EVENTS 와 같은 순서로 맞춘다) · 만점 = 종목 수 × 100.
+   환산 = min(100, 종목 최고 기록 / 목표 점수 × 100) · 원점수 합산·백분위 금지 · 목표 점수는 서버 설정(콘솔)이 정본, 아래는 폴백.
+   종합 순위 = 모든 종목 1판 이상 끝낸 사람만(동점은 전 종목 완료가 이른 쪽) · 종목 순위 = 한 사람 전원 · 1~3위 금·은·동.
+   명예 보상만(경품 없음) · 공개 순위는 닉네임 · 1F 현장 타자왕전(노트북·경품)은 그대로. */
+var OLY_EVENTS = [
+  { key: "pang", name: "AX 팡", short: "팡", view: "game_pang", best: "pang_best" },
+  { key: "jump", name: "ME to WE 점프", short: "점프", view: "game_jump", best: "jump_best" },
+  { key: "type", name: "AX 단어 소나기", short: "소나기", view: "game_type", best: "type_best" },
+  { key: "word", name: "ME to WE 기억력", short: "기억력", view: "game_word", best: "gw_best" }
+];
+var OLY_TARGET = { pang: 3000, jump: 1800, type: 3500, word: 480 };   /* 폴백 · 테스트 플레이 보정값(실측 뒤 콘솔에서 조정) */
+var OLY_MEDAL = ["", "금", "은", "동"];
+var OLY = { board: null, t: 0 };
+function olyMax() { return OLY_EVENTS.length * 100; }
+function olyTarget() { return (OLY.board && OLY.board.target) || OLY_TARGET; }
+function olyPts(best, key) { var t = olyTarget()[key] || 1; return Math.min(100, Math.round(best / t * 1000) / 10); }
+function olyFmt(n) { return (Math.round(n * 10) / 10).toLocaleString(); }
+function olyPull(force) {
+  if (testMode()) { OLY.board = olyTestBoard(); return; }
+  if (!BE.on || (!force && Date.now() - OLY.t < 20000)) return;
+  OLY.t = Date.now();
+  var u = S.get("user", {}) || {};
+  beCall({ action: "oly_board", emp: u.empId || "" }, function (r) {
+    if (r && r.ok) { OLY.board = r; if (["passport", "oly_rank", "wall_type"].indexOf(App.current) >= 0) App.render(); }
+  }, function () {});
+}
+/* 내 현황 · 환산은 이 기기 최고 기록으로 바로(서버를 기다리지 않는다) · 순위·메달은 서버 값 */
+function olyMe() {
+  var sv = (OLY.board && OLY.board.me) || null, me = { total: 0, done: 0, ev: {}, rank: sv ? sv.rank : 0 };
+  OLY_EVENTS.forEach(function (e) {
+    var best = Math.max(S.get(e.best, 0), sv && sv.ev && sv.ev[e.key] ? sv.ev[e.key].best : 0);
+    if (best > 0) {
+      var pts = olyPts(best, e.key), sve = sv && sv.ev && sv.ev[e.key];
+      me.ev[e.key] = { best: best, pts: pts, rank: sve ? sve.rank : 0, medal: sve ? sve.medal : 0 };
+      me.total += pts; me.done++;
+    }
+  });
+  me.total = Math.round(me.total * 10) / 10;
+  me.left = OLY_EVENTS.length - me.done;
+  return me;
+}
+function olySubmit(key, score) {
+  var u = S.get("user", {}) || {};
+  OLY.t = 0;
+  if (!BE.on || testEmp() || !u.empId || key === "type") return;   /* 단어 소나기는 type_submit 이 맡는다 */
+  beCall({ action: "game_submit", emp: u.empId, name: u.name || "", game: key, score: Math.round(score) }, function (r) {
+    if (r && r.ok && OLY.board) OLY.board.me = r.me;
+  }, function () {});
+}
+function olyMedalHtml(m) { return m ? '<span class="medal m' + m + '">' + OLY_MEDAL[m] + "</span>" : ""; }
+function olyResultLine(key, score) {
+  var me = olyMe(), e = me.ev[key];
+  return "올림픽 환산 " + olyFmt(olyPts(score, key)) + "점" + (e && e.best > score ? " · 최고 기록 기준 " + olyFmt(e.pts) + "점" : "") +
+    " · 총점 " + olyFmt(me.total) + " / " + olyMax() + (me.left ? " · 종합 순위까지 " + me.left + "종목" : me.rank ? " · 종합 " + me.rank + "위" : "");
+}
+/* 스탬프 04 카드 펼침 = 올림픽 허브 */
+function olyHubHtml() {
+  olyPull();
+  var me = olyMe();
+  return '<div class="oly-sum"><div><small>내 AX 올림픽 총점</small><b>' + olyFmt(me.total) + "<em> / " + olyMax() + "</em></b></div>" +
+    '<span>종목 ' + me.done + "/" + OLY_EVENTS.length + " 완료<br>" + (me.left ? "종합 순위까지 " + me.left + "종목 남음" : me.rank ? "종합 " + me.rank + "위" : "종합 순위 집계 중") + "</span></div>" +
+    OLY_EVENTS.map(function (e) {
+      var v = me.ev[e.key];
+      return rcHtml({ cls: v ? " done" : "", onclick: "App.go('" + e.view + "')", link: true, left: tokBadge(e.short, v ? "mine" : ""),
+        title: esc(e.name), badges: v ? olyMedalHtml(v.medal) : "",
+        sub: v ? "최고 " + v.best.toLocaleString() + (v.rank ? " · 종목 " + v.rank + "위" : "") : "아직 안 했어요 · 한 판 1분",   /* 오른쪽 숫자 = 환산 점수 */
+        right: '<span class="st">' + (v ? olyFmt(v.pts) : "-") + "</span>" });
+    }).join("") +
+    '<button class="btn line" style="margin-top:4px" onclick="App.go(\'oly_rank\')">AX 올림픽 순위판</button>';
+}
+/* 테스트 모드 순위판 · 가짜 참가자 + 이 기기 기록 · 서버와 같은 규칙으로 계산 */
+var OLY_FAKE = [
+  ["팡팡요정", "보상부문", { pang: 4200, jump: 1500, type: 3300, word: 430 }],
+  ["점프왕", "장기보험부문", { pang: 2600, jump: 2100, type: 2900, word: 470 }],
+  ["타자요정", "디지털전략부문", { pang: 1900, jump: 1200, type: 4380, word: 400 }],
+  ["기억의신", "보상부문", { pang: 2100, jump: 1300, type: 2500, word: 540 }],
+  ["연쇄장인", "자동차보험부문", { pang: 3800, jump: 900, type: 2100, word: 350 }],
+  ["미위팬", "장기보험부문", { pang: 2400, jump: 1700, type: 2010, word: 380 }],
+  ["코인수집가", "디지털전략부문", { pang: 1500, jump: 1900, word: 300 }],
+  ["공감참여", "보상부문", { pang: 900, type: 980 }],
+  ["혁신연결", "자동차보험부문", { jump: 700, word: 260 }],
+  ["로드맵러", "장기보험부문", { pang: 3100, jump: 1600, type: 3120, word: 410 }]
+];
+function olyTestBoard() {
+  var people = OLY_FAKE.map(function (x, i) { return { name: x[0], dept: x[1], best: x[2], doneAt: "2026-10-26 1" + (i % 10) + ":00:00" }; });
+  var mine = {}; OLY_EVENTS.forEach(function (e) { var b = S.get(e.best, 0); if (b > 0) mine[e.key] = b; });
+  people.push({ name: (typeNick() || "나") + " (나)", dept: S.get("dept", "") || "내 부문", best: mine, doneAt: "2026-10-26 12:30:00", me: true });
+  var tgt = OLY_TARGET, keys = OLY_EVENTS.map(function (e) { return e.key; });
+  people.forEach(function (p) {
+    p.pts = {}; p.total = 0; p.done = 0;
+    keys.forEach(function (k) { if (p.best[k] > 0) { p.pts[k] = Math.min(100, Math.round(p.best[k] / tgt[k] * 1000) / 10); p.total += p.pts[k]; p.done++; } });
+    p.total = Math.round(p.total * 10) / 10;
+  });
+  var overall = people.filter(function (p) { return p.done === keys.length; }).sort(function (a, b) { return b.total - a.total || (a.doneAt < b.doneAt ? -1 : 1); });
+  var per = {}, depts = {};
+  keys.forEach(function (k) { per[k] = people.filter(function (p) { return p.best[k] > 0; }).sort(function (a, b) { return b.best[k] - a.best[k]; }); });
+  people.forEach(function (p) { var d = depts[p.dept] || (depts[p.dept] = { dept: p.dept, gold: 0, silver: 0, bronze: 0, finishers: 0 }); if (p.done === keys.length) d.finishers++; });
+  keys.forEach(function (k) { per[k].slice(0, 3).forEach(function (p, i) { depts[p.dept][["gold", "silver", "bronze"][i]]++; }); });
+  var meP = people[people.length - 1], meEv = {};
+  keys.forEach(function (k) { var r = per[k].indexOf(meP) + 1; meEv[k] = meP.best[k] > 0 ? { best: meP.best[k], pts: meP.pts[k], rank: r, medal: r >= 1 && r <= 3 ? r : 0 } : null; });
+  return { ok: true, test: true, events: keys, max: keys.length * 100, target: tgt, players: people.length, finishers: overall.length,
+    overall: overall.slice(0, 10).map(function (p, i) { return { rank: i + 1, name: p.name, total: p.total, me: !!p.me }; }),
+    perEvent: keys.reduce(function (o, k) { o[k] = per[k].slice(0, 10).map(function (p, i) { return { rank: i + 1, name: p.name, score: p.best[k], pts: p.pts[k], me: !!p.me }; }); return o; }, {}),
+    medals: Object.keys(depts).map(function (k) { return depts[k]; }).sort(function (a, b) { return b.gold - a.gold || b.silver - a.silver || b.bronze - a.bronze || b.finishers - a.finishers; }),
+    me: { total: meP.total, done: meP.done, left: keys.length - meP.done, rank: overall.indexOf(meP) + 1, ev: meEv } };
+}
+function olyRows(list, valFn) {
+  if (!list || !list.length) return '<p class="muted">아직 기록이 없어요</p>';
+  return list.map(function (x) {
+    return '<div class="ty-rank' + (x.me ? " me" : "") + '"><span class="no">' + x.rank + '</span><span class="nm">' + esc(x.name) + (x.rank <= 3 && valFn.medal ? " " + olyMedalHtml(x.rank) : "") + '</span><span class="sc">' + valFn(x) + "</span></div>";
+  }).join("");
 }
 
 /* ════════════════ v3.45 휴대폰 미니게임 공통 틀 (사용자 결정 260917 · v3.50 전원 공개) ════════════════
@@ -6379,7 +6570,7 @@ function gsStartHtml(key, o) {
     '<button class="btn line" style="flex:1" onclick="' + gsRankGo(key) + '">순위판</button></div>' +
     (o.foot ? '<p class="muted" style="margin-top:10px;font-size:calc(12px * var(--fs));text-align:center">' + o.foot + "</p>" : "") + "</div>";
 }
-function gsRankGo(key) { return key === "type" ? "App.go('type_rank')" : "S.set('gs_rank_key', '" + key + "'); App.go('gs_rank')"; }
+function gsRankGo(key) { return key === "type" ? "App.go('type_rank')" : "S.set('oly_tab', 'event'); S.set('oly_ev', '" + key + "'); App.go('oly_rank')"; }
 /* r = { why, reason, score, stats, rankLine, banner } · 세 게임 결과 화면 형식이 같다 */
 function gsResultHtml(key, r) {
   var g = GS_GAMES[key];
@@ -6395,21 +6586,6 @@ function gsResultHtml(key, r) {
     '<button class="btn line" onclick="App.go(\'passport\')">스탬프 탭으로</button>';
 }
 /* 로컬 테스트 순위판 · 가짜 닉네임 + 내 최고 기록 (서버 연결 전 · 실제 순위 아님) */
-var GS_FAKE = {
-  pang: [["팡팡요정", 4200], ["연쇄장인", 3700], ["전구수집가", 3150], ["톱니바퀴", 2700], ["차트왕", 2300], ["말풍선러", 1900], ["미위팬", 1550], ["반짝반짝", 1200], ["공감참여", 880], ["혁신연결", 600]],
-  jump: [["점프요정", 2950], ["2단점프왕", 2600], ["코인수집가", 2250], ["달리기러", 1950], ["미위팬", 1700], ["상자넘기", 1450], ["콘피하기", 1200], ["계단왕", 950], ["공감참여", 700], ["혁신연결", 450]]
-};
-function gsRankTop(key) {
-  var g = GS_GAMES[key], best = S.get(g.best, 0);
-  var list = (GS_FAKE[key] || []).map(function (x) { return { name: x[0], score: x[1] }; });
-  if (best) list.push({ name: (typeNick() || "나") + " (나)", score: best, me: true });
-  list.sort(function (a, b) { return b.score - a.score; });
-  var meRank = null;
-  list.forEach(function (x, i) { x.rank = i + 1; if (x.me) meRank = i + 1; });
-  return { top: list.slice(0, 10), me: meRank ? { rank: meRank, score: best } : null, total: list.length };
-}
-function gsRankOf(key, score) { var r = 1; (GS_FAKE[key] || []).forEach(function (x) { if (x[1] > score) r++; }); return r; }
-
 /* ════════════════ AX 팡 · 7×7 같은 그림 3개 맞추기 (60초 · 지는 조건 없음) ════════════════
    조작: 이웃한 두 칸을 밀어서 바꾸기 또는 한 칸 탭 → 옆 칸 탭. 맞는 줄이 안 생기면 튕기듯 제자리로 돌아간다.
    3개 이상 한 줄 = 터짐 → 위 그림이 떨어짐(연쇄) · 점수 = 터진 칸 × 10 × 연쇄 배수(1~5).
@@ -6750,9 +6926,9 @@ function pgEndFinal(why) {
   S.set("pang_best", Math.max(S.get("pang_best", 0), PG.score));
   gameClear("pang_cleared");
   var root = el("pgRoot"); if (!root) return;
-  var rank = gsRankOf("pang", PG.score);
+  olySubmit("pang", PG.score);
   root.innerHTML = gsResultHtml("pang", { why: why, reason: "60초 동안 " + PG.tiles + "칸을 터뜨렸어요", score: PG.score,
-    stats: "터뜨린 칸 " + PG.tiles + "개 · 최고 연쇄 " + PG.maxChain + " · 특수 블록 " + PG.specials + "개", rankLine: "앱 순위 " + rank + "위 (테스트)" });
+    stats: "터뜨린 칸 " + PG.tiles + "개 · 최고 연쇄 " + PG.maxChain + " · 특수 블록 " + PG.specials + "개", rankLine: olyResultLine("pang", PG.score) });
   window.scrollTo(0, 0);
 }
 function pgText(ctx, text, x, y, size, weight, col, align) {
@@ -6992,9 +7168,9 @@ function jpEndFinal(why) {
   S.set("jump_best", Math.max(S.get("jump_best", 0), JP.score));
   gameClear("jump_cleared");
   var root = el("jpRoot"); if (!root) return;
-  var rank = gsRankOf("jump", JP.score);
+  olySubmit("jump", JP.score);
   root.innerHTML = gsResultHtml("jump", { why: why, reason: why === "time" ? "60초를 다 달렸어요" : "하트 3개를 모두 잃어서 끝났어요", score: JP.score,
-    stats: "모은 코인 " + JP.coinN + "개 · 넘은 장애물 " + JP.dodged + "개 · 부딪힘 " + JP.hits + "번", rankLine: "앱 순위 " + rank + "위 (테스트)" });
+    stats: "모은 코인 " + JP.coinN + "개 · 넘은 장애물 " + JP.dodged + "개 · 부딪힘 " + JP.hits + "번", rankLine: olyResultLine("jump", JP.score) });
   window.scrollTo(0, 0);
 }
 function jpObsDraw(ctx, o) {
@@ -7220,6 +7396,7 @@ function gwFinish() {
   GW.phase = "end";
   if (GW.score > S.get("gw_best", 0)) S.set("gw_best", GW.score);
   gameClear("gw_cleared");   /* 실패 없음 · 끝까지 하면 04 미니게임 */
+  olySubmit("word", GW.score);
   var root = el("gwRoot"); if (!root) return;
   var st = ""; for (var i = 0; i < 3; i++) st += '<span class="' + (i < stars ? "on" : "") + '">★</span>';
   root.innerHTML =
@@ -7227,6 +7404,7 @@ function gwFinish() {
     '<p class="mem-stars">' + st + "</p>" +
     '<p class="disp" style="font-size:40px;color:var(--mint);margin-top:4px">' + GW.score.toLocaleString() + "</p>" +
     '<p class="next">문장 ' + GW.done + "개 완성 · 틀린 탭 " + GW.wrongs + "번 · 남은 시간 보너스 +" + bonus + "<br>최고 " + S.get("gw_best", 0).toLocaleString() + "점</p>" +
+    '<p class="next" style="margin-top:6px">' + olyResultLine("word", GW.score) + "</p>" +
     '<p class="next" style="margin-top:6px">미니게임 스탬프는 끝까지 하면 적립돼요</p></div>' +
     MEM_ROUNDS.map(function (R) {
       return '<div class="card soft mb8"><p style="font-size:calc(15.5px * var(--fs));font-weight:800;color:var(--hi)">' + (R.kind === "order" ? R.pairs.map(function (p) { return esc(p[0] + " " + p[1]); }).join(" · ") : esc(R.words.join(" "))) + "</p>" +
