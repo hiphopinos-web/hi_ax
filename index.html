@@ -1256,14 +1256,44 @@ var MEM_ROUNDS_EVENT = [
 /* 한 판 구성 · 문장 2 + 순서 1 · 최근 mem_seen 개까지 기억해 먼저 뺀다 */
 var MEM_PLAY = { sentence: 2, order: 1 }, MEM_SEEN_MAX = 9, MEM_DECOY = { sentence: 2, order: 1 };
 var MEM_SHOW = 6, MEM_SHOW_FAST = 3, MEM_SEC = 60, MEM_PEN = 2, MEM_PT = 10, MEM_PT_ROUND = 30, MEM_PT_SEC = 5, MEM_STAR3 = 450, MEM_STAR2 = 300;
-/* ═══ 타자 게임 단어 풀 · 여기 한 곳 · v3.50C 확정 문서 어휘만 (슬로건 · 3개년 로드맵 · 공식 공지 붙임1·2 프로그램 제목·내용 · DAP) ═══
-   문서에 없는 앱 운영 용어(스탬프·룰렛·응모권·체크인 등)는 뺐다 · 공백이 든 말은 판정이 어려워 붙여 쓴다 · 영문은 모바일 자판 전환 부담으로 3개만.
+/* ═══ 타자 게임 단어 풀 · 여기 한 곳 · v3.72 AI 기본 소양 (사용자 확정 260918 · 「단어에 의미가 있으면 좋겠다」) ═══
+   [단어, 뜻 한 줄] · 단어를 터뜨리면 그 자리에 뜻이 1초 뜬다(한 번에 여럿 터지면 한 줄만).
+   규칙: 2~5자 · 한글만(영문·혼용 없음 · 자판 전환이 없게) · 공백 없음(판정이 어렵다) ·
+   특정 제품·회사 홍보 금지 · 확인되지 않은 숫자 금지 · 과장·겁주는 말 금지.
    단계가 오를수록 긴 단어 비중이 커진다(1단계 3자 이하 · 2단계 4자 이하 · 4단계부터 3자 이상). */
 var TYPE_WORDS = [
-  "AX", "AI", "공감", "참여", "확산", "체화", "혁신", "연결", "실습", "전시", "체험", "상담", "강연", "세션", "경품", "추첨", "시상", "분석", "요약", "현장", "영업", "보상", "전략", "채널", "교안", "동료", "업무", "본사",
-  "DAP", "데이터", "로드맵", "자동화", "커피챗", "리포트", "대강당", "광화문", "파이썬", "노트북", "키노트", "알림봇", "정리표", "산출물", "리서치", "실시간", "새정보",
-  "대시보드", "아이디어", "기조연설", "예측모델", "포토부스", "우수사례", "파트너사", "외부자료", "문서작성", "통계현황", "반복작업", "바이브코딩", "업무혁신", "내부강연"
+  ["인공지능", "사람의 판단과 일을 돕는 기술"],
+  ["전환", "일하는 방식을 바꾸는 것"],
+  ["과제", "데이터로 풀어 볼 우리 업무 문제"],
+  ["질문", "구체적으로 물을수록 답이 좋아져요"],
+  ["답변", "배운 것을 엮어 만든 결과"],
+  ["학습", "많은 자료에서 규칙을 익히는 것"],
+  ["요약", "긴 글을 짧게 줄여 주는 일"],
+  ["번역", "다른 말로 옮겨 주는 일"],
+  ["초안", "먼저 써 주는 첫 원고"],
+  ["검토", "사람이 답을 확인하는 단계"],
+  ["출처", "그 내용이 어디서 왔는지"],
+  ["환각", "모르는 것을 그럴듯하게 말하는 일"],
+  ["형식", "표·목록처럼 원하는 답의 모양"],
+  ["예시", "원하는 답에 가까워지는 힌트"],
+  ["보안", "회사 자료는 규정을 먼저 확인"],
+  ["규정", "회사가 정한 사용 기준"],
+  ["협업", "사람과 도구가 일을 나눠 맡기"],
+  ["실습", "직접 해 보며 익히는 시간"],
+  ["분석", "숫자에서 뜻을 찾아내는 일"],
+  ["예측", "지난 기록으로 앞을 가늠하는 일"],
+  ["생성형", "새 글과 그림을 만들어 주는 방식"],
+  ["데이터", "판단의 바탕이 되는 기록"],
+  ["자동화", "반복 일을 대신 돌게 만드는 것"],
+  ["챗봇", "대화로 묻고 답하는 프로그램"],
+  ["모델", "학습으로 만들어진 본체"],
+  ["프롬프트", "주고 싶은 질문이나 지시"],
+  ["아이디어", "업무에 써 볼 생각 한 줄"],
+  ["대시보드", "숫자를 한눈에 보는 화면"],
+  ["리포트", "결과를 정리해 보여 주는 문서"],
+  ["시나리오", "이렇게 쓰면 되겠다는 사용 흐름"]
 ];
+
 
 /* ════════════════ v10 신규 데이터 · 기획서 v2(260822 1층 반영) ════════════════ */
 /* A. 과제상담 예약 · 슬롯은 하드코딩 금지, 콘솔 설정값으로 생성 (v5 p23~25) */
@@ -5929,10 +5959,12 @@ var MEWE_SPR = {
    가로 배치 = 레인 · 윗부분에 있는 단어 상자와 겹치지 않는 레인에만 · 좌우 8px 여백.
    HUD 는 캔버스 밖 DOM 한 줄(점수·남은 시간·하트·소리·일시정지 44px) · 입력 막대 전폭 17px, 맞히면 테두리 O100, 틀리면 회색 흔들림.
    현장 노트북(1F 타자왕전)과 넓은 화면은 따로: 단어 28~32px · 동시 6~7개 · 도트 4px · 입력 22px. */
-var RAIN_FALL = [7, 6, 5, 4, 3.2];            /* 단계별 · 위에서 바닥선까지 걸리는 초 */
+/* v3.72 난이도 완화 (사용자 피드백 260918 「너무 어렵다」) · 낙하 시간 +1.5초 · 단계 상승 12→15초 · 동시 단어 한 개씩 줄임(최소 2) */
+var RAIN_FALL = [8.5, 7.5, 6.5, 5.5, 4.7];    /* 단계별 · 위에서 바닥선까지 걸리는 초 */
 var RAIN_SPAWN = [2.2, 1.9, 1.6, 1.35, 1.1];  /* 단계별 · 새 단어 간격 초 */
-var RAIN_STAGE_SEC = 12;
-var RAIN_BANDS = [[330, 2, 3], [420, 3, 4], [520, 4, 5], [1e9, 5, 5]];   /* [판 높이 미만, 동시 단어 최대, 단계 수] · 휴대폰 */
+var RAIN_STAGE_SEC = 15;
+var RAIN_EASY_SEC = 10;                       /* 처음 10초는 1단계 · 3자 이하만 */
+var RAIN_BANDS = [[330, 2, 3], [420, 2, 4], [520, 3, 5], [1e9, 4, 5]];   /* [판 높이 미만, 동시 단어 최대, 단계 수] · 휴대폰 */
 var RAIN_FONT = '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif';
 var RG = { on: false, mode: "app", big: false, raf: 0, last: 0, t0: 0, cd: 0, words: [], parts: [], pops: [], lives: RAIN_LIVES, score: 0, hits: 0, tries: 0, combo: 0, maxCombo: 0, stage: 1, spawnT: 0, shake: 0, banner: null, shot: null, mas: { x: 90, tx: 90, open: 0 }, res: null, ac: null, L: null, dpr: 1 };
 function rgReduced() { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); }
@@ -5975,7 +6007,7 @@ function rgLayout(W, H, big) {
   L.ground = H - L.soil;
   L.floor = L.ground - L.masH - L.D;                          /* 단어 상자 아래가 여기 닿으면 놓침 */
   L.top = 8;
-  if (big) { L.maxWords = H >= 640 ? 7 : 6; L.stages = 5; }
+  if (big) { L.maxWords = H >= 640 ? 6 : 5; L.stages = 5; }
   else { for (var i = 0; i < RAIN_BANDS.length; i++) if (H < RAIN_BANDS[i][0]) { L.maxWords = RAIN_BANDS[i][1]; L.stages = RAIN_BANDS[i][2]; break; } }
   L.laneW = big ? 190 : 100;
   L.lanes = Math.max(1, Math.floor((W - 16) / L.laneW));
@@ -6068,9 +6100,14 @@ function rgLive(e) {
    조합 중(한글 자모가 아직 만들어지는 중)에는 보지 않는다 · 맞는 단어가 남아 있으면 건드리지 않는다.
    자동으로 지운 글자는 오타(RG.tries)로 세지 않는다 → 점수·정확도 불변. 피드백은 테두리 한 번 + 「뚝」 소리뿐. */
 function rgPrefixAlive(v) { return RG.words.some(function (w) { return w.text.indexOf(v) === 0; }); }
+/* v3.72 전부 지우지 않고 「아직 맞는 앞부분」까지만 남긴다 (오타 한 글자 때문에 단어를 통째로 잃지 않게)
+   터치 기기는 조합 버퍼 때문에 입력창을 통째로 갈아 끼우므로 그때는 전체 비우기 그대로 */
 function rgAutoClear() {
   var inp = el("rgIn"); if (!inp || !inp.value) return;
-  rgClearInput();
+  var v = inp.value.trim(), keep = "";
+  for (var n = v.length - 1; n > 0; n--) { if (rgPrefixAlive(v.slice(0, n))) { keep = v.slice(0, n); break; } }
+  if (keep && !RGP.touch) { inp.value = keep; inp.focus(); RG.typed = keep; }
+  else { rgClearInput(); RG.typed = ""; }
   rgFlash("auto");
   sfx("tik");
 }
@@ -6078,10 +6115,19 @@ function rgCheckInput() {
   if (!RG.on || RG.composing || RG.cd > 0 || RG.ending || RG.paused) return;
   var inp = el("rgIn"); if (!inp) return;
   var v = inp.value.trim();
+  RG.typed = v;   /* v3.72 지금 치고 있는 글자 · 그리기에서 맞는 단어를 짚어 준다 */
   if (v && !rgPrefixAlive(v)) rgAutoClear();
+}
+/* v3.72 치던 글자와 맞는 단어 중 가장 아래 것 (화면에서 짚어 준다) */
+function rgTypedIdx() {
+  var v = RG.typed || "", hit = -1;
+  if (!v) return -1;
+  RG.words.forEach(function (w, i) { if (w.text.indexOf(v) === 0 && (hit < 0 || w.p > RG.words[hit].p)) hit = i; });
+  return hit;
 }
 /* 입력창 비우기 · 터치 기기는 조합 버퍼가 남지 않게 새 입력창으로 바꿔 끼우고 같은 틱에 포커스(키보드는 열린 채) */
 function rgClearInput() {
+  RG.typed = "";
   var old = el("rgIn"); if (!old) return;
   if (!RGP.touch) { old.value = ""; old.focus(); return; }
   var tmp = document.createElement("span"); tmp.innerHTML = rgInputHtml();
@@ -6120,12 +6166,14 @@ function rgQuit() {
   App.render();
 }
 function rgPickWord() {
-  var st = RG.stage, pool = TYPE_WORDS.filter(function (w) {
-    var n = w.length;
-    return st <= 1 ? n <= 3 : st === 2 ? n <= 4 : st === 3 ? n >= 2 : n >= 3;
+  var st = RG.stage, early = rgElapsed(performance.now()) < RAIN_EASY_SEC;
+  var pool = TYPE_WORDS.filter(function (w) {
+    var n = w[0].length;
+    return early || st <= 1 ? n <= 3 : st === 2 ? n <= 4 : st === 3 ? n >= 2 : n >= 3;
   });
+  if (!pool.length) pool = TYPE_WORDS;
   var onScreen = RG.words.map(function (w) { return w.text; });
-  for (var k = 0; k < 8; k++) { var w = pool[Math.floor(Math.random() * pool.length)]; if (onScreen.indexOf(w) < 0) return w; }
+  for (var k = 0; k < 8; k++) { var w = pool[Math.floor(Math.random() * pool.length)]; if (onScreen.indexOf(w[0]) < 0) return w; }
   return pool[0];
 }
 function rgStart(mode) {
@@ -6158,7 +6206,7 @@ function rgFx(dt) {
 /* 새 단어 · 레인을 섞어 윗부분 단어 상자와 겹치지 않는 자리 · 좌우 8px 여백 */
 function rgSpawn() {
   var L = RG.L, cv = el("rgCv"); if (!L || !cv) return false;
-  var ctx = cv.getContext("2d"), text = rgPickWord();
+  var ctx = cv.getContext("2d"), pick = rgPickWord(), text = pick[0];
   ctx.font = rgFontStr(L.font);
   var bw = Math.ceil(ctx.measureText(text).width) + L.padX * 2;
   var maxX = Math.max(8, L.W - 8 - bw), lw = (L.W - 16) / L.lanes, upper = L.top + L.boxH * 3;
@@ -6168,7 +6216,7 @@ function rgSpawn() {
     var x = Math.round(Math.min(maxX, Math.max(8, 8 + lanes[k] * lw + Math.random() * Math.max(0, lw - bw))));
     var clash = RG.words.some(function (w) { return rgWordY(w) < upper && x < w.x + w.bw + 8 && x + bw + 8 > w.x; });
     if (!clash) {
-      RG.words.push({ text: text, bw: bw, x: x, p: 0, fall: RAIN_FALL[RG.stage - 1] * (0.94 + Math.random() * 0.12) });
+      RG.words.push({ text: text, mean: pick[1], bw: bw, x: x, p: 0, fall: RAIN_FALL[RG.stage - 1] * (0.94 + Math.random() * 0.12) });
       return true;
     }
   }
@@ -6237,7 +6285,7 @@ function rgSubmit() {
   var hit = -1;
   RG.words.forEach(function (w, i) { if (w.text === v && (hit < 0 || w.p > RG.words[hit].p)) hit = i; });
   if (hit < 0) {
-    RG.combo = 0;
+    /* v3.72 오타에 벌칙 없음 (사용자 피드백) · 콤보를 끊지 않고 테두리 한 번 + 짧은 소리만 · 하트도 줄지 않는다 */
     rgFlash("miss");
     sfx("tik");
     return;
@@ -6251,6 +6299,8 @@ function rgSubmit() {
   RG.shot = { x0: RG.mas.tx, y0: L.ground - L.masH, x1: cx, y1: cy, t: 0.12 };
   rgBurst(cx, cy, 16, [RAIN_PAL.o100, RAIN_PAL.ink, RAIN_PAL.w, RAIN_PAL.o50]);
   RG.pops.push({ x: cx, y: cy, text: "+" + pts, t: 0.8, c: RAIN_PAL.w, s: 14 });
+  /* v3.72 이 단어가 무슨 뜻인지 1초 · 동시에 여러 개가 터지면 한 줄만 */
+  if (wd.mean && !RG.pops.some(function (p) { return p.mean; })) RG.pops.push({ x: cx, y: cy + 18, text: wd.mean, t: 1.0, c: RAIN_PAL.deep, s: 11, mean: 1 });
   if (RG.combo >= 3) RG.pops.push({ x: cx, y: cy - 20, text: "COMBO x" + RG.combo, t: 0.9, c: RAIN_PAL.o60, s: 16 });
   if (!rgReduced()) RG.shake = Math.max(RG.shake, 0.06);
   rgFlash("hit");
@@ -6320,10 +6370,22 @@ function rgDraw(ctx, now) {
   for (var lx = 0; lx < L.W; lx += 3 * L.D) ctx.fillRect(lx, L.floor, 2 * L.D, 2);
   /* 단어 · 흰 말풍선 상자 · 글자 크기 고정 */
   ctx.font = rgFontStr(L.font); ctx.textAlign = "left"; ctx.textBaseline = "middle";
-  RG.words.forEach(function (w) {
-    var y = rgWordY(w), danger = w.p > 0.78;
-    rgBox2(ctx, w.x, y, w.bw, L.boxH, danger ? RAIN_PAL.o25 : RAIN_PAL.w);
-    ctx.fillStyle = RAIN_PAL.ink; ctx.fillText(w.text, Math.round(w.x + L.padX), Math.round(y + L.boxH / 2 + 1));
+  /* v3.72 지금 치고 있는 글자와 맞는 단어를 짚어 준다 · 맞는 앞부분은 오렌지 · 오타가 나면 이 표시가 사라져 바로 알아챈다 */
+  var tIdx = rgTypedIdx(), tv = RG.typed || "";
+  RG.words.forEach(function (w, wi) {
+    var y = rgWordY(w), danger = w.p > 0.78, on = wi === tIdx;
+    rgBox2(ctx, w.x, y, w.bw, L.boxH, on ? RAIN_PAL.o10 : danger ? RAIN_PAL.o25 : RAIN_PAL.w);
+    if (on) {
+      ctx.strokeStyle = RAIN_PAL.o100; ctx.lineWidth = 2;
+      ctx.strokeRect(Math.round(w.x) - 1.5, Math.round(y) - 1.5, Math.round(w.bw) + 3, Math.round(L.boxH) + 3);
+    }
+    var tx = Math.round(w.x + L.padX), ty = Math.round(y + L.boxH / 2 + 1);
+    if (on && tv) {
+      ctx.fillStyle = RAIN_PAL.deep; ctx.fillText(tv, tx, ty);
+      ctx.fillStyle = RAIN_PAL.ink; ctx.fillText(w.text.slice(tv.length), tx + ctx.measureText(tv).width, ty);
+    } else {
+      ctx.fillStyle = RAIN_PAL.ink; ctx.fillText(w.text, tx, ty);
+    }
   });
   if (RG.shot) {
     var k = 1 - RG.shot.t / 0.12, sx = RG.shot.x0 + (RG.shot.x1 - RG.shot.x0) * k, sy = RG.shot.y0 + (RG.shot.y1 - RG.shot.y0) * k, q = 2 * L.D;
@@ -7765,8 +7827,10 @@ function jpEndFinal(why) {
 }
 function jpObsDraw(ctx, o) {
   var x = Math.round(o.x), g = JP_GY;
+  var wsh = o.k === "step" ? 24 : o.k === "cone" ? 16 : 18;
+  ctx.fillStyle = "rgba(0,0,0,0.18)"; ctx.fillRect(x - 1, g - 1, wsh, 2);   /* v3.72 바닥 그림자 · 지면 위 물체로 읽히게 */
   if (o.k === "box") {
-    rgBox(ctx, x, g - 16, 16, 16, RAIN_PAL.o60);
+    rgBox(ctx, x, g - 16, 16, 16, RAIN_PAL.deep);   /* v3.72 미위(O100)와 구분되게 한 단 진하게 */
     ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(x + 1, g - 9, 14, 1);
     for (var i = 0; i < 12; i++) { ctx.fillRect(x + 2 + i, g - 14 + Math.floor(i / 2), 1, 1); }
     ctx.fillStyle = RAIN_PAL.o30; ctx.fillRect(x + 2, g - 14, 4, 2);
@@ -7778,23 +7842,24 @@ function jpObsDraw(ctx, o) {
     }
     rgBox(ctx, x, g - 3, 14, 3, RAIN_PAL.deep);
   } else {
-    rgBox(ctx, x, g - 8, 12, 8, RAIN_PAL.o30);
-    rgBox(ctx, x + 11, g - 15, 11, 15, RAIN_PAL.o30);
-    ctx.fillStyle = RAIN_PAL.o50; ctx.fillRect(x + 1, g - 7, 10, 2); ctx.fillRect(x + 12, g - 14, 9, 2);
+    rgBox(ctx, x, g - 8, 12, 8, RAIN_PAL.deep);
+    rgBox(ctx, x + 11, g - 15, 11, 15, RAIN_PAL.deep);
+    ctx.fillStyle = RAIN_PAL.o60; ctx.fillRect(x + 1, g - 7, 10, 2); ctx.fillRect(x + 12, g - 14, 9, 2);
   }
 }
+/* v3.72 (사용자 피드백 260918 「배경이 장애물과 비슷하다」)
+   배경 = 아주 옅은 무채색·O5 한 톤 · 장애물 실루엣을 닮은 형태(검은 나무 상자 등)를 두지 않는다.
+   장애물 = 진한 채움 + 검정 외곽선 + 바닥 그림자 → 지면 위의 물체로 읽힌다. */
 function jpWorld(ctx, dist) {
   var off = Math.floor(dist * 0.3) % 20;
   for (var ty = 0; ty < JP_GY; ty += 10) for (var tx = -20; tx < JP_W + 20; tx += 10) {
-    ctx.fillStyle = ((tx + ty) / 10) % 2 ? RAIN_PAL.o25 : RAIN_PAL.o10; ctx.fillRect(tx - off, ty, 10, 10);
+    ctx.fillStyle = ((tx + ty) / 10) % 2 ? "#FBF8F6" : "#FFFFFF"; ctx.fillRect(tx - off, ty, 10, 10);
   }
-  var toff = Math.floor(dist * 0.6) % 120;
-  for (var k = 0; k < 3; k++) {
-    var tx2 = 20 + k * 120 - toff;
-    ctx.fillStyle = RAIN_PAL.trunk; ctx.fillRect(tx2 + 4, JP_GY - 10, 3, 10);
-    ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(tx2, JP_GY - 22, 11, 13);
-    ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(tx2 + 1, JP_GY - 21, 9, 11);
-    ctx.fillStyle = RAIN_PAL.o50; ctx.fillRect(tx2 + 2, JP_GY - 20, 4, 3);
+  var toff = Math.floor(dist * 0.35) % 90;
+  for (var k = 0; k < 4; k++) {   /* 배경 표식 = 옅은 점선 기둥 (장애물과 닮지 않은 형태) */
+    var tx2 = 16 + k * 90 - toff;
+    ctx.fillStyle = "#F1ECE8";
+    for (var yy = JP_GY - 34; yy < JP_GY - 4; yy += 6) ctx.fillRect(tx2, yy, 2, 3);
   }
   ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(0, JP_GY, JP_W, 1);
   ctx.fillStyle = RAIN_PAL.o50; ctx.fillRect(0, JP_GY + 1, JP_W, 3);
