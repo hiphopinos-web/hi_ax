@@ -2853,10 +2853,43 @@ function testStamp(id) {
   awardStamp(id);
   App.render();
 }
+/* v3.28 테스트 · 완료 취소 (한 장씩 되돌리기) · 로컬 전용, 서버 호출 없음.
+   문턱 연출(3개 룰렛 열림 · 4개부터 응모권)을 반복 확인할 수 있게 보상 로컬 상태를 현재 개수에 맞춘다. */
+function testOverlayDrop(id) {
+  PPOV.q = PPOV.q.filter(function (s) { return !id || s.id !== id; });
+  if (el("ppov")) stampOverlayClose();
+  if (PP.seenT) { clearTimeout(PP.seenT); PP.seenT = null; }   /* 대기 중인 「본 스탬프·글로우 기록」 타이머 */
+  PP.animOn = false;
+}
+function testStampUndo(id) {
+  if (!testMode()) return;
+  var st = S.get("stamps", []);
+  if (st.indexOf(id) < 0) return;
+  testOverlayDrop(id);
+  S.set("pp_seen", S.get("pp_seen", []).filter(function (x) { return x !== id; }));   /* 다시 완료하면 도장 연출이 또 나오게 */
+  S.set("stamps", st.filter(function (x) { return x !== id; }));
+  var n = stampCount();
+  S.set("raffle_seen", raffleTickets(n));   /* 4개째를 다시 채우면 응모권 안내가 다시 뜨게 · 목업 번호는 개수에서 계산되므로 자동으로 줄어든다 */
+  if (n < 3) {                              /* 룰렛 문턱 아래 · 열림·사용·글로우를 되돌려 3개째 연출이 다시 나오게 */
+    S.set("roulette_open", false); S.set("roulette_used", false); S.set("pp_glow3", false);
+  }
+  var sd = STAMPS.filter(function (x) { return x.id === id; })[0];
+  toast("테스트 · 완료 취소 · " + (sd ? sd.title : id) + " · 스탬프 " + n + "개");
+  App.render();
+}
 function testStampReset() {
   if (!testMode()) return;
-  S.set("stamps", []); S.set("pp_seen", []);
-  S.set("pp_glow3", false); S.set("roulette_used", false); S.set("roulette_open", false); S.set("raffle_seen", 0);
+  modalOpen('<b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">스탬프를 전부 초기화할까요?</b>' +
+    '<p class="muted" style="margin-top:8px">이 기기의 테스트 스탬프와 룰렛·응모권 상태를 0으로 되돌립니다. 서버에는 아무것도 보내지 않습니다.</p>' +
+    '<button class="btn mint" style="margin-top:14px" onclick="modalClose(); testStampResetGo()">초기화</button>' +
+    '<button class="btn line" style="margin-top:8px" onclick="modalClose()">취소</button>');
+}
+function testStampResetGo() {
+  if (!testMode()) return;
+  testOverlayDrop(null);                                                   /* 오버레이 큐·연출 잠금 */
+  S.set("stamps", []); S.set("pp_seen", []);                               /* 스탬프 · 레일 카운트 롤업 기준값 */
+  S.set("pp_glow3", false); S.set("roulette_used", false); S.set("roulette_open", false);
+  S.set("raffle_seen", 0); S.set("raffle_nums", []);                       /* 응모권 안내 기준 · 서버 번호 캐시 */
   toast("테스트 · 스탬프 상태를 초기화했어요");
   App.render();
 }
@@ -2946,11 +2979,12 @@ function ppAfterRender(n, oldN, glow) {
       requestAnimationFrame(stepFn);
     }
   }, 80);
-  setTimeout(function () {
-    PP.animOn = false;
+  /* 핸들을 남긴다 · 테스트 되돌리기·초기화가 이 2초 사이에 일어나면 취소해야 pp_glow3·pp_seen 이 되살아나지 않는다 (v3.28) */
+  PP.seenT = setTimeout(function () {
+    PP.animOn = false; PP.seenT = null;
     var st = S.get("stamps", []).filter(function (id) { return STAMPS.some(function (s) { return s.id === id; }); });
     S.set("pp_seen", st);
-    if (glow) S.set("pp_glow3", true);
+    if (glow && stampCount() >= 3) S.set("pp_glow3", true);
   }, 2000);
 }
 /* 기본 순서 = 장소 그룹순: 1F 3건(01 전시·02 부스·06 QR퀴즈) → 17F(03) → 앱(04·05).
@@ -2981,9 +3015,11 @@ function stampInnerHtml(s) {
       if (mine5) inner += '<p class="lnk" onclick="App.go(\'ideas_mine\')">내가 낸 아이디어 ' + mine5 + "건 제출 ›</p>";
     }
   }
-  /* v3.19 테스트 · 완료 처리 (데모·테스트 사번에서만, 미완료 카드 한정) */
-  if (testMode() && S.get("stamps", []).indexOf(s.id) < 0) {
-    inner += '<button class="btn test" onclick="testStamp(\'' + s.id + '\')">테스트 · 완료 처리</button>';
+  /* v3.19 테스트 · 완료 처리 (미완료 카드) · v3.28 테스트 · 완료 취소 (완료 카드) · 데모·테스트 사번에서만 */
+  if (testMode()) {
+    inner += S.get("stamps", []).indexOf(s.id) < 0
+      ? '<button class="btn test" onclick="testStamp(\'' + s.id + '\')">테스트 · 완료 처리</button>'
+      : '<button class="btn test" onclick="testStampUndo(\'' + s.id + '\')">테스트 · 완료 취소</button>';
   }
   return inner;
 }
