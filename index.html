@@ -545,6 +545,8 @@
   .rstep span.on { background: var(--mint); color: #fff; }
   /* 공용 모달 */
   #modal { position: fixed; inset: 0; z-index: 96; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.45); padding: 24px; animation: dimIn 0.18s ease-out; }
+  #modal .ntc-t { display: block; font-size: calc(17px * var(--fs)); color: var(--hi); line-height: 1.45; }
+  #modal .ntc-b { margin-top: 8px; font-size: calc(14.5px * var(--fs)); color: var(--muted); line-height: 1.6; }
   #modal .mcard { width: 100%; max-width: 360px; max-height: 82dvh; overflow-y: auto; background: var(--paper); border: 0; border-radius: 20px; padding: 20px; position: relative; animation: popIn 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
   #modal .mx { position: absolute; top: 6px; right: 8px; border: 0; background: none; color: var(--muted); font-size: 22px; cursor: pointer; width: 36px; height: 36px; }
   .tlstep { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
@@ -1252,7 +1254,7 @@ function a2hsInstall() {
     a2hsSheet(false);
     if (r && r.outcome === "accepted") {
       a2hsMarkDismissed();
-      toast("설치 완료. 홈 화면에서 AX Festival 아이콘을 눌러 여세요");
+      notice({ key: "a2hs", title: "설치 완료", body: "홈 화면의 AX Festival 아이콘으로 열기" });
       App.render();
     }
   });
@@ -1445,6 +1447,36 @@ function toast(msg) {
   t.textContent = msg; t.classList.add("show");
   clearTimeout(toast._h); toast._h = setTimeout(function () { t.classList.remove("show"); }, 2400);
 }
+/* ── v3.53 확인 팝업 대기열 ──
+   중요한 알림(보상 열림 · 포토부스 호출 · 신청/취소 완료 · 적립 실패 · 해야 할 일)은 토스트 대신 「확인」 팝업.
+   가벼운 피드백(입력 검증 · 재시도 · 운영자 화면 · 테스트)은 토스트 그대로.
+   순서: 스탬프 팝(SPOP) 끝 → 팝업 · 다른 모달이 열려 있거나 게임 플레이 중이면 닫힐 때까지 대기 · 한 번에 하나씩.
+   중복: 같은 key 가 대기 중이거나 떠 있거나 3초 안에 떴으면 버린다. o = { key, title, body, go, urgent } */
+var NOTICE = { q: [], cur: null, last: {}, t: 0 };
+function notice(o) {
+  var k = o.key || (o.title + "|" + (o.body || ""));
+  if ((NOTICE.cur && NOTICE.cur.k === k) || NOTICE.q.some(function (x) { return x.k === k; }) || Date.now() - (NOTICE.last[k] || 0) < 3000) return;
+  o.k = k; NOTICE.q.push(o);
+  if (o.urgent && el("rgPlay")) toast(o.title);   /* 게임 중에도 급한 것은 제목만 먼저 · 팝업은 게임을 나온 뒤 */
+  clearTimeout(NOTICE.t); NOTICE.t = setTimeout(noticePump, 60);
+}
+function noticeBusy() {
+  return !!(SPOP.cur || SPOP.q.length || el("spop") || el("modal") || el("rgPlay") || el("app").hidden ||
+    App.current === "admin" || SIGNAGE.indexOf(App.current) >= 0);
+}
+function noticePump() {
+  clearTimeout(NOTICE.t);
+  if (NOTICE.cur || !NOTICE.q.length) return;
+  if (noticeBusy()) { NOTICE.t = setTimeout(noticePump, 400); return; }
+  var o = NOTICE.q.shift();
+  NOTICE.last[o.k] = Date.now();
+  modalOpen('<div class="ntc"><b class="ntc-t">' + esc(o.title) + "</b>" + (o.body ? '<p class="ntc-b">' + esc(o.body) + "</p>" : "") +
+    (o.go ? '<button class="btn mint" style="margin-top:14px" onclick="noticeGo(\'' + o.go + '\')">바로 가기</button><button class="btn line" style="margin-top:8px" onclick="modalClose()">확인</button>'
+      : '<button class="btn" style="margin-top:14px" onclick="modalClose()">확인</button>') + "</div>");
+  NOTICE.cur = o;   /* modalOpen 안의 modalClose 가 cur 를 지우므로 연 다음에 잡는다 */
+  el("modal").setAttribute("data-notice", o.k);
+}
+function noticeGo(v) { modalClose(); App.go(v); }
 
 /* ── 보상·커피챗 ── (커피 나눔 바·잔량 표시는 260917 폐기) */
 /* 스탬프 개수로 열리는 보상 안내 (260909 · v3.39) · 3개=룰렛 1회, 4~7개=사후 추첨 응모 1~4장 */
@@ -1452,12 +1484,12 @@ function checkRewards() {
   var n = stampCount();
   if (n >= 3 && !S.get("roulette_open", false)) {
     S.set("roulette_open", true);
-    setTimeout(function () { toast("★ 스탬프 3개! 1F 이벤트존 룰렛 1회가 열렸어요. 스탬프 탭에서 내 QR을 보여주세요."); }, 1200);
+    notice({ key: "rw:roulette", title: "룰렛 1회 열림", body: "1F 이벤트존에서 내 QR 제시", go: "passport" });
   }
   var t = raffleTickets(n);
   if (t > S.get("raffle_seen", 0)) {
     S.set("raffle_seen", t);
-    setTimeout(function () { toast("사후 추첨 응모 " + t + "장 · 자동 응모 완료. 추첨 결과는 행사 종료 후 개별 안내드립니다."); }, 1500);
+    notice({ key: "rw:raffle", title: "추첨 응모권 " + t + "장", body: "자동 응모 · 결과는 행사 후 개별 안내", go: "passport" });
   }
 }
 /* 앱 안 행동으로 붙는 3종(미니게임·아이디어·전시 QR 퀴즈) 전용.
@@ -1490,7 +1522,7 @@ function scheduleCoffeechat() {
 function matchCoffeechat() {
   var rounds = ["13:30", "14:00", "14:30", "15:00", "15:30"];
   S.set("cchat", { status: "matched", round: rounds[Math.floor(Math.random() * rounds.length)], table: Math.random() < 0.5 ? "A" : "B", ts: Date.now() });
-  toast("AX 커피챗 매칭 완료. 프로그램 › 내 커피챗에서 확인하세요.");
+  checkMyState();   /* v3.53 매칭 팝업은 checkMyState 한 곳 */
 }
 
 /* ── v10: 공용 모달 ── */
@@ -1503,7 +1535,10 @@ function modalOpen(html) {
   el("frame").appendChild(d);
 }
 function modalClose() {
-  STAFFK = "";   /* 담당자 코드를 화면과 함께 버린다 */ var m = el("modal"); if (m) m.remove(); }
+  STAFFK = "";   /* 담당자 코드를 화면과 함께 버린다 */ var m = el("modal"); if (m) m.remove();
+  if (NOTICE.cur) NOTICE.cur = null;   /* v3.53 팝업이든 다른 모달이든 닫히면 다음 팝업 */
+  if (NOTICE.q.length) { clearTimeout(NOTICE.t); NOTICE.t = setTimeout(noticePump, 250); }
+}
 
 /* ── v10: 과제상담 예약 (v5 p23~25) ── */
 function t2m(t) { var p = t.split(":"); return (+p[0]) * 60 + (+p[1]); }
@@ -1558,13 +1593,13 @@ function bookResv() {
       }
     });
   }
-  toast("상담 신청 완료 · " + slot + " · Meeting Room 2. 운영자 승인 후 앱을 열어 두면 화면에서 알려드려요.");
+  notice({ title: "상담 신청 완료", body: slot + " · 1F Meeting Room 2 · 승인되면 알림" });
 }
 function cancelResv() {
   var u = S.get("user", {});
   if (BE.on && u.empId) beCall({ action: "resv_cancel", emp: u.empId });
   S.set("resv", resvAll().filter(function (r) { return !(r.mine && RESV_LIVE.indexOf(r.status) >= 0); }));
-  toast("상담 신청을 취소했어요. 슬롯이 다시 열렸습니다.");
+  notice({ title: "상담 신청 취소됨" });
 }
 function resvAct(id, act) {
   var all = resvAll();
@@ -1662,15 +1697,15 @@ function cchatCancel() {
 function cchatCancelGo() {
   var u = S.get("user", {}) || {};
   S.set("cchat", null);
-  if (!BE.on || !u.empId) { toast("커피챗 신청을 취소했어요"); App.render(); return; }
+  if (!BE.on || !u.empId) { notice({ title: "커피챗 신청 취소됨" }); App.render(); return; }
   beCall({ action: "cchat_cancel", emp: u.empId },
     function (res) {
-      if (res && res.ok) toast("커피챗 신청을 취소했어요");
-      else toast("취소했지만 서버에 반영되지 않았습니다. 18F 라운지 담당자에게 알려주세요.");
+      if (res && res.ok) notice({ title: "커피챗 신청 취소됨" });
+      else notice({ key: "cchatX:fail", title: "서버에 반영되지 않았어요", body: "18F 라운지 담당자에게 취소 요청" });
       App.render();
     },
     function () {
-      toast("취소했지만 서버에 반영되지 않았습니다. 18F 라운지 담당자에게 알려주세요.");
+      notice({ key: "cchatX:fail", title: "서버에 반영되지 않았어요", body: "18F 라운지 담당자에게 취소 요청" });
       App.render();
     });
 }
@@ -2683,10 +2718,10 @@ function sessBook(id) {
   if (BE.on) beCall({ action: "sess_book", emp: (S.get("user", {}) || {}).empId || "", name: (S.get("user", {}) || {}).name || "", sess: id, slot: "" }, function (res) {
     if (!res || res.ok || ["full", "pre", "dup"].indexOf(res.reason) < 0) return;
     var m2 = sessMy(); delete m2[id]; S.set("sess_my", m2);
-    toast(res.reason === "full" ? "만석입니다. 취소가 나오면 다시 열려요" : res.reason === "pre" ? "이미 사전 신청된 강연이에요" : "이미 신청한 강연이에요");
+    notice({ key: "sess:" + id + ":" + res.reason, title: res.reason === "full" ? "신청되지 않았어요 · 만석" : res.reason === "pre" ? "이미 사전 신청된 강연" : "이미 신청한 강연" });
     App.render();
   }, function () {});
-  toast("신청 완료. 홈 내 일정에 담겼어요");
+  notice({ key: "sess:" + id + ":ok", title: "신청 완료", body: s.ttl + " · " + s.tm, go: "home" });
   App.render();
 }
 function sessCancel(id) {
@@ -2696,7 +2731,7 @@ function sessCancel(id) {
   }
   var my = sessMy(); delete my[id]; S.set("sess_my", my);
   if (BE.on) beCall({ action: "sess_cancel", emp: (S.get("user", {}) || {}).empId || "", sess: id }, function () {}, function () {});
-  toast("신청을 취소했어요");
+  notice({ key: "sess:" + id + ":x", title: "신청 취소됨" });
   App.render();
 }
 function sessOpen(id) { PROG.sid = id; App.go("sess_d"); }
@@ -2944,7 +2979,7 @@ function photoTake() {
     var pub = photoPub(), ahead = pub.waiting || 0, no = (pub.serving || 0) + ahead + 1;
     S.set("photo_pub", { waiting: ahead + 1, serving: pub.serving || 0, min: PHOTO.MIN });
     S.set("photoq", { no: no, status: "wait", ahead: ahead, eta: photoEta(ahead) });
-    toast(no + "번 · 예상 입장 " + photoEta(ahead));
+    notice({ key: "photo:" + no, title: "포토부스 " + no + "번", body: "예상 입장 " + photoEta(ahead) });
     return;
   }
   var u = S.get("user", {}) || {};
@@ -2958,18 +2993,18 @@ function photoTake() {
       return;
     }
     S.set("photoq", { no: res.no, status: "wait", ahead: res.ahead, eta: res.eta });
-    toast(res.no + "번 · 예상 입장 " + res.eta);
+    notice({ key: "photo:" + res.no, title: "포토부스 " + res.no + "번", body: "예상 입장 " + res.eta });
   }, function () { PHOTO.busy = false; toast("서버에 연결할 수 없어요"); });
 }
 function photoCancel() {
   if (!BE.on) {
     var pub = photoPub();
     S.set("photo_pub", { waiting: Math.max(0, (pub.waiting || 1) - 1), serving: pub.serving || 0, min: PHOTO.MIN });
-    S.set("photoq", null); toast("번호표를 취소했어요"); return;
+    S.set("photoq", null); notice({ title: "번호표 취소됨" }); return;
   }
   var u = S.get("user", {}) || {};
   beCall({ action: "photo_cancel", emp: u.empId || "" }, function (res) {
-    if (res && res.ok) { S.set("photoq", null); toast("번호표를 취소했어요"); } else toast("취소하지 못했어요");
+    if (res && res.ok) { S.set("photoq", null); notice({ title: "번호표 취소됨" }); } else toast("취소하지 못했어요");
   }, function () { toast("서버에 연결할 수 없어요"); });
 }
 /* 번호표 UI · 프로그램 행 펼침·일정 탭 상시 행·상세 화면 공용 */
@@ -3307,6 +3342,7 @@ function spFinish(cur) {
   }
   if (SPOP.cur === cur) SPOP.cur = null;
   if (SPOP.q.length && !SPOP.cur) setTimeout(spNext, 150);
+  else if (NOTICE.q.length) { clearTimeout(NOTICE.t); NOTICE.t = setTimeout(noticePump, 250); }   /* v3.53 팝 → 팝업 */
 }
 /* v3.49 · 인라인 펀치는 폐지(풀스크린 팝이 맡는다) · 여기는 룰렛 글로우 기록과 본 스탬프 기록만 */
 function ppAfterRender(n, oldN, glow) {
@@ -4598,14 +4634,8 @@ function notifAsk() {
 function notifyUser(title, body, target) {
   try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate([80, 40, 80]); } catch (e) {}   /* 상호작용 전 차단 경고 방지 */
   if (notifOK()) { try { new Notification(title, { body: body }); } catch (e) {} }
-  if (el("modal")) { toast(title); return; }        /* 팝업 위에 팝업 금지 · 뒤 알림은 토스트로 */
-  if (App.current === "game_word" || App.current === "game_type" || App.current === "game_pang" || App.current === "game_jump" || App.current === "type_site") { toast(title); return; }
-  var askBtn = (notifDesktop() && !notifOK() && Notification.permission !== "denied")
-    ? '<button class="btn line" style="margin-top:8px" onclick="notifAsk()">브라우저 알림 켜기</button>' +
-      '<p class="muted" style="margin-top:6px;font-size:calc(12.5px * var(--fs));text-align:center">앱을 열어 둔 동안에만 알려드려요</p>' : "";
-  modalOpen('<b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">' + esc(title) + '</b>' +
-    '<p class="muted" style="margin-top:8px;font-size:calc(14.5px * var(--fs));line-height:1.6">' + esc(body) + "</p>" +
-    (target ? '<button class="btn mint" style="margin-top:14px" onclick="modalClose();App.go(\'' + target + '\')">바로 가기</button>' : '<button class="btn" style="margin-top:14px" onclick="modalClose()">확인</button>') + askBtn);
+  /* v3.53 팝업 대기열로 · 모달·스탬프 팝·게임 플레이가 끝나면 차례로 · 호출은 게임 중 제목 토스트도 */
+  notice({ key: "nu:" + title + "|" + body, title: title, body: body, go: target || "", urgent: /입장|차례/.test(title) });
 }
 /* 내 상태 전환 감지 · 서버 sync·로컬 storage 어느 쪽이 바꿔도 여기서 팝업 1회 */
 function checkMyState() {
@@ -4719,7 +4749,7 @@ function beSync() {
         for (kq in nowQ) {
           if (nowQ[kq].status === "call" && (!was[kq] || was[kq].status !== "call")) {
             var spN = scanSpot(kq);
-            toast((spN ? spN.nm + " · " : "") + nowQ[kq].no + "번, 지금 입장하세요");
+            notice({ key: "q:" + kq + ":" + nowQ[kq].no, title: "지금 입장하세요", body: (spN ? spN.nm + " · " : "") + nowQ[kq].no + "번", urgent: true });
           }
         }
         S.set("queue", nowQ);
@@ -4869,9 +4899,9 @@ function stampByCode(v) {
   if (!v) return false;
   /* v3.19 테스트 사번: 코드→스탬프 매핑이 서버 전용(보안 설계)이라 로컬 판정이 불가능 · 원장 오염을 막기 위해 차단 */
   if (testEmp()) { toast("테스트 계정은 스탬프 카드의 「테스트 · 완료 처리」 버튼을 쓰세요."); return false; }
-  if (!BE.on) { toast("서버에 연결되지 않아 적립할 수 없어요. 잠시 후 다시 시도해주세요."); return false; }
+  if (!BE.on) { notice({ key: "claim:off", title: "적립되지 않았어요", body: "서버 연결 없음 · 잠시 후 다시 스캔" }); return false; }
   var u = S.get("user", {}) || {};
-  if (!u.empId) { toast("사번으로 입장한 뒤 적립할 수 있어요."); return false; }
+  if (!u.empId) { notice({ key: "claim:emp", title: "적립되지 않았어요", body: "사번으로 입장 후 스캔" }); return false; }
   /* v3.34b 통신이 끊긴 게 확실하면 기다리지 않고 바로 저장 (계단실 등) */
   if (navigator.onLine === false) { scanQAdd(v); return true; }
   if (STAMPQ.busy) { scanQAdd(v); return true; }
@@ -4891,7 +4921,7 @@ function scanQAdd(code) {
   var q = scanQList(), up = String(code).toUpperCase();
   if (!q.some(function (x) { return String(x.code).toUpperCase() === up; })) q.push({ code: code, ts: Date.now() });
   S.set("scan_q", q.slice(-20));
-  toast("스캔됨 · 연결되면 적립됩니다");
+  notice({ key: "scanq", title: "스캔 저장됨", body: "연결되면 자동 적립" });
   if (["passport", "home"].indexOf(App.current) >= 0) App.render();
 }
 function scanQNote() {
@@ -5052,17 +5082,17 @@ function mtWordsHtml() {   /* 휴면 · SURVEY_FEATURES.words (끄면 1F 월에 
 function stampClaimDone(res, late) {
   if (!res || !res.ok) {
     var why = res && res.reason;
-    toast((late ? "저장해 둔 스캔 · " : "") + (why === "nocode" ? "행사용 QR이 아닙니다. 부스에 붙은 QR을 찍어주세요." :
-      why === "window" ? "지금은 적립 시간이 아니에요" + (res.open ? " (" + res.open + ")" : "") :
-        why === "off" ? "이 QR 지점은 지금 운영하지 않아요" :
-          why === "param" ? "사번으로 입장한 뒤 적립할 수 있어요." :
-            "적립하지 못했어요. 다시 찍어주세요."));
+    notice({ key: "claim:" + why, title: late ? "저장한 스캔이 적립되지 않았어요" : "적립되지 않았어요",
+      body: why === "nocode" ? "행사용 QR 아님" :
+        why === "window" ? "적립 시간 아님" + (res.open ? " · " + res.open : "") :
+          why === "off" ? "지금 운영하지 않는 지점" :
+            why === "param" ? "사번으로 입장 후 스캔" : "다시 스캔" });
     return;
   }
   stampSync(res.stamps);
   /* 260909: 스탬프 6종 밖 지점(구 p6 포토부스 등)이 시트에 남아 있어도 앱은 세지 않는다 */
   if (!STAMPS.some(function (s) { return s.id === res.id; })) {
-    toast("이 QR은 스탬프 대상이 아니에요 · " + (res.name || res.id));
+    notice({ key: "claim:not:" + res.id, title: "스탬프 대상이 아닌 QR", body: res.name || res.id });
     return;
   }
   if (res.dup) { toast("이미 적립한 스탬프예요 · " + (res.name || res.id)); return; }
@@ -5216,7 +5246,8 @@ function qrCamStart() {
     QRS.hint = setTimeout(function () { var h = el("qrHint"); if (h) h.style.display = "block"; }, 8000);
   }).catch(function () {
     qrCamStop();
-    toast("카메라를 열 수 없습니다. 브라우저의 카메라 권한을 확인해주세요.");
+    if (el("qrVideo")) modalClose();
+    notice({ key: "cam", title: "카메라를 열 수 없어요", body: "브라우저 설정에서 카메라 권한 허용" });
   });
 }
 function qrCamStop() {
@@ -5473,11 +5504,11 @@ function qrScanClose() {
   if (el("qrVideo")) modalClose();
 }
 function qrHandle(raw) {
-  if (qrParseUser(raw)) { toast("참가자 QR입니다. 체크인은 운영 데스크 스캐너에서 진행돼요."); return; }
+  if (qrParseUser(raw)) { notice({ key: "claim:user", title: "참가자 QR이에요", body: "부스·전시 QR 스캔" }); return; }
   var m = raw.match(/#s=([A-Za-z0-9]+)/i);
   if (m) { stampByCode(m[1]); return; }
   if (/^[A-Za-z0-9]{3,12}$/.test(raw.trim())) { stampByCode(raw.trim()); return; }
-  toast("행사용 QR이 아닙니다. 부스·전시의 QR을 스캔해주세요.");
+  notice({ key: "claim:nocode", title: "적립되지 않았어요", body: "행사용 QR 아님" });
 }
 var pickedTag = IDEA_TAGS[IDEA_TAGS.length - 1];
 function pickTag(btn) {
@@ -6094,7 +6125,6 @@ function gameClear(flagKey) {
     S.set(flagKey, true);
     bePush("game:" + flagKey, "", true);
     awardStamp("p4");   /* 260909: 미니게임 별도 칸 폐지 · 04 미니게임으로 통합 */
-    setTimeout(function () { toast("게임 클리어! 패스포트 「미니게임」 칸이 적립됐어요."); }, 300);
   }
 }
 
@@ -8166,7 +8196,7 @@ function xitionRun(switchNow) {
         beStats();
         a2hsAuto();
         if (res.isNew) setTimeout(function () {
-          toast("PIN이 등록되었어요. 다음 접속에도 같은 4자리를 사용하세요");
+          notice({ key: "pin", title: "PIN 등록 완료", body: "다음 접속에도 같은 4자리" });
         }, 700);
       }, function () {
         reset();
