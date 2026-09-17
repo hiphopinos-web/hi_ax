@@ -754,6 +754,10 @@
   .tytv .tytv-foot { margin-top: 14px; font-size: 15px; opacity: 0.6; line-height: 1.6; }
   /* v3.50 AX 올림픽 · 허브 · 메달 · 메달표 */
   .oly-hub { margin-top: 10px; }
+  /* v3.50C AX 한 줄 · 검정 무대 위 한 줄 */
+  .ax-line { margin-top: 10px; font-size: calc(13.5px * var(--fs)); line-height: 1.5; color: var(--muted); word-break: keep-all; }
+  .ax-line b { display: inline-block; margin-right: 6px; padding: 1px 7px; border-radius: 999px; background: var(--mint); color: #fff; font-size: calc(11.5px * var(--fs)); font-weight: 800; vertical-align: 1px; }
+  .ax-line.dk { color: rgba(255,255,255,0.88); }
   .oly-sum { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: var(--ink); color: #fff; border-radius: 16px; padding: 12px 14px; margin-bottom: 8px; }
   .oly-sum small { display: block; font-size: calc(11.5px * var(--fs)); font-weight: 700; opacity: 0.7; }
   .oly-sum b { font-family: var(--disp); font-size: calc(24px * var(--fs)); font-weight: 900; }
@@ -1058,15 +1062,13 @@ var MEM_ROUNDS = [
     mean: "올해는 함께 해 보는 것부터 시작해요 · 내년엔 넓히고, 2028년엔 서로 잇습니다" }
 ];
 var MEM_SHOW = 6, MEM_SHOW_FAST = 3, MEM_SEC = 60, MEM_PEN = 2, MEM_PT = 10, MEM_PT_ROUND = 30, MEM_PT_SEC = 5, MEM_STAR3 = 450, MEM_STAR2 = 300;
-/* ═══ v3.36b 타자 게임 단어 풀 · 여기 한 곳 (사용자 확정 대상 초안) ═══
-   확정 문서·앱에 이미 있는 어휘에서 짧은 단어 위주 · 공백이 든 말(ME to WE 등)은 판정이 어려워 뺐다 · 영문은 모바일 자판 전환 부담으로 3개만.
+/* ═══ 타자 게임 단어 풀 · 여기 한 곳 · v3.50C 확정 문서 어휘만 (슬로건 · 3개년 로드맵 · 공식 공지 붙임1·2 프로그램 제목·내용 · DAP) ═══
+   문서에 없는 앱 운영 용어(스탬프·룰렛·응모권·체크인 등)는 뺐다 · 공백이 든 말은 판정이 어려워 붙여 쓴다 · 영문은 모바일 자판 전환 부담으로 3개만.
    단계가 오를수록 긴 단어 비중이 커진다(1단계 3자 이하 · 2단계 4자 이하 · 4단계부터 3자 이상). */
 var TYPE_WORDS = [
-  "AX", "AI", "DAP",
-  "공감", "참여", "확산", "체화", "혁신", "연결", "실습", "전시", "체험", "상담", "강연", "세션", "설문", "계단", "경품", "추첨", "시상", "분석", "요약", "현장", "영업", "보상", "전략", "채널", "교안", "동료", "업무", "본사", "룰렛",
-  "데이터", "로드맵", "자동화", "커피챗", "스탬프", "리포트", "응모권", "대강당", "광화문", "파이썬", "노트북", "클로드", "키노트", "알림봇", "정리표", "산출물", "체크인", "라이브", "챌린지", "리서치", "실시간", "새정보",
-  "에이전트", "프롬프트", "대시보드", "아이디어", "코파일럿", "하이디큐", "기조연설", "예측모델", "포토부스", "우수사례", "파트너사", "외부자료", "문서작성", "통계현황", "반복작업",
-  "바이브코딩", "업무혁신", "내부강연"
+  "AX", "AI", "공감", "참여", "확산", "체화", "혁신", "연결", "실습", "전시", "체험", "상담", "강연", "세션", "경품", "추첨", "시상", "분석", "요약", "현장", "영업", "보상", "전략", "채널", "교안", "동료", "업무", "본사",
+  "DAP", "데이터", "로드맵", "자동화", "커피챗", "리포트", "대강당", "광화문", "파이썬", "노트북", "키노트", "알림봇", "정리표", "산출물", "리서치", "실시간", "새정보",
+  "대시보드", "아이디어", "기조연설", "예측모델", "포토부스", "우수사례", "파트너사", "외부자료", "문서작성", "통계현황", "반복작업", "바이브코딩", "업무혁신", "내부강연"
 ];
 
 /* ════════════════ v10 신규 데이터 · 기획서 v2(260822 1층 반영) ════════════════ */
@@ -4057,7 +4059,7 @@ var Views = {
     return '<div id="gwRoot">' +
       '<div class="chain-box"><p class="who">MINI GAME</p>' +
       '<p class="word disp" style="letter-spacing:0.02em">ME to WE 기억력</p>' +
-      '<p class="next" style="opacity:0.92">문장을 보고 외운 뒤, 단어 타일을 <b>순서대로</b> 눌러 다시 만들어요.</p></div>' +
+      '<p class="next" style="opacity:0.92">문장을 보고 외운 뒤, 단어 타일을 <b>순서대로</b> 눌러 다시 만들어요.</p>' + axPreHtml("word", true) + "</div>" +
       '<div class="card soft mb12"><ul style="margin:0 0 0 18px;font-size:calc(14.5px * var(--fs));line-height:1.8;color:var(--muted)">' +
       "<li>라운드 " + MEM_ROUNDS.length + "개 · 문장은 " + MEM_SHOW + "초 보여 줘요 (다 외웠으면 「외웠어요」)</li>" +
       "<li>틀린 타일은 남은 시간 -" + MEM_PEN + "초 · 점수는 안 깎여요 · 실패 없음</li>" +
@@ -6276,6 +6278,36 @@ function tyWinSave() {
   }, function () { toast("서버 응답 없음"); });
 }
 
+/* ═══ v3.50C AX 한 줄 · 여기 한 곳 (검토 대상 · 검토자 미정) ═══
+   출처는 확정 문서만: 슬로건 「ME to WE」(「AX : 」 접두 없음) · 3개년 로드맵 · 공식 공지 붙임1·2 프로그램 제목 · DAP.
+   게임 흐름을 끊지 않게 한 줄(3초 이내) · 시작 화면 = 규칙 옆 한 줄 · 결과 카드 = 「오늘의 AX 한 줄」(돌아가며). */
+var AX_PRE = {
+  pang: "ME to WE · 나의 업무 혁신, 우리 회사의 AX가 되다",
+  jump: "AX 로드맵 2026의 키워드는 「공감과 참여」예요",
+  type: "떨어지는 단어는 오늘 프로그램 안내와 AX 로드맵에서 골랐어요",
+  word: "2026 공감과 참여 → 2027 확산과 체화 → 2028 혁신과 연결"
+};
+var AX_TODAY = [
+  "ME to WE · 나의 업무 혁신, 우리 회사의 AX가 되다",
+  "AX 로드맵 · 2026 공감과 참여 → 2027 확산과 체화 → 2028 혁신과 연결",
+  "17F 09:40 기조연설 · AI 환경과 전략 (CTO)",
+  "17F 10:30 내부 강연 · 현대해상 AX 로드맵 (디지털전략본부장)",
+  "파트너사 강연 · (AWS) Agentic AI 시대의 일하는 방식 변화",
+  "파트너사 강연 · (MS) AI와 친해지기",
+  "1F AX Wall · AI 활용 우수사례와 AX 로드맵",
+  "1F AX NOW · 사내 LLM 서비스 HIDI-Q 체험",
+  "18F AX 커피챗 · 소규모 아이디어 논의",
+  "10F 세션 A · 영업 및 보상 현장 우수 사례 강연 및 실습",
+  "10F 세션 B · “내 데이터”로 만드는 통계 현황 리포팅 실습",
+  "10F 세션 C · “내가 보는 자료”로 만드는 외부자료 리서치 자동화 실습",
+  "10F 세션 D · Claude Code를 활용한 바이브 코딩 실습 (AWS)",
+  "10F 세션 E · MS Copilot을 활용한 문서 작성 실습 (MS)",
+  "17:00 Outro · DAP 우수 성과자 시상"
+];
+function axToday() { var i = S.get("ax_line_i", 0) || 0; S.set("ax_line_i", (i + 1) % AX_TODAY.length); return AX_TODAY[i % AX_TODAY.length]; }
+function axPreHtml(key, dark) { return AX_PRE[key] ? '<p class="ax-line' + (dark ? " dk" : "") + '"><b>AX 한 줄</b>' + esc(AX_PRE[key]) + "</p>" : ""; }
+function axTodayHtml(dark) { return '<p class="ax-line' + (dark ? " dk" : "") + '"><b>오늘의 AX 한 줄</b>' + esc(axToday()) + "</p>"; }
+
 /* ════════════════ v3.50 AX 올림픽 (사용자 확정 260917) ════════════════
    종목 = OLY_EVENTS 한 곳(한 줄 추가·삭제 · 서버 OLY_EVENTS 와 같은 순서로 맞춘다) · 만점 = 종목 수 × 100.
    환산 = min(100, 종목 최고 기록 / 목표 점수 × 100) · 원점수 합산·백분위 금지 · 목표 점수는 서버 설정(콘솔)이 정본, 아래는 폴백.
@@ -6562,7 +6594,7 @@ function gsStartHtml(key, o) {
     '<div class="cho-box" style="padding:16px 14px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">MINI GAME</p>' +
     '<p class="word disp" style="font-size:24px;margin-top:2px">' + esc(g.name) + "</p>" +
     '<div class="rg-wrap' + (o.flat ? " flat" : "") + '" style="margin-top:10px"><canvas id="' + o.previewId + '" width="' + o.pw + '" height="' + o.ph + '"></canvas></div>' +
-    '<p class="hint">' + o.rules + "</p></div>" +
+    '<p class="hint">' + o.rules + "</p>" + axPreHtml(key, true) + "</div>" +
     '<div class="row mb8" style="justify-content:space-between"><span class="muted" style="font-size:calc(13.5px * var(--fs))">닉네임 <b style="color:var(--hi)">' + esc(nick) + '</b> · <span style="text-decoration:underline;cursor:pointer" onclick="S.set(\'type_nick_edit\', true); App.render()">변경</span></span>' +
     '<span class="muted" style="font-size:calc(13.5px * var(--fs))">최고 ' + S.get(g.best, 0).toLocaleString() + "</span></div>" +
     '<button class="btn mint mb8" style="padding:16px;font-size:calc(17px * var(--fs))" onclick="' + g.start + '">START</button>' +
@@ -6579,7 +6611,7 @@ function gsResultHtml(key, r) {
     '<p style="margin-top:6px;font-size:calc(15px * var(--fs));font-weight:800">' + esc(r.reason) + "</p>" +
     '<p class="disp" style="font-size:44px;color:var(--mint);margin-top:6px">' + Number(r.score).toLocaleString() + "</p>" +
     '<p class="hint">' + r.stats + "<br>" + (r.rankLine || "") + "</p>" +
-    '<p class="hint" style="margin-top:6px">미니게임 스탬프는 끝까지 하면 적립돼요</p></div>' +
+    '<p class="hint" style="margin-top:6px">미니게임 스탬프는 끝까지 하면 적립돼요</p>' + axTodayHtml(true) + "</div>" +
     (r.banner || "") +
     '<button class="btn mint mb8" style="padding:15px" onclick="' + g.start + '">다시 하기</button>' +
     '<button class="btn line mb8" onclick="' + gsRankGo(key) + '">순위판 보기</button>' +
@@ -7405,7 +7437,7 @@ function gwFinish() {
     '<p class="disp" style="font-size:40px;color:var(--mint);margin-top:4px">' + GW.score.toLocaleString() + "</p>" +
     '<p class="next">문장 ' + GW.done + "개 완성 · 틀린 탭 " + GW.wrongs + "번 · 남은 시간 보너스 +" + bonus + "<br>최고 " + S.get("gw_best", 0).toLocaleString() + "점</p>" +
     '<p class="next" style="margin-top:6px">' + olyResultLine("word", GW.score) + "</p>" +
-    '<p class="next" style="margin-top:6px">미니게임 스탬프는 끝까지 하면 적립돼요</p></div>' +
+    '<p class="next" style="margin-top:6px">미니게임 스탬프는 끝까지 하면 적립돼요</p>' + axTodayHtml(true) + "</div>" +
     MEM_ROUNDS.map(function (R) {
       return '<div class="card soft mb8"><p style="font-size:calc(15.5px * var(--fs));font-weight:800;color:var(--hi)">' + (R.kind === "order" ? R.pairs.map(function (p) { return esc(p[0] + " " + p[1]); }).join(" · ") : esc(R.words.join(" "))) + "</p>" +
         '<p class="muted" style="font-size:calc(13px * var(--fs));margin-top:3px">' + esc(R.mean) + "</p></div>";
