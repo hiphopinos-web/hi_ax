@@ -1271,12 +1271,8 @@ var MOCK_RESV = [
   { id: "m8", room: 2, slot: "13:30", name: "문○경", dept: "개인보험부문", status: "booked" }
 ];
 /* B. DAP Wall QR 퀴즈 · 3세트 × 5문항, 정답은 전부 1F 벽 전시 안에 (v5 p19~20) */
-var DEPTS = ["기술지원부문", "개인보험부문", "기업보험부문", "자동차부문", "보상부문", "CPC부문"];
-var MOCK_DEPTSTAT = [
-  { d: "기술지원부문", n: 47, avg: 82 }, { d: "보상부문", n: 64, avg: 77 },
-  { d: "개인보험부문", n: 52, avg: 74 }, { d: "자동차부문", n: 38, avg: 71 },
-  { d: "CPC부문", n: 29, avg: 69 }, { d: "기업보험부문", n: 31, avg: 66 }
-];
+/* v3.69 부문 목록·부문 정답률 목업은 삭제 (참여자 화면·사이니지 어디에도 부문을 두지 않는다 · 서버 집계만 휴면으로 남는다) */
+
 var WALLQ_DEFAULT = [
   { id: "wall1", name: "WALL 1", theme: "영업·보상 현장 AX 사례", qs: [
     { q: "가입설계 비교 자동화 · 3시간 걸리던 일이 얼마나로 줄었을까요?", o: ["10분", "1시간", "30분", "그대로"], a: 0 },
@@ -1934,22 +1930,7 @@ function wqSubmit() {
   waveBump();
   App.render();
 }
-function deptStats() {
-  var mine = S.get("dept", null);
-  var myAt = S.get("wq_attempts", []);
-  var rows = MOCK_DEPTSTAT.map(function (r) {
-    var o = { d: r.d, n: r.n, avg: r.avg };
-    if (r.d === mine && myAt.length) {
-      var sum = 0;
-      myAt.forEach(function (a) { sum += a.score; });
-      o.n = r.n + myAt.length;
-      o.avg = Math.round((r.n * r.avg + sum) / o.n);
-    }
-    return o;
-  });
-  rows.sort(function (a, b) { return b.avg - a.avg; });
-  return rows;
-}
+
 function wqToggle(id) {
   var a = S.get("wq_active", { wall1: true, wall2: true, wall3: true });
   a[id] = a[id] === false;
@@ -4178,17 +4159,23 @@ var Views = {
   },
 
   /* ── v10 【신규 D】 사이니지 3종 · 프로토타입 (정식판: 무인 10시간·오프라인 캐시·키오스크) ── */
+  /* v3.69 (사용자 확정 260918) 1F Special Wall 에서 부문 순위·부문 이름 전면 삭제 · 경쟁 대신 참여 흐름을 보여 준다.
+     숫자는 이미 도는 ME to WE 월 참여 카운트(mtPoints · wall_tv 와 같은 값)를 그대로 쓴다(새 집계 없음).
+     서버 부문 집계(stats_ depts)는 남아 있지만 이 화면도, 앱도 쓰지 않는다(휴면). */
   wall_quiz: function () {
-    var rows = deptStats();
+    var n = mtPoints(), pct = Math.min(100, Math.floor(n / MT_TOTAL * 100));
+    var recent = (S.get("ideas", []) || []).slice(-3).reverse();
     return '<div class="sg"><div class="row" style="justify-content:space-between;padding-top:8px">' +
-      '<div><p class="sg-title">SPECIAL WALL <span style="color:var(--mint-deep)">LIVE</span></p><p class="sg-sub">부문별 평균 정답률 · 참여 현황</p></div>' +
+      '<div><p class="sg-title">SPECIAL WALL <span style="color:var(--mint-deep)">LIVE</span></p><p class="sg-sub">오늘의 참여</p></div>' +
       '<div class="row" style="gap:6px">' + tvBtns() + '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button></div></div>' +
-      rows.map(function (r, i) {
-        return '<div class="dbar' + (i < 3 ? " t" + (i + 1) : "") + '"><div class="nm"><b><span class="rk">' + (i + 1) + "</span>" + esc(r.d) + '</b><span class="pct">' + r.avg + '<span style="font-size:calc(14.5px * var(--fs))">점</span></span></div>' +
-          '<div class="track"><div class="fill2" style="width:' + r.avg + '%"></div></div>' +
-          '<p class="meta">참여 ' + (r.n + (i === 0 ? tick % 3 : 0)) + "명 · DAP Wall QR 퀴즈 기준</p></div>";
-      }).join("") +
-      '<p style="text-align:center;font-size:calc(13.5px * var(--fs));opacity:0.55;margin-top:14px">지금 QR 퀴즈에 참여하면 우리 부문 점수가 올라갑니다 · 30~60초 주기 갱신 · 75&quot; 세로 화면용</p></div>';
+      '<div style="text-align:center;margin-top:26px"><p class="disp" style="font-size:78px;line-height:1;color:var(--mint)">' + n.toLocaleString() +
+      '<span style="font-size:26px;opacity:0.5"> / ' + MT_TOTAL.toLocaleString() + "</span></p>" +
+      '<p style="margin-top:8px;font-size:calc(16px * var(--fs));opacity:0.75">참여 한 건 = 별 하나</p></div>' +
+      '<div class="track" style="margin-top:18px"><div class="fill2" style="width:' + pct + '%"></div></div>' +
+      (recent.length ? '<div style="margin-top:22px">' + recent.map(function (x) {
+        return '<p style="margin-top:10px;font-size:calc(17px * var(--fs));line-height:1.5;opacity:0.9">' + esc(String(x.text || "").slice(0, 42)) + "</p>";
+      }).join("") + "</div>" : "") +
+      '<p style="text-align:center;font-size:calc(13.5px * var(--fs));opacity:0.55;margin-top:22px">벽의 QR을 스캔하면 그 벽의 문제가 열려요</p></div>';
   },
 
   wall_wave: function () {
