@@ -432,18 +432,36 @@
   /* 모달 등장 = 제자리에서 페이드 + 살짝 확대 (일반적인 다이얼로그). 위치를 옮기는 translate 는 쓰지 않는다 */
   @keyframes popIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
   @keyframes dimIn { from { opacity: 0; } to { opacity: 1; } }
-  /* 게임 A 「AX 링크」 · 끝말 타일 연결 → 문장 완성 */
-  .sline { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center; background: var(--ink); border: 0; border-radius: 16px; padding: 13px 12px; margin-bottom: 12px; line-height: 1.6; }
-  /* v3.42 빈칸 채우기 · 문장 글 · 지금 빈칸 · 완성 문장 */
-  .sline .stext { color: #fff; font-weight: 700; font-size: calc(16px * var(--fs)); word-break: keep-all; }
-  .sblock.cur { background: rgba(255,126,49,0.18); color: var(--mint-deep); box-shadow: inset 0 0 0 2px var(--mint); letter-spacing: 0.06em; }
-  .sline.done { background: none; padding: 0; }
+  /* v3.46 「ME to WE 기억력」 · 보기 = 검정 무대 · 떠올리기 = 빈 칸 + 타일 · 완성 = 오렌지 테두리 + 미위 팝업 */
+  .mem-stage { background: var(--ink); color: #fff; border-radius: 20px; padding: 18px 16px; text-align: center; margin-bottom: 12px; }
+  .mem-stage .who { font-size: calc(12.5px * var(--fs)); font-weight: 800; letter-spacing: 0.08em; color: rgba(255,255,255,0.55); }
+  .mem-sent { margin-top: 10px; font-size: calc(24px * var(--fs)); font-weight: 900; line-height: 1.4; word-break: keep-all; }
+  .mem-sent .mem-yr { display: block; font-size: calc(19px * var(--fs)); }
+  .mem-sent .mem-yr b { color: var(--mint-deep); margin-right: 6px; }
+  .mem-mean { margin-top: 10px; font-size: calc(14.5px * var(--fs)); line-height: 1.6; opacity: 0.88; word-break: keep-all; }
+  .mem-bar { height: 6px; border-radius: 999px; background: rgba(255,255,255,0.18); margin-top: 14px; overflow: hidden; }
+  .mem-bar i { display: block; height: 100%; background: var(--mint); transform-origin: left center; animation: memBar linear both; }
+  @keyframes memBar { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+  .mem-slots { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 12px; }
+  .mem-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .mem-row b { flex: none; width: 48px; font-family: var(--disp); color: var(--mint-deep); font-size: calc(17px * var(--fs)); text-align: left; }
+  .mem-row .mslot { flex: 1; }
+  .mslot { min-width: 44px; min-height: 40px; padding: 7px 10px; border-radius: 10px; border: 1.5px dashed rgba(255,255,255,0.35); background: transparent; color: rgba(255,255,255,0.5); font-family: inherit; font-weight: 800; font-size: calc(16px * var(--fs)); display: inline-flex; align-items: center; justify-content: center; }
+  .mslot.cur { border: 2px solid var(--mint); color: var(--mint-deep); }
+  .mslot.fill { border: 0; background: var(--mint); color: #fff; cursor: pointer; animation: blockPop 0.3s ease-out; }
+  .mem-stage.done { box-shadow: inset 0 0 0 3px var(--mint); }
+  .mem-stage.done .mslot.fill { cursor: default; animation: none; }
+  .mem-pop { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 6px 12px 6px 8px; border-radius: 999px; background: var(--mint); color: #fff; font-weight: 900; font-size: calc(13px * var(--fs)); animation: memPop 0.45s cubic-bezier(0.3, 1.4, 0.5, 1) 0.15s both; }
+  .mem-mascot { width: 28px; height: 26px; image-rendering: pixelated; image-rendering: crisp-edges; }
+  @keyframes memPop { 0% { transform: scale(0.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  .mem-tiles .ltile { padding: 13px 4px; word-break: keep-all; }
   .lgrid.two { grid-template-columns: repeat(2, 1fr); }
-  .sline .cap { width: 100%; text-align: center; font-size: calc(12.5px * var(--fs)); font-weight: 800; letter-spacing: 0.1em; color: rgba(255,255,255,0.55); margin-bottom: 2px; }
-  .sblock { padding: 7px 10px; border-radius: 8px; background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); font-weight: 800; font-size: calc(15.5px * var(--fs)); letter-spacing: 0.06em; }
-  .sblock.fill { background: var(--mint); color: #fff; letter-spacing: 0; }
-  .sblock.pop { animation: blockPop 0.35s ease-out; }
   @keyframes blockPop { 0% { transform: scale(0.6); opacity: 0; } 70% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }
+  .mem-tiles .ltile.used { background: var(--dim); color: transparent; cursor: default; }   /* 쓴 타일 자리는 흐린 빈칸으로 남긴다(위치 기억 유지) */
+  .mem-stars { margin-top: 8px; font-size: 30px; letter-spacing: 6px; }
+  .mem-stars span { color: rgba(255,255,255,0.22); }
+  .mem-stars span.on { color: var(--mint); }
+  @media (prefers-reduced-motion: reduce) { .mem-pop, .mslot.fill { animation: none; } }
   .lgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .ltile { position: relative; border: 0; background: var(--card); border-radius: 12px; padding: 14px 0; text-align: center; font-weight: 800; font-size: calc(16.5px * var(--fs)); color: var(--tx); cursor: pointer; }
   .ltile:active { transform: scale(0.97); }
@@ -483,10 +501,7 @@
   .ty-rank .dp { font-size: calc(12.5px * var(--fs)); color: var(--faint); font-weight: 700; }
   .ty-rank .sc { font-family: var(--disp); color: var(--hi); }
   .cho-box { background: var(--ink); border: 0; color: #fff; border-radius: 20px; padding: 22px 18px; text-align: center; margin-bottom: 12px; }
-  .cho-box .cho { font-family: var(--disp); font-size: 32px; letter-spacing: 0.18em; color: var(--mint-deep); }
   .cho-box .hint { margin-top: 10px; font-size: calc(15.5px * var(--fs)); line-height: 1.65; opacity: 0.92; }
-  .gfeed { min-height: 22px; text-align: center; font-size: calc(15.5px * var(--fs)); font-weight: 800; margin-top: 8px; }
-  .gfeed.ok { color: #1FA45B; } .gfeed.no { color: #E5484D; }
 
   /* ── 과제상담 (DAP ZONE) · 앱 공통 토큰만 사용 ── */
   .slotgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
@@ -804,12 +819,12 @@ var FESTIVAL = {
    구 p6(포토부스)·p8(미니게임 별도 칸)은 폐지 · 미니게임은 04 라이브 챌린지에 통합.
    v47: tap = 스탬프 카드의 바로가기 · cta = 버튼 문구 · note = 카드 안 행동 안내.
    층별 안내(progOpenFl) 폐기로 p1은 QR 스캔, p3은 17F 오후 강연 신청 목록이 목적지다(v3.31b 오후 신청제 복귀).
-   v3.1: p4는 카드 안에서 AX 링크·초성퀴즈·다시 풀기 3버튼을 직접 그린다(stampInnerHtml 특례). */
+   v3.1: p4는 카드 안에서 게임 버튼·다시 풀기를 직접 그린다(stampInnerHtml 특례) · v3.46 기억력 게임 + 타자 게임(휴대폰 게임은 선호도 조사 뒤 확정, 파일럿 3종은 테스트 모드에서만). */
 var STAMPS = [
   { id: "p1", title: "1F 전시", short: "1F 전시", desc: "1F 전시존 QR 스캔", where: "1F · 약 5분", site: 1, tap: "qrScanOpen()", cta: "QR 스캔", note: "1F 전시존 끝 QR 입간판을 스캔하세요." },
   { id: "p2", title: "AX Now! 체험", short: "부스 체험", desc: "HIDI-Q 또는 HI-Helper 부스 1곳 체험", where: "1F · 약 5분", site: 1, tap: "App.go('booth')", cta: "부스 안내 보기", note: "체험을 마치면 스태프가 보여주는 완료 QR을 스캔합니다." },
   { id: "p3", title: "17F 강의", short: "17F 강의", desc: "17F 오후 파트너사 강연 1회 참석 (10F 제외)", where: "17F · 90분", site: 1, tap: "progGoFl(17)", cta: "17F 오후 강연 신청하기", note: "17F 오후 파트너사 강연은 프로그램 탭에서 신청합니다. 사전 신청하셨다면 「사전 신청 완료」로 보입니다. 입장 시 좌석 QR을 스캔하세요." },
-  { id: "p4", title: "라이브 챌린지", short: "라이브 챌린지", desc: "Outro 시작 전 라이브 퀴즈 응답 또는 미니게임(AX 링크·초성퀴즈) 1개 클리어", where: "앱 · 30초", inapp: 1 },
+  { id: "p4", title: "라이브 챌린지", short: "라이브 챌린지", desc: "Outro 시작 전 라이브 퀴즈 응답 또는 미니게임(ME to WE 기억력·타자 게임) 1개 끝까지 하기", where: "앱 · 30초", inapp: 1 },
   { id: "p5", title: "아이디어 한 줄", short: "아이디어", desc: "아이디어 1건 제출", where: "앱 · 1분", inapp: 1, tap: "App.go('ideas')", cta: "아이디어 쓰기" },
   { id: "p7", title: "전시 QR 퀴즈", short: "QR 퀴즈", desc: "DAP Wall QR 퀴즈 1세트 통과 (60점 이상)", where: "1F DAP Wall · 약 10분", tap: "App.go('wq_list')", cta: "QR 퀴즈 풀기" },
   /* v3.34b (260917 사용자 확정) 계단 · 계단실 안 QR 한 번 = 적립 · 층·방향·횟수·시간 조건 없음 · 판정·적립은 서버(stamp_claim)
@@ -995,38 +1010,18 @@ function quizLive() {
   }
   return st;
 }
-/* 게임 A 「AX 링크」 라운드 · v3.42 빈칸 채우기 · 여기 한 곳 (사용자 확정 대상 초안)
-   제작 규칙: ①확정 문서 문장만(슬로건 · 3개년 로드맵 · 공식 공지 붙임1·2) ②{정답} 자리만 빈칸 · opts[i] 는 i 번째 빈칸 보기, 정답은 반드시 1개
-   ③오답은 문맥상 그럴듯하지만 해설로 틀린 이유가 설명되는 것. 구 라운드 「이거, AI로 되겠는데?」「2028년 전 직원 1인 1 AI 에이전트」는 확정 문서 출처가 없어 제외 */
-var LINK_ROUNDS = [
-  { src: "슬로건", text: "ME to WE · 나의 업무 {혁신}, 우리 회사의 {AX}가 되다",
-    opts: [["혁신", "효율", "변화", "성과"], ["AX", "AI", "DX", "IT"]],
-    why: "행사 슬로건입니다. 한 사람의 업무 혁신(ME)이 모여 회사 전체의 AX(WE)가 됩니다. AI 도입이 아니라 일하는 방식의 전환(AX)이 목표입니다." },
-  { src: "3개년 로드맵", text: "2026 {공감}과 참여 · 2027 확산과 {체화} · 2028 {혁신}과 연결",
-    opts: [["공감", "도입", "교육", "실험"], ["체화", "정착", "확대", "교육"], ["혁신", "성장", "전환", "도약"]],
-    why: "AX 3개년 로드맵입니다. 올해는 마음을 움직이는 공감과 참여, 내년은 확산과 체화, 2028년은 혁신과 연결로 이어집니다." },
-  { src: "10F 세션 B", text: "“내 {데이터}”로 만드는 통계 현황 {리포팅} 실습",
-    opts: [["데이터", "업무", "문서", "메일"], ["리포팅", "예측", "시각화", "검증"]],
-    why: "실제 업무 정기 데이터로 AI 활용 분석, 리포트 자동화, 대시보드 개발까지 하는 실습형 세션 B의 공식 제목입니다." },
-  { src: "10F 세션 C", text: "“내가 보는 {자료}”로 만드는 외부자료 리서치 {자동화} 실습",
-    opts: [["자료", "데이터", "화면", "메일"], ["자동화", "요약", "검증", "번역"]],
-    why: "법령·뉴스·공시처럼 늘 찾아보던 외부자료를 자동으로 수집·정리하고 알림 봇까지 만드는 세션 C의 공식 제목입니다." },
-  { src: "17F 파트너사 강연 · AWS", text: "{Agentic AI} 시대의 {일하는 방식} 변화",
-    opts: [["Agentic AI", "생성형 AI", "디지털", "클라우드"], ["일하는 방식", "조직 문화", "고객 경험", "업무 환경"]],
-    why: "AWS 파트너사 초청 강연 제목입니다. 스스로 일을 이어서 처리하는 AI(Agentic AI)가 바꾸는 우리의 일하는 방식을 다룹니다." }
+/* 「ME to WE 기억력」 라운드 · v3.46 · 여기 한 곳 (사용자 확정 대상 초안)
+   제작 규칙: ①확정 문서 문장만(슬로건 · 3개년 로드맵) ②뜻 한 줄은 10초 안에 읽히는 쉬운 말
+   ③미끼는 정답과 헷갈리는 비슷한 말 금지(혁신 자리에 효율 같은 것) · 다른 라운드의 타일이나 뚜렷이 무관한 말만 */
+var MEM_ROUNDS = [
+  { kind: "sentence", words: ["ME", "to", "WE"], decoys: ["공감과 참여", "2028"],
+    mean: "나(ME)의 업무 혁신이 우리(WE) 모두의 변화가 됩니다" },
+  { kind: "sentence", words: ["나의", "업무", "혁신,", "우리", "회사의", "AX가", "되다"], decoys: ["2027", "확산과 체화"],
+    mean: "한 사람이 바꾼 일하는 방식이 모여 회사 전체의 AX가 됩니다" },
+  { kind: "order", pairs: [["2026", "공감과 참여"], ["2027", "확산과 체화"], ["2028", "혁신과 연결"]], decoys: ["ME to WE"],
+    mean: "올해는 함께 해 보는 것부터 시작해요 · 내년엔 넓히고, 2028년엔 서로 잇습니다" }
 ];
-var LINK_SEC = 90, LINK_PEN = 3, LINK_HINT_MS = 6000, LINK_PT = 10, LINK_PT_ROUND = 30, LINK_NEXT_DELAY = 12000;
-var CHOSEONG_QUIZ = [
-  { cho: "ㅇㅇㅈㅌ", a: "에이전트", alts: [], hint: "사람 대신 업무를 알아서 수행하는 AI · 2026년 우리 회사가 도입을 확대합니다" },
-  { cho: "ㅈㄷㅎ", a: "자동화", alts: [], hint: "반복 업무를 AI에게 맡기는 것 · 내 업무 혁신의 첫걸음" },
-  { cho: "ㄱㄱ", a: "공감", alts: [], hint: "2026 로드맵 키워드: 'OO과 참여'" },
-  { cho: "ㅎㅅ", a: "확산", alts: [], hint: "2027 로드맵 키워드: 'OO과 체화'" },
-  { cho: "ㅇㄱ", a: "연결", alts: [], hint: "2028 로드맵 키워드: '혁신과 OO'" },
-  { cho: "ㅍㄹㅍㅌ", a: "프롬프트", alts: [], hint: "AI에게 일을 시키는 문장" },
-  { cho: "영문 3글자", a: "DAP", alts: ["dap", "디에이피"], hint: "현업이 직접 발굴한 과제로 진행하는 디지털 가속 프로그램" },
-  { cho: "ㄷㅇㅌ", a: "데이터", alts: [], hint: "AI의 연료 · 많이 모일수록 똑똑해집니다" }
-];
-var GC_PASS = 6;
+var MEM_SHOW = 6, MEM_SHOW_FAST = 3, MEM_SEC = 60, MEM_PEN = 2, MEM_PT = 10, MEM_PT_ROUND = 30, MEM_PT_SEC = 5, MEM_STAR3 = 450, MEM_STAR2 = 300;
 /* ═══ v3.36b 타자 게임 단어 풀 · 여기 한 곳 (사용자 확정 대상 초안) ═══
    확정 문서·앱에 이미 있는 어휘에서 짧은 단어 위주 · 공백이 든 말(ME to WE 등)은 판정이 어려워 뺐다 · 영문은 모바일 자판 전환 부담으로 3개만.
    단계가 오를수록 긴 단어 비중이 커진다(1단계 3자 이하 · 2단계 4자 이하 · 4단계부터 3자 이상). */
@@ -2333,7 +2328,7 @@ var App = {
     notices: "home",
     /* 스탬프 · 스탬프 카드가 유일한 입구 (v3.1: ev_games·ev_draw·wallv 참여자 화면 폐지) */
     ideas: "passport", booth: "passport", wq_list: "passport", ev_replay: "passport",
-    wq_play: "wq_list", game_word: "passport", game_cho: "passport", game_type: "passport", type_rank: "game_type",
+    wq_play: "wq_list", game_word: "passport", game_type: "passport", type_rank: "game_type",
     game_pilot: "passport", game_pang: "game_pilot", game_jump: "game_pilot", gs_rank: "game_pilot",
     ideas_mine: "passport", survey: "passport",
     /* 프로그램 · 신청 전용 (리더보드는 10F 세션 곁으로, v3.1) · 일정(guide_time)은 v3.3부터 탭 루트라 PARENT 없음 */
@@ -2350,7 +2345,7 @@ var App = {
     sess_d: "프로그램 신청",
     ev_cchat: "내 커피챗", ev_replay: "퀴즈 다시 풀기",
     wq_list: "DAP Wall QR 퀴즈", wq_play: "문제 풀이",
-    admin: "관리자 콘솔", screen: "송출용 화면", screen_survey: "", screen_words: "", game_word: "AX 링크", game_cho: "로드맵 초성퀴즈", game_type: "타자 게임", type_rank: "타자 순위",
+    admin: "관리자 콘솔", screen: "송출용 화면", screen_survey: "", screen_words: "", game_word: "ME to WE 기억력", game_type: "타자 게임", type_rank: "타자 순위",
     game_pilot: "게임 선호도 조사", game_pang: "AX 팡", game_jump: "ME to WE 점프", gs_rank: "게임 순위",
     wall_quiz: "", wall_wave: "", wall_live: "", wall_metowe: "", wall_tv: ""
   },
@@ -2370,7 +2365,7 @@ var App = {
     /* v3.15 새로 고침 복귀 · 현재 화면의 소속 Lv1 탭을 sessionStorage 에 기억(같은 브라우저 탭에서만, 다음 방문은 홈).
        관리자·사이니지·게임 전체화면은 저장하지 않는다 · Lv2 는 부모 탭으로 저장된다 */
     try {
-      if (SIGNAGE.indexOf(v) < 0 && ["admin", "screen", "game_word", "game_cho", "game_type", "game_pang", "game_jump"].indexOf(v) < 0) {
+      if (SIGNAGE.indexOf(v) < 0 && ["admin", "screen", "game_word", "game_type", "game_pang", "game_jump"].indexOf(v) < 0) {
         var lt = this.tabOf(v);
         if (["home", "passport", "guide_time", "guide"].indexOf(lt) >= 0) {
           sessionStorage.setItem("axf_last_tab", lt);
@@ -2417,7 +2412,7 @@ var App = {
     /* 헤더 높이를 실측해 sticky 기준선으로 넘긴다 (홈/탭루트/서브 화면마다 높이가 다르다) */
     el("frame").style.setProperty("--stick", tb.offsetHeight + "px");
     var nav = el("tabbar");
-    nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "game_word" || v === "game_cho" || v === "game_type" || v === "game_pang" || v === "game_jump") ? "none" : "flex";
+    nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "game_word" || v === "game_type" || v === "game_pang" || v === "game_jump") ? "none" : "flex";
     var activeTab = this.tabOf(v);
     var icons = this.ICONS;
     var tabBtns = this.TABS.map(function (t) {
@@ -2437,7 +2432,7 @@ var LED_TTL = 30 * 60000;
 function updateLed() {
   var bar = el("ledbar"), tr = el("ledTrack");
   if (!bar || !tr) return;
-  if (SIGNAGE.indexOf(App.current) >= 0 || App.current === "game_word" || App.current === "game_cho" || App.current === "game_type" || App.current === "game_pang" || App.current === "game_jump") { bar.style.display = "none"; return; }
+  if (SIGNAGE.indexOf(App.current) >= 0 || App.current === "game_word" || App.current === "game_type" || App.current === "game_pang" || App.current === "game_jump") { bar.style.display = "none"; return; }
   var ns = S.get("notices", []);
   var latest = null;
   for (var i = 0; i < ns.length; i++) {
@@ -2456,13 +2451,13 @@ window.addEventListener("scroll", function () {
   var b = el("topbtn");
   if (!b) return;
   var ok = window.scrollY > 400 && !el("app").hidden &&
-    SIGNAGE.indexOf(App.current) < 0 && App.current !== "game_word" && App.current !== "game_cho" && App.current !== "game_type" && App.current !== "game_pang" && App.current !== "game_jump";
+    SIGNAGE.indexOf(App.current) < 0 && App.current !== "game_word" && App.current !== "game_type" && App.current !== "game_pang" && App.current !== "game_jump";
   b.classList.toggle("on", ok);
 }, { passive: true });
 window.addEventListener("axf-store", function () {
   checkMyState();
   updateLed();
-  if (["game_word", "game_cho", "game_type", "game_pang", "game_jump", "wall_wave", "wall_metowe"].indexOf(App.current) >= 0) return;
+  if (["game_word", "game_type", "game_pang", "game_jump", "wall_wave", "wall_metowe"].indexOf(App.current) >= 0) return;
   App.render();
 });
 
@@ -3283,10 +3278,9 @@ function stampInnerHtml(s) {
     quizLive();   /* v3.41 · 만료된 문항을 다시 풀기 목록으로 넘긴다 */
     var qs4 = S.get("quiz_state", INITIAL_QUIZ_STATE), an4 = S.get("quiz_answers", {});
     var replayN = QUIZZES.filter(function (q) { return qs4.finishedIds.indexOf(q.id) >= 0 && !an4[q.id]; }).length;
-    inner += '<div class="row" style="margin-top:10px;gap:8px">' +
-      '<button class="btn mint" style="flex:1" onclick="App.go(\'game_word\')">AX 링크</button>' +
-      '<button class="btn mint" style="flex:1" onclick="App.go(\'game_cho\')">초성퀴즈</button>' +
-      '<button class="btn mint" style="flex:1" onclick="App.go(\'game_type\')">타자 게임</button></div>' +
+    inner += '<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch">' +
+      '<button class="btn mint" onclick="App.go(\'game_word\')">ME to WE 기억력</button>' +
+      '<button class="btn mint" onclick="App.go(\'game_type\')">타자 게임</button></div>' +
       (pilotOn() ? '<button class="btn line" style="margin-top:8px" onclick="App.go(\'game_pilot\')">파일럿 · 미니게임 선호도 조사</button>' : "") +
       (replayN ? '<button class="btn line" style="margin-top:8px" onclick="App.go(\'ev_replay\')">라이브 퀴즈 다시 풀기 · ' + replayN + "문제</button>" : "");
   } else {
@@ -3736,7 +3730,7 @@ var Views = {
       '<button class="btn line" style="margin-top:10px" onclick="cchatCancel()">신청 취소</button></div>';
   },
 
-  /* 미니게임 허브(ev_games)는 v3.1 폐지 · 스탬프 04 카드가 AX 링크·초성퀴즈·다시 풀기를 직접 연다 */
+  /* 미니게임 허브(ev_games)는 v3.1 폐지 · 스탬프 04 카드가 미니게임·다시 풀기를 직접 연다 */
 
   ev_replay: function () {
     quizLive();
@@ -3987,16 +3981,16 @@ var Views = {
   },
 
   game_word: function () {
+    gwStop();
     return '<div id="gwRoot">' +
       '<div class="chain-box"><p class="who">MINI GAME</p>' +
-      '<p class="word disp" style="letter-spacing:0.04em">AX 링크</p>' +
-      '<p class="next" style="opacity:0.92">문장 속 빈칸에 <b>딱 맞는 말</b>을 채워 우리의 문장을 완성하세요.<br>문장 1개를 완성하면 클리어입니다.</p></div>' +
-      '<div class="card soft mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">규칙</b><ul style="margin:8px 0 0 18px;font-size:calc(14.5px * var(--fs));line-height:1.8;color:var(--muted)">' +
-      '<li>문장이 처음부터 보이고 <b>핵심어 자리만 빈칸</b> · 강조된 빈칸부터 차례로</li>' +
-      '<li>보기 4개 중 문맥에 맞는 말을 탭 · 문장을 완성하면 왜 그 말인지 해설이 나와요</li>' +
-      '<li>' + LINK_SEC + '초 · 문장 ' + LINK_ROUNDS.length + '개 · 오답은 시간 −' + LINK_PEN + '초 (점수는 안 깎아요)</li>' +
-      '<li>6초 헤매면 정답 타일이 반짝 · 전부 완성하면 남은 시간 보너스</li></ul></div>' +
-      '<button class="btn mint" style="padding:15px" onclick="gwStart()">게임 시작</button></div>';
+      '<p class="word disp" style="letter-spacing:0.02em">ME to WE 기억력</p>' +
+      '<p class="next" style="opacity:0.92">문장을 보고 외운 뒤, 단어 타일을 <b>순서대로</b> 눌러 다시 만들어요.</p></div>' +
+      '<div class="card soft mb12"><ul style="margin:0 0 0 18px;font-size:calc(14.5px * var(--fs));line-height:1.8;color:var(--muted)">' +
+      "<li>라운드 " + MEM_ROUNDS.length + "개 · 문장은 " + MEM_SHOW + "초 보여 줘요 (다 외웠으면 「외웠어요」)</li>" +
+      "<li>틀린 타일은 남은 시간 -" + MEM_PEN + "초 · 점수는 안 깎여요 · 실패 없음</li>" +
+      "<li>끝까지 하면 <b>라이브 챌린지 스탬프</b></li></ul></div>" +
+      '<button class="btn mint" style="padding:15px" onclick="gwStart(false)">게임 시작</button></div>';
   },
 
   /* ═══ v3.36b 타자 게임 · 닉네임(최초 1회) → 시작 화면 → 게임 → 결과 ═══ */
@@ -4063,14 +4057,6 @@ var Views = {
       (testMode() ? '<p class="scap" style="margin:0 2px 8px">테스트 순위판 · 가짜 닉네임이 섞여 있어요(실서버 순위와 무관)</p>' : "") +
       '<div class="card" id="tyRankBody">' + typeRankHtml(cached, mode) + "</div>" +
       '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">' + (mode === "app" ? "내 폰 기록 · 무제한 도전 · 최고 기록만 · 닉네임으로 표시 · 경품 없음" : "1F 현장 타자왕전 · 결선 시간대 1인 1회 · 동점은 정확도, 그다음 먼저 기록한 쪽 · 1·2등 Outro 호명") + "</p>";
-  },
-
-  game_cho: function () {
-    return '<div id="gcRoot">' +
-      '<div class="cho-box"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">MINI GAME</p>' +
-      '<p class="cho" style="font-size:24px;letter-spacing:0.1em;margin-top:6px">ㅇㅇㅈㅌ ?</p>' +
-      '<p class="hint">힌트를 읽고 초성에 맞는 단어를 맞혀보세요.<br>8문제 중 <b style="color:var(--hi)">' + GC_PASS + '개 이상</b>을 맞히면 클리어입니다.</p></div>' +
-      '<button class="btn mint" style="padding:15px" onclick="gcStart()">퀴즈 시작</button></div>';
   },
 
   admin: function () {
@@ -4591,7 +4577,7 @@ function notifyUser(title, body, target) {
   try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate([80, 40, 80]); } catch (e) {}   /* 상호작용 전 차단 경고 방지 */
   if (notifOK()) { try { new Notification(title, { body: body }); } catch (e) {} }
   if (el("modal")) { toast(title); return; }        /* 팝업 위에 팝업 금지 · 뒤 알림은 토스트로 */
-  if (App.current === "game_word" || App.current === "game_cho" || App.current === "game_type" || App.current === "game_pang" || App.current === "game_jump") { toast(title); return; }
+  if (App.current === "game_word" || App.current === "game_type" || App.current === "game_pang" || App.current === "game_jump") { toast(title); return; }
   var askBtn = (notifDesktop() && !notifOK() && Notification.permission !== "denied")
     ? '<button class="btn line" style="margin-top:8px" onclick="notifAsk()">브라우저 알림 켜기</button>' +
       '<p class="muted" style="margin-top:6px;font-size:calc(12.5px * var(--fs));text-align:center">앱을 열어 둔 동안에만 알려드려요</p>' : "";
@@ -6811,197 +6797,160 @@ function jpPreview() {
   ctx.restore();
 }
 
-/* ════════════════ 게임 A: AX 링크 · v3.42 빈칸 채우기 (사용자 확정 260917) ════════════════
-   문장이 처음부터 보이고 핵심어 자리만 빈칸 · 빈칸은 앞에서부터 차례로 · 보기 4개(정답 1 + 문맥상 그럴듯한 오답 3) 중 골라 채운다.
-   맞히면 칸에 「딱 맞아」 팝 · 틀리면 회색 흔들림 + 시간 감점 · 문장 완성 시 문장 강조 + 해설 한 줄(공식 문서 근거).
-   구 끝말잇기(start·chain·두음법칙)는 폐기. 이름 「AX 링크」는 문장 속 핵심어를 제자리에 이어 붙이는 방식이라 유지. */
+/* ════════════════ 라이브 챌린지 미니게임 「ME to WE 기억력」 (v3.46 · 이름은 사용자 확정 대기 · 화면 id 는 game_word 유지) ════════════════
+   사용자 결정 260917: 핵심 슬로건을 먼저 보여 주고 기억 게임으로 확인한다 (구 빈칸 채우기 게임과 구 퀴즈 게임 대체).
+   라운드마다 ① 보기: 검정 무대 카드에 문장 + 뜻 한 줄 · 6초 뒤 자동(빠른 모드 3초) 또는 「외웠어요」
+   ② 떠올리기: 문장이 사라지고 단어 타일(문장 단어 + 미끼 1~2개)을 순서대로 눌러 다시 만든다 · 입력 없음
+      틀린 타일 = 회색 흔들림 + 남은 시간 -2초(점수 감점 없음) · 놓인 타일을 다시 누르면 그 뒤까지 빠진다
+   ③ 완성: 오렌지 테두리 + 뜻 한 줄 한 번 더 + 미위 팝업.
+   실패 없음 · 끝까지 하면 라이브 챌린지 스탬프 · 점수 = 맞힌 탭(연속 배수) + 라운드 완성 + 남은 시간 · 별 1~3개. */
 var GW = { on: false, timer: null, nextT: null };
-function gwParts(R) { return R.text.split(/\{([^}]+)\}/); }        /* 짝수 = 글, 홀수 = 정답 */
-function gwAnswers(R) { return gwParts(R).filter(function (x, i) { return i % 2 === 1; }); }
 function gwStop() {
   if (GW.timer) { clearInterval(GW.timer); GW.timer = null; }
   if (GW.nextT) { clearTimeout(GW.nextT); GW.nextT = null; }
   GW.on = false;
 }
-function gwStart() {
+function gwStart(fast) {
   gwStop();
-  GW = { on: true, r: 0, bi: 0, score: 0, time: LINK_SEC, board: [], paused: false, done: [], lastAct: Date.now(), hintIdx: -1, timer: null, nextT: null, over: false, wrongs: 0 };
-  gwRound();
-  GW.timer = setInterval(gwTick, 1000);
+  GW = { on: true, fast: !!fast, r: 0, phase: "show", score: 0, combo: 0, maxCombo: 0, wrongs: 0, left: MEM_SEC, placed: [], tiles: [], timer: null, nextT: null, last: 0, done: 0 };
+  gwShow();
+}
+function gwAnswer(R) { return R.kind === "order" ? R.pairs.map(function (p) { return p[1]; }) : R.words; }
+function gwShow() {
+  var R = MEM_ROUNDS[GW.r], sec = GW.fast ? MEM_SHOW_FAST : MEM_SHOW;
+  GW.phase = "show";
+  var root = el("gwRoot"); if (!root) return;
+  root.innerHTML = gwHud() +
+    '<div class="mem-stage"><p class="who">ROUND ' + (GW.r + 1) + " · 보고 기억하기</p>" +
+    '<p class="mem-sent">' + gwSentHtml(R) + "</p>" +
+    '<p class="mem-mean">' + esc(R.mean) + "</p>" +
+    '<div class="mem-bar"><i style="animation-duration:' + sec + 's"></i></div></div>' +
+    '<button class="btn mint" style="padding:15px" onclick="gwRecall()">외웠어요</button>';
+  GW.nextT = setTimeout(gwRecall, sec * 1000);
+}
+function gwSentHtml(R) {
+  if (R.kind === "order") return R.pairs.map(function (p) { return '<span class="mem-yr"><b>' + esc(p[0]) + "</b> " + esc(p[1]) + "</span>"; }).join("");
+  return esc(R.words.join(" "));
+}
+function gwRecall() {
+  if (!GW.on || GW.phase !== "show") return;
+  if (GW.nextT) { clearTimeout(GW.nextT); GW.nextT = null; }
+  var R = MEM_ROUNDS[GW.r];
+  GW.phase = "recall"; GW.placed = [];
+  GW.tiles = shuf(gwAnswer(R).concat(R.decoys)).map(function (w) { return { w: w, used: false }; });
+  GW.last = Date.now();
+  if (!GW.timer) GW.timer = setInterval(gwTick, 250);
   gwPaint();
 }
-function gwRound() { GW.bi = 0; gwBoard(); }
-function gwBoard() {
-  var R = LINK_ROUNDS[GW.r];
-  GW.hintIdx = -1; GW.lastAct = Date.now();
-  GW.board = shuf(R.opts[GW.bi].slice()).map(function (w) { return { w: w, bad: 0 }; });
-}
 function gwTick() {
-  if (!GW.on || GW.over || GW.paused) return;
-  GW.time--;
-  if (GW.time <= 0) { GW.time = 0; gwFinish(); return; }
-  var t = el("gwTime");
-  if (t) { t.textContent = GW.time; if (GW.time <= 10) t.classList.add("hot"); }
-  if (Date.now() - GW.lastAct > LINK_HINT_MS && GW.hintIdx < 0) {
-    var ans = gwAnswers(LINK_ROUNDS[GW.r])[GW.bi];
-    for (var i = 0; i < GW.board.length; i++) {
-      if (GW.board[i].w === ans) { GW.hintIdx = i; var d = el("lt" + i); if (d) d.classList.add("hint"); break; }
-    }
-  }
+  if (!GW.on || GW.phase !== "recall") { GW.last = Date.now(); return; }
+  var now = Date.now();
+  GW.left = Math.max(0, GW.left - (now - GW.last) / 1000);
+  GW.last = now;
+  var t = el("gwTime"); if (t) t.textContent = Math.ceil(GW.left);
 }
-function gwPickTile(i) {
-  if (!GW.on || GW.over || GW.paused) return;
-  var t = GW.board[i], R = LINK_ROUNDS[GW.r];
-  if (!t) return;
-  if (t.w === gwAnswers(R)[GW.bi]) {
-    GW.bi++; GW.score += LINK_PT;
-    if (GW.bi >= gwAnswers(R).length) { gwRoundClear(); return; }
-    gwBoard();
-    gwPaint(true);
-  } else {
-    GW.time = Math.max(0, GW.time - LINK_PEN); GW.wrongs++;
-    GW.lastAct = Date.now();
-    var d = el("lt" + i);
-    if (d) { d.classList.add("wrong"); setTimeout(function () { d.classList.remove("wrong"); }, 450); }
-    var m = el("gwMsg");
-    if (m) m.textContent = "「" + t.w + "」은(는) 이 자리에 맞지 않아요 · 문장을 다시 읽어 보세요 · 시간 −" + LINK_PEN + "초";
-    var tm = el("gwTime");
-    if (tm) { tm.textContent = GW.time; if (GW.time <= 10) tm.classList.add("hot"); }
-    if (GW.time <= 0) gwFinish();
-  }
+function gwHud() {
+  return '<div class="game-hud">' +
+    '<div class="hud"><div class="v">' + (GW.r + 1) + "/" + MEM_ROUNDS.length + '</div><div class="l">라운드</div></div>' +
+    '<div class="hud"><div class="v" id="gwTime">' + Math.ceil(GW.left) + '</div><div class="l">남은 시간(초)</div></div>' +
+    '<div class="hud"><div class="v" id="gwScore">' + GW.score + '</div><div class="l">점수' + (GW.combo >= 2 ? " · 연속 " + GW.combo : "") + "</div></div></div>";
 }
-/* 문장 · 채운 칸 = 오렌지 · 지금 칸 = 테두리 강조 · 남은 칸 = 점선 */
-function gwSentenceHtml(R, upto, popIdx, all) {
-  var parts = gwParts(R), bi = 0, h = "";
-  parts.forEach(function (p, i) {
-    if (i % 2 === 0) { if (p) h += '<span class="stext">' + esc(p) + "</span>"; return; }
-    if (all || bi < upto) h += '<span class="sblock fill' + (bi === popIdx ? " pop" : "") + '">' + esc(p) + "</span>";
-    else if (bi === upto) h += '<span class="sblock cur">' + "? ? ?" + "</span>";
-    else h += '<span class="sblock">· · ·</span>';
-    bi++;
-  });
-  return h;
+function gwSlotsHtml(R, done) {
+  var ans = gwAnswer(R), nextI = GW.placed.length;
+  var slot = function (i) {
+    if (done || i < GW.placed.length) return '<button class="mslot fill" ' + (done ? "disabled" : 'onclick="gwUnplace(' + i + ')"') + ">" + esc(done ? ans[i] : GW.tiles[GW.placed[i]].w) + "</button>";
+    return '<span class="mslot' + (i === nextI ? " cur" : "") + '">' + (i === nextI ? "?" : "") + "</span>";
+  };
+  if (R.kind === "order") return R.pairs.map(function (p, i) { return '<div class="mem-row"><b>' + esc(p[0]) + "</b>" + slot(i) + "</div>"; }).join("");
+  return '<div class="mem-slots">' + ans.map(function (w, i) { return slot(i); }).join("") + "</div>";
 }
-function gwPaint(popLast) {
+function gwPaint() {
   var root = el("gwRoot"); if (!root) return;
-  var R = LINK_ROUNDS[GW.r], n = gwAnswers(R).length;
-  var tiles = GW.board.map(function (t, i) { return '<button class="ltile" id="lt' + i + '" onclick="gwPickTile(' + i + ')">' + esc(t.w) + "</button>"; }).join("");
-  root.innerHTML =
-    '<div class="game-hud">' +
-    '<div class="hud"><div class="v' + (GW.time <= 10 ? " hot" : "") + '" id="gwTime">' + GW.time + '</div><div class="l">남은 시간(초)</div></div>' +
-    '<div class="hud"><div class="v">' + GW.score + '</div><div class="l">점수</div></div>' +
-    '<div class="hud"><div class="v">' + (GW.r + 1) + "/" + LINK_ROUNDS.length + '</div><div class="l">문장</div></div></div>' +
-    '<div class="sline"><span class="cap">' + esc(R.src) + " · 빈칸 " + (GW.bi + 1) + "/" + n + "</span>" + gwSentenceHtml(R, GW.bi, popLast ? GW.bi - 1 : -1) + "</div>" +
-    '<p class="muted" style="text-align:center;margin:0 0 8px;font-size:calc(13.5px * var(--fs))">강조된 빈칸에 들어갈 말을 고르세요</p>' +
-    '<div class="lgrid two">' + tiles + "</div>" +
+  var R = MEM_ROUNDS[GW.r];
+  root.innerHTML = gwHud() +
+    '<div class="mem-stage recall"><p class="who">ROUND ' + (GW.r + 1) + " · " + (R.kind === "order" ? "연도에 맞게 순서대로 누르기" : "순서대로 눌러 문장 만들기") + "</p>" + gwSlotsHtml(R, false) + "</div>" +
+    '<div class="lgrid mem-tiles' + (R.kind === "order" ? " two" : "") + '">' + GW.tiles.map(function (t, i) {
+      return '<button class="ltile' + (t.used ? " used" : "") + '" id="gt' + i + '" ' + (t.used ? "disabled" : 'onclick="gwTap(' + i + ')"') + ">" + esc(t.w) + "</button>";
+    }).join("") + "</div>" +
     '<p class="gmsg" id="gwMsg" style="text-align:center"></p>';
 }
-function gwRoundClear() {
-  GW.paused = true;
-  GW.score += LINK_PT_ROUND;
-  GW.done.push(GW.r);
-  gwPaintClear();
-  GW.nextT = setTimeout(gwNext, LINK_NEXT_DELAY);   /* 방치 대비 자동 진행 · 기본은 버튼으로 넘어간다 */
+function gwTap(i) {
+  if (!GW.on || GW.phase !== "recall") return;
+  var R = MEM_ROUNDS[GW.r], ans = gwAnswer(R), t = GW.tiles[i];
+  if (!t || t.used) return;
+  if (t.w === ans[GW.placed.length]) {
+    t.used = true; GW.placed.push(i);
+    GW.score += Math.round(MEM_PT * (1 + Math.min(GW.combo, 5) * 0.2));
+    GW.combo++; GW.maxCombo = Math.max(GW.maxCombo, GW.combo);
+    if (GW.placed.length >= ans.length) { gwRoundDone(); return; }
+    gwPaint();
+  } else {
+    GW.combo = 0; GW.wrongs++;
+    GW.left = Math.max(0, GW.left - MEM_PEN);
+    var d = el("gt" + i);
+    if (d) { d.classList.remove("wrong"); void d.offsetWidth; d.classList.add("wrong"); setTimeout(function () { d.classList.remove("wrong"); }, 450); }
+    var m = el("gwMsg"); if (m) m.textContent = "순서가 달라요 · 남은 시간 -" + MEM_PEN + "초";
+    var tm = el("gwTime"); if (tm) tm.textContent = Math.ceil(GW.left);
+    var sc = document.querySelector("#gwRoot .game-hud .hud:last-child .l"); if (sc) sc.textContent = "점수";
+  }
+}
+/* 놓인 타일을 다시 누르면 그 칸부터 뒤까지 빠진다(순서 게임이라 중간만 빼면 뒤 칸이 어긋난다) */
+function gwUnplace(k) {
+  if (!GW.on || GW.phase !== "recall") return;
+  GW.placed.splice(k).forEach(function (i) { GW.tiles[i].used = false; });
+  GW.combo = 0;
+  gwPaint();
+}
+function gwRoundDone() {
+  var R = MEM_ROUNDS[GW.r];
+  GW.phase = "done"; GW.done++;
+  GW.score += MEM_PT_ROUND;
+  var root = el("gwRoot"); if (!root) return;
+  var last = GW.r >= MEM_ROUNDS.length - 1;
+  root.innerHTML = gwHud() +
+    '<div class="mem-stage done"><p class="who">ROUND ' + (GW.r + 1) + " · 완성 +" + MEM_PT_ROUND + "</p>" +
+    (R.kind === "order" ? gwSlotsHtml(R, true) : '<p class="mem-sent">' + gwSentHtml(R) + "</p>") +
+    '<p class="mem-mean">' + esc(R.mean) + "</p>" +
+    '<span class="mem-pop"><canvas class="mem-mascot" width="14" height="13"></canvas><span>ME to WE</span></span></div>' +
+    '<button class="btn mint" style="padding:15px" onclick="gwNext()">' + (last ? "결과 보기" : "다음 라운드") + "</button>";
+  var cv = root.querySelector(".mem-mascot");
+  if (cv) { var g = cv.getContext("2d"); g.imageSmoothingEnabled = false; g.drawImage(rgSprCv("open"), 0, 0); }
+  rgBeep(880, 0.12);
+  GW.nextT = setTimeout(gwNext, 5000);   /* 방치 대비 자동 진행 */
 }
 function gwNext() {
   if (GW.nextT) { clearTimeout(GW.nextT); GW.nextT = null; }
-  if (!GW.on || GW.over) return;
-  if (GW.r >= LINK_ROUNDS.length - 1) gwFinish();
-  else { GW.r++; gwRound(); GW.paused = false; gwPaint(); }
+  if (!GW.on || GW.phase !== "done") return;
+  if (GW.r >= MEM_ROUNDS.length - 1) { gwFinish(); return; }
+  GW.r++;
+  gwShow();
 }
-function gwPaintClear() {
-  var root = el("gwRoot"); if (!root) return;
-  var R = LINK_ROUNDS[GW.r];
-  root.innerHTML =
-    '<div class="chain-box" style="padding:26px 16px">' +
-    '<p class="who">딱 맞아 · SENTENCE COMPLETE</p>' +
-    '<p class="disp" style="font-size:30px;margin-top:6px;color:var(--mint)">+' + LINK_PT_ROUND + '</p>' +
-    '<div class="sline done" style="margin:12px 0 0">' + gwSentenceHtml(R, 99, -1, true) + "</div>" +
-    '<p class="next" style="margin-top:12px">' + esc(R.why) + "</p>" +
-    '<button class="btn mint" style="margin-top:18px;padding:14px" onclick="gwNext()">' +
-    (GW.r >= LINK_ROUNDS.length - 1 ? "결과 보기 →" : "다음 문장 →") + "</button></div>";
-}
+function gwStars(score) { return score >= MEM_STAR3 ? 3 : score >= MEM_STAR2 ? 2 : 1; }
 function gwFinish() {
-  if (!GW.on || GW.over) return;
-  GW.over = true; GW.paused = true;
-  if (GW.timer) { clearInterval(GW.timer); GW.timer = null; }
-  if (GW.nextT) { clearTimeout(GW.nextT); GW.nextT = null; }
-  if (GW.done.length >= LINK_ROUNDS.length) GW.score += GW.time;
+  if (!GW.on) return;
+  var bonus = Math.round(GW.left) * MEM_PT_SEC;
+  GW.score += bonus;
+  var stars = gwStars(GW.score);
+  gwStop();
+  GW.phase = "end";
   if (GW.score > S.get("gw_best", 0)) S.set("gw_best", GW.score);
-  gwPaintEnd();
-  if (GW.done.length >= 1) gameClear("gw_cleared");
-}
-function gwPaintEnd() {
+  gameClear("gw_cleared");   /* 실패 없음 · 끝까지 하면 04 라이브 챌린지 */
   var root = el("gwRoot"); if (!root) return;
-  var cleared = GW.done.length >= 1;
-  var allDone = GW.done.length >= LINK_ROUNDS.length;
-  var doneList = GW.done.map(function (r) {
-    var R = LINK_ROUNDS[r];
-    return '<div class="card soft mb8"><p style="font-size:calc(15.5px * var(--fs));font-weight:800;color:var(--hi)">' + esc(R.text.replace(/[{}]/g, "")) + '</p>' +
-      '<p class="muted" style="font-size:calc(12.5px * var(--fs));margin-top:3px">' + esc(R.why) + "</p></div>";
-  }).join("");
+  var st = ""; for (var i = 0; i < 3; i++) st += '<span class="' + (i < stars ? "on" : "") + '">★</span>';
   root.innerHTML =
-    '<div class="chain-box" style="padding:26px 18px">' +
-    '<p class="disp" style="font-size:34px;color:' + (cleared ? "var(--mint)" : "rgba(255,255,255,0.55)") + '">' + (allDone ? "ALL CLEAR!" : cleared ? "CLEAR!" : "TIME UP") + "</p>" +
-    '<p class="next" style="margin-top:8px">' + GW.score + "점 · 문장 " + GW.done.length + "/" + LINK_ROUNDS.length + " 완성 · 최고 " + S.get("gw_best", 0) + '점</p>' +
-    (cleared ? '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));opacity:0.9">패스포트 「라이브 챌린지」 칸 적립 완료' + (allDone ? " · 전 라운드 클리어" : "") + "</p>" :
-      '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));opacity:0.9">문장 1개만 완성해도 클리어! 6초 헤매면 정답이 반짝여요.</p>') + "</div>" +
-    doneList +
-    '<button class="btn mint mb8" style="padding:15px" onclick="gwStart()">다시 도전</button>' +
+    '<div class="chain-box" style="padding:24px 18px"><p class="who">ME to WE 기억력 · ALL CLEAR' + (GW.fast ? " · 빠른 모드" : "") + "</p>" +
+    '<p class="mem-stars">' + st + "</p>" +
+    '<p class="disp" style="font-size:40px;color:var(--mint);margin-top:4px">' + GW.score.toLocaleString() + "</p>" +
+    '<p class="next">문장 ' + GW.done + "개 완성 · 틀린 탭 " + GW.wrongs + "번 · 남은 시간 보너스 +" + bonus + "<br>최고 " + S.get("gw_best", 0).toLocaleString() + "점</p>" +
+    '<p class="next" style="margin-top:6px">라이브 챌린지 스탬프는 끝까지 하면 적립돼요</p></div>' +
+    MEM_ROUNDS.map(function (R) {
+      return '<div class="card soft mb8"><p style="font-size:calc(15.5px * var(--fs));font-weight:800;color:var(--hi)">' + (R.kind === "order" ? R.pairs.map(function (p) { return esc(p[0] + " " + p[1]); }).join(" · ") : esc(R.words.join(" "))) + "</p>" +
+        '<p class="muted" style="font-size:calc(13px * var(--fs));margin-top:3px">' + esc(R.mean) + "</p></div>";
+    }).join("") +
+    '<button class="btn mint mb8" style="padding:15px" onclick="gwStart(false)">다시 하기 · 보기 ' + MEM_SHOW + "초</button>" +
+    '<button class="btn line mb8" onclick="gwStart(true)">빠르게 다시 하기 · 보기 ' + MEM_SHOW_FAST + "초</button>" +
     '<button class="btn line" onclick="App.go(\'passport\')">스탬프 탭으로</button>';
-}
-
-/* ════════════════ 게임 B: 로드맵 초성퀴즈 ════════════════ */
-var GC = { i: 0, correct: 0, active: false };
-function gcStart() {
-  GC = { i: 0, correct: 0, active: true };
-  gcPaint();
-}
-function gcPaint(feed, feedOk) {
-  var root = el("gcRoot"); if (!root) return;
-  if (GC.i >= CHOSEONG_QUIZ.length) { gcEnd(); return; }
-  var q = CHOSEONG_QUIZ[GC.i];
-  root.innerHTML =
-    '<div class="game-hud">' +
-    '<div class="hud"><div class="v">' + (GC.i + 1) + "/" + CHOSEONG_QUIZ.length + '</div><div class="l">문제</div></div>' +
-    '<div class="hud"><div class="v">' + GC.correct + '</div><div class="l">맞힌 개수 (목표 ' + GC_PASS + ')</div></div></div>' +
-    '<div class="cho-box"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">Q' + (GC.i + 1) + "</p>" +
-    '<p class="cho">' + esc(q.cho) + '</p><p class="hint">' + esc(q.hint) + "</p></div>" +
-    '<div class="gfeed' + (feedOk === true ? " ok" : feedOk === false ? " no" : "") + '">' + (feed || "") + "</div>" +
-    '<div class="row" style="margin-top:4px"><input id="gcInput" class="input" placeholder="정답 입력" autocomplete="off" onkeydown="if(event.key===\'Enter\')gcSubmit()">' +
-    '<button class="btn mint" style="width:auto;padding:12px 18px" onclick="gcSubmit()">제출</button></div>' +
-    '<button class="btn line" style="margin-top:8px" onclick="gcSkip()">모르겠어요 (넘기기)</button>';
-  var inp = el("gcInput"); if (inp) inp.focus();
-}
-function gcNorm(s) { return String(s || "").trim().toLowerCase().replace(/\s+/g, ""); }
-function gcSubmit() {
-  if (!GC.active) return;
-  var q = CHOSEONG_QUIZ[GC.i];
-  var v = gcNorm(el("gcInput") && el("gcInput").value);
-  if (!v) return;
-  var ok = v === gcNorm(q.a) || q.alts.some(function (a) { return v === gcNorm(a); });
-  if (ok) GC.correct++;
-  GC.i++;
-  gcPaint(ok ? "정답! · " + q.a : "아쉽! 정답은 「" + q.a + "」", ok);
-}
-function gcSkip() {
-  if (!GC.active) return;
-  var q = CHOSEONG_QUIZ[GC.i];
-  GC.i++;
-  gcPaint("정답은 「" + q.a + "」 · 다음 문제!", false);
-}
-function gcEnd() {
-  GC.active = false;
-  var cleared = GC.correct >= GC_PASS;
-  var root = el("gcRoot"); if (!root) return;
-  root.innerHTML =
-    '<div class="cho-box" style="padding:28px 18px">' +
-    '<p class="disp" style="font-size:34px;color:' + (cleared ? "var(--mint)" : "rgba(255,255,255,0.55)") + '">' + (cleared ? "CLEAR!" : GC.correct + "/8") + "</p>" +
-    '<p style="font-size:20px;font-weight:800;margin-top:8px">' + GC.correct + "/" + CHOSEONG_QUIZ.length + " 정답</p>" +
-    '<p class="hint">' + (cleared ? "패스포트 「미니게임」 칸 적립 완료. 힌트 속 로드맵, 이제 눈에 익으셨죠?" : "목표는 " + GC_PASS + "개 · 힌트 속에 로드맵이 다 들어있어요. 한 번 더?") + "</p></div>" +
-    '<button class="btn mint mb8" style="padding:15px" onclick="gcStart()">다시 풀기</button>' +
-    '<button class="btn line" onclick="App.go(\'passport\')">스탬프 탭으로</button>';
-  if (cleared) gameClear("gc_cleared");
+  window.scrollTo(0, 0);
 }
 
 /* ════════════════ KV 오브젝트 엔진 · 도트 격자 + 점 → 점 고리 → 점선 구체 (design.md v29 §2·§4) ════════════════
