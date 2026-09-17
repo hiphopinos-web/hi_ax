@@ -489,6 +489,39 @@
   #rgPlay .rgp-pause .btn { width: 200px; }
   #rgPlay .rg-form { flex: none; margin: 0; padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)); background: #fff; border-top: 2px solid #000; }
   #rgPlay .rg-form .input { font-size: 17px; }
+  /* v3.36d 단어 소나기 · 위 줄 HUD(DOM 한 줄) · 캔버스 꽉 채움 · 입력 막대 반응 */
+  #rgPlay.rain .rgp-top { padding: 0 4px 0 10px; min-height: 48px; border-bottom: 2px solid #000; background: #fff; }
+  #rgPlay .rg-hud { display: flex; align-items: center; gap: 8px; width: 100%; }
+  #rgPlay .rg-hud .rg-sc { display: flex; align-items: baseline; gap: 4px; min-width: 56px; }
+  #rgPlay .rg-hud .rg-sc small { font-size: 11px; font-weight: 700; color: var(--muted); }
+  #rgPlay .rg-hud .rg-sc b { font-family: var(--disp); font-size: 19px; font-weight: 900; color: #000; font-variant-numeric: tabular-nums; }
+  #rgPlay .rg-hud .rg-tm { font-weight: 800; font-size: 15px; color: #000; min-width: 38px; font-variant-numeric: tabular-nums; }
+  #rgPlay .rg-hud .rg-tm.hot { color: #D64524; }
+  #rgPlay .rg-hud .rg-ht { flex: 1; display: flex; gap: 2px; min-width: 0; }
+  #rgPlay .rg-hud .rg-ht i { display: block; line-height: 0; color: #E3DAD3; fill: currentColor; }
+  #rgPlay .rg-hud .rg-ht i svg { fill: currentColor; }
+  #rgPlay .rg-hud .rg-ht i.on { color: #FF7E31; }
+  #rgPlay .rg-hud .rg-ht i.last { animation: rgBlink 0.5s steps(1) infinite; }
+  #rgPlay .rg-hud .rg-ht i.hit { color: #D64524; animation: tileShake 0.3s; }
+  @keyframes rgBlink { 50% { opacity: 0.25; } }
+  #rgPlay .rg-hud .rg-ib.off { color: #B8AEA6; border-color: #D9D2CC; text-decoration: line-through; }
+  #rgPlay .rg-hud .rg-ib, #rgPlay.rain .rg-hud .rgp-x { flex: none; min-width: 44px; height: 44px; padding: 0 8px; border: 2px solid #000; border-radius: 12px; background: #fff; font-weight: 800; font-size: 13px; color: #000; }
+  #rgPlay .rgp-mid.fill { display: block; overflow: hidden; }
+  #rgPlay .rgp-mid.fill canvas { position: absolute; left: 0; top: 0; border: 0; border-radius: 0; background: #FFEBE0; image-rendering: auto; }
+  #rgPlay.rain .rg-form { gap: 6px; padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)); }
+  #rgPlay.rain .rg-form .input { height: 48px; font-size: 17px; transition: border-color 0.1s, background 0.1s; }
+  #rgPlay.rain .rg-form .btn { min-width: 64px; height: 48px; padding: 0 14px; }
+  #rgForm.hit .input { border-color: #FF7E31 !important; box-shadow: 0 0 0 2px #FF7E31; }
+  #rgForm.miss .input { border-color: #B8AEA6 !important; background: #F2F0EE; animation: tileShake 0.3s; }
+  #rgPlay.rain.big .rgp-top { min-height: 60px; padding: 4px 12px 4px 24px; }
+  #rgPlay.rain.big .rg-hud { gap: 24px; }
+  #rgPlay.rain.big .rg-hud .rg-sc b { font-size: 28px; }
+  #rgPlay.rain.big .rg-hud .rg-tm { font-size: 22px; }
+  #rgPlay.rain.big .rg-hud .rg-ht i svg { width: 26px; height: 22px; }
+  #rgPlay.rain.big .rg-hud .rg-ib, #rgPlay.rain.big .rg-hud .rgp-x { min-width: 64px; height: 48px; font-size: 16px; }
+  #rgPlay.rain.big .rg-form { padding: 12px 24px; gap: 12px; }
+  #rgPlay.rain.big .rg-form .input { height: 64px; font-size: 24px; }
+  #rgPlay.rain.big .rg-form .btn { height: 64px; min-width: 120px; font-size: 20px; }
   /* v3.45 공용 틀 · 밀기·탭 게임은 브라우저 제스처(스크롤·당겨서 새로고침)를 끈다 */
   #rgPlay .rgp-mid.nogest, #rgPlay .rgp-mid.nogest canvas { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
   /* v3.48 AX 팡 플랫 · 흰 바탕 · 도트 확대 없음 · 앱 카드 선 */
@@ -5625,14 +5658,27 @@ function drawWinner() {
    참고(사용자 제공 · 문법만, 에셋·글꼴·음원 미포함): 한컴타자 오락실 산성비 화면 구성 → 두 톤 체크무늬 배경 · 도트 흙 지면과 나무 ·
    두꺼운 검정 외곽선의 흰 말풍선 단어와 HUD · 모래시계 진행 막대. 노랑·청록·초록·파랑은 오렌지 사다리와 웜브라운으로 번역.
    마스코트 「미위」: 오렌지 도트 몸통 · 세로로 벌어지는 입 · 발 · 콤보 5 이상이면 작은 친구가 옆에 붙는다(ME 가 WE 가 되는 연출). 스프라이트는 코드 안 픽셀 배열. */
-var RAIN_W = 180, RAIN_H = 300, RAIN_SEC = 60, RAIN_LIVES = 5, RAIN_FLOOR = 236, RAIN_GROUND = 262;
+var RAIN_SEC = 60, RAIN_LIVES = 5;
 var RAIN_PAL = { o100: "#FF7E31", o60: "#FFA46E", o50: "#FFB284", o30: "#FFCFB0", o25: "#FFD8C1", o10: "#FFEBE0", deep: "#D64524", ink: "#000000", w: "#FFFFFF", gray: "#B8AEA6", dim: "#8A817B", soil: "#7A3E1C", soil2: "#6A3417", trunk: "#5E3218" };
 var MEWE_SPR = {
   closed: ["...OOOOOO...", ".OOOOOOOOOO.", ".OOWOOOOWOO.", ".OOKOOOOKOO.", "OOOOOOOOOOOO", "OOOOOOOOOOOO", "OODDDDDDDDOO", "OOOOOOOOOOOO", ".OOOOOOOOOO.", "..OOOOOOOO..", "..OO....OO.."],
   open: ["...OOOOOO...", ".OOOOOOOOOO.", ".OOWOOOOWOO.", ".OOKOOOOKOO.", "OOOOOOOOOOOO", "OOKKKKKKKKOO", "OOKKKKKKKKOO", "OOKKWWWWKKOO", ".OOOOOOOOOO.", "..OOOOOOOO..", "..OO....OO.."],
   buddy: ["..LLLL..", ".LLLLLL.", "LLWLLWLL", "LLKLLKLL", "LLLLLLLL", "LLDDDDLL", ".LLLLLL.", ".LL..LL."]
 };
-var RG = { on: false, mode: "app", raf: 0, last: 0, t0: 0, cd: 0, words: [], parts: [], pops: [], lives: RAIN_LIVES, score: 0, hits: 0, tries: 0, combo: 0, maxCombo: 0, stage: 1, spawnT: 0, shake: 0, banner: null, shot: null, mas: { x: 90, tx: 90, open: 0 }, res: null, ac: null };
+/* ═══ v3.36d 크기 설계 (사용자 피드백 260917 · 「전체를 비율로 줄인 것 같다」) ═══
+   원인: 180×300 논리 해상도 비트맵을 CSS 로 늘려서 판이 작아지면 글자·마스코트·파티클이 같이 작아졌다.
+   지금: 캔버스 내부 해상도 = 화면에 보이는 크기 × dpr(상한 2) · 좌표는 전부 CSS px · visualViewport 가 바뀔 때마다(키보드 포함) 다시 잡고 그린다.
+   요소마다 제 크기: 단어 18px 고정(휴대폰) · 도트 단위 3px 고정(지면·벽돌·나무·마스코트) → 판이 작아지면 도트 개수만 준다.
+   판이 낮으면 글자를 줄이지 않고 동시 단어 수·단계 수를 줄인다(RAIN_BANDS) · 난이도 = 단어가 바닥선까지 떨어지는 시간(RAIN_FALL) → 어느 판에서나 같은 시간.
+   가로 배치 = 레인 · 윗부분에 있는 단어 상자와 겹치지 않는 레인에만 · 좌우 8px 여백.
+   HUD 는 캔버스 밖 DOM 한 줄(점수·남은 시간·하트·소리·일시정지 44px) · 입력 막대 전폭 17px, 맞히면 테두리 O100, 틀리면 회색 흔들림.
+   현장 노트북(1F 타자왕전)과 넓은 화면은 따로: 단어 28~32px · 동시 6~7개 · 도트 4px · 입력 22px. */
+var RAIN_FALL = [7, 6, 5, 4, 3.2];            /* 단계별 · 위에서 바닥선까지 걸리는 초 */
+var RAIN_SPAWN = [2.2, 1.9, 1.6, 1.35, 1.1];  /* 단계별 · 새 단어 간격 초 */
+var RAIN_STAGE_SEC = 12;
+var RAIN_BANDS = [[330, 2, 3], [420, 3, 4], [520, 4, 5], [1e9, 5, 5]];   /* [판 높이 미만, 동시 단어 최대, 단계 수] · 휴대폰 */
+var RAIN_FONT = '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif';
+var RG = { on: false, mode: "app", big: false, raf: 0, last: 0, t0: 0, cd: 0, words: [], parts: [], pops: [], lives: RAIN_LIVES, score: 0, hits: 0, tries: 0, combo: 0, maxCombo: 0, stage: 1, spawnT: 0, shake: 0, banner: null, shot: null, mas: { x: 90, tx: 90, open: 0 }, res: null, ac: null, L: null, dpr: 1 };
 function rgReduced() { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); }
 function rgSprite(ctx, rows, x, y, pal) {
   for (var r = 0; r < rows.length; r++) for (var c = 0; c < rows[r].length; c++) {
@@ -5667,32 +5713,77 @@ function rgBeep(freq, dur, type, vol) {
   } catch (e) {}
 }
 function rgStop() { RG.on = false; if (RG.raf) cancelAnimationFrame(RG.raf); RG.raf = 0; rgPlayClose(); }
-/* ═══ v3.36c 휴대폰 전체화면 플레이 (사용자 피드백 · 키보드가 바닥선·입력창을 가림) ═══
-   터치·좁은 화면에서만(현장 노트북 모드는 기존 레이아웃): position fixed 오버레이를 visualViewport 높이에 맞춘다.
-   위 = 캔버스(높이 우선으로 비율 유지 축소) · 아래 = 입력 막대(키보드 바로 위) · 헤더·탭바·FAB 가림 · 본문 스크롤 잠금.
+/* 판 크기 → 배치 규칙 · 모든 값은 CSS px */
+function rgLayout(W, H, big) {
+  var L = { W: W, H: H, big: big };
+  L.D = big ? 4 : 3;                                        /* 도트 단위 */
+  L.font = big ? (W >= 1200 ? 32 : W >= 900 ? 30 : 28) : 18;
+  L.boxH = Math.round(L.font * 1.6); L.padX = Math.round(L.font * 0.5);
+  L.masW = 14 * L.D; L.masH = 13 * L.D;                      /* 마스코트 12×11 + 외곽선 1 도트 */
+  L.soil = (H < 330 ? 6 : 9) * L.D;
+  L.ground = H - L.soil;
+  L.floor = L.ground - L.masH - L.D;                          /* 단어 상자 아래가 여기 닿으면 놓침 */
+  L.top = 8;
+  if (big) { L.maxWords = H >= 640 ? 7 : 6; L.stages = 5; }
+  else { for (var i = 0; i < RAIN_BANDS.length; i++) if (H < RAIN_BANDS[i][0]) { L.maxWords = RAIN_BANDS[i][1]; L.stages = RAIN_BANDS[i][2]; break; } }
+  L.laneW = big ? 190 : 100;
+  L.lanes = Math.max(1, Math.floor((W - 16) / L.laneW));
+  L.fallPx = Math.max(10, L.floor - L.boxH - L.top);
+  return L;
+}
+function rgFontStr(px) { return "800 " + px + "px " + RAIN_FONT; }
+function rgWordY(w) { var L = RG.L; return L.top + Math.min(1, w.p) * L.fallPx; }
+/* ═══ v3.36c 휴대폰 전체화면 플레이 · v3.36d 캔버스는 중간 영역을 꽉 채우고 실제 해상도로 그린다 ═══
    입력: 쏘기 버튼은 누르는 순간 기본 동작을 막아 키보드가 닫히지 않게 · 캔버스를 눌러도 입력창 포커스.
    한글 조합: compositionstart/end 추적 · 조합 중 Enter 는 조합이 끝난 뒤 한 틱 뒤 판정 · 입력창 비우기는 새 입력창으로 바꿔 끼워 남은 글자 방지.
-   실시간 판정(휴대폰만): 입력이 떨어지는 단어와 정확히 같아지는 순간 Enter 없이 터진다 · PC 는 Enter 판정 유지.
-   탭이 뒤로 가면 자동 일시정지 · 돌아오면 계속하기. */
+   실시간 판정(터치 기기만): 입력이 떨어지는 단어와 정확히 같아지는 순간 Enter 없이 터진다 · PC 는 Enter 판정 유지. */
 function rgMobile() {
   try { return (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) || window.innerWidth < 600; } catch (e) { return window.innerWidth < 600; }
 }
-var RGP = { on: false };
-/* v3.45 · 오버레이·일시정지·이탈 감지는 공용 틀(gsOverlayOpen)로 옮겼다 */
+function rgTouch() { try { return !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches); } catch (e) { return false; } }
+var RGP = { on: false, touch: false };
+var RG_HEART = '<svg viewBox="0 0 7 6" width="17" height="15" shape-rendering="crispEdges" aria-hidden="true"><path d="M0 0h3v2H0zM4 0h3v2H4zM0 2h7v2H0zM1 4h5v1H1zM2 5h3v1H2z"/></svg>';
+function rgTopHtml() {
+  var hearts = ""; for (var i = 0; i < RAIN_LIVES; i++) hearts += '<i class="on">' + RG_HEART + "</i>";
+  return '<div class="rg-hud">' +
+    '<span class="rg-sc"><small>점수</small><b id="rgHudSc">0</b></span>' +
+    '<span class="rg-tm" id="rgHudTm">' + RAIN_SEC + "초</span>" +
+    '<span class="rg-ht" id="rgHudHt">' + hearts + "</span>" +
+    '<button class="rg-ib' + (S.get("rain_sound", false) ? "" : " off") + '" type="button" id="rgSnd" aria-label="소리 켜기·끄기" onpointerdown="event.preventDefault()" onclick="rgSoundToggle()">소리</button>' +
+    '<button class="rg-ib rgp-x" type="button" data-on="계속" data-off="멈춤" aria-label="일시정지" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">멈춤</button></div>';
+}
+function rgSoundToggle() { S.set("rain_sound", !S.get("rain_sound", false)); var b = el("rgSnd"); if (b) b.classList.toggle("off", !S.get("rain_sound", false)); rgFocus(); }
 function rgPlayOpen() {
-  RGP.on = true;   /* 입력창 안내 문구가 휴대폰용으로 나오게 먼저 켠다 */
-  gsOverlayOpen({ key: "type", title: "AX 단어 소나기", cw: RAIN_W, ch: RAIN_H, canvasId: "rgCv", bottom: rgFormHtml(),
+  RGP.on = true; RGP.touch = rgTouch();   /* 입력창 안내 문구가 기기에 맞게 나오게 먼저 켠다 */
+  gsOverlayOpen({ key: "type", title: "AX 단어 소나기", top: rgTopHtml(), fill: true, cls: "rain" + (RG.big ? " big" : ""), cw: 180, ch: 300, canvasId: "rgCv", bottom: rgFormHtml(),
     down: function (e) { e.preventDefault(); rgFocus(); },
+    resized: rgFit,
     running: function () { return RG.on && !RG.paused && !RG.ending; }, isPaused: function () { return !!RG.paused; },
     pause: rgPause, resume: rgResume, quit: rgQuit });
 }
 function rgPlayClose() { RGP.on = false; gsOverlayClose("type"); }
+/* 캔버스 = 보이는 크기 × dpr(상한 2) · 배치 규칙을 다시 계산하고 바로 한 번 그린다 */
+function rgFit(cv, w, h) {
+  if (!w || !h) return;
+  var dpr = Math.min(2, window.devicePixelRatio || 1);
+  if (RG.L && RG.L.W === w && RG.L.H === h && cv.width === Math.round(w * dpr)) return;   /* visualViewport scroll 로 같은 크기가 또 오면 무시 */
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  RG.dpr = cv.width / w;
+  var oldFont = RG.L ? RG.L.font : 0;
+  RG.L = rgLayout(w, h, RG.big);
+  var ctx = cv.getContext("2d");
+  if (oldFont !== RG.L.font) { ctx.font = rgFontStr(RG.L.font); RG.words.forEach(function (x) { x.bw = Math.ceil(ctx.measureText(x.text).width) + RG.L.padX * 2; }); }
+  RG.words.forEach(function (x) { x.x = Math.max(8, Math.min(w - 8 - x.bw, x.x)); });
+  if (!RG.mas.set) { RG.mas.x = RG.mas.tx = w / 2; RG.mas.set = true; }
+  RG.mas.x = Math.min(RG.mas.x, w - RG.L.masW / 2); RG.mas.tx = Math.min(RG.mas.tx, w - RG.L.masW / 2);
+  rgDraw(ctx, performance.now());
+}
 function rgFormHtml() {
   return '<form class="rg-form" id="rgForm" onsubmit="event.preventDefault(); rgEnter()">' + rgInputHtml() +
     '<button class="btn mint" type="submit" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" ontouchstart="event.preventDefault(); rgEnter()">쏘기</button></form>';
 }
 function rgInputHtml() {
-  return '<input id="rgIn" class="input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" inputmode="text" maxlength="12" placeholder="' + (RGP.on ? "단어를 치면 바로 터져요" : "떨어지는 단어를 치고 Enter") + '" ' +
+  return '<input id="rgIn" class="input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" inputmode="text" maxlength="12" placeholder="' + (RGP.touch ? "단어를 치면 바로 터져요" : "떨어지는 단어를 치고 Enter") + '" ' +
     'onpaste="event.preventDefault()" ondrop="event.preventDefault()" oninput="rgLive(event)">';
 }
 /* compositionstart/end 는 인라인 속성이 없어 리스너로 붙인다 · 떼어낸 옛 입력창의 늦은 compositionend 는 무시 */
@@ -5705,24 +5796,24 @@ function rgFocus() { var i = el("rgIn"); if (i && document.activeElement !== i) 
 function rgCompEnd() {
   RG.composing = false;
   if (RG.pendingEnter) { RG.pendingEnter = false; setTimeout(rgSubmit, 0); }
-  else if (RGP.on) setTimeout(function () { rgLive(null); }, 0);
+  else if (RGP.touch) setTimeout(function () { rgLive(null); }, 0);
 }
 /* Enter · 조합 중이면 조합이 끝난 뒤 판정 */
 function rgEnter() {
   if (RG.composing) { RG.pendingEnter = true; return; }
   setTimeout(rgSubmit, 0);
 }
-/* 실시간 판정 (휴대폰 전체화면에서만) · 정확히 같은 단어가 있을 때만 · 틀림 판정은 Enter 로만 */
+/* 실시간 판정 (터치 기기만) · 정확히 같은 단어가 있을 때만 · 틀림 판정은 Enter 로만 */
 function rgLive(e) {
-  if (!RGP.on || !RG.on || RG.cd > 0 || RG.ending || RG.paused) return;
+  if (!RGP.on || !RGP.touch || !RG.on || RG.cd > 0 || RG.ending || RG.paused) return;
   var inp = el("rgIn"); if (!inp) return;
   var v = inp.value.trim();
   if (v && RG.words.some(function (w) { return w.text === v; })) rgSubmit();
 }
-/* 입력창 비우기 · 조합 버퍼가 남지 않게 새 입력창으로 바꿔 끼우고 같은 틱에 포커스를 옮긴다(키보드는 열린 채) */
+/* 입력창 비우기 · 터치 기기는 조합 버퍼가 남지 않게 새 입력창으로 바꿔 끼우고 같은 틱에 포커스(키보드는 열린 채) */
 function rgClearInput() {
   var old = el("rgIn"); if (!old) return;
-  if (!RGP.on) { old.value = ""; old.focus(); return; }
+  if (!RGP.touch) { old.value = ""; old.focus(); return; }
   var tmp = document.createElement("span"); tmp.innerHTML = rgInputHtml();
   var fresh = tmp.firstChild;
   old.parentNode.insertBefore(fresh, old);
@@ -5730,6 +5821,12 @@ function rgClearInput() {
   fresh.focus();
   old.parentNode.removeChild(old);
   RG.composing = false;
+}
+/* 입력 막대 반응 · 맞힘 = 테두리 O100 0.15초 · 틀림 = 회색 + 짧은 흔들림 (캔버스 MISS 글자는 두지 않는다 · 중복 금지) */
+function rgFlash(kind) {
+  var f = el("rgForm"); if (!f) return;
+  f.classList.remove("hit", "miss"); void f.offsetWidth; f.classList.add(kind);
+  clearTimeout(RG.flashT); RG.flashT = setTimeout(function () { f.classList.remove("hit", "miss"); }, kind === "hit" ? 150 : 320);
 }
 function rgPause() {
   if (!RG.on || RG.paused) return;
@@ -5746,7 +5843,12 @@ function rgResume() {
   rgFocus();
   RG.raf = requestAnimationFrame(rgFrame);
 }
-function rgQuit() { rgStop(); App.render(); }
+function rgQuit() {
+  var site = RG.mode === "site";
+  rgStop();
+  if (site && typeof TS !== "undefined" && TS.phase === "play") TS.phase = "ready";   /* 현장 · 중간에 그만두면 기록 없이 확인 단계로 */
+  App.render();
+}
 function rgPickWord() {
   var st = RG.stage, pool = TYPE_WORDS.filter(function (w) {
     var n = w.length;
@@ -5760,14 +5862,10 @@ function rgStart(mode) {
   rgStop();
   RG.mode = mode || "app"; RG.words = []; RG.parts = []; RG.pops = []; RG.lives = RAIN_LIVES; RG.score = 0; RG.hits = 0; RG.tries = 0;
   RG.combo = 0; RG.maxCombo = 0; RG.stage = 1; RG.spawnT = 0.3; RG.shake = 0; RG.banner = null; RG.shot = null; RG.res = null; RG.ending = null; RG.heartHit = 0;
-  RG.mas = { x: 90, tx: 90, open: 0 }; RG.cd = 3.2; RG.t0 = 0; RG.on = true; RG.last = performance.now();
+  RG.mas = { x: 90, tx: 90, open: 0, set: false }; RG.cd = 3.2; RG.t0 = 0; RG.on = true; RG.last = performance.now(); RG.L = null; RG.hud = "";
   RG.paused = false; RG.composing = false; RG.pendingEnter = false;
-  if (RG.mode === "app" && rgMobile()) {
-    rgPlayOpen();   /* v3.36c 휴대폰 전체화면 */
-  } else {
-    var root = el("tgRoot"); if (!root) return;
-    root.innerHTML = '<div class="rg-wrap" onclick="rgFocus()"><canvas id="rgCv" width="' + RAIN_W + '" height="' + RAIN_H + '"></canvas></div>' + rgFormHtml();
-  }
+  RG.big = RG.mode === "site" || (!rgTouch() && window.innerWidth >= 700);   /* 현장 노트북 · 넓은 화면은 별도 배치 */
+  rgPlayOpen();
   var inp = el("rgIn"); rgBindInput(inp); if (inp) inp.focus();
   RG.raf = requestAnimationFrame(rgFrame);
 }
@@ -5782,10 +5880,32 @@ function rgFrame() {
   if (RG.on) RG.raf = requestAnimationFrame(rgFrame);
 }
 function rgElapsed(now) { return RG.t0 ? (now - RG.t0) / 1000 : 0; }
+function rgFx(dt) {
+  RG.parts = RG.parts.filter(function (p) { p.t -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 420 * dt; return p.t > 0; });
+  RG.pops = RG.pops.filter(function (p) { p.t -= dt; p.y -= 30 * dt; return p.t > 0; });
+}
+/* 새 단어 · 레인을 섞어 윗부분 단어 상자와 겹치지 않는 자리 · 좌우 8px 여백 */
+function rgSpawn() {
+  var L = RG.L, cv = el("rgCv"); if (!L || !cv) return false;
+  var ctx = cv.getContext("2d"), text = rgPickWord();
+  ctx.font = rgFontStr(L.font);
+  var bw = Math.ceil(ctx.measureText(text).width) + L.padX * 2;
+  var maxX = Math.max(8, L.W - 8 - bw), lw = (L.W - 16) / L.lanes, upper = L.top + L.boxH * 3;
+  var lanes = []; for (var i = 0; i < L.lanes; i++) lanes.push(i);
+  shuf(lanes);
+  for (var k = 0; k < lanes.length; k++) {
+    var x = Math.round(Math.min(maxX, Math.max(8, 8 + lanes[k] * lw + Math.random() * Math.max(0, lw - bw))));
+    var clash = RG.words.some(function (w) { return rgWordY(w) < upper && x < w.x + w.bw + 8 && x + bw + 8 > w.x; });
+    if (!clash) {
+      RG.words.push({ text: text, bw: bw, x: x, p: 0, fall: RAIN_FALL[RG.stage - 1] * (0.94 + Math.random() * 0.12) });
+      return true;
+    }
+  }
+  return false;
+}
 function rgUpdate(dt, now) {
   if (RG.ending) {   /* v3.36c 끝나는 순간 1.2초 멈춰 이유를 보여 준다 */
-    RG.ending.t -= dt;
-    RG.parts = RG.parts.filter(function (p) { p.t -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 90 * dt; return p.t > 0; });
+    RG.ending.t -= dt; rgFx(dt);
     if (RG.shake > 0) RG.shake -= dt;
     if (RG.ending.t <= 0) rgEndFinal(RG.ending.why);
     return;
@@ -5798,46 +5918,41 @@ function rgUpdate(dt, now) {
     if (RG.cd <= 0) { RG.t0 = now; rgBeep(880, 0.15); }
     return;
   }
+  var L = RG.L; if (!L) return;
   var el0 = rgElapsed(now);
-  var st = Math.min(5, 1 + Math.floor(el0 / 12));
+  var st = Math.min(L.stages, 1 + Math.floor(el0 / RAIN_STAGE_SEC));
   if (st > RG.stage) { RG.stage = st; RG.banner = { text: "LEVEL " + st, t: 1.3 }; rgBeep(660, 0.12); rgBeep(990, 0.12); }
   RG.spawnT -= dt;
-  if (RG.spawnT <= 0 && RG.words.length < 2 + RG.stage) {
-    var text = rgPickWord(), cv = el("rgCv"), ctx = cv && cv.getContext("2d");
-    if (ctx) ctx.font = "bold 11px sans-serif";
-    var w = ctx ? Math.ceil(ctx.measureText(text).width) : text.length * 11;
-    RG.words.push({ text: text, w: w, x: 6 + Math.random() * Math.max(1, RAIN_W - 12 - w), y: 40, v: 11 + RG.stage * 5 + Math.random() * 4 });
-    RG.spawnT = Math.max(0.75, 2.1 - RG.stage * 0.28);
-  }
+  if (RG.spawnT <= 0 && RG.words.length < L.maxWords) RG.spawnT = rgSpawn() ? RAIN_SPAWN[RG.stage - 1] : 0.25;
   for (var i = RG.words.length - 1; i >= 0; i--) {
     var wd = RG.words[i];
-    wd.y += wd.v * dt;
-    if (wd.y >= RAIN_FLOOR) {
+    wd.p += dt / wd.fall;
+    if (wd.p >= 1) {
       RG.words.splice(i, 1);
       RG.lives--; RG.combo = 0; RG.shake = rgReduced() ? 0 : 0.22; RG.heartHit = 0.5;
-      rgBurst(wd.x + wd.w / 2, RAIN_FLOOR, 6, [RAIN_PAL.dim, RAIN_PAL.ink]);
-      RG.pops.push({ x: wd.x + wd.w / 2, y: RAIN_FLOOR - 6, text: "놓침 · 하트 -1", t: 0.9, c: RAIN_PAL.deep });
+      rgBurst(wd.x + wd.bw / 2, L.floor, 6, [RAIN_PAL.dim, RAIN_PAL.ink]);
+      RG.pops.push({ x: wd.x + wd.bw / 2, y: L.floor - 10, text: "놓침 · 하트 -1", t: 0.9, c: RAIN_PAL.deep, s: 14 });
       rgBeep(120, 0.2, "sawtooth", 0.05);
       if (RG.lives === 1) RG.banner = { text: "마지막 목숨", t: 1.0 };
       if (RG.lives <= 0) { rgEnd("lives"); return; }
     }
   }
-  RG.parts = RG.parts.filter(function (p) { p.t -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 90 * dt; return p.t > 0; });
-  RG.pops = RG.pops.filter(function (p) { p.t -= dt; p.y -= 16 * dt; return p.t > 0; });
+  rgFx(dt);
   if (RG.banner) { RG.banner.t -= dt; if (RG.banner.t <= 0) RG.banner = null; }
   if (RG.shot) { RG.shot.t -= dt; if (RG.shot.t <= 0) RG.shot = null; }
   if (RG.shake > 0) RG.shake -= dt;
   if (RG.mas.open > 0) RG.mas.open -= dt;
   RG.mas.x += (RG.mas.tx - RG.mas.x) * Math.min(1, dt * 8);
-  if (!RG.mas.open) RG.mas.tx += (90 - RG.mas.tx) * Math.min(1, dt * 1.5);
+  if (RG.mas.open <= 0) RG.mas.tx += (L.W / 2 - RG.mas.tx) * Math.min(1, dt * 1.5);
   if (el0 >= RAIN_SEC) rgEnd("time");
 }
+/* 파티클 · 4~6px 고정 크기 */
 function rgBurst(x, y, n, cols) {
   if (rgReduced()) n = Math.min(n, 4);
-  var cap = RGP.on ? 80 : 140;   /* 저사양 휴대폰 대비 */
+  var cap = RGP.touch ? 80 : 140;   /* 저사양 휴대폰 대비 */
   for (var i = 0; i < n && RG.parts.length < cap; i++) {
-    var a = (Math.PI * 2 * i) / n + Math.random() * 0.3, sp = 30 + Math.random() * 40;
-    RG.parts.push({ x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 20, t: 0.5 + Math.random() * 0.3, c: cols[i % cols.length] });
+    var a = (Math.PI * 2 * i) / n + Math.random() * 0.3, sp = 90 + Math.random() * 110;
+    RG.parts.push({ x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60, t: 0.45 + Math.random() * 0.3, c: cols[i % cols.length], s: (RG.big ? 6 : 4) + Math.floor(Math.random() * 3) });
   }
 }
 function rgSubmit() {
@@ -5847,24 +5962,25 @@ function rgSubmit() {
   rgClearInput();
   RG.tries++;
   var hit = -1;
-  RG.words.forEach(function (w, i) { if (w.text === v && (hit < 0 || w.y > RG.words[hit].y)) hit = i; });
+  RG.words.forEach(function (w, i) { if (w.text === v && (hit < 0 || w.p > RG.words[hit].p)) hit = i; });
   if (hit < 0) {
     RG.combo = 0;
-    RG.pops.push({ x: RG.mas.x, y: RAIN_GROUND - 28, text: "MISS", t: 0.6, c: RAIN_PAL.gray });
+    rgFlash("miss");
     rgBeep(180, 0.1, "square", 0.04);
     return;
   }
-  var wd = RG.words.splice(hit, 1)[0];
+  var L = RG.L, wd = RG.words.splice(hit, 1)[0];
   RG.combo++; RG.hits++; RG.maxCombo = Math.max(RG.maxCombo, RG.combo);
   var mult = 1 + 0.2 * Math.min(RG.combo - 1, 10), pts = Math.round(wd.text.length * 10 * mult);
   RG.score += pts;
-  var cx = wd.x + wd.w / 2, cy = wd.y - 4;
-  RG.mas.tx = Math.max(12, Math.min(RAIN_W - 12, cx)); RG.mas.open = 0.25;
-  RG.shot = { x0: RG.mas.tx, y0: RAIN_GROUND - 12, x1: cx, y1: cy, t: 0.12 };
+  var cx = wd.x + wd.bw / 2, cy = rgWordY(wd) + L.boxH / 2;
+  RG.mas.tx = Math.max(L.masW / 2, Math.min(L.W - L.masW / 2, cx)); RG.mas.open = 0.25;
+  RG.shot = { x0: RG.mas.tx, y0: L.ground - L.masH, x1: cx, y1: cy, t: 0.12 };
   rgBurst(cx, cy, 16, [RAIN_PAL.o100, RAIN_PAL.ink, RAIN_PAL.w, RAIN_PAL.o50]);
-  RG.pops.push({ x: cx, y: cy, text: "+" + pts, t: 0.8, c: RAIN_PAL.w });
-  if (RG.combo >= 3) RG.pops.push({ x: cx, y: cy - 12, text: "COMBO x" + RG.combo, t: 0.9, c: RAIN_PAL.o60 });
+  RG.pops.push({ x: cx, y: cy, text: "+" + pts, t: 0.8, c: RAIN_PAL.w, s: 14 });
+  if (RG.combo >= 3) RG.pops.push({ x: cx, y: cy - 20, text: "COMBO x" + RG.combo, t: 0.9, c: RAIN_PAL.o60, s: 16 });
   if (!rgReduced()) RG.shake = Math.max(RG.shake, 0.06);
+  rgFlash("hit");
   rgBeep(520 + Math.min(RG.combo, 10) * 40, 0.07); rgBeep(1040 + Math.min(RG.combo, 10) * 40, 0.05);
 }
 function rgBox(ctx, x, y, w, h, fill) {
@@ -5872,90 +5988,102 @@ function rgBox(ctx, x, y, w, h, fill) {
   ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(x, y, w, h);
   ctx.fillStyle = fill || RAIN_PAL.w; ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
 }
+/* v3.36d 단어·배너 상자 · 외곽선 2px 고정 */
+function rgBox2(ctx, x, y, w, h, fill) {
+  x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
+  ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = fill || RAIN_PAL.w; ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
+}
 function rgStroke(ctx, text, x, y, fill, line, lw) {
   ctx.lineWidth = lw || 3; ctx.strokeStyle = line || RAIN_PAL.ink; ctx.lineJoin = "round";
   ctx.strokeText(text, x, y); ctx.fillStyle = fill; ctx.fillText(text, x, y);
 }
-/* 배경 · 오렌지 두 톤 체크무늬 · 웜 흙 지면 · 도트 나무 (레퍼런스의 문법만 · 에셋 없음) */
-function rgWorld(ctx, h) {
-  for (var ty = 0; ty < RAIN_GROUND; ty += 10) for (var tx = 0; tx < RAIN_W; tx += 10) {
-    ctx.fillStyle = ((tx + ty) / 10) % 2 ? RAIN_PAL.o25 : RAIN_PAL.o10; ctx.fillRect(tx, ty, 10, 10);
+/* 배경 · 도트 단위 D 로 그린다(판이 커지면 도트 개수만 는다) · 두 톤 체크무늬 · 나무 · 풀 · 흙 · 벽돌 */
+function rgWorldD(ctx, L) {
+  var D = L.D, T = 6 * D, W = L.W, g = L.ground;
+  for (var ty = 0; ty < g; ty += T) for (var tx = 0; tx < W; tx += T) {
+    ctx.fillStyle = ((tx + ty) / T) % 2 ? RAIN_PAL.o25 : RAIN_PAL.o10; ctx.fillRect(tx, ty, T, T);
   }
-  [[10, RAIN_GROUND], [160, RAIN_GROUND]].forEach(function (t) {
-    ctx.fillStyle = RAIN_PAL.trunk; ctx.fillRect(t[0] + 4, t[1] - 10, 3, 10);
-    ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(t[0], t[1] - 22, 11, 13);
-    ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(t[0] + 1, t[1] - 21, 9, 11);
-    ctx.fillStyle = RAIN_PAL.o50; ctx.fillRect(t[0] + 2, t[1] - 20, 4, 3);
+  [2 * D, W - 7 * D].forEach(function (x) {
+    ctx.fillStyle = RAIN_PAL.trunk; ctx.fillRect(x + 2 * D, g - 3 * D, D, 3 * D);
+    ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(x, g - 8 * D, 5 * D, 5 * D);
+    ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(x + 2, g - 8 * D + 2, 5 * D - 4, 5 * D - 4);
+    ctx.fillStyle = RAIN_PAL.o50; ctx.fillRect(x + D, g - 7 * D, 2 * D, D);
   });
-  ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(0, RAIN_GROUND, RAIN_W, 1);
-  ctx.fillStyle = RAIN_PAL.o50; ctx.fillRect(0, RAIN_GROUND + 1, RAIN_W, 3);
-  for (var gx = 0; gx < RAIN_W; gx += 6) { ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(gx + 2, RAIN_GROUND + 1, 2, 2); }
-  for (var dy = RAIN_GROUND + 4; dy < h; dy += 6) for (var dx = 0; dx < RAIN_W; dx += 6) {
-    ctx.fillStyle = ((dx + dy) / 6) % 2 ? RAIN_PAL.soil : RAIN_PAL.soil2; ctx.fillRect(dx, dy, 6, 6);
+  ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(0, g, W, 2);
+  ctx.fillStyle = RAIN_PAL.o50; ctx.fillRect(0, g + 2, W, D);
+  for (var gx = 0; gx < W; gx += 2 * D) { ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(gx, g + 2, D, D); }
+  for (var ri = 0, dy = g + 2 + D; dy < L.H; ri++, dy += 2 * D) for (var ci = 0, dx = 0; dx < W; ci++, dx += 2 * D) {
+    ctx.fillStyle = (ri + ci) % 2 ? RAIN_PAL.soil : RAIN_PAL.soil2; ctx.fillRect(dx, dy, 2 * D, 2 * D);
+  }
+  if (L.soil >= 9 * D) {   /* 흙 속 벽돌 · 장식 · 폭에 맞춰 개수만 달라진다 */
+    var bw = 8 * D, gap = D, n = Math.max(1, Math.floor((W - 2 * D) / (bw + gap))), x0 = Math.round((W - n * (bw + gap) + gap) / 2), by = L.H - 4 * D;
+    for (var b = 0; b < n; b++) { rgBox2(ctx, x0 + b * (bw + gap), by, bw, 3 * D, RAIN_PAL.o100); ctx.fillStyle = RAIN_PAL.o50; ctx.fillRect(x0 + b * (bw + gap) + 4, by + 4, bw - 8, D - 1); }
   }
 }
+/* HUD 는 DOM · 값이 바뀔 때만 고친다 */
+function rgHud(now) {
+  var left = RG.t0 ? Math.max(0, Math.ceil(RAIN_SEC - rgElapsed(now))) : RAIN_SEC;
+  var key = RG.score + "|" + left + "|" + RG.lives + "|" + (RG.heartHit > 0 ? 1 : 0);
+  if (key === RG.hud) return;
+  RG.hud = key;
+  var sc = el("rgHudSc"), tm = el("rgHudTm"), ht = el("rgHudHt");
+  if (sc) sc.textContent = RG.score.toLocaleString();
+  if (tm) { tm.textContent = left + "초"; tm.classList.toggle("hot", left <= 10); }
+  if (ht) Array.prototype.forEach.call(ht.children, function (h, i) {
+    h.className = i < RG.lives ? (RG.lives === 1 ? "on last" : "on") : (i === RG.lives && RG.heartHit > 0 ? "hit" : "");
+  });
+}
 function rgDraw(ctx, now) {
-  ctx.save();
+  var L = RG.L; if (!L) return;
+  rgHud(now);
+  ctx.setTransform(RG.dpr, 0, 0, RG.dpr, 0, 0);
   ctx.imageSmoothingEnabled = false;
-  if (RG.shake > 0) ctx.translate(Math.round((Math.random() - 0.5) * 4), Math.round((Math.random() - 0.5) * 4));
-  rgWorld(ctx, RAIN_H + 4);
-  /* 흙 속 벽돌 · 장식 (v3.36c 목숨은 HUD 하트 하나로만 보여 준다) */
-  for (var b = 0; b < RAIN_LIVES; b++) {
-    var bx = 6 + b * 34;
-    rgBox(ctx, bx, RAIN_H - 16, 30, 10, RAIN_PAL.o100);
-    ctx.fillStyle = RAIN_PAL.o50; ctx.fillRect(bx + 2, RAIN_H - 14, 26, 2);
-  }
+  ctx.save();
+  if (RG.shake > 0) ctx.translate(Math.round((Math.random() - 0.5) * 6), Math.round((Math.random() - 0.5) * 6));
+  rgWorldD(ctx, L);
   /* 위험선 (점선) */
   ctx.fillStyle = RAIN_PAL.deep;
-  for (var lx = 0; lx < RAIN_W; lx += 6) ctx.fillRect(lx, RAIN_FLOOR, 3, 1);
-  /* HUD · 흰 박스 + 검정 외곽선 · 모래시계 진행 막대 */
-  rgBox(ctx, 2, 2, RAIN_W - 4, 15, RAIN_PAL.w);
-  ctx.font = "bold 9px sans-serif"; ctx.textBaseline = "middle";
-  ctx.fillStyle = RAIN_PAL.deep; ctx.textAlign = "left"; ctx.fillText("LV " + RG.stage, 6, 10);
-  ctx.fillStyle = RAIN_PAL.ink; ctx.textAlign = "right"; ctx.fillText(String(RG.score), RAIN_W - 6, 10);
-  var blinkOff = RG.lives === 1 && Math.floor(now / 250) % 2 === 0;   /* 마지막 목숨 깜빡임 */
-  for (var hh = 0; hh < RAIN_LIVES; hh++) {
-    var hx = 62 + hh * 11, on = hh < RG.lives, justLost = hh === RG.lives && RG.heartHit > 0;
-    var jy = justLost && !rgReduced() ? Math.round((Math.random() - 0.5) * 3) : 0;
-    ctx.fillStyle = on ? (blinkOff ? RAIN_PAL.o25 : RAIN_PAL.o100) : justLost ? RAIN_PAL.deep : RAIN_PAL.o25;
-    ctx.fillRect(hx, 7 + jy, 3, 2); ctx.fillRect(hx + 4, 7 + jy, 3, 2); ctx.fillRect(hx, 9 + jy, 7, 2); ctx.fillRect(hx + 1, 11 + jy, 5, 1); ctx.fillRect(hx + 2, 12 + jy, 3, 1);
-    if (!on) { ctx.fillStyle = RAIN_PAL.w; ctx.fillRect(hx + 3, 8 + jy, 1, 4); }   /* 금 간 빈 하트 */
-  }
-  var frac = RG.t0 ? Math.max(0, 1 - rgElapsed(now) / RAIN_SEC) : 1;
-  rgBox(ctx, 14, 20, RAIN_W - 18, 7, RAIN_PAL.w);
-  ctx.fillStyle = frac < 0.2 ? RAIN_PAL.deep : RAIN_PAL.o100; ctx.fillRect(15, 21, Math.round((RAIN_W - 20) * frac), 5);
-  ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(4, 19, 7, 1); ctx.fillRect(4, 28, 7, 1); ctx.fillRect(5, 20, 5, 1); ctx.fillRect(6, 21, 3, 2); ctx.fillRect(7, 23, 1, 2); ctx.fillRect(6, 25, 3, 1); ctx.fillRect(5, 26, 5, 2);
-  /* 단어 · 흰 말풍선 박스 */
-  ctx.font = "bold 11px sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  for (var lx = 0; lx < L.W; lx += 3 * L.D) ctx.fillRect(lx, L.floor, 2 * L.D, 2);
+  /* 단어 · 흰 말풍선 상자 · 글자 크기 고정 */
+  ctx.font = rgFontStr(L.font); ctx.textAlign = "left"; ctx.textBaseline = "middle";
   RG.words.forEach(function (w) {
-    var danger = w.y > RAIN_FLOOR - 34, x = Math.round(w.x) - 3, y = Math.round(w.y) - 8;
-    rgBox(ctx, x, y, w.w + 6, 15, danger ? RAIN_PAL.o25 : RAIN_PAL.w);
-    ctx.fillStyle = RAIN_PAL.ink; ctx.fillText(w.text, x + 3, y + 8);
+    var y = rgWordY(w), danger = w.p > 0.78;
+    rgBox2(ctx, w.x, y, w.bw, L.boxH, danger ? RAIN_PAL.o25 : RAIN_PAL.w);
+    ctx.fillStyle = RAIN_PAL.ink; ctx.fillText(w.text, Math.round(w.x + L.padX), Math.round(y + L.boxH / 2 + 1));
   });
   if (RG.shot) {
-    var k = 1 - RG.shot.t / 0.12, sx = RG.shot.x0 + (RG.shot.x1 - RG.shot.x0) * k, sy = RG.shot.y0 + (RG.shot.y1 - RG.shot.y0) * k;
-    ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(Math.round(sx) - 2, Math.round(sy) - 2, 5, 5);
-    ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(Math.round(sx) - 1, Math.round(sy) - 1, 3, 3);
+    var k = 1 - RG.shot.t / 0.12, sx = RG.shot.x0 + (RG.shot.x1 - RG.shot.x0) * k, sy = RG.shot.y0 + (RG.shot.y1 - RG.shot.y0) * k, q = 2 * L.D;
+    ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(Math.round(sx - q / 2), Math.round(sy - q / 2), q, q);
+    ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(Math.round(sx - q / 2) + 2, Math.round(sy - q / 2) + 2, q - 4, q - 4);
   }
-  /* 마스코트 미위 */
-  var bob = Math.floor(now / 300) % 2;
-  ctx.drawImage(rgSprCv(RG.mas.open > 0 ? "open" : "closed"), Math.round(RG.mas.x - 12), RAIN_GROUND - 22 + bob, 24, 22);
-  if (RG.combo >= 5) ctx.drawImage(rgSprCv("buddy"), Math.round(RG.mas.x + 12), RAIN_GROUND - 16 + (1 - bob), 16, 16);
-  RG.parts.forEach(function (p) { ctx.fillStyle = p.c; ctx.fillRect(Math.round(p.x), Math.round(p.y), 2, 2); });
-  ctx.textAlign = "center"; ctx.font = "bold 9px sans-serif";
-  RG.pops.forEach(function (p) { rgStroke(ctx, p.text, Math.round(Math.max(28, Math.min(RAIN_W - 28, p.x))), Math.round(p.y), p.c, RAIN_PAL.ink, 3); });
-  if (RG.banner) { rgBox(ctx, RAIN_W / 2 - 46, 108, 92, 22, RAIN_PAL.w); ctx.font = "bold 13px sans-serif"; ctx.fillStyle = RAIN_PAL.deep; ctx.fillText(RG.banner.text, RAIN_W / 2, 119); }
+  /* 마스코트 미위 · 도트 단위 고정 크기 */
+  var bob = Math.floor(now / 300) % 2 * Math.round(L.D / 3);
+  ctx.drawImage(rgSprCv(RG.mas.open > 0 ? "open" : "closed"), Math.round(RG.mas.x - L.masW / 2), L.ground - L.masH + bob, L.masW, L.masH);
+  if (RG.combo >= 5) ctx.drawImage(rgSprCv("buddy"), Math.round(RG.mas.x + L.masW / 2), L.ground - 10 * L.D + (L.D - bob), 10 * L.D, 10 * L.D);
+  RG.parts.forEach(function (p) { ctx.fillStyle = p.c; ctx.fillRect(Math.round(p.x), Math.round(p.y), p.s, p.s); });
+  ctx.textAlign = "center";
+  RG.pops.forEach(function (p) {
+    ctx.font = rgFontStr(L.big ? Math.round(p.s * 1.6) : p.s);   /* 노트북 배치는 글자 판 자체가 커서 팝도 한 단계 크게 */
+    var tw = ctx.measureText(p.text).width / 2 + 6;
+    rgStroke(ctx, p.text, Math.round(Math.max(tw, Math.min(L.W - tw, p.x))), Math.round(p.y), p.c, RAIN_PAL.ink, 4);
+  });
+  if (RG.banner) {
+    ctx.font = rgFontStr(18); var bw = ctx.measureText(RG.banner.text).width + 32, by = Math.round(L.floor * 0.42);
+    rgBox2(ctx, L.W / 2 - bw / 2, by, bw, 34, RAIN_PAL.w); ctx.fillStyle = RAIN_PAL.deep; ctx.fillText(RG.banner.text, L.W / 2, by + 18);
+  }
   if (RG.ending) {
-    ctx.fillStyle = "rgba(255,255,255,0.6)"; ctx.fillRect(0, 30, RAIN_W, RAIN_FLOOR - 30);
-    rgBox(ctx, 12, 104, RAIN_W - 24, 50, RAIN_PAL.w);
-    ctx.font = "bold 16px sans-serif"; ctx.fillStyle = RG.ending.why === "time" ? RAIN_PAL.o100 : RAIN_PAL.deep;
-    ctx.fillText(RG.ending.why === "time" ? "TIME UP" : "GAME OVER", RAIN_W / 2, 120);
-    ctx.font = "bold 10px sans-serif"; ctx.fillStyle = RAIN_PAL.ink;
-    ctx.fillText(RG.ending.why === "time" ? "60초 완주" : "단어 5개를 놓쳤어요", RAIN_W / 2, 140);
+    var ew = Math.min(L.W - 32, 300), eh = 92, ey = Math.round(Math.max(8, L.floor / 2 - eh / 2));
+    ctx.fillStyle = "rgba(255,255,255,0.6)"; ctx.fillRect(0, 0, L.W, L.floor);
+    rgBox2(ctx, L.W / 2 - ew / 2, ey, ew, eh, RAIN_PAL.w);
+    ctx.font = rgFontStr(26); ctx.fillStyle = RG.ending.why === "time" ? RAIN_PAL.o100 : RAIN_PAL.deep;
+    ctx.fillText(RG.ending.why === "time" ? "TIME UP" : "GAME OVER", L.W / 2, ey + 34);
+    ctx.font = rgFontStr(15); ctx.fillStyle = RAIN_PAL.ink;
+    ctx.fillText(RG.ending.why === "time" ? "60초 완주" : "단어 5개를 놓쳤어요", L.W / 2, ey + 66);
   }
   if (RG.cd > 0) {
-    ctx.fillStyle = "rgba(255,255,255,0.55)"; ctx.fillRect(0, 30, RAIN_W, RAIN_FLOOR - 30);
-    ctx.font = "bold 42px sans-serif"; rgStroke(ctx, RG.cd > 1 ? String(Math.ceil(RG.cd - 0.2)) : "GO", RAIN_W / 2, 135, RAIN_PAL.o100, RAIN_PAL.ink, 6);
+    ctx.fillStyle = "rgba(255,255,255,0.55)"; ctx.fillRect(0, 0, L.W, L.floor);
+    ctx.font = rgFontStr(L.big ? 96 : 64); rgStroke(ctx, RG.cd > 1 ? String(Math.ceil(RG.cd - 0.2)) : "GO", L.W / 2, Math.round(L.floor / 2), RAIN_PAL.o100, RAIN_PAL.ink, 8);
   }
   ctx.restore();
 }
@@ -6040,17 +6168,18 @@ function typeRankHtml(r, mode, big) {
 /* 시작 화면 미리보기 캔버스 · 마스코트와 떨어지는 단어 몇 개 (정지 화면) */
 function rgPreview() {
   var cv = el("rgPrev"); if (!cv) return;
-  var ctx = cv.getContext("2d"); ctx.imageSmoothingEnabled = false;
-  ctx.save(); ctx.translate(0, 110 - RAIN_H + 10);
-  rgWorld(ctx, RAIN_H + 4);
-  ctx.font = "bold 11px sans-serif"; ctx.textBaseline = "middle"; ctx.textAlign = "left";
-  [["에이전트", 30, 210], ["공감", 118, 226], ["데이터", 70, 244]].forEach(function (w) {
-    var tw = Math.ceil(ctx.measureText(w[0]).width);
-    rgBox(ctx, w[1] - 3, w[2] - 8, tw + 6, 15, RAIN_PAL.w); ctx.fillStyle = RAIN_PAL.ink; ctx.fillText(w[0], w[1], w[2]);
+  var w = cv.clientWidth || 300, h = 130, dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.style.height = h + "px"; cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  var ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.imageSmoothingEnabled = false;
+  var L = rgLayout(w, h, false);
+  rgWorldD(ctx, L);
+  ctx.font = rgFontStr(L.font); ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  [["에이전트", 0.08, 10], ["공감", 0.66, 30], ["데이터", 0.36, 50]].forEach(function (x) {
+    var bw = Math.ceil(ctx.measureText(x[0]).width) + L.padX * 2, bx = Math.min(w - 8 - bw, Math.max(8, Math.round(w * x[1])));
+    rgBox2(ctx, bx, x[2], bw, L.boxH, RAIN_PAL.w); ctx.fillStyle = RAIN_PAL.ink; ctx.fillText(x[0], bx + L.padX, x[2] + L.boxH / 2 + 1);
   });
-  ctx.drawImage(rgSprCv("open"), 78, RAIN_GROUND - 22, 24, 22);
-  ctx.drawImage(rgSprCv("buddy"), 104, RAIN_GROUND - 16, 16, 16);
-  ctx.restore();
+  ctx.drawImage(rgSprCv("open"), Math.round(w * 0.46 - L.masW / 2), L.ground - L.masH, L.masW, L.masH);
+  ctx.drawImage(rgSprCv("buddy"), Math.round(w * 0.46 + L.masW / 2), L.ground - 10 * L.D + L.D, 10 * L.D, 10 * L.D);
 }
 /* v3.36b 마스코트 외곽선 · 밝은 배경 위에서 오렌지 몸통이 묻히지 않게 검정 1px 테두리를 스프라이트에 굽는다 */
 function gameClear(flagKey) {
@@ -6235,15 +6364,15 @@ var GS_GAMES = {
   jump: { name: "ME to WE 점프", view: "game_jump", start: "jpStart()", best: "jump_best", line: "달리는 미위를 탭해서 점프 · 공중에서 한 번 더 탭은 2단 점프" }
 };
 var GS = { cur: null, vvh: null, onVis: null, onKey: null };
-/* o = { key, title, cw, ch, canvasId, bottom, noGesture, flat(v3.48 플랫 스타일 오버레이), resized(cv, cssW), down(e), move(e), up(e), keydown(e), running(), isPaused(), pause(), resume(), quit() } */
+/* o = { key, title, top(v3.36d 위 줄 HTML 교체), fill(v3.36d 캔버스 꽉 채움), cls, cw, ch, canvasId, bottom, noGesture, flat(v3.48 플랫 스타일 오버레이), resized(cv, cssW, cssH), down(e), move(e), up(e), keydown(e), running(), isPaused(), pause(), resume(), quit() } */
 function gsOverlayOpen(o) {
   gsOverlayClose();
   GS.cur = o;
   var d = document.createElement("div");
   d.id = "rgPlay";
-  if (o.flat) d.className = "flat";
-  d.innerHTML = '<div class="rgp-top"><span class="rgp-t">' + esc(o.title) + '</span><button class="rgp-x" type="button" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">일시정지</button></div>' +
-    '<div class="rgp-mid' + (o.noGesture ? " nogest" : "") + '" id="gsMid"><canvas id="' + o.canvasId + '" width="' + o.cw + '" height="' + o.ch + '"></canvas>' +
+  d.className = (o.flat ? "flat " : "") + (o.cls || "");
+  d.innerHTML = '<div class="rgp-top">' + (o.top || '<span class="rgp-t">' + esc(o.title) + '</span><button class="rgp-x" type="button" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">일시정지</button>') + "</div>" +
+    '<div class="rgp-mid' + (o.noGesture ? " nogest" : "") + (o.fill ? " fill" : "") + '" id="gsMid"><canvas id="' + o.canvasId + '" width="' + o.cw + '" height="' + o.ch + '"></canvas>' +
     '<div class="rgp-pause" id="rgPause" hidden><p>일시정지</p><button class="btn mint" type="button" onclick="gsResume()">계속하기</button><button class="btn line" type="button" onclick="gsQuit()">그만하기</button></div></div>' +
     (o.bottom || "");
   document.body.appendChild(d);
@@ -6260,6 +6389,12 @@ function gsOverlayOpen(o) {
     d.style.height = Math.round(h) + "px"; d.style.top = Math.round(top) + "px";
     var cv = el(o.canvasId);
     if (!cv) return;
+    if (o.fill) {   /* v3.36d · 캔버스가 중간 영역을 꽉 채우고 게임이 실제 크기로 다시 배치한다 */
+      var fw = mid.clientWidth, fh = mid.clientHeight;
+      cv.style.width = fw + "px"; cv.style.height = fh + "px";
+      if (o.resized) o.resized(cv, fw, fh);
+      return;
+    }
     var mh = mid.clientHeight - 8, mw = mid.clientWidth - 16;
     var w = Math.min(mw, mh * o.cw / o.ch);
     cv.style.width = Math.floor(w) + "px"; cv.style.height = Math.floor(w * o.ch / o.cw) + "px";
@@ -6289,7 +6424,7 @@ function gsOverlayClose(key) {
 }
 function gsPauseUi(on) {
   var p = el("rgPause"); if (p) p.hidden = !on;
-  var x = document.querySelector("#rgPlay .rgp-x"); if (x) x.textContent = on ? "계속하기" : "일시정지";
+  var x = document.querySelector("#rgPlay .rgp-x"); if (x) x.textContent = on ? (x.getAttribute("data-on") || "계속하기") : (x.getAttribute("data-off") || "일시정지");
 }
 function gsPauseToggle() { if (!GS.cur) return; if (GS.cur.isPaused()) GS.cur.resume(); else GS.cur.pause(); }
 function gsResume() { if (GS.cur) GS.cur.resume(); }
