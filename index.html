@@ -716,6 +716,21 @@
   /* 송출 화면 */
   #frame.screen-mode { background: var(--ink); }
   .screen-wrap { color: #fff; padding-bottom: 24px; }
+  /* v3.37 타자 순위판 · 시상 (1F TV · 17F 송출) */
+  .tytv .tytv-k { margin-top: 22px; font-size: 14px; font-weight: 800; letter-spacing: 0.12em; color: var(--mint-deep); }
+  .tytv .tytv-t { margin-top: 6px; font-size: 30px; font-weight: 900; line-height: 1.25; }
+  .tytv .tytv-seg { display: flex; gap: 8px; margin-top: 12px; }
+  .tytv .tytv-seg span { padding: 6px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.3); font-weight: 800; font-size: 14px; opacity: 0.55; }
+  .tytv .tytv-seg span.on { background: var(--mint); border-color: var(--mint); opacity: 1; }
+  .tytv .tytv-list { margin-top: 16px; }
+  .tytv .tytv-row { display: flex; align-items: center; gap: 14px; padding: 11px 16px; border-radius: 14px; background: rgba(255,255,255,0.06); margin-bottom: 8px; font-size: 22px; font-weight: 800; }
+  .tytv .tytv-list.five .tytv-row { padding: 16px 18px; font-size: 28px; }
+  .tytv .tytv-row.top { background: rgba(255,126,49,0.2); }
+  .tytv .tytv-row .no { flex: none; width: 40px; font-family: var(--disp); color: var(--mint-deep); }
+  .tytv .tytv-row .nm { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tytv .tytv-row .nm small, .tytv .tytv-row .sc small { display: block; font-size: 14px; font-weight: 700; opacity: 0.65; margin-top: 2px; }
+  .tytv .tytv-row .sc { flex: none; font-family: var(--disp); text-align: right; }
+  .tytv .tytv-foot { margin-top: 14px; font-size: 15px; opacity: 0.6; line-height: 1.6; }
   .screen-wrap .counters { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center; margin: 16px 0; }
   .screen-wrap .counters div { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 12px 4px; }
   .screen-wrap .counters .v { font-family: var(--disp); font-size: 21px; color: var(--mint-deep); }
@@ -2309,7 +2324,7 @@ function counters() {
 }
 
 /* ════════════════ 라우터 (Lv1 탭 → Lv2 상세) ════════════════ */
-var SIGNAGE = ["screen", "screen_survey", "screen_words", "wall_quiz", "wall_wave", "wall_live", "wall_metowe", "wall_tv"];
+var SIGNAGE = ["screen", "screen_survey", "screen_words", "wall_quiz", "wall_wave", "wall_live", "wall_metowe", "wall_tv", "wall_type", "type_award"];
 /* 설정 톱니 · 글자 크기·관리자 모드를 한 곳에 모은 진입점 */
 var GEAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
   '<circle cx="12" cy="12" r="3.1"/>' +
@@ -2343,7 +2358,7 @@ var App = {
     /* 프로그램 · 신청 전용 (리더보드는 10F 세션 곁으로, v3.1) · 일정(guide_time)은 v3.3부터 탭 루트라 PARENT 없음 */
     dap: "guide", ev_cchat: "guide",
     sess_d: "guide",
-    admin: "home", screen: "admin", screen_survey: "admin", screen_words: "admin",
+    admin: "home", screen: "admin", screen_survey: "admin", screen_words: "admin", type_site: "admin", wall_type: "admin", type_award: "admin",
     wall_quiz: "admin", wall_wave: "admin", wall_live: "admin", wall_metowe: "admin", wall_tv: "wall_metowe"
   },
   TITLES: {
@@ -2354,7 +2369,7 @@ var App = {
     sess_d: "프로그램 신청",
     ev_cchat: "내 커피챗", ev_replay: "퀴즈 다시 풀기",
     wq_list: "DAP Wall QR 퀴즈", wq_play: "문제 풀이",
-    admin: "관리자 콘솔", screen: "송출용 화면", screen_survey: "", screen_words: "", game_word: "ME to WE 기억력", game_type: "타자 게임", type_rank: "타자 순위",
+    admin: "관리자 콘솔", screen: "송출용 화면", screen_survey: "", screen_words: "", game_word: "ME to WE 기억력", game_type: "타자 게임", type_site: "현장 타자왕전", wall_type: "", type_award: "", type_rank: "타자 순위",
     game_pilot: "게임 선호도 조사", game_pang: "AX 팡", game_jump: "ME to WE 점프", gs_rank: "게임 순위",
     wall_quiz: "", wall_wave: "", wall_live: "", wall_metowe: "", wall_tv: ""
   },
@@ -2367,6 +2382,7 @@ var App = {
     if (this.current === "game_word" && v !== "game_word") gwStop();
     if (this.current === "game_type" && v !== "game_type") rgStop();
     if (this.current === "game_pang" && v !== "game_pang") pgStop();
+    if (this.current === "type_site" && v !== "type_site") { tsScanStop(); if (TS.phase === "play") { rgStop(); TS.phase = "ready"; } }
     if (this.current === "game_jump" && v !== "game_jump") jpStop();
     if (this.current === "wall_wave" && v !== "wall_wave") wvStop();
     modalClose();
@@ -2374,7 +2390,7 @@ var App = {
     /* v3.15 새로 고침 복귀 · 현재 화면의 소속 Lv1 탭을 sessionStorage 에 기억(같은 브라우저 탭에서만, 다음 방문은 홈).
        관리자·사이니지·게임 전체화면은 저장하지 않는다 · Lv2 는 부모 탭으로 저장된다 */
     try {
-      if (SIGNAGE.indexOf(v) < 0 && ["admin", "screen", "game_word", "game_type", "game_pang", "game_jump"].indexOf(v) < 0) {
+      if (SIGNAGE.indexOf(v) < 0 && ["admin", "screen", "game_word", "game_type", "game_pang", "game_jump", "type_site"].indexOf(v) < 0) {
         var lt = this.tabOf(v);
         if (["home", "passport", "guide_time", "guide"].indexOf(lt) >= 0) {
           sessionStorage.setItem("axf_last_tab", lt);
@@ -2421,7 +2437,7 @@ var App = {
     /* 헤더 높이를 실측해 sticky 기준선으로 넘긴다 (홈/탭루트/서브 화면마다 높이가 다르다) */
     el("frame").style.setProperty("--stick", tb.offsetHeight + "px");
     var nav = el("tabbar");
-    nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "game_word" || v === "game_type" || v === "game_pang" || v === "game_jump") ? "none" : "flex";
+    nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "game_word" || v === "game_type" || v === "game_pang" || v === "game_jump" || v === "type_site") ? "none" : "flex";
     var activeTab = this.tabOf(v);
     var icons = this.ICONS;
     var tabBtns = this.TABS.map(function (t) {
@@ -2441,7 +2457,7 @@ var LED_TTL = 30 * 60000;
 function updateLed() {
   var bar = el("ledbar"), tr = el("ledTrack");
   if (!bar || !tr) return;
-  if (SIGNAGE.indexOf(App.current) >= 0 || App.current === "game_word" || App.current === "game_type" || App.current === "game_pang" || App.current === "game_jump") { bar.style.display = "none"; return; }
+  if (SIGNAGE.indexOf(App.current) >= 0 || App.current === "game_word" || App.current === "game_type" || App.current === "game_pang" || App.current === "game_jump" || App.current === "type_site") { bar.style.display = "none"; return; }
   var ns = S.get("notices", []);
   var latest = null;
   for (var i = 0; i < ns.length; i++) {
@@ -2460,13 +2476,13 @@ window.addEventListener("scroll", function () {
   var b = el("topbtn");
   if (!b) return;
   var ok = window.scrollY > 400 && !el("app").hidden &&
-    SIGNAGE.indexOf(App.current) < 0 && App.current !== "game_word" && App.current !== "game_type" && App.current !== "game_pang" && App.current !== "game_jump";
+    SIGNAGE.indexOf(App.current) < 0 && App.current !== "game_word" && App.current !== "game_type" && App.current !== "game_pang" && App.current !== "game_jump" && App.current !== "type_site";
   b.classList.toggle("on", ok);
 }, { passive: true });
 window.addEventListener("axf-store", function () {
   checkMyState();
   updateLed();
-  if (["game_word", "game_type", "game_pang", "game_jump", "wall_wave", "wall_metowe"].indexOf(App.current) >= 0) return;
+  if (["game_word", "game_type", "game_pang", "game_jump", "type_site", "wall_wave", "wall_metowe"].indexOf(App.current) >= 0) return;
   App.render();
 });
 
@@ -3468,6 +3484,43 @@ var Views = {
   /* ME to WE 월 참여자 화면(wallv)은 v3.1 폐지 · 월은 1F 사이니지 전용 (wall_metowe·wall_tv 등 SIGNAGE 유지) */
 
   /* TV 전체화면 · 가로 대형 화면 송출용 (좌: 월 풀블리드 / 우: 카운터·언락) */
+  /* ═══ v3.37 현장 타자왕전 · 진행(스태프 노트북) · TV 순위판(로그인 없음) · Outro 시상 ═══ */
+  type_site: function () {
+    if (!S.get("admin_authed", false)) return '<div class="card mb8"><p class="muted">관리자 콘솔에 로그인한 뒤 열어 주세요</p></div><button class="btn mint" onclick="App.go(\'admin\')">관리자 콘솔</button>';
+    return tsSiteHtml();
+  },
+  wall_type: function () {
+    tyTvPull();
+    if (!TYTV.flip) TYTV.flip = setInterval(tyTvTick, 12000);
+    var site = TYTV.show === "site", r = site ? TYTV.site : TYTV.app;
+    var winTxt = TYTV.site && TYTV.site.win ? TYTV.site.win.join(" · ") : "";
+    return '<div class="screen-wrap tytv"><div class="row" style="justify-content:space-between;padding-top:8px">' +
+      '<b class="disp" style="font-size:24px;letter-spacing:0.03em">AX Festival <span style="color:var(--mint-deep)">2026</span></b>' +
+      '<div class="row" style="gap:6px">' + tvBtns() + (S.get("admin_authed", false) ? '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button>' : "") + "</div></div>" +
+      '<p class="tytv-k">AX 단어 소나기 · 타자 순위</p>' +
+      '<p class="tytv-t">' + (site ? "1F 현장 타자왕전 상위 5" : "앱 순위 상위 10") + "</p>" +
+      '<div class="tytv-seg"><span class="' + (site ? "" : "on") + '">앱 상위 10</span><span class="' + (site ? "on" : "") + '">현장 상위 5</span></div>' +
+      '<div class="tytv-list' + (site ? " five" : "") + '">' + tyTvRows(r, site ? 5 : 10) + "</div>" +
+      '<p class="tytv-foot">' + (site ? "결선 " + esc(winTxt) + " · 1인 1회 · 같은 키보드 · 1·2등은 17:00 Outro에서 호명" : "앱 스탬프 탭 → 라이브 챌린지 → 타자 게임 · 닉네임으로 표시 · 도전은 무제한, 최고 기록만") + "</p>" +
+      (testMode() ? '<p class="tytv-foot" style="opacity:0.4">테스트 화면 · 가짜 닉네임</p>' : "") + "</div>";
+  },
+  type_award: function () {
+    if (!S.get("admin_authed", false)) return '<div class="screen-wrap"><p style="padding:40px 8px">관리자 콘솔에 로그인한 뒤 열어 주세요</p><button class="btn mint" onclick="App.go(\'admin\')">관리자 콘솔</button></div>';
+    tyAwardPull();
+    var d = TYAW.data, hide = S.get("tyaw_hide", false), top = (d && d.top) || [];
+    return '<div class="screen-wrap tytv"><div class="row" style="justify-content:space-between;padding-top:8px;flex-wrap:wrap;gap:6px">' +
+      '<b class="disp" style="font-size:24px;letter-spacing:0.03em">AX Festival <span style="color:var(--mint-deep)">2026</span></b>' +
+      '<div class="row" style="gap:6px;flex-wrap:wrap">' + tvBtns() +
+      '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="tyAwardPull(true)">새로고침</button>' +
+      '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="S.set(\'tyaw_hide\', ' + (hide ? "false" : "true") + ')">실명 ' + (hide ? "보이기" : "가리기") + "</button>" +
+      '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'type_site\')">← 진행 화면</button></div></div>' +
+      '<p class="tytv-k">17:00 OUTRO · 시상</p><p class="tytv-t">1F 현장 타자왕전 결과</p>' +
+      '<div class="tytv-list five">' + (top.length ? top.map(function (x) {
+        return '<div class="tytv-row' + (x.rank <= 2 ? " top" : "") + '"><span class="no">' + x.rank + '</span><span class="nm">' + esc(x.nick || "익명 참가자") +
+          (hide ? "" : '<small>' + esc(x.name || "") + (x.dept ? " · " + esc(x.dept) : "") + "</small>") + '</span><span class="sc">' + Number(x.score).toLocaleString() + "<small>정확도 " + x.acc + "%</small></span></div>";
+      }).join("") : '<p style="padding:24px 4px;opacity:0.7">' + (d ? "아직 현장 기록이 없습니다" : "불러오는 중") + "</p>") + "</div>" +
+      '<p class="tytv-foot">동점은 정확도, 그다음 먼저 기록한 쪽 · 결선 ' + esc(((d && d.win) || []).join(" · ")) + (d && d.demo ? " · 데모 예시 이름" : "") + "</p></div>";
+  },
   wall_tv: function () {
     var n = mtPoints(), pct = Math.min(100, Math.floor(n / MT_TOTAL * 100));
     return '<div class="tv">' +
@@ -4190,7 +4243,8 @@ var ADM_STAFF = [
   ["resv",   "상담 승인",   "1F DAP존 · 신청 승인·시간 변경"],
   ["cchat",  "커피챗 매칭", "18F 라운지 · 회차·테이블 배정"],
   ["endcls", "강의 종료",   "종료 즉시 혼잡 안내 원터치"],
-  ["urgent", "긴급 공지",   "전 참여자 LED 띠·실시간 안내"]
+  ["urgent", "긴급 공지",   "전 참여자 LED 띠·실시간 안내"],
+  ["typing", "현장 타자왕전", "참가자 QR → 닉네임 확인 → 1회 도전 · TV 순위판 · Outro 시상"]
 ];
 var ADM_CC = [
   ["quiz",  "라이브 퀴즈",   "Outro 시작 전 4문항 순서 발사 · 송출 화면"],
@@ -4229,6 +4283,21 @@ function photoAdm(act, emp) {
   }, function () { toast("서버 연결 실패"); });
 }
 var AdminTabs = {
+  /* v3.37 현장 타자왕전 입구 · 진행 화면은 게임 캔버스가 재렌더에 지워지지 않게 별도 화면(type_site) */
+  typing: function () {
+    tyTvPull();
+    var win = TYTV.site && TYTV.site.win ? TYTV.site.win.join(",").replace(/~/g, "-") : "";
+    return '<div class="card mb8"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">진행 화면 (노트북)</b><p class="muted" style="margin-top:3px;font-size:calc(13px * var(--fs))">참가자 QR → 닉네임 확인 → 60초 한 판 → 저장 · 1인 1회 · 결선 시간대만</p>' +
+      '<button class="btn mint" style="margin-top:10px" onclick="App.go(\'type_site\')">진행 화면 열기</button></div>' +
+      '<div class="card mb8"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">1F TV 순위판</b><p class="muted" style="margin-top:3px;font-size:calc(13px * var(--fs));word-break:break-all">로그인 없이 TV 브라우저에서 · ' + esc(location.origin + location.pathname) + "#tv=type</p>" +
+      '<button class="btn" style="margin-top:10px" onclick="App.go(\'wall_type\')">미리보기</button></div>' +
+      '<div class="card mb8"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">Outro 시상 화면</b><p class="muted" style="margin-top:3px;font-size:calc(13px * var(--fs))">현장 상위 5 · 닉네임 + 실명(가리기 가능)</p>' +
+      '<button class="btn" style="margin-top:10px" onclick="App.go(\'type_award\')">열기</button></div>' +
+      '<div class="card mb8"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">결선 시간대</b>' +
+      '<input id="tyWin" class="input" style="margin-top:8px" placeholder="12:00-13:00,15:00-16:00" value="' + esc(win) + '">' +
+      '<button class="btn line" style="margin-top:8px" onclick="tyWinSave()">저장</button>' +
+      '<p class="muted" style="margin-top:6px;font-size:calc(12.5px * var(--fs))">지금 서버 값 · ' + (win ? esc(win) : "불러오는 중") + " · 시간대 밖 기록은 서버가 거절(설정 창검사 OFF 면 해제)</p></div>";
+  },
 
   photo: function () {
     var h = '<div class="card soft mb12"><p class="muted" style="font-size:calc(13.5px * var(--fs));line-height:1.6">호출하면 참가자 앱에 「지금 입장하세요」가 뜹니다. 호출 후 10분 안에 오지 않으면 건너뛰기, 도착하면 완료.</p></div>';
@@ -4539,6 +4608,7 @@ var AdminTabs = {
       '<button class="btn" onclick="App.go(\'wall_wave\')">AX Wave /wall/wave</button>' +
       '<button class="btn" onclick="App.go(\'wall_live\')">라이브 보드 /wall/live</button>' +
       '<button class="btn" onclick="App.go(\'wall_metowe\')">ME to WE 월 /wall/metowe</button>' +
+      '<button class="btn" onclick="App.go(\'wall_type\')">1F 타자 순위판 #tv=type</button>' +
       '<button class="btn" onclick="App.go(\'screen_survey\')">설문 참여 안내 (Outro 전)</button>' +
       '<button class="btn" onclick="App.go(\'screen_words\')">오늘의 단어 (Outro)</button>' +
       '<button class="btn" onclick="App.go(\'screen\')">17F 송출뷰 /screen</button></div>' +
@@ -4586,7 +4656,7 @@ function notifyUser(title, body, target) {
   try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate([80, 40, 80]); } catch (e) {}   /* 상호작용 전 차단 경고 방지 */
   if (notifOK()) { try { new Notification(title, { body: body }); } catch (e) {} }
   if (el("modal")) { toast(title); return; }        /* 팝업 위에 팝업 금지 · 뒤 알림은 토스트로 */
-  if (App.current === "game_word" || App.current === "game_type" || App.current === "game_pang" || App.current === "game_jump") { toast(title); return; }
+  if (App.current === "game_word" || App.current === "game_type" || App.current === "game_pang" || App.current === "game_jump" || App.current === "type_site") { toast(title); return; }
   var askBtn = (notifDesktop() && !notifOK() && Notification.permission !== "denied")
     ? '<button class="btn line" style="margin-top:8px" onclick="notifAsk()">브라우저 알림 켜기</button>' +
       '<p class="muted" style="margin-top:6px;font-size:calc(12.5px * var(--fs));text-align:center">앱을 열어 둔 동안에만 알려드려요</p>' : "";
@@ -5438,6 +5508,7 @@ function qrScanTick() {
   if (raw) qrScanHit(raw);
 }
 function qrScanHit(raw) {
+  if (TS.scan) { tsScanHit(raw); return; }    /* v3.37 현장 타자왕전 참가자 확인 */
   if (SCAN.on) { scanHit(raw); return; }      /* 운영자 스캐너 · 연속 스캔이라 닫지 않는다 */
   qrScanClose(); qrHandle(raw);
 }
@@ -5989,6 +6060,167 @@ function gameClear(flagKey) {
     awardStamp("p4");   /* 260909: 미니게임 별도 칸 폐지 · 04 라이브 챌린지로 통합 (라이브 퀴즈와 중복 적립 없음) */
     setTimeout(function () { toast("게임 클리어! 패스포트 「라이브 챌린지」 칸이 적립됐어요."); }, 300);
   }
+}
+
+/* ════════════════ v3.37 1F 현장 타자왕전 (같은 게임 · 스태프 노트북) ════════════════
+   흐름: ① 스태프가 참가자 앱의 「내 QR」을 노트북 카메라로 찍는다(카메라가 없으면 사번 입력) → 서버 type_site_check 로
+   닉네임·실명(스태프 본인 확인용)·이미 도전했는지·결선 시간대인지 확인 → ② 참가자가 같은 키보드로 60초 한 판(카운트다운 포함)
+   → ③ 끝나는 즉시 type_site_submit(관리코드) · 결선 시간대 안 · 1인 1회는 서버가 판정 → 순위·상위 5 표시 → 다음 참가자.
+   1F TV 순위판(wall_type · 로그인 없음 · #tv=type) · Outro 시상 화면(type_award · 관리자 · 닉네임 + 실명). */
+var TS = { phase: "idle", emp: "", info: null, res: null, send: "", msg: "", scan: false, last: "", lastT: 0 };
+var TS_WHY = { dup: "이미 현장 도전 기록이 있습니다 (1인 1회)", window: "결선 시간대가 아닙니다", auth: "관리코드가 맞지 않습니다 · 콘솔에 다시 로그인하세요", range: "기록이 상식 범위를 넘어 저장하지 않았습니다", param: "사번을 확인해 주세요" };
+function tsReset() { tsScanStop(); rgStop(); TS = { phase: "idle", emp: "", info: null, res: null, send: "", msg: "", scan: false, last: "", lastT: 0 }; App.render(); }
+function tsScanStart() {
+  if (!qrScanSupported()) { toast("이 기기에서는 카메라를 열 수 없습니다 · 사번을 입력하세요"); return; }
+  TS.scan = true; App.render();
+  setTimeout(qrCamStart, 40);
+}
+function tsScanStop() { if (TS.scan) { TS.scan = false; qrCamStop(); } }
+function tsScanHit(raw) {
+  var emp = qrParseUser(raw);
+  if (!emp) { TS.msg = "참가자 앱의 「내 QR」이 아닙니다"; var m = el("tsMsg"); if (m) m.textContent = TS.msg; return; }
+  if (raw === TS.last && Date.now() - TS.lastT < 3000) return;
+  TS.last = raw; TS.lastT = Date.now();
+  tsScanStop();
+  tsCheck(emp);
+}
+function tsManual() {
+  var v = ((el("tsEmp") || {}).value || "").trim();
+  if (!/^\d{3,10}$/.test(v)) { toast("사번 숫자를 입력하세요"); return; }
+  tsCheck(v);
+}
+function tsCheck(emp) {
+  TS.emp = emp; TS.phase = "checking"; TS.msg = ""; App.render();
+  if (!BE.on) {   /* 데모 · 서버 없이 흐름만 */
+    setTimeout(function () {
+      TS.info = { ok: true, emp: emp, known: true, name: "데모참가자", dept: "데모부문", nick: typeNick() || "타자요정", done: !!S.get("ts_demo_done_" + emp, false), mine: S.get("ts_demo_done_" + emp, null), inWin: true, win: ["12:00~13:00", "15:00~16:00"] };
+      TS.phase = "ready"; App.render();
+    }, 200);
+    return;
+  }
+  beCall({ action: "type_site_check", key: admKey(), emp: emp }, function (r) {
+    if (!r || !r.ok) { TS.phase = "idle"; TS.msg = TS_WHY[r && r.reason] || "확인하지 못했습니다 · 다시 찍어 주세요"; App.render(); return; }
+    TS.info = r; TS.phase = "ready"; App.render();
+  }, function () { TS.phase = "idle"; TS.msg = "서버 응답 없음 · 다시 찍어 주세요"; App.render(); });
+}
+function tsGo() {
+  var i = TS.info;
+  if (!i || i.done || !i.inWin) return;
+  TS.phase = "play"; TS.res = null; TS.send = "";
+  App.render();
+  rgStart("site");
+}
+/* rgEndFinal(site) 이 부른다 · 끝나는 즉시 한 번 보낸다(실패하면 스태프가 「다시 보내기」) */
+function tsSiteDone(res) {
+  TS.res = res; TS.phase = "done";
+  tsSend();
+}
+function tsSend() {
+  var r = TS.res; if (!r) return;
+  TS.send = "sending"; App.render();
+  if (!BE.on) {
+    S.set("ts_demo_done_" + TS.emp, { score: r.score, acc: r.acc });
+    TS.send = "ok"; TS.rank = typeTestTop("site"); TS.me = { rank: typeTestRank(r.score) }; App.render(); return;
+  }
+  beCall({ action: "type_site_submit", key: admKey(), emp: TS.emp, name: (TS.info && TS.info.name) || "", score: r.score, hits: r.hits, combo: r.combo, acc: r.acc, consent: "1" }, function (x) {
+    if (x && x.ok) { TS.send = "ok"; TS.me = x.me; TS.rank = { top: x.top }; }
+    else { TS.send = "fail"; TS.why = (x && x.reason) || ""; TS.winTxt = x && x.win; }
+    App.render();
+  }, function () { TS.send = "fail"; TS.why = "net"; App.render(); });
+}
+function tsHead() {
+  return '<div class="row" style="justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">' +
+    '<b style="font-size:calc(18px * var(--fs));color:var(--hi)">1F 현장 타자왕전</b>' +
+    '<div class="row" style="gap:6px;flex-wrap:wrap"><button class="tag-btn" onclick="App.go(\'wall_type\')">TV 순위판</button><button class="tag-btn" onclick="App.go(\'type_award\')">Outro 시상</button><button class="tag-btn" onclick="tsScanStop(); App.go(\'admin\')">← 콘솔</button></div></div>';
+}
+function tsSiteHtml() {
+  var i = TS.info, h = tsHead();
+  if (TS.phase === "idle" || TS.phase === "checking") {
+    h += '<div class="card mb12"><b style="font-size:calc(16px * var(--fs));color:var(--hi)">① 참가자 확인</b>' +
+      '<p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">참가자 휴대폰 앱의 가운데 QR 버튼 → 「내 QR」을 카메라에 대 주세요</p>' +
+      (TS.scan ? '<div style="margin-top:10px;border-radius:14px;overflow:hidden;background:#000"><video id="qrVideo" playsinline muted style="width:100%;display:block;max-height:320px;object-fit:cover"></video></div>' +
+        '<button class="btn line" style="margin-top:8px" onclick="tsScanStop(); App.render()">카메라 끄기</button>'
+        : '<button class="btn mint" style="margin-top:10px;padding:15px" onclick="tsScanStart()">참가자 QR 찍기</button>') +
+      '<div class="row" style="gap:8px;margin-top:10px"><input id="tsEmp" class="input" inputmode="numeric" placeholder="카메라가 안 되면 사번 입력" onkeydown="if(event.key===\'Enter\')tsManual()">' +
+      '<button class="btn line" style="width:auto;padding:12px 16px" onclick="tsManual()">확인</button></div>' +
+      '<p class="gmsg" id="tsMsg">' + (TS.phase === "checking" ? "확인 중..." : esc(TS.msg)) + "</p></div>";
+  } else if (TS.phase === "ready" && i) {
+    var block = i.done ? "이미 도전했습니다 · 기록 " + Number(i.mine && i.mine.score || 0).toLocaleString() + "점 (1인 1회)" : !i.inWin ? "지금은 결선 시간대가 아닙니다 · " + esc((i.win || []).join(" · ")) : "";
+    h += '<div class="card mb12" style="text-align:center"><p class="muted" style="font-size:calc(13px * var(--fs))">순위판에 나오는 이름</p>' +
+      '<p style="margin-top:4px;font-size:calc(34px * var(--fs));font-weight:900;color:var(--hi)">' + (i.nick ? esc(i.nick) : "익명 참가자") + "</p>" +
+      (i.nick ? "" : '<p class="muted" style="font-size:calc(12.5px * var(--fs))">' + (i.hiddenNick ? "숨김 처리된 닉네임" : "앱에서 닉네임을 정하지 않았어요 · 도전 전에 앱 타자 게임에서 정하면 순위판에 닉네임으로 나옵니다") + "</p>") +
+      '<p style="margin-top:10px;font-size:calc(14.5px * var(--fs));font-weight:700;color:var(--muted)">스태프 확인 · ' + esc(i.name || "명부에 없음") + (i.dept ? " · " + esc(i.dept) : "") + " · 사번 " + esc(i.emp) + "</p>" +
+      (block ? '<p style="margin-top:12px;padding:10px;border-radius:12px;background:var(--dim);font-weight:800;color:var(--hi)">' + block + "</p>" : "") + "</div>" +
+      (block ? '<button class="btn mint" style="padding:15px" onclick="tsReset()">다음 참가자</button>'
+        : '<p class="muted" style="text-align:center;margin-bottom:8px;font-size:calc(13.5px * var(--fs))">② 참가자에게 키보드를 넘기고 시작 · 60초 한 판 · 붙여넣기 불가</p>' +
+          '<button class="btn mint" style="padding:18px;font-size:calc(18px * var(--fs))" onclick="tsGo()">시작</button>' +
+          '<button class="btn line" style="margin-top:8px" onclick="tsReset()">다른 참가자</button>');
+  } else if (TS.phase === "play") {
+    h += '<p class="muted" style="margin-bottom:8px;font-size:calc(13.5px * var(--fs))">' + (i && i.nick ? esc(i.nick) : "익명 참가자") + " 도전 중 · 떨어지는 단어를 치고 Enter</p>" +
+      '<div id="tgRoot" style="max-width:420px;margin:0 auto"></div>';
+  } else if (TS.phase === "done") {
+    var r = TS.res || {};
+    h += '<div class="cho-box" style="padding:22px 16px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' + (r.why === "time" ? "TIME UP" : "GAME OVER") + " · " + esc(i && i.nick ? i.nick : "익명 참가자") + "</p>" +
+      '<p class="disp" style="font-size:48px;color:var(--mint);margin-top:6px">' + Number(r.score || 0).toLocaleString() + "</p>" +
+      '<p class="hint">터뜨린 단어 ' + (r.hits || 0) + "개 · 최고 콤보 " + (r.combo || 0) + " · 정확도 " + (r.acc || 0) + "%</p>" +
+      '<p style="margin-top:8px;font-size:calc(16px * var(--fs));font-weight:800">' +
+      (TS.send === "sending" ? "기록 저장 중..." : TS.send === "ok" ? "현장 순위 " + (TS.me ? TS.me.rank + "위" : "-") + " · 저장 완료" :
+        "저장 실패 · " + esc(TS.why === "net" ? "서버 응답 없음" : TS_WHY[TS.why] || TS.why)) + "</p></div>" +
+      (TS.send === "fail" && TS.why !== "dup" ? '<button class="btn mint mb8" style="padding:15px" onclick="tsSend()">다시 보내기</button>' : "") +
+      (TS.send === "ok" && TS.rank ? '<div class="card mb12"><b style="color:var(--hi)">현장 상위 5</b>' + typeRankHtml({ top: TS.rank.top || [] }) + "</div>" : "") +
+      '<button class="btn ' + (TS.send === "ok" || TS.why === "dup" ? "mint" : "line") + '" style="padding:15px" onclick="tsReset()">다음 참가자</button>';
+  }
+  return h;
+}
+
+/* ── 1F TV 순위판 · 로그인 없음 · 앱 상위 10 ↔ 현장 상위 5 번갈아(12초) · 닉네임만 · 30초마다 새로 받음 ── */
+var TYTV = { app: null, site: null, show: "app", pullT: 0, flip: null };
+function tyTvPull() {
+  if (testMode()) { TYTV.app = typeTestTop("app"); TYTV.site = typeTestTop("site"); return; }
+  if (Date.now() - TYTV.pullT < 25000) return;
+  TYTV.pullT = Date.now();
+  ["app", "site"].forEach(function (m) {
+    beCall({ action: "type_rank", mode: m, n: m === "site" ? 5 : 10 }, function (r) { if (r && r.ok) { TYTV[m] = r; if (App.current === "wall_type") App.render(); } }, function () {});
+  });
+}
+function tyTvTick() {
+  if (App.current !== "wall_type") { clearInterval(TYTV.flip); TYTV.flip = null; return; }
+  TYTV.show = TYTV.show === "app" ? "site" : "app";
+  tyTvPull();
+  App.render();
+}
+function tyTvRows(r, n) {
+  var top = (r && r.top) || [], h = "";
+  for (var i = 0; i < n; i++) {
+    var x = top[i];
+    h += '<div class="tytv-row' + (i < 3 && x ? " top" : "") + '"><span class="no">' + (i + 1) + '</span><span class="nm">' + (x ? esc(x.name) : '<span style="opacity:0.35">도전을 기다려요</span>') + '</span><span class="sc">' + (x ? Number(x.score).toLocaleString() : "") + "</span></div>";
+  }
+  return h;
+}
+
+/* 시상 화면 데이터 · 관리코드 type_result · 데모는 테스트 순위 + 예시 이름 */
+var TYAW = { data: null, t: 0 };
+function tyAwardPull(force) {
+  if (!BE.on) {
+    if (!TYAW.data) TYAW.data = { demo: true, win: ["12:00~13:00", "15:00~16:00"], top: typeTestTop("site").top.map(function (x, i) {
+      return { rank: x.rank, nick: x.name, name: ["예시일", "예시이", "예시삼", "예시사", "예시오"][i] || "", dept: "데모부문", emp: "9900" + i, score: x.score, acc: 97 - i, hits: 50 - i * 3 };
+    }) };
+    return;
+  }
+  if (!force && Date.now() - TYAW.t < 20000) return;
+  TYAW.t = Date.now();
+  beCall({ action: "type_result", key: admKey() }, function (r) {
+    if (r && r.ok) { TYAW.data = r; if (App.current === "type_award") App.render(); }
+    else toast(r && r.reason === "auth" ? "관리코드 불일치 · 콘솔에 다시 로그인하세요" : "결과를 불러오지 못했습니다");
+  }, function () { toast("서버 응답 없음"); });
+}
+function tyWinSave() {
+  var v = ((el("tyWin") || {}).value || "").replace(/\s+/g, "");
+  if (!/^\d{1,2}:\d{2}-\d{1,2}:\d{2}(,\d{1,2}:\d{2}-\d{1,2}:\d{2})*$/.test(v)) { toast("형식: 12:00-13:00,15:00-16:00"); return; }
+  if (!BE.on) { toast("데모 화면이라 저장하지 않았어요"); return; }
+  beCall({ action: "type_cfg", key: admKey(), win: v }, function (r) {
+    if (r && r.ok) { toast("결선 시간대 저장 · " + r.win); TYTV.pullT = 0; tyTvPull(); } else toast("저장하지 못했습니다 · " + ((r && r.reason) || ""));
+  }, function () { toast("서버 응답 없음"); });
 }
 
 /* ════════════════ v3.45 휴대폰 미니게임 공통 틀 (사용자 결정 260917 · 세 게임을 만들어 선호도 조사) ════════════════
@@ -7466,6 +7698,15 @@ function xitionRun(switchNow) {
     fr.style.width = "448px"; fr.style.maxWidth = "none"; fr.style.boxShadow = "none";
   }
 
+  /* v3.37 1F TV 순위판 · 로그인 없음 · 공개 순위(닉네임만)만 읽는다 */
+  if (/^#tv=type/i.test(location.hash)) {
+    splash.classList.add("gone");
+    el("frame").classList.remove("splash-mode");
+    el("app").hidden = false;
+    App.go("wall_type");
+    return;
+  }
+
   // 데모/캡처 훅: #demo=화면명 으로 열면 로그인·데이터 세팅 후 해당 화면으로 바로 진입 (스크린샷·시연용)
   var dm = location.hash.match(/^#demo(?:=(\w+))?/i);
   if (dm) {
@@ -7490,7 +7731,7 @@ function xitionRun(switchNow) {
     S.set("wq_attempts", [{ set: "wall1", score: 80, passed: true, attemptNo: 1, dept: "보상부문", ts: Date.now() }]);
     var target = dm[1] || "home";
     if (target === "home_quiz") target = "home";
-    if (["admin", "screen", "screen_survey", "screen_words", "wall_quiz", "wall_wave", "wall_live", "wall_metowe", "wall_tv"].indexOf(target) >= 0) S.set("admin_authed", true);
+    if (["admin", "screen", "screen_survey", "screen_words", "wall_quiz", "wall_wave", "wall_live", "wall_metowe", "wall_tv", "type_site", "type_award"].indexOf(target) >= 0) S.set("admin_authed", true);
     splash.classList.add("gone");
     el("frame").classList.remove("splash-mode");
     el("app").hidden = false;
