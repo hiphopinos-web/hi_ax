@@ -260,6 +260,20 @@
   .rc.past .pc, .rc.dim .pc { background: transparent; border-color: var(--dimln); color: #8A817B; }   /* 지나간·잠긴 행은 회색 테두리 */
   /* 내 일정 카드(오렌지 테두리) 위에서도 칩 테두리는 O25 그대로 둔다 · 360px 실측에서 답답해 보이지 않았다 */
   .rc .rt { flex: none; display: flex; align-items: center; }
+  /* v3.62 동시 진행 블록 · 한 카드 안에 두 트랙 (큰글씨는 .stack 으로 위아래) */
+  .rc.par { display: block; padding-bottom: 10px; }
+  .rc.par .rh { cursor: default; }
+  .par-g { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 0 2px; }
+  .par-g.stack { grid-template-columns: 1fr; }
+  .par-t { display: block; width: 100%; text-align: left; padding: 10px; border: 1px solid var(--dimln); border-radius: 14px; background: var(--white); }
+  .par-t .hd { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .par-t .hd b { font-size: calc(14.5px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.35; }
+  .par-t .it { display: block; margin-top: 6px; font-size: calc(13px * var(--fs)); color: var(--muted); font-weight: 700; line-height: 1.4; }
+  .par-t .it small { display: block; margin-top: 1px; font-size: calc(11.5px * var(--fs)); color: var(--faint); font-weight: 700; }
+  .par-t .nt { display: block; margin-top: 8px; font-size: calc(11.5px * var(--fs)); color: var(--acc2); font-weight: 700; }
+  .par-t.my { border-color: var(--acc2); background: var(--tint); }
+  .rc.par.past .par-t { background: var(--dim); border-color: var(--dimln); }
+  .rc.par.past .par-t .hd b, .rc.par.past .par-t .nt { color: var(--faint); }
   .rc .rt .st { font-size: calc(12.5px * var(--fs)); font-weight: 800; color: var(--acc2); }
   .rc .chev { flex: none; color: var(--faint); font-weight: 800; font-size: 11px; }
   .rc .chev.arw { font-size: 15px; }
@@ -988,9 +1002,9 @@ var TIMELINE = [
   /* always=1 (v3.18): 기간이 길어서가 아니라 「그 시간 안에 아무 때나 들르는」 참여 방식이라 상시 묶음.
      10F 오후 세션(내내 참석)·점심(시간대 구분 역할)은 시간표 유지 */
   { time: "13:00", end: "16:30", title: "AX 커피챗", short: "아이디어 제출자 매칭 · 30분 간격", place: "18F 라운지", desc: "아이디어 제출자 매칭 · 30분 간격", tag: "매칭제", always: 1 },
-  { time: "13:30", end: "15:00", title: "파트너사 강연 · AWS", short: "Agentic AI 시대의 일하는 방식 변화 · 구태훈 박사(AWS)", place: "17F 대강당", desc: "신청은 프로그램 탭", tag: "신청제" },
-  { time: "13:30", end: "16:30", title: "10F 실습형 세션 A~E", short: "사전 신청자 · 5개 세션 중 1개", place: "10F", desc: "사전 신청자 대상 · 세션별 장소는 프로그램 탭", tag: "사전 신청" },
-  { time: "15:10", end: "16:40", title: "파트너사 강연 · MS", short: "AI와 친해지기 · MS", place: "17F 대강당", desc: "신청은 프로그램 탭", tag: "신청제" },
+  { time: "13:30", end: "15:00", title: "파트너사 강연 · AWS", short: "Agentic AI 시대의 일하는 방식 변화 · 구태훈 박사(AWS)", place: "17F 대강당", desc: "신청은 프로그램 탭", tag: "신청제", par: 1 },
+  { time: "13:30", end: "16:30", title: "10F 실습형 세션 A~E", short: "사전 신청자 · 5개 세션 중 1개", place: "10F", desc: "사전 신청자 대상 · 세션별 장소는 프로그램 탭", tag: "사전 신청", par: 1 },
+  { time: "15:10", end: "16:40", title: "파트너사 강연 · MS", short: "AI와 친해지기 · MS", place: "17F 대강당", desc: "신청은 프로그램 탭", tag: "신청제", par: 1 },
   /* v3.50 사회자 순서 (사용자 확정 260917) · Outro 문항 기능 폐지 · 설문 참여 안내 → 17:00 Outro */
   { time: "16:45", end: "17:00", title: "설문 참여 안내", short: "오늘 한 판 설문 안내", place: "17F 대강당", desc: "60초 설문 · 스탬프 1개", tag: "자유 참석" },
   { time: "17:00", end: "17:30", title: "Outro · DAP 시상", short: "DAP 우수 성과자 시상 · 경품 추첨", place: "17F 대강당", desc: "DAP 우수 성과자 시상 · 경품 추첨 · 결과는 개별 안내", tag: "피날레" }
@@ -3187,6 +3201,39 @@ function rcTitle(o) {
 }
 function rcIcon(svg) { return '<span class="ico">' + svg + "</span>"; }
 /* 일정 행 = 공용 행 카드 + 좌측 두 줄 시간 뱃지 · cls: "" 기본 / " now" / " past" / " my" */
+/* ══ v3.62 오후 동시 진행 블록 (사용자 확정 260918) ══
+   일정 탭은 시간순이 기본이고, 이 카드 하나만 예외로 「같은 시간대 묶음」이다 (design.md).
+   왼쪽 = 17F 오후 파트너사 강연(신청) · 오른쪽 = 10F 실습형 세션(사전 신청자) · 커피챗·상담·포토부스는 상시 탭 몫이라 넣지 않는다.
+   큰글씨 모드에서는 두 칸이 깨지므로 위아래로 쌓고 「동시 진행」 묶음 표시를 유지한다. */
+var PAR_PM = {
+  time: "13:30", end: "16:40",
+  tracks: [
+    { fl: 17, place: "17F 대강당", nm: "17F 오후 강연", note: "신청 필요", ids: ["l1", "l2"],
+      items: [["파트너사 강연 · AWS", "13:30~15:00"], ["파트너사 강연 · MS", "15:10~16:40"]] },
+    { fl: 10, place: "10F", nm: "10F 실습형 세션", note: "사전 신청자", ids: [],
+      items: [["세션 A~E 중 1개", "13:30~16:30"]] }
+  ]
+};
+function parCardHtml(ph) {
+  var m0 = t2m(PAR_PM.time), m1 = t2m(PAR_PM.end), hm = new Date().getHours() * 60 + new Date().getMinutes();
+  var nowIdx = TIMELINE[NOW_INDEX] || null;
+  var now = ph === "live" && !!nowIdx && nowIdx.par;
+  var past = ph === "after" || (ph === "live" && t2m(nowIdx ? nowIdx.time : "00:00") > m1);
+  var nowBlack = now && isBlack("now");
+  var stack = fsGet() > 1;   /* 큰글씨 = 위아래로 */
+  var tracks = PAR_PM.tracks.map(function (tr) {
+    var mine = tr.ids.some(function (id) { return !!sessMine(id); });
+    return '<button class="par-t' + (mine ? " my" : "") + '" type="button" onclick="progGoFl(' + tr.fl + ')">' +
+      '<span class="hd"><b>' + esc(tr.nm) + "</b>" + (mine ? '<span class="badge mint">내 일정</span>' : "") + "</span>" +
+      tr.items.map(function (it) { return '<span class="it">' + esc(it[0]) + "<small>" + esc(it[1]) + "</small></span>"; }).join("") +
+      '<span class="nt">' + esc(tr.note) + "</span></button>";
+  }).join("");
+  return '<div class="rc par' + (nowBlack ? " now" : past ? " past" : "") + '">' +
+    '<div class="rh"><span class="ls">' + tokBadge(PAR_PM.time, nowBlack ? "act" : past ? "dim" : "", "~" + PAR_PM.end) + "</span>" +
+    '<span class="bd"><span class="tr"><b class="tt">동시 진행</b><span class="bgs">' +
+    (now ? '<span class="badge ' + (nowBlack ? "ink" : "mint") + '">진행 중</span>' : "") + "</span></span></span></div>" +
+    '<div class="par-g' + (stack ? " stack" : "") + '">' + tracks + "</div></div>";
+}
 function schedRow(key, cls, tok, t0, t1, titleHtml, bodyHtml, subHtml, place, badges) {
   var open = !!SCHED.open[key];
   return rcHtml({ cls: cls, onclick: "schedToggle('" + key + "')", left: tokBadge(t0, tok, t1 ? "~" + t1 : null),
@@ -3845,9 +3892,17 @@ var Views = {
     var mineRows = [];   /* 내 일정 = [분, html] */
     /* v3.6 상태 위계: 지나간 행 = 회색 · 진행 중 = 검정 · 기준은 evPhase(데모·당일 모두 NOW_INDEX 포인터) */
     var ph = evPhase();
+    var parDone = false;
     TIMELINE.forEach(function (t, i) {
       var body = '<p class="ds">' + esc(t.desc) + "</p>";   /* v3.44 장소는 칩으로 */
       if (t.always) return;   /* v3.21 상시 항목은 상시 프로그램 탭 몫 */
+      /* v3.62 오후는 17F 강연과 10F 세션이 같은 시간에 돈다 · 시간순 목록에 따로 늘어놓으면 동시 진행인 줄 모른다 → 한 카드 두 트랙 */
+      if (t.par) {
+        if (parDone) return;
+        parDone = true;
+        rows.push([t2m(PAR_PM.time), parCardHtml(ph)]);
+        return;
+      }
       var now = ph === "live" && i === NOW_INDEX;
       var past = ph === "after" || (ph === "live" && i < NOW_INDEX);
       /* v3.25 · 진행 중이 검정을 못 받으면 검정 링·뱃지를 빼고 옅은 주황 뱃지 + 「진행 중」 주황 뱃지로 낮춘다 */
