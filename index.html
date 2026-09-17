@@ -780,6 +780,11 @@
   .tytv .tytv-row .sc { flex: none; font-family: var(--disp); text-align: right; }
   .tytv .tytv-foot { margin-top: 14px; font-size: 15px; opacity: 0.6; line-height: 1.6; }
   /* v3.50 AX 올림픽 · 허브 · 메달 */
+  /* v3.60 보너스 칸 · 본줄과 점선으로 갈라 둔다 · 6개 전에는 눈에 띄지 않게 */
+  .rail .rb .gap { position: absolute; top: -6px; bottom: -6px; width: 0; border-left: 2px dotted var(--line); }
+  .rail .mk.bonus { border-style: dashed; }
+  .rail .lbls span.bonus { color: var(--faint); }
+  .rail .lbls span.bonus.on { color: var(--acc2); }
   .oly-hub { margin-top: 10px; }
   .p3-go { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
   /* v3.50C AX 한 줄 · 검정 무대 위 한 줄 */
@@ -955,8 +960,13 @@ var REWARD_LADDER = [
   { n: 7, nm: "사후 추첨 응모 4장", d: "자동 응모" }
 ];
 /* v3.33 · 칸은 8개 · v3.39 보상은 7개에서 끝 (3개 룰렛 · 4~7개 응모 1~4장) · 8번째는 다른 칸 대신 채울 수 있는 선택지 */
-var STAMP_TOTAL = 8, REWARD_CAP = 7;
-var STAMP_DENOM = REWARD_CAP;   /* v3.49 화면에 보이는 분모(레일 헤더 · 완료 팝) 한 곳 · 7 또는 8 사용자 결정 대기 · 여기만 고치면 앱 전체가 바뀐다 */
+/* v3.60 (사용자 확정 260918) 스탬프는 6개가 끝 · 그다음 1개는 보너스(응모권 1장 더) · 8번째 카드는 빈칸을 채우는 다른 길일 뿐 보상이 없다.
+   화면 분모·보상 계산·서버 발급이 전부 이 상수들에서 나온다 (앱 STAMP_DENOM = 서버 STAMP_DENOM). */
+var STAMP_TOTAL = 8;            /* 카드 수 */
+var STAMP_DENOM = 6;            /* 화면 분모 · 레일 헤더 · 완료 팝 */
+var STAMP_BONUS = 7;            /* 보너스 칸 · 여기까지가 보상 계산 상한 */
+var RAFFLE_MAX = 4;             /* 응모권 최대 */
+var REWARD_CAP = STAMP_BONUS;
 /* 서버가 준 stamps 배열에는 정의 밖 id(구 p6·p8, 계단 p9 등)가 남아 있을 수 있다.
    표시·보상 계산은 전부 이 함수로 센다. */
 function stampCount() {
@@ -964,7 +974,8 @@ function stampCount() {
     return STAMPS.some(function (s) { return s.id === id; });
   }).length;
 }
-function raffleTickets(n) { return n >= 7 ? 4 : n >= 6 ? 3 : n >= 5 ? 2 : n >= 4 ? 1 : 0; }
+/* 3개 = 룰렛(응모권 0) · 4·5·6 = 1·2·3장 · 7 = 보너스 4장 · 8 이상도 4장 */
+function raffleTickets(n) { return Math.max(0, Math.min(RAFFLE_MAX, Math.min(REWARD_CAP, n) - 3)); }
 var TIMELINE = [
   /* v3.29 공식 공지 붙임1·2(260917) 기준 · 순서 = 시작 시각순 · NOW_INDEX(데모 1 = 기조연설) 가 이 순서를 가리킨다 */
   { time: "09:30", end: "09:40", title: "Intro · 개회", short: "CEO · AX 선포 및 Festival 개최 안내", place: "17F 대강당", desc: "CEO · AX 선포 및 Festival 개최 안내", tag: "자유 참석" },
@@ -1568,7 +1579,7 @@ function checkRewards() {
   var t = raffleTickets(n);
   if (t > S.get("raffle_seen", 0)) {
     S.set("raffle_seen", t);
-    notice({ key: "rw:raffle", title: "추첨 응모권 " + t + "장", body: "자동 응모 · 결과는 행사 후 개별 안내", go: "passport" });
+    notice({ key: "rw:raffle", title: (n >= STAMP_BONUS ? "보너스 · " : "") + "추첨 응모권 " + t + "장", body: "자동 응모 · 결과는 행사 후 개별 안내", go: "passport" });
   }
 }
 /* 앱 안 행동으로 붙는 3종(미니게임·아이디어·전시 QR 퀴즈) 전용.
@@ -3320,7 +3331,8 @@ function spNext() {
   if (!sd) { SPOP.cur = null; return; }
   delete SPOP.ids[sd.id];
   var rm = rgReduced(), n = stampCount();
-  var hint = n === 3 ? "룰렛 1회 열림" : n >= 4 && n <= REWARD_CAP ? "추첨 응모권 " + raffleTickets(n) + "장" : "";
+  var hint = n === 3 ? "룰렛 1회 열림" : n === STAMP_BONUS ? "보너스 · 추첨 응모권 " + raffleTickets(n) + "장" :
+    n >= 4 && n <= STAMP_DENOM ? "추첨 응모권 " + raffleTickets(n) + "장" : "";
   var fr = el("frame").getBoundingClientRect(), fw = Math.min(fr.width || innerWidth, innerWidth);
   var S0 = Math.round(Math.min(320, fw * 0.6)), cx = Math.round(fr.width ? fr.left + fr.width / 2 : innerWidth / 2), cy = Math.round(innerHeight * 0.4);
   var d = document.createElement("div");
@@ -3516,7 +3528,7 @@ function stampCardsHtml(st, newly) {
     (st.indexOf(s.id) >= 0 ? done : todo).push([s, e[1]]);
   });
   var next = todo.length ? todo[0][0].id : null;   /* 다음 추천 = 미완료 그룹 첫 카드 */
-  var out = '<div class="sect" style="margin-top:14px"><b>스탬프 ' + STAMPS.length + '종</b><span>' + STAMP_TOTAL + '개 중 ' + REWARD_CAP + '개를 모으면 보상 끝</span></div>';
+  var out = '<div class="sect" style="margin-top:14px"><b>스탬프 ' + STAMPS.length + '종</b><span>' + STAMP_DENOM + '개가 끝 · 그다음 1개는 보너스</span></div>';
   done.forEach(function (e) { out += scardHtml(e[0], true, false, newly); });
   var cap = null;
   todo.forEach(function (e) {
@@ -3537,28 +3549,33 @@ var RAIL_ICO = {
 function railHtml(n, glow, dispN, home) {
   if (dispN == null) dispN = n;
   var shown = Math.min(STAMP_DENOM, dispN);
-  n = Math.min(REWARD_CAP, n); dispN = Math.min(REWARD_CAP, dispN);   /* v3.39 · 8칸 중 7개면 보상 끝 */
+  n = Math.min(REWARD_CAP, n); dispN = Math.min(REWARD_CAP, dispN);
   var out0 = S.get("roulette_out", false);
   var used = S.get("roulette_used", false);
-  var marks = [[3, "룰렛", "ppRouletteOpen()", "wheel", used ? "룰렛 사용 완료" : "룰렛 1회"], [4, "1장", "ppDrawOpen()", "ticket", "추첨 응모 1장"], [5, "2장", "ppDrawOpen()", "ticket", "추첨 응모 2장"], [6, "3장", "ppDrawOpen()", "ticket", "추첨 응모 3장"], [7, "4장", "ppDrawOpen()", "ticket", "추첨 응모 4장"]];
-  var nextAt = n < REWARD_CAP ? Math.max(3, n + 1) : 0;   /* 다음 목표 마커 하나만 강조 */
+  /* v3.60 · 3~6 이 본줄, 7 은 점선 뒤 「보너스」 · 6 을 채우기 전에는 보너스를 강조하지 않는다 */
+  var marks = [[3, "룰렛", "ppRouletteOpen()", "wheel", used ? "룰렛 사용 완료" : "룰렛 1회"], [4, "1장", "ppDrawOpen()", "ticket", "추첨 응모 1장"], [5, "2장", "ppDrawOpen()", "ticket", "추첨 응모 2장"], [6, "3장", "ppDrawOpen()", "ticket", "추첨 응모 3장"], [STAMP_BONUS, "보너스", "ppDrawOpen()", "ticket", "보너스 · 추첨 응모 " + RAFFLE_MAX + "장"]];
+  var RAIL_MAIN = 80;   /* 본줄이 차지하는 폭(%) · 나머지는 보너스 칸 */
+  var railPos = function (k) { return k <= STAMP_DENOM ? k / STAMP_DENOM * RAIL_MAIN : 94; };
+  var nextAt = n < STAMP_DENOM ? Math.max(3, n + 1) : n < REWARD_CAP ? REWARD_CAP : 0;   /* 다음 목표 마커 하나만 강조 */
   var mk = "", lb = "";
   [1, 2].forEach(function (k) {
-    mk += '<span class="tick' + (n >= k ? " on" : "") + '" style="left:' + (k / REWARD_CAP * 100).toFixed(1) + '%"></span>';
+    mk += '<span class="tick' + (n >= k ? " on" : "") + '" style="left:' + railPos(k).toFixed(1) + '%"></span>';
   });
   marks.forEach(function (m) {
-    var pos = (m[0] / REWARD_CAP * 100).toFixed(1) + "%";
+    var pos = railPos(m[0]).toFixed(1) + "%";
     /* 사용 가능해진 룰렛(3 도달·미사용)은 검정 = 지금 행동할 것 (v3.6 상태 위계) · 검정을 못 받으면 오렌지 채움 + 틴트 링(avail) */
-    var st = m[0] === 3 && n >= 3 && !used ? (isBlack("roulette") ? " act" : " on avail") : n >= m[0] ? " on" : m[0] === nextAt ? " next" : "";
-    mk += '<button class="mk' + st + (m[0] === 3 && glow ? " glow" : "") + '" style="left:' + pos + '" onclick="' + m[2] + '" aria-label="스탬프 ' + m[0] + "개 · " + m[4] + '">' +
+    var bonus = m[0] === STAMP_BONUS;
+    var st = m[0] === 3 && n >= 3 && !used ? (isBlack("roulette") ? " act" : " on avail") : n >= m[0] ? " on" : m[0] === nextAt && !(bonus && n < STAMP_DENOM) ? " next" : "";
+    mk += '<button class="mk' + st + (bonus ? " bonus" : "") + (m[0] === 3 && glow ? " glow" : "") + '" style="left:' + pos + '" onclick="' + m[2] + '" aria-label="스탬프 ' + m[0] + "개 · " + m[4] + '">' +
       RAIL_ICO[m[3]] + '<span class="no">' + m[0] + "</span></button>";
-    lb += '<span class="' + (n >= m[0] ? "on" : m[0] === nextAt ? "next" : "") + '" style="left:' + pos + '">' + m[1] + "</span>";
+    lb += '<span class="' + (n >= m[0] ? "on" : m[0] === nextAt && !(bonus && n < STAMP_DENOM) ? "next" : "") + (bonus ? " bonus" : "") + '" style="left:' + pos + '">' + m[1] + "</span>";
   });
   return '<div class="rail">' +
     '<div class="hd"><span class="nm">스탬프 보상</span><span class="cnt"><span id="ppCnt">' + shown + "</span><small> / " + STAMP_DENOM + "</small></span></div>" +
-    '<div class="rb"><i style="width:' + Math.min(100, n / REWARD_CAP * 100) + '%"></i>' + mk + "</div>" +
+    '<div class="rb"><i style="width:' + railPos(Math.min(n, REWARD_CAP)).toFixed(1) + '%"></i><span class="gap" style="left:' + RAIL_MAIN + '%"></span>' + mk + "</div>" +
     '<div class="lbls">' + lb + "</div>" +
-    (out0 ? '<p class="cap">룰렛 소진</p>' : "") +
+    (out0 ? '<p class="cap">룰렛 소진</p>' : dispN >= STAMP_BONUS ? '<p class="cap">보너스까지 완료 · 응모권 ' + RAFFLE_MAX + '장</p>' :
+      dispN >= STAMP_DENOM ? '<p class="cap">' + STAMP_DENOM + '개 완성 · 보너스 한 칸 남음</p>' : "") +
     raffleNumsHtml(n) +
     "</div>";
 }
@@ -3606,7 +3623,7 @@ function ppDrawOpen() {
     tickets = '<div class="tkts">' + chips + "</div>";
   }
   modalOpen('<b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">사후 추첨 응모</b>' +
-    '<p class="muted" style="margin-top:8px;font-size:calc(14.5px * var(--fs));line-height:1.7">스탬프 4개 1장 · 5개 2장 · 6개 3장 · 7개 4장 · 자동 응모<br>지금 <b style="color:var(--hi)">' + t + '장</b></p>' +
+    '<p class="muted" style="margin-top:8px;font-size:calc(14.5px * var(--fs));line-height:1.7">4개 1장 · 5개 2장 · 6개 3장 · 보너스 ' + RAFFLE_MAX + '장 · 자동 응모<br>지금 <b style="color:var(--hi)">' + t + '장</b></p>' +
     tickets +
     '<p class="muted" style="margin-top:8px;font-size:calc(13.5px * var(--fs));line-height:1.65">17:00 Outro 추첨 · 결과는 행사 후 개별 안내</p>' +
     '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>');
