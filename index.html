@@ -1069,17 +1069,64 @@ var NOTICE_TEMPLATES = [
   ["곧 오늘 한 판 설문", "17:00 Outro 전에 앱 홈에서 오늘 한 판 설문(60초)에 참여해 주세요. 제출하면 스탬프 1개!"],
   ["1F 전시, 지금 한산해요", "3분 코스로 둘러보고 패스포트 한 칸 채워가세요."]
 ];
-/* 「ME to WE 기억력」 라운드 · v3.46 · 여기 한 곳 (사용자 확정 대상 초안)
-   제작 규칙: ①확정 문서 문장만(슬로건 · 3개년 로드맵) ②뜻 한 줄은 10초 안에 읽히는 쉬운 말
-   ③미끼는 정답과 헷갈리는 비슷한 말 금지(혁신 자리에 효율 같은 것) · 다른 라운드의 타일이나 뚜렷이 무관한 말만 */
+/* 「ME to WE 기억력」 문제 은행 · v3.57 · 여기 한 곳 (사용자 확정 대상)
+   한 판 = MEM_PLAY 문항을 무작위로 뽑는다(문장 2 + 순서 1) · 최근에 나온 문항(mem_seen)은 먼저 빼고, 다 돌면 초기화 ·
+   한 판 안에 같은 문항 없음 · 타일 순서는 매번 섞고, 미끼는 문항마다 후보 pool 3~5개에서 무작위.
+   제작 규칙: ①확정 문서 문장만(슬로건 · 3개년 로드맵 · 공식 공지 붙임1·2 프로그램 제목·시간·인원 · DAP · HIDI-Q · AX NOW)
+   ②「AX : 」 접두 금지 ③앱 운영 용어(스탬프·룰렛·응모권·체크인) 금지
+   ④뜻 한 줄(mean)은 10초 안에 읽히는 쉬운 말 ⑤미끼는 정답과 비슷한 말 금지(정답 단어와 겹치면 안 된다) */
 var MEM_ROUNDS = [
-  { kind: "sentence", words: ["ME", "to", "WE"], decoys: ["공감과 참여", "2028"],
+  { id: "sl1", kind: "sentence", words: ["ME", "to", "WE"],
+    pool: ["공감과 참여", "2028", "커피챗", "포토 부스", "브로슈어"],
     mean: "나(ME)의 업무 혁신이 우리(WE) 모두의 변화가 됩니다" },
-  { kind: "sentence", words: ["나의", "업무", "혁신,", "우리", "회사의", "AX가", "되다"], decoys: ["2027", "확산과 체화"],
+  { id: "sl2", kind: "sentence", words: ["나의", "업무", "혁신,", "우리", "회사의", "AX가", "되다"],
+    pool: ["2027", "확산과 체화", "대시보드", "브리핑", "포토 부스"],
     mean: "한 사람이 바꾼 일하는 방식이 모여 회사 전체의 AX가 됩니다" },
-  { kind: "order", pairs: [["2026", "공감과 참여"], ["2027", "확산과 체화"], ["2028", "혁신과 연결"]], decoys: ["ME to WE"],
-    mean: "올해는 함께 해 보는 것부터 시작해요 · 내년엔 넓히고, 2028년엔 서로 잇습니다" }
+  { id: "kn1", kind: "sentence", words: ["09:40", "기조연설", "AI", "환경과", "전략"],
+    pool: ["포토 부스", "커피챗", "브로슈어", "1층", "알림 봇"],
+    mean: "오전 기조연설은 AI 환경과 전략 이야기입니다 (CTO)" },
+  { id: "rd1", kind: "sentence", words: ["10:30", "내부", "강연", "현대해상", "AX", "로드맵"],
+    pool: ["포토 부스", "커피챗", "대시보드", "알림 봇", "브로슈어"],
+    mean: "내부 강연은 우리 회사 AX 로드맵을 소개합니다 (디지털전략본부장)" },
+  { id: "aw1", kind: "sentence", words: ["AWS", "Agentic", "AI", "시대의", "일하는", "방식", "변화"],
+    pool: ["커피챗", "포토 부스", "62명", "브리핑", "대시보드"],
+    mean: "파트너사 AWS 강연 제목입니다" },
+  { id: "ms1", kind: "sentence", words: ["MS", "AI와", "친해지기"],
+    pool: ["포토 부스", "커피챗", "브로슈어", "62명", "파이썬"],
+    mean: "파트너사 MS 강연 제목입니다" },
+  { id: "ot1", kind: "sentence", words: ["17:00", "Outro", "DAP", "우수", "성과자", "시상"],
+    pool: ["커피챗", "포토 부스", "파이썬", "알림 봇", "브리핑"],
+    mean: "마지막 순서는 DAP 우수 성과자 시상입니다" },
+  { id: "fl1", kind: "sentence", words: ["1층", "AX", "전시·체험존", "자유", "관람"],
+    pool: ["파이썬", "알림 봇", "62명", "브로슈어", "09:40"],
+    mean: "1층 전시·체험존은 누구나 자유롭게 볼 수 있어요" },
+  { id: "hq1", kind: "sentence", words: ["AX", "NOW", "사내", "LLM", "서비스", "HIDI-Q"],
+    pool: ["커피챗", "브로슈어", "62명", "10:30", "대시보드"],
+    mean: "AX NOW에서 사내 LLM 서비스 HIDI-Q를 체험합니다" },
+  { id: "cc1", kind: "sentence", words: ["18층", "AX", "커피챗", "소규모", "아이디어", "논의"],
+    pool: ["포토 부스", "파이썬", "62명", "09:30", "브리핑"],
+    mean: "18층 커피챗은 작은 모임에서 아이디어를 나눕니다" },
+  { id: "tn1", kind: "sentence", words: ["10층", "실습형", "세션", "사전", "신청자"],
+    pool: ["포토 부스", "커피챗", "17:00", "브리핑", "알림 봇"],
+    mean: "10층 실습형 세션은 사전 신청자가 참여합니다" },
+  { id: "sd1", kind: "sentence", words: ["세션", "D", "Claude", "Code", "바이브", "코딩"],
+    pool: ["커피챗", "포토 부스", "62명", "브리핑", "09:30"],
+    mean: "세션 D는 Claude Code로 바이브 코딩을 실습합니다 (AWS)" },
+  { id: "or1", kind: "order", pairs: [["2026", "공감과 참여"], ["2027", "확산과 체화"], ["2028", "혁신과 연결"]],
+    pool: ["ME to WE", "커피챗", "포토 부스", "브로슈어"],
+    mean: "올해는 함께 해 보는 것부터, 내년엔 넓히고, 2028년엔 서로 잇습니다" },
+  { id: "or2", kind: "order", pairs: [["09:30", "Intro"], ["09:40", "기조연설"], ["10:30", "내부 강연"]],
+    pool: ["Outro", "커피챗", "포토 부스", "실습형 세션"],
+    mean: "오전 17층 순서입니다" },
+  { id: "or3", kind: "order", pairs: [["1층", "AX 전시·체험존"], ["10층", "실습형 세션"], ["17층", "대강당 강연"], ["18층", "AX 커피챗"]],
+    pool: ["기조연설", "포토 부스", "브리핑", "알림 봇"],
+    mean: "층마다 무엇을 하는지입니다" },
+  { id: "or4", kind: "order", pairs: [["세션 A", "62명"], ["세션 B", "최대 32명"], ["세션 C", "20명"]],
+    pool: ["커피챗", "포토 부스", "기조연설", "알림 봇"],
+    mean: "10층 세션별 인원입니다" }
 ];
+/* 한 판 구성 · 문장 2 + 순서 1 · 최근 mem_seen 개까지 기억해 먼저 뺀다 */
+var MEM_PLAY = { sentence: 2, order: 1 }, MEM_SEEN_MAX = 9, MEM_DECOY = { sentence: 2, order: 1 };
 var MEM_SHOW = 6, MEM_SHOW_FAST = 3, MEM_SEC = 60, MEM_PEN = 2, MEM_PT = 10, MEM_PT_ROUND = 30, MEM_PT_SEC = 5, MEM_STAR3 = 450, MEM_STAR2 = 300;
 /* ═══ 타자 게임 단어 풀 · 여기 한 곳 · v3.50C 확정 문서 어휘만 (슬로건 · 3개년 로드맵 · 공식 공지 붙임1·2 프로그램 제목·내용 · DAP) ═══
    문서에 없는 앱 운영 용어(스탬프·룰렛·응모권·체크인 등)는 뺐다 · 공백이 든 말은 판정이 어려워 붙여 쓴다 · 영문은 모바일 자판 전환 부담으로 3개만.
@@ -7503,15 +7550,38 @@ function gwStop() {
   if (GW.nextT) { clearTimeout(GW.nextT); GW.nextT = null; }
   GW.on = false;
 }
+/* v3.57 · 한 판 문항 뽑기 · 최근에 나온 것부터 빼고, 후보가 떨어지면 그 종류만 초기화(은행 한 바퀴) · 한 판 안 중복 없음 · 쉬운 것부터(정답 단어 수 오름차순) */
+function gwPick() {
+  var seen = S.get("mem_seen", []) || [], out = [];
+  Object.keys(MEM_PLAY).forEach(function (kind) {
+    var all = MEM_ROUNDS.filter(function (R) { return R.kind === kind; });
+    for (var i = 0; i < MEM_PLAY[kind]; i++) {
+      var left = all.filter(function (R) { return out.indexOf(R) < 0 && seen.indexOf(R.id) < 0; });
+      if (!left.length) left = all.filter(function (R) { return out.indexOf(R) < 0; });   /* 한 바퀴 다 돌았으면 초기화 */
+      if (!left.length) break;
+      out.push(left[Math.floor(Math.random() * left.length)]);
+    }
+  });
+  out.sort(function (a, b) { return gwAnswer(a).length - gwAnswer(b).length; });
+  S.set("mem_seen", seen.concat(out.map(function (R) { return R.id; })).slice(-MEM_SEEN_MAX));
+  return out;
+}
+/* 미끼 · 문항마다 후보 3~5개에서 무작위 · 정답 단어와 겹치는 후보는 애초에 넣지 않지만 한 번 더 거른다 */
+function gwDecoys(R) {
+  var ans = gwAnswer(R);
+  var cand = (R.pool || []).filter(function (w) { return ans.indexOf(w) < 0; });
+  return shuf(cand).slice(0, MEM_DECOY[R.kind] || 2);
+}
 function gwStart(fast) {
   gwStop();
   SFX.site = false;
-  GW = { on: true, fast: !!fast, r: 0, phase: "show", score: 0, combo: 0, maxCombo: 0, wrongs: 0, left: MEM_SEC, placed: [], tiles: [], timer: null, nextT: null, last: 0, done: 0 };
+  GW = { on: true, fast: !!fast, r: 0, phase: "show", score: 0, combo: 0, maxCombo: 0, wrongs: 0, left: MEM_SEC, placed: [], tiles: [], timer: null, nextT: null, last: 0, done: 0, rounds: gwPick() };
   gwShow();
 }
+function gwRound() { return (GW.rounds || [])[GW.r]; }
 function gwAnswer(R) { return R.kind === "order" ? R.pairs.map(function (p) { return p[1]; }) : R.words; }
 function gwShow() {
-  var R = MEM_ROUNDS[GW.r], sec = GW.fast ? MEM_SHOW_FAST : MEM_SHOW;
+  var R = gwRound(), sec = GW.fast ? MEM_SHOW_FAST : MEM_SHOW;
   GW.phase = "show";
   var root = el("gwRoot"); if (!root) return;
   root.innerHTML = gwHud() +
@@ -7529,9 +7599,9 @@ function gwSentHtml(R) {
 function gwRecall() {
   if (!GW.on || GW.phase !== "show") return;
   if (GW.nextT) { clearTimeout(GW.nextT); GW.nextT = null; }
-  var R = MEM_ROUNDS[GW.r];
+  var R = gwRound();
   GW.phase = "recall"; GW.placed = [];
-  GW.tiles = shuf(gwAnswer(R).concat(R.decoys)).map(function (w) { return { w: w, used: false }; });
+  GW.tiles = shuf(gwAnswer(R).concat(gwDecoys(R))).map(function (w) { return { w: w, used: false }; });   /* v3.57 타일 순서·미끼 매번 새로 */
   GW.last = Date.now();
   if (!GW.timer) GW.timer = setInterval(gwTick, 250);
   gwPaint();
@@ -7546,7 +7616,7 @@ function gwTick() {
 function gwHud() {
   return '<div class="row" style="justify-content:flex-end;margin:-6px 0 4px">' + sndBtnHtml(false) + "</div>" +
     '<div class="game-hud">' +
-    '<div class="hud"><div class="v">' + (GW.r + 1) + "/" + MEM_ROUNDS.length + '</div><div class="l">라운드</div></div>' +
+    '<div class="hud"><div class="v">' + (GW.r + 1) + "/" + GW.rounds.length + '</div><div class="l">라운드</div></div>' +
     '<div class="hud"><div class="v" id="gwTime">' + Math.ceil(GW.left) + '</div><div class="l">남은 시간(초)</div></div>' +
     '<div class="hud"><div class="v" id="gwScore">' + GW.score + '</div><div class="l">점수' + (GW.combo >= 2 ? " · 연속 " + GW.combo : "") + "</div></div></div>";
 }
@@ -7561,9 +7631,9 @@ function gwSlotsHtml(R, done) {
 }
 function gwPaint() {
   var root = el("gwRoot"); if (!root) return;
-  var R = MEM_ROUNDS[GW.r];
+  var R = gwRound();
   root.innerHTML = gwHud() +
-    '<div class="mem-stage recall"><p class="who">ROUND ' + (GW.r + 1) + " · " + (R.kind === "order" ? "연도에 맞게 순서대로 누르기" : "순서대로 눌러 문장 만들기") + "</p>" + gwSlotsHtml(R, false) + "</div>" +
+    '<div class="mem-stage recall"><p class="who">ROUND ' + (GW.r + 1) + " · " + (R.kind === "order" ? "왼쪽에 맞게 순서대로 누르기" : "순서대로 눌러 문장 만들기") + "</p>" + gwSlotsHtml(R, false) + "</div>" +
     '<div class="lgrid mem-tiles' + (R.kind === "order" ? " two" : "") + '">' + GW.tiles.map(function (t, i) {
       return '<button class="ltile' + (t.used ? " used" : "") + '" id="gt' + i + '" ' + (t.used ? "disabled" : 'onclick="gwTap(' + i + ')"') + ">" + esc(t.w) + "</button>";
     }).join("") + "</div>" +
@@ -7571,7 +7641,7 @@ function gwPaint() {
 }
 function gwTap(i) {
   if (!GW.on || GW.phase !== "recall") return;
-  var R = MEM_ROUNDS[GW.r], ans = gwAnswer(R), t = GW.tiles[i];
+  var R = gwRound(), ans = gwAnswer(R), t = GW.tiles[i];
   if (!t || t.used) return;
   if (t.w === ans[GW.placed.length]) {
     t.used = true; GW.placed.push(i);
@@ -7599,11 +7669,11 @@ function gwUnplace(k) {
   gwPaint();
 }
 function gwRoundDone() {
-  var R = MEM_ROUNDS[GW.r];
+  var R = gwRound();
   GW.phase = "done"; GW.done++;
   GW.score += MEM_PT_ROUND;
   var root = el("gwRoot"); if (!root) return;
-  var last = GW.r >= MEM_ROUNDS.length - 1;
+  var last = GW.r >= GW.rounds.length - 1;
   root.innerHTML = gwHud() +
     '<div class="mem-stage done"><p class="who">ROUND ' + (GW.r + 1) + " · 완성 +" + MEM_PT_ROUND + "</p>" +
     (R.kind === "order" ? gwSlotsHtml(R, true) : '<p class="mem-sent">' + gwSentHtml(R) + "</p>") +
@@ -7618,7 +7688,7 @@ function gwRoundDone() {
 function gwNext() {
   if (GW.nextT) { clearTimeout(GW.nextT); GW.nextT = null; }
   if (!GW.on || GW.phase !== "done") return;
-  if (GW.r >= MEM_ROUNDS.length - 1) { gwFinish(); return; }
+  if (GW.r >= GW.rounds.length - 1) { gwFinish(); return; }
   GW.r++;
   gwShow();
 }
@@ -7642,7 +7712,7 @@ function gwFinish() {
     '<p class="disp" style="font-size:40px;color:var(--mint);margin-top:4px">' + GW.score.toLocaleString() + "</p>" +
     '<p class="next">문장 ' + GW.done + "개 완성 · 틀린 탭 " + GW.wrongs + "번 · 남은 시간 보너스 +" + bonus + "<br>최고 " + S.get("gw_best", 0).toLocaleString() + "점</p>" +
     '<p class="next" style="margin-top:6px">' + olyResultLine("word", GW.score) + "</p>" + "</div>" +
-    MEM_ROUNDS.map(function (R) {
+    GW.rounds.map(function (R) {
       return '<div class="card soft mb8"><p style="font-size:calc(15.5px * var(--fs));font-weight:800;color:var(--hi)">' + (R.kind === "order" ? R.pairs.map(function (p) { return esc(p[0] + " " + p[1]); }).join(" · ") : esc(R.words.join(" "))) + "</p>" +
         '<p class="muted" style="font-size:calc(13px * var(--fs));margin-top:3px">' + esc(R.mean) + "</p></div>";
     }).join("") +
