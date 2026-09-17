@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>AX Festival 2026 · ME to WE</title>
+<title>AX Festival 2026 · Me to We</title>
 <!-- 홈 화면에 추가 = 아이콘 한 번으로 실행 (설치·스토어 없음) -->
 <link rel="manifest" href="manifest.json">
 <script defer src="assets/axf_run.js"></script>
@@ -453,7 +453,7 @@
   .sg .sg-title { font-family: var(--disp); font-size: 22px; letter-spacing: 0.03em; }
   .sg .sg-sub { font-size: calc(12.5px * var(--fs)); font-weight: 700; letter-spacing: 0.1em; opacity: 0.55; margin-top: 2px; }
 
-  /* ME to WE 라이브 월 */
+  /* Me to We 라이브 월 */
   .mt-stage { position: relative; margin-top: 12px; border-radius: 20px; background: var(--ink); border: 0; overflow: hidden; height: 54vh; min-height: 330px; }
   .mt-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
   .mt-flash { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,126,49,0.12); opacity: 0; transition: opacity 0.5s; pointer-events: none; font-family: var(--disp); font-size: 25px; color: var(--mint-deep); letter-spacing: 0.04em; text-align: center; line-height: 1.35; }
@@ -470,8 +470,8 @@
   .mt-demo button { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.22); color: rgba(255,255,255,0.85); font-family: inherit; font-size: calc(14.5px * var(--fs)); font-weight: 800; padding: 8px 13px; border-radius: 999px; cursor: pointer; }
   .mt-demo button.on { background: var(--mint-deep); border-color: var(--mint-deep); color: var(--ink); }
   /* 홈 LIVE 섹션 · 미니 월 · 이벤트 현황 · 랭킹 · 혼잡도 */
-  /* ME to WE 월 카드 (이벤트 탭 전폭) */
-  /* ME to WE 월 카드(.wallcard)는 v3.1 폐지 · 월은 1F 사이니지 전용 */
+  /* Me to We 월 카드 (이벤트 탭 전폭) */
+  /* Me to We 월 카드(.wallcard)는 v3.1 폐지 · 월은 1F 사이니지 전용 */
   /* 홈 히어로는 v3.13 폐지 · 「지금·다음」은 나의 일정 첫 줄(tok 뱃지), 연출은 하단 광고판이 맡는다 */
   .bill { position: relative; height: 90px; border: 1px solid var(--dimln); border-radius: 20px; overflow: hidden; background: var(--white); margin-top: 8px; }   /* 360x740 한 화면 실측으로 90px */
   .bill canvas { width: 100%; height: 100%; display: block; }
@@ -642,7 +642,7 @@
     <canvas id="kvCv" data-axf="seq" aria-hidden="true"></canvas>
     <div id="kvTop"><p class="kv-name">AX Festival <span>2026</span></p><p class="kv-meta">2026. 10. 26 (월) · 광화문 본사 · 09:30 – 17:30</p></div>
     <div id="panel">
-      <p class="tagline">AX : ME to WE</p>
+      <p class="tagline">AX : Me to We</p>
       <p class="sub">나의 업무 혁신, 우리 회사의 AX가 되다</p>
       <form id="entryForm" novalidate>
         <input id="empId" placeholder="사번" autocomplete="off">
@@ -819,8 +819,8 @@ var SESSIONS = [
     desc: "코드 한 줄 직접 쓰지 않고, 아이디어를 손에 잡히는 결과물로. 테트리스 게임에서 시작해 실적 분석 · 약관 챗봇 · 보험료 시뮬레이터까지." },
   { id: "fld", fl: 10, zone: "conf", kind: "seat", ttl: "현장 프로그램", sub: "사내강사 세션 + 실습", who: "현장 우수사례 사내강사", tm: "13:00~16:40", cap: 155, seed: 150, video: 1,
     desc: "인터뷰 시청 → 사내강사 세션 → 내 직무 사례 실습." },
-  { id: "photo", fl: 1, zone: "promo", kind: "slot", ttl: "AI 포토부스", sub: "ME to WE 프레임", who: "1F 홍보존", tm: "10:00~17:00", per: 60, cap: 20, video: 0,
-    desc: "촬영 2~3분, 결과물은 ME to WE 프레임으로 출력해 바로 드립니다." },
+  { id: "photo", fl: 1, zone: "promo", kind: "slot", ttl: "AI 포토부스", sub: "Me to We 프레임", who: "1F 홍보존", tm: "10:00~17:00", per: 60, cap: 20, video: 0,
+    desc: "촬영 2~3분, 결과물은 Me to We 프레임으로 출력해 바로 드립니다." },
   { id: "dap", fl: 1, zone: "dap", kind: "link", go: "dap", ttl: "DAP ZONE 과제상담", sub: "1:1 30분", who: "데이터사이언스파트", tm: "09:30~16:30", video: 0,
     desc: "내 업무에 AI를 어떻게 적용할지, 데이터사이언스파트와 마주 앉아 30분. 상담 완료 시 사은품." },
   { id: "cchat", fl: 18, zone: "lounge", kind: "link", go: "ev_cchat", ttl: "AX 커피챗", sub: "같은 고민끼리 20분", who: "18F 라운지", tm: "13:00~16:30", video: 0,
@@ -854,7 +854,7 @@ var PROG = { fl: 1, sid: null, slot: null, openSess: {}, slotSel: {} };   /* fl 
 var IDEA_TAGS = ["영업", "보상", "마케팅", "본사·통계", "기타"];
 var QUIZZES = [
   { id: "q1", part: "⓪ AX란 무엇인가", question: "AX에서 X가 의미하는 것은 무엇일까요?", options: ["eXperience (경험)", "Transformation (전환)", "neXt (다음)"], answerIndex: 1, explain: "AX = AI Transformation. 도구 도입이 아니라 일하는 방식의 전환입니다.", mockDist: [18, 71, 11] },
-  { id: "q2", part: "① 걱정에 먼저 답하기", question: "우리 회사 AX의 완성 조건은?", options: ["최신 AI 모델을 도입할 때", "구성원 모두가 각자의 업무에서 AX를 이룰 때", "전산 시스템을 교체할 때"], answerIndex: 1, explain: "AX는 시스템이 아니라 사람이 완성합니다 · ME to WE.", mockDist: [9, 84, 7] },
+  { id: "q2", part: "① 걱정에 먼저 답하기", question: "우리 회사 AX의 완성 조건은?", options: ["최신 AI 모델을 도입할 때", "구성원 모두가 각자의 업무에서 AX를 이룰 때", "전산 시스템을 교체할 때"], answerIndex: 1, explain: "AX는 시스템이 아니라 사람이 완성합니다 · Me to We.", mockDist: [9, 84, 7] },
   { id: "q3", part: "② 당사 AX 로드맵", question: "우리 회사 3개년 로드맵의 2028년 키워드는?", options: ["단순 업무 자동화", "혁신과 연결", "AI 조직 신설"], answerIndex: 1, explain: "2026 공감과 참여 → 2027 확산과 체화 → 2028 혁신과 연결.", mockDist: [22, 63, 15] },
   { id: "q4", part: "③ 현업의 노력 (DAP)", question: "O/X · DAP는 현업 구성원이 직접 발굴한 과제로 진행된다.", options: ["O", "X"], answerIndex: 0, explain: "맞습니다. DAP의 주인공은 현업입니다. 여러분의 아이디어가 2027 DAP가 됩니다.", mockDist: [88, 12] }
 ];
@@ -879,7 +879,7 @@ var LINK_ROUNDS = [
   { s: ["나의", "업무", "혁신,", "우리", "회사의", "AX가", "되다"], start: "동료",
     chain: ["요약", "약속", "속도", "도전", "전환", "환영", "영감"],
     extra: ["데이터", "미래", "고객", "보상", "회의"],
-    why: "AX : ME to WE · 오늘 페스티벌의 슬로건입니다" },
+    why: "AX : Me to We · 오늘 페스티벌의 슬로건입니다" },
   { s: ["이거,", "AI로", "되겠는데?"], start: "질문",
     chain: ["문서", "서비스", "스마트"],
     extra: ["혁신", "자동", "미래", "고객", "데이터", "약관", "판단", "기록", "요약"],
@@ -953,7 +953,7 @@ var WAVE_LINES = [[0,2],[2,6],[6,11],[11,17],[17,22],[22,25],[0,1],[1,5],[5,11],
 var WAVE_MSGS = [
   "여러분이 만든 26개의 작은 변화가\n오늘 우리 회사의 미래를 바꾸고 있습니다.\n고생하셨습니다",
   "지나가는 발걸음 하나하나가\n26명의 도전에 보내는 박수입니다",
-  "AX : ME to WE\n나의 업무 혁신, 우리 회사의 AX가 되다"
+  "AX : Me to We\n나의 업무 혁신, 우리 회사의 AX가 되다"
 ];
 var MOCK_FEED = [
   { text: "보상 접수 메일, 요약해서 시스템에 자동 입력되면 좋겠어요", tag: "보상" },
@@ -1675,7 +1675,7 @@ function wvTick() {
   if (c) c.textContent = WV.base.toLocaleString();
 }
 
-/* ── ME to WE 라이브 월 (wall_metowe) · 유효 참여 1건 = 점 1개, 2,026점 = WE 완성 ── */
+/* ── Me to We 라이브 월 (wall_metowe) · 유효 참여 1건 = 점 1개, 2,026점 = We 완성 ── */
 var MT_TOTAL = 2026;
 var MT_STEPS = [[50, "오후 깜짝 간식"], [80, "추첨 수량 2배"], [100, "대형경품 업그레이드"]];
 /* 모션 파라미터 · 산출 근거는 `ME to WE 월/260823_월_모션디자인_설계서.md`
@@ -1711,17 +1711,17 @@ function mtBuild(cv) {
     while (ox.measureText(txt).width > maxW && size > 12) { size -= 4; ox.font = "900 " + size + F; }
     return size;
   }
-  /* 조판 분기 · 한 줄("ME to WE")은 폭에 갇혀 세로가 비므로 **가로가 충분히 길 때만** 쓰고,
+  /* 조판 분기 · 한 줄("Me to We")은 폭에 갇혀 세로가 비므로 **가로가 충분히 길 때만** 쓰고,
      그보다 정사각에 가까우면 3단 스택으로 화면을 채운다 (TV 전체화면 = 스테이지 ~1.3) */
   var stack = h > w * 0.69;
   if (stack) {
-    var s1 = Math.min(fit("WE", w * 0.8, Math.floor(h * 0.34)), Math.floor(h * 0.34));
-    ox.font = "900 " + s1 + F; ox.fillText("ME", w / 2, h * 0.2);
+    var s1 = Math.min(fit("We", w * 0.8, Math.floor(h * 0.34)), Math.floor(h * 0.34));
+    ox.font = "900 " + s1 + F; ox.fillText("Me", w / 2, h * 0.2);
     ox.font = "900 " + Math.floor(s1 * 0.42) + F; ox.fillText("to", w / 2, h * 0.47);
-    ox.font = "900 " + s1 + F; ox.fillText("WE", w / 2, h * 0.76);
+    ox.font = "900 " + s1 + F; ox.fillText("We", w / 2, h * 0.76);
   } else {
-    var s0 = fit("ME to WE", w * 0.94, Math.floor(h * 0.72));
-    ox.font = "900 " + s0 + F; ox.fillText("ME to WE", w / 2, h * 0.52);
+    var s0 = fit("Me to We", w * 0.94, Math.floor(h * 0.72));
+    ox.font = "900 " + s0 + F; ox.fillText("Me to We", w / 2, h * 0.52);
   }
   var img = ox.getImageData(0, 0, w, h).data;
   function scan(g) {
@@ -2977,7 +2977,7 @@ var Views = {
     }).join("");
   },
 
-  /* ME to WE 월 참여자 화면(wallv)은 v3.1 폐지 · 월은 1F 사이니지 전용 (wall_metowe·wall_tv 등 SIGNAGE 유지) */
+  /* Me to We 월 참여자 화면(wallv)은 v3.1 폐지 · 월은 1F 사이니지 전용 (wall_metowe·wall_tv 등 SIGNAGE 유지) */
 
   /* TV 전체화면 · 가로 대형 화면 송출용 (좌: 월 풀블리드 / 우: 카운터·언락) */
   wall_tv: function () {
@@ -2987,7 +2987,7 @@ var Views = {
       '<div class="mt-flash tv-flash" id="mtFlash"></div>' +
       '<button class="tv-exit" onclick="tvClose()">← 나가기 (Esc)</button></div>' +
       '<div class="tv-side">' +
-      '<div class="tv-head"><p class="t">ME to <span style="color:var(--mint-deep)">WE</span></p><p class="s">유효 참여 1건 = 별 1개 · 2,026개 = WE 완성</p></div>' +
+      '<div class="tv-head"><p class="t">Me to <span style="color:var(--mint-deep)">We</span></p><p class="s">유효 참여 1건 = 별 1개 · 2,026개 = We 완성</p></div>' +
       '<div><p class="tv-n" id="mtN">' + n.toLocaleString() + '<small>/ ' + MT_TOTAL.toLocaleString() + '</small></p>' +
       '<p class="tv-pct" id="mtPct">' + pct + '%</p></div>' +
       '<div class="tv-bar"><i id="mtBar" style="width:' + Math.min(100, n / MT_TOTAL * 100) + '%"></i></div>' +
@@ -3446,7 +3446,7 @@ var Views = {
       '<div style="margin-top:12px;height:150px;border-radius:16px;overflow:hidden;background:var(--ink);position:relative">' +
       /* 블랙 스테이지 · 원본 오브젝트 루프(점 고리 → 구체 → 알파 서클)를 오른쪽에, 왼쪽은 슬로건. 공용 시계라 4초 재렌더에도 이어진다 */
       kvMediaHtml("live", "kvLive").replace('data-axf="loop"', 'data-axf="loop" data-axf-seq="circle:5,sphere:7,alpha:7" data-axf-dark="1" data-axf-cx="0.72" data-axf-zoom="0.95"') +
-      '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-start;padding-left:22px"><b class="disp" style="font-size:24px;color:#fff;letter-spacing:-0.01em">AX : ME to <span style="color:var(--mint-deep)">WE</span></b></div></div>' +
+      '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-start;padding-left:22px"><b class="disp" style="font-size:24px;color:#fff;letter-spacing:-0.01em">AX : Me to <span style="color:var(--mint-deep)">We</span></b></div></div>' +
       '<div class="screen-wrap" style="padding-bottom:0"><div class="counters" style="margin-bottom:10px">' +
       [["함께하는 사람", c.online], ["모인 아이디어", c.ideas], ["퀴즈 참여", c.quiz], ["스탬프 3개 이상", stamp3]].map(function (x) {
         return '<div><div class="v">' + x[1].toLocaleString() + '</div><div class="l">' + x[0] + "</div></div>";
@@ -3462,7 +3462,7 @@ var Views = {
   wall_metowe: function () {
     var n = mtPoints();
     return '<div class="sg"><div class="row" style="justify-content:space-between;padding-top:8px">' +
-      '<div><p class="sg-title">ME to <span style="color:var(--mint-deep)">WE</span> LIVE WALL</p><p class="sg-sub">유효 참여 1건 = 점 1개 · 2,026개 = WE 완성</p></div>' +
+      '<div><p class="sg-title">Me to <span style="color:var(--mint-deep)">We</span> LIVE WALL</p><p class="sg-sub">유효 참여 1건 = 점 1개 · 2,026개 = We 완성</p></div>' +
       '<div class="row" style="gap:6px">' +
       '<button class="chip" style="background:var(--mint);color:#fff;border-color:var(--mint);white-space:nowrap" onclick="tvOpen()">전체화면 가로</button>' + tvBtns("v") +
       '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button></div></div>' +
@@ -3567,9 +3567,9 @@ var Views = {
     var h = '<div class="screen-wrap"><div class="row" style="justify-content:space-between;padding-top:8px">' +
       '<b class="disp" style="font-size:24px;letter-spacing:0.03em">AX Festival <span style="color:var(--mint-deep)">2026</span></b>' +
       '<div class="row" style="gap:6px">' + tvBtns() + '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button></div></div>' +
-      '<p style="font-size:calc(12.5px * var(--fs));font-weight:700;letter-spacing:0.12em;opacity:0.6;margin-top:2px">ME to WE · 나의 업무 혁신, 우리 회사의 AX</p>' +
+      '<p style="font-size:calc(12.5px * var(--fs));font-weight:700;letter-spacing:0.12em;opacity:0.6;margin-top:2px">Me to We · 나의 업무 혁신, 우리 회사의 AX</p>' +
       '<div class="counters">' +
-      [["함께하는 사람", c.online], ["모인 아이디어", c.ideas], ["퀴즈 참여", c.quiz], ["ME to WE 별", mtPoints()]].map(function (x) {
+      [["함께하는 사람", c.online], ["모인 아이디어", c.ideas], ["퀴즈 참여", c.quiz], ["Me to We 별", mtPoints()]].map(function (x) {
         return '<div><div class="v">' + x[1].toLocaleString() + '</div><div class="l">' + x[0] + "</div></div>";
       }).join("") + "</div>";
     if (quiz && st.phase !== "idle") {
@@ -3884,12 +3884,12 @@ var AdminTabs = {
         return '<div class="card soft"><p class="muted" style="font-size:calc(12.5px * var(--fs))">' + x[0] + '</p><p class="disp" style="margin-top:4px;font-size:20px;color:var(--hi)">' + x[1] + "</p></div>";
       }).join("") + "</div>" +
       '<div class="card mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">사이니지 미리보기 · 1F 16대 + 17F</b>' +
-      '<p class="muted" style="margin-top:3px;font-size:calc(12.5px * var(--fs))">75&quot; 세로 3 (기둥) · 55&quot; 가로 6 · 스탠바이미 7 · 실물은 화면별 전용 레이아웃 · ME to WE 월은 화면 하단 버튼으로 0~100% 상태 미리보기</p>' +
+      '<p class="muted" style="margin-top:3px;font-size:calc(12.5px * var(--fs))">75&quot; 세로 3 (기둥) · 55&quot; 가로 6 · 스탠바이미 7 · 실물은 화면별 전용 레이아웃 · Me to We 월은 화면 하단 버튼으로 0~100% 상태 미리보기</p>' +
       '<div class="grid2" style="margin-top:10px">' +
       '<button class="btn" onclick="App.go(\'wall_quiz\')">정답률 월 /wall/quiz</button>' +
       '<button class="btn" onclick="App.go(\'wall_wave\')">AX Wave /wall/wave</button>' +
       '<button class="btn" onclick="App.go(\'wall_live\')">라이브 보드 /wall/live</button>' +
-      '<button class="btn" onclick="App.go(\'wall_metowe\')">ME to WE 월 /wall/metowe</button>' +
+      '<button class="btn" onclick="App.go(\'wall_metowe\')">Me to We 월 /wall/metowe</button>' +
       '<button class="btn" onclick="App.go(\'wall_rank\')">챔피언십 랭킹 /wall/rank</button>' +
       '<button class="btn" onclick="App.go(\'screen\')">17F 송출뷰 /screen</button></div>' +
       '<p style="margin-top:8px;font-size:calc(12.5px * var(--fs));color:var(--faint);line-height:1.6">정식판 공통 요건: 무인 10시간 · 1시간 자가 새로고침 · 네트워크 끊김 시 캐시 표시(에러 화면 금지) · 키오스크 자동 재실행 · 집계는 캐시 API만 · 배포 단계에서 적용 (기획서 v2 §5-3)</p></div>' +
@@ -4631,7 +4631,7 @@ function submitIdea() {
   if (text.length < 5) { toast("아이디어를 5자 이상 입력해주세요."); return; }
   var nth = counters().ideas;
   ideaPush(text, pickedTag, el("ideaAnon").checked, "app");
-  setTimeout(function () { toast("오늘 " + (nth + 1).toLocaleString() + "번째 아이디어! ME to WE 월에 점 하나가 켜졌어요."); }, 100);
+  setTimeout(function () { toast("오늘 " + (nth + 1).toLocaleString() + "번째 아이디어! Me to We 월에 점 하나가 켜졌어요."); }, 100);
 }
 function tryAdmin() {
   admVerify(el("adminCode").value, function () { S.set("admin_authed", true); App.render(); });
