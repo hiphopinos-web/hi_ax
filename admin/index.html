@@ -170,6 +170,7 @@ var TABS = [
   { id:"acct",  n:"계정" },
   { id:"stamp", n:"스탬프" },
   { id:"apply", n:"신청" },
+  { id:"survey", n:"설문" },
   { id:"notice", n:"공지" },
   { id:"photo", n:"포토부스" }
 ];
@@ -282,6 +283,7 @@ var NEED={
   acct:[{k:"acct",a:"acct_list"}],
   stamp:[{k:"stamp",a:"stamp_people"},{k:"stair",a:"stair_list"},{k:"sy",a:"sync",p:{emp:""}}],
   apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"},{k:"pre",a:"pre_list"}],
+  survey:[{k:"survey",a:"survey_list"}],
   notice:[{k:"noti",a:"sync",p:{emp:""}}],
   photo:[{k:"photo",a:"photo_list"}]
 };
@@ -312,7 +314,7 @@ function render(){
   if(missing.length&&ST.busy){
     h='<h1>'+esc((TABS.filter(function(t){return t.id===ST.tab;})[0]||{}).n||"")+'</h1><div class="card"><p class="muted"><span class="spin"></span>서버에서 불러오는 중입니다. 보통 2~5초 걸립니다.</p></div>';
   } else {
-    try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="notice"?viewNotice():ST.tab==="photo"?viewPhoto():viewApply(); }
+    try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="notice"?viewNotice():ST.tab==="survey"?viewSurvey():ST.tab==="photo"?viewPhoto():viewApply(); }
     catch(e){ h='<div class="err-banner">화면을 그리는 중 오류가 났습니다: '+esc(e.message)+'</div>'; }
   }
   if(ST.err) h='<div class="err-banner">일부 데이터를 못 받았습니다('+esc(ST.err.reason||"")+'). 새로고침을 눌러 주세요. 표시된 값은 마지막으로 받은 것입니다.</div>'+h;
@@ -735,6 +737,32 @@ function preClear(id){
   var x=((ST.data.pre||{}).sess||{})[id]||{};
   dialog({ t:"명단을 비울까요?", s:"사전 신청 명단만 지웁니다. 앱 신청은 그대로입니다.", who:esc(SESS_NAME[id])+" · "+(x.list||0)+"명", ok:"비우기",
     onOk:function(){ call("pre_clear",{sess:id},function(r){ dlgForce(); if(r&&r.ok){ toast(SESS_NAME[id]+" 명단 "+r.removed+"명 비움"); load(); } else toast("실패: "+(r&&r.reason||"")); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
+}
+
+/* ══════════════════ 7-5. 설문 (v3.35) ══════════════════
+ * 답은 사번 없이 저장된다(서버 설문응답 시트). 여기도 사람 단위가 아니라 집계만 본다.
+ * 문항 문구는 앱 SURVEY 상수와 같게 둔다(기획 확정 시 두 곳을 함께 바꾼다). */
+var SURVEY_PLACE_NAME = { p1:"1F AX 전시·체험존", p2:"AX Now! 체험 부스", p7:"DAP Wall QR 퀴즈", p3:"17F 오후 파트너사 강연", dap:"DAP ZONE 과제상담", cchat:"18F AX 커피챗" };
+var SURVEY_BAL = [["강연 더","체험 더"],["혼자 둘러보기","팀이랑 같이"],["하루 종일","반나절 집중"]];
+function viewSurvey(){
+  var d=ST.data.survey||{n:0,places:{},nps:[],lines:[],bal:[],words:[]};
+  var nps=d.nps||[], tot=nps.reduce(function(a,b){return a+b;},0), sum=0; nps.forEach(function(c,i){ sum+=c*i; });
+  var pro=(nps[9]||0)+(nps[10]||0), det=nps.slice(0,7).reduce(function(a,b){return a+b;},0);
+  var h='<h1>설문<small>오늘 한 판 설문 · 14:30부터 · 답은 이름 없이 저장됩니다. 사람 단위 조회는 없습니다.</small></h1>';
+  h+='<div class="grid g4">'+kpi("응답",d.n||0,"명")+kpi("권할 점수 평균",tot?(sum/tot).toFixed(1):"-","/ 10")+kpi("NPS",tot?Math.round((pro-det)/tot*100):"-","","9~10점 비율 - 0~6점 비율")+kpi("공개 단어",(d.words||[]).length,"개","5명 이상 고른 단어")+'</div>';
+  var pk=Object.keys(d.places||{});
+  h+='<div class="grid g2"><div class="card"><h2>프로그램별 반응</h2><table class="tb"><tr><th>다녀간 곳</th><th class="tdr">좋았어요 이상</th><th class="tdr">최고</th><th class="tdr">아쉬웠어요</th><th class="tdr">응답</th></tr>'+
+    (pk.length?pk.map(function(k){ var o=d.places[k], n=o.meh+o.good+o.best; return '<tr><td><b>'+esc(SURVEY_PLACE_NAME[k]||k)+'</b></td><td class="n tdr"><b>'+pct(o.good+o.best,n)+'%</b></td><td class="n tdr">'+o.best+'</td><td class="n tdr">'+o.meh+'</td><td class="n tdr">'+n+'</td></tr>'; }).join(""):'<tr><td colspan="5" class="src">아직 응답이 없습니다.</td></tr>')+'</table></div>';
+  var mx=Math.max.apply(null,nps.concat([1]));
+  h+='<div class="card"><h2>동료에게 권할 점수 분포</h2><table class="tb">'+nps.map(function(c,i){ return '<tr><td style="width:50px"><b class="n">'+i+'점</b></td><td><div class="bar"><i style="width:'+pct(c,mx)+'%"></i></div></td><td class="n tdr">'+c+'</td></tr>'; }).join("")+'</table>'+
+    '<p class="note mt12">매년 같은 문항으로 유지하는 기준 지표입니다.</p></div></div>';
+  h+='<div class="grid g2"><div class="card"><h2>다음엔 뭘 더? (밸런스)</h2>'+SURVEY_BAL.map(function(q,i){ var b=(d.bal||[])[i]||[0,0], n=b[0]+b[1];
+      return '<p class="mt12"><b>'+esc(q[0])+'</b> '+pct(b[0],n)+'% · <b>'+esc(q[1])+'</b> '+pct(b[1],n)+'% <span class="src">('+n+'명)</span></p><div class="bar"><i style="width:'+pct(b[0],n)+'%"></i></div>'; }).join("")+'</div>'+
+    '<div class="card"><h2>오늘을 한 단어로 (5명 이상)</h2>'+((d.words||[]).length?'<div class="row">'+d.words.map(function(w){ return '<span class="pill">'+esc(w.w)+' <b class="n">'+w.n+'</b></span>'; }).join("")+'</div>':'<p class="src">아직 5명 이상 고른 단어가 없습니다.</p>')+'</div></div>';
+  var lines=(d.lines||[]).filter(function(x){ return match(x,["line"]); });
+  h+='<div class="card"><h2>이것만은 꼭 고쳐 주세요 · '+(d.lines||[]).length+'건</h2><div class="tools"><input class="in" placeholder="의견 검색" value="'+esc(ST.q)+'" oninput="setQ(this.value)"></div>'+
+    '<div class="wrap"><table class="tb"><tr><th style="width:130px">시각(10분 단위)</th><th>한 줄</th></tr>'+(lines.length?lines.slice().reverse().slice(0,500).map(function(x){ return '<tr><td class="n src">'+esc(short(x.t))+'</td><td>'+esc(x.line)+'</td></tr>'; }).join(""):'<tr><td colspan="2" class="src">의견이 없습니다.</td></tr>')+'</table></div></div>';
+  return h;
 }
 
 /* ══════════════════ 7-4. 공지 (v3.14) · 발송 notice_set · 중지 notice_clear · 현재 공지는 sync 로 읽는다 ══════════════════ */
