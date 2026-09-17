@@ -173,13 +173,15 @@ var TABS = [
   { id:"notice", n:"공지" },
   { id:"photo", n:"포토부스" }
 ];
-/* 앱 STAMPS(v46, 6종)와 맞춘다. 폐기된 ID 는 옛 로그에 남아 있을 수 있어 표기만 한다. */
+/* 앱 STAMPS 와 맞춘다 · v3.33 8칸(계단 st · 설문 sv 추가), 보상은 6개에서 끝. 번호는 콘솔 표 머리용 약칭일 뿐 앱에는 없다.
+   폐기된 ID 는 옛 로그에 남아 있을 수 있어 표기만 한다(서버 stamp_people 는 old 로 따로 준다). */
 var STAMP_META = {
   p1:{ no:"01", n:"1F 전시" }, p2:{ no:"02", n:"부스 체험" }, p3:{ no:"03", n:"17F 강의" },
   p4:{ no:"04", n:"라이브 챌린지" }, p5:{ no:"05", n:"아이디어" }, p7:{ no:"06", n:"QR 퀴즈" },
-  p6:{ no:"", n:"포토부스", old:1 }, p8:{ no:"", n:"미니게임", old:1 }, p9:{ no:"", n:"계단", old:1 }
+  st:{ no:"07", n:"계단 10층" }, sv:{ no:"08", n:"오늘 한 판 설문" },
+  p6:{ no:"", n:"포토부스", old:1 }, p8:{ no:"", n:"미니게임", old:1 }, p9:{ no:"", n:"계단(구)", old:1 }
 };
-var STAMP_ORDER = ["p1","p2","p3","p4","p5","p7"];
+var STAMP_ORDER = ["p1","p2","p3","p4","p5","p7","st","sv"];
 /* 백엔드 SESS_META · SESS_CAP 과 같은 id */
 var SESS_NAME = {
   /* v3.31b · 17F 오전은 자유 참석(옛 신청 기록 표시용) · 오후 파트너사 강연은 신청제(사전 신청 + 앱 신청) */
@@ -278,7 +280,7 @@ document.addEventListener("visibilitychange",function(){ if(!document.hidden&&ke
 var NEED={
   dash:[{k:"stats",a:"stats"},{k:"acct",a:"acct_list"},{k:"stamp",a:"stamp_people"},{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"}],
   acct:[{k:"acct",a:"acct_list"}],
-  stamp:[{k:"stamp",a:"stamp_people"}],
+  stamp:[{k:"stamp",a:"stamp_people"},{k:"stair",a:"stair_list"},{k:"sy",a:"sync",p:{emp:""}}],
   apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"},{k:"pre",a:"pre_list"}],
   notice:[{k:"noti",a:"sync",p:{emp:""}}],
   photo:[{k:"photo",a:"photo_list"}]
@@ -324,7 +326,7 @@ function setSub(v){ ST.sub=v; ST.q=""; ST.filt=""; render(); }
 function match(row, fields){ if(!ST.q) return true; var q=ST.q.toLowerCase(); return fields.some(function(f){ return String(row[f]||"").toLowerCase().indexOf(q)>=0; }); }
 
 /* 스탬프 개수 → 보상 (260909 확정 · 3개 룰렛 1회 · 4/5/6개 응모권 1/2/3장) */
-function reward(n){ return { roulette:n>=3, tickets: n>=6?3:n>=5?2:n>=4?1:0 }; }
+function reward(n){ n=Math.min(6,n); return { roulette:n>=3, tickets: n>=6?3:n>=5?2:n>=4?1:0 }; }
 function stampCells(ids){
   return '<div class="stamps">'+STAMP_ORDER.map(function(id){ var got=ids.indexOf(id)>=0; return '<span class="st'+(got?" got":"")+'" title="'+esc(STAMP_META[id].n)+'">'+STAMP_META[id].no+'</span>'; }).join("")+
     ids.filter(function(id){return STAMP_ORDER.indexOf(id)<0;}).map(function(id){ var m=STAMP_META[id]||{n:id}; return '<span class="st old" title="'+esc(m.n)+' · 폐기된 항목">'+esc(id.replace("p",""))+'</span>'; }).join("")+'</div>';
@@ -428,8 +430,24 @@ function viewStamp(){
         '<td class="n src">'+esc(short(r.last))+'</td>'+
         '<td><select class="in" style="min-width:120px;padding:5px 8px" onchange="grantStamp(\''+esc(r.emp)+'\',this.value,this)"><option value="">부여할 항목</option>'+["p1","p2","p3"].filter(function(id){return r.stamps.indexOf(id)<0;}).map(function(id){ return '<option value="'+id+'">'+STAMP_META[id].no+' '+STAMP_META[id].n+'</option>'; }).join("")+'</select></td></tr>'; }).join("")+
     (shown.length>400?'<tr><td colspan="8" class="src">400명까지만 표시합니다. 검색으로 좁혀 주세요.</td></tr>':'')+'</table></div>';
-  h+='<p class="note mt12">담당자 부여는 현장 QR 3종(01·02·03)만 됩니다. 앱 자동 적립 3종(04·05·06)은 앱 안에서 하는 행동이라 부여 대상이 아닙니다. 부여는 참여 기록에 「담당자 부여」로 남습니다.</p></div>';
+  h+=viewStairOps();
+  h+='<p class="note mt12">스탬프는 8칸, 보상은 6개에서 끝납니다(7·8번째는 추가 보상 없음). 계단(07)은 서버가 출발·도착 QR로 판정해 적립하고, 설문(08)은 제출 시 적립됩니다. 담당자 부여는 현장 QR 3종(01·02·03)만 됩니다. 앱 자동 적립 3종(04·05·06)은 앱 안에서 하는 행동이라 부여 대상이 아닙니다. 부여는 참여 기록에 「담당자 부여」로 남습니다.</p></div>';
   return h;
+}
+/* v3.33·v3.34 운영 · 룰렛 소진 안내 스위치 + 계단 지점 코드(인쇄용) */
+function viewStairOps(){
+  var out=!!((ST.data.sy||{}).rouletteOut), rows=((ST.data.stair||{}).rows||[]);
+  var h='<div class="grid g2"><div class="card"><h2>룰렛 소진 안내</h2>'+
+    '<p class="src">켜면 참가자 앱의 룰렛 쿠폰 창과 스탬프 보상 레일에 「오늘 준비한 룰렛이 모두 소진되었습니다」가 뜹니다. 응모권은 그대로입니다.</p>'+
+    '<div class="row mt12"><span class="pill'+(out?" on":" off")+'">'+(out?"안내 켜짐":"안내 꺼짐")+'</span><button class="btn sm '+(out?"":"danger")+'" onclick="rouletteOut('+(out?0:1)+')">'+(out?"안내 끄기":"소진 안내 켜기")+'</button></div></div>';
+  h+='<div class="card"><h2>계단 지점 QR (인쇄용)</h2>'+
+    (rows.length?'<table class="tb"><tr><th>지점</th><th>층</th><th>코드</th><th>상태</th></tr>'+rows.map(function(r){ return '<tr><td><b>'+esc(r.name)+'</b></td><td class="n">'+esc(r.fl)+'F</td><td class="n">'+esc(r.code)+'</td><td>'+(r.on?'<span class="pill on">운영</span>':'<span class="pill off">꺼짐</span>')+'</td></tr>'; }).join("")+'</table>':'<p class="src">설치된 계단 지점이 없습니다. 백엔드 stair_install 로 4곳(18F·17F·10F·1F)을 만듭니다.</p>')+
+    '<p class="note mt12">지점마다 포스터 2장 이상 인쇄(한 장이면 스캔 줄이 생깁니다). 각 층 복도 계단실 문 옆에 붙이고, 계단실 안은 통신이 안 될 수 있어 피합니다. 포스터에 「방화문은 닫아 주세요」 · 「내려갈 때는 계단으로」. 판정: 방향 무관 · 하루 누적 10개 층 · 층당 4초 미만은 무효 · 출발 후 15분 만료.</p></div></div>';
+  return h;
+}
+function rouletteOut(on){
+  if(on&&!confirm("룰렛 소진 안내를 켤까요? 참가자 앱 전체에 바로 표시됩니다.")) return;
+  call("roulette_out",{on:on?1:0},function(r){ if(r&&r.ok){ toast(r.out?"룰렛 소진 안내를 켰습니다":"룰렛 소진 안내를 껐습니다"); load(); } else toast("실패: "+(r&&r.reason||"")); },function(){ toast("서버 응답 없음"); });
 }
 function grantStamp(emp,id,sel){
   if(!id) return;
