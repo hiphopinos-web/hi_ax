@@ -248,6 +248,7 @@
   .trow .tcol .tok { width: 100%; min-height: 48px; }
   .trow .tt { flex: 1; min-width: 0; font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.45; }
   .trow .tt .badge { margin-left: 4px; vertical-align: 2px; }
+  .trow .tt .st2 { display: block; margin-top: 3px; font-size: calc(12.5px * var(--fs)); font-weight: 700; color: var(--muted); line-height: 1.4; }   /* v3.21 상시 행 현재 상태 한 줄 */
   .trow .chev { flex: none; color: var(--faint); font-weight: 800; font-size: 11px; }
   .trow .tb { padding: 0 6px 14px 92px; }
   .trow .tb .pl { font-size: calc(13.5px * var(--fs)); font-weight: 800; color: var(--muted); }
@@ -2683,9 +2684,34 @@ function myCouponHtml() {
 }
 
 /* ════════════════ 일정 탭 행 (v3.5) · 좌측 시간 레일 + 우측 제목 · 부가 설명은 공용 아코디언 접힘 ════════════════ */
-var SCHED = { open: {}, mine: false };
+/* v3.21 일정 탭 = 세 탭: all 전체 일정(시간표만) / always 상시 프로그램 / mine 내 일정 */
+var SCHED = { open: {}, tab: "all" };
 function schedToggle(k) { SCHED.open[k] = !SCHED.open[k]; App.render(); }
-function schedMine(v) { SCHED.mine = !!v; App.render(); }
+function schedTab(t) { SCHED.tab = t; App.render(); }
+/* 상시 프로그램 = 운영 시간 안에 아무 때나 들르는 것 · 다이어트 원칙: 이 3개 외 추가 금지 */
+var SCHED_ALWAYS = [
+  { id: "cchat", time: "13:00", end: "16:30", title: "AX 커피챗", tag: "매칭제", place: "18F 라운지" },
+  { id: "dap", time: "09:30", end: "16:30", title: "DAP 과제상담", tag: "신청제", place: "1F DAP ZONE 미팅룸" },
+  { id: "photo", time: "10:00", end: "17:00", title: "AI 포토부스", tag: "대기열", place: "1F 홍보존" }
+];
+/* 상시 행 · 현재 상태 한 줄 + 펼침 본문 */
+function alwaysState(id) {
+  if (id === "cchat") {
+    var cc = S.get("cchat", null);
+    if (cc && cc.status === "matched") return ["매칭 완료 · " + cc.round + " TABLE " + cc.table, "매칭된 시각에 18F 라운지 테이블로 오세요.", "App.go('ev_cchat')", "내 커피챗 보기"];
+    if (cc) return ["매칭 대기 중", "비슷한 아이디어끼리 묶는 중입니다. 매칭되면 앱으로 알려드려요.", "App.go('ev_cchat')", "내 커피챗 보기"];
+    return ["아이디어 제출 시 매칭", "아이디어 한 줄을 제출하면 비슷한 주제의 동료와 20분 마주 앉습니다.", "App.go('ideas')", "아이디어 쓰기"];
+  }
+  if (id === "dap") {
+    var mr = myResv();
+    if (mr && RESV_LIVE.indexOf(mr.status) >= 0) return ["내 상담 " + mr.slot, "1:1 30분 과제상담 · 시작 5분 전까지 미팅룸 앞 체크인.", "App.go('dap')", "내 상담 보기"];
+    return ["잔여 슬롯 " + resvRemain(), "내 업무에 AI를 어떻게 적용할지 데이터사이언스파트와 1:1 30분.", "App.go('dap')", "상담 신청하기"];
+  }
+  return photoState();
+}
+function photoState() {
+  return ["번호표 대기 · 점심(11:20~13:10)은 현장 줄서기", "촬영 2~3분, 결과물은 Me to We 프레임으로 출력해 드립니다.", "progGoFl(1)", "1F 프로그램 보기"];
+}
 /* 시간·층 라벨 뱃지 (v3.9 공용) · state: "" 기본(옅은 주황+짙은 주황) / dim 지나감 / act 진행 중(검정) / mine 틴트 행 대비용 O25.
    v3.17: sub 를 주면 두 줄 변형(시작 크게 + 종료 작게, 같은 뱃지 배경·상태 색 안) · 한 줄 사용처는 그대로 */
 function tokBadge(text, state, sub) {
@@ -3067,23 +3093,17 @@ var Views = {
      내 일정 행 = O10 틴트 채움 + 좌보더 O100 + 오렌지 시간 · 상세 진입은 펼침 안 「바로가기」.
      시간순 병합: 같은 시각이면 전체 일정 다음에 내 항목 · 대기열(시간 없음)은 「지금」으로 맨 위. ═══ */
   guide_time: function () {
-    var rows = [];   /* [분, 정렬보조(전체 0 · 내 것 1), 내것 여부, html] */
-    var alwaysRows = [];   /* v3.18 상시 = 그 시간 안에 아무 때나 들르는 것 · 타임라인 아래 별도 묶음 */
+    var rows = [];   /* 전체 일정 = 시간표 행 [분, html] */
+    var mineRows = [];   /* 내 일정 = [분, html] */
     /* v3.6 상태 위계: 지나간 행 = 회색 · 진행 중 = 검정 · 기준은 evPhase(데모·당일 모두 NOW_INDEX 포인터) */
     var ph = evPhase();
     TIMELINE.forEach(function (t, i) {
       var body = '<p class="pl">' + esc(t.place) + '</p><p class="ds">' + esc(t.desc) + "</p>";
-      if (t.always) {
-        /* 상시 행에는 진행 중 검정 강조를 쓰지 않는다(오후 내내 검정이면 화면당 검정 1곳 원칙과 충돌) */
-        var pastA = ph === "after";
-        alwaysRows.push(schedRow("t" + i, pastA ? " past" : "", pastA ? "dim" : "", t.time, t.end,
-          esc(t.title) + ' <span class="badge gray">' + t.tag + "</span>", body));
-        return;
-      }
+      if (t.always) return;   /* v3.21 상시 항목은 상시 프로그램 탭 몫 */
       var now = ph === "live" && i === NOW_INDEX;
       var past = ph === "after" || (ph === "live" && i < NOW_INDEX);
       var badges = ' <span class="badge ' + (now ? "mint" : "gray") + '">' + t.tag + "</span>" + (now ? ' <span class="badge ink">진행 중</span>' : "");
-      rows.push([t2m(t.time), 0, false,
+      rows.push([t2m(t.time),
         schedRow("t" + i, now ? " now" : past ? " past" : "", now ? "act" : past ? "dim" : "", t.time, t.end, esc(t.title) + badges, body)]);
     });
     /* 내 일정 수집 · 홈 「나의 스케줄」과 같은 규칙 (대기열 → 상담 → 커피챗 → 신청 세션) */
@@ -3108,23 +3128,32 @@ var Views = {
     var nowT = ph === "live" ? [t2m(TIMELINE[NOW_INDEX].time), t2m(TIMELINE[NOW_INDEX].end)] : null;
     my.forEach(function (m, j) {
       var nowish = m[5] || (nowT && m[0] >= 0 && m[0] >= nowT[0] && m[0] < nowT[1]);
-      rows.push([m[0], 1, true,
+      mineRows.push([m[0],
         schedRow("m" + j, " my", nowish ? "act" : "mine", m[1], null, esc(m[2]) + ' <span class="badge mint">내 일정</span>',
           '<p class="pl">' + esc(m[3]) + '</p><button class="btn mint" onclick="' + m[4] + '">바로가기</button>')]);
     });
-    rows.sort(function (a, b) { return a[0] - b[0] || (a[1] === b[1] ? 0 : a[1] - b[1]); });
+    var byT = function (a, b) { return a[0] - b[0]; };
+    rows.sort(byT); mineRows.sort(byT);
+    var tab = SCHED.tab;
     var seg = '<div class="qseg" style="margin-bottom:10px">' +
-      '<button class="' + (SCHED.mine ? "" : "on") + '" onclick="schedMine(false)">전체 일정</button>' +
-      '<button class="' + (SCHED.mine ? "on" : "") + '" onclick="schedMine(true)">내 일정 ' + my.length + "건</button></div>";
-    var shown = SCHED.mine ? rows.filter(function (r) { return r[2]; }) : rows;
-    /* 상시 그룹은 전체 보기에만 · 내 일정 필터에는 표시하지 않는다 (v3.18) */
-    var alwaysHtml = (!SCHED.mine && alwaysRows.length)
-      ? '<p class="scap" style="margin-top:16px">상시 프로그램 · 시간 안에 아무 때나</p><div class="tlist">' + alwaysRows.join("") + "</div>"
-      : "";
-    if (!shown.length) {
-      return seg + '<div class="card soft" style="text-align:center"><p class="muted">아직 신청·배정된 일정이 없어요.<br>프로그램 탭에서 신청하면 여기에 모입니다.</p></div>' + alwaysHtml;
+      '<button class="' + (tab === "all" ? "on" : "") + '" onclick="schedTab(\'all\')">전체 일정</button>' +
+      '<button class="' + (tab === "always" ? "on" : "") + '" onclick="schedTab(\'always\')">상시 프로그램</button>' +
+      '<button class="' + (tab === "mine" ? "on" : "") + '" onclick="schedTab(\'mine\')">내 일정 ' + my.length + "건</button></div>";
+    if (tab === "always") {
+      /* 상시 행에는 진행 중 검정 강조를 쓰지 않는다(오후 내내 검정이면 화면당 검정 1곳 원칙과 충돌) · 종료 후에만 회색 */
+      var pastA = ph === "after";
+      return seg + '<div class="tlist">' + SCHED_ALWAYS.map(function (a) {
+        var stt = alwaysState(a.id);
+        return schedRow("a_" + a.id, pastA ? " past" : "", pastA ? "dim" : "", a.time, a.end,
+          esc(a.title) + ' <span class="badge gray">' + a.tag + '</span><span class="st2">' + esc(stt[0]) + "</span>",
+          '<p class="pl">' + esc(a.place) + '</p><p class="ds">' + esc(stt[1]) + '</p><button class="btn mint" onclick="' + stt[2] + '">' + stt[3] + "</button>");
+      }).join("") + "</div>";
     }
-    return seg + '<div class="tlist">' + shown.map(function (r) { return r[3]; }).join("") + "</div>" + alwaysHtml;
+    if (tab === "mine") {
+      if (!mineRows.length) return seg + '<div class="card soft" style="text-align:center"><p class="muted">아직 신청·배정된 일정이 없어요.<br>프로그램 탭에서 신청하면 여기에 모입니다.</p></div>';
+      return seg + '<div class="tlist">' + mineRows.map(function (r) { return r[1]; }).join("") + "</div>";
+    }
+    return seg + '<div class="tlist">' + rows.map(function (r) { return r[1]; }).join("") + "</div>";
   },
 
   /* ═══ 프로그램 상세 · 소개 영상 · 잔여석 · 신청 ═══ */
