@@ -258,6 +258,11 @@
   .rc .sb .nxt { color: var(--acc2); font-weight: 800; }   /* 스탬프 다음 추천 표시 · 줄을 늘리지 않게 보조 줄 안에 */
   /* 닫힌 행 높이 고정: 제목·보조 줄은 각 한 줄 말줄임 · 전체 문구는 펼침 본문이 맡는다 */
   .rc .rh .tt, .rc .rh .sb { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* v3.44 장소 칩 · 오른쪽 위 · 무채색(시간 뱃지의 옅은 주황과 구분) · 펼침 화살표와 세로로 겹치지 않게 위쪽 6px */
+  .rc .pc { position: absolute; top: 4px; right: 12px; z-index: 1; max-width: 176px; height: 19px; line-height: 19px; padding: 0 8px; border-radius: 999px; background: #F2F2F2; color: #4A4A4A; font-size: 11.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+  .rc.hp .rh .tt { padding-right: calc(var(--pcw) - 20px); }   /* 칩이 본문 영역과 실제로 겹치는 폭만큼만 비운다(화살표 열 폭 제외) */
+  .rc.ink .pc { background: rgba(255,255,255,0.2); color: #fff; }   /* 검정 카드에서는 뒤집는다 */
+  .rc.past .pc, .rc.dim .pc { background: #E9E7E5; color: #8A817B; }
   .rc .rt { flex: none; display: flex; align-items: center; }
   .rc .rt .st { font-size: calc(12.5px * var(--fs)); font-weight: 800; color: var(--acc2); }
   .rc .chev { flex: none; color: var(--faint); font-weight: 800; font-size: 11px; }
@@ -2553,20 +2558,20 @@ function myItems(withTest) {
   var pq = photoQ();
   if (pq && (pq.status === "wait" || pq.status === "call")) {
     var pc = pq.status === "call";
-    out.push({ min: pc ? -1 : t2m(pq.eta), go: "photoGoMine()", badge: pc ? "호출" : pq.no + "번", label: pc ? "지금" : pq.eta, title: "AI 포토부스", gTitle: "AI 포토부스 대기표",
+    out.push({ place: "1F 포토부스", min: pc ? -1 : t2m(pq.eta), go: "photoGoMine()", badge: pc ? "호출" : pq.no + "번", label: pc ? "지금" : pq.eta, title: "AI 포토부스", gTitle: "AI 포토부스 대기표",
       sub: pc ? "지금 입장하세요" : "예상 입장 " + pq.eta + " · 앞 " + pq.ahead + "팀", gSub: pc ? pq.no + "번 · 지금 입장하세요" : pq.no + "번 · 앞 " + pq.ahead + "팀 · 예상 입장 " + pq.eta,
       call: pc, photo: true, kind: "photo", iv: null });
   }
   var mr = myResv();
   if (mr && RESV_LIVE.indexOf(mr.status) >= 0)
-    out.push({ min: sessStartMin(mr.slot), go: "App.go('dap')", badge: mr.slot, label: mr.slot, title: "과제상담", gTitle: "과제상담", sub: "1F DAP존 미팅룸 " + mr.room, gSub: "1F DAP존 미팅룸 " + mr.room + " · 30분 1:1", kind: "resv", iv: [sessStartMin(mr.slot), sessStartMin(mr.slot) + 30] });
+    out.push({ place: "1F DAP ZONE", min: sessStartMin(mr.slot), go: "App.go('dap')", badge: mr.slot, label: mr.slot, title: "과제상담", gTitle: "과제상담", sub: "미팅룸 " + mr.room + " · 30분 1:1", gSub: "1F DAP존 미팅룸 " + mr.room + " · 30분 1:1", kind: "resv", iv: [sessStartMin(mr.slot), sessStartMin(mr.slot) + 30] });
   var cc = S.get("cchat", null);
   if (cc && cc.status === "matched")
-    out.push({ min: sessStartMin(cc.round), go: "App.go('ev_cchat')", badge: cc.round, label: cc.round, title: "AX 커피챗", gTitle: "AX 커피챗", sub: "18F 라운지 TABLE " + cc.table, gSub: "18F 라운지 TABLE " + cc.table + " · 20분", kind: "cchat", iv: [sessStartMin(cc.round), sessStartMin(cc.round) + 20] });
+    out.push({ place: "18F 라운지", min: sessStartMin(cc.round), go: "App.go('ev_cchat')", badge: cc.round, label: cc.round, title: "AX 커피챗", gTitle: "AX 커피챗", sub: "TABLE " + cc.table + " · 20분", gSub: "18F 라운지 TABLE " + cc.table + " · 20분", kind: "cchat", iv: [sessStartMin(cc.round), sessStartMin(cc.round) + 20] });
   sessMineList().forEach(function (x) {
     if (x.test) return;
     var tmLbl = x.slot || x.s.tm.split("~")[0], p = x.s.tm.split("~");
-    out.push({ min: sessStartMin(tmLbl), go: "sessOpen('" + x.s.id + "')", badge: tmLbl, label: tmLbl, title: x.s.ttl, gTitle: x.s.ttl, sub: sessPlace(x.s), gSub: sessPlace(x.s) + " · " + x.s.tm + (x.slot ? " · 내 시간 " + x.slot : ""), kind: "sess:" + x.s.id, ten: x.s.fl === 10, iv: [t2m(p[0]), t2m(p[1])] });
+    out.push({ place: sessPlace(x.s), min: sessStartMin(tmLbl), go: "sessOpen('" + x.s.id + "')", badge: tmLbl, label: tmLbl, title: x.s.ttl, gTitle: x.s.ttl, sub: x.s.tm + (x.pre ? " · 사전 신청" : ""), gSub: sessPlace(x.s) + " · " + x.s.tm + (x.slot ? " · 내 시간 " + x.slot : ""), kind: "sess:" + x.s.id, ten: x.s.fl === 10, iv: [t2m(p[0]), t2m(p[1])] });
   });
   if (!withTest) return out;
   var kinds = out.map(function (x) { return x.kind; }), ivs = out.filter(function (x) { return x.iv; }).map(function (x) { return x.iv; });
@@ -2575,14 +2580,14 @@ function myItems(withTest) {
   var now = new Date().getHours() * 60 + new Date().getMinutes();
   testMine().forEach(function (x) {
     var it = null;
-    if (x.t === "resv") it = { min: t2m(x.slot), go: "App.go('dap')", badge: x.slot, label: x.slot, title: "과제상담", gTitle: "과제상담", sub: "1F DAP존 미팅룸 " + x.room + " · 테스트", gSub: "1F DAP존 미팅룸 " + x.room + " · 승인 · 테스트", kind: "resv", iv: [t2m(x.slot), t2m(x.slot) + 30] };
-    else if (x.t === "cchat") it = { min: t2m(x.round), go: "App.go('ev_cchat')", badge: x.round, label: x.round, title: "AX 커피챗", gTitle: "AX 커피챗", sub: "18F 라운지 TABLE " + x.table + " · 테스트", gSub: "18F 라운지 TABLE " + x.table + " · 20분 · 테스트", kind: "cchat", iv: [t2m(x.round), t2m(x.round) + 20] };
-    else if (x.t === "photo") { var eta = hm2(Math.min(now + x.ahead * 3, 23 * 60)); it = { min: t2m(eta), go: "photoGoMine()", badge: x.no + "번", label: eta, title: "AI 포토부스", gTitle: "AI 포토부스 대기표", sub: "예상 입장 " + eta + " · 앞 " + x.ahead + "팀 · 테스트", gSub: x.no + "번 · 앞 " + x.ahead + "팀 · 예상 입장 " + eta + " · 테스트", photo: true, kind: "photo", iv: null }; }
+    if (x.t === "resv") it = { place: "1F DAP ZONE", min: t2m(x.slot), go: "App.go('dap')", badge: x.slot, label: x.slot, title: "과제상담", gTitle: "과제상담", sub: "미팅룸 " + x.room + " · 테스트", gSub: "1F DAP존 미팅룸 " + x.room + " · 승인 · 테스트", kind: "resv", iv: [t2m(x.slot), t2m(x.slot) + 30] };
+    else if (x.t === "cchat") it = { place: "18F 라운지", min: t2m(x.round), go: "App.go('ev_cchat')", badge: x.round, label: x.round, title: "AX 커피챗", gTitle: "AX 커피챗", sub: "TABLE " + x.table + " · 테스트", gSub: "18F 라운지 TABLE " + x.table + " · 20분 · 테스트", kind: "cchat", iv: [t2m(x.round), t2m(x.round) + 20] };
+    else if (x.t === "photo") { var eta = hm2(Math.min(now + x.ahead * 3, 23 * 60)); it = { place: "1F 포토부스", min: t2m(eta), go: "photoGoMine()", badge: x.no + "번", label: eta, title: "AI 포토부스", gTitle: "AI 포토부스 대기표", sub: "예상 입장 " + eta + " · 앞 " + x.ahead + "팀 · 테스트", gSub: x.no + "번 · 앞 " + x.ahead + "팀 · 예상 입장 " + eta + " · 테스트", photo: true, kind: "photo", iv: null }; }
     else if (x.t === "sess") {
       var s0 = sessById(x.id); if (!s0) return;
       var pp = s0.tm.split("~");
       if (s0.fl === 10 && hasTen) return;
-      it = { min: t2m(pp[0]), go: "sessOpen('" + x.id + "')", badge: pp[0], label: pp[0], title: s0.ttl, gTitle: s0.ttl, sub: sessPlace(s0) + " · 테스트", gSub: sessPlace(s0) + " · " + s0.tm + " · 테스트", kind: "sess:" + x.id, ten: s0.fl === 10, iv: [t2m(pp[0]), t2m(pp[1])] };
+      it = { place: sessPlace(s0), min: t2m(pp[0]), go: "sessOpen('" + x.id + "')", badge: pp[0], label: pp[0], title: s0.ttl, gTitle: s0.ttl, sub: s0.tm + " · 테스트", gSub: sessPlace(s0) + " · " + s0.tm + " · 테스트", kind: "sess:" + x.id, ten: s0.fl === 10, iv: [t2m(pp[0]), t2m(pp[1])] };
     }
     if (!it || kinds.indexOf(it.kind) >= 0 || (it.iv && clash(it.iv))) return;   /* 종류별 1건 · 실제 항목과 시간 겹침 금지 */
     it.test = true;
@@ -2703,7 +2708,7 @@ function sessRowHtml(s) {
     left: tokBadge(tm[0], pqOn && pq.status === "call" && isBlack("call") ? "act" : mine || pqOn ? "mine" : full ? "dim" : "", tm[1] ? "~" + tm[1] : null),
     title: esc(s.ttl) + (mine ? ' <span class="badge mint">' + (mine.pre ? "사전 신청" : "신청 완료") + "</span>" : ""),
     /* v3.40 · 10F 는 장소를 부제 앞에 (말줄임이 장소부터 자르지 않게) */
-    sub: esc(TEN_ROOM[s.id] ? TEN_ROOM[s.id] + " · " + (s.sub || s.who) : (s.sub || s.who)), right: st,
+    sub: esc(s.sub || s.who), right: st, place: sessPlace(s),
     open: !!PROG.openSess[s.id], body: sessInlineHtml(s)
   });
 }
@@ -2803,7 +2808,7 @@ function myScheduleHtml() {
     rows.push([-1, "App.go('survey')", "설문", "오늘 한 판 설문", "60초 · 제출하면 스탬프", "mine"]);
   /* v3.43 · 내 항목은 myItems 하나에서 (종류별 1건 · 테스트 오버레이 겹침 제거) */
   myItems(true).forEach(function (x) {
-    rows.push([x.min, x.go, x.badge, x.title, x.sub, x.call && !x.photo && isBlack("call") ? "act" : "mine"]);
+    rows.push([x.min, x.go, x.badge, x.title, x.sub, x.call && !x.photo && isBlack("call") ? "act" : "mine", x.place]);
   });
   rows.sort(function (a, b) { return a[0] - b[0]; });
   var head = '<div class="sect"><b>나의 일정</b>' +
@@ -2816,7 +2821,7 @@ function myScheduleHtml() {
   var cut = rows.length <= SCHED_MAX + 1 ? rows.length : SCHED_MAX;
   var more = rows.length - cut;
   return head + schedNowRow() + rows.slice(0, cut).map(function (r) {
-    return rcHtml({ cls: " my", onclick: r[1], link: true, left: tokBadge(esc(r[2]), r[5]), title: esc(r[3]), sub: esc(r[4]) });
+    return rcHtml({ cls: " my", onclick: r[1], link: true, left: tokBadge(esc(r[2]), r[5]), title: esc(r[3]), sub: esc(r[4]), place: r[6] });
   }).join("") +
     (more > 0 ? rcHtml({ cls: "", onclick: "App.go('guide_time')", link: true, left: tokBadge("+" + more), title: "외 " + more + "건", sub: "일정 탭에서 보기" }) : "");
 }
@@ -2975,8 +2980,21 @@ function isBlack(kind) { return blackPick(App.current) === kind; }
    o = { cls, onclick, left(좌측 슬롯: 아이콘 또는 시간 뱃지), title, sub, right(우측 슬롯),
          open, body(펼침), link(true = 펼침 대신 이동 · 화살표 ›), chev(false = 화살표 없음) }
    컴포넌트를 바꾸면 이 함수를 쓰는 모든 화면이 함께 바뀐다 (design.md 컴포넌트 일관성) */
+/* v3.44 장소 칩 폭 추정 · 제목 줄 오른쪽 여백으로 쓴다(칩이 제목을 덮지 않게) */
+function rcPlaceW(t) {
+  var w = 22; t = String(t || "");
+  for (var i = 0; i < t.length; i++) w += /[\u1100-\uFFFF]/.test(t.charAt(i)) ? 11.5 : 6.6;
+  return Math.round(Math.min(w, 176));
+}
 function rcHtml(o) {
   var chev = o.chev === false ? "" : o.link ? '<span class="chev arw">›</span>' : '<span class="chev">' + (o.open ? "▲" : "▼") + "</span>";
+  /* v3.44 · 장소는 제목 옆 글자가 아니라 오른쪽 위 무채색 칩 (사용자 요청 260917) */
+  if (o.place) return '<div class="rc hp' + (o.cls || "") + '" style="--pcw:' + rcPlaceW(o.place) + 'px"><span class="pc">' + esc(o.place) + "</span>" +
+    '<div class="rh"' + (o.onclick ? ' onclick="' + o.onclick + '"' : "") + ">" +
+    '<span class="ls">' + (o.left || "") + "</span>" +
+    '<span class="bd"><span class="tt">' + o.title + "</span>" + (o.sub ? '<span class="sb">' + o.sub + "</span>" : "") + "</span>" +
+    (o.right ? '<span class="rt">' + o.right + "</span>" : "") + chev + "</div>" +
+    (o.open && o.body ? '<div class="rb">' + o.body + "</div>" : "") + "</div>";
   return '<div class="rc' + (o.cls || "") + '">' +
     '<div class="rh"' + (o.onclick ? ' onclick="' + o.onclick + '"' : "") + ">" +
     '<span class="ls">' + (o.left || "") + "</span>" +
@@ -2986,10 +3004,10 @@ function rcHtml(o) {
 }
 function rcIcon(svg) { return '<span class="ico">' + svg + "</span>"; }
 /* 일정 행 = 공용 행 카드 + 좌측 두 줄 시간 뱃지 · cls: "" 기본 / " now" / " past" / " my" */
-function schedRow(key, cls, tok, t0, t1, titleHtml, bodyHtml, subHtml) {
+function schedRow(key, cls, tok, t0, t1, titleHtml, bodyHtml, subHtml, place) {
   var open = !!SCHED.open[key];
   return rcHtml({ cls: cls, onclick: "schedToggle('" + key + "')", left: tokBadge(t0, tok, t1 ? "~" + t1 : null),
-    title: titleHtml, sub: subHtml, open: open, body: bodyHtml });
+    title: titleHtml, sub: subHtml, open: open, body: bodyHtml, place: place });
 }
 
 /* ════════════════ 스탬프 카드 아코디언 (v3.2 · 경로 메타포 폐기) · 전폭 카드 · 각자 독립 개폐 ════════════════ */
@@ -3497,7 +3515,7 @@ var Views = {
     /* v3.6 상태 위계: 지나간 행 = 회색 · 진행 중 = 검정 · 기준은 evPhase(데모·당일 모두 NOW_INDEX 포인터) */
     var ph = evPhase();
     TIMELINE.forEach(function (t, i) {
-      var body = '<p class="pl">' + esc(t.place) + '</p><p class="ds">' + esc(t.desc) + "</p>";
+      var body = '<p class="ds">' + esc(t.desc) + "</p>";   /* v3.44 장소는 칩으로 */
       if (t.always) return;   /* v3.21 상시 항목은 상시 프로그램 탭 몫 */
       var now = ph === "live" && i === NOW_INDEX;
       var past = ph === "after" || (ph === "live" && i < NOW_INDEX);
@@ -3505,11 +3523,11 @@ var Views = {
       var nowBlack = now && isBlack("now");
       var badges = ' <span class="badge ' + (now ? "mint" : "gray") + '">' + t.tag + "</span>" + (now ? ' <span class="badge ' + (nowBlack ? "ink" : "mint") + '">진행 중</span>' : "");
       rows.push([t2m(t.time),
-        schedRow("t" + i, nowBlack ? " now" : past ? " past" : "", nowBlack ? "act" : past ? "dim" : "", t.time, t.end, esc(t.title) + badges, body)]);
+        schedRow("t" + i, nowBlack ? " now" : past ? " past" : "", nowBlack ? "act" : past ? "dim" : "", t.time, t.end, esc(t.title) + badges, body, undefined, t.place)]);
     });
     /* 내 일정 수집 · 홈 「나의 스케줄」과 같은 규칙 (대기열 → 상담 → 커피챗 → 신청 세션) */
     var my = [];   /* [분, 시각 라벨, 제목, 상세, onclick, 호출] · v3.43 myItems 하나에서 */
-    myItems(true).forEach(function (x) { my.push([x.min, x.label, x.gTitle, x.gSub, x.go, !!x.call]); });
+    myItems(true).forEach(function (x) { my.push([x.min, x.label, x.gTitle, x.gSub, x.go, !!x.call, x.place]); });
     /* 진행 중 시간대에 든 내 일정 = 오렌지 테두리·틴트 유지, 시간 뱃지만 검정 (v3.11 조합 규칙) */
     var nowT = ph === "live" ? [t2m(TIMELINE[NOW_INDEX].time), t2m(TIMELINE[NOW_INDEX].end)] : null;
     my.forEach(function (m, j) {
@@ -3517,7 +3535,7 @@ var Views = {
       var nowish = m[5] ? isBlack("call") : (nowT && m[0] >= 0 && m[0] >= nowT[0] && m[0] < nowT[1] && isBlack("now"));
       mineRows.push([m[0],
         schedRow("m" + j, " my", nowish ? "act" : "mine", m[1], null, esc(m[2]) + ' <span class="badge mint">내 일정</span>',
-          '<p class="pl">' + esc(m[3]) + '</p><button class="btn mint" onclick="' + m[4] + '">바로가기</button>')]);
+          '<p class="pl">' + esc(m[3]) + '</p><button class="btn mint" onclick="' + m[4] + '">바로가기</button>', undefined, m[6])]);
     });
     var byT = function (a, b) { return a[0] - b[0]; };
     rows.sort(byT); mineRows.sort(byT);
@@ -3535,9 +3553,9 @@ var Views = {
         var pq = a.id === "photo" ? photoQ() : null, pqOn = pq && (pq.status === "wait" || pq.status === "call");
         return schedRow("a_" + a.id, pastA ? " past" : pqOn ? " my" : "", pastA ? "dim" : pqOn ? (pq.status === "call" && isBlack("call") ? "act" : "mine") : "", a.time, a.end,
           esc(a.title) + ' <span class="badge gray">' + a.tag + "</span>",
-          '<p class="pl">' + esc(a.place) + '</p><p class="ds">' + esc(stt[1]) + "</p>" +
+          '<p class="ds">' + esc(stt[1]) + "</p>" +
             (a.id === "photo" ? '<div style="margin-top:10px">' + photoQueueHtml() + "</div>" : '<button class="btn mint" onclick="' + stt[2] + '">' + stt[3] + "</button>"),
-          esc(stt[0]));
+          esc(stt[0]), a.place);
       }).join("") + "</div>";
     }
     if (tab === "mine") {
