@@ -501,6 +501,7 @@
   #rgPlay.rain .rg-form .btn { min-width: 64px; height: 48px; padding: 0 14px; }
   #rgForm.hit .input { border-color: #FF7E31 !important; box-shadow: 0 0 0 2px #FF7E31; }
   #rgForm.miss .input { border-color: #B8AEA6 !important; background: #F2F0EE; animation: tileShake 0.3s; }
+  #rgForm.auto .input { border-color: #B8AEA6 !important; background: #F2F0EE; }
   #rgPlay.rain.big .rgp-top { min-height: 60px; padding: 4px 12px 4px 24px; }
   #rgPlay.rain.big .rg-hud { gap: 24px; }
   #rgPlay.rain.big .rg-hud .rg-sc b { font-size: 28px; }
@@ -967,7 +968,6 @@ var NOW_INDEX = 1;
    세션 E 는 회차마다 행 하나(공용 행 카드 · 인라인 신청 그대로). 회차 선택 UI 를 따로 두지 않는 이유:
    시간 뱃지·잔여석·신청 버튼이 회차마다 다르고, 두 회차 사이 교체는 10F 1인 1세션 교체 모달이 그대로 처리한다.
    info = 상세 표 [구분, 내용] · 붙임2 문장 그대로 · capNote = 정원 보조 문구 */
-var TEN_RERUN = "당일 참석이 어려운 구성원을 위한 사내 교육프로그램 재운영 시기는 추후 별도 공지 예정입니다.";
 var TIME_TBD = "세부 시간은 변동될 수 있습니다";
 var SESSIONS = [
   { id: "key", fl: 17, zone: "hall", kind: "open", ttl: "기조연설", sub: "AI 환경 · 전략", who: "CTO", tm: "09:40~10:20", cap: 235, seed: 187,
@@ -2819,8 +2819,6 @@ function flListHtml(n) {
       return rcHtml({ cls: "", onclick: tap, left: tokBadge("상시"), title: a.nm,
         sub: (tag ? '<b class="nxt">' + tag + "</b> · " : "") + a.d, link: !!tap, chev: tap ? undefined : false });
     }).join("");
-  /* v3.29 · 공지 붙임1·2 하단 문구 · 10F 목록 끝 회색 한 줄 */
-  if (n === 10) rows += '<p style="margin:10px 2px 0;font-size:calc(12.5px * var(--fs));color:var(--faint);line-height:1.6">' + esc(TEN_RERUN) + "</p>";
   return head + rows;
 }
 
@@ -3375,7 +3373,7 @@ function stampInnerHtml(s) {
   if (s.id === "st") {
     /* v3.34b · 누적 막대·출발/도착 안내 삭제 · 계단실 안 QR 한 번이면 끝 */
     inner = '<p class="d">' + s.desc + "</p>" +
-      '<p class="nt">방화문은 닫아 주세요</p>' + scanQNote() +
+      scanQNote() +
       '<button class="btn mint" style="margin-top:10px" onclick="qrScanOpen()">QR 스캔</button>' +
       '<p class="lnk sub" onclick="staffStampOpen()">담당자 적립 ›</p>';
   } else if (s.id === "p3") {
@@ -5704,12 +5702,13 @@ function rgBindInput(inp) {
   if (!inp || inp._rgb) return; inp._rgb = 1;
   inp.addEventListener("compositionstart", function () { if (inp === el("rgIn")) RG.composing = true; });
   inp.addEventListener("compositionend", function () { if (inp === el("rgIn")) rgCompEnd(); });
+  inp.addEventListener("keydown", function (e) { if (e.key === "Escape" && inp === el("rgIn")) { e.preventDefault(); rgAutoClear(); } });   /* v3.56 Esc = 즉시 비우기 */
 }
 function rgFocus() { var i = el("rgIn"); if (i && document.activeElement !== i) i.focus(); }
 function rgCompEnd() {
   RG.composing = false;
   if (RG.pendingEnter) { RG.pendingEnter = false; setTimeout(rgSubmit, 0); }
-  else if (RGP.touch) setTimeout(function () { rgLive(null); }, 0);
+  else setTimeout(function () { rgLive(null); }, 0);   /* v3.56 조합이 끝난 글자로 다시 본다 (자동 비우기 판정) */
 }
 /* Enter · 조합 중이면 조합이 끝난 뒤 판정 */
 function rgEnter() {
@@ -5718,10 +5717,29 @@ function rgEnter() {
 }
 /* 실시간 판정 (터치 기기만) · 정확히 같은 단어가 있을 때만 · 틀림 판정은 Enter 로만 */
 function rgLive(e) {
-  if (!RGP.on || !RGP.touch || !RG.on || RG.cd > 0 || RG.ending || RG.paused) return;
+  if (!RGP.on || !RG.on || RG.cd > 0 || RG.ending || RG.paused) return;
+  rgCheckInput();   /* v3.56 · 앱·현장 노트북 공통 */
+  if (!RGP.touch) return;
   var inp = el("rgIn"); if (!inp) return;
   var v = inp.value.trim();
   if (v && RG.words.some(function (w) { return w.text === v; })) rgSubmit();
+}
+/* ── v3.56 치던 단어가 사라지면 입력창을 바로 비운다 (사용자 피드백 260918 · 60초 게임에서 지우는 시간이 아깝다) ──
+   판정 = 조합이 끝난 글자 기준 접두사 · 지금 떨어지는 단어 중 그 글자로 시작하는 것이 하나도 없으면 비운다.
+   조합 중(한글 자모가 아직 만들어지는 중)에는 보지 않는다 · 맞는 단어가 남아 있으면 건드리지 않는다.
+   자동으로 지운 글자는 오타(RG.tries)로 세지 않는다 → 점수·정확도 불변. 피드백은 테두리 한 번 + 「뚝」 소리뿐. */
+function rgPrefixAlive(v) { return RG.words.some(function (w) { return w.text.indexOf(v) === 0; }); }
+function rgAutoClear() {
+  var inp = el("rgIn"); if (!inp || !inp.value) return;
+  rgClearInput();
+  rgFlash("auto");
+  sfx("tik");
+}
+function rgCheckInput() {
+  if (!RG.on || RG.composing || RG.cd > 0 || RG.ending || RG.paused) return;
+  var inp = el("rgIn"); if (!inp) return;
+  var v = inp.value.trim();
+  if (v && !rgPrefixAlive(v)) rgAutoClear();
 }
 /* 입력창 비우기 · 터치 기기는 조합 버퍼가 남지 않게 새 입력창으로 바꿔 끼우고 같은 틱에 포커스(키보드는 열린 채) */
 function rgClearInput() {
@@ -5738,8 +5756,8 @@ function rgClearInput() {
 /* 입력 막대 반응 · 맞힘 = 테두리 O100 0.15초 · 틀림 = 회색 + 짧은 흔들림 (캔버스 MISS 글자는 두지 않는다 · 중복 금지) */
 function rgFlash(kind) {
   var f = el("rgForm"); if (!f) return;
-  f.classList.remove("hit", "miss"); void f.offsetWidth; f.classList.add(kind);
-  clearTimeout(RG.flashT); RG.flashT = setTimeout(function () { f.classList.remove("hit", "miss"); }, kind === "hit" ? 150 : 320);
+  f.classList.remove("hit", "miss", "auto"); void f.offsetWidth; f.classList.add(kind);
+  clearTimeout(RG.flashT); RG.flashT = setTimeout(function () { f.classList.remove("hit", "miss", "auto"); }, kind === "hit" ? 150 : 320);
 }
 function rgPause() {
   if (!RG.on || RG.paused) return;
@@ -5847,6 +5865,7 @@ function rgUpdate(dt, now) {
       rgBurst(wd.x + wd.bw / 2, L.floor, 6, [RAIN_PAL.dim, RAIN_PAL.ink]);
       RG.pops.push({ x: wd.x + wd.bw / 2, y: L.floor - 10, text: "놓침 · 하트 -1", t: 0.9, c: RAIN_PAL.deep, s: 14 });
       sfx("floor");
+      rgCheckInput();   /* v3.56 치고 있던 단어가 바닥에 닿아 사라졌으면 입력창을 바로 비운다 */
       if (RG.lives === 1) RG.banner = { text: "마지막 목숨", t: 1.0 };
       if (RG.lives <= 0) { rgEnd("lives"); return; }
     }
@@ -5872,7 +5891,8 @@ function rgBurst(x, y, n, cols) {
 function rgSubmit() {
   var inp = el("rgIn"); if (!inp || !RG.on || RG.cd > 0 || RG.ending || RG.paused) return;
   var v = inp.value.trim();
-  if (!v) return;
+  if (!v) { if (inp.value) { rgClearInput(); rgFlash("auto"); }  /* v3.56 빈 판정(공백만)도 즉시 비움 · 오타 아님 */
+    return; }
   rgClearInput();
   RG.tries++;
   var hit = -1;
