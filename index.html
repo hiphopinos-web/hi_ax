@@ -392,12 +392,17 @@
   .chain-box .word { font-size: 27px; font-weight: 800; margin-top: 5px; }
   .chain-box .next { margin-top: 8px; font-size: calc(14.5px * var(--fs)); opacity: 0.9; }
   .chain-box .next b { color: var(--mint-deep); font-size: calc(16.5px * var(--fs)); }
-  .gmsg { min-height: 18px; font-size: calc(14.5px * var(--fs)); font-weight: 700; color: #e11d48; margin-top: 6px; }
+  .gmsg { min-height: 18px; font-size: calc(14.5px * var(--fs)); font-weight: 700; color: var(--muted); margin-top: 6px; }
   /* 모달 등장 = 제자리에서 페이드 + 살짝 확대 (일반적인 다이얼로그). 위치를 옮기는 translate 는 쓰지 않는다 */
   @keyframes popIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
   @keyframes dimIn { from { opacity: 0; } to { opacity: 1; } }
   /* 게임 A 「AX 링크」 · 끝말 타일 연결 → 문장 완성 */
-  .sline { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; background: var(--ink); border: 0; border-radius: 16px; padding: 13px 12px; margin-bottom: 12px; }
+  .sline { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center; background: var(--ink); border: 0; border-radius: 16px; padding: 13px 12px; margin-bottom: 12px; line-height: 1.6; }
+  /* v3.42 빈칸 채우기 · 문장 글 · 지금 빈칸 · 완성 문장 */
+  .sline .stext { color: #fff; font-weight: 700; font-size: calc(16px * var(--fs)); word-break: keep-all; }
+  .sblock.cur { background: rgba(255,126,49,0.18); color: var(--mint-deep); box-shadow: inset 0 0 0 2px var(--mint); letter-spacing: 0.06em; }
+  .sline.done { background: none; padding: 0; }
+  .lgrid.two { grid-template-columns: repeat(2, 1fr); }
   .sline .cap { width: 100%; text-align: center; font-size: calc(12.5px * var(--fs)); font-weight: 800; letter-spacing: 0.1em; color: rgba(255,255,255,0.55); margin-bottom: 2px; }
   .sblock { padding: 7px 10px; border-radius: 8px; background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); font-weight: 800; font-size: calc(15.5px * var(--fs)); letter-spacing: 0.06em; }
   .sblock.fill { background: var(--mint); color: #fff; letter-spacing: 0; }
@@ -408,7 +413,7 @@
   .ltile:active { transform: scale(0.97); }
   .ltile.used { background: var(--tint2); color: var(--acc2); cursor: default; }
   .ltile.used .ord { position: absolute; top: -7px; right: -5px; min-width: 20px; height: 20px; border-radius: 999px; background: var(--mint); color: #fff; font-family: var(--disp); font-size: calc(12.5px * var(--fs)); display: flex; align-items: center; justify-content: center; padding: 0 4px; }
-  .ltile.wrong { border-color: #E5484D; background: rgba(229,72,77,0.1); animation: tileShake 0.4s; }
+  .ltile.wrong { background: var(--dim); color: var(--faint); animation: tileShake 0.4s; }   /* v3.42 틀림은 빨강 금지 · 회색 흔들림 */
   @keyframes tileShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-3px); } }
   .ltile.hint { animation: hintPulse 1s ease-in-out infinite; }
   @keyframes hintPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,126,49,0); } 50% { box-shadow: 0 0 0 4px rgba(255,126,49,0.35); } }
@@ -929,23 +934,27 @@ function quizLive() {
   }
   return st;
 }
-/* 게임 A 「AX 링크」 라운드 · 제작 규칙: ①문장 어절 수=체인 길이 ②체인 첫 글자 라운드 내 유일 ③보기는 요구 글자(두음 변형 포함)로 시작 금지 */
+/* 게임 A 「AX 링크」 라운드 · v3.42 빈칸 채우기 · 여기 한 곳 (사용자 확정 대상 초안)
+   제작 규칙: ①확정 문서 문장만(슬로건 · 3개년 로드맵 · 공식 공지 붙임1·2) ②{정답} 자리만 빈칸 · opts[i] 는 i 번째 빈칸 보기, 정답은 반드시 1개
+   ③오답은 문맥상 그럴듯하지만 해설로 틀린 이유가 설명되는 것. 구 라운드 「이거, AI로 되겠는데?」「2028년 전 직원 1인 1 AI 에이전트」는 확정 문서 출처가 없어 제외 */
 var LINK_ROUNDS = [
-  { s: ["나의", "업무", "혁신,", "우리", "회사의", "AX가", "되다"], start: "동료",
-    chain: ["요약", "약속", "속도", "도전", "전환", "환영", "영감"],
-    extra: ["데이터", "미래", "고객", "보상", "회의"],
-    why: "ME to WE · 오늘 페스티벌의 슬로건입니다" },
-  { s: ["이거,", "AI로", "되겠는데?"], start: "질문",
-    chain: ["문서", "서비스", "스마트"],
-    extra: ["혁신", "자동", "미래", "고객", "데이터", "약관", "판단", "기록", "요약"],
-    why: "모든 AX의 시작 · 떠올랐다면 아이디어 탭에 한 줄 남겨보세요" },
-  { s: ["2028년", "전 직원", "1인 1", "AI", "에이전트"], start: "회사",
-    chain: ["사내", "내일", "일상", "상생", "생각"],
-    extra: ["도약", "미소", "혁신", "질문", "고민", "판례", "확산"],
-    why: "우리 회사 AX 로드맵, 2028년의 목표입니다" }
+  { src: "슬로건", text: "ME to WE · 나의 업무 {혁신}, 우리 회사의 {AX}가 되다",
+    opts: [["혁신", "효율", "변화", "성과"], ["AX", "AI", "DX", "IT"]],
+    why: "행사 슬로건입니다. 한 사람의 업무 혁신(ME)이 모여 회사 전체의 AX(WE)가 됩니다. AI 도입이 아니라 일하는 방식의 전환(AX)이 목표입니다." },
+  { src: "3개년 로드맵", text: "2026 {공감}과 참여 · 2027 확산과 {체화} · 2028 {혁신}과 연결",
+    opts: [["공감", "도입", "교육", "실험"], ["체화", "정착", "확대", "교육"], ["혁신", "성장", "전환", "도약"]],
+    why: "AX 3개년 로드맵입니다. 올해는 마음을 움직이는 공감과 참여, 내년은 확산과 체화, 2028년은 혁신과 연결로 이어집니다." },
+  { src: "10F 세션 B", text: "“내 {데이터}”로 만드는 통계 현황 {리포팅} 실습",
+    opts: [["데이터", "업무", "문서", "메일"], ["리포팅", "예측", "시각화", "검증"]],
+    why: "실제 업무 정기 데이터로 AI 활용 분석, 리포트 자동화, 대시보드 개발까지 하는 실습형 세션 B의 공식 제목입니다." },
+  { src: "10F 세션 C", text: "“내가 보는 {자료}”로 만드는 외부자료 리서치 {자동화} 실습",
+    opts: [["자료", "데이터", "화면", "메일"], ["자동화", "요약", "검증", "번역"]],
+    why: "법령·뉴스·공시처럼 늘 찾아보던 외부자료를 자동으로 수집·정리하고 알림 봇까지 만드는 세션 C의 공식 제목입니다." },
+  { src: "17F 파트너사 강연 · AWS", text: "{Agentic AI} 시대의 {일하는 방식} 변화",
+    opts: [["Agentic AI", "생성형 AI", "디지털", "클라우드"], ["일하는 방식", "조직 문화", "고객 경험", "업무 환경"]],
+    why: "AWS 파트너사 초청 강연 제목입니다. 스스로 일을 이어서 처리하는 AI(Agentic AI)가 바꾸는 우리의 일하는 방식을 다룹니다." }
 ];
-var DUEUM = { "라": "나", "락": "낙", "란": "난", "람": "남", "랑": "낭", "래": "내", "랭": "냉", "량": "양", "려": "여", "력": "역", "련": "연", "렬": "열", "렴": "염", "령": "영", "례": "예", "로": "노", "록": "녹", "론": "논", "롱": "농", "뢰": "뇌", "료": "요", "룡": "용", "루": "누", "류": "유", "륙": "육", "륜": "윤", "률": "율", "리": "이", "린": "인", "림": "임", "립": "입", "녀": "여", "뇨": "요", "뉴": "유", "니": "이" };
-var LINK_SEC = 60, LINK_PEN = 3, LINK_HINT_MS = 6000, LINK_PT = 10, LINK_PT_ROUND = 30, LINK_NEXT_DELAY = 12000;
+var LINK_SEC = 90, LINK_PEN = 3, LINK_HINT_MS = 6000, LINK_PT = 10, LINK_PT_ROUND = 30, LINK_NEXT_DELAY = 12000;
 var CHOSEONG_QUIZ = [
   { cho: "ㅇㅇㅈㅌ", a: "에이전트", alts: [], hint: "사람 대신 업무를 알아서 수행하는 AI · 2026년 우리 회사가 도입을 확대합니다" },
   { cho: "ㅈㄷㅎ", a: "자동화", alts: [], hint: "반복 업무를 AI에게 맡기는 것 · 내 업무 혁신의 첫걸음" },
@@ -3869,12 +3878,12 @@ var Views = {
     return '<div id="gwRoot">' +
       '<div class="chain-box"><p class="who">MINI GAME</p>' +
       '<p class="word disp" style="letter-spacing:0.04em">AX 링크</p>' +
-      '<p class="next" style="opacity:0.92">끝말을 이어 붙이면 <b>우리의 문장</b>이 완성됩니다.<br>문장 1개를 완성하면 클리어입니다.</p></div>' +
+      '<p class="next" style="opacity:0.92">문장 속 빈칸에 <b>딱 맞는 말</b>을 채워 우리의 문장을 완성하세요.<br>문장 1개를 완성하면 클리어입니다.</p></div>' +
       '<div class="card soft mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">규칙</b><ul style="margin:8px 0 0 18px;font-size:calc(14.5px * var(--fs));line-height:1.8;color:var(--muted)">' +
-      '<li>지금 단어의 <b>끝 글자로 시작하는 단어</b>를 보기 12개에서 찾아 탭 (두음법칙 OK)</li>' +
-      '<li>하나 이을 때마다 위 문장의 빈칸이 한 칸씩 채워져요</li>' +
-      '<li>60초 · 문장 3개 · 오답은 시간 −' + LINK_PEN + '초 (점수는 안 깎아요)</li>' +
-      '<li>6초 헤매면 정답 타일이 반짝 · 3문장 완주 = 남은 시간 보너스</li></ul></div>' +
+      '<li>문장이 처음부터 보이고 <b>핵심어 자리만 빈칸</b> · 강조된 빈칸부터 차례로</li>' +
+      '<li>보기 4개 중 문맥에 맞는 말을 탭 · 문장을 완성하면 왜 그 말인지 해설이 나와요</li>' +
+      '<li>' + LINK_SEC + '초 · 문장 ' + LINK_ROUNDS.length + '개 · 오답은 시간 −' + LINK_PEN + '초 (점수는 안 깎아요)</li>' +
+      '<li>6초 헤매면 정답 타일이 반짝 · 전부 완성하면 남은 시간 보너스</li></ul></div>' +
       '<button class="btn mint" style="padding:15px" onclick="gwStart()">게임 시작</button></div>';
   },
 
@@ -5744,15 +5753,13 @@ function gameClear(flagKey) {
   }
 }
 
-/* ════════════════ 게임 A: AX 링크 · 보기 타일에서 끝말을 이어 문장 완성 ════════════════ */
+/* ════════════════ 게임 A: AX 링크 · v3.42 빈칸 채우기 (사용자 확정 260917) ════════════════
+   문장이 처음부터 보이고 핵심어 자리만 빈칸 · 빈칸은 앞에서부터 차례로 · 보기 4개(정답 1 + 문맥상 그럴듯한 오답 3) 중 골라 채운다.
+   맞히면 칸에 「딱 맞아」 팝 · 틀리면 회색 흔들림 + 시간 감점 · 문장 완성 시 문장 강조 + 해설 한 줄(공식 문서 근거).
+   구 끝말잇기(start·chain·두음법칙)는 폐기. 이름 「AX 링크」는 문장 속 핵심어를 제자리에 이어 붙이는 방식이라 유지. */
 var GW = { on: false, timer: null, nextT: null };
-function lastSyl(w) { return w.charAt(w.length - 1); }
-function allowedStarts(syl) {
-  var set = [syl];
-  if (DUEUM[syl] && set.indexOf(DUEUM[syl]) < 0) set.push(DUEUM[syl]);
-  for (var k in DUEUM) { if (DUEUM[k] === syl && set.indexOf(k) < 0) set.push(k); }
-  return set;
-}
+function gwParts(R) { return R.text.split(/\{([^}]+)\}/); }        /* 짝수 = 글, 홀수 = 정답 */
+function gwAnswers(R) { return gwParts(R).filter(function (x, i) { return i % 2 === 1; }); }
 function gwStop() {
   if (GW.timer) { clearInterval(GW.timer); GW.timer = null; }
   if (GW.nextT) { clearTimeout(GW.nextT); GW.nextT = null; }
@@ -5760,21 +5767,16 @@ function gwStop() {
 }
 function gwStart() {
   gwStop();
-  GW = { on: true, r: 0, li: 0, score: 0, time: LINK_SEC, board: [], paused: false, done: [], lastAct: Date.now(), hintIdx: -1, timer: null, nextT: null, over: false };
+  GW = { on: true, r: 0, bi: 0, score: 0, time: LINK_SEC, board: [], paused: false, done: [], lastAct: Date.now(), hintIdx: -1, timer: null, nextT: null, over: false, wrongs: 0 };
   gwRound();
   GW.timer = setInterval(gwTick, 1000);
   gwPaint();
 }
-function gwRound() {
+function gwRound() { GW.bi = 0; gwBoard(); }
+function gwBoard() {
   var R = LINK_ROUNDS[GW.r];
-  GW.li = 0; GW.hintIdx = -1; GW.lastAct = Date.now();
-  GW.board = shuf(R.chain.concat(R.extra)).map(function (w) { return { w: w, used: 0 }; });
-}
-function gwCur() { var R = LINK_ROUNDS[GW.r]; return GW.li === 0 ? R.start : R.chain[GW.li - 1]; }
-function gwNeed() { return allowedStarts(lastSyl(gwCur())); }
-function gwNeedLabel() {
-  var n = gwNeed();
-  return "「" + n[0] + "」" + (n.length > 1 ? " 또는 「" + n.slice(1).join("」「") + "」" : "") + "(으)로 시작하는 단어를 찾으세요";
+  GW.hintIdx = -1; GW.lastAct = Date.now();
+  GW.board = shuf(R.opts[GW.bi].slice()).map(function (w) { return { w: w, bad: 0 }; });
 }
 function gwTick() {
   if (!GW.on || GW.over || GW.paused) return;
@@ -5783,59 +5785,57 @@ function gwTick() {
   var t = el("gwTime");
   if (t) { t.textContent = GW.time; if (GW.time <= 10) t.classList.add("hot"); }
   if (Date.now() - GW.lastAct > LINK_HINT_MS && GW.hintIdx < 0) {
-    var need = gwNeed();
+    var ans = gwAnswers(LINK_ROUNDS[GW.r])[GW.bi];
     for (var i = 0; i < GW.board.length; i++) {
-      if (!GW.board[i].used && need.indexOf(GW.board[i].w.charAt(0)) >= 0) {
-        GW.hintIdx = i;
-        var d = el("lt" + i);
-        if (d) d.classList.add("hint");
-        break;
-      }
+      if (GW.board[i].w === ans) { GW.hintIdx = i; var d = el("lt" + i); if (d) d.classList.add("hint"); break; }
     }
   }
 }
 function gwPickTile(i) {
   if (!GW.on || GW.over || GW.paused) return;
-  var t = GW.board[i];
-  if (!t || t.used) return;
-  var need = gwNeed();
-  if (need.indexOf(t.w.charAt(0)) >= 0) {
-    t.used = GW.li + 1;
-    GW.li++; GW.score += LINK_PT;
-    GW.lastAct = Date.now(); GW.hintIdx = -1;
-    if (GW.li >= LINK_ROUNDS[GW.r].chain.length) gwRoundClear();
-    else gwPaint(true);
+  var t = GW.board[i], R = LINK_ROUNDS[GW.r];
+  if (!t) return;
+  if (t.w === gwAnswers(R)[GW.bi]) {
+    GW.bi++; GW.score += LINK_PT;
+    if (GW.bi >= gwAnswers(R).length) { gwRoundClear(); return; }
+    gwBoard();
+    gwPaint(true);
   } else {
-    GW.time = Math.max(0, GW.time - LINK_PEN);
+    GW.time = Math.max(0, GW.time - LINK_PEN); GW.wrongs++;
     GW.lastAct = Date.now();
     var d = el("lt" + i);
     if (d) { d.classList.add("wrong"); setTimeout(function () { d.classList.remove("wrong"); }, 450); }
     var m = el("gwMsg");
-    if (m) m.textContent = "「" + need.join("/") + "」(으)로 시작해야 해요 · 시간 −" + LINK_PEN + "초";
+    if (m) m.textContent = "「" + t.w + "」은(는) 이 자리에 맞지 않아요 · 문장을 다시 읽어 보세요 · 시간 −" + LINK_PEN + "초";
     var tm = el("gwTime");
     if (tm) { tm.textContent = GW.time; if (GW.time <= 10) tm.classList.add("hot"); }
     if (GW.time <= 0) gwFinish();
   }
 }
+/* 문장 · 채운 칸 = 오렌지 · 지금 칸 = 테두리 강조 · 남은 칸 = 점선 */
+function gwSentenceHtml(R, upto, popIdx, all) {
+  var parts = gwParts(R), bi = 0, h = "";
+  parts.forEach(function (p, i) {
+    if (i % 2 === 0) { if (p) h += '<span class="stext">' + esc(p) + "</span>"; return; }
+    if (all || bi < upto) h += '<span class="sblock fill' + (bi === popIdx ? " pop" : "") + '">' + esc(p) + "</span>";
+    else if (bi === upto) h += '<span class="sblock cur">' + "? ? ?" + "</span>";
+    else h += '<span class="sblock">· · ·</span>';
+    bi++;
+  });
+  return h;
+}
 function gwPaint(popLast) {
   var root = el("gwRoot"); if (!root) return;
-  var R = LINK_ROUNDS[GW.r];
-  var blocks = R.s.map(function (b, i) {
-    if (i < GW.li) return '<span class="sblock fill' + (popLast && i === GW.li - 1 ? " pop" : "") + '">' + esc(b) + "</span>";
-    return '<span class="sblock">· · ·</span>';
-  }).join("");
-  var tiles = GW.board.map(function (t, i) {
-    if (t.used) return '<button class="ltile used" id="lt' + i + '">' + esc(t.w) + '<span class="ord">' + t.used + "</span></button>";
-    return '<button class="ltile" id="lt' + i + '" onclick="gwPickTile(' + i + ')">' + esc(t.w) + "</button>";
-  }).join("");
+  var R = LINK_ROUNDS[GW.r], n = gwAnswers(R).length;
+  var tiles = GW.board.map(function (t, i) { return '<button class="ltile" id="lt' + i + '" onclick="gwPickTile(' + i + ')">' + esc(t.w) + "</button>"; }).join("");
   root.innerHTML =
     '<div class="game-hud">' +
     '<div class="hud"><div class="v' + (GW.time <= 10 ? " hot" : "") + '" id="gwTime">' + GW.time + '</div><div class="l">남은 시간(초)</div></div>' +
     '<div class="hud"><div class="v">' + GW.score + '</div><div class="l">점수</div></div>' +
     '<div class="hud"><div class="v">' + (GW.r + 1) + "/" + LINK_ROUNDS.length + '</div><div class="l">문장</div></div></div>' +
-    '<div class="sline"><span class="cap">완성할 문장 · ' + GW.li + "/" + R.chain.length + "칸</span>" + blocks + "</div>" +
-    '<div class="chain-box" style="padding:14px 16px"><p class="who">지금 단어</p><p class="word" style="font-size:26px">' + esc(gwCur()) + '</p><p class="next" style="font-size:calc(14.5px * var(--fs));color:var(--mint);opacity:1">' + gwNeedLabel() + "</p></div>" +
-    '<div class="lgrid">' + tiles + "</div>" +
+    '<div class="sline"><span class="cap">' + esc(R.src) + " · 빈칸 " + (GW.bi + 1) + "/" + n + "</span>" + gwSentenceHtml(R, GW.bi, popLast ? GW.bi - 1 : -1) + "</div>" +
+    '<p class="muted" style="text-align:center;margin:0 0 8px;font-size:calc(13.5px * var(--fs))">강조된 빈칸에 들어갈 말을 고르세요</p>' +
+    '<div class="lgrid two">' + tiles + "</div>" +
     '<p class="gmsg" id="gwMsg" style="text-align:center"></p>';
 }
 function gwRoundClear() {
@@ -5854,12 +5854,11 @@ function gwNext() {
 function gwPaintClear() {
   var root = el("gwRoot"); if (!root) return;
   var R = LINK_ROUNDS[GW.r];
-  var full = R.s.map(function (b) { return '<span class="sblock fill pop">' + esc(b) + "</span>"; }).join("");
   root.innerHTML =
-    '<div class="chain-box" style="padding:28px 16px">' +
-    '<p class="who">SENTENCE COMPLETE</p>' +
+    '<div class="chain-box" style="padding:26px 16px">' +
+    '<p class="who">딱 맞아 · SENTENCE COMPLETE</p>' +
     '<p class="disp" style="font-size:30px;margin-top:6px;color:var(--mint)">+' + LINK_PT_ROUND + '</p>' +
-    '<div class="sline" style="background:none;border:0;margin:12px 0 0;padding:0">' + full + "</div>" +
+    '<div class="sline done" style="margin:12px 0 0">' + gwSentenceHtml(R, 99, -1, true) + "</div>" +
     '<p class="next" style="margin-top:12px">' + esc(R.why) + "</p>" +
     '<button class="btn mint" style="margin-top:18px;padding:14px" onclick="gwNext()">' +
     (GW.r >= LINK_ROUNDS.length - 1 ? "결과 보기 →" : "다음 문장 →") + "</button></div>";
@@ -5879,8 +5878,9 @@ function gwPaintEnd() {
   var cleared = GW.done.length >= 1;
   var allDone = GW.done.length >= LINK_ROUNDS.length;
   var doneList = GW.done.map(function (r) {
-    return '<div class="card soft mb8"><p style="font-size:calc(15.5px * var(--fs));font-weight:800;color:var(--hi)">' + LINK_ROUNDS[r].s.join(" ") + '</p>' +
-      '<p class="muted" style="font-size:calc(12.5px * var(--fs));margin-top:3px">' + esc(LINK_ROUNDS[r].why) + "</p></div>";
+    var R = LINK_ROUNDS[r];
+    return '<div class="card soft mb8"><p style="font-size:calc(15.5px * var(--fs));font-weight:800;color:var(--hi)">' + esc(R.text.replace(/[{}]/g, "")) + '</p>' +
+      '<p class="muted" style="font-size:calc(12.5px * var(--fs));margin-top:3px">' + esc(R.why) + "</p></div>";
   }).join("");
   root.innerHTML =
     '<div class="chain-box" style="padding:26px 18px">' +
