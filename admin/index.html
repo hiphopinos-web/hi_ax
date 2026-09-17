@@ -179,7 +179,7 @@ var TABS = [
 var STAMP_META = {
   p1:{ no:"01", n:"1F 전시" }, p2:{ no:"02", n:"부스 체험" }, p3:{ no:"03", n:"17F 강의" },
   p4:{ no:"04", n:"라이브 챌린지" }, p5:{ no:"05", n:"아이디어" }, p7:{ no:"06", n:"QR 퀴즈" },
-  st:{ no:"07", n:"계단 10층" }, sv:{ no:"08", n:"오늘 한 판 설문" },
+  st:{ no:"07", n:"계단 이용" }, sv:{ no:"08", n:"오늘 한 판 설문" },
   p6:{ no:"", n:"포토부스", old:1 }, p8:{ no:"", n:"미니게임", old:1 }, p9:{ no:"", n:"계단(구)", old:1 }
 };
 var STAMP_ORDER = ["p1","p2","p3","p4","p5","p7","st","sv"];
@@ -433,7 +433,7 @@ function viewStamp(){
         '<td><select class="in" style="min-width:120px;padding:5px 8px" onchange="grantStamp(\''+esc(r.emp)+'\',this.value,this)"><option value="">부여할 항목</option>'+["p1","p2","p3"].filter(function(id){return r.stamps.indexOf(id)<0;}).map(function(id){ return '<option value="'+id+'">'+STAMP_META[id].no+' '+STAMP_META[id].n+'</option>'; }).join("")+'</select></td></tr>'; }).join("")+
     (shown.length>400?'<tr><td colspan="8" class="src">400명까지만 표시합니다. 검색으로 좁혀 주세요.</td></tr>':'')+'</table></div>';
   h+=viewStairOps();
-  h+='<p class="note mt12">스탬프는 8칸, 보상은 6개에서 끝납니다(7·8번째는 추가 보상 없음). 계단(07)은 서버가 출발·도착 QR로 판정해 적립하고, 설문(08)은 제출 시 적립됩니다. 담당자 부여는 현장 QR 3종(01·02·03)만 됩니다. 앱 자동 적립 3종(04·05·06)은 앱 안에서 하는 행동이라 부여 대상이 아닙니다. 부여는 참여 기록에 「담당자 부여」로 남습니다.</p></div>';
+  h+='<p class="note mt12">스탬프는 8칸, 보상은 6개에서 끝납니다(7·8번째는 추가 보상 없음). 계단(07)은 계단실 안 QR을 한 번 찍으면 적립되고(층 상관없음), 설문(08)은 제출 시 적립됩니다. 담당자 부여는 현장 QR 3종(01·02·03)과 계단(07)이 됩니다. 앱 자동 적립 3종(04·05·06)은 앱 안에서 하는 행동이라 부여 대상이 아닙니다. 부여는 참여 기록에 「담당자 부여」로 남습니다.</p></div>';
   return h;
 }
 /* v3.33·v3.34 운영 · 룰렛 소진 안내 스위치 + 계단 지점 코드(인쇄용) */
@@ -444,7 +444,7 @@ function viewStairOps(){
     '<div class="row mt12"><span class="pill'+(out?" on":" off")+'">'+(out?"안내 켜짐":"안내 꺼짐")+'</span><button class="btn sm '+(out?"":"danger")+'" onclick="rouletteOut('+(out?0:1)+')">'+(out?"안내 끄기":"소진 안내 켜기")+'</button></div></div>';
   h+='<div class="card"><h2>계단 지점 QR (인쇄용)</h2>'+
     (rows.length?'<table class="tb"><tr><th>지점</th><th>층</th><th>코드</th><th>상태</th></tr>'+rows.map(function(r){ return '<tr><td><b>'+esc(r.name)+'</b></td><td class="n">'+esc(r.fl)+'F</td><td class="n">'+esc(r.code)+'</td><td>'+(r.on?'<span class="pill on">운영</span>':'<span class="pill off">꺼짐</span>')+'</td></tr>'; }).join("")+'</table>':'<p class="src">설치된 계단 지점이 없습니다. 백엔드 stair_install 로 4곳(18F·17F·10F·1F)을 만듭니다.</p>')+
-    '<p class="note mt12">지점마다 포스터 2장 이상 인쇄(한 장이면 스캔 줄이 생깁니다). 각 층 복도 계단실 문 옆에 붙이고, 계단실 안은 통신이 안 될 수 있어 피합니다. 포스터에 「방화문은 닫아 주세요」 · 「내려갈 때는 계단으로」. 판정: 방향 무관 · 하루 누적 10개 층 · 층당 4초 미만은 무효 · 출발 후 15분 만료.</p></div></div>';
+    '<p class="note mt12">지점마다 포스터 2장 이상 인쇄(한 장이면 스캔 줄이 생깁니다). 계단실 <b>안쪽 벽</b>(방화문을 열고 들어가야 보이는 곳)에 붙입니다. 어느 층 코드든 같은 스탬프이고 1인 1회입니다. 포스터에 「문은 닫아 주세요」 · 「내려갈 때는 계단으로」. 판정: 층·방향·횟수·시간 조건 없음(v3.34b). 계단실 안이 통신이 약해도 앱이 스캔을 저장했다가 연결되면 자동으로 보냅니다. QR 이미지는 앱 스태프 메뉴 「부스 QR」에서 함께 뽑습니다.</p></div></div>';
   return h;
 }
 function rouletteOut(on){
