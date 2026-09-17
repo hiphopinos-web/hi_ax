@@ -728,7 +728,7 @@ var STAMPS = [
   { id: "p1", title: "1F 전시", short: "1F 전시", desc: "1F 전시존 QR 스캔", where: "1F · 약 5분", site: 1, tap: "qrScanOpen()", cta: "QR 스캔", note: "1F 전시존 끝 QR 입간판을 스캔하세요." },
   { id: "p2", title: "AX Now! 체험", short: "부스 체험", desc: "HIDI-Q 또는 HI-Helper 부스 1곳 체험", where: "1F · 약 5분", site: 1, tap: "App.go('booth')", cta: "부스 안내 보기", note: "체험을 마치면 스태프가 보여주는 완료 QR을 스캔합니다." },
   { id: "p3", title: "17F 강의", short: "17F 강의", desc: "17F 오후 파트너사 강연 1회 참석 (10F 제외)", where: "17F · 90분", site: 1, tap: "progGoFl(17)", cta: "17F 강연 시간 보기", note: "17F 대강당 강연은 신청 없이 자유 참석입니다. 입장 시 좌석 QR을 스캔하세요." },
-  { id: "p4", title: "라이브 챌린지", short: "라이브 챌린지", desc: "기조연설 라이브 퀴즈 응답 또는 미니게임(AX 링크·초성퀴즈) 1개 클리어", where: "앱 · 30초", inapp: 1 },
+  { id: "p4", title: "라이브 챌린지", short: "라이브 챌린지", desc: "Outro 시작 전 라이브 퀴즈 응답 또는 미니게임(AX 링크·초성퀴즈) 1개 클리어", where: "앱 · 30초", inapp: 1 },
   { id: "p5", title: "아이디어 한 줄", short: "아이디어", desc: "아이디어 1건 제출", where: "앱 · 1분", inapp: 1, tap: "App.go('ideas')", cta: "아이디어 쓰기" },
   { id: "p7", title: "전시 QR 퀴즈", short: "QR 퀴즈", desc: "DAP Wall QR 퀴즈 1세트 통과 (60점 이상)", where: "1F DAP Wall · 약 10분", tap: "App.go('wq_list')", cta: "QR 퀴즈 풀기" }
 ];
@@ -763,7 +763,7 @@ function raffleTickets(n) { return n >= 6 ? 3 : n >= 5 ? 2 : n >= 4 ? 1 : 0; }
 var TIMELINE = [
   /* v3.29 공식 공지 붙임1·2(260917) 기준 · 순서 = 시작 시각순 · NOW_INDEX(데모 1 = 기조연설) 가 이 순서를 가리킨다 */
   { time: "09:30", end: "09:40", title: "Intro · 개회", short: "CEO · AX 선포 및 Festival 개최 안내", place: "17F 대강당", desc: "CEO · AX 선포 및 Festival 개최 안내.", tag: "자유 참석" },
-  { time: "09:40", end: "10:20", title: "기조연설", short: "CTO · AI 환경 · 전략", place: "17F 대강당", desc: "CTO · AI 환경 · 전략. 강연 중 라이브 퀴즈가 열립니다. 신청 없이 자유 참석.", tag: "자유 참석" },
+  { time: "09:40", end: "10:20", title: "기조연설", short: "CTO · AI 환경 · 전략", place: "17F 대강당", desc: "CTO · AI 환경 · 전략. 신청 없이 자유 참석.", tag: "자유 참석" },
   { time: "10:30", end: "11:00", title: "내부 강연 · AX 로드맵", short: "디지털전략본부장 · 현대해상 AX 로드맵", place: "17F 대강당", desc: "디지털전략본부장 · 현대해상 AX 로드맵. 신청 없이 자유 참석.", tag: "자유 참석" },
   { time: "11:00", end: "13:30", title: "점심 · 자유 관람", short: "1F AX 전시·체험존에서 스탬프를 채워보세요", place: "1F AX 전시·체험존", desc: "점심 시간과 자유 관람. 1F AX 전시·체험존에서 스탬프를 채워보세요.", tag: "휴식" },
   /* always=1 (v3.18): 기간이 길어서가 아니라 「그 시간 안에 아무 때나 들르는」 참여 방식이라 상시 묶음.
@@ -772,7 +772,9 @@ var TIMELINE = [
   { time: "13:30", end: "15:00", title: "파트너사 강연 · AWS", short: "Agentic AI 시대의 일하는 방식 변화 · 구태훈 박사(AWS)", place: "17F 대강당", desc: "구태훈 박사(AWS) · Agentic AI 시대의 일하는 방식 변화. 신청 없이 자유 참석. 세부 시간은 변동될 수 있습니다.", tag: "자유 참석" },
   { time: "13:30", end: "16:30", title: "10F 실습형 세션 A~E", short: "사전 신청자 · 5개 세션 중 1개", place: "10F", desc: "세션 A 영업 및 보상 현장 우수 사례 · 세션 B 통계 현황 리포팅 · 세션 C 외부자료 리서치 자동화 · 세션 D 바이브 코딩(AWS) · 세션 E MS Copilot 문서 작성(MS, 2회 진행 13:30 · 15:00). 사전 신청한 세션 1개에 참석합니다(세션 A는 16:40 종료).", tag: "신청제" },
   { time: "15:10", end: "16:40", title: "파트너사 강연 · MS", short: "AI와 친해지기 · MS", place: "17F 대강당", desc: "MS · AI와 친해지기. 신청 없이 자유 참석. 세부 시간은 변동될 수 있습니다.", tag: "자유 참석" },
-  { time: "17:00", end: "17:30", title: "Outro · DAP 시상", short: "DAP 우수 성과자 시상 · 경품 추첨", place: "17F 대강당", desc: "CSO · DAP 우수 성과자 시상, 경품 추첨. 추첨 결과는 행사 종료 후 개별 안내드립니다.", tag: "피날레" }
+  /* v3.32 라이브 퀴즈 = Outro 대기 시간 한 판 (사용자 확정 260917) · 4문항을 운영자가 순서대로 발사 */
+  { time: "16:45", end: "17:00", title: "라이브 퀴즈 · 설문 안내", short: "16:45 라이브 퀴즈 · 설문 참여 안내 후 17:00 Outro", place: "17F 대강당", desc: "진행 순서: 라이브 퀴즈 4문항 → 오늘 한 판 설문 참여 안내 → 17:00 Outro. 퀴즈는 문항마다 20초, 홈 화면에서 답하세요. 한 문제만 답해도 라이브 챌린지 스탬프가 적립됩니다.", tag: "자유 참석" },
+  { time: "17:00", end: "17:30", title: "Outro · DAP 시상", short: "DAP 우수 성과자 시상 · 경품 추첨", place: "17F 대강당", desc: "16:45 라이브 퀴즈 · 설문 참여 안내 후 17:00 Outro. CSO · DAP 우수 성과자 시상, 경품 추첨. 추첨 결과는 행사 종료 후 개별 안내드립니다.", tag: "피날레" }
 ];
 var NOW_INDEX = 1;
 var FLOORS = [
@@ -799,7 +801,7 @@ var TEN_RERUN = "당일 참석이 어려운 구성원을 위한 사내 교육프
 var TIME_TBD = "세부 시간은 변동될 수 있습니다.";
 var SESSIONS = [
   { id: "key", fl: 17, zone: "hall", kind: "open", ttl: "기조연설", sub: "AI 환경 · 전략", who: "CTO", tm: "09:40~10:20", cap: 235, seed: 187,
-    desc: "Intro(CEO · AX 선포 및 Festival 개최 안내)에 이어지는 기조연설. 강연 중 라이브 퀴즈가 열립니다." },
+    desc: "Intro(CEO · AX 선포 및 Festival 개최 안내)에 이어지는 기조연설." },
   { id: "road", fl: 17, zone: "hall", kind: "open", ttl: "내부 강연", sub: "현대해상 AX 로드맵", who: "디지털전략본부장", tm: "10:30~11:00", cap: 235, seed: 120,
     desc: "현대해상 AX 로드맵을 디지털전략본부장이 소개합니다." },
   { id: "l1", fl: 17, zone: "hall", kind: "open", ttl: "파트너사 강연 · AWS", sub: "Agentic AI 시대의 일하는 방식 변화", who: "구태훈 박사 (AWS)", tm: "13:30~15:00", cap: 235, seed: 141,
@@ -861,17 +863,17 @@ var PROG = { fl: 1, sid: null, openSess: {} };   /* fl = 선택 층 (v3.7 · 기
 
 var IDEA_TAGS = ["영업", "보상", "마케팅", "본사·통계", "기타"];
 var QUIZZES = [
-  { id: "q1", part: "⓪ AX란 무엇인가", question: "AX에서 X가 의미하는 것은 무엇일까요?", options: ["eXperience (경험)", "Transformation (전환)", "neXt (다음)"], answerIndex: 1, explain: "AX = AI Transformation. 도구 도입이 아니라 일하는 방식의 전환입니다.", mockDist: [18, 71, 11] },
-  { id: "q2", part: "① 걱정에 먼저 답하기", question: "우리 회사 AX의 완성 조건은?", options: ["최신 AI 모델을 도입할 때", "구성원 모두가 각자의 업무에서 AX를 이룰 때", "전산 시스템을 교체할 때"], answerIndex: 1, explain: "AX는 시스템이 아니라 사람이 완성합니다 · ME to WE.", mockDist: [9, 84, 7] },
-  { id: "q3", part: "② 당사 AX 로드맵", question: "우리 회사 3개년 로드맵의 2028년 키워드는?", options: ["단순 업무 자동화", "혁신과 연결", "AI 조직 신설"], answerIndex: 1, explain: "2026 공감과 참여 → 2027 확산과 체화 → 2028 혁신과 연결.", mockDist: [22, 63, 15] },
-  { id: "q4", part: "③ 현업의 노력 (DAP)", question: "O/X · DAP는 현업 구성원이 직접 발굴한 과제로 진행된다.", options: ["O", "X"], answerIndex: 0, explain: "맞습니다. DAP의 주인공은 현업입니다. 여러분의 아이디어가 2027 DAP가 됩니다.", mockDist: [88, 12] }
+  { id: "q1", part: "Outro 퀴즈 1/4", question: "AX에서 X가 의미하는 것은 무엇일까요?", options: ["eXperience (경험)", "Transformation (전환)", "neXt (다음)"], answerIndex: 1, explain: "AX = AI Transformation. 도구 도입이 아니라 일하는 방식의 전환입니다.", mockDist: [18, 71, 11] },
+  { id: "q2", part: "Outro 퀴즈 2/4", question: "우리 회사 AX의 완성 조건은?", options: ["최신 AI 모델을 도입할 때", "구성원 모두가 각자의 업무에서 AX를 이룰 때", "전산 시스템을 교체할 때"], answerIndex: 1, explain: "AX는 시스템이 아니라 사람이 완성합니다 · ME to WE.", mockDist: [9, 84, 7] },
+  { id: "q3", part: "Outro 퀴즈 3/4", question: "우리 회사 3개년 로드맵의 2028년 키워드는?", options: ["단순 업무 자동화", "혁신과 연결", "AI 조직 신설"], answerIndex: 1, explain: "2026 공감과 참여 → 2027 확산과 체화 → 2028 혁신과 연결.", mockDist: [22, 63, 15] },
+  { id: "q4", part: "Outro 퀴즈 4/4", question: "O/X · DAP는 현업 구성원이 직접 발굴한 과제로 진행된다.", options: ["O", "X"], answerIndex: 0, explain: "맞습니다. DAP의 주인공은 현업입니다. 여러분의 아이디어가 2027 DAP가 됩니다.", mockDist: [88, 12] }
 ];
 var DEFAULT_NOTICES = [
   { id: "n1", title: "AX Festival 2026에 오신 것을 환영합니다", body: "자리에서도 페스티벌 안에 있을 수 있어요. 퀴즈 한 문제, 아이디어 한 줄 · 30초면 충분합니다.", ts: 0, pinned: true },
   { id: "n2", title: "18F AX 커피챗, 13:00 시작", body: "아이디어 한 줄을 제출하면 비슷한 주제의 동료와 매칭해 드립니다.", ts: 0 }
 ];
 var NOTICE_TEMPLATES = [
-  ["지금, 17F 기조연설 시작", "곧 라이브 퀴즈가 열립니다. 홈 화면을 열어두세요!"],
+  ["곧 Outro 라이브 퀴즈", "17F 대강당 Outro 시작 전, 라이브 퀴즈 4문항이 열립니다. 홈 화면을 열어두세요!"],
   ["1F 전시, 지금 한산해요", "3분 코스로 둘러보고 패스포트 한 칸 채워가세요."],
   ["부문 우선 관람 10분 전", "곧 우리 부문 슬롯이 시작됩니다. 1F 이벤트존에서 만나요!"]
 ];
@@ -1491,7 +1493,7 @@ function cchatCancelGo() {
     });
 }
 
-/* ── v10: DAP Wall QR 퀴즈 (키노트 라이브 퀴즈와 별개 시스템) ── */
+/* ── v10: DAP Wall QR 퀴즈 (Outro 라이브 퀴즈와 별개 시스템) ── */
 var WQ = { set: null };
 function wqSets() { return S.get("wq_sets", WALLQ_DEFAULT); }
 function wqPassScore() { return S.get("wq_pass", 60); }
@@ -2181,7 +2183,7 @@ function counters() {
 }
 
 /* ════════════════ 라우터 (Lv1 탭 → Lv2 상세) ════════════════ */
-var SIGNAGE = ["screen", "wall_quiz", "wall_wave", "wall_live", "wall_metowe", "wall_tv"];
+var SIGNAGE = ["screen", "screen_survey", "wall_quiz", "wall_wave", "wall_live", "wall_metowe", "wall_tv"];
 /* 설정 톱니 · 글자 크기·관리자 모드를 한 곳에 모은 진입점 */
 var GEAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
   '<circle cx="12" cy="12" r="3.1"/>' +
@@ -2214,7 +2216,7 @@ var App = {
     /* 프로그램 · 신청 전용 (리더보드는 10F 세션 곁으로, v3.1) · 일정(guide_time)은 v3.3부터 탭 루트라 PARENT 없음 */
     dap: "guide", ev_cchat: "guide",
     sess_d: "guide", guide_slots: "guide", crowd: "home",
-    admin: "home", screen: "admin",
+    admin: "home", screen: "admin", screen_survey: "admin",
     wall_quiz: "admin", wall_wave: "admin", wall_live: "admin", wall_metowe: "admin", wall_tv: "wall_metowe"
   },
   TITLES: {
@@ -2225,7 +2227,7 @@ var App = {
     sess_d: "프로그램 신청", guide_slots: "부문별 우선 관람",
     ev_cchat: "내 커피챗", ev_replay: "퀴즈 다시 풀기",
     wq_list: "DAP Wall QR 퀴즈", wq_play: "문제 풀이",
-    admin: "관리자 콘솔", screen: "송출용 화면", game_word: "AX 링크", game_cho: "로드맵 초성퀴즈",
+    admin: "관리자 콘솔", screen: "송출용 화면", screen_survey: "", game_word: "AX 링크", game_cho: "로드맵 초성퀴즈",
     wall_quiz: "", wall_wave: "", wall_live: "", wall_metowe: "", wall_tv: ""
   },
   tabOf: function (v) {
@@ -2369,7 +2371,7 @@ function quizCardHtml() {
   var quiz = QUIZZES.find(function (q) { return q.id === st.activeId; });
   if (!quiz || st.phase === "idle") {
     return '<div class="quiz-wait"><p style="font-size:calc(15.5px * var(--fs));font-weight:800;color:var(--hi)">LIVE QUIZ 대기 중</p>' +
-      '<p class="muted" style="margin-top:5px">기조연설 중에 여기에 퀴즈가 열립니다.<br>놓쳐도 스탬프 탭 「라이브 챌린지」 카드에서 다시 풀 수 있어요.</p></div>';
+      '<p class="muted" style="margin-top:5px">Outro 시작 전(16:45경) 17F 대강당에서 4문항이 열립니다.<br>놓쳐도 스탬프 탭 「라이브 챌린지」 카드에서 다시 풀 수 있어요.</p></div>';
   }
   var answers = S.get("quiz_answers", {});
   var my = answers[quiz.id];
@@ -3585,7 +3587,7 @@ var Views = {
     return deptCard + setCards + rankCard +
       '<div class="card soft mt16"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">참여 방법</b>' +
       '<p class="muted" style="margin-top:6px;font-size:calc(14.5px * var(--fs));line-height:1.8">① 1F DAP Wall·Special Wall의 QR 발견 → ② 스캔하면 5문항 오픈 → ③ 정답은 벽 전시 안에서 탐색 → ④ 평균 <b style="color:var(--hi)">' + pass + '점 이상</b>이면 「전시 QR 퀴즈」 스탬프 적립!</p>' +
-      '<p class="muted" style="margin-top:6px;font-size:calc(13.5px * var(--fs))">' + pass + '점 미만은 <b>무제한 재응시</b> (문항·보기 순서가 바뀌어요) · 기조연설 라이브 퀴즈와는 별개예요. 테스트 버전은 QR 없이 세트를 바로 열 수 있습니다.</p></div>';
+      '<p class="muted" style="margin-top:6px;font-size:calc(13.5px * var(--fs))">' + pass + '점 미만은 <b>무제한 재응시</b> (문항·보기 순서가 바뀌어요) · Outro 라이브 퀴즈와는 별개예요. 테스트 버전은 QR 없이 세트를 바로 열 수 있습니다.</p></div>';
   },
 
   wq_play: function () {
@@ -3755,6 +3757,18 @@ var Views = {
       '<span style="color:var(--faint);font-size:20px">' + (open ? "⌃" : "⌄") + '</span></div></div>' + cc;
   },
 
+  /* v3.32 사회자 순서 ② 설문 참여 안내 · 17F 스크린 송출 */
+  screen_survey: function () {
+    return '<div class="screen-wrap"><div class="row" style="justify-content:space-between;padding-top:8px">' +
+      '<b class="disp" style="font-size:24px;letter-spacing:0.03em">AX Festival <span style="color:var(--mint-deep)">2026</span></b>' +
+      '<div class="row" style="gap:6px">' + tvBtns() + '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button></div></div>' +
+      '<div style="padding:48px 8px 24px">' +
+      '<p style="font-size:calc(14.5px * var(--fs));font-weight:800;letter-spacing:0.12em;color:var(--mint-deep)">17:00 OUTRO 전에 1분</p>' +
+      '<p style="margin-top:12px;font-size:34px;font-weight:900;line-height:1.3">오늘 한 판 설문</p>' +
+      '<p style="margin-top:14px;font-size:20px;font-weight:700;line-height:1.6;opacity:0.9">앱 스탬프 탭 → 「오늘 한 판 설문」<br>60초 · 답은 이름 없이 저장됩니다 · 제출하면 스탬프 1개</p>' +
+      "</div></div>";
+  },
+
   screen: function () {
     var st = S.get("quiz_state", INITIAL_QUIZ_STATE);
     var quiz = QUIZZES.find(function (q) { return q.id === st.activeId; });
@@ -3806,7 +3820,7 @@ var ADM_STAFF = [
   ["urgent", "긴급 공지",   "전 참여자 LED 띠·실시간 안내"]
 ];
 var ADM_CC = [
-  ["quiz",  "라이브 퀴즈",   "기조연설 중 발사 · 송출 화면"],
+  ["quiz",  "라이브 퀴즈",   "Outro 시작 전 4문항 순서 발사 · 송출 화면"],
   ["wq",    "QR 퀴즈",       "DAP Wall 문항 운영"],
   ["ideas", "아이디어",      "수집 현황 · 보드 수기 입력 · CSV"],
   ["qr",    "부스 QR",       "스탬프 QR 인쇄"],
@@ -4025,16 +4039,30 @@ var AdminTabs = {
     var active = QUIZZES.find(function (q) { return q.id === st.activeId; });
     var h = '<div class="card mb12" style="background:var(--ink);border-color:var(--ink);color:#fff;cursor:pointer" onclick="App.go(\'screen\')"><b style="font-size:calc(15.5px * var(--fs))">송출용 대형화면 뷰 열기</b>' +
       '<p style="margin-top:2px;font-size:calc(13.5px * var(--fs));opacity:0.7">대강당 스크린·1F LED 송출용 · 발사하면 실시간 반영</p></div>';
+    /* v3.32 Outro 퀴즈 한 묶음 · 1번부터 발사 → 마감 → 결과 공개 → 다음 문항 (quiz_set 상태 머신 그대로) */
+    var nextQ = QUIZZES.filter(function (q) { return st.finishedIds.indexOf(q.id) < 0 && q.id !== st.activeId; })[0] || null;
+    var qNo = function (q) { return QUIZZES.indexOf(q) + 1; };
+    h += '<div class="card mb12" style="border-color:var(--mint-deep)"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">Outro 퀴즈 · 16:45경 17F 대강당</b>' +
+      '<p class="muted" style="margin-top:3px;font-size:calc(13.5px * var(--fs))">문항마다 발사 → 응답 마감(20초) → 결과 공개 → 다음 문항. 끝나면 퀴즈 내리기.</p>';
     if (active && st.phase !== "idle") {
-      h += '<div class="card mb12" style="border-color:var(--mint-deep)"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">진행 중: ' + esc(active.part) + " · " +
-        (st.phase === "open" ? "응답 접수 중" : st.phase === "closed" ? "마감 (집계 중)" : "결과 공개됨") + "</b>" +
+      h += '<p style="margin-top:10px;font-size:calc(15.5px * var(--fs));font-weight:800;color:var(--hi)">' + qNo(active) + "/" + QUIZZES.length + " · " +
+        (st.phase === "open" ? "응답 접수 중" : st.phase === "closed" ? "마감 (집계 중)" : "결과 공개됨") + "</p>" +
+        '<p class="muted" style="margin-top:2px;font-size:calc(13.5px * var(--fs))">' + esc(active.question) + "</p>" +
         '<div class="row" style="margin-top:10px">' +
         (st.phase === "open" ? '<button class="btn" onclick="setQuiz(\'closed\')">응답 마감</button>' : "") +
         (st.phase === "closed" ? '<button class="btn mint" onclick="setQuiz(\'revealed\')">결과 공개</button>' : "") +
+        (st.phase === "revealed" && nextQ ? '<button class="btn mint" onclick="fireQuiz(\'' + nextQ.id + '\')">다음 문항 발사 · ' + qNo(nextQ) + "/" + QUIZZES.length + "</button>" : "") +
         (st.phase === "revealed" ? '<button class="btn gray" onclick="setQuiz(\'idle\')">퀴즈 내리기</button>' : "") +
-        "</div></div>";
+        "</div>" +
+        /* 사회자 순서(사용자 확정): 퀴즈 4문항 → 설문 참여 안내 → 17:00 Outro · 마지막 결과 공개 뒤 안내 화면으로 */
+        (st.phase === "revealed" && !nextQ ? '<button class="btn mint" style="margin-top:8px" onclick="setQuiz(\'idle\'); App.go(\'screen_survey\')">설문 참여 안내 송출 화면 열기</button>' : "");
+    } else {
+      h += nextQ ? '<button class="btn mint" style="margin-top:10px;padding:15px" onclick="fireQuiz(\'' + nextQ.id + '\')">' + (qNo(nextQ) === 1 ? "Outro 퀴즈 시작 · 1/" : "이어서 발사 · " + qNo(nextQ) + "/") + QUIZZES.length + "</button>" :
+        '<p style="margin-top:10px;font-size:calc(14.5px * var(--fs));font-weight:800;color:var(--muted)">' + QUIZZES.length + "문항 모두 끝났습니다.</p>" +
+        '<button class="btn mint" style="margin-top:8px" onclick="App.go(\'screen_survey\')">설문 참여 안내 송출 화면 열기</button>';
     }
-    h += '<p class="sub-label">사전 등록된 퀴즈 · 기조연설 중 발사</p>' +
+    h += "</div>";
+    h += '<p class="sub-label">문항 목록 · 예외 시 개별 재발사</p>' +
       QUIZZES.map(function (q) {
         var finished = st.finishedIds.indexOf(q.id) >= 0;
         var isActive = st.activeId === q.id && st.phase !== "idle";
@@ -5601,7 +5629,7 @@ function xitionRun(switchNow) {
     S.set("wq_attempts", [{ set: "wall1", score: 80, passed: true, attemptNo: 1, dept: "보상부문", ts: Date.now() }]);
     var target = dm[1] || "home";
     if (target === "home_quiz") target = "home";
-    if (["admin", "screen", "wall_quiz", "wall_wave", "wall_live", "wall_metowe", "wall_tv"].indexOf(target) >= 0) S.set("admin_authed", true);
+    if (["admin", "screen", "screen_survey", "wall_quiz", "wall_wave", "wall_live", "wall_metowe", "wall_tv"].indexOf(target) >= 0) S.set("admin_authed", true);
     splash.classList.add("gone");
     el("frame").classList.remove("splash-mode");
     el("app").hidden = false;
