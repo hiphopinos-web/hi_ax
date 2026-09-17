@@ -730,7 +730,9 @@ var STAMPS = [
   { id: "p3", title: "17F 강의", short: "17F 강의", desc: "17F 오후 파트너사 강연 1회 참석 (10F 제외)", where: "17F · 90분", site: 1, tap: "progGoFl(17)", cta: "17F 오후 강연 신청하기", note: "17F 오후 파트너사 강연은 프로그램 탭에서 신청합니다. 사전 신청하셨다면 「사전 신청 완료」로 보입니다. 입장 시 좌석 QR을 스캔하세요." },
   { id: "p4", title: "라이브 챌린지", short: "라이브 챌린지", desc: "Outro 시작 전 라이브 퀴즈 응답 또는 미니게임(AX 링크·초성퀴즈) 1개 클리어", where: "앱 · 30초", inapp: 1 },
   { id: "p5", title: "아이디어 한 줄", short: "아이디어", desc: "아이디어 1건 제출", where: "앱 · 1분", inapp: 1, tap: "App.go('ideas')", cta: "아이디어 쓰기" },
-  { id: "p7", title: "전시 QR 퀴즈", short: "QR 퀴즈", desc: "DAP Wall QR 퀴즈 1세트 통과 (60점 이상)", where: "1F DAP Wall · 약 10분", tap: "App.go('wq_list')", cta: "QR 퀴즈 풀기" }
+  { id: "p7", title: "전시 QR 퀴즈", short: "QR 퀴즈", desc: "DAP Wall QR 퀴즈 1세트 통과 (60점 이상)", where: "1F DAP Wall · 약 10분", tap: "App.go('wq_list')", cta: "QR 퀴즈 풀기" },
+  /* v3.33·v3.34 (260917 사용자 확정) 계단 · 방향 무관 하루 누적 10개 층 · 판정·적립은 서버(stair_claim) */
+  { id: "st", title: "계단 10층", short: "계단", desc: "계단으로 오늘 누적 10개 층 이동 (오르내림 무관)", where: "계단 · 출발·도착 QR", tap: "qrScanOpen()", cta: "계단 QR 스캔" }
 ];
 /* 스탬프 픽토그램 · 탭 아이콘과 같은 기하 라인(stroke=currentColor) · 이모지 금지 원칙 유지 */
 var SICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">';
@@ -740,6 +742,7 @@ var STAMP_ICONS = {
   p3: SICO + '<rect x="3" y="4" width="18" height="11.5" rx="2"/><path d="M12 15.5v4"/><path d="M8 19.5h8"/><path d="M7.5 11.8l3.2-3.3 2.6 2.6 3.2-3.8"/></svg>',
   p4: SICO + '<path d="M4 5h16v10.5h-7.2L8.6 19.6V15.5H4z"/><path d="M9.9 8.6a2.2 2.2 0 0 1 4.3.7c0 1.5-2.1 1.6-2.1 2.9"/><path d="M12.1 13.4h.01"/></svg>',
   p5: SICO + '<path d="M12 3a6 6 0 0 1 6 6c0 2.3-1.3 3.6-2.3 4.7-.6.7-.9 1.3-1 2.3h-5.4c-.1-1-.4-1.6-1-2.3C7.3 12.6 6 11.3 6 9a6 6 0 0 1 6-6z"/><path d="M9.8 19.5h4.4"/><path d="M10.6 22h2.8"/></svg>',
+  st: SICO + '<path d="M3 20h5v-4h4v-4h4V8h5"/><path d="M3 20h18"/></svg>',
   p7: SICO + '<rect x="3.2" y="3.2" width="7" height="7" rx="1.4"/><rect x="13.8" y="3.2" width="7" height="7" rx="1.4"/><rect x="3.2" y="13.8" width="7" height="7" rx="1.4"/><path d="M13.8 13.8h3.1v3.1h-3.1z"/><path d="M20.8 13.8v1.8M17.9 20.8h2.9M13.8 20.8h1.4"/></svg>'
 };
 /* 보상 (260909 확정) · 확정지급 사다리·즉석경품 응모권 폐지, 스탬프 개수 하나로만 계산한다.
@@ -751,7 +754,9 @@ var REWARD_LADDER = [
   { n: 5, nm: "사후 추첨 응모 2장", d: "자동 응모" },
   { n: 6, nm: "사후 추첨 응모 3장", d: "자동 응모" }
 ];
-var STAMP_TOTAL = 6;
+/* v3.33 · 칸은 8개, 보상은 6개에서 끝 (3개 룰렛 · 4~6개 응모 1~3장) · 7·8번째는 다른 칸 대신 채울 수 있는 선택지 */
+var STAMP_TOTAL = 8, REWARD_CAP = 6;
+var STAIR_NEED = 10;
 /* 서버가 준 stamps 배열에는 정의 밖 id(구 p6·p8, 계단 p9 등)가 남아 있을 수 있다.
    표시·보상 계산은 전부 이 함수로 센다. */
 function stampCount() {
@@ -798,7 +803,6 @@ var SLOTS = [
    세션 E 는 회차마다 행 하나(공용 행 카드 · 인라인 신청 그대로). 회차 선택 UI 를 따로 두지 않는 이유:
    시간 뱃지·잔여석·신청 버튼이 회차마다 다르고, 두 회차 사이 교체는 10F 1인 1세션 교체 모달이 그대로 처리한다.
    info = 상세 표 [구분, 내용] · 붙임2 문장 그대로 · capNote = 정원 보조 문구 */
-var TEN_GIFT = "참가자 전원 사은품 (세션 A·B·C는 AI 구독권 포함)";
 var TEN_RERUN = "당일 참석이 어려운 구성원을 위한 사내 교육프로그램 재운영 시기는 추후 별도 공지 예정입니다.";
 var TIME_TBD = "세부 시간은 변동될 수 있습니다.";
 var SESSIONS = [
@@ -2500,8 +2504,7 @@ function sessInlineHtml(s) {
     /* v3.31b 10F 안내 전용 · 신청·잔여석 없음 · 이 시간에 이곳에서 이런 흐름이 있다는 정보만 */
     h += '<p class="sq" style="margin-top:4px">' + esc(s.desc) + "</p>" +
       (s.capNote ? '<p class="sq" style="margin-top:4px">정원 ' + esc(s.capNote) + "</p>" : "") +
-      '<p class="sq" style="margin-top:4px"><b>사전 신청자 대상</b></p>' +
-      '<p class="sq" style="margin-top:8px">' + esc(TEN_GIFT) + "</p>";
+      '<p class="sq" style="margin-top:4px"><b>사전 신청자 대상</b></p>';
   } else if (s.kind === "seat") {
     h += '<p class="sq" style="margin-top:4px">' + esc(s.desc) + "</p>" + seatRowHtml(s) +
       (mine && mine.pre ? '<div class="tipbanner" style="margin-top:10px">사전 신청 완료</div><p class="sq" style="margin-top:6px">사전 신청 취소는 담당자에게 문의해 주세요.</p>' :
@@ -2641,6 +2644,9 @@ function myScheduleHtml() {
   /* 지금 걸려 있는 대기는 시간이 정해진 일정보다 급하다 · 맨 위(정렬키 -1)에 둔다.
      내 것을 보여주는 자리는 여기 하나뿐이다(홈에 별도 스트립을 만들지 않는다, design.md) */
   var q = S.get("queue", {}), qk;
+  /* v3.34 계단 · 진행 중인 출발이 있으면 한 줄 (도착 QR 시한이 있어 맨 위) */
+  var slg = S.get("stair_leg", null);
+  if (slg) rows.push([-1, "qrScanOpen()", "계단", stairFl(slg.spot) + " 출발", slg.expires + "까지 도착 층 QR", "mine"]);
   for (qk in q) {
     var sp = scanSpot(qk), r = q[qk];
     if (!sp || !r || r.status === "done") continue;
@@ -3018,11 +3024,19 @@ function ppAfterRender(n, oldN, glow) {
 }
 /* 기본 순서 = 장소 그룹순: 1F 3건(01 전시·02 부스·06 QR퀴즈) → 17F(03) → 앱(04·05).
    완료 카드는 위로 올라온다(완료 그룹 상단, 그 안에서 기본 순서 유지) · 그룹 캡션은 미완료 구간에만 얇게. */
-var PP_ORDER = [["p1", "1F"], ["p2", "1F"], ["p7", "1F"], ["p3", "17F"], ["p4", "앱"], ["p5", "앱"]];
+var PP_ORDER = [["p1", "1F"], ["p2", "1F"], ["p7", "1F"], ["p3", "17F"], ["st", "계단 · 층 이동"], ["p4", "앱"], ["p5", "앱"]];
 function stampInnerHtml(s) {
   var inner = '<p class="d">' + s.desc + " · " + s.where + "</p>" +
     (s.note ? '<p class="nt">' + s.note + "</p>" : "");
-  if (s.id === "p4") {
+  if (s.id === "st") {
+    var lg = S.get("stair_leg", null);
+    inner += stairBarHtml(S.get("stair_total", 0)) +
+      (lg ? '<p class="nt">' + esc(stairFl(lg.spot)) + " 출발 · " + esc(lg.expires) + "까지 도착 층 QR을 찍어 주세요</p>" : "") +
+      '<p class="d">내려갈 때는 계단으로 · 오르기는 자율 · 오르내림 모두 누적</p>' +
+      '<p class="d">계단 QR 위치 · 18F · 17F · 10F · 1F 복도 계단실 문 옆 · 출발 층과 도착 층에서 한 번씩</p>' +
+      '<p class="nt">방화문은 닫아 주세요</p>' +
+      '<button class="btn mint" style="margin-top:10px" onclick="qrScanOpen()">계단 QR 스캔</button>';
+  } else if (s.id === "p4") {
     /* v3.1: 미니게임 허브(ev_games) 폐지 · 세 가지 방법을 카드가 직접 연다 */
     var qs4 = S.get("quiz_state", INITIAL_QUIZ_STATE), an4 = S.get("quiz_answers", {});
     var replayN = QUIZZES.filter(function (q) { return qs4.finishedIds.indexOf(q.id) >= 0 && !an4[q.id]; }).length;
@@ -3075,7 +3089,7 @@ function stampCardsHtml(st, newly) {
     (st.indexOf(s.id) >= 0 ? done : todo).push([s, e[1]]);
   });
   var next = todo.length ? todo[0][0].id : null;   /* 다음 추천 = 미완료 그룹 첫 카드 */
-  var out = '<div class="sect" style="margin-top:14px"><b>스탬프 6종</b><span>카드를 누르면 방법이 열려요</span></div>';
+  var out = '<div class="sect" style="margin-top:14px"><b>스탬프 ' + STAMPS.length + '종</b><span>' + STAMP_TOTAL + '개 중 6개를 모으면 보상 끝</span></div>';
   done.forEach(function (e) { out += scardHtml(e[0], true, false, newly); });
   var cap = null;
   todo.forEach(function (e) {
@@ -3089,6 +3103,8 @@ function stampCardsHtml(st, newly) {
    홈·스탬프 탭 공용 컴포넌트 (design.md 컴포넌트 일관성) · home=true 는 컴팩트 변형(캡션 축약 + 하단 CTA)일 뿐 시각 문법은 동일. */
 function railHtml(n, glow, dispN, home) {
   if (dispN == null) dispN = n;   /* 새 스탬프 연출 중엔 카운트만 이전 값에서 굴러 올라간다 */
+  n = Math.min(REWARD_CAP, n); dispN = Math.min(REWARD_CAP, dispN);   /* v3.33 · 8칸 중 6개면 보상 끝 */
+  var out0 = S.get("roulette_out", false);
   var used = S.get("roulette_used", false);
   var marks = [[3, used ? "룰렛 사용" : "룰렛", "ppRouletteOpen()"], [4, "응모 1", "ppDrawOpen()"], [5, "응모 2", "ppDrawOpen()"], [6, "응모 3", "ppDrawOpen()"]];
   var mk = "", lb = "";
@@ -3108,9 +3124,11 @@ function railHtml(n, glow, dispN, home) {
     '<div class="rb"><i style="width:' + Math.min(100, n / 6 * 100) + '%"></i>' + mk + "</div>" +
     '<div class="lbls">' + lb + "</div>" +
     (home
-      ? '<p class="cap">3개 = 룰렛 1회 · 4개부터 응모 1장씩</p>' +
+      ? '<p class="cap">3개 = 룰렛 1회 · 4개부터 응모 1장씩 · 8개 중 6개면 보상 끝</p>' +
+        (out0 ? '<p class="cap">오늘 준비한 룰렛이 모두 소진되었습니다</p>' : "") +
         '<button class="cta" onclick="App.go(\'passport\')">스탬프 탭으로</button>'
-      : '<p class="cap">3개 = 1F 룰렛 1회 · 4개부터 사후 추첨 응모 1장씩 · 마커를 누르면 자세히</p>') +
+      : '<p class="cap">3개 = 1F 룰렛 1회 · 4개부터 사후 추첨 응모 1장씩 · 8개 중 6개를 모으면 보상 끝 · 마커를 누르면 자세히</p>' +
+        (out0 ? '<p class="cap">오늘 준비한 룰렛이 모두 소진되었습니다</p>' : "")) +
     "</div>";
 }
 /* 룰렛 쿠폰 모달 · 내 QR + 사용 여부 (사용 여부는 서버 my.roulette 가 정본, sync 가 roulette_used 로 받아쓴다) */
@@ -3120,7 +3138,11 @@ function ppRouletteOpen() {
   var head = '<div class="row" style="justify-content:space-between"><b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">룰렛 1회권</b>' +
     (used ? '<span class="badge gray">사용 완료</span>' : n >= 3 ? '<span class="badge ink">사용 가능 · 1인 1회</span>' : '<span class="badge gray">' + n + "/3</span>") + "</div>";
   var body;
-  if (used) {
+  /* v3.33 룰렛 소진 안내 · 관리 콘솔 스탬프 탭(roulette_out)에서 켠다 */
+  if (S.get("roulette_out", false) && !used) {
+    body = '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));font-weight:800;color:var(--hi)">오늘 준비한 룰렛이 모두 소진되었습니다</p>' +
+      '<p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">스탬프 4개부터 사후 추첨 응모는 그대로 늘어납니다.</p>';
+  } else if (used) {
     body = '<p class="muted" style="margin-top:8px;font-size:calc(14.5px * var(--fs))">오늘의 룰렛은 여기까지. 스탬프 4개부터는 사후 추첨 응모가 1장씩 늘어납니다.</p>';
   } else if (n < 3) {
     body = '<p class="muted" style="margin-top:8px;font-size:calc(14.5px * var(--fs))">스탬프 <b style="color:var(--hi)">3개</b>를 모으면 1F 이벤트존 실물 룰렛 1회 (1인 1회). 1~4등 실물 경품, 5등은 그 자리에서 한 번 더!</p>';
@@ -3134,7 +3156,7 @@ function ppRouletteOpen() {
 }
 /* 추첨 안내 모달 · 구 ev_draw 화면 흡수 (v3.1) · v3.12 내 응모권 번호 표시 (서버 발급 · 데모는 결정적 목업) */
 function ppDrawOpen() {
-  var n = stampCount(), t = raffleTickets(n);
+  var n = Math.min(REWARD_CAP, stampCount()), t = raffleTickets(n);
   var tickets = "";
   if (t) {
     var nums = testMode() ? ["1026", "2026", "3026"].slice(0, t) : S.get("raffle_nums", []);
@@ -3372,8 +3394,7 @@ var Views = {
         '<p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">전 임직원 누구나 17F 대강당으로 오시면 됩니다.</p></div>';
     } else if (s.kind === "info") {
       act = '<div class="card soft mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">사전 신청자 대상 · 현장 신청 없음</b>' +
-        (s.capNote ? '<p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">정원 ' + esc(s.capNote) + "</p>" : "") +
-        '<p class="muted" style="margin-top:2px;font-size:calc(13.5px * var(--fs))">' + esc(TEN_GIFT) + "</p></div>";
+        (s.capNote ? '<p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">정원 ' + esc(s.capNote) + "</p>" : "") + "</div>";
     } else if (s.kind === "seat") {
       act = '<div class="card mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">잔여 좌석</b>' + seatRowHtml(s) +
         (mine && mine.pre ? '<div class="tipbanner" style="margin-top:12px">사전 신청 완료</div><p class="muted" style="margin-top:6px;font-size:calc(13.5px * var(--fs))">사전 신청 취소는 담당자에게 문의해 주세요.</p>' :
@@ -4246,6 +4267,7 @@ function beSync() {
     BE.stats.wall = res.wall;
     BE.stats.sess = res.sess || null;
     BE.stats.sessLeft = res.sessLeft || null;   /* v3.31b 정원 - 사전 - 앱 */
+    if ("rouletteOut" in res && !!res.rouletteOut !== S.get("roulette_out", false)) S.set("roulette_out", !!res.rouletteOut);   /* v3.33 */
     if (res.quiz && res.quiz.id) {
       var qs = S.get("quiz_state", INITIAL_QUIZ_STATE);
       if (qs.activeId !== res.quiz.id || qs.phase !== res.quiz.phase) {
@@ -4321,6 +4343,9 @@ function beSync() {
       if (res.my.tickets && !testEmp()) S.set("raffle_nums", res.my.tickets);   /* v3.12 응모권 번호 · 서버 발급 정본 */
       /* v3.21 B 포토부스 번호표 · 서버가 정본(없으면 null) · 바뀐 경우에만 저장해 불필요한 재렌더를 막는다 */
       if ("photoQ" in res.my && JSON.stringify(res.my.photoQ) !== JSON.stringify(S.get("photoq", null))) S.set("photoq", res.my.photoQ);
+      /* v3.34 계단 · 진행 중 출발(없으면 null)과 오늘 누적 층수 · 서버가 정본 */
+      if ("stair" in res.my && JSON.stringify(res.my.stair) !== JSON.stringify(S.get("stair_leg", null))) S.set("stair_leg", res.my.stair);
+      if (res.my.stairTotal != null && res.my.stairTotal !== S.get("stair_total", 0)) S.set("stair_total", res.my.stairTotal);
       if (res.my.queue) {
         var was = S.get("queue", {}), nowQ = res.my.queue, kq;
         for (kq in nowQ) {
@@ -4470,6 +4495,7 @@ function qrHtml() {
 function stampByCode(v) {
   v = String(v || "").trim();
   if (!v) return false;
+  if (/^AXW/i.test(v)) return stairByCode(v);   /* v3.34 계단 지점 QR (코드 접두 AXW · 판정은 서버) */
   /* v3.19 테스트 사번: 코드→스탬프 매핑이 서버 전용(보안 설계)이라 로컬 판정이 불가능 · 원장 오염을 막기 위해 차단 */
   if (testEmp()) { toast("테스트 계정은 스탬프 카드의 「테스트 · 완료 처리」 버튼을 쓰세요."); return false; }
   if (!BE.on) { toast("서버에 연결되지 않아 적립할 수 없어요. 잠시 후 다시 시도해주세요."); return false; }
@@ -4483,6 +4509,66 @@ function stampByCode(v) {
   return true;
 }
 var STAMPQ = { busy: false };
+/* ═══ v3.34 계단 10층 · 출발·도착 QR ═══
+   앱은 스캔값만 보낸다 · 층수·시간·방향·누적·스탬프는 서버(stair_claim)가 판정한다. */
+function stairFl(name) { var m = /(\d+)F/.exec(String(name || "")); return m ? m[1] + "F" : String(name || ""); }
+function stairBarHtml(total) {
+  var t = Math.min(STAIR_NEED, total || 0);
+  return '<div class="seatrow"><div class="sb"><i style="width:' + Math.round(t / STAIR_NEED * 100) + '%"></i></div><span class="sn">오늘 누적 ' + (total || 0) + " / " + STAIR_NEED + "</span></div>";
+}
+function stairByCode(v) {
+  if (testEmp()) { toast("테스트 계정은 스탬프 카드의 「테스트 · 완료 처리」 버튼을 쓰세요."); return false; }
+  if (!BE.on) { toast("서버에 연결되지 않아 계단 기록을 남길 수 없어요."); return false; }
+  var u = S.get("user", {}) || {};
+  if (!u.empId) { toast("사번으로 입장한 뒤 기록할 수 있어요."); return false; }
+  if (STAMPQ.busy) return false;
+  STAMPQ.busy = true;
+  beCall({ action: "stair_claim", emp: u.empId, code: v },
+    function (res) { STAMPQ.busy = false; stairClaimDone(res); },
+    function () { STAMPQ.busy = false; toast("서버에 연결할 수 없어요. 계단실 밖 복도에서 다시 찍어주세요."); });
+  return true;
+}
+var STAIR_WHY = {
+  toofast: "너무 빨라요. 엘리베이터는 인정되지 않아요.",
+  tooslow: "시간이 너무 오래 걸렸어요. 이번 구간은 인정되지 않았어요.",
+  wrongdir: "지금은 내려가는 구간만 인정하고 있어요.",
+  samefloor: "같은 층끼리는 층수가 없어요.",
+  nocode: "출발 지점 정보를 찾지 못했어요. 출발 QR부터 다시 찍어주세요."
+};
+function stairClaimDone(res) {
+  if (!res || !res.ok) {
+    var why = res && res.reason;
+    toast(why === "samespot" ? "이미 이 층에서 출발했어요. 도착한 층의 계단 QR을 찍어주세요." :
+      why === "nocode" ? "행사용 계단 QR이 아닙니다." : why === "off" ? "이 계단 지점은 지금 운영하지 않아요." : "기록하지 못했어요. 다시 찍어주세요.");
+    return;
+  }
+  if (res.total != null) S.set("stair_total", res.total);
+  var head, body;
+  if (res.leg === "start") {
+    S.set("stair_leg", { spot: res.spot, at: res.at, expires: res.expires });
+    head = stairFl(res.spot) + " 출발";
+    body = '<p class="muted" style="margin-top:6px;font-size:calc(14.5px * var(--fs))">도착한 층의 계단 QR을 <b style="color:var(--hi)">' + (res.expireMin || 15) + "분 안에</b> 찍어 주세요 · " + esc(res.expires) + "까지</p>" +
+      (res.expired ? '<p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">15분이 지나 새 출발로 시작했어요.</p>' : "") +
+      stairBarHtml(res.total) +
+      '<p class="muted" style="margin-top:8px;font-size:calc(13px * var(--fs))">내려갈 때는 계단으로 · 방화문은 닫아 주세요</p>';
+  } else {
+    S.set("stair_leg", null);
+    head = stairFl(res.from) + " → " + stairFl(res.to) + (res.floors ? " · " + res.floors + "개 층" : "");
+    body = (res.valid ? "" : '<p style="margin-top:6px;font-size:calc(14.5px * var(--fs));font-weight:800;color:var(--hi)">' + (STAIR_WHY[res.reason] || "이번 구간은 인정되지 않았어요.") + "</p>") +
+      stairBarHtml(res.total) +
+      (res.valid && (res.total || 0) < STAIR_NEED ? '<p class="muted" style="margin-top:8px;font-size:calc(13.5px * var(--fs))">' + (STAIR_NEED - (res.total || 0)) + "개 층 더 걸으면 스탬프예요.</p>" : "");
+  }
+  if (res.stamp && !res.stamp.dup) {
+    stampSync(res.stamps);
+    if (!stampOverlay("st")) toast("계단 10층 달성 · 스탬프 적립");
+    checkRewards();
+    App.render();
+    return;
+  }
+  modalOpen('<b style="font-size:calc(19px * var(--fs));color:var(--hi)">' + esc(head) + "</b>" + body +
+    '<button class="btn line" style="margin-top:14px" onclick="modalClose()">닫기</button>');
+  App.render();
+}
 /* 서버 응답 하나로 로컬을 맞춘다. stamps 배열이 정본이라 이걸로 덮는다. */
 function stampClaimDone(res) {
   if (!res || !res.ok) {
