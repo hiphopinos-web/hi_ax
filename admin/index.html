@@ -182,13 +182,16 @@ var STAMP_META = {
 var STAMP_ORDER = ["p1","p2","p3","p4","p5","p7"];
 /* 백엔드 SESS_META · SESS_CAP 과 같은 id */
 var SESS_NAME = {
-  /* v3.29 공식 공지 붙임1·2 · 17F 는 자유 참석(신청 없음) · 옛 신청 기록 표시용으로만 남긴다 */
-  key:"17F 기조연설 (자유 참석)", road:"17F 내부 강연 (자유 참석)", l1:"17F AWS 강연 (자유 참석)", l2:"17F MS 강연 (자유 참석)",
+  /* v3.31b · 17F 오전은 자유 참석(옛 신청 기록 표시용) · 오후 파트너사 강연은 신청제(사전 신청 + 앱 신청) */
+  key:"17F 기조연설 (자유 참석)", road:"17F 내부 강연 (자유 참석)", l1:"17F AWS 강연 (13:30)", l2:"17F MS 강연 (15:10)",
   fld:"세션 A · 영업·보상 현장", ta:"세션 B · 통계 현황 리포팅", tb:"세션 C · 외부자료 리서치", aws:"세션 D · 바이브 코딩 (AWS)", ms1:"세션 E · 1회차 13:30 (MS)", ms2:"세션 E · 2회차 15:00 (MS)",
   photo:"AI 포토부스", kring:"키링 DIY (260917 폐기)"
 };
 /* 상담 상태 · 시트 드롭다운과 같은 목록 */
 var RESV_STATUS = ["신청","승인","체크인","완료","노쇼","취소"];
+/* v3.31b · 10F 실습형 세션은 사전 신청(앱 밖) · 신청 현황에서 제외 (출석은 앱 운영자 스캔 집계) */
+var TEN_SESS = ["fld","ta","tb","aws","ms1","ms2"];
+var PRE_SESS = ["l1","l2"];
 
 /* ══════════════════ 1. 공통 ══════════════════ */
 function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
@@ -276,7 +279,7 @@ var NEED={
   dash:[{k:"stats",a:"stats"},{k:"acct",a:"acct_list"},{k:"stamp",a:"stamp_people"},{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"}],
   acct:[{k:"acct",a:"acct_list"}],
   stamp:[{k:"stamp",a:"stamp_people"}],
-  apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"}],
+  apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"},{k:"pre",a:"pre_list"}],
   notice:[{k:"noti",a:"sync",p:{emp:""}}],
   photo:[{k:"photo",a:"photo_list"}]
 };
@@ -338,7 +341,7 @@ function viewDash(){
   var rvBy={}; rv.forEach(function(r){ rvBy[r.status]=(rvBy[r.status]||0)+1; });
   var ccBy={}; cc.forEach(function(r){ ccBy[r.status]=(ccBy[r.status]||0)+1; });
   var sessN={}; ss.rows.forEach(function(r){ if(r.status!=="취소") sessN[r.sid]=(sessN[r.sid]||0)+1; });
-  var sessIds=Object.keys(ss.cap||{}).filter(function(k){return k!=="photo"&&k!=="kring";});
+  var sessIds=Object.keys(ss.cap||{}).filter(function(k){return k!=="photo"&&k!=="kring"&&TEN_SESS.indexOf(k)<0;});
 
   var h='<h1>대시보드<small>'+(st.t?'서버 시각 '+esc(st.t):'')+'</small></h1>';
   h+='<div class="grid g4">'+
@@ -443,8 +446,8 @@ function grantStamp(emp,id,sel){
 function viewApply(){
   var sub=ST.sub||"resv";
   var h='<h1>신청<small>상담과 커피챗은 여기서 승인·매칭합니다. 강의신청은 정원 선착순이라 현황만 봅니다.</small></h1>';
-  h+='<div class="row" style="margin-top:8px">'+[["resv","상담 승인"],["cchat","커피챗 매칭"],["sess","강의신청 현황"]].map(function(s){ return '<button class="btn'+(sub===s[0]?" pri":"")+'" onclick="setSub(\''+s[0]+'\')">'+s[1]+'</button>'; }).join("")+'</div>';
-  return h+(sub==="resv"?viewResv():sub==="cchat"?viewCchat():viewSess());
+  h+='<div class="row" style="margin-top:8px">'+[["resv","상담 승인"],["cchat","커피챗 매칭"],["sess","강의신청 현황"],["pre","사전 신청 명단"]].map(function(s){ return '<button class="btn'+(sub===s[0]?" pri":"")+'" onclick="setSub(\''+s[0]+'\')">'+s[1]+'</button>'; }).join("")+'</div>';
+  return h+(sub==="resv"?viewResv():sub==="cchat"?viewCchat():sub==="pre"?viewPre():viewSess());
 }
 
 /* 상담 · 1F DAP 존 · resv_set 으로 상태를 바꾼다 */
@@ -509,7 +512,8 @@ function cchatSet(emp,name){
 function viewSess(){
   var d=ST.data.sess||{rows:[],cap:{}}, rows=d.rows.slice(), f=ST.filt||"all";
   var n={}; rows.forEach(function(r){ if(r.status!=="취소") n[r.sid]=(n[r.sid]||0)+1; });
-  var ids=Object.keys(d.cap||{}).filter(function(k){return k!=="photo"&&k!=="kring";});
+  var ids=Object.keys(d.cap||{}).filter(function(k){return k!=="photo"&&k!=="kring"&&TEN_SESS.indexOf(k)<0;});
+  var pre=d.pre||{}, left=d.left||{};
   var shown=rows.filter(function(r){ return match(r,["emp","name","sid","slot"]) && (f==="all"||r.sid===f) && r.status!=="취소"; });
   shown.sort(function(a,b){ return a.sid<b.sid?-1:a.sid>b.sid?1:(a.ts<b.ts?-1:1); });
   var h='<div class="grid g4" style="margin-top:14px">'+ids.map(function(id){ var c=n[id]||0, cap=d.cap[id]||0; return '<div class="kpi" style="cursor:pointer" onclick="setFilt(\''+id+'\')"><div class="l">'+esc(SESS_NAME[id]||id)+'</div><div class="v n">'+c+'<em>/ '+cap+'</em></div><div class="bar'+(c>cap?" over":"")+'"><i style="width:'+pct(c,cap)+'%"></i></div></div>'; }).join("")+'</div>';
@@ -519,14 +523,206 @@ function viewSess(){
   h+='<div class="wrap"><table class="tb"><tr><th>세션</th><th>슬롯</th><th>사번</th><th>이름</th><th>신청 시각</th><th>상태</th></tr>'+
     shown.slice(0,600).map(function(r){ return '<tr><td><b>'+esc(SESS_NAME[r.sid]||r.sid)+'</b></td><td class="n">'+esc(hhmm(r.slot)||"-")+'</td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.name)+'</td><td class="n src">'+esc(short(r.ts))+'</td><td><span class="pill">'+esc(r.status)+'</span></td></tr>'; }).join("")+
     (!shown.length?'<tr><td colspan="6" class="src">신청이 없습니다.</td></tr>':'')+'</table></div>';
-  h+='<p class="note mt12">강의신청은 정원 선착순이라 승인 단계가 없습니다. 정원을 바꾸려면 백엔드 SESS_CAP 을 수정해야 합니다.</p></div>';
+  h+='<p class="note mt12">강의신청은 정원 선착순이라 승인 단계가 없습니다. 17F 오후 강연 잔여 = 정원 - 사전 신청 - 앱 신청'+PRE_SESS.map(function(id){ return ' · '+esc(SESS_NAME[id])+' 사전 '+(pre[id]||0)+' · 잔여 '+(left[id]!=null?left[id]:"-"); }).join("")+'. 10F 실습형 세션은 사전 신청(앱 밖)이라 여기서 제외합니다. 정원을 바꾸려면 백엔드 SESS_CAP 을 수정해야 합니다.</p></div>';
   return h;
+}
+
+/* ══════════════════ 7-3b. 사전 신청 명단 (v3.31b) ══════════════════
+ * 엑셀(.xlsx) · CSV 를 브라우저 안에서만 읽는다. 의존성 없음: xlsx 는 zip 이라 중앙 디렉터리를 읽고
+ * DecompressionStream("deflate-raw") 로 시트 XML 만 풀어 DOMParser 로 읽는다. .xls(구 바이너리)는 다른 이름으로 저장 안내.
+ * 파일·파싱 결과는 메모리(PRE)에만 두고 저장소(localStorage 등)·콘솔 로그에 남기지 않는다. 반영이 끝나면 비운다.
+ * 전송은 JSONP(GET) URL 한계 때문에 20행씩 청크 · 서버는 마지막 청크가 와서 전부 모였을 때만 한 번에 교체한다. */
+var PRE={ file:"", rows:null, errs:[], warn:[], busy:false, pct:0 };
+var PRE_CHUNK=20;
+function preSidOf(v){
+  var raw=String(v||"").trim().toLowerCase(), t=raw.replace(/\s/g,"");
+  if(t==="l1"||/aws/.test(t)||/아마존/.test(t)) return "l1";
+  if(t==="l2"||/(^|[^a-z])ms([^a-z]|$)/.test(raw)||/microsoft|마이크로소프트/.test(t)) return "l2";
+  return "";
+}
+function preHeadKey(v){
+  var t=String(v||"").replace(/\s/g,"").toLowerCase();
+  if(/^(세션|세션id|세션명|강연|강연명|session|sid)$/.test(t)) return "sid";
+  if(/^(사번|직원번호|사원번호|임직원번호|emp|empid|employeeid)$/.test(t)) return "emp";
+  if(/^(이름|성명|name)$/.test(t)) return "name";
+  if(/^(부문|부서|소속|dept|department)$/.test(t)) return "dept";
+  return "";
+}
+function preTemplate(){
+  var csv="\uFEFF세션,사번,이름,부문\r\nAWS,000000,홍길동,예시부문\r\nMS,000001,김예시,예시부문\r\n";
+  var a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  a.download="사전신청_양식.csv"; a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); },1000);
+}
+function preReset(){ PRE={ file:"", rows:null, errs:[], warn:[], busy:false, pct:0 }; render(); }
+function preDrop(e){ e.preventDefault(); var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f) preRead(f); }
+function prePick(inp){ var f=inp.files&&inp.files[0]; inp.value=""; if(f) preRead(f); }
+function preRead(f){
+  var name=f.name||"", ext=(name.split(".").pop()||"").toLowerCase();
+  if(ext==="xls"){ toast("옛 .xls 형식은 읽지 못합니다. 엑셀에서 .xlsx 로 다른 이름 저장 후 올려 주세요"); return; }
+  if(ext!=="xlsx"&&ext!=="csv"){ toast(".xlsx 또는 .csv 파일만 올릴 수 있습니다"); return; }
+  PRE.file=name; PRE.rows=null; render();
+  var fr=new FileReader();
+  fr.onload=function(){
+    var p=ext==="csv"?Promise.resolve(csvParse(decodeText(fr.result))):xlsxRows(fr.result);
+    p.then(function(grid){ preCheck(grid); render(); }).catch(function(err){ PRE.file=""; toast("파일을 읽지 못했습니다: "+(err&&err.message||"형식 오류")); render(); });
+  };
+  fr.readAsArrayBuffer(f);
+}
+/* 한국어 윈도 엑셀의 CSV 는 CP949 일 수 있다 · UTF-8 로 먼저 읽고 깨지면 EUC-KR */
+function decodeText(buf){
+  try{ return new TextDecoder("utf-8",{fatal:true}).decode(buf).replace(/^\uFEFF/,""); }
+  catch(e){ return new TextDecoder("euc-kr").decode(buf); }
+}
+function csvParse(t){
+  var rows=[], row=[], cur="", q=false;
+  for(var i=0;i<t.length;i++){
+    var c=t[i];
+    if(q){ if(c==='"'){ if(t[i+1]==='"'){ cur+='"'; i++; } else q=false; } else cur+=c; }
+    else if(c==='"') q=true;
+    else if(c===","){ row.push(cur); cur=""; }
+    else if(c==="\n"||c==="\r"){ if(c==="\r"&&t[i+1]==="\n") i++; row.push(cur); rows.push(row); row=[]; cur=""; }
+    else cur+=c;
+  }
+  if(cur!==""||row.length){ row.push(cur); rows.push(row); }
+  return rows;
+}
+/* xlsx = zip · 첫 번째 시트만 읽는다 */
+function xlsxRows(buf){
+  if(typeof DecompressionStream==="undefined") return Promise.reject(new Error("이 브라우저는 xlsx 압축 해제를 지원하지 않습니다. CSV 로 저장해 올려 주세요"));
+  var u=new Uint8Array(buf), dv=new DataView(buf), eocd=-1;
+  for(var i=u.length-22;i>=0&&i>u.length-66000;i--){ if(dv.getUint32(i,true)===0x06054b50){ eocd=i; break; } }
+  if(eocd<0) return Promise.reject(new Error("xlsx 파일이 아닙니다"));
+  var n=dv.getUint16(eocd+10,true), off=dv.getUint32(eocd+16,true), ent={};
+  var td=new TextDecoder("utf-8");
+  for(var k=0;k<n;k++){
+    if(dv.getUint32(off,true)!==0x02014b50) break;
+    var meth=dv.getUint16(off+10,true), csz=dv.getUint32(off+20,true), fnl=dv.getUint16(off+28,true), exl=dv.getUint16(off+30,true), cml=dv.getUint16(off+32,true), loc=dv.getUint32(off+42,true);
+    ent[td.decode(u.subarray(off+46,off+46+fnl))]={ meth:meth, csz:csz, loc:loc };
+    off+=46+fnl+exl+cml;
+  }
+  function file(nm){
+    var e=ent[nm]; if(!e) return Promise.resolve(null);
+    var lfn=dv.getUint16(e.loc+26,true), lex=dv.getUint16(e.loc+28,true), start=e.loc+30+lfn+lex, data=u.subarray(start,start+e.csz);
+    if(e.meth===0) return Promise.resolve(td.decode(data));
+    if(e.meth!==8) return Promise.reject(new Error("지원하지 않는 압축 방식"));
+    var ds=new DecompressionStream("deflate-raw");
+    return new Response(new Blob([data]).stream().pipeThrough(ds)).arrayBuffer().then(function(b){ return td.decode(b); });
+  }
+  var sheetName=Object.keys(ent).filter(function(x){ return /^xl\/worksheets\/sheet\d+\.xml$/.test(x); }).sort()[0];
+  if(!sheetName) return Promise.reject(new Error("시트를 찾지 못했습니다"));
+  return Promise.all([file("xl/sharedStrings.xml"), file(sheetName)]).then(function(r){
+    var dp=new DOMParser(), ss=[];
+    if(r[0]){ var sd=dp.parseFromString(r[0],"application/xml"); var si=sd.getElementsByTagName("si");
+      for(var a=0;a<si.length;a++){ var ts=si[a].getElementsByTagName("t"), str=""; for(var b=0;b<ts.length;b++) str+=ts[b].textContent; ss.push(str); } }
+    var wd=dp.parseFromString(r[1],"application/xml"), out=[], rws=wd.getElementsByTagName("row");
+    for(var ri=0;ri<rws.length;ri++){
+      var cs=rws[ri].getElementsByTagName("c"), line=[];
+      for(var ci=0;ci<cs.length;ci++){
+        var ref=cs[ci].getAttribute("r")||"", col=0, m=ref.match(/^[A-Z]+/);
+        if(m) for(var z=0;z<m[0].length;z++) col=col*26+(m[0].charCodeAt(z)-64);
+        col=col?col-1:line.length;
+        var tp=cs[ci].getAttribute("t"), vEl=cs[ci].getElementsByTagName("v")[0], val="";
+        if(tp==="s") val=vEl?(ss[+vEl.textContent]||""):"";
+        else if(tp==="inlineStr"){ var it=cs[ci].getElementsByTagName("t"); for(var y=0;y<it.length;y++) val+=it[y].textContent; }
+        else val=vEl?vEl.textContent:"";
+        while(line.length<col) line.push("");
+        line[col]=val;
+      }
+      out.push(line);
+    }
+    return out;
+  });
+}
+/* 검증 · 오류 행은 반영에서 제외 대상, 경고는 반영 가능 */
+function preCheck(grid){
+  grid=(grid||[]).filter(function(r){ return r&&r.some(function(c){ return String(c||"").trim()!==""; }); });
+  if(!grid.length){ PRE.rows=[]; PRE.errs=[{line:0,msg:"빈 파일입니다"}]; return; }
+  var head=grid[0].map(preHeadKey), ix={};
+  head.forEach(function(k,i){ if(k&&!(k in ix)) ix[k]=i; });
+  PRE.errs=[]; PRE.warn=[]; PRE.rows=[];
+  if(!("sid" in ix)||!("emp" in ix)){ PRE.errs.push({line:1,msg:"첫 행에 「세션」「사번」 열이 필요합니다"}); return; }
+  var seen={};
+  for(var i=1;i<grid.length;i++){
+    var r=grid[i], rawS=String(r[ix.sid]||"").trim(), emp=String(r[ix.emp]||"").trim().replace(/\.0$/,"");
+    var sid=preSidOf(rawS), line=i+1, msg="";
+    if(!sid) msg="알 수 없는 세션 「"+rawS+"」";
+    else if(!emp) msg="사번이 비어 있음";
+    else if(!/^[A-Za-z0-9]+$/.test(emp)) msg="사번 형식 이상 「"+emp+"」";
+    else { var key=sid+"|"+emp.replace(/^0+(?=.)/,"").toUpperCase(); if(seen[key]) msg="같은 세션 사번 중복 ("+seen[key]+"행과 같음)"; else seen[key]=line; }
+    var row={ line:line, sid:sid, emp:emp, name:"name" in ix?String(r[ix.name]||"").trim():"", dept:"dept" in ix?String(r[ix.dept]||"").trim():"", err:msg };
+    if(msg) PRE.errs.push({line:line,msg:msg});
+    PRE.rows.push(row);
+  }
+}
+function preSummary(){
+  var by={}; (PRE.rows||[]).forEach(function(r){ if(!r.err) by[r.sid]=(by[r.sid]||0)+1; });
+  return by;
+}
+function viewPre(){
+  var d=ST.data.pre||{sess:{}}, S2=d.sess||{};
+  var h='<div class="grid g2" style="margin-top:14px">'+PRE_SESS.map(function(id){ var x=S2[id]||{};
+    return '<div class="card" style="margin-top:0"><h2>'+esc(SESS_NAME[id])+'</h2>'+
+      '<table class="tb"><tr><td>정원</td><td class="n tdr"><b>'+(x.cap!=null?x.cap:"-")+'</b></td></tr>'+
+      '<tr><td>사전 신청 명단</td><td class="n tdr"><b>'+(x.list||0)+'</b>명</td></tr>'+
+      '<tr><td>설정값 폴백 (명단이 없을 때만)</td><td class="n tdr">'+(x.cfg||0)+'</td></tr>'+
+      '<tr><td>잔여 계산에 쓰는 사전 신청</td><td class="n tdr"><b>'+(x.used||0)+'</b></td></tr>'+
+      '<tr><td>앱 신청</td><td class="n tdr">'+(x.app||0)+'</td></tr>'+
+      '<tr><td>잔여</td><td class="n tdr"><b>'+(x.left!=null?x.left:"-")+'</b></td></tr></table>'+
+      '<div class="row mt12"><button class="btn sm danger" onclick="preClear(\''+id+'\')">명단 비우기</button></div></div>'; }).join("")+'</div>';
+  h+='<p class="note mt12">잔여 = 정원 - 사전 신청 - 앱 신청. 명단이 올라와 있으면 명단 인원을 쓰고, 명단이 없을 때만 설정 시트의 사전신청수_l1·l2 를 씁니다. 최근 반영 '+esc(d.at||"-")+'</p>';
+  h+='<div class="card"><h2>엑셀로 명단 올리기</h2>'+
+    '<p class="src">첫 행 헤더 · 필수 열 「세션」「사번」 · 선택 열 「이름」「부문」 · 세션 값은 l1 / l2 또는 AWS / MS. 올린 파일에 들어 있는 세션의 명단을 통째로 교체합니다(다시 올려도 두 배가 되지 않습니다).</p>'+
+    '<div class="row mt12"><button class="btn sm" onclick="preTemplate()">양식 내려받기 (CSV)</button><span class="src">.xlsx · .csv · 옛 .xls 는 .xlsx 로 저장 후</span></div>'+
+    '<label ondragover="event.preventDefault()" ondrop="preDrop(event)" style="display:block;margin-top:12px;border:1.5px dashed var(--o25);border-radius:var(--rs);padding:22px;text-align:center;cursor:pointer;background:var(--o5)">'+
+    '<input type="file" accept=".xlsx,.csv,.xls" style="display:none" onchange="prePick(this)"><b>'+(PRE.file?esc(PRE.file):"파일을 끌어다 놓거나 눌러서 고르기")+'</b>'+
+    (PRE.file&&!PRE.rows?'<p class="src" style="margin:6px 0 0"><span class="spin"></span>읽는 중</p>':'')+'</label>';
+  if(PRE.rows){
+    var by=preSummary(), ok=PRE.rows.filter(function(r){return !r.err;}).length;
+    h+='<h2 class="mt12">미리보기</h2><table class="tb"><tr><th>세션</th><th class="tdr">반영할 인원</th><th class="tdr">현재 명단</th><th class="tdr">정원</th><th>확인</th></tr>'+
+      PRE_SESS.filter(function(id){ return by[id]; }).map(function(id){ var x=S2[id]||{}, over=x.cap!=null&&(by[id]+(x.app||0))>x.cap;
+        return '<tr><td><b>'+esc(SESS_NAME[id])+'</b></td><td class="n tdr"><b>'+by[id]+'</b></td><td class="n tdr">'+(x.list||0)+'</td><td class="n tdr">'+(x.cap!=null?x.cap:"-")+'</td><td>'+(over?'<span class="pill off">정원 초과 (앱 신청 '+(x.app||0)+' 포함)</span>':'<span class="pill ok">정원 안</span>')+'</td></tr>'; }).join("")+
+      (!ok?'<tr><td colspan="5" class="src">반영할 행이 없습니다.</td></tr>':'')+'</table>';
+    if(PRE.errs.length) h+='<div class="err-banner">오류 '+PRE.errs.length+'행 · 반영에서 제외됩니다<br>'+PRE.errs.slice(0,30).map(function(e){ return (e.line?e.line+'행 · ':'')+esc(e.msg); }).join("<br>")+(PRE.errs.length>30?'<br>외 '+(PRE.errs.length-30)+'행':'')+'</div>';
+    h+='<p class="src mt12">명부에 없는 사번 경고는 이 콘솔이 명부 사번 목록을 받지 않아 표시하지 않습니다(개인정보 최소 전송).</p>';
+    h+='<div class="row mt12"><button class="btn pri" '+(ok&&!PRE.busy?'':'disabled ')+'onclick="preApply()">'+(PRE.busy?'<span class="spin"></span>반영 중 '+PRE.pct+'%':(PRE.errs.length?'오류 행 제외하고 반영':'반영'))+'</button><button class="btn ghost" onclick="preReset()">취소</button></div>';
+  }
+  h+='</div>';
+  return h;
+}
+function preApply(){
+  var good=(PRE.rows||[]).filter(function(r){ return !r.err; }), by=preSummary(), S2=(ST.data.pre||{}).sess||{};
+  var sids=PRE_SESS.filter(function(id){ return by[id]; });
+  if(!good.length||PRE.busy) return;
+  dialog({ t:"사전 신청 명단을 교체할까요?", s:"올린 파일에 있는 세션의 명단을 통째로 바꿉니다."+(PRE.errs.length?" 오류 "+PRE.errs.length+"행은 제외합니다.":""),
+    who:sids.map(function(id){ return esc(SESS_NAME[id])+" · 기존 "+((S2[id]||{}).list||0)+"명 → 새 "+by[id]+"명"; }).join("<br>"), ok:"교체",
+    onOk:function(){ dlgForce(); preSend(good, sids); } });
+}
+function dlgForce(){ el("dlgOk").disabled=false; dlgClose(); }
+function preSend(good, sids){
+  var up="u"+Date.now().toString(36)+Math.random().toString(36).slice(2,8), chunks=[];
+  for(var i=0;i<good.length;i+=PRE_CHUNK) chunks.push(good.slice(i,i+PRE_CHUNK).map(function(r){ return [r.sid,r.emp,r.name,r.dept]; }));
+  PRE.busy=true; PRE.pct=0; render();
+  var k=0;
+  (function next(){
+    call("pre_upload",{ up:up, i:k, n:chunks.length, sids:sids.join(","), rows:JSON.stringify(chunks[k]) },function(r){
+      if(!r||!r.ok){ PRE.busy=false; render(); toast("반영 실패 ("+(r&&r.reason||"")+") · 기존 명단은 그대로입니다"); return; }
+      k++; PRE.pct=Math.round(k/chunks.length*100); render();
+      if(k<chunks.length) return next();
+      var msg=Object.keys(r.change||{}).map(function(id){ return (SESS_NAME[id]||id)+" "+r.change[id].before+"→"+r.change[id].after+"명"; }).join(" · ");
+      preReset(); toast("반영 완료 · "+msg); load();
+    },function(e){ PRE.busy=false; render(); toast("서버 응답 없음 · 기존 명단은 그대로입니다. 다시 반영하세요"); });
+  })();
+}
+function preClear(id){
+  var x=((ST.data.pre||{}).sess||{})[id]||{};
+  dialog({ t:"명단을 비울까요?", s:"사전 신청 명단만 지웁니다. 앱 신청은 그대로입니다.", who:esc(SESS_NAME[id])+" · "+(x.list||0)+"명", ok:"비우기",
+    onOk:function(){ call("pre_clear",{sess:id},function(r){ dlgForce(); if(r&&r.ok){ toast(SESS_NAME[id]+" 명단 "+r.removed+"명 비움"); load(); } else toast("실패: "+(r&&r.reason||"")); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
 }
 
 /* ══════════════════ 7-4. 공지 (v3.14) · 발송 notice_set · 중지 notice_clear · 현재 공지는 sync 로 읽는다 ══════════════════ */
 /* 앱 NOTICE_TEMPLATES 와 같은 목록 */
 var NOTICE_TPL=[
-  ["지금, 17F 키노트 시작","곧 라이브 퀴즈가 열립니다. 홈 화면을 열어두세요!"],
+  ["곧 Outro 라이브 퀴즈","17F 대강당 Outro 시작 전, 라이브 퀴즈 4문항이 열립니다. 홈 화면을 열어두세요!"],
   ["1F 전시, 지금 한산해요","3분 코스로 둘러보고 패스포트 한 칸 채워가세요."],
   ["부문 우선 관람 10분 전","곧 우리 부문 슬롯이 시작됩니다. 1F 이벤트존에서 만나요!"]
 ];
