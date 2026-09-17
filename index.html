@@ -2519,12 +2519,7 @@ function sessRowHtml(s) {
     open: !!PROG.openSess[s.id], body: sessInlineHtml(s)
   });
 }
-/* 프로그램 상시형 행 아이콘 · 시간이 없는 행은 좌측 슬롯에 아이콘을 같은 폭으로 둔다 */
-var FL_ICO = {
-  roulette: SICO + '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2"/><path d="M12 3.5v6.5M12 14v6.5"/></svg>',
-  slots: SICO + '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.3V12l3.2 2.1"/></svg>',
-  rank: SICO + '<path d="M5 20V12M12 20V6M19 20v-5"/><path d="M3.5 20h17"/></svg>'
-};
+/* v3.26: 시간이 없는 상시형 행은 좌측 슬롯에 아이콘 대신 공용 시간 뱃지 자리에 「상시」(같은 박스 크기 · 제목 시작선 유지) */
 function flListHtml(n) {
   var sess = SESSIONS.filter(function (s) { return s.fl === n; }).sort(function (a, b) { return sessStartMin(a.tm) - sessStartMin(b.tm); });
   var acts = FL_OPEN[n] || [];
@@ -2534,9 +2529,10 @@ function flListHtml(n) {
     acts.map(function (a) {
       var sd = a.sid ? STAMPS.filter(function (x) { return x.id === a.sid; })[0] : null;
       var tap = a.sid ? "ppGoCard('" + a.sid + "')" : a.tap || "";
-      var badge = sd ? '<span class="badge mint">스탬프</span>' : a.tag ? '<span class="badge mint">' + a.tag + "</span>" : "";
-      var ico = a.sid ? STAMP_ICONS[a.sid] : /Roulette/.test(tap) ? FL_ICO.roulette : /guide_slots/.test(tap) ? FL_ICO.slots : FL_ICO.rank;
-      return rcHtml({ cls: "", onclick: tap, left: rcIcon(ico), title: a.nm, sub: a.d, right: badge, link: !!tap, chev: tap ? undefined : false });
+      /* 아이콘이 빠진 만큼 구분 정보는 보조 줄 앞에 둔다(스탬프 · 보상) */
+      var tag = sd ? "스탬프" : a.tag || "";
+      return rcHtml({ cls: "", onclick: tap, left: tokBadge("상시"), title: a.nm,
+        sub: (tag ? '<b class="nxt">' + tag + "</b> · " : "") + a.d, link: !!tap, chev: tap ? undefined : false });
     }).join("");
   return head + rows;
 }
