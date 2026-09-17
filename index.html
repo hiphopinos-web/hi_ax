@@ -793,7 +793,7 @@ var TIMELINE = [
      10F 오후 세션(내내 참석)·점심(시간대 구분 역할)은 시간표 유지 */
   { time: "13:00", end: "16:30", title: "AX 커피챗", short: "아이디어를 낸 분들을 30분 간격으로 매칭합니다", place: "18F 라운지", desc: "아이디어 제출자 매칭 · 30분 간격 × 2테이블. 매칭되면 앱 알림으로 자리·시간을 알려드려요.", tag: "매칭제", always: 1 },
   { time: "13:30", end: "15:00", title: "파트너사 강연 · AWS", short: "Agentic AI 시대의 일하는 방식 변화 · 구태훈 박사(AWS)", place: "17F 대강당", desc: "구태훈 박사(AWS) · Agentic AI 시대의 일하는 방식 변화. 신청제(사전 신청 + 앱 신청), 프로그램 탭에서 잔여석을 확인하세요. 세부 시간은 변동될 수 있습니다.", tag: "신청제" },
-  { time: "13:30", end: "16:30", title: "10F 실습형 세션 A~E", short: "사전 신청자 · 5개 세션 중 1개", place: "10F", desc: "세션 A 영업 및 보상 현장 우수 사례 · 세션 B 통계 현황 리포팅 · 세션 C 외부자료 리서치 자동화 · 세션 D 바이브 코딩(AWS) · 세션 E MS Copilot 문서 작성(MS, 2회 진행 13:30 · 15:00). 사전 신청한 세션 1개에 참석합니다(세션 A는 16:40 종료). 현장 신청은 받지 않습니다.", tag: "사전 신청" },
+  { time: "13:30", end: "16:30", title: "10F 실습형 세션 A~E", short: "사전 신청자 · 5개 세션 중 1개", place: "10F", desc: "세션 A 영업 및 보상 현장 우수 사례 · 세션 B 통계 현황 리포팅 · 세션 C 외부자료 리서치 자동화 · 세션 D 바이브 코딩(AWS) · 세션 E MS Copilot 문서 작성(MS, 2회 진행 13:30 · 15:00). 사전 신청한 세션 1개에 참석합니다(세션 A는 16:40 종료). 현장 신청은 받지 않습니다. 장소: 세션 A 컨퍼런스룸 · 세션 B·C Heart 1 · 7~8 · 세션 D Heart 5 · 6 · 세션 E 추후 안내.", tag: "사전 신청" },
   { time: "15:10", end: "16:40", title: "파트너사 강연 · MS", short: "AI와 친해지기 · MS", place: "17F 대강당", desc: "MS · AI와 친해지기. 신청제(사전 신청 + 앱 신청), 프로그램 탭에서 잔여석을 확인하세요. 세부 시간은 변동될 수 있습니다.", tag: "신청제" },
   /* v3.32 라이브 퀴즈 = Outro 대기 시간 한 판 (사용자 확정 260917) · 4문항을 운영자가 순서대로 발사 */
   { time: "16:45", end: "17:00", title: "라이브 퀴즈 · 설문 안내", short: "16:45 라이브 퀴즈 · 설문 참여 안내 후 17:00 Outro", place: "17F 대강당", desc: "진행 순서: 라이브 퀴즈 4문항 → 오늘 한 판 설문 참여 안내 → 17:00 Outro. 퀴즈는 문항마다 20초, 홈 화면에서 답하세요. 한 문제만 답해도 라이브 챌린지 스탬프가 적립됩니다.", tag: "자유 참석" },
@@ -855,6 +855,13 @@ var SESSIONS = [
 ];
 /* v47: 층별 안내(PROG_FL 존 목록·동선 영상) 전면 삭제 · 안내는 타임라인과 현장 사이니지가 맡는다.
    프로그램 상세의 위치 표기용 존 이름만 남긴다. */
+/* v3.40 10F 세션 장소 · 여기 한 곳 (기획 변경 시 이 값만)
+   출처: 층별 기획안 260803 평면도의 10F 존 배정(컨퍼런스룸 · Heart 1·7~8 · Heart 5·6)을 v3.29 세션 id 승계
+   (fld 현장 프로그램 → 세션 A · ta·tb Track A·B → 세션 B·C · aws 바이브코딩 → 세션 D)로 옮긴 값이며, 백엔드 SESS_META 존
+   (f10_conf · f10_h18 · f10_h56)과 일치한다. 공식 공지 붙임2는 「10층」만 적고 호실은 적지 않아 충돌은 없다.
+   세션 E(신설)는 배정 기록이 없어 「장소 추후 안내」. */
+var TEN_ROOM = { fld: "10F 컨퍼런스룸", ta: "10F Heart 1 · 7~8", tb: "10F Heart 1 · 7~8", aws: "10F Heart 5 · 6", ms1: "10F · 장소 추후 안내", ms2: "10F · 장소 추후 안내" };
+function sessPlace(s) { return TEN_ROOM[s.id] || (s.fl + "F " + (ZONE_NM[s.zone] || "")).trim(); }
 var ZONE_NM = { hall: "대강당", heart18: "Heart 1 · 7~8", heart56: "Heart 5 · 6", conf: "컨퍼런스룸", tbd: "장소 추후 안내", promo: "포토부스 · 홍보존", lounge: "라운지", dap: "DAP ZONE" };
 /* ═══ 프로그램 탭 = 층별 아코디언 (v3.4) · 공간축은 프로그램 탭, 시간축은 일정 탭 ═══
    FL_OPEN = 층별 상시 활동. 참가자가 가서 「하는 것」만 · 존 설명·시설·동선·운영 정보는 넣지 않는다(v3.0 삭제 유지).
@@ -2478,15 +2485,61 @@ function sessById(id) { return SESSIONS.filter(function (s) { return s.id === id
 function sessMy() { return S.get("sess_my", {}); }
 /* v3.31b · 사전 신청(앱 밖) 세션 id 목록 · 서버 sync my.pre 가 정본 · 본인 것만 내려온다 */
 function sessPre() { return S.get("sess_pre", []); }
-function sessMine(id) { return sessMy()[id] || (sessPre().indexOf(id) >= 0 ? { slot: null, pre: true } : null); }
+function sessMine(id) {
+  var m = sessMy()[id] || (sessPre().indexOf(id) >= 0 ? { slot: null, pre: true } : null);
+  if (m) return m;
+  var t = testMine().filter(function (x) { return x.t === "sess" && x.id === id; })[0];   /* v3.40 테스트 오버레이 · 실제 키에 쓰지 않음 */
+  return t ? { slot: null, pre: !!t.pre, test: true } : null;
+}
+/* ═══ v3.40 개발 버전 내 일정 오버레이 (testMode 전용 · 데모 #demo · 테스트 사번 310555) ═══
+   10F 는 앱 신청이 없고 17F 오후는 사전 신청 기반이라 테스트 때 내 일정이 비어 기능 확인이 안 된다.
+   후보에서 3~5개를 무작위로 골라 S "test_mine" 에만 저장한다 · sess_my·resv·cchat·photoq 같은 실제 키나 서버 액션에는 쓰지 않는다.
+   겹침 규칙: 시간 구간이 겹치는 조합 금지(10F 세션 13:30~ 과 17F 오후 강연·커피챗 동시 배치 불가 등) · 포토부스 대기표는 시간 구간 없음.
+   캡처 모드(#demo=...&cap)는 결정적 시드를 쓰므로 오버레이를 끈다. */
+function testMine() {
+  if (!testMode() || /cap/.test(location.hash)) return [];
+  var m = S.get("test_mine", null);
+  if (!m || !m.items) { m = testMineGen(); S.set("test_mine", m); }
+  return m.items;
+}
+function testMineGen() {
+  var R = function (a) { return a[Math.floor(Math.random() * a.length)]; };
+  var occ = [], items = [];
+  var free = function (a, b) { return occ.every(function (x) { return b <= x[0] || a >= x[1]; }); };
+  var rng = function (tm) { var p = tm.split("~"); return [t2m(p[0]), t2m(p[1])]; };
+  var gens = [
+    function () { var s = sessById(R(["fld", "ta", "tb", "aws", R(["ms1", "ms2"])])), r = rng(s.tm); if (!free(r[0], r[1])) return; occ.push(r); items.push({ t: "sess", id: s.id, pre: true }); },
+    function () { var s = sessById("l1"), r = rng(s.tm); if (!free(r[0], r[1])) return; occ.push(r); items.push({ t: "sess", id: "l1", pre: Math.random() < 0.5 }); },
+    function () { var s = sessById("l2"), r = rng(s.tm); if (!free(r[0], r[1])) return; occ.push(r); items.push({ t: "sess", id: "l2", pre: Math.random() < 0.5 }); },
+    function () { for (var k = 0; k < 12; k++) { var a = t2m("09:30") + 30 * Math.floor(Math.random() * 14); if (a >= t2m(RESV_CONF.lunch) && a < t2m(RESV_CONF.lunchEnd)) continue; if (free(a, a + 30)) { occ.push([a, a + 30]); items.push({ t: "resv", slot: hm2(a), room: R([1, 2, 3]) }); return; } } },
+    function () { for (var k = 0; k < 12; k++) { var a = t2m("13:00") + 30 * Math.floor(Math.random() * 7); if (free(a, a + 20)) { occ.push([a, a + 20]); items.push({ t: "cchat", round: hm2(a), table: R(["A", "B", "C"]) }); return; } } },
+    function () { items.push({ t: "photo", no: 20 + Math.floor(Math.random() * 40), ahead: R([1, 2, 4, 6]) }); }
+  ];
+  var want = 3 + Math.floor(Math.random() * 3);
+  gens.sort(function () { return Math.random() - 0.5; });
+  for (var i = 0; i < gens.length && items.length < want; i++) gens[i]();
+  return { items: items, at: Date.now() };
+}
+function testMineShuffle() { if (!testMode()) return; S.set("test_mine", testMineGen()); toast("테스트 · 내 일정을 다시 섞었어요 · " + testMine().length + "개"); App.render(); }
+/* 오버레이의 상담·커피챗·포토부스 행 · [분, onclick, 뱃지, 제목, 보조, 상태] */
+function testMineRows() {
+  var now = new Date().getHours() * 60 + new Date().getMinutes();
+  return testMine().filter(function (x) { return x.t !== "sess"; }).map(function (x) {
+    if (x.t === "resv") return [t2m(x.slot), "App.go('dap')", x.slot, "과제상담", "1F DAP존 미팅룸 " + x.room + " · 승인 · 테스트", "mine"];
+    if (x.t === "cchat") return [t2m(x.round), "App.go('ev_cchat')", x.round, "AX 커피챗", "18F 라운지 TABLE " + x.table + " · 테스트", "mine"];
+    var eta = hm2(Math.min(now + x.ahead * 3, 23 * 60));
+    return [t2m(eta), "photoGoMine()", x.no + "번", "AI 포토부스", "예상 입장 " + eta + " · 앞 " + x.ahead + "팀 · 테스트", "mine"];
+  });
+}
 function sessStartMin(tm) { var m = /(\d{1,2}):(\d{2})/.exec(tm || ""); return m ? (+m[1]) * 60 + (+m[2]) : 9999; }
 function sessMineList() {
   var my = sessMy();
   /* 대기열형(포토부스)은 신청 목록이 아니다 · 구 슬롯 신청 기록이 남아 있어도 내 일정에 올리지 않는다 (v3.21 B) */
   /* v3.29 · 자유 참석(open)도 신청 목록이 아니다 · 서버에 남은 옛 17F 신청 기록은 지우지 않고 표시만 안 한다 */
   /* v3.31b · 10F(info)도 앱 신청이 아니다 · 서버에 남은 옛 10F·오전 17F 신청 기록은 지우지 않고 표시만 안 한다 */
-  return SESSIONS.filter(function (s) { return s.kind === "seat" && sessMine(s.id); })
-    .map(function (s) { var m = sessMine(s.id); return { s: s, slot: m.slot || null, pre: !!m.pre }; })
+  /* v3.40 · 테스트 오버레이의 10F 세션(info)도 내 일정에 올린다 (testMode 에서만 존재) */
+  return SESSIONS.filter(function (s) { var m = sessMine(s.id); return m && (s.kind === "seat" || m.test); })
+    .map(function (s) { var m = sessMine(s.id); return { s: s, slot: m.slot || null, pre: !!m.pre, test: !!m.test }; })
     .sort(function (a, b) { return sessStartMin(a.slot || a.s.tm) - sessStartMin(b.slot || b.s.tm); });
 }
 function sessRemain(s) {
@@ -2516,7 +2569,10 @@ function sessBook(id) {
   App.render();
 }
 function sessCancel(id) {
-  if (!sessMy()[id]) return;   /* 사전 신청은 앱에서 취소하지 않는다 (담당자 문의) */
+  if (!sessMy()[id]) {   /* 사전 신청은 앱에서 취소하지 않는다 (담당자 문의) */
+    var tm0 = sessMine(id); if (tm0 && tm0.test) toast("테스트 항목이에요 · 서버에 쓰지 않습니다");
+    return;
+  }
   var my = sessMy(); delete my[id]; S.set("sess_my", my);
   if (BE.on) beCall({ action: "sess_cancel", emp: (S.get("user", {}) || {}).empId || "", sess: id }, function () {}, function () {});
   toast("신청을 취소했어요");
@@ -2552,7 +2608,8 @@ function sessInlineHtml(s) {
     return h;   /* v3.31 소개 영상 폐지 · 자유 참석 카드는 펼침 안내로 충분 */
   } else if (s.kind === "info") {
     /* v3.31b 10F 안내 전용 · 신청·잔여석 없음 · 이 시간에 이곳에서 이런 흐름이 있다는 정보만 */
-    h += '<p class="sq" style="margin-top:4px">' + esc(s.desc) + "</p>" +
+    h += '<p class="sq" style="margin-top:4px"><b>장소 · ' + esc(sessPlace(s)) + "</b></p>" +
+      '<p class="sq" style="margin-top:4px">' + esc(s.desc) + "</p>" +
       (s.capNote ? '<p class="sq" style="margin-top:4px">정원 ' + esc(s.capNote) + "</p>" : "") +
       '<p class="sq" style="margin-top:4px"><b>사전 신청자 대상</b></p>';
   } else if (s.kind === "seat") {
@@ -2586,7 +2643,8 @@ function sessRowHtml(s) {
     onclick: "progSessToggle('" + s.id + "')",
     left: tokBadge(tm[0], pqOn && pq.status === "call" && isBlack("call") ? "act" : mine || pqOn ? "mine" : full ? "dim" : "", tm[1] ? "~" + tm[1] : null),
     title: esc(s.ttl) + (mine ? ' <span class="badge mint">' + (mine.pre ? "사전 신청" : "신청 완료") + "</span>" : ""),
-    sub: esc(s.sub || s.who), right: st,
+    /* v3.40 · 10F 는 장소를 부제 앞에 (말줄임이 장소부터 자르지 않게) */
+    sub: esc(TEN_ROOM[s.id] ? TEN_ROOM[s.id] + " · " + (s.sub || s.who) : (s.sub || s.who)), right: st,
     open: !!PROG.openSess[s.id], body: sessInlineHtml(s)
   });
 }
@@ -2701,9 +2759,10 @@ function myScheduleHtml() {
   var cc = S.get("cchat", null);
   if (cc && cc.status === "matched")
     rows.push([sessStartMin(cc.round), "App.go('ev_cchat')", cc.round, "AX 커피챗", "18F 라운지 TABLE " + cc.table, "mine"]);
+  testMineRows().forEach(function (r) { rows.push(r); });
   sessMineList().forEach(function (x) {
     var tmLbl = x.slot || x.s.tm.split("~")[0];
-    rows.push([sessStartMin(tmLbl), "sessOpen('" + x.s.id + "')", tmLbl, x.s.ttl, x.s.fl + "F", "mine"]);
+    rows.push([sessStartMin(tmLbl), "sessOpen('" + x.s.id + "')", tmLbl, x.s.ttl, sessPlace(x.s) + (x.test ? " · 테스트" : ""), "mine"]);
   });
   rows.sort(function (a, b) { return a[0] - b[0]; });
   var head = '<div class="sect"><b>나의 일정</b>' +
@@ -3281,7 +3340,7 @@ var Views = {
     if (newly.length || glow) ppAfterRender(n, n - newly.length, glow);
     /* v3.19 테스트 표시·초기화 (데모·테스트 사번 전용) */
     var testBar = !testMode() ? "" :
-      '<p class="scap" style="margin:0 2px 8px">테스트 ' + (BE.on ? "계정" : "모드") + ' · 스탬프는 이 기기에만 기록됩니다 · <span style="cursor:pointer;text-decoration:underline" onclick="testStampReset()">스탬프 초기화</span></p>';
+      '<p class="scap" style="margin:0 2px 8px">테스트 ' + (BE.on ? "계정" : "모드") + ' · 스탬프는 이 기기에만 기록됩니다 · <span style="cursor:pointer;text-decoration:underline" onclick="testStampReset()">스탬프 초기화</span> · <span style="cursor:pointer;text-decoration:underline" onclick="testMineShuffle()">테스트 · 내 일정 다시 섞기</span></p>';
     return testBar + railHtml(n, glow, newly.length ? n - newly.length : n) + stampCardsHtml(st, newly);
   },
 
@@ -3429,9 +3488,10 @@ var Views = {
     if (mr && RESV_LIVE.indexOf(mr.status) >= 0) my.push([sessStartMin(mr.slot), mr.slot, "과제상담", "1F DAP존 미팅룸 " + mr.room + " · 30분 1:1", "App.go('dap')"]);
     var cc = S.get("cchat", null);
     if (cc && cc.status === "matched") my.push([sessStartMin(cc.round), cc.round, "AX 커피챗", "18F 라운지 TABLE " + cc.table + " · 20분", "App.go('ev_cchat')"]);
+    testMineRows().forEach(function (r) { my.push([r[0], r[2], r[3], r[4], r[1]]); });
     sessMineList().forEach(function (x) {
       var tmLbl = x.slot || x.s.tm.split("~")[0];
-      my.push([sessStartMin(tmLbl), tmLbl, x.s.ttl, x.s.fl + "F · " + x.s.tm + (x.slot ? " · 내 시간 " + x.slot : ""), "sessOpen('" + x.s.id + "')"]);
+      my.push([sessStartMin(tmLbl), tmLbl, x.s.ttl, sessPlace(x.s) + " · " + x.s.tm + (x.slot ? " · 내 시간 " + x.slot : "") + (x.test ? " · 테스트" : ""), "sessOpen('" + x.s.id + "')"]);
     });
     /* 진행 중 시간대에 든 내 일정 = 오렌지 테두리·틴트 유지, 시간 뱃지만 검정 (v3.11 조합 규칙) */
     var nowT = ph === "live" ? [t2m(TIMELINE[NOW_INDEX].time), t2m(TIMELINE[NOW_INDEX].end)] : null;
@@ -3475,7 +3535,7 @@ var Views = {
     var s = sessById(PROG.sid);
     if (!s) return '<div class="card">프로그램을 찾을 수 없습니다.</div>';
     var mine = sessMine(s.id);
-    var zn = ZONE_NM[s.zone] || "";
+    var zn = sessPlace(s).replace(/^\d+F\s*·?\s*/, "");
     /* v3.29 · 붙임2 상세 표(주요내용·교육환경·산출물·비고) */
     var infoT = !s.info ? "" : '<div style="margin-top:11px;border-top:1px solid var(--line);padding-top:11px">' +
       s.info.map(function (it) {
@@ -6058,8 +6118,11 @@ function xitionRun(switchNow) {
     S.set("quiz_state", dm[1] === "home_quiz"
       ? { activeId: "q1", phase: "revealed", openedAt: Date.now() - 60000, finishedIds: ["q1"] }
       : { activeId: null, phase: "idle", openedAt: 0, finishedIds: ["q1"] });
-    S.set("cchat", { status: "matched", round: "14:30", table: "B", ts: Date.now() });
-    S.set("sess_pre", ["l1"]);   /* v3.31b 데모 · 17F AWS 강연 사전 신청자 케이스 */
+    /* v3.40 · 캡처(&cap)만 결정적 고정 시드 · 일반 데모는 테스트 오버레이(test_mine)가 내 일정을 채운다 */
+    if (/cap/.test(location.hash)) {
+      S.set("cchat", { status: "matched", round: "14:30", table: "B", ts: Date.now() });
+      S.set("sess_pre", ["l1"]);   /* v3.31b 데모 · 17F AWS 강연 사전 신청자 케이스 */
+    }
     S.set("gw_cleared", true);
     S.set("dept", "보상부문");
     S.set("ev_phase", "live");
