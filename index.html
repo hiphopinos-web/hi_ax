@@ -1894,7 +1894,6 @@ function deptStats() {
   rows.sort(function (a, b) { return b.avg - a.avg; });
   return rows;
 }
-
 function wqToggle(id) {
   var a = S.get("wq_active", { wall1: true, wall2: true, wall3: true });
   a[id] = a[id] === false;
