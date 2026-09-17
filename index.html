@@ -632,7 +632,7 @@
     <canvas id="kvCv" data-axf="seq" aria-hidden="true"></canvas>
     <div id="kvTop"><p class="kv-name">AX Festival <span>2026</span></p><p class="kv-meta">2026. 10. 26 (월) · 광화문 본사 · 09:30 – 17:30</p></div>
     <div id="panel">
-      <p class="tagline">AX : ME to WE</p>
+      <p class="tagline">ME to WE</p>
       <p class="sub">나의 업무 혁신, 우리 회사의 AX가 되다</p>
       <form id="entryForm" novalidate>
         <input id="empId" placeholder="사번" autocomplete="off">
@@ -892,7 +892,7 @@ var LINK_ROUNDS = [
   { s: ["나의", "업무", "혁신,", "우리", "회사의", "AX가", "되다"], start: "동료",
     chain: ["요약", "약속", "속도", "도전", "전환", "환영", "영감"],
     extra: ["데이터", "미래", "고객", "보상", "회의"],
-    why: "AX : ME to WE · 오늘 페스티벌의 슬로건입니다" },
+    why: "ME to WE · 오늘 페스티벌의 슬로건입니다" },
   { s: ["이거,", "AI로", "되겠는데?"], start: "질문",
     chain: ["문서", "서비스", "스마트"],
     extra: ["혁신", "자동", "미래", "고객", "데이터", "약관", "판단", "기록", "요약"],
@@ -966,7 +966,7 @@ var WAVE_LINES = [[0,2],[2,6],[6,11],[11,17],[17,22],[22,25],[0,1],[1,5],[5,11],
 var WAVE_MSGS = [
   "여러분이 만든 26개의 작은 변화가\n오늘 우리 회사의 미래를 바꾸고 있습니다.\n고생하셨습니다",
   "지나가는 발걸음 하나하나가\n26명의 도전에 보내는 박수입니다",
-  "AX : ME to WE\n나의 업무 혁신, 우리 회사의 AX가 되다"
+  "ME to WE\n나의 업무 혁신, 우리 회사의 AX가 되다"
 ];
 var MOCK_FEED = [
   { text: "보상 접수 메일, 요약해서 시스템에 자동 입력되면 좋겠어요", tag: "보상" },
@@ -2630,7 +2630,7 @@ function billboardHtml() {
   var sq = AXF_SEQ.map(function (x) { return x[0] + ":" + x[1]; }).join(",");
   /* v3.24 스탬프 위 배너 · 브랜드 오렌지 스테이지 + 좌측 카피 + 우측 흰 모션(엔진 색 지정 data-axf-colors · 격자 점 data-axf-stage) */
   var sub = evPhase() === "after" ? "함께해 주셔서 고맙습니다" : "10. 26 (월) · 광화문 본사";
-  return '<div class="bill" aria-hidden="true"><div class="bc"><p class="bh">AX : ME to WE</p><p class="bs">' + sub + "</p></div>" +
+  return '<div class="bill" aria-hidden="true"><div class="bc"><p class="bh">ME to WE</p><p class="bs">' + sub + "</p></div>" +
     '<canvas data-axf="loop" data-axf-seq="' + sq + '" data-axf-zoom="0.95" data-axf-stage="orange" data-axf-colors="#FFFFFF,rgba(255,255,255,0.78),#FFFFFF"></canvas></div>';
 }
 
@@ -2736,7 +2736,11 @@ function alwaysState(id) {
    서버(photo_take·photo_cancel·q_call·q_skip·q_done)가 정본 · sync 가 my.photoQ(번호·상태·앞 팀·예상 시각)와 공개 요약(photo)을 내려준다.
    푸시가 없으므로 번호표에 「예상 입장 시각」과 「앞 팀 수」를 가장 크게 · 앞 2팀 이하면 앱 안 알림 1회(checkMyState).
    데모(BE off)는 같은 규칙을 로컬로 흉내 낸다 · 시각은 S photo_phase(open|lunch|closed)로 모의 */
-var PHOTO = { busy: false, MIN: 3, LUNCH: [680, 790], OPEN0: 600 };
+/* v3.30 운영 구간은 여기 한 곳 · 백엔드 PHOTO_OPEN·PHOTO_LUNCH 와 같은 값 (공식 공지 점심 11:00~13:30, 260917 확정) */
+var PHOTO_WIN = { open: [["10:00", "11:00"], ["13:30", "16:40"]], lunch: ["11:00", "13:30"] };
+var PHOTO_LUNCH_TXT = PHOTO_WIN.lunch.join("~");
+var PHOTO_OPEN_TXT = PHOTO_WIN.open.map(function (w) { return w.join("~"); }).join(" · ");
+var PHOTO = { busy: false, MIN: 3, LUNCH: [t2m(PHOTO_WIN.lunch[0]), t2m(PHOTO_WIN.lunch[1])], OPEN0: t2m(PHOTO_WIN.open[0][0]) };
 function photoQ() { return S.get("photoq", null); }
 function photoPub() { return S.get("photo_pub", { waiting: 6, serving: 0, phase: "open", min: 3 }); }
 function photoPhase() {
@@ -2744,7 +2748,7 @@ function photoPhase() {
   if (o) return o;
   return BE.on ? (photoPub().phase || "open") : "open";
 }
-/* 서버 photoEta_ 와 같은 식 · 앞 팀 × 3분, 점심 구간에 걸리면 13:10 으로 밀어 이어서 센다 */
+/* 서버 photoEta_ 와 같은 식 · 앞 팀 × 3분, 점심 구간에 걸리면 점심 끝(PHOTO_WIN.lunch[1] = 13:30)으로 밀어 이어서 센다 */
 function photoEta(ahead) {
   var d = new Date(), c = Math.max(d.getHours() * 60 + d.getMinutes(), PHOTO.OPEN0);
   if (c >= PHOTO.LUNCH[0] && c < PHOTO.LUNCH[1]) c = PHOTO.LUNCH[1];
@@ -2762,8 +2766,8 @@ function photoAlertHtml() {
 }
 function photoTake() {
   var ph = photoPhase();
-  if (ph === "lunch") { toast("점심 시간(11:20~13:10)에는 현장에서 줄을 서 주세요"); return; }
-  if (ph === "closed") { toast("번호표 발급 시간이 아니에요 · 10:00~11:20 · 13:10~16:40"); return; }
+  if (ph === "lunch") { toast("점심 시간(" + PHOTO_LUNCH_TXT + ")에는 현장에서 줄을 서 주세요"); return; }
+  if (ph === "closed") { toast("번호표 발급 시간이 아니에요 · " + PHOTO_OPEN_TXT); return; }
   if (!BE.on) {
     var pub = photoPub(), ahead = pub.waiting || 0, no = (pub.serving || 0) + ahead + 1;
     S.set("photo_pub", { waiting: ahead + 1, serving: pub.serving || 0, phase: pub.phase || "open", min: PHOTO.MIN });
@@ -2778,7 +2782,7 @@ function photoTake() {
   beCall({ action: "photo_take", emp: u.empId }, function (res) {
     PHOTO.busy = false;
     if (!res || !res.ok) {
-      toast(res && res.reason === "lunch" ? "점심 시간(11:20~13:10)에는 현장에서 줄을 서 주세요" :
+      toast(res && res.reason === "lunch" ? "점심 시간(" + PHOTO_LUNCH_TXT + ")에는 현장에서 줄을 서 주세요" :
         res && res.reason === "closed" ? "번호표 발급 시간이 아니에요 · " + (res.open || "") : "번호표를 받지 못했어요. 다시 시도해주세요");
       return;
     }
@@ -2814,8 +2818,8 @@ function photoQueueHtml() {
       (ph === "open" ? '<button class="btn mint" onclick="photoTake()">다시 줄 서기 · 맨 뒤 새 번호</button>' :
         '<p class="sq" style="margin-top:10px">' + (ph === "lunch" ? "점심 시간에는 현장에서 줄을 서 주세요" : "지금은 번호표 발급 시간이 아니에요") + "</p>");
   }
-  if (ph === "lunch") return '<p class="sq">점심 시간(11:20~13:10)에는 번호표를 받지 않아요. 1F 포토부스 앞에서 줄을 서 주세요.</p>';
-  if (ph === "closed") return '<p class="sq">번호표 발급 시간 · 10:00~11:20 · 13:10~16:40</p>';
+  if (ph === "lunch") return '<p class="sq">점심 시간(' + PHOTO_LUNCH_TXT + ')에는 번호표를 받지 않아요. 1F 포토부스 앞에서 줄을 서 주세요.</p>';
+  if (ph === "closed") return '<p class="sq">번호표 발급 시간 · ' + PHOTO_OPEN_TXT + "</p>";
   return '<p class="sq">지금 대기 ' + wait + "팀 · 약 " + wait * PHOTO.MIN + '분</p>' +
     '<button class="btn mint" onclick="photoTake()">대기 번호 받기</button>' +
     '<p class="sq" style="margin-top:8px;font-size:calc(12px * var(--fs))">번호를 받고 자리에서 기다리다 앞 2팀이 되면 내려오세요</p>';
@@ -2825,7 +2829,7 @@ function photoState() {
   var line = q && q.status === "call" ? "지금 입장하세요 · " + q.no + "번" :
     q && q.status === "wait" ? "내 번호 " + q.no + "번 · 예상 입장 " + q.eta :
       q && q.status === "skip" ? "건너뛴 번호 · 다시 줄 서기 가능" :
-        ph === "lunch" ? "점심 시간 · 현장 줄서기" : ph === "closed" ? "발급 시간 10:00~11:20 · 13:10~16:40" :
+        ph === "lunch" ? "점심 시간 · 현장 줄서기" : ph === "closed" ? "발급 시간 " + PHOTO_OPEN_TXT :
           "지금 대기 " + (pub.waiting || 0) + "팀 · 약 " + (pub.waiting || 0) * PHOTO.MIN + "분";
   return [line, "촬영 2~3분, 결과물은 ME to WE 프레임으로 출력해 드립니다.", null, null];
 }
@@ -3684,7 +3688,7 @@ var Views = {
       '<div style="margin-top:12px;height:150px;border-radius:16px;overflow:hidden;background:var(--ink);position:relative">' +
       /* 블랙 스테이지 · 원본 오브젝트 루프(점 고리 → 구체 → 알파 서클)를 오른쪽에, 왼쪽은 슬로건. 공용 시계라 4초 재렌더에도 이어진다 */
       kvMediaHtml("live", "kvLive").replace('data-axf="loop"', 'data-axf="loop" data-axf-seq="circle:5,sphere:7,alpha:7" data-axf-dark="1" data-axf-cx="0.72" data-axf-zoom="0.95"') +
-      '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-start;padding-left:22px"><b class="disp" style="font-size:24px;color:#fff;letter-spacing:-0.01em">AX : ME to <span style="color:var(--mint-deep)">WE</span></b></div></div>' +
+      '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-start;padding-left:22px"><b class="disp" style="font-size:24px;color:#fff;letter-spacing:-0.01em">ME to <span style="color:var(--mint-deep)">WE</span></b></div></div>' +
       '<div class="screen-wrap" style="padding-bottom:0"><div class="counters" style="margin-bottom:10px">' +
       [["함께하는 사람", c.online], ["모인 아이디어", c.ideas], ["퀴즈 참여", c.quiz], ["스탬프 3개 이상", stamp3]].map(function (x) {
         return '<div><div class="v">' + x[1].toLocaleString() + '</div><div class="l">' + x[0] + "</div></div>";
@@ -3877,7 +3881,7 @@ function photoAdm(act, emp) {
   if (emp) p.emp = emp;
   beCall(p, function (res) {
     if (!res || !res.ok) {
-      toast(res && res.reason === "lunch" ? "점심 시간 · 원격 번호 호출 중지 (13:10 재개)" : res && res.reason === "empty" ? "대기 중인 번호가 없습니다" : "처리 실패" + (res && res.reason ? " (" + res.reason + ")" : ""));
+      toast(res && res.reason === "lunch" ? "점심 시간 · 원격 번호 호출 중지 (" + PHOTO_WIN.lunch[1] + " 재개)" : res && res.reason === "empty" ? "대기 중인 번호가 없습니다" : "처리 실패" + (res && res.reason ? " (" + res.reason + ")" : ""));
       return;
     }
     toast((res.no ? res.no + "번 · " : "") + (act === "call" ? "호출했습니다" : act === "skip" ? "건너뛰었습니다" : "완료 처리했습니다"));
@@ -3887,7 +3891,7 @@ function photoAdm(act, emp) {
 var AdminTabs = {
 
   photo: function () {
-    var h = '<div class="card soft mb12"><p class="muted" style="font-size:calc(13.5px * var(--fs));line-height:1.6">호출하면 참가자 앱에 「지금 입장하세요」가 뜹니다. 호출 후 10분 안에 오지 않으면 건너뛰기, 도착하면 완료. 점심(11:20~13:10)에는 원격 번호 호출이 멈추고 현장 줄을 받습니다.</p></div>';
+    var h = '<div class="card soft mb12"><p class="muted" style="font-size:calc(13.5px * var(--fs));line-height:1.6">호출하면 참가자 앱에 「지금 입장하세요」가 뜹니다. 호출 후 10분 안에 오지 않으면 건너뛰기, 도착하면 완료. 점심(' + PHOTO_LUNCH_TXT + ')에는 원격 번호 호출이 멈추고 현장 줄을 받습니다.</p></div>';
     if (!BE.on) {
       var q = photoQ(), pub = photoPub();
       return h + '<div class="card mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">대기 ' + (pub.waiting || 0) + "팀 · 호출 " + (pub.serving || 0) + "번째</b>" +
@@ -4803,7 +4807,7 @@ function scanDone(emp, sp, act, res) {
               why === "need" ? "스탬프 3개 미만 · 차감 불가 (현재 " + (res.n || 0) + "개)" :
                 why === "used" ? "이미 룰렛을 사용한 참가자입니다" :
                   why === "notfound" ? "대기 목록에 없습니다" :
-                  why === "lunch" ? "점심 시간 · 포토부스 원격 호출 중지 (13:10 재개)" :
+                  why === "lunch" ? "점심 시간 · 포토부스 원격 호출 중지 (" + PHOTO_WIN.lunch[1] + " 재개)" :
                     why === "auth" ? "관리코드 불일치 · 설정 시트를 확인하세요" :
                       why === "dup" ? "이미 접수됨" : "처리 실패" + (why || err ? " (" + (why || err.slice(0, 40)) + ")" : "");
     scanLog(emp, msg, false, true);
