@@ -911,6 +911,23 @@ var NOTICE_TEMPLATES = [
 ];
 var QUIZ_SECONDS = 20;
 var INITIAL_QUIZ_STATE = { activeId: null, phase: "idle", openedAt: 0, finishedIds: [] };
+/* v3.41 hotfix · 로컬 퀴즈 상태 안전 만료 (openedAt 기준 · 여기 한 곳)
+   서버 종료 신호(idle)를 오프라인·불통으로 못 받은 기기가 카드를 계속 띄우지 않게 한다.
+   open = 응답 20초 + 여유 3분 · closed(집계) = 8분 · revealed(결과 공개) = 12분 · 운영자는 문항당 몇 분 안에 넘긴다 */
+var QUIZ_STALE_MS = { open: (QUIZ_SECONDS + 180) * 1000, closed: 8 * 60000, revealed: 12 * 60000 };
+/* 지금 참여자에게 보여 줄 퀴즈 상태 · 없으면 null · 만료면 로컬을 idle 로 정리(활성 문항은 다시 풀기로) */
+function quizLive() {
+  var st = S.get("quiz_state", INITIAL_QUIZ_STATE);
+  if (!st || !st.activeId || st.phase === "idle") return null;
+  var lim = QUIZ_STALE_MS[st.phase] || QUIZ_STALE_MS.revealed;
+  if (Date.now() - (st.openedAt || 0) > lim) {
+    var fin = (st.finishedIds || []).slice();
+    if (fin.indexOf(st.activeId) < 0) fin.push(st.activeId);
+    S.set("quiz_state", { activeId: null, phase: "idle", openedAt: 0, finishedIds: fin });
+    return null;
+  }
+  return st;
+}
 /* 게임 A 「AX 링크」 라운드 · 제작 규칙: ①문장 어절 수=체인 길이 ②체인 첫 글자 라운드 내 유일 ③보기는 요구 글자(두음 변형 포함)로 시작 금지 */
 var LINK_ROUNDS = [
   { s: ["나의", "업무", "혁신,", "우리", "회사의", "AX가", "되다"], start: "동료",
@@ -2425,12 +2442,12 @@ window.addEventListener("popstate", function () {
 
 /* ── 라이브 퀴즈 ── */
 var quizTimer = setInterval(function () {
-  var st = S.get("quiz_state", INITIAL_QUIZ_STATE);
-  if (st.phase === "open" && ["home", "screen"].indexOf(App.current) >= 0) App.render();
+  var st = quizLive();
+  if (st && st.phase === "open" && ["home", "screen"].indexOf(App.current) >= 0) App.render();
 }, 800);
 
 function quizCardHtml() {
-  var st = S.get("quiz_state", INITIAL_QUIZ_STATE);
+  var st = quizLive() || INITIAL_QUIZ_STATE;
   var quiz = QUIZZES.find(function (q) { return q.id === st.activeId; });
   if (!quiz || st.phase === "idle") {
     return '<div class="quiz-wait"><p style="font-size:calc(15.5px * var(--fs));font-weight:800;color:var(--hi)">LIVE QUIZ 대기 중</p>' +
@@ -2920,8 +2937,7 @@ function tokBadge(text, state, sub) {
 function blackPick(view) {
   view = view || App.current;
   var c = [], st = SCHED.tab;
-  var qs = S.get("quiz_state", INITIAL_QUIZ_STATE);
-  if (view === "home" && qs.activeId && qs.phase !== "idle") c.push("quiz");
+  if (view === "home" && quizLive()) c.push("quiz");
   var pq = S.get("photoq", null), qq = S.get("queue", {}), call = !!(pq && pq.status === "call"), k;
   for (k in qq) if (qq[k] && qq[k].status === "call") call = true;
   if (call && (view === "home" || view === "guide" || view === "sess_d" || (view === "guide_time" && st !== "all"))) c.push("call");
@@ -3130,6 +3146,7 @@ function stampInnerHtml(s) {
       '<p class="lnk sub" onclick="staffStampOpen()">QR이 안 되면 담당자 적립 요청 ›</p>';
   } else if (s.id === "p4") {
     /* v3.1: 미니게임 허브(ev_games) 폐지 · 세 가지 방법을 카드가 직접 연다 */
+    quizLive();   /* v3.41 · 만료된 문항을 다시 풀기 목록으로 넘긴다 */
     var qs4 = S.get("quiz_state", INITIAL_QUIZ_STATE), an4 = S.get("quiz_answers", {});
     var replayN = QUIZZES.filter(function (q) { return qs4.finishedIds.indexOf(q.id) >= 0 && !an4[q.id]; }).length;
     inner += '<div class="row" style="margin-top:10px;gap:8px">' +
@@ -3291,8 +3308,7 @@ var Views = {
      운영 쪽 존 등급 입력(ZONE_GRADE)·백엔드 grade·입장 스캔 동선 집계는 유지.
      히어로(지금 진행 중)는 나의 일정 첫 줄로 흡수 · 스탬프는 행사 전·당일·후 항상 맨 위 */
   home: function () {
-    var st = S.get("quiz_state", INITIAL_QUIZ_STATE);
-    var liveOpen = !!st.activeId && st.phase !== "idle";
+    var liveOpen = !!quizLive();   /* v3.41 · 만료·종료 판정 한 곳 */
     return "" +
       (liveOpen ? quizCardHtml() : "") +
       photoAlertHtml() +
@@ -3610,6 +3626,7 @@ var Views = {
   /* 미니게임 허브(ev_games)는 v3.1 폐지 · 스탬프 04 카드가 AX 링크·초성퀴즈·다시 풀기를 직접 연다 */
 
   ev_replay: function () {
+    quizLive();
     var st = S.get("quiz_state", INITIAL_QUIZ_STATE);
     var answers = S.get("quiz_answers", {});
     var replayable = QUIZZES.filter(function (q) { return st.finishedIds.indexOf(q.id) >= 0 && !answers[q.id]; });
@@ -3980,7 +3997,7 @@ var Views = {
   },
 
   screen: function () {
-    var st = S.get("quiz_state", INITIAL_QUIZ_STATE);
+    var st = quizLive() || INITIAL_QUIZ_STATE;
     var quiz = QUIZZES.find(function (q) { return q.id === st.activeId; });
     var c = counters();
     var h = '<div class="screen-wrap"><div class="row" style="justify-content:space-between;padding-top:8px">' +
@@ -4450,8 +4467,8 @@ function checkMyState() {
     seen.photoCall = pq.no; changed = true;
     notifyUser("지금 입장하세요", "1F 포토부스 · " + pq.no + "번 · 호출 후 10분 안에 와 주세요", "home");
   }
-  var qs = S.get("quiz_state", INITIAL_QUIZ_STATE);
-  if (qs.phase === "open" && qs.activeId && seen.quiz !== qs.activeId + ":open" && Date.now() - (qs.openedAt || 0) < 600000) {
+  var qs = quizLive() || INITIAL_QUIZ_STATE;
+  if (qs.phase === "open" && qs.activeId && seen.quiz !== qs.activeId + ":open") {
     seen.quiz = qs.activeId + ":open"; changed = true;
     var qz2 = QUIZZES.find(function (q) { return q.id === qs.activeId; });
     notifyUser("라이브 퀴즈 시작", (qz2 ? qz2.part + " · " : "") + "마감 전까지 홈에서 답할 수 있습니다.", "home");
@@ -4470,9 +4487,11 @@ function beSync() {
     BE.stats.sess = res.sess || null;
     BE.stats.sessLeft = res.sessLeft || null;   /* v3.31b 정원 - 사전 - 앱 */
     if ("rouletteOut" in res && !!res.rouletteOut !== S.get("roulette_out", false)) S.set("roulette_out", !!res.rouletteOut);   /* v3.33 */
-    if (res.quiz && res.quiz.id) {
+    /* v3.41 hotfix · 서버의 종료 상태는 id 가 빈 idle({"id":"","phase":"idle"})다. 예전 조건(res.quiz.id)은 이걸 통째로 무시해
+       한 번 open·revealed 를 받은 기기에 카드가 영원히 남았다. idle 은 id 와 무관하게 반영, open·revealed 는 id 가 있을 때만 */
+    if (res.quiz && (res.quiz.phase === "idle" || res.quiz.id)) {
       var qs = S.get("quiz_state", INITIAL_QUIZ_STATE);
-      if (qs.activeId !== res.quiz.id || qs.phase !== res.quiz.phase) {
+      if (res.quiz.phase === "idle" ? qs.phase !== "idle" || qs.activeId : (qs.activeId !== res.quiz.id || qs.phase !== res.quiz.phase)) {
         var fin = qs.finishedIds || [];
         if (res.quiz.phase === "idle") {
           if (qs.activeId && fin.indexOf(qs.activeId) < 0) fin.push(qs.activeId);
