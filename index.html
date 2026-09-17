@@ -792,7 +792,7 @@ var TIMELINE = [
   { time: "11:00", end: "13:30", title: "점심 · 자유 관람", short: "1F AX 전시·체험존에서 스탬프를 채워보세요", place: "1F AX 전시·체험존", desc: "점심 시간과 자유 관람. 1F AX 전시·체험존에서 스탬프를 채워보세요.", tag: "휴식" },
   /* always=1 (v3.18): 기간이 길어서가 아니라 「그 시간 안에 아무 때나 들르는」 참여 방식이라 상시 묶음.
      10F 오후 세션(내내 참석)·점심(시간대 구분 역할)은 시간표 유지 */
-  { time: "13:00", end: "16:30", title: "AX 커피챗", short: "아이디어를 낸 분들을 30분 간격으로 매칭합니다", place: "18F 라운지", desc: "아이디어 제출자 매칭 · 30분 간격 × 2테이블. 매칭되면 앱 알림으로 자리·시간을 알려드려요.", tag: "매칭제", always: 1 },
+  { time: "13:00", end: "16:30", title: "AX 커피챗", short: "아이디어를 낸 분들을 30분 간격으로 매칭합니다", place: "18F 라운지", desc: "아이디어 제출자 매칭 · 30분 간격 × 2테이블. 매칭되면 앱을 열어 두었을 때 화면에서 자리·시간을 알려드려요.", tag: "매칭제", always: 1 },
   { time: "13:30", end: "15:00", title: "파트너사 강연 · AWS", short: "Agentic AI 시대의 일하는 방식 변화 · 구태훈 박사(AWS)", place: "17F 대강당", desc: "구태훈 박사(AWS) · Agentic AI 시대의 일하는 방식 변화. 신청제(사전 신청 + 앱 신청), 프로그램 탭에서 잔여석을 확인하세요. 세부 시간은 변동될 수 있습니다.", tag: "신청제" },
   { time: "13:30", end: "16:30", title: "10F 실습형 세션 A~E", short: "사전 신청자 · 5개 세션 중 1개", place: "10F", desc: "세션 A 영업 및 보상 현장 우수 사례 · 세션 B 통계 현황 리포팅 · 세션 C 외부자료 리서치 자동화 · 세션 D 바이브 코딩(AWS) · 세션 E MS Copilot 문서 작성(MS, 2회 진행 13:30 · 15:00). 사전 신청한 세션 1개에 참석합니다(세션 A는 16:40 종료). 현장 신청은 받지 않습니다. 장소: 세션 A 컨퍼런스룸 · 세션 B·C Heart 1 · 7~8 · 세션 D Heart 5 · 6 · 세션 E 추후 안내.", tag: "사전 신청" },
   { time: "15:10", end: "16:40", title: "파트너사 강연 · MS", short: "AI와 친해지기 · MS", place: "17F 대강당", desc: "MS · AI와 친해지기. 신청제(사전 신청 + 앱 신청), 프로그램 탭에서 잔여석을 확인하세요. 세부 시간은 변동될 수 있습니다.", tag: "신청제" },
@@ -1436,7 +1436,7 @@ function bookResv() {
       }
     });
   }
-  toast("상담 신청 완료 · " + slot + " · Meeting Room 2. 운영자 승인 후 앱으로 알려드립니다.");
+  toast("상담 신청 완료 · " + slot + " · Meeting Room 2. 운영자 승인 후 앱을 열어 두면 화면에서 알려드려요.");
 }
 function cancelResv() {
   var u = S.get("user", {});
@@ -2479,7 +2479,8 @@ function sessMine(id) {
   var m = sessMy()[id] || (sessPre().indexOf(id) >= 0 ? { slot: null, pre: true } : null);
   if (m) return m;
   var t = testMine().filter(function (x) { return x.t === "sess" && x.id === id; })[0];   /* v3.40 테스트 오버레이 · 실제 키에 쓰지 않음 */
-  return t ? { slot: null, pre: !!t.pre, test: true } : null;
+  if (!t || testMineHidden(id)) return null;   /* v3.43 · 실제 항목과 겹쳐 표시하지 않는 오버레이는 뱃지도 없음 */
+  return { slot: null, pre: !!t.pre, test: true };
 }
 /* ═══ v3.40 개발 버전 내 일정 오버레이 (testMode 전용 · 데모 #demo · 테스트 사번 310555) ═══
    10F 는 앱 신청이 없고 17F 오후는 사전 신청 기반이라 테스트 때 내 일정이 비어 기능 확인이 안 된다.
@@ -2487,39 +2488,98 @@ function sessMine(id) {
    겹침 규칙: 시간 구간이 겹치는 조합 금지(10F 세션 13:30~ 과 17F 오후 강연·커피챗 동시 배치 불가 등) · 포토부스 대기표는 시간 구간 없음.
    캡처 모드(#demo=...&cap)는 결정적 시드를 쓰므로 오버레이를 끈다. */
 function testMine() {
-  if (!testMode() || /cap/.test(location.hash)) return [];
+  if (!testMode() || /cap/.test(location.hash) || TMG_BUSY) return [];   /* v3.43 생성 중 재귀 방지 */
   var m = S.get("test_mine", null);
   if (!m || !m.items) { m = testMineGen(); S.set("test_mine", m); }
   return m.items;
 }
+var TMG_BUSY = false;
 function testMineGen() {
+  TMG_BUSY = true;
+  try { return testMineGen0(); } finally { TMG_BUSY = false; }
+}
+function testMineGen0() {
   var R = function (a) { return a[Math.floor(Math.random() * a.length)]; };
-  var occ = [], items = [];
+  var real = myItems(false), occ = real.filter(function (x) { return x.iv; }).map(function (x) { return x.iv.slice(); }), items = [];
+  var has = function (k) { return real.some(function (x) { return x.kind === k || (k === "ten" && x.ten); }); };
   var free = function (a, b) { return occ.every(function (x) { return b <= x[0] || a >= x[1]; }); };
   var rng = function (tm) { var p = tm.split("~"); return [t2m(p[0]), t2m(p[1])]; };
   var gens = [
-    function () { var s = sessById(R(["fld", "ta", "tb", "aws", R(["ms1", "ms2"])])), r = rng(s.tm); if (!free(r[0], r[1])) return; occ.push(r); items.push({ t: "sess", id: s.id, pre: true }); },
-    function () { var s = sessById("l1"), r = rng(s.tm); if (!free(r[0], r[1])) return; occ.push(r); items.push({ t: "sess", id: "l1", pre: Math.random() < 0.5 }); },
-    function () { var s = sessById("l2"), r = rng(s.tm); if (!free(r[0], r[1])) return; occ.push(r); items.push({ t: "sess", id: "l2", pre: Math.random() < 0.5 }); },
-    function () { for (var k = 0; k < 12; k++) { var a = t2m("09:30") + 30 * Math.floor(Math.random() * 14); if (a >= t2m(RESV_CONF.lunch) && a < t2m(RESV_CONF.lunchEnd)) continue; if (free(a, a + 30)) { occ.push([a, a + 30]); items.push({ t: "resv", slot: hm2(a), room: R([1, 2, 3]) }); return; } } },
-    function () { for (var k = 0; k < 12; k++) { var a = t2m("13:00") + 30 * Math.floor(Math.random() * 7); if (free(a, a + 20)) { occ.push([a, a + 20]); items.push({ t: "cchat", round: hm2(a), table: R(["A", "B", "C"]) }); return; } } },
-    function () { items.push({ t: "photo", no: 20 + Math.floor(Math.random() * 40), ahead: R([1, 2, 4, 6]) }); }
+    function () { if (has("ten")) return; var s = sessById(R(["fld", "ta", "tb", "aws", R(["ms1", "ms2"])])), r = rng(s.tm); if (!free(r[0], r[1])) return; occ.push(r); items.push({ t: "sess", id: s.id, pre: true }); },
+    function () { if (has("sess:l1")) return; var s = sessById("l1"), r = rng(s.tm); if (!free(r[0], r[1])) return; occ.push(r); items.push({ t: "sess", id: "l1", pre: Math.random() < 0.5 }); },
+    function () { if (has("sess:l2")) return; var s = sessById("l2"), r = rng(s.tm); if (!free(r[0], r[1])) return; occ.push(r); items.push({ t: "sess", id: "l2", pre: Math.random() < 0.5 }); },
+    function () { if (has("resv")) return; for (var k = 0; k < 12; k++) { var a = t2m("09:30") + 30 * Math.floor(Math.random() * 14); if (a >= t2m(RESV_CONF.lunch) && a < t2m(RESV_CONF.lunchEnd)) continue; if (free(a, a + 30)) { occ.push([a, a + 30]); items.push({ t: "resv", slot: hm2(a), room: R([1, 2, 3]) }); return; } } },
+    function () { if (has("cchat")) return; for (var k = 0; k < 12; k++) { var a = t2m("13:00") + 30 * Math.floor(Math.random() * 7); if (free(a, a + 20)) { occ.push([a, a + 20]); items.push({ t: "cchat", round: hm2(a), table: R(["A", "B", "C"]) }); return; } } },
+    function () { if (has("photo")) return; items.push({ t: "photo", no: 20 + Math.floor(Math.random() * 40), ahead: R([1, 2, 4, 6]) }); }
   ];
   var want = 3 + Math.floor(Math.random() * 3);
   gens.sort(function () { return Math.random() - 0.5; });
   for (var i = 0; i < gens.length && items.length < want; i++) gens[i]();
   return { items: items, at: Date.now() };
 }
+var TMH = { at: 0, ids: [] };
+function testMineHidden(id) {
+  if (Date.now() - TMH.at > 500) {
+    TMH.at = Date.now();
+    var shown = myItems(true).filter(function (x) { return x.test && x.kind.indexOf("sess:") === 0; }).map(function (x) { return x.kind.slice(5); });
+    TMH.ids = testMine().filter(function (x) { return x.t === "sess" && shown.indexOf(x.id) < 0; }).map(function (x) { return x.id; });
+  }
+  return TMH.ids.indexOf(id) >= 0;
+}
 function testMineShuffle() { if (!testMode()) return; S.set("test_mine", testMineGen()); toast("테스트 · 내 일정을 다시 섞었어요 · " + testMine().length + "개"); App.render(); }
-/* 오버레이의 상담·커피챗·포토부스 행 · [분, onclick, 뱃지, 제목, 보조, 상태] */
-function testMineRows() {
-  var now = new Date().getHours() * 60 + new Date().getMinutes();
-  return testMine().filter(function (x) { return x.t !== "sess"; }).map(function (x) {
-    if (x.t === "resv") return [t2m(x.slot), "App.go('dap')", x.slot, "과제상담", "1F DAP존 미팅룸 " + x.room + " · 승인 · 테스트", "mine"];
-    if (x.t === "cchat") return [t2m(x.round), "App.go('ev_cchat')", x.round, "AX 커피챗", "18F 라운지 TABLE " + x.table + " · 테스트", "mine"];
-    var eta = hm2(Math.min(now + x.ahead * 3, 23 * 60));
-    return [t2m(eta), "photoGoMine()", x.no + "번", "AI 포토부스", "예상 입장 " + eta + " · 앞 " + x.ahead + "팀 · 테스트", "mine"];
+/* ═══ v3.43 hotfix · 내 항목 병합 함수 하나 (홈 「나의 일정」 · 일정 탭 「내 일정」 공용) ═══
+   종류별 1건 규칙: 커피챗·상담·포토부스는 사람당 1건 · 실제 상태에 같은 종류가 있으면 테스트 오버레이 항목은 표시하지 않는다.
+   오버레이 세션은 같은 id 가 실제로 있거나 실제 항목과 시간이 겹치면 표시하지 않는다(저장된 test_mine 은 그대로 둔다).
+   반환 항목: { min, go, badge, label, title, gTitle, sub, gSub, call, kind, iv:[시작분, 끝분] | null, test } */
+function myItems(withTest) {
+  var out = [], q = S.get("queue", {}), qk;
+  for (qk in q) {
+    var sp = scanSpot(qk), r = q[qk];
+    if (!sp || !r || r.status === "done") continue;
+    var qc = r.status === "call";
+    out.push({ min: -1, go: "qrPanelOpen('mine')", badge: qc ? "호출" : r.no + "번", label: "지금", title: sp.nm, gTitle: sp.nm,
+      sub: qc ? "지금 입장하세요" : "대기 중" + (r.ahead ? " (앞 " + r.ahead + "명)" : ""), gSub: qc ? "지금 입장하세요" : r.no + "번 대기 중" + (r.ahead ? " (앞 " + r.ahead + "명)" : ""),
+      call: qc, kind: "queue:" + qk, iv: null });
+  }
+  var pq = photoQ();
+  if (pq && (pq.status === "wait" || pq.status === "call")) {
+    var pc = pq.status === "call";
+    out.push({ min: pc ? -1 : t2m(pq.eta), go: "photoGoMine()", badge: pc ? "호출" : pq.no + "번", label: pc ? "지금" : pq.eta, title: "AI 포토부스", gTitle: "AI 포토부스 대기표",
+      sub: pc ? "지금 입장하세요" : "예상 입장 " + pq.eta + " · 앞 " + pq.ahead + "팀", gSub: pc ? pq.no + "번 · 지금 입장하세요" : pq.no + "번 · 앞 " + pq.ahead + "팀 · 예상 입장 " + pq.eta,
+      call: pc, photo: true, kind: "photo", iv: null });
+  }
+  var mr = myResv();
+  if (mr && RESV_LIVE.indexOf(mr.status) >= 0)
+    out.push({ min: sessStartMin(mr.slot), go: "App.go('dap')", badge: mr.slot, label: mr.slot, title: "과제상담", gTitle: "과제상담", sub: "1F DAP존 미팅룸 " + mr.room, gSub: "1F DAP존 미팅룸 " + mr.room + " · 30분 1:1", kind: "resv", iv: [sessStartMin(mr.slot), sessStartMin(mr.slot) + 30] });
+  var cc = S.get("cchat", null);
+  if (cc && cc.status === "matched")
+    out.push({ min: sessStartMin(cc.round), go: "App.go('ev_cchat')", badge: cc.round, label: cc.round, title: "AX 커피챗", gTitle: "AX 커피챗", sub: "18F 라운지 TABLE " + cc.table, gSub: "18F 라운지 TABLE " + cc.table + " · 20분", kind: "cchat", iv: [sessStartMin(cc.round), sessStartMin(cc.round) + 20] });
+  sessMineList().forEach(function (x) {
+    if (x.test) return;
+    var tmLbl = x.slot || x.s.tm.split("~")[0], p = x.s.tm.split("~");
+    out.push({ min: sessStartMin(tmLbl), go: "sessOpen('" + x.s.id + "')", badge: tmLbl, label: tmLbl, title: x.s.ttl, gTitle: x.s.ttl, sub: sessPlace(x.s), gSub: sessPlace(x.s) + " · " + x.s.tm + (x.slot ? " · 내 시간 " + x.slot : ""), kind: "sess:" + x.s.id, ten: x.s.fl === 10, iv: [t2m(p[0]), t2m(p[1])] });
   });
+  if (!withTest) return out;
+  var kinds = out.map(function (x) { return x.kind; }), ivs = out.filter(function (x) { return x.iv; }).map(function (x) { return x.iv; });
+  var hasTen = out.some(function (x) { return x.ten; });
+  var clash = function (iv) { return ivs.some(function (b) { return iv[0] < b[1] && b[0] < iv[1]; }); };
+  var now = new Date().getHours() * 60 + new Date().getMinutes();
+  testMine().forEach(function (x) {
+    var it = null;
+    if (x.t === "resv") it = { min: t2m(x.slot), go: "App.go('dap')", badge: x.slot, label: x.slot, title: "과제상담", gTitle: "과제상담", sub: "1F DAP존 미팅룸 " + x.room + " · 테스트", gSub: "1F DAP존 미팅룸 " + x.room + " · 승인 · 테스트", kind: "resv", iv: [t2m(x.slot), t2m(x.slot) + 30] };
+    else if (x.t === "cchat") it = { min: t2m(x.round), go: "App.go('ev_cchat')", badge: x.round, label: x.round, title: "AX 커피챗", gTitle: "AX 커피챗", sub: "18F 라운지 TABLE " + x.table + " · 테스트", gSub: "18F 라운지 TABLE " + x.table + " · 20분 · 테스트", kind: "cchat", iv: [t2m(x.round), t2m(x.round) + 20] };
+    else if (x.t === "photo") { var eta = hm2(Math.min(now + x.ahead * 3, 23 * 60)); it = { min: t2m(eta), go: "photoGoMine()", badge: x.no + "번", label: eta, title: "AI 포토부스", gTitle: "AI 포토부스 대기표", sub: "예상 입장 " + eta + " · 앞 " + x.ahead + "팀 · 테스트", gSub: x.no + "번 · 앞 " + x.ahead + "팀 · 예상 입장 " + eta + " · 테스트", photo: true, kind: "photo", iv: null }; }
+    else if (x.t === "sess") {
+      var s0 = sessById(x.id); if (!s0) return;
+      var pp = s0.tm.split("~");
+      if (s0.fl === 10 && hasTen) return;
+      it = { min: t2m(pp[0]), go: "sessOpen('" + x.id + "')", badge: pp[0], label: pp[0], title: s0.ttl, gTitle: s0.ttl, sub: sessPlace(s0) + " · 테스트", gSub: sessPlace(s0) + " · " + s0.tm + " · 테스트", kind: "sess:" + x.id, ten: s0.fl === 10, iv: [t2m(pp[0]), t2m(pp[1])] };
+    }
+    if (!it || kinds.indexOf(it.kind) >= 0 || (it.iv && clash(it.iv))) return;   /* 종류별 1건 · 실제 항목과 시간 겹침 금지 */
+    it.test = true;
+    out.push(it); kinds.push(it.kind); if (it.iv) ivs.push(it.iv); if (it.ten) hasTen = true;
+  });
+  return out;
 }
 function sessStartMin(tm) { var m = /(\d{1,2}):(\d{2})/.exec(tm || ""); return m ? (+m[1]) * 60 + (+m[2]) : 9999; }
 function sessMineList() {
@@ -2732,27 +2792,9 @@ function myScheduleHtml() {
   var hm0 = new Date().getHours() * 60 + new Date().getMinutes();
   if (surveyOpen() && !surveyDone() && evPhase() === "live" && hm0 >= t2m("16:40") && hm0 < t2m("17:10"))
     rows.push([-1, "App.go('survey')", "설문", "오늘 한 판 설문", "60초 · 제출하면 스탬프", "mine"]);
-  for (qk in q) {
-    var sp = scanSpot(qk), r = q[qk];
-    if (!sp || !r || r.status === "done") continue;
-    rows.push([-1, "qrPanelOpen('mine')", r.status === "call" ? "호출" : r.no + "번", sp.nm,
-      r.status === "call" ? "지금 입장하세요" : "대기 중" + (r.ahead ? " (앞 " + r.ahead + "명)" : ""), r.status === "call" && isBlack("call") ? "act" : "mine"]);
-  }
-  var pq = photoQ();   /* v3.21 B 포토부스 대기표 */
-  if (pq && (pq.status === "wait" || pq.status === "call"))
-    rows.push([pq.status === "call" ? -1 : t2m(pq.eta), "photoGoMine()", pq.status === "call" ? "호출" : pq.no + "번", "AI 포토부스",
-      /* 호출이면 홈 최상단 대기 카드(photoAlertHtml)가 검정을 받으므로, 같은 항목의 이 행은 한 단계 낮춘다 (v3.25 화면당 1곳) */
-      pq.status === "call" ? "지금 입장하세요" : "예상 입장 " + pq.eta + " · 앞 " + pq.ahead + "팀", "mine"]);
-  var mr = myResv();
-  if (mr && RESV_LIVE.indexOf(mr.status) >= 0)
-    rows.push([sessStartMin(mr.slot), "App.go('dap')", mr.slot, "과제상담", "1F DAP존 미팅룸 " + mr.room, "mine"]);
-  var cc = S.get("cchat", null);
-  if (cc && cc.status === "matched")
-    rows.push([sessStartMin(cc.round), "App.go('ev_cchat')", cc.round, "AX 커피챗", "18F 라운지 TABLE " + cc.table, "mine"]);
-  testMineRows().forEach(function (r) { rows.push(r); });
-  sessMineList().forEach(function (x) {
-    var tmLbl = x.slot || x.s.tm.split("~")[0];
-    rows.push([sessStartMin(tmLbl), "sessOpen('" + x.s.id + "')", tmLbl, x.s.ttl, sessPlace(x.s) + (x.test ? " · 테스트" : ""), "mine"]);
+  /* v3.43 · 내 항목은 myItems 하나에서 (종류별 1건 · 테스트 오버레이 겹침 제거) */
+  myItems(true).forEach(function (x) {
+    rows.push([x.min, x.go, x.badge, x.title, x.sub, x.call && !x.photo && isBlack("call") ? "act" : "mine"]);
   });
   rows.sort(function (a, b) { return a[0] - b[0]; });
   var head = '<div class="sect"><b>나의 일정</b>' +
@@ -2794,7 +2836,7 @@ function alwaysState(id) {
   if (id === "cchat") {
     var cc = S.get("cchat", null);
     if (cc && cc.status === "matched") return ["매칭 완료 · " + cc.round + " TABLE " + cc.table, "매칭된 시각에 18F 라운지 테이블로 오세요.", "App.go('ev_cchat')", "내 커피챗 보기"];
-    if (cc) return ["매칭 대기 중", "비슷한 아이디어끼리 묶는 중입니다. 매칭되면 앱으로 알려드려요.", "App.go('ev_cchat')", "내 커피챗 보기"];
+    if (cc) return ["매칭 대기 중", "비슷한 아이디어끼리 묶는 중입니다. 매칭되면 앱을 열어 두었을 때 화면에서 알려드려요 · 이 화면에서도 확인할 수 있어요.", "App.go('ev_cchat')", "내 커피챗 보기"];
     return ["아이디어 제출 시 매칭", "아이디어 한 줄을 제출하면 비슷한 주제의 동료와 20분 마주 앉습니다.", "App.go('ideas')", "아이디어 쓰기"];
   }
   if (id === "dap") {
@@ -2868,7 +2910,7 @@ function photoQueueHtml() {
   }
   if (q && q.status === "wait") {
     return '<div class="pq"><p class="k">예상 입장</p><p class="big">' + esc(q.eta) + '</p><p class="s">앞 <b>' + q.ahead + "팀</b> · 내 번호 " + q.no + "번</p>" +
-      (q.ahead <= 2 ? '<p class="nt">곧 차례예요 · 1F 포토부스로 내려와 주세요</p>' : '<p class="s2">앞 2팀이 되면 앱에서 알려드려요 · 앱을 열어 두세요</p>') + "</div>" +
+      (q.ahead <= 2 ? '<p class="nt">곧 차례예요 · 1F 포토부스로 내려와 주세요</p>' : '<p class="s2">예상 입장 시각에 맞춰 내려와 주세요 · 앱을 열어 두면 앞 2팀일 때 화면에서도 알려드려요</p>') + "</div>" +
       '<button class="btn line" onclick="photoCancel()">번호표 취소</button>';
   }
   if (q && q.status === "skip") {
@@ -3457,31 +3499,8 @@ var Views = {
         schedRow("t" + i, nowBlack ? " now" : past ? " past" : "", nowBlack ? "act" : past ? "dim" : "", t.time, t.end, esc(t.title) + badges, body)]);
     });
     /* 내 일정 수집 · 홈 「나의 스케줄」과 같은 규칙 (대기열 → 상담 → 커피챗 → 신청 세션) */
-    var my = [];   /* [분, 시각 라벨, 제목, 상세, onclick] */
-    var q = S.get("queue", {}), qk;
-    for (qk in q) {
-      var sp = scanSpot(qk), r = q[qk];
-      if (!sp || !r || r.status === "done") continue;
-      my.push([-1, "지금", sp.nm,
-        r.status === "call" ? "지금 입장하세요" : r.no + "번 대기 중" + (r.ahead ? " (앞 " + r.ahead + "명)" : ""),
-        "qrPanelOpen('mine')", r.status === "call"]);   /* 호출 = 검정 뱃지 (지금 행동할 것) */
-    }
-    /* v3.21 B 포토부스 대기표 · 예상 입장 시각 위치에 · 호출이면 맨 위「지금」+ 검정 */
-    var pq0 = photoQ();
-    if (pq0 && (pq0.status === "wait" || pq0.status === "call")) {
-      my.push([pq0.status === "call" ? -1 : t2m(pq0.eta), pq0.status === "call" ? "지금" : pq0.eta, "AI 포토부스 대기표",
-        pq0.status === "call" ? pq0.no + "번 · 지금 입장하세요" : pq0.no + "번 · 앞 " + pq0.ahead + "팀 · 예상 입장 " + pq0.eta,
-        "photoGoMine()", pq0.status === "call"]);
-    }
-    var mr = myResv();
-    if (mr && RESV_LIVE.indexOf(mr.status) >= 0) my.push([sessStartMin(mr.slot), mr.slot, "과제상담", "1F DAP존 미팅룸 " + mr.room + " · 30분 1:1", "App.go('dap')"]);
-    var cc = S.get("cchat", null);
-    if (cc && cc.status === "matched") my.push([sessStartMin(cc.round), cc.round, "AX 커피챗", "18F 라운지 TABLE " + cc.table + " · 20분", "App.go('ev_cchat')"]);
-    testMineRows().forEach(function (r) { my.push([r[0], r[2], r[3], r[4], r[1]]); });
-    sessMineList().forEach(function (x) {
-      var tmLbl = x.slot || x.s.tm.split("~")[0];
-      my.push([sessStartMin(tmLbl), tmLbl, x.s.ttl, sessPlace(x.s) + " · " + x.s.tm + (x.slot ? " · 내 시간 " + x.slot : "") + (x.test ? " · 테스트" : ""), "sessOpen('" + x.s.id + "')"]);
-    });
+    var my = [];   /* [분, 시각 라벨, 제목, 상세, onclick, 호출] · v3.43 myItems 하나에서 */
+    myItems(true).forEach(function (x) { my.push([x.min, x.label, x.gTitle, x.gSub, x.go, !!x.call]); });
     /* 진행 중 시간대에 든 내 일정 = 오렌지 테두리·틴트 유지, 시간 뱃지만 검정 (v3.11 조합 규칙) */
     var nowT = ph === "live" ? [t2m(TIMELINE[NOW_INDEX].time), t2m(TIMELINE[NOW_INDEX].end)] : null;
     my.forEach(function (m, j) {
@@ -3547,7 +3566,7 @@ var Views = {
     } else if (s.kind === "seat") {
       act = '<div class="card mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">잔여 좌석</b>' + seatRowHtml(s) +
         (mine && mine.pre ? '<div class="tipbanner" style="margin-top:12px">사전 신청 완료</div><p class="muted" style="margin-top:6px;font-size:calc(13.5px * var(--fs))">사전 신청 취소는 담당자에게 문의해 주세요.</p>' :
-        mine ? '<div class="tipbanner" style="margin-top:12px">신청 완료. 당일 시작 10분 전 앱 알림을 드려요</div><button class="btn line" style="margin-top:8px" onclick="sessCancel(\'' + s.id + '\')">신청 취소</button>' :
+        mine ? '<div class="tipbanner" style="margin-top:12px">신청 완료. 시작 시각에 맞춰 17F 대강당으로 와 주세요</div><button class="btn line" style="margin-top:8px" onclick="sessCancel(\'' + s.id + '\')">신청 취소</button>' :
           sessRemain(s) <= 0 ? '<button class="btn" style="margin-top:12px" disabled>만석 · 취소되면 열립니다</button>' :
             '<button class="btn mint" style="margin-top:12px;padding:15px" onclick="sessBook(\'' + s.id + '\')">신청하기</button>') + "</div>";
     } else {
@@ -3592,7 +3611,7 @@ var Views = {
       '<div class="card soft"><p class="muted">' +
       (matched
         ? "배정 완료 · 시작 5분 전까지 18F 라운지 해당 테이블에 앉아주세요. 커피는 스태프가 준비해 둡니다."
-        : "매칭되면 앱 알림으로 자리와 시간을 알려드립니다.") + "</p>" +
+        : "매칭되면 앱을 열어 두었을 때 화면에서 자리와 시간을 알려드려요 · 이 화면에서도 확인할 수 있어요.") + "</p>" +
       '<button class="btn line" style="margin-top:10px" onclick="cchatCancel()">신청 취소</button></div>';
   },
 
@@ -3636,7 +3655,7 @@ var Views = {
             return '<span class="' + (i < stepIdx ? "done" : i === stepIdx ? "on" : "") + '">' + s + "</span>";
           }).join("") + "</div>") +
         (my.status === "requested" || my.status === "booked" ?
-          '<div class="card soft"><p class="muted">운영자 확인 후 승인되면 앱 팝업으로 알려드립니다.</p>' +
+          '<div class="card soft"><p class="muted">운영자 확인 후 승인되면 앱을 열어 두었을 때 화면에서 알려드려요 · 이 화면에서도 확인할 수 있어요.</p>' +
           '<button class="btn line" style="margin-top:10px" onclick="cancelResv()">신청 취소</button></div>' :
           my.status === "approved" ?
           '<div class="card soft"><p class="muted">승인 완료 · 시작 5분 전까지 1F Meeting Room 2 앞에서 체크인해주세요. 시작 10분 경과 시 노쇼 처리됩니다.</p>' +
@@ -4403,6 +4422,15 @@ function hhmm(v) {
   return m ? m[1] + ":" + m[2] : String(v == null ? "" : v);
 }
 function notifOK() { return ("Notification" in window) && Notification.permission === "granted"; }
+/* v3.43 · 브라우저 알림은 앱 화면이 열려 있을 때 페이지가 띄우는 알림뿐이다(푸시 없음).
+   안드로이드 크롬은 페이지 알림을 막고 아이폰 무설치 사파리는 API 가 없어, 휴대폰에서는 버튼을 숨기고 PC 에서만 보인다 */
+function notifDesktop() {
+  var u = navigator.userAgent || "";
+  if (!("Notification" in window)) return false;
+  if (/Android|iPhone|iPad|iPod|Mobile|SamsungBrowser/i.test(u) || isIOS()) return false;
+  if (navigator.maxTouchPoints > 1 && /Macintosh/i.test(u)) return false;   /* iPadOS 데스크톱 UA */
+  return true;
+}
 function notifAsk() {
   if (!("Notification" in window)) { toast("이 브라우저는 알림을 지원하지 않습니다."); return; }
   Notification.requestPermission().then(function (r) {
@@ -4414,8 +4442,9 @@ function notifyUser(title, body, target) {
   if (notifOK()) { try { new Notification(title, { body: body }); } catch (e) {} }
   if (el("modal")) { toast(title); return; }        /* 팝업 위에 팝업 금지 · 뒤 알림은 토스트로 */
   if (App.current === "game_word" || App.current === "game_cho" || App.current === "game_type") { toast(title); return; }
-  var askBtn = (!notifOK() && ("Notification" in window) && Notification.permission !== "denied")
-    ? '<button class="btn line" style="margin-top:8px" onclick="notifAsk()">브라우저 알림 켜기</button>' : "";
+  var askBtn = (notifDesktop() && !notifOK() && Notification.permission !== "denied")
+    ? '<button class="btn line" style="margin-top:8px" onclick="notifAsk()">브라우저 알림 켜기</button>' +
+      '<p class="muted" style="margin-top:6px;font-size:calc(12.5px * var(--fs));text-align:center">앱을 열어 둔 동안에만 알려드려요</p>' : "";
   modalOpen('<b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">' + esc(title) + '</b>' +
     '<p class="muted" style="margin-top:8px;font-size:calc(14.5px * var(--fs));line-height:1.6">' + esc(body) + "</p>" +
     (target ? '<button class="btn mint" style="margin-top:14px" onclick="modalClose();App.go(\'' + target + '\')">바로 가기</button>' : '<button class="btn" style="margin-top:14px" onclick="modalClose()">확인</button>') + askBtn);
@@ -4523,7 +4552,8 @@ function beSync() {
       }
       if (res.my.cchat && res.my.cchat.status === "매칭") {
         var c = S.get("cchat", null);
-        if (!c || c.status !== "matched") S.set("cchat", { status: "matched", round: hhmm(res.my.cchat.round), table: String(res.my.cchat.table || ""), ts: Date.now() });
+        var sr = hhmm(res.my.cchat.round), stb = String(res.my.cchat.table || "");
+        if (!c || c.status !== "matched" || c.round !== sr || c.table !== stb) S.set("cchat", { status: "matched", round: sr, table: stb, ts: Date.now() });   /* v3.43 서버가 정본 */
       }
       if (res.my.pre && JSON.stringify(res.my.pre) !== JSON.stringify(sessPre())) S.set("sess_pre", res.my.pre);   /* v3.31b 본인 사전 신청만 */
       if (res.my.sess) {
