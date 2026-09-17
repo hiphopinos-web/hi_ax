@@ -527,10 +527,11 @@
   .rail .rnum .gap { height: 40px; }
   .tkt { background: var(--tint); border: 1.5px dashed var(--tint2); color: var(--acc2); font-family: var(--disp); font-weight: 800; font-size: calc(20px * var(--fs)); letter-spacing: 0.1em; padding: 9px 14px; border-radius: 12px; }
   .tkt.wait { background: var(--dim); border-color: var(--dimln); color: var(--faint); font-size: calc(13px * var(--fs)); font-weight: 700; letter-spacing: 0; display: flex; align-items: center; }
-  .rail .lbls { position: relative; height: calc(15px * var(--fs)); margin: 6px 13px 0; }
+  /* v3.39 · 마커(27px)는 막대(10px) 아래로 8.5px 나오고 사용 가능 룰렛은 3px 링이 더 붙는다 · 라벨은 그 아래 7px 띄운다 */
+  .rail .lbls { position: relative; height: calc(15px * var(--fs)); margin: 19px 13px 0; }
   .rail .lbls span { position: absolute; top: 0; transform: translateX(-50%); font-size: calc(10.5px * var(--fs)); font-weight: 800; color: var(--muted); white-space: nowrap; }
   /* v3.31c · 칸마다 라벨을 달면 360px 에서 「룰렛·응모 1·응모 2」가 서로 씹힌다(마커 간격 약 45px) · 4~6 은 한 라벨로 묶는다 */
-  .rail .lbls span.rg { transform: none; left: 58.5%; right: -13px; text-align: center; }
+  .rail .lbls span.rg { transform: none; left: 53%; right: -13px; text-align: center; }   /* v3.39 7단 · 4~7 구간(57~100%) 가운데 */
   .rail .cap { margin-top: 7px; font-size: calc(12px * var(--fs)); font-weight: 700; color: var(--faint); line-height: 1.5; }
   /* 섹션 제목 (카드 바깥) */
   .sect { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 9px 2px 6px; }
@@ -764,15 +765,16 @@ var STAMP_ICONS = {
 };
 /* 보상 (260909 확정) · 확정지급 사다리·즉석경품 응모권 폐지, 스탬프 개수 하나로만 계산한다.
    3개 = 1F 이벤트존 실물 룰렛 1회 (1인 1회 · 내 QR 제시 → 운영자 스캔 차감)
-   4~6개 = 사후 추첨 응모 1~3장 (자동 계산 · 별도 행동 불필요 · 결과는 행사 종료 후 개별 안내) */
+   4~7개 = 사후 추첨 응모 1~4장 (v3.39 사용자 확정 · 자동 계산 · 별도 행동 불필요 · 결과는 행사 종료 후 개별 안내) */
 var REWARD_LADDER = [
   { n: 3, nm: "룰렛 1회", d: "1F 이벤트존 실물 룰렛 · 1인 1회 · 내 QR 제시" },
   { n: 4, nm: "사후 추첨 응모 1장", d: "자동 응모 · 결과는 행사 종료 후 개별 안내" },
   { n: 5, nm: "사후 추첨 응모 2장", d: "자동 응모" },
-  { n: 6, nm: "사후 추첨 응모 3장", d: "자동 응모" }
+  { n: 6, nm: "사후 추첨 응모 3장", d: "자동 응모" },
+  { n: 7, nm: "사후 추첨 응모 4장", d: "자동 응모" }
 ];
-/* v3.33 · 칸은 8개, 보상은 6개에서 끝 (3개 룰렛 · 4~6개 응모 1~3장) · 7·8번째는 다른 칸 대신 채울 수 있는 선택지 */
-var STAMP_TOTAL = 8, REWARD_CAP = 6;
+/* v3.33 · 칸은 8개 · v3.39 보상은 7개에서 끝 (3개 룰렛 · 4~7개 응모 1~4장) · 8번째는 다른 칸 대신 채울 수 있는 선택지 */
+var STAMP_TOTAL = 8, REWARD_CAP = 7;
 /* 서버가 준 stamps 배열에는 정의 밖 id(구 p6·p8, 계단 p9 등)가 남아 있을 수 있다.
    표시·보상 계산은 전부 이 함수로 센다. */
 function stampCount() {
@@ -780,7 +782,7 @@ function stampCount() {
     return STAMPS.some(function (s) { return s.id === id; });
   }).length;
 }
-function raffleTickets(n) { return n >= 6 ? 3 : n >= 5 ? 2 : n >= 4 ? 1 : 0; }
+function raffleTickets(n) { return n >= 7 ? 4 : n >= 6 ? 3 : n >= 5 ? 2 : n >= 4 ? 1 : 0; }
 var TIMELINE = [
   /* v3.29 공식 공지 붙임1·2(260917) 기준 · 순서 = 시작 시각순 · NOW_INDEX(데모 1 = 기조연설) 가 이 순서를 가리킨다 */
   { time: "09:30", end: "09:40", title: "Intro · 개회", short: "CEO · AX 선포 및 Festival 개최 안내", place: "17F 대강당", desc: "CEO · AX 선포 및 Festival 개최 안내.", tag: "자유 참석" },
@@ -1326,7 +1328,7 @@ function toast(msg) {
 }
 
 /* ── 보상·커피챗 ── (커피 나눔 바·잔량 표시는 260917 폐기) */
-/* 스탬프 개수로 열리는 보상 안내 (260909) · 3개=룰렛 1회, 4~6개=사후 추첨 응모 1~3장 */
+/* 스탬프 개수로 열리는 보상 안내 (260909 · v3.39) · 3개=룰렛 1회, 4~7개=사후 추첨 응모 1~4장 */
 function checkRewards() {
   var n = stampCount();
   if (n >= 3 && !S.get("roulette_open", false)) {
@@ -2999,7 +3001,7 @@ function stampOverlayNext() {
     '<span class="hd2"><span class="ico">' + STAMP_ICONS[sd.id] + "</span>" +
     '<span class="tt">' + sd.title + "</span></span>" +
     stampMarkHtml(false, 148) +
-    '<span class="cnt">스탬프 ' + n + " / 6" + (hint ? " · " + hint : "") + "</span></div>";
+    '<span class="cnt">스탬프 ' + Math.min(REWARD_CAP, n) + " / " + REWARD_CAP + (hint ? " · " + hint : "") + "</span></div>";
   d.onclick = function () { stampOverlayClose(); };
   document.body.appendChild(d);
   if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) { try { navigator.vibrate(35); } catch (e) {} }
@@ -3122,7 +3124,7 @@ function stampCardsHtml(st, newly) {
     (st.indexOf(s.id) >= 0 ? done : todo).push([s, e[1]]);
   });
   var next = todo.length ? todo[0][0].id : null;   /* 다음 추천 = 미완료 그룹 첫 카드 */
-  var out = '<div class="sect" style="margin-top:14px"><b>스탬프 ' + STAMPS.length + '종</b><span>' + STAMP_TOTAL + '개 중 6개를 모으면 보상 끝</span></div>';
+  var out = '<div class="sect" style="margin-top:14px"><b>스탬프 ' + STAMPS.length + '종</b><span>' + STAMP_TOTAL + '개 중 ' + REWARD_CAP + '개를 모으면 보상 끝</span></div>';
   done.forEach(function (e) { out += scardHtml(e[0], true, false, newly); });
   var cap = null;
   todo.forEach(function (e) {
@@ -3132,37 +3134,37 @@ function stampCardsHtml(st, newly) {
   return out;
 }
 /* 보상 레일 (v3.1) · 사다리 카드+룰렛 쿠폰 카드를 한 줄로. 마커 3=룰렛(탭=쿠폰 모달) · 4~6=응모(탭=추첨 안내 모달).
-   v3.2: 레일은 6단이다. 1·2 지점에도 보상 없는 회색 틱을 둬서 1~2개인 사용자도 진행이 레일 위에 찍혀 보이게 한다.
+   v3.2: 레일은 6단이다(v3.39 부터 7단). 1·2 지점에도 보상 없는 회색 틱을 둬서 1~2개인 사용자도 진행이 레일 위에 찍혀 보이게 한다.
    홈·스탬프 탭 공용 컴포넌트 (design.md 컴포넌트 일관성) · home=true 는 컴팩트 변형(캡션 축약 + 하단 CTA)일 뿐 시각 문법은 동일. */
 function railHtml(n, glow, dispN, home) {
   if (dispN == null) dispN = n;   /* 새 스탬프 연출 중엔 카운트만 이전 값에서 굴러 올라간다 */
-  n = Math.min(REWARD_CAP, n); dispN = Math.min(REWARD_CAP, dispN);   /* v3.33 · 8칸 중 6개면 보상 끝 */
+  n = Math.min(REWARD_CAP, n); dispN = Math.min(REWARD_CAP, dispN);   /* v3.39 · 8칸 중 7개면 보상 끝 */
   var out0 = S.get("roulette_out", false);
   var used = S.get("roulette_used", false);
-  var marks = [[3, used ? "룰렛 사용" : "룰렛", "ppRouletteOpen()"], [4, "추첨 응모 1장", "ppDrawOpen()"], [5, "추첨 응모 2장", "ppDrawOpen()"], [6, "추첨 응모 3장", "ppDrawOpen()"]];
+  var marks = [[3, used ? "룰렛 사용" : "룰렛", "ppRouletteOpen()"], [4, "추첨 응모 1장", "ppDrawOpen()"], [5, "추첨 응모 2장", "ppDrawOpen()"], [6, "추첨 응모 3장", "ppDrawOpen()"], [7, "추첨 응모 4장", "ppDrawOpen()"]];
   var mk = "", lb = "";
   [1, 2].forEach(function (k) {
-    mk += '<span class="tick' + (n >= k ? " on" : "") + '" style="left:' + (k / 6 * 100).toFixed(1) + '%"></span>';
+    mk += '<span class="tick' + (n >= k ? " on" : "") + '" style="left:' + (k / REWARD_CAP * 100).toFixed(1) + '%"></span>';
   });
   marks.forEach(function (m) {
-    var pos = (m[0] / 6 * 100).toFixed(1) + "%";
+    var pos = (m[0] / REWARD_CAP * 100).toFixed(1) + "%";
     /* 사용 가능해진 룰렛(3 도달·미사용)은 검정 = 지금 행동할 것 (v3.6 상태 위계) */
     /* v3.25 · 사용 가능한 룰렛이 검정을 못 받으면 오렌지 채움 + 틴트 링(avail)으로 한 단계 낮춘다 */
     var cls = m[0] === 3 && n >= 3 && !used ? (isBlack("roulette") ? " act" : " on avail") : n >= m[0] ? " on" : "";
     mk += '<button class="mk' + cls + (m[0] === 3 && glow ? " glow" : "") + '" style="left:' + pos + '" onclick="' + m[2] + '" aria-label="' + m[1] + '">' + m[0] + "</button>";
     if (m[0] === 3) lb += '<span style="left:' + pos + '">룰렛</span>';   /* 사용 여부는 마커 색·쿠폰 창이 말한다 (라벨 길이 고정) */
   });
-  lb += '<span class="rg">추첨 응모 1·2·3장</span>';
+  lb += '<span class="rg">추첨 응모 1·2·3·4장</span>';
   return '<div class="rail">' +
-    '<div class="hd"><span class="nm">스탬프 보상</span><span class="cnt"><span id="ppCnt">' + dispN + "</span><small> / 6</small></span></div>" +
-    '<div class="rb"><i style="width:' + Math.min(100, n / 6 * 100) + '%"></i>' + mk + "</div>" +
+    '<div class="hd"><span class="nm">스탬프 보상</span><span class="cnt"><span id="ppCnt">' + dispN + "</span><small> / " + REWARD_CAP + "</small></span></div>" +
+    '<div class="rb"><i style="width:' + Math.min(100, n / REWARD_CAP * 100) + '%"></i>' + mk + "</div>" +
     '<div class="lbls">' + lb + "</div>" +
     (home
-      ? '<p class="cap">3개 = 룰렛 1회 · 4개부터 응모 1장씩 · 8개 중 6개면 보상 끝</p>' +
+      ? '<p class="cap">3개 = 룰렛 1회 · 4개부터 응모 1장씩 · 8개 중 7개면 보상 끝</p>' +
         (out0 ? '<p class="cap">오늘 준비한 룰렛이 모두 소진되었습니다</p>' : "") +
         raffleNumsHtml(n) +
         '<button class="cta" onclick="App.go(\'passport\')">스탬프 탭으로</button>'
-      : '<p class="cap">3개 = 1F 룰렛 1회 · 4개부터 사후 추첨 응모 1장씩 · 8개 중 6개를 모으면 보상 끝 · 마커를 누르면 자세히</p>' +
+      : '<p class="cap">3개 = 1F 룰렛 1회 · 4개부터 사후 추첨 응모 1장씩 · 8개 중 7개를 모으면 보상 끝 · 마커를 누르면 자세히</p>' +
         (out0 ? '<p class="cap">오늘 준비한 룰렛이 모두 소진되었습니다</p>' : "") +
         raffleNumsHtml(n)) +
     "</div>";
@@ -3171,7 +3173,6 @@ function railHtml(n, glow, dispN, home) {
 function raffleNums() { return testMode() ? ["1026", "2026", "3026", "4026"] : S.get("raffle_nums", []); }
 function raffleNumsHtml(n) {
   var t = raffleTickets(Math.min(REWARD_CAP, n));
-  if (testMode() && S.get("raffle_ui4", false)) t = 4;   /* 레이아웃 확인 전용 목업 · 보상 규칙은 최대 3장 그대로 */
   if (!t) return "";
   var nums = raffleNums(), chips = "";
   for (var i = 0; i < 4; i++) chips += i >= t ? '<span class="gap"></span>' : i < nums.length ? '<span class="tkt">' + esc(nums[i]) + "</span>" : '<span class="tkt wait">발급 중</span>';
@@ -3215,7 +3216,7 @@ function ppDrawOpen() {
       (nums.length < t ? " · 발급 중인 번호는 잠시 후 동기화되면 채워져요" : "") + "</p>";
   }
   modalOpen('<b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">사후 추첨 응모</b>' +
-    '<p class="muted" style="margin-top:8px;font-size:calc(14.5px * var(--fs));line-height:1.7">스탬프 <b>4개=응모 1장 · 5개=2장 · 6개=3장</b>이 자동 응모됩니다 · 별도 행동은 없어요. 지금 내 응모는 <b style="color:var(--hi)">' + t + '장</b> (스탬프 ' + n + '개).</p>' +
+    '<p class="muted" style="margin-top:8px;font-size:calc(14.5px * var(--fs));line-height:1.7">스탬프 <b>4개=응모 1장 · 5개=2장 · 6개=3장 · 7개=4장</b>이 자동 응모됩니다 · 별도 행동은 없어요. 지금 내 응모는 <b style="color:var(--hi)">' + t + '장</b> (스탬프 ' + n + '개).</p>' +
     tickets +
     '<p class="muted" style="margin-top:8px;font-size:calc(13.5px * var(--fs));line-height:1.65">추첨은 17:00 Outro(DAP 시상)와 함께 진행하고, <b style="color:var(--hi)">결과와 수령 방법은 행사 종료 후 개별 안내</b>드립니다.</p>' +
     '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>');
@@ -4320,7 +4321,7 @@ var AdminTabs = {
       '<button class="btn" onclick="App.go(\'screen\')">17F 송출뷰 /screen</button></div>' +
       '<p style="margin-top:8px;font-size:calc(12.5px * var(--fs));color:var(--faint);line-height:1.6">정식판 공통 요건: 무인 10시간 · 1시간 자가 새로고침 · 네트워크 끊김 시 캐시 표시(에러 화면 금지) · 키오스크 자동 재실행 · 집계는 캐시 API만 · 배포 단계에서 적용 (기획서 v2 §5-3)</p></div>' +
       '<p style="font-size:calc(12.5px * var(--fs));color:var(--faint);line-height:1.6">※ 프로토타입 v10 (260822 · 기획서 v2 반영): 전사 수치는 시뮬레이션. KPI 목표(v16): 200명 멈춤 · 120명 아이디어 · 60명 스탬프 3개 이상 · 20건 과제화 검토. 부스 피드백 ' + S.get("booth_fb", []).length + "건 · 시연 신청 " + S.get("demo_reqs", []).length + "건.</p>" +
-      '<div class="card mt16"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">스탬프 경품 추첨 (사후)</b><p class="muted" style="margin-top:3px;font-size:calc(14.5px * var(--fs))">조건: 스탬프 4개 이상 자동 응모 · 4개=1장, 5개=2장, 6개=3장. 결과는 행사 종료 후 개별 안내</p>' +
+      '<div class="card mt16"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">스탬프 경품 추첨 (사후)</b><p class="muted" style="margin-top:3px;font-size:calc(14.5px * var(--fs))">조건: 스탬프 4개 이상 자동 응모 · 4개=1장, 5개=2장, 6개=3장, 7개=4장. 결과는 행사 종료 후 개별 안내</p>' +
       /* 추첨 로직이 아직 없다(260830). 이 버튼은 가짜 이름 3개 중에서 뽑아 보여줬고,
          당일 무대에서 누르면 존재하지 않는 사람을 전사 앞에서 발표하게 된다.
          실제 추첨이 서버에 붙기 전까지 잠근다. 붙으면 이 블록을 되돌린다. */
