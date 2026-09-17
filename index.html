@@ -471,9 +471,12 @@
   /* Me to We 월 카드 (이벤트 탭 전폭) */
   /* Me to We 월 카드(.wallcard)는 v3.1 폐지 · 월은 1F 사이니지 전용 */
   /* 홈 히어로는 v3.13 폐지 · 「지금·다음」은 나의 일정 첫 줄(tok 뱃지), 연출은 하단 광고판이 맡는다 */
-  .bill { position: relative; height: 90px; border: 1px solid var(--dimln); border-radius: 20px; overflow: hidden; background: var(--white); margin-top: 8px; }   /* 360x740 한 화면 실측으로 90px */
-  .bill canvas { width: 100%; height: 100%; display: block; }
-  .bill .bt { position: absolute; left: 13px; bottom: 9px; font-size: calc(11px * var(--fs)); font-weight: 800; letter-spacing: 0.08em; color: var(--faint); pointer-events: none; }
+  /* v3.24 홈 광고판 배너 · 스탬프 바로 위 · 브랜드 오렌지 스테이지(상태 색 아님, 화면당 1개) · 공용 카드 격자 2칸(64+8+64=136px) · 라운드 20px */
+  .bill { position: relative; display: flex; height: 136px; border-radius: 20px; overflow: hidden; background: var(--mint); margin-bottom: 8px; color: #fff; }
+  .bill .bc { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 0 0 0 18px; }
+  .bill .bh { font-size: calc(22px * var(--fs)); font-weight: 900; line-height: 1.2; letter-spacing: -0.01em; }
+  .bill .bs { margin-top: 6px; font-size: calc(12.5px * var(--fs)); font-weight: 700; opacity: 0.9; }
+  .bill canvas { flex: none; width: 46%; height: 100%; display: block; }
   /* 층별 혼잡도 압축 스트립 · 막대 4개라 높이는 내용 기준, 라운드·면·테두리·좌우 패딩·최소 높이는 공용 행 카드(.rc)와 동일 (v3.22) */
   .cstrip { background: var(--white); border: 1px solid var(--dimln); border-radius: 20px; padding: 10px 15px 9px; min-height: 64px; margin-bottom: 8px; cursor: pointer; }
   .cstrip:active { background: var(--dim); }
@@ -2581,7 +2584,10 @@ function billboardHtml() {
   /* data-axf="loop" = 같은 axfSeqMount 엔진에 캔버스 전체를 무대로(band:false). "seq" 경로는 스플래시의 kvTop·panel 위치로
      무대 띠를 재므로 홈 카드에서는 오브젝트가 어긋난다. 시퀀스 값은 AXF_SEQ 와 동일하게 명시 */
   var sq = AXF_SEQ.map(function (x) { return x[0] + ":" + x[1]; }).join(",");
-  return '<div class="bill" aria-hidden="true"><canvas data-axf="loop" data-axf-seq="' + sq + '" data-axf-zoom="0.92"></canvas><span class="bt">AX : Me to We</span></div>';
+  /* v3.24 스탬프 위 배너 · 브랜드 오렌지 스테이지 + 좌측 카피 + 우측 흰 모션(엔진 색 지정 data-axf-colors · 격자 점 data-axf-stage) */
+  var sub = evPhase() === "after" ? "함께해 주셔서 고맙습니다" : "10. 26 (월) · 광화문 본사";
+  return '<div class="bill" aria-hidden="true"><div class="bc"><p class="bh">AX : Me to We</p><p class="bs">' + sub + "</p></div>" +
+    '<canvas data-axf="loop" data-axf-seq="' + sq + '" data-axf-zoom="0.95" data-axf-stage="orange" data-axf-colors="#FFFFFF,rgba(255,255,255,0.78),#FFFFFF"></canvas></div>';
 }
 
 /* 층별 혼잡도 · 홈에 다시 올린다 (260830: 프로그램 탭 하단으로 내렸더니 안 보인다는 지적).
@@ -3076,10 +3082,10 @@ var Views = {
     return "" +
       (liveOpen ? quizCardHtml() : "") +
       photoAlertHtml() +
+      billboardHtml() +      /* v3.24 광고판 = 스탬프 바로 위 배너 */
       myCouponHtml() +
       myScheduleHtml() +
-      crowdStripHtml() +
-      billboardHtml();
+      crowdStripHtml();
   },
 
   notices: function () {
@@ -5339,6 +5345,7 @@ function axfSeqMount(cv, opts) {
   cv.dataset.axfOn = "1";
   opts = opts || {};
   var seq = opts.seq || AXF_SEQ, dark = !!opts.dark, cxf = opts.cx == null ? 0.5 : opts.cx, zoom = opts.zoom || 0.9;
+  var cols = opts.colors || null, orange = !!opts.orange;   /* v3.24 · 오렌지 스테이지 위 흰 오브젝트 (원본 좌표·시계는 그대로, 색만 바꾼다) */
   var dpr = Math.min(2, window.devicePixelRatio || 1);
   var rm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var st = { raf: null, n: 0, band: null };
@@ -5361,18 +5368,18 @@ function axfSeqMount(cv, opts) {
     var GS = 28 * dpr, gi = 0;
     for (var gy = GS / 2; gy < H; gy += GS) for (var gx = GS / 2; gx < W; gx += GS, gi++) {
       var on = ((gi * 2654435761) >>> 0) % 1000 < 15;
-      cx.fillStyle = on ? "rgba(255,126,49,0.55)" : (dark ? "rgba(255,255,255,0.12)" : "#E3E3E3");
+      cx.fillStyle = orange ? (on ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.22)") : on ? "rgba(255,126,49,0.55)" : (dark ? "rgba(255,255,255,0.12)" : "#E3E3E3");
       cx.fillRect(gx - 0.9 * dpr, gy - 0.9 * dpr, 1.8 * dpr, 1.8 * dpr);
     }
     var b = st.band, sc = Math.min(b.w, b.h) * zoom / 1080, box = { x: b.x + b.w * cxf - 540 * sc, y: b.y + (b.h - 1080 * sc) / 2, s: sc };
     var T = (performance.now() - AXF.t0) / 1000, f = T * 30, R = Math.min(b.w, b.h) * 0.4;
-    if (rm) { axfDraw(cx, seq[seq.length - 1][0], 0, box); return; }
+    if (rm) { axfDraw(cx, seq[seq.length - 1][0], 0, box, cols); return; }
     var q = axfSeqAt(T, seq, AXF_TRANS);
-    if (!q.b) axfDraw(cx, q.a, f, box);
+    if (!q.b) axfDraw(cx, q.a, f, box, cols);
     else {
       var e = axfEase(q.p);
-      axfDraw(cx, q.a, f, box, null, 1 - e, e * R);             /* 앞 장면 · 점으로 흩어지며 사라진다 */
-      axfDraw(cx, q.b, f, box, null, e, (1 - e) * R);           /* 다음 장면 · 흩어진 점이 모여든다 */
+      axfDraw(cx, q.a, f, box, cols, 1 - e, e * R);             /* 앞 장면 · 점으로 흩어지며 사라진다 */
+      axfDraw(cx, q.b, f, box, cols, e, (1 - e) * R);           /* 다음 장면 · 흩어진 점이 모여든다 */
     }
     st.raf = requestAnimationFrame(draw);
   }
@@ -5406,7 +5413,8 @@ function axfMountAll() {
     if (c.dataset.axf === "seq") { axfSeqMount(c); continue; }
     if (c.dataset.axf === "loop") {                     /* data-axf-seq="circle:5,sphere:7,alpha:7" · 캔버스 전체가 무대 */
       var sq = (c.dataset.axfSeq || "circle:5,sphere:7,alpha:7").split(",").map(function (x) { var y = x.split(":"); return [y[0], +y[1] || 5]; });
-      axfSeqMount(c, { seq: sq, dark: c.dataset.axfDark === "1", cx: c.dataset.axfCx ? +c.dataset.axfCx : 0.5, zoom: c.dataset.axfZoom ? +c.dataset.axfZoom : 0.9, band: false });
+      axfSeqMount(c, { seq: sq, dark: c.dataset.axfDark === "1", cx: c.dataset.axfCx ? +c.dataset.axfCx : 0.5, zoom: c.dataset.axfZoom ? +c.dataset.axfZoom : 0.9, band: false,
+        colors: c.dataset.axfColors ? c.dataset.axfColors.split(",") : null, orange: c.dataset.axfStage === "orange" });
       continue;
     }
     axfMount(c, { name: c.dataset.axf, zoom: c.dataset.axfZoom ? +c.dataset.axfZoom : 1, colors: c.dataset.axfColors ? c.dataset.axfColors.split(",") : null });
