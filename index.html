@@ -472,28 +472,12 @@
   /* 홈 LIVE 섹션 · 미니 월 · 이벤트 현황 · 랭킹 · 혼잡도 */
   /* ME to WE 월 카드 (이벤트 탭 전폭) */
   /* ME to WE 월 카드(.wallcard)는 v3.1 폐지 · 월은 1F 사이니지 전용 */
-  /* 홈 히어로 = 「지금 행사가 어떤 상태인가」 (260915 UX 피드백 · 화면만 보고 행사 상태를 읽는다).
-     오렌지 스테이지 + 흰 점 고리(KV 02 Connection)가 카드 모서리에 걸쳐 잘린다(design.md §4 원칙 5). 글자는 정지. */
-  .hero { position: relative; overflow: hidden; background: var(--mint); border-radius: 24px; padding: 15px 14px 14px 16px; margin-bottom: 9px; color: #fff; cursor: pointer;
-    display: grid; grid-template-columns: minmax(0, 1fr) 96px; grid-template-rows: auto auto auto auto; column-gap: 6px; align-items: start; }
-  .hero > * { grid-column: 1; }
-  .hero .kv { grid-column: 2; grid-row: 1 / 5; width: 96px; height: 96px; justify-self: end; align-self: center; pointer-events: none; }
-  /* 포스터 모션 썸네일 · 흰 면 위 오렌지 점 오브젝트가 오렌지 스테이지 위에 흰 칩으로 앉는다 (그레이 카드 위 흰 칩과 같은 문법) */
-  .hero .kvbox { height: 108px; border-radius: 14px; overflow: hidden; background: #fff; }
-  .hero .kvbox video, .hero .kvbox canvas { width: 100%; height: 100%; display: block; }
-  .hero .kvbox video { object-fit: cover; }
-  .hero .kvbox[data-off] { background: rgba(255,255,255,0.18); }
-  .hero .eb { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: calc(12px * var(--fs)); font-weight: 800; letter-spacing: 0.06em; }
-  .hero .eb .live { display: flex; align-items: center; gap: 7px; }
-  .hero .eb .live i { width: 8px; height: 8px; border-radius: 50%; background: #fff; animation: pulse 1.6s infinite; }
-  .hero .eb .tm { font-family: var(--disp); font-weight: 800; letter-spacing: 0; opacity: 0.95; }
-  .hero .ttl { position: relative; margin-top: 9px; font-size: calc(21px * var(--fs)); font-weight: 800; line-height: 1.28; letter-spacing: -0.01em; }
-  .hero .pl { position: relative; margin-top: 4px; font-size: calc(13.5px * var(--fs)); font-weight: 700; opacity: 0.92; }
-  .hero .next { position: relative; display: flex; align-items: center; gap: 9px; margin-top: 12px; background: rgba(255,255,255,0.18); border-radius: 12px; padding: 9px 12px; font-size: calc(13.5px * var(--fs)); font-weight: 700; }
-  .hero .next .lb { font-size: calc(11.5px * var(--fs)); font-weight: 800; letter-spacing: 0.06em; opacity: 0.85; }
-  .hero .next b { font-family: var(--disp); font-weight: 800; }
-  .hero .next .nm { flex: 1; min-width: 0; line-height: 1.35; }
-  .hero .next .arw { font-weight: 800; }
+  /* 홈 히어로는 v3.13 폐지 · 「지금·다음」은 나의 일정 첫 줄(tok 뱃지), 연출은 하단 광고판이 맡는다 */
+  .bill { position: relative; height: 90px; border: 1px solid var(--dimln); border-radius: 20px; overflow: hidden; background: var(--white); margin-top: 8px; }   /* 360x740 한 화면 실측으로 90px */
+  .bill canvas { width: 100%; height: 100%; display: block; }
+  .bill .bt { position: absolute; left: 13px; bottom: 9px; font-size: calc(11px * var(--fs)); font-weight: 800; letter-spacing: 0.08em; color: var(--faint); pointer-events: none; }
+  .mine .r .tok { flex: none; min-width: 52px; padding: 5px 9px 4px; font-size: calc(12.5px * var(--fs)); }
+  .mine .r.now1 .tx { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }   /* 지금·다음 한 줄 고정 */
   /* 층별 혼잡도 압축 스트립 · 프로그램 탭 하단으로 내렸더니 안 보인다는 지적으로 홈에 복귀 (260830).
      「지금 어디가 붐비나」는 「지금 진행 중」과 같은 질문이라 바로 아래에 붙인다. */
   .cstrip { background: var(--card); border: 0; border-radius: 18px; padding: 10px 13px 9px; margin-bottom: 9px; cursor: pointer; }
@@ -2598,38 +2582,33 @@ function evPhase() {
   return now < EV_START ? "before" : now > EV_END ? "after" : "live";
 }
 /* 홈 히어로 = 지금 진행 중 (한 화면 안에 들어가야 하므로 시간·제목·장소·다음 일정만). 눌러서 타임라인으로 */
-function nowCardHtml() {
+/* v3.13: 히어로(nowCardHtml)는 폐지 · 「지금·다음」은 나의 스케줄 첫 줄로 흡수(schedNowRow), 연출은 광고판이 맡는다 */
+function schedNowRow() {
   var ph = evPhase();
-  /* 오른쪽 열 = 홍보부 Me to We 심볼 원본 루프("axf:이름", 공용 시계라 4초 재렌더에도 이어진다).
-     mp4 는 재렌더마다 처음부터 다시 시작하므로 이 자리(4초 틱 화면)에는 맞지 않는다(260916 루프 끊김의 원인). 없으면 흰 점 고리 폴백 */
-  var kv = /^axf:/.test(KV_MEDIA.hero || "")
-    ? '<div class="kv kvbox"><canvas data-axf="' + KV_MEDIA.hero.slice(4) + '" data-axf-zoom="1.15" aria-hidden="true"></canvas></div>'
-    : /\.mp4$/i.test(KV_MEDIA.hero || "")
-    ? '<div class="kv kvbox"><video autoplay muted loop playsinline src="' + KV_MEDIA.hero + '" onerror="this.parentNode.dataset.off=1"></video></div>'
-    : '<canvas class="kv" data-kv="1" data-kv-mode="ring" data-kv-color="#fff" data-kv-grid="0" data-kv-cx="0.5" data-kv-cy="0.5" data-kv-r="0.42" aria-hidden="true"></canvas>';
   if (ph === "before") {
     var d = Math.max(1, Math.ceil((EV_START - new Date()) / 86400000));
-    return '<div class="hero" onclick="App.go(\'guide\')">' + kv +
-      '<div class="eb"><span>AX Festival 2026</span><span class="tm">D-' + d + '</span></div>' +
-      '<p class="ttl">10. 26 (월) 09:30<br>광화문 본사에서 뵙겠습니다</p>' +
-      '<div class="next"><span class="lb">미리 보기</span><span class="nm">프로그램 신청과 전체 타임라인</span><span class="arw">›</span></div></div>';
+    return '<div class="r now1" onclick="App.go(\'guide_time\')">' + tokBadge("D-" + d) +
+      '<span class="tx"><b>10. 26 (월) 09:30 시작</b> · 광화문 본사</span><span class="arw">›</span></div>';
   }
   if (ph === "after") {
-    return '<div class="hero" onclick="App.go(\'passport\')">' + kv +
-      '<div class="eb"><span>AX Festival 2026</span><span class="tm">마무리</span></div>' +
-      '<p class="ttl">오늘 함께해 주셔서<br>고맙습니다</p>' +
-      '<div class="next"><span class="lb">보상</span><span class="nm">스탬프 경품 · 추첨 결과는 개별 안내</span><span class="arw">›</span></div></div>';
+    return '<div class="r now1" onclick="App.go(\'guide_time\')">' + tokBadge("종료", "dim") +
+      '<span class="tx">행사가 끝났습니다 · 추첨 결과는 개별 안내</span><span class="arw">›</span></div>';
   }
   var now = TIMELINE[NOW_INDEX];
   /* 다음 일정에서 상시 항목(always)은 건너뛴다 (v3.18) */
   var nx = null;
   for (var xi = NOW_INDEX + 1; xi < TIMELINE.length; xi++) if (!TIMELINE[xi].always) { nx = TIMELINE[xi]; break; }
-  return '<div class="hero" onclick="App.go(\'guide_time\')">' + kv +
-    '<div class="eb"><span class="live"><i></i>지금 진행 중</span><span class="tm">' + now.time + " – " + now.end + "</span></div>" +
-    '<p class="ttl">' + esc(now.title) + '</p><p class="pl">' + esc(now.place) + "</p>" +
-    (nx ? '<div class="next"><span class="lb">다음</span><b>' + nx.time + "</b>" +
-      '<span class="nm">' + esc(nx.title) + '</span><span class="arw">›</span></div>' : "") +
-    "</div>";
+  return '<div class="r now1" onclick="App.go(\'guide_time\')">' + tokBadge("지금", "act") +
+    '<span class="tx"><b>' + esc(now.title) + "</b>" + (nx ? " · 다음 " + nx.time + " " + esc(nx.title) : "") + '</span><span class="arw">›</span></div>';
+}
+/* v3.13 홈 광고판 · 스플래시와 같은 AXF 시퀀스 엔진(axfSeqMount, 점 → 구체 → 달리는 사람 → Me to We) 재사용.
+   공용 시계(AXF.t0)라 재렌더에도 시퀀스가 이어진다 · isConnected 검사로 화면을 떠나면 raf 정지 ·
+   reduced-motion 은 엔진이 자체 처리 · 장식 전용(탭 없음 · 링크 금지) */
+function billboardHtml() {
+  /* data-axf="loop" = 같은 axfSeqMount 엔진에 캔버스 전체를 무대로(band:false). "seq" 경로는 스플래시의 kvTop·panel 위치로
+     무대 띠를 재므로 홈 카드에서는 오브젝트가 어긋난다. 시퀀스 값은 AXF_SEQ 와 동일하게 명시 */
+  var sq = AXF_SEQ.map(function (x) { return x[0] + ":" + x[1]; }).join(",");
+  return '<div class="bill" aria-hidden="true"><canvas data-axf="loop" data-axf-seq="' + sq + '" data-axf-zoom="0.92"></canvas><span class="bt">AX : Me to We</span></div>';
 }
 
 /* 층별 혼잡도 · 홈에 다시 올린다 (260830: 프로그램 탭 하단으로 내렸더니 안 보인다는 지적).
@@ -2675,17 +2654,18 @@ function myScheduleHtml() {
     rows.push([sessStartMin(tmLbl), "sessOpen('" + x.s.id + "')", tmLbl, x.s.ttl + " · " + x.s.fl + "F"]);
   });
   rows.sort(function (a, b) { return a[0] - b[0]; });
-  var head = '<div class="sect"><b>나의 스케줄</b>' +
+  var head = '<div class="sect"><b>나의 일정</b>' +
     '<span onclick="App.go(\'guide_time\')">일정 탭 ›</span></div>';
+  /* v3.13: 첫 줄 = 「지금·다음」(구 히어로 흡수 · 시간 뱃지 공용 tok, 진행 중 = 검정) */
   if (!rows.length) {
-    return head + '<div class="mine empty" onclick="App.go(\'guide\')">' +
-      '<div class="r"><span class="tx">신청한 프로그램이 없습니다</span>' +
-      '<span class="go">프로그램 신청 ›</span></div></div>';
+    return head + '<div class="mine">' + schedNowRow() +
+      '<div class="r" onclick="App.go(\'guide\')"><span class="tx" style="color:var(--muted)">신청한 프로그램이 없습니다</span>' +
+      '<span class="arw" style="font-size:calc(13.5px * var(--fs))">프로그램 신청 ›</span></div></div>';
   }
   /* 3건이면 「외 1건」 줄을 쓰나 3행을 쓰나 높이가 같다. 같은 높이면 정보를 보여주는 쪽이 낫다. */
   var cut = rows.length <= SCHED_MAX + 1 ? rows.length : SCHED_MAX;
   var more = rows.length - cut;
-  return head + '<div class="mine">' + rows.slice(0, cut).map(function (r) {
+  return head + '<div class="mine">' + schedNowRow() + rows.slice(0, cut).map(function (r) {
     return '<div class="r" onclick="' + r[1] + '"><span class="tm">' + esc(r[2]) + "</span>" +
       '<span class="tx">' + esc(r[3]) + '</span><span class="arw">›</span></div>';
   }).join("") +
@@ -2975,15 +2955,17 @@ var Views = {
   /* ═══ 홈 = 「내 것」만 (260830 사용자 지시: 첫 화면이 복잡하면 안 된다)
      지금 어디에 있어야 하는가 · 내가 신청한 것 · 내가 받을 것. 이 셋 외에는 두지 않는다.
      행사 전체에 관한 것(프로그램 목록·혼잡도·월·게임·아이디어)은 각 탭이 맡는다. ═══ */
+  /* v3.13 홈 위계 재배치 (사용자 확정): [라이브 퀴즈 · 열릴 때만 예외 최상단] → 스탬프 → 나의 일정(지금·다음 흡수) → 혼잡도 → 광고판.
+     히어로(지금 진행 중)는 나의 일정 첫 줄로 흡수 · 스탬프는 행사 전·당일·후 항상 맨 위 */
   home: function () {
     var st = S.get("quiz_state", INITIAL_QUIZ_STATE);
     var liveOpen = !!st.activeId && st.phase !== "idle";
     return "" +
       (liveOpen ? quizCardHtml() : "") +
-      nowCardHtml() +
-      crowdStripHtml() +
+      myCouponHtml() +
       myScheduleHtml() +
-      myCouponHtml();
+      crowdStripHtml() +
+      billboardHtml();
   },
 
   notices: function () {
@@ -3942,7 +3924,7 @@ function notifAsk() {
   });
 }
 function notifyUser(title, body, target) {
-  try { if (navigator.vibrate) navigator.vibrate([80, 40, 80]); } catch (e) {}
+  try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate([80, 40, 80]); } catch (e) {}   /* 상호작용 전 차단 경고 방지 */
   if (notifOK()) { try { new Notification(title, { body: body }); } catch (e) {} }
   if (el("modal")) { toast(title); return; }        /* 팝업 위에 팝업 금지 · 뒤 알림은 토스트로 */
   if (App.current === "game_word" || App.current === "game_cho") { toast(title); return; }
@@ -5266,8 +5248,9 @@ function xitionRun(switchNow) {
     var t = (now - t0) / 1000;
     if (t >= 0.45 && !switched) {
       switched = true; switchNow();                                    /* 흰 면이 다 덮은 뒤에 바꾼다 */
-      var hb = document.querySelector("#view .hero .kvbox canvas"), r = hb ? hb.getBoundingClientRect() : null;
-      if (r && r.width) { land = axfBox(r.width * dpr, r.height * dpr, 1.15); land.x += r.left * dpr; land.y += r.top * dpr; }
+      /* v3.13 히어로 폐지 · 착지 대상 = 홈 광고판 캔버스(화면 안에 보일 때만), 아니면 중앙 축소 폴백 */
+      var hb = document.querySelector("#view .bill canvas"), r = hb ? hb.getBoundingClientRect() : null;
+      if (r && r.width && r.top < window.innerHeight) { land = axfBox(r.width * dpr, r.height * dpr, 1.15); land.x += r.left * dpr; land.y += r.top * dpr; }
       else land = { x: W / 2 - big.s * 108, y: H / 2 - big.s * 108, s: big.s * 0.2 };
     }
     var cover = EO(t / 0.15), u = EO((t - 0.05) / 0.45), v = t < 0.62 || !land ? 0 : EIO((t - 0.62) / 0.38);
