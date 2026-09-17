@@ -320,9 +320,6 @@
   .stampmk .sglow { position: absolute; inset: 0; pointer-events: none; opacity: 0; animation: sealGlow 0.3s ease-out var(--land, 0.3s) both; }
   .stampmk .sglow svg { display: block; }
   .stampmk .spl { position: absolute; left: 50%; top: 50%; width: var(--sz); height: var(--sz); margin: calc(var(--sz) / -2) 0 0 calc(var(--sz) / -2); border-radius: 50%; background: var(--c); pointer-events: none; opacity: 0; animation: inkSplash 0.4s cubic-bezier(0.2, 0.7, 0.3, 1) var(--land, 0.3s) both; }
-  .rc.punch { overflow: hidden; animation: cardShakeS 0.18s linear 0.3s; }
-  .rc.punch .stampmk { --land: 0.3s; animation: stampPunch 0.5s cubic-bezier(0.3, 0.9, 0.4, 1) both; }
-  @keyframes stampPunch { 0% { transform: scale(3.3) rotate(14deg); opacity: 0.6; } 60% { transform: scale(1) rotate(-6deg); opacity: 1; } 76% { transform: scale(0.92) rotate(-3deg); } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
   @keyframes inkRing { 0% { transform: scale(0.7); opacity: 0.95; } 100% { transform: scale(1.9); opacity: 0; } }
   @keyframes inkRing2 { 0% { transform: scale(0.8); opacity: 0.8; } 100% { transform: scale(2.6); opacity: 0; } }
   @keyframes sealGlow { 0% { opacity: 0; } 35% { opacity: 0.6; } 100% { opacity: 0; } }
@@ -333,29 +330,32 @@
   @keyframes glowIn { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0.55; } }
   @keyframes cntPop { 0% { transform: scale(1.3); opacity: 0; } 40% { opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
   @keyframes fadeUp { 0% { opacity: 0; transform: translateY(3px); } 100% { opacity: 1; transform: translateY(0); } }
-  /* ── 미션 완료 순간 오버레이 (v3.16 · v3.20 큰 도장 세로 배치) · 카드 크기만, 얕은 딤 · 탭=닫기 ── */
-  #ppov { --land: 0.42s; position: fixed; inset: 0; z-index: 95; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.12); animation: dimIn 0.18s ease-out; }
-  #ppov::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(255,126,49,0.34) 0, rgba(255,126,49,0.12) 32%, rgba(255,126,49,0) 60%); opacity: 0; pointer-events: none; animation: glowIn 0.6s ease-out 0.3s both; }
-  #ppov::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.16); opacity: 0; pointer-events: none; animation: dimPulse 0.2s ease-out var(--land) both; }
-  #ppov .pcard { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 12px; width: min(300px, 84vw); background: var(--tint); border: 2px solid var(--mint); border-radius: 20px; padding: 20px 18px 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.18); animation: popIn 0.2s ease-out, cardShake 0.18s linear var(--land); }
-  #ppov .pcard .cntn { display: inline-block; animation: cntPop 0.26s ease-out calc(var(--land) + 0.05s) both; }
-  #ppov .pcard .cnth { display: inline-block; animation: fadeUp 0.2s ease-out calc(var(--land) + 0.2s) both; }
-  #ppov .pcard .hd2 { display: flex; align-items: center; gap: 10px; max-width: 100%; }
-  #ppov .pcard .ico { position: relative; flex: none; width: 38px; height: 38px; border: 2px solid var(--mint); border-radius: 50%; background: var(--tint2); color: var(--acc2); display: flex; align-items: center; justify-content: center; }
-  #ppov .pcard .ico svg { width: 20px; height: 20px; display: block; }
-  #ppov .pcard .tt { font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.35; }
-  #ppov .pcard .cnt { font-size: calc(12.5px * var(--fs)); font-weight: 800; color: var(--acc2); }
-  #ppov .pcard .stampmk { animation: stampDrop 0.5s cubic-bezier(0.3, 0.9, 0.4, 1) 0.12s both; }
-  @keyframes stampDrop { 0% { transform: scale(3.3) rotate(14deg); opacity: 0.6; } 60% { transform: scale(1) rotate(-6deg); opacity: 1; } 76% { transform: scale(0.92) rotate(-3deg); } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
-  /* 모션 줄이기 · 찍힌 정지 상태만 (진동은 짧게 한 번) */
-  #ppov.rm .pcard, #ppov.rm, #ppov.rm::before, #ppov.rm::after, #ppov.rm .pcard .cntn, #ppov.rm .pcard .cnth { animation: none; }
-  #ppov.rm::before, #ppov.rm::after { display: none; }
-  #ppov.rm .pcard .stampmk { animation: none; }
-  #ppov.rm .stampmk .ring, #ppov.rm .stampmk .sglow, #ppov.rm .stampmk .spl { display: none; }
-  @media (prefers-reduced-motion: reduce) {
-    .rc.punch, .rc.punch .stampmk { animation: none; }
-    .rc.punch .stampmk .ring, .rc.punch .stampmk .sglow, .rc.punch .stampmk .spl { display: none; }
-  }
+  /* ── v3.49 완료 연출 = 화면 가운데 풀스크린 팝 → 제자리로 날아가 안착 (사용자 피드백 260917 · 카드 안에서만 터져서 안 찍힌다) ──
+     팝 0.7초(딤 0.5 · 화면 폭 60% 도장 · v3.47 낙하·잉크 링·튐·진동 · 앱 흔들림) → 0.35초 멈춤 → 0.5초 곡선 비행(작아지며 제자리로) · 탭하면 바로 안착 */
+  #spop { --land: 0.42s; position: fixed; inset: 0; z-index: 400; }
+  #spop .sp-dim { position: absolute; inset: 0; background: rgba(0,0,0,0.5); animation: dimIn 0.18s ease-out both; }
+  #spop .sp-stage { position: absolute; transform-origin: 50% 50%; will-change: transform; }
+  #spop .sp-stage .stampmk { animation: stampDrop 0.5s cubic-bezier(0.3, 0.9, 0.4, 1) 0.12s both; }
+  #spop .sp-text { position: absolute; text-align: center; color: #fff; padding: 0 16px; animation: fadeUp 0.2s ease-out 0.5s both; }
+  #spop .sp-text b { display: block; font-size: calc(21px * var(--fs)); font-weight: 900; line-height: 1.35; word-break: keep-all; }
+  #spop .sp-text span { display: block; margin-top: 6px; font-size: calc(16px * var(--fs)); font-weight: 800; color: #FFB284; animation: fadeUp 0.2s ease-out 0.65s both; }
+  @keyframes stampDrop { 0% { transform: scale(3.2) rotate(14deg); opacity: 0.6; } 60% { transform: scale(1) rotate(-6deg); opacity: 1; } 76% { transform: scale(0.92) rotate(-3deg); } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+  #spop.rm .sp-dim, #spop.rm .sp-stage .stampmk, #spop.rm .sp-text, #spop.rm .sp-text span { animation: none; }
+  #spop.rm .stampmk .ring, #spop.rm .stampmk .sglow, #spop.rm .stampmk .spl { display: none; }
+  #view.sp-shake { animation: cardShake 0.18s linear; }
+  /* 안착 전 자리는 아직 비어 보이게 · 안착 순간 한 번 튕김 */
+  .rail .tick.sp-wait { background: var(--dim) !important; border-color: var(--dimln) !important; }
+  .rail .mk.sp-wait { background: var(--dim) !important; border-color: var(--dimln) !important; color: #B9B2AC !important; box-shadow: none !important; animation: none !important; }
+  .stampmk.sp-wait, #ppCnt.sp-wait { opacity: 0; }
+  .sp-bounce { animation: spBounce 0.32s cubic-bezier(0.3, 1.6, 0.5, 1); }
+  .rail .tick.sp-bounce, .rail .mk.sp-bounce { animation: spBounceC 0.32s cubic-bezier(0.3, 1.6, 0.5, 1); }
+  @keyframes spBounce { 0% { transform: scale(1.25); } 100% { transform: scale(1); } }
+  @keyframes spBounceC { 0% { transform: translate(-50%, -50%) scale(1.25); } 100% { transform: translate(-50%, -50%) scale(1); } }
+  .rc.sp-settle { animation: spSettle 0.5s ease-out; }
+  @keyframes spSettle { 0% { box-shadow: 0 0 0 0 rgba(255,126,49,0.55); } 100% { box-shadow: 0 0 0 10px rgba(255,126,49,0); } }
+  #tabbar button .ico { position: relative; }
+  #tabbar button.sp-dot .ico::after { content: ""; position: absolute; top: -2px; right: -5px; width: 8px; height: 8px; border-radius: 50%; background: var(--mint); animation: spDot 0.9s ease-out both; }
+  @keyframes spDot { 0% { transform: scale(0); opacity: 1; } 30% { transform: scale(1.3); } 60% { transform: scale(1); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
   .scap { margin: 13px 2px 7px; font-size: calc(11.5px * var(--fs)); font-weight: 800; letter-spacing: 0.04em; color: var(--faint); }
   /* v3.19 테스트 버튼 · 회색 점선 = 운영(테스트) 요소임이 보이게, 위계 최하위 */
   .btn.test { margin-top: 8px; background: transparent; border: 1.5px dashed var(--dimln); color: var(--faint); font-size: calc(12.5px * var(--fs)); font-weight: 700; padding: 9px; }
@@ -914,6 +914,7 @@ var REWARD_LADDER = [
 ];
 /* v3.33 · 칸은 8개 · v3.39 보상은 7개에서 끝 (3개 룰렛 · 4~7개 응모 1~4장) · 8번째는 다른 칸 대신 채울 수 있는 선택지 */
 var STAMP_TOTAL = 8, REWARD_CAP = 7;
+var STAMP_DENOM = REWARD_CAP;   /* v3.49 화면에 보이는 분모(레일 헤더 · 완료 팝) 한 곳 · 7 또는 8 사용자 결정 대기 · 여기만 고치면 앱 전체가 바뀐다 */
 /* 서버가 준 stamps 배열에는 정의 밖 id(구 p6·p8, 계단 p9 등)가 남아 있을 수 있다.
    표시·보상 계산은 전부 이 함수로 센다. */
 function stampCount() {
@@ -1467,7 +1468,7 @@ function awardStamp(id) {
   if (st.indexOf(id) >= 0) return;
   st.push(id); S.set("stamps", st);
   var sd = STAMPS.find(function (s) { return s.id === id; });
-  /* v3.16 적립 확정 순간 도장 오버레이 · 스탬프 탭이면 인라인 펀치가 맡고 토스트만 */
+  /* v3.49 적립 확정 순간 풀스크린 팝 → 제자리로 비행 (어느 화면에서든) */
   if (!stampOverlay(id)) toast("스탬프 적립 · " + (sd ? sd.title : id) + " · 스탬프 " + stampCount() + "개");
   if (!testEmp()) bePush("stamp:" + id, sd ? sd.title : id, true);   /* v3.19 테스트 사번은 서버에 적립하지 않는다 */
   checkRewards();
@@ -2480,6 +2481,7 @@ var App = {
     tabBtns.splice(2, 0, '<button class="fab" onclick="qrPanelOpen()" aria-label="내 QR 보기 · QR 스캔">' + QR_SVG + "</button>");
     nav.innerHTML = tabBtns.join("");
     el("view").innerHTML = Views[v]();
+    if (typeof SPOP !== "undefined" && SPOP.cur && !SPOP.cur.done) { var spT = spTarget(SPOP.cur.sd.id); if (spT.el) spT.el.classList.add("sp-wait"); }   /* v3.49 재렌더돼도 안착 전 자리는 비어 보이게 */
     kvMountAll();
     updateLed();
     if (el("mtCv")) setTimeout(mtEnsure, 30); else if (MT.raf) mtStop();
@@ -3143,8 +3145,9 @@ function testStamp(id) {
 /* v3.28 테스트 · 완료 취소 (한 장씩 되돌리기) · 로컬 전용, 서버 호출 없음.
    문턱 연출(3개 룰렛 열림 · 4개부터 응모권)을 반복 확인할 수 있게 보상 로컬 상태를 현재 개수에 맞춘다. */
 function testOverlayDrop(id) {
-  PPOV.q = PPOV.q.filter(function (s) { return !id || s.id !== id; });
-  if (el("ppov")) stampOverlayClose();
+  SPOP.q = id ? SPOP.q.filter(function (s) { return s.id !== id; }) : [];
+  SPOP.ids = {}; SPOP.q.forEach(function (s) { SPOP.ids[s.id] = 1; });
+  if (SPOP.cur && (!id || SPOP.cur.sd.id === id)) { var q = SPOP.q; SPOP.q = []; spFinish(SPOP.cur); SPOP.q = q; }
   if (PP.seenT) { clearTimeout(PP.seenT); PP.seenT = null; }   /* 대기 중인 「본 스탬프·글로우 기록」 타이머 */
   PP.animOn = false;
 }
@@ -3224,77 +3227,149 @@ function inkSplash(mk, count, scale) {
 function stampBuzz(pattern) {
   if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) { try { navigator.vibrate(pattern); } catch (e) {} }
 }
-/* ── 미션 완료 순간 연출 (v3.16) · 적립 확정 순간 카드 크기 오버레이에 도장이 내려찍힌다.
-   스탬프 탭을 보고 있으면 기존 카드 인라인 펀치가 맡는다(중복 금지) · 연출한 스탬프는 pp_seen 에 즉시 기록 ·
-   동시 적립은 순차 재생 · prefers-reduced-motion 이면 정지 상태 1.2초 ── */
-var PPOV = { q: [], on: false, timer: null };
+/* ── v3.49 완료 연출 = 화면 가운데 풀스크린 팝 → 제자리로 안착 (사용자 피드백 260917) ──
+   팝 약 0.7초(딤 · 화면 폭 60% 도장 A · 낙하·잉크 링 2겹·튐·진동 · 화면 흔들림) → 0.35초 멈춤 → 약 0.5초 위로 살짝 휜 곡선으로 작아지며 제자리 → 한 번 튕김.
+   제자리: 스탬프 탭 = 그 카드 도장 칸(화면 밖이면 먼저 스크롤) · 홈 = 레일 자리 · 그 외 = 하단 탭바 스탬프 아이콘(점 배지) · 탭바가 없으면 오른쪽 위.
+   어느 순간에 탭해도 바로 안착 · 연속 적립은 순차 재생 · 연출한 스탬프는 pp_seen 에 즉시 기록 · 모션 줄이기 = 가운데 정지 0.8초 후 사라짐, 흔들림·비행 없음. */
+var SPOP = { q: [], cur: null, ids: {} };
 function stampOverlay(id) {
   var sd = STAMPS.filter(function (s) { return s.id === id; })[0];
   if (!sd) return false;
-  if (App.current === "passport") return false;   /* 인라인 펀치가 맡는다 */
   var seen = S.get("pp_seen", []);
-  if (seen.indexOf(id) < 0) { seen.push(id); S.set("pp_seen", seen); }
-  PPOV.q.push(sd);
-  if (!PPOV.on) stampOverlayNext();
+  if (seen.indexOf(id) < 0) { seen.push(id); S.set("pp_seen", seen); }   /* 재생 중복 방지 · 스탬프 탭이 다시 그려져도 또 안 튄다 */
+  if (SPOP.ids[id] || (SPOP.cur && SPOP.cur.sd.id === id)) return true;
+  SPOP.ids[id] = 1; SPOP.q.push(sd);
+  if (!SPOP.cur) setTimeout(spNext, 0);   /* 적립으로 생긴 재렌더가 끝난 뒤 목표 좌표를 잡는다 */
   return true;
 }
-function stampOverlayNext() {
-  var sd = PPOV.q.shift();
-  if (!sd) { PPOV.on = false; return; }
-  PPOV.on = true;
-  var n = stampCount();
-  var hint = n === 3 ? "룰렛 1회 열림" : n >= 4 ? "응모권 " + raffleTickets(n) + "장" : "";
-  var rm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var old = el("ppov");
-  if (old && old.parentNode) old.parentNode.removeChild(old);
-  var d = document.createElement("div");
-  d.id = "ppov";
-  if (rm) d.className = "rm";
-  d.innerHTML = '<div class="pcard">' +
-    '<span class="hd2"><span class="ico">' + STAMP_ICONS[sd.id] + "</span>" +
-    '<span class="tt">' + sd.title + "</span></span>" +
-    stampMarkHtml(!rm, 148) +
-    '<span class="cnt"><b class="cntn">스탬프 ' + Math.min(STAMP_TOTAL, n) + " / " + STAMP_TOTAL + "</b>" + (hint ? '<span class="cnth">&nbsp;· ' + hint + "</span>" : "") + "</span></div>";
-  d.onclick = function () { stampOverlayClose(); };
-  document.body.appendChild(d);
-  /* v3.47 · 착지 순간(0.42초)에 진동과 잉크 튐 10개 · 모션 줄이기면 짧은 진동만 */
-  if (rm) stampBuzz(25);
-  else {
-    inkSplash(d.querySelector(".stampmk"), 10, 1);
-    PPOV.buzz = setTimeout(function () { PPOV.buzz = null; stampBuzz([25, 40, 70]); }, 420);
+/* 목표 · 스탬프 탭 = 그 카드의 도장 칸 · 홈 = 방금 채워진 레일 자리(1·2 틱, 3~7 마커) · 그 외 = 하단 탭바 「스탬프」 아이콘 · 탭바가 없으면 오른쪽 위 */
+function spTarget(id) {
+  var v = App.current, t = null, kind = "";
+  if (v === "passport") {
+    var rh = document.querySelector('#view .rc .rh[onclick*="ppToggle(\'' + id + '\')"]'), rc = rh && rh.closest(".rc");
+    t = rc && rc.querySelector(".rt .stampmk"); if (t) kind = "card";
+  } else if (v === "home") {
+    var rail = document.querySelector("#view .rail"), n = stampCount();
+    if (rail) {
+      if (n >= 1 && n <= 2) t = rail.querySelectorAll(".tick")[n - 1];
+      else if (n >= 3 && n <= REWARD_CAP) t = rail.querySelectorAll(".mk")[n - 3];
+      else t = el("ppCnt");
+      if (t) kind = "rail";
+    }
   }
-  PPOV.timer = setTimeout(stampOverlayClose, rm ? 1200 : 2400);
+  if (!t) {
+    var tb = el("tabbar"), b = tb && tb.querySelector('button[onclick*="\'passport\'"]'), br = b && b.getBoundingClientRect();
+    if (b && tb.style.display !== "none" && br.width > 0) { t = b.querySelector(".ico"); kind = "tab"; } else kind = "corner";
+  }
+  return { el: t, kind: kind };
 }
-function stampOverlayClose() {
-  if (PPOV.timer) { clearTimeout(PPOV.timer); PPOV.timer = null; }
-  if (PPOV.buzz) { clearTimeout(PPOV.buzz); PPOV.buzz = null; }
-  var d = el("ppov");
-  if (d && d.parentNode) d.parentNode.removeChild(d);
-  if (PPOV.q.length) setTimeout(stampOverlayNext, 120); else PPOV.on = false;
+function spNext() {
+  if (SPOP.cur && !SPOP.cur.done) return;   /* 이미 재생 중 · 끝나면 spFinish 가 다음을 부른다 */
+  var sd = SPOP.q.shift();
+  if (!sd) { SPOP.cur = null; return; }
+  delete SPOP.ids[sd.id];
+  var rm = rgReduced(), n = stampCount();
+  var hint = n === 3 ? "룰렛 1회 열림" : n >= 4 && n <= REWARD_CAP ? "추첨 응모권 " + raffleTickets(n) + "장" : "";
+  var fr = el("frame").getBoundingClientRect(), fw = Math.min(fr.width || innerWidth, innerWidth);
+  var S0 = Math.round(Math.min(320, fw * 0.6)), cx = Math.round(fr.width ? fr.left + fr.width / 2 : innerWidth / 2), cy = Math.round(innerHeight * 0.4);
+  var d = document.createElement("div");
+  d.id = "spop"; if (rm) d.className = "rm";
+  d.innerHTML = '<div class="sp-dim"></div>' +
+    '<div class="sp-stage" style="left:' + (cx - S0 / 2) + "px;top:" + (cy - S0 / 2) + "px;width:" + S0 + "px;height:" + S0 + 'px">' + stampMarkHtml(!rm, S0) + "</div>" +
+    '<div class="sp-text" style="left:' + Math.round(cx - fw / 2) + "px;width:" + Math.round(fw) + "px;top:" + (cy + S0 / 2 + 16) + 'px"><b>' + esc(sd.title) + " · 스탬프 " + Math.min(STAMP_DENOM, n) + " / " + STAMP_DENOM + "</b>" +
+    (hint ? "<span>" + hint + "</span>" : "") + "</div>";
+  document.body.appendChild(d);
+  var cur = SPOP.cur = { sd: sd, d: d, timers: [], anims: [], done: false, rm: rm };
+  var at = function (fn, ms) { cur.timers.push(setTimeout(fn, ms)); };
+  var t0 = spTarget(sd.id); if (t0.el) t0.el.classList.add("sp-wait");
+  d.addEventListener("click", function () { spFinish(cur); });
+  if (rm) {   /* 모션 줄이기 · 흔들림·비행 없음 · 가운데 정지 0.8초 → 사라짐 · 제자리 색만 바뀐다 */
+    stampBuzz(25);
+    at(function () { cur.anims.push(d.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: "forwards" })); }, 800);
+    at(function () { spFinish(cur); }, 1000);
+    return;
+  }
+  inkSplash(d.querySelector(".stampmk"), 10, 2);
+  at(function () {
+    stampBuzz([25, 40, 70]);
+    var v = el("view"); if (v) { v.classList.remove("sp-shake"); void v.offsetWidth; v.classList.add("sp-shake"); }
+  }, 420);
+  at(function () { spScroll(cur); }, 700);
+  at(function () { spFly(cur); }, 1050);
 }
-/* 적립 연출은 인라인만 (v47 확정 · 풀스크린 오버레이 금지).
-   「본 적 있는 스탬프」는 pp_seen 으로 추적해 새 것에만 도장 펀치·잉크 링을 건다.
-   S.set 은 동기 이벤트로 재렌더를 부르므로 seen 갱신은 애니가 끝난 뒤로 미룬다. */
+/* 목표가 화면 밖이면 먼저 부드럽게 스크롤 */
+function spScroll(cur) {
+  if (cur.done) return;
+  var t = spTarget(cur.sd.id);
+  if (!t.el || t.kind === "tab") return;
+  t.el.classList.add("sp-wait");
+  var r = t.el.getBoundingClientRect();
+  if (r.top < 70 || r.bottom > innerHeight - 100) t.el.scrollIntoView({ block: "center", behavior: "smooth" });
+}
+/* 비행 · 비행 직전에 한 번만 좌표를 잡는다(스크롤이 아직 움직이면 멈출 때까지 최대 0.4초 기다림) · transform 만 */
+function spFly(cur, tries) {
+  if (cur.done) return;
+  var t = spTarget(cur.sd.id);
+  if (t.el) {
+    t.el.classList.add("sp-wait");
+    var r0 = t.el.getBoundingClientRect();
+    if ((tries || 0) < 8) {
+      requestAnimationFrame(function () {
+        if (cur.done) return;
+        var r1 = t.el.getBoundingClientRect();
+        if (Math.abs(r1.top - r0.top) > 0.5) { cur.timers.push(setTimeout(function () { spFly(cur, (tries || 0) + 1); }, 50)); return; }
+        spFlyGo(cur, t);
+      });
+      return;
+    }
+  }
+  spFlyGo(cur, t);
+}
+function spFlyGo(cur, t) {
+  if (cur.done || cur.flying) return;
+  cur.flying = true;
+  var stage = cur.d.querySelector(".sp-stage"), sr = stage.getBoundingClientRect(), tx, ty, ts;
+  if (t.el) { var r = t.el.getBoundingClientRect(); tx = r.left + r.width / 2; ty = r.top + r.height / 2; ts = Math.max(r.width, r.height, 10); }
+  else { var fr = el("frame").getBoundingClientRect(); tx = (fr.width ? fr.right : innerWidth) - 30; ty = 30; ts = 24; }
+  var dx = tx - (sr.left + sr.width / 2), dy = ty - (sr.top + sr.height / 2), s1 = ts / sr.width, lift = 50 + Math.abs(dy) * 0.15, frames = [];
+  for (var i = 0; i <= 20; i++) {
+    var p = i / 20, e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2, u = 1 - e;
+    var x = 3 * u * u * e * (dx * 0.2) + 3 * u * e * e * (dx * 0.8) + e * e * e * dx;
+    var y = 3 * u * u * e * (dy * 0.2 - lift) + 3 * u * e * e * (dy * 0.8 - lift * 0.5) + e * e * e * dy;
+    frames.push({ transform: "translate(" + x.toFixed(1) + "px," + y.toFixed(1) + "px) scale(" + (1 + (s1 - 1) * e).toFixed(4) + ")" });
+  }
+  cur.path = { dx: dx, dy: dy, s1: s1, kind: t.kind };
+  cur.anims.push(stage.animate(frames, { duration: 500, fill: "forwards" }));
+  cur.anims.push(cur.d.querySelector(".sp-dim").animate([{ opacity: 1 }, { opacity: 0 }], { duration: 450, fill: "forwards" }));
+  cur.anims.push(cur.d.querySelector(".sp-text").animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, fill: "forwards" }));
+  cur.timers.push(setTimeout(function () { spFinish(cur); }, 500));
+}
+/* 안착 · 어느 순간에 탭해도 여기로 바로 온다 */
+function spFinish(cur) {
+  if (!cur || cur.done) return;
+  cur.done = true;
+  cur.timers.forEach(clearTimeout);
+  cur.anims.forEach(function (a) { try { a.cancel(); } catch (e) {} });
+  if (cur.d.parentNode) cur.d.parentNode.removeChild(cur.d);
+  var t = spTarget(cur.sd.id);
+  Array.prototype.forEach.call(document.querySelectorAll(".sp-wait"), function (x) { x.classList.remove("sp-wait"); });
+  if (t.el && !cur.rm) {
+    var cls = t.kind === "rail" && t.el.id !== "ppCnt" ? "sp-bounce" : "sp-bounce";
+    t.el.classList.remove(cls); void t.el.offsetWidth; t.el.classList.add(cls);
+    setTimeout(function () { t.el.classList.remove(cls); }, 400);
+    if (t.kind === "card") { var rc = t.el.closest(".rc"); if (rc) { rc.classList.remove("sp-settle"); void rc.offsetWidth; rc.classList.add("sp-settle"); setTimeout(function () { rc.classList.remove("sp-settle"); }, 600); } }
+  }
+  if (t.kind === "tab" || t.kind === "corner") {
+    var tb = el("tabbar"), b = tb && tb.querySelector('button[onclick*="\'passport\'"]');
+    if (b) { b.classList.remove("sp-dot"); void b.offsetWidth; b.classList.add("sp-dot"); setTimeout(function () { b.classList.remove("sp-dot"); }, 1000); }
+  }
+  if (SPOP.cur === cur) SPOP.cur = null;
+  if (SPOP.q.length && !SPOP.cur) setTimeout(spNext, 150);
+}
+/* v3.49 · 인라인 펀치는 폐지(풀스크린 팝이 맡는다) · 여기는 룰렛 글로우 기록과 본 스탬프 기록만 */
 function ppAfterRender(n, oldN, glow) {
   if (PP.animOn) return;
   PP.animOn = true;
-  /* v3.47 · 카드 인라인 펀치도 같은 문법 · 튐은 절반 크기(카드 안에서 잘린다) · 착지 0.3초에 진동 */
-  var rmI = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (!rmI) Array.prototype.forEach.call(document.querySelectorAll(".rc.punch .stampmk"), function (mk) { inkSplash(mk, 6, 0.5); });
-  setTimeout(function () {
-    /* userActivation 가드: 상호작용 전 vibrate 는 브라우저가 콘솔 경고를 내며 차단한다 (첫 진입 자동 연출 케이스) */
-    stampBuzz(rmI ? 25 : [25, 40, 70]);
-    var c = el("ppCnt");
-    if (c && n > oldN) {
-      var t0 = performance.now();
-      var stepFn = function (now) {
-        var p = Math.min(1, (now - t0) / 650);
-        c.textContent = String(Math.round(oldN + (n - oldN) * (1 - Math.pow(1 - p, 3))));
-        if (p < 1) requestAnimationFrame(stepFn);
-      };
-      requestAnimationFrame(stepFn);
-    }
-  }, rmI ? 0 : 300);
   /* 핸들을 남긴다 · 테스트 되돌리기·초기화가 이 2초 사이에 일어나면 취소해야 pp_glow3·pp_seen 이 되살아나지 않는다 (v3.28) */
   PP.seenT = setTimeout(function () {
     PP.animOn = false; PP.seenT = null;
@@ -3369,11 +3444,11 @@ function scardHtml(s, got, isNext, newly) {
   var isNew = newly.indexOf(s.id) >= 0;
   /* v3.8: 번호 표시 삭제(순서 개념 없음) · 완료 = 우측 「완료」 고무도장 (체크 대체 · 펀치 애니는 도장에서 재생) */
   return rcHtml({
-    cls: (got ? " done" : isNext ? " next" : " dim") + (isNew ? " punch" : ""),
+    cls: (got ? " done" : isNext ? " next" : " dim"),
     onclick: "ppToggle('" + s.id + "')",
     left: rcIcon(STAMP_ICONS[s.id]),
     title: s.title, sub: (s.id === "sv" && !got && !surveyOpen() ? SURVEY.open + "에 열려요 · " : isNext ? '<b class="nxt">다음 추천</b> · ' : "") + s.where,
-    right: got ? stampMarkHtml(isNew) : "",
+    right: got ? stampMarkHtml(false) : "",
     open: !!PP.open[s.id], body: stampInnerHtml(s)
   });
 }
@@ -3406,7 +3481,8 @@ var RAIL_ICO = {
 };
 /* v3.44c (사용자 요청 260917 · 규칙 문장이 많다) · 설명 줄 삭제 · 라벨은 짧게(룰렛 · 1장~4장) · 규칙 설명은 마커를 누르면 뜨는 모달에만 */
 function railHtml(n, glow, dispN, home) {
-  if (dispN == null) dispN = n;   /* 새 스탬프 연출 중엔 카운트만 이전 값에서 굴러 올라간다 */
+  if (dispN == null) dispN = n;
+  var shown = Math.min(STAMP_DENOM, dispN);
   n = Math.min(REWARD_CAP, n); dispN = Math.min(REWARD_CAP, dispN);   /* v3.39 · 8칸 중 7개면 보상 끝 */
   var out0 = S.get("roulette_out", false);
   var used = S.get("roulette_used", false);
@@ -3425,7 +3501,7 @@ function railHtml(n, glow, dispN, home) {
     lb += '<span class="' + (n >= m[0] ? "on" : m[0] === nextAt ? "next" : "") + '" style="left:' + pos + '">' + m[1] + "</span>";
   });
   return '<div class="rail">' +
-    '<div class="hd"><span class="nm">스탬프 보상</span><span class="cnt"><span id="ppCnt">' + dispN + "</span><small> / " + REWARD_CAP + "</small></span></div>" +
+    '<div class="hd"><span class="nm">스탬프 보상</span><span class="cnt"><span id="ppCnt">' + shown + "</span><small> / " + STAMP_DENOM + "</small></span></div>" +
     '<div class="rb"><i style="width:' + Math.min(100, n / REWARD_CAP * 100) + '%"></i>' + mk + "</div>" +
     '<div class="lbls">' + lb + "</div>" +
     (out0 ? '<p class="cap">오늘 준비한 룰렛이 모두 소진되었습니다</p>' : "") +
@@ -3578,11 +3654,14 @@ var Views = {
       return seen.indexOf(id) < 0 && STAMPS.some(function (s) { return s.id === id; });
     });
     var glow = n >= 3 && !S.get("roulette_used", false) && !S.get("pp_glow3", false);
-    if (newly.length || glow) ppAfterRender(n, n - newly.length, glow);
+    /* v3.49 서버 동기화 등으로 들어온 새 스탬프 1개는 같은 팝 · 여러 개가 한꺼번에(업데이트 직후 첫 진입 등)면 조용히 본 것으로 기록 */
+    if (newly.length === 1) setTimeout(function () { var id1 = newly[0]; if (S.get("stamps", []).indexOf(id1) >= 0 && S.get("pp_seen", []).indexOf(id1) < 0) stampOverlay(id1); }, 0);   /* 발사 시점에 다시 확인 · 테스트 되돌리기 중 잠깐 생긴 차이로 튀지 않게 */
+    else if (newly.length > 1) setTimeout(function () { S.set("pp_seen", seen.concat(newly)); }, 0);
+    if (glow) ppAfterRender(n, n, glow);
     /* v3.19 테스트 표시·초기화 (데모·테스트 사번 전용) */
     var testBar = !testMode() ? "" :
       '<p class="scap" style="margin:0 2px 8px">테스트 ' + (BE.on ? "계정" : "모드") + ' · 스탬프는 이 기기에만 기록됩니다 · <span style="cursor:pointer;text-decoration:underline" onclick="testStampReset()">스탬프 초기화</span> · <span style="cursor:pointer;text-decoration:underline" onclick="testMineShuffle()">테스트 · 내 일정 다시 섞기</span></p>';
-    return testBar + railHtml(n, glow, newly.length ? n - newly.length : n) + stampCardsHtml(st, newly);
+    return testBar + railHtml(n, glow, n) + stampCardsHtml(st, []);
   },
 
   ideas: function () {
