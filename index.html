@@ -22,7 +22,7 @@
      선을 쓰지 않는다(꼭 필요한 구분선·입력창 테두리만 O25 헤어라인 1px). 다크 면은 네이비가 아니라 블랙 스테이지.
      그래픽 언어 = 도트 격자 + KV 오브젝트(점 → 점 고리 → 점선 구체). Impact 폐기, 숫자도 Pretendard. */
   :root {
-    --ink: #000000;                     /* 블랙 스테이지 · 다크 카드(라이브 퀴즈·게임·히어로)·사이니지 */
+    --ink: #000000;                     /* 블랙 스테이지 · 다크 카드(게임·히어로)·사이니지 */
     --paper: #FFFFFF;                   /* 흰 면 · 헤더·바텀시트·탭바·페이지 바탕 */
     --bg: #FFFFFF;                      /* 스크롤 바탕 = 흰색 (v29 · 웜그레이 폐기) */
     --white: #FFFFFF;                   /* 그레이 카드 위에 얹는 흰 칩·입력면·버튼 */
@@ -210,18 +210,6 @@
   .progress5 { display: flex; gap: 4px; margin-top: 12px; }
   .progress5 span { flex: 1; height: 10px; background: var(--white); border-radius: 2px; }
   .progress5 span.on { background: var(--mint); }
-  .quiz-card { background: var(--ink); border: 0; border-radius: 20px; padding: 18px; color: #fff; margin-bottom: 14px; }
-  .quiz-card .live-tag { display: flex; align-items: center; gap: 7px; font-size: calc(12.5px * var(--fs)); font-weight: 800; letter-spacing: 0.08em; color: var(--mint-deep); }
-  .quiz-card .live-tag .dot-red { width: 8px; height: 8px; background: #ff5a4e; animation: pulse 1.2s infinite; }
-  .quiz-card .q { margin-top: 12px; font-size: calc(19px * var(--fs)); font-weight: 800; line-height: 1.45; }
-  .quiz-card .opt { display: block; width: 100%; text-align: left; margin-top: 8px; border: 1px solid rgba(255,255,255,0.35); cursor: pointer; border-radius: 6px; background: rgba(255,255,255,0.06); color: #fff; padding: 12px 14px; font-size: calc(15.5px * var(--fs)); font-weight: 600; }
-  .quiz-card .opt:active { background: var(--mint); color: #fff; border-color: var(--mint); }
-  .quiz-card .bar { position: relative; overflow: hidden; border-radius: 6px; background: rgba(255,255,255,0.08); margin-top: 8px; border: 1px solid rgba(255,255,255,0.15); }
-  .quiz-card .bar .fill { position: absolute; inset: 0 auto 0 0; background: rgba(255,255,255,0.14); }
-  .quiz-card .bar .fill.ans { background: var(--mint-deep); }
-  .quiz-card .bar .lbl { position: relative; display: flex; justify-content: space-between; padding: 10px 14px; font-size: calc(15.5px * var(--fs)); font-weight: 700; }
-  .quiz-card .info { margin-top: 10px; border-radius: 6px; background: rgba(255,255,255,0.08); padding: 10px 14px; font-size: calc(14.5px * var(--fs)); line-height: 1.6; }
-  .quiz-wait { border: 1.5px dashed var(--line); border-radius: 20px; padding: 16px; text-align: center; background: var(--card); margin-bottom: 14px; }
   .timer { border-radius: 3px; background: var(--mint); color: #fff; padding: 4px 10px; font-size: calc(13.5px * var(--fs)); font-weight: 800; }
   .timer.hot { background: #ff5a4e; color: #fff; }
   /* LED 전광판 공지 띠 · 블랙 스테이지에 Hi Orange 글자가 흐른다 (v29 · 네이비 폐기) */
@@ -305,7 +293,7 @@
   .pq.act .k { color: var(--mint-deep); }
   .pq.act .big { color: #fff; }
   .pq.act .s { color: rgba(255,255,255,0.75); }
-  .pq.call { box-shadow: inset 0 0 0 2px var(--mint); }   /* v3.25 호출이지만 검정을 못 받았을 때(라이브 퀴즈가 열림) · 오렌지 링 */
+  .pq.call { box-shadow: inset 0 0 0 2px var(--mint); }   /* v3.25 호출이지만 검정을 못 받았을 때 · 오렌지 링 */
   .pq.dim { background: var(--dim); }
   .pq.dim .k, .pq.dim .big { color: var(--faint); }
   .rc.done .ico { background: var(--tint2); border-color: var(--mint); color: var(--acc2); }
@@ -868,20 +856,20 @@ var FESTIVAL = {
   name: "AX Festival 2026",
   date: "2026. 10. 26 (월)", timeRange: "09:30 – 17:30", place: "광화문 본사",
   floors: "1F · 10F · 17F · 18F",
-  mockOnline: 1842, mockIdeas: 214, mockQuizPlayers: 2087,
+  mockOnline: 1842, mockIdeas: 214, mockGamePlayers: 1260,
   mockStamp3: 61, mockWave: 1128, mockWe: 1013
 };
 /* 적립 경로 6종 (260909 확정) · 완주 개념 폐기, 모은 개수가 그대로 보상 기준.
    short = 좁은 자리용 짧은 이름 · where = 층·소요시간 · inapp = 앱에서 바로 되는 칸(구분 뱃지)
-   구 p6(포토부스)·p8(미니게임 별도 칸)은 폐지 · 미니게임은 04 라이브 챌린지에 통합.
+   구 p6(포토부스)·p8(미니게임 별도 칸)은 폐지 · 미니게임은 04 미니게임에 통합.
    v47: tap = 스탬프 카드의 바로가기 · cta = 버튼 문구 · note = 카드 안 행동 안내.
    층별 안내(progOpenFl) 폐기로 p1은 QR 스캔, p3은 17F 오후 강연 신청 목록이 목적지다(v3.31b 오후 신청제 복귀).
-   v3.1: p4는 카드 안에서 게임 버튼·다시 풀기를 직접 그린다(stampInnerHtml 특례) · v3.46 기억력 게임 + 타자 게임(휴대폰 게임은 선호도 조사 뒤 확정, 파일럿 3종은 테스트 모드에서만). */
+   v3.1: p4는 카드 안에서 게임 입구를 직접 그린다(stampInnerHtml 특례) · v3.50 「미니게임」 = 게임 4종 중 아무거나 한 판(전원 공개). */
 var STAMPS = [
   { id: "p1", title: "1F 전시", short: "1F 전시", desc: "1F 전시존 QR 스캔", where: "1F · 약 5분", site: 1, tap: "qrScanOpen()", cta: "QR 스캔", note: "1F 전시존 끝 QR 입간판을 스캔하세요." },
   { id: "p2", title: "AX Now! 체험", short: "부스 체험", desc: "HIDI-Q 또는 HI-Helper 부스 1곳 체험", where: "1F · 약 5분", site: 1, tap: "App.go('booth')", cta: "부스 안내 보기", note: "체험을 마치면 스태프가 보여주는 완료 QR을 스캔합니다." },
   { id: "p3", title: "17F 강의", short: "17F 강의", desc: "17F 오후 파트너사 강연 1회 참석 (10F 제외)", where: "17F · 90분", site: 1, tap: "progGoFl(17)", cta: "17F 오후 강연 신청하기", note: "17F 오후 파트너사 강연은 프로그램 탭에서 신청합니다. 사전 신청하셨다면 「사전 신청 완료」로 보입니다. 입장 시 좌석 QR을 스캔하세요." },
-  { id: "p4", title: "라이브 챌린지", short: "라이브 챌린지", desc: "Outro 시작 전 라이브 퀴즈 응답 또는 미니게임(ME to WE 기억력·타자 게임) 1개 끝까지 하기", where: "앱 · 30초", inapp: 1 },
+  { id: "p4", title: "미니게임", short: "미니게임", desc: "미니게임 아무거나 1종을 끝까지 한 판", where: "앱 · 1분", inapp: 1 },
   { id: "p5", title: "아이디어 한 줄", short: "아이디어", desc: "아이디어 1건 제출", where: "앱 · 1분", inapp: 1, tap: "App.go('ideas')", cta: "아이디어 쓰기" },
   { id: "p7", title: "전시 QR 퀴즈", short: "QR 퀴즈", desc: "DAP Wall QR 퀴즈 1세트 통과 (60점 이상)", where: "1F DAP Wall · 약 10분", tap: "App.go('wq_list')", cta: "QR 퀴즈 풀기" },
   /* v3.34b (260917 사용자 확정) 계단 · 계단실 안 QR 한 번 = 적립 · 층·방향·횟수·시간 조건 없음 · 판정·적립은 서버(stamp_claim)
@@ -935,9 +923,9 @@ var TIMELINE = [
   { time: "13:30", end: "15:00", title: "파트너사 강연 · AWS", short: "Agentic AI 시대의 일하는 방식 변화 · 구태훈 박사(AWS)", place: "17F 대강당", desc: "구태훈 박사(AWS) · Agentic AI 시대의 일하는 방식 변화. 신청제(사전 신청 + 앱 신청), 프로그램 탭에서 잔여석을 확인하세요. 세부 시간은 변동될 수 있습니다.", tag: "신청제" },
   { time: "13:30", end: "16:30", title: "10F 실습형 세션 A~E", short: "사전 신청자 · 5개 세션 중 1개", place: "10F", desc: "세션 A 영업 및 보상 현장 우수 사례 · 세션 B 통계 현황 리포팅 · 세션 C 외부자료 리서치 자동화 · 세션 D 바이브 코딩(AWS) · 세션 E MS Copilot 문서 작성(MS, 2회 진행 13:30 · 15:00). 사전 신청한 세션 1개에 참석합니다(세션 A는 16:40 종료). 현장 신청은 받지 않습니다. 장소: 세션 A 컨퍼런스룸 · 세션 B·C Heart 1 · 7~8 · 세션 D Heart 5 · 6 · 세션 E 추후 안내.", tag: "사전 신청" },
   { time: "15:10", end: "16:40", title: "파트너사 강연 · MS", short: "AI와 친해지기 · MS", place: "17F 대강당", desc: "MS · AI와 친해지기. 신청제(사전 신청 + 앱 신청), 프로그램 탭에서 잔여석을 확인하세요. 세부 시간은 변동될 수 있습니다.", tag: "신청제" },
-  /* v3.32 라이브 퀴즈 = Outro 대기 시간 한 판 (사용자 확정 260917) · 4문항을 운영자가 순서대로 발사 */
-  { time: "16:45", end: "17:00", title: "라이브 퀴즈 · 설문 안내", short: "16:45 라이브 퀴즈 · 설문 참여 안내 후 17:00 Outro", place: "17F 대강당", desc: "진행 순서: 라이브 퀴즈 4문항 → 오늘 한 판 설문 참여 안내 → 17:00 Outro. 퀴즈는 문항마다 20초, 홈 화면에서 답하세요. 한 문제만 답해도 라이브 챌린지 스탬프가 적립됩니다.", tag: "자유 참석" },
-  { time: "17:00", end: "17:30", title: "Outro · DAP 시상", short: "DAP 우수 성과자 시상 · 경품 추첨", place: "17F 대강당", desc: "16:45 라이브 퀴즈 · 설문 참여 안내 후 17:00 Outro. CSO · DAP 우수 성과자 시상, 경품 추첨. 추첨 결과는 행사 종료 후 개별 안내드립니다.", tag: "피날레" }
+  /* v3.50 사회자 순서 (사용자 확정 260917) · Outro 문항 기능 폐지 · 설문 참여 안내 → 17:00 Outro */
+  { time: "16:45", end: "17:00", title: "설문 참여 안내", short: "오늘 한 판 설문 참여 안내 후 17:00 Outro", place: "17F 대강당", desc: "진행 순서: 오늘 한 판 설문 참여 안내 → 17:00 Outro. 앱 홈 첫 줄에서 60초 설문에 참여하면 스탬프 1개가 적립됩니다.", tag: "자유 참석" },
+  { time: "17:00", end: "17:30", title: "Outro · DAP 시상", short: "DAP 우수 성과자 시상 · 경품 추첨", place: "17F 대강당", desc: "16:45 설문 참여 안내 후 17:00 Outro. CSO · DAP 우수 성과자 시상, 경품 추첨. 추첨 결과는 행사 종료 후 개별 안내드립니다.", tag: "피날레" }
 ];
 var NOW_INDEX = 1;
 /* ═══ 프로그램 카탈로그 · v3.29 공식 공지 붙임1·2(260917) 정본 ═══
@@ -1035,39 +1023,14 @@ var SURVEY_PLACES = [
   ["p3", "17F 오후 파트너사 강연"], ["dap", "DAP ZONE 과제상담"], ["cchat", "18F AX 커피챗"]
 ];
 var IDEA_TAGS = ["영업", "보상", "마케팅", "본사·통계", "기타"];
-var QUIZZES = [
-  { id: "q1", part: "Outro 퀴즈 1/4", question: "AX에서 X가 의미하는 것은 무엇일까요?", options: ["eXperience (경험)", "Transformation (전환)", "neXt (다음)"], answerIndex: 1, explain: "AX = AI Transformation. 도구 도입이 아니라 일하는 방식의 전환입니다.", mockDist: [18, 71, 11] },
-  { id: "q2", part: "Outro 퀴즈 2/4", question: "우리 회사 AX의 완성 조건은?", options: ["최신 AI 모델을 도입할 때", "구성원 모두가 각자의 업무에서 AX를 이룰 때", "전산 시스템을 교체할 때"], answerIndex: 1, explain: "AX는 시스템이 아니라 사람이 완성합니다 · ME to WE.", mockDist: [9, 84, 7] },
-  { id: "q3", part: "Outro 퀴즈 3/4", question: "우리 회사 3개년 로드맵의 2028년 키워드는?", options: ["단순 업무 자동화", "혁신과 연결", "AI 조직 신설"], answerIndex: 1, explain: "2026 공감과 참여 → 2027 확산과 체화 → 2028 혁신과 연결.", mockDist: [22, 63, 15] },
-  { id: "q4", part: "Outro 퀴즈 4/4", question: "O/X · DAP는 현업 구성원이 직접 발굴한 과제로 진행된다.", options: ["O", "X"], answerIndex: 0, explain: "맞습니다. DAP의 주인공은 현업입니다. 여러분의 아이디어가 2027 DAP가 됩니다.", mockDist: [88, 12] }
-];
 var DEFAULT_NOTICES = [
-  { id: "n1", title: "AX Festival 2026에 오신 것을 환영합니다", body: "자리에서도 페스티벌 안에 있을 수 있어요. 퀴즈 한 문제, 아이디어 한 줄 · 30초면 충분합니다.", ts: 0, pinned: true },
+  { id: "n1", title: "AX Festival 2026에 오신 것을 환영합니다", body: "자리에서도 페스티벌 안에 있을 수 있어요. 미니게임 한 판, 아이디어 한 줄 · 1분이면 충분합니다.", ts: 0, pinned: true },
   { id: "n2", title: "18F AX 커피챗, 13:00 시작", body: "아이디어 한 줄을 제출하면 비슷한 주제의 동료와 매칭해 드립니다.", ts: 0 }
 ];
 var NOTICE_TEMPLATES = [
-  ["곧 Outro 라이브 퀴즈", "17F 대강당 Outro 시작 전, 라이브 퀴즈 4문항이 열립니다. 홈 화면을 열어두세요!"],
+  ["곧 오늘 한 판 설문", "17:00 Outro 전에 앱 홈에서 오늘 한 판 설문(60초)에 참여해 주세요. 제출하면 스탬프 1개!"],
   ["1F 전시, 지금 한산해요", "3분 코스로 둘러보고 패스포트 한 칸 채워가세요."]
 ];
-var QUIZ_SECONDS = 20;
-var INITIAL_QUIZ_STATE = { activeId: null, phase: "idle", openedAt: 0, finishedIds: [] };
-/* v3.41 hotfix · 로컬 퀴즈 상태 안전 만료 (openedAt 기준 · 여기 한 곳)
-   서버 종료 신호(idle)를 오프라인·불통으로 못 받은 기기가 카드를 계속 띄우지 않게 한다.
-   open = 응답 20초 + 여유 3분 · closed(집계) = 8분 · revealed(결과 공개) = 12분 · 운영자는 문항당 몇 분 안에 넘긴다 */
-var QUIZ_STALE_MS = { open: (QUIZ_SECONDS + 180) * 1000, closed: 8 * 60000, revealed: 12 * 60000 };
-/* 지금 참여자에게 보여 줄 퀴즈 상태 · 없으면 null · 만료면 로컬을 idle 로 정리(활성 문항은 다시 풀기로) */
-function quizLive() {
-  var st = S.get("quiz_state", INITIAL_QUIZ_STATE);
-  if (!st || !st.activeId || st.phase === "idle") return null;
-  var lim = QUIZ_STALE_MS[st.phase] || QUIZ_STALE_MS.revealed;
-  if (Date.now() - (st.openedAt || 0) > lim) {
-    var fin = (st.finishedIds || []).slice();
-    if (fin.indexOf(st.activeId) < 0) fin.push(st.activeId);
-    S.set("quiz_state", { activeId: null, phase: "idle", openedAt: 0, finishedIds: fin });
-    return null;
-  }
-  return st;
-}
 /* 「ME to WE 기억력」 라운드 · v3.46 · 여기 한 곳 (사용자 확정 대상 초안)
    제작 규칙: ①확정 문서 문장만(슬로건 · 3개년 로드맵) ②뜻 한 줄은 10초 안에 읽히는 쉬운 말
    ③미끼는 정답과 헷갈리는 비슷한 말 금지(혁신 자리에 효율 같은 것) · 다른 라운드의 타일이나 뚜렷이 무관한 말만 */
@@ -1085,7 +1048,7 @@ var MEM_SHOW = 6, MEM_SHOW_FAST = 3, MEM_SEC = 60, MEM_PEN = 2, MEM_PT = 10, MEM
    단계가 오를수록 긴 단어 비중이 커진다(1단계 3자 이하 · 2단계 4자 이하 · 4단계부터 3자 이상). */
 var TYPE_WORDS = [
   "AX", "AI", "DAP",
-  "공감", "참여", "확산", "체화", "혁신", "연결", "실습", "전시", "체험", "상담", "강연", "세션", "설문", "계단", "퀴즈", "경품", "추첨", "시상", "분석", "요약", "현장", "영업", "보상", "전략", "채널", "교안", "동료", "업무", "본사", "룰렛",
+  "공감", "참여", "확산", "체화", "혁신", "연결", "실습", "전시", "체험", "상담", "강연", "세션", "설문", "계단", "경품", "추첨", "시상", "분석", "요약", "현장", "영업", "보상", "전략", "채널", "교안", "동료", "업무", "본사", "룰렛",
   "데이터", "로드맵", "자동화", "커피챗", "스탬프", "리포트", "응모권", "대강당", "광화문", "파이썬", "노트북", "클로드", "키노트", "알림봇", "정리표", "산출물", "체크인", "라이브", "챌린지", "리서치", "실시간", "새정보",
   "에이전트", "프롬프트", "대시보드", "아이디어", "코파일럿", "하이디큐", "기조연설", "예측모델", "포토부스", "우수사례", "파트너사", "외부자료", "문서작성", "통계현황", "반복작업",
   "바이브코딩", "업무혁신", "내부강연"
@@ -1156,7 +1119,7 @@ var MOCK_FEED = [
  * URL을 넣는 순간 로그인·참여기록·월 집계가 서버로 연결된다.
  * 정적 호스팅(GitHub Pages)에서 CORS 제약 없이 통신하기 위해 JSONP(script 태그) 방식 사용. */
 var GAS_URL = "https://script.google.com/macros/s/AKfycbwjCaSSUnQ7W1lrM8T426Cn_LgKs_UhI0Qi5XRVk-_eF-oD55-Wwjsot0DkPJCX9JqMBA/exec";
-var BE_POLL_MS = 10000;        /* sync 폴링 주기 · 월 집계 + 퀴즈 발사 + 내 상태(승인·매칭) */
+var BE_POLL_MS = 10000;        /* sync 폴링 주기 · 월 집계 + 내 상태(승인·매칭) · 공지 */
 var BE = { on: false, stats: null, seq: 0 };
 
 function beCall(params, done, fail) {
@@ -1461,7 +1424,7 @@ function checkRewards() {
     setTimeout(function () { toast("사후 추첨 응모 " + t + "장 · 자동 응모 완료. 추첨 결과는 행사 종료 후 개별 안내드립니다."); }, 1500);
   }
 }
-/* 앱 안 행동으로 붙는 3종(라이브 챌린지·아이디어·전시 QR 퀴즈) 전용.
+/* 앱 안 행동으로 붙는 3종(미니게임·아이디어·전시 QR 퀴즈) 전용.
    현장 QR 은 stampByCode 가 서버로 보내므로 여기를 타지 않는다. */
 function awardStamp(id) {
   var st = S.get("stamps", []);
@@ -1676,7 +1639,7 @@ function cchatCancelGo() {
     });
 }
 
-/* ── v10: DAP Wall QR 퀴즈 (Outro 라이브 퀴즈와 별개 시스템) ── */
+/* ── v10: DAP Wall QR 퀴즈 ── */
 var WQ = { set: null };
 function wqSets() { return S.get("wq_sets", WALLQ_DEFAULT); }
 function wqPassScore() { return S.get("wq_pass", 60); }
@@ -2353,7 +2316,7 @@ function counters() {
   return {
     online: FESTIVAL.mockOnline + ((tick * 7) % 41) - 20,
     ideas: FESTIVAL.mockIdeas + S.get("ideas", []).length + Math.floor(tick / 3),
-    quiz: FESTIVAL.mockQuizPlayers + Object.keys(S.get("quiz_answers", {})).length + ((tick * 3) % 13)
+    games: FESTIVAL.mockGamePlayers + ((tick * 3) % 13)   /* v3.50 미니게임 참여 */
   };
 }
 
@@ -2385,9 +2348,9 @@ var App = {
   PARENT: {
     notices: "home",
     /* 스탬프 · 스탬프 카드가 유일한 입구 (v3.1: ev_games·ev_draw·wallv 참여자 화면 폐지) */
-    ideas: "passport", booth: "passport", wq_list: "passport", ev_replay: "passport",
+    ideas: "passport", booth: "passport", wq_list: "passport",
     wq_play: "wq_list", game_word: "passport", game_type: "passport", type_rank: "game_type",
-    game_pilot: "passport", game_pang: "game_pilot", game_jump: "game_pilot", gs_rank: "game_pilot",
+    game_pang: "passport", game_jump: "passport", gs_rank: "passport",
     ideas_mine: "passport", survey: "passport",
     /* 프로그램 · 신청 전용 (리더보드는 10F 세션 곁으로, v3.1) · 일정(guide_time)은 v3.3부터 탭 루트라 PARENT 없음 */
     dap: "guide", ev_cchat: "guide",
@@ -2401,10 +2364,10 @@ var App = {
     booth: "AX Now! 부스",
     ideas: "아이디어 한 줄", ideas_mine: "내가 낸 아이디어", survey: "오늘 한 판 설문",
     sess_d: "프로그램 신청",
-    ev_cchat: "내 커피챗", ev_replay: "퀴즈 다시 풀기",
+    ev_cchat: "내 커피챗",
     wq_list: "DAP Wall QR 퀴즈", wq_play: "문제 풀이",
     admin: "관리자 콘솔", screen: "송출용 화면", screen_survey: "", screen_words: "", game_word: "ME to WE 기억력", game_type: "타자 게임", type_site: "현장 타자왕전", wall_type: "", type_award: "", type_rank: "타자 순위",
-    game_pilot: "게임 선호도 조사", game_pang: "AX 팡", game_jump: "ME to WE 점프", gs_rank: "게임 순위",
+    game_pang: "AX 팡", game_jump: "ME to WE 점프", gs_rank: "게임 순위",
     wall_quiz: "", wall_wave: "", wall_live: "", wall_metowe: "", wall_tv: ""
   },
   tabOf: function (v) {
@@ -2541,63 +2504,6 @@ window.addEventListener("popstate", function () {
   toast("한 번 더 뒤로 가면 앱을 나갑니다");
   navRepush();
 });
-
-/* ── 라이브 퀴즈 ── */
-var quizTimer = setInterval(function () {
-  var st = quizLive();
-  if (st && st.phase === "open" && ["home", "screen"].indexOf(App.current) >= 0) App.render();
-}, 800);
-
-function quizCardHtml() {
-  var st = quizLive() || INITIAL_QUIZ_STATE;
-  var quiz = QUIZZES.find(function (q) { return q.id === st.activeId; });
-  if (!quiz || st.phase === "idle") {
-    return '<div class="quiz-wait"><p style="font-size:calc(15.5px * var(--fs));font-weight:800;color:var(--hi)">LIVE QUIZ 대기 중</p>' +
-      '<p class="muted" style="margin-top:5px">Outro 시작 전(16:45경) 17F 대강당에서 4문항이 열립니다.<br>놓쳐도 스탬프 탭 「라이브 챌린지」 카드에서 다시 풀 수 있어요.</p></div>';
-  }
-  var answers = S.get("quiz_answers", {});
-  var my = answers[quiz.id];
-  /* 일몰 없음(260826) · 관리자가 콘솔에서 마감할 때까지 응답 가능 */
-  var expired = st.phase !== "open";
-  var h = '<div class="quiz-card"><div class="row" style="justify-content:space-between">' +
-    '<span class="live-tag"><span class="dot-red"></span>LIVE QUIZ · ' + esc(quiz.part) + "</span>" +
-    (st.phase === "open" ? '<span class="timer">응답 접수 중</span>' : "") +
-    '</div><p class="q">' + esc(quiz.question) + "</p>";
-  if (st.phase === "open" && !expired && !my) {
-    h += quiz.options.map(function (o, i) {
-      return '<button class="opt" onclick="answerQuiz(\'' + quiz.id + "'," + i + ')">' + (i + 1) + ". " + esc(o) + "</button>";
-    }).join("");
-  } else if (st.phase !== "revealed") {
-    h += '<div class="info">' + (my ? '✔ 응답 완료 · "' + esc(quiz.options[my.choice]) + '"' : "응답 마감") +
-      '<br><span style="opacity:0.75">지금 ' + counters().quiz.toLocaleString() + "명이 함께 풀었어요. 곧 전체 결과가 공개됩니다.</span></div>";
-  } else {
-    h += quiz.options.map(function (o, i) {
-      var isAns = i === quiz.answerIndex, isMine = my && my.choice === i;
-      return '<div class="bar"><div class="fill' + (isAns ? " ans" : "") + '" style="width:' + quiz.mockDist[i] + '%"></div>' +
-        '<div class="lbl"><span>' + (isAns ? "◈ " : "") + esc(o) + (isMine ? " · 내 선택" : "") + "</span><b>" + quiz.mockDist[i] + "%</b></div></div>";
-    }).join("");
-    h += '<div class="info">' + (my ? (my.correct ? "정답! 패스포트 「라이브 챌린지」 칸이 적립됐어요." : "아쉽지만 오답. 결과는 나만 볼 수 있으니 걱정 마세요.") :
-      "이번 퀴즈를 놓쳤어도 스탬프 탭 「라이브 챌린지」 카드에서 참여할 수 있어요.") + " · " + esc(quiz.explain) + "</div>";
-  }
-  return h + "</div>";
-}
-function answerQuiz(qid, choice) {
-  var quiz = QUIZZES.find(function (q) { return q.id === qid; });
-  var answers = S.get("quiz_answers", {});
-  if (answers[qid]) return;
-  answers[qid] = { choice: choice, correct: choice === quiz.answerIndex, replay: false, ts: Date.now() };
-  S.set("quiz_answers", answers);
-  awardStamp("p4");
-}
-function replayQuiz(qid, choice) {
-  var quiz = QUIZZES.find(function (q) { return q.id === qid; });
-  var answers = S.get("quiz_answers", {});
-  if (answers[qid]) return;
-  answers[qid] = { choice: choice, correct: choice === quiz.answerIndex, replay: true, ts: Date.now() };
-  S.set("quiz_answers", answers);
-  awardStamp("p4");
-  toast(choice === quiz.answerIndex ? "정답! 패스포트 「라이브 챌린지」 칸이 적립됐어요." : "아쉽게 오답. 해설을 확인해보세요.");
-}
 
 /* ═══ 프로그램 신청 · seat(좌석)·slot(시간대)·link(기존 시스템) ═══ */
 function sessById(id) { return SESSIONS.filter(function (s) { return s.id === id; })[0]; }
@@ -2917,7 +2823,7 @@ function myScheduleHtml() {
   /* 지금 걸려 있는 대기는 시간이 정해진 일정보다 급하다 · 맨 위(정렬키 -1)에 둔다.
      내 것을 보여주는 자리는 여기 하나뿐이다(홈에 별도 스트립을 만들지 않는다, design.md) */
   var q = S.get("queue", {}), qk;
-  /* v3.35 · Outro 전 사회자 안내(16:45 퀴즈 → 설문 안내) 시간대에만 홈 첫 줄로 · 그 밖에는 스탬프 탭 카드가 입구 */
+  /* v3.35 · Outro 전 사회자 안내(16:45 설문 안내) 시간대에만 홈 첫 줄로 · 그 밖에는 스탬프 탭 카드가 입구 */
   var hm0 = new Date().getHours() * 60 + new Date().getMinutes();
   if (surveyOpen() && !surveyDone() && evPhase() === "live" && hm0 >= t2m("16:40") && hm0 < t2m("17:10"))
     rows.push([-1, "App.go('survey')", "설문", "오늘 한 판 설문", "60초 · 제출하면 스탬프", "mine"]);
@@ -2989,7 +2895,7 @@ function photoEta(ahead) {
   return hm2(d.getHours() * 60 + d.getMinutes() + ahead * PHOTO.MIN);
 }
 function photoGoMine() { SCHED.open.a_photo = true; SCHED.tab = "always"; App.go("guide_time"); }
-/* 홈 최상단 대기 카드 (라이브 퀴즈와 같은 예외 자리) · 앞 2팀 이하이거나 호출됐을 때만 */
+/* 홈 최상단 대기 카드 (예외 자리) · 앞 2팀 이하이거나 호출됐을 때만 */
 function photoAlertHtml() {
   var q = photoQ();
   if (!q || !((q.status === "wait" && q.ahead <= 2) || q.status === "call")) return "";
@@ -3075,13 +2981,12 @@ function tokBadge(text, state, sub) {
   return '<span class="tok' + (state ? " " + state : "") + (sub ? " two" : "") + '"><b>' + text + "</b>" + (sub ? "<small>" + sub + "</small>" : "") + "</span>";
 }
 /* ══ 화면당 검정 강조 1곳 (v3.25 사용자 확정) · 긴급도 1순위 하나만 act(검정)를 받는다 ══
-   순위: quiz 라이브 퀴즈 카드(20초 제한 · 카드 자체가 검정) > call 호출(포토부스·대기열 · 안 가면 건너뛰어짐)
+   순위: call 호출(포토부스·대기열 · 안 가면 건너뛰어짐) (v3.50)
          > roulette 룰렛 사용 가능(스탬프 3개·미사용) > now 진행 중 일정.
    후보는 그 화면(일정 탭은 하위 탭까지)에 실제로 보이는 것만 모은다. 오버레이·모달은 대상 아님. */
 function blackPick(view) {
   view = view || App.current;
   var c = [], st = SCHED.tab;
-  if (view === "home" && quizLive()) c.push("quiz");
   var pq = S.get("photoq", null), qq = S.get("queue", {}), call = !!(pq && pq.status === "call"), k;
   for (k in qq) if (qq[k] && qq[k].status === "call") call = true;
   if (call && (view === "home" || view === "guide" || view === "sess_d" || (view === "guide_time" && st !== "all"))) c.push("call");
@@ -3407,15 +3312,12 @@ function stampInnerHtml(s) {
       '<button class="btn mint" style="margin-top:10px" onclick="qrScanOpen()">QR 스캔</button>' +
       '<p class="lnk sub" onclick="staffStampOpen()">QR이 안 되면 담당자 적립 요청 ›</p>';
   } else if (s.id === "p4") {
-    /* v3.1: 미니게임 허브(ev_games) 폐지 · 세 가지 방법을 카드가 직접 연다 */
-    quizLive();   /* v3.41 · 만료된 문항을 다시 풀기 목록으로 넘긴다 */
-    var qs4 = S.get("quiz_state", INITIAL_QUIZ_STATE), an4 = S.get("quiz_answers", {});
-    var replayN = QUIZZES.filter(function (q) { return qs4.finishedIds.indexOf(q.id) >= 0 && !an4[q.id]; }).length;
+    /* v3.50 · 휴대폰 게임 4종 전원 공개  */
     inner += '<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch">' +
-      '<button class="btn mint" onclick="App.go(\'game_word\')">ME to WE 기억력</button>' +
-      '<button class="btn mint" onclick="App.go(\'game_type\')">타자 게임</button></div>' +
-      (pilotOn() ? '<button class="btn line" style="margin-top:8px" onclick="App.go(\'game_pilot\')">파일럿 · 미니게임 선호도 조사</button>' : "") +
-      (replayN ? '<button class="btn line" style="margin-top:8px" onclick="App.go(\'ev_replay\')">라이브 퀴즈 다시 풀기 · ' + replayN + "문제</button>" : "");
+      '<button class="btn mint" onclick="App.go(\'game_pang\')">AX 팡</button>' +
+      '<button class="btn mint" onclick="App.go(\'game_jump\')">ME to WE 점프</button>' +
+      '<button class="btn mint" onclick="App.go(\'game_type\')">단어 소나기</button>' +
+      '<button class="btn mint" onclick="App.go(\'game_word\')">ME to WE 기억력</button></div>';
   } else {
     /* v3.12: 적립방식(how) 뱃지 삭제 · 참여자에게 필요한 건 desc 와 바로가기뿐 */
     inner += '<button class="btn mint" style="margin-top:10px" onclick="' + s.tap + '">' + s.cta + "</button>";
@@ -3567,14 +3469,12 @@ var Views = {
   /* ═══ 홈 = 「내 것」만 (260830 사용자 지시: 첫 화면이 복잡하면 안 된다)
      지금 어디에 있어야 하는가 · 내가 신청한 것 · 내가 받을 것. 이 셋 외에는 두지 않는다.
      행사 전체에 관한 것(프로그램 목록·혼잡도·월·게임·아이디어)은 각 탭이 맡는다. ═══ */
-  /* v3.13 홈 위계 재배치 (사용자 확정): [라이브 퀴즈 · 열릴 때만 예외 최상단] → 스탬프 → 나의 일정(지금·다음 흡수) → 광고판.
-     v3.31c (260917 사용자 확정) 층별 혼잡도 참여자 화면 삭제 · 홈 = [퀴즈·포토부스 알림] → 광고판 → 스탬프 → 나의 일정.
+  /* v3.13 홈 위계 재배치 (사용자 확정): 스탬프 → 나의 일정(지금·다음 흡수) → 광고판 (v3.50 예외 자리는 포토부스 알림만).
+     v3.31c (260917 사용자 확정) 층별 혼잡도 참여자 화면 삭제 · 홈 = [포토부스 알림] → 광고판 → 스탬프 → 나의 일정.
      운영 쪽 존 등급 입력(ZONE_GRADE)·백엔드 grade·입장 스캔 동선 집계는 유지.
      히어로(지금 진행 중)는 나의 일정 첫 줄로 흡수 · 스탬프는 행사 전·당일·후 항상 맨 위 */
   home: function () {
-    var liveOpen = !!quizLive();   /* v3.41 · 만료·종료 판정 한 곳 */
     return "" +
-      (liveOpen ? quizCardHtml() : "") +
       photoAlertHtml() +
       billboardHtml() +      /* v3.24 광고판 = 스탬프 바로 위 배너 */
       myCouponHtml() +
@@ -3610,7 +3510,7 @@ var Views = {
       '<p class="tytv-t">' + (site ? "1F 현장 타자왕전 상위 5" : "앱 순위 상위 10") + "</p>" +
       '<div class="tytv-seg"><span class="' + (site ? "" : "on") + '">앱 상위 10</span><span class="' + (site ? "on" : "") + '">현장 상위 5</span></div>' +
       '<div class="tytv-list' + (site ? " five" : "") + '">' + tyTvRows(r, site ? 5 : 10) + "</div>" +
-      '<p class="tytv-foot">' + (site ? "결선 " + esc(winTxt) + " · 1인 1회 · 같은 키보드 · 1·2등은 17:00 Outro에서 호명" : "앱 스탬프 탭 → 라이브 챌린지 → 타자 게임 · 닉네임으로 표시 · 도전은 무제한, 최고 기록만") + "</p>" +
+      '<p class="tytv-foot">' + (site ? "결선 " + esc(winTxt) + " · 1인 1회 · 같은 키보드 · 1·2등은 17:00 Outro에서 호명" : "앱 스탬프 탭 → 미니게임 → 타자 게임 · 닉네임으로 표시 · 도전은 무제한, 최고 기록만") + "</p>" +
       (testMode() ? '<p class="tytv-foot" style="opacity:0.4">테스트 화면 · 가짜 닉네임</p>' : "") + "</div>";
   },
   type_award: function () {
@@ -3904,23 +3804,6 @@ var Views = {
       '<button class="btn line" style="margin-top:10px" onclick="cchatCancel()">신청 취소</button></div>';
   },
 
-  /* 미니게임 허브(ev_games)는 v3.1 폐지 · 스탬프 04 카드가 미니게임·다시 풀기를 직접 연다 */
-
-  ev_replay: function () {
-    quizLive();
-    var st = S.get("quiz_state", INITIAL_QUIZ_STATE);
-    var answers = S.get("quiz_answers", {});
-    var replayable = QUIZZES.filter(function (q) { return st.finishedIds.indexOf(q.id) >= 0 && !answers[q.id]; });
-    if (!replayable.length) return '<div class="card soft" style="text-align:center"><p class="muted">지금 다시 풀 수 있는 퀴즈가 없어요.<br>라이브 퀴즈가 끝나면 여기로 옵니다.</p></div>';
-    return replayable.map(function (q) {
-      return '<div class="card soft mb8"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">Replay · ' + esc(q.part) + '</b><p class="muted" style="font-size:calc(13.5px * var(--fs));margin-top:2px">정답 시 「라이브 챌린지」 스탬프 적립</p>' +
-        '<p style="margin-top:10px;font-size:calc(15.5px * var(--fs));font-weight:700">' + esc(q.question) + "</p>" +
-        q.options.map(function (o, i) {
-          return '<button class="input" style="text-align:left;margin-top:6px;cursor:pointer" onclick="replayQuiz(\'' + q.id + "'," + i + ')">' + (i + 1) + ". " + esc(o) + "</button>";
-        }).join("") + "</div>";
-    }).join("");
-  },
-
   /* 추첨 안내 화면(ev_draw)은 v3.1 폐지 · 보상 레일 응모 마커의 ppDrawOpen 모달이 흡수 */
 
   /* ── v10 【신규 A】 과제상담 신청 · 구성은 v5 p25 목업, 룩은 앱 공통 다크·민트 ── */
@@ -4050,7 +3933,7 @@ var Views = {
     return deptCard + setCards + rankCard +
       '<div class="card soft mt16"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">참여 방법</b>' +
       '<p class="muted" style="margin-top:6px;font-size:calc(14.5px * var(--fs));line-height:1.8">① 1F DAP Wall·Special Wall의 QR 발견 → ② 스캔하면 5문항 오픈 → ③ 정답은 벽 전시 안에서 탐색 → ④ 평균 <b style="color:var(--hi)">' + pass + '점 이상</b>이면 「전시 QR 퀴즈」 스탬프 적립!</p>' +
-      '<p class="muted" style="margin-top:6px;font-size:calc(13.5px * var(--fs))">' + pass + '점 미만은 <b>무제한 재응시</b> (문항·보기 순서가 바뀌어요) · Outro 라이브 퀴즈와는 별개예요. 테스트 버전은 QR 없이 세트를 바로 열 수 있습니다.</p></div>';
+      '<p class="muted" style="margin-top:6px;font-size:calc(13.5px * var(--fs))">' + pass + '점 미만은 <b>무제한 재응시</b> (문항·보기 순서가 바뀌어요) 테스트 버전은 QR 없이 세트를 바로 열 수 있습니다.</p></div>';
   },
 
   wq_play: function () {
@@ -4125,7 +4008,7 @@ var Views = {
       kvMediaHtml("live", "kvLive").replace('data-axf="loop"', 'data-axf="loop" data-axf-seq="circle:5,sphere:7,alpha:7" data-axf-dark="1" data-axf-cx="0.72" data-axf-zoom="0.95"') +
       '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-start;padding-left:22px"><b class="disp" style="font-size:24px;color:#fff;letter-spacing:-0.01em">ME to <span style="color:var(--mint-deep)">WE</span></b></div></div>' +
       '<div class="screen-wrap" style="padding-bottom:0"><div class="counters" style="margin-bottom:10px">' +
-      [["함께하는 사람", c.online], ["모인 아이디어", c.ideas], ["퀴즈 참여", c.quiz], ["스탬프 3개 이상", stamp3]].map(function (x) {
+      [["함께하는 사람", c.online], ["모인 아이디어", c.ideas], ["미니게임 참여", c.games], ["스탬프 3개 이상", stamp3]].map(function (x) {
         return '<div><div class="v">' + x[1].toLocaleString() + '</div><div class="l">' + x[0] + "</div></div>";
       }).join("") + "</div></div>" +
       '<p style="font-size:calc(13.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:var(--mint-deep);margin-top:4px">지금 올라온 아이디어 · 운영자 승인분</p>' +
@@ -4163,7 +4046,7 @@ var Views = {
       '<div class="card soft mb12"><ul style="margin:0 0 0 18px;font-size:calc(14.5px * var(--fs));line-height:1.8;color:var(--muted)">' +
       "<li>라운드 " + MEM_ROUNDS.length + "개 · 문장은 " + MEM_SHOW + "초 보여 줘요 (다 외웠으면 「외웠어요」)</li>" +
       "<li>틀린 타일은 남은 시간 -" + MEM_PEN + "초 · 점수는 안 깎여요 · 실패 없음</li>" +
-      "<li>끝까지 하면 <b>라이브 챌린지 스탬프</b></li></ul></div>" +
+      "<li>끝까지 하면 <b>미니게임 스탬프</b></li></ul></div>" +
       '<button class="btn mint" style="padding:15px" onclick="gwStart(false)">게임 시작</button></div>';
   },
 
@@ -4173,47 +4056,23 @@ var Views = {
     if (gsNeedNick()) return gsNickHtml("type");
     setTimeout(rgPreview, 0);
     return gsStartHtml("type", { rootId: "tgRoot", previewId: "rgPrev", pw: 180, ph: 110,
-      rules: "떨어지는 단어를 그대로 치고 Enter · 단어가 바닥에 닿으면 하트 -1<br>하트 5개를 다 잃거나 60초가 지나면 끝 · 연속으로 맞히면 콤보 · 끝까지 하면 <b>라이브 챌린지 스탬프</b>",
+      rules: "떨어지는 단어를 그대로 치고 Enter · 단어가 바닥에 닿으면 하트 -1<br>하트 5개를 다 잃거나 60초가 지나면 끝 · 연속으로 맞히면 콤보 · 끝까지 하면 <b>미니게임 스탬프</b>",
       foot: "경품은 1F 현장 타자왕전(같은 키보드)에서만 · 붙여넣기는 막혀 있어요" });
   },
-  /* ═══ v3.45 파일럿 미니게임 · AX 팡 · ME to WE 점프 (선호도 조사 전용 · 참여자 동선에는 없다) ═══ */
+  /* ═══ v3.45 휴대폰 미니게임 · AX 팡 · ME to WE 점프 (v3.50 전원 공개) ═══ */
   game_pang: function () {
     pgStop();
     if (gsNeedNick()) return gsNickHtml("pang");
     setTimeout(pgPreview, 0);
     return gsStartHtml("pang", { rootId: "pgRoot", previewId: "pgPrev", pw: 180, ph: 174, flat: true,
-      rules: "이웃한 두 칸을 바꿔 같은 그림 3개를 한 줄로 · 연달아 터지면 연쇄 배수<br>4개 이상 한 줄이면 줄 지우기 블록 · 60초 · 지는 조건 없음 · 끝까지 하면 <b>라이브 챌린지 스탬프</b>" });
+      rules: "이웃한 두 칸을 바꿔 같은 그림 3개를 한 줄로 · 연달아 터지면 연쇄 배수<br>4개 이상 한 줄이면 줄 지우기 블록 · 60초 · 지는 조건 없음 · 끝까지 하면 <b>미니게임 스탬프</b>" });
   },
   game_jump: function () {
     jpStop();
     if (gsNeedNick()) return gsNickHtml("jump");
     setTimeout(jpPreview, 0);
     return gsStartHtml("jump", { rootId: "jpRoot", previewId: "jpPrev", pw: 180, ph: 110,
-      rules: "탭 = 점프 · 공중에서 한 번 더 탭 = 2단 점프 · 코인은 AX 토큰<br>부딪히면 하트 -1 (1초 무적) · 하트 3개를 다 잃거나 60초가 지나면 끝 · 끝까지 하면 <b>라이브 챌린지 스탬프</b>" });
-  },
-  game_pilot: function () {
-    if (!pilotOn()) return '<div class="card"><p class="muted">파일럿 테스터 전용 화면이에요</p></div>';
-    var m = gvMine();
-    var cards = ["type", "pang", "jump"].map(function (k) {
-      var g = GS_GAMES[k], v = m[k] || 0;
-      return '<div class="card mb8"><div class="row" style="justify-content:space-between;align-items:center;gap:10px;flex-wrap:nowrap"><div style="min-width:0;flex:1">' +
-        '<b style="font-size:calc(16px * var(--fs));color:var(--hi)">' + esc(g.name) + "</b>" +
-        '<p class="muted" style="margin-top:3px;font-size:calc(13px * var(--fs));line-height:1.45">' + esc(g.line) + "</p>" +
-        '<p class="muted" style="margin-top:3px;font-size:calc(12.5px * var(--fs))">' + (v ? "재미 " + v + "점 · 최고 " + S.get(g.best, 0).toLocaleString() : "아직 점수를 안 남겼어요") + "</p></div>" +
-        '<button class="btn mint" style="width:auto;flex:none;padding:12px 16px" onclick="App.go(\'' + g.view + '\')">플레이</button></div></div>';
-    }).join("");
-    var opts = ["type", "pang", "jump"].map(function (k) {
-      return '<button class="btn ' + (m.choice === k ? "mint" : "line") + ' mb8" onclick="gvChoose(\'' + k + '\')">' + esc(GS_GAMES[k].name) + "</button>";
-    }).join("");
-    return '<div class="cho-box" style="padding:18px 16px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">PILOT</p>' +
-      '<p class="word disp" style="font-size:22px;margin-top:2px">미니게임 선호도 조사</p>' +
-      '<p class="hint">세 게임을 한 판씩 하고, 끝나면 재미 점수(1~5)를 눌러 주세요.<br>마지막에 앱에 넣을 게임 하나를 골라 주세요 · 다시 내면 덮어써요</p></div>' +
-      cards +
-      '<div class="card mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">앱에 넣을 게임은?</b><div style="margin-top:10px">' + opts + "</div>" +
-      '<input id="gvCmt" class="input" maxlength="120" placeholder="한 줄 의견 (선택)" value="' + esc(m.comment || "") + '">' +
-      '<button class="btn mint" style="margin-top:10px" onclick="gvSubmit()">' + (m.sent ? "다시 제출" : "제출") + "</button>" +
-      (m.sent && GS_GAMES[m.choice] ? '<p class="muted" style="margin-top:8px;font-size:calc(12.5px * var(--fs))">제출했어요 · ' + esc(GS_GAMES[m.choice].name) + "</p>" : "") +
-      (!BE.on ? '<p class="muted" style="margin-top:8px;font-size:calc(12.5px * var(--fs))">데모 화면은 서버에 저장하지 않아요</p>' : "") + "</div>";
+      rules: "탭 = 점프 · 공중에서 한 번 더 탭 = 2단 점프 · 코인은 AX 토큰<br>부딪히면 하트 -1 (1초 무적) · 하트 3개를 다 잃거나 60초가 지나면 끝 · 끝까지 하면 <b>미니게임 스탬프</b>" });
   },
   gs_rank: function () {
     var key = S.get("gs_rank_key", "pang") === "jump" ? "jump" : "pang";
@@ -4308,36 +4167,19 @@ var Views = {
   },
 
   screen: function () {
-    var st = quizLive() || INITIAL_QUIZ_STATE;
-    var quiz = QUIZZES.find(function (q) { return q.id === st.activeId; });
     var c = counters();
     var h = '<div class="screen-wrap"><div class="row" style="justify-content:space-between;padding-top:8px">' +
       '<b class="disp" style="font-size:24px;letter-spacing:0.03em">AX Festival <span style="color:var(--mint-deep)">2026</span></b>' +
       '<div class="row" style="gap:6px">' + tvBtns() + '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button></div></div>' +
       '<p style="font-size:calc(12.5px * var(--fs));font-weight:700;letter-spacing:0.12em;opacity:0.6;margin-top:2px">ME to WE · 나의 업무 혁신, 우리 회사의 AX</p>' +
       '<div class="counters">' +
-      [["함께하는 사람", c.online], ["모인 아이디어", c.ideas], ["퀴즈 참여", c.quiz], ["ME to WE 별", mtPoints()]].map(function (x) {
+      [["함께하는 사람", c.online], ["모인 아이디어", c.ideas], ["미니게임 참여", c.games], ["ME to WE 별", mtPoints()]].map(function (x) {
         return '<div><div class="v">' + x[1].toLocaleString() + '</div><div class="l">' + x[0] + "</div></div>";
       }).join("") + "</div>";
-    if (quiz && st.phase !== "idle") {
-      h += '<div style="border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);padding:20px">' +
-        '<span style="display:flex;align-items:center;gap:7px;font-size:calc(13.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:var(--mint-deep)"><span style="width:9px;height:9px;background:#ff5a4e;animation:pulse 1.2s infinite"></span>LIVE QUIZ · ' + esc(quiz.part) +
-        (st.phase === "open" ? " · 응답 접수 중" : st.phase === "closed" ? " · 집계 중" : "") + "</span>" +
-        '<p style="margin-top:12px;font-size:22px;font-weight:800;line-height:1.4">' + esc(quiz.question) + "</p>" +
-        quiz.options.map(function (o, i) {
-          var revealed = st.phase === "revealed", isAns = i === quiz.answerIndex;
-          return '<div style="position:relative;overflow:hidden;border-radius:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);margin-top:10px">' +
-            (revealed ? '<div style="position:absolute;inset:0 auto 0 0;width:' + quiz.mockDist[i] + "%;background:" + (isAns ? "rgba(65,143,222,0.8)" : "rgba(255,255,255,0.14)") + ';transition:width 1s"></div>' : "") +
-            '<div style="position:relative;display:flex;justify-content:space-between;padding:13px 16px;font-size:calc(16.5px * var(--fs));font-weight:700"><span>' + (revealed && isAns ? "◈ " : "") + (i + 1) + ". " + esc(o) + "</span>" +
-            (revealed ? '<b class="disp" style="font-size:calc(19px * var(--fs))">' + quiz.mockDist[i] + "%</b>" : "") + "</div></div>";
-        }).join("") +
-        (st.phase === "revealed" ? '<p style="margin-top:14px;font-size:calc(15.5px * var(--fs));opacity:0.85">' + esc(quiz.explain) + "</p>" : "") + "</div>";
-    } else {
       h += '<div class="mt-stage" id="mtStage" style="height:42vh;min-height:280px"><canvas id="mtCv"></canvas><div class="mt-flash" id="mtFlash"></div></div>' +
-        '<div class="mt-count"><span class="disp" id="mtN">' + mtPoints().toLocaleString() + '</span><span class="tot">/ 2,026</span><span class="pct" id="mtPct"></span></div>' +
-        '<div class="mt-bar"><i id="mtBar"></i></div>' +
-        '<p style="text-align:center;font-size:calc(14.5px * var(--fs));opacity:0.55;margin-top:12px">휴대폰 카메라로 QR을 스캔하거나 포털 배너로 접속하세요 · 30초면 함께할 수 있습니다</p>';
-    }
+      '<div class="mt-count"><span class="disp" id="mtN">' + mtPoints().toLocaleString() + '</span><span class="tot">/ 2,026</span><span class="pct" id="mtPct"></span></div>' +
+      '<div class="mt-bar"><i id="mtBar"></i></div>' +
+      '<p style="text-align:center;font-size:calc(14.5px * var(--fs));opacity:0.55;margin-top:12px">휴대폰 카메라로 QR을 스캔하거나 포털 배너로 접속하세요 · 30초면 함께할 수 있습니다</p>';
     return h + "</div>";
   }
 };
@@ -4359,7 +4201,6 @@ var ADM_STAFF = [
   ["typing", "현장 타자왕전", "참가자 QR → 닉네임 확인 → 1회 도전 · TV 순위판 · Outro 시상"]
 ];
 var ADM_CC = [
-  ["quiz",  "라이브 퀴즈",   "Outro 시작 전 4문항 순서 발사 · 송출 화면"],
   ["wq",    "QR 퀴즈",       "DAP Wall 문항 운영"],
   ["ideas", "아이디어",      "수집 현황 · 보드 수기 입력 · CSV"],
   ["qr",    "부스 QR",       "스탬프 QR 인쇄"],
@@ -4589,45 +4430,6 @@ var AdminTabs = {
     }).join("");
     return h + '<p style="font-size:calc(12.5px * var(--fs));color:var(--faint);line-height:1.6">행사 직전까지 전시 문구가 바뀔 수 있어 문항을 콘솔에서 수정합니다. 재응시마다 문항·보기 순서 셔플. 정식판: 문항 추가·삭제, 부문 집계 서버 캐시(30~60초), QR 라우트 Q-WALL1~3.</p>';
   },
-  quiz: function () {
-    var st = S.get("quiz_state", INITIAL_QUIZ_STATE);
-    var active = QUIZZES.find(function (q) { return q.id === st.activeId; });
-    var h = '<div class="card mb12" style="background:var(--ink);border-color:var(--ink);color:#fff;cursor:pointer" onclick="App.go(\'screen\')"><b style="font-size:calc(15.5px * var(--fs))">송출용 대형화면 뷰 열기</b>' +
-      '<p style="margin-top:2px;font-size:calc(13.5px * var(--fs));opacity:0.7">대강당 스크린·1F LED 송출용 · 발사하면 실시간 반영</p></div>';
-    /* v3.32 Outro 퀴즈 한 묶음 · 1번부터 발사 → 마감 → 결과 공개 → 다음 문항 (quiz_set 상태 머신 그대로) */
-    var nextQ = QUIZZES.filter(function (q) { return st.finishedIds.indexOf(q.id) < 0 && q.id !== st.activeId; })[0] || null;
-    var qNo = function (q) { return QUIZZES.indexOf(q) + 1; };
-    h += '<div class="card mb12" style="border-color:var(--mint-deep)"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">Outro 퀴즈 · 16:45경 17F 대강당</b>' +
-      '<p class="muted" style="margin-top:3px;font-size:calc(13.5px * var(--fs))">문항마다 발사 → 응답 마감(20초) → 결과 공개 → 다음 문항. 끝나면 퀴즈 내리기.</p>';
-    if (active && st.phase !== "idle") {
-      h += '<p style="margin-top:10px;font-size:calc(15.5px * var(--fs));font-weight:800;color:var(--hi)">' + qNo(active) + "/" + QUIZZES.length + " · " +
-        (st.phase === "open" ? "응답 접수 중" : st.phase === "closed" ? "마감 (집계 중)" : "결과 공개됨") + "</p>" +
-        '<p class="muted" style="margin-top:2px;font-size:calc(13.5px * var(--fs))">' + esc(active.question) + "</p>" +
-        '<div class="row" style="margin-top:10px">' +
-        (st.phase === "open" ? '<button class="btn" onclick="setQuiz(\'closed\')">응답 마감</button>' : "") +
-        (st.phase === "closed" ? '<button class="btn mint" onclick="setQuiz(\'revealed\')">결과 공개</button>' : "") +
-        (st.phase === "revealed" && nextQ ? '<button class="btn mint" onclick="fireQuiz(\'' + nextQ.id + '\')">다음 문항 발사 · ' + qNo(nextQ) + "/" + QUIZZES.length + "</button>" : "") +
-        (st.phase === "revealed" ? '<button class="btn gray" onclick="setQuiz(\'idle\')">퀴즈 내리기</button>' : "") +
-        "</div>" +
-        /* 사회자 순서(사용자 확정): 퀴즈 4문항 → 설문 참여 안내 → 17:00 Outro · 마지막 결과 공개 뒤 안내 화면으로 */
-        (st.phase === "revealed" && !nextQ ? '<button class="btn mint" style="margin-top:8px" onclick="setQuiz(\'idle\'); App.go(\'screen_survey\')">설문 참여 안내 송출 화면 열기</button>' : "");
-    } else {
-      h += nextQ ? '<button class="btn mint" style="margin-top:10px;padding:15px" onclick="fireQuiz(\'' + nextQ.id + '\')">' + (qNo(nextQ) === 1 ? "Outro 퀴즈 시작 · 1/" : "이어서 발사 · " + qNo(nextQ) + "/") + QUIZZES.length + "</button>" :
-        '<p style="margin-top:10px;font-size:calc(14.5px * var(--fs));font-weight:800;color:var(--muted)">' + QUIZZES.length + "문항 모두 끝났습니다.</p>" +
-        '<button class="btn mint" style="margin-top:8px" onclick="App.go(\'screen_survey\')">설문 참여 안내 송출 화면 열기</button>';
-    }
-    h += "</div>";
-    h += '<p class="sub-label">문항 목록 · 예외 시 개별 재발사</p>' +
-      QUIZZES.map(function (q) {
-        var finished = st.finishedIds.indexOf(q.id) >= 0;
-        var isActive = st.activeId === q.id && st.phase !== "idle";
-        return '<div class="card soft mb8"><b style="font-size:calc(13.5px * var(--fs));color:var(--acc2)">' + esc(q.part) + '</b><p style="margin-top:3px;font-size:calc(15.5px * var(--fs));font-weight:700">' + esc(q.question) + "</p>" +
-          '<p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">정답: ' + esc(q.options[q.answerIndex]) + "</p>" +
-          '<button class="btn ' + (finished ? "gray" : "") + '" style="margin-top:10px" ' + (isActive ? "disabled" : 'onclick="fireQuiz(\'' + q.id + '\')"') + ">" +
-          (isActive ? "진행 중…" : finished ? "재발사" : "발사") + "</button></div>";
-      }).join("");
-    return h;
-  },
   /* 강의 종료 원터치 · 이 신호가 통제 웹앱 방출 예측의 트리거가 된다 */
   endcls: function () {
     return '<div class="card mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">교육 종료 · 혼잡 안내 원터치</b>' +
@@ -4709,7 +4511,7 @@ var AdminTabs = {
     var winner = S.get("draw_winner", null);
     var resv2 = resvAll().filter(function (r) { return r.room === 2 && RESV_HOLD.indexOf(r.status) >= 0; }).length;
     return '<div class="grid2 mb12">' +
-      [["동시 접속", c.online.toLocaleString()], ["아이디어", c.ideas.toLocaleString()], ["퀴즈 참여", c.quiz.toLocaleString()], ["스탬프(내 기기)", stampCount() + "/6"],
+      [["동시 접속", c.online.toLocaleString()], ["아이디어", c.ideas.toLocaleString()], ["미니게임 참여", c.games.toLocaleString()], ["스탬프(내 기기)", stampCount() + "/6"],
        ["상담 예약 (룸②)", resv2 + "/" + resvSlots().length], ["QR퀴즈 통과(내 기기)", wqPassedCount() + "/3"]].map(function (x) {
         return '<div class="card soft"><p class="muted" style="font-size:calc(12.5px * var(--fs))">' + x[0] + '</p><p class="disp" style="margin-top:4px;font-size:20px;color:var(--hi)">' + x[1] + "</p></div>";
       }).join("") + "</div>" +
@@ -4805,15 +4607,9 @@ function checkMyState() {
     seen.photoCall = pq.no; changed = true;
     notifyUser("지금 입장하세요", "1F 포토부스 · " + pq.no + "번 · 호출 후 10분 안에 와 주세요", "home");
   }
-  var qs = quizLive() || INITIAL_QUIZ_STATE;
-  if (qs.phase === "open" && qs.activeId && seen.quiz !== qs.activeId + ":open") {
-    seen.quiz = qs.activeId + ":open"; changed = true;
-    var qz2 = QUIZZES.find(function (q) { return q.id === qs.activeId; });
-    notifyUser("라이브 퀴즈 시작", (qz2 ? qz2.part + " · " : "") + "마감 전까지 홈에서 답할 수 있습니다.", "home");
-  }
   if (changed) S.set("noti_seen", seen);
 }
-/* 폴링 1회 = 월 + 퀴즈 발사 + 내 상담·커피챗 상태 */
+/* 폴링 1회 = 월 + 내 상담·커피챗 상태 + 공지 (v3.50 Outro 문항 기능 폐지 · 서버 응답의 옛 문항 필드는 읽지 않는다) */
 function beSync() {
   if (!BE.on) return;
   var u = S.get("user", {});
@@ -4825,21 +4621,6 @@ function beSync() {
     BE.stats.sess = res.sess || null;
     BE.stats.sessLeft = res.sessLeft || null;   /* v3.31b 정원 - 사전 - 앱 */
     if ("rouletteOut" in res && !!res.rouletteOut !== S.get("roulette_out", false)) S.set("roulette_out", !!res.rouletteOut);   /* v3.33 */
-    /* v3.41 hotfix · 서버의 종료 상태는 id 가 빈 idle({"id":"","phase":"idle"})다. 예전 조건(res.quiz.id)은 이걸 통째로 무시해
-       한 번 open·revealed 를 받은 기기에 카드가 영원히 남았다. idle 은 id 와 무관하게 반영, open·revealed 는 id 가 있을 때만 */
-    if (res.quiz && (res.quiz.phase === "idle" || res.quiz.id)) {
-      var qs = S.get("quiz_state", INITIAL_QUIZ_STATE);
-      if (res.quiz.phase === "idle" ? qs.phase !== "idle" || qs.activeId : (qs.activeId !== res.quiz.id || qs.phase !== res.quiz.phase)) {
-        var fin = qs.finishedIds || [];
-        if (res.quiz.phase === "idle") {
-          if (qs.activeId && fin.indexOf(qs.activeId) < 0) fin.push(qs.activeId);
-          S.set("quiz_state", { activeId: null, phase: "idle", openedAt: 0, finishedIds: fin });
-        } else {
-          if (res.quiz.phase === "revealed" && res.quiz.id && fin.indexOf(res.quiz.id) < 0) fin.push(res.quiz.id);
-          S.set("quiz_state", { activeId: res.quiz.id, phase: res.quiz.phase, openedAt: res.quiz.ts || Date.now(), finishedIds: fin });
-        }
-      }
-    }
     /* v3.14 공지 중지: 서버가 내려준 중지 id 는 로컬에서도 지운다(LED 띠·뱃지·목록·팝업이 자연 소멸).
        중지 목록에 든 공지는 다시 추가하지 않는다 · notice 가 null 이면 신규 추가 없음 */
     var nOff = res.noticeOff || [];
@@ -5650,19 +5431,6 @@ function submitIdea() {
 function tryAdmin() {
   admVerify(el("adminCode").value, function () { S.set("admin_authed", true); App.render(); });
 }
-function fireQuiz(id) {
-  S.set("quiz_state", { activeId: id, phase: "open", openedAt: Date.now(), finishedIds: S.get("quiz_state", INITIAL_QUIZ_STATE).finishedIds });
-  if (BE.on) beCall({ action: "quiz_set", key: admKey(), id: id, phase: "open" });
-  toast("퀴즈 발사! 앱을 켠 참여자에게 " + Math.round(BE_POLL_MS / 1000) + "초 안에 전달됩니다.");
-}
-function setQuiz(phase) {
-  var st = S.get("quiz_state", INITIAL_QUIZ_STATE);
-  if (phase === "idle") { st.activeId = null; st.openedAt = 0; }
-  if (phase === "revealed" && st.activeId && st.finishedIds.indexOf(st.activeId) < 0) st.finishedIds.push(st.activeId);
-  st.phase = phase;
-  S.set("quiz_state", st);
-  if (BE.on) beCall({ action: "quiz_set", key: admKey(), id: st.activeId || "", phase: phase });
-}
 function adminNotice(title, body) {
   var localId = uid();
   var n = S.get("notices", []);
@@ -5732,7 +5500,7 @@ function drawWinner() {
    판정: 입력창의 완성 문자열을 Enter(모바일 완료)로 제출 · 화면 단어와 정확히 같으면 터짐(같은 단어가 여럿이면 가장 아래) · 키 이벤트 단위 판정 없음.
    한 판 60초 · 목숨 5 · 바닥선에 닿으면 목숨 -1(벽돌 하나 깨짐) · 12초마다 단계 상승(낙하 속도·동시 개수 증가).
    점수 = 글자 수 × 10 × 콤보 배수(1 + 0.2 × min(콤보-1, 10), 최대 3배) · 정확도 = 제출 중 명중 비율.
-   끝까지 하면(시간 종료 또는 목숨 소진) 04 라이브 챌린지 적립(점수 무관). 소리는 기본 꺼짐(WebAudio 8비트 효과음 · 음원 파일 없음).
+   끝까지 하면(시간 종료 또는 목숨 소진) 04 미니게임 적립(점수 무관). 소리는 기본 꺼짐(WebAudio 8비트 효과음 · 음원 파일 없음).
    비주얼: 180×300 저해상도 캔버스를 pixelated 로 확대 · 팔레트는 오렌지 사다리 + 검정 + 흰색 + 웜그레이·웜브라운만.
    참고(사용자 제공 · 문법만, 에셋·글꼴·음원 미포함): 한컴타자 오락실 산성비 화면 구성 → 두 톤 체크무늬 배경 · 도트 흙 지면과 나무 ·
    두꺼운 검정 외곽선의 흰 말풍선 단어와 HUD · 모래시계 진행 막대. 노랑·청록·초록·파랑은 오렌지 사다리와 웜브라운으로 번역.
@@ -6181,7 +5949,7 @@ function rgEndFinal(why) {
   RG.res = { why: why, score: RG.score, hits: RG.hits, combo: RG.maxCombo, acc: acc, me: null, send: "" };
   if (RG.mode === "app") {
     S.set("type_best", Math.max(S.get("type_best", 0), RG.score));
-    gameClear("type_cleared");   /* 끝까지 하면 04 라이브 챌린지 (점수 무관 · 이미 있으면 조용히) */
+    gameClear("type_cleared");   /* 끝까지 하면 04 미니게임 (점수 무관 · 이미 있으면 조용히) */
     var u = S.get("user", {}) || {};
     if (BE.on && !testEmp() && u.empId) {
       RG.res.send = "sending";
@@ -6265,8 +6033,8 @@ function gameClear(flagKey) {
   if (!S.get(flagKey, false)) {
     S.set(flagKey, true);
     bePush("game:" + flagKey, "", true);
-    awardStamp("p4");   /* 260909: 미니게임 별도 칸 폐지 · 04 라이브 챌린지로 통합 (라이브 퀴즈와 중복 적립 없음) */
-    setTimeout(function () { toast("게임 클리어! 패스포트 「라이브 챌린지」 칸이 적립됐어요."); }, 300);
+    awardStamp("p4");   /* 260909: 미니게임 별도 칸 폐지 · 04 미니게임으로 통합 */
+    setTimeout(function () { toast("게임 클리어! 패스포트 「미니게임」 칸이 적립됐어요."); }, 300);
   }
 }
 
@@ -6431,10 +6199,10 @@ function tyWinSave() {
   }, function () { toast("서버 응답 없음"); });
 }
 
-/* ════════════════ v3.45 휴대폰 미니게임 공통 틀 (사용자 결정 260917 · 세 게임을 만들어 선호도 조사) ════════════════
+/* ════════════════ v3.45 휴대폰 미니게임 공통 틀 (사용자 결정 260917 · v3.50 전원 공개) ════════════════
    세 게임(AX 단어 소나기 · AX 팡 · ME to WE 점프)이 같은 틀을 쓴다:
    전체화면 오버레이(visualViewport 높이) · 앱 이탈 시 자동 일시정지 · 3초 카운트다운 · 끝나는 순간 1.2초 멈춤 · 같은 결과 화면 ·
-   게임 닉네임(타자 게임 닉네임 공용) · 끝까지 하면 라이브 챌린지 스탬프(gameClear). 점수는 숫자 하나.
+   게임 닉네임(타자 게임 닉네임 공용) · 끝까지 하면 미니게임 스탬프(gameClear). 점수는 숫자 하나.
    AX 팡·점프 순위판은 지금은 로컬 테스트용(가짜 닉네임 + 내 최고 기록) · 서버 순위는 게임이 정해진 뒤 연결한다.
    비주얼: 오렌지 사다리 · 검정 · 흰색 · 16비트 도트 · 마스코트 미위 · 이모지 없음. */
 var GS_GAMES = {
@@ -6620,13 +6388,11 @@ function gsResultHtml(key, r) {
     '<p style="margin-top:6px;font-size:calc(15px * var(--fs));font-weight:800">' + esc(r.reason) + "</p>" +
     '<p class="disp" style="font-size:44px;color:var(--mint);margin-top:6px">' + Number(r.score).toLocaleString() + "</p>" +
     '<p class="hint">' + r.stats + "<br>" + (r.rankLine || "") + "</p>" +
-    '<p class="hint" style="margin-top:6px">라이브 챌린지 스탬프는 끝까지 하면 적립돼요</p></div>' +
+    '<p class="hint" style="margin-top:6px">미니게임 스탬프는 끝까지 하면 적립돼요</p></div>' +
     (r.banner || "") +
-    (pilotOn() ? gvRateHtml(key) : "") +
     '<button class="btn mint mb8" style="padding:15px" onclick="' + g.start + '">다시 하기</button>' +
     '<button class="btn line mb8" onclick="' + gsRankGo(key) + '">순위판 보기</button>' +
-    (pilotOn() ? '<button class="btn line" onclick="App.go(\'game_pilot\')">게임 3종 목록으로</button>'
-      : '<button class="btn line" onclick="App.go(\'passport\')">스탬프 탭으로</button>');
+    '<button class="btn line" onclick="App.go(\'passport\')">스탬프 탭으로</button>';
 }
 /* 로컬 테스트 순위판 · 가짜 닉네임 + 내 최고 기록 (서버 연결 전 · 실제 순위 아님) */
 var GS_FAKE = {
@@ -6643,51 +6409,6 @@ function gsRankTop(key) {
   return { top: list.slice(0, 10), me: meRank ? { rank: meRank, score: best } : null, total: list.length };
 }
 function gsRankOf(key, score) { var r = 1; (GS_FAKE[key] || []).forEach(function (x) { if (x[1] > score) r++; }); return r; }
-
-/* ═══ 파일럿 선호도 조사 · 행사 전 테스터 전용 (참여자에게는 안 보인다) ═══
-   노출: 테스트 모드(310555 · 데모) 또는 파일럿 주소 #pilot=games 로 한 번 연 기기.
-   게임마다 결과 화면에서 재미 1~5 · 목록 화면에서 최종 선택 1개 + 한 줄 · 서버 game_vote (같은 투표자는 덮어쓰기) */
-function pilotOn() { return testMode() || S.get("pilot_games", false); }
-function gvMine() { return S.get("gv_mine", { type: 0, pang: 0, jump: 0, choice: "", comment: "", sent: false }); }
-function gvWho() {
-  var u = S.get("user", {}) || {};
-  if (u.empId && !testEmp() && /^[0-9A-Za-z]{1,20}$/.test(String(u.empId))) return String(u.empId);
-  var d = S.get("gs_dev", "");
-  if (!d) { d = Math.random().toString(36).slice(2, 12); S.set("gs_dev", d); }
-  return "d:" + d;
-}
-function gvSend(params, done) {
-  if (!BE.on) { if (done) done("local"); return; }
-  var u = S.get("user", {}) || {};
-  params.action = "game_vote"; params.who = gvWho(); params.emp = String(u.empId || "");
-  beCall(params, function (r) { if (done) done(r && r.ok ? "ok" : "fail"); }, function () { if (done) done("fail"); });
-}
-function gvRateHtml(key) {
-  var m = gvMine(), v = m[key] || 0, b = "";
-  for (var i = 1; i <= 5; i++) b += '<button class="btn ' + (v === i ? "mint" : "line") + '" style="flex:1;padding:12px 0" onclick="gvRate(\'' + key + "', " + i + ')">' + i + "</button>";
-  return '<div class="card mb12" id="gvRate"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">얼마나 재밌었나요?</b>' +
-    '<div class="row" style="gap:6px;margin-top:10px">' + b + "</div>" +
-    '<p class="muted" style="margin-top:6px;font-size:calc(12.5px * var(--fs))">1 = 별로예요 · 5 = 아주 재밌어요' + (v ? " · " + v + "점으로 저장했어요" : "") + "</p></div>";
-}
-function gvRate(key, n) {
-  var m = gvMine(); m[key] = n; S.set("gv_mine", m);
-  var box = el("gvRate"); if (box) box.outerHTML = gvRateHtml(key);
-  var p = { game: key, rating: n };
-  gvSend(p, function (st) { if (st === "fail") toast("저장하지 못했어요. 다시 눌러 주세요."); else if (st === "local") toast("데모 화면이라 이 기기에만 저장했어요"); });
-}
-function gvChoose(key) { var m = gvMine(); m.choice = key; S.set("gv_mine", m); App.render(); }
-function gvSubmit() {
-  var m = gvMine();
-  if (!m.choice) { toast("앱에 넣을 게임을 하나 골라 주세요"); return; }
-  m.comment = ((el("gvCmt") || {}).value || "").trim().slice(0, 120);
-  S.set("gv_mine", m);
-  gvSend({ choice: m.choice, comment: m.comment }, function (st) {
-    if (st === "fail") { toast("저장하지 못했어요. 다시 눌러 주세요."); return; }
-    m.sent = true; S.set("gv_mine", m);
-    toast(st === "local" ? "데모 화면이라 이 기기에만 저장했어요" : "고마워요. 투표가 저장됐어요");
-    App.render();
-  });
-}
 
 /* ════════════════ AX 팡 · 7×7 같은 그림 3개 맞추기 (60초 · 지는 조건 없음) ════════════════
    조작: 이웃한 두 칸을 밀어서 바꾸기 또는 한 칸 탭 → 옆 칸 탭. 맞는 줄이 안 생기면 튕기듯 제자리로 돌아간다.
@@ -7361,13 +7082,13 @@ function jpPreview() {
   ctx.restore();
 }
 
-/* ════════════════ 라이브 챌린지 미니게임 「ME to WE 기억력」 (v3.46 · 이름은 사용자 확정 대기 · 화면 id 는 game_word 유지) ════════════════
-   사용자 결정 260917: 핵심 슬로건을 먼저 보여 주고 기억 게임으로 확인한다 (구 빈칸 채우기 게임과 구 퀴즈 게임 대체).
+/* ════════════════ 미니게임 미니게임 「ME to WE 기억력」 (v3.46 · 이름은 사용자 확정 대기 · 화면 id 는 game_word 유지) ════════════════
+   사용자 결정 260917: 핵심 슬로건을 먼저 보여 주고 기억 게임으로 확인한다 (구 빈칸 채우기 게임과 구 입력형 게임 대체).
    라운드마다 ① 보기: 검정 무대 카드에 문장 + 뜻 한 줄 · 6초 뒤 자동(빠른 모드 3초) 또는 「외웠어요」
    ② 떠올리기: 문장이 사라지고 단어 타일(문장 단어 + 미끼 1~2개)을 순서대로 눌러 다시 만든다 · 입력 없음
       틀린 타일 = 회색 흔들림 + 남은 시간 -2초(점수 감점 없음) · 놓인 타일을 다시 누르면 그 뒤까지 빠진다
    ③ 완성: 오렌지 테두리 + 뜻 한 줄 한 번 더 + 미위 팝업.
-   실패 없음 · 끝까지 하면 라이브 챌린지 스탬프 · 점수 = 맞힌 탭(연속 배수) + 라운드 완성 + 남은 시간 · 별 1~3개. */
+   실패 없음 · 끝까지 하면 미니게임 스탬프 · 점수 = 맞힌 탭(연속 배수) + 라운드 완성 + 남은 시간 · 별 1~3개. */
 var GW = { on: false, timer: null, nextT: null };
 function gwStop() {
   if (GW.timer) { clearInterval(GW.timer); GW.timer = null; }
@@ -7498,7 +7219,7 @@ function gwFinish() {
   gwStop();
   GW.phase = "end";
   if (GW.score > S.get("gw_best", 0)) S.set("gw_best", GW.score);
-  gameClear("gw_cleared");   /* 실패 없음 · 끝까지 하면 04 라이브 챌린지 */
+  gameClear("gw_cleared");   /* 실패 없음 · 끝까지 하면 04 미니게임 */
   var root = el("gwRoot"); if (!root) return;
   var st = ""; for (var i = 0; i < 3; i++) st += '<span class="' + (i < stars ? "on" : "") + '">★</span>';
   root.innerHTML =
@@ -7506,7 +7227,7 @@ function gwFinish() {
     '<p class="mem-stars">' + st + "</p>" +
     '<p class="disp" style="font-size:40px;color:var(--mint);margin-top:4px">' + GW.score.toLocaleString() + "</p>" +
     '<p class="next">문장 ' + GW.done + "개 완성 · 틀린 탭 " + GW.wrongs + "번 · 남은 시간 보너스 +" + bonus + "<br>최고 " + S.get("gw_best", 0).toLocaleString() + "점</p>" +
-    '<p class="next" style="margin-top:6px">라이브 챌린지 스탬프는 끝까지 하면 적립돼요</p></div>' +
+    '<p class="next" style="margin-top:6px">미니게임 스탬프는 끝까지 하면 적립돼요</p></div>' +
     MEM_ROUNDS.map(function (R) {
       return '<div class="card soft mb8"><p style="font-size:calc(15.5px * var(--fs));font-weight:800;color:var(--hi)">' + (R.kind === "order" ? R.pairs.map(function (p) { return esc(p[0] + " " + p[1]); }).join(" · ") : esc(R.words.join(" "))) + "</p>" +
         '<p class="muted" style="font-size:calc(13px * var(--fs));margin-top:3px">' + esc(R.mean) + "</p></div>";
@@ -7873,8 +7594,6 @@ function xitionRun(switchNow) {
 /* ════════════════ 스플래시 → 앱 진입 ════════════════ */
 (function () {
   var splash = el("splash");
-  /* v3.45 파일럿 주소 · 한 번 열면 이 기기에서 선호도 조사 입구가 보인다 */
-  if (/^#pilot=games/i.test(location.hash)) S.set("pilot_games", true);
   function enterApp() { xitionRun(enterNow); }
   function enterNow() {
     splash.classList.add("gone");
@@ -7897,7 +7616,6 @@ function xitionRun(switchNow) {
       var lf = parseInt(sessionStorage.getItem("axf_last_fl"), 10);
       if ([1, 10, 17, 18].indexOf(lf) >= 0) PROG.fl = lf;
     } catch (e) {}
-    if (/^#pilot=games/i.test(location.hash)) target = "game_pilot";
     App.go(m || mq ? "home" : target);
     /* 스캔값을 그대로 서버에 넘긴다 · 앱은 어느 스탬프인지 모른다 (260830) */
     if (m) setTimeout(function () { stampByCode(m[1]); }, 400);
@@ -7930,10 +7648,6 @@ function xitionRun(switchNow) {
     S.set("user", { empId: "1234", name: "박형동" });
     S.set("stamps", ["p1", "p4", "p7"]);   /* 3/6 = 룰렛 열림 · p7은 아래 wq 통과 시드와 정합 */
     S.set("roulette_open", true);
-    S.set("quiz_answers", { q1: { choice: 1, correct: true, replay: false, ts: Date.now() } });
-    S.set("quiz_state", dm[1] === "home_quiz"
-      ? { activeId: "q1", phase: "revealed", openedAt: Date.now() - 60000, finishedIds: ["q1"] }
-      : { activeId: null, phase: "idle", openedAt: 0, finishedIds: ["q1"] });
     /* v3.40 · 캡처(&cap)만 결정적 고정 시드 · 일반 데모는 테스트 오버레이(test_mine)가 내 일정을 채운다 */
     if (/cap/.test(location.hash)) {
       S.set("cchat", { status: "matched", round: "14:30", table: "B", ts: Date.now() });
@@ -7944,7 +7658,6 @@ function xitionRun(switchNow) {
     S.set("ev_phase", "live");
     S.set("wq_attempts", [{ set: "wall1", score: 80, passed: true, attemptNo: 1, dept: "보상부문", ts: Date.now() }]);
     var target = dm[1] || "home";
-    if (target === "home_quiz") target = "home";
     if (["admin", "screen", "screen_survey", "screen_words", "wall_quiz", "wall_wave", "wall_live", "wall_metowe", "wall_tv", "type_site", "type_award"].indexOf(target) >= 0) S.set("admin_authed", true);
     splash.classList.add("gone");
     el("frame").classList.remove("splash-mode");
