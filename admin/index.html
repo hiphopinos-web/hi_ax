@@ -173,7 +173,8 @@ var TABS = [
   { id:"survey", n:"설문" },
   { id:"typing", n:"게임" },
   { id:"notice", n:"공지" },
-  { id:"photo", n:"포토부스" }
+  { id:"photo", n:"포토부스" },
+  { id:"art", n:"사생대회" }
 ];
 /* 앱 STAMPS 와 맞춘다 · v3.33 8칸(계단 st · 설문 sv 추가), v3.39 보상은 7개에서 끝. 번호는 콘솔 표 머리용 약칭일 뿐 앱에는 없다.
    폐기된 ID 는 옛 로그에 남아 있을 수 있어 표기만 한다(서버 stamp_people 는 old 로 따로 준다). */
@@ -287,7 +288,8 @@ var NEED={
   survey:[{k:"survey",a:"survey_list"}],
   typing:[{k:"nick",a:"type_nick_list"},{k:"tres",a:"type_result"},{k:"olyr",a:"oly_result"}],
   notice:[{k:"noti",a:"sync",p:{emp:""}}],
-  photo:[{k:"photo",a:"photo_list"}]
+  photo:[{k:"photo",a:"photo_list"}],
+  art:[{k:"art",a:"art_all"}]
 };
 /* 탭을 빨리 바꾸면 앞선 요청이 뒤에 도착한다. 최신 요청만 화면에 반영한다. */
 ST.seq=0;
@@ -316,7 +318,7 @@ function render(){
   if(missing.length&&ST.busy){
     h='<h1>'+esc((TABS.filter(function(t){return t.id===ST.tab;})[0]||{}).n||"")+'</h1><div class="card"><p class="muted"><span class="spin"></span>서버에서 불러오는 중입니다. 보통 2~5초 걸립니다.</p></div>';
   } else {
-    try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="notice"?viewNotice():ST.tab==="survey"?viewSurvey():ST.tab==="typing"?viewTyping():ST.tab==="photo"?viewPhoto():viewApply(); }
+    try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="notice"?viewNotice():ST.tab==="survey"?viewSurvey():ST.tab==="typing"?viewTyping():ST.tab==="photo"?viewPhoto():ST.tab==="art"?viewArt():viewApply(); }
     catch(e){ h='<div class="err-banner">화면을 그리는 중 오류가 났습니다: '+esc(e.message)+'</div>'; }
   }
   if(ST.err) h='<div class="err-banner">일부 데이터를 못 받았습니다('+esc(ST.err.reason||"")+'). 새로고침을 눌러 주세요. 표시된 값은 마지막으로 받은 것입니다.</div>'+h;
@@ -749,6 +751,59 @@ function preClear(id){
  * 문항 문구는 앱 SURVEY 상수와 같게 둔다(기획 확정 시 두 곳을 함께 바꾼다). */
 var SURVEY_PLACE_NAME = { p1:"1F AX 전시·체험존", p2:"AX Now! 체험 부스", p7:"DAP Wall QR 퀴즈", p3:"17F 오후 파트너사 강연", dap:"DAP ZONE 과제상담", cchat:"18F AX 커피챗" };
 /* v3.52b 설문 = 범용 틀 · 문항은 앱 SURVEY_Q 한 곳 · 서버가 문항 id 별로 형식별 기본 집계만 준다(선택 비율 · 점수 분포 · 한 줄) */
+/* v3.58 AI 사생대회 · 1차 심사는 앱 밖에서 · 여기에는 본선 공개할 작품만 올린다.
+   앱에는 작품 상태가 '공개' 인 것만, 작가 없이(번호·제목·설명) 나간다 · 좋아요 1인 3표 · 시상 확인용 실명은 이 화면에만 있다.
+   이미지는 GAS 릴레이가 아니라 정적 호스팅이다: 원본을 내려받아 긴 변 1080px + 섬네일 320px 로 줄이고
+   웹배포용/assets/art/ 에 <작품ID>.jpg · <작품ID>_t.jpg 로 넣은 뒤 시트 「파일」 칸에 <작품ID>.jpg 만 적는다. */
+function viewArt(){
+  var d=ST.data.art||{}, rows=(d.rows||[]).filter(function(r){ return match(r,["id","title","desc","name","nick","emp"]); });
+  var byLikes=rows.slice().filter(function(r){ return r.status==="공개"; }).sort(function(a,b){ return b.likes-a.likes || (a.ts<b.ts?-1:1); });
+  var h='<h1>AI 사생대회<small>본선 공개 작품 · 좋아요 1인 3표 · 앱에는 작가가 나오지 않습니다 (시상 때 공개)</small></h1>';
+  h+='<div class="grid g4">'+kpi("공개",rows.filter(function(r){return r.status==="공개";}).length,"점")+kpi("대기",rows.filter(function(r){return r.status==="대기";}).length,"점")+kpi("숨김",rows.filter(function(r){return r.status==="숨김";}).length,"점")+kpi("좋아요",rows.reduce(function(a,r){return a+(r.likes||0);},0),"개")+'</div>';
+  h+='<div class="card"><h2>설정</h2><div class="row" style="gap:10px;flex-wrap:wrap">'+
+    '<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700">접수 폼 주소<input class="in" id="artForm" style="min-width:260px" value="'+esc(d.form||"")+'"></label>'+
+    '<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700">접수 마감<input class="in" id="artSub" style="width:170px" value="'+esc(d.subEnd||"")+'"></label>'+
+    '<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700">좋아요 마감<input class="in" id="artVote" style="width:170px" value="'+esc(d.voteEnd||"")+'"></label>'+
+    '<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700">순위 상위 N<input class="in" id="artTop" style="width:90px" inputmode="numeric" value="'+(d.top||10)+'"></label>'+
+    '<button class="btn pri" style="align-self:flex-end" onclick="artSave()">저장</button></div>'+
+    '<p class="note mt12">형식 2026-10-26 16:30 · 접수 마감 전에는 앱 홈 배너가 폼으로, 그 뒤 좋아요 마감까지는 갤러리로 갑니다. 좋아요 마감이 지나면 배너가 사라지고 좋아요가 잠깁니다.</p></div>';
+  h+='<div class="card"><h2>이미지 올리는 순서 (정적 호스팅)</h2><ol class="note" style="margin:6px 0 0 18px;line-height:1.9">'+
+    '<li>폼 응답에서 본선 작품 원본을 내려받는다.</li>'+
+    '<li>작품마다 번호를 정한다(01~10). 이 번호가 작품ID이자 앱에 보이는 번호다.</li>'+
+    '<li>변환 스크립트를 돌린다: <b>python 사생대회_이미지_변환.py &lt;원본 폴더&gt;</b> → 긴 변 1080px <b>01.jpg</b> 와 섬네일 320px <b>01_t.jpg</b> 가 나온다.</li>'+
+    '<li>나온 파일을 <b>웹배포용/assets/art/</b> 에 넣고 push 한다.</li>'+
+    '<li>시트 「사생대회」에 작품ID·접수시각·사번·제목·설명·파일(01.jpg)·상태(대기)를 적고, 여기서 「공개」로 바꾼다.</li>'+
+    '</ol><p class="note mt12">공개 주소를 아는 사람은 누구나 이미지를 볼 수 있습니다. 접수 폼에 「사내·대외비 자료 금지」를 적어 두세요.</p></div>';
+  h+='<div class="card"><div class="tools"><input class="in" placeholder="번호 · 제목 · 이름 검색" value="'+esc(ST.q)+'" oninput="setQ(this.value)"><span class="src">'+rows.length+'점</span></div>'+
+    '<div class="wrap"><table class="tb"><tr><th>번호</th><th>제목</th><th>작가(시상용)</th><th>파일</th><th class="tdr">좋아요</th><th>상태</th><th>처리</th></tr>'+
+    (rows.length?rows.map(function(r){ var k=esc(r.id).replace(/'/g,"");
+      return '<tr><td class="n"><b>'+esc(r.id)+'</b></td><td>'+esc(r.title)+'<div class="src">'+esc(r.desc||"")+'</div></td>'+
+        '<td>'+esc(r.name||"-")+'<div class="src">'+esc(r.emp||"")+(r.nick?" · "+esc(r.nick):"")+'</div></td>'+
+        '<td class="n src">'+esc(r.file||"")+'</td><td class="n tdr">'+(r.likes||0)+'</td>'+
+        '<td><span class="pill'+(r.status==="공개"?" ok":r.status==="숨김"?" off":"")+'">'+esc(r.status)+'</span></td>'+
+        '<td><div class="row" style="gap:6px">'+(r.status!=="공개"?'<button class="btn sm pri" onclick="artSet(\''+k+'\',\'공개\')">공개</button>':'')+
+        (r.status!=="숨김"?'<button class="btn sm danger" onclick="artSet(\''+k+'\',\'숨김\')">숨김</button>':'')+'</div></td></tr>'; }).join(""):'<tr><td colspan="7" class="src">작품이 없습니다. 시트 「사생대회」에 행을 넣고 새로고침하세요.</td></tr>')+
+    '</table></div></div>';
+  h+='<div class="card"><h2>좋아요 순위 · 시상용</h2><p class="src">동점은 먼저 낸 쪽이 위 · 좋아요 수로만 정합니다</p><div class="wrap"><table class="tb"><tr><th>순위</th><th>번호</th><th>제목</th><th>작가</th><th>사번</th><th class="tdr">좋아요</th></tr>'+
+    (byLikes.length?byLikes.slice(0,20).map(function(r,i){ return '<tr><td class="n"><b>'+(i+1)+'</b></td><td class="n">'+esc(r.id)+'</td><td>'+esc(r.title)+'</td><td>'+esc(r.name||"-")+'</td><td class="n">'+esc(r.emp||"")+'</td><td class="n tdr">'+(r.likes||0)+'</td></tr>'; }).join(""):'<tr><td colspan="6" class="src">공개된 작품이 없습니다.</td></tr>')+
+    '</table></div><button class="btn mt12" onclick="artCsv()">시상 결과 CSV 내려받기</button></div>';
+  return h;
+}
+function artSet(id,status){
+  call("art_set",{id:id,status:status},function(r){ if(r&&r.ok){ toast("작품 "+id+" · "+status); load(); } else toast("처리 실패"+((r&&r.reason)?" ("+r.reason+")":"")); },function(){ toast("서버 연결 실패"); });
+}
+function artSave(){
+  call("art_cfg",{form:(el("artForm").value||"").trim(),subEnd:(el("artSub").value||"").trim(),voteEnd:(el("artVote").value||"").trim(),top:(el("artTop").value||"10").trim()},
+    function(r){ if(r&&r.ok){ toast("저장했습니다"); load(); } else toast("저장 실패"); },function(){ toast("서버 연결 실패"); });
+}
+function artCsv(){
+  var rows=((ST.data.art||{}).rows||[]).filter(function(r){ return r.status==="공개"; }).sort(function(a,b){ return b.likes-a.likes || (a.ts<b.ts?-1:1); });
+  var out=["순위,번호,제목,작가,사번,닉네임,좋아요,접수시각"].concat(rows.map(function(r,i){
+    return [i+1,r.id,'"'+String(r.title||"").replace(/"/g,'""')+'"',r.name||"",r.emp||"",r.nick||"",r.likes||0,r.ts||""].join(",");
+  }));
+  var blob=new Blob(["\ufeff"+out.join("\n")],{type:"text/csv;charset=utf-8"});
+  var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="사생대회_시상.csv"; a.click(); URL.revokeObjectURL(a.href);
+}
 function viewSurvey(){
   var d=ST.data.survey||{n:0,qs:[]}, qs=d.qs||[];
   var h='<h1>설문<small>오늘 한 판 설문 · 14:30부터 · 스탬프 1개 이상 · 답은 이름 없이 저장됩니다. 사람 단위 조회는 없습니다.</small></h1>';
