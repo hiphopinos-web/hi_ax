@@ -803,6 +803,10 @@
   .rail .mk.bonus { border-style: dashed; }
   .rail .lbls span.bonus { color: var(--faint); }
   .rail .lbls span.bonus.on { color: var(--acc2); }
+  /* v3.68 홈 나의 일정 · 3장 높이까지 보이고 그 아래는 안에서 스크롤 (4번째 카드가 살짝 잘려 스크롤이 있다는 걸 보여 준다) */
+  .myscroll { max-height: 236px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent); -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent); }
+  .myscroll .rc:last-child { margin-bottom: 2px; }
   .oly-hub { margin-top: 10px; }
   .p3-go { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
   /* v3.50C AX 한 줄 · 검정 무대 위 한 줄 */
@@ -3013,7 +3017,9 @@ function billboardHtml() {
    목록만 길이가 가변이라, 여기를 안 막으면 신청이 많은 사람에게서 홈이 넘친다. */
 /* v3.22: 행이 개별 카드(64px)가 되어 목록형보다 커졌다 · 사용자 지시(카드 통일)가 홈 한 화면보다 우선이라
    내 항목 상한을 2 → 1 로 줄여 넘침을 최소화한다(2건이면 둘 다, 3건 이상이면 1건 + 「외 n건」) */
-var SCHED_MAX = 1;
+/* v3.68 (사용자 확정 260918) 홈 「나의 일정」은 「외 n건」으로 접지 않고 전부 담아 세로 스크롤 · 3장 높이까지만 보이고 그 아래는 스크롤.
+   0~2건이면 스크롤 영역을 만들지 않는다(빈 자리·잘린 카드 없음) · 순서·상태 색·카드 문법은 그대로. */
+var SCHED_VIEW = 3;
 function myScheduleHtml() {
   var rows = [];   /* [정렬 분, onclick, 뱃지 글자, 제목, 보조 줄, 뱃지 상태] */
   /* 지금 걸려 있는 대기는 시간이 정해진 일정보다 급하다 · 맨 위(정렬키 -1)에 둔다.
@@ -3035,12 +3041,11 @@ function myScheduleHtml() {
     return head + schedNowRow() +
       rcHtml({ cls: "", onclick: "App.go('guide')", link: true, left: rcIcon(App.ICONS.guide), title: "신청한 프로그램 없음", sub: "프로그램 탭에서 신청" });
   }
-  var cut = rows.length <= SCHED_MAX + 1 ? rows.length : SCHED_MAX;
-  var more = rows.length - cut;
-  return head + schedNowRow() + rows.slice(0, cut).map(function (r) {
+  var cards = rows.map(function (r) {
     return rcHtml({ cls: " my", onclick: r[1], link: true, left: tokBadge(esc(r[2]), r[5]), title: esc(r[3]), sub: esc(r[4]), place: r[6] });
-  }).join("") +
-    (more > 0 ? rcHtml({ cls: "", onclick: "App.go('guide_time')", link: true, left: tokBadge("+" + more), title: "외 " + more + "건", sub: "" }) : "");
+  }).join("");
+  if (rows.length > SCHED_VIEW) cards = '<div class="myscroll">' + cards + "</div>";
+  return head + schedNowRow() + cards;
 }
 
 /* 홈 · 스탬프 블록 (v3.2): 홈도 스탬프 탭과 같은 railHtml 공용 컴포넌트를 쓴다 (design.md 컴포넌트 일관성).
