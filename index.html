@@ -1038,14 +1038,22 @@ var FL_OPEN = {
 };
 var PROG = { fl: 1, sid: null, openSess: {} };   /* fl = 선택 층 (v3.7 · 기본 1F · 탭 왕복에도 유지) */
 
-/* ═══ v3.35 오늘 한 판 설문 문항 · 여기 한 곳만 고치면 된다 (기획 확정 D-10 · 10/16) ═══
-   아래는 기획검토 문서 예시를 옮긴 초안이다. 단어 칩 12개 · 밸런스 3문항 · 권할 점수 문항은 매년 같은 형식 유지. */
-var SURVEY = {
-  open: "14:30",
-  words: ["해볼 만하다", "막막하다", "벌써 쓰고 싶다", "아직 멀다", "생각보다 가깝다", "내 일에 써보고 싶다", "더 배우고 싶다", "어렵다", "재미있다", "기대된다", "동료와 해보고 싶다", "새롭다"],
-  balance: [["강연 더", "체험 더"], ["혼자 둘러보기", "팀이랑 같이"], ["하루 종일", "반나절 집중"]],
-  npsQ: "내년에 동료에게 이 행사를 권하겠어요?",
-  lineQ: "이것만은 꼭 고쳐 주세요"
+/* ═══ v3.52b 오늘 한 판 설문 = 틀만 (사용자 지시 260917 · 「문항이 아직 안 정해졌다 · 집만 지어 둬라」) ═══
+   ※ 문항 미확정 · 아래 SURVEY_Q 는 기본 3문항일 뿐이다(참여자 화면에는 이 사실을 쓰지 않는다 · 콘솔 설문 탭에만 표시).
+   화면은 SURVEY_Q 배열 하나로만 그린다 · 문항을 바꿀 때 이 배열만 고친다(서버는 문항 id 별로 그대로 저장·형식별 집계).
+   형식: single(보기 하나) · chips(칩 하나 + 기타 직접 입력) · scale(점수 min~max) · text(한 줄 · optional 가능) · places(오늘 다녀간 곳 카드 · 서버 기록 연동 · 기본 목록에는 넣지 않음) */
+var SURVEY = { open: "14:30" };
+var SURVEY_Q = [
+  { id: "sat", type: "scale", q: "오늘 행사, 얼마나 만족하셨나요?", min: 0, max: 10, left: "아쉬웠어요", right: "아주 좋았어요" },
+  { id: "best", type: "chips", q: "오늘 가장 좋았던 것 하나를 골라 주세요", opts: ["1F 전시·부스", "17F 강연", "10F 실습", "18F 커피챗", "미니게임"], other: "기타" },
+  { id: "line", type: "text", q: "한 줄 남겨 주세요", optional: true, max: 200, ph: "비워도 제출됩니다" }
+];
+/* 휴면 기능 스위치 · 특정 문항을 전제로 한 기능은 꺼 둔다(지우지 않음 · 켜면 SURVEY_LEGACY 문항과 함께 돌아온다)
+   words = 1F ME to WE 월 「오늘을 한 단어로」(5명 이상) · balance = 밸런스 비율 막대 */
+var SURVEY_FEATURES = { words: false, balance: false };
+var SURVEY_LEGACY = {
+  words: ["해볼 만하다", "막막하다", "벌써 쓰고 싶다", "아직 멀다", "생각보다 가깝다", "내 일에 써보고 싶다", "더 배우고 싶다", "어렵다", "재미있다", "기대된다", "동료와 해보고 싶다", "아직 모르겠다"],
+  balance: [["강연 더", "체험 더"], ["혼자 둘러보기", "팀이랑 같이"], ["하루 종일", "반나절 집중"]]
 };
 /* 다녀간 곳 카드 · 이 사람의 스탬프·신청 기록에서 다녀간 곳만 (안 간 곳은 묻지 않는다) */
 var SURVEY_PLACES = [
@@ -3619,71 +3627,27 @@ var Views = {
       (mine.length ? '<div class="menu">' + menuItem("ideas_mine", "01", "내가 낸 아이디어", mine.length + "건 제출", "") + "</div>" : "");
   },
 
-  /* ═══ v3.35 오늘 한 판 설문 · 5단계 ═══ */
+  /* ═══ v3.35 오늘 한 판 설문 · v3.52b SURVEY_Q 한 곳으로 그리는 범용 단계 ═══ */
   survey: function () {
     surveyAggPull();
-    var d = svDraft(), priv = '<p class="scap" style="margin:0 2px 8px">답은 이름 없이 저장됩니다 · 제출하면 스탬프 1개 (답 내용과 무관)</p>';
+    var d = svDraft(), Q = SURVEY_Q, n = Q.length, priv = '<p class="scap" style="margin:0 2px 8px">답은 이름 없이 저장됩니다 · 제출하면 스탬프 1개 (답 내용과 무관)</p>';
     if (surveyDone()) {
       var m = S.get("survey_mine", null), a = svAgg();
       return '<div class="card mb12"><b style="font-size:calc(17px * var(--fs));color:var(--hi)">제출 완료 · 고마워요</b>' +
-        (m && m.word ? '<p class="muted" style="margin-top:6px">내가 고른 단어 「' + esc(m.word) + '」 · 5명 이상 고르면 1F ME to WE 월에 떠오릅니다</p>' : "") + "</div>" +
-        '<div class="card soft mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">다음엔 뭘 더? · 지금까지 ' + (a && a.n ? a.n.toLocaleString() + "명" : "") + "</b>" +
-        SURVEY.balance.map(function (q, i) { return '<p class="sq" style="margin-top:10px"><b>' + esc(q[0]) + " vs " + esc(q[1]) + "</b></p>" + svBalBars(i, m && m.bal ? m.bal[i] : null); }).join("") + "</div>" +
-        (m && m.nps != null ? '<div class="card soft"><p class="muted">동료에게 권할 점수 · 내 답 ' + m.nps + " / 10</p></div>" : "");
+        '<p class="muted" style="margin-top:6px">답은 이름 없이 저장됐어요 · 스탬프 1개가 적립됐어요</p></div>' +
+        (SURVEY_FEATURES.balance ? '<div class="card soft mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">다음엔 뭘 더? · 지금까지 ' + (a && a.n ? a.n.toLocaleString() + "명" : "") + "</b>" +
+          SURVEY_LEGACY.balance.map(function (q, i) { return '<p class="sq" style="margin-top:10px"><b>' + esc(q[0]) + " vs " + esc(q[1]) + "</b></p>" + svBalBars(i, m && m.bal ? m.bal[i] : null); }).join("") + "</div>" : "");
     }
     if (!surveyOpen()) return '<div class="card soft" style="text-align:center"><p class="muted">' + SURVEY.open + '에 열려요.<br>오후 프로그램을 겪은 뒤 답해 주세요.</p></div>';
     if (surveyLock() === "nostamp") return '<div class="card soft" style="text-align:center"><p class="muted">스탬프를 하나 모으면 열려요.<br>전시·부스·프로그램 무엇이든 하나면 돼요.</p><button class="btn mint" style="margin-top:12px" onclick="App.go(\'passport\')">스탬프 탭으로</button></div>';
-    var step = d.step || 1;
-    var bar = '<div class="row" style="justify-content:space-between;margin-bottom:6px"><b style="font-size:calc(14px * var(--fs));color:var(--acc2)">' + step + ' / 5</b>' +
+    var step = Math.max(1, Math.min(d.step || 1, n)), q = Q[step - 1], last = step === n;
+    var bar = '<div class="row" style="justify-content:space-between;margin-bottom:6px"><b style="font-size:calc(14px * var(--fs));color:var(--acc2)">' + step + " / " + n + "</b>" +
       (step > 1 ? '<span class="lnk" style="margin:0" onclick="svGo(' + (step - 1) + ')">‹ 이전</span>' : "<span></span>") + "</div>" +
-      '<div class="seatrow" style="margin-top:0;margin-bottom:10px"><div class="sb"><i style="width:' + (step - 1) * 25 + '%"></i></div></div>';
-    var body = "";
-    if (step === 1) {
-      var pl = surveyPlaces();
-      if (!pl.length) {
-        body = '<div class="card mb12"><b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">오늘 다녀간 곳</b><p class="muted" style="margin-top:6px">스탬프로 확인된 다녀간 곳이 아직 없어요. 다음 단계로 넘어갑니다.</p></div>' +
-          '<button class="btn mint" onclick="svGo(2)">다음</button>';
-      } else {
-        var p = pl[Math.min(SV.card, pl.length - 1)];
-        body = '<p class="sq" style="margin-bottom:8px">오늘 다녀간 곳 ' + (SV.card + 1) + " / " + pl.length + " · 오른쪽으로 넘기면 좋았어요 · 왼쪽 아쉬웠어요 · 위로 최고</p>" +
-          '<div class="card mb12" id="svCard" style="min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;touch-action:none;cursor:grab">' +
-          '<b style="font-size:calc(21px * var(--fs));color:var(--hi);line-height:1.35">' + esc(p[1]) + "</b></div>" +
-          '<div class="row" style="gap:8px"><button class="btn line" style="flex:1" onclick="svCard(\'meh\')">아쉬웠어요</button>' +
-          '<button class="btn line" style="flex:1" onclick="svCard(\'good\')">좋았어요</button>' +
-          '<button class="btn mint" style="flex:1" onclick="svCard(\'best\')">최고</button></div>';
-        setTimeout(svSwipeBind, 0);
-      }
-    } else if (step === 2) {
-      body = '<div class="card mb12"><b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">오늘을 한 단어로</b>' +
-        '<div class="row" style="flex-wrap:wrap;margin-top:10px">' + SURVEY.words.map(function (w) {
-          return '<button class="tag-btn' + (d.word === w ? " on" : "") + '" onclick="svWord(\'' + esc(w) + '\')">' + esc(w) + "</button>";
-        }).join("") + "</div>" +
-        '<input class="input" style="margin-top:10px" maxlength="12" placeholder="직접 입력 (12자)" value="' + (SURVEY.words.indexOf(d.word) < 0 ? esc(d.word) : "") + '" oninput="svWordInput(this.value)">' +
-        '<p class="muted" style="margin-top:6px;font-size:calc(12.5px * var(--fs))">5명 이상 고른 단어만 1F ME to WE 월에 떠오릅니다</p></div>' +
-        '<button class="btn mint" onclick="svGo(3)">다음</button>';
-    } else if (step === 3) {
-      body = '<div class="card mb12"><b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">다음엔 뭘 더?</b>' +
-        SURVEY.balance.map(function (q, i) {
-          var v = d.bal[i];
-          return '<div class="row" style="gap:8px;margin-top:10px">' +
-            '<button class="btn ' + (v === 0 ? "mint" : "line") + '" style="flex:1" onclick="svBal(' + i + ',0)">' + esc(q[0]) + "</button>" +
-            '<button class="btn ' + (v === 1 ? "mint" : "line") + '" style="flex:1" onclick="svBal(' + i + ',1)">' + esc(q[1]) + "</button></div>" +
-            (v != null ? svBalBars(i, v) : "");
-        }).join("") + "</div>" +
-        '<button class="btn mint" onclick="svGo(4)">다음</button>';
-    } else if (step === 4) {
-      var nv = d.nps == null ? 5 : d.nps;
-      if (d.nps == null) { d.nps = 5; svSave(d); }
-      body = '<div class="card mb12"><b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">' + esc(SURVEY.npsQ) + "</b>" +
-        '<p class="disp" style="margin-top:12px;text-align:center;font-size:34px;color:var(--acc2)"><span id="svNpsV">' + nv + '</span><small style="font-size:15px;color:var(--faint)"> / 10</small></p>' +
-        '<input type="range" min="0" max="10" step="1" value="' + nv + '" style="width:100%;accent-color:#FF7E31" oninput="svNps(this.value)">' +
-        '<div class="row" style="justify-content:space-between"><span class="muted" style="font-size:calc(12px * var(--fs))">0 · 권하지 않음</span><span class="muted" style="font-size:calc(12px * var(--fs))">10 · 꼭 권함</span></div></div>' +
-        '<button class="btn mint" onclick="svGo(5)">다음</button>';
-    } else {
-      body = '<div class="card mb12"><b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">' + esc(SURVEY.lineQ) + '</b><span class="muted" style="margin-left:6px;font-size:calc(12.5px * var(--fs))">선택</span>' +
-        '<textarea class="input" rows="3" maxlength="200" style="margin-top:10px;resize:none" placeholder="비워도 제출됩니다" oninput="svLine(this.value)">' + esc(d.line) + "</textarea></div>" +
-        '<button class="btn mint" style="padding:15px" ' + (SV.busy ? "disabled" : "") + ' onclick="svSubmit()">' + (SV.busy ? "제출 중" : "제출하기") + "</button>";
-    }
+      '<div class="seatrow" style="margin-top:0;margin-bottom:10px"><div class="sb"><i style="width:' + Math.round((step - 1) / n * 100) + '%"></i></div></div>';
+    var body = '<div class="card mb12"><b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">' + esc(q.q) + "</b>" +
+      (q.optional ? '<span class="muted" style="margin-left:6px;font-size:calc(12.5px * var(--fs))">선택</span>' : "") + svInputHtml(q, d.a[q.id]) + "</div>" +
+      (last ? '<button class="btn mint" style="padding:15px" ' + (SV.busy ? "disabled" : "") + ' onclick="svSubmit()">' + (SV.busy ? "제출 중" : "제출하기") + "</button>"
+        : '<button class="btn mint" onclick="svNext()">다음</button>');
     return priv + bar + body;
   },
 
@@ -4215,7 +4179,8 @@ var Views = {
   },
 
   /* v3.35 Outro · 오늘 가장 많이 나온 단어 (5명 이상 고른 단어만) */
-  screen_words: function () {
+  screen_words: function () {   /* v3.52b 휴면 · SURVEY_FEATURES.words 가 꺼져 있으면 사이니지 목록에서도 뺀다 */
+    if (!SURVEY_FEATURES.words) return '<div class="screen-wrap"><p style="padding:40px 8px;opacity:0.7">오늘의 단어 송출은 지금 꺼져 있습니다</p><button class="btn" onclick="App.go(\'admin\')">콘솔로</button></div>';
     surveyAggPull();
     var a = svAgg() || { words: [], n: 0 }, w = a.words || [];
     return '<div class="screen-wrap"><div class="row" style="justify-content:space-between;padding-top:8px">' +
@@ -4588,7 +4553,7 @@ var AdminTabs = {
       '<button class="btn" onclick="App.go(\'wall_metowe\')">ME to WE 월 /wall/metowe</button>' +
       '<button class="btn" onclick="App.go(\'wall_type\')">1F 타자 순위판 #tv=type</button>' +
       '<button class="btn" onclick="App.go(\'screen_survey\')">설문 참여 안내 (Outro 전)</button>' +
-      '<button class="btn" onclick="App.go(\'screen_words\')">오늘의 단어 (Outro)</button>' +
+      (SURVEY_FEATURES.words ? '<button class="btn" onclick="App.go(\'screen_words\')">오늘의 단어 (Outro)</button>' : "") +
       '<button class="btn" onclick="App.go(\'screen\')">17F 송출뷰 /screen</button></div>' +
       '<p style="margin-top:8px;font-size:calc(12.5px * var(--fs));color:var(--faint);line-height:1.6">정식판 공통 요건: 무인 10시간 · 1시간 자가 새로고침 · 네트워크 끊김 시 캐시 표시(에러 화면 금지) · 키오스크 자동 재실행 · 집계는 캐시 API만 · 배포 단계에서 적용 (기획서 v2 §5-3)</p></div>' +
       '<p style="font-size:calc(12.5px * var(--fs));color:var(--faint);line-height:1.6">※ 프로토타입 v10 (260822 · 기획서 v2 반영): 전사 수치는 시뮬레이션. KPI 목표(v16): 200명 멈춤 · 120명 아이디어 · 60명 스탬프 3개 이상 · 20건 과제화 검토. 부스 피드백 ' + S.get("booth_fb", []).length + "건 · 시연 신청 " + S.get("demo_reqs", []).length + "건.</p>" +
@@ -4980,35 +4945,49 @@ function surveyPlaces() {
     return st.indexOf(p[0]) >= 0;
   });
 }
-function svDraft() { return S.get("survey_draft", null) || { step: 1, cards: {}, word: "", bal: [null, null, null], nps: null, line: "" }; }
+function svDraft() { var d = S.get("survey_draft", null); return d && d.a ? d : { step: 1, a: {} }; }
 function svSave(d) { S.set("survey_draft", d); }
 function svGo(step) { var d = svDraft(); d.step = step; svSave(d); SV.card = 0; App.render(); window.scrollTo(0, 0); }
-function svCard(val) {
-  var d = svDraft(), pl = surveyPlaces(), p = pl[SV.card];
-  if (!p) return;
-  d.cards[p[0]] = val; svSave(d);
-  SV.card++;
-  if (SV.card >= pl.length) { d.step = 2; svSave(d); SV.card = 0; }
-  App.render();
+function svSet(id, v, redraw) { var d = svDraft(); d.a[id] = v; svSave(d); if (redraw) App.render(); }
+function svEmpty(q, v) { return v == null || v === "" || (q.type === "chips" && v === q.other + ":") || (q.type === "places" && !Object.keys(v || {}).length); }
+function svNext() {
+  var d = svDraft(), step = Math.max(1, d.step || 1), q = SURVEY_Q[step - 1];
+  if (q && !q.optional && svEmpty(q, d.a[q.id])) { toast("답을 골라 주세요"); return; }
+  svGo(step + 1);
 }
-function svWord(w) { var d = svDraft(); d.word = w; svSave(d); App.render(); }
-function svWordInput(v) { var d = svDraft(); d.word = String(v || "").slice(0, 12); svSave(d); }
-function svBal(q, v) { var d = svDraft(); d.bal[q] = v; svSave(d); App.render(); }
-function svNps(v) { var d = svDraft(); d.nps = +v; svSave(d); var o = el("svNpsV"); if (o) o.textContent = v; }
-function svLine(v) { var d = svDraft(); d.line = String(v || "").slice(0, 200); svSave(d); }
-/* 카드 넘기기 · 오른쪽 좋았어요 · 왼쪽 아쉬웠어요 · 위 최고 (버튼과 같은 결과) */
-function svSwipeBind() {
-  var c = el("svCard"); if (!c || c._b) return; c._b = 1;
-  var x0 = 0, y0 = 0, on = false;
-  c.addEventListener("pointerdown", function (e) { on = true; x0 = e.clientX; y0 = e.clientY; });
-  c.addEventListener("pointerup", function (e) {
-    if (!on) return; on = false;
-    var dx = e.clientX - x0, dy = e.clientY - y0;
-    if (dy < -60 && Math.abs(dy) > Math.abs(dx)) svCard("best");
-    else if (dx > 60) svCard("good");
-    else if (dx < -60) svCard("meh");
-  });
+/* 형식별 입력 · 값은 draft.a[문항id] */
+function svInputHtml(q, v) {
+  var id = q.id;
+  if (q.type === "single") return '<div style="margin-top:10px">' + q.opts.map(function (o) {
+    return '<button class="btn ' + (v === o ? "mint" : "line") + ' mb8" onclick="svSet(\'' + id + '\', \'' + esc(o) + '\', true)">' + esc(o) + "</button>";
+  }).join("") + "</div>";
+  if (q.type === "chips") {
+    var isOther = typeof v === "string" && v.indexOf(q.other + ":") === 0;
+    return '<div class="row" style="flex-wrap:wrap;margin-top:10px">' + q.opts.map(function (o) {
+      return '<button class="tag-btn' + (v === o ? " on" : "") + '" onclick="svSet(\'' + id + '\', \'' + esc(o) + '\', true)">' + esc(o) + "</button>";
+    }).join("") + (q.other ? '<button class="tag-btn' + (isOther ? " on" : "") + '" onclick="svSet(\'' + id + '\', \'' + esc(q.other) + ':\', true)">' + esc(q.other) + "</button>" : "") + "</div>" +
+      (isOther ? '<input class="input" style="margin-top:10px" maxlength="40" placeholder="직접 입력" value="' + esc(v.slice(q.other.length + 1)) + '" oninput="svSet(\'' + id + '\', \'' + esc(q.other) + ':\' + this.value, false)">' : "");
+  }
+  if (q.type === "scale") {
+    var mid = Math.round((q.min + q.max) / 2), nv = v == null ? mid : v;
+    if (v == null) setTimeout(function () { svSet(id, mid, false); }, 0);
+    return '<p class="disp" style="margin-top:12px;text-align:center;font-size:34px;color:var(--acc2)"><span id="svScale_' + id + '">' + nv + '</span><small style="font-size:15px;color:var(--faint)"> / ' + q.max + "</small></p>" +
+      '<input type="range" min="' + q.min + '" max="' + q.max + '" step="1" value="' + nv + '" style="width:100%;accent-color:#FF7E31" oninput="svSet(\'' + id + '\', +this.value, false); var o=el(\'svScale_' + id + '\'); if (o) o.textContent=this.value">' +
+      '<div class="row" style="justify-content:space-between"><span class="muted" style="font-size:calc(12px * var(--fs))">' + q.min + " · " + esc(q.left || "") + '</span><span class="muted" style="font-size:calc(12px * var(--fs))">' + q.max + " · " + esc(q.right || "") + "</span></div>";
+  }
+  if (q.type === "text") return '<textarea class="input" rows="3" maxlength="' + (q.max || 200) + '" style="margin-top:10px;resize:none" placeholder="' + esc(q.ph || "") + '" oninput="svSet(\'' + id + '\', this.value, false)">' + esc(v || "") + "</textarea>";
+  if (q.type === "places") {
+    var pl = surveyPlaces(), cur = v || {};
+    if (!pl.length) return '<p class="muted" style="margin-top:6px">스탬프로 확인된 다녀간 곳이 아직 없어요. 다음으로 넘어가 주세요.</p>';
+    return pl.map(function (p) {
+      return '<div style="margin-top:10px"><p style="font-weight:800">' + esc(p[1]) + '</p><div class="row" style="gap:6px;margin-top:6px">' + [["meh", "아쉬웠어요"], ["good", "좋았어요"], ["best", "최고"]].map(function (b) {
+        return '<button class="btn ' + (cur[p[0]] === b[0] ? "mint" : "line") + '" style="flex:1" onclick="svPlace(\'' + id + '\', \'' + p[0] + '\', \'' + b[0] + '\')">' + b[1] + "</button>";
+      }).join("") + "</div></div>";
+    }).join("");
+  }
+  return "";
 }
+function svPlace(id, place, val) { var d = svDraft(), o = d.a[id] || {}; o[place] = val; d.a[id] = o; svSave(d); App.render(); }
 function svAgg() { return BE.on ? S.get("survey_agg", null) : SURVEY_MOCK; }
 function surveyAggPull(force) {
   if (!BE.on) return;
@@ -5024,10 +5003,15 @@ function surveyAggPull(force) {
 function svSubmit() {
   var d = svDraft();
   if (SV.busy) return;
-  if (d.nps == null) { toast("점수를 골라 주세요"); svGo(4); return; }
-  var ans = { cards: d.cards, word: d.word, bal: d.bal.map(function (x) { return x == null ? "" : x; }), nps: d.nps, line: d.line };
+  for (var qi = 0; qi < SURVEY_Q.length; qi++) {
+    var qq = SURVEY_Q[qi];
+    if (!qq.optional && svEmpty(qq, d.a[qq.id])) { toast("답을 골라 주세요"); svGo(qi + 1); return; }
+  }
+  var a = {};
+  SURVEY_Q.forEach(function (qq) { var v = d.a[qq.id]; if (!svEmpty(qq, v)) a[qq.id] = { t: qq.type, q: qq.q, v: v }; });
+  var ans = { a: a };
   var done = function (agg) {
-    S.set("survey_mine", { word: d.word, bal: d.bal, nps: d.nps });
+    S.set("survey_mine", d.a);
     S.set("survey_done", true); S.set("survey_draft", null);
     if (agg) S.set("survey_agg", agg);
     App.render(); window.scrollTo(0, 0);
@@ -5049,14 +5033,16 @@ function svSubmit() {
     checkRewards();
   }, function () { SV.busy = false; App.render(); toast("서버에 연결할 수 없어요. 다시 눌러 주세요."); });
 }
-function svBalBars(q, mine) {
+function svBalBars(q, mine) {   /* 휴면 · SURVEY_FEATURES.balance */
+  if (!SURVEY_FEATURES.balance) return "";
   var a = svAgg(), b = a && a.bal && a.bal[q] ? a.bal[q] : [0, 0], tot = b[0] + b[1];
-  return SURVEY.balance[q].map(function (lb, i) {
+  return SURVEY_LEGACY.balance[q].map(function (lb, i) {
     var pct = tot ? Math.round(b[i] / tot * 100) : 0;
     return '<div class="seatrow"><div class="sb"><i style="width:' + pct + '%"></i></div><span class="sn">' + (mine === i ? "내 선택 · " : "") + esc(lb) + " " + pct + "%</span></div>";
   }).join("");
 }
-function mtWordsHtml() {
+function mtWordsHtml() {   /* 휴면 · SURVEY_FEATURES.words (끄면 1F 월에 아무것도 안 띄운다) */
+  if (!SURVEY_FEATURES.words) return "";
   var a = svAgg();
   if (!a || !a.words || !a.words.length) return "";
   return '<p class="lb">오늘을 한 단어로 · ' + (a.min || 5) + "명 이상 고른 단어</p>" +
