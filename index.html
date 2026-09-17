@@ -472,16 +472,6 @@
   .bill .bs { margin-top: 6px; font-size: calc(12.5px * var(--fs)); font-weight: 700; opacity: 0.9; }
   .bill canvas { flex: none; width: 46%; height: 100%; display: block; }
   /* 층별 혼잡도 압축 스트립 · 막대 4개라 높이는 내용 기준, 라운드·면·테두리·좌우 패딩·최소 높이는 공용 행 카드(.rc)와 동일 (v3.22) */
-  .cstrip { background: var(--white); border: 1px solid var(--dimln); border-radius: 20px; padding: 10px 15px 9px; min-height: 64px; margin-bottom: 8px; cursor: pointer; }
-  .cstrip:active { background: var(--dim); }
-  .cstrip .hd { display: flex; align-items: baseline; justify-content: space-between; }
-  .cstrip .hd b { font-size: calc(14px * var(--fs)); font-weight: 800; color: var(--hi); }
-  .cstrip .hd span { font-size: calc(12px * var(--fs)); font-weight: 700; color: var(--faint); }
-  .cstrip .row4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 7px; }
-  .cstrip .fl { font-family: var(--disp); font-size: calc(13.5px * var(--fs)); color: var(--hi); }
-  .cstrip .bar { height: 6px; border-radius: 3px; background: var(--dim); overflow: hidden; margin-top: 4px; }
-  .cstrip .bar i { display: block; height: 100%; border-radius: 3px; }
-  .cstrip .st { margin-top: 3px; font-size: calc(11px * var(--fs)); font-weight: 800; }
   /* 홈 나의 일정 목록형(.mine .r)은 v3.22 폐지 · 개별 공용 행 카드(.rc)로 */
   /* 홈 스탬프 카드(.chal)는 v3.2 폐지 · 홈도 스탬프 탭과 같은 railHtml 공용 컴포넌트를 쓴다 */
   /* 공지 한 줄 */
@@ -511,6 +501,12 @@
   .rail .cta:active { transform: scale(0.99); }
   /* v3.12 응모권 번호 칩 · 내 것 = 옅은 주황 · 미발급 자리는 회색 플레이스홀더 */
   .tkts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  /* v3.31c 레일 하단 내 응모 번호 · 모달 티켓 칩과 같은 문법의 작은 변형 (최대 3개 · 360px 한 줄) */
+  .rail .rnum { margin-top: 9px; padding-top: 9px; border-top: 1px dashed var(--tint2); }
+  .rail .rnum .lb { font-size: calc(12px * var(--fs)); font-weight: 800; color: var(--acc2); }
+  .rail .rnum .tkts { margin-top: 6px; gap: 6px; flex-wrap: nowrap; }
+  .rail .rnum .tkt { font-size: calc(15px * var(--fs)); padding: 5px 10px; border-radius: 10px; background: var(--white); }
+  .rail .rnum .tkt.wait { font-size: calc(12px * var(--fs)); }
   .tkt { background: var(--tint); border: 1.5px dashed var(--tint2); color: var(--acc2); font-family: var(--disp); font-weight: 800; font-size: calc(20px * var(--fs)); letter-spacing: 0.1em; padding: 9px 14px; border-radius: 12px; }
   .tkt.wait { background: var(--dim); border-color: var(--dimln); color: var(--faint); font-size: calc(13px * var(--fs)); font-weight: 700; letter-spacing: 0; display: flex; align-items: center; }
   .rail .lbls { position: relative; height: 15px; margin: 6px 13px 0; }
@@ -550,9 +546,6 @@
   .rrow .rbar i { display: block; height: 100%; border-radius: 5px; background: var(--mint); }
   .rrow.dim .rbar i { opacity: 0.45; }
   .rrow .rv { flex: none; width: 34px; text-align: right; font-size: calc(13.5px * var(--fs)); color: var(--hi); }
-  .cbar { height: 7px; border-radius: 5px; background: var(--surface2); overflow: hidden; margin-top: 6px; }
-  .cbar i { display: block; height: 100%; border-radius: 5px; transition: width 0.8s; }
-  .cbar.big { height: 10px; margin-top: 12px; }
   .dbar { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 12px 14px; margin-top: 10px; }
   .dbar .nm { display: flex; justify-content: space-between; align-items: baseline; }
   .dbar .nm b { font-size: calc(19px * var(--fs)); font-weight: 800; }
@@ -782,12 +775,6 @@ var TIMELINE = [
   { time: "17:00", end: "17:30", title: "Outro · DAP 시상", short: "DAP 우수 성과자 시상 · 경품 추첨", place: "17F 대강당", desc: "16:45 라이브 퀴즈 · 설문 참여 안내 후 17:00 Outro. CSO · DAP 우수 성과자 시상, 경품 추첨. 추첨 결과는 행사 종료 후 개별 안내드립니다.", tag: "피날레" }
 ];
 var NOW_INDEX = 1;
-var FLOORS = [
-  { no: "18", nm: "AX 커피챗", items: ["AX 커피챗 · 소규모 아이디어 논의"] },
-  { no: "17", nm: "키노트 · 파트너사 강연", items: ["대강당 · Intro · 기조연설 · 내부 강연 · 파트너사 강연(AWS · MS) · Outro", "오전 자유 참석 · 오후 파트너사 강연 신청제(사전 신청 + 앱 신청)"] },
-  { no: "10", nm: "실습형 세션 A~E", items: ["세션 A · 영업 및 보상 현장 우수 사례 강연 및 실습 (62명)", "세션 B · 통계 현황 리포팅 실습 (최대 32명)", "세션 C · 외부자료 리서치 자동화 실습 (20명)", "세션 D · Claude Code 바이브 코딩 실습 · AWS (20명)", "세션 E · MS Copilot 문서 작성 실습 · MS (2회 진행 · 1회차 13:30 · 2회차 15:00 · 회당 20명)"] },
-  { no: "01", nm: "AX 전시·체험존", items: ["이벤트존 · INFO 데스크 · 「내 3시간을 돌려줘」 보드 · 라이브 스크린 · 참가상(1F 한정 200개)", "DAP존 (미니 강의 · 과제 상담)", "기술지원부문 부스 · AX 헬프데스크", "체크인 (외부 주차장) · 웰컴키트"] }
-];
 var SLOTS = [
   { time: "13:00–13:30", dept: "5F 보상부문" },
   { time: "14:30–15:00", dept: "9F 계약부문" },
@@ -2164,7 +2151,7 @@ function mtDemoPaint() {
 
 /* ════════════════ 카운터 ════════════════ */
 var tick = 0;
-setInterval(function () { tick++; if (["home", "screen", "wall_quiz", "wall_live", "crowd"].indexOf(App.current) >= 0) App.render(); }, 4000);
+setInterval(function () { tick++; if (["home", "screen", "wall_quiz", "wall_live"].indexOf(App.current) >= 0) App.render(); }, 4000);
 /* 백엔드 연결 · GAS_URL 이 채워져 있으면 서버 모드로 전환하고 월 집계를 주기적으로 받는다 */
 BE.on = !!GAS_URL;
 if (BE.on) { beStats(); beSync(); setInterval(beSync, BE_POLL_MS); setInterval(beStats, 60000); }
@@ -2172,14 +2159,6 @@ if (BE.on) { beStats(); beSync(); setInterval(beSync, BE_POLL_MS); setInterval(b
 if ("serviceWorker" in navigator && location.protocol === "https:") {
   try { navigator.serviceWorker.register("sw.js"); } catch (e) {}
 }
-/* 층별 혼잡도 · 테스트 빌드는 시뮬레이션 (base·진폭·위상, 실측 센서 없음) */
-var CROWD_SIM = { 1: [74, 16, 0], 10: [46, 13, 2.1], 17: [58, 26, 4.2], 18: [40, 14, 1.3] };
-function crowdOf(no) {
-  var b = CROWD_SIM[+no] || [50, 10, 0];
-  var v = b[0] + Math.sin(tick / 3.5 + b[2]) * b[1] + ((tick * 13 + (+no) * 7) % 7) - 3;
-  return Math.max(6, Math.min(97, Math.round(v)));
-}
-function crowdBand(v) { return v < 40 ? ["여유", "#1FA45B"] : v < 70 ? ["보통", "#8A94A0"] : ["혼잡", "#FF6B61"]; }
 function counters() {
   return {
     online: FESTIVAL.mockOnline + ((tick * 7) % 41) - 20,
@@ -2221,13 +2200,13 @@ var App = {
     ideas_mine: "passport",
     /* 프로그램 · 신청 전용 (리더보드는 10F 세션 곁으로, v3.1) · 일정(guide_time)은 v3.3부터 탭 루트라 PARENT 없음 */
     dap: "guide", ev_cchat: "guide",
-    sess_d: "guide", guide_slots: "guide", crowd: "home",
+    sess_d: "guide", guide_slots: "guide",
     admin: "home", screen: "admin", screen_survey: "admin",
     wall_quiz: "admin", wall_wave: "admin", wall_live: "admin", wall_metowe: "admin", wall_tv: "wall_metowe"
   },
   TITLES: {
     home: "", passport: "스탬프", guide_time: "일정", guide: "프로그램",
-    notices: "실시간 안내", dap: "과제상담 신청", crowd: "층별 혼잡도",
+    notices: "실시간 안내", dap: "과제상담 신청",
     booth: "AX Now! 부스",
     ideas: "아이디어 한 줄", ideas_mine: "내가 낸 아이디어",
     sess_d: "프로그램 신청", guide_slots: "부문별 우선 관람",
@@ -2615,20 +2594,6 @@ function billboardHtml() {
   var sub = evPhase() === "after" ? "함께해 주셔서 고맙습니다" : "10. 26 (월) · 광화문 본사";
   return '<div class="bill" aria-hidden="true"><div class="bc"><p class="bh">ME to WE</p><p class="bs">' + sub + "</p></div>" +
     '<canvas data-axf="loop" data-axf-seq="' + sq + '" data-axf-zoom="0.95" data-axf-stage="orange" data-axf-colors="#FFFFFF,rgba(255,255,255,0.78),#FFFFFF"></canvas></div>';
-}
-
-/* 층별 혼잡도 · 홈에 다시 올린다 (260830: 프로그램 탭 하단으로 내렸더니 안 보인다는 지적).
-   지금 어디가 붐비는지는 「지금 진행 중」과 같은 질문이라 바로 아래에 붙인다.
-   한 줄짜리 막대 4개로만 보여주고, 자세한 건 눌러서 crowd 화면으로. */
-function crowdStripHtml() {
-  return '<div class="cstrip" onclick="App.go(\'crowd\')">' +
-    '<div class="hd"><b>층별 혼잡도</b><span>자세히 ›</span></div>' +
-    '<div class="row4">' + FLOORS.slice().reverse().map(function (f) {
-      var v = crowdOf(f.no), b = crowdBand(v);
-      return '<div><p class="fl">' + (+f.no) + 'F</p>' +
-        '<div class="bar"><i style="width:' + v + "%;background:" + b[1] + '"></i></div>' +
-        '<p class="st" style="color:' + b[1] + '">' + b[0] + "</p></div>";
-    }).join("") + "</div></div>";
 }
 
 /* 나의 스케줄 · 내가 신청한 것만 담는다 (260830 사용자 지시).
@@ -3126,10 +3091,21 @@ function railHtml(n, glow, dispN, home) {
     (home
       ? '<p class="cap">3개 = 룰렛 1회 · 4개부터 응모 1장씩 · 8개 중 6개면 보상 끝</p>' +
         (out0 ? '<p class="cap">오늘 준비한 룰렛이 모두 소진되었습니다</p>' : "") +
+        raffleNumsHtml(n) +
         '<button class="cta" onclick="App.go(\'passport\')">스탬프 탭으로</button>'
       : '<p class="cap">3개 = 1F 룰렛 1회 · 4개부터 사후 추첨 응모 1장씩 · 8개 중 6개를 모으면 보상 끝 · 마커를 누르면 자세히</p>' +
-        (out0 ? '<p class="cap">오늘 준비한 룰렛이 모두 소진되었습니다</p>' : "")) +
+        (out0 ? '<p class="cap">오늘 준비한 룰렛이 모두 소진되었습니다</p>' : "") +
+        raffleNumsHtml(n)) +
     "</div>";
+}
+/* v3.31c 내 응모 번호 · 응모권 1장 이상일 때만 · 서버 번호가 아직 없으면 「발급 중」 회색 (v3.12 모달과 같은 규칙) */
+function raffleNums() { return testMode() ? ["1026", "2026", "3026"] : S.get("raffle_nums", []); }
+function raffleNumsHtml(n) {
+  var t = raffleTickets(Math.min(REWARD_CAP, n));
+  if (!t) return "";
+  var nums = raffleNums(), chips = "";
+  for (var i = 0; i < t; i++) chips += i < nums.length ? '<span class="tkt">' + esc(nums[i]) + "</span>" : '<span class="tkt wait">발급 중</span>';
+  return '<div class="rnum"><p class="lb">내 응모 번호</p><div class="tkts">' + chips + "</div></div>";
 }
 /* 룰렛 쿠폰 모달 · 내 QR + 사용 여부 (사용 여부는 서버 my.roulette 가 정본, sync 가 roulette_used 로 받아쓴다) */
 function ppRouletteOpen() {
@@ -3159,13 +3135,13 @@ function ppDrawOpen() {
   var n = Math.min(REWARD_CAP, stampCount()), t = raffleTickets(n);
   var tickets = "";
   if (t) {
-    var nums = testMode() ? ["1026", "2026", "3026"].slice(0, t) : S.get("raffle_nums", []);
+    var nums = raffleNums().slice(0, t);
     var chips = "";
     for (var i = 0; i < t; i++) {
       chips += i < nums.length ? '<span class="tkt">' + esc(nums[i]) + "</span>" : '<span class="tkt wait">발급 중</span>';
     }
     tickets = '<div class="tkts">' + chips + "</div>" +
-      '<p class="muted" style="margin-top:6px;font-size:calc(12.5px * var(--fs))">내 응모권 번호 · 추첨은 이 번호로 진행됩니다' +
+      '<p class="muted" style="margin-top:6px;font-size:calc(12.5px * var(--fs))">내 응모권 번호 · 스탬프 보상 레일 아래에도 늘 보입니다 · 추첨은 이 번호로 진행됩니다' +
       (nums.length < t ? " · 발급 중인 번호는 잠시 후 동기화되면 채워져요" : "") + "</p>";
   }
   modalOpen('<b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">사후 추첨 응모</b>' +
@@ -3180,7 +3156,9 @@ var Views = {
   /* ═══ 홈 = 「내 것」만 (260830 사용자 지시: 첫 화면이 복잡하면 안 된다)
      지금 어디에 있어야 하는가 · 내가 신청한 것 · 내가 받을 것. 이 셋 외에는 두지 않는다.
      행사 전체에 관한 것(프로그램 목록·혼잡도·월·게임·아이디어)은 각 탭이 맡는다. ═══ */
-  /* v3.13 홈 위계 재배치 (사용자 확정): [라이브 퀴즈 · 열릴 때만 예외 최상단] → 스탬프 → 나의 일정(지금·다음 흡수) → 혼잡도 → 광고판.
+  /* v3.13 홈 위계 재배치 (사용자 확정): [라이브 퀴즈 · 열릴 때만 예외 최상단] → 스탬프 → 나의 일정(지금·다음 흡수) → 광고판.
+     v3.31c (260917 사용자 확정) 층별 혼잡도 참여자 화면 삭제 · 홈 = [퀴즈·포토부스 알림] → 광고판 → 스탬프 → 나의 일정.
+     운영 쪽 존 등급 입력(ZONE_GRADE)·백엔드 grade·입장 스캔 동선 집계는 유지.
      히어로(지금 진행 중)는 나의 일정 첫 줄로 흡수 · 스탬프는 행사 전·당일·후 항상 맨 위 */
   home: function () {
     var st = S.get("quiz_state", INITIAL_QUIZ_STATE);
@@ -3190,8 +3168,7 @@ var Views = {
       photoAlertHtml() +
       billboardHtml() +      /* v3.24 광고판 = 스탬프 바로 위 배너 */
       myCouponHtml() +
-      myScheduleHtml() +
-      crowdStripHtml();
+      myScheduleHtml();
   },
 
   notices: function () {
@@ -3218,21 +3195,6 @@ var Views = {
       '<p class="tv-pct" id="mtPct">' + pct + '%</p></div>' +
       '<div class="tv-bar"><i id="mtBar" style="width:' + Math.min(100, n / MT_TOTAL * 100) + '%"></i></div>' +
       '<p class="tv-tick" id="mtTick"></p></div></div>';
-  },
-
-  crowd: function () {
-    return '<div class="card soft mb12"><p class="muted" style="font-size:calc(14.5px * var(--fs))">층별 카운터 집계로 약 5분마다 갱신됩니다. <b style="color:var(--hi)">여유</b>일 때 가면 대기 없이 바로 체험할 수 있어요. ※ 테스트 빌드는 시뮬레이션 수치</p></div>' +
-      FLOORS.slice().reverse().map(function (f) {
-        var v = crowdOf(f.no), b = crowdBand(v);
-        var tip = v < 40 ? "지금 가면 대기가 거의 없어요" : v < 70 ? "적당히 붐비는 정도, 바로 참여할 수 있어요" : "지금 가장 붐비는 층이에요. 잠시 뒤에 오면 쾌적해요";
-        return '<div class="card mb12" style="padding:16px">' +
-          '<div class="row" style="justify-content:space-between"><span><b class="disp" style="font-size:calc(19px * var(--fs));color:var(--hi)">' + (+f.no) + 'F</b><span style="margin-left:8px;font-size:calc(14.5px * var(--fs));font-weight:800;color:var(--muted)">' + esc(f.nm) + '</span></span>' +
-          '<b style="font-size:calc(15.5px * var(--fs));color:' + b[1] + '">' + b[0] + " · " + v + "%</b></div>" +
-          '<div class="cbar big"><i style="width:' + v + '%;background:' + b[1] + '"></i></div>' +
-          '<p style="margin-top:9px;font-size:calc(14.5px * var(--fs));font-weight:700;color:var(--muted)">' + tip + "</p>" +
-          '<p style="margin-top:7px;font-size:calc(13.5px * var(--fs));color:var(--faint);line-height:1.7">' + f.items.slice(0, 2).map(function (x) { return "· " + esc(x); }).join("<br>") + (f.items.length > 2 ? "<br>· 외 " + (f.items.length - 2) + "개 프로그램" : "") + "</p></div>";
-      }).join("") +
-      '<div class="row" style="justify-content:space-between;padding:4px 2px;cursor:pointer" onclick="App.go(\'guide\')"><span style="font-size:calc(14.5px * var(--fs));font-weight:800;color:var(--muted)">프로그램 신청 · 전체 목록</span><span style="color:var(--faint);font-weight:800">›</span></div>';
   },
 
   /* ═══ 스탬프 탭 (라우트 id는 passport 유지) · v3.2: 보상 레일 한 줄 + 전폭 카드 아코디언 6장, 그 외 없음.
