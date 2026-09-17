@@ -754,6 +754,7 @@
   .tytv .tytv-foot { margin-top: 14px; font-size: 15px; opacity: 0.6; line-height: 1.6; }
   /* v3.50 AX 올림픽 · 허브 · 메달 · 메달표 */
   .oly-hub { margin-top: 10px; }
+  .p3-go { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
   /* v3.50C AX 한 줄 · 검정 무대 위 한 줄 */
   .ax-line { margin-top: 10px; font-size: calc(13.5px * var(--fs)); line-height: 1.5; color: var(--muted); word-break: keep-all; }
   .ax-line b { display: inline-block; margin-right: 6px; padding: 1px 7px; border-radius: 999px; background: var(--mint); color: #fff; font-size: calc(11.5px * var(--fs)); font-weight: 800; vertical-align: 1px; }
@@ -891,10 +892,13 @@ var FESTIVAL = {
    v47: tap = 스탬프 카드의 바로가기 · cta = 버튼 문구 · note = 카드 안 행동 안내.
    층별 안내(progOpenFl) 폐기로 p1은 QR 스캔, p3은 17F 오후 강연 신청 목록이 목적지다(v3.31b 오후 신청제 복귀).
    v3.1: p4는 카드 안에서 게임 입구를 직접 그린다(stampInnerHtml 특례) · v3.50 「미니게임」 = 게임 4종 중 아무거나 한 판(전원 공개). */
+/* v3.52 · 10F 실습형 세션 입장도 p3 로 셀지 · 서버 P3_INCLUDE_10F 와 함께 바꾼다 (기본 끔) */
+var P3_INCLUDE_10F = false;
 var STAMPS = [
   { id: "p1", title: "1F 전시", short: "1F 전시", desc: "1F 전시존 QR 스캔", where: "1F · 약 5분", site: 1, tap: "qrScanOpen()", cta: "QR 스캔", note: "1F 전시존 끝 QR 입간판을 스캔하세요." },
   { id: "p2", title: "AX Now! 체험", short: "부스 체험", desc: "HIDI-Q 또는 HI-Helper 부스 1곳 체험", where: "1F · 약 5분", site: 1, tap: "App.go('booth')", cta: "부스 안내 보기", note: "체험을 마치면 스태프가 보여주는 완료 QR을 스캔합니다." },
-  { id: "p3", title: "17F 강의", short: "17F 강의", desc: "17F 오후 파트너사 강연 1회 참석 (10F 제외)", where: "17F · 90분", site: 1, tap: "progGoFl(17)", cta: "17F 오후 강연 신청하기", note: "17F 오후 파트너사 강연은 프로그램 탭에서 신청합니다. 사전 신청하셨다면 「사전 신청 완료」로 보입니다. 입장 시 좌석 QR을 스캔하세요." },
+  /* v3.52 (사용자 확정 260917) p3 = 프로그램 참여 · 17F 오후 강연 · DAP 과제상담 · AX 커피챗 중 1회 · 적립은 서버가 확인(입장 스캔·상담 체크인/완료·커피챗 접수/완료) */
+  { id: "p3", title: "프로그램 참여", short: "프로그램", desc: "17F 오후 강연 · DAP 과제상담 · AX 커피챗 중 1회" + (P3_INCLUDE_10F ? " · 10F 실습형 세션" : ""), where: "17F · 1F · 18F", site: 1, tap: "progGoFl(17)", cta: "17F 오후 강연 신청하기", note: "참석이 확인되면 자동으로 적립돼요. 17F 강연은 입장 때 좌석 QR을 스캔하세요." },
   { id: "p4", title: "미니게임", short: "미니게임", desc: "미니게임 아무거나 1종을 끝까지 한 판", where: "앱 · 1분", inapp: 1 },
   { id: "p5", title: "아이디어 한 줄", short: "아이디어", desc: "아이디어 1건 제출", where: "앱 · 1분", inapp: 1, tap: "App.go('ideas')", cta: "아이디어 쓰기" },
   { id: "p7", title: "전시 QR 퀴즈", short: "QR 퀴즈", desc: "DAP Wall QR 퀴즈 1세트 통과 (60점 이상)", where: "1F DAP Wall · 약 10분", tap: "App.go('wq_list')", cta: "QR 퀴즈 풀기" },
@@ -2849,7 +2853,7 @@ function myScheduleHtml() {
   var q = S.get("queue", {}), qk;
   /* v3.35 · Outro 전 사회자 안내(16:45 설문 안내) 시간대에만 홈 첫 줄로 · 그 밖에는 스탬프 탭 카드가 입구 */
   var hm0 = new Date().getHours() * 60 + new Date().getMinutes();
-  if (surveyOpen() && !surveyDone() && evPhase() === "live" && hm0 >= t2m("16:40") && hm0 < t2m("17:10"))
+  if (!surveyLock() && !surveyDone() && evPhase() === "live" && hm0 >= t2m("16:40") && hm0 < t2m("17:10"))
     rows.push([-1, "App.go('survey')", "설문", "오늘 한 판 설문", "60초 · 제출하면 스탬프", "mine"]);
   /* v3.43 · 내 항목은 myItems 하나에서 (종류별 1건 · 테스트 오버레이 겹침 제거) */
   myItems(true).forEach(function (x) {
@@ -3315,16 +3319,18 @@ function stampInnerHtml(s) {
   var inner = '<p class="d">' + s.desc + " · " + s.where + "</p>" +
     (s.note ? '<p class="nt">' + s.note + "</p>" : "");
   if (s.id === "sv") {
-    var dn = surveyDone(), op = surveyOpen(), dr = S.get("survey_draft", null);
+    var dn = surveyDone(), lk = surveyLock(), dr = S.get("survey_draft", null);
     inner = '<p class="d">' + s.desc + " · " + s.where + "</p>" +
       (dn ? '<p class="d">제출 완료 · 고마워요</p><button class="btn line" style="margin-top:10px" onclick="App.go(\'survey\')">내가 고른 것 · 전체 비율 보기</button>' :
-        !op ? '<p class="d">' + SURVEY.open + "에 열려요 · 오후 프로그램을 겪은 뒤 답해 주세요</p>" +
+        lk === "time" ? '<p class="d">' + SURVEY.open + "에 열려요 · 오후 프로그램을 겪은 뒤 답해 주세요</p>" +
           '<button class="btn" style="margin-top:10px" disabled>' + SURVEY.open + "에 열려요</button>" :
+        lk === "nostamp" ? '<p class="d">스탬프를 하나 모으면 열려요 · 전시·부스·프로그램 무엇이든</p>' +
+          '<button class="btn" style="margin-top:10px" disabled>스탬프를 하나 모으면 열려요</button>' :
           '<button class="btn mint" style="margin-top:10px" onclick="App.go(\'survey\')">' + (dr ? "이어 하기 · " + dr.step + " / 5" : "설문 시작") + "</button>");
     if (testMode()) {
       inner += S.get("stamps", []).indexOf(s.id) < 0
         ? '<button class="btn test" onclick="testStamp(\'' + s.id + '\')">테스트 · 완료 처리</button>' +
-          (!op ? '<button class="btn test" onclick="S.set(\'survey_force\', true); App.render()">테스트 · 잠금 풀기</button>' : "")
+          (lk === "time" ? '<button class="btn test" onclick="S.set(\'survey_force\', true); App.render()">테스트 · 잠금 풀기</button>' : "")
         : '<button class="btn test" onclick="testStampUndo(\'' + s.id + '\'); S.set(\'survey_done\', false); S.set(\'survey_mine\', null)">테스트 · 완료 취소</button>';
     }
     return inner;
@@ -3335,6 +3341,14 @@ function stampInnerHtml(s) {
       '<p class="d">내려갈 때는 계단으로</p>' +
       '<p class="nt">방화문은 닫아 주세요</p>' + scanQNote() +
       '<button class="btn mint" style="margin-top:10px" onclick="qrScanOpen()">QR 스캔</button>' +
+      '<p class="lnk sub" onclick="staffStampOpen()">QR이 안 되면 담당자 적립 요청 ›</p>';
+  } else if (s.id === "p3") {
+    /* v3.52 · 세 가지 중 하나 · 바로가기 3개 · 좌석 QR · 담당자 적립 */
+    inner += '<div class="p3-go">' +
+      '<button class="btn mint" onclick="progGoFl(17)">17F 오후 강연</button>' +
+      '<button class="btn mint" onclick="App.go(\'dap\')">DAP 과제상담</button>' +
+      '<button class="btn mint" onclick="App.go(\'ev_cchat\')">AX 커피챗</button></div>' + scanQNote() +
+      '<button class="btn line" style="margin-top:8px" onclick="qrScanOpen()">17F 좌석 QR 스캔</button>' +
       '<p class="lnk sub" onclick="staffStampOpen()">QR이 안 되면 담당자 적립 요청 ›</p>';
   } else if (s.id === "p4") {
     /* v3.50 · AX 올림픽 허브 · 종목 행 카드 · 내 환산 점수·메달 · 총점 */
@@ -3370,7 +3384,7 @@ function scardHtml(s, got, isNext, newly) {
     cls: (got ? " done" : isNext ? " next" : " dim"),
     onclick: "ppToggle('" + s.id + "')",
     left: rcIcon(STAMP_ICONS[s.id]),
-    title: s.title, sub: (s.id === "sv" && !got && !surveyOpen() ? SURVEY.open + "에 열려요 · " : isNext ? '<b class="nxt">다음 추천</b> · ' : "") + s.where,
+    title: s.title, sub: (s.id === "sv" && !got && surveyLock() === "time" ? SURVEY.open + "에 열려요 · " : s.id === "sv" && !got && surveyLock() === "nostamp" ? "스탬프를 하나 모으면 열려요 · " : isNext ? '<b class="nxt">다음 추천</b> · ' : "") + s.where,
     right: got ? stampMarkHtml(false) : "",
     open: !!PP.open[s.id], body: stampInnerHtml(s)
   });
@@ -3618,6 +3632,7 @@ var Views = {
         (m && m.nps != null ? '<div class="card soft"><p class="muted">동료에게 권할 점수 · 내 답 ' + m.nps + " / 10</p></div>" : "");
     }
     if (!surveyOpen()) return '<div class="card soft" style="text-align:center"><p class="muted">' + SURVEY.open + '에 열려요.<br>오후 프로그램을 겪은 뒤 답해 주세요.</p></div>';
+    if (surveyLock() === "nostamp") return '<div class="card soft" style="text-align:center"><p class="muted">스탬프를 하나 모으면 열려요.<br>전시·부스·프로그램 무엇이든 하나면 돼요.</p><button class="btn mint" style="margin-top:12px" onclick="App.go(\'passport\')">스탬프 탭으로</button></div>';
     var step = d.step || 1;
     var bar = '<div class="row" style="justify-content:space-between;margin-bottom:6px"><b style="font-size:calc(14px * var(--fs));color:var(--acc2)">' + step + ' / 5</b>' +
       (step > 1 ? '<span class="lnk" style="margin:0" onclick="svGo(' + (step - 1) + ')">‹ 이전</span>' : "<span></span>") + "</div>" +
@@ -4942,6 +4957,12 @@ document.addEventListener("visibilitychange", function () { if (!document.hidden
    서버는 답을 사번 없이 저장하고 제출 사실만 사번과 남긴다. */
 var SV = { card: 0, busy: false, aggAt: 0 };
 var SURVEY_MOCK = { n: 128, bal: [[71, 57], [48, 80], [39, 89]], words: [{ w: "해볼 만하다", n: 31 }, { w: "생각보다 가깝다", n: 22 }, { w: "벌써 쓰고 싶다", n: 17 }, { w: "더 배우고 싶다", n: 12 }, { w: "막막하다", n: 6 }], min: 5 };
+/* v3.52 설문 잠금 · "time" = 14:30 전 · "nostamp" = 다른 스탬프 0개 · "" = 열림 (서버 survey_submit 와 같은 조건) */
+function surveyLock() {
+  if (!surveyOpen()) return "time";
+  var other = S.get("stamps", []).filter(function (id) { return id !== "sv" && STAMPS.some(function (x) { return x.id === id; }); });
+  return other.length ? "" : "nostamp";
+}
 function surveyOpen() {
   if (testMode() && S.get("survey_force", false)) return true;
   var ph = evPhase();
@@ -5072,8 +5093,15 @@ function stampSync(list) {
   if (!list.length) return;
   var cur = S.get("stamps", []), chg = list.length !== cur.length;
   if (!chg) for (var i = 0; i < list.length; i++) if (cur.indexOf(list[i]) < 0) { chg = true; break; }
-  if (chg) { S.set("stamps", list.slice()); checkRewards(); }
+  if (chg) {
+    var added = list.filter(function (id) { return cur.indexOf(id) < 0; });
+    S.set("stamps", list.slice()); checkRewards();
+    /* v3.52 · 운영자가 찍은 입장 스캔·상담 체크인·커피챗 완료로 서버에서 새로 생긴 스탬프 · 앱이 켜진 채 받으면 팝 */
+    if (STAMP_SYNC.warm && added.length && added.length <= 2) added.forEach(function (id) { if (S.get("pp_seen", []).indexOf(id) < 0) stampOverlay(id); });
+  }
+  STAMP_SYNC.warm = true;
 }
+var STAMP_SYNC = { warm: false };
 
 /* ═══════════════ 양방향 QR (260830) ═══════════════
  * 지금까지 QR은 「읽는 쪽」만 있었다. 체크인·대기·쿠폰 수령은 참가자가 자기 QR을
