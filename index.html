@@ -295,6 +295,7 @@
   .pq.act .k { color: var(--mint-deep); }
   .pq.act .big { color: #fff; }
   .pq.act .s { color: rgba(255,255,255,0.75); }
+  .pq.call { box-shadow: inset 0 0 0 2px var(--mint); }   /* v3.25 호출이지만 검정을 못 받았을 때(라이브 퀴즈가 열림) · 오렌지 링 */
   .pq.dim { background: var(--dim); }
   .pq.dim .k, .pq.dim .big { color: var(--faint); }
   .rc.done .ico { background: var(--tint2); border-color: var(--mint); color: var(--acc2); }
@@ -509,6 +510,7 @@
   .rail .mk { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 27px; height: 27px; border-radius: 999px; border: 2px solid var(--dimln); background: var(--dim); color: var(--faint); font-family: var(--disp); font-size: 12.5px; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
   .rail .mk.on { background: var(--mint); border-color: var(--mint); color: #fff; }
   .rail .mk.act { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .rail .mk.avail { box-shadow: 0 0 0 3px var(--tint2); }   /* v3.25 검정을 못 받은 사용 가능 룰렛 · 오렌지 채움 + 틴트 링 */
   .rail .mk.glow { animation: coupGlow 1.7s ease-out 2; }
   .rail .tick { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 9px; height: 9px; border-radius: 999px; background: var(--dim); border: 1.5px solid var(--dimln); pointer-events: none; }
   .rail .tick.on { background: #fff; border-color: var(--mint); }
@@ -2511,7 +2513,7 @@ function sessRowHtml(s) {
   return rcHtml({
     cls: mine || pqOn ? " my" : full ? " dim" : "",
     onclick: "progSessToggle('" + s.id + "')",
-    left: tokBadge(tm[0], pqOn && pq.status === "call" ? "act" : mine || pqOn ? "mine" : full ? "dim" : "", tm[1] ? "~" + tm[1] : null),
+    left: tokBadge(tm[0], pqOn && pq.status === "call" && isBlack("call") ? "act" : mine || pqOn ? "mine" : full ? "dim" : "", tm[1] ? "~" + tm[1] : null),
     title: esc(s.ttl) + (mine ? ' <span class="badge mint">' + (mine.slot ? mine.slot + " " : "") + "신청 완료</span>" : ""),
     sub: esc(s.sub || s.who), right: st,
     open: !!PROG.openSess[s.id], body: sessInlineHtml(s)
@@ -2574,7 +2576,8 @@ function schedNowRow() {
   /* 다음 일정에서 상시 항목(always)은 건너뛴다 (v3.18) */
   var nx = null;
   for (var xi = NOW_INDEX + 1; xi < TIMELINE.length; xi++) if (!TIMELINE[xi].always) { nx = TIMELINE[xi]; break; }
-  return rcHtml({ cls: "", onclick: go, link: true, left: tokBadge("지금", "act", now.time),
+  /* v3.25 · 검정을 못 받으면 기본 옅은 주황 뱃지로 한 단계 낮춘다 */
+  return rcHtml({ cls: "", onclick: go, link: true, left: tokBadge("지금", isBlack("now") ? "act" : "", now.time),
     title: esc(now.title), sub: nx ? "다음 " + nx.time + " " + esc(nx.title) : "" });
 }
 /* v3.13 홈 광고판 · 스플래시와 같은 AXF 시퀀스 엔진(axfSeqMount, 점 → 구체 → 달리는 사람 → Me to We) 재사용.
@@ -2621,12 +2624,13 @@ function myScheduleHtml() {
     var sp = scanSpot(qk), r = q[qk];
     if (!sp || !r || r.status === "done") continue;
     rows.push([-1, "qrPanelOpen('mine')", r.status === "call" ? "호출" : r.no + "번", sp.nm,
-      r.status === "call" ? "지금 입장하세요" : "대기 중" + (r.ahead ? " (앞 " + r.ahead + "명)" : ""), r.status === "call" ? "act" : "mine"]);
+      r.status === "call" ? "지금 입장하세요" : "대기 중" + (r.ahead ? " (앞 " + r.ahead + "명)" : ""), r.status === "call" && isBlack("call") ? "act" : "mine"]);
   }
   var pq = photoQ();   /* v3.21 B 포토부스 대기표 */
   if (pq && (pq.status === "wait" || pq.status === "call"))
     rows.push([pq.status === "call" ? -1 : t2m(pq.eta), "photoGoMine()", pq.status === "call" ? "호출" : pq.no + "번", "AI 포토부스",
-      pq.status === "call" ? "지금 입장하세요" : "예상 입장 " + pq.eta + " · 앞 " + pq.ahead + "팀", pq.status === "call" ? "act" : "mine"]);
+      /* 호출이면 홈 최상단 대기 카드(photoAlertHtml)가 검정을 받으므로, 같은 항목의 이 행은 한 단계 낮춘다 (v3.25 화면당 1곳) */
+      pq.status === "call" ? "지금 입장하세요" : "예상 입장 " + pq.eta + " · 앞 " + pq.ahead + "팀", "mine"]);
   var mr = myResv();
   if (mr && RESV_LIVE.indexOf(mr.status) >= 0)
     rows.push([sessStartMin(mr.slot), "App.go('dap')", mr.slot, "과제상담", "1F DAP존 미팅룸 " + mr.room, "mine"]);
@@ -2712,7 +2716,7 @@ function photoAlertHtml() {
   var q = photoQ();
   if (!q || !((q.status === "wait" && q.ahead <= 2) || q.status === "call")) return "";
   var call = q.status === "call";
-  return rcHtml({ cls: " my", onclick: "photoGoMine()", link: true, left: tokBadge(q.no + "번", call ? "act" : "mine"),
+  return rcHtml({ cls: " my", onclick: "photoGoMine()", link: true, left: tokBadge(q.no + "번", call && isBlack("call") ? "act" : "mine"),
     title: call ? "지금 입장하세요" : "곧 차례예요", sub: call ? "1F 포토부스 · 10분 안에 와 주세요" : "1F 포토부스로 내려와 주세요 · 예상 " + q.eta });
 }
 function photoTake() {
@@ -2757,7 +2761,7 @@ function photoQueueHtml() {
   var q = photoQ(), pub = photoPub(), ph = photoPhase();
   var wait = pub.waiting || 0;
   if (q && q.status === "call") {
-    return '<div class="pq act"><p class="k">지금 입장하세요</p><p class="big">' + q.no + '번</p><p class="s">1F 포토부스 · 호출 후 10분 안에 와 주세요</p></div>';
+    return '<div class="pq' + (isBlack("call") ? " act" : " call") + '"><p class="k">지금 입장하세요</p><p class="big">' + q.no + '번</p><p class="s">1F 포토부스 · 호출 후 10분 안에 와 주세요</p></div>';
   }
   if (q && q.status === "wait") {
     return '<div class="pq"><p class="k">예상 입장</p><p class="big">' + esc(q.eta) + '</p><p class="s">앞 <b>' + q.ahead + "팀</b> · 내 번호 " + q.no + "번</p>" +
@@ -2800,6 +2804,24 @@ function photoDemo(act) {
 function tokBadge(text, state, sub) {
   return '<span class="tok' + (state ? " " + state : "") + (sub ? " two" : "") + '"><b>' + text + "</b>" + (sub ? "<small>" + sub + "</small>" : "") + "</span>";
 }
+/* ══ 화면당 검정 강조 1곳 (v3.25 사용자 확정) · 긴급도 1순위 하나만 act(검정)를 받는다 ══
+   순위: quiz 라이브 퀴즈 카드(20초 제한 · 카드 자체가 검정) > call 호출(포토부스·대기열 · 안 가면 건너뛰어짐)
+         > roulette 룰렛 사용 가능(스탬프 3개·미사용) > now 진행 중 일정.
+   후보는 그 화면(일정 탭은 하위 탭까지)에 실제로 보이는 것만 모은다. 오버레이·모달은 대상 아님. */
+function blackPick(view) {
+  view = view || App.current;
+  var c = [], st = SCHED.tab;
+  var qs = S.get("quiz_state", INITIAL_QUIZ_STATE);
+  if (view === "home" && qs.activeId && qs.phase !== "idle") c.push("quiz");
+  var pq = S.get("photoq", null), qq = S.get("queue", {}), call = !!(pq && pq.status === "call"), k;
+  for (k in qq) if (qq[k] && qq[k].status === "call") call = true;
+  if (call && (view === "home" || view === "guide" || view === "sess_d" || (view === "guide_time" && st !== "all"))) c.push("call");
+  if ((view === "home" || view === "passport") && stampCount() >= 3 && !S.get("roulette_used", false)) c.push("roulette");
+  if (evPhase() === "live" && (view === "home" || (view === "guide_time" && st !== "always"))) c.push("now");
+  return c[0] || null;
+}
+function isBlack(kind) { return blackPick(App.current) === kind; }
+
 /* ══ 공용 행 카드 (v3.22) · 스탬프 카드·일정 행·홈 나의 일정·프로그램 행이 전부 이 함수 하나로 그린다 ══
    o = { cls, onclick, left(좌측 슬롯: 아이콘 또는 시간 뱃지), title, sub, right(우측 슬롯),
          open, body(펼침), link(true = 펼침 대신 이동 · 화살표 ›), chev(false = 화살표 없음) }
@@ -3015,7 +3037,8 @@ function railHtml(n, glow, dispN, home) {
   marks.forEach(function (m) {
     var pos = (m[0] / 6 * 100).toFixed(1) + "%";
     /* 사용 가능해진 룰렛(3 도달·미사용)은 검정 = 지금 행동할 것 (v3.6 상태 위계) */
-    var cls = m[0] === 3 && n >= 3 && !used ? " act" : n >= m[0] ? " on" : "";
+    /* v3.25 · 사용 가능한 룰렛이 검정을 못 받으면 오렌지 채움 + 틴트 링(avail)으로 한 단계 낮춘다 */
+    var cls = m[0] === 3 && n >= 3 && !used ? (isBlack("roulette") ? " act" : " on avail") : n >= m[0] ? " on" : "";
     mk += '<button class="mk' + cls + (m[0] === 3 && glow ? " glow" : "") + '" style="left:' + pos + '" onclick="' + m[2] + '" aria-label="' + m[1] + '">' + m[0] + "</button>";
     lb += '<span style="left:' + pos + '">' + m[1] + "</span>";
   });
@@ -3196,9 +3219,11 @@ var Views = {
       if (t.always) return;   /* v3.21 상시 항목은 상시 프로그램 탭 몫 */
       var now = ph === "live" && i === NOW_INDEX;
       var past = ph === "after" || (ph === "live" && i < NOW_INDEX);
-      var badges = ' <span class="badge ' + (now ? "mint" : "gray") + '">' + t.tag + "</span>" + (now ? ' <span class="badge ink">진행 중</span>' : "");
+      /* v3.25 · 진행 중이 검정을 못 받으면 검정 링·뱃지를 빼고 옅은 주황 뱃지 + 「진행 중」 주황 뱃지로 낮춘다 */
+      var nowBlack = now && isBlack("now");
+      var badges = ' <span class="badge ' + (now ? "mint" : "gray") + '">' + t.tag + "</span>" + (now ? ' <span class="badge ' + (nowBlack ? "ink" : "mint") + '">진행 중</span>' : "");
       rows.push([t2m(t.time),
-        schedRow("t" + i, now ? " now" : past ? " past" : "", now ? "act" : past ? "dim" : "", t.time, t.end, esc(t.title) + badges, body)]);
+        schedRow("t" + i, nowBlack ? " now" : past ? " past" : "", nowBlack ? "act" : past ? "dim" : "", t.time, t.end, esc(t.title) + badges, body)]);
     });
     /* 내 일정 수집 · 홈 「나의 스케줄」과 같은 규칙 (대기열 → 상담 → 커피챗 → 신청 세션) */
     var my = [];   /* [분, 시각 라벨, 제목, 상세, onclick] */
@@ -3228,7 +3253,8 @@ var Views = {
     /* 진행 중 시간대에 든 내 일정 = 오렌지 테두리·틴트 유지, 시간 뱃지만 검정 (v3.11 조합 규칙) */
     var nowT = ph === "live" ? [t2m(TIMELINE[NOW_INDEX].time), t2m(TIMELINE[NOW_INDEX].end)] : null;
     my.forEach(function (m, j) {
-      var nowish = m[5] || (nowT && m[0] >= 0 && m[0] >= nowT[0] && m[0] < nowT[1]);
+      /* v3.25 · 호출(m[5])은 call 순위, 진행 중 시간대에 든 내 항목은 now 순위로 검정 판정 */
+      var nowish = m[5] ? isBlack("call") : (nowT && m[0] >= 0 && m[0] >= nowT[0] && m[0] < nowT[1] && isBlack("now"));
       mineRows.push([m[0],
         schedRow("m" + j, " my", nowish ? "act" : "mine", m[1], null, esc(m[2]) + ' <span class="badge mint">내 일정</span>',
           '<p class="pl">' + esc(m[3]) + '</p><button class="btn mint" onclick="' + m[4] + '">바로가기</button>')]);
@@ -3247,7 +3273,7 @@ var Views = {
         var stt = alwaysState(a.id);
         /* 포토부스는 펼침 = 번호표 UI 자체 · 내 번호표가 살아 있으면 내 것(my), 호출이면 뱃지 검정 */
         var pq = a.id === "photo" ? photoQ() : null, pqOn = pq && (pq.status === "wait" || pq.status === "call");
-        return schedRow("a_" + a.id, pastA ? " past" : pqOn ? " my" : "", pastA ? "dim" : pqOn ? (pq.status === "call" ? "act" : "mine") : "", a.time, a.end,
+        return schedRow("a_" + a.id, pastA ? " past" : pqOn ? " my" : "", pastA ? "dim" : pqOn ? (pq.status === "call" && isBlack("call") ? "act" : "mine") : "", a.time, a.end,
           esc(a.title) + ' <span class="badge gray">' + a.tag + "</span>",
           '<p class="pl">' + esc(a.place) + '</p><p class="ds">' + esc(stt[1]) + "</p>" +
             (a.id === "photo" ? '<div style="margin-top:10px">' + photoQueueHtml() + "</div>" : '<button class="btn mint" onclick="' + stt[2] + '">' + stt[3] + "</button>"),
