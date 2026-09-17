@@ -239,13 +239,14 @@
   .rc .ls .tok { width: 100%; min-height: 48px; }
   .rc .ls .ico { position: relative; width: 42px; height: 42px; border: 2px solid var(--dimln); border-radius: 50%; background: var(--white); color: var(--faint); display: flex; align-items: center; justify-content: center; }
   .rc .ls .ico svg { width: 22px; height: 22px; display: block; }
-  .rc .bd { flex: 1; min-width: 0; padding: 9px 0; }
+  .rc .bd { flex: 1 1 auto; min-width: 118px; padding: 9px 0; }   /* v3.63 제목 자리 최소 폭 보장 · 오른쪽 상태 슬롯·장소 칩이 먼저 줄어든다 */
   .rc .tt { display: block; font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.35; }
   .rc .tt .badge { margin-left: 4px; vertical-align: 2px; }
   /* v3.44b 뱃지 슬롯 (실기기 360px 제보: 긴 제목에서 뱃지가 제목과 함께 말줄임으로 잘림) · 제목만 줄이고 뱃지는 항상 보인다 */
   .rc .tr { display: flex; align-items: center; gap: 5px; min-width: 0; }
-  .rc .tr .tt { flex: 0 1 auto; min-width: 0; }
-  .rc .tr .bgs { flex: none; display: flex; align-items: center; gap: 4px; }
+  /* v3.63 제목 최소 폭 보장 (사용자 지적: 「기.」 처럼 한두 글자로 잘렸다) · 자리가 모자라면 장소 칩 → 뱃지 순으로 먼저 줄인다 */
+  .rc .tr .tt { flex: 1 1 auto; min-width: 0; }
+  .rc .tr .bgs { flex: 0 1 auto; min-width: 0; display: flex; align-items: center; gap: 4px; overflow: hidden; }
   .rc .tr .bgs .badge { margin: 0; }
   .rc .sb { display: block; margin-top: 2px; font-size: calc(12.5px * var(--fs)); font-weight: 700; color: var(--muted); line-height: 1.4; }
   .rc .sb .nxt { color: var(--acc2); font-weight: 800; }   /* 스탬프 다음 추천 표시 · 줄을 늘리지 않게 보조 줄 안에 */
@@ -254,12 +255,12 @@
   /* v3.44 장소 칩 · 오른쪽 위 · 무채색(시간 뱃지의 옅은 주황과 구분) · 펼침 화살표와 세로로 겹치지 않게 위쪽 6px */
   /* v3.61 (사용자 확정 260918) 장소 칩도 시간 뱃지와 같은 오렌지 문법 · 다만 한 단 약하게 = 면 없이 테두리만.
      검정은 시간 뱃지 몫이라 진행 중 카드에서도 칩은 검정이 되지 않는다(화면당 검정 하나). */
-  .rc .pc { position: absolute; top: 4px; right: 12px; z-index: 1; max-width: 176px; height: 19px; line-height: 17px; padding: 0 8px; border-radius: 999px; background: transparent; border: 1px solid var(--tint2); color: var(--acc2); font-size: 11.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
-  .rc.hp .rh .tr { padding-right: calc(var(--pcw) - 20px); }   /* 칩이 본문 영역과 실제로 겹치는 폭만큼만 비운다(화살표 열 폭 제외) */
+  .rc .pc { position: absolute; top: 4px; right: 12px; z-index: 1; max-width: 88px; height: 19px; line-height: 17px; padding: 0 8px; border-radius: 999px; background: transparent; border: 1px solid var(--tint2); color: var(--acc2); font-size: 11.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+  .rc.hp .rh .tr { padding-right: min(calc(var(--pcw) - 20px), 44px); }   /* v3.63 칩 자리 확보 상한 44px · 제목이 먼저다 */
   .rc.ink .pc { background: transparent; border-color: rgba(255,255,255,0.45); color: #fff; }   /* 검정 카드에서는 흰 테두리 */
   .rc.past .pc, .rc.dim .pc { background: transparent; border-color: var(--dimln); color: #8A817B; }   /* 지나간·잠긴 행은 회색 테두리 */
   /* 내 일정 카드(오렌지 테두리) 위에서도 칩 테두리는 O25 그대로 둔다 · 360px 실측에서 답답해 보이지 않았다 */
-  .rc .rt { flex: none; display: flex; align-items: center; }
+  .rc .rt { flex: 0 1 auto; min-width: 0; display: flex; align-items: center; overflow: hidden; }
   /* v3.62 동시 진행 블록 · 한 카드 안에 두 트랙 (큰글씨는 .stack 으로 위아래) */
   .rc.par { display: block; padding-bottom: 10px; }
   .rc.par .rh { cursor: default; }
@@ -274,7 +275,7 @@
   .par-t.my { border-color: var(--acc2); background: var(--tint); }
   .rc.par.past .par-t { background: var(--dim); border-color: var(--dimln); }
   .rc.par.past .par-t .hd b, .rc.par.past .par-t .nt { color: var(--faint); }
-  .rc .rt .st { font-size: calc(12.5px * var(--fs)); font-weight: 800; color: var(--acc2); }
+  .rc .rt .st { max-width: 64px; font-size: calc(12.5px * var(--fs)); font-weight: 800; color: var(--acc2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rc .chev { flex: none; color: var(--faint); font-weight: 800; font-size: 11px; }
   .rc .chev.arw { font-size: 15px; }
   /* 펼침 · 같은 카드 안 · 스탬프 카드 펼침 문법(설명 → 행동 버튼 → 보조 링크) */
@@ -1006,7 +1007,8 @@ var TIMELINE = [
   { time: "13:30", end: "16:30", title: "10F 실습형 세션 A~E", short: "사전 신청자 · 5개 세션 중 1개", place: "10F", desc: "사전 신청자 대상 · 세션별 장소는 프로그램 탭", tag: "사전 신청", par: 1 },
   { time: "15:10", end: "16:40", title: "파트너사 강연 · MS", short: "AI와 친해지기 · MS", place: "17F 대강당", desc: "신청은 프로그램 탭", tag: "신청제", par: 1 },
   /* v3.50 사회자 순서 (사용자 확정 260917) · Outro 문항 기능 폐지 · 설문 참여 안내 → 17:00 Outro */
-  { time: "16:45", end: "17:00", title: "설문 참여 안내", short: "오늘 한 판 설문 안내", place: "17F 대강당", desc: "60초 설문 · 스탬프 1개", tag: "자유 참석" },
+  /* v3.63 (사용자 확정 260918) 「일단 빼자」 · 항목은 남기고 off 로 일정 탭에서만 감춘다 (설문 기능·송출 화면·홈/스탬프 입구는 그대로) */
+  { off: 1, time: "16:45", end: "17:00", title: "설문 참여 안내", short: "오늘 한 판 설문 안내", place: "17F 대강당", desc: "60초 설문 · 스탬프 1개", tag: "자유 참석" },
   { time: "17:00", end: "17:30", title: "Outro · DAP 시상", short: "DAP 우수 성과자 시상 · 경품 추첨", place: "17F 대강당", desc: "DAP 우수 성과자 시상 · 경품 추첨 · 결과는 개별 안내", tag: "피날레" }
 ];
 var NOW_INDEX = 1;
@@ -2967,7 +2969,7 @@ function schedNowRow() {
   var now = TIMELINE[NOW_INDEX];
   /* 다음 일정에서 상시 항목(always)은 건너뛴다 (v3.18) */
   var nx = null;
-  for (var xi = NOW_INDEX + 1; xi < TIMELINE.length; xi++) if (!TIMELINE[xi].always) { nx = TIMELINE[xi]; break; }
+  for (var xi = NOW_INDEX + 1; xi < TIMELINE.length; xi++) if (!TIMELINE[xi].always && !TIMELINE[xi].off) { nx = TIMELINE[xi]; break; }
   /* v3.25 · 검정을 못 받으면 기본 옅은 주황 뱃지로 한 단계 낮춘다 */
   return rcHtml({ cls: "", onclick: go, link: true, left: tokBadge("지금", isBlack("now") ? "act" : "", now.time),
     title: esc(now.title), sub: nx ? "다음 " + nx.time + " " + esc(nx.title) : "" });
@@ -3178,7 +3180,7 @@ function isBlack(kind) { return blackPick(App.current) === kind; }
 function rcPlaceW(t) {
   var w = 22; t = String(t || "");
   for (var i = 0; i < t.length; i++) w += /[\u1100-\uFFFF]/.test(t.charAt(i)) ? 11.5 : 6.6;
-  return Math.round(Math.min(w, 176));
+  return Math.round(Math.min(w, 88));   /* v3.63 칩 상한을 낮춰 제목 자리를 먼저 지킨다 · 넘치면 칩이 말줄임 */
 }
 function rcHtml(o) {
   var chev = o.chev === false ? "" : o.link ? '<span class="chev arw">›</span>' : '<span class="chev">' + (o.open ? "▲" : "▼") + "</span>";
@@ -3895,7 +3897,7 @@ var Views = {
     var parDone = false;
     TIMELINE.forEach(function (t, i) {
       var body = '<p class="ds">' + esc(t.desc) + "</p>";   /* v3.44 장소는 칩으로 */
-      if (t.always) return;   /* v3.21 상시 항목은 상시 프로그램 탭 몫 */
+      if (t.always || t.off) return;   /* v3.21 상시 항목은 상시 프로그램 탭 몫 · v3.63 off = 일정 탭에서 감춤 */
       /* v3.62 오후는 17F 강연과 10F 세션이 같은 시간에 돈다 · 시간순 목록에 따로 늘어놓으면 동시 진행인 줄 모른다 → 한 카드 두 트랙 */
       if (t.par) {
         if (parDone) return;
@@ -3907,7 +3909,9 @@ var Views = {
       var past = ph === "after" || (ph === "live" && i < NOW_INDEX);
       /* v3.25 · 진행 중이 검정을 못 받으면 검정 링·뱃지를 빼고 옅은 주황 뱃지 + 「진행 중」 주황 뱃지로 낮춘다 */
       var nowBlack = now && isBlack("now");
-      var badges = '<span class="badge ' + (now ? "mint" : "gray") + '">' + t.tag + "</span>" + (now ? '<span class="badge ' + (nowBlack ? "ink" : "mint") + '">진행 중</span>' : "");
+      /* v3.63 · 참여 방식 태그(자유 참석·신청제·사전 신청·휴식·피날레)는 펼침으로 내린다 · 접힌 줄은 시간·제목·진행 중만 */
+      var badges = now ? '<span class="badge ' + (nowBlack ? "ink" : "mint") + '">진행 중</span>' : "";
+      body = '<p class="ds"><span class="badge gray">' + esc(t.tag) + "</span></p>" + body;
       rows.push([t2m(t.time),
         schedRow("t" + i, nowBlack ? " now" : past ? " past" : "", nowBlack ? "act" : past ? "dim" : "", t.time, t.end, esc(t.title), body, undefined, t.place, badges)]);
     });
