@@ -174,7 +174,7 @@ var TABS = [
   { id:"notice", n:"공지" },
   { id:"photo", n:"포토부스" }
 ];
-/* 앱 STAMPS 와 맞춘다 · v3.33 8칸(계단 st · 설문 sv 추가), 보상은 6개에서 끝. 번호는 콘솔 표 머리용 약칭일 뿐 앱에는 없다.
+/* 앱 STAMPS 와 맞춘다 · v3.33 8칸(계단 st · 설문 sv 추가), v3.39 보상은 7개에서 끝. 번호는 콘솔 표 머리용 약칭일 뿐 앱에는 없다.
    폐기된 ID 는 옛 로그에 남아 있을 수 있어 표기만 한다(서버 stamp_people 는 old 로 따로 준다). */
 var STAMP_META = {
   p1:{ no:"01", n:"1F 전시" }, p2:{ no:"02", n:"부스 체험" }, p3:{ no:"03", n:"17F 강의" },
@@ -327,8 +327,8 @@ function setFilt(v){ ST.filt=v; render(); }
 function setSub(v){ ST.sub=v; ST.q=""; ST.filt=""; render(); }
 function match(row, fields){ if(!ST.q) return true; var q=ST.q.toLowerCase(); return fields.some(function(f){ return String(row[f]||"").toLowerCase().indexOf(q)>=0; }); }
 
-/* 스탬프 개수 → 보상 (260909 확정 · 3개 룰렛 1회 · 4/5/6개 응모권 1/2/3장) */
-function reward(n){ n=Math.min(6,n); return { roulette:n>=3, tickets: n>=6?3:n>=5?2:n>=4?1:0 }; }
+/* 스탬프 개수 → 보상 (260909 확정 · v3.39 · 3개 룰렛 1회 · 4/5/6/7개 응모권 1/2/3/4장) */
+function reward(n){ n=Math.min(7,n); return { roulette:n>=3, tickets: n>=7?4:n>=6?3:n>=5?2:n>=4?1:0 }; }
 function stampCells(ids){
   return '<div class="stamps">'+STAMP_ORDER.map(function(id){ var got=ids.indexOf(id)>=0; return '<span class="st'+(got?" got":"")+'" title="'+esc(STAMP_META[id].n)+'">'+STAMP_META[id].no+'</span>'; }).join("")+
     ids.filter(function(id){return STAMP_ORDER.indexOf(id)<0;}).map(function(id){ var m=STAMP_META[id]||{n:id}; return '<span class="st old" title="'+esc(m.n)+' · 폐기된 항목">'+esc(id.replace("p",""))+'</span>'; }).join("")+'</div>';
@@ -339,8 +339,8 @@ function kpi(l,v,u,x){ return '<div class="kpi"><div class="l">'+esc(l)+'</div><
 function viewDash(){
   var st=ST.data.stats||{}, ac=(ST.data.acct||{}).rows||[], sp=(ST.data.stamp||{}).rows||[];
   var rv=(ST.data.resv||{}).rows||[], cc=(ST.data.cchat||{}).rows||[], ss=ST.data.sess||{rows:[],cap:{}};
-  var dist=[0,0,0,0,0,0,0]; var roul=0, tickets=0;
-  sp.forEach(function(r){ var n=Math.min(6,r.n); dist[n]++; if(r.roulette) roul++; tickets+=reward(r.n).tickets; });
+  var dist=[0,0,0,0,0,0,0,0]; var roul=0, tickets=0;
+  sp.forEach(function(r){ var n=Math.min(7,r.n); dist[n]++; if(r.roulette) roul++; tickets+=reward(r.n).tickets; });
   var eligible=sp.filter(function(r){return r.n>=3;}).length;
   var rvBy={}; rv.forEach(function(r){ rvBy[r.status]=(rvBy[r.status]||0)+1; });
   var ccBy={}; cc.forEach(function(r){ ccBy[r.status]=(ccBy[r.status]||0)+1; });
@@ -352,7 +352,7 @@ function viewDash(){
     kpi("가입 계정",ac.length,"명",(ST.data.acct&&ST.data.acct.roster?'명부 '+ST.data.acct.roster+'명 중 '+pct(ac.length,ST.data.acct.roster)+'%':''))+
     kpi("참여 기록",st.wall||0,"건","스탬프·아이디어·게임·룰렛 전체")+
     kpi("스탬프 3개 이상",eligible,"명","룰렛 자격 · 사용 "+roul+"명")+
-    kpi("추첨 응모권",tickets,"장","4개 1장 · 5개 2장 · 6개 3장")+
+    kpi("추첨 응모권",tickets,"장","4개 1장 · 5개 2장 · 6개 3장 · 7개 4장")+
   '</div>';
 
   h+='<div class="grid g2"><div class="card"><h2>스탬프 보유 분포</h2>';
@@ -419,7 +419,7 @@ function viewStamp(){
   var rows=((ST.data.stamp||{}).rows||[]);
   var f=ST.filt||"all";
   var shown=rows.filter(function(r){ return match(r,["emp","name","dept"]) && (f==="all"||(f==="3"&&r.n>=3)||(f==="4"&&r.n>=4)||(f==="r"&&r.roulette)); });
-  var tot=[0,0,0,0,0,0,0]; rows.forEach(function(r){ tot[Math.min(6,r.n)]++; });
+  var tot=[0,0,0,0,0,0,0,0]; rows.forEach(function(r){ tot[Math.min(7,r.n)]++; });
   var h='<h1>스탬프<small>사번별 수집 내역. 서버 참여 기록이 정본이고, 앱 화면은 이걸 따라갑니다.</small></h1>';
   h+='<div class="grid g4">'+kpi("기록 있는 사람",rows.length,"명")+kpi("3개 이상",rows.filter(function(r){return r.n>=3;}).length,"명","룰렛 자격")+kpi("룰렛 사용",rows.filter(function(r){return r.roulette;}).length,"명")+kpi("응모권 합계",rows.reduce(function(a,r){return a+reward(r.n).tickets;},0),"장")+'</div>';
   h+='<div class="card"><div class="tools"><input class="in" placeholder="사번 · 이름 · 부문 검색" value="'+esc(ST.q)+'" oninput="setQ(this.value)">'+
@@ -433,7 +433,7 @@ function viewStamp(){
         '<td><select class="in" style="min-width:120px;padding:5px 8px" onchange="grantStamp(\''+esc(r.emp)+'\',this.value,this)"><option value="">부여할 항목</option>'+["p1","p2","p3"].filter(function(id){return r.stamps.indexOf(id)<0;}).map(function(id){ return '<option value="'+id+'">'+STAMP_META[id].no+' '+STAMP_META[id].n+'</option>'; }).join("")+'</select></td></tr>'; }).join("")+
     (shown.length>400?'<tr><td colspan="8" class="src">400명까지만 표시합니다. 검색으로 좁혀 주세요.</td></tr>':'')+'</table></div>';
   h+=viewStairOps();
-  h+='<p class="note mt12">스탬프는 8칸, 보상은 6개에서 끝납니다(7·8번째는 추가 보상 없음). 계단(07)은 계단실 안 QR을 한 번 찍으면 적립되고(층 상관없음), 설문(08)은 제출 시 적립됩니다. 담당자 부여는 현장 QR 3종(01·02·03)과 계단(07)이 됩니다. 앱 자동 적립 3종(04·05·06)은 앱 안에서 하는 행동이라 부여 대상이 아닙니다. 부여는 참여 기록에 「담당자 부여」로 남습니다.</p></div>';
+  h+='<p class="note mt12">스탬프는 8칸, 보상은 7개에서 끝납니다(4~7개 응모 1~4장 · 8번째는 추가 보상 없음). 계단(07)은 계단실 안 QR을 한 번 찍으면 적립되고(층 상관없음), 설문(08)은 제출 시 적립됩니다. 담당자 부여는 현장 QR 3종(01·02·03)과 계단(07)이 됩니다. 앱 자동 적립 3종(04·05·06)은 앱 안에서 하는 행동이라 부여 대상이 아닙니다. 부여는 참여 기록에 「담당자 부여」로 남습니다.</p></div>';
   return h;
 }
 /* v3.33·v3.34 운영 · 룰렛 소진 안내 스위치 + 계단 지점 코드(인쇄용) */
