@@ -948,7 +948,7 @@ var STAMPS = [
   { id: "p3", title: "프로그램 참여", short: "프로그램", desc: "17F 오후 강연 · DAP 과제상담 · AX 커피챗 중 1회" + (P3_INCLUDE_10F ? " · 10F 실습형 세션" : ""), where: "", site: 1, tap: "progGoFl(17)", cta: "17F 오후 강연 신청하기" },
   { id: "p4", title: "미니게임", short: "미니게임", desc: "미니게임 1종 끝까지 한 판", where: "1분", inapp: 1 },
   { id: "p5", title: "아이디어 한 줄", short: "아이디어", desc: "아이디어 1건 제출", where: "1분", inapp: 1, tap: "App.go('ideas')", cta: "아이디어 쓰기" },
-  { id: "p7", title: "전시 QR 퀴즈", short: "QR 퀴즈", desc: "DAP Wall QR 퀴즈 1세트 통과 (60점 이상)", where: "약 10분", tap: "App.go('wq_list')", cta: "QR 퀴즈 풀기" },
+  { id: "p7", title: "전시 QR 퀴즈", short: "QR 퀴즈", desc: "벽 QR 스캔 · 한 세트 완료", where: "약 10분", tap: "App.go('wq_list')", cta: "QR 퀴즈 풀기" },
   /* v3.34b (260917 사용자 확정) 계단 · 계단실 안 QR 한 번 = 적립 · 층·방향·횟수·시간 조건 없음 · 판정·적립은 서버(stamp_claim)
      site: 담당자 적립 가능 (서버 stamp_grant 가 st 를 받는다) */
   { id: "st", title: "계단 이용", short: "계단", desc: "계단실 안 QR 스캔", where: "", site: 1, tap: "qrScanOpen()", cta: "QR 스캔" },
@@ -1083,7 +1083,7 @@ var FL_OPEN = {
   1: [
     { nm: "1F 전시", d: "AX Wall 관람", sid: "p1" },
     { nm: "AX Now! 부스", d: "HI-Helper · HIDI-Q 체험", sid: "p2" },
-    { nm: "DAP Wall QR 퀴즈", d: "5문항 · 60점 이상 통과", sid: "p7" },
+    { nm: "DAP Wall QR 퀴즈", d: "벽 QR 스캔 · 5문항", sid: "p7" },
     { nm: "이벤트존 룰렛", d: "스탬프 3개 · 1인 1회", tap: "ppRouletteOpen()", tag: "보상" }
   ],
   10: [],
@@ -1821,33 +1821,36 @@ function cchatCancelGo() {
 
 /* ── v10: DAP Wall QR 퀴즈 ── */
 var WQ = { set: null };
+/* v3.65 (사용자 확정 260918) 난이도 조정 · 벽 QR 을 찍어야 그 벽의 세트가 열리고, 한 세트만 끝내면 적립.
+   60점 커트라인·재응시·부문 경쟁은 폐기 · 점수 대신 맞힌 개수와 정답을 보여 준다.
+   QR 값: 앱 주소 뒤 #q=wall1 | wall2 | wall3 (인쇄용 QR 내용이 바뀐다 · 콘솔 인쇄 안내 참조) */
 function wqSets() { return S.get("wq_sets", WALLQ_DEFAULT); }
-function wqPassScore() { return S.get("wq_pass", 60); }
 function wqActive(id) { var a = S.get("wq_active", { wall1: true, wall2: true, wall3: true }); return a[id] !== false; }
 function wqAttempts(setId) { return S.get("wq_attempts", []).filter(function (a) { return !setId || a.set === setId; }); }
 function wqBest(setId) {
   var best = null;
-  wqAttempts(setId).forEach(function (a) { if (!best || a.score > best.score) best = a; });
+  wqAttempts(setId).forEach(function (a) { if (!best || a.correct > best.correct) best = a; });
   return best;
 }
-function wqPassedCount() {
+function wqDoneCount() {
   var n = 0;
-  ["wall1", "wall2", "wall3"].forEach(function (id) { var b = wqBest(id); if (b && b.passed) n++; });
+  ["wall1", "wall2", "wall3"].forEach(function (id) { if (wqAttempts(id).length) n++; });
   return n;
 }
 function shuf(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+/* 목록에서 누르면 잠금 안내만 · 테스트·데모에서는 그냥 열린다 */
 function wqOpen(setId) {
-  if (!S.get("dept", null)) {
-    App.go("wq_list");
-    setTimeout(function () { toast("부문을 먼저 선택해주세요. 부문별 정답률 경쟁에 반영돼요."); }, 200);
-    return;
-  }
+  if (!testMode()) { toast("벽의 QR을 스캔하면 열려요"); return; }
+  wqOpenQr(setId);
+}
+/* 벽 QR 이 부르는 입구 · 그 벽의 세트만 연다 */
+function wqOpenQr(setId) {
   if (!wqStart(setId)) return;
   App.go("wq_play");
 }
 function wqStart(setId) {
   var def = wqSets().find(function (s) { return s.id === setId; });
-  if (!def) return false;
+  if (!def) { toast("이 QR의 문제를 찾지 못했어요"); return false; }
   if (!wqActive(setId)) { toast("이 세트는 지금 점검 중이에요."); return false; }
   var qs = def.qs.map(function (q) {
     var idx = q.o.map(function (_, i) { return i; });
@@ -1858,29 +1861,23 @@ function wqStart(setId) {
   WQ = { set: setId, name: def.name, theme: def.theme, qs: qs, picks: {}, submitted: false, result: null };
   return true;
 }
-function wqRetry(setId) { if (wqStart(setId)) App.render(); }
 function wqPick(qi, oi) { if (WQ.submitted) return; WQ.picks[qi] = oi; App.render(); }
 function wqSubmit() {
   if (!WQ.set || WQ.submitted) return;
   var n = Object.keys(WQ.picks).length;
-  if (n < WQ.qs.length) { toast("아직 " + (WQ.qs.length - n) + "문항이 남았어요. 정답은 DAP Wall에 있습니다!"); return; }
+  if (n < WQ.qs.length) { toast("아직 " + (WQ.qs.length - n) + "문항이 남았어요"); return; }
   var correct = 0;
   WQ.qs.forEach(function (q, i) { if (WQ.picks[i] === q.a) correct++; });
-  var score = Math.round((correct / WQ.qs.length) * 100);
-  var passed = score >= wqPassScore();
-  var prevBest = wqBest(WQ.set);
-  var firstPass = passed && !(prevBest && prevBest.passed);
+  var first = !S.get("wq_attempts", []).length;
   var at = S.get("wq_attempts", []);
-  at.push({ set: WQ.set, score: score, passed: passed, attemptNo: wqAttempts(WQ.set).length + 1, dept: S.get("dept", null) || "미지정", ts: Date.now() });
+  at.push({ set: WQ.set, correct: correct, total: WQ.qs.length, ts: Date.now() });
   S.set("wq_attempts", at);
   WQ.submitted = true;
-  WQ.result = { score: score, correct: correct, passed: passed };
-  /* 260909: 응모권 발급 폐지 · 통과 = 스탬프 06(전시 QR 퀴즈)만 적립 */
-  if (firstPass) awardStamp("p7");
+  WQ.result = { correct: correct, total: WQ.qs.length };
+  if (first) awardStamp("p7");   /* v3.65 점수와 무관 · 한 세트를 끝내면 적립 (다른 세트는 추가 적립 없음) */
   waveBump();
   App.render();
 }
-function pickDept(d) { S.set("dept", d); toast("부문 선택 완료. " + d + "의 정답률에 반영됩니다."); }
 function deptStats() {
   var mine = S.get("dept", null);
   var myAt = S.get("wq_attempts", []);
@@ -1897,12 +1894,7 @@ function deptStats() {
   rows.sort(function (a, b) { return b.avg - a.avg; });
   return rows;
 }
-function wqPassSave() {
-  var v = parseInt(el("wqPass").value, 10);
-  if (!(v >= 0 && v <= 100)) { toast("0~100 사이 점수를 입력해주세요."); return; }
-  S.set("wq_pass", v);
-  toast("커트라인 " + v + "점 적용 (p19 “점수 기준 변경 가능”)");
-}
+
 function wqToggle(id) {
   var a = S.get("wq_active", { wall1: true, wall2: true, wall3: true });
   a[id] = a[id] === false;
@@ -1940,33 +1932,8 @@ function boothStamp() {
   awardStamp("p2");
   waveBump();
 }
-var FB_RATE = 0;
-function fbPick(n, btn) {
-  FB_RATE = n;
-  document.querySelectorAll(".tag-btn[data-fb]").forEach(function (b) { b.classList.toggle("on", b === btn); });
-}
-function boothFeedback() {
-  if (!FB_RATE) { toast("만족도를 먼저 선택해주세요."); return; }
-  var fb = S.get("booth_fb", []);
-  fb.push({ rate: FB_RATE, text: (el("fbText").value || "").trim(), ts: Date.now() });
-  FB_RATE = 0;
-  S.set("booth_fb", fb);
-  toast("피드백 감사합니다! 서비스 개선 우선순위에 반영돼요.");
-}
-function boothQuestion() {
-  var t = (el("bqText").value || "").trim();
-  if (t.length < 5) { toast("질문을 5자 이상 입력해주세요."); return; }
-  ideaPush(t, "기타", false, "booth");
-  setTimeout(function () { toast("질문이 아이디어 풀에 담겼어요. 커피챗·2027 DAP 후보가 됩니다."); }, 100);
-}
-function demoRequest() {
-  var d = (el("drDept").value || "").trim();
-  if (!d) { toast("부서명을 입력해주세요."); return; }
-  var r = S.get("demo_reqs", []);
-  r.push({ dept: d, text: (el("drText").value || "").trim(), ts: Date.now() });
-  S.set("demo_reqs", r);
-  toast("시연 신청 접수! HIDI-Q 담당자가 연락드립니다.");
-}
+/* v3.64 (사용자 확정 260918) AX Now! 부스 화면의 30초 피드백 · 내 질문 · 시연 신청 블록 삭제 · 관련 함수(fbPick·boothFeedback·boothQuestion·demoRequest)와 로컬 저장(booth_fb·demo_reqs)도 함께 제거.
+   서버 액션·시트는 그대로 둔다(운영 데이터 삭제 금지). */
 function addBoardIdea() {
   var t = (el("bdText").value || "").trim();
   if (!t) { toast("내용을 입력해주세요."); return; }
@@ -4085,108 +4052,73 @@ var Views = {
   },
 
   /* ── v10 【신규 C】 AX Now! 부스 연동 · v5 p28·31~41 ── */
+  /* v3.64 · 부스 소개와 위치 안내만 남긴다 (피드백·질문·시연 신청 블록은 사용자 확정으로 삭제) */
   booth: function () {
     var got2 = S.get("stamps", []).indexOf("p2") >= 0;
-    var fb = S.get("booth_fb", []);
-    var dr = S.get("demo_reqs", []);
     return '' +
       '<div class="card mb12" style="background:var(--ink)"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.1em;color:var(--mint)">AX NOW! · 1F 부스 2종</p>' +
       '<p style="margin-top:6px;font-size:calc(19px * var(--fs));font-weight:800;color:#fff;line-height:1.4">설명이 아닌,<br>체험으로 증명합니다</p>' +
-      '<p class="muted" style="margin-top:6px;font-size:calc(14.5px * var(--fs))">부스 1곳만 체험해도 「AX Now! 체험」 스탬프가 채워져요.</p></div>' +
+      '<p class="muted" style="margin-top:6px;font-size:calc(14.5px * var(--fs))">부스 1곳 체험 = 스탬프 1개</p></div>' +
       '<div class="card mb8"><div class="row" style="justify-content:space-between"><b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">① HI-Helper</b><span class="badge blue">10.1 OPEN</span></div>' +
       '<p class="muted" style="margin-top:4px;font-size:calc(14.5px * var(--fs))">보험 설계를 돕는 LLM 비서</p>' +
-      '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));line-height:1.8;color:var(--tx)">STEP 1 · 내 보험 설계해보기 (상품 증정)<br>STEP 2 · HiDI-Helper 시연·체험<br>STEP 3 · 피드백 + 체험 완료 스탬프</p></div>' +
+      '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));line-height:1.8;color:var(--tx)">STEP 1 · 내 보험 설계해보기<br>STEP 2 · HiDI-Helper 체험<br>STEP 3 · 체험 완료 QR 스캔</p></div>' +
       '<div class="card mb12"><div class="row" style="justify-content:space-between"><b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">② HIDI-Q</b><span class="badge blue">11.1 OPEN</span></div>' +
-      '<p class="muted" style="margin-top:4px;font-size:calc(14.5px * var(--fs))">업무 문서 AI 비서 · 5분 3-STEP · 문서 3개, 질문 3개로 확인</p>' +
-      '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));line-height:1.8;color:var(--tx)">STEP 1 · 부서 키트 + 질문 셋 수령 (1분)<br>STEP 2 · 업로드 → 질의응답 → 초안 생성 (5분)<br>STEP 3 · 2027 로드맵 확인 + Passport 발급</p>' +
-      '<p style="margin-top:6px;font-size:calc(12.5px * var(--fs));color:var(--faint)">&ldquo;초안까지는 AI, 판단은 담당자&rdquo; · 세션 종료 시 자료 삭제</p></div>' +
-      '<div class="card mb12" style="border-color:var(--mint-deep)"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">체험 완료 스탬프</b>' +
-      '<p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">체험을 마치면 스태프가 완료 QR을 보여드려요. 스캔하면 적립됩니다.</p>' +
-      '<button class="btn' + (got2 ? " gray" : " mint") + '" style="margin-top:10px" onclick="boothStamp()">' + (got2 ? "적립 완료 ✔" : "완료 QR 스캔 (시연)") + "</button></div>" +
-      '<div class="card mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">30초 피드백</b><p class="muted" style="margin-top:3px;font-size:calc(13.5px * var(--fs))">2문항 · 서비스 개선 우선순위에 바로 반영돼요.' + (fb.length ? " (제출 " + fb.length + "건)" : "") + "</p>" +
-      '<div class="row" style="flex-wrap:wrap;margin-top:10px">' + ["최고예요", "좋아요", "보통", "아쉬워요"].map(function (t, i) {
-        return '<button class="tag-btn" data-fb="1" onclick="fbPick(' + (4 - i) + ', this)">' + t + "</button>";
-      }).join("") + "</div>" +
-      '<input id="fbText" class="input" placeholder="한 줄 의견 (선택)" style="margin-top:10px">' +
-      '<button class="btn" style="margin-top:10px" onclick="boothFeedback()">피드백 제출</button></div>' +
-      '<div class="card mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">내 질문 1개 · HIDI-Q에 물어보고 싶은 것</b>' +
-      '<p class="muted" style="margin-top:3px;font-size:calc(13.5px * var(--fs))">질문 셋 카드 뒷면의 &ldquo;내 질문&rdquo;을 앱으로 · 아이디어 풀에 담겨 2027 DAP 후보가 됩니다.</p>' +
-      '<textarea id="bqText" class="input" rows="2" maxlength="200" style="margin-top:10px;resize:none" placeholder="예: 대인 합의금 산정 시 과실비율은 어디를 보면 되나요?"></textarea>' +
-      '<button class="btn mint" style="margin-top:10px" onclick="boothQuestion()">질문 제출 (아이디어 적립)</button></div>' +
-      '<div class="card"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">우리 부서 시연 신청</b>' +
-      '<p class="muted" style="margin-top:3px;font-size:calc(13.5px * var(--fs))">부스가 끝이 아니라 시작. 부서로 찾아가는 시연을 신청하세요.' + (dr.length ? " (접수 " + dr.length + "건)" : "") + "</p>" +
-      '<input id="drDept" class="input" placeholder="부서명" style="margin-top:10px">' +
-      '<input id="drText" class="input" placeholder="활용하고 싶은 업무 (선택)" style="margin-top:8px">' +
-      '<button class="btn" style="margin-top:10px" onclick="demoRequest()">시연 신청</button></div>';
+      '<p class="muted" style="margin-top:4px;font-size:calc(14.5px * var(--fs))">업무 문서 AI 비서 · 5분</p>' +
+      '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));line-height:1.8;color:var(--tx)">STEP 1 · 부서 키트 + 질문 셋 수령<br>STEP 2 · 업로드 → 질의응답 → 초안 생성<br>STEP 3 · 체험 완료 QR 스캔</p>' +
+      '<p style="margin-top:6px;font-size:calc(12.5px * var(--fs));color:var(--faint)">세션 종료 시 자료 삭제</p></div>' +
+      '<div class="card" style="border-color:var(--mint-deep)"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">체험 완료 스탬프</b>' +
+      '<p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">체험 후 스태프 QR 스캔</p>' +
+      '<button class="btn' + (got2 ? " gray" : " mint") + '" style="margin-top:10px" onclick="boothStamp()">' + (got2 ? "적립 완료 ✔" : "완료 QR 스캔 (시연)") + "</button></div>";
   },
 
   /* ── v10 【신규 B】 DAP Wall QR 퀴즈 ── */
   wq_list: function () {
-    var dept = S.get("dept", null);
-    var pass = wqPassScore();
-    var deptCard = dept ?
-      '<div class="row mb12" style="justify-content:space-between"><span style="font-size:calc(14.5px * var(--fs));font-weight:700;color:var(--muted)">우리 부문: <b style="color:var(--hi)">' + esc(dept) + '</b> · 정답률 경쟁 반영 중</span><button class="tag-btn" onclick="S.set(\'dept\', null)">변경</button></div>' :
-      '<div class="card mb12" style="border-color:var(--mint-deep)"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">부문 선택 · 시작 전 1번만</b><p class="muted" style="margin-top:3px;font-size:calc(13.5px * var(--fs))">Special Wall 스크린의 부문별 정답률 경쟁에 반영돼요.</p>' +
-      '<div class="row" style="flex-wrap:wrap;margin-top:10px">' + DEPTS.map(function (d) {
-        return '<button class="tag-btn" onclick="pickDept(\'' + d + '\')">' + d + "</button>";
-      }).join("") + "</div></div>";
     var setCards = wqSets().map(function (s, i) {
-      var best = wqBest(s.id);
+      var done = wqAttempts(s.id).length ? wqBest(s.id) : null;
       var badge = !wqActive(s.id) ? '<span class="badge gray">점검 중</span>' :
-        best && best.passed ? '<span class="badge mint">통과 ' + best.score + "점</span>" :
-        best ? '<span class="badge blue">최고 ' + best.score + "점</span>" : '<span class="badge gray">미응시</span>';
-      return '<div class="card mb8" style="display:flex;align-items:center;gap:12px;cursor:pointer" onclick="wqOpen(\'' + s.id + '\')">' +
-        '<span class="disp" style="font-size:calc(15.5px * var(--fs));color:var(--hi);border:1px solid var(--line);border-radius:4px;padding:6px 8px">QR ' + (i + 1) + "</span>" +
-        '<div style="flex:1"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">' + esc(s.name) + '</b><p class="muted" style="font-size:calc(13.5px * var(--fs));margin-top:2px">' + esc(s.theme) + "</p></div>" + badge + "</div>";
+        done ? '<span class="badge mint">' + done.correct + " / " + done.total + " 정답</span>" : '<span class="badge gray">QR 필요</span>';
+      return '<div class="card mb8' + (done ? "" : " soft") + '" style="display:flex;align-items:center;gap:12px;cursor:pointer" onclick="wqOpen(\'' + s.id + '\')">' +
+        '<span class="disp" style="font-size:calc(15.5px * var(--fs));color:' + (done ? "var(--hi)" : "var(--faint)") + ';border:1px solid var(--line);border-radius:4px;padding:6px 8px">QR ' + (i + 1) + "</span>" +
+        '<div style="flex:1"><b style="font-size:calc(15.5px * var(--fs));color:' + (done ? "var(--hi)" : "var(--muted)") + '">' + esc(s.name) + '</b>' +
+        '<p class="muted" style="font-size:calc(13.5px * var(--fs));margin-top:2px">' + esc(s.theme) + "</p></div>" + badge + "</div>";
     }).join("");
-    /* 부문 정답률 랭킹 · 홈에 있던 블록을 집계의 출처인 이 화면으로 (1F Special Wall 사이니지와 같은 수치) */
-    var rows = deptStats(), myIdx = -1;
-    for (var ri = 0; ri < rows.length; ri++) if (rows[ri].d === dept) { myIdx = ri; break; }
-    var rrow = function (r, idx, dim) {
-      return '<div class="rrow' + (dim ? " dim" : "") + '"><span class="rno' + (idx === 0 ? " g" : "") + '">' + (idx + 1) + "</span>" +
-        '<span class="rname' + (r.d === dept ? " me" : "") + '">' + esc(r.d) + "</span>" +
-        '<span class="rbar"><i style="width:' + Math.round(r.avg / Math.max(1, rows[0].avg) * 100) + '%"></i></span>' +
-        '<b class="disp rv">' + r.avg + "</b></div>";
-    };
-    var rankCard = !rows.length ? "" :
-      '<div class="card mt16" style="padding:15px 16px">' +
-      '<div class="row" style="justify-content:space-between;align-items:baseline;margin-bottom:8px">' +
-      '<b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">부문 정답률 랭킹</b>' +
-      '<span style="font-size:calc(12.5px * var(--fs));color:var(--faint)">100점 만점</span></div>' +
-      rows.slice(0, 3).map(function (r, i) { return rrow(r, i, false); }).join("") +
-      ((dept && myIdx >= 3) ? rrow(rows[myIdx], myIdx, true) : "") +
-      '<p style="margin-top:9px;font-size:calc(12.5px * var(--fs));color:var(--faint);line-height:1.55">지금 문제를 풀면 우리 부문 점수가 올라갑니다. 1F Special Wall 화면과 같은 집계예요.</p></div>';
-    return deptCard + setCards + rankCard +
+    return setCards +
       '<div class="card soft mt16"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">참여 방법</b>' +
-      '<p class="muted" style="margin-top:6px;font-size:calc(14.5px * var(--fs));line-height:1.8">① 1F DAP Wall·Special Wall의 QR 발견 → ② 스캔하면 5문항 오픈 → ③ 정답은 벽 전시 안에서 탐색 → ④ 평균 <b style="color:var(--hi)">' + pass + '점 이상</b>이면 「전시 QR 퀴즈」 스탬프 적립!</p>' +
-      '<p class="muted" style="margin-top:6px;font-size:calc(13.5px * var(--fs))">' + pass + '점 미만은 <b>무제한 재응시</b> (문항·보기 순서가 바뀌어요) 테스트 버전은 QR 없이 세트를 바로 열 수 있습니다.</p></div>';
+      '<p class="muted" style="margin-top:6px;font-size:calc(14.5px * var(--fs));line-height:1.8">벽의 QR을 스캔하면 그 벽의 문제가 열려요 · 한 세트를 끝내면 적립</p>' +
+      '<p class="muted" style="margin-top:6px;font-size:calc(13.5px * var(--fs))">정답은 1F 벽 전시 안에 있어요</p>' +
+      '<button class="btn mint" style="margin-top:10px" onclick="qrScanOpen()">QR 스캔</button>' +
+      (testMode() ? '<p class="scap" style="margin-top:8px">테스트 · 위 세트를 눌러 QR 없이 열 수 있어요</p>' : "") + "</div>";
   },
 
   wq_play: function () {
     if (!WQ.set) {
-      return '<div class="card soft" style="text-align:center"><p class="muted">세트를 선택하면 문항이 열립니다.</p>' +
-        '<button class="btn mint" style="margin-top:12px" onclick="App.go(\'wq_list\')">세트 고르러 가기</button></div>';
+      return '<div class="card soft" style="text-align:center"><p class="muted">벽의 QR을 스캔하면 문제가 열려요</p>' +
+        '<button class="btn mint" style="margin-top:12px" onclick="qrScanOpen()">QR 스캔</button></div>';
     }
     if (WQ.submitted) {
       var r = WQ.result;
-      return '<div class="cho-box" style="padding:26px 18px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' + esc(WQ.name) + " · " + WQ.qs.length + '문항</p>' +
-        '<p class="disp" style="font-size:44px;margin-top:6px;color:' + (r.passed ? "var(--mint)" : "#FF6B61") + '">' + r.score + '점</p>' +
-        '<p class="hint">' + (r.passed ? "통과! (" + r.correct + "/" + WQ.qs.length + " 정답 · 커트라인 " + wqPassScore() + "점)" :
-          r.correct + "/" + WQ.qs.length + " 정답 · 커트라인 " + wqPassScore() + "점. 정답은 전부 1F 벽에 있어요. 다시 도전!") + "</p></div>" +
-        (r.passed ? '<div class="card mb8" style="border-color:var(--mint-deep)"><p style="font-size:calc(14.5px * var(--fs));color:var(--tx)">「전시 QR 퀴즈」 스탬프 적립 완료 · 지금 <b style="color:var(--hi)">스탬프 ' + stampCount() + '개</b>예요.</p></div>' : "") +
-        '<button class="btn mint mb8" style="padding:15px" onclick="wqRetry(\'' + WQ.set + '\')">' + (r.passed ? "한 번 더 (기록 갱신)" : "재응시 · 순서 셔플") + "</button>" +
+      return '<div class="cho-box" style="padding:26px 18px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' + esc(WQ.name) + "</p>" +
+        '<p class="disp" style="font-size:44px;margin-top:6px;color:var(--mint)">' + r.correct + " / " + r.total + "</p>" +
+        '<p class="hint">맞힌 문항</p></div>' +
+        '<div class="card mb8" style="border-color:var(--mint-deep)"><p style="font-size:calc(14.5px * var(--fs));color:var(--tx)">「전시 QR 퀴즈」 스탬프 적립</p></div>' +
+        WQ.qs.map(function (q, qi) {
+          var ok = WQ.picks[qi] === q.a;
+          return '<div class="card mb8"><b style="font-size:calc(14.5px * var(--fs));color:var(--hi);line-height:1.5">Q' + (qi + 1) + ". " + esc(q.q) + "</b>" +
+            '<p class="muted" style="margin-top:6px;font-size:calc(13.5px * var(--fs))">정답 · ' + esc(q.o[q.a]) + "</p>" +
+            (ok ? "" : '<p class="muted" style="margin-top:2px;font-size:calc(13px * var(--fs));color:var(--faint)">내 답 · ' + esc(q.o[WQ.picks[qi]] || "-") + "</p>") + "</div>";
+        }).join("") +
         '<button class="btn line" onclick="App.go(\'wq_list\')">세트 목록으로</button>';
     }
     var n = Object.keys(WQ.picks).length;
-    return '<div class="card soft mb12" style="padding:12px 14px"><div class="row" style="justify-content:space-between"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">' + esc(WQ.name) + " · " + esc(WQ.theme) + '</b><span class="badge tint">' + n + "/" + WQ.qs.length + "</span></div>" +
-      '<p class="muted" style="font-size:calc(12.5px * var(--fs));margin-top:3px">시간 제한 없음 · 정답은 1F 벽 전시 안에 있어요</p></div>' +
+    return '<div class="card soft mb12" style="padding:12px 14px"><div class="row" style="justify-content:space-between"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">' + esc(WQ.name) + " · " + WQ.qs.length + "문항</b></div>" +
+      '<p class="muted" style="font-size:calc(12.5px * var(--fs));margin-top:3px">정답은 1F 벽 전시 안에 있어요</p></div>' +
       WQ.qs.map(function (q, qi) {
         return '<div class="card mb8"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi);line-height:1.5">Q' + (qi + 1) + ". " + esc(q.q) + "</b>" +
           q.o.map(function (o, oi) {
             return '<button class="wopt' + (WQ.picks[qi] === oi ? " on" : "") + '" onclick="wqPick(' + qi + "," + oi + ')">' + esc(o) + "</button>";
           }).join("") + "</div>";
       }).join("") +
-      '<button class="btn mint" style="padding:15px;margin-top:4px" onclick="wqSubmit()">제출하고 채점 (' + n + "/" + WQ.qs.length + ")</button>";
+      '<button class="btn mint" style="padding:15px;margin-top:4px" onclick="wqSubmit()">제출 (' + n + "/" + WQ.qs.length + ")</button>";
   },
 
   /* ── v10 【신규 D】 사이니지 3종 · 프로토타입 (정식판: 무인 10시간·오프라인 캐시·키오스크) ── */
@@ -4638,18 +4570,15 @@ var AdminTabs = {
       (r2.length ? r2.map(row).join("") : '<div class="card soft"><p class="muted">아직 당일 신청이 없습니다.</p></div>') +
       '<p class="sub-label">미팅룸 ① · 사전신청 (D-3 링크 접수분)</p>' + r1.map(row).join("");
   },
-  /* v10: DAP Wall QR 퀴즈 관리 · 문항·커트라인은 행사 직전까지 콘솔에서 수정 */
+  /* v10: DAP Wall QR 퀴즈 관리 · 문항은 행사 직전까지 콘솔에서 수정 (v3.65 커트라인 폐지) */
   wq: function () {
-    var pass = wqPassScore();
     var act = S.get("wq_active", { wall1: true, wall2: true, wall3: true });
     var editKey = S.get("wq_edit", null);
-    var h = '<div class="card mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">통과 커트라인</b>' +
-      '<div class="row" style="margin-top:10px"><input id="wqPass" class="input" inputmode="numeric" value="' + pass + '" style="max-width:90px;text-align:center"><span style="font-size:calc(14.5px * var(--fs));font-weight:700;color:var(--muted)">점 이상 → 스탬프 06 적립 (기본 60)</span></div>' +
-      '<button class="btn" style="margin-top:10px" onclick="wqPassSave()">적용</button></div>';
+    var h = "";
     h += wqSets().map(function (s) {
       var at = wqAttempts(s.id);
-      var passN = at.filter(function (a) { return a.passed; }).length;
-      var avg = at.length ? Math.round(at.reduce(function (x, a) { return x + a.score; }, 0) / at.length) : 0;
+      var passN = at.length;
+      var avg = at.length ? Math.round(at.reduce(function (x, a) { return x + (a.correct || 0); }, 0) / at.length * 10) / 10 : 0;
       var qsHtml = s.qs.map(function (q, qi) {
         var key = s.id + ":" + qi;
         if (editKey === key) {
@@ -4756,7 +4685,7 @@ var AdminTabs = {
     var resv2 = resvAll().filter(function (r) { return r.room === 2 && RESV_HOLD.indexOf(r.status) >= 0; }).length;
     return '<div class="grid2 mb12">' +
       [["동시 접속", c.online.toLocaleString()], ["아이디어", c.ideas.toLocaleString()], ["미니게임 참여", c.games.toLocaleString()], ["스탬프(내 기기)", stampCount() + "/6"],
-       ["상담 예약 (룸②)", resv2 + "/" + resvSlots().length], ["QR퀴즈 통과(내 기기)", wqPassedCount() + "/3"]].map(function (x) {
+       ["상담 예약 (룸②)", resv2 + "/" + resvSlots().length], ["QR퀴즈 응시(내 기기)", wqDoneCount() + "/3"]].map(function (x) {
         return '<div class="card soft"><p class="muted" style="font-size:calc(12.5px * var(--fs))">' + x[0] + '</p><p class="disp" style="margin-top:4px;font-size:20px;color:var(--hi)">' + x[1] + "</p></div>";
       }).join("") + "</div>" +
       '<div class="card mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">사이니지 미리보기 · 1F 16대 + 17F</b>' +
@@ -5797,6 +5726,9 @@ function qrScanClose() {
 }
 function qrHandle(raw) {
   if (qrParseUser(raw)) { notice({ key: "claim:user", title: "참가자 QR이에요", body: "부스·전시 QR 스캔" }); return; }
+  /* v3.65 벽 QR = 앱 주소 뒤 #q=wall1 · 그 벽의 문제만 연다 */
+  var mq = raw.match(/#q=(wall[0-9]+)/i);
+  if (mq) { wqOpenQr(mq[1].toLowerCase()); return; }
   var m = raw.match(/#s=([A-Za-z0-9]+)/i);
   if (m) { stampByCode(m[1]); return; }
   if (/^[A-Za-z0-9]{3,12}$/.test(raw.trim())) { stampByCode(raw.trim()); return; }
@@ -8409,7 +8341,7 @@ function xitionRun(switchNow) {
     S.set("gw_cleared", true);
     S.set("dept", "보상부문");
     S.set("ev_phase", "live");
-    S.set("wq_attempts", [{ set: "wall1", score: 80, passed: true, attemptNo: 1, dept: "보상부문", ts: Date.now() }]);
+    S.set("wq_attempts", [{ set: "wall1", correct: 4, total: 5, ts: Date.now() }]);
     var target = dm[1] || "home";
     if (["admin", "screen", "screen_survey", "screen_words", "wall_quiz", "wall_wave", "wall_live", "wall_metowe", "wall_tv", "type_site", "type_award"].indexOf(target) >= 0) S.set("admin_authed", true);
     splash.classList.add("gone");
