@@ -283,6 +283,20 @@
   .rc.my { background: var(--tint); border-color: var(--mint); box-shadow: inset 0 0 0 1px var(--mint); }   /* v3.11 오렌지 전체 테두리 = 내 것 */
   .rc.now { border-color: var(--ink); box-shadow: inset 0 0 0 0.5px var(--ink); }
   .rc.next { background: var(--dim); border-color: var(--mint); }
+  /* v3.21 B 포토부스 번호표 · 예상 입장 시각이 가장 크게 · 호출 = 검정(지금 행동할 것) · 건너뜀 = 회색 */
+  .pq { background: var(--tint); border-radius: 14px; padding: 13px 15px; text-align: center; margin-bottom: 8px; }
+  .pq .k { font-size: calc(12px * var(--fs)); font-weight: 800; color: var(--acc2); letter-spacing: 0.04em; }
+  .pq .big { margin-top: 2px; font-family: var(--disp); font-size: calc(34px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.1; }
+  .pq .s { margin-top: 4px; font-size: calc(13.5px * var(--fs)); font-weight: 700; color: var(--muted); }
+  .pq .s b { color: var(--hi); }
+  .pq .s2 { margin-top: 6px; font-size: calc(12px * var(--fs)); font-weight: 700; color: var(--faint); }
+  .pq .nt { margin-top: 6px; font-size: calc(13px * var(--fs)); font-weight: 800; color: var(--acc2); }
+  .pq.act { background: var(--ink); }
+  .pq.act .k { color: var(--mint-deep); }
+  .pq.act .big { color: #fff; }
+  .pq.act .s { color: rgba(255,255,255,0.75); }
+  .pq.dim { background: var(--dim); }
+  .pq.dim .k, .pq.dim .big { color: var(--faint); }
   .rc.done .ico { background: var(--tint2); border-color: var(--mint); color: var(--acc2); }
   .rc.next .ico { border-color: var(--mint); color: var(--acc2); animation: trailPulse 2.2s ease-in-out infinite; }
   /* 완료 도장 (v3.20 A안) · 칸 안에 맞춘다(넘침 제거) · -12도 기울기는 SVG 안에서 · 잉크 질감 필터는 생략 유지(작은 크기 가독) */
@@ -790,8 +804,9 @@ var SESSIONS = [
     desc: "코드 한 줄 직접 쓰지 않고, 아이디어를 손에 잡히는 결과물로. 테트리스 게임에서 시작해 실적 분석 · 약관 챗봇 · 보험료 시뮬레이터까지." },
   { id: "fld", fl: 10, zone: "conf", kind: "seat", ttl: "현장 프로그램", sub: "사내강사 세션 + 실습", who: "현장 우수사례 사내강사", tm: "13:00~16:40", cap: 155, seed: 150, video: 1,
     desc: "인터뷰 시청 → 사내강사 세션 → 내 직무 사례 실습." },
-  { id: "photo", fl: 1, zone: "promo", kind: "slot", ttl: "AI 포토부스", sub: "Me to We 프레임", who: "1F 홍보존", tm: "10:00~17:00", per: 60, cap: 20, video: 0,
-    desc: "촬영 2~3분, 결과물은 Me to We 프레임으로 출력해 바로 드립니다." },
+  /* v3.21 B: 시간대 슬롯 신청(kind slot) → 원격 대기열(kind queue) · 번호표를 받고 자리에서 기다린다 */
+  { id: "photo", fl: 1, zone: "promo", kind: "queue", ttl: "AI 포토부스", sub: "Me to We 프레임", who: "1F 홍보존", tm: "10:00~17:00", video: 0,
+    desc: "촬영 2~3분, 결과물은 Me to We 프레임으로 출력해 바로 드립니다. 번호표를 받고 자리에서 기다리다 차례가 가까워지면 내려오세요." },
   { id: "dap", fl: 1, zone: "dap", kind: "link", go: "dap", ttl: "DAP ZONE 과제상담", sub: "1:1 30분", who: "데이터사이언스파트", tm: "09:30~16:30", video: 0,
     desc: "내 업무에 AI를 어떻게 적용할지, 데이터사이언스파트와 마주 앉아 30분. 상담 완료 시 사은품." },
   { id: "cchat", fl: 18, zone: "lounge", kind: "link", go: "ev_cchat", ttl: "AX 커피챗", sub: "같은 고민끼리 20분", who: "18F 라운지", tm: "13:00~16:30", video: 0,
@@ -820,7 +835,7 @@ var FL_OPEN = {
   17: [],
   18: []
 };
-var PROG = { fl: 1, sid: null, slot: null, openSess: {}, slotSel: {} };   /* fl = 선택 층 (v3.7 · 기본 1F · 탭 왕복에도 유지) */
+var PROG = { fl: 1, sid: null, openSess: {} };   /* fl = 선택 층 (v3.7 · 기본 1F · 탭 왕복에도 유지) */
 
 var IDEA_TAGS = ["영업", "보상", "마케팅", "본사·통계", "기타"];
 var QUIZZES = [
@@ -2391,7 +2406,8 @@ function sessStartMin(tm) { var m = /(\d{1,2}):(\d{2})/.exec(tm || ""); return m
 function sessRange(s) { var m = /(\d{1,2}):(\d{2})\s*~\s*(\d{1,2}):(\d{2})/.exec(s.tm); return m ? [(+m[1]) * 60 + (+m[2]), (+m[3]) * 60 + (+m[4])] : null; }
 function sessMineList() {
   var my = sessMy();
-  return SESSIONS.filter(function (s) { return my[s.id]; })
+  /* 대기열형(포토부스)은 신청 목록이 아니다 · 구 슬롯 신청 기록이 남아 있어도 내 일정에 올리지 않는다 (v3.21 B) */
+  return SESSIONS.filter(function (s) { return my[s.id] && s.kind !== "queue"; })
     .map(function (s) { return { s: s, slot: my[s.id].slot || null }; })
     .sort(function (a, b) { return sessStartMin(a.slot || a.s.tm) - sessStartMin(b.slot || b.s.tm); });
 }
@@ -2401,19 +2417,7 @@ function sessRemain(s) {
   return Math.max(0, s.cap - s.seed - (sessMine(s.id) ? 1 : 0));
 }
 function hm2(min) { var h = Math.floor(min / 60), m = min % 60; return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m; }
-function sessSlots(s) {
-  var r = sessRange(s), out = [], t;
-  for (t = r[0]; t + s.per <= r[1]; t += s.per) out.push(hm2(t));
-  return out;
-}
-function slotRemain(s, t) { /* 서버 연동 전 결정적 목업 · 슬롯마다 25~100% 채움 */
-  var seed = 0, k = s.id + t, i;
-  for (i = 0; i < k.length; i++) seed += k.charCodeAt(i) * (i + 7);
-  var used = Math.floor(s.cap * (0.25 + (mtHash(seed) % 1000) / 1000 * 0.78));
-  var mine = sessMine(s.id);
-  if (mine && mine.slot === t) used = Math.min(s.cap, used + 1);
-  return Math.max(0, s.cap - used);
-}
+/* 시간대 슬롯 신청(sessSlots·slotRemain·슬롯 선택 UI)은 v3.21 B 폐지 · 유일한 슬롯형이던 포토부스가 원격 대기열로 바뀌었다 */
 function sessOverlap(s) {
   var r = sessRange(s); if (!r) return null;
   var hit = null;
@@ -2428,7 +2432,6 @@ function sessBook(id, slot) {
   var s = sessById(id), my = sessMy();
   if (!s || my[id]) return;
   if (s.kind === "seat" && sessRemain(s) <= 0) { toast("만석입니다. 취소가 나오면 다시 열려요"); return; }
-  if (s.kind === "slot" && !slot) { toast("시간을 먼저 선택하세요"); return; }
   if (s.kind === "seat") {
     var ov = sessOverlap(s);
     if (ov) {
@@ -2441,7 +2444,6 @@ function sessBook(id, slot) {
   }
   my[id] = { slot: slot || null, ts: Date.now() };
   S.set("sess_my", my);
-  PROG.slot = null;
   if (BE.on) beCall({ action: "sess_book", emp: (S.get("user", {}) || {}).empId || "", name: (S.get("user", {}) || {}).name || "", sid: id, slot: slot || "" }, function () {}, function () {});
   toast((slot ? slot + " · " : "") + "신청 완료. 홈 내 일정에 담겼어요");
   App.render();
@@ -2457,8 +2459,7 @@ function sessCancel(id) {
   toast("신청을 취소했어요");
   App.render();
 }
-function sessOpen(id) { PROG.sid = id; PROG.slot = null; App.go("sess_d"); }
-function sessPickSlot(t) { PROG.slot = t; App.render(); }
+function sessOpen(id) { PROG.sid = id; App.go("sess_d"); }
 /* 층별 안내(progOpenFl·층 칩·존 스크롤)는 v47에서 폐기 · 안내는 타임라인과 현장 사이니지가 맡는다 */
 function seatRowHtml(s) {
   var rem = sessRemain(s), pct = Math.round((s.cap - rem) / s.cap * 100);
@@ -2471,7 +2472,6 @@ function seatRowHtml(s) {
 function progPickFl(n) { PROG.fl = n; App.render(); }
 function progGoFl(n) { PROG.fl = n; App.go("guide"); }   /* 다른 화면에서 특정 층으로 진입 (스탬프 03 등) */
 function progSessToggle(id) { PROG.openSess[id] = !PROG.openSess[id]; App.render(); }
-function progPickSlot(sid, t) { PROG.slotSel[sid] = PROG.slotSel[sid] === t ? null : t; App.render(); }
 /* 상시형 중 스탬프가 걸린 활동은 스탬프 탭 해당 카드로 위임한다 · 카드를 열어 둔 채 진입 */
 function ppGoCard(id) { PP.open[id] = true; App.go("passport"); }
 /* 신청형 인라인 신청 UI · sess_d 의 핵심(잔여석·슬롯 선택·신청/취소)만 흡수.
@@ -2488,16 +2488,8 @@ function sessInlineHtml(s) {
         sessRemain(s) <= 0 ? '<button class="btn" style="margin-top:10px" disabled>만석 · 취소되면 열립니다</button>' :
           '<button class="btn mint" style="margin-top:10px" onclick="sessBook(\'' + s.id + '\')">신청하기</button>');
   } else {
-    var sel = PROG.slotSel[s.id] || null;
-    h += '<p class="sq" style="margin-top:4px">' + s.per + "분 단위 · 회당 " + s.cap + '명</p>' +
-      '<div class="slotgrid" style="margin-top:9px">' + sessSlots(s).map(function (t) {
-        var rem = slotRemain(s, t), on = sel === t, mySlot = mine && mine.slot === t;
-        if (mySlot) return '<button class="slot on">' + t + "</button>";
-        if (rem <= 0) return '<button class="slot off">' + t + "</button>";
-        return '<button class="slot' + (on ? " on" : "") + '" onclick="progPickSlot(\'' + s.id + "','" + t + '\')">' + t + "</button>";
-      }).join("") + "</div>" +
-      (mine ? '<button class="btn line" style="margin-top:10px" onclick="sessCancel(\'' + s.id + '\')">' + mine.slot + " 신청 취소</button>" :
-        '<button class="btn mint" style="margin-top:10px"' + (sel ? ' onclick="sessBook(\'' + s.id + "', PROG.slotSel['" + s.id + "'])\"" : " disabled") + ">" + (sel ? sel + " 신청하기" : "시간을 선택하세요") + "</button>");
+    /* v3.21 B 원격 대기열 · 번호표 UI 는 일정 탭 상시 행·상세 화면과 같은 photoQueueHtml 하나 */
+    return h + photoQueueHtml();
   }
   h += '<p class="lnk" onclick="sessOpen(\'' + s.id + '\')">자세히' + (s.video || LEC_MEDIA[s.id] ? " · 소개 영상" : "") + " ›</p>";
   return h;
@@ -2505,16 +2497,18 @@ function sessInlineHtml(s) {
 /* 프로그램 신청형 행 = 공용 행 카드 · 시간이 있는 행은 일정 탭과 같은 좌측 두 줄 시간 뱃지 (v3.22)
    신청 완료 = my(틴트+오렌지 링) · 만석 = dim · 평상 = 기본 */
 function sessRowHtml(s) {
-  var mine = sessMine(s.id);
+  var mine = s.kind === "queue" ? null : sessMine(s.id);
   var full = s.kind === "seat" && sessRemain(s) <= 0;
   var tm = s.tm.split("~");
+  /* 대기열형 · 내 번호표가 살아 있으면 내 것(my), 호출이면 시간 뱃지 검정 */
+  var pq = s.kind === "queue" ? photoQ() : null, pqOn = pq && (pq.status === "wait" || pq.status === "call");
   var st = mine ? "" :
     s.kind === "seat" ? (full ? '<span class="badge gray">만석</span>' : '<span class="st">잔여 ' + sessRemain(s) + "석</span>") :
-      s.kind === "slot" ? '<span class="st">시간 선택</span>' : '<span class="st">신청제</span>';
+      s.kind === "queue" ? '<span class="st">' + (pqOn ? pq.no + "번" : "대기 " + (photoPub().waiting || 0) + "팀") + "</span>" : '<span class="st">신청제</span>';
   return rcHtml({
-    cls: mine ? " my" : full ? " dim" : "",
+    cls: mine || pqOn ? " my" : full ? " dim" : "",
     onclick: "progSessToggle('" + s.id + "')",
-    left: tokBadge(tm[0], mine ? "mine" : full ? "dim" : "", tm[1] ? "~" + tm[1] : null),
+    left: tokBadge(tm[0], pqOn && pq.status === "call" ? "act" : mine || pqOn ? "mine" : full ? "dim" : "", tm[1] ? "~" + tm[1] : null),
     title: esc(s.ttl) + (mine ? ' <span class="badge mint">' + (mine.slot ? mine.slot + " " : "") + "신청 완료</span>" : ""),
     sub: esc(s.sub || s.who), right: st,
     open: !!PROG.openSess[s.id], body: sessInlineHtml(s)
@@ -2623,6 +2617,10 @@ function myScheduleHtml() {
     rows.push([-1, "qrPanelOpen('mine')", r.status === "call" ? "호출" : r.no + "번", sp.nm,
       r.status === "call" ? "지금 입장하세요" : "대기 중" + (r.ahead ? " (앞 " + r.ahead + "명)" : ""), r.status === "call" ? "act" : "mine"]);
   }
+  var pq = photoQ();   /* v3.21 B 포토부스 대기표 */
+  if (pq && (pq.status === "wait" || pq.status === "call"))
+    rows.push([pq.status === "call" ? -1 : t2m(pq.eta), "photoGoMine()", pq.status === "call" ? "호출" : pq.no + "번", "AI 포토부스",
+      pq.status === "call" ? "지금 입장하세요" : "예상 입장 " + pq.eta + " · 앞 " + pq.ahead + "팀", pq.status === "call" ? "act" : "mine"]);
   var mr = myResv();
   if (mr && RESV_LIVE.indexOf(mr.status) >= 0)
     rows.push([sessStartMin(mr.slot), "App.go('dap')", mr.slot, "과제상담", "1F DAP존 미팅룸 " + mr.room, "mine"]);
@@ -2683,8 +2681,113 @@ function alwaysState(id) {
   }
   return photoState();
 }
+/* ══ v3.21 B · AI 포토부스 원격 대기열 (앱) ══
+   서버(photo_take·photo_cancel·q_call·q_skip·q_done)가 정본 · sync 가 my.photoQ(번호·상태·앞 팀·예상 시각)와 공개 요약(photo)을 내려준다.
+   푸시가 없으므로 번호표에 「예상 입장 시각」과 「앞 팀 수」를 가장 크게 · 앞 2팀 이하면 앱 안 알림 1회(checkMyState).
+   데모(BE off)는 같은 규칙을 로컬로 흉내 낸다 · 시각은 S photo_phase(open|lunch|closed)로 모의 */
+var PHOTO = { busy: false, MIN: 3, LUNCH: [680, 790], OPEN0: 600 };
+function photoQ() { return S.get("photoq", null); }
+function photoPub() { return S.get("photo_pub", { waiting: 6, serving: 0, phase: "open", min: 3 }); }
+function photoPhase() {
+  var o = S.get("photo_phase", null);
+  if (o) return o;
+  return BE.on ? (photoPub().phase || "open") : "open";
+}
+/* 서버 photoEta_ 와 같은 식 · 앞 팀 × 3분, 점심 구간에 걸리면 13:10 으로 밀어 이어서 센다 */
+function photoEta(ahead) {
+  var d = new Date(), c = Math.max(d.getHours() * 60 + d.getMinutes(), PHOTO.OPEN0);
+  if (c >= PHOTO.LUNCH[0] && c < PHOTO.LUNCH[1]) c = PHOTO.LUNCH[1];
+  for (var i = 0; i < ahead; i++) { c += PHOTO.MIN; if (c >= PHOTO.LUNCH[0] && c < PHOTO.LUNCH[1]) c = PHOTO.LUNCH[1]; }
+  return hm2(c);
+}
+function photoGoMine() { SCHED.open.a_photo = true; SCHED.tab = "always"; App.go("guide_time"); }
+/* 홈 최상단 대기 카드 (라이브 퀴즈와 같은 예외 자리) · 앞 2팀 이하이거나 호출됐을 때만 */
+function photoAlertHtml() {
+  var q = photoQ();
+  if (!q || !((q.status === "wait" && q.ahead <= 2) || q.status === "call")) return "";
+  var call = q.status === "call";
+  return rcHtml({ cls: " my", onclick: "photoGoMine()", link: true, left: tokBadge(q.no + "번", call ? "act" : "mine"),
+    title: call ? "지금 입장하세요" : "곧 차례예요", sub: call ? "1F 포토부스 · 10분 안에 와 주세요" : "1F 포토부스로 내려와 주세요 · 예상 " + q.eta });
+}
+function photoTake() {
+  var ph = photoPhase();
+  if (ph === "lunch") { toast("점심 시간(11:20~13:10)에는 현장에서 줄을 서 주세요"); return; }
+  if (ph === "closed") { toast("번호표 발급 시간이 아니에요 · 10:00~11:20 · 13:10~16:40"); return; }
+  if (!BE.on) {
+    var pub = photoPub(), ahead = pub.waiting || 0, no = (pub.serving || 0) + ahead + 1;
+    S.set("photo_pub", { waiting: ahead + 1, serving: pub.serving || 0, phase: pub.phase || "open", min: PHOTO.MIN });
+    S.set("photoq", { no: no, status: "wait", ahead: ahead, eta: photoEta(ahead) });
+    toast(no + "번 · 예상 입장 " + photoEta(ahead));
+    return;
+  }
+  var u = S.get("user", {}) || {};
+  if (!u.empId) { toast("사번으로 입장한 뒤 받을 수 있어요"); return; }
+  if (PHOTO.busy) return;
+  PHOTO.busy = true;
+  beCall({ action: "photo_take", emp: u.empId }, function (res) {
+    PHOTO.busy = false;
+    if (!res || !res.ok) {
+      toast(res && res.reason === "lunch" ? "점심 시간(11:20~13:10)에는 현장에서 줄을 서 주세요" :
+        res && res.reason === "closed" ? "번호표 발급 시간이 아니에요 · " + (res.open || "") : "번호표를 받지 못했어요. 다시 시도해주세요");
+      return;
+    }
+    S.set("photoq", { no: res.no, status: "wait", ahead: res.ahead, eta: res.eta });
+    toast(res.no + "번 · 예상 입장 " + res.eta);
+  }, function () { PHOTO.busy = false; toast("서버에 연결할 수 없어요"); });
+}
+function photoCancel() {
+  if (!BE.on) {
+    var pub = photoPub();
+    S.set("photo_pub", { waiting: Math.max(0, (pub.waiting || 1) - 1), serving: pub.serving || 0, phase: pub.phase || "open", min: PHOTO.MIN });
+    S.set("photoq", null); toast("번호표를 취소했어요"); return;
+  }
+  var u = S.get("user", {}) || {};
+  beCall({ action: "photo_cancel", emp: u.empId || "" }, function (res) {
+    if (res && res.ok) { S.set("photoq", null); toast("번호표를 취소했어요"); } else toast("취소하지 못했어요");
+  }, function () { toast("서버에 연결할 수 없어요"); });
+}
+/* 번호표 UI · 프로그램 행 펼침·일정 탭 상시 행·상세 화면 공용 */
+function photoQueueHtml() {
+  var q = photoQ(), pub = photoPub(), ph = photoPhase();
+  var wait = pub.waiting || 0;
+  if (q && q.status === "call") {
+    return '<div class="pq act"><p class="k">지금 입장하세요</p><p class="big">' + q.no + '번</p><p class="s">1F 포토부스 · 호출 후 10분 안에 와 주세요</p></div>';
+  }
+  if (q && q.status === "wait") {
+    return '<div class="pq"><p class="k">예상 입장</p><p class="big">' + esc(q.eta) + '</p><p class="s">앞 <b>' + q.ahead + "팀</b> · 내 번호 " + q.no + "번</p>" +
+      (q.ahead <= 2 ? '<p class="nt">곧 차례예요 · 1F 포토부스로 내려와 주세요</p>' : '<p class="s2">앞 2팀이 되면 앱에서 알려드려요 · 앱을 열어 두세요</p>') + "</div>" +
+      '<button class="btn line" onclick="photoCancel()">번호표 취소</button>';
+  }
+  if (q && q.status === "skip") {
+    return '<div class="pq dim"><p class="k">건너뛴 번호</p><p class="big">' + q.no + '번</p><p class="s">호출 후 10분 안에 오지 않아 건너뛰었어요</p></div>' +
+      (ph === "open" ? '<button class="btn mint" onclick="photoTake()">다시 줄 서기 · 맨 뒤 새 번호</button>' :
+        '<p class="sq" style="margin-top:10px">' + (ph === "lunch" ? "점심 시간에는 현장에서 줄을 서 주세요" : "지금은 번호표 발급 시간이 아니에요") + "</p>");
+  }
+  if (ph === "lunch") return '<p class="sq">점심 시간(11:20~13:10)에는 번호표를 받지 않아요. 1F 포토부스 앞에서 줄을 서 주세요.</p>';
+  if (ph === "closed") return '<p class="sq">번호표 발급 시간 · 10:00~11:20 · 13:10~16:40</p>';
+  return '<p class="sq">지금 대기 ' + wait + "팀 · 약 " + wait * PHOTO.MIN + '분</p>' +
+    '<button class="btn mint" onclick="photoTake()">대기 번호 받기</button>' +
+    '<p class="sq" style="margin-top:8px;font-size:calc(12px * var(--fs))">번호를 받고 자리에서 기다리다 앞 2팀이 되면 내려오세요</p>';
+}
 function photoState() {
-  return ["번호표 대기 · 점심(11:20~13:10)은 현장 줄서기", "촬영 2~3분, 결과물은 Me to We 프레임으로 출력해 드립니다.", "progGoFl(1)", "1F 프로그램 보기"];
+  var q = photoQ(), ph = photoPhase(), pub = photoPub();
+  var line = q && q.status === "call" ? "지금 입장하세요 · " + q.no + "번" :
+    q && q.status === "wait" ? "내 번호 " + q.no + "번 · 예상 입장 " + q.eta :
+      q && q.status === "skip" ? "건너뛴 번호 · 다시 줄 서기 가능" :
+        ph === "lunch" ? "점심 시간 · 현장 줄서기" : ph === "closed" ? "발급 시간 10:00~11:20 · 13:10~16:40" :
+          "지금 대기 " + (pub.waiting || 0) + "팀 · 약 " + (pub.waiting || 0) * PHOTO.MIN + "분";
+  return [line, "촬영 2~3분, 결과물은 Me to We 프레임으로 출력해 드립니다.", null, null];
+}
+/* 데모 운영 흉내 (BE off) · 관리자 포토부스 패널 버튼이 부른다 */
+function photoDemo(act) {
+  var q = photoQ(), pub = photoPub();
+  if (act === "call") {
+    if (q && q.status === "wait" && q.ahead > 0) S.set("photoq", { no: q.no, status: "wait", ahead: q.ahead - 1, eta: photoEta(q.ahead - 1) });
+    else if (q && q.status === "wait") S.set("photoq", { no: q.no, status: "call", ahead: 0, eta: q.eta });
+    S.set("photo_pub", { waiting: Math.max(0, (pub.waiting || 0) - (q && q.status === "wait" && q.ahead > 0 ? 1 : 0)), serving: (pub.serving || 0) + 1, phase: pub.phase || "open", min: PHOTO.MIN });
+  } else if (act === "skip" && q && q.status === "call") S.set("photoq", { no: q.no, status: "skip" });
+  else if (act === "done" && q && q.status === "call") { S.set("photoq", null); S.set("photo_pub", { waiting: Math.max(0, (pub.waiting || 1) - 1), serving: pub.serving || 0, phase: pub.phase || "open", min: PHOTO.MIN }); }
+  App.render();
 }
 /* 시간·층 라벨 뱃지 (v3.9 공용) · state: "" 기본(옅은 주황+짙은 주황) / dim 지나감 / act 진행 중(검정) / mine 틴트 행 대비용 O25.
    v3.17: sub 를 주면 두 줄 변형(시작 크게 + 종료 작게, 같은 뱃지 배경·상태 색 안) · 한 줄 사용처는 그대로 */
@@ -2972,6 +3075,7 @@ var Views = {
     var liveOpen = !!st.activeId && st.phase !== "idle";
     return "" +
       (liveOpen ? quizCardHtml() : "") +
+      photoAlertHtml() +
       myCouponHtml() +
       myScheduleHtml() +
       crowdStripHtml() +
@@ -3100,6 +3204,13 @@ var Views = {
         r.status === "call" ? "지금 입장하세요" : r.no + "번 대기 중" + (r.ahead ? " (앞 " + r.ahead + "명)" : ""),
         "qrPanelOpen('mine')", r.status === "call"]);   /* 호출 = 검정 뱃지 (지금 행동할 것) */
     }
+    /* v3.21 B 포토부스 대기표 · 예상 입장 시각 위치에 · 호출이면 맨 위「지금」+ 검정 */
+    var pq0 = photoQ();
+    if (pq0 && (pq0.status === "wait" || pq0.status === "call")) {
+      my.push([pq0.status === "call" ? -1 : t2m(pq0.eta), pq0.status === "call" ? "지금" : pq0.eta, "AI 포토부스 대기표",
+        pq0.status === "call" ? pq0.no + "번 · 지금 입장하세요" : pq0.no + "번 · 앞 " + pq0.ahead + "팀 · 예상 입장 " + pq0.eta,
+        "photoGoMine()", pq0.status === "call"]);
+    }
     var mr = myResv();
     if (mr && RESV_LIVE.indexOf(mr.status) >= 0) my.push([sessStartMin(mr.slot), mr.slot, "과제상담", "1F DAP존 미팅룸 " + mr.room + " · 30분 1:1", "App.go('dap')"]);
     var cc = S.get("cchat", null);
@@ -3128,9 +3239,12 @@ var Views = {
       var pastA = ph === "after";
       return seg + '<div class="tlist">' + SCHED_ALWAYS.map(function (a) {
         var stt = alwaysState(a.id);
-        return schedRow("a_" + a.id, pastA ? " past" : "", pastA ? "dim" : "", a.time, a.end,
+        /* 포토부스는 펼침 = 번호표 UI 자체 · 내 번호표가 살아 있으면 내 것(my), 호출이면 뱃지 검정 */
+        var pq = a.id === "photo" ? photoQ() : null, pqOn = pq && (pq.status === "wait" || pq.status === "call");
+        return schedRow("a_" + a.id, pastA ? " past" : pqOn ? " my" : "", pastA ? "dim" : pqOn ? (pq.status === "call" ? "act" : "mine") : "", a.time, a.end,
           esc(a.title) + ' <span class="badge gray">' + a.tag + "</span>",
-          '<p class="pl">' + esc(a.place) + '</p><p class="ds">' + esc(stt[1]) + '</p><button class="btn mint" onclick="' + stt[2] + '">' + stt[3] + "</button>",
+          '<p class="pl">' + esc(a.place) + '</p><p class="ds">' + esc(stt[1]) + "</p>" +
+            (a.id === "photo" ? '<div style="margin-top:10px">' + photoQueueHtml() + "</div>" : '<button class="btn mint" onclick="' + stt[2] + '">' + stt[3] + "</button>"),
           esc(stt[0]));
       }).join("") + "</div>";
     }
@@ -3172,17 +3286,8 @@ var Views = {
           sessRemain(s) <= 0 ? '<button class="btn" style="margin-top:12px" disabled>만석 · 취소되면 열립니다</button>' :
             '<button class="btn mint" style="margin-top:12px;padding:15px" onclick="sessBook(\'' + s.id + '\')">신청하기</button>') + "</div>";
     } else {
-      var slots = sessSlots(s);
-      act = '<div class="card mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">시간 선택</b>' +
-        '<p class="muted" style="margin-top:3px;font-size:calc(12.5px * var(--fs))">' + s.per + "분 단위 · 회당 " + s.cap + "명</p>" +
-        '<div class="slotgrid" style="margin-top:10px">' + slots.map(function (t) {
-          var rem = slotRemain(s, t), on = PROG.slot === t, mySlot = mine && mine.slot === t;
-          if (mySlot) return '<button class="slot on">' + t + "</button>";
-          if (rem <= 0) return '<button class="slot off">' + t + "</button>";
-          return '<button class="slot' + (on ? " on" : "") + '" onclick="sessPickSlot(\'' + t + '\')">' + t + "</button>";
-        }).join("") + "</div>" +
-        (mine ? '<div class="tipbanner" style="margin-top:12px">' + mine.slot + ' 신청 완료. 시작 10분 전 앱 알림을 드려요</div><button class="btn line" style="margin-top:8px" onclick="sessCancel(\'' + s.id + '\')">신청 취소</button>' :
-          '<button class="btn mint" style="margin-top:12px;padding:15px"' + (PROG.slot ? ' onclick="sessBook(\'' + s.id + '\', PROG.slot)"' : " disabled") + ">" + (PROG.slot ? PROG.slot + " 신청하기" : "시간을 선택하세요") + "</button>") + "</div>";
+      /* v3.21 B 원격 대기열 · 프로그램 행·일정 탭 상시 행과 같은 번호표 UI */
+      act = '<div class="card mb12">' + photoQueueHtml() + "</div>";
     }
     var loc = '<div class="card soft"><span style="font-size:calc(14px * var(--fs));font-weight:700;color:var(--muted)">위치 · ' + s.fl + "F " + esc(zn) + "</span></div>";
     return hero + info + act + loc;
@@ -3616,6 +3721,7 @@ var Views = {
  *   웹앱이 백엔드에 붙기 전까지 여기가 유일한 경로이므로 삭제하지 않고 접어둔다. */
 var ADM_STAFF = [
   ["scan",   "현장 스캔",   "참가자 QR로 체크인·대기·룰렛"],
+  ["photo",  "포토부스 대기열", "번호 호출 · 건너뛰기 · 완료"],
   ["zone",   "존 혼잡 등급", "내 담당 존을 15분마다 여유·보통·혼잡"],
   ["book",   "신청 현황",   "세션별 신청 인원과 잔여석"],
   ["resv",   "상담 승인",   "1F DAP존 · 신청 승인·시간 변경"],
@@ -3635,7 +3741,57 @@ ADM_STAFF.concat(ADM_CC).forEach(function (t) { ADM_META[t[0]] = [t[1], t[2]]; }
 function admOpen(id) { S.set("admin_tab", id); }
 function admMenu() { S.set("admin_tab", ""); }
 
+/* v3.21 B 포토부스 운영자 패널 · 서버 photo_list 로 줄을 보고 q_call·q_skip·q_done 으로 움직인다 (데모는 photoDemo) */
+var PHOTOADM = { rows: null, pub: null, busy: false };
+function photoAdmLoad() {
+  if (!BE.on) return;
+  PHOTOADM.busy = true;
+  beCall({ action: "photo_list", key: admKey() }, function (res) {
+    PHOTOADM.busy = false;
+    if (res && res.ok) { PHOTOADM.rows = res.rows; PHOTOADM.pub = res.pub; }
+    else { PHOTOADM.rows = []; toast(res && res.reason === "auth" ? "관리코드 불일치" : "대기열을 불러오지 못했습니다"); }
+    App.render();
+  }, function () { PHOTOADM.busy = false; PHOTOADM.rows = []; toast("서버 연결 실패"); App.render(); });
+}
+function photoAdm(act, emp) {
+  var p = { key: admKey(), spot: "q_photo", action: act === "call" ? "q_call" : act === "skip" ? "q_skip" : "q_done" };
+  if (emp) p.emp = emp;
+  beCall(p, function (res) {
+    if (!res || !res.ok) {
+      toast(res && res.reason === "lunch" ? "점심 시간 · 원격 번호 호출 중지 (13:10 재개)" : res && res.reason === "empty" ? "대기 중인 번호가 없습니다" : "처리 실패" + (res && res.reason ? " (" + res.reason + ")" : ""));
+      return;
+    }
+    toast((res.no ? res.no + "번 · " : "") + (act === "call" ? "호출했습니다" : act === "skip" ? "건너뛰었습니다" : "완료 처리했습니다"));
+    photoAdmLoad();
+  }, function () { toast("서버 연결 실패"); });
+}
 var AdminTabs = {
+
+  photo: function () {
+    var h = '<div class="card soft mb12"><p class="muted" style="font-size:calc(13.5px * var(--fs));line-height:1.6">호출하면 참가자 앱에 「지금 입장하세요」가 뜹니다. 호출 후 10분 안에 오지 않으면 건너뛰기, 도착하면 완료. 점심(11:20~13:10)에는 원격 번호 호출이 멈추고 현장 줄을 받습니다.</p></div>';
+    if (!BE.on) {
+      var q = photoQ(), pub = photoPub();
+      return h + '<div class="card mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">대기 ' + (pub.waiting || 0) + "팀 · 호출 " + (pub.serving || 0) + "번째</b>" +
+        '<p class="muted" style="margin-top:4px;font-size:calc(13px * var(--fs))">데모 · 이 기기 번호표 ' + (q ? q.no + "번 " + q.status + (q.status === "wait" ? " · 앞 " + q.ahead + "팀" : "") : "없음") + "</p>" +
+        '<div class="row" style="gap:8px;margin-top:10px"><button class="btn mint" style="flex:1" onclick="photoDemo(\'call\')">다음 호출</button>' +
+        '<button class="btn line" style="flex:1" onclick="photoDemo(\'skip\')">건너뛰기</button>' +
+        '<button class="btn line" style="flex:1" onclick="photoDemo(\'done\')">완료</button></div></div>';
+    }
+    if (!PHOTOADM.rows && !PHOTOADM.busy) photoAdmLoad();
+    var rows = PHOTOADM.rows || [], pb = PHOTOADM.pub || {};
+    h += '<div class="card mb12"><div class="row" style="justify-content:space-between;align-items:center">' +
+      '<b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">대기 ' + rows.length + "팀 · 호출 중 " + (pb.serving ? pb.serving + "번" : "없음") + "</b>" +
+      '<button class="tag-btn" onclick="photoAdmLoad()">새로고침</button></div>' +
+      '<button class="btn mint" style="margin-top:10px" onclick="photoAdm(\'call\')">다음 번호 호출</button></div>';
+    h += !rows.length ? '<div class="card soft"><p class="muted">대기 중인 번호가 없습니다.</p></div>' : rows.map(function (r) {
+      return '<div class="card soft mb8"><div class="row" style="justify-content:space-between;align-items:center;gap:8px">' +
+        '<span><b style="font-size:calc(15px * var(--fs));color:var(--hi)">' + r.no + "번 · " + esc(r.name || r.emp) + "</b>" +
+        '<p class="muted" style="font-size:calc(12.5px * var(--fs))">' + (r.status === "call" ? "호출 중" : "대기 · 앞 " + r.ahead + "팀 · 예상 " + r.eta) + "</p></span>" +
+        (r.status === "call" ? '<span class="row" style="gap:6px"><button class="tag-btn" onclick="photoAdm(\'skip\',\'' + esc(r.emp) + '\')">건너뛰기</button>' +
+          '<button class="tag-btn" onclick="photoAdm(\'done\',\'' + esc(r.emp) + '\')">완료</button></span>' : "") + "</div></div>";
+    }).join("");
+    return h;
+  },
 
   /* 존 혼잡 등급 · 서서 한 손으로 누르는 화면이라 층을 먼저 고르고 존은 목록으로 편다.
      마지막 입력 시각을 존마다 보여 준다. 15분 주기를 지키려면 「언제 눌렀는지」가 보여야 한다.
@@ -3967,6 +4123,16 @@ function checkMyState() {
     seen.cchat = "m:" + c.round + c.table; changed = true;
     notifyUser("커피챗 매칭 완료", "18F 라운지 · " + hhmm(c.round) + " · TABLE " + c.table, "ev_cchat");
   }
+  /* v3.21 B 포토부스 · 앞 2팀 이하 = 「곧 차례」 1회, 호출 = 「지금 입장」 1회 (앱이 열려 있을 때 · 푸시 대체) */
+  var pq = S.get("photoq", null);
+  if (pq && pq.status === "wait" && pq.ahead <= 2 && seen.photoNear !== pq.no) {
+    seen.photoNear = pq.no; changed = true;
+    notifyUser("곧 차례예요", "1F 포토부스로 내려와 주세요 · " + pq.no + "번 · 앞 " + pq.ahead + "팀", "home");
+  }
+  if (pq && pq.status === "call" && seen.photoCall !== pq.no) {
+    seen.photoCall = pq.no; changed = true;
+    notifyUser("지금 입장하세요", "1F 포토부스 · " + pq.no + "번 · 호출 후 10분 안에 와 주세요", "home");
+  }
   var qs = S.get("quiz_state", INITIAL_QUIZ_STATE);
   if (qs.phase === "open" && qs.activeId && seen.quiz !== qs.activeId + ":open" && Date.now() - (qs.openedAt || 0) < 600000) {
     seen.quiz = qs.activeId + ":open"; changed = true;
@@ -4005,6 +4171,7 @@ function beSync() {
       var kept = nz0.filter(function (x) { return nOff.indexOf(x.id) < 0; });
       if (kept.length !== nz0.length) S.set("notices", kept);
     }
+    if (res.photo && JSON.stringify(res.photo) !== JSON.stringify(S.get("photo_pub", null))) S.set("photo_pub", res.photo);   /* v3.21 B 공개 대기 요약 */
     if (res.notice && res.notice.id && nOff.indexOf(res.notice.id) < 0) {
       var nz = S.get("notices", []);
       if (!nz.some(function (x) { return x.id === res.notice.id; })) {
@@ -4055,6 +4222,8 @@ function beSync() {
       if (res.my.stamps) stampSync(res.my.stamps);   /* 스탬프는 서버가 정본 */
       if ("roulette" in res.my && !testEmp()) S.set("roulette_used", !!res.my.roulette);   /* 룰렛 사용 여부도 서버가 정본 (260909) · 테스트 사번은 로컬 */
       if (res.my.tickets && !testEmp()) S.set("raffle_nums", res.my.tickets);   /* v3.12 응모권 번호 · 서버 발급 정본 */
+      /* v3.21 B 포토부스 번호표 · 서버가 정본(없으면 null) · 바뀐 경우에만 저장해 불필요한 재렌더를 막는다 */
+      if ("photoQ" in res.my && JSON.stringify(res.my.photoQ) !== JSON.stringify(S.get("photoq", null))) S.set("photoq", res.my.photoQ);
       if (res.my.queue) {
         var was = S.get("queue", {}), nowQ = res.my.queue, kq;
         for (kq in nowQ) {
@@ -4454,6 +4623,7 @@ var SCAN_SPOTS = [
   { id: "fld", nm: "10F 현장 프로그램", kind: "sess" },
   { id: "q_dap", nm: "1F DAP 과제상담", kind: "queue" },
   { id: "q_cchat", nm: "18F AX 커피챗", kind: "queue" },
+  { id: "q_photo", nm: "1F AI 포토부스", kind: "queue" },   /* v3.21 B · 번호는 참가자가 앱에서 받고, 데스크는 호출·건너뛰기·완료 */
   { id: "roulette", nm: "1F 이벤트존 룰렛", kind: "roulette" }   /* 260909 · 스탬프 3개=1회, 판정은 서버 */
 ];
 function scanSpot(id) { return SCAN_SPOTS.filter(function (s) { return s.id === id; })[0] || null; }
@@ -4465,6 +4635,7 @@ function scanActs(id) {
   var sp = scanSpot(id);
   if (!sp) return [];
   if (sp.kind === "sess") return [["in", "입장 체크인"], ["out", "퇴장 체크아웃"]];
+  if (id === "q_photo") return [["call", "다음 호출"], ["skip", "건너뛰기"], ["done", "완료 처리"], ["take", "대신 접수"]];
   if (sp.kind === "queue") return [["take", "대기 접수"], ["call", "다음 호출"], ["done", "완료 처리"]];
   return [["use", "룰렛 1회 차감"]];
 }
@@ -4511,13 +4682,14 @@ function scanDone(emp, sp, act, res) {
               why === "need" ? "스탬프 3개 미만 · 차감 불가 (현재 " + (res.n || 0) + "개)" :
                 why === "used" ? "이미 룰렛을 사용한 참가자입니다" :
                   why === "notfound" ? "대기 목록에 없습니다" :
+                  why === "lunch" ? "점심 시간 · 포토부스 원격 호출 중지 (13:10 재개)" :
                     why === "auth" ? "관리코드 불일치 · 설정 시트를 확인하세요" :
                       why === "dup" ? "이미 접수됨" : "처리 실패" + (why || err ? " (" + (why || err.slice(0, 40)) + ")" : "");
     scanLog(emp, msg, false, true);
     return;
   }
   var msg = sp.kind === "sess" ? (act === "in" ? (res.dup ? "이미 입장 처리됨" : "입장 확인") : "퇴장 처리") :
-    sp.kind === "queue" ? (act === "take" ? res.no + "번 접수 (앞 " + (res.waiting || 0) + "명)" : act === "call" ? res.no + "번 호출" : "완료 처리") :
+    sp.kind === "queue" ? (act === "take" ? res.no + "번 접수 (앞 " + (res.waiting || 0) + "명)" : act === "call" ? res.no + "번 호출" : act === "skip" ? res.no + "번 건너뛰기" : "완료 처리") :
       "룰렛 1회 차감 · 바로 돌리세요 (스탬프 " + (res.n || "") + "개)";
   scanLog(emp, (res.name ? res.name + " · " : "") + msg, true, true);
 }
