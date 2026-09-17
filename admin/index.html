@@ -178,7 +178,7 @@ var TABS = [
 /* 앱 STAMPS 와 맞춘다 · v3.33 8칸(계단 st · 설문 sv 추가), v3.39 보상은 7개에서 끝. 번호는 콘솔 표 머리용 약칭일 뿐 앱에는 없다.
    폐기된 ID 는 옛 로그에 남아 있을 수 있어 표기만 한다(서버 stamp_people 는 old 로 따로 준다). */
 var STAMP_META = {
-  p1:{ no:"01", n:"1F 전시" }, p2:{ no:"02", n:"부스 체험" }, p3:{ no:"03", n:"17F 강의" },
+  p1:{ no:"01", n:"1F 전시" }, p2:{ no:"02", n:"부스 체험" }, p3:{ no:"03", n:"프로그램 참여" },
   p4:{ no:"04", n:"미니게임" }, p5:{ no:"05", n:"아이디어" }, p7:{ no:"06", n:"QR 퀴즈" },
   st:{ no:"07", n:"계단 이용" }, sv:{ no:"08", n:"오늘 한 판 설문" },
   p6:{ no:"", n:"포토부스", old:1 }, p8:{ no:"", n:"미니게임", old:1 }, p9:{ no:"", n:"계단(구)", old:1 }
@@ -495,7 +495,7 @@ function viewResv(){
 }
 function resvSet(id,status,name){
   if((status==="취소"||status==="노쇼") && !confirm(name+" 님 상담을 「"+status+"」 처리할까요? 되돌릴 수 없습니다.")) return;
-  call("resv_set",{id:id,status:status},function(r){ if(r&&r.ok){ toast(name+" · "+status); load(); } else toast("실패: "+(r&&r.reason||"")); },function(){ toast("서버 응답 없음"); });
+  call("resv_set",{id:id,status:status},function(r){ if(r&&r.ok){ toast(name+" · "+status+(r.stamp&&!r.stamp.dup?" · 스탬프 03 적립":"")); load(); } else toast("실패: "+(r&&r.reason||"")); },function(){ toast("서버 응답 없음"); });
 }
 function resvMemo(id,cur){
   var m=prompt("메모 (운영 담당만 봅니다)",cur||""); if(m===null) return;
@@ -518,10 +518,13 @@ function viewCchat(){
     shown.map(function(r){ var s=r.status, k=esc(r.emp).replace(/'/g,"");
       return '<tr><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td><td>'+esc(r.dept)+'</td><td><span class="pill">'+esc(r.tag||"-")+'</span></td><td class="n src">'+esc(short(r.ts))+'</td>'+
         '<td><span class="pill'+(s==="매칭"?" on":s==="취소"?" off":s==="완료"?" ok":"")+'">'+esc(s)+'</span></td><td class="n">'+esc(hhmm(r.round)||"-")+'</td><td>'+esc(r.table||"-")+'</td>'+
-        '<td>'+(s==="대기"||s==="매칭"?'<div class="row" style="gap:6px"><input class="in" type="time" id="cr_'+k+'" value="'+esc(hhmm(r.round))+'" style="min-width:110px;padding:5px 8px"><input class="in" id="ct_'+k+'" placeholder="테이블" value="'+esc(r.table)+'" style="min-width:80px;width:90px;padding:5px 8px"><button class="btn sm pri" onclick="cchatSet(\''+k+'\',\''+esc(r.name)+'\')">'+(s==="대기"?"매칭":"변경")+'</button></div>':'<span class="src">-</span>')+'</td></tr>'; }).join("")+
+        '<td>'+(s==="대기"||s==="매칭"?'<div class="row" style="gap:6px"><input class="in" type="time" id="cr_'+k+'" value="'+esc(hhmm(r.round))+'" style="min-width:110px;padding:5px 8px"><input class="in" id="ct_'+k+'" placeholder="테이블" value="'+esc(r.table)+'" style="min-width:80px;width:90px;padding:5px 8px"><button class="btn sm pri" onclick="cchatSet(\''+k+'\',\''+esc(r.name)+'\')">'+(s==="대기"?"매칭":"변경")+'</button></div>':'<span class="src">-</span>')+''+(s==="매칭"?'<div class="row" style="gap:6px;margin-top:6px"><button class="btn sm pri" onclick="cchatStatus(\''+k+'\',\''+esc(r.name)+'\',\'참석\')">참석</button><button class="btn sm" onclick="cchatStatus(\''+k+'\',\''+esc(r.name)+'\',\'완료\')">완료</button></div>':s==="참석"?'<button class="btn sm pri" onclick="cchatStatus(\''+k+'\',\''+esc(r.name)+'\',\'완료\')">완료</button>':'')+'</td></tr>'; }).join("")+
     (!shown.length?'<tr><td colspan="9" class="src">해당하는 신청이 없습니다.</td></tr>':'')+'</table></div>';
-  h+='<p class="note mt12">회차와 테이블을 넣고 매칭을 누르면 참가자 앱에 「18F 라운지 · 회차 · 테이블」로 뜹니다. 같은 관심 태그끼리 한 테이블에 묶는 것이 기본입니다.</p></div>';
+  h+='<p class="note mt12">회차와 테이블을 넣고 매칭을 누르면 참가자 앱에 「18F 라운지 · 회차 · 테이블」로 뜹니다. 같은 관심 태그끼리 한 테이블에 묶는 것이 기본입니다. 테이블에 온 사람은 「참석」 또는 「완료」를 누르면 스탬프 03 「프로그램 참여」가 적립됩니다(1인 1회).</p></div>';
   return h;
+}
+function cchatStatus(emp,name,status){
+  call("cchat_status",{emp:emp,status:status},function(res){ if(res&&res.ok){ toast(name+" · "+status+(res.stamp&&!res.stamp.dup?" · 스탬프 03 적립":"")); load(); } else toast("실패: "+(res&&res.reason||"")); },function(){ toast("서버 응답 없음"); });
 }
 function cchatSet(emp,name){
   var r=el("cr_"+emp), t=el("ct_"+emp); if(!r||!t) return;
