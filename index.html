@@ -722,12 +722,12 @@ var FESTIVAL = {
    short = 좁은 자리용 짧은 이름 · where = 층·소요시간 · inapp = 앱에서 바로 되는 칸(구분 뱃지)
    구 p6(포토부스)·p8(미니게임 별도 칸)은 폐지 · 미니게임은 04 라이브 챌린지에 통합.
    v47: tap = 스탬프 카드의 바로가기 · cta = 버튼 문구 · note = 카드 안 행동 안내.
-   층별 안내(progOpenFl) 폐기로 p1은 QR 스캔, p3은 17F 강연 목록이 목적지다(v3.29 자유 참석 · 신청 없음).
+   층별 안내(progOpenFl) 폐기로 p1은 QR 스캔, p3은 17F 오후 강연 신청 목록이 목적지다(v3.31b 오후 신청제 복귀).
    v3.1: p4는 카드 안에서 AX 링크·초성퀴즈·다시 풀기 3버튼을 직접 그린다(stampInnerHtml 특례). */
 var STAMPS = [
   { id: "p1", title: "1F 전시", short: "1F 전시", desc: "1F 전시존 QR 스캔", where: "1F · 약 5분", site: 1, tap: "qrScanOpen()", cta: "QR 스캔", note: "1F 전시존 끝 QR 입간판을 스캔하세요." },
   { id: "p2", title: "AX Now! 체험", short: "부스 체험", desc: "HIDI-Q 또는 HI-Helper 부스 1곳 체험", where: "1F · 약 5분", site: 1, tap: "App.go('booth')", cta: "부스 안내 보기", note: "체험을 마치면 스태프가 보여주는 완료 QR을 스캔합니다." },
-  { id: "p3", title: "17F 강의", short: "17F 강의", desc: "17F 오후 파트너사 강연 1회 참석 (10F 제외)", where: "17F · 90분", site: 1, tap: "progGoFl(17)", cta: "17F 강연 시간 보기", note: "17F 대강당 강연은 신청 없이 자유 참석입니다. 입장 시 좌석 QR을 스캔하세요." },
+  { id: "p3", title: "17F 강의", short: "17F 강의", desc: "17F 오후 파트너사 강연 1회 참석 (10F 제외)", where: "17F · 90분", site: 1, tap: "progGoFl(17)", cta: "17F 오후 강연 신청하기", note: "17F 오후 파트너사 강연은 프로그램 탭에서 신청합니다. 사전 신청하셨다면 「사전 신청 완료」로 보입니다. 입장 시 좌석 QR을 스캔하세요." },
   { id: "p4", title: "라이브 챌린지", short: "라이브 챌린지", desc: "Outro 시작 전 라이브 퀴즈 응답 또는 미니게임(AX 링크·초성퀴즈) 1개 클리어", where: "앱 · 30초", inapp: 1 },
   { id: "p5", title: "아이디어 한 줄", short: "아이디어", desc: "아이디어 1건 제출", where: "앱 · 1분", inapp: 1, tap: "App.go('ideas')", cta: "아이디어 쓰기" },
   { id: "p7", title: "전시 QR 퀴즈", short: "QR 퀴즈", desc: "DAP Wall QR 퀴즈 1세트 통과 (60점 이상)", where: "1F DAP Wall · 약 10분", tap: "App.go('wq_list')", cta: "QR 퀴즈 풀기" }
@@ -769,9 +769,9 @@ var TIMELINE = [
   /* always=1 (v3.18): 기간이 길어서가 아니라 「그 시간 안에 아무 때나 들르는」 참여 방식이라 상시 묶음.
      10F 오후 세션(내내 참석)·점심(시간대 구분 역할)은 시간표 유지 */
   { time: "13:00", end: "16:30", title: "AX 커피챗", short: "아이디어를 낸 분들을 30분 간격으로 매칭합니다", place: "18F 라운지", desc: "아이디어 제출자 매칭 · 30분 간격 × 2테이블. 매칭되면 앱 알림으로 자리·시간을 알려드려요.", tag: "매칭제", always: 1 },
-  { time: "13:30", end: "15:00", title: "파트너사 강연 · AWS", short: "Agentic AI 시대의 일하는 방식 변화 · 구태훈 박사(AWS)", place: "17F 대강당", desc: "구태훈 박사(AWS) · Agentic AI 시대의 일하는 방식 변화. 신청 없이 자유 참석. 세부 시간은 변동될 수 있습니다.", tag: "자유 참석" },
-  { time: "13:30", end: "16:30", title: "10F 실습형 세션 A~E", short: "사전 신청자 · 5개 세션 중 1개", place: "10F", desc: "세션 A 영업 및 보상 현장 우수 사례 · 세션 B 통계 현황 리포팅 · 세션 C 외부자료 리서치 자동화 · 세션 D 바이브 코딩(AWS) · 세션 E MS Copilot 문서 작성(MS, 2회 진행 13:30 · 15:00). 사전 신청한 세션 1개에 참석합니다(세션 A는 16:40 종료).", tag: "신청제" },
-  { time: "15:10", end: "16:40", title: "파트너사 강연 · MS", short: "AI와 친해지기 · MS", place: "17F 대강당", desc: "MS · AI와 친해지기. 신청 없이 자유 참석. 세부 시간은 변동될 수 있습니다.", tag: "자유 참석" },
+  { time: "13:30", end: "15:00", title: "파트너사 강연 · AWS", short: "Agentic AI 시대의 일하는 방식 변화 · 구태훈 박사(AWS)", place: "17F 대강당", desc: "구태훈 박사(AWS) · Agentic AI 시대의 일하는 방식 변화. 신청제(사전 신청 + 앱 신청), 프로그램 탭에서 잔여석을 확인하세요. 세부 시간은 변동될 수 있습니다.", tag: "신청제" },
+  { time: "13:30", end: "16:30", title: "10F 실습형 세션 A~E", short: "사전 신청자 · 5개 세션 중 1개", place: "10F", desc: "세션 A 영업 및 보상 현장 우수 사례 · 세션 B 통계 현황 리포팅 · 세션 C 외부자료 리서치 자동화 · 세션 D 바이브 코딩(AWS) · 세션 E MS Copilot 문서 작성(MS, 2회 진행 13:30 · 15:00). 사전 신청한 세션 1개에 참석합니다(세션 A는 16:40 종료). 현장 신청은 받지 않습니다.", tag: "사전 신청" },
+  { time: "15:10", end: "16:40", title: "파트너사 강연 · MS", short: "AI와 친해지기 · MS", place: "17F 대강당", desc: "MS · AI와 친해지기. 신청제(사전 신청 + 앱 신청), 프로그램 탭에서 잔여석을 확인하세요. 세부 시간은 변동될 수 있습니다.", tag: "신청제" },
   /* v3.32 라이브 퀴즈 = Outro 대기 시간 한 판 (사용자 확정 260917) · 4문항을 운영자가 순서대로 발사 */
   { time: "16:45", end: "17:00", title: "라이브 퀴즈 · 설문 안내", short: "16:45 라이브 퀴즈 · 설문 참여 안내 후 17:00 Outro", place: "17F 대강당", desc: "진행 순서: 라이브 퀴즈 4문항 → 오늘 한 판 설문 참여 안내 → 17:00 Outro. 퀴즈는 문항마다 20초, 홈 화면에서 답하세요. 한 문제만 답해도 라이브 챌린지 스탬프가 적립됩니다.", tag: "자유 참석" },
   { time: "17:00", end: "17:30", title: "Outro · DAP 시상", short: "DAP 우수 성과자 시상 · 경품 추첨", place: "17F 대강당", desc: "16:45 라이브 퀴즈 · 설문 참여 안내 후 17:00 Outro. CSO · DAP 우수 성과자 시상, 경품 추첨. 추첨 결과는 행사 종료 후 개별 안내드립니다.", tag: "피날레" }
@@ -779,7 +779,7 @@ var TIMELINE = [
 var NOW_INDEX = 1;
 var FLOORS = [
   { no: "18", nm: "AX 커피챗", items: ["AX 커피챗 · 소규모 아이디어 논의"] },
-  { no: "17", nm: "키노트 · 파트너사 강연", items: ["대강당 · Intro · 기조연설 · 내부 강연 · 파트너사 강연(AWS · MS) · Outro", "전 임직원 자유 참석 · 신청 없음"] },
+  { no: "17", nm: "키노트 · 파트너사 강연", items: ["대강당 · Intro · 기조연설 · 내부 강연 · 파트너사 강연(AWS · MS) · Outro", "오전 자유 참석 · 오후 파트너사 강연 신청제(사전 신청 + 앱 신청)"] },
   { no: "10", nm: "실습형 세션 A~E", items: ["세션 A · 영업 및 보상 현장 우수 사례 강연 및 실습 (62명)", "세션 B · 통계 현황 리포팅 실습 (최대 32명)", "세션 C · 외부자료 리서치 자동화 실습 (20명)", "세션 D · Claude Code 바이브 코딩 실습 · AWS (20명)", "세션 E · MS Copilot 문서 작성 실습 · MS (2회 진행 · 1회차 13:30 · 2회차 15:00 · 회당 20명)"] },
   { no: "01", nm: "AX 전시·체험존", items: ["이벤트존 · INFO 데스크 · 「내 3시간을 돌려줘」 보드 · 라이브 스크린 · 참가상(1F 한정 200개)", "DAP존 (미니 강의 · 과제 상담)", "기술지원부문 부스 · AX 헬프데스크", "체크인 (외부 주차장) · 웰컴키트"] }
 ];
@@ -789,8 +789,10 @@ var SLOTS = [
   { time: "15:30–16:00", dept: "12F 마케팅부문" }
 ];
 /* ═══ 프로그램 카탈로그 · v3.29 공식 공지 붙임1·2(260917) 정본 ═══
-   kind: seat=좌석 신청 / queue=원격 대기열 / link=기존 신청 시스템 연결 / open=자유 참석(신청 없음)
-   17F 강연은 open · cap·seed 는 신청제로 되돌릴 때를 위해 남긴다(kind 만 seat 로 바꾸면 신청 UI 가 돌아온다).
+   kind: seat=좌석 신청 / queue=원격 대기열 / link=기존 신청 시스템 연결 / open=자유 참석(신청 없음) / info=사전 신청자 대상 안내 전용
+   17F 오전(key·road)은 open · 17F 오후 파트너사 강연(l1·l2)은 seat (v3.31b 사용자 확정 · 사전 신청 + 앱 신청,
+   잔여 = 정원 - 사전 신청 - 앱 신청 · 서버 sessLeft · 사전 신청자는 sync my.pre 로 「사전 신청 완료」).
+   10F 실습형 세션은 info (v3.31b 사용자 확정 · 현장 신청 없음 · 신청은 앱 밖 사전 공지로 끝남) · cap 은 되돌릴 때를 위해 남긴다.
    10F 실습형 세션은 5개 중 1개만(sessConflict · 백엔드 sessBook_ reason ten). id 는 기존 유지:
    fld=세션 A · ta=세션 B · tb=세션 C · aws=세션 D · ms1·ms2=세션 E 1·2회차(v3.31 회차 분리 · 80분 × 2회, 사이 10분).
    세션 E 는 회차마다 행 하나(공용 행 카드 · 인라인 신청 그대로). 회차 선택 UI 를 따로 두지 않는 이유:
@@ -804,31 +806,31 @@ var SESSIONS = [
     desc: "Intro(CEO · AX 선포 및 Festival 개최 안내)에 이어지는 기조연설." },
   { id: "road", fl: 17, zone: "hall", kind: "open", ttl: "내부 강연", sub: "현대해상 AX 로드맵", who: "디지털전략본부장", tm: "10:30~11:00", cap: 235, seed: 120,
     desc: "현대해상 AX 로드맵을 디지털전략본부장이 소개합니다." },
-  { id: "l1", fl: 17, zone: "hall", kind: "open", ttl: "파트너사 강연 · AWS", sub: "Agentic AI 시대의 일하는 방식 변화", who: "구태훈 박사 (AWS)", tm: "13:30~15:00", cap: 235, seed: 141,
+  { id: "l1", fl: 17, zone: "hall", kind: "seat", ttl: "파트너사 강연 · AWS", sub: "Agentic AI 시대의 일하는 방식 변화", who: "구태훈 박사 (AWS)", tm: "13:30~15:00", cap: 235, seed: 141,
     desc: "파트너사 초청 강연. " + TIME_TBD },
-  { id: "l2", fl: 17, zone: "hall", kind: "open", ttl: "파트너사 강연 · MS", sub: "AI와 친해지기", who: "MS", tm: "15:10~16:40", cap: 235, seed: 96,
+  { id: "l2", fl: 17, zone: "hall", kind: "seat", ttl: "파트너사 강연 · MS", sub: "AI와 친해지기", who: "MS", tm: "15:10~16:40", cap: 235, seed: 96,
     desc: "파트너사 초청 강연. " + TIME_TBD },
-  { id: "fld", fl: 10, zone: "conf", kind: "seat", ttl: "세션 A", sub: "영업 및 보상 현장 우수 사례 강연 및 실습", who: "현장 실습 프로그램", tm: "13:30~16:40", cap: 62, seed: 50,
+  { id: "fld", fl: 10, zone: "conf", kind: "info", ttl: "세션 A", sub: "영업 및 보상 현장 우수 사례 강연 및 실습", who: "현장 실습 프로그램", tm: "13:30~16:40", cap: 62, seed: 50,
     capNote: "62명",
     desc: "영업(개인, AM), 전략채널, 보상(자동차, 장기) 직원 대상.",
     info: [["주요내용", "동료 활용 사례 공유 및 AI활용 교안 제공 · 원하는 주제 선택 및 개발 실습 진행"], ["교육환경", "Claude, 1인 1노트북 배정"], ["산출물", "영업 현장 활용 가능 HTML앱 · 보상 업무 전체 활용 가능한 agent HTML앱"], ["비고", "브로슈어 제공(현업 복귀 후 활용 가능)"]] },
-  { id: "ta", fl: 10, zone: "heart18", kind: "seat", ttl: "세션 B", sub: "“내 데이터”로 만드는 통계 현황 리포팅 실습", who: "본사 실습 프로그램", tm: "13:30~16:30", cap: 32, seed: 24,
+  { id: "ta", fl: 10, zone: "heart18", kind: "info", ttl: "세션 B", sub: "“내 데이터”로 만드는 통계 현황 리포팅 실습", who: "본사 실습 프로그램", tm: "13:30~16:30", cap: 32, seed: 24,
     capNote: "최대 32명 (신청현황에 따라 변동)",
     desc: "실제 업무 정기 데이터로 분석, 리포트 자동화, 대시보드 개발까지 실습합니다.",
     info: [["주요내용", "데이터 분석: 실제 업무 정기 데이터의 AI 활용 분석(기초, 증감, 예측모델) · 리포트 자동화: 분석 결과 리포트 개발 반복 작업 자동화 코드 작성 · 대시보드 개발: 데이터 삽입 → 실시간 결과 반영 HTML앱 개발"], ["교육환경", "Claude, Python, 1인 1노트북 배정"], ["산출물", "내부망에서 활용 가능한 데이터분석 파이썬 코드 · 대시보드 작성 HTML앱"], ["비고", "사전에 본인 업무 데이터를 받아 교육 실습 때 활용 예정"]] },
-  { id: "tb", fl: 10, zone: "heart18", kind: "seat", ttl: "세션 C", sub: "“내가 보는 자료”로 만드는 외부자료 리서치 자동화 실습", who: "본사 실습 프로그램", tm: "13:30~16:30", cap: 20, seed: 15,
+  { id: "tb", fl: 10, zone: "heart18", kind: "info", ttl: "세션 C", sub: "“내가 보는 자료”로 만드는 외부자료 리서치 자동화 실습", who: "본사 실습 프로그램", tm: "13:30~16:30", cap: 20, seed: 15,
     capNote: "20명 (신청현황에 따라 변동)",
     desc: "외부자료 리서치, 요약 및 정리, 자동 알림 시스템 개발까지 실습합니다.",
     info: [["주요내용", "외부자료 리서치: 최신 갱신 외부자료 검색 및 수집(법령, 뉴스, 공시 등) · 요약 및 정리: 수집된 자료 자동 정리(중복 또는 예전 자료 제외 등) · 자동 알림 시스템 개발: 주기적인 새정보 업데이트 알림 봇 개발"], ["교육환경", "Claude, 1인 1노트북 배정"], ["산출물", "자동알림 봇 · AX 적용 아이디어 정리표"], ["비고", "사전에 본인이 검색 및 활용하는 웹사이트 조사하여 실습 구성 예정"]] },
-  { id: "aws", fl: 10, zone: "heart56", kind: "seat", ttl: "세션 D", sub: "Claude Code를 활용한 바이브 코딩 실습 (AWS)", who: "파트너사 진행 · AWS", tm: "13:30~16:30", cap: 20, seed: 16,
+  { id: "aws", fl: 10, zone: "heart56", kind: "info", ttl: "세션 D", sub: "Claude Code를 활용한 바이브 코딩 실습 (AWS)", who: "파트너사 진행 · AWS", tm: "13:30~16:30", cap: 20, seed: 16,
     capNote: "20명",
     desc: "파트너사(AWS)가 진행하는 Claude Code 바이브 코딩 실습입니다.",
     info: [["교육환경", "Claude Code"], ["비고", "상황에 따라 프로그램 변경 가능"]] },
-  { id: "ms1", fl: 10, zone: "tbd", kind: "seat", ttl: "세션 E · 1회차", sub: "MS Copilot을 활용한 문서 작성 실습 (MS)", who: "파트너사 진행 · MS", tm: "13:30~14:50", cap: 20, seed: 12,
+  { id: "ms1", fl: 10, zone: "tbd", kind: "info", ttl: "세션 E · 1회차", sub: "MS Copilot을 활용한 문서 작성 실습 (MS)", who: "파트너사 진행 · MS", tm: "13:30~14:50", cap: 20, seed: 12,
     capNote: "20명 (2회 진행 중 1회차)",
     desc: "파트너사(MS)가 진행하는 MS Copilot 문서 작성 실습입니다. 2회 진행되며 1회차(13:30~14:50)와 2회차(15:00~16:20)는 같은 내용입니다. 두 회차 중 하나만 신청할 수 있습니다.",
     info: [["교육환경", "MS Copilot"], ["진행", "2회 진행 · 1회차 13:30~14:50 · 2회차 15:00~16:20 · 회당 20명"], ["비고", "상황에 따라 프로그램 변경 가능"]] },
-  { id: "ms2", fl: 10, zone: "tbd", kind: "seat", ttl: "세션 E · 2회차", sub: "MS Copilot을 활용한 문서 작성 실습 (MS)", who: "파트너사 진행 · MS", tm: "15:00~16:20", cap: 20, seed: 9,
+  { id: "ms2", fl: 10, zone: "tbd", kind: "info", ttl: "세션 E · 2회차", sub: "MS Copilot을 활용한 문서 작성 실습 (MS)", who: "파트너사 진행 · MS", tm: "15:00~16:20", cap: 20, seed: 9,
     capNote: "20명 (2회 진행 중 2회차)",
     desc: "파트너사(MS)가 진행하는 MS Copilot 문서 작성 실습입니다. 2회 진행되며 1회차(13:30~14:50)와 2회차(15:00~16:20)는 같은 내용입니다. 두 회차 중 하나만 신청할 수 있습니다.",
     info: [["교육환경", "MS Copilot"], ["진행", "2회 진행 · 1회차 13:30~14:50 · 2회차 15:00~16:20 · 회당 20명"], ["비고", "상황에 따라 프로그램 변경 가능"]] },
@@ -2420,73 +2422,49 @@ function replayQuiz(qid, choice) {
 /* ═══ 프로그램 신청 · seat(좌석)·slot(시간대)·link(기존 시스템) ═══ */
 function sessById(id) { return SESSIONS.filter(function (s) { return s.id === id; })[0]; }
 function sessMy() { return S.get("sess_my", {}); }
-function sessMine(id) { return sessMy()[id] || null; }
+/* v3.31b · 사전 신청(앱 밖) 세션 id 목록 · 서버 sync my.pre 가 정본 · 본인 것만 내려온다 */
+function sessPre() { return S.get("sess_pre", []); }
+function sessMine(id) { return sessMy()[id] || (sessPre().indexOf(id) >= 0 ? { slot: null, pre: true } : null); }
 function sessStartMin(tm) { var m = /(\d{1,2}):(\d{2})/.exec(tm || ""); return m ? (+m[1]) * 60 + (+m[2]) : 9999; }
-function sessRange(s) { var m = /(\d{1,2}):(\d{2})\s*~\s*(\d{1,2}):(\d{2})/.exec(s.tm); return m ? [(+m[1]) * 60 + (+m[2]), (+m[3]) * 60 + (+m[4])] : null; }
 function sessMineList() {
   var my = sessMy();
   /* 대기열형(포토부스)은 신청 목록이 아니다 · 구 슬롯 신청 기록이 남아 있어도 내 일정에 올리지 않는다 (v3.21 B) */
   /* v3.29 · 자유 참석(open)도 신청 목록이 아니다 · 서버에 남은 옛 17F 신청 기록은 지우지 않고 표시만 안 한다 */
-  return SESSIONS.filter(function (s) { return my[s.id] && s.kind !== "queue" && s.kind !== "open"; })
-    .map(function (s) { return { s: s, slot: my[s.id].slot || null }; })
+  /* v3.31b · 10F(info)도 앱 신청이 아니다 · 서버에 남은 옛 10F·오전 17F 신청 기록은 지우지 않고 표시만 안 한다 */
+  return SESSIONS.filter(function (s) { return s.kind === "seat" && sessMine(s.id); })
+    .map(function (s) { var m = sessMine(s.id); return { s: s, slot: m.slot || null, pre: !!m.pre }; })
     .sort(function (a, b) { return sessStartMin(a.slot || a.s.tm) - sessStartMin(b.slot || b.s.tm); });
 }
 function sessRemain(s) {
+  /* v3.31b · 서버 잔여(정원 - 사전 신청 - 앱 신청)가 있으면 그것이 정본 */
+  if (BE.on && BE.stats && BE.stats.sessLeft && BE.stats.sessLeft[s.id] != null) return BE.stats.sessLeft[s.id];
   if (BE.on && BE.stats && BE.stats.sess && BE.stats.sess[s.id] != null)
     return Math.max(0, s.cap - BE.stats.sess[s.id]);
   return Math.max(0, s.cap - s.seed - (sessMine(s.id) ? 1 : 0));
 }
 function hm2(min) { var h = Math.floor(min / 60), m = min % 60; return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m; }
 /* 시간대 슬롯 신청(sessSlots·slotRemain·슬롯 선택 UI)은 v3.21 B 폐지 · 유일한 슬롯형이던 포토부스가 원격 대기열로 바뀌었다 */
-/* v3.29 · 10F 실습형 세션은 5개 중 1개만(공식 공지 붙임2) · 시간과 무관하게 같은 층 신청이 있으면 충돌.
-   그 밖의 좌석형은 기존대로 시간 겹침으로 본다. 반환 [기존 세션, 사유 ten|time] */
-function sessOverlap(s) {
-  var r = sessRange(s);
-  var hit = null;
-  sessMineList().forEach(function (x) {
-    if (hit || x.s.id === s.id || x.s.kind !== "seat") return;
-    if (s.fl === 10 && x.s.fl === 10) { hit = [x.s, "ten"]; return; }
-    var r2 = sessRange(x.s);
-    if (r && r2 && r[0] < r2[1] && r2[0] < r[1]) hit = [x.s, "time"];
-  });
-  return hit;
-}
-function sessBook(id, slot, swapFrom) {
+/* v3.31b · 10F 1인 1세션 교체 확인창(sessOverlap·sessSwap)은 10F 가 안내 전용이 되며 삭제 · 서버 규칙(reason ten)은 유지.
+   17F 오후 두 강연은 시간이 겹치지 않아 둘 다 신청할 수 있다 */
+function sessBook(id) {
   var s = sessById(id), my = sessMy();
-  if (!s || my[id] || s.kind === "open") return;
-  if (s.kind === "seat" && sessRemain(s) <= 0) { toast("만석입니다. 취소가 나오면 다시 열려요"); return; }
-  if (s.kind === "seat" && !swapFrom) {
-    var ovh = sessOverlap(s);
-    if (ovh) {
-      var ov = ovh[0], ten = ovh[1] === "ten";
-      modalOpen('<b style="font-size:calc(17px * var(--fs));color:var(--hi)">' + (ten ? "10F 세션은 1개만 신청할 수 있어요" : "시간이 겹칩니다") + "</b>" +
-        '<p class="muted" style="margin-top:8px">' + (ten ?
-          "이미 「" + esc(ov.ttl) + "」(" + ov.tm + ") 신청이 있어요. 실습형 세션은 5개 중 1개만 선택할 수 있습니다." :
-          "「" + esc(ov.ttl) + "」(" + ov.tm + ") 신청과 시간이 겹쳐요. 오후 세션은 1개만 참석할 수 있습니다.") + "</p>" +
-        '<button class="btn mint" style="margin-top:14px" onclick="modalClose(); sessSwap(\'' + ov.id + '\', \'' + id + '\')">기존을 취소하고 이걸로 신청</button>' +
-        '<button class="btn line" style="margin-top:8px" onclick="modalClose()">그대로 두기</button>');
-      return;
-    }
-  }
-  my[id] = { slot: slot || null, ts: Date.now() };
+  if (!s || s.kind !== "seat" || sessMine(id)) return;
+  if (sessRemain(s) <= 0) { toast("만석입니다. 취소가 나오면 다시 열려요"); return; }
+  my[id] = { slot: null, ts: Date.now() };
   S.set("sess_my", my);
-  /* 교체는 서버 한 번에(swap) · 취소·신청을 따로 보내면 도착 순서가 뒤집혀 1인 1세션 검사에 걸린다 */
-  if (BE.on) beCall({ action: "sess_book", emp: (S.get("user", {}) || {}).empId || "", name: (S.get("user", {}) || {}).name || "", sid: id, slot: slot || "", swap: swapFrom || "" }, function (res) {
-    if (!res || res.ok || (res.reason !== "ten" && res.reason !== "full")) return;
+  if (BE.on) beCall({ action: "sess_book", emp: (S.get("user", {}) || {}).empId || "", name: (S.get("user", {}) || {}).name || "", sess: id, slot: "" }, function (res) {
+    if (!res || res.ok || ["full", "pre", "dup"].indexOf(res.reason) < 0) return;
     var m2 = sessMy(); delete m2[id]; S.set("sess_my", m2);
-    toast(res.reason === "ten" ? "이미 다른 10F 세션을 신청했어요 · 1개만 선택할 수 있습니다" : "만석입니다. 취소가 나오면 다시 열려요");
+    toast(res.reason === "full" ? "만석입니다. 취소가 나오면 다시 열려요" : res.reason === "pre" ? "이미 사전 신청된 강연이에요" : "이미 신청한 강연이에요");
     App.render();
   }, function () {});
-  toast((slot ? slot + " · " : "") + "신청 완료. 홈 내 일정에 담겼어요");
+  toast("신청 완료. 홈 내 일정에 담겼어요");
   App.render();
 }
-function sessSwap(oldId, newId) {
-  var my = sessMy(); delete my[oldId]; S.set("sess_my", my);
-  sessBook(newId, null, oldId);
-}
 function sessCancel(id) {
+  if (!sessMy()[id]) return;   /* 사전 신청은 앱에서 취소하지 않는다 (담당자 문의) */
   var my = sessMy(); delete my[id]; S.set("sess_my", my);
-  if (BE.on) beCall({ action: "sess_cancel", emp: (S.get("user", {}) || {}).empId || "", sid: id }, function () {}, function () {});
+  if (BE.on) beCall({ action: "sess_cancel", emp: (S.get("user", {}) || {}).empId || "", sess: id }, function () {}, function () {});
   toast("신청을 취소했어요");
   App.render();
 }
@@ -2518,12 +2496,18 @@ function sessInlineHtml(s) {
     h += '<p class="sq" style="margin-top:4px">' + esc(s.desc) + "</p>" +
       '<p class="sq" style="margin-top:6px"><b>자유 참석 · 신청 없음</b></p>';
     return h;   /* v3.31 소개 영상 폐지 · 자유 참석 카드는 펼침 안내로 충분 */
+  } else if (s.kind === "info") {
+    /* v3.31b 10F 안내 전용 · 신청·잔여석 없음 · 이 시간에 이곳에서 이런 흐름이 있다는 정보만 */
+    h += '<p class="sq" style="margin-top:4px">' + esc(s.desc) + "</p>" +
+      (s.capNote ? '<p class="sq" style="margin-top:4px">정원 ' + esc(s.capNote) + "</p>" : "") +
+      '<p class="sq" style="margin-top:4px"><b>사전 신청자 대상</b></p>' +
+      '<p class="sq" style="margin-top:8px">' + esc(TEN_GIFT) + "</p>";
   } else if (s.kind === "seat") {
-    h += (s.capNote ? '<p class="sq" style="margin-top:4px">정원 ' + esc(s.capNote) + "</p>" : "") + seatRowHtml(s) +
-      (mine ? '<button class="btn line" style="margin-top:10px" onclick="sessCancel(\'' + s.id + '\')">신청 취소</button>' :
+    h += '<p class="sq" style="margin-top:4px">' + esc(s.desc) + "</p>" + seatRowHtml(s) +
+      (mine && mine.pre ? '<div class="tipbanner" style="margin-top:10px">사전 신청 완료</div><p class="sq" style="margin-top:6px">사전 신청 취소는 담당자에게 문의해 주세요.</p>' :
+        mine ? '<button class="btn line" style="margin-top:10px" onclick="sessCancel(\'' + s.id + '\')">신청 취소</button>' :
         sessRemain(s) <= 0 ? '<button class="btn" style="margin-top:10px" disabled>만석 · 취소되면 열립니다</button>' :
-          '<button class="btn mint" style="margin-top:10px" onclick="sessBook(\'' + s.id + '\')">신청하기</button>') +
-      (s.fl === 10 ? '<p class="sq" style="margin-top:8px">' + esc(TEN_GIFT) + "</p>" : "");
+          '<button class="btn mint" style="margin-top:10px" onclick="sessBook(\'' + s.id + '\')">신청하기</button>');
   } else {
     /* v3.21 B 원격 대기열 · 번호표 UI 는 일정 탭 상시 행·상세 화면과 같은 photoQueueHtml 하나 */
     return h + photoQueueHtml();
@@ -2534,20 +2518,21 @@ function sessInlineHtml(s) {
 /* 프로그램 신청형 행 = 공용 행 카드 · 시간이 있는 행은 일정 탭과 같은 좌측 두 줄 시간 뱃지 (v3.22)
    신청 완료 = my(틴트+오렌지 링) · 만석 = dim · 평상 = 기본 */
 function sessRowHtml(s) {
-  var mine = s.kind === "queue" || s.kind === "open" ? null : sessMine(s.id);
+  var mine = s.kind === "seat" ? sessMine(s.id) : null;
   var full = s.kind === "seat" && sessRemain(s) <= 0;
   var tm = s.tm.split("~");
   /* 대기열형 · 내 번호표가 살아 있으면 내 것(my), 호출이면 시간 뱃지 검정 */
   var pq = s.kind === "queue" ? photoQ() : null, pqOn = pq && (pq.status === "wait" || pq.status === "call");
   var st = mine ? "" :
     s.kind === "open" ? '<span class="st">자유 참석</span>' :
+    s.kind === "info" ? "" :
     s.kind === "seat" ? (full ? '<span class="badge gray">만석</span>' : '<span class="st">잔여 ' + sessRemain(s) + "석</span>") :
       s.kind === "queue" ? '<span class="st">' + (pqOn ? pq.no + "번" : "대기 " + (photoPub().waiting || 0) + "팀") + "</span>" : '<span class="st">신청제</span>';
   return rcHtml({
     cls: mine || pqOn ? " my" : full ? " dim" : "",
     onclick: "progSessToggle('" + s.id + "')",
     left: tokBadge(tm[0], pqOn && pq.status === "call" && isBlack("call") ? "act" : mine || pqOn ? "mine" : full ? "dim" : "", tm[1] ? "~" + tm[1] : null),
-    title: esc(s.ttl) + (mine ? ' <span class="badge mint">' + (mine.slot ? mine.slot + " " : "") + "신청 완료</span>" : ""),
+    title: esc(s.ttl) + (mine ? ' <span class="badge mint">' + (mine.pre ? "사전 신청" : "신청 완료") + "</span>" : ""),
     sub: esc(s.sub || s.who), right: st,
     open: !!PROG.openSess[s.id], body: sessInlineHtml(s)
   });
@@ -2557,9 +2542,12 @@ function flListHtml(n) {
   /* 같은 시각이면 제목순(10F 세션 A→E) */
   var sess = SESSIONS.filter(function (s) { return s.fl === n; }).sort(function (a, b) { return sessStartMin(a.tm) - sessStartMin(b.tm) || (a.ttl < b.ttl ? -1 : a.ttl > b.ttl ? 1 : 0); });
   var acts = FL_OPEN[n] || [];
-  var nOpen = sess.filter(function (s) { return s.kind === "open"; }).length, nBook = sess.length - nOpen;
+  var cnt = function (k) { return sess.filter(function (s) { return s.kind === k; }).length; };
+  /* 10F 는 신청 여부와 무관하게 세션 수(세션 E 두 회차는 하나로) */
+  var nInfo = {}; sess.forEach(function (s) { if (s.kind === "info") nInfo[s.ttl.split(" · ")[0]] = 1; });
+  var nInfoN = Object.keys(nInfo).length, nBook = sess.length - cnt("open") - cnt("info");
   var head = '<div class="sect" style="margin-top:2px"><b>' + n + "F · " + FLTAG[n] + '</b>' +
-    "<span>" + [nBook ? "신청 " + nBook + "개" : "", nOpen ? "자유 참석 " + nOpen + "개" : "", acts.length ? "상시 " + acts.length + "개" : ""].filter(Boolean).join(" · ") + "</span></div>";
+    "<span>" + [nInfoN ? "세션 " + nInfoN + "개" : "", cnt("open") ? "자유 참석 " + cnt("open") + "개" : "", nBook ? "신청 " + nBook + "개" : "", acts.length ? "상시 " + acts.length + "개" : ""].filter(Boolean).join(" · ") + "</span></div>";
   var rows = sess.map(sessRowHtml).join("") +
     acts.map(function (a) {
       var sd = a.sid ? STAMPS.filter(function (x) { return x.id === a.sid; })[0] : null;
@@ -3382,11 +3370,14 @@ var Views = {
     } else if (s.kind === "open") {
       act = '<div class="card soft mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">자유 참석 · 신청 없음</b>' +
         '<p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">전 임직원 누구나 17F 대강당으로 오시면 됩니다.</p></div>';
-    } else if (s.kind === "seat") {
-      act = '<div class="card mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">잔여 좌석</b>' +
+    } else if (s.kind === "info") {
+      act = '<div class="card soft mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">사전 신청자 대상 · 현장 신청 없음</b>' +
         (s.capNote ? '<p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">정원 ' + esc(s.capNote) + "</p>" : "") +
-        (s.fl === 10 ? '<p class="muted" style="margin-top:2px;font-size:calc(13.5px * var(--fs))">' + esc(TEN_GIFT) + "</p>" : "") + seatRowHtml(s) +
-        (mine ? '<div class="tipbanner" style="margin-top:12px">신청 완료. 당일 시작 10분 전 앱 알림을 드려요</div><button class="btn line" style="margin-top:8px" onclick="sessCancel(\'' + s.id + '\')">신청 취소</button>' :
+        '<p class="muted" style="margin-top:2px;font-size:calc(13.5px * var(--fs))">' + esc(TEN_GIFT) + "</p></div>";
+    } else if (s.kind === "seat") {
+      act = '<div class="card mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">잔여 좌석</b>' + seatRowHtml(s) +
+        (mine && mine.pre ? '<div class="tipbanner" style="margin-top:12px">사전 신청 완료</div><p class="muted" style="margin-top:6px;font-size:calc(13.5px * var(--fs))">사전 신청 취소는 담당자에게 문의해 주세요.</p>' :
+        mine ? '<div class="tipbanner" style="margin-top:12px">신청 완료. 당일 시작 10분 전 앱 알림을 드려요</div><button class="btn line" style="margin-top:8px" onclick="sessCancel(\'' + s.id + '\')">신청 취소</button>' :
           sessRemain(s) <= 0 ? '<button class="btn" style="margin-top:12px" disabled>만석 · 취소되면 열립니다</button>' :
             '<button class="btn mint" style="margin-top:12px;padding:15px" onclick="sessBook(\'' + s.id + '\')">신청하기</button>') + "</div>";
     } else {
@@ -3945,6 +3936,7 @@ var AdminTabs = {
   },
   /* 신청 현황 · 세션별 신청 인원과 잔여석. 서버 모드면 시트 집계로 대체된다. */
   book: function () {
+    /* v3.31b · 앱 신청 세션만(17F 오후) · 10F 는 사전 신청(앱 밖)이라 제외, 출석은 입장 스캔 집계 */
     var rows = SESSIONS.filter(function (x) { return x.cap && x.kind === "seat"; }).map(function (x) {
       var left = sessRemain(x);              /* 앱 정본 헬퍼 · 내 신청분까지 반영 */
       var bk = x.cap - left;
@@ -3962,7 +3954,7 @@ var AdminTabs = {
     return '<div class="card mb12"><div class="row" style="justify-content:space-between;align-items:baseline">' +
       '<b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">전체 신청</b>' +
       '<span class="disp" style="font-size:22px;color:var(--hi)">' + tot + '<span style="font-size:14px;color:var(--faint)">/' + cap + '</span></span></div>' +
-      '<p class="muted" style="margin-top:3px;font-size:calc(12.5px * var(--fs))">' + Math.round(tot / cap * 100) + '% · 이 수치가 통제센터 재실 예측의 기준선이 됩니다</p></div>' + rows;
+      '<p class="muted" style="margin-top:3px;font-size:calc(12.5px * var(--fs))">' + (cap ? Math.round(tot / cap * 100) : 0) + '% · 사전 신청 포함 · 사전 신청 명단은 관리 콘솔 「신청」 탭에서 엑셀로 올립니다</p></div>' + rows;
   },
 
   /* v10: 과제상담 운영 · 슬롯은 콘솔 설정값, 노쇼 즉시 재오픈 */
@@ -4253,6 +4245,7 @@ function beSync() {
     if (!BE.stats) BE.stats = {};
     BE.stats.wall = res.wall;
     BE.stats.sess = res.sess || null;
+    BE.stats.sessLeft = res.sessLeft || null;   /* v3.31b 정원 - 사전 - 앱 */
     if (res.quiz && res.quiz.id) {
       var qs = S.get("quiz_state", INITIAL_QUIZ_STATE);
       if (qs.activeId !== res.quiz.id || qs.phase !== res.quiz.phase) {
@@ -4307,6 +4300,7 @@ function beSync() {
         var c = S.get("cchat", null);
         if (!c || c.status !== "matched") S.set("cchat", { status: "matched", round: hhmm(res.my.cchat.round), table: String(res.my.cchat.table || ""), ts: Date.now() });
       }
+      if (res.my.pre && JSON.stringify(res.my.pre) !== JSON.stringify(sessPre())) S.set("sess_pre", res.my.pre);   /* v3.31b 본인 사전 신청만 */
       if (res.my.sess) {
         /* 강의 신청 · 서버 우선. 서버에 없는 로컬 신청은 30초(전송 유예)만 유지 */
         var srv = {}, curS = sessMy(), chg = false, k3;
@@ -5623,6 +5617,7 @@ function xitionRun(switchNow) {
       ? { activeId: "q1", phase: "revealed", openedAt: Date.now() - 60000, finishedIds: ["q1"] }
       : { activeId: null, phase: "idle", openedAt: 0, finishedIds: ["q1"] });
     S.set("cchat", { status: "matched", round: "14:30", table: "B", ts: Date.now() });
+    S.set("sess_pre", ["l1"]);   /* v3.31b 데모 · 17F AWS 강연 사전 신청자 케이스 */
     S.set("gw_cleared", true);
     S.set("dept", "보상부문");
     S.set("ev_phase", "live");
