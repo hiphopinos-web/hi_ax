@@ -733,8 +733,9 @@ var STAMPS = [
   { id: "p4", title: "라이브 챌린지", short: "라이브 챌린지", desc: "Outro 시작 전 라이브 퀴즈 응답 또는 미니게임(AX 링크·초성퀴즈) 1개 클리어", where: "앱 · 30초", inapp: 1 },
   { id: "p5", title: "아이디어 한 줄", short: "아이디어", desc: "아이디어 1건 제출", where: "앱 · 1분", inapp: 1, tap: "App.go('ideas')", cta: "아이디어 쓰기" },
   { id: "p7", title: "전시 QR 퀴즈", short: "QR 퀴즈", desc: "DAP Wall QR 퀴즈 1세트 통과 (60점 이상)", where: "1F DAP Wall · 약 10분", tap: "App.go('wq_list')", cta: "QR 퀴즈 풀기" },
-  /* v3.33·v3.34 (260917 사용자 확정) 계단 · 방향 무관 하루 누적 10개 층 · 판정·적립은 서버(stair_claim) */
-  { id: "st", title: "계단 10층", short: "계단", desc: "계단으로 오늘 누적 10개 층 이동 (오르내림 무관)", where: "계단 · 출발·도착 QR", tap: "qrScanOpen()", cta: "계단 QR 스캔" },
+  /* v3.34b (260917 사용자 확정) 계단 · 계단실 안 QR 한 번 = 적립 · 층·방향·횟수·시간 조건 없음 · 판정·적립은 서버(stamp_claim)
+     site: 담당자 적립 가능 (서버 stamp_grant 가 st 를 받는다) */
+  { id: "st", title: "계단 이용", short: "계단", desc: "계단실 안 QR을 찍으면 적립 · 층 상관없음", where: "계단실 안 QR", site: 1, tap: "qrScanOpen()", cta: "QR 스캔" },
   /* v3.35 오늘 한 판 설문 · 14:30 부터 · 제출만 하면 적립(답 내용 무관) · 판정·적립은 서버(survey_submit) */
   { id: "sv", title: "오늘 한 판 설문", short: "설문", desc: "60초 설문 제출 · 답은 이름 없이 저장됩니다", where: "앱 · 60초 · 14:30부터", inapp: 1, tap: "App.go('survey')", cta: "설문 시작" }
 ];
@@ -761,7 +762,6 @@ var REWARD_LADDER = [
 ];
 /* v3.33 · 칸은 8개, 보상은 6개에서 끝 (3개 룰렛 · 4~6개 응모 1~3장) · 7·8번째는 다른 칸 대신 채울 수 있는 선택지 */
 var STAMP_TOTAL = 8, REWARD_CAP = 6;
-var STAIR_NEED = 10;
 /* 서버가 준 stamps 배열에는 정의 밖 id(구 p6·p8, 계단 p9 등)가 남아 있을 수 있다.
    표시·보상 계산은 전부 이 함수로 센다. */
 function stampCount() {
@@ -2628,9 +2628,6 @@ function myScheduleHtml() {
   /* 지금 걸려 있는 대기는 시간이 정해진 일정보다 급하다 · 맨 위(정렬키 -1)에 둔다.
      내 것을 보여주는 자리는 여기 하나뿐이다(홈에 별도 스트립을 만들지 않는다, design.md) */
   var q = S.get("queue", {}), qk;
-  /* v3.34 계단 · 진행 중인 출발이 있으면 한 줄 (도착 QR 시한이 있어 맨 위) */
-  var slg = S.get("stair_leg", null);
-  if (slg) rows.push([-1, "qrScanOpen()", "계단", stairFl(slg.spot) + " 출발", slg.expires + "까지 도착 층 QR", "mine"]);
   /* v3.35 · Outro 전 사회자 안내(16:45 퀴즈 → 설문 안내) 시간대에만 홈 첫 줄로 · 그 밖에는 스탬프 탭 카드가 입구 */
   var hm0 = new Date().getHours() * 60 + new Date().getMinutes();
   if (surveyOpen() && !surveyDone() && evPhase() === "live" && hm0 >= t2m("16:40") && hm0 < t2m("17:10"))
@@ -2994,7 +2991,7 @@ function ppAfterRender(n, oldN, glow) {
 }
 /* 기본 순서 = 장소 그룹순: 1F 3건(01 전시·02 부스·06 QR퀴즈) → 17F(03) → 앱(04·05).
    완료 카드는 위로 올라온다(완료 그룹 상단, 그 안에서 기본 순서 유지) · 그룹 캡션은 미완료 구간에만 얇게. */
-var PP_ORDER = [["p1", "1F"], ["p2", "1F"], ["p7", "1F"], ["p3", "17F"], ["st", "계단 · 층 이동"], ["p4", "앱"], ["p5", "앱"], ["sv", "앱"]];
+var PP_ORDER = [["p1", "1F"], ["p2", "1F"], ["p7", "1F"], ["p3", "17F"], ["st", "계단"], ["p4", "앱"], ["p5", "앱"], ["sv", "앱"]];
 function stampInnerHtml(s) {
   var inner = '<p class="d">' + s.desc + " · " + s.where + "</p>" +
     (s.note ? '<p class="nt">' + s.note + "</p>" : "");
@@ -3014,13 +3011,12 @@ function stampInnerHtml(s) {
     return inner;
   }
   if (s.id === "st") {
-    var lg = S.get("stair_leg", null);
-    inner += stairBarHtml(S.get("stair_total", 0)) +
-      (lg ? '<p class="nt">' + esc(stairFl(lg.spot)) + " 출발 · " + esc(lg.expires) + "까지 도착 층 QR을 찍어 주세요</p>" : "") +
-      '<p class="d">내려갈 때는 계단으로 · 오르기는 자율 · 오르내림 모두 누적</p>' +
-      '<p class="d">계단 QR 위치 · 18F · 17F · 10F · 1F 복도 계단실 문 옆 · 출발 층과 도착 층에서 한 번씩</p>' +
-      '<p class="nt">방화문은 닫아 주세요</p>' +
-      '<button class="btn mint" style="margin-top:10px" onclick="qrScanOpen()">계단 QR 스캔</button>';
+    /* v3.34b · 누적 막대·출발/도착 안내 삭제 · 계단실 안 QR 한 번이면 끝 */
+    inner = '<p class="d">' + s.desc + "</p>" +
+      '<p class="d">내려갈 때는 계단으로</p>' +
+      '<p class="nt">방화문은 닫아 주세요</p>' + scanQNote() +
+      '<button class="btn mint" style="margin-top:10px" onclick="qrScanOpen()">QR 스캔</button>' +
+      '<p class="lnk sub" onclick="staffStampOpen()">QR이 안 되면 담당자 적립 요청 ›</p>';
   } else if (s.id === "p4") {
     /* v3.1: 미니게임 허브(ev_games) 폐지 · 세 가지 방법을 카드가 직접 연다 */
     var qs4 = S.get("quiz_state", INITIAL_QUIZ_STATE), an4 = S.get("quiz_answers", {});
@@ -3033,6 +3029,7 @@ function stampInnerHtml(s) {
     /* v3.12: 적립방식(how) 뱃지 삭제 · 참여자에게 필요한 건 desc 와 바로가기뿐 */
     inner += '<button class="btn mint" style="margin-top:10px" onclick="' + s.tap + '">' + s.cta + "</button>";
     if (s.site) {
+      inner += scanQNote();   /* v3.34b 저장된 스캔이 있으면 한 줄 */
       /* v3.1: 현장 적립형(01·02·03)은 QR 스캔·담당자 적립을 카드 안에서 바로 (보조 카드 폐지) */
       if (s.tap !== "qrScanOpen()") inner += '<button class="btn line" style="margin-top:8px" onclick="qrScanOpen()">QR 스캔</button>';
       /* v3.12: 예외 경로는 최하위 회색 텍스트 링크 (design.md 보조 대안 행동 규정) */
@@ -4209,13 +4206,14 @@ var AdminTabs = {
     var base = location.origin + location.pathname;
     return '<div class="card soft mb12"><p class="muted" style="font-size:calc(14.5px * var(--fs));line-height:1.6">' +
       '아래 QR을 부스에 붙이면 참가자가 찍어 적립합니다. <b style="color:var(--hi)">계단·저조도 지점은 A4 이상</b>으로 뽑으세요.<br>' +
+      '계단 QR은 계단실 <b style="color:var(--hi)">안쪽 벽</b>(방화문을 열고 들어가야 보이는 곳)에 붙이고 「문은 닫아 주세요」를 함께 적습니다.<br>' +
       '코드가 바뀌면(회전) 인쇄물을 다시 뽑아야 합니다.</p>' +
       '<button class="btn line" style="margin-top:10px" onclick="SPOTS.rows=null;App.render()">코드 다시 불러오기</button></div>' +
       SPOTS.rows.map(function (r) {
         var url = base + "#s=" + r.code;
         return '<div class="card mb12" style="text-align:center">' +
           '<b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">' + esc(r.name) + "</b>" +
-          '<p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">' + esc(r.id) + ' · ' + esc(r.s) + "~" + esc(r.e) +
+          '<p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">' + esc(r.id) + ' · ' + (r.stair ? "계단실 안 · 층 상관없음" : esc(r.s) + "~" + esc(r.e)) +
           (r.on ? "" : ' · <b style="color:#E5484D">중지됨</b>') + "</p>" +
           '<div style="display:flex;justify-content:center;margin-top:12px">' + qrTextSvg(url, 190) + "</div>" +
           '<p style="margin-top:8px;font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:var(--faint)">' + esc(r.code) + "</p></div>";
@@ -4326,6 +4324,7 @@ function beSync() {
   var u = S.get("user", {});
   beCall({ action: "sync", emp: u.empId || "" }, function (res) {
     if (!res || !res.ok) return;
+    if (scanQList().length) setTimeout(scanQFlush, 200);   /* v3.34b 연결이 살아났으면 저장된 스캔 재전송 */
     if (!BE.stats) BE.stats = {};
     BE.stats.wall = res.wall;
     BE.stats.sess = res.sess || null;
@@ -4406,9 +4405,6 @@ function beSync() {
       if (res.my.tickets && !testEmp()) S.set("raffle_nums", res.my.tickets);   /* v3.12 응모권 번호 · 서버 발급 정본 */
       /* v3.21 B 포토부스 번호표 · 서버가 정본(없으면 null) · 바뀐 경우에만 저장해 불필요한 재렌더를 막는다 */
       if ("photoQ" in res.my && JSON.stringify(res.my.photoQ) !== JSON.stringify(S.get("photoq", null))) S.set("photoq", res.my.photoQ);
-      /* v3.34 계단 · 진행 중 출발(없으면 null)과 오늘 누적 층수 · 서버가 정본 */
-      if ("stair" in res.my && JSON.stringify(res.my.stair) !== JSON.stringify(S.get("stair_leg", null))) S.set("stair_leg", res.my.stair);
-      if (res.my.stairTotal != null && res.my.stairTotal !== S.get("stair_total", 0)) S.set("stair_total", res.my.stairTotal);
       if (res.my.survey === true && !S.get("survey_done", false) && !testEmp()) S.set("survey_done", true);   /* v3.35 */
       if (res.my.queue) {
         var was = S.get("queue", {}), nowQ = res.my.queue, kq;
@@ -4458,10 +4454,14 @@ function admVerify(v, done, keep) {
 var SPOTS = { rows: null, loading: false };
 function spotsLoad() {
   beCall({ action: "stamp_list", key: admKey() }, function (res) {
-    SPOTS.loading = false;
-    SPOTS.rows = res && res.ok ? (res.rows || []) : [];
-    if (!(res && res.ok)) toast(res && res.reason === "auth" ? "관리코드 불일치" : "부스 코드를 불러오지 못했습니다.");
-    App.render();
+    var rows = res && res.ok ? (res.rows || []) : [];
+    if (!(res && res.ok)) { SPOTS.loading = false; SPOTS.rows = rows; toast(res && res.reason === "auth" ? "관리코드 불일치" : "부스 코드를 불러오지 못했습니다."); App.render(); return; }
+    /* v3.34b 계단실 안 QR 도 같은 목록에서 뽑는다 · 어느 층 코드든 같은 스탬프(st) */
+    beCall({ action: "stair_list", key: admKey() }, function (r2) {
+      SPOTS.loading = false;
+      SPOTS.rows = rows.concat(r2 && r2.ok ? (r2.rows || []).map(function (x) { return { id: "st", name: x.name, code: x.code, on: x.on, stair: true }; }) : []);
+      App.render();
+    }, function () { SPOTS.loading = false; SPOTS.rows = rows; App.render(); });
   }, function () { SPOTS.loading = false; SPOTS.rows = []; toast("서버 연결 실패"); App.render(); });
 }
 var ADMIN_SRV = { resv: null, cchat: null };
@@ -4559,20 +4559,56 @@ function qrHtml() {
 function stampByCode(v) {
   v = String(v || "").trim();
   if (!v) return false;
-  if (/^AXW/i.test(v)) return stairByCode(v);   /* v3.34 계단 지점 QR (코드 접두 AXW · 판정은 서버) */
   /* v3.19 테스트 사번: 코드→스탬프 매핑이 서버 전용(보안 설계)이라 로컬 판정이 불가능 · 원장 오염을 막기 위해 차단 */
   if (testEmp()) { toast("테스트 계정은 스탬프 카드의 「테스트 · 완료 처리」 버튼을 쓰세요."); return false; }
   if (!BE.on) { toast("서버에 연결되지 않아 적립할 수 없어요. 잠시 후 다시 시도해주세요."); return false; }
   var u = S.get("user", {}) || {};
   if (!u.empId) { toast("사번으로 입장한 뒤 적립할 수 있어요."); return false; }
-  if (STAMPQ.busy) return false;
+  /* v3.34b 통신이 끊긴 게 확실하면 기다리지 않고 바로 저장 (계단실 등) */
+  if (navigator.onLine === false) { scanQAdd(v); return true; }
+  if (STAMPQ.busy) { scanQAdd(v); return true; }
   STAMPQ.busy = true;
   beCall({ action: "stamp_claim", emp: u.empId, code: v },
-    function (res) { STAMPQ.busy = false; stampClaimDone(res); },
-    function () { STAMPQ.busy = false; toast("서버에 연결할 수 없어요. 신호를 확인하고 다시 찍어주세요."); });
+    function (res) { STAMPQ.busy = false; stampClaimDone(res); scanQFlush(); },
+    function () { STAMPQ.busy = false; scanQAdd(v); });
   return true;
 }
 var STAMPQ = { busy: false };
+/* ═══ v3.34b 스캔 대기열 · 통신이 약한 곳(계단실 등)에서 찍은 현장 QR ═══
+   전송이 실패하면 폰에 저장하고 「스캔됨 · 연결되면 적립됩니다」 · 통신이 돌아오면(online 이벤트·sync 성공·화면 복귀) 자동 재전송.
+   서버 stamp_claim 이 1인 1회라 같은 코드를 여러 번 보내도 중복 적립은 없다. 코드는 그대로 보낼 뿐 앱은 어느 스탬프인지 모른다. */
+var SCANQ = { busy: false };
+function scanQList() { return S.get("scan_q", []) || []; }
+function scanQAdd(code) {
+  var q = scanQList(), up = String(code).toUpperCase();
+  if (!q.some(function (x) { return String(x.code).toUpperCase() === up; })) q.push({ code: code, ts: Date.now() });
+  S.set("scan_q", q.slice(-20));
+  toast("스캔됨 · 연결되면 적립됩니다");
+  if (["passport", "home"].indexOf(App.current) >= 0) App.render();
+}
+function scanQNote() {
+  var n = scanQList().length;
+  return n ? '<p class="nt">저장된 스캔 ' + n + "건 · 연결되면 적립됩니다</p>" : "";
+}
+function scanQFlush() {
+  if (!BE.on || SCANQ.busy || STAMPQ.busy) return;
+  var q = scanQList(), u = S.get("user", {}) || {};
+  if (!q.length || !u.empId || testEmp()) return;
+  if (navigator.onLine === false) return;
+  var it = q[0];
+  SCANQ.busy = true;
+  beCall({ action: "stamp_claim", emp: u.empId, code: it.code }, function (res) {
+    SCANQ.busy = false;
+    S.set("scan_q", scanQList().filter(function (x) { return x.code !== it.code; }));
+    /* 응답이 왔으면(성공·거부 모두) 대기열에서 뺀다 · 이미 적립이면 조용히 */
+    if (res && res.ok && res.dup) stampSync(res.stamps);
+    else stampClaimDone(res, true);
+    if (["passport", "home"].indexOf(App.current) >= 0) App.render();
+    setTimeout(scanQFlush, 400);
+  }, function () { SCANQ.busy = false; });
+}
+window.addEventListener("online", function () { setTimeout(scanQFlush, 800); });
+document.addEventListener("visibilitychange", function () { if (!document.hidden) setTimeout(scanQFlush, 800); });
 /* ═══ v3.35 오늘 한 판 설문 ═══
    5단계 · 60초 · 뒤로가기 · 중간 이탈 시 이어 하기(초안은 이 기기에만) · 1인 1회 · 14:30 부터.
    서버는 답을 사번 없이 저장하고 제출 사실만 사번과 남긴다. */
@@ -4677,75 +4713,15 @@ function mtWordsHtml() {
   return '<p class="lb">오늘을 한 단어로 · ' + (a.min || 5) + "명 이상 고른 단어</p>" +
     a.words.slice(0, 8).map(function (w, i) { return '<span class="w' + (i < 3 ? " top" : "") + '">' + esc(w.w) + "</span>"; }).join("");
 }
-/* ═══ v3.34 계단 10층 · 출발·도착 QR ═══
-   앱은 스캔값만 보낸다 · 층수·시간·방향·누적·스탬프는 서버(stair_claim)가 판정한다. */
-function stairFl(name) { var m = /(\d+)F/.exec(String(name || "")); return m ? m[1] + "F" : String(name || ""); }
-function stairBarHtml(total) {
-  var t = Math.min(STAIR_NEED, total || 0);
-  return '<div class="seatrow"><div class="sb"><i style="width:' + Math.round(t / STAIR_NEED * 100) + '%"></i></div><span class="sn">오늘 누적 ' + (total || 0) + " / " + STAIR_NEED + "</span></div>";
-}
-function stairByCode(v) {
-  if (testEmp()) { toast("테스트 계정은 스탬프 카드의 「테스트 · 완료 처리」 버튼을 쓰세요."); return false; }
-  if (!BE.on) { toast("서버에 연결되지 않아 계단 기록을 남길 수 없어요."); return false; }
-  var u = S.get("user", {}) || {};
-  if (!u.empId) { toast("사번으로 입장한 뒤 기록할 수 있어요."); return false; }
-  if (STAMPQ.busy) return false;
-  STAMPQ.busy = true;
-  beCall({ action: "stair_claim", emp: u.empId, code: v },
-    function (res) { STAMPQ.busy = false; stairClaimDone(res); },
-    function () { STAMPQ.busy = false; toast("서버에 연결할 수 없어요. 계단실 밖 복도에서 다시 찍어주세요."); });
-  return true;
-}
-var STAIR_WHY = {
-  toofast: "너무 빨라요. 엘리베이터는 인정되지 않아요.",
-  tooslow: "시간이 너무 오래 걸렸어요. 이번 구간은 인정되지 않았어요.",
-  wrongdir: "지금은 내려가는 구간만 인정하고 있어요.",
-  samefloor: "같은 층끼리는 층수가 없어요.",
-  nocode: "출발 지점 정보를 찾지 못했어요. 출발 QR부터 다시 찍어주세요."
-};
-function stairClaimDone(res) {
-  if (!res || !res.ok) {
-    var why = res && res.reason;
-    toast(why === "samespot" ? "이미 이 층에서 출발했어요. 도착한 층의 계단 QR을 찍어주세요." :
-      why === "nocode" ? "행사용 계단 QR이 아닙니다." : why === "off" ? "이 계단 지점은 지금 운영하지 않아요." : "기록하지 못했어요. 다시 찍어주세요.");
-    return;
-  }
-  if (res.total != null) S.set("stair_total", res.total);
-  var head, body;
-  if (res.leg === "start") {
-    S.set("stair_leg", { spot: res.spot, at: res.at, expires: res.expires });
-    head = stairFl(res.spot) + " 출발";
-    body = '<p class="muted" style="margin-top:6px;font-size:calc(14.5px * var(--fs))">도착한 층의 계단 QR을 <b style="color:var(--hi)">' + (res.expireMin || 15) + "분 안에</b> 찍어 주세요 · " + esc(res.expires) + "까지</p>" +
-      (res.expired ? '<p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">15분이 지나 새 출발로 시작했어요.</p>' : "") +
-      stairBarHtml(res.total) +
-      '<p class="muted" style="margin-top:8px;font-size:calc(13px * var(--fs))">내려갈 때는 계단으로 · 방화문은 닫아 주세요</p>';
-  } else {
-    S.set("stair_leg", null);
-    head = stairFl(res.from) + " → " + stairFl(res.to) + (res.floors ? " · " + res.floors + "개 층" : "");
-    body = (res.valid ? "" : '<p style="margin-top:6px;font-size:calc(14.5px * var(--fs));font-weight:800;color:var(--hi)">' + (STAIR_WHY[res.reason] || "이번 구간은 인정되지 않았어요.") + "</p>") +
-      stairBarHtml(res.total) +
-      (res.valid && (res.total || 0) < STAIR_NEED ? '<p class="muted" style="margin-top:8px;font-size:calc(13.5px * var(--fs))">' + (STAIR_NEED - (res.total || 0)) + "개 층 더 걸으면 스탬프예요.</p>" : "");
-  }
-  if (res.stamp && !res.stamp.dup) {
-    stampSync(res.stamps);
-    if (!stampOverlay("st")) toast("계단 10층 달성 · 스탬프 적립");
-    checkRewards();
-    App.render();
-    return;
-  }
-  modalOpen('<b style="font-size:calc(19px * var(--fs));color:var(--hi)">' + esc(head) + "</b>" + body +
-    '<button class="btn line" style="margin-top:14px" onclick="modalClose()">닫기</button>');
-  App.render();
-}
 /* 서버 응답 하나로 로컬을 맞춘다. stamps 배열이 정본이라 이걸로 덮는다. */
-function stampClaimDone(res) {
+function stampClaimDone(res, late) {
   if (!res || !res.ok) {
     var why = res && res.reason;
-    toast(why === "nocode" ? "행사용 QR이 아닙니다. 부스에 붙은 QR을 찍어주세요." :
+    toast((late ? "저장해 둔 스캔 · " : "") + (why === "nocode" ? "행사용 QR이 아닙니다. 부스에 붙은 QR을 찍어주세요." :
       why === "window" ? "지금은 적립 시간이 아니에요" + (res.open ? " (" + res.open + ")" : "") :
-        why === "off" ? "이 부스는 지금 운영하지 않아요" :
+        why === "off" ? "이 QR 지점은 지금 운영하지 않아요" :
           why === "param" ? "사번으로 입장한 뒤 적립할 수 있어요." :
-            "적립하지 못했어요. 다시 찍어주세요.");
+            "적립하지 못했어요. 다시 찍어주세요."));
     return;
   }
   stampSync(res.stamps);
