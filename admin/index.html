@@ -182,8 +182,10 @@ var STAMP_META = {
 var STAMP_ORDER = ["p1","p2","p3","p4","p5","p7"];
 /* 백엔드 SESS_META · SESS_CAP 과 같은 id */
 var SESS_NAME = {
-  key:"Intro · Keynote", l1:"강연 1", l2:"강연 2", ta:"Track A", tb:"Track B",
-  aws:"바이브코딩 실습", fld:"현장 프로그램", photo:"AI 포토부스", kring:"키링 DIY (260917 폐기)"
+  /* v3.29 공식 공지 붙임1·2 · 17F 는 자유 참석(신청 없음) · 옛 신청 기록 표시용으로만 남긴다 */
+  key:"17F 기조연설 (자유 참석)", road:"17F 내부 강연 (자유 참석)", l1:"17F AWS 강연 (자유 참석)", l2:"17F MS 강연 (자유 참석)",
+  fld:"세션 A · 영업·보상 현장", ta:"세션 B · 통계 현황 리포팅", tb:"세션 C · 외부자료 리서치", aws:"세션 D · 바이브 코딩 (AWS)", ms:"세션 E · MS Copilot (MS)",
+  photo:"AI 포토부스", kring:"키링 DIY (260917 폐기)"
 };
 /* 상담 상태 · 시트 드롭다운과 같은 목록 */
 var RESV_STATUS = ["신청","승인","체크인","완료","노쇼","취소"];
