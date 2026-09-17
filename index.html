@@ -525,6 +525,30 @@
   #rgPlay .gs-foot { flex: none; padding: 12px 10px calc(12px + env(safe-area-inset-bottom, 0px)); background: #fff; border-top: 2px solid #000; text-align: center; font-weight: 800; font-size: 13.5px; color: #000; touch-action: none; user-select: none; -webkit-user-select: none; }
   .rg-form .input { flex: 1; font-size: 18px; border: 2px solid #000; }
   .rg-form .btn { width: auto; padding: 12px 18px; }
+  /* v3.58 AI 사생대회 갤러리 · 섬네일 목록 · 지연 로딩 */
+  .art-list { display: flex; flex-direction: column; gap: 8px; }
+  .art-c { display: flex; align-items: center; gap: 10px; padding: 8px; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; }
+  .art-c .th { width: 88px; height: 88px; flex: none; border-radius: 10px; overflow: hidden; background: var(--dim); cursor: pointer; }
+  .art-c .th img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .art-c .th img.na { display: none; }
+  .art-c .bd { flex: 1; min-width: 0; cursor: pointer; }
+  .art-c .bd b { display: block; font-size: calc(15.5px * var(--fs)); color: var(--hi); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .art-c .bd p { margin-top: 2px; font-size: calc(13px * var(--fs)); color: var(--muted); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .art-c .bd .who { display: block; margin-top: 4px; font-size: calc(12.5px * var(--fs)); color: var(--faint); font-weight: 700; }
+  .art-c .lk { flex: none; width: 58px; padding: 8px 0; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); color: var(--muted); font-weight: 800; font-size: calc(12.5px * var(--fs)); line-height: 1.3; }
+  .art-c .lk .ic { display: block; font-size: calc(17px * var(--fs)); }
+  .art-c .lk.on { border-color: var(--acc2); color: var(--acc2); background: var(--tint); }
+  .art-c .lk.off { opacity: 0.45; }
+  .art-rules { margin: 6px 0 0 16px; font-size: calc(13.5px * var(--fs)); color: var(--muted); line-height: 1.7; }
+  .art-full { display: block; width: 100%; margin-top: 10px; border-radius: 12px; background: var(--dim); }
+  .art-full.na { display: none; }
+  .art-tv { display: flex; gap: 18px; justify-content: center; margin-top: 18px; }
+  .art-tv-c { flex: 1; max-width: 320px; text-align: center; }
+  .art-tv-c img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 14px; background: rgba(255,255,255,0.08); }
+  .art-tv-c img.na { visibility: hidden; }
+  .art-tv-c .r { display: block; font-family: var(--disp); font-size: 28px; color: var(--mint); }
+  .art-tv-c b { display: block; margin-top: 6px; font-size: 20px; }
+  .art-tv-c span { display: block; margin-top: 2px; font-size: 15px; opacity: 0.7; }
   .ty-rank { display: flex; align-items: center; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--line); }
   .ty-rank.me { background: var(--tint); border-radius: 10px; padding-left: 8px; }
   .ty-rank .no { width: 26px; font-family: var(--disp); color: var(--acc2); }
@@ -1043,6 +1067,16 @@ var PROG = { fl: 1, sid: null, openSess: {} };   /* fl = 선택 층 (v3.7 · 기
    화면은 SURVEY_Q 배열 하나로만 그린다 · 문항을 바꿀 때 이 배열만 고친다(서버는 문항 id 별로 그대로 저장·형식별 집계).
    형식: single(보기 하나) · chips(칩 하나 + 기타 직접 입력) · scale(점수 min~max) · text(한 줄 · optional 가능) · places(오늘 다녀간 곳 카드 · 서버 기록 연동 · 기본 목록에는 넣지 않음) */
 var SURVEY = { open: "14:30" };
+/* ═══ v3.58 AI 사생대회 (사용자 확정 260918) · 접수는 행사 전 구글 폼 · 앱은 갤러리·좋아요·순위만 ═══
+   스탬프가 아니라 별도 요소 · 입구는 홈 배너 하나 · 기간이 끝나면 배너는 저절로 사라진다.
+   이미지는 정적 호스팅(웹배포용/assets/art)에서 그대로 읽는다(GAS 릴레이는 장당 1~3초 + 할당량).
+   ⚠ 공개 주소를 아는 사람은 누구나 볼 수 있다 → 폼에 「사내·대외비 자료 금지」를 적는다.
+   보관 위치를 바꿔야 하면 ART_IMG_BASE 한 줄만 바꾼다(끝에 / 포함 · 절대 주소도 된다). */
+var ART_IMG_BASE = "assets/art/";
+var ART = { data: null, t: 0, busy: "", sort: "new" };
+/* v3.58b (사용자 확정 260918) 본선 10점만 공개 · 갤러리는 작가를 가린다(번호·제목·설명만 · 신원은 Outro 시상에서) · 1인 3표 */
+var ART_VOTE_MAX = 3;
+var ART_RULES = ["혐오·차별 표현 금지", "사내·고객 정보 금지", "타인 초상·저작물 무단 사용 금지", "특정인 비방 금지"];
 var SURVEY_Q = [
   { id: "sat", type: "scale", q: "오늘 행사, 얼마나 만족하셨나요?", min: 0, max: 10, left: "아쉬웠어요", right: "아주 좋았어요" },
   { id: "best", type: "chips", q: "오늘 가장 좋았던 것 하나를 골라 주세요", opts: ["1F 전시·부스", "17F 강연", "10F 실습", "18F 커피챗", "미니게임"], other: "기타" },
@@ -2437,7 +2471,7 @@ function counters() {
 }
 
 /* ════════════════ 라우터 (Lv1 탭 → Lv2 상세) ════════════════ */
-var SIGNAGE = ["screen", "screen_survey", "screen_words", "wall_quiz", "wall_wave", "wall_live", "wall_metowe", "wall_tv", "wall_type", "type_award"];
+var SIGNAGE = ["screen", "screen_art", "screen_survey", "screen_words", "wall_quiz", "wall_wave", "wall_live", "wall_metowe", "wall_tv", "wall_type", "type_award"];
 /* 설정 톱니 · 글자 크기·관리자 모드를 한 곳에 모은 진입점 */
 var GEAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
   '<circle cx="12" cy="12" r="3.1"/>' +
@@ -2468,6 +2502,7 @@ var App = {
     wq_play: "wq_list", game_word: "passport", game_type: "passport", type_rank: "game_type",
     game_pang: "passport", game_jump: "passport", oly_rank: "passport",
     ideas_mine: "passport", survey: "passport",
+    art: "home", art_rank: "art", screen_art: "admin",   /* v3.58 AI 사생대회 · 입구는 홈 배너 */
     /* 프로그램 · 신청 전용 (리더보드는 10F 세션 곁으로, v3.1) · 일정(guide_time)은 v3.3부터 탭 루트라 PARENT 없음 */
     dap: "guide", ev_cchat: "guide",
     sess_d: "guide",
@@ -2484,6 +2519,7 @@ var App = {
     wq_list: "DAP Wall QR 퀴즈", wq_play: "문제 풀이",
     admin: "관리자 콘솔", screen: "송출용 화면", screen_survey: "", screen_words: "", game_word: "ME to WE 기억력", game_type: "타자 게임", type_site: "현장 타자왕전", wall_type: "", type_award: "", type_rank: "타자 순위",
     game_pang: "AX 팡", game_jump: "ME to WE 점프", oly_rank: "AX 올림픽",
+    art: "AI 사생대회", art_rank: "좋아요 순위", screen_art: "",
     wall_quiz: "", wall_wave: "", wall_live: "", wall_metowe: "", wall_tv: ""
   },
   tabOf: function (v) {
@@ -3590,6 +3626,7 @@ var Views = {
       photoAlertHtml() +
       billboardHtml() +      /* v3.24 광고판 = 스탬프 바로 위 배너 */
       myCouponHtml() +
+      artBannerHtml() +      /* v3.58 AI 사생대회 · 광고판 아래 · 나의 일정 위 · 기간이 끝나면 사라진다 */
       myScheduleHtml();
   },
 
@@ -3694,6 +3731,46 @@ var Views = {
       '<label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:calc(15.5px * var(--fs));color:var(--tx)"><input type="checkbox" id="ideaAnon" style="width:16px;height:16px;accent-color:#FF7E31">익명으로 표시 (시상 시에만 본인 확인)</label>' +
       '<button class="btn mint" style="margin-top:12px;padding:15px" onclick="submitIdea()">30초 완성 · 제출하기</button></div>' +
       (mine.length ? '<div class="menu">' + menuItem("ideas_mine", "01", "내가 낸 아이디어", mine.length + "건 제출", "") + "</div>" : "");
+  },
+
+  /* ═══ v3.58 AI 사생대회 갤러리 · 카드 목록(섬네일 · 제목 · 설명 · 작가 닉네임 · 좋아요) · 탭하면 원본 ═══ */
+  art: function () {
+    artPull();
+    var d = ART.data, ph = artPhase(), list = artItems();
+    var head = '<div class="qseg" style="margin-bottom:10px">' +
+      '<button class="' + (ART.sort === "new" ? "on" : "") + '" onclick="ART.sort=\'new\'; App.render()">최신순</button>' +
+      '<button class="' + (ART.sort === "like" ? "on" : "") + '" onclick="ART.sort=\'like\'; App.render()">좋아요순</button></div>';
+    var cap = ph === "submit" ? "작품 접수 중" : ph === "vote" ? ((d && d.voteEnd ? d.voteEnd.slice(11, 16) + " 마감 · " : "") + "남은 표 " + artLeft() + " / " + ART_VOTE_MAX) : "좋아요 마감 · Outro에서 시상";
+    head += '<p class="scap" style="margin:0 2px 8px">' + cap + "</p>";
+    if (ph === "submit" && d && d.form) head += '<button class="btn mint mb12" onclick="artForm()">작품 내러 가기</button>';
+    if (!d) return head + '<div class="card"><p class="muted">불러오는 중</p></div>';
+    if (!list.length) return head + '<div class="card soft" style="text-align:center"><p class="muted">공개된 작품이 아직 없어요</p></div>';
+    return head + '<div class="art-list">' + list.map(artCardHtml).join("") + "</div>" +
+      '<button class="btn line" style="margin-top:10px" onclick="App.go(\'art_rank\')">좋아요 순위 보기</button>' +
+      '<div class="card soft" style="margin-top:10px"><b style="font-size:calc(14.5px * var(--fs));color:var(--hi)">작품 규칙</b><ul class="art-rules">' +
+      ART_RULES.map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") +
+      '</ul><p class="muted" style="margin-top:6px;font-size:calc(12.5px * var(--fs))">어긋난 작품은 운영자가 내립니다 · 작가는 Outro 시상에서 공개</p></div>';
+  },
+  art_rank: function () {
+    artPull();
+    var list = artItems().slice().sort(function (a, b) { return b.likes - a.likes || (a.ts < b.ts ? -1 : 1); }).slice(0, 10);
+    if (!list.length) return '<div class="card soft" style="text-align:center"><p class="muted">공개된 작품이 아직 없어요</p></div>';
+    return '<div class="card">' + list.map(function (w, i) {
+      return '<div class="ty-rank" onclick="artOpen(\'' + w.id + '\')"><span class="no">' + (i + 1) + '</span><span class="nm">' + esc(w.title || "제목 없음") +
+        '<small style="display:block;color:var(--faint);font-size:calc(12.5px * var(--fs))">작품 ' + esc(w.id) + "</small></span>" +
+        '<span class="sc">♥ ' + w.likes + "</span></div>";
+    }).join("") + "</div>" + '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">좋아요 수로만 정합니다 · 동점은 먼저 낸 작품 · Outro에서 시상</p>';
+  },
+  /* 17F Outro 송출 · 상위 3점 */
+  screen_art: function () {
+    artPull();
+    var list = artItems().slice().sort(function (a, b) { return b.likes - a.likes || (a.ts < b.ts ? -1 : 1); }).slice(0, 3);
+    return '<div class="screen-wrap tytv"><p class="tytv-k">17:00 OUTRO · AI 사생대회</p><p class="tytv-t">좋아요 상위 3</p>' +
+      '<div class="art-tv">' + (list.length ? list.map(function (w, i) {
+        return '<div class="art-tv-c"><span class="r">' + (i + 1) + '</span><img src="' + esc(artImg(w, false)) + '" alt="" onerror="this.classList.add(\'na\')">' +
+          '<b>' + esc(w.title || "제목 없음") + "</b><span>작품 " + esc(w.id) + " · ♥ " + w.likes + "</span></div>";
+      }).join("") : '<p style="padding:24px 4px;opacity:0.7">공개된 작품이 없습니다</p>') + "</div>" +
+      '<p class="tytv-foot">좋아요 수로만 정합니다 · 동점은 먼저 낸 작품 · 작가는 시상에서 공개</p></div>';
   },
 
   /* ═══ v3.35 오늘 한 판 설문 · v3.52b SURVEY_Q 한 곳으로 그리는 범용 단계 ═══ */
@@ -4976,11 +5053,124 @@ document.addEventListener("visibilitychange", function () { if (!document.hidden
 var SV = { card: 0, busy: false, aggAt: 0 };
 var SURVEY_MOCK = { n: 128, bal: [[71, 57], [48, 80], [39, 89]], words: [{ w: "해볼 만하다", n: 31 }, { w: "생각보다 가깝다", n: 22 }, { w: "벌써 쓰고 싶다", n: 17 }, { w: "더 배우고 싶다", n: 12 }, { w: "막막하다", n: 6 }], min: 5 };
 /* v3.52 설문 잠금 · "time" = 14:30 전 · "nostamp" = 다른 스탬프 0개 · "" = 열림 (서버 survey_submit 와 같은 조건) */
+/* ── v3.58 AI 사생대회 ── */
+function artPull(force) {
+  if (testMode() && !BE.on) { if (!ART.data) ART.data = artDemo(); return; }
+  if (!BE.on || (!force && Date.now() - ART.t < 20000)) return;
+  ART.t = Date.now();
+  var u = S.get("user", {}) || {};
+  beCall({ action: "art_list", emp: u.empId || "" }, function (r) {
+    if (r && r.ok) { ART.data = r; if (["art", "home", "screen_art"].indexOf(App.current) >= 0) App.render(); }
+  }, function () {});
+}
+function artPhase() { return (ART.data && ART.data.phase) || (testMode() ? "vote" : ""); }
+function artItems() {
+  var d = ART.data, list = (d && d.items) ? d.items.slice() : [];
+  if (ART.sort === "like") list.sort(function (a, b) { return b.likes - a.likes || (a.ts < b.ts ? -1 : 1); });
+  else list.sort(function (a, b) { return a.ts < b.ts ? 1 : a.ts > b.ts ? -1 : 0; });
+  return list;
+}
+function artMine(id) { var m = ART.data && ART.data.my; return !!(m && (m.own || []).indexOf(id) >= 0); }
+function artLeft() { var m = ART.data && ART.data.my; return m && m.left != null ? m.left : ART_VOTE_MAX; }
+function artLiked(id) { var m = ART.data && ART.data.my; return !!(m && (m.liked || []).indexOf(id) >= 0); }
+function artLocked() { return artPhase() === "done"; }
+function artImg(w, thumb) {
+  if (w.demo) return artDemoImg(w, thumb);
+  var f = String(w.file || "");
+  return ART_IMG_BASE + (thumb ? f.replace(/(\.[a-z0-9]+)$/i, "_t$1") : f);
+}
+/* 좋아요 토글 · 화면은 먼저 바꾸고 서버 응답으로 맞춘다 · 실패하면 되돌린다 */
+function artLike(id) {
+  if (artLocked()) { notice({ key: "art:lock", title: "좋아요가 마감됐어요", body: (ART.data && ART.data.voteEnd ? ART.data.voteEnd.slice(11, 16) + " 마감" : "") }); return; }
+  if (artMine(id)) { toast("내 작품에는 좋아요를 누를 수 없어요"); return; }
+  if (!artLiked(id) && artLeft() <= 0) { toast("표는 " + ART_VOTE_MAX + "개까지 · 누른 작품을 취소하면 다시 생겨요"); return; }
+  if (ART.busy === id) return;
+  var d = ART.data, it = (d && d.items || []).filter(function (x) { return x.id === id; })[0];
+  if (!it || !d) return;
+  var was = artLiked(id);
+  d.my = d.my || { liked: [], own: [], left: ART_VOTE_MAX };
+  d.my.liked = was ? d.my.liked.filter(function (x) { return x !== id; }) : d.my.liked.concat([id]);
+  d.my.left = Math.max(0, ART_VOTE_MAX - d.my.liked.length);
+  it.likes = Math.max(0, it.likes + (was ? -1 : 1));
+  App.render();
+  if (testMode() && !BE.on) return;
+  var u = S.get("user", {}) || {};
+  if (!u.empId) { toast("사번으로 입장한 뒤 누를 수 있어요"); return; }
+  ART.busy = id;
+  beCall({ action: "art_like", emp: u.empId, id: id }, function (r) {
+    ART.busy = "";
+    if (r && r.ok) {
+      it.likes = r.likes;
+      if (r.liked !== artLiked(id)) d.my.liked = r.liked ? d.my.liked.concat([id]) : d.my.liked.filter(function (x) { return x !== id; });
+      if (r.left != null) d.my.left = r.left;
+    }
+    else {
+      d.my.liked = was ? d.my.liked.concat([id]) : d.my.liked.filter(function (x) { return x !== id; });
+      it.likes = Math.max(0, it.likes + (was ? 1 : -1));
+      d.my.left = Math.max(0, ART_VOTE_MAX - d.my.liked.length);
+      toast(r && r.reason === "self" ? "내 작품에는 좋아요를 누를 수 없어요" : r && r.reason === "closed" ? "좋아요가 마감됐어요" : r && r.reason === "max" ? "표는 " + ART_VOTE_MAX + "개까지예요" : "좋아요가 저장되지 않았어요");
+    }
+    App.render();
+  }, function () { ART.busy = ""; toast("서버에 연결할 수 없어요"); });
+}
+function artOpen(id) {
+  var it = (ART.data && ART.data.items || []).filter(function (x) { return x.id === id; })[0];
+  if (!it) return;
+  modalOpen('<b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">작품 ' + esc(it.id) + " · " + esc(it.title || "") + "</b>" +
+    '<img class="art-full" src="' + esc(artImg(it, false)) + '" alt="' + esc(it.title || "작품") + '" onerror="this.classList.add(\'na\')">' +
+    (it.desc ? '<p class="muted" style="margin-top:8px">' + esc(it.desc) + "</p>" : "") +
+    '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>');
+}
+function artCardHtml(w) {
+  var liked = artLiked(w.id), mine = artMine(w.id), lock = artLocked();
+  return '<div class="art-c"><div class="th" onclick="artOpen(\'' + w.id + '\')">' +
+    '<img src="' + esc(artImg(w, true)) + '" alt="" loading="lazy" decoding="async" width="88" height="88" onerror="this.classList.add(\'na\')"></div>' +
+    '<div class="bd" onclick="artOpen(\'' + w.id + '\')"><b>' + esc(w.title || "제목 없음") + "</b>" +
+    (w.desc ? "<p>" + esc(w.desc) + "</p>" : "") +
+    '<span class="who">작품 ' + esc(w.id) + "</span></div>" +
+    '<button class="lk' + (liked ? " on" : "") + (mine || lock ? " off" : "") + '" ' + (mine || lock ? "disabled" : 'onclick="artLike(\'' + w.id + '\')"') +
+    ' aria-label="좋아요"><span class="ic">' + (liked ? "♥" : "♡") + '</span><span class="n">' + w.likes + "</span></button></div>";
+}
+function artBannerHtml() {
+  artPull();
+  var ph = artPhase();
+  if (ph !== "submit" && ph !== "vote") return "";   /* 기간이 끝나면 홈에서 저절로 빠진다 */
+  var form = (ART.data && ART.data.form) || "";
+  var sub = ph === "submit" ? (ART.data && ART.data.subEnd ? "" : "") : "";
+  return rcHtml({
+    cls: "", link: true,
+    onclick: ph === "submit" && form ? "artForm()" : "App.go('art')",
+    left: rcIcon(ART_ICON),
+    title: "AI 사생대회",
+    sub: ph === "submit" ? "작품 접수" + sub : "좋아요로 장원 뽑기"
+  });
+}
+function artForm() {
+  var url = (ART.data && ART.data.form) || "";
+  if (!url) { toast("접수 링크가 아직 열리지 않았어요"); return; }
+  window.open(url, "_blank", "noopener");
+}
+/* 데모·테스트 · 50점으로 스크롤을 본다 (서버가 없을 때만) */
+function artDemo() {
+  var items = [], t = ["오늘의 회의실", "AI와 커피", "숫자 정원", "야근의 끝", "데이터 바다", "우리 팀 로고", "새벽 출근길", "보고서 요정", "회의록 숲", "퇴근길 지하철"];
+  var n = S.get("art_demo_n", 10) || 10;   /* 기본 = 본선 10점 · 스크롤 성능 확인 때만 늘린다 */
+  for (var i = 0; i < n; i++) items.push({ id: (i + 1 < 10 ? "0" : "") + (i + 1), demo: 1, title: t[i % t.length], desc: "프롬프트 한 줄로 만든 그림", file: "", ts: "2026-10-1" + (i % 9) + " 09:00:00", likes: (i * 7) % 23 });
+  return { ok: true, demo: 1, phase: "vote", form: "", voteEnd: "2026-10-26 16:30", max: ART_VOTE_MAX, items: items, my: { liked: ["03"], own: ["02"], left: ART_VOTE_MAX - 1 } };
+}
+function artDemoImg(w, thumb) {
+  var n = parseInt(String(w.id).replace(/\D/g, ""), 10) || 0, sz = thumb ? 88 : 640;
+  var c = ["#FF7E31", "#FFB284", "#FFEBE0", "#111111", "#8A817B"][n % 5], c2 = ["#FFEBE0", "#111111", "#FF7E31", "#FFB284", "#FFFFFF"][(n + 2) % 5];
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + sz + '" height="' + sz + '"><rect width="100%" height="100%" fill="' + c + '"/>' +
+    '<circle cx="' + sz * 0.35 + '" cy="' + sz * 0.4 + '" r="' + sz * 0.22 + '" fill="' + c2 + '"/>' +
+    '<rect x="' + sz * 0.5 + '" y="' + sz * 0.55 + '" width="' + sz * 0.35 + '" height="' + sz * 0.3 + '" fill="' + c2 + '"/></svg>';
+  return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+}
 function surveyLock() {
   if (!surveyOpen()) return "time";
   var other = S.get("stamps", []).filter(function (id) { return id !== "sv" && STAMPS.some(function (x) { return x.id === id; }); });
   return other.length ? "" : "nostamp";
 }
+var ART_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 15.5 9 10l4.5 4.5L16 12l4.5 4"/><circle cx="8.6" cy="8.6" r="1.4"/></svg>';
 function surveyOpen() {
   if (testMode() && S.get("survey_force", false)) return true;
   var ph = evPhase();
