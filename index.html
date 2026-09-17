@@ -240,41 +240,56 @@
   .tok.two { flex-direction: column; padding: 8px 10px 6px; border-radius: 13px; }
   .tok.two small { display: block; margin-top: 2px; font-size: calc(11px * var(--fs)); font-weight: 700; opacity: 0.62; letter-spacing: 0; }
   .tok.act small { color: rgba(255,255,255,0.75); opacity: 1; }
-  /* ── 일정 탭 행 (v3.5 · v3.9 시간 뱃지) · 좌측 시간 뱃지(고정폭, 세로 정렬) + 우측 제목 · 설명은 접힘 ── */
-  .trow { border-bottom: 1px solid #EFEFEF; }
-  .trow:last-child { border-bottom: 0; }
-  .trow .rh { display: flex; align-items: center; gap: 14px; padding: 15px 6px; cursor: pointer; }
-  .trow .tcol { flex: none; width: 72px; text-align: center; }
-  .trow .tcol .tok { width: 100%; min-height: 48px; }
-  .trow .tt { flex: 1; min-width: 0; font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.45; }
-  .trow .tt .badge { margin-left: 4px; vertical-align: 2px; }
-  .trow .tt .st2 { display: block; margin-top: 3px; font-size: calc(12.5px * var(--fs)); font-weight: 700; color: var(--muted); line-height: 1.4; }   /* v3.21 상시 행 현재 상태 한 줄 */
-  .trow .chev { flex: none; color: var(--faint); font-weight: 800; font-size: 11px; }
-  .trow .tb { padding: 0 6px 14px 92px; }
-  .trow .tb .pl { font-size: calc(13.5px * var(--fs)); font-weight: 800; color: var(--muted); }
-  .trow .tb .ds { margin-top: 4px; font-size: calc(13.5px * var(--fs)); color: var(--muted); line-height: 1.65; }
-  .trow .tb .btn { margin-top: 10px; padding: 11px; }
-  /* v3.6 위계 + v3.9 뱃지 + v3.11 테두리: 내 것 = O10 채움 + 오렌지 전체 테두리 · 진행 중 = 검정 뱃지 + 검정 테두리 · 지나감 = 회색 저채도 */
-  .trow.my { background: var(--tint); border: 2px solid var(--mint); border-radius: 14px; margin: 5px 0; }
-  .trow.past .tt { color: var(--faint); }
-  .trow.past .tt .badge { opacity: 0.55; }
-  .trow.now { border: 1.5px solid var(--ink); border-radius: 14px; border-bottom-width: 1.5px; margin: 5px 0; }
-  /* ── 스탬프 카드 아코디언 (v3.2 · v3.6 상태 위계) ·
-     미완료 = 회색(--dim, 저채도) / 완료 = O10 틴트(내 것) / 다음 추천 = 회색 기조 + 오렌지 보더 / 층 컨테이너(.fl) = 기본(흰 면 + 헤어라인) ── */
-  .scard { position: relative; background: var(--dim); border-radius: 20px; padding: 13px 15px; margin-bottom: 8px; }
-  .scard.done { background: var(--tint); }
-  .scard.next { box-shadow: 0 0 0 1.5px var(--mint); }
-  .scard .shead { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-  .scard .ico { position: relative; flex: none; width: 42px; height: 42px; border: 2px solid var(--dimln); border-radius: 50%; background: var(--white); color: var(--faint); display: flex; align-items: center; justify-content: center; }
-  .scard .ico svg { width: 22px; height: 22px; display: block; }
-  .scard.done .ico { background: var(--tint2); border-color: var(--mint); color: var(--acc2); }
-  .scard.next .ico { border-color: var(--mint); color: var(--acc2); animation: trailPulse 2.2s ease-in-out infinite; }
+  /* ══ 공용 행 카드 .rc (v3.22 사용자 지시 · 스탬프 카드 기준으로 전 화면 통일) ══
+     스탬프 카드·일정 행·홈 나의 일정·프로그램 행이 전부 rcHtml() 하나로 그린다. 높이·라운드·좌우 패딩·좌측 슬롯 폭 고정.
+     상태 변형은 면 색만 바꾼다: 테두리는 모든 변형에서 1px 고정, 강조 테두리는 inset 그림자로 그려 박스 크기가 변하지 않는다.
+     면 = v3.6 상태 위계: 기본 흰 면 / dim·past 회색 / done 틴트 / my 틴트+오렌지 링 / now 검정 링 / next 회색+오렌지 테두리 */
+  .rc { --rc-h: 64px; --rc-r: 20px; --rc-px: 15px; --rc-ls: 64px; --rc-gap: 12px;
+    position: relative; background: var(--white); border: 1px solid var(--dimln); border-radius: var(--rc-r); padding: 0 var(--rc-px); margin-bottom: 8px; }
+  .rc .rh { display: flex; align-items: center; gap: var(--rc-gap); min-height: var(--rc-h); cursor: pointer; }
+  .rc .ls { flex: none; width: var(--rc-ls); display: flex; align-items: center; justify-content: center; }
+  .rc .ls .tok { width: 100%; min-height: 48px; }
+  .rc .ls .ico { position: relative; width: 42px; height: 42px; border: 2px solid var(--dimln); border-radius: 50%; background: var(--white); color: var(--faint); display: flex; align-items: center; justify-content: center; }
+  .rc .ls .ico svg { width: 22px; height: 22px; display: block; }
+  .rc .bd { flex: 1; min-width: 0; padding: 9px 0; }
+  .rc .tt { display: block; font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.35; }
+  .rc .tt .badge { margin-left: 4px; vertical-align: 2px; }
+  .rc .sb { display: block; margin-top: 2px; font-size: calc(12.5px * var(--fs)); font-weight: 700; color: var(--muted); line-height: 1.4; }
+  .rc .sb .nxt { color: var(--acc2); font-weight: 800; }   /* 스탬프 다음 추천 표시 · 줄을 늘리지 않게 보조 줄 안에 */
+  /* 닫힌 행 높이 고정: 제목·보조 줄은 각 한 줄 말줄임 · 전체 문구는 펼침 본문이 맡는다 */
+  .rc .rh .tt, .rc .rh .sb { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rc .rt { flex: none; display: flex; align-items: center; }
+  .rc .rt .st { font-size: calc(12.5px * var(--fs)); font-weight: 800; color: var(--acc2); }
+  .rc .chev { flex: none; color: var(--faint); font-weight: 800; font-size: 11px; }
+  .rc .chev.arw { font-size: 15px; }
+  /* 펼침 · 같은 카드 안 · 스탬프 카드 펼침 문법(설명 → 행동 버튼 → 보조 링크) */
+  .rc .rb { padding: 2px 0 14px; }
+  .rc .rb .d, .rc .rb .ds, .rc .rb .sq { font-size: calc(13.5px * var(--fs)); color: var(--muted); line-height: 1.6; }
+  .rc .rb .ds { margin-top: 4px; }
+  .rc .rb .pl { font-size: calc(13.5px * var(--fs)); font-weight: 800; color: var(--muted); }
+  .rc .rb .nt { margin-top: 6px; font-size: calc(12.5px * var(--fs)); font-weight: 700; color: var(--acc2); line-height: 1.55; }
+  .rc .rb .btn { margin-top: 10px; padding: 11px; }
+  .rc .rb .row .btn { margin-top: 0; }
+  .rc .rb .lnk { margin-top: 9px; font-size: calc(12.5px * var(--fs)); font-weight: 800; color: var(--acc2); cursor: pointer; }
+  .rc .rb .lnk.sub { color: var(--faint); font-weight: 700; font-size: calc(12px * var(--fs)); }   /* v3.12 보조 대안 행동 = 회색 링크 */
+  /* 상태 변형 (크기 불변) */
+  .rc.dim { background: var(--dim); border-color: var(--dim); }
+  .rc.dim .tt { color: var(--muted); }
+  .rc.past { background: var(--dim); border-color: var(--dim); }
+  .rc.past .tt { color: var(--faint); }
+  .rc.past .tt .badge { opacity: 0.55; }
+  .rc.past .tok.dim, .rc.dim .tok.dim { background: var(--dimln); }   /* 회색 면 위 회색 뱃지가 묻히지 않게 한 단 진하게 */
+  .rc.done { background: var(--tint); border-color: var(--tint); }
+  .rc.my { background: var(--tint); border-color: var(--mint); box-shadow: inset 0 0 0 1px var(--mint); }   /* v3.11 오렌지 전체 테두리 = 내 것 */
+  .rc.now { border-color: var(--ink); box-shadow: inset 0 0 0 0.5px var(--ink); }
+  .rc.next { background: var(--dim); border-color: var(--mint); }
+  .rc.done .ico { background: var(--tint2); border-color: var(--mint); color: var(--acc2); }
+  .rc.next .ico { border-color: var(--mint); color: var(--acc2); animation: trailPulse 2.2s ease-in-out infinite; }
   /* 완료 도장 (v3.20 A안) · 칸 안에 맞춘다(넘침 제거) · -12도 기울기는 SVG 안에서 · 잉크 질감 필터는 생략 유지(작은 크기 가독) */
   .stampmk { position: relative; flex: none; display: flex; align-items: center; justify-content: center; }
   .stampmk svg { display: block; }
   .stampmk .ring { position: absolute; left: 50%; top: 50%; width: 58px; height: 58px; margin: -29px 0 0 -29px; border: 2.5px solid var(--mint); border-radius: 999px; pointer-events: none; animation: trailRing 0.8s ease-out 0.3s both; }
-  .scard .shead { min-height: 56px; }   /* 완료·미완료 카드 높이 통일 (도장 56px 기준) */
-  .scard.punch .stampmk { animation: stampPunch 0.62s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  .rc.punch .stampmk { animation: stampPunch 0.62s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
   @keyframes stampPunch { 0% { transform: scale(2.2) rotate(14deg) translateY(-6px); opacity: 0; } 45% { opacity: 1; } 72% { transform: scale(0.94) rotate(-3deg) translateY(0); } 100% { transform: scale(1) rotate(0deg); } }
   /* ── 미션 완료 순간 오버레이 (v3.16 · v3.20 큰 도장 세로 배치) · 카드 크기만, 얕은 딤 · 탭=닫기 ── */
   #ppov { position: fixed; inset: 0; z-index: 95; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.12); animation: dimIn 0.18s ease-out; }
@@ -290,41 +305,9 @@
   #ppov.rm .pcard, #ppov.rm { animation: none; }
   #ppov.rm .pcard .stampmk { animation: none; }
   #ppov.rm .pcard .stampmk::after { animation: none; opacity: 0; }
-  .scard .bd { flex: 1; min-width: 0; }
-  .scard .bd .no { display: block; font-family: var(--disp); font-size: calc(11.5px * var(--fs)); font-weight: 700; color: var(--faint); letter-spacing: 0.06em; }
-  .scard.done .bd .no, .scard.next .bd .no { color: var(--acc2); }
-  .scard .bd .tt { display: block; margin-top: 1px; font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--muted); line-height: 1.35; }
-  .scard.done .bd .tt, .scard.next .bd .tt { color: var(--hi); }
-  .scard .bd .wh { display: block; margin-top: 1px; font-size: calc(12.5px * var(--fs)); font-weight: 700; color: var(--faint); }
-  .scard .chev { flex: none; color: var(--faint); font-weight: 800; font-size: 12px; }
   .scap { margin: 13px 2px 7px; font-size: calc(11.5px * var(--fs)); font-weight: 800; letter-spacing: 0.04em; color: var(--faint); }
-  .scard .tcard { margin-top: 11px; background: var(--white); border-radius: 14px; padding: 12px 13px; }
-  .scard .tcard .d { font-size: calc(13.5px * var(--fs)); color: var(--muted); line-height: 1.6; }
-  .scard .tcard .nt { margin-top: 6px; font-size: calc(12.5px * var(--fs)); font-weight: 700; color: var(--acc2); line-height: 1.55; }
-  .scard .tcard .btn { margin: 0; padding: 11px; }
-  .scard .tcard .lnk { margin-top: 9px; font-size: calc(12.5px * var(--fs)); font-weight: 800; color: var(--acc2); cursor: pointer; }
-  .scard .tcard .lnk.sub { color: var(--faint); font-weight: 700; font-size: calc(12px * var(--fs)); }   /* v3.12 보조 대안 행동 = 회색 링크 */
   /* v3.19 테스트 버튼 · 회색 점선 = 운영(테스트) 요소임이 보이게, 위계 최하위 */
   .btn.test { margin-top: 8px; background: transparent; border: 1.5px dashed var(--dimln); color: var(--faint); font-size: calc(12.5px * var(--fs)); font-weight: 700; padding: 9px; }
-  /* ── 프로그램 탭 층 아코디언 (v3.4) · scard 문법 재사용 · 층 안 = 신청형 행(무겁게) + 상시형 행(얇게) ── */
-  /* v3.6 상태 위계: 평상 행 = 기본(흰 면 + 헤어라인) · 신청 완료 = O10(내 것) · 만석·종료 = 회색 */
-  .srow { background: var(--white); border: 1px solid var(--dimln); border-radius: 14px; padding: 11px 13px; margin-top: 8px; }
-  .srow.mine { background: var(--tint); border: 2px solid var(--mint); }   /* v3.11 오렌지 전체 테두리 = 내 것 (일정 탭 내 일정 행과 통일) */
-  .srow.off { background: var(--dim); }
-  .srow.off .tt, .srow.off .tm { color: var(--faint); }
-  .srow .rh { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-  .srow .tm { flex: none; font-family: var(--disp); font-size: calc(14.5px * var(--fs)); color: var(--hi); }
-  .srow .tt { flex: 1; min-width: 0; font-size: calc(14.5px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.35; }
-  .srow .st { flex: none; font-size: calc(12.5px * var(--fs)); font-weight: 800; color: var(--acc2); }
-  .srow .chev { flex: none; color: var(--faint); font-weight: 800; font-size: 11px; }
-  .srow .tcard { background: var(--dim); }
-  .srow.mine .tcard { background: var(--white); }
-  .srow .sq { font-size: calc(13px * var(--fs)); font-weight: 700; color: var(--muted); line-height: 1.55; }
-  .orow { display: flex; align-items: center; gap: 10px; background: var(--white); border: 1px solid var(--dimln); border-radius: 12px; padding: 9px 13px; margin-top: 6px; }
-  .orow .bd { flex: 1; min-width: 0; }
-  .orow .bd b { display: block; font-size: calc(13.5px * var(--fs)); font-weight: 800; color: var(--hi); }
-  .orow .bd small { display: block; margin-top: 1px; font-size: calc(12px * var(--fs)); font-weight: 700; color: var(--faint); }
-  .orow .arw { flex: none; color: var(--faint); font-weight: 800; }
   @keyframes trailPunch { 0% { transform: scale(2.2) rotate(-9deg); opacity: 0; } 45% { opacity: 1; } 72% { transform: scale(0.94) rotate(1.5deg); } 100% { transform: scale(1) rotate(0deg); } }
   @keyframes trailRing { 0% { transform: scale(0.55); opacity: 0.9; } 100% { transform: scale(2); opacity: 0; } }
   @keyframes trailPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,126,49,0.32); } 50% { box-shadow: 0 0 0 7px rgba(255,126,49,0); } }
@@ -379,7 +362,7 @@
   .sess .ttl { margin-top: 7px; font-size: calc(16px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.4; cursor: pointer; }
   .sess .who { margin-top: 3px; font-size: calc(13.5px * var(--fs)); font-weight: 700; color: var(--muted); }
   .seatrow { display: flex; align-items: center; gap: 10px; margin-top: 11px; }
-  .seatrow .sb { flex: 1; height: 8px; border-radius: 5px; background: var(--white); overflow: hidden; }
+  .seatrow .sb { flex: 1; height: 8px; border-radius: 5px; background: var(--dim); overflow: hidden; }   /* 흰 면 카드 위에서 트랙이 보이게 (v3.22) */
   .seatrow .sb i { display: block; height: 100%; border-radius: 5px; background: var(--mint); }
   .seatrow .sn { flex: none; font-size: calc(13px * var(--fs)); font-weight: 800; color: var(--hi); }
   .seatrow.full .sb i { background: #E5484D; } .seatrow.full .sn { color: #E5484D; }
@@ -477,31 +460,18 @@
   .bill { position: relative; height: 90px; border: 1px solid var(--dimln); border-radius: 20px; overflow: hidden; background: var(--white); margin-top: 8px; }   /* 360x740 한 화면 실측으로 90px */
   .bill canvas { width: 100%; height: 100%; display: block; }
   .bill .bt { position: absolute; left: 13px; bottom: 9px; font-size: calc(11px * var(--fs)); font-weight: 800; letter-spacing: 0.08em; color: var(--faint); pointer-events: none; }
-  .mine .r .tok { flex: none; min-width: 52px; padding: 5px 9px 4px; font-size: calc(12.5px * var(--fs)); }
-  .mine .r.now1 .tx { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }   /* 지금·다음 한 줄 고정 */
-  /* 층별 혼잡도 압축 스트립 · 프로그램 탭 하단으로 내렸더니 안 보인다는 지적으로 홈에 복귀 (260830).
-     「지금 어디가 붐비나」는 「지금 진행 중」과 같은 질문이라 바로 아래에 붙인다. */
-  .cstrip { background: var(--card); border: 0; border-radius: 18px; padding: 10px 13px 9px; margin-bottom: 9px; cursor: pointer; }
-  .cstrip:active { background: var(--surface2); }
+  /* 층별 혼잡도 압축 스트립 · 막대 4개라 높이는 내용 기준, 라운드·면·테두리·좌우 패딩·최소 높이는 공용 행 카드(.rc)와 동일 (v3.22) */
+  .cstrip { background: var(--white); border: 1px solid var(--dimln); border-radius: 20px; padding: 10px 15px 9px; min-height: 64px; margin-bottom: 8px; cursor: pointer; }
+  .cstrip:active { background: var(--dim); }
   .cstrip .hd { display: flex; align-items: baseline; justify-content: space-between; }
   .cstrip .hd b { font-size: calc(14px * var(--fs)); font-weight: 800; color: var(--hi); }
   .cstrip .hd span { font-size: calc(12px * var(--fs)); font-weight: 700; color: var(--faint); }
   .cstrip .row4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 7px; }
   .cstrip .fl { font-family: var(--disp); font-size: calc(13.5px * var(--fs)); color: var(--hi); }
-  .cstrip .bar { height: 6px; border-radius: 3px; background: var(--white); overflow: hidden; margin-top: 4px; }
+  .cstrip .bar { height: 6px; border-radius: 3px; background: var(--dim); overflow: hidden; margin-top: 4px; }
   .cstrip .bar i { display: block; height: 100%; border-radius: 3px; }
   .cstrip .st { margin-top: 3px; font-size: calc(11px * var(--fs)); font-weight: 800; }
-  /* 내 일정 · 예약·매칭이 있을 때만 (오렌지 틴트 = 내 것) */
-  .mine { background: var(--tint); border: 0; border-radius: 20px; padding: 2px 15px; margin-bottom: 12px; }
-  .mine .r { display: flex; align-items: center; gap: 11px; padding: 11px 0; cursor: pointer; border-bottom: 1px solid rgba(255,126,49,0.25); }
-  .mine .r:last-child { border-bottom: 0; }
-  /* 빈 상태도 같은 재질로 · 별도 카드를 만들면 홈이 한 화면을 넘는다 (260830) */
-  .mine.empty .r { justify-content: space-between; }
-  .mine.empty .tx { flex: none; color: var(--muted); font-weight: 700; }
-  .mine.empty .go { font-size: calc(13.5px * var(--fs)); font-weight: 800; color: var(--acc2); }
-  .mine .r .tm { flex: none; font-family: var(--disp); font-size: calc(15.5px * var(--fs)); color: var(--acc2); }
-  .mine .r .tx { flex: 1; font-size: calc(14.5px * var(--fs)); font-weight: 700; color: var(--hi); line-height: 1.45; }
-  .mine .r .arw { flex: none; color: var(--acc2); font-weight: 800; }
+  /* 홈 나의 일정 목록형(.mine .r)은 v3.22 폐지 · 개별 공용 행 카드(.rc)로 */
   /* 홈 스탬프 카드(.chal)는 v3.2 폐지 · 홈도 스탬프 탭과 같은 railHtml 공용 컴포넌트를 쓴다 */
   /* 공지 한 줄 */
   /* 내 참여 현황 */
@@ -2530,22 +2500,32 @@ function sessInlineHtml(s) {
         '<button class="btn mint" style="margin-top:10px"' + (sel ? ' onclick="sessBook(\'' + s.id + "', PROG.slotSel['" + s.id + "'])\"" : " disabled") + ">" + (sel ? sel + " 신청하기" : "시간을 선택하세요") + "</button>");
   }
   h += '<p class="lnk" onclick="sessOpen(\'' + s.id + '\')">자세히' + (s.video || LEC_MEDIA[s.id] ? " · 소개 영상" : "") + " ›</p>";
-  return '<div class="tcard">' + h + "</div>";
+  return h;
 }
+/* 프로그램 신청형 행 = 공용 행 카드 · 시간이 있는 행은 일정 탭과 같은 좌측 두 줄 시간 뱃지 (v3.22)
+   신청 완료 = my(틴트+오렌지 링) · 만석 = dim · 평상 = 기본 */
 function sessRowHtml(s) {
-  var open = !!PROG.openSess[s.id];
   var mine = sessMine(s.id);
   var full = s.kind === "seat" && sessRemain(s) <= 0;
-  var st = mine ? '<span class="badge mint">' + (mine.slot ? mine.slot + " " : "") + "신청 완료</span>" :
+  var tm = s.tm.split("~");
+  var st = mine ? "" :
     s.kind === "seat" ? (full ? '<span class="badge gray">만석</span>' : '<span class="st">잔여 ' + sessRemain(s) + "석</span>") :
       s.kind === "slot" ? '<span class="st">시간 선택</span>' : '<span class="st">신청제</span>';
-  return '<div class="srow' + (mine ? " mine" : full ? " off" : "") + '">' +
-    '<div class="rh" onclick="progSessToggle(\'' + s.id + '\')">' +
-    '<span class="tm">' + s.tm.split("~")[0] + '</span>' +
-    '<span class="tt">' + esc(s.ttl) + "</span>" + st +
-    '<span class="chev">' + (open ? "▲" : "▼") + "</span></div>" +
-    (open ? sessInlineHtml(s) : "") + "</div>";
+  return rcHtml({
+    cls: mine ? " my" : full ? " dim" : "",
+    onclick: "progSessToggle('" + s.id + "')",
+    left: tokBadge(tm[0], mine ? "mine" : full ? "dim" : "", tm[1] ? "~" + tm[1] : null),
+    title: esc(s.ttl) + (mine ? ' <span class="badge mint">' + (mine.slot ? mine.slot + " " : "") + "신청 완료</span>" : ""),
+    sub: esc(s.sub || s.who), right: st,
+    open: !!PROG.openSess[s.id], body: sessInlineHtml(s)
+  });
 }
+/* 프로그램 상시형 행 아이콘 · 시간이 없는 행은 좌측 슬롯에 아이콘을 같은 폭으로 둔다 */
+var FL_ICO = {
+  roulette: SICO + '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2"/><path d="M12 3.5v6.5M12 14v6.5"/></svg>',
+  slots: SICO + '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.3V12l3.2 2.1"/></svg>',
+  rank: SICO + '<path d="M5 20V12M12 20V6M19 20v-5"/><path d="M3.5 20h17"/></svg>'
+};
 function flListHtml(n) {
   var sess = SESSIONS.filter(function (s) { return s.fl === n; }).sort(function (a, b) { return sessStartMin(a.tm) - sessStartMin(b.tm); });
   var acts = FL_OPEN[n] || [];
@@ -2556,9 +2536,8 @@ function flListHtml(n) {
       var sd = a.sid ? STAMPS.filter(function (x) { return x.id === a.sid; })[0] : null;
       var tap = a.sid ? "ppGoCard('" + a.sid + "')" : a.tap || "";
       var badge = sd ? '<span class="badge mint">스탬프</span>' : a.tag ? '<span class="badge mint">' + a.tag + "</span>" : "";
-      return '<div class="orow"' + (tap ? ' onclick="' + tap + '" style="cursor:pointer"' : "") + ">" +
-        '<span class="bd"><b>' + a.nm + '</b><small>' + a.d + "</small></span>" + badge +
-        (tap ? '<span class="arw">›</span>' : "") + "</div>";
+      var ico = a.sid ? STAMP_ICONS[a.sid] : /Roulette/.test(tap) ? FL_ICO.roulette : /guide_slots/.test(tap) ? FL_ICO.slots : FL_ICO.rank;
+      return rcHtml({ cls: "", onclick: tap, left: rcIcon(ico), title: a.nm, sub: a.d, right: badge, link: !!tap, chev: tap ? undefined : false });
     }).join("");
   return head + rows;
 }
@@ -2585,22 +2564,21 @@ function evPhase() {
 /* 홈 히어로 = 지금 진행 중 (한 화면 안에 들어가야 하므로 시간·제목·장소·다음 일정만). 눌러서 타임라인으로 */
 /* v3.13: 히어로(nowCardHtml)는 폐지 · 「지금·다음」은 나의 스케줄 첫 줄로 흡수(schedNowRow), 연출은 광고판이 맡는다 */
 function schedNowRow() {
-  var ph = evPhase();
+  var ph = evPhase(), go = "App.go('guide_time')";
+  /* v3.22 공용 행 카드 · 한 줄 말줄임(one) · 진행 중 뱃지만 검정 */
   if (ph === "before") {
     var d = Math.max(1, Math.ceil((EV_START - new Date()) / 86400000));
-    return '<div class="r now1" onclick="App.go(\'guide_time\')">' + tokBadge("D-" + d) +
-      '<span class="tx"><b>10. 26 (월) 09:30 시작</b> · 광화문 본사</span><span class="arw">›</span></div>';
+    return rcHtml({ cls: "", onclick: go, link: true, left: tokBadge("D-" + d), title: "10. 26 (월) 09:30 시작", sub: "광화문 본사" });
   }
   if (ph === "after") {
-    return '<div class="r now1" onclick="App.go(\'guide_time\')">' + tokBadge("종료", "dim") +
-      '<span class="tx">행사가 끝났습니다 · 추첨 결과는 개별 안내</span><span class="arw">›</span></div>';
+    return rcHtml({ cls: " past", onclick: go, link: true, left: tokBadge("종료", "dim"), title: "행사가 끝났습니다", sub: "추첨 결과는 개별 안내" });
   }
   var now = TIMELINE[NOW_INDEX];
   /* 다음 일정에서 상시 항목(always)은 건너뛴다 (v3.18) */
   var nx = null;
   for (var xi = NOW_INDEX + 1; xi < TIMELINE.length; xi++) if (!TIMELINE[xi].always) { nx = TIMELINE[xi]; break; }
-  return '<div class="r now1" onclick="App.go(\'guide_time\')">' + tokBadge("지금", "act") +
-    '<span class="tx"><b>' + esc(now.title) + "</b>" + (nx ? " · 다음 " + nx.time + " " + esc(nx.title) : "") + '</span><span class="arw">›</span></div>';
+  return rcHtml({ cls: "", onclick: go, link: true, left: tokBadge("지금", "act", now.time),
+    title: esc(now.title), sub: nx ? "다음 " + nx.time + " " + esc(nx.title) : "" });
 }
 /* v3.13 홈 광고판 · 스플래시와 같은 AXF 시퀀스 엔진(axfSeqMount, 점 → 구체 → 달리는 사람 → Me to We) 재사용.
    공용 시계(AXF.t0)라 재렌더에도 시퀀스가 이어진다 · isConnected 검사로 화면을 떠나면 raf 정지 ·
@@ -2631,48 +2609,44 @@ function crowdStripHtml() {
    내가 신청한 것과 그냥 열려 있는 것이 섞여, 이 영역이 무슨 뜻인지 흐려진다.
    ⚠홈은 한 화면에 들어와야 하므로 이 목록은 2행까지만 편다(260830).
    목록만 길이가 가변이라, 여기를 안 막으면 신청이 많은 사람에게서 홈이 넘친다. */
-var SCHED_MAX = 2;
+/* v3.22: 행이 개별 카드(64px)가 되어 목록형보다 커졌다 · 사용자 지시(카드 통일)가 홈 한 화면보다 우선이라
+   내 항목 상한을 2 → 1 로 줄여 넘침을 최소화한다(2건이면 둘 다, 3건 이상이면 1건 + 「외 n건」) */
+var SCHED_MAX = 1;
 function myScheduleHtml() {
-  var rows = [];
+  var rows = [];   /* [정렬 분, onclick, 뱃지 글자, 제목, 보조 줄, 뱃지 상태] */
   /* 지금 걸려 있는 대기는 시간이 정해진 일정보다 급하다 · 맨 위(정렬키 -1)에 둔다.
      내 것을 보여주는 자리는 여기 하나뿐이다(홈에 별도 스트립을 만들지 않는다, design.md) */
   var q = S.get("queue", {}), qk;
   for (qk in q) {
     var sp = scanSpot(qk), r = q[qk];
     if (!sp || !r || r.status === "done") continue;
-    rows.push([-1, "qrPanelOpen('mine')",
-      r.status === "call" ? "호출" : r.no + "번",
-      sp.nm + (r.status === "call" ? " · 지금 입장하세요" : " · 대기 중" + (r.ahead ? " (앞 " + r.ahead + "명)" : ""))]);
+    rows.push([-1, "qrPanelOpen('mine')", r.status === "call" ? "호출" : r.no + "번", sp.nm,
+      r.status === "call" ? "지금 입장하세요" : "대기 중" + (r.ahead ? " (앞 " + r.ahead + "명)" : ""), r.status === "call" ? "act" : "mine"]);
   }
   var mr = myResv();
   if (mr && RESV_LIVE.indexOf(mr.status) >= 0)
-    rows.push([sessStartMin(mr.slot), "App.go('dap')", mr.slot, "과제상담 · 1F DAP존 미팅룸 " + mr.room]);
+    rows.push([sessStartMin(mr.slot), "App.go('dap')", mr.slot, "과제상담", "1F DAP존 미팅룸 " + mr.room, "mine"]);
   var cc = S.get("cchat", null);
   if (cc && cc.status === "matched")
-    rows.push([sessStartMin(cc.round), "App.go('ev_cchat')", cc.round, "AX 커피챗 · 18F 라운지 TABLE " + cc.table]);
+    rows.push([sessStartMin(cc.round), "App.go('ev_cchat')", cc.round, "AX 커피챗", "18F 라운지 TABLE " + cc.table, "mine"]);
   sessMineList().forEach(function (x) {
     var tmLbl = x.slot || x.s.tm.split("~")[0];
-    rows.push([sessStartMin(tmLbl), "sessOpen('" + x.s.id + "')", tmLbl, x.s.ttl + " · " + x.s.fl + "F"]);
+    rows.push([sessStartMin(tmLbl), "sessOpen('" + x.s.id + "')", tmLbl, x.s.ttl, x.s.fl + "F", "mine"]);
   });
   rows.sort(function (a, b) { return a[0] - b[0]; });
   var head = '<div class="sect"><b>나의 일정</b>' +
     '<span onclick="App.go(\'guide_time\')">일정 탭 ›</span></div>';
-  /* v3.13: 첫 줄 = 「지금·다음」(구 히어로 흡수 · 시간 뱃지 공용 tok, 진행 중 = 검정) */
+  /* v3.13: 첫 줄 = 「지금·다음」(구 히어로 흡수 · 시간 뱃지 공용 tok, 진행 중 = 검정) · v3.22 모든 행 = 공용 행 카드 */
   if (!rows.length) {
-    return head + '<div class="mine">' + schedNowRow() +
-      '<div class="r" onclick="App.go(\'guide\')"><span class="tx" style="color:var(--muted)">신청한 프로그램이 없습니다</span>' +
-      '<span class="arw" style="font-size:calc(13.5px * var(--fs))">프로그램 신청 ›</span></div></div>';
+    return head + schedNowRow() +
+      rcHtml({ cls: "", onclick: "App.go('guide')", link: true, left: rcIcon(App.ICONS.guide), title: "신청한 프로그램이 없습니다", sub: "프로그램 탭에서 신청하기" });
   }
-  /* 3건이면 「외 1건」 줄을 쓰나 3행을 쓰나 높이가 같다. 같은 높이면 정보를 보여주는 쪽이 낫다. */
   var cut = rows.length <= SCHED_MAX + 1 ? rows.length : SCHED_MAX;
   var more = rows.length - cut;
-  return head + '<div class="mine">' + schedNowRow() + rows.slice(0, cut).map(function (r) {
-    return '<div class="r" onclick="' + r[1] + '"><span class="tm">' + esc(r[2]) + "</span>" +
-      '<span class="tx">' + esc(r[3]) + '</span><span class="arw">›</span></div>';
+  return head + schedNowRow() + rows.slice(0, cut).map(function (r) {
+    return rcHtml({ cls: " my", onclick: r[1], link: true, left: tokBadge(esc(r[2]), r[5]), title: esc(r[3]), sub: esc(r[4]) });
   }).join("") +
-    (more > 0 ? '<div class="r" onclick="App.go(\'guide_time\')"><span class="tm">+' + more + "</span>" +
-      '<span class="tx">외 ' + more + '건 · 일정 탭에서 보기</span><span class="arw">›</span></div>' : "") +
-    "</div>";
+    (more > 0 ? rcHtml({ cls: "", onclick: "App.go('guide_time')", link: true, left: tokBadge("+" + more), title: "외 " + more + "건", sub: "일정 탭에서 보기" }) : "");
 }
 
 /* 홈 · 스탬프 블록 (v3.2): 홈도 스탬프 탭과 같은 railHtml 공용 컴포넌트를 쓴다 (design.md 컴포넌트 일관성).
@@ -2717,14 +2691,25 @@ function photoState() {
 function tokBadge(text, state, sub) {
   return '<span class="tok' + (state ? " " + state : "") + (sub ? " two" : "") + '"><b>' + text + "</b>" + (sub ? "<small>" + sub + "</small>" : "") + "</span>";
 }
-function schedRow(key, cls, tok, t0, t1, titleHtml, bodyHtml) {
+/* ══ 공용 행 카드 (v3.22) · 스탬프 카드·일정 행·홈 나의 일정·프로그램 행이 전부 이 함수 하나로 그린다 ══
+   o = { cls, onclick, left(좌측 슬롯: 아이콘 또는 시간 뱃지), title, sub, right(우측 슬롯),
+         open, body(펼침), link(true = 펼침 대신 이동 · 화살표 ›), chev(false = 화살표 없음) }
+   컴포넌트를 바꾸면 이 함수를 쓰는 모든 화면이 함께 바뀐다 (design.md 컴포넌트 일관성) */
+function rcHtml(o) {
+  var chev = o.chev === false ? "" : o.link ? '<span class="chev arw">›</span>' : '<span class="chev">' + (o.open ? "▲" : "▼") + "</span>";
+  return '<div class="rc' + (o.cls || "") + '">' +
+    '<div class="rh"' + (o.onclick ? ' onclick="' + o.onclick + '"' : "") + ">" +
+    '<span class="ls">' + (o.left || "") + "</span>" +
+    '<span class="bd"><span class="tt">' + o.title + "</span>" + (o.sub ? '<span class="sb">' + o.sub + "</span>" : "") + "</span>" +
+    (o.right ? '<span class="rt">' + o.right + "</span>" : "") + chev + "</div>" +
+    (o.open && o.body ? '<div class="rb">' + o.body + "</div>" : "") + "</div>";
+}
+function rcIcon(svg) { return '<span class="ico">' + svg + "</span>"; }
+/* 일정 행 = 공용 행 카드 + 좌측 두 줄 시간 뱃지 · cls: "" 기본 / " now" / " past" / " my" */
+function schedRow(key, cls, tok, t0, t1, titleHtml, bodyHtml, subHtml) {
   var open = !!SCHED.open[key];
-  return '<div class="trow' + cls + '">' +
-    '<div class="rh" onclick="schedToggle(\'' + key + '\')">' +
-    '<span class="tcol">' + tokBadge(t0, tok, t1 ? "~" + t1 : null) + "</span>" +
-    '<span class="tt">' + titleHtml + "</span>" +
-    '<span class="chev">' + (open ? "▲" : "▼") + "</span></div>" +
-    (open ? '<div class="tb">' + bodyHtml + "</div>" : "") + "</div>";
+  return rcHtml({ cls: cls, onclick: "schedToggle('" + key + "')", left: tokBadge(t0, tok, t1 ? "~" + t1 : null),
+    title: titleHtml, sub: subHtml, open: open, body: bodyHtml });
 }
 
 /* ════════════════ 스탬프 카드 아코디언 (v3.2 · 경로 메타포 폐기) · 전폭 카드 · 각자 독립 개폐 ════════════════ */
@@ -2873,21 +2858,20 @@ function stampInnerHtml(s) {
   if (testMode() && S.get("stamps", []).indexOf(s.id) < 0) {
     inner += '<button class="btn test" onclick="testStamp(\'' + s.id + '\')">테스트 · 완료 처리</button>';
   }
-  return '<div class="tcard">' + inner + "</div>";
+  return inner;
 }
+/* 스탬프 카드 = 공용 행 카드(.rc) · 미완료 = 회색(dim) · 완료 = 틴트(done) + 우측 도장 56px · 다음 추천 = next */
 function scardHtml(s, got, isNext, newly) {
-  var open = !!PP.open[s.id];
   var isNew = newly.indexOf(s.id) >= 0;
   /* v3.8: 번호 표시 삭제(순서 개념 없음) · 완료 = 우측 「완료」 고무도장 (체크 대체 · 펀치 애니는 도장에서 재생) */
-  return '<div class="scard' + (got ? " done" : "") + (isNext ? " next" : "") + (isNew ? " punch" : "") + '">' +
-    '<div class="shead" onclick="ppToggle(\'' + s.id + '\')">' +
-    '<span class="ico">' + STAMP_ICONS[s.id] + "</span>" +
-    '<span class="bd">' + (isNext ? '<span class="no">다음 추천</span>' : "") +
-    '<span class="tt">' + s.title + '</span>' +
-    '<span class="wh">' + s.where + "</span></span>" +
-    (got ? stampMarkHtml(isNew) : "") +
-    '<span class="chev">' + (open ? "▲" : "▼") + "</span></div>" +
-    (open ? stampInnerHtml(s) : "") + "</div>";
+  return rcHtml({
+    cls: (got ? " done" : isNext ? " next" : " dim") + (isNew ? " punch" : ""),
+    onclick: "ppToggle('" + s.id + "')",
+    left: rcIcon(STAMP_ICONS[s.id]),
+    title: s.title, sub: (isNext ? '<b class="nxt">다음 추천</b> · ' : "") + s.where,
+    right: got ? stampMarkHtml(isNew) : "",
+    open: !!PP.open[s.id], body: stampInnerHtml(s)
+  });
 }
 function stampCardsHtml(st, newly) {
   var by = {};
@@ -3145,8 +3129,9 @@ var Views = {
       return seg + '<div class="tlist">' + SCHED_ALWAYS.map(function (a) {
         var stt = alwaysState(a.id);
         return schedRow("a_" + a.id, pastA ? " past" : "", pastA ? "dim" : "", a.time, a.end,
-          esc(a.title) + ' <span class="badge gray">' + a.tag + '</span><span class="st2">' + esc(stt[0]) + "</span>",
-          '<p class="pl">' + esc(a.place) + '</p><p class="ds">' + esc(stt[1]) + '</p><button class="btn mint" onclick="' + stt[2] + '">' + stt[3] + "</button>");
+          esc(a.title) + ' <span class="badge gray">' + a.tag + "</span>",
+          '<p class="pl">' + esc(a.place) + '</p><p class="ds">' + esc(stt[1]) + '</p><button class="btn mint" onclick="' + stt[2] + '">' + stt[3] + "</button>",
+          esc(stt[0]));
       }).join("") + "</div>";
     }
     if (tab === "mine") {
