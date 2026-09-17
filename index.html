@@ -254,13 +254,18 @@
   .rc .bd { flex: 1; min-width: 0; padding: 9px 0; }
   .rc .tt { display: block; font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.35; }
   .rc .tt .badge { margin-left: 4px; vertical-align: 2px; }
+  /* v3.44b 뱃지 슬롯 (실기기 360px 제보: 긴 제목에서 뱃지가 제목과 함께 말줄임으로 잘림) · 제목만 줄이고 뱃지는 항상 보인다 */
+  .rc .tr { display: flex; align-items: center; gap: 5px; min-width: 0; }
+  .rc .tr .tt { flex: 0 1 auto; min-width: 0; }
+  .rc .tr .bgs { flex: none; display: flex; align-items: center; gap: 4px; }
+  .rc .tr .bgs .badge { margin: 0; }
   .rc .sb { display: block; margin-top: 2px; font-size: calc(12.5px * var(--fs)); font-weight: 700; color: var(--muted); line-height: 1.4; }
   .rc .sb .nxt { color: var(--acc2); font-weight: 800; }   /* 스탬프 다음 추천 표시 · 줄을 늘리지 않게 보조 줄 안에 */
   /* 닫힌 행 높이 고정: 제목·보조 줄은 각 한 줄 말줄임 · 전체 문구는 펼침 본문이 맡는다 */
   .rc .rh .tt, .rc .rh .sb { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* v3.44 장소 칩 · 오른쪽 위 · 무채색(시간 뱃지의 옅은 주황과 구분) · 펼침 화살표와 세로로 겹치지 않게 위쪽 6px */
   .rc .pc { position: absolute; top: 4px; right: 12px; z-index: 1; max-width: 176px; height: 19px; line-height: 19px; padding: 0 8px; border-radius: 999px; background: #F2F2F2; color: #4A4A4A; font-size: 11.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
-  .rc.hp .rh .tt { padding-right: calc(var(--pcw) - 20px); }   /* 칩이 본문 영역과 실제로 겹치는 폭만큼만 비운다(화살표 열 폭 제외) */
+  .rc.hp .rh .tr { padding-right: calc(var(--pcw) - 20px); }   /* 칩이 본문 영역과 실제로 겹치는 폭만큼만 비운다(화살표 열 폭 제외) */
   .rc.ink .pc { background: rgba(255,255,255,0.2); color: #fff; }   /* 검정 카드에서는 뒤집는다 */
   .rc.past .pc, .rc.dim .pc { background: #E9E7E5; color: #8A817B; }
   .rc .rt { flex: none; display: flex; align-items: center; }
@@ -2727,7 +2732,7 @@ function sessRowHtml(s) {
     cls: mine || pqOn ? " my" : full ? " dim" : "",
     onclick: "progSessToggle('" + s.id + "')",
     left: tokBadge(tm[0], pqOn && pq.status === "call" && isBlack("call") ? "act" : mine || pqOn ? "mine" : full ? "dim" : "", tm[1] ? "~" + tm[1] : null),
-    title: esc(s.ttl) + (mine ? ' <span class="badge mint">' + (mine.pre ? "사전 신청" : "신청 완료") + "</span>" : ""),
+    title: esc(s.ttl), badges: mine ? '<span class="badge mint">' + (mine.pre ? "사전 신청" : "신청 완료") + "</span>" : "",
     /* v3.40 · 10F 는 장소를 부제 앞에 (말줄임이 장소부터 자르지 않게) */
     sub: esc(s.sub || s.who), right: st, place: sessPlace(s),
     open: !!PROG.openSess[s.id], body: sessInlineHtml(s)
@@ -2998,7 +3003,7 @@ function blackPick(view) {
 function isBlack(kind) { return blackPick(App.current) === kind; }
 
 /* ══ 공용 행 카드 (v3.22) · 스탬프 카드·일정 행·홈 나의 일정·프로그램 행이 전부 이 함수 하나로 그린다 ══
-   o = { cls, onclick, left(좌측 슬롯: 아이콘 또는 시간 뱃지), title, sub, right(우측 슬롯),
+   o = { cls, onclick, left(좌측 슬롯: 아이콘 또는 시간 뱃지), title, badges(v3.44b 제목 옆 뱃지 · 말줄임 대상 아님), sub, right(우측 슬롯),
          open, body(펼침), link(true = 펼침 대신 이동 · 화살표 ›), chev(false = 화살표 없음) }
    컴포넌트를 바꾸면 이 함수를 쓰는 모든 화면이 함께 바뀐다 (design.md 컴포넌트 일관성) */
 /* v3.44 장소 칩 폭 추정 · 제목 줄 오른쪽 여백으로 쓴다(칩이 제목을 덮지 않게) */
@@ -3013,22 +3018,25 @@ function rcHtml(o) {
   if (o.place) return '<div class="rc hp' + (o.cls || "") + '" style="--pcw:' + rcPlaceW(o.place) + 'px"><span class="pc">' + esc(o.place) + "</span>" +
     '<div class="rh"' + (o.onclick ? ' onclick="' + o.onclick + '"' : "") + ">" +
     '<span class="ls">' + (o.left || "") + "</span>" +
-    '<span class="bd"><span class="tt">' + o.title + "</span>" + (o.sub ? '<span class="sb">' + o.sub + "</span>" : "") + "</span>" +
+    '<span class="bd">' + rcTitle(o) + (o.sub ? '<span class="sb">' + o.sub + "</span>" : "") + "</span>" +
     (o.right ? '<span class="rt">' + o.right + "</span>" : "") + chev + "</div>" +
     (o.open && o.body ? '<div class="rb">' + o.body + "</div>" : "") + "</div>";
   return '<div class="rc' + (o.cls || "") + '">' +
     '<div class="rh"' + (o.onclick ? ' onclick="' + o.onclick + '"' : "") + ">" +
     '<span class="ls">' + (o.left || "") + "</span>" +
-    '<span class="bd"><span class="tt">' + o.title + "</span>" + (o.sub ? '<span class="sb">' + o.sub + "</span>" : "") + "</span>" +
+    '<span class="bd">' + rcTitle(o) + (o.sub ? '<span class="sb">' + o.sub + "</span>" : "") + "</span>" +
     (o.right ? '<span class="rt">' + o.right + "</span>" : "") + chev + "</div>" +
     (o.open && o.body ? '<div class="rb">' + o.body + "</div>" : "") + "</div>";
 }
+function rcTitle(o) {
+  return '<span class="tr"><span class="tt">' + o.title + "</span>" + (o.badges ? '<span class="bgs">' + o.badges + "</span>" : "") + "</span>";
+}
 function rcIcon(svg) { return '<span class="ico">' + svg + "</span>"; }
 /* 일정 행 = 공용 행 카드 + 좌측 두 줄 시간 뱃지 · cls: "" 기본 / " now" / " past" / " my" */
-function schedRow(key, cls, tok, t0, t1, titleHtml, bodyHtml, subHtml, place) {
+function schedRow(key, cls, tok, t0, t1, titleHtml, bodyHtml, subHtml, place, badges) {
   var open = !!SCHED.open[key];
   return rcHtml({ cls: cls, onclick: "schedToggle('" + key + "')", left: tokBadge(t0, tok, t1 ? "~" + t1 : null),
-    title: titleHtml, sub: subHtml, open: open, body: bodyHtml, place: place });
+    title: titleHtml, badges: badges, sub: subHtml, open: open, body: bodyHtml, place: place });
 }
 
 /* ════════════════ 스탬프 카드 아코디언 (v3.2 · 경로 메타포 폐기) · 전폭 카드 · 각자 독립 개폐 ════════════════ */
@@ -3543,9 +3551,9 @@ var Views = {
       var past = ph === "after" || (ph === "live" && i < NOW_INDEX);
       /* v3.25 · 진행 중이 검정을 못 받으면 검정 링·뱃지를 빼고 옅은 주황 뱃지 + 「진행 중」 주황 뱃지로 낮춘다 */
       var nowBlack = now && isBlack("now");
-      var badges = ' <span class="badge ' + (now ? "mint" : "gray") + '">' + t.tag + "</span>" + (now ? ' <span class="badge ' + (nowBlack ? "ink" : "mint") + '">진행 중</span>' : "");
+      var badges = '<span class="badge ' + (now ? "mint" : "gray") + '">' + t.tag + "</span>" + (now ? '<span class="badge ' + (nowBlack ? "ink" : "mint") + '">진행 중</span>' : "");
       rows.push([t2m(t.time),
-        schedRow("t" + i, nowBlack ? " now" : past ? " past" : "", nowBlack ? "act" : past ? "dim" : "", t.time, t.end, esc(t.title) + badges, body, undefined, t.place)]);
+        schedRow("t" + i, nowBlack ? " now" : past ? " past" : "", nowBlack ? "act" : past ? "dim" : "", t.time, t.end, esc(t.title), body, undefined, t.place, badges)]);
     });
     /* 내 일정 수집 · 홈 「나의 스케줄」과 같은 규칙 (대기열 → 상담 → 커피챗 → 신청 세션) */
     var my = [];   /* [분, 시각 라벨, 제목, 상세, onclick, 호출] · v3.43 myItems 하나에서 */
@@ -3556,7 +3564,7 @@ var Views = {
       /* v3.25 · 호출(m[5])은 call 순위, 진행 중 시간대에 든 내 항목은 now 순위로 검정 판정 */
       var nowish = m[5] ? isBlack("call") : (nowT && m[0] >= 0 && m[0] >= nowT[0] && m[0] < nowT[1] && isBlack("now"));
       mineRows.push([m[0],
-        schedRow("m" + j, " my", nowish ? "act" : "mine", m[1], null, esc(m[2]) + ' <span class="badge mint">내 일정</span>',
+        schedRow("m" + j, " my", nowish ? "act" : "mine", m[1], null, esc(m[2]),   /* v3.44b 「내 일정」 뱃지 삭제 · 이 탭은 전부 내 것(오렌지 테두리·틴트가 같은 뜻) */
           '<p class="pl">' + esc(m[3]) + '</p><button class="btn mint" onclick="' + m[4] + '">바로가기</button>', undefined, m[6])]);
     });
     var byT = function (a, b) { return a[0] - b[0]; };
@@ -3574,10 +3582,10 @@ var Views = {
         /* 포토부스는 펼침 = 번호표 UI 자체 · 내 번호표가 살아 있으면 내 것(my), 호출이면 뱃지 검정 */
         var pq = a.id === "photo" ? photoQ() : null, pqOn = pq && (pq.status === "wait" || pq.status === "call");
         return schedRow("a_" + a.id, pastA ? " past" : pqOn ? " my" : "", pastA ? "dim" : pqOn ? (pq.status === "call" && isBlack("call") ? "act" : "mine") : "", a.time, a.end,
-          esc(a.title) + ' <span class="badge gray">' + a.tag + "</span>",
+          esc(a.title),
           '<p class="ds">' + esc(stt[1]) + "</p>" +
             (a.id === "photo" ? '<div style="margin-top:10px">' + photoQueueHtml() + "</div>" : '<button class="btn mint" onclick="' + stt[2] + '">' + stt[3] + "</button>"),
-          esc(stt[0]), a.place);
+          esc(stt[0]), a.place, '<span class="badge gray">' + a.tag + "</span>");
       }).join("") + "</div>";
     }
     if (tab === "mine") {
