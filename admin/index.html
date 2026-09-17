@@ -447,6 +447,11 @@ function viewStairOps(){
   var h='<div class="grid g2"><div class="card"><h2>룰렛 소진 안내</h2>'+
     '<p class="src">켜면 참가자 앱의 룰렛 쿠폰 창과 스탬프 보상 레일에 「오늘 준비한 룰렛이 모두 소진되었습니다」가 뜹니다. 응모권은 그대로입니다.</p>'+
     '<div class="row mt12"><span class="pill'+(out?" on":" off")+'">'+(out?"안내 켜짐":"안내 꺼짐")+'</span><button class="btn sm '+(out?"":"danger")+'" onclick="rouletteOut('+(out?0:1)+')">'+(out?"안내 끄기":"소진 안내 켜기")+'</button></div></div>';
+  /* v3.65 DAP Wall QR 퀴즈 · 벽 QR 내용이 바뀐다(앱 주소 뒤 #q=wall1|wall2|wall3) · 스캔한 벽의 문제만 열린다 */
+  h+='<div class="card"><h2>DAP Wall 퀴즈 QR (인쇄용)</h2><p class="src">벽마다 다른 QR 을 붙입니다. 스캔하면 그 벽의 문제 5개만 열리고, 한 세트를 끝내면 「전시 QR 퀴즈」 스탬프가 적립됩니다(점수 기준 없음).</p>'+
+    '<div class="wrap"><table class="tb"><tr><th>벽</th><th>QR 내용</th></tr>'+
+    ["wall1","wall2","wall3"].map(function(w,i){ return '<tr><td><b>WALL '+(i+1)+'</b></td><td class="n">'+esc(location.origin)+'/index.html#q='+w+'</td></tr>'; }).join("")+
+    '</table></div><p class="note mt12">주소는 참가자 앱 주소에 맞춰 바꿉니다. 옛 QR(스탬프 코드)은 그대로 두고, 퀴즈 QR 만 새로 인쇄합니다.</p></div>';
   h+='<div class="card"><h2>계단 지점 QR (인쇄용)</h2>'+
     (rows.length?'<table class="tb"><tr><th>지점</th><th>층</th><th>코드</th><th>상태</th></tr>'+rows.map(function(r){ return '<tr><td><b>'+esc(r.name)+'</b></td><td class="n">'+esc(r.fl)+'F</td><td class="n">'+esc(r.code)+'</td><td>'+(r.on?'<span class="pill on">운영</span>':'<span class="pill off">꺼짐</span>')+'</td></tr>'; }).join("")+'</table>':'<p class="src">설치된 계단 지점이 없습니다. 백엔드 stair_install 로 4곳(18F·17F·10F·1F)을 만듭니다.</p>')+
     '<p class="note mt12">지점마다 포스터 2장 이상 인쇄(한 장이면 스캔 줄이 생깁니다). 계단실 <b>안쪽 벽</b>(방화문을 열고 들어가야 보이는 곳)에 붙입니다. 어느 층 코드든 같은 스탬프이고 1인 1회입니다. 포스터 문구: 「계단실 안쪽 부착 · 방화문은 닫아 주세요」 · 「내려갈 때는 계단으로」 (v3.56 · 앱에서는 뺐고 인쇄물에만 남긴다). 판정: 층·방향·횟수·시간 조건 없음(v3.34b). 계단실 안이 통신이 약해도 앱이 스캔을 저장했다가 연결되면 자동으로 보냅니다. QR 이미지는 앱 스태프 메뉴 「부스 QR」에서 함께 뽑습니다.</p></div></div>';
