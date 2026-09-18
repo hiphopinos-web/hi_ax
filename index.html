@@ -6915,11 +6915,11 @@ function axTodayHtml(dark) { return '<p class="ax-line' + (dark ? " dk" : "") + 
    명예 보상만(경품 없음) · 공개 순위는 닉네임 · 1F 현장 타자왕전(노트북·경품)은 그대로. */
 var OLY_EVENTS = [
   { key: "pang", name: "AX 팡", short: "팡", view: "game_pang", best: "pang_best", lower: 1, unit: "초" },   /* v3.74 기록 = 완주 시간(1/100초) · 작을수록 좋다 */
-  { key: "jump", name: "ME to WE 점프", short: "점프", view: "game_jump", best: "jump_best" },
+  { key: "jump", name: "ME to WE 점프", short: "점프", view: "game_jump", best: "jump_best", time: 1, unit: "초" },   /* v3.75 기록 = 생존 시간(1/100초) · 길수록 좋다 */
   { key: "type", name: "AX 단어 소나기", short: "소나기", view: "game_type", best: "type_best" },
   { key: "word", name: "ME to WE 기억력", short: "기억력", view: "game_word", best: "gw_best" }
 ];
-var OLY_TARGET = { pang: 4500, jump: 1800, type: 3500, word: 480 };   /* 폴백 · 팡은 목표 완주 시간 45초(4500) · 나머지는 목표 점수 (실측 뒤 콘솔에서 조정) */
+var OLY_TARGET = { pang: 4500, jump: 6000, type: 3500, word: 480 };   /* 폴백 · 팡은 목표 완주 시간 45초(4500) · 나머지는 목표 점수 (실측 뒤 콘솔에서 조정) */
 var OLY_MEDAL = ["", "금", "은", "동"];
 var OLY = { board: null, t: 0 };
 function olyMax() { return OLY_EVENTS.length * 100; }
@@ -6932,7 +6932,8 @@ function olyPts(best, key) {
   return Math.min(100, Math.round(best / t * 1000) / 10);
 }
 /* 기록 보여 주기 · 팡은 1/100초 → 43.2초 */
-function olyRec(best, key) { return olyLower(key) ? (best / 100).toFixed(1) + "초" : Number(best).toLocaleString(); }
+function olyTime(key) { return OLY_EVENTS.some(function (e) { return e.key === key && (e.lower || e.time); }); }
+function olyRec(best, key) { return olyTime(key) ? (best / 100).toFixed(1) + "초" : Number(best).toLocaleString(); }
 function olyFmt(n) { return (Math.round(n * 10) / 10).toLocaleString(); }
 function olyPull(force) {
   if (testMode()) { OLY.board = olyTestBoard(); return; }
@@ -7215,7 +7216,7 @@ function gsRankGo(key) { return key === "type" ? "App.go('type_rank')" : "S.set(
 function gsResultHtml(key, r) {
   var g = GS_GAMES[key];
   return '<div class="cho-box" style="padding:24px 18px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' +
-    esc(g.name) + " · " + (r.why === "done" ? "완주" : r.why === "time" ? "TIME UP" : "GAME OVER") + " · " + esc(typeNick() || "익명 참가자") + "</p>" +
+    esc(g.name) + " · " + (r.label || (r.why === "done" ? "완주" : r.why === "time" ? "TIME UP" : "GAME OVER")) + " · " + esc(typeNick() || "익명 참가자") + "</p>" +
     (r.reason ? '<p style="margin-top:6px;font-size:calc(15px * var(--fs));font-weight:800">' + esc(r.reason) + "</p>" : "") +
     '<p class="disp" style="font-size:44px;color:var(--mint);margin-top:6px">' + (typeof r.score === "string" ? esc(r.score) : Number(r.score).toLocaleString()) + "</p>" +
     '<p class="hint">' + r.stats + "<br>" + (r.rankLine || "") + "</p>" + "</div>" +
@@ -7719,7 +7720,16 @@ function pgPreview() {
    장애물(상자 · 러버콘 · 계단 블록)에 부딪히면 하트 -1 후 1초 무적(깜빡임) · 첫 충돌로 끝나지 않는다.
    끝 = 60초 완주 또는 하트 3개 소진. 처음 10초는 장애물이 드물고 느리다 → 이후 조금씩 빨라진다.
    코인 = AX 토큰. 점수 = 코인 × 30 + 넘은 장애물 × 20 + 버틴 초 × 5. 장애물 이름·모양은 중립적인 사물만(회사·동료를 부정적으로 그리지 않는다). */
-var JP_W = 180, JP_H = 240, JP_GY = 196, JP_PX = 30, JP_SEC = 60, JP_HEARTS = 3, JP_G = 820, JP_JV = 300, JP_JV2 = 245, JP_INV = 1.0;
+/* v3.75 (사용자 확정 260918) 60초 제한 폐지 → 오래 버틴 시간이 기록 · 갈수록 빨라지고 장애물이 촘촘해진다.
+   안전 상한 5분 · 올림픽 환산은 기록/목표(길수록 좋다) · 목표 60초(6000 = 1/100초) · 팡(빠를수록 좋다)과 반대 방향이다. */
+var JP_W = 180, JP_H = 240, JP_GY = 196, JP_PX = 30, JP_MAX_SEC = 300, JP_HEARTS = 3, JP_G = 820, JP_JV = 300, JP_JV2 = 245, JP_INV = 1.0;
+var JP_ITEM_EVERY = 15, JP_ITEM_SEC = 5;   /* 아이템 · 15초마다 하나 · 5초 동안 */
+var JP_ROAD = [
+  { at: 8, top: "2026", sub: "공감과 참여" },
+  { at: 28, top: "2027", sub: "확산과 체화" },
+  { at: 48, top: "2028", sub: "혁신과 연결" },
+  { at: 68, top: "ME to WE", sub: "나의 업무 혁신" }
+];   /* 배경 이정표 · 20초 간격 · 2028 뒤에는 ME to WE 로 바뀌고 그 뒤로는 반복 */
 /* 장애물 판정 사각형 [가로 시작, 폭, 높이] · 바닥에 붙어 있다 */
 var JP_OBS = { box: { w: 16, rects: [[0, 16, 16]] }, cone: { w: 14, rects: [[3, 8, 17]] }, step: { w: 22, rects: [[0, 11, 8], [11, 11, 15]] } };
 var JP_COIN = ["...KKKK...", ".KKOOOOKK.", ".KOWOOWOK.", "KOOOWWOOOK", "KOOOWWOOOK", ".KOWOOWOK.", ".KKOOOOKK.", "...KKKK..."];
@@ -7730,7 +7740,8 @@ function jpStart() {
   jpStop();
   SFX.site = false;
   JP = { on: true, paused: false, ending: null, raf: 0, cd: 3.2, t0: 0, last: performance.now(), py: JP_GY, vy: 0, jumps: 0, hearts: JP_HEARTS, inv: 0, heartHit: 0,
-    obs: [], coins: [], parts: [], pops: [], banner: null, shake: 0, dist: 0, nextObs: 150, coinN: 0, dodged: 0, hits: 0, jumpsN: 0, score: 0, speedUp: 0 };
+    obs: [], coins: [], items: [], parts: [], pops: [], banner: null, shake: 0, dist: 0, nextObs: 70, coinN: 0, dodged: 0, hits: 0, jumpsN: 0, score: 0, speedUp: 0,
+    item: null, itemT: 0, nextItem: JP_ITEM_EVERY, road: 0, guide: 2.5, surv: 0 };
   gsOverlayOpen({ key: "jump", title: "ME to WE 점프", cw: JP_W, ch: JP_H, canvasId: "jpCv", noGesture: true,
     bottom: '<div class="gs-foot">화면 아무 곳이나 탭 = 점프 · 공중에서 한 번 더 = 2단 점프</div>',
     down: function (e) { e.preventDefault(); jpTap(); },
@@ -7755,18 +7766,29 @@ function jpFrame() {
 function jpEl(now) { return JP.t0 ? (now - JP.t0) / 1000 : 0; }
 function jpTap() {
   if (!JP.on || JP.paused || JP.ending || JP.cd > 0) return;
-  if (JP.jumps === 0 && JP.py >= JP_GY) { JP.vy = -JP_JV; JP.jumps = 1; JP.jumpsN++; sfx("ppyong"); }
+  var jb = JP.item === "small" ? 1.22 : 1;   /* v3.75 작아지면 더 높이 */
+  if (JP.jumps === 0 && JP.py >= JP_GY) { JP.vy = -JP_JV * jb; JP.jumps = 1; JP.jumpsN++; sfx("ppyong"); }
   else if (JP.jumps < 2) {
-    JP.vy = -JP_JV2; JP.jumps = 2; JP.jumpsN++; sfx("ppyong2");
+    JP.vy = -JP_JV2 * jb; JP.jumps = 2; JP.jumpsN++; sfx("ppyong2");
     gsBurst(JP, JP_PX + 14, JP.py, 5, [RAIN_PAL.w, RAIN_PAL.o50]);
   }
 }
-function jpSpeed(t) { return t < 10 ? 55 : Math.min(125, 62 + (t - 10) * 1.3); }
-function jpBody() { return { x: JP_PX + 8, y: JP.py - 20, w: 12, h: 18 }; }
+/* v3.75 속도 램프 · 55에서 시작해 부드럽게 오르고 200에서 멈춘다 (평균 40~70초 · 잘하면 2분대) */
+function jpSpeed(t) { return Math.min(200, 55 + t * 1.55); }
+/* v3.75 몸 크기 = 아이템 상태 그대로 (그린 크기와 판정이 같아야 한다) */
+function jpScale() { return JP.item === "big" ? 1.5 : JP.item === "small" ? 0.7 : 1; }
+function jpBody() { var k = jpScale(); return { x: JP_PX + 8 + (1 - k) * 3, y: JP.py - 20 * k, w: 12 * k, h: 18 * k }; }
 function jpOverlap(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
 /* 부딪힘 · 무적 중이면 무시 · 1초 무적 */
 function jpHit(o) {
   if (JP.inv > 0 || JP.ending) return false;
+  if (JP.item === "big") {   /* v3.75 커진 동안은 부수고 지나간다 · 하트 안 깎임 */
+    o.hit = true; o.smash = 1;
+    gsBurst(JP, o.x + 8, JP_GY - 8, 8, [RAIN_PAL.deep, RAIN_PAL.o100, RAIN_PAL.w]);
+    JP.pops.push({ x: o.x + 8, y: JP_GY - 30, text: "부쉈다", t: 0.7, c: RAIN_PAL.o100 });
+    sfx("kwang");
+    return false;
+  }
   o.hit = true;
   JP.hearts--; JP.hits++; JP.inv = JP_INV; JP.heartHit = 0.5; JP.shake = rgReduced() ? 0 : 0.25;
   JP.pops.push({ x: JP_PX + 14, y: JP.py - 30, text: "하트 -1", t: 0.9, c: RAIN_PAL.deep });
@@ -7788,11 +7810,25 @@ function jpUpdate(dt, now) {
     return;
   }
   var t = jpEl(now);
-  if (t >= JP_SEC) { jpEnd("time"); return; }
+  JP.surv = t;
+  if (t >= JP_MAX_SEC) { jpEnd("time"); return; }   /* 안전 상한 5분 */
   gsFx(JP, dt);
   if (JP.inv > 0) JP.inv = Math.max(0, JP.inv - dt);
   if (JP.heartHit > 0) JP.heartHit -= dt;
-  var su = t >= 40 ? 3 : t >= 25 ? 2 : t >= 10 ? 1 : 0;
+  if (JP.guide > 0) JP.guide -= dt;
+  /* v3.75 배경 이정표 · AX 3개년 로드맵이 지나간다 (2028 뒤에는 ME to WE 반복) */
+  while (JP.road < JP_ROAD.length && t >= JP_ROAD[JP.road].at) { JP.roadCur = JP_ROAD[JP.road]; JP.roadT = 0; JP.road++; }
+  if (JP.road >= JP_ROAD.length && t >= JP_ROAD[JP_ROAD.length - 1].at + 20 * (JP.road - JP_ROAD.length + 1)) { JP.roadCur = JP_ROAD[JP_ROAD.length - 1]; JP.roadT = 0; JP.road++; }
+  if (JP.roadCur) JP.roadT += dt;
+  /* 아이템 · 한 번에 하나 · 5초 */
+  if (JP.item) { JP.itemT -= dt; if (JP.itemT <= 0) { JP.item = null; JP.banner = { text: "원래 크기", t: 0.8 }; } }
+  JP.nextItem -= dt;
+  if (JP.nextItem <= 0 && !JP.item) {
+    JP.nextItem = JP_ITEM_EVERY;
+    var kind = Math.random() < 0.5 ? "big" : "small";
+    JP.items.push({ k: kind, x: JP_W + 6, y: JP_GY - 34 - Math.random() * 18, got: false });
+  }
+  var su = t >= 60 ? 4 : t >= 40 ? 3 : t >= 25 ? 2 : t >= 10 ? 1 : 0;
   if (su > JP.speedUp) { JP.speedUp = su; JP.banner = { text: "속도 UP", t: 1.0 }; sfx("level"); }
   var dx = jpSpeed(t) * dt;
   JP.dist += dx;
@@ -7802,11 +7838,22 @@ function jpUpdate(dt, now) {
   if (JP.nextObs <= 0) {
     var kinds = t < 10 ? ["box", "cone"] : ["box", "cone", "step"], k = kinds[Math.floor(Math.random() * kinds.length)];
     JP.obs.push({ k: k, x: JP_W + 4, w: JP_OBS[k].w, passed: false, hit: false });
-    var gMin = t < 10 ? 190 : Math.max(100, 170 - (t - 10) * 1.5), gMax = gMin + (t < 10 ? 70 : 60);
+    /* v3.75 간격이 계속 좁아진다(부드럽게) · 하한 78 */
+    var gMin = Math.max(78, 175 - t * 1.15), gMax = gMin + Math.max(34, 70 - t * 0.4);
     JP.nextObs = gMin + Math.random() * (gMax - gMin);
     if (Math.random() < 0.75) {
-      var cx0 = JP_W + 4 + JP_OBS[k].w + 28 + Math.random() * 12, hg = 10 + Math.random() * 36;
-      for (var i = 0; i < 3; i++) JP.coins.push({ x: cx0 + i * 14, y: JP_GY - hg - (i === 1 ? 8 : 0) - 8, got: false });
+      var cx0 = JP_W + 4 + JP_OBS[k].w + 28 + Math.random() * 12;
+      /* 2단 점프로만 닿는 높은 코인 아치(3~5개, 2배) 또는 낮은 코인 3개 */
+      if (Math.random() < 0.45) {
+        var nHi = 3 + Math.floor(Math.random() * 3);
+        for (var hi = 0; hi < nHi; hi++) {
+          var arc = Math.sin((hi + 1) / (nHi + 1) * Math.PI);
+          JP.coins.push({ x: cx0 + hi * 13, y: JP_GY - 74 - arc * 16, got: false, hi: 1 });
+        }
+      } else {
+        var hg = 10 + Math.random() * 30;
+        for (var i = 0; i < 3; i++) JP.coins.push({ x: cx0 + i * 14, y: JP_GY - hg - (i === 1 ? 8 : 0) - 8, got: false });
+      }
     }
   }
   var body = jpBody();
@@ -7820,17 +7867,28 @@ function jpUpdate(dt, now) {
       if (!o.hit) { JP.dodged++; JP.pops.push({ x: JP_PX + 14, y: JP.py - 28, text: "+20", t: 0.6, c: RAIN_PAL.o100 }); }
     }
   });
-  JP.obs = JP.obs.filter(function (o) { return o.x + o.w > -8; });
+  JP.obs = JP.obs.filter(function (o) { return o.x + o.w > -8 && !o.smash; });
   JP.coins.forEach(function (c) {
     c.x -= dx;
     if (!c.got && jpOverlap(body, { x: c.x, y: c.y, w: 10, h: 8 })) {
-      c.got = true; JP.coinN++;
-      JP.pops.push({ x: c.x + 5, y: c.y - 4, text: "+30", t: 0.6, c: RAIN_PAL.o100 });
+      c.got = true; JP.coinN += c.hi ? 2 : 1;
+      JP.pops.push({ x: c.x + 5, y: c.y - 4, text: c.hi ? "+60" : "+30", t: 0.6, c: RAIN_PAL.o100 });
       gsBurst(JP, c.x + 5, c.y + 4, 4, [RAIN_PAL.o100, RAIN_PAL.w]);
       sfx("ting");
     }
   });
   JP.coins = JP.coins.filter(function (c) { return !c.got && c.x > -12; });
+  /* v3.75 아이템 · 커지기(무적 · 장애물을 부순다) · 작아지기(높이 점프) */
+  JP.items.forEach(function (it) {
+    it.x -= dx;
+    if (!it.got && jpOverlap(body, { x: it.x, y: it.y, w: 12, h: 12 })) {
+      it.got = true; JP.item = it.k; JP.itemT = JP_ITEM_SEC;
+      JP.banner = { text: it.k === "big" ? "커졌다 · 부수고 지나가요" : "작아졌다 · 더 높이 점프", t: 1.2 };
+      gsBurst(JP, it.x + 6, it.y + 6, 6, [RAIN_PAL.o100, RAIN_PAL.w]);
+      sfx("ting");
+    }
+  });
+  JP.items = JP.items.filter(function (it) { return !it.got && it.x > -14; });
   JP.score = JP.coinN * 30 + JP.dodged * 20 + Math.floor(t) * 5;
 }
 function jpEnd(why) {
@@ -7842,13 +7900,14 @@ function jpEndFinal(why) {
   if (!JP.on) return;
   JP.ending = null;
   jpStop();
-  if (JP.score > 0 && JP.score > S.get("jump_best", 0)) setTimeout(function () { sfx("best"); }, 250);
-  S.set("jump_best", Math.max(S.get("jump_best", 0), JP.score));
+  var surv = Math.round((JP.surv || 0) * 100);   /* v3.75 기록 = 생존 시간(1/100초) · 길수록 좋다 */
+  var prev = S.get("jump_best", 0);
+  if (surv > prev) { S.set("jump_best", surv); setTimeout(function () { sfx("best"); }, 250); }
   gameClear("jump_cleared");
   var root = el("jpRoot"); if (!root) return;
-  olySubmit("jump", JP.score);
-  root.innerHTML = gsResultHtml("jump", { why: why, reason: why === "time" ? "" : "하트 소진", score: JP.score,
-    stats: "모은 코인 " + JP.coinN + "개 · 넘은 장애물 " + JP.dodged + "개 · 부딪힘 " + JP.hits + "번", rankLine: olyResultLine("jump", JP.score) });
+  olySubmit("jump", surv);
+  root.innerHTML = gsResultHtml("jump", { why: "done", label: "생존 기록", reason: "", score: (surv / 100).toFixed(1) + "초 생존",
+    stats: "모은 코인 " + JP.coinN + "개 · 넘은 장애물 " + JP.dodged + "개 · 부딪힘 " + JP.hits + "번", rankLine: olyResultLine("jump", surv) });
   window.scrollTo(0, 0);
 }
 function jpObsDraw(ctx, o) {
@@ -7906,16 +7965,25 @@ function jpDraw(ctx, now) {
   ctx.imageSmoothingEnabled = false;
   if (JP.shake > 0) ctx.translate(Math.round((Math.random() - 0.5) * 4), Math.round((Math.random() - 0.5) * 4));
   jpWorld(ctx, JP.dist);
+  jpRoadDraw(ctx);   /* v3.75 배경 이정표 · AX 3개년 로드맵 */
   JP.coins.forEach(function (c) { ctx.drawImage(jpCoinCv(), Math.round(c.x), Math.round(c.y + (Math.floor(now / 200 + c.x) % 2))); });
+  JP.items.forEach(function (it) { jpItemDraw(ctx, it, now); });
   JP.obs.forEach(function (o) { jpObsDraw(ctx, o); });
-  /* 미위 · 무적 중 깜빡임 · 공중이면 입을 벌린다 */
+  /* 미위 · 무적 중 깜빡임 · 공중이면 입을 벌린다 · v3.75 아이템으로 커지거나 작아진다(판정도 같이) */
   var blink = JP.inv > 0 && Math.floor(now / 90) % 2 === 0;
   if (!blink) {
-    var air = JP.py < JP_GY, step = !air && Math.floor(now / 140) % 2;
-    ctx.drawImage(rgSprCv(air ? "open" : "closed"), JP_PX, Math.round(JP.py) - 26 - (step ? 1 : 0), 28, 26);
+    var air = JP.py < JP_GY, step = !air && Math.floor(now / 140) % 2, k = jpScale();
+    ctx.drawImage(rgSprCv(air ? "open" : "closed"), JP_PX + (1 - k) * 8, Math.round(JP.py) - 26 * k - (step ? 1 : 0), 28 * k, 26 * k);
   }
-  var frac = JP.t0 ? Math.max(0, 1 - jpEl(now) / JP_SEC) : 1;
+  var frac = JP.item ? Math.max(0, JP.itemT / JP_ITEM_SEC) : 0;   /* v3.75 막대 = 아이템 남은 시간 */
   gsHud(ctx, JP_W, "ME to WE", JP.score, frac);
+  /* v3.75 생존 시간 · 시작 안내 */
+  pgText(ctx, (Math.round((JP.surv || 0) * 10) / 10).toFixed(1) + "초 생존", 6, 41, 9, 800, RAIN_PAL.deep, "left");
+  if (JP.guide > 0 && JP.cd <= 0) {
+    ctx.globalAlpha = Math.min(1, JP.guide);
+    pgText(ctx, "화면을 탭하면 점프 · 두 번 탭하면 2단 점프", JP_W / 2, JP_GY - 60, 8, 700, RAIN_PAL.dim, "center");
+    ctx.globalAlpha = 1;
+  }
   var blinkLast = JP.hearts === 1 && Math.floor(now / 250) % 2 === 0;
   for (var h = 0; h < JP_HEARTS; h++) {
     var on = h < JP.hearts, justLost = h === JP.hearts && JP.heartHit > 0;
@@ -7924,9 +7992,32 @@ function jpDraw(ctx, now) {
   }
   gsFxDraw(ctx, JP, JP_W);
   gsBannerDraw(ctx, JP, JP_W, 70);
-  gsEndDraw(ctx, JP.ending, JP_W, 30, JP_GY, JP.ending && JP.ending.why === "time" ? "60초 완주" : "하트 3개를 모두 잃었어요");
+  gsEndDraw(ctx, JP.ending, JP_W, 30, JP_GY, (Math.round((JP.surv || 0) * 10) / 10).toFixed(1) + "초 생존");
   gsCountDraw(ctx, JP.cd, JP_W, 30, JP_GY);
   ctx.restore();
+}
+/* v3.75 배경 이정표 · 옅은 무채색 큰 글자 · 장애물로 보이지 않게 채도·대비를 낮춘다(v3.72 규칙) */
+function jpRoadDraw(ctx) {
+  var r = JP.roadCur; if (!r) return;
+  var t = JP.roadT || 0, life = 6;
+  if (t > life) { JP.roadCur = null; return; }
+  var a = t < 0.6 ? t / 0.6 : t > life - 1 ? Math.max(0, (life - t)) : 1;
+  ctx.save();
+  ctx.globalAlpha = 0.16 * a;
+  pgText(ctx, r.top, JP_W / 2, JP_GY - 118, 30, 900, "#8A817B", "center");
+  ctx.globalAlpha = 0.22 * a;
+  pgText(ctx, r.sub, JP_W / 2, JP_GY - 96, 11, 800, "#8A817B", "center");
+  ctx.restore();
+}
+/* v3.75 아이템 · 커지기(위 화살표) · 작아지기(아래 화살표) · 코인과 헷갈리지 않게 사각 배지 */
+function jpItemDraw(ctx, it, now) {
+  var x = Math.round(it.x), y = Math.round(it.y + (Math.floor(now / 220) % 2));
+  rgBox(ctx, x, y, 12, 12, it.k === "big" ? RAIN_PAL.o100 : RAIN_PAL.w);
+  ctx.strokeStyle = RAIN_PAL.ink; ctx.lineWidth = 1.4; ctx.lineCap = "round"; ctx.lineJoin = "round";
+  ctx.beginPath();
+  if (it.k === "big") { ctx.moveTo(x + 6, y + 9); ctx.lineTo(x + 6, y + 3); ctx.moveTo(x + 3, y + 6); ctx.lineTo(x + 6, y + 3); ctx.lineTo(x + 9, y + 6); }
+  else { ctx.moveTo(x + 6, y + 3); ctx.lineTo(x + 6, y + 9); ctx.moveTo(x + 3, y + 6); ctx.lineTo(x + 6, y + 9); ctx.lineTo(x + 9, y + 6); }
+  ctx.stroke();
 }
 function jpPreview() {
   var cv = el("jpPrev"); if (!cv) return;
