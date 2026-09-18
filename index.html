@@ -551,6 +551,16 @@
   .rg-wrap.flat { background: #fff; border: 1px solid var(--dimln); }
   .rg-wrap.flat canvas { image-rendering: auto; }
   #rgPlay .gs-foot { flex: none; padding: 12px 10px calc(12px + env(safe-area-inset-bottom, 0px)); background: #fff; border-top: 2px solid #000; text-align: center; font-weight: 800; font-size: 13.5px; color: #000; touch-action: none; user-select: none; -webkit-user-select: none; }
+  /* v3.86 테트리스 조작판 · 화면 아래 고정 · 늘 보인다 · 버튼은 최소 56px 이고 사이를 띄워 두 개가 같이 눌리지 않게 한다 */
+  #rgPlay .tt-pad { flex: none; display: flex; flex-direction: column; gap: 8px; padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px)); background: #fff; border-top: 2px solid #000; touch-action: none; user-select: none; -webkit-user-select: none; }
+  #rgPlay .tt-row { display: flex; gap: 10px; }
+  #rgPlay .tt-b { flex: 1; min-height: 62px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 2px solid #000; border-radius: 16px; background: #fff; color: #000; font-weight: 800; font-size: 12.5px; padding: 6px 4px; touch-action: none; }
+  #rgPlay .tt-b svg { width: 24px; height: 24px; fill: currentColor; }
+  #rgPlay .tt-b.on { background: #FF7E31; color: #fff; transform: translateY(1px); }
+  #rgPlay .tt-b.soft { min-height: 56px; }
+  #rgPlay .tt-b.hard { min-height: 56px; flex: 1.3; background: #000; color: #fff; }
+  #rgPlay .tt-b.hard.on { background: #D64524; }
+  #rgPlay.tetris .rgp-mid { background: #fff; }
   .rg-form .input { flex: 1; font-size: 18px; border: 2px solid #000; }
   .rg-form .btn { width: auto; padding: 12px 18px; }
   /* v3.58 AI 사생대회 갤러리 · 섬네일 목록 · 지연 로딩 */
@@ -2616,7 +2626,7 @@ var App = {
     notices: "home",
     /* 스탬프 · 스탬프 카드가 유일한 입구 (v3.1: ev_games·ev_draw·wallv 참여자 화면 폐지) */
     ideas: "passport", booth: "passport", wq_list: "passport",
-    wq_play: "wq_list", game_word: "passport", game_type: "passport", type_rank: "game_type",
+    wq_play: "wq_list", game_word: "passport", game_type: "passport", game_tetris: "passport", type_rank: "game_type",
     game_pang: "passport", game_jump: "passport", oly_rank: "passport",
     ideas_mine: "passport", survey: "passport",
     art: "home", art_rank: "art", screen_art: "admin",   /* v3.58 AI 사생대회 · 입구는 홈 배너 */
@@ -2634,7 +2644,7 @@ var App = {
     sess_d: "프로그램 신청",
     ev_cchat: "내 커피챗",
     wq_list: "DAP Wall QR 퀴즈", wq_play: "문제 풀이",
-    admin: "관리자 콘솔", screen: "송출용 화면", screen_survey: "", screen_words: "", game_word: "ME to WE 기억력", game_type: "타자 게임", type_site: "현장 타자왕전", wall_type: "", type_award: "", type_rank: "타자 순위",
+    admin: "관리자 콘솔", screen: "송출용 화면", screen_survey: "", screen_words: "", game_word: "ME to WE 기억력", game_type: "타자 게임", game_tetris: "테트리스", type_site: "현장 타자왕전", wall_type: "", type_award: "", type_rank: "타자 순위",
     game_pang: "AX 팡", game_jump: "ME to WE 점프", oly_rank: "AX 올림픽",
     art: "AI 사생대회", art_rank: "좋아요 순위", screen_art: "",
     wall_quiz: "", wall_wave: "", wall_live: "", wall_metowe: "", wall_tv: ""
@@ -2647,6 +2657,7 @@ var App = {
   go: function (v) {
     if (this.current === "game_word" && v !== "game_word") gwStop();
     if (this.current === "game_type" && v !== "game_type") rgStop();
+      if (this.current === "game_tetris" && v !== "game_tetris") ttStop();
     if (this.current === "game_pang" && v !== "game_pang") pgStop();
     if (this.current === "type_site" && v !== "type_site") { tsScanStop(); if (TS.phase === "play") { rgStop(); TS.phase = "ready"; } }
     if (this.current === "game_jump" && v !== "game_jump") jpStop();
@@ -2656,7 +2667,7 @@ var App = {
     /* v3.15 새로 고침 복귀 · 현재 화면의 소속 Lv1 탭을 sessionStorage 에 기억(같은 브라우저 탭에서만, 다음 방문은 홈).
        관리자·사이니지·게임 전체화면은 저장하지 않는다 · Lv2 는 부모 탭으로 저장된다 */
     try {
-      if (SIGNAGE.indexOf(v) < 0 && ["admin", "screen", "game_word", "game_type", "game_pang", "game_jump", "type_site"].indexOf(v) < 0) {
+      if (SIGNAGE.indexOf(v) < 0 && ["admin", "screen", "game_word", "game_type", "game_tetris", "game_pang", "game_jump", "type_site"].indexOf(v) < 0) {
         var lt = this.tabOf(v);
         if (["home", "passport", "guide_time", "guide"].indexOf(lt) >= 0) {
           sessionStorage.setItem("axf_last_tab", lt);
@@ -2703,7 +2714,7 @@ var App = {
     /* 헤더 높이를 실측해 sticky 기준선으로 넘긴다 (홈/탭루트/서브 화면마다 높이가 다르다) */
     el("frame").style.setProperty("--stick", tb.offsetHeight + "px");
     var nav = el("tabbar");
-    nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "game_word" || v === "game_type" || v === "game_pang" || v === "game_jump" || v === "type_site") ? "none" : "flex";
+    nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "game_word" || v === "game_type" || v === "game_tetris" || v === "game_pang" || v === "game_jump" || v === "type_site") ? "none" : "flex";
     var activeTab = this.tabOf(v);
     var icons = this.ICONS;
     var tabBtns = this.TABS.map(function (t) {
@@ -2724,7 +2735,7 @@ var LED_TTL = 30 * 60000;
 function updateLed() {
   var bar = el("ledbar"), tr = el("ledTrack");
   if (!bar || !tr) return;
-  if (SIGNAGE.indexOf(App.current) >= 0 || App.current === "game_word" || App.current === "game_type" || App.current === "game_pang" || App.current === "game_jump" || App.current === "type_site") { bar.style.display = "none"; return; }
+  if (SIGNAGE.indexOf(App.current) >= 0 || App.current === "game_word" || App.current === "game_type" || App.current === "game_tetris" || App.current === "game_pang" || App.current === "game_jump" || App.current === "type_site") { bar.style.display = "none"; return; }
   var ns = S.get("notices", []);
   var latest = null;
   for (var i = 0; i < ns.length; i++) {
@@ -2743,13 +2754,13 @@ window.addEventListener("scroll", function () {
   var b = el("topbtn");
   if (!b) return;
   var ok = window.scrollY > 400 && !el("app").hidden &&
-    SIGNAGE.indexOf(App.current) < 0 && App.current !== "game_word" && App.current !== "game_type" && App.current !== "game_pang" && App.current !== "game_jump" && App.current !== "type_site";
+    SIGNAGE.indexOf(App.current) < 0 && App.current !== "game_word" && App.current !== "game_type" && App.current !== "game_tetris" && App.current !== "game_pang" && App.current !== "game_jump" && App.current !== "type_site";
   b.classList.toggle("on", ok);
 }, { passive: true });
 window.addEventListener("axf-store", function () {
   checkMyState();
   updateLed();
-  if (["game_word", "game_type", "game_pang", "game_jump", "type_site", "wall_wave", "wall_metowe"].indexOf(App.current) >= 0) return;
+  if (["game_word", "game_type", "game_tetris", "game_pang", "game_jump", "type_site", "wall_wave", "wall_metowe"].indexOf(App.current) >= 0) return;
   App.render();
 });
 
@@ -3845,17 +3856,17 @@ var Views = {
     tyTvPull();
     if (!TYTV.flip) TYTV.flip = setInterval(tyTvTick, 12000);
     olyPull();
-    var site = TYTV.show === "site", oly = TYTV.show === "oly", r = site ? TYTV.site : TYTV.app;
+    var oly = TYTV.show === "oly", site = !oly, r = TYTV.site;
     var winTxt = TYTV.site && TYTV.site.win ? TYTV.site.win.join(" · ") : "";
     var ob = OLY.board, orows = { top: ((ob && ob.overall) || []).map(function (x) { return { name: x.name, score: olyFmt(x.total) }; }) };
     return '<div class="screen-wrap tytv"><div class="row" style="justify-content:space-between;padding-top:8px">' +
       '<b class="disp" style="font-size:24px;letter-spacing:0.03em">AX Festival <span style="color:var(--mint-deep)">2026</span></b>' +
       '<div class="row" style="gap:6px">' + tvBtns() + (S.get("admin_authed", false) ? '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button>' : "") + "</div></div>" +
-      '<p class="tytv-k">' + (oly ? "AX 올림픽 · 종합 순위" : "AX 단어 소나기 · 타자 순위") + "</p>" +
-      '<p class="tytv-t">' + (oly ? "종합 상위 10 · 4종목 " + olyMax() + "점 만점" : site ? "1F 현장 타자왕전 상위 5" : "앱 순위 상위 10") + "</p>" +
-      '<div class="tytv-seg"><span class="' + (site || oly ? "" : "on") + '">앱 타자 10</span><span class="' + (site ? "on" : "") + '">현장 타자 5</span><span class="' + (oly ? "on" : "") + '">AX 올림픽</span></div>' +
-      '<div class="tytv-list' + (site ? " five" : "") + '">' + (oly ? tyTvRows(orows, 10) : tyTvRows(r, site ? 5 : 10)) + "</div>" +
-      '<p class="tytv-foot">' + (oly ? "앱 스탬프 탭 → 미니게임 → 4종목을 한 판씩 · 종목마다 최고 기록을 100점 만점으로 환산 · 명예 순위" : site ? "결선 " + esc(winTxt) + " · 1인 1회 · 같은 키보드 · 1·2등은 17:00 Outro에서 호명" : "앱 스탬프 탭 → 미니게임 → 타자 게임 · 닉네임으로 표시 · 도전은 무제한, 최고 기록만") + "</p>" +
+      '<p class="tytv-k">' + (oly ? "AX 올림픽 · 종합 순위" : "AX 단어 소나기 · 1F 현장 타자왕전") + "</p>" +
+      '<p class="tytv-t">' + (oly ? "종합 상위 10 · 4종목 " + olyMax() + "점 만점" : "현장 타자왕전 상위 5") + "</p>" +
+      '<div class="tytv-seg"><span class="' + (site ? "on" : "") + '">현장 타자 5</span><span class="' + (oly ? "on" : "") + '">AX 올림픽</span></div>' +
+      '<div class="tytv-list' + (site ? " five" : "") + '">' + (oly ? tyTvRows(orows, 10) : tyTvRows(r, 5)) + "</div>" +
+      '<p class="tytv-foot">' + (oly ? "앱 스탬프 탭 → 미니게임 → 4종목(팡 · 점프 · 테트리스 · 기억력)을 한 판씩 · 종목마다 최고 기록을 100점 만점으로 환산 · 명예 순위" : "결선 " + esc(winTxt) + " · 1인 1회 · 같은 키보드 · 1·2등은 17:00 Outro에서 호명") + "</p>" +
       (testMode() ? '<p class="tytv-foot" style="opacity:0.4">테스트 화면 · 가짜 닉네임</p>' : "") + "</div>";
   },
   type_award: function () {
@@ -4375,6 +4386,14 @@ var Views = {
     return gsStartHtml("type", { rootId: "tgRoot", previewId: "rgPrev", pw: 180, ph: 110,
       rules: "단어를 치고 Enter · 바닥에 닿으면 하트 -1 · 하트 5개를 다 잃을 때까지 버티기 · 한 판이면 스탬프" });
   },
+  /* v3.86 테트리스 · 휴대폰 종목 (단어 소나기 자리) · 조작은 화면 아래 버튼이 기본 */
+  game_tetris: function () {
+    ttStop();
+    if (gsNeedNick()) return gsNickHtml("tetris");
+    setTimeout(ttPreview, 0);
+    return gsStartHtml("tetris", { rootId: "ttRoot", previewId: "ttPrev", pw: 180, ph: 120, flat: true,
+      rules: "아래 버튼으로 옮기고 돌려서 줄을 채워요 · 「떨어뜨리기」는 곧장 내려놓기 · 한 판이면 스탬프" });
+  },
   /* ═══ v3.45 휴대폰 미니게임 · AX 팡 · ME to WE 점프 (v3.50 전원 공개) ═══ */
   game_pang: function () {
     pgStop();
@@ -4407,7 +4426,7 @@ var Views = {
       }).join("") + "</div>";
       var ev = OLY_EVENTS.filter(function (e) { return e.key === evk; })[0], mv = me.ev[evk];
       var f = function (x) { return olyRec(x.score, evk) + '<small class="oly-pts">' + olyFmt(x.pts) + "점</small>"; }; f.medal = true;
-      h += '<div class="card"><b style="color:var(--hi)">' + esc(ev.name) + '</b><p class="muted" style="margin:2px 0 6px;font-size:calc(12.5px * var(--fs))">목표 ' + olyRec(olyTarget()[evk] || 0, evk) + " = 100점" + (olyLower(evk) ? " · 빠를수록 좋아요" : olyTime(evk) ? " · 오래 버틸수록 좋아요" : "") + "</p>" +
+      h += '<div class="card"><b style="color:var(--hi)">' + esc(ev.name) + '</b><p class="muted" style="margin:2px 0 6px;font-size:calc(12.5px * var(--fs))">목표 ' + olyRec(olyTarget()[evk] || 0, evk) + " = 100점" + (olyLower(evk) ? " · 빠를수록 좋아요" : olyTime(evk) ? " · 오래 버틸수록 좋아요" : olyUnit(evk) === "줄" ? " · 많이 지울수록 좋아요" : " · 높을수록 좋아요") + "</p>" +
         olyRows(b.perEvent && b.perEvent[evk], f) +
         (mv ? '<p class="muted" style="margin-top:10px">내 기록 ' + olyRec(mv.best, evk) + " · 환산 " + olyFmt(mv.pts) + "점" + (mv.rank ? " · " + mv.rank + "위" : "") + "</p>" : '<button class="btn mint" style="margin-top:10px" onclick="App.go(\'' + ev.view + '\')">' + esc(ev.name) + " 한 판</button>") + "</div>";
     } else {
@@ -6775,18 +6794,18 @@ function tsSiteHtml() {
 }
 
 /* ── 1F TV 순위판 · 로그인 없음 · 앱 상위 10 ↔ 현장 상위 5 번갈아(12초) · 닉네임만 · 30초마다 새로 받음 ── */
-var TYTV = { app: null, site: null, show: "app", pullT: 0, flip: null };
+var TYTV = { app: null, site: null, show: "site", pullT: 0, flip: null };
 function tyTvPull() {
-  if (testMode()) { TYTV.app = typeTestTop("app"); TYTV.site = typeTestTop("site"); return; }
+  if (testMode()) { TYTV.site = typeTestTop("site"); return; }
   if (Date.now() - TYTV.pullT < 25000) return;
   TYTV.pullT = Date.now();
-  ["app", "site"].forEach(function (m) {
-    beCall({ action: "type_rank", mode: m, n: m === "site" ? 5 : 10 }, function (r) { if (r && r.ok) { TYTV[m] = r; if (App.current === "wall_type") App.render(); } }, function () {});
+  ["site"].forEach(function (m) {   /* v3.86 TV 는 현장 기록만 받는다 */
+    beCall({ action: "type_rank", mode: m, n: 5 }, function (r) { if (r && r.ok) { TYTV[m] = r; if (App.current === "wall_type") App.render(); } }, function () {});
   });
 }
 function tyTvTick() {
   if (App.current !== "wall_type") { clearInterval(TYTV.flip); TYTV.flip = null; return; }
-  TYTV.show = TYTV.show === "app" ? "site" : TYTV.show === "site" ? "oly" : "app";   /* v3.50 올림픽 종합을 같이 돌린다 */
+  TYTV.show = TYTV.show === "oly" ? "site" : "oly";   /* v3.86 앱 타자 순위는 뺐다(앱 종목이 테트리스로 바뀜) · 현장 타자 ↔ 올림픽 종합 */
   tyTvPull(); olyPull();
   App.render();
 }
@@ -6997,7 +7016,7 @@ function sndToggle(site) {
   if (typeof rgFocus === "function" && el("rgIn")) rgFocus();
 }
 /* START · 아직 안 골랐으면 선택 카드 한 번 */
-var SND_START = { pang: "pgStart()", jump: "jpStart()", type: "rgStart('app')", word: "gwStart(false)" };
+var SND_START = { pang: "pgStart()", jump: "jpStart()", tetris: "ttStart()", type: "rgStart('app')", word: "gwStart(false)" };
 function gsBegin(key) {
   SFX.site = false;
   if (sndChosen()) { if (sndOn()) sfxUnlock(); new Function(SND_START[key])(); return; }
@@ -7052,10 +7071,10 @@ function axTodayHtml(dark) { return '<p class="ax-line' + (dark ? " dk" : "") + 
 var OLY_EVENTS = [
   { key: "pang", name: "AX 팡", short: "팡", view: "game_pang", best: "pang_best", lower: 1, unit: "초" },   /* v3.74 기록 = 완주 시간(1/100초) · 작을수록 좋다 */
   { key: "jump", name: "ME to WE 점프", short: "점프", view: "game_jump", best: "jump_best", time: 1, unit: "초" },   /* v3.75 기록 = 생존 시간(1/100초) · 길수록 좋다 */
-  { key: "type", name: "AX 단어 소나기", short: "소나기", view: "game_type", best: "type_best", time: 1, unit: "초" },   /* v3.80 기록 = 버틴 시간(1/100초) · 길수록 좋다 */
+  { key: "tetris", name: "테트리스", short: "테트리스", view: "game_tetris", best: "tetris_best", unit: "줄" },   /* v3.86 기록 = 지운 줄 수(많을수록 좋다) · 같은 줄 수면 오래 버틴 쪽 */
   { key: "word", name: "ME to WE 기억력", short: "기억력", view: "game_word", best: "gw_best" }
 ];
-var OLY_TARGET = { pang: 4500, jump: 6000, type: 6000, word: 480 };   /* 폴백 · 팡 = 목표 완주 45초(4500 · 짧을수록) · 점프·소나기 = 목표 생존 60초(6000 · 길수록) · 기억력 = 목표 점수 (실측 뒤 콘솔에서 조정) */
+var OLY_TARGET = { pang: 4500, jump: 6000, tetris: 20, word: 480 };   /* 폴백 · 팡 = 목표 완주 45초(4500 · 짧을수록) · 점프 = 목표 생존 60초(6000 · 길수록) · 테트리스 = 목표 20줄 · 기억력 = 목표 점수 (실측 뒤 콘솔에서 조정) */
 var OLY_MEDAL = ["", "금", "은", "동"];
 var OLY = { board: null, t: 0 };
 function olyMax() { return OLY_EVENTS.length * 100; }
@@ -7069,7 +7088,9 @@ function olyPts(best, key) {
 }
 /* 기록 보여 주기 · 팡은 1/100초 → 43.2초 */
 function olyTime(key) { return OLY_EVENTS.some(function (e) { return e.key === key && (e.lower || e.time); }); }
-function olyRec(best, key) { return olyTime(key) ? (best / 100).toFixed(1) + "초" : Number(best).toLocaleString(); }
+/* v3.86 시간이 아닌 종목은 단위를 뒤에 붙인다 (테트리스 = 줄) */
+function olyUnit(key) { var e = OLY_EVENTS.filter(function (x) { return x.key === key; })[0]; return e && !e.lower && !e.time && e.unit ? e.unit : ""; }
+function olyRec(best, key) { return olyTime(key) ? (best / 100).toFixed(1) + "초" : Number(best).toLocaleString() + olyUnit(key); }
 function olyFmt(n) { return (Math.round(n * 10) / 10).toLocaleString(); }
 function olyPull(force) {
   if (testMode()) { OLY.board = olyTestBoard(); return; }
@@ -7099,7 +7120,7 @@ function olyMe() {
 function olySubmit(key, score) {
   var u = S.get("user", {}) || {};
   OLY.t = 0;
-  if (!BE.on || testEmp() || !u.empId || key === "type") return;   /* 단어 소나기는 type_submit 이 맡는다 */
+  if (!BE.on || testEmp() || !u.empId) return;   /* v3.86 네 종목 모두 game_submit · 소나기는 앱 종목에서 빠졌다(현장 타자왕전은 type_site_submit) */
   beCall({ action: "game_submit", emp: u.empId, name: u.name || "", game: key, score: Math.round(score) }, function (r) {
     if (r && r.ok && OLY.board) OLY.board.me = r.me;
   }, function () {});
@@ -7129,16 +7150,16 @@ function olyHubHtml() {
 }
 /* 테스트 모드 순위판 · 가짜 참가자 + 이 기기 기록 · 서버와 같은 규칙으로 계산 */
 var OLY_FAKE = [
-  ["팡팡요정", { pang: 4120, jump: 1500, type: 3300, word: 430 }],
-  ["점프왕", { pang: 5230, jump: 2100, type: 2900, word: 470 }],
-  ["타자요정", { pang: 6180, jump: 1200, type: 4380, word: 400 }],
-  ["기억의신", { pang: 5690, jump: 1300, type: 2500, word: 540 }],
-  ["연쇄장인", { pang: 3980, jump: 900, type: 2100, word: 350 }],
-  ["미위팬", { pang: 5040, jump: 1700, type: 2010, word: 380 }],
+  ["팡팡요정", { pang: 4120, jump: 1500, tetris: 16, word: 430 }],
+  ["점프왕", { pang: 5230, jump: 2100, tetris: 12, word: 470 }],
+  ["블록장인", { pang: 6180, jump: 1200, tetris: 24, word: 400 }],
+  ["기억의신", { pang: 5690, jump: 1300, tetris: 9, word: 540 }],
+  ["연쇄장인", { pang: 3980, jump: 900, tetris: 7, word: 350 }],
+  ["미위팬", { pang: 5040, jump: 1700, tetris: 11, word: 380 }],
   ["코인수집가", { pang: 7250, jump: 1900, word: 300 }],
-  ["공감참여", { pang: 8800, type: 980 }],
+  ["공감참여", { pang: 8800, tetris: 4 }],
   ["혁신연결", { jump: 700, word: 260 }],
-  ["로드맵러", { pang: 4460, jump: 1600, type: 3120, word: 410 }]
+  ["로드맵러", { pang: 4460, jump: 1600, tetris: 14, word: 410 }]
 ];
 function olyTestBoard() {
   var people = OLY_FAKE.map(function (x, i) { return { name: x[0], best: x[1], doneAt: "2026-10-26 1" + (i % 10) + ":00:00" }; });
@@ -7167,6 +7188,434 @@ function olyRows(list, valFn) {
   }).join("");
 }
 
+/* ════════════════ v3.86 테트리스 (사용자 확정 260918 · 휴대폰의 단어 소나기 자리) ════════════════
+   왜 바꿨나: 휴대폰 한글 입력(IME)에 기대는 게임이라 실기에서 오류가 잦았다 → 글자 입력이 아예 없는 게임으로 바꾼다.
+   1F 현장 타자왕전(노트북 · 물리 키보드 · 경품)은 그대로다 · 소나기 엔진과 화면은 type_site 전용으로 살아 있다.
+   규칙: 10×20 · 블록 7종 · 회전(막히면 좌우·위로 한 칸씩 밀어 본다) · 한 칸 내리기 · 즉시 떨어뜨리기 ·
+        한 번에 지운 줄 1/2/3/4 = 100/300/500/800 × 레벨 · 5줄마다 레벨 +1 → 낙하가 빨라진다 · 안전 상한 5분.
+   기록 = 지운 줄 수(많을수록 좋다) · 같은 줄 수면 오래 버틴 쪽(결과 카드에 함께 적는다) · 올림픽 목표 20줄.
+   조작: 화면 아래 가상 버튼이 기본이다(늘 보인다 · 최소 56px · 왼쪽·오른쪽은 누르고 있으면 반복).
+        쓸어넘기기(좌우 이동 · 아래 내리기 · 위로 즉시 떨어뜨리기 · 탭 회전)는 보조로 같이 동작한다.
+   보기: v3.48 플랫 · 흰 바탕 · 블록 7종은 채움이 모두 다르다 · 유령 블록 · 다음 블록 · 줄 지울 때 번쩍임. 이모지 없음. */
+var TT_COLS = 10, TT_ROWS = 20, TT_MAX_SEC = 300;
+var TT_DAS = 0.22, TT_ARR = 0.07, TT_SOFT_REP = 0.055;      /* 누르고 있을 때 · 첫 반복까지 0.22초, 그다음 0.07초 */
+var TT_LOCK = 0.5, TT_LOCK_MAX = 12;                        /* 바닥에 닿고 고정될 때까지 · 움직이면 미뤄지되 12번까지 */
+var TT_LINE_PTS = [0, 100, 300, 500, 800];
+var TT_PIECES = {
+  I: { c: "o100", m: [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]] },
+  O: { c: "ink", m: [[1, 1], [1, 1]] },
+  T: { c: "o50", m: [[0, 1, 0], [1, 1, 1], [0, 0, 0]] },
+  S: { c: "deep", m: [[0, 1, 1], [1, 1, 0], [0, 0, 0]] },
+  Z: { c: "o25", m: [[1, 1, 0], [0, 1, 1], [0, 0, 0]] },
+  J: { c: "w", m: [[1, 0, 0], [1, 1, 1], [0, 0, 0]] },
+  L: { c: "gray", m: [[0, 0, 1], [1, 1, 1], [0, 0, 0]] }
+};
+var TT_KEYS = ["I", "O", "T", "S", "Z", "J", "L"];
+var TT_KICK = [[0, 0], [-1, 0], [1, 0], [-2, 0], [2, 0], [0, -1], [-1, -1], [1, -1]];   /* 벽·블록에 막히면 이 순서로 밀어 본다 */
+var TT = { on: false, raf: 0, L: null, parts: [], pops: [] };
+
+function ttStop() { TT.on = false; if (TT.raf) cancelAnimationFrame(TT.raf); TT.raf = 0; gsOverlayClose("tetris"); }
+function ttVib(ms) { try { if (navigator.vibrate && !rgReduced()) navigator.vibrate(ms); } catch (e) {} }
+function ttGridNew() { var g = []; for (var y = 0; y < TT_ROWS; y++) { g.push([]); for (var x = 0; x < TT_COLS; x++) g[y].push(""); } return g; }
+function ttBag() { return shuf(TT_KEYS.slice()); }
+function ttNextKey() { if (!TT.bag || !TT.bag.length) TT.bag = ttBag(); return TT.bag.pop(); }
+function ttMake(k) {
+  var m = TT_PIECES[k].m.map(function (r) { return r.slice(); });
+  return { k: k, m: m, x: Math.floor((TT_COLS - m[0].length) / 2), y: k === "O" ? 0 : -1 };
+}
+function ttHit(m, px, py) {
+  for (var y = 0; y < m.length; y++) for (var x = 0; x < m[y].length; x++) {
+    if (!m[y][x]) continue;
+    var bx = px + x, by = py + y;
+    if (bx < 0 || bx >= TT_COLS || by >= TT_ROWS) return true;
+    if (by >= 0 && TT.grid[by][bx]) return true;
+  }
+  return false;
+}
+function ttSpawn() {
+  TT.cur = ttMake(TT.nextK || ttNextKey());
+  TT.nextK = ttNextKey();
+  TT.lockT = 0; TT.lockN = 0; TT.gt = 0; TT.pieces++;
+  if (ttHit(TT.cur.m, TT.cur.x, TT.cur.y)) { TT.cur.dead = 1; ttEnd("top"); }
+}
+function ttMove(dx) {
+  if (ttHit(TT.cur.m, TT.cur.x + dx, TT.cur.y)) return false;
+  TT.cur.x += dx; ttTouch(); sfx("tik");
+  return true;
+}
+function ttRotate(dir) {
+  var n = TT.cur.m.length, out = [];
+  for (var y = 0; y < n; y++) { out.push([]); for (var x = 0; x < n; x++) out[y].push(dir > 0 ? TT.cur.m[n - 1 - x][y] : TT.cur.m[x][n - 1 - y]); }
+  for (var i = 0; i < TT_KICK.length; i++) {
+    var kx = TT.cur.x + TT_KICK[i][0], ky = TT.cur.y + TT_KICK[i][1];
+    if (!ttHit(out, kx, ky)) { TT.cur.m = out; TT.cur.x = kx; TT.cur.y = ky; ttTouch(); sfx("ppyong"); return true; }
+  }
+  return false;
+}
+/* 바닥에 닿은 뒤 움직이면 고정을 조금 미뤄 준다 (열두 번까지) */
+function ttTouch() { if (ttHit(TT.cur.m, TT.cur.x, TT.cur.y + 1)) { TT.lockT = 0; TT.lockN++; } }
+function ttSoft() {
+  if (ttHit(TT.cur.m, TT.cur.x, TT.cur.y + 1)) return false;
+  TT.cur.y++; TT.score++; TT.gt = 0; TT.lockT = 0;
+  return true;
+}
+function ttHard() {
+  var n = 0;
+  while (!ttHit(TT.cur.m, TT.cur.x, TT.cur.y + 1)) { TT.cur.y++; n++; }
+  TT.score += n * 2; TT.drop = { y: TT.cur.y, t: 0.18 };
+  TT.shake = rgReduced() ? 0 : 0.12;
+  sfx("kwang"); ttVib(16);
+  ttLock();
+  return true;
+}
+function ttGhostY() {
+  var gy = TT.cur.y;
+  while (!ttHit(TT.cur.m, TT.cur.x, gy + 1)) gy++;
+  return gy;
+}
+function ttLock() {
+  var c = TT.cur, full = [];
+  for (var y = 0; y < c.m.length; y++) for (var x = 0; x < c.m[y].length; x++) {
+    if (!c.m[y][x]) continue;
+    var by = c.y + y, bx = c.x + x;
+    if (by < 0) { ttEnd("top"); return; }
+    TT.grid[by][bx] = c.k;
+  }
+  TT.cur = null;
+  for (var r = 0; r < TT_ROWS; r++) {
+    var ok = true;
+    for (var q = 0; q < TT_COLS; q++) if (!TT.grid[r][q]) { ok = false; break; }
+    if (ok) full.push(r);
+  }
+  if (full.length) {
+    TT.flash = { rows: full, t: 0.28 };
+    TT.score += TT_LINE_PTS[full.length] * TT.level;
+    TT.clears[full.length - 1]++;
+    TT.pops.push({ x: TT.L ? TT.L.bw / 2 : 100, y: 40, text: full.length + "줄", t: 0.9, c: RAIN_PAL.o100 });
+    sfx(full.length >= 4 ? "fanfare" : "ting"); ttVib(full.length >= 2 ? 24 : 12);
+    return;
+  }
+  sfx("puck");
+  ttSpawn();
+}
+function ttCollapse() {
+  var rows = TT.flash.rows;
+  TT.flash = null;
+  rows.sort(function (a, b) { return a - b; }).forEach(function (r) { TT.grid.splice(r, 1); TT.grid.unshift(["", "", "", "", "", "", "", "", "", ""]); });
+  TT.lines += rows.length;
+  var lv = Math.min(15, 1 + Math.floor(TT.lines / 5));
+  if (lv > TT.level) { TT.level = lv; TT.banner = { text: "LEVEL " + lv, t: 1.1 }; sfx("level"); }
+  ttSpawn();
+}
+/* 레벨이 오를수록 빨라진다 · 15레벨에서 0.06초 → 어떤 실력이어도 결국 쌓여서 끝난다 */
+function ttGrav() { return Math.max(0.06, 0.85 * Math.pow(0.8, TT.level - 1)); }
+function ttAct(k) {
+  if (!TT.on || TT.paused || TT.ending || TT.cd > 0 || TT.flash || !TT.cur) return false;
+  if (k === "L") return ttMove(-1);
+  if (k === "R") return ttMove(1);
+  if (k === "ROT") return ttRotate(1);
+  if (k === "SOFT") return ttSoft();
+  if (k === "HARD") return ttHard();
+  return false;
+}
+/* rep = 반복 중인 호출(진동·반복 예약 없음) */
+function ttDo(k, rep) {
+  var ok = ttAct(k);
+  if (!rep) {
+    ttVib(k === "HARD" ? 16 : 8);
+    if (k === "L" || k === "R" || k === "SOFT") TT.rep = { k: k, t: TT_DAS };
+  }
+  return ok;
+}
+function ttRelease(k) { if (TT.rep && TT.rep.k === k) TT.rep = null; }
+function ttStart() {
+  ttStop();
+  SFX.site = false;
+  TT = { on: true, paused: false, ending: null, raf: 0, cd: 3.2, t0: 0, last: performance.now(), L: null, dpr: 1,
+    grid: ttGridNew(), bag: null, cur: null, nextK: null, lines: 0, score: 0, level: 1, pieces: 0, surv: 0,
+    clears: [0, 0, 0, 0], gt: 0, lockT: 0, lockN: 0, flash: null, drop: null, rep: null, sw: null,
+    parts: [], pops: [], banner: null, shake: 0, hud: "" };
+  TT.nextK = ttNextKey();
+  gsOverlayOpen({ key: "tetris", title: "테트리스", top: ttTopHtml(), fill: true, cls: "tetris", cw: 200, ch: 360, canvasId: "ttCv", flat: true,
+    bottom: ttPadHtml(),
+    resized: ttFit,
+    down: function (e) { e.preventDefault(); TT.sw = { x: e.clientX, y: e.clientY, mx: e.clientX, my: e.clientY, t: performance.now(), moved: 0 }; },
+    move: function (e) {
+      var s = TT.sw; if (!s) return;
+      var cell = (TT.L && TT.L.cell) || 24, dx = e.clientX - s.mx, dy = e.clientY - s.my;
+      if (Math.abs(dx) >= cell) { var n = Math.round(dx / cell); for (var i = 0; i < Math.abs(n); i++) ttAct(n > 0 ? "R" : "L"); s.mx += n * cell; s.moved++; }
+      if (dy >= cell) { ttAct("SOFT"); s.my += cell; s.moved++; }
+    },
+    up: function (e, cancel) {
+      var s = TT.sw; TT.sw = null;
+      if (!s || cancel) return;
+      var dt = performance.now() - s.t, dx = e.clientX - s.x, dy = e.clientY - s.y;
+      if (!s.moved && Math.abs(dx) < 14 && Math.abs(dy) < 14 && dt < 320) { ttDo("ROT", false); return; }
+      if (dy < -55 && dt < 450) ttDo("HARD", false);            /* 위로 쓸기 = 즉시 떨어뜨리기 */
+      else if (dy > 150 && dt < 550) ttDo("HARD", false);       /* 아래로 길게 쓸기도 즉시 떨어뜨리기 */
+    },
+    keydown: function (e) {
+      var k = e.key === "ArrowLeft" ? "L" : e.key === "ArrowRight" ? "R" : e.key === "ArrowDown" ? "SOFT" : (e.key === "ArrowUp" || e.key === "x") ? "ROT" : (e.code === "Space" || e.key === " ") ? "HARD" : "";
+      if (!k) return;
+      e.preventDefault();
+      ttDo(k, !!e.repeat);
+    },
+    running: function () { return TT.on && !TT.paused && !TT.ending; }, isPaused: function () { return !!TT.paused; },
+    pause: function () { TT.rep = null; gsPauseState(TT); }, resume: function () { gsResumeState(TT, ttFrame); },
+    quit: function () { ttStop(); App.render(); } });
+  ttBindPad();
+  TT.raf = requestAnimationFrame(ttFrame);
+}
+function ttTopHtml() {
+  return '<div class="rg-hud">' +
+    '<span class="rg-sc"><small>줄</small><b id="ttHudLn">0</b></span>' +
+    '<span class="rg-sc"><small>점수</small><b id="ttHudSc">0</b></span>' +
+    '<span class="rg-tm" id="ttHudLv">Lv 1</span>' +
+    '<span style="flex:1"></span>' +
+    sndBtnHtml(false) +
+    '<button class="rg-ib rgp-x" type="button" data-on="계속" data-off="멈춤" aria-label="일시정지" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">멈춤</button></div>';
+}
+function ttPadHtml() {
+  var L = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 3.5 L6.5 12 L15.5 20.5 Z"/></svg>';
+  var R = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3.5 L17.5 12 L8.5 20.5 Z"/></svg>';
+  var ROT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12 A8 8 0 1 1 12 4" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><path d="M12 0.5 L12 7.5 L6.5 4 Z"/></svg>';
+  var DN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8 L12 16 L20 8 Z"/></svg>';
+  var HD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4 L12 12 L20 4 Z"/><path d="M4 12 L12 20 L20 12 Z"/></svg>';
+  return '<div class="tt-pad" id="ttPad">' +
+    '<div class="tt-row">' + ttBtnHtml("L", "왼쪽", L, "") + ttBtnHtml("ROT", "회전", ROT, "rot") + ttBtnHtml("R", "오른쪽", R, "") + "</div>" +
+    '<div class="tt-row">' + ttBtnHtml("SOFT", "내리기", DN, "soft") + ttBtnHtml("HARD", "떨어뜨리기", HD, "hard") + "</div></div>";
+}
+function ttBtnHtml(k, label, svg, cls) {
+  return '<button type="button" class="tt-b' + (cls ? " " + cls : "") + '" data-k="' + k + '" aria-label="' + label + '">' + svg + "<span>" + label + "</span></button>";
+}
+function ttBindPad() {
+  var pad = el("ttPad"); if (!pad) return;
+  Array.prototype.forEach.call(pad.querySelectorAll(".tt-b"), function (b) {
+    var k = b.getAttribute("data-k");
+    b.addEventListener("pointerdown", function (e) {
+      e.preventDefault();
+      b.classList.add("on");
+      try { if (b.setPointerCapture) b.setPointerCapture(e.pointerId); } catch (x) {}
+      ttDo(k, false);
+    });
+    ["pointerup", "pointercancel", "pointerleave"].forEach(function (t) {
+      b.addEventListener(t, function () { b.classList.remove("on"); ttRelease(k); });
+    });
+  });
+}
+/* 판 크기 · 조작판을 뺀 나머지 높이에 20칸이 다 들어가게 잡는다 (스크롤 없음) */
+function ttFit(cv, w, h) {
+  if (!w || !h) return;
+  var dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  TT.dpr = cv.width / w;
+  var M = 8, SIDE_MIN = 54, cell = Math.floor((h - M * 2) / TT_ROWS);
+  if (TT_COLS * cell + SIDE_MIN + M * 3 > w) cell = Math.floor((w - M * 3 - SIDE_MIN) / TT_COLS);   /* 다음 블록 칸이 눌리지 않게 폭을 먼저 확보한다 */
+  cell = Math.max(8, cell);
+  var side = Math.max(SIDE_MIN, Math.min(Math.round(cell * 2.3), w - TT_COLS * cell - M * 3));
+  var bw = TT_COLS * cell, bh = TT_ROWS * cell;
+  var ox = Math.max(M, Math.round((w - bw - side - M) / 2)), oy = Math.max(M, Math.round((h - bh) / 2));
+  TT.L = { W: w, H: h, cell: cell, ox: ox, oy: oy, bw: bw, bh: bh, sx: ox + bw + M, side: side };
+  var ctx = cv.getContext("2d");
+  ttDraw(ctx, performance.now());
+}
+function ttFrame() {
+  if (!TT.on || TT.paused) return;
+  var now = performance.now(), dt = Math.min(0.05, (now - TT.last) / 1000);
+  TT.last = now;
+  ttUpdate(dt, now);
+  var cv = el("ttCv");
+  if (!cv) { ttStop(); return; }
+  ttDraw(cv.getContext("2d"), now);
+  ttHud();
+  if (TT.on && !TT.paused) TT.raf = requestAnimationFrame(ttFrame);
+}
+function ttUpdate(dt, now) {
+  if (TT.ending) {
+    TT.ending.t -= dt; gsFx(TT, dt);
+    if (TT.ending.t <= 0) ttEndFinal(TT.ending.why);
+    return;
+  }
+  if (TT.cd > 0) {
+    TT.cd -= dt;
+    if (TT.cd <= 0) { TT.cd = 0; TT.t0 = now; ttSpawn(); }
+    return;
+  }
+  var el0 = (now - TT.t0) / 1000;
+  TT.surv = el0;
+  gsFx(TT, dt);
+  if (TT.drop) { TT.drop.t -= dt; if (TT.drop.t <= 0) TT.drop = null; }
+  if (el0 >= TT_MAX_SEC) { ttEnd("time"); return; }
+  if (TT.flash) { TT.flash.t -= dt; if (TT.flash.t <= 0) ttCollapse(); return; }
+  if (TT.rep) {
+    TT.rep.t -= dt;
+    var guard = 0;
+    while (TT.rep && TT.rep.t <= 0 && guard++ < 6) { ttAct(TT.rep.k); if (TT.rep) TT.rep.t += (TT.rep.k === "SOFT" ? TT_SOFT_REP : TT_ARR); }
+  }
+  if (!TT.cur || TT.flash) return;
+  if (ttHit(TT.cur.m, TT.cur.x, TT.cur.y + 1)) {
+    TT.lockT += dt;
+    if (TT.lockT >= TT_LOCK || TT.lockN > TT_LOCK_MAX) ttLock();
+  } else {
+    TT.lockT = 0;
+    TT.gt += dt;
+    var iv = ttGrav(), guard2 = 0;
+    while (TT.gt >= iv && TT.cur && !TT.flash && guard2++ < 20) {
+      TT.gt -= iv;
+      if (ttHit(TT.cur.m, TT.cur.x, TT.cur.y + 1)) break;
+      TT.cur.y++;
+    }
+  }
+}
+function ttHud() {
+  var key = TT.lines + "|" + TT.score + "|" + TT.level;
+  if (key === TT.hud) return;
+  TT.hud = key;
+  var a = el("ttHudLn"), b = el("ttHudSc"), c = el("ttHudLv");
+  if (a) a.textContent = String(TT.lines);
+  if (b) b.textContent = TT.score.toLocaleString();
+  if (c) c.textContent = "Lv " + TT.level;
+}
+function ttEnd(why) {
+  if (!TT.on || TT.ending) return;
+  TT.rep = null;
+  TT.ending = { t: 1.2, why: why };
+  TT.banner = null;
+  sfx("over");
+}
+function ttEndFinal(why) {
+  if (!TT.on) return;
+  TT.ending = null;
+  var lines = TT.lines, score = TT.score, surv = TT.surv, lv = TT.level, pieces = TT.pieces, cl = TT.clears.slice();
+  ttStop();
+  if (lines > S.get("tetris_best", 0)) { S.set("tetris_best", lines); setTimeout(function () { sfx("best"); }, 250); }
+  gameClear("tetris_cleared");
+  var root = el("ttRoot"); if (!root) return;
+  olySubmit("tetris", lines);
+  root.innerHTML = gsResultHtml("tetris", { why: "done", label: "기록", reason: "", score: lines + "줄",
+    stats: "점수 " + score.toLocaleString() + " · 버틴 시간 " + surv.toFixed(1) + "초 · 레벨 " + lv + " · 블록 " + pieces + "개<br>1줄 " + cl[0] + " · 2줄 " + cl[1] + " · 3줄 " + cl[2] + " · 4줄 " + cl[3],
+    rankLine: olyResultLine("tetris", lines) });
+  window.scrollTo(0, 0);
+}
+/* ── 그리기 · 전부 CSS px 좌표 (캔버스는 기기 해상도) ── */
+function ttCell(ctx, x, y, cell, kind, alpha) {
+  var p = TT_PIECES[kind], col = p ? RAIN_PAL[p.c] : RAIN_PAL.gray, r = Math.max(2, Math.round(cell * 0.18)), pad = 1;
+  ctx.globalAlpha = alpha || 1;
+  ttRound(ctx, x + pad, y + pad, cell - pad * 2, cell - pad * 2, r);
+  ctx.fillStyle = col; ctx.fill();
+  ctx.lineWidth = Math.max(1, Math.round(cell * 0.07)); ctx.strokeStyle = RAIN_PAL.ink; ctx.stroke();
+  if (p && (p.c === "w" || p.c === "o25" || p.c === "gray")) {   /* 밝은 채움은 안쪽 점으로 한 번 더 구분 */
+    var d = Math.max(3, Math.round(cell * 0.22));
+    ctx.fillStyle = p.c === "w" ? RAIN_PAL.ink : p.c === "gray" ? RAIN_PAL.w : RAIN_PAL.o100;
+    ctx.fillRect(Math.round(x + cell / 2 - d / 2), Math.round(y + cell / 2 - d / 2), d, d);
+  }
+  ctx.globalAlpha = 1;
+}
+function ttRound(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+function ttDraw(ctx, now) {
+  var L = TT.L; if (!L) return;
+  var d = TT.dpr || 1, cell = L.cell;
+  ctx.setTransform(d, 0, 0, d, 0, 0);
+  ctx.clearRect(0, 0, L.W, L.H);
+  ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, L.W, L.H);
+  var sh = TT.shake > 0 ? Math.round((Math.random() - 0.5) * 3) : 0;
+  ctx.save(); ctx.translate(L.ox + sh, L.oy);
+  /* 판 바탕 · 옅은 격자 */
+  ctx.fillStyle = "#FDFAF8"; ctx.fillRect(0, 0, L.bw, L.bh);
+  ctx.strokeStyle = "#F0E9E4"; ctx.lineWidth = 1;
+  for (var gx = 1; gx < TT_COLS; gx++) { ctx.beginPath(); ctx.moveTo(gx * cell + 0.5, 0); ctx.lineTo(gx * cell + 0.5, L.bh); ctx.stroke(); }
+  for (var gy = 1; gy < TT_ROWS; gy++) { ctx.beginPath(); ctx.moveTo(0, gy * cell + 0.5); ctx.lineTo(L.bw, gy * cell + 0.5); ctx.stroke(); }
+  /* 쌓인 블록 */
+  for (var y = 0; y < TT_ROWS; y++) for (var x = 0; x < TT_COLS; x++) {
+    var k = TT.grid[y][x];
+    if (k) ttCell(ctx, x * cell, y * cell, cell, k, 1);
+  }
+  /* 유령 블록 · 지금 블록 */
+  if (TT.cur && !TT.flash) {
+    var gyy = ttGhostY(), c = TT.cur;
+    for (var yy = 0; yy < c.m.length; yy++) for (var xx = 0; xx < c.m[yy].length; xx++) {
+      if (!c.m[yy][xx]) continue;
+      var gy2 = gyy + yy;
+      if (gy2 >= 0 && gy2 !== c.y + yy) {
+        ctx.strokeStyle = RAIN_PAL.o50; ctx.lineWidth = Math.max(1, Math.round(cell * 0.09));
+        ttRound(ctx, (c.x + xx) * cell + 2, gy2 * cell + 2, cell - 4, cell - 4, Math.max(2, Math.round(cell * 0.18)));
+        ctx.stroke();
+      }
+    }
+    for (var py = 0; py < c.m.length; py++) for (var px = 0; px < c.m[py].length; px++) {
+      if (!c.m[py][px]) continue;
+      var ry = c.y + py;
+      if (ry >= 0) ttCell(ctx, (c.x + px) * cell, ry * cell, cell, c.k, 1);
+    }
+  }
+  /* 지우는 줄 번쩍임 */
+  if (TT.flash) {
+    var on = Math.floor(TT.flash.t * 16) % 2 === 0;
+    TT.flash.rows.forEach(function (r) {
+      ctx.fillStyle = on ? RAIN_PAL.o100 : RAIN_PAL.w;
+      ctx.fillRect(0, r * cell, L.bw, cell);
+      ctx.strokeStyle = RAIN_PAL.ink; ctx.lineWidth = 1; ctx.strokeRect(0.5, r * cell + 0.5, L.bw - 1, cell - 1);
+    });
+  }
+  /* 즉시 떨어뜨린 자리 잔상 */
+  if (TT.drop) {
+    ctx.fillStyle = "rgba(255,126,49," + Math.max(0, TT.drop.t * 2) + ")";
+    ctx.fillRect(0, Math.max(0, (TT.drop.y - 1) * cell), L.bw, cell);
+  }
+  ctx.strokeStyle = RAIN_PAL.ink; ctx.lineWidth = 2; ctx.strokeRect(-1, -1, L.bw + 2, L.bh + 2);
+  ctx.restore();
+  /* 옆 칸 · 다음 블록 */
+  ctx.save(); ctx.translate(L.sx, L.oy);
+  ctx.fillStyle = RAIN_PAL.dim; ctx.font = "700 11px " + RAIN_FONT; ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("다음", 0, 2);
+  var nk = TT.nextK, nm = nk ? TT_PIECES[nk].m : null, nc = Math.max(7, Math.min(Math.round(cell * 0.62), Math.floor((L.side - 6) / 4)));
+  if (nm) {
+    var w0 = nm[0].length, rows0 = nm.length;
+    var offx = Math.round((L.side - w0 * nc) / 2), offy = 20;
+    for (var ny = 0; ny < rows0; ny++) for (var nx = 0; nx < w0; nx++) if (nm[ny][nx]) ttCell(ctx, offx + nx * nc, offy + ny * nc, nc, nk, 1);
+  }
+  ctx.restore();
+  gsFxDraw(ctx, TT, L.W);
+  if (TT.banner) { ctx.save(); ctx.translate(L.ox, 0); gsBannerDraw(ctx, TT, L.bw, L.oy + 8); ctx.restore(); }
+  gsCountDraw(ctx, TT.cd, L.W, L.oy, L.oy + L.bh);
+  if (TT.ending) ttEndDraw(ctx, L);
+}
+function ttEndDraw(ctx, L) {
+  var cy = L.oy + L.bh / 2;
+  ctx.fillStyle = "rgba(255,255,255,0.72)"; ctx.fillRect(0, L.oy, L.W, L.bh);
+  ttRound(ctx, L.ox + 6, cy - 40, L.bw - 12, 80, 16);
+  ctx.fillStyle = RAIN_PAL.w; ctx.fill();
+  ctx.lineWidth = 2; ctx.strokeStyle = RAIN_PAL.ink; ctx.stroke();
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillStyle = RAIN_PAL.deep; ctx.font = "800 18px " + RAIN_FONT;
+  ctx.fillText(TT.ending.why === "time" ? "5분 완주" : "GAME OVER", L.ox + L.bw / 2, cy - 14);
+  ctx.fillStyle = RAIN_PAL.ink; ctx.font = "700 13px " + RAIN_FONT;
+  ctx.fillText(TT.lines + "줄 · " + TT.score.toLocaleString() + "점", L.ox + L.bw / 2, cy + 12);
+}
+/* 시작 화면 미리보기 · 정지 화면 */
+function ttPreview() {
+  var cv = el("ttPrev"); if (!cv) return;
+  var ctx = cv.getContext("2d"), W = cv.width, H = cv.height, cell = 14, cols = 7, rows = 7;
+  var ox = Math.round((W - cols * cell) / 2), oy = Math.round((H - rows * cell) / 2);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = "#FDFAF8"; ctx.fillRect(ox, oy, cols * cell, rows * cell);
+  ctx.strokeStyle = "#F0E9E4"; ctx.lineWidth = 1;
+  for (var i = 1; i < cols; i++) { ctx.beginPath(); ctx.moveTo(ox + i * cell + 0.5, oy); ctx.lineTo(ox + i * cell + 0.5, oy + rows * cell); ctx.stroke(); }
+  for (var j = 1; j < rows; j++) { ctx.beginPath(); ctx.moveTo(ox, oy + j * cell + 0.5); ctx.lineTo(ox + cols * cell, oy + j * cell + 0.5); ctx.stroke(); }
+  var demo = [[0, 2, "T"], [1, 2, "T"], [2, 2, "T"], [1, 1, "T"], [4, 0, "I"], [4, 1, "I"], [4, 2, "I"], [4, 3, "I"],
+    [0, 6, "O"], [1, 6, "O"], [0, 5, "O"], [1, 5, "O"], [3, 6, "L"], [4, 6, "L"], [5, 6, "L"], [5, 5, "L"], [6, 6, "S"], [2, 6, "Z"]];
+  demo.forEach(function (d) { ttCell(ctx, ox + d[0] * cell, oy + d[1] * cell, cell, d[2], 1); });
+  ctx.strokeStyle = RAIN_PAL.ink; ctx.lineWidth = 2; ctx.strokeRect(ox - 1, oy - 1, cols * cell + 2, rows * cell + 2);
+}
+
 /* ════════════════ v3.45 휴대폰 미니게임 공통 틀 (사용자 결정 260917 · v3.50 전원 공개) ════════════════
    세 게임(AX 단어 소나기 · AX 팡 · ME to WE 점프)이 같은 틀을 쓴다:
    전체화면 오버레이(visualViewport 높이) · 앱 이탈 시 자동 일시정지 · 3초 카운트다운 · 끝나는 순간 1.2초 멈춤 · 같은 결과 화면 ·
@@ -7174,6 +7623,8 @@ function olyRows(list, valFn) {
    AX 팡·점프 순위판은 지금은 로컬 테스트용(가짜 닉네임 + 내 최고 기록) · 서버 순위는 게임이 정해진 뒤 연결한다.
    비주얼: 오렌지 사다리 · 검정 · 흰색 · 16비트 도트 · 마스코트 미위 · 이모지 없음. */
 var GS_GAMES = {
+  /* v3.86 휴대폰 종목은 테트리스 · 소나기(type)는 1F 현장 타자왕전 전용으로만 남는다(앱 진입점 없음) */
+  tetris: { name: "테트리스", view: "game_tetris", start: "ttStart()", best: "tetris_best", line: "블록을 옮기고 돌려서 줄을 채워요 · 아래 버튼으로" },
   type: { name: "AX 단어 소나기", view: "game_type", start: "rgStart('app')", best: "type_best", line: "떨어지는 단어를 쳐서 터뜨려요 · 키보드로 입력" },
   pang: { name: "AX 팡", view: "game_pang", start: "pgStart()", best: "pang_best", line: "같은 그림 3개를 한 줄로 맞춰 터뜨려요 · 밀어서 바꾸기" },
   jump: { name: "ME to WE 점프", view: "game_jump", start: "jpStart()", best: "jump_best", line: "달리는 미위를 탭해서 점프 · 공중에서 한 번 더 탭은 2단 점프" },
