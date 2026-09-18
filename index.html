@@ -7420,19 +7420,31 @@ function ttPadHtml() {
 function ttBtnHtml(k, label, svg, cls) {
   return '<button type="button" class="tt-c' + (cls ? " " + cls : "") + '" data-k="' + k + '" aria-label="' + label + '">' + svg + "</button>";
 }
+/* v3.87c (실기 제보 260918 「조작 버튼이 먹히지 않는다」) 버튼을 찾는 기준은 data-k 하나다.
+   v3.87b 에서 버튼 class 를 tt-b → tt-c 로 바꾸면서 여기 선택자를 같이 못 바꿔 리스너가 한 개도 안 붙었다.
+   class 이름에 기대지 않게 [data-k] 로 찾는다 · 포인터 이벤트가 없는 기기를 위해 touch 도 같이 받는다. */
 function ttBindPad() {
   var pad = el("ttPad"); if (!pad) return;
-  Array.prototype.forEach.call(pad.querySelectorAll(".tt-b"), function (b) {
+  var down = function (b, k, e) {
+    if (e.cancelable) e.preventDefault();
+    b.classList.add("on");
+    ttDo(k, false);
+  };
+  var up = function (b, k) { b.classList.remove("on"); ttRelease(k); };
+  Array.prototype.forEach.call(pad.querySelectorAll("[data-k]"), function (b) {
     var k = b.getAttribute("data-k");
-    b.addEventListener("pointerdown", function (e) {
-      e.preventDefault();
-      b.classList.add("on");
-      try { if (b.setPointerCapture) b.setPointerCapture(e.pointerId); } catch (x) {}
-      ttDo(k, false);
-    });
-    ["pointerup", "pointercancel", "pointerleave"].forEach(function (t) {
-      b.addEventListener(t, function () { b.classList.remove("on"); ttRelease(k); });
-    });
+    if (window.PointerEvent) {
+      b.addEventListener("pointerdown", function (e) {
+        try { if (b.setPointerCapture) b.setPointerCapture(e.pointerId); } catch (x) {}
+        down(b, k, e);
+      });
+      ["pointerup", "pointercancel", "pointerleave"].forEach(function (t) { b.addEventListener(t, function () { up(b, k); }); });
+    } else {
+      b.addEventListener("touchstart", function (e) { down(b, k, e); }, { passive: false });
+      ["touchend", "touchcancel"].forEach(function (t) { b.addEventListener(t, function (e) { if (e.cancelable) e.preventDefault(); up(b, k); }, { passive: false }); });
+      b.addEventListener("mousedown", function (e) { down(b, k, e); });
+      ["mouseup", "mouseleave"].forEach(function (t) { b.addEventListener(t, function () { up(b, k); }); });
+    }
   });
 }
 /* 판 크기 · 조작판을 뺀 나머지 높이에 20칸이 다 들어가게 잡는다 (스크롤 없음) */
