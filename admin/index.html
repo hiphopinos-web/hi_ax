@@ -383,10 +383,10 @@ var STAMP_META = {
   p6:{ no:"", n:"포토부스", old:1 }, p8:{ no:"", n:"미니게임", old:1 }, p9:{ no:"", n:"계단(구)", old:1 }
 };
 var STAMP_ORDER = ["p1","p2","p3","p4","p5","p7","st","sv"];
-/* v3.95 담당자 부여 = 현장 QR 3종 + 계단 · 담당자 취소 = 같은 4종 (서버 REVOKE_IDS 와 같게 둔다)
-   앱 자동 3종(04·05·06)과 설문(08)은 앱 안의 행동이라 부여하지 않고, 취소하면 다시 받을 길이 없어 취소도 막는다. */
+/* v3.95 담당자 부여 = 현장 QR 3종 + 계단 · 앱 자동 3종(04·05·06)과 설문(08)은 앱 안의 행동이라 부여하지 않는다.
+   v3.95b 담당자 취소 범위는 서버가 정한다(설정 「스탬프취소_범위」 전체 = 8종 · 현장 = 4종) · stamp_people.revokeIds 를 따르고, 못 받았으면 8종으로 본다(서버가 다시 판정한다). */
 var GRANT_IDS = ["p1","p2","p3","st"];
-var REVOKE_IDS = ["p1","p2","p3","st"];
+function revokeIds(){ var d=ST.data.stamp||{}; return d.revokeIds||STAMP_ORDER; }
 /* 백엔드 SESS_META · SESS_CAP 과 같은 id */
 var SESS_NAME = {
   /* v3.31b · 17F 오전은 자유 참석(옛 신청 기록 표시용) · 오후 파트너사 강연은 신청제(사전 신청 + 앱 신청) */
@@ -648,8 +648,8 @@ function personHist(emp){
 var GUIDE={
   dash:[["지금 처리할 일","숫자가 있는 줄의 <b>처리하기</b>를 누르면 그 메뉴의 그 필터로 바로 갑니다."],["숫자 타일","가입·스탬프·룰렛·응모권 · 참여 기록을 30초마다 새로 받습니다."],["아래 표","스탬프 보유 분포 · 강연 정원 대비 · 상담·커피챗 흐름입니다. 흐름 칸을 누르면 신청 탭의 그 상태로 갑니다."]],
   acct:[["분실 요청","앱에서 온 비밀번호 분실 요청이 위에 쌓입니다. <b>사원증이나 얼굴로 본인 확인을 먼저</b> 합니다."],["초기화","초기화하면 본인이 앱에서 다음에 넣는 4자리가 새 비밀번호가 됩니다. 비밀번호 값은 어디에도 보이지 않습니다."],["처리자 이름","한 번 적어 두면 이 브라우저가 기억하고 운영 로그에 함께 남깁니다."]],
-  stamp:[["사람 찾기","왼쪽 칸에 사번이나 이름을 넣고 한 사람을 고릅니다."],["8칸 확인","획득한 칸은 네이비, 획득 경로(현장 QR · 담당자 부여 · 앱 자동)가 칸 안에 보입니다."],["부여","현장 QR 01·02·03 과 계단 07 만 <b>부여</b>할 수 있습니다. 앱 자동 04·05·06 과 설문 08 은 앱 안의 행동이라 부여하지 않습니다."],["취소","같은 4종만 <b>취소</b>할 수 있습니다. 확인 창에서 보상 변화를 먼저 보여 줍니다. 룰렛을 이미 돌렸거나 발급된 응모권이 줄어드는 취소는 서버가 거부합니다."],["되돌리기","처리 직후 알림의 <b>되돌리기</b>로 바로 원래대로 돌릴 수 있습니다. 모든 부여·취소는 참여 기록에 행으로 남습니다(지우지 않음)."]],
-  apply:[["처리할 것","기본 필터는 <b>처리할 것</b>입니다. 칩의 숫자는 상태별 건수입니다."],["다음 행동","행마다 지금 상태에서 할 다음 행동 하나가 네이비 버튼입니다(신청 → 승인 → 체크인 → 완료). 노쇼·취소는 옆의 적갈 버튼입니다."],["여러 건","왼쪽 칸을 체크하면 위에 일괄 처리 바가 뜹니다(일괄 승인 · 일괄 취소 · 일괄 매칭)."],["상세","행을 누르면 오른쪽에 상세 패널이 열립니다. 이력 확인과 메모 저장, 처리까지 거기서 합니다."],["되돌리기","승인·노쇼·취소·매칭은 처리 뒤 7초 동안 알림에 <b>되돌리기</b>가 뜹니다. 체크인·완료·참석은 스탬프 03 이 적립되어 되돌리기가 없습니다."]],
+  stamp:[["사람 찾기","왼쪽 칸에 사번이나 이름을 넣고 한 사람을 고릅니다."],["8칸 확인","획득한 칸은 네이비, 획득 경로(현장 QR · 담당자 부여 · 앱 자동)가 칸 안에 보입니다."],["부여","현장 QR 01·02·03 과 계단 07 만 <b>부여</b>할 수 있습니다. 앱 자동 04·05·06 과 설문 08 은 앱 안의 행동이라 부여하지 않습니다."],["취소","지금은 8칸 모두 <b>취소</b>할 수 있습니다(테스트 기간 · 설정 「스탬프취소_범위」 = 전체). 취소한 칸은 같은 행동으로 다시 받을 수 있습니다. 확인 창에서 보상 변화를 먼저 보여 주고, 룰렛을 이미 돌렸거나 발급된 응모권이 줄어드는 취소는 서버가 거부합니다."],["되돌리기","처리 직후 알림의 <b>되돌리기</b>로 바로 원래대로 돌릴 수 있습니다. 모든 부여·취소는 참여 기록에 행으로 남습니다(지우지 않음)."]],
+  apply:[["처리할 것","기본 필터는 <b>처리할 것</b>입니다. 칩의 숫자는 상태별 건수입니다."],["다음 행동","행마다 지금 상태에서 할 다음 행동 하나가 네이비 버튼입니다(신청 → 승인 → 체크인 → 완료). 노쇼·취소는 옆의 적갈 버튼입니다."],["여러 건","왼쪽 칸을 체크하면 위에 일괄 처리 바가 뜹니다(상담 일괄 승인·취소 · 커피챗 일괄 매칭·취소). 강의신청은 현황만 봅니다."],["상세","행을 누르면 오른쪽에 상세 패널이 열립니다. 이력 확인과 메모 저장, 처리까지 거기서 합니다."],["되돌리기","승인·노쇼·취소·매칭은 처리 뒤 7초 동안 알림에 <b>되돌리기</b>가 뜹니다. 체크인·완료·참석은 스탬프 03 이 적립되어 되돌리기가 없습니다."]],
   survey:[["집계","문항마다 선택 비율 · 점수 분포 · 한 줄 답을 봅니다."],["이름 없음","답은 사번 없이 저장됩니다. 사람 단위 조회는 없습니다."]],
   typing:[["AX 올림픽","종목마다 보통(50점) · 최상(90점) 기록을 넣고 저장하면 전원 점수가 다시 계산됩니다."],["게임별 통계","네 종목 전원 기록과 CSV 입니다. 부문 통계는 두지 않습니다."],["타자왕전 · 닉네임","Outro 호명용 상위 5와 부적절한 닉네임 숨김·초기화입니다."]],
   notice:[["발송","제목과 내용을 넣고 발송하면 모든 참가자 앱에 나갑니다."],["중지","송출 중인 공지를 중지하면 다음 동기화(10초) 때 전 기기에서 사라집니다."]],
@@ -834,7 +834,8 @@ function viewStamp(){
   else h+=viewStampOne();
   h+=memo('<p>스탬프는 8칸, 보상은 7개에서 끝납니다(3개 룰렛 · 4~7개 응모 1~4장 · 8번째는 추가 보상 없음). 계단(07)은 계단실 안 QR을 한 번 찍으면 적립되고(층 상관없음), 설문(08)은 제출 시 적립됩니다.</p>'+
     '<p>담당자 부여는 현장 QR 3종(01·02·03)과 계단(07)이 됩니다. 앱 자동 적립 3종(04·05·06)은 앱 안에서 하는 행동이라 부여 대상이 아닙니다. 부여는 참여 기록에 「담당자 부여」로 남습니다.</p>'+
-    '<p>담당자 취소(v3.95)도 같은 4종만 됩니다. 기록을 지우지 않고 참여 기록에 「담당자 취소」 행을 남깁니다. 취소 뒤에는 QR 이나 부여로 다시 받을 수 있습니다. 앱 자동 3종과 설문은 한 번 적립되면 서버가 재적립을 막아서 취소하면 다시 받을 길이 없어 막아 두었습니다.</p>'+
+    '<p>담당자 취소 범위는 설정 시트 「스탬프취소_범위」가 정합니다. 지금은 <b>'+esc((ST.data.stamp||{}).revokeScope||"전체")+'</b>입니다(전체 = 8칸 모두 · 현장 = 01·02·03·07 만). 테스트 기간이라 전체로 두었습니다. <b>행사 전 현장으로 전환 검토.</b></p>'+
+    '<p>취소는 기록을 지우지 않고 참여 기록에 「담당자 취소」 행을 남깁니다. 취소한 칸은 같은 행동으로 다시 받을 수 있습니다(현장 QR·부여 · 앱 미니게임·아이디어·QR 퀴즈 · 설문 재제출). 설문을 취소하면 다시 제출해 스탬프를 받을 수 있지만, 답은 이름 없이 저장돼 첫 답을 지울 수 없으므로 재제출한 답은 저장하지 않습니다(집계 이중 계산 방지).</p>'+
     '<p>보상과 부딪치는 취소는 서버가 거부합니다. 룰렛을 이미 돌렸는데 3개 미만이 되는 경우, 이미 발급된 응모권 장수가 취소 뒤 자격보다 많아지는 경우입니다(응모권 번호는 되돌리지 않는 원장). 이때는 경품 담당과 먼저 정리합니다.</p>'+
     '<p>참가자 앱은 다음 동기화(10초 주기)에 서버 목록을 따라갑니다. 단, 취소로 스탬프가 0개가 되면 앱이 빈 목록을 무시해 기기 화면에 이전 칸이 남을 수 있습니다(서버 기록과 보상 판정은 정상).</p>');
   return h;
@@ -876,8 +877,8 @@ function spPanel(r){
     '<div><div class="l">룰렛</div><div class="v" style="font-size:var(--fs-h2);margin-top:6px">'+(r.roulette?tag("사용함","off"):rw.roulette?tag("돌릴 수 있음","pri"):tag("3개부터","off"))+'</div><div class="x">1인 1회 · 1F 이벤트존</div></div>'+
     '<div><div class="l">응모권</div><div class="v">'+rw.tickets+'<em>장 자격</em></div><div class="x">번호 발급 '+tk+'장'+(tk<rw.tickets?' · 앱이 다음 동기화에 발급':'')+'</div></div></div>';
   h+='<div class="slots">'+STAMP_ORDER.map(function(id){
-    var m=STAMP_META[id], got=(r.stamps||[]).indexOf(id)>=0, canG=GRANT_IDS.indexOf(id)>=0, canR=REVOKE_IDS.indexOf(id)>=0;
-    var act=got?(canR?'<button class="btn sm danger" onclick="stRevoke(\''+jq(r.emp)+'\',\''+id+'\')">취소</button>':'<span class="cap">취소 대상 아님</span>')
+    var m=STAMP_META[id], got=(r.stamps||[]).indexOf(id)>=0, canG=GRANT_IDS.indexOf(id)>=0, canR=revokeIds().indexOf(id)>=0;
+    var act=got?(canR?'<button class="btn sm danger" onclick="stRevoke(\''+jq(r.emp)+'\',\''+id+'\')">취소</button>':'<span class="cap">취소 범위 밖 (현장)</span>')
       :(canG?'<button class="btn sm pri" onclick="stGrant(\''+jq(r.emp)+'\',\''+id+'\')">부여</button>':'<span class="cap">앱에서 자동 적립</span>');
     return '<div class="slot'+(got?" got":"")+'"><div class="no">'+m.no+'</div><div class="nm">'+esc(m.n)+'</div><div class="via">'+esc(spVia(r,id))+'</div>'+
       '<div class="ft">'+(got?tag("획득","pri"):tag("미획득","off"))+act+'</div></div>'; }).join("")+'</div>';
@@ -934,12 +935,12 @@ function stRevoke(emp, id){
       var msg=d.reason==="roulette"?"이 사람은 <b>룰렛을 이미 돌렸습니다</b>. 취소하면 3개 미만이 되어 이미 받은 경품과 맞지 않습니다. 경품 담당과 먼저 정리하세요."
         :d.reason==="tickets"?"<b>응모권 번호가 이미 "+d.tickets+"장 발급</b>되었습니다. 취소하면 자격이 "+d.ticketsAfter+"장이 되는데, 응모권 번호는 되돌리지 않는 원장이라 취소를 막습니다."
         :d.reason==="nostamp"?"서버 기록에 이 스탬프가 없습니다. 화면이 오래되었을 수 있습니다. 새로고침 해 주세요."
-        :d.reason==="noid"?"이 항목은 담당자 취소 대상이 아닙니다(앱 자동 적립·설문).":"확인 실패: "+esc(why(d));
+        :d.reason==="noid"?"지금 취소 범위(설정 「스탬프취소_범위」 = "+esc(d.scope||"현장")+")에 들어 있지 않은 항목입니다.":"확인 실패: "+esc(why(d));
       dialog({ t:"취소할 수 없습니다", s:msg, who:who, x:d.n!=null?imp(rwImpact(d.n, d.nAfter)):"", ok:"확인" });
       if(d.reason==="nostamp") load();
       return;
     }
-    dialog({ t:"스탬프를 취소할까요?", s:"기록을 지우지 않고 참여 기록에 <b>「담당자 취소」</b> 행을 남깁니다. 취소 뒤에도 QR 이나 부여로 다시 받을 수 있습니다.",
+    dialog({ t:"스탬프를 취소할까요?", s:"기록을 지우지 않고 참여 기록에 <b>「담당자 취소」</b> 행을 남깁니다. 취소한 칸은 같은 행동으로 다시 받을 수 있습니다."+(id==="sv"?" 설문은 다시 제출할 수 있고, 재제출한 답은 저장하지 않습니다.":GRANT_IDS.indexOf(id)<0?" 앱 자동 적립 칸은 참가자가 앱에서 그 행동을 다시 하면 적립됩니다.":""),
       who:who, x:imp(rwImpact(d.n, d.nAfter, [["응모권 번호 발급", d.tickets+"장 (그대로)"],["룰렛 사용", d.roulette?"사용함":"안 함"]])), ok:"취소 처리", danger:true,
       onOk:function(){ stRevokeGo(emp,id,false); } });
   },function(){ toast("서버 응답 없음"); });
@@ -951,7 +952,7 @@ function stRevokeGo(emp, id, quiet){
     if(res&&res.ok){
       spApply(emp, res.stamps, id, null); var rr=spRow(emp); if(rr) rr.rv=(rr.rv||0)+1;
       hist(emp, m.no+" "+m.n+" 취소"); render();
-      toast((quiet?"되돌렸습니다 · ":"취소했습니다 · ")+(r.name||emp)+" · "+m.no+" "+m.n, quiet?{}:{ undo:function(){ stGrant(emp,id,true); } });
+      toast((quiet?"되돌렸습니다 · ":"취소했습니다 · ")+(r.name||emp)+" · "+m.no+" "+m.n, (quiet||GRANT_IDS.indexOf(id)<0)?{}:{ undo:function(){ stGrant(emp,id,true); } });   /* 앱 자동·설문 칸은 담당자 부여가 없어 되돌리기를 두지 않는다 */
     } else toast("취소 실패: "+(res&&res.reason==="roulette"?"룰렛을 이미 돌렸습니다":res&&res.reason==="tickets"?"응모권이 이미 발급되었습니다":why(res)));
   },function(){ dlgForce(); toast("서버 응답 없음"); });
 }
@@ -1217,7 +1218,7 @@ function drwCchat(emp){
   return h+personHist(r.emp)+'</div>';
 }
 
-/* ── 강의신청 · 정원 선착순이라 승인 없음 · 운영자는 잘못된 신청만 취소한다(sess_cancel · 되돌리기 없음) ── */
+/* ── 강의신청 · 정원 선착순이라 승인 없음 · 현황만 본다(운영자 취소는 두지 않는다 · 260919 사용자 확정) ── */
 function ssRows(){ return ((ST.data.sess||{}).rows||[]); }
 function viewSess(){
   var d=ST.data.sess||{rows:[],cap:{}}, rows=d.rows.slice(), f=ST.filt||"all";
@@ -1228,37 +1229,21 @@ function viewSess(){
   shown.sort(function(a,b){ return a.sid<b.sid?-1:a.sid>b.sid?1:(a.ts<b.ts?-1:1); });
   var h='<div class="kpis">'+ids.map(function(id){ var c=n[id]||0, p0=PRE_SESS.indexOf(id)>=0?(pre[id]||0):0, cap=d.cap[id]||0;
     return '<div class="kpi link" onclick="setFilt(\''+id+'\')" style="'+(f===id?"border-color:var(--navy)":"")+'"><div class="l">'+esc(SESS_NAME[id]||id)+'</div><div class="v">'+(c+p0)+'<em>/ '+cap+'</em></div><div class="x">앱 '+c+(p0?' · 사전 '+p0:'')+(left[id]!=null?' · 잔여 '+left[id]:'')+'</div><div class="bar'+(c+p0>cap?" over":"")+'"><i style="width:'+pct(c+p0,cap)+'%"></i></div></div>'; }).join("")+'</div>';
-  var sel=selKeys("s:").map(function(k){ var a=k.split("|"); return rows.filter(function(r){ return normE(r.emp)===a[0]&&r.sid===a[1]&&r.status!=="취소"; })[0]; }).filter(Boolean);
   var body=chips([{v:"all",n:"모든 세션",c:rows.filter(function(r){return r.status!=="취소";}).length}].concat(ids.map(function(id){ return {v:id,n:SESS_NAME[id]||id,c:n[id]||0}; })), f, "setFilt");
-  if(sel.length) body+='<div class="bulk"><span class="c"><b>'+sel.length+'건</b> 선택</span><button class="btn sm danger" onclick="ssCancel(selKeys(\'s:\'))">일괄 취소 '+sel.length+'</button><button class="btn sm ghost" onclick="selClear()">선택 해제</button></div>';
   body+='<div class="toolbar">'+searchBox("사번 · 이름 검색")+'<span class="cnt"><b>'+shown.length+'</b>건 · 취소 제외</span></div>';
-  body+='<div class="wrap"><table class="tb"><tr><th class="ckc">'+ckAll("s:",shown.slice(0,600).map(function(r){return normE(r.emp)+"|"+r.sid;}))+'</th><th>세션</th><th>슬롯</th><th>이름</th><th>신청 시각</th><th>상태</th><th class="tdr">처리</th></tr>'+
-    shown.slice(0,600).map(function(r){ var k="s:"+normE(r.emp)+"|"+r.sid;
-      return '<tr class="hv click'+(ST.sel[k]?" sel":"")+'" onclick="drwOpen(\'ss\',\''+jq(normE(r.emp)+"|"+r.sid)+'\')"><td class="ckc">'+ck1(k)+'</td><td><b>'+esc(SESS_NAME[r.sid]||r.sid)+'</b></td><td class="n">'+esc(hhmm(r.slot)||"-")+'</td><td><div class="who2">'+esc(r.name)+'<small class="n">'+esc(r.emp)+'</small></div></td><td class="n cap">'+esc(short(r.ts))+'</td><td>'+tag(r.status,"")+'</td>'+
-        '<td><div class="acts"><button class="btn sm danger" onclick="event.stopPropagation();ssCancel([\''+jq(normE(r.emp)+"|"+r.sid)+'\'])">취소</button></div></td></tr>'; }).join("")+
-    (!shown.length?emptyRow(7,"신청이 없습니다."):'')+'</table></div>';
-  body+=memo('<p>강의신청은 정원 선착순이라 승인 단계가 없습니다. 운영자는 잘못 들어간 신청만 취소합니다. 취소는 되돌릴 수 없습니다(다시 넣으면 신청 순서가 맨 뒤로 가므로 되돌리기를 두지 않았습니다). 사전 신청 명단 인원은 여기서 취소되지 않고 「사전 신청 명단」에서 관리합니다.</p>'+
+  body+='<div class="wrap"><table class="tb"><tr><th>세션</th><th>슬롯</th><th>이름</th><th>신청 시각</th><th>상태</th></tr>'+
+    shown.slice(0,600).map(function(r){
+      return '<tr class="hv click" onclick="drwOpen(\'ss\',\''+jq(normE(r.emp)+"|"+r.sid)+'\')"><td><b>'+esc(SESS_NAME[r.sid]||r.sid)+'</b></td><td class="n">'+esc(hhmm(r.slot)||"-")+'</td><td><div class="who2">'+esc(r.name)+'<small class="n">'+esc(r.emp)+'</small></div></td><td class="n cap">'+esc(short(r.ts))+'</td><td>'+tag(r.status,"")+'</td></tr>'; }).join("")+
+    (!shown.length?emptyRow(5,"신청이 없습니다."):'')+'</table></div>';
+  body+=memo('<p>강의신청은 정원 선착순이라 승인 단계가 없고, 콘솔에서 처리하지 않습니다(현황만). 행을 누르면 그 사람의 신청 기록을 봅니다.</p>'+
     '<p>17F 오후 강연 잔여 = 정원 - 사전 신청 - 앱 신청'+PRE_SESS.map(function(id){ return ' · '+esc(SESS_NAME[id])+' 사전 '+(pre[id]||0)+' · 잔여 '+(left[id]!=null?left[id]:"-"); }).join("")+'. 10F 실습형 세션은 사전 신청(앱 밖)이라 여기서 제외합니다. 정원을 바꾸려면 백엔드 SESS_CAP 을 수정해야 합니다.</p>');
   return h+card("","",body);
 }
 function ssFind(k){ var a=String(k).split("|"); return ssRows().filter(function(r){ return normE(r.emp)===a[0]&&r.sid===a[1]&&r.status!=="취소"; })[0]; }
-function ssCancel(keys){
-  var rows=keys.map(ssFind).filter(Boolean);
-  if(!rows.length){ toast("취소할 신청이 없습니다"); return; }
-  dialog({ t:(rows.length>1?rows.length+"건의 ":"")+"강의신청을 취소할까요?", s:"참가자 앱의 내 일정에서 빠지고 자리가 하나 납니다. <b>되돌릴 수 없습니다.</b> 다시 넣으려면 본인이 앱에서 신청해야 합니다(선착순 맨 뒤).",
-    who:rows.length===1?esc(rows[0].name)+'<span>사번 '+esc(rows[0].emp)+' · '+esc(SESS_NAME[rows[0].sid]||rows[0].sid)+'</span>':namesOf(rows), ok:"취소 처리", danger:true,
-    onOk:function(){
-      dlgForce();
-      var items=rows.map(function(r){ r.status="취소"; ovrSet("ss:"+normE(r.emp)+":"+r.sid,{status:"취소"}); return { r:r, run:op("sess_cancel",{emp:r.emp,sess:r.sid}) }; });
-      render();
-      runOps(items, function(it,ok){ if(!ok){ it.r.status="신청"; delete ST.ovr["ss:"+normE(it.r.emp)+":"+it.r.sid]; } else { hist(it.r.emp,(SESS_NAME[it.r.sid]||it.r.sid)+" 신청 취소"); delete ST.sel["s:"+normE(it.r.emp)+"|"+it.r.sid]; } },
-        function(okN,bad){ render(); toast("강의신청 취소 "+okN+"건"+(bad.length?" · 실패 "+bad.length+"건 ("+why(bad[0].res)+")":"")); });
-    } });
-}
 function drwSess(k){
   var r=ssFind(k); if(!r) return "";
   var h=drwHead(r.name, '사번 '+esc(r.emp))+'<div class="db"><h3>강의신청</h3><div class="row" style="justify-content:space-between"><b>'+esc(SESS_NAME[r.sid]||r.sid)+'</b>'+tag(r.status,"")+'</div><p class="cap mt8">신청 '+esc(short(r.ts))+(r.slot?' · 슬롯 '+esc(hhmm(r.slot)):'')+'</p>'+
-    '<div class="row mt16"><button class="btn danger" onclick="ssCancel([\''+jq(k)+'\'])">신청 취소</button></div><p class="cap mt8">정원 선착순이라 승인 단계가 없습니다. 취소는 되돌릴 수 없습니다.</p>';
+    '<p class="cap mt8">정원 선착순이라 승인 단계가 없습니다. 콘솔에서는 현황만 봅니다.</p>';
   return h+personHist(r.emp)+'</div>';
 }
 
