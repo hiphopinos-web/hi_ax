@@ -9610,7 +9610,8 @@ function xitionRun(switchNow) {
     /* 스캔값을 그대로 서버에 넘긴다 · 앱은 어느 스탬프인지 모른다 (260830) */
     if (m) setTimeout(function () { stampByCode(m[1]); }, 400);
     if (mq) {
-      setTimeout(function () { wqOpen(mq[1].toLowerCase()); }, 400);
+      /* v3.96 (버그 260919) 벽 QR 딥링크는 잠금 안내(wqOpen)가 아니라 QR 입구(wqOpenQr)로 · 테스트 계정은 wqOpen 이 그냥 열어 줘서 실제 계정만 막혀 있었다 */
+      setTimeout(function () { wqOpenQr(mq[1].toLowerCase()); }, 400);
     }
   }
   // 캡처 모드(#...cap): 프레임을 좌상단 고정 정폭으로 · 헤드리스 스크린샷용
