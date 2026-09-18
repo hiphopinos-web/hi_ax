@@ -1812,12 +1812,48 @@ function noticePump() {
   var o = NOTICE.q.shift();
   NOTICE.last[o.k] = Date.now();
   modalOpen('<div class="ntc"><b class="ntc-t">' + esc(o.title) + "</b>" + (o.body ? '<p class="ntc-b">' + esc(o.body) + "</p>" : "") +
-    (o.go ? '<button class="btn mint" style="margin-top:14px" onclick="noticeGo(\'' + o.go + '\')">바로 가기</button><button class="btn line" style="margin-top:8px" onclick="modalClose()">확인</button>'
+    (o.go ? '<button class="btn mint" style="margin-top:14px" onclick="noticeGo(\'' + o.go + "','" + (o.focus || "") + '\')">' + (o.goLbl || "바로 가기") + '</button><button class="btn line" style="margin-top:8px" onclick="modalClose()">확인</button>'
       : '<button class="btn" style="margin-top:14px" onclick="modalClose()">확인</button>') + "</div>");
   NOTICE.cur = o;   /* modalOpen 안의 modalClose 가 cur 를 지우므로 연 다음에 잡는다 */
   el("modal").setAttribute("data-notice", o.k);
 }
-function noticeGo(v) { modalClose(); App.go(v); }
+/* v3.93 f = 이동한 화면에서 한 번 튕길 자리 · 스탬프 팝 안착 튕김(sp-bounce)을 그대로 쓴다 · 이미 홈이어도 같은 동작(다시 그린 뒤 튕김) */
+function noticeGo(v, f) {
+  modalClose(); App.go(v);
+  if (f) setTimeout(function () { focusPulse(f); }, 120);
+}
+/* roulette = 레일의 룰렛 마커 · raffle = 가장 최근 응모 번호 칩(없으면 지금 개수의 마커)
+   my:조각 = 홈 「나의 일정」에서 onclick 에 그 조각이 든 카드 (photo = 포토부스 대기 · sess:id = 신청한 강연) */
+function focusTarget(f) {
+  if (f.indexOf("my:") === 0) {
+    var key = f.slice(3), frag = key === "photo" ? "photoGoMine" : key.indexOf("sess:") === 0 ? "sessOpen('" + key.slice(5) + "')" : key;
+    var cs = document.querySelectorAll("#view .rc.my .rh");
+    for (var i = 0; i < cs.length; i++) if ((cs[i].getAttribute("onclick") || "").indexOf(frag) >= 0) return cs[i].closest(".rc");
+    return null;
+  }
+  var rail = document.querySelector("#view .rail");
+  if (!rail) return null;
+  var mks = rail.querySelectorAll(".mk");
+  if (f === "roulette") return mks[0] || null;
+  if (f === "raffle") {
+    var tk = rail.querySelectorAll(".rnum .tkt");
+    if (tk.length) return tk[tk.length - 1];
+    var n = Math.min(REWARD_CAP, stampCount());
+    return n >= 3 ? mks[n - 3] || null : null;
+  }
+  return null;
+}
+function focusPulse(f) {
+  var t = focusTarget(f);
+  if (!t) return;
+  var r = t.getBoundingClientRect();
+  if (r.top < 60 || r.bottom > innerHeight - 90) t.scrollIntoView({ block: "center" });
+  var cls = t.classList.contains("rc") ? "sp-settle" : "sp-bounce";
+  setTimeout(function () {
+    t.classList.remove(cls); void t.offsetWidth; t.classList.add(cls);
+    setTimeout(function () { t.classList.remove(cls); }, 600);
+  }, 180);
+}
 
 /* ── 보상·커피챗 ── (커피 나눔 바·잔량 표시는 260917 폐기) */
 /* 스탬프 개수로 열리는 보상 안내 (260909 · v3.39) · 3개=룰렛 1회, 4~7개=사후 추첨 응모 1~4장 */
@@ -1825,12 +1861,12 @@ function checkRewards() {
   var n = stampCount();
   if (n >= 3 && !S.get("roulette_open", false)) {
     S.set("roulette_open", true);
-    notice({ key: "rw:roulette", title: "룰렛 1회 열림", body: "1F 이벤트존에서 내 QR 제시", go: "passport" });
+    notice({ key: "rw:roulette", title: "룰렛 1회 열림", body: "1F 이벤트존에서 내 QR 제시", go: "home", focus: "roulette", goLbl: "홈에서 보기" });
   }
   var t = raffleTickets(n);
   if (t > S.get("raffle_seen", 0)) {
     S.set("raffle_seen", t);
-    notice({ key: "rw:raffle", title: (n >= STAMP_BONUS ? "보너스 · " : "") + "추첨 응모권 " + t + "장", body: "자동 응모 · 결과는 행사 후 개별 안내", go: "passport" });
+    notice({ key: "rw:raffle", title: (n >= STAMP_BONUS ? "보너스 · " : "") + "추첨 응모권 " + t + "장", body: "자동 응모 · 결과는 행사 후 개별 안내", go: "home", focus: "raffle", goLbl: "홈에서 보기" });
   }
 }
 /* 앱 안 행동으로 붙는 3종(미니게임·아이디어·전시 QR 퀴즈) 전용.
@@ -3016,7 +3052,7 @@ function sessBook(id) {
     notice({ key: "sess:" + id + ":" + res.reason, title: res.reason === "full" ? "신청되지 않았어요 · 만석" : res.reason === "pre" ? "이미 사전 신청된 강연" : "이미 신청한 강연" });
     App.render();
   }, function () {});
-  notice({ key: "sess:" + id + ":ok", title: "신청 완료", body: s.ttl + " · " + s.tm, go: "home" });
+  notice({ key: "sess:" + id + ":ok", title: "신청 완료", body: s.ttl + " · " + s.tm, go: "home", focus: "my:sess:" + id, goLbl: "홈에서 보기" });
   App.render();
 }
 function sessCancel(id) {
@@ -5013,11 +5049,11 @@ function notifAsk() {
     toast(r === "granted" ? "브라우저 알림이 켜졌습니다." : "알림이 허용되지 않았습니다.");
   });
 }
-function notifyUser(title, body, target) {
+function notifyUser(title, body, target, focus) {
   try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate([80, 40, 80]); } catch (e) {}   /* 상호작용 전 차단 경고 방지 */
   if (notifOK()) { try { new Notification(title, { body: body }); } catch (e) {} }
   /* v3.53 팝업 대기열로 · 모달·스탬프 팝·게임 플레이가 끝나면 차례로 · 호출은 게임 중 제목 토스트도 */
-  notice({ key: "nu:" + title + "|" + body, title: title, body: body, go: target || "", urgent: /입장|차례/.test(title) });
+  notice({ key: "nu:" + title + "|" + body, title: title, body: body, go: target || "", focus: focus || "", goLbl: target === "home" ? "홈에서 보기" : "", urgent: /입장|차례/.test(title) });
 }
 /* 내 상태 전환 감지 · 서버 sync·로컬 storage 어느 쪽이 바꿔도 여기서 팝업 1회 */
 function checkMyState() {
@@ -5042,11 +5078,11 @@ function checkMyState() {
   var pq = S.get("photoq", null);
   if (pq && pq.status === "wait" && pq.ahead <= 2 && seen.photoNear !== pq.no) {
     seen.photoNear = pq.no; changed = true;
-    notifyUser("곧 차례예요", "1F 포토부스 · " + pq.no + "번 · 앞 " + pq.ahead + "팀", "home");
+    notifyUser("곧 차례예요", "1F 포토부스 · " + pq.no + "번 · 앞 " + pq.ahead + "팀", "home", "my:photo");
   }
   if (pq && pq.status === "call" && seen.photoCall !== pq.no) {
     seen.photoCall = pq.no; changed = true;
-    notifyUser("지금 입장하세요", "1F 포토부스 · " + pq.no + "번 · 10분 안에 입장", "home");
+    notifyUser("지금 입장하세요", "1F 포토부스 · " + pq.no + "번 · 10분 안에 입장", "home", "my:photo");
   }
   if (changed) S.set("noti_seen", seen);
 }
