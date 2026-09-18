@@ -566,8 +566,18 @@
   .art-c .lk.on { border-color: var(--acc2); color: var(--acc2); background: var(--tint); }
   .art-c .lk.off { opacity: 0.45; }
   .art-rules { margin: 6px 0 0 16px; font-size: calc(13.5px * var(--fs)); color: var(--muted); line-height: 1.7; }
-  .art-full { display: block; width: 100%; margin-top: 10px; border-radius: 12px; background: var(--dim); }
+  .art-fullbox { position: relative; margin-top: 10px; max-height: 62vh; overflow-y: auto; border-radius: 12px; background: var(--dim); }
+  .art-full { display: block; width: 100%; }
   .art-full.na { display: none; }
+  /* v3.78 「샘플」 워터마크 · 대각선 큰 글자 · 반투명 흰색 + 어두운 외곽선(어떤 그림 위에서도 읽힌다) */
+  .art-c .th { position: relative; }
+  .art-c .th .wm { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-28deg); font-size: 15px; font-weight: 900; letter-spacing: 0.06em;
+    color: rgba(255,255,255,0.92); text-shadow: 0 1px 0 rgba(0,0,0,0.85), 0 -1px 0 rgba(0,0,0,0.85), 1px 0 0 rgba(0,0,0,0.85), -1px 0 0 rgba(0,0,0,0.85); pointer-events: none; }
+  .art-fullbox .wm { position: sticky; display: block; top: 40%; text-align: center; transform: rotate(-24deg); font-size: 44px; font-weight: 900; letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.86); text-shadow: 0 2px 0 rgba(0,0,0,0.8), 0 -2px 0 rgba(0,0,0,0.8), 2px 0 0 rgba(0,0,0,0.8), -2px 0 0 rgba(0,0,0,0.8); pointer-events: none; }
+  .art-c.sample .lk { opacity: 0.5; }
+  /* v3.78 세로로 긴 안내물(샘플)은 위쪽을 살려 자른다 · 제목이 잘리지 않게 */
+  .art-c.sample .th img { object-position: top center; }
   .art-tv { display: flex; gap: 18px; justify-content: center; margin-top: 18px; }
   .art-tv-c { flex: 1; max-width: 320px; text-align: center; }
   .art-tv-c img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 14px; background: rgba(255,255,255,0.08); }
@@ -1134,9 +1144,18 @@ var SURVEY = { open: "14:30" };
    ⚠ 공개 주소를 아는 사람은 누구나 볼 수 있다 → 폼에 「사내·대외비 자료 금지」를 적는다.
    보관 위치를 바꿔야 하면 ART_IMG_BASE 한 줄만 바꾼다(끝에 / 포함 · 절대 주소도 된다). */
 var ART_IMG_BASE = "assets/art/";
-var ART = { data: null, t: 0, busy: "", sort: "new" };
+var ART = { data: null, t: 0, busy: "" };
 /* v3.58b (사용자 확정 260918) 본선 10점만 공개 · 갤러리는 작가를 가린다(번호·제목·설명만 · 신원은 Outro 시상에서) · 1인 3표 */
 var ART_VOTE_MAX = 3;
+/* v3.78 (사용자 확정 260918) 접수 전에 「이런 걸 내면 된다」를 보여 주는 샘플 · 주제 = 자동차보험 약관 개정.
+   좋아요·순위·시상에서 빠지고 큰 「샘플」 워터마크가 얹힌다 · 이미지는 assets/art/s1.jpg · s1_t.jpg (운영자가 바꿔 끼울 수 있다).
+   서버에는 상태 '샘플' 로 넣으면 같은 방식으로 나온다(데모·서버 어느 쪽이든 동작). */
+var ART_SAMPLES = [
+  { id: "s1", file: "s1.jpg", title: "경상환자 배상체계, 한 장으로",
+    desc: "자동차보험 약관 개정 내용을 고객 안내용 한 장으로 정리했습니다. 바뀌기 전과 뒤를 위아래로 두고 숫자만 크게 뽑았어요." },
+  { id: "s2", file: "s2.jpg", title: "상해등급 12~14급 안내문 초안",
+    desc: "창구에서 자주 받는 질문을 먼저 적고, 개정 내용이 답이 되도록 순서를 바꿔 만든 안내문 초안입니다." }
+];
 var ART_RULES = ["혐오·차별 표현 금지", "사내·고객 정보 금지", "타인 초상·저작물 무단 사용 금지", "특정인 비방 금지"];
 var SURVEY_Q = [
   { id: "sat", type: "scale", q: "오늘 행사, 얼마나 만족하셨나요?", min: 0, max: 10, left: "아쉬웠어요", right: "아주 좋았어요" },
@@ -3910,9 +3929,7 @@ var Views = {
   art: function () {
     artPull();
     var d = ART.data, ph = artPhase(), list = artItems();
-    var head = '<div class="qseg" style="margin-bottom:10px">' +
-      '<button class="' + (ART.sort === "new" ? "on" : "") + '" onclick="ART.sort=\'new\'; App.render()">최신순</button>' +
-      '<button class="' + (ART.sort === "like" ? "on" : "") + '" onclick="ART.sort=\'like\'; App.render()">좋아요순</button></div>';
+    var head = "";
     var cap = ph === "submit" ? "작품 접수 중" : ph === "vote" ? ((d && d.voteEnd ? d.voteEnd.slice(11, 16) + " 마감 · " : "") + "남은 표 " + artLeft() + " / " + ART_VOTE_MAX) : "좋아요 마감 · Outro에서 시상";
     head += '<p class="scap" style="margin:0 2px 8px">' + cap + "</p>";
     if (ph === "submit" && d && d.form) head += '<button class="btn mint mb12" onclick="artForm()">작품 내러 가기</button>';
@@ -3926,7 +3943,7 @@ var Views = {
   },
   art_rank: function () {
     artPull();
-    var list = artItems().slice().sort(function (a, b) { return b.likes - a.likes || (a.ts < b.ts ? -1 : 1); }).slice(0, 10);
+    var list = artRankList().slice(0, 10);
     if (!list.length) return '<div class="card soft" style="text-align:center"><p class="muted">공개된 작품이 아직 없어요</p></div>';
     return '<div class="card">' + list.map(function (w, i) {
       return '<div class="ty-rank" onclick="artOpen(\'' + w.id + '\')"><span class="no">' + (i + 1) + '</span><span class="nm">' + esc(w.title || "제목 없음") +
@@ -3937,7 +3954,7 @@ var Views = {
   /* 17F Outro 송출 · 상위 3점 */
   screen_art: function () {
     artPull();
-    var list = artItems().slice().sort(function (a, b) { return b.likes - a.likes || (a.ts < b.ts ? -1 : 1); }).slice(0, 3);
+    var list = artRankList().slice(0, 3);
     return '<div class="screen-wrap tytv"><p class="tytv-k">17:00 OUTRO · AI 사생대회</p><p class="tytv-t">좋아요 상위 3</p>' +
       '<div class="art-tv">' + (list.length ? list.map(function (w, i) {
         return '<div class="art-tv-c"><span class="r">' + (i + 1) + '</span><img src="' + esc(artImg(w, false)) + '" alt="" onerror="this.classList.add(\'na\')">' +
@@ -5215,11 +5232,13 @@ function artPull(force) {
   }, function () {});
 }
 function artPhase() { return (ART.data && ART.data.phase) || (testMode() ? "vote" : ""); }
+/* v3.78 (사용자 확정 260918) 예선을 거쳐 올리므로 정렬 선택은 없앴다 · 콘솔에 등록한 순서(작품 번호) 그대로 */
 function artItems() {
   var d = ART.data, list = (d && d.items) ? d.items.slice() : [];
-  if (ART.sort === "like") list.sort(function (a, b) { return b.likes - a.likes || (a.ts < b.ts ? -1 : 1); });
-  else list.sort(function (a, b) { return a.ts < b.ts ? 1 : a.ts > b.ts ? -1 : 0; });
-  return list;
+  return list.sort(function (a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; });
+}
+function artRankList() {
+  return artItems().filter(function (w) { return !w.sample; }).sort(function (a, b) { return b.likes - a.likes || (a.ts < b.ts ? -1 : 1); });
 }
 function artMine(id) { var m = ART.data && ART.data.my; return !!(m && (m.own || []).indexOf(id) >= 0); }
 function artLeft() { var m = ART.data && ART.data.my; return m && m.left != null ? m.left : ART_VOTE_MAX; }
@@ -5233,6 +5252,8 @@ function artImg(w, thumb) {
 /* 좋아요 토글 · 화면은 먼저 바꾸고 서버 응답으로 맞춘다 · 실패하면 되돌린다 */
 function artLike(id) {
   if (artLocked()) { notice({ key: "art:lock", title: "좋아요가 마감됐어요", body: (ART.data && ART.data.voteEnd ? ART.data.voteEnd.slice(11, 16) + " 마감" : "") }); return; }
+  var it0 = (ART.data && ART.data.items || []).filter(function (x) { return x.id === id; })[0];
+  if (it0 && it0.sample) { toast("샘플 작품이에요"); return; }   /* v3.78 샘플은 좋아요 대상이 아니다 */
   if (artMine(id)) { toast("내 작품에는 좋아요를 누를 수 없어요"); return; }
   if (!artLiked(id) && artLeft() <= 0) { toast("표는 " + ART_VOTE_MAX + "개까지 · 누른 작품을 취소하면 다시 생겨요"); return; }
   if (ART.busy === id) return;
@@ -5268,19 +5289,22 @@ function artOpen(id) {
   var it = (ART.data && ART.data.items || []).filter(function (x) { return x.id === id; })[0];
   if (!it) return;
   modalOpen('<b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">작품 ' + esc(it.id) + " · " + esc(it.title || "") + "</b>" +
-    '<img class="art-full" src="' + esc(artImg(it, false)) + '" alt="' + esc(it.title || "작품") + '" onerror="this.classList.add(\'na\')">' +
+    '<div class="art-fullbox' + (it.sample ? " sample" : "") + '"><img class="art-full" src="' + esc(artImg(it, false)) + '" alt="' + esc(it.title || "작품") + '" onerror="this.classList.add(\'na\')">' +
+    (it.sample ? '<span class="wm">샘플</span>' : "") + "</div>" +
     (it.desc ? '<p class="muted" style="margin-top:8px">' + esc(it.desc) + "</p>" : "") +
     '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>');
 }
 function artCardHtml(w) {
   var liked = artLiked(w.id), mine = artMine(w.id), lock = artLocked();
-  return '<div class="art-c"><div class="th" onclick="artOpen(\'' + w.id + '\')">' +
-    '<img src="' + esc(artImg(w, true)) + '" alt="" loading="lazy" decoding="async" width="88" height="88" onerror="this.classList.add(\'na\')"></div>' +
+  return '<div class="art-c' + (w.sample ? " sample" : "") + '"><div class="th" onclick="artOpen(\'' + w.id + '\')">' +
+    '<img src="' + esc(artImg(w, true)) + '" alt="" loading="lazy" decoding="async" width="88" height="88" onerror="this.classList.add(\'na\')">' +
+    (w.sample ? '<span class="wm">샘플</span>' : "") + "</div>" +
     '<div class="bd" onclick="artOpen(\'' + w.id + '\')"><b>' + esc(w.title || "제목 없음") + "</b>" +
     (w.desc ? "<p>" + esc(w.desc) + "</p>" : "") +
-    '<span class="who">작품 ' + esc(w.id) + "</span></div>" +
-    '<button class="lk' + (liked ? " on" : "") + (mine || lock ? " off" : "") + '" ' + (mine || lock ? "disabled" : 'onclick="artLike(\'' + w.id + '\')"') +
-    ' aria-label="좋아요"><span class="ic">' + (liked ? "♥" : "♡") + '</span><span class="n">' + w.likes + "</span></button></div>";
+    '<span class="who">' + (w.sample ? "샘플 작품" : "작품 " + esc(w.id)) + "</span></div>" +
+    (w.sample ? '<span class="lk off" aria-hidden="true"><span class="ic">♡</span><span class="n">샘플</span></span>'
+      : '<button class="lk' + (liked ? " on" : "") + (mine || lock ? " off" : "") + '" ' + (mine || lock ? "disabled" : 'onclick="artLike(\'' + w.id + '\')"') +
+        ' aria-label="좋아요"><span class="ic">' + (liked ? "♥" : "♡") + '</span><span class="n">' + w.likes + "</span></button>") + "</div>";
 }
 function artBannerHtml() {
   artPull();
@@ -5306,6 +5330,7 @@ function artDemo() {
   var items = [], t = ["오늘의 회의실", "AI와 커피", "숫자 정원", "야근의 끝", "데이터 바다", "우리 팀 로고", "새벽 출근길", "보고서 요정", "회의록 숲", "퇴근길 지하철"];
   var n = S.get("art_demo_n", 10) || 10;   /* 기본 = 본선 10점 · 스크롤 성능 확인 때만 늘린다 */
   for (var i = 0; i < n; i++) items.push({ id: (i + 1 < 10 ? "0" : "") + (i + 1), demo: 1, title: t[i % t.length], desc: "프롬프트 한 줄로 만든 그림", file: "", ts: "2026-10-1" + (i % 9) + " 09:00:00", likes: (i * 7) % 23 });
+  ART_SAMPLES.forEach(function (sm) { items.push({ id: sm.id, sample: true, title: sm.title, desc: sm.desc, file: sm.file, ts: "2026-10-01 09:00:00", likes: 0 }); });
   return { ok: true, demo: 1, phase: "vote", form: "", voteEnd: "2026-10-26 16:30", max: ART_VOTE_MAX, items: items, my: { liked: ["03"], own: ["02"], left: ART_VOTE_MAX - 1 } };
 }
 function artDemoImg(w, thumb) {
