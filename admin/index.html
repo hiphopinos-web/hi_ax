@@ -75,6 +75,7 @@ table.tb th{text-align:left;font-size:11.5px;color:var(--tx3);font-weight:600;pa
 table.tb td{padding:9px 10px;vertical-align:middle;border-top:1px solid var(--o5)}
 table.tb tr:hover td{background:var(--o5)}
 .wrap{overflow-x:auto}
+.tbadge{display:inline-block;margin-left:6px;min-width:18px;padding:0 5px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;font-weight:800;font-style:normal;line-height:18px;text-align:center}
 .scrolly{max-height:440px;overflow:auto}
 .scrolly table{width:100%}
 .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700;background:var(--o10);color:var(--tx)}
@@ -274,7 +275,9 @@ var ST={ tab:"dash", sub:"resv", q:"", filt:"", data:{}, busy:false, at:null };
 /* load() 를 먼저 불러 busy 를 세운 뒤 그린다. 반대로 하면 첫 진입에 「가입 계정 0명」처럼 0 으로 그려진다. */
 function go(t){ ST.tab=t; ST.q=""; ST.filt=""; renderTabs(); window.scrollTo(0,0); load(); render(); }
 function renderTabs(){
-  el("tabs").innerHTML=TABS.map(function(t){ return '<button class="'+(ST.tab===t.id?"on":"")+'" onclick="go(\''+t.id+'\')">'+esc(t.n)+'</button>'; }).join("");
+  /* v3.88 계정 탭에 비밀번호 요청 대기 수를 배지로 (데스크가 놓치지 않게) */
+  var wait=((ST.data.pwreq||{}).waiting)||0;
+  el("tabs").innerHTML=TABS.map(function(t){ var b=(t.id==="acct"&&wait)?'<em class="tbadge">'+wait+'</em>':''; return '<button class="'+(ST.tab===t.id?"on":"")+'" onclick="go(\''+t.id+'\')">'+esc(t.n)+b+'</button>'; }).join("");
 }
 function refresh(){ load(true); }
 var _poll=null;
@@ -283,8 +286,8 @@ document.addEventListener("visibilitychange",function(){ if(!document.hidden&&ke
 
 /* 탭별로 필요한 액션만 부른다 */
 var NEED={
-  dash:[{k:"stats",a:"stats"},{k:"acct",a:"acct_list"},{k:"stamp",a:"stamp_people"},{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"}],
-  acct:[{k:"acct",a:"acct_list"}],
+  dash:[{k:"stats",a:"stats"},{k:"acct",a:"acct_list"},{k:"stamp",a:"stamp_people"},{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"},{k:"pwreq",a:"pw_req_list"}],
+  acct:[{k:"acct",a:"acct_list"},{k:"pwreq",a:"pw_req_list"}],
   stamp:[{k:"stamp",a:"stamp_people"},{k:"stair",a:"stair_list"},{k:"sy",a:"sync",p:{emp:""}}],
   apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"},{k:"pre",a:"pre_list"}],
   survey:[{k:"survey",a:"survey_list"}],
@@ -391,6 +394,7 @@ function viewAcct(){
   /* pw===false 만 「초기화 대기」. 필드가 없으면(옛 백엔드) 등록으로 본다. */
   var waiting=rows.filter(function(r){ return r.pw===false; }).length;
   var h='<h1>계정<small>로그인한 사람. 명부에 있고 비밀번호를 등록한 계정입니다. 비밀번호를 잊은 사람은 여기서 초기화합니다.</small></h1>';
+  h+=viewPwReq();
   h+='<div class="grid g4">'+kpi("가입 계정",rows.length,"명")+kpi("명부",(ST.data.acct||{}).roster||0,"명","가입률 "+pct(rows.length,(ST.data.acct||{}).roster||0)+"%")+kpi("부문 수",Object.keys(byDept).length,"개")+kpi("비밀번호 초기화 대기",waiting,"명",waiting?"본인이 앱에서 새 비밀번호를 입력하면 풀립니다":"")+'</div>';
   h+='<div class="card"><div class="tools"><input class="in" placeholder="사번 · 이름 · 부문 검색" value="'+esc(ST.q)+'" oninput="setQ(this.value)"><span class="src">'+shown.length+' / '+rows.length+'명</span></div>';
   h+='<p class="src" style="margin:0 0 8px">최근 접속 = 앱을 마지막으로 연 시각입니다(v3.83부터 앱 사용 중에도 갱신 · 약 10분 간격). 그 전 기록은 마지막 비밀번호 입력 시각입니다.</p>';
@@ -403,6 +407,62 @@ function viewAcct(){
   h+='<p class="note mt12">비밀번호 초기화는 지금 비밀번호를 지우고, 본인이 앱에서 다음에 입력하는 4자리를 새 비밀번호로 등록합니다. 스탬프·신청 기록은 그대로입니다. 운영 로그에 남습니다.</p></div>';
   h+='<div class="card soft"><h2>부문별 가입</h2><div class="row">'+Object.keys(byDept).sort(function(a,b){return byDept[b]-byDept[a];}).map(function(d){ return '<span class="pill">'+esc(d)+' <b class="n">'+byDept[d]+'</b></span>'; }).join("")+'</div></div>';
   return h;
+}
+/* ── v3.88 비밀번호 분실 요청 (앱 → 운영 데스크) ──────────────────────────────
+ * 앱에서 사번·이름만 보낸 요청이 여기에 쌓인다. 데스크에서 「본인 확인」을 하고 초기화를 누르면
+ * 서버가 비번해시를 비우고(기존 acct_pwreset 과 같은 경로) 요청을 처리로 표시한다. 잘못된 요청은 취소.
+ * 처리자 이름은 이 브라우저에 기억해 두고 함께 보낸다(누가 처리했는지 남기기 위함). */
+function pwBy(){ try{ return localStorage.getItem("axf_desk")||""; }catch(e){ return ""; } }
+function pwBySet(v){ try{ localStorage.setItem("axf_desk",v||""); }catch(e){} }
+function viewPwReq(){
+  var d=ST.data.pwreq||{}, rows=(d.rows||[]);
+  var wait=rows.filter(function(r){ return r.status==="대기"; });
+  var done=rows.filter(function(r){ return r.status!=="대기"; }).slice(0,20);
+  var h='<div class="card"><h2>비밀번호 분실 요청 '+(wait.length?'<small style="color:var(--bad)">· 대기 '+wait.length+'건</small>':'<small>· 대기 없음</small>')+'</h2>'+
+    '<p class="note">사원증이나 얼굴로 <b>본인 확인을 먼저</b> 한 뒤 초기화하세요. 앱에서 온 요청일 뿐, 본인 확인은 데스크에서 합니다.</p>'+
+    '<div class="tools" style="margin-top:10px"><input class="in" style="width:160px" placeholder="처리자 이름" value="'+esc(pwBy())+'" oninput="pwBySet(this.value)">'+
+    '<button class="btn sm" onclick="load(true)">새로고침</button><span class="src">자동 갱신 중</span></div>'+
+    '<div class="wrap"><table class="tb"><tr><th>요청 시각</th><th>사번</th><th>이름</th><th>계정</th><th>처리</th></tr>'+
+    (wait.length?wait.map(function(r){
+      return '<tr><td class="n src">'+esc(short(r.ts))+'</td><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td>'+
+        '<td>'+(r.joined?(r.pwSet?'<span class="pill ok">사용 중</span>':'<span class="pill">이미 초기화됨</span>'):'<span class="pill off">가입 전</span>')+'</td>'+
+        '<td><div class="row" style="gap:6px"><button class="btn sm danger" data-row="'+r.row+'" data-emp="'+esc(r.emp)+'" data-name="'+esc(r.name)+'" onclick="pwReqDone(this)">비밀번호 초기화</button>'+
+        '<button class="btn sm" data-row="'+r.row+'" data-name="'+esc(r.name)+'" onclick="pwReqCancel(this)">취소</button></div></td></tr>';
+    }).join(""):'<tr><td colspan="5" class="src">대기 중인 요청이 없습니다.</td></tr>')+'</table></div>';
+  if(done.length){
+    h+='<p class="note mt12">최근 처리 내역</p><div class="wrap"><table class="tb"><tr><th>요청</th><th>사번</th><th>이름</th><th>상태</th><th>처리 시각</th><th>처리자</th></tr>'+
+      done.map(function(r){ return '<tr><td class="n src">'+esc(short(r.ts))+'</td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.name)+'</td>'+
+        '<td>'+(r.status==="처리"?'<span class="pill ok">처리</span>':'<span class="pill off">취소</span>')+'</td>'+
+        '<td class="n src">'+esc(short(r.doneAt))+'</td><td>'+esc(r.by||"-")+'</td></tr>'; }).join("")+'</table></div>';
+  }
+  return h+'</div>';
+}
+function pwReqDone(btn){
+  var row=btn.getAttribute("data-row"), emp=btn.getAttribute("data-emp")||"", name=btn.getAttribute("data-name")||"";
+  dialog({ t:"본인 확인을 마쳤나요?",
+    s:"확인이 끝났으면 초기화합니다. 지금 비밀번호가 지워지고 <b>본인이 앱에서 다음에 넣는 4자리가 새 비밀번호</b>가 됩니다. 운영 로그에 남습니다.",
+    who:esc(name)+'<span>사번 '+esc(emp)+'</span>', ok:"확인했고 초기화",
+    onOk:function(){
+      call("pw_req_done",{row:row,by:pwBy()||"운영 데스크"},function(r){
+        el("dlgOk").disabled=false;
+        if(r&&r.ok){
+          load();
+          dialog({ t:"초기화했습니다", who:esc(r.name||name)+'<span>사번 '+esc(r.emp||emp)+'</span>', ok:"확인했습니다",
+            s:"본인에게 이렇게 안내해 주세요. <b>「앱에서 사번·이름을 넣고 새 비밀번호 4자리를 입력하면 그 번호로 등록됩니다」</b>"+(r.already?'<br><span class="src">이미 초기화 상태였습니다.</span>':"")+(r.noAccount?'<br><span class="src">아직 가입 전이라 계정은 없습니다. 바로 새로 입장하면 됩니다.</span>':"") });
+        } else { dlgClose(); toast("실패: "+((r&&r.reason)||"")); }
+      },function(){ el("dlgOk").disabled=false; dlgClose(); toast("서버 응답 없음"); });
+    }});
+}
+function pwReqCancel(btn){
+  var row=btn.getAttribute("data-row"), name=btn.getAttribute("data-name")||"";
+  dialog({ t:"요청을 취소할까요?", s:"잘못 눌렀거나 본인 확인이 안 된 요청을 목록에서 내립니다. 계정은 그대로입니다.",
+    who:esc(name), ok:"취소 처리",
+    onOk:function(){
+      call("pw_req_cancel",{row:row,by:pwBy()||"운영 데스크"},function(r){
+        el("dlgOk").disabled=false;
+        if(r&&r.ok){ dlgClose(); load(); toast("취소했습니다"); } else { dlgClose(); toast("실패: "+((r&&r.reason)||"")); }
+      },function(){ el("dlgOk").disabled=false; dlgClose(); toast("서버 응답 없음"); });
+    }});
 }
 /* 비밀번호 초기화 · acct_pwreset. 서버는 행을 남기고 비번해시만 비운다. 다음 로그인의 4자리가 새 비밀번호가 된다. */
 function pwReset(btn){
