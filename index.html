@@ -1342,7 +1342,12 @@ var MEM_ROUNDS_EVENT = [
 ];
 /* 한 판 구성 · 문장 2 + 순서 1 · 최근 mem_seen 개까지 기억해 먼저 뺀다 */
 var MEM_PLAY = { sentence: 2, order: 1 }, MEM_SEEN_MAX = 9, MEM_DECOY = { sentence: 2, order: 1 };
-var MEM_SHOW = 6, MEM_SHOW_FAST = 3, MEM_SEC = 60, MEM_PEN = 2, MEM_PT = 10, MEM_PT_ROUND = 30, MEM_PT_SEC = 5, MEM_STAR3 = 450, MEM_STAR2 = 300;
+/* v3.92 (사용자 피드백 260918 「기억력은 점수가 어떻게 나오는지 알 수 없다」) 점수 → 시간 기록.
+   기록 = 떠올리기 단계에서 실제로 쓴 시간(1/100초) + 오답 1개당 2초 · 작을수록 좋다 · 보기 시간은 넣지 않는다.
+   한 판 정답 타일 수는 MEM_TILES 로 고정(문항 길이 운을 없앤다) · 빠른 모드는 기록상 이득이 없어 없앴다.
+   60초 제한도 없앴다(실패 없음 · 끝까지 하면 스탬프) · 안전 상한 MEM_REC_MAX(120초)를 넘으면 상한으로 적는다.
+   별 = 걸린 시간 기준(MEM_STAR3 이하 3개 · MEM_STAR2 이하 2개). */
+var MEM_SHOW = 6, MEM_PEN = 2, MEM_TILES = 14, MEM_REC_MAX = 12000, MEM_STAR3 = 1800, MEM_STAR2 = 3000;
 /* ═══ 타자 게임 단어 풀 · 여기 한 곳 · v3.72 AI 기본 소양 (사용자 확정 260918 · 「단어에 의미가 있으면 좋겠다」) ═══
    [단어, 뜻 한 줄] · 단어를 터뜨리면 그 자리에 뜻이 1초 뜬다(한 번에 여럿 터지면 한 줄만).
    규칙: 2~5자 · 한글만(영문·혼용 없음 · 자판 전환이 없게) · 공백 없음(판정이 어렵다) ·
@@ -3487,7 +3492,7 @@ function testStampReset() {
 }
 /* v3.70 (사용자 확정 260918) 테스트 사번·데모에서 미니게임을 한 번도 안 한 상태로 되돌린다.
    이 기기 기록만 지운다 · 순위판에 올라간 서버 기록은 관리 콘솔에서 지운다(참여자 앱에 삭제 기능을 두지 않는다). */
-var GAME_KEYS = ["pang_best", "jump_best", "gw_best", "type_best", "pang_cleared", "jump_cleared", "gw_cleared", "type_cleared",
+var GAME_KEYS = ["pang_best", "jump_best", "gw_best", "gw_time_best", "tt_best", "type_best", "pang_cleared", "jump_cleared", "gw_cleared", "type_cleared",
   "oly_tab", "oly_ev", "mem_seen", "type_rank_app", "type_rank_site", "game_sound", "type_nick_edit", "art_demo_n"];
 function testGameReset(withNick) {
   if (!testMode()) return;
@@ -3954,7 +3959,7 @@ var Views = {
       '<p class="tytv-t">' + (oly ? "종합 상위 10 · 4종목 " + olyMax() + "점 만점" : "현장 타자왕전 상위 5") + "</p>" +
       '<div class="tytv-seg"><span class="' + (site ? "on" : "") + '">현장 타자 5</span><span class="' + (oly ? "on" : "") + '">AX 올림픽</span></div>' +
       '<div class="tytv-list' + (site ? " five" : "") + '">' + (oly ? tyTvRows(orows, 10) : tyTvRows(r, 5)) + "</div>" +
-      '<p class="tytv-foot">' + (oly ? "앱 스탬프 탭 → 미니게임 → 4종목(팡 · 점프 · 테트리스 · 기억력)을 한 판씩 · 종목마다 최고 기록을 100점 만점으로 환산 · 명예 순위" : "결선 " + esc(winTxt) + " · 1인 1회 · 같은 키보드 · 1·2등은 17:00 Outro에서 호명") + "</p>" +
+      '<p class="tytv-foot">' + (oly ? "앱 스탬프 탭 → 미니게임 → 4종목(팡 · 점프 · 테트리스 · 기억력)을 한 판씩 · 종목마다 최고 기록을 점수로 환산(보통 50 · 최상 90) · 명예 순위" : "결선 " + esc(winTxt) + " · 1인 1회 · 같은 키보드 · 1·2등은 17:00 Outro에서 호명") + "</p>" +
       (testMode() ? '<p class="tytv-foot" style="opacity:0.4">테스트 화면 · 가짜 닉네임</p>' : "") + "</div>";
   },
   type_award: function () {
@@ -4462,7 +4467,7 @@ var Views = {
     return '<div id="gwRoot">' +
       '<div class="chain-box"><p class="who">MINI GAME</p>' +
       '<p class="word disp" style="letter-spacing:0.02em">ME to WE 기억력</p>' +
-      '<p class="next" style="opacity:0.92">문장 ' + MEM_SHOW + "초 보고 단어 타일을 순서대로 · 틀리면 -" + MEM_PEN + "초 · 끝까지 하면 스탬프</p>" + axPreHtml("word", true) + "</div>" +
+      '<p class="next" style="opacity:0.92">문장 ' + MEM_SHOW + "초 보고 단어 타일을 순서대로 · 기록 = 걸린 시간 · 틀리면 +" + MEM_PEN + "초 · 끝까지 하면 스탬프</p>" + axPreHtml("word", true) + "</div>" +
       '<div class="row" style="gap:8px;align-items:stretch"><button class="btn mint" style="flex:1;padding:15px" onclick="gsBegin(\'word\')">게임 시작</button>' + sndBtnHtml(false) + "</div></div>";
   },
 
@@ -4514,7 +4519,7 @@ var Views = {
       }).join("") + "</div>";
       var ev = OLY_EVENTS.filter(function (e) { return e.key === evk; })[0], mv = me.ev[evk];
       var f = function (x) { return olyRec(x.score, evk) + '<small class="oly-pts">' + olyFmt(x.pts) + "점</small>"; }; f.medal = true;
-      h += '<div class="card"><b style="color:var(--hi)">' + esc(ev.name) + '</b><p class="muted" style="margin:2px 0 6px;font-size:calc(12.5px * var(--fs))">목표 ' + olyRec(olyTarget()[evk] || 0, evk) + " = 100점" + (olyLower(evk) ? " · 빠를수록 좋아요" : olyTime(evk) ? " · 오래 버틸수록 좋아요" : olyUnit(evk) === "줄" ? " · 많이 지울수록 좋아요" : " · 높을수록 좋아요") + "</p>" +
+      h += '<div class="card"><b style="color:var(--hi)">' + esc(ev.name) + '</b><p class="muted" style="margin:2px 0 6px;font-size:calc(12.5px * var(--fs))">보통 ' + olyRec(olyBase()[evk].mid, evk) + " = 50점 · 최상 " + olyRec(olyBase()[evk].top, evk) + " = 90점" + (olyLower(evk) ? " · 빠를수록 좋아요" : " · 오래 버틸수록 좋아요") + "</p>" +
         olyRows(b.perEvent && b.perEvent[evk], f) +
         (mv ? '<p class="muted" style="margin-top:10px">내 기록 ' + olyRec(mv.best, evk) + " · 환산 " + olyFmt(mv.pts) + "점" + (mv.rank ? " · " + mv.rank + "위" : "") + "</p>" : '<button class="btn mint" style="margin-top:10px" onclick="App.go(\'' + ev.view + '\')">' + esc(ev.name) + " 한 판</button>") + "</div>";
     } else {
@@ -7104,7 +7109,7 @@ function sndToggle(site) {
   if (typeof rgFocus === "function" && el("rgIn")) rgFocus();
 }
 /* START · 아직 안 골랐으면 선택 카드 한 번 */
-var SND_START = { pang: "pgStart()", jump: "jpStart()", tetris: "ttStart()", type: "rgStart('app')", word: "gwStart(false)" };
+var SND_START = { pang: "pgStart()", jump: "jpStart()", tetris: "ttStart()", type: "rgStart('app')", word: "gwStart()" };
 function gsBegin(key) {
   SFX.site = false;
   if (sndChosen()) { if (sndOn()) sfxUnlock(); new Function(SND_START[key])(); return; }
@@ -7160,19 +7165,32 @@ var OLY_EVENTS = [
   { key: "pang", name: "AX 팡", short: "팡", view: "game_pang", best: "pang_best", lower: 1, unit: "초" },   /* v3.74 기록 = 완주 시간(1/100초) · 작을수록 좋다 */
   { key: "jump", name: "ME to WE 점프", short: "점프", view: "game_jump", best: "jump_best", time: 1, unit: "초" },   /* v3.75 기록 = 생존 시간(1/100초) · 길수록 좋다 */
   { key: "tetris", name: "테트리스", short: "테트리스", view: "game_tetris", best: "tt_best", time: 1, unit: "초" },   /* v3.87 기록 = 버틴 시간(1/100초) · 길수록 좋다 · 줄·점수는 결과 카드의 보조 지표 */
-  { key: "word", name: "ME to WE 기억력", short: "기억력", view: "game_word", best: "gw_best" }
+  { key: "word", name: "ME to WE 기억력", short: "기억력", view: "game_word", best: "gw_time_best", lower: 1, unit: "초" }   /* v3.92 기록 = 걸린 시간(1/100초) · 작을수록 좋다 */
 ];
-var OLY_TARGET = { pang: 4500, jump: 6000, tetris: 6000, word: 480 };   /* 폴백 · 팡 = 목표 완주 45초(4500 · 짧을수록) · 점프·테트리스 = 목표 생존 60초(6000 · 길수록) · 기억력 = 목표 점수 (실측 뒤 콘솔에서 조정) */
+/* v3.92 환산 기준(폴백 · 서버 「올림픽_기준」이 정본) · 1/100초 · mid = 보통(50점) · top = 최상(90점) · 서버 OLY_BASE_DEFAULT 와 같은 값 */
+var OLY_BASE = { pang: { mid: 3100, top: 1900 }, jump: { mid: 3500, top: 6500 }, tetris: { mid: 4800, top: 8900 }, word: { mid: 2750, top: 1200 } };
 var OLY_MEDAL = ["", "금", "은", "동"];
 var OLY = { board: null, t: 0 };
 function olyMax() { return OLY_EVENTS.length * 100; }
-function olyTarget() { return (OLY.board && OLY.board.target) || OLY_TARGET; }
+/* v3.92 서버가 준 기준(mid·top)이 있으면 그것 · 옛 서버(숫자 하나)이거나 없으면 폴백 */
+function olyBase() {
+  var t = (OLY.board && OLY.board.target) || {}, out = {};
+  OLY_EVENTS.forEach(function (e) { var b = t[e.key]; out[e.key] = b && b.mid > 0 && b.top > 0 && b.mid !== b.top ? b : OLY_BASE[e.key]; });
+  return out;
+}
 function olyLower(key) { return OLY_EVENTS.some(function (e) { return e.key === key && e.lower; }); }
-/* v3.74 종목마다 방향이 다르다 · 팡(완주 시간)은 목표/기록 · 나머지는 기록/목표 · 서버 olyPts_ 와 같은 식 */
-function olyPts(best, key) {
-  var t = olyTarget()[key] || 1;
-  if (olyLower(key)) return best > 0 ? Math.min(100, Math.round(t / best * 1000) / 10) : 0;
-  return Math.min(100, Math.round(best / t * 1000) / 10);
+/* v3.92 로지스틱 환산 · z = ln(기록/보통) / ln(최상/보통) · 점수 = 100 / (1 + 9^(−z)) · 0.1 ~ 99.9 · 서버 olyPts_ 와 같은 식
+   짧을수록 좋은 종목은 최상 < 보통이라 방향 분기가 필요 없다 */
+function olyPts(best, key, base) {
+  var b = base || olyBase()[key];
+  if (!(best > 0) || !b) return 0;
+  var z = Math.log(best / b.mid) / Math.log(b.top / b.mid);
+  return Math.max(0.1, Math.min(99.9, Math.round(1000 / (1 + Math.pow(9, -z))) / 10));
+}
+/* 그 점수를 받으려면 필요한 기록 (역함수) · 결과 줄의 「다음 한 단계」 안내용 */
+function olyRecFor(pts, key) {
+  var b = olyBase()[key], z = -Math.log(100 / pts - 1) / Math.log(9);
+  return Math.round(b.mid * Math.pow(b.top / b.mid, z));
 }
 /* 기록 보여 주기 · 팡은 1/100초 → 43.2초 */
 function olyTime(key) { return OLY_EVENTS.some(function (e) { return e.key === key && (e.lower || e.time); }); }
@@ -7214,9 +7232,11 @@ function olySubmit(key, score) {
   }, function () {});
 }
 function olyMedalHtml(m) { return m ? '<span class="medal m' + m + '">' + OLY_MEDAL[m] + "</span>" : ""; }
+/* v3.92 결과 줄 · 「이 기록 = n점」 + 다음 한 단계(보통 50점 · 최상 90점 중 아직 못 넘은 쪽의 기록) + 총점 */
 function olyResultLine(key, score) {
-  var me = olyMe(), e = me.ev[key];
-  return "환산 " + olyFmt(olyPts(score, key)) + "점 · 총점 " + olyFmt(me.total) + " / " + olyMax() +
+  var me = olyMe(), pts = olyPts(score, key), b = olyBase()[key];
+  var next = pts < 50 ? "보통 " + olyRec(b.mid, key) + " = 50점" : pts < 90 ? "최상 " + olyRec(b.top, key) + " = 90점" : "최상 기준 넘음";
+  return "이 기록 = " + olyFmt(pts) + "점 · " + next + "<br>총점 " + olyFmt(me.total) + " / " + olyMax() +
     (me.left ? " · 종합 순위까지 " + me.left + "종목" : me.rank ? " · 종합 " + me.rank + "위" : "");
 }
 /* 스탬프 04 카드 펼침 = 올림픽 허브 */
@@ -7238,22 +7258,22 @@ function olyHubHtml() {
 }
 /* 테스트 모드 순위판 · 가짜 참가자 + 이 기기 기록 · 서버와 같은 규칙으로 계산 */
 var OLY_FAKE = [
-  ["팡팡요정", { pang: 4120, jump: 1500, tetris: 5200, word: 430 }],
-  ["점프왕", { pang: 5230, jump: 2100, tetris: 3800, word: 470 }],
-  ["블록장인", { pang: 6180, jump: 1200, tetris: 7400, word: 400 }],
-  ["기억의신", { pang: 5690, jump: 1300, tetris: 2900, word: 540 }],
-  ["연쇄장인", { pang: 3980, jump: 900, tetris: 2100, word: 350 }],
-  ["미위팬", { pang: 5040, jump: 1700, tetris: 3300, word: 380 }],
-  ["코인수집가", { pang: 7250, jump: 1900, word: 300 }],
+  ["팡팡요정", { pang: 3100, jump: 2600, tetris: 5200, word: 2300 }],
+  ["점프왕", { pang: 5230, jump: 8200, tetris: 3800, word: 2700 }],
+  ["블록장인", { pang: 6180, jump: 2200, tetris: 9400, word: 3000 }],
+  ["기억의신", { pang: 5690, jump: 2400, tetris: 2900, word: 1150 }],
+  ["연쇄장인", { pang: 2750, jump: 1900, tetris: 3100, word: 3400 }],
+  ["미위팬", { pang: 5040, jump: 3300, tetris: 4300, word: 2600 }],
+  ["코인수집가", { pang: 7250, jump: 4100, word: 2900 }],
   ["공감참여", { pang: 8800, tetris: 1500 }],
-  ["혁신연결", { jump: 700, word: 260 }],
-  ["로드맵러", { pang: 4460, jump: 1600, tetris: 4500, word: 410 }]
+  ["혁신연결", { jump: 1700, word: 4100 }],
+  ["로드맵러", { pang: 4460, jump: 3600, tetris: 5100, word: 2100 }]
 ];
 function olyTestBoard() {
   var people = OLY_FAKE.map(function (x, i) { return { name: x[0], best: x[1], doneAt: "2026-10-26 1" + (i % 10) + ":00:00" }; });
   var mine = {}; OLY_EVENTS.forEach(function (e) { var b = S.get(e.best, 0); if (b > 0) mine[e.key] = b; });
   people.push({ name: (typeNick() || "나") + " (나)", best: mine, doneAt: "2026-10-26 12:30:00", me: true });
-  var tgt = OLY_TARGET, keys = OLY_EVENTS.map(function (e) { return e.key; });
+  var tgt = OLY_BASE, keys = OLY_EVENTS.map(function (e) { return e.key; });
   people.forEach(function (p) {
     p.pts = {}; p.total = 0; p.done = 0;
     keys.forEach(function (k) { if (p.best[k] > 0) { p.pts[k] = olyPts(p.best[k], k); p.total += p.pts[k]; p.done++; } });
@@ -7776,7 +7796,7 @@ var GS_GAMES = {
   type: { name: "AX 단어 소나기", view: "game_type", start: "rgStart('app')", best: "type_best", line: "떨어지는 단어를 쳐서 터뜨려요 · 키보드로 입력" },
   pang: { name: "AX 팡", view: "game_pang", start: "pgStart()", best: "pang_best", line: "같은 그림 3개를 한 줄로 맞춰 터뜨려요 · 밀어서 바꾸기" },
   jump: { name: "ME to WE 점프", view: "game_jump", start: "jpStart()", best: "jump_best", line: "달리는 미위를 탭해서 점프 · 공중에서 한 번 더 탭은 2단 점프" },
-  word: { name: "ME to WE 기억력", view: "game_word", start: "gwStart(false)", best: "gw_best", line: "문장을 외워 단어 타일을 순서대로" }
+  word: { name: "ME to WE 기억력", view: "game_word", start: "gwStart()", best: "gw_time_best", line: "문장을 외워 단어 타일을 순서대로" }
 };
 var GS = { cur: null, vvh: null, onVis: null, onKey: null };
 /* o = { key, title, top(v3.36d 위 줄 HTML 교체), fill(v3.36d 캔버스 꽉 채움), cls, cw, ch, canvasId, bottom, noGesture, flat(v3.48 플랫 스타일 오버레이), resized(cv, cssW, cssH), down(e), move(e), up(e), keydown(e), running(), isPaused(), pause(), resume(), quit() } */
@@ -7972,7 +7992,7 @@ function gsResultHtml(key, r) {
    채움: 말풍선 흰색 · 톱니 검정 · 차트 O100 · 전구 O10 · 반짝임 O50 (아이콘은 흰색 또는 검정). 점 파티클 = KV 도트 격자 모티프. */
 var PG_N = 7, PG_TS = 24, PG_W = 180, PG_H = 236, PG_OX = 6, PG_OY = 38, PG_KINDS = 5;
 /* v3.74 (사용자 확정 260918) 60초 제한 → 완주 시간 경쟁 · 목표 타일을 다 터뜨릴 때까지 걸린 시간이 기록이다.
-   목표 타일 수·제한 시간은 여기 한 곳 · 올림픽 환산 목표 시간은 OLY_TARGET.pang(1/100초 · 콘솔 조정)이다. */
+   목표 타일 수·제한 시간은 여기 한 곳 · 올림픽 환산 기준(보통·최상)은 OLY_BASE.pang(1/100초 · 콘솔 조정)이다. */
 var PG_GOAL = 80, PG_MAX_SEC = 120;   /* v3.74 실측 · 한 수에 평균 4~5칸이 터져 40칸은 9수면 끝났다 → 80칸(약 18수)으로 올림 */
 /* v3.79 완주 연출을 더 음미할 수 있게 (사용자 피드백 260918) · 무너짐 2초 → 슬로건 한 줄씩 0.4초 간격 → 3.5초 머무름 */
 var PG_FIN = { fall: 2.0, hold: 3.5, step: 0.4 };
@@ -8817,15 +8837,25 @@ function gwStop() {
 /* v3.57 · 한 판 문항 뽑기 · 최근에 나온 것부터 빼고, 후보가 떨어지면 그 종류만 초기화(은행 한 바퀴) · 한 판 안 중복 없음 · 쉬운 것부터(정답 단어 수 오름차순) */
 function gwPick() {
   var seen = S.get("mem_seen", []) || [], out = [];
-  Object.keys(MEM_PLAY).forEach(function (kind) {
-    var all = MEM_ROUNDS.filter(function (R) { return R.kind === kind; });
-    for (var i = 0; i < MEM_PLAY[kind]; i++) {
-      var left = all.filter(function (R) { return out.indexOf(R) < 0 && seen.indexOf(R.id) < 0; });
-      if (!left.length) left = all.filter(function (R) { return out.indexOf(R) < 0; });   /* 한 바퀴 다 돌았으면 초기화 */
-      if (!left.length) break;
-      out.push(left[Math.floor(Math.random() * left.length)]);
+  /* v3.92 한 판 정답 타일 합을 MEM_TILES 로 맞춘다 · 순서 문항을 먼저 뽑고, 남은 칸 수에 맞는 문장 두 개를 고른다
+     (맞는 짝이 없으면 가장 가까운 짝) · 최근에 나온 문항은 되도록 빼고, 모자라면 한 바퀴 초기화 */
+  var fresh = function (R) { return seen.indexOf(R.id) < 0; };
+  var ords = MEM_ROUNDS.filter(function (R) { return R.kind === "order"; });
+  var sens = MEM_ROUNDS.filter(function (R) { return R.kind === "sentence"; });
+  var oPool = ords.filter(fresh); if (!oPool.length) oPool = ords;
+  var o = oPool[Math.floor(Math.random() * oPool.length)];
+  out.push(o);
+  var need = MEM_TILES - gwAnswer(o).length, pairs = [], best = 99;
+  [sens.filter(fresh), sens].some(function (pool) {
+    pairs = []; best = 99;
+    for (var a = 0; a < pool.length; a++) for (var b = a + 1; b < pool.length; b++) {
+      var d = Math.abs(gwAnswer(pool[a]).length + gwAnswer(pool[b]).length - need);
+      if (d < best) { best = d; pairs = []; }
+      if (d === best) pairs.push([pool[a], pool[b]]);
     }
+    return pairs.length && best === 0;
   });
+  if (pairs.length) { var pk = pairs[Math.floor(Math.random() * pairs.length)]; out.push(pk[0], pk[1]); }
   out.sort(function (a, b) { return gwAnswer(a).length - gwAnswer(b).length; });
   S.set("mem_seen", seen.concat(out.map(function (R) { return R.id; })).slice(-MEM_SEEN_MAX));
   return out;
@@ -8836,16 +8866,19 @@ function gwDecoys(R) {
   var cand = (R.pool || []).filter(function (w) { return ans.indexOf(w) < 0; });
   return shuf(cand).slice(0, MEM_DECOY[R.kind] || 2);
 }
-function gwStart(fast) {
+function gwStart() {
   gwStop();
   SFX.site = false;
-  GW = { on: true, fast: !!fast, r: 0, phase: "show", score: 0, combo: 0, maxCombo: 0, wrongs: 0, left: MEM_SEC, placed: [], tiles: [], timer: null, nextT: null, last: 0, done: 0, rounds: gwPick() };
+  GW = { on: true, r: 0, phase: "show", used: 0, wrongs: 0, placed: [], tiles: [], timer: null, nextT: null, last: 0, done: 0, rounds: gwPick() };
   gwShow();
 }
+/* v3.92 기록 = 떠올리기에 쓴 시간 + 오답 × 2초 (1/100초) */
+function gwRec() { return Math.min(MEM_REC_MAX, Math.round(GW.used / 10) + GW.wrongs * MEM_PEN * 100); }
+function gwSec(cs) { return (cs / 100).toFixed(1) + "초"; }
 function gwRound() { return (GW.rounds || [])[GW.r]; }
 function gwAnswer(R) { return R.kind === "order" ? R.pairs.map(function (p) { return p[1]; }) : R.words; }
 function gwShow() {
-  var R = gwRound(), sec = GW.fast ? MEM_SHOW_FAST : MEM_SHOW;
+  var R = gwRound(), sec = MEM_SHOW;
   GW.phase = "show";
   var root = el("gwRoot"); if (!root) return;
   root.innerHTML = gwHud() +
@@ -8873,16 +8906,16 @@ function gwRecall() {
 function gwTick() {
   if (!GW.on || GW.phase !== "recall") { GW.last = Date.now(); return; }
   var now = Date.now();
-  GW.left = Math.max(0, GW.left - (now - GW.last) / 1000);
+  GW.used += now - GW.last;
   GW.last = now;
-  var t = el("gwTime"); if (t) t.textContent = Math.ceil(GW.left);
+  var t = el("gwTime"); if (t) t.textContent = gwSec(gwRec());
 }
 function gwHud() {
   return '<div class="row" style="justify-content:flex-end;margin:-6px 0 4px">' + sndBtnHtml(false) + "</div>" +
     '<div class="game-hud">' +
     '<div class="hud"><div class="v">' + (GW.r + 1) + "/" + GW.rounds.length + '</div><div class="l">라운드</div></div>' +
-    '<div class="hud"><div class="v" id="gwTime">' + Math.ceil(GW.left) + '</div><div class="l">남은 시간(초)</div></div>' +
-    '<div class="hud"><div class="v" id="gwScore">' + GW.score + '</div><div class="l">점수' + (GW.combo >= 2 ? " · 연속 " + GW.combo : "") + "</div></div></div>";
+    '<div class="hud"><div class="v" id="gwTime" style="font-variant-numeric:tabular-nums">' + gwSec(gwRec()) + '</div><div class="l">걸린 시간</div></div>' +
+    '<div class="hud"><div class="v" id="gwWrong">' + GW.wrongs + '</div><div class="l">오답 (+' + MEM_PEN + "초씩)</div></div></div>";
 }
 function gwSlotsHtml(R, done) {
   var ans = gwAnswer(R), nextI = GW.placed.length;
@@ -8909,37 +8942,33 @@ function gwTap(i) {
   if (!t || t.used) return;
   if (t.w === ans[GW.placed.length]) {
     t.used = true; GW.placed.push(i);
-    GW.score += Math.round(MEM_PT * (1 + Math.min(GW.combo, 5) * 0.2));
-    GW.combo++; GW.maxCombo = Math.max(GW.maxCombo, GW.combo);
     sfx("tak");
     if (GW.placed.length >= ans.length) { gwRoundDone(); return; }
     gwPaint();
   } else {
-    GW.combo = 0; GW.wrongs++;
+    GW.wrongs++;
     sfx("ttuk");
-    GW.left = Math.max(0, GW.left - MEM_PEN);
     var d = el("gt" + i);
     if (d) { d.classList.remove("wrong"); void d.offsetWidth; d.classList.add("wrong"); setTimeout(function () { d.classList.remove("wrong"); }, 450); }
-    var m = el("gwMsg"); if (m) m.textContent = "순서가 달라요 · 남은 시간 -" + MEM_PEN + "초";
-    var tm = el("gwTime"); if (tm) tm.textContent = Math.ceil(GW.left);
-    var sc = document.querySelector("#gwRoot .game-hud .hud:last-child .l"); if (sc) sc.textContent = "점수";
+    var m = el("gwMsg"); if (m) m.textContent = "순서가 달라요 · +" + MEM_PEN + "초";
+    var tm = el("gwTime"); if (tm) tm.textContent = gwSec(gwRec());
+    var wr = el("gwWrong"); if (wr) wr.textContent = GW.wrongs;
   }
 }
 /* 놓인 타일을 다시 누르면 그 칸부터 뒤까지 빠진다(순서 게임이라 중간만 빼면 뒤 칸이 어긋난다) */
 function gwUnplace(k) {
   if (!GW.on || GW.phase !== "recall") return;
   GW.placed.splice(k).forEach(function (i) { GW.tiles[i].used = false; });
-  GW.combo = 0;
   gwPaint();
 }
 function gwRoundDone() {
   var R = gwRound();
+  if (GW.last) { GW.used += Date.now() - GW.last; GW.last = Date.now(); }   /* 마지막 탭까지의 시간을 넣고 시계를 멈춘다 */
   GW.phase = "done"; GW.done++;
-  GW.score += MEM_PT_ROUND;
   var root = el("gwRoot"); if (!root) return;
   var last = GW.r >= GW.rounds.length - 1;
   root.innerHTML = gwHud() +
-    '<div class="mem-stage done"><p class="who">ROUND ' + (GW.r + 1) + " · 완성 +" + MEM_PT_ROUND + "</p>" +
+    '<div class="mem-stage done"><p class="who">ROUND ' + (GW.r + 1) + " · 완성</p>" +
     (R.kind === "order" ? gwSlotsHtml(R, true) : '<p class="mem-sent">' + gwSentHtml(R) + "</p>") +
     '<p class="mem-mean">' + esc(R.mean) + "</p>" +
     '<span class="mem-pop"><canvas class="mem-mascot" width="14" height="13"></canvas><span>ME to WE</span></span></div>' +
@@ -8956,32 +8985,30 @@ function gwNext() {
   GW.r++;
   gwShow();
 }
-function gwStars(score) { return score >= MEM_STAR3 ? 3 : score >= MEM_STAR2 ? 2 : 1; }
+function gwStars(rec) { return rec <= MEM_STAR3 ? 3 : rec <= MEM_STAR2 ? 2 : 1; }
 function gwFinish() {
   if (!GW.on) return;
-  var bonus = Math.round(GW.left) * MEM_PT_SEC;
-  GW.score += bonus;
-  var stars = gwStars(GW.score);
+  var rec = gwRec(), stars = gwStars(rec), pure = Math.round(GW.used / 10);
   gwStop();
   GW.phase = "end";
   sfx("fanfare");
-  if (GW.score > S.get("gw_best", 0)) { setTimeout(function () { sfx("best"); }, 700); S.set("gw_best", GW.score); }
+  var prev = S.get("gw_time_best", 0);
+  if (!prev || rec < prev) { setTimeout(function () { sfx("best"); }, 700); S.set("gw_time_best", rec); }
   gameClear("gw_cleared");   /* 실패 없음 · 끝까지 하면 04 미니게임 */
-  olySubmit("word", GW.score);
+  olySubmit("word", rec);
   var root = el("gwRoot"); if (!root) return;
   var st = ""; for (var i = 0; i < 3; i++) st += '<span class="' + (i < stars ? "on" : "") + '">★</span>';
   root.innerHTML =
-    '<div class="chain-box" style="padding:24px 18px"><p class="who">ME to WE 기억력 · ALL CLEAR' + (GW.fast ? " · 빠른 모드" : "") + "</p>" +
+    '<div class="chain-box" style="padding:24px 18px"><p class="who">ME to WE 기억력 · ALL CLEAR</p>' +
     '<p class="mem-stars">' + st + "</p>" +
-    '<p class="disp" style="font-size:40px;color:var(--mint);margin-top:4px">' + GW.score.toLocaleString() + "</p>" +
-    '<p class="next">문장 ' + GW.done + "개 완성 · 틀린 탭 " + GW.wrongs + "번 · 남은 시간 보너스 +" + bonus + "<br>최고 " + S.get("gw_best", 0).toLocaleString() + "점</p>" +
-    '<p class="next" style="margin-top:6px">' + olyResultLine("word", GW.score) + "</p>" + "</div>" +
+    '<p class="disp" style="font-size:40px;color:var(--mint);margin-top:4px">' + gwSec(rec) + "</p>" +
+    '<p class="next">떠올린 시간 ' + gwSec(pure) + " + 오답 " + GW.wrongs + "개 × " + MEM_PEN + "초<br>최고 " + gwSec(S.get("gw_time_best", rec)) + "</p>" +
+    '<p class="next" style="margin-top:6px">' + olyResultLine("word", rec) + "</p>" + "</div>" +
     GW.rounds.map(function (R) {
       return '<div class="card soft mb8"><p style="font-size:calc(15.5px * var(--fs));font-weight:800;color:var(--hi)">' + (R.kind === "order" ? R.pairs.map(function (p) { return esc(p[0] + " " + p[1]); }).join(" · ") : esc(R.words.join(" "))) + "</p>" +
         '<p class="muted" style="font-size:calc(13px * var(--fs));margin-top:3px">' + esc(R.mean) + "</p></div>";
     }).join("") +
-    '<button class="btn mint mb8" style="padding:15px" onclick="gwStart(false)">다시 하기 · 보기 ' + MEM_SHOW + "초</button>" +
-    '<button class="btn line mb8" onclick="gwStart(true)">빠르게 다시 하기 · 보기 ' + MEM_SHOW_FAST + "초</button>" +
+    '<button class="btn mint mb8" style="padding:15px" onclick="gwStart()">다시 하기</button>' +
     '<button class="btn line" onclick="App.go(\'passport\')">스탬프 탭으로</button>';
   window.scrollTo(0, 0);
 }
