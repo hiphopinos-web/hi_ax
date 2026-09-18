@@ -929,7 +929,7 @@ function viewTyping(){
  * 기록 방향이 종목마다 다르다: 팡 = 완주 시간(짧을수록), 점프·소나기 = 버틴 시간(길수록), 기억력 = 점수.
  * 숫자마다 단위를 붙인다(초/점). 운영 전용 화면이라 실명·사번을 함께 보여 준다 · 부문은 어디에도 넣지 않는다. */
 var GST_NAME={ pang:"AX 팡", jump:"ME to WE 점프", tetris:"테트리스", word:"ME to WE 기억력" };
-var GST_DIR={ pang:"완주 시간 · 짧을수록 좋음", jump:"버틴 시간 · 길수록 좋음", tetris:"버틴 시간 · 길수록 좋음", word:"점수 · 높을수록 좋음" };
+var GST_DIR={ pang:"완주 시간 · 짧을수록 좋음", jump:"버틴 시간 · 길수록 좋음", tetris:"버틴 시간 · 길수록 좋음", word:"걸린 시간 · 짧을수록 좋음" };
 var GQ={};
 function gstFmt(v,unit){ return unit==="cs" ? (Number(v||0)/100).toFixed(1)+"초" : unit==="ln" ? Number(v||0).toLocaleString()+"줄" : Number(v||0).toLocaleString()+"점"; }
 function gstMatch(r,q){ if(!q) return true; return (r.nick||"").toLowerCase().indexOf(q)>=0 || (r.name||"").toLowerCase().indexOf(q)>=0 || String(r.emp||"").indexOf(q)>=0; }
@@ -982,7 +982,8 @@ function gstCard(g){
   var d=ST.data.gstats||{}, G=(d.games||{})[g];
   if(!G) return '<div class="card"><h2>'+esc(GST_NAME[g])+'</h2><p class="src">불러오는 중</p></div>';
   var sum=G.players?('참여 '+G.players+'명 · 플레이 '+G.plays+'회 · 최고 '+gstFmt(G.best,G.unit)+' · 중간값 '+gstFmt(G.median,G.unit)):"아직 기록이 없습니다";
-  return '<div class="card"><h2>'+esc(GST_NAME[g])+' <small>· '+esc(GST_DIR[g])+' · 목표 '+gstFmt(G.target,G.unit)+' = 100점</small></h2>'+
+  var tb=G.target&&typeof G.target==="object"?G.target:null;
+  return '<div class="card"><h2>'+esc(GST_NAME[g])+' <small>· '+esc(GST_DIR[g])+(tb?' · 보통 '+gstFmt(tb.mid,G.unit)+' = 50점 · 최상 '+gstFmt(tb.top,G.unit)+' = 90점':'')+'</small></h2>'+
     '<p class="src">'+esc(sum)+'</p>'+
     '<div class="tools" style="margin-top:10px"><input class="in" placeholder="닉네임 · 이름 · 사번 검색" oninput="gstSearch(\''+g+'\',this.value)">'+
     '<span class="src" id="gcnt_'+g+'">'+G.rows.length+' / '+G.rows.length+'명</span>'+
@@ -1018,24 +1019,50 @@ function viewGameStats(){
 }
 /* v3.50 AX 올림픽 · 종목별 목표 점수(환산 100점 기준) · 종합 상위 10(실명) · v3.50d 부문 표시 삭제 */
 var OLY_NAME={ pang:"AX 팡", jump:"ME to WE 점프", tetris:"테트리스", word:"ME to WE 기억력" };
-/* v3.80 목표값의 단위와 방향 · 팡은 완주 시간(짧을수록), 점프·소나기는 버틴 시간(길수록), 기억력은 점수 */
-var OLY_UNIT={ pang:"1/100초 · 짧을수록", jump:"1/100초 · 길수록", tetris:"1/100초 · 길수록", word:"점수 · 높을수록" };
+/* ── v3.92 AX 올림픽 환산 기준 · 종목마다 보통(= 50점)·최상(= 90점) 기록 두 개 (1/100초) ──
+ * 점수 = 100 / (1 + 9^(−z)) · z = ln(기록/보통) / ln(최상/보통) · 0.1 ~ 99.9 (0점·100점에 닿지 않는다)
+ * 팡·기억력은 짧을수록 좋아서 최상 < 보통, 점프·테트리스는 길수록 좋아서 최상 > 보통 · 서버가 방향까지 검사한다. */
+var OLY_LOWER={ pang:1, word:1 };
+var OLY_DIR={ pang:"완주 시간 · 짧을수록", jump:"버틴 시간 · 길수록", tetris:"버틴 시간 · 길수록", word:"걸린 시간 · 짧을수록" };
+function olyPtsC(rec,b){ if(!(rec>0)||!b||!(b.mid>0)||!(b.top>0)||b.mid===b.top) return 0; var z=Math.log(rec/b.mid)/Math.log(b.top/b.mid); return Math.max(0.1,Math.min(99.9,Math.round(1000/(1+Math.pow(9,-z)))/10)); }
+function secC(cs){ return (Number(cs||0)/100).toFixed(1)+"초"; }
+/* 입력칸을 바꾸면 그 종목의 미리보기 한 줄을 다시 그린다 · 저장 전 확인용 */
+function olyPrev(g){
+  var mid=Number((el("olyM_"+g)||{}).value), top=Number((el("olyT_"+g)||{}).value), p=el("olyP_"+g); if(!p) return;
+  var ok=mid>0&&top>0&&mid!==top&&(OLY_LOWER[g]?top<mid:top>mid);
+  if(!ok){ p.textContent=OLY_LOWER[g]?"최상 < 보통이어야 합니다":"최상 > 보통이어야 합니다"; p.style.color="var(--bad)"; return; }
+  var b={mid:mid,top:top}, far=Math.round(mid*Math.pow(top/mid,2)), low=Math.round(mid*mid/top);
+  p.style.color="";
+  p.textContent=secC(low)+" = "+olyPtsC(low,b)+"점 · "+secC(mid)+" = 50점 · "+secC(top)+" = 90점 · "+secC(far)+" = "+olyPtsC(far,b)+"점";
+}
 function viewOly(){
   var d=ST.data.olyr||{};
   if(!d.ok) return '<div class="card"><h2>AX 올림픽</h2><p class="src">'+(d.reason?"불러오지 못했습니다 · "+esc(d.reason):"불러오는 중")+'</p></div>';
   var ev=d.events||[], t=d.target||{};
-  var h='<div class="card"><h2>AX 올림픽 · 종목별 목표</h2><p class="src">시간이 짧을수록 좋은 종목(AX 팡)은 환산 = min(100, 목표 / 기록 × 100) · 시간이 길수록 좋은 종목(점프 · 소나기)과 점수 종목(기억력)은 min(100, 기록 / 목표 × 100) · 시간 종목의 목표는 1/100초로 적습니다(6000 = 60.0초) · 만점 '+(ev.length*100)+' ('+ev.length+'종목 × 100) · 바꾸면 전원 환산이 즉시 다시 계산됩니다</p>'+
-    '<div class="row mt12" style="gap:10px;flex-wrap:wrap">'+ev.map(function(g){ return '<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700">'+esc(OLY_NAME[g]||g)+'<input class="in" id="olyT_'+g+'" style="width:130px" inputmode="numeric" value="'+(t[g]||"")+'"><span class="src" style="font-weight:600">'+esc(OLY_UNIT[g]||"")+(g!=="word"&&t[g]?" · "+(Number(t[g])/100).toFixed(1)+"초":"")+'</span></label>'; }).join("")+
-    '<button class="btn pri" style="align-self:flex-end" onclick="olySave()">저장</button></div></div>';
+  var h='<div class="card"><h2>AX 올림픽 · 환산 기준</h2><p class="src">종목마다 보통 기록 = 50점, 최상 기록 = 90점 · 그 사이와 바깥은 곡선으로 이어져 0점·100점에는 닿지 않습니다 · 기록은 1/100초로 적습니다(3000 = 30.0초) · 만점 '+(ev.length*100)+' ('+ev.length+'종목) · 바꾸면 전원 점수가 즉시 다시 계산됩니다</p>'+
+    ev.map(function(g){
+      var b=t[g]&&typeof t[g]==="object"?t[g]:{mid:"",top:""};
+      return '<div class="row mt12" style="gap:10px;flex-wrap:wrap;align-items:flex-end">'+
+        '<b style="width:118px;font-size:13px">'+esc(OLY_NAME[g]||g)+'<br><span class="src" style="font-weight:600">'+esc(OLY_DIR[g]||"")+'</span></b>'+
+        '<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700">보통 (50점)<input class="in" id="olyM_'+g+'" style="width:110px" inputmode="numeric" value="'+(b.mid||"")+'" oninput="olyPrev(\''+g+'\')"></label>'+
+        '<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700">최상 (90점)<input class="in" id="olyT_'+g+'" style="width:110px" inputmode="numeric" value="'+(b.top||"")+'" oninput="olyPrev(\''+g+'\')"></label>'+
+        '<span class="src" id="olyP_'+g+'" style="flex:1;min-width:220px"></span></div>';
+    }).join("")+
+    '<div class="row mt12"><button class="btn pri" onclick="olySave()">저장</button></div></div>';
   h+='<div class="card"><h2>종합 상위 10 · Outro 호명용 (1~3위)</h2><p class="src">전 종목 완주자만 · 동점은 전 종목 완료가 이른 쪽 · 명예 시상(경품 없음)</p><div class="wrap"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">총점</th><th>완주 시각</th></tr>'+
     ((d.overall||[]).length?d.overall.map(function(r){ return '<tr><td class="n"><b>'+r.rank+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name)+'</td><td class="n">'+esc(r.emp)+'</td><td class="n tdr">'+r.total+'</td><td class="n src">'+esc(short(r.doneAt))+'</td></tr>'; }).join(""):'<tr><td colspan="6" class="src">아직 전 종목 완주자가 없습니다.</td></tr>')+'</table></div></div>';
+  setTimeout(function(){ ev.forEach(olyPrev); },0);
   return h;
 }
 function olySave(){
-  var d=ST.data.olyr||{}, t={}, bad="";
-  (d.events||[]).forEach(function(g){ var v=Number((el("olyT_"+g)||{}).value); if(!(v>0)||Math.round(v)!==v) bad=g; t[g]=v; });
-  if(bad){ toast("목표는 1 이상 정수 · "+(OLY_NAME[bad]||bad)); return; }
-  call("oly_cfg",{target:JSON.stringify(t)},function(r){ if(r&&r.ok){ toast("목표를 저장했습니다"); load(); } else toast("실패: "+(r&&r.reason||"")); },function(){ toast("서버 응답 없음"); });
+  var d=ST.data.olyr||{}, base={}, bad="";
+  (d.events||[]).forEach(function(g){
+    var mid=Number((el("olyM_"+g)||{}).value), top=Number((el("olyT_"+g)||{}).value);
+    if(!(mid>0)||!(top>0)||Math.round(mid)!==mid||Math.round(top)!==top||mid===top||(OLY_LOWER[g]?top>=mid:top<=mid)) bad=g;
+    base[g]={mid:mid,top:top};
+  });
+  if(bad){ toast("기준을 확인해 주세요 · "+(OLY_NAME[bad]||bad)+" ("+(OLY_LOWER[bad]?"최상 < 보통":"최상 > 보통")+" · 1 이상 정수)"); return; }
+  call("oly_cfg",{base:JSON.stringify(base)},function(r){ if(r&&r.ok){ toast("환산 기준을 저장했습니다"); load(); } else toast("실패: "+(r&&r.reason||"")+(r&&r.game?" · "+(OLY_NAME[r.game]||r.game):"")); },function(){ toast("서버 응답 없음"); });
 }
 /* v3.70 테스트 사번 기록 삭제 · 서버가 테스트 목록을 다시 확인한다 */
 function gameWipe(){
