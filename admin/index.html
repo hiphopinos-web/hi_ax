@@ -391,6 +391,7 @@ function viewAcct(){
   var h='<h1>계정<small>로그인한 사람. 명부에 있고 PIN을 등록한 계정입니다. PIN을 잊은 사람은 여기서 초기화합니다.</small></h1>';
   h+='<div class="grid g4">'+kpi("가입 계정",rows.length,"명")+kpi("명부",(ST.data.acct||{}).roster||0,"명","가입률 "+pct(rows.length,(ST.data.acct||{}).roster||0)+"%")+kpi("부문 수",Object.keys(byDept).length,"개")+kpi("PIN 초기화 대기",waiting,"명",waiting?"본인이 앱에서 새 PIN을 입력하면 풀립니다":"")+'</div>';
   h+='<div class="card"><div class="tools"><input class="in" placeholder="사번 · 이름 · 부문 검색" value="'+esc(ST.q)+'" oninput="setQ(this.value)"><span class="src">'+shown.length+' / '+rows.length+'명</span></div>';
+  h+='<p class="src" style="margin:0 0 8px">최근 접속 = 앱을 마지막으로 연 시각입니다(v3.83부터 앱 사용 중에도 갱신 · 약 10분 간격). 그 전 기록은 마지막 PIN 입력 시각입니다.</p>';
   h+='<div class="wrap"><table class="tb"><tr><th>사번</th><th>이름</th><th>부문</th><th>가입</th><th>최근 접속</th><th>PIN</th><th></th></tr>'+
     shown.slice(0,500).map(function(r){ var wait=r.pw===false;
       return '<tr><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td><td>'+esc(r.dept)+'</td><td class="n src">'+esc(short(r.joined))+'</td><td class="n">'+esc(short(r.last))+'</td>'+
