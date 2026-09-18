@@ -522,6 +522,25 @@
   #rgPlay .rg-hud .rg-ib.off { color: #B8AEA6; border-color: #D9D2CC; text-decoration: line-through; }
   #rgPlay .rg-hud .rg-ib, #rgPlay.rain .rg-hud .rgp-x { flex: none; min-width: 44px; height: 44px; padding: 0 8px; border: 2px solid #000; border-radius: 12px; background: #fff; font-weight: 800; font-size: 13px; color: #000; }
   #rgPlay .rgp-mid.fill { display: block; overflow: hidden; }
+  /* v3.94 점프 글자 레이어 · 캔버스(180×240 도트)를 키우면 글자가 뭉개져서 글자만 DOM 으로 올린다 · --u = 캔버스 1칸의 CSS px */
+  #jpTx { position: absolute; pointer-events: none; overflow: hidden; border-radius: 10px; font-family: inherit; font-variant-numeric: tabular-nums; }
+  #jpTx .jt-l, #jpTx .jt-s { position: absolute; top: calc(var(--u) * 2); height: calc(var(--u) * 15); display: flex; align-items: center; font-weight: 800; }
+  #jpTx .jt-l { left: calc(var(--u) * 6); font-size: 13px; color: #D64524; }
+  #jpTx .jt-s { right: calc(var(--u) * 6); font-size: 15px; color: #000; }
+  #jpTx .jt-sv { position: absolute; left: calc(var(--u) * 6); top: calc(var(--u) * 32); font-size: 17px; font-weight: 800; color: #D64524; letter-spacing: -0.01em; }
+  #jpTx .jt-sv small { font-size: 13px; font-weight: 700; margin-left: 2px; }
+  #jpTx .jt-guide { position: absolute; left: 50%; top: calc(var(--u) * 116); transform: translateX(-50%); width: max-content; max-width: 92%; padding: 8px 14px; border-radius: 12px;
+    background: rgba(255, 255, 255, 0.92); border: 1.5px solid #000; text-align: center; font-size: 16px; font-weight: 800; line-height: 1.4; color: #000; transition: opacity 0.4s; }
+  #jpTx .jt-guide small { display: block; font-size: 15px; font-weight: 700; color: #5E5750; }
+  #jpTx .jt-road { position: absolute; left: 0; right: 0; top: calc(var(--u) * 58); text-align: center; color: #8A817B; line-height: 1; }
+  #jpTx .jt-road b { display: block; font-size: calc(var(--u) * 34); font-weight: 900; opacity: 0.17; letter-spacing: -0.02em; }
+  #jpTx .jt-road span { display: block; margin-top: calc(var(--u) * 3); font-size: calc(var(--u) * 12); font-weight: 800; opacity: 0.26; }
+  #jpTx .jt-ban { position: absolute; left: 50%; top: calc(var(--u) * 50); transform: translateX(-50%); width: max-content; max-width: 92%; padding: 7px 14px; border-radius: 10px;
+    background: #fff; border: 2px solid #000; font-size: 15px; font-weight: 800; color: #D64524; text-align: center; line-height: 1.35; }
+  #jpTx .jt-ban.new { background: #000; color: #fff; }
+  #jpTx .jt-ban.new small { display: block; font-size: 13px; font-weight: 700; color: #FFB284; }
+  #jpTx .jt-pop { position: absolute; transform: translate(-50%, -50%); font-size: 14px; font-weight: 900; white-space: nowrap;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 2px 0 #000; }
   #rgPlay .rgp-mid.fill canvas { position: absolute; left: 0; top: 0; border: 0; border-radius: 0; background: #FFEBE0; image-rendering: auto; }
   #rgPlay .rg-tip { flex: none; margin: 0; padding: 5px 10px 0; background: #fff; font-size: 13px; font-weight: 800; color: #D64524; text-align: center; }
   #rgPlay .rg-tip[hidden] { display: none; }
@@ -8546,7 +8565,7 @@ function pgPreview() {
    미위가 자동으로 달린다 · 탭 = 점프 · 공중에서 한 번 더 탭 = 2단 점프 (PC 는 스페이스·위 화살표도).
    장애물(상자 · 러버콘 · 계단 블록)에 부딪히면 하트 -1 후 1초 무적(깜빡임) · 첫 충돌로 끝나지 않는다.
    끝 = 60초 완주 또는 하트 3개 소진. 처음 10초는 장애물이 드물고 느리다 → 이후 조금씩 빨라진다.
-   코인 = AX 토큰. 점수 = 코인 × 30 + 넘은 장애물 × 20 + 버틴 초 × 5. 장애물 이름·모양은 중립적인 사물만(회사·동료를 부정적으로 그리지 않는다). */
+   코인 = AX 토큰. 점수 = 코인 × 30 + 버틴 초 × 5 (v3.94 넘은 장애물 +20 폐지 · 순위는 생존 시간). 장애물 이름·모양은 중립적인 사물만(회사·동료를 부정적으로 그리지 않는다). */
 /* v3.75 (사용자 확정 260918) 60초 제한 폐지 → 오래 버틴 시간이 기록 · 갈수록 빨라지고 장애물이 촘촘해진다.
    안전 상한 5분 · 올림픽 환산은 기록/목표(길수록 좋다) · 목표 60초(6000 = 1/100초) · 팡(빠를수록 좋다)과 반대 방향이다. */
 var JP_W = 180, JP_H = 240, JP_GY = 196, JP_PX = 30, JP_MAX_SEC = 300, JP_HEARTS = 3, JP_G = 820, JP_JV = 300, JP_JV2 = 245, JP_INV = 1.0;
@@ -8557,8 +8576,21 @@ var JP_ROAD = [
   { at: 48, top: "2028", sub: "혁신과 연결" },
   { at: 68, top: "ME to WE", sub: "나의 업무 혁신" }
 ];   /* 배경 이정표 · 20초 간격 · 2028 뒤에는 ME to WE 로 바뀌고 그 뒤로는 반복 */
-/* 장애물 판정 사각형 [가로 시작, 폭, 높이] · 바닥에 붙어 있다 */
-var JP_OBS = { box: { w: 16, rects: [[0, 16, 16]] }, cone: { w: 14, rects: [[3, 8, 17]] }, step: { w: 22, rects: [[0, 11, 8], [11, 11, 15]] } };
+/* 장애물 판정 사각형 [가로 시작, 폭, 높이, 바닥에서 뜬 높이(없으면 0)] · 그린 모양과 판정이 같다
+   v3.94 중반 이후 새 유형 (사용자 요청 260918 「중간 이후 입체적인 방해 장치」):
+   sign 높은 간판 = 아래로 지나간다(점프하면 부딪힘 · 간판 밑 24 > 서 있는 몸 20) · tower 탑 62 = 2단 점프만 넘는다(1단 최고 57)
+   gap 끊긴 바닥 = 점프 · bob 오르내리는 상자(0~34) = 2단 점프면 언제든 넘는다 · 아이템 없이 모두 넘을 수 있다 */
+var JP_OBS = { box: { w: 16, rects: [[0, 16, 16]] }, cone: { w: 14, rects: [[3, 8, 17]] }, step: { w: 22, rects: [[0, 11, 8], [11, 11, 15]] },
+  sign: { w: 30, rects: [[2, 26, 86, 24]] }, tower: { w: 16, rects: [[0, 16, 62]] }, gap: { w: 34, rects: [] }, bob: { w: 14, rects: [[0, 14, 14]] } };
+/* 새 유형 등장표 · 30초부터 15초마다 하나씩 열린다 · 처음 나올 때는 먼 거리 + 예고 배너(검정) */
+var JP_NEW = [
+  { k: "sign", at: 30, tip: "높은 간판", how: "점프하지 말고 아래로" },
+  { k: "tower", at: 45, tip: "높은 탑", how: "2단 점프로 넘기" },
+  { k: "gap", at: 60, tip: "끊긴 바닥", how: "점프로 건너기" },
+  { k: "bob", at: 75, tip: "오르내리는 상자", how: "2단 점프로 넘기" }
+];
+var JP_BOB_AMP = 34, JP_BOB_PER = 1.5;   /* 오르내리는 상자 · 바닥 0 ~ 34 · 1.5초 주기 */
+var JP_NEW_P = 0.45;   /* 새 유형 비율 상한 · 30초 16%에서 천천히 올라 약 102초에 45% */
 var JP_COIN = ["...KKKK...", ".KKOOOOKK.", ".KOWOOWOK.", "KOOOWWOOOK", "KOOOWWOOOK", ".KOWOOWOK.", ".KKOOOOKK.", "...KKKK..."];
 var JP_COINCV = null;
 var JP = { on: false, raf: 0, parts: [], pops: [] };
@@ -8568,16 +8600,24 @@ function jpStart() {
   SFX.site = false;
   JP = { on: true, paused: false, ending: null, raf: 0, cd: 3.2, t0: 0, last: performance.now(), py: JP_GY, vy: 0, jumps: 0, hearts: JP_HEARTS, inv: 0, heartHit: 0,
     obs: [], coins: [], items: [], parts: [], pops: [], banner: null, shake: 0, dist: 0, nextObs: 70, coinN: 0, dodged: 0, hits: 0, jumpsN: 0, score: 0, speedUp: 0,
-    item: null, itemT: 0, nextItem: JP_ITEM_EVERY, road: 0, guide: 2.5, surv: 0 };
+    item: null, itemT: 0, nextItem: JP_ITEM_EVERY, road: 0, guide: 3.5, surv: 0, nextK: null, seen: {}, tx: {} };
   gsOverlayOpen({ key: "jump", title: "ME to WE 점프", cw: JP_W, ch: JP_H, canvasId: "jpCv", noGesture: true,
     bottom: '<div class="gs-foot">화면 아무 곳이나 탭 = 점프 · 공중에서 한 번 더 = 2단 점프</div>',
     down: function (e) { e.preventDefault(); jpTap(); },
     keydown: function (e) { if (e.code === "Space" || e.key === " " || e.key === "ArrowUp") { e.preventDefault(); if (!e.repeat) jpTap(); } },
     running: function () { return JP.on && !JP.paused && !JP.ending; }, isPaused: function () { return !!JP.paused; },
     pause: function () { gsPauseState(JP); }, resume: function () { gsResumeState(JP, jpFrame); },
-    quit: function () { jpStop(); App.render(); } });
+    quit: function () { jpStop(); App.render(); }, resized: function (cv, w) { jpTxFit(cv, w); } });
   var foot = document.querySelector("#rgPlay .gs-foot");
   if (foot) foot.addEventListener("pointerdown", function (e) { e.preventDefault(); jpTap(); });
+  var mid = el("gsMid"), tx = document.createElement("div");
+  tx.id = "jpTx";
+  tx.innerHTML = '<span class="jt-l">ME to WE</span><span class="jt-s" id="jtScore">0</span><span class="jt-sv" id="jtSurv"></span>' +
+    '<div class="jt-road" id="jtRoad" hidden><b></b><span></span></div>' +
+    '<div class="jt-guide" id="jtGuide" hidden>탭 = 점프<small>공중에서 한 번 더 탭 = 2단 점프</small></div>' +
+    '<div class="jt-ban" id="jtBan" hidden></div>';
+  mid.appendChild(tx);
+  if (GS.vvh) GS.vvh();
   JP.raf = requestAnimationFrame(jpFrame);
 }
 function jpFrame() {
@@ -8588,9 +8628,49 @@ function jpFrame() {
   var cv = el("jpCv");
   if (!cv) { jpStop(); return; }
   jpDraw(cv.getContext("2d"), now);
+  jpTxSync();
   if (JP.on && !JP.paused) JP.raf = requestAnimationFrame(jpFrame);
 }
+/* v3.94 글자 레이어를 캔버스 안쪽(테두리 2px 안)에 겹친다 · --u = 캔버스 1칸 */
+function jpTxFit(cv, w) {
+  var tx = el("jpTx"); if (!tx || !cv) return;
+  tx.style.left = (cv.offsetLeft + 2) + "px"; tx.style.top = (cv.offsetTop + 2) + "px";
+  tx.style.width = w + "px"; tx.style.height = Math.floor(w * JP_H / JP_W) + "px";
+  tx.style.setProperty("--u", (w / JP_W).toFixed(4) + "px");
+}
+/* 매 프레임 · 바뀐 것만 DOM 에 쓴다 */
+function jpTxSet(id, key, fn) { var e = el(id); if (!e) return null; if (JP.tx[id] !== key) { JP.tx[id] = key; fn(e); } return e; }
+function jpTxSync() {
+  var tx = el("jpTx"); if (!tx) return;
+  jpTxSet("jtScore", JP.score, function (e) { e.textContent = JP.score; });
+  var sv = (Math.round((JP.surv || 0) * 10) / 10).toFixed(1);
+  jpTxSet("jtSurv", JP.cd > 0 ? "" : sv, function (e) { e.innerHTML = JP.cd > 0 ? "" : sv + "<small>초 생존</small>"; });
+  var g = JP.guide > 0 && JP.cd <= 0 && !JP.ending, ga = g ? Math.min(1, JP.guide / 0.5) : 0;
+  jpTxSet("jtGuide", g ? ga.toFixed(2) : "off", function (e) { e.hidden = !g; e.style.opacity = ga; });
+  var r = JP.roadCur, ra = 0;
+  if (r) { var rt = JP.roadT || 0; ra = rt < 0.6 ? rt / 0.6 : rt > 5 ? Math.max(0, 6 - rt) : 1; }
+  jpTxSet("jtRoad", r ? r.top + ra.toFixed(2) : "off", function (e) {
+    e.hidden = !r; if (!r) return;
+    e.style.opacity = ra; e.firstChild.textContent = r.top; e.lastChild.textContent = r.sub;
+  });
+  var b = JP.banner;
+  jpTxSet("jtBan", b ? b.text + (b.how || "") : "off", function (e) {
+    e.hidden = !b; if (!b) return;
+    e.className = "jt-ban" + (b.how ? " new" : "");
+    e.innerHTML = esc(b.text) + (b.how ? "<small>" + esc(b.how) + "</small>" : "");
+  });
+  /* 팝 글자(하트 -1 · +30 · 부쉈다) · 생길 때 만들고 사라지면 지운다 */
+  var u = tx.clientWidth / JP_W;
+  JP.pops.forEach(function (p) {
+    if (!p.el) { p.el = document.createElement("span"); p.el.className = "jt-pop"; p.el.textContent = p.text; p.el.style.color = p.c; tx.appendChild(p.el); }
+    p.el.style.left = (Math.max(22, Math.min(JP_W - 22, p.x)) * u).toFixed(1) + "px"; p.el.style.top = (p.y * u).toFixed(1) + "px";
+    p.el.style.opacity = Math.min(1, p.t / 0.25).toFixed(2);
+  });
+  Array.prototype.forEach.call(tx.querySelectorAll(".jt-pop"), function (n) { if (!JP.pops.some(function (p) { return p.el === n; })) n.remove(); });
+}
 function jpEl(now) { return JP.t0 ? (now - JP.t0) / 1000 : 0; }
+/* 일반 배너 · 새 장애물 예고가 떠 있는 동안은 덮지 않는다 */
+function jpBan(text, t) { if (JP.banner && JP.banner.how && JP.banner.t > 0.3) return; JP.banner = { text: text, t: t }; }
 function jpTap() {
   if (!JP.on || JP.paused || JP.ending || JP.cd > 0) return;
   var jb = JP.item === "small" ? 1.22 : 1;   /* v3.75 작아지면 더 높이 */
@@ -8620,7 +8700,7 @@ function jpHit(o) {
   JP.hearts--; JP.hits++; JP.inv = JP_INV; JP.heartHit = 0.5; JP.shake = rgReduced() ? 0 : 0.25;
   JP.pops.push({ x: JP_PX + 14, y: JP.py - 30, text: "하트 -1", t: 0.9, c: RAIN_PAL.deep });
   sfx("puck");   /* 무적 중에는 jpHit 이 먼저 돌아가 소리도 없다 */
-  if (JP.hearts === 1) JP.banner = { text: "마지막 하트", t: 1.0 };
+  if (JP.hearts === 1) jpBan("마지막 하트", 1.0);
   if (JP.hearts <= 0) jpEnd("lives");
   return true;
 }
@@ -8648,7 +8728,7 @@ function jpUpdate(dt, now) {
   if (JP.road >= JP_ROAD.length && t >= JP_ROAD[JP_ROAD.length - 1].at + 20 * (JP.road - JP_ROAD.length + 1)) { JP.roadCur = JP_ROAD[JP_ROAD.length - 1]; JP.roadT = 0; JP.road++; }
   if (JP.roadCur) JP.roadT += dt;
   /* 아이템 · 한 번에 하나 · 5초 */
-  if (JP.item) { JP.itemT -= dt; if (JP.itemT <= 0) { JP.item = null; JP.banner = { text: "원래 크기", t: 0.8 }; } }
+  if (JP.item) { JP.itemT -= dt; if (JP.itemT <= 0) { JP.item = null; jpBan("원래 크기", 0.8); } }
   JP.nextItem -= dt;
   if (JP.nextItem <= 0 && !JP.item) {
     JP.nextItem = JP_ITEM_EVERY;
@@ -8656,19 +8736,32 @@ function jpUpdate(dt, now) {
     JP.items.push({ k: kind, x: JP_W + 6, y: JP_GY - 34 - Math.random() * 18, got: false });
   }
   var su = t >= 60 ? 4 : t >= 40 ? 3 : t >= 25 ? 2 : t >= 10 ? 1 : 0;
-  if (su > JP.speedUp) { JP.speedUp = su; JP.banner = { text: "속도 UP", t: 1.0 }; sfx("level"); }
+  if (su > JP.speedUp) { JP.speedUp = su; jpBan("속도 UP", 1.0); sfx("level"); }
   var dx = jpSpeed(t) * dt;
   JP.dist += dx;
   JP.vy += JP_G * dt; JP.py += JP.vy * dt;
   if (JP.py >= JP_GY) { JP.py = JP_GY; JP.vy = 0; JP.jumps = 0; }
   JP.nextObs -= dx;
   if (JP.nextObs <= 0) {
-    var kinds = t < 10 ? ["box", "cone"] : ["box", "cone", "step"], k = kinds[Math.floor(Math.random() * kinds.length)];
-    JP.obs.push({ k: k, x: JP_W + 4, w: JP_OBS[k].w, passed: false, hit: false });
+    var kinds = t < 10 ? ["box", "cone"] : ["box", "cone", "step"], k = JP.nextK || kinds[Math.floor(Math.random() * kinds.length)];
+    JP.nextK = null;
+    JP.obs.push({ k: k, x: JP_W + 4, w: JP_OBS[k].w, passed: false, hit: false, ph: Math.random() * Math.PI * 2 });
     /* v3.75 간격이 계속 좁아진다(부드럽게) · 하한 78 */
     var gMin = Math.max(78, 175 - t * 1.15), gMax = gMin + Math.max(34, 70 - t * 0.4);
     JP.nextObs = gMin + Math.random() * (gMax - gMin);
-    if (Math.random() < 0.75) {
+    /* v3.94 다음 장애물을 지금 정한다 · 새 유형이 앞뒤에 오면 착지할 거리(속도 × 1.3초)를 보장 · 처음 나오는 유형은 거리를 더 두고 예고 배너 */
+    var sp0 = jpSpeed(t), open = JP_NEW.filter(function (n) { return t >= n.at; });
+    var first = open.filter(function (n) { return !JP.seen[n.k]; })[0];
+    var isNew = !!JP_NEW.filter(function (n) { return n.k === k; })[0];
+    var pNew = open.length ? Math.min(JP_NEW_P, 0.16 + (t - 30) * 0.004) : 0;
+    var nx = first || (!isNew && Math.random() < pNew ? open[Math.floor(Math.random() * open.length)] : null);
+    if (nx) {
+      JP.nextK = nx.k;
+      JP.nextObs = Math.max(JP.nextObs, sp0 * (first ? 2.2 : 1.3));
+      if (first) { JP.seen[nx.k] = 1; JP.banner = { text: "새 장애물 · " + nx.tip, how: nx.how, t: 2.6 }; sfx("level"); }
+    }
+    if (isNew) JP.nextObs = Math.max(JP.nextObs, sp0 * 1.3);
+    if (!isNew && Math.random() < 0.75) {
       var cx0 = JP_W + 4 + JP_OBS[k].w + 28 + Math.random() * 12;
       /* 2단 점프로만 닿는 높은 코인 아치(3~5개, 2배) 또는 낮은 코인 3개 */
       if (Math.random() < 0.45) {
@@ -8686,13 +8779,15 @@ function jpUpdate(dt, now) {
   var body = jpBody();
   JP.obs.forEach(function (o) {
     o.x -= dx;
+    if (o.k === "bob") o.ph += dt * Math.PI * 2 / JP_BOB_PER;
     JP_OBS[o.k].rects.forEach(function (rc) {
-      if (!o.hit && jpOverlap(body, { x: o.x + rc[0], y: JP_GY - rc[2], w: rc[1], h: rc[2] })) jpHit(o);
+      var lift = o.k === "bob" ? jpBobLift(o) : rc[3] || 0;
+      if (!o.hit && jpOverlap(body, { x: o.x + rc[0], y: JP_GY - lift - rc[2], w: rc[1], h: rc[2] })) jpHit(o);
     });
-    if (!o.passed && o.x + o.w < body.x) {
-      o.passed = true;
-      if (!o.hit) { JP.dodged++; JP.pops.push({ x: JP_PX + 14, y: JP.py - 28, text: "+20", t: 0.6, c: RAIN_PAL.o100 }); }
-    }
+    /* 끊긴 바닥 · 땅에 닿은 채로 구멍 위(가장자리 4칸 여유)를 지나면 부딪힘 · 떨어지지는 않고 하트만 깎인다 */
+    if (o.k === "gap" && !o.hit && JP.py >= JP_GY - 0.5 && body.x + body.w - 4 > o.x && body.x + 4 < o.x + o.w) jpHit(o);
+    /* v3.94 2단 점프 +20 폐지(사용자 260918 「주는 이유를 모르겠다」) · 넘은 개수만 센다 */
+    if (!o.passed && o.x + o.w < body.x) { o.passed = true; if (!o.hit) JP.dodged++; }
   });
   JP.obs = JP.obs.filter(function (o) { return o.x + o.w > -8 && !o.smash; });
   JP.coins.forEach(function (c) {
@@ -8710,13 +8805,13 @@ function jpUpdate(dt, now) {
     it.x -= dx;
     if (!it.got && jpOverlap(body, { x: it.x, y: it.y, w: 12, h: 12 })) {
       it.got = true; JP.item = it.k; JP.itemT = JP_ITEM_SEC;
-      JP.banner = { text: it.k === "big" ? "커졌다 · 부수고 지나가요" : "작아졌다 · 더 높이 점프", t: 1.2 };
+      jpBan(it.k === "big" ? "커졌다 · 부수고 지나가요" : "작아졌다 · 더 높이 점프", 1.2);
       gsBurst(JP, it.x + 6, it.y + 6, 6, [RAIN_PAL.o100, RAIN_PAL.w]);
       sfx("ting");
     }
   });
   JP.items = JP.items.filter(function (it) { return !it.got && it.x > -14; });
-  JP.score = JP.coinN * 30 + JP.dodged * 20 + Math.floor(t) * 5;
+  JP.score = JP.coinN * 30 + Math.floor(t) * 5;
 }
 function jpEnd(why) {
   if (!JP.on || JP.ending) return;
@@ -8737,7 +8832,10 @@ function jpEndFinal(why) {
     stats: "모은 코인 " + JP.coinN + "개 · 넘은 장애물 " + JP.dodged + "개 · 부딪힘 " + JP.hits + "번", rankLine: olyResultLine("jump", surv) });
   window.scrollTo(0, 0);
 }
+/* 오르내리는 상자의 뜬 높이 · 0 ~ JP_BOB_AMP */
+function jpBobLift(o) { return Math.round(JP_BOB_AMP * (1 - Math.cos(o.ph || 0)) / 2); }
 function jpObsDraw(ctx, o) {
+  if (o.k === "sign" || o.k === "tower" || o.k === "gap" || o.k === "bob") { jpObsDraw2(ctx, o); return; }
   var x = Math.round(o.x), g = JP_GY;
   var wsh = o.k === "step" ? 24 : o.k === "cone" ? 16 : 18;
   ctx.fillStyle = "rgba(0,0,0,0.18)"; ctx.fillRect(x - 1, g - 1, wsh, 2);   /* v3.72 바닥 그림자 · 지면 위 물체로 읽히게 */
@@ -8757,6 +8855,38 @@ function jpObsDraw(ctx, o) {
     rgBox(ctx, x, g - 8, 12, 8, RAIN_PAL.deep);
     rgBox(ctx, x + 11, g - 15, 11, 15, RAIN_PAL.deep);
     ctx.fillStyle = RAIN_PAL.o60; ctx.fillRect(x + 1, g - 7, 10, 2); ctx.fillRect(x + 12, g - 14, 9, 2);
+  }
+}
+/* v3.94 새 유형 그리기 · 기존 장애물 문법(진한 채움 + 검정 외곽 + 바닥 그림자) 그대로 */
+function jpObsDraw2(ctx, o) {
+  var x = Math.round(o.x), g = JP_GY, i;
+  if (o.k === "sign") {   /* 천장에서 늘어진 간판 · 밑면이 머리 위 4칸 */
+    var top = g - 24 - 86;
+    ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(x + 7, 30, 1, top - 30); ctx.fillRect(x + 23, 30, 1, top - 30);
+    rgBox(ctx, x + 2, top, 26, 86, RAIN_PAL.deep);
+    ctx.fillStyle = RAIN_PAL.o60; ctx.fillRect(x + 3, top + 1, 24, 2);
+    for (i = 0; i < 4; i++) { ctx.fillStyle = RAIN_PAL.w; ctx.fillRect(x + 5, top + 12 + i * 18, 20, 3); }
+    ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(x + 3, g - 25, 24, 1);
+    ctx.fillStyle = "rgba(0,0,0,0.10)"; ctx.fillRect(x + 1, g - 1, 28, 2);   /* 바닥 그림자는 옅게 · 공중에 떠 있다 */
+  } else if (o.k === "tower") {   /* 상자 네 개를 쌓은 탑 · 62 */
+    ctx.fillStyle = "rgba(0,0,0,0.18)"; ctx.fillRect(x - 1, g - 1, 18, 2);
+    var hs = [16, 16, 15, 15], y = g;
+    for (i = 0; i < 4; i++) {
+      y -= hs[i]; rgBox(ctx, x, y, 16, hs[i] + (i ? 1 : 0), RAIN_PAL.deep);
+      ctx.fillStyle = RAIN_PAL.o30; ctx.fillRect(x + 2, y + 2, 4, 2);
+    }
+  } else if (o.k === "gap") {   /* 끊긴 바닥 · 땅과 흙을 지우고 검은 구멍 */
+    ctx.fillStyle = "#1B120D"; ctx.fillRect(x, g, o.w, JP_H - g);
+    ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(x - 1, g, 1, JP_H - g); ctx.fillRect(x + o.w, g, 1, JP_H - g);
+    ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(x - 3, g - 1, 3, 2); ctx.fillRect(x + o.w + 1, g - 1, 3, 2);
+  } else {   /* 오르내리는 상자 · 위아래 화살표 · 바닥 그림자는 높이에 따라 옅어진다 */
+    var lf = jpBobLift(o), by = g - lf - 14;
+    ctx.fillStyle = "rgba(0,0,0," + (0.2 - lf / JP_BOB_AMP * 0.12).toFixed(3) + ")"; ctx.fillRect(x, g - 1, 14, 2);
+    ctx.fillStyle = "#E8DED6"; ctx.fillRect(x + 6, g - JP_BOB_AMP - 14, 2, JP_BOB_AMP + 13);   /* 오르내리는 길 · 옅은 레일 */
+    rgBox(ctx, x, by, 14, 14, RAIN_PAL.deep);
+    ctx.fillStyle = RAIN_PAL.w;
+    ctx.fillRect(x + 6, by + 3, 2, 1); ctx.fillRect(x + 5, by + 4, 4, 1);
+    ctx.fillRect(x + 5, by + 9, 4, 1); ctx.fillRect(x + 6, by + 10, 2, 1);
   }
 }
 /* v3.72 (사용자 피드백 260918 「배경이 장애물과 비슷하다」)
@@ -8792,7 +8922,7 @@ function jpDraw(ctx, now) {
   ctx.imageSmoothingEnabled = false;
   if (JP.shake > 0) ctx.translate(Math.round((Math.random() - 0.5) * 4), Math.round((Math.random() - 0.5) * 4));
   jpWorld(ctx, JP.dist);
-  jpRoadDraw(ctx);   /* v3.75 배경 이정표 · AX 3개년 로드맵 */
+  jpRoadTick();   /* v3.75 배경 이정표 · AX 3개년 로드맵 · v3.94 글자는 DOM */
   JP.coins.forEach(function (c) { ctx.drawImage(jpCoinCv(), Math.round(c.x), Math.round(c.y + (Math.floor(now / 200 + c.x) % 2))); });
   JP.items.forEach(function (it) { jpItemDraw(ctx, it, now); });
   JP.obs.forEach(function (o) { jpObsDraw(ctx, o); });
@@ -8803,39 +8933,20 @@ function jpDraw(ctx, now) {
     ctx.drawImage(rgSprCv(air ? "open" : "closed"), JP_PX + (1 - k) * 8, Math.round(JP.py) - 26 * k - (step ? 1 : 0), 28 * k, 26 * k);
   }
   var frac = JP.item ? Math.max(0, JP.itemT / JP_ITEM_SEC) : 0;   /* v3.75 막대 = 아이템 남은 시간 */
-  gsHud(ctx, JP_W, "ME to WE", JP.score, frac);
-  /* v3.75 생존 시간 · 시작 안내 */
-  pgText(ctx, (Math.round((JP.surv || 0) * 10) / 10).toFixed(1) + "초 생존", 6, 41, 9, 800, RAIN_PAL.deep, "left");
-  if (JP.guide > 0 && JP.cd <= 0) {
-    ctx.globalAlpha = Math.min(1, JP.guide);
-    pgText(ctx, "화면을 탭하면 점프 · 두 번 탭하면 2단 점프", JP_W / 2, JP_GY - 60, 8, 700, RAIN_PAL.dim, "center");
-    ctx.globalAlpha = 1;
-  }
+  gsHud(ctx, JP_W, "", "", frac);   /* v3.94 글자(라벨·점수·생존 시간·안내·로드맵·배너·팝)는 DOM 글자 레이어 jpTxSync 가 그린다 */
   var blinkLast = JP.hearts === 1 && Math.floor(now / 250) % 2 === 0;
   for (var h = 0; h < JP_HEARTS; h++) {
     var on = h < JP.hearts, justLost = h === JP.hearts && JP.heartHit > 0;
     var jy = justLost && !rgReduced() ? Math.round((Math.random() - 0.5) * 3) : 0;
     gsHeart(ctx, 74 + h * 11, 7, on ? (blinkLast ? "blink" : "on") : justLost ? "hit" : "off", jy);
   }
-  gsFxDraw(ctx, JP, JP_W);
-  gsBannerDraw(ctx, JP, JP_W, 70);
+  JP.parts.forEach(function (p) { ctx.fillStyle = p.c; ctx.fillRect(Math.round(p.x), Math.round(p.y), 2, 2); });
   gsEndDraw(ctx, JP.ending, JP_W, 30, JP_GY, (Math.round((JP.surv || 0) * 10) / 10).toFixed(1) + "초 생존");
   gsCountDraw(ctx, JP.cd, JP_W, 30, JP_GY);
   ctx.restore();
 }
-/* v3.75 배경 이정표 · 옅은 무채색 큰 글자 · 장애물로 보이지 않게 채도·대비를 낮춘다(v3.72 규칙) */
-function jpRoadDraw(ctx) {
-  var r = JP.roadCur; if (!r) return;
-  var t = JP.roadT || 0, life = 6;
-  if (t > life) { JP.roadCur = null; return; }
-  var a = t < 0.6 ? t / 0.6 : t > life - 1 ? Math.max(0, (life - t)) : 1;
-  ctx.save();
-  ctx.globalAlpha = 0.16 * a;
-  pgText(ctx, r.top, JP_W / 2, JP_GY - 118, 30, 900, "#8A817B", "center");
-  ctx.globalAlpha = 0.22 * a;
-  pgText(ctx, r.sub, JP_W / 2, JP_GY - 96, 11, 800, "#8A817B", "center");
-  ctx.restore();
-}
+/* v3.75 배경 이정표 · 옅은 무채색 큰 글자 · 장애물로 보이지 않게 채도·대비를 낮춘다(v3.72 규칙) · v3.94 글자는 DOM(.jt-road) · 여기는 수명만 */
+function jpRoadTick() { if (JP.roadCur && (JP.roadT || 0) > 6) JP.roadCur = null; }
 /* v3.75 아이템 · 커지기(위 화살표) · 작아지기(아래 화살표) · 코인과 헷갈리지 않게 사각 배지 */
 function jpItemDraw(ctx, it, now) {
   var x = Math.round(it.x), y = Math.round(it.y + (Math.floor(now / 220) % 2));
