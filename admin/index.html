@@ -8,126 +8,316 @@
 <!-- 외부 리소스를 쓰지 않는다. Pretendard 가 기기에 있으면 쓰고, 없으면 맑은 고딕으로 떨어진다.
      이 파일은 public 저장소에 올라간다. 관리코드·백엔드 비밀값을 절대 적지 않는다. -->
 <style>
-/* design.md v29 · 흰 바탕 + 연주황(O10) 무보더 카드 · 텍스트 무채색 · 오렌지는 CTA 1개와 브랜드 문구 */
+/* v3.95 콘솔 톤 (사용자 지정 260919 · 총무전용공간 관리자맵 레퍼런스)
+   연회색 바탕 + 흰 카드(12px · 옅은 테두리) · 주 색은 네이비 하나(활성 탭 · 주 버튼 · 제목)
+   상태색은 채도를 낮춘 초록 · 앰버 · 적갈 · 현대해상 오렌지는 주의 배지에만 쓴다.
+   참가자 앱의 「파랑 금지」(design.md)는 앱 셸 규칙이다. 운영 콘솔은 이 레퍼런스를 따른다.
+   글자는 6단계만 쓴다: 28 숫자 · 22 페이지 제목 · 16 카드 제목 · 14 본문 · 13 보조 · 12 캡션 */
 :root{
-  --bg:#FFFFFF; --card:#FFEBE0; --card2:#FFF6F0; --line:#FFD8C1;
-  --o100:#FF7E31; --o50:#FFBF98; --o25:#FFD8C1; --o10:#FFEBE0; --o5:#FFF6F0;
-  --tx:#111111; --tx2:#555555; --tx3:#8A8A8A; --faint:#B5B5B5;
-  --ok:#1FA45B; --bad:#E5484D;
-  --r:20px; --rs:12px;
+  --bg:#F2F4F7; --sf:#FFFFFF; --soft:#F9FAFB;
+  --line:#E5E7EB; --line2:#EFF0F3; --line3:#D1D5DB;
+  --tx:#14171F; --tx2:#4B5060; --tx3:#80848F;
+  --navy:#00205B; --navy8:#0D2461; --navy1:#DFE3EF; --navy05:#EEF0F7;
+  --ok:#1E7B4F; --ok-bg:#EAF5EF; --ok-bd:#CFE6D9;
+  --warn:#8A5A12; --warn-bg:#FFF6E3; --warn-bd:#F3DFB3;
+  --bad:#A63A34; --bad-bg:#FBF0EF; --bad-bd:#EFD3D0;
+  --brand:#FF7E31;
+  --fs-kpi:28px; --fs-h1:22px; --fs-h2:16px; --fs-b:14px; --fs-s:13px; --fs-c:12px;
+  --r:12px; --r-s:8px;
+  --sh-lg:0 12px 28px rgba(8,24,74,.14),0 4px 8px rgba(8,24,74,.06);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{background:var(--bg);color:var(--tx);
   font-family:"Pretendard Variable",Pretendard,-apple-system,"Segoe UI","Malgun Gothic",sans-serif;
-  font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;word-break:keep-all}
-button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+  font-size:var(--fs-b);line-height:1.55;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;word-break:keep-all}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit;letter-spacing:inherit}
 button{cursor:pointer;border:0;background:none}
 a{color:inherit;text-decoration:none}
-.n{font-variant-numeric:tabular-nums}
+.n,td.n,.num{font-variant-numeric:tabular-nums}
+b,strong{font-weight:700}
 
-/* 헤더 */
-header{display:flex;align-items:center;gap:18px;padding:14px 24px;position:sticky;top:0;background:var(--bg);z-index:5}
-.brand{display:flex;align-items:baseline;gap:10px}
-.brand b{color:var(--o100);font-size:19px;font-weight:800;letter-spacing:.02em}
-.brand span{color:var(--tx3);font-size:12.5px;font-weight:600}
-nav.tabs{display:flex;gap:4px;margin-left:8px}
-nav.tabs button{padding:8px 14px;border-radius:999px;font-weight:600;color:var(--tx2)}
-nav.tabs button.on{background:var(--o10);color:var(--tx)}
-.hr{margin-left:auto;display:flex;align-items:center;gap:10px;color:var(--tx3);font-size:12.5px}
-.hr b{color:var(--tx);font-weight:700}
-.btn{padding:8px 14px;border-radius:999px;font-weight:700;background:var(--o10);color:var(--tx)}
-.btn.pri{background:var(--o100);color:#fff}
-.btn.ghost{background:transparent;color:var(--tx2)}
-.btn.sm{padding:5px 10px;font-size:12.5px}
-.btn.danger{color:var(--bad)}
-.btn:disabled{opacity:.4;cursor:default}
+/* ── 상단바 · 가로 탭 한 줄 · 활성 탭은 네이비로 채운다 ── */
+header.top{position:sticky;top:0;z-index:30;height:60px;background:var(--sf);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:16px;padding:0 24px}
+.brand{display:flex;align-items:baseline;gap:8px;white-space:nowrap;flex-shrink:0}
+.brand b{font-size:var(--fs-h2);font-weight:800;color:var(--navy);letter-spacing:.01em}
+.brand span{font-size:var(--fs-c);color:var(--tx3);font-weight:600}
+nav.tabs{display:flex;gap:2px;min-width:0;overflow-x:auto;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{padding:7px 12px;border-radius:var(--r-s);font-weight:600;color:var(--tx3);white-space:nowrap;flex-shrink:0}
+nav.tabs button:hover{background:var(--bg);color:var(--tx)}
+nav.tabs button.on{background:var(--navy);color:#fff}
+.tbadge{display:inline-block;margin-left:6px;min-width:18px;padding:0 6px;border-radius:99px;background:var(--brand);color:#fff;
+  font-size:var(--fs-c);font-weight:800;font-style:normal;line-height:18px;text-align:center}
+nav.tabs button.on .tbadge{background:#fff;color:var(--navy)}
+.hr{margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0;white-space:nowrap;font-size:var(--fs-s);color:var(--tx3)}
+.hr b{color:var(--tx2)}
+.role{font-size:var(--fs-c);font-weight:700;color:var(--navy);background:var(--navy05);border:1px solid var(--navy1);border-radius:99px;padding:2px 10px}
 
-main{padding:6px 24px 60px;max-width:1440px;margin:0 auto}
-h1{font-size:22px;font-weight:700;margin:14px 0 4px}
-h1 small{display:block;font-size:13px;font-weight:500;color:var(--tx3);margin-top:2px}
-h2{font-size:15px;font-weight:700;margin-bottom:10px}
-.card{background:var(--card);border-radius:var(--r);padding:18px 20px;margin-top:14px}
-.card.soft{background:var(--card2)}
-.grid{display:grid;gap:12px}
+/* ── 버튼 · 주(네이비) · 보조(흰 테두리) · 위험(적갈) · 고스트 · sm ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border-radius:var(--r-s);
+  font-weight:600;background:var(--sf);color:var(--tx2);border:1px solid var(--line3);white-space:nowrap;line-height:1.3}
+.btn:hover{border-color:var(--tx3);color:var(--tx)}
+.btn.pri{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.pri:hover{background:var(--navy8);border-color:var(--navy8)}
+.btn.danger{color:var(--bad);border-color:var(--bad-bd);background:var(--sf)}
+.btn.danger:hover{background:var(--bad-bg);border-color:var(--bad)}
+.btn.danger.fill{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--tx3)}
+.btn.ghost:hover{background:var(--bg);color:var(--tx)}
+.btn.sm{padding:5px 10px;font-size:var(--fs-s)}
+.btn:disabled{opacity:.45;cursor:default}
+
+/* ── 페이지 뼈대 · 제목 + 한 줄 설명 → 서브탭 칩 → 툴바 → 본문 ── */
+main{padding:24px 24px 72px;max-width:1480px;margin:0 auto}
+.ph{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.ph h1{font-size:var(--fs-h1);font-weight:800;color:var(--navy);letter-spacing:-.02em;line-height:1.3}
+.ph p{font-size:var(--fs-s);color:var(--tx3);margin-top:4px}
+.ph .r{margin-left:auto;display:flex;gap:8px;align-items:center}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.fchip{display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:99px;border:1px solid var(--line);
+  background:var(--sf);font-size:var(--fs-s);font-weight:600;color:var(--tx2)}
+.fchip:hover{border-color:var(--tx3);color:var(--tx)}
+.fchip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.fchip .cnt{font-size:var(--fs-c);font-weight:800;border-radius:99px;padding:0 7px;background:var(--navy05);color:var(--navy);font-variant-numeric:tabular-nums}
+.fchip.on .cnt{background:rgba(255,255,255,.2);color:#fff}
+.fchip.zero .cnt{background:var(--line2);color:var(--tx3)}
+.fchip .sep{color:var(--tx3)}
+.chips .arrow{align-self:center;color:var(--line3);font-size:var(--fs-s)}
+.chips .gap{width:12px}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.toolbar .cnt{font-size:var(--fs-s);color:var(--tx3)}
+.toolbar .cnt b{color:var(--tx)}
+.toolbar .sp{flex:1}
+.in{height:36px;padding:0 12px;border-radius:var(--r-s);border:1px solid var(--line);background:var(--sf);min-width:220px;color:var(--tx)}
+.in::placeholder{color:var(--tx3)}
+.in:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px var(--navy05)}
+select.in{min-width:130px;padding-right:8px}
+textarea.in{height:auto;min-height:72px;padding:9px 12px;resize:vertical;width:100%}
+.in.sm{height:30px;min-width:0;padding:0 8px;font-size:var(--fs-s)}
+.fld{display:flex;flex-direction:column;gap:4px;font-size:var(--fs-c);font-weight:600;color:var(--tx2)}
+
+/* ── 카드 ── */
+.card{background:var(--sf);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-top:16px}
+.card:first-child{margin-top:0}
+.ch{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.ch h2{font-size:var(--fs-h2);font-weight:700;color:var(--tx)}
+.ch .sub{font-size:var(--fs-s);color:var(--tx3)}
+.ch .r{margin-left:auto;display:flex;gap:8px;align-items:center}
+.grid{display:grid;gap:16px;margin-top:16px}
+.grid>.card{margin-top:0}
 .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
-.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
-.g6{grid-template-columns:repeat(6,minmax(0,1fr))}
-@media(max-width:1000px){.g4,.g6{grid-template-columns:repeat(3,minmax(0,1fr))}.g3{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:640px){.g2,.g3,.g4,.g6{grid-template-columns:1fr}header{flex-wrap:wrap}nav.tabs{order:3;width:100%;margin:6px 0 0}}
+.g57{grid-template-columns:minmax(0,5fr) minmax(0,7fr)}
+.kpis{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+@media(max-width:1100px){.g2,.g3,.g57{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:720px){header.top{height:auto;flex-wrap:wrap;padding:10px 16px;gap:8px}nav.tabs{order:3;width:100%}.hr{flex-wrap:wrap;margin-left:0}main{padding:16px 16px 60px}.ph .r{margin-left:0}.card .pp-sum{grid-template-columns:minmax(0,1fr)}.card .slots{grid-template-columns:minmax(0,1fr)}}
 
-/* KPI */
-.kpi{background:var(--card);border-radius:var(--r);padding:16px 18px}
-.kpi .l{font-size:12px;color:var(--tx3);font-weight:600}
-.kpi .v{font-size:28px;font-weight:800;line-height:1.1;margin-top:4px}
-.kpi .v em{font-style:normal;font-size:13px;font-weight:600;color:var(--tx3);margin-left:4px}
-.kpi .x{font-size:12px;color:var(--tx2);margin-top:6px}
+/* KPI 타일 · 큰 숫자 + 라벨 + 보조 한 줄 */
+.kpi{background:var(--sf);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+.kpi .l{font-size:var(--fs-s);color:var(--tx2);font-weight:600}
+.kpi .v{font-size:var(--fs-kpi);font-weight:800;line-height:1.15;margin-top:6px;color:var(--tx);font-variant-numeric:tabular-nums}
+.kpi .v em{font-style:normal;font-size:var(--fs-s);font-weight:600;color:var(--tx3);margin-left:4px}
+.kpi .x{font-size:var(--fs-c);color:var(--tx3);margin-top:4px}
+.kpi.link{cursor:pointer}.kpi.link:hover{border-color:var(--navy)}
+.kpi .bar{margin-top:10px}
 
-/* 게이지 · 채움 O100, 트랙은 흰색(카드가 O10 이라) */
-.bar{height:8px;border-radius:99px;background:#fff;overflow:hidden;margin-top:6px}
-.bar i{display:block;height:100%;background:var(--o100);border-radius:99px}
+/* 막대 · 네이비 채움, 트랙은 옅은 네이비 */
+.bar{height:8px;border-radius:99px;background:var(--navy05);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--navy);border-radius:99px}
 .bar.over i{background:var(--bad)}
 
 /* 표 */
-table.tb{width:100%;border-collapse:collapse;font-size:13.5px;background:#fff;border-radius:var(--rs);overflow:hidden}
-table.tb th{text-align:left;font-size:11.5px;color:var(--tx3);font-weight:600;padding:9px 10px;background:var(--card2)}
-table.tb td{padding:9px 10px;vertical-align:middle;border-top:1px solid var(--o5)}
-table.tb tr:hover td{background:var(--o5)}
-.wrap{overflow-x:auto}
-.tbadge{display:inline-block;margin-left:6px;min-width:18px;padding:0 5px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;font-weight:800;font-style:normal;line-height:18px;text-align:center}
-.scrolly{max-height:440px;overflow:auto}
-.scrolly table{width:100%}
-.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700;background:var(--o10);color:var(--tx)}
-.pill.on{background:var(--o100);color:#fff}
-.pill.off{background:#F1F1F1;color:var(--tx3)}
-.pill.ok{background:#E6F6EC;color:#177A44}
-.pill.bad{background:#FDE8E9;color:#B4272B}
-.src{font-size:11.5px;color:var(--tx3)}
+.wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-s)}
+table.tb{width:100%;border-collapse:collapse;background:var(--sf)}
+table.tb th{text-align:left;font-size:var(--fs-c);color:var(--tx3);font-weight:600;padding:9px 12px;background:var(--soft);border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;z-index:1}
+table.tb td{padding:10px 12px;vertical-align:middle;border-bottom:1px solid var(--line2)}
+table.tb tr:last-child td{border-bottom:0}
+table.tb tbody tr:hover td,table.tb tr.hv:hover td{background:var(--soft)}
+table.tb tr.click{cursor:pointer}
+table.tb tr.sel td{background:var(--navy05)}
+table.tb tr.flash td{animation:fl 1.2s ease-out}
+@keyframes fl{from{background:#FFF6E3}to{background:transparent}}
+table.tb.plain{border:0}
+.tdr,th.tdr{text-align:right;white-space:nowrap}
+.tdc{text-align:center}
+td .who2{font-weight:700;color:var(--tx)}
+td .who2 small,.who2 small{display:block;font-size:var(--fs-c);color:var(--tx3);font-weight:500}
+.scrolly{max-height:460px;overflow:auto}
+.ck{width:16px;height:16px;accent-color:var(--navy);cursor:pointer;vertical-align:middle}
+td.ckc,th.ckc{width:40px;text-align:center;padding-left:14px;padding-right:0}
+.acts{display:flex;gap:6px;align-items:center;justify-content:flex-end;flex-wrap:nowrap}
+.bartb td{border:0;padding:6px 0}
+.bartb td.l{width:190px;white-space:nowrap;padding-right:12px;font-size:var(--fs-s)}
+.bartb td.v{width:88px;text-align:right;font-size:var(--fs-s);font-variant-numeric:tabular-nums;padding-left:12px}
+
+/* 상태 배지 · 알약 */
+.tag{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;font-size:var(--fs-c);font-weight:700;border-radius:99px;padding:2px 10px;
+  color:var(--navy);background:var(--navy05);border:1px solid var(--navy1)}
+.tag.pri{color:#fff;background:var(--navy);border-color:var(--navy)}
+.tag.ok{color:var(--ok);background:var(--ok-bg);border-color:var(--ok-bd)}
+.tag.warn{color:var(--warn);background:var(--warn-bg);border-color:var(--warn-bd)}
+.tag.bad{color:var(--bad);background:var(--bad-bg);border-color:var(--bad-bd)}
+.tag.off{color:var(--tx3);background:var(--soft);border-color:var(--line)}
+.tag.brand{color:#fff;background:var(--brand);border-color:var(--brand)}
+.cap{font-size:var(--fs-c);color:var(--tx3)}
+.src{font-size:var(--fs-c);color:var(--tx3)}
 .muted{color:var(--tx2)}
-.faint{color:var(--faint)}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
-.in{padding:9px 12px;border-radius:var(--rs);border:0;background:#fff;min-width:200px}
-.in:focus{outline:2px solid var(--o50)}
-select.in{min-width:120px}
-.note{font-size:12.5px;color:var(--tx2);padding-left:10px;border-left:2px solid var(--o25)}
-.mt12{margin-top:12px}.mt6{margin-top:6px}
-.stamps{display:flex;gap:4px;flex-wrap:wrap}
-.st{width:26px;height:26px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;
-  font-size:11px;font-weight:800;background:#fff;color:var(--faint)}
-.st.got{background:var(--o100);color:#fff}
-.st.old{background:#EEE;color:var(--faint);text-decoration:line-through}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}
+.empty{padding:28px;text-align:center;font-size:var(--fs-s);color:var(--tx3);background:var(--soft);border:1px dashed var(--line3);border-radius:var(--r-s)}
+.note{font-size:var(--fs-s);color:var(--tx2);background:var(--soft);border:1px solid var(--line2);border-radius:var(--r-s);padding:10px 12px}
+.note.warn{color:var(--warn);background:var(--warn-bg);border-color:var(--warn-bd)}
+.note b{color:var(--tx)}
+
+/* 운영 메모 · 긴 설명은 접어 둔다 */
+details.memo{margin-top:16px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--soft)}
+details.memo summary{cursor:pointer;list-style:none;padding:10px 14px;font-size:var(--fs-s);font-weight:700;color:var(--tx2);display:flex;align-items:center;gap:8px}
+details.memo summary::-webkit-details-marker{display:none}
+details.memo summary::before{content:"";width:6px;height:6px;border-right:2px solid var(--tx3);border-bottom:2px solid var(--tx3);transform:rotate(-45deg);transition:transform .15s}
+details.memo[open] summary::before{transform:rotate(45deg)}
+details.memo .mb{padding:0 14px 12px 28px;font-size:var(--fs-s);color:var(--tx2);line-height:1.7}
+details.memo .mb p+p{margin-top:6px}
+details.memo .mb ol{padding-left:18px}
+
+/* 흐름 (신청 → 승인 → 체크인 → 완료) */
+.flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap}
+.flow .fs{flex:1;min-width:84px;padding:10px 12px;border:1px solid var(--line);background:var(--sf);cursor:pointer}
+.flow .fs+.st{border-left:0}
+.flow .fs:first-child{border-radius:var(--r-s) 0 0 var(--r-s)}
+.flow .fs.last{border-radius:0 var(--r-s) var(--r-s) 0}
+.flow .fs.end{border-radius:var(--r-s);margin-left:8px;border-left:1px solid var(--line);background:var(--soft)}
+.flow .fs:hover{border-color:var(--navy)}
+.flow .fs .l{font-size:var(--fs-c);color:var(--tx3);font-weight:600}
+.flow .fs .v{font-size:var(--fs-h1);font-weight:800;color:var(--tx);font-variant-numeric:tabular-nums;line-height:1.2}
+.flow .fs.hot .v{color:var(--navy)}
+
+/* 지금 처리할 일 */
+.todo{display:flex;flex-direction:column}
+.todo .it{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 4px;border-top:1px solid var(--line2)}
+.todo .it:first-child{border-top:0}
+.todo .it .v{font-size:var(--fs-h1);font-weight:800;text-align:right;font-variant-numeric:tabular-nums;color:var(--navy)}
+.todo .it.zero .v{color:var(--line3)}
+.todo .it .t{font-weight:700}
+.todo .it .d{font-size:var(--fs-c);color:var(--tx3)}
+.todo .it.zero .t{color:var(--tx3);font-weight:600}
+
+/* 개인 스탬프 패널 · 왼쪽 목록 · 오른쪽 8칸 */
+.sp{display:grid;grid-template-columns:320px minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:1000px){.sp{grid-template-columns:minmax(0,1fr)}.sp .lnb{position:static}.sp .lnb ul{max-height:260px}}
+.lnb{background:var(--sf);border:1px solid var(--line);border-radius:var(--r);padding:12px;position:sticky;top:76px}
+.lnb .in{width:100%;min-width:0}
+.lnb .cap{padding:8px 4px 6px}
+.lnb ul{list-style:none;max-height:calc(100vh - 230px);overflow:auto;display:flex;flex-direction:column;gap:2px}
+.lnb li button{width:100%;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r-s);text-align:left}
+.lnb li button:hover{background:var(--bg)}
+.lnb li button.on{background:var(--navy);color:#fff}
+.lnb li .nm{font-weight:700;font-size:var(--fs-s)}
+.lnb li .em{font-size:var(--fs-c);color:var(--tx3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lnb li button.on .em{color:#C9D2EA}
+.lnb li .c{margin-left:auto;font-size:var(--fs-c);font-weight:700;color:var(--tx3);font-variant-numeric:tabular-nums;flex-shrink:0}
+.lnb li button.on .c{color:#fff}
+.pp-h{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.pp-h .nm{font-size:var(--fs-h1);font-weight:800;color:var(--navy);line-height:1.2}
+.pp-h .em{font-size:var(--fs-s);color:var(--tx3);margin-top:4px}
+.pp-h .r{margin-left:auto;display:flex;gap:8px;align-items:center}
+.pp-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
+.pp-sum>div{border:1px solid var(--line);border-radius:var(--r-s);padding:12px 14px}
+.pp-sum .l{font-size:var(--fs-c);color:var(--tx3);font-weight:600}
+.pp-sum .v{font-size:var(--fs-h1);font-weight:800;font-variant-numeric:tabular-nums;margin-top:2px}
+.pp-sum .v em{font-style:normal;font-size:var(--fs-s);color:var(--tx3);font-weight:600;margin-left:3px}
+.pp-sum .x{font-size:var(--fs-c);color:var(--tx2);margin-top:2px}
+.slots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
+@media(max-width:1280px){.slots{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.slot{border:1px solid var(--line);border-radius:var(--r-s);padding:14px;display:flex;flex-direction:column;gap:8px;min-height:148px;background:var(--sf)}
+.slot.got{border-color:var(--navy1);background:var(--navy05)}
+.slot .no{font-size:var(--fs-c);font-weight:800;color:var(--tx3);font-variant-numeric:tabular-nums}
+.slot.got .no{color:var(--navy)}
+.slot .nm{font-weight:700}
+.slot .via{font-size:var(--fs-c);color:var(--tx2);min-height:18px}
+.slot .ft{margin-top:auto;display:flex;align-items:center;gap:8px}
+.slot .ft .btn{margin-left:auto}
+.stamps{display:flex;gap:3px;flex-wrap:nowrap}
+.st{width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;background:var(--sf);border:1px solid var(--line);color:var(--line3);font-variant-numeric:tabular-nums}
+.st.got{background:var(--navy);border-color:var(--navy);color:#fff}
+.st.old{background:var(--soft);color:var(--tx3);text-decoration:line-through}
+
+/* 선택 일괄 처리 바 */
+.bulk{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;margin-bottom:12px;background:var(--navy05);border:1px solid var(--navy1);border-radius:var(--r-s)}
+.bulk .c{font-size:var(--fs-s);color:var(--tx2);margin-right:auto}
+.bulk .c b{color:var(--navy)}
 
 /* 잠금 화면 */
-#lock{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:50}
-#lock .box{width:min(380px,90vw);background:var(--card);border-radius:var(--r);padding:28px 26px;text-align:center}
-#lock .box b{display:block;color:var(--o100);font-size:24px;font-weight:800}
-#lock .box p{color:var(--tx2);margin:6px 0 18px;font-size:13.5px}
-#lock input{width:100%;text-align:center;font-size:20px;letter-spacing:.2em;padding:12px}
-#lock .err{color:var(--bad);font-size:12.5px;min-height:18px;margin-top:8px}
+#lock{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:80}
+#lock .box{width:min(400px,90vw);background:var(--sf);border:1px solid var(--line);border-radius:var(--r);padding:32px 28px;text-align:center}
+#lock .box b{display:block;color:var(--navy);font-size:var(--fs-h1);font-weight:800}
+#lock .box p{color:var(--tx2);margin:6px 0 18px;font-size:var(--fs-s)}
+#lock input{width:100%;text-align:center;font-size:var(--fs-h2);letter-spacing:.2em;height:44px}
+#lock .err{color:var(--bad);font-size:var(--fs-c);min-height:18px;margin-top:8px}
 
-/* 확인 창 · 총무전용공간 관리자맵의 overlay 문법(어두운 배경, 위쪽에 뜨는 카드, 제목·설명·대상·오른쪽 버튼)을
-   콘솔 토큰으로 옮겼다. 잠금 화면(50)보다 아래, 표(0)보다 위. */
-.overlay{position:fixed;inset:0;background:rgba(17,17,17,.45);z-index:40;display:none;align-items:flex-start;justify-content:center;padding:72px 16px;overflow:auto}
+/* 확인 창 · 제목 · 설명 · 대상 · 영향 · 오른쪽 버튼 */
+.overlay{position:fixed;inset:0;background:rgba(8,24,74,.42);z-index:60;display:none;align-items:flex-start;justify-content:center;padding:72px 16px;overflow:auto}
 .overlay.on{display:flex}
-.ocard{background:#fff;border-radius:var(--r);width:min(480px,100%);padding:24px 26px;box-shadow:0 12px 28px rgba(0,0,0,.14)}
-.ot{font-size:16px;font-weight:800;margin-bottom:4px}
-.os{font-size:13px;color:var(--tx2);line-height:1.6}
+.ocard{background:var(--sf);border-radius:var(--r);width:min(500px,100%);padding:24px;box-shadow:var(--sh-lg)}
+.ocard.wide{width:min(640px,100%)}
+.ot{font-size:var(--fs-h2);font-weight:800;color:var(--navy);margin-bottom:6px}
+.os{font-size:var(--fs-s);color:var(--tx2);line-height:1.65}
 .os b{color:var(--tx)}
-.who{margin-top:14px;padding:12px 14px;background:var(--o5);border-radius:var(--rs);font-size:15px;font-weight:700}
-.who span{display:block;font-size:12.5px;font-weight:600;color:var(--tx2);margin-top:2px}
+.who{margin-top:14px;padding:12px 14px;background:var(--soft);border:1px solid var(--line2);border-radius:var(--r-s);font-size:var(--fs-b);font-weight:700}
+.who span{display:block;font-size:var(--fs-c);font-weight:500;color:var(--tx3);margin-top:2px}
+.imp{margin-top:12px;border:1px solid var(--line);border-radius:var(--r-s);overflow:hidden}
+.imp div{display:flex;justify-content:space-between;gap:12px;padding:8px 14px;font-size:var(--fs-s);border-top:1px solid var(--line2)}
+.imp div:first-child{border-top:0}
+.imp div span{color:var(--tx3)}
+.imp div b{font-variant-numeric:tabular-nums}
+.imp div.chg b{color:var(--navy)}
+.imp div.loss b{color:var(--bad)}
 .oa{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
-.oa .btn{padding:9px 16px}
-.tdr{text-align:right;white-space:nowrap}
+.oa .btn{padding:9px 18px}
+.guide{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.guide .gs{display:flex;gap:11px;align-items:flex-start;padding:11px 14px;background:var(--soft);border:1px solid var(--line2);border-radius:var(--r-s)}
+.guide .gn{flex-shrink:0;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:var(--navy);color:#fff;font-size:var(--fs-c);font-weight:800}
+.guide .gt{font-size:var(--fs-s);line-height:1.65;color:var(--tx2)}
+.guide .gt b{color:var(--navy)}
 
-/* 알림 */
-#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--tx);color:#fff;
-  padding:10px 16px;border-radius:999px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s;z-index:60}
-#toast.on{opacity:1}
-.err-banner{background:#FDE8E9;color:#B4272B;border-radius:var(--rs);padding:10px 14px;font-size:13px;margin-top:12px}
-.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--o25);border-top-color:var(--o100);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px;margin-right:6px}
+/* 상세 패널 (오른쪽 서랍) */
+#drwBg{position:fixed;inset:0;background:rgba(8,24,74,.18);z-index:50;display:none}
+#drw{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:var(--sf);border-left:1px solid var(--line);z-index:55;
+  box-shadow:var(--sh-lg);transform:translateX(105%);transition:transform .18s ease-out;display:flex;flex-direction:column}
+#drw.on{transform:none}
+#drwBg.on{display:block}
+#drw .dh{padding:20px 22px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start}
+#drw .dh .nm{font-size:var(--fs-h1);font-weight:800;color:var(--navy);line-height:1.2}
+#drw .dh .em{font-size:var(--fs-s);color:var(--tx3);margin-top:4px}
+#drw .dh .x{margin-left:auto}
+#drw .db{padding:18px 22px 28px;overflow:auto;flex:1}
+#drw h3{font-size:var(--fs-s);font-weight:800;color:var(--tx2);margin:18px 0 8px}
+#drw h3:first-child{margin-top:0}
+.steps{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.steps span{font-size:var(--fs-c);font-weight:700;padding:3px 10px;border-radius:99px;background:var(--soft);color:var(--tx3);border:1px solid var(--line)}
+.steps span.done{color:var(--navy);background:var(--navy05);border-color:var(--navy1)}
+.steps span.cur{color:#fff;background:var(--navy);border-color:var(--navy)}
+.steps i{font-style:normal;color:var(--line3)}
+.hist{list-style:none;display:flex;flex-direction:column}
+.hist li{display:flex;gap:10px;padding:7px 0;border-top:1px solid var(--line2);font-size:var(--fs-s)}
+.hist li:first-child{border-top:0}
+.hist li .t{color:var(--tx3);width:72px;flex-shrink:0;font-variant-numeric:tabular-nums}
+
+/* 알림 · 되돌리기 버튼을 품는다 */
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(8px);background:var(--tx);color:#fff;
+  padding:10px 12px 10px 18px;border-radius:var(--r-s);font-size:var(--fs-s);font-weight:600;opacity:0;pointer-events:none;
+  transition:opacity .2s,transform .2s;z-index:90;display:flex;gap:14px;align-items:center;max-width:min(640px,92vw);box-shadow:var(--sh-lg)}
+#toast.on{opacity:1;transform:translateX(-50%);pointer-events:auto}
+#toast button{color:#FFD27A;font-weight:800;padding:4px 8px;border-radius:6px}
+#toast button:hover{background:rgba(255,255,255,.12)}
+#toast .tt{padding-right:6px}
+.err-banner{background:var(--bad-bg);color:var(--bad);border:1px solid var(--bad-bd);border-radius:var(--r-s);padding:10px 14px;font-size:var(--fs-s);margin-bottom:16px}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--navy1);border-top-color:var(--navy);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px;margin-right:6px}
 @keyframes sp{to{transform:rotate(360deg)}}
+.drop{display:block;margin-top:12px;border:1.5px dashed var(--line3);border-radius:var(--r-s);padding:22px;text-align:center;cursor:pointer;background:var(--soft)}
+.drop:hover{border-color:var(--navy)}
 </style>
 </head>
 <body>
@@ -138,46 +328,51 @@ select.in{min-width:120px}
     <p>운영 관리 콘솔입니다. 관리코드를 입력하세요.</p>
     <input id="key" class="in" type="password" inputmode="numeric" autocomplete="off" placeholder="관리코드">
     <div class="err" id="lockErr"></div>
-    <button class="btn pri" style="width:100%;margin-top:8px;padding:12px" onclick="unlock()">들어가기</button>
+    <button class="btn pri" style="width:100%;margin-top:8px;height:44px" onclick="unlock()">들어가기</button>
     <p class="src" style="margin:14px 0 0">코드는 이 브라우저 탭이 열려 있는 동안만 기억합니다. 탭을 닫으면 다시 입력합니다.</p>
   </div>
 </div>
 
-<header>
+<header class="top">
   <div class="brand"><b>AXF CONTROL</b><span>운영 관리</span></div>
   <nav class="tabs" id="tabs"></nav>
   <div class="hr">
     <span id="stamp">·</span>
+    <button class="btn sm ghost" onclick="guide()">사용 안내</button>
+    <span class="role">관리자</span>
     <button class="btn sm" onclick="refresh()">새로고침</button>
     <button class="btn sm ghost" onclick="lock()">잠금</button>
   </div>
 </header>
 <main id="view"></main>
-<div id="toast"></div>
+<div id="drwBg" onclick="drwClose()"></div>
+<aside id="drw" aria-label="상세"></aside>
+<div id="toast"><span class="tt" id="toastT"></span><button id="toastU" style="display:none">되돌리기</button></div>
 <div id="dlg" class="overlay" role="dialog" aria-modal="true" aria-labelledby="dlgT">
-  <div class="ocard">
+  <div class="ocard" id="dlgCard">
     <div class="ot" id="dlgT"></div>
     <div class="os" id="dlgS"></div>
     <div class="who" id="dlgWho"></div>
-    <div class="oa"><button class="btn" id="dlgCancel" onclick="dlgClose()">취소</button><button class="btn pri" id="dlgOk" onclick="dlgGo()">확인</button></div>
+    <div id="dlgX"></div>
+    <div class="oa"><button class="btn" id="dlgCancel" onclick="dlgClose()">닫기</button><button class="btn pri" id="dlgOk" onclick="dlgGo()">확인</button></div>
   </div>
 </div>
-
 <script>
 /* ══════════════════ 0. 설정 ══════════════════ */
 /* 백엔드 URL 은 비밀이 아니다(앱 소스에도 있다). 관리코드는 파일에 두지 않는다. */
 var BE = "https://script.google.com/macros/s/AKfycbwjCaSSUnQ7W1lrM8T426Cn_LgKs_UhI0Qi5XRVk-_eF-oD55-Wwjsot0DkPJCX9JqMBA/exec";
 var POLL_MS = 30000;
+/* 메뉴마다 같은 뼈대: 제목 + 한 줄 설명(d) → 서브탭 칩 → 툴바 → 본문 */
 var TABS = [
-  { id:"dash",  n:"대시보드" },
-  { id:"acct",  n:"계정" },
-  { id:"stamp", n:"스탬프" },
-  { id:"apply", n:"신청" },
-  { id:"survey", n:"설문" },
-  { id:"typing", n:"게임" },
-  { id:"notice", n:"공지" },
-  { id:"photo", n:"포토부스" },
-  { id:"art", n:"사생대회" }
+  { id:"dash",  n:"대시보드", d:"지금 처리할 일과 오늘의 숫자를 한 화면에 봅니다." },
+  { id:"acct",  n:"계정", d:"로그인한 사람과 비밀번호 분실 요청을 처리합니다." },
+  { id:"stamp", n:"스탬프", d:"사번이나 이름으로 한 사람을 골라 스탬프를 부여하거나 취소합니다." },
+  { id:"apply", n:"신청", d:"상담 승인 · 커피챗 매칭 · 강의신청 · 사전 신청 명단을 처리합니다." },
+  { id:"survey", n:"설문", d:"오늘 한 판 설문 집계입니다. 답은 이름 없이 저장되어 사람 단위 조회는 없습니다." },
+  { id:"typing", n:"게임", d:"AX 올림픽 환산 기준 · 게임별 전원 기록 · 1F 현장 타자왕전과 닉네임을 관리합니다." },
+  { id:"notice", n:"공지", d:"참가자 앱 LED 띠와 실시간 안내에 나가는 공지를 발송하고 중지합니다." },
+  { id:"photo", n:"포토부스", d:"AI 포토부스 원격 대기열을 호출하고 완료 처리합니다." },
+  { id:"art", n:"사생대회", d:"본선 공개 작품을 관리합니다. 좋아요 1인 3표이고 앱에는 작가가 나오지 않습니다." }
 ];
 /* 앱 STAMPS 와 맞춘다 · v3.33 8칸(계단 st · 설문 sv 추가), v3.39 보상은 7개에서 끝. 번호는 콘솔 표 머리용 약칭일 뿐 앱에는 없다.
    폐기된 ID 는 옛 로그에 남아 있을 수 있어 표기만 한다(서버 stamp_people 는 old 로 따로 준다). */
@@ -188,6 +383,10 @@ var STAMP_META = {
   p6:{ no:"", n:"포토부스", old:1 }, p8:{ no:"", n:"미니게임", old:1 }, p9:{ no:"", n:"계단(구)", old:1 }
 };
 var STAMP_ORDER = ["p1","p2","p3","p4","p5","p7","st","sv"];
+/* v3.95 담당자 부여 = 현장 QR 3종 + 계단 · 담당자 취소 = 같은 4종 (서버 REVOKE_IDS 와 같게 둔다)
+   앱 자동 3종(04·05·06)과 설문(08)은 앱 안의 행동이라 부여하지 않고, 취소하면 다시 받을 길이 없어 취소도 막는다. */
+var GRANT_IDS = ["p1","p2","p3","st"];
+var REVOKE_IDS = ["p1","p2","p3","st"];
 /* 백엔드 SESS_META · SESS_CAP 과 같은 id */
 var SESS_NAME = {
   /* v3.31b · 17F 오전은 자유 참석(옛 신청 기록 표시용) · 오후 파트너사 강연은 신청제(사전 신청 + 앱 신청) */
@@ -197,40 +396,81 @@ var SESS_NAME = {
 };
 /* 상담 상태 · 시트 드롭다운과 같은 목록 */
 var RESV_STATUS = ["신청","승인","체크인","완료","노쇼","취소"];
+var CC_STATUS = ["대기","매칭","참석","완료","취소"];
 /* v3.31b · 10F 실습형 세션은 사전 신청(앱 밖) · 신청 현황에서 제외 (출석은 앱 운영자 스캔 집계) */
 var TEN_SESS = ["fld","ta","tb","aws","ms1","ms2"];
 var PRE_SESS = ["l1","l2"];
 
 /* ══════════════════ 1. 공통 ══════════════════ */
-function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+/* onclick 안에 넣는 문자열 · 사번·ID 는 영숫자라 그 밖의 글자는 버린다 */
+function jq(s){ return String(s==null?"":s).replace(/[^0-9A-Za-z_\-.:가-힣]/g,""); }
 function el(id){ return document.getElementById(id); }
 function key(){ try{ return sessionStorage.getItem("axf_adm_key")||""; }catch(e){ return window.__k||""; } }
 function setKey(v){ try{ sessionStorage.setItem("axf_adm_key",v); }catch(e){ window.__k=v; } }
-function toast(m){ var t=el("toast"); t.textContent=m; t.className="on"; clearTimeout(t._t); t._t=setTimeout(function(){t.className="";},2200); }
+function normE(v){ return String(v==null?"":v).replace(/\s/g,"").toUpperCase().replace(/^0+(?=.)/,""); }
+function nowHMS(){ var d=new Date(); return ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)+":"+("0"+d.getSeconds()).slice(-2); }
+/* 알림 · o.undo 가 있으면 「되돌리기」 버튼을 몇 초 동안 띄운다 */
+function toast(m,o){
+  o=o||{}; var t=el("toast"), u=el("toastU");
+  el("toastT").textContent=m; t.className="on";
+  if(o.undo){ u.style.display=""; u.onclick=function(){ u.style.display="none"; t.className=""; o.undo(); }; } else { u.style.display="none"; u.onclick=null; }
+  clearTimeout(t._t); t._t=setTimeout(function(){ t.className=""; u.style.display="none"; }, o.ms||(o.undo?7000:2400));
+}
 /* 확인 창. 브라우저 confirm() 과 달리 대상(이름·사번)을 크게 보여 주고, 처리 중에는 버튼을 잠근다.
-   onOk 가 없으면 안내 전용(확인 버튼 하나). 배경 클릭·Esc 로 닫히되 처리 중에는 안 닫힌다. */
+   onOk 가 없으면 안내 전용(확인 버튼 하나). 배경 클릭·Esc 로 닫히되 처리 중에는 안 닫힌다.
+   x = 대상 아래에 붙는 영향 표 · danger = 확인 버튼을 적갈로 */
 var DLG={ onOk:null };
 function dialog(o){
   DLG.onOk=o.onOk||null;
   el("dlgT").textContent=o.t||""; el("dlgS").innerHTML=o.s||"";
   el("dlgWho").innerHTML=o.who||""; el("dlgWho").style.display=o.who?"":"none";
-  var ok=el("dlgOk"); ok.textContent=o.ok||"확인"; ok.disabled=false;
+  el("dlgX").innerHTML=o.x||"";
+  el("dlgCard").className="ocard"+(o.wide?" wide":"");
+  var ok=el("dlgOk"); ok.textContent=o.ok||"확인"; ok.disabled=false; ok.className="btn "+(o.danger?"danger fill":"pri");
   el("dlgCancel").style.display=o.onOk?"":"none";
   el("dlg").className="overlay on";
   setTimeout(function(){ ok.focus(); },30);
 }
 function dlgBusy(){ return el("dlgOk").disabled; }
 function dlgClose(){ if(dlgBusy()) return; el("dlg").className="overlay"; DLG.onOk=null; }
+function dlgForce(){ el("dlgOk").disabled=false; dlgClose(); }
 function dlgGo(){
   if(!DLG.onOk){ dlgClose(); return; }
   var ok=el("dlgOk"); ok.disabled=true; ok.innerHTML='<span class="spin" style="border-color:rgba(255,255,255,.4);border-top-color:#fff"></span>처리 중';
   var fn=DLG.onOk; DLG.onOk=null; fn();
 }
 el("dlg").addEventListener("click",function(e){ if(e.target===el("dlg")) dlgClose(); });
-document.addEventListener("keydown",function(e){ if(e.key==="Escape"&&el("dlg").className.indexOf("on")>=0) dlgClose(); });
+document.addEventListener("keydown",function(e){
+  if(e.key!=="Escape") return;
+  if(el("dlg").className.indexOf("on")>=0) dlgClose(); else if(ST.drw) drwClose();
+});
+function imp(rows){ return '<div class="imp">'+rows.map(function(r){ return '<div class="'+(r[2]||"")+'"><span>'+esc(r[0])+'</span><b>'+r[1]+'</b></div>'; }).join("")+'</div>'; }
 function hhmm(s){ s=String(s||""); var m=s.match(/(\d{1,2}):(\d{2})/); return m?(("0"+m[1]).slice(-2)+":"+m[2]):s; }
 function short(ts){ ts=String(ts||""); var m=ts.match(/(\d{2}):(\d{2}):?\d{0,2}$/); var d=ts.match(/(\d{2})-(\d{2}) /); return (d?d[1]+"/"+d[2]+" ":"")+(m?m[1]+":"+m[2]:ts); }
 function pct(a,b){ return b>0?Math.min(100,Math.round(a/b*100)):0; }
+
+/* 뼈대 조각 · 모든 메뉴가 같은 것을 쓴다 */
+function ph(title, desc, right){ return '<div class="ph"><div><h1>'+esc(title)+'</h1>'+(desc?'<p>'+desc+'</p>':'')+'</div>'+(right?'<div class="r">'+right+'</div>':'')+'</div>'; }
+function tabHead(right){ var t=TABS.filter(function(x){return x.id===ST.tab;})[0]||{}; return ph(t.n||"", esc(t.d||""), right); }
+function chips(list, cur, fn){
+  return '<div class="chips">'+list.map(function(c){
+    if(c==="|") return '<span class="gap"></span>';
+    if(c===">") return '<span class="arrow">›</span>';
+    var has=c.c!=null;
+    return '<button class="fchip'+(cur===c.v?" on":"")+(has&&!c.c?" zero":"")+'" onclick="'+fn+'(\''+jq(c.v)+'\')">'+esc(c.n)+(has?'<span class="cnt">'+c.c+'</span>':'')+'</button>';
+  }).join("")+'</div>';
+}
+function card(title, sub, body, right, cls){
+  return '<div class="card'+(cls?" "+cls:"")+'">'+(title?'<div class="ch"><h2>'+esc(title)+'</h2>'+(sub?'<span class="sub">'+sub+'</span>':'')+(right?'<div class="r">'+right+'</div>':'')+'</div>':'')+body+'</div>';
+}
+function memo(body, title){ return '<details class="memo"><summary>'+esc(title||"운영 메모")+'</summary><div class="mb">'+body+'</div></details>'; }
+function searchBox(ph0){ return '<input class="in" placeholder="'+esc(ph0)+'" value="'+esc(ST.q)+'" oninput="setQ(this.value)">'; }
+function kpi(l,v,u,x,click){ return '<div class="kpi'+(click?" link":"")+'"'+(click?' onclick="'+click+'"':'')+'><div class="l">'+esc(l)+'</div><div class="v">'+v+(u?'<em>'+esc(u)+'</em>':'')+'</div>'+(x?'<div class="x">'+x+'</div>':'')+'</div>'; }
+function tag(s, cls){ return '<span class="tag'+(cls?" "+cls:"")+'">'+esc(s)+'</span>'; }
+var RESV_TAG={ "신청":"warn","승인":"","체크인":"pri","완료":"ok","노쇼":"bad","취소":"off" };
+var CC_TAG={ "대기":"warn","매칭":"","참석":"pri","완료":"ok","취소":"off" };
+function emptyRow(n, msg){ return '<tr><td colspan="'+n+'"><div class="empty">'+esc(msg)+'</div></td></tr>'; }
 
 /* JSONP · 백엔드가 callback 파라미터를 지원한다. GitHub Pages 에서 GAS 로 fetch 는 CORS 리다이렉트에 걸린다. */
 var _cbN=0;
@@ -254,6 +494,28 @@ function callAll(list, done){
       function(e){ err=err||e; out[it.k]=null; if(!--left) done(out,err); });
   });
 }
+/* 여러 건을 차례로 보낸다(동시 3건) · 한 건 끝날 때마다 onEach 로 그 행만 고친다 */
+function runOps(items, onEach, onDone){
+  var i=0, live=0, okN=0, bad=[], total=items.length;
+  if(!total) return onDone(0,[]);
+  function next(){
+    while(live<3&&i<total){
+      (function(it){ live++;
+        it.run(function(ok,res){ live--; if(ok) okN++; else bad.push({it:it,res:res}); onEach&&onEach(it,ok,res);
+          if(total>2) el("toastT").textContent="처리 중 "+(okN+bad.length)+" / "+total;
+          if(okN+bad.length===total) onDone(okN,bad); else next(); });
+      })(items[i++]);
+    }
+  }
+  if(total>2) toast("처리 중 0 / "+total,{ms:60000});
+  next();
+}
+function op(action, params){ return function(cb){ call(action, params, function(r){ cb(!!(r&&r.ok), r||{}); }, function(e){ cb(false, e||{reason:"network"}); }); }; }
+function why(r){ r=r||{}; return {network:"서버 응답 없음",timeout:"서버 응답 없음",notfound:"대상을 찾지 못했습니다",param:"입력값 오류",pre:"사전 신청 명단 인원입니다",notable:"테이블이 없습니다"}[r.reason]||r.reason||r.err||"실패"; }
+
+/* 처리 이력 · 이 콘솔 탭에서 한 처리만 기억한다(서버 기록은 참여 기록·운영 로그가 정본) */
+var HIST={};
+function hist(emp, text){ var k=normE(emp); (HIST[k]=HIST[k]||[]).unshift({t:nowHMS(), x:text}); }
 
 /* ══════════════════ 2. 잠금 ══════════════════ */
 function lock(msg){ setKey(""); el("lock").style.display="flex"; el("lockErr").textContent=msg||""; el("key").value=""; setTimeout(function(){el("key").focus();},50); }
@@ -269,14 +531,18 @@ function unlock(){
 el("key").addEventListener("keydown",function(e){ if(e.key==="Enter") unlock(); });
 
 /* ══════════════════ 3. 라우팅 · 폴링 ══════════════════ */
-var ST={ tab:"dash", sub:"resv", q:"", filt:"", data:{}, busy:false, at:null };
+/* subs = 메뉴별 서브탭 · sel = 표에서 고른 행 · ovr = 처리 직후 서버 반영 전까지 덮어 보여 줄 값 · drw = 열린 상세 패널 */
+var ST={ tab:"dash", subs:{ apply:"resv", stamp:"one", typing:"oly" }, q:"", filt:"", data:{}, busy:false, at:null, sel:{}, ovr:{}, drw:null, draft:{}, bulk:{}, sp:{ q:"", emp:"" } };
 /* 탭을 바꾸면 먼저 갖고 있는 데이터로 즉시 그리고, 그 다음 서버에서 받아 다시 그린다.
    안 그러면 응답이 올 때까지(1~3초) 이전 탭 내용이 새 탭 이름 아래 그대로 보인다. */
 /* load() 를 먼저 불러 busy 를 세운 뒤 그린다. 반대로 하면 첫 진입에 「가입 계정 0명」처럼 0 으로 그려진다. */
-function go(t){ ST.tab=t; ST.q=""; ST.filt=""; renderTabs(); window.scrollTo(0,0); load(); render(); }
+function go(t){ ST.tab=t; ST.q=""; ST.filt=""; ST.sel={}; drwClose(true); renderTabs(); window.scrollTo(0,0); load(); render(); }
+/* 대시보드 바로가기 · 탭 + 서브탭 + 필터까지 한 번에 */
+function goTo(t, sub, filt){ if(sub) ST.subs[t]=sub; go(t); if(filt){ ST.filt=filt; render(); } }
+function sub(){ return ST.subs[ST.tab]; }
 function renderTabs(){
   /* v3.88 계정 탭에 비밀번호 요청 대기 수를 배지로 (데스크가 놓치지 않게) */
-  var wait=((ST.data.pwreq||{}).waiting)||0;
+  var wait=(((ST.data.pwreq||{}).rows)||[]).filter(function(r){ return r.status==="대기"; }).length;
   el("tabs").innerHTML=TABS.map(function(t){ var b=(t.id==="acct"&&wait)?'<em class="tbadge">'+wait+'</em>':''; return '<button class="'+(ST.tab===t.id?"on":"")+'" onclick="go(\''+t.id+'\')">'+esc(t.n)+b+'</button>'; }).join("");
 }
 function refresh(){ load(true); }
@@ -286,9 +552,9 @@ document.addEventListener("visibilitychange",function(){ if(!document.hidden&&ke
 
 /* 탭별로 필요한 액션만 부른다 */
 var NEED={
-  dash:[{k:"stats",a:"stats"},{k:"acct",a:"acct_list"},{k:"stamp",a:"stamp_people"},{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"},{k:"pwreq",a:"pw_req_list"}],
+  dash:[{k:"stats",a:"stats"},{k:"acct",a:"acct_list"},{k:"stamp",a:"stamp_people"},{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"},{k:"pwreq",a:"pw_req_list"},{k:"photo",a:"photo_list"}],
   acct:[{k:"acct",a:"acct_list"},{k:"pwreq",a:"pw_req_list"}],
-  stamp:[{k:"stamp",a:"stamp_people"},{k:"stair",a:"stair_list"},{k:"sy",a:"sync",p:{emp:""}}],
+  stamp:[{k:"stamp",a:"stamp_people"},{k:"acct",a:"acct_list"},{k:"stair",a:"stair_list"},{k:"sy",a:"sync",p:{emp:""}}],
   apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"},{k:"pre",a:"pre_list"}],
   survey:[{k:"survey",a:"survey_list"}],
   typing:[{k:"nick",a:"type_nick_list"},{k:"tres",a:"type_result"},{k:"olyr",a:"oly_result"},{k:"gstats",a:"game_stats"}],
@@ -303,38 +569,101 @@ function load(manual){
   var seq=++ST.seq;
   ST.busy=true; el("stamp").innerHTML='<span class="spin"></span>불러오는 중';
   callAll(NEED[ST.tab],function(out,err){
-    if(seq!==ST.seq){ for(var k0 in out) if(out[k0]) ST.data[k0]=out[k0]; return; }   /* 데이터는 챙기고 화면은 안 건드린다 */
+    if(seq!==ST.seq){ for(var k0 in out) if(out[k0]) ST.data[k0]=out[k0]; applyOvr(); return; }   /* 데이터는 챙기고 화면은 안 건드린다 */
     ST.busy=false;
     for(var k in out) if(out[k]) ST.data[k]=out[k];
+    applyOvr();
     ST.at=new Date(); ST.err=err;
-    el("stamp").innerHTML=err?'<span style="color:var(--bad)">일부 실패</span>':'갱신 <b class="n">'+("0"+ST.at.getHours()).slice(-2)+":"+("0"+ST.at.getMinutes()).slice(-2)+":"+("0"+ST.at.getSeconds()).slice(-2)+'</b>';
-    render(); schedule();
+    el("stamp").innerHTML=err?'<span style="color:var(--bad)">일부 실패</span>':'갱신 <b class="n">'+nowHMS()+'</b>';
+    renderTabs(); render(); schedule();
     if(manual&&!err) toast("갱신했습니다");
   });
+}
+/* 처리 직후 20초 동안은 방금 바꾼 값을 서버 목록 위에 덮는다.
+   그 사이 도착한 폴링 응답이 처리 전 값일 수 있어서다(시트 쓰기와 읽기 사이의 틈). 서버 값이 같아지면 덮기를 멈춘다. */
+function ovrSet(k, patch){ ST.ovr[k]={ p:patch, exp:Date.now()+20000 }; }
+function applyOvr(){
+  var now=Date.now();
+  function ap(list, keyOf){ (list||[]).forEach(function(r){ var k=keyOf(r), o=ST.ovr[k]; if(!o) return;
+    if(o.exp<now){ delete ST.ovr[k]; return; }
+    var same=true; for(var f in o.p) if(String(r[f])!==String(o.p[f])) same=false;
+    if(same) delete ST.ovr[k]; else for(var f2 in o.p) r[f2]=o.p[f2]; }); }
+  ap((ST.data.resv||{}).rows, function(r){ return "resv:"+r.id; });
+  ap((ST.data.cchat||{}).rows, function(r){ return "cc:"+normE(r.emp); });
+  ap((ST.data.sess||{}).rows, function(r){ return "ss:"+normE(r.emp)+":"+r.sid; });
 }
 
 /* 값을 고칠 때 있던 자리를 지킨다. 화면을 통째로 다시 그리므로 스크롤·포커스를 직접 되돌린다. */
 function render(){
-  var v=el("view"), top=window.scrollY, ae=document.activeElement, fIdx=-1;
-  if(ae&&v.contains(ae)&&/^(INPUT|SELECT)$/.test(ae.tagName)){ var fl=v.querySelectorAll("input,select"); for(var i=0;i<fl.length;i++) if(fl[i]===ae){fIdx=i;break;} }
+  var v=el("view"), top=window.scrollY, ae=document.activeElement, fIdx=-1, selS=null, selE=null;
+  if(ae&&v.contains(ae)&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName)){ var fl=v.querySelectorAll("input,select,textarea"); for(var i=0;i<fl.length;i++) if(fl[i]===ae){fIdx=i;break;} try{ selS=ae.selectionStart; selE=ae.selectionEnd; }catch(e){} }
   var h="";
   /* 아직 안 받은 탭은 빈 표 대신 「불러오는 중」을 보인다. 빈 표는 「신청이 없다」로 읽힌다. */
   var missing=NEED[ST.tab].filter(function(it){ return !ST.data[it.k]; });
   if(missing.length&&ST.busy){
-    h='<h1>'+esc((TABS.filter(function(t){return t.id===ST.tab;})[0]||{}).n||"")+'</h1><div class="card"><p class="muted"><span class="spin"></span>서버에서 불러오는 중입니다. 보통 2~5초 걸립니다.</p></div>';
+    h=tabHead()+'<div class="card"><p class="muted"><span class="spin"></span>서버에서 불러오는 중입니다. 보통 2~5초 걸립니다.</p></div>';
   } else {
     try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="notice"?viewNotice():ST.tab==="survey"?viewSurvey():ST.tab==="typing"?viewTyping():ST.tab==="photo"?viewPhoto():ST.tab==="art"?viewArt():viewApply(); }
     catch(e){ h='<div class="err-banner">화면을 그리는 중 오류가 났습니다: '+esc(e.message)+'</div>'; }
   }
   if(ST.err) h='<div class="err-banner">일부 데이터를 못 받았습니다('+esc(ST.err.reason||"")+'). 새로고침을 눌러 주세요. 표시된 값은 마지막으로 받은 것입니다.</div>'+h;
   v.innerHTML=h;
-  if(fIdx>=0){ var f2=v.querySelectorAll("input,select"); if(f2[fIdx]){ try{f2[fIdx].focus({preventScroll:true});}catch(e){f2[fIdx].focus();} } }
+  if(fIdx>=0){ var f2=v.querySelectorAll("input,select,textarea"); if(f2[fIdx]){ try{f2[fIdx].focus({preventScroll:true});}catch(e){f2[fIdx].focus();} try{ if(selS!=null) f2[fIdx].setSelectionRange(selS,selE); }catch(e){} } }
   window.scrollTo(0,top);
+  renderDrawer();
 }
 function setQ(v){ ST.q=v; render(); }
-function setFilt(v){ ST.filt=v; render(); }
-function setSub(v){ ST.sub=v; ST.q=""; ST.filt=""; render(); }
+function setFilt(v){ ST.filt=v; ST.sel={}; render(); }
+function setSub(v){ ST.subs[ST.tab]=v; ST.q=""; ST.filt=""; ST.sel={}; drwClose(true); render(); }
 function match(row, fields){ if(!ST.q) return true; var q=ST.q.toLowerCase(); return fields.some(function(f){ return String(row[f]||"").toLowerCase().indexOf(q)>=0; }); }
+
+/* ── 상세 패널 (오른쪽 서랍) ── */
+function drwOpen(kind, k){ ST.drw={ kind:kind, k:k }; renderDrawer(); }
+function drwClose(silent){ ST.drw=null; el("drw").className=""; el("drwBg").className=""; if(!silent) render(); }
+function renderDrawer(){
+  var d=ST.drw, box=el("drw");
+  if(!d){ box.className=""; el("drwBg").className=""; return; }
+  var h=d.kind==="resv"?drwResv(d.k):d.kind==="cc"?drwCchat(d.k):d.kind==="ss"?drwSess(d.k):"";
+  if(!h){ ST.drw=null; box.className=""; el("drwBg").className=""; return; }
+  var keep=box.querySelector("textarea"), memoV=keep&&keep===document.activeElement?keep.value:null;
+  var sc=(box.querySelector(".db")||{}).scrollTop||0;
+  box.innerHTML=h; box.className="on"; el("drwBg").className="on";
+  if(memoV!=null){ var t=box.querySelector("textarea"); if(t){ t.value=memoV; t.focus(); } }
+  var db=box.querySelector(".db"); if(db) db.scrollTop=sc;
+}
+function drwHead(name, sub0){ return '<div class="dh"><div><div class="nm">'+esc(name||"-")+'</div><div class="em">'+sub0+'</div></div><button class="btn sm ghost x" onclick="drwClose()">닫기</button></div>'; }
+/* 한 사람의 신청 이력 · 신청 탭이 이미 받은 네 목록에서 모은다 */
+function personHist(emp){
+  var e=normE(emp), out=[];
+  ((ST.data.resv||{}).rows||[]).forEach(function(r){ if(normE(r.emp)===e) out.push(["상담 "+hhmm(r.slot), r.status, short(r.ts)]); });
+  ((ST.data.cchat||{}).rows||[]).forEach(function(r){ if(normE(r.emp)===e) out.push(["커피챗"+(r.tag?" · "+r.tag:""), r.status, short(r.ts)]); });
+  ((ST.data.sess||{}).rows||[]).forEach(function(r){ if(normE(r.emp)===e) out.push([SESS_NAME[r.sid]||r.sid, r.status, short(r.ts)]); });
+  var h='<h3>신청 기록</h3>'+(out.length?'<ul class="hist">'+out.map(function(x){ return '<li><span class="t">'+esc(x[2])+'</span><span style="flex:1">'+esc(x[0])+'</span>'+tag(x[1], RESV_TAG[x[1]]||CC_TAG[x[1]]||"off")+'</li>'; }).join("")+'</ul>':'<p class="cap">없음</p>');
+  var hs=HIST[e]||[];
+  h+='<h3>이 콘솔에서 한 처리</h3>'+(hs.length?'<ul class="hist">'+hs.map(function(x){ return '<li><span class="t">'+esc(x.t)+'</span><span>'+esc(x.x)+'</span></li>'; }).join("")+'</ul>':'<p class="cap">아직 없음 · 서버 기록은 시트가 정본입니다</p>');
+  return h;
+}
+
+/* ── 사용 안내 · 번호 단계 ── */
+var GUIDE={
+  dash:[["지금 처리할 일","숫자가 있는 줄의 <b>처리하기</b>를 누르면 그 메뉴의 그 필터로 바로 갑니다."],["숫자 타일","가입·스탬프·룰렛·응모권 · 참여 기록을 30초마다 새로 받습니다."],["아래 표","스탬프 보유 분포 · 강연 정원 대비 · 상담·커피챗 흐름입니다. 흐름 칸을 누르면 신청 탭의 그 상태로 갑니다."]],
+  acct:[["분실 요청","앱에서 온 비밀번호 분실 요청이 위에 쌓입니다. <b>사원증이나 얼굴로 본인 확인을 먼저</b> 합니다."],["초기화","초기화하면 본인이 앱에서 다음에 넣는 4자리가 새 비밀번호가 됩니다. 비밀번호 값은 어디에도 보이지 않습니다."],["처리자 이름","한 번 적어 두면 이 브라우저가 기억하고 운영 로그에 함께 남깁니다."]],
+  stamp:[["사람 찾기","왼쪽 칸에 사번이나 이름을 넣고 한 사람을 고릅니다."],["8칸 확인","획득한 칸은 네이비, 획득 경로(현장 QR · 담당자 부여 · 앱 자동)가 칸 안에 보입니다."],["부여","현장 QR 01·02·03 과 계단 07 만 <b>부여</b>할 수 있습니다. 앱 자동 04·05·06 과 설문 08 은 앱 안의 행동이라 부여하지 않습니다."],["취소","같은 4종만 <b>취소</b>할 수 있습니다. 확인 창에서 보상 변화를 먼저 보여 줍니다. 룰렛을 이미 돌렸거나 발급된 응모권이 줄어드는 취소는 서버가 거부합니다."],["되돌리기","처리 직후 알림의 <b>되돌리기</b>로 바로 원래대로 돌릴 수 있습니다. 모든 부여·취소는 참여 기록에 행으로 남습니다(지우지 않음)."]],
+  apply:[["처리할 것","기본 필터는 <b>처리할 것</b>입니다. 칩의 숫자는 상태별 건수입니다."],["다음 행동","행마다 지금 상태에서 할 다음 행동 하나가 네이비 버튼입니다(신청 → 승인 → 체크인 → 완료). 노쇼·취소는 옆의 적갈 버튼입니다."],["여러 건","왼쪽 칸을 체크하면 위에 일괄 처리 바가 뜹니다(일괄 승인 · 일괄 취소 · 일괄 매칭)."],["상세","행을 누르면 오른쪽에 상세 패널이 열립니다. 이력 확인과 메모 저장, 처리까지 거기서 합니다."],["되돌리기","승인·노쇼·취소·매칭은 처리 뒤 7초 동안 알림에 <b>되돌리기</b>가 뜹니다. 체크인·완료·참석은 스탬프 03 이 적립되어 되돌리기가 없습니다."]],
+  survey:[["집계","문항마다 선택 비율 · 점수 분포 · 한 줄 답을 봅니다."],["이름 없음","답은 사번 없이 저장됩니다. 사람 단위 조회는 없습니다."]],
+  typing:[["AX 올림픽","종목마다 보통(50점) · 최상(90점) 기록을 넣고 저장하면 전원 점수가 다시 계산됩니다."],["게임별 통계","네 종목 전원 기록과 CSV 입니다. 부문 통계는 두지 않습니다."],["타자왕전 · 닉네임","Outro 호명용 상위 5와 부적절한 닉네임 숨김·초기화입니다."]],
+  notice:[["발송","제목과 내용을 넣고 발송하면 모든 참가자 앱에 나갑니다."],["중지","송출 중인 공지를 중지하면 다음 동기화(10초) 때 전 기기에서 사라집니다."]],
+  photo:[["호출","<b>다음 번호 호출</b>을 누르면 맨 앞 번호의 앱에 「지금 입장하세요」가 뜹니다."],["건너뛰기 · 완료","호출 후 10분 안에 오지 않으면 건너뛰기, 도착하면 완료입니다."]],
+  art:[["설정","접수 폼 주소와 두 마감 시각을 저장합니다."],["공개","작품을 공개 · 샘플 · 숨김으로 바꿉니다."],["시상","좋아요 순위와 CSV 로 시상합니다."]]
+};
+function guide(){
+  var t=TABS.filter(function(x){return x.id===ST.tab;})[0]||{}, g=GUIDE[ST.tab]||[];
+  dialog({ t:"사용 안내 · "+(t.n||""), s:esc(t.d||""), wide:true, ok:"닫기",
+    x:'<div class="guide">'+g.map(function(s,i){ return '<div class="gs"><span class="gn">'+(i+1)+'</span><div class="gt"><b>'+esc(s[0])+'</b> · '+s[1]+'</div></div>'; }).join("")+'</div>' });
+}
+function pwBy(){ try{ return localStorage.getItem("axf_desk")||""; }catch(e){ return ""; } }
+function pwBySet(v){ try{ localStorage.setItem("axf_desk",v||""); }catch(e){} }
+function byBox(){ return '<input class="in" style="min-width:0;width:150px" placeholder="처리자 이름" value="'+esc(pwBy())+'" oninput="pwBySet(this.value)">'; }
 
 /* 스탬프 개수 → 보상 (v3.60 사용자 확정 260918 · 6개가 끝 · 7개째는 보너스) · 앱·서버와 같은 식 */
 var STAMP_DENOM=6, STAMP_BONUS=7, RAFFLE_MAX=4;
@@ -343,45 +672,62 @@ function stampCells(ids){
   return '<div class="stamps">'+STAMP_ORDER.map(function(id){ var got=ids.indexOf(id)>=0; return '<span class="st'+(got?" got":"")+'" title="'+esc(STAMP_META[id].n)+'">'+STAMP_META[id].no+'</span>'; }).join("")+
     ids.filter(function(id){return STAMP_ORDER.indexOf(id)<0;}).map(function(id){ var m=STAMP_META[id]||{n:id}; return '<span class="st old" title="'+esc(m.n)+' · 폐기된 항목">'+esc(id.replace("p",""))+'</span>'; }).join("")+'</div>';
 }
-function kpi(l,v,u,x){ return '<div class="kpi"><div class="l">'+esc(l)+'</div><div class="v n">'+v+(u?'<em>'+esc(u)+'</em>':'')+'</div>'+(x?'<div class="x">'+x+'</div>':'')+'</div>'; }
+function barRow(label, n, max, right, over){ return '<tr><td class="l">'+label+'</td><td><div class="bar'+(over?" over":"")+'"><i style="width:'+pct(n,max)+'%"></i></div></td><td class="v">'+right+'</td></tr>'; }
 
-/* ══════════════════ 4. 대시보드 ══════════════════ */
+/* ══════════════════ 4. 대시보드 ══════════════════
+ * 위계: 숫자 타일 한 줄 → 지금 처리할 일(대기 건수 + 바로가기) → 세부 표 */
 function viewDash(){
-  var st=ST.data.stats||{}, ac=(ST.data.acct||{}).rows||[], sp=(ST.data.stamp||{}).rows||[];
-  var rv=(ST.data.resv||{}).rows||[], cc=(ST.data.cchat||{}).rows||[], ss=ST.data.sess||{rows:[],cap:{}};
-  var dist=[0,0,0,0,0,0,0,0]; var roul=0, tickets=0;
-  sp.forEach(function(r){ var n=Math.min(7,r.n); dist[n]++; if(r.roulette) roul++; tickets+=reward(r.n).tickets; });
+  var st=ST.data.stats||{}, ac=(ST.data.acct||{}).rows||[], sp=(ST.data.stamp||{}).rows||[], roster=(ST.data.acct||{}).roster||0;
+  var rv=(ST.data.resv||{}).rows||[], cc=(ST.data.cchat||{}).rows||[], ss=ST.data.sess||{rows:[],cap:{}}, ph0=(ST.data.photo&&ST.data.photo.ok)?(ST.data.photo.rows||[]):[];
+  var dist=[0,0,0,0,0,0,0,0,0]; var roul=0, tickets=0, issued=0, hasTk=false, active=0;
+  sp.forEach(function(r){ dist[Math.min(8,r.n)]++; if(r.n>0) active++; if(r.roulette) roul++; tickets+=reward(r.n).tickets; if(r.tk!=null){ hasTk=true; issued+=r.tk; } });
   var eligible=sp.filter(function(r){return r.n>=3;}).length;
   var rvBy={}; rv.forEach(function(r){ rvBy[r.status]=(rvBy[r.status]||0)+1; });
   var ccBy={}; cc.forEach(function(r){ ccBy[r.status]=(ccBy[r.status]||0)+1; });
   var sessN={}; ss.rows.forEach(function(r){ if(r.status!=="취소") sessN[r.sid]=(sessN[r.sid]||0)+1; });
   var sessIds=Object.keys(ss.cap||{}).filter(function(k){return k!=="photo"&&k!=="kring"&&TEN_SESS.indexOf(k)<0;});
+  var pre=ss.pre||{}, over=sessIds.filter(function(id){ return (sessN[id]||0)+(PRE_SESS.indexOf(id)>=0?(pre[id]||0):0)>(ss.cap[id]||0); });
+  var pw=(((ST.data.pwreq||{}).rows)||[]).filter(function(r){ return r.status==="대기"; }).length;
 
-  var h='<h1>대시보드<small>'+(st.t?'서버 시각 '+esc(st.t):'')+'</small></h1>';
-  h+='<div class="grid g4">'+
-    kpi("가입 계정",ac.length,"명",(ST.data.acct&&ST.data.acct.roster?'명부 '+ST.data.acct.roster+'명 중 '+pct(ac.length,ST.data.acct.roster)+'%':''))+
-    kpi("참여 기록",st.wall||0,"건","스탬프·아이디어·게임·룰렛 전체")+
-    kpi("스탬프 3개 이상",eligible,"명","룰렛 자격 · 사용 "+roul+"명")+
-    kpi("추첨 응모권",tickets,"장","4개 1장 · 5개 2장 · 6개 3장 · 보너스(7개) 4장")+
+  var h=tabHead(st.t?'<span class="cap">서버 시각 <b class="n">'+esc(st.t)+'</b></span>':'');
+  h+='<div class="kpis">'+
+    kpi("가입 계정",ac.length,"명",roster?'명부 '+roster+'명 중 '+pct(ac.length,roster)+'%':'',"go('acct')")+
+    kpi("스탬프 참여",active,"명",'1개 이상 · 평균 '+(active?(sp.reduce(function(a,r){return a+r.n;},0)/active).toFixed(1):"0")+'개',"go('stamp')")+
+    kpi("룰렛 자격",eligible,"명",'3개 이상 · 사용 '+roul+'명 · 남음 '+Math.max(0,eligible-roul)+'명')+
+    kpi("추첨 응모권",tickets,"장",hasTk?'자격 기준 · 번호 발급 '+issued+'장':'4개 1장 · 5개 2장 · 6개 3장 · 7개 4장')+
+    kpi("참여 기록",(st.wall||0).toLocaleString(),"건","스탬프 · 아이디어 · 게임 · 룰렛 전체")+
   '</div>';
 
-  h+='<div class="grid g2"><div class="card"><h2>스탬프 보유 분포</h2>';
-  var mx=Math.max.apply(null,dist.concat([1]));
-  h+='<table class="tb">'+dist.map(function(c,i){ return '<tr><td style="width:70px"><b class="n">'+i+'개</b>'+(i===3?' <span class="pill">룰렛</span>':i>=4?' <span class="pill">응모 '+(i-3)+'장</span>':'')+'</td><td><div class="bar"><i style="width:'+pct(c,mx)+'%"></i></div></td><td class="n" style="width:60px;text-align:right">'+c+'명</td></tr>'; }).join("")+'</table>';
-  h+='<p class="src mt6">참여 기록이 있는 사람만 셉니다. 가입만 하고 아무것도 안 한 사람은 0개에 안 들어갑니다.</p></div>';
-
-  h+='<div class="card"><h2>강의신청 · 정원 대비</h2><table class="tb">'+sessIds.map(function(id){ var n=sessN[id]||0, cap=ss.cap[id]||0, over=n>cap; return '<tr><td style="width:140px"><b>'+esc(SESS_NAME[id]||id)+'</b></td><td><div class="bar'+(over?" over":"")+'"><i style="width:'+pct(n,cap)+'%"></i></div></td><td class="n" style="width:90px;text-align:right">'+n+' / '+cap+'</td></tr>'; }).join("")+'</table>';
-  h+='<p class="src mt6">취소를 뺀 신청 수입니다. 정원 초과는 붉게 표시됩니다.</p></div></div>';
-
-  h+='<div class="grid g2"><div class="card"><h2>상담 (1F DAP존)</h2><div class="row">'+RESV_STATUS.map(function(s){ return '<span class="pill'+(s==="승인"||s==="체크인"?" on":s==="취소"||s==="노쇼"?" off":"")+'">'+esc(s)+' <b class="n">'+(rvBy[s]||0)+'</b></span>'; }).join("")+'</div>'+
-    '<p class="src mt12">신청 '+(rvBy["신청"]||0)+'건이 승인 대기입니다. <a href="javascript:ST.sub=\'resv\';go(\'apply\')" style="color:var(--o100);font-weight:700">신청 탭에서 처리</a></p></div>';
-  h+='<div class="card"><h2>커피챗 (18F 라운지)</h2><div class="row">'+["대기","매칭","참석","완료","취소"].map(function(s){ return '<span class="pill'+(s==="매칭"?" on":s==="취소"?" off":"")+'">'+esc(s)+' <b class="n">'+(ccBy[s]||0)+'</b></span>'; }).join("")+'</div>'+
-    '<p class="src mt12">대기 '+(ccBy["대기"]||0)+'명이 매칭을 기다립니다.</p></div></div>';
-
-  if(st.depts&&st.depts.length){
-    var dm=st.depts[0].n;
-    h+='<div class="card"><h2>부문별 참여 기록</h2><table class="tb">'+st.depts.slice(0,12).map(function(d){ return '<tr><td style="width:180px">'+esc(d.d)+'</td><td><div class="bar"><i style="width:'+pct(d.n,dm)+'%"></i></div></td><td class="n" style="width:70px;text-align:right">'+d.n+'</td></tr>'; }).join("")+'</table></div>';
+  var todo=[
+    { v:pw, t:"비밀번호 분실 요청", d:"본인 확인 후 초기화", go:"go('acct')" },
+    { v:rvBy["신청"]||0, t:"상담 승인 대기", d:"1F DAP존 · 신청 상태", go:"goTo('apply','resv','신청')" },
+    { v:rvBy["승인"]||0, t:"상담 체크인 대기", d:"승인됐고 아직 오지 않음", go:"goTo('apply','resv','승인')" },
+    { v:ccBy["대기"]||0, t:"커피챗 매칭 대기", d:"18F 라운지 · 회차와 테이블 배정", go:"goTo('apply','cchat','대기')" },
+    { v:ph0.length, t:"포토부스 대기", d:"호출할 번호표", go:"go('photo')" },
+    { v:over.length, t:"정원 초과 강연", d:over.length?over.map(function(id){return SESS_NAME[id]||id;}).join(" · "):"17F 오후 강연 · 사전 신청 포함", go:"goTo('apply','sess')" }
+  ];
+  todo.sort(function(a,b){ return (b.v?1:0)-(a.v?1:0); });
+  var hot=todo.filter(function(x){return x.v;}).length;
+  h+='<div class="grid g57">'+
+    card("지금 처리할 일", hot?hot+'건 유형 대기':'대기 없음', '<div class="todo">'+todo.map(function(x){
+      return '<div class="it'+(x.v?"":" zero")+'"><div class="v">'+x.v+'</div><div><div class="t">'+esc(x.t)+'</div><div class="d">'+esc(x.d)+'</div></div>'+
+        '<button class="btn sm '+(x.v?"pri":"ghost")+'" onclick="'+x.go+'">'+(x.v?"처리하기":"보기")+'</button></div>'; }).join("")+'</div>');
+  /* 상담 · 커피챗 흐름 · 칸을 누르면 신청 탭 그 필터로 */
+  function flow(list, by, endList, sub0){
+    return '<div class="flow">'+list.map(function(s,i){ return '<div class="fs'+(i===list.length-1?" last":"")+(by[s]?" hot":"")+'" onclick="goTo(\'apply\',\''+sub0+'\',\''+s+'\')"><div class="l">'+esc(s)+'</div><div class="v">'+(by[s]||0)+'</div></div>'; }).join("")+
+      endList.map(function(s){ return '<div class="fs end" onclick="goTo(\'apply\',\''+sub0+'\',\''+s+'\')"><div class="l">'+esc(s)+'</div><div class="v">'+(by[s]||0)+'</div></div>'; }).join("")+'</div>';
   }
+  var mx=Math.max.apply(null,dist.concat([1]));
+  var capCard=card("강연 신청 · 정원 대비","취소 제외 · 17F 오후는 사전 신청 포함",
+    '<table class="tb plain bartb">'+sessIds.map(function(id){ var p0=PRE_SESS.indexOf(id)>=0?(pre[id]||0):0, n=(sessN[id]||0)+p0, cap=ss.cap[id]||0; return barRow('<b>'+esc(SESS_NAME[id]||id)+'</b>', n, cap, n+' / '+cap, n>cap); }).join("")+'</table>'+
+    '<p class="cap mt8">정원 초과는 적갈 막대로 표시됩니다.</p>');
+  h+='<div>'+card("상담 흐름","1F DAP존 · 전체 "+rv.length+"건 · 칸을 누르면 그 상태 목록으로",flow(["신청","승인","체크인","완료"],rvBy,["노쇼","취소"],"resv"))+
+    card("커피챗 흐름","18F 라운지 · 전체 "+cc.length+"명",flow(["대기","매칭","참석","완료"],ccBy,["취소"],"cchat"))+capCard+'</div></div>';
+  h+='<div class="grid g2">'+card("스탬프 보유 분포","참여 기록이 있는 사람 "+sp.length+"명",
+    '<table class="tb plain bartb">'+dist.map(function(c,i){ var rw=i>=3?(i===3?"룰렛":i<=7?"응모 "+(i-3)+"장":"응모 4장"):""; return barRow('<b class="n">'+i+'개</b>'+(rw?' <span class="cap">'+rw+'</span>':''), c, mx, c+'명'); }).join("")+'</table>'+
+    '<p class="cap mt8">가입만 하고 아무것도 안 한 사람은 0개에 들어가지 않습니다.</p>');
+  var dm=(st.depts&&st.depts.length)?st.depts[0].n:1;
+  h+=card("부문별 참여 기록","참여 기록 행 수 기준 · 상위 12",(st.depts&&st.depts.length)?'<table class="tb plain bartb">'+st.depts.slice(0,12).map(function(d){ return barRow(esc(d.d), d.n, dm, d.n.toLocaleString()); }).join("")+'</table>':'<div class="empty">아직 기록이 없습니다.</div>')+'</div>';
   return h;
 }
 
@@ -392,50 +738,45 @@ function viewAcct(){
   var shown=rows.filter(function(r){ return match(r,["emp","name","dept"]); });
   var byDept={}; rows.forEach(function(r){ byDept[r.dept||"(미상)"]=(byDept[r.dept||"(미상)"]||0)+1; });
   /* pw===false 만 「초기화 대기」. 필드가 없으면(옛 백엔드) 등록으로 본다. */
-  var waiting=rows.filter(function(r){ return r.pw===false; }).length;
-  var h='<h1>계정<small>로그인한 사람. 명부에 있고 비밀번호를 등록한 계정입니다. 비밀번호를 잊은 사람은 여기서 초기화합니다.</small></h1>';
+  var waiting=rows.filter(function(r){ return r.pw===false; }).length, roster=(ST.data.acct||{}).roster||0;
+  var h=tabHead();
+  h+='<div class="kpis">'+kpi("가입 계정",rows.length,"명")+kpi("명부",roster,"명","가입률 "+pct(rows.length,roster)+"%")+kpi("부문 수",Object.keys(byDept).length,"개")+kpi("비밀번호 초기화 대기",waiting,"명",waiting?"본인이 앱에서 새 비밀번호를 넣으면 풀립니다":"")+'</div>';
   h+=viewPwReq();
-  h+='<div class="grid g4">'+kpi("가입 계정",rows.length,"명")+kpi("명부",(ST.data.acct||{}).roster||0,"명","가입률 "+pct(rows.length,(ST.data.acct||{}).roster||0)+"%")+kpi("부문 수",Object.keys(byDept).length,"개")+kpi("비밀번호 초기화 대기",waiting,"명",waiting?"본인이 앱에서 새 비밀번호를 입력하면 풀립니다":"")+'</div>';
-  h+='<div class="card"><div class="tools"><input class="in" placeholder="사번 · 이름 · 부문 검색" value="'+esc(ST.q)+'" oninput="setQ(this.value)"><span class="src">'+shown.length+' / '+rows.length+'명</span></div>';
-  h+='<p class="src" style="margin:0 0 8px">최근 접속 = 앱을 마지막으로 연 시각입니다(v3.83부터 앱 사용 중에도 갱신 · 약 10분 간격). 그 전 기록은 마지막 비밀번호 입력 시각입니다.</p>';
-  h+='<div class="wrap"><table class="tb"><tr><th>사번</th><th>이름</th><th>부문</th><th>가입</th><th>최근 접속</th><th>비밀번호</th><th></th></tr>'+
+  var body='<div class="toolbar">'+searchBox("사번 · 이름 · 부문 검색")+'<span class="cnt"><b>'+shown.length+'</b> / '+rows.length+'명</span></div>';
+  body+='<div class="wrap scrolly" style="max-height:620px"><table class="tb"><tr><th>사번</th><th>이름</th><th>부문</th><th>가입</th><th>최근 접속</th><th>비밀번호</th><th class="tdr">처리</th></tr>'+
     shown.slice(0,500).map(function(r){ var wait=r.pw===false;
-      return '<tr><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td><td>'+esc(r.dept)+'</td><td class="n src">'+esc(short(r.joined))+'</td><td class="n">'+esc(short(r.last))+'</td>'+
-        '<td>'+(wait?'<span class="pill">초기화 대기</span>':'<span class="pill off">사용 중</span>')+'</td>'+
-        '<td class="tdr">'+(wait?'<span class="src">새 비밀번호 입력 대기</span>':'<button class="btn sm" data-emp="'+esc(r.emp)+'" data-name="'+esc(r.name)+'" onclick="pwReset(this)">비밀번호 초기화</button>')+'</td></tr>'; }).join("")+
-    (shown.length>500?'<tr><td colspan="7" class="src">500명까지만 표시합니다. 검색으로 좁혀 주세요.</td></tr>':'')+'</table></div>';
-  h+='<p class="note mt12">비밀번호 초기화는 지금 비밀번호를 지우고, 본인이 앱에서 다음에 입력하는 4자리를 새 비밀번호로 등록합니다. 스탬프·신청 기록은 그대로입니다. 운영 로그에 남습니다.</p></div>';
-  h+='<div class="card soft"><h2>부문별 가입</h2><div class="row">'+Object.keys(byDept).sort(function(a,b){return byDept[b]-byDept[a];}).map(function(d){ return '<span class="pill">'+esc(d)+' <b class="n">'+byDept[d]+'</b></span>'; }).join("")+'</div></div>';
+      return '<tr class="hv"><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td><td>'+esc(r.dept)+'</td><td class="n cap">'+esc(short(r.joined))+'</td><td class="n">'+esc(short(r.last))+'</td>'+
+        '<td>'+(wait?tag("초기화 대기","warn"):tag("사용 중","off"))+'</td>'+
+        '<td class="tdr">'+(wait?'<span class="cap">새 비밀번호 입력 대기</span>':'<button class="btn sm" data-emp="'+esc(r.emp)+'" data-name="'+esc(r.name)+'" onclick="pwReset(this)">비밀번호 초기화</button>')+'</td></tr>'; }).join("")+
+    (shown.length>500?'<tr><td colspan="7" class="cap">500명까지만 표시합니다. 검색으로 좁혀 주세요.</td></tr>':'')+(!shown.length?emptyRow(7,"해당하는 계정이 없습니다."):'')+'</table></div>';
+  body+=memo('<p>최근 접속 = 앱을 마지막으로 연 시각입니다(v3.83부터 앱 사용 중에도 갱신 · 약 10분 간격). 그 전 기록은 마지막 비밀번호 입력 시각입니다.</p><p>비밀번호 초기화는 지금 비밀번호를 지우고, 본인이 앱에서 다음에 입력하는 4자리를 새 비밀번호로 등록합니다. 스탬프·신청 기록은 그대로입니다. 운영 로그에 남습니다.</p>');
+  h+=card("가입 계정","최근 접속 순",body);
+  h+=card("부문별 가입","",'<div class="row">'+Object.keys(byDept).sort(function(a,b){return byDept[b]-byDept[a];}).map(function(d){ return '<span class="tag off">'+esc(d)+' <b class="n">'+byDept[d]+'</b></span>'; }).join("")+'</div>');
   return h;
 }
 /* ── v3.88 비밀번호 분실 요청 (앱 → 운영 데스크) ──────────────────────────────
  * 앱에서 사번·이름만 보낸 요청이 여기에 쌓인다. 데스크에서 「본인 확인」을 하고 초기화를 누르면
  * 서버가 비번해시를 비우고(기존 acct_pwreset 과 같은 경로) 요청을 처리로 표시한다. 잘못된 요청은 취소.
  * 처리자 이름은 이 브라우저에 기억해 두고 함께 보낸다(누가 처리했는지 남기기 위함). */
-function pwBy(){ try{ return localStorage.getItem("axf_desk")||""; }catch(e){ return ""; } }
-function pwBySet(v){ try{ localStorage.setItem("axf_desk",v||""); }catch(e){} }
 function viewPwReq(){
   var d=ST.data.pwreq||{}, rows=(d.rows||[]);
   var wait=rows.filter(function(r){ return r.status==="대기"; });
   var done=rows.filter(function(r){ return r.status!=="대기"; }).slice(0,20);
-  var h='<div class="card"><h2>비밀번호 분실 요청 '+(wait.length?'<small style="color:var(--bad)">· 대기 '+wait.length+'건</small>':'<small>· 대기 없음</small>')+'</h2>'+
-    '<p class="note">사원증이나 얼굴로 <b>본인 확인을 먼저</b> 한 뒤 초기화하세요. 앱에서 온 요청일 뿐, 본인 확인은 데스크에서 합니다.</p>'+
-    '<div class="tools" style="margin-top:10px"><input class="in" style="width:160px" placeholder="처리자 이름" value="'+esc(pwBy())+'" oninput="pwBySet(this.value)">'+
-    '<button class="btn sm" onclick="load(true)">새로고침</button><span class="src">자동 갱신 중</span></div>'+
-    '<div class="wrap"><table class="tb"><tr><th>요청 시각</th><th>사번</th><th>이름</th><th>계정</th><th>처리</th></tr>'+
+  var body='<div class="note warn">사원증이나 얼굴로 <b>본인 확인을 먼저</b> 한 뒤 초기화하세요. 앱에서 온 요청일 뿐, 본인 확인은 데스크에서 합니다.</div>'+
+    '<div class="wrap mt12"><table class="tb"><tr><th>요청 시각</th><th>사번</th><th>이름</th><th>계정</th><th class="tdr">처리</th></tr>'+
     (wait.length?wait.map(function(r){
-      return '<tr><td class="n src">'+esc(short(r.ts))+'</td><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td>'+
-        '<td>'+(r.joined?(r.pwSet?'<span class="pill ok">사용 중</span>':'<span class="pill">이미 초기화됨</span>'):'<span class="pill off">가입 전</span>')+'</td>'+
-        '<td><div class="row" style="gap:6px"><button class="btn sm danger" data-row="'+r.row+'" data-emp="'+esc(r.emp)+'" data-name="'+esc(r.name)+'" onclick="pwReqDone(this)">비밀번호 초기화</button>'+
-        '<button class="btn sm" data-row="'+r.row+'" data-name="'+esc(r.name)+'" onclick="pwReqCancel(this)">취소</button></div></td></tr>';
-    }).join(""):'<tr><td colspan="5" class="src">대기 중인 요청이 없습니다.</td></tr>')+'</table></div>';
+      return '<tr class="hv"><td class="n cap">'+esc(short(r.ts))+'</td><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td>'+
+        '<td>'+(r.joined?(r.pwSet?tag("사용 중","ok"):tag("이미 초기화됨","warn")):tag("가입 전","off"))+'</td>'+
+        '<td><div class="acts"><button class="btn sm pri" data-row="'+r.row+'" data-emp="'+esc(r.emp)+'" data-name="'+esc(r.name)+'" onclick="pwReqDone(this)">본인 확인 후 초기화</button>'+
+        '<button class="btn sm danger" data-row="'+r.row+'" data-name="'+esc(r.name)+'" onclick="pwReqCancel(this)">요청 취소</button></div></td></tr>';
+    }).join(""):emptyRow(5,"대기 중인 요청이 없습니다."))+'</table></div>';
   if(done.length){
-    h+='<p class="note mt12">최근 처리 내역</p><div class="wrap"><table class="tb"><tr><th>요청</th><th>사번</th><th>이름</th><th>상태</th><th>처리 시각</th><th>처리자</th></tr>'+
-      done.map(function(r){ return '<tr><td class="n src">'+esc(short(r.ts))+'</td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.name)+'</td>'+
-        '<td>'+(r.status==="처리"?'<span class="pill ok">처리</span>':'<span class="pill off">취소</span>')+'</td>'+
-        '<td class="n src">'+esc(short(r.doneAt))+'</td><td>'+esc(r.by||"-")+'</td></tr>'; }).join("")+'</table></div>';
+    body+=memo('<div class="wrap"><table class="tb"><tr><th>요청</th><th>사번</th><th>이름</th><th>상태</th><th>처리 시각</th><th>처리자</th></tr>'+
+      done.map(function(r){ return '<tr><td class="n cap">'+esc(short(r.ts))+'</td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.name)+'</td>'+
+        '<td>'+(r.status==="처리"?tag("처리","ok"):tag("취소","off"))+'</td>'+
+        '<td class="n cap">'+esc(short(r.doneAt))+'</td><td>'+esc(r.by||"-")+'</td></tr>'; }).join("")+'</table></div>', "최근 처리 내역 "+done.length+"건");
   }
-  return h+'</div>';
+  return card("비밀번호 분실 요청", wait.length?'<span class="tag brand">대기 '+wait.length+'건</span>':'대기 없음', body, byBox()+'<button class="btn sm" onclick="load(true)">새로고침</button>');
 }
 function pwReqDone(btn){
   var row=btn.getAttribute("data-row"), emp=btn.getAttribute("data-emp")||"", name=btn.getAttribute("data-name")||"";
@@ -449,18 +790,18 @@ function pwReqDone(btn){
           load();
           dialog({ t:"초기화했습니다", who:esc(r.name||name)+'<span>사번 '+esc(r.emp||emp)+'</span>', ok:"확인했습니다",
             s:"본인에게 이렇게 안내해 주세요. <b>「앱에서 사번·이름을 넣고 새 비밀번호 4자리를 입력하면 그 번호로 등록됩니다」</b>"+(r.already?'<br><span class="src">이미 초기화 상태였습니다.</span>':"")+(r.noAccount?'<br><span class="src">아직 가입 전이라 계정은 없습니다. 바로 새로 입장하면 됩니다.</span>':"") });
-        } else { dlgClose(); toast("실패: "+((r&&r.reason)||"")); }
+        } else { dlgClose(); toast("실패: "+why(r)); }
       },function(){ el("dlgOk").disabled=false; dlgClose(); toast("서버 응답 없음"); });
     }});
 }
 function pwReqCancel(btn){
   var row=btn.getAttribute("data-row"), name=btn.getAttribute("data-name")||"";
   dialog({ t:"요청을 취소할까요?", s:"잘못 눌렀거나 본인 확인이 안 된 요청을 목록에서 내립니다. 계정은 그대로입니다.",
-    who:esc(name), ok:"취소 처리",
+    who:esc(name), ok:"요청 취소", danger:true,
     onOk:function(){
       call("pw_req_cancel",{row:row,by:pwBy()||"운영 데스크"},function(r){
         el("dlgOk").disabled=false;
-        if(r&&r.ok){ dlgClose(); load(); toast("취소했습니다"); } else { dlgClose(); toast("실패: "+((r&&r.reason)||"")); }
+        if(r&&r.ok){ dlgClose(); load(); toast("요청을 취소했습니다"); } else { dlgClose(); toast("실패: "+why(r)); }
       },function(){ el("dlgOk").disabled=false; dlgClose(); toast("서버 응답 없음"); });
     }});
 }
@@ -469,7 +810,7 @@ function pwReset(btn){
   var emp=btn.getAttribute("data-emp")||"", name=btn.getAttribute("data-name")||"";
   dialog({ t:"비밀번호를 초기화할까요?",
     s:"지금 비밀번호는 지워지고, <b>본인이 앱에서 다음에 입력하는 4자리가 새 비밀번호</b>로 등록됩니다. 스탬프·신청 기록은 그대로이고, 운영 로그에 남습니다.",
-    who:esc(name)+'<span>사번 '+esc(emp)+'</span>', ok:"초기화",
+    who:esc(name)+'<span>사번 '+esc(emp)+'</span>', ok:"초기화", danger:true,
     onOk:function(){
       call("acct_pwreset",{emp:emp},function(r){
         if(r&&r.ok){
@@ -477,134 +818,407 @@ function pwReset(btn){
           el("dlgOk").disabled=false;
           dialog({ t:"초기화했습니다", who:esc(r.name||name)+'<span>사번 '+esc(r.emp||emp)+'</span>', ok:"확인했습니다",
             s:"본인에게 이렇게 안내해 주세요. <b>「앱에서 사번·이름을 넣고 새 비밀번호 4자리를 입력하면 그 번호로 다시 등록됩니다」</b><br>초기화 직후에는 사번·이름만으로 새 비밀번호를 정할 수 있으니, 본인이 바로 입장하도록 해 주세요."+(r.already?'<br><span class="src">이미 초기화 상태였습니다.</span>':"") });
-        } else { el("dlgOk").disabled=false; dlgClose(); toast("실패: "+(r&&r.reason==="notfound"?"계정에 없는 사번입니다":(r&&r.reason)||"")); }
+        } else { el("dlgOk").disabled=false; dlgClose(); toast("실패: "+(r&&r.reason==="notfound"?"계정에 없는 사번입니다":why(r))); }
       },function(){ el("dlgOk").disabled=false; dlgClose(); toast("서버 응답 없음"); });
     }});
 }
 
-/* ══════════════════ 6. 스탬프 ══════════════════ */
+/* ══════════════════ 6. 스탬프 ══════════════════
+ * 서브탭 · 개인 발급·취소(기본) | 전체 현황 | 현장 운영(룰렛 소진 · 인쇄용 QR) */
 function viewStamp(){
-  var rows=((ST.data.stamp||{}).rows||[]);
-  var f=ST.filt||"all";
-  var shown=rows.filter(function(r){ return match(r,["emp","name","dept"]) && (f==="all"||(f==="3"&&r.n>=3)||(f==="4"&&r.n>=4)||(f==="r"&&r.roulette)); });
-  var tot=[0,0,0,0,0,0,0,0]; rows.forEach(function(r){ tot[Math.min(7,r.n)]++; });
-  var h='<h1>스탬프<small>사번별 수집 내역. 서버 참여 기록이 정본이고, 앱 화면은 이걸 따라갑니다.</small></h1>';
-  h+='<div class="grid g4">'+kpi("기록 있는 사람",rows.length,"명")+kpi("3개 이상",rows.filter(function(r){return r.n>=3;}).length,"명","룰렛 자격")+kpi("룰렛 사용",rows.filter(function(r){return r.roulette;}).length,"명")+kpi("응모권 합계",rows.reduce(function(a,r){return a+reward(r.n).tickets;},0),"장")+'</div>';
-  h+='<div class="card"><div class="tools"><input class="in" placeholder="사번 · 이름 · 부문 검색" value="'+esc(ST.q)+'" oninput="setQ(this.value)">'+
-    '<select class="in" onchange="setFilt(this.value)">'+[["all","전체"],["3","3개 이상 (룰렛)"],["4","4개 이상 (응모)"],["r","룰렛 사용자"]].map(function(o){ return '<option value="'+o[0]+'"'+(f===o[0]?" selected":"")+'>'+o[1]+'</option>'; }).join("")+'</select>'+
-    '<span class="src">'+shown.length+' / '+rows.length+'명</span></div>';
-  h+='<div class="wrap"><table class="tb"><tr><th>사번</th><th>이름</th><th>부문</th><th>개수</th><th>'+STAMP_ORDER.map(function(id){return STAMP_META[id].no;}).join(" · ")+'</th><th>보상</th><th>마지막 기록</th><th>담당자 부여</th></tr>'+
-    shown.slice(0,400).map(function(r){ var rw=reward(r.n);
-      return '<tr><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td><td>'+esc(r.dept)+'</td><td class="n"><b>'+r.n+'</b></td><td>'+stampCells(r.stamps)+'</td>'+
-        '<td>'+(rw.roulette?'<span class="pill'+(r.roulette?" off":" on")+'">룰렛 '+(r.roulette?"사용":"가능")+'</span> ':'')+(rw.tickets?'<span class="pill">응모 '+rw.tickets+'장</span>':'')+(!rw.roulette&&!rw.tickets?'<span class="src">'+(3-r.n)+'개 더</span>':'')+'</td>'+
-        '<td class="n src">'+esc(short(r.last))+'</td>'+
-        '<td><select class="in" style="min-width:120px;padding:5px 8px" onchange="grantStamp(\''+esc(r.emp)+'\',this.value,this)"><option value="">부여할 항목</option>'+["p1","p2","p3"].filter(function(id){return r.stamps.indexOf(id)<0;}).map(function(id){ return '<option value="'+id+'">'+STAMP_META[id].no+' '+STAMP_META[id].n+'</option>'; }).join("")+'</select></td></tr>'; }).join("")+
-    (shown.length>400?'<tr><td colspan="8" class="src">400명까지만 표시합니다. 검색으로 좁혀 주세요.</td></tr>':'')+'</table></div>';
-  h+=viewStairOps();
-  h+='<p class="note mt12">스탬프는 8칸, 보상은 7개에서 끝납니다(4~7개 응모 1~4장 · 8번째는 추가 보상 없음). 계단(07)은 계단실 안 QR을 한 번 찍으면 적립되고(층 상관없음), 설문(08)은 제출 시 적립됩니다. 담당자 부여는 현장 QR 3종(01·02·03)과 계단(07)이 됩니다. 앱 자동 적립 3종(04·05·06)은 앱 안에서 하는 행동이라 부여 대상이 아닙니다. 부여는 참여 기록에 「담당자 부여」로 남습니다.</p></div>';
+  var rows=((ST.data.stamp||{}).rows||[]), s=sub()||"one";
+  var h=tabHead(byBox());
+  h+=chips([{v:"one",n:"개인 발급 · 취소"},{v:"all",n:"전체 현황",c:rows.length},{v:"ops",n:"현장 운영 · 인쇄용 QR"}], s, "setSub");
+  if(s==="all") h+=viewStampAll(rows);
+  else if(s==="ops") h+=viewStairOps();
+  else h+=viewStampOne();
+  h+=memo('<p>스탬프는 8칸, 보상은 7개에서 끝납니다(3개 룰렛 · 4~7개 응모 1~4장 · 8번째는 추가 보상 없음). 계단(07)은 계단실 안 QR을 한 번 찍으면 적립되고(층 상관없음), 설문(08)은 제출 시 적립됩니다.</p>'+
+    '<p>담당자 부여는 현장 QR 3종(01·02·03)과 계단(07)이 됩니다. 앱 자동 적립 3종(04·05·06)은 앱 안에서 하는 행동이라 부여 대상이 아닙니다. 부여는 참여 기록에 「담당자 부여」로 남습니다.</p>'+
+    '<p>담당자 취소(v3.95)도 같은 4종만 됩니다. 기록을 지우지 않고 참여 기록에 「담당자 취소」 행을 남깁니다. 취소 뒤에는 QR 이나 부여로 다시 받을 수 있습니다. 앱 자동 3종과 설문은 한 번 적립되면 서버가 재적립을 막아서 취소하면 다시 받을 길이 없어 막아 두었습니다.</p>'+
+    '<p>보상과 부딪치는 취소는 서버가 거부합니다. 룰렛을 이미 돌렸는데 3개 미만이 되는 경우, 이미 발급된 응모권 장수가 취소 뒤 자격보다 많아지는 경우입니다(응모권 번호는 되돌리지 않는 원장). 이때는 경품 담당과 먼저 정리합니다.</p>'+
+    '<p>참가자 앱은 다음 동기화(10초 주기)에 서버 목록을 따라갑니다. 단, 취소로 스탬프가 0개가 되면 앱이 빈 목록을 무시해 기기 화면에 이전 칸이 남을 수 있습니다(서버 기록과 보상 판정은 정상).</p>');
   return h;
+}
+/* 한 사람 · 계정 목록과 스탬프 집계를 사번으로 합친다(스탬프가 0개인 사람도 찾을 수 있어야 부여한다) */
+function spPeople(){
+  var by={}, out=[];
+  ((ST.data.stamp||{}).rows||[]).forEach(function(r){ var k=normE(r.emp); by[k]=r; out.push(r); });
+  ((ST.data.acct||{}).rows||[]).forEach(function(a){ var k=normE(a.emp); if(!by[k]){ var r={ emp:a.emp, name:a.name, dept:a.dept, stamps:[], via:{}, n:0, roulette:false, tk:0, last:"", noRec:true }; by[k]=r; out.push(r); } });
+  return { by:by, list:out };
+}
+function spSel(emp){ ST.sp.emp=emp; render(); }
+function spQ(v){ ST.sp.q=v; render(); }
+function viewStampOne(){
+  var P=spPeople(), q=ST.sp.q.trim().toLowerCase(), list=P.list;
+  if(q) list=list.filter(function(r){ return String(r.emp).toLowerCase().indexOf(q)>=0||String(r.name||"").toLowerCase().indexOf(q)>=0||String(r.dept||"").toLowerCase().indexOf(q)>=0; });
+  else list=list.filter(function(r){ return !r.noRec; }).sort(function(a,b){ return (b.last||"")<(a.last||"")?-1:1; });
+  var cur=ST.sp.emp?P.by[normE(ST.sp.emp)]:null;
+  var h='<div class="sp"><div class="lnb"><input class="in" placeholder="사번 · 이름 · 부문으로 찾기" value="'+esc(ST.sp.q)+'" oninput="spQ(this.value)">'+
+    '<div class="cap">'+(q?'검색 결과 '+list.length+'명':'최근 기록 순 · 스탬프 0개인 사람은 검색으로 찾습니다')+'</div><ul>'+
+    list.slice(0,80).map(function(r){ var on=cur&&normE(cur.emp)===normE(r.emp);
+      return '<li><button class="'+(on?"on":"")+'" onclick="spSel(\''+jq(r.emp)+'\')"><div style="min-width:0"><div class="nm">'+esc(r.name||"(이름 없음)")+'</div><div class="em">'+esc(r.emp)+(r.dept?' · '+esc(r.dept):'')+'</div></div><span class="c">'+r.n+' / 8</span></button></li>'; }).join("")+
+    (list.length>80?'<li class="cap" style="padding:8px">80명까지 표시 · 검색으로 좁혀 주세요</li>':'')+(!list.length?'<li class="cap" style="padding:8px">찾는 사람이 없습니다. 가입 전인 사람은 스탬프를 받을 수 없습니다.</li>':'')+'</ul></div>';
+  h+='<div>'+(cur?spPanel(cur):'<div class="card"><div class="empty">왼쪽에서 사번이나 이름으로 한 사람을 고르세요.<br>8칸 상태를 보고 바로 부여하거나 취소할 수 있습니다.</div></div>')+'</div></div>';
+  return h;
+}
+function spVia(r, id){
+  var v=(r.via||{})[id];
+  if(!v) return (r.stamps||[]).indexOf(id)>=0?"획득":"";
+  var s=v.v||(GRANT_IDS.indexOf(id)<0?"앱 자동 적립":"기록");
+  return s+(v.t?' · '+hhmm(v.t):'');
+}
+function spPanel(r){
+  var n=r.n||0, rw=reward(n), tk=r.tk||0;
+  var h='<div class="card" style="margin-top:0"><div class="pp-h"><div><div class="nm">'+esc(r.name||"(이름 없음)")+'</div><div class="em">사번 '+esc(r.emp)+(r.dept?' · '+esc(r.dept):'')+(r.last?' · 마지막 기록 '+esc(short(r.last)):'')+'</div></div>'+
+    '<div class="r"><button class="btn sm ghost" onclick="spSel(\'\')">선택 해제</button></div></div>';
+  h+='<div class="pp-sum">'+
+    '<div><div class="l">보유</div><div class="v">'+n+'<em>/ 8</em></div><div class="x">'+(n>=STAMP_BONUS?"보상 끝 (7개)":"다음 보상까지 "+(n<3?3-n:1)+"개")+'</div></div>'+
+    '<div><div class="l">룰렛</div><div class="v" style="font-size:var(--fs-h2);margin-top:6px">'+(r.roulette?tag("사용함","off"):rw.roulette?tag("돌릴 수 있음","pri"):tag("3개부터","off"))+'</div><div class="x">1인 1회 · 1F 이벤트존</div></div>'+
+    '<div><div class="l">응모권</div><div class="v">'+rw.tickets+'<em>장 자격</em></div><div class="x">번호 발급 '+tk+'장'+(tk<rw.tickets?' · 앱이 다음 동기화에 발급':'')+'</div></div></div>';
+  h+='<div class="slots">'+STAMP_ORDER.map(function(id){
+    var m=STAMP_META[id], got=(r.stamps||[]).indexOf(id)>=0, canG=GRANT_IDS.indexOf(id)>=0, canR=REVOKE_IDS.indexOf(id)>=0;
+    var act=got?(canR?'<button class="btn sm danger" onclick="stRevoke(\''+jq(r.emp)+'\',\''+id+'\')">취소</button>':'<span class="cap">취소 대상 아님</span>')
+      :(canG?'<button class="btn sm pri" onclick="stGrant(\''+jq(r.emp)+'\',\''+id+'\')">부여</button>':'<span class="cap">앱에서 자동 적립</span>');
+    return '<div class="slot'+(got?" got":"")+'"><div class="no">'+m.no+'</div><div class="nm">'+esc(m.n)+'</div><div class="via">'+esc(spVia(r,id))+'</div>'+
+      '<div class="ft">'+(got?tag("획득","pri"):tag("미획득","off"))+act+'</div></div>'; }).join("")+'</div>';
+  if(r.old&&r.old.length) h+='<p class="cap mt12">폐기된 옛 항목 기록: '+r.old.map(function(id){ return esc((STAMP_META[id]||{n:id}).n); }).join(" · ")+' (개수에 안 들어감)</p>';
+  var hs=HIST[normE(r.emp)]||[];
+  if(hs.length||r.rv) h+='<h2 style="font-size:var(--fs-s);font-weight:800;color:var(--tx2);margin:18px 0 6px">처리 기록</h2>'+(r.rv?'<p class="cap">서버에 담당자 취소 기록 '+r.rv+'건</p>':'')+
+    (hs.length?'<ul class="hist">'+hs.map(function(x){ return '<li><span class="t">'+esc(x.t)+'</span><span>'+esc(x.x)+'</span></li>'; }).join("")+'</ul>':'');
+  return h+'</div>';
+}
+/* 보상 변화 줄 · 확인 창 「영향」 */
+function rwImpact(n0, n1, extra){
+  var a=reward(n0), b=reward(n1), out=[["스탬프", n0+"개 → "+n1+"개", "chg"]];
+  if(a.roulette!==b.roulette) out.push(["룰렛 자격", b.roulette?"생김":"없어짐", b.roulette?"chg":"loss"]);
+  else out.push(["룰렛 자격", a.roulette?"그대로 (있음)":"그대로 (없음)"]);
+  if(a.tickets!==b.tickets) out.push(["응모권 자격", a.tickets+"장 → "+b.tickets+"장", b.tickets>a.tickets?"chg":"loss"]);
+  else out.push(["응모권 자격", "그대로 ("+a.tickets+"장)"]);
+  return out.concat(extra||[]);
+}
+function spRow(emp){ return spPeople().by[normE(emp)]; }
+/* 서버 응답의 목록으로 그 사람 행만 고친다(표 전체를 다시 받지 않는다) */
+function spApply(emp, stamps, id, via){
+  var d=ST.data.stamp=ST.data.stamp||{rows:[]}, k=normE(emp), r=null;
+  for(var i=0;i<d.rows.length;i++) if(normE(d.rows[i].emp)===k){ r=d.rows[i]; break; }
+  if(!r){ var b=spRow(emp)||{emp:emp,name:"",dept:""}; r={ emp:b.emp, name:b.name, dept:b.dept, stamps:[], via:{}, n:0, roulette:false, tk:0, rv:0, last:"" }; d.rows.unshift(r); }
+  r.stamps=(stamps||[]).filter(function(x){ return STAMP_ORDER.indexOf(x)>=0; }); r.n=r.stamps.length; r.via=r.via||{};
+  if(via) r.via[id]={ v:via, t:nowHMS() }; else delete r.via[id];
+  r.last=r.last||"";
+}
+function stGrant(emp, id, quiet){
+  var r=spRow(emp)||{emp:emp,n:0}, m=STAMP_META[id], n0=r.n||0;
+  function doIt(){
+    call("stamp_grant",{emp:emp,id:id},function(res){
+      dlgForce();
+      if(res&&res.ok){
+        if(res.dup){ toast("이미 있는 스탬프입니다 · "+m.no+" "+m.n); load(); return; }
+        spApply(emp, res.stamps, id, "담당자 부여"); hist(emp, m.no+" "+m.n+" 부여"); render();
+        toast((quiet?"되돌렸습니다 · ":"부여했습니다 · ")+(r.name||emp)+" · "+m.no+" "+m.n, quiet?{}:{ undo:function(){ stRevokeGo(emp,id,true); } });
+      } else toast("부여 실패: "+(res&&res.reason==="noid"?"부여할 수 없는 항목입니다":why(res)));
+    },function(){ dlgForce(); toast("서버 응답 없음"); });
+  }
+  if(quiet) return doIt();
+  dialog({ t:"스탬프를 부여할까요?", s:"참여 기록에 <b>「담당자 부여」</b>로 남습니다. 참가자 앱에는 다음 동기화에 반영됩니다.",
+    who:esc(r.name||emp)+'<span>사번 '+esc(emp)+' · '+m.no+' '+esc(m.n)+'</span>', x:imp(rwImpact(n0, n0+1)), ok:"부여", onOk:doIt });
+}
+/* 취소 · 먼저 dry=1 로 서버 판정과 영향을 받아 확인 창에 보여 준다 */
+function stRevoke(emp, id){
+  var r=spRow(emp)||{emp:emp}, m=STAMP_META[id];
+  toast("취소할 수 있는지 확인 중",{ms:8000});
+  call("stamp_revoke",{emp:emp,id:id,dry:1},function(d){
+    el("toast").className="";
+    d=d||{};
+    var who=esc(r.name||emp)+'<span>사번 '+esc(emp)+' · '+m.no+' '+esc(m.n)+' · '+esc(spVia(r,id)||"")+'</span>';
+    if(!d.ok){
+      var msg=d.reason==="roulette"?"이 사람은 <b>룰렛을 이미 돌렸습니다</b>. 취소하면 3개 미만이 되어 이미 받은 경품과 맞지 않습니다. 경품 담당과 먼저 정리하세요."
+        :d.reason==="tickets"?"<b>응모권 번호가 이미 "+d.tickets+"장 발급</b>되었습니다. 취소하면 자격이 "+d.ticketsAfter+"장이 되는데, 응모권 번호는 되돌리지 않는 원장이라 취소를 막습니다."
+        :d.reason==="nostamp"?"서버 기록에 이 스탬프가 없습니다. 화면이 오래되었을 수 있습니다. 새로고침 해 주세요."
+        :d.reason==="noid"?"이 항목은 담당자 취소 대상이 아닙니다(앱 자동 적립·설문).":"확인 실패: "+esc(why(d));
+      dialog({ t:"취소할 수 없습니다", s:msg, who:who, x:d.n!=null?imp(rwImpact(d.n, d.nAfter)):"", ok:"확인" });
+      if(d.reason==="nostamp") load();
+      return;
+    }
+    dialog({ t:"스탬프를 취소할까요?", s:"기록을 지우지 않고 참여 기록에 <b>「담당자 취소」</b> 행을 남깁니다. 취소 뒤에도 QR 이나 부여로 다시 받을 수 있습니다.",
+      who:who, x:imp(rwImpact(d.n, d.nAfter, [["응모권 번호 발급", d.tickets+"장 (그대로)"],["룰렛 사용", d.roulette?"사용함":"안 함"]])), ok:"취소 처리", danger:true,
+      onOk:function(){ stRevokeGo(emp,id,false); } });
+  },function(){ toast("서버 응답 없음"); });
+}
+function stRevokeGo(emp, id, quiet){
+  var r=spRow(emp)||{emp:emp}, m=STAMP_META[id];
+  call("stamp_revoke",{emp:emp,id:id,by:pwBy()||"운영 콘솔"},function(res){
+    dlgForce();
+    if(res&&res.ok){
+      spApply(emp, res.stamps, id, null); var rr=spRow(emp); if(rr) rr.rv=(rr.rv||0)+1;
+      hist(emp, m.no+" "+m.n+" 취소"); render();
+      toast((quiet?"되돌렸습니다 · ":"취소했습니다 · ")+(r.name||emp)+" · "+m.no+" "+m.n, quiet?{}:{ undo:function(){ stGrant(emp,id,true); } });
+    } else toast("취소 실패: "+(res&&res.reason==="roulette"?"룰렛을 이미 돌렸습니다":res&&res.reason==="tickets"?"응모권이 이미 발급되었습니다":why(res)));
+  },function(){ dlgForce(); toast("서버 응답 없음"); });
+}
+function viewStampAll(rows){
+  var f=ST.filt||"all";
+  var shown=rows.filter(function(r){ return match(r,["emp","name","dept"]) && (f==="all"||(f==="3"&&r.n>=3)||(f==="4"&&r.n>=4)||(f==="r"&&r.roulette)||(f==="rv"&&r.rv)); });
+  var h='<div class="kpis">'+kpi("기록 있는 사람",rows.length,"명")+kpi("3개 이상",rows.filter(function(r){return r.n>=3;}).length,"명","룰렛 자격")+kpi("룰렛 사용",rows.filter(function(r){return r.roulette;}).length,"명")+kpi("응모권 자격 합계",rows.reduce(function(a,r){return a+reward(r.n).tickets;},0),"장")+'</div>';
+  var body=chips([{v:"all",n:"전체",c:rows.length},{v:"3",n:"3개 이상",c:rows.filter(function(r){return r.n>=3;}).length},{v:"4",n:"4개 이상",c:rows.filter(function(r){return r.n>=4;}).length},{v:"r",n:"룰렛 사용",c:rows.filter(function(r){return r.roulette;}).length},{v:"rv",n:"취소 기록 있음",c:rows.filter(function(r){return r.rv;}).length}], f, "setFilt")+
+    '<div class="toolbar">'+searchBox("사번 · 이름 · 부문 검색")+'<span class="cnt"><b>'+shown.length+'</b> / '+rows.length+'명</span></div>';
+  body+='<div class="wrap scrolly" style="max-height:640px"><table class="tb"><tr><th>사번</th><th>이름</th><th>부문</th><th class="tdr">개수</th><th>'+STAMP_ORDER.map(function(id){return STAMP_META[id].no;}).join(" ")+'</th><th>보상</th><th>마지막 기록</th><th class="tdr"></th></tr>'+
+    shown.slice(0,400).map(function(r){ var rw=reward(r.n);
+      return '<tr class="hv click" onclick="ST.sp.emp=\''+jq(r.emp)+'\';setSub(\'one\')"><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td><td>'+esc(r.dept)+'</td><td class="n tdr"><b>'+r.n+'</b></td><td>'+stampCells(r.stamps)+'</td>'+
+        '<td><div class="row" style="gap:4px">'+(rw.roulette?tag("룰렛 "+(r.roulette?"사용":"가능"),r.roulette?"off":"pri"):'')+(rw.tickets?tag("응모 "+rw.tickets+"장"):'')+(!rw.roulette?'<span class="cap">'+(3-r.n)+'개 더</span>':'')+'</div></td>'+
+        '<td class="n cap">'+esc(short(r.last))+'</td><td class="tdr"><button class="btn sm">관리</button></td></tr>'; }).join("")+
+    (shown.length>400?'<tr><td colspan="8" class="cap">400명까지만 표시합니다. 검색으로 좁혀 주세요.</td></tr>':'')+(!shown.length?emptyRow(8,"해당하는 사람이 없습니다."):'')+'</table></div>';
+  return h+card("사람별 수집 내역","행을 누르면 개인 발급 · 취소 화면으로 갑니다",body);
 }
 /* v3.33·v3.34 운영 · 룰렛 소진 안내 스위치 + 계단 지점 코드(인쇄용) */
 function viewStairOps(){
   var out=!!((ST.data.sy||{}).rouletteOut), rows=((ST.data.stair||{}).rows||[]);
-  var h='<div class="grid g2"><div class="card"><h2>룰렛 소진 안내</h2>'+
-    '<p class="src">켜면 참가자 앱의 룰렛 쿠폰 창과 스탬프 보상 레일에 「오늘 준비한 룰렛이 모두 소진되었습니다」가 뜹니다. 응모권은 그대로입니다.</p>'+
-    '<div class="row mt12"><span class="pill'+(out?" on":" off")+'">'+(out?"안내 켜짐":"안내 꺼짐")+'</span><button class="btn sm '+(out?"":"danger")+'" onclick="rouletteOut('+(out?0:1)+')">'+(out?"안내 끄기":"소진 안내 켜기")+'</button></div></div>';
+  var h='<div class="grid g2" style="margin-top:0">'+card("룰렛 소진 안내", out?tag("안내 켜짐","warn"):tag("안내 꺼짐","off"),
+    '<p class="muted" style="font-size:var(--fs-s)">켜면 참가자 앱의 룰렛 쿠폰 창과 스탬프 보상 레일에 「오늘 준비한 룰렛이 모두 소진되었습니다」가 뜹니다. 응모권은 그대로입니다.</p>'+
+    '<div class="row mt12"><button class="btn '+(out?"":"danger")+'" onclick="rouletteOut('+(out?0:1)+')">'+(out?"안내 끄기":"소진 안내 켜기")+'</button></div>');
   /* v3.65 DAP Wall QR 퀴즈 · 벽 QR 내용이 바뀐다(앱 주소 뒤 #q=wall1|wall2|wall3) · 스캔한 벽의 문제만 열린다 */
-  h+='<div class="card"><h2>DAP Wall 퀴즈 QR (인쇄용)</h2><p class="src">벽마다 다른 QR 을 붙입니다. 스캔하면 그 벽의 문제 5개만 열리고, 한 세트를 끝내면 「전시 QR 퀴즈」 스탬프가 적립됩니다(점수 기준 없음).</p>'+
+  h+=card("DAP Wall 퀴즈 QR","인쇄용",
     '<div class="wrap"><table class="tb"><tr><th>벽</th><th>QR 내용</th></tr>'+
-    ["wall1","wall2","wall3"].map(function(w,i){ return '<tr><td><b>WALL '+(i+1)+'</b></td><td class="n">'+esc(location.origin)+'/index.html#q='+w+'</td></tr>'; }).join("")+
-    '</table></div><p class="note mt12">주소는 참가자 앱 주소에 맞춰 바꿉니다. 옛 QR(스탬프 코드)은 그대로 두고, 퀴즈 QR 만 새로 인쇄합니다.</p></div>';
-  h+='<div class="card"><h2>계단 지점 QR (인쇄용)</h2>'+
-    (rows.length?'<table class="tb"><tr><th>지점</th><th>층</th><th>코드</th><th>상태</th></tr>'+rows.map(function(r){ return '<tr><td><b>'+esc(r.name)+'</b></td><td class="n">'+esc(r.fl)+'F</td><td class="n">'+esc(r.code)+'</td><td>'+(r.on?'<span class="pill on">운영</span>':'<span class="pill off">꺼짐</span>')+'</td></tr>'; }).join("")+'</table>':'<p class="src">설치된 계단 지점이 없습니다. 백엔드 stair_install 로 4곳(18F·17F·10F·1F)을 만듭니다.</p>')+
-    '<p class="note mt12">지점마다 포스터 2장 이상 인쇄(한 장이면 스캔 줄이 생깁니다). 계단실 <b>안쪽 벽</b>(방화문을 열고 들어가야 보이는 곳)에 붙입니다. 어느 층 코드든 같은 스탬프이고 1인 1회입니다. 포스터 문구: 「계단실 안쪽 부착 · 방화문은 닫아 주세요」 · 「내려갈 때는 계단으로」 (v3.56 · 앱에서는 뺐고 인쇄물에만 남긴다). 판정: 층·방향·횟수·시간 조건 없음(v3.34b). 계단실 안이 통신이 약해도 앱이 스캔을 저장했다가 연결되면 자동으로 보냅니다. QR 이미지는 앱 스태프 메뉴 「부스 QR」에서 함께 뽑습니다.</p></div></div>';
+    ["wall1","wall2","wall3"].map(function(w,i){ return '<tr><td><b>WALL '+(i+1)+'</b></td><td class="n">'+esc(appBase())+'index.html#q='+w+'</td></tr>'; }).join("")+'</table></div>'+
+    memo('<p>벽마다 다른 QR 을 붙입니다. 스캔하면 그 벽의 문제 5개만 열리고, 한 세트를 끝내면 「전시 QR 퀴즈」 스탬프가 적립됩니다(점수 기준 없음).</p><p>주소는 참가자 앱 주소에 맞춰 바꿉니다. 옛 QR(스탬프 코드)은 그대로 두고, 퀴즈 QR 만 새로 인쇄합니다.</p>'))+'</div>';
+  h+=card("계단 지점 QR","인쇄용 · 어느 층 코드든 같은 스탬프 · 1인 1회",
+    (rows.length?'<div class="wrap"><table class="tb"><tr><th>지점</th><th>층</th><th>코드</th><th>상태</th></tr>'+rows.map(function(r){ return '<tr><td><b>'+esc(r.name)+'</b></td><td class="n">'+esc(r.fl)+'F</td><td class="n">'+esc(r.code)+'</td><td>'+(r.on?tag("운영","ok"):tag("꺼짐","off"))+'</td></tr>'; }).join("")+'</table></div>':'<div class="empty">설치된 계단 지점이 없습니다. 백엔드 stair_install 로 4곳(18F·17F·10F·1F)을 만듭니다.</div>')+
+    memo('<p>지점마다 포스터 2장 이상 인쇄(한 장이면 스캔 줄이 생깁니다). 계단실 <b>안쪽 벽</b>(방화문을 열고 들어가야 보이는 곳)에 붙입니다.</p><p>포스터 문구: 「계단실 안쪽 부착 · 방화문은 닫아 주세요」 · 「내려갈 때는 계단으로」 (v3.56 · 앱에서는 뺐고 인쇄물에만 남긴다). 판정: 층·방향·횟수·시간 조건 없음(v3.34b).</p><p>계단실 안이 통신이 약해도 앱이 스캔을 저장했다가 연결되면 자동으로 보냅니다. QR 이미지는 앱 스태프 메뉴 「부스 QR」에서 함께 뽑습니다.</p>'));
   return h;
 }
+/* 참가자 앱 주소 · 콘솔 경로(…/admin/index.html)에서 admin/ 을 뗀 것. GitHub Pages 의 /hi_ax/ 같은 저장소 경로를 지킨다
+   (260919 QR 기획 점검: location.origin 만 쓰면 /hi_ax/ 가 빠져 인쇄한 QR 이 404 가 된다) */
+function appBase(){ return location.origin+location.pathname.replace(/admin\/[^\/]*$/,"").replace(/[^\/]*$/,""); }
 function rouletteOut(on){
-  if(on&&!confirm("룰렛 소진 안내를 켤까요? 참가자 앱 전체에 바로 표시됩니다.")) return;
-  call("roulette_out",{on:on?1:0},function(r){ if(r&&r.ok){ toast(r.out?"룰렛 소진 안내를 켰습니다":"룰렛 소진 안내를 껐습니다"); load(); } else toast("실패: "+(r&&r.reason||"")); },function(){ toast("서버 응답 없음"); });
-}
-function grantStamp(emp,id,sel){
-  if(!id) return;
-  var m=STAMP_META[id]||{n:id};
-  if(!confirm(emp+" 님에게 「"+m.no+" "+m.n+"」 스탬프를 부여할까요? 기록에 남습니다.")){ sel.value=""; return; }
-  sel.disabled=true;
-  call("stamp_grant",{emp:emp,id:id},function(r){
-    if(r&&r.ok){ toast(r.dup?"이미 있는 스탬프입니다":"부여했습니다 · "+emp+" · "+m.n); load(); }
-    else { toast("실패: "+(r&&r.reason||"")); sel.disabled=false; sel.value=""; }
-  },function(){ toast("서버 응답 없음"); sel.disabled=false; sel.value=""; });
+  function go0(){ call("roulette_out",{on:on?1:0},function(r){ dlgForce(); if(r&&r.ok){ toast(r.out?"룰렛 소진 안내를 켰습니다":"룰렛 소진 안내를 껐습니다"); load(); } else toast("실패: "+why(r)); },function(){ dlgForce(); toast("서버 응답 없음"); }); }
+  if(!on) return go0();
+  dialog({ t:"룰렛 소진 안내를 켤까요?", s:"참가자 앱 전체에 바로 표시됩니다. 응모권은 그대로입니다.", ok:"켜기", danger:true, onOk:go0 });
 }
 
-/* ══════════════════ 7. 신청 ══════════════════ */
+/* ══════════════════ 7. 신청 ══════════════════
+ * 스탬프 패널과 같은 문법: 상태 흐름 칩(건수) → 툴바 → 표. 행마다 「다음 행동」 하나가 주 버튼, 노쇼·취소는 적갈 보조 버튼.
+ * 체크박스로 여러 건을 골라 일괄 처리 · 행을 누르면 오른쪽 상세 패널 · 처리 뒤 그 행만 바로 고친다(목록을 다시 받지 않는다).
+ * 취소·노쇼는 확인 창을 거치고, 처리 뒤 7초 동안 알림에 「되돌리기」(이전 상태로 다시 세팅)가 뜬다. */
 function viewApply(){
-  var sub=ST.sub||"resv";
-  var h='<h1>신청<small>상담과 커피챗은 여기서 승인·매칭합니다. 강의신청은 정원 선착순이라 현황만 봅니다.</small></h1>';
-  h+='<div class="row" style="margin-top:8px">'+[["resv","상담 승인"],["cchat","커피챗 매칭"],["sess","강의신청 현황"],["pre","사전 신청 명단"]].map(function(s){ return '<button class="btn'+(sub===s[0]?" pri":"")+'" onclick="setSub(\''+s[0]+'\')">'+s[1]+'</button>'; }).join("")+'</div>';
-  return h+(sub==="resv"?viewResv():sub==="cchat"?viewCchat():sub==="pre"?viewPre():viewSess());
+  var s=sub()||"resv", rv=(ST.data.resv||{}).rows||[], cc=(ST.data.cchat||{}).rows||[], ss=(ST.data.sess||{}).rows||[];
+  var h=tabHead(byBox());
+  h+=chips([{v:"resv",n:"상담 승인",c:rv.filter(function(r){return r.status==="신청";}).length},{v:"cchat",n:"커피챗 매칭",c:cc.filter(function(r){return r.status==="대기";}).length},
+    {v:"sess",n:"강의신청 현황",c:ss.filter(function(r){return r.status!=="취소";}).length},{v:"pre",n:"사전 신청 명단"}], s, "setSub");
+  return h+(s==="resv"?viewResv():s==="cchat"?viewCchat():s==="pre"?viewPre():viewSess());
 }
+function selKeys(prefix){ return Object.keys(ST.sel).filter(function(k){ return ST.sel[k]&&k.indexOf(prefix)===0; }).map(function(k){ return k.slice(prefix.length); }); }
+function selToggle(k, on){ if(on) ST.sel[k]=1; else delete ST.sel[k]; render(); }
+function selAll(prefix, keys, on){ keys.forEach(function(k){ if(on) ST.sel[prefix+k]=1; else delete ST.sel[prefix+k]; }); render(); }
+function selClear(){ ST.sel={}; render(); }
+function ckAll(prefix, keys){ var all=keys.length&&keys.every(function(k){ return ST.sel[prefix+k]; }); return '<input type="checkbox" class="ck" '+(all?"checked ":"")+'onclick="event.stopPropagation()" onchange="selAll(\''+prefix+'\',['+keys.map(function(k){return "\'"+jq(k)+"\'";}).join(",")+'],this.checked)" title="보이는 것 전체 선택">'; }
+function ck1(k){ return '<input type="checkbox" class="ck" '+(ST.sel[k]?"checked ":"")+'onclick="event.stopPropagation()" onchange="selToggle(\''+jq(k)+'\',this.checked)">'; }
+function namesOf(rows){ var n=rows.map(function(r){ return esc(r.name||r.emp); }); return n.slice(0,8).join(", ")+(n.length>8?" 외 "+(n.length-8)+"명":""); }
 
-/* 상담 · 1F DAP 존 · resv_set 으로 상태를 바꾼다 */
+/* ── 상담 · 1F DAP 존 · resv_set 으로 상태를 바꾼다 ── */
+var RESV_NEXT={ "신청":"승인", "승인":"체크인", "체크인":"완료" };
+var RESV_SIDE={ "신청":["취소"], "승인":["노쇼","취소"] };
+var RESV_UNDO={ "승인":1, "노쇼":1, "취소":1 };   /* 체크인·완료는 스탬프 03 이 적립되어 되돌리지 않는다 */
+function resvRows(){ return ((ST.data.resv||{}).rows||[]); }
+function resvById(id){ return resvRows().filter(function(r){ return r.id===id; })[0]; }
 function viewResv(){
-  var rows=((ST.data.resv||{}).rows||[]).slice(), f=ST.filt||"open";
+  var rows=resvRows().slice(), f=ST.filt||"todo";
   var by={}; rows.forEach(function(r){ by[r.status]=(by[r.status]||0)+1; });
-  var shown=rows.filter(function(r){ return match(r,["emp","name","dept","slot","memo"]) && (f==="all"||(f==="open"&&(r.status==="신청"||r.status==="승인"))||r.status===f); });
-  shown.sort(function(a,b){ var o={"신청":0,"승인":1,"체크인":2,"완료":3,"노쇼":4,"취소":5}; return (o[a.status]-o[b.status])||(hhmm(a.slot)<hhmm(b.slot)?-1:1); });
-  var h='<div class="card"><div class="tools"><input class="in" placeholder="사번 · 이름 · 슬롯 · 메모 검색" value="'+esc(ST.q)+'" oninput="setQ(this.value)">'+
-    '<select class="in" onchange="setFilt(this.value)"><option value="open"'+(f==="open"?" selected":"")+'>처리 중 (신청·승인)</option><option value="all"'+(f==="all"?" selected":"")+'>전체</option>'+RESV_STATUS.map(function(s){ return '<option value="'+s+'"'+(f===s?" selected":"")+'>'+s+' ('+(by[s]||0)+')</option>'; }).join("")+'</select>'+
-    '<span class="src">'+shown.length+' / '+rows.length+'건</span></div>';
-  h+='<div class="wrap"><table class="tb"><tr><th>슬롯</th><th>사번</th><th>이름</th><th>부문</th><th>신청 시각</th><th>상태</th><th>메모</th><th style="min-width:300px">처리</th></tr>'+
-    shown.map(function(r){ var s=r.status;
-      var acts=s==="신청"?[["승인","pri"],["취소","danger"]]:s==="승인"?[["체크인","pri"],["노쇼","danger"],["취소","danger"]]:s==="체크인"?[["완료","pri"]]:[];
-      return '<tr><td class="n"><b>'+esc(hhmm(r.slot))+'</b></td><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td><td>'+esc(r.dept)+'</td><td class="n src">'+esc(short(r.ts))+'</td>'+
-        '<td><span class="pill'+(s==="승인"||s==="체크인"?" on":s==="취소"||s==="노쇼"?" off":s==="완료"?" ok":"")+'">'+esc(s)+'</span></td>'+
-        '<td class="src">'+esc(r.memo)+'</td>'+
-        '<td><div class="row" style="gap:6px">'+acts.map(function(a){ return '<button class="btn sm '+a[1]+'" onclick="resvSet(\''+esc(r.id)+'\',\''+a[0]+'\',\''+esc(r.name)+'\')">'+a[0]+'</button>'; }).join("")+
-        (s!=="취소"?'<button class="btn sm ghost" onclick="resvMemo(\''+esc(r.id)+'\',\''+esc(r.memo).replace(/'/g,"&#39;")+'\')">메모</button>':'')+'</div></td></tr>'; }).join("")+
-    (!shown.length?'<tr><td colspan="8" class="src">해당하는 신청이 없습니다.</td></tr>':'')+'</table></div>';
-  h+='<p class="note mt12">신청 → 승인 → 체크인 → 완료 순서입니다. 노쇼·취소는 되돌릴 수 없어 한 번 더 묻습니다. 상태는 참가자 앱에 10초 안에 반영됩니다.</p></div>';
-  return h;
+  var todoN=(by["신청"]||0)+(by["승인"]||0)+(by["체크인"]||0);
+  var shown=rows.filter(function(r){ return match(r,["emp","name","dept","slot","memo"]) && (f==="all"||(f==="todo"&&RESV_NEXT[r.status])||r.status===f); });
+  var o={"신청":0,"승인":1,"체크인":2,"완료":3,"노쇼":4,"취소":5};
+  shown.sort(function(a,b){ return (o[a.status]-o[b.status])||(hhmm(a.slot)<hhmm(b.slot)?-1:1); });
+  var h=chips([{v:"todo",n:"처리할 것",c:todoN},"|",{v:"신청",n:"신청",c:by["신청"]||0},">",{v:"승인",n:"승인",c:by["승인"]||0},">",{v:"체크인",n:"체크인",c:by["체크인"]||0},">",{v:"완료",n:"완료",c:by["완료"]||0},"|",{v:"노쇼",n:"노쇼",c:by["노쇼"]||0},{v:"취소",n:"취소",c:by["취소"]||0},{v:"all",n:"전체",c:rows.length}], f, "setFilt");
+  var sel=selKeys("r:").map(resvById).filter(Boolean);
+  var body='';
+  if(sel.length){
+    var canA=sel.filter(function(r){return r.status==="신청";}).length, canC=sel.filter(function(r){return r.status==="신청"||r.status==="승인";}).length;
+    body+='<div class="bulk"><span class="c"><b>'+sel.length+'건</b> 선택</span>'+
+      '<button class="btn sm pri" '+(canA?"":"disabled ")+'onclick="resvDo(selKeys(\'r:\'),\'승인\')">일괄 승인'+(canA?' '+canA:'')+'</button>'+
+      '<button class="btn sm danger" '+(canC?"":"disabled ")+'onclick="resvDo(selKeys(\'r:\'),\'취소\')">일괄 취소'+(canC?' '+canC:'')+'</button>'+
+      '<button class="btn sm ghost" onclick="selClear()">선택 해제</button></div>';
+  }
+  body+='<div class="toolbar">'+searchBox("사번 · 이름 · 슬롯 · 메모 검색")+'<span class="cnt"><b>'+shown.length+'</b> / '+rows.length+'건</span></div>';
+  body+='<div class="wrap"><table class="tb"><tr><th class="ckc">'+ckAll("r:",shown.map(function(r){return r.id;}))+'</th><th>슬롯</th><th>이름</th><th>부문</th><th>신청 시각</th><th>상태</th><th>메모</th><th class="tdr">다음 행동</th></tr>'+
+    shown.map(function(r){ var s=r.status, nx=RESV_NEXT[s], sd=RESV_SIDE[s]||[], k="r:"+r.id;
+      return '<tr class="hv click'+(ST.sel[k]?" sel":"")+'" onclick="drwOpen(\'resv\',\''+jq(r.id)+'\')"><td class="ckc">'+ck1(k)+'</td>'+
+        '<td class="n"><b>'+esc(hhmm(r.slot))+'</b></td><td><div class="who2">'+esc(r.name)+'<small class="n">'+esc(r.emp)+'</small></div></td><td>'+esc(r.dept)+'</td><td class="n cap">'+esc(short(r.ts))+'</td>'+
+        '<td>'+tag(s,RESV_TAG[s])+'</td><td class="cap" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.memo||"")+'</td>'+
+        '<td><div class="acts">'+sd.map(function(a){ return '<button class="btn sm danger" onclick="event.stopPropagation();resvDo([\''+jq(r.id)+'\'],\''+a+'\')">'+a+'</button>'; }).join("")+
+        (nx?'<button class="btn sm pri" style="min-width:72px" onclick="event.stopPropagation();resvDo([\''+jq(r.id)+'\'],\''+nx+'\')">'+nx+'</button>':'<span class="cap">끝</span>')+'</div></td></tr>'; }).join("")+
+    (!shown.length?emptyRow(8,f==="todo"?"처리할 신청이 없습니다.":"해당하는 신청이 없습니다."):'')+'</table></div>';
+  body+=memo('<p>신청 → 승인 → 체크인 → 완료 순서입니다. 체크인이나 완료를 누르는 순간 스탬프 03 「프로그램 참여」가 적립됩니다(1인 1회). 상태는 참가자 앱에 10초 안에 반영됩니다.</p><p>노쇼·취소는 확인 창을 거칩니다. 승인·노쇼·취소는 처리 뒤 7초 동안 알림의 「되돌리기」로 이전 상태로 돌릴 수 있습니다. 취소한 슬롯은 그 사이 다른 사람이 앱에서 신청할 수 있으니 되돌리기는 바로 누르세요.</p>');
+  return h+card("", "", body);
 }
-function resvSet(id,status,name){
-  if((status==="취소"||status==="노쇼") && !confirm(name+" 님 상담을 「"+status+"」 처리할까요? 되돌릴 수 없습니다.")) return;
-  call("resv_set",{id:id,status:status},function(r){ if(r&&r.ok){ toast(name+" · "+status+(r.stamp&&!r.stamp.dup?" · 스탬프 03 적립":"")); load(); } else toast("실패: "+(r&&r.reason||"")); },function(){ toast("서버 응답 없음"); });
+/* 상태 바꾸기 · 한 건이든 여러 건이든 같은 길 · 낙관적으로 먼저 바꿔 그리고, 실패한 행만 원래대로 */
+function resvDo(ids, status, opt){
+  opt=opt||{};
+  var ok0={ "승인":["신청"], "체크인":["승인"], "완료":["체크인"], "노쇼":["승인"], "취소":["신청","승인"] }[status];
+  var rows=ids.map(resvById).filter(function(r){ return r && (opt.undo || !ok0 || ok0.indexOf(r.status)>=0); });
+  if(!rows.length){ toast("「"+status+"」할 수 있는 신청이 없습니다"); return; }
+  var skip=ids.length-rows.length;
+  function go0(){
+    dlgForce();
+    var prev={}; rows.forEach(function(r){ prev[r.id]=r.status; });
+    var items=rows.map(function(r){ var target=opt.undo?opt.undo[r.id]:status;
+      r.status=target; ovrSet("resv:"+r.id,{status:target});
+      return { r:r, run:op("resv_set",{id:r.id,status:target}) }; });
+    render();
+    runOps(items, function(it,ok,res){
+      if(!ok){ it.r.status=prev[it.r.id]; delete ST.ovr["resv:"+it.r.id]; }
+      else { hist(it.r.emp, "상담 "+hhmm(it.r.slot)+" "+(opt.undo?"되돌림 → ":"")+it.r.status+(res.stamp&&!res.stamp.dup?" · 스탬프 03 적립":"")); if(!opt.undo) delete ST.sel["r:"+it.r.id]; }
+    }, function(okN,bad){
+      render();
+      var who=rows.length===1?rows[0].name+" · ":"";
+      var msg=opt.undo?"되돌렸습니다 · "+who+okN+"건":who+status+(rows.length>1?" "+okN+"건":"")+(bad.length?" · 실패 "+bad.length+"건 ("+why(bad[0].res)+")":"")+(skip?" · 해당 없음 "+skip+"건 제외":"");
+      var undoIds=items.filter(function(it){ return bad.every(function(b){ return b.it!==it; }); }).map(function(it){ return it.r.id; });
+      toast(msg, (!opt.undo&&RESV_UNDO[status]&&undoIds.length)?{ undo:function(){ var back={}; undoIds.forEach(function(id){ back[id]=prev[id]; }); resvDo(undoIds, "", { undo:back }); } }:{});
+    });
+  }
+  if(opt.undo||status==="승인"&&rows.length===1||status==="체크인"||status==="완료") return go0();
+  var danger=status==="취소"||status==="노쇼";
+  dialog({ t:(rows.length>1?rows.length+"건을 ":"")+"「"+status+"」 처리할까요?",
+    s:danger?"참가자 앱에 바로 반영됩니다. 처리 뒤 7초 동안 알림의 <b>되돌리기</b>로 이전 상태로 돌릴 수 있습니다."+(skip?"<br>지금 상태에서 "+status+"할 수 없는 "+skip+"건은 빼고 처리합니다.":"")
+      :"선택한 신청을 승인합니다. 참가자 앱에 「승인」으로 뜹니다."+(skip?"<br>신청 상태가 아닌 "+skip+"건은 뺍니다.":""),
+    who:rows.length===1?esc(rows[0].name)+'<span>사번 '+esc(rows[0].emp)+' · 슬롯 '+esc(hhmm(rows[0].slot))+' · 지금 '+esc(rows[0].status)+'</span>':namesOf(rows),
+    ok:(danger?status+" 처리":status)+(rows.length>1?" "+rows.length+"건":""), danger:danger, onOk:go0 });
 }
-function resvMemo(id,cur){
-  var m=prompt("메모 (운영 담당만 봅니다)",cur||""); if(m===null) return;
-  var row=((ST.data.resv||{}).rows||[]).filter(function(r){return r.id===id;})[0];
-  call("resv_set",{id:id,status:row?row.status:"신청",memo:m},function(r){ if(r&&r.ok){ toast("메모 저장"); load(); } else toast("실패"); },function(){ toast("서버 응답 없음"); });
+function resvMemoSave(id){
+  var r=resvById(id), t=el("drwMemo"); if(!r||!t) return;
+  var m=t.value, old=r.memo;
+  r.memo=m; render();
+  call("resv_set",{id:id,status:r.status,memo:m},function(res){ if(res&&res.ok){ hist(r.emp,"상담 메모 저장"); toast("메모를 저장했습니다"); render(); } else { r.memo=old; render(); toast("메모 저장 실패: "+why(res)); } },function(){ r.memo=old; render(); toast("서버 응답 없음"); });
+}
+function stepsHtml(list, cur, ends){
+  var i0=list.indexOf(cur);
+  return '<div class="steps">'+list.map(function(s,i){ return (i?'<i>›</i>':'')+'<span class="'+(s===cur?"cur":i0>i?"done":"")+'">'+esc(s)+'</span>'; }).join("")+
+    (ends.indexOf(cur)>=0?'<i></i><span class="cur" style="background:var(--bad);border-color:var(--bad)">'+esc(cur)+'</span>':'')+'</div>';
+}
+function drwResv(id){
+  var r=resvById(id); if(!r) return "";
+  var s=r.status, nx=RESV_NEXT[s], sd=RESV_SIDE[s]||[];
+  var h=drwHead(r.name, '사번 '+esc(r.emp)+(r.dept?' · '+esc(r.dept):''))+'<div class="db">';
+  h+='<h3>상담 · 1F DAP존</h3><div class="row" style="justify-content:space-between"><b class="n" style="font-size:var(--fs-h2)">슬롯 '+esc(hhmm(r.slot))+'</b>'+tag(s,RESV_TAG[s])+'</div><p class="cap mt8">신청 '+esc(short(r.ts))+'</p>';
+  h+='<div class="mt12">'+stepsHtml(["신청","승인","체크인","완료"], s, ["노쇼","취소"])+'</div>';
+  h+='<div class="row mt16">'+(nx?'<button class="btn pri" onclick="resvDo([\''+jq(r.id)+'\'],\''+nx+'\')">'+nx+'</button>':'')+sd.map(function(a){ return '<button class="btn danger" onclick="resvDo([\''+jq(r.id)+'\'],\''+a+'\')">'+a+'</button>'; }).join("")+(!nx&&!sd.length?'<span class="cap">더 처리할 것이 없습니다.</span>':'')+'</div>';
+  if(nx==="체크인"||nx==="완료") h+='<p class="cap mt8">'+nx+'을 누르면 스탬프 03 「프로그램 참여」가 적립됩니다.</p>';
+  h+='<h3>메모 · 운영 담당만 봅니다</h3><textarea class="in" id="drwMemo" placeholder="예: 보상 자동화 과제 · 자료 지참">'+esc(r.memo||"")+'</textarea><div class="row mt8"><button class="btn sm" onclick="resvMemoSave(\''+jq(r.id)+'\')">메모 저장</button></div>';
+  return h+personHist(r.emp)+'</div>';
 }
 
-/* 커피챗 · 18F 라운지 · cchat_set 으로 회차·테이블을 배정한다 */
+/* ── 커피챗 · 18F 라운지 · 매칭 = cchat_set(회차·테이블) · 참석·완료·취소·되돌리기 = cchat_status ── */
+var CC_NEXT={ "매칭":"참석", "참석":"완료" };
+function ccRows(){ return ((ST.data.cchat||{}).rows||[]); }
+function ccBy(emp){ var k=normE(emp); return ccRows().filter(function(r){ return normE(r.emp)===k; })[0]; }
+function ccDraft(emp, f, v){ var k=normE(emp); ST.draft[k]=ST.draft[k]||{}; ST.draft[k][f]=v; }
+function ccVal(r, f){ var d=ST.draft[normE(r.emp)]||{}; return d[f]!=null?d[f]:(f==="round"?hhmm(r.round):r.table||""); }
 function viewCchat(){
-  /* 기본은 전체를 보이되 대기를 맨 위로 올린다. 「대기」만 보이게 하면 대기자가 없을 때 빈 표만 남는다. */
-  var rows=((ST.data.cchat||{}).rows||[]).slice(), f=ST.filt||"all";
+  /* 기본은 「처리할 것」(대기·매칭·참석) · 대기를 맨 위로 */
+  var rows=ccRows().slice(), f=ST.filt||"todo";
   var by={}; rows.forEach(function(r){ by[r.status]=(by[r.status]||0)+1; });
   var ord={"대기":0,"매칭":1,"참석":2,"완료":3,"취소":4};
   rows.sort(function(a,b){ return ((ord[a.status]!=null?ord[a.status]:9)-(ord[b.status]!=null?ord[b.status]:9))||(a.ts<b.ts?-1:1); });
-  var shown=rows.filter(function(r){ return match(r,["emp","name","dept","tag","table"]) && (f==="all"||r.status===f); });
-  var h='<div class="card"><div class="tools"><input class="in" placeholder="사번 · 이름 · 태그 · 테이블 검색" value="'+esc(ST.q)+'" oninput="setQ(this.value)">'+
-    '<select class="in" onchange="setFilt(this.value)"><option value="all"'+(f==="all"?" selected":"")+'>전체</option>'+["대기","매칭","참석","완료","취소"].map(function(s){ return '<option value="'+s+'"'+(f===s?" selected":"")+'>'+s+' ('+(by[s]||0)+')</option>'; }).join("")+'</select>'+
-    '<span class="src">'+shown.length+' / '+rows.length+'명</span></div>';
-  h+='<div class="wrap"><table class="tb"><tr><th>사번</th><th>이름</th><th>부문</th><th>관심 태그</th><th>신청</th><th>상태</th><th>회차</th><th>테이블</th><th style="min-width:280px">매칭</th></tr>'+
-    shown.map(function(r){ var s=r.status, k=esc(r.emp).replace(/'/g,"");
-      return '<tr><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td><td>'+esc(r.dept)+'</td><td><span class="pill">'+esc(r.tag||"-")+'</span></td><td class="n src">'+esc(short(r.ts))+'</td>'+
-        '<td><span class="pill'+(s==="매칭"?" on":s==="취소"?" off":s==="완료"?" ok":"")+'">'+esc(s)+'</span></td><td class="n">'+esc(hhmm(r.round)||"-")+'</td><td>'+esc(r.table||"-")+'</td>'+
-        '<td>'+(s==="대기"||s==="매칭"?'<div class="row" style="gap:6px"><input class="in" type="time" id="cr_'+k+'" value="'+esc(hhmm(r.round))+'" style="min-width:110px;padding:5px 8px"><input class="in" id="ct_'+k+'" placeholder="테이블" value="'+esc(r.table)+'" style="min-width:80px;width:90px;padding:5px 8px"><button class="btn sm pri" onclick="cchatSet(\''+k+'\',\''+esc(r.name)+'\')">'+(s==="대기"?"매칭":"변경")+'</button></div>':'<span class="src">-</span>')+''+(s==="매칭"?'<div class="row" style="gap:6px;margin-top:6px"><button class="btn sm pri" onclick="cchatStatus(\''+k+'\',\''+esc(r.name)+'\',\'참석\')">참석</button><button class="btn sm" onclick="cchatStatus(\''+k+'\',\''+esc(r.name)+'\',\'완료\')">완료</button></div>':s==="참석"?'<button class="btn sm pri" onclick="cchatStatus(\''+k+'\',\''+esc(r.name)+'\',\'완료\')">완료</button>':'')+'</td></tr>'; }).join("")+
-    (!shown.length?'<tr><td colspan="9" class="src">해당하는 신청이 없습니다.</td></tr>':'')+'</table></div>';
-  h+='<p class="note mt12">회차와 테이블을 넣고 매칭을 누르면 참가자 앱에 「18F 라운지 · 회차 · 테이블」로 뜹니다. 같은 관심 태그끼리 한 테이블에 묶는 것이 기본입니다. 테이블에 온 사람은 「참석」 또는 「완료」를 누르면 스탬프 03 「프로그램 참여」가 적립됩니다(1인 1회).</p></div>';
-  return h;
+  var shown=rows.filter(function(r){ return match(r,["emp","name","dept","tag","table"]) && (f==="all"||(f==="todo"&&(r.status==="대기"||r.status==="매칭"||r.status==="참석"))||r.status===f); });
+  var h=chips([{v:"todo",n:"처리할 것",c:(by["대기"]||0)+(by["매칭"]||0)+(by["참석"]||0)},"|",{v:"대기",n:"대기",c:by["대기"]||0},">",{v:"매칭",n:"매칭",c:by["매칭"]||0},">",{v:"참석",n:"참석",c:by["참석"]||0},">",{v:"완료",n:"완료",c:by["완료"]||0},"|",{v:"취소",n:"취소",c:by["취소"]||0},{v:"all",n:"전체",c:rows.length}], f, "setFilt");
+  var sel=selKeys("c:").map(ccBy).filter(Boolean), body='';
+  if(sel.length){
+    var canM=sel.filter(function(r){return r.status==="대기"||r.status==="매칭";}).length, canC=canM;
+    var bd=ST.bulk||{};
+    body+='<div class="bulk"><span class="c"><b>'+sel.length+'명</b> 선택 · 같은 회차·테이블로 묶기</span>'+
+      '<input class="in sm" type="time" style="width:110px" value="'+esc(bd.round||"")+'" oninput="ST.bulk.round=this.value">'+
+      '<input class="in sm" style="width:90px" placeholder="테이블" value="'+esc(bd.table||"")+'" oninput="ST.bulk.table=this.value">'+
+      '<button class="btn sm pri" '+(canM?"":"disabled ")+'onclick="ccMatch(selKeys(\'c:\'),true)">일괄 매칭'+(canM?' '+canM:'')+'</button>'+
+      '<button class="btn sm danger" '+(canC?"":"disabled ")+'onclick="ccDo(selKeys(\'c:\'),\'취소\')">일괄 취소'+(canC?' '+canC:'')+'</button>'+
+      '<button class="btn sm ghost" onclick="selClear()">선택 해제</button></div>';
+  }
+  body+='<div class="toolbar">'+searchBox("사번 · 이름 · 태그 · 테이블 검색")+'<span class="cnt"><b>'+shown.length+'</b> / '+rows.length+'명</span></div>';
+  body+='<div class="wrap"><table class="tb"><tr><th class="ckc">'+ckAll("c:",shown.map(function(r){return normE(r.emp);}))+'</th><th>이름</th><th>부문</th><th>관심 태그</th><th>신청</th><th>상태</th><th>회차 · 테이블</th><th class="tdr">다음 행동</th></tr>'+
+    shown.map(function(r){ var s=r.status, k="c:"+normE(r.emp), e=jq(r.emp), act='';
+      if(s==="대기") act='<input class="in sm" type="time" style="width:104px" value="'+esc(ccVal(r,"round"))+'" onclick="event.stopPropagation()" oninput="ccDraft(\''+e+'\',\'round\',this.value)">'+
+        '<input class="in sm" style="width:76px" placeholder="테이블" value="'+esc(ccVal(r,"table"))+'" onclick="event.stopPropagation()" oninput="ccDraft(\''+e+'\',\'table\',this.value)">'+
+        '<button class="btn sm danger" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'취소\')">취소</button><button class="btn sm pri" style="min-width:72px" onclick="event.stopPropagation();ccMatch([\''+e+'\'])">매칭</button>';
+      else if(s==="매칭") act='<button class="btn sm danger" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'취소\')">취소</button><button class="btn sm" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'완료\')">완료</button><button class="btn sm pri" style="min-width:72px" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'참석\')">참석</button>';
+      else if(s==="참석") act='<button class="btn sm pri" style="min-width:72px" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'완료\')">완료</button>';
+      else act='<span class="cap">끝</span>';
+      return '<tr class="hv click'+(ST.sel[k]?" sel":"")+'" onclick="drwOpen(\'cc\',\''+e+'\')"><td class="ckc">'+ck1(k)+'</td><td><div class="who2">'+esc(r.name)+'<small class="n">'+esc(r.emp)+'</small></div></td><td>'+esc(r.dept)+'</td><td>'+(r.tag?tag(r.tag,"off"):'<span class="cap">-</span>')+'</td><td class="n cap">'+esc(short(r.ts))+'</td>'+
+        '<td>'+tag(s,CC_TAG[s])+'</td><td class="n">'+(r.round||r.table?'<b>'+esc(hhmm(r.round)||"-")+'</b> · '+esc(r.table||"-"):'<span class="cap">-</span>')+'</td>'+
+        '<td><div class="acts">'+act+'</div></td></tr>'; }).join("")+
+    (!shown.length?emptyRow(8,f==="todo"?"처리할 커피챗이 없습니다.":"해당하는 신청이 없습니다."):'')+'</table></div>';
+  body+=memo('<p>회차와 테이블을 넣고 매칭을 누르면 참가자 앱에 「18F 라운지 · 회차 · 테이블」로 뜹니다. 같은 관심 태그끼리 한 테이블에 묶는 것이 기본입니다. 여러 명을 체크하면 같은 회차·테이블로 한 번에 매칭합니다.</p><p>테이블에 온 사람은 「참석」 또는 「완료」를 누르면 스탬프 03 「프로그램 참여」가 적립됩니다(1인 1회). 그래서 참석·완료에는 되돌리기가 없습니다. 매칭·취소는 7초 동안 되돌릴 수 있습니다.</p>');
+  return h+card("", "", body);
 }
-function cchatStatus(emp,name,status){
-  call("cchat_status",{emp:emp,status:status},function(res){ if(res&&res.ok){ toast(name+" · "+status+(res.stamp&&!res.stamp.dup?" · 스탬프 03 적립":"")); load(); } else toast("실패: "+(res&&res.reason||"")); },function(){ toast("서버 응답 없음"); });
+function ccMatch(emps, bulk){
+  var bd=ST.bulk||{}, rows=emps.map(ccBy).filter(function(r){ return r&&(r.status==="대기"||r.status==="매칭"); });
+  if(!rows.length){ toast("매칭할 수 있는 신청이 없습니다"); return; }
+  var plan=rows.map(function(r){ return { r:r, round:bulk?bd.round:ccVal(r,"round"), table:String(bulk?bd.table||"":ccVal(r,"table")).trim(), prev:{status:r.status, round:hhmm(r.round), table:r.table||""} }; });
+  var miss=plan.filter(function(p){ return !p.round||!p.table; });
+  if(miss.length){ toast(bulk?"일괄 매칭할 회차 시간과 테이블을 넣어 주세요":"회차 시간과 테이블을 넣어 주세요"); return; }
+  function go0(){
+    dlgForce();
+    var items=plan.map(function(p){ p.r.status="매칭"; p.r.round=p.round; p.r.table=p.table; ovrSet("cc:"+normE(p.r.emp),{status:"매칭",table:p.table});
+      return { p:p, run:op("cchat_set",{emp:p.r.emp,round:p.round,table:p.table}) }; });
+    render();
+    runOps(items, function(it,ok){
+      var p=it.p;
+      if(!ok){ p.r.status=p.prev.status; p.r.round=p.prev.round; p.r.table=p.prev.table; delete ST.ovr["cc:"+normE(p.r.emp)]; }
+      else { hist(p.r.emp, "커피챗 매칭 "+p.round+" · "+p.table); delete ST.draft[normE(p.r.emp)]; delete ST.sel["c:"+normE(p.r.emp)]; }
+    }, function(okN,bad){
+      render();
+      var good=items.filter(function(it){ return bad.every(function(b){ return b.it!==it; }); }).map(function(it){ return it.p; });
+      toast((rows.length===1?rows[0].name+" · "+plan[0].round+" · "+plan[0].table:"매칭 "+okN+"명")+(bad.length?" · 실패 "+bad.length+"명":""), good.length?{ undo:function(){ ccRestore(good); } }:{});
+    });
+  }
+  if(rows.length===1) return go0();
+  dialog({ t:rows.length+"명을 한 테이블로 매칭할까요?", s:"참가자 앱에 「18F 라운지 · "+esc(bd.round)+" · "+esc(bd.table)+"」로 뜹니다.", who:namesOf(rows), ok:"매칭 "+rows.length+"명", onOk:go0 });
 }
-function cchatSet(emp,name){
-  var r=el("cr_"+emp), t=el("ct_"+emp); if(!r||!t) return;
-  if(!r.value){ toast("회차 시간을 넣어 주세요"); r.focus(); return; }
-  if(!t.value.trim()){ toast("테이블을 넣어 주세요"); t.focus(); return; }
-  call("cchat_set",{emp:emp,round:r.value,table:t.value.trim()},function(res){ if(res&&res.ok){ toast(name+" · "+r.value+" · "+t.value.trim()); load(); } else toast("실패: "+(res&&res.reason||"")); },function(){ toast("서버 응답 없음"); });
+/* 되돌리기 · 이전이 대기면 cchat_status 대기(회차·테이블 비움), 이전이 매칭이면 옛 회차·테이블로 cchat_set 또는 cchat_status 매칭 */
+function ccRestore(plans){
+  var items=plans.map(function(p){ var r=p.r, pv=p.prev;
+    var run=pv.status==="대기"?op("cchat_status",{emp:r.emp,status:"대기"}):(pv.round&&pv.table&&(hhmm(r.round)!==pv.round||r.table!==pv.table))?op("cchat_set",{emp:r.emp,round:pv.round,table:pv.table}):op("cchat_status",{emp:r.emp,status:pv.status});
+    r.status=pv.status; r.round=pv.status==="대기"?"":pv.round; r.table=pv.status==="대기"?"":pv.table; ovrSet("cc:"+normE(r.emp),{status:pv.status});
+    return { r:r, run:run }; });
+  render();
+  runOps(items, function(it,ok){ if(ok) hist(it.r.emp,"커피챗 되돌림 → "+it.r.status); }, function(okN,bad){ if(bad.length) load(); else render(); toast(bad.length?"되돌리기 실패 "+bad.length+"건 · 목록을 다시 받았습니다":"되돌렸습니다 · "+okN+"건"); });
+}
+function ccDo(emps, status){
+  var okFrom={ "참석":["매칭"], "완료":["매칭","참석"], "취소":["대기","매칭"] }[status];
+  var rows=emps.map(ccBy).filter(function(r){ return r&&okFrom.indexOf(r.status)>=0; });
+  if(!rows.length){ toast("「"+status+"」할 수 있는 신청이 없습니다"); return; }
+  function go0(){
+    dlgForce();
+    var plan=rows.map(function(r){ return { r:r, prev:{status:r.status, round:hhmm(r.round), table:r.table||""} }; });
+    var items=plan.map(function(p){ p.r.status=status; ovrSet("cc:"+normE(p.r.emp),{status:status}); return { p:p, run:op("cchat_status",{emp:p.r.emp,status:status}) }; });
+    render();
+    runOps(items, function(it,ok,res){ var p=it.p;
+      if(!ok){ p.r.status=p.prev.status; delete ST.ovr["cc:"+normE(p.r.emp)]; }
+      else { hist(p.r.emp,"커피챗 "+status+(res.stamp&&!res.stamp.dup?" · 스탬프 03 적립":"")); delete ST.sel["c:"+normE(p.r.emp)]; }
+    }, function(okN,bad){
+      render();
+      var good=items.filter(function(it){ return bad.every(function(b){ return b.it!==it; }); }).map(function(it){ return it.p; });
+      toast((rows.length===1?rows[0].name+" · "+status:status+" "+okN+"명")+(bad.length?" · 실패 "+bad.length+"명 ("+why(bad[0].res)+")":""), (status==="취소"&&good.length)?{ undo:function(){ ccRestore(good); } }:{});
+    });
+  }
+  if(status!=="취소") return go0();
+  dialog({ t:(rows.length>1?rows.length+"명의 ":"")+"커피챗 신청을 취소할까요?", s:"참가자 앱에 취소로 뜹니다. 처리 뒤 7초 동안 알림의 <b>되돌리기</b>로 이전 상태(대기 또는 매칭)로 돌릴 수 있습니다.",
+    who:rows.length===1?esc(rows[0].name)+'<span>사번 '+esc(rows[0].emp)+' · 지금 '+esc(rows[0].status)+'</span>':namesOf(rows), ok:"취소 처리", danger:true, onOk:go0 });
+}
+function drwCchat(emp){
+  var r=ccBy(emp); if(!r) return "";
+  var s=r.status, e=jq(r.emp);
+  var h=drwHead(r.name, '사번 '+esc(r.emp)+(r.dept?' · '+esc(r.dept):''))+'<div class="db">';
+  h+='<h3>커피챗 · 18F 라운지</h3><div class="row" style="justify-content:space-between"><span>'+(r.tag?tag(r.tag,"off"):'<span class="cap">관심 태그 없음</span>')+'</span>'+tag(s,CC_TAG[s])+'</div><p class="cap mt8">신청 '+esc(short(r.ts))+'</p>';
+  h+='<div class="mt12">'+stepsHtml(["대기","매칭","참석","완료"], s, ["취소"])+'</div>';
+  if(s==="대기"||s==="매칭"){
+    h+='<h3>'+(s==="대기"?"회차 · 테이블 배정":"회차 · 테이블 변경")+'</h3><div class="row"><label class="fld">회차<input class="in sm" type="time" style="width:120px;height:36px" value="'+esc(ccVal(r,"round"))+'" oninput="ccDraft(\''+e+'\',\'round\',this.value)"></label>'+
+      '<label class="fld">테이블<input class="in sm" style="width:110px;height:36px" placeholder="예: T3" value="'+esc(ccVal(r,"table"))+'" oninput="ccDraft(\''+e+'\',\'table\',this.value)"></label>'+
+      '<button class="btn pri" style="align-self:flex-end" onclick="ccMatch([\''+e+'\'])">'+(s==="대기"?"매칭":"변경")+'</button></div>';
+  }
+  h+='<div class="row mt16">'+(CC_NEXT[s]?'<button class="btn pri" onclick="ccDo([\''+e+'\'],\''+CC_NEXT[s]+'\')">'+CC_NEXT[s]+'</button>':'')+(s==="매칭"?'<button class="btn" onclick="ccDo([\''+e+'\'],\'완료\')">완료</button>':'')+
+    (s==="대기"||s==="매칭"?'<button class="btn danger" onclick="ccDo([\''+e+'\'],\'취소\')">취소</button>':'')+'</div>';
+  if(s==="매칭"||s==="참석") h+='<p class="cap mt8">참석·완료를 누르면 스탬프 03 「프로그램 참여」가 적립됩니다.</p>';
+  return h+personHist(r.emp)+'</div>';
 }
 
-/* 강의신청 · 정원 선착순이라 승인 없음 · 현황만 */
+/* ── 강의신청 · 정원 선착순이라 승인 없음 · 운영자는 잘못된 신청만 취소한다(sess_cancel · 되돌리기 없음) ── */
+function ssRows(){ return ((ST.data.sess||{}).rows||[]); }
 function viewSess(){
   var d=ST.data.sess||{rows:[],cap:{}}, rows=d.rows.slice(), f=ST.filt||"all";
   var n={}; rows.forEach(function(r){ if(r.status!=="취소") n[r.sid]=(n[r.sid]||0)+1; });
@@ -612,15 +1226,40 @@ function viewSess(){
   var pre=d.pre||{}, left=d.left||{};
   var shown=rows.filter(function(r){ return match(r,["emp","name","sid","slot"]) && (f==="all"||r.sid===f) && r.status!=="취소"; });
   shown.sort(function(a,b){ return a.sid<b.sid?-1:a.sid>b.sid?1:(a.ts<b.ts?-1:1); });
-  var h='<div class="grid g4" style="margin-top:14px">'+ids.map(function(id){ var c=n[id]||0, cap=d.cap[id]||0; return '<div class="kpi" style="cursor:pointer" onclick="setFilt(\''+id+'\')"><div class="l">'+esc(SESS_NAME[id]||id)+'</div><div class="v n">'+c+'<em>/ '+cap+'</em></div><div class="bar'+(c>cap?" over":"")+'"><i style="width:'+pct(c,cap)+'%"></i></div></div>'; }).join("")+'</div>';
-  h+='<div class="card"><div class="tools"><input class="in" placeholder="사번 · 이름 검색" value="'+esc(ST.q)+'" oninput="setQ(this.value)">'+
-    '<select class="in" onchange="setFilt(this.value)"><option value="all"'+(f==="all"?" selected":"")+'>모든 세션</option>'+ids.map(function(id){ return '<option value="'+id+'"'+(f===id?" selected":"")+'>'+esc(SESS_NAME[id]||id)+' ('+(n[id]||0)+')</option>'; }).join("")+'</select>'+
-    '<span class="src">'+shown.length+'건 (취소 제외)</span></div>';
-  h+='<div class="wrap"><table class="tb"><tr><th>세션</th><th>슬롯</th><th>사번</th><th>이름</th><th>신청 시각</th><th>상태</th></tr>'+
-    shown.slice(0,600).map(function(r){ return '<tr><td><b>'+esc(SESS_NAME[r.sid]||r.sid)+'</b></td><td class="n">'+esc(hhmm(r.slot)||"-")+'</td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.name)+'</td><td class="n src">'+esc(short(r.ts))+'</td><td><span class="pill">'+esc(r.status)+'</span></td></tr>'; }).join("")+
-    (!shown.length?'<tr><td colspan="6" class="src">신청이 없습니다.</td></tr>':'')+'</table></div>';
-  h+='<p class="note mt12">강의신청은 정원 선착순이라 승인 단계가 없습니다. 17F 오후 강연 잔여 = 정원 - 사전 신청 - 앱 신청'+PRE_SESS.map(function(id){ return ' · '+esc(SESS_NAME[id])+' 사전 '+(pre[id]||0)+' · 잔여 '+(left[id]!=null?left[id]:"-"); }).join("")+'. 10F 실습형 세션은 사전 신청(앱 밖)이라 여기서 제외합니다. 정원을 바꾸려면 백엔드 SESS_CAP 을 수정해야 합니다.</p></div>';
-  return h;
+  var h='<div class="kpis">'+ids.map(function(id){ var c=n[id]||0, p0=PRE_SESS.indexOf(id)>=0?(pre[id]||0):0, cap=d.cap[id]||0;
+    return '<div class="kpi link" onclick="setFilt(\''+id+'\')" style="'+(f===id?"border-color:var(--navy)":"")+'"><div class="l">'+esc(SESS_NAME[id]||id)+'</div><div class="v">'+(c+p0)+'<em>/ '+cap+'</em></div><div class="x">앱 '+c+(p0?' · 사전 '+p0:'')+(left[id]!=null?' · 잔여 '+left[id]:'')+'</div><div class="bar'+(c+p0>cap?" over":"")+'"><i style="width:'+pct(c+p0,cap)+'%"></i></div></div>'; }).join("")+'</div>';
+  var sel=selKeys("s:").map(function(k){ var a=k.split("|"); return rows.filter(function(r){ return normE(r.emp)===a[0]&&r.sid===a[1]&&r.status!=="취소"; })[0]; }).filter(Boolean);
+  var body=chips([{v:"all",n:"모든 세션",c:rows.filter(function(r){return r.status!=="취소";}).length}].concat(ids.map(function(id){ return {v:id,n:SESS_NAME[id]||id,c:n[id]||0}; })), f, "setFilt");
+  if(sel.length) body+='<div class="bulk"><span class="c"><b>'+sel.length+'건</b> 선택</span><button class="btn sm danger" onclick="ssCancel(selKeys(\'s:\'))">일괄 취소 '+sel.length+'</button><button class="btn sm ghost" onclick="selClear()">선택 해제</button></div>';
+  body+='<div class="toolbar">'+searchBox("사번 · 이름 검색")+'<span class="cnt"><b>'+shown.length+'</b>건 · 취소 제외</span></div>';
+  body+='<div class="wrap"><table class="tb"><tr><th class="ckc">'+ckAll("s:",shown.slice(0,600).map(function(r){return normE(r.emp)+"|"+r.sid;}))+'</th><th>세션</th><th>슬롯</th><th>이름</th><th>신청 시각</th><th>상태</th><th class="tdr">처리</th></tr>'+
+    shown.slice(0,600).map(function(r){ var k="s:"+normE(r.emp)+"|"+r.sid;
+      return '<tr class="hv click'+(ST.sel[k]?" sel":"")+'" onclick="drwOpen(\'ss\',\''+jq(normE(r.emp)+"|"+r.sid)+'\')"><td class="ckc">'+ck1(k)+'</td><td><b>'+esc(SESS_NAME[r.sid]||r.sid)+'</b></td><td class="n">'+esc(hhmm(r.slot)||"-")+'</td><td><div class="who2">'+esc(r.name)+'<small class="n">'+esc(r.emp)+'</small></div></td><td class="n cap">'+esc(short(r.ts))+'</td><td>'+tag(r.status,"")+'</td>'+
+        '<td><div class="acts"><button class="btn sm danger" onclick="event.stopPropagation();ssCancel([\''+jq(normE(r.emp)+"|"+r.sid)+'\'])">취소</button></div></td></tr>'; }).join("")+
+    (!shown.length?emptyRow(7,"신청이 없습니다."):'')+'</table></div>';
+  body+=memo('<p>강의신청은 정원 선착순이라 승인 단계가 없습니다. 운영자는 잘못 들어간 신청만 취소합니다. 취소는 되돌릴 수 없습니다(다시 넣으면 신청 순서가 맨 뒤로 가므로 되돌리기를 두지 않았습니다). 사전 신청 명단 인원은 여기서 취소되지 않고 「사전 신청 명단」에서 관리합니다.</p>'+
+    '<p>17F 오후 강연 잔여 = 정원 - 사전 신청 - 앱 신청'+PRE_SESS.map(function(id){ return ' · '+esc(SESS_NAME[id])+' 사전 '+(pre[id]||0)+' · 잔여 '+(left[id]!=null?left[id]:"-"); }).join("")+'. 10F 실습형 세션은 사전 신청(앱 밖)이라 여기서 제외합니다. 정원을 바꾸려면 백엔드 SESS_CAP 을 수정해야 합니다.</p>');
+  return h+card("","",body);
+}
+function ssFind(k){ var a=String(k).split("|"); return ssRows().filter(function(r){ return normE(r.emp)===a[0]&&r.sid===a[1]&&r.status!=="취소"; })[0]; }
+function ssCancel(keys){
+  var rows=keys.map(ssFind).filter(Boolean);
+  if(!rows.length){ toast("취소할 신청이 없습니다"); return; }
+  dialog({ t:(rows.length>1?rows.length+"건의 ":"")+"강의신청을 취소할까요?", s:"참가자 앱의 내 일정에서 빠지고 자리가 하나 납니다. <b>되돌릴 수 없습니다.</b> 다시 넣으려면 본인이 앱에서 신청해야 합니다(선착순 맨 뒤).",
+    who:rows.length===1?esc(rows[0].name)+'<span>사번 '+esc(rows[0].emp)+' · '+esc(SESS_NAME[rows[0].sid]||rows[0].sid)+'</span>':namesOf(rows), ok:"취소 처리", danger:true,
+    onOk:function(){
+      dlgForce();
+      var items=rows.map(function(r){ r.status="취소"; ovrSet("ss:"+normE(r.emp)+":"+r.sid,{status:"취소"}); return { r:r, run:op("sess_cancel",{emp:r.emp,sess:r.sid}) }; });
+      render();
+      runOps(items, function(it,ok){ if(!ok){ it.r.status="신청"; delete ST.ovr["ss:"+normE(it.r.emp)+":"+it.r.sid]; } else { hist(it.r.emp,(SESS_NAME[it.r.sid]||it.r.sid)+" 신청 취소"); delete ST.sel["s:"+normE(it.r.emp)+"|"+it.r.sid]; } },
+        function(okN,bad){ render(); toast("강의신청 취소 "+okN+"건"+(bad.length?" · 실패 "+bad.length+"건 ("+why(bad[0].res)+")":"")); });
+    } });
+}
+function drwSess(k){
+  var r=ssFind(k); if(!r) return "";
+  var h=drwHead(r.name, '사번 '+esc(r.emp))+'<div class="db"><h3>강의신청</h3><div class="row" style="justify-content:space-between"><b>'+esc(SESS_NAME[r.sid]||r.sid)+'</b>'+tag(r.status,"")+'</div><p class="cap mt8">신청 '+esc(short(r.ts))+(r.slot?' · 슬롯 '+esc(hhmm(r.slot)):'')+'</p>'+
+    '<div class="row mt16"><button class="btn danger" onclick="ssCancel([\''+jq(k)+'\'])">신청 취소</button></div><p class="cap mt8">정원 선착순이라 승인 단계가 없습니다. 취소는 되돌릴 수 없습니다.</p>';
+  return h+personHist(r.emp)+'</div>';
 }
 
 /* ══════════════════ 7-3b. 사전 신청 명단 (v3.31b) ══════════════════
@@ -754,37 +1393,6 @@ function preSummary(){
   var by={}; (PRE.rows||[]).forEach(function(r){ if(!r.err) by[r.sid]=(by[r.sid]||0)+1; });
   return by;
 }
-function viewPre(){
-  var d=ST.data.pre||{sess:{}}, S2=d.sess||{};
-  var h='<div class="grid g2" style="margin-top:14px">'+PRE_SESS.map(function(id){ var x=S2[id]||{};
-    return '<div class="card" style="margin-top:0"><h2>'+esc(SESS_NAME[id])+'</h2>'+
-      '<table class="tb"><tr><td>정원</td><td class="n tdr"><b>'+(x.cap!=null?x.cap:"-")+'</b></td></tr>'+
-      '<tr><td>사전 신청 명단</td><td class="n tdr"><b>'+(x.list||0)+'</b>명</td></tr>'+
-      '<tr><td>설정값 폴백 (명단이 없을 때만)</td><td class="n tdr">'+(x.cfg||0)+'</td></tr>'+
-      '<tr><td>잔여 계산에 쓰는 사전 신청</td><td class="n tdr"><b>'+(x.used||0)+'</b></td></tr>'+
-      '<tr><td>앱 신청</td><td class="n tdr">'+(x.app||0)+'</td></tr>'+
-      '<tr><td>잔여</td><td class="n tdr"><b>'+(x.left!=null?x.left:"-")+'</b></td></tr></table>'+
-      '<div class="row mt12"><button class="btn sm danger" onclick="preClear(\''+id+'\')">명단 비우기</button></div></div>'; }).join("")+'</div>';
-  h+='<p class="note mt12">잔여 = 정원 - 사전 신청 - 앱 신청. 명단이 올라와 있으면 명단 인원을 쓰고, 명단이 없을 때만 설정 시트의 사전신청수_l1·l2 를 씁니다. 최근 반영 '+esc(d.at||"-")+'</p>';
-  h+='<div class="card"><h2>엑셀로 명단 올리기</h2>'+
-    '<p class="src">첫 행 헤더 · 필수 열 「세션」「사번」 · 선택 열 「이름」「부문」 · 세션 값은 l1 / l2 또는 AWS / MS. 올린 파일에 들어 있는 세션의 명단을 통째로 교체합니다(다시 올려도 두 배가 되지 않습니다).</p>'+
-    '<div class="row mt12"><button class="btn sm" onclick="preTemplate()">양식 내려받기 (CSV)</button><span class="src">.xlsx · .csv · 옛 .xls 는 .xlsx 로 저장 후</span></div>'+
-    '<label ondragover="event.preventDefault()" ondrop="preDrop(event)" style="display:block;margin-top:12px;border:1.5px dashed var(--o25);border-radius:var(--rs);padding:22px;text-align:center;cursor:pointer;background:var(--o5)">'+
-    '<input type="file" accept=".xlsx,.csv,.xls" style="display:none" onchange="prePick(this)"><b>'+(PRE.file?esc(PRE.file):"파일을 끌어다 놓거나 눌러서 고르기")+'</b>'+
-    (PRE.file&&!PRE.rows?'<p class="src" style="margin:6px 0 0"><span class="spin"></span>읽는 중</p>':'')+'</label>';
-  if(PRE.rows){
-    var by=preSummary(), ok=PRE.rows.filter(function(r){return !r.err;}).length;
-    h+='<h2 class="mt12">미리보기</h2><table class="tb"><tr><th>세션</th><th class="tdr">반영할 인원</th><th class="tdr">현재 명단</th><th class="tdr">정원</th><th>확인</th></tr>'+
-      PRE_SESS.filter(function(id){ return by[id]; }).map(function(id){ var x=S2[id]||{}, over=x.cap!=null&&(by[id]+(x.app||0))>x.cap;
-        return '<tr><td><b>'+esc(SESS_NAME[id])+'</b></td><td class="n tdr"><b>'+by[id]+'</b></td><td class="n tdr">'+(x.list||0)+'</td><td class="n tdr">'+(x.cap!=null?x.cap:"-")+'</td><td>'+(over?'<span class="pill off">정원 초과 (앱 신청 '+(x.app||0)+' 포함)</span>':'<span class="pill ok">정원 안</span>')+'</td></tr>'; }).join("")+
-      (!ok?'<tr><td colspan="5" class="src">반영할 행이 없습니다.</td></tr>':'')+'</table>';
-    if(PRE.errs.length) h+='<div class="err-banner">오류 '+PRE.errs.length+'행 · 반영에서 제외됩니다<br>'+PRE.errs.slice(0,30).map(function(e){ return (e.line?e.line+'행 · ':'')+esc(e.msg); }).join("<br>")+(PRE.errs.length>30?'<br>외 '+(PRE.errs.length-30)+'행':'')+'</div>';
-    h+='<p class="src mt12">명부에 없는 사번 경고는 이 콘솔이 명부 사번 목록을 받지 않아 표시하지 않습니다(개인정보 최소 전송).</p>';
-    h+='<div class="row mt12"><button class="btn pri" '+(ok&&!PRE.busy?'':'disabled ')+'onclick="preApply()">'+(PRE.busy?'<span class="spin"></span>반영 중 '+PRE.pct+'%':(PRE.errs.length?'오류 행 제외하고 반영':'반영'))+'</button><button class="btn ghost" onclick="preReset()">취소</button></div>';
-  }
-  h+='</div>';
-  return h;
-}
 function preApply(){
   var good=(PRE.rows||[]).filter(function(r){ return !r.err; }), by=preSummary(), S2=(ST.data.pre||{}).sess||{};
   var sids=PRE_SESS.filter(function(id){ return by[id]; });
@@ -793,7 +1401,6 @@ function preApply(){
     who:sids.map(function(id){ return esc(SESS_NAME[id])+" · 기존 "+((S2[id]||{}).list||0)+"명 → 새 "+by[id]+"명"; }).join("<br>"), ok:"교체",
     onOk:function(){ dlgForce(); preSend(good, sids); } });
 }
-function dlgForce(){ el("dlgOk").disabled=false; dlgClose(); }
 function preSend(good, sids){
   var up="u"+Date.now().toString(36)+Math.random().toString(36).slice(2,8), chunks=[];
   for(var i=0;i<good.length;i+=PRE_CHUNK) chunks.push(good.slice(i,i+PRE_CHUNK).map(function(r){ return [r.sid,r.emp,r.name,r.dept]; }));
@@ -814,7 +1421,6 @@ function preClear(id){
   dialog({ t:"명단을 비울까요?", s:"사전 신청 명단만 지웁니다. 앱 신청은 그대로입니다.", who:esc(SESS_NAME[id])+" · "+(x.list||0)+"명", ok:"비우기",
     onOk:function(){ call("pre_clear",{sess:id},function(r){ dlgForce(); if(r&&r.ok){ toast(SESS_NAME[id]+" 명단 "+r.removed+"명 비움"); load(); } else toast("실패: "+(r&&r.reason||"")); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
 }
-
 /* ══════════════════ 7-5. 설문 (v3.35) ══════════════════
  * 답은 사번 없이 저장된다(서버 설문응답 시트). 여기도 사람 단위가 아니라 집계만 본다.
  * 문항 문구는 앱 SURVEY 상수와 같게 둔다(기획 확정 시 두 곳을 함께 바꾼다). */
@@ -824,39 +1430,228 @@ var SURVEY_PLACE_NAME = { p1:"1F AX 전시·체험존", p2:"AX Now! 체험 부�
    앱에는 상태가 '공개'·'샘플' 인 것만, 작가 없이(번호·제목·설명) 나간다 · '샘플' 은 좋아요·순위에서 빠지고 화면에 「샘플」 워터마크가 얹힌다 · 좋아요 1인 3표 · 시상 확인용 실명은 이 화면에만 있다.
    이미지는 GAS 릴레이가 아니라 정적 호스팅이다: 원본을 내려받아 긴 변 1080px + 섬네일 320px 로 줄이고
    웹배포용/assets/art/ 에 <작품ID>.jpg · <작품ID>_t.jpg 로 넣은 뒤 시트 「파일」 칸에 <작품ID>.jpg 만 적는다. */
+
+function viewPre(){
+  var d=ST.data.pre||{sess:{}}, S2=d.sess||{};
+  var h='<div class="grid g2" style="margin-top:0">'+PRE_SESS.map(function(id){ var x=S2[id]||{};
+    return card(SESS_NAME[id], "잔여 "+(x.left!=null?x.left:"-"),
+      '<div class="wrap"><table class="tb"><tr><td>정원</td><td class="n tdr"><b>'+(x.cap!=null?x.cap:"-")+'</b></td></tr>'+
+      '<tr><td>사전 신청 명단</td><td class="n tdr"><b>'+(x.list||0)+'</b>명</td></tr>'+
+      '<tr><td>설정값 폴백 (명단이 없을 때만)</td><td class="n tdr">'+(x.cfg||0)+'</td></tr>'+
+      '<tr><td>잔여 계산에 쓰는 사전 신청</td><td class="n tdr"><b>'+(x.used||0)+'</b></td></tr>'+
+      '<tr><td>앱 신청</td><td class="n tdr">'+(x.app||0)+'</td></tr>'+
+      '<tr><td>잔여</td><td class="n tdr"><b>'+(x.left!=null?x.left:"-")+'</b></td></tr></table></div>',
+      '<button class="btn sm danger" onclick="preClear(\''+id+'\')">명단 비우기</button>'); }).join("")+'</div>';
+  var body='<div class="row"><button class="btn sm" onclick="preTemplate()">양식 내려받기 (CSV)</button><span class="cap">.xlsx · .csv · 옛 .xls 는 .xlsx 로 저장 후 · 최근 반영 '+esc(d.at||"-")+'</span></div>'+
+    '<label class="drop" ondragover="event.preventDefault()" ondrop="preDrop(event)">'+
+    '<input type="file" accept=".xlsx,.csv,.xls" style="display:none" onchange="prePick(this)"><b>'+(PRE.file?esc(PRE.file):"파일을 끌어다 놓거나 눌러서 고르기")+'</b>'+
+    (PRE.file&&!PRE.rows?'<p class="cap" style="margin:6px 0 0"><span class="spin"></span>읽는 중</p>':'')+'</label>';
+  if(PRE.rows){
+    var by=preSummary(), ok=PRE.rows.filter(function(r){return !r.err;}).length;
+    body+='<h2 class="mt16" style="font-size:var(--fs-b);font-weight:700;margin-bottom:8px">미리보기</h2><div class="wrap"><table class="tb"><tr><th>세션</th><th class="tdr">반영할 인원</th><th class="tdr">현재 명단</th><th class="tdr">정원</th><th>확인</th></tr>'+
+      PRE_SESS.filter(function(id){ return by[id]; }).map(function(id){ var x=S2[id]||{}, over=x.cap!=null&&(by[id]+(x.app||0))>x.cap;
+        return '<tr><td><b>'+esc(SESS_NAME[id])+'</b></td><td class="n tdr"><b>'+by[id]+'</b></td><td class="n tdr">'+(x.list||0)+'</td><td class="n tdr">'+(x.cap!=null?x.cap:"-")+'</td><td>'+(over?tag("정원 초과 (앱 신청 "+(x.app||0)+" 포함)","bad"):tag("정원 안","ok"))+'</td></tr>'; }).join("")+
+      (!ok?emptyRow(5,"반영할 행이 없습니다."):'')+'</table></div>';
+    if(PRE.errs.length) body+='<div class="err-banner mt12">오류 '+PRE.errs.length+'행 · 반영에서 제외됩니다<br>'+PRE.errs.slice(0,30).map(function(e){ return (e.line?e.line+'행 · ':'')+esc(e.msg); }).join("<br>")+(PRE.errs.length>30?'<br>외 '+(PRE.errs.length-30)+'행':'')+'</div>';
+    body+='<div class="row mt12"><button class="btn pri" '+(ok&&!PRE.busy?'':'disabled ')+'onclick="preApply()">'+(PRE.busy?'<span class="spin"></span>반영 중 '+PRE.pct+'%':(PRE.errs.length?'오류 행 제외하고 반영':'반영'))+'</button><button class="btn ghost" onclick="preReset()">취소</button></div>';
+  }
+  body+=memo('<p>첫 행 헤더 · 필수 열 「세션」「사번」 · 선택 열 「이름」「부문」 · 세션 값은 l1 / l2 또는 AWS / MS. 올린 파일에 들어 있는 세션의 명단을 통째로 교체합니다(다시 올려도 두 배가 되지 않습니다).</p>'+
+    '<p>잔여 = 정원 - 사전 신청 - 앱 신청. 명단이 올라와 있으면 명단 인원을 쓰고, 명단이 없을 때만 설정 시트의 사전신청수_l1·l2 를 씁니다.</p>'+
+    '<p>명부에 없는 사번 경고는 이 콘솔이 명부 사번 목록을 받지 않아 표시하지 않습니다(개인정보 최소 전송).</p>');
+  return h+card("엑셀로 명단 올리기","17F 오후 강연 사전 신청",body);
+}
+
+/* ══════════════════ 7-5. AI 사생대회 ══════════════════ */
 function viewArt(){
   var d=ST.data.art||{}, rows=(d.rows||[]).filter(function(r){ return match(r,["id","title","desc","name","nick","emp"]); });
   var byLikes=rows.slice().filter(function(r){ return r.status==="공개"; }).sort(function(a,b){ return b.likes-a.likes || (a.ts<b.ts?-1:1); });
-  var h='<h1>AI 사생대회<small>본선 공개 작품 · 좋아요 1인 3표 · 앱에는 작가가 나오지 않습니다 (시상 때 공개)</small></h1>';
-  h+='<div class="grid g4">'+kpi("공개",rows.filter(function(r){return r.status==="공개";}).length,"점")+kpi("대기",rows.filter(function(r){return r.status==="대기";}).length,"점")+kpi("숨김",rows.filter(function(r){return r.status==="숨김";}).length,"점")+kpi("좋아요",rows.reduce(function(a,r){return a+(r.likes||0);},0),"개")+'</div>';
-  h+='<div class="card"><h2>설정</h2><div class="row" style="gap:10px;flex-wrap:wrap">'+
-    '<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700">접수 폼 주소<input class="in" id="artForm" style="min-width:260px" value="'+esc(d.form||"")+'"></label>'+
-    '<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700">접수 마감<input class="in" id="artSub" style="width:170px" value="'+esc(d.subEnd||"")+'"></label>'+
-    '<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700">좋아요 마감<input class="in" id="artVote" style="width:170px" value="'+esc(d.voteEnd||"")+'"></label>'+
-    '<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700">순위 상위 N<input class="in" id="artTop" style="width:90px" inputmode="numeric" value="'+(d.top||10)+'"></label>'+
-    '<button class="btn pri" style="align-self:flex-end" onclick="artSave()">저장</button></div>'+
-    '<p class="note mt12">형식 2026-10-26 16:30 · 접수 마감 전에는 앱 홈 배너가 폼으로, 그 뒤 좋아요 마감까지는 갤러리로 갑니다. 좋아요 마감이 지나면 배너가 사라지고 좋아요가 잠깁니다.</p></div>';
-  h+='<div class="card"><h2>이미지 올리는 순서 (정적 호스팅)</h2><ol class="note" style="margin:6px 0 0 18px;line-height:1.9">'+
-    '<li>폼 응답에서 본선 작품 원본을 내려받는다.</li>'+
-    '<li>작품마다 번호를 정한다(01~10). 이 번호가 작품ID이자 앱에 보이는 번호다.</li>'+
-    '<li>변환 스크립트를 돌린다: <b>python 사생대회_이미지_변환.py &lt;원본 폴더&gt;</b> → 긴 변 1080px <b>01.jpg</b> 와 섬네일 320px <b>01_t.jpg</b> 가 나온다.</li>'+
-    '<li>나온 파일을 <b>웹배포용/assets/art/</b> 에 넣고 push 한다.</li>'+
-    '<li>시트 「사생대회」에 작품ID·접수시각·사번·제목·설명·파일(01.jpg)·상태(대기)를 적고, 여기서 「공개」로 바꾼다.</li>'+
-    '</ol><p class="note mt12">공개 주소를 아는 사람은 누구나 이미지를 볼 수 있습니다. 접수 폼에 「사내·대외비 자료 금지」를 적어 두세요.</p></div>';
-  h+='<div class="card"><div class="tools"><input class="in" placeholder="번호 · 제목 · 이름 검색" value="'+esc(ST.q)+'" oninput="setQ(this.value)"><span class="src">'+rows.length+'점</span></div>'+
-    '<div class="wrap"><table class="tb"><tr><th>번호</th><th>제목</th><th>작가(시상용)</th><th>파일</th><th class="tdr">좋아요</th><th>상태</th><th>처리</th></tr>'+
-    (rows.length?rows.map(function(r){ var k=esc(r.id).replace(/'/g,"");
-      return '<tr><td class="n"><b>'+esc(r.id)+'</b></td><td>'+esc(r.title)+'<div class="src">'+esc(r.desc||"")+'</div></td>'+
-        '<td>'+esc(r.name||"-")+'<div class="src">'+esc(r.emp||"")+(r.nick?" · "+esc(r.nick):"")+'</div></td>'+
-        '<td class="n src">'+esc(r.file||"")+'</td><td class="n tdr">'+(r.likes||0)+'</td>'+
-        '<td><span class="pill'+(r.status==="공개"?" ok":r.status==="숨김"?" off":"")+'">'+esc(r.status)+'</span></td>'+
-        '<td><div class="row" style="gap:6px">'+(r.status!=="공개"?'<button class="btn sm pri" onclick="artSet(\''+k+'\',\'공개\')">공개</button>':'')+
+  var h=tabHead();
+  h+='<div class="kpis">'+kpi("공개",rows.filter(function(r){return r.status==="공개";}).length,"점")+kpi("대기",rows.filter(function(r){return r.status==="대기";}).length,"점")+kpi("숨김",rows.filter(function(r){return r.status==="숨김";}).length,"점")+kpi("좋아요",rows.reduce(function(a,r){return a+(r.likes||0);},0),"개")+'</div>';
+  h+=card("설정","형식 2026-10-26 16:30",'<div class="row" style="gap:12px;align-items:flex-end">'+
+    '<label class="fld">접수 폼 주소<input class="in" id="artForm" style="min-width:280px" value="'+esc(d.form||"")+'"></label>'+
+    '<label class="fld">접수 마감<input class="in" id="artSub" style="min-width:0;width:170px" value="'+esc(d.subEnd||"")+'"></label>'+
+    '<label class="fld">좋아요 마감<input class="in" id="artVote" style="min-width:0;width:170px" value="'+esc(d.voteEnd||"")+'"></label>'+
+    '<label class="fld">순위 상위 N<input class="in" id="artTop" style="min-width:0;width:90px" inputmode="numeric" value="'+(d.top||10)+'"></label>'+
+    '<button class="btn pri" onclick="artSave()">저장</button></div>'+
+    memo('<p>접수 마감 전에는 앱 홈 배너가 폼으로, 그 뒤 좋아요 마감까지는 갤러리로 갑니다. 좋아요 마감이 지나면 배너가 사라지고 좋아요가 잠깁니다.</p>'+
+      '<p><b>이미지 올리는 순서 (정적 호스팅)</b></p><ol><li>폼 응답에서 본선 작품 원본을 내려받는다.</li><li>작품마다 번호를 정한다(01~10). 이 번호가 작품ID이자 앱에 보이는 번호다.</li>'+
+      '<li>변환 스크립트를 돌린다: <b>python 사생대회_이미지_변환.py &lt;원본 폴더&gt;</b> → 긴 변 1080px <b>01.jpg</b> 와 섬네일 320px <b>01_t.jpg</b> 가 나온다.</li>'+
+      '<li>나온 파일을 <b>웹배포용/assets/art/</b> 에 넣고 push 한다.</li><li>시트 「사생대회」에 작품ID·접수시각·사번·제목·설명·파일(01.jpg)·상태(대기)를 적고, 여기서 「공개」로 바꾼다.</li></ol>'+
+      '<p>공개 주소를 아는 사람은 누구나 이미지를 볼 수 있습니다. 접수 폼에 「사내·대외비 자료 금지」를 적어 두세요.</p>'));
+  h+=card("작품","앱에는 작가 없이 번호 · 제목 · 설명만 나갑니다",'<div class="toolbar">'+searchBox("번호 · 제목 · 이름 검색")+'<span class="cnt"><b>'+rows.length+'</b>점</span></div>'+
+    '<div class="wrap"><table class="tb"><tr><th>번호</th><th>제목</th><th>작가(시상용)</th><th>파일</th><th class="tdr">좋아요</th><th>상태</th><th class="tdr">처리</th></tr>'+
+    (rows.length?rows.map(function(r){ var k=jq(r.id);
+      return '<tr class="hv"><td class="n"><b>'+esc(r.id)+'</b></td><td>'+esc(r.title)+'<div class="cap">'+esc(r.desc||"")+'</div></td>'+
+        '<td>'+esc(r.name||"-")+'<div class="cap">'+esc(r.emp||"")+(r.nick?" · "+esc(r.nick):"")+'</div></td>'+
+        '<td class="n cap">'+esc(r.file||"")+'</td><td class="n tdr">'+(r.likes||0)+'</td>'+
+        '<td>'+tag(r.status, r.status==="공개"?"ok":r.status==="숨김"?"off":r.status==="대기"?"warn":"")+'</td>'+
+        '<td><div class="acts">'+(r.status!=="숨김"?'<button class="btn sm danger" onclick="artSet(\''+k+'\',\'숨김\')">숨김</button>':'')+
         (r.status!=="샘플"?'<button class="btn sm" onclick="artSet(\''+k+'\',\'샘플\')">샘플</button>':'')+
-        (r.status!=="숨김"?'<button class="btn sm danger" onclick="artSet(\''+k+'\',\'숨김\')">숨김</button>':'')+'</div></td></tr>'; }).join(""):'<tr><td colspan="7" class="src">작품이 없습니다. 시트 「사생대회」에 행을 넣고 새로고침하세요.</td></tr>')+
-    '</table></div></div>';
-  h+='<div class="card"><h2>좋아요 순위 · 시상용</h2><p class="src">동점은 먼저 낸 쪽이 위 · 좋아요 수로만 정합니다</p><div class="wrap"><table class="tb"><tr><th>순위</th><th>번호</th><th>제목</th><th>작가</th><th>사번</th><th class="tdr">좋아요</th></tr>'+
-    (byLikes.length?byLikes.slice(0,20).map(function(r,i){ return '<tr><td class="n"><b>'+(i+1)+'</b></td><td class="n">'+esc(r.id)+'</td><td>'+esc(r.title)+'</td><td>'+esc(r.name||"-")+'</td><td class="n">'+esc(r.emp||"")+'</td><td class="n tdr">'+(r.likes||0)+'</td></tr>'; }).join(""):'<tr><td colspan="6" class="src">공개된 작품이 없습니다.</td></tr>')+
-    '</table></div><button class="btn mt12" onclick="artCsv()">시상 결과 CSV 내려받기</button></div>';
+        (r.status!=="공개"?'<button class="btn sm pri" onclick="artSet(\''+k+'\',\'공개\')">공개</button>':'')+'</div></td></tr>'; }).join(""):emptyRow(7,"작품이 없습니다. 시트 「사생대회」에 행을 넣고 새로고침하세요."))+
+    '</table></div>');
+  h+=card("좋아요 순위 · 시상용","동점은 먼저 낸 쪽이 위 · 좋아요 수로만 정합니다",'<div class="wrap"><table class="tb"><tr><th>순위</th><th>번호</th><th>제목</th><th>작가</th><th>사번</th><th class="tdr">좋아요</th></tr>'+
+    (byLikes.length?byLikes.slice(0,20).map(function(r,i){ return '<tr><td class="n"><b>'+(i+1)+'</b></td><td class="n">'+esc(r.id)+'</td><td>'+esc(r.title)+'</td><td>'+esc(r.name||"-")+'</td><td class="n">'+esc(r.emp||"")+'</td><td class="n tdr">'+(r.likes||0)+'</td></tr>'; }).join(""):emptyRow(6,"공개된 작품이 없습니다."))+
+    '</table></div>','<button class="btn sm" onclick="artCsv()">시상 결과 CSV</button>');
+  return h;
+}
+
+/* ══════════════════ 7-5. 설문 (v3.35) ══════════════════ */
+function viewSurvey(){
+  var d=ST.data.survey||{n:0,qs:[]}, qs=d.qs||[];
+  var h=tabHead();
+  h+='<div class="kpis">'+kpi("응답",d.n||0,"명","14:30부터 · 스탬프 1개 이상")+kpi("문항",qs.length,"개")+'</div>';
+  h+=memo('<p>문항 미확정 · 지금 앱은 기본 3문항(만족도 0~10 · 가장 좋았던 것 · 한 줄)으로 받습니다. 문항은 앱 SURVEY_Q 한 곳만 바꾸면 되고 이 화면은 그대로 집계합니다.</p>');
+  if(!qs.length) return h+'<div class="card"><div class="empty">아직 응답이 없습니다.</div></div>';
+  qs.forEach(function(q){
+    var body='';
+    if(q.t==="scale"){
+      var keys=Object.keys(q.dist||{}).map(Number).sort(function(a,b){return a-b;}), mx=Math.max.apply(null,keys.map(function(k){return q.dist[k];}).concat([1]));
+      body='<p class="muted" style="font-size:var(--fs-s)">평균 <b class="n">'+q.avg+'</b></p><table class="tb plain bartb">'+keys.map(function(k){ return barRow('<b class="n">'+k+'점</b>', q.dist[k], mx, q.dist[k]); }).join("")+'</table>';
+    } else if(q.t==="text"){
+      var lines=(q.lines||[]).filter(function(x){ return match(x,["line"]); });
+      body='<div class="toolbar">'+searchBox("검색")+'<span class="cnt"><b>'+lines.length+'</b>건</span></div><div class="wrap scrolly"><table class="tb"><tr><th style="width:140px">시각(10분 단위)</th><th>한 줄</th></tr>'+
+        (lines.length?lines.slice().reverse().slice(0,500).map(function(x){ return '<tr><td class="n cap">'+esc(short(x.t))+'</td><td>'+esc(x.line)+'</td></tr>'; }).join(""):emptyRow(2,"없음"))+'</table></div>';
+    } else {
+      var ck=Object.keys(q.counts||{}).sort(function(a,b){ return q.counts[b]-q.counts[a]; }), tot=ck.reduce(function(s,k){return s+q.counts[k];},0);
+      body='<table class="tb plain bartb">'+ck.map(function(k){ var nm=q.t==="places"?(SURVEY_PLACE_NAME[k.split(":")[0]]||k.split(":")[0])+" · "+({meh:"아쉬웠어요",good:"좋았어요",best:"최고"}[k.split(":")[1]]||""):k;
+        return barRow('<b>'+esc(nm)+'</b>', q.counts[k], tot, q.counts[k]+' · '+pct(q.counts[k],tot)+'%'); }).join("")+'</table>'+
+        ((q.lines||[]).length?'<p class="cap mt12">기타 직접 입력 '+q.lines.length+'건 · '+q.lines.slice(-20).map(function(x){return esc(x.line);}).join(" · ")+'</p>':'');
+    }
+    h+=card(q.q||q.id, esc(q.id)+' · '+esc(q.t)+' · '+q.n+'명', body);
+  });
+  return h;
+}
+
+/* ══════════════════ 7-6. 게임 · 서브탭 · AX 올림픽 | 게임별 통계 | 타자왕전 · 닉네임 ══════════════════
+ * 순위판은 닉네임만 공개한다. 여기는 운영자 전용이라 사번·실명을 함께 본다. 부문 통계는 어디에도 넣지 않는다. */
+function viewTyping(){
+  var s=sub()||"oly", h=tabHead();
+  h+=chips([{v:"oly",n:"AX 올림픽"},{v:"stats",n:"게임별 통계"},{v:"type",n:"타자왕전 · 닉네임"}], s, "setSub");
+  if(s==="stats") return h+viewGameStats();
+  if(s==="type") return h+viewTypeNick();
+  return h+viewOly();
+}
+function viewTypeNick(){
+  var rows=((ST.data.nick||{}).rows||[]).filter(function(r){ return match(r,["emp","nick","name"]); });
+  var tr=ST.data.tres||{top:[],win:[]};
+  var h=card("1F 현장 타자왕전 상위 5","Outro 호명용 · 결선 시간대 "+esc((tr.win||[]).join(" · ")),
+    '<div class="wrap"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">생존</th><th class="tdr">정확도</th><th>기록 시각</th></tr>'+
+    ((tr.top||[]).length?tr.top.map(function(r){ return '<tr><td class="n"><b>'+r.rank+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name)+'</td><td class="n">'+esc(r.emp)+'</td><td class="n tdr">'+tySec(r.score)+'</td><td class="n tdr">'+r.acc+'%</td><td class="n cap">'+esc(short(r.ts))+'</td></tr>'; }).join(""):emptyRow(7,"아직 현장 기록이 없습니다."))+'</table></div>'+
+    memo('<p>AX 단어 소나기(노트북 전용 · 앱 종목은 테트리스) · 1인 1회 · 오래 버틴 순 · 동점은 정확도, 그다음 먼저 기록한 쪽.</p>'));
+  h+=card("미니게임 닉네임","2~8자 · 중복·금칙어·명부 실명은 서버가 거부 · 숨기면 순위판에 「이름 숨김」",
+    '<div class="toolbar">'+searchBox("닉네임 · 사번 · 이름 검색")+'<span class="cnt"><b>'+rows.length+'</b>명</span></div>'+
+    '<div class="wrap scrolly"><table class="tb"><tr><th>닉네임</th><th>상태</th><th>사번</th><th>이름</th><th class="tdr">앱 최고 생존</th><th class="tdr">현장 생존</th><th class="tdr">처리</th></tr>'+
+    (rows.length?rows.map(function(r){ var k=jq(r.emp);
+      return '<tr class="hv"><td><b>'+esc(r.nick||"(초기화됨)")+'</b></td><td>'+(r.hidden?tag("숨김","off"):tag("공개","ok"))+'</td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.name)+'</td><td class="n tdr">'+tySec(r.app)+'</td><td class="n tdr">'+tySec(r.site)+'</td>'+
+        '<td><div class="acts"><button class="btn sm danger" onclick="nickReset(\''+k+'\')">초기화</button><button class="btn sm" onclick="nickHide(\''+k+'\','+(r.hidden?0:1)+')">'+(r.hidden?"숨김 해제":"숨기기")+'</button></div></td></tr>'; }).join(""):emptyRow(7,"닉네임이 없습니다."))+'</table></div>'+
+    memo('<p>초기화하면 닉네임이 지워지고 순위판에 「익명 참가자」로 나옵니다. 참가자는 앱에서 새 닉네임을 다시 정할 수 있습니다. 기록 점수는 지우지 않습니다.</p>'));
+  h+=card("리허설 기록 지우기","테스트 사번(310555)만 · 실제 참가자 사번은 서버가 거부",
+    '<div class="row"><input class="in" id="gwEmp" style="min-width:0;width:160px" placeholder="테스트 사번" value="310555"><button class="btn danger" onclick="gameWipe()">기록 삭제</button></div>'+
+    '<p class="cap mt8">앱 게임기록과 현장 타자왕전 기록을 함께 지웁니다.</p>');
+  return h;
+}
+function gstCard(g){
+  var d=ST.data.gstats||{}, G=(d.games||{})[g];
+  if(!G) return card(GST_NAME[g],"",'<p class="cap">불러오는 중</p>');
+  var tb=G.target&&typeof G.target==="object"?G.target:null;
+  var sum=G.players?'<div class="row" style="gap:6px;margin-bottom:12px">'+tag("참여 "+G.players+"명","off")+tag("플레이 "+G.plays+"회","off")+tag("최고 "+gstFmt(G.best,G.unit),"off")+tag("중간값 "+gstFmt(G.median,G.unit),"off")+'</div>':'<p class="cap" style="margin-bottom:12px">아직 기록이 없습니다</p>';
+  return card(GST_NAME[g], esc(GST_DIR[g])+(tb?' · 보통 '+gstFmt(tb.mid,G.unit)+' = 50점 · 최상 '+gstFmt(tb.top,G.unit)+' = 90점':''),
+    sum+'<div class="toolbar"><input class="in" placeholder="닉네임 · 이름 · 사번 검색" oninput="gstSearch(\''+g+'\',this.value)">'+
+    '<span class="cnt" id="gcnt_'+g+'">'+G.rows.length+' / '+G.rows.length+'명</span></div>'+
+    '<div class="wrap scrolly"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">최고 기록</th><th class="tdr">환산</th><th class="tdr">플레이</th><th>마지막 기록</th></tr>'+
+    '<tbody id="gtb_'+g+'">'+gstRowsHtml(g)+'</tbody></table></div>', '<button class="btn sm" onclick="gstCsv(\''+g+'\')">CSV</button>');
+}
+function olyAllHtml(){
+  var d=ST.data.gstats||{}, O=d.oly, ev=d.events||[];
+  if(!O) return card("AX 올림픽 · 전원 명단","",'<p class="cap">불러오는 중</p>');
+  var q=(GQ.oly||"").trim().toLowerCase();
+  var rows=O.rows.filter(function(r){ return gstMatch(r,q); });
+  var bars=(O.dist||[]).map(function(n,i){ return tag((i*50)+'~'+((i+1)*50-1)+'점 '+n+'명',"off"); }).join(" ");
+  var body=rows.length?rows.map(function(r){
+    return '<tr><td class="n">'+r.rank+'</td><td><b>'+esc(r.nick||"(닉네임 없음)")+'</b></td><td>'+esc(r.name||"-")+'</td><td class="n">'+esc(r.emp)+'</td>'+
+      ev.map(function(g){ return '<td class="n tdr">'+(r.ev[g]?r.ev[g].pts+"점":'<span class="cap">-</span>')+'</td>'; }).join("")+
+      '<td class="n tdr"><b>'+r.total+'점</b></td><td class="n tdr">'+r.done+' / '+ev.length+'</td></tr>';
+  }).join(""):emptyRow(6+ev.length, O.rows.length?"검색 결과가 없습니다.":"아직 기록이 없습니다.");
+  return card("AX 올림픽 · 전원 명단", '참여 '+O.players+'명 · 4종목 완주 '+O.finishers+'명 · 만점 '+(d.max||400)+'점',
+    '<div class="row" style="gap:6px;margin-bottom:12px"><span class="cap">총점 분포</span> '+bars+'</div>'+
+    '<div class="toolbar"><input class="in" placeholder="닉네임 · 이름 · 사번 검색" value="'+esc(GQ.oly||"")+'" oninput="GQ.oly=this.value; render()">'+
+    '<span class="cnt"><b>'+rows.length+'</b> / '+O.rows.length+'명</span></div>'+
+    '<div class="wrap scrolly"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th>'+
+    ev.map(function(g){ return '<th class="tdr">'+esc(GST_NAME[g])+'</th>'; }).join("")+
+    '<th class="tdr">총점</th><th class="tdr">완주</th></tr>'+body+'</table></div>', '<button class="btn sm" onclick="olyCsv()">CSV</button>');
+}
+function viewGameStats(){
+  var d=ST.data.gstats||{}, ev=d.events||["pang","jump","type","word"];
+  return '<p class="cap" style="margin-bottom:4px">네 종목 전원 · 기록 단위는 종목마다 다릅니다(초 · 점) · 부문 통계는 두지 않습니다</p>'+ev.map(gstCard).join("")+olyAllHtml();
+}
+function viewOly(){
+  var d=ST.data.olyr||{};
+  if(!d.ok) return card("AX 올림픽","",'<p class="cap">'+(d.reason?"불러오지 못했습니다 · "+esc(d.reason):"불러오는 중")+'</p>');
+  var ev=d.events||[], t=d.target||{};
+  var h=card("환산 기준","보통 = 50점 · 최상 = 90점 · 만점 "+(ev.length*100)+" ("+ev.length+"종목)",
+    ev.map(function(g){
+      var b=t[g]&&typeof t[g]==="object"?t[g]:{mid:"",top:""};
+      return '<div class="row" style="gap:12px;align-items:flex-end;padding:10px 0;border-top:1px solid var(--line2)">'+
+        '<div style="width:150px"><b>'+esc(OLY_NAME[g]||g)+'</b><div class="cap">'+esc(OLY_DIR[g]||"")+'</div></div>'+
+        '<label class="fld">보통 (50점)<input class="in" id="olyM_'+g+'" style="min-width:0;width:110px" inputmode="numeric" value="'+(b.mid||"")+'" oninput="olyPrev(\''+g+'\')"></label>'+
+        '<label class="fld">최상 (90점)<input class="in" id="olyT_'+g+'" style="min-width:0;width:110px" inputmode="numeric" value="'+(b.top||"")+'" oninput="olyPrev(\''+g+'\')"></label>'+
+        '<span class="cap n" id="olyP_'+g+'" style="flex:1;min-width:220px;padding-bottom:8px"></span></div>';
+    }).join("")+
+    '<div class="row mt12"><button class="btn pri" onclick="olySave()">저장</button></div>'+
+    memo('<p>종목마다 보통 기록 = 50점, 최상 기록 = 90점 · 그 사이와 바깥은 곡선으로 이어져 0점·100점에는 닿지 않습니다 · 기록은 1/100초로 적습니다(3000 = 30.0초) · 바꾸면 전원 점수가 즉시 다시 계산됩니다.</p>'));
+  h+=card("종합 상위 10","Outro 호명용 (1~3위) · 전 종목 완주자만 · 동점은 전 종목 완료가 이른 쪽 · 명예 시상(경품 없음)",'<div class="wrap"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">총점</th><th>완주 시각</th></tr>'+
+    ((d.overall||[]).length?d.overall.map(function(r){ return '<tr><td class="n"><b>'+r.rank+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name)+'</td><td class="n">'+esc(r.emp)+'</td><td class="n tdr">'+r.total+'</td><td class="n cap">'+esc(short(r.doneAt))+'</td></tr>'; }).join(""):emptyRow(6,"아직 전 종목 완주자가 없습니다."))+'</table></div>');
+  setTimeout(function(){ ev.forEach(olyPrev); },0);
+  return h;
+}
+/* v3.70 테스트 사번 기록 삭제 · 서버가 테스트 목록을 다시 확인한다 */
+function gameWipe(){
+  var emp=((el("gwEmp")||{}).value||"").trim();
+  if(!emp){ toast("사번을 입력하세요"); return; }
+  dialog({ t:"테스트 기록을 지울까요?", s:"게임·타자 기록을 지웁니다. <b>되돌릴 수 없습니다.</b> 테스트 사번만 지울 수 있습니다.", who:"사번 "+esc(emp), ok:"기록 삭제", danger:true,
+    onOk:function(){ call("game_wipe",{emp:emp},function(r){ dlgForce();
+      if(r&&r.ok) { toast("삭제 · 게임 "+r.game+"행 · 타자 "+r.type+"행"); load(); }
+      else toast(r&&r.reason==="notest"?"테스트 사번만 지울 수 있습니다":"삭제 실패"+((r&&r.reason)?" ("+r.reason+")":""));
+    },function(){ dlgForce(); toast("서버 연결 실패"); }); } });
+}
+function nickHide(emp,on){ call("type_nick_hide",{emp:emp,on:on},function(r){ if(r&&r.ok){ toast(on?"닉네임을 숨겼습니다":"숨김을 해제했습니다"); load(); } else toast("실패: "+why(r)); },function(){ toast("서버 응답 없음"); }); }
+function nickReset(emp){
+  dialog({ t:"닉네임을 초기화할까요?", s:"닉네임이 지워지고 순위판에 「익명 참가자」로 나옵니다. 기록 점수는 남습니다.", who:"사번 "+esc(emp), ok:"초기화", danger:true,
+    onOk:function(){ call("type_nick_reset",{emp:emp},function(r){ dlgForce(); if(r&&r.ok){ toast("초기화했습니다"); load(); } else toast("실패: "+why(r)); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
+}
+
+/* ══════════════════ 7-4. 공지 (v3.14) · 발송 notice_set · 중지 notice_clear · 현재 공지는 sync 로 읽는다 ══════════════════ */
+function viewNotice(){
+  var d=(ST.data.noti&&ST.data.noti.ok)?ST.data.noti:{}, cur=d.notice||null;
+  var h=tabHead();
+  h+=card("지금 송출 중", cur?tag("송출 중","pri"):tag("없음","off"),
+    (cur?'<p><b>'+esc(cur.title)+'</b></p><p class="muted mt8">'+esc(cur.body)+'</p><p class="cap mt8">'+esc(cur.id)+'</p>':'<div class="empty">송출 중인 공지가 없습니다.</div>'),
+    cur?'<button class="btn danger" onclick="noticeStopC(\''+jq(cur.id)+'\')">공지 중지 (전 기기)</button>':'');
+  h+='<div class="grid g2">'+card("새 공지 발송","모든 참가자 기기",
+    '<label class="fld">제목<input class="in" id="ntT" placeholder="예: 1F 전시, 지금 한산해요" style="width:100%"></label>'+
+    '<label class="fld mt12">내용<input class="in" id="ntB" placeholder="한두 문장" style="width:100%"></label>'+
+    '<div class="row mt12"><button class="btn pri" onclick="noticeSend()">전체 발송</button></div>');
+  h+=card("템플릿","확인 창을 거쳐 발송",NOTICE_TPL.map(function(t,i){
+    return '<div class="row" style="justify-content:space-between;flex-wrap:nowrap;padding:10px 0;border-top:'+(i?"1px solid var(--line2)":"0")+'"><div style="flex:1;min-width:0"><b>'+esc(t[0])+'</b><p class="cap" style="margin-top:2px">'+esc(t[1])+'</p></div><button class="btn sm pri" onclick="noticeTpl('+i+')">발송</button></div>';
+  }).join(""))+'</div>';
+  h+=memo('<p>발송하면 참가자 앱의 LED 띠(30분)·실시간 안내에 나갑니다. 중지하면 다음 동기화(10초 주기)에 전 기기에서 사라집니다.</p>');
+  return h;
+}
+
+/* ══════════════════ 7-5. 포토부스 원격 대기열 (v3.21 B) · photo_list 조회 · q_call·q_skip·q_done ══════════════════ */
+function viewPhoto(){
+  var d=(ST.data.photo&&ST.data.photo.ok)?ST.data.photo:{rows:[],pub:{}}, rows=d.rows||[], pub=d.pub||{};
+  var h=tabHead('<button class="btn pri" onclick="photoAct(\'call\')">다음 번호 호출</button>');
+  /* v3.38 번호표 발급 시간 제한 폐기 · 상태(발급 중·점심·발급 시간 아님) 칸 삭제 */
+  h+='<div class="kpis">'+kpi("대기",rows.length,"팀")+kpi("호출 중",pub.serving?pub.serving:"-",pub.serving?"번":"")+kpi("예상 소요",rows.length*(pub.min||3),"분","한 팀 "+(pub.min||3)+"분 기준")+'</div>';
+  h+=card("대기열","호출 후 10분 안에 오지 않으면 건너뛰기, 도착하면 완료",'<div class="wrap"><table class="tb"><tr><th>번호</th><th>이름</th><th>상태</th><th class="tdr">앞 팀</th><th>예상 입장</th><th class="tdr">처리</th></tr>'+
+    rows.map(function(r){ var k=jq(r.emp);
+      return '<tr class="hv"><td class="n"><b>'+r.no+'</b></td><td><div class="who2">'+esc(r.name||"")+'<small class="n">'+esc(r.emp)+'</small></div></td>'+
+        '<td>'+(r.status==="call"?tag("호출 중","pri"):tag("대기","warn"))+'</td>'+
+        '<td class="n tdr">'+r.ahead+'</td><td class="n">'+esc(r.eta||"")+'</td>'+
+        '<td>'+(r.status==="call"?'<div class="acts"><button class="btn sm danger" onclick="photoAct(\'skip\',\''+k+'\','+r.no+')">건너뛰기</button><button class="btn sm pri" onclick="photoAct(\'done\',\''+k+'\','+r.no+')">완료</button></div>':'<div class="acts"><span class="cap">-</span></div>')+'</td></tr>'; }).join("")+
+    (!rows.length?emptyRow(6,"대기 중인 번호가 없습니다."):'')+'</table></div>'+
+    memo('<p>참가자는 앱에서 번호를 받고 자리에서 기다립니다. 앞 2팀이 되면 앱에 「곧 차례예요」가 뜨고, 호출하면 「지금 입장하세요」가 뜹니다. 번호표 발급은 시간 제한이 없습니다.</p>'));
   return h;
 }
 function artSet(id,status){
@@ -874,56 +1669,8 @@ function artCsv(){
   var blob=new Blob(["\ufeff"+out.join("\n")],{type:"text/csv;charset=utf-8"});
   var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="사생대회_시상.csv"; a.click(); URL.revokeObjectURL(a.href);
 }
-function viewSurvey(){
-  var d=ST.data.survey||{n:0,qs:[]}, qs=d.qs||[];
-  var h='<h1>설문<small>오늘 한 판 설문 · 14:30부터 · 스탬프 1개 이상 · 답은 이름 없이 저장됩니다. 사람 단위 조회는 없습니다.</small></h1>';
-  h+='<div class="card soft"><p class="note">문항 미확정 · 지금 앱은 기본 3문항(만족도 0~10 · 가장 좋았던 것 · 한 줄)으로 받습니다. 문항은 앱 SURVEY_Q 한 곳만 바꾸면 되고 이 화면은 그대로 집계합니다.</p></div>';
-  h+='<div class="grid g4">'+kpi("응답",d.n||0,"명")+'</div>';
-  if(!qs.length) return h+'<div class="card"><p class="src">아직 응답이 없습니다.</p></div>';
-  qs.forEach(function(q){
-    h+='<div class="card"><h2>'+esc(q.q||q.id)+' <span class="src">('+esc(q.id)+' · '+esc(q.t)+' · '+q.n+'명)</span></h2>';
-    if(q.t==="scale"){
-      var keys=Object.keys(q.dist||{}).map(Number).sort(function(a,b){return a-b;}), mx=Math.max.apply(null,keys.map(function(k){return q.dist[k];}).concat([1]));
-      h+='<p class="src">평균 '+q.avg+'</p><table class="tb">'+keys.map(function(k){ return '<tr><td style="width:60px"><b class="n">'+k+'점</b></td><td><div class="bar"><i style="width:'+pct(q.dist[k],mx)+'%"></i></div></td><td class="n tdr" style="width:60px">'+q.dist[k]+'</td></tr>'; }).join("")+'</table>';
-    } else if(q.t==="text"){
-      var lines=(q.lines||[]).filter(function(x){ return match(x,["line"]); });
-      h+='<div class="tools"><input class="in" placeholder="검색" value="'+esc(ST.q)+'" oninput="setQ(this.value)"><span class="src">'+lines.length+'건</span></div><div class="wrap"><table class="tb"><tr><th style="width:130px">시각(10분 단위)</th><th>한 줄</th></tr>'+
-        (lines.length?lines.slice().reverse().slice(0,500).map(function(x){ return '<tr><td class="n src">'+esc(short(x.t))+'</td><td>'+esc(x.line)+'</td></tr>'; }).join(""):'<tr><td colspan="2" class="src">없음</td></tr>')+'</table></div>';
-    } else {
-      var ck=Object.keys(q.counts||{}).sort(function(a,b){ return q.counts[b]-q.counts[a]; }), tot=ck.reduce(function(s,k){return s+q.counts[k];},0);
-      h+='<table class="tb">'+ck.map(function(k){ var nm=q.t==="places"?(SURVEY_PLACE_NAME[k.split(":")[0]]||k.split(":")[0])+" · "+({meh:"아쉬웠어요",good:"좋았어요",best:"최고"}[k.split(":")[1]]||""):k;
-        return '<tr><td style="width:200px"><b>'+esc(nm)+'</b></td><td><div class="bar"><i style="width:'+pct(q.counts[k],tot)+'%"></i></div></td><td class="n tdr" style="width:90px">'+q.counts[k]+' · '+pct(q.counts[k],tot)+'%</td></tr>'; }).join("")+'</table>'+
-        ((q.lines||[]).length?'<p class="src mt12">기타 직접 입력 '+q.lines.length+'건 · '+q.lines.slice(-20).map(function(x){return esc(x.line);}).join(" · ")+'</p>':'');
-    }
-    h+='</div>';
-  });
-  return h;
-}
-
-/* ══════════════════ 7-6. 타자 게임 (v3.36b) ══════════════════
- * 순위판은 닉네임만 공개한다. 여기는 운영자 전용이라 사번·실명을 함께 본다(부적절한 닉네임 숨김·초기화, 현장 시상 확인). */
 /* v3.80 타자 기록은 「버틴 시간」(1/100초) · 표에는 초로 보여 준다 */
 function tySec(v){ return v ? (Number(v)/100).toFixed(1)+"초" : "-"; }
-function viewTyping(){
-  var rows=((ST.data.nick||{}).rows||[]).filter(function(r){ return match(r,["emp","nick","name"]); });
-  var tr=ST.data.tres||{top:[],win:[]};
-  var h='<h1>게임<small>AX 올림픽 · 게임별 통계(팡 · 점프 · 테트리스 · 기억력) · 미니게임 닉네임 · 1F 현장 타자왕전</small></h1>';
-  h+=viewOly();
-  h+=viewGameStats();   /* v3.84 네 종목 전원 통계 */
-  h+='<h1 style="margin-top:18px">1F 현장 타자왕전<small>AX 단어 소나기(노트북 전용 · 앱 종목은 테트리스) · 닉네임은 2~8자 · 중복·금칙어·명부 실명은 서버가 거부 · 여기서 숨기면 순위판에 「이름 숨김」</small></h1>';
-  h+='<div class="card"><h2>1F 현장 타자왕전 상위 5 · Outro 호명용</h2><p class="src">결선 시간대 '+esc((tr.win||[]).join(" · "))+' · 1인 1회 · 오래 버틴 순 · 동점은 정확도, 그다음 먼저 기록한 쪽</p>'+
-    '<div class="wrap"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">생존</th><th class="tdr">정확도</th><th>기록 시각</th></tr>'+
-    ((tr.top||[]).length?tr.top.map(function(r){ return '<tr><td class="n"><b>'+r.rank+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name)+'</td><td class="n">'+esc(r.emp)+'</td><td class="n tdr">'+tySec(r.score)+'</td><td class="n tdr">'+r.acc+'%</td><td class="n src">'+esc(short(r.ts))+'</td></tr>'; }).join(""):'<tr><td colspan="7" class="src">아직 현장 기록이 없습니다.</td></tr>')+'</table></div></div>';
-  h+='<div class="card"><div class="tools"><input class="in" placeholder="닉네임 · 사번 · 이름 검색" value="'+esc(ST.q)+'" oninput="setQ(this.value)"><span class="src">'+rows.length+'명</span></div>'+
-    '<div class="wrap"><table class="tb"><tr><th>닉네임</th><th>상태</th><th>사번</th><th>이름</th><th class="tdr">앱 최고 생존</th><th class="tdr">현장 생존</th><th>처리</th></tr>'+
-    (rows.length?rows.map(function(r){ var k=esc(r.emp).replace(/'/g,"");
-      return '<tr><td><b>'+esc(r.nick||"(초기화됨)")+'</b></td><td>'+(r.hidden?'<span class="pill off">숨김</span>':'<span class="pill ok">공개</span>')+'</td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.name)+'</td><td class="n tdr">'+tySec(r.app)+'</td><td class="n tdr">'+tySec(r.site)+'</td>'+
-        '<td><div class="row" style="gap:6px"><button class="btn sm" onclick="nickHide(\''+k+'\','+(r.hidden?0:1)+')">'+(r.hidden?"숨김 해제":"숨기기")+'</button><button class="btn sm danger" onclick="nickReset(\''+k+'\')">초기화</button></div></td></tr>'; }).join(""):'<tr><td colspan="7" class="src">닉네임이 없습니다.</td></tr>')+'</table></div>'+
-    '<p class="note mt12">리허설 기록 지우기 · 테스트 사번(310555)만 지울 수 있습니다. 앱 게임기록과 현장 타자왕전 기록을 함께 지웁니다. 실제 참가자 사번은 거부됩니다.</p>'+
-    '<div class="row mt12" style="gap:8px"><input class="in" id="gwEmp" style="width:160px" placeholder="테스트 사번" value="310555"><button class="btn danger" onclick="gameWipe()">기록 삭제</button></div>'+
-    '<p class="note mt12">초기화하면 닉네임이 지워지고 순위판에 「익명 참가자」로 나옵니다. 참가자는 앱에서 새 닉네임을 다시 정할 수 있습니다. 기록 점수는 지우지 않습니다.</p></div>';
-  return h;
-}
 /* ── v3.84 게임별 통계 (사용자 요청 260918 「타자 말고 다른 게임도 통계」 · 「상위 10이 아니라 전원」) ──────────
  * 기록은 서버 game_stats 한 번으로 받는다. 네 종목 모두 참여 인원·플레이 횟수·최고·중간값 + 전원 명단.
  * 기록 방향이 종목마다 다르다: 팡 = 완주 시간(짧을수록), 점프·소나기 = 버틴 시간(길수록), 기억력 = 점수.
@@ -934,12 +1681,12 @@ var GQ={};
 function gstFmt(v,unit){ return unit==="cs" ? (Number(v||0)/100).toFixed(1)+"초" : unit==="ln" ? Number(v||0).toLocaleString()+"줄" : Number(v||0).toLocaleString()+"점"; }
 function gstMatch(r,q){ if(!q) return true; return (r.nick||"").toLowerCase().indexOf(q)>=0 || (r.name||"").toLowerCase().indexOf(q)>=0 || String(r.emp||"").indexOf(q)>=0; }
 function gstRowsHtml(g){
-  var G=((ST.data.gstats||{}).games||{})[g]; if(!G) return '<tr><td colspan="8" class="src">불러오는 중</td></tr>';
+  var G=((ST.data.gstats||{}).games||{})[g]; if(!G) return '<tr><td colspan="8" class="cap">불러오는 중</td></tr>';
   var q=(GQ[g]||"").trim().toLowerCase();
   var rows=G.rows.filter(function(r){ return gstMatch(r,q); });
-  if(!rows.length) return '<tr><td colspan="8" class="src">'+(G.rows.length?"검색 결과가 없습니다.":"아직 기록이 없습니다.")+'</td></tr>';
+  if(!rows.length) return '<tr><td colspan="8" class="cap">'+(G.rows.length?"검색 결과가 없습니다.":"아직 기록이 없습니다.")+'</td></tr>';
   return rows.map(function(r){
-    return '<tr><td class="n">'+r.rank+'</td><td><b>'+esc(r.nick||"(닉네임 없음)")+'</b>'+(r.hidden?' <span class="pill off">숨김</span>':'')+'</td>'+
+    return '<tr><td class="n">'+r.rank+'</td><td><b>'+esc(r.nick||"(닉네임 없음)")+'</b>'+(r.hidden?' <span class="tag off">숨김</span>':'')+'</td>'+
       '<td>'+esc(r.name||"-")+'</td><td class="n">'+esc(r.emp)+'</td>'+
       '<td class="n tdr">'+gstFmt(r.best,G.unit)+'</td><td class="n tdr">'+r.pts+'점</td>'+
       '<td class="n tdr">'+r.plays+'회</td><td class="n src">'+esc(short(r.last))+'</td></tr>';
@@ -978,45 +1725,6 @@ function olyCsv(){
   csvDl("AX올림픽_전체기록.csv",lines.join("\n"));
   toast("CSV를 내려받았습니다");
 }
-function gstCard(g){
-  var d=ST.data.gstats||{}, G=(d.games||{})[g];
-  if(!G) return '<div class="card"><h2>'+esc(GST_NAME[g])+'</h2><p class="src">불러오는 중</p></div>';
-  var sum=G.players?('참여 '+G.players+'명 · 플레이 '+G.plays+'회 · 최고 '+gstFmt(G.best,G.unit)+' · 중간값 '+gstFmt(G.median,G.unit)):"아직 기록이 없습니다";
-  var tb=G.target&&typeof G.target==="object"?G.target:null;
-  return '<div class="card"><h2>'+esc(GST_NAME[g])+' <small>· '+esc(GST_DIR[g])+(tb?' · 보통 '+gstFmt(tb.mid,G.unit)+' = 50점 · 최상 '+gstFmt(tb.top,G.unit)+' = 90점':'')+'</small></h2>'+
-    '<p class="src">'+esc(sum)+'</p>'+
-    '<div class="tools" style="margin-top:10px"><input class="in" placeholder="닉네임 · 이름 · 사번 검색" oninput="gstSearch(\''+g+'\',this.value)">'+
-    '<span class="src" id="gcnt_'+g+'">'+G.rows.length+' / '+G.rows.length+'명</span>'+
-    '<button class="btn sm" onclick="gstCsv(\''+g+'\')">CSV 내려받기</button></div>'+
-    '<div class="wrap scrolly"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">최고 기록</th><th class="tdr">환산</th><th class="tdr">플레이</th><th>마지막 기록</th></tr>'+
-    '<tbody id="gtb_'+g+'">'+gstRowsHtml(g)+'</tbody></table></div></div>';
-}
-function olyAllHtml(){
-  var d=ST.data.gstats||{}, O=d.oly, ev=d.events||[];
-  if(!O) return '<div class="card"><h2>AX 올림픽 · 전원</h2><p class="src">불러오는 중</p></div>';
-  var q=(GQ.oly||"").trim().toLowerCase();
-  var rows=O.rows.filter(function(r){ return gstMatch(r,q); });
-  var bars=(O.dist||[]).map(function(n,i){ return '<span class="pill">'+(i*50)+'~'+((i+1)*50-1)+'점 '+n+'명</span>'; }).join(" ");
-  var body=rows.length?rows.map(function(r){
-    return '<tr><td class="n">'+r.rank+'</td><td><b>'+esc(r.nick||"(닉네임 없음)")+'</b></td><td>'+esc(r.name||"-")+'</td><td class="n">'+esc(r.emp)+'</td>'+
-      ev.map(function(g){ return '<td class="n tdr">'+(r.ev[g]?r.ev[g].pts+"점":'<span class="src">-</span>')+'</td>'; }).join("")+
-      '<td class="n tdr"><b>'+r.total+'점</b></td><td class="n tdr">'+r.done+' / '+ev.length+'</td></tr>';
-  }).join(""):'<tr><td colspan="'+(6+ev.length)+'" class="src">'+(O.rows.length?"검색 결과가 없습니다.":"아직 기록이 없습니다.")+'</td></tr>';
-  return '<div class="card"><h2>AX 올림픽 · 전원 명단<small>참여 '+O.players+'명 · 4종목 완주 '+O.finishers+'명 · 만점 '+(d.max||400)+'점</small></h2>'+
-    '<p class="src">총점 분포 '+bars+'</p>'+
-    '<div class="tools" style="margin-top:10px"><input class="in" placeholder="닉네임 · 이름 · 사번 검색" oninput="GQ.oly=this.value; render()">'+
-    '<span class="src">'+rows.length+' / '+O.rows.length+'명</span><button class="btn sm" onclick="olyCsv()">CSV 내려받기</button></div>'+
-    '<div class="wrap scrolly"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th>'+
-    ev.map(function(g){ return '<th class="tdr">'+esc(GST_NAME[g])+'</th>'; }).join("")+
-    '<th class="tdr">총점</th><th class="tdr">완주</th></tr>'+body+'</table></div></div>';
-}
-function viewGameStats(){
-  var d=ST.data.gstats||{}, ev=d.events||["pang","jump","type","word"];
-  var h='<h1 style="margin-top:18px">게임별 통계<small>네 종목 전원 · 기록 단위는 종목마다 다릅니다(초 · 점) · 부문 통계는 두지 않습니다</small></h1>';
-  h+=ev.map(gstCard).join("");
-  h+=olyAllHtml();
-  return h;
-}
 /* v3.50 AX 올림픽 · 종목별 목표 점수(환산 100점 기준) · 종합 상위 10(실명) · v3.50d 부문 표시 삭제 */
 var OLY_NAME={ pang:"AX 팡", jump:"ME to WE 점프", tetris:"테트리스", word:"ME to WE 기억력" };
 /* ── v3.92 AX 올림픽 환산 기준 · 종목마다 보통(= 50점)·최상(= 90점) 기록 두 개 (1/100초) ──
@@ -1035,25 +1743,6 @@ function olyPrev(g){
   p.style.color="";
   p.textContent=secC(low)+" = "+olyPtsC(low,b)+"점 · "+secC(mid)+" = 50점 · "+secC(top)+" = 90점 · "+secC(far)+" = "+olyPtsC(far,b)+"점";
 }
-function viewOly(){
-  var d=ST.data.olyr||{};
-  if(!d.ok) return '<div class="card"><h2>AX 올림픽</h2><p class="src">'+(d.reason?"불러오지 못했습니다 · "+esc(d.reason):"불러오는 중")+'</p></div>';
-  var ev=d.events||[], t=d.target||{};
-  var h='<div class="card"><h2>AX 올림픽 · 환산 기준</h2><p class="src">종목마다 보통 기록 = 50점, 최상 기록 = 90점 · 그 사이와 바깥은 곡선으로 이어져 0점·100점에는 닿지 않습니다 · 기록은 1/100초로 적습니다(3000 = 30.0초) · 만점 '+(ev.length*100)+' ('+ev.length+'종목) · 바꾸면 전원 점수가 즉시 다시 계산됩니다</p>'+
-    ev.map(function(g){
-      var b=t[g]&&typeof t[g]==="object"?t[g]:{mid:"",top:""};
-      return '<div class="row mt12" style="gap:10px;flex-wrap:wrap;align-items:flex-end">'+
-        '<b style="width:118px;font-size:13px">'+esc(OLY_NAME[g]||g)+'<br><span class="src" style="font-weight:600">'+esc(OLY_DIR[g]||"")+'</span></b>'+
-        '<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700">보통 (50점)<input class="in" id="olyM_'+g+'" style="width:110px" inputmode="numeric" value="'+(b.mid||"")+'" oninput="olyPrev(\''+g+'\')"></label>'+
-        '<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700">최상 (90점)<input class="in" id="olyT_'+g+'" style="width:110px" inputmode="numeric" value="'+(b.top||"")+'" oninput="olyPrev(\''+g+'\')"></label>'+
-        '<span class="src" id="olyP_'+g+'" style="flex:1;min-width:220px"></span></div>';
-    }).join("")+
-    '<div class="row mt12"><button class="btn pri" onclick="olySave()">저장</button></div></div>';
-  h+='<div class="card"><h2>종합 상위 10 · Outro 호명용 (1~3위)</h2><p class="src">전 종목 완주자만 · 동점은 전 종목 완료가 이른 쪽 · 명예 시상(경품 없음)</p><div class="wrap"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">총점</th><th>완주 시각</th></tr>'+
-    ((d.overall||[]).length?d.overall.map(function(r){ return '<tr><td class="n"><b>'+r.rank+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name)+'</td><td class="n">'+esc(r.emp)+'</td><td class="n tdr">'+r.total+'</td><td class="n src">'+esc(short(r.doneAt))+'</td></tr>'; }).join(""):'<tr><td colspan="6" class="src">아직 전 종목 완주자가 없습니다.</td></tr>')+'</table></div></div>';
-  setTimeout(function(){ ev.forEach(olyPrev); },0);
-  return h;
-}
 function olySave(){
   var d=ST.data.olyr||{}, base={}, bad="";
   (d.events||[]).forEach(function(g){
@@ -1064,43 +1753,11 @@ function olySave(){
   if(bad){ toast("기준을 확인해 주세요 · "+(OLY_NAME[bad]||bad)+" ("+(OLY_LOWER[bad]?"최상 < 보통":"최상 > 보통")+" · 1 이상 정수)"); return; }
   call("oly_cfg",{base:JSON.stringify(base)},function(r){ if(r&&r.ok){ toast("환산 기준을 저장했습니다"); load(); } else toast("실패: "+(r&&r.reason||"")+(r&&r.game?" · "+(OLY_NAME[r.game]||r.game):"")); },function(){ toast("서버 응답 없음"); });
 }
-/* v3.70 테스트 사번 기록 삭제 · 서버가 테스트 목록을 다시 확인한다 */
-function gameWipe(){
-  var emp=((el("gwEmp")||{}).value||"").trim();
-  if(!emp){ toast("사번을 입력하세요"); return; }
-  if(!confirm(emp+" 의 게임·타자 기록을 지울까요? 되돌릴 수 없습니다.")) return;
-  call("game_wipe",{emp:emp},function(r){
-    if(r&&r.ok) { toast("삭제 · 게임 "+r.game+"행 · 타자 "+r.type+"행"); load(); }
-    else toast(r&&r.reason==="notest"?"테스트 사번만 지울 수 있습니다":"삭제 실패"+((r&&r.reason)?" ("+r.reason+")":""));
-  },function(){ toast("서버 연결 실패"); });
-}
-function nickHide(emp,on){ call("type_nick_hide",{emp:emp,on:on},function(r){ if(r&&r.ok){ toast(on?"닉네임을 숨겼습니다":"숨김을 해제했습니다"); load(); } else toast("실패: "+(r&&r.reason||"")); },function(){ toast("서버 응답 없음"); }); }
-function nickReset(emp){ if(!confirm(emp+" 님의 닉네임을 초기화할까요? 기록 점수는 남습니다.")) return; call("type_nick_reset",{emp:emp},function(r){ if(r&&r.ok){ toast("초기화했습니다"); load(); } else toast("실패: "+(r&&r.reason||"")); },function(){ toast("서버 응답 없음"); }); }
-
-/* ══════════════════ 7-4. 공지 (v3.14) · 발송 notice_set · 중지 notice_clear · 현재 공지는 sync 로 읽는다 ══════════════════ */
 /* 앱 NOTICE_TEMPLATES 와 같은 목록 */
 var NOTICE_TPL=[
   ["곧 오늘 한 판 설문","17:00 Outro 전에 앱 홈에서 오늘 한 판 설문(60초)에 참여해 주세요. 제출하면 스탬프 1개!"],
   ["1F 전시, 지금 한산해요","3분 코스로 둘러보고 패스포트 한 칸 채워가세요."]
 ];
-function viewNotice(){
-  var d=(ST.data.noti&&ST.data.noti.ok)?ST.data.noti:{}, cur=d.notice||null;
-  var h='<h1>공지</h1>';
-  h+='<div class="card"><h2>지금 송출 중</h2>'+
-    (cur
-      ?'<p style="margin-top:6px"><b>'+esc(cur.title)+'</b> <span class="pill on">송출 중</span></p><p class="muted" style="margin-top:4px">'+esc(cur.body)+'</p><p class="muted" style="margin-top:4px;font-size:12px">'+esc(cur.id)+'</p>'+
-       '<button class="btn danger" style="margin-top:10px" onclick="noticeStopC(\''+esc(cur.id)+'\')">공지 중지 (전 기기)</button>'
-      :'<p class="muted" style="margin-top:6px">송출 중인 공지가 없습니다.</p>')+
-    '<p class="note mt12">발송하면 참가자 앱의 LED 띠(30분)·실시간 안내에 나갑니다. 중지하면 다음 동기화(10초 주기)에 전 기기에서 사라집니다.</p></div>';
-  h+='<div class="card"><h2>새 공지 발송</h2>'+
-    '<input class="in" id="ntT" placeholder="제목" style="width:100%;margin-top:8px">'+
-    '<input class="in" id="ntB" placeholder="내용" style="width:100%;margin-top:8px">'+
-    '<button class="btn pri" style="margin-top:10px" onclick="noticeSend()">전체 발송</button></div>';
-  h+='<div class="card"><h2>템플릿 · 확인 후 발송</h2>'+NOTICE_TPL.map(function(t,i){
-    return '<div class="row" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px"><div style="flex:1;min-width:0"><b>'+esc(t[0])+'</b><p class="muted" style="margin-top:2px">'+esc(t[1])+'</p></div><button class="btn sm pri" onclick="noticeTpl('+i+')">발송</button></div>';
-  }).join("")+'</div>';
-  return h;
-}
 function noticeSendGo(t,b){
   call("notice_set",{title:t,body:b},function(r){
     if(r&&r.ok){ toast("발송했습니다 · "+t); load(); } else toast("발송 실패: "+(r&&r.reason||""));
@@ -1124,28 +1781,6 @@ function noticeStopC(id){
         if(r&&r.ok){ toast("공지를 중지했습니다"); load(); } else toast("중지 실패: "+(r&&r.reason||""));
       },function(){ toast("서버 응답 없음"); });
     } });
-}
-
-/* ══════════════════ 7-5. 포토부스 원격 대기열 (v3.21 B) · photo_list 조회 · q_call·q_skip·q_done ══════════════════ */
-function viewPhoto(){
-  var d=(ST.data.photo&&ST.data.photo.ok)?ST.data.photo:{rows:[],pub:{}}, rows=d.rows||[], pub=d.pub||{};
-  var h='<h1>포토부스 대기열</h1>';
-  /* v3.38 번호표 발급 시간 제한 폐기 · 상태(발급 중·점심·발급 시간 아님) 칸 삭제 */
-  h+='<div class="grid g3" style="margin-top:14px">'+
-    '<div class="kpi"><div class="l">대기</div><div class="v n">'+rows.length+'<em>팀</em></div></div>'+
-    '<div class="kpi"><div class="l">호출 중</div><div class="v n">'+(pub.serving?pub.serving+'<em>번</em>':'-')+'</div></div>'+
-    '<div class="kpi"><div class="l">예상 소요</div><div class="v n">'+(rows.length*(pub.min||3))+'<em>분</em></div></div></div>';
-  h+='<div class="card"><div class="tools"><button class="btn pri" onclick="photoAct(\'call\')">다음 번호 호출</button>'+
-    '<span class="src">호출 후 10분 안에 오지 않으면 건너뛰기, 도착하면 완료</span></div>';
-  h+='<div class="wrap"><table class="tb"><tr><th>번호</th><th>사번</th><th>이름</th><th>상태</th><th>앞 팀</th><th>예상 입장</th><th style="min-width:180px">처리</th></tr>'+
-    rows.map(function(r){ var k=esc(r.emp).replace(/'/g,"");
-      return '<tr><td class="n"><b>'+r.no+'</b></td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.name||"")+'</td>'+
-        '<td><span class="pill'+(r.status==="call"?" on":"")+'">'+(r.status==="call"?"호출 중":"대기")+'</span></td>'+
-        '<td class="n">'+r.ahead+'</td><td class="n">'+esc(r.eta||"")+'</td>'+
-        '<td>'+(r.status==="call"?'<div class="row" style="gap:6px"><button class="btn sm" onclick="photoAct(\'skip\',\''+k+'\','+r.no+')">건너뛰기</button><button class="btn sm pri" onclick="photoAct(\'done\',\''+k+'\','+r.no+')">완료</button></div>':'<span class="src">-</span>')+'</td></tr>'; }).join("")+
-    (!rows.length?'<tr><td colspan="7" class="src">대기 중인 번호가 없습니다.</td></tr>':'')+'</table></div>';
-  h+='<p class="note mt12">참가자는 앱에서 번호를 받고 자리에서 기다립니다. 앞 2팀이 되면 앱에 「곧 차례예요」가 뜨고, 호출하면 「지금 입장하세요」가 뜹니다. 번호표 발급은 시간 제한이 없습니다.</p></div>';
-  return h;
 }
 function photoAct(act, emp, no){
   var go=function(){
