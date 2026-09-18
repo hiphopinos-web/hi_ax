@@ -552,14 +552,21 @@
   .rg-wrap.flat canvas { image-rendering: auto; }
   #rgPlay .gs-foot { flex: none; padding: 12px 10px calc(12px + env(safe-area-inset-bottom, 0px)); background: #fff; border-top: 2px solid #000; text-align: center; font-weight: 800; font-size: 13.5px; color: #000; touch-action: none; user-select: none; -webkit-user-select: none; }
   /* v3.86 테트리스 조작판 · 화면 아래 고정 · 늘 보인다 · 버튼은 최소 56px 이고 사이를 띄워 두 개가 같이 눌리지 않게 한다 */
-  #rgPlay .tt-pad { flex: none; display: flex; flex-direction: column; gap: 8px; padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px)); background: #fff; border-top: 2px solid #000; touch-action: none; user-select: none; -webkit-user-select: none; }
-  #rgPlay .tt-row { display: flex; gap: 10px; }
-  #rgPlay .tt-b { flex: 1; min-height: 62px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 2px solid #000; border-radius: 16px; background: #fff; color: #000; font-weight: 800; font-size: 12.5px; padding: 6px 4px; touch-action: none; }
-  #rgPlay .tt-b svg { width: 24px; height: 24px; fill: currentColor; }
-  #rgPlay .tt-b.on { background: #FF7E31; color: #fff; transform: translateY(1px); }
-  #rgPlay .tt-b.soft { min-height: 56px; }
-  #rgPlay .tt-b.hard { min-height: 56px; flex: 1.3; background: #000; color: #fff; }
-  #rgPlay .tt-b.hard.on { background: #D64524; }
+  /* v3.87b (사용자 레퍼런스 260918) 둥근 조작 버튼이 판 아래 빈 띠에 떠 있다 · 상자형 패널 없음 ·
+     왼손 십자(위 = 바닥까지 · 아래 = 한 칸씩 · 좌우 이동) · 오른손 회전 둘(반시계 · 시계) · 색은 우리 팔레트(주황·검정·흰색). */
+  #rgPlay .tt-pad { flex: none; position: relative; display: flex; align-items: flex-start; justify-content: space-between; height: 192px; padding: 4px 12px calc(4px + env(safe-area-inset-bottom, 0px)); background: #fff; touch-action: none; user-select: none; -webkit-user-select: none; }
+  #rgPlay .tt-dpad { position: relative; width: 168px; height: 168px; flex: none; }
+  #rgPlay .tt-rot { position: relative; width: 124px; height: 168px; flex: none; }
+  #rgPlay .tt-c { position: absolute; width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,0.55); background: rgba(255,255,255,0.92); color: #000; display: flex; align-items: center; justify-content: center; padding: 0; touch-action: none; }
+  #rgPlay .tt-c svg { width: 25px; height: 25px; fill: currentColor; }
+  #rgPlay .tt-c.on { background: #FF7E31; border-color: #D64524; color: #fff; }
+  #rgPlay .tt-dpad .up { left: 56px; top: 0; }
+  #rgPlay .tt-dpad .lf { left: 0; top: 56px; }
+  #rgPlay .tt-dpad .rt { left: 112px; top: 56px; }
+  #rgPlay .tt-dpad .dn { left: 56px; top: 112px; }
+  #rgPlay .tt-rot .ccw { left: 0; top: 94px; width: 58px; height: 58px; }
+  #rgPlay .tt-rot .cw { left: 58px; top: 30px; width: 66px; height: 66px; }
+  #rgPlay .tt-cap { position: absolute; left: 0; right: 0; bottom: calc(5px + env(safe-area-inset-bottom, 0px)); text-align: center; font-size: 10.5px; font-weight: 700; color: var(--muted); pointer-events: none; margin: 0; }
   #rgPlay.tetris .rgp-mid { background: #fff; }
   .rg-form .input { flex: 1; font-size: 18px; border: 2px solid #000; }
   .rg-form .btn { width: auto; padding: 12px 18px; }
@@ -3071,7 +3078,7 @@ function schedNowRow() {
   return rcHtml({ cls: "", onclick: go, link: true, left: tokBadge("지금", isBlack("now") ? "act" : "", now.time),
     title: esc(now.title), sub: nx ? "다음 " + nx.time + " " + esc(nx.title) : "" });
 }
-/* v3.13 홈 광고판 · 스플래시와 같은 AXF 시퀀스 엔진(axfSeqMount, 점 → 구체 → 달리는 사람 → Me to We) 재사용.
+/* v3.13 홈 광고판 · 스플래시와 같은 AXF 시퀀스 엔진(axfSeqMount, 점 → 구체 → 달리는 사람 → ME to WE) 재사용.
    공용 시계(AXF.t0)라 재렌더에도 시퀀스가 이어진다 · isConnected 검사로 화면을 떠나면 raf 정지 ·
    reduced-motion 은 엔진이 자체 처리 · 장식 전용(탭 없음 · 링크 금지) */
 function billboardHtml() {
@@ -4392,7 +4399,7 @@ var Views = {
     if (gsNeedNick()) return gsNickHtml("tetris");
     setTimeout(ttPreview, 0);
     return gsStartHtml("tetris", { rootId: "ttRoot", previewId: "ttPrev", pw: 180, ph: 120, flat: true,
-      rules: "아래 버튼으로 옮기고 돌려서 줄을 채워요 · 「떨어뜨리기」는 곧장 내려놓기 · 한 판이면 스탬프" });
+      rules: "왼쪽 십자로 옮기고(위 = 바닥까지, 아래 = 한 칸씩) 오른쪽 두 버튼으로 돌려요 · 한 판이면 스탬프" });
   },
   /* ═══ v3.45 휴대폰 미니게임 · AX 팡 · ME to WE 점프 (v3.50 전원 공개) ═══ */
   game_pang: function () {
@@ -7071,10 +7078,10 @@ function axTodayHtml(dark) { return '<p class="ax-line' + (dark ? " dk" : "") + 
 var OLY_EVENTS = [
   { key: "pang", name: "AX 팡", short: "팡", view: "game_pang", best: "pang_best", lower: 1, unit: "초" },   /* v3.74 기록 = 완주 시간(1/100초) · 작을수록 좋다 */
   { key: "jump", name: "ME to WE 점프", short: "점프", view: "game_jump", best: "jump_best", time: 1, unit: "초" },   /* v3.75 기록 = 생존 시간(1/100초) · 길수록 좋다 */
-  { key: "tetris", name: "테트리스", short: "테트리스", view: "game_tetris", best: "tetris_best", unit: "줄" },   /* v3.86 기록 = 지운 줄 수(많을수록 좋다) · 같은 줄 수면 오래 버틴 쪽 */
+  { key: "tetris", name: "테트리스", short: "테트리스", view: "game_tetris", best: "tt_best", time: 1, unit: "초" },   /* v3.87 기록 = 버틴 시간(1/100초) · 길수록 좋다 · 줄·점수는 결과 카드의 보조 지표 */
   { key: "word", name: "ME to WE 기억력", short: "기억력", view: "game_word", best: "gw_best" }
 ];
-var OLY_TARGET = { pang: 4500, jump: 6000, tetris: 20, word: 480 };   /* 폴백 · 팡 = 목표 완주 45초(4500 · 짧을수록) · 점프 = 목표 생존 60초(6000 · 길수록) · 테트리스 = 목표 20줄 · 기억력 = 목표 점수 (실측 뒤 콘솔에서 조정) */
+var OLY_TARGET = { pang: 4500, jump: 6000, tetris: 6000, word: 480 };   /* 폴백 · 팡 = 목표 완주 45초(4500 · 짧을수록) · 점프·테트리스 = 목표 생존 60초(6000 · 길수록) · 기억력 = 목표 점수 (실측 뒤 콘솔에서 조정) */
 var OLY_MEDAL = ["", "금", "은", "동"];
 var OLY = { board: null, t: 0 };
 function olyMax() { return OLY_EVENTS.length * 100; }
@@ -7150,16 +7157,16 @@ function olyHubHtml() {
 }
 /* 테스트 모드 순위판 · 가짜 참가자 + 이 기기 기록 · 서버와 같은 규칙으로 계산 */
 var OLY_FAKE = [
-  ["팡팡요정", { pang: 4120, jump: 1500, tetris: 16, word: 430 }],
-  ["점프왕", { pang: 5230, jump: 2100, tetris: 12, word: 470 }],
-  ["블록장인", { pang: 6180, jump: 1200, tetris: 24, word: 400 }],
-  ["기억의신", { pang: 5690, jump: 1300, tetris: 9, word: 540 }],
-  ["연쇄장인", { pang: 3980, jump: 900, tetris: 7, word: 350 }],
-  ["미위팬", { pang: 5040, jump: 1700, tetris: 11, word: 380 }],
+  ["팡팡요정", { pang: 4120, jump: 1500, tetris: 5200, word: 430 }],
+  ["점프왕", { pang: 5230, jump: 2100, tetris: 3800, word: 470 }],
+  ["블록장인", { pang: 6180, jump: 1200, tetris: 7400, word: 400 }],
+  ["기억의신", { pang: 5690, jump: 1300, tetris: 2900, word: 540 }],
+  ["연쇄장인", { pang: 3980, jump: 900, tetris: 2100, word: 350 }],
+  ["미위팬", { pang: 5040, jump: 1700, tetris: 3300, word: 380 }],
   ["코인수집가", { pang: 7250, jump: 1900, word: 300 }],
-  ["공감참여", { pang: 8800, tetris: 4 }],
+  ["공감참여", { pang: 8800, tetris: 1500 }],
   ["혁신연결", { jump: 700, word: 260 }],
-  ["로드맵러", { pang: 4460, jump: 1600, tetris: 14, word: 410 }]
+  ["로드맵러", { pang: 4460, jump: 1600, tetris: 4500, word: 410 }]
 ];
 function olyTestBoard() {
   var people = OLY_FAKE.map(function (x, i) { return { name: x[0], best: x[1], doneAt: "2026-10-26 1" + (i % 10) + ":00:00" }; });
@@ -7193,7 +7200,7 @@ function olyRows(list, valFn) {
    1F 현장 타자왕전(노트북 · 물리 키보드 · 경품)은 그대로다 · 소나기 엔진과 화면은 type_site 전용으로 살아 있다.
    규칙: 10×20 · 블록 7종 · 회전(막히면 좌우·위로 한 칸씩 밀어 본다) · 한 칸 내리기 · 즉시 떨어뜨리기 ·
         한 번에 지운 줄 1/2/3/4 = 100/300/500/800 × 레벨 · 5줄마다 레벨 +1 → 낙하가 빨라진다 · 안전 상한 5분.
-   기록 = 지운 줄 수(많을수록 좋다) · 같은 줄 수면 오래 버틴 쪽(결과 카드에 함께 적는다) · 올림픽 목표 20줄.
+   기록 = 버틴 시간(1/100초 · 길수록 좋다 · v3.87 사용자 확정) · 지운 줄·점수·레벨은 결과 카드의 보조 지표 · 올림픽 목표 60초.
    조작: 화면 아래 가상 버튼이 기본이다(늘 보인다 · 최소 56px · 왼쪽·오른쪽은 누르고 있으면 반복).
         쓸어넘기기(좌우 이동 · 아래 내리기 · 위로 즉시 떨어뜨리기 · 탭 회전)는 보조로 같이 동작한다.
    보기: v3.48 플랫 · 흰 바탕 · 블록 7종은 채움이 모두 다르다 · 유령 블록 · 다음 블록 · 줄 지울 때 번쩍임. 이모지 없음. */
@@ -7211,12 +7218,25 @@ var TT_PIECES = {
   L: { c: "gray", m: [[0, 0, 1], [1, 1, 1], [0, 0, 0]] }
 };
 var TT_KEYS = ["I", "O", "T", "S", "Z", "J", "L"];
+/* v3.87 (사용자 요청 260918) 블록마다 짧은 말 한 조각 · 장식일 뿐 설명·팝업은 없다.
+   블록 한 칸에만 찍는다(모든 칸에 쓰면 판이 지저분하다) · 칸이 TT_TOK_MIN 보다 작으면 글자를 아예 안 쓴다(뭉개느니 빼는 쪽). */
+var TT_TOKEN = { I: "ME", O: "to", T: "WE", S: "AX", Z: "공감", J: "참여", L: "연결" };
+var TT_TOK_MIN = 23;
 var TT_KICK = [[0, 0], [-1, 0], [1, 0], [-2, 0], [2, 0], [0, -1], [-1, -1], [1, -1]];   /* 벽·블록에 막히면 이 순서로 밀어 본다 */
 var TT = { on: false, raf: 0, L: null, parts: [], pops: [] };
 
 function ttStop() { TT.on = false; if (TT.raf) cancelAnimationFrame(TT.raf); TT.raf = 0; gsOverlayClose("tetris"); }
 function ttVib(ms) { try { if (navigator.vibrate && !rgReduced()) navigator.vibrate(ms); } catch (e) {} }
 function ttGridNew() { var g = []; for (var y = 0; y < TT_ROWS; y++) { g.push([]); for (var x = 0; x < TT_COLS; x++) g[y].push(""); } return g; }
+/* 글자를 얹을 칸 = 블록 중심에 가장 가까운 칸 (회전해도 자연스럽게 따라간다) */
+function ttTokCell(m) {
+  var cells = [], sx = 0, sy = 0;
+  for (var y = 0; y < m.length; y++) for (var x = 0; x < m[y].length; x++) if (m[y][x]) { cells.push([x, y]); sx += x; sy += y; }
+  if (!cells.length) return null;
+  var cx = sx / cells.length, cy = sy / cells.length, best = cells[0], bd = 1e9;
+  cells.forEach(function (c) { var d = (c[0] - cx) * (c[0] - cx) + (c[1] - cy) * (c[1] - cy); if (d < bd) { bd = d; best = c; } });
+  return best;
+}
 function ttBag() { return shuf(TT_KEYS.slice()); }
 function ttNextKey() { if (!TT.bag || !TT.bag.length) TT.bag = ttBag(); return TT.bag.pop(); }
 function ttMake(k) {
@@ -7233,8 +7253,9 @@ function ttHit(m, px, py) {
   return false;
 }
 function ttSpawn() {
-  TT.cur = ttMake(TT.nextK || ttNextKey());
-  TT.nextK = ttNextKey();
+  TT.cur = ttMake((TT.nextQ && TT.nextQ.length ? TT.nextQ.shift() : ttNextKey()));
+  while (!TT.nextQ || TT.nextQ.length < 2) { TT.nextQ = TT.nextQ || []; TT.nextQ.push(ttNextKey()); }
+  TT.nextK = TT.nextQ[0];
   TT.lockT = 0; TT.lockN = 0; TT.gt = 0; TT.pieces++;
   if (ttHit(TT.cur.m, TT.cur.x, TT.cur.y)) { TT.cur.dead = 1; ttEnd("top"); }
 }
@@ -7274,12 +7295,13 @@ function ttGhostY() {
   return gy;
 }
 function ttLock() {
-  var c = TT.cur, full = [];
+  var c = TT.cur, full = [], tk = ttTokCell(c.m);
   for (var y = 0; y < c.m.length; y++) for (var x = 0; x < c.m[y].length; x++) {
     if (!c.m[y][x]) continue;
     var by = c.y + y, bx = c.x + x;
     if (by < 0) { ttEnd("top"); return; }
     TT.grid[by][bx] = c.k;
+    TT.tok[by][bx] = (tk && tk[0] === x && tk[1] === y) ? (TT_TOKEN[c.k] || "") : "";   /* 글자는 한 칸에만 남는다 */
   }
   TT.cur = null;
   for (var r = 0; r < TT_ROWS; r++) {
@@ -7301,7 +7323,10 @@ function ttLock() {
 function ttCollapse() {
   var rows = TT.flash.rows;
   TT.flash = null;
-  rows.sort(function (a, b) { return a - b; }).forEach(function (r) { TT.grid.splice(r, 1); TT.grid.unshift(["", "", "", "", "", "", "", "", "", ""]); });
+  rows.sort(function (a, b) { return a - b; }).forEach(function (r) {
+    TT.grid.splice(r, 1); TT.grid.unshift(["", "", "", "", "", "", "", "", "", ""]);
+    TT.tok.splice(r, 1); TT.tok.unshift(["", "", "", "", "", "", "", "", "", ""]);
+  });
   TT.lines += rows.length;
   var lv = Math.min(15, 1 + Math.floor(TT.lines / 5));
   if (lv > TT.level) { TT.level = lv; TT.banner = { text: "LEVEL " + lv, t: 1.1 }; sfx("level"); }
@@ -7314,6 +7339,7 @@ function ttAct(k) {
   if (k === "L") return ttMove(-1);
   if (k === "R") return ttMove(1);
   if (k === "ROT") return ttRotate(1);
+  if (k === "ROTL") return ttRotate(-1);   /* v3.87b 반시계 회전 */
   if (k === "SOFT") return ttSoft();
   if (k === "HARD") return ttHard();
   return false;
@@ -7332,10 +7358,11 @@ function ttStart() {
   ttStop();
   SFX.site = false;
   TT = { on: true, paused: false, ending: null, raf: 0, cd: 3.2, t0: 0, last: performance.now(), L: null, dpr: 1,
-    grid: ttGridNew(), bag: null, cur: null, nextK: null, lines: 0, score: 0, level: 1, pieces: 0, surv: 0,
+    grid: ttGridNew(), tok: ttGridNew(), bag: null, cur: null, nextK: null, lines: 0, score: 0, level: 1, pieces: 0, surv: 0,
     clears: [0, 0, 0, 0], gt: 0, lockT: 0, lockN: 0, flash: null, drop: null, rep: null, sw: null,
     parts: [], pops: [], banner: null, shake: 0, hud: "" };
-  TT.nextK = ttNextKey();
+  TT.nextQ = [ttNextKey(), ttNextKey()];   /* v3.87b 다음 블록 두 개를 보여 준다 */
+  TT.nextK = TT.nextQ[0];
   gsOverlayOpen({ key: "tetris", title: "테트리스", top: ttTopHtml(), fill: true, cls: "tetris", cw: 200, ch: 360, canvasId: "ttCv", flat: true,
     bottom: ttPadHtml(),
     resized: ttFit,
@@ -7355,7 +7382,7 @@ function ttStart() {
       else if (dy > 150 && dt < 550) ttDo("HARD", false);       /* 아래로 길게 쓸기도 즉시 떨어뜨리기 */
     },
     keydown: function (e) {
-      var k = e.key === "ArrowLeft" ? "L" : e.key === "ArrowRight" ? "R" : e.key === "ArrowDown" ? "SOFT" : (e.key === "ArrowUp" || e.key === "x") ? "ROT" : (e.code === "Space" || e.key === " ") ? "HARD" : "";
+      var k = e.key === "ArrowLeft" ? "L" : e.key === "ArrowRight" ? "R" : e.key === "ArrowDown" ? "SOFT" : (e.key === "ArrowUp" || e.key === "x") ? "ROT" : (e.key === "z" || e.key === "Z") ? "ROTL" : (e.code === "Space" || e.key === " ") ? "HARD" : "";
       if (!k) return;
       e.preventDefault();
       ttDo(k, !!e.repeat);
@@ -7368,25 +7395,30 @@ function ttStart() {
 }
 function ttTopHtml() {
   return '<div class="rg-hud">' +
+    '<span class="rg-sc"><small>생존</small><b id="ttHudTm">0.0초</b></span>' +
     '<span class="rg-sc"><small>줄</small><b id="ttHudLn">0</b></span>' +
-    '<span class="rg-sc"><small>점수</small><b id="ttHudSc">0</b></span>' +
     '<span class="rg-tm" id="ttHudLv">Lv 1</span>' +
     '<span style="flex:1"></span>' +
     sndBtnHtml(false) +
-    '<button class="rg-ib rgp-x" type="button" data-on="계속" data-off="멈춤" aria-label="일시정지" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">멈춤</button></div>';
+    '<button class="rg-ib rgp-x" type="button" data-on="계속" data-off="멈춤" aria-label="일시정지" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">멈춤</button></div>';   /* v3.87b 멈춤은 위 줄에 둔다 · 조작 묶음 옆에 두면 360px 폭에서 겹치고 잘못 눌린다 */
 }
+/* v3.87b 둥근 버튼 두 묶음 · 왼손 십자(위 = 바닥까지 · 아래 = 한 칸씩 · 좌우 = 이동) · 오른손 회전 둘(반시계 · 시계).
+   판 아래 빈 띠에만 두어 블록이 떨어지는 자리를 가리지 않는다 · 쓸어넘기기는 그대로 보조로 동작한다. */
 function ttPadHtml() {
   var L = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 3.5 L6.5 12 L15.5 20.5 Z"/></svg>';
   var R = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3.5 L17.5 12 L8.5 20.5 Z"/></svg>';
-  var ROT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12 A8 8 0 1 1 12 4" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><path d="M12 0.5 L12 7.5 L6.5 4 Z"/></svg>';
-  var DN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8 L12 16 L20 8 Z"/></svg>';
-  var HD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4 L12 12 L20 4 Z"/><path d="M4 12 L12 20 L20 12 Z"/></svg>';
+  var DN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7 L12 14 L19 7 Z"/></svg>';
+  var HD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3 L12 10 L19 3 Z"/><path d="M5 10 L12 17 L19 10 Z"/><rect x="5" y="19" width="14" height="2.4" rx="1.2"/></svg>';
+  var CW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12 A8 8 0 1 1 12 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M12 0.5 L12 7.5 L6.5 4 Z"/></svg>';
+  var CCW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12 A8 8 0 1 0 12 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M12 0.5 L12 7.5 L17.5 4 Z"/></svg>';
   return '<div class="tt-pad" id="ttPad">' +
-    '<div class="tt-row">' + ttBtnHtml("L", "왼쪽", L, "") + ttBtnHtml("ROT", "회전", ROT, "rot") + ttBtnHtml("R", "오른쪽", R, "") + "</div>" +
-    '<div class="tt-row">' + ttBtnHtml("SOFT", "내리기", DN, "soft") + ttBtnHtml("HARD", "떨어뜨리기", HD, "hard") + "</div></div>";
+    '<div class="tt-dpad">' + ttBtnHtml("HARD", "바닥까지 떨어뜨리기", HD, "up") + ttBtnHtml("L", "왼쪽으로", L, "lf") +
+      ttBtnHtml("R", "오른쪽으로", R, "rt") + ttBtnHtml("SOFT", "한 칸 내리기", DN, "dn") + "</div>" +
+    '<div class="tt-rot">' + ttBtnHtml("ROTL", "왼쪽으로 회전", CCW, "ccw") + ttBtnHtml("ROT", "오른쪽으로 회전", CW, "cw") + "</div>" +
+    '<p class="tt-cap">위 = 바닥까지 · 아래 = 한 칸씩 · 오른쪽 = 회전</p></div>';
 }
 function ttBtnHtml(k, label, svg, cls) {
-  return '<button type="button" class="tt-b' + (cls ? " " + cls : "") + '" data-k="' + k + '" aria-label="' + label + '">' + svg + "<span>" + label + "</span></button>";
+  return '<button type="button" class="tt-c' + (cls ? " " + cls : "") + '" data-k="' + k + '" aria-label="' + label + '">' + svg + "</button>";
 }
 function ttBindPad() {
   var pad = el("ttPad"); if (!pad) return;
@@ -7409,12 +7441,12 @@ function ttFit(cv, w, h) {
   var dpr = Math.min(2, window.devicePixelRatio || 1);
   cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
   TT.dpr = cv.width / w;
-  var M = 8, SIDE_MIN = 54, cell = Math.floor((h - M * 2) / TT_ROWS);
+  var M = 8, MV = 2, SIDE_MIN = 54, cell = Math.floor((h - MV * 2) / TT_ROWS);   /* v3.87b 세로 여백은 2px · 조작판이 커진 만큼 판을 최대한 크게 */
   if (TT_COLS * cell + SIDE_MIN + M * 3 > w) cell = Math.floor((w - M * 3 - SIDE_MIN) / TT_COLS);   /* 다음 블록 칸이 눌리지 않게 폭을 먼저 확보한다 */
   cell = Math.max(8, cell);
   var side = Math.max(SIDE_MIN, Math.min(Math.round(cell * 2.3), w - TT_COLS * cell - M * 3));
   var bw = TT_COLS * cell, bh = TT_ROWS * cell;
-  var ox = Math.max(M, Math.round((w - bw - side - M) / 2)), oy = Math.max(M, Math.round((h - bh) / 2));
+  var ox = Math.max(M, Math.round((w - bw - side - M) / 2)), oy = Math.max(MV, Math.round((h - bh) / 2));
   TT.L = { W: w, H: h, cell: cell, ox: ox, oy: oy, bw: bw, bh: bh, sx: ox + bw + M, side: side };
   var ctx = cv.getContext("2d");
   ttDraw(ctx, performance.now());
@@ -7468,12 +7500,13 @@ function ttUpdate(dt, now) {
   }
 }
 function ttHud() {
-  var key = TT.lines + "|" + TT.score + "|" + TT.level;
+  var t = (Math.round((TT.surv || 0) * 10) / 10).toFixed(1);
+  var key = TT.lines + "|" + t + "|" + TT.level;
   if (key === TT.hud) return;
   TT.hud = key;
-  var a = el("ttHudLn"), b = el("ttHudSc"), c = el("ttHudLv");
+  var a = el("ttHudLn"), b = el("ttHudTm"), c = el("ttHudLv");
   if (a) a.textContent = String(TT.lines);
-  if (b) b.textContent = TT.score.toLocaleString();
+  if (b) b.textContent = t + "초";
   if (c) c.textContent = "Lv " + TT.level;
 }
 function ttEnd(why) {
@@ -7488,23 +7521,32 @@ function ttEndFinal(why) {
   TT.ending = null;
   var lines = TT.lines, score = TT.score, surv = TT.surv, lv = TT.level, pieces = TT.pieces, cl = TT.clears.slice();
   ttStop();
-  if (lines > S.get("tetris_best", 0)) { S.set("tetris_best", lines); setTimeout(function () { sfx("best"); }, 250); }
+  var rec = Math.round(surv * 100);   /* v3.87 기록 = 버틴 시간(1/100초) · 줄·점수는 보조 지표 */
+  if (rec > S.get("tt_best", 0)) { S.set("tt_best", rec); setTimeout(function () { sfx("best"); }, 250); }
   gameClear("tetris_cleared");
   var root = el("ttRoot"); if (!root) return;
-  olySubmit("tetris", lines);
-  root.innerHTML = gsResultHtml("tetris", { why: "done", label: "기록", reason: "", score: lines + "줄",
-    stats: "점수 " + score.toLocaleString() + " · 버틴 시간 " + surv.toFixed(1) + "초 · 레벨 " + lv + " · 블록 " + pieces + "개<br>1줄 " + cl[0] + " · 2줄 " + cl[1] + " · 3줄 " + cl[2] + " · 4줄 " + cl[3],
-    rankLine: olyResultLine("tetris", lines) });
+  olySubmit("tetris", rec);
+  root.innerHTML = gsResultHtml("tetris", { why: "done", label: "생존 기록", reason: "", score: surv.toFixed(1) + "초 생존",
+    stats: "지운 줄 " + lines + "줄 · 점수 " + score.toLocaleString() + " · 레벨 " + lv + " · 블록 " + pieces + "개<br>1줄 " + cl[0] + " · 2줄 " + cl[1] + " · 3줄 " + cl[2] + " · 4줄 " + cl[3],
+    rankLine: olyResultLine("tetris", rec) });
   window.scrollTo(0, 0);
 }
 /* ── 그리기 · 전부 CSS px 좌표 (캔버스는 기기 해상도) ── */
-function ttCell(ctx, x, y, cell, kind, alpha) {
+function ttDark(c) { return c === "ink" || c === "deep" || c === "o100"; }
+function ttCell(ctx, x, y, cell, kind, alpha, token) {
   var p = TT_PIECES[kind], col = p ? RAIN_PAL[p.c] : RAIN_PAL.gray, r = Math.max(2, Math.round(cell * 0.18)), pad = 1;
   ctx.globalAlpha = alpha || 1;
   ttRound(ctx, x + pad, y + pad, cell - pad * 2, cell - pad * 2, r);
   ctx.fillStyle = col; ctx.fill();
   ctx.lineWidth = Math.max(1, Math.round(cell * 0.07)); ctx.strokeStyle = RAIN_PAL.ink; ctx.stroke();
-  if (p && (p.c === "w" || p.c === "o25" || p.c === "gray")) {   /* 밝은 채움은 안쪽 점으로 한 번 더 구분 */
+  if (token && cell >= TT_TOK_MIN) {   /* v3.87 글자 한 조각 · 어두운 채움엔 흰 글씨, 밝은 채움엔 검은 글씨 */
+    var two = token.length > 2 || /[가-힣]/.test(token) && token.length > 1;
+    var fs = Math.round(cell * (two ? 0.38 : 0.46));
+    ctx.font = "800 " + fs + "px " + RAIN_FONT;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = ttDark(p ? p.c : "") ? RAIN_PAL.w : RAIN_PAL.ink;
+    ctx.fillText(token, x + cell / 2, y + cell / 2 + 0.5);
+  } else if (cell < TT_TOK_MIN && p && (p.c === "w" || p.c === "o25" || p.c === "gray")) {   /* 글자를 못 쓰는 작은 판에서만 밝은 채움을 점으로 구분한다 (글자가 보이는 판에서는 점을 빼 깔끔하게) */
     var d = Math.max(3, Math.round(cell * 0.22));
     ctx.fillStyle = p.c === "w" ? RAIN_PAL.ink : p.c === "gray" ? RAIN_PAL.w : RAIN_PAL.o100;
     ctx.fillRect(Math.round(x + cell / 2 - d / 2), Math.round(y + cell / 2 - d / 2), d, d);
@@ -7536,7 +7578,7 @@ function ttDraw(ctx, now) {
   /* 쌓인 블록 */
   for (var y = 0; y < TT_ROWS; y++) for (var x = 0; x < TT_COLS; x++) {
     var k = TT.grid[y][x];
-    if (k) ttCell(ctx, x * cell, y * cell, cell, k, 1);
+    if (k) ttCell(ctx, x * cell, y * cell, cell, k, 1, TT.tok[y][x]);
   }
   /* 유령 블록 · 지금 블록 */
   if (TT.cur && !TT.flash) {
@@ -7550,10 +7592,11 @@ function ttDraw(ctx, now) {
         ctx.stroke();
       }
     }
+    var tkc = ttTokCell(c.m);
     for (var py = 0; py < c.m.length; py++) for (var px = 0; px < c.m[py].length; px++) {
       if (!c.m[py][px]) continue;
       var ry = c.y + py;
-      if (ry >= 0) ttCell(ctx, (c.x + px) * cell, ry * cell, cell, c.k, 1);
+      if (ry >= 0) ttCell(ctx, (c.x + px) * cell, ry * cell, cell, c.k, 1, (tkc && tkc[0] === px && tkc[1] === py) ? TT_TOKEN[c.k] : "");
     }
   }
   /* 지우는 줄 번쩍임 */
@@ -7576,12 +7619,19 @@ function ttDraw(ctx, now) {
   ctx.save(); ctx.translate(L.sx, L.oy);
   ctx.fillStyle = RAIN_PAL.dim; ctx.font = "700 11px " + RAIN_FONT; ctx.textAlign = "left"; ctx.textBaseline = "top";
   ctx.fillText("다음", 0, 2);
-  var nk = TT.nextK, nm = nk ? TT_PIECES[nk].m : null, nc = Math.max(7, Math.min(Math.round(cell * 0.62), Math.floor((L.side - 6) / 4)));
-  if (nm) {
-    var w0 = nm[0].length, rows0 = nm.length;
-    var offx = Math.round((L.side - w0 * nc) / 2), offy = 20;
-    for (var ny = 0; ny < rows0; ny++) for (var nx = 0; nx < w0; nx++) if (nm[ny][nx]) ttCell(ctx, offx + nx * nc, offy + ny * nc, nc, nk, 1);
-  }
+  /* v3.87b 다음 블록 두 개 · 빈 줄·빈 칸을 떼고 실제 모양만 그린다 (좁은 옆 칸에서도 크게 보인다) */
+  var q = (TT.nextQ || []).slice(0, 2), qy = 22;
+  q.forEach(function (nk, qi) {
+    var nm = TT_PIECES[nk].m, x0 = 9, x1 = -1, y0 = 9, y1 = -1;
+    for (var ry = 0; ry < nm.length; ry++) for (var rx = 0; rx < nm[ry].length; rx++) if (nm[ry][rx]) {
+      if (rx < x0) x0 = rx; if (rx > x1) x1 = rx; if (ry < y0) y0 = ry; if (ry > y1) y1 = ry;
+    }
+    var cw = x1 - x0 + 1, ch2 = y1 - y0 + 1;
+    var nc = Math.max(7, Math.min(Math.round(cell * (qi ? 0.52 : 0.76)), Math.floor((L.side - 4) / cw)));
+    var offx = Math.round((L.side - cw * nc) / 2);
+    for (var ny = y0; ny <= y1; ny++) for (var nx = x0; nx <= x1; nx++) if (nm[ny][nx]) ttCell(ctx, offx + (nx - x0) * nc, qy + (ny - y0) * nc, nc, nk, qi ? 0.75 : 1, "");
+    qy += ch2 * nc + 12;
+  });
   ctx.restore();
   gsFxDraw(ctx, TT, L.W);
   if (TT.banner) { ctx.save(); ctx.translate(L.ox, 0); gsBannerDraw(ctx, TT, L.bw, L.oy + 8); ctx.restore(); }
@@ -7598,7 +7648,7 @@ function ttEndDraw(ctx, L) {
   ctx.fillStyle = RAIN_PAL.deep; ctx.font = "800 18px " + RAIN_FONT;
   ctx.fillText(TT.ending.why === "time" ? "5분 완주" : "GAME OVER", L.ox + L.bw / 2, cy - 14);
   ctx.fillStyle = RAIN_PAL.ink; ctx.font = "700 13px " + RAIN_FONT;
-  ctx.fillText(TT.lines + "줄 · " + TT.score.toLocaleString() + "점", L.ox + L.bw / 2, cy + 12);
+  ctx.fillText(TT.surv.toFixed(1) + "초 생존 · " + TT.lines + "줄", L.ox + L.bw / 2, cy + 12);
 }
 /* 시작 화면 미리보기 · 정지 화면 */
 function ttPreview() {
@@ -7612,7 +7662,8 @@ function ttPreview() {
   for (var j = 1; j < rows; j++) { ctx.beginPath(); ctx.moveTo(ox, oy + j * cell + 0.5); ctx.lineTo(ox + cols * cell, oy + j * cell + 0.5); ctx.stroke(); }
   var demo = [[0, 2, "T"], [1, 2, "T"], [2, 2, "T"], [1, 1, "T"], [4, 0, "I"], [4, 1, "I"], [4, 2, "I"], [4, 3, "I"],
     [0, 6, "O"], [1, 6, "O"], [0, 5, "O"], [1, 5, "O"], [3, 6, "L"], [4, 6, "L"], [5, 6, "L"], [5, 5, "L"], [6, 6, "S"], [2, 6, "Z"]];
-  demo.forEach(function (d) { ttCell(ctx, ox + d[0] * cell, oy + d[1] * cell, cell, d[2], 1); });
+  var seen = {};
+  demo.forEach(function (d) { var t = seen[d[2]] ? "" : (TT_TOKEN[d[2]] || ""); seen[d[2]] = 1; ttCell(ctx, ox + d[0] * cell, oy + d[1] * cell, cell, d[2], 1, cell >= TT_TOK_MIN ? t : ""); });
   ctx.strokeStyle = RAIN_PAL.ink; ctx.lineWidth = 2; ctx.strokeRect(ox - 1, oy - 1, cols * cell + 2, rows * cell + 2);
 }
 
@@ -7624,7 +7675,7 @@ function ttPreview() {
    비주얼: 오렌지 사다리 · 검정 · 흰색 · 16비트 도트 · 마스코트 미위 · 이모지 없음. */
 var GS_GAMES = {
   /* v3.86 휴대폰 종목은 테트리스 · 소나기(type)는 1F 현장 타자왕전 전용으로만 남는다(앱 진입점 없음) */
-  tetris: { name: "테트리스", view: "game_tetris", start: "ttStart()", best: "tetris_best", line: "블록을 옮기고 돌려서 줄을 채워요 · 아래 버튼으로" },
+  tetris: { name: "테트리스", view: "game_tetris", start: "ttStart()", best: "tt_best", line: "블록을 옮기고 돌려서 줄을 채워요 · 아래 버튼으로" },
   type: { name: "AX 단어 소나기", view: "game_type", start: "rgStart('app')", best: "type_best", line: "떨어지는 단어를 쳐서 터뜨려요 · 키보드로 입력" },
   pang: { name: "AX 팡", view: "game_pang", start: "pgStart()", best: "pang_best", line: "같은 그림 3개를 한 줄로 맞춰 터뜨려요 · 밀어서 바꾸기" },
   jump: { name: "ME to WE 점프", view: "game_jump", start: "jpStart()", best: "jump_best", line: "달리는 미위를 탭해서 점프 · 공중에서 한 번 더 탭은 2단 점프" },
@@ -8843,7 +8894,7 @@ function gwFinish() {
    홍보부의 모션 원본(mp4 · Lottie JSON · HTML/JS)이 오면 KV_MEDIA 에 경로를 넣는다.
    그러면 그 자리에 원본이 재생되고 이 캔버스 엔진은 원본이 없는 자리의 폴백으로 남는다. */
 var KV_MEDIA = { splash: "", live: "axf:loop", hero: "axf:me" };   /* "axf:me|circle"(원본 엔진) | "assets/x.mp4" | "assets/x.json" | "assets/x.html" */
-/* hero = 홍보부 원본 심볼 「Me to We」 (AXF Design Data 260916, 엔진 AXF_DATA). 구 포스터 mp4 크롭(kv_poster.mp4)은 폐기 */
+/* hero = 홍보부 원본 심볼 「ME to WE」 (AXF Design Data 260916, 엔진 AXF_DATA). 구 포스터 mp4 크롭(kv_poster.mp4)은 폐기 */
 var KV = { N: 180, live: {} };
 function kvMediaHtml(key, id, cls) {
   var src = KV_MEDIA[key] || "";
@@ -9045,7 +9096,7 @@ function axfDraw(cx, name, f, box, colors, alpha, sc) {
   }
   cx.globalAlpha = 1;
 }
-/* ── 첫 화면 시퀀스 · 점 → 구체 → 달리는 사람 → Me to We (사용자 지정 260916) · 장면 사이는 점으로 흩어졌다 모인다 · 루프 끝 = 시작 ── */
+/* ── 첫 화면 시퀀스 · 점 → 구체 → 달리는 사람 → ME to WE (사용자 지정 260916) · 장면 사이는 점으로 흩어졌다 모인다 · 루프 끝 = 시작 ── */
 var AXF_SEQ = [["dot", 3.0], ["sphere", 6.0], ["run", 4.0], ["me", 6.0]], AXF_TRANS = 1.5;
 function axfSeqAt(T, seq, trans) {
   seq = seq || AXF_SEQ; trans = trans == null ? AXF_TRANS : trans;
@@ -9143,8 +9194,8 @@ function axfMountAll() {
   }
 }
 
-/* ════════════════ 입장 전환 · 약 1초 · Me to We 도트 심볼(홍보부 원본 좌표) ════════════════
-   0~0.15s 흰 면이 첫 화면을 덮고, 바깥에 흩어져 있던 점 1,037개가 0.5s 까지 「Me to We」로 모인다 → 그 뒤에서 화면을 홈으로 바꾼다
+/* ════════════════ 입장 전환 · 약 1초 · ME to WE 도트 심볼(홍보부 원본 좌표) ════════════════
+   0~0.15s 흰 면이 첫 화면을 덮고, 바깥에 흩어져 있던 점 1,037개가 0.5s 까지 「ME to WE」로 모인다 → 그 뒤에서 화면을 홈으로 바꾼다
    → 0.62~1.0s 심볼이 홈 히어로의 심볼 자리로 내려앉으며 흰 면이 걷힌다. 히어로 캔버스와 같은 시계·같은 좌표를 쓰므로 그대로 이어서 돈다.
    모션 최소화 설정·캡처·데모 훅에서는 바로 전환한다. */
 function xitionRun(switchNow) {
