@@ -554,20 +554,19 @@
   /* v3.86 테트리스 조작판 · 화면 아래 고정 · 늘 보인다 · 버튼은 최소 56px 이고 사이를 띄워 두 개가 같이 눌리지 않게 한다 */
   /* v3.87b (사용자 레퍼런스 260918) 둥근 조작 버튼이 판 아래 빈 띠에 떠 있다 · 상자형 패널 없음 ·
      왼손 십자(위 = 바닥까지 · 아래 = 한 칸씩 · 좌우 이동) · 오른손 회전 둘(반시계 · 시계) · 색은 우리 팔레트(주황·검정·흰색). */
-  #rgPlay .tt-pad { flex: none; position: relative; display: flex; align-items: flex-start; justify-content: space-between; height: 192px; padding: 4px 12px calc(4px + env(safe-area-inset-bottom, 0px)); background: #fff; touch-action: none; user-select: none; -webkit-user-select: none; }
-  #rgPlay .tt-dpad { position: relative; width: 168px; height: 168px; flex: none; }
-  #rgPlay .tt-rot { position: relative; width: 124px; height: 168px; flex: none; }
+  #rgPlay .tt-pad { flex: none; position: relative; display: flex; align-items: flex-start; justify-content: space-between; height: 152px; padding: 6px 14px calc(6px + env(safe-area-inset-bottom, 0px)); background: #fff; touch-action: none; user-select: none; -webkit-user-select: none; }
+  #rgPlay .tt-dpad { position: relative; width: 168px; height: 118px; flex: none; }
+  #rgPlay .tt-rot { position: relative; width: 132px; height: 124px; flex: none; }
   #rgPlay .tt-c { position: absolute; width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,0.55); background: rgba(255,255,255,0.92); color: #000; display: flex; align-items: center; justify-content: center; padding: 0; touch-action: none; }
   #rgPlay .tt-c svg { width: 25px; height: 25px; fill: currentColor; }
   #rgPlay .tt-c.on { background: #FF7E31; border-color: #D64524; color: #fff; }
-  #rgPlay .tt-dpad .up { left: 56px; top: 0; }
-  #rgPlay .tt-dpad .lf { left: 0; top: 56px; }
-  #rgPlay .tt-dpad .rt { left: 112px; top: 56px; }
-  #rgPlay .tt-dpad .dn { left: 56px; top: 112px; }
-  #rgPlay .tt-rot .ccw { left: 0; top: 94px; width: 58px; height: 58px; }
-  #rgPlay .tt-rot .cw { left: 58px; top: 30px; width: 66px; height: 66px; }
+  #rgPlay .tt-dpad .lf { left: 0; top: 0; }
+  #rgPlay .tt-dpad .rt { left: 112px; top: 0; }
+  #rgPlay .tt-dpad .dn { left: 56px; top: 60px; }
+  #rgPlay .tt-rot .cw { left: 0; top: 58px; width: 60px; height: 60px; }      /* 회전 · 엄지 안쪽 아래 */
+  #rgPlay .tt-rot .up { left: 64px; top: 0; width: 66px; height: 66px; }      /* 바닥까지 · 대각선 바깥 위 */
   #rgPlay .tt-cap { position: absolute; left: 0; right: 0; bottom: calc(5px + env(safe-area-inset-bottom, 0px)); text-align: center; font-size: 10.5px; font-weight: 700; color: var(--muted); pointer-events: none; margin: 0; }
-  #rgPlay.tetris .rgp-mid { background: #fff; }
+  #rgPlay.tetris .rgp-mid { background: #fff; touch-action: none; }   /* v3.87d 세로로 쓸 때 브라우저가 스크롤로 가로채 pointercancel 을 던지던 것을 막는다 */
   .rg-form .input { flex: 1; font-size: 18px; border: 2px solid #000; }
   .rg-form .btn { width: auto; padding: 12px 18px; }
   /* v3.58 AI 사생대회 갤러리 · 섬네일 목록 · 지연 로딩 */
@@ -4399,7 +4398,7 @@ var Views = {
     if (gsNeedNick()) return gsNickHtml("tetris");
     setTimeout(ttPreview, 0);
     return gsStartHtml("tetris", { rootId: "ttRoot", previewId: "ttPrev", pw: 180, ph: 120, flat: true,
-      rules: "왼쪽 십자로 옮기고(위 = 바닥까지, 아래 = 한 칸씩) 오른쪽 두 버튼으로 돌려요 · 한 판이면 스탬프" });
+      rules: "왼쪽 버튼으로 옮기고 한 칸씩 내려요 · 오른쪽 아래는 회전, 위는 바닥까지 · 한 판이면 스탬프" });
   },
   /* ═══ v3.45 휴대폰 미니게임 · AX 팡 · ME to WE 점프 (v3.50 전원 공개) ═══ */
   game_pang: function () {
@@ -7199,7 +7198,7 @@ function olyRows(list, valFn) {
    왜 바꿨나: 휴대폰 한글 입력(IME)에 기대는 게임이라 실기에서 오류가 잦았다 → 글자 입력이 아예 없는 게임으로 바꾼다.
    1F 현장 타자왕전(노트북 · 물리 키보드 · 경품)은 그대로다 · 소나기 엔진과 화면은 type_site 전용으로 살아 있다.
    규칙: 10×20 · 블록 7종 · 회전(막히면 좌우·위로 한 칸씩 밀어 본다) · 한 칸 내리기 · 즉시 떨어뜨리기 ·
-        한 번에 지운 줄 1/2/3/4 = 100/300/500/800 × 레벨 · 5줄마다 레벨 +1 → 낙하가 빨라진다 · 안전 상한 5분.
+        한 번에 지운 줄 1/2/3/4 = 100/300/500/800 × 레벨 · TT_LV_LINES 줄마다 레벨 +1 → 낙하가 빨라진다 · 안전 상한 5분.
    기록 = 버틴 시간(1/100초 · 길수록 좋다 · v3.87 사용자 확정) · 지운 줄·점수·레벨은 결과 카드의 보조 지표 · 올림픽 목표 60초.
    조작: 화면 아래 가상 버튼이 기본이다(늘 보인다 · 최소 56px · 왼쪽·오른쪽은 누르고 있으면 반복).
         쓸어넘기기(좌우 이동 · 아래 내리기 · 위로 즉시 떨어뜨리기 · 탭 회전)는 보조로 같이 동작한다.
@@ -7222,6 +7221,7 @@ var TT_KEYS = ["I", "O", "T", "S", "Z", "J", "L"];
    블록 한 칸에만 찍는다(모든 칸에 쓰면 판이 지저분하다) · 칸이 TT_TOK_MIN 보다 작으면 글자를 아예 안 쓴다(뭉개느니 빼는 쪽). */
 var TT_TOKEN = { I: "ME", O: "to", T: "WE", S: "AX", Z: "공감", J: "참여", L: "연결" };
 var TT_TOK_MIN = 23;
+var TT_LV_LINES = 3;   /* v3.87e (사용자 피드백 260918 「단계가 30% 정도 빨리 올라가면 좋겠다」) 레벨 상승에 필요한 줄 수 5 → 3 · 4줄로는 보통 한 판(2~4줄)에서 레벨이 한 번도 안 올랐다(실측) */
 var TT_KICK = [[0, 0], [-1, 0], [1, 0], [-2, 0], [2, 0], [0, -1], [-1, -1], [1, -1]];   /* 벽·블록에 막히면 이 순서로 밀어 본다 */
 var TT = { on: false, raf: 0, L: null, parts: [], pops: [] };
 
@@ -7328,7 +7328,7 @@ function ttCollapse() {
     TT.tok.splice(r, 1); TT.tok.unshift(["", "", "", "", "", "", "", "", "", ""]);
   });
   TT.lines += rows.length;
-  var lv = Math.min(15, 1 + Math.floor(TT.lines / 5));
+  var lv = Math.min(15, 1 + Math.floor(TT.lines / TT_LV_LINES));
   if (lv > TT.level) { TT.level = lv; TT.banner = { text: "LEVEL " + lv, t: 1.1 }; sfx("level"); }
   ttSpawn();
 }
@@ -7366,18 +7366,21 @@ function ttStart() {
   gsOverlayOpen({ key: "tetris", title: "테트리스", top: ttTopHtml(), fill: true, cls: "tetris", cw: 200, ch: 360, canvasId: "ttCv", flat: true,
     bottom: ttPadHtml(),
     resized: ttFit,
-    down: function (e) { e.preventDefault(); TT.sw = { x: e.clientX, y: e.clientY, mx: e.clientX, my: e.clientY, t: performance.now(), moved: 0 }; },
+    down: function (e) { e.preventDefault(); TT.sw = { x: e.clientX, y: e.clientY, mx: e.clientX, my: e.clientY, lx: e.clientX, ly: e.clientY, t: performance.now(), moved: 0 }; },
     move: function (e) {
       var s = TT.sw; if (!s) return;
       var cell = (TT.L && TT.L.cell) || 24, dx = e.clientX - s.mx, dy = e.clientY - s.my;
+      s.lx = e.clientX; s.ly = e.clientY;
       if (Math.abs(dx) >= cell) { var n = Math.round(dx / cell); for (var i = 0; i < Math.abs(n); i++) ttAct(n > 0 ? "R" : "L"); s.mx += n * cell; s.moved++; }
       if (dy >= cell) { ttAct("SOFT"); s.my += cell; s.moved++; }
     },
     up: function (e, cancel) {
       var s = TT.sw; TT.sw = null;
-      if (!s || cancel) return;
-      var dt = performance.now() - s.t, dx = e.clientX - s.x, dy = e.clientY - s.y;
-      if (!s.moved && Math.abs(dx) < 14 && Math.abs(dy) < 14 && dt < 320) { ttDo("ROT", false); return; }
+      if (!s) return;
+      /* v3.87d 취소(pointercancel)로 끝나도 마지막으로 본 위치로 판정한다 · 실기에서 위로 쓸기가 취소로 끝나는 일이 있다 */
+      var ex = cancel ? s.lx : e.clientX, ey = cancel ? s.ly : e.clientY;
+      var dt = performance.now() - s.t, dx = ex - s.x, dy = ey - s.y;
+      if (!s.moved && Math.abs(dx) < 14 && Math.abs(dy) < 14 && dt < 320 && !cancel) { ttDo("ROT", false); return; }
       if (dy < -55 && dt < 450) ttDo("HARD", false);            /* 위로 쓸기 = 즉시 떨어뜨리기 */
       else if (dy > 150 && dt < 550) ttDo("HARD", false);       /* 아래로 길게 쓸기도 즉시 떨어뜨리기 */
     },
@@ -7402,20 +7405,20 @@ function ttTopHtml() {
     sndBtnHtml(false) +
     '<button class="rg-ib rgp-x" type="button" data-on="계속" data-off="멈춤" aria-label="일시정지" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">멈춤</button></div>';   /* v3.87b 멈춤은 위 줄에 둔다 · 조작 묶음 옆에 두면 360px 폭에서 겹치고 잘못 눌린다 */
 }
-/* v3.87b 둥근 버튼 두 묶음 · 왼손 십자(위 = 바닥까지 · 아래 = 한 칸씩 · 좌우 = 이동) · 오른손 회전 둘(반시계 · 시계).
-   판 아래 빈 띠에만 두어 블록이 떨어지는 자리를 가리지 않는다 · 쓸어넘기기는 그대로 보조로 동작한다. */
+/* v3.87d (사용자 확정 260918) 버튼 네 개.
+   왼손 = 왼쪽 · 오른쪽 · 한 칸 내리기 (십자의 위 칸은 없앴다) · 오른손 = 아래 안쪽 회전(시계만) · 대각선 위 바닥까지.
+   판 아래 빈 띠에만 두어 블록이 떨어지는 자리를 가리지 않는다 · 쓸어넘기기(위로 쓸면 바닥까지)는 그대로 보조로 동작한다. */
 function ttPadHtml() {
   var L = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 3.5 L6.5 12 L15.5 20.5 Z"/></svg>';
   var R = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3.5 L17.5 12 L8.5 20.5 Z"/></svg>';
   var DN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7 L12 14 L19 7 Z"/></svg>';
   var HD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3 L12 10 L19 3 Z"/><path d="M5 10 L12 17 L19 10 Z"/><rect x="5" y="19" width="14" height="2.4" rx="1.2"/></svg>';
   var CW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12 A8 8 0 1 1 12 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M12 0.5 L12 7.5 L6.5 4 Z"/></svg>';
-  var CCW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12 A8 8 0 1 0 12 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M12 0.5 L12 7.5 L17.5 4 Z"/></svg>';
   return '<div class="tt-pad" id="ttPad">' +
-    '<div class="tt-dpad">' + ttBtnHtml("HARD", "바닥까지 떨어뜨리기", HD, "up") + ttBtnHtml("L", "왼쪽으로", L, "lf") +
-      ttBtnHtml("R", "오른쪽으로", R, "rt") + ttBtnHtml("SOFT", "한 칸 내리기", DN, "dn") + "</div>" +
-    '<div class="tt-rot">' + ttBtnHtml("ROTL", "왼쪽으로 회전", CCW, "ccw") + ttBtnHtml("ROT", "오른쪽으로 회전", CW, "cw") + "</div>" +
-    '<p class="tt-cap">위 = 바닥까지 · 아래 = 한 칸씩 · 오른쪽 = 회전</p></div>';
+    '<div class="tt-dpad">' + ttBtnHtml("L", "왼쪽으로", L, "lf") + ttBtnHtml("R", "오른쪽으로", R, "rt") +
+      ttBtnHtml("SOFT", "한 칸 내리기", DN, "dn") + "</div>" +
+    '<div class="tt-rot">' + ttBtnHtml("ROT", "회전", CW, "cw") + ttBtnHtml("HARD", "바닥까지 떨어뜨리기", HD, "up") + "</div>" +
+    '<p class="tt-cap">왼쪽 = 좌우·한 칸씩 · 오른쪽 아래 = 회전 · 위 = 바닥까지</p></div>';
 }
 function ttBtnHtml(k, label, svg, cls) {
   return '<button type="button" class="tt-c' + (cls ? " " + cls : "") + '" data-k="' + k + '" aria-label="' + label + '">' + svg + "</button>";
