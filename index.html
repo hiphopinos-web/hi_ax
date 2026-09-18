@@ -640,17 +640,28 @@
   /* 홈 히어로는 v3.13 폐지 · 「지금·다음」은 나의 일정 첫 줄(tok 뱃지), 연출은 하단 광고판이 맡는다 */
   /* v3.24 홈 광고판 배너 · 스탬프 바로 위 · 브랜드 오렌지 스테이지(상태 색 아님, 화면당 1개) · 공용 카드 격자 2칸(64+8+64=136px) · 라운드 20px */
   .bill { position: relative; display: flex; height: 136px; border-radius: 20px; overflow: hidden; background: var(--mint); margin-bottom: 8px; color: #fff; }
-  .bill .bc { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 0 6px 0 18px; perspective: 520px; }
-  /* v3.71 뒤집히는 낱말 카드 · 앞 ME / WE · 뒤 우리말 슬로건 · transform 만 움직인다 */
-  .bill .bfc { position: relative; display: block; height: 30px; transform-style: preserve-3d; transform-origin: center;
-    animation: axFlip 8s cubic-bezier(0.45, 0, 0.2, 1) infinite; will-change: transform; }
-  .bill .bfc .f, .bill .bfc .b { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: flex; align-items: center;
-    backface-visibility: hidden; -webkit-backface-visibility: hidden; white-space: nowrap; }
-  .bill .bfc .f { font-size: calc(24px * var(--fs)); font-weight: 900; letter-spacing: -0.01em; }
-  .bill .bfc .b { font-size: calc(14px * var(--fs)); font-weight: 800; transform: rotateY(180deg); }
-  .bill .bto { display: block; height: 16px; font-size: calc(13px * var(--fs)); font-weight: 800; opacity: 0.75; }
-  @keyframes axFlip { 0%, 30% { transform: rotateY(0deg); } 38%, 80% { transform: rotateY(-180deg); } 88%, 100% { transform: rotateY(0deg); } }
-  @media (prefers-reduced-motion: reduce) { .bill .bfc { animation: none; transform: rotateY(-180deg); } }
+  .bill .bc { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; justify-content: center; padding: 0 8px 0 18px; }
+  /* v3.77 흩뿌림 → 모임 · 두 층이 같은 자리에 겹쳐 있고 8초 루프를 나눠 쓴다 */
+  .bill .bmw { position: relative; font-size: min(calc(28px * var(--fs)), 30px);   /* v3.77 큰글씨에서도 광고판 왼쪽 폭(190px)을 넘지 않게 상한 */ font-weight: 900; line-height: 1.1; letter-spacing: -0.01em; white-space: nowrap; }
+  .bill .bmw .c { display: inline-block; animation: axScatter 8s ease-in-out infinite; will-change: transform, opacity; }
+  .bill .bmw .sp { display: inline-block; width: 0.28em; }
+  .bill .bko { position: absolute; left: 18px; right: 8px; font-size: min(calc(15px * var(--fs)), 16px); font-weight: 800; line-height: 1.5; opacity: 0;
+    animation: axGather 8s ease-in-out infinite; will-change: transform, opacity; }
+  .bill .bko span { display: block; white-space: nowrap; }
+  @keyframes axScatter {
+    0%, 28% { transform: none; opacity: 1; }
+    44%, 74% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); opacity: 0; }
+    90%, 100% { transform: none; opacity: 1; }
+  }
+  @keyframes axGather {
+    0%, 32% { opacity: 0; transform: translateY(6px); }
+    48%, 72% { opacity: 1; transform: none; }
+    84%, 100% { opacity: 0; transform: translateY(-4px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bill .bmw { display: none; }
+    .bill .bko { position: static; opacity: 1; animation: none; transform: none; }
+  }
   .bill canvas { flex: none; width: 42%; height: 100%; display: block; }
   /* 층별 혼잡도 압축 스트립 · 막대 4개라 높이는 내용 기준, 라운드·면·테두리·좌우 패딩·최소 높이는 공용 행 카드(.rc)와 동일 (v3.22) */
   /* 홈 나의 일정 목록형(.mine .r)은 v3.22 폐지 · 개별 공용 행 카드(.rc)로 */
@@ -3032,22 +3043,25 @@ function schedNowRow() {
    공용 시계(AXF.t0)라 재렌더에도 시퀀스가 이어진다 · isConnected 검사로 화면을 떠나면 raf 정지 ·
    reduced-motion 은 엔진이 자체 처리 · 장식 전용(탭 없음 · 링크 금지) */
 function billboardHtml() {
-  /* v3.71 (사용자 확정 260918) 왼쪽 = 뒤집히는 메시지 · 오른쪽 = 기존 AXF 시퀀스 모션.
-     ME / WE 두 장이 왼쪽으로 돌아 뒷면의 우리말 슬로건을 보여 준다 (to 는 가운데 고정 · 카드 수를 줄여 저사양에서도 가볍게).
-     홈은 4초마다 다시 그려진다 → 애니메이션이 처음부터 다시 시작하지 않도록 공용 시계(AXF.t0)로 음수 delay 를 준다.
-     날짜·장소 줄은 홈 머리에 이미 있어 넣지 않는다 (v3.54 문구 규칙). */
+  /* v3.77 (사용자 피드백 260918 「문자 변경이 경박스럽고 글자가 작다」) 카드 뒤집기 폐지.
+     왼쪽 = 「ME to WE」 한 줄(가로)이 글자마다 흩어졌다가 우리말 두 줄로 모인다 · 오른쪽 = 기존 AXF 시퀀스 모션.
+     홈은 4초마다 다시 그려진다 → 공용 시계(AXF.t0)로 음수 delay 를 줘 이어서 돈다 · transform·투명도만 쓴다.
+     슬로건 표기는 확정본 「나의 업무 혁신, 우리 회사의 AX가 되다」 (CLAUDE.md) 를 따른다. */
   var sq = AXF_SEQ.map(function (x) { return x[0] + ":" + x[1]; }).join(",");
   var off = ((Date.now() - (window.AXF && AXF.t0 ? AXF.t0 : Date.now())) / 1000) % BILL_LOOP;
-  var card = function (front, back, delay) {
-    return '<span class="bfc" style="animation-delay:' + (-(off) + delay).toFixed(2) + 's">' +
-      '<span class="f">' + esc(front) + '</span><span class="b">' + esc(back) + "</span></span>";
-  };
+  var d = (-off).toFixed(2) + "s";
+  var chars = "ME to WE".split("").map(function (ch, i2) {
+    if (ch === " ") return '<span class="sp"> </span>';
+    var dx = (i2 - 3.5) * 9 + (i2 % 2 ? 6 : -6), dy = (i2 % 3 - 1) * 14 - 6, rot = (i2 % 2 ? 1 : -1) * (5 + i2);
+    return '<span class="c" style="animation-delay:' + d + ';--dx:' + dx.toFixed(0) + "px;--dy:" + dy.toFixed(0) + "px;--rot:" + rot + 'deg">' + ch + "</span>";
+  }).join("");
   return '<div class="bill" aria-hidden="true"><div class="bc">' +
-    card("ME", "나의 업무 혁신", 0) +
-    '<span class="bto">to</span>' +
-    card("WE", "우리 회사의 AX가 되다", 0.25) + "</div>" +
+    '<p class="bmw">' + chars + "</p>" +
+    '<p class="bko" style="animation-delay:' + d + '"><span>나의 업무 혁신,</span><span>우리 회사의 AX가 되다</span></p>' +
+    "</div>" +
     '<canvas data-axf="loop" data-axf-seq="' + sq + '" data-axf-zoom="0.95" data-axf-stage="orange" data-axf-colors="#FFFFFF,rgba(255,255,255,0.78),#FFFFFF"></canvas></div>';
 }
+
 
 
 /* 나의 스케줄 · 내가 신청한 것만 담는다 (260830 사용자 지시).
