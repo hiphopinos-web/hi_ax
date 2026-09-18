@@ -95,7 +95,7 @@
   #a2hs .a-later { width: 100%; margin-top: 10px; border: 0; background: none; cursor: pointer; font-family: inherit; font-size: calc(14.5px * var(--fs)); font-weight: 700; color: var(--faint); padding: 8px; }
   #a2hs .a-url { margin-top: 8px; padding: 10px 12px; background: var(--card); border: 0; border-radius: 10px; font-size: calc(12.5px * var(--fs)); color: var(--muted); word-break: break-all; }
 
-  /* 재방문 · PIN 전용 화면 (영상 스플래시 없이 바로) */
+  /* 재방문 · 비밀번호만 받는 화면 (영상 스플래시 없이 바로) */
   #quick { position: absolute; inset: 0; z-index: 110; background: var(--paper); display: flex; align-items: center; justify-content: center; padding: 24px; }
   #quick[hidden] { display: none; }
   #quick .q-card { width: 100%; max-width: 340px; text-align: center; }
@@ -888,8 +888,8 @@
       <form id="entryForm" novalidate>
         <input id="empId" placeholder="사번" autocomplete="off">
         <input id="userName" placeholder="이름 (예: 홍길동)" autocomplete="off">
-        <input id="userPin" type="password" inputmode="numeric" maxlength="4" placeholder="행사 PIN 4자리 (처음이면 새로 설정)" autocomplete="off">
-        <p class="note" id="pinNote" style="text-align:left;margin:-4px 2px 0">※ 행사 전용 숫자 4자리입니다. 사내 비밀번호는 사용하지 마세요</p>
+        <input id="userPin" type="password" inputmode="numeric" maxlength="4" placeholder="비밀번호 숫자 4자리" autocomplete="off">
+        <p class="note" id="pinNote" style="text-align:left;margin:-4px 2px 0">처음 입장할 때 쓸 비밀번호를 정해 주세요 · 이 행사에서만 쓰는 숫자 4자리 (사내 비밀번호 사용 금지)</p>
         <p id="err"></p>
         <button type="submit">페스티벌 입장</button>
         <p class="note">입력 정보는 기기에 저장되지 않습니다</p>
@@ -897,13 +897,13 @@
     </div>
   </section>
 
-  <!-- ═══════ 재방문 · PIN만 입력 (스플래시 건너뜀) ═══════ -->
+  <!-- ═══════ 재방문 · 비밀번호만 입력 (스플래시 건너뜀) ═══════ -->
   <section id="quick" hidden>
     <div class="q-card">
       <p class="q-eyebrow">AX Festival 2026</p>
       <p class="q-hello">환영합니다</p>
       <p class="q-who"><b id="qName"></b><span id="qEmp"></span></p>
-      <input id="quickPin" type="password" inputmode="numeric" maxlength="4" placeholder="PIN 4자리" autocomplete="off">
+      <input id="quickPin" type="password" inputmode="numeric" maxlength="4" placeholder="비밀번호 4자리" autocomplete="off">
       <p id="qErr"></p>
       <button id="qBtn" class="q-go">입장</button>
       <button id="qOther" class="q-other">다른 사번으로 입장</button>
@@ -1456,7 +1456,7 @@ function bePush(kind, val, once) {
       }
     });
 }
-/* 이 기기를 기억 · 두 번째 접속부터는 사번·이름을 다시 묻지 않고 PIN만 받는다.
+/* 이 기기를 기억 · 두 번째 접속부터는 사번·이름을 다시 묻지 않고 비밀번호만 받는다.
  * (참여 기록은 서버에 있으므로 여기 남기는 건 "누구인지"뿐) */
 /* ── 홈 화면에 추가 · 적극 유도 3단 구성 ──────────────────────
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
@@ -8818,8 +8818,8 @@ function xitionRun(switchNow) {
     return;
   }
 
-  /* ── 재방문: 이 기기를 기억하고 있으면 영상 스플래시를 건너뛰고 PIN만 받는다 ── */
-  /* v19: 이 기기에서 입장한 적 있으면 스플래시·PIN 없이 바로 재입장 (로그아웃은 설정에서) */
+  /* ── 재방문: 이 기기를 기억하고 있으면 영상 스플래시를 건너뛰고 비밀번호만 받는다 ── */
+  /* v19: 이 기기에서 입장한 적 있으면 스플래시·비밀번호 없이 바로 재입장 (로그아웃은 설정에서) */
   var savedU = S.get("user", {});
   if (savedU && savedU.empId) {
     enterApp();
@@ -8830,7 +8830,7 @@ function xitionRun(switchNow) {
     var pin = el("quickPin").value.trim();
     var qe = el("qErr"), btn = el("qBtn");
     var show = function (m) { qe.textContent = m; qe.style.display = "block"; };
-    if (!/^\d{4}$/.test(pin)) { show("PIN 4자리를 입력해주세요."); return; }
+    if (!/^\d{4}$/.test(pin)) { show("비밀번호 4자리를 입력해 주세요."); return; }
     qe.style.display = "none";
     btn.disabled = true; btn.textContent = "확인 중…";
     var reset = function () { btn.disabled = false; btn.textContent = "입장"; };
@@ -8839,7 +8839,7 @@ function xitionRun(switchNow) {
         reset();
         if (!res || !res.ok) {
           var msg = {
-            pw: "PIN이 일치하지 않습니다. 처음 설정한 4자리를 입력해주세요.",
+            pw: "비밀번호가 맞지 않습니다. 처음 정한 4자리를 입력해 주세요.",
             notfound: "명부에서 찾을 수 없습니다. 운영진에게 문의해주세요.",
             name: "이름이 명부와 일치하지 않습니다.",
             param: "다시 시도해주세요."
@@ -8874,10 +8874,10 @@ function xitionRun(switchNow) {
     });
   }
 
-  /* 첫 화면 · KV 오브젝트 루프 시작 (재방문 PIN 화면이 떠 있으면 그 뒤에서 돌지 않는다) */
+  /* 첫 화면 · KV 오브젝트 루프 시작 (재방문 비밀번호 화면이 떠 있으면 그 뒤에서 돌지 않는다) */
   if (!splash.classList.contains("gone")) kvMountAll();
 
-  /* 오프라인(서버 미연결)이면 PIN 입력을 숨긴다 */
+  /* 오프라인(서버 미연결)이면 비밀번호 입력을 숨긴다 */
   if (!BE.on) {
     if (el("userPin")) el("userPin").style.display = "none";
     if (el("pinNote")) el("pinNote").style.display = "none";
@@ -8902,7 +8902,7 @@ function xitionRun(switchNow) {
       a2hsAuto();
       return;
     }
-    if (!/^\d{4}$/.test(pin)) { show("행사 PIN 4자리를 입력해주세요."); return; }
+    if (!/^\d{4}$/.test(pin)) { show("비밀번호 4자리를 정해 주세요."); return; }
 
     btn.disabled = true; btn.textContent = "확인 중…";
     var reset = function () { btn.disabled = false; btn.textContent = "페스티벌 입장"; };
@@ -8913,7 +8913,7 @@ function xitionRun(switchNow) {
           var msg = {
             notfound: "명부에 없는 사번입니다. 운영진에게 문의해주세요.",
             name: "사번과 이름이 일치하지 않습니다.",
-            pw: "PIN이 일치하지 않습니다. 처음 설정한 4자리를 입력해주세요.",
+            pw: "비밀번호가 맞지 않습니다. 처음 정한 4자리를 입력해 주세요.",
             param: "입력값을 다시 확인해주세요."
           };
           show((res && msg[res.reason]) || "연결에 실패했어요. 잠시 후 다시 시도해주세요.");
@@ -8921,12 +8921,12 @@ function xitionRun(switchNow) {
         }
         S.set("user", { empId: id, name: res.name || nm, dept: res.dept || "" });
         if (res.dept) S.set("dept", res.dept);
-        knownSet({ empId: id, name: res.name || nm, dept: res.dept || "" });   /* 다음 접속엔 PIN만 */
+        knownSet({ empId: id, name: res.name || nm, dept: res.dept || "" });   /* 다음 접속엔 비밀번호만 */
         enterApp();
         beStats();
         a2hsAuto();
         if (res.isNew) setTimeout(function () {
-          notice({ key: "pin", title: "PIN 등록 완료", body: "다음 접속에도 같은 4자리" });
+          notice({ key: "pin", title: "비밀번호가 등록되었어요", body: "다음 입장에도 같은 4자리" });
         }, 700);
       }, function () {
         reset();
