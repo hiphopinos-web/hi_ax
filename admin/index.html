@@ -390,25 +390,25 @@ function viewAcct(){
   var byDept={}; rows.forEach(function(r){ byDept[r.dept||"(미상)"]=(byDept[r.dept||"(미상)"]||0)+1; });
   /* pw===false 만 「초기화 대기」. 필드가 없으면(옛 백엔드) 등록으로 본다. */
   var waiting=rows.filter(function(r){ return r.pw===false; }).length;
-  var h='<h1>계정<small>로그인한 사람. 명부에 있고 PIN을 등록한 계정입니다. PIN을 잊은 사람은 여기서 초기화합니다.</small></h1>';
-  h+='<div class="grid g4">'+kpi("가입 계정",rows.length,"명")+kpi("명부",(ST.data.acct||{}).roster||0,"명","가입률 "+pct(rows.length,(ST.data.acct||{}).roster||0)+"%")+kpi("부문 수",Object.keys(byDept).length,"개")+kpi("PIN 초기화 대기",waiting,"명",waiting?"본인이 앱에서 새 PIN을 입력하면 풀립니다":"")+'</div>';
+  var h='<h1>계정<small>로그인한 사람. 명부에 있고 비밀번호를 등록한 계정입니다. 비밀번호를 잊은 사람은 여기서 초기화합니다.</small></h1>';
+  h+='<div class="grid g4">'+kpi("가입 계정",rows.length,"명")+kpi("명부",(ST.data.acct||{}).roster||0,"명","가입률 "+pct(rows.length,(ST.data.acct||{}).roster||0)+"%")+kpi("부문 수",Object.keys(byDept).length,"개")+kpi("비밀번호 초기화 대기",waiting,"명",waiting?"본인이 앱에서 새 비밀번호를 입력하면 풀립니다":"")+'</div>';
   h+='<div class="card"><div class="tools"><input class="in" placeholder="사번 · 이름 · 부문 검색" value="'+esc(ST.q)+'" oninput="setQ(this.value)"><span class="src">'+shown.length+' / '+rows.length+'명</span></div>';
-  h+='<p class="src" style="margin:0 0 8px">최근 접속 = 앱을 마지막으로 연 시각입니다(v3.83부터 앱 사용 중에도 갱신 · 약 10분 간격). 그 전 기록은 마지막 PIN 입력 시각입니다.</p>';
-  h+='<div class="wrap"><table class="tb"><tr><th>사번</th><th>이름</th><th>부문</th><th>가입</th><th>최근 접속</th><th>PIN</th><th></th></tr>'+
+  h+='<p class="src" style="margin:0 0 8px">최근 접속 = 앱을 마지막으로 연 시각입니다(v3.83부터 앱 사용 중에도 갱신 · 약 10분 간격). 그 전 기록은 마지막 비밀번호 입력 시각입니다.</p>';
+  h+='<div class="wrap"><table class="tb"><tr><th>사번</th><th>이름</th><th>부문</th><th>가입</th><th>최근 접속</th><th>비밀번호</th><th></th></tr>'+
     shown.slice(0,500).map(function(r){ var wait=r.pw===false;
       return '<tr><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td><td>'+esc(r.dept)+'</td><td class="n src">'+esc(short(r.joined))+'</td><td class="n">'+esc(short(r.last))+'</td>'+
         '<td>'+(wait?'<span class="pill">초기화 대기</span>':'<span class="pill off">사용 중</span>')+'</td>'+
-        '<td class="tdr">'+(wait?'<span class="src">새 PIN 입력 대기</span>':'<button class="btn sm" data-emp="'+esc(r.emp)+'" data-name="'+esc(r.name)+'" onclick="pwReset(this)">PIN 초기화</button>')+'</td></tr>'; }).join("")+
+        '<td class="tdr">'+(wait?'<span class="src">새 비밀번호 입력 대기</span>':'<button class="btn sm" data-emp="'+esc(r.emp)+'" data-name="'+esc(r.name)+'" onclick="pwReset(this)">비밀번호 초기화</button>')+'</td></tr>'; }).join("")+
     (shown.length>500?'<tr><td colspan="7" class="src">500명까지만 표시합니다. 검색으로 좁혀 주세요.</td></tr>':'')+'</table></div>';
-  h+='<p class="note mt12">PIN 초기화는 지금 PIN을 지우고, 본인이 앱에서 다음에 입력하는 4자리를 새 PIN으로 등록합니다. 스탬프·신청 기록은 그대로입니다. 운영 로그에 남습니다.</p></div>';
+  h+='<p class="note mt12">비밀번호 초기화는 지금 비밀번호를 지우고, 본인이 앱에서 다음에 입력하는 4자리를 새 비밀번호로 등록합니다. 스탬프·신청 기록은 그대로입니다. 운영 로그에 남습니다.</p></div>';
   h+='<div class="card soft"><h2>부문별 가입</h2><div class="row">'+Object.keys(byDept).sort(function(a,b){return byDept[b]-byDept[a];}).map(function(d){ return '<span class="pill">'+esc(d)+' <b class="n">'+byDept[d]+'</b></span>'; }).join("")+'</div></div>';
   return h;
 }
-/* PIN 초기화 · acct_pwreset. 서버는 행을 남기고 비번해시만 비운다. 다음 로그인의 4자리가 새 PIN 이 된다. */
+/* 비밀번호 초기화 · acct_pwreset. 서버는 행을 남기고 비번해시만 비운다. 다음 로그인의 4자리가 새 비밀번호가 된다. */
 function pwReset(btn){
   var emp=btn.getAttribute("data-emp")||"", name=btn.getAttribute("data-name")||"";
-  dialog({ t:"PIN을 초기화할까요?",
-    s:"지금 PIN은 지워지고, <b>본인이 앱에서 다음에 입력하는 4자리가 새 PIN</b>으로 등록됩니다. 스탬프·신청 기록은 그대로이고, 운영 로그에 남습니다.",
+  dialog({ t:"비밀번호를 초기화할까요?",
+    s:"지금 비밀번호는 지워지고, <b>본인이 앱에서 다음에 입력하는 4자리가 새 비밀번호</b>로 등록됩니다. 스탬프·신청 기록은 그대로이고, 운영 로그에 남습니다.",
     who:esc(name)+'<span>사번 '+esc(emp)+'</span>', ok:"초기화",
     onOk:function(){
       call("acct_pwreset",{emp:emp},function(r){
@@ -416,7 +416,7 @@ function pwReset(btn){
           load();
           el("dlgOk").disabled=false;
           dialog({ t:"초기화했습니다", who:esc(r.name||name)+'<span>사번 '+esc(r.emp||emp)+'</span>', ok:"확인했습니다",
-            s:"본인에게 이렇게 안내해 주세요. <b>「앱에서 사번·이름을 넣고 새 PIN 4자리를 입력하면 그 번호로 다시 등록됩니다」</b><br>초기화 직후에는 사번·이름만으로 새 PIN을 정할 수 있으니, 본인이 바로 입장하도록 해 주세요."+(r.already?'<br><span class="src">이미 초기화 상태였습니다.</span>':"") });
+            s:"본인에게 이렇게 안내해 주세요. <b>「앱에서 사번·이름을 넣고 새 비밀번호 4자리를 입력하면 그 번호로 다시 등록됩니다」</b><br>초기화 직후에는 사번·이름만으로 새 비밀번호를 정할 수 있으니, 본인이 바로 입장하도록 해 주세요."+(r.already?'<br><span class="src">이미 초기화 상태였습니다.</span>':"") });
         } else { el("dlgOk").disabled=false; dlgClose(); toast("실패: "+(r&&r.reason==="notfound"?"계정에 없는 사번입니다":(r&&r.reason)||"")); }
       },function(){ el("dlgOk").disabled=false; dlgClose(); toast("서버 응답 없음"); });
     }});
