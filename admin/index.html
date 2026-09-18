@@ -758,7 +758,7 @@ function preClear(id){
 var SURVEY_PLACE_NAME = { p1:"1F AX 전시·체험존", p2:"AX Now! 체험 부스", p7:"DAP Wall QR 퀴즈", p3:"17F 오후 파트너사 강연", dap:"DAP ZONE 과제상담", cchat:"18F AX 커피챗" };
 /* v3.52b 설문 = 범용 틀 · 문항은 앱 SURVEY_Q 한 곳 · 서버가 문항 id 별로 형식별 기본 집계만 준다(선택 비율 · 점수 분포 · 한 줄) */
 /* v3.58 AI 사생대회 · 1차 심사는 앱 밖에서 · 여기에는 본선 공개할 작품만 올린다.
-   앱에는 작품 상태가 '공개' 인 것만, 작가 없이(번호·제목·설명) 나간다 · 좋아요 1인 3표 · 시상 확인용 실명은 이 화면에만 있다.
+   앱에는 상태가 '공개'·'샘플' 인 것만, 작가 없이(번호·제목·설명) 나간다 · '샘플' 은 좋아요·순위에서 빠지고 화면에 「샘플」 워터마크가 얹힌다 · 좋아요 1인 3표 · 시상 확인용 실명은 이 화면에만 있다.
    이미지는 GAS 릴레이가 아니라 정적 호스팅이다: 원본을 내려받아 긴 변 1080px + 섬네일 320px 로 줄이고
    웹배포용/assets/art/ 에 <작품ID>.jpg · <작품ID>_t.jpg 로 넣은 뒤 시트 「파일」 칸에 <작품ID>.jpg 만 적는다. */
 function viewArt(){
@@ -788,6 +788,7 @@ function viewArt(){
         '<td class="n src">'+esc(r.file||"")+'</td><td class="n tdr">'+(r.likes||0)+'</td>'+
         '<td><span class="pill'+(r.status==="공개"?" ok":r.status==="숨김"?" off":"")+'">'+esc(r.status)+'</span></td>'+
         '<td><div class="row" style="gap:6px">'+(r.status!=="공개"?'<button class="btn sm pri" onclick="artSet(\''+k+'\',\'공개\')">공개</button>':'')+
+        (r.status!=="샘플"?'<button class="btn sm" onclick="artSet(\''+k+'\',\'샘플\')">샘플</button>':'')+
         (r.status!=="숨김"?'<button class="btn sm danger" onclick="artSet(\''+k+'\',\'숨김\')">숨김</button>':'')+'</div></td></tr>'; }).join(""):'<tr><td colspan="7" class="src">작품이 없습니다. 시트 「사생대회」에 행을 넣고 새로고침하세요.</td></tr>')+
     '</table></div></div>';
   h+='<div class="card"><h2>좋아요 순위 · 시상용</h2><p class="src">동점은 먼저 낸 쪽이 위 · 좋아요 수로만 정합니다</p><div class="wrap"><table class="tb"><tr><th>순위</th><th>번호</th><th>제목</th><th>작가</th><th>사번</th><th class="tdr">좋아요</th></tr>'+
