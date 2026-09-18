@@ -3871,7 +3871,7 @@ var Views = {
       '<p class="tytv-k">17:00 OUTRO · 시상</p><p class="tytv-t">1F 현장 타자왕전 결과</p>' +
       '<div class="tytv-list five">' + (top.length ? top.map(function (x) {
         return '<div class="tytv-row' + (x.rank <= 2 ? " top" : "") + '"><span class="no">' + x.rank + '</span><span class="nm">' + esc(x.nick || "익명 참가자") +
-          (hide ? "" : '<small>' + esc(x.name || "") + (x.dept ? " · " + esc(x.dept) : "") + "</small>") + '</span><span class="sc">' + Number(x.score).toLocaleString() + "<small>정확도 " + x.acc + "%</small></span></div>";
+          (hide ? "" : '<small>' + esc(x.name || "") + (x.dept ? " · " + esc(x.dept) : "") + "</small>") + '</span><span class="sc">' + typeSec(x.score) + "<small>정확도 " + x.acc + "%</small></span></div>";
       }).join("") : '<p style="padding:24px 4px;opacity:0.7">' + (d ? "아직 현장 기록이 없습니다" : "불러오는 중") + "</p>") + "</div>" +
       '<p class="tytv-foot">동점은 정확도, 그다음 먼저 기록한 쪽 · 결선 ' + esc(((d && d.win) || []).join(" · ")) + (d && d.demo ? " · 데모 예시 이름" : "") + "</p></div>";
   },
@@ -4371,7 +4371,7 @@ var Views = {
     if (gsNeedNick()) return gsNickHtml("type");
     setTimeout(rgPreview, 0);
     return gsStartHtml("type", { rootId: "tgRoot", previewId: "rgPrev", pw: 180, ph: 110,
-      rules: "단어를 치고 Enter · 바닥에 닿으면 하트 -1 · 60초 · 끝까지 하면 스탬프" });
+      rules: "단어를 치고 Enter · 바닥에 닿으면 하트 -1 · 하트 5개를 다 잃을 때까지 버티기 · 한 판이면 스탬프" });
   },
   /* ═══ v3.45 휴대폰 미니게임 · AX 팡 · ME to WE 점프 (v3.50 전원 공개) ═══ */
   game_pang: function () {
@@ -4379,14 +4379,14 @@ var Views = {
     if (gsNeedNick()) return gsNickHtml("pang");
     setTimeout(pgPreview, 0);
     return gsStartHtml("pang", { rootId: "pgRoot", previewId: "pgPrev", pw: 180, ph: 174, flat: true,
-      rules: "두 칸을 바꿔 같은 그림 3개를 한 줄로 · 60초 · 끝까지 하면 스탬프" });
+      rules: "두 칸을 바꿔 같은 그림 3개를 한 줄로 · 80칸을 빨리 · 한 판이면 스탬프" });
   },
   game_jump: function () {
     jpStop();
     if (gsNeedNick()) return gsNickHtml("jump");
     setTimeout(jpPreview, 0);
     return gsStartHtml("jump", { rootId: "jpRoot", previewId: "jpPrev", pw: 180, ph: 110,
-      rules: "탭 점프 · 공중 탭 2단 점프 · 하트 3개 · 60초 · 끝까지 하면 스탬프" });
+      rules: "탭 점프 · 공중 탭 2단 점프 · 하트 3개 · 오래 버티기 · 한 판이면 스탬프" });
   },
   /* ═══ v3.50 AX 올림픽 순위판 · 종합(전 종목 완주자) · 종목별(금은동) ═══
      v3.50d 부문 정보 전면 삭제 (사용자 확정 260917·260918 · 부문 메달표·부문 라벨·부문 평균 금지) */
@@ -4405,7 +4405,7 @@ var Views = {
       }).join("") + "</div>";
       var ev = OLY_EVENTS.filter(function (e) { return e.key === evk; })[0], mv = me.ev[evk];
       var f = function (x) { return olyRec(x.score, evk) + '<small class="oly-pts">' + olyFmt(x.pts) + "점</small>"; }; f.medal = true;
-      h += '<div class="card"><b style="color:var(--hi)">' + esc(ev.name) + '</b><p class="muted" style="margin:2px 0 6px;font-size:calc(12.5px * var(--fs))">목표 ' + olyRec(olyTarget()[evk] || 0, evk) + " = 100점" + (olyLower(evk) ? " · 빠를수록 좋아요" : "") + "</p>" +
+      h += '<div class="card"><b style="color:var(--hi)">' + esc(ev.name) + '</b><p class="muted" style="margin:2px 0 6px;font-size:calc(12.5px * var(--fs))">목표 ' + olyRec(olyTarget()[evk] || 0, evk) + " = 100점" + (olyLower(evk) ? " · 빠를수록 좋아요" : olyTime(evk) ? " · 오래 버틸수록 좋아요" : "") + "</p>" +
         olyRows(b.perEvent && b.perEvent[evk], f) +
         (mv ? '<p class="muted" style="margin-top:10px">내 기록 ' + olyRec(mv.best, evk) + " · 환산 " + olyFmt(mv.pts) + "점" + (mv.rank ? " · " + mv.rank + "위" : "") + "</p>" : '<button class="btn mint" style="margin-top:10px" onclick="App.go(\'' + ev.view + '\')">' + esc(ev.name) + " 한 판</button>") + "</div>";
     } else {
@@ -4424,7 +4424,7 @@ var Views = {
       '<button class="' + (mode === "site" ? "on" : "") + '" onclick="S.set(\'type_rank_tab\', \'site\'); App.render()">1F 현장 상위 5</button></div>' +
       (testMode() ? '<p class="scap" style="margin:0 2px 8px">테스트 순위판 · 가짜 닉네임이 섞여 있어요(실서버 순위와 무관)</p>' : "") +
       '<div class="card" id="tyRankBody">' + typeRankHtml(cached, mode) + "</div>" +
-      '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">' + (mode === "app" ? "최고 기록만 · 경품 없음" : "결선 시간대 1인 1회 · 동점은 정확도 · 1·2등 Outro 호명") + "</p>";
+      '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">' + (mode === "app" ? "오래 버틴 시간 순 · 최고 기록만 · 경품 없음" : "결선 시간대 1인 1회 · 오래 버틴 시간 순 · 동점은 정확도 · 1·2등 Outro 호명") + "</p>";
   },
 
   admin: function () {
@@ -4576,7 +4576,7 @@ var AdminTabs = {
   typing: function () {
     tyTvPull();
     var win = TYTV.site && TYTV.site.win ? TYTV.site.win.join(",").replace(/~/g, "-") : "";
-    return '<div class="card mb8"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">진행 화면 (노트북)</b><p class="muted" style="margin-top:3px;font-size:calc(13px * var(--fs))">참가자 QR → 닉네임 확인 → 60초 한 판 → 저장 · 1인 1회 · 결선 시간대만</p>' +
+    return '<div class="card mb8"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">진행 화면 (노트북)</b><p class="muted" style="margin-top:3px;font-size:calc(13px * var(--fs))">참가자 QR → 닉네임 확인 → 하트 5개를 다 잃을 때까지 한 판 → 저장 · 1인 1회 · 결선 시간대만</p>' +
       '<button class="btn mint" style="margin-top:10px" onclick="App.go(\'type_site\')">진행 화면 열기</button></div>' +
       '<div class="card mb8"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">1F TV 순위판</b><p class="muted" style="margin-top:3px;font-size:calc(13px * var(--fs));word-break:break-all">로그인 없이 TV 브라우저에서 · ' + esc(location.origin + location.pathname) + "#tv=type</p>" +
       '<button class="btn" style="margin-top:10px" onclick="App.go(\'wall_type\')">미리보기</button></div>' +
@@ -5989,9 +5989,9 @@ function drawWinner() {
 }
 
 /* ════════════════ 게임 공통 ════════════════ */
-/* ═══ v3.36b 타자 게임 = AX 단어 소나기 (사용자 피드백 260917 · 떨어지는 단어를 쳐서 터뜨리는 60초 게임) ═══
+/* ═══ v3.36b 타자 게임 = AX 단어 소나기 (사용자 피드백 260917 · 떨어지는 단어를 쳐서 터뜨리는 게임 · v3.80 부터 생존 모드) ═══
    판정: 입력창의 완성 문자열을 Enter(모바일 완료)로 제출 · 화면 단어와 정확히 같으면 터짐(같은 단어가 여럿이면 가장 아래) · 키 이벤트 단위 판정 없음.
-   한 판 60초 · 목숨 5 · 바닥선에 닿으면 목숨 -1(벽돌 하나 깨짐) · 12초마다 단계 상승(낙하 속도·동시 개수 증가).
+   한 판 = 목숨 5 · 바닥선에 닿으면 목숨 -1(벽돌 하나 깨짐) · 15초마다 단계 상승(낙하 속도·동시 개수 증가) · 기록은 버틴 시간(안전 상한 5분).
    점수 = 글자 수 × 10 × 콤보 배수(1 + 0.2 × min(콤보-1, 10), 최대 3배) · 정확도 = 제출 중 명중 비율.
    끝까지 하면(시간 종료 또는 목숨 소진) 04 미니게임 적립(점수 무관). 소리는 기본 꺼짐(WebAudio 8비트 효과음 · 음원 파일 없음).
    비주얼: 180×300 저해상도 캔버스를 pixelated 로 확대 · 팔레트는 오렌지 사다리 + 검정 + 흰색 + 웜그레이·웜브라운만.
@@ -6013,14 +6013,16 @@ var MEWE_SPR = {
    요소마다 제 크기: 단어 18px 고정(휴대폰) · 도트 단위 3px 고정(지면·벽돌·나무·마스코트) → 판이 작아지면 도트 개수만 준다.
    판이 낮으면 글자를 줄이지 않고 동시 단어 수·단계 수를 줄인다(RAIN_BANDS) · 난이도 = 단어가 바닥선까지 떨어지는 시간(RAIN_FALL) → 어느 판에서나 같은 시간.
    가로 배치 = 레인 · 윗부분에 있는 단어 상자와 겹치지 않는 레인에만 · 좌우 8px 여백.
-   HUD 는 캔버스 밖 DOM 한 줄(점수·남은 시간·하트·소리·일시정지 44px) · 입력 막대 전폭 17px, 맞히면 테두리 O100, 틀리면 회색 흔들림.
+   HUD 는 캔버스 밖 DOM 한 줄(점수·버틴 시간·하트·소리·일시정지 44px) · 입력 막대 전폭 17px, 맞히면 테두리 O100, 틀리면 회색 흔들림.
    현장 노트북(1F 타자왕전)과 넓은 화면은 따로: 단어 28~32px · 동시 6~7개 · 도트 4px · 입력 22px. */
 /* v3.72 난이도 완화 (사용자 피드백 260918 「너무 어렵다」) · 낙하 시간 +1.5초 · 단계 상승 12→15초 · 동시 단어 한 개씩 줄임(최소 2) */
 var RAIN_FALL = [8.5, 7.5, 6.5, 5.5, 4.7];    /* 단계별 · 위에서 바닥선까지 걸리는 초 */
 var RAIN_SPAWN = [2.2, 1.9, 1.6, 1.35, 1.1];  /* 단계별 · 새 단어 간격 초 */
 var RAIN_STAGE_SEC = 15;
 var RAIN_EASY_SEC = 10;                       /* 처음 10초는 1단계 · 3자 이하만 */
-var RAIN_RAMP_FROM = 60, RAIN_RAMP_MIN = 0.55, RAIN_RAMP_SPAN = 180;   /* 마지막 단계 뒤 추가 램프 · 60초부터 240초까지 낙하 시간 55%까지 */
+var RAIN_RAMP_FROM = 60, RAIN_RAMP_MIN = 0.5, RAIN_RAMP_SPAN = 180;   /* 마지막 단계 뒤 추가 램프 · 60초부터 240초까지 낙하 시간과 등장 간격이 50%까지 줄어든다 */
+/* v3.80 60초가 지나면 계속 빨라진다 · 낙하 시간과 새 단어 간격에 같은 배율을 쓴다 (자동 재생 검증: 이게 없으면 빠른 타자는 5분 상한까지 안 죽었다) */
+function rgRamp(el) { return Math.max(RAIN_RAMP_MIN, 1 - Math.max(0, el - RAIN_RAMP_FROM) / RAIN_RAMP_SPAN * (1 - RAIN_RAMP_MIN)); }
 var RAIN_BANDS = [[330, 2, 3], [420, 2, 4], [520, 3, 5], [1e9, 4, 5]];   /* [판 높이 미만, 동시 단어 최대, 단계 수] · 휴대폰 */
 var RAIN_FONT = '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif';
 var RG = { on: false, mode: "app", big: false, raf: 0, last: 0, t0: 0, cd: 0, words: [], parts: [], pops: [], lives: RAIN_LIVES, score: 0, hits: 0, tries: 0, combo: 0, maxCombo: 0, stage: 1, spawnT: 0, shake: 0, banner: null, shot: null, mas: { x: 90, tx: 90, open: 0 }, res: null, ac: null, L: null, dpr: 1 };
@@ -6289,7 +6291,7 @@ function rgSpawn() {
     var x = Math.round(Math.min(maxX, Math.max(8, 8 + lanes[k] * lw + Math.random() * Math.max(0, lw - bw))));
     var clash = RG.words.some(function (w) { return rgWordY(w) < upper && x < w.x + w.bw + 8 && x + bw + 8 > w.x; });
     if (!clash) {
-      var ramp = Math.max(RAIN_RAMP_MIN, 1 - Math.max(0, rgElapsed(performance.now()) - RAIN_RAMP_FROM) / RAIN_RAMP_SPAN * (1 - RAIN_RAMP_MIN));
+      var ramp = rgRamp(rgElapsed(performance.now()));
       RG.words.push({ text: text, mean: pick[1], bw: bw, x: x, p: 0, fall: RAIN_FALL[RG.stage - 1] * ramp * (0.94 + Math.random() * 0.12) });
       return true;
     }
@@ -6319,7 +6321,7 @@ function rgUpdate(dt, now) {
   if (st > RG.stage) { RG.stage = st; RG.banner = { text: "LEVEL " + st, t: 1.3 }; sfx("level"); }
   RG.spawnT -= dt;
   var extra = Math.min(2, Math.floor(Math.max(0, el0 - RAIN_RAMP_FROM) / 60));   /* v3.80 60초마다 동시 단어 +1 (최대 +2) */
-  if (RG.spawnT <= 0 && RG.words.length < L.maxWords + extra) RG.spawnT = rgSpawn() ? RAIN_SPAWN[RG.stage - 1] : 0.25;
+  if (RG.spawnT <= 0 && RG.words.length < L.maxWords + extra) RG.spawnT = rgSpawn() ? RAIN_SPAWN[RG.stage - 1] * rgRamp(el0) : 0.25;
   for (var i = RG.words.length - 1; i >= 0; i--) {
     var wd = RG.words[i];
     wd.p += dt / wd.fall;
@@ -6489,9 +6491,9 @@ function rgDraw(ctx, now) {
     ctx.fillStyle = "rgba(255,255,255,0.6)"; ctx.fillRect(0, 0, L.W, L.floor);
     rgBox2(ctx, L.W / 2 - ew / 2, ey, ew, eh, RAIN_PAL.w);
     ctx.font = rgFontStr(26); ctx.fillStyle = RG.ending.why === "time" ? RAIN_PAL.o100 : RAIN_PAL.deep;
-    ctx.fillText(RG.ending.why === "time" ? "TIME UP" : "GAME OVER", L.W / 2, ey + 34);
+    ctx.fillText(RG.ending.why === "time" ? "5분 완주" : "GAME OVER", L.W / 2, ey + 34);
     ctx.font = rgFontStr(15); ctx.fillStyle = RAIN_PAL.ink;
-    ctx.fillText(RG.ending.why === "time" ? "60초 완주" : "단어 5개를 놓쳤어요", L.W / 2, ey + 66);
+    ctx.fillText(RG.ending.why === "time" ? "최대 기록에 닿았어요" : "단어 5개를 놓쳤어요", L.W / 2, ey + 66);
   }
   if (RG.cd > 0) {
     ctx.fillStyle = "rgba(255,255,255,0.55)"; ctx.fillRect(0, 0, L.W, L.floor);
@@ -6581,10 +6583,11 @@ function typeNickSave() {
   }, function () { toast("서버에 연결할 수 없어요"); });
 }
 /* 테스트 순위판 오버레이 (testMode 전용 · 실서버 순위에 섞지 않는다) · 내 테스트 최고 기록이 사이에 끼어 보인다 */
-/* 점수 규모 참고 · 자동 입력으로 60초 내내 가장 아래 단어를 0.4초마다 맞히면 52개 · 4,536점 */
+/* v3.80 순위판 목업 · 아래 숫자는 옛 점수 기준이고 typeTestTop 에서 생존 시간(1/100초)으로 환산해 쓴다 */
 var TYPE_TEST_NICKS = [["타자요정", 4380], ["에이전트왕", 3960], ["프롬프트장인", 3510], ["로드맵러", 3120], ["데이터덕후", 2740], ["코파일럿", 2380], ["미위팬", 2010], ["커피챗러", 1650], ["혁신연결", 1320], ["공감참여", 980]];
 function typeTestTop(mode) {
-  var list = TYPE_TEST_NICKS.map(function (x) { return { name: x[0], score: mode === "site" ? Math.round(x[1] * 1.08) : x[1] }; });
+  /* v3.80 목업도 생존 시간(1/100초) · 옛 점수를 55로 나눠 초로 바꿨다 · 현장은 조금 더 잘한다 */
+  var list = TYPE_TEST_NICKS.map(function (x) { return { name: x[0], score: Math.round((mode === "site" ? x[1] * 1.08 : x[1]) / 55 * 100) }; });
   if (mode === "app" && S.get("type_best", 0)) list.push({ name: (typeNick() || "나") + " (나)", score: S.get("type_best", 0), me: true });
   list.sort(function (a, b) { return b.score - a.score; });
   var n = mode === "site" ? 5 : 10, meRank = null;
@@ -6603,9 +6606,9 @@ function typeRankHtml(r, mode, big) {
   if (!r) return '<p class="muted">순위를 불러오는 중입니다</p>';
   var top = r.top || [];
   return (top.length ? top.map(function (x) {
-      return '<div class="ty-rank' + (x.me ? " me" : "") + '"><span class="no">' + x.rank + '</span><span class="nm">' + esc(x.name) + '</span><span class="sc">' + Number(x.score).toLocaleString() + "</span></div>";
+      return '<div class="ty-rank' + (x.me ? " me" : "") + '"><span class="no">' + x.rank + '</span><span class="nm">' + esc(x.name) + '</span><span class="sc">' + typeSec(x.score) + "</span></div>";
     }).join("") : '<p class="muted">아직 기록이 없어요</p>') +
-    (r.me ? '<p class="muted" style="margin-top:10px">내 순위 ' + r.me.rank + "위 · " + Number(r.me.score).toLocaleString() + "점</p>" : "");
+    (r.me ? '<p class="muted" style="margin-top:10px">내 순위 ' + r.me.rank + "위 · " + typeSec(r.me.score) + " 생존</p>" : "");
 }
 /* 시작 화면 미리보기 캔버스 · 마스코트와 떨어지는 단어 몇 개 (정지 화면) */
 function rgPreview() {
@@ -6634,7 +6637,7 @@ function gameClear(flagKey) {
 
 /* ════════════════ v3.37 1F 현장 타자왕전 (같은 게임 · 스태프 노트북) ════════════════
    흐름: ① 스태프가 참가자 앱의 「내 QR」을 노트북 카메라로 찍는다(카메라가 없으면 사번 입력) → 서버 type_site_check 로
-   닉네임·실명(스태프 본인 확인용)·이미 도전했는지·결선 시간대인지 확인 → ② 참가자가 같은 키보드로 60초 한 판(카운트다운 포함)
+   닉네임·실명(스태프 본인 확인용)·이미 도전했는지·결선 시간대인지 확인 → ② 참가자가 같은 키보드로 한 판(카운트다운 포함 · 하트 5개가 다 떨어질 때까지)
    → ③ 끝나는 즉시 type_site_submit(관리코드) · 결선 시간대 안 · 1인 1회는 서버가 판정 → 순위·상위 5 표시 → 다음 참가자.
    1F TV 순위판(wall_type · 로그인 없음 · #tv=type) · Outro 시상 화면(type_award · 관리자 · 닉네임 + 실명). */
 var TS = { phase: "idle", emp: "", info: null, res: null, send: "", msg: "", scan: false, last: "", lastT: 0 };
@@ -6715,14 +6718,14 @@ function tsSiteHtml() {
       '<button class="btn line" style="width:auto;padding:12px 16px" onclick="tsManual()">확인</button></div>' +
       '<p class="gmsg" id="tsMsg">' + (TS.phase === "checking" ? "확인 중..." : esc(TS.msg)) + "</p></div>";
   } else if (TS.phase === "ready" && i) {
-    var block = i.done ? "이미 도전했습니다 · 기록 " + Number(i.mine && i.mine.score || 0).toLocaleString() + "점 (1인 1회)" : !i.inWin ? "지금은 결선 시간대가 아닙니다 · " + esc((i.win || []).join(" · ")) : "";
+    var block = i.done ? "이미 도전했습니다 · 기록 " + typeSec(i.mine && i.mine.score || 0) + " 생존 (1인 1회)" : !i.inWin ? "지금은 결선 시간대가 아닙니다 · " + esc((i.win || []).join(" · ")) : "";
     h += '<div class="card mb12" style="text-align:center"><p class="muted" style="font-size:calc(13px * var(--fs))">순위판에 나오는 이름</p>' +
       '<p style="margin-top:4px;font-size:calc(34px * var(--fs));font-weight:900;color:var(--hi)">' + (i.nick ? esc(i.nick) : "익명 참가자") + "</p>" +
       (i.nick ? "" : '<p class="muted" style="font-size:calc(12.5px * var(--fs))">' + (i.hiddenNick ? "숨김 처리된 닉네임" : "닉네임 없음 · 앱 게임에서 설정") + "</p>") +
       '<p style="margin-top:10px;font-size:calc(14.5px * var(--fs));font-weight:700;color:var(--muted)">스태프 확인 · ' + esc(i.name || "명부에 없음") + (i.dept ? " · " + esc(i.dept) : "") + " · 사번 " + esc(i.emp) + "</p>" +
       (block ? '<p style="margin-top:12px;padding:10px;border-radius:12px;background:var(--dim);font-weight:800;color:var(--hi)">' + block + "</p>" : "") + "</div>" +
       (block ? '<button class="btn mint" style="padding:15px" onclick="tsReset()">다음 참가자</button>'
-        : '<p class="muted" style="text-align:center;margin-bottom:8px;font-size:calc(13.5px * var(--fs))">② 참가자에게 키보드를 넘기고 시작 · 60초 한 판 · 붙여넣기 불가</p>' +
+        : '<p class="muted" style="text-align:center;margin-bottom:8px;font-size:calc(13.5px * var(--fs))">② 참가자에게 키보드를 넘기고 시작 · 하트 5개를 다 잃을 때까지 · 붙여넣기 불가</p>' +
           '<button class="btn mint" style="padding:18px;font-size:calc(18px * var(--fs))" onclick="tsGo()">시작</button>' +
           '<button class="btn line" style="margin-top:8px" onclick="tsReset()">다른 참가자</button>');
   } else if (TS.phase === "play") {
@@ -6730,9 +6733,9 @@ function tsSiteHtml() {
       '<div id="tgRoot" style="max-width:420px;margin:0 auto"></div>';
   } else if (TS.phase === "done") {
     var r = TS.res || {};
-    h += '<div class="cho-box" style="padding:22px 16px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' + (r.why === "time" ? "TIME UP" : "GAME OVER") + " · " + esc(i && i.nick ? i.nick : "익명 참가자") + "</p>" +
-      '<p class="disp" style="font-size:48px;color:var(--mint);margin-top:6px">' + Number(r.score || 0).toLocaleString() + "</p>" +
-      '<p class="hint">터뜨린 단어 ' + (r.hits || 0) + "개 · 최고 콤보 " + (r.combo || 0) + " · 정확도 " + (r.acc || 0) + "%</p>" +
+    h += '<div class="cho-box" style="padding:22px 16px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' + (r.why === "time" ? "5분 완주" : "GAME OVER") + " · " + esc(i && i.nick ? i.nick : "익명 참가자") + "</p>" +
+      '<p class="disp" style="font-size:48px;color:var(--mint);margin-top:6px">' + typeSec(r.score || 0) + "</p>" +
+      '<p class="hint">생존 기록 · 터뜨린 단어 ' + (r.hits || 0) + "개 · 최고 콤보 " + (r.combo || 0) + " · 정확도 " + (r.acc || 0) + "%</p>" +
       '<p style="margin-top:8px;font-size:calc(16px * var(--fs));font-weight:800">' +
       (TS.send === "sending" ? "기록 저장 중..." : TS.send === "ok" ? "현장 순위 " + (TS.me ? TS.me.rank + "위" : "-") + " · 저장 완료" :
         "저장 실패 · " + esc(TS.why === "net" ? "서버 응답 없음" : TS_WHY[TS.why] || TS.why)) + "</p></div>" +
@@ -6763,7 +6766,7 @@ function tyTvRows(r, n) {
   var top = (r && r.top) || [], h = "";
   for (var i = 0; i < n; i++) {
     var x = top[i];
-    h += '<div class="tytv-row' + (i < 3 && x ? " top" : "") + '"><span class="no">' + (i + 1) + '</span><span class="nm">' + (x ? esc(x.name) : '<span style="opacity:0.35">도전을 기다려요</span>') + '</span><span class="sc">' + (x ? Number(x.score).toLocaleString() : "") + "</span></div>";
+    h += '<div class="tytv-row' + (i < 3 && x ? " top" : "") + '"><span class="no">' + (i + 1) + '</span><span class="nm">' + (x ? esc(x.name) : '<span style="opacity:0.35">도전을 기다려요</span>') + '</span><span class="sc">' + (x ? typeSec(x.score) : "") + "</span></div>";
   }
   return h;
 }
@@ -7021,10 +7024,10 @@ function axTodayHtml(dark) { return '<p class="ax-line' + (dark ? " dk" : "") + 
 var OLY_EVENTS = [
   { key: "pang", name: "AX 팡", short: "팡", view: "game_pang", best: "pang_best", lower: 1, unit: "초" },   /* v3.74 기록 = 완주 시간(1/100초) · 작을수록 좋다 */
   { key: "jump", name: "ME to WE 점프", short: "점프", view: "game_jump", best: "jump_best", time: 1, unit: "초" },   /* v3.75 기록 = 생존 시간(1/100초) · 길수록 좋다 */
-  { key: "type", name: "AX 단어 소나기", short: "소나기", view: "game_type", best: "type_best" },
+  { key: "type", name: "AX 단어 소나기", short: "소나기", view: "game_type", best: "type_best", time: 1, unit: "초" },   /* v3.80 기록 = 버틴 시간(1/100초) · 길수록 좋다 */
   { key: "word", name: "ME to WE 기억력", short: "기억력", view: "game_word", best: "gw_best" }
 ];
-var OLY_TARGET = { pang: 4500, jump: 6000, type: 3500, word: 480 };   /* 폴백 · 팡은 목표 완주 시간 45초(4500) · 나머지는 목표 점수 (실측 뒤 콘솔에서 조정) */
+var OLY_TARGET = { pang: 4500, jump: 6000, type: 6000, word: 480 };   /* 폴백 · 팡 = 목표 완주 45초(4500 · 짧을수록) · 점프·소나기 = 목표 생존 60초(6000 · 길수록) · 기억력 = 목표 점수 (실측 뒤 콘솔에서 조정) */
 var OLY_MEDAL = ["", "금", "은", "동"];
 var OLY = { board: null, t: 0 };
 function olyMax() { return OLY_EVENTS.length * 100; }
