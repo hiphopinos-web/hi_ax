@@ -75,6 +75,8 @@ table.tb th{text-align:left;font-size:11.5px;color:var(--tx3);font-weight:600;pa
 table.tb td{padding:9px 10px;vertical-align:middle;border-top:1px solid var(--o5)}
 table.tb tr:hover td{background:var(--o5)}
 .wrap{overflow-x:auto}
+.scrolly{max-height:440px;overflow:auto}
+.scrolly table{width:100%}
 .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700;background:var(--o10);color:var(--tx)}
 .pill.on{background:var(--o100);color:#fff}
 .pill.off{background:#F1F1F1;color:var(--tx3)}
@@ -286,7 +288,7 @@ var NEED={
   stamp:[{k:"stamp",a:"stamp_people"},{k:"stair",a:"stair_list"},{k:"sy",a:"sync",p:{emp:""}}],
   apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"},{k:"pre",a:"pre_list"}],
   survey:[{k:"survey",a:"survey_list"}],
-  typing:[{k:"nick",a:"type_nick_list"},{k:"tres",a:"type_result"},{k:"olyr",a:"oly_result"}],
+  typing:[{k:"nick",a:"type_nick_list"},{k:"tres",a:"type_result"},{k:"olyr",a:"oly_result"},{k:"gstats",a:"game_stats"}],
   notice:[{k:"noti",a:"sync",p:{emp:""}}],
   photo:[{k:"photo",a:"photo_list"}],
   art:[{k:"art",a:"art_all"}]
@@ -845,8 +847,9 @@ function tySec(v){ return v ? (Number(v)/100).toFixed(1)+"초" : "-"; }
 function viewTyping(){
   var rows=((ST.data.nick||{}).rows||[]).filter(function(r){ return match(r,["emp","nick","name"]); });
   var tr=ST.data.tres||{top:[],win:[]};
-  var h='<h1>게임<small>AX 올림픽 · 미니게임 닉네임 · 현장 타자왕전</small></h1>';
+  var h='<h1>게임<small>AX 올림픽 · 게임별 통계 · 미니게임 닉네임 · 현장 타자왕전</small></h1>';
   h+=viewOly();
+  h+=viewGameStats();   /* v3.84 네 종목 전원 통계 */
   h+='<h1 style="margin-top:18px">타자 게임<small>AX 단어 소나기 · 닉네임은 2~8자 · 중복·금칙어·명부 실명은 서버가 거부 · 여기서 숨기면 순위판에 「이름 숨김」</small></h1>';
   h+='<div class="card"><h2>1F 현장 타자왕전 상위 5 · Outro 호명용</h2><p class="src">결선 시간대 '+esc((tr.win||[]).join(" · "))+' · 1인 1회 · 오래 버틴 순 · 동점은 정확도, 그다음 먼저 기록한 쪽</p>'+
     '<div class="wrap"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">생존</th><th class="tdr">정확도</th><th>기록 시각</th></tr>'+
@@ -859,6 +862,98 @@ function viewTyping(){
     '<p class="note mt12">리허설 기록 지우기 · 테스트 사번(310555)만 지울 수 있습니다. 앱 게임기록과 현장 타자왕전 기록을 함께 지웁니다. 실제 참가자 사번은 거부됩니다.</p>'+
     '<div class="row mt12" style="gap:8px"><input class="in" id="gwEmp" style="width:160px" placeholder="테스트 사번" value="310555"><button class="btn danger" onclick="gameWipe()">기록 삭제</button></div>'+
     '<p class="note mt12">초기화하면 닉네임이 지워지고 순위판에 「익명 참가자」로 나옵니다. 참가자는 앱에서 새 닉네임을 다시 정할 수 있습니다. 기록 점수는 지우지 않습니다.</p></div>';
+  return h;
+}
+/* ── v3.84 게임별 통계 (사용자 요청 260918 「타자 말고 다른 게임도 통계」 · 「상위 10이 아니라 전원」) ──────────
+ * 기록은 서버 game_stats 한 번으로 받는다. 네 종목 모두 참여 인원·플레이 횟수·최고·중간값 + 전원 명단.
+ * 기록 방향이 종목마다 다르다: 팡 = 완주 시간(짧을수록), 점프·소나기 = 버틴 시간(길수록), 기억력 = 점수.
+ * 숫자마다 단위를 붙인다(초/점). 운영 전용 화면이라 실명·사번을 함께 보여 준다 · 부문은 어디에도 넣지 않는다. */
+var GST_NAME={ pang:"AX 팡", jump:"ME to WE 점프", type:"AX 단어 소나기", word:"ME to WE 기억력" };
+var GST_DIR={ pang:"완주 시간 · 짧을수록 좋음", jump:"버틴 시간 · 길수록 좋음", type:"버틴 시간 · 길수록 좋음", word:"점수 · 높을수록 좋음" };
+var GQ={};
+function gstFmt(v,unit){ return unit==="cs" ? (Number(v||0)/100).toFixed(1)+"초" : Number(v||0).toLocaleString()+"점"; }
+function gstMatch(r,q){ if(!q) return true; return (r.nick||"").toLowerCase().indexOf(q)>=0 || (r.name||"").toLowerCase().indexOf(q)>=0 || String(r.emp||"").indexOf(q)>=0; }
+function gstRowsHtml(g){
+  var G=((ST.data.gstats||{}).games||{})[g]; if(!G) return '<tr><td colspan="8" class="src">불러오는 중</td></tr>';
+  var q=(GQ[g]||"").trim().toLowerCase();
+  var rows=G.rows.filter(function(r){ return gstMatch(r,q); });
+  if(!rows.length) return '<tr><td colspan="8" class="src">'+(G.rows.length?"검색 결과가 없습니다.":"아직 기록이 없습니다.")+'</td></tr>';
+  return rows.map(function(r){
+    return '<tr><td class="n">'+r.rank+'</td><td><b>'+esc(r.nick||"(닉네임 없음)")+'</b>'+(r.hidden?' <span class="pill off">숨김</span>':'')+'</td>'+
+      '<td>'+esc(r.name||"-")+'</td><td class="n">'+esc(r.emp)+'</td>'+
+      '<td class="n tdr">'+gstFmt(r.best,G.unit)+'</td><td class="n tdr">'+r.pts+'점</td>'+
+      '<td class="n tdr">'+r.plays+'회</td><td class="n src">'+esc(short(r.last))+'</td></tr>';
+  }).join("");
+}
+function gstSearch(g,v){
+  GQ[g]=v;
+  var t=el("gtb_"+g); if(t) t.innerHTML=gstRowsHtml(g);
+  var c=el("gcnt_"+g), G=((ST.data.gstats||{}).games||{})[g];
+  if(c&&G){ var q=(v||"").trim().toLowerCase(); c.textContent=G.rows.filter(function(r){ return gstMatch(r,q); }).length+" / "+G.rows.length+"명"; }
+}
+function csvq(v){ v=String(v==null?"":v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+function csvDl(name,text){
+  var blob=new Blob(["\ufeff"+text],{type:"text/csv;charset=utf-8"});
+  var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },400);
+}
+function gstCsv(g){
+  var G=((ST.data.gstats||{}).games||{})[g];
+  if(!G||!G.rows.length){ toast("내보낼 기록이 없습니다"); return; }
+  var head=["순위","닉네임","이름","사번",(G.unit==="cs"?"최고기록(초)":"최고점수"),"환산점수","플레이횟수","마지막기록"];
+  var lines=[head.join(",")].concat(G.rows.map(function(r){
+    return [r.rank,csvq(r.nick),csvq(r.name),csvq(r.emp),(G.unit==="cs"?(r.best/100).toFixed(1):r.best),r.pts,r.plays,csvq(r.last)].join(",");
+  }));
+  csvDl(GST_NAME[g]+"_전체기록.csv",lines.join("\n"));
+  toast("CSV를 내려받았습니다");
+}
+function olyCsv(){
+  var O=(ST.data.gstats||{}).oly, ev=(ST.data.gstats||{}).events||[];
+  if(!O||!O.rows.length){ toast("내보낼 기록이 없습니다"); return; }
+  var head=["순위","닉네임","이름","사번"].concat(ev.map(function(g){ return GST_NAME[g]+"(환산)"; })).concat(["총점","완주종목","완주시각"]);
+  var lines=[head.join(",")].concat(O.rows.map(function(r){
+    return [r.rank,csvq(r.nick),csvq(r.name),csvq(r.emp)].concat(ev.map(function(g){ return r.ev[g]?r.ev[g].pts:""; })).concat([r.total,r.done,csvq(r.doneAt)]).join(",");
+  }));
+  csvDl("AX올림픽_전체기록.csv",lines.join("\n"));
+  toast("CSV를 내려받았습니다");
+}
+function gstCard(g){
+  var d=ST.data.gstats||{}, G=(d.games||{})[g];
+  if(!G) return '<div class="card"><h2>'+esc(GST_NAME[g])+'</h2><p class="src">불러오는 중</p></div>';
+  var sum=G.players?('참여 '+G.players+'명 · 플레이 '+G.plays+'회 · 최고 '+gstFmt(G.best,G.unit)+' · 중간값 '+gstFmt(G.median,G.unit)):"아직 기록이 없습니다";
+  return '<div class="card"><h2>'+esc(GST_NAME[g])+' <small>· '+esc(GST_DIR[g])+' · 목표 '+gstFmt(G.target,G.unit)+' = 100점</small></h2>'+
+    '<p class="src">'+esc(sum)+'</p>'+
+    '<div class="tools" style="margin-top:10px"><input class="in" placeholder="닉네임 · 이름 · 사번 검색" oninput="gstSearch(\''+g+'\',this.value)">'+
+    '<span class="src" id="gcnt_'+g+'">'+G.rows.length+' / '+G.rows.length+'명</span>'+
+    '<button class="btn sm" onclick="gstCsv(\''+g+'\')">CSV 내려받기</button></div>'+
+    '<div class="wrap scrolly"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">최고 기록</th><th class="tdr">환산</th><th class="tdr">플레이</th><th>마지막 기록</th></tr>'+
+    '<tbody id="gtb_'+g+'">'+gstRowsHtml(g)+'</tbody></table></div></div>';
+}
+function olyAllHtml(){
+  var d=ST.data.gstats||{}, O=d.oly, ev=d.events||[];
+  if(!O) return '<div class="card"><h2>AX 올림픽 · 전원</h2><p class="src">불러오는 중</p></div>';
+  var q=(GQ.oly||"").trim().toLowerCase();
+  var rows=O.rows.filter(function(r){ return gstMatch(r,q); });
+  var bars=(O.dist||[]).map(function(n,i){ return '<span class="pill">'+(i*50)+'~'+((i+1)*50-1)+'점 '+n+'명</span>'; }).join(" ");
+  var body=rows.length?rows.map(function(r){
+    return '<tr><td class="n">'+r.rank+'</td><td><b>'+esc(r.nick||"(닉네임 없음)")+'</b></td><td>'+esc(r.name||"-")+'</td><td class="n">'+esc(r.emp)+'</td>'+
+      ev.map(function(g){ return '<td class="n tdr">'+(r.ev[g]?r.ev[g].pts+"점":'<span class="src">-</span>')+'</td>'; }).join("")+
+      '<td class="n tdr"><b>'+r.total+'점</b></td><td class="n tdr">'+r.done+' / '+ev.length+'</td></tr>';
+  }).join(""):'<tr><td colspan="'+(6+ev.length)+'" class="src">'+(O.rows.length?"검색 결과가 없습니다.":"아직 기록이 없습니다.")+'</td></tr>';
+  return '<div class="card"><h2>AX 올림픽 · 전원 명단<small>참여 '+O.players+'명 · 4종목 완주 '+O.finishers+'명 · 만점 '+(d.max||400)+'점</small></h2>'+
+    '<p class="src">총점 분포 '+bars+'</p>'+
+    '<div class="tools" style="margin-top:10px"><input class="in" placeholder="닉네임 · 이름 · 사번 검색" oninput="GQ.oly=this.value; render()">'+
+    '<span class="src">'+rows.length+' / '+O.rows.length+'명</span><button class="btn sm" onclick="olyCsv()">CSV 내려받기</button></div>'+
+    '<div class="wrap scrolly"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th>'+
+    ev.map(function(g){ return '<th class="tdr">'+esc(GST_NAME[g])+'</th>'; }).join("")+
+    '<th class="tdr">총점</th><th class="tdr">완주</th></tr>'+body+'</table></div></div>';
+}
+function viewGameStats(){
+  var d=ST.data.gstats||{}, ev=d.events||["pang","jump","type","word"];
+  var h='<h1 style="margin-top:18px">게임별 통계<small>네 종목 전원 · 기록 단위는 종목마다 다릅니다(초 · 점) · 부문 통계는 두지 않습니다</small></h1>';
+  h+=ev.map(gstCard).join("");
+  h+=olyAllHtml();
   return h;
 }
 /* v3.50 AX 올림픽 · 종목별 목표 점수(환산 100점 기준) · 종합 상위 10(실명) · v3.50d 부문 표시 삭제 */
