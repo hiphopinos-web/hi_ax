@@ -108,8 +108,8 @@
   #pwlost .pw-err { margin-top: 10px; font-size: calc(13.5px * var(--fs)); font-weight: 700; color: var(--bad); min-height: 1px; }
   #pwlost .pw-link, #panel .pw-link { display: block; width: 100%; margin-top: 10px; border: 0; background: none; cursor: pointer; font-family: inherit; font-size: calc(14px * var(--fs)); font-weight: 700; color: var(--muted); text-decoration: underline; }
   #quick .q-card { width: 100%; max-width: 340px; text-align: center; }
-  #quick .q-eyebrow { font-size: calc(14px * var(--fs)); font-weight: 800; letter-spacing: -0.01em; color: var(--mint); }
-  #quick .q-hello { margin-top: 14px; font-size: 26px; font-weight: 800; color: var(--hi); letter-spacing: -0.02em; }
+  #quick .q-eyebrow, #pwlost .q-eyebrow { font-size: calc(14px * var(--fs)); font-weight: 800; letter-spacing: -0.01em; color: var(--mint); }
+  #quick .q-hello, #pwlost .q-hello { margin-top: 14px; font-size: 26px; font-weight: 800; color: var(--hi); letter-spacing: -0.02em; }
   #quick .q-who { margin-top: 8px; font-size: calc(15.5px * var(--fs)); color: var(--muted); }
   #quick .q-who b { color: var(--hi); font-weight: 800; }
   #quick .q-who span { margin-left: 7px; color: var(--faint); font-family: var(--disp); font-size: calc(14.5px * var(--fs)); }
@@ -117,9 +117,9 @@
   #quick input:focus { border-color: var(--mint); }
   #quick input::placeholder { letter-spacing: 0; font-size: calc(16.5px * var(--fs)); font-weight: 700; color: var(--faint); }
   #qErr { display: none; margin-top: 10px; font-size: calc(14.5px * var(--fs)); font-weight: 700; color: #E5484D; }
-  #quick .q-go { width: 100%; margin-top: 14px; border: 0; cursor: pointer; border-radius: 12px; background: var(--mint); padding: 16px; font-family: inherit; font-size: calc(16.5px * var(--fs)); font-weight: 800; color: #fff; }
-  #quick .q-go:disabled { opacity: 0.5; }
-  #quick .q-other { width: 100%; margin-top: 10px; border: 0; background: none; cursor: pointer; font-family: inherit; font-size: calc(14.5px * var(--fs)); font-weight: 700; color: var(--faint); text-decoration: underline; text-underline-offset: 3px; padding: 8px; }
+  #quick .q-go, #pwlost .q-go { width: 100%; margin-top: 14px; border: 0; cursor: pointer; border-radius: 12px; background: var(--mint); padding: 16px; font-family: inherit; font-size: calc(16.5px * var(--fs)); font-weight: 800; color: #fff; }
+  #quick .q-go:disabled, #pwlost .q-go:disabled { opacity: 0.5; }
+  #quick .q-other, #pwlost .q-other { width: 100%; margin-top: 10px; border: 0; background: none; cursor: pointer; font-family: inherit; font-size: calc(14.5px * var(--fs)); font-weight: 700; color: var(--faint); text-decoration: underline; text-underline-offset: 3px; padding: 8px; }
 
   /* ───────── 앱 셸 ─────────
      헤더 v16 · 아이덴티티(네이비칩 + 톱니)는 전 화면 고정, 그 아래 줄만 화면에 따라 바뀐다.
