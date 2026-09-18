@@ -4365,10 +4365,10 @@ var Views = {
         return '<button class="' + (e.key === evk ? "on" : "") + '" onclick="S.set(\'oly_ev\', \'' + e.key + '\'); App.render()">' + esc(e.short) + "</button>";
       }).join("") + "</div>";
       var ev = OLY_EVENTS.filter(function (e) { return e.key === evk; })[0], mv = me.ev[evk];
-      var f = function (x) { return Number(x.score).toLocaleString() + '<small class="oly-pts">' + olyFmt(x.pts) + "점</small>"; }; f.medal = true;
-      h += '<div class="card"><b style="color:var(--hi)">' + esc(ev.name) + '</b><p class="muted" style="margin:2px 0 6px;font-size:calc(12.5px * var(--fs))">목표 ' + (olyTarget()[evk] || 0).toLocaleString() + "점 = 100점</p>" +
+      var f = function (x) { return olyRec(x.score, evk) + '<small class="oly-pts">' + olyFmt(x.pts) + "점</small>"; }; f.medal = true;
+      h += '<div class="card"><b style="color:var(--hi)">' + esc(ev.name) + '</b><p class="muted" style="margin:2px 0 6px;font-size:calc(12.5px * var(--fs))">목표 ' + olyRec(olyTarget()[evk] || 0, evk) + " = 100점" + (olyLower(evk) ? " · 빠를수록 좋아요" : "") + "</p>" +
         olyRows(b.perEvent && b.perEvent[evk], f) +
-        (mv ? '<p class="muted" style="margin-top:10px">내 기록 ' + mv.best.toLocaleString() + " · 환산 " + olyFmt(mv.pts) + "점" + (mv.rank ? " · " + mv.rank + "위" : "") + "</p>" : '<button class="btn mint" style="margin-top:10px" onclick="App.go(\'' + ev.view + '\')">' + esc(ev.name) + " 한 판</button>") + "</div>";
+        (mv ? '<p class="muted" style="margin-top:10px">내 기록 ' + olyRec(mv.best, evk) + " · 환산 " + olyFmt(mv.pts) + "점" + (mv.rank ? " · " + mv.rank + "위" : "") + "</p>" : '<button class="btn mint" style="margin-top:10px" onclick="App.go(\'' + ev.view + '\')">' + esc(ev.name) + " 한 판</button>") + "</div>";
     } else {
       var f2 = function (x) { return olyFmt(x.total) + '<small class="oly-pts">/ ' + (b.max || olyMax()) + "</small>"; };
       h += '<div class="card mb8"><b style="color:var(--hi)">내 총점 ' + olyFmt(me.total) + " / " + olyMax() + "</b>" +
@@ -6914,17 +6914,25 @@ function axTodayHtml(dark) { return '<p class="ax-line' + (dark ? " dk" : "") + 
    종합 순위 = 모든 종목 1판 이상 끝낸 사람만(동점은 전 종목 완료가 이른 쪽) · 종목 순위 = 한 사람 전원 · 1~3위 금·은·동.
    명예 보상만(경품 없음) · 공개 순위는 닉네임 · 1F 현장 타자왕전(노트북·경품)은 그대로. */
 var OLY_EVENTS = [
-  { key: "pang", name: "AX 팡", short: "팡", view: "game_pang", best: "pang_best" },
+  { key: "pang", name: "AX 팡", short: "팡", view: "game_pang", best: "pang_best", lower: 1, unit: "초" },   /* v3.74 기록 = 완주 시간(1/100초) · 작을수록 좋다 */
   { key: "jump", name: "ME to WE 점프", short: "점프", view: "game_jump", best: "jump_best" },
   { key: "type", name: "AX 단어 소나기", short: "소나기", view: "game_type", best: "type_best" },
   { key: "word", name: "ME to WE 기억력", short: "기억력", view: "game_word", best: "gw_best" }
 ];
-var OLY_TARGET = { pang: 3000, jump: 1800, type: 3500, word: 480 };   /* 폴백 · 테스트 플레이 보정값(실측 뒤 콘솔에서 조정) */
+var OLY_TARGET = { pang: 4500, jump: 1800, type: 3500, word: 480 };   /* 폴백 · 팡은 목표 완주 시간 45초(4500) · 나머지는 목표 점수 (실측 뒤 콘솔에서 조정) */
 var OLY_MEDAL = ["", "금", "은", "동"];
 var OLY = { board: null, t: 0 };
 function olyMax() { return OLY_EVENTS.length * 100; }
 function olyTarget() { return (OLY.board && OLY.board.target) || OLY_TARGET; }
-function olyPts(best, key) { var t = olyTarget()[key] || 1; return Math.min(100, Math.round(best / t * 1000) / 10); }
+function olyLower(key) { return OLY_EVENTS.some(function (e) { return e.key === key && e.lower; }); }
+/* v3.74 종목마다 방향이 다르다 · 팡(완주 시간)은 목표/기록 · 나머지는 기록/목표 · 서버 olyPts_ 와 같은 식 */
+function olyPts(best, key) {
+  var t = olyTarget()[key] || 1;
+  if (olyLower(key)) return best > 0 ? Math.min(100, Math.round(t / best * 1000) / 10) : 0;
+  return Math.min(100, Math.round(best / t * 1000) / 10);
+}
+/* 기록 보여 주기 · 팡은 1/100초 → 43.2초 */
+function olyRec(best, key) { return olyLower(key) ? (best / 100).toFixed(1) + "초" : Number(best).toLocaleString(); }
 function olyFmt(n) { return (Math.round(n * 10) / 10).toLocaleString(); }
 function olyPull(force) {
   if (testMode()) { OLY.board = olyTestBoard(); return; }
@@ -6939,7 +6947,8 @@ function olyPull(force) {
 function olyMe() {
   var sv = (OLY.board && OLY.board.me) || null, me = { total: 0, done: 0, ev: {}, rank: sv ? sv.rank : 0 };
   OLY_EVENTS.forEach(function (e) {
-    var best = Math.max(S.get(e.best, 0), sv && sv.ev && sv.ev[e.key] ? sv.ev[e.key].best : 0);
+    var lb = S.get(e.best, 0), sb = sv && sv.ev && sv.ev[e.key] ? sv.ev[e.key].best : 0;
+    var best = e.lower ? (lb && sb ? Math.min(lb, sb) : (lb || sb)) : Math.max(lb, sb);
     if (best > 0) {
       var pts = olyPts(best, e.key), sve = sv && sv.ev && sv.ev[e.key];
       me.ev[e.key] = { best: best, pts: pts, rank: sve ? sve.rank : 0, medal: sve ? sve.medal : 0 };
@@ -6974,7 +6983,7 @@ function olyHubHtml() {
       var v = me.ev[e.key];
       return rcHtml({ cls: v ? " done" : "", onclick: "App.go('" + e.view + "')", link: true, left: tokBadge(e.short, v ? "mine" : ""),
         title: esc(e.name), badges: v ? olyMedalHtml(v.medal) : "",
-        sub: v ? "최고 " + v.best.toLocaleString() + (v.rank ? " · 종목 " + v.rank + "위" : "") : "",   /* 오른쪽 숫자 = 환산 점수 */
+        sub: v ? "최고 " + olyRec(v.best, e.key) + (v.rank ? " · 종목 " + v.rank + "위" : "") : "",   /* 오른쪽 숫자 = 환산 점수 */
         right: '<span class="st">' + (v ? olyFmt(v.pts) : "-") + "</span>" });
     }).join("") +
     '<button class="btn line" style="margin-top:4px" onclick="App.go(\'oly_rank\')">AX 올림픽 순위판</button>' +
@@ -6983,16 +6992,16 @@ function olyHubHtml() {
 }
 /* 테스트 모드 순위판 · 가짜 참가자 + 이 기기 기록 · 서버와 같은 규칙으로 계산 */
 var OLY_FAKE = [
-  ["팡팡요정", { pang: 4200, jump: 1500, type: 3300, word: 430 }],
-  ["점프왕", { pang: 2600, jump: 2100, type: 2900, word: 470 }],
-  ["타자요정", { pang: 1900, jump: 1200, type: 4380, word: 400 }],
-  ["기억의신", { pang: 2100, jump: 1300, type: 2500, word: 540 }],
-  ["연쇄장인", { pang: 3800, jump: 900, type: 2100, word: 350 }],
-  ["미위팬", { pang: 2400, jump: 1700, type: 2010, word: 380 }],
-  ["코인수집가", { pang: 1500, jump: 1900, word: 300 }],
-  ["공감참여", { pang: 900, type: 980 }],
+  ["팡팡요정", { pang: 4120, jump: 1500, type: 3300, word: 430 }],
+  ["점프왕", { pang: 5230, jump: 2100, type: 2900, word: 470 }],
+  ["타자요정", { pang: 6180, jump: 1200, type: 4380, word: 400 }],
+  ["기억의신", { pang: 5690, jump: 1300, type: 2500, word: 540 }],
+  ["연쇄장인", { pang: 3980, jump: 900, type: 2100, word: 350 }],
+  ["미위팬", { pang: 5040, jump: 1700, type: 2010, word: 380 }],
+  ["코인수집가", { pang: 7250, jump: 1900, word: 300 }],
+  ["공감참여", { pang: 8800, type: 980 }],
   ["혁신연결", { jump: 700, word: 260 }],
-  ["로드맵러", { pang: 3100, jump: 1600, type: 3120, word: 410 }]
+  ["로드맵러", { pang: 4460, jump: 1600, type: 3120, word: 410 }]
 ];
 function olyTestBoard() {
   var people = OLY_FAKE.map(function (x, i) { return { name: x[0], best: x[1], doneAt: "2026-10-26 1" + (i % 10) + ":00:00" }; });
@@ -7001,12 +7010,12 @@ function olyTestBoard() {
   var tgt = OLY_TARGET, keys = OLY_EVENTS.map(function (e) { return e.key; });
   people.forEach(function (p) {
     p.pts = {}; p.total = 0; p.done = 0;
-    keys.forEach(function (k) { if (p.best[k] > 0) { p.pts[k] = Math.min(100, Math.round(p.best[k] / tgt[k] * 1000) / 10); p.total += p.pts[k]; p.done++; } });
+    keys.forEach(function (k) { if (p.best[k] > 0) { p.pts[k] = olyPts(p.best[k], k); p.total += p.pts[k]; p.done++; } });
     p.total = Math.round(p.total * 10) / 10;
   });
   var overall = people.filter(function (p) { return p.done === keys.length; }).sort(function (a, b) { return b.total - a.total || (a.doneAt < b.doneAt ? -1 : 1); });
   var per = {};
-  keys.forEach(function (k) { per[k] = people.filter(function (p) { return p.best[k] > 0; }).sort(function (a, b) { return b.best[k] - a.best[k]; }); });
+  keys.forEach(function (k) { per[k] = people.filter(function (p) { return p.best[k] > 0; }).sort(function (a, b) { return olyLower(k) ? a.best[k] - b.best[k] : b.best[k] - a.best[k]; }); });
   var meP = people[people.length - 1], meEv = {};
   keys.forEach(function (k) { var r = per[k].indexOf(meP) + 1; meEv[k] = meP.best[k] > 0 ? { best: meP.best[k], pts: meP.pts[k], rank: r, medal: r >= 1 && r <= 3 ? r : 0 } : null; });
   return { ok: true, test: true, events: keys, max: keys.length * 100, target: tgt, players: people.length, finishers: overall.length,
@@ -7206,9 +7215,9 @@ function gsRankGo(key) { return key === "type" ? "App.go('type_rank')" : "S.set(
 function gsResultHtml(key, r) {
   var g = GS_GAMES[key];
   return '<div class="cho-box" style="padding:24px 18px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' +
-    esc(g.name) + " · " + (r.why === "time" ? "TIME UP" : "GAME OVER") + " · " + esc(typeNick() || "익명 참가자") + "</p>" +
+    esc(g.name) + " · " + (r.why === "done" ? "완주" : r.why === "time" ? "TIME UP" : "GAME OVER") + " · " + esc(typeNick() || "익명 참가자") + "</p>" +
     (r.reason ? '<p style="margin-top:6px;font-size:calc(15px * var(--fs));font-weight:800">' + esc(r.reason) + "</p>" : "") +
-    '<p class="disp" style="font-size:44px;color:var(--mint);margin-top:6px">' + Number(r.score).toLocaleString() + "</p>" +
+    '<p class="disp" style="font-size:44px;color:var(--mint);margin-top:6px">' + (typeof r.score === "string" ? esc(r.score) : Number(r.score).toLocaleString()) + "</p>" +
     '<p class="hint">' + r.stats + "<br>" + (r.rankLine || "") + "</p>" + "</div>" +
     (r.banner || "") +
     '<button class="btn mint mb8" style="padding:15px" onclick="' + g.start + '">다시 하기</button>' +
@@ -7225,21 +7234,22 @@ function gsResultHtml(key, r) {
    흰 바탕 · 둥근 사각 타일(그림자 없음, 얇은 선) · SICO 문법 벡터 아이콘 5종(모양 + 채움색 둘 다로 구분) ·
    특수 블록 = 검정 타일 + 흰 화살표 선 + O100 테두리 · 앱 기본 글꼴 · 캔버스는 기기 해상도로 그린다(도트 확대 없음).
    채움: 말풍선 흰색 · 톱니 검정 · 차트 O100 · 전구 O10 · 반짝임 O50 (아이콘은 흰색 또는 검정). 점 파티클 = KV 도트 격자 모티프. */
-var PG_N = 7, PG_TS = 24, PG_W = 180, PG_H = 236, PG_OX = 6, PG_OY = 38, PG_KINDS = 5, PG_SEC = 60;
-var PG_HINT_FIRST = 3, PG_HINT_AGAIN = 5;   /* v3.66 힌트 · 첫 3초 · 이후 5초마다 (판이 그대로라 같은 수를 다시 보여 준다) */
+var PG_N = 7, PG_TS = 24, PG_W = 180, PG_H = 236, PG_OX = 6, PG_OY = 38, PG_KINDS = 5;
+/* v3.74 (사용자 확정 260918) 60초 제한 → 완주 시간 경쟁 · 목표 타일을 다 터뜨릴 때까지 걸린 시간이 기록이다.
+   목표 타일 수·제한 시간은 여기 한 곳 · 올림픽 환산 목표 시간은 OLY_TARGET.pang(1/100초 · 콘솔 조정)이다. */
+var PG_GOAL = 80, PG_MAX_SEC = 120;   /* v3.74 실측 · 한 수에 평균 4~5칸이 터져 40칸은 9수면 끝났다 → 80칸(약 18수)으로 올림 */
+var PG_FIN = { fall: 1.5, hold: 2.0 };   /* 완주 연출 · 타일이 무너지는 시간 · 슬로건이 머무는 시간 */
+var PG_HINT_FIRST = 5, PG_HINT_AGAIN = 5;   /* v3.74 힌트 · 첫 5초 · 이후 5초마다 (v3.66 의 3초는 너무 빨랐다) */
 var PG_C = { o100: "#FF7E31", o50: "#FFB284", o10: "#FFEBE0", ink: "#111111", w: "#FFFFFF", line: "#E6E0DB", track: "#EFEDEB", muted: "#8A817B", tx: "#1A1A1A" };
-/* v3.73 (사용자 확정 260918) 타일마다 AI 기본 소양 낱말을 붙인다 · 그림과 뜻이 맞는 쪽으로 배치.
-   말풍선=프롬프트(묻는 말) · 톱니=자동화(대신 돌아가는 일) · 차트=데이터 · 전구=아이디어 · 반짝임=생성 · 특수 블록=에이전트.
-   문구 규칙은 v3.67과 같다(제품·회사 홍보 금지 · 확인 안 된 숫자 금지 · 과장·겁주는 말 금지). */
+/* v3.74 (사용자 피드백 260918 「교육 기능이 어설프다」) v3.73 타일 낱말·설명 줄은 걷어냈다 · 타일은 그냥 그림이다.
+   교육 문구는 완주했을 때 뜨는 슬로건 한 번뿐이다(그게 보상이라 어색하지 않다). */
 var PG_TILE = [
-  { name: "말풍선", term: "프롬프트", line: "프롬프트 · 주고 싶은 질문이나 지시", fill: PG_C.w, ic: PG_C.ink, line2: "#D9D2CC" },
-  { name: "톱니", term: "자동화", line: "자동화 · 반복 일을 대신 돌게 만드는 것", fill: PG_C.ink, ic: PG_C.w, line2: PG_C.ink },
-  { name: "차트", term: "데이터", line: "데이터 · 판단의 바탕이 되는 기록", fill: PG_C.o100, ic: PG_C.w, line2: PG_C.o100 },
-  { name: "전구", term: "아이디어", line: "아이디어 · 업무에 써 볼 생각 한 줄", fill: PG_C.o10, ic: PG_C.ink, line2: "#FFD3BA" },
-  { name: "반짝임", term: "생성", line: "생성 · 새 글과 그림을 만들어 내는 일", fill: PG_C.o50, ic: PG_C.ink, line2: PG_C.o50 }
+  { name: "말풍선", fill: PG_C.w, ic: PG_C.ink, line: "#D9D2CC" },
+  { name: "톱니", fill: PG_C.ink, ic: PG_C.w, line: PG_C.ink },
+  { name: "차트", fill: PG_C.o100, ic: PG_C.w, line: PG_C.o100 },
+  { name: "전구", fill: PG_C.o10, ic: PG_C.ink, line: "#FFD3BA" },
+  { name: "반짝임", fill: PG_C.o50, ic: PG_C.ink, line: PG_C.o50 }
 ];
-var PG_AGENT_LINE = "에이전트 · 맡기면 여러 단계를 알아서 처리";
-var PG_LINE_EVERY = 5;   /* 다섯 번 맞출 때마다 · 타일 종류별 첫 매치에도 한 줄 */
 var PG_FONT = '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif';
 function pgRR(ctx, x, y, w, h, r) {
   ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
@@ -7358,7 +7368,7 @@ function pgStart() {
   pgStop();
   SFX.site = false;
   PG = { on: true, paused: false, ending: null, raf: 0, cd: 3.2, t0: 0, last: performance.now(), b: pgBoardInit(), phase: "idle", sel: null, pair: null, drag: null, k: 1,
-    idle: 0, hint: null, hintN: 0, hintT: 0, hits5: 0, seenT: {}, chain: 0, clrT: 0, lines: [], parts: [], pops: [], banner: null, combo: null, score: 0, tiles: 0, maxChain: 0, specials: 0, moves: 0, shuffles: 0 };
+    idle: 0, hint: null, hintN: 0, hintT: 0, chain: 0, clrT: 0, lines: [], parts: [], pops: [], banner: null, combo: null, score: 0, tiles: 0, maxChain: 0, specials: 0, moves: 0, shuffles: 0 };
   gsOverlayOpen({ key: "pang", title: "AX 팡", cw: PG_W, ch: PG_H, canvasId: "pgCv", noGesture: true, flat: true,
     bottom: '<div class="gs-foot">이웃한 두 칸을 밀어서 바꾸거나, 한 칸 누르고 옆 칸을 누르세요</div>',
     down: pgDown, move: pgMove, up: pgUp, resized: pgFit,
@@ -7453,30 +7463,10 @@ function pgDots(x, y, n) {
 /* 터뜨리기 · 4개 이상 줄은 그 자리(바꾼 칸이 있으면 그 칸)에 특수 블록 · 특수 블록이 터지면 그 줄 전체 */
 function pgClear(runs) {
   PG.chain++;
+  /* v3.74 특수 블록(줄 지우기) 폐지 (사용자 피드백 260918 「기능이 이해되지 않고 헷갈린다」)
+     4개 이상 한 줄은 그만큼 칸이 많이 터져 점수·목표 진행이 더 빠르다 = 여전히 이득 · 설명이 필요한 장치만 뺐다 */
   var mult = Math.min(PG.chain, 5), b = PG.b, kill = {}, makes = [];
-  runs.forEach(function (run) {
-    run.cells.forEach(function (p) { kill[p[0] + "," + p[1]] = 1; });
-    if (run.cells.length >= 4) {
-      var pos = run.cells[Math.floor(run.cells.length / 2)];
-      if (PG.pair) PG.pair.forEach(function (q) { run.cells.forEach(function (p) { if (p[0] === q[0] && p[1] === q[1]) pos = p; }); });
-      makes.push({ r: pos[0], c: pos[1], t: b[pos[0]][pos[1]].t, sp: run.dir });
-    }
-  });
-  var queue = Object.keys(kill), seen = {};
-  while (queue.length) {
-    var k = queue.pop(); if (seen[k]) continue; seen[k] = 1;
-    var rc = k.split(","), r = +rc[0], c = +rc[1], tile = b[r][c];
-    if (tile.sp) {
-      PG.lines.push({ r: r, c: c, dir: tile.sp, t: 0.28 });
-      PG.banner = { text: PG_AGENT_LINE, t: 1.5 };   /* v3.73 줄 지우기 블록이 터질 때 = 에이전트 */
-      sfx("kwang");
-      for (var i = 0; i < PG_N; i++) {
-        var kk = tile.sp === "h" ? r + "," + i : i + "," + c;
-        if (!kill[kk]) { kill[kk] = 1; queue.push(kk); }
-      }
-    }
-  }
-  makes.forEach(function (m) { delete kill[m.r + "," + m.c]; });
+  runs.forEach(function (run) { run.cells.forEach(function (p) { kill[p[0] + "," + p[1]] = 1; }); });
   var n = 0, sx = 0, sy = 0;
   Object.keys(kill).forEach(function (k2) {
     var rc2 = k2.split(","), t2 = b[+rc2[0]][+rc2[1]];
@@ -7485,25 +7475,12 @@ function pgClear(runs) {
     sx += px; sy += py;
     pgDots(px, py, n <= 8 ? 7 : 3);
   });
-  makes.forEach(function (m) { var t3 = b[m.r][m.c]; t3.t = m.t; t3.sp = m.sp; t3.clr = 0; t3.born = 0.3; PG.specials++; });
-  var cnt = n + makes.length, gain = cnt * 10 * mult;
+  var cnt = n, gain = cnt * 10 * mult;
   PG.score += gain; PG.tiles += cnt; PG.maxChain = Math.max(PG.maxChain, PG.chain);
   if (n) PG.pops.push({ x: sx / n, y: sy / n, text: "+" + gain, t: 0, life: 0.7 });
-  /* v3.73 무엇을 맞췄는지 낱말로 · 점수 팝과 겹치지 않게 아래 · 한 번에 여러 종류면 한 종류만 */
-  var big = null;
-  runs.forEach(function (run) { var t4 = b[run.cells[0][0]] && b[run.cells[0][0]][run.cells[0][1]]; if (!big && t4) big = PG_TILE[t4.t]; });
-  if (n && big) {
-    PG.pops.push({ x: sx / n, y: sy / n + 14, text: big.term, t: 0, life: 0.8, small: 1 });
-    PG.hits5 = (PG.hits5 || 0) + 1;
-    PG.seenT = PG.seenT || {};
-    var firstOfKind = !PG.seenT[big.term];
-    if (firstOfKind || PG.hits5 % PG_LINE_EVERY === 0) {
-      PG.seenT[big.term] = 1;
-      PG.banner = { text: big.line, t: 1.5 };
-    }
-  }
   if (PG.chain >= 2) PG.combo = { n: mult, t: 0 };
-  else if (makes.length) PG.banner = { text: PG_AGENT_LINE, t: 1.5 };   /* v3.73 특수 블록 = 에이전트 */
+  /* v3.74 목표 타일을 다 터뜨리면 완주 · 시간이 기록이 된다 */
+  if (!PG.ending && PG.tiles >= PG_GOAL) pgEnd("goal");
   sfx(PG.chain >= 2 ? "cascade" : "ppok", PG.chain);
   PG.pair = null; PG.clrT = 0.18; PG.phase = "clear";
 }
@@ -7541,7 +7518,7 @@ function pgUpdate(dt, now) {
     if (PG.cd <= 0) { PG.t0 = now; sfx("go"); }
     return;
   }
-  if (pgEl(now) >= PG_SEC) { pgEnd("time"); return; }
+  if (pgEl(now) >= PG_MAX_SEC) { pgEnd("time"); return; }   /* v3.74 120초까지 못 끝내면 미완주 (벌칙 없음) */
   pgFx(dt);
   if (PG.phase === "idle") {
     PG.idle += dt;
@@ -7578,20 +7555,41 @@ function pgUpdate(dt, now) {
 }
 function pgEnd(why) {
   if (!PG.on || PG.ending) return;
-  PG.ending = { t: 1.2, why: why }; PG.sel = null; PG.hint = null; PG.drag = null;
+  var done = why === "goal";
+  PG.fin = done ? Math.round(pgEl(performance.now()) * 100) : 0;   /* 완주 기록 = 1/100초 */
+  PG.ending = { t: done ? PG_FIN.fall + PG_FIN.hold : 1.2, why: why, done: done };
+  PG.sel = null; PG.hint = null; PG.drag = null;
   sfx("fanfare");
+}
+/* v3.74 완주 연출 · 타일이 아래로 무너지고 뒤에서 슬로건이 드러난다 (transform·투명도만 · 모션 줄이기면 사라지기만) */
+function pgFinDraw(ctx, now) {
+  var e = PG.ending; if (!e || !e.done) return;
+  var gone = (PG_FIN.fall + PG_FIN.hold) - e.t, k = Math.min(1, gone / PG_FIN.fall), rm = rgReduced();
+  ctx.save();
+  ctx.globalAlpha = Math.min(1, Math.max(0, (gone - PG_FIN.fall * 0.35) / 0.5));
+  pgText(ctx, "ME to WE", PG_W / 2, PG_OY + 74, 26, 900, PG_C.o100, "center");
+  pgText(ctx, "나의 업무 혁신,", PG_W / 2, PG_OY + 100, 11, 800, PG_C.tx, "center");
+  pgText(ctx, "우리 회사의 AX가 되다", PG_W / 2, PG_OY + 116, 11, 800, PG_C.tx, "center");
+  pgText(ctx, (PG.fin / 100).toFixed(1) + "초 완주", PG_W / 2, PG_OY + 142, 12, 800, PG_C.o100, "center");
+  ctx.restore();
+  return k;
 }
 function pgEndFinal(why) {
   if (!PG.on) return;
+  var done = why === "goal", fin = PG.fin || 0;
   PG.ending = null;
   pgStop();
-  if (PG.score > 0 && PG.score > S.get("pang_best", 0)) setTimeout(function () { sfx("best"); }, 250);
-  S.set("pang_best", Math.max(S.get("pang_best", 0), PG.score));
-  gameClear("pang_cleared");
+  gameClear("pang_cleared");   /* 미완주여도 스탬프는 적립 */
+  var prev = S.get("pang_best", 0);
+  if (done) {
+    if (!prev || fin < prev) { S.set("pang_best", fin); setTimeout(function () { sfx("best"); }, 250); }
+    olySubmit("pang", fin);
+  }
   var root = el("pgRoot"); if (!root) return;
-  olySubmit("pang", PG.score);
-  root.innerHTML = gsResultHtml("pang", { why: why, reason: "", score: PG.score,
-    stats: "터뜨린 칸 " + PG.tiles + "개 · 최고 연쇄 " + PG.maxChain + " · 특수 블록 " + PG.specials + "개", rankLine: olyResultLine("pang", PG.score) });
+  root.innerHTML = gsResultHtml("pang", { why: done ? "done" : why, reason: "",
+    score: done ? (fin / 100).toFixed(1) + "초" : "미완주",
+    stats: "터뜨린 칸 " + PG.tiles + " / " + PG_GOAL + "개 · 최고 연쇄 " + PG.maxChain,
+    rankLine: done ? olyResultLine("pang", fin) : "완주하면 순위에 올라가요" });
   window.scrollTo(0, 0);
 }
 function pgText(ctx, text, x, y, size, weight, col, align) {
@@ -7602,10 +7600,11 @@ function pgDraw(ctx, now) {
   ctx.setTransform(PG.k, 0, 0, PG.k, 0, 0);
   ctx.fillStyle = PG_C.w; ctx.fillRect(0, 0, PG_W, PG_H);
   /* 위 · 점수(앱 숫자 스타일) · 콤보 팝 · 남은 시간 막대 */
-  var left = PG.t0 ? Math.max(0, PG_SEC - pgEl(now)) : PG_SEC, frac = left / PG_SEC;
-  pgText(ctx, "점수", PG_OX, 8, 7, 700, PG_C.muted);
-  pgText(ctx, PG.score.toLocaleString(), PG_OX, 20, 14, 800, PG_C.tx);
-  pgText(ctx, Math.ceil(left) + "초", PG_W - PG_OX, 20, 11, 700, frac < 0.2 ? PG_C.o100 : PG_C.tx, "right");
+  /* v3.74 남은 타일 · 올라가는 시간 · 진행 막대는 목표까지의 비율 */
+  var elp = PG.t0 ? pgEl(now) : 0, leftT = Math.max(0, PG_GOAL - PG.tiles), frac = Math.min(1, PG.tiles / PG_GOAL);
+  pgText(ctx, "남은 타일", PG_OX, 8, 7, 700, PG_C.muted);
+  pgText(ctx, String(leftT), PG_OX, 20, 14, 800, leftT <= 8 ? PG_C.o100 : PG_C.tx);
+  pgText(ctx, (Math.round(elp * 10) / 10).toFixed(1) + "초", PG_W - PG_OX, 20, 11, 700, PG_C.tx, "right");
   if (PG.combo) {
     var cp = Math.min(1, PG.combo.t / 0.2), cs = 1.3 - 0.3 * pgEase(cp, "out"), ca = PG.combo.t > 0.8 ? Math.max(0, 1 - (PG.combo.t - 0.8) / 0.3) : 1;
     ctx.save(); ctx.globalAlpha = ca; ctx.translate(PG_W / 2, 18); ctx.scale(cs, cs);
@@ -7630,7 +7629,7 @@ function pgDraw(ctx, now) {
   });
   ctx.globalAlpha = 1;
   var by = PG_OY + PG_N * PG_TS;
-  pgText(ctx, "4개 이상 맞추면 줄 지우기 블록", PG_W / 2, by + 11, 8, 600, PG_C.muted, "center");
+  pgText(ctx, "같은 그림 3개를 한 줄로", PG_W / 2, by + 11, 8, 600, PG_C.muted, "center");
   if (PG.banner) {
     /* v3.73 안내 줄은 판 아래 정보 줄 자리에 · 타일을 가리거나 판을 밀지 않는다 */
     ctx.font = "700 9px " + PG_FONT;
@@ -7639,11 +7638,19 @@ function pgDraw(ctx, now) {
     pgText(ctx, PG.banner.text, PG_W / 2, by2 + 9, 9, 700, PG_C.w, "center");
   }
   if (PG.ending || PG.cd > 0) {
+    if (PG.ending && PG.ending.done) {
+      /* v3.74 완주 · 타일이 무너지고 뒤에서 슬로건이 드러난다 (판 위에 흰 막을 서서히 덮는다) */
+      var gone2 = (PG_FIN.fall + PG_FIN.hold) - PG.ending.t;
+      ctx.fillStyle = "rgba(255,255,255," + Math.min(0.96, Math.max(0, gone2 / PG_FIN.fall)).toFixed(3) + ")";
+      ctx.fillRect(0, PG_OY - 4, PG_W, PG_N * PG_TS + 8);
+      pgFinDraw(ctx, now);
+      return;
+    }
     ctx.fillStyle = "rgba(255,255,255,0.82)"; ctx.fillRect(0, PG_OY - 4, PG_W, PG_N * PG_TS + 8);
     if (PG.ending) {
       pgRR(ctx, 22, PG_OY + 52, PG_W - 44, 60, 10); ctx.fillStyle = PG_C.w; ctx.fill(); ctx.lineWidth = 0.8; ctx.strokeStyle = PG_C.line; ctx.stroke();
       pgText(ctx, "시간 종료", PG_W / 2, PG_OY + 74, 14, 800, PG_C.tx, "center");
-      pgText(ctx, "60초 완주 · " + PG.score.toLocaleString() + "점", PG_W / 2, PG_OY + 94, 9, 700, PG_C.o100, "center");
+      pgText(ctx, "터뜨린 칸 " + PG.tiles + " / " + PG_GOAL, PG_W / 2, PG_OY + 94, 9, 700, PG_C.o100, "center");
     } else {
       var n = PG.cd > 1 ? String(Math.ceil(PG.cd - 0.2)) : "시작", f = PG.cd % 1, s = 1 + 0.15 * Math.max(0, f - 0.7) / 0.3;
       ctx.save(); ctx.translate(PG_W / 2, PG_OY + PG_N * PG_TS / 2); ctx.scale(s, s);
@@ -7653,6 +7660,9 @@ function pgDraw(ctx, now) {
   }
 }
 function pgBoardDraw(ctx, b, now, live) {
+  /* v3.74 완주 연출 · 열마다 시차를 두고 아래로 무너진다 · 모션 줄이기면 그 자리에서 사라진다 */
+  var fin = PG.ending && PG.ending.done ? Math.min(1, ((PG_FIN.fall + PG_FIN.hold) - PG.ending.t) / PG_FIN.fall) : 0;
+  var finRm = fin && rgReduced();
   var bw = PG_N * PG_TS;
   ctx.save();
   pgRR(ctx, PG_OX - 2, PG_OY - 2, bw + 4, bw + 4, 8); ctx.clip();
@@ -7665,6 +7675,11 @@ function pgBoardDraw(ctx, b, now, live) {
     if (t.clr) { var q = live ? 1 - Math.max(0, PG.clrT / 0.18) : 0; sc = 1 - 0.4 * q; al = 1 - q; }
     var isHint = hintOn && ((PG.hint[0][0] === r && PG.hint[0][1] === c) || (PG.hint[1][0] === r && PG.hint[1][1] === c));
     if (isHint) { sc *= pulse; cy -= rmH ? 0 : 1.2; }
+    if (fin) {
+      var lag = Math.max(0, Math.min(1, (fin - c * 0.045) / 0.6));
+      if (finRm) al *= 1 - fin;
+      else { cy += lag * lag * (PG_H + 40); al *= 1 - lag * 0.9; }
+    }
     if (t.born > 0) sc *= 1 + 0.25 * (t.born / 0.3);
     if (al <= 0) continue;
     var sel = live && PG.sel && PG.sel[0] === r && PG.sel[1] === c;
@@ -7675,18 +7690,8 @@ function pgBoardDraw(ctx, b, now, live) {
     }
     var st = PG_TILE[t.t], half = 10.8;
     pgRR(ctx, -half, -half, half * 2, half * 2, 4.2);
-    if (t.sp) {
-      ctx.fillStyle = PG_C.ink; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = PG_C.o100; ctx.stroke();
-      ctx.strokeStyle = PG_C.w; ctx.lineWidth = 1.3; ctx.lineCap = "round"; ctx.lineJoin = "round";
-      ctx.save(); if (t.sp === "v") ctx.rotate(Math.PI / 2);
-      ctx.beginPath(); ctx.moveTo(-7.5, 0); ctx.lineTo(7.5, 0);
-      ctx.moveTo(-4.8, -2.8); ctx.lineTo(-7.5, 0); ctx.lineTo(-4.8, 2.8); ctx.moveTo(4.8, -2.8); ctx.lineTo(7.5, 0); ctx.lineTo(4.8, 2.8); ctx.stroke();
-      ctx.restore();
-      pgIconDraw(ctx, t.t, t.sp === "v" ? -5.2 : 0, t.sp === "v" ? 0 : -5.2, 7.5, PG_C.w);
-    } else {
-      ctx.fillStyle = st.fill; ctx.fill(); ctx.lineWidth = 0.75; ctx.strokeStyle = st.line2; ctx.stroke();
-      pgIconDraw(ctx, t.t, 0, 0, 13.5, st.ic);
-    }
+    ctx.fillStyle = st.fill; ctx.fill(); ctx.lineWidth = 0.75; ctx.strokeStyle = st.line; ctx.stroke();
+    pgIconDraw(ctx, t.t, 0, 0, 13.5, st.ic);
     if (sel) { pgRR(ctx, -half - 1.4, -half - 1.4, half * 2 + 2.8, half * 2 + 2.8, 5.4); ctx.lineWidth = 1.6; ctx.strokeStyle = PG_C.o100; ctx.stroke(); }
     ctx.restore();
   }
