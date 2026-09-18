@@ -583,16 +583,24 @@
   /* v3.87b (사용자 레퍼런스 260918) 둥근 조작 버튼이 판 아래 빈 띠에 떠 있다 · 상자형 패널 없음 ·
      왼손 십자(위 = 바닥까지 · 아래 = 한 칸씩 · 좌우 이동) · 오른손 회전 둘(반시계 · 시계) · 색은 우리 팔레트(주황·검정·흰색). */
   #rgPlay .tt-pad { flex: none; position: relative; display: flex; align-items: flex-start; justify-content: space-between; height: 152px; padding: 6px 14px calc(6px + env(safe-area-inset-bottom, 0px)); background: #fff; touch-action: none; user-select: none; -webkit-user-select: none; }
-  #rgPlay .tt-dpad { position: relative; width: 168px; height: 118px; flex: none; }
-  #rgPlay .tt-rot { position: relative; width: 132px; height: 124px; flex: none; }
-  #rgPlay .tt-c { position: absolute; width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,0.55); background: rgba(255,255,255,0.92); color: #000; display: flex; align-items: center; justify-content: center; padding: 0; touch-action: none; }
-  #rgPlay .tt-c svg { width: 25px; height: 25px; fill: currentColor; }
-  #rgPlay .tt-c.on { background: #FF7E31; border-color: #D64524; color: #fff; }
+  /* v3.95 버튼 다섯 개 모두 같은 원(58px) · 옅은 테두리 + 얕은 그림자 · 눌림 = 오렌지 채움 + 흰 글리프 · 자리는 v3.87d 그대로 */
+  #rgPlay .tt-dpad { position: relative; width: 174px; height: 118px; flex: none; }
+  #rgPlay .tt-rot { position: relative; width: 124px; height: 118px; flex: none; }
+  #rgPlay .tt-c { position: absolute; width: 58px; height: 58px; border-radius: 50%; border: 1px solid #DDD3CB; background: #fff; color: #1F1B18; display: flex; align-items: center; justify-content: center; padding: 0; touch-action: none;
+    box-shadow: 0 2px 6px rgba(31, 27, 24, 0.12), 0 1px 1px rgba(31, 27, 24, 0.06); transition: transform 0.06s, background-color 0.06s; }
+  #rgPlay .tt-c svg { width: 24px; height: 24px; fill: currentColor; }
+  #rgPlay .tt-c.on { background: #FF7E31; border-color: #FF7E31; color: #fff; box-shadow: 0 1px 2px rgba(214, 69, 36, 0.3); transform: scale(0.96); }
   #rgPlay .tt-dpad .lf { left: 0; top: 0; }
-  #rgPlay .tt-dpad .rt { left: 112px; top: 0; }
-  #rgPlay .tt-dpad .dn { left: 56px; top: 60px; }
-  #rgPlay .tt-rot .cw { left: 0; top: 58px; width: 60px; height: 60px; }      /* 회전 · 엄지 안쪽 아래 */
-  #rgPlay .tt-rot .up { left: 64px; top: 0; width: 66px; height: 66px; }      /* 바닥까지 · 대각선 바깥 위 */
+  #rgPlay .tt-dpad .rt { left: 116px; top: 0; }
+  #rgPlay .tt-dpad .dn { left: 58px; top: 58px; }
+  #rgPlay .tt-rot .cw { left: 0; top: 58px; }      /* 회전 · 엄지 안쪽 아래 */
+  #rgPlay .tt-rot .up { left: 64px; top: 0; }      /* 바닥까지 · 대각선 바깥 위 */
+  #rgPlay.tetris .rg-hud { gap: 14px; }
+  #rgPlay.tetris .rg-hud .rg-sc { min-width: 0; }
+  #rgPlay.tetris .rg-hud .rg-sc small { font-size: 12px; }
+  #rgPlay.tetris .rg-hud .rg-sc b { font-size: 20px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  #rgPlay.tetris .rg-hud .rg-sc.tm b { min-width: 3.6em; }   /* 초가 늘어도 옆 칸이 밀리지 않게 */
+  #rgPlay.tetris .rg-hud .snd-btn, #rgPlay.tetris .rg-hud .rgp-x { height: 44px; min-height: 44px; border: 1px solid #DDD3CB; border-radius: 12px; background: #fff; box-shadow: 0 1px 3px rgba(31, 27, 24, 0.08); font-size: 13px; font-weight: 800; color: #1F1B18; }
   #rgPlay .tt-cap { position: absolute; left: 0; right: 0; bottom: calc(5px + env(safe-area-inset-bottom, 0px)); text-align: center; font-size: 10.5px; font-weight: 700; color: var(--muted); pointer-events: none; margin: 0; }
   #rgPlay.tetris .rgp-mid { background: #fff; touch-action: none; }   /* v3.87d 세로로 쓸 때 브라우저가 스크롤로 가로채 pointercancel 을 던지던 것을 막는다 */
   .rg-form .input { flex: 1; font-size: 18px; border: 2px solid #000; }
@@ -7374,10 +7382,22 @@ var TT_PIECES = {
   L: { c: "gray", m: [[0, 0, 1], [1, 1, 1], [0, 0, 0]] }
 };
 var TT_KEYS = ["I", "O", "T", "S", "Z", "J", "L"];
+/* v3.95 블록 채움 7색 · 오렌지 사다리 4단 + 무채색 3단(숯·회·웜화이트) · 가장자리는 채움을 한 단 어둡게 1px · 글자는 채움 밝기로 흰/먹 */
+var TT_FILL = { I: "#FF7E31", O: "#2A2522", T: "#FFA46E", S: "#D64524", Z: "#FFCFB0", J: "#F6F1ED", L: "#B8AEA6" };
+var TT_EDGE = { I: "#D9621F", O: "#000000", T: "#E0844D", S: "#A93318", Z: "#E3AE8C", J: "#CFC6BF", L: "#948980" };
+var TT_INK = { I: "#FFFFFF", O: "#FFFFFF", T: "#1F1B18", S: "#FFFFFF", Z: "#1F1B18", J: "#1F1B18", L: "#1F1B18" };
+function ttFill(k) { return TT_FILL[k] || RAIN_PAL.gray; }
+function ttInk(k) { return TT_INK[k] || RAIN_PAL.ink; }
+/* 지금 떨어지는 블록 = 채움을 흰색 쪽으로 14% 밝힌다 */
+function ttLift(hex) {
+  var n = parseInt(hex.slice(1), 16), m = function (v) { return Math.round(v + (255 - v) * 0.14); };
+  return "rgb(" + m(n >> 16) + "," + m((n >> 8) & 255) + "," + m(n & 255) + ")";
+}
 /* v3.87 (사용자 요청 260918) 블록마다 짧은 말 한 조각 · 장식일 뿐 설명·팝업은 없다.
    블록 한 칸에만 찍는다(모든 칸에 쓰면 판이 지저분하다) · 칸이 TT_TOK_MIN 보다 작으면 글자를 아예 안 쓴다(뭉개느니 빼는 쪽). */
 var TT_TOKEN = { I: "ME", O: "to", T: "WE", S: "AX", Z: "공감", J: "참여", L: "연결" };
 var TT_TOK_MIN = 23;
+var TT_CLEAR_SEC = 0.2, TT_FLASH_SEC = 0.08;   /* v3.95 줄 지우기 연출 · 흰 번쩍 0.08초 → 세로로 접힘 0.12초 (구 0.28초 깜빡임) */
 var TT_LV_LINES = 3;   /* v3.87e (사용자 피드백 260918 「단계가 30% 정도 빨리 올라가면 좋겠다」) 레벨 상승에 필요한 줄 수 5 → 3 · 4줄로는 보통 한 판(2~4줄)에서 레벨이 한 번도 안 올랐다(실측) */
 var TT_KICK = [[0, 0], [-1, 0], [1, 0], [-2, 0], [2, 0], [0, -1], [-1, -1], [1, -1]];   /* 벽·블록에 막히면 이 순서로 밀어 본다 */
 var TT = { on: false, raf: 0, L: null, parts: [], pops: [] };
@@ -7467,7 +7487,7 @@ function ttLock() {
     if (ok) full.push(r);
   }
   if (full.length) {
-    TT.flash = { rows: full, t: 0.28 };
+    TT.flash = { rows: full, t: TT_CLEAR_SEC };
     TT.score += TT_LINE_PTS[full.length] * TT.level;
     TT.clears[full.length - 1]++;
     TT.pops.push({ x: TT.L ? TT.L.bw / 2 : 100, y: 40, text: full.length + "줄", t: 0.9, c: RAIN_PAL.o100 });
@@ -7555,9 +7575,9 @@ function ttStart() {
 }
 function ttTopHtml() {
   return '<div class="rg-hud">' +
-    '<span class="rg-sc"><small>생존</small><b id="ttHudTm">0.0초</b></span>' +
+    '<span class="rg-sc tm"><small>생존</small><b id="ttHudTm">0.0초</b></span>' +
     '<span class="rg-sc"><small>줄</small><b id="ttHudLn">0</b></span>' +
-    '<span class="rg-tm" id="ttHudLv">Lv 1</span>' +
+    '<span class="rg-sc"><small>레벨</small><b id="ttHudLv">1</b></span>' +
     '<span style="flex:1"></span>' +
     sndBtnHtml(false) +
     '<button class="rg-ib rgp-x" type="button" data-on="계속" data-off="멈춤" aria-label="일시정지" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">멈춤</button></div>';   /* v3.87b 멈춤은 위 줄에 둔다 · 조작 묶음 옆에 두면 360px 폭에서 겹치고 잘못 눌린다 */
@@ -7613,7 +7633,7 @@ function ttFit(cv, w, h) {
   var dpr = Math.min(2, window.devicePixelRatio || 1);
   cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
   TT.dpr = cv.width / w;
-  var M = 8, MV = 2, SIDE_MIN = 54, cell = Math.floor((h - MV * 2) / TT_ROWS);   /* v3.87b 세로 여백은 2px · 조작판이 커진 만큼 판을 최대한 크게 */
+  var M = 10, MV = 6, SIDE_MIN = 54, cell = Math.floor((h - MV * 2) / TT_ROWS);   /* v3.95 판 둘레 액자(4px)가 들어갈 여백 */   /* v3.87b 세로 여백은 2px · 조작판이 커진 만큼 판을 최대한 크게 */
   if (TT_COLS * cell + SIDE_MIN + M * 3 > w) cell = Math.floor((w - M * 3 - SIDE_MIN) / TT_COLS);   /* 다음 블록 칸이 눌리지 않게 폭을 먼저 확보한다 */
   cell = Math.max(8, cell);
   var side = Math.max(SIDE_MIN, Math.min(Math.round(cell * 2.3), w - TT_COLS * cell - M * 3));
@@ -7679,7 +7699,7 @@ function ttHud() {
   var a = el("ttHudLn"), b = el("ttHudTm"), c = el("ttHudLv");
   if (a) a.textContent = String(TT.lines);
   if (b) b.textContent = t + "초";
-  if (c) c.textContent = "Lv " + TT.level;
+  if (c) c.textContent = String(TT.level);
 }
 function ttEnd(why) {
   if (!TT.on || TT.ending) return;
@@ -7704,24 +7724,26 @@ function ttEndFinal(why) {
   window.scrollTo(0, 0);
 }
 /* ── 그리기 · 전부 CSS px 좌표 (캔버스는 기기 해상도) ── */
-function ttDark(c) { return c === "ink" || c === "deep" || c === "o100"; }
-function ttCell(ctx, x, y, cell, kind, alpha, token) {
-  var p = TT_PIECES[kind], col = p ? RAIN_PAL[p.c] : RAIN_PAL.gray, r = Math.max(2, Math.round(cell * 0.18)), pad = 1;
+/* v3.95 블록 한 칸 · 모서리 3~4px · 가장자리 1px(채움보다 한 단 어둡게) · 위쪽 안쪽 하이라이트 1px · 아래쪽 안쪽 그늘 1px
+   active = 지금 떨어지는 블록(더 밝게 · 하이라이트 진하게) · 글자는 채움 밝기에 맞춰 흰/먹 */
+function ttCell(ctx, x, y, cell, kind, alpha, token, active) {
+  var col = ttFill(kind), r = cell >= 20 ? 4 : 3, pad = 1, w = cell - pad * 2, dark = ttInk(kind) === "#FFFFFF";
   ctx.globalAlpha = alpha || 1;
-  ttRound(ctx, x + pad, y + pad, cell - pad * 2, cell - pad * 2, r);
-  ctx.fillStyle = col; ctx.fill();
-  ctx.lineWidth = Math.max(1, Math.round(cell * 0.07)); ctx.strokeStyle = RAIN_PAL.ink; ctx.stroke();
-  if (token && cell >= TT_TOK_MIN) {   /* v3.87 글자 한 조각 · 어두운 채움엔 흰 글씨, 밝은 채움엔 검은 글씨 */
+  ttRound(ctx, x + pad, y + pad, w, w, r);
+  ctx.fillStyle = active ? ttLift(col) : col; ctx.fill();
+  ctx.fillStyle = dark ? "rgba(255,255,255," + (active ? 0.34 : 0.22) + ")" : "rgba(255,255,255," + (active ? 0.9 : 0.7) + ")";
+  ctx.fillRect(x + pad + r - 1, y + pad + 1, w - r * 2 + 2, 1);
+  ctx.fillStyle = "rgba(0,0,0," + (dark ? 0.16 : 0.07) + ")";
+  ctx.fillRect(x + pad + r - 1, y + pad + w - 2, w - r * 2 + 2, 1);
+  ttRound(ctx, x + pad + 0.5, y + pad + 0.5, w - 1, w - 1, r - 0.5);
+  ctx.lineWidth = 1; ctx.strokeStyle = TT_EDGE[kind] || RAIN_PAL.dim; ctx.stroke();
+  if (token && cell >= TT_TOK_MIN) {   /* v3.87 글자 한 조각 */
     var two = token.length > 2 || /[가-힣]/.test(token) && token.length > 1;
     var fs = Math.round(cell * (two ? 0.38 : 0.46));
     ctx.font = "800 " + fs + "px " + RAIN_FONT;
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillStyle = ttDark(p ? p.c : "") ? RAIN_PAL.w : RAIN_PAL.ink;
+    ctx.fillStyle = ttInk(kind);
     ctx.fillText(token, x + cell / 2, y + cell / 2 + 0.5);
-  } else if (cell < TT_TOK_MIN && p && (p.c === "w" || p.c === "o25" || p.c === "gray")) {   /* 글자를 못 쓰는 작은 판에서만 밝은 채움을 점으로 구분한다 (글자가 보이는 판에서는 점을 빼 깔끔하게) */
-    var d = Math.max(3, Math.round(cell * 0.22));
-    ctx.fillStyle = p.c === "w" ? RAIN_PAL.ink : p.c === "gray" ? RAIN_PAL.w : RAIN_PAL.o100;
-    ctx.fillRect(Math.round(x + cell / 2 - d / 2), Math.round(y + cell / 2 - d / 2), d, d);
   }
   ctx.globalAlpha = 1;
 }
@@ -7742,9 +7764,12 @@ function ttDraw(ctx, now) {
   ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, L.W, L.H);
   var sh = TT.shake > 0 ? Math.round((Math.random() - 0.5) * 3) : 0;
   ctx.save(); ctx.translate(L.ox + sh, L.oy);
-  /* 판 바탕 · 옅은 격자 */
-  ctx.fillStyle = "#FDFAF8"; ctx.fillRect(0, 0, L.bw, L.bh);
-  ctx.strokeStyle = "#F0E9E4"; ctx.lineWidth = 1;
+  /* v3.95 판 = 액자 패널 · 바깥 4px 웜그레이 테 + 얕은 그림자 · 안쪽 바탕 + 옅은 격자 */
+  ctx.save(); ctx.shadowColor = "rgba(31,27,24,0.14)"; ctx.shadowBlur = 8; ctx.shadowOffsetY = 2;
+  ttRound(ctx, -4, -4, L.bw + 8, L.bh + 8, 9); ctx.fillStyle = "#EFE8E2"; ctx.fill(); ctx.restore();
+  ttRound(ctx, -4.5, -4.5, L.bw + 9, L.bh + 9, 9.5); ctx.lineWidth = 1; ctx.strokeStyle = "#DDD3CB"; ctx.stroke();
+  ctx.fillStyle = "#FCFAF8"; ctx.fillRect(0, 0, L.bw, L.bh);
+  ctx.strokeStyle = "#F1EBE6"; ctx.lineWidth = 1;
   for (var gx = 1; gx < TT_COLS; gx++) { ctx.beginPath(); ctx.moveTo(gx * cell + 0.5, 0); ctx.lineTo(gx * cell + 0.5, L.bh); ctx.stroke(); }
   for (var gy = 1; gy < TT_ROWS; gy++) { ctx.beginPath(); ctx.moveTo(0, gy * cell + 0.5); ctx.lineTo(L.bw, gy * cell + 0.5); ctx.stroke(); }
   /* 쌓인 블록 */
@@ -7759,25 +7784,31 @@ function ttDraw(ctx, now) {
       if (!c.m[yy][xx]) continue;
       var gy2 = gyy + yy;
       if (gy2 >= 0 && gy2 !== c.y + yy) {
-        ctx.strokeStyle = RAIN_PAL.o50; ctx.lineWidth = Math.max(1, Math.round(cell * 0.09));
-        ttRound(ctx, (c.x + xx) * cell + 2, gy2 * cell + 2, cell - 4, cell - 4, Math.max(2, Math.round(cell * 0.18)));
-        ctx.stroke();
+        ctx.strokeStyle = "rgba(214,69,36,0.45)"; ctx.lineWidth = 1.5;   /* v3.95 유령 = 채움 없는 외곽선 */
+        ctx.setLineDash([Math.max(2, Math.round(cell * 0.2)), Math.max(2, Math.round(cell * 0.12))]);
+        ttRound(ctx, (c.x + xx) * cell + 2.25, gy2 * cell + 2.25, cell - 4.5, cell - 4.5, cell >= 20 ? 3.5 : 2.5);
+        ctx.stroke(); ctx.setLineDash([]);
       }
     }
     var tkc = ttTokCell(c.m);
     for (var py = 0; py < c.m.length; py++) for (var px = 0; px < c.m[py].length; px++) {
       if (!c.m[py][px]) continue;
       var ry = c.y + py;
-      if (ry >= 0) ttCell(ctx, (c.x + px) * cell, ry * cell, cell, c.k, 1, (tkc && tkc[0] === px && tkc[1] === py) ? TT_TOKEN[c.k] : "");
+      if (ry >= 0) ttCell(ctx, (c.x + px) * cell, ry * cell, cell, c.k, 1, (tkc && tkc[0] === px && tkc[1] === py) ? TT_TOKEN[c.k] : "", true);
     }
   }
   /* 지우는 줄 번쩍임 */
   if (TT.flash) {
-    var on = Math.floor(TT.flash.t * 16) % 2 === 0;
+    var el0 = TT_CLEAR_SEC - TT.flash.t, fk = Math.max(0, Math.min(1, (el0 - TT_FLASH_SEC) / (TT_CLEAR_SEC - TT_FLASH_SEC)));
     TT.flash.rows.forEach(function (r) {
-      ctx.fillStyle = on ? RAIN_PAL.o100 : RAIN_PAL.w;
-      ctx.fillRect(0, r * cell, L.bw, cell);
-      ctx.strokeStyle = RAIN_PAL.ink; ctx.lineWidth = 1; ctx.strokeRect(0.5, r * cell + 0.5, L.bw - 1, cell - 1);
+      if (el0 < TT_FLASH_SEC) {   /* 번쩍 · 줄 전체를 흰색으로 덮고 오렌지 테두리 */
+        ctx.fillStyle = "rgba(255,255,255," + (0.92 - el0 / TT_FLASH_SEC * 0.2).toFixed(2) + ")"; ctx.fillRect(0, r * cell, L.bw, cell);
+        ctx.strokeStyle = RAIN_PAL.o100; ctx.lineWidth = 2; ctx.strokeRect(1, r * cell + 1, L.bw - 2, cell - 2);
+      } else {   /* 접힘 · 줄 가운데로 얇아지며 사라진다 */
+        var hh = cell * (1 - fk * fk);
+        ctx.fillStyle = "#FCFAF8"; ctx.fillRect(0, r * cell, L.bw, cell);
+        ctx.fillStyle = "rgba(255,126,49," + (0.85 * (1 - fk)).toFixed(2) + ")"; ctx.fillRect(0, r * cell + (cell - hh) / 2, L.bw, hh);
+      }
     });
   }
   /* 즉시 떨어뜨린 자리 잔상 */
@@ -7785,21 +7816,23 @@ function ttDraw(ctx, now) {
     ctx.fillStyle = "rgba(255,126,49," + Math.max(0, TT.drop.t * 2) + ")";
     ctx.fillRect(0, Math.max(0, (TT.drop.y - 1) * cell), L.bw, cell);
   }
-  ctx.strokeStyle = RAIN_PAL.ink; ctx.lineWidth = 2; ctx.strokeRect(-1, -1, L.bw + 2, L.bh + 2);
+  ctx.strokeStyle = "#D6CCC4"; ctx.lineWidth = 1; ctx.strokeRect(-0.5, -0.5, L.bw + 1, L.bh + 1);
   ctx.restore();
   /* 옆 칸 · 다음 블록 */
   ctx.save(); ctx.translate(L.sx, L.oy);
-  ctx.fillStyle = RAIN_PAL.dim; ctx.font = "700 11px " + RAIN_FONT; ctx.textAlign = "left"; ctx.textBaseline = "top";
-  ctx.fillText("다음", 0, 2);
+  var qh = Math.min(L.bh, Math.round(cell * 5.2) + 30);
+  ttRound(ctx, -0.5, -0.5, L.side + 1, qh + 1, 9); ctx.fillStyle = "#FCFAF8"; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = "#DDD3CB"; ctx.stroke();
+  ctx.fillStyle = "#6B625C"; ctx.font = "800 12px " + RAIN_FONT; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillText("다음", L.side / 2, 7);
   /* v3.87b 다음 블록 두 개 · 빈 줄·빈 칸을 떼고 실제 모양만 그린다 (좁은 옆 칸에서도 크게 보인다) */
-  var q = (TT.nextQ || []).slice(0, 2), qy = 22;
+  var q = (TT.nextQ || []).slice(0, 2), qy = 28;
   q.forEach(function (nk, qi) {
     var nm = TT_PIECES[nk].m, x0 = 9, x1 = -1, y0 = 9, y1 = -1;
     for (var ry = 0; ry < nm.length; ry++) for (var rx = 0; rx < nm[ry].length; rx++) if (nm[ry][rx]) {
       if (rx < x0) x0 = rx; if (rx > x1) x1 = rx; if (ry < y0) y0 = ry; if (ry > y1) y1 = ry;
     }
     var cw = x1 - x0 + 1, ch2 = y1 - y0 + 1;
-    var nc = Math.max(7, Math.min(Math.round(cell * (qi ? 0.52 : 0.76)), Math.floor((L.side - 4) / cw)));
+    var nc = Math.max(7, Math.min(Math.round(cell * (qi ? 0.52 : 0.76)), Math.floor((L.side - 10) / cw)));
     var offx = Math.round((L.side - cw * nc) / 2);
     for (var ny = y0; ny <= y1; ny++) for (var nx = x0; nx <= x1; nx++) if (nm[ny][nx]) ttCell(ctx, offx + (nx - x0) * nc, qy + (ny - y0) * nc, nc, nk, qi ? 0.75 : 1, "");
     qy += ch2 * nc + 12;
