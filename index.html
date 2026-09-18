@@ -96,8 +96,17 @@
   #a2hs .a-url { margin-top: 8px; padding: 10px 12px; background: var(--card); border: 0; border-radius: 10px; font-size: calc(12.5px * var(--fs)); color: var(--muted); word-break: break-all; }
 
   /* 재방문 · 비밀번호만 받는 화면 (영상 스플래시 없이 바로) */
-  #quick { position: absolute; inset: 0; z-index: 110; background: var(--paper); display: flex; align-items: center; justify-content: center; padding: 24px; }
-  #quick[hidden] { display: none; }
+  #quick, #pwlost { position: absolute; inset: 0; z-index: 110; background: var(--paper); display: flex; align-items: center; justify-content: center; padding: 24px; }
+  #quick[hidden], #pwlost[hidden] { display: none; }
+  /* v3.88 비밀번호 분실 요청 · 카드 문법은 재방문 화면과 같게 */
+  #pwlost .q-card { width: 100%; max-width: 340px; text-align: center; }
+  #pwlost input { width: 100%; margin-top: 10px; border-radius: 16px; border: 1.5px solid transparent; background: var(--card); padding: 15px; font-size: calc(16.5px * var(--fs)); font-weight: 700; text-align: center; color: var(--hi); outline: none; }
+  #pwlost input:focus { border-color: var(--mint); }
+  #pwlost input::placeholder { font-weight: 700; color: var(--faint); }
+  #pwlost .pw-msg { margin-top: 14px; font-size: calc(14.5px * var(--fs)); line-height: 1.6; color: var(--muted); }
+  #pwlost .pw-ok { margin-top: 16px; font-size: calc(16px * var(--fs)); font-weight: 800; line-height: 1.6; color: var(--hi); }
+  #pwlost .pw-err { margin-top: 10px; font-size: calc(13.5px * var(--fs)); font-weight: 700; color: var(--bad); min-height: 1px; }
+  #pwlost .pw-link, #panel .pw-link { display: block; width: 100%; margin-top: 10px; border: 0; background: none; cursor: pointer; font-family: inherit; font-size: calc(14px * var(--fs)); font-weight: 700; color: var(--muted); text-decoration: underline; }
   #quick .q-card { width: 100%; max-width: 340px; text-align: center; }
   #quick .q-eyebrow { font-size: calc(14px * var(--fs)); font-weight: 800; letter-spacing: -0.01em; color: var(--mint); }
   #quick .q-hello { margin-top: 14px; font-size: 26px; font-weight: 800; color: var(--hi); letter-spacing: -0.02em; }
@@ -910,6 +919,7 @@
         <button type="submit">페스티벌 입장</button>
         <p class="note">입력 정보는 기기에 저장되지 않습니다</p>
       </form>
+      <button type="button" class="pw-link" onclick="pwLostOpen()">비밀번호를 잊었어요</button>
     </div>
   </section>
 
@@ -923,6 +933,27 @@
       <p id="qErr"></p>
       <button id="qBtn" class="q-go">입장</button>
       <button id="qOther" class="q-other">다른 사번으로 입장</button>
+      <button type="button" class="pw-link" onclick="pwLostOpen()">비밀번호를 잊었어요</button>
+    </div>
+  </section>
+
+  <!-- ═══════ v3.88 비밀번호 분실 · 운영 데스크 요청 (메일·문자 발송 없음) ═══════ -->
+  <section id="pwlost" hidden>
+    <div class="q-card">
+      <p class="q-eyebrow">AX Festival 2026</p>
+      <p class="q-hello">비밀번호 찾기</p>
+      <div id="pwForm">
+        <p class="pw-msg">사번과 이름을 넣어 주세요 · 운영 데스크에 요청만 전달됩니다<br>문자나 메일은 가지 않고, 데스크에서 본인 확인 후 초기화해 드려요</p>
+        <input id="pwEmp" inputmode="numeric" placeholder="사번" autocomplete="off">
+        <input id="pwName" placeholder="이름 (예: 홍길동)" autocomplete="off">
+        <p class="pw-err" id="pwErr"></p>
+        <button type="button" id="pwSend" class="q-go" onclick="pwLostSend()">요청 보내기</button>
+      </div>
+      <div id="pwDone" hidden>
+        <p class="pw-ok">운영 데스크에 요청이 전달됐어요<br>1F 체크인 데스크에서 확인해 주세요</p>
+        <p class="pw-msg">데스크에서 본인 확인을 하고 비밀번호를 지워 드립니다<br>그다음 앱에서 새 비밀번호 4자리를 넣으면 다시 들어올 수 있어요</p>
+      </div>
+      <button type="button" class="q-other" onclick="pwLostBack()">돌아가기</button>
     </div>
   </section>
 
@@ -1472,6 +1503,50 @@ function bePush(kind, val, once) {
       }
     });
 }
+/* ── v3.88 비밀번호 분실 요청 (사용자 요청 260918) ──────────────────────────────
+   앱은 사번·이름만 보낸다 · 비밀번호 값은 만들지도 보여 주지도 않는다.
+   서버는 명부와 짝이 맞을 때만 「비번요청」 시트에 한 줄을 남기고, 맞지 않아도 응답은 똑같다(누가 있는지 떠보지 못하게).
+   그래서 앱도 결과를 가리지 않고 언제나 같은 문구를 보여 준다 · 메일·문자 발송은 없다(데스크에서 사람이 처리). */
+var PWLOST = { from: "" };
+function pwLostOpen() {
+  var q = el("quick"), sp = el("splash");
+  PWLOST.from = q && !q.hidden ? "quick" : "splash";
+  if (q) q.hidden = true;
+  if (sp) sp.hidden = true;
+  var known = (typeof knownGet === "function" ? knownGet() : null) || {};
+  el("pwEmp").value = known.empId || (el("empId") ? el("empId").value : "") || "";
+  el("pwName").value = known.name || (el("userName") ? el("userName").value : "") || "";
+  el("pwErr").textContent = "";
+  el("pwForm").hidden = false; el("pwDone").hidden = true;
+  el("pwlost").hidden = false;
+  if (!PWLOST.bound) {   /* 엔터로도 보낼 수 있게 (버튼은 인라인 onclick) */
+    PWLOST.bound = 1;
+    ["pwEmp", "pwName"].forEach(function (k) {
+      var i = el(k); if (i) i.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); pwLostSend(); } });
+    });
+  }
+}
+function pwLostBack() {
+  el("pwlost").hidden = true;
+  if (PWLOST.from === "quick") { if (el("quick")) el("quick").hidden = false; }
+  else if (el("splash")) el("splash").hidden = false;
+}
+function pwLostSend() {
+  var emp = (el("pwEmp").value || "").trim(), name = (el("pwName").value || "").trim();
+  var err = el("pwErr"), btn = el("pwSend");
+  if (!emp || !name) { err.textContent = "사번과 이름을 모두 넣어 주세요."; return; }
+  err.textContent = "";
+  btn.disabled = true; btn.textContent = "보내는 중...";
+  var done = function () {   /* 성공·명부 불일치 모두 같은 화면 (떠보기 차단) */
+    btn.disabled = false; btn.textContent = "요청 보내기";
+    el("pwForm").hidden = true; el("pwDone").hidden = false;
+  };
+  beCall({ action: "pw_reset_req", emp: emp, name: name }, function () { done(); }, function () {
+    btn.disabled = false; btn.textContent = "요청 보내기";
+    err.textContent = "연결에 실패했어요. 잠시 후 다시 시도해 주세요.";
+  });
+}
+
 /* 이 기기를 기억 · 두 번째 접속부터는 사번·이름을 다시 묻지 않고 비밀번호만 받는다.
  * (참여 기록은 서버에 있으므로 여기 남기는 건 "누구인지"뿐) */
 /* ── 홈 화면에 추가 · 적극 유도 3단 구성 ──────────────────────
