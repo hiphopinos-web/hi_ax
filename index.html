@@ -520,6 +520,14 @@
   #rgForm.hit .input { border-color: #FF7E31 !important; box-shadow: 0 0 0 2px #FF7E31; }
   #rgForm.miss .input { border-color: #B8AEA6 !important; background: #F2F0EE; animation: tileShake 0.3s; }
   #rgForm.auto .input { border-color: #B8AEA6 !important; background: #F2F0EE; }
+  /* v3.76 되새김 화면 · 흰 바탕 · 한 줄씩 차례로 (게임 중 팝과 정반대로 조용하게) */
+  .rg-review { padding: 18px 16px 6px; background: var(--white); border: 1px solid var(--line); border-radius: 18px; }
+  .rg-review .rv-h { font-size: calc(12.5px * var(--fs)); font-weight: 800; letter-spacing: 0.06em; color: var(--faint); }
+  .rg-review .rv-l { margin-top: 12px; opacity: 0; animation: rvIn 0.32s ease-out forwards; }
+  .rg-review .rv-l b { display: block; font-size: calc(16.5px * var(--fs)); font-weight: 800; color: var(--hi); }
+  .rg-review .rv-l span { display: block; margin-top: 2px; font-size: calc(14px * var(--fs)); color: var(--muted); line-height: 1.55; }
+  @keyframes rvIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .rg-review .rv-l { animation: none; opacity: 1; } }
   #rgPlay.rain.big .rgp-top { min-height: 60px; padding: 4px 12px 4px 24px; }
   #rgPlay.rain.big .rg-hud { gap: 24px; }
   #rgPlay.rain.big .rg-hud .rg-sc b { font-size: 28px; }
@@ -6178,7 +6186,7 @@ function rgPickWord() {
 }
 function rgStart(mode) {
   rgStop();
-  RG.mode = mode || "app"; RG.words = []; RG.parts = []; RG.pops = []; RG.lives = RAIN_LIVES; RG.score = 0; RG.hits = 0; RG.tries = 0;
+  RG.mode = mode || "app"; RG.words = []; RG.parts = []; RG.pops = []; RG.hitWords = []; RG.lives = RAIN_LIVES; RG.score = 0; RG.hits = 0; RG.tries = 0;
   RG.combo = 0; RG.maxCombo = 0; RG.stage = 1; RG.spawnT = 0.3; RG.shake = 0; RG.banner = null; RG.shot = null; RG.res = null; RG.ending = null; RG.heartHit = 0;
   RG.mas = { x: 90, tx: 90, open: 0, set: false }; RG.cd = 3.2; RG.t0 = 0; RG.on = true; RG.last = performance.now(); RG.L = null; RG.hud = "";
   RG.paused = false; RG.composing = false; RG.pendingEnter = false;
@@ -6299,8 +6307,8 @@ function rgSubmit() {
   RG.shot = { x0: RG.mas.tx, y0: L.ground - L.masH, x1: cx, y1: cy, t: 0.12 };
   rgBurst(cx, cy, 16, [RAIN_PAL.o100, RAIN_PAL.ink, RAIN_PAL.w, RAIN_PAL.o50]);
   RG.pops.push({ x: cx, y: cy, text: "+" + pts, t: 0.8, c: RAIN_PAL.w, s: 14 });
-  /* v3.72 이 단어가 무슨 뜻인지 1초 · 동시에 여러 개가 터지면 한 줄만 */
-  if (wd.mean && !RG.pops.some(function (p) { return p.mean; })) RG.pops.push({ x: cx, y: cy + 18, text: wd.mean, t: 1.0, c: RAIN_PAL.deep, s: 11, mean: 1 });
+  /* v3.76 (사용자 피드백 260918 「너무 정신이 없다」) 게임 중 뜻 표시는 삭제 · 대신 맞힌 단어를 모아 두었다가 끝나고 한 번에 되새긴다 */
+  if (wd.mean) RG.hitWords.push({ w: wd.text, m: wd.mean });
   if (RG.combo >= 3) RG.pops.push({ x: cx, y: cy - 20, text: "COMBO x" + RG.combo, t: 0.9, c: RAIN_PAL.o60, s: 16 });
   if (!rgReduced()) RG.shake = Math.max(RG.shake, 0.06);
   rgFlash("hit");
@@ -6447,8 +6455,33 @@ function rgEndFinal(why) {
         function (r) { if (RG.res) { RG.res.send = r && r.ok ? "ok" : (r && r.reason) || "fail"; RG.res.me = r && r.me; } if (App.current === "game_type") rgResultPaint(); },
         function () { if (RG.res) RG.res.send = "fail"; if (App.current === "game_type") rgResultPaint(); });
     }
-    rgResultPaint();
+    rgReviewPaint();
   } else if (typeof tsSiteDone === "function") tsSiteDone(RG.res);
+}
+/* ── v3.76 되새김 화면 (사용자 확정 260918) · 내가 친 단어와 뜻만 조용히 · 점수·순위·격려 문구 없음
+   최대 6개 · 많이 쳤으면 나중에 친 것부터(방금 본 단어라 기억에 남는다) · 0개면 건너뛰고 결과로
+   6초 뒤 자동으로 결과 · 「결과 보기」 버튼으로 언제든 넘어갈 수 있다(막히지 않게) */
+var RG_REVIEW_MAX = 6, RG_REVIEW_SEC = 6;
+function rgReviewPaint() {
+  var root = el("tgRoot"); if (!root) return;
+  var seen = {}, list = [];
+  (RG.hitWords || []).slice().reverse().forEach(function (x) {
+    if (seen[x.w] || list.length >= RG_REVIEW_MAX) return;
+    seen[x.w] = 1; list.push(x);
+  });
+  if (!list.length) { rgResultPaint(); return; }
+  root.innerHTML = '<div class="rg-review"><p class="rv-h">내가 친 단어</p>' +
+    list.map(function (x, i) {
+      return '<p class="rv-l" style="animation-delay:' + (i * 0.15).toFixed(2) + 's"><b>' + esc(x.w) + "</b><span>" + esc(x.m) + "</span></p>";
+    }).join("") +
+    '<button class="btn mint" style="margin-top:16px" onclick="rgReviewGo()">결과 보기</button></div>';
+  window.scrollTo(0, 0);
+  clearTimeout(RG.revT);
+  RG.revT = setTimeout(rgReviewGo, RG_REVIEW_SEC * 1000);
+}
+function rgReviewGo() {
+  clearTimeout(RG.revT); RG.revT = null;
+  rgResultPaint();
 }
 function rgResultPaint() {
   var root = el("tgRoot"), r = RG.res; if (!root || !r) return;
