@@ -524,6 +524,7 @@
   #rgPlay .rgp-mid.fill { display: block; overflow: hidden; }
   /* v3.94 점프 글자 레이어 · 캔버스(180×240 도트)를 키우면 글자가 뭉개져서 글자만 DOM 으로 올린다 · --u = 캔버스 1칸의 CSS px */
   #jpTx { position: absolute; pointer-events: none; overflow: hidden; border-radius: 10px; font-family: inherit; font-variant-numeric: tabular-nums; }
+  #jpTx .jt-hint[hidden], #jpTx .jt-bg[hidden] { display: none; }
   #jpTx .jt-l, #jpTx .jt-s { position: absolute; top: calc(var(--u) * 2); height: calc(var(--u) * 15); display: flex; align-items: center; font-weight: 800; }
   #jpTx .jt-l { left: calc(var(--u) * 6); font-size: 13px; color: #D64524; }
   #jpTx .jt-s { right: calc(var(--u) * 6); font-size: 15px; color: #000; }
@@ -532,9 +533,10 @@
   #jpTx .jt-guide { position: absolute; left: 50%; top: calc(var(--u) * 116); transform: translateX(-50%); width: max-content; max-width: 92%; padding: 8px 14px; border-radius: 12px;
     background: rgba(255, 255, 255, 0.92); border: 1.5px solid #000; text-align: center; font-size: 16px; font-weight: 800; line-height: 1.4; color: #000; transition: opacity 0.4s; }
   #jpTx .jt-guide small { display: block; font-size: 15px; font-weight: 700; color: #5E5750; }
-  #jpTx .jt-road { position: absolute; left: 0; right: 0; top: calc(var(--u) * 58); text-align: center; color: #8A817B; line-height: 1; }
-  #jpTx .jt-road b { display: block; font-size: calc(var(--u) * 34); font-weight: 900; opacity: 0.17; letter-spacing: -0.02em; }
-  #jpTx .jt-road span { display: block; margin-top: calc(var(--u) * 3); font-size: calc(var(--u) * 12); font-weight: 800; opacity: 0.26; }
+  #jpTx .jt-hint { position: absolute; left: 50%; top: calc(var(--u) * 48); transform: translateX(-50%); width: max-content; max-width: 92%; padding: 9px 14px; border-radius: 12px;
+    background: #FF7E31; color: #fff; font-size: 16px; font-weight: 800; line-height: 1.35; text-align: center; box-shadow: 0 0 0 2px #000; }
+  /* v3.98 배경 AI 상식 한 문장 · 옅게(장애물보다 앞서지 않게) · 그래도 읽히게 진한 회색 62% · 두 줄까지 */
+  #jpTx .jt-bg { position: absolute; left: 8%; right: 8%; top: calc(var(--u) * 86); margin: 0; text-align: center; color: rgba(94, 87, 80, 0.62); font-size: calc(var(--u) * 10.5); font-weight: 800; line-height: 1.3; letter-spacing: -0.01em; word-break: keep-all; }
   #jpTx .jt-ban { position: absolute; left: 50%; top: calc(var(--u) * 50); transform: translateX(-50%); width: max-content; max-width: 92%; padding: 7px 14px; border-radius: 10px;
     background: #fff; border: 2px solid #000; font-size: 15px; font-weight: 800; color: #D64524; text-align: center; line-height: 1.35; }
   #jpTx .jt-ban.new { background: #000; color: #fff; }
@@ -647,6 +649,16 @@
   .ty-rank .sc { font-family: var(--disp); color: var(--hi); }
   .cho-box { background: var(--ink); border: 0; color: #fff; border-radius: 20px; padding: 22px 18px; text-align: center; margin-bottom: 12px; }
   .cho-box .hint { margin-top: 10px; font-size: calc(15.5px * var(--fs)); line-height: 1.65; opacity: 0.92; }
+  /* v3.98 점프 시작 화면 · 글자·조작 안내·여백 한 단계 크게 (사용자 요청 260919) · 360x640 에서 스크롤 없이 */
+  .gs-root.big .cho-box { padding: 20px 18px 18px; }
+  .gs-root.big .cho-box .word { font-size: 30px !important; }
+  .gs-root.big .gs-how { margin: 14px 2px 0; display: grid; gap: 8px; text-align: left; }
+  .gs-root.big .gs-how p { display: flex; align-items: center; gap: 12px; font-size: calc(18px * var(--fs)); font-weight: 800; line-height: 1.3; color: #fff; }
+  .gs-root.big .gs-how p b { flex: none; min-width: 92px; padding: 6px 0; border-radius: 10px; background: rgba(255,255,255,0.14); text-align: center; font-size: calc(16px * var(--fs)); font-weight: 900; color: #FFB284; }
+  .gs-root.big .gs-rule { margin-top: 12px; font-size: calc(15px * var(--fs)); font-weight: 700; line-height: 1.45; color: rgba(255,255,255,0.78); }
+  .gs-root.big .gs-go { display: flex; gap: 8px; align-items: stretch; }
+  .gs-root.big .gs-go .btn.mint { flex: 1; padding: 17px 10px; font-size: calc(20px * var(--fs)); }
+  .gs-root.big .gs-go .btn.line { flex: none; width: auto; padding: 0 16px; font-size: calc(16px * var(--fs)); }
 
   /* ── 과제상담 (DAP ZONE) · 앱 공통 토큰만 사용 ── */
   .slotgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
@@ -4584,8 +4596,9 @@ var Views = {
     jpStop();
     if (gsNeedNick()) return gsNickHtml("jump");
     setTimeout(jpPreview, 0);
-    return gsStartHtml("jump", { rootId: "jpRoot", previewId: "jpPrev", pw: 180, ph: 110,
-      rules: "탭 점프 · 공중 탭 2단 점프 · 하트 3개 · 오래 버티기 · 한 판이면 스탬프" });
+    return gsStartHtml("jump", { rootId: "jpRoot", previewId: "jpPrev", pw: 180, ph: 84,
+      how: [["탭", "점프"], ["두 번 탭", "2단 점프"], ["꾸욱 누르기", "엎드리기 (누르는 동안)"]],
+      rules: "하트 3개 · 오래 버틸수록 기록 · 한 판이면 스탬프" });
   },
   /* ═══ v3.50 AX 올림픽 순위판 · 종합(전 종목 완주자) · 종목별(금은동) ═══
      v3.50d 부문 정보 전면 삭제 (사용자 확정 260917·260918 · 부문 메달표·부문 라벨·부문 평균 금지) */
@@ -6211,7 +6224,9 @@ var RAIN_PAL = { o100: "#FF7E31", o60: "#FFA46E", o50: "#FFB284", o30: "#FFCFB0"
 var MEWE_SPR = {
   closed: ["...OOOOOO...", ".OOOOOOOOOO.", ".OOWOOOOWOO.", ".OOKOOOOKOO.", "OOOOOOOOOOOO", "OOOOOOOOOOOO", "OODDDDDDDDOO", "OOOOOOOOOOOO", ".OOOOOOOOOO.", "..OOOOOOOO..", "..OO....OO.."],
   open: ["...OOOOOO...", ".OOOOOOOOOO.", ".OOWOOOOWOO.", ".OOKOOOOKOO.", "OOOOOOOOOOOO", "OOKKKKKKKKOO", "OOKKKKKKKKOO", "OOKKWWWWKKOO", ".OOOOOOOOOO.", "..OOOOOOOO..", "..OO....OO.."],
-  buddy: ["..LLLL..", ".LLLLLL.", "LLWLLWLL", "LLKLLKLL", "LLLLLLLL", "LLDDDDLL", ".LLLLLL.", ".LL..LL."]
+  buddy: ["..LLLL..", ".LLLLLL.", "LLWLLWLL", "LLKLLKLL", "LLLLLLLL", "LLDDDDLL", ".LLLLLL.", ".LL..LL."],
+  /* v3.98 엎드린 미위 · 납작하게 옆으로 퍼진 몸(14×6) · 외곽선 포함 16×8 → 점프 화면에서 2배(32×16) */
+  duck: ["..OOOOOOOOOO..", ".OOWOOOOOOWOO.", "OOOKOOOOOOKOOO", "OOOOOOOOOOOOOO", "OODDDDDDDDDDOO", ".OO.OO..OO.OO."]
 };
 /* ═══ v3.36d 크기 설계 (사용자 피드백 260917 · 「전체를 비율로 줄인 것 같다」) ═══
    원인: 180×300 논리 해상도 비트맵을 CSS 로 늘려서 판이 작아지면 글자·마스코트·파티클이 같이 작아졌다.
@@ -7914,7 +7929,7 @@ var GS_GAMES = {
   tetris: { name: "테트리스", view: "game_tetris", start: "ttStart()", best: "tt_best", line: "블록을 옮기고 돌려서 줄을 채워요 · 아래 버튼으로" },
   type: { name: "AX 단어 소나기", view: "game_type", start: "rgStart('app')", best: "type_best", line: "떨어지는 단어를 쳐서 터뜨려요 · 키보드로 입력" },
   pang: { name: "AX 팡", view: "game_pang", start: "pgStart()", best: "pang_best", line: "같은 그림 3개를 한 줄로 맞춰 터뜨려요 · 밀어서 바꾸기" },
-  jump: { name: "ME to WE 점프", view: "game_jump", start: "jpStart()", best: "jump_best", line: "달리는 미위를 탭해서 점프 · 공중에서 한 번 더 탭은 2단 점프" },
+  jump: { name: "ME to WE 점프", view: "game_jump", start: "jpStart()", best: "jump_best", line: "탭 점프 · 두 번 탭 2단 점프 · 꾸욱 누르면 엎드리기", fmt: function (cs) { return cs ? (cs / 100).toFixed(1) + "초" : "0"; } },
   word: { name: "ME to WE 기억력", view: "game_word", start: "gwStart()", best: "gw_time_best", line: "문장을 외워 단어 타일을 순서대로" }
 };
 var GS = { cur: null, vvh: null, onVis: null, onKey: null };
@@ -8074,6 +8089,7 @@ function gsNeedNick() { return !typeNick() || S.get("type_nick_edit", false); }
 /* o = { rootId, previewId, pw, ph, rules, foot } */
 function gsStartHtml(key, o) {
   var g = GS_GAMES[key], nick = typeNick();
+  if (o.how) return gsStartBigHtml(key, o, g, nick);
   return '<div id="' + o.rootId + '" class="gs-root">' +
     '<div class="cho-box" style="padding:16px 14px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">MINI GAME</p>' +
     '<p class="word disp" style="font-size:24px;margin-top:2px">' + esc(g.name) + "</p>" +
@@ -8084,6 +8100,19 @@ function gsStartHtml(key, o) {
     '<button class="btn mint mb8" style="padding:16px;font-size:calc(17px * var(--fs))" onclick="gsBegin(\'' + key + '\')">START</button>' +
     '<div class="row" style="gap:8px;align-items:stretch"><button class="btn line" style="flex:1" onclick="' + gsRankGo(key) + '">순위판</button>' + sndBtnHtml(false) + "</div>" +
     (o.foot ? '<p class="muted" style="margin-top:10px;font-size:calc(12px * var(--fs));text-align:center">' + o.foot + "</p>" : "") + "</div>";
+}
+/* v3.98 큰 시작 화면 · 조작 동작을 한 줄씩(칩 + 설명) · START·순위판·소리를 한 줄에 모아 360x640 에 들어가게 */
+function gsStartBigHtml(key, o, g, nick) {
+  return '<div id="' + o.rootId + '" class="gs-root big">' +
+    '<div class="cho-box"><p style="font-size:calc(13px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">MINI GAME</p>' +
+    '<p class="word disp" style="margin-top:2px">' + esc(g.name) + "</p>" +
+    '<div class="rg-wrap' + (o.flat ? " flat" : "") + '" style="margin-top:12px"><canvas id="' + o.previewId + '" width="' + o.pw + '" height="' + o.ph + '"></canvas></div>' +
+    '<div class="gs-how">' + o.how.map(function (h) { return "<p><b>" + esc(h[0]) + "</b>" + esc(h[1]) + "</p>"; }).join("") + "</div>" +
+    '<p class="gs-rule">' + o.rules + "</p></div>" +
+    '<div class="row mb8" style="justify-content:space-between"><span class="muted" style="font-size:calc(14px * var(--fs))">닉네임 <b style="color:var(--hi)">' + esc(nick) + '</b> · <span style="text-decoration:underline;cursor:pointer" onclick="S.set(\'type_nick_edit\', true); App.render()">변경</span></span>' +
+    '<span class="muted" style="font-size:calc(14px * var(--fs))">최고 ' + (g.fmt ? g.fmt(S.get(g.best, 0)) : S.get(g.best, 0).toLocaleString()) + "</span></div>" +
+    '<div class="gs-go"><button class="btn mint" onclick="gsBegin(\'' + key + '\')">START</button>' +
+    '<button class="btn line" onclick="' + gsRankGo(key) + '">순위판</button>' + sndBtnHtml(false) + "</div></div>";
 }
 function gsRankGo(key) { return key === "type" ? "App.go('type_rank')" : "S.set('oly_tab', 'event'); S.set('oly_ev', '" + key + "'); App.go('oly_rank')"; }
 /* r = { why, reason, score, stats, rankLine, banner } · 세 게임 결과 화면 형식이 같다 */
@@ -8634,52 +8663,63 @@ function pgPreview() {
    안전 상한 5분 · 올림픽 환산은 기록/목표(길수록 좋다) · 목표 60초(6000 = 1/100초) · 팡(빠를수록 좋다)과 반대 방향이다. */
 var JP_W = 180, JP_H = 240, JP_GY = 196, JP_PX = 30, JP_MAX_SEC = 300, JP_HEARTS = 3, JP_G = 820, JP_JV = 300, JP_JV2 = 245, JP_INV = 1.0;
 var JP_ITEM_EVERY = 15, JP_ITEM_SEC = 5;   /* 아이템 · 15초마다 하나 · 5초 동안 */
-var JP_ROAD = [
-  { at: 8, top: "2026", sub: "공감과 참여" },
-  { at: 28, top: "2027", sub: "확산과 체화" },
-  { at: 48, top: "2028", sub: "혁신과 연결" },
-  { at: 68, top: "ME to WE", sub: "나의 업무 혁신" }
-];   /* 배경 이정표 · 20초 간격 · 2028 뒤에는 ME to WE 로 바뀌고 그 뒤로는 반복 */
+/* v3.98 (사용자 요청 260919) 배경 = AI 상식 한 문장 · 로드맵 이정표 대체 · 새로 짓지 않고 「ME to WE 기억력」 문제 은행(MEM_ROUNDS 문장형)을 그대로 쓴다
+   달리면서 한 번에 읽히게 JP_BG_MAX 자 이하만 · 6초 첫 문장, 10초마다 다음 문장(7초 보임) · 한 판 안에서 겹치지 않게 섞는다 */
+var JP_BG_MAX = 21, JP_BG_FIRST = 6, JP_BG_EVERY = 10, JP_BG_LIFE = 7;
+function jpBgLines() {
+  return MEM_ROUNDS.filter(function (R) { return R.kind === "sentence"; }).map(function (R) { return R.words.join(" "); })
+    .filter(function (t) { return t.length <= JP_BG_MAX; });
+}
 /* 장애물 판정 사각형 [가로 시작, 폭, 높이, 바닥에서 뜬 높이(없으면 0)] · 그린 모양과 판정이 같다
    v3.94 중반 이후 새 유형 (사용자 요청 260918 「중간 이후 입체적인 방해 장치」):
-   sign 높은 간판 = 아래로 지나간다(점프하면 부딪힘 · 간판 밑 24 > 서 있는 몸 20) · tower 탑 62 = 2단 점프만 넘는다(1단 최고 57)
+   sign 낮은 간판 = v3.98 엎드려야만 지나간다(간판 밑 16 · 서 있는 몸 20 은 부딪히고 엎드린 몸 12 는 통과 · 위로는 110 이라 못 넘는다) · tower 탑 62 = 2단 점프만 넘는다(1단 최고 57)
    gap 끊긴 바닥 = 점프 · bob 오르내리는 상자(0~34) = 2단 점프면 언제든 넘는다 · 아이템 없이 모두 넘을 수 있다 */
 var JP_OBS = { box: { w: 16, rects: [[0, 16, 16]] }, cone: { w: 14, rects: [[3, 8, 17]] }, step: { w: 22, rects: [[0, 11, 8], [11, 11, 15]] },
-  sign: { w: 30, rects: [[2, 26, 86, 24]] }, tower: { w: 16, rects: [[0, 16, 62]] }, gap: { w: 34, rects: [] }, bob: { w: 14, rects: [[0, 14, 14]] } };
-/* 새 유형 등장표 · 30초부터 15초마다 하나씩 열린다 · 처음 나올 때는 먼 거리 + 예고 배너(검정) */
+  sign: { w: 30, rects: [[2, 26, 94, 16]] }, tower: { w: 16, rects: [[0, 16, 62]] }, gap: { w: 34, rects: [] }, bob: { w: 14, rects: [[0, 14, 14]] } };
+/* 새 유형 등장표 · v3.98 20초부터 10초마다 하나씩 (구 30초부터 15초) · 처음 나올 때는 먼 거리 + 예고 배너(검정) */
 var JP_NEW = [
-  { k: "sign", at: 30, tip: "높은 간판", how: "점프하지 말고 아래로" },
-  { k: "tower", at: 45, tip: "높은 탑", how: "2단 점프로 넘기" },
-  { k: "gap", at: 60, tip: "끊긴 바닥", how: "점프로 건너기" },
-  { k: "bob", at: 75, tip: "오르내리는 상자", how: "2단 점프로 넘기" }
+  { k: "sign", at: 20, tip: "낮은 간판", how: "화면을 꾸욱 누르면 엎드릴 수 있어요" },
+  { k: "tower", at: 30, tip: "높은 탑", how: "2단 점프로 넘기" },
+  { k: "gap", at: 40, tip: "끊긴 바닥", how: "점프로 건너기" },
+  { k: "bob", at: 50, tip: "오르내리는 상자", how: "2단 점프로 넘기" }
 ];
+/* v3.98 난이도 +30% (사용자 요청 260919) · 속도 오르는 기울기·간격 줄어드는 속도·속도 UP 시점을 모두 1.3배 빠르게 · 상한(속도 200·간격 하한 78)은 그대로 */
+var JP_RAMP = 1.3;
 var JP_BOB_AMP = 34, JP_BOB_PER = 1.5;   /* 오르내리는 상자 · 바닥 0 ~ 34 · 1.5초 주기 */
-var JP_NEW_P = 0.45;   /* 새 유형 비율 상한 · 30초 16%에서 천천히 올라 약 102초에 45% */
+var JP_NEW_P = 0.45;   /* 새 유형 비율 상한 · 20초 16%에서 올라 약 76초에 45% */
 var JP_COIN = ["...KKKK...", ".KKOOOOKK.", ".KOWOOWOK.", "KOOOWWOOOK", "KOOOWWOOOK", ".KOWOOWOK.", ".KKOOOOKK.", "...KKKK..."];
 var JP_COINCV = null;
 var JP = { on: false, raf: 0, parts: [], pops: [] };
-function jpStop() { JP.on = false; if (JP.raf) cancelAnimationFrame(JP.raf); JP.raf = 0; gsOverlayClose("jump"); }
+function jpStop() { JP.on = false; if (JP.raf) cancelAnimationFrame(JP.raf); JP.raf = 0; if (JP.onKeyUp) document.removeEventListener("keyup", JP.onKeyUp); JP.duck = false; JP.press = null; gsOverlayClose("jump"); }
 function jpStart() {
   jpStop();
   SFX.site = false;
   JP = { on: true, paused: false, ending: null, raf: 0, cd: 3.2, t0: 0, last: performance.now(), py: JP_GY, vy: 0, jumps: 0, hearts: JP_HEARTS, inv: 0, heartHit: 0,
     obs: [], coins: [], items: [], parts: [], pops: [], banner: null, shake: 0, dist: 0, nextObs: 70, coinN: 0, dodged: 0, hits: 0, jumpsN: 0, score: 0, speedUp: 0,
-    item: null, itemT: 0, nextItem: JP_ITEM_EVERY, road: 0, guide: 3.5, surv: 0, nextK: null, seen: {}, tx: {} };
+    item: null, itemT: 0, nextItem: JP_ITEM_EVERY, guide: 4, surv: 0, nextK: null, seen: {}, tx: {},
+    bg: shuf(jpBgLines()), bgI: 0, bgCur: null, bgT: 0, bgNext: JP_BG_FIRST, duck: false, press: null, hint: false };
   gsOverlayOpen({ key: "jump", title: "ME to WE 점프", cw: JP_W, ch: JP_H, canvasId: "jpCv", noGesture: true,
-    bottom: '<div class="gs-foot">화면 아무 곳이나 탭 = 점프 · 공중에서 한 번 더 = 2단 점프</div>',
-    down: function (e) { e.preventDefault(); jpTap(); },
-    keydown: function (e) { if (e.code === "Space" || e.key === " " || e.key === "ArrowUp") { e.preventDefault(); if (!e.repeat) jpTap(); } },
+    bottom: '<div class="gs-foot">탭 = 점프 · 두 번 탭 = 2단 점프 · 꾸욱 = 엎드리기</div>',
+    down: function (e) { e.preventDefault(); jpDown(); },
+    up: function () { jpUp(); },
+    keydown: function (e) {
+      if (e.code === "Space" || e.key === " " || e.key === "ArrowUp") { e.preventDefault(); if (!e.repeat) jpTap(); }
+      else if (e.key === "ArrowDown") { e.preventDefault(); if (!e.repeat && JP.jumps === 0) JP.duck = true; }   /* PC · 아래 화살표 = 엎드리기 */
+    },
     running: function () { return JP.on && !JP.paused && !JP.ending; }, isPaused: function () { return !!JP.paused; },
-    pause: function () { gsPauseState(JP); }, resume: function () { gsResumeState(JP, jpFrame); },
+    pause: function () { JP.duck = false; JP.press = null; gsPauseState(JP); }, resume: function () { gsResumeState(JP, jpFrame); },
     quit: function () { jpStop(); App.render(); }, resized: function (cv, w) { jpTxFit(cv, w); } });
   var foot = document.querySelector("#rgPlay .gs-foot");
-  if (foot) foot.addEventListener("pointerdown", function (e) { e.preventDefault(); jpTap(); });
+  if (foot) { foot.addEventListener("pointerdown", function (e) { e.preventDefault(); jpDown(); }); ["pointerup", "pointercancel"].forEach(function (t) { foot.addEventListener(t, jpUp); }); }
+  JP.onKeyUp = function (e) { if (e.key === "ArrowDown") JP.duck = false; };
+  document.addEventListener("keyup", JP.onKeyUp);
   var mid = el("gsMid"), tx = document.createElement("div");
   tx.id = "jpTx";
   tx.innerHTML = '<span class="jt-l">ME to WE</span><span class="jt-s" id="jtScore">0</span><span class="jt-sv" id="jtSurv"></span>' +
-    '<div class="jt-road" id="jtRoad" hidden><b></b><span></span></div>' +
-    '<div class="jt-guide" id="jtGuide" hidden>탭 = 점프<small>공중에서 한 번 더 탭 = 2단 점프</small></div>' +
-    '<div class="jt-ban" id="jtBan" hidden></div>';
+    '<p class="jt-bg" id="jtBg" hidden></p>' +
+    '<div class="jt-guide" id="jtGuide" hidden>탭 = 점프<small>두 번 탭 = 2단 점프</small><small>꾸욱 누르기 = 엎드리기</small></div>' +
+    '<div class="jt-ban" id="jtBan" hidden></div>' +
+    '<div class="jt-hint" id="jtHint" hidden>화면을 꾸욱 누르면<br>엎드릴 수 있어요</div>';
   mid.appendChild(tx);
   if (GS.vvh) GS.vvh();
   JP.raf = requestAnimationFrame(jpFrame);
@@ -8711,13 +8751,20 @@ function jpTxSync() {
   jpTxSet("jtSurv", JP.cd > 0 ? "" : sv, function (e) { e.innerHTML = JP.cd > 0 ? "" : sv + "<small>초 생존</small>"; });
   var g = JP.guide > 0 && JP.cd <= 0 && !JP.ending, ga = g ? Math.min(1, JP.guide / 0.5) : 0;
   jpTxSet("jtGuide", g ? ga.toFixed(2) : "off", function (e) { e.hidden = !g; e.style.opacity = ga; });
-  var r = JP.roadCur, ra = 0;
-  if (r) { var rt = JP.roadT || 0; ra = rt < 0.6 ? rt / 0.6 : rt > 5 ? Math.max(0, 6 - rt) : 1; }
-  jpTxSet("jtRoad", r ? r.top + ra.toFixed(2) : "off", function (e) {
+  var r = JP.bgCur, ra = 0;
+  if (r) { var rt = JP.bgT || 0; ra = rt < 0.6 ? rt / 0.6 : rt > JP_BG_LIFE - 1 ? Math.max(0, JP_BG_LIFE - rt) : 1; }
+  jpTxSet("jtBg", r ? r + ra.toFixed(2) : "off", function (e) {
     e.hidden = !r; if (!r) return;
-    e.style.opacity = ra; e.firstChild.textContent = r.top; e.lastChild.textContent = r.sub;
+    e.style.opacity = ra; e.textContent = r;
   });
-  var b = JP.banner;
+  /* v3.98 첫 간판이 몸 앞 1.6초 안에 들어오면 엎드리기 안내 · 한 판에 한 번 · 지나가면 사라진다 */
+  var fs = !JP.hintDone && JP.obs.filter(function (o) { return o.k === "sign" && !o.passed; })[0];
+  var hs = fs && fs.x - (JP_PX + 20) < jpSpeed(JP.surv || 0) * 1.6;
+  if (fs && fs.passed) JP.hintDone = true;
+  if (!fs && JP.seen.sign && JP.hintShown) JP.hintDone = true;
+  if (hs) JP.hintShown = true;
+  jpTxSet("jtHint", hs ? "on" : "off", function (e) { e.hidden = !hs; });
+  var b = hs ? null : JP.banner;
   jpTxSet("jtBan", b ? b.text + (b.how || "") : "off", function (e) {
     e.hidden = !b; if (!b) return;
     e.className = "jt-ban" + (b.how ? " new" : "");
@@ -8735,6 +8782,43 @@ function jpTxSync() {
 function jpEl(now) { return JP.t0 ? (now - JP.t0) / 1000 : 0; }
 /* 일반 배너 · 새 장애물 예고가 떠 있는 동안은 덮지 않는다 */
 function jpBan(text, t) { if (JP.banner && JP.banner.how && JP.banner.t > 0.3) return; JP.banner = { text: text, t: t }; }
+/* ═══ v3.98 입력 · 탭 = 점프 · 공중에서 한 번 더 = 2단 점프 · 꾸욱 = 엎드리기(누르는 동안)
+   탭과 꾸욱을 가르는 방식 세 가지를 만들어 비교했다(JP_PRESS):
+     "a" 땅에서 누르면 판정 시간(JP_HOLD_MS) 동안 기다린다 · 그 전에 떼면 점프(뗄 때) · 계속 누르면 엎드림 → 모든 점프가 누른 시간만큼 늦다
+     "b" 누르면 바로 점프 · 간판이 가까울 때(JP_SIGN_WIN 초 안)만 "a" 처럼 판정
+     "c" 누르면 바로 점프 · 간판이 가까울 때만 누르는 즉시 엎드림(판정 대기 없음) · 간판 앞에서 점프는 언제나 부딪히는 선택이라 뺏기는 것이 없다
+   실측 비교(봇 · v3.98 보고)로 "c" 를 기본으로 한다 · 공중에서는 어느 방식이든 누르는 즉시 2단 점프. */
+var JP_PRESS = "c", JP_HOLD_MS = 130, JP_SIGN_WIN = 1.8;
+/* 가까운 간판 · 몸 앞에서 「다음」 장애물이 간판이고 JP_SIGN_WIN 초 안 · 앞에 넘을 장애물이 남아 있으면 그쪽이 먼저(점프)
+   창 1.8초 = 첫 간판 안내(1.6초 전)보다 넓게 · 안내를 보고 미리 눌러도 점프가 나가지 않는다 */
+function jpSignNear() {
+  var sp = jpSpeed(jpEl(performance.now())), front = JP_PX + 20;
+  var nx = JP.obs.filter(function (o) { return !o.hit && o.x + o.w > JP_PX + 6; }).sort(function (p, q) { return p.x - q.x; })[0];
+  return !!nx && nx.k === "sign" && nx.x - front < sp * JP_SIGN_WIN;
+}
+function jpDown() {
+  if (!JP.on || JP.paused || JP.ending || JP.cd > 0) return;
+  var ground = JP.jumps === 0 && JP.py >= JP_GY;
+  if (!ground) { jpTap(); return; }   /* 공중 · 2단 점프 */
+  var near = jpSignNear();
+  if (JP_PRESS === "c") {
+    if (near) { JP.duck = true; JP.press = { t: performance.now(), duck: true }; }
+    else { jpTap(); JP.press = { t: performance.now(), jumped: true }; }
+    return;
+  }
+  if (JP_PRESS === "b" && !near) { jpTap(); JP.press = { t: performance.now(), jumped: true }; return; }
+  JP.press = { t: performance.now(), wait: true };   /* 판정 대기 · jpUpdate 가 JP_HOLD_MS 뒤 엎드림으로 바꾼다 */
+}
+function jpUp() {
+  var p = JP.press;
+  JP.press = null; JP.duck = false;
+  if (p && p.wait && JP.on && !JP.paused && !JP.ending) jpTap();   /* 판정 전에 뗐다 = 탭 = 점프 */
+}
+/* 매 프레임 · 판정 대기가 JP_HOLD_MS 를 넘으면 엎드림 */
+function jpPressTick() {
+  var p = JP.press;
+  if (p && p.wait && performance.now() - p.t >= JP_HOLD_MS) { p.wait = false; p.duck = true; JP.duck = true; }
+}
 function jpTap() {
   if (!JP.on || JP.paused || JP.ending || JP.cd > 0) return;
   var jb = JP.item === "small" ? 1.22 : 1;   /* v3.75 작아지면 더 높이 */
@@ -8745,10 +8829,16 @@ function jpTap() {
   }
 }
 /* v3.75 속도 램프 · 55에서 시작해 부드럽게 오르고 200에서 멈춘다 (평균 40~70초 · 잘하면 2분대) */
-function jpSpeed(t) { return Math.min(200, 55 + t * 1.55); }
+function jpSpeed(t) { return Math.min(200, 55 + t * 1.55 * JP_RAMP); }
 /* v3.75 몸 크기 = 아이템 상태 그대로 (그린 크기와 판정이 같아야 한다) */
 function jpScale() { return JP.item === "big" ? 1.5 : JP.item === "small" ? 0.7 : 1; }
-function jpBody() { var k = jpScale(); return { x: JP_PX + 8 + (1 - k) * 3, y: JP.py - 20 * k, w: 12 * k, h: 18 * k }; }
+function jpBody() {
+  var k = jpScale();
+  if (jpDucking()) return { x: JP_PX + 7 + (1 - k) * 3, y: JP.py - 12 * k, w: 14 * k, h: 10 * k };   /* v3.98 엎드림 · 머리 높이 12 (간판 밑 16) */
+  return { x: JP_PX + 8 + (1 - k) * 3, y: JP.py - 20 * k, w: 12 * k, h: 18 * k };
+}
+/* 엎드림은 땅에 있을 때만 · 공중에서 누르면 2단 점프뿐(빠른 낙하 같은 부가 동작 없음) */
+function jpDucking() { return !!JP.duck && JP.py >= JP_GY && JP.jumps === 0; }
 function jpOverlap(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
 /* 부딪힘 · 무적 중이면 무시 · 1초 무적 */
 function jpHit(o) {
@@ -8783,14 +8873,15 @@ function jpUpdate(dt, now) {
   var t = jpEl(now);
   JP.surv = t;
   if (t >= JP_MAX_SEC) { jpEnd("time"); return; }   /* 안전 상한 5분 */
+  jpPressTick();
   gsFx(JP, dt);
   if (JP.inv > 0) JP.inv = Math.max(0, JP.inv - dt);
   if (JP.heartHit > 0) JP.heartHit -= dt;
   if (JP.guide > 0) JP.guide -= dt;
   /* v3.75 배경 이정표 · AX 3개년 로드맵이 지나간다 (2028 뒤에는 ME to WE 반복) */
-  while (JP.road < JP_ROAD.length && t >= JP_ROAD[JP.road].at) { JP.roadCur = JP_ROAD[JP.road]; JP.roadT = 0; JP.road++; }
-  if (JP.road >= JP_ROAD.length && t >= JP_ROAD[JP_ROAD.length - 1].at + 20 * (JP.road - JP_ROAD.length + 1)) { JP.roadCur = JP_ROAD[JP_ROAD.length - 1]; JP.roadT = 0; JP.road++; }
-  if (JP.roadCur) JP.roadT += dt;
+  /* v3.98 배경 AI 상식 · 한 문장씩 */
+  if (t >= JP.bgNext && JP.bg.length) { JP.bgCur = JP.bg[JP.bgI % JP.bg.length]; JP.bgI++; JP.bgT = 0; JP.bgNext += JP_BG_EVERY; }
+  if (JP.bgCur) { JP.bgT += dt; if (JP.bgT > JP_BG_LIFE) JP.bgCur = null; }
   /* 아이템 · 한 번에 하나 · 5초 */
   if (JP.item) { JP.itemT -= dt; if (JP.itemT <= 0) { JP.item = null; jpBan("원래 크기", 0.8); } }
   JP.nextItem -= dt;
@@ -8799,7 +8890,7 @@ function jpUpdate(dt, now) {
     var kind = Math.random() < 0.5 ? "big" : "small";
     JP.items.push({ k: kind, x: JP_W + 6, y: JP_GY - 34 - Math.random() * 18, got: false });
   }
-  var su = t >= 60 ? 4 : t >= 40 ? 3 : t >= 25 ? 2 : t >= 10 ? 1 : 0;
+  var tr = t * JP_RAMP, su = tr >= 60 ? 4 : tr >= 40 ? 3 : tr >= 25 ? 2 : tr >= 10 ? 1 : 0;   /* v3.98 속도 UP 시점도 1.3배 앞당김 */
   if (su > JP.speedUp) { JP.speedUp = su; jpBan("속도 UP", 1.0); sfx("level"); }
   var dx = jpSpeed(t) * dt;
   JP.dist += dx;
@@ -8811,18 +8902,18 @@ function jpUpdate(dt, now) {
     JP.nextK = null;
     JP.obs.push({ k: k, x: JP_W + 4, w: JP_OBS[k].w, passed: false, hit: false, ph: Math.random() * Math.PI * 2 });
     /* v3.75 간격이 계속 좁아진다(부드럽게) · 하한 78 */
-    var gMin = Math.max(78, 175 - t * 1.15), gMax = gMin + Math.max(34, 70 - t * 0.4);
+    var gMin = Math.max(78, 175 - t * 1.15 * JP_RAMP), gMax = gMin + Math.max(34, 70 - t * 0.4 * JP_RAMP);
     JP.nextObs = gMin + Math.random() * (gMax - gMin);
     /* v3.94 다음 장애물을 지금 정한다 · 새 유형이 앞뒤에 오면 착지할 거리(속도 × 1.3초)를 보장 · 처음 나오는 유형은 거리를 더 두고 예고 배너 */
     var sp0 = jpSpeed(t), open = JP_NEW.filter(function (n) { return t >= n.at; });
     var first = open.filter(function (n) { return !JP.seen[n.k]; })[0];
     var isNew = !!JP_NEW.filter(function (n) { return n.k === k; })[0];
-    var pNew = open.length ? Math.min(JP_NEW_P, 0.16 + (t - 30) * 0.004) : 0;
+    var pNew = open.length ? Math.min(JP_NEW_P, 0.16 + (t - JP_NEW[0].at) * 0.0052) : 0;
     var nx = first || (!isNew && Math.random() < pNew ? open[Math.floor(Math.random() * open.length)] : null);
     if (nx) {
       JP.nextK = nx.k;
-      JP.nextObs = Math.max(JP.nextObs, sp0 * (first ? 2.2 : 1.3));
-      if (first) { JP.seen[nx.k] = 1; JP.banner = { text: "새 장애물 · " + nx.tip, how: nx.how, t: 2.6 }; sfx("level"); }
+      JP.nextObs = Math.max(JP.nextObs, sp0 * (first ? (nx.k === "sign" ? 3.2 : 2.2) : 1.3));   /* v3.98 간판 첫 등장은 3.2초 앞에서 안내 */
+      if (first) { JP.seen[nx.k] = 1; JP.banner = { text: "새 장애물 · " + nx.tip, how: nx.how, t: nx.k === "sign" ? 3.4 : 2.6 }; sfx("level"); }
     }
     if (isNew) JP.nextObs = Math.max(JP.nextObs, sp0 * 1.3);
     if (!isNew && Math.random() < 0.75) {
@@ -8925,12 +9016,12 @@ function jpObsDraw(ctx, o) {
 function jpObsDraw2(ctx, o) {
   var x = Math.round(o.x), g = JP_GY, i;
   if (o.k === "sign") {   /* 천장에서 늘어진 간판 · 밑면이 머리 위 4칸 */
-    var top = g - 24 - 86;
+    var top = g - 16 - 94;
     ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(x + 7, 30, 1, top - 30); ctx.fillRect(x + 23, 30, 1, top - 30);
-    rgBox(ctx, x + 2, top, 26, 86, RAIN_PAL.deep);
+    rgBox(ctx, x + 2, top, 26, 94, RAIN_PAL.deep);
     ctx.fillStyle = RAIN_PAL.o60; ctx.fillRect(x + 3, top + 1, 24, 2);
-    for (i = 0; i < 4; i++) { ctx.fillStyle = RAIN_PAL.w; ctx.fillRect(x + 5, top + 12 + i * 18, 20, 3); }
-    ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(x + 3, g - 25, 24, 1);
+    for (i = 0; i < 5; i++) { ctx.fillStyle = RAIN_PAL.w; ctx.fillRect(x + 5, top + 12 + i * 17, 20, 3); }
+    ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(x + 3, g - 17, 24, 1);
     ctx.fillStyle = "rgba(0,0,0,0.10)"; ctx.fillRect(x + 1, g - 1, 28, 2);   /* 바닥 그림자는 옅게 · 공중에 떠 있다 */
   } else if (o.k === "tower") {   /* 상자 네 개를 쌓은 탑 · 62 */
     ctx.fillStyle = "rgba(0,0,0,0.18)"; ctx.fillRect(x - 1, g - 1, 18, 2);
@@ -8986,7 +9077,7 @@ function jpDraw(ctx, now) {
   ctx.imageSmoothingEnabled = false;
   if (JP.shake > 0) ctx.translate(Math.round((Math.random() - 0.5) * 4), Math.round((Math.random() - 0.5) * 4));
   jpWorld(ctx, JP.dist);
-  jpRoadTick();   /* v3.75 배경 이정표 · AX 3개년 로드맵 · v3.94 글자는 DOM */
+
   JP.coins.forEach(function (c) { ctx.drawImage(jpCoinCv(), Math.round(c.x), Math.round(c.y + (Math.floor(now / 200 + c.x) % 2))); });
   JP.items.forEach(function (it) { jpItemDraw(ctx, it, now); });
   JP.obs.forEach(function (o) { jpObsDraw(ctx, o); });
@@ -8994,7 +9085,8 @@ function jpDraw(ctx, now) {
   var blink = JP.inv > 0 && Math.floor(now / 90) % 2 === 0;
   if (!blink) {
     var air = JP.py < JP_GY, step = !air && Math.floor(now / 140) % 2, k = jpScale();
-    ctx.drawImage(rgSprCv(air ? "open" : "closed"), JP_PX + (1 - k) * 8, Math.round(JP.py) - 26 * k - (step ? 1 : 0), 28 * k, 26 * k);
+    if (jpDucking()) ctx.drawImage(rgSprCv("duck"), JP_PX - 2 + (1 - k) * 8, Math.round(JP.py) - 16 * k, 32 * k, 16 * k);   /* v3.98 엎드린 미위 */
+    else ctx.drawImage(rgSprCv(air ? "open" : "closed"), JP_PX + (1 - k) * 8, Math.round(JP.py) - 26 * k - (step ? 1 : 0), 28 * k, 26 * k);
   }
   var frac = JP.item ? Math.max(0, JP.itemT / JP_ITEM_SEC) : 0;   /* v3.75 막대 = 아이템 남은 시간 */
   gsHud(ctx, JP_W, "", "", frac);   /* v3.94 글자(라벨·점수·생존 시간·안내·로드맵·배너·팝)는 DOM 글자 레이어 jpTxSync 가 그린다 */
@@ -9009,8 +9101,7 @@ function jpDraw(ctx, now) {
   gsCountDraw(ctx, JP.cd, JP_W, 30, JP_GY);
   ctx.restore();
 }
-/* v3.75 배경 이정표 · 옅은 무채색 큰 글자 · 장애물로 보이지 않게 채도·대비를 낮춘다(v3.72 규칙) · v3.94 글자는 DOM(.jt-road) · 여기는 수명만 */
-function jpRoadTick() { if (JP.roadCur && (JP.roadT || 0) > 6) JP.roadCur = null; }
+
 /* v3.75 아이템 · 커지기(위 화살표) · 작아지기(아래 화살표) · 코인과 헷갈리지 않게 사각 배지 */
 function jpItemDraw(ctx, it, now) {
   var x = Math.round(it.x), y = Math.round(it.y + (Math.floor(now / 220) % 2));
@@ -9024,11 +9115,14 @@ function jpItemDraw(ctx, it, now) {
 function jpPreview() {
   var cv = el("jpPrev"); if (!cv) return;
   var ctx = cv.getContext("2d"); ctx.imageSmoothingEnabled = false;
-  ctx.save(); ctx.translate(0, 110 - JP_H + 8);
+  /* v3.98 미리보기 · 박스를 뛰어넘는 미위 + 낮은 간판 밑으로 엎드린 미위 (세 동작 중 두 자세) */
+  ctx.save(); ctx.translate(0, 64 - JP_GY);
   jpWorld(ctx, 0);
-  jpObsDraw(ctx, { k: "box", x: 92 }); jpObsDraw(ctx, { k: "cone", x: 150 });
-  ctx.drawImage(jpCoinCv(), 118, JP_GY - 44); ctx.drawImage(jpCoinCv(), 132, JP_GY - 50);
-  ctx.drawImage(rgSprCv("open"), 40, JP_GY - 58, 28, 26);
+  jpObsDraw(ctx, { k: "box", x: 46 });
+  ctx.drawImage(jpCoinCv(), 84, JP_GY - 40); ctx.drawImage(jpCoinCv(), 98, JP_GY - 44);
+  ctx.drawImage(rgSprCv("open"), 40, JP_GY - 54, 28, 26);
+  jpObsDraw(ctx, { k: "sign", x: 128 });
+  ctx.drawImage(rgSprCv("duck"), 127, JP_GY - 16, 32, 16);
   ctx.restore();
 }
 
