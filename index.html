@@ -3127,6 +3127,13 @@ function menuItem(target, no, title, desc, badge) {
    before = 행사 전(D-day) / live = 당일 진행 중 / after = 종료 후(감사 인사 + 보상 안내, 카카오 if 종료 화면 문법).
    관리자·데모는 S "ev_phase" 로 강제할 수 있다. */
 var BILL_LOOP = 8;   /* v3.71 광고판 뒤집기 한 바퀴(초) · CSS axFlip 과 같은 값 */
+/* ── v3.89 (사용자 피드백 260918 「입장 연출이 ME to WE 로 끝나는데 광고판은 뜬금없이 점부터 시작한다」) ──
+   입장 전환이 끝나는 순간을 이 세션의 위상 기준(BILL.t0)으로 삼는다. 광고판 글자는 0초(= 모여 있는 ME to WE)에서 출발하고,
+   오른쪽 캔버스는 시퀀스의 「me」 구간 머리에서 출발해 그대로 앞으로 흐른다 → 전환의 심볼과 광고판이 이어져 보인다.
+   공용 시계(AXF.t0)를 건드리지 않고 기준 시각만 세션 것으로 바꾸므로, 홈이 4초마다 다시 그려져도 애니메이션은 이어진다.
+   탭을 옮겼다 돌아오는 것은 입장이 아니므로 기준을 다시 잡지 않는다(그 사이에도 위상은 계속 흐른 것처럼 보인다). */
+var BILL = { t0: 0 };   /* performance.now() 기준 · AXF.t0 와 같은 시계를 쓴다 */
+function billBase() { return BILL.t0 || (window.AXF && AXF.t0 ? AXF.t0 : performance.now()); }
 var EV_START = new Date(2026, 9, 26, 9, 0), EV_END = new Date(2026, 9, 26, 18, 0);
 function evPhase() {
   var o = S.get("ev_phase", null);
@@ -3161,7 +3168,7 @@ function billboardHtml() {
      홈은 4초마다 다시 그려진다 → 공용 시계(AXF.t0)로 음수 delay 를 줘 이어서 돈다 · transform·투명도만 쓴다.
      슬로건 표기는 확정본 「나의 업무 혁신, 우리 회사의 AX가 되다」 (CLAUDE.md) 를 따른다. */
   var sq = AXF_SEQ.map(function (x) { return x[0] + ":" + x[1]; }).join(",");
-  var off = ((Date.now() - (window.AXF && AXF.t0 ? AXF.t0 : Date.now())) / 1000) % BILL_LOOP;
+  var off = ((performance.now() - billBase()) / 1000) % BILL_LOOP;   /* v3.89 세션 기준 · 입장 직후엔 0(= 모여 있는 ME to WE) */
   var d = (-off).toFixed(2) + "s";
   var chars = "ME to WE".split("").map(function (ch, i2) {
     if (ch === " ") return '<span class="sp"> </span>';
@@ -3172,7 +3179,7 @@ function billboardHtml() {
     '<p class="bmw">' + chars + "</p>" +
     '<p class="bko" style="animation-delay:' + d + '"><span>나의 업무 혁신,</span><span>우리 회사의 AX가 되다</span></p>' +
     "</div>" +
-    '<canvas data-axf="loop" data-axf-seq="' + sq + '" data-axf-zoom="0.95" data-axf-stage="orange" data-axf-colors="#FFFFFF,rgba(255,255,255,0.78),#FFFFFF"></canvas></div>';
+    '<canvas data-axf="loop" data-axf-seq="' + sq + '" data-axf-zoom="0.95" data-axf-stage="orange" data-axf-start="me" data-axf-colors="#FFFFFF,rgba(255,255,255,0.78),#FFFFFF"></canvas></div>';
 }
 
 
@@ -9188,6 +9195,16 @@ function axfDraw(cx, name, f, box, colors, alpha, sc) {
 }
 /* ── 첫 화면 시퀀스 · 점 → 구체 → 달리는 사람 → ME to WE (사용자 지정 260916) · 장면 사이는 점으로 흩어졌다 모인다 · 루프 끝 = 시작 ── */
 var AXF_SEQ = [["dot", 3.0], ["sphere", 6.0], ["run", 4.0], ["me", 6.0]], AXF_TRANS = 1.5;
+/* v3.89 시퀀스에서 그 장면이 시작하는 초 · 위상 기준을 옮길 때 쓴다 (없으면 0) */
+function axfSeqStart(name, seq, trans) {
+  seq = seq || AXF_SEQ; trans = trans == null ? AXF_TRANS : trans;
+  var cur = 0;
+  for (var k = 0; k < seq.length; k++) {
+    if (seq[k][0] === name) return cur;
+    cur += seq[k][1] + trans;
+  }
+  return 0;
+}
 function axfSeqAt(T, seq, trans) {
   seq = seq || AXF_SEQ; trans = trans == null ? AXF_TRANS : trans;
   var total = 0, k, cur = 0;
@@ -9208,6 +9225,8 @@ function axfSeqMount(cv, opts) {
   cv.dataset.axfOn = "1";
   opts = opts || {};
   var seq = opts.seq || AXF_SEQ, dark = !!opts.dark, cxf = opts.cx == null ? 0.5 : opts.cx, zoom = opts.zoom || 0.9;
+  /* v3.89 base() = 위상 기준 시각(기본은 공용 시계) · startOff = 그 기준에서 시작할 장면의 초 */
+  var base = opts.base || function () { return AXF.t0; }, startOff = opts.start ? axfSeqStart(opts.start, seq, AXF_TRANS) : 0;
   var cols = opts.colors || null, orange = !!opts.orange;   /* v3.24 · 오렌지 스테이지 위 흰 오브젝트 (원본 좌표·시계는 그대로, 색만 바꾼다) */
   var dpr = Math.min(2, window.devicePixelRatio || 1);
   var rm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -9235,7 +9254,7 @@ function axfSeqMount(cv, opts) {
       cx.fillRect(gx - 0.9 * dpr, gy - 0.9 * dpr, 1.8 * dpr, 1.8 * dpr);
     }
     var b = st.band, sc = Math.min(b.w, b.h) * zoom / 1080, box = { x: b.x + b.w * cxf - 540 * sc, y: b.y + (b.h - 1080 * sc) / 2, s: sc };
-    var T = (performance.now() - AXF.t0) / 1000, f = T * 30, R = Math.min(b.w, b.h) * 0.4;
+    var T = (performance.now() - base()) / 1000 + startOff, f = T * 30, R = Math.min(b.w, b.h) * 0.4;
     if (rm) { axfDraw(cx, seq[seq.length - 1][0], 0, box, cols); return; }
     var q = axfSeqAt(T, seq, AXF_TRANS);
     if (!q.b) axfDraw(cx, q.a, f, box, cols);
@@ -9277,6 +9296,7 @@ function axfMountAll() {
     if (c.dataset.axf === "loop") {                     /* data-axf-seq="circle:5,sphere:7,alpha:7" · 캔버스 전체가 무대 */
       var sq = (c.dataset.axfSeq || "circle:5,sphere:7,alpha:7").split(",").map(function (x) { var y = x.split(":"); return [y[0], +y[1] || 5]; });
       axfSeqMount(c, { seq: sq, dark: c.dataset.axfDark === "1", cx: c.dataset.axfCx ? +c.dataset.axfCx : 0.5, zoom: c.dataset.axfZoom ? +c.dataset.axfZoom : 0.9, band: false,
+        start: c.dataset.axfStart || "", base: c.dataset.axfStart ? billBase : null,
         colors: c.dataset.axfColors ? c.dataset.axfColors.split(",") : null, orange: c.dataset.axfStage === "orange" });
       continue;
     }
@@ -9341,6 +9361,7 @@ function xitionRun(switchNow) {
     el("frame").classList.remove("splash-mode");
     el("app").hidden = false;
     axfStop(el("kvCv"));
+    BILL.t0 = performance.now();   /* v3.89 입장 전환이 끝나는 순간 = 광고판 위상 0 · 전환의 ME to WE 심볼에서 그대로 이어진다 */
     /* 글자 크기를 한 번도 고른 적 없으면, 그런 기능이 있다는 것만 조용히 알린다 (1회) */
     try {
       if (!localStorage.getItem(LS_FS)) setTimeout(function () {
