@@ -514,6 +514,8 @@
   #rgPlay .rg-hud .rg-ib, #rgPlay.rain .rg-hud .rgp-x { flex: none; min-width: 44px; height: 44px; padding: 0 8px; border: 2px solid #000; border-radius: 12px; background: #fff; font-weight: 800; font-size: 13px; color: #000; }
   #rgPlay .rgp-mid.fill { display: block; overflow: hidden; }
   #rgPlay .rgp-mid.fill canvas { position: absolute; left: 0; top: 0; border: 0; border-radius: 0; background: #FFEBE0; image-rendering: auto; }
+  #rgPlay .rg-tip { flex: none; margin: 0; padding: 5px 10px 0; background: #fff; font-size: 13px; font-weight: 800; color: #D64524; text-align: center; }
+  #rgPlay .rg-tip[hidden] { display: none; }
   #rgPlay.rain .rg-form { gap: 6px; padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)); }
   #rgPlay.rain .rg-form .input { height: 48px; font-size: 17px; transition: border-color 0.1s, background 0.1s; }
   #rgPlay.rain .rg-form .btn { min-width: 64px; height: 48px; padding: 0 14px; }
@@ -6077,7 +6079,9 @@ function rgFontStr(px) { return "800 " + px + "px " + RAIN_FONT; }
 function rgWordY(w) { var L = RG.L; return L.top + Math.min(1, w.p) * L.fallPx; }
 /* ═══ v3.36c 휴대폰 전체화면 플레이 · v3.36d 캔버스는 중간 영역을 꽉 채우고 실제 해상도로 그린다 ═══
    입력: 쏘기 버튼은 누르는 순간 기본 동작을 막아 키보드가 닫히지 않게 · 캔버스를 눌러도 입력창 포커스.
-   한글 조합: compositionstart/end 추적 · 조합 중 Enter 는 조합이 끝난 뒤 한 틱 뒤 판정 · 입력창 비우기는 새 입력창으로 바꿔 끼워 남은 글자 방지.
+   한글 조합(v3.82 · iOS 대응): 입력창 노드는 한 판 내내 절대 바꾸지 않는다(교체하면 사파리에서 포커스·IME 가 끊겨 글자가 먹힌다).
+   판정은 input 이벤트에서 조합 중 글자까지 포함해 본다(iOS 는 compositionend 가 늦게 와서 기다리면 단어가 안 터진다) · 같은 단어 중복 판정은 400ms 안에서 막는다.
+   비우기는 value = "" 한 줄 · 조합이 열려 있을 때만 같은 노드를 한 번 blur→focus 해서 조합 버퍼를 끊는다.
    실시간 판정(터치 기기만): 입력이 떨어지는 단어와 정확히 같아지는 순간 Enter 없이 터진다 · PC 는 Enter 판정 유지. */
 function rgMobile() {
   try { return (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) || window.innerWidth < 600; } catch (e) { return window.innerWidth < 600; }
@@ -6120,18 +6124,19 @@ function rgFit(cv, w, h) {
   rgDraw(ctx, performance.now());
 }
 function rgFormHtml() {
-  return '<form class="rg-form" id="rgForm" onsubmit="event.preventDefault(); rgEnter()">' + rgInputHtml() +
+  return '<p class="rg-tip" id="rgTip" hidden>한글 자판으로 바꿔 주세요</p>' +
+    '<form class="rg-form" id="rgForm" onsubmit="event.preventDefault(); rgEnter()">' + rgInputHtml() +
     '<button class="btn mint" type="submit" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" ontouchstart="event.preventDefault(); rgEnter()">쏘기</button></form>';
 }
 function rgInputHtml() {
   return '<input id="rgIn" class="input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" inputmode="text" maxlength="12" placeholder="' + (RGP.touch ? "단어를 치면 바로 터져요" : "떨어지는 단어를 치고 Enter") + '" ' +
     'onpaste="event.preventDefault()" ondrop="event.preventDefault()" oninput="rgLive(event)">';
 }
-/* compositionstart/end 는 인라인 속성이 없어 리스너로 붙인다 · 떼어낸 옛 입력창의 늦은 compositionend 는 무시 */
+/* compositionstart/end 는 인라인 속성이 없어 리스너로 붙인다 · v3.82 입력창을 바꾸지 않으므로 한 번만 붙는다 */
 function rgBindInput(inp) {
   if (!inp || inp._rgb) return; inp._rgb = 1;
-  inp.addEventListener("compositionstart", function () { if (inp === el("rgIn")) RG.composing = true; });
-  inp.addEventListener("compositionend", function () { if (inp === el("rgIn")) rgCompEnd(); });
+  inp.addEventListener("compositionstart", function () { RG.composing = true; });
+  inp.addEventListener("compositionend", function () { rgCompEnd(); });
   inp.addEventListener("keydown", function (e) { if (e.key === "Escape" && inp === el("rgIn")) { e.preventDefault(); rgAutoClear(); } });   /* v3.56 Esc = 즉시 비우기 */
 }
 function rgFocus() { var i = el("rgIn"); if (i && document.activeElement !== i) i.focus(); }
@@ -6140,19 +6145,35 @@ function rgCompEnd() {
   if (RG.pendingEnter) { RG.pendingEnter = false; setTimeout(rgSubmit, 0); }
   else setTimeout(function () { rgLive(null); }, 0);   /* v3.56 조합이 끝난 글자로 다시 본다 (자동 비우기 판정) */
 }
+/* v3.82 조합 중 글자인지 · 「ㄷ」 같은 낱자는 접두사 판정에서 뺀다 (안 그러면 치는 족족 지워진다) */
+function rgJamoTail(v) { var c = v.charCodeAt(v.length - 1); return c >= 0x3131 && c <= 0x318e; }
+function rgLatinOnly(v) { return !!v && /^[A-Za-z]+$/.test(v); }
+/* v3.82 영문 자판 안내 · 로마자만 2초 이상 들고 있으면 입력창 위에 한 줄 (팝업 없음 · 한글이 오면 바로 사라진다) */
+function rgTipShow(on) {
+  if (!!RG.tip === !!on) return;
+  RG.tip = !!on;
+  var t = el("rgTip"); if (t) t.hidden = !on;
+}
+function rgTipTick(now) {
+  if (!RG.latT) { rgTipShow(false); return; }
+  if (now - RG.latT >= 2000) rgTipShow(true);
+}
 /* Enter · 조합 중이면 조합이 끝난 뒤 판정 */
 function rgEnter() {
   if (RG.composing) { RG.pendingEnter = true; return; }
   setTimeout(rgSubmit, 0);
 }
-/* 실시간 판정 (터치 기기만) · 정확히 같은 단어가 있을 때만 · 틀림 판정은 Enter 로만 */
+/* 실시간 판정 (터치 기기만) · 정확히 같은 단어가 있을 때만 · 틀림 판정은 Enter 로만
+   v3.82 조합이 끝나기를 기다리지 않는다 · iOS 는 마지막 글자의 compositionend 가 다음 글자를 칠 때까지 안 와서 단어가 안 터졌다 */
 function rgLive(e) {
   if (!RGP.on || !RG.on || RG.cd > 0 || RG.ending || RG.paused) return;
-  rgCheckInput();   /* v3.56 · 앱·현장 노트북 공통 */
-  if (!RGP.touch) return;
   var inp = el("rgIn"); if (!inp) return;
   var v = inp.value.trim();
-  if (v && RG.words.some(function (w) { return w.text === v; })) rgSubmit();
+  RG.typed = v;                                   /* 조합 중 글자도 화면에서 짚어 준다 */
+  RG.latT = rgLatinOnly(v) ? (RG.latT || performance.now()) : 0;
+  if (!RG.latT) rgTipShow(false);
+  if (RGP.touch && v && RG.words.some(function (w) { return w.text === v; })) { rgSubmit(); return; }
+  rgCheckInput(v);   /* v3.56 · 앱·현장 노트북 공통 */
 }
 /* ── v3.56 치던 단어가 사라지면 입력창을 바로 비운다 (사용자 피드백 260918 · 60초 게임에서 지우는 시간이 아깝다) ──
    판정 = 조합이 끝난 글자 기준 접두사 · 지금 떨어지는 단어 중 그 글자로 시작하는 것이 하나도 없으면 비운다.
@@ -6160,22 +6181,25 @@ function rgLive(e) {
    자동으로 지운 글자는 오타(RG.tries)로 세지 않는다 → 점수·정확도 불변. 피드백은 테두리 한 번 + 「뚝」 소리뿐. */
 function rgPrefixAlive(v) { return RG.words.some(function (w) { return w.text.indexOf(v) === 0; }); }
 /* v3.72 전부 지우지 않고 「아직 맞는 앞부분」까지만 남긴다 (오타 한 글자 때문에 단어를 통째로 잃지 않게)
-   터치 기기는 조합 버퍼 때문에 입력창을 통째로 갈아 끼우므로 그때는 전체 비우기 그대로 */
+   v3.82 조합이 열려 있을 때는 앞부분만 남기지 않는다 (IME 가 그 글자 위에 계속 조합해서 뒤죽박죽이 된다) → 통째로 비운다 */
 function rgAutoClear() {
   var inp = el("rgIn"); if (!inp || !inp.value) return;
   var v = inp.value.trim(), keep = "";
   for (var n = v.length - 1; n > 0; n--) { if (rgPrefixAlive(v.slice(0, n))) { keep = v.slice(0, n); break; } }
-  if (keep && !RGP.touch) { inp.value = keep; inp.focus(); RG.typed = keep; }
+  if (keep && !RG.composing) { inp.value = keep; RG.typed = keep; if (document.activeElement !== inp) inp.focus(); }
   else { rgClearInput(); RG.typed = ""; }
   rgFlash("auto");
   sfx("tik");
 }
-function rgCheckInput() {
-  if (!RG.on || RG.composing || RG.cd > 0 || RG.ending || RG.paused) return;
+function rgCheckInput(v) {
+  if (!RG.on || RG.cd > 0 || RG.ending || RG.paused) return;
   var inp = el("rgIn"); if (!inp) return;
-  var v = inp.value.trim();
+  if (v == null) v = inp.value.trim();
   RG.typed = v;   /* v3.72 지금 치고 있는 글자 · 그리기에서 맞는 단어를 짚어 준다 */
-  if (v && !rgPrefixAlive(v)) rgAutoClear();
+  if (!v) return;
+  if (rgJamoTail(v)) return;    /* v3.82 아직 만들어지는 중인 낱자 · 자동 비우기 보류 */
+  if (rgLatinOnly(v)) return;   /* v3.82 영문 자판이면 지우지 말고 안내 한 줄로 알려 준다 */
+  if (!rgPrefixAlive(v)) rgAutoClear();
 }
 /* v3.72 치던 글자와 맞는 단어 중 가장 아래 것 (화면에서 짚어 준다) */
 function rgTypedIdx() {
@@ -6184,18 +6208,18 @@ function rgTypedIdx() {
   RG.words.forEach(function (w, i) { if (w.text.indexOf(v) === 0 && (hit < 0 || w.p > RG.words[hit].p)) hit = i; });
   return hit;
 }
-/* 입력창 비우기 · 터치 기기는 조합 버퍼가 남지 않게 새 입력창으로 바꿔 끼우고 같은 틱에 포커스(키보드는 열린 채) */
+/* 입력창 비우기 · v3.82 (아이폰 실기 제보 260918 「타자 게임이 안 된다」)
+   옛 방식은 터치 기기에서 입력창 노드를 통째로 갈아 끼웠다 → iOS 사파리는 포커스와 IME 상태를 함께 잃어 글자가 사라지고 키보드가 닫혔다.
+   지금은 노드를 그대로 두고 value 만 비운다 · 조합이 열려 있을 때만 같은 노드를 한 번 blur→focus 해서 조합 버퍼를 끊는다(키보드는 같은 틱에 다시 열린다). */
 function rgClearInput() {
   RG.typed = "";
-  var old = el("rgIn"); if (!old) return;
-  if (!RGP.touch) { old.value = ""; old.focus(); return; }
-  var tmp = document.createElement("span"); tmp.innerHTML = rgInputHtml();
-  var fresh = tmp.firstChild;
-  old.parentNode.insertBefore(fresh, old);
-  rgBindInput(fresh);
-  fresh.focus();
-  old.parentNode.removeChild(old);
-  RG.composing = false;
+  var inp = el("rgIn"); if (!inp) return;
+  inp.value = "";
+  if (RG.composing) {
+    RG.composing = false;
+    try { inp.blur(); inp.focus(); } catch (e) {}
+    if (inp.value) inp.value = "";
+  } else if (document.activeElement !== inp) inp.focus();
 }
 /* 입력 막대 반응 · 맞힘 = 테두리 O100 0.15초 · 틀림 = 회색 + 짧은 흔들림 (캔버스 MISS 글자는 두지 않는다 · 중복 금지) */
 function rgFlash(kind) {
@@ -6256,7 +6280,7 @@ function rgStart(mode) {
   RG.mode = mode || "app"; RG.words = []; RG.parts = []; RG.pops = []; RG.hitWords = []; RG.bag = null; RG.recent = []; RG.surv = 0; RG.lives = RAIN_LIVES; RG.score = 0; RG.hits = 0; RG.tries = 0;
   RG.combo = 0; RG.maxCombo = 0; RG.stage = 1; RG.spawnT = 0.3; RG.shake = 0; RG.banner = null; RG.shot = null; RG.res = null; RG.ending = null; RG.heartHit = 0;
   RG.mas = { x: 90, tx: 90, open: 0, set: false }; RG.cd = 3.2; RG.t0 = 0; RG.on = true; RG.last = performance.now(); RG.L = null; RG.hud = "";
-  RG.paused = false; RG.composing = false; RG.pendingEnter = false;
+  RG.paused = false; RG.composing = false; RG.pendingEnter = false; RG.typed = ""; RG.lastHit = null; RG.latT = 0; RG.tip = false;
   RG.big = RG.mode === "site" || (!rgTouch() && window.innerWidth >= 700);
   SFX.site = RG.mode === "site";   /* v3.51 현장 타자왕전은 site_sound(기본 끔) */   /* 현장 노트북 · 넓은 화면은 별도 배치 */
   rgPlayOpen();
@@ -6316,6 +6340,7 @@ function rgUpdate(dt, now) {
   var L = RG.L; if (!L) return;
   var el0 = rgElapsed(now);
   RG.surv = el0;
+  rgTipTick(now);   /* v3.82 영문 자판 안내 */
   if (el0 >= RAIN_MAX_SEC) { rgEnd("time"); return; }   /* v3.80 안전 상한 5분 */
   var st = Math.min(L.stages, 1 + Math.floor(el0 / RAIN_STAGE_SEC));
   if (st > RG.stage) { RG.stage = st; RG.banner = { text: "LEVEL " + st, t: 1.3 }; sfx("level"); }
@@ -6358,6 +6383,8 @@ function rgSubmit() {
   var v = inp.value.trim();
   if (!v) { if (inp.value) { rgClearInput(); rgFlash("auto"); }  /* v3.56 빈 판정(공백만)도 즉시 비움 · 오타 아님 */
     return; }
+  var tnow = performance.now();
+  if (RG.lastHit && RG.lastHit.v === v && tnow - RG.lastHit.t < 400) { rgClearInput(); return; }   /* v3.82 한 단어가 두 번 터지지 않게 (iOS 는 input 이 연달아 온다) */
   rgClearInput();
   RG.tries++;
   var hit = -1;
@@ -6369,6 +6396,7 @@ function rgSubmit() {
     return;
   }
   var L = RG.L, wd = RG.words.splice(hit, 1)[0];
+  RG.lastHit = { v: v, t: tnow };
   RG.combo++; RG.hits++; RG.maxCombo = Math.max(RG.maxCombo, RG.combo);
   var mult = 1 + 0.2 * Math.min(RG.combo - 1, 10), pts = Math.round(wd.text.length * 10 * mult);
   RG.score += pts;
