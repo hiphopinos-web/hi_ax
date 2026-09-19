@@ -588,18 +588,36 @@
   /* v3.87b (사용자 레퍼런스 260918) 둥근 조작 버튼이 판 아래 빈 띠에 떠 있다 · 상자형 패널 없음 ·
      왼손 십자(위 = 바닥까지 · 아래 = 한 칸씩 · 좌우 이동) · 오른손 회전 둘(반시계 · 시계) · 색은 우리 팔레트(주황·검정·흰색). */
   #rgPlay .tt-pad { flex: none; position: relative; display: flex; align-items: flex-start; justify-content: space-between; height: 152px; padding: 6px 14px calc(6px + env(safe-area-inset-bottom, 0px)); background: #fff; touch-action: none; user-select: none; -webkit-user-select: none; }
-  /* v3.95 버튼 다섯 개 모두 같은 원(58px) · 옅은 테두리 + 얕은 그림자 · 눌림 = 오렌지 채움 + 흰 글리프 · 자리는 v3.87d 그대로 */
-  #rgPlay .tt-dpad { position: relative; width: 174px; height: 118px; flex: none; }
-  #rgPlay .tt-rot { position: relative; width: 124px; height: 118px; flex: none; }
-  #rgPlay .tt-c { position: absolute; width: 58px; height: 58px; border-radius: 50%; border: 1px solid #DDD3CB; background: #fff; color: #1F1B18; display: flex; align-items: center; justify-content: center; padding: 0; touch-action: none;
-    box-shadow: 0 2px 6px rgba(31, 27, 24, 0.12), 0 1px 1px rgba(31, 27, 24, 0.06); transition: transform 0.06s, background-color 0.06s; }
-  #rgPlay .tt-c svg { width: 24px; height: 24px; fill: currentColor; }
-  #rgPlay .tt-c.on { background: #FF7E31; border-color: #FF7E31; color: #fff; box-shadow: 0 1px 2px rgba(214, 69, 36, 0.3); transform: scale(0.96); }
+  /* v4.01 (사용자 요청 260919) 조작 버튼 역할별 위계 · 개수 다섯 · 자리 원칙(왼손 이동 · 오른손 회전 아래 안쪽 + 바닥까지 대각선 위)은 v3.87d 그대로.
+     이동(좌·우·한 칸) = 웜그레이 한 판(ㅜ 모양) 위의 흰 둥근 네모 키 · 회전 = 가장 큰 오렌지 원(가장 자주 누른다) · 바닥까지 = 먹색 둥근 네모(되돌릴 수 없는 확정).
+     누름 = 아래 받침 그림자가 사라지며 2~3px 가라앉는다 · 누르는 순간은 전환 없음(지연 0) · 떼면 0.09초로 돌아온다.
+     실제 히트 영역은 보이는 크기보다 크다(::after) · 이웃 버튼과는 겹치지 않는다(틈 10px · 확장 5px). */
+  #rgPlay .tt-dpad { position: relative; width: 188px; height: 121px; flex: none; }
+  #rgPlay .tt-dpad::before, #rgPlay .tt-dpad::after { content: ""; position: absolute; background: #F4F2F0; border-radius: 20px; pointer-events: none; }
+  #rgPlay .tt-dpad::before { left: -5px; top: -5px; width: 198px; height: 68px; }
+  #rgPlay .tt-dpad::after { left: 61px; top: -5px; width: 66px; height: 128px; }
+  #rgPlay .tt-rot { position: relative; width: 134px; height: 121px; flex: none; }
+  #rgPlay .tt-c { position: absolute; z-index: 1; display: flex; align-items: center; justify-content: center; padding: 0; margin: 0; border: 0; touch-action: none; -webkit-tap-highlight-color: transparent;
+    transition: transform 0.09s ease-out, box-shadow 0.09s ease-out, background-color 0.09s; }
+  #rgPlay .tt-c::after { content: ""; position: absolute; inset: -5px; border-radius: inherit; }   /* 보이는 크기보다 큰 히트 영역 */
+  #rgPlay .tt-c svg { position: relative; pointer-events: none; }
+  #rgPlay .tt-c.on { transition: none; }   /* 누르는 순간은 곧바로 */
+  #rgPlay .tt-c.mv { width: 56px; height: 56px; border-radius: 16px; background: #fff; color: #1F1B18; box-shadow: 0 0 0 1px #DDD3CB, 0 3px 0 #DDD3CB; }
+  #rgPlay .tt-c.mv svg { width: 26px; height: 26px; }
+  #rgPlay .tt-c.mv.on { background: #FF7E31; color: #fff; box-shadow: 0 0 0 1px #FF7E31, 0 0 0 #DDD3CB; transform: translateY(3px); }
+  #rgPlay .tt-c.cw { width: 74px; height: 74px; border-radius: 50%; background: #FF7E31; color: #fff; box-shadow: 0 4px 0 #D64524, 0 6px 12px rgba(214, 69, 36, 0.22); }
+  #rgPlay .tt-c.cw::after { inset: -8px; }
+  #rgPlay .tt-c.cw svg { width: 36px; height: 36px; }
+  #rgPlay .tt-c.cw.on { background: #D64524; box-shadow: 0 0 0 #D64524, 0 1px 3px rgba(214, 69, 36, 0.25); transform: translateY(4px) scale(0.97); }
+  #rgPlay .tt-c.up { width: 54px; height: 54px; border-radius: 17px; background: #1F1B18; color: #fff; box-shadow: 0 3px 0 #000, 0 5px 10px rgba(31, 27, 24, 0.18); }
+  #rgPlay .tt-c.up::after { inset: -6px; }
+  #rgPlay .tt-c.up svg { width: 26px; height: 26px; }
+  #rgPlay .tt-c.up.on { background: #FF7E31; color: #fff; box-shadow: 0 0 0 #000; transform: translateY(3px); }
   #rgPlay .tt-dpad .lf { left: 0; top: 0; }
-  #rgPlay .tt-dpad .rt { left: 116px; top: 0; }
-  #rgPlay .tt-dpad .dn { left: 58px; top: 58px; }
-  #rgPlay .tt-rot .cw { left: 0; top: 58px; }      /* 회전 · 엄지 안쪽 아래 */
-  #rgPlay .tt-rot .up { left: 64px; top: 0; }      /* 바닥까지 · 대각선 바깥 위 */
+  #rgPlay .tt-dpad .rt { left: 132px; top: 0; }
+  #rgPlay .tt-dpad .dn { left: 66px; top: 62px; }
+  #rgPlay .tt-rot .cw { left: 0; top: 43px; }      /* 회전 · 엄지 안쪽 아래 · 가장 크다 */
+  #rgPlay .tt-rot .up { left: 80px; top: 0; }      /* 바닥까지 · 대각선 바깥 위 · 회전과 18px 이상 띄운다 */
   #rgPlay.tetris .rg-hud { gap: 14px; }
   #rgPlay.tetris .rg-hud .rg-sc { min-width: 0; }
   #rgPlay.tetris .rg-hud .rg-sc small { font-size: 12px; }
@@ -7421,11 +7439,11 @@ function olyRows(list, valFn) {
    규칙: 10×20 · 블록 7종 · 회전(막히면 좌우·위로 한 칸씩 밀어 본다) · 한 칸 내리기 · 즉시 떨어뜨리기 ·
         한 번에 지운 줄 1/2/3/4 = 100/300/500/800 × 레벨 · TT_LV_LINES 줄마다 레벨 +1 → 낙하가 빨라진다 · 안전 상한 5분.
    기록 = 버틴 시간(1/100초 · 길수록 좋다 · v3.87 사용자 확정) · 지운 줄·점수·레벨은 결과 카드의 보조 지표 · 올림픽 목표 60초.
-   조작: 화면 아래 가상 버튼이 기본이다(늘 보인다 · 최소 56px · 왼쪽·오른쪽은 누르고 있으면 반복).
+   조작: 화면 아래 가상 버튼이 기본이다(늘 보인다 · 최소 54px + 히트 영역 5~8px · 좌·우·한 칸은 누르고 있으면 0.17초 뒤 0.05초마다 반복 · 마지막 누름 우선).
         쓸어넘기기(좌우 이동 · 아래 내리기 · 위로 즉시 떨어뜨리기 · 탭 회전)는 보조로 같이 동작한다.
    보기: v3.48 플랫 · 흰 바탕 · 블록 7종은 채움이 모두 다르다 · 유령 블록 · 다음 블록 · 줄 지울 때 번쩍임. 이모지 없음. */
 var TT_COLS = 10, TT_ROWS = 20, TT_MAX_SEC = 300;
-var TT_DAS = 0.22, TT_ARR = 0.07, TT_SOFT_REP = 0.055;      /* 누르고 있을 때 · 첫 반복까지 0.22초, 그다음 0.07초 */
+var TT_DAS = 0.17, TT_ARR = 0.05, TT_SOFT_REP = 0.05;      /* v4.01 누르고 있을 때 · 첫 반복까지 0.17초, 그다음 0.05초 (구 0.22 / 0.07) */
 var TT_LOCK = 0.5, TT_LOCK_MAX = 12;                        /* 바닥에 닿고 고정될 때까지 · 움직이면 미뤄지되 12번까지 */
 var TT_LINE_PTS = [0, 100, 300, 500, 800];
 var TT_PIECES = {
@@ -7459,7 +7477,8 @@ var TT_KICK = [[0, 0], [-1, 0], [1, 0], [-2, 0], [2, 0], [0, -1], [-1, -1], [1, 
 var TT = { on: false, raf: 0, L: null, parts: [], pops: [] };
 
 function ttStop() { TT.on = false; if (TT.raf) cancelAnimationFrame(TT.raf); TT.raf = 0; gsOverlayClose("tetris"); }
-function ttVib(ms) { try { if (navigator.vibrate && !rgReduced()) navigator.vibrate(ms); } catch (e) {} }
+/* 진동 · 지원 기기만(iOS 는 navigator.vibrate 가 없어 조용히 넘어간다) · 동작 줄이기 설정이면 끈다 · 소리 설정과는 묶지 않는다(소리는 기본 꺼짐) */
+function ttVib(ms) { try { if (navigator.vibrate && !rgReduced() && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(ms); } catch (e) {} }
 function ttGridNew() { var g = []; for (var y = 0; y < TT_ROWS; y++) { g.push([]); for (var x = 0; x < TT_COLS; x++) g[y].push(""); } return g; }
 /* 글자를 얹을 칸 = 블록 중심에 가장 가까운 칸 (회전해도 자연스럽게 따라간다) */
 function ttTokCell(m) {
@@ -7577,22 +7596,40 @@ function ttAct(k) {
   if (k === "HARD") return ttHard();
   return false;
 }
-/* rep = 반복 중인 호출(진동·반복 예약 없음) */
+/* rep = 반복 중인 호출 또는 키보드(진동·반복 예약 없음 · 키보드는 OS 반복을 쓴다)
+   v4.01 누르고 있는 이동 버튼 목록 TT.held · 마지막에 누른 것이 반복한다 · 그걸 떼면 아직 누르고 있는 것으로 이어간다 */
+var TT_HOLD = { L: 1, R: 1, SOFT: 1 };
 function ttDo(k, rep) {
   var ok = ttAct(k);
   if (!rep) {
-    ttVib(k === "HARD" ? 16 : 8);
-    if (k === "L" || k === "R" || k === "SOFT") TT.rep = { k: k, t: TT_DAS };
+    ttVib(k === "HARD" ? 14 : 10);
+    if (TT_HOLD[k] && TT.on && !TT.paused && !TT.ending) {
+      TT.held = (TT.held || []).filter(function (h) { return h !== k; }); TT.held.push(k);
+      TT.rep = { k: k, t: TT_DAS };
+    }
   }
   return ok;
 }
-function ttRelease(k) { if (TT.rep && TT.rep.k === k) TT.rep = null; }
+function ttRelease(k) {
+  if (!TT_HOLD[k]) return;
+  TT.held = (TT.held || []).filter(function (h) { return h !== k; });
+  if (TT.rep && TT.rep.k === k) {
+    var nk = TT.held.length ? TT.held[TT.held.length - 1] : "";
+    TT.rep = nk ? { k: nk, t: TT_DAS } : null;
+  }
+}
+/* 모든 누름을 푼다 · 일시정지 · 화면 이탈 · 창 포커스 잃음 · 끝 */
+function ttPadReset() {
+  TT.rep = null; TT.held = [];
+  var pad = el("ttPad");
+  if (pad) Array.prototype.forEach.call(pad.querySelectorAll("[data-k]"), function (b) { b._pid = null; b.classList.remove("on"); });
+}
 function ttStart() {
   ttStop();
   SFX.site = false;
   TT = { on: true, paused: false, ending: null, raf: 0, cd: 3.2, t0: 0, last: performance.now(), L: null, dpr: 1,
     grid: ttGridNew(), tok: ttGridNew(), bag: null, cur: null, nextK: null, lines: 0, score: 0, level: 1, pieces: 0, surv: 0,
-    clears: [0, 0, 0, 0], gt: 0, lockT: 0, lockN: 0, flash: null, drop: null, rep: null, sw: null,
+    clears: [0, 0, 0, 0], gt: 0, lockT: 0, lockN: 0, flash: null, drop: null, rep: null, held: [], sw: null,
     parts: [], pops: [], banner: null, shake: 0, hud: "" };
   TT.nextQ = [ttNextKey(), ttNextKey()];   /* v3.87b 다음 블록 두 개를 보여 준다 */
   TT.nextK = TT.nextQ[0];
@@ -7621,12 +7658,13 @@ function ttStart() {
       var k = e.key === "ArrowLeft" ? "L" : e.key === "ArrowRight" ? "R" : e.key === "ArrowDown" ? "SOFT" : (e.key === "ArrowUp" || e.key === "x") ? "ROT" : (e.key === "z" || e.key === "Z") ? "ROTL" : (e.code === "Space" || e.key === " ") ? "HARD" : "";
       if (!k) return;
       e.preventDefault();
-      ttDo(k, !!e.repeat);
+      ttDo(k, true);   /* v4.01 키보드는 OS 반복을 쓴다 · 뗌(keyup)을 받지 않으므로 버튼 반복을 걸면 멈추지 않는다 */
     },
     running: function () { return TT.on && !TT.paused && !TT.ending; }, isPaused: function () { return !!TT.paused; },
-    pause: function () { TT.rep = null; gsPauseState(TT); }, resume: function () { gsResumeState(TT, ttFrame); },
+    pause: function () { ttPadReset(); gsPauseState(TT); }, resume: function () { gsResumeState(TT, ttFrame); },
     quit: function () { ttStop(); App.render(); } });
   ttBindPad();
+  if (!ttPadReset.bound) { ttPadReset.bound = true; window.addEventListener("blur", ttPadReset); }
   TT.raf = requestAnimationFrame(ttFrame);
 }
 function ttTopHtml() {
@@ -7642,14 +7680,16 @@ function ttTopHtml() {
    왼손 = 왼쪽 · 오른쪽 · 한 칸 내리기 (십자의 위 칸은 없앴다) · 오른손 = 아래 안쪽 회전(시계만) · 대각선 위 바닥까지.
    판 아래 빈 띠에만 두어 블록이 떨어지는 자리를 가리지 않는다 · 쓸어넘기기(위로 쓸면 바닥까지)는 그대로 보조로 동작한다. */
 function ttPadHtml() {
-  var L = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 3.5 L6.5 12 L15.5 20.5 Z"/></svg>';
-  var R = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3.5 L17.5 12 L8.5 20.5 Z"/></svg>';
-  var DN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7 L12 14 L19 7 Z"/></svg>';
-  var HD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3 L12 10 L19 3 Z"/><path d="M5 10 L12 17 L19 10 Z"/><rect x="5" y="19" width="14" height="2.4" rx="1.2"/></svg>';
-  var CW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12 A8 8 0 1 1 12 4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M12 0.5 L12 7.5 L6.5 4 Z"/></svg>';
+  /* v4.01 벡터 글리프 · 이동 = 둥근 삼각형(채움) · 회전 = 시계 방향 원호 + 화살촉 · 바닥까지 = 겹화살 + 바닥 선 */
+  var A = ' fill="currentColor" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"', S = ' fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"';
+  var L = '<svg viewBox="0 0 24 24" aria-hidden="true"><path' + A + ' d="M15.5 5.5 L7.5 12 L15.5 18.5 Z"/></svg>';
+  var R = '<svg viewBox="0 0 24 24" aria-hidden="true"><path' + A + ' d="M8.5 5.5 L16.5 12 L8.5 18.5 Z"/></svg>';
+  var DN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path' + A + ' d="M5.5 8.5 L12 16.5 L18.5 8.5 Z"/></svg>';
+  var HD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path' + S + ' stroke-width="2.6" d="M6.5 3.5 L12 9 L17.5 3.5 M6.5 10 L12 15.5 L17.5 10 M5 20.5 H19"/></svg>';
+  var CW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path' + S + ' stroke-width="2.6" d="M12 4.5 A7.5 7.5 0 1 1 4.5 12"/><path' + A + ' stroke-width="1.4" d="M1 12.8 L4.5 7 L8 12.8 Z"/></svg>';
   return '<div class="tt-pad" id="ttPad">' +
-    '<div class="tt-dpad">' + ttBtnHtml("L", "왼쪽으로", L, "lf") + ttBtnHtml("R", "오른쪽으로", R, "rt") +
-      ttBtnHtml("SOFT", "한 칸 내리기", DN, "dn") + "</div>" +
+    '<div class="tt-dpad">' + ttBtnHtml("L", "왼쪽으로", L, "mv lf") + ttBtnHtml("R", "오른쪽으로", R, "mv rt") +
+      ttBtnHtml("SOFT", "한 칸 내리기", DN, "mv dn") + "</div>" +
     '<div class="tt-rot">' + ttBtnHtml("ROT", "회전", CW, "cw") + ttBtnHtml("HARD", "바닥까지 떨어뜨리기", HD, "up") + "</div>" +
     '<p class="tt-cap">왼쪽 = 좌우·한 칸씩 · 오른쪽 아래 = 회전 · 위 = 바닥까지</p></div>';
 }
@@ -7659,27 +7699,36 @@ function ttBtnHtml(k, label, svg, cls) {
 /* v3.87c (실기 제보 260918 「조작 버튼이 먹히지 않는다」) 버튼을 찾는 기준은 data-k 하나다.
    v3.87b 에서 버튼 class 를 tt-b → tt-c 로 바꾸면서 여기 선택자를 같이 못 바꿔 리스너가 한 개도 안 붙었다.
    class 이름에 기대지 않게 [data-k] 로 찾는다 · 포인터 이벤트가 없는 기기를 위해 touch 도 같이 받는다. */
+/* v4.01 버튼마다 누른 손가락 하나만 받는다(b._pid) · 뗌·취소·캡처 잃음·화면 이탈·일시정지 어느 쪽으로 끝나도 반복이 멈춘다. */
 function ttBindPad() {
   var pad = el("ttPad"); if (!pad) return;
-  var down = function (b, k, e) {
+  var down = function (b, k, e, pid) {
     if (e.cancelable) e.preventDefault();
+    if (b._pid != null) return;   /* 같은 버튼을 두 손가락이 누르면 첫 손가락만 */
+    b._pid = pid;
     b.classList.add("on");
     ttDo(k, false);
   };
-  var up = function (b, k) { b.classList.remove("on"); ttRelease(k); };
+  var up = function (b, k, pid) {
+    if (b._pid == null || (pid != null && b._pid !== pid)) return;
+    b._pid = null;
+    b.classList.remove("on"); ttRelease(k);
+  };
   Array.prototype.forEach.call(pad.querySelectorAll("[data-k]"), function (b) {
     var k = b.getAttribute("data-k");
+    b._pid = null;
     if (window.PointerEvent) {
       b.addEventListener("pointerdown", function (e) {
         try { if (b.setPointerCapture) b.setPointerCapture(e.pointerId); } catch (x) {}
-        down(b, k, e);
+        down(b, k, e, e.pointerId);
       });
-      ["pointerup", "pointercancel", "pointerleave"].forEach(function (t) { b.addEventListener(t, function () { up(b, k); }); });
+      ["pointerup", "pointercancel", "lostpointercapture"].forEach(function (t) { b.addEventListener(t, function (e) { up(b, k, e.pointerId); }); });
+      b.addEventListener("contextmenu", function (e) { e.preventDefault(); });   /* 길게 누를 때 메뉴가 뜨지 않게 */
     } else {
-      b.addEventListener("touchstart", function (e) { down(b, k, e); }, { passive: false });
-      ["touchend", "touchcancel"].forEach(function (t) { b.addEventListener(t, function (e) { if (e.cancelable) e.preventDefault(); up(b, k); }, { passive: false }); });
-      b.addEventListener("mousedown", function (e) { down(b, k, e); });
-      ["mouseup", "mouseleave"].forEach(function (t) { b.addEventListener(t, function () { up(b, k); }); });
+      b.addEventListener("touchstart", function (e) { down(b, k, e, "t"); }, { passive: false });
+      ["touchend", "touchcancel"].forEach(function (t) { b.addEventListener(t, function (e) { if (e.cancelable) e.preventDefault(); up(b, k, "t"); }, { passive: false }); });
+      b.addEventListener("mousedown", function (e) { down(b, k, e, "m"); });
+      ["mouseup", "mouseleave"].forEach(function (t) { b.addEventListener(t, function () { up(b, k, "m"); }); });
     }
   });
 }
@@ -7759,7 +7808,7 @@ function ttHud() {
 }
 function ttEnd(why) {
   if (!TT.on || TT.ending) return;
-  TT.rep = null;
+  ttPadReset();
   TT.ending = { t: 1.2, why: why };
   TT.banner = null;
   sfx("over");
