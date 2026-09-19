@@ -524,7 +524,7 @@
   #rgPlay .rgp-mid.fill { display: block; overflow: hidden; }
   /* v3.94 점프 글자 레이어 · 캔버스(180×240 도트)를 키우면 글자가 뭉개져서 글자만 DOM 으로 올린다 · --u = 캔버스 1칸의 CSS px */
   #jpTx { position: absolute; pointer-events: none; overflow: hidden; border-radius: 10px; font-family: inherit; font-variant-numeric: tabular-nums; }
-  #jpTx .jt-hint[hidden], #jpTx .jt-bg[hidden] { display: none; }
+  #jpTx .jt-hint[hidden], #jpTx .jt-fact[hidden] { display: none; }
   #jpTx .jt-l, #jpTx .jt-s { position: absolute; top: calc(var(--u) * 2); height: calc(var(--u) * 15); display: flex; align-items: center; font-weight: 800; }
   #jpTx .jt-l { left: calc(var(--u) * 6); font-size: 13px; color: #D64524; }
   #jpTx .jt-s { right: calc(var(--u) * 6); font-size: 15px; color: #000; }
@@ -535,8 +535,11 @@
   #jpTx .jt-guide small { display: block; font-size: 15px; font-weight: 700; color: #5E5750; }
   #jpTx .jt-hint { position: absolute; left: 50%; top: calc(var(--u) * 48); transform: translateX(-50%); width: max-content; max-width: 92%; padding: 9px 14px; border-radius: 12px;
     background: #FF7E31; color: #fff; font-size: 16px; font-weight: 800; line-height: 1.35; text-align: center; box-shadow: 0 0 0 2px #000; }
-  /* v3.98 배경 AI 상식 한 문장 · 옅게(장애물보다 앞서지 않게) · 그래도 읽히게 진한 회색 62% · 두 줄까지 */
-  #jpTx .jt-bg { position: absolute; left: 8%; right: 8%; top: calc(var(--u) * 86); margin: 0; text-align: center; color: rgba(94, 87, 80, 0.62); font-size: calc(var(--u) * 10.5); font-weight: 800; line-height: 1.3; letter-spacing: -0.01em; word-break: keep-all; }
+  /* v4.00 AI 상식 글자 블록 · 공중(2단 점프 높이)에 뜬 문장 · 들이받으면 글자가 흩어지며 보너스 */
+  #jpTx .jt-fact { position: absolute; left: 0; top: 0; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0 calc(var(--u) * 4); box-sizing: border-box;
+    text-align: center; color: #2A2522; font-size: calc(var(--u) * 9.2); font-weight: 800; line-height: 1.22; letter-spacing: -0.02em; word-break: keep-all; will-change: transform; }
+  #jpTx .jt-fact i { display: inline-block; font-style: normal; transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.3, 1), opacity 0.5s ease-out; }
+  #jpTx .jt-fact.gone i { transform: translate(var(--dx), var(--dy)) rotate(var(--rt)) scale(0.6); opacity: 0; }
   #jpTx .jt-ban { position: absolute; left: 50%; top: calc(var(--u) * 50); transform: translateX(-50%); width: max-content; max-width: 92%; padding: 7px 14px; border-radius: 10px;
     background: #fff; border: 2px solid #000; font-size: 15px; font-weight: 800; color: #D64524; text-align: center; line-height: 1.35; }
   #jpTx .jt-ban.new { background: #000; color: #fff; }
@@ -8666,30 +8669,34 @@ function pgPreview() {
    안전 상한 5분 · 올림픽 환산은 기록/목표(길수록 좋다) · 목표 60초(6000 = 1/100초) · 팡(빠를수록 좋다)과 반대 방향이다. */
 var JP_W = 180, JP_H = 240, JP_GY = 196, JP_PX = 30, JP_MAX_SEC = 300, JP_HEARTS = 3, JP_G = 820, JP_JV = 300, JP_JV2 = 245, JP_INV = 1.0;
 var JP_ITEM_EVERY = 15, JP_ITEM_SEC = 5;   /* 아이템 · 15초마다 하나 · 5초 동안 */
-/* v3.98 (사용자 요청 260919) 배경 = AI 상식 한 문장 · 로드맵 이정표 대체 · 새로 짓지 않고 「ME to WE 기억력」 문제 은행(MEM_ROUNDS 문장형)을 그대로 쓴다
-   달리면서 한 번에 읽히게 JP_BG_MAX 자 이하만 · 6초 첫 문장, 10초마다 다음 문장(7초 보임) · 한 판 안에서 겹치지 않게 섞는다 */
-var JP_BG_MAX = 21, JP_BG_FIRST = 6, JP_BG_EVERY = 10, JP_BG_LIFE = 7;
+/* v3.98 AI 상식 문장 · 새로 짓지 않고 「ME to WE 기억력」 문제 은행(MEM_ROUNDS 문장형)을 그대로 쓴다 · JP_BG_MAX 자 이하만
+   v4.00 (사용자 요청 260919) 흘러가는 배경 → 공중에 뜬 글자 블록(2단 점프 미션) · 들이받으면 글자가 흩어지며 점수 보너스 · 결과 화면에 획득 목록
+   블록 = 바닥에서 80~110 높이(1단 점프 머리 최고 75 · 2단 점프 113) · 앞뒤 장애물과 떨어뜨려 회피와 동시에 요구하지 않는다 */
+var JP_BG_MAX = 21, JP_BG_FIRST = 7, JP_BG_EVERY = 10;
+var JP_FACT = { w: 104, h: 30, lo: 80, pts: 150 };
 function jpBgLines() {
   return MEM_ROUNDS.filter(function (R) { return R.kind === "sentence"; }).map(function (R) { return R.words.join(" "); })
     .filter(function (t) { return t.length <= JP_BG_MAX; });
 }
 /* 장애물 판정 사각형 [가로 시작, 폭, 높이, 바닥에서 뜬 높이(없으면 0)] · 그린 모양과 판정이 같다
    v3.94 중반 이후 새 유형 (사용자 요청 260918 「중간 이후 입체적인 방해 장치」):
-   sign 낮은 간판 = v3.98 엎드려야만 지나간다(간판 밑 16 · 서 있는 몸 20 은 부딪히고 엎드린 몸 12 는 통과 · 위로는 110 이라 못 넘는다) · tower 탑 62 = 2단 점프만 넘는다(1단 최고 57)
+   (v4.00 탑 삭제) sign 낮은 간판 = v3.98 엎드려야만 지나간다(간판 밑 16 · 서 있는 몸 20 은 부딪히고 엎드린 몸 12 는 통과 · 위로는 110 이라 못 넘는다) · tower 탑 62 = 2단 점프만 넘는다(1단 최고 57)
    gap 끊긴 바닥 = 점프 · bob 오르내리는 상자(0~34) = 2단 점프면 언제든 넘는다 · 아이템 없이 모두 넘을 수 있다 */
 var JP_OBS = { box: { w: 16, rects: [[0, 16, 16]] }, cone: { w: 14, rects: [[3, 8, 17]] }, step: { w: 22, rects: [[0, 11, 8], [11, 11, 15]] },
-  sign: { w: 30, rects: [[2, 26, 94, 16]] }, tower: { w: 16, rects: [[0, 16, 62]] }, gap: { w: 34, rects: [] }, bob: { w: 14, rects: [[0, 14, 14]] } };
-/* 새 유형 등장표 · v3.98 20초부터 10초마다 하나씩 (구 30초부터 15초) · 처음 나올 때는 먼 거리 + 예고 배너(검정) */
+  sign: { w: 30, rects: [[2, 26, 94, 16]] }, gap: { w: 34, rects: [] }, bob: { w: 14, rects: [[0, 14, 14]] } };   /* v4.00 탑 삭제 · 2단 점프는 상자와 글자 미션이 맡는다 */
+/* 새 유형 등장표 · v4.00 (사용자 요청 260919 「1+1+1+1」) ① 단순 장애물(처음부터) → ② 간판 20초 → ③ 구멍 30초 → ④ 오르내리는 상자 40초
+   단계가 열리면 풀에 하나씩 더해지고 이전 유형도 계속 섞인다(가방 섞기 jpBagNext) · 처음 나올 때는 먼 거리 + 예고 배너(검정) */
 var JP_NEW = [
   { k: "sign", at: 20, tip: "낮은 간판", how: "화면을 꾸욱 누르면 엎드릴 수 있어요" },
-  { k: "tower", at: 30, tip: "높은 탑", how: "2단 점프로 넘기" },
-  { k: "gap", at: 40, tip: "끊긴 바닥", how: "점프로 건너기" },
-  { k: "bob", at: 50, tip: "오르내리는 상자", how: "2단 점프로 넘기" }
+  { k: "gap", at: 30, tip: "끊긴 바닥", how: "점프로 건너기" },
+  { k: "bob", at: 40, tip: "오르내리는 상자", how: "2단 점프로 넘기" }
 ];
+/* v4.00 일반 장애물 최소 간격(초) · 한 번에 넘기엔 멀고 착지 뒤 다시 뛰기엔 가까운 간격(구 53~77px @200)을 없앤다 */
+var JP_GAP_SEC = 0.65;
 /* v3.98 난이도 +30% (사용자 요청 260919) · 속도 오르는 기울기·간격 줄어드는 속도·속도 UP 시점을 모두 1.3배 빠르게 · 상한(속도 200·간격 하한 78)은 그대로 */
 var JP_RAMP = 1.3;
 var JP_BOB_AMP = 34, JP_BOB_PER = 1.5;   /* 오르내리는 상자 · 바닥 0 ~ 34 · 1.5초 주기 */
-var JP_NEW_P = 0.45;   /* 새 유형 비율 상한 · 20초 16%에서 올라 약 76초에 45% */
+var JP_NEW_P = 0.45;   /* 새 유형 비율(일반 장애물 뒤 차례마다) · v4.00 20초 30%에서 올라 45초에 45% 상한 */
 var JP_COIN = ["...KKKK...", ".KKOOOOKK.", ".KOWOOWOK.", "KOOOWWOOOK", "KOOOWWOOOK", ".KOWOOWOK.", ".KKOOOOKK.", "...KKKK..."];
 var JP_COINCV = null;
 var JP = { on: false, raf: 0, parts: [], pops: [] };
@@ -8699,8 +8706,8 @@ function jpStart() {
   SFX.site = false;
   JP = { on: true, paused: false, ending: null, raf: 0, cd: 3.2, t0: 0, last: performance.now(), py: JP_GY, vy: 0, jumps: 0, hearts: JP_HEARTS, inv: 0, heartHit: 0,
     obs: [], coins: [], items: [], parts: [], pops: [], banner: null, shake: 0, dist: 0, nextObs: 70, coinN: 0, dodged: 0, hits: 0, jumpsN: 0, score: 0, speedUp: 0,
-    item: null, itemT: 0, nextItem: JP_ITEM_EVERY, guide: 4, surv: 0, nextK: null, seen: {}, tx: {},
-    bg: shuf(jpBgLines()), bgI: 0, bgCur: null, bgT: 0, bgNext: JP_BG_FIRST, duck: false, press: null, hint: false };
+    item: null, itemT: 0, nextItem: JP_ITEM_EVERY, surv: 0, nextK: null, seen: {}, tx: {},
+    bg: shuf(jpBgLines()), bgI: 0, bgNext: JP_BG_FIRST, fact: null, facts: [], bonus: 0, duck: false, press: null, bag: null, lastSp: "", tutSeen: {} };
   gsOverlayOpen({ key: "jump", title: "ME to WE 점프", cw: JP_W, ch: JP_H, canvasId: "jpCv", noGesture: true,
     bottom: '<div class="gs-foot">탭 = 점프 · 두 번 탭 = 2단 점프 · 꾸욱 = 엎드리기</div>',
     down: function (e) { e.preventDefault(); jpDown(); },
@@ -8719,10 +8726,9 @@ function jpStart() {
   var mid = el("gsMid"), tx = document.createElement("div");
   tx.id = "jpTx";
   tx.innerHTML = '<span class="jt-l">ME to WE</span><span class="jt-s" id="jtScore">0</span><span class="jt-sv" id="jtSurv"></span>' +
-    '<p class="jt-bg" id="jtBg" hidden></p>' +
-    '<div class="jt-guide" id="jtGuide" hidden>탭 = 점프<small>두 번 탭 = 2단 점프</small><small>꾸욱 누르기 = 엎드리기</small></div>' +
+    '<p class="jt-fact" id="jtFact" hidden></p>' +
     '<div class="jt-ban" id="jtBan" hidden></div>' +
-    '<div class="jt-hint" id="jtHint" hidden>화면을 꾸욱 누르면<br>엎드릴 수 있어요</div>';
+    '<div class="jt-hint" id="jtHint" hidden></div>';
   mid.appendChild(tx);
   if (GS.vvh) GS.vvh();
   JP.raf = requestAnimationFrame(jpFrame);
@@ -8752,21 +8758,26 @@ function jpTxSync() {
   jpTxSet("jtScore", JP.score, function (e) { e.textContent = JP.score; });
   var sv = (Math.round((JP.surv || 0) * 10) / 10).toFixed(1);
   jpTxSet("jtSurv", JP.cd > 0 ? "" : sv, function (e) { e.innerHTML = JP.cd > 0 ? "" : sv + "<small>초 생존</small>"; });
-  var g = JP.guide > 0 && JP.cd <= 0 && !JP.ending, ga = g ? Math.min(1, JP.guide / 0.5) : 0;
-  jpTxSet("jtGuide", g ? ga.toFixed(2) : "off", function (e) { e.hidden = !g; e.style.opacity = ga; });
-  var r = JP.bgCur, ra = 0;
-  if (r) { var rt = JP.bgT || 0; ra = rt < 0.6 ? rt / 0.6 : rt > JP_BG_LIFE - 1 ? Math.max(0, JP_BG_LIFE - rt) : 1; }
-  jpTxSet("jtBg", r ? r + ra.toFixed(2) : "off", function (e) {
-    e.hidden = !r; if (!r) return;
-    e.style.opacity = ra; e.textContent = r;
-  });
-  /* v3.98 첫 간판이 몸 앞 1.6초 안에 들어오면 엎드리기 안내 · 한 판에 한 번 · 지나가면 사라진다 */
-  var fs = !JP.hintDone && JP.obs.filter(function (o) { return o.k === "sign" && !o.passed; })[0];
-  var hs = fs && fs.x - (JP_PX + 20) < jpSpeed(JP.surv || 0) * 1.6;
-  if (fs && fs.passed) JP.hintDone = true;
-  if (!fs && JP.seen.sign && JP.hintShown) JP.hintDone = true;
-  if (hs) JP.hintShown = true;
-  jpTxSet("jtHint", hs ? "on" : "off", function (e) { e.hidden = !hs; });
+  /* v4.00 글자 블록 · 판 위치를 따라 움직이고, 먹으면 글자 하나하나가 흩어진다 */
+  var f = JP.fact, u0 = tx.clientWidth / JP_W, fe = el("jtFact");
+  if (fe) {
+    if (!f) { if (!fe.hidden) { fe.hidden = true; fe.className = "jt-fact"; } JP.tx.jtFact = null; }
+    else {
+      if (JP.tx.jtFact !== f) {
+        JP.tx.jtFact = f; fe.hidden = false; fe.className = "jt-fact";
+        fe.style.width = (JP_FACT.w * u0).toFixed(1) + "px"; fe.style.height = (JP_FACT.h * u0).toFixed(1) + "px";
+        fe.innerHTML = "<span>" + f.text.split("").map(function (ch) {
+          return ch === " " ? " " : '<i style="--dx:' + Math.round((Math.random() - 0.5) * 70) + "px;--dy:" + Math.round(-10 - Math.random() * 50) + "px;--rt:" + Math.round((Math.random() - 0.5) * 80) + 'deg">' + esc(ch) + "</i>";
+        }).join("") + "</span>";   /* 한 덩어리로 감싸야 flex 안에서 글자 사이 띄어쓰기·줄바꿈이 산다 */
+      }
+      if (f.got && fe.className.indexOf("gone") < 0) fe.className = "jt-fact gone";
+      fe.style.transform = "translate(" + (f.x * u0).toFixed(1) + "px," + ((JP_GY - JP_FACT.lo - JP_FACT.h) * u0).toFixed(1) + "px)";
+    }
+  }
+  /* v4.00 동작 안내 팝업 3종 · 같은 모양(주황 상자) · 필요한 첫 순간 직전에 · 안내마다 기기에서 처음 3번까지(jp_tut) */
+  var hint = jpHintNow();
+  jpTxSet("jtHint", hint || "off", function (e) { e.hidden = !hint; if (hint) e.innerHTML = hint; });
+  var hs = !!hint;
   var b = hs ? null : JP.banner;
   jpTxSet("jtBan", b ? b.text + (b.how || "") : "off", function (e) {
     e.hidden = !b; if (!b) return;
@@ -8783,6 +8794,31 @@ function jpTxSync() {
   Array.prototype.forEach.call(tx.querySelectorAll(".jt-pop"), function (n) { if (!JP.pops.some(function (p) { return p.el === n; })) n.remove(); });
 }
 function jpEl(now) { return JP.t0 ? (now - JP.t0) / 1000 : 0; }
+/* v4.00 안내 팝업 · tap = 첫 장애물 · dbl = 첫 글자 블록 · duck = 첫 간판 · 대상이 몸 앞 1.6초 안일 때 · 대상을 지나면 끝
+   기기에 안내별로 몇 번 봤는지 남겨 3번까지만(판마다 처음 한 번) · 네 번째 판부터는 시작 화면 설명과 예고 배너로 충분하다 */
+var JP_TUT_MAX = 3, JP_TUT_TEXT = { tap: "탭하면 점프", dbl: "빠르게 두 번 탭하면<br>2단 점프", duck: "화면을 꾸욱 누르면<br>엎드릴 수 있어요" };
+function jpHintNow() {
+  if (JP.cd > 0 || JP.ending) return "";
+  var lead = jpSpeed(JP.surv || 0) * 1.6, front = JP_PX + 20, seen = S.get("jp_tut", {}) || {}, out = "";
+  var cand = [
+    ["tap", JP.obs.filter(function (o) { return o.k !== "sign"; })[0], function (o) { return o.x; }],
+    ["dbl", JP.fact && !JP.fact.got ? JP.fact : null, function (o) { return o.x; }],
+    ["duck", JP.obs.filter(function (o) { return o.k === "sign"; })[0], function (o) { return o.x; }]
+  ];
+  cand.forEach(function (c) {
+    var k = c[0], o = c[1], st = JP.tutSeen[k];
+    if (out || st === "done") return;
+    if (!st && (seen[k] || 0) >= JP_TUT_MAX) { JP.tutSeen[k] = "done"; return; }
+    if (!o) { if (st === "on") JP.tutSeen[k] = "done"; return; }
+    var dx = c[2](o) - front;
+    if (st === "on" && (dx + (o.w || JP_FACT.w) < -6 || o.got || o.hit || o.passed)) { JP.tutSeen[k] = "done"; return; }
+    if (dx < lead) {
+      if (!st) { JP.tutSeen[k] = "on"; seen[k] = (seen[k] || 0) + 1; S.set("jp_tut", seen); }
+      out = JP_TUT_TEXT[k];
+    }
+  });
+  return out;
+}
 /* 일반 배너 · 새 장애물 예고가 떠 있는 동안은 덮지 않는다 */
 function jpBan(text, t) { if (JP.banner && JP.banner.how && JP.banner.t > 0.3) return; JP.banner = { text: text, t: t }; }
 /* ═══ v3.98 입력 · 탭 = 점프 · 공중에서 한 번 더 = 2단 점프 · 꾸욱 = 엎드리기(누르는 동안)
@@ -8880,11 +8916,6 @@ function jpUpdate(dt, now) {
   gsFx(JP, dt);
   if (JP.inv > 0) JP.inv = Math.max(0, JP.inv - dt);
   if (JP.heartHit > 0) JP.heartHit -= dt;
-  if (JP.guide > 0) JP.guide -= dt;
-  /* v3.75 배경 이정표 · AX 3개년 로드맵이 지나간다 (2028 뒤에는 ME to WE 반복) */
-  /* v3.98 배경 AI 상식 · 한 문장씩 */
-  if (t >= JP.bgNext && JP.bg.length) { JP.bgCur = JP.bg[JP.bgI % JP.bg.length]; JP.bgI++; JP.bgT = 0; JP.bgNext += JP_BG_EVERY; }
-  if (JP.bgCur) { JP.bgT += dt; if (JP.bgT > JP_BG_LIFE) JP.bgCur = null; }
   /* 아이템 · 한 번에 하나 · 5초 */
   if (JP.item) { JP.itemT -= dt; if (JP.itemT <= 0) { JP.item = null; jpBan("원래 크기", 0.8); } }
   JP.nextItem -= dt;
@@ -8897,6 +8928,7 @@ function jpUpdate(dt, now) {
   if (su > JP.speedUp) { JP.speedUp = su; jpBan("속도 UP", 1.0); sfx("level"); }
   var dx = jpSpeed(t) * dt;
   JP.dist += dx;
+  jpFactTick(t, dx);   /* v4.00 AI 상식 글자 블록 */
   JP.vy += JP_G * dt; JP.py += JP.vy * dt;
   if (JP.py >= JP_GY) { JP.py = JP_GY; JP.vy = 0; JP.jumps = 0; }
   JP.nextObs -= dx;
@@ -8905,14 +8937,14 @@ function jpUpdate(dt, now) {
     JP.nextK = null;
     JP.obs.push({ k: k, x: JP_W + 4, w: JP_OBS[k].w, passed: false, hit: false, ph: Math.random() * Math.PI * 2 });
     /* v3.75 간격이 계속 좁아진다(부드럽게) · 하한 78 */
-    var gMin = Math.max(78, 175 - t * 1.15 * JP_RAMP), gMax = gMin + Math.max(34, 70 - t * 0.4 * JP_RAMP);
+    var gMin = Math.max(78, 175 - t * 1.15 * JP_RAMP, jpSpeed(t) * JP_GAP_SEC), gMax = gMin + Math.max(34, 70 - t * 0.4 * JP_RAMP);
     JP.nextObs = gMin + Math.random() * (gMax - gMin);
     /* v3.94 다음 장애물을 지금 정한다 · 새 유형이 앞뒤에 오면 착지할 거리(속도 × 1.3초)를 보장 · 처음 나오는 유형은 거리를 더 두고 예고 배너 */
     var sp0 = jpSpeed(t), open = JP_NEW.filter(function (n) { return t >= n.at; });
     var first = open.filter(function (n) { return !JP.seen[n.k]; })[0];
     var isNew = !!JP_NEW.filter(function (n) { return n.k === k; })[0];
-    var pNew = open.length ? Math.min(JP_NEW_P, 0.16 + (t - JP_NEW[0].at) * 0.0052) : 0;
-    var nx = first || (!isNew && Math.random() < pNew ? open[Math.floor(Math.random() * open.length)] : null);
+    var pNew = open.length ? Math.min(JP_NEW_P, 0.3 + (t - JP_NEW[0].at) * 0.006) : 0;
+    var nx = first || (!isNew && Math.random() < pNew ? jpBagNext(open) : null);
     if (nx) {
       JP.nextK = nx.k;
       JP.nextObs = Math.max(JP.nextObs, sp0 * (first ? (nx.k === "sign" ? 3.2 : 2.2) : 1.3));   /* v3.98 간판 첫 등장은 3.2초 앞에서 안내 */
@@ -8969,7 +9001,7 @@ function jpUpdate(dt, now) {
     }
   });
   JP.items = JP.items.filter(function (it) { return !it.got && it.x > -14; });
-  JP.score = JP.coinN * 30 + Math.floor(t) * 5;
+  JP.score = JP.coinN * 30 + Math.floor(t) * 5 + JP.bonus;   /* v4.00 + 글자 미션 보너스 */
 }
 function jpEnd(why) {
   if (!JP.on || JP.ending) return;
@@ -8986,14 +9018,64 @@ function jpEndFinal(why) {
   gameClear("jump_cleared");
   var root = el("jpRoot"); if (!root) return;
   olySubmit("jump", surv);
+  var facts = JP.facts.slice();
+  /* v4.00 AI 상식 획득 목록 · 점수 보너스일 뿐 순위(생존 시간)와 무관하다는 것을 한 줄로 */
+  var fh = '<div class="card mb8 jp-facts"><p style="font-size:calc(16px * var(--fs));font-weight:800">AI 상식 ' + facts.length + "개 획득</p>" +
+    '<p class="muted" style="margin-top:2px;font-size:calc(13px * var(--fs))">1개 = 점수 +' + JP_FACT.pts + " · 기록(버틴 시간)과는 따로</p>" +
+    (facts.length ? '<ul style="margin:8px 0 0;padding-left:18px;font-size:calc(15px * var(--fs));line-height:1.55">' + facts.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>"
+      : '<p style="margin-top:8px;font-size:calc(14px * var(--fs))">공중의 글자 블록을 2단 점프로 들이받으면 모을 수 있어요</p>') + "</div>";
   root.innerHTML = gsResultHtml("jump", { why: "done", label: "생존 기록", reason: "", score: (surv / 100).toFixed(1) + "초 생존",
-    stats: "모은 코인 " + JP.coinN + "개 · 넘은 장애물 " + JP.dodged + "개 · 부딪힘 " + JP.hits + "번", rankLine: olyResultLine("jump", surv) });
+    stats: "점수 " + JP.score.toLocaleString() + " · 코인 " + JP.coinN + "개 · AI 상식 " + facts.length + "개 · 부딪힘 " + JP.hits + "번", rankLine: olyResultLine("jump", surv), banner: fh });
   window.scrollTo(0, 0);
+}
+/* v4.00 새 유형 섞기 · 열린 유형을 가방에 한 번씩 넣고 하나씩 꺼낸다 · 비면 다시 채운다 · 바로 전과 같은 유형은 뒤로 미룬다
+   (구 v3.98 원인: 새 유형 첫 소개가 늘 우선이고 비율이 16%에서 시작해 균등 추첨이라 30초 뒤 간판이 10초에 0.4~0.7번으로 줄었다) */
+function jpBagNext(open) {
+  if (!JP.bag || !JP.bag.length) JP.bag = shuf(open.slice());
+  var n = JP.bag.pop();
+  if (n.k === JP.lastSp && JP.bag.length) { var m = JP.bag.pop(); JP.bag.push(n); n = m; }
+  JP.lastSp = n.k;
+  return n;
+}
+/* v4.00 글자 블록 · 생성 조건: 새 유형 대기 없음 + 앞 장애물이 1초 이상 앞 · 생성하면 다음 장애물을 블록 뒤 1.1초로 미룬다 */
+function jpFactTick(t, dx) {
+  var sp = jpSpeed(t), f = JP.fact;
+  if (!f && t >= JP.bgNext && JP.bg.length && !JP.nextK) {
+    var last = JP.obs[JP.obs.length - 1];
+    if (!last || last.x + last.w < JP_W + 4 - sp * 1.0) {
+      JP.fact = f = { text: JP.bg[JP.bgI % JP.bg.length], x: JP_W + 4, got: false, gone: 0 };
+      JP.bgI++; JP.bgNext = t + JP_BG_EVERY;
+      JP.nextObs = Math.max(JP.nextObs, JP_FACT.w + sp * 1.1);
+      JP.tx.jtFact = null;
+    }
+  }
+  if (!f) return;
+  f.x -= dx;
+  if (f.got) { f.gone += dx / sp; if (f.gone > 0.6) JP.fact = null; return; }
+  var b = jpBody(), top = JP_GY - JP_FACT.lo - JP_FACT.h;
+  if (jpOverlap(b, { x: f.x, y: top, w: JP_FACT.w, h: JP_FACT.h })) {
+    f.got = true; JP.facts.push(f.text); JP.bonus += JP_FACT.pts;
+    JP.pops.push({ x: JP_PX + 16, y: top - 6, text: "+" + JP_FACT.pts + " AI 상식", t: 1.0, c: RAIN_PAL.o100 });
+    for (var i = 0; i < 44; i++) {   /* 글자가 흩어지는 도트 · 블록 전체에서 사방으로 */
+      var px = f.x + 6 + Math.random() * (JP_FACT.w - 12), py = top + 4 + Math.random() * (JP_FACT.h - 8), a = Math.random() * Math.PI * 2, v = 25 + Math.random() * 55;
+      JP.parts.push({ x: px, y: py, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 25, t: 0.45 + Math.random() * 0.4, c: [RAIN_PAL.ink, RAIN_PAL.o100, RAIN_PAL.o60, "#5E5750"][i % 4] });
+    }
+    sfx("ting");
+  }
+  if (f.x + JP_FACT.w < -8) JP.fact = null;
+}
+/* 글자 블록 그리기(캔버스 판) · 글자는 DOM(.jt-fact) */
+function jpFactDraw(ctx) {
+  var f = JP.fact; if (!f || f.got) return;
+  var x = Math.round(f.x), y = JP_GY - JP_FACT.lo - JP_FACT.h;
+  rgBox(ctx, x, y, JP_FACT.w, JP_FACT.h, "#FFF6F0");
+  ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(x + 1, y + 1, JP_FACT.w - 2, 2);
+  ctx.fillStyle = "rgba(0,0,0,0.08)"; ctx.fillRect(x + 4, JP_GY - 1, JP_FACT.w - 8, 2);   /* 공중에 떠 있다 · 옅은 그림자 */
 }
 /* 오르내리는 상자의 뜬 높이 · 0 ~ JP_BOB_AMP */
 function jpBobLift(o) { return Math.round(JP_BOB_AMP * (1 - Math.cos(o.ph || 0)) / 2); }
 function jpObsDraw(ctx, o) {
-  if (o.k === "sign" || o.k === "tower" || o.k === "gap" || o.k === "bob") { jpObsDraw2(ctx, o); return; }
+  if (o.k === "sign" || o.k === "gap" || o.k === "bob") { jpObsDraw2(ctx, o); return; }
   var x = Math.round(o.x), g = JP_GY;
   var wsh = o.k === "step" ? 24 : o.k === "cone" ? 16 : 18;
   ctx.fillStyle = "rgba(0,0,0,0.18)"; ctx.fillRect(x - 1, g - 1, wsh, 2);   /* v3.72 바닥 그림자 · 지면 위 물체로 읽히게 */
@@ -9026,13 +9108,6 @@ function jpObsDraw2(ctx, o) {
     for (i = 0; i < 5; i++) { ctx.fillStyle = RAIN_PAL.w; ctx.fillRect(x + 5, top + 12 + i * 17, 20, 3); }
     ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(x + 3, g - 17, 24, 1);
     ctx.fillStyle = "rgba(0,0,0,0.10)"; ctx.fillRect(x + 1, g - 1, 28, 2);   /* 바닥 그림자는 옅게 · 공중에 떠 있다 */
-  } else if (o.k === "tower") {   /* 상자 네 개를 쌓은 탑 · 62 */
-    ctx.fillStyle = "rgba(0,0,0,0.18)"; ctx.fillRect(x - 1, g - 1, 18, 2);
-    var hs = [16, 16, 15, 15], y = g;
-    for (i = 0; i < 4; i++) {
-      y -= hs[i]; rgBox(ctx, x, y, 16, hs[i] + (i ? 1 : 0), RAIN_PAL.deep);
-      ctx.fillStyle = RAIN_PAL.o30; ctx.fillRect(x + 2, y + 2, 4, 2);
-    }
   } else if (o.k === "gap") {   /* 끊긴 바닥 · 땅과 흙을 지우고 검은 구멍 */
     ctx.fillStyle = "#1B120D"; ctx.fillRect(x, g, o.w, JP_H - g);
     ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(x - 1, g, 1, JP_H - g); ctx.fillRect(x + o.w, g, 1, JP_H - g);
@@ -9081,6 +9156,7 @@ function jpDraw(ctx, now) {
   if (JP.shake > 0) ctx.translate(Math.round((Math.random() - 0.5) * 4), Math.round((Math.random() - 0.5) * 4));
   jpWorld(ctx, JP.dist);
 
+  jpFactDraw(ctx);
   JP.coins.forEach(function (c) { ctx.drawImage(jpCoinCv(), Math.round(c.x), Math.round(c.y + (Math.floor(now / 200 + c.x) % 2))); });
   JP.items.forEach(function (it) { jpItemDraw(ctx, it, now); });
   JP.obs.forEach(function (o) { jpObsDraw(ctx, o); });
