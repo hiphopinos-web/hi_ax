@@ -498,7 +498,9 @@
   #rgPlay .rgp-x { border: 2px solid #000; background: #fff; border-radius: 999px; padding: 4px 12px; font-weight: 800; font-size: 13px; }
   #rgPlay .rgp-mid { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
   #rgPlay .rgp-mid canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; border: 2px solid #000; border-radius: 12px; background: #FFEBE0; }
-  #rgPlay .rgp-pause { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: rgba(255,255,255,0.86); }
+  #rgPlay .rgp-pause { position: absolute; inset: 0; z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: #FFFFFF; }   /* v4.02 불투명 · 멈춘 채 판을 보고 생각할 수 없게 */
+  #rgPlay .rgp-pause small { font-size: 14px; font-weight: 700; color: var(--muted); margin-top: -4px; }
+  #rgPlay .rgp-x.off, #rgPlay .rgp-x:disabled { opacity: 0.35; }
   #rgPlay .rgp-pause[hidden] { display: none; }
   #rgPlay .rgp-pause p { font-weight: 900; font-size: 22px; }
   #rgPlay .rgp-pause .btn { width: 200px; }
@@ -580,7 +582,7 @@
   #rgPlay.flat .rgp-x { border: 1px solid var(--dimln); background: var(--white); color: var(--hi); font-weight: 700; }
   #rgPlay.flat .rgp-mid canvas { image-rendering: auto; border: 0; border-radius: 0; background: #fff; }
   #rgPlay.flat .gs-foot { border-top: 1px solid var(--dimln); font-weight: 600; color: var(--muted); }
-  #rgPlay.flat .rgp-pause { background: rgba(255,255,255,0.94); }
+  #rgPlay.flat .rgp-pause { background: #FFFFFF; }
   .rg-wrap.flat { background: #fff; border: 1px solid var(--dimln); }
   .rg-wrap.flat canvas { image-rendering: auto; }
   #rgPlay .gs-foot { flex: none; padding: 12px 10px calc(12px + env(safe-area-inset-bottom, 0px)); background: #fff; border-top: 2px solid #000; text-align: center; font-weight: 800; font-size: 13.5px; color: #000; touch-action: none; user-select: none; -webkit-user-select: none; }
@@ -954,6 +956,83 @@
   .medal.m2 { background: #8A817B; }
   .medal.m3 { background: #7A3E1C; }
   .oly-pts { display: block; font-size: calc(11.5px * var(--fs)); font-weight: 700; color: var(--muted); text-align: right; }
+  /* v4.02 AX 올림픽 점수 체계 v2 · 월계수 표식(최소 48px) · 결과 구성 표 · 포디움 2-1-3 · 종목별 72px 행 */
+  svg.lw { display: block; flex: none; overflow: visible; }
+  .oly-lwbox { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; }
+  .oly-res-lw { display: flex; justify-content: center; margin-top: 6px; }
+  .oly-res-lw:empty { display: none; }
+  .oly-res-sc { font-size: 44px; color: var(--mint); margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .oly-res-sc small { font-size: 18px; margin-left: 2px; }
+  .oly-res-head { margin-top: 2px; font-size: calc(15px * var(--fs)); font-weight: 800; }
+  .oly-res-head .mem-stars { display: inline-block; margin-top: 0; font-size: 24px; }
+  .oly-brk { width: 100%; margin-top: 12px; border-collapse: collapse; text-align: left; font-size: calc(14px * var(--fs)); }
+  .oly-brk th, .oly-brk td { padding: 7px 2px; border-top: 1px solid rgba(255,255,255,0.14); font-weight: 700; vertical-align: top; }
+  .oly-brk th { color: #fff; }
+  .oly-brk th small { display: block; font-size: calc(11.5px * var(--fs)); font-weight: 700; opacity: 0.6; margin-top: 1px; }
+  .oly-brk td { color: rgba(255,255,255,0.72); white-space: nowrap; }
+  .oly-brk td.n { text-align: right; color: #fff; font-variant-numeric: tabular-nums; padding-left: 8px; }
+  .oly-brk tr.sum th, .oly-brk tr.sum td { border-top: 2px solid rgba(255,255,255,0.4); font-weight: 900; }
+  .oly-brk tr.sum td.n { color: var(--mint); font-size: calc(16px * var(--fs)); }
+  .oly-res-note { margin-top: 8px; font-size: calc(12.5px * var(--fs)); line-height: 1.5; opacity: 0.62; text-align: left; }
+  .oly-res-me { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.14); text-align: left; font-size: calc(14px * var(--fs)); font-weight: 700; line-height: 1.6; }
+  .oly-res-me p:empty { display: none; }
+  .oly-card { padding-bottom: 12px; }
+  .oly-card .oly-h { display: block; color: var(--hi); font-size: calc(16.5px * var(--fs)); }
+  .oly-card .oly-rule { margin: 2px 0 8px; font-size: calc(12.5px * var(--fs)); font-weight: 600; color: var(--muted); line-height: 1.5; }
+  .oly-pos { margin-top: 10px; font-size: calc(14px * var(--fs)); font-weight: 800; color: var(--acc2); }
+  .oly-row { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 0 6px; border-bottom: 1px solid var(--line); }
+  .oly-row.big { min-height: 72px; }
+  .oly-row.me { background: var(--tint2); border-radius: 12px; border-bottom-color: transparent; }
+  .oly-row .no { flex: none; width: 48px; display: flex; align-items: center; justify-content: center; font-family: var(--disp); font-weight: 900; font-size: calc(17px * var(--fs)); color: var(--acc2); }
+  .oly-row .nm { flex: 1; min-width: 0; font-weight: 800; color: var(--hi); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .oly-row .nm small { display: block; font-size: calc(12px * var(--fs)); font-weight: 700; color: var(--muted); margin-top: 1px; }
+  .oly-row .sc { flex: none; font-family: var(--disp); font-weight: 900; color: var(--hi); font-variant-numeric: tabular-nums; }
+  .oly-gap { height: 10px; border-bottom: 2px dotted var(--line); margin-bottom: 4px; }
+  .oly-podium { display: flex; align-items: flex-end; gap: 6px; margin: 4px 0 8px; }
+  .oly-pd { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+  .oly-pd-top { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 100%; padding: 0 2px 6px; text-align: center; }
+  .oly-pd-nm { display: block; max-width: 100%; font-weight: 800; font-size: calc(14px * var(--fs)); color: var(--hi); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .oly-pd-sc { font-family: var(--disp); font-weight: 900; font-size: calc(15px * var(--fs)); color: var(--hi); font-variant-numeric: tabular-nums; }
+  .oly-pd-st { width: 100%; border-radius: 12px 12px 0 0; background: var(--tint2); display: flex; align-items: flex-start; justify-content: center; padding-top: 6px; font-family: var(--disp); font-weight: 900; color: var(--acc2); }
+  .oly-pd.r1 .oly-pd-st { height: 64px; background: var(--mint); color: #fff; }
+  .oly-pd.r2 .oly-pd-st { height: 44px; }
+  .oly-pd.r3 .oly-pd-st { height: 30px; }
+  .oly-pd.me .oly-pd-nm { color: var(--acc2); }
+  .oly-pd.empty .oly-pd-top { min-height: 64px; justify-content: flex-end; }
+  .oly-pd-no { font-family: var(--disp); font-weight: 900; color: var(--faint); }
+  /* TV 순위판 · 올림픽 두 장 */
+  .tvp-stage { display: flex; align-items: flex-end; gap: 10px; margin-top: 14px; }
+  .tvp { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .tvp.r1 { flex-grow: 1.3; }
+  .tvp svg.lw { width: 100%; height: auto; max-width: 180px; }
+  .tvp.r2 svg.lw, .tvp.r3 svg.lw { max-width: 140px; }
+  .tvp b { display: block; max-width: 100%; margin-top: 4px; font-size: 22px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tvp b.wait { font-size: 16px; opacity: 0.4; padding-bottom: 8px; }
+  .tvp span { font-family: var(--disp); font-size: 20px; font-weight: 900; color: var(--mint-deep); }
+  .tvp i { display: block; width: 100%; margin-top: 6px; border-radius: 12px 12px 0 0; background: rgba(255,255,255,0.1); font-style: normal; font-family: var(--disp); font-weight: 900; font-size: 22px; padding-top: 6px; }
+  .tvp.r1 i { height: 70px; background: var(--mint); } .tvp.r2 i { height: 48px; } .tvp.r3 i { height: 34px; }
+  .tvp-rest { margin-top: 12px; }
+  .tve-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .tve { background: rgba(255,255,255,0.06); border-radius: 14px; padding: 10px 10px 4px; min-width: 0; }
+  .tve-h { font-size: 16px; font-weight: 900; color: var(--mint-deep); margin-bottom: 4px; }
+  .tve-row { display: flex; align-items: center; gap: 6px; min-height: 60px; }
+  .tve-row svg.lw { width: 56px; height: 56px; }
+  .tve-no { flex: none; width: 56px; text-align: center; font-family: var(--disp); font-weight: 900; font-size: 20px; opacity: 0.4; }
+  .tve-row .nm { flex: 1; min-width: 0; font-size: 16px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tve-row .nm small { display: block; font-size: 12px; opacity: 0.6; font-weight: 700; }
+  .tve-row .sc { flex: none; font-family: var(--disp); font-weight: 900; font-size: 16px; }
+  .tve-grid.aw .tve-row svg.lw { width: 64px; height: 64px; }
+  .awp-stage { display: flex; align-items: flex-end; gap: 10px; margin-top: 18px; }
+  .awp { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .awp.r1 { flex-grow: 1.35; }
+  .awp svg.lw { width: 100%; height: auto; max-width: 240px; }
+  .awp.r2 svg.lw, .awp.r3 svg.lw { max-width: 180px; }
+  .awp b { display: block; max-width: 100%; margin-top: 6px; font-size: 24px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .awp small { display: block; font-size: 14px; opacity: 0.7; font-weight: 700; }
+  .awp span { font-family: var(--disp); font-size: 22px; font-weight: 900; color: var(--mint-deep); }
+  .awp span em { font-style: normal; font-size: 13px; opacity: 0.6; }
+  .awp i { display: block; width: 100%; margin-top: 8px; border-radius: 12px 12px 0 0; background: rgba(255,255,255,0.1); font-style: normal; font-family: var(--disp); font-weight: 900; font-size: 24px; padding-top: 6px; }
+  .awp.r1 i { height: 80px; background: var(--mint); } .awp.r2 i { height: 56px; } .awp.r3 i { height: 40px; }
   .screen-wrap .counters { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center; margin: 16px 0; }
   .screen-wrap .counters div { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 12px 4px; }
   .screen-wrap .counters .v { font-family: var(--disp); font-size: 21px; color: var(--mint-deep); }
@@ -1403,12 +1482,12 @@ var MEM_ROUNDS_EVENT = [
 ];
 /* 한 판 구성 · 문장 2 + 순서 1 · 최근 mem_seen 개까지 기억해 먼저 뺀다 */
 var MEM_PLAY = { sentence: 2, order: 1 }, MEM_SEEN_MAX = 9, MEM_DECOY = { sentence: 2, order: 1 };
-/* v3.92 (사용자 피드백 260918 「기억력은 점수가 어떻게 나오는지 알 수 없다」) 점수 → 시간 기록.
-   기록 = 떠올리기 단계에서 실제로 쓴 시간(1/100초) + 오답 1개당 2초 · 작을수록 좋다 · 보기 시간은 넣지 않는다.
-   한 판 정답 타일 수는 MEM_TILES 로 고정(문항 길이 운을 없앤다) · 빠른 모드는 기록상 이득이 없어 없앴다.
-   60초 제한도 없앴다(실패 없음 · 끝까지 하면 스탬프) · 안전 상한 MEM_REC_MAX(120초)를 넘으면 상한으로 적는다.
-   별 = 걸린 시간 기준(MEM_STAR3 이하 3개 · MEM_STAR2 이하 2개). */
-var MEM_SHOW = 6, MEM_PEN = 2, MEM_TILES = 14, MEM_REC_MAX = 12000, MEM_STAR3 = 1800, MEM_STAR2 = 3000;
+/* v4.02 (점수 체계 v2 · 사용자 확정 260919) 시간 기록 → 칸마다 보이는 점수.
+   정답 칸 = 앞 정답(라운드 첫 칸은 떠올리기 시작)부터 걸린 시간의 등급 · 0.5초 안 200(번개) · 0.8초 130(빠름) · 1.2초 90(좋음) · 2초 60(보통) · 그 뒤 30 ·
+   틀린 뒤에 맞힌 칸 0 · 오답 한 번 −50 · 오답 없이 끝낸 라운드 +40 · 판 점수는 0 밑으로 내려가지 않는다 (계수 = 올림픽 규칙 word).
+   보기 단계(최대 6초 자동)는 점수와 무관한 암기 시간 · 한 판 정답 타일 수는 MEM_TILES 로 고정 · 별 = 점수 기준(MEM_STAR3 이상 3개 · MEM_STAR2 이상 2개). */
+var MEM_SHOW = 6, MEM_TILES = 14, MEM_STAR3 = 2000, MEM_STAR2 = 1000;
+var MEM_TIER_NAME = ["번개", "빠름", "좋음", "보통", "느림"];
 /* ═══ 타자 게임 단어 풀 · 여기 한 곳 · v3.72 AI 기본 소양 (사용자 확정 260918 · 「단어에 의미가 있으면 좋겠다」) ═══
    [단어, 뜻 한 줄] · 단어를 터뜨리면 그 자리에 뜻이 1초 뜬다(한 번에 여럿 터지면 한 줄만).
    규칙: 2~5자 · 한글만(영문·혼용 없음 · 자판 전환이 없게) · 공백 없음(판정이 어렵다) ·
@@ -3613,6 +3692,7 @@ function testStampReset() {
 /* v3.70 (사용자 확정 260918) 테스트 사번·데모에서 미니게임을 한 번도 안 한 상태로 되돌린다.
    이 기기 기록만 지운다 · 순위판에 올라간 서버 기록은 관리 콘솔에서 지운다(참여자 앱에 삭제 기능을 두지 않는다). */
 var GAME_KEYS = ["pang_best", "jump_best", "gw_best", "gw_time_best", "tt_best", "type_best", "pang_cleared", "jump_cleared", "gw_cleared", "type_cleared",
+  "oly2_best_pang", "oly2_best_jump", "oly2_best_tetris", "oly2_best_word", "oly2_done_pang", "oly2_done_jump", "oly2_done_tetris", "oly2_done_word",
   "oly_tab", "oly_ev", "mem_seen", "type_rank_app", "type_rank_site", "game_sound", "type_nick_edit", "art_demo_n"];
 function testGameReset(withNick) {
   if (!testMode()) return;
@@ -4069,17 +4149,16 @@ var Views = {
     tyTvPull();
     if (!TYTV.flip) TYTV.flip = setInterval(tyTvTick, 12000);
     olyPull();
-    var oly = TYTV.show === "oly", site = !oly, r = TYTV.site;
+    var oly = TYTV.show === "oly", oly2 = TYTV.show === "oly2", site = !oly && !oly2, r = TYTV.site;
     var winTxt = TYTV.site && TYTV.site.win ? TYTV.site.win.join(" · ") : "";
-    var ob = OLY.board, orows = { top: ((ob && ob.overall) || []).map(function (x) { return { name: x.name, score: olyFmt(x.total) }; }) };
     return '<div class="screen-wrap tytv"><div class="row" style="justify-content:space-between;padding-top:8px">' +
       '<b class="disp" style="font-size:24px;letter-spacing:0.03em">AX Festival <span style="color:var(--mint-deep)">2026</span></b>' +
       '<div class="row" style="gap:6px">' + tvBtns() + (S.get("admin_authed", false) ? '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button>' : "") + "</div></div>" +
-      '<p class="tytv-k">' + (oly ? "AX 올림픽 · 종합 순위" : "AX 단어 소나기 · 1F 현장 타자왕전") + "</p>" +
-      '<p class="tytv-t">' + (oly ? "종합 상위 10 · 4종목 " + olyMax() + "점 만점" : "현장 타자왕전 상위 5") + "</p>" +
-      '<div class="tytv-seg"><span class="' + (site ? "on" : "") + '">현장 타자 5</span><span class="' + (oly ? "on" : "") + '">AX 올림픽</span></div>' +
-      '<div class="tytv-list' + (site ? " five" : "") + '">' + (oly ? tyTvRows(orows, 10) : tyTvRows(r, 5)) + "</div>" +
-      '<p class="tytv-foot">' + (oly ? "앱 스탬프 탭 → 미니게임 → 4종목(팡 · 점프 · 테트리스 · 기억력)을 한 판씩 · 종목마다 최고 기록을 점수로 환산(보통 50 · 최상 90) · 명예 순위" : "결선 " + esc(winTxt) + " · 1인 1회 · 같은 키보드 · 1·2등은 17:00 Outro에서 호명") + "</p>" +
+      '<p class="tytv-k">' + (oly ? "AX 올림픽 · 종합 순위" : oly2 ? "AX 올림픽 · 종목별 1~3위" : "AX 단어 소나기 · 1F 현장 타자왕전") + "</p>" +
+      '<p class="tytv-t">' + (oly ? "네 종목 최고 점수 합계 · " + olyFmt(olyMax()) + "점 만점" : oly2 ? "팡 · 점프 · 테트리스 · 기억력" : "현장 타자왕전 상위 5") + "</p>" +
+      '<div class="tytv-seg"><span class="' + (site ? "on" : "") + '">현장 타자 5</span><span class="' + (oly ? "on" : "") + '">올림픽 종합</span><span class="' + (oly2 ? "on" : "") + '">올림픽 종목별</span></div>' +
+      (oly ? olyTvPodium() : oly2 ? olyTvEvents() : '<div class="tytv-list five">' + tyTvRows(r, 5) + "</div>") +
+      '<p class="tytv-foot">' + (oly || oly2 ? "종목마다 최고 한 판 · 종목 최대 " + olyFmt(olyCap()) + "점 · 명예 순위" : "결선 " + esc(winTxt) + " · 1인 1회 · 같은 키보드 · 1·2등은 17:00 Outro에서 호명") + "</p>" +
       (testMode() ? '<p class="tytv-foot" style="opacity:0.4">테스트 화면 · 가짜 닉네임</p>' : "") + "</div>";
   },
   type_award: function () {
@@ -4587,7 +4666,7 @@ var Views = {
     return '<div id="gwRoot">' +
       '<div class="chain-box"><p class="who">MINI GAME</p>' +
       '<p class="word disp" style="letter-spacing:0.02em">ME to WE 기억력</p>' +
-      '<p class="next" style="opacity:0.92">문장 ' + MEM_SHOW + "초 보고 단어 타일을 순서대로 · 기록 = 걸린 시간 · 틀리면 +" + MEM_PEN + "초 · 끝까지 하면 스탬프</p>" + axPreHtml("word", true) + "</div>" +
+      '<p class="next" style="opacity:0.92">문장 ' + MEM_SHOW + "초 보고 단어 타일을 순서대로 · " + esc(olyRuleLine("word")) + "</p>" + axPreHtml("word", true) + "</div>" +
       '<div class="row" style="gap:8px;align-items:stretch"><button class="btn mint" style="flex:1;padding:15px" onclick="gsBegin(\'word\')">게임 시작</button>' + sndBtnHtml(false) + "</div></div>";
   },
 
@@ -4605,7 +4684,7 @@ var Views = {
     if (gsNeedNick()) return gsNickHtml("tetris");
     setTimeout(ttPreview, 0);
     return gsStartHtml("tetris", { rootId: "ttRoot", previewId: "ttPrev", pw: 180, ph: 120, flat: true,
-      rules: "왼쪽 버튼으로 옮기고 한 칸씩 내려요 · 오른쪽 아래는 회전, 위는 바닥까지 · 한 판이면 스탬프" });
+      rules: "왼쪽 버튼으로 옮기고 한 칸씩 내려요 · 오른쪽 아래는 회전, 위는 바닥까지<br>" + esc(olyRuleLine("tetris")) });   /* v4.02 점수 = 블록 + 줄 · 시간은 점수 아님 */
   },
   /* ═══ v3.45 휴대폰 미니게임 · AX 팡 · ME to WE 점프 (v3.50 전원 공개) ═══ */
   game_pang: function () {
@@ -4613,7 +4692,7 @@ var Views = {
     if (gsNeedNick()) return gsNickHtml("pang");
     setTimeout(pgPreview, 0);
     return gsStartHtml("pang", { rootId: "pgRoot", previewId: "pgPrev", pw: 180, ph: 174, flat: true,
-      rules: "두 칸을 바꿔 같은 그림 3개를 한 줄로 · 80칸을 빨리 · 한 판이면 스탬프" });
+      rules: "두 칸을 바꿔 같은 그림 3개를 한 줄로 · " + esc(olyRuleLine("pang")) });   /* v4.02 점수 = 완주 시간 환산 */
   },
   game_jump: function () {
     jpStop();
@@ -4621,36 +4700,11 @@ var Views = {
     setTimeout(jpPreview, 0);
     return gsStartHtml("jump", { rootId: "jpRoot", previewId: "jpPrev", pw: 180, ph: 84,
       how: [["탭", "점프"], ["두 번 탭", "2단 점프"], ["꾸욱 누르기", "엎드리기 (누르는 동안)"]],
-      rules: "하트 3개 · 오래 버틸수록 기록 · 한 판이면 스탬프" });
+      rules: "하트 3개 · " + esc(olyRuleLine("jump")) });   /* v4.02 버틴 시간은 점수가 아니다 */
   },
   /* ═══ v3.50 AX 올림픽 순위판 · 종합(전 종목 완주자) · 종목별(금은동) ═══
      v3.50d 부문 정보 전면 삭제 (사용자 확정 260917·260918 · 부문 메달표·부문 라벨·부문 평균 금지) */
-  oly_rank: function () {
-    olyPull();
-    var b = OLY.board, tab = S.get("oly_tab", "all") === "event" ? "event" : "all", evk = S.get("oly_ev", OLY_EVENTS[0].key), me = olyMe();
-    if (!OLY_EVENTS.some(function (e) { return e.key === evk; })) evk = OLY_EVENTS[0].key;
-    var seg = '<div class="qseg" style="margin-bottom:10px">' + [["all", "종합"], ["event", "종목별"]].map(function (t) {
-      return '<button class="' + (tab === t[0] ? "on" : "") + '" onclick="S.set(\'oly_tab\', \'' + t[0] + '\'); App.render()">' + t[1] + "</button>";
-    }).join("") + "</div>";
-    var h = seg + (b && b.test ? '<p class="scap" style="margin:0 2px 8px">테스트 순위판 · 가짜 닉네임이 섞여 있어요</p>' : "");
-    if (!b) return h + '<div class="card"><p class="muted">순위를 불러오는 중입니다</p></div>';
-    if (tab === "event") {
-      h += '<div class="fl-chips" style="margin-bottom:10px">' + OLY_EVENTS.map(function (e) {
-        return '<button class="' + (e.key === evk ? "on" : "") + '" onclick="S.set(\'oly_ev\', \'' + e.key + '\'); App.render()">' + esc(e.short) + "</button>";
-      }).join("") + "</div>";
-      var ev = OLY_EVENTS.filter(function (e) { return e.key === evk; })[0], mv = me.ev[evk];
-      var f = function (x) { return olyRec(x.score, evk) + '<small class="oly-pts">' + olyFmt(x.pts) + "점</small>"; }; f.medal = true;
-      h += '<div class="card"><b style="color:var(--hi)">' + esc(ev.name) + '</b><p class="muted" style="margin:2px 0 6px;font-size:calc(12.5px * var(--fs))">보통 ' + olyRec(olyBase()[evk].mid, evk) + " = 50점 · 최상 " + olyRec(olyBase()[evk].top, evk) + " = 90점" + (olyLower(evk) ? " · 빠를수록 좋아요" : " · 오래 버틸수록 좋아요") + "</p>" +
-        olyRows(b.perEvent && b.perEvent[evk], f) +
-        (mv ? '<p class="muted" style="margin-top:10px">내 기록 ' + olyRec(mv.best, evk) + " · 환산 " + olyFmt(mv.pts) + "점" + (mv.rank ? " · " + mv.rank + "위" : "") + "</p>" : '<button class="btn mint" style="margin-top:10px" onclick="App.go(\'' + ev.view + '\')">' + esc(ev.name) + " 한 판</button>") + "</div>";
-    } else {
-      var f2 = function (x) { return olyFmt(x.total) + '<small class="oly-pts">/ ' + (b.max || olyMax()) + "</small>"; };
-      h += '<div class="card mb8"><b style="color:var(--hi)">내 총점 ' + olyFmt(me.total) + " / " + olyMax() + "</b>" +
-        '<p class="muted" style="margin-top:3px">' + (me.left ? "종합 순위까지 " + me.left + "종목 남음" : me.rank ? "종합 " + me.rank + "위" : "종합 순위 집계 중") + "</p></div>" +
-        '<div class="card"><b style="color:var(--hi)">종합 상위 10</b><p class="muted" style="margin:2px 0 6px;font-size:calc(12.5px * var(--fs))">전 종목 완주자 ' + (b.finishers || 0) + "명 · 동점은 전 종목 완료가 이른 쪽</p>" + olyRows(b.overall, f2) + "</div>";
-    }
-    return h + '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">경품 없음 · Outro에서 종합 1~3위 호명</p>';
-  },
+  oly_rank: function () { return olyRankHtml(); },   /* v4.02 점수 체계 v2 · 포디움 2-1-3 · 월계수 · 내 위치 줄 (olyRankHtml) */
   type_rank: function () {
     var mode = S.get("type_rank_tab", "app");
     var cached = testMode() ? typeTestTop(mode) : S.get("type_rank_" + mode, null);
@@ -6834,7 +6888,7 @@ function rgResultPaint() {
   var root = el("tgRoot"), r = RG.res; if (!root || !r) return;
   var rank = r.me ? r.me.rank : testMode() ? typeTestRank(r.score) : null;
   root.innerHTML = gsResultHtml("type", { why: "done", label: "생존 기록", reason: "", score: (r.score / 100).toFixed(1) + "초 생존",
-    stats: "터뜨린 단어 " + r.hits + "개 · 점수 " + Number(r.pts || 0).toLocaleString() + " · 최고 콤보 " + r.combo + " · 정확도 " + r.acc + "%<br>" + olyResultLine("type", r.score),
+    stats: "터뜨린 단어 " + r.hits + "개 · 점수 " + Number(r.pts || 0).toLocaleString() + " · 최고 콤보 " + r.combo + " · 정확도 " + r.acc + "%",   /* v4.02 소나기는 올림픽 종목이 아니다 (옛 환산 줄 삭제) */
     rankLine: r.send === "sending" ? "순위 반영 중" : rank ? "앱 순위 " + rank + "위" + (testMode() ? " (테스트)" : "") : r.send === "range" ? "순위 미반영 · 기록 범위 초과" : "",
     banner: rank && rank <= 10 ? '<div class="tipbanner mb12">앱 상위 10 · 1F 현장 타자왕전 · 1·2등 Outro 호명</div>' : "" });
 }
@@ -7035,7 +7089,7 @@ function tyTvPull() {
 }
 function tyTvTick() {
   if (App.current !== "wall_type") { clearInterval(TYTV.flip); TYTV.flip = null; return; }
-  TYTV.show = TYTV.show === "oly" ? "site" : "oly";   /* v3.86 앱 타자 순위는 뺐다(앱 종목이 테트리스로 바뀜) · 현장 타자 ↔ 올림픽 종합 */
+  TYTV.show = TYTV.show === "site" ? "oly" : TYTV.show === "oly" ? "oly2" : "site";   /* v4.02 현장 타자 → 올림픽 종합 포디움 → 올림픽 종목별 1~3위 (12초씩) */
   tyTvPull(); olyPull();
   App.render();
 }
@@ -7058,7 +7112,9 @@ function olyAwardTabs(cur) {
 }
 function olyAwardPull(force) {
   if (!BE.on) {
-    if (!OLYAW.data) { var tb = olyTestBoard(); OLYAW.data = { demo: true, overall: tb.overall.map(function (x, i) { return { rank: x.rank, nick: x.name, name: ["예시일", "예시이", "예시삼", "예시사", "예시오", "예시육", "예시칠", "예시팔", "예시구", "예시십"][i] || "", dept: "데모부문", total: x.total }; }), medals: tb.medals }; }
+    if (!OLYAW.data) { var tb = olyTestBoard(), nm = ["예시일", "예시이", "예시삼", "예시사", "예시오", "예시육", "예시칠", "예시팔", "예시구", "예시십"];
+      OLYAW.data = { demo: true, overall: tb.overall.map(function (x, i) { return { rank: x.rank, nick: x.name, name: nm[i] || "", dept: "데모부문", total: x.total }; }),
+        perEvent: Object.keys(tb.perEvent).reduce(function (o, k) { o[k] = tb.perEvent[k].slice(0, 3).map(function (x, i) { return { rank: x.rank, nick: x.name, name: nm[i] || "", score: x.score, key: x.key }; }); return o; }, {}) }; }
     return;
   }
   if (!force && Date.now() - OLYAW.t < 20000) return;
@@ -7071,6 +7127,7 @@ function olyAwardPull(force) {
 function olyAwardHtml() {
   olyAwardPull();
   var d = OLYAW.data, hide = S.get("tyaw_hide", false), top = ((d && d.overall) || []).slice(0, 3), st = "background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap";
+  var pg = S.get("tyaw_oly_pg", "all") === "event" ? "event" : "all";
   return '<div class="screen-wrap tytv"><div class="row" style="justify-content:space-between;padding-top:8px;flex-wrap:wrap;gap:6px">' +
     '<b class="disp" style="font-size:24px;letter-spacing:0.03em">AX Festival <span style="color:var(--mint-deep)">2026</span></b>' +
     '<div class="row" style="gap:6px;flex-wrap:wrap">' + tvBtns() +
@@ -7078,11 +7135,21 @@ function olyAwardHtml() {
     '<button class="chip" style="' + st + '" onclick="S.set(\'tyaw_hide\', ' + (hide ? "false" : "true") + ')">실명 ' + (hide ? "보이기" : "가리기") + "</button>" +
     '<button class="chip" style="' + st + '" onclick="App.go(\'type_site\')">← 진행 화면</button></div></div>' +
     olyAwardTabs("oly") +
-    '<p class="tytv-k">17:00 OUTRO · 명예 시상</p><p class="tytv-t">AX 올림픽 종합 1~3위</p>' +
-    '<div class="tytv-list five">' + (top.length ? top.map(function (x) {
-      return '<div class="tytv-row top"><span class="no">' + x.rank + '</span><span class="nm">' + esc(x.nick || "익명 참가자") +
-        (hide ? "" : "<small>" + esc(x.name || "") + (x.dept ? " · " + esc(x.dept) : "") + "</small>") + '</span><span class="sc">' + olyFmt(x.total) + "<small>/ " + olyMax() + "</small></span></div>";
-    }).join("") : '<p style="padding:24px 4px;opacity:0.7">' + (d ? "아직 전 종목 완주자가 없습니다" : "불러오는 중") + "</p>") + "</div>" +
+    '<div class="row" style="gap:6px;margin-top:8px">' + [["all", "종합 1~3위"], ["event", "종목별 1~3위"]].map(function (t) {
+      return '<button class="chip" style="' + (pg === t[0] ? "background:var(--mint);color:#fff;border-color:var(--mint);white-space:nowrap" : st) + '" onclick="S.set(\'tyaw_oly_pg\', \'' + t[0] + '\')">' + t[1] + "</button>";
+    }).join("") + "</div>" +
+    '<p class="tytv-k">17:00 OUTRO · 명예 시상</p><p class="tytv-t">' + (pg === "event" ? "AX 올림픽 종목별 1~3위" : "AX 올림픽 종합 1~3위") + "</p>" +
+    (pg === "event" ? '<div class="tve-grid aw">' + OLY_EVENTS.map(function (e) {
+      var l = ((d && d.perEvent) || {})[e.key] || [];
+      return '<div class="tve"><p class="tve-h">' + esc(e.name) + "</p>" + [0, 1, 2].map(function (i) {
+        var x = l[i];
+        return '<div class="tve-row">' + (x ? olyLw(i + 1, 96) : '<span class="tve-no">' + (i + 1) + "</span>") + '<span class="nm">' + (x ? esc(x.nick || "익명 참가자") + "<small>" + (hide ? "" : esc(x.name || "") + " · ") + esc(x.key || "") + "</small>" : '<span style="opacity:0.35">기록 없음</span>') + '</span><span class="sc">' + (x ? olyFmt(x.score) : "") + "</span></div>";
+      }).join("") + "</div>";
+    }).join("") + "</div>"
+      : top.length ? '<div class="awp-stage">' + [top[1], top[0], top[2]].map(function (x, k) {
+        var r = [2, 1, 3][k];
+        return '<div class="awp r' + r + '">' + (x ? olyLw(r, r === 1 ? 240 : 180) + "<b>" + esc(x.nick || "익명 참가자") + "</b>" + (hide ? "" : "<small>" + esc(x.name || "") + (x.dept ? " · " + esc(x.dept) : "") + "</small>") + "<span>" + olyFmt(x.total) + "<em> / " + olyFmt(olyMax()) + "</em></span>" : "") + "<i>" + r + "</i></div>";
+      }).join("") + "</div>" : '<p style="padding:24px 4px;opacity:0.7">' + (d ? "아직 전 종목 완주자가 없습니다" : "불러오는 중") + "</p>") +
     '<p class="tytv-foot">명예 시상 · 경품 없음 · 전 종목 완주자만 · 동점은 전 종목 완료가 이른 쪽' + (d && d.demo ? " · 데모 예시 이름" : "") + "</p></div>";
 }
 /* 시상 화면 데이터 · 관리코드 type_result · 데모는 테스트 순위 + 예시 이름 */
@@ -7293,48 +7360,74 @@ function axToday() { var i = S.get("ax_line_i", 0) || 0; S.set("ax_line_i", (i +
 function axPreHtml(key, dark) { return AX_PRE[key] ? '<p class="ax-line' + (dark ? " dk" : "") + '"><b>AX 한 줄</b>' + esc(AX_PRE[key]) + "</p>" : ""; }
 function axTodayHtml(dark) { return '<p class="ax-line' + (dark ? " dk" : "") + '"><b>오늘의 AX 한 줄</b>' + esc(axToday()) + "</p>"; }
 
-/* ════════════════ v3.50 AX 올림픽 (사용자 확정 260917) ════════════════
-   종목 = OLY_EVENTS 한 곳(한 줄 추가·삭제 · 서버 OLY_EVENTS 와 같은 순서로 맞춘다) · 만점 = 종목 수 × 100.
-   환산 = min(100, 종목 최고 기록 / 목표 점수 × 100) · 원점수 합산·백분위 금지 · 목표 점수는 서버 설정(콘솔)이 정본, 아래는 폴백.
-   종합 순위 = 모든 종목 1판 이상 끝낸 사람만(동점은 전 종목 완료가 이른 쪽) · 종목 순위 = 한 사람 전원 · 1~3위 금·은·동.
-   명예 보상만(경품 없음) · 공개 순위는 닉네임 · 1F 현장 타자왕전(노트북·경품)은 그대로. */
+/* ════════════════ v4.02 AX 올림픽 점수 체계 v2 (사용자 확정 260919 · 설계 정본 「AX 올림픽 점수 체계 v2.md」) ════════════════
+   종목 점수 = 게임 화면에 보이는 행동 점수 그대로 · 종목 최고 한 판 · 종목 상한 3,000 · 종합 = 네 종목 최고 점수의 합(만점 12,000).
+   AX 팡 = 80칸 완주 시간 환산(1000 × (기준 초 / 완주 초)^지수) · 점프 = 장애물 40 · 코인 5 · AI 상식 100 ·
+   테트리스 = 블록 10(60개까지) · 줄 50(30줄까지, 그 뒤 10) · 동시 삭제 보너스 · 기억력 = 칸마다 속도 등급 · 오답 −50 · 무오답 라운드 +40.
+   계수는 서버 설정 「올림픽_점수」가 정본 · oly_board 응답의 rule 을 받아 쓴다 · 받기 전에는 아래 OLY_RULE(서버 기본값과 같은 값 · 검사 60절이 대조).
+   제출 = 구성 요소(parts) + 점수 · 서버가 같은 식으로 다시 계산해 다르면 거부(mismatch) · 옛 기록(g1·g2)은 집계 제외 · 로컬 최고는 oly2_best_<종목>.
+   명예 순위만(경품 없음) · 부문 통계·부문 메달 없음 · 공개 순위는 닉네임 · 1~3위 표식 = 월계수(A안 · 48px 미만으로 쓰지 않는다). */
 var OLY_EVENTS = [
-  { key: "pang", name: "AX 팡", short: "팡", view: "game_pang", best: "pang_best", lower: 1, unit: "초" },   /* v3.74 기록 = 완주 시간(1/100초) · 작을수록 좋다 */
-  { key: "jump", name: "ME to WE 점프", short: "점프", view: "game_jump", best: "jump_best", time: 1, unit: "초" },   /* v3.75 기록 = 생존 시간(1/100초) · 길수록 좋다 */
-  { key: "tetris", name: "테트리스", short: "테트리스", view: "game_tetris", best: "tt_best", time: 1, unit: "초" },   /* v3.87 기록 = 버틴 시간(1/100초) · 길수록 좋다 · 줄·점수는 결과 카드의 보조 지표 */
-  { key: "word", name: "ME to WE 기억력", short: "기억력", view: "game_word", best: "gw_time_best", lower: 1, unit: "초" }   /* v3.92 기록 = 걸린 시간(1/100초) · 작을수록 좋다 */
+  { key: "pang", name: "AX 팡", short: "팡", view: "game_pang", best: "oly2_best_pang" },
+  { key: "jump", name: "ME to WE 점프", short: "점프", view: "game_jump", best: "oly2_best_jump" },
+  { key: "tetris", name: "테트리스", short: "테트리스", view: "game_tetris", best: "oly2_best_tetris" },
+  { key: "word", name: "ME to WE 기억력", short: "기억력", view: "game_word", best: "oly2_best_word" }
 ];
-/* v3.92 환산 기준(폴백 · 서버 「올림픽_기준」이 정본) · 1/100초 · mid = 보통(50점) · top = 최상(90점) · 서버 OLY_BASE_DEFAULT 와 같은 값 */
-var OLY_BASE = { pang: { mid: 3100, top: 1900 }, jump: { mid: 3500, top: 6200 }, tetris: { mid: 4800, top: 8900 }, word: { mid: 2750, top: 1200 } };
-var OLY_MEDAL = ["", "금", "은", "동"];
+/* 폴백 규칙 · 서버 OLY_RULE_DEFAULT 와 같은 값 (팡 base = 기준 초 · pow = 지수 · 260919 봇 재보정) */
+var OLY_RULE = {
+  rev: 1, cap: 3000,
+  pang: { goal: 80, base: 27, pow: 0.87, pauseMax: 3 },
+  jump: { obs: 40, coin: 5, fact: 100, pauseMax: 3 },
+  tetris: { block: 10, blockMax: 60, line: 50, lineFull: 30, lineAfter: 10, multi: [0, 0, 20, 60, 120], pauseMax: 3 },
+  word: { tiers: [[50, 200], [80, 130], [120, 90], [200, 60]], base: 30, clean: 40, wrong: 50 }
+};
+var OLY_MEDAL = ["", "금메달", "은메달", "동메달"];
 var OLY = { board: null, t: 0 };
-function olyMax() { return OLY_EVENTS.length * 100; }
-/* v3.92 서버가 준 기준(mid·top)이 있으면 그것 · 옛 서버(숫자 하나)이거나 없으면 폴백 */
-function olyBase() {
-  var t = (OLY.board && OLY.board.target) || {}, out = {};
-  OLY_EVENTS.forEach(function (e) { var b = t[e.key]; out[e.key] = b && b.mid > 0 && b.top > 0 && b.mid !== b.top ? b : OLY_BASE[e.key]; });
-  return out;
+function olyRule() {
+  var r = OLY.board && OLY.board.rule;
+  return r && r.cap > 0 && r.pang && r.jump && r.tetris && r.word && r.word.tiers && r.word.tiers.length === 4 && r.tetris.multi && r.tetris.multi.length === 5 ? r : OLY_RULE;
 }
-function olyLower(key) { return OLY_EVENTS.some(function (e) { return e.key === key && e.lower; }); }
-/* v3.92 로지스틱 환산 · z = ln(기록/보통) / ln(최상/보통) · 점수 = 100 / (1 + 9^(−z)) · 0.1 ~ 99.9 · 서버 olyPts_ 와 같은 식
-   짧을수록 좋은 종목은 최상 < 보통이라 방향 분기가 필요 없다 */
-function olyPts(best, key, base) {
-  var b = base || olyBase()[key];
-  if (!(best > 0) || !b) return 0;
-  var z = Math.log(best / b.mid) / Math.log(b.top / b.mid);
-  return Math.max(0.1, Math.min(99.9, Math.round(1000 / (1 + Math.pow(9, -z))) / 10));
+function olyCap() { return olyRule().cap; }
+function olyMax() { return OLY_EVENTS.length * olyCap(); }
+function olyEv(key) { return OLY_EVENTS.filter(function (e) { return e.key === key; })[0]; }
+function olyFmt(n) { return Math.round(Number(n) || 0).toLocaleString(); }
+/* 점수 계산 · 서버 olyScore_ 와 글자 그대로 같은 식 (검사 60절이 같은 parts 로 대조) */
+function olyScore(game, p, rule) {
+  rule = rule || olyRule();
+  var R = rule[game], n = function (k) { return Number(p && p[k]) || 0; }, s = 0, i;
+  if (!R) return 0;
+  if (game === "pang") {
+    s = n("fin") > 0 ? Math.round(1000 * Math.pow(R.base * 100 / n("fin"), R.pow)) : 0;
+  } else if (game === "jump") {
+    s = n("obs") * R.obs + n("coin") * R.coin + n("fact") * R.fact;
+  } else if (game === "tetris") {
+    var ln = n("lines");
+    s = Math.min(n("blk"), R.blockMax) * R.block + Math.min(ln, R.lineFull) * R.line + Math.max(0, ln - R.lineFull) * R.lineAfter +
+      n("c2") * R.multi[2] + n("c3") * R.multi[3] + n("c4") * R.multi[4];
+  } else if (game === "word") {
+    for (i = 0; i < R.tiers.length; i++) s += n("j" + i) * R.tiers[i][1];
+    s += n("j" + R.tiers.length) * R.base + n("cl") * R.clean - n("wr") * R.wrong;
+  }
+  return Math.max(0, Math.min(rule.cap, s));
 }
-/* 그 점수를 받으려면 필요한 기록 (역함수) · 결과 줄의 「다음 한 단계」 안내용 */
-function olyRecFor(pts, key) {
-  var b = olyBase()[key], z = -Math.log(100 / pts - 1) / Math.log(9);
-  return Math.round(b.mid * Math.pow(b.top / b.mid, z));
+/* 대표 카운터 한 줄 · 서버 olyKey_ 와 같은 문구 */
+function olyKey(game, p) {
+  if (!p) return "";
+  if (game === "pang") return "완주 " + (Number(p.fin) / 100).toFixed(1) + "초";
+  if (game === "jump") return "장애물 " + (Number(p.obs) || 0);
+  if (game === "tetris") return (Number(p.lines) || 0) + "줄";
+  if (game === "word") return "오답 " + (Number(p.wr) || 0);
+  return "";
 }
-/* 기록 보여 주기 · 팡은 1/100초 → 43.2초 */
-function olyTime(key) { return OLY_EVENTS.some(function (e) { return e.key === key && (e.lower || e.time); }); }
-/* v3.86 시간이 아닌 종목은 단위를 뒤에 붙인다 (테트리스 = 줄) */
-function olyUnit(key) { var e = OLY_EVENTS.filter(function (x) { return x.key === key; })[0]; return e && !e.lower && !e.time && e.unit ? e.unit : ""; }
-function olyRec(best, key) { return olyTime(key) ? (best / 100).toFixed(1) + "초" : Number(best).toLocaleString() + olyUnit(key); }
-function olyFmt(n) { return (Math.round(n * 10) / 10).toLocaleString(); }
+/* 규칙 한 줄 · 시작 화면·순위판 종목 탭 */
+function olyRuleLine(key) {
+  var R = olyRule()[key], cap = olyFmt(olyCap());
+  if (key === "pang") return R.goal + "칸 완주가 빠를수록 점수 · " + R.base + "초 = 1,000점 · 종목 최대 " + cap;
+  if (key === "jump") return "넘은 장애물 " + R.obs + " · 코인 " + R.coin + " · AI 상식 " + R.fact + " · 종목 최대 " + cap;
+  if (key === "tetris") return "블록 " + R.block + "점(" + R.blockMax + "개까지) · 줄 " + R.line + "점 · 한 번에 여러 줄 보너스 · 시간은 점수가 아니에요";
+  if (key === "word") return "빨리 맞힐수록 칸 점수가 커요 · 오답 −" + R.wrong + " · 오답 없는 라운드 +" + R.clean;
+  return "";
+}
 function olyPull(force) {
   if (testMode()) { OLY.board = olyTestBoard(); return; }
   if (!BE.on || (!force && Date.now() - OLY.t < 20000)) return;
@@ -7344,93 +7437,273 @@ function olyPull(force) {
     if (r && r.ok) { OLY.board = r; if (["passport", "oly_rank", "wall_type"].indexOf(App.current) >= 0) App.render(); }
   }, function () {});
 }
-/* 내 현황 · 환산은 이 기기 최고 기록으로 바로(서버를 기다리지 않는다) · 순위·메달은 서버 값 */
+/* 내 현황 · 종목 점수는 이 기기 최고와 서버 최고 중 큰 쪽(바로 보이게) · 순위·메달·위치는 서버 값(없으면 숨긴다) */
 function olyMe() {
-  var sv = (OLY.board && OLY.board.me) || null, me = { total: 0, done: 0, ev: {}, rank: sv ? sv.rank : 0 };
+  var sv = (OLY.board && OLY.board.me) || null, me = { total: 0, done: 0, ev: {}, rank: sv ? sv.rank : 0, up: sv ? sv.up : 0, podium: sv ? sv.podium : 0, lead: sv ? sv.lead : 0, sv: !!sv };
   OLY_EVENTS.forEach(function (e) {
-    var lb = S.get(e.best, 0), sb = sv && sv.ev && sv.ev[e.key] ? sv.ev[e.key].best : 0;
-    var best = e.lower ? (lb && sb ? Math.min(lb, sb) : (lb || sb)) : Math.max(lb, sb);
-    if (best > 0) {
-      var pts = olyPts(best, e.key), sve = sv && sv.ev && sv.ev[e.key];
-      me.ev[e.key] = { best: best, pts: pts, rank: sve ? sve.rank : 0, medal: sve ? sve.medal : 0 };
-      me.total += pts; me.done++;
+    var sve = sv && sv.ev && sv.ev[e.key], best = Math.max(Number(S.get(e.best, 0)) || 0, sve ? sve.best : 0);
+    if (best > 0 || sve || S.get("oly2_done_" + e.key, 0)) {
+      me.ev[e.key] = { best: best, rank: sve ? sve.rank : 0, medal: sve ? sve.medal : 0, up: sve ? sve.up : 0, podium: sve ? sve.podium : 0, lead: sve ? sve.lead : 0, sync: !!sve && sve.best === best };
+      me.total += best; me.done++;
     }
   });
-  me.total = Math.round(me.total * 10) / 10;
   me.left = OLY_EVENTS.length - me.done;
   return me;
 }
-function olySubmit(key, score) {
+/* 판이 끝나면 한 번 · parts = 종목별 구성 요소 · 점수는 여기서 계산해 함께 보낸다 · 이 기기 최고는 oly2_best_<종목> */
+function olySubmit(key, parts) {
+  var score = olyScore(key, parts), e = olyEv(key), prev = Number(S.get(e.best, 0)) || 0;
+  if (score > prev) S.set(e.best, score);
+  S.set("oly2_done_" + key, 1);   /* 0점 판도 한 판(종합 자격) */
+  OLY.last = { key: key, score: score, best: score > prev, prev: prev };
   var u = S.get("user", {}) || {};
   OLY.t = 0;
-  if (!BE.on || testEmp() || !u.empId) return;   /* v3.86 네 종목 모두 game_submit · 소나기는 앱 종목에서 빠졌다(현장 타자왕전은 type_site_submit) */
-  beCall({ action: "game_submit", emp: u.empId, name: u.name || "", game: key, score: Math.round(score) }, function (r) {
-    if (r && r.ok && OLY.board) OLY.board.me = r.me;
-  }, function () {});
+  if (testMode()) { OLY.board = olyTestBoard(); return score; }
+  if (!BE.on || !u.empId) return score;
+  var body = {};
+  Object.keys(parts).forEach(function (k) { body[k] = Math.max(0, Math.round(Number(parts[k]) || 0)); });
+  beCall({ action: "game_submit", emp: u.empId, name: u.name || "", game: key, v: "g3", parts: JSON.stringify(body), score: score }, function (r) {
+    if (r && r.ok) { if (OLY.board) OLY.board.me = r.me; else OLY.board = { me: r.me }; olyResMeFill(key); return; }
+    var why = r && r.reason;
+    if (why === "ver") toast("앱이 새로 나왔어요 · 새로고침한 뒤 다시 해 주세요");
+    else if (why === "mismatch") { toast("점수 규칙이 바뀌었어요 · 새로고침한 뒤 다시 해 주세요"); olyPull(true); }
+    else if (why === "range") toast("이번 판은 순위에 올리지 않았어요");
+    olyResMeFill(key);
+  }, function () { olyResMeFill(key); });
+  return score;
 }
-function olyMedalHtml(m) { return m ? '<span class="medal m' + m + '">' + OLY_MEDAL[m] + "</span>" : ""; }
-/* v3.92 결과 줄 · 「이 기록 = n점」 + 다음 한 단계(보통 50점 · 최상 90점 중 아직 못 넘은 쪽의 기록) + 총점 */
-function olyResultLine(key, score) {
-  var me = olyMe(), pts = olyPts(score, key), b = olyBase()[key];
-  var next = pts < 50 ? "보통 " + olyRec(b.mid, key) + " = 50점" : pts < 90 ? "최상 " + olyRec(b.top, key) + " = 90점" : "최상 기준 넘음";
-  return "이 기록 = " + olyFmt(pts) + "점 · " + next + "<br>총점 " + olyFmt(me.total) + " / " + olyMax() +
-    (me.left ? " · 종합 순위까지 " + me.left + "종목" : me.rank ? " · 종합 " + me.rank + "위" : "");
+/* ── 월계수 표식 (A안 · 디자인 시안/포디움 표식/A_월계수 · 도트 잎 + ME to WE 심볼 + 순위 원) ──
+   원본 SVG(각 150KB · 원 3,098개)를 같은 좌표의 선 끝 둥근 점 경로로 줄였다(모양·색 동일) · 숫자는 윤곽선(NotoSansKR 800) ·
+   금·은·동 색은 원본 값 그대로(표식 색 · 앱 셸 색과 별개) · 최소 48px · 그보다 작은 자리에는 숫자 순위만 둔다. */
+var LW_MIN = 48;
+var LW_PAL = {"1": ["#8A6A26", "#C9A34E", "#E8D194", "#D8BC72", "#3F2E0C"], "2": ["#6C737A", "#A9AFB5", "#DADDE1", "#C0C5CA", "#24292E"], "3": ["#7A4D32", "#B27B57", "#D9AB8A", "#C5916F", "#3A2213"]};
+var LW_BASE = '<path d="M72.64 171.18h0M67.46 169.08h0M62.44 166.64h0M57.61 163.84h0M52.98 160.72h0M48.58 157.28h0M44.43 153.55h0M40.55 149.53h0M36.96 145.25h0M33.68 140.74h0M30.72 136h0M28.1 131.07h0M25.83 125.97h0M23.92 120.72h0M22.38 115.35h0M21.22 109.89h0M20.44 104.36h0M20.05 98.79h0M20.05 93.21h0M20.44 87.64h0M21.22 82.11h0M22.38 76.65h0M23.92 71.28h0M25.83 66.03h0M28.1 60.93h0M30.72 56h0M33.68 51.26h0M36.96 46.75h0M40.55 42.47h0M44.43 38.45h0M127.36 171.18h0M132.54 169.08h0M137.56 166.64h0M142.39 163.84h0M147.02 160.72h0M151.42 157.28h0M155.57 153.55h0M159.45 149.53h0M163.04 145.25h0M166.32 140.74h0M169.28 136h0M171.9 131.07h0M174.17 125.97h0M176.08 120.72h0M177.62 115.35h0M178.78 109.89h0M179.56 104.36h0M179.95 98.79h0M179.95 93.21h0M179.56 87.64h0M178.78 82.11h0M177.62 76.65h0M176.08 71.28h0M174.17 66.03h0M171.9 60.93h0M169.28 56h0M166.32 51.26h0M163.04 46.75h0M159.45 42.47h0M155.57 38.45h0" style="stroke:var(--l0);stroke-width:2.56;stroke-linecap:round;fill:none"/><path d="M55.26 29.68h0M144.74 29.68h0" style="stroke:var(--l1);stroke-width:6.8;stroke-linecap:round;fill:none"/><path transform="translate(64.93 167.90) rotate(174.00)" d="M0 0Q12.50 -9.00 25.00 0Q12.50 9.00 0 0Z" style="fill:var(--l1)"/><path transform="translate(64.93 167.90) rotate(238.00)" d="M0 0Q9.75 -7.02 19.50 0Q9.75 7.02 0 0Z" style="fill:var(--l2)"/><path transform="translate(47.52 156.38) rotate(189.00)" d="M0 0Q11.71 -8.43 23.43 0Q11.71 8.43 0 0Z" style="fill:var(--l1)"/><path transform="translate(47.52 156.38) rotate(253.00)" d="M0 0Q9.14 -6.58 18.27 0Q9.14 6.58 0 0Z" style="fill:var(--l2)"/><path transform="translate(33.68 140.74) rotate(204.00)" d="M0 0Q10.93 -7.87 21.86 0Q10.93 7.87 0 0Z" style="fill:var(--l1)"/><path transform="translate(33.68 140.74) rotate(268.00)" d="M0 0Q8.52 -6.14 17.05 0Q8.52 6.14 0 0Z" style="fill:var(--l2)"/><path transform="translate(24.36 122.05) rotate(219.00)" d="M0 0Q10.14 -7.30 20.29 0Q10.14 7.30 0 0Z" style="fill:var(--l1)"/><path transform="translate(24.36 122.05) rotate(283.00)" d="M0 0Q7.91 -5.70 15.82 0Q7.91 5.70 0 0Z" style="fill:var(--l2)"/><path transform="translate(20.19 101.58) rotate(234.00)" d="M0 0Q9.36 -6.74 18.71 0Q9.36 6.74 0 0Z" style="fill:var(--l1)"/><path transform="translate(20.19 101.58) rotate(298.00)" d="M0 0Q7.30 -5.25 14.60 0Q7.30 5.25 0 0Z" style="fill:var(--l2)"/><path transform="translate(21.47 80.74) rotate(249.00)" d="M0 0Q8.57 -6.17 17.14 0Q8.57 6.17 0 0Z" style="fill:var(--l1)"/><path transform="translate(21.47 80.74) rotate(313.00)" d="M0 0Q6.69 -4.81 13.37 0Q6.69 4.81 0 0Z" style="fill:var(--l2)"/><path transform="translate(28.10 60.93) rotate(264.00)" d="M0 0Q7.79 -5.61 15.57 0Q7.79 5.61 0 0Z" style="fill:var(--l1)"/><path transform="translate(28.10 60.93) rotate(328.00)" d="M0 0Q6.07 -4.37 12.15 0Q6.07 4.37 0 0Z" style="fill:var(--l2)"/><path transform="translate(39.62 43.52) rotate(279.00)" d="M0 0Q7.00 -5.04 14.00 0Q7.00 5.04 0 0Z" style="fill:var(--l1)"/><path transform="translate(39.62 43.52) rotate(343.00)" d="M0 0Q5.46 -3.93 10.92 0Q5.46 3.93 0 0Z" style="fill:var(--l2)"/><path transform="translate(135.07 167.90) rotate(6.00)" d="M0 0Q12.50 -9.00 25.00 0Q12.50 9.00 0 0Z" style="fill:var(--l1)"/><path transform="translate(135.07 167.90) rotate(-58.00)" d="M0 0Q9.75 -7.02 19.50 0Q9.75 7.02 0 0Z" style="fill:var(--l2)"/><path transform="translate(152.48 156.38) rotate(-9.00)" d="M0 0Q11.71 -8.43 23.43 0Q11.71 8.43 0 0Z" style="fill:var(--l1)"/><path transform="translate(152.48 156.38) rotate(-73.00)" d="M0 0Q9.14 -6.58 18.27 0Q9.14 6.58 0 0Z" style="fill:var(--l2)"/><path transform="translate(166.32 140.74) rotate(-24.00)" d="M0 0Q10.93 -7.87 21.86 0Q10.93 7.87 0 0Z" style="fill:var(--l1)"/><path transform="translate(166.32 140.74) rotate(-88.00)" d="M0 0Q8.52 -6.14 17.05 0Q8.52 6.14 0 0Z" style="fill:var(--l2)"/><path transform="translate(175.64 122.05) rotate(-39.00)" d="M0 0Q10.14 -7.30 20.29 0Q10.14 7.30 0 0Z" style="fill:var(--l1)"/><path transform="translate(175.64 122.05) rotate(-103.00)" d="M0 0Q7.91 -5.70 15.82 0Q7.91 5.70 0 0Z" style="fill:var(--l2)"/><path transform="translate(179.81 101.58) rotate(-54.00)" d="M0 0Q9.36 -6.74 18.71 0Q9.36 6.74 0 0Z" style="fill:var(--l1)"/><path transform="translate(179.81 101.58) rotate(-118.00)" d="M0 0Q7.30 -5.25 14.60 0Q7.30 5.25 0 0Z" style="fill:var(--l2)"/><path transform="translate(178.53 80.74) rotate(-69.00)" d="M0 0Q8.57 -6.17 17.14 0Q8.57 6.17 0 0Z" style="fill:var(--l1)"/><path transform="translate(178.53 80.74) rotate(-133.00)" d="M0 0Q6.69 -4.81 13.37 0Q6.69 4.81 0 0Z" style="fill:var(--l2)"/><path transform="translate(171.90 60.93) rotate(-84.00)" d="M0 0Q7.79 -5.61 15.57 0Q7.79 5.61 0 0Z" style="fill:var(--l1)"/><path transform="translate(171.90 60.93) rotate(-148.00)" d="M0 0Q6.07 -4.37 12.15 0Q6.07 4.37 0 0Z" style="fill:var(--l2)"/><path transform="translate(160.38 43.52) rotate(-99.00)" d="M0 0Q7.00 -5.04 14.00 0Q7.00 5.04 0 0Z" style="fill:var(--l1)"/><path transform="translate(160.38 43.52) rotate(-163.00)" d="M0 0Q5.46 -3.93 10.92 0Q5.46 3.93 0 0Z" style="fill:var(--l2)"/><g transform="translate(41.200 29.200) scale(0.10889)"><path d="M277.9 104.1h0m17.8 0h0m17.8 0h0m17.8 0h0m-89 124.5h0m0 17.8h0m17.8 -124.5h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-71.2 17.7h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.8 -106.7h0m0 17.8h0m0 17.8h0m17.8 0h0m-17.8 17.7h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 0h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.7 0h0m142.4 -106.7h0m-35.6 35.6h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-53.4 17.7h0m0 17.8h0m-35.6 35.6h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-302.5 17.8h0m0 17.8h0m0 17.8h0m0 17.8h0m0 17.8h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -124.6h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-53.4 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-89 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m53.4 -160.2h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.7 -53.4h0m0 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-71.1 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.7 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m35.6 -106.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-89 17.8h0m35.6 0h0m0 17.8h0m0 17.8h0m0 17.8h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-53.4 17.8h0m0 17.8h0m0 17.7h0m0 17.8h0m17.8 -53.3h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.7h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -320.2h0m17.8 0h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-35.6 17.7h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m0 17.8h0m35.6 0.7h0m-35.6 17.1h0m0 17.8h0m35.6 -17.1h0m0 17.8h0m35.5 -89h0m-17.7 17.8h0m17.7 0h0m17.8 -17.8h0m0 17.8h0m17.8 -35.6h0m17.8 0h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-88.9 17.8h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m17.8 -17.8h0m0 17.8h0m-35.5 17.8h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -106.8h0m17.8 0h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -35.6h0m0 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-71.2 17.8h0m17.8 0h0m17.8 0h0m0 17.8h0m-35.6 35.6h0m17.8 0h0m17.8 0h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -89h0m0 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 0h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-320.3 17.1h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m35.6 0.7h0m0 17.8h0m0 17.7h0m0 17.8h0m-71.2 17.2h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m71.2 -106.1h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m17.8 -17.8h0m0 17.8h0m-35.5 17.7h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m17.8 -17.8h0m0 17.8h0m17.8 -53.3h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.7h0m0 17.8h0m17.8 0h0m-71.1 17.8h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m17.8 -17.8h0m0 17.8h0m0 17.8h0m17.8 -35.6h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-177.9 17.2h0m0 17.8h0m0 17.7h0m0 17.8h0m63.1 -48.2h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m17.8 0h0m17.8 0h0m0 17.8h0m17.8 -124.6h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 0h0m17.8 0h0m-53.4 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m0 17.8h0m39.6 -9.4h0m21.8 -262h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.7h0m17.8 0h0m17.8 -35.5h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.7h0m17.8 0h0m-71.2 35.6h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -124.5h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.7h0m17.8 0h0m17.8 0h0m-35.6 53.4h0m0 17.8h0m-75.3 119.7h0m17.8 0h0m-35.5 17.8h0m0 17.8h0m17.7 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -35.6h0m17.8 0h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -35.6h0m0 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 0h0m-713.2 142.9h0m17.8 0h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 0h0m-71.2 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m0 17.8h0m17.8 -71.2h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.7 0h0m-53.3 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m17.8 0h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.7 -53.4h0m0 17.8h0m17.8 0h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m35.6 -177.9h0m-17.8 17.7h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -35.5h0m17.8 0h0m17.8 0h0m-35.6 17.7h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m89 -53.3h0m0 17.8h0m0 17.7h0m0 17.8h0m-178 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-71.2 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m35.6 -124.6h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m35.6 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-89 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-266.9 17.8h0m17.8 0h0m0 17.8h0m0 17.8h0m17.7 -35.6h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.7h0m17.8 0h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m0 17.8h0m17.8 -124.5h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m-35.6 17.7h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m17.8 0h0m17.8 -35.6h0m0 17.8h0m0 17.8h0m71.2 -106.7h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m0 17.8h0m0 17.8h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.7h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.7 -320.2h0m17.8 0h0m17.8 0h0m50.9 -44.6h0m0 17.8h0m0 17.8h0m-86.5 26.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.7h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -53.9h0m0 17.8h0m0 17.8h0m0 17.8h0m50.9 -115.2h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m0 17.8h0m39.6 -27.2h0m0 17.8h0m-39.6 27.2h0m0 17.8h0m39.6 -27.2h0m-75.2 45h0m17.8 0h0m17.8 0h0m-139.9 62.3h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m54.4 -14.2h0m0 17.8h0m35.6 -71.2h0m17.8 0h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-71.2 17.8h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m18.3 -271.1h0m0 17.8h0m17.7 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.5 17.8h0m0 17.7h0m17.7 -17.7h0m17.8 0h0m-17.8 17.7h0m17.8 0h0m53.4 -53.3h0m-35.6 53.3h0m35.6 -17.7h0m-17.8 17.7h0m17.8 0h0m-88.9 17.8h0m17.7 0h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -88.9h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.7h0m17.8 -17.7h0m0 17.7h0m17.8 -53.3h0m0 17.8h0m0 17.8h0m0 17.7h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m-142.8 111h0m0 17.8h0m17.8 -17.8h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 0h0m-88.9 17.8h0m0 17.8h0m17.8 -17.8h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m-35.5 35.6h0m53.3 -53.4h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m17.8 0h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -71.2h0m0 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-339.1 14.2h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m54.4 -49.8h0m0 17.8h0m0 17.8h0m0 17.7h0m-72.2 14.2h0m17.8 0h0m54.4 3.6h0m17.8 -71.1h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.7h0m17.8 0h0m17.8 -17.7h0m0 17.7h0m17.8 -53.3h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.7h0m17.8 0h0m17.8 -17.7h0m-89 35.5h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m17.8 0h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m17.8 0h0m17.8 -142.3h0m0 17.8h0m17.8 -17.8h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m-35.5 17.8h0m17.8 0h0m17.7 0h0m0 17.7h0m17.8 -53.3h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.7h0m17.8 -17.7h0m17.8 0h0m-17.8 17.7h0m17.8 0h0m-88.9 35.6h0m17.8 0h0m17.7 0h0m-35.5 17.8h0m0 17.8h0m17.8 -17.8h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m17.8 -35.6h0m17.8 -17.8h0m0 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -124.5h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.7h0m17.8 -17.7h0m17.8 0h0m-17.8 17.7h0m17.8 0h0m-35.6 71.2h0m-106.7 17.8h0m17.8 0h0m17.7 0h0m17.8 0h0m17.8 0h0m17.8 0h0" style="stroke:var(--l1);stroke-width:28.17;stroke-linecap:round;fill:none"/><path d="M277.9 104.1h0m17.8 0h0m17.8 0h0m17.8 0h0m-89 124.5h0m0 17.8h0m17.8 -124.5h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-71.2 17.7h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.8 -106.7h0m0 17.8h0m0 17.8h0m17.8 0h0m-17.8 17.7h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 0h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.7 0h0m142.4 -106.7h0m-35.6 35.6h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-53.4 17.7h0m0 17.8h0m-35.6 35.6h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-302.5 17.8h0m0 17.8h0m0 17.8h0m0 17.8h0m0 17.8h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -124.6h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-53.4 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-89 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m53.4 -160.2h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.7 -53.4h0m0 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-71.1 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.7 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m35.6 -106.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-89 17.8h0m35.6 0h0m0 17.8h0m0 17.8h0m0 17.8h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-53.4 17.8h0m0 17.8h0m0 17.7h0m0 17.8h0m17.8 -53.3h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.7h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -320.2h0m17.8 0h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-35.6 17.7h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m0 17.8h0m35.6 0.7h0m-35.6 17.1h0m0 17.8h0m35.6 -17.1h0m0 17.8h0m35.5 -89h0m-17.7 17.8h0m17.7 0h0m17.8 -17.8h0m0 17.8h0m17.8 -35.6h0m17.8 0h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-88.9 17.8h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m17.8 -17.8h0m0 17.8h0m-35.5 17.8h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -106.8h0m17.8 0h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -35.6h0m0 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-71.2 17.8h0m17.8 0h0m17.8 0h0m0 17.8h0m-35.6 35.6h0m17.8 0h0m17.8 0h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -89h0m0 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 0h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-320.3 17.1h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m35.6 0.7h0m0 17.8h0m0 17.7h0m0 17.8h0m-71.2 17.2h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m71.2 -106.1h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m17.8 -17.8h0m0 17.8h0m-35.5 17.7h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m17.8 -17.8h0m0 17.8h0m17.8 -53.3h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.7h0m0 17.8h0m17.8 0h0m-71.1 17.8h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m17.8 -17.8h0m0 17.8h0m0 17.8h0m17.8 -35.6h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-177.9 17.2h0m0 17.8h0m0 17.7h0m0 17.8h0m63.1 -48.2h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m17.8 0h0m17.8 0h0m0 17.8h0m17.8 -124.6h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 0h0m17.8 0h0m-53.4 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m0 17.8h0m39.6 -9.4h0m21.8 -262h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.7h0m17.8 0h0m17.8 -35.5h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.7h0m17.8 0h0m-71.2 35.6h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -124.5h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.7h0m17.8 0h0m17.8 0h0m-35.6 53.4h0m0 17.8h0m-75.3 119.7h0m17.8 0h0m-35.5 17.8h0m0 17.8h0m17.7 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -35.6h0m17.8 0h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -35.6h0m0 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 0h0m-713.2 142.9h0m17.8 0h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 0h0m-71.2 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m0 17.8h0m17.8 -71.2h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.7 0h0m-53.3 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m17.8 0h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.7 -53.4h0m0 17.8h0m17.8 0h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m35.6 -177.9h0m-17.8 17.7h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -35.5h0m17.8 0h0m17.8 0h0m-35.6 17.7h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m89 -53.3h0m0 17.8h0m0 17.7h0m0 17.8h0m-178 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-71.2 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m35.6 -124.6h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m35.6 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-89 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-266.9 17.8h0m17.8 0h0m0 17.8h0m0 17.8h0m17.7 -35.6h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.7h0m17.8 0h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m0 17.8h0m17.8 -124.5h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m-35.6 17.7h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m17.8 0h0m17.8 -35.6h0m0 17.8h0m0 17.8h0m71.2 -106.7h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m0 17.8h0m0 17.8h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.7h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.7 -320.2h0m17.8 0h0m17.8 0h0m50.9 -44.6h0m0 17.8h0m0 17.8h0m-86.5 26.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.7h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -53.9h0m0 17.8h0m0 17.8h0m0 17.8h0m50.9 -115.2h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m0 17.8h0m39.6 -27.2h0m0 17.8h0m-39.6 27.2h0m0 17.8h0m39.6 -27.2h0m-75.2 45h0m17.8 0h0m17.8 0h0m-139.9 62.3h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m54.4 -14.2h0m0 17.8h0m35.6 -71.2h0m17.8 0h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-71.2 17.8h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m18.3 -271.1h0m0 17.8h0m17.7 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.5 17.8h0m0 17.7h0m17.7 -17.7h0m17.8 0h0m-17.8 17.7h0m17.8 0h0m53.4 -53.3h0m-35.6 53.3h0m35.6 -17.7h0m-17.8 17.7h0m17.8 0h0m-88.9 17.8h0m17.7 0h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -88.9h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.7h0m17.8 -17.7h0m0 17.7h0m17.8 -53.3h0m0 17.8h0m0 17.8h0m0 17.7h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m-142.8 111h0m0 17.8h0m17.8 -17.8h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 0h0m-88.9 17.8h0m0 17.8h0m17.8 -17.8h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m-35.5 35.6h0m53.3 -53.4h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m17.8 0h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -71.2h0m0 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-339.1 14.2h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m54.4 -49.8h0m0 17.8h0m0 17.8h0m0 17.7h0m-72.2 14.2h0m17.8 0h0m54.4 3.6h0m17.8 -71.1h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.7h0m17.8 0h0m17.8 -17.7h0m0 17.7h0m17.8 -53.3h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.7h0m17.8 0h0m17.8 -17.7h0m-89 35.5h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m17.8 0h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m17.8 0h0m17.8 -142.3h0m0 17.8h0m17.8 -17.8h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m-35.5 17.8h0m17.8 0h0m17.7 0h0m0 17.7h0m17.8 -53.3h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.7h0m17.8 -17.7h0m17.8 0h0m-17.8 17.7h0m17.8 0h0m-88.9 35.6h0m17.8 0h0m17.7 0h0m-35.5 17.8h0m0 17.8h0m17.8 -17.8h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m17.8 -35.6h0m17.8 -17.8h0m0 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -124.5h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.7h0m17.8 -17.7h0m17.8 0h0m-17.8 17.7h0m17.8 0h0m-35.6 71.2h0m-106.7 17.8h0m17.8 0h0m17.7 0h0m17.8 0h0m17.8 0h0m17.8 0h0" style="stroke:var(--l3);stroke-width:13.34;stroke-linecap:round;fill:none"/><g style="stroke:#fff;stroke-opacity:.35;stroke-linecap:round;fill:none"><path d="M682.6 744.6h0" style="stroke-width:0.09"/><path d="M682.6 886.9h0" style="stroke-width:0.43"/><path d="M539.3 687.6h0" style="stroke-width:0.52"/><path d="M607.9 500.7h0" style="stroke-width:0.93"/><path d="M718.2 940.3h0" style="stroke-width:0.99"/><path d="M661.3 625.3h0" style="stroke-width:1.67"/><path d="M793.9 353.8h0" style="stroke-width:1.98"/><path d="M687.1 336h0" style="stroke-width:2.05"/><path d="M580.4 353.2h0" style="stroke-width:2.4"/><path d="M100 176h0" style="stroke-width:32"/><path d="M776.1 389.4h0" style="stroke-width:4.07"/><path d="M521.5 687.6h0" style="stroke-width:4.93"/><path d="M219 705.4h0" style="stroke-width:5.25"/><path d="M580.4 193h0" style="stroke-width:5.62"/><path d="M580.4 335.4h0" style="stroke-width:5.78"/><path d="M277.9 104.1h0m17.8 0h0m17.8 0h0m17.8 0h0m-89 124.5h0m0 17.8h0m17.8 -124.5h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m17.8 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-71.2 17.7h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m53.4 -88.9h0m0 17.8h0m17.8 0h0m-17.8 17.7h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 0h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.7 0h0m142.4 -106.7h0m-35.6 35.6h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-53.4 17.7h0m0 17.8h0m-35.6 35.6h0m17.8 -17.8h0m0 17.8h0m35.6 -53.4h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-302.5 17.8h0m0 17.8h0m0 17.8h0m0 17.8h0m0 17.8h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -124.6h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m17.8 0h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-53.4 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 35.6h0m17.8 0h0m-89 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m53.4 -160.2h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.7 -53.4h0m0 17.8h0m0 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-71.1 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.7 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m35.6 -106.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 0h0m17.8 0h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-89 17.8h0m35.6 0h0m0 17.8h0m0 17.8h0m0 17.8h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 17.8h0m-17.8 17.8h0m17.8 0h0m-53.4 17.8h0m0 17.8h0m0 17.7h0m0 17.8h0m17.8 -53.3h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.7h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -320.2h0m17.8 0h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-35.6 35.5h0m17.8 0h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m0 17.8h0m35.6 0.7h0m-35.6 17.1h0m0 17.8h0m35.6 -17.1h0m0 17.8h0m35.5 -89h0m-17.7 17.8h0m17.7 0h0m17.8 -17.8h0m0 17.8h0m17.8 -35.6h0m17.8 0h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-88.9 35.6h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m17.8 -17.8h0m0 17.8h0m-35.5 17.8h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -106.8h0m17.8 0h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -35.6h0m0 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-71.2 17.8h0m17.8 0h0m17.8 0h0m0 17.8h0m-35.6 35.6h0m17.8 0h0m17.8 0h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m0 17.8h0m17.8 0h0m17.8 0h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-320.3 17.1h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m35.6 0.7h0m0 17.8h0m0 17.7h0m0 17.8h0m-71.2 17.2h0m0 17.8h0m0 35.6h0m17.8 -17.8h0m71.2 -106.1h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m17.8 -17.8h0m0 17.8h0m-35.5 17.7h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m17.8 -17.8h0m0 17.8h0m17.8 -53.3h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.7h0m0 17.8h0m17.8 0h0m-71.1 17.8h0m0 17.8h0m35.5 17.8h0m17.8 -35.6h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-177.9 17.2h0m0 17.8h0m0 17.7h0m0 17.8h0m63.1 -48.2h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m-17.8 17.8h0m35.6 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m17.8 0h0m17.8 0h0m0 17.8h0m17.8 -124.6h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 0h0m17.8 0h0m-53.4 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m35.6 -35.6h0m-17.8 17.8h0m0 17.8h0m39.6 -9.4h0m21.8 -262h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.7h0m17.8 0h0m17.8 -35.5h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.7h0m17.8 0h0m-71.2 35.6h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 35.6h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -124.5h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.7h0m17.8 0h0m17.8 0h0m-35.6 53.4h0m0 17.8h0m-75.3 119.7h0m17.8 0h0m-35.5 17.8h0m17.7 0h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -35.6h0m17.8 0h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -35.6h0m0 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 0h0m-713.2 142.9h0m17.8 0h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 0h0m-53.4 17.8h0m17.8 0h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m0 17.8h0m17.8 -71.2h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.7 0h0m-53.3 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 35.6h0m17.8 0h0m17.7 -53.4h0m0 17.8h0m17.8 0h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m35.6 -177.9h0m-17.8 17.7h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -35.5h0m17.8 0h0m17.8 0h0m-35.6 17.7h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m106.8 -17.7h0m0 17.7h0m0 17.8h0m-178 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-71.2 17.8h0m0 17.8h0m0 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m35.6 -124.6h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m35.6 -35.6h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-89 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-249.1 17.8h0m17.8 0h0m0 17.8h0m0 17.8h0m17.7 -35.6h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.7h0m17.8 0h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m0 17.8h0m17.8 -124.5h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-17.8 17.8h0m-35.6 17.7h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m17.8 0h0m17.8 -35.6h0m0 17.8h0m0 17.8h0m71.2 -106.7h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m0 17.8h0m0 17.8h0m35.6 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.7h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.7 -320.2h0m17.8 0h0m17.8 0h0m50.9 -44.6h0m0 17.8h0m0 17.8h0m-86.5 26.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-35.6 35.5h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -53.9h0m0 17.8h0m0 17.8h0m0 17.8h0m50.9 -115.2h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m0 17.8h0m39.6 -27.2h0m0 17.8h0m-39.6 27.2h0m0 17.8h0m39.6 -27.2h0m-57.4 45h0m-122.1 62.3h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m54.4 -14.2h0m0 17.8h0m35.6 -71.2h0m35.6 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-71.2 17.8h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m36.1 -271.1h0m0 17.8h0m17.7 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.5 17.8h0m0 17.7h0m17.7 -17.7h0m17.8 0h0m-17.8 17.7h0m17.8 0h0m53.4 -53.3h0m-35.6 53.3h0m35.6 -17.7h0m-17.8 17.7h0m17.8 0h0m-88.9 17.8h0m17.7 0h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m35.6 -88.9h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.7h0m17.8 -17.7h0m0 17.7h0m17.8 -53.3h0m0 17.8h0m0 17.8h0m0 17.7h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m-142.8 111h0m0 17.8h0m17.8 -17.8h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m17.8 -17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m17.8 0h0m-88.9 35.6h0m17.8 -17.8h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m-35.5 35.6h0m53.3 -53.4h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m17.8 0h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -71.2h0m0 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m-321.3 32h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m0 17.8h0m17.8 -17.8h0m0 17.8h0m54.4 -49.8h0m0 17.8h0m0 17.8h0m0 17.7h0m-72.2 14.2h0m17.8 0h0m54.4 3.6h0m17.8 -71.1h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.7h0m17.8 0h0m35.6 -53.3h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 0h0m-17.8 17.7h0m17.8 0h0m17.8 -17.7h0m-89 35.5h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m17.8 0h0m0 17.8h0m17.8 -53.4h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -17.8h0m0 17.8h0m-35.6 17.8h0m17.8 17.8h0m17.8 -17.8h0m0 17.8h0m-17.8 17.8h0m17.8 0h0m17.8 -142.3h0m0 17.8h0m17.8 -17.8h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m-35.5 17.8h0m17.8 0h0m17.7 0h0m0 17.7h0m17.8 -53.3h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.7h0m17.8 -17.7h0m17.8 0h0m-71.1 53.3h0m17.7 0h0m-35.5 17.8h0m0 17.8h0m17.8 -17.8h0m17.7 0h0m-17.7 17.8h0m17.7 0h0m17.8 -35.6h0m17.8 -17.8h0m0 17.8h0m17.8 0h0m-35.6 17.8h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m17.8 -124.5h0m0 17.8h0m17.8 -17.8h0m17.8 0h0m-17.8 17.8h0m17.8 0h0m-35.6 35.5h0m35.6 -17.7h0m-17.8 17.7h0m17.8 0h0m-35.6 71.2h0m-106.7 17.8h0m17.8 0h0m17.7 0h0m17.8 0h0m17.8 0h0m17.8 0h0" style="stroke-width:5.93"/></g></g><circle cx="100" cy="176" r="16" style="fill:var(--l1)"/>';
+var LW_DIG = {"1": "M94.95 184.5V181.47H98.61V171.23H95.48V168.91Q96.81 168.67 97.77 168.31Q98.72 167.96 99.58 167.41H102.34V181.47H105.48V184.5Z", "2": "M94.09 184.5V182.35Q96.32 180.33 97.95 178.61Q99.57 176.89 100.46 175.4Q101.34 173.9 101.34 172.62Q101.34 171.81 101.06 171.23Q100.79 170.65 100.25 170.35Q99.71 170.04 98.95 170.04Q98.05 170.04 97.32 170.55Q96.58 171.05 95.95 171.75L93.9 169.73Q95.12 168.41 96.4 167.76Q97.67 167.11 99.45 167.11Q101.08 167.11 102.32 167.77Q103.55 168.43 104.25 169.62Q104.94 170.81 104.94 172.42Q104.94 173.93 104.18 175.49Q103.41 177.06 102.18 178.59Q100.95 180.13 99.52 181.56Q100.17 181.48 100.95 181.41Q101.73 181.35 102.32 181.35H105.73V184.5Z", "3": "M99.46 184.82Q98.11 184.82 97.04 184.52Q95.96 184.21 95.13 183.67Q94.29 183.13 93.69 182.44L95.42 180.08Q96.2 180.8 97.11 181.3Q98.03 181.79 99.1 181.79Q99.94 181.79 100.56 181.54Q101.18 181.29 101.52 180.81Q101.87 180.32 101.87 179.62Q101.87 178.83 101.49 178.26Q101.12 177.69 100.14 177.39Q99.16 177.09 97.34 177.09V174.42Q98.86 174.42 99.72 174.12Q100.58 173.82 100.95 173.27Q101.33 172.72 101.33 172.01Q101.33 171.08 100.77 170.56Q100.22 170.04 99.21 170.04Q98.33 170.04 97.59 170.43Q96.84 170.81 96.07 171.51L94.17 169.21Q95.33 168.22 96.6 167.67Q97.87 167.11 99.38 167.11Q101.08 167.11 102.37 167.65Q103.65 168.18 104.36 169.21Q105.07 170.23 105.07 171.74Q105.07 173.05 104.35 174.04Q103.64 175.02 102.29 175.56V175.68Q103.24 175.94 104 176.51Q104.75 177.07 105.19 177.91Q105.63 178.75 105.63 179.86Q105.63 181.43 104.78 182.54Q103.93 183.65 102.53 184.23Q101.13 184.82 99.46 184.82Z"};
+function olyLwInit() {
+  if (el("lwSprite")) return;
+  var d = document.createElement("div");
+  d.id = "lwSprite";
+  d.setAttribute("aria-hidden", "true");
+  d.style.cssText = "position:absolute;width:0;height:0;overflow:hidden";
+  d.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0"><defs><symbol id="lwB" viewBox="0 0 200 200">' + LW_BASE + "</symbol>" +
+    [1, 2, 3].map(function (n) { return '<symbol id="lwN' + n + '" viewBox="0 0 200 200"><path d="' + LW_DIG[n] + '" style="fill:var(--l4)"/></symbol>'; }).join("") + "</defs></svg>";
+  document.body.appendChild(d);
 }
-/* 스탬프 04 카드 펼침 = 올림픽 허브 */
+/* rank 1~3 · size px (48 미만이면 빈 문자열 → 부르는 쪽이 숫자 순위를 둔다) */
+function olyLw(rank, size) {
+  if (!(rank >= 1 && rank <= 3) || !(size >= LW_MIN)) return "";
+  olyLwInit();
+  var c = LW_PAL[rank];
+  return '<svg class="lw" width="' + size + '" height="' + size + '" viewBox="0 0 200 200" role="img" aria-label="' + OLY_MEDAL[rank] + '" style="--l0:' + c[0] + ";--l1:" + c[1] + ";--l2:" + c[2] + ";--l3:" + c[3] + ";--l4:" + c[4] + '">' +
+    '<use href="#lwB"/><use href="#lwN' + rank + '"/></svg>';
+}
+/* ── 내 위치 줄 (§7.4) · 서버 up·podium·lead(동점 규칙 반영) · 서버 값이 없으면 빈 문자열(추정치를 보여 주지 않는다) ── */
+function olyPosText(p) {
+  if (!p || !p.rank) return "";
+  if (p.rank === 1) return p.lead > 0 ? "2위와 " + olyFmt(p.lead) + "점 차" : "";
+  if (p.rank === 2) return "금메달까지 " + olyFmt(p.up) + "점";
+  if (p.rank === 3) return "은메달까지 " + olyFmt(p.up) + "점";
+  return "동메달까지 " + olyFmt(p.podium) + "점";
+}
+/* 종목 한 줄 · 「테트리스 5위 · 동메달까지 320점」 · 만점이면 「만점 3,000 · 먼저 달성한 순서로 2위」 */
+function olyEvPos(key, v) {
+  if (!v || !v.rank || !olyMe().sv) return "";
+  if (v.best >= olyCap() && v.rank > 1) return "만점 " + olyFmt(olyCap()) + " · 먼저 달성한 순서로 " + v.rank + "위";
+  var t = olyPosText(v);
+  return olyEv(key).short + " " + v.rank + "위" + (t ? " · " + t : "");
+}
+/* 종합 한 줄 · 「종합 12위 · 동메달까지 1,150점」 · 자격 전이면 「종합 순위까지 2종목 · 테트리스 · 기억력」 */
+function olyOverallPos(me) {
+  if (me.left) return "종합 순위까지 " + me.left + "종목 · " + OLY_EVENTS.filter(function (e) { return !me.ev[e.key]; }).map(function (e) { return e.short; }).join(" · ");
+  if (!me.sv || !me.rank) return "";
+  var t = olyPosText(me);
+  return "종합 " + me.rank + "위" + (t ? " · " + t : "");
+}
+/* ── 결과 화면 구성 표 (§7.2) · 종목마다 행만 바뀐다 · 0개인 행은 접는다 ── */
+function olyRowsFor(key, p) {
+  var R = olyRule()[key], rows = [], n = function (k) { return Number(p[k]) || 0; };
+  var add = function (label, cnt, detail, pts, note) { rows.push({ l: label, c: cnt, d: detail, v: pts, note: note || "" }); };
+  if (key === "pang") {
+    add("완주 시간", 1, (n("fin") / 100).toFixed(1) + "초", olyScore("pang", p), R.base + "초 = 1,000점");
+  } else if (key === "jump") {
+    add("넘은 장애물", n("obs"), n("obs") + "개 × " + R.obs, n("obs") * R.obs);
+    add("코인", n("coin"), n("coin") + "개 × " + R.coin, n("coin") * R.coin, "높은 코인은 2개");
+    add("AI 상식", n("fact"), n("fact") + "개 × " + R.fact, n("fact") * R.fact);
+  } else if (key === "tetris") {
+    var b = Math.min(n("blk"), R.blockMax), ln = n("lines"), l1 = Math.min(ln, R.lineFull), l2 = Math.max(0, ln - R.lineFull);
+    add("놓은 블록", b, b + "개 × " + R.block, b * R.block, R.blockMax + "개까지");
+    add("지운 줄", l1, l1 + "줄 × " + R.line, l1 * R.line);
+    add((R.lineFull + 1) + "번째 줄부터", l2, l2 + "줄 × " + R.lineAfter, l2 * R.lineAfter);
+    [2, 3, 4].forEach(function (k) { add(k + "줄 한 번에", n("c" + k), n("c" + k) + "번 × " + R.multi[k], n("c" + k) * R.multi[k]); });
+  } else if (key === "word") {
+    ["번개", "빠름", "좋음", "보통"].forEach(function (nm, i) { var t = R.tiers[i]; add(nm, n("j" + i), n("j" + i) + "칸 × " + t[1], n("j" + i) * t[1], t[0] / 100 + "초 안"); });
+    add("느림", n("j4"), n("j4") + "칸 × " + R.base, n("j4") * R.base);
+    add("틀린 뒤 맞힌 칸", n("jx"), n("jx") + "칸 × 0", 0);
+    add("오답 없는 라운드", n("cl"), n("cl") + "번 × " + R.clean, n("cl") * R.clean);
+    add("오답", n("wr"), n("wr") + "번 × −" + R.wrong, -n("wr") * R.wrong);
+  }
+  return rows.filter(function (r) { return r.c > 0; });
+}
+function olyBreakHtml(key, p, score) {
+  var raw = key === "word" ? olyScoreRaw(p) : 0;
+  return '<table class="oly-brk">' + olyRowsFor(key, p).map(function (r) {
+    return "<tr><th>" + esc(r.l) + (r.note ? "<small>" + esc(r.note) + "</small>" : "") + "</th><td>" + esc(r.d) + '</td><td class="n">' + (r.v < 0 ? "−" + olyFmt(-r.v) : olyFmt(r.v)) + "</td></tr>";
+  }).join("") +
+    '<tr class="sum"><th>합계</th><td>' + (raw < 0 ? "0점 밑으로 내려가지 않아요" : "종목 최대 " + olyFmt(olyCap())) + '</td><td class="n">' + olyFmt(score) + "</td></tr></table>";
+}
+function olyScoreRaw(p) { var R = olyRule().word, s = 0; R.tiers.forEach(function (t, i) { s += (Number(p["j" + i]) || 0) * t[1]; }); return s + (Number(p.j4) || 0) * R.base + (Number(p.cl) || 0) * R.clean - (Number(p.wr) || 0) * R.wrong; }
+/* 결과 화면 아래 두 줄 · 서버 응답이 오면 다시 채운다 */
+function olyResMeHtml(key) {
+  var me = olyMe(), v = me.ev[key], last = OLY.last && OLY.last.key === key ? OLY.last : null, a = [], b = [];
+  if (v) {
+    a.push(last && v.best > last.score ? "내 최고 " + olyFmt(v.best) + " (이번 판 " + olyFmt(last.score) + ")" : "내 최고 " + olyFmt(v.best));
+    var ep = olyEvPos(key, v); if (ep) a.push(ep);
+  }
+  b.push("총점 " + olyFmt(me.total) + " / " + olyFmt(olyMax()));
+  var op = olyOverallPos(me); if (op) b.push(op);
+  return "<p>" + esc(a.join(" · ")) + "</p><p>" + esc(b.join(" · ")) + "</p>";
+}
+function olyResMeFill(key) {
+  var d = el("olyResMe"); if (d) d.innerHTML = olyResMeHtml(key);
+  var m = el("olyResLw"), v = olyMe().ev[key];
+  if (m) m.innerHTML = v && v.medal ? olyLw(v.medal, 64) : "";
+}
+/* 결과 화면 본문 (게임 결과 카드 안) · o = { key, parts, score, head(점수 아래 한 줄), note(참고 줄) } */
+function olyResultBody(o) {
+  var v = olyMe().ev[o.key];
+  return '<div id="olyResLw" class="oly-res-lw">' + (v && v.medal ? olyLw(v.medal, 64) : "") + "</div>" +
+    '<p class="disp oly-res-sc">' + olyFmt(o.score) + "<small>점</small></p>" +
+    (o.head ? '<p class="oly-res-head">' + o.head + "</p>" : "") +
+    olyBreakHtml(o.key, o.parts, o.score) +
+    (o.note ? '<p class="oly-res-note">' + o.note + "</p>" : "") +
+    '<div class="oly-res-me" id="olyResMe">' + olyResMeHtml(o.key) + "</div>";
+}
+/* ── 스탬프 탭 올림픽 허브 (§7.5) ── */
 function olyHubHtml() {
   olyPull();
-  var me = olyMe();
-  return '<div class="oly-sum"><div><small>내 AX 올림픽 총점</small><b>' + olyFmt(me.total) + "<em> / " + olyMax() + "</em></b></div>" +
-    '<span>종목 ' + me.done + "/" + OLY_EVENTS.length + " 완료<br>" + (me.left ? "종합 순위까지 " + me.left + "종목 남음" : me.rank ? "종합 " + me.rank + "위" : "종합 순위 집계 중") + "</span></div>" +
+  var me = olyMe(), op = olyOverallPos(me);
+  return '<div class="oly-sum"><div><small>내 AX 올림픽 총점</small><b>' + olyFmt(me.total) + "<em> / " + olyFmt(olyMax()) + "</em></b></div>" +
+    '<span>종목 ' + me.done + "/" + OLY_EVENTS.length + (op ? "<br>" + esc(op) : "") + "</span></div>" +
     OLY_EVENTS.map(function (e) {
-      var v = me.ev[e.key];
-      return rcHtml({ cls: v ? " done" : "", onclick: "App.go('" + e.view + "')", link: true, left: tokBadge(e.short, v ? "mine" : ""),
-        title: esc(e.name), badges: v ? olyMedalHtml(v.medal) : "",
-        sub: v ? "최고 " + olyRec(v.best, e.key) + (v.rank ? " · 종목 " + v.rank + "위" : "") : "",   /* 오른쪽 숫자 = 환산 점수 */
-        right: '<span class="st">' + (v ? olyFmt(v.pts) : "-") + "</span>" });
+      var v = me.ev[e.key], lw = v && v.medal ? olyLw(v.medal, 48) : "";
+      return rcHtml({ cls: v ? " done" : "", onclick: "App.go('" + e.view + "')", link: true, left: lw ? '<span class="oly-lwbox">' + lw + "</span>" : tokBadge(e.short, v ? "mine" : ""),
+        title: esc(e.name),
+        sub: v ? "최고 " + olyFmt(v.best) + (me.sv && v.rank ? " · 종목 " + v.rank + "위" : "") : "",
+        right: '<span class="st">' + (v ? olyFmt(v.best) : "-") + "</span>" });
     }).join("") +
     '<button class="btn line" style="margin-top:4px" onclick="App.go(\'oly_rank\')">AX 올림픽 순위판</button>' +
     (testMode() ? '<button class="btn test" style="margin-top:8px" onclick="testGameReset(false)">테스트 · 게임 기록만 초기화</button>' +
       '<button class="btn test" style="margin-top:6px" onclick="testGameReset(true)">테스트 · 닉네임까지 초기화</button>' : "");
 }
-/* 테스트 모드 순위판 · 가짜 참가자 + 이 기기 기록 · 서버와 같은 규칙으로 계산 */
+/* ── 테스트 순위판 · 가짜 참가자(구성 요소) + 이 기기 최고 · 서버와 같은 규칙(합산 · 동점은 먼저 달성) ── */
 var OLY_FAKE = [
-  ["팡팡요정", { pang: 3100, jump: 2600, tetris: 5200, word: 2300 }],
-  ["점프왕", { pang: 5230, jump: 8200, tetris: 3800, word: 2700 }],
-  ["블록장인", { pang: 6180, jump: 2200, tetris: 9400, word: 3000 }],
-  ["기억의신", { pang: 5690, jump: 2400, tetris: 2900, word: 1150 }],
-  ["연쇄장인", { pang: 2750, jump: 1900, tetris: 3100, word: 3400 }],
-  ["미위팬", { pang: 5040, jump: 3300, tetris: 4300, word: 2600 }],
-  ["코인수집가", { pang: 7250, jump: 4100, word: 2900 }],
-  ["공감참여", { pang: 8800, tetris: 1500 }],
-  ["혁신연결", { jump: 1700, word: 4100 }],
-  ["로드맵러", { pang: 4460, jump: 3600, tetris: 5100, word: 2100 }]
+  ["팡팡요정", { pang: { fin: 1150 }, jump: { obs: 30, coin: 26, fact: 3 }, tetris: { blk: 70, c1: 10, c2: 3, c3: 1, c4: 0, lines: 19 }, word: { j0: 9, j1: 3, j2: 1, j3: 1, j4: 0, cl: 3, wr: 0 } }],
+  ["점프왕", { pang: { fin: 2400 }, jump: { obs: 55, coin: 40, fact: 5 }, tetris: { blk: 52, c1: 6, c2: 1, c3: 0, c4: 0, lines: 8 }, word: { j0: 4, j1: 4, j2: 3, j3: 2, j4: 1, cl: 3, wr: 0 } }],
+  ["블록장인", { pang: { fin: 2900 }, jump: { obs: 15, coin: 10, fact: 1 }, tetris: { blk: 140, c1: 12, c2: 6, c3: 3, c4: 5, lines: 53 }, word: { j0: 2, j1: 4, j2: 4, j3: 3, j4: 1, cl: 2, wr: 1 } }],
+  ["기억의신", { pang: { fin: 2650 }, jump: { obs: 18, coin: 12, fact: 1 }, tetris: { blk: 40, c1: 4, c2: 1, c3: 0, c4: 0, lines: 6 }, word: { j0: 14, j1: 0, j2: 0, j3: 0, j4: 0, cl: 3, wr: 0 } }],
+  ["연쇄장인", { pang: { fin: 980 }, jump: { obs: 12, coin: 8, fact: 1 }, tetris: { blk: 45, c1: 5, c2: 1, c3: 0, c4: 0, lines: 7 }, word: { j0: 3, j1: 3, j2: 4, j3: 3, j4: 1, cl: 2, wr: 1 } }],
+  ["미위팬", { pang: { fin: 2300 }, jump: { obs: 24, coin: 20, fact: 2 }, tetris: { blk: 60, c1: 8, c2: 2, c3: 0, c4: 0, lines: 12 }, word: { j0: 5, j1: 4, j2: 2, j3: 2, j4: 1, cl: 3, wr: 0 } }],
+  ["코인수집가", { pang: { fin: 3400 }, jump: { obs: 35, coin: 70, fact: 4 }, word: { j0: 3, j1: 4, j2: 3, j3: 3, j4: 1, cl: 3, wr: 0 } }],
+  ["공감참여", { pang: { fin: 4200 }, tetris: { blk: 30, c1: 2, c2: 0, c3: 0, c4: 0, lines: 2 } }],
+  ["혁신연결", { jump: { obs: 10, coin: 6, fact: 0 }, word: { j0: 1, j1: 2, j2: 3, j3: 4, j4: 4, cl: 1, wr: 3, jx: 0 } }],
+  ["로드맵러", { pang: { fin: 1900 }, jump: { obs: 27, coin: 22, fact: 3 }, tetris: { blk: 66, c1: 9, c2: 2, c3: 1, c4: 0, lines: 16 }, word: { j0: 6, j1: 4, j2: 2, j3: 1, j4: 1, cl: 3, wr: 0 } }]
 ];
-function olyTestBoard() {
-  var people = OLY_FAKE.map(function (x, i) { return { name: x[0], best: x[1], doneAt: "2026-10-26 1" + (i % 10) + ":00:00" }; });
-  var mine = {}; OLY_EVENTS.forEach(function (e) { var b = S.get(e.best, 0); if (b > 0) mine[e.key] = b; });
-  people.push({ name: (typeNick() || "나") + " (나)", best: mine, doneAt: "2026-10-26 12:30:00", me: true });
-  var tgt = OLY_BASE, keys = OLY_EVENTS.map(function (e) { return e.key; });
-  people.forEach(function (p) {
-    p.pts = {}; p.total = 0; p.done = 0;
-    keys.forEach(function (k) { if (p.best[k] > 0) { p.pts[k] = olyPts(p.best[k], k); p.total += p.pts[k]; p.done++; } });
-    p.total = Math.round(p.total * 10) / 10;
-  });
-  var overall = people.filter(function (p) { return p.done === keys.length; }).sort(function (a, b) { return b.total - a.total || (a.doneAt < b.doneAt ? -1 : 1); });
-  var per = {};
-  keys.forEach(function (k) { per[k] = people.filter(function (p) { return p.best[k] > 0; }).sort(function (a, b) { return olyLower(k) ? a.best[k] - b.best[k] : b.best[k] - a.best[k]; }); });
-  var meP = people[people.length - 1], meEv = {};
-  keys.forEach(function (k) { var r = per[k].indexOf(meP) + 1; meEv[k] = meP.best[k] > 0 ? { best: meP.best[k], pts: meP.pts[k], rank: r, medal: r >= 1 && r <= 3 ? r : 0 } : null; });
-  return { ok: true, test: true, events: keys, max: keys.length * 100, target: tgt, players: people.length, finishers: overall.length,
-    overall: overall.slice(0, 10).map(function (p, i) { return { rank: i + 1, name: p.name, total: p.total, me: !!p.me }; }),
-    perEvent: keys.reduce(function (o, k) { o[k] = per[k].slice(0, 10).map(function (p, i) { return { rank: i + 1, name: p.name, score: p.best[k], pts: p.pts[k], me: !!p.me }; }); return o; }, {}),
-    me: { total: meP.total, done: meP.done, left: keys.length - meP.done, rank: overall.indexOf(meP) + 1, ev: meEv } };
+function olyPosOf(list, i, val) {
+  if (i < 0) return { rank: 0, up: 0, podium: 0, lead: 0 };
+  var mine = val(list[i]);
+  return { rank: i + 1, up: i > 0 ? val(list[i - 1]) - mine + 1 : 0, podium: i >= 3 ? val(list[2]) - mine + 1 : 0, lead: i === 0 && list.length > 1 ? mine - val(list[1]) : 0 };
 }
-function olyRows(list, valFn) {
-  if (!list || !list.length) return '<p class="muted">아직 기록이 없어요</p>';
-  return list.map(function (x) {
-    return '<div class="ty-rank' + (x.me ? " me" : "") + '"><span class="no">' + x.rank + '</span><span class="nm">' + esc(x.name) + (x.rank <= 3 && valFn.medal ? " " + olyMedalHtml(x.rank) : "") + '</span><span class="sc">' + valFn(x) + "</span></div>";
-  }).join("");
+function olyTestBoard() {
+  var rule = OLY_RULE, keys = OLY_EVENTS.map(function (e) { return e.key; });
+  var people = OLY_FAKE.map(function (x, i) {
+    var sc = {}; keys.forEach(function (k) { if (x[1][k]) sc[k] = olyScore(k, x[1][k], rule); });
+    return { name: x[0], sc: sc, parts: x[1], at: "2026-10-26 1" + (i % 10) + ":00:00" };
+  });
+  var mine = {}; OLY_EVENTS.forEach(function (e) { var b = Number(S.get(e.best, 0)) || 0; if (b > 0 || S.get("oly2_done_" + e.key, 0)) mine[e.key] = b; });
+  var meP = { name: (typeNick() || "나") + " (나)", sc: mine, parts: {}, at: "2026-10-26 12:30:00", me: true };
+  people.push(meP);
+  people.forEach(function (p) { p.total = 0; p.done = 0; keys.forEach(function (k) { if (k in p.sc) { p.total += p.sc[k]; p.done++; } }); });
+  var overall = people.filter(function (p) { return p.done === keys.length; }).sort(function (a, b) { return b.total - a.total || (a.at < b.at ? -1 : 1); });
+  var per = {};
+  keys.forEach(function (k) { per[k] = people.filter(function (p) { return k in p.sc; }).sort(function (a, b) { return b.sc[k] - a.sc[k] || (a.at < b.at ? -1 : 1); }); });
+  var meEv = {};
+  keys.forEach(function (k) { var ps = olyPosOf(per[k], per[k].indexOf(meP), function (p) { return p.sc[k]; }); meEv[k] = k in meP.sc ? { best: meP.sc[k], rank: ps.rank, medal: ps.rank >= 1 && ps.rank <= 3 ? ps.rank : 0, up: ps.up, podium: ps.podium, lead: ps.lead } : null; });
+  var op = olyPosOf(overall, overall.indexOf(meP), function (p) { return p.total; });
+  return { ok: true, test: true, events: keys, cap: rule.cap, max: keys.length * rule.cap, rule: rule, players: people.length, finishers: overall.length, t: "",
+    overall: overall.slice(0, 10).map(function (p, i) { return { rank: i + 1, name: p.name, total: p.total, me: !!p.me }; }),
+    perEvent: keys.reduce(function (o, k) { o[k] = per[k].slice(0, 10).map(function (p, i) { return { rank: i + 1, name: p.name, score: p.sc[k], key: p.me ? "" : olyKey(k, p.parts[k]), me: !!p.me }; }); return o; }, {}),
+    me: { total: meP.total, done: meP.done, left: keys.length - meP.done, rank: op.rank, up: op.up, podium: op.podium, lead: op.lead, ev: meEv } };
+}
+/* ── 순위판 조각 (§7.3) ── */
+/* 종합 포디움 2-1-3 · 1위 월계수 84px · 2·3위 64px */
+function olyPodiumHtml(list) {
+  var slot = function (x, rank) {
+    if (!x) return '<div class="oly-pd r' + rank + ' empty"><div class="oly-pd-top"><span class="oly-pd-no">' + rank + '</span></div><div class="oly-pd-st"></div></div>';
+    return '<div class="oly-pd r' + rank + (x.me ? " me" : "") + '"><div class="oly-pd-top">' + olyLw(rank, rank === 1 ? 84 : 64) +
+      '<b class="oly-pd-nm">' + esc(x.name) + '</b><span class="oly-pd-sc">' + olyFmt(x.total) + '</span></div><div class="oly-pd-st"><span>' + rank + "</span></div></div>";
+  };
+  return '<div class="oly-podium">' + slot(list[1], 2) + slot(list[0], 1) + slot(list[2], 3) + "</div>";
+}
+/* 목록 행 · big = 1~3위 72px 행(월계수 48px) · 나머지 56px 숫자 순위 */
+function olyRowHtml(x, val, sub, big, me) {
+  var lw = big ? olyLw(x.rank, 48) : "";
+  return '<div class="oly-row' + (big ? " big" : "") + (me ? " me" : "") + '"><span class="no">' + (lw || x.rank) + '</span><span class="nm">' + esc(x.name) +
+    (sub ? "<small>" + esc(sub) + "</small>" : "") + '</span><span class="sc">' + val + "</span></div>";
+}
+/* 순위판 화면 (oly_rank) · 종합 = 포디움 2-1-3 + 4~10위 + 내 줄 · 종목별 = 1~3위 72px 행 + 4~10위 + 내 줄 */
+function olyRankHtml() {
+  olyPull();
+  var b = OLY.board, tab = S.get("oly_tab", "all") === "event" ? "event" : "all", evk = S.get("oly_ev", OLY_EVENTS[0].key), me = olyMe(), nick = typeNick() || "나";
+  if (!olyEv(evk)) evk = OLY_EVENTS[0].key;
+  var seg = '<div class="qseg" style="margin-bottom:10px">' + [["all", "종합"], ["event", "종목별"]].map(function (t) {
+    return '<button class="' + (tab === t[0] ? "on" : "") + '" onclick="S.set(\'oly_tab\', \'' + t[0] + '\'); App.render()">' + t[1] + "</button>";
+  }).join("") + "</div>";
+  var h = seg + (b && b.test ? '<p class="scap" style="margin:0 2px 8px">테스트 순위판 · 가짜 닉네임이 섞여 있어요</p>' : "");
+  if (!b || !b.overall) return h + '<div class="card"><p class="muted">순위를 불러오는 중입니다</p></div>';
+  var at = b.t ? String(b.t).slice(11, 16) : "";
+  if (tab === "event") {
+    var ev = olyEv(evk), mv = me.ev[evk], list = (b.perEvent && b.perEvent[evk]) || [];
+    h += '<div class="fl-chips" style="margin-bottom:10px">' + OLY_EVENTS.map(function (e) {
+      return '<button class="' + (e.key === evk ? "on" : "") + '" onclick="S.set(\'oly_ev\', \'' + e.key + '\'); App.render()">' + esc(e.short) + "</button>";
+    }).join("") + "</div>";
+    var mine = function (x) { return x.me || (me.sv && mv && mv.rank && x.rank === mv.rank); };
+    var rows = list.map(function (x) { return olyRowHtml(x, olyFmt(x.score), x.key, x.rank <= 3, mine(x)); }).join("");
+    if (mv && me.sv && mv.rank > list.length) rows += '<div class="oly-gap"></div>' + olyRowHtml({ rank: mv.rank, name: nick + " (나)" }, olyFmt(mv.best), "", false, true);
+    h += '<div class="card oly-card"><b class="oly-h">' + esc(ev.name) + '</b><p class="oly-rule">' + esc(olyRuleLine(evk)) + "</p>" +
+      (list.length ? rows : '<p class="muted" style="padding:10px 0">아직 기록이 없어요</p>') +
+      (mv ? (olyEvPos(evk, mv) ? '<p class="oly-pos">' + esc(olyEvPos(evk, mv)) + "</p>" : "")
+        : '<p class="oly-pos">한 판 하면 순위에 올라가요</p><button class="btn mint" style="margin-top:10px" onclick="App.go(\'' + ev.view + '\')">' + esc(ev.name) + " 한 판</button>") + "</div>";
+  } else {
+    var ov = b.overall || [], isMe = function (x) { return x.me || (me.sv && me.rank && x.rank === me.rank); };
+    var top = ov.slice(0, 3).map(function (x) { return Object.assign({}, x, { me: isMe(x) }); });
+    var rest = ov.slice(3).map(function (x) { return olyRowHtml(x, olyFmt(x.total), "", false, isMe(x)); }).join("");
+    if (me.sv && me.rank > ov.length) rest += '<div class="oly-gap"></div>' + olyRowHtml({ rank: me.rank, name: nick + " (나)" }, olyFmt(me.total), "", false, true);
+    var op = olyOverallPos(me);
+    h += '<div class="card oly-card"><b class="oly-h">종합 순위</b><p class="oly-rule">네 종목 최고 점수 합계' + (at ? " · " + at + " 기준" : "") + " · " + olyFmt(olyMax()) + "점 만점</p>" +
+      (ov.length ? olyPodiumHtml(top) + rest : '<p class="muted" style="padding:10px 0">아직 네 종목을 모두 한 사람이 없어요</p>') +
+      '<p class="oly-pos">' + (op ? esc(op) : me.done ? "내 총점 " + olyFmt(me.total) : "한 판 하면 순위에 올라가요") + "</p></div>";
+  }
+  return h + '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">명예 순위 · 경품 없음 · Outro에서 종합 1~3위 호명</p>';
+}
+/* ── TV 순위판 (wall_type · 1920×1080) · ① 종합 포디움(1위 180px · 2·3위 140px) + 4~10위 ② 종목별 1~3위(96px) ── */
+function olyTvPodium() {
+  var ov = (OLY.board && OLY.board.overall) || [];
+  var slot = function (x, r) {
+    return '<div class="tvp r' + r + '">' + (x ? olyLw(r, r === 1 ? 180 : 140) + '<b>' + esc(x.name) + "</b><span>" + olyFmt(x.total) + "</span>" : '<b class="wait">도전을 기다려요</b>') + '<i>' + r + "</i></div>";
+  };
+  var rest = "";
+  for (var i = 3; i < 10; i++) { var x = ov[i]; rest += '<div class="tytv-row"><span class="no">' + (i + 1) + '</span><span class="nm">' + (x ? esc(x.name) : '<span style="opacity:0.35">도전을 기다려요</span>') + '</span><span class="sc">' + (x ? olyFmt(x.total) : "") + "</span></div>"; }
+  return '<div class="tvp-wrap"><div class="tvp-stage">' + slot(ov[1], 2) + slot(ov[0], 1) + slot(ov[2], 3) + '</div><div class="tytv-list tvp-rest">' + rest + "</div></div>";
+}
+function olyTvEvents() {
+  var pe = (OLY.board && OLY.board.perEvent) || {};
+  return '<div class="tve-grid">' + OLY_EVENTS.map(function (e) {
+    var l = pe[e.key] || [];
+    return '<div class="tve"><p class="tve-h">' + esc(e.name) + "</p>" + [0, 1, 2].map(function (i) {
+      var x = l[i];
+      return '<div class="tve-row">' + (x ? olyLw(i + 1, 96) : '<span class="tve-no">' + (i + 1) + "</span>") + '<span class="nm">' + (x ? esc(x.name) + "<small>" + esc(x.key || "") + "</small>" : '<span style="opacity:0.35">도전을 기다려요</span>') + '</span><span class="sc">' + (x ? olyFmt(x.score) : "") + "</span></div>";
+    }).join("") + "</div>";
+  }).join("") + "</div>";
 }
 
 /* ════════════════ v3.86 테트리스 (사용자 확정 260918 · 휴대폰의 단어 소나기 자리) ════════════════
@@ -7445,7 +7718,7 @@ function olyRows(list, valFn) {
 var TT_COLS = 10, TT_ROWS = 20, TT_MAX_SEC = 300;
 var TT_DAS = 0.17, TT_ARR = 0.05, TT_SOFT_REP = 0.05;      /* v4.01 누르고 있을 때 · 첫 반복까지 0.17초, 그다음 0.05초 (구 0.22 / 0.07) */
 var TT_LOCK = 0.5, TT_LOCK_MAX = 12;                        /* 바닥에 닿고 고정될 때까지 · 움직이면 미뤄지되 12번까지 */
-var TT_LINE_PTS = [0, 100, 300, 500, 800];
+/* v4.02 (점수 체계 v2) 줄 점수 × 레벨 · 한 칸 내리기 +1 · 바닥까지 +2 는 폐지 · 점수 = olyScore("tetris", ttParts()) · 레벨은 낙하 속도에만 쓴다 */
 var TT_PIECES = {
   I: { c: "o100", m: [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]] },
   O: { c: "ink", m: [[1, 1], [1, 1]] },
@@ -7529,13 +7802,13 @@ function ttRotate(dir) {
 function ttTouch() { if (ttHit(TT.cur.m, TT.cur.x, TT.cur.y + 1)) { TT.lockT = 0; TT.lockN++; } }
 function ttSoft() {
   if (ttHit(TT.cur.m, TT.cur.x, TT.cur.y + 1)) return false;
-  TT.cur.y++; TT.score++; TT.gt = 0; TT.lockT = 0;
+  TT.cur.y++; TT.gt = 0; TT.lockT = 0;
   return true;
 }
 function ttHard() {
   var n = 0;
   while (!ttHit(TT.cur.m, TT.cur.x, TT.cur.y + 1)) { TT.cur.y++; n++; }
-  TT.score += n * 2; TT.drop = { y: TT.cur.y, t: 0.18 };
+  TT.drop = { y: TT.cur.y, t: 0.18 };
   TT.shake = rgReduced() ? 0 : 0.12;
   sfx("kwang"); ttVib(16);
   ttLock();
@@ -7556,6 +7829,8 @@ function ttLock() {
     TT.tok[by][bx] = (tk && tk[0] === x && tk[1] === y) ? (TT_TOKEN[c.k] || "") : "";   /* 글자는 한 칸에만 남는다 */
   }
   TT.cur = null;
+  var s0 = TT.score;
+  TT.locked++;   /* v4.02 바닥에 고정된 블록만 센다 (천장에 닿아 못 놓인 마지막 블록은 빠진다) */
   for (var r = 0; r < TT_ROWS; r++) {
     var ok = true;
     for (var q = 0; q < TT_COLS; q++) if (!TT.grid[r][q]) { ok = false; break; }
@@ -7563,14 +7838,28 @@ function ttLock() {
   }
   if (full.length) {
     TT.flash = { rows: full, t: TT_CLEAR_SEC };
-    TT.score += TT_LINE_PTS[full.length] * TT.level;
     TT.clears[full.length - 1]++;
-    TT.pops.push({ x: TT.L ? TT.L.bw / 2 : 100, y: 40, text: full.length + "줄", t: 0.9, c: RAIN_PAL.o100 });
+    ttScore(s0, full.length);
     sfx(full.length >= 4 ? "fanfare" : "ting"); ttVib(full.length >= 2 ? 24 : 12);
     return;
   }
+  ttScore(s0, 0);
   sfx("puck");
-  ttSpawn();
+  if (!TT.ending) ttSpawn();
+}
+/* v4.02 제출 구성 요소 · blk 놓은 블록 · c1~c4 한 번에 1~4줄 지운 횟수 · lines 지운 줄 · lv 레벨 · surv 버틴 1/100초(참고) · pz 직접 멈춘 횟수
+   줄 수는 지운 횟수에서 바로 센다(줄이 사라지는 연출 중에 판이 끝나도 앞뒤가 맞게) */
+function ttParts() {
+  var c = TT.clears, lines = c[0] + 2 * c[1] + 3 * c[2] + 4 * c[3];
+  return { blk: TT.locked || 0, c1: c[0], c2: c[1], c3: c[2], c4: c[3], lines: lines, lv: Math.min(15, 1 + Math.floor(lines / TT_LV_LINES)), surv: Math.round((TT.surv || 0) * 100), pz: TT.pz || 0 };
+}
+/* 블록을 놓을 때마다 점수 다시 계산 · 팝 = 블록 +10(60개까지) · 줄 「2줄 +120」 · 3,000 에 닿으면 만점 종료 */
+function ttScore(s0, n) {
+  TT.score = olyScore("tetris", ttParts());
+  var d = TT.score - s0, x = TT.L ? TT.L.bw / 2 : 100;
+  if (n) TT.pops.push({ x: x, y: 40, text: n + "줄 +" + d, t: 0.9, c: RAIN_PAL.o100 });
+  else if (d > 0) TT.pops.push({ x: x, y: 58, text: "+" + d, t: 0.5, c: RAIN_PAL.ink });
+  if (TT.score >= olyCap() && !TT.ending) ttEnd("full");
 }
 function ttCollapse() {
   var rows = TT.flash.rows;
@@ -7629,7 +7918,7 @@ function ttStart() {
   SFX.site = false;
   TT = { on: true, paused: false, ending: null, raf: 0, cd: 3.2, t0: 0, last: performance.now(), L: null, dpr: 1,
     grid: ttGridNew(), tok: ttGridNew(), bag: null, cur: null, nextK: null, lines: 0, score: 0, level: 1, pieces: 0, surv: 0,
-    clears: [0, 0, 0, 0], gt: 0, lockT: 0, lockN: 0, flash: null, drop: null, rep: null, held: [], sw: null,
+    clears: [0, 0, 0, 0], gt: 0, lockT: 0, lockN: 0, flash: null, drop: null, rep: null, held: [], sw: null, locked: 0, pz: 0,
     parts: [], pops: [], banner: null, shake: 0, hud: "" };
   TT.nextQ = [ttNextKey(), ttNextKey()];   /* v3.87b 다음 블록 두 개를 보여 준다 */
   TT.nextK = TT.nextQ[0];
@@ -7669,7 +7958,7 @@ function ttStart() {
 }
 function ttTopHtml() {
   return '<div class="rg-hud">' +
-    '<span class="rg-sc tm"><small>생존</small><b id="ttHudTm">0.0초</b></span>' +
+    '<span class="rg-sc tm"><small>점수</small><b id="ttHudSc">0</b></span>' +   /* v4.02 생존 칸 → 점수 (시간은 점수가 아니다) */
     '<span class="rg-sc"><small>줄</small><b id="ttHudLn">0</b></span>' +
     '<span class="rg-sc"><small>레벨</small><b id="ttHudLv">1</b></span>' +
     '<span style="flex:1"></span>' +
@@ -7797,13 +8086,12 @@ function ttUpdate(dt, now) {
   }
 }
 function ttHud() {
-  var t = (Math.round((TT.surv || 0) * 10) / 10).toFixed(1);
-  var key = TT.lines + "|" + t + "|" + TT.level;
+  var key = TT.lines + "|" + TT.score + "|" + TT.level;
   if (key === TT.hud) return;
   TT.hud = key;
-  var a = el("ttHudLn"), b = el("ttHudTm"), c = el("ttHudLv");
+  var a = el("ttHudLn"), b = el("ttHudSc"), c = el("ttHudLv");
   if (a) a.textContent = String(TT.lines);
-  if (b) b.textContent = t + "초";
+  if (b) b.textContent = olyFmt(TT.score);
   if (c) c.textContent = String(TT.level);
 }
 function ttEnd(why) {
@@ -7811,21 +8099,19 @@ function ttEnd(why) {
   ttPadReset();
   TT.ending = { t: 1.2, why: why };
   TT.banner = null;
-  sfx("over");
+  sfx(why === "full" ? "fanfare" : "over");   /* v4.02 만점 종료는 축하음 */
 }
 function ttEndFinal(why) {
   if (!TT.on) return;
   TT.ending = null;
-  var lines = TT.lines, score = TT.score, surv = TT.surv, lv = TT.level, pieces = TT.pieces, cl = TT.clears.slice();
+  var parts = ttParts(), surv = TT.surv, prev = Number(S.get("oly2_best_tetris", 0)) || 0;
   ttStop();
-  var rec = Math.round(surv * 100);   /* v3.87 기록 = 버틴 시간(1/100초) · 줄·점수는 보조 지표 */
-  if (rec > S.get("tt_best", 0)) { S.set("tt_best", rec); setTimeout(function () { sfx("best"); }, 250); }
   gameClear("tetris_cleared");
   var root = el("ttRoot"); if (!root) return;
-  olySubmit("tetris", rec);
-  root.innerHTML = gsResultHtml("tetris", { why: "done", label: "생존 기록", reason: "", score: surv.toFixed(1) + "초 생존",
-    stats: "지운 줄 " + lines + "줄 · 점수 " + score.toLocaleString() + " · 레벨 " + lv + " · 블록 " + pieces + "개<br>1줄 " + cl[0] + " · 2줄 " + cl[1] + " · 3줄 " + cl[2] + " · 4줄 " + cl[3],
-    rankLine: olyResultLine("tetris", rec) });
+  var sc = olySubmit("tetris", parts);
+  if (sc > prev) setTimeout(function () { sfx("best"); }, 250);
+  root.innerHTML = gsResultHtml("tetris", { why: why === "full" ? "done" : "over", label: why === "full" ? "만점" : "결과", reason: "",
+    oly: { key: "tetris", parts: parts, score: sc, note: "참고 · 버틴 시간 " + surv.toFixed(1) + "초 · 레벨 " + parts.lv + " · 점수에는 들어가지 않아요" } });
   window.scrollTo(0, 0);
 }
 /* ── 그리기 · 전부 CSS px 좌표 (캔버스는 기기 해상도) ── */
@@ -7956,9 +8242,9 @@ function ttEndDraw(ctx, L) {
   ctx.lineWidth = 2; ctx.strokeStyle = RAIN_PAL.ink; ctx.stroke();
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.fillStyle = RAIN_PAL.deep; ctx.font = "800 18px " + RAIN_FONT;
-  ctx.fillText(TT.ending.why === "time" ? "5분 완주" : "GAME OVER", L.ox + L.bw / 2, cy - 14);
+  ctx.fillText(TT.ending.why === "full" ? "만점 " + olyFmt(olyCap()) : TT.ending.why === "time" ? "5분 완주" : "GAME OVER", L.ox + L.bw / 2, cy - 14);
   ctx.fillStyle = RAIN_PAL.ink; ctx.font = "700 13px " + RAIN_FONT;
-  ctx.fillText(TT.surv.toFixed(1) + "초 생존 · " + TT.lines + "줄", L.ox + L.bw / 2, cy + 12);
+  ctx.fillText(olyFmt(TT.score) + "점 · " + ttParts().lines + "줄", L.ox + L.bw / 2, cy + 12);
 }
 /* 시작 화면 미리보기 · 정지 화면 */
 function ttPreview() {
@@ -7985,11 +8271,11 @@ function ttPreview() {
    비주얼: 오렌지 사다리 · 검정 · 흰색 · 16비트 도트 · 마스코트 미위 · 이모지 없음. */
 var GS_GAMES = {
   /* v3.86 휴대폰 종목은 테트리스 · 소나기(type)는 1F 현장 타자왕전 전용으로만 남는다(앱 진입점 없음) */
-  tetris: { name: "테트리스", view: "game_tetris", start: "ttStart()", best: "tt_best", line: "블록을 옮기고 돌려서 줄을 채워요 · 아래 버튼으로" },
+  tetris: { name: "테트리스", view: "game_tetris", start: "ttStart()", best: "oly2_best_tetris", line: "블록을 옮기고 돌려서 줄을 채워요 · 아래 버튼으로" },
   type: { name: "AX 단어 소나기", view: "game_type", start: "rgStart('app')", best: "type_best", line: "떨어지는 단어를 쳐서 터뜨려요 · 키보드로 입력" },
-  pang: { name: "AX 팡", view: "game_pang", start: "pgStart()", best: "pang_best", line: "같은 그림 3개를 한 줄로 맞춰 터뜨려요 · 밀어서 바꾸기" },
-  jump: { name: "ME to WE 점프", view: "game_jump", start: "jpStart()", best: "jump_best", line: "탭 점프 · 두 번 탭 2단 점프 · 꾸욱 누르면 엎드리기", fmt: function (cs) { return cs ? (cs / 100).toFixed(1) + "초" : "0"; } },
-  word: { name: "ME to WE 기억력", view: "game_word", start: "gwStart()", best: "gw_time_best", line: "문장을 외워 단어 타일을 순서대로" }
+  pang: { name: "AX 팡", view: "game_pang", start: "pgStart()", best: "oly2_best_pang", line: "같은 그림 3개를 한 줄로 맞춰 터뜨려요 · 밀어서 바꾸기" },
+  jump: { name: "ME to WE 점프", view: "game_jump", start: "jpStart()", best: "oly2_best_jump", line: "탭 점프 · 두 번 탭 2단 점프 · 꾸욱 누르면 엎드리기" },
+  word: { name: "ME to WE 기억력", view: "game_word", start: "gwStart()", best: "oly2_best_word", line: "문장을 외워 단어 타일을 순서대로" }
 };
 var GS = { cur: null, vvh: null, onVis: null, onKey: null };
 /* o = { key, title, top(v3.36d 위 줄 HTML 교체), fill(v3.36d 캔버스 꽉 채움), cls, cw, ch, canvasId, bottom, noGesture, flat(v3.48 플랫 스타일 오버레이), resized(cv, cssW, cssH), down(e), move(e), up(e), keydown(e), running(), isPaused(), pause(), resume(), quit() } */
@@ -8001,7 +8287,7 @@ function gsOverlayOpen(o) {
   d.className = (o.flat ? "flat " : "") + (o.cls || "");
   d.innerHTML = '<div class="rgp-top">' + (o.top || '<span class="rgp-t">' + esc(o.title) + '</span><span class="row" style="gap:6px;align-items:center">' + sndBtnHtml(false) + '<button class="rgp-x" type="button" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">일시정지</button></span>') + "</div>" +
     '<div class="rgp-mid' + (o.noGesture ? " nogest" : "") + (o.fill ? " fill" : "") + '" id="gsMid"><canvas id="' + o.canvasId + '" width="' + o.cw + '" height="' + o.ch + '"></canvas>' +
-    '<div class="rgp-pause" id="rgPause" hidden><p>일시정지</p><button class="btn mint" type="button" onclick="gsResume()">계속하기</button><button class="btn line" type="button" onclick="gsQuit()">그만하기</button></div></div>' +
+    '<div class="rgp-pause" id="rgPause" hidden><p>일시정지</p><small id="rgPauseLeft"></small><button class="btn mint" type="button" onclick="gsResume()">계속하기</button><button class="btn line" type="button" onclick="gsQuit()">그만하기</button></div></div>' +
     (o.bottom || "");
   document.body.appendChild(d);
   document.documentElement.classList.add("rg-lock");
@@ -8054,15 +8340,33 @@ function gsPauseUi(on) {
   var p = el("rgPause"); if (p) p.hidden = !on;
   var x = document.querySelector("#rgPlay .rgp-x"); if (x) x.textContent = on ? (x.getAttribute("data-on") || "계속하기") : (x.getAttribute("data-off") || "일시정지");
 }
-function gsPauseToggle() { if (!GS.cur) return; if (GS.cur.isPaused()) GS.cur.resume(); else GS.cur.pause(); }
+function gsPauseToggle() {
+  if (!GS.cur) return;
+  if (GS.cur.isPaused()) { GS.cur.resume(); return; }
+  GS.manual = true;
+  try { GS.cur.pause(); } finally { GS.manual = false; }
+}
+/* v4.02 (점수 체계 v2 §3.1 · 결정 6) 판당 멈춤 상한 · 올림픽 규칙 pauseMax(기본 3) · 없는 게임은 무제한 */
+function gsPauseMax() { var R = GS.cur && olyRule()[GS.cur.key]; return R && R.pauseMax != null ? R.pauseMax : 99; }
+function gsPauseBtnSync(G) {
+  var x = document.querySelector("#rgPlay .rgp-x"); if (!x || G.paused) return;
+  var left = gsPauseMax() - (G.pz || 0);
+  x.disabled = left <= 0; x.classList.toggle("off", left <= 0);
+}
 function gsResume() { if (GS.cur) GS.cur.resume(); }
 function gsQuit() { if (GS.cur) GS.cur.quit(); }
 /* 게임 상태 객체 공용 일시정지 · 멈춘 시간은 60초에서 빠지지 않는다 */
 function gsPauseState(G) {
   if (!G.on || G.paused || G.ending) return;
+  if (GS.manual) {   /* 직접 누른 멈춤만 센다 · 상한에 닿으면 멈추지 않는다 (전화·앱 전환 자동 멈춤은 그대로 · 멈춤 화면은 불투명이라 판이 보이지 않는다) */
+    if ((G.pz || 0) >= gsPauseMax()) { toast("이번 판 일시정지를 다 썼어요"); return; }
+    G.pz = (G.pz || 0) + 1;
+  }
   G.paused = true; G.pauseAt = performance.now();
   if (G.raf) cancelAnimationFrame(G.raf); G.raf = 0;
   gsPauseUi(true);
+  var lf = el("rgPauseLeft"), left = gsPauseMax() - (G.pz || 0);
+  if (lf) lf.textContent = gsPauseMax() < 99 ? (left > 0 ? "이번 판 일시정지 " + left + "번 남음" : "이번 판 일시정지를 다 썼어요") : "";
 }
 function gsResumeState(G, frame) {
   if (!G.on || !G.paused) return;
@@ -8070,6 +8374,7 @@ function gsResumeState(G, frame) {
   if (G.t0) G.t0 += gap;
   G.paused = false; G.last = performance.now();
   gsPauseUi(false);
+  gsPauseBtnSync(G);
   G.raf = requestAnimationFrame(frame);
 }
 /* 캔버스 좌표 · CSS 크기로 늘어난 캔버스에서 원래 픽셀 좌표로 */
@@ -8128,8 +8433,8 @@ function gsEndDraw(ctx, ending, W, y0, y1, small) {
   ctx.fillStyle = "rgba(255,255,255,0.6)"; ctx.fillRect(0, y0, W, y1 - y0);
   rgBox(ctx, 12, cy - 25, W - 24, 50, RAIN_PAL.w);
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.font = "bold 16px sans-serif"; ctx.fillStyle = ending.why === "time" ? RAIN_PAL.o100 : RAIN_PAL.deep;
-  ctx.fillText(ending.why === "time" ? "TIME UP" : "GAME OVER", W / 2, cy - 9);
+  ctx.font = "bold 16px sans-serif"; ctx.fillStyle = ending.why === "time" || ending.why === "full" ? RAIN_PAL.o100 : RAIN_PAL.deep;
+  ctx.fillText(ending.why === "full" ? "만점 " + olyFmt(olyCap()) : ending.why === "time" ? "TIME UP" : "GAME OVER", W / 2, cy - 9);
   ctx.font = "bold 10px sans-serif"; ctx.fillStyle = RAIN_PAL.ink;
   ctx.fillText(small, W / 2, cy + 11);
 }
@@ -8155,7 +8460,7 @@ function gsStartHtml(key, o) {
     '<div class="rg-wrap' + (o.flat ? " flat" : "") + '" style="margin-top:10px"><canvas id="' + o.previewId + '" width="' + o.pw + '" height="' + o.ph + '"></canvas></div>' +
     '<p class="hint">' + o.rules + "</p>" + axPreHtml(key, true) + "</div>" +
     '<div class="row mb8" style="justify-content:space-between"><span class="muted" style="font-size:calc(13.5px * var(--fs))">닉네임 <b style="color:var(--hi)">' + esc(nick) + '</b> · <span style="text-decoration:underline;cursor:pointer" onclick="S.set(\'type_nick_edit\', true); App.render()">변경</span></span>' +
-    '<span class="muted" style="font-size:calc(13.5px * var(--fs))">최고 ' + S.get(g.best, 0).toLocaleString() + "</span></div>" +
+    '<span class="muted" style="font-size:calc(13.5px * var(--fs))">최고 ' + olyFmt(S.get(g.best, 0)) + "점</span></div>" +
     '<button class="btn mint mb8" style="padding:16px;font-size:calc(17px * var(--fs))" onclick="gsBegin(\'' + key + '\')">START</button>' +
     '<div class="row" style="gap:8px;align-items:stretch"><button class="btn line" style="flex:1" onclick="' + gsRankGo(key) + '">순위판</button>' + sndBtnHtml(false) + "</div>" +
     (o.foot ? '<p class="muted" style="margin-top:10px;font-size:calc(12px * var(--fs));text-align:center">' + o.foot + "</p>" : "") + "</div>";
@@ -8169,7 +8474,7 @@ function gsStartBigHtml(key, o, g, nick) {
     '<div class="gs-how">' + o.how.map(function (h) { return "<p><b>" + esc(h[0]) + "</b>" + esc(h[1]) + "</p>"; }).join("") + "</div>" +
     '<p class="gs-rule">' + o.rules + "</p></div>" +
     '<div class="row mb8" style="justify-content:space-between"><span class="muted" style="font-size:calc(14px * var(--fs))">닉네임 <b style="color:var(--hi)">' + esc(nick) + '</b> · <span style="text-decoration:underline;cursor:pointer" onclick="S.set(\'type_nick_edit\', true); App.render()">변경</span></span>' +
-    '<span class="muted" style="font-size:calc(14px * var(--fs))">최고 ' + (g.fmt ? g.fmt(S.get(g.best, 0)) : S.get(g.best, 0).toLocaleString()) + "</span></div>" +
+    '<span class="muted" style="font-size:calc(14px * var(--fs))">최고 ' + olyFmt(S.get(g.best, 0)) + "점</span></div>" +
     '<div class="gs-go"><button class="btn mint" onclick="gsBegin(\'' + key + '\')">START</button>' +
     '<button class="btn line" onclick="' + gsRankGo(key) + '">순위판</button>' + sndBtnHtml(false) + "</div></div>";
 }
@@ -8180,8 +8485,9 @@ function gsResultHtml(key, r) {
   return '<div class="cho-box" style="padding:24px 18px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' +
     esc(g.name) + " · " + (r.label || (r.why === "done" ? "완주" : r.why === "time" ? "TIME UP" : "GAME OVER")) + " · " + esc(typeNick() || "익명 참가자") + "</p>" +
     (r.reason ? '<p style="margin-top:6px;font-size:calc(15px * var(--fs));font-weight:800">' + esc(r.reason) + "</p>" : "") +
+    (r.oly ? olyResultBody(r.oly) :
     '<p class="disp" style="font-size:44px;color:var(--mint);margin-top:6px">' + (typeof r.score === "string" ? esc(r.score) : Number(r.score).toLocaleString()) + "</p>" +
-    '<p class="hint">' + r.stats + "<br>" + (r.rankLine || "") + "</p>" + "</div>" +
+    '<p class="hint">' + r.stats + "<br>" + (r.rankLine || "") + "</p>") + "</div>" +
     (r.banner || "") +
     '<button class="btn mint mb8" style="padding:15px" onclick="' + g.start + '">다시 하기</button>' +
     '<button class="btn line mb8" onclick="' + gsRankGo(key) + '">순위판 보기</button>' +
@@ -8199,7 +8505,8 @@ function gsResultHtml(key, r) {
    채움: 말풍선 흰색 · 톱니 검정 · 차트 O100 · 전구 O10 · 반짝임 O50 (아이콘은 흰색 또는 검정). 점 파티클 = KV 도트 격자 모티프. */
 var PG_N = 7, PG_TS = 24, PG_W = 180, PG_H = 236, PG_OX = 6, PG_OY = 38, PG_KINDS = 5;
 /* v3.74 (사용자 확정 260918) 60초 제한 → 완주 시간 경쟁 · 목표 타일을 다 터뜨릴 때까지 걸린 시간이 기록이다.
-   목표 타일 수·제한 시간은 여기 한 곳 · 올림픽 환산 기준(보통·최상)은 OLY_BASE.pang(1/100초 · 콘솔 조정)이다. */
+   v4.02 (점수 체계 v2 · 사용자 결정 260919 · 60초 타임어택안 기각) 완주 시간을 점수로 바꾼다 · 1000 × (기준 초 / 완주 초)^지수 · 3,000 상한
+   (계수 = 올림픽 규칙 pang.base·pow · 서버 설정 「올림픽_점수」) · 판 안에서 터뜨린 칸 점수·연쇄 배수는 점수가 아니다(진행만 보여 준다). */
 var PG_GOAL = 80, PG_MAX_SEC = 120;   /* v3.74 실측 · 한 수에 평균 4~5칸이 터져 40칸은 9수면 끝났다 → 80칸(약 18수)으로 올림 */
 /* v3.79 완주 연출을 더 음미할 수 있게 (사용자 피드백 260918) · 무너짐 2초 → 슬로건 한 줄씩 0.4초 간격 → 3.5초 머무름 */
 var PG_FIN = { fall: 2.0, hold: 3.5, step: 0.4 };
@@ -8333,7 +8640,7 @@ function pgStart() {
   pgStop();
   SFX.site = false;
   PG = { on: true, paused: false, ending: null, raf: 0, cd: 3.2, t0: 0, last: performance.now(), b: pgBoardInit(), phase: "idle", sel: null, pair: null, drag: null, k: 1,
-    idle: 0, hint: null, hintN: 0, hintT: 0, bar: 0, barPulse: 0, mile: 0, chain: 0, clrT: 0, lines: [], parts: [], pops: [], banner: null, combo: null, score: 0, tiles: 0, maxChain: 0, specials: 0, moves: 0, shuffles: 0 };
+    idle: 0, hint: null, hintN: 0, hintT: 0, bar: 0, barPulse: 0, mile: 0, chain: 0, clrT: 0, lines: [], parts: [], pops: [], banner: null, combo: null, score: 0, tiles: 0, maxChain: 0, specials: 0, moves: 0, shuffles: 0, bad: 0, pz: 0 };
   gsOverlayOpen({ key: "pang", title: "AX 팡", cw: PG_W, ch: PG_H, canvasId: "pgCv", noGesture: true, flat: true,
     bottom: '<div class="gs-foot">이웃한 두 칸을 밀어서 바꾸거나, 한 칸 누르고 옆 칸을 누르세요</div>',
     down: pgDown, move: pgMove, up: pgUp, resized: pgFit,
@@ -8442,7 +8749,7 @@ function pgClear(runs) {
   });
   var cnt = n, gain = cnt * 10 * mult;
   PG.score += gain; PG.tiles += cnt; PG.maxChain = Math.max(PG.maxChain, PG.chain);
-  if (n) PG.pops.push({ x: sx / n, y: sy / n, text: "+" + gain, t: 0, life: 0.7 });
+  if (n) PG.pops.push({ x: sx / n, y: sy / n, text: "+" + cnt + "칸", t: 0, life: 0.7 });   /* v4.02 점수는 완주 시간 · 팝은 진행(칸)만 */
   if (PG.chain >= 2) PG.combo = { n: mult, t: 0 };
   /* v3.74 목표 타일을 다 터뜨리면 완주 · 시간이 기록이 된다 */
   if (!PG.ending && PG.tiles >= PG_GOAL) pgEnd("goal");
@@ -8513,7 +8820,7 @@ function pgUpdate(dt, now) {
     if (!pgSettle(dt)) {
       var runs = pgRuns(PG.b);
       if (runs.length) pgClear(runs);
-      else { pgSwapAnim(PG.pair[0], PG.pair[1], "back"); PG.pair = null; PG.phase = "back"; sfx("ttuk"); }
+      else { pgSwapAnim(PG.pair[0], PG.pair[1], "back"); PG.pair = null; PG.phase = "back"; PG.bad++; sfx("ttuk"); }
     }
   } else if (PG.phase === "back") {
     if (!pgSettle(dt)) PG.phase = "idle";
@@ -8532,8 +8839,8 @@ function pgEnd(why) {
   if (!PG.on || PG.ending) return;
   var done = why === "goal";
   PG.fin = done ? Math.round(pgEl(performance.now()) * 100) : 0;   /* 완주 기록 = 1/100초 */
-  var prevBest = S.get("pang_best", 0);
-  PG.finBest = done && (!prevBest || PG.fin < prevBest);
+  PG.sc = done ? olyScore("pang", pgParts()) : 0;                    /* v4.02 완주 시간 → 점수 */
+  PG.finBest = done && PG.sc > (Number(S.get("oly2_best_pang", 0)) || 0);
   PG.ending = { t: done ? PG_FIN.fall + PG_FIN.hold : 1.2, why: why, done: done };
   PG.sel = null; PG.hint = null; PG.drag = null;
   if (done) {
@@ -8557,7 +8864,7 @@ function pgFinDraw(ctx, now) {
   pgText(ctx, "우리 회사의 AX가 되다", PG_W / 2, PG_OY + 100, 11, 800, PG_C.tx, "center");
   ctx.globalAlpha = line(3);
   pgText(ctx, (PG.fin / 100).toFixed(1) + "초", PG_W / 2, PG_OY + 132, 26, 900, PG_C.o100, "center");
-  pgText(ctx, "완주", PG_W / 2, PG_OY + 150, 9, 700, PG_C.muted, "center");
+  pgText(ctx, "완주 = " + olyFmt(PG.sc) + "점", PG_W / 2, PG_OY + 150, 9, 700, PG_C.muted, "center");
   if (PG.finBest) { ctx.globalAlpha = line(4); pgText(ctx, "내 최고 기록", PG_W / 2, PG_OY + 166, 9, 800, PG_C.o100, "center"); }
   ctx.restore();
 }
@@ -8566,22 +8873,24 @@ function pgFinSkip() {
   if (!PG.on || !PG.ending || !PG.ending.done) return;
   pgEndFinal("goal");
 }
+/* v4.02 제출 구성 요소 · fin 완주 1/100초 · tiles 터뜨린 칸 · moves 바꾼 수 · bad 튕긴 수 · pz 직접 멈춘 횟수 */
+function pgParts() { return { fin: PG.fin || 0, tiles: PG.tiles, moves: PG.moves, bad: PG.bad || 0, pz: PG.pz || 0 }; }
 function pgEndFinal(why) {
   if (!PG.on) return;
-  var done = why === "goal", fin = PG.fin || 0;
+  var done = why === "goal", fin = PG.fin || 0, parts = pgParts();
   PG.ending = null;
   pgStop();
   gameClear("pang_cleared");   /* 미완주여도 스탬프는 적립 */
-  var prev = S.get("pang_best", 0);
+  var sc = 0;
   if (done) {
-    if (!prev || fin < prev) { S.set("pang_best", fin); setTimeout(function () { sfx("best"); }, 250); }
-    olySubmit("pang", fin);
+    if (PG.finBest) setTimeout(function () { sfx("best"); }, 250);
+    sc = olySubmit("pang", parts);
   }
   var root = el("pgRoot"); if (!root) return;
-  root.innerHTML = gsResultHtml("pang", { why: done ? "done" : why, reason: "",
-    score: done ? (fin / 100).toFixed(1) + "초" : "미완주",
-    stats: "터뜨린 칸 " + PG.tiles + " / " + PG_GOAL + "개 · 최고 연쇄 " + PG.maxChain,
-    rankLine: done ? olyResultLine("pang", fin) : "완주하면 순위에 올라가요" });
+  root.innerHTML = gsResultHtml("pang", done ? { why: "done", reason: "",
+    oly: { key: "pang", parts: parts, score: sc, head: "완주 " + (fin / 100).toFixed(1) + "초 = " + olyFmt(sc) + "점",
+      note: "참고 · 터뜨린 칸 " + PG.tiles + "개 · 최고 연쇄 " + PG.maxChain + " · 튕긴 수 " + (PG.bad || 0) } }
+    : { why: why, reason: "", score: "미완주", stats: "터뜨린 칸 " + PG.tiles + " / " + PG_GOAL + "개 · 최고 연쇄 " + PG.maxChain, rankLine: "완주하면 순위에 올라가요" });
   window.scrollTo(0, 0);
 }
 function pgText(ctx, text, x, y, size, weight, col, align) {
@@ -8726,7 +9035,7 @@ var JP_ITEM_EVERY = 15, JP_ITEM_SEC = 5;   /* 아이템 · 15초마다 하나 ·
    v4.00 (사용자 요청 260919) 흘러가는 배경 → 공중에 뜬 글자 블록(2단 점프 미션) · 들이받으면 글자가 흩어지며 점수 보너스 · 결과 화면에 획득 목록
    블록 = 바닥에서 80~110 높이(1단 점프 머리 최고 75 · 2단 점프 113) · 앞뒤 장애물과 떨어뜨려 회피와 동시에 요구하지 않는다 */
 var JP_BG_MAX = 21, JP_BG_FIRST = 7, JP_BG_EVERY = 10;
-var JP_FACT = { w: 104, h: 30, lo: 80, pts: 150 };
+var JP_FACT = { w: 104, h: 30, lo: 80 };   /* v4.02 블록 점수는 올림픽 규칙 jump.fact(기본 100 · v4.00 의 임시 +150 폐지) */
 function jpBgLines() {
   return MEM_ROUNDS.filter(function (R) { return R.kind === "sentence"; }).map(function (R) { return R.words.join(" "); })
     .filter(function (t) { return t.length <= JP_BG_MAX; });
@@ -8760,7 +9069,7 @@ function jpStart() {
   JP = { on: true, paused: false, ending: null, raf: 0, cd: 3.2, t0: 0, last: performance.now(), py: JP_GY, vy: 0, jumps: 0, hearts: JP_HEARTS, inv: 0, heartHit: 0,
     obs: [], coins: [], items: [], parts: [], pops: [], banner: null, shake: 0, dist: 0, nextObs: 70, coinN: 0, dodged: 0, hits: 0, jumpsN: 0, score: 0, speedUp: 0,
     item: null, itemT: 0, nextItem: JP_ITEM_EVERY, surv: 0, nextK: null, seen: {}, tx: {},
-    bg: shuf(jpBgLines()), bgI: 0, bgNext: JP_BG_FIRST, fact: null, facts: [], bonus: 0, duck: false, press: null, bag: null, lastSp: "", tutSeen: {} };
+    bg: shuf(jpBgLines()), bgI: 0, bgNext: JP_BG_FIRST, fact: null, facts: [], duck: false, press: null, bag: null, lastSp: "", tutSeen: {}, pz: 0 };
   gsOverlayOpen({ key: "jump", title: "ME to WE 점프", cw: JP_W, ch: JP_H, canvasId: "jpCv", noGesture: true,
     bottom: '<div class="gs-foot">탭 = 점프 · 두 번 탭 = 2단 점프 · 꾸욱 = 엎드리기</div>',
     down: function (e) { e.preventDefault(); jpDown(); },
@@ -8810,7 +9119,7 @@ function jpTxSync() {
   var tx = el("jpTx"); if (!tx) return;
   jpTxSet("jtScore", JP.score, function (e) { e.textContent = JP.score; });
   var sv = (Math.round((JP.surv || 0) * 10) / 10).toFixed(1);
-  jpTxSet("jtSurv", JP.cd > 0 ? "" : sv, function (e) { e.innerHTML = JP.cd > 0 ? "" : sv + "<small>초 생존</small>"; });
+  jpTxSet("jtSurv", "", function (e) { e.innerHTML = ""; });   /* v4.02 버틴 시간은 점수가 아니라 HUD 에서 뺐다 (결과 화면 참고 줄에만) */
   /* v4.00 글자 블록 · 판 위치를 따라 움직이고, 먹으면 글자 하나하나가 흩어진다 */
   var f = JP.fact, u0 = tx.clientWidth / JP_W, fe = el("jtFact");
   if (fe) {
@@ -9030,14 +9339,14 @@ function jpUpdate(dt, now) {
     /* 끊긴 바닥 · 땅에 닿은 채로 구멍 위(가장자리 4칸 여유)를 지나면 부딪힘 · 떨어지지는 않고 하트만 깎인다 */
     if (o.k === "gap" && !o.hit && JP.py >= JP_GY - 0.5 && body.x + body.w - 4 > o.x && body.x + 4 < o.x + o.w) jpHit(o);
     /* v3.94 2단 점프 +20 폐지(사용자 260918 「주는 이유를 모르겠다」) · 넘은 개수만 센다 */
-    if (!o.passed && o.x + o.w < body.x) { o.passed = true; if (!o.hit) JP.dodged++; }
+    if (!o.passed && o.x + o.w < body.x) { o.passed = true; if (!o.hit) { JP.dodged++; JP.pops.push({ x: JP_PX + 10, y: JP_GY - 44, text: "+" + olyRule().jump.obs, t: 0.55, c: RAIN_PAL.ink }); } }
   });
   JP.obs = JP.obs.filter(function (o) { return o.x + o.w > -8 && !o.smash; });
   JP.coins.forEach(function (c) {
     c.x -= dx;
     if (!c.got && jpOverlap(body, { x: c.x, y: c.y, w: 10, h: 8 })) {
       c.got = true; JP.coinN += c.hi ? 2 : 1;
-      JP.pops.push({ x: c.x + 5, y: c.y - 4, text: c.hi ? "+60" : "+30", t: 0.6, c: RAIN_PAL.o100 });
+      JP.pops.push({ x: c.x + 5, y: c.y - 4, text: "+" + olyRule().jump.coin * (c.hi ? 2 : 1), t: 0.6, c: RAIN_PAL.o100 });
       gsBurst(JP, c.x + 5, c.y + 4, 4, [RAIN_PAL.o100, RAIN_PAL.w]);
       sfx("ting");
     }
@@ -9054,31 +9363,33 @@ function jpUpdate(dt, now) {
     }
   });
   JP.items = JP.items.filter(function (it) { return !it.got && it.x > -14; });
-  JP.score = JP.coinN * 30 + Math.floor(t) * 5 + JP.bonus;   /* v4.00 + 글자 미션 보너스 */
+  JP.score = olyScore("jump", jpParts());   /* v4.02 넘은 장애물 × 40 + 코인 × 5 + AI 상식 × 100 · 버틴 시간은 점수 아님 */
+  if (JP.score >= olyCap() && !JP.ending) jpEnd("full");   /* 만점 3,000 · 결승 */
 }
 function jpEnd(why) {
   if (!JP.on || JP.ending) return;
   JP.ending = { t: 1.2, why: why }; JP.banner = null;
-  sfx(why === "time" ? "fanfare" : "over");
+  sfx(why === "time" || why === "full" ? "fanfare" : "over");
 }
+/* v4.02 제출 구성 요소 · obs 넘은 장애물 · coin 코인 단위(높은 코인 2) · fact AI 상식 · hits 부딪힘 · surv 버틴 1/100초(참고) · pz 직접 멈춘 횟수 */
+function jpParts() { return { obs: JP.dodged, coin: JP.coinN, fact: JP.facts.length, hits: JP.hits, surv: Math.round((JP.surv || 0) * 100), pz: JP.pz || 0 }; }
 function jpEndFinal(why) {
   if (!JP.on) return;
   JP.ending = null;
   jpStop();
-  var surv = Math.round((JP.surv || 0) * 100);   /* v3.75 기록 = 생존 시간(1/100초) · 길수록 좋다 */
-  var prev = S.get("jump_best", 0);
-  if (surv > prev) { S.set("jump_best", surv); setTimeout(function () { sfx("best"); }, 250); }
+  var parts = jpParts(), prev = Number(S.get("oly2_best_jump", 0)) || 0;
   gameClear("jump_cleared");
   var root = el("jpRoot"); if (!root) return;
-  olySubmit("jump", surv);
+  var sc = olySubmit("jump", parts);
+  if (sc > prev) setTimeout(function () { sfx("best"); }, 250);
   var facts = JP.facts.slice();
-  /* v4.00 AI 상식 획득 목록 · 점수 보너스일 뿐 순위(생존 시간)와 무관하다는 것을 한 줄로 */
+  /* v4.00 AI 상식 획득 목록 · v4.02 1개 = 점수 +100 */
   var fh = '<div class="card mb8 jp-facts"><p style="font-size:calc(16px * var(--fs));font-weight:800">AI 상식 ' + facts.length + "개 획득</p>" +
-    '<p class="muted" style="margin-top:2px;font-size:calc(13px * var(--fs))">1개 = 점수 +' + JP_FACT.pts + " · 기록(버틴 시간)과는 따로</p>" +
+    '<p class="muted" style="margin-top:2px;font-size:calc(13px * var(--fs))">1개 = 점수 +' + olyRule().jump.fact + "</p>" +
     (facts.length ? '<ul style="margin:8px 0 0;padding-left:18px;font-size:calc(15px * var(--fs));line-height:1.55">' + facts.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>"
       : '<p style="margin-top:8px;font-size:calc(14px * var(--fs))">공중의 글자 블록을 2단 점프로 들이받으면 모을 수 있어요</p>') + "</div>";
-  root.innerHTML = gsResultHtml("jump", { why: "done", label: "생존 기록", reason: "", score: (surv / 100).toFixed(1) + "초 생존",
-    stats: "점수 " + JP.score.toLocaleString() + " · 코인 " + JP.coinN + "개 · AI 상식 " + facts.length + "개 · 부딪힘 " + JP.hits + "번", rankLine: olyResultLine("jump", surv), banner: fh });
+  root.innerHTML = gsResultHtml("jump", { why: why === "full" ? "done" : "over", label: why === "full" ? "만점" : "결과", reason: "",
+    oly: { key: "jump", parts: parts, score: sc, note: "참고 · 버틴 시간 " + (parts.surv / 100).toFixed(1) + "초 · 부딪힘 " + JP.hits + "번 · 버틴 시간은 점수에 들어가지 않아요" }, banner: fh });
   window.scrollTo(0, 0);
 }
 /* v4.00 새 유형 섞기 · 열린 유형을 가방에 한 번씩 넣고 하나씩 꺼낸다 · 비면 다시 채운다 · 바로 전과 같은 유형은 뒤로 미룬다
@@ -9107,8 +9418,8 @@ function jpFactTick(t, dx) {
   if (f.got) { f.gone += dx / sp; if (f.gone > 0.6) JP.fact = null; return; }
   var b = jpBody(), top = JP_GY - JP_FACT.lo - JP_FACT.h;
   if (jpOverlap(b, { x: f.x, y: top, w: JP_FACT.w, h: JP_FACT.h })) {
-    f.got = true; JP.facts.push(f.text); JP.bonus += JP_FACT.pts;
-    JP.pops.push({ x: JP_PX + 16, y: top - 6, text: "+" + JP_FACT.pts + " AI 상식", t: 1.0, c: RAIN_PAL.o100 });
+    f.got = true; JP.facts.push(f.text);
+    JP.pops.push({ x: JP_PX + 16, y: top - 6, text: "+" + olyRule().jump.fact + " AI 상식", t: 1.0, c: RAIN_PAL.o100 });
     for (var i = 0; i < 44; i++) {   /* 글자가 흩어지는 도트 · 블록 전체에서 사방으로 */
       var px = f.x + 6 + Math.random() * (JP_FACT.w - 12), py = top + 4 + Math.random() * (JP_FACT.h - 8), a = Math.random() * Math.PI * 2, v = 25 + Math.random() * 55;
       JP.parts.push({ x: px, y: py, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 25, t: 0.45 + Math.random() * 0.4, c: [RAIN_PAL.ink, RAIN_PAL.o100, RAIN_PAL.o60, "#5E5750"][i % 4] });
@@ -9229,7 +9540,7 @@ function jpDraw(ctx, now) {
     gsHeart(ctx, 74 + h * 11, 7, on ? (blinkLast ? "blink" : "on") : justLost ? "hit" : "off", jy);
   }
   JP.parts.forEach(function (p) { ctx.fillStyle = p.c; ctx.fillRect(Math.round(p.x), Math.round(p.y), 2, 2); });
-  gsEndDraw(ctx, JP.ending, JP_W, 30, JP_GY, (Math.round((JP.surv || 0) * 10) / 10).toFixed(1) + "초 생존");
+  gsEndDraw(ctx, JP.ending, JP_W, 30, JP_GY, olyFmt(JP.score) + "점");
   gsCountDraw(ctx, JP.cd, JP_W, 30, JP_GY);
   ctx.restore();
 }
@@ -9306,12 +9617,14 @@ function gwDecoys(R) {
 function gwStart() {
   gwStop();
   SFX.site = false;
-  GW = { on: true, r: 0, phase: "show", used: 0, wrongs: 0, placed: [], tiles: [], timer: null, nextT: null, last: 0, done: 0, rounds: gwPick() };
+  GW = { on: true, r: 0, phase: "show", used: 0, wrongs: 0, placed: [], tiles: [], timer: null, nextT: null, last: 0, done: 0, rounds: gwPick(),
+    j: [0, 0, 0, 0, 0], jx: 0, cl: 0, rw: 0, miss: false, tapT: 0, score: 0, msg: "" };
   gwShow();
 }
-/* v3.92 기록 = 떠올리기에 쓴 시간 + 오답 × 2초 (1/100초) */
-function gwRec() { return Math.min(MEM_REC_MAX, Math.round(GW.used / 10) + GW.wrongs * MEM_PEN * 100); }
-function gwSec(cs) { return (cs / 100).toFixed(1) + "초"; }
+/* v4.02 제출 구성 요소 · j0~j4 등급별 칸 · jx 틀린 뒤 맞힌 칸 · wr 오답 · cl 무오답 라운드 · used 떠올린 시간(1/100초) */
+function gwParts() { return { j0: GW.j[0], j1: GW.j[1], j2: GW.j[2], j3: GW.j[3], j4: GW.j[4], jx: GW.jx, wr: GW.wrongs, cl: GW.cl, used: Math.round(GW.used / 10) }; }
+/* 걸린 시간(1/100초) → 등급 0~4 */
+function gwTier(cs) { var T = olyRule().word.tiers; for (var i = 0; i < T.length; i++) if (cs <= T[i][0]) return i; return T.length; }
 function gwRound() { return (GW.rounds || [])[GW.r]; }
 function gwAnswer(R) { return R.kind === "order" ? R.pairs.map(function (p) { return p[1]; }) : R.words; }
 function gwShow() {
@@ -9336,7 +9649,7 @@ function gwRecall() {
   var R = gwRound();
   GW.phase = "recall"; GW.placed = [];
   GW.tiles = shuf(gwAnswer(R).concat(gwDecoys(R))).map(function (w) { return { w: w, used: false }; });   /* v3.57 타일 순서·미끼 매번 새로 */
-  GW.last = Date.now();
+  GW.last = Date.now(); GW.tapT = GW.last; GW.rw = 0; GW.miss = false; GW.msg = "";   /* 라운드 첫 칸은 떠올리기 시작부터 잰다 */
   if (!GW.timer) GW.timer = setInterval(gwTick, 250);
   gwPaint();
 }
@@ -9345,14 +9658,13 @@ function gwTick() {
   var now = Date.now();
   GW.used += now - GW.last;
   GW.last = now;
-  var t = el("gwTime"); if (t) t.textContent = gwSec(gwRec());
 }
 function gwHud() {
   return '<div class="row" style="justify-content:flex-end;margin:-6px 0 4px">' + sndBtnHtml(false) + "</div>" +
     '<div class="game-hud">' +
+    '<div class="hud"><div class="v" id="gwScore" style="font-variant-numeric:tabular-nums">' + olyFmt(GW.score) + '</div><div class="l">점수</div></div>' +
     '<div class="hud"><div class="v">' + (GW.r + 1) + "/" + GW.rounds.length + '</div><div class="l">라운드</div></div>' +
-    '<div class="hud"><div class="v" id="gwTime" style="font-variant-numeric:tabular-nums">' + gwSec(gwRec()) + '</div><div class="l">걸린 시간</div></div>' +
-    '<div class="hud"><div class="v" id="gwWrong">' + GW.wrongs + '</div><div class="l">오답 (+' + MEM_PEN + "초씩)</div></div></div>";
+    '<div class="hud"><div class="v" id="gwWrong">' + GW.wrongs + '</div><div class="l">오답 (−' + olyRule().word.wrong + "씩)</div></div></div>";
 }
 function gwSlotsHtml(R, done) {
   var ans = gwAnswer(R), nextI = GW.placed.length;
@@ -9371,24 +9683,32 @@ function gwPaint() {
     '<div class="lgrid mem-tiles' + (R.kind === "order" ? " two" : "") + '">' + GW.tiles.map(function (t, i) {
       return '<button class="ltile' + (t.used ? " used" : "") + '" id="gt' + i + '" ' + (t.used ? "disabled" : 'onclick="gwTap(' + i + ')"') + ">" + esc(t.w) + "</button>";
     }).join("") + "</div>" +
-    '<p class="gmsg" id="gwMsg" style="text-align:center"></p>';
+    '<p class="gmsg" id="gwMsg" style="text-align:center">' + esc(GW.msg || "") + "</p>";
 }
 function gwTap(i) {
   if (!GW.on || GW.phase !== "recall") return;
-  var R = gwRound(), ans = gwAnswer(R), t = GW.tiles[i];
+  var R = gwRound(), ans = gwAnswer(R), t = GW.tiles[i], W = olyRule().word;
   if (!t || t.used) return;
   if (t.w === ans[GW.placed.length]) {
+    var now = Date.now(), cs = Math.round((now - GW.tapT) / 10);
+    GW.tapT = now;
+    if (GW.miss) { GW.jx++; GW.msg = "틀린 뒤 맞힌 칸 +0"; }
+    else { var ti = gwTier(cs), pts = ti < W.tiers.length ? W.tiers[ti][1] : W.base; GW.j[ti]++; GW.msg = MEM_TIER_NAME[ti] + " +" + pts; }
+    GW.miss = false;
+    GW.score = olyScore("word", gwParts());
     t.used = true; GW.placed.push(i);
     sfx("tak");
     if (GW.placed.length >= ans.length) { gwRoundDone(); return; }
     gwPaint();
   } else {
-    GW.wrongs++;
+    GW.wrongs++; GW.rw++; GW.miss = true;
+    GW.score = olyScore("word", gwParts());
+    GW.msg = "순서가 달라요 · −" + W.wrong;
     sfx("ttuk");
     var d = el("gt" + i);
     if (d) { d.classList.remove("wrong"); void d.offsetWidth; d.classList.add("wrong"); setTimeout(function () { d.classList.remove("wrong"); }, 450); }
-    var m = el("gwMsg"); if (m) m.textContent = "순서가 달라요 · +" + MEM_PEN + "초";
-    var tm = el("gwTime"); if (tm) tm.textContent = gwSec(gwRec());
+    var m = el("gwMsg"); if (m) m.textContent = GW.msg;
+    var sc = el("gwScore"); if (sc) sc.textContent = olyFmt(GW.score);
     var wr = el("gwWrong"); if (wr) wr.textContent = GW.wrongs;
   }
 }
@@ -9402,6 +9722,8 @@ function gwRoundDone() {
   var R = gwRound();
   if (GW.last) { GW.used += Date.now() - GW.last; GW.last = Date.now(); }   /* 마지막 탭까지의 시간을 넣고 시계를 멈춘다 */
   GW.phase = "done"; GW.done++;
+  if (!GW.rw) GW.cl++;   /* v4.02 오답 없이 끝낸 라운드 +40 */
+  GW.score = olyScore("word", gwParts());
   var root = el("gwRoot"); if (!root) return;
   var last = GW.r >= GW.rounds.length - 1;
   root.innerHTML = gwHud() +
@@ -9409,6 +9731,7 @@ function gwRoundDone() {
     (R.kind === "order" ? gwSlotsHtml(R, true) : '<p class="mem-sent">' + gwSentHtml(R) + "</p>") +
     '<p class="mem-mean">' + esc(R.mean) + "</p>" +
     '<span class="mem-pop"><canvas class="mem-mascot" width="14" height="13"></canvas><span>ME to WE</span></span></div>' +
+    '<p class="gmsg" style="text-align:center">' + (GW.rw ? "이번 라운드 오답 " + GW.rw + "번" : "오답 없는 라운드 +" + olyRule().word.clean) + "</p>" +
     '<button class="btn mint" style="padding:15px" onclick="gwNext()">' + (last ? "결과 보기" : "다음 라운드") + "</button>";
   var cv = root.querySelector(".mem-mascot");
   if (cv) { var g = cv.getContext("2d"); g.imageSmoothingEnabled = false; g.drawImage(rgSprCv("open"), 0, 0); }
@@ -9422,31 +9745,25 @@ function gwNext() {
   GW.r++;
   gwShow();
 }
-function gwStars(rec) { return rec <= MEM_STAR3 ? 3 : rec <= MEM_STAR2 ? 2 : 1; }
+function gwStars(score) { return score >= MEM_STAR3 ? 3 : score >= MEM_STAR2 ? 2 : 1; }
 function gwFinish() {
   if (!GW.on) return;
-  var rec = gwRec(), stars = gwStars(rec), pure = Math.round(GW.used / 10);
+  var parts = gwParts(), prev = Number(S.get("oly2_best_word", 0)) || 0;
   gwStop();
   GW.phase = "end";
   sfx("fanfare");
-  var prev = S.get("gw_time_best", 0);
-  if (!prev || rec < prev) { setTimeout(function () { sfx("best"); }, 700); S.set("gw_time_best", rec); }
   gameClear("gw_cleared");   /* 실패 없음 · 끝까지 하면 04 미니게임 */
-  olySubmit("word", rec);
+  var sc = olySubmit("word", parts), stars = gwStars(sc);
+  if (sc > prev) setTimeout(function () { sfx("best"); }, 700);
   var root = el("gwRoot"); if (!root) return;
   var st = ""; for (var i = 0; i < 3; i++) st += '<span class="' + (i < stars ? "on" : "") + '">★</span>';
-  root.innerHTML =
-    '<div class="chain-box" style="padding:24px 18px"><p class="who">ME to WE 기억력 · ALL CLEAR</p>' +
-    '<p class="mem-stars">' + st + "</p>" +
-    '<p class="disp" style="font-size:40px;color:var(--mint);margin-top:4px">' + gwSec(rec) + "</p>" +
-    '<p class="next">떠올린 시간 ' + gwSec(pure) + " + 오답 " + GW.wrongs + "개 × " + MEM_PEN + "초<br>최고 " + gwSec(S.get("gw_time_best", rec)) + "</p>" +
-    '<p class="next" style="margin-top:6px">' + olyResultLine("word", rec) + "</p>" + "</div>" +
-    GW.rounds.map(function (R) {
+  root.innerHTML = gsResultHtml("word", { why: "done", label: "ALL CLEAR", reason: "",
+    oly: { key: "word", parts: parts, score: sc, head: '<span class="mem-stars">' + st + "</span>",
+      note: "참고 · 떠올린 시간 " + (parts.used / 100).toFixed(1) + "초 · 보기 시간은 점수와 무관해요" },
+    banner: GW.rounds.map(function (R) {
       return '<div class="card soft mb8"><p style="font-size:calc(15.5px * var(--fs));font-weight:800;color:var(--hi)">' + (R.kind === "order" ? R.pairs.map(function (p) { return esc(p[0] + " " + p[1]); }).join(" · ") : esc(R.words.join(" "))) + "</p>" +
         '<p class="muted" style="font-size:calc(13px * var(--fs));margin-top:3px">' + esc(R.mean) + "</p></div>";
-    }).join("") +
-    '<button class="btn mint mb8" style="padding:15px" onclick="gwStart()">다시 하기</button>' +
-    '<button class="btn line" onclick="App.go(\'passport\')">스탬프 탭으로</button>';
+    }).join("") });
   window.scrollTo(0, 0);
 }
 
