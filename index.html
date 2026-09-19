@@ -7280,7 +7280,7 @@ var OLY_EVENTS = [
   { key: "word", name: "ME to WE 기억력", short: "기억력", view: "game_word", best: "gw_time_best", lower: 1, unit: "초" }   /* v3.92 기록 = 걸린 시간(1/100초) · 작을수록 좋다 */
 ];
 /* v3.92 환산 기준(폴백 · 서버 「올림픽_기준」이 정본) · 1/100초 · mid = 보통(50점) · top = 최상(90점) · 서버 OLY_BASE_DEFAULT 와 같은 값 */
-var OLY_BASE = { pang: { mid: 3100, top: 1900 }, jump: { mid: 3500, top: 6500 }, tetris: { mid: 4800, top: 8900 }, word: { mid: 2750, top: 1200 } };
+var OLY_BASE = { pang: { mid: 3100, top: 1900 }, jump: { mid: 3500, top: 6200 }, tetris: { mid: 4800, top: 8900 }, word: { mid: 2750, top: 1200 } };
 var OLY_MEDAL = ["", "금", "은", "동"];
 var OLY = { board: null, t: 0 };
 function olyMax() { return OLY_EVENTS.length * 100; }
