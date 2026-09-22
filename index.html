@@ -1200,10 +1200,10 @@
   .axs-ttb { display: flex; flex-direction: column; gap: var(--ax-space-12); padding-top: var(--ax-space-12); border-top: 1px solid var(--ax-color-divider); }
   .axs-ttb .axs-kv { row-gap: var(--ax-space-8); grid-template-columns: 56px minmax(0, 1fr); }
   .axs-ttb .ax-button { min-height: var(--ax-touch-size); padding: var(--ax-space-12); }
-  /* [전체 | 나의 일정] = 목록의 분류 칩 자리 · 같은 무게(흰 면 · 선택 brandSoft) · 위 [목록 | 시간표] 세그먼트보다 한 단 약하게 */
+  /* [전체 | 나의 일정] = 목록의 분류 칩 자리 · 선택 상태는 위 [목록 | 시간표]와 같은 흰 면 + 진한 글자(v4.16 사용자 지적 260922: 주황 계열은 「내 항목」 의미로만 쓴다 · brandSoft 선택은 내 항목 틴트와 헷갈렸다) */
   .axs-seg.axs-seg-sub { padding: 0; gap: var(--ax-space-8); background: transparent; }
-  .axs-seg.axs-seg-sub button { background: var(--ax-color-surface); color: var(--ax-color-body); }
-  .axs-seg.axs-seg-sub button[aria-selected="true"] { background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); }
+  .axs-seg.axs-seg-sub button { background: var(--ax-color-divider); color: var(--ax-color-body); }
+  .axs-seg.axs-seg-sub button[aria-selected="true"] { background: var(--ax-color-surface); color: var(--ax-color-ink); }
   @media (prefers-reduced-motion: reduce) { .axs-ttc .axs-chev { transition: none; } }
   /* v4.15 폰 관리자 모드 3화면(스캔 · 혼잡도 · 담당 명단) · 사용자 확정 260922 · 토큰만 */
   .axs-seg.axs-seg3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -1263,7 +1263,7 @@
   body[data-pg="d"], body[data-pg="d"] #frame, body[data-pg="d"] #topbar.ax-header { background: var(--ax-color-ink); }
   body[data-pg="d"] #topbar .axs-htitle, body[data-pg="d"] #topbar .axs-back, body[data-pg="d"] #topbar .axs-ib { color: var(--ax-color-inverse); }
   body[data-pg="d"] #topbar.ax-header { border-bottom-color: var(--ax-color-body); }
-  #view[data-v="scan_q"] { padding-bottom: calc(200px + env(safe-area-inset-bottom)); }
+  #view[data-v="scan_q"] { padding-bottom: calc(260px + env(safe-area-inset-bottom)); }   /* v4.16 하단 시트에 「내 QR 보여주기」 추가로 60px 늘림 */
   .axs-scanwrap .ax-title, .axs-inv { color: var(--ax-color-inverse); }
   .axs-cam { position: relative; aspect-ratio: 1 / 1; border-radius: var(--ax-radius-24); overflow: hidden; background: var(--ax-color-body); }
   .axs-cam video { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -2124,16 +2124,7 @@ var TYPE_WORDS = [
 /* ════════════════ v10 신규 데이터 · 기획서 v2(260822 1층 반영) ════════════════ */
 /* A. 과제상담 예약 · 슬롯은 하드코딩 금지, 콘솔 설정값으로 생성 (v5 p23~25) */
 var RESV_CONF = { start: "09:30", end: "16:30", step: 30, lunch: "12:00", lunchEnd: "13:00" };
-var MOCK_RESV = [
-  { id: "m1", room: 1, slot: "09:30", name: "김○수", dept: "보상부문", status: "done", gift: true },
-  { id: "m2", room: 1, slot: "10:00", name: "이○영", dept: "개인보험부문", status: "checked" },
-  { id: "m3", room: 1, slot: "10:30", name: "박○진", dept: "기업보험부문", status: "booked" },
-  { id: "m4", room: 1, slot: "13:00", name: "정○아", dept: "자동차부문", status: "booked" },
-  { id: "m5", room: 1, slot: "14:00", name: "최○호", dept: "기술지원부문", status: "booked" },
-  { id: "m6", room: 2, slot: "09:30", name: "한○별", dept: "CPC부문", status: "done", gift: true },
-  { id: "m7", room: 2, slot: "10:30", name: "서○우", dept: "보상부문", status: "noshow" },
-  { id: "m8", room: 2, slot: "13:30", name: "문○경", dept: "개인보험부문", status: "booked" }
-];
+/* v4.16 옛 상담 목업 8건(m1~m8) 삭제 · 기기에 저장된 상담 목록이 없으면 빈 배열이 기본값이다(서버 연결 시 resv 값으로 바뀐다) */
 /* B. DAP Wall QR 퀴즈 · 3세트 × 5문항, 정답은 전부 1F 벽 전시 안에 (v5 p19~20) */
 /* v3.69 부문 목록·부문 정답률 목업은 삭제 (참여자 화면·사이니지 어디에도 부문을 두지 않는다 · 서버 집계만 휴면으로 남는다) */
 
@@ -2705,7 +2696,7 @@ function resvSlots() {
   }
   return out;
 }
-function resvAll() { return S.get("resv", MOCK_RESV); }
+function resvAll() { return S.get("resv", []); }
 /* v17: 승인 플로우 · requested(신청) → approved(승인) → checked(체크인) → done. booked는 구버전 호환 */
 var RESV_LIVE = ["requested", "booked", "approved", "checked"];
 var RESV_HOLD = ["requested", "booked", "approved", "checked", "done"];
@@ -3938,6 +3929,12 @@ function progTTMineLbl(pid) {
   if (pid === "cchat") { var c = S.get("cchat", null); return c && c.status === "matched" ? "매칭 완료" : "매칭 대기"; }
   var m = sessMine(pid); return m && m.pre ? "사전 신청 완료" : "신청 완료";
 }
+/* v4.16 (사용자 지적 260922) 내 항목은 틴트만으로 뜻이 전해지지 않는다 · 닫힌 행에 짧은 글자 칩을 더한다(상태는 글로도 알린다) */
+function progTTMineChip(pid) {
+  if (pid === "cchat") { var c = S.get("cchat", null); return c && c.status === "matched" ? "매칭됨" : "매칭 대기"; }
+  if (pid === "dap") { var r = myResv(); return (r && RESV_ST[r.status]) || "신청함"; }
+  return "신청함";
+}
 function progTTRow(k, o) {
   return rcHtml({ cls: o.cls, onclick: "progTTOpen('" + k + "')", left: tokBadge(o.t0, o.tok, o.t1 ? "~" + o.t1 : null),
     title: esc(o.title) + (o.mine ? '<span class="ax-sr-only"> · 내 일정</span>' : ""), badges: o.badge || "", open: !!PROG.ttOpen[k], body: o.body, chev: "svg" });
@@ -3961,7 +3958,13 @@ function progTTAllHtml() {
     if (t.always || t.off) return;
     rows.push({ k: "t" + i, t: t, pid: TL_PROG[t.title] || "", now: ph === "live" && i === NOW_INDEX, past: ph === "after" || (ph === "live" && i < NOW_INDEX) });
   });
-  TL_SPAN.forEach(function (t, i) { rows.push({ k: "s" + i, t: t, pid: t.pid, span: true, now: false, past: ph === "after" }); });
+  TL_SPAN.forEach(function (t, i) {   /* v4.16 (사용자 지적 260922) 신청한 DAP 상담은 운영 시간 대신 내 상담 시각에 놓는다 */
+    var r = t.pid === "dap" && progTTMine(t.pid) ? myResv() : null;
+    if (r && r.slot) {
+      var e0 = t2m(r.slot) + (RESV_CONF.step || 30);
+      rows.push({ k: "s" + i, t: { time: r.slot, end: hm2(e0), title: t.title, place: t.place, short: t.short, tag: t.tag }, pid: t.pid, span: false, now: false, past: ph === "after" });
+    } else rows.push({ k: "s" + i, t: t, pid: t.pid, span: true, now: false, past: ph === "after" });
+  });
   rows.sort(function (a, b) { return (a.t.time ? t2m(a.t.time) : 9999) - (b.t.time ? t2m(b.t.time) : 9999) || (a.span ? 1 : 0) - (b.span ? 1 : 0); });   /* 시각 미정은 맨 아래 묶음 */
   var nowAct = isBlack("now");
   var row = function (r) {
@@ -3972,7 +3975,7 @@ function progTTAllHtml() {
       t0: t.time || "미정", t1: t.time ? t.end : "", title: t.title, mine: mine,
       cls: (mine ? " my" : r.past ? " past" : "") + (r.now ? " now" : ""),
       tok: r.now ? (nowAct ? "act" : "") : mine ? "mine" : r.past ? "dim" : "",
-      badge: r.now ? '<span class="axs-chip">진행 중</span>' : "",
+      badge: r.now ? '<span class="axs-chip">진행 중</span>' : mine ? '<span class="axs-chip">' + esc(progTTMineChip(pid)) + "</span>" : "",
       body: progTTBody(t.short || t.desc, [["시간", t.time ? t.time + " – " + t.end + dur : "시간 미정"], ["장소", t.place], ["참여", mine ? progTTMineLbl(pid) : t.tag]],
         go, pid === "#실습" ? "실습형 세션 보기" : "자세히 보기")
     });
@@ -3998,9 +4001,10 @@ function progTTMineHtml(items) {
     items.map(function (x, j) {
       var call = !!x.call, t0 = x.min < 0 ? "지금" : x.iv ? hm2(x.iv[0]) : x.label, t1 = x.min >= 0 && x.iv ? hm2(x.iv[1]) : "";
       var wait = x.photo || x.kind.indexOf("queue:") === 0;
+      var chip = call ? "입장 차례" : wait ? "대기 " + x.badge : x.kind === "cchat" ? "매칭됨" : x.kind === "resv" ? progTTMineChip("dap") : "신청함";   /* v4.16 닫힌 행 상태 칩 · DAP 은 승인 단계까지 보여준다(전체 탭과 통일) */
       return progTTRow("m" + j, {
         t0: t0, t1: t1, title: x.gTitle, cls: " my" + (call ? " now" : ""), tok: call && callAct ? "act" : "mine",
-        badge: call ? '<span class="axs-chip">입장 차례</span>' : "",
+        badge: '<span class="axs-chip">' + esc(chip) + "</span>",
         body: progTTBody(x.gSub, [["장소", x.place || ""]], x.go, wait ? "대기 상세 보기" : x.kind === "stair" ? "계단 안내 보기" : "자세히 보기")
       });
     }).join("") + '<p class="ax-meta">신청 취소는 신청 상세에서 할 수 있어요</p></section>';
@@ -5480,8 +5484,7 @@ var Views = {
       '<p class="tytv-t">' + (oly ? "다섯 종목 최고 점수 합계 · " + olyFmt(olyMax()) + "점 만점" : oly2 ? "팡 · 점프 · 테트리스 · 기억력 · O/X" : "현장 타자왕전 상위 5") + "</p>" +
       '<div class="tytv-seg"><span class="' + (site ? "on" : "") + '">현장 타자 5</span><span class="' + (oly ? "on" : "") + '">올림픽 종합</span><span class="' + (oly2 ? "on" : "") + '">올림픽 종목별</span></div>' +
       (oly ? olyTvPodium() : oly2 ? olyTvEvents() : '<div class="tytv-list five">' + tyTvRows(r, 5) + "</div>") +
-      '<p class="tytv-foot">' + (oly || oly2 ? "종목마다 최고 한 판 · 종목 최대 " + olyFmt(olyCap()) + "점 · 명예 순위" : "결선 " + esc(winTxt) + " · 1인 1회 · 같은 키보드 · 1·2등은 17:00 Outro에서 호명") + "</p>" +
-      (testMode() ? '<p class="tytv-foot" style="opacity:0.4">테스트 화면 · 가짜 닉네임</p>' : "") + "</div>";
+      '<p class="tytv-foot">' + (oly || oly2 ? "종목마다 최고 한 판 · 종목 최대 " + olyFmt(olyCap()) + "점 · 명예 순위" : "결선 " + esc(winTxt) + " · 1인 1회 · 같은 키보드 · 1·2등은 17:00 Outro에서 호명") + "</p></div>";   /* v4.16 가짜 닉네임 표기 삭제 · TV 는 항상 실서버 값 */
   },
   type_award: function () {
     if (S.get("tyaw_tab", "type") === "oly" && S.get("admin_authed", false)) return olyAwardHtml();
@@ -5500,7 +5503,7 @@ var Views = {
         return '<div class="tytv-row' + (x.rank <= 2 ? " top" : "") + '"><span class="no">' + x.rank + '</span><span class="nm">' + esc(x.nick || "익명 참가자") +
           (hide ? "" : '<small>' + esc(x.name || "") + (x.dept ? " · " + esc(x.dept) : "") + "</small>") + '</span><span class="sc">' + typeSec(x.score) + "<small>정확도 " + x.acc + "%</small></span></div>";
       }).join("") : '<p style="padding:24px 4px;opacity:0.7">' + (d ? "아직 현장 기록이 없습니다" : "불러오는 중") + "</p>") + "</div>" +
-      '<p class="tytv-foot">동점은 정확도, 그다음 먼저 기록한 쪽 · 결선 ' + esc(((d && d.win) || []).join(" · ")) + (d && d.demo ? " · 데모 예시 이름" : "") + "</p></div>";
+      '<p class="tytv-foot">동점은 정확도, 그다음 먼저 기록한 쪽 · 결선 ' + esc(((d && d.win) || []).join(" · ")) + "</p></div>";
   },
   wall_tv: function () {
     var n = mtPoints(), pct = Math.min(100, Math.floor(n / MT_TOTAL * 100));
@@ -5932,11 +5935,10 @@ var Views = {
   oly_rank: function () { return olyRankHtml(); },   /* v4.02 점수 체계 v2 · 포디움 2-1-3 · 월계수 · 내 위치 줄 (olyRankHtml) */
   type_rank: function () {
     var mode = S.get("type_rank_tab", "app");
-    var cached = testMode() ? typeTestTop(mode) : S.get("type_rank_" + mode, null);
+    var cached = S.get("type_rank_" + mode, null);   /* v4.16 관리자·테스트 계정도 실서버 캐시(가짜 닉네임 목업 삭제) */
     typeRankPull(mode, function (r) { if (App.current === "type_rank") { var b = el("tyRankBody"); if (b) b.innerHTML = typeRankHtml(r, mode); } });
     return '<div class="qseg" style="margin-bottom:10px"><button class="' + (mode === "app" ? "on" : "") + '" onclick="S.set(\'type_rank_tab\', \'app\'); App.render()">앱 순위 상위 10</button>' +
       '<button class="' + (mode === "site" ? "on" : "") + '" onclick="S.set(\'type_rank_tab\', \'site\'); App.render()">1F 현장 상위 5</button></div>' +
-      (testMode() ? '<p class="scap" style="margin:0 2px 8px">테스트 순위판 · 가짜 닉네임이 섞여 있어요(실서버 순위와 무관)</p>' : "") +
       '<div class="card" id="tyRankBody">' + typeRankHtml(cached, mode) + "</div>" +
       '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">' + (mode === "app" ? "오래 버틴 시간 순 · 최고 기록만 · 경품 없음" : "결선 시간대 1인 1회 · 오래 버틴 시간 순 · 동점은 정확도 · 1·2등 Outro 호명") + "</p>";
   },
@@ -6092,7 +6094,8 @@ function rosterMark(emp, mark) {
   beCall({ action: "staff_mark", key: admKey(), prog: p, emp: emp, mark: mark }, function (res) {
     ROSTER.busy = "";
     if (res && res.ok) toast((res.name || emp) + " · " + (mark === "in" ? (res.dup ? "이미 입장 처리됐어요" : "입장 처리했어요") : mark === "noshow" ? "노쇼로 표시했어요" : "노쇼 표시를 풀었어요"));
-    else toast(res && res.reason === "window" ? "지금은 입장 처리 시간이 아니에요 (" + (res.open || "") + ")" : res && res.reason === "in" ? "이미 입장한 사람이에요" : res && res.reason === "notfound" ? "명단에 없는 사람이에요" : "처리하지 못했어요 · 다시 눌러 주세요");
+    /* v4.16 GAS @87 · DAP 상담 원장 자체가 노쇼면 이 화면에서 풀 수 없다(상담 승인 화면 = 콘솔 몫) */
+    else toast(res && res.reason === "ledger_noshow" ? "상담 승인 화면(CONTROL)에서 처리된 노쇼예요" : res && res.reason === "window" ? "지금은 입장 처리 시간이 아니에요 (" + (res.open || "") + ")" : res && res.reason === "in" ? "이미 입장한 사람이에요" : res && res.reason === "notfound" ? "명단에 없는 사람이에요" : "처리하지 못했어요 · 다시 눌러 주세요");
     ROSTER.data[p] = null; rosterLoad();
   }, function () { ROSTER.busy = ""; toast("서버 응답이 없어요 · 다시 눌러 주세요"); App.render(); });
 }
@@ -6100,9 +6103,11 @@ function rosterRowHtml(r, p) {
   var sub = [r.dept, p === "dap" ? r.slot : p === "cchat" ? (r.round ? r.round + (r.table ? " · TABLE " + r.table : "") : "매칭 전") : r.src].filter(function (x) { return x; }).join(" · ");
   var chip = r.st === "입장" ? '<span class="axs-chip ok">입장</span>' : r.st === "노쇼" ? '<span class="axs-chip bad">노쇼</span>' : '<span class="axs-chip flat">' + esc(p === "dap" ? r.raw || "신청" : "신청") + "</span>";
   var dis = ROSTER.busy ? " disabled" : "", e = esc(r.emp);
+  var ledgerNoshow = p === "dap" && r.raw === "노쇼";   /* v4.16 GAS @87 · 상담 원장 자체가 노쇼면 여기서는 풀 수 없다 */
   var btn = r.st === "입장" ? "" : '<div class="axs-rbtn"><button type="button" class="ax-button"' + dis + ' onclick="rosterMark(\'' + e + '\', \'in\')">입장 처리</button>' +
-    (r.st === "노쇼" ? '<button type="button" class="ax-button ax-button-weak"' + dis + ' onclick="rosterMark(\'' + e + '\', \'clear\')">노쇼 표시 풀기</button>'
-      : '<button type="button" class="ax-button axs-btn-danger"' + dis + ' onclick="rosterMark(\'' + e + '\', \'noshow\')">노쇼</button>') + "</div>";
+    (r.st !== "노쇼" ? '<button type="button" class="ax-button axs-btn-danger"' + dis + ' onclick="rosterMark(\'' + e + '\', \'noshow\')">노쇼</button>'
+      : ledgerNoshow ? '<p class="ax-meta">상담 승인 화면(CONTROL)에서 처리된 노쇼예요</p>'
+      : '<button type="button" class="ax-button ax-button-weak"' + dis + ' onclick="rosterMark(\'' + e + '\', \'clear\')">노쇼 표시 풀기</button>') + "</div>";
   return '<article class="axs-rrow"><div class="axs-rhead"><div class="axs-tx"><span class="ax-card-title">' + esc(r.name || r.emp) + '</span><span class="ax-meta">' + esc(sub) + "</span></div>" + chip + "</div>" + btn + "</article>";
 }
 function admListHtml() {
@@ -7083,6 +7088,7 @@ function scanQHtml() {
     '<p class="ax-description axs-inv">촬영 버튼 없이 자동으로 인식해요</p>' +
     '<p class="ax-meta axs-inv" id="qrHint" hidden>QR에서 20~30cm 떨어뜨리고, 화면 밝기를 올려 보세요</p></div>' +
     '<div class="axs-fix ax-sheet axs-scansheet"><button type="button" class="ax-button ax-button-weak" onclick="qrCamStop(); staffStampOpen()">담당자에게 적립 요청</button>' +
+    '<button type="button" class="ax-button ax-button-weak" onclick="qrCamStop(); qrPanelOpen(\'mine\')">내 QR 보여주기</button>' +   /* v4.16 스탬프 개수와 무관 · 룰렛·대기 행과 같은 QR 화면 재사용 */
     '<p class="ax-meta">카메라 권한이 없으면 기본 카메라로 스캔할 수 있어요</p></div>';
 }
 function scanQStart() {
@@ -8204,10 +8210,10 @@ function rgReviewGo() {
 }
 function rgResultPaint() {
   var root = el("tgRoot"), r = RG.res; if (!root || !r) return;
-  var rank = r.me ? r.me.rank : testMode() ? typeTestRank(r.score) : null;
+  var rank = r.me ? r.me.rank : null;   /* v4.16 테스트 계정은 서버에 제출하지 않으므로(dry) 가짜 순위를 계산하지 않는다 */
   root.innerHTML = gsResultHtml("type", { why: "done", label: "생존 기록", reason: "", score: (r.score / 100).toFixed(1) + "초 생존",
     stats: "터뜨린 단어 " + r.hits + "개 · 점수 " + Number(r.pts || 0).toLocaleString() + " · 최고 콤보 " + r.combo + " · 정확도 " + r.acc + "%",   /* v4.02 소나기는 올림픽 종목이 아니다 (옛 환산 줄 삭제) */
-    rankLine: r.send === "sending" ? "순위 반영 중" : rank ? "앱 순위 " + rank + "위" + (testMode() ? " (테스트)" : "") : r.send === "range" ? "순위 미반영 · 기록 범위 초과" : "",
+    rankLine: r.send === "sending" ? "순위 반영 중" : rank ? "앱 순위 " + rank + "위" : testEmp() ? "내 기록 · 테스트라 순위에 들어가지 않아요" : r.send === "range" ? "순위 미반영 · 기록 범위 초과" : "",
     banner: rank && rank <= 10 ? '<div class="tipbanner mb12">앱 상위 10 · 1F 현장 타자왕전 · 1·2등 Outro 호명</div>' : "" });
 }
 /* ── 닉네임 · 순위판 ── */
@@ -8229,21 +8235,8 @@ function typeNickSave() {
     else toast(TYPE_NICK_WHY[r && r.reason] || "저장하지 못했어요. 다시 눌러 주세요.");
   }, function () { toast("서버에 연결할 수 없어요"); });
 }
-/* 테스트 순위판 오버레이 (testMode 전용 · 실서버 순위에 섞지 않는다) · 내 테스트 최고 기록이 사이에 끼어 보인다 */
-/* v3.80 순위판 목업 · 아래 숫자는 옛 점수 기준이고 typeTestTop 에서 생존 시간(1/100초)으로 환산해 쓴다 */
-var TYPE_TEST_NICKS = [["타자요정", 4380], ["에이전트왕", 3960], ["프롬프트장인", 3510], ["로드맵러", 3120], ["데이터덕후", 2740], ["코파일럿", 2380], ["미위팬", 2010], ["커피챗러", 1650], ["혁신연결", 1320], ["공감참여", 980]];
-function typeTestTop(mode) {
-  /* v3.80 목업도 생존 시간(1/100초) · 옛 점수를 55로 나눠 초로 바꿨다 · 현장은 조금 더 잘한다 */
-  var list = TYPE_TEST_NICKS.map(function (x) { return { name: x[0], score: Math.round((mode === "site" ? x[1] * 1.08 : x[1]) / 55 * 100) }; });
-  if (mode === "app" && S.get("type_best", 0)) list.push({ name: (typeNick() || "나") + " (나)", score: S.get("type_best", 0), me: true });
-  list.sort(function (a, b) { return b.score - a.score; });
-  var n = mode === "site" ? 5 : 10, meRank = null;
-  list.forEach(function (x, i) { x.rank = i + 1; if (x.me) meRank = i + 1; });
-  return { top: list.slice(0, n), me: meRank ? { rank: meRank, score: S.get("type_best", 0) } : null, total: list.length };
-}
-function typeTestRank(score) { var r = 1; TYPE_TEST_NICKS.forEach(function (x) { if (x[1] > score) r++; }); return r; }
+/* v4.16 (사용자 확정 260922) 관리자·테스트 계정이어도 순위판은 항상 실서버 값 · 가짜 닉네임 목업(typeTestTop·typeTestRank·TYPE_TEST_NICKS)은 삭제 */
 function typeRankPull(mode, cb) {
-  if (testMode()) { cb(typeTestTop(mode)); return; }
   var u = S.get("user", {}) || {};
   beCall({ action: "type_rank", mode: mode, emp: u.empId || "", n: mode === "site" ? 5 : 10 }, function (r) { if (r && r.ok) { S.set("type_rank_" + mode, r); cb(r); } }, function () {});
 }
@@ -8341,9 +8334,9 @@ function tsSiteDone(res) {
 function tsSend() {
   var r = TS.res; if (!r) return;
   TS.send = "sending"; App.render();
-  if (!BE.on) {
+  if (!BE.on) {   /* v4.16 서버 없는 로컬 미리보기 · 가짜 순위 대신 빈 상태(순위 없음) */
     S.set("ts_demo_done_" + TS.emp, { score: r.score, acc: r.acc });
-    TS.send = "ok"; TS.rank = typeTestTop("site"); TS.me = { rank: typeTestRank(r.score) }; App.render(); return;
+    TS.send = "ok"; TS.rank = null; TS.me = null; App.render(); return;
   }
   beCall({ action: "type_site_submit", key: admKey(), emp: TS.emp, name: (TS.info && TS.info.name) || "", score: r.score, hits: r.hits, combo: r.combo, acc: r.acc, consent: "1" }, function (x) {
     if (x && x.ok) { TS.send = "ok"; TS.me = x.me; TS.rank = { top: x.top }; }
@@ -8398,8 +8391,7 @@ function tsSiteHtml() {
 
 /* ── 1F TV 순위판 · 로그인 없음 · 앱 상위 10 ↔ 현장 상위 5 번갈아(12초) · 닉네임만 · 30초마다 새로 받음 ── */
 var TYTV = { app: null, site: null, show: "site", pullT: 0, flip: null };
-function tyTvPull() {
-  if (testMode()) { TYTV.site = typeTestTop("site"); return; }
+function tyTvPull() {   /* v4.16 관리자·테스트 계정이어도 실서버 값 · 서버 없으면 빈 상태("도전을 기다려요") */
   if (Date.now() - TYTV.pullT < 25000) return;
   TYTV.pullT = Date.now();
   ["site"].forEach(function (m) {   /* v3.86 TV 는 현장 기록만 받는다 */
@@ -8421,7 +8413,7 @@ function tyTvRows(r, n) {
   return h;
 }
 
-/* v3.50 시상 · AX 올림픽 탭 · 종합 1~3위 호명(닉네임 + 실명) · 관리코드 oly_result · 데모는 테스트 순위 + 예시 이름 */
+/* v3.50 시상 · AX 올림픽 탭 · 종합 1~3위 호명(닉네임 + 실명) · 관리코드 oly_result */
 var OLYAW = { data: null, t: 0 };
 function olyAwardTabs(cur) {
   var st = "background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap";
@@ -8430,12 +8422,7 @@ function olyAwardTabs(cur) {
   }).join("") + "</div>";
 }
 function olyAwardPull(force) {
-  if (!BE.on) {
-    if (!OLYAW.data) { var tb = olyTestBoard(), nm = ["예시일", "예시이", "예시삼", "예시사", "예시오", "예시육", "예시칠", "예시팔", "예시구", "예시십"];
-      OLYAW.data = { demo: true, overall: tb.overall.map(function (x, i) { return { rank: x.rank, nick: x.name, name: nm[i] || "", dept: "데모부문", total: x.total }; }),
-        perEvent: Object.keys(tb.perEvent).reduce(function (o, k) { o[k] = tb.perEvent[k].slice(0, 3).map(function (x, i) { return { rank: x.rank, nick: x.name, name: nm[i] || "", score: x.score, key: x.key }; }); return o; }, {}) }; }
-    return;
-  }
+  if (!BE.on) return;   /* v4.16 서버 없는 로컬 미리보기 · 가짜 예시 이름 대신 빈 상태("불러오는 중") */
   if (!force && Date.now() - OLYAW.t < 20000) return;
   OLYAW.t = Date.now();
   beCall({ action: "oly_result", key: admKey() }, function (r) {
@@ -8469,17 +8456,12 @@ function olyAwardHtml() {
         var r = [2, 1, 3][k];
         return '<div class="awp r' + r + '">' + (x ? olyLw(r, r === 1 ? 240 : 180) + "<b>" + esc(x.nick || "익명 참가자") + "</b>" + (hide ? "" : "<small>" + esc(x.name || "") + (x.dept ? " · " + esc(x.dept) : "") + "</small>") + "<span>" + olyFmt(x.total) + "<em> / " + olyFmt(olyMax()) + "</em></span>" : "") + "<i>" + r + "</i></div>";
       }).join("") + "</div>" : '<p style="padding:24px 4px;opacity:0.7">' + (d ? "아직 전 종목 완주자가 없습니다" : "불러오는 중") + "</p>") +
-    '<p class="tytv-foot">명예 시상 · 경품 없음 · 전 종목 완주자만 · 동점은 전 종목 완료가 이른 쪽' + (d && d.demo ? " · 데모 예시 이름" : "") + "</p></div>";
+    '<p class="tytv-foot">명예 시상 · 경품 없음 · 전 종목 완주자만 · 동점은 전 종목 완료가 이른 쪽</p></div>';
 }
-/* 시상 화면 데이터 · 관리코드 type_result · 데모는 테스트 순위 + 예시 이름 */
+/* 시상 화면 데이터 · 관리코드 type_result */
 var TYAW = { data: null, t: 0 };
 function tyAwardPull(force) {
-  if (!BE.on) {
-    if (!TYAW.data) TYAW.data = { demo: true, win: ["12:00~13:00", "15:00~16:00"], top: typeTestTop("site").top.map(function (x, i) {
-      return { rank: x.rank, nick: x.name, name: ["예시일", "예시이", "예시삼", "예시사", "예시오"][i] || "", dept: "데모부문", emp: "9900" + i, score: x.score, acc: 97 - i, hits: 50 - i * 3 };
-    }) };
-    return;
-  }
+  if (!BE.on) return;   /* v4.16 서버 없는 로컬 미리보기 · 가짜 예시 이름 대신 빈 상태("불러오는 중") */
   if (!force && Date.now() - TYAW.t < 20000) return;
   TYAW.t = Date.now();
   beCall({ action: "type_result", key: admKey() }, function (r) {
@@ -8887,17 +8869,6 @@ function oxParts(ql, tk, R, tl, pz) {
   f.tl = X.end ? 0 : Math.max(0, Math.round(tl || 0)); f.pz = pz || 0; f.ql = ql; f.tk = tk || "";
   return f;
 }
-/* 테스트 순위판 가짜 참가자 · seq 한 글자 = 한 줄(r 정답 · w 오답 · p 판자) · 난이도마다 앞 문항부터(짝 그룹 하나씩) · 판이 끝나면(목숨 · 도착) 뒤는 버린다 · 한도를 넘는 시간은 한도 직전으로 */
-function oxFake(seq, t) {
-  var R = OLY_RULE.ox, used = {}, by = [[], [], []], q = [];
-  [3, 2, 1].forEach(function (lv) { OX_BANK.forEach(function (x) { if (x.lv !== lv || by[lv - 1].length >= R.per[lv - 1] || (x.g && used[x.g])) return; if (x.g) used[x.g] = 1; by[lv - 1].push(x); }); });
-  var ids = by[0].concat(by[1], by[2]);
-  seq.split("").forEach(function (c, i) {
-    var x = ids[i], T = oxTally(q.join(","), R, []); if (!x || T.end) return;
-    q.push(x.id + "." + (c === "p" ? "P" : c === "r" ? x.a : x.a === "O" ? "X" : "O") + "." + Math.min(t, T.lim - 1));
-  });
-  return oxParts(q.join(","), "", R, 0, 0);
-}
 /* 대표 카운터 한 줄 · 서버 olyKey_ 와 같은 문구 */
 function olyKey(game, p) {
   if (!p) return "";
@@ -8918,8 +8889,7 @@ function olyRuleLine(key) {
   if (key === "ox") return "정답 " + R.base[0] + "~" + R.base[2] + " · 빠르면 +" + R.speed + " · " + R.feverAt + "연속마다 피버 ×" + R.feverMul + " · 황금 발판 ×" + R.goldMul + " · 도착 +" + R.arrive + " · 오답·떨어짐 −" + R.pen;
   return "";
 }
-function olyPull(force) {
-  if (testMode()) { OLY.board = olyTestBoard(); return; }
+function olyPull(force) {   /* v4.16 관리자·테스트 계정이어도 순위판은 실서버 값(읽기 전용이라 안전) */
   if (!BE.on || (!force && Date.now() - OLY.t < 20000)) return;
   OLY.t = Date.now();
   var u = S.get("user", {}) || {};
@@ -8948,8 +8918,7 @@ function olySubmit(key, parts) {
   OLY.last = { key: key, score: score, best: score > prev, prev: prev };
   var u = S.get("user", {}) || {};
   OLY.t = 0;
-  if (testMode()) { OLY.board = olyTestBoard(); return score; }
-  if (!BE.on || !u.empId) return score;
+  if (!BE.on || !u.empId || testEmp()) return score;   /* v4.16 테스트 계정은 서버에 쓰지 않는다(dry) · 순위판(olyPull)은 항상 실서버 값 */
   var body = {};
   Object.keys(parts).forEach(function (k) { body[k] = k === "ql" || k === "tk" ? String(parts[k] || "") : Math.max(0, Math.round(Number(parts[k]) || 0)); });   /* v4.09 O/X 문항 기록·토큰은 문자열 */
   beCall({ action: "game_submit", emp: u.empId, name: u.name || "", game: key, v: "g5", parts: JSON.stringify(body), score: score }, function (r) {
@@ -9005,6 +8974,7 @@ function olyEvPos(key, v) {
 /* 종합 한 줄 · 「종합 12위 · 동메달까지 1,150점」 · 자격 전이면 「종합 순위까지 2종목 · 테트리스 · 기억력」 */
 function olyOverallPos(me) {
   if (me.left) return "종합 순위까지 " + me.left + "종목 · " + OLY_EVENTS.filter(function (e) { return !me.ev[e.key]; }).map(function (e) { return e.short; }).join(" · ");
+  if (testEmp()) return "내 기록 · 테스트라 순위에 들어가지 않아요";   /* v4.16 테스트 계정은 서버에 쓰지 않아 순위 계산이 안 된다(가짜 순위 대신 안내) */
   if (!me.sv || !me.rank) return "";
   var t = olyPosText(me);
   return "종합 " + me.rank + "위" + (t ? " · " + t : "");
@@ -9094,45 +9064,7 @@ function olyHubHtml() {
     (testMode() ? '<button class="btn test" style="margin-top:8px" onclick="testGameReset(false)">테스트 · 게임 기록만 초기화</button>' +
       '<button class="btn test" style="margin-top:6px" onclick="testGameReset(true)">테스트 · 닉네임까지 초기화</button>' : "");
 }
-/* ── 테스트 순위판 · 가짜 참가자(구성 요소) + 이 기기 최고 · 서버와 같은 규칙(합산 · 동점은 먼저 달성) ── */
-var OLY_FAKE = [
-  ["팡팡요정", { pang: { fin: 1150 }, jump: { obs: 30, coin: 26, fact: 3 }, tetris: { blk: 70, c1: 10, c2: 3, c3: 1, c4: 0, lines: 19 }, word: { j0: 9, j1: 3, j2: 1, j3: 1, j4: 0, cl: 3, wr: 0 }, ox: oxFake("rrrrrrrwrrrrrrrrwrrr", 170) }],
-  ["점프왕", { pang: { fin: 2400 }, jump: { obs: 55, coin: 40, fact: 5 }, tetris: { blk: 52, c1: 6, c2: 1, c3: 0, c4: 0, lines: 8 }, word: { j0: 4, j1: 4, j2: 3, j3: 2, j4: 1, cl: 3, wr: 0 }, ox: oxFake("rrrrwrrrrrrwrr", 210) }],
-  ["블록장인", { pang: { fin: 2900 }, jump: { obs: 15, coin: 10, fact: 1 }, tetris: { blk: 140, c1: 12, c2: 6, c3: 3, c4: 5, lines: 53 }, word: { j0: 2, j1: 4, j2: 4, j3: 3, j4: 1, cl: 2, wr: 1 }, ox: oxFake("rrrwrrrrwrrr", 230) }],
-  ["기억의신", { pang: { fin: 2650 }, jump: { obs: 18, coin: 12, fact: 1 }, tetris: { blk: 40, c1: 4, c2: 1, c3: 0, c4: 0, lines: 6 }, word: { j0: 14, j1: 0, j2: 0, j3: 0, j4: 0, cl: 3, wr: 0 }, ox: oxFake("rrrrrrrrrrrrrrrrwrrrrrr", 150) }],
-  ["연쇄장인", { pang: { fin: 980 }, jump: { obs: 12, coin: 8, fact: 1 }, tetris: { blk: 45, c1: 5, c2: 1, c3: 0, c4: 0, lines: 7 }, word: { j0: 3, j1: 3, j2: 4, j3: 3, j4: 1, cl: 2, wr: 1 }, ox: oxFake("rrrrrwrrrrwrrrrr", 190) }],
-  ["미위팬", { pang: { fin: 2300 }, jump: { obs: 24, coin: 20, fact: 2 }, tetris: { blk: 60, c1: 8, c2: 2, c3: 0, c4: 0, lines: 12 }, word: { j0: 5, j1: 4, j2: 2, j3: 2, j4: 1, cl: 3, wr: 0 }, ox: oxFake("rrrwrrrrrwrrrp", 220) }],
-  ["코인수집가", { pang: { fin: 3400 }, jump: { obs: 35, coin: 70, fact: 4 }, word: { j0: 3, j1: 4, j2: 3, j3: 3, j4: 1, cl: 3, wr: 0 }, ox: oxFake("rrwrrrrrwrr", 260) }],
-  ["공감참여", { pang: { fin: 4200 }, tetris: { blk: 30, c1: 2, c2: 0, c3: 0, c4: 0, lines: 2 } }],
-  ["혁신연결", { jump: { obs: 10, coin: 6, fact: 0 }, word: { j0: 1, j1: 2, j2: 3, j3: 4, j4: 4, cl: 1, wr: 3, jx: 0 } }],
-  ["로드맵러", { pang: { fin: 1900 }, jump: { obs: 27, coin: 22, fact: 3 }, tetris: { blk: 66, c1: 9, c2: 2, c3: 1, c4: 0, lines: 16 }, word: { j0: 6, j1: 4, j2: 2, j3: 1, j4: 1, cl: 3, wr: 0 }, ox: oxFake("rrrrrrrrrrrrrrrrrrrrrrrr", 140) }]
-];
-function olyPosOf(list, i, val) {
-  if (i < 0) return { rank: 0, up: 0, podium: 0, lead: 0 };
-  var mine = val(list[i]);
-  return { rank: i + 1, up: i > 0 ? val(list[i - 1]) - mine + 1 : 0, podium: i >= 3 ? val(list[2]) - mine + 1 : 0, lead: i === 0 && list.length > 1 ? mine - val(list[1]) : 0 };
-}
-function olyTestBoard() {
-  var rule = OLY_RULE, keys = OLY_EVENTS.map(function (e) { return e.key; });
-  var people = OLY_FAKE.map(function (x, i) {
-    var sc = {}; keys.forEach(function (k) { if (x[1][k]) sc[k] = olyScore(k, x[1][k], rule); });
-    return { name: x[0], sc: sc, parts: x[1], at: "2026-10-26 1" + (i % 10) + ":00:00" };
-  });
-  var mine = {}; OLY_EVENTS.forEach(function (e) { var b = Number(S.get(e.best, 0)) || 0; if (b > 0 || S.get("oly2_done_" + e.key, 0)) mine[e.key] = b; });
-  var meP = { name: (typeNick() || "나") + " (나)", sc: mine, parts: {}, at: "2026-10-26 12:30:00", me: true };
-  people.push(meP);
-  people.forEach(function (p) { p.total = 0; p.done = 0; keys.forEach(function (k) { if (k in p.sc) { p.total += p.sc[k]; p.done++; } }); });
-  var overall = people.filter(function (p) { return p.done === keys.length; }).sort(function (a, b) { return b.total - a.total || (a.at < b.at ? -1 : 1); });
-  var per = {};
-  keys.forEach(function (k) { per[k] = people.filter(function (p) { return k in p.sc; }).sort(function (a, b) { return b.sc[k] - a.sc[k] || (a.at < b.at ? -1 : 1); }); });
-  var meEv = {};
-  keys.forEach(function (k) { var ps = olyPosOf(per[k], per[k].indexOf(meP), function (p) { return p.sc[k]; }); meEv[k] = k in meP.sc ? { best: meP.sc[k], rank: ps.rank, medal: ps.rank >= 1 && ps.rank <= 3 ? ps.rank : 0, up: ps.up, podium: ps.podium, lead: ps.lead } : null; });
-  var op = olyPosOf(overall, overall.indexOf(meP), function (p) { return p.total; });
-  return { ok: true, test: true, events: keys, cap: rule.cap, max: keys.length * rule.cap, rule: rule, players: people.length, finishers: overall.length, t: "",
-    overall: overall.slice(0, 10).map(function (p, i) { return { rank: i + 1, name: p.name, total: p.total, me: !!p.me }; }),
-    perEvent: keys.reduce(function (o, k) { o[k] = per[k].slice(0, 10).map(function (p, i) { return { rank: i + 1, name: p.name, score: p.sc[k], key: p.me ? "" : olyKey(k, p.parts[k]), me: !!p.me }; }); return o; }, {}),
-    me: { total: meP.total, done: meP.done, left: keys.length - meP.done, rank: op.rank, up: op.up, podium: op.podium, lead: op.lead, ev: meEv } };
-}
+/* v4.16 (사용자 확정 260922) 가짜 참가자 목업(OLY_FAKE·olyTestBoard·olyPosOf) 삭제 · 관리자·테스트 계정도 실서버 oly_board 를 읽는다 */
 /* ── 순위판 조각 (§7.3) ── */
 /* 종합 포디움 2-1-3 · 1위 월계수 84px · 2·3위 64px */
 function olyPodiumHtml(list) {
@@ -9157,7 +9089,7 @@ function olyRankHtml() {
   var seg = '<div class="axs-seg" role="tablist" aria-label="순위 구분">' + [["all", "종합"], ["event", "종목별"]].map(function (t) {
     return '<button type="button" role="tab" aria-selected="' + (tab === t[0]) + '" onclick="S.set(\'oly_tab\', \'' + t[0] + '\'); App.render()">' + t[1] + "</button>";
   }).join("") + "</div>";
-  var h = '<div class="ax-stack oly-rk">' + seg + (b && b.test ? '<p class="ax-meta">테스트 순위판 · 가짜 닉네임이 섞여 있어요</p>' : "");
+  var h = '<div class="ax-stack oly-rk">' + seg;   /* v4.16 항상 실서버 값 · 가짜 닉네임 안내 삭제 */
   if (!b || !b.overall) return h + botHtml("순위를 불러오는 중이에요") + "</div>";
   var at = b.t ? String(b.t).slice(11, 16) : "";
   if (tab === "event") {
@@ -10154,7 +10086,6 @@ function gsResultHtml(key, r) {
     '<button type="button" class="ax-button ax-button-weak" onclick="' + gsRankGo(key) + '">순위판 보기</button>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="App.go(\'passport\')">스탬프 보기</button></div>';
 }
-/* 로컬 테스트 순위판 · 가짜 닉네임 + 내 최고 기록 (서버 연결 전 · 실제 순위 아님) */
 /* ════════════════ AX 팡 · 7×7 같은 그림 3개 맞추기 (60초 · 지는 조건 없음) ════════════════
    조작: 이웃한 두 칸을 밀어서 바꾸기 또는 한 칸 탭 → 옆 칸 탭. 맞는 줄이 안 생기면 튕기듯 제자리로 돌아간다.
    3개 이상 한 줄 = 터짐 → 위 그림이 떨어짐(연쇄) · 점수 = 터진 칸 × 10 × 연쇄 배수(1~5).
