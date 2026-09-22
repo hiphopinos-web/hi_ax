@@ -39,6 +39,7 @@
     --tint: var(--ax-color-brandSoft); --tint2: var(--ax-color-brandSoft);
     --acc2: var(--ax-color-brandText);  /* 밝은 면 위 오렌지 글자 */
     --dim: var(--ax-color-inset); --dimln: var(--ax-color-divider);   /* 지나감·잠김 */
+    --axs-divider-strong: #CBD0D6;      /* 앱 전용 토큰(가이드에 없음, 260922 사용자 요청) · divider #E5E8EB 와 disabled #B0B8C1 의 중간값 · 헤더 하단선처럼 흰 면 위에서 더 또렷해야 할 때만 쓴다 */
     --hi: var(--ax-color-ink);          /* 제목·주요 텍스트 */
     --tx: var(--ax-color-body); --muted: var(--ax-color-muted); --faint: var(--ax-color-muted);
     --fs: 1;                            /* 글자 크기 배율 (설정에서 1 / 1.12 / 1.25) */
@@ -460,7 +461,7 @@
   .rg-form { display: flex; gap: 8px; margin-top: 10px; }
   /* v3.36c 휴대폰 전체화면 플레이 */
   html.rg-lock, html.rg-lock body { overflow: hidden; overscroll-behavior: none; }
-  #rgPlay { position: fixed; left: 0; right: 0; top: 0; height: 100%; z-index: 300; display: flex; flex-direction: column; background: #FFEBE0; touch-action: manipulation; overscroll-behavior: none; }
+  #rgPlay { position: fixed; left: 0; right: 0; top: 0; height: 100dvh; z-index: 300; display: flex; flex-direction: column; background: #FFEBE0; touch-action: manipulation; overscroll-behavior: none; }   /* v4.10 100% → 100dvh(사용자 제보 260922) · position:fixed 에서 100%는 뷰포트 전체(100vh)로 계산돼 모바일 주소창이 떠 있으면 아래 고정 조작 안내(.gs-foot)가 화면 밖으로 밀렸다 */
   #rgPlay .rgp-top { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; }
   #rgPlay .rgp-t { font-weight: 800; font-size: 14px; color: #000; }
   #rgPlay .rgp-x { border: 2px solid #000; background: #fff; border-radius: 999px; padding: 4px 12px; font-weight: 800; font-size: 13px; }
@@ -1007,7 +1008,8 @@
   /* 헤더 64 · 화면 바탕과 같은 canvas 면 */
   /* v4.04 헤더 = v4.02 구성 복원(사용자 결정 260922) · 유틸 행 64(워드마크 · 일반/큰글씨 · 알림 종 · 설정) + 홈 인사 / 탭 루트 제목 · 상세 = 뒤로 + 제목 + 설정.
      가이드에서 벗어나는 것만 다듬었다: 흰 글자 → onBrand · 아이콘 터치 48 · 글자는 토큰 단계 · QR 아이콘 없음(가운데 QR 버튼) */
-  #topbar.ax-header { position: sticky; top: 0; z-index: 30; display: block; height: auto; background: var(--ax-color-canvas); border-bottom: 1px solid var(--ax-color-divider); }   /* v4.06 헤더 하단 구분선 1px(사용자 결정 260922) · 그림자 없음 · sticky 라 스크롤해도 본문과 나뉜다 */
+  #topbar.ax-header { position: sticky; top: 0; z-index: 30; display: block; height: auto; background: var(--ax-color-surface); border-bottom: 1px solid var(--axs-divider-strong); }   /* v4.10 흰 헤더 + 진한 구분선(사용자 확정 260922) · 회색 canvas 헤더 위에서 divider 가 거의 안 보이던 문제 · 경로 줄도 같은 흰 면에 붙는다 */
+  #topbar.ax-header.scrolled { box-shadow: 0 2px 8px rgba(25, 31, 40, 0.04); }   /* v4.10 본문이 헤더 밑으로 스크롤될 때만 옅은 그림자(맨 위에서는 없음) */
   #topbar .axs-hrow { display: flex; align-items: center; gap: 0; min-height: var(--ax-header-height); }
   #topbar .axs-fs { margin-left: var(--ax-space-4); }
   /* 좁은 폭 · 360 미만은 「2026」을 빼고, 320 대는 글자 크기 토글을 설정(톱니) 시트로만 둔다(시트에 같은 선택지가 있다) */
@@ -1028,7 +1030,7 @@
   #topbar .axs-back { flex: none; width: var(--ax-touch-size); height: var(--ax-touch-size); margin-left: calc(var(--ax-space-12) * -1); padding: 0; border: 0; background: transparent; color: var(--ax-color-ink); display: grid; place-items: center; cursor: pointer; }
   #topbar .axs-back svg { width: 24px; height: 24px; display: block; }
   /* v4.09 경로 줄 (axs- 조각 · 가이드에 없음) · T7 · 앞 단계 = body 링크 · 지금 = ink 굵게 · 한 줄 */
-  #topbar .axs-crumb { margin: 0 calc(var(--ax-page-inset) * -1); padding: var(--ax-space-4) var(--ax-page-inset); border-top: 1px solid var(--ax-color-divider); }   /* 헤더 구분선 바로 아래 한 줄 */
+  #topbar .axs-crumb { margin: 0 calc(var(--ax-page-inset) * -1); padding: var(--ax-space-4) var(--ax-page-inset); border-top: 1px solid var(--axs-divider-strong); }   /* 헤더 구분선 바로 아래 한 줄 · 헤더와 같은 흰 면 */
   #topbar.ax-header:has(.axs-crumb:not([hidden])) { border-bottom-color: transparent; }
   body[data-pg="d"] #topbar .axs-crumb { border-top-color: var(--ax-color-body); }
   body[data-pg="d"] #topbar .axs-crumb ol, body[data-pg="d"] #topbar .axs-crumb button { color: var(--ax-color-disabled); }
@@ -1112,15 +1114,7 @@
   .axs-seg { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ax-space-4); padding: var(--ax-space-4); border-radius: var(--ax-radius-16); background: var(--ax-color-divider); }
   .axs-seg button { min-height: var(--ax-touch-size); border: 0; border-radius: var(--ax-radius-12); background: transparent; color: var(--ax-color-body); font: var(--ax-type-t6-strong); cursor: pointer; }
   .axs-seg button[aria-selected="true"] { background: var(--ax-color-surface); color: var(--ax-color-ink); }
-  /* 스탬프 (M04 모양 · 숫자는 현행 운영: 분모 6 · 7번째 보너스) */
-  .axs-count { display: flex; align-items: baseline; gap: var(--ax-space-8); color: var(--ax-color-ink); }
-  .axs-count b { font: var(--ax-type-display); }
-  .axs-count span { font: var(--ax-type-t3); color: var(--ax-color-body); }
-  .axs-cells { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--ax-space-8); }
-  .axs-cell { height: var(--ax-touch-size); border-radius: var(--ax-radius-16); background: var(--ax-color-canvas); color: var(--ax-color-disabled); display: grid; place-items: center; font: var(--ax-type-t5-strong); }
-  .axs-cell.on { background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
-  .axs-cell.bonus { background: transparent; border: 1px dashed var(--ax-color-disabled); font: var(--ax-type-caption); }
-  .axs-cell.bonus.on { background: var(--ax-color-brand); border-color: var(--ax-color-brand); color: var(--ax-color-onBrand); }
+  /* v4.10 스탬프 현황 M04 숫자 칸(axs-count·axs-cells·axs-cell) 폐기 · 홈과 같은 .rail 재사용(사용자 결정 260922) */
   .axs-hr { height: 1px; background: var(--ax-color-divider); }
   .axs-big { font: var(--ax-type-t1); color: var(--ax-color-ink); }
   /* 광고판 · 흰 surface 위 원본 주황 심볼 (주 행동 카드보다 약하게: 그림자 없음 · 홈 맨 아래) */
@@ -1408,8 +1402,9 @@
   /* 미니게임 허브 · 총점(검정 타일 폐지) · 순위판 입구 */
   .oly-sum { display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: var(--ax-space-12); margin: 0 0 var(--ax-space-12); padding: var(--ax-space-20) var(--ax-space-24); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); color: var(--ax-color-ink); text-align: left; }
   .oly-sum > div { min-width: 0; }
-  /* 게임 화면(시작 · 결과 · 기억력 판) 여백 = 앱 공통 좌우 24 · 하단 메뉴가 없어 아래는 32 */
-  #view[data-v^="game_"] { padding: var(--ax-space-24) var(--ax-page-inset) calc(var(--ax-space-32) + env(safe-area-inset-bottom)); }
+  /* 게임 화면(시작 · 결과 · 기억력 판) 여백 = 앱 공통 좌우 24 · 하단 메뉴가 없어 아래는 16(v4.10 · 32 는 경로 줄이 생긴 뒤 390×844 에서 42px 스크롤을 남겼다, 사용자 제보 260922) */
+  /* v4.10 min-height 0 · #view 공통 규칙의 min-height 는 헤더 64px 고정값 기준이라, 경로 줄로 헤더가 실제로 더 커지면(약 106px) 그 차만큼 뷰가 과하게 늘어나 있지도 않은 스크롤이 생겼다. 게임 화면은 내용만큼만 차지해도 된다(#frame 배경이 어차피 100dvh 를 채운다) */
+  #view[data-v^="game_"] { padding: var(--ax-space-24) var(--ax-page-inset) calc(var(--ax-space-16) + env(safe-area-inset-bottom)); min-height: 0; }
   .oly-sum-n { margin: var(--ax-space-4) 0 0; font: var(--ax-type-t2); color: var(--ax-color-ink); font-variant-numeric: tabular-nums; }
   .oly-sum-n small { font: var(--ax-type-t6); color: var(--ax-color-muted); }
   .oly-sum-r { margin: 0; text-align: right; }
@@ -3652,6 +3647,8 @@ function updateLed() {}
 setInterval(updateLed, 30000);
 /* 맨 위로 · 700px 넘게 내려간 일반 화면에서만 (사이니지·게임 제외) */
 window.addEventListener("scroll", function () {
+  var tb = el("topbar");
+  if (tb) tb.classList.toggle("scrolled", window.scrollY > 0);   /* v4.10 스크롤하면 헤더에 옅은 그림자(사용자 확정 260922) */
   var b = el("topbtn");
   if (!b) return;
   var ok = window.scrollY > 400 && !el("app").hidden &&
@@ -4371,7 +4368,7 @@ function myScheduleHtml() {
   });
   rows.sort(function (a, b) { return a[0] - b[0]; });
   var head = '<div class="sect"><b>나의 일정</b>' +
-    '<span role="button" tabindex="0" onclick="mySched()">' + lnkChev("내 일정") + "</span></div>";
+    '<span role="button" tabindex="0" aria-label="내 일정 바로가기" onclick="mySched()">' + lnkChev("바로가기") + "</span></div>";
   /* v3.13: 첫 줄 = 「지금·다음」(구 히어로 흡수 · 시간 뱃지 공용 tok, 진행 중 = 검정) · v3.22 모든 행 = 공용 행 카드 */
   if (!rows.length) {
     return head + '<div class="axs-rows">' + schedNowRow() +
@@ -4388,7 +4385,7 @@ function myScheduleHtml() {
    홈용은 컴팩트 변형(캡션 축약 + 하단 CTA)일 뿐 레일의 시각 문법은 동일 · 마커 탭 동작(모달)도 동일하다. */
 function myCouponHtml() {
   return '<div class="sect"><b>스탬프</b>' +
-    '<span role="button" tabindex="0" onclick="App.go(\'passport\')">' + lnkChev("스탬프") + "</span></div>" +
+    '<span role="button" tabindex="0" aria-label="스탬프 바로가기" onclick="App.go(\'passport\')">' + lnkChev("바로가기") + "</span></div>" +
     railHtml(stampCount(), false, null, true);
 }
 
@@ -5156,25 +5153,18 @@ function rewItems() {
 }
 function rewPick(f) { REW.f = f; App.render(); }
 
-/* ── 스탬프 (M04 모양) · 숫자는 현행 운영: 카드 8종 · 분모 6 · 7번째 보너스 · 보상 계산 상한 REWARD_CAP ── */
+/* ── 스탬프 · 숫자는 현행 운영: 카드 8종 · 분모 6 · 7번째 보너스 · 보상 계산 상한 REWARD_CAP · 현황 모양은 홈과 같은 railHtml(v4.10) ── */
 function stampGoalText(n) {
   if (n < 3) return (3 - n) + "개 더 모으면 룰렛 1회";
   if (n < STAMP_DENOM) return "1개 더 모으면 응모권 " + raffleTickets(n + 1) + "장";
   if (n < STAMP_BONUS) return "1개 더 모으면 보너스 응모권 1장";
   return "보너스까지 완료 · 응모권 " + RAFFLE_MAX + "장";
 }
-function stampHeroHtml(n) {
-  var cells = "";
-  for (var k = 1; k <= STAMP_BONUS; k++) {
-    var bonus = k === STAMP_BONUS;
-    cells += '<span class="axs-cell' + (n >= k ? " on" : "") + (bonus ? " bonus" : "") + '"' + (bonus ? ' aria-label="보너스"' : "") + ">" + (bonus ? "+1" : k) + "</span>";
-  }
+function stampHeroHtml(n, glow) {
+  /* v4.10 (사용자 결정 260922) 홈과 같은 railHtml 재사용 · M04 숫자 칸 폐기 · 한쪽을 고치면 양쪽이 같이 바뀐다 */
   var rw = rewItems().filter(function (x) { return !x.used; }).length;
-  return '<div class="ax-stack-tight"><p class="ax-description">새로운 경험을 모으는 중</p>' +
-    '<p class="axs-count"><b id="ppCnt">' + Math.min(STAMP_DENOM, n) + "</b><span>/ " + STAMP_DENOM + "개</span></p></div>" +
-    '<section class="ax-card ax-card-elevated"><div class="axs-cells" role="img" aria-label="스탬프 ' + n + '개">' + cells + "</div>" +
-    '<p class="ax-type-t4">' + stampGoalText(n) + "</p>" +
-    '<button type="button" class="ax-button ax-button-weak" onclick="App.tab(\'exp\')">스탬프 모으러 가기</button></section>' +
+  return railHtml(n, glow, null, false) +
+    '<button type="button" class="ax-button ax-button-weak" onclick="App.tab(\'exp\')">스탬프 모으러 가기</button>' +
     axDest("내 보상", "사용 가능한 보상만 따로 확인", rw + "개", "App.go('rewards')") +
     '<p class="ax-description">완료한 활동은 한 번만 적립돼요.<br>' + STAMP_BONUS + "번째 스탬프는 보너스 보상으로 연결돼요.</p>";
 }
@@ -5382,7 +5372,7 @@ var Views = {
     /* v3.19 테스트 표시·초기화 (데모·테스트 사번 전용) */
     var testBar = !testMode() ? "" :
       '<p class="scap" style="margin:0 2px 8px">테스트 ' + (BE.on ? "계정" : "모드") + ' · 스탬프는 이 기기에만 기록됩니다 · <span style="cursor:pointer;text-decoration:underline" onclick="testStampReset()">스탬프 초기화</span> · <span style="cursor:pointer;text-decoration:underline" onclick="testMineShuffle()">테스트 · 내 일정 다시 섞기</span></p>';
-    return '<div class="ax-stack">' + testBar + stampHeroHtml(n) + "<div>" + stampCardsHtml(st, []) + "</div></div>";   /* v4.03 AX-TDS M04 · 레일 대신 칸(분모 6 + 보너스 1) */
+    return '<div class="ax-stack">' + testBar + stampHeroHtml(n, glow) + "<div>" + stampCardsHtml(st, []) + "</div></div>";   /* v4.10 홈과 같은 railHtml 재사용(사용자 결정 260922) · 그 아래 스탬프 카드 8종은 그대로 */
   },
 
   ideas: function () {
@@ -5800,7 +5790,7 @@ var Views = {
     oxPrefetch();
     var R = olyRule().ox;
     return gsStartHtml("ox", { rootId: "oxRoot", hero: '<div class="ox-hero">' + BOT_SVG + '<p class="gs-say-b">맞으면 O, 틀리면 X</p></div>',
-      rules: R.sec / 100 + "초 · 최대 " + (R.per[0] + R.per[1] + R.per[2]) + "문제 · 패스 " + R.pass + "번<br>" + esc(olyRuleLine("ox")) });
+      rules: R.sec / 100 + "초 · 최대 " + (R.per[0] + R.per[1] + R.per[2]) + "문제 · 패스 " + R.pass + "번" });   /* v4.10 규칙 한 줄(문구 다이어트) · 점수 구성은 결과 화면에서 본다 · 260922 경로 줄 추가로 한 화면 넘침 수정 */
   },
   /* ═══ v3.50 AX 올림픽 순위판 · 종합(전 종목 완주자) · 종목별(금은동) ═══
      v3.50d 부문 정보 전면 삭제 (사용자 확정 260917·260918 · 부문 메달표·부문 라벨·부문 평균 금지) */
@@ -8900,7 +8890,7 @@ var OLY_RULE = {
   jump: { obs: 40, coin: 5, fact: 100, pauseMax: 3 },
   tetris: { block: 10, blockMax: 60, line: 50, lineFull: 30, lineAfter: 10, multi: [0, 0, 20, 60, 120], pauseMax: 3 },
   word: { tiers: [[50, 200], [80, 130], [120, 90], [200, 60]], base: 30, clean: 40, wrong: 50 },
-  ox: { sec: 6000, per: [10, 10, 10], base: [40, 45, 50], pen: 80, hasty: 60, speed: 5, full: 100, limit: 400, combo: 2, comboMax: 5,
+  ox: { sec: 6000, per: [10, 10, 10], base: [42, 48, 53], pen: 80, hasty: 60, speed: 5, full: 100, limit: 400, combo: 2, comboMax: 5,   /* 260922 재보정: base ×1.06(보통·잘함 목표 대비 6% 낮음 보정) */
     feverAt: 5, feverLen: 3, feverMul: 2, goldMul: 3, bonusAt: 10, bonusSec: 300, pass: 1, lock: 30 }
 };
 /* v4.09 AI O/X 문제 은행 (원본 「AI OX 문제은행.json」 86문제 · 올림픽 보정/ox_bank_build.py 가 만든다 · 서버 OX_KEY 와 검사 68절이 대조)
