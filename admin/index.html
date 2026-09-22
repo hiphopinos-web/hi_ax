@@ -412,6 +412,29 @@ table.brk tr.tot td{border-bottom:0;border-top:1px solid var(--line3)}
 #rtv .ctl button:hover{border-color:#FF7E31;color:#fff}
 #rtv .ctl button:disabled{opacity:.35;cursor:default}
 #rtv .ctl .k{font-size:11px;color:rgba(255,255,255,.45);margin-left:4px}
+/* ── v4.16 아이디어 · Wall QR 퀴즈 문항 편집 ── */
+td.itx{min-width:280px;max-width:520px;white-space:normal;line-height:1.55}
+.ilist{list-style:none;display:flex;flex-direction:column}
+.ilist li{padding:10px 0;border-top:1px solid var(--line2)}
+.ilist li:first-child{border-top:0;padding-top:0}
+.ilist .it{color:var(--tx);line-height:1.55}
+.ilist .im{font-size:var(--fs-c);color:var(--tx3);margin-top:4px}
+.wqset{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) auto;gap:12px;margin-bottom:4px}
+.wqset .in{min-width:0;width:100%}
+.wqq{border:1px solid var(--line);border-radius:var(--r-s);padding:14px;margin-top:12px;background:var(--sf)}
+.wqh{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.wqh .sp{flex:1}
+.wqq>textarea.in{min-height:56px}
+.wqq>.wqcnt{display:block;margin-top:2px}
+.wqos{display:flex;flex-direction:column;gap:4px;margin-top:10px}
+.wqos>.btn{align-self:flex-start;margin-top:4px}
+.wqo{display:grid;grid-template-columns:auto minmax(0,1fr) 64px auto;gap:8px;align-items:center;padding:4px 8px;border-radius:var(--r-s)}
+.wqo.on{background:var(--navy05)}
+.wqo .in{min-width:0;width:100%}
+.wqcnt{font-size:var(--fs-c);color:var(--tx3);font-weight:500;font-variant-numeric:tabular-nums;text-align:right}
+.wqcnt.over{color:var(--bad);font-weight:700}
+.wqbar{position:sticky;top:60px;z-index:5;background:var(--sf);padding:8px 0;border-bottom:1px solid var(--line2)}
+@media(max-width:900px){.wqset{grid-template-columns:minmax(0,1fr)}.wqo{grid-template-columns:auto minmax(0,1fr) auto}.wqo .wqcnt{display:none}}
 </style>
 </head>
 <body>
@@ -466,6 +489,7 @@ var TABS = [
   { id:"acct",  n:"계정", d:"로그인한 사람과 비밀번호 분실 요청을 처리합니다." },
   { id:"stamp", n:"스탬프", d:"사번이나 이름으로 한 사람을 골라 스탬프를 부여하거나 취소합니다." },
   { id:"apply", n:"신청", d:"상담 승인 · 커피챗 매칭 · 강의신청 · 사전 신청 명단을 처리합니다." },
+  { id:"idea", n:"아이디어", d:"참가자가 낸 아이디어 한 줄을 봅니다. 18F 커피챗 매칭 때 분야별로 묶어 봅니다." },
   { id:"survey", n:"설문", d:"오늘 한 판 설문 집계입니다. 답은 이름 없이 저장되어 사람 단위 조회는 없습니다." },
   { id:"typing", n:"게임", d:"AX 올림픽 점수 계수와 당일 잠금 · 게임별 전원 점수 · 1F 현장 타자왕전과 닉네임을 관리합니다." },
   { id:"race", n:"타자왕전", d:"1F 현장 타자 대전(2~4명)을 열고 시작하고 TV에 띄웁니다. 선수 노트북은 좌석 링크로 이 판에만 참가합니다." },
@@ -664,7 +688,7 @@ el("key").addEventListener("keydown",function(e){ if(e.key==="Enter") unlock(); 
 
 /* ══════════════════ 3. 라우팅 · 폴링 ══════════════════ */
 /* subs = 메뉴별 서브탭 · sel = 표에서 고른 행 · ovr = 처리 직후 서버 반영 전까지 덮어 보여 줄 값 · drw = 열린 상세 패널 */
-var ST={ tab:"dash", subs:{ apply:"resv", stamp:"one", typing:"oly", race:"live" }, q:"", filt:"", data:{}, busy:false, at:null, sel:{}, ovr:{}, drw:null, draft:{}, bulk:{}, sp:{ q:"", emp:"" } };
+var ST={ tab:"dash", subs:{ apply:"resv", stamp:"one", typing:"oly", race:"live", idea:"list" }, q:"", filt:"", data:{}, busy:false, at:null, sel:{}, ovr:{}, drw:null, draft:{}, bulk:{}, sp:{ q:"", emp:"" } };
 /* 탭을 바꾸면 먼저 갖고 있는 데이터로 즉시 그리고, 그 다음 서버에서 받아 다시 그린다.
    안 그러면 응답이 올 때까지(1~3초) 이전 탭 내용이 새 탭 이름 아래 그대로 보인다. */
 /* load() 를 먼저 불러 busy 를 세운 뒤 그린다. 반대로 하면 첫 진입에 「가입 계정 0명」처럼 0 으로 그려진다. */
@@ -697,6 +721,7 @@ var NEED={
   acct:[{k:"acct",a:"acct_list"},{k:"pwreq",a:"pw_req_list"}],
   stamp:[{k:"stamp",a:"stamp_people"},{k:"acct",a:"acct_list"},{k:"stair",a:"stair_list"},{k:"sstat",a:"stair_stats"},{k:"sy",a:"sync",p:{emp:""}}],
   apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"},{k:"pre",a:"pre_list"}],
+  idea:[{k:"idea",a:"idea_list"},{k:"cchat",a:"cchat_list"}],
   survey:[{k:"survey",a:"survey_list"}],
   typing:[{k:"nick",a:"type_nick_list"},{k:"tres",a:"type_result"},{k:"olyr",a:"oly_result"},{k:"gstats",a:"game_stats"},{k:"stats",a:"stats"},{k:"oxs",a:"ox_stats"}],
   race:[{k:"rlist",a:"race_list"}],
@@ -704,6 +729,13 @@ var NEED={
   photo:[{k:"photo",a:"photo_list"}],
   art:[{k:"art",a:"art_all"}]
 };
+/* v4.16 서브탭에서만 쓰는 액션 · 그 서브탭을 열 때만 부른다(함수면 지금 고른 값으로 만든다 · 담당 명단은 프로그램마다 다른 요청) */
+var SUBNEED={
+  "stamp:ops":[{k:"slist",a:"stamp_list"}],
+  "stamp:wq":[{k:"wq",a:"wq_get"}],
+  "apply:roster":function(){ return [{k:"ros_"+ROS.prog,a:"staff_roster",p:{prog:ROS.prog}}]; }
+};
+function needOf(t){ var x=SUBNEED[t+":"+(ST.subs[t]||"")]; return NEED[t].concat(typeof x==="function"?x():(x||[])); }
 /* v4.11 (사용자 승인 260922) 비밀번호 요청 배지 · 계정 탭 배지와 대시보드 「지금 처리할 일」은 대기 건수만 있으면 된다.
    목록(pw_req_list)은 계정 탭만 받고, 다른 탭은 5분 자동 업데이트 때 건수만 주는 pw_req_count 하나를 더 부른다(캐시 규칙 같음).
    목록을 받으면 그 대기 수로 건수 캐시도 고쳐 둔다. 다른 탭으로 옮겨도 5분 전 건수가 방금 처리한 결과를 덮지 않게. */
@@ -721,7 +753,7 @@ ST.seq=0;
 function load(manual, opts){
   if(!key()) return;
   opts=opts||{};
-  var need=opts.only?NEED[ST.tab].filter(function(it){ return opts.only.indexOf(it.k)>=0; }):NEED[ST.tab];
+  var need=opts.only?needOf(ST.tab).filter(function(it){ return opts.only.indexOf(it.k)>=0; }):needOf(ST.tab);
   if(!opts.only&&!need.some(function(it){ return it.k==="pwreq"; })) need=need.concat([PWC]);
   if(!need.length) return;
   var seq=++ST.seq;
@@ -770,11 +802,11 @@ function render(){
   if(ae&&v.contains(ae)&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName)){ var fl=v.querySelectorAll("input,select,textarea"); for(var i=0;i<fl.length;i++) if(fl[i]===ae){fIdx=i;break;} try{ selS=ae.selectionStart; selE=ae.selectionEnd; }catch(e){} }
   var h="";
   /* 아직 안 받은 탭은 빈 표 대신 「불러오는 중」을 보인다. 빈 표는 「신청이 없다」로 읽힌다. */
-  var missing=NEED[ST.tab].filter(function(it){ return !ST.data[it.k]; });
+  var missing=needOf(ST.tab).filter(function(it){ return !ST.data[it.k]; });
   if(missing.length&&ST.busy){
     h=tabHead()+'<div class="card"><p class="muted"><span class="spin"></span>서버에서 불러오는 중입니다. 보통 2~5초 걸립니다.</p></div>';
   } else {
-    try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="notice"?viewNotice():ST.tab==="survey"?viewSurvey():ST.tab==="typing"?viewTyping():ST.tab==="photo"?viewPhoto():ST.tab==="art"?viewArt():ST.tab==="race"?viewRace():viewApply(); }
+    try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="notice"?viewNotice():ST.tab==="survey"?viewSurvey():ST.tab==="typing"?viewTyping():ST.tab==="photo"?viewPhoto():ST.tab==="art"?viewArt():ST.tab==="race"?viewRace():ST.tab==="idea"?viewIdea():viewApply(); }
     catch(e){ h='<div class="err-banner">화면을 그리는 중 오류가 났습니다: '+esc(e.message)+'</div>'; }
   }
   if(ST.err) h='<div class="err-banner">일부 데이터를 못 받았습니다('+esc(ST.err.reason||"")+'). 새로고침을 눌러 주세요. 표시된 값은 마지막으로 받은 것입니다.</div>'+h;
@@ -785,7 +817,7 @@ function render(){
 }
 function setQ(v){ ST.q=v; render(); }
 function setFilt(v){ ST.filt=v; ST.sel={}; render(); }
-function setSub(v){ ST.subs[ST.tab]=v; ST.q=""; ST.filt=""; ST.sel={}; drwClose(true); render(); }
+function setSub(v){ ST.subs[ST.tab]=v; ST.q=""; ST.filt=""; ST.sel={}; drwClose(true); load(); render(); }
 function match(row, fields){ if(!ST.q) return true; var q=ST.q.toLowerCase(); return fields.some(function(f){ return String(row[f]||"").toLowerCase().indexOf(q)>=0; }); }
 
 /* ── 상세 패널 (오른쪽 서랍) ── */
@@ -821,6 +853,7 @@ var GUIDE={
   acct:[["분실 요청","앱에서 온 비밀번호 분실 요청이 위에 쌓입니다. <b>사원증이나 얼굴로 본인 확인을 먼저</b> 합니다."],["초기화","초기화하면 본인이 앱에서 다음에 넣는 4자리가 새 비밀번호가 됩니다. 비밀번호 값은 어디에도 보이지 않습니다."],["처리자 이름","한 번 적어 두면 이 브라우저가 기억하고 운영 로그에 함께 남깁니다."]],
   stamp:[["사람 찾기","왼쪽 칸에 사번이나 이름을 넣고 한 사람을 고릅니다."],["8칸 확인","획득한 칸은 네이비, 획득 경로(현장 QR · 담당자 부여 · 앱 자동)가 칸 안에 보입니다."],["부여","현장 QR 01·02·03 과 계단 07 만 <b>부여</b>할 수 있습니다. 앱 자동 04·05·06 과 설문 08 은 앱 안의 행동이라 부여하지 않습니다."],["취소","지금은 8칸 모두 <b>취소</b>할 수 있습니다(테스트 기간 · 설정 「스탬프취소_범위」 = 전체). 취소한 칸은 같은 행동으로 다시 받을 수 있습니다. 확인 창에서 보상 변화를 먼저 보여 주고, 룰렛을 이미 돌렸거나 발급된 응모권이 줄어드는 취소는 서버가 거부합니다."],["되돌리기","처리 직후 알림의 <b>되돌리기</b>로 바로 원래대로 돌릴 수 있습니다. 모든 부여·취소는 참여 기록에 행으로 남습니다(지우지 않음)."]],
   apply:[["처리할 것","기본 필터는 <b>처리할 것</b>입니다. 칩의 숫자는 상태별 건수입니다."],["다음 행동","행마다 지금 상태에서 할 다음 행동 하나가 네이비 버튼입니다(신청 → 승인 → 체크인 → 완료). 노쇼·취소는 옆의 적갈 버튼입니다."],["여러 건","왼쪽 칸을 체크하면 위에 일괄 처리 바가 뜹니다(상담 일괄 승인·취소 · 커피챗 일괄 매칭·취소). 강의신청은 현황만 봅니다."],["상세","행을 누르면 오른쪽에 상세 패널이 열립니다. 이력 확인과 메모 저장, 처리까지 거기서 합니다."],["되돌리기","승인·노쇼·취소·매칭은 처리 뒤 7초 동안 알림에 <b>되돌리기</b>가 뜹니다. 체크인·완료·참석은 스탬프 03 이 적립되어 되돌리기가 없습니다."]],
+  idea:[["목록","최신 아이디어가 위에 옵니다. 테스트 계정은 빠져 있고 「테스트 계정 포함」으로 볼 수 있습니다."],["분야별 묶음","18F 커피챗 매칭 때 씁니다. 같은 분야에서 커피챗을 신청한 사람이 위에 옵니다."],["CSV","지금 걸러 보는 목록 그대로 내려받습니다."]],
   survey:[["집계","문항마다 선택 비율 · 점수 분포 · 한 줄 답을 봅니다."],["이름 없음","답은 사번 없이 저장됩니다. 사람 단위 조회는 없습니다."]],
   typing:[["AX 올림픽 · 점수 계수","종목별 계수를 고치면 미리보기에 예시 기록의 점수가 바로 보입니다. <b>저장</b>하면 규칙판(rev)이 1 오르고 이미 낸 기록까지 전원 점수가 새 계수로 다시 계산됩니다."],["당일 잠금","리허설 재보정을 마친 뒤 10/26 아침에 <b>당일 잠금 켜기</b>를 누릅니다. 잠긴 동안에는 저장이 거부되고, 해제는 언제든 됩니다."],["게임별 통계","다섯 종목 전원 점수 · 최고 점수 중앙 · 만점 도달 · CSV 입니다. 행의 대표 기록을 누르면 점수 구성이 펼쳐집니다. 부문 통계는 두지 않습니다."],["O/X 문항","AI O/X 문항별 정답률 · 판자 · 낙하 · O 선택 비율 · 평균 시간입니다. 답이 틀린 문항은 체크한 뒤 <b>선택 문항 끄기</b>로 출제에서 뺍니다. 규칙 잠금과 별개라 당일에도 됩니다."],["타자왕전 · 닉네임","Outro 호명용 상위 5와 부적절한 닉네임 숨김·초기화입니다."]],
   race:[["준비","아침에 <b>좌석 링크</b>를 선수 노트북마다 한 번 엽니다. 관리코드는 필요 없고, 진행자가 연 판에만 참가됩니다."],["판 열기","좌석 수(2~4)를 고르고 <b>판 열기</b>를 누르면 선수 노트북에 이름 입력이 나옵니다. 2명부터 <b>시작</b>할 수 있습니다."],["TV","<b>TV 화면 열기</b>는 전체 화면 대전 화면입니다. 마우스를 움직이면 아래 오른쪽에 진행 버튼이 나옵니다(N 판 열기 · S 시작 · E 지금 끝내기 · R 결과와 시상)."],["기록","모두 완주하거나 120초가 지나면 결과가 「타자대전」 시트에 한 번 기록됩니다. <b>오늘 기록</b>에서 완주 속도 순위와 CSV 를 봅니다."]],
@@ -1000,8 +1033,9 @@ function pwReset(btn){
 function viewStamp(){
   var rows=((ST.data.stamp||{}).rows||[]), s=sub()||"one";
   var h=tabHead(byBox());
-  h+=chips([{v:"one",n:"개인 발급 · 취소"},{v:"all",n:"전체 현황",c:rows.length},{v:"stair",n:"계단"},{v:"ops",n:"현장 운영 · 인쇄용 QR"}], s, "setSub");
+  h+=chips([{v:"one",n:"개인 발급 · 취소"},{v:"all",n:"전체 현황",c:rows.length},{v:"stair",n:"계단"},{v:"wq",n:"QR 퀴즈 문항"},{v:"ops",n:"현장 운영 · 인쇄용 QR"}], s, "setSub");
   if(s==="all") h+=viewStampAll(rows);
+  else if(s==="wq") h+=viewWq();
   else if(s==="stair") h+=viewStairStats();
   else if(s==="ops") h+=viewStairOps();
   else h+=viewStampOne();
@@ -1195,7 +1229,8 @@ function viewStairOps(){
   h+=card("DAP Wall 퀴즈 QR","인쇄용",
     '<div class="wrap"><table class="tb"><tr><th>벽</th><th>QR 내용</th></tr>'+
     ["wall1","wall2","wall3"].map(function(w,i){ return '<tr><td><b>WALL '+(i+1)+'</b></td><td class="n">'+esc(appBase())+'index.html#q='+w+'</td></tr>'; }).join("")+'</table></div>'+
-    memo('<p>벽마다 다른 QR 을 붙입니다. 스캔하면 그 벽의 문제 5개만 열리고, 한 세트를 끝내면 「전시 QR 퀴즈」 스탬프가 적립됩니다(점수 기준 없음).</p><p>주소는 참가자 앱 주소에 맞춰 바꿉니다. 옛 QR(스탬프 코드)은 그대로 두고, 퀴즈 QR 만 새로 인쇄합니다.</p>'))+'</div>';
+    memo('<p>벽마다 다른 QR 을 붙입니다. 스캔하면 그 벽의 세트만 열리고, 한 세트를 끝내면 「QR 퀴즈」 스탬프가 적립됩니다(점수 기준 없음). 문항은 「QR 퀴즈 문항」 서브탭에서 고칩니다.</p><p>인쇄 파일은 <code>QR 테스트/out/light</code> 또는 <code>/dark</code>의 <b>wall1.png ~ wall3.png</b>입니다. 서버 코드가 없는 고정 주소라 다시 만들 필요가 없습니다(인쇄본은 index.html 을 뺀 짧은 주소이고 두 주소 모두 같은 퀴즈를 엽니다).</p>'))+'</div>';
+  h+=boothCard();
   h+=card("계단 지점 QR","인쇄용 · 방화문 앞 · 36곳(1F~18F × 비상계단 1·2) · 지점마다 시작 · 종료 겸용 QR 1개",
     (rows.length?'<div class="wrap"><table class="tb"><tr><th>지점</th><th>층</th><th>코드</th><th>상태</th></tr>'+rows.map(function(r){ return '<tr><td><b>'+esc(r.name)+'</b></td><td class="n">'+esc(r.fl)+'F</td><td class="n">'+esc(r.code)+'</td><td>'+(r.on?tag("운영","ok"):tag("꺼짐","off"))+'</td></tr>'; }).join("")+'</table></div>':'<div class="empty">설치된 계단 지점이 없습니다. 백엔드 stair_install 로 36곳(1F~18F × 비상계단 1·2)을 만듭니다. 옛 계단실 안 4곳(18F·17F·10F·1F)은 같이 꺼집니다.</div>')+
     memo('<p>지점마다 <b>방화문 앞</b>(복도 쪽, 계단실 문을 열기 전)에 붙입니다. 포스터 2장 이상 인쇄를 권합니다(한 장이면 스캔 줄이 생깁니다).</p>'+
@@ -1221,8 +1256,8 @@ function viewApply(){
   var s=sub()||"resv", rv=(ST.data.resv||{}).rows||[], cc=(ST.data.cchat||{}).rows||[], ss=(ST.data.sess||{}).rows||[];
   var h=tabHead(byBox());
   h+=chips([{v:"resv",n:"상담 승인",c:rv.filter(function(r){return r.status==="신청";}).length},{v:"cchat",n:"커피챗 매칭",c:cc.filter(function(r){return r.status==="대기";}).length},
-    {v:"sess",n:"강의신청 현황",c:ss.filter(function(r){return r.status!=="취소";}).length},{v:"pre",n:"사전 신청 명단"}], s, "setSub");
-  return h+(s==="resv"?viewResv():s==="cchat"?viewCchat():s==="pre"?viewPre():viewSess());
+    {v:"sess",n:"강의신청 현황",c:ss.filter(function(r){return r.status!=="취소";}).length},{v:"pre",n:"사전 신청 명단"},{v:"roster",n:"담당 명단"}], s, "setSub");
+  return h+(s==="roster"?viewRoster():s==="resv"?viewResv():s==="cchat"?viewCchat():s==="pre"?viewPre():viewSess());
 }
 function selKeys(prefix){ return Object.keys(ST.sel).filter(function(k){ return ST.sel[k]&&k.indexOf(prefix)===0; }).map(function(k){ return k.slice(prefix.length); }); }
 function selToggle(k, on){ if(on) ST.sel[k]=1; else delete ST.sel[k]; render(); }
@@ -1870,7 +1905,7 @@ function viewOxItems(){
       '<td class="n tdr">'+(it.avgT==null?'<span class="cap">-</span>':(it.avgT/100).toFixed(1)+"초")+'</td>'+
       '<td>'+(it.off?tag("꺼짐","bad"):tag("출제","off"))+'</td></tr>';
   }).join(""):emptyRow(14, all.length?"조건에 맞는 문항이 없습니다.":"문항이 없습니다.");
-  return card("AI O/X 문항","정답률 낮은 순 · g4(유리다리) 판만 센다 · 정답률·O 선택 비율·평균 시간은 판자·낙하를 뺀 답 기준 · 부문 통계 없음",
+  return card("AI O/X 문항","정답률 낮은 순 · g5(12줄 유리다리) 판만 센다 · 정답률·O 선택 비율·평균 시간은 판자·낙하를 뺀 답 기준 · 부문 통계 없음",
     sum+tb+'<div class="wrap scrolly"><table class="tb"><tr><th>'+ckAll("ox:",rows.map(function(x){ return x.id; }))+'</th><th>id</th><th>난이도</th><th>분야</th><th>문장</th><th>정답</th><th>검수</th><th class="tdr">출제 수</th><th class="tdr">정답률</th><th class="tdr">판자</th><th class="tdr">낙하</th><th class="tdr">O 선택</th><th class="tdr">평균 시간</th><th>상태</th></tr>'+body+'</table></div>'+
     memo('<p><b>끄기</b>는 답이 틀렸거나 문장이 애매한 문항을 배포 없이 출제에서 뺍니다. 앞으로 시작하는 판부터 빠지고, 이미 끝난 판의 점수는 그대로입니다.</p>'+
       '<p>점수 계수의 <b>당일 잠금과 별개</b>입니다. 잠겨 있어도 행사 당일 끄고 켤 수 있습니다.</p>'+
@@ -1956,7 +1991,8 @@ function viewPhoto(){
         '<td class="n tdr">'+r.ahead+'</td><td class="n">'+esc(r.eta||"")+'</td>'+
         '<td>'+(r.status==="call"?'<div class="acts"><button class="btn sm danger" onclick="photoAct(\'skip\',\''+k+'\','+r.no+')">건너뛰기</button><button class="btn sm pri" onclick="photoAct(\'done\',\''+k+'\','+r.no+')">완료</button></div>':'<div class="acts"><span class="cap">-</span></div>')+'</td></tr>'; }).join("")+
     (!rows.length?emptyRow(6,"대기 중인 번호가 없습니다."):'')+'</table></div>'+
-    memo('<p>참가자는 앱에서 번호를 받고 자리에서 기다립니다. 앞 2팀이 되면 앱에 「곧 차례예요」가 뜨고, 호출하면 「지금 입장하세요」가 뜹니다. 번호표 발급은 시간 제한이 없습니다.</p>'));
+    memo('<p>참가자는 앱에서 번호를 받고 자리에서 기다립니다. 앞 2팀이 되면 앱에 「곧 차례예요」가 뜨고, 호출하면 「지금 입장하세요」가 뜹니다. 번호표 발급은 시간 제한이 없습니다.</p>'+
+      '<p>v4.15부터 담당자 폰이 참가자 QR을 찍으면 그 번호가 <b>완료</b>로 빠지고 다음 대기 번호가 <b>자동으로 호출</b>됩니다(호출 전에 먼저 온 사람도 받습니다). 이 표에서는 찍힌 번호가 사라지고 다음 번호가 「호출 중」으로 바뀝니다. 건너뛰기(노쇼)는 이 화면에서만 합니다.</p>'));
   return h;
 }
 function artSet(id,status){
@@ -2257,12 +2293,12 @@ var OLY_F=[
   { g:"ox", s:"부정 방지", k:"lock", n:"입력 잠금", u:"초", cs:1, lo:0, hi:200, h:"문제가 나온 뒤 이보다 빠른 답은 거부" },
   { g:"ox", s:"부정 방지", k:"pauseMax", n:"멈춤 허용", u:"회", i:1, lo:0, hi:10, h:"판당 직접 멈춤 · 넘으면 서버가 거부" }
 ];
-/* 미리보기 예시 · 봇 보정 참고치(설계 §4.3 · §4.6) · 기본 계수로 보통 약 1,000 · 잘함 약 2,000 · 최상 약 2,800 */
+/* 미리보기 예시 · 봇 보정 참고치(설계 §4.3 · §4.6) · 기본 계수로 보통 약 1,000 · 잘함 약 2,000 · 최상 약 2,300(황금 없이) */
 var OLY_EX={
   pang:[["보통","완주 26.9초",{fin:2690}],["잘함","완주 10.8초",{fin:1080}],["최상","완주 8.2초",{fin:820}]],
   jump:[["보통","장애물 20 · 코인 20 · 상식 1",{obs:20,coin:20,fact:1}],["잘함","장애물 40 · 코인 40 · 상식 2",{obs:40,coin:40,fact:2}],["최상","장애물 55 · 코인 60 · 상식 3",{obs:55,coin:60,fact:3}]],
   tetris:[["보통","블록 50 · 8줄(2줄 1번)",{blk:50,c1:6,c2:1,lines:8}],["잘함","블록 60 · 24줄(2줄 5 · 3줄 2)",{blk:60,c1:8,c2:5,c3:2,lines:24}],["최상","블록 80 · 36줄(2줄 5 · 3줄 4 · 4줄 2)",{blk:80,c1:6,c2:5,c3:4,c4:2,lines:36}]],
-  ox:[["보통","2.5초마다 · 7문제에 1번 오답",{sim:{pat:"OOOOOOX",t:250}}],["잘함","2초마다 · 13문제에 1번 오답",{sim:{pat:"OOOOOOOOOOOOX",t:200}}],["최상","1.8초마다 · 전부 정답",{sim:{pat:"O",t:180}}]],
+  ox:[["보통","3초마다 · 7문제에 1번 오답",{sim:{pat:"OOOOOOX",t:300}}],["잘함","2초마다 · 전부 정답",{sim:{pat:"O",t:200}}],["최상","1초마다 · 전부 정답",{sim:{pat:"O",t:100}}]],
   word:[["보통","번개 1 · 빠름 3 · 좋음 4 · 보통 4 · 느림 1 · 오답 2",{j0:1,j1:3,j2:4,j3:4,j4:1,jx:1,wr:2,cl:1}],["잘함","번개 6 · 빠름 5 · 좋음 2 · 보통 1 · 무오답",{j0:6,j1:5,j2:2,j3:1,cl:3}],["최상","번개 11 · 빠름 3 · 무오답",{j0:11,j1:3,cl:3}]]
 };
 var OLYD=null, OLYTRY="15";
@@ -2718,6 +2754,364 @@ function rtvAwardHtml(){
   return rtvHead()+'<div class="bd" style="justify-content:flex-start;padding-top:2vw"><p class="ey">이번 판 1위</p><p class="hl">'+esc(top?top.name:"")+'</p>'+
     '<div class="pod">'+order.map(function(i){ var r=rows[i]; if(!r) return "";
       return '<div class="pc p'+r.rank+'"><span class="nm">'+esc(r.name)+'</span><span class="rc n">'+rtvRec(r)+' · 분당 '+r.cpm+'타 · '+r.acc+'%</span><div class="blk n">'+r.rank+'</div></div>'; }).join("")+'</div></div>';
+}
+
+/* ══════════════════ 9. v4.16 폰 관리자 모드 축소로 넘어온 화면 (앱 v4.15 · GAS @86) ══════════════════
+ * ① 아이디어 열람(idea_list) · 메뉴 「아이디어」 ② Wall QR 퀴즈 문항 편집(wq_get · wq_set · wq_lock) · 스탬프 › QR 퀴즈 문항
+ * ③ 담당 명단(staff_roster · staff_mark) · 신청 › 담당 명단 ④ 부스 QR 인쇄용 코드(stamp_list) · 스탬프 › 현장 운영 · 인쇄용 QR
+ * 서브탭에서만 쓰는 액션은 SUBNEED 가 그 서브탭을 열 때만 부른다(캐시 규칙 같음). */
+
+/* ── 9-1. 아이디어 · 최신 먼저 · 테스트 계정 제외가 기본 · 분야별 묶음은 18F 커피챗 매칭용 ── */
+var IDEA_TAG_ORDER=["영업","보상","마케팅","본사·통계","기타"];   /* 앱 IDEA_TAGS 와 같은 순서 */
+var IDEA_CH={ app:"앱", booth:"부스", board:"보드" };
+ST.idea={ tag:"", test:false, cc:false };
+function ideaTagOf(r){ return r.tag||"분야 없음"; }
+function ideaRows(){ return ((ST.data.idea||{}).rows||[]); }
+function ideaCc(){ var m={}; ((ST.data.cchat||{}).rows||[]).forEach(function(r){ if(r.status!=="취소") m[normE(r.emp)]=r; }); return m; }
+function ideaSet(k,v){ ST.idea[k]=v; render(); }
+function ideaBase(){ var f=ST.idea, cc=ideaCc(); return ideaRows().filter(function(r){ return (f.test||!r.test)&&(!f.cc||cc[normE(r.emp)])&&match(r,["text","name","emp","dept","tag"]); }); }
+function ideaShown(){ var t=ST.idea.tag; return ideaBase().filter(function(r){ return !t||ideaTagOf(r)===t; }); }
+function ideaTags(rows){
+  var by={}; rows.forEach(function(r){ var t=ideaTagOf(r); by[t]=(by[t]||0)+1; });
+  var ks=IDEA_TAG_ORDER.filter(function(t){ return by[t]; }).concat(Object.keys(by).filter(function(t){ return IDEA_TAG_ORDER.indexOf(t)<0; }).sort());
+  return ks.map(function(t){ return { t:t, n:by[t] }; });
+}
+function ideaCcTag(r, cc){ var c=cc[normE(r.emp)]; if(!c) return '<span class="cap">-</span>'; return tag("커피챗 "+c.status+(c.round?" · "+hhmm(c.round):"")+(c.table?" · "+c.table:""), CC_TAG[c.status]||""); }
+function ideaWho(r){ return esc(r.name||"-")+(r.anon?' '+tag("익명 공개","off"):"")+(r.test?' '+tag("테스트","warn"):"")+(r.hidden?' '+tag("숨김","off"):""); }
+function viewIdea(){
+  var d=ST.data.idea||{}, s=sub()||"list", cc=ideaCc(), f=ST.idea;
+  var all=ideaRows(), real=all.filter(function(r){ return !r.test; }), testN=all.length-real.length;
+  var both={}; real.forEach(function(r){ if(cc[normE(r.emp)]) both[normE(r.emp)]=1; });
+  var base=ideaBase(), shown=ideaShown(), tags=ideaTags(base);
+  var h=tabHead('<button class="btn" onclick="ideaCsv()">CSV 내려받기</button>');
+  h+='<div class="kpis" style="margin-bottom:16px">'+kpi("아이디어",(d.n!=null?d.n:real.length).toLocaleString(),"건","테스트 계정 제외")+kpi("낸 사람",(d.people!=null?d.people:0).toLocaleString(),"명")+
+    kpi("커피챗도 신청",Object.keys(both).length,"명","아이디어를 낸 사람 중 18F 커피챗 신청(취소 제외)","goTo('apply','cchat')")+'</div>';
+  h+=chips([{v:"list",n:"최신순 목록",c:shown.length},{v:"group",n:"분야별 묶음",c:tags.length}], s, "setSub");
+  var tb='<div class="toolbar">'+searchBox("아이디어 · 이름 · 사번 · 부문 검색")+
+    '<select class="in" onchange="ideaSet(\'tag\',this.value)"><option value="">분야 전체 ('+base.length+')</option>'+tags.map(function(x){ return '<option value="'+esc(x.t)+'"'+(f.tag===x.t?" selected":"")+'>'+esc(x.t)+' ('+x.n+')</option>'; }).join("")+'</select>'+
+    '<label class="row cap" style="gap:6px"><input type="checkbox" class="ck"'+(f.cc?" checked":"")+' onchange="ideaSet(\'cc\',this.checked)">커피챗 신청자만</label>'+
+    '<label class="row cap" style="gap:6px"><input type="checkbox" class="ck"'+(f.test?" checked":"")+' onchange="ideaSet(\'test\',this.checked)">테스트 계정 포함 ('+testN+')</label>'+
+    '<span class="sp"></span><span class="cnt"><b>'+shown.length+'</b> / '+(f.test?all.length:real.length)+'건</span></div>';
+  var body;
+  if(s==="group"){
+    var groups=ideaTags(shown);
+    body=tb+(groups.length?'<div class="grid g2" style="margin-top:0">'+groups.map(function(g){
+      var rs=shown.filter(function(r){ return ideaTagOf(r)===g.t; });
+      /* 매칭 재료 · 커피챗을 신청한 사람을 위로, 그 안에서는 최신 먼저 */
+      rs.sort(function(a,b){ return (cc[normE(b.emp)]?1:0)-(cc[normE(a.emp)]?1:0); });
+      var ccN=rs.filter(function(r){ return cc[normE(r.emp)]; }).length;
+      return card(g.t, g.n+"건"+(ccN?" · 커피챗 신청 "+ccN+"명":""),
+        '<ul class="ilist">'+rs.map(function(r){ return '<li><p class="it">'+esc(r.text)+'</p><p class="im">'+ideaWho(r)+' · '+esc(r.dept||"-")+' · <span class="n">'+esc(short(r.ts))+'</span> '+(cc[normE(r.emp)]?ideaCcTag(r,cc):"")+'</p></li>'; }).join("")+'</ul>');
+    }).join("")+'</div>':'<div class="empty">'+(all.length?"조건에 맞는 아이디어가 없습니다.":"아직 들어온 아이디어가 없습니다.")+'</div>');
+  } else {
+    body=card("","",tb+'<div class="wrap"><table class="tb"><tr><th>시각</th><th>분야</th><th>아이디어</th><th>이름</th><th>부문</th><th>18F 커피챗</th><th>경로</th></tr>'+
+      shown.map(function(r){ return '<tr class="hv'+(r.test||r.hidden?" dim":"")+'"><td class="n cap">'+esc(short(r.ts))+'</td><td>'+tag(ideaTagOf(r))+'</td>'+
+        '<td class="itx">'+esc(r.text)+'</td><td><div class="who2">'+ideaWho(r)+'<small class="n">'+esc(r.emp)+'</small></div></td><td>'+esc(r.dept||"")+'</td>'+
+        '<td>'+ideaCcTag(r,cc)+'</td><td class="cap">'+esc(IDEA_CH[r.ch]||r.ch||"")+'</td></tr>'; }).join("")+
+      (!shown.length?emptyRow(7, all.length?"조건에 맞는 아이디어가 없습니다.":"아직 들어온 아이디어가 없습니다."):"")+'</table></div>');
+  }
+  h+=body;
+  h+=memo('<p>참가자가 앱에서 낸 아이디어 한 줄(최대 300자)이 서버에 쌓인 것입니다. 같은 기기에서 다시 보내도 한 번만 저장됩니다.</p>'+
+    '<p><b>분야별 묶음</b>은 18F 커피챗 매칭용입니다. 같은 분야에서 커피챗을 신청한 사람이 위에 오니, 비슷한 주제끼리 같은 회차 · 테이블로 묶을 때 봅니다. 매칭은 <a href="javascript:goTo(\'apply\',\'cchat\')" style="color:var(--navy);font-weight:700">신청 › 커피챗 매칭</a>에서 합니다.</p>'+
+    '<p>「익명 공개」는 참가자가 공개 화면(월 · 사이니지)에 이름 없이 나가길 고른 것입니다. 콘솔에는 매칭을 위해 이름이 보입니다. 밖으로 공유하는 자료에는 이름을 빼세요.</p>'+
+    '<p>테스트 계정(310555 등)의 아이디어는 집계에서 빠지고, 「테스트 계정 포함」을 켜야 보입니다. 숨김 처리는 콘솔에 없습니다. 부적절한 글은 시트 「아이디어」의 숨김 칸에 Y를 적습니다.</p>');
+  return h;
+}
+function ideaCsv(){
+  var cc=ideaCc(), rows=ideaShown();
+  if(!rows.length){ toast("내려받을 아이디어가 없습니다"); return; }
+  var out=["시각,ID,사번,이름,부문,분야,아이디어,익명 공개,경로,테스트,커피챗 상태,커피챗 회차,커피챗 테이블"].concat(rows.map(function(r){ var c=cc[normE(r.emp)]||{};
+    return [r.ts,r.id,r.emp,r.name,r.dept,r.tag,r.text,r.anon?"Y":"",IDEA_CH[r.ch]||r.ch,r.test?"Y":"",c.status||"",c.round?hhmm(c.round):"",c.table||""].map(csvq).join(","); }));
+  csvDl("아이디어_"+new Date().toISOString().slice(0,10)+".csv", out.join("\n"));
+}
+
+/* ── 9-2. 담당 명단 · 17F AWS · MS 강연 · 1F DAP 과제상담 · 18F 커피챗 ──
+ * 폰 관리자 「내 담당 명단」과 같은 목록. 콘솔은 노쇼 표시 · 해제만 한다(입장 처리는 폰 스캔).
+ * 노쇼 표시는 담당표시 시트 한 줄이고 원장(신청 · 상담 · 커피챗 시트)은 그대로다. 좌석 · 슬롯 반환은 각 신청 화면에서. */
+var ROS_PROGS=[{v:"l1",n:"17F AWS 강연"},{v:"l2",n:"17F MS 강연"},{v:"dap",n:"1F DAP 과제상담"},{v:"cchat",n:"18F 커피챗"}];
+var ROS={ prog:"l1", f:"all" };
+function rosName(p){ var x=ROS_PROGS.filter(function(o){ return o.v===p; })[0]; return x?x.n:p; }
+function rosData(p){ return ST.data["ros_"+(p||ROS.prog)]; }
+function rosProg(v){ ROS.prog=v; ROS.f="all"; ST.q=""; load(); render(); }
+function rosFilt(v){ ROS.f=v; render(); }
+function rosCount(rows){ var n={ all:rows.length, "신청":0, "입장":0, "노쇼":0 }; rows.forEach(function(r){ n[r.st]=(n[r.st]||0)+1; }); return n; }
+function viewRoster(){
+  var d=rosData(), p=ROS.prog;
+  var h=chips(ROS_PROGS.map(function(o){ var x=rosData(o.v); return { v:o.v, n:o.n, c:x&&x.ok?(x.rows||[]).length:null }; }), p, "rosProg");
+  if(!d){ return h+'<div class="card"><p class="muted"><span class="spin"></span>명단을 불러오는 중입니다.</p></div>'; }
+  if(!d.ok) return h+'<div class="err-banner">명단을 받지 못했습니다('+esc(why(d))+').</div>';
+  var rows=d.rows||[], n=rosCount(rows), f=ROS.f||"all";
+  var shown=rows.filter(function(r){ return (f==="all"||r.st===f)&&match(r,["emp","name","dept","slot","round","table","src"]); });
+  var body=chips([{v:"all",n:"전체",c:n.all},"|",{v:"신청",n:"신청",c:n["신청"]},{v:"입장",n:"입장",c:n["입장"]},{v:"노쇼",n:"노쇼",c:n["노쇼"]}], f, "rosFilt");
+  body+='<div class="toolbar">'+searchBox("사번 · 이름 · 부문 검색")+'<span class="sp"></span><span class="cnt"><b>'+shown.length+'</b> / '+rows.length+'명 · '+esc(short(d.t))+' 기준</span>'+
+    '<button class="btn sm" onclick="reload([\'ros_'+p+'\'])">이 명단 새로고침</button></div>';
+  var th=p==="dap"?'<th>슬롯</th>':p==="cchat"?'<th>회차</th><th>테이블</th>':'';
+  var th2=p==="l1"||p==="l2"?'<th>신청 경로</th>':p==="dap"?'<th>상담 상태</th>':'<th>매칭 상태</th>';
+  var cols=4+(p==="cchat"?2:p==="dap"?1:0)+1;
+  body+='<div class="wrap"><table class="tb"><tr>'+th+'<th>이름</th><th>부문</th>'+th2+'<th>담당 상태</th><th class="tdr">노쇼</th></tr>'+
+    shown.map(function(r){ var k=jq(r.emp);
+      var pre=p==="dap"?'<td class="n"><b>'+esc(hhmm(r.slot))+'</b></td>':p==="cchat"?'<td class="n">'+(r.round?esc(hhmm(r.round)):'<span class="cap">미정</span>')+'</td><td>'+esc(r.table||"-")+'</td>':'';
+      var raw=p==="l1"||p==="l2"?esc(r.src||""):tag(r.raw, p==="dap"?RESV_TAG[r.raw]:CC_TAG[r.raw]);
+      var st=tag(r.st, r.st==="입장"?"ok":r.st==="노쇼"?"bad":"warn");
+      var act=r.st==="신청"?'<button class="btn sm danger" onclick="rosMark(\''+k+'\',\'noshow\')">노쇼 표시</button>':
+        r.st==="노쇼"?(p==="dap"&&r.raw==="노쇼"?'<span class="cap">상담 화면에서 처리됨</span>':'<button class="btn sm" onclick="rosMark(\''+k+'\',\'clear\')">노쇼 해제</button>'):'<span class="cap">-</span>';
+      return '<tr class="hv">'+pre+'<td><div class="who2">'+esc(r.name||"-")+'<small class="n">'+esc(r.emp)+'</small></div></td><td>'+esc(r.dept||"")+'</td><td>'+raw+'</td><td>'+st+'</td><td><div class="acts">'+act+'</div></td></tr>'; }).join("")+
+    (!shown.length?emptyRow(cols, rows.length?"조건에 맞는 사람이 없습니다.":"명단이 비어 있습니다."):"")+'</table></div>';
+  if(p==="dap") body+='<div class="note mt12 row"><span style="flex:1">DAP 노쇼 <b>표시</b>는 명단 표시만 합니다. 슬롯을 비워 다른 사람이 신청하게 하려면 상담 승인 화면에서 그 신청을 「노쇼」로 바꿉니다.</span><button class="btn sm pri" onclick="goTo(\'apply\',\'resv\',\'승인\')">상담 승인 화면으로</button></div>';
+  if(p==="l1"||p==="l2") body+='<div class="note mt12">노쇼 표시는 강연 좌석을 돌려주지 않습니다. 강연 신청 취소는 참가자 본인이 앱에서 합니다(콘솔의 운영자 취소는 260919에 없앴습니다).</div>';
+  body+=memo('<p>현장 담당자 폰의 「내 담당 명단」과 같은 목록입니다. <b>입장</b>은 담당자가 폰으로 참가자 QR을 찍을 때 바뀝니다(강연 = 체크인 시트, 상담 = 「체크인」, 커피챗 = 「참석」).</p>'+
+    '<p><b>노쇼 표시</b>는 담당표시 시트에 한 줄 남기는 표시입니다. 신청 · 상담 · 커피챗 원장은 바뀌지 않습니다. 이미 입장한 사람은 노쇼로 표시할 수 없고, 노쇼로 표시된 사람이 나중에 입장하면 표시가 자동으로 풀립니다.</p>'+
+    '<p>DAP 상담을 상담 승인 화면에서 「노쇼」로 바꾼 경우(원장 노쇼)는 여기서 해제하지 않습니다. 상담 승인 화면의 되돌리기를 씁니다.</p>');
+  return h+card("",rosName(p),body);
+}
+function rosRow(emp){ var d=rosData(); return ((d&&d.rows)||[]).filter(function(r){ return normE(r.emp)===normE(emp); })[0]; }
+function rosMark(emp, mark, undo){
+  var p=ROS.prog, r=rosRow(emp); if(!r){ toast("명단에서 찾지 못했습니다"); return; }
+  function go0(){
+    call("staff_mark",{prog:p,emp:r.emp,mark:mark},function(res){
+      dlgForce();
+      if(res&&res.ok){
+        var before=r.st; r.st=res.st||r.st;
+        hist(r.emp, rosName(p)+" "+(mark==="noshow"?"노쇼 표시":"노쇼 해제")+(undo?"(되돌림)":""));
+        render();
+        var msg=(r.name||r.emp)+" · "+(res.dup?"이미 "+r.st+" 상태입니다":mark==="noshow"?"노쇼로 표시했습니다":"노쇼 표시를 풀었습니다");
+        toast(msg, (!undo&&!res.dup&&before!==r.st)?{ undo:function(){ rosMark(r.emp, mark==="noshow"?"clear":"noshow", true); } }:{});
+      } else toast("실패: "+({in:"이미 입장한 사람이라 노쇼로 표시할 수 없습니다",notfound:"명단에 없는 사번입니다",param:"입력값 오류",prog:"프로그램 이름 오류"}[(res||{}).reason]||why(res)));
+    },function(){ dlgForce(); toast("서버 응답 없음"); });
+  }
+  if(undo) return go0();
+  dialog({ t:mark==="noshow"?"노쇼로 표시할까요?":"노쇼 표시를 풀까요?",
+    s:mark==="noshow"?"담당표시 시트에 「노쇼」 한 줄을 남깁니다. 신청 원장은 바뀌지 않고 좌석 · 슬롯도 돌려주지 않습니다. 처리 뒤 7초 동안 <b>되돌리기</b>가 뜹니다.":"담당 상태를 「신청」으로 되돌립니다. 원장은 그대로입니다.",
+    who:esc(r.name||"-")+'<span>사번 '+esc(r.emp)+' · '+esc(rosName(p))+(r.slot?' · 슬롯 '+esc(hhmm(r.slot)):"")+(r.round?' · '+esc(hhmm(r.round))+' '+esc(r.table||""):"")+'</span>',
+    ok:mark==="noshow"?"노쇼 표시":"해제", danger:mark==="noshow", onOk:go0 });
+}
+
+/* ── 9-3. DAP Wall QR 퀴즈 문항 · wq_get(읽기) · wq_set(저장 · reset=1 내장으로) · wq_lock(1 · 0 · auto) ──
+ * 서버 문항이 없으면 앱은 내장 문항(WALLQ_DEFAULT)을 쓴다. 편집은 서버 문항, 없으면 내장 문항 사본에서 시작한다.
+ * 세트 3개(wall1~3)를 늘 한꺼번에 보낸다. 앱은 보기와 문항 순서를 섞어서 보여 준다.
+ * 저장은 POST(fetch) · 문항이 많으면 JSONP(GET) 주소 한계(운영 실측 약 11KB)를 넘기 때문이다. POST 는 GAS doPost → doGet 으로 같은 처리. */
+var WQ_IDS=["wall1","wall2","wall3"], WQ_LOCK_DAY="2026-10-26";
+var WQ_LIM={ name:30, theme:40, q:200, o:80, qs:10, oMin:2, oMax:5 };
+/* 앱 WALLQ_DEFAULT(v4.15 index.html) 사본 · 「내장 문항」 보기와 편집 시작점 · 앱 내장 문항을 바꾸면 여기도 */
+var WQ_BUILTIN = [
+  { id: "wall1", name: "WALL 1", theme: "영업·보상 현장 AX 사례", qs: [
+    { q: "가입설계 비교 자동화 · 3시간 걸리던 일이 얼마나로 줄었을까요?", o: ["10분", "1시간", "30분", "그대로"], a: 0 },
+    { q: "전산심사 자동 판정 확대의 성과는?", o: ["심사 하루 → 즉시", "심사 일주일 → 하루", "심사 하루 → 반나절", "변화 없음"], a: 0 },
+    { q: "고객 성향 상담 대상 선별로 상담 성공률은 몇 배가 됐나요?", o: ["1.8배", "1.2배", "2.5배", "3배"], a: 0 },
+    { q: "지급 오류 사전 검증으로 오지급은 얼마나 줄었나요?", o: ["60% 감소", "20% 감소", "40% 감소", "90% 감소"], a: 0 },
+    { q: "영업 벽면의 슬로건 · \"○이 아니라, 데이터로 고객을 만납니다\"", o: ["감", "운", "말", "경험"], a: 0 }
+  ] },
+  { id: "wall2", name: "WALL 2", theme: "DAP ① · 장기보험 과제", qs: [
+    { q: "장기보험 관련 DAP 과제는 모두 몇 개일까요?", o: ["16개", "10개", "20개", "26개"], a: 0 },
+    { q: "그중 예측모델 과제는 몇 개?", o: ["12개", "5개", "8개", "16개"], a: 0 },
+    { q: "장기보험 DAP가 커버하는 구간은?", o: ["심사·계약·손사·계리 전 구간", "심사만", "계약·손사만", "계리만"], a: 0 },
+    { q: "DAP의 D는 무엇의 약자일까요?", o: ["Digital (디지털)", "Data (데이터)", "Deep (딥)", "Dream (드림)"], a: 0 },
+    { q: "다음 중 장기보험 DAP 과제가 아닌 것은?", o: ["보험사기 SNA 분석", "AI 심사 승인", "해지 예측", "재보험 자동화"], a: 0 }
+  ] },
+  { id: "wall3", name: "WALL 3", theme: "DAP ② + 회사 AX 로드맵", qs: [
+    { q: "장기보험 外 (자동차·CM·CCO·기업보험) DAP 과제는 몇 개?", o: ["10개", "16개", "5개", "20개"], a: 0 },
+    { q: "다음 중 장기보험 外 DAP 과제인 것은?", o: ["요율 시뮬레이션", "AI 심사 승인", "해지 예측", "재보험 자동화"], a: 0 },
+    { q: "회사 AX 로드맵 · 2026년에 열리는 것은?", o: ["사내 LLM·생성형 AI 오픈", "전사 1인 1 AI Agent", "AI 조직 신설", "전 시스템 교체"], a: 0 },
+    { q: "로드맵이 그리는 2028년의 모습은?", o: ["전사 1인 1 AI Agent", "사내 LLM 오픈", "종이 없는 사무실", "AI 자격증 의무화"], a: 0 },
+    { q: "AX Wave 별자리의 점 26개가 뜻하는 것은?", o: ["올해 DAP를 수행한 26명", "26개 부서", "창립 26주년", "26개 시스템"], a: 0 }
+  ] }
+];
+var WQ={ draft:null, v:null, set:"wall1", dirty:false, err:"" };
+function wqClone(o){ return JSON.parse(JSON.stringify(o)); }
+function wqSrv(){ return ST.data.wq&&ST.data.wq.ok!==false?ST.data.wq:null; }
+function wqBase(){
+  var w=wqSrv(), d=w&&w.data;
+  return { sets:WQ_BUILTIN.map(function(s){ var x=d&&d.sets?d.sets.filter(function(y){ return y.id===s.id; })[0]:null; return wqClone(x||s); }), off:(d&&d.off||[]).slice() };
+}
+function wqDraft(){ var w=wqSrv(); if(!w) return null; if(!WQ.draft||(!WQ.dirty&&WQ.v!==w.v)){ WQ.draft=wqBase(); WQ.v=w.v; } return WQ.draft; }
+function wqCur(){ var d=WQ.draft; return d?d.sets.filter(function(s){ return s.id===WQ.set; })[0]:null; }
+function wqT(v){ return String(v==null?"":v).trim(); }
+function wqLabel(id){ return "WALL "+(WQ_IDS.indexOf(id)+1); }
+/* 서버 wqCheck_ 와 같은 규칙 · 어디가 틀렸는지 문장으로 */
+function wqErrs(d){
+  var E=[]; if(!d) return E;
+  d.sets.forEach(function(s){
+    var L=wqLabel(s.id);
+    if(!wqT(s.name)) E.push(L+" · 세트 이름이 비었습니다");
+    else if(wqT(s.name).length>WQ_LIM.name) E.push(L+" · 세트 이름은 "+WQ_LIM.name+"자까지입니다");
+    if(wqT(s.theme).length>WQ_LIM.theme) E.push(L+" · 주제는 "+WQ_LIM.theme+"자까지입니다");
+    if(!s.qs.length) E.push(L+" · 문항이 하나도 없습니다");
+    if(s.qs.length>WQ_LIM.qs) E.push(L+" · 문항은 "+WQ_LIM.qs+"개까지입니다");
+    s.qs.forEach(function(q,i){
+      var Q=L+" · "+(i+1)+"번";
+      if(!wqT(q.q)) E.push(Q+" 문항 문장이 비었습니다");
+      else if(wqT(q.q).length>WQ_LIM.q) E.push(Q+" 문항은 "+WQ_LIM.q+"자까지입니다(지금 "+wqT(q.q).length+"자)");
+      if(q.o.length<WQ_LIM.oMin||q.o.length>WQ_LIM.oMax) E.push(Q+" 보기는 2~5개입니다");
+      q.o.forEach(function(o,j){ if(!wqT(o)) E.push(Q+" 보기 "+(j+1)+"이 비었습니다"); else if(wqT(o).length>WQ_LIM.o) E.push(Q+" 보기 "+(j+1)+"은 "+WQ_LIM.o+"자까지입니다"); });
+      if(!(q.a>=0&&q.a<q.o.length)) E.push(Q+" 정답을 고르세요");
+    });
+  });
+  return E;
+}
+var WQ_WHY={ sets:"세트 구성이 맞지 않습니다(1~3개)", id:"세트 id가 wall1~wall3가 아니거나 겹칩니다", name:"세트 이름(1~30자)이나 주제(40자 이하)가 맞지 않습니다",
+  qs:"세트마다 문항은 1~10개입니다", q:"문항 문장이 비었거나 200자를 넘습니다", o:"보기는 2~5개, 보기마다 1~80자입니다", a:"정답이 보기 범위 밖입니다", off:"멈춘 세트 목록이 맞지 않습니다" };
+function wqWhy(r){ r=r||{};
+  if(r.reason==="bad") return "서버가 거절했습니다 · "+(WQ_WHY[r.field]||r.field||"형식 오류");
+  if(r.reason==="locked") return "잠겨 있어 저장할 수 없습니다. 잠금을 풀고 다시 저장하세요";
+  if(r.reason==="json") return "서버가 보낸 문항을 읽지 못했습니다";
+  return why(r);
+}
+/* POST · 응답은 JSON · 관리코드는 본문으로(주소에 남지 않는다) */
+function callPost(action, params, done, fail){
+  var body=new URLSearchParams(); params=params||{}; params.action=action; if(!("key" in params)) params.key=key();
+  for(var k in params) if(params[k]!=null) body.append(k, params[k]);
+  var ctl=window.AbortController?new AbortController():null, timer=setTimeout(function(){ if(ctl) ctl.abort(); },25000);
+  fetch(BE,{ method:"POST", body:body, redirect:"follow", signal:ctl?ctl.signal:undefined }).then(function(r){ return r.text(); }).then(function(t){
+    clearTimeout(timer); var res=null; try{ res=JSON.parse(t); }catch(e){ res={ ok:false, reason:"network" }; }
+    if(res&&res.ok===false&&res.reason==="auth"){ lock("관리코드가 맞지 않습니다. 다시 입력하세요."); return; }
+    done&&done(res);
+  }).catch(function(){ clearTimeout(timer); fail&&fail({ ok:false, reason:"network" }); });
+}
+function wqPut(res){ ST.data.wq=res; _cache[sig_("wq_get",{})]={ data:res, at:Date.now() }; }
+function viewWq(){
+  var w=wqSrv();
+  if(!w) return '<div class="card"><p class="muted"><span class="spin"></span>문항을 불러오는 중입니다.</p></div>';
+  var d=wqDraft(), s=wqCur(), lk=!!w.locked, E=wqErrs(d), dis=lk?" disabled":"";
+  var today=new Date(), ymd=today.getFullYear()+"-"+("0"+(today.getMonth()+1)).slice(-2)+"-"+("0"+today.getDate()).slice(-2);
+  var h='<div class="grid g2" style="margin-top:0">'+
+    card("지금 앱이 쓰는 문항", w.v?tag("서버 문항","pri"):tag("앱 내장 문항","off"),
+      '<p class="muted" style="font-size:var(--fs-s)">'+(w.v?"콘솔에서 저장한 문항입니다 · 판 번호 <b class=\"n\">"+esc(w.v)+"</b>"+(wqVerAt(w.v)?" ("+esc(wqVerAt(w.v))+" 저장)":""):"서버에 저장한 문항이 없어 앱에 들어 있는 기본 문항이 나갑니다. 아래에서 고쳐 저장하면 서버 문항으로 바뀝니다.")+'</p>'+
+      '<p class="cap mt8">참가자 앱은 10초 동기화 때 판 번호가 바뀐 것을 보고 새 문항을 받습니다. 서버 문항을 못 받으면 내장 문항으로 돕니다.</p>')+
+    card("당일 잠금", lk?tag("잠김","bad"):tag("풀림","ok"),
+      '<p class="muted" style="font-size:var(--fs-s)">잠기면 저장 · 되돌리기를 서버가 거절합니다. 기본은 <b>자동</b>이고 행사 당일('+WQ_LOCK_DAY.slice(5).replace("-","/")+')부터 잠깁니다'+(ymd>=WQ_LOCK_DAY?" (오늘 해당)":"")+'.</p>'+
+      '<div class="row mt12"><button class="btn sm" onclick="wqLockSet(\'auto\')">자동으로 (당일부터 잠금)</button><button class="btn sm danger" onclick="wqLockSet(\'1\')">지금 잠그기</button><button class="btn sm" onclick="wqLockSet(\'0\')">잠금 풀기</button></div>'+
+      '<p class="cap mt8">잠금 방식은 설정 시트 「벽퀴즈_잠금」에 남습니다(ON = 잠금 · OFF = 풀림 · 빈칸 = 자동).</p>')+'</div>';
+  var body=chips(d.sets.map(function(x){ var n=wqErrs({sets:[x],off:[]}).length; return { v:x.id, n:wqLabel(x.id)+(d.off.indexOf(x.id)>=0?" · 멈춤":"")+(n?" · 고칠 곳 "+n:""), c:x.qs.length }; }), WQ.set, "wqSetSel");
+  body+='<div class="toolbar wqbar"><span class="cnt">'+esc(wqLabel(s.id))+' · 문항 <b>'+s.qs.length+'</b> / '+WQ_LIM.qs+'</span><span class="tag warn" id="wqDirty"'+(WQ.dirty?"":' style="display:none"')+'>저장 안 한 변경 있음</span><span class="sp"></span>'+
+    '<button class="btn sm ghost" onclick="wqDiscard()"'+(WQ.dirty?"":" disabled")+' id="wqDisc">변경 취소</button>'+
+    '<button class="btn sm danger" onclick="wqReset()"'+(lk||!w.v?" disabled":"")+'>내장 문항으로 되돌리기</button>'+
+    '<button class="btn pri" id="wqSave" onclick="wqSave()"'+(lk||E.length||!WQ.dirty?" disabled":"")+'>저장</button></div>';
+  if(lk) body+='<div class="note warn" style="margin-bottom:12px">잠겨 있어 고칠 수 없습니다. 고치려면 위 「당일 잠금」에서 <b>잠금 풀기</b>를 누릅니다.</div>';
+  if(WQ.err) body+='<div class="err-banner">'+esc(WQ.err)+'</div>';
+  body+='<div id="wqErr">'+wqErrHtml(E)+'</div>';
+  body+='<div class="wqset"><label class="fld">세트 이름 <span class="cap">벽 앞 카드 제목 · 30자까지</span><input class="in" id="wq_name" value="'+esc(s.name)+'" oninput="wqIn(\'name\',this.value)"'+dis+'>'+wqCnt("name",s.name,WQ_LIM.name)+'</label>'+
+    '<label class="fld">주제 <span class="cap">40자까지 · 비워도 됩니다</span><input class="in" id="wq_theme" value="'+esc(s.theme||"")+'" oninput="wqIn(\'theme\',this.value)"'+dis+'>'+wqCnt("theme",s.theme,WQ_LIM.theme,true)+'</label>'+
+    '<label class="row cap" style="gap:6px;align-self:end;padding-bottom:10px"><input type="checkbox" class="ck"'+(d.off.indexOf(s.id)>=0?" checked":"")+' onchange="wqOff(this.checked)"'+dis+'>이 세트 멈춤 (앱에 「점검 중」)</label></div>';
+  body+=s.qs.map(function(q,i){
+    return '<div class="wqq"><div class="wqh"><b class="n">'+(i+1)+'번</b><span class="sp"></span>'+
+      '<button class="btn sm ghost" onclick="wqMove('+i+',-1)"'+(lk||!i?" disabled":"")+'>위로</button><button class="btn sm ghost" onclick="wqMove('+i+',1)"'+(lk||i===s.qs.length-1?" disabled":"")+'>아래로</button>'+
+      '<button class="btn sm danger" onclick="wqDelQ('+i+')"'+(lk||s.qs.length<=1?" disabled":"")+'>문항 빼기</button></div>'+
+      '<textarea class="in" rows="2" id="wq_q_'+i+'" oninput="wqIn(\'q:'+i+'\',this.value)"'+dis+'>'+esc(q.q)+'</textarea>'+wqCnt("q:"+i,q.q,WQ_LIM.q)+
+      '<div class="wqos">'+q.o.map(function(o,j){
+        return '<div class="wqo'+(q.a===j?" on":"")+'"><label class="row cap" style="gap:6px;white-space:nowrap"><input type="radio" class="ck" name="wqa'+i+'"'+(q.a===j?" checked":"")+' onchange="wqAns('+i+','+j+')"'+dis+'>정답</label>'+
+          '<input class="in" id="wq_o_'+i+'_'+j+'" value="'+esc(o)+'" placeholder="보기 '+(j+1)+'" oninput="wqIn(\'o:'+i+':'+j+'\',this.value)"'+dis+'>'+wqCnt("o:"+i+":"+j,o,WQ_LIM.o)+
+          '<button class="btn sm ghost" onclick="wqDelO('+i+','+j+')"'+(lk||q.o.length<=WQ_LIM.oMin?" disabled":"")+'>빼기</button></div>'; }).join("")+
+      (q.o.length<WQ_LIM.oMax?'<button class="btn sm ghost" onclick="wqAddO('+i+')"'+dis+'>보기 추가</button>':'')+'</div></div>';
+  }).join("");
+  if(s.qs.length<WQ_LIM.qs) body+='<button class="btn mt12" onclick="wqAddQ()"'+dis+'>문항 추가</button>';
+  body+=memo('<p>1F DAP Wall 벽마다 붙은 QR(WALL 1~3)을 찍으면 그 벽의 세트만 열립니다. 한 세트를 끝내면 스탬프 06 「QR 퀴즈」가 적립됩니다(점수 기준 없음).</p>'+
+    '<p>앱은 <b>문항 순서와 보기 순서를 섞어서</b> 보여 줍니다. 여기서는 정답 보기만 정확히 고르면 됩니다. 제한: 세트마다 문항 1~10개 · 문항 200자 · 보기 2~5개, 보기마다 80자 · 세트 이름 30자 · 주제 40자.</p>'+
+    '<p>세트 3개를 늘 한꺼번에 저장합니다. <b>멈춤</b>은 그 벽 QR을 찍으면 「점검 중」이 뜨고 퀴즈가 열리지 않습니다(문항을 고치는 동안 잠깐 쓸 때).</p>'+
+    '<p><b>내장 문항으로 되돌리기</b>는 서버 문항을 비웁니다. 앱은 다음 동기화부터 앱에 들어 있는 기본 문항을 씁니다. 처리 뒤 7초 동안 되돌리기가 뜹니다.</p>');
+  return h+card("문항 편집","",body);
+}
+function wqVerAt(v){ v=Number(v); if(!(v>1e12)) return ""; var t=new Date(v); return (t.getMonth()+1)+"/"+t.getDate()+" "+("0"+t.getHours()).slice(-2)+":"+("0"+t.getMinutes()).slice(-2); }
+function wqCnt(path,v,max,opt){ var n=wqT(v).length; return '<span class="wqcnt'+(n>max||(!n&&!opt)?" over":"")+'" data-wqc="'+path+'" data-max="'+max+'"'+(opt?' data-opt="1"':"")+'>'+n+' / '+max+'</span>'; }
+function wqErrHtml(E){ return E.length?'<div class="err-banner"><b>저장 전에 고칠 곳 '+E.length+'개</b><br>'+E.slice(0,8).map(esc).join("<br>")+(E.length>8?"<br>외 "+(E.length-8)+"개":"")+'</div>':""; }
+function wqVal(path){ var s=wqCur(), p=path.split(":"); return p[0]==="name"?s.name:p[0]==="theme"?s.theme:p[0]==="q"?s.qs[+p[1]].q:s.qs[+p[1]].o[+p[2]]; }
+/* 글자 입력은 화면을 다시 그리지 않는다(한글 조합이 끊기지 않게) · 글자 수 · 오류 · 저장 버튼만 고친다 */
+function wqRefresh(){
+  var E=wqErrs(WQ.draft), w=wqSrv()||{};
+  var b=el("wqErr"); if(b) b.innerHTML=wqErrHtml(E);
+  var sv=el("wqSave"); if(sv) sv.disabled=!!w.locked||!!E.length||!WQ.dirty;
+  var dt=el("wqDirty"); if(dt) dt.style.display=WQ.dirty?"":"none";
+  var dc=el("wqDisc"); if(dc) dc.disabled=!WQ.dirty;
+  [].forEach.call(document.querySelectorAll("[data-wqc]"),function(n){ var v=wqT(wqVal(n.getAttribute("data-wqc"))).length, mx=+n.getAttribute("data-max"), bad=v>mx||(!v&&!n.getAttribute("data-opt"));
+    n.textContent=v+" / "+mx; n.className="wqcnt"+(bad?" over":""); var inp=n.previousElementSibling; if(inp&&inp.classList) inp.classList.toggle("bad",bad); });
+}
+function wqTouch(){ WQ.dirty=true; WQ.err=""; }
+function wqIn(path,v){ var s=wqCur(), p=path.split(":"); if(!s) return;
+  if(p[0]==="name") s.name=v; else if(p[0]==="theme") s.theme=v; else if(p[0]==="q") s.qs[+p[1]].q=v; else s.qs[+p[1]].o[+p[2]]=v;
+  wqTouch(); wqRefresh(); }
+function wqAns(i,j){ wqCur().qs[i].a=j; wqTouch(); render(); }
+function wqOff(on){ var d=WQ.draft, id=WQ.set; d.off=d.off.filter(function(x){ return x!==id; }); if(on) d.off.push(id); wqTouch(); render(); }
+function wqSetSel(id){ WQ.set=id; render(); }
+function wqAddQ(){ var s=wqCur(); if(s.qs.length>=WQ_LIM.qs) return; s.qs.push({ q:"", o:["",""], a:0 }); wqTouch(); render(); setTimeout(function(){ var t=el("wq_q_"+(s.qs.length-1)); if(t){ t.focus(); t.scrollIntoView({block:"center"}); } },30); }
+function wqDelQ(i){ var s=wqCur(); if(s.qs.length<=1) return; s.qs.splice(i,1); wqTouch(); render(); toast((i+1)+"번 문항을 뺐습니다 · 저장 전이라 「변경 취소」로 되돌릴 수 있습니다"); }
+function wqMove(i,dir){ var s=wqCur(), j=i+dir; if(j<0||j>=s.qs.length) return; var t=s.qs[i]; s.qs[i]=s.qs[j]; s.qs[j]=t; wqTouch(); render(); }
+function wqAddO(i){ var q=wqCur().qs[i]; if(q.o.length>=WQ_LIM.oMax) return; q.o.push(""); wqTouch(); render(); setTimeout(function(){ var t=el("wq_o_"+i+"_"+(q.o.length-1)); if(t) t.focus(); },30); }
+function wqDelO(i,j){ var q=wqCur().qs[i]; if(q.o.length<=WQ_LIM.oMin) return; q.o.splice(j,1); if(q.a===j) q.a=-1; else if(q.a>j) q.a--; wqTouch(); render(); }
+function wqDiscard(){ if(!WQ.dirty) return; dialog({ t:"저장 안 한 변경을 버릴까요?", s:"서버에 저장된 문항으로 되돌립니다.", ok:"버리기", danger:true, onOk:function(){ dlgForce(); WQ.draft=null; WQ.dirty=false; WQ.err=""; render(); toast("변경을 버렸습니다"); } }); }
+function wqPayload(d){ return d.sets.map(function(s){ return { id:s.id, name:wqT(s.name), theme:wqT(s.theme), qs:s.qs.map(function(q){ return { q:wqT(q.q), o:q.o.map(wqT), a:q.a }; }) }; }); }
+function wqSend(params, okMsg, undo){
+  callPost("wq_set", params, function(r){
+    dlgForce();
+    if(r&&r.ok){ var w=wqSrv()||{}; wqPut({ ok:true, data:r.data, v:r.v, locked:w.locked }); WQ.draft=null; WQ.dirty=false; WQ.err=""; render(); if(okMsg) toast(okMsg(r), undo?{ undo:undo }:{}); }
+    else { WQ.err=wqWhy(r); render(); toast("저장하지 못했습니다 · "+wqWhy(r)); }
+  }, function(e){ dlgForce(); WQ.err=wqWhy(e); render(); toast("서버 응답 없음 · 문항은 이 화면에 그대로 있습니다"); });
+}
+function wqSave(){
+  var d=WQ.draft, w=wqSrv()||{}, E=wqErrs(d);
+  if(w.locked){ toast("잠겨 있어 저장할 수 없습니다"); return; }
+  if(E.length){ toast("고칠 곳이 "+E.length+"개 있습니다"); return; }
+  var prev=w.data?wqClone(w.data):null;
+  dialog({ t:"Wall QR 퀴즈 문항을 저장할까요?", s:"저장하면 참가자 앱이 다음 동기화(10초 안)에 새 문항을 받습니다. 이미 퀴즈를 끝내고 받은 스탬프는 그대로입니다.",
+    x:imp(d.sets.map(function(s){ return [wqLabel(s.id)+(wqT(s.name)!==wqLabel(s.id)?" · "+wqT(s.name):""), s.qs.length+"문항"+(d.off.indexOf(s.id)>=0?" · 멈춤":""), d.off.indexOf(s.id)>=0?"loss":"chg"]; })),
+    ok:"저장", onOk:function(){
+      wqSend({ sets:JSON.stringify(wqPayload(d)), off:JSON.stringify(d.off) }, function(r){ return "저장했습니다 · 판 "+r.v; },
+        function(){ wqRestore(prev); });
+    } });
+}
+/* 되돌리기 · 저장 전 서버 문항으로(없었으면 내장 문항으로) */
+function wqRestore(prev){
+  if(prev&&prev.sets) wqSend({ sets:JSON.stringify(prev.sets), off:JSON.stringify(prev.off||[]) }, function(){ return "저장 전 문항으로 되돌렸습니다"; });
+  else wqSend({ reset:"1" }, function(){ return "내장 문항으로 되돌렸습니다"; });
+}
+function wqReset(){
+  var w=wqSrv()||{}; if(w.locked){ toast("잠겨 있어 되돌릴 수 없습니다"); return; }
+  var prev=w.data?wqClone(w.data):null;
+  dialog({ t:"내장 문항으로 되돌릴까요?", s:"서버에 저장한 문항을 비웁니다. 참가자 앱은 다음 동기화부터 앱에 들어 있는 기본 문항(세트마다 5문항)을 씁니다. 처리 뒤 7초 동안 <b>되돌리기</b>가 뜹니다.",
+    x:WQ.dirty?'<div class="note warn mt12">저장 안 한 변경도 함께 사라집니다.</div>':"", ok:"되돌리기", danger:true,
+    onOk:function(){ wqSend({ reset:"1" }, function(){ return "내장 문항으로 되돌렸습니다"; }, prev?function(){ wqRestore(prev); }:null); } });
+}
+function wqLockSet(on){
+  var t={ "1":"지금 잠글까요?", "0":"잠금을 풀까요?", auto:"자동 잠금으로 둘까요?" }[on];
+  var s={ "1":"잠그면 행사 당일이 아니어도 문항 저장 · 되돌리기를 서버가 거절합니다.", "0":"풀면 행사 당일에도 문항을 고칠 수 있습니다. 행사 중 문항이 바뀌면 같은 벽에서 사람마다 다른 문제를 봅니다.", auto:"행사 당일("+WQ_LOCK_DAY+")부터 저절로 잠기고, 그 전에는 풀려 있습니다." }[on];
+  dialog({ t:t, s:s, ok:on==="1"?"잠그기":on==="0"?"풀기":"자동으로", danger:on==="0", onOk:function(){
+    call("wq_lock",{ on:on },function(r){ dlgForce(); if(r&&r.ok){ var w=wqSrv()||{ ok:true }; w.locked=!!r.locked; wqPut(w); render(); toast((on==="auto"?"자동 잠금으로 두었습니다 · ":"")+"지금 "+(r.locked?"잠김":"풀림")); } else toast("실패: "+why(r)); },
+      function(){ dlgForce(); toast("서버 응답 없음"); });
+  } });
+}
+
+/* ── 9-4. 부스 QR · 인쇄용 코드 · 인쇄 원본은 QR 테스트/qr_mother.py 가 만든다(브랜드 도안 + 인식 검증) ──
+ * 콘솔은 서버 코드를 보여 주고 codes.json 을 내려준다. 그 파일을 QR 테스트/ 에 넣고 qr_mother.py 를 돌리면 out/light · out/dark 에 실제 코드판이 나온다.
+ * (260922 확인: 지금 out/ 의 p1~p3 는 codes.json 에 부스 코드가 없어 견본 코드 AXSSAMPLE 로 만든 것이다 · 인쇄 금지) */
+function boothRows(){ return ((ST.data.slist||{}).rows||[]).slice().sort(function(a,b){ return (a.id<b.id?-1:1); }); }
+function qrCodesJson(){
+  var out={};
+  boothRows().forEach(function(r){ if(STAMP_META[r.id]&&!STAMP_META[r.id].old) out[r.id]=r.code; });
+  ((ST.data.stair||{}).rows||[]).forEach(function(r){ out["st"+("0"+r.fl).slice(-2)+"-"+r.r]=r.code; });
+  return out;
+}
+function qrCodesDl(){
+  var o=qrCodesJson(), n=Object.keys(o).length;
+  if(!n){ toast("받은 코드가 없습니다"); return; }
+  var blob=new Blob([JSON.stringify(o,null,1)+"\n"],{type:"application/json"}), a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download="codes.json"; document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },400);
+  toast("codes.json · 코드 "+n+"개");
+}
+function boothCard(){
+  var d=ST.data.slist, rows=boothRows();
+  if(!d) return card("부스 QR","인쇄용 · 스탬프 01 · 02 · 03",'<p class="muted"><span class="spin"></span>코드를 불러오는 중입니다.</p>');
+  var cur=rows.filter(function(r){ return STAMP_META[r.id]&&!STAMP_META[r.id].old; }), old=rows.filter(function(r){ return !(STAMP_META[r.id]&&!STAMP_META[r.id].old); });
+  return card("부스 QR","인쇄용 · 스탬프 01 · 02 · 03 · 코드를 바꾸면 다시 인쇄",
+    (cur.length?'<div class="wrap"><table class="tb"><tr><th>스탬프</th><th>지점</th><th>운영 시간</th><th>코드</th><th>QR 내용</th><th>인쇄 파일</th><th>상태</th></tr>'+cur.map(function(r){
+      return '<tr><td>'+tag("스탬프 "+STAMP_META[r.id].no)+'</td><td style="white-space:nowrap"><b>'+esc(r.name)+'</b></td><td class="n" style="white-space:nowrap">'+esc(hhmm(r.s))+' ~ '+esc(hhmm(r.e))+'</td><td class="n"><b>'+esc(r.code)+'</b></td>'+
+        '<td class="n cap">'+esc(appBase())+'#s='+esc(r.code)+'</td><td class="n cap">'+esc(r.id)+'.png</td><td>'+(r.on?tag("운영","ok"):tag("꺼짐","off"))+'</td></tr>'; }).join("")+'</table></div>'
+      :'<div class="empty">설치된 부스 지점이 없습니다. 백엔드 stamp_install 로 만듭니다.</div>')+
+    (old.length?'<p class="cap mt8">옛 지점 '+old.map(function(r){ return esc(r.id+" "+r.name)+(r.on?" (운영 중)":" (꺼짐)"); }).join(" · ")+' · 인쇄하지 않습니다.</p>':'')+
+    '<div class="row mt12"><button class="btn pri" onclick="qrCodesDl()">codes.json 내려받기 (부스 + 계단)</button><span class="cap">인쇄 원본을 만드는 파일입니다. 아래 운영 메모의 순서대로 씁니다.</span></div>'+
+    memo('<ol><li><b>codes.json 내려받기</b>를 눌러 받은 파일로 <code>QR 테스트/codes.json</code>을 바꿉니다(부스 3곳 + 계단 36곳의 지금 서버 코드).</li>'+
+      '<li><code>QR 테스트</code> 폴더에서 <code>python qr_mother.py</code>를 돌립니다. 모든 QR을 다시 만들고 인식 검증까지 합니다(실패가 있으면 종료코드 1).</li>'+
+      '<li><code>QR 테스트/out/light</code>(흰 벽) 또는 <code>/dark</code>(어두운 곳)의 <b>p1.png · p2.png · p3.png</b>를 인쇄합니다. 라벨에 「견본」이 보이면 인쇄하지 않습니다.</li>'+
+      '<li>붙인 뒤 폰 기본 카메라로 한 번 찍어 이 표의 코드로 적립되는지 확인합니다.</li></ol>'+
+      '<p>260922 기준 <code>QR 테스트/out</code>의 p1~p3은 부스 코드 없이 만든 <b>견본(AXSSAMPLE)</b>입니다. 반드시 위 순서로 다시 만듭니다. 코드 전면 교체(stamp_rotate)를 하면 인쇄물도 다시 뽑습니다.</p>'));
 }
 
 /* ══════════════════ 8. 시작 ══════════════════ */
