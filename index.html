@@ -1324,52 +1324,57 @@
   #rgPlay .tt-c.up.on { background: var(--ax-color-brand); color: var(--ax-color-onBrand); box-shadow: 0 0 0 1px var(--ax-color-brand), 0 0 0 var(--ax-color-divider); }
   #rgPlay .tt-cap { font: var(--ax-type-caption); color: var(--ax-color-muted); }
   /* 안내 말풍선 · 챗봇이 말하듯 · 원본 BOT_SVG 합성만 · 떠 있기 + 깜빡임 */
-  /* ═══ v4.09 AI O/X · 60초 타임어택 (AX-TDS 토큰 · 새 그라데이션·검은 바탕 없음 · 피버·황금은 brand 계열) ═══ */
-  .ox-hero { display: flex; align-items: flex-end; gap: var(--ax-space-12); }
-  .ox-hero > svg { flex: none; width: 96px; height: 96px; animation: axsFloat 3.2s ease-in-out infinite; }
-  .ox-hero .eye, .ox-bot .eye { transform-box: fill-box; transform-origin: center; animation: axsBlink 4.6s linear infinite; }
-  .ox-hero .gs-say-b { margin-bottom: var(--ax-space-16); }
-  .ox-g { display: flex; flex-direction: column; gap: var(--ax-space-12); }
-  .ox-top { display: flex; align-items: center; gap: var(--ax-space-12); }
-  .ox-bar { flex: 1; height: 12px; border-radius: var(--ax-radius-999); background: var(--ax-color-inset); box-shadow: inset 0 0 0 1px var(--ax-color-divider); overflow: hidden; }
-  .ox-bar i { display: block; height: 100%; border-radius: inherit; background: var(--ax-color-brand); transform-origin: left center; }
-  .ox-bar.warn i { background: var(--ax-color-error); }
-  .ox-sec { flex: none; min-width: 3.2em; text-align: right; font: var(--ax-type-t5-strong); color: var(--ax-color-ink); font-variant-numeric: tabular-nums; }
-  .ox-sec.warn { color: var(--ax-color-error); }
-  .ox-hud { position: relative; display: flex; align-items: center; gap: var(--ax-space-8); min-height: 40px; }
-  .ox-sc { font: var(--ax-type-t3); color: var(--ax-color-ink); font-variant-numeric: tabular-nums; }
-  .ox-sc small { margin-left: var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-body); }
-  .ox-cnt { margin-left: auto; font: var(--ax-type-t6-strong); color: var(--ax-color-body); font-variant-numeric: tabular-nums; }
-  .ox-fev { padding: var(--ax-space-4) var(--ax-space-12); border-radius: var(--ax-radius-999); background: var(--ax-color-brand); color: var(--ax-color-onBrand); font: var(--ax-type-t7); font-weight: 700; white-space: nowrap; }
-  .ox-pop { position: absolute; left: 0; top: -4px; font: var(--ax-type-t6-strong); font-style: normal; color: var(--ax-color-success); pointer-events: none; opacity: 0; }
-  .ox-pop.bad { color: var(--ax-color-error); }
-  .ox-pop.on { animation: oxPop 0.6s ease-out both; }
-  @keyframes oxPop { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-22px); } }
-  .ox-card { position: relative; display: flex; align-items: flex-end; gap: var(--ax-space-12); min-height: 148px; padding: var(--ax-space-20) var(--ax-space-16); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); box-shadow: inset 0 0 0 1px var(--ax-color-divider); }
-  .ox-card.fever { box-shadow: inset 0 0 0 2px var(--ax-color-brand); }
-  .ox-card.gold { background: var(--ax-color-brandSoft); box-shadow: inset 0 0 0 3px var(--ax-color-brand); }
-  .ox-bot { position: relative; flex: none; width: 64px; height: 64px; }
-  .ox-bot svg { width: 64px; height: 64px; display: block; transform-origin: 50% 100%; animation: axsFloat 3.2s ease-in-out infinite; }
-  .ox-bot.sq svg { animation: oxSquash 0.14s ease-out 1; }
-  @keyframes oxSquash { 0% { transform: scaleY(1); } 50% { transform: scale(1.06, 0.86); } 100% { transform: scaleY(1); } }
-  .ox-praise { position: absolute; left: 50%; bottom: 100%; margin-bottom: var(--ax-space-4); padding: var(--ax-space-4) var(--ax-space-8); border-radius: var(--ax-radius-999); background: var(--ax-color-brand); color: var(--ax-color-onBrand); font: var(--ax-type-caption); font-weight: 700; white-space: nowrap; transform: translateX(-50%); opacity: 0; pointer-events: none; }
-  .ox-praise.on { animation: oxPraise 0.75s ease-out both; }
-  @keyframes oxPraise { 0% { opacity: 0; transform: translate(-50%, 6px); } 20% { opacity: 1; transform: translate(-50%, 0); } 75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -4px); } }
-  .ox-bub { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--ax-space-8); }
-  .ox-gold { align-self: flex-start; padding: var(--ax-space-4) var(--ax-space-12); border-radius: var(--ax-radius-999); background: var(--ax-color-brand); color: var(--ax-color-onBrand); font: var(--ax-type-t7); font-weight: 700; }
-  .ox-q { margin: 0; min-height: 3.2em; font: var(--ax-type-t4); color: var(--ax-color-ink); word-break: keep-all; }
-  .ox-q.in { animation: oxIn 0.12s ease-out both; }
-  @keyframes oxIn { from { opacity: 0.2; } to { opacity: 1; } }
+  /* ═══ v4.12 AI O/X · 유리다리 건너기 (게임판 캔버스는 시제품 그림 · 위 줄·문제 카드·조작 버튼은 AX-TDS 토큰 · 새 그라데이션·검은 바탕 없음) ═══ */
+  #rgPlay.oxb .rgp-top { flex-direction: column; align-items: stretch; gap: var(--ax-space-8); padding: var(--ax-space-4) var(--ax-space-16) var(--ax-space-12); }
+  #rgPlay.oxb .rgp-mid.fill canvas { background: var(--ax-color-canvas); }
+  #rgPlay.oxb .rgp-x { padding: 0 var(--ax-space-12); }
+  .oxb-top { display: flex; flex-direction: column; gap: var(--ax-space-8); }
+  .oxb-hud { display: flex; align-items: center; gap: var(--ax-space-8); min-height: var(--ax-touch-size); }
+  .oxb-lives { display: flex; gap: 2px; }
+  .oxb-lives.hit { animation: tileShake 0.35s; }
+  .oxb-life { display: block; width: 26px; height: 26px; line-height: 0; transition: opacity 0.3s, filter 0.3s; }
+  .oxb-life svg { display: block; width: 26px; height: 26px; }
+  .oxb-life.off { opacity: 0.22; filter: grayscale(1); }
+  .oxb-chip { padding: 2px var(--ax-space-8); border-radius: var(--ax-radius-999); font: var(--ax-type-caption); font-weight: 700; white-space: nowrap; }
+  .oxb-chip.cb { background: var(--ax-color-successSoft); color: var(--ax-color-success); transform: scale(var(--k, 1)); transform-origin: left center; }   /* 연속일수록 조금씩 커진다 */
+  .oxb-chip.fv { background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
+  .oxb-sp { flex: 1; }
+  .oxb-sc { display: inline-flex; align-items: baseline; gap: 2px; }
+  .oxb-sc b { display: inline-block; font: var(--ax-type-t3); color: var(--ax-color-ink); font-variant-numeric: tabular-nums; }
+  .oxb-sc small { font: var(--ax-type-caption); color: var(--ax-color-muted); }
+  .oxb-sc b.pop { animation: oxbPop 0.32s ease-out; }
+  @keyframes oxbPop { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
+  .oxb-bar { position: relative; height: 6px; border-radius: var(--ax-radius-999); background: var(--ax-color-divider); overflow: hidden; }
+  .oxb-bar i { position: absolute; inset: 0; border-radius: inherit; background: var(--ax-color-brand); transform-origin: left center; }
+  .oxb-bar.warn i { background: var(--ax-color-error); }
+  .oxb-q { padding: var(--ax-space-8) var(--ax-space-16) var(--ax-space-12); border-radius: var(--ax-radius-16); background: var(--ax-color-surface); box-shadow: inset 0 0 0 1px var(--ax-color-divider); transition: box-shadow 0.2s, background 0.2s; }
+  .oxb-q.gold { background: var(--ax-color-brandSoft); box-shadow: inset 0 0 0 3px var(--ax-color-brand); }
+  .oxb-q.fever { box-shadow: inset 0 0 0 2px var(--ax-color-brand); }
+  .oxb-meta { display: flex; align-items: center; gap: 6px; min-height: 22px; font: var(--ax-type-caption); font-weight: 600; color: var(--ax-color-muted); white-space: nowrap; }
+  .oxb-tag { padding: 0 var(--ax-space-8); border-radius: var(--ax-radius-999); font-weight: 700; color: var(--ax-color-onBrand); }
+  .oxb-tag.gd { background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); box-shadow: inset 0 0 0 1px var(--ax-color-brand); }
+  .oxb-tag.fv { background: var(--ax-color-brand); }
+  .oxb-sec { margin-left: auto; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); font-variant-numeric: tabular-nums; }
+  .oxb-sec.warn { color: var(--ax-color-error); }
+  .oxb-text { margin: var(--ax-space-4) 0 0; min-height: 3.625rem; font: var(--ax-type-t4); font-weight: 700; color: var(--ax-color-ink); word-break: keep-all; }   /* 두 줄 자리를 늘 잡아 발판·챗봇과 겹치지 않는다 */
+  .oxb-text.ok { color: var(--ax-color-success); }
+  .oxb-text.no { color: var(--ax-color-error); }
+  .oxb-text.in { animation: oxbIn 0.14s ease-out both; }
+  @keyframes oxbIn { from { opacity: 0.2; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  #rgPlay.oxb-hide .oxb-text { visibility: hidden; }   /* 멈춘 동안 문제를 가린다(멈추고 생각할 수 없게) */
+  .oxb-ctl { flex: none; display: grid; grid-template-columns: 1fr 76px 1fr; gap: var(--ax-space-8); padding: var(--ax-space-8) var(--ax-space-16) calc(var(--ax-space-12) + env(safe-area-inset-bottom, 0px)); background: var(--ax-color-surface); border-top: 1px solid var(--ax-color-divider); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+  .oxb-b { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: 72px; padding: 0; border: 0; border-radius: var(--ax-radius-16); background: var(--ax-color-inset); box-shadow: inset 0 0 0 1px var(--ax-color-divider); color: var(--ax-color-ink); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .oxb-b svg { display: block; width: 32px; height: 32px; }
+  .oxb-b span { font: var(--ax-type-caption); color: var(--ax-color-muted); }
+  .oxb-b.o svg { color: var(--ax-color-brand); }
+  .oxb-b.p { background: var(--ax-color-brandSoft); box-shadow: none; color: var(--ax-color-brandText); font: var(--ax-type-t7); font-weight: 700; }
+  .oxb-b.p span { font: inherit; color: inherit; }
+  .oxb-b.p:disabled { background: var(--ax-color-canvas); color: var(--ax-color-disabled); }
+  .oxb-b.hit { background: var(--ax-color-brandSoft); }
+  .oxb-b.ok { background: var(--ax-color-successSoft); box-shadow: inset 0 0 0 2px var(--ax-color-success); }
+  .oxb-b.bad { background: var(--ax-color-errorSoft); box-shadow: inset 0 0 0 2px var(--ax-color-error); }
+  .gs-sub { margin: 0; font: var(--ax-type-t5-strong); color: var(--ax-color-brandText); }
   .ox-ex { font: var(--ax-type-t7); color: var(--ax-color-muted); white-space: nowrap; }
-  .ox-btns { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ax-space-12); }
-  .ox-b { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--ax-space-4); height: 112px; border: 0; border-radius: var(--ax-radius-24); background: var(--ax-color-surface); box-shadow: inset 0 0 0 1px var(--ax-color-divider); color: var(--ax-color-ink); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none; }
-  .ox-b svg { width: 48px; height: 48px; display: block; }
-  .ox-b span { font: var(--ax-type-caption); color: var(--ax-color-muted); }
-  .ox-b:active { background: var(--ax-color-inset); }
-  .ox-g.fever .ox-b { box-shadow: inset 0 0 0 2px var(--ax-color-brand); }
-  .ox-b.ok { background: var(--ax-color-successSoft); box-shadow: inset 0 0 0 2px var(--ax-color-success); }
-  .ox-b.bad { background: var(--ax-color-errorSoft); box-shadow: inset 0 0 0 2px var(--ax-color-error); }
-  .ox-pass { min-height: var(--ax-touch-size); }
   .ox-res-big { margin: 0; font: var(--ax-type-t3); color: var(--ax-color-ink); }
   .ox-res-big b { font: var(--ax-type-display); color: var(--ax-color-brandText); font-variant-numeric: tabular-nums; }
   .ox-res-sub { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-body); }
@@ -1379,7 +1384,7 @@
   .ox-wrong .ox-w p { margin: 0; }
   .ox-wrong .ox-w p + p { margin-top: var(--ax-space-4); }
   .ox-wrong .ox-w b { color: var(--ax-color-ink); }
-  @media (prefers-reduced-motion: reduce) { .ox-hero > svg, .ox-bot svg, .ox-hero .eye, .ox-bot .eye, .ox-bot.sq svg, .ox-q.in { animation: none; } .ox-praise.on, .ox-pop.on { animation-duration: 0.01s; } }
+  @media (prefers-reduced-motion: reduce) { .oxb-lives.hit, .oxb-sc b.pop, .oxb-text.in { animation: none; } }
   /* v4.09 기억력 라운드 완성 팝 · 미위(원본) 위에서 챗봇(원본)이 통통 뛰어다닌다 · 몸 전체만 움직인다(모양 변형 없음 · design.md A 5-6) */
   .mem-hop { position: relative; display: block; height: 44px; margin: 8px auto 0; max-width: 220px; }
   .mem-hop svg { position: absolute; left: 0; bottom: 0; width: 36px; height: 36px; animation: memRoam 2.4s ease-in-out infinite alternate, memHop 0.4s cubic-bezier(0.3, 0, 0.7, 1) infinite alternate; }
@@ -1453,8 +1458,6 @@
   .gs-prev .gsp-dom { position: absolute; left: var(--ax-space-12); top: var(--ax-space-12); transform-origin: 0 0; pointer-events: none; }
   .gs-prev .mem-stage { min-height: 132px; margin: 0 0 var(--ax-space-12); display: flex; flex-direction: column; justify-content: center; }
   .gs-prev .mem-stage .mem-sent { margin: var(--ax-space-8) 0 0; }
-  .gs-prev .ox-card { min-height: 0; }
-  .gs-prev .ox-b { height: 88px; }
   .gs-info { display: grid; gap: var(--ax-space-4); }
   .gs-ctl { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }
   .gs-pts { margin: 0; font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
@@ -5795,14 +5798,14 @@ var Views = {
     if (gsNeedNick()) return gsNickHtml("jump");
     return gsStartHtml("jump", { rootId: "jpRoot", rules: "하트 3개 · " + esc(olyRuleLine("jump")) });   /* v4.11 세 동작은 조작 한 줄(GS_GAMES.jump.line · 항상 보임) */   /* v4.02 버틴 시간은 점수가 아니다 */
   },
-  /* ═══ v4.09 AI O/X · 60초 타임어택 · 시작 화면에서 판 토큰(황금 자리)·모두의 선택 비율을 미리 받는다 ═══ */
+  /* ═══ v4.12 AI O/X · 유리다리 건너기 · 시작 화면에서 판 토큰(황금 자리)·모두의 선택 비율을 미리 받는다 ═══ */
   game_ox: function () {
     oxStop();
     if (gsNeedNick()) return gsNickHtml("ox");
     oxPrefetch();
     var R = olyRule().ox;
-    return gsStartHtml("ox", { rootId: "oxRoot",
-      rules: R.sec / 100 + "초 · 최대 " + (R.per[0] + R.per[1] + R.per[2]) + "문제 · 패스 " + R.pass + "번" });   /* v4.10 규칙 한 줄(문구 다이어트) · 점수 구성은 결과 화면에서 본다 · 260922 경로 줄 추가로 한 화면 넘침 수정 */
+    return gsStartHtml("ox", { rootId: "oxRoot", sub: "유리다리 건너기",
+      rules: R.sec / 100 + "초 · " + (R.per[0] + R.per[1] + R.per[2]) + "줄 · 목숨 " + R.lives + " · 판자 " + R.pass + "번" });
   },
   /* ═══ v3.50 AX 올림픽 순위판 · 종합(전 종목 완주자) · 종목별(금은동) ═══
      v3.50d 부문 정보 전면 삭제 (사용자 확정 260917·260918 · 부문 메달표·부문 라벨·부문 평균 금지) */
@@ -8764,7 +8767,8 @@ function sfxNoise(dur, o) {
   src.connect(f); f.connect(g); g.connect(SFX.master); src.start(t); src.stop(t + dur + 0.02);
 }
 var SFX_LEN = { tick: 0.06, go: 0.35, fanfare: 0.75, over: 0.5, best: 0.45, click: 0.04, tok: 0.06, shook: 0.14, ppok: 0.14, cascade: 0.2, kwang: 0.4, ttuk: 0.1,
-  ppyong: 0.16, ppyong2: 0.16, ting: 0.22, puck: 0.14, hit: 0.12, tik: 0.05, floor: 0.12, level: 0.3, tak: 0.05, dingdong: 0.65, kung: 0.34 };
+  ppyong: 0.16, ppyong2: 0.16, ting: 0.22, puck: 0.14, hit: 0.12, tik: 0.05, floor: 0.12, level: 0.3, tak: 0.05, dingdong: 0.65, kung: 0.34,
+  oxok: 0.22, oxup: 0.32, oxcrk: 0.08, oxsplash: 0.45 };
 /* 이름 → 소리 · p = 연쇄 단계·콤보 등 */
 function sfxPlay(name, p) {
   var T = sfxTone, N = sfxNoise;
@@ -8794,6 +8798,11 @@ function sfxPlay(name, p) {
     case "tak": N(0.04, { freq: 2600, q: 0.9, vol: 1.1 }); T(1250, 0.035, { vol: 0.35 }); break;
     case "dingdong": T(1319, 0.3, { type: "triangle", vol: 0.5 }); T(988, 0.4, { type: "triangle", vol: 0.5, delay: 0.24 }); break;
     case "kung": T(95, 0.32, { to: 42, vol: 0.95 }); N(0.12, { filter: "lowpass", freq: 650, vol: 0.6 }); break;
+    /* v4.12 유리다리 · 정답(연속일수록 한 음씩 높게) · 황금·피버 올림 · 금 가는 소리(단계) · 풍덩 */
+    case "oxok": var fo = 784 * Math.pow(1.06, Math.min(10, p || 0)); T(fo, 0.09, { type: "triangle", vol: 0.42 }); T(fo * 1.5, 0.14, { vol: 0.3, delay: 0.055 }); N(0.06, { freq: 6500, filter: "highpass", vol: 0.1, delay: 0.03 }); break;
+    case "oxup": [1047, 1319, 1568].forEach(function (f, i) { T(f, 0.09, { type: "triangle", vol: 0.3, delay: 0.1 + i * 0.06 }); }); break;
+    case "oxcrk": N(0.07, { freq: 2600 + 500 * (p || 1), q: 3, vol: 0.5 + 0.15 * (p || 1) }); T(1500, 0.04, { type: "square", to: 800, vol: 0.12 }); break;
+    case "oxsplash": N(0.42, { filter: "lowpass", freq: 1400, to: 180, vol: 0.9 }); T(190, 0.28, { to: 70, vol: 0.45 }); break;
   }
 }
 /* 게임이 부르는 입구 · 꺼져 있으면 아무것도 안 한다 · 동시 8개 상한 */
@@ -8887,7 +8896,7 @@ function axTodayHtml(dark) { return '<p class="ax-line' + (dark ? " dk" : "") + 
    AX 팡 = 80칸 완주 시간 환산(1000 × (기준 초 / 완주 초)^지수) · 점프 = 장애물 40 · 코인 5 · AI 상식 100 ·
    테트리스 = 블록 10(60개까지) · 줄 50(30줄까지, 그 뒤 10) · 동시 삭제 보너스 · 기억력 = 칸마다 속도 등급 · 오답 −50 · 무오답 라운드 +40.
    계수는 서버 설정 「올림픽_점수」가 정본 · oly_board 응답의 rule 을 받아 쓴다 · 받기 전에는 아래 OLY_RULE(서버 기본값과 같은 값 · 검사 60절이 대조).
-   제출 = 구성 요소(parts) + 점수 · 서버가 같은 식으로 다시 계산해 다르면 거부(mismatch) · 옛 기록(g1·g2)은 집계 제외 · 로컬 최고는 oly2_best_<종목>.
+   제출 = 구성 요소(parts) + 점수 · 서버가 같은 식으로 다시 계산해 다르면 거부(mismatch) · 옛 기록(g1·g2 · v4.12 전 O/X g3)은 집계 제외 · 제출 버전 g4(v4.12) · 로컬 최고는 oly2_best_<종목>.
    명예 순위만(경품 없음) · 부문 통계·부문 메달 없음 · 공개 순위는 닉네임 · 1~3위 표식 = 월계수(A안 · 48px 미만으로 쓰지 않는다). */
 var OLY_EVENTS = [
   { key: "pang", name: "AX 팡", short: "팡", view: "game_pang", best: "oly2_best_pang" },
@@ -8903,8 +8912,10 @@ var OLY_RULE = {
   jump: { obs: 40, coin: 5, fact: 100, pauseMax: 3 },
   tetris: { block: 10, blockMax: 60, line: 50, lineFull: 30, lineAfter: 10, multi: [0, 0, 20, 60, 120], pauseMax: 3 },
   word: { tiers: [[50, 200], [80, 130], [120, 90], [200, 60]], base: 30, clean: 40, wrong: 50 },
-  ox: { sec: 6000, per: [10, 10, 10], base: [42, 48, 53], pen: 80, hasty: 60, speed: 5, full: 100, limit: 400, combo: 2, comboMax: 5,   /* 260922 재보정: base ×1.06(보통·잘함 목표 대비 6% 낮음 보정) */
-    feverAt: 5, feverLen: 3, feverMul: 2, goldMul: 3, bonusAt: 10, bonusSec: 300, pass: 1, lock: 30 }
+  /* v4.12 유리다리(260922 · 보정 「올림픽 보정/ox_bridge_sim.js」) · rowT = 줄 시간 첫 줄 → 마지막 줄(1/100초 · 두 번째 값이 속도 상한) · lead = 여유 줄(1/100줄) [시작, 떨어진 뒤·최소, 최대] */
+  ox: { sec: 6000, per: [7, 7, 6], lives: 3, base: [60, 63, 66], pen: 60, hasty: 60, speed: 5, full: 100, limit: 400, combo: 2, comboMax: 5,
+    feverAt: 5, feverLen: 3, feverMul: 2, goldMul: 3, bonusAt: 10, bonusSec: 300, pass: 1, lock: 30,
+    rowT: [380, 230], lead: [130, 100, 150], arrive: 100, lifeBonus: 30, secBonus: 5, pauseMax: 3 }
 };
 /* v4.09 AI O/X 문제 은행 (원본 「AI OX 문제은행.json」 86문제 · 올림픽 보정/ox_bank_build.py 가 만든다 · 서버 OX_KEY 와 검사 68절이 대조)
    id · c 분야(1 AI 기초·생성형 AI · 2 사내 AI 안전 수칙 · 3 현대해상 AX 로드맵) · lv 난이도 · q 문장 · a 정답 · e 해설 · g 짝 그룹(한 판에 하나) ·
@@ -9004,7 +9015,7 @@ var OLY = { board: null, t: 0 };
 function olyRule() {
   var r = OLY.board && OLY.board.rule;
   return r && r.cap > 0 && r.pang && r.jump && r.tetris && r.word && r.word.tiers && r.word.tiers.length === 4 && r.tetris.multi && r.tetris.multi.length === 5 &&
-    r.ox && r.ox.sec > 0 && r.ox.base && r.ox.base.length === 3 && r.ox.per && r.ox.per.length === 3 ? r : OLY_RULE;
+    r.ox && r.ox.sec > 0 && r.ox.base && r.ox.base.length === 3 && r.ox.per && r.ox.per.length === 3 && r.ox.lives > 0 && r.ox.rowT && r.ox.rowT.length === 2 && r.ox.lead && r.ox.lead.length === 3 ? r : OLY_RULE;
 }
 function olyCap() { return olyRule().cap; }
 function olyMax() { return OLY_EVENTS.length * olyCap(); }
@@ -9031,17 +9042,25 @@ function olyScore(game, p, rule) {
   }
   return Math.max(0, Math.min(rule.cap, s));
 }
-/* v4.09 AI O/X 채점 (60초 타임어택) · 서버 oxTally_ 와 글자 그대로 같은 식(검사 68절) · ql = 「id.답.시간」 · 답 O|X|P(패스) · 시간 1/100초 · gold = 황금 자리
-   정답 = (기본[난이도] + 속도 + 연속) × 배수(황금 > 피버 > 1) · 오답 = −pen(hasty 미만이면 2배) · 패스 = 0점(연속·피버 그대로) · 연속이 bonusAt 배수면 +bonusSec */
+/* v4.12 AI O/X 유리다리 채점 · 서버 oxTally_ 와 글자 그대로 같은 식(검사 68·70절) · ql = 「id.답.시간」 · 답 O|X|P(판자)|T(발판이 아래 끝에 닿아 떨어짐) · 시간 1/100초 · gold = 황금 자리
+   다리는 문제가 떠 있는 동안 흘러내린다 · 문제마다 한도 lim = ceil(여유 × 줄 시간 / 100) · 한도 안에 답한다 · T 는 한도에 정확히 · 답하면 한 줄 올라가 여유 +100
+   정답 = (기본 + 속도 + 연속) × 배수(황금 > 피버 > 1) · 오답 −pen(hasty 미만이면 2배) · 떨어짐 −pen · 둘 다 목숨 −1 · 판자 0점(연속·피버 그대로) · 20줄을 건너면 도착 보너스
+   시계 = 문제 시간 + 연출 시간(OX_STEP) · 끝 = life | arrive | time(연출 중 시간 끝) | ''(문제가 떠 있다) */
+var OX_STEP = { hop: 50, plank: 80, fall: 170 };   /* 연출 시간(1/100초) · 한 줄 건너기 · 판자 · 떨어졌다 올라오기 · 서버 OX_STEP 과 같다 */
+function oxRowT(R, i) { var N = R.per[0] + R.per[1] + R.per[2]; return Math.round(R.rowT[0] + (R.rowT[1] - R.rowT[0]) * Math.min(i, N - 1) / Math.max(1, N - 1)); }
 function oxTally(ql, R, gold) {
-  var T = { ok: true, items: [], n: 0, c1: 0, c2: 0, c3: 0, wr: 0, hs: 0, pa: 0, sp: 0, cb: 0, fb: 0, gb: 0, gc: 0, pn: 0, hp: 0, mx: 0, used: 0, pts: 0 }, run = 0, fever = 0;
+  var T = { ok: true, items: [], n: 0, c1: 0, c2: 0, c3: 0, wr: 0, hs: 0, fl: 0, pa: 0, sp: 0, cb: 0, fb: 0, gb: 0, gc: 0, pn: 0, hp: 0, mx: 0, used: 0, life: R.lives, arr: 0, pts: 0,
+    lead: R.lead[0], dl: R.sec, rt: 0, lim: 0, end: '' }, run = 0, fever = 0, N = R.per[0] + R.per[1] + R.per[2];
   var list = String(ql == null ? '' : ql) ? String(ql).split(',') : [];
   gold = gold || [];
-  for (var i = 0; i < list.length; i++) {
-    var m = /^([ASR]\d{2})\.([OXP])\.(\d{1,5})$/.exec(list[i]), k = m && OX_KEY[m[1]];
-    if (!k) { T.ok = false; T.pts = 0; return T; }
-    var lv = k[0], ans = m[2], t = Number(m[3]), it = { id: m[1], lv: lv, a: k[1], g: k[2], ans: ans, t: t, right: ans === k[1], gold: gold.indexOf(i) >= 0, mul: 1, pts: 0 };
-    T.n++; T.used += t;
+  for (var i = 0; ; i++) {
+    T.rt = oxRowT(R, i); T.lim = Math.ceil(T.lead * T.rt / 100);
+    T.end = T.life <= 0 ? 'life' : T.n >= N ? 'arrive' : T.used >= T.dl ? 'time' : '';
+    if (i >= list.length) break;
+    var m = /^([ASR]\d{2})\.([OXPT])\.(\d{1,5})$/.exec(list[i]), k = m && OX_KEY[m[1]], ans = m ? m[2] : '', t = m ? Number(m[3]) : 0;
+    if (!k || T.end || (ans === 'T' ? t !== T.lim : t >= T.lim) || t >= T.dl - T.used) { T.ok = false; T.pts = 0; return T; }
+    var lv = k[0], it = { id: m[1], lv: lv, a: k[1], g: k[2], ans: ans, t: t, lim: T.lim, right: ans === k[1], gold: gold.indexOf(i) >= 0, mul: 1, pts: 0 };
+    T.n++;
     if (ans === 'P') T.pa++;
     else if (it.right) {
       var sp = Math.round(R.speed * Math.max(0, Math.min(1, (R.limit - t) / (R.limit - R.full)))), cb = R.combo * Math.min(run, R.comboMax), raw = R.base[lv - 1] + sp + cb;
@@ -9052,14 +9071,18 @@ function oxTally(ql, R, gold) {
       run++;
       if (run > T.mx) T.mx = run;
       if (run % R.feverAt === 0) { fever = R.feverLen; it.fever = 1; }
-      if (run % R.bonusAt === 0) { T.hp++; it.bonus = 1; }
+      if (run % R.bonusAt === 0) { T.hp++; T.dl += R.bonusSec; it.bonus = 1; }
     } else {
-      var pn = R.pen * (t < R.hasty ? 2 : 1);
-      it.pts = -pn; T.pn += pn; T.pts -= pn; T.wr++; if (t < R.hasty) T.hs++;
+      var pn = R.pen * (ans !== 'T' && t < R.hasty ? 2 : 1);
+      it.pts = -pn; T.pn += pn; T.pts -= pn; T.life--;
+      if (ans === 'T') T.fl++; else { T.wr++; if (t < R.hasty) T.hs++; }
       run = 0; fever = 0;
     }
+    T.used += t + (ans === 'P' ? OX_STEP.plank : it.right ? OX_STEP.hop : OX_STEP.fall);
+    T.lead = Math.min(R.lead[2], Math.max(R.lead[1], T.lead - Math.round(t * 100 / T.rt) + 100));
     T.items.push(it);
   }
+  if (T.end === 'arrive') { T.arr = R.arrive + T.life * R.lifeBonus + Math.floor(Math.max(0, T.dl - T.used) / 100) * R.secBonus; T.pts += T.arr; }
   if (!T.n) T.ok = false;
   return T;
 }
@@ -9068,19 +9091,23 @@ function oxGold(tk) {
   var m = /^[0-9a-z]{1,12}\.(\d{1,2})\.(\d{1,2})\.[0-9a-z]{1,20}$/.exec(String(tk == null ? '' : tk));
   return m ? [Number(m[1]), Number(m[2])] : [];
 }
-/* 제출 구성 요소 · 집계 숫자는 ql 에서 다시 센 값 · tl = 60초 + 보너스 − 답한 시간 합(마지막 못 푼 문제 · 다 풀었으면 남은 시간) */
-function oxParts(ql, tk, R) {
+/* 제출 구성 요소 · 집계 숫자는 ql 에서 다시 센 값 · tl = 문제가 떠 있는 동안 시간이 다 됐을 때 그 순간 남은 시간(끝났으면 0) · pz = 직접 멈춤 수 */
+function oxParts(ql, tk, R, tl, pz) {
   var X = oxTally(ql, R, oxGold(tk)), f = {};
-  ["n", "c1", "c2", "c3", "wr", "hs", "pa", "sp", "cb", "fb", "gb", "gc", "pn", "hp", "mx", "used"].forEach(function (k) { f[k] = X[k]; });
-  f.tl = R.sec + X.hp * R.bonusSec - X.used; f.ql = ql; f.tk = tk || "";
+  ["n", "c1", "c2", "c3", "wr", "hs", "fl", "pa", "sp", "cb", "fb", "gb", "gc", "pn", "hp", "mx", "used", "life", "arr"].forEach(function (k) { f[k] = X[k]; });
+  f.tl = X.end ? 0 : Math.max(0, Math.round(tl || 0)); f.pz = pz || 0; f.ql = ql; f.tk = tk || "";
   return f;
 }
-/* 테스트 순위판 가짜 참가자 · seq 한 글자 = 한 문제(r 정답 · w 오답 · p 패스) · 난이도마다 앞 문항부터(짝 그룹 하나씩) */
+/* 테스트 순위판 가짜 참가자 · seq 한 글자 = 한 줄(r 정답 · w 오답 · p 판자) · 난이도마다 앞 문항부터(짝 그룹 하나씩) · 판이 끝나면(목숨 · 도착) 뒤는 버린다 · 한도를 넘는 시간은 한도 직전으로 */
 function oxFake(seq, t) {
-  var used = {}, by = [[], [], []];
-  [3, 2, 1].forEach(function (lv) { OX_BANK.forEach(function (x) { if (x.lv !== lv || by[lv - 1].length >= 10 || (x.g && used[x.g])) return; if (x.g) used[x.g] = 1; by[lv - 1].push(x); }); });
+  var R = OLY_RULE.ox, used = {}, by = [[], [], []], q = [];
+  [3, 2, 1].forEach(function (lv) { OX_BANK.forEach(function (x) { if (x.lv !== lv || by[lv - 1].length >= R.per[lv - 1] || (x.g && used[x.g])) return; if (x.g) used[x.g] = 1; by[lv - 1].push(x); }); });
   var ids = by[0].concat(by[1], by[2]);
-  return oxParts(seq.split("").map(function (c, i) { var x = ids[i]; return x.id + "." + (c === "p" ? "P" : c === "r" ? x.a : x.a === "O" ? "X" : "O") + "." + t; }).join(","), "", OLY_RULE.ox);
+  seq.split("").forEach(function (c, i) {
+    var x = ids[i], T = oxTally(q.join(","), R, []); if (!x || T.end) return;
+    q.push(x.id + "." + (c === "p" ? "P" : c === "r" ? x.a : x.a === "O" ? "X" : "O") + "." + Math.min(t, T.lim - 1));
+  });
+  return oxParts(q.join(","), "", R, 0, 0);
 }
 /* 대표 카운터 한 줄 · 서버 olyKey_ 와 같은 문구 */
 function olyKey(game, p) {
@@ -9099,7 +9126,7 @@ function olyRuleLine(key) {
   if (key === "jump") return "넘은 장애물 " + R.obs + " · 코인 " + R.coin + " · AI 상식 " + R.fact + " · 종목 최대 " + cap;
   if (key === "tetris") return "블록 " + R.block + "점(" + R.blockMax + "개까지) · 줄 " + R.line + "점 · 한 번에 여러 줄 보너스 · 시간은 점수가 아니에요";
   if (key === "word") return "빨리 맞힐수록 칸 점수가 커요 · 오답 −" + R.wrong + " · 오답 없는 라운드 +" + R.clean;
-  if (key === "ox") return "정답 " + R.base[0] + "~" + R.base[2] + " · 빠르면 +" + R.speed + " · " + R.feverAt + "연속마다 피버 ×" + R.feverMul + " · 황금 문제 ×" + R.goldMul + " · " + R.bonusAt + "연속 +" + R.bonusSec / 100 + "초 · 오답 −" + R.pen + "(" + R.hasty / 100 + "초 안 −" + R.pen * 2 + ")";
+  if (key === "ox") return "정답 " + R.base[0] + "~" + R.base[2] + " · 빠르면 +" + R.speed + " · " + R.feverAt + "연속마다 피버 ×" + R.feverMul + " · 황금 발판 ×" + R.goldMul + " · 도착 +" + R.arrive + " · 오답·떨어짐 −" + R.pen;
   return "";
 }
 function olyPull(force) {
@@ -9136,7 +9163,7 @@ function olySubmit(key, parts) {
   if (!BE.on || !u.empId) return score;
   var body = {};
   Object.keys(parts).forEach(function (k) { body[k] = k === "ql" || k === "tk" ? String(parts[k] || "") : Math.max(0, Math.round(Number(parts[k]) || 0)); });   /* v4.09 O/X 문항 기록·토큰은 문자열 */
-  beCall({ action: "game_submit", emp: u.empId, name: u.name || "", game: key, v: "g3", parts: JSON.stringify(body), score: score }, function (r) {
+  beCall({ action: "game_submit", emp: u.empId, name: u.name || "", game: key, v: "g4", parts: JSON.stringify(body), score: score }, function (r) {
     if (r && r.ok) { if (OLY.board) OLY.board.me = r.me; else OLY.board = { me: r.me }; olyResMeFill(key); return; }
     var why = r && r.reason;
     if (why === "ver") toast("앱이 새로 나왔어요 · 새로고침한 뒤 다시 해 주세요");
@@ -9220,8 +9247,10 @@ function olyRowsFor(key, p) {
     add("빠른 답", n("sp"), "1초 안 +" + R.speed, n("sp"));
     add("연속 정답", n("cb"), "최대 +" + R.combo * R.comboMax, n("cb"));
     add("피버 ×" + R.feverMul, n("fb"), R.feverAt + "연속마다 " + R.feverLen + "문제", n("fb"));
-    add("황금 문제 ×" + R.goldMul, n("gc"), n("gc") + "개", n("gb"));
-    add("오답", n("wr"), n("wr") + "번", -n("pn"), n("hs") ? (R.hasty / 100) + "초 안 오답 " + n("hs") + "번은 2배" : "");
+    add("황금 발판 ×" + R.goldMul, n("gc"), n("gc") + "개", n("gb"));
+    add("도착 보너스", n("arr") ? 1 : 0, "목숨 " + n("life") + " · 남은 시간", n("arr"), R.arrive + " + 목숨 × " + R.lifeBonus + " + 남은 초 × " + R.secBonus);
+    add("오답", n("wr"), n("wr") + "번", -(n("pn") - n("fl") * R.pen), n("hs") ? (R.hasty / 100) + "초 안 오답 " + n("hs") + "번은 2배" : "");
+    add("늦어서 떨어짐", n("fl"), n("fl") + "번 × −" + R.pen, -n("fl") * R.pen);
   }
   return rows.filter(function (r) { return r.c > 0; });
 }
@@ -9964,7 +9993,7 @@ var GS_GAMES = {
   pang: { name: "AX 팡", view: "game_pang", start: "pgStart()", best: "oly2_best_pang", line: "같은 그림 3개를 한 줄로 맞춰 터뜨려요 · 밀어서 바꾸기" },
   jump: { name: "ME to WE 점프", view: "game_jump", start: "jpStart()", best: "oly2_best_jump", line: "탭 점프 · 두 번 탭 2단 점프 · 꾸욱 엎드리기" },
   word: { name: "ME to WE 기억력", view: "game_word", start: "gwStart()", best: "oly2_best_word", line: "문장을 외워 단어 타일을 순서대로" },
-  ox: { name: "AI O/X", view: "game_ox", start: "oxStart()", best: "oly2_best_ox", line: "맞으면 O, 틀리면 X · 틀리면 감점" }
+  ox: { name: "AI O/X", view: "game_ox", start: "oxStart()", best: "oly2_best_ox", line: "맞으면 왼쪽 O, 틀리면 오른쪽 X · 발판이 아래 끝에 닿기 전에" }
 };
 /* v4.08 키보드가 올라와도 입력칸과 아래 고정 버튼이 가려지지 않게 · 가려진 높이를 --kb 로 넘긴다 · 포커스한 칸은 보이는 곳 가운데로 */
 function kbSync() {
@@ -10160,7 +10189,7 @@ function gsNickHtml(key) {
     '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" onclick="typeNickSave()">닉네임 저장하기</button></div>';   /* v4.09 버튼 하나 · 나가기는 헤더 뒤로(바꾸던 중이면 게임을 떠날 때 원래대로) */
 }
 function gsNeedNick() { return !typeNick() || S.get("type_nick_edit", false); }
-/* o = { rootId, rules, previewId·pw·ph·flat(옛 소나기 전용) }
+/* o = { rootId, rules, sub(부제 · v4.12), previewId·pw·ph·flat(옛 소나기 전용) }
    v4.11 한 틀(사용자 요청 260922) · 흰 카드(미리보기 · 조작 한 줄 · 점수 · 내 최고) + 작은 링크 줄(닉네임 · 순위판 · 소리) + 아래 고정 주 버튼 하나(design.md A-5 5-7) */
 function gsStartHtml(key, o) {
   var g = GS_GAMES[key], nick = typeNick(), best = S.get(g.best, 0), D = GSP_DEMO[key];
@@ -10169,7 +10198,7 @@ function gsStartHtml(key, o) {
     '<section class="ax-card gs-card"><h1 class="ax-sr-only">' + esc(g.name) + "</h1>" +   /* 게임 이름은 헤더가 알린다(5-4) */
     (D ? '<div class="gs-prev" id="gsPrev" aria-hidden="true">' + D.html() + "</div>" :
       o.previewId ? '<div class="rg-wrap' + (o.flat ? " flat" : "") + '"><canvas id="' + o.previewId + '" width="' + o.pw + '" height="' + o.ph + '"></canvas></div>' : "") +
-    '<div class="gs-info"><p class="gs-ctl">' + esc(g.line) + "</p>" +   /* 조작 한 줄 · 첫 안내 말풍선과 같은 문구 · 3판 제한 없이 항상 보인다 */
+    '<div class="gs-info">' + (o.sub ? '<p class="gs-sub">' + esc(o.sub) + "</p>" : "") + '<p class="gs-ctl">' + esc(g.line) + "</p>" +   /* v4.12 부제(AI O/X · 유리다리 건너기) */   /* 조작 한 줄 · 첫 안내 말풍선과 같은 문구 · 3판 제한 없이 항상 보인다 */
     '<p class="gs-pts">' + o.rules + "</p>" +
     (best > 0 ? '<p class="gs-best">내 최고 ' + olyFmt(best) + "점</p>" : "") + "</div></section>" +
     '<div class="gs-links"><span>닉네임 <b>' + esc(nick) + '</b></span><button type="button" class="gs-edit" onclick="S.set(\'type_nick_edit\', true); App.render()">변경</button>' +
@@ -10185,7 +10214,7 @@ var GSP_DEMO = {
   jump: { html: function () { return '<canvas id="jpPrev" class="px" width="180" height="120"></canvas>'; }, draw: function (t) { jpPreview(t); }, still: 1.77 },
   tetris: { html: function () { return '<canvas id="ttPrev" width="120" height="120"></canvas>'; }, draw: function (t) { ttPreview(t); }, still: 0.9 },
   word: { html: function () { GWP = { step: null }; return '<div class="gsp-dom" id="gspDom"></div>'; }, draw: function (t) { gwPreview(t); }, still: 3.8 },
-  ox: { html: function () { OXP = { step: null }; return '<div class="gsp-dom" id="gspDom"></div>'; }, draw: function (t) { oxPreview(t); }, still: 1.8 }
+  ox: { html: function () { OXP = null; return '<canvas id="oxPrev" width="300" height="230"></canvas>'; }, draw: function (t) { oxPreview(t); }, still: 4.2 }
 };
 function gspK() { return Math.min(3, window.devicePixelRatio || 1) * 2; }   /* 캔버스 해상도 배수 · 칸 그림을 선명하게(도트 점프 제외) */
 function gspStop() {
@@ -10263,25 +10292,62 @@ function gwPreview(t) {
   GWP.tiles.forEach(function (w, i) { var x = el("gwpT" + i); if (x) x.classList.toggle("used", used.indexOf(w) >= 0); });
   var st = el("gwpSt"); if (st) st.classList.toggle("done", done);
 }
-/* O/X 미리보기 · 실제 문제 카드(ox-card · 챗봇) · O/X 버튼 · 은행 첫 문제 3개 · 문제 1.4초 → 정답 표시 1초 */
-var OXP = { step: null };
+/* O/X 미리보기 · 유리다리 데모 · 게임과 같은 그리기(oxbDraw · 발판 · 챗봇 · 반짝이 · 깨짐)로 저절로 건넌다 · 다리는 계속 흘러내리고 다섯 번째마다 한 번 틀려 물에 빠진다
+   게임 시간으로 1/30초씩 나아간다(정지 화면이면 그 시각까지 한 번에 돌려 그린다) · 28줄을 건너면 처음부터 */
+var OXP = null;
+function oxpInit(W, H) {
+  var qs = []; for (var i = 0; i < 32; i++) qs.push(OX_BANK[(i * 7) % OX_BANK.length]);
+  var G = oxbScene(qs, [4, 11, 19, 26]); oxbFit(G, W, H);
+  return { G: G, t: 0, n: 0, lead: 130, wait: 0, busy: false, tm: [], k: 0 };
+}
+function oxpStep(P, dt) {
+  var G = P.G; G.gt += dt;
+  for (var i = 0; i < P.tm.length; i++) if (G.gt >= P.tm[i].t) { var f = P.tm[i].fn; P.tm.splice(i--, 1); f(); }
+  if (!P.busy) {
+    P.wait += dt; P.lead -= dt * 100 / 2.6;
+    G.danger = Math.max(0, Math.min(1, (60 - P.lead) / 60));
+    var cur = G.rows[G.cur]; if (cur && !cur.deck && G.side != null) cur.sides[G.side].crack = Math.max(cur.sides[G.side].crack, G.danger);
+    if (P.wait >= 1.15) oxpGo(P);
+  }
+  G.flow = P.n - P.lead / 100;
+  oxbTick(G, dt);
+}
+function oxpGo(P) {
+  var G = P.G, k = P.k++, r = G.rows[P.n + 1], right = k % 5 !== 3, side = [0, 1, 1, 0, 1, 0, 0, 1][k % 8], a = right ? side : 1 - side;
+  var later = function (s, fn) { P.tm.push({ t: G.gt + s, fn: fn }); };
+  P.busy = true; P.wait = 0; P.n++; P.lead = Math.min(150, Math.max(100, P.lead + 100)); G.danger = 0; G.next = P.n + 1;
+  oxbAnim(G, { kind: "arc", x0: G.ch.x, y0: G.ch.y, z0: G.ch.z, x1: oxbSideX(a), y1: 0, z1: r.z, h: right ? 1.4 : 0.9, dur: right ? 0.34 : 0.28, done: function () {
+    G.cur = r.i; G.side = a;
+    if (right) {
+      var sd = r.sides[a], run = k % 5 + 1; sd.flex = 1; sd.glow = 1;
+      G.rings.push({ x: oxbSideX(a), y: 0.02, z: r.z, t0: G.gt, amt: 0.6, col: "rgba(2,118,72,A)" });
+      oxbSparkle(G, r, a, r.gold ? 26 : 20, r.gold ? ["#FFC56E", "#FFFFFF", "#FF7F32"] : ["#027648", "#FFFFFF", "#7FD4AE"]);
+      oxbFloat(G, "정답!", "#027648", 0.2, 1.35, 0.8); oxbFloat(G, "+" + (r.gold ? 3 : 1) * (65 + 2 * Math.min(run - 1, 5)), r.gold ? "#A63D00" : "#191F28", 0.95, 1.05, 0.95);
+      if (run >= 2) oxbFloat(G, run + " 콤보", "#6B7684", 2.2, 1, 0.9);
+      G.flash = { ok: true, t: 0.28, d: 0.28 };
+      oxbAnim(G, { kind: "arc", x0: G.ch.x, y0: 0, z0: G.ch.z, x1: G.ch.x, y1: 0, z1: G.ch.z, h: 0.3, dur: 0.16, done: function () { P.busy = false; } });
+    } else {
+      r.sides[a].st = "crack"; r.sides[a].crack = 0.6;
+      later(0.12, function () {
+        oxbShatter(G, r, a); G.flash = { ok: false, t: 0.4, d: 0.4 }; G.shake = 1; oxbFloat(G, "−60", "#D22030", 0.4, 1.2, 0.9);
+        oxbAnim(G, { kind: "fall", x0: G.ch.x, y0: 0, z0: r.z, x1: G.ch.x, y1: OXB.WATER - 1.2, z1: r.z, dur: 0.42 });
+        later(0.32, function () { oxbSplash(G, G.ch.x, r.z, 1); });
+        later(0.72, function () { r.reveal = side; oxbSplash(G, G.ch.x, r.z, 0.5);
+          oxbAnim(G, { kind: "arc", x0: G.ch.x, y0: OXB.WATER - 0.6, z0: r.z, x1: oxbSideX(side), y1: 0, z1: r.z, h: 2.1, dur: 0.5, done: function () { G.side = side; r.sides[side].flex = 1; P.busy = false; } }); });
+      });
+    }
+  } });
+}
 function oxPreview(t) {
-  var d = el("gspDom"); if (!d) return;
-  if (!OXP.qs) OXP.qs = ["A01", "A02", "A03"].map(function (id) { return OX_BANK.filter(function (x) { return x.id === id; })[0]; }).filter(Boolean);
-  var n = OXP.qs.length; if (!n) return;
-  var P = 2.4, i = Math.floor(t / P) % n, ph = t % P < 1.4 ? 0 : 1, step = i * 2 + ph;
-  if (step === OXP.step) return;
-  if (OXP.step == null) d.innerHTML = '<div class="ox-g"><div class="ox-top"><div class="ox-bar"><i id="oxpBar"></i></div><b class="ox-sec" id="oxpSec">60초</b></div><section class="ox-card"><div class="ox-bot">' + BOT_SVG + "</div>" +
-    '<div class="ox-bub"><p class="ox-q" id="oxpQ"></p></div></section>' +
-    '<div class="ox-btns"><span class="ox-b" id="oxpO">' + OX_O + '<span>맞아요</span></span><span class="ox-b" id="oxpX">' + OX_X + "<span>아니에요</span></span></div></div>";
-  var x = OXP.qs[i], q = el("oxpQ"), left = 60 - Math.floor(t % (P * n)), bar = el("oxpBar"), sec = el("oxpSec");
-  if (bar) bar.style.transform = "scaleX(" + (left / 60).toFixed(3) + ")";
-  if (sec) sec.textContent = left + "초";
-  if (q && (OXP.step == null || OXP.step >> 1 !== i)) { q.textContent = x.q; q.classList.remove("in"); void q.offsetWidth; q.classList.add("in"); }
-  var o = el("oxpO"), xx = el("oxpX");
-  if (o) o.classList.toggle("ok", !!ph && x.a === "O");
-  if (xx) xx.classList.toggle("ok", !!ph && x.a === "X");
-  OXP.step = step;
+  var cv = el("oxPrev"); if (!cv) return;
+  oxbBotLoad();
+  var k = Math.min(2, window.devicePixelRatio || 1), W = 300, H = 230;
+  if (cv.width !== W * k) { cv.width = W * k; cv.height = H * k; }
+  if (!OXP || t < OXP.t) OXP = oxpInit(W, H);
+  else if (OXP.n >= 28) { OXP = oxpInit(W, H); OXP.t = t; }
+  var guard = 0;
+  while (OXP.t < t && guard++ < 2000) { var d = Math.min(1 / 30, t - OXP.t); OXP.t += d; oxpStep(OXP, d); }
+  var ctx = cv.getContext("2d"); ctx.setTransform(k, 0, 0, k, 0, 0); oxbDraw(ctx, OXP.G);
 }
 function gsRankGo(key) { return key === "type" ? "App.go('type_rank')" : "S.set('oly_tab', 'event'); S.set('oly_ev', '" + key + "'); App.go('oly_rank')"; }
 /* r = { why, reason, score, stats, rankLine, banner } · 세 게임 결과 화면 형식이 같다 */
@@ -11636,16 +11702,17 @@ function gwFinish() {
   window.scrollTo(0, 0);
 }
 
-/* ════════════════ v4.09 AI O/X · AX 올림픽 5번째 종목 · 60초 타임어택 (사용자 결정 260922 · 기획 「AI OX 게임 기획.md」 타임어택 전환 절) ════════════════
-   60초 동안 난이도 1 → 2 → 3 (각 10문제) · 답하면 바로 다음 문제 · 문제당 시간 제한·목숨·일시정지 없음 · 앱을 벗어나도 시계는 흐른다.
-   점수 = oxTally(서버 oxTally_ 와 같은 식) · 판마다 서버 토큰(ox_start)이 황금 문제 자리를 정한다 · 토큰이 없으면 황금 없이.
-   챗봇은 원본 BOT_SVG 합성만 · 반응 = 떠 있기·깜빡임·정답 때 짧은 눌림 + 짧은 한마디(빨라요 · 5연속 · 피버 · +3초 · 황금). 해설은 결과 화면 「틀린 문제」 카드에만. */
+/* ════════════════ v4.12 AI O/X · 유리다리 건너기 · AX 올림픽 5번째 종목 (사용자 결정 260922 · 기획 「AI OX 게임 기획.md」 260922 유리다리 전환 절) ════════════════
+   60초 · 다리 20줄(난이도 1 → 2 → 3 = 7·7·6) · 목숨 3 · 왼쪽 발판 O · 오른쪽 발판 X · 탭하거나 밀어서 건넌다.
+   다리는 문제가 떠 있는 동안 아래로 흘러내린다(테트리스처럼) · 서 있는 발판이 화면 아래 끝에 닿기 전에 답해야 하고, 닿으면 떨어진다(목숨 −1).
+   아래 끝에 가까워질수록 발판에 금이 간다(옛 「오래 서 있으면 금」과 하나로) · 뒤로 갈수록 빨라지고 속도 상한이 있다(어느 문제든 읽을 시간 2초 이상).
+   점수 = oxTally(서버 oxTally_ 와 같은 식) · 판마다 서버 토큰(ox_start)이 황금 발판 자리를 정한다 · 토큰이 없으면 황금 없이.
+   시계와 다리 흐름은 게임 시간으로 잰다 · 앱을 벗어나면 멈춘다(판이 보이지 않게 문제도 가린다) · 직접 멈춤은 판당 pauseMax 번.
+   챗봇은 원본 BOT_SVG 래스터화만 · 이동과 튀기기만(형태 변형 없음). 해설은 결과 화면 「틀린 문제」 카드에만. */
 var OX_TITLE = { 1: "AI 기초 마스터", 2: "안전 수칙 마스터", 3: "AX 로드맵 마스터" }, OX_TITLE_MIN = 4;   /* 한 판에 그 분야를 4문제 이상 풀고 모두 맞히면 · 점수와 무관 */
 var OX_SEEN_MAX = 60, OX_TK_AGE = 9000000;   /* 최근 본 문항 · 토큰은 2시간 30분까지 쓴다(서버 3시간) */
 var OXS = { tk: "", at: 0, ratio: {}, min: 20, off: [], busy: false };
 var OX = { on: false };
-var OX_O = '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="16" fill="none" stroke="currentColor" stroke-width="6"/></svg>';
-var OX_X = '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M12 12L36 36M36 12L12 36" stroke="currentColor" stroke-width="6" stroke-linecap="round"/></svg>';
 function oxOffList() { var r = OLY.board && OLY.board.rule && OLY.board.rule.ox; return ((r && r.off) || []).concat(OXS.off || []); }
 /* 판 토큰 · 모두의 선택 비율 · 끈 문항 · 시작 화면에서 미리 · 판을 시작하면 쓰고 다음 판 것을 곧바로 받는다 */
 function oxPrefetch(force) {
@@ -11668,7 +11735,8 @@ function oxRatioText(id) {
   var n = c[0] + c[1], o = Math.round(c[0] * 100 / n);
   return o >= 50 ? "직원 " + o + "%가 O를 골랐어요" : "직원 " + (100 - o) + "%가 X를 골랐어요";
 }
-/* 한 판 뽑기 · 난이도마다 per 개 · 짝 그룹은 한 판에 하나(어려운 난이도가 먼저 차지) · 10개 묶음마다 O·X 각 6개까지 · 최근 본 문항은 뒤로(모자라면 그 난이도만 비움) · 끈 문항 제외 */
+/* 한 판 뽑기 · 난이도마다 per 개 · 짝 그룹은 한 판에 하나(어려운 난이도가 먼저 차지) · 난이도 묶음마다 O·X 각 60%까지 · 최근 본 문항은 뒤로(모자라면 그 난이도만 비움) · 끈 문항 제외
+   은행 86문제를 판마다 20개씩 돌려 쓴다(최근 본 60개를 뒤로 미뤄 몇 판이면 전부 나온다) */
 function oxPick() {
   var R = olyRule().ox, off = oxOffList(), seen = S.get("ox_seen", []) || [], used = {}, out = [[], [], []];
   var free = function (x) { return off.indexOf(x.id) < 0 && !used[x.id] && !(x.g && used["g:" + x.g]); };
@@ -11689,176 +11757,641 @@ function oxPick() {
   S.set("ox_seen", seen.concat(list.map(function (x) { return x.id; })).slice(-OX_SEEN_MAX));
   return list;
 }
-function oxStop() {
-  if (OX.raf) cancelAnimationFrame(OX.raf);
-  (OX.tmr || []).forEach(function (t) { clearTimeout(t); clearInterval(t); });
-  if (OX.onKey) document.removeEventListener("keydown", OX.onKey);
-  OX.on = false; OX.raf = 0; OX.tmr = []; OX.onKey = null;
-  crumbShow(true);
-}
-function oxLater(fn, ms) { OX.tmr.push(setTimeout(fn, ms)); }
-function oxU() { return Math.round((performance.now() - OX.t0) / 10); }
-function oxStart() {
-  oxStop();
-  SFX.site = false;
-  var R = olyRule().ox, tk = OXS.tk && Date.now() - OXS.at < OX_TK_AGE ? OXS.tk : "";
-  OXS.tk = ""; oxPrefetch(true);   /* 토큰은 한 판에 하나 · 다음 판 것을 미리 받는다 */
-  OX = { on: true, phase: "ready", list: oxPick(), i: 0, recs: [], tk: tk, gold: oxGold(tk), t0: 0, shown: 0, dl: R.sec, T: oxTally("", R, []), raf: 0, tmr: [], onKey: null, fast: -9, tip: gsTutTake("ox") };
-  var root = el("oxRoot"); if (!root) return;
-  crumbShow(false);
-  root.className = "ax-stack gs-root";
-  root.innerHTML = '<div class="ox-g" id="oxG">' +
-    '<div class="ox-top"><div class="ox-bar" id="oxBarW"><i id="oxBar"></i></div><b class="ox-sec" id="oxSec">' + R.sec / 100 + "초</b></div>" +
-    '<div class="ox-hud"><span class="ox-sc"><b id="oxScore">0</b><small>점</small></span><i class="ox-pop" id="oxPop"></i><span class="ox-fev" id="oxFev" hidden></span><span class="ox-cnt" id="oxCnt">정답 0</span></div>' +
-    '<section class="ox-card" id="oxCard"><div class="ox-bot" id="oxBot">' + BOT_SVG + '<span class="ox-praise" id="oxPraise"></span></div>' +
-    '<div class="ox-bub"><span class="ox-gold" id="oxGold" hidden>황금 문제 ×' + R.goldMul + '</span><p class="ox-q" id="oxQ" aria-live="polite">' + esc(OX.tip || "준비") + "</p></div></section>" +
-    '<div class="ox-btns"><button type="button" class="ox-b" id="oxO" aria-label="O" onpointerdown="oxTap(event, \'O\')" onclick="oxTap(event, \'O\')">' + OX_O + "<span>맞아요</span></button>" +
-    '<button type="button" class="ox-b" id="oxX" aria-label="X" onpointerdown="oxTap(event, \'X\')" onclick="oxTap(event, \'X\')">' + OX_X + "<span>아니에요</span></button></div>" +
-    '<button type="button" class="ax-button ax-button-weak ox-pass" id="oxPass" onpointerdown="oxTap(event, \'P\')" onclick="oxTap(event, \'P\')">패스 · ' + R.pass + "번</button></div>";
-  OX.onKey = function (e) {
-    if (e.repeat) return;
-    var k = e.key;
-    if (k === "ArrowLeft" || k === "o" || k === "O") { e.preventDefault(); oxAns("O"); }
-    else if (k === "ArrowRight" || k === "x" || k === "X") { e.preventDefault(); oxAns("X"); }
-    else if (k === "ArrowDown" || k === "p" || k === "P") { e.preventDefault(); oxAns("P"); }
-  };
-  document.addEventListener("keydown", OX.onKey);
-  window.scrollTo(0, 0);
-  oxLater(function () { var q = el("oxQ"); if (q && OX.on) q.textContent = "시작"; }, OX.tip ? 2000 : 700);
-  oxLater(oxGo, OX.tip ? 2500 : 1100);
-}
-/* 누름 한 번 = 답 한 번 · pointerdown 에서 받고 뒤따르는 click 은 버린다(키보드·보조기기 click 은 받는다) */
-function oxTap(e, a) {
-  if (e.type === "pointerdown") { e.preventDefault(); OX.pd = Date.now(); oxAns(a); return; }
-  if (OX.pd && Date.now() - OX.pd < 700) return;
-  oxAns(a);
-}
-function oxGo() {
-  if (!OX.on) return;
-  OX.t0 = performance.now();
-  oxShow();
-  oxHud();
-  OX.raf = requestAnimationFrame(oxLoop);
-  OX.tmr.push(setInterval(function () { if (OX.on && oxU() >= OX.dl) oxEnd("time"); }, 250));   /* 화면 갱신(rAF)이 멈춰도 시간이 되면 끝낸다 */
-}
-function oxLoop() {
-  if (!OX.on) return;
-  var R = olyRule().ox, left = Math.max(0, OX.dl - oxU()), warn = left <= 1000;
-  var b = el("oxBar"), sc = el("oxSec"), w = el("oxBarW");
-  if (b) b.style.transform = "scaleX(" + Math.min(1, left / R.sec).toFixed(4) + ")";
-  if (sc) { sc.textContent = Math.ceil(left / 100) + "초"; sc.classList.toggle("warn", warn); }
-  if (w) w.classList.toggle("warn", warn);
-  if (left <= 0) { oxEnd("time"); return; }
-  OX.raf = requestAnimationFrame(oxLoop);
-}
-function oxShow() {
-  var x = OX.list[OX.i], R = olyRule().ox;
-  if (!x) { oxEnd("done"); return; }
-  OX.phase = "q"; OX.shown = oxU();
-  var q = el("oxQ");
-  if (q) { q.innerHTML = esc(x.q) + (x.rv ? "" : ' <small class="ox-ex">(예시)</small>'); q.classList.remove("in"); void q.offsetWidth; q.classList.add("in"); }
-  var g = OX.gold.indexOf(OX.i) >= 0, gc = el("oxGold"), cd = el("oxCard");
-  if (gc) gc.hidden = !g;
-  if (cd) cd.classList.toggle("gold", g);
-  if (OX.i === R.per[0] || OX.i === R.per[0] + R.per[1]) oxPraise(OX.i === R.per[0] ? "2단계" : "3단계");
-}
-function oxAns(a) {
-  if (!OX.on || OX.phase !== "q") return;
-  var R = olyRule().ox, u = oxU();
-  if (u >= OX.dl) { oxEnd("time"); return; }
-  var t = u - OX.shown;
-  if (t < R.lock) return;   /* 입력 잠금 0.3초 · 앞 문제에서 두 번 누른 손가락이 다음 문제를 누르지 않게 */
-  if (a === "P" && OX.T.pa >= R.pass) return;
-  var prev = OX.T, x = OX.list[OX.i];
-  OX.recs.push(x.id + "." + a + "." + t);
-  OX.T = oxTally(OX.recs.join(","), R, OX.gold);
-  var it = OX.T.items[OX.T.items.length - 1];
-  if (OX.T.hp > prev.hp) OX.dl += R.bonusSec;
-  oxFeedback(a, it);
-  OX.i++;
-  oxHud();
-  if (OX.i >= OX.list.length) { oxEnd("done"); return; }
-  oxShow();
-}
-function oxHud() {
-  var R = olyRule().ox, T = OX.T, s = el("oxScore"), c = el("oxCnt"), f = el("oxFev"), g = el("oxG"), p = el("oxPass"), cd = el("oxCard");
-  var fever = oxFeverLeft();
-  if (s) s.textContent = olyFmt(Math.max(0, T.pts));
-  if (c) c.textContent = "정답 " + (T.c1 + T.c2 + T.c3);
-  if (f) { f.hidden = !fever; f.textContent = "피버 ×" + R.feverMul + " · " + fever + "문제"; }
-  if (g) g.classList.toggle("fever", !!fever);
-  if (cd) cd.classList.toggle("fever", !!fever);
-  if (p) { var left = R.pass - T.pa; p.disabled = left <= 0; p.textContent = left > 0 ? "패스 · " + left + "번" : "패스를 썼어요"; }
-}
-/* 남은 피버 문제 수 · 채점과 같은 규칙으로 기록을 다시 따라간다 */
-function oxFeverLeft() {
-  var R = olyRule().ox, run = 0, fever = 0;
-  OX.T.items.forEach(function (it) {
+/* 채점을 따라가며 지금 연속 정답 수 · 남은 피버 줄 수 (oxTally 와 같은 규칙) */
+function oxRunFever(T, R) {
+  var run = 0, fever = 0;
+  T.items.forEach(function (it) {
     if (it.ans === "P") return;
     if (!it.right) { run = 0; fever = 0; return; }
     if (fever > 0) fever--;
     run++;
     if (run % R.feverAt === 0) fever = R.feverLen;
   });
-  return fever;
+  return { run: run, fever: fever };
 }
-function oxFeedback(a, it) {
-  var btn = el(a === "O" ? "oxO" : a === "X" ? "oxX" : "oxPass");
-  if (btn && a !== "P") { var cls = it.right ? "ok" : "bad"; btn.classList.remove("ok", "bad"); void btn.offsetWidth; btn.classList.add(cls); oxLater(function () { btn.classList.remove(cls); }, 260); }
-  var pop = el("oxPop");
-  if (pop) { pop.textContent = a === "P" ? "패스" : it.pts > 0 ? "+" + it.pts : "−" + (-it.pts); pop.className = "ox-pop" + (it.pts < 0 ? " bad" : ""); void pop.offsetWidth; pop.classList.add("on"); }
-  if (a === "P") { sfx("tak"); return; }
-  if (!it.right) { sfx("ttuk"); stampBuzz(30); return; }
-  sfx("tak"); stampBuzz(10);
-  var bot = el("oxBot");
-  if (bot && !rgReduced()) { bot.classList.remove("sq"); void bot.offsetWidth; bot.classList.add("sq"); }
-  var R = olyRule().ox, run = 0;
-  OX.T.items.forEach(function (x) { if (x.ans === "P") return; run = x.right ? run + 1 : 0; });
-  /* 칭찬 한마디 · 하나만 (황금 > +3초 > 피버 > 연속 > 빨라요) · 빨라요는 3문제에 한 번까지 */
-  var w = it.gold ? "황금 ×" + R.goldMul : it.bonus ? run + "연속 +" + R.bonusSec / 100 + "초" : it.fever ? run + "연속 · 피버 ×" + R.feverMul : run >= 3 && run % 5 === 3 ? run + "연속" : "";
-  if (!w && it.t <= R.full && OX.i - OX.fast >= 3) { w = "빨라요"; OX.fast = OX.i; }
-  if (w) oxPraise(w);
+
+/* ── 무대 · 3D 다리 (시제품 proto/ox-bridge.html 의 그리기를 옮겼다 · 게임과 시작 화면 미리보기가 같은 함수를 쓴다) ──
+   세계 좌표: x 오른쪽 · y 위 · z 앞(다리 방향) · 줄 간격 ROWD · 발판 중심 x = ∓PX · 물 높이 WATER
+   카메라는 다리 흐름 s(줄 단위)를 따라간다 · s 줄의 발판 중심이 화면 아래 끝(y = H)에 온다 · 서 있는 줄 = 흐름 + 여유(lead) */
+var OXB = { ROWD: 3.0, PX: 1.1, PW: 1.5, PD: 1.7, WATER: -1.1, CH: 1.0, RAIL: 2.02, D0: 4.6, UP: 0.30 };
+var OXB_BOT = { img: null, ok: false, cv: null };
+function oxbBotLoad() {
+  if (OXB_BOT.img) return;
+  var svg = BOT_SVG.replace('<svg viewBox="0 0 200 200"', '<svg xmlns="http://www.w3.org/2000/svg" width="264" height="304" preserveAspectRatio="none" viewBox="40 18 120 138.2"').replace(/ class="eye"/g, "");
+  var im = new Image();
+  im.onload = function () { var c = document.createElement("canvas"); c.width = 264; c.height = 304; c.getContext("2d").drawImage(im, 0, 0, 264, 304); OXB_BOT.cv = c; OXB_BOT.ok = true; if (OXP && el("oxPrev")) oxPreview(OXP.t); };
+  im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  OXB_BOT.img = im;
 }
-function oxPraise(w) {
-  var p = el("oxPraise"); if (!p) return;
-  p.textContent = w; p.classList.remove("on"); void p.offsetWidth; p.classList.add("on");
+function oxbSideX(side) { return side === 0 ? -OXB.PX : side === 1 ? OXB.PX : 0; }
+function oxbSide() { var rays = [], n = 5 + Math.floor(Math.random() * 3);
+  for (var k = 0; k < n; k++) { var a = (k / n) * Math.PI * 2 + Math.random() * 0.6, pts = [[0, 0]], r = 0;
+    for (var s = 0; s < 3; s++) { r += 0.12 + Math.random() * 0.12; a += (Math.random() - 0.5) * 0.7; pts.push([Math.cos(a) * r, Math.sin(a) * r * 0.9]); }
+    rays.push(pts); }
+  return { st: "whole", crack: 0, rays: rays, flex: 0, glow: 0 }; }
+/* 줄 목록 · 0 = 출발 데크 · 1..n = 유리 줄(문제 i−1) · n+1 = 도착 데크 */
+function oxbRows(qs, gold) {
+  var rows = [], n = qs.length;
+  for (var i = 0; i <= n + 1; i++) rows.push({ i: i, z: i * OXB.ROWD, deck: i === 0 || i === n + 1, q: i >= 1 && i <= n ? qs[i - 1] : null, gold: gold.indexOf(i - 1) >= 0,
+    sides: [oxbSide(), oxbSide()], board: null, reveal: -1 });
+  return rows;
 }
-function oxEnd(why) {
-  if (!OX.on) return;
-  var R = olyRule().ox, ql = OX.recs.join(",");
+/* 크기 · W×H(CSS px) · 흐름 줄의 발판이 아래 끝 · 그 위 한 줄이 높이의 (1 − UP) 에 온다 · 발판 두 개가 한 줄 위에서 폭 안에 들어간다 */
+function oxbFit(G, W, H) {
+  var B = OXB, F = (W / 2 - 6) * (B.D0 + B.ROWD) / (B.PX + B.PW / 2 + 0.05);
+  F = Math.min(F, H * 2.2);
+  var CAMY = B.UP * H / (F * (1 / B.D0 - 1 / (B.D0 + B.ROWD)));
+  G.pr = { W: W, H: H, F: F, CAMY: CAMY, HY: H - CAMY * F / B.D0 };
+}
+function oxbP(G, x, y, z) {
+  var c = G.cam, pr = G.pr, dz = z - c.z; if (dz < 0.3) return null;
+  var s = pr.F / dz, sx = G.shake > 0 ? G.shake * Math.sin(G.gt * 70) * 7 : 0, sy = G.shake > 0 ? G.shake * Math.cos(G.gt * 53) * 5 : 0;
+  return { x: pr.W / 2 + (x - c.x) * s + sx, y: pr.HY + (pr.CAMY - y) * s + sy, s: s };
+}
+function oxbQuad(ctx, G, pts, fill, stroke, lw) {
+  var zmin = G.cam.z + 0.32, ps = pts.map(function (p) { return oxbP(G, p[0], p[1], Math.max(zmin, p[2])); });
+  if (ps.some(function (p) { return !p; })) return null;
+  ctx.beginPath(); ctx.moveTo(ps[0].x, ps[0].y); for (var i = 1; i < ps.length; i++) ctx.lineTo(ps[i].x, ps[i].y); ctx.closePath();
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 1; ctx.stroke(); }
+  return ps;
+}
+var OXB_FONT = '"Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
+/* 한 장면 그리기 · G = { pr, cam, rows, ch, cur(지금 서 있는 줄), next(다음 줄), fever, danger(0~1), parts, floats, rings, confetti, flash, gt, big } */
+function oxbDraw(ctx, G) {
+  var pr = G.pr, W = pr.W, H = pr.H, HY = pr.HY, B = OXB, RMo = rgReduced();
+  var fv = G.fever > 0;
+  /* 하늘 · 도트 격자가 다리와 함께 아래로 흐른다 */
+  var sk = ctx.createLinearGradient(0, 0, 0, Math.max(1, HY));
+  sk.addColorStop(0, fv ? "#FFF1E8" : "#FBFBF9"); sk.addColorStop(1, fv ? "#FFE3CF" : "#EEF1F3");
+  ctx.fillStyle = sk; ctx.fillRect(0, 0, W, Math.max(0, HY) + 1);
+  if (HY > 8) {
+    ctx.fillStyle = fv ? "rgba(255,127,50,.2)" : "rgba(176,184,193,.38)";
+    var off = ((G.cam.z * 5) % 18 + 18) % 18;
+    for (var gy = off - 18 + 6; gy < HY - 4; gy += 18) { if (gy < 4) continue; var row = Math.round((gy - off) / 18);
+      for (var gx = ((row % 2 + 2) % 2) * 9 + 6; gx < W; gx += 18) { ctx.beginPath(); ctx.arc(gx, gy, 1, 0, 7); ctx.fill(); } }
+  }
+  /* 물 · 채도 낮은 회청(게임판 안에서만) · 물결이 세계 좌표에 있어 다리와 함께 흐른다 */
+  var wy = Math.max(0, HY), wg = ctx.createLinearGradient(0, wy, 0, H);
+  wg.addColorStop(0, "#E4EAEE"); wg.addColorStop(0.35, "#D3DDE4"); wg.addColorStop(1, "#BCCBD5");
+  ctx.fillStyle = wg; ctx.fillRect(0, wy, W, H - wy);
+  ctx.fillStyle = "rgba(255,255,255,.6)"; ctx.fillRect(0, wy, W, 1);
+  ctx.strokeStyle = "rgba(255,255,255,.6)"; ctx.lineWidth = 1;
+  var z0 = Math.floor(G.cam.z / 1.3) * 1.3 + 1.3;
+  for (var wz = z0; wz < z0 + 46; wz += 1.3) {
+    var sd = Math.sin(wz * 12.9898) * 43758.5453; sd -= Math.floor(sd);
+    for (var kk = 0; kk < 3; kk++) {
+      var wx = ((sd * (kk + 3) * 7.3) % 1) * 12 - 6 + Math.sin(G.gt * 0.8 + wz + kk) * 0.4, p = oxbP(G, wx, B.WATER, wz);
+      if (!p || p.y < wy + 2) continue; var len = p.s * 0.5;
+      ctx.globalAlpha = Math.min(0.8, p.s / 90); ctx.beginPath(); ctx.moveTo(p.x - len, p.y); ctx.lineTo(p.x + len, p.y); ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
+  G.rings = G.rings.filter(function (rg) { return G.gt - rg.t0 < 1.1; });
+  G.rings.forEach(function (rg) {
+    var age = G.gt - rg.t0; if (age < 0) return; var p = oxbP(G, rg.x, rg.y == null ? B.WATER : rg.y, rg.z); if (!p) return;
+    var r = (0.3 + age * 1.8 * rg.amt) * p.s; ctx.strokeStyle = rg.col ? rg.col.replace("A", String(0.9 * (1 - age / 1.1))) : "rgba(255,255,255," + (0.9 * (1 - age / 1.1)) + ")"; ctx.lineWidth = rg.col ? 3 : 2;
+    ctx.beginPath(); ctx.ellipse(p.x, p.y, r, r * 0.3, 0, 0, 7); ctx.stroke();
+  });
+  /* 난간 */
+  var zn = G.cam.z + 0.35, zf = G.rows[G.rows.length - 1].z + 6;
+  [-B.RAIL, 0, B.RAIL].forEach(function (x) {
+    oxbQuad(ctx, G, [[x - 0.07, -0.06, zn], [x + 0.07, -0.06, zn], [x + 0.07, -0.06, zf], [x - 0.07, -0.06, zf]], "#8B95A1");
+  });
+  /* 줄 · 멀리서 가까이 · 챗봇은 제 줄 앞에 */
+  var drawn = false;
+  for (var i = G.rows.length - 1; i >= 0; i--) {
+    var r = G.rows[i];
+    if (r.z < G.cam.z - 2) continue;
+    if (!drawn && G.ch.z > r.z + (r.deck && r.i > 0 ? 5 : B.PD / 2)) { oxbBot(ctx, G); drawn = true; }
+    oxbRow(ctx, G, r);
+  }
+  if (!drawn) oxbBot(ctx, G);
+  oxbParts(ctx, G);
+  oxbFloats(ctx, G);
+  /* 아래 끝 위험 띠 · 발판이 아래 끝에 가까울수록 진해진다 */
+  if (G.danger > 0.02) {
+    var dg = ctx.createLinearGradient(0, H * 0.72, 0, H);
+    dg.addColorStop(0, "rgba(210,32,48,0)"); dg.addColorStop(1, "rgba(210,32,48," + (0.34 * G.danger * (RMo ? 1 : 0.75 + 0.25 * Math.sin(G.gt * 18))) + ")");
+    ctx.fillStyle = dg; ctx.fillRect(0, H * 0.72, W, H * 0.28);
+  }
+  /* 정답·오답 번쩍임 · 초록 테두리 / 빨강 테두리 */
+  if (G.flash && G.flash.t > 0) {
+    var fa = Math.min(1, G.flash.t / G.flash.d), c = G.flash.ok ? "2,118,72" : "210,32,48", g2 = ctx.createRadialGradient(W / 2, H * 0.55, Math.min(W, H) * 0.3, W / 2, H * 0.55, Math.max(W, H) * 0.8);
+    g2.addColorStop(0, "rgba(" + c + ",0)"); g2.addColorStop(1, "rgba(" + c + "," + (0.38 * fa) + ")");
+    ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H);
+  }
+  if (G.big) oxbBig(ctx, G, G.big.s, G.big.c, G.big.sub);
+  G.confetti.forEach(function (c) { ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.rot); ctx.fillStyle = c.col;
+    if (c.round) { ctx.beginPath(); ctx.arc(0, 0, c.w / 2, 0, 7); ctx.fill(); } else ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h); ctx.restore(); });
+}
+function oxbBig(ctx, G, s, col, sub) {
+  var W = G.pr.W, y = Math.max(40, Math.min(G.pr.HY * 0.5 + 18, G.pr.H * 0.2));
+  ctx.font = "800 " + Math.round(Math.min(W, 420) * 0.12) + "px " + OXB_FONT; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.lineWidth = 6; ctx.strokeStyle = "rgba(255,255,255,.92)"; ctx.strokeText(s, W / 2, y); ctx.fillStyle = col; ctx.fillText(s, W / 2, y);
+  if (sub) { ctx.font = "700 " + Math.round(Math.min(W, 420) * 0.045) + "px " + OXB_FONT; ctx.lineWidth = 4; ctx.strokeText(sub, W / 2, y + Math.min(W, 420) * 0.085); ctx.fillStyle = "#191F28"; ctx.fillText(sub, W / 2, y + Math.min(W, 420) * 0.085); }
+}
+function oxbRow(ctx, G, r) {
+  var z = r.z, B = OXB;
+  if (r.deck) {
+    var zA = r.i === 0 ? z - 4 : z - B.PD / 2, zB = r.i === 0 ? z + B.PD / 2 : z + 5;
+    oxbQuad(ctx, G, [[-B.RAIL - 0.1, 0, zA], [B.RAIL + 0.1, 0, zA], [B.RAIL + 0.1, 0, zB], [-B.RAIL - 0.1, 0, zB]], "#FFE3CF", "#FF7F32", 1.5);
+    oxbQuad(ctx, G, [[-B.RAIL - 0.1, 0, zA], [B.RAIL + 0.1, 0, zA], [B.RAIL + 0.1, -0.28, zA], [-B.RAIL - 0.1, -0.28, zA]], "#FFB07A");
+    if (r.i !== 0) oxbGate(ctx, G, z + 2.6);
+    return;
+  }
+  if (r.i % 3 === 0) [-B.RAIL, B.RAIL].forEach(function (x) { oxbQuad(ctx, G, [[x - 0.1, -0.2, z], [x + 0.1, -0.2, z], [x + 0.1, B.WATER, z], [x - 0.1, B.WATER, z]], "rgba(107,118,132,.55)"); });
+  oxbQuad(ctx, G, [[-B.RAIL, -0.06, z - B.PD / 2 - 0.05], [B.RAIL, -0.06, z - B.PD / 2 - 0.05], [B.RAIL, -0.06, z - B.PD / 2 + 0.08], [-B.RAIL, -0.06, z - B.PD / 2 + 0.08]], "#8B95A1");
+  var up = r.i === G.next, fv = G.fever > 0 && r.i >= G.next;
+  for (var s = 0; s < 2; s++) oxbPlank(ctx, G, r, s, up, fv);
+  if (r.board) oxbBoard(ctx, G, r);
+}
+function oxbPlank(ctx, G, r, s, up, fv) {
+  var sd = r.sides[s], B = OXB, RMo = rgReduced(); if (sd.st === "broken") return;
+  var cx = oxbSideX(s), z = r.z, hw = B.PW / 2, hd = B.PD / 2, jit = sd.crack > 0.55 && !RMo ? (Math.random() - 0.5) * 0.04 * sd.crack : 0, dip = -0.1 * Math.sin(sd.flex * Math.PI) + 0.1 * Math.sin(sd.flex * Math.PI * 2) * sd.flex;
+  cx += jit;
+  var ps = [[cx - hw, dip, z - hd], [cx + hw, dip, z - hd], [cx + hw, dip, z + hd], [cx - hw, dip, z + hd]].map(function (p) { return oxbP(G, p[0], p[1], p[2]); });
+  if (ps.some(function (p) { return !p; })) return;
+  var glass, edge;
+  if (r.gold) {
+    var g = ctx.createLinearGradient(ps[3].x, ps[3].y, ps[1].x, ps[1].y), sh = (G.gt * 0.6 + r.i * 0.37) % 1;
+    g.addColorStop(0, "#FFD88F"); g.addColorStop(Math.max(0, sh - 0.12), "#FFC56E"); g.addColorStop(sh, "#FFF4D9"); g.addColorStop(Math.min(1, sh + 0.12), "#FFC56E"); g.addColorStop(1, "#FFB65A");
+    glass = RMo ? "#FFC56E" : g; edge = "#E0962E";
+  } else { glass = "rgba(255,255,255,.62)"; edge = "rgba(78,89,104,.55)"; }
+  if (r.reveal === s) { glass = r.gold ? glass : "rgba(240,250,246,.95)"; edge = "#027648"; }
+  oxbQuad(ctx, G, [[cx - hw, dip, z - hd], [cx + hw, dip, z - hd], [cx + hw, dip - 0.12, z - hd], [cx - hw, dip - 0.12, z - hd]], r.gold ? "#E0A54A" : "rgba(200,212,220,.9)");
+  ctx.save();
+  if (sd.glow > 0 && !RMo) { ctx.shadowColor = "rgba(2,118,72," + (0.9 * sd.glow) + ")"; ctx.shadowBlur = 26 * sd.glow; }
+  else if (fv && !RMo) { ctx.shadowColor = "rgba(255,127,50,.85)"; ctx.shadowBlur = 16; }
+  ctx.beginPath(); ctx.moveTo(ps[0].x, ps[0].y); for (var i = 1; i < 4; i++) ctx.lineTo(ps[i].x, ps[i].y); ctx.closePath();
+  ctx.fillStyle = glass; ctx.fill();
+  if (sd.glow > 0) { ctx.fillStyle = "rgba(2,118,72," + (0.32 * sd.glow) + ")"; ctx.fill(); }
+  ctx.lineWidth = sd.glow > 0 ? 2 + 2.5 * sd.glow : fv ? 2.5 : up ? 2 : 1.2; ctx.strokeStyle = sd.glow > 0 ? "#027648" : fv ? "#FF7F32" : edge; ctx.stroke();
+  ctx.restore();
+  var a = oxbP(G, cx - hw * 0.6, dip, z + hd * 0.7), b = oxbP(G, cx - hw * 0.1, dip, z - hd * 0.5);
+  if (a && b && !r.gold) { ctx.strokeStyle = "rgba(255,255,255,.95)"; ctx.lineWidth = Math.max(1, a.s * 0.03); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+  if (sd.crack > 0) {
+    ctx.strokeStyle = "rgba(25,31,40,.78)"; ctx.lineWidth = 1.2 + sd.crack;
+    sd.rays.forEach(function (ray) {
+      var segs = (ray.length - 1) * Math.min(1, sd.crack * 1.15);
+      ctx.beginPath();
+      for (var k = 0; k <= Math.ceil(segs) && k < ray.length; k++) {
+        var f = k <= segs ? 1 : segs - Math.floor(segs), u = ray[k][0], v = ray[k][1];
+        if (k > 0 && k > segs) { u = ray[k - 1][0] + (u - ray[k - 1][0]) * f; v = ray[k - 1][1] + (v - ray[k - 1][1]) * f; }
+        var p = oxbP(G, cx + u * B.PW, dip, z + v * B.PD); if (!p) continue; if (k === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+      }
+      ctx.stroke();
+    });
+  }
+  var c = oxbP(G, cx, dip, z);
+  if (c) {
+    ctx.globalAlpha = up ? 1 : r.i > G.next ? 0.3 : 0.14;
+    ctx.font = "800 " + Math.round(c.s * 0.62) + "px " + OXB_FONT; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.save(); ctx.translate(c.x, c.y); ctx.scale(1, 0.62);
+    ctx.fillStyle = r.reveal === s || sd.glow > 0.2 ? "#027648" : s === 0 ? "#FF7F32" : "#191F28"; ctx.fillText(s === 0 ? "O" : "X", 0, 0);
+    ctx.restore(); ctx.globalAlpha = 1;
+    if (r.gold && up) { ctx.font = "700 " + Math.max(11, Math.round(c.s * 0.2)) + "px " + OXB_FONT; ctx.fillStyle = "#A63D00"; ctx.fillText("×3", c.x, c.y + c.s * 0.34); }
+  }
+}
+function oxbBoard(ctx, G, r) {
+  var b = r.board; if (b.gone) return;
+  var z = r.z, y = b.y, hw = 0.55, hd = OXB.PD / 2 + 0.25;
+  oxbQuad(ctx, G, [[-hw, y - 0.1, z - hd], [hw, y - 0.1, z - hd], [hw, y - 0.24, z - hd], [-hw, y - 0.24, z - hd]], "#A8743F");
+  var ps = oxbQuad(ctx, G, [[-hw, y - 0.1, z - hd], [hw, y - 0.1, z - hd], [hw, y - 0.1, z + hd], [-hw, y - 0.1, z + hd]], "#D9A066", "#8A5A2B", 1.5);
+  if (ps) for (var k = 1; k < 3; k++) { var a = oxbP(G, -hw + k * hw * 2 / 3, y - 0.1, z - hd), c = oxbP(G, -hw + k * hw * 2 / 3, y - 0.1, z + hd); if (a && c) { ctx.strokeStyle = "rgba(138,90,43,.6)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(c.x, c.y); ctx.stroke(); } }
+  if (b.crack > 0) { var m = oxbP(G, 0, y - 0.1, z); if (m) { ctx.strokeStyle = "rgba(25,31,40,.75)"; ctx.lineWidth = 1.5 + b.crack; ctx.beginPath(); ctx.moveTo(m.x - m.s * 0.25 * b.crack, m.y - 3); ctx.lineTo(m.x, m.y + 2); ctx.lineTo(m.x + m.s * 0.2 * b.crack, m.y - 2); ctx.stroke(); } }
+}
+function oxbGate(ctx, G, z) {
+  var B = OXB, l = oxbP(G, -B.RAIL, 0, z), r = oxbP(G, B.RAIL, 0, z), lt = oxbP(G, -B.RAIL, 2.6, z), rt = oxbP(G, B.RAIL, 2.6, z);
+  if (!l || !r || !lt || !rt) return;
+  ctx.fillStyle = "#FF7F32"; var w = Math.max(3, l.s * 0.14);
+  ctx.fillRect(l.x - w / 2, lt.y, w, l.y - lt.y); ctx.fillRect(r.x - w / 2, rt.y, w, r.y - rt.y);
+  var bh = l.s * 0.62; ctx.fillRect(lt.x - w / 2, lt.y - bh * 0.1, rt.x - lt.x + w, bh);
+  ctx.fillStyle = "#351A0C"; ctx.font = "800 " + Math.round(bh * 0.6) + "px " + OXB_FONT; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText("도착", (lt.x + rt.x) / 2, lt.y + bh * 0.4);
+}
+function oxbBot(ctx, G) {
+  var c = G.ch, p = oxbP(G, c.x, c.y, c.z); if (!p || !OXB_BOT.ok) return;
+  var h = OXB.CH * p.s, w = h * 264 / 304;
+  if (c.y > -0.05) { var g = oxbP(G, c.x, 0, c.z); if (g) { var sc = Math.max(0.3, 1 - c.y * 0.35); ctx.fillStyle = "rgba(25,31,40," + (0.18 * sc) + ")"; ctx.beginPath(); ctx.ellipse(g.x, g.y, w * 0.42 * sc, w * 0.1 * sc, 0, 0, 7); ctx.fill(); } }
+  ctx.save();
+  if (c.y < 0) { var wl = oxbP(G, c.x, OXB.WATER, c.z); if (wl) { ctx.beginPath(); ctx.rect(0, 0, G.pr.W, wl.y); ctx.clip(); } }
+  if (G.fever > 0 && !rgReduced()) { var rg = ctx.createRadialGradient(p.x, p.y - h * 0.5, h * 0.1, p.x, p.y - h * 0.5, h * 0.85); rg.addColorStop(0, "rgba(255,127,50,.35)"); rg.addColorStop(1, "rgba(255,127,50,0)"); ctx.fillStyle = rg; ctx.fillRect(p.x - h, p.y - h * 1.4, h * 2, h * 1.8); }
+  ctx.drawImage(OXB_BOT.cv, p.x - w / 2, p.y - h, w, h);
+  ctx.restore();
+}
+function oxbParts(ctx, G) {
+  for (var i = 0; i < G.parts.length; i++) {
+    var q = G.parts[i], p = oxbP(G, q.x, q.y, q.z); if (!p) continue; var age = (G.gt - q.t0) / q.life;
+    if (q.k === "shard") {
+      if (q.y < OXB.WATER + 0.05) continue;
+      var s = q.sz * p.s; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(q.rot);
+      ctx.fillStyle = q.gold ? "rgba(255,197,110,.9)" : "rgba(255,255,255,.85)"; ctx.strokeStyle = "rgba(78,89,104,.55)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(-s, -s * 0.4); ctx.lineTo(s * 0.8, -s * 0.7); ctx.lineTo(s * 0.2, s * 0.8); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+    } else if (q.k === "drop") {
+      ctx.fillStyle = "rgba(255,255,255," + Math.max(0, 0.95 - age * 0.5) + ")"; ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(1.2, q.sz * p.s), 0, 7); ctx.fill();
+      ctx.strokeStyle = "rgba(139,160,176,.5)"; ctx.lineWidth = 0.8; ctx.stroke();
+    } else {   /* 반짝이 · 네 갈래 별 */
+      ctx.globalAlpha = Math.max(0, 1 - age); ctx.fillStyle = q.col; var sz = Math.max(2, (q.sz || 0.06) * p.s) * (1 - age * 0.4);
+      ctx.beginPath(); ctx.moveTo(p.x, p.y - sz); ctx.lineTo(p.x + sz * 0.3, p.y - sz * 0.3); ctx.lineTo(p.x + sz, p.y); ctx.lineTo(p.x + sz * 0.3, p.y + sz * 0.3);
+      ctx.lineTo(p.x, p.y + sz); ctx.lineTo(p.x - sz * 0.3, p.y + sz * 0.3); ctx.lineTo(p.x - sz, p.y); ctx.lineTo(p.x - sz * 0.3, p.y - sz * 0.3); ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+}
+/* 떠오르는 글자 · 크기 sc 배 · 처음 0.15초에 커졌다가 제 크기 */
+function oxbFloats(ctx, G) {
+  G.floats = G.floats.filter(function (f) { return G.gt - f.t0 < (f.life || 0.9); });
+  G.floats.forEach(function (f) {
+    var life = f.life || 0.9, age = (G.gt - f.t0) / life, p = oxbP(G, f.x, 1.35 + f.dy * 0.55 + age * 0.7, f.z); if (!p) return;
+    var pop = age < 0.16 ? 0.7 + age / 0.16 * 0.55 : 1.25 - Math.min(0.25, (age - 0.16) * 1.2);
+    ctx.globalAlpha = 1 - age * age; ctx.font = "800 " + Math.round(Math.max(14, p.s * 0.26) * (f.sc || 1) * pop) + "px " + OXB_FONT;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineWidth = 5; ctx.strokeStyle = "rgba(255,255,255,.95)";
+    ctx.strokeText(f.s, p.x, p.y); ctx.fillStyle = f.col; ctx.fillText(f.s, p.x, p.y); ctx.globalAlpha = 1;
+  });
+}
+/* 효과 만들기 */
+function oxbFloat(G, s, col, dy, sc, life) { G.floats.push({ s: s, col: col, t0: G.gt, dy: dy || 0, x: G.ch.x, z: G.ch.z, sc: sc || 1, life: life || 0.9 }); }
+function oxbSparkle(G, r, side, n, cols) {
+  if (rgReduced()) n = Math.ceil(n / 3);
+  for (var i = 0; i < n; i++) { var a = Math.random() * Math.PI * 2, sp = 1.2 + Math.random() * 2.6;
+    G.parts.push({ k: "spk", x: oxbSideX(side) + (Math.random() - 0.5) * OXB.PW * 0.8, y: 0.1, z: r.z + (Math.random() - 0.5) * OXB.PD * 0.6,
+      vx: Math.cos(a) * sp * 0.9, vy: 2 + Math.random() * 3.4, vz: Math.sin(a) * sp * 0.5, life: 0.55 + Math.random() * 0.45, t0: G.gt, sz: 0.07 + Math.random() * 0.1, col: cols[i % cols.length] }); }
+}
+function oxbShatter(G, r, side) {
+  var s = r.sides[side]; s.st = "broken";
+  for (var i = 0, n = rgReduced() ? 6 : 18; i < n; i++) G.parts.push({ k: "shard", x: oxbSideX(side) + (Math.random() - 0.5) * OXB.PW, y: 0, z: r.z + (Math.random() - 0.5) * OXB.PD,
+    vx: (Math.random() - 0.5) * 2.4, vy: Math.random() * 1.8, vz: Math.random() * 1.4, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 10, sz: 0.07 + Math.random() * 0.13, life: 3, t0: G.gt, gold: r.gold });
+}
+function oxbSplash(G, x, z, amt) {
+  var n = Math.round((rgReduced() ? 8 : 34) * amt);
+  for (var i = 0; i < n; i++) { var a = Math.random() * Math.PI * 2, sp = 0.6 + Math.random() * 1.6;
+    G.parts.push({ k: "drop", x: x + Math.cos(a) * 0.3, y: OXB.WATER, z: z + Math.sin(a) * 0.3, vx: Math.cos(a) * sp, vy: 3 + Math.random() * 4.5 * amt, vz: Math.sin(a) * sp, life: 1.4, t0: G.gt, sz: 0.05 + Math.random() * 0.08 }); }
+  G.rings.push({ x: x, z: z, t0: G.gt, amt: amt }); if (amt >= 1) G.rings.push({ x: x, z: z, t0: G.gt + 0.18, amt: amt * 0.7 });
+}
+function oxbConf(G) {
+  var cols = ["#FF7F32", "#FFB07A", "#FFC56E", "#FFE0C7", "#191F28"], W = G.pr.W, H = G.pr.H;
+  return { x: W / 2 + (Math.random() - 0.5) * 60, y: H * 0.45, vx: (Math.random() - 0.5) * 520, vy: -300 - Math.random() * 520, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 12,
+    col: cols[Math.floor(Math.random() * cols.length)], w: 5 + Math.random() * 6, h: 3 + Math.random() * 5, round: Math.random() < 0.3 };
+}
+/* 공용 갱신 · 캐릭터 동작 · 카메라 · 파티클 */
+function oxbAnim(G, o) { o.t0 = G.gt; G.ch.a = o; }
+function oxbTick(G, dt) {
+  var c = G.ch, a = c.a, B = OXB;
+  if (a) {
+    var p = Math.min(1, (G.gt - a.t0) / a.dur);
+    if (a.kind === "arc") { var e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2; c.x = a.x0 + (a.x1 - a.x0) * e; c.z = a.z0 + (a.z1 - a.z0) * e; c.y = a.y0 + (a.y1 - a.y0) * p + a.h * Math.sin(Math.PI * p); }
+    else if (a.kind === "fall") { c.y = a.y0 + (a.y1 - a.y0) * p * p; }
+    if (p >= 1) { c.a = null; if (a.done) a.done(); }
+  }
+  var tz = G.flow * B.ROWD - B.D0, tx = c.x * 0.45;
+  if (rgReduced() || G.snap) { G.cam.z = tz; G.cam.x = tx; G.snap = false; } else { var k = 1 - Math.exp(-dt * 6); G.cam.z += (tz - G.cam.z) * k; G.cam.x += (tx - G.cam.x) * k; }
+  G.shake = Math.max(0, G.shake - dt * 3);
+  if (G.flash) G.flash.t -= dt;
+  for (var j = 0; j < G.parts.length; j++) {
+    var q = G.parts[j], age = G.gt - q.t0;
+    q.vy -= (q.k === "spk" ? 5 : 12) * dt; q.x += q.vx * dt; q.y += q.vy * dt; q.z += q.vz * dt; if (q.rot != null) q.rot += q.vr * dt;
+    if (q.k === "shard" && q.y < B.WATER) { if (!rgReduced() && Math.random() < 0.5) oxbSplash(G, q.x, q.z, 0.12); q.life = 0; }
+    if (q.k === "drop" && q.y < B.WATER && q.vy < 0) q.life = 0;
+    if (age > q.life) G.parts.splice(j--, 1);
+  }
+  if (G.parts.length > 260) G.parts.splice(0, G.parts.length - 260);
+  for (var m = 0; m < G.confetti.length; m++) { var f = G.confetti[m]; f.vy += 900 * dt; f.vx *= 0.985; f.x += f.vx * dt; f.y += f.vy * dt; f.rot += f.vr * dt; if (f.y > G.pr.H + 20) G.confetti.splice(m--, 1); }
+  for (var n = 0; n < G.rows.length; n++) { var rr = G.rows[n]; for (var s2 = 0; s2 < 2; s2++) { rr.sides[s2].flex = Math.max(0, rr.sides[s2].flex - dt * 3.2); rr.sides[s2].glow = Math.max(0, rr.sides[s2].glow - dt * 1.6); }
+    if (rr.board && rr.board.y > 0) rr.board.y = Math.max(0, 3.2 - (G.gt - rr.board.t0) * (rgReduced() ? 30 : 11)); }
+}
+function oxbScene(qs, gold) {
+  return { pr: { W: 1, H: 1, F: 1, CAMY: 1, HY: 0 }, cam: { x: 0, z: -OXB.D0 }, rows: oxbRows(qs, gold), ch: { x: 0, y: 0, z: 0, a: null }, cur: 0, next: 1, flow: -OXB.D0 / OXB.ROWD,
+    fever: 0, danger: 0, parts: [], floats: [], rings: [], confetti: [], flash: null, shake: 0, gt: 0, big: null, snap: true };
+}
+
+/* ── 게임 ── */
+function oxStop() {
+  OX.on = false;
+  if (OX.raf) cancelAnimationFrame(OX.raf);
+  OX.raf = 0;
+  gsOverlayClose("ox");
+}
+function oxLater(sec, fn) { OX.tmr.push({ t: OX.G.gt + sec, fn: fn }); }
+function oxStart() {
   oxStop();
-  OX.phase = "end";
-  var parts = oxParts(ql, OX.tk, R), X = oxTally(ql, R, OX.gold), prev = Number(S.get("oly2_best_ox", 0)) || 0;
-  sfx("fanfare");
+  oxbBotLoad();
+  SFX.site = false;
+  var R = olyRule().ox, tk = OXS.tk && Date.now() - OXS.at < OX_TK_AGE ? OXS.tk : "";
+  OXS.tk = ""; oxPrefetch(true);   /* 토큰은 한 판에 하나 · 다음 판 것을 미리 받는다 */
+  var list = oxPick(), gold = oxGold(tk), tip = gsTutTake("ox");
+  OX = { on: true, paused: false, ending: null, raf: 0, last: performance.now(), pz: 0, st: "count", goT: tip ? 2.6 : 1.3, el: 0, recs: [], list: list, tk: tk, gold: gold,
+    T: oxTally("", R, gold), G: oxbScene(list, gold), tmr: [], clk: R.sec, clkT: R.sec, wrongs: [], hud: "", tip: tip, pd: 0, sw: null, crackTick: -1 };
+  gsOverlayOpen({ key: "ox", title: "AI O/X", top: oxTopHtml(R), fill: true, cls: "oxb", cw: 360, ch: 400, canvasId: "oxCv", flat: true, tip: tip, noGesture: true,
+    bottom: oxCtlHtml(R),
+    resized: oxFit,
+    down: function (e) { e.preventDefault(); OX.sw = { x: e.clientX, y: e.clientY }; },
+    up: function (e, cancel) {
+      var s = OX.sw; OX.sw = null; if (!s || cancel) return;
+      var dx = e.clientX - s.x, dy = e.clientY - s.y;
+      if (Math.abs(dx) > 28 && Math.abs(dx) > Math.abs(dy)) { oxAnswer(dx < 0 ? 0 : 1); return; }   /* 밀기 · 왼쪽 O · 오른쪽 X */
+      if (Math.abs(dx) < 14 && Math.abs(dy) < 14) { var cv = el("oxCv"), r = cv.getBoundingClientRect(); oxAnswer(e.clientX - r.left < r.width / 2 ? 0 : 1); }   /* 탭 · 왼쪽 반 O · 오른쪽 반 X */
+    },
+    keydown: function (e) {
+      if (e.repeat) return;
+      var k = e.key, a = k === "ArrowLeft" || k === "o" || k === "O" ? 0 : k === "ArrowRight" || k === "x" || k === "X" ? 1 : k === "ArrowDown" || k === "p" || k === "P" || k === " " ? 2 : -1;
+      if (a < 0) return; e.preventDefault(); oxAnswer(a);
+    },
+    running: function () { return OX.on && !OX.paused && !OX.ending; }, isPaused: function () { return !!OX.paused; },
+    pause: function () { gsPauseState(OX); var g = el("rgPlay"); if (g) g.classList.toggle("oxb-hide", !!OX.paused); },
+    resume: function () { var g = el("rgPlay"); if (g) g.classList.remove("oxb-hide"); gsResumeState(OX, oxFrame); },
+    quit: function () { oxStop(); App.render(); } });
+  oxBindCtl();
+  oxHud(true);
+  oxSetQ("준비", "", "");
+  OX.raf = requestAnimationFrame(oxFrame);
+}
+function oxTopHtml(R) {
+  var lives = ""; for (var i = 0; i < R.lives; i++) lives += '<i class="oxb-life">' + BOT_SVG + "</i>";
+  return '<div class="oxb-top"><div class="oxb-hud"><span class="oxb-lives" id="oxLives" aria-label="목숨 ' + R.lives + '">' + lives + "</span><span class=\"oxb-sp\"></span>" +
+    '<span class="oxb-sc"><b id="oxScore">0</b><small>점</small></span>' + sndBtnHtml(false) +
+    '<button class="rgp-x" type="button" data-on="계속" data-off="멈춤" aria-label="일시정지" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">멈춤</button></div>' +
+    '<div class="oxb-bar" id="oxBarW"><i id="oxBar"></i></div>' +
+    '<section class="oxb-q" id="oxCard" aria-live="polite"><div class="oxb-meta"><span id="oxN">1 / ' + (R.per[0] + R.per[1] + R.per[2]) + '</span><span class="oxb-chip cb" id="oxCombo" hidden></span>' +
+    '<span class="oxb-tag gd" id="oxGold" hidden>황금 발판 ×' + R.goldMul + '</span><span class="oxb-tag fv" id="oxFev" hidden></span><b class="oxb-sec" id="oxSec">' + R.sec / 100 + '초</b></div><p class="oxb-text" id="oxQ">준비</p></section></div>';   /* 위 줄 = 목숨 · 점수 · 소리 · 멈춤 · 연속·피버·황금은 문제 카드 머리 줄(360 폭에서 넘치지 않게) */
+}
+function oxCtlHtml(R) {
+  return '<div class="oxb-ctl" id="oxCtl"><button type="button" class="oxb-b o" data-a="0" aria-label="O 발판 · 맞아요">' + OX_O + '<span>맞아요</span></button>' +
+    '<button type="button" class="oxb-b p" data-a="2" id="oxPass">판자<br><span id="oxPassN">' + R.pass + '</span>번</button>' +
+    '<button type="button" class="oxb-b x" data-a="1" aria-label="X 발판 · 아니에요">' + OX_X + "<span>아니에요</span></button></div>";
+}
+var OX_O = '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="16" fill="none" stroke="currentColor" stroke-width="6"/></svg>';
+var OX_X = '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M12 12L36 36M36 12L12 36" stroke="currentColor" stroke-width="6" stroke-linecap="round"/></svg>';
+/* 누름 한 번 = 답 한 번 · pointerdown 에서 받고 뒤따르는 click 은 버린다(키보드·보조기기 click 은 받는다) */
+function oxBindCtl() {
+  var box = el("oxCtl"); if (!box) return;
+  Array.prototype.forEach.call(box.querySelectorAll("[data-a]"), function (b) {
+    var a = Number(b.getAttribute("data-a"));
+    b.addEventListener("pointerdown", function (e) { e.preventDefault(); OX.pd = Date.now(); oxAnswer(a); b.classList.remove("hit"); void b.offsetWidth; b.classList.add("hit"); });
+    b.addEventListener("click", function () { if (OX.pd && Date.now() - OX.pd < 700) return; oxAnswer(a); });
+    b.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+  });
+}
+function oxFit(cv, w, h) {
+  if (!w || !h) return;
+  var dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  OX.dpr = cv.width / w;
+  oxbFit(OX.G, w, h);
+  OX.G.snap = true;
+  if (!OX.raf) oxDrawNow();
+}
+function oxDrawNow() { var cv = el("oxCv"); if (!cv || !OX.G) return; var ctx = cv.getContext("2d"); ctx.setTransform(OX.dpr || 1, 0, 0, OX.dpr || 1, 0, 0); oxbDraw(ctx, OX.G); }
+function oxFrame() {
+  if (!OX.on || OX.paused) return;
+  var now = performance.now(), dt = Math.min(0.05, (now - OX.last) / 1000);
+  OX.last = now;
+  oxUpdate(dt);
+  if (!OX.on) return;
+  var cv = el("oxCv"); if (!cv) { oxStop(); return; }
+  var ctx = cv.getContext("2d"); ctx.setTransform(OX.dpr || 1, 0, 0, OX.dpr || 1, 0, 0);
+  oxbDraw(ctx, OX.G);
+  oxClock();
+  if (OX.on && !OX.paused) OX.raf = requestAnimationFrame(oxFrame);
+}
+/* 지금 흐름 · 문제가 떠 있으면 여유가 줄 시간만큼 줄어든다 */
+function oxLeadNow() { var T = OX.T; return OX.st === "wait" ? T.lead - OX.el * 100 * 100 / T.rt : T.lead; }
+function oxUpdate(dt) {
+  var G = OX.G, R = olyRule().ox, T = OX.T;
+  G.gt += dt;
+  for (var i = 0; i < OX.tmr.length; i++) if (G.gt >= OX.tmr[i].t) { var f = OX.tmr[i].fn; OX.tmr.splice(i--, 1); f(); if (!OX.on) return; }
+  if (OX.ending) { OX.ending.t -= dt; oxbTick(G, dt); if (OX.ending.t <= 0) oxEndFinal(OX.ending.why); return; }
+  if (OX.st === "count") {
+    G.big = { s: G.gt < OX.goT - 0.45 ? "준비" : "시작", c: "#191F28" };
+    if (G.gt >= OX.goT) { G.big = null; oxShowQ(); }
+  } else if (OX.st === "wait") {
+    OX.el += dt;
+    var cs = OX.el * 100, rem = T.dl - T.used;
+    if (cs >= rem) { oxEnd("time", rem); return; }                  /* 시간이 먼저 · 떨어짐과 같은 순간이면 시간 끝 */
+    if (cs >= T.lim) { oxRecord(3, T.lim); return; }                /* 서 있던 발판이 아래 끝에 닿았다 */
+    var ld = oxLeadNow(), dg = Math.max(0, Math.min(1, (60 - ld) / 60)), cur = G.rows[G.cur];
+    G.danger = dg;
+    if (cur && !cur.deck) { var sd = OX.side === 2 ? cur.board : cur.sides[OX.side]; if (sd) { if (dg > 0 && OX.side !== 2) sd.st = "crack"; sd.crack = Math.max(sd.crack || 0, dg);
+      var tick = Math.floor(dg * 4); if (dg > 0 && tick !== OX.crackTick) { OX.crackTick = tick; if (tick > 0) { sfx("oxcrk", tick); stampBuzz(8); } } } }
+  } else { G.danger = Math.max(0, G.danger - dt * 3); OX.clk = Math.max(OX.clkT, OX.clk - dt * 100); }   /* 연출 중 시계는 목표(서버와 같은 시계)까지 실제 시간으로 */
+  G.flow = OX.T.n - oxLeadNow() / 100;   /* 흐름 = 올라선(올라설) 줄 − 여유 · 답하는 순간에도 이어진다 */
+  oxbTick(G, dt);
+}
+function oxClock() {
+  var R = olyRule().ox, T = OX.T, left;
+  if (OX.st === "wait") { left = T.dl - T.used - OX.el * 100; OX.clk = left; } else left = OX.clk;
+  left = Math.max(0, left);
+  var b = el("oxBar"), s = el("oxSec"), w = el("oxBarW"), warn = left <= 1000;
+  if (b) b.style.transform = "scaleX(" + Math.min(1, left / R.sec).toFixed(4) + ")";
+  if (s) { var txt = Math.ceil(left / 100) + "초"; if (s.textContent !== txt) s.textContent = txt; s.classList.toggle("warn", warn); }
+  if (w) w.classList.toggle("warn", warn);
+}
+function oxShowQ() {
+  var T = OX.T, G = OX.G;
+  if (T.end === "life") { oxEnd("life"); return; }
+  if (T.end === "arrive") { oxArrive(); return; }
+  if (T.end === "time") { oxEnd("time", 0); return; }
+  var x = OX.list[T.n]; if (!x) { oxEnd("time", 0); return; }
+  OX.st = "wait"; OX.el = 0; OX.crackTick = -1; OX.clkT = T.dl - T.used; OX.clk = OX.clkT;
+  G.next = T.n + 1;
+  oxSetQ(esc(x.q) + (x.rv ? "" : ' <small class="ox-ex">(예시)</small>'), "", "q");
+  oxHud();
+}
+function oxSetQ(html, cls, kind) {
+  var q = el("oxQ"), c = el("oxCard"); if (!q) return;
+  q.className = "oxb-text" + (cls ? " " + cls : "");
+  q.innerHTML = html;
+  if (kind === "q") { q.classList.remove("in"); void q.offsetWidth; q.classList.add("in"); }
+}
+function oxHud(force) {
+  var R = olyRule().ox, T = OX.T, rf = oxRunFever(T, R), N = R.per[0] + R.per[1] + R.per[2], x = OX.list[Math.min(T.n, N - 1)];
+  var showing = OX.st === "wait", gold = showing && OX.gold.indexOf(T.n) >= 0, lives = Math.max(0, T.life);
+  var key = [T.pts, lives, rf.run, rf.fever, T.n, T.pa, OX.st].join("|");
+  if (!force && key === OX.hud) return;
+  OX.hud = key;
+  var L = el("oxLives");
+  if (L) { Array.prototype.forEach.call(L.children, function (c, k) { c.classList.toggle("off", k >= lives); }); L.setAttribute("aria-label", "목숨 " + lives); }
+  var sc = el("oxScore"); if (sc) sc.textContent = olyFmt(Math.max(0, T.pts));
+  var cb = el("oxCombo"); if (cb) { cb.hidden = rf.run < 2; cb.textContent = rf.run + " 콤보"; cb.style.setProperty("--k", String(Math.min(1.2, 1 + (rf.run - 2) * 0.025))); }
+  var n = el("oxN"); if (n) n.textContent = Math.min(T.n + 1, N) + " / " + N + " · 난이도 " + (x ? x.lv : 3);
+  var gd = el("oxGold"); if (gd) gd.hidden = !gold;
+  var fv = el("oxFev"); if (fv) { fv.hidden = !rf.fever || gold; fv.textContent = "피버 ×" + R.feverMul + " · " + rf.fever; }
+  var cd = el("oxCard"); if (cd) { cd.classList.toggle("gold", gold); cd.classList.toggle("fever", showing && !!rf.fever && !gold); }
+  var p = el("oxPass"), pn = el("oxPassN"); if (p) p.disabled = T.pa >= R.pass; if (pn) pn.textContent = String(Math.max(0, R.pass - T.pa));
+  OX.G.fever = OX.st === "end" ? 0 : rf.fever;
+}
+function oxPopHud(id, cls) { var e = el(id); if (!e) return; e.classList.remove(cls); void e.offsetWidth; e.classList.add(cls); }
+/* 답 · side 0 = O(왼쪽) · 1 = X(오른쪽) · 2 = 판자 */
+function oxAnswer(side) {
+  if (!OX.on || OX.paused || OX.ending || OX.st !== "wait") return;
+  var R = olyRule().ox, T = OX.T, cs = Math.round(OX.el * 100);
+  if (cs < R.lock) return;   /* 입력 잠금 0.3초 · 앞 줄에서 두 번 누른 손가락이 다음 줄을 누르지 않게 */
+  if (side === 2 && T.pa >= R.pass) return;
+  var t = Math.min(cs, T.lim - 1, T.dl - T.used - 1);
+  if (t < R.lock) return;
+  oxRecord(side, t);
+}
+/* 기록 한 줄 · side 3 = 떨어짐(T) · 채점을 다시 하고 연출을 고른다 */
+function oxRecord(side, t) {
+  var R = olyRule().ox, x = OX.list[OX.T.n], G = OX.G, r = G.rows[OX.T.n + 1];
+  var a = side === 0 ? "O" : side === 1 ? "X" : side === 2 ? "P" : "T";
+  OX.recs.push(x.id + "." + a + "." + t);
+  var prev = OX.T;
+  OX.T = oxTally(OX.recs.join(","), R, OX.gold);
+  if (!OX.T.ok) { OX.recs.pop(); OX.T = prev; return; }   /* 한도 밖(있을 수 없는 경우) · 기록하지 않는다 */
+  var it = OX.T.items[OX.T.items.length - 1];
+  OX.st = "busy"; OX.clkT = OX.T.dl - OX.T.used;
+  G.danger = 0;
+  if (a === "T") { oxFallScroll(r, it); return; }
+  if (a === "P") { oxPlank(r, it); return; }
+  var btn = document.querySelector('#oxCtl [data-a="' + side + '"]');
+  if (btn) { var k = it.right ? "ok" : "bad"; btn.classList.remove("ok", "bad"); void btn.offsetWidth; btn.classList.add(k); setTimeout(function () { btn.classList.remove(k); }, 420); }
+  sfx("tik");
+  var rf = oxRunFever(OX.T, R), h = rgReduced() ? 0.4 : it.right ? 1.25 + 0.07 * Math.min(rf.run, 8) : 0.9;
+  oxbAnim(G, { kind: "arc", x0: G.ch.x, y0: G.ch.y, z0: G.ch.z, x1: oxbSideX(side), y1: 0, z1: r.z, h: h, dur: it.right ? 0.34 : 0.28, done: function () {
+    if (it.right) oxLandOk(r, side, it, rf); else oxLandBad(r, side, it);
+  } });
+  oxHud();
+}
+function oxStand(r, side) { OX.G.cur = r.i; OX.side = side; }
+/* 정답 · 초록으로 빛나며 튕기는 발판 · 반짝이 · 「정답!」과 점수 · 챗봇 한 번 더 튀기 · 짧은 진동 · 연속일수록 크게 */
+function oxLandOk(r, side, it, rf) {
+  var G = OX.G, R = olyRule().ox, run = rf.run, big = Math.min(run, 10);
+  oxStand(r, side);
+  var sd = r.sides[side]; sd.flex = 1; sd.glow = 1;
+  G.rings.push({ x: oxbSideX(side), y: 0.02, z: r.z, t0: G.gt, amt: 0.55 + big * 0.04, col: "rgba(2,118,72,A)" });
+  oxbSparkle(G, r, side, 22 + big * 4, it.gold ? ["#FFC56E", "#FFFFFF", "#FF7F32"] : rf.fever || it.mul > 1 ? ["#FF7F32", "#FFFFFF", "#027648"] : ["#027648", "#FFFFFF", "#7FD4AE"]);
+  oxbFloat(G, "정답!", "#027648", 0.2, 1.55 + big * 0.06, 0.8);
+  oxbFloat(G, "+" + it.pts, it.gold ? "#A63D00" : "#191F28", 1.05, 1.2 + big * 0.05, 0.95);
+  if (it.gold) oxbFloat(G, "황금 ×" + R.goldMul, "#A63D00", 1.6, 1.1, 1);
+  else if (it.mul > 1) oxbFloat(G, "피버 ×" + R.feverMul, "#A63D00", 1.6, 1, 0.9);
+  if (it.fever) oxbFloat(G, "피버!", "#FF7F32", 2.2, 1.3, 1);
+  else if (it.bonus) oxbFloat(G, "+" + R.bonusSec / 100 + "초", "#027648", 2.2, 1.2, 1);
+  else if (run >= 2) oxbFloat(G, run + " 콤보", "#6B7684", 2.2, 1 + big * 0.06, 0.9);
+  G.flash = { ok: true, t: 0.28, d: 0.28 };
+  stampBuzz(run >= 5 ? [10, 30, 10] : 12);
+  sfx("oxok", run); if (it.gold || it.fever) sfx("oxup");
+  oxSetQ("정답 " + it.a, "ok", "");
+  oxPopHud("oxScore", "pop");
+  oxHud();
+  /* 몸 전체로 한 번 더 튄다(형태 그대로) · 연속일수록 높이 */
+  oxbAnim(G, { kind: "arc", x0: G.ch.x, y0: 0, z0: G.ch.z, x1: G.ch.x, y1: 0, z1: G.ch.z, h: rgReduced() ? 0 : 0.28 + big * 0.03, dur: 0.16, done: function () { oxShowQ(); } });
+}
+/* 오답 · 금 → 깨짐 → 풍덩 → 정답 쪽으로 다시 올라온다 · 빨강 번쩍임 · 흔들림 · 긴 진동 */
+function oxLandBad(r, side, it) {
+  var G = OX.G, s = r.sides[side], RMo = rgReduced();
+  oxStand(r, side);
+  s.st = "crack"; s.crack = 0.6;
+  sfx("oxcrk", 4); stampBuzz(30);
+  oxSetQ("틀렸어요 · 정답 " + it.a, "no", "");
+  oxLives(); oxHud();
+  oxLater(RMo ? 0.06 : 0.12, function () {
+    s.crack = 1; oxbShatter(G, r, side);
+    oxbFloat(G, "−" + (-it.pts), "#D22030", 0.4, 1.2, 0.9);
+    G.shake = RMo ? 0 : 1; G.flash = { ok: false, t: 0.4, d: 0.4 };
+    oxbAnim(G, { kind: "fall", x0: G.ch.x, y0: 0, z0: r.z, x1: G.ch.x, y1: OXB.WATER - 1.2, z1: r.z, dur: RMo ? 0.25 : 0.42 });
+    oxLater(RMo ? 0.18 : 0.32, function () { oxbSplash(G, G.ch.x, r.z, 1); stampBuzz([40, 30, 90]); sfx("oxsplash"); });
+    oxLater(RMo ? 0.5 : 0.72, function () { oxClimb(r, it.a === "O" ? 0 : 1, r); });
+  });
+}
+function oxLives() { var L = el("oxLives"); if (!L) return; L.classList.remove("hit"); void L.offsetWidth; L.classList.add("hit"); }
+/* 물에서 정답 쪽 발판으로 올라온다 · to = 올라설 줄 */
+function oxClimb(from, cs, to) {
+  var G = OX.G;
+  if (OX.T.life <= 0) { G.ch.a = null; oxEnd("life"); return; }
+  to.reveal = cs;
+  oxbSplash(G, G.ch.x, from.z, 0.5);
+  oxbAnim(G, { kind: "arc", x0: G.ch.x, y0: OXB.WATER - 0.6, z0: from.z, x1: oxbSideX(cs), y1: 0, z1: to.z, h: rgReduced() ? 0.6 : 2.1, dur: rgReduced() ? 0.3 : 0.5, done: function () {
+    oxStand(to, cs); to.sides[cs].flex = 1; oxShowQ();
+  } });
+}
+/* 흘러내려 떨어짐 · 서 있던 발판이 아래 끝에 닿았다 · 다음 줄 정답 쪽으로 올라온다 */
+function oxFallScroll(nr, it) {
+  var G = OX.G, cur = G.rows[G.cur], RMo = rgReduced();
+  oxSetQ("늦었어요 · 정답 " + it.a, "no", "");
+  oxLives(); oxHud();
+  if (cur && !cur.deck) { if (OX.side === 2) { if (cur.board) cur.board.gone = true; } else { cur.sides[OX.side].crack = 1; oxbShatter(G, cur, OX.side); } }
+  oxbFloat(G, "−" + (-it.pts), "#D22030", 0.4, 1.2, 0.9);
+  G.shake = RMo ? 0 : 1; G.flash = { ok: false, t: 0.4, d: 0.4 };
+  stampBuzz([40, 30, 90]); sfx("oxcrk", 4);
+  var fz = G.ch.z;
+  oxbAnim(G, { kind: "fall", x0: G.ch.x, y0: 0, z0: fz, x1: G.ch.x, y1: OXB.WATER - 1.2, z1: fz, dur: RMo ? 0.25 : 0.42 });
+  oxLater(RMo ? 0.18 : 0.32, function () { oxbSplash(G, G.ch.x, fz, 1); sfx("oxsplash"); });
+  oxLater(RMo ? 0.5 : 0.95, function () { oxClimb({ z: fz }, it.a === "O" ? 0 : 1, nr); });
+}
+/* 판자 · 0점 · 연속·피버 그대로 · 두 발판 사이에 판자가 내려온다 */
+function oxPlank(r, it) {
+  var G = OX.G;
+  r.board = { y: 3.2, t0: G.gt, crack: 0 };
+  sfx("tok"); stampBuzz(10);
+  oxSetQ("판자 · 정답 " + it.a, "ok", "");
+  oxHud();
+  oxLater(rgReduced() ? 0.1 : 0.3, function () {
+    oxbAnim(G, { kind: "arc", x0: G.ch.x, y0: G.ch.y, z0: G.ch.z, x1: 0, y1: 0, z1: r.z, h: rgReduced() ? 0.3 : 1.0, dur: 0.34, done: function () {
+      oxStand(r, 2); r.reveal = it.a === "O" ? 0 : 1; oxbFloat(G, "판자 · 0", "#6B7684", 0.3, 1, 0.8);
+      oxLater(0.14, oxShowQ);
+    } });
+  });
+}
+/* 다리 끝 · 도착 데크로 건너 도착 보너스 · 색종이 */
+function oxArrive() {
+  var G = OX.G, T = OX.T, d = G.rows[G.rows.length - 1];
+  OX.st = "arrive";
+  oxbAnim(G, { kind: "arc", x0: G.ch.x, y0: 0, z0: G.ch.z, x1: 0, y1: 0, z1: d.z + 0.6, h: 1.3, dur: rgReduced() ? 0.25 : 0.45, done: function () {
+    G.cur = d.i; OX.side = 0;
+    G.big = { s: "도착", c: "#FF7F32", sub: "보너스 +" + T.arr };
+    for (var i = 0; i < (rgReduced() ? 30 : 110); i++) G.confetti.push(oxbConf(G));
+    stampBuzz([20, 40, 20, 40, 60]); sfx("fanfare");
+    oxSetQ("도착 · 보너스 +" + T.arr, "ok", "");
+    oxHud();
+    var hop = function (k) { if (k >= 2 || rgReduced()) { oxEnd("arrive"); return; } oxbAnim(G, { kind: "arc", x0: 0, y0: 0, z0: G.ch.z, x1: 0, y1: 0, z1: G.ch.z, h: 0.55, dur: 0.34, done: function () { hop(k + 1); } }); };
+    hop(0);
+  } });
+}
+/* 끝 · why = arrive | life | time · tl = 문제가 떠 있는 동안 시간이 다 됐을 때 그 순간 남은 시간(1/100초) */
+function oxEnd(why, tl) {
+  if (!OX.on || OX.ending) return;
+  OX.st = "end"; OX.tl = why === "time" ? Math.max(0, Math.round(tl || 0)) : 0;
+  var G = OX.G;
+  if (why === "time") { G.big = { s: "시간 끝", c: "#D22030" }; oxSetQ("시간이 다 됐어요", "no", ""); sfx("over"); }
+  if (why === "life") { G.big = { s: "풍덩", c: "#D22030", sub: "목숨을 모두 잃었어요" }; oxSetQ("목숨을 모두 잃었어요", "no", ""); sfx("over"); }
+  G.danger = 0;
+  oxHud(true);
+  OX.ending = { t: why === "arrive" ? 1.0 : 1.3, why: why };
+}
+function oxEndFinal(why) {
+  if (!OX.on) return;
+  var R = olyRule().ox, ql = OX.recs.join(","), tk = OX.tk, pz = OX.pz || 0, tl = OX.tl || 0;
+  oxStop();
+  var parts = oxParts(ql, tk, R, tl, pz), X = oxTally(ql, R, oxGold(tk)), prev = Number(S.get("oly2_best_ox", 0)) || 0;
   gameClear("ox_cleared");   /* 결과 화면에 닿으면 끝까지 한 판 · 04 미니게임 */
-  var sc = X.n ? olySubmit("ox", parts) : 0;   /* 한 문제도 안 풀었으면 올리지 않는다 */
-  if (sc > prev) setTimeout(function () { sfx("best"); }, 700);
+  var sc = X.n ? olySubmit("ox", parts) : 0;   /* 한 줄도 안 건넜으면 올리지 않는다 */
+  if (sc > prev) setTimeout(function () { sfx("best"); }, 400);
   var root = el("oxRoot"); if (!root) return;
-  var ok = X.c1 + X.c2 + X.c3, ans = X.items.filter(function (it) { return it.ans !== "P"; }), avg = ans.length ? ans.reduce(function (a, it) { return a + it.t; }, 0) / ans.length / 100 : 0;
-  var titles = oxTitles(X);
-  root.innerHTML = gsResultHtml("ox", { why: why === "done" ? "done" : "time", label: why === "done" ? "30문제 완주" : R.sec / 100 + "초 끝", reason: "",
+  var ok = X.c1 + X.c2 + X.c3, N = R.per[0] + R.per[1] + R.per[2], ans = X.items.filter(function (it) { return it.ans === "O" || it.ans === "X"; }), avg = ans.length ? ans.reduce(function (a, it) { return a + it.t; }, 0) / ans.length / 100 : 0;
+  var titles = oxTitles(X), label = why === "arrive" ? "도착" : why === "life" ? "목숨 소진" : "시간 끝";
+  root.innerHTML = gsResultHtml("ox", { why: why === "arrive" ? "done" : why === "time" ? "time" : "over", label: label, reason: "",
     oly: { key: "ox", parts: parts, score: sc,
-      top: '<p class="ox-res-big">' + (why === "done" ? "30문제 완주 · " : R.sec / 100 + "초에 ") + "<b>" + ok + "</b>문제 정답</p>" +
-        '<p class="ox-res-sub">한 문제 평균 ' + avg.toFixed(1) + "초 · 최대 " + X.mx + "연속</p>" +
+      top: '<p class="ox-res-big">정답 <b>' + ok + "</b></p>" +
+        '<p class="ox-res-sub">' + (why === "arrive" ? "다리 끝까지 " + N + "줄" : N + "줄 중 " + X.n + "줄") + " · 한 문제 평균 " + avg.toFixed(1) + "초 · 최대 " + X.mx + "연속" + (X.fl ? " · 늦어서 떨어짐 " + X.fl + "번" : "") + "</p>" +
         (titles.length ? '<p class="ox-titles">' + titles.map(function (t) { return "<span>" + esc(t) + "</span>"; }).join("") + "</p>" : ""),
-      note: "참고 · 푼 문제 " + X.n + (X.pa ? " · 패스 " + X.pa : "") + (X.hp ? " · 보너스 +" + X.hp * R.bonusSec / 100 + "초" : "") + " · 점수는 0 밑으로 내려가지 않아요" },
+      note: "참고 · 판자 " + X.pa + "번" + (X.hp ? " · 보너스 +" + X.hp * R.bonusSec / 100 + "초" : "") + " · 점수는 0 밑으로 내려가지 않아요" },
     banner: oxWrongHtml(X) });
   window.scrollTo(0, 0);
 }
-/* 분야별 칭호 · 한 판에 그 분야를 OX_TITLE_MIN 문제 이상 풀고(패스 제외) 모두 맞혔을 때 · 점수와 무관 */
+/* 분야별 칭호 · 한 판에 그 분야를 OX_TITLE_MIN 문제 이상 풀고(판자·떨어짐 제외) 모두 맞혔을 때 · 점수와 무관 */
 function oxTitles(X) {
   var by = {};
-  X.items.forEach(function (it) { if (it.ans === "P") return; var c = (OX_BANK.filter(function (b) { return b.id === it.id; })[0] || {}).c; var o = by[c] || (by[c] = { n: 0, ok: 0 }); o.n++; if (it.right) o.ok++; });
+  X.items.forEach(function (it) { if (it.ans !== "O" && it.ans !== "X") return; var c = (OX_BANK.filter(function (b) { return b.id === it.id; })[0] || {}).c; var o = by[c] || (by[c] = { n: 0, ok: 0 }); o.n++; if (it.right) o.ok++; });
   return [1, 2, 3].filter(function (c) { return by[c] && by[c].n >= OX_TITLE_MIN && by[c].ok === by[c].n; }).map(function (c) { return OX_TITLE[c]; });
 }
-/* 틀린 문제 카드 · 점수 카드와 따로(260918 교육 문구 금지의 승인된 예외 · 사용자 결정 260922) · 최대 3줄 · 모두의 선택 비율은 여기서만 보여 준다 */
+/* 틀린 문제 카드 · 점수 카드와 따로(260918 교육 문구 금지의 승인된 예외 · 사용자 결정 260922) · 최대 3줄 · 늦어서 떨어진 문제도 넣는다 · 모두의 선택 비율은 여기서 보여 준다 */
 function oxWrongHtml(X) {
   var bad = X.items.filter(function (it) { return it.ans !== "P" && !it.right; });
   if (!bad.length) return "";
   return '<section class="ax-card ax-stack-tight ox-wrong"><h2 class="ax-card-title">틀린 문제</h2>' + bad.slice(0, 3).map(function (it) {
     var b = OX_BANK.filter(function (x) { return x.id === it.id; })[0], r = oxRatioText(it.id);
     return '<div class="ox-w"><p class="ax-body">' + esc(b.q) + (b.rv ? "" : ' <small class="ox-ex">(예시)</small>') + "</p>" +
-      '<p class="ax-meta"><b>정답 ' + b.a + "</b> · " + esc(b.e) + "</p>" + (r ? '<p class="ax-meta">' + esc(r) + "</p>" : "") + "</div>";
+      '<p class="ax-meta"><b>정답 ' + b.a + "</b>" + (it.ans === "T" ? " · 늦어서 떨어짐" : "") + " · " + esc(b.e) + "</p>" + (r ? '<p class="ax-meta">' + esc(r) + "</p>" : "") + "</div>";
   }).join("") + (bad.length > 3 ? '<p class="ax-meta">외 ' + (bad.length - 3) + "문제</p>" : "") + "</section>";
 }
 
