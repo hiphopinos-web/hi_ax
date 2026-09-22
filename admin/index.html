@@ -580,7 +580,7 @@ document.addEventListener("visibilitychange",function(){ if(!document.hidden&&ke
 var NEED={
   dash:[{k:"stats",a:"stats"},{k:"acct",a:"acct_list"},{k:"stamp",a:"stamp_people"},{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"},{k:"pwreq",a:"pw_req_list"},{k:"photo",a:"photo_list"}],
   acct:[{k:"acct",a:"acct_list"},{k:"pwreq",a:"pw_req_list"}],
-  stamp:[{k:"stamp",a:"stamp_people"},{k:"acct",a:"acct_list"},{k:"stair",a:"stair_list"},{k:"sy",a:"sync",p:{emp:""}}],
+  stamp:[{k:"stamp",a:"stamp_people"},{k:"acct",a:"acct_list"},{k:"stair",a:"stair_list"},{k:"sstat",a:"stair_stats"},{k:"sy",a:"sync",p:{emp:""}}],
   apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"},{k:"pre",a:"pre_list"}],
   survey:[{k:"survey",a:"survey_list"}],
   typing:[{k:"nick",a:"type_nick_list"},{k:"tres",a:"type_result"},{k:"olyr",a:"oly_result"},{k:"gstats",a:"game_stats"},{k:"stats",a:"stats"}],
@@ -854,12 +854,13 @@ function pwReset(btn){
 function viewStamp(){
   var rows=((ST.data.stamp||{}).rows||[]), s=sub()||"one";
   var h=tabHead(byBox());
-  h+=chips([{v:"one",n:"개인 발급 · 취소"},{v:"all",n:"전체 현황",c:rows.length},{v:"ops",n:"현장 운영 · 인쇄용 QR"}], s, "setSub");
+  h+=chips([{v:"one",n:"개인 발급 · 취소"},{v:"all",n:"전체 현황",c:rows.length},{v:"stair",n:"계단"},{v:"ops",n:"현장 운영 · 인쇄용 QR"}], s, "setSub");
   if(s==="all") h+=viewStampAll(rows);
+  else if(s==="stair") h+=viewStairStats();
   else if(s==="ops") h+=viewStairOps();
   else h+=viewStampOne();
-  h+=memo('<p>스탬프는 8칸, 보상은 7개에서 끝납니다(3개 룰렛 · 4~7개 응모 1~4장 · 8번째는 추가 보상 없음). 계단(07)은 계단실 안 QR을 한 번 찍으면 적립되고(층 상관없음), 설문(08)은 제출 시 적립됩니다.</p>'+
-    '<p>담당자 부여는 현장 QR 3종(01·02·03)과 계단(07)이 됩니다. 앱 자동 적립 3종(04·05·06)은 앱 안에서 하는 행동이라 부여 대상이 아닙니다. 부여는 참여 기록에 「담당자 부여」로 남습니다.</p>'+
+  h+=memo('<p>스탬프는 8칸, 보상은 7개에서 끝납니다(3개 룰렛 · 4~7개 응모 1~4장 · 8번째는 추가 보상 없음). 계단(07)은 방화문 앞 QR로 시작과 종료를 찍어 오늘 오른 층수가 10개 층에 닿으면 적립됩니다(1F~18F × 비상계단 1·2, 36곳). 설문(08)은 제출 시 적립됩니다.</p>'+
+    '<p>담당자 부여는 현장 QR 3종(01·02·03)과 계단(07)이 됩니다. 계단은 정상적으로는 참가자가 36곳 QR로 자동 적립하고, 담당자 부여는 스캔이 안 될 때의 예외 처리입니다. 앱 자동 적립 3종(04·05·06)은 앱 안에서 하는 행동이라 부여 대상이 아닙니다. 부여는 참여 기록에 「담당자 부여」로 남습니다.</p>'+
     '<p>담당자 취소 범위는 설정 시트 「스탬프취소_범위」가 정합니다. 지금은 <b>'+esc((ST.data.stamp||{}).revokeScope||"전체")+'</b>입니다(전체 = 8칸 모두 · 현장 = 01·02·03·07 만). 테스트 기간이라 전체로 두었습니다. <b>행사 전 현장으로 전환 검토.</b></p>'+
     '<p>취소는 기록을 지우지 않고 참여 기록에 「담당자 취소」 행을 남깁니다. 취소한 칸은 같은 행동으로 다시 받을 수 있습니다(현장 QR·부여 · 앱 미니게임·아이디어·QR 퀴즈 · 설문 재제출). 설문을 취소하면 다시 제출해 스탬프를 받을 수 있지만, 답은 이름 없이 저장돼 첫 답을 지울 수 없으므로 재제출한 답은 저장하지 않습니다(집계 이중 계산 방지).</p>'+
     '<p>보상과 부딪치는 취소는 서버가 거부합니다. 룰렛을 이미 돌렸는데 3개 미만이 되는 경우, 이미 발급된 응모권 장수가 취소 뒤 자격보다 많아지는 경우입니다(응모권 번호는 되돌리지 않는 원장). 이때는 경품 담당과 먼저 정리합니다.</p>'+
@@ -996,6 +997,48 @@ function viewStampAll(rows){
     (shown.length>400?'<tr><td colspan="8" class="cap">400명까지만 표시합니다. 검색으로 좁혀 주세요.</td></tr>':'')+(!shown.length?emptyRow(8,"해당하는 사람이 없습니다."):'')+'</table></div>';
   return h+card("사람별 수집 내역","행을 누르면 개인 발급 · 취소 화면으로 갑니다",body);
 }
+/* v4.06 계단 B안(260919 사용자 확정) · 콘솔 전용 서브탭 · 설치 점검표 · 오늘 함께 오른 층수 · 자기 신고 기록 · 층수 상위
+ * 참가자 화면에는 없다(올림픽·순위·경품에 넣지 않는다). 테스트 계정은 집계에서 빠진다. */
+function viewStairStats(){
+  var d=ST.data.sstat||{}, spots=d.spots||[], people=d.people||[], selfRows=d.selfRows||[], fl0=d.floors||{}, cn=d.counts||{};
+  var never=spots.filter(function(x){ return !x.n; }).length, mis=spots.filter(function(x){ return x.mis>0; }).length;
+  var byFR={}; spots.forEach(function(x){ byFR[x.fl+"-"+x.r]=x; });
+  var h='<div class="kpis">'+
+    kpi("오늘 함께 오른 층수",fl0.total||0,"개 층","스캔 종료 "+(fl0.scan||0)+" · 자기 신고 "+(fl0.self||0))+
+    kpi("오늘 시작 · 종료",(cn.start||0)+" / "+(cn.end||0),"","중복 "+(cn.dup||0)+" · 보정 대기 "+(cn.fixq||0)+" · 자기 신고 "+(cn.self||0)+"건")+
+    kpi("스탬프 목표",d.goal||10,"개 층","누적이 닿는 순간 계단(07) 적립")+
+    '</div>';
+  h+=card("설치 점검표","36곳(1F~18F × 비상계단 1·2) · 스캔 없음 "+never+"곳 · 주소 불일치 "+mis+"곳",
+    '<div class="wrap"><table class="tb"><tr><th>층</th><th>비상계단 1</th><th>비상계단 2</th></tr>'+
+    (function(){ var out=[];
+      for(var fl=18; fl>=1; fl--){
+        out.push('<tr><td class="n"><b>'+fl+'F</b></td>'+[1,2].map(function(r){
+          var x=byFR[fl+"-"+r];
+          if(!x) return '<td class="cap">미설치</td>';
+          var st=!x.n?tag("스캔 없음","bad"):x.mis>0?tag("불일치 "+x.mis+"건","warn"):tag("정상","ok");
+          return '<td><div class="row" style="gap:4px">'+st+(x.on?"":tag("꺼짐","off"))+'</div><div class="cap mt8">누적 '+x.n+' · 오늘 '+x.today+(x.last?' · '+esc(short(x.last)):'')+'</div></td>';
+        }).join("")+'</tr>');
+      }
+      return out.join("");
+    })()+
+    '</table></div>');
+  h+=card("자기 신고 기록","최근 50건 · 최신 순 · 시작 뒤 30분 넘어 다른 층이거나 같은 층 2분 넘어 재스캔하면 본인이 직접 지난 구간의 도착 층을 고른 기록",
+    '<div class="wrap scrolly" style="max-height:360px"><table class="tb"><tr><th>시각</th><th>사번</th><th>이름</th><th>구간</th><th class="tdr">층수</th></tr>'+
+    selfRows.map(function(r){ return '<tr><td class="n cap">'+esc(short(r.ts))+'</td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.name||"")+'</td><td class="n">'+r.from+'F → '+r.to+'F</td><td class="n tdr"><b>'+r.floors+'</b></td></tr>'; }).join("")+
+    (!selfRows.length?emptyRow(5,"오늘 자기 신고 기록이 없습니다."):'')+
+    '</table></div>');
+  h+=card("층수 상위 30","오늘 함께 오른 층수 기준 · 자기 신고 비율이 높은 사람은 표시",
+    '<div class="wrap"><table class="tb"><tr><th class="tdr">순위</th><th>사번</th><th>이름</th><th class="tdr">층수</th><th class="tdr">구간 수</th><th class="tdr">자기 신고</th></tr>'+
+    people.map(function(p,i){ var ratio=p.legs?p.self/p.legs:0, warn=p.self>=2||ratio>=0.4;
+      return '<tr><td class="n tdr">'+(i+1)+'</td><td class="n">'+esc(p.emp)+'</td><td><b>'+esc(p.name||"")+'</b></td><td class="n tdr"><b>'+p.floors+'</b></td><td class="n tdr">'+p.legs+'</td><td class="n tdr">'+p.self+(warn?' '+tag("자기 신고 다수","warn"):'')+'</td></tr>'; }).join("")+
+    (!people.length?emptyRow(6,"오늘 기록이 없습니다."):'')+
+    '</table></div>');
+  h+=memo('<p>계단은 방화문 앞 QR로 시작과 종료를 찍는 방식입니다(1F~18F × 비상계단 1·2, 36곳). 오늘 오른 층수 합이 10개 층에 닿는 순간 계단(07) 스탬프가 적립됩니다. 층·방향·횟수 제한은 없습니다.</p>'+
+    '<p>같은 층에서 2분 안에 다시 스캔하면 중복(무시), 시작 뒤 30분이 넘어 다른 층이면 다음 스캔 전에 본인이 지난 구간의 도착 층을 먼저 고릅니다(자기 신고 · 「자기 신고 기록」에 남고 누적에 들어갑니다).</p>'+
+    '<p><b>설치 점검표</b>의 「스캔 없음」은 QR이 아직 한 번도 찍히지 않은 지점입니다(미설치이거나 인쇄물이 안 붙었을 가능성). 「불일치」는 QR 주소의 층·경로가 서버에 등록된 지점과 달라 붙은 자리가 틀렸을 가능성입니다. 두 경우 다 인쇄물 위치를 현장에서 확인하세요.</p>'+
+    '<p>오늘 함께 오른 층수와 자기 신고·상위 기록은 이 서브탭(관리코드)에만 있습니다. 참가자 화면·올림픽·순위·경품에는 넣지 않습니다.</p>');
+  return h;
+}
 /* v3.33·v3.34 운영 · 룰렛 소진 안내 스위치 + 계단 지점 코드(인쇄용) */
 function viewStairOps(){
   var out=!!((ST.data.sy||{}).rouletteOut), rows=((ST.data.stair||{}).rows||[]);
@@ -1007,9 +1050,12 @@ function viewStairOps(){
     '<div class="wrap"><table class="tb"><tr><th>벽</th><th>QR 내용</th></tr>'+
     ["wall1","wall2","wall3"].map(function(w,i){ return '<tr><td><b>WALL '+(i+1)+'</b></td><td class="n">'+esc(appBase())+'index.html#q='+w+'</td></tr>'; }).join("")+'</table></div>'+
     memo('<p>벽마다 다른 QR 을 붙입니다. 스캔하면 그 벽의 문제 5개만 열리고, 한 세트를 끝내면 「전시 QR 퀴즈」 스탬프가 적립됩니다(점수 기준 없음).</p><p>주소는 참가자 앱 주소에 맞춰 바꿉니다. 옛 QR(스탬프 코드)은 그대로 두고, 퀴즈 QR 만 새로 인쇄합니다.</p>'))+'</div>';
-  h+=card("계단 지점 QR","인쇄용 · 어느 층 코드든 같은 스탬프 · 1인 1회",
-    (rows.length?'<div class="wrap"><table class="tb"><tr><th>지점</th><th>층</th><th>코드</th><th>상태</th></tr>'+rows.map(function(r){ return '<tr><td><b>'+esc(r.name)+'</b></td><td class="n">'+esc(r.fl)+'F</td><td class="n">'+esc(r.code)+'</td><td>'+(r.on?tag("운영","ok"):tag("꺼짐","off"))+'</td></tr>'; }).join("")+'</table></div>':'<div class="empty">설치된 계단 지점이 없습니다. 백엔드 stair_install 로 4곳(18F·17F·10F·1F)을 만듭니다.</div>')+
-    memo('<p>지점마다 포스터 2장 이상 인쇄(한 장이면 스캔 줄이 생깁니다). 계단실 <b>안쪽 벽</b>(방화문을 열고 들어가야 보이는 곳)에 붙입니다.</p><p>포스터 문구: 「계단실 안쪽 부착 · 방화문은 닫아 주세요」 · 「내려갈 때는 계단으로」 (v3.56 · 앱에서는 뺐고 인쇄물에만 남긴다). 판정: 층·방향·횟수·시간 조건 없음(v3.34b).</p><p>계단실 안이 통신이 약해도 앱이 스캔을 저장했다가 연결되면 자동으로 보냅니다. QR 이미지는 앱 스태프 메뉴 「부스 QR」에서 함께 뽑습니다.</p>'));
+  h+=card("계단 지점 QR","인쇄용 · 방화문 앞 · 36곳(1F~18F × 비상계단 1·2) · 지점마다 시작 · 종료 겸용 QR 1개",
+    (rows.length?'<div class="wrap"><table class="tb"><tr><th>지점</th><th>층</th><th>코드</th><th>상태</th></tr>'+rows.map(function(r){ return '<tr><td><b>'+esc(r.name)+'</b></td><td class="n">'+esc(r.fl)+'F</td><td class="n">'+esc(r.code)+'</td><td>'+(r.on?tag("운영","ok"):tag("꺼짐","off"))+'</td></tr>'; }).join("")+'</table></div>':'<div class="empty">설치된 계단 지점이 없습니다. 백엔드 stair_install 로 36곳(1F~18F × 비상계단 1·2)을 만듭니다. 옛 계단실 안 4곳(18F·17F·10F·1F)은 같이 꺼집니다.</div>')+
+    memo('<p>지점마다 <b>방화문 앞</b>(복도 쪽, 계단실 문을 열기 전)에 붙입니다. 포스터 2장 이상 인쇄를 권합니다(한 장이면 스캔 줄이 생깁니다).</p>'+
+      '<p>참가자가 QR을 찍으면 그 지점에서 시작 또는 종료로 판정됩니다(같은 지점, 같은 QR). 진행 중 시작이 없으면 시작, 다른 층이면 종료로 그 구간의 층수가 오늘 누적에 더해집니다. 누적이 10개 층에 닿는 순간 계단(07) 스탬프가 적립됩니다. 층·방향·횟수 제한은 없습니다(자세한 판정은 이 메뉴의 「계단」 서브탭 참고).</p>'+
+      '<p>인쇄 파일은 <code>QR 테스트/out/light</code> 또는 <code>/dark</code> 폴더의 <b>st01-1.png ~ st18-2.png</b>(층 두 자리 + 경로 1·2, 36장)입니다. 붙이기 전에 이 표의 코드와 파일이 같은 지점인지 확인하세요.</p>'+
+      '<p>계단실 구간은 통신이 약해도 앱이 스캔을 저장했다가 연결되면 자동으로 보냅니다.</p>'));
   return h;
 }
 /* 참가자 앱 주소 · 콘솔 경로(…/admin/index.html)에서 admin/ 을 뗀 것. GitHub Pages 의 /hi_ax/ 같은 저장소 경로를 지킨다
