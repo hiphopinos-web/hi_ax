@@ -177,7 +177,8 @@
   .menu .mi .tt { flex: 1; }
   .menu .mi .tt b { font-size: calc(16.5px * var(--fs)); color: var(--hi); }
   .menu .mi .tt p { font-size: calc(13.5px * var(--fs)); color: var(--muted); margin-top: 2px; line-height: 1.45; }
-  .menu .mi .arw { font-weight: 800; color: var(--faint); }
+  .menu .mi .arw { font-weight: 800; color: var(--faint); display: grid; place-items: center; width: 24px; height: 24px; }
+  .menu .mi .arw .axs-chev, #fsSheet .fs-admin .axs-chev { width: 20px; height: 20px; display: block; }
   .progress5 { display: flex; gap: 4px; margin-top: 12px; }
   .progress5 span { flex: 1; height: 10px; background: var(--white); border-radius: 2px; }
   .progress5 span.on { background: var(--mint); }
@@ -227,7 +228,13 @@
   /* v3.61 (사용자 확정 260918) 장소 칩도 시간 뱃지와 같은 오렌지 문법 · 다만 한 단 약하게 = 면 없이 테두리만.
      검정은 시간 뱃지 몫이라 진행 중 카드에서도 칩은 검정이 되지 않는다(화면당 검정 하나). */
   .rc .pc { position: absolute; top: 4px; right: 12px; z-index: 1; max-width: 88px; height: 19px; line-height: 17px; padding: 0 8px; border-radius: 999px; background: transparent; border: 1px solid var(--tint2); color: var(--acc2); font-size: 11.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
-  .rc.hp .rh .tr { padding-right: min(calc(var(--pcw) - 20px), 44px); }   /* v3.63 칩 자리 확보 상한 44px · 제목이 먼저다 */
+  .rc .pl { display: flex; align-items: center; gap: var(--ax-space-4); min-width: 0; margin-top: 2px; font: var(--ax-type-t7); color: var(--ax-color-muted); }   /* v4.09 장소 줄 */
+  .rc .pl > span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rc .pl .axs-pin { flex: none; width: 14px; height: 14px; }
+  .rc .chev.arw { width: 24px; height: 24px; display: grid; place-items: center; align-self: center; color: var(--ax-color-muted); font-size: 0; }
+  .rc .chev.arw .axs-chev { width: 20px; height: 20px; display: block; }
+  .axs-lk { display: inline-flex; align-items: center; gap: 2px; }
+  .axs-lk .axs-chev { flex: none; width: 16px; height: 16px; }
   .rc.ink .pc { background: transparent; border-color: rgba(255,255,255,0.45); color: #fff; }   /* 검정 카드에서는 흰 테두리 */
   .rc.past .pc, .rc.dim .pc { background: transparent; border-color: var(--dimln); color: #8A817B; }   /* 지나간·잠긴 행은 회색 테두리 */
   /* 내 일정 카드(오렌지 테두리) 위에서도 칩 테두리는 O25 그대로 둔다 · 360px 실측에서 답답해 보이지 않았다 */
@@ -1020,6 +1027,19 @@
   #topbar .axs-ib .bdg { position: absolute; top: var(--ax-space-4); right: var(--ax-space-4); min-width: 20px; height: 20px; padding: 0 var(--ax-space-4); border-radius: var(--ax-radius-999); background: var(--ax-color-brand); color: var(--ax-color-onBrand); font: var(--ax-type-caption); display: grid; place-items: center; }
   #topbar .axs-back { flex: none; width: var(--ax-touch-size); height: var(--ax-touch-size); margin-left: calc(var(--ax-space-12) * -1); padding: 0; border: 0; background: transparent; color: var(--ax-color-ink); display: grid; place-items: center; cursor: pointer; }
   #topbar .axs-back svg { width: 24px; height: 24px; display: block; }
+  /* v4.09 경로 줄 (axs- 조각 · 가이드에 없음) · T7 · 앞 단계 = body 링크 · 지금 = ink 굵게 · 한 줄 */
+  #topbar .axs-crumb { margin: 0 calc(var(--ax-page-inset) * -1); padding: var(--ax-space-4) var(--ax-page-inset); border-top: 1px solid var(--ax-color-divider); }   /* 헤더 구분선 바로 아래 한 줄 */
+  #topbar.ax-header:has(.axs-crumb:not([hidden])) { border-bottom-color: transparent; }
+  body[data-pg="d"] #topbar .axs-crumb { border-top-color: var(--ax-color-body); }
+  body[data-pg="d"] #topbar .axs-crumb ol, body[data-pg="d"] #topbar .axs-crumb button { color: var(--ax-color-disabled); }
+  body[data-pg="d"] #topbar .axs-crumb b { color: var(--ax-color-inverse); }
+  #topbar .axs-crumb ol { display: flex; align-items: center; min-width: 0; margin: 0; padding: 0; list-style: none; overflow: hidden; white-space: nowrap; font: var(--ax-type-t7); color: var(--ax-color-body); }
+  #topbar .axs-crumb li { display: flex; align-items: center; flex: none; min-width: 0; }
+  #topbar .axs-crumb li:last-child { flex: 0 1 auto; overflow: hidden; }
+  #topbar .axs-crumb li.gone { display: none; }
+  #topbar .axs-crumb .sep { padding: 0 var(--ax-space-4); color: var(--ax-color-muted); }
+  #topbar .axs-crumb button { min-height: 32px; padding: 0; border: 0; background: none; font: inherit; color: var(--ax-color-body); cursor: pointer; text-decoration: underline; text-decoration-color: var(--ax-color-divider); text-underline-offset: 3px; }
+  #topbar .axs-crumb b { display: block; overflow: hidden; text-overflow: ellipsis; color: var(--ax-color-ink); font-weight: 700; }
   #topbar .axs-htitle { flex: 1; min-width: 0; font: var(--ax-type-t5-strong); color: var(--ax-color-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #topbar .axs-hgr { padding-bottom: var(--ax-space-8); }
   #topbar .axs-hgr .ax-meta { display: block; }
@@ -1310,6 +1330,69 @@
   #rgPlay .tt-c.up.on { background: var(--ax-color-brand); color: var(--ax-color-onBrand); box-shadow: 0 0 0 1px var(--ax-color-brand), 0 0 0 var(--ax-color-divider); }
   #rgPlay .tt-cap { font: var(--ax-type-caption); color: var(--ax-color-muted); }
   /* 안내 말풍선 · 챗봇이 말하듯 · 원본 BOT_SVG 합성만 · 떠 있기 + 깜빡임 */
+  /* ═══ v4.09 AI O/X · 60초 타임어택 (AX-TDS 토큰 · 새 그라데이션·검은 바탕 없음 · 피버·황금은 brand 계열) ═══ */
+  .ox-hero { display: flex; align-items: flex-end; gap: var(--ax-space-12); }
+  .ox-hero > svg { flex: none; width: 96px; height: 96px; animation: axsFloat 3.2s ease-in-out infinite; }
+  .ox-hero .eye, .ox-bot .eye { transform-box: fill-box; transform-origin: center; animation: axsBlink 4.6s linear infinite; }
+  .ox-hero .gs-say-b { margin-bottom: var(--ax-space-16); }
+  .ox-g { display: flex; flex-direction: column; gap: var(--ax-space-12); }
+  .ox-top { display: flex; align-items: center; gap: var(--ax-space-12); }
+  .ox-bar { flex: 1; height: 12px; border-radius: var(--ax-radius-999); background: var(--ax-color-inset); box-shadow: inset 0 0 0 1px var(--ax-color-divider); overflow: hidden; }
+  .ox-bar i { display: block; height: 100%; border-radius: inherit; background: var(--ax-color-brand); transform-origin: left center; }
+  .ox-bar.warn i { background: var(--ax-color-error); }
+  .ox-sec { flex: none; min-width: 3.2em; text-align: right; font: var(--ax-type-t5-strong); color: var(--ax-color-ink); font-variant-numeric: tabular-nums; }
+  .ox-sec.warn { color: var(--ax-color-error); }
+  .ox-hud { position: relative; display: flex; align-items: center; gap: var(--ax-space-8); min-height: 40px; }
+  .ox-sc { font: var(--ax-type-t3); color: var(--ax-color-ink); font-variant-numeric: tabular-nums; }
+  .ox-sc small { margin-left: var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-body); }
+  .ox-cnt { margin-left: auto; font: var(--ax-type-t6-strong); color: var(--ax-color-body); font-variant-numeric: tabular-nums; }
+  .ox-fev { padding: var(--ax-space-4) var(--ax-space-12); border-radius: var(--ax-radius-999); background: var(--ax-color-brand); color: var(--ax-color-onBrand); font: var(--ax-type-t7); font-weight: 700; white-space: nowrap; }
+  .ox-pop { position: absolute; left: 0; top: -4px; font: var(--ax-type-t6-strong); font-style: normal; color: var(--ax-color-success); pointer-events: none; opacity: 0; }
+  .ox-pop.bad { color: var(--ax-color-error); }
+  .ox-pop.on { animation: oxPop 0.6s ease-out both; }
+  @keyframes oxPop { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-22px); } }
+  .ox-card { position: relative; display: flex; align-items: flex-end; gap: var(--ax-space-12); min-height: 148px; padding: var(--ax-space-20) var(--ax-space-16); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); box-shadow: inset 0 0 0 1px var(--ax-color-divider); }
+  .ox-card.fever { box-shadow: inset 0 0 0 2px var(--ax-color-brand); }
+  .ox-card.gold { background: var(--ax-color-brandSoft); box-shadow: inset 0 0 0 3px var(--ax-color-brand); }
+  .ox-bot { position: relative; flex: none; width: 64px; height: 64px; }
+  .ox-bot svg { width: 64px; height: 64px; display: block; transform-origin: 50% 100%; animation: axsFloat 3.2s ease-in-out infinite; }
+  .ox-bot.sq svg { animation: oxSquash 0.14s ease-out 1; }
+  @keyframes oxSquash { 0% { transform: scaleY(1); } 50% { transform: scale(1.06, 0.86); } 100% { transform: scaleY(1); } }
+  .ox-praise { position: absolute; left: 50%; bottom: 100%; margin-bottom: var(--ax-space-4); padding: var(--ax-space-4) var(--ax-space-8); border-radius: var(--ax-radius-999); background: var(--ax-color-brand); color: var(--ax-color-onBrand); font: var(--ax-type-caption); font-weight: 700; white-space: nowrap; transform: translateX(-50%); opacity: 0; pointer-events: none; }
+  .ox-praise.on { animation: oxPraise 0.75s ease-out both; }
+  @keyframes oxPraise { 0% { opacity: 0; transform: translate(-50%, 6px); } 20% { opacity: 1; transform: translate(-50%, 0); } 75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -4px); } }
+  .ox-bub { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--ax-space-8); }
+  .ox-gold { align-self: flex-start; padding: var(--ax-space-4) var(--ax-space-12); border-radius: var(--ax-radius-999); background: var(--ax-color-brand); color: var(--ax-color-onBrand); font: var(--ax-type-t7); font-weight: 700; }
+  .ox-q { margin: 0; min-height: 3.2em; font: var(--ax-type-t4); color: var(--ax-color-ink); word-break: keep-all; }
+  .ox-q.in { animation: oxIn 0.12s ease-out both; }
+  @keyframes oxIn { from { opacity: 0.2; } to { opacity: 1; } }
+  .ox-ex { font: var(--ax-type-t7); color: var(--ax-color-muted); white-space: nowrap; }
+  .ox-btns { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ax-space-12); }
+  .ox-b { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--ax-space-4); height: 112px; border: 0; border-radius: var(--ax-radius-24); background: var(--ax-color-surface); box-shadow: inset 0 0 0 1px var(--ax-color-divider); color: var(--ax-color-ink); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none; }
+  .ox-b svg { width: 48px; height: 48px; display: block; }
+  .ox-b span { font: var(--ax-type-caption); color: var(--ax-color-muted); }
+  .ox-b:active { background: var(--ax-color-inset); }
+  .ox-g.fever .ox-b { box-shadow: inset 0 0 0 2px var(--ax-color-brand); }
+  .ox-b.ok { background: var(--ax-color-successSoft); box-shadow: inset 0 0 0 2px var(--ax-color-success); }
+  .ox-b.bad { background: var(--ax-color-errorSoft); box-shadow: inset 0 0 0 2px var(--ax-color-error); }
+  .ox-pass { min-height: var(--ax-touch-size); }
+  .ox-res-big { margin: 0; font: var(--ax-type-t3); color: var(--ax-color-ink); }
+  .ox-res-big b { font: var(--ax-type-display); color: var(--ax-color-brandText); font-variant-numeric: tabular-nums; }
+  .ox-res-sub { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-body); }
+  .ox-titles { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--ax-space-8); margin: 0; }
+  .ox-titles span { padding: var(--ax-space-4) var(--ax-space-12); border-radius: var(--ax-radius-999); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t7); font-weight: 700; }
+  .ox-wrong .ox-w { padding-top: var(--ax-space-12); border-top: 1px solid var(--ax-color-divider); }
+  .ox-wrong .ox-w p { margin: 0; }
+  .ox-wrong .ox-w p + p { margin-top: var(--ax-space-4); }
+  .ox-wrong .ox-w b { color: var(--ax-color-ink); }
+  @media (prefers-reduced-motion: reduce) { .ox-hero > svg, .ox-bot svg, .ox-hero .eye, .ox-bot .eye, .ox-bot.sq svg, .ox-q.in { animation: none; } .ox-praise.on, .ox-pop.on { animation-duration: 0.01s; } }
+  /* v4.09 기억력 라운드 완성 팝 · 미위(원본) 위에서 챗봇(원본)이 통통 뛰어다닌다 · 몸 전체만 움직인다(모양 변형 없음 · design.md A 5-6) */
+  .mem-hop { position: relative; display: block; height: 44px; margin: 8px auto 0; max-width: 220px; }
+  .mem-hop svg { position: absolute; left: 0; bottom: 0; width: 36px; height: 36px; animation: memRoam 2.4s ease-in-out infinite alternate, memHop 0.4s cubic-bezier(0.3, 0, 0.7, 1) infinite alternate; }
+  @keyframes memRoam { from { left: 0; } to { left: calc(100% - 36px); } }
+  @keyframes memHop { from { transform: translateY(0); } to { transform: translateY(-12px); } }
+  @media (prefers-reduced-motion: reduce) { .mem-hop svg { animation: none; left: calc(50% - 18px); } }
+  @media (min-width: 1200px) { .tve-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
   .gs-say { display: flex; align-items: flex-end; gap: var(--ax-space-8); text-align: left; }
   .gs-say > svg { flex: none; width: 48px; height: 48px; display: block; animation: axsFloat 3.2s ease-in-out infinite; }
   .gs-say .eye { transform-box: fill-box; transform-origin: center; animation: axsBlink 4.6s linear infinite; }
@@ -1390,7 +1473,10 @@
   /* 비밀번호 찾기 · 전체 화면 */
   #pwlost { align-items: stretch; justify-content: center; padding: 0; background: var(--ax-color-canvas); }
   #pwlost .axs-pw { display: flex; flex-direction: column; width: 100%; max-width: var(--ax-app-max); min-height: 100%; }
-  #pwlost .axs-pw-main { flex: 1 1 auto; padding: var(--ax-space-48) var(--ax-page-inset) var(--ax-space-24); text-align: left; }
+  #pwlost .axs-pw-main { flex: 1 1 auto; padding: var(--ax-space-8) var(--ax-page-inset) var(--ax-space-24); text-align: left; }
+  #pwlost .axs-pw-top { display: flex; align-items: center; height: 64px; padding: 0 var(--ax-page-inset); }
+  #pwlost .axs-pw-back { width: var(--ax-touch-size); height: var(--ax-touch-size); margin-left: calc(var(--ax-space-12) * -1); padding: 0; border: 0; background: transparent; color: var(--ax-color-ink); display: grid; place-items: center; cursor: pointer; }
+  #pwlost .axs-pw-back svg { width: 24px; height: 24px; display: block; }
   #pwlost .pw-msg { margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); }
   #pwlost .pw-ok { margin: 0; font: var(--ax-type-t4); color: var(--ax-color-ink); }
   #pwlost .pw-err { margin: 0; min-height: 0; font: var(--ax-type-t7); color: var(--ax-color-error); }
@@ -1451,8 +1537,9 @@
 
   <!-- ═══════ v3.88 비밀번호 분실 · 운영 데스크 요청 (메일·문자 발송 없음) ═══════ -->
   <section id="pwlost" hidden>
-    <!-- v4.08 입력·제출 화면 형식 · 위 = 제목·안내·입력 · 아래 고정 = 주 버튼(요청 보낼게요) + 약한 버튼(돌아갈게요) -->
+    <!-- v4.08 입력·제출 화면 형식 · 위 = 제목·안내·입력 · 아래 고정 = 주 버튼(요청 보내기) · v4.09 로그인 전이라 헤더가 없어 뒤로 버튼을 맨 위에 둔다 -->
     <div class="axs-pw">
+      <div class="axs-pw-top"><button type="button" class="axs-pw-back" id="pwBack" onclick="pwLostBack()" aria-label="뒤로"></button></div>
       <div class="ax-stack axs-pw-main">
         <div class="ax-stack-tight axs-gap12"><p class="ax-meta">AX Festival 2026</p><h1 class="ax-type-t2">비밀번호 찾기</h1></div>
         <div id="pwForm" class="ax-stack">
@@ -1469,8 +1556,7 @@
         </div>
       </div>
       <div class="ax-bottom axs-pw-bot">
-        <button type="button" id="pwSend" class="ax-button" onclick="pwLostSend()">요청 보낼게요</button>
-        <button type="button" class="ax-button ax-button-weak" onclick="pwLostBack()">돌아갈게요</button>
+        <button type="button" id="pwSend" class="ax-button" onclick="pwLostSend()">요청 보내기</button>
       </div>
     </div>
   </section>
@@ -1521,7 +1607,7 @@
       <p class="a-t">홈 화면에<br>바로가기를 만드세요</p>
       <p class="a-s">다음부터 QR 없이 <b>아이콘 한 번</b>으로 열립니다.<br>행사 당일, 여는 속도가 곧 참여 속도예요.</p>
       <div id="a2hsBody"></div>
-      <button class="a-later" onclick="a2hsSheet(false)">다음에 하기 · 우선 입장 ›</button>
+      <button class="a-later" onclick="a2hsSheet(false)"><span class="axs-lk">다음에 하기 · 우선 입장<svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
     </div>
   </div>
 
@@ -1533,11 +1619,11 @@
       <p class="fs-s">고르면 앱 전체 글자가 바로 바뀝니다. 이 기기에 저장돼요.</p>
       <div id="fsOpts"></div>
       <p class="fs-lb">앱</p>
-      <button class="fs-admin" onclick="fsSheet(false); App.go('notices')">공지 전체 보기<span>&rsaquo;</span></button>
-      <button class="fs-admin" onclick="fsSheet(false); a2hsSheet(true)">홈 화면에 바로가기 추가<span>&rsaquo;</span></button>
+      <button class="fs-admin" onclick="fsSheet(false); App.go('notices')">공지 전체 보기<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
+      <button class="fs-admin" onclick="fsSheet(false); a2hsSheet(true)">홈 화면에 바로가기 추가<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
       <p class="fs-lb">운영</p>
-      <button class="fs-admin" onclick="fsSheet(false); App.go('admin')">관리자 모드<span>&rsaquo;</span></button>
-      <button class="fs-admin" onclick="axfLogout()">로그아웃 · 다른 사번으로 입장<span>&rsaquo;</span></button>
+      <button class="fs-admin" onclick="fsSheet(false); App.go('admin')">관리자 모드<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
+      <button class="fs-admin" onclick="axfLogout()">로그아웃 · 다른 사번으로 입장<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
       <button class="fs-close" onclick="fsSheet(false)">닫기</button>
     </div>
   </div>
@@ -1576,7 +1662,7 @@ var FESTIVAL = {
    구 p6(포토부스)·p8(미니게임 별도 칸)은 폐지 · 미니게임은 04 미니게임에 통합.
    v47: tap = 스탬프 카드의 바로가기 · cta = 버튼 문구 · note = 카드 안 행동 안내.
    층별 안내(progOpenFl) 폐기로 p1은 QR 스캔, p3은 17F 오후 강연 신청 목록이 목적지다(v3.31b 오후 신청제 복귀).
-   v3.1: p4는 카드 안에서 게임 입구를 직접 그린다(stampInnerHtml 특례) · v3.50 「미니게임」 = 게임 4종 중 아무거나 한 판(전원 공개). */
+   v3.1: p4는 카드 안에서 게임 입구를 직접 그린다(stampInnerHtml 특례) · v3.50 「미니게임」 = 게임 중 아무거나 한 판(전원 공개 · v4.09 AI O/X 포함 5종). */
 /* v3.52 · 10F 실습형 세션 입장도 p3 로 셀지 · 서버 P3_INCLUDE_10F 와 함께 바꾼다 (기본 끔) */
 var P3_INCLUDE_10F = false;
 var STAMPS = [
@@ -2074,6 +2160,7 @@ function pwLostOpen() {
   el("pwName").value = known.name || (el("userName") ? el("userName").value : "") || "";
   el("pwErr").textContent = "";
   el("pwForm").hidden = false; el("pwDone").hidden = true; el("pwSend").hidden = false;
+  if (el("pwBack") && !el("pwBack").firstChild) el("pwBack").innerHTML = BACK_SVG;   /* v4.09 헤더 뒤로와 같은 모양 */
   el("pwlost").hidden = false;
   if (!PWLOST.bound) {   /* 엔터로도 보낼 수 있게 (버튼은 인라인 onclick) */
     PWLOST.bound = 1;
@@ -2094,11 +2181,11 @@ function pwLostSend() {
   err.textContent = "";
   btn.disabled = true; btn.textContent = "보내는 중";
   var done = function () {   /* 성공·명부 불일치 모두 같은 화면 (떠보기 차단) */
-    btn.disabled = false; btn.textContent = "요청 보낼게요";
+    btn.disabled = false; btn.textContent = "요청 보내기";
     el("pwForm").hidden = true; el("pwDone").hidden = false; btn.hidden = true;
   };
   beCall({ action: "pw_reset_req", emp: emp, name: name }, function () { done(); }, function () {
-    btn.disabled = false; btn.textContent = "요청 보낼게요";
+    btn.disabled = false; btn.textContent = "요청 보내기";
     err.textContent = "연결에 실패했어요. 잠시 후 다시 시도해 주세요.";
   });
 }
@@ -3316,6 +3403,11 @@ var SIGNAGE = ["screen", "screen_art", "screen_survey", "screen_words", "wall_qu
 var GEAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
   '<circle cx="12" cy="12" r="3.1"/>' +
   '<path d="M19.1 14.4a1.6 1.6 0 0 0 .32 1.77l.06.06a1.9 1.9 0 1 1-2.69 2.69l-.06-.06a1.6 1.6 0 0 0-1.77-.32 1.6 1.6 0 0 0-.97 1.47v.17a1.9 1.9 0 1 1-3.8 0v-.09a1.6 1.6 0 0 0-1.05-1.47 1.6 1.6 0 0 0-1.77.32l-.06.06a1.9 1.9 0 1 1-2.69-2.69l.06-.06a1.6 1.6 0 0 0 .32-1.77 1.6 1.6 0 0 0-1.47-.97H3.9a1.9 1.9 0 1 1 0-3.8h.09a1.6 1.6 0 0 0 1.47-1.05 1.6 1.6 0 0 0-.32-1.77l-.06-.06a1.9 1.9 0 1 1 2.69-2.69l.06.06a1.6 1.6 0 0 0 1.77.32h.08a1.6 1.6 0 0 0 .97-1.47V3.9a1.9 1.9 0 1 1 3.8 0v.09a1.6 1.6 0 0 0 .97 1.47 1.6 1.6 0 0 0 1.77-.32l.06-.06a1.9 1.9 0 1 1 2.69 2.69l-.06.06a1.6 1.6 0 0 0-.32 1.77v.08a1.6 1.6 0 0 0 1.47.97h.17a1.9 1.9 0 1 1 0 3.8h-.09a1.6 1.6 0 0 0-1.47.97z"/></svg>';
+/* v4.09 이동 표시 셰브론(글자 「›」 대신) · 위치 아이콘(장소 줄) */
+var CHEV_SVG = '<svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg>';
+var PIN_SVG = '<svg class="axs-pin" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 14.2s4.6-4.1 4.6-7.8a4.6 4.6 0 0 0-9.2 0c0 3.7 4.6 7.8 4.6 7.8z"/><circle cx="8" cy="6.4" r="1.6"/></svg>';
+/* 글자 링크 뒤 셰브론 · 「스탬프 ›」처럼 글자에 이어 붙이지 않는다 */
+function lnkChev(t) { return '<span class="axs-lk">' + t + CHEV_SVG + '</span>'; }
 var BACK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>';
 var BELL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10a6 6 0 0 0-12 0c0 4.4-1.7 5.9-2.4 6.6h16.8c-.7-.7-2.4-2.2-2.4-6.6z"/><path d="M10.2 20a2 2 0 0 0 3.6 0"/></svg>';
 var QR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><path d="M13.5 13.5h3.2v3.2h-3.2z"/><path d="M20.5 13.5v3.2"/><path d="M13.5 20.5h3.2"/><path d="M18.6 17.4v3.1h1.9"/></svg>';
@@ -3347,7 +3439,7 @@ var App = {
     /* v4.06 3단계 · 현장 안내 E02 · 스캔 Q02 · 결과 Q03 · 계단 화면 */
     exp_g: "exp", scan_q: "exp", scan_res: "exp", stair: "exp",
     games: "exp", ideas: "exp", survey: "exp", ideas_mine: "ideas",
-    game_word: "games", game_type: "games", game_tetris: "games", game_pang: "games", game_jump: "games", oly_rank: "games", type_rank: "game_type",
+    game_word: "games", game_type: "games", game_tetris: "games", game_pang: "games", game_jump: "games", game_ox: "games", oly_rank: "games", type_rank: "game_type",
     art: "home", art_rank: "art", screen_art: "admin",   /* v4.01 AI 사생대회 폐기 · 진입은 막혀 있다 */
     /* 프로그램 · 신청 (2단계에서 재디자인) */
     dap: "guide", ev_cchat: "guide", sess_d: "guide", sess_cf: "sess_d", sess_ok: "guide",
@@ -3364,7 +3456,7 @@ var App = {
     ev_cchat: "내 커피챗",
     wq_list: "DAP Wall QR 퀴즈", wq_play: "문제 풀이",
     admin: "관리자 콘솔", screen: "송출용 화면", screen_survey: "", screen_words: "", game_word: "ME to WE 기억력", game_type: "타자 게임", game_tetris: "테트리스", type_site: "현장 타자왕전", wall_type: "", type_award: "", type_rank: "타자 순위",
-    game_pang: "AX 팡", game_jump: "ME to WE 점프", oly_rank: "AX 올림픽",
+    game_pang: "AX 팡", game_jump: "ME to WE 점프", game_ox: "AI O/X", oly_rank: "AX 올림픽",
     art: "AI 사생대회", art_rank: "좋아요 순위", screen_art: "",
     wall_quiz: "", wall_wave: "", wall_live: "", wall_metowe: "", wall_tv: ""
   },
@@ -3391,6 +3483,37 @@ var App = {
     return this.TITLES[v] || "";
   },
   tab: function (t) { this.from = {}; this.go(t); },
+  /* v4.09 경로 줄 · 실제로 들어온 길 = 뒤로 버튼과 같은 사슬(parentOf · from) · [탭 첫 화면(또는 홈), …, 지금] */
+  crumbs: function (v) {
+    var out = [v], cur = v, hop = 0;
+    while (this.parentOf(cur) && hop < 8) { cur = this.parentOf(cur); out.unshift(cur); hop++; }
+    return out;
+  },
+  crumbLabel: function (v) {
+    if (v === "home") return "홈";
+    if (v === "sess_d") {
+      var s = progById(PROG.sid); if (!s) return "프로그램";
+      if (s.id === "dap") return "DAP 과제상담";
+      if (s.id === "cchat") return "AX 커피챗";
+      var d = progDetail(s); return d.cat + (d.org && d.cat.indexOf(d.org) < 0 ? " · " + d.org : "");
+    }
+    return this.title(v);
+  },
+  /* 경로 줄 링크 · 그 단계까지 거슬러 올라간다(뒤로를 여러 번 누른 것과 같다 · 프로그램 필터·스크롤 보존) */
+  up: function (to) {
+    var cur = this.current, hop = 0;
+    while (cur && cur !== to && hop < 8) { var p = this.parentOf(cur); delete this.from[cur]; cur = p; hop++; }
+    this.go(to, true);
+  },
+  crumbHtml: function (v) {
+    var cr = this.crumbs(v);
+    if (cr.length < 2 || SIGNAGE.indexOf(v) >= 0 || v === "admin" || this.isAnc("admin", v)) return "";
+    return '<nav class="axs-crumb" id="axsCrumb" aria-label="현재 위치"><ol>' + cr.map(function (c, i) {
+      var last = i === cr.length - 1, lb = esc(App.crumbLabel(c));
+      return "<li" + (last ? ' aria-current="page"' : "") + ">" + (i ? '<span class="sep" aria-hidden="true">›</span>' : "") +
+        (last ? "<b>" + lb + "</b>" : '<button type="button" onclick="App.up(\'' + c + '\')">' + lb + "</button>") + "</li>";
+    }).join("") + "</ol></nav>";
+  },
   back: function () {
     var v = this.current, p = this.parentOf(v) || "home";
     delete this.from[v];
@@ -3410,6 +3533,8 @@ var App = {
     if (this.current === "game_pang" && v !== "game_pang") pgStop();
     if (this.current === "type_site" && v !== "type_site") { tsScanStop(); if (TS.phase === "play") { rgStop(); TS.phase = "ready"; } }
     if (this.current === "game_jump" && v !== "game_jump") jpStop();
+    if (this.current === "game_ox" && v !== "game_ox") oxStop();   /* v4.09 판 중간에 나가면 기록하지 않는다 */
+    if (/^game_/.test(this.current || "") && v !== this.current && S.get("type_nick_edit", false)) S.set("type_nick_edit", false);   /* v4.09 닉네임을 바꾸다 헤더 뒤로 = 바꾸지 않음 */
     if (this.current === "wall_wave" && v !== "wall_wave") wvStop();
     modalClose();
     var prev = this.booted ? this.current : null;   /* 첫 진입(딥링크·새로 고침 복귀)은 들어온 곳이 없다 */
@@ -3422,7 +3547,7 @@ var App = {
     /* v3.15 새로 고침 복귀 · 현재 화면의 소속 탭을 sessionStorage 에 기억(같은 브라우저 탭에서만, 다음 방문은 홈).
        관리자·사이니지·게임 전체화면은 저장하지 않는다 · Lv2 는 소속 탭으로 저장된다 */
     try {
-      if (SIGNAGE.indexOf(v) < 0 && ["admin", "screen", "game_word", "game_type", "game_tetris", "game_pang", "game_jump", "type_site"].indexOf(v) < 0) {
+      if (SIGNAGE.indexOf(v) < 0 && ["admin", "screen", "game_word", "game_type", "game_tetris", "game_pang", "game_jump", "game_ox", "type_site"].indexOf(v) < 0) {
         var lt = this.tabOf(v);
         if (this.ROOTS.indexOf(lt) >= 0) {
           sessionStorage.setItem("axf_last_tab", lt);
@@ -3461,14 +3586,16 @@ var App = {
     } else {
       tb.innerHTML = '<div class="axs-hrow"><button type="button" class="axs-back" onclick="App.back()" aria-label="뒤로">' + BACK_SVG + "</button>" +
         '<span class="axs-htitle">' + esc(this.title(v)) + "</span>" +
-        (v === "admin" && S.get("admin_authed", false) ? '<button class="chip" onclick="admLock()">잠금</button>' : "") + gear + "</div>";
+        (v === "admin" && S.get("admin_authed", false) ? '<button class="chip" onclick="admLock()">잠금</button>' : "") + gear + "</div>" +
+        this.crumbHtml(v);   /* v4.09 경로 줄 · 헤더 구분선 바로 아래 */
     }
     tb.style.display = SIGNAGE.indexOf(v) >= 0 ? "none" : "";
+    crumbFit();
     /* 헤더 높이를 실측해 sticky 기준선으로 넘긴다 */
     el("frame").style.setProperty("--stick", tb.offsetHeight + "px");
     var nav = el("tabbar");
     document.body.dataset.pg = v === "scan_q" ? "d" : "";   /* v4.06 · 프로그램 탭 흰 페이지(v4.05) 폐지 · 다른 탭과 같은 canvas + 흰 카드 · Q02 스캔만 카메라 화면(짙은 면) */
-    nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "sess_d" || v === "sess_cf" || v === "sess_ok" || (v === "ideas" && IDEA.step) || ["exp_g", "scan_q", "scan_res", "stair"].indexOf(v) >= 0 || v === "game_word" || v === "game_type" || v === "game_tetris" || v === "game_pang" || v === "game_jump" || v === "type_site") ? "none" : "";
+    nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "sess_d" || v === "sess_cf" || v === "sess_ok" || (v === "ideas" && IDEA.step) || ["exp_g", "scan_q", "scan_res", "stair"].indexOf(v) >= 0 || v === "game_word" || v === "game_type" || v === "game_tetris" || v === "game_pang" || v === "game_jump" || v === "game_ox" || v === "type_site") ? "none" : "";
     var activeTab = this.tabOf(v), ico = this.NAV_ICO;
     var btn = function (t) {
       return '<button class="ax-nav-link"' + (activeTab === t[0] ? ' aria-current="page"' : "") + ' onclick="App.tab(\'' + t[0] + '\')">' +
@@ -3497,6 +3624,28 @@ var App = {
     if (el("mtCv")) setTimeout(mtEnsure, 30); else if (MT.raf) mtStop();
   }
 };
+/* v4.09 경로 줄 한 줄 맞춤 · 넘치면 가운데 단계를 앞에서부터 「…」 하나로 접는다 · 첫 단계와 지금 위치는 늘 보인다(지금 위치가 길면 말줄임) · 가로 스크롤 없음 */
+function crumbFit() {
+  var n = el("axsCrumb"); if (!n) return;
+  var ol = n.querySelector("ol"), li = [].slice.call(ol.children);
+  /* 내용 폭 합(마지막 칸은 말줄임으로 줄어들어 ol.scrollWidth 로는 넘침을 못 잡는다) */
+  var need = function () {
+    var w = 0;
+    [].forEach.call(ol.children, function (x) {
+      if (x.classList.contains("gone")) return;
+      var bb = x.querySelector("b"), sp = x.querySelector(".sep");
+      w += bb ? bb.scrollWidth + (sp ? sp.offsetWidth : 0) : x.scrollWidth;
+    });
+    return w > ol.clientWidth + 1;
+  };
+  if (li.length < 3 || !need()) return;
+  var dot = document.createElement("li");
+  dot.className = "dot"; dot.innerHTML = '<span class="sep" aria-hidden="true">›</span><span aria-label="중간 단계 생략">…</span>';
+  ol.insertBefore(dot, li[1]);
+  for (var i = 1; i < li.length - 1 && need(); i++) li[i].classList.add("gone");
+}
+/* 게임 판 중에는 경로 줄을 숨긴다(시작·결과 화면에는 보인다) */
+function crumbShow(on) { var n = el("axsCrumb"); if (n) n.hidden = !on; }
 /* LED 공지 띠는 AX-TDS 1단계(260922)에서 폐기 · 공지는 홈 맨 위 카드 한 장(homeNoticeHtml) · 30분 창(LED_TTL)은 그 카드가 이어 쓴다 */
 var LED_TTL = 30 * 60000;
 function updateLed() {}
@@ -3506,13 +3655,13 @@ window.addEventListener("scroll", function () {
   var b = el("topbtn");
   if (!b) return;
   var ok = window.scrollY > 400 && !el("app").hidden &&
-    SIGNAGE.indexOf(App.current) < 0 && App.current !== "game_word" && App.current !== "game_type" && App.current !== "game_tetris" && App.current !== "game_pang" && App.current !== "game_jump" && App.current !== "type_site";
+    SIGNAGE.indexOf(App.current) < 0 && App.current !== "game_word" && App.current !== "game_type" && App.current !== "game_tetris" && App.current !== "game_pang" && App.current !== "game_jump" && App.current !== "game_ox" && App.current !== "type_site";
   b.classList.toggle("on", ok);
 }, { passive: true });
 window.addEventListener("axf-store", function () {
   checkMyState();
   updateLed();
-  if (["game_word", "game_type", "game_tetris", "game_pang", "game_jump", "type_site", "wall_wave", "wall_metowe", "scan_q"].indexOf(App.current) >= 0) return;   /* v4.06 Q02 는 저장소가 바뀔 때마다 카메라를 다시 붙이지 않는다 */
+  if (["game_word", "game_type", "game_tetris", "game_pang", "game_jump", "game_ox", "type_site", "wall_wave", "wall_metowe", "scan_q"].indexOf(App.current) >= 0) return;   /* v4.06 Q02 는 저장소가 바뀔 때마다 카메라를 다시 붙이지 않는다 */
   App.render();
 });
 
@@ -3773,7 +3922,7 @@ function progDetail(s) {
     else if (m && m.pre) { D.secT = "신청한 프로그램이에요"; D.help = "사전 신청 취소는 담당자에게 문의해 주세요"; D.btn = progBtn("내 일정 보기", "mySched()", "ax-button-weak"); }
     else if (m) { D.secT = "신청한 프로그램이에요"; D.help = "참여가 어려우면 신청을 취소할 수 있어요"; D.btn = cxBtn; }
     else if (rem <= 0) { D.help = "취소가 나오면 다시 열려요"; D.btn = progBtn("정원이 마감됐어요", "", "", "", true); }
-    else { D.help = "선택한 일정과 장소를 확인한 후 신청해요"; D.btn = progBtn("참여 신청할게요", "progApply(\'" + s.id + "\')") + progBtn("다음에 할게요", "App.back()", "ax-button-weak"); }
+    else { D.help = "선택한 일정과 장소를 확인한 후 신청해요"; D.btn = progBtn("신청하기", "progApply(\'" + s.id + "\')"); }
     return D;
   }
   if (s.kind === "open") {
@@ -3825,7 +3974,7 @@ function progDetail(s) {
       '<p class="ax-meta axs-lunch">점심시간 ' + conf.lunch + "–" + conf.lunchEnd + "</p>" + slots.filter(function (t) { return t2m(t) >= lunchM; }).map(cell).join("") + "</div></section>";
     D.secB = "업무 설명 → 병목 → 개선방안 순서로 30분 진행해요.<br>상담을 완료하면 사은품을 드려요.";
     D.help = DAPSEL ? "선택한 시간 " + DAPSEL + " · 1F DAP ZONE 미팅룸 2" : "상담 시간을 먼저 골라 주세요";
-    D.btn = (DAPSEL ? progBtn("이 시간으로 신청할게요", "progApply(\'dap\')") : progBtn("이 시간으로 신청할게요", "", "", "", true)) + progBtn("다음에 할게요", "App.back()", "ax-button-weak");
+    D.btn = DAPSEL ? progBtn("이 시간으로 신청하기", "progApply(\'dap\')") : progBtn("이 시간으로 신청하기", "", "", "", true);
     return D;
   }
   if (s.id === "cchat") {
@@ -3836,8 +3985,8 @@ function progDetail(s) {
     if (!c) {
       /* v4.07 자동 요청 폐기 · 아이디어가 있으면 바로 신청, 없으면 아이디어부터 */
       D.secB = CCHAT_TXT.replace(" · ", "<br>") + "<br>비슷한 주제끼리 묶어 자리를 배정해 드려요.";
-      if (ideaMineN()) { D.help = "제출한 아이디어로 신청해요"; D.btn = progBtn("커피챗 신청할게요", "cchatApply()", "", "cchatApplyBtn") + progBtn("다음에 할게요", "App.back()", "ax-button-weak"); }
-      else { D.help = "아이디어를 한 줄 남기면 신청할 수 있어요"; D.btn = progBtn("아이디어 남길게요", "App.go(\'ideas\')") + progBtn("다음에 할게요", "App.back()", "ax-button-weak"); }
+      if (ideaMineN()) { D.help = "제출한 아이디어로 신청해요"; D.btn = progBtn("커피챗 신청하기", "cchatApply()", "", "cchatApplyBtn"); }
+      else { D.help = "아이디어를 한 줄 남기면 신청할 수 있어요"; D.btn = progBtn("아이디어 남기기", "App.go(\'ideas\')"); }
     } else {
       D.secT = "신청한 커피챗이에요";
       D.secB = mt ? "시작 5분 전까지 18F 라운지 해당 테이블에 앉아 주세요. 커피는 스태프가 준비해 둬요." : "DS파트가 비슷한 아이디어끼리 묶는 중이에요.<br>매칭되면 자리와 시간을 앱에서 알려 드려요.";
@@ -3932,13 +4081,26 @@ function progCancelOpen(id) {
   sheetPaint(true);
 }
 function sheetPaint(first) {
-  var s = progById(SHEET.id), d = progDetail(s), w = el("axsSheet");
+  var w = el("axsSheet");
   if (!w) {
     w = document.createElement("div"); w.id = "axsSheet";
     w.addEventListener("click", function (e) { if (e.target === w && !SHEET.busy) sheetClose(); });
     w.addEventListener("keydown", sheetKey);
     el("frame").appendChild(w);
   }
+  if (SHEET.id === "photo") {   /* v4.09 포토부스 번호표 */
+    var pq = photoQ() || {};
+    w.innerHTML = '<div class="ax-sheet" role="dialog" aria-modal="true" aria-labelledby="axsSheetT">' +
+      '<h2 class="ax-type-t2" id="axsSheetT">번호표를 취소할까요?</h2>' +
+      '<p class="ax-body">1F AI 포토부스 ' + esc(pq.no || "") + "번" + (pq.eta ? "<br>예상 입장 " + esc(pq.eta) : "") + "</p>" +
+      (SHEET.err ? '<div class="axs-err" role="alert"><b>' + esc(SHEET.err) + "</b><span>번호표는 그대로 유지돼요.</span></div>" : "") +
+      '<div class="ax-stack-tight axs-gap12"><button type="button" class="ax-button" onclick="sheetClose()"' + (SHEET.busy ? " disabled" : "") + ">번호표 유지하기</button>" +
+      '<button type="button" class="ax-button ax-button-weak" onclick="photoCancel()"' + (SHEET.busy ? ' disabled aria-busy="true"' : "") + ">" + (SHEET.busy ? "취소하는 중" : SHEET.err ? "다시 시도하기" : "번호표 취소하기") + "</button></div></div>";
+    var pb = w.querySelectorAll("button:not([disabled])");
+    if (pb.length && (first || !w.contains(document.activeElement))) pb[0].focus();
+    return;
+  }
+  var s = progById(SHEET.id), d = progDetail(s);
   var when = s.id === "dap" ? (myResv() || {}).slot || "" : s.id === "cchat" ? (S.get("cchat", {}) || {}).round || "" : progTm(s.tm);
   w.innerHTML = '<div class="ax-sheet" role="dialog" aria-modal="true" aria-labelledby="axsSheetT">' +
     '<h2 class="ax-type-t2" id="axsSheetT">신청을 취소할까요?</h2>' +
@@ -4064,7 +4226,7 @@ function sessInlineHtml(s) {
     /* v3.21 B 원격 대기열 · 번호표 UI 는 일정 탭 상시 행·상세 화면과 같은 photoQueueHtml 하나 */
     return h + photoQueueHtml();
   }
-  h += '<p class="lnk" onclick="sessOpen(\'' + s.id + '\')">자세히 ›</p>';
+  h += '<p class="lnk" onclick="sessOpen(\'' + s.id + '\')">' + lnkChev("자세히") + "</p>";
   return h;
 }
 /* 프로그램 신청형 행 = 공용 행 카드 · 시간이 있는 행은 일정 탭과 같은 좌측 두 줄 시간 뱃지 (v3.22)
@@ -4116,7 +4278,7 @@ function flListHtml(n) {
 function menuItem(target, no, title, desc, badge) {
   return '<div class="mi" onclick="App.go(\'' + target + '\')"><span class="no">' + no + '</span>' +
     '<span class="tt"><b>' + title + "</b>" + (desc ? "<p>" + desc + "</p>" : "") + "</span>" +
-    (badge || "") + '<span class="arw">›</span></div>';
+    (badge || "") + '<span class="arw">' + CHEV_SVG + "</span></div>";
 }
 
 
@@ -4209,7 +4371,7 @@ function myScheduleHtml() {
   });
   rows.sort(function (a, b) { return a[0] - b[0]; });
   var head = '<div class="sect"><b>나의 일정</b>' +
-    '<span role="button" tabindex="0" onclick="mySched()">내 일정 ›</span></div>';
+    '<span role="button" tabindex="0" onclick="mySched()">' + lnkChev("내 일정") + "</span></div>";
   /* v3.13: 첫 줄 = 「지금·다음」(구 히어로 흡수 · 시간 뱃지 공용 tok, 진행 중 = 검정) · v3.22 모든 행 = 공용 행 카드 */
   if (!rows.length) {
     return head + '<div class="axs-rows">' + schedNowRow() +
@@ -4226,7 +4388,7 @@ function myScheduleHtml() {
    홈용은 컴팩트 변형(캡션 축약 + 하단 CTA)일 뿐 레일의 시각 문법은 동일 · 마커 탭 동작(모달)도 동일하다. */
 function myCouponHtml() {
   return '<div class="sect"><b>스탬프</b>' +
-    '<span role="button" tabindex="0" onclick="App.go(\'passport\')">스탬프 ›</span></div>' +
+    '<span role="button" tabindex="0" onclick="App.go(\'passport\')">' + lnkChev("스탬프") + "</span></div>" +
     railHtml(stampCount(), false, null, true);
 }
 
@@ -4300,16 +4462,27 @@ function photoTake() {
     notice({ key: "photo:" + res.no, title: "포토부스 " + res.no + "번", body: "예상 입장 " + res.eta });
   }, function () { PHOTO.busy = false; toast("서버에 연결할 수 없어요"); });
 }
+/* v4.09 번호표 취소 = M03 취소 확인 시트(신청 취소와 같은 틀 · design.md A 5-6) · 실패하면 번호표 유지 */
+function photoCancelOpen() {
+  var q = photoQ(); if (!q || q.status !== "wait") return;
+  SHEET.id = "photo"; SHEET.busy = false; SHEET.err = "";
+  SHEET.back = (document.activeElement && document.activeElement.id) || "";
+  sheetPaint(true);
+}
 function photoCancel() {
+  if (SHEET.busy) return;
+  var done = function () { S.set("photoq", null); sheetClose(true); notice({ title: "번호표 취소됨" }); };
+  var bad = function (m) { SHEET.busy = false; SHEET.err = m; if (el("axsSheet")) sheetPaint(); };
+  SHEET.busy = true; SHEET.err = ""; if (el("axsSheet")) sheetPaint();
   if (!BE.on) {
     var pub = photoPub();
     S.set("photo_pub", { waiting: Math.max(0, (pub.waiting || 1) - 1), serving: pub.serving || 0, min: PHOTO.MIN });
-    S.set("photoq", null); notice({ title: "번호표 취소됨" }); return;
+    return done();
   }
   var u = S.get("user", {}) || {};
   beCall({ action: "photo_cancel", emp: u.empId || "" }, function (res) {
-    if (res && res.ok) { S.set("photoq", null); notice({ title: "번호표 취소됨" }); } else toast("취소하지 못했어요");
-  }, function () { toast("서버에 연결할 수 없어요"); });
+    if (res && res.ok) done(); else bad("취소하지 못했어요");
+  }, function () { bad("서버에 연결할 수 없어요"); });
 }
 /* 번호표 UI · 프로그램 행 펼침·일정 탭 상시 행·상세 화면 공용 */
 function photoQueueHtml(noBtn) {
@@ -4321,7 +4494,7 @@ function photoQueueHtml(noBtn) {
   if (q && q.status === "wait") {
     return '<div class="pq"><p class="k">예상 입장</p><p class="big">' + esc(q.eta) + '</p><p class="s">앞 <b>' + q.ahead + "팀</b> · 내 번호 " + q.no + "번</p>" +
       (q.ahead <= 2 ? '<p class="nt">곧 차례 · 1F 포토부스로 이동</p>' : "") + "</div>" +
-      (noBtn ? "" : '<button class="btn line" onclick="photoCancel()">번호표 취소</button>');
+      (noBtn ? "" : '<button class="btn line" onclick="photoCancelOpen()">번호표 취소</button>');
   }
   if (q && q.status === "skip") {
     return '<div class="pq dim"><p class="k">건너뛴 번호</p><p class="big">' + q.no + '번</p></div>' +
@@ -4381,18 +4554,13 @@ function rcPlaceW(t) {
   return Math.round(Math.min(w, 88));   /* v3.63 칩 상한을 낮춰 제목 자리를 먼저 지킨다 · 넘치면 칩이 말줄임 */
 }
 function rcHtml(o) {
-  var chev = o.chev === false ? "" : o.link ? '<span class="chev arw">›</span>' : '<span class="chev">' + (o.open ? "▲" : "▼") + "</span>";
-  /* v3.44 · 장소는 제목 옆 글자가 아니라 오른쪽 위 무채색 칩 (사용자 요청 260917) */
-  if (o.place) return '<div class="rc hp' + (o.cls || "") + '" style="--pcw:' + rcPlaceW(o.place) + 'px"><span class="pc">' + esc(o.place) + "</span>" +
+  var chev = o.chev === false ? "" : o.link ? '<span class="chev arw">' + CHEV_SVG + "</span>" : '<span class="chev">' + (o.open ? "▲" : "▼") + "</span>";
+  /* v4.09 (사용자 피드백 260922 「장소와 › 가 붙어 보기 불편」) · 장소 = 제목 아래 한 줄(위치 아이콘 + T7 muted) ·
+     이동 표시 = 행 오른쪽 끝 셰브론(24 영역 · 세로 가운데) · 누르는 곳은 행 전체(.rh) · 옛 오른쪽 위 장소 칩(v3.44)은 폐지 */
+  return '<div class="rc' + (o.place ? " hp" : "") + (o.cls || "") + '">' +
     '<div class="rh"' + (o.onclick ? ' onclick="' + o.onclick + '"' : "") + ">" +
     '<span class="ls">' + (o.left || "") + "</span>" +
-    '<span class="bd">' + rcTitle(o) + (o.sub ? '<span class="sb">' + o.sub + "</span>" : "") + "</span>" +
-    (o.right ? '<span class="rt">' + o.right + "</span>" : "") + chev + "</div>" +
-    (o.open && o.body ? '<div class="rb">' + o.body + "</div>" : "") + "</div>";
-  return '<div class="rc' + (o.cls || "") + '">' +
-    '<div class="rh"' + (o.onclick ? ' onclick="' + o.onclick + '"' : "") + ">" +
-    '<span class="ls">' + (o.left || "") + "</span>" +
-    '<span class="bd">' + rcTitle(o) + (o.sub ? '<span class="sb">' + o.sub + "</span>" : "") + "</span>" +
+    '<span class="bd">' + rcTitle(o) + (o.sub ? '<span class="sb">' + o.sub + "</span>" : "") + (o.place ? '<span class="pl">' + PIN_SVG + "<span>" + esc(o.place) + "</span></span>" : "") + "</span>" +
     (o.right ? '<span class="rt">' + o.right + "</span>" : "") + chev + "</div>" +
     (o.open && o.body ? '<div class="rb">' + o.body + "</div>" : "") + "</div>";
 }
@@ -4489,7 +4657,7 @@ function testStampReset() {
 /* v3.70 (사용자 확정 260918) 테스트 사번·데모에서 미니게임을 한 번도 안 한 상태로 되돌린다.
    이 기기 기록만 지운다 · 순위판에 올라간 서버 기록은 관리 콘솔에서 지운다(참여자 앱에 삭제 기능을 두지 않는다). */
 var GAME_KEYS = ["pang_best", "jump_best", "gw_best", "gw_time_best", "tt_best", "type_best", "pang_cleared", "jump_cleared", "gw_cleared", "type_cleared",
-  "oly2_best_pang", "oly2_best_jump", "oly2_best_tetris", "oly2_best_word", "oly2_done_pang", "oly2_done_jump", "oly2_done_tetris", "oly2_done_word",
+  "oly2_best_pang", "oly2_best_jump", "oly2_best_tetris", "oly2_best_word", "oly2_best_ox", "oly2_done_pang", "oly2_done_jump", "oly2_done_tetris", "oly2_done_word", "oly2_done_ox", "ox_cleared", "ox_seen",
   "oly_tab", "oly_ev", "mem_seen", "type_rank_app", "type_rank_site", "game_sound", "type_nick_edit", "art_demo_n"];
 function testGameReset(withNick) {
   if (!testMode()) return;
@@ -4765,7 +4933,7 @@ function stampInnerHtml(s) {
       (sst.leg ? '<p class="nt">진행 중 · ' + sst.leg.fl + "F 시작 · " + esc(sst.leg.at || "") + "</p>" : "") +
       '<p class="nt">' + STAIR_SAFE + "</p>" + scanQNote() +
       '<button class="btn mint" style="margin-top:10px" onclick="stairOpen()">' + (sst.leg ? "진행 화면 보기" : "계단 안내") + "</button>" +
-      '<p class="lnk sub" onclick="staffStampOpen()">담당자 적립 ›</p>';
+      '<p class="lnk sub" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</p>";
   } else if (s.id === "p3") {
     /* v3.52 · 세 가지 중 하나 · 바로가기 3개 · 좌석 QR · 담당자 적립 */
     inner += '<div class="p3-go">' +
@@ -4773,7 +4941,7 @@ function stampInnerHtml(s) {
       '<button class="btn mint" onclick="App.go(\'dap\')">DAP 과제상담</button>' +
       '<button class="btn mint" onclick="App.go(\'ev_cchat\')">AX 커피챗</button></div>' + scanQNote() +
       '<button class="btn line" style="margin-top:8px" onclick="qrScanOpen()">17F 좌석 QR 스캔</button>' +
-      '<p class="lnk sub" onclick="staffStampOpen()">담당자 적립 ›</p>';
+      '<p class="lnk sub" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</p>";
   } else if (s.id === "p4") {
     /* v3.50 · AX 올림픽 허브 · 종목 행 카드 · 내 환산 점수·메달 · 총점 */
     inner += '<div class="oly-hub">' + olyHubHtml() + "</div>";
@@ -4785,11 +4953,11 @@ function stampInnerHtml(s) {
       /* v3.1: 현장 적립형(01·02·03)은 QR 스캔·담당자 적립을 카드 안에서 바로 (보조 카드 폐지) */
       if (s.tap !== "qrScanOpen()") inner += '<button class="btn line" style="margin-top:8px" onclick="qrScanOpen()">QR 스캔</button>';
       /* v3.12: 예외 경로는 최하위 회색 텍스트 링크 (design.md 보조 대안 행동 규정) */
-      inner += '<p class="lnk sub" onclick="staffStampOpen()">담당자 적립 ›</p>';
+      inner += '<p class="lnk sub" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</p>";
     }
     if (s.id === "p5") {
       var mine5 = S.get("ideas", []).filter(function (x) { return x.empId === (S.get("user", {}) || {}).empId; }).length;
-      if (mine5) inner += '<p class="lnk" onclick="App.go(\'ideas_mine\')">내가 낸 아이디어 ' + mine5 + "건 제출 ›</p>";
+      if (mine5) inner += '<p class="lnk" onclick="App.go(\'ideas_mine\')">' + lnkChev("내가 낸 아이디어 " + mine5 + "건") + "</p>";
     }
   }
   /* v3.19 테스트 · 완료 처리 (미완료 카드) · v3.28 테스트 · 완료 취소 (완료 카드) · 데모·테스트 사번에서만 */
@@ -5123,12 +5291,12 @@ var Views = {
 
   /* ═══ 포토부스 대기 · 나의 참여 › 목적지 · 기존 번호표 UI 를 그대로 담는다(새 대기 UI 는 가이드에 정의가 없다) ═══ */
   photoq: function () {
-    /* v4.08 결정 화면 형식 · 상태는 카드 · 행동은 아래 고정(대기 번호 받을게요 · 다시 줄 설게요 · 번호표 취소) · 호출 중에는 버튼 없음 */
+    /* v4.08 결정 화면 형식 · 상태는 카드 · 행동은 아래 고정 · v4.09 버튼 하나(대기 번호 받기 · 다시 줄 서기 · 번호표 취소하기 → 확인 시트) · 호출 중에는 버튼 없음 */
     var q = photoQ(), st = q && q.status;
     return '<div class="ax-stack"><section class="ax-card"><div class="ax-stack-tight"><h2 class="ax-card-title">1F AI 포토부스</h2>' +
       '<p class="ax-meta">1F 홍보존 · 10:00 – 17:00</p></div>' + photoQueueHtml(true) + "</section></div>" +
-      (st === "call" ? "" : st === "wait" ? '<div class="axs-fix ax-bottom"><button type="button" class="ax-button axs-btn-neutral" onclick="photoCancel()">번호표 취소하기</button></div>'
-        : ax2Btn(st === "skip" ? "다시 줄 설게요" : "대기 번호 받을게요", "photoTake()", "다음에 할게요", "App.back()"));
+      (st === "call" ? "" : st === "wait" ? '<div class="axs-fix ax-bottom"><button type="button" class="ax-button axs-btn-neutral" id="pqCxBtn" onclick="photoCancelOpen()">번호표 취소하기</button></div>'
+        : ax2Btn(st === "skip" ? "다시 줄 서기" : "대기 번호 받기", "photoTake()"));
   },
 
   notices: function () {
@@ -5158,7 +5326,7 @@ var Views = {
       '<b class="disp" style="font-size:24px;letter-spacing:0.03em">AX Festival <span style="color:var(--mint-deep)">2026</span></b>' +
       '<div class="row" style="gap:6px">' + tvBtns() + (S.get("admin_authed", false) ? '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button>' : "") + "</div></div>" +
       '<p class="tytv-k">' + (oly ? "AX 올림픽 · 종합 순위" : oly2 ? "AX 올림픽 · 종목별 1~3위" : "AX 단어 소나기 · 1F 현장 타자왕전") + "</p>" +
-      '<p class="tytv-t">' + (oly ? "네 종목 최고 점수 합계 · " + olyFmt(olyMax()) + "점 만점" : oly2 ? "팡 · 점프 · 테트리스 · 기억력" : "현장 타자왕전 상위 5") + "</p>" +
+      '<p class="tytv-t">' + (oly ? "다섯 종목 최고 점수 합계 · " + olyFmt(olyMax()) + "점 만점" : oly2 ? "팡 · 점프 · 테트리스 · 기억력 · O/X" : "현장 타자왕전 상위 5") + "</p>" +
       '<div class="tytv-seg"><span class="' + (site ? "on" : "") + '">현장 타자 5</span><span class="' + (oly ? "on" : "") + '">올림픽 종합</span><span class="' + (oly2 ? "on" : "") + '">올림픽 종목별</span></div>' +
       (oly ? olyTvPodium() : oly2 ? olyTvEvents() : '<div class="tytv-list five">' + tyTvRows(r, 5) + "</div>") +
       '<p class="tytv-foot">' + (oly || oly2 ? "종목마다 최고 한 판 · 종목 최대 " + olyFmt(olyCap()) + "점 · 명예 순위" : "결선 " + esc(winTxt) + " · 1인 1회 · 같은 키보드 · 1·2등은 17:00 Outro에서 호명") + "</p>" +
@@ -5253,8 +5421,7 @@ var Views = {
       (IDEA.err ? '<div class="axs-err" role="alert"><b>' + esc(IDEA.err) + "</b><span>쓴 내용은 그대로 있어요</span></div>" : "") +
       (mine.length ? '<button type="button" class="ax-link axs-plain axs-self" onclick="App.go(\'ideas_mine\')">내가 낸 아이디어 ' + mine.length + "건</button>" : "") +
       "</div>" +
-      '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" id="ideaGo" onclick="submitIdea()"' + (n >= IDEA_MIN ? "" : " disabled") + ">제출할게요</button>" +
-      '<button type="button" class="ax-button ax-button-weak" onclick="App.back()">다음에 할게요</button></div>';
+      '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" id="ideaGo" onclick="submitIdea()"' + (n >= IDEA_MIN ? "" : " disabled") + ">제출하기</button></div>";   /* v4.09 버튼 하나 · 나가기는 헤더 뒤로 */
   },
 
   /* ═══ v3.58 AI 사생대회 갤러리 · 카드 목록(섬네일 · 제목 · 설명 · 작가 닉네임 · 좋아요) · 탭하면 원본 ═══ */
@@ -5307,7 +5474,8 @@ var Views = {
     }
     if (!surveyOpen()) return '<div class="ax-stack">' + botHtml(SURVEY.open + "에 열려요") + "</div>";
     if (surveyLock() === "nostamp") return '<div class="ax-stack">' + botHtml("스탬프를 하나 모으면 열려요") + '<button type="button" class="ax-button ax-button-weak" onclick="App.go(\'passport\')">스탬프 보기</button></div>';
-    /* v4.08 입력·제출 화면 형식 · 전체 화면 · 하단 메뉴 숨김 · 아래 고정(다음/제출할게요 + 이전/다음에 할게요) · 답은 그대로 저장(survey_draft) */
+    /* v4.08 입력·제출 화면 형식 · 전체 화면 · 하단 메뉴 숨김 · 아래 고정(다음/제출하기 + 2번째 문항부터 이전) · 답은 그대로 저장(survey_draft)
+       v4.09 첫 문항의 약한 나가기 버튼 삭제(나가기는 헤더 뒤로) · 「이전」은 남긴다(헤더 뒤로는 설문 자체를 나가서 문항 이동을 대신하지 못한다) */
     var step = Math.max(1, Math.min(d.step || 1, n)), q = Q[step - 1], last = step === n;
     return '<div class="ax-stack axs-form">' +
       '<div class="ax-stack-tight axs-gap12"><p class="ax-meta">' + step + " / " + n + " · 답은 이름 없이 저장돼요</p>" +
@@ -5315,10 +5483,9 @@ var Views = {
       '<h1 class="ax-type-t3">' + esc(q.q) + (q.optional ? ' <span class="axs-chip off">선택</span>' : "") + "</h1></div>" +
       '<div class="axs-svin">' + svInputHtml(q, d.a[q.id]) + "</div></div>" +
       '<div class="ax-bottom axs-fix">' +
-      (last ? '<button type="button" class="ax-button" ' + (SV.busy ? 'disabled aria-busy="true"' : "") + ' onclick="svSubmit()">' + (SV.busy ? "제출하는 중" : "제출할게요") + "</button>"
+      (last ? '<button type="button" class="ax-button" ' + (SV.busy ? 'disabled aria-busy="true"' : "") + ' onclick="svSubmit()">' + (SV.busy ? "제출하는 중" : "제출하기") + "</button>"
         : '<button type="button" class="ax-button" onclick="svNext()">다음</button>') +
-      (step > 1 ? '<button type="button" class="ax-button ax-button-weak" onclick="svGo(' + (step - 1) + ')"' + (SV.busy ? " disabled" : "") + ">이전</button>"
-        : '<button type="button" class="ax-button ax-button-weak" onclick="App.back()">다음에 할게요</button>') + "</div>";
+      (step > 1 ? '<button type="button" class="ax-button ax-button-weak" onclick="svGo(' + (step - 1) + ')"' + (SV.busy ? " disabled" : "") + ">이전</button>" : "") + "</div>";
   },
 
   ideas_mine: function () {
@@ -5417,8 +5584,7 @@ var Views = {
       '<div class="ax-bottom axs-fix">' +
       (e && e.act
         ? '<button type="button" class="ax-button" onclick="' + e.act + '">' + esc(e.lbl) + "</button>"
-        : '<button type="button" class="ax-button" id="cfGo" onclick="progConfirm()"' + (c.busy ? ' disabled aria-busy="true"' : "") + ">" + (c.busy ? "신청하는 중" : e ? "다시 시도할게요" : "신청할게요") + "</button>") +
-      '<button type="button" class="ax-button ax-button-weak" onclick="App.back()"' + (c.busy ? " disabled" : "") + ">다시 살펴볼게요</button></div>";
+        : '<button type="button" class="ax-button" id="cfGo" onclick="progConfirm()"' + (c.busy ? ' disabled aria-busy="true"' : "") + ">" + (c.busy ? "신청하는 중" : e ? "다시 시도하기" : "신청하기") + "</button>") + "</div>";   /* v4.09 버튼 하나 · 다시 보기는 헤더 뒤로 */
   },
 
   /* ═══ 신청 결과 P04 · 서버 성공(데모는 로컬 판정)일 때만 여기로 온다 ═══ */
@@ -5591,7 +5757,7 @@ var Views = {
 
   game_word: function () {
     gwStop();
-    if (gsNeedNick()) return gsNickHtml("word");   /* v3.50d 네 게임 모두 같은 닉네임(type_nick) · 이미 있으면 묻지 않는다 */
+    if (gsNeedNick()) return gsNickHtml("word");   /* v3.50d 모든 게임이 같은 닉네임(type_nick) · 이미 있으면 묻지 않는다 */
     return gsStartHtml("word", { rootId: "gwRoot", rules: "문장 " + MEM_SHOW + "초 보고 단어 타일을 순서대로 · " + esc(olyRuleLine("word")) });   /* v4.08 공용 시작 틀 */
   },
 
@@ -5626,6 +5792,15 @@ var Views = {
     return gsStartHtml("jump", { rootId: "jpRoot", previewId: "jpPrev", pw: 180, ph: 84,
       how: [["탭", "점프"], ["두 번 탭", "2단 점프"], ["꾸욱 누르기", "엎드리기 (누르는 동안)"]],
       rules: "하트 3개 · " + esc(olyRuleLine("jump")) });   /* v4.02 버틴 시간은 점수가 아니다 */
+  },
+  /* ═══ v4.09 AI O/X · 60초 타임어택 · 시작 화면에서 판 토큰(황금 자리)·모두의 선택 비율을 미리 받는다 ═══ */
+  game_ox: function () {
+    oxStop();
+    if (gsNeedNick()) return gsNickHtml("ox");
+    oxPrefetch();
+    var R = olyRule().ox;
+    return gsStartHtml("ox", { rootId: "oxRoot", hero: '<div class="ox-hero">' + BOT_SVG + '<p class="gs-say-b">맞으면 O, 틀리면 X</p></div>',
+      rules: R.sec / 100 + "초 · 최대 " + (R.per[0] + R.per[1] + R.per[2]) + "문제 · 패스 " + R.pass + "번<br>" + esc(olyRuleLine("ox")) });
   },
   /* ═══ v3.50 AX 올림픽 순위판 · 종합(전 종목 완주자) · 종목별(금은동) ═══
      v3.50d 부문 정보 전면 삭제 (사용자 확정 260917·260918 · 부문 메달표·부문 라벨·부문 평균 금지) */
@@ -5668,7 +5843,7 @@ var Views = {
         '<div class="row" style="justify-content:space-between;align-items:center;gap:10px">' +
         '<span><b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">' + t[1] + '</b>' +
         '<p class="muted" style="margin-top:2px;font-size:calc(13.5px * var(--fs))">' + t[2] + '</p></span>' +
-        '<span style="color:var(--faint);font-size:20px">›</span></div></div>';
+        '<span style="color:var(--faint);display:grid;place-items:center;width:24px;height:24px">' + CHEV_SVG + "</span></div></div>";
     }).join("");
     var open = !onlyGrade && S.get("admin_cc_open", false);
     var cc = !open ? "" : ADM_CC.map(function (t) {
@@ -5676,7 +5851,7 @@ var Views = {
         '<div class="row" style="justify-content:space-between;align-items:center;gap:10px">' +
         '<span><b style="font-size:calc(15.5px * var(--fs))">' + t[1] + '</b>' +
         '<p class="muted" style="margin-top:2px;font-size:calc(12.5px * var(--fs))">' + t[2] + '</p></span>' +
-        '<span style="color:var(--faint);font-size:20px">›</span></div></div>';
+        '<span style="color:var(--faint);display:grid;place-items:center;width:24px;height:24px">' + CHEV_SVG + "</span></div></div>";
     }).join("");
     if (onlyGrade) return '<p class="sub-label">등급 담당 모드 · 존 혼잡 등급만 입력할 수 있습니다</p>' + staff;
     return '<p class="sub-label">스태프 모드 · 현장에서 바로 누르는 것</p>' + staff +
@@ -7002,11 +7177,10 @@ function stairFloorPick(label) {
     (STR.busy ? botHtml("확인하는 중") : "") +
     (STR.err ? '<div class="axs-err" role="alert"><b>처리하지 못했어요</b>' + esc(STR.err) + "</div>" : "");
 }
-/* v4.08 보정 화면 아래 고정 · 주 = 고른 층으로 보정할게요(고르기 전엔 꺼짐) · 약한 = 나가기 */
-function stairPickBtn(back, backLbl) {
-  var p = STR.pick, lbl = p == null ? "층을 골라 주세요" : p === 0 ? "계단을 쓰지 않았어요로 보정할게요" : p + "F로 보정할게요";
-  return '<div class="axs-fix ax-bottom"><button type="button" class="ax-button" id="stGo" onclick="stairPickGo()"' + (p == null || STR.busy ? " disabled" : "") + ">" + (STR.busy ? "보정하는 중" : lbl) + "</button>" +
-    '<button type="button" class="ax-button ax-button-weak" onclick="' + back + '"' + (STR.busy ? " disabled" : "") + ">" + backLbl + "</button></div>";
+/* v4.08 보정 화면 아래 고정 · v4.09 버튼 하나 = 고른 층으로 보정하기(고르기 전엔 꺼짐) · 나가기는 헤더 뒤로 */
+function stairPickBtn() {
+  var p = STR.pick, lbl = p == null ? "층을 골라 주세요" : p === 0 ? "계단 안 씀으로 보정하기" : p + "F로 보정하기";
+  return '<div class="axs-fix ax-bottom"><button type="button" class="ax-button" id="stGo" onclick="stairPickGo()"' + (p == null || STR.busy ? " disabled" : "") + ">" + (STR.busy ? "보정하는 중" : lbl) + "</button></div>";
 }
 function stairHtml() {
   var o = STR.res || {}, s = stairState(), goal = s.goal || 10, m = STR.mode;
@@ -7043,7 +7217,7 @@ function stairHtml() {
       '<h1 class="ax-title">지난번 종료를<br>찍지 않았어요</h1>' +
       '<p class="ax-description">' + o.from.fl + "F 시작 · " + esc(o.from.at || "") + "</p>" +
       '<section class="ax-card axs-gap12">' + stairFloorPick("지난번 종료 층을 눌러 주세요") + "</section>" +
-      '<p class="ax-meta">직접 고른 층수는 자기 신고로 기록돼요</p>', btn: stairPickBtn("App.tab(\'exp\')", "다음에 할게요") };
+      '<p class="ax-meta">직접 고른 층수는 자기 신고로 기록돼요</p>', btn: stairPickBtn() };
   }
   if (m === "reclass") {
     var vf = o.from ? o.from.fl : "";
@@ -7052,7 +7226,7 @@ function stairHtml() {
       '<h1 class="ax-title">지난번 종료 층을<br>눌러 주세요</h1>' +
       '<p class="ax-description">' + vf + "F 시작 · 방금 스캔은 " + (o.to ? o.to.fl : "") + "F 새 시작으로 바꿔요</p>" +
       '<section class="ax-card axs-gap12">' + stairFloorPick("지난번 종료 층") + "</section>" +
-      '<p class="ax-meta">직접 고른 층수는 자기 신고로 기록돼요</p>', btn: stairPickBtn("STR.mode=\'end\'; STR.err=\'\'; STR.pick=null; App.render()", "취소할게요") };
+      '<p class="ax-meta">직접 고른 층수는 자기 신고로 기록돼요</p>', btn: stairPickBtn() };
   }
   if (m === "ask") {
     var st2 = o.stamp && !o.stamp.dup && o.stamp.id === "st", sc = STR.sc || {};
@@ -7457,7 +7631,7 @@ function staffStampOpen() {
     return '<button class="btn line" style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:10px' +
       (done ? ";opacity:0.45" : "") + '"' + (done ? " disabled" : ' onclick="staffStampGive(\'' + s.id + '\')"') + ">" +
       "<span>" + s.title + "</span>" +
-      '<span style="font-weight:800;color:' + (done ? "var(--faint)" : "var(--acc2)") + '">' + (done ? "적립 완료" : "적립 ›") + "</span></button>";
+      '<span style="font-weight:800;color:' + (done ? "var(--faint)" : "var(--acc2)") + '">' + (done ? "적립 완료" : lnkChev("적립")) + "</span></button>";
   }).join("");
   modalOpen('<b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">담당자 적립</b>' +
     '<p class="muted" style="margin-top:6px;font-size:calc(13.5px * var(--fs))">QR이 인식되지 않을 때 쓰는 우회 경로입니다. 참가자분은 담당자에게 화면을 보여주시고, <b style="color:var(--hi)">담당자가 확인 후 부여</b>합니다. 코드는 이 기기에 저장되지 않습니다.</p>' +
@@ -8658,7 +8832,7 @@ function sndToggle(site) {
   if (typeof rgFocus === "function" && el("rgIn")) rgFocus();
 }
 /* START · 아직 안 골랐으면 선택 카드 한 번 */
-var SND_START = { pang: "pgStart()", jump: "jpStart()", tetris: "ttStart()", type: "rgStart('app')", word: "gwStart()" };
+var SND_START = { pang: "pgStart()", jump: "jpStart()", tetris: "ttStart()", type: "rgStart('app')", word: "gwStart()", ox: "oxStart()" };
 function gsBegin(key) {
   SFX.site = false;
   if (sndChosen()) { if (sndOn()) sfxUnlock(); new Function(SND_START[key])(); return; }
@@ -8706,7 +8880,7 @@ function axPreHtml(key, dark) { return AX_PRE[key] ? '<p class="ax-line' + (dark
 function axTodayHtml(dark) { return '<p class="ax-line' + (dark ? " dk" : "") + '"><b>오늘의 AX 한 줄</b>' + esc(axToday()) + "</p>"; }
 
 /* ════════════════ v4.02 AX 올림픽 점수 체계 v2 (사용자 확정 260919 · 설계 정본 「AX 올림픽 점수 체계 v2.md」) ════════════════
-   종목 점수 = 게임 화면에 보이는 행동 점수 그대로 · 종목 최고 한 판 · 종목 상한 3,000 · 종합 = 네 종목 최고 점수의 합(만점 12,000).
+   종목 점수 = 게임 화면에 보이는 행동 점수 그대로 · 종목 최고 한 판 · 종목 상한 3,000 · 종합 = 다섯 종목 최고 점수의 합(만점 15,000 · v4.09 AI O/X 편입).
    AX 팡 = 80칸 완주 시간 환산(1000 × (기준 초 / 완주 초)^지수) · 점프 = 장애물 40 · 코인 5 · AI 상식 100 ·
    테트리스 = 블록 10(60개까지) · 줄 50(30줄까지, 그 뒤 10) · 동시 삭제 보너스 · 기억력 = 칸마다 속도 등급 · 오답 −50 · 무오답 라운드 +40.
    계수는 서버 설정 「올림픽_점수」가 정본 · oly_board 응답의 rule 을 받아 쓴다 · 받기 전에는 아래 OLY_RULE(서버 기본값과 같은 값 · 검사 60절이 대조).
@@ -8716,7 +8890,8 @@ var OLY_EVENTS = [
   { key: "pang", name: "AX 팡", short: "팡", view: "game_pang", best: "oly2_best_pang" },
   { key: "jump", name: "ME to WE 점프", short: "점프", view: "game_jump", best: "oly2_best_jump" },
   { key: "tetris", name: "테트리스", short: "테트리스", view: "game_tetris", best: "oly2_best_tetris" },
-  { key: "word", name: "ME to WE 기억력", short: "기억력", view: "game_word", best: "oly2_best_word" }
+  { key: "word", name: "ME to WE 기억력", short: "기억력", view: "game_word", best: "oly2_best_word" },
+  { key: "ox", name: "AI O/X", short: "O/X", view: "game_ox", best: "oly2_best_ox" }
 ];
 /* 폴백 규칙 · 서버 OLY_RULE_DEFAULT 와 같은 값 (팡 base = 기준 초 · pow = 지수 · 260919 봇 재보정) */
 var OLY_RULE = {
@@ -8724,13 +8899,109 @@ var OLY_RULE = {
   pang: { goal: 80, base: 27, pow: 0.87, pauseMax: 3 },
   jump: { obs: 40, coin: 5, fact: 100, pauseMax: 3 },
   tetris: { block: 10, blockMax: 60, line: 50, lineFull: 30, lineAfter: 10, multi: [0, 0, 20, 60, 120], pauseMax: 3 },
-  word: { tiers: [[50, 200], [80, 130], [120, 90], [200, 60]], base: 30, clean: 40, wrong: 50 }
+  word: { tiers: [[50, 200], [80, 130], [120, 90], [200, 60]], base: 30, clean: 40, wrong: 50 },
+  ox: { sec: 6000, per: [10, 10, 10], base: [40, 45, 50], pen: 80, hasty: 60, speed: 5, full: 100, limit: 400, combo: 2, comboMax: 5,
+    feverAt: 5, feverLen: 3, feverMul: 2, goldMul: 3, bonusAt: 10, bonusSec: 300, pass: 1, lock: 30 }
 };
+/* v4.09 AI O/X 문제 은행 (원본 「AI OX 문제은행.json」 86문제 · 올림픽 보정/ox_bank_build.py 가 만든다 · 서버 OX_KEY 와 검사 68절이 대조)
+   id · c 분야(1 AI 기초·생성형 AI · 2 사내 AI 안전 수칙 · 3 현대해상 AX 로드맵) · lv 난이도 · q 문장 · a 정답 · e 해설 · g 짝 그룹(한 판에 하나) ·
+   rv 검수 통과(0 이면 문장 옆 「(예시)」 · 사용자 결정 260922 · 86문제 전부 출시) · 답이 틀린 문항은 서버 설정 OX_OFF 로 뺀다 */
+var OX_BANK = [
+  { id: "A01", c: 1, lv: 1, q: "머신러닝은 AI의 한 분야다", a: "O", e: "데이터에서 규칙을 스스로 배우는 방법이 머신러닝이다.", g: "mlai", rv: 1 },
+  { id: "A02", c: 1, lv: 1, q: "AI가 자신 있게 말하면 사실이다", a: "X", e: "틀린 내용도 자신 있게 말할 수 있어 따로 확인한다.", g: "conf", rv: 1 },
+  { id: "A03", c: 1, lv: 1, q: "같은 질문에도 AI 답은 달라질 수 있다", a: "O", e: "생성형 AI는 답을 매번 확률적으로 새로 만든다.", g: "var", rv: 1 },
+  { id: "A04", c: 1, lv: 1, q: "질문은 짧을수록 늘 좋은 답이 나온다", a: "X", e: "상황과 목적을 함께 적어야 답이 나아진다.", g: "ctxq", rv: 1 },
+  { id: "A05", c: 1, lv: 1, q: "읽을 사람을 알려 주면 답이 나아진다", a: "O", e: "누구에게 무엇을 위해 쓰는지 알면 맞춤 답을 준다.", g: "ctxq", rv: 1 },
+  { id: "A06", c: 1, lv: 1, q: "AI를 쓰면 사람의 검토는 필요 없다", a: "X", e: "AI 결과는 사람이 확인하고 책임지고 쓴다.", g: "human", rv: 1 },
+  { id: "A07", c: 1, lv: 1, q: "영어로 물어야만 AI가 답한다", a: "X", e: "한국어를 비롯한 여러 언어로 묻고 답할 수 있다.", g: "", rv: 1 },
+  { id: "A08", c: 1, lv: 1, q: "AI는 계산을 한 번도 틀리지 않는다", a: "X", e: "숫자와 계산도 틀릴 수 있어 원자료로 검산한다.", g: "", rv: 1 },
+  { id: "A09", c: 1, lv: 1, q: "AI에게 답의 분량을 정해 줄 수 있다", a: "O", e: "「세 줄로」처럼 길이를 정하면 그에 맞춰 답한다.", g: "", rv: 1 },
+  { id: "A10", c: 1, lv: 1, q: "AI 답의 말투도 바꿔 달라고 할 수 있다", a: "O", e: "보고서체, 안내문체처럼 말투도 정해 줄 수 있다.", g: "", rv: 1 },
+  { id: "A11", c: 1, lv: 1, q: "코딩을 몰라도 말로 AI에게 일을 시킨다", a: "O", e: "평소 쓰는 말로 지시하면 되어 코딩은 필수가 아니다.", g: "", rv: 0 },
+  { id: "A12", c: 1, lv: 1, q: "글로 설명해서 AI로 그림을 만들 수 있다", a: "O", e: "원하는 그림을 글로 설명하면 이미지를 만들어 준다.", g: "", rv: 1 },
+  { id: "A13", c: 1, lv: 1, q: "AI는 배운 적 없는 사내 규정도 안다", a: "X", e: "사내 문서를 보지 못한 AI는 사내 규정을 모른다.", g: "", rv: 1 },
+  { id: "A14", c: 1, lv: 1, q: "AI 말투가 공손하면 내용도 정확하다", a: "X", e: "말투와 정확성은 별개라 내용을 따로 확인한다.", g: "conf", rv: 1 },
+  { id: "A15", c: 1, lv: 1, q: "생성형 AI는 있는 글을 찾아 그대로 보여 준다", a: "X", e: "배운 내용을 바탕으로 새 문장을 만들어 낸다.", g: "gen", rv: 1 },
+  { id: "A16", c: 1, lv: 2, q: "딥러닝은 머신러닝보다 넓은 개념이다", a: "X", e: "딥러닝은 머신러닝 안에 있는 한 방법이다.", g: "mlai", rv: 1 },
+  { id: "A17", c: 1, lv: 2, q: "LLM은 다음에 올 말을 예측하며 글을 쓴다", a: "O", e: "앞의 글을 보고 다음 조각(토큰)을 하나씩 이어 붙인다.", g: "gen", rv: 1 },
+  { id: "A18", c: 1, lv: 2, q: "AI 답은 늘 최신 인터넷 자료에서 나온다", a: "X", e: "검색 기능이 없으면 학습한 시점까지의 내용으로 답한다.", g: "", rv: 0 },
+  { id: "A19", c: 1, lv: 2, q: "할루시네이션은 AI가 지어낸 틀린 답이다", a: "O", e: "그럴듯하지만 틀린 내용을 만들어 내는 현상이다.", g: "conf", rv: 1 },
+  { id: "A20", c: 1, lv: 2, q: "토큰은 AI가 글을 잘게 나눈 처리 단위다", a: "O", e: "AI는 글을 단어나 글자 조각 단위로 나눠 계산한다.", g: "tok", rv: 1 },
+  { id: "A21", c: 1, lv: 2, q: "대화가 길어도 AI는 처음 내용을 다 기억한다", a: "X", e: "한 번에 볼 수 있는 양을 넘으면 앞 내용을 놓칠 수 있다.", g: "ctx", rv: 0 },
+  { id: "A22", c: 1, lv: 2, q: "멀티모달 AI는 글과 이미지를 함께 다룬다", a: "O", e: "글, 이미지, 음성처럼 여러 형태를 함께 입력받는다.", g: "mm", rv: 1 },
+  { id: "A23", c: 1, lv: 2, q: "사진 속 글자를 AI가 읽을 수 있다", a: "O", e: "이미지를 다루는 AI는 사진 속 글자도 읽어 낸다.", g: "mm", rv: 1 },
+  { id: "A24", c: 1, lv: 2, q: "AI 에이전트는 도구를 써 가며 일을 해낸다", a: "O", e: "목표를 받으면 검색, 파일 같은 도구를 골라 쓴다.", g: "agent", rv: 1 },
+  { id: "A25", c: 1, lv: 2, q: "AI 학습 데이터에는 편향이 섞일 수 있다", a: "O", e: "데이터가 한쪽으로 치우치면 답에도 그대로 드러난다.", g: "", rv: 1 },
+  { id: "A26", c: 1, lv: 2, q: "역할을 정해 주면 답의 관점이 분명해진다", a: "O", e: "「인사 담당자로서」처럼 역할을 주면 관점이 맞춰진다.", g: "", rv: 1 },
+  { id: "A27", c: 1, lv: 2, q: "복잡한 일은 단계로 나눠 시키면 좋다", a: "O", e: "큰 일을 작은 단계로 나누면 결과가 안정된다.", g: "", rv: 1 },
+  { id: "A28", c: 1, lv: 2, q: "AI가 알려 준 출처는 모두 실제로 있다", a: "X", e: "없는 논문이나 링크를 지어낼 때도 있어 확인한다.", g: "cite", rv: 1 },
+  { id: "A29", c: 1, lv: 2, q: "AI가 요약하면 빠지는 내용이 없다", a: "X", e: "중요한 내용을 빼먹을 수 있어 원문과 대조한다.", g: "", rv: 1 },
+  { id: "A30", c: 1, lv: 2, q: "자료를 주고 그 자료만 보고 답하게 한다", a: "O", e: "근거 자료를 함께 주면 엉뚱한 답이 줄어든다.", g: "", rv: 1 },
+  { id: "A31", c: 1, lv: 2, q: "딥페이크는 AI로 만든 가짜 영상·음성이다", a: "O", e: "진짜처럼 보여도 가짜일 수 있어 출처를 확인한다.", g: "", rv: 1 },
+  { id: "A32", c: 1, lv: 3, q: "트랜스포머는 요즘 언어 모델의 기반 구조다", a: "O", e: "2017년에 소개된 구조로 오늘날 LLM 대부분이 쓴다.", g: "tf", rv: 1 },
+  { id: "A33", c: 1, lv: 3, q: "트랜스포머 구조는 2010년에 처음 나왔다", a: "X", e: "2017년 논문 「Attention Is All You Need」에서 나왔다.", g: "tf", rv: 1 },
+  { id: "A34", c: 1, lv: 3, q: "한글 한 글자는 언제나 토큰 1개다", a: "X", e: "모델마다 나누는 방식이 달라 글자 수와 같지 않다.", g: "tok", rv: 1 },
+  { id: "A35", c: 1, lv: 3, q: "컨텍스트 창은 AI가 한 번에 보는 글의 양이다", a: "O", e: "이 범위를 넘는 앞 내용은 답에 반영되지 않는다.", g: "ctx", rv: 1 },
+  { id: "A36", c: 1, lv: 3, q: "RAG는 자료를 찾아 붙여 답하게 하는 방식이다", a: "O", e: "검색한 문서를 근거로 함께 넣어 답을 만든다.", g: "rag", rv: 1 },
+  { id: "A37", c: 1, lv: 3, q: "RAG를 쓰면 할루시네이션이 완전히 사라진다", a: "X", e: "틀린 답이 줄어들 뿐 사라지지 않아 확인이 필요하다.", g: "rag", rv: 1 },
+  { id: "A38", c: 1, lv: 3, q: "파인튜닝은 모델을 목적에 맞게 더 학습시킨다", a: "O", e: "추가 데이터로 모델 자체를 조정하는 방법이다.", g: "ft", rv: 1 },
+  { id: "A39", c: 1, lv: 3, q: "파인튜닝은 질문할 때마다 새로 한다", a: "X", e: "한 번 학습시켜 두고 쓰며, 질문마다 하지 않는다.", g: "ft", rv: 1 },
+  { id: "A40", c: 1, lv: 3, q: "「모르면 모른다고 해」라고 요청할 수 있다", a: "O", e: "모른다고 답해도 된다고 알려 주면 지어낸 답이 줄어든다.", g: "", rv: 1 },
+  { id: "A41", c: 1, lv: 3, q: "「하지 말 것」만 적는 게 가장 좋은 지시다", a: "X", e: "하지 말 것보다 해야 할 것을 적는 편이 낫다.", g: "", rv: 1 },
+  { id: "A42", c: 1, lv: 3, q: "AI가 쓴 글인지 늘 정확히 가려낼 수 있다", a: "X", e: "판별 도구도 자주 틀려서 AI 작성 여부를 단정할 수 없다.", g: "", rv: 0 },
+  { id: "A43", c: 1, lv: 3, q: "AI라는 말은 1950년대에 처음 쓰였다", a: "O", e: "1955년 다트머스 연구 제안서에서 처음 쓰였다.", g: "", rv: 1 },
+  { id: "A44", c: 1, lv: 3, q: "AI 에이전트는 사람 확인 없이 다 해도 된다", a: "X", e: "중요한 단계마다 사람이 확인하도록 설계한다.", g: "agent", rv: 1 },
+  { id: "S01", c: 2, lv: 1, q: "고객 개인정보는 외부 AI에 넣지 않는다", a: "O", e: "이름, 연락처, 주민번호 같은 정보는 입력하지 않는다.", g: "pii", rv: 0 },
+  { id: "S02", c: 2, lv: 1, q: "대외비 문서는 외부 AI에 올려도 된다", a: "X", e: "대외비는 회사가 허용한 도구와 범위에서만 다룬다.", g: "secret", rv: 0 },
+  { id: "S03", c: 2, lv: 1, q: "비밀번호는 AI 대화창에 넣지 않는다", a: "O", e: "계정 정보는 어떤 AI에도 입력하지 않는다.", g: "", rv: 0 },
+  { id: "S04", c: 2, lv: 1, q: "동료의 개인정보도 외부 AI에 넣지 않는다", a: "O", e: "임직원 정보도 개인정보라 고객 정보처럼 다룬다.", g: "pii", rv: 0 },
+  { id: "S05", c: 2, lv: 1, q: "보안이 걱정되면 AI를 아예 쓰면 안 된다", a: "X", e: "민감한 정보를 빼고 허용된 도구로 쓰면 된다.", g: "", rv: 0 },
+  { id: "S06", c: 2, lv: 1, q: "AI 답은 확인 없이 고객에게 보내도 된다", a: "X", e: "밖으로 나가는 글은 사람이 확인한 뒤 보낸다.", g: "", rv: 0 },
+  { id: "S07", c: 2, lv: 1, q: "민감한 내용은 빼고 일반화해서 묻는다", a: "O", e: "회사명, 고객명 대신 「A사」처럼 바꿔 묻는다.", g: "", rv: 0 },
+  { id: "S08", c: 2, lv: 1, q: "사내 규정은 사내 원문으로 확인한다", a: "O", e: "AI 답이 틀릴 수 있어 규정은 원문을 기준으로 본다.", g: "", rv: 0 },
+  { id: "S09", c: 2, lv: 2, q: "이름만 지우면 고객 정보를 넣어도 된다", a: "X", e: "다른 정보를 조합하면 누군지 알 수 있어 위험하다.", g: "pii", rv: 0 },
+  { id: "S10", c: 2, lv: 2, q: "업무 자료는 회사가 허용한 AI 도구에 쓴다", a: "O", e: "어떤 도구가 허용됐는지는 사내 기준을 따른다.", g: "tool", rv: 0 },
+  { id: "S11", c: 2, lv: 2, q: "개인 폰 무료 AI 앱에 업무 자료를 넣는다", a: "X", e: "개인 앱은 회사 관리 밖이라 업무 자료를 넣지 않는다.", g: "tool", rv: 0 },
+  { id: "S12", c: 2, lv: 2, q: "외부 AI에 넣은 내용은 학습에 쓰일 수 있다", a: "O", e: "서비스 설정에 따라 입력 내용이 저장, 학습될 수 있다.", g: "", rv: 0 },
+  { id: "S13", c: 2, lv: 2, q: "화면 캡처 이미지는 유출 걱정이 없다", a: "X", e: "캡처 속 글자도 AI가 읽으므로 글과 똑같이 다룬다.", g: "", rv: 0 },
+  { id: "S14", c: 2, lv: 2, q: "AI 결과를 업무에 쓴 책임은 쓴 사람에게 있다", a: "O", e: "AI가 만든 내용이라도 업무에 쓴 사람이 책임진다.", g: "", rv: 0 },
+  { id: "S15", c: 2, lv: 2, q: "AI 답의 링크는 열기 전에 주소를 본다", a: "O", e: "없는 주소나 위험한 사이트로 이어질 수 있다.", g: "", rv: 0 },
+  { id: "S16", c: 2, lv: 3, q: "출처 모를 AI 확장 프로그램도 설치한다", a: "X", e: "브라우저 확장은 화면 내용을 읽을 수 있어 허용된 것만 쓴다.", g: "tool", rv: 0 },
+  { id: "S17", c: 2, lv: 3, q: "사내 소스 코드는 외부 AI에 올리지 않는다", a: "O", e: "코드에는 시스템 구조와 접속 정보가 담겨 있다.", g: "", rv: 0 },
+  { id: "S18", c: 2, lv: 3, q: "대화를 지우면 서비스 기록도 바로 사라진다", a: "X", e: "서비스마다 보관 기간이 달라 바로 지워진다고 볼 수 없다.", g: "", rv: 0 },
+  { id: "S19", c: 2, lv: 3, q: "회의 녹음을 AI로 요약하면 참석자에게 알린다", a: "O", e: "녹음하고 요약한다는 사실을 참석자에게 먼저 알린다.", g: "", rv: 0 },
+  { id: "S20", c: 2, lv: 3, q: "AI가 만든 결과물은 저작권 걱정이 없다", a: "X", e: "학습 자료와 비슷한 결과가 나올 수 있어 확인한다.", g: "", rv: 0 },
+  { id: "S21", c: 2, lv: 3, q: "보안 등급과 상관없이 파일을 AI에 올린다", a: "X", e: "보안 등급에 따라 올릴 수 있는 곳이 정해져 있다.", g: "secret", rv: 0 },
+  { id: "R01", c: 3, lv: 1, q: "HIDI-Q는 사내 생성형 AI 서비스다", a: "O", e: "사내 문서를 바탕으로 검색, 요약을 돕는 서비스다.", g: "hq", rv: 0 },
+  { id: "R02", c: 3, lv: 1, q: "1인 1 Agent는 IT 부서만 만든다는 뜻이다", a: "X", e: "각자 자기 업무에 맞는 Agent를 직접 만들어 쓴다는 뜻이다.", g: "p1a", rv: 0 },
+  { id: "R03", c: 3, lv: 1, q: "HIDI-Q는 요약과 번역을 도와준다", a: "O", e: "HIDI-Q는 검색, 요약, 번역, 기획안 작성을 돕는다.", g: "hqf", rv: 0 },
+  { id: "R04", c: 3, lv: 1, q: "로드맵에서 최종 의사결정은 AI가 내린다", a: "X", e: "AI가 분석과 선택지를 내고 사람이 최종 결정한다.", g: "", rv: 0 },
+  { id: "R05", c: 3, lv: 1, q: "로드맵이 지향하는 것은 「1인 1 Agent」다", a: "O", e: "누구나 자기 업무용 Agent를 쓰는 시대를 지향한다.", g: "p1a", rv: 0 },
+  { id: "R06", c: 3, lv: 1, q: "Agent Builder는 코딩 없이 쓴다", a: "O", e: "No-Code 방식으로 임직원이 직접 만들게 하는 도구다.", g: "", rv: 0 },
+  { id: "R07", c: 3, lv: 1, q: "회사는 외부 모델만 쓰고 자체 모델은 없다", a: "X", e: "업무별 작은 모델(sLLM) 자체 구축을 계획하고 있다.", g: "llm", rv: 0 },
+  { id: "R08", c: 3, lv: 2, q: "HIDI-Q 1단계는 2028년 오픈 계획이다", a: "X", e: "HIDI-Q 1단계는 2026년 10월 오픈 계획이다.", g: "hqo", rv: 0 },
+  { id: "R09", c: 3, lv: 2, q: "HIDI-Q 1단계는 사내 문서로 답한다", a: "O", e: "1단계는 문서 기반 답변이고, 이후 지식을 더해 간다.", g: "hqs", rv: 0 },
+  { id: "R10", c: 3, lv: 2, q: "HIDI-Q는 처음부터 사외 뉴스까지 답한다", a: "X", e: "사외 지식 추가는 2027년 3단계 계획이다.", g: "hqs", rv: 0 },
+  { id: "R11", c: 3, lv: 2, q: "생성형 AI 다음 단계는 AI Agent다", a: "O", e: "생성형 AI, AI Agent, Agentic AI 순서로 발전한다.", g: "stage", rv: 0 },
+  { id: "R12", c: 3, lv: 2, q: "로드맵에서 Agentic AI는 첫 단계다", a: "X", e: "Agentic AI는 생성형 AI, AI Agent 다음의 마지막 단계다.", g: "stage", rv: 0 },
+  { id: "R13", c: 3, lv: 2, q: "Agent를 모두 연 뒤에 생성형 AI를 연다", a: "X", e: "생성형 AI 서비스를 먼저 열고 Agent를 차례로 연다.", g: "", rv: 0 },
+  { id: "R14", c: 3, lv: 2, q: "Agent의 핵심은 회사 데이터와 업무 학습이다", a: "O", e: "현대해상 데이터와 업무 프로세스를 배우는 것이 핵심이다.", g: "", rv: 0 },
+  { id: "R15", c: 3, lv: 2, q: "사내 Agent 플랫폼은 외부 LLM만 쓴다", a: "X", e: "내부 LLM과 외부 LLM을 함께 쓰는 구조다.", g: "llm", rv: 0 },
+  { id: "R16", c: 3, lv: 2, q: "사내 Agent는 Hi-Works에서 부른다", a: "O", e: "개발되는 Agent는 Hi-Works에서 호출하도록 계획돼 있다.", g: "", rv: 0 },
+  { id: "R17", c: 3, lv: 3, q: "HIDI-Q는 LLM에 RAG를 더한 구조다", a: "O", e: "질문과 관련된 사내 문서를 찾아 LLM이 답하게 한다.", g: "hqf", rv: 0 },
+  { id: "R18", c: 3, lv: 3, q: "MCP는 AI와 회사 시스템을 잇는 방식이다", a: "O", e: "기존 시스템을 MCP 서버로 감싸 Agent가 쓰게 한다.", g: "", rv: 0 },
+  { id: "R19", c: 3, lv: 3, q: "A2A는 사람과 AI가 대화하는 방식이다", a: "X", e: "A2A는 서로 다른 Agent끼리 통신하는 표준 방식이다.", g: "", rv: 0 },
+  { id: "R20", c: 3, lv: 3, q: "인프라 3단계 끝은 AI Agent 인프라다", a: "O", e: "파이프라인, 거버넌스, AI Agent 인프라 순서로 간다.", g: "", rv: 0 },
+  { id: "R21", c: 3, lv: 3, q: "문서 자산화는 AI 활용과 관계없는 일이다", a: "X", e: "문서가 정리돼야 AI가 찾아 쓸 수 있는 기반 작업이다.", g: "", rv: 0 }
+];
+var OX_KEY = {};   /* id: [난이도, 정답, 짝, 검수, 문장] · 서버 OX_KEY 와 같은 모양(채점 식을 글자 그대로 같게 쓰려고) */
+OX_BANK.forEach(function (x) { OX_KEY[x.id] = [x.lv, x.a, x.g, x.rv, x.q]; });
 var OLY_MEDAL = ["", "금메달", "은메달", "동메달"];
 var OLY = { board: null, t: 0 };
 function olyRule() {
   var r = OLY.board && OLY.board.rule;
-  return r && r.cap > 0 && r.pang && r.jump && r.tetris && r.word && r.word.tiers && r.word.tiers.length === 4 && r.tetris.multi && r.tetris.multi.length === 5 ? r : OLY_RULE;
+  return r && r.cap > 0 && r.pang && r.jump && r.tetris && r.word && r.word.tiers && r.word.tiers.length === 4 && r.tetris.multi && r.tetris.multi.length === 5 &&
+    r.ox && r.ox.sec > 0 && r.ox.base && r.ox.base.length === 3 && r.ox.per && r.ox.per.length === 3 ? r : OLY_RULE;
 }
 function olyCap() { return olyRule().cap; }
 function olyMax() { return OLY_EVENTS.length * olyCap(); }
@@ -8752,8 +9023,61 @@ function olyScore(game, p, rule) {
   } else if (game === "word") {
     for (i = 0; i < R.tiers.length; i++) s += n("j" + i) * R.tiers[i][1];
     s += n("j" + R.tiers.length) * R.base + n("cl") * R.clean - n("wr") * R.wrong;
+  } else if (game === "ox") {
+    s = oxTally(p && p.ql, R, oxGold(p && p.tk)).pts;
   }
   return Math.max(0, Math.min(rule.cap, s));
+}
+/* v4.09 AI O/X 채점 (60초 타임어택) · 서버 oxTally_ 와 글자 그대로 같은 식(검사 68절) · ql = 「id.답.시간」 · 답 O|X|P(패스) · 시간 1/100초 · gold = 황금 자리
+   정답 = (기본[난이도] + 속도 + 연속) × 배수(황금 > 피버 > 1) · 오답 = −pen(hasty 미만이면 2배) · 패스 = 0점(연속·피버 그대로) · 연속이 bonusAt 배수면 +bonusSec */
+function oxTally(ql, R, gold) {
+  var T = { ok: true, items: [], n: 0, c1: 0, c2: 0, c3: 0, wr: 0, hs: 0, pa: 0, sp: 0, cb: 0, fb: 0, gb: 0, gc: 0, pn: 0, hp: 0, mx: 0, used: 0, pts: 0 }, run = 0, fever = 0;
+  var list = String(ql == null ? '' : ql) ? String(ql).split(',') : [];
+  gold = gold || [];
+  for (var i = 0; i < list.length; i++) {
+    var m = /^([ASR]\d{2})\.([OXP])\.(\d{1,5})$/.exec(list[i]), k = m && OX_KEY[m[1]];
+    if (!k) { T.ok = false; T.pts = 0; return T; }
+    var lv = k[0], ans = m[2], t = Number(m[3]), it = { id: m[1], lv: lv, a: k[1], g: k[2], ans: ans, t: t, right: ans === k[1], gold: gold.indexOf(i) >= 0, mul: 1, pts: 0 };
+    T.n++; T.used += t;
+    if (ans === 'P') T.pa++;
+    else if (it.right) {
+      var sp = Math.round(R.speed * Math.max(0, Math.min(1, (R.limit - t) / (R.limit - R.full)))), cb = R.combo * Math.min(run, R.comboMax), raw = R.base[lv - 1] + sp + cb;
+      it.mul = it.gold ? R.goldMul : fever > 0 ? R.feverMul : 1; it.pts = raw * it.mul;
+      T['c' + lv]++; T.sp += sp; T.cb += cb; T.pts += it.pts;
+      if (it.gold) { T.gb += raw * (it.mul - 1); T.gc++; } else T.fb += raw * (it.mul - 1);
+      if (fever > 0) fever--;
+      run++;
+      if (run > T.mx) T.mx = run;
+      if (run % R.feverAt === 0) { fever = R.feverLen; it.fever = 1; }
+      if (run % R.bonusAt === 0) { T.hp++; it.bonus = 1; }
+    } else {
+      var pn = R.pen * (t < R.hasty ? 2 : 1);
+      it.pts = -pn; T.pn += pn; T.pts -= pn; T.wr++; if (t < R.hasty) T.hs++;
+      run = 0; fever = 0;
+    }
+    T.items.push(it);
+  }
+  if (!T.n) T.ok = false;
+  return T;
+}
+/* 황금 자리 · 서버 토큰 「발급시각36진.자리1.자리2.서명」 · 서버 oxGold_ 와 같다 · 토큰이 없으면 황금 없음 */
+function oxGold(tk) {
+  var m = /^[0-9a-z]{1,12}\.(\d{1,2})\.(\d{1,2})\.[0-9a-z]{1,20}$/.exec(String(tk == null ? '' : tk));
+  return m ? [Number(m[1]), Number(m[2])] : [];
+}
+/* 제출 구성 요소 · 집계 숫자는 ql 에서 다시 센 값 · tl = 60초 + 보너스 − 답한 시간 합(마지막 못 푼 문제 · 다 풀었으면 남은 시간) */
+function oxParts(ql, tk, R) {
+  var X = oxTally(ql, R, oxGold(tk)), f = {};
+  ["n", "c1", "c2", "c3", "wr", "hs", "pa", "sp", "cb", "fb", "gb", "gc", "pn", "hp", "mx", "used"].forEach(function (k) { f[k] = X[k]; });
+  f.tl = R.sec + X.hp * R.bonusSec - X.used; f.ql = ql; f.tk = tk || "";
+  return f;
+}
+/* 테스트 순위판 가짜 참가자 · seq 한 글자 = 한 문제(r 정답 · w 오답 · p 패스) · 난이도마다 앞 문항부터(짝 그룹 하나씩) */
+function oxFake(seq, t) {
+  var used = {}, by = [[], [], []];
+  [3, 2, 1].forEach(function (lv) { OX_BANK.forEach(function (x) { if (x.lv !== lv || by[lv - 1].length >= 10 || (x.g && used[x.g])) return; if (x.g) used[x.g] = 1; by[lv - 1].push(x); }); });
+  var ids = by[0].concat(by[1], by[2]);
+  return oxParts(seq.split("").map(function (c, i) { var x = ids[i]; return x.id + "." + (c === "p" ? "P" : c === "r" ? x.a : x.a === "O" ? "X" : "O") + "." + t; }).join(","), "", OLY_RULE.ox);
 }
 /* 대표 카운터 한 줄 · 서버 olyKey_ 와 같은 문구 */
 function olyKey(game, p) {
@@ -8762,6 +9086,7 @@ function olyKey(game, p) {
   if (game === "jump") return "장애물 " + (Number(p.obs) || 0);
   if (game === "tetris") return (Number(p.lines) || 0) + "줄";
   if (game === "word") return "오답 " + (Number(p.wr) || 0);
+  if (game === "ox") return "정답 " + ((Number(p.c1) || 0) + (Number(p.c2) || 0) + (Number(p.c3) || 0));
   return "";
 }
 /* 규칙 한 줄 · 시작 화면·순위판 종목 탭 */
@@ -8771,6 +9096,7 @@ function olyRuleLine(key) {
   if (key === "jump") return "넘은 장애물 " + R.obs + " · 코인 " + R.coin + " · AI 상식 " + R.fact + " · 종목 최대 " + cap;
   if (key === "tetris") return "블록 " + R.block + "점(" + R.blockMax + "개까지) · 줄 " + R.line + "점 · 한 번에 여러 줄 보너스 · 시간은 점수가 아니에요";
   if (key === "word") return "빨리 맞힐수록 칸 점수가 커요 · 오답 −" + R.wrong + " · 오답 없는 라운드 +" + R.clean;
+  if (key === "ox") return "정답 " + R.base[0] + "~" + R.base[2] + " · 빠르면 +" + R.speed + " · " + R.feverAt + "연속마다 피버 ×" + R.feverMul + " · 황금 문제 ×" + R.goldMul + " · " + R.bonusAt + "연속 +" + R.bonusSec / 100 + "초 · 오답 −" + R.pen + "(" + R.hasty / 100 + "초 안 −" + R.pen * 2 + ")";
   return "";
 }
 function olyPull(force) {
@@ -8806,7 +9132,7 @@ function olySubmit(key, parts) {
   if (testMode()) { OLY.board = olyTestBoard(); return score; }
   if (!BE.on || !u.empId) return score;
   var body = {};
-  Object.keys(parts).forEach(function (k) { body[k] = Math.max(0, Math.round(Number(parts[k]) || 0)); });
+  Object.keys(parts).forEach(function (k) { body[k] = k === "ql" || k === "tk" ? String(parts[k] || "") : Math.max(0, Math.round(Number(parts[k]) || 0)); });   /* v4.09 O/X 문항 기록·토큰은 문자열 */
   beCall({ action: "game_submit", emp: u.empId, name: u.name || "", game: key, v: "g3", parts: JSON.stringify(body), score: score }, function (r) {
     if (r && r.ok) { if (OLY.board) OLY.board.me = r.me; else OLY.board = { me: r.me }; olyResMeFill(key); return; }
     var why = r && r.reason;
@@ -8886,11 +9212,18 @@ function olyRowsFor(key, p) {
     add("틀린 뒤 맞힌 칸", n("jx"), n("jx") + "칸 × 0", 0);
     add("오답 없는 라운드", n("cl"), n("cl") + "번 × " + R.clean, n("cl") * R.clean);
     add("오답", n("wr"), n("wr") + "번 × −" + R.wrong, -n("wr") * R.wrong);
+  } else if (key === "ox") {
+    [1, 2, 3].forEach(function (d) { add(d + "단계 정답", n("c" + d), n("c" + d) + "개 × " + R.base[d - 1], n("c" + d) * R.base[d - 1]); });
+    add("빠른 답", n("sp"), "1초 안 +" + R.speed, n("sp"));
+    add("연속 정답", n("cb"), "최대 +" + R.combo * R.comboMax, n("cb"));
+    add("피버 ×" + R.feverMul, n("fb"), R.feverAt + "연속마다 " + R.feverLen + "문제", n("fb"));
+    add("황금 문제 ×" + R.goldMul, n("gc"), n("gc") + "개", n("gb"));
+    add("오답", n("wr"), n("wr") + "번", -n("pn"), n("hs") ? (R.hasty / 100) + "초 안 오답 " + n("hs") + "번은 2배" : "");
   }
   return rows.filter(function (r) { return r.c > 0; });
 }
 function olyBreakHtml(key, p, score) {
-  var raw = key === "word" ? olyScoreRaw(p) : 0;
+  var raw = key === "word" ? olyScoreRaw(p) : key === "ox" ? oxTally(p.ql, olyRule().ox, oxGold(p.tk)).pts : 0;
   return '<table class="oly-brk">' + olyRowsFor(key, p).map(function (r) {
     return "<tr><th>" + esc(r.l) + (r.note ? "<small>" + esc(r.note) + "</small>" : "") + "</th><td>" + esc(r.d) + '</td><td class="n">' + (r.v < 0 ? "−" + olyFmt(-r.v) : olyFmt(r.v)) + "</td></tr>";
   }).join("") +
@@ -8913,10 +9246,10 @@ function olyResMeFill(key) {
   var m = el("olyResLw"), v = olyMe().ev[key];
   if (m) m.innerHTML = v && v.medal ? olyLw(v.medal, 64) : "";
 }
-/* 결과 화면 본문 (게임 결과 카드 안) · o = { key, parts, score, head(점수 아래 한 줄), note(참고 줄) } */
+/* 결과 화면 본문 (게임 결과 카드 안) · o = { key, parts, score, top(점수 위 · v4.09 O/X 맞힌 개수), head(점수 아래 한 줄), note(참고 줄) } */
 function olyResultBody(o) {
   var v = olyMe().ev[o.key];
-  return '<div id="olyResLw" class="oly-res-lw">' + (v && v.medal ? olyLw(v.medal, 64) : "") + "</div>" +
+  return '<div id="olyResLw" class="oly-res-lw">' + (v && v.medal ? olyLw(v.medal, 64) : "") + "</div>" + (o.top || "") +
     '<p class="gs-sc">' + olyFmt(o.score) + "<small>점</small></p>" +
     (o.head ? '<p class="oly-res-head">' + o.head + "</p>" : "") +
     olyBreakHtml(o.key, o.parts, o.score) +
@@ -8942,16 +9275,16 @@ function olyHubHtml() {
 }
 /* ── 테스트 순위판 · 가짜 참가자(구성 요소) + 이 기기 최고 · 서버와 같은 규칙(합산 · 동점은 먼저 달성) ── */
 var OLY_FAKE = [
-  ["팡팡요정", { pang: { fin: 1150 }, jump: { obs: 30, coin: 26, fact: 3 }, tetris: { blk: 70, c1: 10, c2: 3, c3: 1, c4: 0, lines: 19 }, word: { j0: 9, j1: 3, j2: 1, j3: 1, j4: 0, cl: 3, wr: 0 } }],
-  ["점프왕", { pang: { fin: 2400 }, jump: { obs: 55, coin: 40, fact: 5 }, tetris: { blk: 52, c1: 6, c2: 1, c3: 0, c4: 0, lines: 8 }, word: { j0: 4, j1: 4, j2: 3, j3: 2, j4: 1, cl: 3, wr: 0 } }],
-  ["블록장인", { pang: { fin: 2900 }, jump: { obs: 15, coin: 10, fact: 1 }, tetris: { blk: 140, c1: 12, c2: 6, c3: 3, c4: 5, lines: 53 }, word: { j0: 2, j1: 4, j2: 4, j3: 3, j4: 1, cl: 2, wr: 1 } }],
-  ["기억의신", { pang: { fin: 2650 }, jump: { obs: 18, coin: 12, fact: 1 }, tetris: { blk: 40, c1: 4, c2: 1, c3: 0, c4: 0, lines: 6 }, word: { j0: 14, j1: 0, j2: 0, j3: 0, j4: 0, cl: 3, wr: 0 } }],
-  ["연쇄장인", { pang: { fin: 980 }, jump: { obs: 12, coin: 8, fact: 1 }, tetris: { blk: 45, c1: 5, c2: 1, c3: 0, c4: 0, lines: 7 }, word: { j0: 3, j1: 3, j2: 4, j3: 3, j4: 1, cl: 2, wr: 1 } }],
-  ["미위팬", { pang: { fin: 2300 }, jump: { obs: 24, coin: 20, fact: 2 }, tetris: { blk: 60, c1: 8, c2: 2, c3: 0, c4: 0, lines: 12 }, word: { j0: 5, j1: 4, j2: 2, j3: 2, j4: 1, cl: 3, wr: 0 } }],
-  ["코인수집가", { pang: { fin: 3400 }, jump: { obs: 35, coin: 70, fact: 4 }, word: { j0: 3, j1: 4, j2: 3, j3: 3, j4: 1, cl: 3, wr: 0 } }],
+  ["팡팡요정", { pang: { fin: 1150 }, jump: { obs: 30, coin: 26, fact: 3 }, tetris: { blk: 70, c1: 10, c2: 3, c3: 1, c4: 0, lines: 19 }, word: { j0: 9, j1: 3, j2: 1, j3: 1, j4: 0, cl: 3, wr: 0 }, ox: oxFake("rrrrrrrwrrrrrrrrwrrr", 170) }],
+  ["점프왕", { pang: { fin: 2400 }, jump: { obs: 55, coin: 40, fact: 5 }, tetris: { blk: 52, c1: 6, c2: 1, c3: 0, c4: 0, lines: 8 }, word: { j0: 4, j1: 4, j2: 3, j3: 2, j4: 1, cl: 3, wr: 0 }, ox: oxFake("rrrrwrrrrrrwrr", 210) }],
+  ["블록장인", { pang: { fin: 2900 }, jump: { obs: 15, coin: 10, fact: 1 }, tetris: { blk: 140, c1: 12, c2: 6, c3: 3, c4: 5, lines: 53 }, word: { j0: 2, j1: 4, j2: 4, j3: 3, j4: 1, cl: 2, wr: 1 }, ox: oxFake("rrrwrrrrwrrr", 230) }],
+  ["기억의신", { pang: { fin: 2650 }, jump: { obs: 18, coin: 12, fact: 1 }, tetris: { blk: 40, c1: 4, c2: 1, c3: 0, c4: 0, lines: 6 }, word: { j0: 14, j1: 0, j2: 0, j3: 0, j4: 0, cl: 3, wr: 0 }, ox: oxFake("rrrrrrrrrrrrrrrrwrrrrrr", 150) }],
+  ["연쇄장인", { pang: { fin: 980 }, jump: { obs: 12, coin: 8, fact: 1 }, tetris: { blk: 45, c1: 5, c2: 1, c3: 0, c4: 0, lines: 7 }, word: { j0: 3, j1: 3, j2: 4, j3: 3, j4: 1, cl: 2, wr: 1 }, ox: oxFake("rrrrrwrrrrwrrrrr", 190) }],
+  ["미위팬", { pang: { fin: 2300 }, jump: { obs: 24, coin: 20, fact: 2 }, tetris: { blk: 60, c1: 8, c2: 2, c3: 0, c4: 0, lines: 12 }, word: { j0: 5, j1: 4, j2: 2, j3: 2, j4: 1, cl: 3, wr: 0 }, ox: oxFake("rrrwrrrrrwrrrp", 220) }],
+  ["코인수집가", { pang: { fin: 3400 }, jump: { obs: 35, coin: 70, fact: 4 }, word: { j0: 3, j1: 4, j2: 3, j3: 3, j4: 1, cl: 3, wr: 0 }, ox: oxFake("rrwrrrrrwrr", 260) }],
   ["공감참여", { pang: { fin: 4200 }, tetris: { blk: 30, c1: 2, c2: 0, c3: 0, c4: 0, lines: 2 } }],
   ["혁신연결", { jump: { obs: 10, coin: 6, fact: 0 }, word: { j0: 1, j1: 2, j2: 3, j3: 4, j4: 4, cl: 1, wr: 3, jx: 0 } }],
-  ["로드맵러", { pang: { fin: 1900 }, jump: { obs: 27, coin: 22, fact: 3 }, tetris: { blk: 66, c1: 9, c2: 2, c3: 1, c4: 0, lines: 16 }, word: { j0: 6, j1: 4, j2: 2, j3: 1, j4: 1, cl: 3, wr: 0 } }]
+  ["로드맵러", { pang: { fin: 1900 }, jump: { obs: 27, coin: 22, fact: 3 }, tetris: { blk: 66, c1: 9, c2: 2, c3: 1, c4: 0, lines: 16 }, word: { j0: 6, j1: 4, j2: 2, j3: 1, j4: 1, cl: 3, wr: 0 }, ox: oxFake("rrrrrrrrrrrrrrrrrrrrrrrr", 140) }]
 ];
 function olyPosOf(list, i, val) {
   if (i < 0) return { rank: 0, up: 0, podium: 0, lead: 0 };
@@ -9024,8 +9357,8 @@ function olyRankHtml() {
     var rest = ov.slice(3).map(function (x) { return olyRowHtml(x, olyFmt(x.total), "", false, isMe(x)); }).join("");
     if (me.sv && me.rank > ov.length) rest += '<div class="oly-gap"></div>' + olyRowHtml({ rank: me.rank, name: nick + " (나)" }, olyFmt(me.total), "", false, true);
     var op = olyOverallPos(me);
-    h += '<section class="ax-card oly-card"><div class="ax-stack-tight"><h2 class="ax-section-title">종합 순위</h2><p class="ax-description">네 종목 최고 점수 합계' + (at ? " · " + at + " 기준" : "") + " · " + olyFmt(olyMax()) + "점 만점</p></div>" +
-      (ov.length ? olyPodiumHtml(top) + '<div class="oly-list">' + rest + "</div>" : '<p class="ax-description">아직 네 종목을 모두 한 사람이 없어요</p>') +
+    h += '<section class="ax-card oly-card"><div class="ax-stack-tight"><h2 class="ax-section-title">종합 순위</h2><p class="ax-description">다섯 종목 최고 점수 합계' + (at ? " · " + at + " 기준" : "") + " · " + olyFmt(olyMax()) + "점 만점</p></div>" +
+      (ov.length ? olyPodiumHtml(top) + '<div class="oly-list">' + rest + "</div>" : '<p class="ax-description">아직 다섯 종목을 모두 한 사람이 없어요</p>') +
       '<p class="oly-pos">' + (op ? esc(op) : me.done ? "내 총점 " + olyFmt(me.total) : "한 판 하면 순위에 올라가요") + "</p></section>";
   }
   return h + '<p class="ax-meta">명예 순위 · 경품 없음 · Outro에서 종합 1~3위 호명</p></div>';
@@ -9620,7 +9953,8 @@ var GS_GAMES = {
   type: { name: "AX 단어 소나기", view: "game_type", start: "rgStart('app')", best: "type_best", line: "떨어지는 단어를 쳐서 터뜨려요 · 키보드로 입력" },
   pang: { name: "AX 팡", view: "game_pang", start: "pgStart()", best: "oly2_best_pang", line: "같은 그림 3개를 한 줄로 맞춰 터뜨려요 · 밀어서 바꾸기" },
   jump: { name: "ME to WE 점프", view: "game_jump", start: "jpStart()", best: "oly2_best_jump", line: "탭 점프 · 두 번 탭 2단 점프 · 꾸욱 누르면 엎드리기" },
-  word: { name: "ME to WE 기억력", view: "game_word", start: "gwStart()", best: "oly2_best_word", line: "문장을 외워 단어 타일을 순서대로" }
+  word: { name: "ME to WE 기억력", view: "game_word", start: "gwStart()", best: "oly2_best_word", line: "문장을 외워 단어 타일을 순서대로" },
+  ox: { name: "AI O/X", view: "game_ox", start: "oxStart()", best: "oly2_best_ox", line: "맞으면 O, 틀리면 X · 틀리면 감점" }
 };
 /* v4.08 키보드가 올라와도 입력칸과 아래 고정 버튼이 가려지지 않게 · 가려진 높이를 --kb 로 넘긴다 · 포커스한 칸은 보이는 곳 가운데로 */
 function kbSync() {
@@ -9813,16 +10147,15 @@ function gsNickHtml(key) {
     '<h1 class="ax-type-t2">닉네임 정하기</h1><p class="ax-description">순위판에는 닉네임만 나와요</p></div>' +
     '<div class="ax-stack-tight"><label class="ax-sr-only" for="tnIn">닉네임</label><input id="tnIn" class="ax-field" maxlength="8" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="예: 타자요정" value="' + esc(nick) + '" oninput="typeNickInput(this.value)">' +
     '<p class="ax-meta" id="tnMsg">' + (nick ? "지금 닉네임 · " + esc(nick) : "한글·영문·숫자 2~8자") + "</p></div></div>" +
-    '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" onclick="typeNickSave()">이 닉네임으로 할게요</button>' +
-    (nick ? '<button type="button" class="ax-button ax-button-weak" onclick="S.set(\'type_nick_edit\', false); App.render()">그대로 둘게요</button>'
-      : '<button type="button" class="ax-button ax-button-weak" onclick="App.back()">다음에 할게요</button>') + "</div>";
+    '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" onclick="typeNickSave()">닉네임 저장하기</button></div>';   /* v4.09 버튼 하나 · 나가기는 헤더 뒤로(바꾸던 중이면 게임을 떠날 때 원래대로) */
 }
 function gsNeedNick() { return !typeNick() || S.get("type_nick_edit", false); }
-/* o = { rootId, previewId, pw, ph, rules, foot, how, flat } · v4.08 AX-TDS 4단계 · 흰 카드 한 장(이름 · 미리보기 · 조작 · 규칙) + 닉네임·최고 줄 + 시작 줄 */
+/* o = { rootId, previewId, pw, ph, rules, foot, how, flat, hero(v4.09) } · v4.08 AX-TDS 4단계 · 흰 카드 한 장(이름 · 미리보기 · 조작 · 규칙) + 닉네임·최고 줄 + 시작 줄 */
 function gsStartHtml(key, o) {
   var g = GS_GAMES[key], nick = typeNick();
   return '<div id="' + o.rootId + '" class="ax-stack gs-root' + (o.how ? " big" : "") + '">' +
     '<section class="ax-card gs-card"><h1 class="ax-sr-only">' + esc(g.name) + "</h1>" +   /* 게임 이름은 헤더가 알린다(5-4 · 같은 제목 반복 없음) */
+    (o.hero || "") +   /* v4.09 O/X · 챗봇 96 + 말풍선 */
     (o.previewId ? '<div class="rg-wrap' + (o.flat ? " flat" : "") + '"><canvas id="' + o.previewId + '" width="' + o.pw + '" height="' + o.ph + '"></canvas></div>' : "") +
     (o.how ? '<div class="gs-how">' + o.how.map(function (h) { return "<p><b>" + esc(h[0]) + "</b>" + esc(h[1]) + "</p>"; }).join("") + "</div>" : "") +
     '<p class="ax-description gs-rule">' + o.rules + "</p>" + axPreHtml(key) + "</section>" +
@@ -10963,6 +11296,7 @@ function jpPreview() {
    실패 없음 · 끝까지 하면 미니게임 스탬프 · 점수 = 맞힌 탭(연속 배수) + 라운드 완성 + 남은 시간 · 별 1~3개. */
 var GW = { on: false, timer: null, nextT: null };
 function gwStop() {
+  crumbShow(true);
   if (GW.timer) { clearInterval(GW.timer); GW.timer = null; }
   if (GW.nextT) { clearTimeout(GW.nextT); GW.nextT = null; }
   GW.on = false;
@@ -11004,6 +11338,7 @@ function gwStart() {
   SFX.site = false;
   GW = { on: true, r: 0, phase: "show", used: 0, wrongs: 0, placed: [], tiles: [], timer: null, nextT: null, last: 0, done: 0, rounds: gwPick(),
     j: [0, 0, 0, 0, 0], jx: 0, cl: 0, rw: 0, miss: false, tapT: 0, score: 0, msg: "", tip: gsTutTake("word") };
+  crumbShow(false);
   gwShow();
 }
 /* v4.02 제출 구성 요소 · j0~j4 등급별 칸 · jx 틀린 뒤 맞힌 칸 · wr 오답 · cl 무오답 라운드 · used 떠올린 시간(1/100초) */
@@ -11115,6 +11450,7 @@ function gwRoundDone() {
     '<div class="mem-stage done"><p class="who">ROUND ' + (GW.r + 1) + " · 완성</p>" +
     (R.kind === "order" ? gwSlotsHtml(R, true) : '<p class="mem-sent">' + gwSentHtml(R) + "</p>") +
     '<p class="mem-mean">' + esc(R.mean) + "</p>" +
+    '<span class="mem-hop" aria-hidden="true">' + BOT_SVG + '</span>' +   /* v4.09 미위 위에서 챗봇이 통통 (design.md A 5-6) */
     '<span class="mem-pop"><canvas class="mem-mascot" width="14" height="13"></canvas><span>ME to WE</span></span></div>' +
     '<p class="gmsg" style="text-align:center">' + (GW.rw ? "이번 라운드 오답 " + GW.rw + "번" : "오답 없는 라운드 +" + olyRule().word.clean) + "</p>" +
     '<button class="btn mint" style="padding:15px" onclick="gwNext()">' + (last ? "결과 보기" : "다음 라운드") + "</button>";
@@ -11150,6 +11486,232 @@ function gwFinish() {
         '<p class="ax-description">' + esc(R.mean) + "</p></section>";
     }).join("") });
   window.scrollTo(0, 0);
+}
+
+/* ════════════════ v4.09 AI O/X · AX 올림픽 5번째 종목 · 60초 타임어택 (사용자 결정 260922 · 기획 「AI OX 게임 기획.md」 타임어택 전환 절) ════════════════
+   60초 동안 난이도 1 → 2 → 3 (각 10문제) · 답하면 바로 다음 문제 · 문제당 시간 제한·목숨·일시정지 없음 · 앱을 벗어나도 시계는 흐른다.
+   점수 = oxTally(서버 oxTally_ 와 같은 식) · 판마다 서버 토큰(ox_start)이 황금 문제 자리를 정한다 · 토큰이 없으면 황금 없이.
+   챗봇은 원본 BOT_SVG 합성만 · 반응 = 떠 있기·깜빡임·정답 때 짧은 눌림 + 짧은 한마디(빨라요 · 5연속 · 피버 · +3초 · 황금). 해설은 결과 화면 「틀린 문제」 카드에만. */
+var OX_TITLE = { 1: "AI 기초 마스터", 2: "안전 수칙 마스터", 3: "AX 로드맵 마스터" }, OX_TITLE_MIN = 4;   /* 한 판에 그 분야를 4문제 이상 풀고 모두 맞히면 · 점수와 무관 */
+var OX_SEEN_MAX = 60, OX_TK_AGE = 9000000;   /* 최근 본 문항 · 토큰은 2시간 30분까지 쓴다(서버 3시간) */
+var OXS = { tk: "", at: 0, ratio: {}, min: 20, off: [], busy: false };
+var OX = { on: false };
+var OX_O = '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="16" fill="none" stroke="currentColor" stroke-width="6"/></svg>';
+var OX_X = '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M12 12L36 36M36 12L12 36" stroke="currentColor" stroke-width="6" stroke-linecap="round"/></svg>';
+function oxOffList() { var r = OLY.board && OLY.board.rule && OLY.board.rule.ox; return ((r && r.off) || []).concat(OXS.off || []); }
+/* 판 토큰 · 모두의 선택 비율 · 끈 문항 · 시작 화면에서 미리 · 판을 시작하면 쓰고 다음 판 것을 곧바로 받는다 */
+function oxPrefetch(force) {
+  if (testMode()) {
+    if (force || !OXS.tk) { var R = olyRule().ox; OXS.tk = Date.now().toString(36) + "." + (R.per[0] + Math.floor(Math.random() * R.per[1])) + "." + (R.per[0] + R.per[1] + Math.floor(Math.random() * R.per[2])) + ".local"; OXS.at = Date.now(); OXS.ratio = oxFakeRatio(); }
+    return;
+  }
+  if (!BE.on || OXS.busy || (!force && OXS.tk && Date.now() - OXS.at < 3600000)) return;
+  OXS.busy = true;
+  beCall({ action: "ox_start" }, function (r) {
+    OXS.busy = false;
+    if (r && r.ok) { OXS.tk = r.tk || ""; OXS.at = Date.now(); OXS.ratio = r.ratio || {}; OXS.min = r.min || 20; OXS.off = r.off || []; }
+  }, function () { OXS.busy = false; });
+}
+/* 테스트 화면 · 가짜 비율(모든 문항 20명 이상) */
+function oxFakeRatio() { var o = {}; OX_BANK.forEach(function (x, i) { var n = 24 + (i * 37) % 70, pc = x.a === "O" ? 45 + (i * 13) % 50 : 8 + (i * 17) % 50, k = Math.round(n * pc / 100); o[x.id] = [k, n - k]; }); return o; }
+/* 「직원 62%가 O를 골랐어요」 · 고른 사람이 OXS.min(20) 미만이면 빈 문자열 */
+function oxRatioText(id) {
+  var c = OXS.ratio && OXS.ratio[id]; if (!c || c[0] + c[1] < OXS.min) return "";
+  var n = c[0] + c[1], o = Math.round(c[0] * 100 / n);
+  return o >= 50 ? "직원 " + o + "%가 O를 골랐어요" : "직원 " + (100 - o) + "%가 X를 골랐어요";
+}
+/* 한 판 뽑기 · 난이도마다 per 개 · 짝 그룹은 한 판에 하나(어려운 난이도가 먼저 차지) · 10개 묶음마다 O·X 각 6개까지 · 최근 본 문항은 뒤로(모자라면 그 난이도만 비움) · 끈 문항 제외 */
+function oxPick() {
+  var R = olyRule().ox, off = oxOffList(), seen = S.get("ox_seen", []) || [], used = {}, out = [[], [], []];
+  var free = function (x) { return off.indexOf(x.id) < 0 && !used[x.id] && !(x.g && used["g:" + x.g]); };
+  [3, 2, 1].forEach(function (lv) {
+    var d = lv - 1, need = R.per[d], cand = shuf(OX_BANK.filter(function (x) { return x.lv === lv && free(x); }));
+    var fresh = cand.filter(function (x) { return seen.indexOf(x.id) < 0; });
+    if (fresh.length < need) seen = seen.filter(function (id) { return !OX_KEY[id] || OX_KEY[id][0] !== lv; });
+    var order = fresh.length < need ? cand : fresh.concat(cand.filter(function (x) { return fresh.indexOf(x) < 0; }));
+    var cap = Math.ceil(need * 0.6), cnt = { O: 0, X: 0 };
+    [true, false].forEach(function (bal) {
+      order.forEach(function (x) {
+        if (out[d].length >= need || !free(x) || (bal && cnt[x.a] >= cap)) return;
+        out[d].push(x); used[x.id] = 1; if (x.g) used["g:" + x.g] = 1; cnt[x.a]++;
+      });
+    });
+  });
+  var list = out[0].concat(out[1], out[2]);
+  S.set("ox_seen", seen.concat(list.map(function (x) { return x.id; })).slice(-OX_SEEN_MAX));
+  return list;
+}
+function oxStop() {
+  if (OX.raf) cancelAnimationFrame(OX.raf);
+  (OX.tmr || []).forEach(function (t) { clearTimeout(t); clearInterval(t); });
+  if (OX.onKey) document.removeEventListener("keydown", OX.onKey);
+  OX.on = false; OX.raf = 0; OX.tmr = []; OX.onKey = null;
+  crumbShow(true);
+}
+function oxLater(fn, ms) { OX.tmr.push(setTimeout(fn, ms)); }
+function oxU() { return Math.round((performance.now() - OX.t0) / 10); }
+function oxStart() {
+  oxStop();
+  SFX.site = false;
+  var R = olyRule().ox, tk = OXS.tk && Date.now() - OXS.at < OX_TK_AGE ? OXS.tk : "";
+  OXS.tk = ""; oxPrefetch(true);   /* 토큰은 한 판에 하나 · 다음 판 것을 미리 받는다 */
+  OX = { on: true, phase: "ready", list: oxPick(), i: 0, recs: [], tk: tk, gold: oxGold(tk), t0: 0, shown: 0, dl: R.sec, T: oxTally("", R, []), raf: 0, tmr: [], onKey: null, fast: -9, tip: gsTutTake("ox") };
+  var root = el("oxRoot"); if (!root) return;
+  crumbShow(false);
+  root.className = "ax-stack gs-root";
+  root.innerHTML = '<div class="ox-g" id="oxG">' +
+    '<div class="ox-top"><div class="ox-bar" id="oxBarW"><i id="oxBar"></i></div><b class="ox-sec" id="oxSec">' + R.sec / 100 + "초</b></div>" +
+    '<div class="ox-hud"><span class="ox-sc"><b id="oxScore">0</b><small>점</small></span><i class="ox-pop" id="oxPop"></i><span class="ox-fev" id="oxFev" hidden></span><span class="ox-cnt" id="oxCnt">정답 0</span></div>' +
+    '<section class="ox-card" id="oxCard"><div class="ox-bot" id="oxBot">' + BOT_SVG + '<span class="ox-praise" id="oxPraise"></span></div>' +
+    '<div class="ox-bub"><span class="ox-gold" id="oxGold" hidden>황금 문제 ×' + R.goldMul + '</span><p class="ox-q" id="oxQ" aria-live="polite">' + esc(OX.tip || "준비") + "</p></div></section>" +
+    '<div class="ox-btns"><button type="button" class="ox-b" id="oxO" aria-label="O" onpointerdown="oxTap(event, \'O\')" onclick="oxTap(event, \'O\')">' + OX_O + "<span>맞아요</span></button>" +
+    '<button type="button" class="ox-b" id="oxX" aria-label="X" onpointerdown="oxTap(event, \'X\')" onclick="oxTap(event, \'X\')">' + OX_X + "<span>아니에요</span></button></div>" +
+    '<button type="button" class="ax-button ax-button-weak ox-pass" id="oxPass" onpointerdown="oxTap(event, \'P\')" onclick="oxTap(event, \'P\')">패스 · ' + R.pass + "번</button></div>";
+  OX.onKey = function (e) {
+    if (e.repeat) return;
+    var k = e.key;
+    if (k === "ArrowLeft" || k === "o" || k === "O") { e.preventDefault(); oxAns("O"); }
+    else if (k === "ArrowRight" || k === "x" || k === "X") { e.preventDefault(); oxAns("X"); }
+    else if (k === "ArrowDown" || k === "p" || k === "P") { e.preventDefault(); oxAns("P"); }
+  };
+  document.addEventListener("keydown", OX.onKey);
+  window.scrollTo(0, 0);
+  oxLater(function () { var q = el("oxQ"); if (q && OX.on) q.textContent = "시작"; }, OX.tip ? 2000 : 700);
+  oxLater(oxGo, OX.tip ? 2500 : 1100);
+}
+/* 누름 한 번 = 답 한 번 · pointerdown 에서 받고 뒤따르는 click 은 버린다(키보드·보조기기 click 은 받는다) */
+function oxTap(e, a) {
+  if (e.type === "pointerdown") { e.preventDefault(); OX.pd = Date.now(); oxAns(a); return; }
+  if (OX.pd && Date.now() - OX.pd < 700) return;
+  oxAns(a);
+}
+function oxGo() {
+  if (!OX.on) return;
+  OX.t0 = performance.now();
+  oxShow();
+  oxHud();
+  OX.raf = requestAnimationFrame(oxLoop);
+  OX.tmr.push(setInterval(function () { if (OX.on && oxU() >= OX.dl) oxEnd("time"); }, 250));   /* 화면 갱신(rAF)이 멈춰도 시간이 되면 끝낸다 */
+}
+function oxLoop() {
+  if (!OX.on) return;
+  var R = olyRule().ox, left = Math.max(0, OX.dl - oxU()), warn = left <= 1000;
+  var b = el("oxBar"), sc = el("oxSec"), w = el("oxBarW");
+  if (b) b.style.transform = "scaleX(" + Math.min(1, left / R.sec).toFixed(4) + ")";
+  if (sc) { sc.textContent = Math.ceil(left / 100) + "초"; sc.classList.toggle("warn", warn); }
+  if (w) w.classList.toggle("warn", warn);
+  if (left <= 0) { oxEnd("time"); return; }
+  OX.raf = requestAnimationFrame(oxLoop);
+}
+function oxShow() {
+  var x = OX.list[OX.i], R = olyRule().ox;
+  if (!x) { oxEnd("done"); return; }
+  OX.phase = "q"; OX.shown = oxU();
+  var q = el("oxQ");
+  if (q) { q.innerHTML = esc(x.q) + (x.rv ? "" : ' <small class="ox-ex">(예시)</small>'); q.classList.remove("in"); void q.offsetWidth; q.classList.add("in"); }
+  var g = OX.gold.indexOf(OX.i) >= 0, gc = el("oxGold"), cd = el("oxCard");
+  if (gc) gc.hidden = !g;
+  if (cd) cd.classList.toggle("gold", g);
+  if (OX.i === R.per[0] || OX.i === R.per[0] + R.per[1]) oxPraise(OX.i === R.per[0] ? "2단계" : "3단계");
+}
+function oxAns(a) {
+  if (!OX.on || OX.phase !== "q") return;
+  var R = olyRule().ox, u = oxU();
+  if (u >= OX.dl) { oxEnd("time"); return; }
+  var t = u - OX.shown;
+  if (t < R.lock) return;   /* 입력 잠금 0.3초 · 앞 문제에서 두 번 누른 손가락이 다음 문제를 누르지 않게 */
+  if (a === "P" && OX.T.pa >= R.pass) return;
+  var prev = OX.T, x = OX.list[OX.i];
+  OX.recs.push(x.id + "." + a + "." + t);
+  OX.T = oxTally(OX.recs.join(","), R, OX.gold);
+  var it = OX.T.items[OX.T.items.length - 1];
+  if (OX.T.hp > prev.hp) OX.dl += R.bonusSec;
+  oxFeedback(a, it);
+  OX.i++;
+  oxHud();
+  if (OX.i >= OX.list.length) { oxEnd("done"); return; }
+  oxShow();
+}
+function oxHud() {
+  var R = olyRule().ox, T = OX.T, s = el("oxScore"), c = el("oxCnt"), f = el("oxFev"), g = el("oxG"), p = el("oxPass"), cd = el("oxCard");
+  var fever = oxFeverLeft();
+  if (s) s.textContent = olyFmt(Math.max(0, T.pts));
+  if (c) c.textContent = "정답 " + (T.c1 + T.c2 + T.c3);
+  if (f) { f.hidden = !fever; f.textContent = "피버 ×" + R.feverMul + " · " + fever + "문제"; }
+  if (g) g.classList.toggle("fever", !!fever);
+  if (cd) cd.classList.toggle("fever", !!fever);
+  if (p) { var left = R.pass - T.pa; p.disabled = left <= 0; p.textContent = left > 0 ? "패스 · " + left + "번" : "패스를 썼어요"; }
+}
+/* 남은 피버 문제 수 · 채점과 같은 규칙으로 기록을 다시 따라간다 */
+function oxFeverLeft() {
+  var R = olyRule().ox, run = 0, fever = 0;
+  OX.T.items.forEach(function (it) {
+    if (it.ans === "P") return;
+    if (!it.right) { run = 0; fever = 0; return; }
+    if (fever > 0) fever--;
+    run++;
+    if (run % R.feverAt === 0) fever = R.feverLen;
+  });
+  return fever;
+}
+function oxFeedback(a, it) {
+  var btn = el(a === "O" ? "oxO" : a === "X" ? "oxX" : "oxPass");
+  if (btn && a !== "P") { var cls = it.right ? "ok" : "bad"; btn.classList.remove("ok", "bad"); void btn.offsetWidth; btn.classList.add(cls); oxLater(function () { btn.classList.remove(cls); }, 260); }
+  var pop = el("oxPop");
+  if (pop) { pop.textContent = a === "P" ? "패스" : it.pts > 0 ? "+" + it.pts : "−" + (-it.pts); pop.className = "ox-pop" + (it.pts < 0 ? " bad" : ""); void pop.offsetWidth; pop.classList.add("on"); }
+  if (a === "P") { sfx("tak"); return; }
+  if (!it.right) { sfx("ttuk"); stampBuzz(30); return; }
+  sfx("tak"); stampBuzz(10);
+  var bot = el("oxBot");
+  if (bot && !rgReduced()) { bot.classList.remove("sq"); void bot.offsetWidth; bot.classList.add("sq"); }
+  var R = olyRule().ox, run = 0;
+  OX.T.items.forEach(function (x) { if (x.ans === "P") return; run = x.right ? run + 1 : 0; });
+  /* 칭찬 한마디 · 하나만 (황금 > +3초 > 피버 > 연속 > 빨라요) · 빨라요는 3문제에 한 번까지 */
+  var w = it.gold ? "황금 ×" + R.goldMul : it.bonus ? run + "연속 +" + R.bonusSec / 100 + "초" : it.fever ? run + "연속 · 피버 ×" + R.feverMul : run >= 3 && run % 5 === 3 ? run + "연속" : "";
+  if (!w && it.t <= R.full && OX.i - OX.fast >= 3) { w = "빨라요"; OX.fast = OX.i; }
+  if (w) oxPraise(w);
+}
+function oxPraise(w) {
+  var p = el("oxPraise"); if (!p) return;
+  p.textContent = w; p.classList.remove("on"); void p.offsetWidth; p.classList.add("on");
+}
+function oxEnd(why) {
+  if (!OX.on) return;
+  var R = olyRule().ox, ql = OX.recs.join(",");
+  oxStop();
+  OX.phase = "end";
+  var parts = oxParts(ql, OX.tk, R), X = oxTally(ql, R, OX.gold), prev = Number(S.get("oly2_best_ox", 0)) || 0;
+  sfx("fanfare");
+  gameClear("ox_cleared");   /* 결과 화면에 닿으면 끝까지 한 판 · 04 미니게임 */
+  var sc = X.n ? olySubmit("ox", parts) : 0;   /* 한 문제도 안 풀었으면 올리지 않는다 */
+  if (sc > prev) setTimeout(function () { sfx("best"); }, 700);
+  var root = el("oxRoot"); if (!root) return;
+  var ok = X.c1 + X.c2 + X.c3, ans = X.items.filter(function (it) { return it.ans !== "P"; }), avg = ans.length ? ans.reduce(function (a, it) { return a + it.t; }, 0) / ans.length / 100 : 0;
+  var titles = oxTitles(X);
+  root.innerHTML = gsResultHtml("ox", { why: why === "done" ? "done" : "time", label: why === "done" ? "30문제 완주" : R.sec / 100 + "초 끝", reason: "",
+    oly: { key: "ox", parts: parts, score: sc,
+      top: '<p class="ox-res-big">' + (why === "done" ? "30문제 완주 · " : R.sec / 100 + "초에 ") + "<b>" + ok + "</b>문제 정답</p>" +
+        '<p class="ox-res-sub">한 문제 평균 ' + avg.toFixed(1) + "초 · 최대 " + X.mx + "연속</p>" +
+        (titles.length ? '<p class="ox-titles">' + titles.map(function (t) { return "<span>" + esc(t) + "</span>"; }).join("") + "</p>" : ""),
+      note: "참고 · 푼 문제 " + X.n + (X.pa ? " · 패스 " + X.pa : "") + (X.hp ? " · 보너스 +" + X.hp * R.bonusSec / 100 + "초" : "") + " · 점수는 0 밑으로 내려가지 않아요" },
+    banner: oxWrongHtml(X) });
+  window.scrollTo(0, 0);
+}
+/* 분야별 칭호 · 한 판에 그 분야를 OX_TITLE_MIN 문제 이상 풀고(패스 제외) 모두 맞혔을 때 · 점수와 무관 */
+function oxTitles(X) {
+  var by = {};
+  X.items.forEach(function (it) { if (it.ans === "P") return; var c = (OX_BANK.filter(function (b) { return b.id === it.id; })[0] || {}).c; var o = by[c] || (by[c] = { n: 0, ok: 0 }); o.n++; if (it.right) o.ok++; });
+  return [1, 2, 3].filter(function (c) { return by[c] && by[c].n >= OX_TITLE_MIN && by[c].ok === by[c].n; }).map(function (c) { return OX_TITLE[c]; });
+}
+/* 틀린 문제 카드 · 점수 카드와 따로(260918 교육 문구 금지의 승인된 예외 · 사용자 결정 260922) · 최대 3줄 · 모두의 선택 비율은 여기서만 보여 준다 */
+function oxWrongHtml(X) {
+  var bad = X.items.filter(function (it) { return it.ans !== "P" && !it.right; });
+  if (!bad.length) return "";
+  return '<section class="ax-card ax-stack-tight ox-wrong"><h2 class="ax-card-title">틀린 문제</h2>' + bad.slice(0, 3).map(function (it) {
+    var b = OX_BANK.filter(function (x) { return x.id === it.id; })[0], r = oxRatioText(it.id);
+    return '<div class="ox-w"><p class="ax-body">' + esc(b.q) + (b.rv ? "" : ' <small class="ox-ex">(예시)</small>') + "</p>" +
+      '<p class="ax-meta"><b>정답 ' + b.a + "</b> · " + esc(b.e) + "</p>" + (r ? '<p class="ax-meta">' + esc(r) + "</p>" : "") + "</div>";
+  }).join("") + (bad.length > 3 ? '<p class="ax-meta">외 ' + (bad.length - 3) + "문제</p>" : "") + "</section>";
 }
 
 /* ════════════════ KV 오브젝트 엔진 · 도트 격자 + 점 → 점 고리 → 점선 구체 (design.md v29 §2·§4) ════════════════
