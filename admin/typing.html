@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>타자왕전 · 선수</title>
+<!-- v4.13 (260922 사용자 확정 A안) 1F 현장 타자왕전 · 다인 대전 · 선수 노트북 화면
+     관리코드 없이 열린다. 참가는 진행자가 연 판에만 된다: 좌석 링크(#k=..&s=2 · 콘솔 「타자왕전」이 발급) 또는 그 판의 4자리 판 코드.
+     화면은 사이니지 세계(design.md §0~§5 · 블랙 스테이지 + 어두운 도트 격자 + Vibrant Orange). 외부 리소스를 쓰지 않는다.
+     이 파일은 public 저장소에 올라간다. 관리코드·백엔드 비밀값을 적지 않는다. -->
+<style>
+:root{
+  --bk:#000000; --grid:#262626; --o100:#FF7E31; --hio:#FF963E; --o50:#FFB284; --o25:#FFD8C1; --lp:#E6CCFF;
+  --tx:#FFFFFF; --tx2:rgba(255,255,255,.72); --tx3:rgba(255,255,255,.48); --line:rgba(255,255,255,.16); --face:rgba(255,255,255,.06);
+  --ng:#E5484D; --ok:#1FA45B;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background-color:var(--bk);color:var(--tx);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Crect x='0' y='0' width='3' height='3' fill='%23262626'/%3E%3C/svg%3E");
+  font-family:"Pretendard Variable",Pretendard,-apple-system,"Segoe UI","Malgun Gothic",sans-serif;
+  font-size:16px;line-height:1.5;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;word-break:keep-all}
+button,input{font-family:inherit;font-size:inherit;color:inherit;letter-spacing:inherit}
+button{cursor:pointer;border:0;background:none}
+.n{font-variant-numeric:tabular-nums}
+.top{display:flex;align-items:center;gap:16px;padding:18px 28px}
+.brand{font-size:22px;font-weight:600;color:var(--o100);letter-spacing:-.01em;white-space:nowrap}
+.top .t{font-size:15px;font-weight:600;color:var(--tx2)}
+.top .r{margin-left:auto;display:flex;gap:10px;align-items:center;font-size:14px;color:var(--tx3)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:99px;border:1px solid var(--line);font-size:14px;font-weight:700;color:var(--tx2);white-space:nowrap}
+.pill.on{border-color:var(--o100);color:var(--o100)}
+main{max-width:1180px;margin:0 auto;padding:12px 28px 48px}
+.h1{font-size:40px;font-weight:700;line-height:1.25;color:var(--o100)}
+.lead{font-size:18px;color:var(--tx2);margin-top:8px}
+.box{background:var(--face);border-radius:24px;padding:28px 32px;margin-top:24px}
+.lbl{display:block;font-size:14px;font-weight:700;color:var(--tx2);margin-bottom:8px}
+.fld{width:100%;height:60px;padding:0 20px;border-radius:14px;border:1.5px solid var(--line);background:#0B0B0B;font-size:26px;font-weight:600;outline:none}
+.fld:focus{border-color:var(--o100)}
+.fld.code{letter-spacing:.3em;text-align:center;max-width:260px}
+.row{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
+.row>div{flex:1;min-width:220px}
+.seats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.seat{height:88px;border-radius:16px;border:1.5px solid var(--line);background:#0B0B0B;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.seat b{font-size:26px;font-weight:700}
+.seat span{font-size:13px;color:var(--tx3);max-width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seat.on{border-color:var(--o100);background:rgba(255,126,49,.14)}
+.seat.on b{color:var(--o100)}
+.seat:disabled{opacity:.4;cursor:default}
+.cta{display:inline-flex;align-items:center;justify-content:center;height:60px;min-width:220px;padding:0 32px;border-radius:14px;background:var(--o100);color:#000;font-size:20px;font-weight:700}
+.cta:disabled{opacity:.4;cursor:default}
+.ghost{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--line);color:var(--tx2);font-size:15px;font-weight:600}
+.err{min-height:24px;margin-top:12px;font-size:16px;font-weight:600;color:var(--ng)}
+.hint{font-size:14px;color:var(--tx3);margin-top:10px}
+/* 대기 */
+.wait{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:center;margin-top:24px}
+.me-seat{font-size:120px;font-weight:700;line-height:1;color:var(--o100)}
+.me-name{font-size:40px;font-weight:700;margin-top:10px}
+.others{display:flex;flex-direction:column;gap:10px}
+.oth{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:14px;background:var(--face);font-size:20px;font-weight:700}
+.oth i{font-style:normal;width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#1A1A1A;color:var(--tx2);font-size:16px}
+.oth.me i{background:var(--o100);color:#000}
+.oth.empty{color:var(--tx3);font-weight:500}
+/* 카운트다운 */
+.cd{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:62vh}
+.cd b{font-size:240px;font-weight:700;line-height:1;color:var(--o100)}
+.cd span{font-size:22px;color:var(--tx2);margin-top:18px}
+/* 경기 */
+.hud{display:flex;gap:28px;align-items:flex-end;margin-top:4px}
+.hud div{display:flex;flex-direction:column}
+.hud b{font-size:40px;font-weight:700;line-height:1.1}
+.hud span{font-size:13px;color:var(--tx3);font-weight:600}
+.hud .left{margin-left:auto;text-align:right}
+.hud .left b{color:var(--o100)}
+.txt{margin-top:18px;padding:26px 30px;border-radius:24px;background:var(--face);font-size:34px;font-weight:600;line-height:1.7;letter-spacing:0;word-break:break-all}
+.txt span{border-radius:4px}
+.txt .ok{color:var(--o100)}
+.txt .todo{color:var(--tx3)}
+.txt .cw{color:var(--tx);box-shadow:inset 0 -3px 0 rgba(255,255,255,.35)}
+.txt .ng{color:#fff;background:var(--ng)}
+.txt .cmp{color:var(--tx);box-shadow:inset 0 -3px 0 var(--o100)}
+.txt .cur{box-shadow:inset 3px 0 0 var(--o100)}
+.inw{margin-top:18px;display:flex;gap:14px;align-items:center}
+.in{flex:1;height:76px;padding:0 24px;border-radius:18px;border:2px solid var(--line);background:#0B0B0B;font-size:32px;font-weight:600;outline:none}
+.in:focus{border-color:var(--o100)}
+.in.bad{border-color:var(--ng);background:#1F0B0C}
+.in:disabled{opacity:.5}
+.lanes{margin-top:22px;display:flex;flex-direction:column;gap:8px}
+.ln{display:grid;grid-template-columns:44px 150px minmax(0,1fr) 92px;gap:14px;align-items:center;font-size:17px;font-weight:700}
+.ln .no{width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#1A1A1A;color:var(--tx2);font-size:15px}
+.ln.me .no{background:var(--o100);color:#000}
+.ln .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trk{position:relative;height:12px;border-radius:99px;background:#1A1A1A;overflow:hidden}
+.trk i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--hio);transition:width .9s linear}
+.ln.me .trk i{background:var(--o100)}
+.ln .v{text-align:right;color:var(--tx2)}
+.ln.fin .v{color:var(--o100)}
+/* 결과 */
+.res{margin-top:22px;display:flex;flex-direction:column;gap:10px}
+.rr{display:grid;grid-template-columns:72px minmax(0,1fr) 150px 120px 110px;gap:14px;align-items:center;padding:16px 22px;border-radius:16px;background:var(--face);font-size:22px;font-weight:700}
+.rr.me{background:rgba(255,126,49,.18)}
+.rr .rk{font-size:30px;color:var(--o100)}
+.rr .c{text-align:right}
+.rr .c small{display:block;font-size:12px;color:var(--tx3);font-weight:600}
+.banner{margin-top:14px;font-size:18px;color:var(--tx2)}
+@media(max-width:900px){.wait{grid-template-columns:1fr}.seats{grid-template-columns:repeat(2,minmax(0,1fr))}.rr{grid-template-columns:52px minmax(0,1fr) 110px 90px;font-size:18px}.rr .x{display:none}.ln{grid-template-columns:40px 100px minmax(0,1fr) 80px}.txt{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="top"><span class="brand">AX Festival 2026</span><span class="t" id="topT">1F 현장 타자왕전</span><div class="r"><span id="net" class="pill">연결 중</span></div></div>
+<main id="view"></main>
+<script>
+/* 백엔드 URL 은 비밀이 아니다(앱 소스에도 있다) */
+var BE = "https://script.google.com/macros/s/AKfycbwjCaSSUnQ7W1lrM8T426Cn_LgKs_UhI0Qi5XRVk-_eF-oD55-Wwjsot0DkPJCX9JqMBA/exec";
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+function ls(k,v){ try{ if(v===undefined) return localStorage.getItem(k)||""; if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){ return ""; } }
+/* 타수 = 자판을 누르는 횟수 · 백엔드 raceKeys 와 글자 그대로 같다(test_backend 71절이 대조한다) */
+function raceKeys(s) {
+  var n = 0, J2 = [9, 10, 11, 14, 15, 16, 19], T2 = [3, 5, 6, 9, 10, 11, 12, 13, 14, 15, 18];
+  s = String(s || '');
+  for (var i = 0; i < s.length; i++) {
+    var c = s.charCodeAt(i) - 0xAC00;
+    if (c >= 0 && c <= 11171) { var t = c % 28, j = Math.floor(c / 28) % 21; n += 1 + (J2.indexOf(j) >= 0 ? 2 : 1) + (t ? (T2.indexOf(t) >= 0 ? 2 : 1) : 0); }
+    else n += 1;
+  }
+  return n;
+}
+/* JSONP · 콘솔과 같은 방식(GitHub Pages 에서 GAS 로 fetch 는 CORS 리다이렉트에 걸린다) · 서버 시계 차이를 함께 잰다 */
+var _cbN=0;
+function call(action, params, done, fail){
+  var name="__axr"+(++_cbN), sc=document.createElement("script"), q=[], t0=Date.now();
+  params=params||{}; params.action=action; params.callback=name; params._=t0;
+  for(var k in params) if(params[k]!=null&&params[k]!=="") q.push(encodeURIComponent(k)+"="+encodeURIComponent(params[k]));
+  var timer=setTimeout(function(){ cleanup(); net(false); fail&&fail({ok:false,reason:"network"}); },12000);
+  function cleanup(){ clearTimeout(timer); try{delete window[name];}catch(e){window[name]=undefined;} if(sc.parentNode) sc.parentNode.removeChild(sc); }
+  window[name]=function(res){ cleanup(); net(true); var t1=Date.now();
+    if(res&&res.now){ var rtt=t1-t0; if(rtt<=P.rtt+150){ P.off=res.now-(t0+t1)/2; P.rtt=Math.min(P.rtt,rtt); } }
+    done&&done(res); };
+  sc.onerror=function(){ cleanup(); net(false); fail&&fail({ok:false,reason:"network"}); };
+  sc.src=BE+"?"+q.join("&");
+  document.head.appendChild(sc);
+}
+function net(ok){ var n=el("net"); if(!n) return; n.textContent=ok?"연결됨":"연결 끊김 · 다시 시도 중"; n.className="pill"+(ok?" on":""); }
+function snow(){ return Date.now()+P.off; }
+
+/* ── 상태 ── P = 이 노트북 · M = 서버가 준 판 · G = 이 노트북의 경기 ── */
+var P={ k:"", s:0, fixed:false, off:0, rtt:1e9, sel:0, err:"", busy:false, form:{name:"",emp:"",code:""} };
+var M=null, G=null, SHOW="";
+(function(){
+  var h={}; String(location.hash||"").replace(/^#/,"").split("&").forEach(function(x){ var a=x.split("="); if(a[0]) h[a[0]]=decodeURIComponent(a[1]||""); });
+  if(h.k){ ls("race_k",h.k); ls("race_s",h.s||""); }
+  P.k=ls("race_k"); P.s=Number(ls("race_s"))||0; P.fixed=!!(P.k&&P.s);
+  if(P.fixed) el("topT").textContent="1F 현장 타자왕전 · "+P.s+"번 자리";
+})();
+function myTok(){ return M?ls("race_tok_"+M.id):""; }
+function mySeat(){ return M?Number(ls("race_seat_"+M.id))||0:0; }
+function inGame(){ return !!(M&&myTok()&&mySeat()&&(M.rows||[]).some(function(r){ return r.s===mySeat(); })); }
+
+/* ── 폴링 · 판 없음 2초 · 대기·경기 1초 · 응답이 온 뒤 다음을 부른다(겹치지 않게) ── */
+var _pt=null;
+function poll(){
+  clearTimeout(_pt);
+  var playing=M&&M.st==="run"&&inGame()&&G&&G.id===M.id;
+  var a=playing?"race_prog":"race_state", p={};
+  if(playing){ p={ id:M.id, s:mySeat(), tok:myTok(), pos:G.pos, errs:G.errs }; }
+  call(a, p, function(r){ take(r&&r.st?r.st:r); next(); }, function(){ next(); });
+  function next(){ _pt=setTimeout(poll, !M||M.st==="closed"||M.st==="done"?2000:1000); }
+}
+function take(r){
+  if(!r||!r.ok) return;
+  var prev=M; M=r.m;
+  if(M&&M.st==="run"&&inGame()&&(!G||G.id!==M.id)) gameInit();
+  if(G&&M&&G.id===M.id&&M.st==="done") gameStop();
+  paint(prev);
+}
+
+/* ── 화면 ── */
+function paint(prev){
+  var v=el("view"), key=scene();
+  if(key==="play"||key==="count"){ if(SHOW!==key+(M&&M.id)){ SHOW=key+M.id; v.innerHTML=key==="count"?countHtml():playHtml(); if(key==="play") playMount(); } if(key==="play") playTick(); else countTick(); return; }
+  if(key==="join"&&SHOW==="join"+M.id){ joinSeatsPaint(); return; }   /* 입력 중에는 다시 그리지 않는다(한글 조합이 끊긴다) */
+  SHOW=key+(M?M.id:"");
+  v.innerHTML=key==="join"?joinHtml():key==="wait"?waitHtml():key==="done"?doneHtml():key==="watch"?watchHtml():key==="rest"?restHtml():idleHtml();
+  if(key==="join"){ var f=el(P.fixed||P.form.code?"fName":"fCode"); if(f&&!P.busy) f.focus(); }
+}
+function scene(){
+  if(!M||M.st==="closed") return "idle";
+  if(M.st==="open") return inGame()?"wait":P.fixed&&P.s>M.n?"rest":"join";
+  if(M.st==="run"){ if(!inGame()) return "watch"; return snow()<M.t0?"count":"play"; }
+  if(M.st==="done") return "done";
+  return "idle";
+}
+function restHtml(){
+  return '<div class="cd" style="min-height:56vh;align-items:flex-start"><p class="h1">이번 판은 '+M.n+'석입니다</p><p class="lead">'+P.s+'번 자리는 이번 판을 쉽니다. 다음 판을 기다려 주세요.</p></div>';
+}
+function idleHtml(){
+  return '<div class="cd" style="min-height:56vh;align-items:flex-start"><p class="h1">다음 판을 기다리고 있습니다</p>'+
+    '<p class="lead">진행자가 판을 열면 이 화면에서 이름을 넣습니다.</p>'+
+    (P.fixed?'':'<p class="hint">좌석 링크로 열지 않은 화면입니다. 판이 열리면 판 코드를 넣어 참가합니다.</p>')+'</div>';
+}
+function joinHtml(){
+  var f=P.form, h='<p class="h1">'+(P.fixed?P.s+'번 자리 · 선수 등록':'선수 등록')+'</p><p class="lead">이름을 넣고 참가하면 진행자가 시작할 때까지 기다립니다.</p><div class="box">';
+  if(!P.fixed){
+    h+='<label class="lbl" for="fCode">판 코드 4자리</label><input id="fCode" class="fld code n" inputmode="numeric" maxlength="4" autocomplete="off" value="'+esc(f.code)+'" oninput="P.form.code=this.value.replace(/\\D/g,\'\')">'+
+      '<p class="lbl" style="margin-top:22px">자리</p><div class="seats" id="seatBox"></div>';
+  }
+  h+='<div class="row" style="margin-top:22px"><div><label class="lbl" for="fName">이름 또는 닉네임 (TV에 나옵니다)</label><input id="fName" class="fld" maxlength="12" autocomplete="off" spellcheck="false" value="'+esc(f.name)+'" oninput="P.form.name=this.value" onkeydown="if(event.key===\'Enter\'&&!event.isComposing)join()"></div>'+
+    '<div style="flex:0 0 220px;min-width:0"><label class="lbl" for="fEmp">사번 (선택)</label><input id="fEmp" class="fld n" maxlength="12" inputmode="numeric" autocomplete="off" value="'+esc(f.emp)+'" oninput="P.form.emp=this.value" onkeydown="if(event.key===\'Enter\'&&!event.isComposing)join()"></div></div>'+
+    '<div style="margin-top:24px;display:flex;gap:12px;align-items:center"><button class="cta" id="joinBtn" onclick="join()">참가하기</button></div><p class="err" id="jErr">'+esc(P.err)+'</p>'+
+    '<p class="hint">사번은 시상 확인용으로 기록에만 남고 TV에는 나오지 않습니다.</p></div>';
+  setTimeout(joinSeatsPaint,0);
+  return h;
+}
+function joinSeatsPaint(){
+  var b=el("seatBox"); if(!b||!M) return;
+  var taken={}; (M.rows||[]).forEach(function(r){ taken[r.s]=r.name; });
+  var h="";
+  for(var s=1;s<=M.n;s++) h+='<button class="seat'+(P.sel===s?" on":"")+'" '+(taken[s]?"disabled":"")+' onclick="P.sel='+s+';joinSeatsPaint()"><b class="n">'+s+'</b><span>'+(taken[s]?esc(taken[s]):"비어 있음")+'</span></button>';
+  b.innerHTML=h;
+}
+var JOIN_ERR={ closed:"지금 참가할 수 있는 판이 없습니다", code:"판 코드가 맞지 않습니다", locked:"판 코드 입력이 잠겼습니다. 진행자에게 좌석 링크를 받으세요", auth:"좌석 링크가 바뀌었습니다. 진행자에게 새 링크를 받으세요",
+  seat:"자리를 고르세요", name:"이름을 넣어 주세요", ban:"쓸 수 없는 말이 들어 있습니다", taken:"이미 다른 사람이 앉은 자리입니다", network:"서버 응답이 없습니다. 다시 눌러 주세요" };
+function join(){
+  if(P.busy||!M) return;
+  var s=P.fixed?P.s:P.sel, f=P.form, p={ s:s, name:f.name.trim(), emp:f.emp.trim() };
+  if(P.fixed) p.k=P.k; else p.code=f.code;
+  if(!P.fixed&&!/^\d{4}$/.test(f.code)) return jErr("판 코드 4자리를 넣어 주세요");
+  if(!s) return jErr(JOIN_ERR.seat);
+  if(!p.name) return jErr(JOIN_ERR.name);
+  var old=ls("race_tok_"+M.id); if(old&&Number(ls("race_seat_"+M.id))===s) p.tok=old;
+  P.busy=true; el("joinBtn").disabled=true; jErr("");
+  call("race_join", p, function(r){
+    P.busy=false;
+    if(r&&r.ok){ ls("race_tok_"+M.id,r.tok); ls("race_seat_"+M.id,String(r.s)); P.err=""; P.form={ name:"", emp:"", code:"" }; take(r); return; }
+    var b=el("joinBtn"); if(b) b.disabled=false;
+    jErr((JOIN_ERR[r&&r.reason]||"참가하지 못했습니다")+(r&&r.reason==="taken"&&r.name?" ("+r.name+")":""));
+  }, function(){ P.busy=false; var b=el("joinBtn"); if(b) b.disabled=false; jErr(JOIN_ERR.network); });
+}
+function jErr(m){ P.err=m; var e=el("jErr"); if(e) e.textContent=m; }
+function seatRows(){
+  var by={}; (M.rows||[]).forEach(function(r){ by[r.s]=r; });
+  var h=""; for(var s=1;s<=M.n;s++){ var r=by[s], me=s===mySeat();
+    h+='<div class="oth'+(me?" me":"")+(r?"":" empty")+'"><i class="n">'+s+'</i>'+(r?esc(r.name)+(me?' <span style="color:var(--tx3);font-weight:500">· 나</span>':''):"비어 있음")+'</div>'; }
+  return h;
+}
+function waitHtml(){
+  var r=(M.rows||[]).filter(function(x){ return x.s===mySeat(); })[0]||{};
+  return '<div class="wait"><div><p class="lbl">내 자리</p><p class="me-seat n">'+mySeat()+'</p><p class="me-name">'+esc(r.name)+'</p>'+
+    '<p class="lead" style="margin-top:18px">진행자가 시작하면 3, 2, 1 뒤에 모두 같은 문장이 나옵니다. 어절을 맞게 치고 띄어쓰기를 누르면 다음 어절로 넘어갑니다.</p>'+
+    '<button class="ghost" style="margin-top:20px" onclick="leave()">자리 비우기</button></div>'+
+    '<div class="others">'+seatRows()+'</div></div>';
+}
+function leave(){
+  if(!M) return;
+  call("race_leave",{ s:mySeat(), tok:myTok() },function(r){ ls("race_tok_"+M.id,null); ls("race_seat_"+M.id,null); take(r&&r.ok?r:{ok:true,now:0,m:M}); });
+}
+function watchHtml(){
+  return '<p class="h1">진행 중인 판입니다</p><p class="lead">이 판이 끝나면 다음 판에 참가할 수 있습니다.</p><div class="lanes" style="margin-top:28px">'+lanesHtml()+'</div>';
+}
+function doneHtml(){
+  var mine=mySeat();
+  var h='<p class="h1">'+(M.why==="time"?"시간 끝":"경기 끝")+'</p><div class="res">';
+  (M.rows||[]).forEach(function(r){
+    h+='<div class="rr'+(r.s===mine&&inGame()?" me":"")+'"><span class="rk n">'+r.rank+'위</span><span>'+esc(r.name)+' <small style="color:var(--tx3);font-size:14px">'+r.s+'번 자리</small></span>'+
+      '<span class="c n">'+(r.fin?(Math.round(r.el/100)/10).toFixed(1)+"초":Math.round(r.pos/Math.max(1,M.len)*100)+"%")+'<small>'+(r.fin?"완주":"진행")+'</small></span>'+
+      '<span class="c n">'+r.cpm+'<small>분당 타수</small></span><span class="c n x">'+r.acc+'%<small>정확도</small></span></div>';
+  });
+  return h+'</div><p class="banner">다음 판은 진행자가 엽니다.</p>';
+}
+
+/* ── 카운트다운 ── */
+function countHtml(){ return '<div class="cd"><b class="n" id="cdN">3</b><span>'+mySeat()+'번 자리 · 같은 문장이 곧 나옵니다</span></div>'; }
+function countTick(){
+  var b=el("cdN"); if(!b||!M) return;
+  var left=M.t0-snow();
+  if(left<=0){ paint(); return; }
+  b.textContent=Math.min(3,Math.ceil(left/1000));
+  requestAnimationFrame(countTick);
+}
+
+/* ── 경기 · 어절 단위 · 맞게 친 어절 + 띄어쓰기 = 다음 어절 · 마지막 어절은 맞으면 바로 완주
+   한글 조합 중인 마지막 글자는 판정하지 않는다(ㅎ → 하 → 한 을 오타로 보지 않게) · 붙여넣기·끌어 놓기는 막는다 ── */
+function gameInit(){
+  G={ id:M.id, text:M.text, words:M.text.split(" "), wi:0, base:0, pos:0, errs:0, wrong:false, comp:false, fin:false, sent:false, v:"" };
+}
+function gameStop(){ if(G) G.over=true; }
+function playHtml(){
+  return '<div class="hud"><div><b class="n" id="hCpm">0</b><span>분당 타수</span></div><div><b class="n" id="hAcc">100%</b><span>정확도</span></div><div><b class="n" id="hPos">0%</b><span>진행</span></div>'+
+    '<div class="left"><b class="n" id="hLeft">'+M.lim+'</b><span>남은 초</span></div></div>'+
+    '<div class="txt" id="txt"></div>'+
+    '<div class="inw"><input id="in" class="in" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="여기에 입력" '+
+    'onpaste="return false" ondrop="return false" oninput="typed(event)" onkeydown="keyd(event)"></div>'+
+    '<div class="lanes" id="lanes"></div>';
+}
+/* 조합 이벤트는 on* 속성이 없어서 addEventListener 로만 받는다 · Chrome 순서 = input(조합 중) → compositionend */
+function playMount(){ txtPaint(); var i=el("in"); if(i){ i.addEventListener("compositionstart",function(){ if(G) G.comp=true; }); i.addEventListener("compositionend",function(){ if(G){ G.comp=false; typed(); } }); i.focus(); document.addEventListener("click",refocus); } }
+function refocus(){ var i=el("in"); if(i&&!i.disabled) i.focus(); }
+function keyd(e){ if(e.key==="Enter") e.preventDefault(); }
+function typed(e){
+  if(!G||G.fin||G.over) return;
+  var inp=el("in"); if(!inp) return;
+  if(e&&typeof e.isComposing==="boolean") G.comp=e.isComposing;
+  var v=inp.value, w=G.words[G.wi], last=G.wi===G.words.length-1;
+  if(!last&&v===w+" "){ G.base+=w.length+1; G.wi++; inp.value=""; G.wrong=false; G.v=""; G.comp=false; G.pos=G.base; after(); return; }
+  if(last&&v===w){ G.base+=w.length; G.v=v; G.pos=G.text.length; finish(); return; }
+  var tgt=last?w:w+" ", judged=G.comp&&v.length?v.slice(0,-1):v, ok=tgt.indexOf(judged)===0;
+  if(!ok&&!G.wrong) G.errs++;
+  G.wrong=!ok; G.v=v;
+  var k=0; while(k<judged.length&&judged.charAt(k)===tgt.charAt(k)) k++;
+  G.pos=G.base+k;
+  after();
+}
+function after(){ var i=el("in"); if(i) i.className="in"+(G.wrong?" bad":""); txtPaint(); hud(); }
+function txtPaint(){
+  var t=el("txt"); if(!t||!G) return;
+  var w=G.words[G.wi]||"", wEnd=G.base+w.length, v=G.v, judged=G.comp&&v.length?v.slice(0,-1):v, h="";
+  for(var i=0;i<G.text.length;i++){
+    var ch=G.text.charAt(i), c;
+    if(G.fin||i<G.base) c="ok";
+    else if(i<wEnd||(i===wEnd&&!G.fin)){
+      var j=i-G.base;
+      if(j<judged.length) c=judged.charAt(j)===ch?"ok":"ng";
+      else if(G.comp&&j===judged.length&&v.length) c="cmp";
+      else c="cw"+(j===v.length?" cur":"");
+    } else c="todo";
+    h+='<span class="'+c+'">'+(ch===" "?"&nbsp;":esc(ch))+'</span>';
+  }
+  t.innerHTML=h;
+}
+function hud(){
+  if(!G||!M) return;
+  var el0=Math.max(0,snow()-M.t0), min=el0/60000, left=Math.max(0,Math.ceil((M.t0+M.lim*1000-snow())/1000));
+  var cpm=G.fin&&G.el?Math.round(raceKeys(G.text)/(G.el/60000)):min>0.02?Math.round(raceKeys(G.text.slice(0,G.pos))/min):0;
+  var a=el("hCpm"); if(a) a.textContent=cpm;
+  a=el("hAcc"); if(a) a.textContent=(G.pos+G.errs?Math.round(G.pos/(G.pos+G.errs)*100):100)+"%";
+  a=el("hPos"); if(a) a.textContent=Math.round(G.pos/G.text.length*100)+"%";
+  a=el("hLeft"); if(a) a.textContent=G.fin?"완주":left;
+}
+function finish(){
+  G.fin=true; G.el=snow()-M.t0;
+  var i=el("in"); if(i){ i.value=""; i.disabled=true; i.placeholder="완주 · 다른 선수를 기다립니다"; i.className="in"; }
+  document.removeEventListener("click",refocus);
+  txtPaint(); hud(); sendFin();
+}
+function sendFin(){
+  if(!G||G.sent||!M||M.st!=="run") return;
+  call("race_fin",{ id:M.id, s:mySeat(), tok:myTok(), txt:G.words.join(" "), errs:G.errs },function(r){
+    if(r&&r.ok){ G.sent=true; if(r.m&&r.m.rows){ var me=r.m.rows.filter(function(x){ return x.s===mySeat(); })[0]; if(me&&me.fin) G.el=me.el; } take(r); }
+    else if(r&&r.reason==="state"){ G.sent=true; take(r.st); }
+    else setTimeout(sendFin,1000);
+  },function(){ setTimeout(sendFin,1000); });
+}
+function playTick(){ hud(); var l=el("lanes"); if(l) l.innerHTML=lanesHtml(); if(M&&M.st==="run"&&snow()>=M.t0+M.lim*1000&&G&&!G.fin){ var i=el("in"); if(i) i.disabled=true; } }
+setInterval(function(){ if(SHOW.indexOf("play")===0) hud(); },250);
+function lanesHtml(){
+  var by={}; (M.rows||[]).forEach(function(r){ by[r.s]=r; });
+  var seats=(M.rows||[]).map(function(r){ return r.s; }).sort(), len=M.len||1, h="";
+  seats.forEach(function(s){
+    var r=by[s], me=s===mySeat()&&inGame(), pos=me&&G?Math.max(G.pos,r.pos):r.pos, fin=r.fin||(me&&G&&G.fin);
+    h+='<div class="ln'+(me?" me":"")+(fin?" fin":"")+'"><span class="no n">'+s+'</span><span class="nm">'+esc(r.name)+'</span><span class="trk"><i style="width:'+Math.min(100,pos/len*100).toFixed(1)+'%"></i></span>'+
+      '<span class="v n">'+(r.fin?r.rank+"위 · "+(Math.round(r.el/100)/10).toFixed(1)+"초":fin?"완주":r.cpm+"타")+'</span></div>';
+  });
+  return h;
+}
+paint();
+poll();
+</script>
+</body>
+</html>

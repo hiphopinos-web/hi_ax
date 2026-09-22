@@ -345,6 +345,73 @@ table.brk tr.tot td{border-bottom:0;border-top:1px solid var(--line3)}
 @keyframes sp{to{transform:rotate(360deg)}}
 .drop{display:block;margin-top:12px;border:1.5px dashed var(--line3);border-radius:var(--r-s);padding:22px;text-align:center;cursor:pointer;background:var(--soft)}
 .drop:hover{border-color:var(--navy)}
+/* ── v4.13 타자왕전 · 콘솔 진행 화면 ── */
+.rcode{font-size:var(--fs-kpi);font-weight:800;letter-spacing:.18em;color:var(--navy);font-variant-numeric:tabular-nums}
+.rlink{min-width:0;width:100%;font-size:var(--fs-c);color:var(--tx2)}
+.rbar{height:8px;border-radius:99px;background:var(--navy05);overflow:hidden;min-width:120px}
+.rbar i{display:block;height:100%;background:var(--navy);border-radius:99px;transition:width .9s linear}
+/* ── v4.13 타자왕전 · TV 전체 화면 (사이니지 세계 · design.md §0~§5 · 블랙 스테이지 + 어두운 도트 격자 + Vibrant Orange)
+   크기는 1920 폭 기준 비율(vw) · 글자는 움직이지 않고 막대와 점(KV 01)만 움직인다 ── */
+#rtv{position:fixed;inset:0;z-index:58;background:#000;color:#fff;display:none;overflow:hidden;letter-spacing:-.01em;cursor:default}
+#rtv.on{display:block}
+#rtv canvas{position:absolute;inset:0;width:100%;height:100%}
+#rtv .in0{position:absolute;inset:0;padding:2.6vw 3.4vw;display:flex;flex-direction:column}
+#rtv .n{font-variant-numeric:tabular-nums}
+#rtv .hd{display:flex;align-items:baseline;gap:1.6vw}
+#rtv .hd .b{font-size:2.1vw;font-weight:600;color:#FF7E31}
+#rtv .hd .t{font-size:1.25vw;font-weight:600;color:rgba(255,255,255,.72)}
+#rtv .hd .r{margin-left:auto;display:flex;align-items:baseline;gap:.8vw;font-size:1.25vw;color:rgba(255,255,255,.72);font-weight:600}
+#rtv .hd .r b{font-size:3.6vw;font-weight:700;color:#FF7E31;line-height:1}
+#rtv .bd{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0}
+#rtv .ey{font-size:1.5vw;font-weight:600;color:#FF963E}
+#rtv .hl{font-size:5.4vw;font-weight:700;line-height:1.15;color:#FF7E31;margin-top:.6vw}
+#rtv .sb{font-size:1.7vw;color:rgba(255,255,255,.72);margin-top:1vw}
+#rtv .seats{display:grid;gap:1.4vw;margin-top:3vw}
+#rtv .seat{border-radius:1.6vw;background:rgba(255,255,255,.07);padding:2vw 2.2vw;min-height:13vw;display:flex;flex-direction:column;justify-content:space-between}
+#rtv .seat .no{font-size:1.4vw;font-weight:600;color:rgba(255,255,255,.48)}
+#rtv .seat .nm{font-size:3.2vw;font-weight:700;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rtv .seat.empty .nm{color:rgba(255,255,255,.28);font-weight:500}
+#rtv .seat.on .no{color:#FF963E}
+#rtv .cd{font-size:24vw;font-weight:700;line-height:1;color:#FF7E31;text-align:center}
+#rtv .cdn{display:flex;justify-content:center;gap:3vw;font-size:2vw;font-weight:700;color:rgba(255,255,255,.72);margin-top:2vw}
+#rtv .txt{font-size:1.75vw;line-height:1.6;color:rgba(255,255,255,.6);background:rgba(255,255,255,.06);border-radius:1.2vw;padding:1.1vw 1.6vw;margin-top:1.6vw}
+#rtv .lanes{display:flex;flex-direction:column;justify-content:center;gap:1.6vw;flex:1}
+#rtv .ln{display:grid;grid-template-columns:4.4vw 15vw minmax(0,1fr) 9vw 7vw;gap:1.4vw;align-items:center}
+#rtv .ln .sn{width:3.6vw;height:3.6vw;border-radius:50%;background:#1A1A1A;display:flex;align-items:center;justify-content:center;font-size:1.6vw;font-weight:700;color:rgba(255,255,255,.72)}
+#rtv .ln .nm{font-size:2.4vw;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rtv .trk{position:relative;height:3.6vw}
+#rtv .trk .dots{position:absolute;left:0;right:0;top:50%;height:.5vw;margin-top:-.25vw;background-image:radial-gradient(circle,#333 40%,transparent 45%);background-size:1.2vw .5vw;background-repeat:repeat-x}
+#rtv .trk .fill{position:absolute;left:0;top:50%;height:.7vw;margin-top:-.35vw;border-radius:99px;background:#FF963E;transition:width .95s linear}
+#rtv .trk .head{position:absolute;top:50%;width:2.6vw;height:2.6vw;margin:-1.3vw 0 0 -1.3vw;border-radius:50%;background:#FF7E31;transition:left .95s linear;display:flex;align-items:center;justify-content:center}
+#rtv .trk .head i{width:.9vw;height:.9vw;border-radius:50%;background:#E6CCFF}
+#rtv .trk .flag{position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:1.2vw;font-weight:700;color:rgba(255,255,255,.35)}
+#rtv .ln.fin .fill{background:#FF7E31}
+#rtv .ln.fin .head{width:auto;height:auto;margin:0;transform:translate(-100%,-50%);border-radius:99px;padding:.35vw 1.2vw;font-size:1.6vw;font-weight:800;color:#000}
+#rtv .ln .sv{text-align:right}
+#rtv .ln .sv b{display:block;font-size:2.6vw;font-weight:700;line-height:1.1}
+#rtv .ln .sv span{font-size:1vw;color:rgba(255,255,255,.48);font-weight:600}
+#rtv .res{display:flex;flex-direction:column;gap:1vw;margin-top:2.4vw}
+#rtv .rr{display:grid;grid-template-columns:7vw minmax(0,1fr) 14vw 11vw 10vw;gap:1.4vw;align-items:center;padding:1.3vw 2vw;border-radius:1.4vw;background:rgba(255,255,255,.07)}
+#rtv .rr.w{background:rgba(255,126,49,.2)}
+#rtv .rr .rk{font-size:3.2vw;font-weight:700;color:#FF7E31}
+#rtv .rr .nm{font-size:2.8vw;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rtv .rr .c{text-align:right;font-size:2.4vw;font-weight:700}
+#rtv .rr .c small{display:block;font-size:1vw;color:rgba(255,255,255,.48);font-weight:600}
+#rtv .pod{display:flex;align-items:flex-end;justify-content:center;gap:2vw;margin-top:2vw;flex:1}
+#rtv .pc{width:22vw;display:flex;flex-direction:column;align-items:center;text-align:center}
+#rtv .pc .nm{font-size:3vw;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rtv .pc .rc{font-size:1.4vw;color:rgba(255,255,255,.72);margin:.4vw 0 1.2vw;font-weight:600}
+#rtv .pc .blk{width:100%;border-radius:1.6vw 1.6vw 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:1.6vw;font-size:5vw;font-weight:700;color:#000}
+#rtv .pc.p1 .blk{height:34vh;background:#FF7E31}
+#rtv .pc.p2 .blk{height:26vh;background:#FF963E}
+#rtv .pc.p3 .blk{height:20vh;background:#FFB284}
+#rtv .pc.p1 .nm{font-size:3.8vw;color:#FF7E31}
+#rtv .ctl{position:absolute;right:1.6vw;bottom:1.4vw;display:flex;gap:8px;opacity:0;transition:opacity .25s}
+#rtv.ui .ctl{opacity:1}
+#rtv .ctl button{padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.6);color:rgba(255,255,255,.85);font-size:13px;font-weight:600}
+#rtv .ctl button:hover{border-color:#FF7E31;color:#fff}
+#rtv .ctl button:disabled{opacity:.35;cursor:default}
+#rtv .ctl .k{font-size:11px;color:rgba(255,255,255,.45);margin-left:4px}
 </style>
 </head>
 <body>
@@ -374,6 +441,7 @@ table.brk tr.tot td{border-bottom:0;border-top:1px solid var(--line3)}
 <main id="view"></main>
 <div id="drwBg" onclick="drwClose()"></div>
 <aside id="drw" aria-label="상세"></aside>
+<div id="rtv" aria-label="타자왕전 TV 화면"><canvas id="rtvCv"></canvas><div class="in0" id="rtvIn"></div></div>
 <div id="toast"><span class="tt" id="toastT"></span><button id="toastU" style="display:none">되돌리기</button></div>
 <div id="dlg" class="overlay" role="dialog" aria-modal="true" aria-labelledby="dlgT">
   <div class="ocard" id="dlgCard">
@@ -400,6 +468,7 @@ var TABS = [
   { id:"apply", n:"신청", d:"상담 승인 · 커피챗 매칭 · 강의신청 · 사전 신청 명단을 처리합니다." },
   { id:"survey", n:"설문", d:"오늘 한 판 설문 집계입니다. 답은 이름 없이 저장되어 사람 단위 조회는 없습니다." },
   { id:"typing", n:"게임", d:"AX 올림픽 점수 계수와 당일 잠금 · 게임별 전원 점수 · 1F 현장 타자왕전과 닉네임을 관리합니다." },
+  { id:"race", n:"타자왕전", d:"1F 현장 타자 대전(2~4명)을 열고 시작하고 TV에 띄웁니다. 선수 노트북은 좌석 링크로 이 판에만 참가합니다." },
   { id:"notice", n:"공지", d:"참가자 앱 LED 띠와 실시간 안내에 나가는 공지를 발송하고 중지합니다." },
   { id:"photo", n:"포토부스", d:"AI 포토부스 원격 대기열을 호출하고 완료 처리합니다." },
   { id:"art", n:"사생대회", d:"본선 공개 작품을 관리합니다. 좋아요 1인 3표이고 앱에는 작가가 나오지 않습니다." }
@@ -595,11 +664,11 @@ el("key").addEventListener("keydown",function(e){ if(e.key==="Enter") unlock(); 
 
 /* ══════════════════ 3. 라우팅 · 폴링 ══════════════════ */
 /* subs = 메뉴별 서브탭 · sel = 표에서 고른 행 · ovr = 처리 직후 서버 반영 전까지 덮어 보여 줄 값 · drw = 열린 상세 패널 */
-var ST={ tab:"dash", subs:{ apply:"resv", stamp:"one", typing:"oly" }, q:"", filt:"", data:{}, busy:false, at:null, sel:{}, ovr:{}, drw:null, draft:{}, bulk:{}, sp:{ q:"", emp:"" } };
+var ST={ tab:"dash", subs:{ apply:"resv", stamp:"one", typing:"oly", race:"live" }, q:"", filt:"", data:{}, busy:false, at:null, sel:{}, ovr:{}, drw:null, draft:{}, bulk:{}, sp:{ q:"", emp:"" } };
 /* 탭을 바꾸면 먼저 갖고 있는 데이터로 즉시 그리고, 그 다음 서버에서 받아 다시 그린다.
    안 그러면 응답이 올 때까지(1~3초) 이전 탭 내용이 새 탭 이름 아래 그대로 보인다. */
 /* load() 를 먼저 불러 busy 를 세운 뒤 그린다. 반대로 하면 첫 진입에 「가입 계정 0명」처럼 0 으로 그려진다. */
-function go(t){ if(!ART_ON&&t==="art") t="dash"; ST.tab=t; ST.q=""; ST.filt=""; ST.sel={}; drwClose(true); renderTabs(); window.scrollTo(0,0); load(); render(); }
+function go(t){ if(!ART_ON&&t==="art") t="dash"; ST.tab=t; ST.q=""; ST.filt=""; ST.sel={}; drwClose(true); renderTabs(); window.scrollTo(0,0); load(); render(); if(typeof raceTab==="function") raceTab(t==="race"); }
 /* 대시보드 바로가기 · 탭 + 서브탭 + 필터까지 한 번에 */
 function goTo(t, sub, filt){ if(sub) ST.subs[t]=sub; go(t); if(filt){ ST.filt=filt; render(); } }
 function sub(){ return ST.subs[ST.tab]; }
@@ -630,6 +699,7 @@ var NEED={
   apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"},{k:"pre",a:"pre_list"}],
   survey:[{k:"survey",a:"survey_list"}],
   typing:[{k:"nick",a:"type_nick_list"},{k:"tres",a:"type_result"},{k:"olyr",a:"oly_result"},{k:"gstats",a:"game_stats"},{k:"stats",a:"stats"},{k:"oxs",a:"ox_stats"}],
+  race:[{k:"rlist",a:"race_list"}],
   notice:[{k:"noti",a:"sync",p:{emp:""}}],
   photo:[{k:"photo",a:"photo_list"}],
   art:[{k:"art",a:"art_all"}]
@@ -704,7 +774,7 @@ function render(){
   if(missing.length&&ST.busy){
     h=tabHead()+'<div class="card"><p class="muted"><span class="spin"></span>서버에서 불러오는 중입니다. 보통 2~5초 걸립니다.</p></div>';
   } else {
-    try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="notice"?viewNotice():ST.tab==="survey"?viewSurvey():ST.tab==="typing"?viewTyping():ST.tab==="photo"?viewPhoto():ST.tab==="art"?viewArt():viewApply(); }
+    try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="notice"?viewNotice():ST.tab==="survey"?viewSurvey():ST.tab==="typing"?viewTyping():ST.tab==="photo"?viewPhoto():ST.tab==="art"?viewArt():ST.tab==="race"?viewRace():viewApply(); }
     catch(e){ h='<div class="err-banner">화면을 그리는 중 오류가 났습니다: '+esc(e.message)+'</div>'; }
   }
   if(ST.err) h='<div class="err-banner">일부 데이터를 못 받았습니다('+esc(ST.err.reason||"")+'). 새로고침을 눌러 주세요. 표시된 값은 마지막으로 받은 것입니다.</div>'+h;
@@ -753,6 +823,7 @@ var GUIDE={
   apply:[["처리할 것","기본 필터는 <b>처리할 것</b>입니다. 칩의 숫자는 상태별 건수입니다."],["다음 행동","행마다 지금 상태에서 할 다음 행동 하나가 네이비 버튼입니다(신청 → 승인 → 체크인 → 완료). 노쇼·취소는 옆의 적갈 버튼입니다."],["여러 건","왼쪽 칸을 체크하면 위에 일괄 처리 바가 뜹니다(상담 일괄 승인·취소 · 커피챗 일괄 매칭·취소). 강의신청은 현황만 봅니다."],["상세","행을 누르면 오른쪽에 상세 패널이 열립니다. 이력 확인과 메모 저장, 처리까지 거기서 합니다."],["되돌리기","승인·노쇼·취소·매칭은 처리 뒤 7초 동안 알림에 <b>되돌리기</b>가 뜹니다. 체크인·완료·참석은 스탬프 03 이 적립되어 되돌리기가 없습니다."]],
   survey:[["집계","문항마다 선택 비율 · 점수 분포 · 한 줄 답을 봅니다."],["이름 없음","답은 사번 없이 저장됩니다. 사람 단위 조회는 없습니다."]],
   typing:[["AX 올림픽 · 점수 계수","종목별 계수를 고치면 미리보기에 예시 기록의 점수가 바로 보입니다. <b>저장</b>하면 규칙판(rev)이 1 오르고 이미 낸 기록까지 전원 점수가 새 계수로 다시 계산됩니다."],["당일 잠금","리허설 재보정을 마친 뒤 10/26 아침에 <b>당일 잠금 켜기</b>를 누릅니다. 잠긴 동안에는 저장이 거부되고, 해제는 언제든 됩니다."],["게임별 통계","다섯 종목 전원 점수 · 최고 점수 중앙 · 만점 도달 · CSV 입니다. 행의 대표 기록을 누르면 점수 구성이 펼쳐집니다. 부문 통계는 두지 않습니다."],["O/X 문항","AI O/X 문항별 정답률 · 판자 · 낙하 · O 선택 비율 · 평균 시간입니다. 답이 틀린 문항은 체크한 뒤 <b>선택 문항 끄기</b>로 출제에서 뺍니다. 규칙 잠금과 별개라 당일에도 됩니다."],["타자왕전 · 닉네임","Outro 호명용 상위 5와 부적절한 닉네임 숨김·초기화입니다."]],
+  race:[["준비","아침에 <b>좌석 링크</b>를 선수 노트북마다 한 번 엽니다. 관리코드는 필요 없고, 진행자가 연 판에만 참가됩니다."],["판 열기","좌석 수(2~4)를 고르고 <b>판 열기</b>를 누르면 선수 노트북에 이름 입력이 나옵니다. 2명부터 <b>시작</b>할 수 있습니다."],["TV","<b>TV 화면 열기</b>는 전체 화면 대전 화면입니다. 마우스를 움직이면 아래 오른쪽에 진행 버튼이 나옵니다(N 판 열기 · S 시작 · E 지금 끝내기 · R 결과와 시상)."],["기록","모두 완주하거나 120초가 지나면 결과가 「타자대전」 시트에 한 번 기록됩니다. <b>오늘 기록</b>에서 완주 속도 순위와 CSV 를 봅니다."]],
   notice:[["발송","제목과 내용을 넣고 발송하면 모든 참가자 앱에 나갑니다."],["중지","송출 중인 공지를 중지하면 다음 동기화(10초) 때 전 기기에서 사라집니다."]],
   photo:[["호출","<b>다음 번호 호출</b>을 누르면 맨 앞 번호의 앱에 「지금 입장하세요」가 뜹니다."],["건너뛰기 · 완료","호출 후 10분 안에 오지 않으면 건너뛰기, 도착하면 완료입니다."]],
   art:[["설정","접수 폼 주소와 두 마감 시각을 저장합니다."],["공개","작품을 공개 · 샘플 · 숨김으로 바꿉니다."],["시상","좋아요 순위와 CSV 로 시상합니다."]]
@@ -2340,6 +2411,313 @@ function photoAct(act, emp, no){
   };
   if(act==="skip") dialog({ t:"건너뛸까요?", s:"호출 후 10분 안에 오지 않은 번호를 건너뜁니다. 참가자는 앱에서 다시 줄을 설 수 있습니다.", who:"<b>"+no+"번</b> · "+esc(emp), ok:"건너뛰기", onOk:function(){ dlgClose(); go(); } });
   else go();
+}
+
+/* ══════════════════ 7-7. 타자왕전 · 1F 현장 다인 대전 (v4.13 · 사용자 확정 260922 A안) ══════════════════
+   선수 노트북 2~4대 = admin/typing.html (관리코드 없음 · 좌석 링크 또는 판 코드로 이 판에만 참가)
+   진행 = 이 메뉴 「진행」 · TV = 「TV 화면」(전체 화면 · 사이니지 세계). 판 상태는 서버 캐시에만 있고 시트에는 판이 끝날 때 결과만 쓴다.
+   폴링: 이 메뉴를 보는 동안 race_state 2초(판 없음 4초) · TV 를 켜면 TV 가 1초로 대신 부른다(둘이 겹치지 않는다).
+   판 코드·좌석 링크 키·사번은 race_host(관리코드)로만 받는다. 기록은 「타자대전」 시트에만 쌓이고 기존 현장 타자왕전(소나기) 상위 5 와 섞이지 않는다. */
+var RACE={ n:4, m:null, host:null, key:"", off:0, rtt:1e9, t:null, sig:"", hostAt:0, hostId:"", hostJoin:-1, lastSt:"" };
+/* 타수 = 자판을 누르는 횟수 · 백엔드 raceKeys 와 글자 그대로 같다(test_backend 71절이 대조한다) */
+function raceKeys(s) {
+  var n = 0, J2 = [9, 10, 11, 14, 15, 16, 19], T2 = [3, 5, 6, 9, 10, 11, 12, 13, 14, 15, 18];
+  s = String(s || '');
+  for (var i = 0; i < s.length; i++) {
+    var c = s.charCodeAt(i) - 0xAC00;
+    if (c >= 0 && c <= 11171) { var t = c % 28, j = Math.floor(c / 28) % 21; n += 1 + (J2.indexOf(j) >= 0 ? 2 : 1) + (t ? (T2.indexOf(t) >= 0 ? 2 : 1) : 0); }
+    else n += 1;
+  }
+  return n;
+}
+function rnow(){ return Date.now()+RACE.off; }
+/* 상태 받기 · 서버 시계 차이를 함께 잰다(카운트다운·남은 초가 선수 화면과 맞게) */
+function raceCall(a, p, done, fail){
+  var t0=Date.now();
+  call(a, p||{}, function(r){ var t1=Date.now(); if(r&&r.now){ var rtt=t1-t0; if(rtt<=RACE.rtt+150){ RACE.off=r.now-(t0+t1)/2; RACE.rtt=Math.min(RACE.rtt,rtt); } } done&&done(r); }, fail);
+}
+function raceTake(r){
+  if(!r||!r.ok) return;
+  var m=r.m, prevSt=RACE.lastSt;
+  if(r.key!==undefined){ RACE.host=m; RACE.key=r.key||""; RACE.hostAt=Date.now(); RACE.hostId=m?m.id:""; RACE.hostJoin=m?(m.rows||[]).length:-1; }
+  if(m&&m.n&&(!RACE.m||RACE.m.id!==m.id)) RACE.n=m.n;   /* 좌석 수는 마지막 판을 따른다(N 키 · 다음 판 열기) · 콘솔 칩으로 바꾼다 */
+  RACE.m=m; RACE.lastSt=m?m.id+":"+m.st:"";
+  /* 판이 끝나면 오늘 기록을 새로 받는다 */
+  if(m&&m.st==="done"&&prevSt!==m.id+":done"&&prevSt){ for(var k in _cache) if(k.indexOf("race_list")===0) delete _cache[k]; if(ST.tab==="race") reload(["rlist"]); }
+  /* 새 판이거나 앉은 사람이 바뀌면 콘솔 전용 값(판 코드·사번)을 다시 받는다 */
+  if(ST.tab==="race"&&m&&(m.id!==RACE.hostId||(m.st==="open"&&(m.rows||[]).length!==RACE.hostJoin))&&Date.now()-RACE.hostAt>1500) raceHostPull();
+  var sig=JSON.stringify(m||null);
+  if(sig!==RACE.sig){ RACE.sig=sig; if(ST.tab==="race"&&sub()!=="log"&&!RTV.on) render(); }
+  if(RTV.on) rtvPaint();
+}
+function raceHostPull(done){ RACE.hostAt=Date.now(); raceCall("race_host",{},function(r){ raceTake(r); done&&done(r); },function(){ done&&done(null); }); }
+function racePoll(){
+  clearTimeout(RACE.t);
+  if(ST.tab!=="race"||RTV.on||!key()) return;
+  raceCall("race_state",{},function(r){ raceTake(r); next(); },next);
+  function next(){ clearTimeout(RACE.t); if(ST.tab==="race"&&!RTV.on) RACE.t=setTimeout(racePoll, RACE.m&&(RACE.m.st==="open"||RACE.m.st==="run")?2000:4000); }
+}
+/* go() 가 부른다 · 이 메뉴에 들어오면 콘솔 값(판 코드·좌석 키)을 받고 폴링을 시작한다 · 나가면 멈춘다 */
+function raceTab(on){ clearTimeout(RACE.t); if(!on) return; raceHostPull(function(){ racePoll(); }); }
+function raceSeatLink(s){ var u=location.href.split("#")[0].split("?")[0].replace(/[^\/]*$/,""); return u+"typing.html#k="+encodeURIComponent(RACE.key)+"&s="+s; }
+var RACE_ERR={ busy:"진행 중인 판이 있습니다", few:"앉은 선수가 2명 이상이어야 시작합니다", state:"지금 상태에서는 할 수 없습니다", n:"좌석 수는 2~4입니다", empty:"이미 빈 자리입니다", id:"판이 바뀌었습니다. 다시 확인하세요" };
+function raceAct(a, p, okMsg, done){
+  raceCall(a, p||{}, function(r){
+    if(r&&r.ok){ raceTake(r); if(okMsg) toast(okMsg); done&&done(r); }
+    else if(r&&r.reason==="busy"){ raceOpenForce(p); }
+    else toast((RACE_ERR[r&&r.reason]||"처리하지 못했습니다")+(r&&r.reason&&!RACE_ERR[r.reason]?" ("+r.reason+")":""));
+  }, function(){ toast("서버 응답 없음"); });
+}
+function raceN(n){ RACE.n=n; render(); }
+function raceOpen(){ raceAct("race_open",{ n:RACE.n }, RACE.n+"석 판을 열었습니다"); }
+/* 진행 중인 판이 있을 때 새 판 · 지금 판은 기록 없이 닫힌다 */
+function raceOpenForce(p){
+  var m=RACE.m||{};
+  dialog({ t:"진행 중인 판을 닫고 새 판을 열까요?", s:"지금 판("+(m.st==="run"?"경기 중":"선수 모집 중")+")은 <b>기록 없이</b> 닫힙니다. 선수 화면은 새 판의 이름 입력으로 돌아갑니다.", ok:"새 판 열기", danger:true,
+    who:(m.rows||[]).map(function(r){ return r.s+"번 "+esc(r.name); }).join(" · ")||"앉은 선수 없음",
+    onOk:function(){ dlgForce(); raceAct("race_open",{ n:(p&&p.n)||RACE.n, force:1 }, "새 판을 열었습니다"); } });
+}
+function raceStart(){ raceAct("race_start",{}, "시작했습니다 · 4초 뒤 문장이 나옵니다"); }
+function raceEnd(){
+  dialog({ t:"지금 끝낼까요?", s:"완주하지 못한 선수는 <b>지금까지 친 글자 수</b>로 순위를 매기고 결과를 기록합니다.", ok:"지금 끝내기", danger:true,
+    onOk:function(){ dlgForce(); raceAct("race_end",{}, "끝냈습니다 · 결과를 기록했습니다"); } });
+}
+function raceClose(){
+  var m=RACE.m||{}, live=m.st==="open"||m.st==="run";
+  if(!live){ raceAct("race_close",{ id:m.id }, "판을 닫았습니다"); return; }
+  dialog({ t:"판을 닫을까요?", s:(m.st==="run"?"경기 중인 판이 <b>기록 없이</b> 취소됩니다.":"선수 모집 중인 판이 닫힙니다. 앉은 선수는 다음 판에 다시 등록합니다."), ok:"판 닫기", danger:true,
+    who:(m.rows||[]).map(function(r){ return r.s+"번 "+esc(r.name); }).join(" · ")||"앉은 선수 없음",
+    onOk:function(){ dlgForce(); raceAct("race_close",{ id:m.id }, "판을 닫았습니다"); } });
+}
+function raceKick(s){
+  var r=((RACE.m||{}).rows||[]).filter(function(x){ return x.s===s; })[0]; if(!r) return;
+  dialog({ t:"자리를 비울까요?", s:"이 좌석의 선수 등록을 지웁니다. 선수 화면은 이름 입력으로 돌아갑니다.", who:"<b>"+s+"번 자리</b><span>"+esc(r.name)+"</span>", ok:"비우기", danger:true,
+    onOk:function(){ dlgForce(); raceAct("race_kick",{ s:s }, s+"번 자리를 비웠습니다"); } });
+}
+function raceKeyIssue(reset){
+  var go=function(){ raceCall("race_key",reset?{reset:1}:{},function(r){ if(r&&r.ok){ RACE.key=r.key; toast(reset?"좌석 링크를 새로 발급했습니다 · 노트북 4대에 새 링크를 여세요":"좌석 링크를 발급했습니다"); render(); } else toast("발급 실패"); },function(){ toast("서버 응답 없음"); }); };
+  if(!reset) return go();
+  dialog({ t:"좌석 링크를 다시 발급할까요?", s:"지금 노트북에 열려 있는 옛 링크로는 <b>다음 참가부터 막힙니다</b>. 노트북마다 새 링크를 다시 열어야 합니다. 링크가 밖으로 퍼졌을 때만 씁니다.", ok:"다시 발급", danger:true,
+    onOk:function(){ dlgForce(); go(); } });
+}
+function raceCopy(s){
+  var t=raceSeatLink(s);
+  var ok=function(){ toast(s+"번 자리 링크를 복사했습니다"); };
+  try{ navigator.clipboard.writeText(t).then(ok,function(){ raceCopyOld(t); ok(); }); }catch(e){ raceCopyOld(t); ok(); }
+}
+function raceCopyOld(t){ var a=document.createElement("textarea"); a.value=t; document.body.appendChild(a); a.select(); try{ document.execCommand("copy"); }catch(e){} document.body.removeChild(a); }
+var RACE_ST={ open:["선수 모집","warn"], run:["경기 중","pri"], done:["끝남 · 결과","ok"], closed:["닫힘","off"] };
+function raceSec(ms){ return (Math.round(Number(ms||0)/100)/10).toFixed(1)+"초"; }   /* 시트 소요(초)와 같은 반올림(0.1초) */
+function viewRace(){
+  var s=sub()||"live";
+  var h=tabHead('<button class="btn pri" onclick="rtvOpen()">TV 화면 열기</button>');
+  h+=chips([{v:"live",n:"진행"},{v:"log",n:"오늘 기록",c:(ST.data.rlist||{}).games}], s, "setSub");
+  return h+(s==="log"?raceLogHtml():raceLiveHtml());
+}
+function raceLiveHtml(){
+  var m=RACE.m, st=m?m.st:"", hm=RACE.host&&m&&RACE.host.id===m.id?RACE.host:null, live=st==="open"||st==="run";
+  var joined=m?(m.rows||[]).length:0, tb='<div class="toolbar">';
+  if(!live){
+    tb+='<span class="cap">좌석 수</span>'+[2,3,4].map(function(n){ return '<button class="fchip'+(RACE.n===n?" on":"")+'" onclick="raceN('+n+')">'+n+'석</button>'; }).join("")+
+      '<button class="btn pri" onclick="raceOpen()">'+(st==="done"?"다음 판 열기":"판 열기")+' · '+RACE.n+'석</button>';
+    if(st==="done") tb+='<button class="btn" onclick="raceClose()">결과 닫기</button>';
+  } else if(st==="open"){
+    tb+='<button class="btn pri" onclick="raceStart()" '+(joined<2?"disabled":"")+'>시작 · '+joined+'명</button><button class="btn danger" onclick="raceClose()">판 닫기</button>'+
+      (joined<2?'<span class="cap">2명부터 시작할 수 있습니다</span>':'');
+  } else {
+    tb+='<button class="btn" onclick="raceEnd()">지금 끝내기</button><button class="btn danger" onclick="raceClose()">판 닫기 (기록 없이 취소)</button>';
+  }
+  tb+='</div>';
+  var h=tb;
+  var head=m&&st!=="closed"?tag((RACE_ST[st]||[st])[0],(RACE_ST[st]||[])[1]):tag("판 없음","off");
+  var body;
+  if(!m||st==="closed") body='<div class="empty">열린 판이 없습니다. 좌석 수를 고르고 <b>판 열기</b>를 누르면 선수 노트북에 이름 입력 화면이 나옵니다.</div>';
+  else {
+    var by={}; (m.rows||[]).forEach(function(r){ by[r.s]=r; });
+    var hby={}; ((hm&&hm.rows)||[]).forEach(function(r){ hby[r.s]=r; });
+    var seats=[]; if(st==="open"){ for(var i=1;i<=m.n;i++) seats.push(i); } else seats=(m.rows||[]).map(function(r){ return r.s; }).sort();
+    body='<div class="row" style="gap:28px;margin-bottom:14px;align-items:flex-end">'+
+      '<div><div class="cap">판 코드 · 좌석 링크 없이 참가할 때</div><div class="rcode">'+esc(hm?hm.code:"····")+'</div></div>'+
+      (hm&&hm.codeLocked?tag("판 코드 잠김 · 오답 30회","bad"):"")+
+      (m.text?'<div style="flex:1;min-width:280px"><div class="cap">이번 문장 · '+m.len+'자 · '+m.keys+'타</div><div class="muted">'+esc(m.text)+'</div></div>':'')+'</div>'+
+      '<div class="wrap"><table class="tb"><tr><th>좌석</th><th>이름</th><th>사번</th><th>상태</th><th>진행</th><th class="tdr">분당 타수</th><th class="tdr">정확도</th><th class="tdr">처리</th></tr>'+
+      seats.map(function(s){ var r=by[s], e=(hby[s]||{}).emp||"";
+        if(!r) return '<tr><td class="n"><b>'+s+'</b></td><td colspan="7" class="cap">비어 있음</td></tr>';
+        var stt=st==="open"?tag("대기"):r.fin?tag(r.rank+"위 · "+raceSec(r.el),"ok"):st==="done"?tag(r.rank+"위 · 미완주","off"):tag("치는 중","pri");
+        var pct=m.len?Math.round(r.pos/m.len*100):0;
+        return '<tr class="hv"><td class="n"><b>'+s+'</b></td><td><b>'+esc(r.name)+'</b></td><td class="n">'+esc(e||"-")+'</td><td>'+stt+'</td>'+
+          '<td>'+(st==="open"?'<span class="cap">-</span>':'<div class="row" style="flex-wrap:nowrap"><div class="rbar" style="flex:1"><i style="width:'+pct+'%"></i></div><span class="n cap">'+pct+'%</span></div>')+'</td>'+
+          '<td class="n tdr">'+(st==="open"?"-":r.cpm)+'</td><td class="n tdr">'+(st==="open"?"-":r.acc+"%")+'</td>'+
+          '<td><div class="acts">'+(st==="open"?'<button class="btn sm danger" onclick="raceKick('+s+')">비우기</button>':'')+'</div></td></tr>';
+      }).join("")+'</table></div>';
+  }
+  h+=card("지금 판", head+(m&&m.st==="run"?' <span class="cap n" id="raceLeft"></span>':''), body);
+  var links;
+  if(!RACE.key) links='<div class="row"><button class="btn pri" onclick="raceKeyIssue(0)">좌석 링크 발급</button><span class="cap">노트북마다 자기 자리 링크를 한 번 열어 두면 판마다 판 코드를 넣지 않아도 됩니다.</span></div>';
+  else links='<div class="wrap"><table class="tb"><tr><th>좌석</th><th>링크 (노트북에서 한 번 열어 둡니다)</th><th class="tdr">복사</th></tr>'+
+    [1,2,3,4].map(function(s){ return '<tr><td class="n"><b>'+s+'</b></td><td><input class="in rlink" readonly value="'+esc(raceSeatLink(s))+'" onclick="this.select()"></td><td><div class="acts"><button class="btn sm" onclick="raceCopy('+s+')">복사</button></div></td></tr>'; }).join("")+
+    '</table></div>';
+  h+=card("좌석 링크", "관리코드 없이 열리고, 진행자가 연 판에만 참가됩니다", links, RACE.key?'<button class="btn sm danger" onclick="raceKeyIssue(1)">다시 발급</button>':'');
+  h+=memo('<ol><li>아침에 <b>좌석 링크</b>를 선수 노트북 2~4대에서 하나씩 엽니다(1번 노트북 = 1번 링크). 전체 화면(F11)으로 둡니다.</li>'+
+    '<li>TV에 연결한 노트북에서 이 메뉴의 <b>TV 화면 열기</b>를 누릅니다. TV 화면 아래 오른쪽에 마우스를 올리면 진행 버튼이 나옵니다(N 판 열기 · S 시작 · R 결과와 시상 전환 · E 지금 끝내기).</li>'+
+    '<li><b>판 열기</b> → 선수가 이름을 넣으면 TV와 이 표에 뜹니다 → 2명 이상이면 <b>시작</b> → 4초 카운트다운 뒤 같은 문장이 나옵니다.</li>'+
+    '<li>모두 완주하거나 120초가 지나면 끝나고 결과가 「타자대전」 시트에 한 번 기록됩니다. TV는 결과를 보여 준 뒤 시상 화면으로 넘어갑니다.</li></ol>'+
+    '<p>순위는 완주 순서(서버 시계), 못 한 선수는 친 글자 수 순입니다. 오타는 고쳐야 다음 어절로 넘어가고 정확도에 반영됩니다. 이 기록은 기존 현장 타자왕전(단어 소나기) 상위 5와 섞이지 않습니다.</p>');
+  return h;
+}
+function raceLogHtml(){
+  var d=ST.data.rlist||{ rows:[], top:[], games:0 };
+  var fin=(d.rows||[]).filter(function(r){ return r.fin; });
+  var h='<div class="kpis">'+kpi("오늘 판",d.games||0,"판")+kpi("선수 기록",(d.rows||[]).length,"명")+kpi("완주",fin.length,"명")+kpi("최고 분당 타수",(d.top&&d.top[0]?d.top[0].cpm:0),"타",d.top&&d.top[0]?esc(d.top[0].name)+" · 정확도 "+d.top[0].acc+"%":"")+'</div>';
+  h+=card("완주 기록 · 분당 타수 상위 10","같은 판 안의 순위는 완주 순서 · 여기서는 판을 넘어 속도로 줄 세웁니다",
+    '<div class="wrap"><table class="tb"><tr><th>순위</th><th>이름</th><th>사번</th><th class="tdr">분당 타수</th><th class="tdr">정확도</th><th class="tdr">소요</th><th>판 순위</th><th>시각</th></tr>'+
+    ((d.top||[]).length?d.top.map(function(r,i){ return '<tr class="hv"><td class="n"><b>'+(i+1)+'</b></td><td><b>'+esc(r.name)+'</b></td><td class="n">'+esc(r.emp||"-")+'</td><td class="n tdr">'+r.cpm+'</td><td class="n tdr">'+r.acc+'%</td><td class="n tdr">'+r.sec.toFixed(1)+'초</td><td class="n">'+r.rank+'위</td><td class="n cap">'+esc(short(r.ts))+'</td></tr>'; }).join(""):emptyRow(8,"아직 완주 기록이 없습니다"))+'</table></div>',
+    '<button class="btn sm" onclick="raceCsv()">CSV</button>');
+  h+=card("판별 기록","최근 판부터 · 좌석마다 한 줄",
+    '<div class="wrap scrolly"><table class="tb"><tr><th>시각</th><th>판</th><th>순위</th><th>좌석</th><th>이름</th><th>사번</th><th>결과</th><th class="tdr">분당 타수</th><th class="tdr">정확도</th><th class="tdr">오타</th></tr>'+
+    ((d.rows||[]).length?d.rows.map(function(r){ return '<tr class="hv"><td class="n cap">'+esc(short(r.ts))+'</td><td class="n cap">'+esc(r.id)+'</td><td class="n"><b>'+r.rank+'</b></td><td class="n">'+r.s+'</td><td><b>'+esc(r.name)+'</b></td><td class="n">'+esc(r.emp||"-")+'</td>'+
+      '<td>'+(r.fin?tag("완주 "+r.sec.toFixed(1)+"초","ok"):tag("미완주 "+(r.len?Math.round(r.pos/r.len*100):0)+"%","off"))+'</td><td class="n tdr">'+r.cpm+'</td><td class="n tdr">'+r.acc+'%</td><td class="n tdr">'+r.errs+'</td></tr>'; }).join(""):emptyRow(10,"아직 끝난 판이 없습니다"))+'</table></div>');
+  return h;
+}
+function raceCsv(){
+  var rows=(ST.data.rlist||{}).rows||[];
+  var out=["시각,판,순위,좌석,이름,사번,완주,소요(초),분당 타수,정확도,진행 글자,전체 글자,오타"].concat(rows.map(function(r){
+    return [r.ts,r.id,r.rank,r.s,csvq(r.name),r.emp||"",r.fin?"Y":"N",r.fin?r.sec:"",r.cpm,r.acc,r.pos,r.len,r.errs].join(",");
+  }));
+  var blob=new Blob(["﻿"+out.join("\n")],{type:"text/csv;charset=utf-8"});
+  var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="타자대전_기록.csv"; a.click(); URL.revokeObjectURL(a.href);
+}
+/* 남은 초 · 콘솔 표 위 작은 숫자(네트워크 없이 250ms 틱) */
+setInterval(function(){ var e=el("raceLeft"), m=RACE.m; if(!e||!m||m.st!=="run") return; var l=Math.ceil((m.t0+m.lim*1000-rnow())/1000); e.textContent=l>m.lim?"시작 "+Math.ceil((m.t0-rnow())/1000)+"초 전":"남은 "+Math.max(0,l)+"초"; },250);
+
+/* ── TV 전체 화면 ── */
+var RTV={ on:false, t:null, key:"", view:"", doneAt:0, doneId:"", pin:"", ui:null };
+function rtvOpen(){
+  RTV.on=true; RTV.key=""; el("rtv").className="on"; clearTimeout(RACE.t);
+  try{ var d=document.documentElement; if(d.requestFullscreen) d.requestFullscreen().catch(function(){}); }catch(e){}
+  rtvGrid(); rtvUi(); rtvPaint(); rtvPoll();
+}
+function rtvClose(){
+  RTV.on=false; clearTimeout(RTV.t); el("rtv").className="";
+  try{ if(document.fullscreenElement) document.exitFullscreen().catch(function(){}); }catch(e){}
+  if(ST.tab==="race"){ render(); racePoll(); }
+}
+function rtvPoll(){
+  clearTimeout(RTV.t); if(!RTV.on) return;
+  raceCall("race_state",{},function(r){ raceTake(r); RTV.t=setTimeout(rtvPoll,1000); },function(){ RTV.t=setTimeout(rtvPoll,1500); });
+}
+/* 도트 격자 · 화면 폭의 1/64 간격 정사각 점 · 소수(약 1.2%)는 오렌지로 켠다 · 격자는 움직이지 않는다 */
+function rtvGrid(){
+  var c=el("rtvCv"); if(!c) return;
+  var w=window.innerWidth, h=window.innerHeight, dpr=window.devicePixelRatio||1; c.width=w*dpr; c.height=h*dpr;
+  var x=c.getContext("2d"); x.setTransform(dpr,0,0,dpr,0,0); x.fillStyle="#000"; x.fillRect(0,0,w,h);
+  var g=w/64, d=Math.max(2,Math.round(g*0.12)), seed=7;
+  function rnd(){ seed=(seed*16807)%2147483647; return seed/2147483647; }
+  for(var yy=g/2; yy<h; yy+=g) for(var xx=g/2; xx<w; xx+=g){ x.fillStyle=rnd()<0.012?"#FF7E31":"#262626"; x.fillRect(Math.round(xx),Math.round(yy),d,d); }
+}
+window.addEventListener("resize",function(){ if(RTV.on) rtvGrid(); });
+function rtvUi(){ var r=el("rtv"); r.classList.add("ui"); clearTimeout(RTV.ui); RTV.ui=setTimeout(function(){ r.classList.remove("ui"); },3000); }
+el("rtv").addEventListener("mousemove",rtvUi);
+document.addEventListener("keydown",function(e){
+  if(!RTV.on||el("dlg").className.indexOf("on")>=0||/^(INPUT|TEXTAREA|SELECT)$/.test((e.target||{}).tagName||"")) return;
+  var k=(e.key||"").toLowerCase(), m=RACE.m||{};
+  if(k==="n"){ if(m.st==="open"||m.st==="run") raceOpenForce({ n:RACE.n }); else raceAct("race_open",{ n:RACE.n },"판을 열었습니다"); }
+  else if(k==="s"&&m.st==="open") raceStart();
+  else if(k==="e"&&m.st==="run") raceEnd();
+  else if(k==="r"&&m.st==="done"){ RTV.pin=RTV.view==="award"?"result":"award"; rtvPaint(); }
+  else if(k==="escape"&&!document.fullscreenElement) rtvClose();
+  else return;
+  e.preventDefault(); rtvUi();
+});
+function rtvScene(){
+  var m=RACE.m;
+  if(!m||m.st==="closed") return "idle";
+  if(m.st==="open") return "open";
+  if(m.st==="run") return rnow()<m.t0?"count":"run";
+  if(m.st==="done"){
+    if(RTV.doneId!==m.id){ RTV.doneId=m.id; RTV.doneAt=Date.now(); RTV.pin=""; }
+    if(RTV.pin) return RTV.pin;
+    return Date.now()-RTV.doneAt<8000?"result":"award";   /* 결과 8초 → 시상 · R 로 전환 */
+  }
+  return "idle";
+}
+function rtvHead(right){ return '<div class="hd"><span class="b">AX Festival 2026</span><span class="t">1F 현장 타자왕전</span><div class="r">'+(right||"")+'</div></div>'; }
+function rtvCtl(){
+  var m=RACE.m||{}, st=m.st;
+  return '<div class="ctl">'+
+    '<button onclick="'+(st==="open"||st==="run"?"raceOpenForce({n:"+RACE.n+"})":"raceAct(\'race_open\',{n:"+RACE.n+"},\'판을 열었습니다\')")+'">'+(st==="done"?"다음 판":"판 열기")+' · '+RACE.n+'석<span class="k">N</span></button>'+
+    '<button onclick="raceStart()" '+(st==="open"&&(m.rows||[]).length>=2?"":"disabled")+'>시작<span class="k">S</span></button>'+
+    '<button onclick="raceEnd()" '+(st==="run"?"":"disabled")+'>지금 끝내기<span class="k">E</span></button>'+
+    '<button onclick="RTV.pin=RTV.view===\'award\'?\'result\':\'award\';rtvPaint()" '+(st==="done"?"":"disabled")+'>결과 · 시상<span class="k">R</span></button>'+
+    '<button onclick="rtvClose()">나가기</button></div>';
+}
+function rtvPaint(){
+  if(!RTV.on) return;
+  var m=RACE.m, sc=rtvScene(); RTV.view=sc;
+  var k=sc+"|"+(m?m.id+"|"+m.n+"|"+(m.rows||[]).map(function(r){ return r.s+r.name; }).join(","):"")+"|"+(m&&m.st);
+  if(sc==="run"||sc==="count") k=sc+"|"+m.id;
+  if(k!==RTV.key){
+    RTV.key=k;
+    var h=sc==="open"?rtvOpenHtml():sc==="count"?rtvCountHtml():sc==="run"?rtvRunHtml():sc==="result"?rtvResultHtml():sc==="award"?rtvAwardHtml():rtvIdleHtml();
+    el("rtvIn").innerHTML=h+rtvCtl();
+  }
+  if(sc==="run") rtvRunUpd();
+}
+function rtvIdleHtml(){ return rtvHead()+'<div class="bd"><p class="ey">1F 현장 타자왕전</p><p class="hl">타자왕전</p><p class="sb">다음 판을 준비하고 있습니다.</p></div>'; }
+function rtvOpenHtml(){
+  var m=RACE.m, by={}; (m.rows||[]).forEach(function(r){ by[r.s]=r; });
+  var h=rtvHead('<span class="n">'+(m.rows||[]).length+' / '+m.n+'명</span>')+'<div class="bd"><p class="ey">선수 모집</p><p class="hl">같은 문장, 먼저 끝까지</p><p class="sb">자리의 노트북에 이름을 넣으면 여기에 나옵니다.</p>'+
+    '<div class="seats" style="grid-template-columns:repeat('+m.n+',minmax(0,1fr))">';
+  for(var s=1;s<=m.n;s++){ var r=by[s]; h+='<div class="seat'+(r?" on":" empty")+'"><span class="no n">'+s+'번 자리</span><span class="nm">'+(r?esc(r.name):"비어 있음")+'</span></div>'; }
+  return h+'</div></div>';
+}
+function rtvCountHtml(){
+  var m=RACE.m;
+  setTimeout(rtvCountTick,0);
+  return rtvHead()+'<div class="bd"><div class="cd n" id="rtvCd">3</div><div class="cdn">'+(m.rows||[]).slice().sort(function(a,b){ return a.s-b.s; }).map(function(r){ return '<span>'+r.s+' · '+esc(r.name)+'</span>'; }).join("")+'</div></div>';
+}
+function rtvCountTick(){
+  var b=el("rtvCd"), m=RACE.m; if(!b||!m||!RTV.on) return;
+  var left=m.t0-rnow();
+  if(left<=0){ rtvPaint(); return; }
+  b.textContent=Math.min(3,Math.ceil(left/1000));
+  requestAnimationFrame(rtvCountTick);
+}
+function rtvRunHtml(){
+  var m=RACE.m, seats=(m.rows||[]).slice().sort(function(a,b){ return a.s-b.s; });
+  return rtvHead('<span>남은</span><b class="n" id="rtvLeft">'+m.lim+'</b><span>초</span>')+
+    '<div class="txt">'+esc(m.text)+'</div><div class="lanes">'+seats.map(function(r){
+      return '<div class="ln" id="rtvL'+r.s+'"><span class="sn n">'+r.s+'</span><span class="nm">'+esc(r.name)+'</span>'+
+        '<div class="trk"><div class="dots"></div><div class="fill" id="rtvF'+r.s+'" style="width:0"></div><div class="head" id="rtvH'+r.s+'" style="left:0"><i></i></div><span class="flag">완주</span></div>'+
+        '<div class="sv"><b class="n" id="rtvC'+r.s+'">0</b><span>분당 타수</span></div><div class="sv"><b class="n" id="rtvA'+r.s+'">100%</b><span>정확도</span></div></div>';
+    }).join("")+'</div>';
+}
+function rtvRunUpd(){
+  var m=RACE.m; if(!m) return;
+  (m.rows||[]).forEach(function(r){
+    var p=m.len?Math.min(100,r.pos/m.len*100):0, L=el("rtvL"+r.s); if(!L) return;
+    el("rtvF"+r.s).style.width=p+"%";
+    var hd=el("rtvH"+r.s); hd.style.left=p+"%";
+    if(r.fin&&L.className.indexOf("fin")<0){ L.className="ln fin"; hd.innerHTML=r.rank+"위 · "+raceSec(r.el); }
+    el("rtvC"+r.s).textContent=r.cpm; el("rtvA"+r.s).textContent=r.acc+"%";
+  });
+}
+setInterval(function(){ var e=el("rtvLeft"), m=RACE.m; if(!RTV.on||!e||!m||m.st!=="run") return; e.textContent=Math.max(0,Math.ceil((m.t0+m.lim*1000-rnow())/1000)); },250);
+setInterval(function(){ if(RTV.on&&RACE.m&&RACE.m.st==="done"&&!RTV.pin&&RTV.view==="result"&&Date.now()-RTV.doneAt>=8000) rtvPaint(); },500);
+function rtvRec(r){ return r.fin?raceSec(r.el):Math.round(r.pos/Math.max(1,RACE.m.len)*100)+"%"; }
+function rtvResultHtml(){
+  var m=RACE.m;
+  return rtvHead('<span>'+(m.why==="time"?"시간 끝":"경기 끝")+'</span>')+'<div class="bd"><p class="ey">결과</p><div class="res">'+(m.rows||[]).map(function(r){
+    return '<div class="rr'+(r.rank===1?" w":"")+'"><span class="rk n">'+r.rank+'위</span><span class="nm">'+esc(r.name)+'</span>'+
+      '<span class="c n">'+rtvRec(r)+'<small>'+(r.fin?"완주":"진행")+'</small></span><span class="c n">'+r.cpm+'<small>분당 타수</small></span><span class="c n">'+r.acc+'%<small>정확도</small></span></div>';
+  }).join("")+'</div></div>';
+}
+function rtvAwardHtml(){
+  var m=RACE.m, rows=m.rows||[], top=rows[0];
+  var order=rows.length>=3?[1,0,2]:[1,0];
+  return rtvHead()+'<div class="bd" style="justify-content:flex-start;padding-top:2vw"><p class="ey">이번 판 1위</p><p class="hl">'+esc(top?top.name:"")+'</p>'+
+    '<div class="pod">'+order.map(function(i){ var r=rows[i]; if(!r) return "";
+      return '<div class="pc p'+r.rank+'"><span class="nm">'+esc(r.name)+'</span><span class="rc n">'+rtvRec(r)+' · 분당 '+r.cpm+'타 · '+r.acc+'%</span><div class="blk n">'+r.rank+'</div></div>'; }).join("")+'</div></div>';
 }
 
 /* ══════════════════ 8. 시작 ══════════════════ */
