@@ -360,9 +360,9 @@ table.brk tr.tot td{border-bottom:0;border-top:1px solid var(--line3)}
   <div class="brand"><b>AXF CONTROL</b><span>운영 관리</span></div>
   <nav class="tabs" id="tabs"></nav>
   <div class="hr">
-    <span id="stamp">·</span>
     <button class="btn sm ghost" onclick="guide()">사용 안내</button>
     <span class="role">관리자</span>
+    <span id="stamp" class="cap">·</span>
     <button class="btn sm" onclick="refresh()">새로고침</button>
     <button class="btn sm ghost" onclick="lock()">잠금</button>
   </div>
@@ -384,7 +384,10 @@ table.brk tr.tot td{border-bottom:0;border-top:1px solid var(--line3)}
 /* ══════════════════ 0. 설정 ══════════════════ */
 /* 백엔드 URL 은 비밀이 아니다(앱 소스에도 있다). 관리코드는 파일에 두지 않는다. */
 var BE = "https://script.google.com/macros/s/AKfycbwjCaSSUnQ7W1lrM8T426Cn_LgKs_UhI0Qi5XRVk-_eF-oD55-Wwjsot0DkPJCX9JqMBA/exec";
-var POLL_MS = 30000;
+/* v4.10 (260922) 참가자 앱과 같은 서버에 부담을 주지 않게 30초 자동 폴링을 5분으로 늦춘다.
+   화면(탭)마다 필요한 액션만 메모리 캐시(§1-1)에 5분 동안 담아 둔다. 그 안에서는 탭을 옮겨도 서버를 다시 부르지 않는다. */
+var POLL_MS = 300000;
+var CACHE_MS = 300000;
 /* 메뉴마다 같은 뼈대: 제목 + 한 줄 설명(d) → 서브탭 칩 → 툴바 → 본문 */
 var TABS = [
   { id:"dash",  n:"대시보드", d:"지금 처리할 일과 오늘의 숫자를 한 화면에 봅니다." },
@@ -520,6 +523,36 @@ function callAll(list, done){
       function(e){ err=err||e; out[it.k]=null; if(!--left) done(out,err); });
   });
 }
+/* ── 1-1. 캐시 (v4.10 260922) · 같은 요청(action+params)이 5분 안에 다시 오면 서버를 부르지 않고 메모리 값을 쓴다.
+   탭마다 다른 키(k)로 저장돼도 실제 액션+파라미터가 같으면(예: 스탬프 탭의 sy · 공지 탭의 noti 는 둘 다 sync) 캐시를 나눠 쓴다.
+   같은 요청이 겹쳐 나가면(탭을 빨리 오가는 경우) 하나로 합쳐 보낸다. ── */
+var _cache={}, _inflight={};
+function sig_(a,p){ p=p||{}; var ks=Object.keys(p).sort(); return a+"?"+ks.map(function(k){ return k+"="+p[k]; }).join("&"); }
+function fetchCached_(a, p, force, done){
+  var s=sig_(a,p), c=_cache[s];
+  if(!force && c && (Date.now()-c.at)<CACHE_MS){ done(c.data,null); return; }
+  if(_inflight[s]){ _inflight[s].push(done); return; }
+  _inflight[s]=[done];
+  /* call() 이 넘겨받은 params 에 action·callback·_·key 를 직접 적어 넣는다(부작용).
+     NEED 목록의 p(예: sync 의 {emp:""})는 여러 번 다시 쓰는 같은 객체라, 복사하지 않으면 두 번째 호출부터
+     서명(sig_)이 이전 호출의 부산물(_=timestamp 등)까지 섞여 달라져 캐시가 매번 빗나간다. */
+  var pc={}; for(var pk in p) pc[pk]=p[pk];
+  call(a, pc, function(r){
+    _cache[s]={data:r, at:Date.now()};
+    var cbs=_inflight[s]; delete _inflight[s];
+    cbs.forEach(function(cb){ cb(r,null); });
+  }, function(e){
+    var cbs=_inflight[s]; delete _inflight[s];
+    cbs.forEach(function(cb){ cb(null, e||{reason:"network"}); });
+  });
+}
+function callAllCached(list, force, done){
+  var out={}, left=list.length, err=null;
+  if(!left) return done(out,null);
+  list.forEach(function(it){
+    fetchCached_(it.a, it.p||{}, force, function(r,e){ if(e){ err=err||e; out[it.k]=null; } else out[it.k]=r; if(!--left) done(out,err); });
+  });
+}
 /* 여러 건을 차례로 보낸다(동시 3건) · 한 건 끝날 때마다 onEach 로 그 행만 고친다 */
 function runOps(items, onEach, onDone){
   var i=0, live=0, okN=0, bad=[], total=items.length;
@@ -571,8 +604,17 @@ function renderTabs(){
   var wait=(((ST.data.pwreq||{}).rows)||[]).filter(function(r){ return r.status==="대기"; }).length;
   el("tabs").innerHTML=TABS.map(function(t){ var b=(t.id==="acct"&&wait)?'<em class="tbadge">'+wait+'</em>':''; return '<button class="'+(ST.tab===t.id?"on":"")+'" onclick="go(\''+t.id+'\')">'+esc(t.n)+b+'</button>'; }).join("");
 }
-function refresh(){ load(true); }
+/* 수동 새로고침 · 지금 화면에 필요한 것만 캐시를 무시하고 강제로 다시 받는다. 연타 방지로 10초에 한 번만 서버를 부른다. */
+var _lastManual=0;
+function refresh(){
+  var t=Date.now();
+  if(t-_lastManual<10000){ toast("잠시 뒤에 다시 눌러 주세요"); return; }
+  _lastManual=t;
+  load(true,{force:true});
+}
 var _poll=null;
+/* 5분마다 지금 보는 화면(탭)에 필요한 액션만 다시 받는다. 캐시가 아직 5분 안이면 실제 서버 호출 없이 그대로 끝난다.
+   탭이 가려져 있으면(document.hidden) 쉬고, 다시 보일 때 한 번 확인한다. */
 function schedule(){ clearTimeout(_poll); _poll=setTimeout(function(){ if(!document.hidden && key()) load(); else schedule(); },POLL_MS); }
 document.addEventListener("visibilitychange",function(){ if(!document.hidden&&key()) load(); });
 
@@ -590,21 +632,38 @@ var NEED={
 };
 /* 탭을 빨리 바꾸면 앞선 요청이 뒤에 도착한다. 최신 요청만 화면에 반영한다. */
 ST.seq=0;
-function load(manual){
+/* opts.only = 이 탭의 NEED 중 이 키들만 받는다(처리 직후 그 액션만 다시 받을 때 씀 · reload() 참고).
+   opts.force = 캐시를 무시하고 반드시 서버를 부른다(수동 새로고침). 둘 다 없으면 탭 전체를 캐시에 맡겨 필요한 만큼만 서버를 부른다. */
+function load(manual, opts){
   if(!key()) return;
+  opts=opts||{};
+  var need=opts.only?NEED[ST.tab].filter(function(it){ return opts.only.indexOf(it.k)>=0; }):NEED[ST.tab];
+  if(!need.length) return;
   var seq=++ST.seq;
-  ST.busy=true; el("stamp").innerHTML='<span class="spin"></span>불러오는 중';
-  callAll(NEED[ST.tab],function(out,err){
+  ST.busy=true; stampTick();
+  callAllCached(need, !!opts.force, function(out,err){
     if(seq!==ST.seq){ for(var k0 in out) if(out[k0]) ST.data[k0]=out[k0]; applyOvr(); return; }   /* 데이터는 챙기고 화면은 안 건드린다 */
     ST.busy=false;
     for(var k in out) if(out[k]) ST.data[k]=out[k];
     applyOvr();
     ST.at=new Date(); ST.err=err;
-    el("stamp").innerHTML=err?'<span style="color:var(--bad)">일부 실패</span>':'갱신 <b class="n">'+nowHMS()+'</b>';
+    stampTick();
     renderTabs(); render(); schedule();
     if(manual&&!err) toast("갱신했습니다");
   });
 }
+/* 처리(부여·취소·승인·발송 등) 뒤에 쓴다. 탭 전체를 다시 받지 않고 그 처리로 바뀐 액션만 강제로 새로 받는다. */
+function reload(keys){ load(false,{only:keys,force:true}); }
+/* 헤더의 「마지막 업데이트 n분 전」 · 네트워크 없이 문구만 다시 그린다(15초마다 틱) */
+function stampTick(){
+  var s=el("stamp"); if(!s) return;
+  if(ST.busy){ s.innerHTML='<span class="spin"></span>불러오는 중'; return; }
+  if(ST.err){ s.innerHTML='<span style="color:var(--bad)">일부 실패</span>'; return; }
+  if(!ST.at){ s.textContent="·"; return; }
+  var m=Math.floor((Date.now()-ST.at.getTime())/60000);
+  s.textContent=m<1?"방금 업데이트":m+"분 전 업데이트";
+}
+setInterval(function(){ if(!ST.busy) stampTick(); },15000);
 /* 처리 직후 20초 동안은 방금 바꾼 값을 서버 목록 위에 덮는다.
    그 사이 도착한 폴링 응답이 처리 전 값일 수 있어서다(시트 쓰기와 읽기 사이의 틈). 서버 값이 같아지면 덮기를 멈춘다. */
 function ovrSet(k, patch){ ST.ovr[k]={ p:patch, exp:Date.now()+20000 }; }
@@ -802,7 +861,7 @@ function viewPwReq(){
         '<td>'+(r.status==="처리"?tag("처리","ok"):tag("취소","off"))+'</td>'+
         '<td class="n cap">'+esc(short(r.doneAt))+'</td><td>'+esc(r.by||"-")+'</td></tr>'; }).join("")+'</table></div>', "최근 처리 내역 "+done.length+"건");
   }
-  return card("비밀번호 분실 요청", wait.length?'<span class="tag brand">대기 '+wait.length+'건</span>':'대기 없음', body, byBox()+'<button class="btn sm" onclick="load(true)">새로고침</button>');
+  return card("비밀번호 분실 요청", wait.length?'<span class="tag brand">대기 '+wait.length+'건</span>':'대기 없음', body, byBox()+'<button class="btn sm" onclick="reload([\'pwreq\'])">새로고침</button>');
 }
 function pwReqDone(btn){
   var row=btn.getAttribute("data-row"), emp=btn.getAttribute("data-emp")||"", name=btn.getAttribute("data-name")||"";
@@ -813,7 +872,7 @@ function pwReqDone(btn){
       call("pw_req_done",{row:row,by:pwBy()||"운영 데스크"},function(r){
         el("dlgOk").disabled=false;
         if(r&&r.ok){
-          load();
+          reload(["pwreq"]);
           dialog({ t:"초기화했습니다", who:esc(r.name||name)+'<span>사번 '+esc(r.emp||emp)+'</span>', ok:"확인했습니다",
             s:"본인에게 이렇게 안내해 주세요. <b>「앱에서 사번·이름을 넣고 새 비밀번호 4자리를 입력하면 그 번호로 등록됩니다」</b>"+(r.already?'<br><span class="src">이미 초기화 상태였습니다.</span>':"")+(r.noAccount?'<br><span class="src">아직 가입 전이라 계정은 없습니다. 바로 새로 입장하면 됩니다.</span>':"") });
         } else { dlgClose(); toast("실패: "+why(r)); }
@@ -827,7 +886,7 @@ function pwReqCancel(btn){
     onOk:function(){
       call("pw_req_cancel",{row:row,by:pwBy()||"운영 데스크"},function(r){
         el("dlgOk").disabled=false;
-        if(r&&r.ok){ dlgClose(); load(); toast("요청을 취소했습니다"); } else { dlgClose(); toast("실패: "+why(r)); }
+        if(r&&r.ok){ dlgClose(); reload(["pwreq"]); toast("요청을 취소했습니다"); } else { dlgClose(); toast("실패: "+why(r)); }
       },function(){ el("dlgOk").disabled=false; dlgClose(); toast("서버 응답 없음"); });
     }});
 }
@@ -840,7 +899,7 @@ function pwReset(btn){
     onOk:function(){
       call("acct_pwreset",{emp:emp},function(r){
         if(r&&r.ok){
-          load();
+          reload(["acct"]);
           el("dlgOk").disabled=false;
           dialog({ t:"초기화했습니다", who:esc(r.name||name)+'<span>사번 '+esc(r.emp||emp)+'</span>', ok:"확인했습니다",
             s:"본인에게 이렇게 안내해 주세요. <b>「앱에서 사번·이름을 넣고 새 비밀번호 4자리를 입력하면 그 번호로 다시 등록됩니다」</b><br>초기화 직후에는 사번·이름만으로 새 비밀번호를 정할 수 있으니, 본인이 바로 입장하도록 해 주세요."+(r.already?'<br><span class="src">이미 초기화 상태였습니다.</span>':"") });
@@ -940,7 +999,7 @@ function stGrant(emp, id, quiet){
     call("stamp_grant",{emp:emp,id:id},function(res){
       dlgForce();
       if(res&&res.ok){
-        if(res.dup){ toast("이미 있는 스탬프입니다 · "+m.no+" "+m.n); load(); return; }
+        if(res.dup){ toast("이미 있는 스탬프입니다 · "+m.no+" "+m.n); reload(["stamp"]); return; }
         spApply(emp, res.stamps, id, "담당자 부여"); hist(emp, m.no+" "+m.n+" 부여"); render();
         toast((quiet?"되돌렸습니다 · ":"부여했습니다 · ")+(r.name||emp)+" · "+m.no+" "+m.n, quiet?{}:{ undo:function(){ stRevokeGo(emp,id,true); } });
       } else toast("부여 실패: "+(res&&res.reason==="noid"?"부여할 수 없는 항목입니다":why(res)));
@@ -964,7 +1023,7 @@ function stRevoke(emp, id){
         :d.reason==="nostamp"?"서버 기록에 이 스탬프가 없습니다. 화면이 오래되었을 수 있습니다. 새로고침 해 주세요."
         :d.reason==="noid"?"지금 취소 범위(설정 「스탬프취소_범위」 = "+esc(d.scope||"현장")+")에 들어 있지 않은 항목입니다.":"확인 실패: "+esc(why(d));
       dialog({ t:"취소할 수 없습니다", s:msg, who:who, x:d.n!=null?imp(rwImpact(d.n, d.nAfter)):"", ok:"확인" });
-      if(d.reason==="nostamp") load();
+      if(d.reason==="nostamp") reload(["stamp"]);
       return;
     }
     dialog({ t:"스탬프를 취소할까요?", s:"기록을 지우지 않고 참여 기록에 <b>「담당자 취소」</b> 행을 남깁니다. 취소한 칸은 같은 행동으로 다시 받을 수 있습니다."+(id==="sv"?" 설문은 다시 제출할 수 있고, 재제출한 답은 저장하지 않습니다.":GRANT_IDS.indexOf(id)<0?" 앱 자동 적립 칸은 참가자가 앱에서 그 행동을 다시 하면 적립됩니다.":""),
@@ -1062,7 +1121,7 @@ function viewStairOps(){
    (260919 QR 기획 점검: location.origin 만 쓰면 /hi_ax/ 가 빠져 인쇄한 QR 이 404 가 된다) */
 function appBase(){ return location.origin+location.pathname.replace(/admin\/[^\/]*$/,"").replace(/[^\/]*$/,""); }
 function rouletteOut(on){
-  function go0(){ call("roulette_out",{on:on?1:0},function(r){ dlgForce(); if(r&&r.ok){ toast(r.out?"룰렛 소진 안내를 켰습니다":"룰렛 소진 안내를 껐습니다"); load(); } else toast("실패: "+why(r)); },function(){ dlgForce(); toast("서버 응답 없음"); }); }
+  function go0(){ call("roulette_out",{on:on?1:0},function(r){ dlgForce(); if(r&&r.ok){ toast(r.out?"룰렛 소진 안내를 켰습니다":"룰렛 소진 안내를 껐습니다"); reload(["sy"]); } else toast("실패: "+why(r)); },function(){ dlgForce(); toast("서버 응답 없음"); }); }
   if(!on) return go0();
   dialog({ t:"룰렛 소진 안내를 켤까요?", s:"참가자 앱 전체에 바로 표시됩니다. 응모권은 그대로입니다.", ok:"켜기", danger:true, onOk:go0 });
 }
@@ -1249,7 +1308,7 @@ function ccRestore(plans){
     r.status=pv.status; r.round=pv.status==="대기"?"":pv.round; r.table=pv.status==="대기"?"":pv.table; ovrSet("cc:"+normE(r.emp),{status:pv.status});
     return { r:r, run:run }; });
   render();
-  runOps(items, function(it,ok){ if(ok) hist(it.r.emp,"커피챗 되돌림 → "+it.r.status); }, function(okN,bad){ if(bad.length) load(); else render(); toast(bad.length?"되돌리기 실패 "+bad.length+"건 · 목록을 다시 받았습니다":"되돌렸습니다 · "+okN+"건"); });
+  runOps(items, function(it,ok){ if(ok) hist(it.r.emp,"커피챗 되돌림 → "+it.r.status); }, function(okN,bad){ if(bad.length) reload(["cchat"]); else render(); toast(bad.length?"되돌리기 실패 "+bad.length+"건 · 목록을 다시 받았습니다":"되돌렸습니다 · "+okN+"건"); });
 }
 function ccDo(emps, status){
   var okFrom={ "참석":["매칭"], "완료":["매칭","참석"], "취소":["대기","매칭"] }[status];
@@ -1469,14 +1528,14 @@ function preSend(good, sids){
       k++; PRE.pct=Math.round(k/chunks.length*100); render();
       if(k<chunks.length) return next();
       var msg=Object.keys(r.change||{}).map(function(id){ return (SESS_NAME[id]||id)+" "+r.change[id].before+"→"+r.change[id].after+"명"; }).join(" · ");
-      preReset(); toast("반영 완료 · "+msg); load();
+      preReset(); toast("반영 완료 · "+msg); reload(["pre"]);
     },function(e){ PRE.busy=false; render(); toast("서버 응답 없음 · 기존 명단은 그대로입니다. 다시 반영하세요"); });
   })();
 }
 function preClear(id){
   var x=((ST.data.pre||{}).sess||{})[id]||{};
   dialog({ t:"명단을 비울까요?", s:"사전 신청 명단만 지웁니다. 앱 신청은 그대로입니다.", who:esc(SESS_NAME[id])+" · "+(x.list||0)+"명", ok:"비우기",
-    onOk:function(){ call("pre_clear",{sess:id},function(r){ dlgForce(); if(r&&r.ok){ toast(SESS_NAME[id]+" 명단 "+r.removed+"명 비움"); load(); } else toast("실패: "+(r&&r.reason||"")); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
+    onOk:function(){ call("pre_clear",{sess:id},function(r){ dlgForce(); if(r&&r.ok){ toast(SESS_NAME[id]+" 명단 "+r.removed+"명 비움"); reload(["pre"]); } else toast("실패: "+(r&&r.reason||"")); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
 }
 /* ══════════════════ 7-5. 설문 (v3.35) ══════════════════
  * 답은 사번 없이 저장된다(서버 설문응답 시트). 여기도 사람 단위가 아니라 집계만 본다.
@@ -1686,14 +1745,14 @@ function gameWipe(){
   if(!emp){ toast("사번을 입력하세요"); return; }
   dialog({ t:"테스트 기록을 지울까요?", s:"게임·타자 기록을 지웁니다. <b>되돌릴 수 없습니다.</b> 테스트 사번만 지울 수 있습니다.", who:"사번 "+esc(emp), ok:"기록 삭제", danger:true,
     onOk:function(){ call("game_wipe",{emp:emp},function(r){ dlgForce();
-      if(r&&r.ok) { toast("삭제 · 게임 "+r.game+"행 · 타자 "+r.type+"행"); load(); }
+      if(r&&r.ok) { toast("삭제 · 게임 "+r.game+"행 · 타자 "+r.type+"행"); reload(["gstats","tres"]); }
       else toast(r&&r.reason==="notest"?"테스트 사번만 지울 수 있습니다":"삭제 실패"+((r&&r.reason)?" ("+r.reason+")":""));
     },function(){ dlgForce(); toast("서버 연결 실패"); }); } });
 }
-function nickHide(emp,on){ call("type_nick_hide",{emp:emp,on:on},function(r){ if(r&&r.ok){ toast(on?"닉네임을 숨겼습니다":"숨김을 해제했습니다"); load(); } else toast("실패: "+why(r)); },function(){ toast("서버 응답 없음"); }); }
+function nickHide(emp,on){ call("type_nick_hide",{emp:emp,on:on},function(r){ if(r&&r.ok){ toast(on?"닉네임을 숨겼습니다":"숨김을 해제했습니다"); reload(["nick"]); } else toast("실패: "+why(r)); },function(){ toast("서버 응답 없음"); }); }
 function nickReset(emp){
   dialog({ t:"닉네임을 초기화할까요?", s:"닉네임이 지워지고 순위판에 「익명 참가자」로 나옵니다. 기록 점수는 남습니다.", who:"사번 "+esc(emp), ok:"초기화", danger:true,
-    onOk:function(){ call("type_nick_reset",{emp:emp},function(r){ dlgForce(); if(r&&r.ok){ toast("초기화했습니다"); load(); } else toast("실패: "+why(r)); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
+    onOk:function(){ call("type_nick_reset",{emp:emp},function(r){ dlgForce(); if(r&&r.ok){ toast("초기화했습니다"); reload(["nick"]); } else toast("실패: "+why(r)); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
 }
 
 /* ══════════════════ 7-4. 공지 (v3.14) · 발송 notice_set · 중지 notice_clear · 현재 공지는 sync 로 읽는다 ══════════════════ */
@@ -1731,11 +1790,11 @@ function viewPhoto(){
   return h;
 }
 function artSet(id,status){
-  call("art_set",{id:id,status:status},function(r){ if(r&&r.ok){ toast("작품 "+id+" · "+status); load(); } else toast("처리 실패"+((r&&r.reason)?" ("+r.reason+")":"")); },function(){ toast("서버 연결 실패"); });
+  call("art_set",{id:id,status:status},function(r){ if(r&&r.ok){ toast("작품 "+id+" · "+status); reload(["art"]); } else toast("처리 실패"+((r&&r.reason)?" ("+r.reason+")":"")); },function(){ toast("서버 연결 실패"); });
 }
 function artSave(){
   call("art_cfg",{form:(el("artForm").value||"").trim(),subEnd:(el("artSub").value||"").trim(),voteEnd:(el("artVote").value||"").trim(),top:(el("artTop").value||"10").trim()},
-    function(r){ if(r&&r.ok){ toast("저장했습니다"); load(); } else toast("저장 실패"); },function(){ toast("서버 연결 실패"); });
+    function(r){ if(r&&r.ok){ toast("저장했습니다"); reload(["art"]); } else toast("저장 실패"); },function(){ toast("서버 연결 실패"); });
 }
 function artCsv(){
   var rows=((ST.data.art||{}).rows||[]).filter(function(r){ return r.status==="공개"; }).sort(function(a,b){ return b.likes-a.likes || (a.ts<b.ts?-1:1); });
@@ -2008,7 +2067,7 @@ function olySave(){
 }
 function olyPut(rule,done,inDlg){
   call("oly_rule",{rule:JSON.stringify(rule)},function(r){
-    if(r&&r.ok){ var d=ST.data.olyr||{}; d.rule=r.rule; d.locked=!!r.locked; done(r); render(); load(); }
+    if(r&&r.ok){ var d=ST.data.olyr||{}; d.rule=r.rule; d.locked=!!r.locked; done(r); render(); reload(["olyr","gstats"]); }
     else { if(inDlg) dlgForce(); toast(r&&r.reason==="locked"?"잠겨 있어 서버가 저장을 거부했습니다":r&&r.reason==="rule"?"형식 오류로 서버가 거부했습니다":"저장 실패: "+why(r)); if(r&&r.reason==="locked"){ (ST.data.olyr||{}).locked=true; render(); } }
   },function(){ if(inDlg) dlgForce(); toast("서버 응답 없음"); });
 }
@@ -2033,7 +2092,7 @@ var NOTICE_TPL=[
 ];
 function noticeSendGo(t,b){
   call("notice_set",{title:t,body:b},function(r){
-    if(r&&r.ok){ toast("발송했습니다 · "+t); load(); } else toast("발송 실패: "+(r&&r.reason||""));
+    if(r&&r.ok){ toast("발송했습니다 · "+t); reload(["noti"]); } else toast("발송 실패: "+(r&&r.reason||""));
   },function(){ toast("서버 응답 없음"); });
 }
 function noticeSend(){
@@ -2051,7 +2110,7 @@ function noticeStopC(id){
   dialog({ t:"공지를 중지할까요?", s:"서버 송출을 멈추고, 다음 동기화 때 전 기기 화면에서 사라집니다.", ok:"중지",
     onOk:function(){ dlgClose();
       call("notice_clear",{id:id},function(r){
-        if(r&&r.ok){ toast("공지를 중지했습니다"); load(); } else toast("중지 실패: "+(r&&r.reason||""));
+        if(r&&r.ok){ toast("공지를 중지했습니다"); reload(["noti"]); } else toast("중지 실패: "+(r&&r.reason||""));
       },function(){ toast("서버 응답 없음"); });
     } });
 }
@@ -2059,7 +2118,7 @@ function photoAct(act, emp, no){
   var go=function(){
     var p={spot:"q_photo"}; if(emp) p.emp=emp;
     call(act==="call"?"q_call":act==="skip"?"q_skip":"q_done", p, function(r){
-      if(r&&r.ok){ toast((r.no?r.no+"번 · ":"")+(act==="call"?"호출했습니다":act==="skip"?"건너뛰었습니다":"완료 처리했습니다")); load(); }
+      if(r&&r.ok){ toast((r.no?r.no+"번 · ":"")+(act==="call"?"호출했습니다":act==="skip"?"건너뛰었습니다":"완료 처리했습니다")); reload(["photo"]); }
       else toast(r&&r.reason==="empty"?"대기 중인 번호가 없습니다":"실패: "+(r&&r.reason||""));
     },function(){ toast("서버 응답 없음"); });
   };
