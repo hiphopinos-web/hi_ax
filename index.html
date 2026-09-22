@@ -633,16 +633,7 @@
   .ty-rank .sc { font-family: var(--disp); color: var(--hi); }
   .cho-box { background: var(--ink); border: 0; color: #fff; border-radius: 20px; padding: 22px 18px; text-align: center; margin-bottom: 12px; }
   .cho-box .hint { margin-top: 10px; font-size: calc(15.5px * var(--fs)); line-height: 1.65; opacity: 0.92; }
-  /* v3.98 점프 시작 화면 · 글자·조작 안내·여백 한 단계 크게 (사용자 요청 260919) · 360x640 에서 스크롤 없이 */
-  .gs-root.big .cho-box { padding: 20px 18px 18px; }
-  .gs-root.big .cho-box .word { font-size: 30px !important; }
-  .gs-root.big .gs-how { margin: 14px 2px 0; display: grid; gap: 8px; text-align: left; }
-  .gs-root.big .gs-how p { display: flex; align-items: center; gap: 12px; font-size: calc(18px * var(--fs)); font-weight: 800; line-height: 1.3; color: #fff; }
-  .gs-root.big .gs-how p b { flex: none; min-width: 92px; padding: 6px 0; border-radius: 10px; background: rgba(255,255,255,0.14); text-align: center; font-size: calc(16px * var(--fs)); font-weight: 900; color: #FFB284; }
-  .gs-root.big .gs-rule { margin-top: 12px; font-size: calc(15px * var(--fs)); font-weight: 700; line-height: 1.45; color: rgba(255,255,255,0.78); }
-  .gs-root.big .gs-go { display: flex; gap: 8px; align-items: stretch; }
-  .gs-root.big .gs-go .btn.mint { flex: 1; padding: 17px 10px; font-size: calc(20px * var(--fs)); }
-  .gs-root.big .gs-go .btn.line { flex: none; width: auto; padding: 0 16px; font-size: calc(16px * var(--fs)); }
+  /* v3.98 점프 시작 화면 big 규칙(검정 무대 전제)은 v4.08 AX-TDS 4단계 틀(.gs-card · .gs-how)로 바뀌었다 */
 
   /* ── 과제상담 (DAP ZONE) · 앱 공통 토큰만 사용 ── */
   .slotgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
@@ -1247,6 +1238,170 @@
   .axs-pd .axs-kv { grid-template-columns: 72px minmax(0, 1fr); }
   /* 옛 공용 카드 반경만 새 규격(24)으로 · 안쪽 여백·타이포는 2~4단계에서 */
   .card, .menu { border-radius: var(--ax-radius-24); }
+  /* ═══ v4.08 AX-TDS 4단계 · 게임 화면 틀(시작 · 결과 · 일시정지 · 순위판 · 허브) + 안내 말풍선(챗봇) · 게임판 내부(캔버스·도트)는 기존 디자인 ═══ */
+  .gs-card { display: flex; flex-direction: column; gap: var(--ax-space-16); }
+  .gs-card .rg-wrap, .gs-card .rg-wrap.flat { border: 1px solid var(--ax-color-divider); border-radius: var(--ax-radius-16); background: var(--ax-color-surface); }
+  .gs-how { display: grid; gap: var(--ax-space-8); }
+  .gs-how p { display: flex; align-items: center; gap: var(--ax-space-12); margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .gs-how p b { flex: none; min-width: 96px; min-height: 32px; display: inline-flex; align-items: center; justify-content: center; padding: 0 var(--ax-space-8); border-radius: var(--ax-radius-8); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t7); font-weight: 700; }
+  .gs-rule { margin: 0; }
+  .gs-card .ax-line { margin: 0; font: var(--ax-type-t7); color: var(--ax-color-body); }
+  .gs-card .ax-line b { margin-right: var(--ax-space-8); padding: 0 var(--ax-space-8); border-radius: var(--ax-radius-999); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-caption); font-weight: 700; }
+  .gs-meta { display: flex; justify-content: space-between; align-items: center; gap: var(--ax-space-8); min-height: var(--ax-touch-size); padding: 0 var(--ax-space-16); border-radius: var(--ax-radius-16); background: var(--ax-color-surface); font: var(--ax-type-t7); color: var(--ax-color-muted); }
+  .gs-meta b { color: var(--ax-color-ink); font-weight: 600; }
+  .gs-edit { min-height: var(--ax-touch-size); padding: 0 var(--ax-space-4); border: 0; background: none; font: inherit; color: var(--ax-color-body); text-decoration: underline; cursor: pointer; }
+  .gs-go { display: flex; gap: var(--ax-space-8); align-items: stretch; }
+  .gs-go .ax-button { width: auto; flex: 1 1 auto; }
+  .gs-go .ax-button-weak { flex: 0 0 auto; padding: 0 var(--ax-space-16); }
+  .snd-btn { width: var(--ax-touch-size); min-height: var(--ax-touch-size); border: 1px solid var(--ax-color-divider); border-radius: var(--ax-radius-12); background: var(--ax-color-surface); color: var(--ax-color-muted); }
+  .snd-btn.on { border-color: var(--ax-color-brandSoft); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); }
+  .gs-go .snd-btn { width: var(--ax-button-height); min-height: var(--ax-button-height); border-radius: var(--ax-radius-16); }
+  /* 결과 */
+  .gs-res { display: flex; flex-direction: column; align-items: center; gap: var(--ax-space-12); text-align: center; }
+  .gs-sc { margin: 0; font: var(--ax-type-display); color: var(--ax-color-ink); font-variant-numeric: tabular-nums; }
+  .gs-sc small { margin-left: var(--ax-space-4); font: var(--ax-type-t4); color: var(--ax-color-body); }
+  .gs-res .oly-res-lw { margin: 0; }
+  .gs-res .oly-res-head { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-body); }
+  .gs-res .mem-stars { margin: 0; font-size: 1.5rem; letter-spacing: 0.25em; }
+  .gs-res .mem-stars span { color: var(--ax-color-divider); }
+  .gs-res .mem-stars span.on { color: var(--ax-color-brand); }
+  .gs-res .oly-brk { width: 100%; margin: 0; border-collapse: collapse; text-align: left; font: var(--ax-type-t7); }
+  .gs-res .oly-brk th, .gs-res .oly-brk td { padding: var(--ax-space-8) 0; border-top: 1px solid var(--ax-color-divider); font-weight: 500; vertical-align: top; }
+  .gs-res .oly-brk th { color: var(--ax-color-ink); font-weight: 600; }
+  .gs-res .oly-brk th small { display: block; margin: 0; font: var(--ax-type-caption); color: var(--ax-color-muted); opacity: 1; }
+  .gs-res .oly-brk td { padding-left: var(--ax-space-8); color: var(--ax-color-body); white-space: nowrap; }
+  .gs-res .oly-brk td.n { text-align: right; color: var(--ax-color-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .gs-res .oly-brk tr.sum th, .gs-res .oly-brk tr.sum td { border-top: 2px solid var(--ax-color-divider); font-weight: 700; }
+  .gs-res .oly-brk tr.sum td.n { color: var(--ax-color-brandText); font: var(--ax-type-t5-strong); }
+  .gs-res .oly-res-note { align-self: stretch; margin: 0; font: var(--ax-type-caption); color: var(--ax-color-muted); opacity: 1; text-align: left; }
+  .gs-res .oly-res-me { align-self: stretch; margin: 0; padding: var(--ax-space-12) var(--ax-space-16); border: 0; border-radius: var(--ax-radius-16); background: var(--ax-color-inset); text-align: left; font: var(--ax-type-t7); color: var(--ax-color-ink); }
+  .gs-res .oly-res-me p { margin: 0; }
+  .gs-res .oly-res-me p + p { margin-top: var(--ax-space-4); }
+  /* 낮은 화면(640 등) · 시작 화면이 스크롤 없이 들어가게 간격만 한 단계 줄인다(v3.98 360×640 기준 유지) */
+  @media (max-height: 700px) {
+    .gs-root.ax-stack { gap: var(--ax-space-16); }
+    .gs-card { gap: var(--ax-space-12); padding: var(--ax-space-20); }
+    .gs-how { gap: var(--ax-space-4); }
+    #view[data-v^="game_"][data-v] { padding-top: var(--ax-space-16); padding-bottom: calc(var(--ax-space-16) + env(safe-area-inset-bottom)); }
+  }
+  .gs-list { margin: 0; padding-left: var(--ax-space-20); font: var(--ax-type-t6); color: var(--ax-color-body); }
+  /* 전체화면 틀 · 위 줄 · 일시정지 · 아래 안내 줄 (게임판 캔버스 테두리·색은 그대로) */
+  #rgPlay, #rgPlay.flat { background: var(--ax-color-surface); }
+  #rgPlay .rgp-top { min-height: 56px; padding: var(--ax-space-4) var(--ax-space-8) var(--ax-space-4) var(--ax-space-16); border-bottom: 1px solid var(--ax-color-divider); background: var(--ax-color-surface); }
+  #rgPlay .rgp-t, #rgPlay.flat .rgp-t { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
+  #rgPlay .rgp-x, #rgPlay.flat .rgp-x { min-height: var(--ax-touch-size); padding: 0 var(--ax-space-16); border: 0; border-radius: var(--ax-radius-12); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t7); font-weight: 700; cursor: pointer; }
+  #rgPlay .rgp-x.off, #rgPlay .rgp-x:disabled { opacity: 1; background: var(--ax-color-canvas); color: var(--ax-color-disabled); }
+  #rgPlay .rgp-top .snd-btn, #rgPlay .rg-hud .snd-btn { height: var(--ax-touch-size); border: 1px solid var(--ax-color-divider); color: var(--ax-color-muted); }
+  #rgPlay .rgp-top .snd-btn.on, #rgPlay .rg-hud .snd-btn.on { border-color: var(--ax-color-brandSoft); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); }
+  #rgPlay .rgp-pause, #rgPlay.flat .rgp-pause { gap: var(--ax-space-12); padding: 0 var(--ax-page-inset); background: var(--ax-color-surface); }
+  #rgPlay .rgp-pause p { margin: 0; font: var(--ax-type-t2); color: var(--ax-color-ink); }
+  #rgPlay .rgp-pause small { margin: 0 0 var(--ax-space-12); font: var(--ax-type-t6); color: var(--ax-color-muted); }
+  #rgPlay .rgp-pause .ax-button { width: 100%; max-width: 320px; }
+  #rgPlay .gs-foot, #rgPlay.flat .gs-foot { border-top: 1px solid var(--ax-color-divider); background: var(--ax-color-surface); font: var(--ax-type-t7); font-weight: 600; color: var(--ax-color-body); }
+  /* 테트리스 · 위 줄 버튼 48 · 조작판 색 = 토큰(주황 위 짙은 글자 · 먹색 키 → 약한 버튼 색) · 자리와 크기는 그대로 */
+  #rgPlay.tetris .rg-hud .snd-btn, #rgPlay.tetris .rg-hud .rgp-x { height: var(--ax-touch-size); min-height: var(--ax-touch-size); border: 1px solid var(--ax-color-divider); border-radius: var(--ax-radius-12); background: var(--ax-color-surface); box-shadow: none; font: var(--ax-type-t7); font-weight: 700; color: var(--ax-color-ink); }
+  #rgPlay.tetris .rg-hud .rg-sc small { font: var(--ax-type-caption); color: var(--ax-color-muted); }
+  #rgPlay.tetris .rg-hud .rg-sc b { font: var(--ax-type-t4); color: var(--ax-color-ink); font-variant-numeric: tabular-nums; }
+  #rgPlay .tt-c.mv { color: var(--ax-color-ink); }
+  #rgPlay .tt-c.mv.on { background: var(--ax-color-brand); color: var(--ax-color-onBrand); box-shadow: 0 0 0 1px var(--ax-color-brand), 0 0 0 var(--ax-color-divider); }
+  #rgPlay .tt-c.cw { background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
+  #rgPlay .tt-c.cw.on { color: var(--ax-color-onBrand); }
+  #rgPlay .tt-c.up { background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); box-shadow: 0 0 0 1px var(--ax-color-divider), 0 3px 0 var(--ax-color-divider); }
+  #rgPlay .tt-c.up.on { background: var(--ax-color-brand); color: var(--ax-color-onBrand); box-shadow: 0 0 0 1px var(--ax-color-brand), 0 0 0 var(--ax-color-divider); }
+  #rgPlay .tt-cap { font: var(--ax-type-caption); color: var(--ax-color-muted); }
+  /* 안내 말풍선 · 챗봇이 말하듯 · 원본 BOT_SVG 합성만 · 떠 있기 + 깜빡임 */
+  .gs-say { display: flex; align-items: flex-end; gap: var(--ax-space-8); text-align: left; }
+  .gs-say > svg { flex: none; width: 48px; height: 48px; display: block; animation: axsFloat 3.2s ease-in-out infinite; }
+  .gs-say .eye { transform-box: fill-box; transform-origin: center; animation: axsBlink 4.6s linear infinite; }
+  .gs-say-b { position: relative; margin: 0 0 var(--ax-space-12); padding: var(--ax-space-12) var(--ax-space-16); border-radius: var(--ax-radius-16); background: var(--ax-color-surface); color: var(--ax-color-ink); font: var(--ax-type-t6-strong); box-shadow: 0 0 0 1px var(--ax-color-divider), var(--ax-sheet-shadow); word-break: keep-all; }
+  .gs-say-b::before { content: ""; position: absolute; left: -5px; bottom: 14px; width: 10px; height: 10px; background: var(--ax-color-surface); transform: rotate(45deg); box-shadow: -1px 1px 0 var(--ax-color-divider); }
+  .gs-say-b small { display: block; margin-top: var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-body); }
+  @media (prefers-reduced-motion: reduce) { .gs-say > svg, .gs-say .eye { animation: none; } }
+  #jpTx .jt-hint, #jpTx .jt-ban.new { padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; color: var(--ax-color-ink); text-align: left; max-width: 94%; }
+  #jpTx .jt-ban.new small { color: var(--ax-color-body); }
+  .gs-tip { position: absolute; left: var(--ax-space-16); right: var(--ax-space-16); top: var(--ax-space-16); z-index: 15; display: flex; justify-content: center; pointer-events: none; transition: opacity 0.3s; }
+  .gs-tip.off { opacity: 0; }
+  .gs-tip.gs-tip-in { position: static; justify-content: flex-start; }
+  /* 미니게임 허브 · 총점(검정 타일 폐지) · 순위판 입구 */
+  .oly-sum { display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: var(--ax-space-12); margin: 0 0 var(--ax-space-12); padding: var(--ax-space-20) var(--ax-space-24); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); color: var(--ax-color-ink); text-align: left; }
+  .oly-sum > div { min-width: 0; }
+  /* 게임 화면(시작 · 결과 · 기억력 판) 여백 = 앱 공통 좌우 24 · 하단 메뉴가 없어 아래는 32 */
+  #view[data-v^="game_"] { padding: var(--ax-space-24) var(--ax-page-inset) calc(var(--ax-space-32) + env(safe-area-inset-bottom)); }
+  .oly-sum-n { margin: var(--ax-space-4) 0 0; font: var(--ax-type-t2); color: var(--ax-color-ink); font-variant-numeric: tabular-nums; }
+  .oly-sum-n small { font: var(--ax-type-t6); color: var(--ax-color-muted); }
+  .oly-sum-r { margin: 0; text-align: right; }
+  .oly-rank-go { margin-top: var(--ax-space-12); }
+  /* 순위판 · 종합 포디움 2-1-3 · 종목별 · 월계수 A안 최소 48 */
+  .oly-rk .oly-card { display: flex; flex-direction: column; gap: var(--ax-space-16); padding-bottom: var(--ax-space-24); }
+  .oly-list { display: flex; flex-direction: column; }
+  .oly-row { gap: var(--ax-space-12); min-height: 56px; padding: 0 var(--ax-space-8); border-bottom: 1px solid var(--ax-color-divider); }
+  .oly-row:last-child { border-bottom: 0; }
+  .oly-row.big { min-height: 72px; }
+  .oly-row.me { background: var(--ax-color-brandSoft); border-radius: var(--ax-radius-12); border-bottom-color: transparent; }
+  .oly-row .no { width: 48px; font: var(--ax-type-t5-strong); color: var(--ax-color-body); }
+  .oly-row .nm { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .oly-row .nm small { margin: 0; font: var(--ax-type-caption); color: var(--ax-color-muted); }
+  .oly-row .sc { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); font-variant-numeric: tabular-nums; }
+  .oly-row.me .no, .oly-row.me .nm { color: var(--ax-color-brandText); }
+  .oly-gap { height: var(--ax-space-12); margin-bottom: var(--ax-space-4); border-bottom: 2px dotted var(--ax-color-divider); }
+  .oly-podium { gap: var(--ax-space-8); margin: 0; }
+  .oly-pd-top { gap: var(--ax-space-4); padding: 0 var(--ax-space-4) var(--ax-space-8); }
+  .oly-pd-nm { font: var(--ax-type-t7); font-weight: 600; color: var(--ax-color-ink); }
+  .oly-pd-sc { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); font-variant-numeric: tabular-nums; }
+  .oly-pd-st { padding-top: var(--ax-space-8); border-radius: var(--ax-radius-12) var(--ax-radius-12) 0 0; background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t5-strong); }
+  .oly-pd.r1 .oly-pd-st { background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
+  .oly-pd.me .oly-pd-nm { color: var(--ax-color-brandText); }
+  .oly-pd-no { font: var(--ax-type-t5-strong); color: var(--ax-color-muted); }
+  .oly-pos { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-brandText); }
+  .oly-card .ax-button { margin: 0; }
+  /* 기억력 · 판 위 HUD 줄(점수 · 라운드 · 오답) = 흰 카드 토큰 (검정 무대는 게임판이라 그대로) */
+  .game-hud { gap: var(--ax-space-8); margin: 0; }
+  .game-hud .hud { border-radius: var(--ax-radius-16); padding: var(--ax-space-8); background: var(--ax-color-surface); }
+  .game-hud .hud .v { font: var(--ax-type-t4); color: var(--ax-color-ink); }
+  .game-hud .hud .l { margin: 0; font: var(--ax-type-caption); color: var(--ax-color-muted); }
+  .gmsg { min-height: 18px; margin: 0; font: var(--ax-type-t7); color: var(--ax-color-body); }
+  /* 주황 면 위 흰 글자 정리 · 기억력 채운 칸(누르면 빠진다) · 완성 팝 · 타일 순번 = 짙은 글자 */
+  .mslot.fill, .mem-pop, .ltile.used .ord { color: var(--ax-color-onBrand); }
+  /* ═══ v4.08 결정·제출 화면 통일 · 전체 화면 · 하단 메뉴 숨김 · 아래 고정 주 버튼 + 약한 버튼 · 키보드 위로 올림(--kb) ═══ */
+  #view[data-fix="1"][data-v] { padding-bottom: calc(208px + env(safe-area-inset-bottom) + var(--kb, 0px)); }
+  .axs-fix.ax-bottom { bottom: var(--kb, 0px); }
+  html.kb-on .axs-fix.ax-bottom { padding-bottom: var(--ax-space-12); }
+  .axs-form { gap: var(--ax-space-24); padding-top: var(--ax-space-8); }
+  .axs-ta { width: 100%; min-height: 120px; padding: var(--ax-space-16); resize: none; font: var(--ax-type-t5); line-height: 1.5; }
+  .axs-cnt { display: flex; justify-content: space-between; gap: var(--ax-space-8); }
+  .axs-cnt .ax-meta { margin: 0; }
+  #ideaLeft { color: var(--ax-color-body); }
+  .axs-check { display: flex; align-items: center; gap: var(--ax-space-8); min-height: var(--ax-touch-size); font: var(--ax-type-t6); color: var(--ax-color-body); }
+  .axs-check input { width: 20px; height: 20px; accent-color: var(--ax-color-brand); }
+  .axs-opt { display: flex; align-items: center; width: 100%; min-height: var(--ax-button-height); padding: 0 var(--ax-space-16); border: 1px solid var(--ax-color-divider); border-radius: var(--ax-radius-16); background: var(--ax-color-surface); color: var(--ax-color-ink); font: var(--ax-type-t6-strong); text-align: left; cursor: pointer; }
+  .axs-opt[aria-pressed="true"] { border-color: var(--ax-color-brand); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); }
+  .axs-svin { display: flex; flex-direction: column; gap: var(--ax-space-12); }
+  .axs-svin .row { display: flex; gap: var(--ax-space-8); }
+  .axs-svin input[type=range] { width: 100%; accent-color: var(--ax-color-brand); }
+  /* 포토부스 대기 번호 · 검정 호출 면 폐지 → 주황 면 + 짙은 글자 */
+  .pq { margin: 0; padding: var(--ax-space-16); border-radius: var(--ax-radius-16); background: var(--ax-color-inset); }
+  .pq .k { font: var(--ax-type-t7); font-weight: 700; color: var(--ax-color-brandText); letter-spacing: 0; }
+  .pq .big { margin-top: var(--ax-space-4); font: var(--ax-type-t1); color: var(--ax-color-ink); }
+  .pq .s { margin-top: var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-body); }
+  .pq .nt { margin-top: var(--ax-space-8); font: var(--ax-type-t7); font-weight: 700; color: var(--ax-color-brandText); }
+  .pq.act { background: var(--ax-color-brand); }
+  .pq.act .k, .pq.act .big, .pq.act .s { color: var(--ax-color-onBrand); }
+  .pq.call { box-shadow: inset 0 0 0 2px var(--ax-color-brand); }
+  /* 비밀번호 찾기 · 전체 화면 */
+  #pwlost { align-items: stretch; justify-content: center; padding: 0; background: var(--ax-color-canvas); }
+  #pwlost .axs-pw { display: flex; flex-direction: column; width: 100%; max-width: var(--ax-app-max); min-height: 100%; }
+  #pwlost .axs-pw-main { flex: 1 1 auto; padding: var(--ax-space-48) var(--ax-page-inset) var(--ax-space-24); text-align: left; }
+  #pwlost .pw-msg { margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); }
+  #pwlost .pw-ok { margin: 0; font: var(--ax-type-t4); color: var(--ax-color-ink); }
+  #pwlost .pw-err { margin: 0; min-height: 0; font: var(--ax-type-t7); color: var(--ax-color-error); }
+  #pwlost .pw-err:empty { display: none; }
+  #pwlost input { margin: 0; text-align: left; font: var(--ax-type-t5); }
+  #pwlost .axs-pw-bot { display: flex; flex-direction: column; gap: var(--ax-space-12); padding: var(--ax-space-16) var(--ax-page-inset) calc(max(var(--ax-space-24), env(safe-area-inset-bottom)) + var(--kb, 0px)); background: var(--ax-color-canvas); }
+  #pwlost [hidden] { display: none !important; }
+  #pwlost { position: fixed; overflow-y: auto; }   /* 화면 높이에 맞춘다 · 앱 면이 길어도 아래 버튼이 화면 안에 */
+  #pwlost h1 { color: var(--ax-color-ink); }
+  /* 아래 고정 바의 꺼진 주 버튼 · canvas 바탕 위에서도 자리가 보이게 흰 면 + disabled 글자 */
+  .axs-fix.ax-bottom .ax-button:disabled { background: var(--ax-color-surface); color: var(--ax-color-disabled); }
 </style>
 </head>
 <body>
@@ -1296,21 +1451,27 @@
 
   <!-- ═══════ v3.88 비밀번호 분실 · 운영 데스크 요청 (메일·문자 발송 없음) ═══════ -->
   <section id="pwlost" hidden>
-    <div class="q-card">
-      <p class="q-eyebrow">AX Festival 2026</p>
-      <p class="q-hello">비밀번호 찾기</p>
-      <div id="pwForm">
-        <p class="pw-msg">사번과 이름을 넣어 주세요 · 운영 데스크에 요청만 전달됩니다<br>문자나 메일은 가지 않고, 데스크에서 본인 확인 후 초기화해 드려요</p>
-        <input id="pwEmp" inputmode="numeric" placeholder="사번" autocomplete="off">
-        <input id="pwName" placeholder="이름 (예: 홍길동)" autocomplete="off">
-        <p class="pw-err" id="pwErr"></p>
-        <button type="button" id="pwSend" class="q-go" onclick="pwLostSend()">요청 보내기</button>
+    <!-- v4.08 입력·제출 화면 형식 · 위 = 제목·안내·입력 · 아래 고정 = 주 버튼(요청 보낼게요) + 약한 버튼(돌아갈게요) -->
+    <div class="axs-pw">
+      <div class="ax-stack axs-pw-main">
+        <div class="ax-stack-tight axs-gap12"><p class="ax-meta">AX Festival 2026</p><h1 class="ax-type-t2">비밀번호 찾기</h1></div>
+        <div id="pwForm" class="ax-stack">
+          <p class="ax-body pw-msg">사번과 이름을 넣어 주세요 · 운영 데스크에 요청만 전달됩니다<br>문자나 메일은 가지 않고, 데스크에서 본인 확인 후 초기화해 드려요</p>
+          <div class="ax-fields">
+            <label class="ax-sr-only" for="pwEmp">사번</label><input id="pwEmp" class="ax-field" inputmode="numeric" placeholder="사번" autocomplete="off" onfocus="kbFocus(this)">
+            <label class="ax-sr-only" for="pwName">이름</label><input id="pwName" class="ax-field" placeholder="이름 (예: 홍길동)" autocomplete="off" onfocus="kbFocus(this)">
+          </div>
+          <p class="pw-err" id="pwErr" role="alert"></p>
+        </div>
+        <div id="pwDone" class="ax-stack-tight axs-gap12" hidden>
+          <p class="pw-ok">운영 데스크에 요청이 전달됐어요<br>1F 체크인 데스크에서 확인해 주세요</p>
+          <p class="ax-body pw-msg">데스크에서 본인 확인을 하고 비밀번호를 지워 드립니다<br>그다음 앱에서 새 비밀번호 4자리를 넣으면 다시 들어올 수 있어요</p>
+        </div>
       </div>
-      <div id="pwDone" hidden>
-        <p class="pw-ok">운영 데스크에 요청이 전달됐어요<br>1F 체크인 데스크에서 확인해 주세요</p>
-        <p class="pw-msg">데스크에서 본인 확인을 하고 비밀번호를 지워 드립니다<br>그다음 앱에서 새 비밀번호 4자리를 넣으면 다시 들어올 수 있어요</p>
+      <div class="ax-bottom axs-pw-bot">
+        <button type="button" id="pwSend" class="ax-button" onclick="pwLostSend()">요청 보낼게요</button>
+        <button type="button" class="ax-button ax-button-weak" onclick="pwLostBack()">돌아갈게요</button>
       </div>
-      <button type="button" class="q-other" onclick="pwLostBack()">돌아가기</button>
     </div>
   </section>
 
@@ -1912,7 +2073,7 @@ function pwLostOpen() {
   el("pwEmp").value = known.empId || (el("empId") ? el("empId").value : "") || "";
   el("pwName").value = known.name || (el("userName") ? el("userName").value : "") || "";
   el("pwErr").textContent = "";
-  el("pwForm").hidden = false; el("pwDone").hidden = true;
+  el("pwForm").hidden = false; el("pwDone").hidden = true; el("pwSend").hidden = false;
   el("pwlost").hidden = false;
   if (!PWLOST.bound) {   /* 엔터로도 보낼 수 있게 (버튼은 인라인 onclick) */
     PWLOST.bound = 1;
@@ -1931,13 +2092,13 @@ function pwLostSend() {
   var err = el("pwErr"), btn = el("pwSend");
   if (!emp || !name) { err.textContent = "사번과 이름을 모두 넣어 주세요."; return; }
   err.textContent = "";
-  btn.disabled = true; btn.textContent = "보내는 중...";
+  btn.disabled = true; btn.textContent = "보내는 중";
   var done = function () {   /* 성공·명부 불일치 모두 같은 화면 (떠보기 차단) */
-    btn.disabled = false; btn.textContent = "요청 보내기";
-    el("pwForm").hidden = true; el("pwDone").hidden = false;
+    btn.disabled = false; btn.textContent = "요청 보낼게요";
+    el("pwForm").hidden = true; el("pwDone").hidden = false; btn.hidden = true;
   };
   beCall({ action: "pw_reset_req", emp: emp, name: name }, function () { done(); }, function () {
-    btn.disabled = false; btn.textContent = "요청 보내기";
+    btn.disabled = false; btn.textContent = "요청 보낼게요";
     err.textContent = "연결에 실패했어요. 잠시 후 다시 시도해 주세요.";
   });
 }
@@ -2592,7 +2753,7 @@ function ideaPush(text, tag, anon, ch) {
   waveBump();
 }
 /* v4.07 아이디어 제출 뒤 단계 · null = 입력 폼 · "ask" = 커피챗 참석 질문 · "done" = 제출 완료 (다른 화면에서 들어오면 폼으로) */
-var IDEA = { step: null, yes: false };
+var IDEA = { step: null, yes: false, draft: null, tag: "", anon: false, err: "" };
 var CCHAT_TXT = "커피와 쿠키를 드려요 · 멘토와 내 고민을 가볍게 나눠요";
 var IDEA_AWARD_TXT = "우수 아이디어는 17:00 Outro에서 시상해요";
 function ideaCchat(yes) {
@@ -3322,7 +3483,12 @@ var App = {
     el("view").dataset.v = v;
     if (v === "ideas" && IDEA.step) el("view").dataset.st = IDEA.step; else delete el("view").dataset.st;   /* v4.07 질문·완료는 하단 고정 버튼 자리를 비운다 */
     if (v === "scan_q" && QRS.stream) qrCamStop();   /* v4.06 video 요소를 다시 그리므로 카메라를 새로 붙인다 */
+    var ae = document.activeElement, aeId = ae && ae.id && el("view").contains(ae) && /^(INPUT|TEXTAREA)$/.test(ae.tagName) ? ae.id : "", aeSel = aeId ? [ae.selectionStart, ae.selectionEnd] : null;
     el("view").innerHTML = Views[v]();
+    /* v4.08 아래 고정 버튼(axs-fix)이 있는 화면 = 결정·제출 화면 · 하단 메뉴를 숨기고 버튼 높이만큼 비운다 */
+    var fixB = !!el("view").querySelector(".axs-fix.ax-bottom");
+    if (fixB) { el("view").dataset.fix = "1"; nav.style.display = "none"; } else delete el("view").dataset.fix;
+    if (aeId) { var aeN = el(aeId); if (aeN) { try { aeN.focus({ preventScroll: true }); if (aeSel) aeN.setSelectionRange(aeSel[0], aeSel[1]); } catch (e) {} } }   /* 다시 그려도 입력 중인 칸과 커서를 되돌린다 */
     if (v === "scan_q") setTimeout(scanQStart, 80);
     if (v === "stair" && STR.mode === "start") stairTickOn();
     if (typeof SPOP !== "undefined" && SPOP.cur && !SPOP.cur.done) { var spT = spTarget(SPOP.cur.sd.id); if (spT.el) spT.el.classList.add("sp-wait"); }   /* v3.49 재렌더돼도 안착 전 자리는 비어 보이게 */
@@ -3607,7 +3773,7 @@ function progDetail(s) {
     else if (m && m.pre) { D.secT = "신청한 프로그램이에요"; D.help = "사전 신청 취소는 담당자에게 문의해 주세요"; D.btn = progBtn("내 일정 보기", "mySched()", "ax-button-weak"); }
     else if (m) { D.secT = "신청한 프로그램이에요"; D.help = "참여가 어려우면 신청을 취소할 수 있어요"; D.btn = cxBtn; }
     else if (rem <= 0) { D.help = "취소가 나오면 다시 열려요"; D.btn = progBtn("정원이 마감됐어요", "", "", "", true); }
-    else { D.help = "선택한 일정과 장소를 확인한 후 신청해요"; D.btn = progBtn("참여 신청하기", "progApply(\'" + s.id + "\')"); }
+    else { D.help = "선택한 일정과 장소를 확인한 후 신청해요"; D.btn = progBtn("참여 신청할게요", "progApply(\'" + s.id + "\')") + progBtn("다음에 할게요", "App.back()", "ax-button-weak"); }
     return D;
   }
   if (s.kind === "open") {
@@ -3659,7 +3825,7 @@ function progDetail(s) {
       '<p class="ax-meta axs-lunch">점심시간 ' + conf.lunch + "–" + conf.lunchEnd + "</p>" + slots.filter(function (t) { return t2m(t) >= lunchM; }).map(cell).join("") + "</div></section>";
     D.secB = "업무 설명 → 병목 → 개선방안 순서로 30분 진행해요.<br>상담을 완료하면 사은품을 드려요.";
     D.help = DAPSEL ? "선택한 시간 " + DAPSEL + " · 1F DAP ZONE 미팅룸 2" : "상담 시간을 먼저 골라 주세요";
-    D.btn = DAPSEL ? progBtn("이 시간으로 신청하기", "progApply(\'dap\')") : progBtn("이 시간으로 신청하기", "", "", "", true);
+    D.btn = (DAPSEL ? progBtn("이 시간으로 신청할게요", "progApply(\'dap\')") : progBtn("이 시간으로 신청할게요", "", "", "", true)) + progBtn("다음에 할게요", "App.back()", "ax-button-weak");
     return D;
   }
   if (s.id === "cchat") {
@@ -3670,8 +3836,8 @@ function progDetail(s) {
     if (!c) {
       /* v4.07 자동 요청 폐기 · 아이디어가 있으면 바로 신청, 없으면 아이디어부터 */
       D.secB = CCHAT_TXT.replace(" · ", "<br>") + "<br>비슷한 주제끼리 묶어 자리를 배정해 드려요.";
-      if (ideaMineN()) { D.help = "제출한 아이디어로 신청해요"; D.btn = progBtn("커피챗 신청하기", "cchatApply()", "", "cchatApplyBtn"); }
-      else { D.help = "아이디어를 한 줄 남기면 신청할 수 있어요"; D.btn = progBtn("아이디어 남기기", "App.go(\'ideas\')"); }
+      if (ideaMineN()) { D.help = "제출한 아이디어로 신청해요"; D.btn = progBtn("커피챗 신청할게요", "cchatApply()", "", "cchatApplyBtn") + progBtn("다음에 할게요", "App.back()", "ax-button-weak"); }
+      else { D.help = "아이디어를 한 줄 남기면 신청할 수 있어요"; D.btn = progBtn("아이디어 남길게요", "App.go(\'ideas\')") + progBtn("다음에 할게요", "App.back()", "ax-button-weak"); }
     } else {
       D.secT = "신청한 커피챗이에요";
       D.secB = mt ? "시작 5분 전까지 18F 라운지 해당 테이블에 앉아 주세요. 커피는 스태프가 준비해 둬요." : "DS파트가 비슷한 아이디어끼리 묶는 중이에요.<br>매칭되면 자리와 시간을 앱에서 알려 드려요.";
@@ -4146,7 +4312,7 @@ function photoCancel() {
   }, function () { toast("서버에 연결할 수 없어요"); });
 }
 /* 번호표 UI · 프로그램 행 펼침·일정 탭 상시 행·상세 화면 공용 */
-function photoQueueHtml() {
+function photoQueueHtml(noBtn) {
   var q = photoQ(), pub = photoPub();
   var wait = pub.waiting || 0;
   if (q && q.status === "call") {
@@ -4155,12 +4321,13 @@ function photoQueueHtml() {
   if (q && q.status === "wait") {
     return '<div class="pq"><p class="k">예상 입장</p><p class="big">' + esc(q.eta) + '</p><p class="s">앞 <b>' + q.ahead + "팀</b> · 내 번호 " + q.no + "번</p>" +
       (q.ahead <= 2 ? '<p class="nt">곧 차례 · 1F 포토부스로 이동</p>' : "") + "</div>" +
-      '<button class="btn line" onclick="photoCancel()">번호표 취소</button>';
+      (noBtn ? "" : '<button class="btn line" onclick="photoCancel()">번호표 취소</button>');
   }
   if (q && q.status === "skip") {
     return '<div class="pq dim"><p class="k">건너뛴 번호</p><p class="big">' + q.no + '번</p></div>' +
-      '<button class="btn mint" onclick="photoTake()">다시 줄 서기</button>';
+      (noBtn ? "" : '<button class="btn mint" onclick="photoTake()">다시 줄 서기</button>');
   }
+  if (noBtn) return '<div class="pq dim"><p class="k">지금 대기</p><p class="big">' + wait + '팀</p><p class="s">약 ' + wait * PHOTO.MIN + "분 · 촬영 2~3분 · 현장 출력</p></div>";
   return '<button class="btn mint" onclick="photoTake()">대기 번호 받기</button>';   /* v3.54 대기 팀 수는 행 상태에 이미 있다 */
 }
 function photoState() {
@@ -4839,7 +5006,7 @@ function stampHeroHtml(n) {
     '<p class="axs-count"><b id="ppCnt">' + Math.min(STAMP_DENOM, n) + "</b><span>/ " + STAMP_DENOM + "개</span></p></div>" +
     '<section class="ax-card ax-card-elevated"><div class="axs-cells" role="img" aria-label="스탬프 ' + n + '개">' + cells + "</div>" +
     '<p class="ax-type-t4">' + stampGoalText(n) + "</p>" +
-    '<button type="button" class="ax-button ax-button-dark" onclick="App.tab(\'exp\')">스탬프 모으러 가기</button></section>' +
+    '<button type="button" class="ax-button ax-button-weak" onclick="App.tab(\'exp\')">스탬프 모으러 가기</button></section>' +
     axDest("내 보상", "사용 가능한 보상만 따로 확인", rw + "개", "App.go('rewards')") +
     '<p class="ax-description">완료한 활동은 한 번만 적립돼요.<br>' + STAMP_BONUS + "번째 스탬프는 보너스 보상으로 연결돼요.</p>";
 }
@@ -4948,7 +5115,7 @@ var Views = {
       return '<section class="ax-card" data-rw="' + x.k + '"><span class="axs-chip axs-self' + (x.off ? " off" : " ok") + '">' + x.chip + "</span>" +
         '<div class="ax-stack-tight"><h2 class="ax-section-title">' + x.nm + '</h2><p class="axs-big">' + x.big + "</p></div>" +
         '<div class="axs-hr"></div><p class="ax-description">' + x.why + "</p>" +
-        '<button type="button" class="ax-button ax-button-dark" onclick="' + x.go + '">사용 방법 보기</button></section>';
+        '<button type="button" class="ax-button ax-button-weak" onclick="' + x.go + '">사용 방법 보기</button></section>';
     }).join("") || botHtml(f === "used" ? "사용한 보상이 없어요" : "아직 받은 보상이 없어요");
     return '<div class="ax-stack">' + tabs + cards +
       '<p class="ax-description">룰렛은 스탬프 3개, 응모권은 4개부터 생겨요.<br>달성한 보상만 이곳에 표시됩니다.</p></div>';
@@ -4956,8 +5123,12 @@ var Views = {
 
   /* ═══ 포토부스 대기 · 나의 참여 › 목적지 · 기존 번호표 UI 를 그대로 담는다(새 대기 UI 는 가이드에 정의가 없다) ═══ */
   photoq: function () {
+    /* v4.08 결정 화면 형식 · 상태는 카드 · 행동은 아래 고정(대기 번호 받을게요 · 다시 줄 설게요 · 번호표 취소) · 호출 중에는 버튼 없음 */
+    var q = photoQ(), st = q && q.status;
     return '<div class="ax-stack"><section class="ax-card"><div class="ax-stack-tight"><h2 class="ax-card-title">1F AI 포토부스</h2>' +
-      '<p class="ax-meta">1F 홍보존 · 10:00 – 17:00</p></div>' + photoQueueHtml() + "</section></div>";
+      '<p class="ax-meta">1F 홍보존 · 10:00 – 17:00</p></div>' + photoQueueHtml(true) + "</section></div>" +
+      (st === "call" ? "" : st === "wait" ? '<div class="axs-fix ax-bottom"><button type="button" class="ax-button axs-btn-neutral" onclick="photoCancel()">번호표 취소하기</button></div>'
+        : ax2Btn(st === "skip" ? "다시 줄 설게요" : "대기 번호 받을게요", "photoTake()", "다음에 할게요", "App.back()"));
   },
 
   notices: function () {
@@ -5066,16 +5237,24 @@ var Views = {
         '<div class="ax-card ax-stack-tight axs-gap12"><p class="ax-card-title">AX 커피챗</p><p class="ax-description" id="ideaCcLine">' + cl + "</p></div></div>" +
         '<div class="ax-bottom axs-fix">' + progBtn("내가 낸 아이디어 보기", "App.go(\'ideas_mine\')") + progBtn("한 줄 더 남기기", "IDEA.step=null;App.render()", "ax-button-weak") + "</div>";
     }
-    return '<div class="card mb12"><p style="font-size:calc(19px * var(--fs));font-weight:800;line-height:1.45;color:var(--hi)">문득 떠오른 &ldquo;이거 AI로 되겠는데?&rdquo;<br><span style="color:var(--acc2)">한 줄이면 충분해요.</span></p>' +
-      '<p class="muted" style="margin-top:6px" id="ideaAward">' + IDEA_AWARD_TXT + "</p>" +
-      '<textarea id="ideaText" class="input" rows="3" maxlength="200" style="margin-top:14px;resize:none;line-height:1.55" placeholder="예: 보상 접수 메일, 요약해서 시스템에 자동 입력되면 좋겠다" oninput="el(\'ideaCnt\').textContent=this.value.length"></textarea>' +
-      '<p style="text-align:right;font-size:calc(12.5px * var(--fs));color:var(--faint)"><span id="ideaCnt">0</span>/200</p>' +
-      '<div class="row" style="flex-wrap:wrap;margin-top:8px">' + IDEA_TAGS.map(function (t, i) {
-        return '<button class="tag-btn' + (i === IDEA_TAGS.length - 1 ? " on" : "") + '" data-tag="' + t + '" onclick="pickTag(this)">' + t + "</button>";
-      }).join("") + "</div>" +
-      '<label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:calc(15.5px * var(--fs));color:var(--tx)"><input type="checkbox" id="ideaAnon" style="width:16px;height:16px;accent-color:#FF7E31">익명으로 표시 (시상 시에만 본인 확인)</label>' +
-      '<button class="btn mint" style="margin-top:12px;padding:15px" onclick="submitIdea()">30초 완성 · 제출하기</button></div>' +
-      (mine.length ? '<div class="menu">' + menuItem("ideas_mine", "01", "내가 낸 아이디어", mine.length + "건 제출", "") + "</div>" : "");
+    /* v4.08 입력·제출 화면 = 전체 화면 · 하단 메뉴 숨김 · 아래 고정 주 버튼(5글자 이상이면 켜짐) + 약한 버튼
+       쓴 내용은 어떤 경우에도 지우지 않는다(IDEA.draft · 기기 저장 idea_draft · 다시 그려도 그대로) · 공백은 글자 수에서 뺀다 */
+    var dr = ideaDraft(), n = ideaLen(dr), tag = IDEA.tag || pickedTag;
+    return '<div class="ax-stack axs-form">' +
+      '<div class="ax-stack-tight axs-gap12"><h1 class="ax-type-t2">문득 떠오른<br>&ldquo;이거 AI로 되겠는데?&rdquo;</h1>' +
+      '<p class="ax-body" id="ideaAward">한 줄이면 충분해요 · ' + IDEA_AWARD_TXT + "</p></div>" +
+      '<div class="ax-stack-tight"><label class="ax-sr-only" for="ideaText">아이디어 한 줄</label>' +
+      '<textarea id="ideaText" class="ax-field axs-ta" rows="3" maxlength="200" placeholder="예: 보상 접수 메일, 요약해서 시스템에 자동 입력되면 좋겠다" oninput="ideaInput(this.value)" onfocus="kbFocus(this)" aria-describedby="ideaLeft">' + esc(dr) + "</textarea>" +
+      '<div class="axs-cnt"><p class="ax-meta" id="ideaLeft" aria-live="polite">' + ideaLeftTxt(n) + '</p><p class="ax-meta"><span id="ideaCnt">' + dr.length + "</span>/200</p></div></div>" +
+      '<div class="ax-stack-tight"><p class="ax-type-t6-strong">분야</p><div class="axs-chiprow" role="group" aria-label="분야">' + IDEA_TAGS.map(function (t) {
+        return '<button type="button" class="axs-chip" data-tag="' + t + '" aria-pressed="' + (t === tag) + '" onclick="pickTag(this)">' + t + "</button>";
+      }).join("") + "</div></div>" +
+      '<label class="axs-check"><input type="checkbox" id="ideaAnon"' + (IDEA.anon ? " checked" : "") + ' onchange="IDEA.anon=this.checked">익명으로 표시 (시상 시에만 본인 확인)</label>' +
+      (IDEA.err ? '<div class="axs-err" role="alert"><b>' + esc(IDEA.err) + "</b><span>쓴 내용은 그대로 있어요</span></div>" : "") +
+      (mine.length ? '<button type="button" class="ax-link axs-plain axs-self" onclick="App.go(\'ideas_mine\')">내가 낸 아이디어 ' + mine.length + "건</button>" : "") +
+      "</div>" +
+      '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" id="ideaGo" onclick="submitIdea()"' + (n >= IDEA_MIN ? "" : " disabled") + ">제출할게요</button>" +
+      '<button type="button" class="ax-button ax-button-weak" onclick="App.back()">다음에 할게요</button></div>';
   },
 
   /* ═══ v3.58 AI 사생대회 갤러리 · 카드 목록(섬네일 · 제목 · 설명 · 작가 닉네임 · 좋아요) · 탭하면 원본 ═══ */
@@ -5126,17 +5305,20 @@ var Views = {
         (SURVEY_FEATURES.balance ? '<div class="card soft mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">다음엔 뭘 더? · 지금까지 ' + (a && a.n ? a.n.toLocaleString() + "명" : "") + "</b>" +
           SURVEY_LEGACY.balance.map(function (q, i) { return '<p class="sq" style="margin-top:10px"><b>' + esc(q[0]) + " vs " + esc(q[1]) + "</b></p>" + svBalBars(i, m && m.bal ? m.bal[i] : null); }).join("") + "</div>" : "");
     }
-    if (!surveyOpen()) return '<div class="card soft" style="text-align:center"><p class="muted">' + SURVEY.open + '에 열려요</p></div>';
-    if (surveyLock() === "nostamp") return '<div class="card soft" style="text-align:center"><p class="muted">스탬프를 하나 모으면 열려요</p><button class="btn mint" style="margin-top:12px" onclick="App.go(\'passport\')">스탬프 탭으로</button></div>';
+    if (!surveyOpen()) return '<div class="ax-stack">' + botHtml(SURVEY.open + "에 열려요") + "</div>";
+    if (surveyLock() === "nostamp") return '<div class="ax-stack">' + botHtml("스탬프를 하나 모으면 열려요") + '<button type="button" class="ax-button ax-button-weak" onclick="App.go(\'passport\')">스탬프 보기</button></div>';
+    /* v4.08 입력·제출 화면 형식 · 전체 화면 · 하단 메뉴 숨김 · 아래 고정(다음/제출할게요 + 이전/다음에 할게요) · 답은 그대로 저장(survey_draft) */
     var step = Math.max(1, Math.min(d.step || 1, n)), q = Q[step - 1], last = step === n;
-    var bar = '<div class="row" style="justify-content:space-between;margin-bottom:6px"><b style="font-size:calc(14px * var(--fs));color:var(--acc2)">' + step + " / " + n + "</b>" +
-      (step > 1 ? '<span class="lnk" style="margin:0" onclick="svGo(' + (step - 1) + ')">‹ 이전</span>' : "<span></span>") + "</div>" +
-      '<div class="seatrow" style="margin-top:0;margin-bottom:10px"><div class="sb"><i style="width:' + Math.round((step - 1) / n * 100) + '%"></i></div></div>';
-    var body = '<div class="card mb12"><b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">' + esc(q.q) + "</b>" +
-      (q.optional ? '<span class="muted" style="margin-left:6px;font-size:calc(12.5px * var(--fs))">선택</span>' : "") + svInputHtml(q, d.a[q.id]) + "</div>" +
-      (last ? '<button class="btn mint" style="padding:15px" ' + (SV.busy ? "disabled" : "") + ' onclick="svSubmit()">' + (SV.busy ? "제출 중" : "제출하기") + "</button>"
-        : '<button class="btn mint" onclick="svNext()">다음</button>');
-    return priv + bar + body;
+    return '<div class="ax-stack axs-form">' +
+      '<div class="ax-stack-tight axs-gap12"><p class="ax-meta">' + step + " / " + n + " · 답은 이름 없이 저장돼요</p>" +
+      '<div class="axs-gauge" role="img" aria-label="' + step + " / " + n + '"><i style="width:' + Math.round(step / n * 100) + '%"></i></div>' +
+      '<h1 class="ax-type-t3">' + esc(q.q) + (q.optional ? ' <span class="axs-chip off">선택</span>' : "") + "</h1></div>" +
+      '<div class="axs-svin">' + svInputHtml(q, d.a[q.id]) + "</div></div>" +
+      '<div class="ax-bottom axs-fix">' +
+      (last ? '<button type="button" class="ax-button" ' + (SV.busy ? 'disabled aria-busy="true"' : "") + ' onclick="svSubmit()">' + (SV.busy ? "제출하는 중" : "제출할게요") + "</button>"
+        : '<button type="button" class="ax-button" onclick="svNext()">다음</button>') +
+      (step > 1 ? '<button type="button" class="ax-button ax-button-weak" onclick="svGo(' + (step - 1) + ')"' + (SV.busy ? " disabled" : "") + ">이전</button>"
+        : '<button type="button" class="ax-button ax-button-weak" onclick="App.back()">다음에 할게요</button>') + "</div>";
   },
 
   ideas_mine: function () {
@@ -5235,8 +5417,8 @@ var Views = {
       '<div class="ax-bottom axs-fix">' +
       (e && e.act
         ? '<button type="button" class="ax-button" onclick="' + e.act + '">' + esc(e.lbl) + "</button>"
-        : '<button type="button" class="ax-button" id="cfGo" onclick="progConfirm()"' + (c.busy ? ' disabled aria-busy="true"' : "") + ">" + (c.busy ? "신청하는 중" : e ? "다시 시도하기" : "신청 확정하기") + "</button>") +
-      '<button type="button" class="ax-button ax-button-weak" onclick="App.back()"' + (c.busy ? " disabled" : "") + ">다시 살펴보기</button></div>";
+        : '<button type="button" class="ax-button" id="cfGo" onclick="progConfirm()"' + (c.busy ? ' disabled aria-busy="true"' : "") + ">" + (c.busy ? "신청하는 중" : e ? "다시 시도할게요" : "신청할게요") + "</button>") +
+      '<button type="button" class="ax-button ax-button-weak" onclick="App.back()"' + (c.busy ? " disabled" : "") + ">다시 살펴볼게요</button></div>";
   },
 
   /* ═══ 신청 결과 P04 · 서버 성공(데모는 로컬 판정)일 때만 여기로 온다 ═══ */
@@ -5410,11 +5592,7 @@ var Views = {
   game_word: function () {
     gwStop();
     if (gsNeedNick()) return gsNickHtml("word");   /* v3.50d 네 게임 모두 같은 닉네임(type_nick) · 이미 있으면 묻지 않는다 */
-    return '<div id="gwRoot">' +
-      '<div class="chain-box"><p class="who">MINI GAME</p>' +
-      '<p class="word disp" style="letter-spacing:0.02em">ME to WE 기억력</p>' +
-      '<p class="next" style="opacity:0.92">문장 ' + MEM_SHOW + "초 보고 단어 타일을 순서대로 · " + esc(olyRuleLine("word")) + "</p>" + axPreHtml("word", true) + "</div>" +
-      '<div class="row" style="gap:8px;align-items:stretch"><button class="btn mint" style="flex:1;padding:15px" onclick="gsBegin(\'word\')">게임 시작</button>' + sndBtnHtml(false) + "</div></div>";
+    return gsStartHtml("word", { rootId: "gwRoot", rules: "문장 " + MEM_SHOW + "초 보고 단어 타일을 순서대로 · " + esc(olyRuleLine("word")) });   /* v4.08 공용 시작 틀 */
   },
 
   /* ═══ v3.36b 타자 게임 · 닉네임(최초 1회) → 시작 화면 → 게임 → 결과 ═══ */
@@ -6375,15 +6553,15 @@ function svNext() {
 /* 형식별 입력 · 값은 draft.a[문항id] */
 function svInputHtml(q, v) {
   var id = q.id;
-  if (q.type === "single") return '<div style="margin-top:10px">' + q.opts.map(function (o) {
-    return '<button class="btn ' + (v === o ? "mint" : "line") + ' mb8" onclick="svSet(\'' + id + '\', \'' + esc(o) + '\', true)">' + esc(o) + "</button>";
+  if (q.type === "single") return '<div class="ax-stack-tight">' + q.opts.map(function (o) {
+    return '<button type="button" class="axs-opt" aria-pressed="' + (v === o) + '" onclick="svSet(\'' + id + '\', \'' + esc(o) + '\', true)">' + esc(o) + "</button>";
   }).join("") + "</div>";
   if (q.type === "chips") {
     var isOther = typeof v === "string" && v.indexOf(q.other + ":") === 0;
-    return '<div class="row" style="flex-wrap:wrap;margin-top:10px">' + q.opts.map(function (o) {
-      return '<button class="tag-btn' + (v === o ? " on" : "") + '" onclick="svSet(\'' + id + '\', \'' + esc(o) + '\', true)">' + esc(o) + "</button>";
-    }).join("") + (q.other ? '<button class="tag-btn' + (isOther ? " on" : "") + '" onclick="svSet(\'' + id + '\', \'' + esc(q.other) + ':\', true)">' + esc(q.other) + "</button>" : "") + "</div>" +
-      (isOther ? '<input class="input" style="margin-top:10px" maxlength="40" placeholder="직접 입력" value="' + esc(v.slice(q.other.length + 1)) + '" oninput="svSet(\'' + id + '\', \'' + esc(q.other) + ':\' + this.value, false)">' : "");
+    return '<div class="axs-chiprow">' + q.opts.map(function (o) {
+      return '<button type="button" class="axs-chip" aria-pressed="' + (v === o) + '" onclick="svSet(\'' + id + '\', \'' + esc(o) + '\', true)">' + esc(o) + "</button>";
+    }).join("") + (q.other ? '<button type="button" class="axs-chip" aria-pressed="' + isOther + '" onclick="svSet(\'' + id + '\', \'' + esc(q.other) + ':\', true)">' + esc(q.other) + "</button>" : "") + "</div>" +
+      (isOther ? '<input id="svOther_' + id + '" class="ax-field" maxlength="40" placeholder="직접 입력" value="' + esc(v.slice(q.other.length + 1)) + '" onfocus="kbFocus(this)" oninput="svSet(\'' + id + '\', \'' + esc(q.other) + ':\' + this.value, false)">' : "");
   }
   if (q.type === "scale") {
     var mid = Math.round((q.min + q.max) / 2), nv = v == null ? mid : v;
@@ -6392,13 +6570,13 @@ function svInputHtml(q, v) {
       '<input type="range" min="' + q.min + '" max="' + q.max + '" step="1" value="' + nv + '" style="width:100%;accent-color:#FF7E31" oninput="svSet(\'' + id + '\', +this.value, false); var o=el(\'svScale_' + id + '\'); if (o) o.textContent=this.value">' +
       '<div class="row" style="justify-content:space-between"><span class="muted" style="font-size:calc(12px * var(--fs))">' + q.min + " · " + esc(q.left || "") + '</span><span class="muted" style="font-size:calc(12px * var(--fs))">' + q.max + " · " + esc(q.right || "") + "</span></div>";
   }
-  if (q.type === "text") return '<textarea class="input" rows="3" maxlength="' + (q.max || 200) + '" style="margin-top:10px;resize:none" placeholder="' + esc(q.ph || "") + '" oninput="svSet(\'' + id + '\', this.value, false)">' + esc(v || "") + "</textarea>";
+  if (q.type === "text") return '<textarea id="svText_' + id + '" class="ax-field axs-ta" rows="3" maxlength="' + (q.max || 200) + '" placeholder="' + esc(q.ph || "") + '" onfocus="kbFocus(this)" oninput="svSet(\'' + id + '\', this.value, false)">' + esc(v || "") + "</textarea>";
   if (q.type === "places") {
     var pl = surveyPlaces(), cur = v || {};
     if (!pl.length) return '<p class="muted" style="margin-top:6px">스탬프로 확인된 다녀간 곳이 아직 없어요. 다음으로 넘어가 주세요.</p>';
     return pl.map(function (p) {
       return '<div style="margin-top:10px"><p style="font-weight:800">' + esc(p[1]) + '</p><div class="row" style="gap:6px;margin-top:6px">' + [["meh", "아쉬웠어요"], ["good", "좋았어요"], ["best", "최고"]].map(function (b) {
-        return '<button class="btn ' + (cur[p[0]] === b[0] ? "mint" : "line") + '" style="flex:1" onclick="svPlace(\'' + id + '\', \'' + p[0] + '\', \'' + b[0] + '\')">' + b[1] + "</button>";
+        return '<button type="button" class="axs-opt" aria-pressed="' + (cur[p[0]] === b[0]) + '" style="flex:1" onclick="svPlace(\'' + id + '\', \'' + p[0] + '\', \'' + b[0] + '\')">' + b[1] + "</button>";
       }).join("") + "</div></div>";
     }).join("");
   }
@@ -6778,8 +6956,12 @@ function stairOpen() {
 }
 function stairPick(fl) {
   if (STR.busy) return;
-  var u = S.get("user", {}) || {}, sc = STR.sc || {};
-  STR.pick = fl;
+  STR.pick = fl; STR.err = "";
+  App.render();   /* v4.08 고르기만 한다 · 확정은 아래 고정 주 버튼(stairPickGo) */
+}
+function stairPickGo() {
+  if (STR.busy || STR.pick == null) return;
+  var u = S.get("user", {}) || {}, sc = STR.sc || {}, fl = STR.pick;
   if (STR.mode === "reclass") stairCall({ action: "stair_reclass", emp: u.empId, code: sc.code, fl: sc.fl || "", r: sc.r || "", t: Date.now(), endFl: fl }, sc, false);
   else stairCall({ action: "stair_fix", emp: u.empId, endFl: fl, t: Date.now() }, sc, false);
 }
@@ -6820,6 +7002,12 @@ function stairFloorPick(label) {
     (STR.busy ? botHtml("확인하는 중") : "") +
     (STR.err ? '<div class="axs-err" role="alert"><b>처리하지 못했어요</b>' + esc(STR.err) + "</div>" : "");
 }
+/* v4.08 보정 화면 아래 고정 · 주 = 고른 층으로 보정할게요(고르기 전엔 꺼짐) · 약한 = 나가기 */
+function stairPickBtn(back, backLbl) {
+  var p = STR.pick, lbl = p == null ? "층을 골라 주세요" : p === 0 ? "계단을 쓰지 않았어요로 보정할게요" : p + "F로 보정할게요";
+  return '<div class="axs-fix ax-bottom"><button type="button" class="ax-button" id="stGo" onclick="stairPickGo()"' + (p == null || STR.busy ? " disabled" : "") + ">" + (STR.busy ? "보정하는 중" : lbl) + "</button>" +
+    '<button type="button" class="ax-button ax-button-weak" onclick="' + back + '"' + (STR.busy ? " disabled" : "") + ">" + backLbl + "</button></div>";
+}
 function stairHtml() {
   var o = STR.res || {}, s = stairState(), goal = s.goal || 10, m = STR.mode;
   if (m === "load" || (STR.busy && m !== "fix" && m !== "reclass")) return { body: botHtml("확인하는 중"), btn: "" };
@@ -6855,7 +7043,7 @@ function stairHtml() {
       '<h1 class="ax-title">지난번 종료를<br>찍지 않았어요</h1>' +
       '<p class="ax-description">' + o.from.fl + "F 시작 · " + esc(o.from.at || "") + "</p>" +
       '<section class="ax-card axs-gap12">' + stairFloorPick("지난번 종료 층을 눌러 주세요") + "</section>" +
-      '<p class="ax-meta">직접 고른 층수는 자기 신고로 기록돼요</p>', btn: "" };
+      '<p class="ax-meta">직접 고른 층수는 자기 신고로 기록돼요</p>', btn: stairPickBtn("App.tab(\'exp\')", "다음에 할게요") };
   }
   if (m === "reclass") {
     var vf = o.from ? o.from.fl : "";
@@ -6864,7 +7052,7 @@ function stairHtml() {
       '<h1 class="ax-title">지난번 종료 층을<br>눌러 주세요</h1>' +
       '<p class="ax-description">' + vf + "F 시작 · 방금 스캔은 " + (o.to ? o.to.fl : "") + "F 새 시작으로 바꿔요</p>" +
       '<section class="ax-card axs-gap12">' + stairFloorPick("지난번 종료 층") + "</section>" +
-      '<p class="ax-meta">직접 고른 층수는 자기 신고로 기록돼요</p>', btn: '<div class="axs-fix ax-bottom"><button type="button" class="ax-button ax-button-weak" onclick="STR.mode=\'end\'; STR.err=\'\'; App.render()">취소</button></div>' };
+      '<p class="ax-meta">직접 고른 층수는 자기 신고로 기록돼요</p>', btn: stairPickBtn("STR.mode=\'end\'; STR.err=\'\'; STR.pick=null; App.render()", "취소할게요") };
   }
   if (m === "ask") {
     var st2 = o.stamp && !o.stamp.dup && o.stamp.id === "st", sc = STR.sc || {};
@@ -6874,7 +7062,7 @@ function stairHtml() {
       '<h1 class="ax-title">여기서 새로<br>시작할까요?</h1>' +
       (sc.fl ? '<p class="axs-st-big">' + esc(sc.fl) + "F" + (sc.r ? " · " + stairRoute(sc.r) : "") + "</p>" : "") +
       '<section class="ax-card axs-gap12">' + stairGauge(o.total, goal) + "</section>",
-      btn: ax2Btn("시작", "stairRestart()", "아니요", "App.tab('exp')") };
+      btn: ax2Btn("여기서 시작할게요", "stairRestart()", "시작하지 않을게요", "App.tab('exp')") };
   }
   return { body: botHtml("진행 중인 계단 이용이 없어요"), btn: ax2Btn("계단 안내", "expGuide('st')") };
 }
@@ -7354,14 +7542,28 @@ function qrScanClose() {
 /* v4.06 qrHandle → qrRoute (3단계 절 · 링크와 스캐너가 같은 분기) */
 var pickedTag = IDEA_TAGS[IDEA_TAGS.length - 1];
 function pickTag(btn) {
-  pickedTag = btn.dataset.tag;
-  document.querySelectorAll(".tag-btn[data-tag]").forEach(function (b) { b.classList.toggle("on", b === btn); });
+  pickedTag = btn.dataset.tag; IDEA.tag = pickedTag;
+  document.querySelectorAll("[data-tag]").forEach(function (b) { b.classList.toggle("on", b === btn); b.setAttribute("aria-pressed", String(b === btn)); });
+}
+/* v4.08 글자 수 = 공백을 뺀 글자 · 5글자 이상이면 제출 버튼이 켜진다 · 입력은 지우지 않는다 */
+var IDEA_MIN = 5;
+function ideaLen(v) { return String(v || "").replace(/\s/g, "").length; }
+function ideaDraft() { if (IDEA.draft == null) IDEA.draft = String(S.get("idea_draft", "") || ""); return IDEA.draft; }
+function ideaLeftTxt(n) { return n >= IDEA_MIN ? "제출할 수 있어요" : n === 0 ? IDEA_MIN + "글자 이상 쓰면 제출할 수 있어요" : (IDEA_MIN - n) + "글자 더 쓰면 제출할 수 있어요"; }
+function ideaInput(v) {
+  IDEA.draft = v; S.set("idea_draft", v);
+  var n = ideaLen(v), c = el("ideaCnt"), l = el("ideaLeft"), b = el("ideaGo");
+  if (c) c.textContent = v.length;
+  if (l) l.textContent = ideaLeftTxt(n);
+  if (b) b.disabled = n < IDEA_MIN;
 }
 function submitIdea() {
-  var text = (el("ideaText").value || "").trim();
-  if (text.length < 5) { toast("아이디어를 5자 이상 입력해주세요."); return; }
+  var text = ideaDraft().trim();
+  if (ideaLen(text) < IDEA_MIN) { ideaInput(ideaDraft()); return; }   /* 버튼이 꺼져 있어 보통 오지 않는다 · 입력은 그대로 */
   var nth = counters().ideas;
-  ideaPush(text, pickedTag, el("ideaAnon").checked, "app");
+  try { ideaPush(text, pickedTag, !!IDEA.anon, "app"); }
+  catch (e) { IDEA.err = "제출하지 못했어요. 다시 눌러 주세요."; App.render(); return; }   /* 실패해도 쓴 내용은 남는다 */
+  IDEA.draft = ""; S.set("idea_draft", ""); IDEA.err = "";
   App.render(); window.scrollTo(0, 0);   /* v4.07 커피챗 참석 질문(또는 제출 완료)으로 */
   setTimeout(function () { toast("오늘 " + (nth + 1).toLocaleString() + "번째 아이디어! ME to WE 월에 점 하나가 켜졌어요."); }, 100);
 }
@@ -8460,10 +8662,10 @@ var SND_START = { pang: "pgStart()", jump: "jpStart()", tetris: "ttStart()", typ
 function gsBegin(key) {
   SFX.site = false;
   if (sndChosen()) { if (sndOn()) sfxUnlock(); new Function(SND_START[key])(); return; }
-  modalOpen('<b style="font-size:calc(17px * var(--fs));color:var(--hi)">효과음을 켤까요?</b>' +
-    '<p class="muted" style="margin-top:8px;font-size:calc(14.5px * var(--fs));line-height:1.6">주변에 소리가 날 수 있어요. 아이폰은 무음 모드에서 소리가 나지 않을 수 있어요.</p>' +
-    '<button class="btn mint" style="margin-top:14px;padding:15px" onclick="sndChoose(true, \'' + key + '\')">소리 켜고 시작</button>' +
-    '<button class="btn line" style="margin-top:8px" onclick="sndChoose(false, \'' + key + '\')">소리 없이 시작</button>');
+  modalOpen('<div class="ax-stack-tight axs-gap12"><h2 class="ax-section-title">효과음을 켤까요?</h2>' +
+    '<p class="ax-description">주변에 소리가 날 수 있어요. 아이폰은 무음 모드에서 소리가 나지 않을 수 있어요.</p>' +
+    '<button type="button" class="ax-button" onclick="sndChoose(true, \'' + key + '\')">소리 켜고 시작할게요</button>' +
+    '<button type="button" class="ax-button ax-button-weak" onclick="sndChoose(false, \'' + key + '\')">소리 없이 시작할게요</button></div>');
 }
 function sndChoose(on, key) {
   S.set("game_sound", !!on);
@@ -8715,7 +8917,7 @@ function olyResMeFill(key) {
 function olyResultBody(o) {
   var v = olyMe().ev[o.key];
   return '<div id="olyResLw" class="oly-res-lw">' + (v && v.medal ? olyLw(v.medal, 64) : "") + "</div>" +
-    '<p class="disp oly-res-sc">' + olyFmt(o.score) + "<small>점</small></p>" +
+    '<p class="gs-sc">' + olyFmt(o.score) + "<small>점</small></p>" +
     (o.head ? '<p class="oly-res-head">' + o.head + "</p>" : "") +
     olyBreakHtml(o.key, o.parts, o.score) +
     (o.note ? '<p class="oly-res-note">' + o.note + "</p>" : "") +
@@ -8725,8 +8927,8 @@ function olyResultBody(o) {
 function olyHubHtml() {
   olyPull();
   var me = olyMe(), op = olyOverallPos(me);
-  return '<div class="oly-sum"><div><small>내 AX 올림픽 총점</small><b>' + olyFmt(me.total) + "<em> / " + olyFmt(olyMax()) + "</em></b></div>" +
-    '<span>종목 ' + me.done + "/" + OLY_EVENTS.length + (op ? "<br>" + esc(op) : "") + "</span></div>" +
+  return '<section class="ax-card oly-sum"><div><p class="ax-meta">내 AX 올림픽 총점</p><p class="oly-sum-n">' + olyFmt(me.total) + "<small> / " + olyFmt(olyMax()) + "</small></p></div>" +
+    '<p class="ax-meta oly-sum-r">종목 ' + me.done + "/" + OLY_EVENTS.length + (op ? "<br>" + esc(op) : "") + "</p></section>" +
     OLY_EVENTS.map(function (e) {
       var v = me.ev[e.key], lw = v && v.medal ? olyLw(v.medal, 48) : "";
       return rcHtml({ cls: v ? " done" : "", onclick: "App.go('" + e.view + "')", link: true, left: lw ? '<span class="oly-lwbox">' + lw + "</span>" : tokBadge(e.short, v ? "mine" : ""),
@@ -8734,7 +8936,7 @@ function olyHubHtml() {
         sub: v ? "최고 " + olyFmt(v.best) + (me.sv && v.rank ? " · 종목 " + v.rank + "위" : "") : "",
         right: '<span class="st">' + (v ? olyFmt(v.best) : "-") + "</span>" });
     }).join("") +
-    '<button class="btn line" style="margin-top:4px" onclick="App.go(\'oly_rank\')">AX 올림픽 순위판</button>' +
+    '<button type="button" class="ax-button ax-button-weak oly-rank-go" onclick="App.go(\'oly_rank\')">AX 올림픽 순위판</button>' +
     (testMode() ? '<button class="btn test" style="margin-top:8px" onclick="testGameReset(false)">테스트 · 게임 기록만 초기화</button>' +
       '<button class="btn test" style="margin-top:6px" onclick="testGameReset(true)">테스트 · 닉네임까지 초기화</button>' : "");
 }
@@ -8798,35 +9000,35 @@ function olyRankHtml() {
   olyPull();
   var b = OLY.board, tab = S.get("oly_tab", "all") === "event" ? "event" : "all", evk = S.get("oly_ev", OLY_EVENTS[0].key), me = olyMe(), nick = typeNick() || "나";
   if (!olyEv(evk)) evk = OLY_EVENTS[0].key;
-  var seg = '<div class="qseg" style="margin-bottom:10px">' + [["all", "종합"], ["event", "종목별"]].map(function (t) {
-    return '<button class="' + (tab === t[0] ? "on" : "") + '" onclick="S.set(\'oly_tab\', \'' + t[0] + '\'); App.render()">' + t[1] + "</button>";
+  var seg = '<div class="axs-seg" role="tablist" aria-label="순위 구분">' + [["all", "종합"], ["event", "종목별"]].map(function (t) {
+    return '<button type="button" role="tab" aria-selected="' + (tab === t[0]) + '" onclick="S.set(\'oly_tab\', \'' + t[0] + '\'); App.render()">' + t[1] + "</button>";
   }).join("") + "</div>";
-  var h = seg + (b && b.test ? '<p class="scap" style="margin:0 2px 8px">테스트 순위판 · 가짜 닉네임이 섞여 있어요</p>' : "");
-  if (!b || !b.overall) return h + botHtml("순위를 불러오는 중이에요");
+  var h = '<div class="ax-stack oly-rk">' + seg + (b && b.test ? '<p class="ax-meta">테스트 순위판 · 가짜 닉네임이 섞여 있어요</p>' : "");
+  if (!b || !b.overall) return h + botHtml("순위를 불러오는 중이에요") + "</div>";
   var at = b.t ? String(b.t).slice(11, 16) : "";
   if (tab === "event") {
     var ev = olyEv(evk), mv = me.ev[evk], list = (b.perEvent && b.perEvent[evk]) || [];
-    h += '<div class="fl-chips" style="margin-bottom:10px">' + OLY_EVENTS.map(function (e) {
-      return '<button class="' + (e.key === evk ? "on" : "") + '" onclick="S.set(\'oly_ev\', \'' + e.key + '\'); App.render()">' + esc(e.short) + "</button>";
+    h += '<div class="axs-chiprow" role="group" aria-label="종목">' + OLY_EVENTS.map(function (e) {
+      return '<button type="button" class="axs-chip" aria-pressed="' + (e.key === evk) + '" onclick="S.set(\'oly_ev\', \'' + e.key + '\'); App.render()">' + esc(e.short) + "</button>";
     }).join("") + "</div>";
     var mine = function (x) { return x.me || (me.sv && mv && mv.rank && x.rank === mv.rank); };
     var rows = list.map(function (x) { return olyRowHtml(x, olyFmt(x.score), x.key, x.rank <= 3, mine(x)); }).join("");
     if (mv && me.sv && mv.rank > list.length) rows += '<div class="oly-gap"></div>' + olyRowHtml({ rank: mv.rank, name: nick + " (나)" }, olyFmt(mv.best), "", false, true);
-    h += '<div class="card oly-card"><b class="oly-h">' + esc(ev.name) + '</b><p class="oly-rule">' + esc(olyRuleLine(evk)) + "</p>" +
-      (list.length ? rows : '<p class="muted" style="padding:10px 0">아직 기록이 없어요</p>') +
+    h += '<section class="ax-card oly-card"><div class="ax-stack-tight"><h2 class="ax-section-title">' + esc(ev.name) + '</h2><p class="ax-description">' + esc(olyRuleLine(evk)) + "</p></div>" +
+      '<div class="oly-list">' + (list.length ? rows : '<p class="ax-description">아직 기록이 없어요</p>') + "</div>" +
       (mv ? (olyEvPos(evk, mv) ? '<p class="oly-pos">' + esc(olyEvPos(evk, mv)) + "</p>" : "")
-        : '<p class="oly-pos">한 판 하면 순위에 올라가요</p><button class="btn mint" style="margin-top:10px" onclick="App.go(\'' + ev.view + '\')">' + esc(ev.name) + " 한 판</button>") + "</div>";
+        : '<p class="oly-pos">한 판 하면 순위에 올라가요</p><button type="button" class="ax-button" onclick="App.go(\'' + ev.view + '\')">' + esc(ev.name) + " 한 판</button>") + "</section>";
   } else {
     var ov = b.overall || [], isMe = function (x) { return x.me || (me.sv && me.rank && x.rank === me.rank); };
     var top = ov.slice(0, 3).map(function (x) { return Object.assign({}, x, { me: isMe(x) }); });
     var rest = ov.slice(3).map(function (x) { return olyRowHtml(x, olyFmt(x.total), "", false, isMe(x)); }).join("");
     if (me.sv && me.rank > ov.length) rest += '<div class="oly-gap"></div>' + olyRowHtml({ rank: me.rank, name: nick + " (나)" }, olyFmt(me.total), "", false, true);
     var op = olyOverallPos(me);
-    h += '<div class="card oly-card"><b class="oly-h">종합 순위</b><p class="oly-rule">네 종목 최고 점수 합계' + (at ? " · " + at + " 기준" : "") + " · " + olyFmt(olyMax()) + "점 만점</p>" +
-      (ov.length ? olyPodiumHtml(top) + rest : '<p class="muted" style="padding:10px 0">아직 네 종목을 모두 한 사람이 없어요</p>') +
-      '<p class="oly-pos">' + (op ? esc(op) : me.done ? "내 총점 " + olyFmt(me.total) : "한 판 하면 순위에 올라가요") + "</p></div>";
+    h += '<section class="ax-card oly-card"><div class="ax-stack-tight"><h2 class="ax-section-title">종합 순위</h2><p class="ax-description">네 종목 최고 점수 합계' + (at ? " · " + at + " 기준" : "") + " · " + olyFmt(olyMax()) + "점 만점</p></div>" +
+      (ov.length ? olyPodiumHtml(top) + '<div class="oly-list">' + rest + "</div>" : '<p class="ax-description">아직 네 종목을 모두 한 사람이 없어요</p>') +
+      '<p class="oly-pos">' + (op ? esc(op) : me.done ? "내 총점 " + olyFmt(me.total) : "한 판 하면 순위에 올라가요") + "</p></section>";
   }
-  return h + '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">명예 순위 · 경품 없음 · Outro에서 종합 1~3위 호명</p>';
+  return h + '<p class="ax-meta">명예 순위 · 경품 없음 · Outro에서 종합 1~3위 호명</p></div>';
 }
 /* ── TV 순위판 (wall_type · 1920×1080) · ① 종합 포디움(1위 180px · 2·3위 140px) + 4~10위 ② 종목별 1~3위(96px) ── */
 function olyTvPodium() {
@@ -9065,7 +9267,7 @@ function ttStart() {
     parts: [], pops: [], banner: null, shake: 0, hud: "" };
   TT.nextQ = [ttNextKey(), ttNextKey()];   /* v3.87b 다음 블록 두 개를 보여 준다 */
   TT.nextK = TT.nextQ[0];
-  gsOverlayOpen({ key: "tetris", title: "테트리스", top: ttTopHtml(), fill: true, cls: "tetris", cw: 200, ch: 360, canvasId: "ttCv", flat: true,
+  gsOverlayOpen({ key: "tetris", title: "테트리스", top: ttTopHtml(), fill: true, cls: "tetris", cw: 200, ch: 360, canvasId: "ttCv", flat: true, tip: gsTutTake("tetris"),
     bottom: ttPadHtml(),
     resized: ttFit,
     down: function (e) { e.preventDefault(); TT.sw = { x: e.clientX, y: e.clientY, mx: e.clientX, my: e.clientY, lx: e.clientX, ly: e.clientY, t: performance.now(), moved: 0 }; },
@@ -9420,7 +9622,26 @@ var GS_GAMES = {
   jump: { name: "ME to WE 점프", view: "game_jump", start: "jpStart()", best: "oly2_best_jump", line: "탭 점프 · 두 번 탭 2단 점프 · 꾸욱 누르면 엎드리기" },
   word: { name: "ME to WE 기억력", view: "game_word", start: "gwStart()", best: "oly2_best_word", line: "문장을 외워 단어 타일을 순서대로" }
 };
+/* v4.08 키보드가 올라와도 입력칸과 아래 고정 버튼이 가려지지 않게 · 가려진 높이를 --kb 로 넘긴다 · 포커스한 칸은 보이는 곳 가운데로 */
+function kbSync() {
+  var vv = window.visualViewport; if (!vv) return;
+  var kb = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+  document.documentElement.style.setProperty("--kb", (kb > 80 ? kb : 0) + "px");
+  document.documentElement.classList.toggle("kb-on", kb > 80);
+}
+if (window.visualViewport) { window.visualViewport.addEventListener("resize", kbSync); window.visualViewport.addEventListener("scroll", kbSync); }
+function kbFocus(n) { setTimeout(function () { kbSync(); if (n && n.scrollIntoView) try { n.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) { n.scrollIntoView(); } }, 320); }
 var GS = { cur: null, vvh: null, onVis: null, onKey: null };
+/* v4.08 게임 안내 팝업 = 챗봇 말풍선 (design.md A-5 결정 5) · 문구는 그대로 · 원본 BOT_SVG 합성만 */
+function gsSayHtml(html) { return '<div class="gs-say">' + BOT_SVG + '<p class="gs-say-b">' + html + "</p></div>"; }
+/* 첫 안내 · 게임마다 기기에서 처음 3판까지 · 문구 = GS_GAMES[key].line (시작 화면 줄과 같다) */
+var GS_TUT_MAX = 3;
+function gsTutTake(key) {
+  var seen = S.get("gs_tut", {}) || {};
+  if ((seen[key] || 0) >= GS_TUT_MAX || !GS_GAMES[key]) return "";
+  seen[key] = (seen[key] || 0) + 1; S.set("gs_tut", seen);
+  return GS_GAMES[key].line;
+}
 /* o = { key, title, top(v3.36d 위 줄 HTML 교체), fill(v3.36d 캔버스 꽉 채움), cls, cw, ch, canvasId, bottom, noGesture, flat(v3.48 플랫 스타일 오버레이), resized(cv, cssW, cssH), down(e), move(e), up(e), keydown(e), running(), isPaused(), pause(), resume(), quit() } */
 function gsOverlayOpen(o) {
   gsOverlayClose();
@@ -9430,12 +9651,15 @@ function gsOverlayOpen(o) {
   d.className = (o.flat ? "flat " : "") + (o.cls || "");
   d.innerHTML = '<div class="rgp-top">' + (o.top || '<span class="rgp-t">' + esc(o.title) + '</span><span class="row" style="gap:6px;align-items:center">' + sndBtnHtml(false) + '<button class="rgp-x" type="button" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">일시정지</button></span>') + "</div>" +
     '<div class="rgp-mid' + (o.noGesture ? " nogest" : "") + (o.fill ? " fill" : "") + '" id="gsMid"><canvas id="' + o.canvasId + '" width="' + o.cw + '" height="' + o.ch + '"></canvas>' +
-    '<div class="rgp-pause" id="rgPause" hidden><p>일시정지</p><small id="rgPauseLeft"></small><button class="btn mint" type="button" onclick="gsResume()">계속하기</button><button class="btn line" type="button" onclick="gsQuit()">그만하기</button></div></div>' +
+    (o.tip ? '<div class="gs-tip" id="gsTip">' + gsSayHtml(esc(o.tip)) + "</div>" : "") +
+    '<div class="rgp-pause" id="rgPause" hidden><p>일시정지</p><small id="rgPauseLeft"></small><button class="ax-button" type="button" onclick="gsResume()">계속하기</button><button class="ax-button ax-button-weak" type="button" onclick="gsQuit()">그만하기</button></div></div>' +
     (o.bottom || "");
   document.body.appendChild(d);
   document.documentElement.classList.add("rg-lock");
   var mid = d.querySelector(".rgp-mid");
+  if (o.tip) setTimeout(function () { var t = el("gsTip"); if (t) t.classList.add("off"); }, 3200);   /* 카운트다운 동안만 · 시작과 함께 걷힌다 */
   mid.addEventListener("pointerdown", function (e) {
+    var tp = el("gsTip"); if (tp) tp.classList.add("off");
     if (e.target.closest && e.target.closest(".rgp-pause")) return;
     if (o.down) o.down(e);
   });
@@ -9582,59 +9806,47 @@ function gsEndDraw(ctx, ending, W, y0, y1, small) {
   ctx.fillText(small, W / 2, cy + 11);
 }
 /* ── 공용 화면 조각 · 닉네임 · 시작 · 결과 ── */
+/* v4.08 AX-TDS 4단계 · 닉네임 = 입력·제출 화면 형식(전체 화면 · 아래 고정 주 버튼 + 약한 버튼) */
 function gsNickHtml(key) {
   var nick = typeNick();
-  return '<div class="gs-root"><div class="cho-box"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' + esc(GS_GAMES[key].name) + "</p>" +
-    '<p class="word disp" style="font-size:24px;margin-top:4px">닉네임 정하기</p>' +
-    '<p class="hint">순위판에는 닉네임만 나와요</p></div>' +
-    '<div class="card mb12"><input id="tnIn" class="input" maxlength="8" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="예: 타자요정" value="' + esc(nick) + '" oninput="typeNickInput(this.value)">' +
-    '<p class="muted" id="tnMsg" style="margin-top:6px;font-size:calc(12.5px * var(--fs))">' + (nick ? "지금 닉네임 · " + esc(nick) : "한글·영문·숫자 2~8자") + "</p>" +
-    '<button class="btn mint" style="margin-top:10px" onclick="typeNickSave()">이 닉네임으로</button>' +
-    (nick ? '<button class="btn line" style="margin-top:8px" onclick="S.set(\'type_nick_edit\', false); App.render()">그대로 두기</button>' : "") + "</div></div>";
+  return '<div class="ax-stack gs-root"><div class="ax-stack-tight">' +
+    '<h1 class="ax-type-t2">닉네임 정하기</h1><p class="ax-description">순위판에는 닉네임만 나와요</p></div>' +
+    '<div class="ax-stack-tight"><label class="ax-sr-only" for="tnIn">닉네임</label><input id="tnIn" class="ax-field" maxlength="8" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="예: 타자요정" value="' + esc(nick) + '" oninput="typeNickInput(this.value)">' +
+    '<p class="ax-meta" id="tnMsg">' + (nick ? "지금 닉네임 · " + esc(nick) : "한글·영문·숫자 2~8자") + "</p></div></div>" +
+    '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" onclick="typeNickSave()">이 닉네임으로 할게요</button>' +
+    (nick ? '<button type="button" class="ax-button ax-button-weak" onclick="S.set(\'type_nick_edit\', false); App.render()">그대로 둘게요</button>'
+      : '<button type="button" class="ax-button ax-button-weak" onclick="App.back()">다음에 할게요</button>') + "</div>";
 }
 function gsNeedNick() { return !typeNick() || S.get("type_nick_edit", false); }
-/* o = { rootId, previewId, pw, ph, rules, foot } */
+/* o = { rootId, previewId, pw, ph, rules, foot, how, flat } · v4.08 AX-TDS 4단계 · 흰 카드 한 장(이름 · 미리보기 · 조작 · 규칙) + 닉네임·최고 줄 + 시작 줄 */
 function gsStartHtml(key, o) {
   var g = GS_GAMES[key], nick = typeNick();
-  if (o.how) return gsStartBigHtml(key, o, g, nick);
-  return '<div id="' + o.rootId + '" class="gs-root">' +
-    '<div class="cho-box" style="padding:16px 14px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">MINI GAME</p>' +
-    '<p class="word disp" style="font-size:24px;margin-top:2px">' + esc(g.name) + "</p>" +
-    '<div class="rg-wrap' + (o.flat ? " flat" : "") + '" style="margin-top:10px"><canvas id="' + o.previewId + '" width="' + o.pw + '" height="' + o.ph + '"></canvas></div>' +
-    '<p class="hint">' + o.rules + "</p>" + axPreHtml(key, true) + "</div>" +
-    '<div class="row mb8" style="justify-content:space-between"><span class="muted" style="font-size:calc(13.5px * var(--fs))">닉네임 <b style="color:var(--hi)">' + esc(nick) + '</b> · <span style="text-decoration:underline;cursor:pointer" onclick="S.set(\'type_nick_edit\', true); App.render()">변경</span></span>' +
-    '<span class="muted" style="font-size:calc(13.5px * var(--fs))">최고 ' + olyFmt(S.get(g.best, 0)) + "점</span></div>" +
-    '<button class="btn mint mb8" style="padding:16px;font-size:calc(17px * var(--fs))" onclick="gsBegin(\'' + key + '\')">START</button>' +
-    '<div class="row" style="gap:8px;align-items:stretch"><button class="btn line" style="flex:1" onclick="' + gsRankGo(key) + '">순위판</button>' + sndBtnHtml(false) + "</div>" +
-    (o.foot ? '<p class="muted" style="margin-top:10px;font-size:calc(12px * var(--fs));text-align:center">' + o.foot + "</p>" : "") + "</div>";
-}
-/* v3.98 큰 시작 화면 · 조작 동작을 한 줄씩(칩 + 설명) · START·순위판·소리를 한 줄에 모아 360x640 에 들어가게 */
-function gsStartBigHtml(key, o, g, nick) {
-  return '<div id="' + o.rootId + '" class="gs-root big">' +
-    '<div class="cho-box"><p style="font-size:calc(13px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">MINI GAME</p>' +
-    '<p class="word disp" style="margin-top:2px">' + esc(g.name) + "</p>" +
-    '<div class="rg-wrap' + (o.flat ? " flat" : "") + '" style="margin-top:12px"><canvas id="' + o.previewId + '" width="' + o.pw + '" height="' + o.ph + '"></canvas></div>' +
-    '<div class="gs-how">' + o.how.map(function (h) { return "<p><b>" + esc(h[0]) + "</b>" + esc(h[1]) + "</p>"; }).join("") + "</div>" +
-    '<p class="gs-rule">' + o.rules + "</p></div>" +
-    '<div class="row mb8" style="justify-content:space-between"><span class="muted" style="font-size:calc(14px * var(--fs))">닉네임 <b style="color:var(--hi)">' + esc(nick) + '</b> · <span style="text-decoration:underline;cursor:pointer" onclick="S.set(\'type_nick_edit\', true); App.render()">변경</span></span>' +
-    '<span class="muted" style="font-size:calc(14px * var(--fs))">최고 ' + olyFmt(S.get(g.best, 0)) + "점</span></div>" +
-    '<div class="gs-go"><button class="btn mint" onclick="gsBegin(\'' + key + '\')">START</button>' +
-    '<button class="btn line" onclick="' + gsRankGo(key) + '">순위판</button>' + sndBtnHtml(false) + "</div></div>";
+  return '<div id="' + o.rootId + '" class="ax-stack gs-root' + (o.how ? " big" : "") + '">' +
+    '<section class="ax-card gs-card"><h1 class="ax-sr-only">' + esc(g.name) + "</h1>" +   /* 게임 이름은 헤더가 알린다(5-4 · 같은 제목 반복 없음) */
+    (o.previewId ? '<div class="rg-wrap' + (o.flat ? " flat" : "") + '"><canvas id="' + o.previewId + '" width="' + o.pw + '" height="' + o.ph + '"></canvas></div>' : "") +
+    (o.how ? '<div class="gs-how">' + o.how.map(function (h) { return "<p><b>" + esc(h[0]) + "</b>" + esc(h[1]) + "</p>"; }).join("") + "</div>" : "") +
+    '<p class="ax-description gs-rule">' + o.rules + "</p>" + axPreHtml(key) + "</section>" +
+    '<div class="gs-meta"><span>닉네임 <b>' + esc(nick) + '</b> · <button type="button" class="gs-edit" onclick="S.set(\'type_nick_edit\', true); App.render()">변경</button></span>' +
+    "<span>최고 <b>" + olyFmt(S.get(g.best, 0)) + "점</b></span></div>" +
+    '<div class="gs-go"><button type="button" class="ax-button" onclick="gsBegin(\'' + key + '\')">게임 시작</button>' +
+    '<button type="button" class="ax-button ax-button-weak" onclick="' + gsRankGo(key) + '">순위판</button>' + sndBtnHtml(false) + "</div>" +
+    (o.foot ? '<p class="ax-meta axs-center-tx">' + o.foot + "</p>" : "") + "</div>";
 }
 function gsRankGo(key) { return key === "type" ? "App.go('type_rank')" : "S.set('oly_tab', 'event'); S.set('oly_ev', '" + key + "'); App.go('oly_rank')"; }
 /* r = { why, reason, score, stats, rankLine, banner } · 세 게임 결과 화면 형식이 같다 */
 function gsResultHtml(key, r) {
   var g = GS_GAMES[key];
-  return '<div class="cho-box" style="padding:24px 18px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' +
+  /* v4.08 AX-TDS 4단계 · 결과 = 흰 카드(점수 · 구성 표 · 내 위치) + 아래 버튼 줄(주 1 + 약한 2) */
+  return '<section class="ax-card gs-res"><p class="ax-meta">' +
     esc(g.name) + " · " + (r.label || (r.why === "done" ? "완주" : r.why === "time" ? "TIME UP" : "GAME OVER")) + " · " + esc(typeNick() || "익명 참가자") + "</p>" +
-    (r.reason ? '<p style="margin-top:6px;font-size:calc(15px * var(--fs));font-weight:800">' + esc(r.reason) + "</p>" : "") +
+    (r.reason ? '<p class="ax-type-t6-strong">' + esc(r.reason) + "</p>" : "") +
     (r.oly ? olyResultBody(r.oly) :
-    '<p class="disp" style="font-size:44px;color:var(--mint);margin-top:6px">' + (typeof r.score === "string" ? esc(r.score) : Number(r.score).toLocaleString()) + "</p>" +
-    '<p class="hint">' + r.stats + "<br>" + (r.rankLine || "") + "</p>") + "</div>" +
+    '<p class="gs-sc">' + (typeof r.score === "string" ? esc(r.score) : Number(r.score).toLocaleString()) + "</p>" +
+    '<p class="ax-description">' + r.stats + "<br>" + (r.rankLine || "") + "</p>") + "</section>" +
     (r.banner || "") +
-    '<button class="btn mint mb8" style="padding:15px" onclick="' + g.start + '">다시 하기</button>' +
-    '<button class="btn line mb8" onclick="' + gsRankGo(key) + '">순위판 보기</button>' +
-    '<button class="btn line" onclick="App.go(\'passport\')">스탬프 탭으로</button>';
+    '<div class="ax-stack-tight gs-res-go"><button type="button" class="ax-button" onclick="' + g.start + '">다시 하기</button>' +
+    '<button type="button" class="ax-button ax-button-weak" onclick="' + gsRankGo(key) + '">순위판 보기</button>' +
+    '<button type="button" class="ax-button ax-button-weak" onclick="App.go(\'passport\')">스탬프 보기</button></div>';
 }
 /* 로컬 테스트 순위판 · 가짜 닉네임 + 내 최고 기록 (서버 연결 전 · 실제 순위 아님) */
 /* ════════════════ AX 팡 · 7×7 같은 그림 3개 맞추기 (60초 · 지는 조건 없음) ════════════════
@@ -9784,7 +9996,7 @@ function pgStart() {
   SFX.site = false;
   PG = { on: true, paused: false, ending: null, raf: 0, cd: 3.2, t0: 0, last: performance.now(), b: pgBoardInit(), phase: "idle", sel: null, pair: null, drag: null, k: 1,
     idle: 0, hint: null, hintN: 0, hintT: 0, bar: 0, barPulse: 0, mile: 0, chain: 0, clrT: 0, lines: [], parts: [], pops: [], banner: null, combo: null, score: 0, tiles: 0, maxChain: 0, specials: 0, moves: 0, shuffles: 0, bad: 0, pz: 0 };
-  gsOverlayOpen({ key: "pang", title: "AX 팡", cw: PG_W, ch: PG_H, canvasId: "pgCv", noGesture: true, flat: true,
+  gsOverlayOpen({ key: "pang", title: "AX 팡", cw: PG_W, ch: PG_H, canvasId: "pgCv", noGesture: true, flat: true, tip: gsTutTake("pang"),
     bottom: '<div class="gs-foot">이웃한 두 칸을 밀어서 바꾸거나, 한 칸 누르고 옆 칸을 누르세요</div>',
     down: pgDown, move: pgMove, up: pgUp, resized: pgFit,
     running: function () { return PG.on && !PG.paused && !PG.ending; }, isPaused: function () { return !!PG.paused; },
@@ -10205,9 +10417,37 @@ var JP_NEW_P = 0.45;   /* 새 유형 비율(일반 장애물 뒤 차례마다) �
 var JP_COIN = ["...KKKK...", ".KKOOOOKK.", ".KOWOOWOK.", "KOOOWWOOOK", "KOOOWWOOOK", ".KOWOOWOK.", ".KKOOOOKK.", "...KKKK..."];
 var JP_COINCV = null;
 var JP = { on: false, raf: 0, parts: [], pops: [] };
+/* v4.08 (design.md A-5 결정 5) 러너 = 행사 캐릭터 챗봇 · 원본 BOT_SVG 를 줄여 래스터화한 것만 쓴다(새로 그리지 않는다)
+   서기 22×26 · 엎드리기 = 같은 그림을 세로로 누른 22×14(스쿼시) · 달리기 = 몸 전체 1칸 튀기기 · 공중 = 같은 그림
+   원본 200 상자에서 그림이 있는 곳(40~160 × 18~157)만 잘라 쓴다 · 크기별로 한 번만 래스터화해 둔다 */
+var JP_BOT = { img: null, ok: false, cv: {}, vb: "40 18 120 139" };
+function jpBotLoad() {
+  if (JP_BOT.img) return;
+  var svg = BOT_SVG.replace('<svg viewBox="0 0 200 200"', '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="139" preserveAspectRatio="none" viewBox="' + JP_BOT.vb + '"').replace(/ class="eye"/g, "");
+  var im = new Image();
+  im.onload = function () { JP_BOT.ok = true; JP_BOT.cv = {}; if (el("jpPrev")) jpPreview(); };
+  im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  JP_BOT.img = im;
+}
+function jpBotCv(w, h) {
+  w = Math.max(1, Math.round(w)); h = Math.max(1, Math.round(h));
+  if (!JP_BOT.ok) return null;
+  var k = w + "x" + h;
+  if (!JP_BOT.cv[k]) { var c = document.createElement("canvas"); c.width = w; c.height = h; c.getContext("2d").drawImage(JP_BOT.img, 0, 0, w, h); JP_BOT.cv[k] = c; }
+  return JP_BOT.cv[k];
+}
+var JP_BOT_W = 22, JP_BOT_H = 26, JP_BOT_DH = 14;   /* 서기 22×26 · 엎드리기 22×14 */
+/* 그리기 · (x, 바닥 y) 기준 · 원본이 아직 안 읽혔으면 옛 도트 몸으로 대신 그린다(한 프레임도 비지 않게) */
+function jpBotDraw(ctx, x, gy, k, duck, lift) {
+  var w = JP_BOT_W * k, h = (duck ? JP_BOT_DH : JP_BOT_H) * k, c = jpBotCv(w, h);
+  if (c) { ctx.drawImage(c, Math.round(x), Math.round(gy - h - (lift || 0))); return; }
+  if (duck) ctx.drawImage(rgSprCv("duck"), Math.round(x) - 5, Math.round(gy) - 16 * k, 32 * k, 16 * k);
+  else ctx.drawImage(rgSprCv("closed"), Math.round(x) - 3, Math.round(gy) - 26 * k - (lift || 0), 28 * k, 26 * k);
+}
 function jpStop() { JP.on = false; if (JP.raf) cancelAnimationFrame(JP.raf); JP.raf = 0; if (JP.onKeyUp) document.removeEventListener("keyup", JP.onKeyUp); JP.duck = false; JP.press = null; gsOverlayClose("jump"); }
 function jpStart() {
   jpStop();
+  jpBotLoad();
   SFX.site = false;
   JP = { on: true, paused: false, ending: null, raf: 0, cd: 3.2, t0: 0, last: performance.now(), py: JP_GY, vy: 0, jumps: 0, hearts: JP_HEARTS, inv: 0, heartHit: 0,
     obs: [], coins: [], items: [], parts: [], pops: [], banner: null, shake: 0, dist: 0, nextObs: 70, coinN: 0, dodged: 0, hits: 0, jumpsN: 0, score: 0, speedUp: 0,
@@ -10281,13 +10521,13 @@ function jpTxSync() {
   }
   /* v4.00 동작 안내 팝업 3종 · 같은 모양(주황 상자) · 필요한 첫 순간 직전에 · 안내마다 기기에서 처음 3번까지(jp_tut) */
   var hint = jpHintNow();
-  jpTxSet("jtHint", hint || "off", function (e) { e.hidden = !hint; if (hint) e.innerHTML = hint; });
+  jpTxSet("jtHint", hint || "off", function (e) { e.hidden = !hint; if (hint) e.innerHTML = gsSayHtml(hint); });   /* v4.08 챗봇 말풍선 */
   var hs = !!hint;
   var b = hs ? null : JP.banner;
   jpTxSet("jtBan", b ? b.text + (b.how || "") : "off", function (e) {
     e.hidden = !b; if (!b) return;
     e.className = "jt-ban" + (b.how ? " new" : "");
-    e.innerHTML = esc(b.text) + (b.how ? "<small>" + esc(b.how) + "</small>" : "");
+    e.innerHTML = b.how ? gsSayHtml(esc(b.text) + "<small>" + esc(b.how) + "</small>") : esc(b.text);   /* v4.08 새 장애물 예고 = 챗봇 말풍선 */
   });
   /* 팝 글자(하트 -1 · +30 · 부쉈다) · 생길 때 만들고 사라지면 지운다 */
   var u = tx.clientWidth / JP_W;
@@ -10378,6 +10618,8 @@ function jpSpeed(t) { return Math.min(200, 55 + t * 1.55 * JP_RAMP); }
 function jpScale() { return JP.item === "big" ? 1.5 : JP.item === "small" ? 0.7 : 1; }
 function jpBody() {
   var k = jpScale();
+  /* v4.08 챗봇 러너 · 그림 가운데(JP_PX+14)에 판정 상자를 맞췄다 · 크기는 v3.98 값 그대로(서기 12×18 머리 20 · 엎드리기 14×10 머리 12 · 간판 밑 16 · 1단 점프 머리 최고 75 < 글자 블록 80)
+     가로 14 로 넓힌 안을 봇 150판 × 3단계로 비교하니 중간 실력 만점 도달이 55→44판으로 줄어 점수 체계 v2 계수가 흔들려 넓히지 않았다 */
   if (jpDucking()) return { x: JP_PX + 7 + (1 - k) * 3, y: JP.py - 12 * k, w: 14 * k, h: 10 * k };   /* v3.98 엎드림 · 머리 높이 12 (간판 밑 16) */
   return { x: JP_PX + 8 + (1 - k) * 3, y: JP.py - 20 * k, w: 12 * k, h: 18 * k };
 }
@@ -10527,10 +10769,10 @@ function jpEndFinal(why) {
   if (sc > prev) setTimeout(function () { sfx("best"); }, 250);
   var facts = JP.facts.slice();
   /* v4.00 AI 상식 획득 목록 · v4.02 1개 = 점수 +100 */
-  var fh = '<div class="card mb8 jp-facts"><p style="font-size:calc(16px * var(--fs));font-weight:800">AI 상식 ' + facts.length + "개 획득</p>" +
-    '<p class="muted" style="margin-top:2px;font-size:calc(13px * var(--fs))">1개 = 점수 +' + olyRule().jump.fact + "</p>" +
-    (facts.length ? '<ul style="margin:8px 0 0;padding-left:18px;font-size:calc(15px * var(--fs));line-height:1.55">' + facts.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>"
-      : '<p style="margin-top:8px;font-size:calc(14px * var(--fs))">공중의 글자 블록을 2단 점프로 들이받으면 모을 수 있어요</p>') + "</div>";
+  var fh = '<section class="ax-card ax-stack-tight jp-facts"><h2 class="ax-card-title">AI 상식 ' + facts.length + "개 획득</h2>" +
+    '<p class="ax-meta">1개 = 점수 +' + olyRule().jump.fact + "</p>" +
+    (facts.length ? '<ul class="gs-list">' + facts.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>"
+      : '<p class="ax-description">공중의 글자 블록을 2단 점프로 들이받으면 모을 수 있어요</p>') + "</section>";
   root.innerHTML = gsResultHtml("jump", { why: why === "full" ? "done" : "over", label: why === "full" ? "만점" : "결과", reason: "",
     oly: { key: "jump", parts: parts, score: sc, note: "참고 · 버틴 시간 " + (parts.surv / 100).toFixed(1) + "초 · 부딪힘 " + JP.hits + "번 · 버틴 시간은 점수에 들어가지 않아요" }, banner: fh });
   window.scrollTo(0, 0);
@@ -10667,12 +10909,11 @@ function jpDraw(ctx, now) {
   JP.coins.forEach(function (c) { ctx.drawImage(jpCoinCv(), Math.round(c.x), Math.round(c.y + (Math.floor(now / 200 + c.x) % 2))); });
   JP.items.forEach(function (it) { jpItemDraw(ctx, it, now); });
   JP.obs.forEach(function (o) { jpObsDraw(ctx, o); });
-  /* 미위 · 무적 중 깜빡임 · 공중이면 입을 벌린다 · v3.75 아이템으로 커지거나 작아진다(판정도 같이) */
+  /* v4.08 챗봇 · 무적 중 깜빡임 · 땅에서 달릴 때 몸 전체가 1칸 튄다 · 엎드리면 세로로 눌린다 · 아이템으로 커지거나 작아진다(판정도 같이) */
   var blink = JP.inv > 0 && Math.floor(now / 90) % 2 === 0;
   if (!blink) {
     var air = JP.py < JP_GY, step = !air && Math.floor(now / 140) % 2, k = jpScale();
-    if (jpDucking()) ctx.drawImage(rgSprCv("duck"), JP_PX - 2 + (1 - k) * 8, Math.round(JP.py) - 16 * k, 32 * k, 16 * k);   /* v3.98 엎드린 미위 */
-    else ctx.drawImage(rgSprCv(air ? "open" : "closed"), JP_PX + (1 - k) * 8, Math.round(JP.py) - 26 * k - (step ? 1 : 0), 28 * k, 26 * k);
+    jpBotDraw(ctx, JP_PX + 14 - JP_BOT_W * k / 2, JP.py, k, jpDucking(), step ? 1 : 0);
   }
   var frac = JP.item ? Math.max(0, JP.itemT / JP_ITEM_SEC) : 0;   /* v3.75 막대 = 아이템 남은 시간 */
   gsHud(ctx, JP_W, "", "", frac);   /* v3.94 글자(라벨·점수·생존 시간·안내·로드맵·배너·팝)는 DOM 글자 레이어 jpTxSync 가 그린다 */
@@ -10701,14 +10942,15 @@ function jpItemDraw(ctx, it, now) {
 function jpPreview() {
   var cv = el("jpPrev"); if (!cv) return;
   var ctx = cv.getContext("2d"); ctx.imageSmoothingEnabled = false;
-  /* v3.98 미리보기 · 박스를 뛰어넘는 미위 + 낮은 간판 밑으로 엎드린 미위 (세 동작 중 두 자세) */
+  /* v3.98 미리보기 · 박스를 뛰어넘는 러너 + 낮은 간판 밑으로 엎드린 러너 (세 동작 중 두 자세) · v4.08 러너 = 챗봇 */
+  jpBotLoad();
   ctx.save(); ctx.translate(0, 64 - JP_GY);
   jpWorld(ctx, 0);
   jpObsDraw(ctx, { k: "box", x: 46 });
   ctx.drawImage(jpCoinCv(), 84, JP_GY - 40); ctx.drawImage(jpCoinCv(), 98, JP_GY - 44);
-  ctx.drawImage(rgSprCv("open"), 40, JP_GY - 54, 28, 26);
+  jpBotDraw(ctx, 43, JP_GY - 28, 1, false);
   jpObsDraw(ctx, { k: "sign", x: 128 });
-  ctx.drawImage(rgSprCv("duck"), 127, JP_GY - 16, 32, 16);
+  jpBotDraw(ctx, 132, JP_GY, 1, true);
   ctx.restore();
 }
 
@@ -10761,7 +11003,7 @@ function gwStart() {
   gwStop();
   SFX.site = false;
   GW = { on: true, r: 0, phase: "show", used: 0, wrongs: 0, placed: [], tiles: [], timer: null, nextT: null, last: 0, done: 0, rounds: gwPick(),
-    j: [0, 0, 0, 0, 0], jx: 0, cl: 0, rw: 0, miss: false, tapT: 0, score: 0, msg: "" };
+    j: [0, 0, 0, 0, 0], jx: 0, cl: 0, rw: 0, miss: false, tapT: 0, score: 0, msg: "", tip: gsTutTake("word") };
   gwShow();
 }
 /* v4.02 제출 구성 요소 · j0~j4 등급별 칸 · jx 틀린 뒤 맞힌 칸 · wr 오답 · cl 무오답 라운드 · used 떠올린 시간(1/100초) */
@@ -10774,7 +11016,7 @@ function gwShow() {
   var R = gwRound(), sec = MEM_SHOW;
   GW.phase = "show";
   var root = el("gwRoot"); if (!root) return;
-  root.innerHTML = gwHud() +
+  root.innerHTML = gwHud() + (GW.r === 0 && GW.tip ? '<div class="gs-tip gs-tip-in">' + gsSayHtml(esc(GW.tip)) + "</div>" : "") +   /* v4.08 첫 안내 말풍선 */
     '<div class="mem-stage"><p class="who">ROUND ' + (GW.r + 1) + " · 보고 기억하기</p>" +
     '<p class="mem-sent">' + gwSentHtml(R) + "</p>" +
     '<p class="mem-mean">' + esc(R.mean) + "</p>" +
@@ -10904,8 +11146,8 @@ function gwFinish() {
     oly: { key: "word", parts: parts, score: sc, head: '<span class="mem-stars">' + st + "</span>",
       note: "참고 · 떠올린 시간 " + (parts.used / 100).toFixed(1) + "초 · 보기 시간은 점수와 무관해요" },
     banner: GW.rounds.map(function (R) {
-      return '<div class="card soft mb8"><p style="font-size:calc(15.5px * var(--fs));font-weight:800;color:var(--hi)">' + (R.kind === "order" ? R.pairs.map(function (p) { return esc(p[0] + " " + p[1]); }).join(" · ") : esc(R.words.join(" "))) + "</p>" +
-        '<p class="muted" style="font-size:calc(13px * var(--fs));margin-top:3px">' + esc(R.mean) + "</p></div>";
+      return '<section class="ax-card ax-stack-tight"><p class="ax-card-title">' + (R.kind === "order" ? R.pairs.map(function (p) { return esc(p[0] + " " + p[1]); }).join(" · ") : esc(R.words.join(" "))) + "</p>" +
+        '<p class="ax-description">' + esc(R.mean) + "</p></section>";
     }).join("") });
   window.scrollTo(0, 0);
 }
