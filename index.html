@@ -1122,9 +1122,13 @@
   /* v4.10 스탬프 현황 M04 숫자 칸(axs-count·axs-cells·axs-cell) 폐기 · 홈과 같은 .rail 재사용(사용자 결정 260922) */
   .axs-hr { height: 1px; background: var(--ax-color-divider); }
   .axs-big { font: var(--ax-type-t1); color: var(--ax-color-ink); }
-  /* 광고판 · 흰 surface 위 원본 주황 심볼 (주 행동 카드보다 약하게: 그림자 없음 · 홈 맨 아래) */
+  /* 광고판 · 기본(BILL_ORANGE off) = 흰 surface 위 원본 주황 심볼 · 그림자 없음 */
   .bill .bmw { color: var(--ax-color-ink); }
   .bill .bko { color: var(--ax-color-body); }
+  /* v4.17 (사용자 결정 260923 · 홍보부 협의) 주황 스테이지 복원 · 브랜드 연출 전용이라 한 화면에 하나만(design.md 색 위계).
+     그림자는 계속 두지 않는다 · 면 색만 바뀌고 크기·자리는 그대로여서 상태 색 위계(검정·옅은 주황·회색)에는 끼지 않는다. */
+  .bill.bill-o { background: var(--ax-color-brand); color: var(--ax-color-inverse); }
+  .bill.bill-o .bmw, .bill.bill-o .bko { color: var(--ax-color-inverse); }
   /* 챗봇 · 빈 화면과 불러오는 중에만 (원본 벡터 합성 · 떠 있기 + 깜빡임 · 동작 줄이기에서 정지) */
   .axs-bot { display: flex; flex-direction: column; align-items: center; gap: var(--ax-space-12); padding: var(--ax-space-24) 0; text-align: center; }
   .axs-bot svg { width: 96px; height: 96px; display: block; animation: axsFloat 3.2s ease-in-out infinite; }
@@ -4456,7 +4460,10 @@ var BILL_LOOP = 8;   /* v3.71 광고판 뒤집기 한 바퀴(초) · CSS axFlip 
    공용 시계(AXF.t0)를 건드리지 않고 기준 시각만 세션 것으로 바꾸므로, 홈이 4초마다 다시 그려져도 애니메이션은 이어진다.
    탭을 옮겼다 돌아오는 것은 입장이 아니므로 기준을 다시 잡지 않는다(그 사이에도 위상은 계속 흐른 것처럼 보인다). */
 var BILL = { t0: 0 };
-var BILL_ORANGE = false;   /* v4.03 AX-TDS · 광고판 = 흰 surface(사용자 결정 260922) · true 로 돌리면 옛 주황 면 연출 */   /* performance.now() 기준 · AXF.t0 와 같은 시계를 쓴다 */
+/* v4.17 (사용자 결정 260923 · 홍보부 협의 완료 「광고판을 흰색으로 맞추다 보니 와우가 없다」) 260922 의 흰 면(A안)을 뒤집어 주황 스테이지로 되돌린다.
+   true = 주황 면 + 흰 글자 + 흰 심볼(bill-o 클래스 · data-axf-stage="orange") · false = v4.03~v4.16 의 흰 surface 연출.
+   이 값 하나로 CSS 클래스·캔버스 색·입장 전환 잉크 보간이 함께 움직인다(한쪽만 바뀌어 어긋나지 않게). */
+var BILL_ORANGE = true;   /* performance.now() 기준 · AXF.t0 와 같은 시계를 쓴다 */
 function billBase() { return BILL.t0 || (window.AXF && AXF.t0 ? AXF.t0 : performance.now()); }
 var EV_START = new Date(2026, 9, 26, 9, 0), EV_END = new Date(2026, 9, 26, 18, 0);
 function evPhase() {
@@ -4499,11 +4506,13 @@ function billboardHtml() {
     var dx = (i2 - 3.5) * 9 + (i2 % 2 ? 6 : -6), dy = (i2 % 3 - 1) * 14 - 6, rot = (i2 % 2 ? 1 : -1) * (5 + i2);
     return '<span class="c" style="animation-delay:' + d + ';--dx:' + dx.toFixed(0) + "px;--dy:" + dy.toFixed(0) + "px;--rot:" + rot + 'deg">' + ch + "</span>";
   }).join("");
-  return '<div class="bill" aria-hidden="true"><div class="bc">' +
+  /* v4.17 BILL_ORANGE = 주황 스테이지(브랜드 연출 · 화면당 1개) · 끄면 흰 surface 위 원본 주황 심볼 */
+  var stage = BILL_ORANGE ? ' data-axf-stage="orange" data-axf-colors="#FFFFFF,rgba(255,255,255,0.78),#FFFFFF"' : "";
+  return '<div class="bill' + (BILL_ORANGE ? " bill-o" : "") + '" aria-hidden="true"><div class="bc">' +
     '<p class="bmw">' + chars + "</p>" +
     '<p class="bko" style="animation-delay:' + d + '"><span>나의 업무 혁신,</span><span>우리 회사의 AX가 되다</span></p>' +
     "</div>" +
-    '<canvas data-axf="loop" data-axf-seq="' + sq + '" data-axf-zoom="0.95" data-axf-start="me"></canvas></div>';   /* v4.03 흰 면 · 원본 주황 */
+    '<canvas data-axf="loop" data-axf-seq="' + sq + '" data-axf-zoom="0.95" data-axf-start="me"' + stage + "></canvas></div>";
 }
 
 
@@ -5349,7 +5358,7 @@ var Views = {
      히어로(지금 진행 중)는 나의 일정 첫 줄로 흡수 · 스탬프는 행사 전·당일·후 항상 맨 위 */
   /* ═══ 홈 (H01 · AX-TDS v1 260922) = 지금 할 일 ═══
      공지 카드 한 장(있을 때만) → 포토부스 호출(급한 내 것) → 인사 → 진행 중 카드(화면의 주 행동) → 전체 시간표 · 체험 찾기 → 광고판.
-     광고판은 사용자 결정(260922)으로 남긴 예외 · 흰 surface · 그림자 없음 · 맨 아래라 주 행동 카드보다 약하다.
+     광고판은 사용자 결정(260922)으로 남긴 예외 · v4.17(260923)부터 다시 주황 스테이지 · 그림자 없음.
      옛 홈의 스탬프 레일 · 나의 일정은 나의 참여(M01)로 옮겼다. */
   /* v4.04 (사용자 결정 260922 「메인 화면은 기존 버전이 더 좋아 보인다」) 홈 = v4.02 구성과 순서로 복원 ·
      인사는 헤더 · 공지 카드 한 장(흐르는 띠 대신, 1단계 것 유지) → 포토부스 호출 → 광고판 → 스탬프 레일 → 나의 일정(지금·다음 + 내 항목).
@@ -12602,7 +12611,7 @@ function xitionRun(switchNow) {
        글자는 하나의 덩어리로 날아가면서 주황 → 흰색으로 바뀐다. 면이 펴지지도, 두 글자가 겹치지도 않는다.
        색은 비행 중간(v 0.55)부터 바뀌기 시작해 도착 직전(v 0.9)에 끝난다 → 마지막 순간은 흔들림 없이 흰 글자로 멈춘다.
        광고판의 주황 면은 글자가 내려앉는 바닥일 뿐이고, 흰색으로 바뀌는 이유가 그 위에서 읽히기 위해서라는 게 그대로 보인다. */
-    var ink = BILL_ORANGE ? Math.max(0, Math.min(1, (v - 0.5) / 0.35)) : 0;   /* 주황 면 광고판일 때만 주황 → 흰색 · v4.03 흰 면이면 주황 그대로 */
+    var ink = BILL_ORANGE ? Math.max(0, Math.min(1, (v - 0.5) / 0.35)) : 0;   /* 주황 면 광고판일 때만 주황 → 흰색 · 흰 면이면 주황 그대로 (v4.17 주황 복원으로 다시 켜짐) */
     if (switched) {   /* 날아오는 글자와 광고판이 이미 그려 둔 같은 글자가 겹치지 않게, 내려앉기 직전까지 광고판 쪽을 감춘다 */
       var hbNow = document.querySelector("#view .bill canvas");
       if (hbNow) hbNow.style.opacity = v < 0.9 ? "0" : "";
