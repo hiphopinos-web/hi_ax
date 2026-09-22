@@ -318,6 +318,8 @@ details.memo .mb ol{padding-left:18px}
 .olyh{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
 .olyh b{font-size:var(--fs-h2)}
 .olyf{display:flex;flex-wrap:wrap;gap:12px 16px}
+.olysub{font-size:var(--fs-c);font-weight:700;color:var(--tx2);margin:14px 0 8px}
+.olysub:first-child{margin-top:0}
 .olyfl{width:156px}
 .tb tr.dim td{color:var(--tx3)}
 .tb td.oxq{min-width:260px;max-width:420px;white-space:normal}
@@ -750,7 +752,7 @@ var GUIDE={
   stamp:[["사람 찾기","왼쪽 칸에 사번이나 이름을 넣고 한 사람을 고릅니다."],["8칸 확인","획득한 칸은 네이비, 획득 경로(현장 QR · 담당자 부여 · 앱 자동)가 칸 안에 보입니다."],["부여","현장 QR 01·02·03 과 계단 07 만 <b>부여</b>할 수 있습니다. 앱 자동 04·05·06 과 설문 08 은 앱 안의 행동이라 부여하지 않습니다."],["취소","지금은 8칸 모두 <b>취소</b>할 수 있습니다(테스트 기간 · 설정 「스탬프취소_범위」 = 전체). 취소한 칸은 같은 행동으로 다시 받을 수 있습니다. 확인 창에서 보상 변화를 먼저 보여 주고, 룰렛을 이미 돌렸거나 발급된 응모권이 줄어드는 취소는 서버가 거부합니다."],["되돌리기","처리 직후 알림의 <b>되돌리기</b>로 바로 원래대로 돌릴 수 있습니다. 모든 부여·취소는 참여 기록에 행으로 남습니다(지우지 않음)."]],
   apply:[["처리할 것","기본 필터는 <b>처리할 것</b>입니다. 칩의 숫자는 상태별 건수입니다."],["다음 행동","행마다 지금 상태에서 할 다음 행동 하나가 네이비 버튼입니다(신청 → 승인 → 체크인 → 완료). 노쇼·취소는 옆의 적갈 버튼입니다."],["여러 건","왼쪽 칸을 체크하면 위에 일괄 처리 바가 뜹니다(상담 일괄 승인·취소 · 커피챗 일괄 매칭·취소). 강의신청은 현황만 봅니다."],["상세","행을 누르면 오른쪽에 상세 패널이 열립니다. 이력 확인과 메모 저장, 처리까지 거기서 합니다."],["되돌리기","승인·노쇼·취소·매칭은 처리 뒤 7초 동안 알림에 <b>되돌리기</b>가 뜹니다. 체크인·완료·참석은 스탬프 03 이 적립되어 되돌리기가 없습니다."]],
   survey:[["집계","문항마다 선택 비율 · 점수 분포 · 한 줄 답을 봅니다."],["이름 없음","답은 사번 없이 저장됩니다. 사람 단위 조회는 없습니다."]],
-  typing:[["AX 올림픽 · 점수 계수","종목별 계수를 고치면 미리보기에 예시 기록의 점수가 바로 보입니다. <b>저장</b>하면 규칙판(rev)이 1 오르고 이미 낸 기록까지 전원 점수가 새 계수로 다시 계산됩니다."],["당일 잠금","리허설 재보정을 마친 뒤 10/26 아침에 <b>당일 잠금 켜기</b>를 누릅니다. 잠긴 동안에는 저장이 거부되고, 해제는 언제든 됩니다."],["게임별 통계","다섯 종목 전원 점수 · 최고 점수 중앙 · 만점 도달 · CSV 입니다. 행의 대표 기록을 누르면 점수 구성이 펼쳐집니다. 부문 통계는 두지 않습니다."],["O/X 문항","AI O/X 문항별 정답률 · 패스 · O 선택 비율 · 평균 시간입니다. 답이 틀린 문항은 체크한 뒤 <b>선택 문항 끄기</b>로 출제에서 뺍니다. 규칙 잠금과 별개라 당일에도 됩니다."],["타자왕전 · 닉네임","Outro 호명용 상위 5와 부적절한 닉네임 숨김·초기화입니다."]],
+  typing:[["AX 올림픽 · 점수 계수","종목별 계수를 고치면 미리보기에 예시 기록의 점수가 바로 보입니다. <b>저장</b>하면 규칙판(rev)이 1 오르고 이미 낸 기록까지 전원 점수가 새 계수로 다시 계산됩니다."],["당일 잠금","리허설 재보정을 마친 뒤 10/26 아침에 <b>당일 잠금 켜기</b>를 누릅니다. 잠긴 동안에는 저장이 거부되고, 해제는 언제든 됩니다."],["게임별 통계","다섯 종목 전원 점수 · 최고 점수 중앙 · 만점 도달 · CSV 입니다. 행의 대표 기록을 누르면 점수 구성이 펼쳐집니다. 부문 통계는 두지 않습니다."],["O/X 문항","AI O/X 문항별 정답률 · 판자 · 낙하 · O 선택 비율 · 평균 시간입니다. 답이 틀린 문항은 체크한 뒤 <b>선택 문항 끄기</b>로 출제에서 뺍니다. 규칙 잠금과 별개라 당일에도 됩니다."],["타자왕전 · 닉네임","Outro 호명용 상위 5와 부적절한 닉네임 숨김·초기화입니다."]],
   notice:[["발송","제목과 내용을 넣고 발송하면 모든 참가자 앱에 나갑니다."],["중지","송출 중인 공지를 중지하면 다음 동기화(10초) 때 전 기기에서 사라집니다."]],
   photo:[["호출","<b>다음 번호 호출</b>을 누르면 맨 앞 번호의 앱에 「지금 입장하세요」가 뜹니다."],["건너뛰기 · 완료","호출 후 10분 안에 오지 않으면 건너뛰기, 도착하면 완료입니다."]],
   art:[["설정","접수 폼 주소와 두 마감 시각을 저장합니다."],["공개","작품을 공개 · 샘플 · 숨김으로 바꿉니다."],["시상","좋아요 순위와 CSV 로 시상합니다."]]
@@ -1715,7 +1717,7 @@ function viewGameStats(){
   var d=ST.data.gstats||{}, ev=d.events||OLY_EV;
   return '<p class="cap" style="margin-bottom:4px">'+ev.length+'종목 전원 · 단위는 모두 점(게임 화면 점수 = 순위 점수) · 점수는 저장된 구성 요소를 지금 계수로 다시 계산한 값 · 부문 통계는 두지 않습니다</p>'+ev.map(gstCard).join("")+olyAllHtml()+olyRejHtml()+
     memo('<p>재보정은 카드마다 <b>최고 점수 중앙</b>을 봅니다. 목표는 보통 참가자 약 1,000 · 잘하는 사람 약 2,000 · 현실적 최고 약 2,850입니다. 1,000에서 크게 벗어난 종목은 AX 올림픽 서브탭에서 주 계수(팡 기준 시간 · 점프 장애물 · 테트리스 줄 · 기억력 등급 점수)를 같은 비율로 고칩니다. 만점 도달이 3%를 넘으면 체감 구간을 당깁니다.</p>'+
-      '<p>옛 체계(g1·g2) 기록은 시트에 남아 있지만 여기와 순위에는 들어가지 않습니다.</p>');
+      '<p>옛 체계(g1·g2) 기록과 옛 AI O/X(60초 타임어택, g3) 기록은 시트에 남아 있지만 여기와 순위에는 들어가지 않습니다. 나머지 네 종목의 g3 기록은 그대로 셉니다.</p>');
 }
 function viewOly(){
   var d=ST.data.olyr||{};
@@ -1734,20 +1736,21 @@ function viewOly(){
     '<div class="olyev"><div class="olyh"><b>공통</b><span class="cap">종합 만점 = '+ev.length+' × 상한 = '+(D.err[0]?"-":n0(ev.length*R.cap))+'점</span></div><div class="olyf">'+idx("").map(fld).join("")+'</div></div>'+
     ev.map(function(g){
       return '<div class="olyev"><div class="olyh"><b>'+esc(GST_NAME[g])+'</b><span class="cap">'+esc(olyRuleLine(g,R))+'</span></div>'+
-        '<div class="olyf">'+idx(g).map(fld).join("")+'</div>'+olyPrevHtml(g,S,R,D)+'</div>';
+        olyFieldsHtml(idx(g),fld)+olyPrevHtml(g,S,R,D)+'</div>';
     }).join("");
   var errs=[]; OLY_F.forEach(function(f,i){ if(D.err[i]) errs.push((f.g?GST_NAME[f.g]+" · ":"")+f.n+" · "+D.err[i]); });
-  if(D.rerr) errs.push(D.rerr);
+  (D.rerr||[]).forEach(function(x){ errs.push(x); });
   body+=(errs.length?'<div class="err-banner mt12">저장 전에 고칠 곳 '+errs.length+'개<br>'+errs.map(esc).join("<br>")+'</div>':'')+
     '<div class="row mt12"><button class="btn pri" onclick="olySave()"'+(lk||errs.length||!dirty.length||stale?" disabled":"")+'>저장 (rev '+S.rev+' → '+(S.rev+1)+')</button>'+
     '<button class="btn ghost" onclick="olyReset()"'+(OLYD?"":" disabled")+'>변경 취소</button></div>'+
     memo('<p>점수 = 게임 화면에 보이는 행동 점수 그대로입니다. 종목 점수는 그 종목 최고 한 판, 종합은 다섯 종목 최고의 합이고 종합 순위는 다섯 종목 모두 한 판 이상 한 사람만 듭니다.</p>'+
       '<p>저장하면 이미 낸 기록도 <b>저장된 구성 요소를 새 계수로 다시 계산</b>해 전원이 같은 규칙으로 다시 줄 섭니다. 규칙판(rev)은 저장할 때마다 1씩 오르고 기록 행에 남습니다.</p>'+
-      '<p>미리보기 예시는 봇 보정의 보통 · 잘함 · 최상 참고치입니다(설계 문서 §4). 멈춤 허용 횟수와 팡 완주 칸은 점수가 아니라 서버 개연성 검사에 쓰는 값입니다.</p>'+
+      '<p>미리보기 예시는 봇 보정의 보통 · 잘함 · 최상 참고치입니다(설계 문서 §4). 멈춤 허용 횟수, 팡 완주 칸, AI O/X 판자 허용·입력 잠금은 점수가 아니라 서버 개연성 검사에 쓰는 값입니다.</p>'+
+      '<p><b>AI O/X 유리다리</b>는 문제를 읽는 동안 다리가 한 줄씩 내려옵니다. 한 문제에 쓸 수 있는 시간 = 여유 줄 × 그 줄의 내려오는 시간이고, 답하면 여유가 한 줄 늘어납니다(최대까지). 다리는 뒤로 갈수록 느려질 수 없고, 가장 짧은 읽을 시간(여유 줄 최소 × 줄 시간 끝)은 2초 이상이어야 서버가 받습니다.</p>'+
       '<p>리허설 뒤 게임별 통계의 최고 점수 중앙값을 보고 재보정한 다음, <b>10/26 당일 아침에 잠급니다.</b> 잠긴 동안에는 저장이 거부되고 해제만 됩니다.</p>');
   var h=card("점수 계수","규칙판 rev "+S.rev+" · 종목 상한 "+n0(S.cap)+" · 만점 "+n0(ev.length*S.cap),body,head);
-  h+=card("종합 상위 10","Outro 호명용 (1~3위) · 다섯 종목 모두 한 판 이상 · 동점은 다섯 종목을 먼저 마친 쪽 · 명예 시상(경품 없음)",'<div class="wrap"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">총점</th><th>네 종목 완료 시각</th></tr>'+
-    ((d.overall||[]).length?d.overall.map(function(r){ return '<tr><td class="n"><b>'+r.rank+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name)+'</td><td class="n">'+esc(r.emp)+'</td><td class="n tdr"><b>'+n0(r.total)+'점</b></td><td class="n cap">'+esc(short(r.doneAt))+'</td></tr>'; }).join(""):emptyRow(6,"아직 네 종목을 다 한 사람이 없습니다."))+'</table></div>');
+  h+=card("종합 상위 10","Outro 호명용 (1~3위) · 다섯 종목 모두 한 판 이상 · 동점은 다섯 종목을 먼저 마친 쪽 · 명예 시상(경품 없음)",'<div class="wrap"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">총점</th><th>다섯 종목 완료 시각</th></tr>'+
+    ((d.overall||[]).length?d.overall.map(function(r){ return '<tr><td class="n"><b>'+r.rank+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name)+'</td><td class="n">'+esc(r.emp)+'</td><td class="n tdr"><b>'+n0(r.total)+'점</b></td><td class="n cap">'+esc(short(r.doneAt))+'</td></tr>'; }).join(""):emptyRow(6,"아직 다섯 종목을 다 한 사람이 없습니다."))+'</table></div>');
   var per=d.perEvent||{}, prow=[];
   ev.forEach(function(g){ (per[g]||[]).forEach(function(r,i){ prow.push('<tr'+(i?'':' class="olytop"')+'><td>'+(i?'':'<b>'+esc(GST_NAME[g])+'</b>')+'</td><td class="n"><b>'+r.rank+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name)+'</td><td class="n">'+esc(r.emp)+'</td><td class="n tdr"><b>'+n0(r.score)+'점</b></td><td class="n">'+esc(r.key||"")+'</td></tr>'); });
     if(!(per[g]||[]).length) prow.push('<tr class="olytop"><td><b>'+esc(GST_NAME[g])+'</b></td><td colspan="6" class="cap">아직 기록이 없습니다</td></tr>'); });
@@ -1771,7 +1774,7 @@ function oxPctHtml(v){ return v==null?'<span class="cap">-</span>':(v<50?'<b cla
 function viewOxItems(){
   var d=ST.data.oxs||{};
   if(!d.ok) return card("AI O/X 문항","",'<p class="cap">'+(d.reason?"불러오지 못했습니다 · "+esc(d.reason):"불러오는 중")+'</p>');
-  var all=d.items||[], per=d.per||[10,10,10], room=d.room||[0,0,0];
+  var all=d.items||[], per=d.per||[7,7,6], room=d.room||[0,0,0];
   var q=(ST.q||"").trim().toLowerCase();
   var rows=all.filter(function(it){
     if(OXF==="rev"&&it.reviewed) return false;
@@ -1787,20 +1790,22 @@ function viewOxItems(){
     '<button class="btn sm danger" onclick="oxOffAsk(1)"'+(selOn.length?"":" disabled")+'>선택 문항 끄기'+(selOn.length?" "+selOn.length:"")+'</button>'+
     '<button class="btn sm" onclick="oxOffAsk(0)"'+(selOff.length?"":" disabled")+'>다시 켜기'+(selOff.length?" "+selOff.length:"")+'</button></div>';
   var body=rows.length?rows.map(function(it){
-    var shown=it.n+it.pass;
+    var shown=it.n+it.pass+(it.fall||0);
     return '<tr class="hv'+(it.off?" dim":"")+'"><td>'+ck1("ox:"+it.id)+'</td><td class="n"><b>'+esc(it.id)+'</b></td><td class="n">'+it.lv+'</td><td>'+esc(OX_CAT[it.id.charAt(0)]||"-")+'</td>'+
       '<td class="oxq">'+esc(it.q)+(it.reviewed?'':' <span class="cap">(예시)</span>')+(it.grp?' <span class="cap">· 짝 '+esc(it.grp)+'</span>':'')+'</td>'+
       '<td class="n"><b>'+esc(it.a)+'</b></td><td>'+(it.reviewed?tag("검수","ok"):tag("미검수","warn"))+'</td>'+
-      '<td class="n tdr">'+n0(shown)+'</td><td class="n tdr">'+oxPctHtml(it.rate)+'</td><td class="n tdr">'+(it.pass||0)+'</td>'+
+      '<td class="n tdr">'+n0(shown)+'</td><td class="n tdr">'+oxPctHtml(it.rate)+'</td><td class="n tdr">'+(it.pass||0)+'</td><td class="n tdr">'+(it.fall?'<b class="chg">'+it.fall+'</b>':0)+'</td>'+
       '<td class="n tdr">'+(it.n?Math.round(it.pickO*100/it.n)+"%":'<span class="cap">-</span>')+'</td>'+
       '<td class="n tdr">'+(it.avgT==null?'<span class="cap">-</span>':(it.avgT/100).toFixed(1)+"초")+'</td>'+
       '<td>'+(it.off?tag("꺼짐","bad"):tag("출제","off"))+'</td></tr>';
-  }).join(""):emptyRow(13, all.length?"조건에 맞는 문항이 없습니다.":"문항이 없습니다.");
-  return card("AI O/X 문항","정답률 낮은 순 · 판마다 한 번씩 센다 · 정답률·O 선택 비율·평균 시간은 패스를 뺀 답 기준 · 부문 통계 없음",
-    sum+tb+'<div class="wrap scrolly"><table class="tb"><tr><th>'+ckAll("ox:",rows.map(function(x){ return x.id; }))+'</th><th>id</th><th>난이도</th><th>분야</th><th>문장</th><th>정답</th><th>검수</th><th class="tdr">출제 수</th><th class="tdr">정답률</th><th class="tdr">패스</th><th class="tdr">O 선택</th><th class="tdr">평균 시간</th><th>상태</th></tr>'+body+'</table></div>'+
+  }).join(""):emptyRow(14, all.length?"조건에 맞는 문항이 없습니다.":"문항이 없습니다.");
+  return card("AI O/X 문항","정답률 낮은 순 · g4(유리다리) 판만 센다 · 정답률·O 선택 비율·평균 시간은 판자·낙하를 뺀 답 기준 · 부문 통계 없음",
+    sum+tb+'<div class="wrap scrolly"><table class="tb"><tr><th>'+ckAll("ox:",rows.map(function(x){ return x.id; }))+'</th><th>id</th><th>난이도</th><th>분야</th><th>문장</th><th>정답</th><th>검수</th><th class="tdr">출제 수</th><th class="tdr">정답률</th><th class="tdr">판자</th><th class="tdr">낙하</th><th class="tdr">O 선택</th><th class="tdr">평균 시간</th><th>상태</th></tr>'+body+'</table></div>'+
     memo('<p><b>끄기</b>는 답이 틀렸거나 문장이 애매한 문항을 배포 없이 출제에서 뺍니다. 앞으로 시작하는 판부터 빠지고, 이미 끝난 판의 점수는 그대로입니다.</p>'+
       '<p>점수 계수의 <b>당일 잠금과 별개</b>입니다. 잠겨 있어도 행사 당일 끄고 켤 수 있습니다.</p>'+
       '<p>난이도마다 켜진 문항(같은 짝 그룹은 하나로 셉니다)이 출제 수('+per.join(" · ")+')보다 적어지면 서버가 거절합니다. 문항을 더 끄려면 같은 난이도의 다른 문항을 먼저 켭니다.</p>'+
+      '<p><b>낙하</b>는 답하지 못해 서 있던 발판이 화면 아래 끝에 닿은 횟수입니다. 답하지 않은 것이라 정답률 분모에서 뺍니다. 낙하가 유난히 많은 문항은 문장이 길거나 읽기 어려운지 봅니다. 출제 수 = 답한 수 + 판자 + 낙하.</p>'+
+      '<p>옛 AI O/X(60초 타임어택) 판은 계산식이 달라 여기와 순위에서 뺍니다(시트에는 남습니다).</p>'+
       '<p>「(예시)」는 아직 검수를 통과하지 않은 문항이고 앱에서도 문장 옆에 같은 표시가 붙습니다. 정답률이 아주 낮거나 O 선택 비율이 한쪽으로 쏠린 문항은 문장과 정답을 먼저 확인합니다.</p>'));
 }
 function oxWhy(r){
@@ -1824,7 +1829,7 @@ function oxOffAsk(on){
   var ids=selKeys("ox:").filter(function(id){ var it=all.filter(function(x){ return x.id===id; })[0]; return it&&(on?!it.off:it.off); });
   if(!ids.length) return;
   var next=on?cur.concat(ids):cur.filter(function(id){ return ids.indexOf(id)<0; });
-  var r0=d.room||oxRoomC(cur,all), r1=oxRoomC(next,all), per=d.per||[10,10,10], short=[0,1,2].some(function(i){ return r1[i]<per[i]; });
+  var r0=d.room||oxRoomC(cur,all), r1=oxRoomC(next,all), per=d.per||[7,7,6], short=[0,1,2].some(function(i){ return r1[i]<per[i]; });
   var list=ids.map(function(id){ var it=all.filter(function(x){ return x.id===id; })[0]; return '<tr><td class="n"><b>'+esc(id)+'</b></td><td class="n">'+it.lv+'</td><td>'+esc(it.q)+(it.reviewed?'':' <span class="cap">(예시)</span>')+'</td><td class="n">'+esc(it.a)+'</td><td class="n tdr">'+(it.rate==null?"-":it.rate+"%")+'</td></tr>'; }).join("");
   var roomT='<tr class="tot"><td colspan="5">난이도별 켜진 문항 '+[0,1,2].map(function(i){ return (i+1)+'단계 '+r0[i]+' → <b'+(r1[i]<per[i]?' style="color:var(--bad)"':'')+'>'+r1[i]+'</b>'; }).join(" · ")+' (출제 '+per.join(" · ")+')</td></tr>';
   var x='<table class="tb plain"><tr><th>id</th><th>난이도</th><th>문장</th><th>정답</th><th class="tdr">정답률</th></tr>'+list+roomT+'</table>';
@@ -1910,13 +1915,13 @@ var OLY_NAME=GST_NAME, OLY_EV=["pang","jump","tetris","word","ox"];
 var GQ={}, GX={};
 /* 서버 OLY_PARTS 와 같은 순서 · 1/100초 필드는 초로 보여 준다 */
 var OLY_PARTS={ pang:["fin","tiles","moves","bad","pz"], jump:["obs","coin","fact","hits","surv","pz"], tetris:["blk","c1","c2","c3","c4","lines","lv","surv","pz"], word:["j0","j1","j2","j3","j4","jx","wr","cl","used"],
-  ox:["n","c1","c2","c3","wr","hs","pa","sp","cb","fb","gb","gc","pn","hp","mx","used","tl"] };   /* v4.11 ox · 문항 기록 ql · 토큰 tk 는 CSV 에 싣지 않는다 */
+  ox:["n","c1","c2","c3","wr","hs","fl","pa","sp","cb","fb","gb","gc","pn","hp","mx","used","life","arr","tl","pz"] };   /* v4.12 ox 유리다리 · 문항 기록 ql · 토큰 tk 는 CSV 에 싣지 않는다 */
 var OLY_PART_N={ fin:"완주(초)", tiles:"터뜨린 칸", moves:"바꾼 수", bad:"튕긴 수", pz:"멈춤", obs:"넘은 장애물", coin:"코인", fact:"AI 상식", hits:"부딪힘", surv:"버틴 시간(초)",
   blk:"놓은 블록", c1:"1줄 삭제", c2:"2줄 동시", c3:"3줄 동시", c4:"4줄 동시", lines:"지운 줄", lv:"레벨", j0:"번개", j1:"빠름", j2:"좋음", j3:"보통", j4:"느림", jx:"틀린 뒤 칸", wr:"오답", cl:"무오답 라운드", used:"떠올린 시간(초)" };
 var OLY_CS={ fin:1, surv:1, used:1, tl:1 };
 /* v4.11 AI O/X 구성 요소 이름 · 키가 다른 종목(c1 · lv · used)과 겹쳐 따로 둔다 */
-var OX_PART_N={ n:"푼 문제", c1:"1단계 정답", c2:"2단계 정답", c3:"3단계 정답", wr:"오답", hs:"성급한 오답", pa:"패스", sp:"속도 점수", cb:"연속 점수", fb:"피버 추가", gb:"황금 추가", gc:"황금 정답",
-  pn:"오답 감점", hp:"시간 추가 횟수", mx:"최대 연속", used:"쓴 시간(초)", tl:"남은 시간(초)", ql:"문항 기록", tk:"판 토큰" };
+var OX_PART_N={ n:"건넌 줄", c1:"1단계 정답", c2:"2단계 정답", c3:"3단계 정답", wr:"오답", hs:"성급한 오답", fl:"낙하", pa:"판자", sp:"속도 점수", cb:"연속 점수", fb:"피버 추가", gb:"황금 추가", gc:"황금 정답",
+  pn:"오답·낙하 감점", hp:"시간 추가 횟수", mx:"최대 연속", used:"쓴 시간(초)", life:"남은 목숨", arr:"도착 보너스", tl:"남은 시간(초)", pz:"멈춤", ql:"문항 기록", tk:"판 토큰" };
 function partN(g,k){ return (g==="ox"?OX_PART_N[k]:OLY_PART_N[k])||k; }
 var OLY_TIER=["번개","빠름","좋음","보통"];
 function n0(v){ return Math.round(Number(v)||0).toLocaleString(); }
@@ -1930,28 +1935,40 @@ function olyScoreC(game,p,rule){
   else if(game==="jump") s=n("obs")*R.obs+n("coin")*R.coin+n("fact")*R.fact;
   else if(game==="tetris"){ var ln=n("lines"); s=Math.min(n("blk"),R.blockMax)*R.block+Math.min(ln,R.lineFull)*R.line+Math.max(0,ln-R.lineFull)*R.lineAfter+n("c2")*R.multi[2]+n("c3")*R.multi[3]+n("c4")*R.multi[4]; }
   else if(game==="word"){ for(i=0;i<R.tiers.length;i++) s+=n("j"+i)*R.tiers[i][1]; s+=n("j"+R.tiers.length)*R.base+n("cl")*R.clean-n("wr")*R.wrong; }
-  else if(game==="ox") s=p&&p.sim?oxSim(p.sim,R).pts:n("c1")*R.base[0]+n("c2")*R.base[1]+n("c3")*R.base[2]+n("sp")+n("cb")+n("fb")+n("gb")-n("pn");
+  else if(game==="ox") s=p&&p.sim?oxSim(p.sim,R).pts:n("c1")*R.base[0]+n("c2")*R.base[1]+n("c3")*R.base[2]+n("sp")+n("cb")+n("fb")+n("gb")-n("pn")+n("arr");
   return Math.max(0,Math.min(rule.cap,s));
 }
 /* v4.11 AI O/X 미리보기 · 서버 oxTally_ 와 같은 식으로 가상의 한 판을 센다(황금 자리 없음).
-   ex = { pat:"OOOX" (O 정답 · X 오답 · P 패스, 되풀이), t: 한 문제에 쓰는 시간(1/100초) } · 판 시간(+연속 보너스 시간)이 다 되거나 문제가 떨어질 때까지 푼다.
+   ex = { pat:"OOOX" (O 정답 · X 오답 · P 판자, 되풀이), t: 한 문제에 쓰는 시간(1/100초) } · 한도보다 오래 걸리면 낙하로 센다.
    기록 행의 구성 펼침은 제출된 구성 요소 합(c1~c3 × 기본 + 속도 + 연속 + 피버 + 황금 − 감점)으로 보인다. */
+/* v4.12 유리다리 · 줄 시간 rowT 가 첫 줄 → 마지막 줄로 짧아지고, 여유 lead(1/100줄)가 줄 시간 동안 100 줄어든다 · 한도 = lead × 줄 시간
+   한도 안에 못 답하면 낙하(−pen · 목숨 −1) · 목숨 0 · 줄을 다 건넘(도착 보너스) · 시간 끝에서 멈춘다 · 연출 시간은 서버 OX_STEP 과 같다 */
+var OX_STEP_C={ hop:50, plank:80, fall:170 };
+function oxRowTC(R,i){ var N=R.per[0]+R.per[1]+R.per[2]; return Math.round(R.rowT[0]+(R.rowT[1]-R.rowT[0])*Math.min(i,N-1)/Math.max(1,N-1)); }
 function oxSim(ex,R){
-  var T={n:0,c1:0,c2:0,c3:0,wr:0,hs:0,pa:0,sp:0,cb:0,fb:0,gb:0,gc:0,pn:0,hp:0,mx:0,used:0,pts:0}, run=0, fever=0, dl=R.sec, tot=R.per[0]+R.per[1]+R.per[2], i=0;
-  while(T.n<tot&&T.used+ex.t<=dl){
-    var c=ex.pat.charAt(i%ex.pat.length), lv=T.n<R.per[0]?1:T.n<R.per[0]+R.per[1]?2:3, t=ex.t; i++;
+  var T={n:0,c1:0,c2:0,c3:0,wr:0,hs:0,fl:0,pa:0,sp:0,cb:0,fb:0,gb:0,gc:0,pn:0,hp:0,mx:0,used:0,life:R.lives,arr:0,pts:0,end:""}, run=0, fever=0, dl=R.sec, tot=R.per[0]+R.per[1]+R.per[2], lead=R.lead[0];
+  for(var i=0;;i++){
+    var rt=oxRowTC(R,i), lim=Math.ceil(lead*rt/100);
+    T.end=T.life<=0?"life":T.n>=tot?"arrive":T.used>=dl?"time":"";
+    if(T.end) break;
+    var c=ex.pat.charAt(i%ex.pat.length), lv=T.n<R.per[0]?1:T.n<R.per[0]+R.per[1]?2:3, t=ex.t;
     if(c==="P"&&T.pa>=R.pass) c="O";
-    T.n++; T.used+=t;
-    if(c==="P"){ T.pa++; continue; }
-    if(c==="O"){
+    if(t>=lim){ c="T"; t=lim; }
+    if(t>=dl-T.used){ T.end="time"; break; }
+    T.n++;
+    if(c==="P") T.pa++;
+    else if(c==="O"){
       var sp=Math.round(R.speed*Math.max(0,Math.min(1,(R.limit-t)/(R.limit-R.full)))), cb=R.combo*Math.min(run,R.comboMax), raw=R.base[lv-1]+sp+cb, mul=fever>0?R.feverMul:1;
       T["c"+lv]++; T.sp+=sp; T.cb+=cb; T.pts+=raw*mul; T.fb+=raw*(mul-1);
       if(fever>0) fever--;
       run++; if(run>T.mx) T.mx=run;
       if(run%R.feverAt===0) fever=R.feverLen;
       if(run%R.bonusAt===0){ T.hp++; dl+=R.bonusSec; }
-    } else { var pn=R.pen*(t<R.hasty?2:1); T.pn+=pn; T.pts-=pn; T.wr++; if(t<R.hasty) T.hs++; run=0; fever=0; }
+    } else { var pn=R.pen*(c!=="T"&&t<R.hasty?2:1); T.pn+=pn; T.pts-=pn; T.life--; if(c==="T") T.fl++; else { T.wr++; if(t<R.hasty) T.hs++; } run=0; fever=0; }
+    T.used+=t+(c==="P"?OX_STEP_C.plank:c==="O"?OX_STEP_C.hop:OX_STEP_C.fall);
+    lead=Math.min(R.lead[2],Math.max(R.lead[1],lead-Math.round(t*100/rt)+100));
   }
+  if(T.end==="arrive"){ T.arr=R.arrive+T.life*R.lifeBonus+Math.floor(Math.max(0,dl-T.used)/100)*R.secBonus; T.pts+=T.arr; }
   return T;
 }
 /* 팡 · 상한에 닿는 완주 시간(초) */
@@ -1962,7 +1979,7 @@ function olyRuleLine(g,R){
   if(g==="jump") return "장애물 "+P.obs+" · 코인 "+P.coin+" · AI 상식 "+P.fact+" · 버틴 시간은 점수 아님";
   if(g==="tetris") return "블록 "+P.block+"("+P.blockMax+"개까지) · 줄 "+P.line+"("+P.lineFull+"줄까지, 그 뒤 "+P.lineAfter+") · 동시 +"+P.multi[2]+" · +"+P.multi[3]+" · +"+P.multi[4];
   if(g==="word") return P.tiers.map(function(t,i){ return OLY_TIER[i]+" "+t[1]; }).join(" · ")+" · 느림 "+P.base+" · 오답 −"+P.wrong+" · 무오답 +"+P.clean;
-  if(g==="ox") return (P.sec/100)+"초 · 기본 "+P.base.join("/")+" · 속도 +"+P.speed+" · 연속 +"+P.combo+"(최대 "+P.comboMax+") · 오답 −"+P.pen+" · 피버 "+P.feverAt+"연속 ×"+P.feverMul+" · 황금 ×"+P.goldMul;
+  if(g==="ox") return "유리다리 "+(P.per[0]+P.per[1]+P.per[2])+"줄 · "+(P.sec/100)+"초 · 목숨 "+P.lives+" · 기본 "+P.base.join("/")+" · 속도 +"+P.speed+" · 연속 +"+P.combo+" · 오답·낙하 −"+P.pen+" · 피버 ×"+P.feverMul+" · 황금 ×"+P.goldMul+" · 도착 "+P.arrive+" + 목숨×"+P.lifeBonus+" + 초×"+P.secBonus;
   return "";
 }
 /* 대표 카운터 중앙값 한 줄 (서버 keyField: 팡 fin · 점프 obs · 테트리스 lines · 기억력 wr) */
@@ -2000,8 +2017,10 @@ function olyBreak(g,p,rule){
     o.push(["연속 점수", "최대 연속 "+n("mx"), n("cb")]);
     o.push(["피버 추가", "×"+R.feverMul+" 구간", n("fb")]);
     o.push(["황금 추가", n("gc")+"번 × "+R.goldMul, n("gb")]);
-    o.push(["오답 감점", n("wr")+"번 (성급 "+n("hs")+"번 2배)", -n("pn")]);
-    o.push(["푼 문제 · 패스 · 시간 추가", n("n")+"문제 · "+n("pa")+"번 · +"+n("hp")+"번", null]);
+    o.push(["오답·낙하 감점", "오답 "+n("wr")+"번 (성급 "+n("hs")+"번 2배) · 낙하 "+n("fl")+"번", -n("pn")]);
+    o.push(["도착 보너스", n("arr")?R.arrive+" + 남은 목숨 "+n("life")+" × "+R.lifeBonus+" + 남은 초 × "+R.secBonus:"도착 못 함", n("arr")]);
+    o.push(["건넌 줄 · 판자 · 시간 추가 · 남은 목숨", n("n")+"줄 · "+n("pa")+"번 · +"+n("hp")+"번 · "+n("life")+"개", null]);
+    o.push(["직접 멈춤", n("pz")+"회 (허용 "+R.pauseMax+"회)", null]);
     return o;
   }
   if(g!=="word") o.push(["직접 멈춤", n("pz")+"회 (허용 "+R.pauseMax+"회)", null]);
@@ -2019,7 +2038,7 @@ function olyBreakHtml(g,p,rule){
  * rejects 가 없으면(서버가 아직 싣지 않음) 안내만 보인다. */
 var REJ_N={ range:"범위 밖", mismatch:"점수 불일치", ver:"옛 앱" };
 /* v4.11 AI O/X 개연성 사유(서버 oxPlausible_) · 키가 다른 종목과 겹쳐(lv · n) 종목이 ox 면 이것을 먼저 본다 */
-var REJ_OX={ ql:"문항 기록 형식", n:"문제 수 초과", dup:"같은 문항 두 번", grp:"같은 짝 문항 두 번", lv:"난이도 순서", t:"입력 잠금보다 빠른 답", per:"난이도별 문제 수", pass:"패스 초과", time:"시간 합계", tk:"판 토큰(서명·기한·자리)" };
+var REJ_OX={ ql:"문항 기록(형식 · 한도를 넘긴 답 · 낙하 시각 · 끝난 뒤 기록)", pz:"멈춤 횟수", n:"문제 수 초과", dup:"같은 문항 두 번", grp:"같은 짝 문항 두 번", lv:"난이도 순서", t:"입력 잠금보다 빠른 답", per:"난이도별 문제 수", pass:"판자 초과", time:"시간 합계(남은 시간 · 발판이 버틴 시간)", tk:"판 토큰(서명·기한·자리)" };
 function rejDetail(r){
   if(r.reason!=="range") return r.detail;
   if(r.game==="ox"){ var m=/^sum:(\w+)$/.exec(r.detail||""); return m?"구성 합계 불일치 · "+partN("ox",m[1]):(REJ_OX[r.detail]||r.detail); }
@@ -2045,7 +2064,7 @@ function olyRejHtml(){
     memo('<p><b>범위 밖</b> = 구성 요소가 사람이 낼 수 없는 값(너무 빠른 완주 · 버틴 시간보다 많은 장애물 등)입니다. 한 사람이 반복하면 부정 제출을 의심합니다.</p>'+
       '<p><b>점수 불일치</b> = 앱이 계산한 점수와 서버 계산이 다릅니다. 계수를 저장한 직후 옛 계수를 쥔 앱이 보낸 경우가 대부분이고, 계속 쌓이면 앱과 서버 규칙이 어긋난 버그입니다.</p>'+
       '<p><b>옛 앱</b> = 점수 체계 v2 이전 앱 캐시입니다. 참가자에게 앱 새로고침을 안내합니다.</p>'+
-      '<p><b>AI O/X</b>의 걸린 조건: 문항 기록 형식 · 문제 수 초과 · 같은 문항(짝 문항) 두 번 · 난이도 순서(앞 문항보다 쉬워짐) · 입력 잠금보다 빠른 답 · 난이도별 문제 수 · 패스 초과 · 시간 합계 · 판 토큰(서명·기한·황금 자리) · 구성 합계 불일치(어느 칸인지 함께 표시).</p>'));
+      '<p><b>AI O/X</b>의 걸린 조건: 문항 기록 형식 · 문제 수 초과 · 같은 문항(짝 문항) 두 번 · 난이도 순서(앞 문항보다 쉬워짐) · 입력 잠금보다 빠른 답 · 난이도별 문제 수 · 판자 초과 · 멈춤 횟수 · 시간 합계 · 판 토큰(서명·기한·황금 자리) · 구성 합계 불일치(어느 칸인지 함께 표시). 문항 기록에는 답 시간이 그 줄의 한도를 넘었거나, 떨어진 시각이 한도와 다른 경우도 포함됩니다.</p>'));
 }
 function gstMatch(r,q){ if(!q) return true; return (r.nick||"").toLowerCase().indexOf(q)>=0 || (r.name||"").toLowerCase().indexOf(q)>=0 || String(r.emp||"").indexOf(q)>=0; }
 function gstCount(g){ var G=((ST.data.gstats||{}).games||{})[g]; if(!G) return ""; var q=(GQ[g]||"").trim().toLowerCase(); return G.rows.filter(function(r){ return gstMatch(r,q); }).length+" / "+G.rows.length+"명"; }
@@ -2132,29 +2151,40 @@ var OLY_F=[
   { g:"word", k:"base", n:"느림 · 점수", u:"점", i:1, lo:0, hi:10000, h:"보통 시간을 넘긴 칸" },
   { g:"word", k:"wrong", n:"오답 감점", u:"점", i:1, lo:0, hi:10000, h:"오답 1번마다 · 판 점수는 0 아래로 안 내려감" },
   { g:"word", k:"clean", n:"무오답 라운드", u:"점", i:1, lo:0, hi:10000, h:"오답 없이 끝낸 라운드마다" },
-  /* v4.11 AI O/X 18개 계수(per · base 는 난이도별 3칸) · 범위는 서버 olyRuleOk_ 와 같다 */
-  { g:"ox", k:"sec", n:"판 시간", u:"초", cs:1, lo:1000, hi:30000, h:"한 판 제한 시간(10~300초)" },
-  { g:"ox", k:"per.0", n:"1단계 출제 수", u:"문제", i:1, lo:1, hi:30, h:"켜진 1단계 문항보다 많을 수 없음" },
-  { g:"ox", k:"per.1", n:"2단계 출제 수", u:"문제", i:1, lo:1, hi:30, h:"켜진 2단계 문항보다 많을 수 없음" },
-  { g:"ox", k:"per.2", n:"3단계 출제 수", u:"문제", i:1, lo:1, hi:30, h:"켜진 3단계 문항보다 많을 수 없음" },
-  { g:"ox", k:"base.0", n:"1단계 기본 점수", u:"점", i:1, lo:0, hi:10000, h:"정답 1개 · 주 계수" },
-  { g:"ox", k:"base.1", n:"2단계 기본 점수", u:"점", i:1, lo:0, hi:10000, h:"정답 1개 · 주 계수" },
-  { g:"ox", k:"base.2", n:"3단계 기본 점수", u:"점", i:1, lo:0, hi:10000, h:"정답 1개 · 주 계수" },
-  { g:"ox", k:"speed", n:"속도 점수 최대", u:"점", i:1, lo:0, hi:10000, h:"빠를수록 0~이 값을 더함" },
-  { g:"ox", k:"full", n:"속도 만점 시간", u:"초", cs:1, lo:1, hi:6000, h:"이 시간 안에 맞히면 속도 점수 최대" },
-  { g:"ox", k:"limit", n:"속도 0 시간", u:"초", cs:1, lo:2, hi:6000, h:"이 시간부터 속도 점수 0 · 만점 시간보다 길게" },
-  { g:"ox", k:"combo", n:"연속 1회당", u:"점", i:1, lo:0, hi:10000, h:"앞선 연속 정답 수 × 이 값" },
-  { g:"ox", k:"comboMax", n:"연속 가산 한도", u:"회", i:1, lo:0, hi:30, h:"이 연속까지만 더함" },
-  { g:"ox", k:"feverAt", n:"피버 시작", u:"연속", i:1, lo:1, hi:50, h:"연속이 이 배수가 되면 피버" },
-  { g:"ox", k:"feverLen", n:"피버 길이", u:"문제", i:1, lo:0, hi:30, h:"피버가 이어지는 정답 수" },
-  { g:"ox", k:"feverMul", n:"피버 배수", u:"배", i:1, lo:1, hi:5, h:"피버 구간 정답 점수" },
-  { g:"ox", k:"goldMul", n:"황금 배수", u:"배", i:1, lo:1, hi:5, h:"서버가 정한 황금 자리 2곳" },
-  { g:"ox", k:"pen", n:"오답 감점", u:"점", i:1, lo:0, hi:10000, h:"오답 1번 · 연속·피버 끊김" },
-  { g:"ox", k:"hasty", n:"성급한 오답", u:"초", cs:1, lo:0, hi:1000, h:"이 시간 안에 틀리면 감점 2배" },
-  { g:"ox", k:"bonusAt", n:"시간 추가 연속", u:"연속", i:1, lo:1, hi:100, h:"연속이 이 배수가 되면 시간 추가" },
-  { g:"ox", k:"bonusSec", n:"추가 시간", u:"초", cs:1, lo:0, hi:3000, h:"한 번에 늘어나는 판 시간" },
-  { g:"ox", k:"pass", n:"패스 허용", u:"회", i:1, lo:0, hi:5, h:"판당 · 넘으면 서버가 거부" },
-  { g:"ox", k:"lock", n:"입력 잠금", u:"초", cs:1, lo:0, hi:200, h:"문제가 나온 뒤 이보다 빠른 답은 거부" }
+  /* v4.12 AI O/X 유리다리 계수 · 범위는 서버 olyRuleOk_ 와 같다 · sc = 1/100줄을 화면에서 「줄」로 · cs = 1/100초를 「초」로
+     서버가 함께 보는 조건(olyDraft 가 저장 전에 같은 검사): 줄 시간 마지막 ≤ 처음 · 여유 최소 ≤ 시작 ≤ 최대 · 최소 여유 × 마지막 줄 시간 ≥ 2초 · 속도 만점 < 속도 0 */
+  { g:"ox", s:"판 구성", k:"sec", n:"판 시간", u:"초", cs:1, lo:1000, hi:30000, h:"한 판 제한 시간(10~300초)" },
+  { g:"ox", s:"판 구성", k:"lives", n:"목숨 수", u:"개", i:1, lo:1, hi:9, h:"오답·낙하마다 1개 줄고, 0이면 판이 끝남" },
+  { g:"ox", s:"판 구성", k:"per.0", n:"1단계 줄 수", u:"줄", i:1, lo:1, hi:30, h:"다리 앞쪽 · 켜진 1단계 문항보다 많을 수 없음" },
+  { g:"ox", s:"판 구성", k:"per.1", n:"2단계 줄 수", u:"줄", i:1, lo:1, hi:30, h:"다리 가운데 · 켜진 2단계 문항보다 많을 수 없음" },
+  { g:"ox", s:"판 구성", k:"per.2", n:"3단계 줄 수", u:"줄", i:1, lo:1, hi:30, h:"다리 끝쪽 · 켜진 3단계 문항보다 많을 수 없음" },
+  { g:"ox", s:"다리 속도", k:"rowT.0", n:"줄 내려오는 시간 · 처음", u:"초", cs:1, lo:150, hi:2000, h:"첫 줄에서 다리가 한 줄 내려오는 데 걸리는 시간" },
+  { g:"ox", s:"다리 속도", k:"rowT.1", n:"줄 내려오는 시간 · 끝", u:"초", cs:1, lo:150, hi:2000, h:"마지막 줄 · 처음보다 길 수 없음(다리는 느려지지 않음)" },
+  { g:"ox", s:"다리 속도", k:"lead.0", n:"여유 줄 · 시작", u:"줄", sc:1, lo:50, hi:500, h:"판을 시작할 때 발판 아래 남은 줄" },
+  { g:"ox", s:"다리 속도", k:"lead.1", n:"여유 줄 · 최소", u:"줄", sc:1, lo:50, hi:500, h:"떨어졌다 올라온 뒤에도 이만큼은 남김 · 시작 이하" },
+  { g:"ox", s:"다리 속도", k:"lead.2", n:"여유 줄 · 최대", u:"줄", sc:1, lo:50, hi:500, h:"빨리 답해도 이 이상 쌓이지 않음 · 시작 이상" },
+  { g:"ox", s:"정답 점수", k:"base.0", n:"1단계 기본 점수", u:"점", i:1, lo:0, hi:10000, h:"정답 1개 · 주 계수" },
+  { g:"ox", s:"정답 점수", k:"base.1", n:"2단계 기본 점수", u:"점", i:1, lo:0, hi:10000, h:"정답 1개 · 주 계수" },
+  { g:"ox", s:"정답 점수", k:"base.2", n:"3단계 기본 점수", u:"점", i:1, lo:0, hi:10000, h:"정답 1개 · 주 계수" },
+  { g:"ox", s:"정답 점수", k:"speed", n:"속도 점수 최대", u:"점", i:1, lo:0, hi:10000, h:"빨리 맞힐수록 0~이 값을 더함" },
+  { g:"ox", s:"정답 점수", k:"full", n:"속도 만점 시간", u:"초", cs:1, lo:1, hi:6000, h:"이 시간 안에 맞히면 속도 점수 최대" },
+  { g:"ox", s:"정답 점수", k:"limit", n:"속도 0 시간", u:"초", cs:1, lo:2, hi:6000, h:"이 시간부터 속도 점수 0 · 만점 시간보다 길게" },
+  { g:"ox", s:"정답 점수", k:"combo", n:"연속 1회당", u:"점", i:1, lo:0, hi:10000, h:"앞선 연속 정답 수 × 이 값" },
+  { g:"ox", s:"정답 점수", k:"comboMax", n:"연속 가산 한도", u:"회", i:1, lo:0, hi:30, h:"이 연속까지만 더함" },
+  { g:"ox", s:"정답 점수", k:"feverAt", n:"피버 시작", u:"연속", i:1, lo:1, hi:50, h:"연속이 이 배수가 되면 피버" },
+  { g:"ox", s:"정답 점수", k:"feverLen", n:"피버 길이", u:"문제", i:1, lo:0, hi:30, h:"피버가 이어지는 정답 수" },
+  { g:"ox", s:"정답 점수", k:"feverMul", n:"피버 배수", u:"배", i:1, lo:1, hi:5, h:"피버 구간 정답 점수" },
+  { g:"ox", s:"정답 점수", k:"goldMul", n:"황금 발판 배수", u:"배", i:1, lo:1, hi:5, h:"서버가 정한 황금 자리 2곳 · 피버보다 우선" },
+  { g:"ox", s:"감점", k:"pen", n:"오답·낙하 감점", u:"점", i:1, lo:0, hi:10000, h:"오답 또는 낙하 1번 · 연속·피버 끊김" },
+  { g:"ox", s:"감점", k:"hasty", n:"성급한 오답", u:"초", cs:1, lo:0, hi:1000, h:"이 시간 안에 틀리면 감점 2배(낙하는 해당 없음)" },
+  { g:"ox", s:"도착·시간", k:"arrive", n:"도착 보너스", u:"점", i:1, lo:0, hi:10000, h:"마지막 줄까지 다 건너면 더함" },
+  { g:"ox", s:"도착·시간", k:"lifeBonus", n:"남은 목숨 1개당", u:"점", i:1, lo:0, hi:10000, h:"도착할 때 남은 목숨마다 더함" },
+  { g:"ox", s:"도착·시간", k:"secBonus", n:"남은 시간 1초당", u:"점", i:1, lo:0, hi:1000, h:"도착할 때 남은 초마다 더함" },
+  { g:"ox", s:"도착·시간", k:"bonusAt", n:"시간 추가 연속", u:"연속", i:1, lo:1, hi:100, h:"연속이 이 배수가 되면 판 시간 추가" },
+  { g:"ox", s:"도착·시간", k:"bonusSec", n:"추가 시간", u:"초", cs:1, lo:0, hi:3000, h:"한 번에 늘어나는 판 시간" },
+  { g:"ox", s:"부정 방지", k:"pass", n:"판자 허용", u:"회", i:1, lo:0, hi:5, h:"판당 판자(0점으로 한 줄 건너기) · 넘으면 서버가 거부" },
+  { g:"ox", s:"부정 방지", k:"lock", n:"입력 잠금", u:"초", cs:1, lo:0, hi:200, h:"문제가 나온 뒤 이보다 빠른 답은 거부" },
+  { g:"ox", s:"부정 방지", k:"pauseMax", n:"멈춤 허용", u:"회", i:1, lo:0, hi:10, h:"판당 직접 멈춤 · 넘으면 서버가 거부" }
 ];
 /* 미리보기 예시 · 봇 보정 참고치(설계 §4.3 · §4.6) · 기본 계수로 보통 약 1,000 · 잘함 약 2,000 · 최상 약 2,800 */
 var OLY_EX={
@@ -2172,7 +2202,7 @@ function olyObj(f){ return f.g?f.g+"."+f.k:f.k; }
 function olyRaw(i,S){
   if(OLYD&&OLYD.raw[i]!=null) return OLYD.raw[i];
   var f=OLY_F[i], v=olyGet(S,olyObj(f));
-  return f.cs?String(Number(v)/100):String(v);
+  return f.cs||f.sc?String(Number(v)/100):String(v);
 }
 /* 고치는 중인 규칙 · err[i] = 칸별 문제 · 틀린 칸은 서버 값으로 두고 계산한다(미리보기가 끊기지 않게) */
 function olyDraft(){
@@ -2180,23 +2210,39 @@ function olyDraft(){
   OLY_F.forEach(function(f,i){
     var s=olyRaw(i,S).trim(), v=Number(s), m="";
     if(s===""||!isFinite(v)) m="숫자를 넣어 주세요";
-    else if(f.cs){ var c=Math.round(v*100); if(Math.abs(v*100-c)>1e-6) m="0.01초 단위까지"; else if(c<f.lo||c>f.hi) m=(f.lo/100)+"~"+(f.hi/100)+"초"; else v=c; }
+    else if(f.cs||f.sc){ var c=Math.round(v*100); if(Math.abs(v*100-c)>1e-6) m="0.01"+f.u+" 단위까지"; else if(c<f.lo||c>f.hi) m=(f.lo/100)+"~"+(f.hi/100)+f.u; else v=c; }
     else if(f.i&&Math.round(v)!==v) m="정수만";
     else if(v<f.lo||v>f.hi) m=f.lo+"~"+n0(f.hi)+" 사이";
     if(m) err[i]=m; else olySetP(R,olyObj(f),v);
   });
   for(var t=1;t<4;t++) if(!(R.word.tiers[t][0]>R.word.tiers[t-1][0])){ rerr="기억력 · 등급 시간은 번개 < 빠름 < 좋음 < 보통 순으로 길어야 합니다"; break; }
-  if(R.ox&&!rerr){
-    var rm=(ST.data.oxs||{}).room;
-    if(!(R.ox.full<R.ox.limit)) rerr="AI O/X · 속도 만점 시간은 속도 0 시간보다 짧아야 합니다";
-    else if(rm) for(var d=0;d<3;d++) if(R.ox.per[d]>rm[d]){ rerr="AI O/X · "+(d+1)+"단계 출제 수 "+R.ox.per[d]+"문제가 켜진 문항 "+rm[d]+"개(짝은 하나로 셈)보다 많습니다"; break; }
-  }
-  return { rule:R, err:err, rerr:rerr, bad:!!(rerr||Object.keys(err).length) };
+  var rerrs=rerr?[rerr]:[];
+  if(R.ox) rerrs=rerrs.concat(oxRuleErrs(R.ox,(ST.data.oxs||{}).room));
+  return { rule:R, err:err, rerr:rerrs, bad:!!(rerrs.length||Object.keys(err).length) };
+}
+/* AI O/X 칸끼리 맞물린 조건 · 서버 olyRuleOk_ 와 같은 검사 · 사람이 읽는 이유 목록(빈 배열 = 통과) · room = 난이도별 켜진 문항 수(없으면 건너뜀) */
+function oxRuleErrs(X,room){
+  var e=[], sec=function(v){ return (v/100)+"초"; }, row=function(v){ return (v/100)+"줄"; };
+  if(!(X.full<X.limit)) e.push("AI O/X · 속도 만점 시간("+sec(X.full)+")은 속도 0 시간("+sec(X.limit)+")보다 짧아야 합니다");
+  if(X.rowT[1]>X.rowT[0]) e.push("AI O/X · 줄 내려오는 시간 끝("+sec(X.rowT[1])+")이 처음("+sec(X.rowT[0])+")보다 깁니다. 다리는 뒤로 갈수록 같거나 빨라져야 합니다");
+  if(X.lead[1]>X.lead[0]) e.push("AI O/X · 여유 줄 최소("+row(X.lead[1])+")가 시작("+row(X.lead[0])+")보다 큽니다. 최소 ≤ 시작이어야 합니다");
+  if(X.lead[0]>X.lead[2]) e.push("AI O/X · 여유 줄 시작("+row(X.lead[0])+")이 최대("+row(X.lead[2])+")보다 큽니다. 시작 ≤ 최대여야 합니다");
+  if(X.lead[1]*X.rowT[1]<20000) e.push("AI O/X · 가장 짧은 읽을 시간이 "+(X.lead[1]*X.rowT[1]/10000).toFixed(2)+"초입니다(여유 줄 최소 "+row(X.lead[1])+" × 줄 시간 끝 "+sec(X.rowT[1])+"). 2초 이상이 되게 둘 중 하나를 늘려 주세요");
+  if(room) for(var d=0;d<3;d++) if(X.per[d]>room[d]){ e.push("AI O/X · "+(d+1)+"단계 줄 수 "+X.per[d]+"줄이 켜진 문항 "+room[d]+"개(짝은 하나로 셈)보다 많습니다"); break; }
+  return e;
+}
+/* 입력칸 묶음 · 칸에 s(소제목)가 있으면 소제목마다 끊어 그린다(AI O/X) */
+function olyFieldsHtml(ix,fld){
+  var h="", cur=null, buf=[];
+  var flush=function(){ if(buf.length) h+=(cur?'<div class="olysub">'+esc(cur)+'</div>':'')+'<div class="olyf">'+buf.join("")+'</div>'; buf=[]; };
+  ix.forEach(function(i){ var s=OLY_F[i].s||""; if(s!==cur){ flush(); cur=s; } buf.push(fld(i)); });
+  flush();
+  return h;
 }
 /* 서버 값과 다른 칸 목록 [이름, 전, 후] */
 function olyDiff(S,R){
   var out=[];
-  OLY_F.forEach(function(f){ var a=olyGet(S,olyObj(f)), b=olyGet(R,olyObj(f)); if(Number(a)!==Number(b)) out.push([(f.g?GST_NAME[f.g]+" · ":"")+f.n, f.cs?(a/100)+"초":String(a), f.cs?(b/100)+"초":String(b)]); });
+  OLY_F.forEach(function(f){ var a=olyGet(S,olyObj(f)), b=olyGet(R,olyObj(f)); if(Number(a)!==Number(b)) out.push([(f.g?GST_NAME[f.g]+" · ":"")+f.n, f.cs||f.sc?(a/100)+f.u:String(a), f.cs||f.sc?(b/100)+f.u:String(b)]); });
   return out;
 }
 function olyIn(i,v){
@@ -2218,7 +2264,8 @@ function olyPrevHtml(g,S,R,D){
       '<td class="n tdr">'+(ok?n0(olyScoreC("pang",{fin:fin},S))+'점':'<span class="cap">3~120초</span>')+'</td><td class="n tdr">'+(ok?'<b>'+n0(olyScoreC("pang",{fin:fin},R))+'점</b>':'')+'</td></tr>'+
       '<tr><td></td><td class="cap">상한 '+n0(R.cap)+'점에 닿는 완주 시간</td><td class="n tdr cap">'+olyPangCapSec(S.pang,S.cap).toFixed(1)+'초 이하</td><td class="n tdr cap">'+olyPangCapSec(R.pang,R.cap).toFixed(1)+'초 이하</td></tr>';
   }
-  if(g==="ox") extra='<tr><td></td><td class="cap" colspan="3">가상의 한 판(황금 자리 없음 · 실제 판은 황금 2곳 ×'+R.ox.goldMul+') · 판 시간 '+(R.ox.sec/100)+'초 안에서 푼 만큼</td></tr>';
+  if(g==="ox") extra='<tr><td></td><td class="cap" colspan="3">가상의 한 판(황금 자리 없음 · 실제 판은 황금 2곳 ×'+R.ox.goldMul+') · '+(R.ox.per[0]+R.ox.per[1]+R.ox.per[2])+'줄 · '+(R.ox.sec/100)+'초 · 목숨 '+R.ox.lives+' · 한도보다 늦으면 낙하 · 다 건너면 도착 보너스</td></tr>'+
+    '<tr><td></td><td class="cap">가장 짧은 읽을 시간 (최소 여유 × 마지막 줄 시간)</td><td class="n tdr cap">'+(S.ox.lead[1]*S.ox.rowT[1]/10000).toFixed(1)+'초</td><td class="n tdr cap">'+(R.ox.lead[1]*R.ox.rowT[1]/10000).toFixed(1)+'초</td></tr>';
   return '<div class="wrap olypv"><table class="tb plain"><tr><th>미리보기</th><th>이 기록이면</th><th class="tdr">지금 계수</th><th class="tdr">고친 계수</th></tr>'+rows+extra+'</table></div>';
 }
 function olyTry(v){ OLYTRY=v; render(); }
