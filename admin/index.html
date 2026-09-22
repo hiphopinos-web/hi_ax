@@ -559,6 +559,10 @@ function dialog(o){
   setTimeout(function(){ ok.focus(); },30);
 }
 function dlgBusy(){ return el("dlgOk").disabled; }
+/* dlgClose 는 뒷배경 클릭·Esc 용이다. 처리 중에는 일부러 닫히지 않는다.
+   dlgGo 가 onOk 직전에 확인 버튼을 disabled 로 만들므로, onOk 안에서 창을 닫을 때는
+   반드시 dlgForce() 를 쓴다. 여기서 dlgClose() 를 부르면 창이 「처리 중」인 채로 남는다
+   (260923 공지 발송에서 실제로 났다 · 검사 77절이 이 규칙을 지킨다). */
 function dlgClose(){ if(dlgBusy()) return; el("dlg").className="overlay"; DLG.onOk=null; }
 function dlgForce(){ el("dlgOk").disabled=false; dlgClose(); }
 function dlgGo(){
@@ -2422,16 +2426,16 @@ function noticeSend(){
   var t=(el("ntT").value||"").trim(), b=(el("ntB").value||"").trim();
   if(!t){ toast("제목을 입력하세요"); el("ntT").focus(); return; }
   dialog({ t:"공지를 발송할까요?", s:"모든 참가자 기기의 LED 띠·실시간 안내에 나갑니다.", who:"<b>"+esc(t)+"</b><br>"+esc(b), ok:"발송",
-    onOk:function(){ dlgClose(); noticeSendGo(t,b); } });
+    onOk:function(){ dlgForce(); noticeSendGo(t,b); } });
 }
 function noticeTpl(i){
   var t=NOTICE_TPL[i]; if(!t) return;
   dialog({ t:"템플릿을 발송할까요?", s:"모든 참가자 기기에 나갑니다.", who:"<b>"+esc(t[0])+"</b><br>"+esc(t[1]), ok:"발송",
-    onOk:function(){ dlgClose(); noticeSendGo(t[0],t[1]); } });
+    onOk:function(){ dlgForce(); noticeSendGo(t[0],t[1]); } });
 }
 function noticeStopC(id){
   dialog({ t:"공지를 중지할까요?", s:"서버 송출을 멈추고, 다음 동기화 때 전 기기 화면에서 사라집니다.", ok:"중지",
-    onOk:function(){ dlgClose();
+    onOk:function(){ dlgForce();
       call("notice_clear",{id:id},function(r){
         if(r&&r.ok){ toast("공지를 중지했습니다"); reload(["noti"]); } else toast("중지 실패: "+(r&&r.reason||""));
       },function(){ toast("서버 응답 없음"); });
@@ -2445,7 +2449,7 @@ function photoAct(act, emp, no){
       else toast(r&&r.reason==="empty"?"대기 중인 번호가 없습니다":"실패: "+(r&&r.reason||""));
     },function(){ toast("서버 응답 없음"); });
   };
-  if(act==="skip") dialog({ t:"건너뛸까요?", s:"호출 후 10분 안에 오지 않은 번호를 건너뜁니다. 참가자는 앱에서 다시 줄을 설 수 있습니다.", who:"<b>"+no+"번</b> · "+esc(emp), ok:"건너뛰기", onOk:function(){ dlgClose(); go(); } });
+  if(act==="skip") dialog({ t:"건너뛸까요?", s:"호출 후 10분 안에 오지 않은 번호를 건너뜁니다. 참가자는 앱에서 다시 줄을 설 수 있습니다.", who:"<b>"+no+"번</b> · "+esc(emp), ok:"건너뛰기", onOk:function(){ dlgForce(); go(); } });
   else go();
 }
 
