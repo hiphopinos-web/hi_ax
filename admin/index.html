@@ -2876,7 +2876,7 @@ function rosMark(emp, mark, undo){
         render();
         var msg=(r.name||r.emp)+" · "+(res.dup?"이미 "+r.st+" 상태입니다":mark==="noshow"?"노쇼로 표시했습니다":"노쇼 표시를 풀었습니다");
         toast(msg, (!undo&&!res.dup&&before!==r.st)?{ undo:function(){ rosMark(r.emp, mark==="noshow"?"clear":"noshow", true); } }:{});
-      } else toast("실패: "+({in:"이미 입장한 사람이라 노쇼로 표시할 수 없습니다",notfound:"명단에 없는 사번입니다",param:"입력값 오류",prog:"프로그램 이름 오류"}[(res||{}).reason]||why(res)));
+      } else toast("실패: "+({in:"이미 입장한 사람이라 노쇼로 표시할 수 없습니다",notfound:"명단에 없는 사번입니다",param:"입력값 오류",prog:"프로그램 이름 오류",ledger_noshow:"상담 원장이 이미 노쇼라 여기서 해제할 수 없습니다. 상담 승인 화면에서 처리하세요."}[(res||{}).reason]||why(res)));
     },function(){ dlgForce(); toast("서버 응답 없음"); });
   }
   if(undo) return go0();
@@ -2927,6 +2927,8 @@ function wqDraft(){ var w=wqSrv(); if(!w) return null; if(!WQ.draft||(!WQ.dirty&
 function wqCur(){ var d=WQ.draft; return d?d.sets.filter(function(s){ return s.id===WQ.set; })[0]:null; }
 function wqT(v){ return String(v==null?"":v).trim(); }
 function wqLabel(id){ return "WALL "+(WQ_IDS.indexOf(id)+1); }
+/* 잠금 모드 표시 · 서버 wq_get 의 mode 를 그대로 보여준다(auto·on·off, 설정 시트를 보라는 안내 없이) */
+function wqModeTag(mode){ return mode==="on"?tag("수동 잠금","bad"):mode==="off"?tag("잠금 풀림","ok"):tag("자동 잠금(10/26부터)","pri"); }
 /* 서버 wqCheck_ 와 같은 규칙 · 어디가 틀렸는지 문장으로 */
 function wqErrs(d){
   var E=[]; if(!d) return E;
@@ -2977,10 +2979,9 @@ function viewWq(){
     card("지금 앱이 쓰는 문항", w.v?tag("서버 문항","pri"):tag("앱 내장 문항","off"),
       '<p class="muted" style="font-size:var(--fs-s)">'+(w.v?"콘솔에서 저장한 문항입니다 · 판 번호 <b class=\"n\">"+esc(w.v)+"</b>"+(wqVerAt(w.v)?" ("+esc(wqVerAt(w.v))+" 저장)":""):"서버에 저장한 문항이 없어 앱에 들어 있는 기본 문항이 나갑니다. 아래에서 고쳐 저장하면 서버 문항으로 바뀝니다.")+'</p>'+
       '<p class="cap mt8">참가자 앱은 10초 동기화 때 판 번호가 바뀐 것을 보고 새 문항을 받습니다. 서버 문항을 못 받으면 내장 문항으로 돕니다.</p>')+
-    card("당일 잠금", lk?tag("잠김","bad"):tag("풀림","ok"),
-      '<p class="muted" style="font-size:var(--fs-s)">잠기면 저장 · 되돌리기를 서버가 거절합니다. 기본은 <b>자동</b>이고 행사 당일('+WQ_LOCK_DAY.slice(5).replace("-","/")+')부터 잠깁니다'+(ymd>=WQ_LOCK_DAY?" (오늘 해당)":"")+'.</p>'+
-      '<div class="row mt12"><button class="btn sm" onclick="wqLockSet(\'auto\')">자동으로 (당일부터 잠금)</button><button class="btn sm danger" onclick="wqLockSet(\'1\')">지금 잠그기</button><button class="btn sm" onclick="wqLockSet(\'0\')">잠금 풀기</button></div>'+
-      '<p class="cap mt8">잠금 방식은 설정 시트 「벽퀴즈_잠금」에 남습니다(ON = 잠금 · OFF = 풀림 · 빈칸 = 자동).</p>')+'</div>';
+    card("당일 잠금", wqModeTag(w.mode),
+      '<p class="muted" style="font-size:var(--fs-s)">지금 <b>'+(lk?"잠김":"풀림")+'</b>입니다. 잠기면 저장 · 되돌리기를 서버가 거절합니다. 자동은 행사 당일('+WQ_LOCK_DAY.slice(5).replace("-","/")+')부터 잠깁니다'+(ymd>=WQ_LOCK_DAY?" (오늘 해당)":"")+'.</p>'+
+      '<div class="row mt12"><button class="btn sm'+(w.mode==="auto"?" pri":"")+'" onclick="wqLockSet(\'auto\')">자동 잠금(10/26부터)</button><button class="btn sm'+(w.mode==="on"?" danger":"")+'" onclick="wqLockSet(\'1\')">수동 잠금</button><button class="btn sm'+(w.mode==="off"?" pri":"")+'" onclick="wqLockSet(\'0\')">잠금 풀림</button></div>')+'</div>';
   var body=chips(d.sets.map(function(x){ var n=wqErrs({sets:[x],off:[]}).length; return { v:x.id, n:wqLabel(x.id)+(d.off.indexOf(x.id)>=0?" · 멈춤":"")+(n?" · 고칠 곳 "+n:""), c:x.qs.length }; }), WQ.set, "wqSetSel");
   body+='<div class="toolbar wqbar"><span class="cnt">'+esc(wqLabel(s.id))+' · 문항 <b>'+s.qs.length+'</b> / '+WQ_LIM.qs+'</span><span class="tag warn" id="wqDirty"'+(WQ.dirty?"":' style="display:none"')+'>저장 안 한 변경 있음</span><span class="sp"></span>'+
     '<button class="btn sm ghost" onclick="wqDiscard()"'+(WQ.dirty?"":" disabled")+' id="wqDisc">변경 취소</button>'+
@@ -3041,7 +3042,7 @@ function wqPayload(d){ return d.sets.map(function(s){ return { id:s.id, name:wqT
 function wqSend(params, okMsg, undo){
   callPost("wq_set", params, function(r){
     dlgForce();
-    if(r&&r.ok){ var w=wqSrv()||{}; wqPut({ ok:true, data:r.data, v:r.v, locked:w.locked }); WQ.draft=null; WQ.dirty=false; WQ.err=""; render(); if(okMsg) toast(okMsg(r), undo?{ undo:undo }:{}); }
+    if(r&&r.ok){ var w=wqSrv()||{}; wqPut({ ok:true, data:r.data, v:r.v, locked:w.locked, mode:w.mode }); WQ.draft=null; WQ.dirty=false; WQ.err=""; render(); if(okMsg) toast(okMsg(r), undo?{ undo:undo }:{}); }
     else { WQ.err=wqWhy(r); render(); toast("저장하지 못했습니다 · "+wqWhy(r)); }
   }, function(e){ dlgForce(); WQ.err=wqWhy(e); render(); toast("서버 응답 없음 · 문항은 이 화면에 그대로 있습니다"); });
 }
@@ -3073,7 +3074,7 @@ function wqLockSet(on){
   var t={ "1":"지금 잠글까요?", "0":"잠금을 풀까요?", auto:"자동 잠금으로 둘까요?" }[on];
   var s={ "1":"잠그면 행사 당일이 아니어도 문항 저장 · 되돌리기를 서버가 거절합니다.", "0":"풀면 행사 당일에도 문항을 고칠 수 있습니다. 행사 중 문항이 바뀌면 같은 벽에서 사람마다 다른 문제를 봅니다.", auto:"행사 당일("+WQ_LOCK_DAY+")부터 저절로 잠기고, 그 전에는 풀려 있습니다." }[on];
   dialog({ t:t, s:s, ok:on==="1"?"잠그기":on==="0"?"풀기":"자동으로", danger:on==="0", onOk:function(){
-    call("wq_lock",{ on:on },function(r){ dlgForce(); if(r&&r.ok){ var w=wqSrv()||{ ok:true }; w.locked=!!r.locked; wqPut(w); render(); toast((on==="auto"?"자동 잠금으로 두었습니다 · ":"")+"지금 "+(r.locked?"잠김":"풀림")); } else toast("실패: "+why(r)); },
+    call("wq_lock",{ on:on },function(r){ dlgForce(); if(r&&r.ok){ var w=wqSrv()||{ ok:true }; w.locked=!!r.locked; w.mode=on==="1"?"on":on==="0"?"off":"auto"; wqPut(w); render(); toast((on==="auto"?"자동 잠금으로 두었습니다 · ":"")+"지금 "+(r.locked?"잠김":"풀림")); } else toast("실패: "+why(r)); },
       function(){ dlgForce(); toast("서버 응답 없음"); });
   } });
 }
