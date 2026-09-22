@@ -48,7 +48,7 @@
   /* word-break:keep-all = 한글을 어절 단위로 끊는다 · 단어 중간에서 잘리지 않고 통째로 다음 줄로 */
   body { background: var(--bg); font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif; display: flex; justify-content: center; color: var(--tx); word-break: keep-all; overflow-wrap: break-word; }
   button, input, textarea { font-family: inherit; }
-  #frame { position: relative; width: 100%; max-width: var(--ax-app-max); min-height: 100dvh; background: var(--bg); }
+  #frame { position: relative; width: 100%; min-width: 0; max-width: var(--ax-app-max); min-height: 100dvh; background: var(--bg); }   /* v4.04 min-width 0 · body(flex) 안에서 긴 한 줄 글자가 앱 폭을 밀지 않게 */
   #frame.splash-mode { height: 100dvh; overflow: hidden; }
 
   /* ───────── 스플래시 · 화이트 스테이지 + 도트 격자 + KV 오브젝트 (v29 · 수면 반사 영상·차임 폐기) ─────────
@@ -1007,11 +1007,69 @@
   body { background: var(--ax-color-canvas); }
   #app :focus-visible, #splash :focus-visible { outline: var(--ax-focus-width) solid var(--ax-color-ink); outline-offset: var(--ax-space-4); }
   /* 헤더 64 · 화면 바탕과 같은 canvas 면 */
-  #topbar.ax-header { position: sticky; top: 0; z-index: 30; height: var(--ax-header-height); justify-content: flex-start; gap: var(--ax-space-4); background: var(--ax-color-canvas); }
-  #topbar .axs-htitle { flex: 1; min-width: 0; font: var(--ax-type-t5-strong); color: var(--ax-color-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* v4.04 헤더 = v4.02 구성 복원(사용자 결정 260922) · 유틸 행 64(워드마크 · 일반/큰글씨 · 알림 종 · 설정) + 홈 인사 / 탭 루트 제목 · 상세 = 뒤로 + 제목 + 설정.
+     가이드에서 벗어나는 것만 다듬었다: 흰 글자 → onBrand · 아이콘 터치 48 · 글자는 토큰 단계 · QR 아이콘 없음(가운데 QR 버튼) */
+  #topbar.ax-header { position: sticky; top: 0; z-index: 30; display: block; height: auto; background: var(--ax-color-canvas); }
+  #topbar .axs-hrow { display: flex; align-items: center; gap: 0; min-height: var(--ax-header-height); }
+  #topbar .axs-fs { margin-left: var(--ax-space-4); }
+  /* 좁은 폭 · 360 미만은 「2026」을 빼고, 320 대는 글자 크기 토글을 설정(톱니) 시트로만 둔다(시트에 같은 선택지가 있다) */
+  #topbar { container-type: inline-size; container-name: axh; }   /* 헤더 내용이 화면 폭을 밀지 않게 · 폭 판정은 컨테이너 기준(내용 폭 = 화면 - 48) */
+  @container axh (max-width: 326px) { .axs-wm span { display: none; } }
+  @container axh (max-width: 311px) { .axs-fs { display: none; } .axs-wm span { display: inline; } }
+  #topbar .axs-sp { flex: 1; }
+  #topbar .axs-wm { flex: 0 1 auto; min-width: 0; display: flex; align-items: center; gap: var(--ax-space-4); min-height: var(--ax-touch-size); padding: 0; border: 0; background: transparent; cursor: pointer; font: var(--ax-type-t5-strong); white-space: nowrap; color: var(--ax-color-ink); }
+  #topbar .axs-wm span { color: var(--ax-color-brandText); }
+  #topbar .axs-fs { flex: none; display: flex; gap: var(--ax-space-4); padding: var(--ax-space-4); border-radius: var(--ax-radius-12); background: var(--ax-color-divider); }
+  #topbar .axs-fs button { min-height: 40px; padding: 0 var(--ax-space-8); border: 0; border-radius: var(--ax-radius-8); background: transparent; color: var(--ax-color-body); font: var(--ax-type-t7); cursor: pointer; }
+  #topbar .axs-fs button[aria-pressed="true"] { background: var(--ax-color-surface); color: var(--ax-color-ink); }
+  #topbar .axs-ib { position: relative; flex: none; width: var(--ax-touch-size); height: var(--ax-touch-size); padding: 0; border: 0; border-radius: var(--ax-radius-12); background: transparent; color: var(--ax-color-body); display: grid; place-items: center; cursor: pointer; }
+  #topbar .axs-ib svg { width: 24px; height: 24px; display: block; }
+  #topbar .axs-ib .bdg { position: absolute; top: var(--ax-space-4); right: var(--ax-space-4); min-width: 20px; height: 20px; padding: 0 var(--ax-space-4); border-radius: var(--ax-radius-999); background: var(--ax-color-brand); color: var(--ax-color-onBrand); font: var(--ax-type-caption); display: grid; place-items: center; }
   #topbar .axs-back { flex: none; width: var(--ax-touch-size); height: var(--ax-touch-size); margin-left: calc(var(--ax-space-12) * -1); padding: 0; border: 0; background: transparent; color: var(--ax-color-ink); display: grid; place-items: center; cursor: pointer; }
   #topbar .axs-back svg { width: 24px; height: 24px; display: block; }
+  #topbar .axs-htitle { flex: 1; min-width: 0; font: var(--ax-type-t5-strong); color: var(--ax-color-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #topbar .axs-hgr { padding-bottom: var(--ax-space-8); }
+  #topbar .axs-hgr .ax-meta { display: block; }
+  #topbar .axs-hbig { font: var(--ax-type-t3); color: var(--ax-color-muted); }
+  #topbar .axs-hbig b { font-weight: 700; color: var(--ax-color-ink); }
+  #topbar .axs-hroot { padding-bottom: var(--ax-space-8); font: var(--ax-type-t3); color: var(--ax-color-ink); }
   #topbar .chip { flex: none; }
+  /* 헤더가 두 줄(인사 · 루트 제목)이면 본문 위 여백을 줄여 첫 블록이 헤더에 붙는다 */
+  #view[data-v="home"], #view[data-v="guide"], #view[data-v="exp"], #view[data-v="my"] { padding-top: var(--ax-space-16); }
+  /* v4.04 홈 = v4.02 구성 복원(공지 카드 → 포토부스 호출 → 광고판 → 스탬프 레일 → 나의 일정) · 옛 조각을 이 화면 안에서만 가이드 문법으로 다듬는다.
+     연주황 카드 → 흰 surface(반경 24) · 검정 강조 → 주황 채움 + 짙은 글자 · 행은 목적지 행 반경 20 · 흰 글자 없음 */
+  #view[data-v="home"] .axs-sec { display: flex; flex-direction: column; gap: var(--ax-space-12); }
+  #view[data-v="home"] .axs-railgo .rail { cursor: pointer; }
+  #view[data-v="home"] .sect { margin: 0; align-items: center; }
+  #view[data-v="home"] .sect b { font: var(--ax-type-t4); color: var(--ax-color-ink); }
+  #view[data-v="home"] .sect span { display: inline-flex; align-items: center; min-height: var(--ax-touch-size); font: var(--ax-type-t6-strong); color: var(--ax-color-brandText); }
+  #view[data-v="home"] .rail { margin: 0; padding: var(--ax-space-24); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); }
+  #view[data-v="home"] .rail .hd .nm { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
+  #view[data-v="home"] .rail .hd .cnt { font: var(--ax-type-t4); color: var(--ax-color-brandText); }
+  #view[data-v="home"] .rail .hd .cnt small { font: var(--ax-type-t6); color: var(--ax-color-muted); }
+  #view[data-v="home"] .rail .rb { background: var(--ax-color-canvas); }
+  #view[data-v="home"] .rail .mk.act { background: var(--ax-color-brand); border-color: var(--ax-color-brand); color: var(--ax-color-onBrand); box-shadow: 0 0 0 var(--ax-space-4) var(--ax-color-brandSoft); }
+  #view[data-v="home"] .rail .mk .no, #view[data-v="home"] .rail .lbls span { font: var(--ax-type-caption); }
+  #view[data-v="home"] .rail .lbls span.on, #view[data-v="home"] .rail .mk.on .no, #view[data-v="home"] .rail .mk.act .no { color: var(--ax-color-brandText); }
+  #view[data-v="home"] .rail .rnum { border-top: 1px dashed var(--ax-color-divider); }
+  #view[data-v="home"] .rail .rnum .tkt { background: var(--ax-color-inset); }
+  #view[data-v="home"] .rail .cap { font: var(--ax-type-t7); color: var(--ax-color-brandText); }
+  #view[data-v="home"] .axs-rows { display: flex; flex-direction: column; gap: var(--ax-space-8); }
+  #view[data-v="home"] .rc { margin: 0; border: 0; border-radius: var(--ax-radius-20); background: var(--ax-color-surface); box-shadow: none; --rc-px: var(--ax-space-16); }
+  #view[data-v="home"] .rc.my, #view[data-v="home"] .rc.now { background: var(--ax-color-surface); box-shadow: none; }
+  #view[data-v="home"] .rc.past, #view[data-v="home"] .rc.dim { background: var(--ax-color-inset); }
+  #view[data-v="home"] .rc .tt { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
+  #view[data-v="home"] .rc .sb { font: var(--ax-type-t7); color: var(--ax-color-muted); }
+  #view[data-v="home"] .rc .pc { top: var(--ax-space-8); border: 0; border-radius: var(--ax-radius-8); background: var(--ax-color-canvas); color: var(--ax-color-muted); font: var(--ax-type-caption); height: auto; line-height: 18px; }
+  #view[data-v="home"] .tok { border-radius: var(--ax-radius-12); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t6-strong); }
+  #view[data-v="home"] .tok small { font: var(--ax-type-caption); }
+  #view[data-v="home"] .tok.act { background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
+  #view[data-v="home"] .tok.act small { color: var(--ax-color-onBrand); }
+  #view[data-v="home"] .tok.dim { background: var(--ax-color-canvas); color: var(--ax-color-muted); }
+  #view[data-v="home"] .rc .chev { color: var(--ax-color-muted); }
+  #view[data-v="home"] .rc .bd { min-width: 0; }   /* 320 에서 행이 화면을 밀지 않게 (제목은 말줄임) */
+  #view[data-v="home"] .myscroll { display: flex; flex-direction: column; gap: var(--ax-space-8); }
+  #view[data-v="home"] .rc .ls .ico { border-color: var(--ax-color-divider); background: var(--ax-color-inset); color: var(--ax-color-muted); }
   /* 하단 메뉴 80 · 홈 / 프로그램 / [QR 스캔] / 체험 / 나의 참여 (가운데 QR = 사용자 결정 260922 승인 예외 · 5칸 균등) */
   #tabbar.ax-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: var(--ax-app-max); z-index: 40; grid-template-columns: repeat(5, minmax(0, 1fr)); }
   #tabbar .ax-nav-link { position: relative; padding: 0; border: 0; background: transparent; cursor: pointer; }
@@ -3075,13 +3133,26 @@ var App = {
   render: function () {
     var v = this.current;
     var tb = el("topbar"), par = this.parentOf(v);
-    /* 헤더 64 · 탭 루트 = 화면 이름 / 상세 = 뒤로 + 화면 이름 (알림 종 · 설정 톱니 · 글자 크기 토글은 나의 참여 › 설정으로 옮겼다) */
+    /* v4.04 헤더 = v4.02 구성 복원 (사용자 결정 260922 「헤더가 있는 게 더 갖춰진 느낌」)
+       탭 루트 = 유틸 행(워드마크 · 일반/큰글씨 · 알림 종 · 설정) + 홈 인사 / 화면 이름 · 상세 = 뒤로 + 화면 이름 + 설정 */
+    var gear = '<button type="button" class="axs-ib" onclick="fsSheet(true)" aria-label="설정">' + GEAR_SVG + "</button>";
     if (!par) {
-      tb.innerHTML = '<span class="axs-htitle">' + esc(this.title(v)) + "</span>";
+      var hu = S.get("user", {}) || {}, liveN = S.get("notices", []).length, big = fsGet() > 1;
+      tb.innerHTML = '<div class="axs-hrow">' +
+        '<button type="button" class="axs-wm" onclick="App.tab(\'home\')" aria-label="AX Festival 2026 홈">AX Festival<span>2026</span></button>' +
+        '<span class="axs-sp"></span>' +
+        '<span class="axs-fs" role="group" aria-label="글자 크기"><button type="button" aria-pressed="' + !big + '" onclick="fsPick(1)">일반</button>' +
+        '<button type="button" aria-pressed="' + big + '" onclick="fsPick(1.25)">큰글씨</button></span>' +
+        '<button type="button" class="axs-ib" onclick="App.go(\'notices\')" aria-label="공지' + (liveN ? " " + liveN + "건" : "") + '">' + BELL_SVG + (liveN ? '<span class="bdg" aria-hidden="true">' + liveN + "</span>" : "") + "</button>" +
+        gear + "</div>" +
+        (v === "home"
+          ? '<div class="axs-hgr"><span class="ax-meta">' + FESTIVAL.date.replace(/^2026\.\s*/, "") + " · " + FESTIVAL.place + " · " + FESTIVAL.timeRange + "</span>" +
+            '<p class="axs-hbig">' + (hu.name ? esc(hu.name) + "님, " : "") + "오늘 <b>하루의 코스</b></p></div>"
+          : '<p class="axs-hroot">' + esc(this.title(v)) + "</p>");
     } else {
-      tb.innerHTML = '<button class="axs-back" onclick="App.back()" aria-label="뒤로">' + BACK_SVG + "</button>" +
+      tb.innerHTML = '<div class="axs-hrow"><button type="button" class="axs-back" onclick="App.back()" aria-label="뒤로">' + BACK_SVG + "</button>" +
         '<span class="axs-htitle">' + esc(this.title(v)) + "</span>" +
-        (v === "admin" && S.get("admin_authed", false) ? '<button class="chip" onclick="admLock()">잠금</button>' : "");
+        (v === "admin" && S.get("admin_authed", false) ? '<button class="chip" onclick="admLock()">잠금</button>' : "") + gear + "</div>";
     }
     tb.style.display = SIGNAGE.indexOf(v) >= 0 ? "none" : "";
     /* 헤더 높이를 실측해 sticky 기준선으로 넘긴다 */
@@ -3426,7 +3497,7 @@ function evPhase() {
 /* 홈 히어로 = 지금 진행 중 (한 화면 안에 들어가야 하므로 시간·제목·장소·다음 일정만). 눌러서 타임라인으로 */
 /* v3.13: 히어로(nowCardHtml)는 폐지 · 「지금·다음」은 나의 스케줄 첫 줄로 흡수(schedNowRow), 연출은 광고판이 맡는다 */
 function schedNowRow() {
-  var ph = evPhase(), go = "App.go('guide_time')";
+  var ph = evPhase(), go = "homeSched()";
   /* v3.22 공용 행 카드 · 한 줄 말줄임(one) · 진행 중 뱃지만 검정 */
   /* v3.71 (사용자 확정 260918) 행사 전 D-N 줄 삭제 · 날짜·장소는 홈 머리에 이미 있다 */
   if (ph === "before") return "";
@@ -3491,24 +3562,24 @@ function myScheduleHtml() {
   });
   rows.sort(function (a, b) { return a[0] - b[0]; });
   var head = '<div class="sect"><b>나의 일정</b>' +
-    '<span onclick="App.go(\'guide_time\')">일정 탭 ›</span></div>';
+    '<span role="button" tabindex="0" onclick="mySched()">내 일정 ›</span></div>';
   /* v3.13: 첫 줄 = 「지금·다음」(구 히어로 흡수 · 시간 뱃지 공용 tok, 진행 중 = 검정) · v3.22 모든 행 = 공용 행 카드 */
   if (!rows.length) {
-    return head + schedNowRow() +
-      rcHtml({ cls: "", onclick: "App.go('guide')", link: true, left: rcIcon(App.ICONS.guide), title: "신청한 프로그램 없음", sub: "프로그램 탭에서 신청" });
+    return head + '<div class="axs-rows">' + schedNowRow() +
+      rcHtml({ cls: "", onclick: "App.tab('guide')", link: true, left: rcIcon(App.ICONS.guide), title: "신청한 프로그램 없음", sub: "프로그램에서 신청" }) + "</div>";
   }
   var cards = rows.map(function (r) {
     return rcHtml({ cls: " my", onclick: r[1], link: true, left: tokBadge(esc(r[2]), r[5]), title: esc(r[3]), sub: esc(r[4]), place: r[6] });
   }).join("");
   if (rows.length > SCHED_VIEW) cards = '<div class="myscroll">' + cards + "</div>";
-  return head + schedNowRow() + cards;
+  return head + '<div class="axs-rows">' + schedNowRow() + cards + "</div>";
 }
 
 /* 홈 · 스탬프 블록 (v3.2): 홈도 스탬프 탭과 같은 railHtml 공용 컴포넌트를 쓴다 (design.md 컴포넌트 일관성).
    홈용은 컴팩트 변형(캡션 축약 + 하단 CTA)일 뿐 레일의 시각 문법은 동일 · 마커 탭 동작(모달)도 동일하다. */
 function myCouponHtml() {
-  return '<div class="sect" style="margin-top:12px"><b>스탬프</b>' +
-    '<span onclick="App.go(\'passport\')">스탬프 탭 ›</span></div>' +
+  return '<div class="sect"><b>스탬프</b>' +
+    '<span role="button" tabindex="0" onclick="App.go(\'passport\')">스탬프 ›</span></div>' +
     railHtml(stampCount(), false, null, true);
 }
 
@@ -4299,16 +4370,17 @@ var Views = {
      공지 카드 한 장(있을 때만) → 포토부스 호출(급한 내 것) → 인사 → 진행 중 카드(화면의 주 행동) → 전체 시간표 · 체험 찾기 → 광고판.
      광고판은 사용자 결정(260922)으로 남긴 예외 · 흰 surface · 그림자 없음 · 맨 아래라 주 행동 카드보다 약하다.
      옛 홈의 스탬프 레일 · 나의 일정은 나의 참여(M01)로 옮겼다. */
+  /* v4.04 (사용자 결정 260922 「메인 화면은 기존 버전이 더 좋아 보인다」) 홈 = v4.02 구성과 순서로 복원 ·
+     인사는 헤더 · 공지 카드 한 장(흐르는 띠 대신, 1단계 것 유지) → 포토부스 호출 → 광고판 → 스탬프 레일 → 나의 일정(지금·다음 + 내 항목).
+     1단계 H01(진행 중 카드 · 시간표 · 체험 찾기)의 homeNowHtml 은 남겨 둔다(다른 곳에서 부르지 않는다). */
   home: function () {
-    var hu = S.get("user", {}) || {};
     return '<div class="ax-stack">' +
       homeNoticeHtml() +
       photoAlertHtml() +
-      '<div class="ax-stack-tight"><p class="ax-meta">10월 26일 월요일</p><h1 class="ax-title">안녕하세요' + (hu.name ? ", " + esc(hu.name) + "님" : "") + "</h1></div>" +
-      homeNowHtml() +
-      axDest("전체 시간표", "시간순으로 프로그램 확인", "보기", "homeSched()") +
-      axDest("체험 찾기", "현장과 앱에서 바로 시작하기", "보기", "App.tab('exp')") +
       billboardHtml() +
+      '<section class="axs-sec axs-railgo" onclick="if (!event.target.closest(\'.mk, .sect span\')) App.go(\'passport\')">' + myCouponHtml() + "</section>" +   /* 레일 면을 누르면 나의 참여 › 스탬프 · 마커는 v4.02 대로 룰렛·응모 안내 */
+      artBannerHtml() +
+      '<section class="axs-sec">' + myScheduleHtml() + "</section>" +
       "</div>";
   },
 
@@ -4326,7 +4398,6 @@ var Views = {
       axDest("포토부스 대기", "내 대기 순서와 접수 상태", pqAct, "App.go('photoq')") +
       "</div>" +
       '<button type="button" class="ax-button ax-button-weak" onclick="qrPanelOpen(\'mine\')">내 QR 보여주기</button>' +
-      '<button type="button" class="ax-link axs-plain axs-center" onclick="fsSheet(true)">설정 · 글자 크기 · 로그아웃</button>' +
       "</div>";
   },
 
