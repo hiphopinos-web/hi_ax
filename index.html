@@ -1009,7 +1009,7 @@
   /* 헤더 64 · 화면 바탕과 같은 canvas 면 */
   /* v4.04 헤더 = v4.02 구성 복원(사용자 결정 260922) · 유틸 행 64(워드마크 · 일반/큰글씨 · 알림 종 · 설정) + 홈 인사 / 탭 루트 제목 · 상세 = 뒤로 + 제목 + 설정.
      가이드에서 벗어나는 것만 다듬었다: 흰 글자 → onBrand · 아이콘 터치 48 · 글자는 토큰 단계 · QR 아이콘 없음(가운데 QR 버튼) */
-  #topbar.ax-header { position: sticky; top: 0; z-index: 30; display: block; height: auto; background: var(--ax-color-canvas); }
+  #topbar.ax-header { position: sticky; top: 0; z-index: 30; display: block; height: auto; background: var(--ax-color-canvas); border-bottom: 1px solid var(--ax-color-divider); }   /* v4.06 헤더 하단 구분선 1px(사용자 결정 260922) · 그림자 없음 · sticky 라 스크롤해도 본문과 나뉜다 */
   #topbar .axs-hrow { display: flex; align-items: center; gap: 0; min-height: var(--ax-header-height); }
   #topbar .axs-fs { margin-left: var(--ax-space-4); }
   /* 좁은 폭 · 360 미만은 「2026」을 빼고, 320 대는 글자 크기 토글을 설정(톱니) 시트로만 둔다(시트에 같은 선택지가 있다) */
@@ -1019,8 +1019,10 @@
   #topbar .axs-sp { flex: 1; }
   #topbar .axs-wm { flex: 0 1 auto; min-width: 0; display: flex; align-items: center; gap: var(--ax-space-4); min-height: var(--ax-touch-size); padding: 0; border: 0; background: transparent; cursor: pointer; font: var(--ax-type-t5-strong); white-space: nowrap; color: var(--ax-color-ink); }
   #topbar .axs-wm span { color: var(--ax-color-brandText); }
-  #topbar .axs-fs { flex: none; display: flex; gap: var(--ax-space-4); padding: var(--ax-space-4); border-radius: var(--ax-radius-12); background: var(--ax-color-divider); }
-  #topbar .axs-fs button { min-height: 40px; padding: 0 var(--ax-space-8); border: 0; border-radius: var(--ax-radius-8); background: transparent; color: var(--ax-color-body); font: var(--ax-type-t7); cursor: pointer; }
+  /* v4.06 (사용자 요청 260922) 글자 크기 토글 · 보이는 칩 32(안쪽 4 + 버튼 24) · 글자 T7 · 누르는 자리는 버튼 위아래 12씩 투명하게 넓혀 48 · 종·설정과 세로 가운데 */
+  #topbar .axs-fs { flex: none; display: flex; align-items: center; gap: var(--ax-space-4); padding: var(--ax-space-4); border-radius: var(--ax-radius-12); background: var(--ax-color-divider); }
+  #topbar .axs-fs button { position: relative; min-height: 24px; padding: 0 var(--ax-space-8); border: 0; border-radius: var(--ax-radius-8); background: transparent; color: var(--ax-color-body); font: var(--ax-type-t7); line-height: 24px; cursor: pointer; }
+  #topbar .axs-fs button::before { content: ""; position: absolute; left: 0; right: 0; top: calc(var(--ax-space-12) * -1); bottom: calc(var(--ax-space-12) * -1); }
   #topbar .axs-fs button[aria-pressed="true"] { background: var(--ax-color-surface); color: var(--ax-color-ink); }
   #topbar .axs-ib { position: relative; flex: none; width: var(--ax-touch-size); height: var(--ax-touch-size); padding: 0; border: 0; border-radius: var(--ax-radius-12); background: transparent; color: var(--ax-color-body); display: grid; place-items: center; cursor: pointer; }
   #topbar .axs-ib svg { width: 24px; height: 24px; display: block; }
@@ -1035,7 +1037,8 @@
   #topbar .axs-hroot { padding-bottom: var(--ax-space-8); font: var(--ax-type-t3); color: var(--ax-color-ink); }
   #topbar .chip { flex: none; }
   /* 헤더가 두 줄(인사 · 루트 제목)이면 본문 위 여백을 줄여 첫 블록이 헤더에 붙는다 */
-  #view[data-v="home"], #view[data-v="guide"], #view[data-v="exp"], #view[data-v="my"] { padding-top: var(--ax-space-16); }
+  /* v4.06 탭 첫 화면(프로그램 · 체험 · 나의 참여)은 큰 제목을 없앴다 · 헤더와 첫 요소 사이 24(#view 기본) · 홈만 인사 줄 아래 16 */
+  #view[data-v="home"] { padding-top: var(--ax-space-16); }
   /* v4.04 홈 = v4.02 구성 복원(공지 카드 → 포토부스 호출 → 광고판 → 스탬프 레일 → 나의 일정) · 옛 조각을 이 화면 안에서만 가이드 문법으로 다듬는다.
      연주황 카드 → 흰 surface(반경 24) · 검정 강조 → 주황 채움 + 짙은 글자 · 행은 목적지 행 반경 20 · 흰 글자 없음 */
   #view[data-v="home"] .axs-sec { display: flex; flex-direction: column; gap: var(--ax-space-12); }
@@ -1175,6 +1178,73 @@
   #axsSheet { position: fixed; inset: 0; z-index: 70; display: flex; align-items: flex-end; justify-content: center; background: color-mix(in srgb, var(--ax-color-ink) 40%, transparent); }
   #axsSheet .ax-sheet { width: 100%; max-width: var(--ax-app-max); padding-bottom: max(var(--ax-space-32), env(safe-area-inset-bottom)); color: var(--ax-color-ink); }
   #axsSheet .ax-type-t2 { color: var(--ax-color-ink); }
+  /* ═══ AX-TDS v1 3단계 · 체험 E01/E02 · 스캔 Q02 · 결과 Q03 · 계단 (260922 · 토큰만 · hex 없음) ═══ */
+  #view[data-v="exp_g"], #view[data-v="scan_res"], #view[data-v="stair"] { padding-bottom: calc(176px + env(safe-area-inset-bottom)); }
+  .axs-fix.ax-bottom { display: flex; flex-direction: column; gap: var(--ax-space-12); padding: var(--ax-space-16) var(--ax-page-inset) max(var(--ax-space-24), env(safe-area-inset-bottom)); background: var(--ax-color-canvas); }
+  .axs-steps { display: flex; flex-direction: column; gap: var(--ax-space-20); margin: 0; padding: var(--ax-space-24); list-style: none; border-radius: var(--ax-radius-24); background: var(--ax-color-surface); }
+  .axs-steps li { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: var(--ax-space-12); }
+  .axs-steps .axs-no { font: var(--ax-type-t6-strong); color: var(--ax-color-brandText); }
+  .axs-steps .axs-tx { display: flex; flex-direction: column; gap: var(--ax-space-4); min-width: 0; }
+  .axs-chip.err { background: var(--ax-color-errorSoft); color: var(--ax-color-error); }
+  .axs-pend { color: var(--ax-color-brandText); text-align: center; }
+  /* Q03 · 적립 결과 · 서버 확인 뒤에만 개수 */
+  .axs-res-bot svg, .axs-stbot svg { display: block; width: 100%; height: 100%; }
+  .axs-res-bot { width: 88px; height: 88px; }
+  .axs-res-bot svg { animation: axsFloat 3.2s ease-in-out infinite; }
+  .axs-res-bot .eye, .axs-stbot .eye { transform-box: fill-box; transform-origin: center; animation: axsBlink 4.6s linear infinite; }
+  .axs-res-card { display: flex; flex-direction: column; gap: var(--ax-space-8); padding: var(--ax-space-24); border-radius: var(--ax-radius-24); background: var(--ax-color-brandSoft); }
+  .axs-res-card .axs-bt { color: var(--ax-color-brandText); }
+  .axs-res-n { font: var(--ax-type-display); color: var(--ax-color-onBrand); }
+  /* Q02 · 스캔 · 카메라 화면(가이드 2866:168)만 짙은 면 · 하단 흰 시트 */
+  body[data-pg="d"], body[data-pg="d"] #frame, body[data-pg="d"] #topbar.ax-header { background: var(--ax-color-ink); }
+  body[data-pg="d"] #topbar .axs-htitle, body[data-pg="d"] #topbar .axs-back, body[data-pg="d"] #topbar .axs-ib { color: var(--ax-color-inverse); }
+  body[data-pg="d"] #topbar.ax-header { border-bottom-color: var(--ax-color-body); }
+  #view[data-v="scan_q"] { padding-bottom: calc(200px + env(safe-area-inset-bottom)); }
+  .axs-scanwrap .ax-title, .axs-inv { color: var(--ax-color-inverse); }
+  .axs-cam { position: relative; aspect-ratio: 1 / 1; border-radius: var(--ax-radius-24); overflow: hidden; background: var(--ax-color-body); }
+  .axs-cam video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .axs-cam-fr { position: absolute; inset: 16%; border: 2px solid var(--ax-color-inverse); border-radius: var(--ax-radius-24); pointer-events: none; }
+  .axs-cam-off { display: flex; flex-direction: column; justify-content: center; gap: var(--ax-space-12); padding: var(--ax-space-24); text-align: center; }
+  .axs-cam-off .ax-type-t5-strong, .axs-cam-off .ax-description { color: var(--ax-color-inverse); }
+  .axs-scansheet { display: flex; flex-direction: column; gap: var(--ax-space-12); border-radius: var(--ax-radius-32) var(--ax-radius-32) 0 0; padding: var(--ax-space-24) var(--ax-page-inset) max(var(--ax-space-24), env(safe-area-inset-bottom)); background: var(--ax-color-surface); }
+  /* 계단 · 진행 · 도트 계단(10초 한 칸) · 챗봇이 맨 위 칸에 · 모션 줄이기면 정지 */
+  .axs-st-big { font: var(--ax-type-t2); color: var(--ax-color-ink); }
+  .axs-strow { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--ax-space-16); }
+  .axs-stairs { position: relative; flex: none; width: 112px; aspect-ratio: 120 / 160; }
+  .axs-stairs svg { position: absolute; left: 0; bottom: 0; width: 100%; height: 75%; display: block; overflow: visible; }
+  .axs-stairs circle { fill: var(--ax-color-divider); }
+  .axs-stairs circle.on { fill: var(--ax-color-brand); }
+  .axs-stbot { position: absolute; width: 32%; aspect-ratio: 1 / 1; transition: left 0.6s ease, top 0.6s ease; }
+  .axs-stbot svg { animation: axsFloat 3.2s ease-in-out infinite; }
+  .axs-safe { padding: var(--ax-space-16); border-radius: var(--ax-radius-16); background: var(--ax-color-surface); font: var(--ax-type-t6-strong); color: var(--ax-color-ink); text-align: center; }
+  .axs-gauge { height: 8px; border-radius: var(--ax-radius-999); background: var(--ax-color-brandSoft); overflow: hidden; }
+  .axs-gauge i { display: block; height: 100%; border-radius: var(--ax-radius-999); background: var(--ax-color-brand); }
+  .axs-fl6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .axs-fl6 .axs-none { grid-column: 1 / -1; font: var(--ax-type-t6-strong); }
+  /* 내 QR · 운영자가 찍으면 「확인됨」 */
+  .myqr { position: relative; }
+  .axs-okbadge { position: absolute; left: 50%; top: 50%; width: 72px; height: 72px; transform: translate(-50%, -50%); border-radius: var(--ax-radius-999); background: var(--ax-color-brandSoft); color: var(--ax-color-ink); display: grid; place-items: center; }
+  .axs-okbadge svg { width: 40px; height: 40px; }
+  .axs-okline { margin-top: var(--ax-space-8); padding: var(--ax-space-12) var(--ax-space-16); border-radius: var(--ax-radius-12); background: var(--ax-color-brandSoft); color: var(--ax-color-ink); font: var(--ax-type-t6); text-align: center; }
+  .axs-okline b { font-weight: 700; }
+  @media (prefers-reduced-motion: reduce) { .axs-res-bot svg, .axs-stbot svg, .axs-res-bot .eye, .axs-stbot .eye { animation: none; } .axs-stbot { transition: none; } }
+  /* v4.06 프로그램 탭 색 역할 통일(사용자 요청 260922) · 흰 페이지 → canvas + 흰 카드 · 보라 분류·검정 연사 칸·검정 필터를 다른 탭 문법으로
+     목록 행 = 흰 카드(반경 20, 나의 참여·체험 목적지 행과 같은 면) · 층 배지 = brandSoft(홈 일정 시간 배지와 같은 강조) · 필터 선택 = brandSoft(내 보상 필터와 같다)
+     분류 칩 = 중립 canvas · 연사 칸 = canvas 바탕 + ink 글자 · 시간표 행 · 내 일정 카드 = 흰 면 · 하단 고정 바 = canvas */
+  #view[data-v="guide"] .axs-rows { display: flex; flex-direction: column; gap: var(--ax-space-12); }
+  .axs-prow.ax-program-row { padding: var(--ax-space-20); border: 0; border-radius: var(--ax-radius-20); background: var(--ax-color-surface); }
+  #app .ax-floor { background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); }
+  #app .ax-filter-button { background: var(--ax-color-surface); color: var(--ax-color-body); cursor: pointer; font-family: inherit; }
+  #app .ax-filter-button[aria-pressed="true"] { background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); }
+  .axs-chip.cat { background: var(--ax-color-canvas); color: var(--ax-color-body); }
+  .axs-cat { color: var(--ax-color-muted); }
+  .axs-av { background: var(--ax-color-canvas); color: var(--ax-color-ink); }
+  .axs-tl { background: var(--ax-color-surface); }
+  .axs-my { background: var(--ax-color-surface); }
+  .axs-pd .ax-inset { padding: var(--ax-space-16); }
+  .axs-tl + .axs-tl { margin-top: var(--ax-space-8); }
+  #view[data-v="sess_d"] .axs-slot:not(:disabled):not([aria-pressed="true"]) { background: var(--ax-color-surface); }   /* canvas 페이지 위 상담 시간 칩 */
+  .axs-pd .axs-kv { grid-template-columns: 72px minmax(0, 1fr); }
   /* 옛 공용 카드 반경만 새 규격(24)으로 · 안쪽 여백·타이포는 2~4단계에서 */
   .card, .menu { border-radius: var(--ax-radius-24); }
 </style>
@@ -1358,7 +1428,8 @@ var STAMPS = [
   { id: "p7", title: "전시 QR 퀴즈", short: "QR 퀴즈", desc: "벽 QR 스캔 · 한 세트 완료", where: "약 10분", tap: "App.go('wq_list')", cta: "QR 퀴즈 풀기" },
   /* v3.34b (260917 사용자 확정) 계단 · 계단실 안 QR 한 번 = 적립 · 층·방향·횟수·시간 조건 없음 · 판정·적립은 서버(stamp_claim)
      site: 담당자 적립 가능 (서버 stamp_grant 가 st 를 받는다) */
-  { id: "st", title: "계단 이용", short: "계단", desc: "계단실 안 QR 스캔", where: "", site: 1, tap: "qrScanOpen()", cta: "QR 스캔" },
+  /* v4.06 (260919 사용자 확정) 계단 B안 · 방화문 앞 QR 로 시작과 끝 · 누적 10개 층이 되는 종료 스캔에서 적립 · 판정은 서버(stair_scan) */
+  { id: "st", title: "계단 이용", short: "계단", desc: "방화문 앞 QR · 시작과 끝에 찍기 · 누적 10개 층", where: "", site: 1, tap: "stairOpen()", cta: "계단 안내" },
   /* v3.35 오늘 한 판 설문 · 14:30 부터 · 제출만 하면 적립(답 내용 무관) · 판정·적립은 서버(survey_submit) */
   { id: "sv", title: "오늘 한 판 설문", short: "설문", desc: "설문 제출", where: "60초", inapp: 1, tap: "App.go('survey')", cta: "설문 시작" }
 ];
@@ -2122,7 +2193,7 @@ function notice(o) {
 }
 function noticeBusy() {
   return !!(SPOP.cur || SPOP.q.length || el("spop") || el("modal") || el("rgPlay") || el("app").hidden ||
-    App.current === "admin" || SIGNAGE.indexOf(App.current) >= 0);
+    App.current === "admin" || App.current === "scan_res" || App.current === "stair" || SIGNAGE.indexOf(App.current) >= 0);   /* v4.06 결과·계단 화면이 연출이다 · 보상 안내는 나온 뒤 */
 }
 function noticePump() {
   clearTimeout(NOTICE.t);
@@ -2140,6 +2211,7 @@ function noticePump() {
 /* v4.03 AX-TDS · 옛 홈의 레일·나의 일정이 나의 참여로 옮겨 가서 목적지도 옮겼다: 보상 = 내 보상 카드 · 신청 = 내 일정 · 포토부스 = 포토부스 대기 */
 function noticeGo(v, f) {
   modalClose();
+  if (v.indexOf("card:") === 0) { expStamp(v.slice(5)); return; }   /* v4.06 이미 받음 · 저장한 스캔 적립 → 그 스탬프 카드 펼침 */
   if (v === "my_sched") { SCHED.tab = "mine"; v = "guide_time"; }
   App.go(v);
   if (f) setTimeout(function () { focusPulse(f); }, 120);
@@ -2258,6 +2330,7 @@ function modalOpen(html) {
 }
 function modalClose() {
   STAFFK = "";   /* 담당자 코드를 화면과 함께 버린다 */ var m = el("modal"); if (m) m.remove();
+  if (typeof QRM !== "undefined" && QRM.timer) { qrMineOff(); QRM.msg = ""; }   /* v4.06 내 QR 3초 동기화는 패널이 열려 있는 동안만 */
   if (NOTICE.cur) NOTICE.cur = null;   /* v3.53 팝업이든 다른 모달이든 닫히면 다음 팝업 */
   if (NOTICE.q.length) { clearTimeout(NOTICE.t); NOTICE.t = setTimeout(noticePump, 250); }
 }
@@ -3086,6 +3159,8 @@ var App = {
     passport: "my", guide_time: "my", rewards: "my", photoq: "my",
     /* 체험 · 현장(부스·QR 퀴즈) / 앱(미니게임·아이디어·설문) (E01) */
     booth: "exp", wq_list: "exp", wq_play: "wq_list",
+    /* v4.06 3단계 · 현장 안내 E02 · 스캔 Q02 · 결과 Q03 · 계단 화면 */
+    exp_g: "exp", scan_q: "exp", scan_res: "exp", stair: "exp",
     games: "exp", ideas: "exp", survey: "exp", ideas_mine: "ideas",
     game_word: "games", game_type: "games", game_tetris: "games", game_pang: "games", game_jump: "games", oly_rank: "games", type_rank: "game_type",
     art: "home", art_rank: "art", screen_art: "admin",   /* v4.01 AI 사생대회 폐기 · 진입은 막혀 있다 */
@@ -3124,6 +3199,10 @@ var App = {
   title: function (v) {
     if (v === "guide_time") return SCHED.tab === "mine" ? "내 일정" : "전체 시간표";
     if (v === "sess_d") return progMine(PROG.sid) ? "신청 관리" : "프로그램";
+    if (v === "exp_g") return stampTitle(EXPG.id);
+    if (v === "scan_q") return SCQ.ctx ? stampTitle(SCQ.ctx) + " 안내" : "QR 스캔";
+    if (v === "scan_res") return SR.st === "ok" ? "적립 완료" : SR.st === "saved" ? "스캔 저장됨" : "적립 결과";
+    if (v === "stair") return "계단 이용";
     return this.TITLES[v] || "";
   },
   tab: function (t) { this.from = {}; this.go(t); },
@@ -3138,6 +3217,7 @@ var App = {
     if (v === "dap" || v === "ev_cchat") { PROG.sid = v === "dap" ? "dap" : "cchat"; v = "sess_d"; }
     if (typeof sheetClose === "function" && el("axsSheet")) sheetClose(true);
     if (this.current === "guide" && v !== "guide") PROG.scroll = window.scrollY;   /* 목록 스크롤 보존 (뒤로 오면 되돌린다) */   /* v4.01 AI 사생대회 폐기 · 배너·해시(#demo=art 등)·뒤로가기를 포함한 모든 진입을 홈으로 돌린다 */
+    if (this.current === "scan_q" && v !== "scan_q") { qrCamStop(); SCQ.paused = false; }   /* v4.06 Q02 를 떠나면 카메라를 끈다 */
     if (this.current === "game_word" && v !== "game_word") gwStop();
     if (this.current === "game_type" && v !== "game_type") rgStop();
       if (this.current === "game_tetris" && v !== "game_tetris") ttStop();
@@ -3201,8 +3281,8 @@ var App = {
     /* 헤더 높이를 실측해 sticky 기준선으로 넘긴다 */
     el("frame").style.setProperty("--stick", tb.offsetHeight + "px");
     var nav = el("tabbar");
-    document.body.dataset.pg = ["guide", "sess_d", "sess_ok", "guide_time"].indexOf(v) >= 0 ? "w" : "";   /* v4.05 흰 페이지 */
-    nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "sess_d" || v === "sess_cf" || v === "sess_ok" || v === "game_word" || v === "game_type" || v === "game_tetris" || v === "game_pang" || v === "game_jump" || v === "type_site") ? "none" : "";
+    document.body.dataset.pg = v === "scan_q" ? "d" : "";   /* v4.06 · 프로그램 탭 흰 페이지(v4.05) 폐지 · 다른 탭과 같은 canvas + 흰 카드 · Q02 스캔만 카메라 화면(짙은 면) */
+    nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "sess_d" || v === "sess_cf" || v === "sess_ok" || ["exp_g", "scan_q", "scan_res", "stair"].indexOf(v) >= 0 || v === "game_word" || v === "game_type" || v === "game_tetris" || v === "game_pang" || v === "game_jump" || v === "type_site") ? "none" : "";
     var activeTab = this.tabOf(v), ico = this.NAV_ICO;
     var btn = function (t) {
       return '<button class="ax-nav-link"' + (activeTab === t[0] ? ' aria-current="page"' : "") + ' onclick="App.tab(\'' + t[0] + '\')">' +
@@ -3211,11 +3291,14 @@ var App = {
     var T = this.TABS;
     /* 가운데 = 즉시 스캔 · 주황 원 + 짙은 글리프 · 가이드 헤더 QR 과 같은 둥근 모서리 그림(qr-corners) + QR 글자 */
     nav.innerHTML = btn(T[0]) + btn(T[1]) +
-      '<button class="axs-scan" onclick="qrPanelOpen(\'scan\')" aria-label="QR 스캔"><span class="axs-scan-c" aria-hidden="true">' +
+      '<button class="axs-scan" onclick="scanOpen(\'\')" aria-label="QR 스캔"><span class="axs-scan-c" aria-hidden="true">' +
       '<svg><use href="#qr-corners"/></svg><b>QR</b></span><span aria-hidden="true">QR 스캔</span></button>' +
       btn(T[2]) + btn(T[3]);
     el("view").dataset.v = v;
+    if (v === "scan_q" && QRS.stream) qrCamStop();   /* v4.06 video 요소를 다시 그리므로 카메라를 새로 붙인다 */
     el("view").innerHTML = Views[v]();
+    if (v === "scan_q") setTimeout(scanQStart, 80);
+    if (v === "stair" && STR.mode === "start") stairTickOn();
     if (typeof SPOP !== "undefined" && SPOP.cur && !SPOP.cur.done) { var spT = spTarget(SPOP.cur.sd.id); if (spT.el) spT.el.classList.add("sp-wait"); }   /* v3.49 재렌더돼도 안착 전 자리는 비어 보이게 */
     kvMountAll();
     updateLed();
@@ -3237,9 +3320,23 @@ window.addEventListener("scroll", function () {
 window.addEventListener("axf-store", function () {
   checkMyState();
   updateLed();
-  if (["game_word", "game_type", "game_tetris", "game_pang", "game_jump", "type_site", "wall_wave", "wall_metowe"].indexOf(App.current) >= 0) return;
+  if (["game_word", "game_type", "game_tetris", "game_pang", "game_jump", "type_site", "wall_wave", "wall_metowe", "scan_q"].indexOf(App.current) >= 0) return;   /* v4.06 Q02 는 저장소가 바뀔 때마다 카메라를 다시 붙이지 않는다 */
   App.render();
 });
+
+/* v4.06 스캔 링크(#s= · #q=) · 히스토리 트랩(replaceState)보다 먼저 꺼내 주소에서 지운다 · 처리는 로그인 뒤 scanLinkRun (3단계 절) */
+var SCANLINK_KEY = "axf_pending_scan", SCANLINK = { mem: null };
+/* 주소의 #s= · #q= 를 꺼내 보관하고 주소에서 지운다 · 새로 고침·뒤로 가기로 같은 판정이 반복되지 않게 */
+function scanLinkTake() {
+  var h = String(location.hash || "");
+  if (!/^#(s|q)=/i.test(h)) return false;
+  var p = { raw: h, t: Date.now() };
+  SCANLINK.mem = p;
+  try { sessionStorage.setItem(SCANLINK_KEY, JSON.stringify(p)); } catch (e) {}
+  try { history.replaceState(history.state, "", location.pathname + location.search); } catch (e) {}
+  return true;
+}
+scanLinkTake();
 
 /* ── 뒤로가기 = 앱 안에서 위로 (v19) · 실수로 앱을 이탈하지 않게 히스토리 트랩 ── */
 var NAV = { lastBack: 0 };
@@ -3333,6 +3430,8 @@ function myItems(withTest) {
       sub: qc ? "지금 입장하세요" : "대기 중" + (r.ahead ? " (앞 " + r.ahead + "명)" : ""), gSub: qc ? "지금 입장하세요" : r.no + "번 대기 중" + (r.ahead ? " (앞 " + r.ahead + "명)" : ""),
       call: qc, kind: "queue:" + qk, iv: null });
   }
+  var sl0 = stairState().leg;   /* v4.06 계단 진행 중 · 도착 층 QR 을 찍을 때까지 맨 위 */
+  if (sl0) out.push({ min: -1, go: "stairOpen()", badge: "계단", label: "지금", title: "계단 이용", gTitle: "계단 이용", sub: sl0.fl + "F 시작 · 도착 층 QR", gSub: sl0.fl + "F " + (sl0.route || stairRoute(sl0.r)) + " 시작 · 도착 층 QR", kind: "stair", iv: null });
   var pq = photoQ();
   if (pq && (pq.status === "wait" || pq.status === "call")) {
     var pc = pq.status === "call";
@@ -4147,7 +4246,7 @@ function schedRow(key, cls, tok, t0, t1, titleHtml, bodyHtml, subHtml, place, ba
 }
 
 /* ════════════════ 스탬프 카드 아코디언 (v3.2 · 경로 메타포 폐기) · 전폭 카드 · 각자 독립 개폐 ════════════════ */
-var PP = { open: {}, animOn: false };
+var PP = { open: {}, animOn: false, just: {} };   /* v4.06 just = 방금 적립한 시각(이 화면 세션) */
 function ppToggle(id) { PP.open[id] = !PP.open[id]; App.render(); }
 /* ── 테스트 모드 (v3.19) · 노출 = 데모(#demo, BE off) 또는 테스트 사번 로그인.
    관리자 인증만으로는 노출하지 않는다: 실서버 stamp_grant 완료 버튼은 사후 추첨 원장 오염 위험이 있어 제외(310555 로 충족).
@@ -4430,10 +4529,25 @@ function ppAfterRender(n, oldN, glow) {
 /* 기본 순서 = 장소 그룹순: 1F 3건(01 전시·02 부스·06 QR퀴즈) → 17F(03) → 앱(04·05).
    완료 카드는 위로 올라온다(완료 그룹 상단, 그 안에서 기본 순서 유지) · 그룹 캡션은 미완료 구간에만 얇게. */
 var PP_ORDER = [["p1", "1F"], ["p2", "1F"], ["p7", "1F"], ["p3", "17F · 1F · 18F"], ["st", "계단"], ["p4", "앱"], ["p5", "앱"], ["sv", "앱"]];
+/* v4.06 방금 적립한 현장 스탬프 · 같은 층에서 아직 안 한 현장 스탬프 하나 (QR 상호작용 기획 2-3) · 코칭 문장 없이 버튼 라벨만 */
+var PP_NEXT = { p1: ["p7", "p2"], p2: ["p7", "p1"], p7: ["p1", "p2"], p3: ["sv", "p5"] };
+function ppNextHtml(id) {
+  var st = S.get("stamps", []), c = PP_NEXT[id] || [];
+  for (var i = 0; i < c.length; i++) {
+    var n = c[i];
+    if (st.indexOf(n) >= 0) continue;
+    if (n === "sv" && surveyLock()) continue;
+    var lb = { p1: "1F 전시 · QR 스캔", p2: "AX Now! 체험 · 부스 안내", p7: "전시 QR 퀴즈 · QR 스캔", sv: "오늘 한 판 설문", p5: "아이디어 쓰기" }[n];
+    var go = { p1: "expGuide('p1')", p2: "expGuide('p2')", p7: "expGuide('p7')", sv: "App.go('survey')", p5: "App.go('ideas')" }[n];
+    return '<button class="btn line" style="margin-top:8px" onclick="' + go + '">' + lb + "</button>";
+  }
+  return "";
+}
 function stampInnerHtml(s) {
   /* v3.54 문구 규칙 · 본문은 desc 만 (where 는 부제) */
   var inner = '<p class="d">' + s.desc + "</p>" +
     (s.note ? '<p class="nt">' + s.note + "</p>" : "");
+  if (PP.just[s.id] && S.get("stamps", []).indexOf(s.id) >= 0 && s.id !== "st") return '<p class="d">방금 적립 · ' + PP.just[s.id] + "</p>" + ppNextHtml(s.id);
   if (s.id === "sv") {
     var dn = surveyDone(), lk = surveyLock(), dr = S.get("survey_draft", null);
     inner = '<p class="d">' + s.desc + "</p>" +
@@ -4450,10 +4564,12 @@ function stampInnerHtml(s) {
     return inner;
   }
   if (s.id === "st") {
-    /* v3.34b · 누적 막대·출발/도착 안내 삭제 · 계단실 안 QR 한 번이면 끝 */
-    inner = '<p class="d">' + s.desc + "</p>" +
-      scanQNote() +
-      '<button class="btn mint" style="margin-top:10px" onclick="qrScanOpen()">QR 스캔</button>' +
+    /* v4.06 계단 B안 · 누적 게이지 · 진행 중 한 줄 · 안전 문구 · 계단 화면 / 안내로 */
+    var sst = stairState();
+    inner = '<p class="d">' + s.desc + "</p>" + stairGauge(sst.total || 0, sst.goal || 10) +
+      (sst.leg ? '<p class="nt">진행 중 · ' + sst.leg.fl + "F 시작 · " + esc(sst.leg.at || "") + "</p>" : "") +
+      '<p class="nt">' + STAIR_SAFE + "</p>" + scanQNote() +
+      '<button class="btn mint" style="margin-top:10px" onclick="stairOpen()">' + (sst.leg ? "진행 화면 보기" : "계단 안내") + "</button>" +
       '<p class="lnk sub" onclick="staffStampOpen()">담당자 적립 ›</p>';
   } else if (s.id === "p3") {
     /* v3.52 · 세 가지 중 하나 · 바로가기 3개 · 좌석 QR · 담당자 적립 */
@@ -4497,7 +4613,7 @@ function scardHtml(s, got, isNext, newly) {
     cls: (got ? " done" : isNext ? " next" : " dim"),
     onclick: "ppToggle('" + s.id + "')",
     left: rcIcon(STAMP_ICONS[s.id]),
-    title: s.title, sub: s.id === "sv" && !got && surveyLock() === "time" ? SURVEY.open + "에 열려요" : s.id === "sv" && !got && surveyLock() === "nostamp" ? "스탬프를 하나 모으면 열려요" : (isNext ? '<b class="nxt">다음 추천</b>' + (s.where ? " · " : "") : "") + s.where,
+    title: s.title, sub: got && PP.just[s.id] ? "방금 적립 · " + PP.just[s.id] : s.id === "sv" && !got && surveyLock() === "time" ? SURVEY.open + "에 열려요" : s.id === "sv" && !got && surveyLock() === "nostamp" ? "스탬프를 하나 모으면 열려요" : (isNext ? '<b class="nxt">다음 추천</b>' + (s.where ? " · " : "") : "") + s.where,
     right: got ? stampMarkHtml(false) : "",
     open: !!PP.open[s.id], body: stampInnerHtml(s)
   });
@@ -4743,8 +4859,7 @@ var Views = {
     var nSched = myItems(true).length, n = stampCount(), pq = photoQ();
     var rw = rewItems().filter(function (x) { return !x.used; }).length;
     var pqAct = !pq ? "확인" : pq.status === "call" ? "입장" : pq.status === "wait" ? pq.no + "번" : "확인";
-    return '<div class="ax-stack">' +
-      '<h1 class="ax-title">나의 참여를<br>한곳에서 확인해요</h1>' +
+    return '<div class="ax-stack">' +   /* v4.06 탭 첫 화면 큰 제목 삭제(사용자 결정 260922 · 화면 이름은 헤더) */
       '<div class="axs-list">' +
       axDest("내 일정", "신청한 프로그램과 예약", nSched + "개", "mySched()") +
       axDest("스탬프", "모은 스탬프와 다음 목표", n + "개", "App.go('passport')") +
@@ -4764,23 +4879,30 @@ var Views = {
     var tabs = '<div class="axs-seg" role="tablist" aria-label="체험 구분">' +
       '<button type="button" role="tab" aria-selected="' + (seg === "site") + '" onclick="expSeg(\'site\')">현장에서</button>' +
       '<button type="button" role="tab" aria-selected="' + (seg === "app") + '" onclick="expSeg(\'app\')">앱에서</button></div>';
+    var sst = stairState();
+    /* v4.06 E01-onsite · 행 → 체험 안내(E02) → QR 스캔(Q02) → 결과(Q03) · 계단은 진행 중이면 진행 화면 */
     var list = seg === "site" ? [
-      ["1F 전시", "1F · 약 5분", "expStamp('p1')", "p1"],
-      ["AX Now! 체험", "HIDI-Q / HI-Helper · 약 5분", "App.go('booth')", "p2"],
-      ["전시 QR 퀴즈", "1F · 약 10분", "App.go('wq_list')", "p7"],
+      ["1F 전시", "1F · 약 5분", "expGuide('p1')", "p1"],
+      ["AX Now! 체험", "HIDI-Q / HI-Helper · 약 5분", "expGuide('p2')", "p2"],
+      ["전시 QR 퀴즈", "1F · 약 10분", "expGuide('p7')", "p7"],
       ["AI 포토부스", "1F · 현장 대기 접수", "App.go('photoq')", ""],
-      ["계단 이용", "계단실 안 QR 스캔", "expStamp('st')", "st"]
+      ["계단 이용", sst.leg ? "진행 중 · " + sst.leg.fl + "F 시작" : "1F~18F · 누적 " + (sst.total || 0) + " / " + (sst.goal || 10) + "개 층", "stairOpen()", "st"]
     ] : [
       ["미니게임", "한 판 끝까지 · AX 올림픽 순위", "App.go('games')", "p4"],
       ["아이디어 한 줄", "내 업무의 변화 아이디어 남기기", "App.go('ideas')", "p5"],
       ["오늘 한 판 설문", SURVEY.open + "부터 · 스탬프 1개 필요", "App.go('survey')", "sv"]
     ];
-    return '<div class="ax-stack">' +
-      '<div class="ax-stack-tight"><h1 class="ax-title">지금, 가볍게 시작해요</h1><p class="ax-description">관심 있는 체험 하나를 골라 주세요</p></div>' +
+    return '<div class="ax-stack">' +   /* v4.06 탭 첫 화면 큰 제목·부제 삭제(사용자 결정 260922) · 스캔은 가운데 QR 버튼과 각 안내 화면 */
       tabs + '<div class="axs-list" role="tabpanel">' + list.map(row).join("") + "</div>" +
-      (seg === "site" ? '<button type="button" class="ax-button ax-button-weak" onclick="qrPanelOpen(\'scan\')">활동 QR 스캔하기</button>' : "") +
+      (seg === "site" ? scanQNote() : "") +
       "</div>";
   },
+
+  /* ═══ v4.06 3단계 · E02 체험 안내 · Q02 스캔 · Q03 결과 · 계단 (주 행동은 하단 고정) ═══ */
+  exp_g: function () { return expGuideHtml(); },
+  scan_q: function () { return scanQHtml(); },
+  scan_res: function () { var r = scanResHtml(); return '<div class="ax-stack axs-res">' + r.body + "</div>" + r.btn; },
+  stair: function () { var r = stairHtml(); return '<div class="ax-stack axs-stairv">' + r.body + "</div>" + r.btn; },
 
   /* ═══ 미니게임 · 체험 › 앱에서 · 기존 AX 올림픽 허브(종목 4 + 순위판·포디움 입구) 그대로 (게임 화면 재디자인은 4단계) ═══ */
   games: function () {
@@ -4991,8 +5113,7 @@ var Views = {
   guide: function () {
     var cat = PROG.cat || "all", CATS = [["all", "전체"], ["강연", "강연"], ["실습", "실습"], ["상담", "상담"]];
     var list = progList().filter(function (s) { return cat === "all" || PROG_CAT[s.id] === cat; });
-    return '<div class="ax-stack">' +
-      '<div class="ax-stack-tight"><h1 class="ax-title">새로운 일의 방식을<br>발견해 보세요</h1><p class="ax-description">강연부터 실습, 상담까지 한눈에</p></div>' +
+    return '<div class="ax-stack">' +   /* v4.06 탭 첫 화면 큰 제목·부제 삭제(사용자 결정 260922) */
       '<div class="ax-filter" role="group" aria-label="프로그램 분류">' + CATS.map(function (c) {
         return '<button type="button" class="ax-filter-button" aria-pressed="' + (cat === c[0]) + '" onclick="progCat(\'' + c[0] + '\')">' + c[1] + "</button>";
       }).join("") + "</div>" +
@@ -5042,10 +5163,11 @@ var Views = {
     if (!s) return '<div class="ax-stack">' + botHtml("프로그램을 찾을 수 없어요") + '<button type="button" class="ax-button ax-button-weak" onclick="App.tab(\'guide\')">프로그램 보기</button></div>';
     var d = progDetail(s);
     return '<div class="ax-stack">' +
+      '<section class="ax-card axs-pd">' +   /* v4.06 색 통일 · 흰 페이지 → canvas 위 흰 카드 */
       '<div class="axs-chiprow"><span class="axs-chip cat">' + esc(d.cat) + "</span>" + (d.st ? '<span class="axs-chip ' + d.stc + '">' + esc(d.st) + "</span>" : "") + "</div>" +
       '<h1 class="ax-title">' + esc(d.title) + "</h1>" +
       (d.who ? '<div class="axs-who"><span class="axs-av" aria-hidden="true">' + esc(d.av) + '</span><span class="axs-tx"><span class="ax-card-title">' + esc(d.who) + '</span><span class="ax-description">' + esc(d.whoSub) + "</span></span></div>" : "") +
-      '<dl class="ax-inset axs-kv">' + d.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl>" +
+      '<dl class="ax-inset axs-kv">' + d.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl></section>" +
       (d.extra || "") +
       '<section class="ax-stack-tight axs-gap12"><h2 class="ax-section-title">' + esc(d.secT) + '</h2><p class="ax-body">' + d.secB + "</p>" + (d.link || "") + "</section>" +
       "</div>" +
@@ -5082,7 +5204,7 @@ var Views = {
       '<span class="axs-okmark">완료</span>' +
       '<div class="ax-stack-tight axs-gap12 axs-center-tx"><h1 class="ax-type-t2">' + (dap ? "상담 신청이 접수됐어요" : "참여 신청이 완료됐어요") + "</h1>" +
       '<p class="ax-body">' + (dap ? "운영자가 승인하면 앱에서 알려 드려요." : "새로운 발견의 순간,<br>" + esc(pl) + "에서 만나요.") + "</p></div>" +
-      '<div class="ax-inset ax-stack-tight axs-gap12"><p class="ax-card-title">' + esc(s.ttl) + '</p><p class="ax-description">10월 26일 · ' + esc(dap ? o.slot + " · 30분" : progTm(s.tm)) + '</p><p class="ax-description">' + esc(pl) + "</p></div></div>" +
+      '<div class="ax-card ax-stack-tight axs-gap12"><p class="ax-card-title">' + esc(s.ttl) + '</p><p class="ax-description">10월 26일 · ' + esc(dap ? o.slot + " · 30분" : progTm(s.tm)) + '</p><p class="ax-description">' + esc(pl) + "</p></div></div>" +
       '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" onclick="mySched()">내 일정 확인하기</button>' +
       '<button type="button" class="ax-button ax-button-weak" onclick="App.tab(\'guide\')">다른 프로그램 둘러보기</button></div>';
   },
@@ -5876,7 +5998,8 @@ function beSync() {
       /* v5 · 체크인·대기 상태는 서버가 정본이다(운영 데스크 스캐너가 쓰므로 앱은 받아쓰기만 한다).
          내 차례가 되면 한 번만 알린다 · 폴링마다 토스트가 뜨지 않게 직전 상태와 비교. */
       if (res.my.checkin) S.set("checkin", res.my.checkin);
-      if (res.my.stamps) { stampSync(res.my.stamps); stampPendRetry(); }   /* 스탬프는 서버가 정본 · v3.97 빈 목록 포함 · 못 보낸 적립은 다시 보낸다 */
+      if (res.my.stamps) { stampSync(res.my.stamps); stampPendRetry(); }
+      if (res.my.stair && JSON.stringify(res.my.stair) !== JSON.stringify(S.get("stair", null))) S.set("stair", res.my.stair);   /* v4.06 계단 진행 · 서버가 정본 */   /* 스탬프는 서버가 정본 · v3.97 빈 목록 포함 · 못 보낸 적립은 다시 보낸다 */
       if ("roulette" in res.my && !testEmp()) S.set("roulette_used", !!res.my.roulette);   /* 룰렛 사용 여부도 서버가 정본 (260909) · 테스트 사번은 로컬 */
       if (res.my.tickets && !testEmp()) S.set("raffle_nums", res.my.tickets);   /* v3.12 응모권 번호 · 서버 발급 정본 */
       /* v3.21 B 포토부스 번호표 · 서버가 정본(없으면 null) · 바뀐 경우에만 저장해 불필요한 재렌더를 막는다 */
@@ -5896,6 +6019,7 @@ function beSync() {
     }
     if (el("mtCv")) mtSync();
     checkMyState();
+    qrMineCheck();   /* v4.06 내 QR 이 열려 있으면 방금 바뀐 것 한 줄(확인됨) */
     if (App.current === "home") App.render();
   });
 }
@@ -6033,59 +6157,7 @@ function qrHtml() {
    현장 스탬프를 전부 자가 적립할 수 있었다(그게 대형경품 응모로 이어졌다).
    이제 앱은 **스캔한 값을 그대로 서버에 넘기기만** 하고 어느 스탬프인지도 모른다.
    정규화(대소문자·공백·하이픈)도 서버가 한다. 여기서 손대면 서버 판정과 어긋난다. */
-function stampByCode(v) {
-  v = String(v || "").trim();
-  if (!v) return false;
-  /* v3.19 테스트 사번: 코드→스탬프 매핑이 서버 전용(보안 설계)이라 로컬 판정이 불가능 · 원장 오염을 막기 위해 차단 */
-  if (testEmp()) { toast("테스트 계정은 스탬프 카드의 「테스트 · 완료 처리」 버튼을 쓰세요."); return false; }
-  if (!BE.on) { notice({ key: "claim:off", title: "적립되지 않았어요", body: "서버 연결 없음 · 잠시 후 다시 스캔" }); return false; }
-  var u = S.get("user", {}) || {};
-  if (!u.empId) { notice({ key: "claim:emp", title: "적립되지 않았어요", body: "사번으로 입장 후 스캔" }); return false; }
-  /* v3.34b 통신이 끊긴 게 확실하면 기다리지 않고 바로 저장 (계단실 등) */
-  if (navigator.onLine === false) { scanQAdd(v); return true; }
-  if (STAMPQ.busy) { scanQAdd(v); return true; }
-  STAMPQ.busy = true;
-  beCall({ action: "stamp_claim", emp: u.empId, code: v },
-    function (res) { STAMPQ.busy = false; stampClaimDone(res); scanQFlush(); },
-    function () { STAMPQ.busy = false; scanQAdd(v); });
-  return true;
-}
-var STAMPQ = { busy: false };
-/* ═══ v3.34b 스캔 대기열 · 통신이 약한 곳(계단실 등)에서 찍은 현장 QR ═══
-   전송이 실패하면 폰에 저장하고 「스캔됨 · 연결되면 적립됩니다」 · 통신이 돌아오면(online 이벤트·sync 성공·화면 복귀) 자동 재전송.
-   서버 stamp_claim 이 1인 1회라 같은 코드를 여러 번 보내도 중복 적립은 없다. 코드는 그대로 보낼 뿐 앱은 어느 스탬프인지 모른다. */
-var SCANQ = { busy: false };
-function scanQList() { return S.get("scan_q", []) || []; }
-function scanQAdd(code) {
-  var q = scanQList(), up = String(code).toUpperCase();
-  if (!q.some(function (x) { return String(x.code).toUpperCase() === up; })) q.push({ code: code, ts: Date.now() });
-  S.set("scan_q", q.slice(-20));
-  notice({ key: "scanq", title: "스캔 저장됨", body: "연결되면 자동 적립" });
-  if (["passport", "home"].indexOf(App.current) >= 0) App.render();
-}
-function scanQNote() {
-  var n = scanQList().length;
-  return n ? '<p class="nt">저장된 스캔 ' + n + "건 · 연결되면 적립됩니다</p>" : "";
-}
-function scanQFlush() {
-  if (!BE.on || SCANQ.busy || STAMPQ.busy) return;
-  var q = scanQList(), u = S.get("user", {}) || {};
-  if (!q.length || !u.empId || testEmp()) return;
-  if (navigator.onLine === false) return;
-  var it = q[0];
-  SCANQ.busy = true;
-  beCall({ action: "stamp_claim", emp: u.empId, code: it.code }, function (res) {
-    SCANQ.busy = false;
-    S.set("scan_q", scanQList().filter(function (x) { return x.code !== it.code; }));
-    /* 응답이 왔으면(성공·거부 모두) 대기열에서 뺀다 · 이미 적립이면 조용히 */
-    if (res && res.ok && res.dup) stampSync(res.stamps);
-    else stampClaimDone(res, true);
-    if (["passport", "home"].indexOf(App.current) >= 0) App.render();
-    setTimeout(scanQFlush, 400);
-  }, function () { SCANQ.busy = false; });
-}
-window.addEventListener("online", function () { setTimeout(scanQFlush, 800); });
-document.addEventListener("visibilitychange", function () { if (!document.hidden) setTimeout(scanQFlush, 800); });
+/* v4.06 stampByCode · 대기열(scanQ*)은 「AX-TDS v1 3단계」 절로 옮겼다 (부스·계단 공용 · 찍은 순서대로) */
 /* ═══ v3.35 오늘 한 판 설문 ═══
    5단계 · 60초 · 뒤로가기 · 중간 이탈 시 이어 하기(초안은 이 기기에만) · 1인 1회 · 14:30 부터.
    서버는 답을 사번 없이 저장하고 제출 사실만 사번과 남긴다. */
@@ -6347,28 +6419,8 @@ function mtWordsHtml() {   /* 휴면 · SURVEY_FEATURES.words (끄면 1F 월에 
   return '<p class="lb">오늘을 한 단어로 · ' + (a.min || 5) + "명 이상 고른 단어</p>" +
     a.words.slice(0, 8).map(function (w, i) { return '<span class="w' + (i < 3 ? " top" : "") + '">' + esc(w.w) + "</span>"; }).join("");
 }
-/* 서버 응답 하나로 로컬을 맞춘다. stamps 배열이 정본이라 이걸로 덮는다. */
-function stampClaimDone(res, late) {
-  if (!res || !res.ok) {
-    var why = res && res.reason;
-    notice({ key: "claim:" + why, title: late ? "저장한 스캔이 적립되지 않았어요" : "적립되지 않았어요",
-      body: why === "nocode" ? "행사용 QR 아님" :
-        why === "window" ? "적립 시간 아님" + (res.open ? " · " + res.open : "") :
-          why === "off" ? "지금 운영하지 않는 지점" :
-            why === "param" ? "사번으로 입장 후 스캔" : "다시 스캔" });
-    return;
-  }
-  stampSync(res.stamps);
-  /* 260909: 스탬프 6종 밖 지점(구 p6 포토부스 등)이 시트에 남아 있어도 앱은 세지 않는다 */
-  if (!STAMPS.some(function (s) { return s.id === res.id; })) {
-    notice({ key: "claim:not:" + res.id, title: "스탬프 대상이 아닌 QR", body: res.name || res.id });
-    return;
-  }
-  if (res.dup) { toast("이미 적립한 스탬프예요 · " + (res.name || res.id)); return; }
-  /* v3.16 서버 판정 성공 순간에도 같은 도장 오버레이 */
-  if (!stampOverlay(res.id)) toast("적립 완료 · " + (res.name || res.id) + " · 스탬프 " + stampCount() + "개");
-  checkRewards();
-}
+/* v4.06 옛 이름 호환 · 결과 처리는 boothDone (3단계 절) */
+function stampClaimDone(res, late) { boothDone(res, late, ""); }
 /* 서버가 준 목록으로 로컬을 맞춘다 (sync 응답에서도 같은 함수를 쓴다).
    정의 밖 id(구 p6·p8, 계단 p9 등)는 버린다 · 표시·보상 계산과 어긋나지 않게 (260909) */
 function stampSync(list) {
@@ -6396,6 +6448,498 @@ function stampSync(list) {
   STAMP_SYNC.warm = true;
 }
 var STAMP_SYNC = { warm: false };
+
+/* ═══ AX-TDS v1 3단계 (260922) · 현장 QR · 스캔 입구 하나 · Q02 스캔 · Q03 결과 · 계단 B안 ═══
+   (QR 상호작용 기획.md · 260919 사용자 확정)
+   · 입구: 폰 기본 카메라 링크(#s= · #q=)도 앱 안 스캐너도 qrRoute 하나로 간다.
+     링크는 스크립트가 뜨자마자 주소에서 지우고(sessionStorage 에 보관) 로그인 뒤 이어서 처리한다 · 이미 열린 탭은 hashchange.
+   · 부스: 서버 적립 확인 뒤에만 결과(Q03 적립됨)와 보상 수를 그린다 · 이미 받음 = 받은 시각 팝업 · 오프라인 = 저장됨 · 거부 = 실패 + 대안 하나.
+     결과에서 「스탬프 확인하기」 = 나의 참여 › 스탬프, 그 카드 펼침 + 「방금 적립 · 시각」.
+   · 계단: 방화문 앞 QR · 시작 → 다른 층 = 종료 · 같은 층 2분 안 = 중복 · 보정(지난번 종료 층 자기 신고) · 「종료가 아니라 새로 시작이에요」.
+     판정은 서버(stair_scan · stair_fix · stair_reclass) · 앱은 결과만 그린다.
+   · 테스트 계정 310555: 서버가 판정만 하고 쓰지 않는다(dry) · 부스 스탬프는 이 기기에만 기록. */
+function scanLinkPeek() {
+  var p = SCANLINK.mem;
+  try { var raw = sessionStorage.getItem(SCANLINK_KEY); if (raw) p = JSON.parse(raw); } catch (e) {}
+  return p && p.raw ? p : null;
+}
+function scanLinkClear() { SCANLINK.mem = null; try { sessionStorage.removeItem(SCANLINK_KEY); } catch (e) {} }
+/* 로그인 뒤 · 30분 넘게 묵은 링크는 버린다(로그인 화면에 오래 머문 뒤 엉뚱한 판정 방지) */
+function scanLinkRun() {
+  var p = scanLinkPeek();
+  if (!p) return;
+  if (!((S.get("user", {}) || {}).empId)) return;
+  scanLinkClear();
+  if (Date.now() - (p.t || 0) > 30 * 60000) return;
+  qrRoute(p.raw, p.t);
+}
+/* 로그인 화면 한 줄 · 화면에 없는 정보(찍은 것이 로그인 뒤 이어진다)만 */
+function scanLinkNote() {
+  var p = scanLinkPeek();
+  if (!p) return;
+  var msg = /^#q=/i.test(p.raw) ? "로그인하면 퀴즈로 이어져요" : "로그인하면 이어서 적립";
+  ["entryForm", "quick"].forEach(function (id) {
+    var box = el(id);
+    if (!box || box.querySelector(".axs-pend")) return;
+    var n = document.createElement("p");
+    n.className = "ax-meta axs-pend"; n.setAttribute("role", "status"); n.textContent = msg;
+    var at = id === "quick" ? box.querySelector("#qBtn") : box.querySelector(".ax-bottom");
+    if (at && at.parentNode) at.parentNode.insertBefore(n, at);
+  });
+}
+window.addEventListener("hashchange", function () {
+  if (!scanLinkTake()) return;
+  if (!el("app").hidden) setTimeout(scanLinkRun, 60);
+  else scanLinkNote();
+});
+
+/* ── 분기 하나 · 스캐너와 링크가 같은 결과 ── */
+function qrRoute(raw, t) {
+  raw = String(raw || "").trim();
+  if (qrParseUser(raw)) { notice({ key: "claim:user", title: "참가자 QR이에요", body: "부스·전시 QR 스캔", go: "scan_q", goLbl: "다시 스캔" }); return; }
+  var mq = raw.match(/#q=(wall[0-9]+)/i);
+  if (mq) {
+    var wid = mq[1].toLowerCase();
+    if (!/^wall[1-3]$/.test(wid)) { srShow({ st: "fail", why: "nocode" }); return; }
+    wqOpenQr(wid); return;
+  }
+  var m = raw.match(/#s=([A-Za-z0-9]+)/i), code = m ? m[1] : (/^[A-Za-z0-9]{3,12}$/.test(raw) ? raw : "");
+  if (!code) { srShow({ st: "fail", why: "nocode" }); return; }
+  var fl = (raw.match(/[#&?]fl=(\d{1,2})\b/i) || [])[1] || "", r = (raw.match(/[#&?]r=([12])\b/i) || [])[1] || "";
+  if (/^AXW/i.test(code) || fl) stairByCode(code, fl, r, t); else stampByCode(code, t);
+}
+function qrHandle(raw) { qrRoute(raw, Date.now()); }
+
+/* ═══ Q03 · 서버 적립 결과 (네 상태: 적립됨 · 이미 받음 · 오프라인 저장 · 실패) ═══
+   이미 받음은 팝업(받은 시각) · 나머지는 결과 화면 scan_res. 적립됨만 보상 수를 그린다(서버 응답 뒤). */
+var SR = { st: "", id: "", name: "", why: "", open: "", test: false, stair: false, n: 0, at: "" };
+var SR_WHY = {
+  nocode: ["행사용 QR이 아니에요", "scan", "다시 스캔"],
+  window: ["적립 시간이 아니에요", "exp", "확인"],
+  off: ["지금 운영하지 않는 지점이에요", "staff", "담당자에게 적립 요청"],
+  param: ["사번으로 입장한 뒤 스캔해 주세요", "exp", "확인"],
+  server: ["서버에 연결되지 않았어요", "scan", "다시 스캔"],
+  stair: ["계단 QR은 계단 화면에서 처리돼요", "scan", "다시 스캔"],
+  other: ["다시 스캔해 주세요", "scan", "다시 스캔"]
+};
+function srShow(o) {
+  SR = Object.assign({ st: "", id: "", name: "", why: "", open: "", test: false, stair: false, n: 0, at: "" }, o);
+  if (App.current === "scan_res") App.render(); else App.go("scan_res");
+}
+function stampTitle(id) { var s = STAMPS.filter(function (x) { return x.id === id; })[0]; return s ? s.title : id; }
+function srDupPopup(id, name, at, test) {
+  notice({ key: "claim:dup:" + id, title: "이미 받음", body: (name || stampTitle(id)) + (at ? " · " + at + " 받음" : "") + (test ? " · 테스트 계정" : ""),
+    go: "card:" + id, goLbl: "스탬프 보기" });
+}
+function srAct(k) {
+  if (k === "scan") { scanOpen(SCQ.ctx); return; }
+  if (k === "staff") { staffStampOpen(); return; }
+  if (k === "card") { expStamp(SR.id); return; }
+  App.tab("exp");
+}
+function scanResHtml() {
+  var o = SR, h = "", bot = BOT_SVG;
+  if (o.st === "ok") {
+    var n = Math.min(STAMP_DENOM, stampCount());
+    h = '<div class="axs-res-bot">' + bot + "</div>" +
+      '<span class="axs-chip ok axs-self">' + esc(o.name) + " · 적립 완료</span>" +
+      '<h1 class="ax-title">스탬프 1개를<br>모았어요</h1>' +
+      '<section class="axs-res-card"><p class="ax-type-t7 axs-bt">현재 스탬프</p><p class="axs-res-n">' + n + " / " + STAMP_DENOM + "개</p>" +
+      '<p class="ax-description">' + esc(srGoalLine(stampCount())) + "</p></section>" +
+      (o.test ? '<p class="ax-meta">테스트 계정 · 서버 적립 없음 · 이 기기에만 기록</p>' : "");
+    return { body: h, btn: ax2Btn("스탬프 확인하기", "srAct('card')", "체험으로 돌아가기", "srAct('exp')") };
+  }
+  if (o.st === "saved") {
+    h = '<div class="axs-res-bot">' + bot + "</div>" +
+      '<span class="axs-chip off axs-self">스캔 저장됨</span>' +
+      '<h1 class="ax-title">스캔을<br>저장했어요</h1>' +
+      '<p class="ax-description">' + (o.stair ? "연결되면 찍은 순서대로 처리돼요" : "연결되면 자동으로 적립돼요") + "</p>" +
+      '<p class="ax-meta">저장된 스캔 ' + scanQList().length + "건</p>";
+    return { body: h, btn: ax2Btn("확인", "srAct('exp')") };
+  }
+  var w = SR_WHY[o.why] || SR_WHY.other;
+  h = '<span class="axs-chip err axs-self">적립되지 않음</span>' +
+    '<h1 class="ax-title">적립되지<br>않았어요</h1>' +
+    '<p class="ax-description">' + esc(w[0]) + (o.why === "window" && o.open ? " · " + esc(o.open) + " 적립" : "") + "</p>" +
+    (o.name ? '<p class="ax-meta">' + esc(o.name) + "</p>" : "");
+  return { body: h, btn: ax2Btn(w[2], "srAct('" + w[1] + "')", w[1] === "exp" ? "" : "체험으로 돌아가기", "srAct('exp')") };
+}
+/* 적립 결과 한 줄 · 서버가 확인한 개수로만 */
+function srGoalLine(n) {
+  if (n === 3) return "룰렛 1회가 열렸어요 · 1F 이벤트존";
+  if (n >= 4 && n <= REWARD_CAP) return "사후 추첨 응모권 " + raffleTickets(n) + "장 · 자동 응모";
+  return stampGoalText(n);
+}
+/* 하단 고정 버튼 1~2개 (주 행동 + 보조) */
+function ax2Btn(a, ga, b, gb) {
+  return '<div class="axs-fix ax-bottom"><button type="button" class="ax-button" onclick="' + ga + '">' + a + "</button>" +
+    (b ? '<button type="button" class="ax-button ax-button-weak" onclick="' + gb + '">' + b + "</button>" : "") + "</div>";
+}
+
+/* ═══ 부스 QR (p1 · p2 · p3) · 판정은 서버 ═══ */
+var STAMPQ = { busy: false };
+function stampByCode(v, t) {
+  v = String(v || "").trim();
+  if (!v) return false;
+  var u = S.get("user", {}) || {};
+  if (!u.empId) { srShow({ st: "fail", why: "param" }); return false; }
+  if (!BE.on) { srShow({ st: "fail", why: "server" }); return false; }
+  /* 통신이 끊긴 게 확실하면 기다리지 않고 저장 · 앞선 전송이 진행 중이어도 순서를 지키려고 저장 */
+  if (navigator.onLine === false || STAMPQ.busy || SCANQ.busy) { scanQAdd({ k: "stamp", code: v, ts: t || Date.now() }); return true; }
+  STAMPQ.busy = true;
+  beCall({ action: "stamp_claim", emp: u.empId, code: v },
+    function (res) { STAMPQ.busy = false; boothDone(res, false, v); scanQFlush(); },
+    function () { STAMPQ.busy = false; scanQAdd({ k: "stamp", code: v, ts: t || Date.now() }); });
+  return true;
+}
+/* 서버 응답 하나로 로컬을 맞춘다 · stamps 배열이 정본 */
+function boothDone(res, late, code) {
+  if (!res || !res.ok) {
+    var why = res && res.reason;
+    if (why === "stair") { stairByCode(code, "", "", Date.now()); return; }   /* 계단 코드가 부스 경로로 들어온 경우(옛 인쇄물) */
+    if (late) { notice({ key: "claim:late:" + why, title: "저장한 스캔이 적립되지 않았어요", body: (SR_WHY[why] || SR_WHY.other)[0] }); return; }
+    srShow({ st: "fail", why: SR_WHY[why] ? why : "other", open: res && res.open || "" });
+    return;
+  }
+  if (!STAMPS.some(function (s) { return s.id === res.id; })) {   /* 스탬프 8종 밖 지점(구 p6 등) */
+    if (late) return;
+    srShow({ st: "fail", why: "other", name: res.name || res.id });
+    return;
+  }
+  var id = res.id, name = res.name || stampTitle(id), test = !!res.dry;
+  if (test) {
+    var st0 = S.get("stamps", []);
+    if (st0.indexOf(id) >= 0) { if (!late) srDupPopup(id, name, "", true); return; }
+    ppSeenAdd(id); st0.push(id); S.set("stamps", st0);
+  } else {
+    if (res.dup) { stampSync(res.stamps); if (!late) srDupPopup(id, name, res.at || "", false); return; }
+    ppSeenAdd(id);   /* 결과 화면이 연출이다 · 도장 팝을 겹치지 않는다 */
+    stampSync(res.stamps);
+  }
+  PP.just[id] = hm2(new Date().getHours() * 60 + new Date().getMinutes());
+  PP.open[id] = true;
+  checkRewards();
+  stampBuzz(25);
+  if (late) { notice({ key: "claim:lateok:" + id, title: "저장한 스캔 적립", body: name + " · 스탬프 " + Math.min(STAMP_DENOM, stampCount()) + " / " + STAMP_DENOM, go: "card:" + id, goLbl: "스탬프 보기" }); return; }
+  srShow({ st: "ok", id: id, name: name, test: test });
+}
+function ppSeenAdd(id) { var seen = S.get("pp_seen", []); if (seen.indexOf(id) < 0) { seen.push(id); S.set("pp_seen", seen); } }
+
+/* ═══ 스캔 대기열 · 통신이 약한 곳(계단 복도 등) · 찍은 순서대로 보낸다 ═══
+   항목 = { k: "stamp" | "stair", code, fl, r, ts(기기 시각) } · 옛 항목({code, ts})은 코드 접두로 가른다.
+   부스는 같은 코드를 한 번만 담는다(서버가 1인 1회) · 계단은 시작·종료가 따로라 모두 담는다. */
+var SCANQ = { busy: false };
+function scanQList() { return S.get("scan_q", []) || []; }
+function scanQKind(x) { return x.k || (/^AXW/i.test(String(x.code || "")) ? "stair" : "stamp"); }
+function scanQAdd(it) {
+  var q = scanQList(), up = String(it.code).toUpperCase(), stair = scanQKind(it) === "stair";
+  if (stair || !q.some(function (x) { return scanQKind(x) === "stamp" && String(x.code).toUpperCase() === up; })) q.push(it);
+  S.set("scan_q", q.slice(-30));
+  srShow({ st: "saved", stair: stair });
+}
+function scanQNote() {
+  var n = scanQList().length;
+  return n ? '<p class="nt">저장된 스캔 ' + n + "건 · 연결되면 처리됩니다</p>" : "";
+}
+function scanQFlush() {
+  if (!BE.on || SCANQ.busy || STAMPQ.busy || STR.busy) return;
+  var q = scanQList(), u = S.get("user", {}) || {};
+  if (!q.length || !u.empId) return;
+  if (navigator.onLine === false) return;
+  var it = q[0], stair = scanQKind(it) === "stair";
+  SCANQ.busy = true;
+  var drop = function () { var qq = scanQList(); if (qq.length && qq[0].code === it.code && qq[0].ts === it.ts) qq.shift(); S.set("scan_q", qq); };
+  var p = stair ? { action: "stair_scan", emp: u.empId, code: it.code, fl: it.fl || "", r: it.r || "", t: it.ts || "" } : { action: "stamp_claim", emp: u.empId, code: it.code };
+  beCall(p, function (res) {
+    SCANQ.busy = false;
+    drop();   /* 응답이 왔으면(성공·거부 모두) 대기열에서 뺀다 */
+    if (stair) stairDone(res, { code: it.code, fl: it.fl, r: it.r, t: it.ts }, true); else boothDone(res, true, it.code);
+    if (["passport", "home", "exp", "exp_g"].indexOf(App.current) >= 0) App.render();
+    setTimeout(scanQFlush, 400);
+  }, function () { SCANQ.busy = false; });
+}
+window.addEventListener("online", function () { setTimeout(scanQFlush, 800); });
+document.addEventListener("visibilitychange", function () { if (!document.hidden) setTimeout(scanQFlush, 800); });
+
+/* ═══ 계단 B안 · 화면 stair (시작 · 종료 · 보정 · 새로 시작 묻기 · 재분류) ═══
+   로컬 상태 S "stair" = { leg: { fl, r, route, at, since } | null, total, goal } · 서버 sync my.stair 가 정본 */
+var STR = { mode: "idle", res: null, sc: null, busy: false, err: "", pick: null, tick: null };
+var STAIR_SAFE = "뛰지 마세요 · 방화문은 닫아 주세요";
+function stairState() { var s = S.get("stair", null); return s && typeof s === "object" ? s : { leg: null, total: 0, goal: 10 }; }
+function stairRoute(r) { return r == 2 ? "비상계단 2" : r == 1 ? "비상계단 1" : ""; }
+function stairByCode(code, fl, r, t) {
+  var u = S.get("user", {}) || {};
+  if (!u.empId) { srShow({ st: "fail", why: "param" }); return; }
+  if (!BE.on) { srShow({ st: "fail", why: "server" }); return; }
+  var sc = { code: code, fl: fl || "", r: r || "", t: t || Date.now() };
+  if (navigator.onLine === false || STR.busy || SCANQ.busy) { scanQAdd({ k: "stair", code: code, fl: sc.fl, r: sc.r, ts: sc.t }); return; }
+  stairCall({ action: "stair_scan", emp: u.empId, code: code, fl: sc.fl, r: sc.r, t: sc.t }, sc, true);
+}
+/* queue = 네트워크 실패 시 저장(스캔만 · 보정·재분류는 화면에서 다시 시도) */
+function stairCall(p, sc, queue) {
+  STR.busy = true; STR.err = ""; STR.sc = sc;
+  if (App.current !== "stair") { STR.mode = "load"; App.go("stair"); } else App.render();
+  beCall(p, function (res) { STR.busy = false; stairDone(res, sc, false, p.action); scanQFlush(); },
+    function () {
+      STR.busy = false;
+      if (queue) { STR.mode = "idle"; scanQAdd({ k: "stair", code: sc.code, fl: sc.fl, r: sc.r, ts: sc.t }); return; }
+      STR.err = "연결이 불안정해 처리하지 못했어요"; App.render();
+    });
+}
+function stairDone(res, sc, late, act) {
+  if (!res || !res.ok) {
+    var why = res && res.reason;
+    if (why === "booth") { stampByCode(sc.code, sc.t); return; }
+    if (late) { notice({ key: "stair:late:" + why, title: "저장한 계단 스캔이 처리되지 않았어요", body: (SR_WHY[why] || SR_WHY.other)[0] }); return; }
+    if (act === "stair_fix" || act === "stair_reclass") { STR.err = why === "noleg" || why === "noend" || why === "open" ? "이미 처리된 기록이에요 · 다시 스캔해 주세요" : "다시 시도해 주세요"; App.render(); return; }
+    STR.mode = "idle"; srShow({ st: "fail", why: SR_WHY[why] ? why : "other", stair: true });
+    return;
+  }
+  var s = stairState();
+  s.total = res.total != null ? res.total : s.total; s.goal = res.goal || s.goal || 10;
+  if (res.leg === "start") s.leg = { fl: res.fl, r: res.r, route: res.route, at: res.at, since: res.since || sc.t || Date.now() };
+  else if (res.leg === "dup" || res.leg === "fix") s.leg = res.from ? { fl: res.from.fl, r: res.from.r, route: res.from.route, at: res.from.at, since: res.from.since || 0 } : s.leg;
+  else s.leg = null;
+  S.set("stair", s);
+  var st = res.stamp;
+  if (st && !st.dup && !st.revoked && !st.kept && st.id === "st") {
+    ppSeenAdd("st");
+    if (st.dry) { var l = S.get("stamps", []); if (l.indexOf("st") < 0) { l.push("st"); S.set("stamps", l); } }
+    else if (res.stamps) stampSync(res.stamps);
+    PP.just.st = hm2(new Date().getHours() * 60 + new Date().getMinutes());
+    checkRewards(); stampBuzz(25);
+  } else if (st && st.revoked) {
+    if (st.dry || testEmp()) S.set("stamps", S.get("stamps", []).filter(function (x) { return x !== "st"; }));
+    else if (res.stamps) stampSync(res.stamps);
+  }
+  if (res.leg === "start" && !res.reclass) stampBuzz(25);
+  if (late) {
+    var body = res.leg === "end" ? res.from.fl + "F → " + res.to.fl + "F · " + res.floors + "개 층 · 누적 " + res.total + " / " + s.goal
+      : res.leg === "start" ? res.fl + "F 시작 · " + stairRoute(res.r) : res.leg === "fix" ? "지난번 종료를 찍지 않았어요" : res.fl + "F";
+    STR.res = res; STR.sc = sc; STR.mode = res.leg === "dup" ? "start" : res.leg;
+    notice({ key: "stair:late:" + res.leg + ":" + (sc.t || ""), title: "저장한 계단 스캔 처리", body: body, go: "stair", goLbl: "계단 화면" });
+    return;
+  }
+  STR.res = res; STR.pick = null;
+  STR.mode = act === "stair_fix" ? "ask" : res.leg === "dup" ? "start" : res.leg;
+  if (App.current === "stair") App.render(); else App.go("stair");
+}
+/* 체험 › 계단 이용 · 진행 중이면 진행 화면, 아니면 안내(E02) */
+function stairOpen() {
+  var s = stairState();
+  if (s.leg) { STR.res = { leg: "start", fl: s.leg.fl, r: s.leg.r, route: s.leg.route, at: s.leg.at, since: s.leg.since, total: s.total, goal: s.goal }; STR.mode = "start"; STR.err = ""; App.go("stair"); return; }
+  expGuide("st");
+}
+function stairPick(fl) {
+  if (STR.busy) return;
+  var u = S.get("user", {}) || {}, sc = STR.sc || {};
+  STR.pick = fl;
+  if (STR.mode === "reclass") stairCall({ action: "stair_reclass", emp: u.empId, code: sc.code, fl: sc.fl || "", r: sc.r || "", t: Date.now(), endFl: fl }, sc, false);
+  else stairCall({ action: "stair_fix", emp: u.empId, endFl: fl, t: Date.now() }, sc, false);
+}
+/* 보정 뒤 「여기서 새로 시작할까요?」 · 시작 = 방금 찍은 코드로 다시 스캔 */
+function stairRestart() {
+  var sc = STR.sc || {}, u = S.get("user", {}) || {};
+  if (!sc.code || STR.busy) { App.tab("exp"); return; }
+  stairCall({ action: "stair_scan", emp: u.empId, code: sc.code, fl: sc.fl || "", r: sc.r || "", t: Date.now() }, { code: sc.code, fl: sc.fl, r: sc.r, t: Date.now() }, true);
+}
+function stairReclassOpen() { STR.mode = "reclass"; STR.err = ""; STR.pick = null; App.render(); }
+function stairElapsed(since) {
+  var s = Math.max(0, Math.round((Date.now() - (since || Date.now())) / 1000));
+  var m = Math.floor(s / 60), h = Math.floor(m / 60);
+  return h ? h + "시간 " + (m % 60) + "분" : m ? m + "분 " + (s % 60) + "초" : s + "초";
+}
+function stairSec(sec) { sec = Math.max(0, sec || 0); var m = Math.floor(sec / 60); return m ? m + "분 " + (sec % 60) + "초" : sec + "초"; }
+/* 도트 계단 · 10초에 한 칸 · 12칸이면 비우고 반복 · 시작 시각 기준이라 화면을 껐다 켜도 이어진다 · 챗봇이 맨 위 칸에 선다 */
+function stairDotsHtml(since) {
+  var k = Math.floor(Math.max(0, Date.now() - (since || Date.now())) / 10000) % 12 + 1, d = "", x, y, SZ = 10;
+  for (x = 0; x < 12; x++) for (y = 0; y <= x; y++)
+    d += '<circle cx="' + (x * SZ + 5) + '" cy="' + (115 - y * SZ) + '" r="3.4" class="' + (x < k ? "on" : "") + '"/>';
+  /* 상자 120 × 160 · 도트는 아래 120 · 챗봇(폭 32%)이 그 칸 맨 위 도트에 선다 */
+  var bx = (k - 1) * SZ - 14, by = 114 - (k - 1) * SZ;
+  STR.k = k;
+  return '<div class="axs-stairs" aria-hidden="true"><svg viewBox="0 0 120 120">' + d + "</svg>" +
+    '<span class="axs-stbot" style="left:' + (bx / 120 * 100).toFixed(1) + "%;top:" + (by / 160 * 100).toFixed(1) + '%">' + BOT_SVG + "</span></div>";
+}
+function stairGauge(total, goal) {
+  var pct = Math.min(100, Math.round((total || 0) / (goal || 10) * 100));
+  return '<div class="axs-gauge" role="img" aria-label="누적 ' + total + " / " + goal + '개 층"><i style="width:' + pct + '%"></i></div>' +
+    '<p class="ax-type-t6-strong">누적 ' + total + (total >= goal ? "개 층" : " / " + goal + "개 층") + "</p>";
+}
+function stairFloorPick(label) {
+  var b = "";
+  for (var f = 1; f <= 18; f++) b += '<button type="button" class="axs-slot" aria-pressed="' + (STR.pick === f) + '"' + (STR.busy ? " disabled" : "") + ' onclick="stairPick(' + f + ')">' + f + "F</button>";
+  return '<p class="ax-type-t6-strong">' + label + "</p>" +
+    '<div class="axs-slots axs-fl6">' + b + '<button type="button" class="axs-slot axs-none" aria-pressed="' + (STR.pick === 0) + '"' + (STR.busy ? " disabled" : "") + ' onclick="stairPick(0)">계단을 쓰지 않았어요</button></div>' +
+    (STR.busy ? botHtml("확인하는 중") : "") +
+    (STR.err ? '<div class="axs-err" role="alert"><b>처리하지 못했어요</b>' + esc(STR.err) + "</div>" : "");
+}
+function stairHtml() {
+  var o = STR.res || {}, s = stairState(), goal = s.goal || 10, m = STR.mode;
+  if (m === "load" || (STR.busy && m !== "fix" && m !== "reclass")) return { body: botHtml("확인하는 중"), btn: "" };
+  if (m === "start") {
+    var since = o.since || (s.leg && s.leg.since) || Date.now();
+    return { body:
+      '<div class="axs-chiprow"><span class="axs-chip">진행 중</span>' + (o.leg === "dup" ? '<span class="axs-chip off">이미 시작함</span>' : "") + (o.reclass ? '<span class="axs-chip off">새로 시작으로 바꿈</span>' : "") + "</div>" +
+      (o.reclass && o.stamp && o.stamp.revoked ? '<p class="ax-meta">누적이 ' + goal + "개 층 아래라 계단 스탬프가 취소됐어요</p>" : "") +
+      '<div class="axs-strow"><div class="ax-stack-tight"><h1 class="ax-title">계단 이용 시작</h1>' +
+      '<p class="axs-st-big">' + o.fl + "F · " + esc(o.route || stairRoute(o.r)) + "</p></div>" + stairDotsHtml(since) + "</div>" +
+      '<p class="axs-safe">' + STAIR_SAFE + "</p>" +
+      '<section class="ax-card axs-gap12"><p class="ax-type-t5-strong">도착 층 방화문 앞 QR 스캔</p>' + stairGauge(s.total || o.total || 0, goal) + "</section>" +
+      '<p class="ax-meta" id="stElapsed">시작 ' + esc(o.at || (s.leg && s.leg.at) || "") + " · " + stairElapsed(since) + "</p>",
+      btn: ax2Btn("도착 층 QR 스캔", "scanOpen('st')", "확인", "App.tab('exp')") };
+  }
+  if (m === "end") {
+    var got = o.stamp && !o.stamp.dup && o.stamp.id === "st";
+    return { body:
+      (got ? '<div class="axs-res-bot">' + BOT_SVG + "</div>" : "") +
+      '<div class="axs-chiprow"><span class="axs-chip ok">종료</span>' + (got ? '<span class="axs-chip ok">계단 스탬프 적립</span>' : "") + "</div>" +
+      '<h1 class="ax-title">' + o.from.fl + "F → " + o.to.fl + "F</h1>" +
+      '<p class="axs-st-big">' + o.floors + "개 층</p>" +
+      '<p class="ax-meta">' + stairSec(o.sec) + "</p>" +
+      '<section class="ax-card axs-gap12">' + stairGauge(o.total, goal) +
+      (got ? '<p class="ax-description">스탬프 ' + Math.min(STAMP_DENOM, stampCount()) + " / " + STAMP_DENOM + " · " + esc(srGoalLine(stampCount())) + "</p>" : "") +
+      (got && o.stamp.dry ? '<p class="ax-meta">테스트 계정 · 서버 적립 없음</p>' : "") + "</section>" +
+      '<button type="button" class="ax-link axs-plain axs-self" onclick="stairReclassOpen()">종료가 아니라 새로 시작이에요</button>',
+      btn: ax2Btn(got ? "스탬프 확인하기" : "확인", got ? "expStamp('st')" : "App.tab('exp')") };
+  }
+  if (m === "fix") {
+    return { body:
+      '<span class="axs-chip axs-self">보정</span>' +
+      '<h1 class="ax-title">지난번 종료를<br>찍지 않았어요</h1>' +
+      '<p class="ax-description">' + o.from.fl + "F 시작 · " + esc(o.from.at || "") + "</p>" +
+      '<section class="ax-card axs-gap12">' + stairFloorPick("지난번 종료 층을 눌러 주세요") + "</section>" +
+      '<p class="ax-meta">직접 고른 층수는 자기 신고로 기록돼요</p>', btn: "" };
+  }
+  if (m === "reclass") {
+    var vf = o.from ? o.from.fl : "";
+    return { body:
+      '<span class="axs-chip axs-self">새로 시작</span>' +
+      '<h1 class="ax-title">지난번 종료 층을<br>눌러 주세요</h1>' +
+      '<p class="ax-description">' + vf + "F 시작 · 방금 스캔은 " + (o.to ? o.to.fl : "") + "F 새 시작으로 바꿔요</p>" +
+      '<section class="ax-card axs-gap12">' + stairFloorPick("지난번 종료 층") + "</section>" +
+      '<p class="ax-meta">직접 고른 층수는 자기 신고로 기록돼요</p>', btn: '<div class="axs-fix ax-bottom"><button type="button" class="ax-button ax-button-weak" onclick="STR.mode=\'end\'; STR.err=\'\'; App.render()">취소</button></div>' };
+  }
+  if (m === "ask") {
+    var st2 = o.stamp && !o.stamp.dup && o.stamp.id === "st", sc = STR.sc || {};
+    return { body:
+      '<div class="axs-chiprow"><span class="axs-chip ok">보정 완료</span><span class="axs-chip off">자기 신고</span>' + (st2 ? '<span class="axs-chip ok">계단 스탬프 적립</span>' : "") + "</div>" +
+      '<p class="ax-description">' + (o.endFl ? o.from.fl + "F → " + o.endFl + "F · " + o.floors + "개 층" : "계단을 쓰지 않음") + "</p>" +
+      '<h1 class="ax-title">여기서 새로<br>시작할까요?</h1>' +
+      (sc.fl ? '<p class="axs-st-big">' + esc(sc.fl) + "F" + (sc.r ? " · " + stairRoute(sc.r) : "") + "</p>" : "") +
+      '<section class="ax-card axs-gap12">' + stairGauge(o.total, goal) + "</section>",
+      btn: ax2Btn("시작", "stairRestart()", "아니요", "App.tab('exp')") };
+  }
+  return { body: botHtml("진행 중인 계단 이용이 없어요"), btn: ax2Btn("계단 안내", "expGuide('st')") };
+}
+/* 진행 화면이 떠 있는 동안 1초마다 경과·도트만 갈아 끼운다(재렌더 없음) */
+function stairTickOn() {
+  if (STR.tick) return;
+  STR.tick = setInterval(function () {
+    if (App.current !== "stair" || STR.mode !== "start") { clearInterval(STR.tick); STR.tick = null; return; }
+    var o = STR.res || {}, s = stairState(), since = o.since || (s.leg && s.leg.since) || Date.now();
+    var e = el("stElapsed"); if (e) e.textContent = "시작 " + (o.at || (s.leg && s.leg.at) || "") + " · " + stairElapsed(since);
+    var d = document.querySelector("#view .axs-stairs"), k = Math.floor(Math.max(0, Date.now() - since) / 10000) % 12 + 1;
+    if (d && k !== STR.k && !matchMedia("(prefers-reduced-motion: reduce)").matches) d.outerHTML = stairDotsHtml(since);   /* 칸이 바뀔 때만 · 떠 있기 모션이 끊기지 않게 */
+  }, 1000);
+}
+
+/* ═══ E02 · 체험 방법과 적립 조건 (현장 활동 하나) ═══ */
+var EXPG = { id: "p1" };
+var EXP_GUIDE = {
+  p1: { chip: "1F · 약 5분", h: "1층 전시를<br>둘러보세요", d: "전시를 보고, 끝에 있는 QR을 스캔하면 스탬프를 받을 수 있어요.",
+    steps: [["전시 관람", "1F 전시존을 자유롭게 둘러봐요"], ["QR 스캔", "전시존 끝 QR 입간판을 찾아요"], ["적립 확인", "결과 화면에서 스탬프를 확인해요"]],
+    meta: "09:00~17:30 적립 · 1인 1회", cta: "전시 QR 스캔하기" },
+  p2: { chip: "1F · 약 5분", h: "AX Now! 부스를<br>체험해 보세요", d: "HIDI-Q 또는 HI-Helper 부스 1곳을 체험하고, 스태프가 든 QR을 스캔해요.",
+    steps: [["부스 체험", "HIDI-Q · HI-Helper 중 1곳"], ["QR 스캔", "체험 후 스태프가 든 QR"], ["적립 확인", "결과 화면에서 스탬프를 확인해요"]],
+    meta: "09:30~16:30 적립 · 1인 1회", cta: "체험 QR 스캔하기", link: ["부스 안내 보기", "App.go('booth')"] },
+  p7: { chip: "1F · 약 10분", h: "벽 QR 퀴즈를<br>풀어 보세요", d: "DAP Wall 벽의 QR을 스캔하면 그 벽의 5문항이 열려요. 한 세트를 끝내면 스탬프를 받아요.",
+    steps: [["벽 QR 스캔", "WALL 1~3 중 한 곳"], ["5문항 풀기", "보기를 골라 제출해요"], ["적립 확인", "처음 끝낸 세트에서 스탬프"]],
+    meta: "", cta: "벽 QR 스캔하기", link: ["퀴즈 목록", "App.go('wq_list')"] },
+  st: { chip: "1F~18F · 비상계단 1·2", h: "계단으로<br>이동해 보세요", d: "출발 층과 도착 층 방화문 앞 QR을 찍으면 층수가 쌓여요. 누적 10개 층이면 스탬프를 받아요.",
+    steps: [["출발 층 QR 스캔", "방화문 앞 QR"], ["계단으로 이동", STAIR_SAFE], ["도착 층 QR 스캔", "오르기·내려가기 모두 층수 누적"]],
+    meta: "", cta: "계단 QR 스캔하기" }
+};
+function expGuide(id) { EXPG.id = EXP_GUIDE[id] ? id : "p1"; App.go("exp_g"); }
+function expGuideHtml() {
+  var id = EXPG.id, g = EXP_GUIDE[id], done = S.get("stamps", []).indexOf(id) >= 0, s = stairState();
+  var steps = g.steps.map(function (x, i) {
+    return '<li><span class="axs-no">0' + (i + 1) + '</span><span class="axs-tx"><b class="ax-type-t5-strong">' + x[0] + '</b><span class="ax-meta">' + esc(x[1]) + "</span></span></li>";
+  }).join("");
+  var prog = "";
+  if (id === "st") {
+    prog = '<section class="ax-card axs-gap12">' + stairGauge(s.total || 0, s.goal || 10) +
+      (s.leg ? '<p class="ax-description">진행 중 · ' + s.leg.fl + "F " + esc(s.leg.route || stairRoute(s.leg.r)) + " 시작 · " + esc(s.leg.at || "") + "</p>" +
+        '<button type="button" class="ax-button ax-button-weak" onclick="stairOpen()">진행 화면 보기</button>' : "") + "</section>";
+  }
+  return '<div class="ax-stack">' +
+    '<div class="axs-chiprow"><span class="axs-chip">' + esc(g.chip) + "</span>" + (done ? '<span class="axs-chip ok">적립 완료</span>' : "") + "</div>" +
+    '<div class="ax-stack-tight"><h1 class="ax-title">' + g.h + '</h1><p class="ax-description">' + esc(g.d) + "</p></div>" +
+    prog +
+    '<ol class="axs-steps">' + steps + "</ol>" +
+    (g.meta ? '<p class="ax-meta">' + esc(g.meta) + "</p>" : "") +
+    scanQNote() +
+    (g.link ? '<button type="button" class="ax-link axs-plain axs-self" onclick="' + g.link[1] + '">' + g.link[0] + "</button>" : "") +
+    "</div>" + ax2Btn(g.cta, "scanOpen('" + id + "')");
+}
+
+/* ═══ Q02 · 활동 QR 인식 · 카메라 권한 → 검증 요청 → 결과 ═══ */
+var SCQ = { ctx: "", err: "", paused: false };
+var SCQ_TT = { p1: "전시 QR을", p2: "체험 QR을", p7: "벽 QR을", st: "계단 QR을", p3: "좌석 QR을" };
+function scanOpen(ctx) { SCQ.ctx = SCQ_TT[ctx] ? ctx : ""; SCQ.err = ""; SCQ.paused = false; if (App.current === "scan_q") App.render(); else App.go("scan_q"); }
+function qrScanOpen() { scanOpen(""); }
+function scanQHtml() {
+  var t = SCQ_TT[SCQ.ctx] || "QR을", can = qrScanSupported();
+  var box = SCQ.paused
+    ? '<div class="axs-cam axs-cam-off"><p class="ax-type-t5-strong">스캔을 멈췄어요</p><button type="button" class="ax-button ax-button-weak" onclick="scanOpen(SCQ.ctx)">다시 스캔</button></div>'
+    : SCQ.err || !can
+    ? '<div class="axs-cam axs-cam-off" role="alert"><p class="ax-type-t5-strong">카메라를 열 수 없어요</p>' +
+      '<p class="ax-description">' + (can ? "브라우저 설정에서 카메라 권한을 허용해 주세요" : "이 브라우저는 카메라 스캔을 지원하지 않아요") + "</p>" +
+      (can ? '<button type="button" class="ax-button ax-button-weak" onclick="scanOpen(SCQ.ctx)">다시 시도</button>' : "") + "</div>"
+    : '<div class="axs-cam"><video id="qrVideo" playsinline muted></video><span class="axs-cam-fr" aria-hidden="true"></span></div>';
+  return '<div class="ax-stack axs-scanwrap">' +
+    '<h1 class="ax-title">' + t + "<br>화면 안에 맞춰주세요</h1>" + box +
+    '<p class="ax-description axs-inv">촬영 버튼 없이 자동으로 인식해요</p>' +
+    '<p class="ax-meta axs-inv" id="qrHint" hidden>QR에서 20~30cm 떨어뜨리고, 화면 밝기를 올려 보세요</p></div>' +
+    '<div class="axs-fix ax-sheet axs-scansheet"><button type="button" class="ax-button ax-button-weak" onclick="qrCamStop(); staffStampOpen()">담당자에게 적립 요청</button>' +
+    '<p class="ax-meta">카메라 권한이 없으면 기본 카메라로 스캔할 수 있어요</p></div>';
+}
+function scanQStart() {
+  if (App.current !== "scan_q" || SCQ.err || SCQ.paused || !qrScanSupported() || QRS.stream) return;
+  qrCamStart();
+}
+
+/* ═══ 내 QR · 운영자가 찍는 쪽 · 화면을 열어 둔 동안 3초 동기화 → 「확인됨」 ═══ */
+var QRM = { timer: null, until: 0, snap: null, msg: "" };
+function qrMineSnap() {
+  return { ck: JSON.stringify(S.get("checkin", {})), q: S.get("queue", {}), ru: !!S.get("roulette_used", false) };
+}
+function qrMineOn() {
+  qrMineOff();
+  QRM.snap = qrMineSnap(); QRM.msg = ""; QRM.until = Date.now() + 90000;
+  QRM.timer = setInterval(function () {
+    if (!el("qrPanel") || Date.now() > QRM.until) { qrMineOff(); return; }
+    if (BE.on) beSync();
+  }, 3000);
+}
+function qrMineOff() { if (QRM.timer) { clearInterval(QRM.timer); QRM.timer = null; } }
+/* sync 뒤 · 열려 있는 내 QR 과 비교해 방금 바뀐 것 한 줄 */
+function qrMineCheck() {
+  if (!QRM.timer || !QRM.snap || !el("qrPanel")) return;
+  var a = QRM.snap, b = qrMineSnap(), msg = "";
+  var ck0 = JSON.parse(a.ck || "{}"), ck1 = S.get("checkin", {}) || {}, k;
+  for (k in ck1) if (ck1[k] !== ck0[k]) { var sp = scanSpot(k); msg = (ck1[k] === "done" ? "퇴장 확인 · " : "입장 확인 · ") + (sp ? sp.nm : k); }
+  var q0 = a.q || {}, q1 = b.q || {};
+  for (k in q1) {
+    var s1 = q1[k] || {}, s0 = q0[k] || {}, sp2 = scanSpot(k), nm = sp2 ? sp2.nm : k;
+    if (s1.status !== s0.status || s1.no !== s0.no) msg = s1.status === "call" ? "지금 입장하세요 · " + nm : s1.status === "done" ? "완료 · " + nm : nm + " · " + s1.no + "번" + (s1.ahead ? " · 앞 " + s1.ahead + "명" : "");
+  }
+  if (!a.ru && b.ru) msg = "룰렛 1회 사용 · 지금 돌리세요";
+  if (!msg) return;
+  QRM.snap = b; QRM.msg = msg; QRM.until = Date.now() + 90000;
+  stampBuzz(25);
+  var box = el("qrPanel"); if (box) box.innerHTML = qrPanelHtml(true);
+}
 
 /* ═══════════════ 양방향 QR (260830) ═══════════════
  * 지금까지 QR은 「읽는 쪽」만 있었다. 체크인·대기·쿠폰 수령은 참가자가 자기 QR을
@@ -6448,45 +6992,24 @@ function qrTextSvg(text, px) {
 
 /* ── 참가자 패널 · 스캔과 내 QR을 한 자리에 (QR을 주고받는 순간은 하나다) ── */
 function qrPanelOpen(tab) {
-  var can = qrScanSupported();
-  /* 기본은 「내 QR」 (260830 사용자 지시). 이 버튼을 누르는 대부분의 상황은 자기 QR을 내미는
-     순간이다. 부스 QR을 읽는 일은 스탬프 화면의 「부스 QR 스캔하기」 버튼이 맡는다. */
-  QRS.tab = tab || "mine";
+  /* v4.06 가운데 QR 버튼·부스 버튼 = Q02 스캔 화면 · 이 패널은 「내 QR 보여주기」 전용(나의 참여) */
+  if (tab === "scan") { scanOpen(""); return; }
+  QRS.tab = "mine"; QRM.msg = "";
   modalOpen(qrPanelHtml());
-  if (QRS.tab === "scan" && can) qrCamStart();
+  qrMineOn();
 }
-function qrPanelTab(t) {
-  if (QRS.tab === t) return;
-  qrCamStop();
-  QRS.tab = t;
-  var box = el("qrPanel");
-  if (box) box.innerHTML = qrPanelHtml(true);
-  if (t === "scan" && qrScanSupported()) qrCamStart();
-}
+function qrPanelTab(t) { if (t === "scan") { modalClose(); scanOpen(""); } }
+var OK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 function qrPanelHtml(inner) {
-  var t = QRS.tab, u = S.get("user", {}) || {};
-  var seg = '<div class="qseg">' +
-    '<button class="' + (t === "mine" ? "on" : "") + '" onclick="qrPanelTab(\'mine\')">내 QR</button>' +
-    '<button class="' + (t === "scan" ? "on" : "") + '" onclick="qrPanelTab(\'scan\')">QR 스캔</button></div>';
-  var body;
-  if (t === "scan") {
-    body = !qrScanSupported() ?
-      '<p class="muted" style="margin-top:12px;font-size:calc(14.5px * var(--fs));line-height:1.7">이 화면에서는 카메라를 열 수 없습니다. 폰의 <b style="color:var(--hi)">기본 카메라</b>로 QR을 비추면 같은 결과가 됩니다.</p>' :
-      '<div style="margin-top:10px;border-radius:12px;overflow:hidden;background:#000"><video id="qrVideo" playsinline muted style="width:100%;max-height:48vh;display:block"></video></div>' +
-      '<p class="muted" style="margin-top:8px;font-size:calc(13.5px * var(--fs))">촬영 버튼은 없습니다. QR을 화면 가운데에 비추면 자동으로 적립돼요</p>' +
-      '<div id="qrHint" style="display:none;margin-top:10px;background:var(--surface2);border-radius:12px;padding:12px 14px">' +
-      '<p class="muted" style="font-size:calc(13.5px * var(--fs));line-height:1.65">잘 안 잡히나요? QR에서 <b style="color:var(--hi)">20~30cm</b> 떨어뜨리고, 화면 밝기를 올려보세요.</p>' +
-      '<button class="btn line" style="margin-top:9px" onclick="qrCamStop(); modalClose(); staffStampOpen()">담당자에게 적립 요청</button></div>';
-  } else {
-    var txt = myQrText();
-    body = !txt ?
-      '<p class="muted" style="margin-top:12px;font-size:calc(14.5px * var(--fs))">사번으로 입장하면 내 QR이 발급됩니다.</p>' :
-      '<div class="myqr">' + qrTextSvg(txt, 216) + '</div>' +
-      '<p class="myqr-nm">' + esc(u.name || "") + '<span>' + esc(u.empId || "") + '</span></p>' +
-      '<p class="muted" style="margin-top:8px;text-align:center;font-size:calc(13.5px * var(--fs));line-height:1.65">' +
-      '체크인·대기 접수·룰렛 사용은 이 QR을 <b style="color:var(--hi)">운영 데스크 스캐너</b>에 대면 됩니다.<br>화면 밝기를 올리면 더 빨리 읽혀요.</p>' + qrMineStateHtml();
-  }
-  var h = seg + body + '<button class="btn line" style="margin-top:10px" onclick="qrCamStop(); modalClose()">닫기</button>';
+  var u = S.get("user", {}) || {}, txt = myQrText();
+  var body = !txt ?
+    '<p class="muted" style="margin-top:12px;font-size:calc(14.5px * var(--fs))">사번으로 입장하면 내 QR이 발급됩니다.</p>' :
+    '<div class="myqr' + (QRM.msg ? " axs-qrok" : "") + '">' + qrTextSvg(txt, 216) + (QRM.msg ? '<span class="axs-okbadge">' + OK_SVG + "</span>" : "") + "</div>" +
+    '<p class="myqr-nm">' + esc(u.name || "") + "<span>" + esc(u.empId || "") + "</span></p>" +
+    (QRM.msg ? '<p class="axs-okline" role="status"><b>확인됨</b> · ' + esc(QRM.msg) + "</p>" : "") +
+    '<p class="muted" style="margin-top:8px;text-align:center;font-size:calc(13.5px * var(--fs));line-height:1.65">' +
+    '체크인·대기 접수·룰렛 사용은 이 QR을 <b style="color:var(--hi)">운영 데스크 스캐너</b>에 대면 됩니다.<br>화면 밝기를 올리면 더 빨리 읽혀요.</p>' + qrMineStateHtml();
+  var h = '<b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">내 QR</b>' + body + '<button class="btn line" style="margin-top:10px" onclick="modalClose()">닫기</button>';
   return inner ? h : '<div id="qrPanel">' + h + "</div>";
 }
 /* 내 QR 아래에 지금 걸려 있는 대기·체크인을 같이 보여준다(QR을 꺼낸 이유가 대개 이것이다) */
@@ -6521,9 +7044,10 @@ function qrCamStart() {
     var pp = v.play(); if (pp && pp.catch) pp.catch(function () {});
     /* 촬영 버튼 없이 프레임을 계속 훑는다. 300ms(초당 3회)는 대보다가 놓치는 구간이 생겨 120ms로 (260830 실측 검증) */
     QRS.timer = setInterval(qrScanTick, 120);
-    QRS.hint = setTimeout(function () { var h = el("qrHint"); if (h) h.style.display = "block"; }, 8000);
+    QRS.hint = setTimeout(function () { var h = el("qrHint"); if (h) { h.hidden = false; h.style.display = "block"; } }, 8000);
   }).catch(function () {
     qrCamStop();
+    if (App.current === "scan_q" && !SCAN.on && !TS.scan) { SCQ.err = "deny"; App.render(); return; }   /* v4.06 Q02 · 화면 안에서 거부 상태 */
     if (el("qrVideo")) modalClose();
     notice({ key: "cam", title: "카메라를 열 수 없어요", body: "브라우저 설정에서 카메라 권한 허용" });
   });
@@ -6751,8 +7275,7 @@ function qrScanSupported() {
   return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) &&
     ("BarcodeDetector" in window || typeof jsQR === "function");
 }
-/* FAB·부스 버튼의 진입점 · 이제 스캔과 내 QR 두 갈래 패널을 연다 */
-function qrScanOpen() { qrPanelOpen("scan"); }
+/* v4.06 qrScanOpen → Q02 스캔 화면 (3단계 절 scanOpen) */
 function qrScanTick() {
   var v = el("qrVideo");
   if (!v) { qrScanClose(); return; }          /* 모달이 다른 경로로 닫힌 경우 카메라 정리 */
@@ -6776,21 +7299,13 @@ function qrScanHit(raw) {
   if (TS.scan) { tsScanHit(raw); return; }    /* v3.37 현장 타자왕전 참가자 확인 */
   if (SCAN.on) { scanHit(raw); return; }      /* 운영자 스캐너 · 연속 스캔이라 닫지 않는다 */
   qrScanClose(); qrHandle(raw);
+  if (App.current === "scan_q") { SCQ.paused = true; App.render(); }   /* v4.06 화면을 떠나지 않는 결과(참가자 QR 등) · 같은 QR 을 곧바로 다시 읽지 않게 멈춤 */
 }
 function qrScanClose() {
   qrCamStop();
   if (el("qrVideo")) modalClose();
 }
-function qrHandle(raw) {
-  if (qrParseUser(raw)) { notice({ key: "claim:user", title: "참가자 QR이에요", body: "부스·전시 QR 스캔" }); return; }
-  /* v3.65 벽 QR = 앱 주소 뒤 #q=wall1 · 그 벽의 문제만 연다 */
-  var mq = raw.match(/#q=(wall[0-9]+)/i);
-  if (mq) { wqOpenQr(mq[1].toLowerCase()); return; }
-  var m = raw.match(/#s=([A-Za-z0-9]+)/i);
-  if (m) { stampByCode(m[1]); return; }
-  if (/^[A-Za-z0-9]{3,12}$/.test(raw.trim())) { stampByCode(raw.trim()); return; }
-  notice({ key: "claim:nocode", title: "적립되지 않았어요", body: "행사용 QR 아님" });
-}
+/* v4.06 qrHandle → qrRoute (3단계 절 · 링크와 스캐너가 같은 분기) */
 var pickedTag = IDEA_TAGS[IDEA_TAGS.length - 1];
 function pickTag(btn) {
   pickedTag = btn.dataset.tag;
@@ -10751,9 +11266,7 @@ function xitionRun(switchNow) {
         if (App.current === "home" && el("a2hs").hidden) toast("글씨가 작으면 나의 참여 › 설정에서 키울 수 있어요");
       }, 3200);
     } catch (e) {}
-    var m = location.hash.match(/^#s=(\w+)/i);
-    var mq = location.hash.match(/^#q=(wall[1-3])/i);
-    /* v3.15 새로 고침 복귀 · 딥링크(#s=·#q=)가 있으면 기존대로 홈 진입 후 처리, 없으면 보던 탭으로 */
+    /* v4.06 스캔 링크(#s= · #q=)는 스크립트 시작 때 주소에서 꺼내 두었다(scanLinkTake) · 보던 탭으로 들어간 뒤 같은 분기(qrRoute)로 */
     var target = "home";
     try {
       var lt = sessionStorage.getItem("axf_last_tab");
@@ -10761,13 +11274,8 @@ function xitionRun(switchNow) {
       var lf = parseInt(sessionStorage.getItem("axf_last_fl"), 10);
       if ([1, 10, 17, 18].indexOf(lf) >= 0) PROG.fl = lf;
     } catch (e) {}
-    App.go(m || mq ? "home" : target);
-    /* 스캔값을 그대로 서버에 넘긴다 · 앱은 어느 스탬프인지 모른다 (260830) */
-    if (m) setTimeout(function () { stampByCode(m[1]); }, 400);
-    if (mq) {
-      /* v3.96 (버그 260919) 벽 QR 딥링크는 잠금 안내(wqOpen)가 아니라 QR 입구(wqOpenQr)로 · 테스트 계정은 wqOpen 이 그냥 열어 줘서 실제 계정만 막혀 있었다 */
-      setTimeout(function () { wqOpenQr(mq[1].toLowerCase()); }, 400);
-    }
+    App.go(target);
+    setTimeout(scanLinkRun, 400);
   }
   // 캡처 모드(#...cap): 프레임을 좌상단 고정 정폭으로 · 헤드리스 스크린샷용
   if (/cap/.test(location.hash)) {
@@ -10817,6 +11325,7 @@ function xitionRun(switchNow) {
 
   /* ── 재방문: 이 기기를 기억하고 있으면 영상 스플래시를 건너뛰고 비밀번호만 받는다 ── */
   /* v19: 이 기기에서 입장한 적 있으면 스플래시·비밀번호 없이 바로 재입장 (로그아웃은 설정에서) */
+  scanLinkNote();   /* v4.06 찍고 들어왔는데 로그인 전이면 로그인 화면에 한 줄 */
   var savedU = S.get("user", {});
   if (savedU && savedU.empId) {
     enterApp();
