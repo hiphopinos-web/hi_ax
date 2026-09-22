@@ -1,0 +1,1222 @@
+[
+  {
+    "id": "2860:70",
+    "name": "Button/Primary",
+    "type": "COMPONENT",
+    "width": 216,
+    "height": 56,
+    "x": 0,
+    "y": 0,
+    "cornerRadius": 16,
+    "layoutMode": "HORIZONTAL",
+    "itemSpacing": 0,
+    "paddingTop": 16,
+    "paddingRight": 16,
+    "paddingBottom": 16,
+    "paddingLeft": 16,
+    "fills": [
+      {
+        "type": "SOLID",
+        "visible": true,
+        "opacity": 1,
+        "blendMode": "NORMAL",
+        "color": {
+          "r": 1,
+          "g": 0.49803921580314636,
+          "b": 0.19607843458652496
+        },
+        "boundVariables": {
+          "color": {
+            "type": "VARIABLE_ALIAS",
+            "id": "VariableID:2858:40"
+          }
+        }
+      }
+    ],
+    "strokes": [],
+    "effects": [],
+    "children": [
+      {
+        "id": "2860:71",
+        "name": "참여 신청하기",
+        "type": "TEXT",
+        "width": 93,
+        "height": 26,
+        "x": 61.5,
+        "y": 15,
+        "fills": [
+          {
+            "type": "SOLID",
+            "visible": true,
+            "opacity": 1,
+            "blendMode": "NORMAL",
+            "color": {
+              "r": 0.2078431397676468,
+              "g": 0.10196078568696976,
+              "b": 0.0470588244497776
+            },
+            "boundVariables": {
+              "color": {
+                "type": "VARIABLE_ALIAS",
+                "id": "VariableID:2858:43"
+              }
+            }
+          }
+        ],
+        "strokes": [],
+        "effects": [],
+        "text": "참여 신청하기",
+        "font": {
+          "family": "Pretendard Variable",
+          "style": "SemiBold",
+          "variationSettings": {
+            "wght": 600
+          }
+        },
+        "size": 17,
+        "lineHeight": {
+          "unit": "PIXELS",
+          "value": 25.5
+        }
+      }
+    ]
+  },
+  {
+    "id": "2860:72",
+    "name": "Button/Weak",
+    "type": "COMPONENT",
+    "width": 216,
+    "height": 56,
+    "x": 232,
+    "y": 0,
+    "cornerRadius": 16,
+    "layoutMode": "HORIZONTAL",
+    "itemSpacing": 0,
+    "paddingTop": 16,
+    "paddingRight": 16,
+    "paddingBottom": 16,
+    "paddingLeft": 16,
+    "fills": [
+      {
+        "type": "SOLID",
+        "visible": true,
+        "opacity": 1,
+        "blendMode": "NORMAL",
+        "color": {
+          "r": 1,
+          "g": 0.9450980424880981,
+          "b": 0.9098039269447327
+        },
+        "boundVariables": {
+          "color": {
+            "type": "VARIABLE_ALIAS",
+            "id": "VariableID:2858:41"
+          }
+        }
+      }
+    ],
+    "strokes": [],
+    "effects": [],
+    "children": [
+      {
+        "id": "2860:73",
+        "name": "참여 신청하기",
+        "type": "TEXT",
+        "width": 93,
+        "height": 26,
+        "x": 61.5,
+        "y": 15,
+        "fills": [
+          {
+            "type": "SOLID",
+            "visible": true,
+            "opacity": 1,
+            "blendMode": "NORMAL",
+            "color": {
+              "r": 0.6509804129600525,
+              "g": 0.239215686917305,
+              "b": 0
+            },
+            "boundVariables": {
+              "color": {
+                "type": "VARIABLE_ALIAS",
+                "id": "VariableID:2858:42"
+              }
+            }
+          }
+        ],
+        "strokes": [],
+        "effects": [],
+        "text": "참여 신청하기",
+        "font": {
+          "family": "Pretendard Variable",
+          "style": "SemiBold",
+          "variationSettings": {
+            "wght": 600
+          }
+        },
+        "size": 17,
+        "lineHeight": {
+          "unit": "PIXELS",
+          "value": 25.5
+        }
+      }
+    ]
+  },
+  {
+    "id": "2860:76",
+    "name": "Button/Disabled",
+    "type": "COMPONENT",
+    "width": 216,
+    "height": 56,
+    "x": 696,
+    "y": 0,
+    "cornerRadius": 16,
+    "layoutMode": "HORIZONTAL",
+    "itemSpacing": 0,
+    "paddingTop": 16,
+    "paddingRight": 16,
+    "paddingBottom": 16,
+    "paddingLeft": 16,
+    "fills": [
+      {
+        "type": "SOLID",
+        "visible": true,
+        "opacity": 1,
+        "blendMode": "NORMAL",
+        "color": {
+          "r": 0.9490196108818054,
+          "g": 0.95686274766922,
+          "b": 0.9647058844566345
+        },
+        "boundVariables": {
+          "color": {
+            "type": "VARIABLE_ALIAS",
+            "id": "VariableID:2858:32"
+          }
+        }
+      }
+    ],
+    "strokes": [],
+    "effects": [],
+    "children": [
+      {
+        "id": "2860:77",
+        "name": "입력 후 시작하기",
+        "type": "TEXT",
+        "width": 111,
+        "height": 26,
+        "x": 52.5,
+        "y": 15,
+        "fills": [
+          {
+            "type": "SOLID",
+            "visible": true,
+            "opacity": 1,
+            "blendMode": "NORMAL",
+            "color": {
+              "r": 0.6901960968971252,
+              "g": 0.7215686440467834,
+              "b": 0.7568627595901489
+            },
+            "boundVariables": {
+              "color": {
+                "type": "VARIABLE_ALIAS",
+                "id": "VariableID:2858:39"
+              }
+            }
+          }
+        ],
+        "strokes": [],
+        "effects": [],
+        "text": "입력 후 시작하기",
+        "font": {
+          "family": "Pretendard Variable",
+          "style": "SemiBold",
+          "variationSettings": {
+            "wght": 600
+          }
+        },
+        "size": 17,
+        "lineHeight": {
+          "unit": "PIXELS",
+          "value": 25.5
+        }
+      }
+    ]
+  },
+  {
+    "id": "2863:148",
+    "name": "TextField/Default",
+    "type": "INSTANCE",
+    "width": 342,
+    "height": 56,
+    "x": 0,
+    "y": 0,
+    "cornerRadius": 0,
+    "layoutMode": "VERTICAL",
+    "itemSpacing": 8,
+    "paddingTop": 0,
+    "paddingRight": 0,
+    "paddingBottom": 0,
+    "paddingLeft": 0,
+    "fills": [],
+    "strokes": [],
+    "effects": [],
+    "children": [
+      {
+        "id": "I2863:148;2863:131",
+        "name": "Input",
+        "type": "FRAME",
+        "width": 342,
+        "height": 56,
+        "x": 0,
+        "y": 0,
+        "cornerRadius": 12,
+        "layoutMode": "HORIZONTAL",
+        "itemSpacing": 0,
+        "paddingTop": 16,
+        "paddingRight": 16,
+        "paddingBottom": 16,
+        "paddingLeft": 16,
+        "fills": [
+          {
+            "type": "SOLID",
+            "visible": true,
+            "opacity": 1,
+            "blendMode": "NORMAL",
+            "color": {
+              "r": 0.9764705896377563,
+              "g": 0.9803921580314636,
+              "b": 0.9843137264251709
+            },
+            "boundVariables": {
+              "color": {
+                "type": "VARIABLE_ALIAS",
+                "id": "VariableID:2858:34"
+              }
+            }
+          }
+        ],
+        "strokes": [
+          {
+            "type": "SOLID",
+            "visible": true,
+            "opacity": 1,
+            "blendMode": "NORMAL",
+            "color": {
+              "r": 0.8980392217636108,
+              "g": 0.9098039269447327,
+              "b": 0.9215686321258545
+            },
+            "boundVariables": {
+              "color": {
+                "type": "VARIABLE_ALIAS",
+                "id": "VariableID:2858:35"
+              }
+            }
+          }
+        ],
+        "effects": [],
+        "children": [
+          {
+            "id": "I2863:148;2863:132",
+            "name": "사번을 입력해 주세요",
+            "type": "TEXT",
+            "width": 108,
+            "height": 20,
+            "x": 17,
+            "y": 17,
+            "fills": [
+              {
+                "type": "SOLID",
+                "visible": true,
+                "opacity": 1,
+                "blendMode": "NORMAL",
+                "color": {
+                  "r": 0.30588236451148987,
+                  "g": 0.3490196168422699,
+                  "b": 0.40784314274787903
+                },
+                "boundVariables": {
+                  "color": {
+                    "type": "VARIABLE_ALIAS",
+                    "id": "VariableID:2858:37"
+                  }
+                }
+              }
+            ],
+            "strokes": [],
+            "effects": [],
+            "text": "사번을 입력해 주세요",
+            "font": {
+              "family": "Pretendard Variable",
+              "style": "Medium",
+              "variationSettings": {
+                "wght": 500
+              }
+            },
+            "size": 13,
+            "lineHeight": {
+              "unit": "PIXELS",
+              "value": 19.5
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "2863:153",
+    "name": "TextField/Default",
+    "type": "INSTANCE",
+    "width": 342,
+    "height": 56,
+    "x": 0,
+    "y": 76,
+    "cornerRadius": 0,
+    "layoutMode": "VERTICAL",
+    "itemSpacing": 8,
+    "paddingTop": 0,
+    "paddingRight": 0,
+    "paddingBottom": 0,
+    "paddingLeft": 0,
+    "fills": [],
+    "strokes": [],
+    "effects": [],
+    "children": [
+      {
+        "id": "I2863:153;2863:131",
+        "name": "Input",
+        "type": "FRAME",
+        "width": 342,
+        "height": 56,
+        "x": 0,
+        "y": 0,
+        "cornerRadius": 12,
+        "layoutMode": "HORIZONTAL",
+        "itemSpacing": 0,
+        "paddingTop": 16,
+        "paddingRight": 16,
+        "paddingBottom": 16,
+        "paddingLeft": 16,
+        "fills": [
+          {
+            "type": "SOLID",
+            "visible": true,
+            "opacity": 1,
+            "blendMode": "NORMAL",
+            "color": {
+              "r": 0.9764705896377563,
+              "g": 0.9803921580314636,
+              "b": 0.9843137264251709
+            },
+            "boundVariables": {
+              "color": {
+                "type": "VARIABLE_ALIAS",
+                "id": "VariableID:2858:34"
+              }
+            }
+          }
+        ],
+        "strokes": [
+          {
+            "type": "SOLID",
+            "visible": true,
+            "opacity": 1,
+            "blendMode": "NORMAL",
+            "color": {
+              "r": 0.8980392217636108,
+              "g": 0.9098039269447327,
+              "b": 0.9215686321258545
+            },
+            "boundVariables": {
+              "color": {
+                "type": "VARIABLE_ALIAS",
+                "id": "VariableID:2858:35"
+              }
+            }
+          }
+        ],
+        "effects": [],
+        "children": [
+          {
+            "id": "I2863:153;2863:132",
+            "name": "사번을 입력해 주세요",
+            "type": "TEXT",
+            "width": 108,
+            "height": 20,
+            "x": 17,
+            "y": 17,
+            "fills": [
+              {
+                "type": "SOLID",
+                "visible": true,
+                "opacity": 1,
+                "blendMode": "NORMAL",
+                "color": {
+                  "r": 0.30588236451148987,
+                  "g": 0.3490196168422699,
+                  "b": 0.40784314274787903
+                },
+                "boundVariables": {
+                  "color": {
+                    "type": "VARIABLE_ALIAS",
+                    "id": "VariableID:2858:37"
+                  }
+                }
+              }
+            ],
+            "strokes": [],
+            "effects": [],
+            "text": "이름을 입력해 주세요",
+            "font": {
+              "family": "Pretendard Variable",
+              "style": "Medium",
+              "variationSettings": {
+                "wght": 500
+              }
+            },
+            "size": 13,
+            "lineHeight": {
+              "unit": "PIXELS",
+              "value": 19.5
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "2863:158",
+    "name": "TextField/Default",
+    "type": "INSTANCE",
+    "width": 342,
+    "height": 56,
+    "x": 0,
+    "y": 152,
+    "cornerRadius": 0,
+    "layoutMode": "VERTICAL",
+    "itemSpacing": 8,
+    "paddingTop": 0,
+    "paddingRight": 0,
+    "paddingBottom": 0,
+    "paddingLeft": 0,
+    "fills": [],
+    "strokes": [],
+    "effects": [],
+    "children": [
+      {
+        "id": "I2863:158;2863:131",
+        "name": "Input",
+        "type": "FRAME",
+        "width": 342,
+        "height": 56,
+        "x": 0,
+        "y": 0,
+        "cornerRadius": 12,
+        "layoutMode": "HORIZONTAL",
+        "itemSpacing": 0,
+        "paddingTop": 16,
+        "paddingRight": 16,
+        "paddingBottom": 16,
+        "paddingLeft": 16,
+        "fills": [
+          {
+            "type": "SOLID",
+            "visible": true,
+            "opacity": 1,
+            "blendMode": "NORMAL",
+            "color": {
+              "r": 0.9764705896377563,
+              "g": 0.9803921580314636,
+              "b": 0.9843137264251709
+            },
+            "boundVariables": {
+              "color": {
+                "type": "VARIABLE_ALIAS",
+                "id": "VariableID:2858:34"
+              }
+            }
+          }
+        ],
+        "strokes": [
+          {
+            "type": "SOLID",
+            "visible": true,
+            "opacity": 1,
+            "blendMode": "NORMAL",
+            "color": {
+              "r": 0.8980392217636108,
+              "g": 0.9098039269447327,
+              "b": 0.9215686321258545
+            },
+            "boundVariables": {
+              "color": {
+                "type": "VARIABLE_ALIAS",
+                "id": "VariableID:2858:35"
+              }
+            }
+          }
+        ],
+        "effects": [],
+        "children": [
+          {
+            "id": "I2863:158;2863:132",
+            "name": "사번을 입력해 주세요",
+            "type": "TEXT",
+            "width": 182,
+            "height": 20,
+            "x": 17,
+            "y": 17,
+            "fills": [
+              {
+                "type": "SOLID",
+                "visible": true,
+                "opacity": 1,
+                "blendMode": "NORMAL",
+                "color": {
+                  "r": 0.30588236451148987,
+                  "g": 0.3490196168422699,
+                  "b": 0.40784314274787903
+                },
+                "boundVariables": {
+                  "color": {
+                    "type": "VARIABLE_ALIAS",
+                    "id": "VariableID:2858:37"
+                  }
+                }
+              }
+            ],
+            "strokes": [],
+            "effects": [],
+            "text": "행사에 사용할 암호를 입력해 주세요",
+            "font": {
+              "family": "Pretendard Variable",
+              "style": "Medium",
+              "variationSettings": {
+                "wght": 500
+              }
+            },
+            "size": 13,
+            "lineHeight": {
+              "unit": "PIXELS",
+              "value": 19.5
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "2861:11",
+    "name": "Scroll content",
+    "type": "FRAME",
+    "width": 390,
+    "height": 700,
+    "x": 0,
+    "y": 64,
+    "cornerRadius": 0,
+    "layoutMode": "VERTICAL",
+    "itemSpacing": 24,
+    "paddingTop": 24,
+    "paddingRight": 24,
+    "paddingBottom": 24,
+    "paddingLeft": 24,
+    "fills": [
+      {
+        "type": "SOLID",
+        "visible": true,
+        "opacity": 1,
+        "blendMode": "NORMAL",
+        "color": {
+          "r": 0.9490196108818054,
+          "g": 0.95686274766922,
+          "b": 0.9647058844566345
+        },
+        "boundVariables": {
+          "color": {
+            "type": "VARIABLE_ALIAS",
+            "id": "VariableID:2858:32"
+          }
+        }
+      }
+    ],
+    "strokes": [],
+    "effects": [],
+    "children": [
+      {
+        "id": "2861:37",
+        "name": "Greeting",
+        "type": "FRAME",
+        "width": 342,
+        "height": 64,
+        "x": 24,
+        "y": 24,
+        "cornerRadius": 0,
+        "layoutMode": "VERTICAL",
+        "itemSpacing": 4,
+        "paddingTop": 0,
+        "paddingRight": 0,
+        "paddingBottom": 0,
+        "paddingLeft": 0,
+        "fills": [],
+        "strokes": [],
+        "effects": [],
+        "children": [
+          {
+            "id": "2861:38",
+            "name": "10월 26일 월요일",
+            "type": "TEXT",
+            "width": 93,
+            "height": 20,
+            "x": 0,
+            "y": 0,
+            "fills": [
+              {
+                "type": "SOLID",
+                "visible": true,
+                "opacity": 1,
+                "blendMode": "NORMAL",
+                "color": {
+                  "r": 0.30588236451148987,
+                  "g": 0.3490196168422699,
+                  "b": 0.40784314274787903
+                },
+                "boundVariables": {
+                  "color": {
+                    "type": "VARIABLE_ALIAS",
+                    "id": "VariableID:2858:37"
+                  }
+                }
+              }
+            ],
+            "strokes": [],
+            "effects": [],
+            "text": "10월 26일 월요일",
+            "font": {
+              "family": "Pretendard Variable",
+              "style": "Medium",
+              "variationSettings": {
+                "wght": 500
+              }
+            },
+            "size": 13,
+            "lineHeight": {
+              "unit": "PIXELS",
+              "value": 19.5
+            }
+          },
+          {
+            "id": "2861:39",
+            "name": "오늘의 발견이",
+            "type": "TEXT",
+            "width": 342,
+            "height": 40,
+            "x": 0,
+            "y": 24,
+            "fills": [
+              {
+                "type": "SOLID",
+                "visible": true,
+                "opacity": 1,
+                "blendMode": "NORMAL",
+                "color": {
+                  "r": 0.09803921729326248,
+                  "g": 0.12156862765550613,
+                  "b": 0.1568627506494522
+                },
+                "boundVariables": {
+                  "color": {
+                    "type": "VARIABLE_ALIAS",
+                    "id": "VariableID:2858:36"
+                  }
+                }
+              }
+            ],
+            "strokes": [],
+            "effects": [],
+            "text": "안녕하세요, 박형동님",
+            "font": {
+              "family": "Pretendard Variable",
+              "style": "Bold",
+              "variationSettings": {
+                "wght": 700
+              }
+            },
+            "size": 30,
+            "lineHeight": {
+              "unit": "PIXELS",
+              "value": 40
+            }
+          }
+        ]
+      },
+      {
+        "id": "2861:40",
+        "name": "Festival pass",
+        "type": "FRAME",
+        "width": 342,
+        "height": 261,
+        "x": 24,
+        "y": 112,
+        "cornerRadius": 24,
+        "layoutMode": "VERTICAL",
+        "itemSpacing": 20,
+        "paddingTop": 24,
+        "paddingRight": 24,
+        "paddingBottom": 24,
+        "paddingLeft": 24,
+        "fills": [
+          {
+            "type": "SOLID",
+            "visible": true,
+            "opacity": 1,
+            "blendMode": "NORMAL",
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1
+            },
+            "boundVariables": {
+              "color": {
+                "type": "VARIABLE_ALIAS",
+                "id": "VariableID:2858:33"
+              }
+            }
+          }
+        ],
+        "strokes": [],
+        "effects": [
+          {
+            "type": "DROP_SHADOW",
+            "visible": true,
+            "radius": 16,
+            "boundVariables": {},
+            "color": {
+              "r": 0.10000000149011612,
+              "g": 0.11999999731779099,
+              "b": 0.1599999964237213,
+              "a": 0.03999999910593033
+            },
+            "offset": {
+              "x": 0,
+              "y": 4
+            },
+            "spread": 0,
+            "blendMode": "NORMAL",
+            "showShadowBehindNode": true
+          }
+        ],
+        "children": [
+          {
+            "id": "2861:41",
+            "name": "Pass header",
+            "type": "FRAME",
+            "width": 294,
+            "height": 28,
+            "x": 24,
+            "y": 24,
+            "cornerRadius": 0,
+            "layoutMode": "HORIZONTAL",
+            "itemSpacing": 8,
+            "paddingTop": 0,
+            "paddingRight": 0,
+            "paddingBottom": 0,
+            "paddingLeft": 0,
+            "fills": [],
+            "strokes": [],
+            "effects": []
+          },
+          {
+            "id": "2861:45",
+            "name": "Current session",
+            "type": "FRAME",
+            "width": 294,
+            "height": 89,
+            "x": 24,
+            "y": 72,
+            "cornerRadius": 0,
+            "layoutMode": "VERTICAL",
+            "itemSpacing": 4,
+            "paddingTop": 0,
+            "paddingRight": 0,
+            "paddingBottom": 0,
+            "paddingLeft": 0,
+            "fills": [],
+            "strokes": [],
+            "effects": []
+          },
+          {
+            "id": "2861:49",
+            "name": "Button/Primary",
+            "type": "INSTANCE",
+            "width": 294,
+            "height": 56,
+            "x": 24,
+            "y": 181,
+            "cornerRadius": 16,
+            "layoutMode": "HORIZONTAL",
+            "itemSpacing": 0,
+            "paddingTop": 16,
+            "paddingRight": 16,
+            "paddingBottom": 16,
+            "paddingLeft": 16,
+            "fills": [
+              {
+                "type": "SOLID",
+                "visible": true,
+                "opacity": 1,
+                "blendMode": "NORMAL",
+                "color": {
+                  "r": 1,
+                  "g": 0.49803921580314636,
+                  "b": 0.19607843458652496
+                },
+                "boundVariables": {
+                  "color": {
+                    "type": "VARIABLE_ALIAS",
+                    "id": "VariableID:2858:40"
+                  }
+                }
+              }
+            ],
+            "strokes": [],
+            "effects": []
+          }
+        ]
+      },
+      {
+        "id": "2868:97",
+        "name": "ListRow/Destination",
+        "type": "INSTANCE",
+        "width": 342,
+        "height": 80,
+        "x": 24,
+        "y": 397,
+        "cornerRadius": 20,
+        "layoutMode": "HORIZONTAL",
+        "itemSpacing": 16,
+        "paddingTop": 20,
+        "paddingRight": 20,
+        "paddingBottom": 20,
+        "paddingLeft": 20,
+        "fills": [
+          {
+            "type": "SOLID",
+            "visible": true,
+            "opacity": 1,
+            "blendMode": "NORMAL",
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1
+            },
+            "boundVariables": {
+              "color": {
+                "type": "VARIABLE_ALIAS",
+                "id": "VariableID:2858:33"
+              }
+            }
+          }
+        ],
+        "strokes": [],
+        "effects": [],
+        "children": [
+          {
+            "id": "I2868:97;2867:99",
+            "name": "Label",
+            "type": "FRAME",
+            "width": 228,
+            "height": 50,
+            "x": 20,
+            "y": 15,
+            "cornerRadius": 0,
+            "layoutMode": "VERTICAL",
+            "itemSpacing": 4,
+            "paddingTop": 0,
+            "paddingRight": 0,
+            "paddingBottom": 0,
+            "paddingLeft": 0,
+            "fills": [],
+            "strokes": [],
+            "effects": []
+          },
+          {
+            "id": "I2868:97;2867:102",
+            "name": "보기",
+            "type": "TEXT",
+            "width": 26,
+            "height": 23,
+            "x": 296,
+            "y": 28.5,
+            "fills": [
+              {
+                "type": "SOLID",
+                "visible": true,
+                "opacity": 1,
+                "blendMode": "NORMAL",
+                "color": {
+                  "r": 0.6509804129600525,
+                  "g": 0.239215686917305,
+                  "b": 0
+                },
+                "boundVariables": {
+                  "color": {
+                    "type": "VARIABLE_ALIAS",
+                    "id": "VariableID:2858:42"
+                  }
+                }
+              }
+            ],
+            "strokes": [],
+            "effects": [],
+            "text": "보기",
+            "font": {
+              "family": "Pretendard Variable",
+              "style": "SemiBold",
+              "variationSettings": {
+                "wght": 600
+              }
+            },
+            "size": 15,
+            "lineHeight": {
+              "unit": "PIXELS",
+              "value": 22.5
+            }
+          }
+        ]
+      },
+      {
+        "id": "2868:102",
+        "name": "ListRow/Destination",
+        "type": "INSTANCE",
+        "width": 342,
+        "height": 80,
+        "x": 24,
+        "y": 501,
+        "cornerRadius": 20,
+        "layoutMode": "HORIZONTAL",
+        "itemSpacing": 16,
+        "paddingTop": 20,
+        "paddingRight": 20,
+        "paddingBottom": 20,
+        "paddingLeft": 20,
+        "fills": [
+          {
+            "type": "SOLID",
+            "visible": true,
+            "opacity": 1,
+            "blendMode": "NORMAL",
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1
+            },
+            "boundVariables": {
+              "color": {
+                "type": "VARIABLE_ALIAS",
+                "id": "VariableID:2858:33"
+              }
+            }
+          }
+        ],
+        "strokes": [],
+        "effects": [],
+        "children": [
+          {
+            "id": "I2868:102;2867:99",
+            "name": "Label",
+            "type": "FRAME",
+            "width": 228,
+            "height": 50,
+            "x": 20,
+            "y": 15,
+            "cornerRadius": 0,
+            "layoutMode": "VERTICAL",
+            "itemSpacing": 4,
+            "paddingTop": 0,
+            "paddingRight": 0,
+            "paddingBottom": 0,
+            "paddingLeft": 0,
+            "fills": [],
+            "strokes": [],
+            "effects": []
+          },
+          {
+            "id": "I2868:102;2867:102",
+            "name": "보기",
+            "type": "TEXT",
+            "width": 26,
+            "height": 23,
+            "x": 296,
+            "y": 28.5,
+            "fills": [
+              {
+                "type": "SOLID",
+                "visible": true,
+                "opacity": 1,
+                "blendMode": "NORMAL",
+                "color": {
+                  "r": 0.6509804129600525,
+                  "g": 0.239215686917305,
+                  "b": 0
+                },
+                "boundVariables": {
+                  "color": {
+                    "type": "VARIABLE_ALIAS",
+                    "id": "VariableID:2858:42"
+                  }
+                }
+              }
+            ],
+            "strokes": [],
+            "effects": [],
+            "text": "보기",
+            "font": {
+              "family": "Pretendard Variable",
+              "style": "SemiBold",
+              "variationSettings": {
+                "wght": 600
+              }
+            },
+            "size": 15,
+            "lineHeight": {
+              "unit": "PIXELS",
+              "value": 22.5
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "2880:245",
+    "name": "Icon button / 내 QR",
+    "type": "FRAME",
+    "width": 48,
+    "height": 48,
+    "x": 318,
+    "y": 8,
+    "cornerRadius": 0,
+    "layoutMode": "HORIZONTAL",
+    "itemSpacing": 0,
+    "paddingTop": 0,
+    "paddingRight": 0,
+    "paddingBottom": 0,
+    "paddingLeft": 0,
+    "fills": [],
+    "strokes": [],
+    "effects": [],
+    "children": [
+      {
+        "id": "2900:248",
+        "name": "Icon / QR",
+        "type": "FRAME",
+        "width": 32,
+        "height": 32,
+        "x": 8,
+        "y": 8,
+        "cornerRadius": 0,
+        "layoutMode": "NONE",
+        "itemSpacing": 0,
+        "paddingTop": 0,
+        "paddingRight": 0,
+        "paddingBottom": 0,
+        "paddingLeft": 0,
+        "fills": [
+          {
+            "type": "SOLID",
+            "visible": false,
+            "opacity": 1,
+            "blendMode": "NORMAL",
+            "color": {
+              "r": 1,
+              "g": 1,
+              "b": 1
+            },
+            "boundVariables": {}
+          }
+        ],
+        "strokes": [],
+        "effects": [],
+        "children": [
+          {
+            "id": "2901:244",
+            "name": "Rounded QR corners",
+            "type": "FRAME",
+            "width": 32,
+            "height": 32,
+            "x": 0,
+            "y": 0,
+            "cornerRadius": 0,
+            "layoutMode": "NONE",
+            "itemSpacing": 0,
+            "paddingTop": 0,
+            "paddingRight": 0,
+            "paddingBottom": 0,
+            "paddingLeft": 0,
+            "fills": [
+              {
+                "type": "SOLID",
+                "visible": false,
+                "opacity": 1,
+                "blendMode": "NORMAL",
+                "color": {
+                  "r": 1,
+                  "g": 1,
+                  "b": 1
+                },
+                "boundVariables": {}
+              }
+            ],
+            "strokes": [],
+            "effects": []
+          },
+          {
+            "id": "2900:250",
+            "name": "QR",
+            "type": "TEXT",
+            "width": 18,
+            "height": 16,
+            "x": 7,
+            "y": 8,
+            "fills": [
+              {
+                "type": "SOLID",
+                "visible": true,
+                "opacity": 1,
+                "blendMode": "NORMAL",
+                "color": {
+                  "r": 0.30588236451148987,
+                  "g": 0.3490196168422699,
+                  "b": 0.40784314274787903
+                },
+                "boundVariables": {
+                  "color": {
+                    "type": "VARIABLE_ALIAS",
+                    "id": "VariableID:2858:37"
+                  }
+                }
+              }
+            ],
+            "strokes": [],
+            "effects": [],
+            "text": "QR",
+            "font": {
+              "family": "Pretendard Variable",
+              "style": "SemiBold",
+              "variationSettings": {
+                "wght": 600
+              }
+            },
+            "size": 13,
+            "lineHeight": {
+              "unit": "AUTO"
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg"><symbol id="nav-experience" viewBox="0 0 24 24" fill="none">
+<g>
+<path d="M17.5 3.5H6.5C5.39543 3.5 4.5 4.39543 4.5 5.5V18.5C4.5 19.6046 5.39543 20.5 6.5 20.5H17.5C18.6046 20.5 19.5 19.6046 19.5 18.5V5.5C19.5 4.39543 18.6046 3.5 17.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M4.5 9.2H19.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M4.5 14.9H19.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9.5 20V14.9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</symbol><symbol id="nav-home" viewBox="0 0 24 24" fill="none">
+<g>
+<path d="M3.5 11.2L12 4L20.5 11.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M6 9.8V20H18V9.8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M10 20V14.6H14V20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</symbol><symbol id="nav-my" viewBox="0 0 24 24" fill="none">
+<g>
+<path d="M17 3.5H7C5.89543 3.5 5 4.39543 5 5.5V18.5C5 19.6046 5.89543 20.5 7 20.5H17C18.1046 20.5 19 19.6046 19 18.5V5.5C19 4.39543 18.1046 3.5 17 3.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9 16.5H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</symbol><symbol id="nav-program" viewBox="0 0 24 24" fill="none">
+<g>
+<path d="M7.5 4.5L18.5 10.9L13.7 12.2L12.4 17L7.5 4.5Z" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M4 4L5.6 5.6M4 9.5H6.2M9.5 4V6.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</symbol><symbol id="qr-corners" viewBox="0 0 32 32" fill="none">
+<g>
+<path d="M11 4H9C7.67392 4 6.40215 4.52678 5.46447 5.46447C4.52678 6.40215 4 7.67392 4 9V11M21 4H23C24.3261 4 25.5979 4.52678 26.5355 5.46447C27.4732 6.40215 28 7.67392 28 9V11M28 21V23C28 24.3261 27.4732 25.5979 26.5355 26.5355C25.5979 27.4732 24.3261 28 23 28H21M11 28H9C7.67392 28 6.40215 27.4732 5.46447 26.5355C4.52678 25.5979 4 24.3261 4 23V21" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</symbol></svg>

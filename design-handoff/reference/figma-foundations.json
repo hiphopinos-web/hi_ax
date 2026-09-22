@@ -1,0 +1,1135 @@
+{
+  "variables": [
+    {
+      "id": "VariableID:2858:11",
+      "name": "white",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:12",
+      "name": "grey50",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 0.9764705896377563,
+          "g": 0.9803921580314636,
+          "b": 0.9843137264251709,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:13",
+      "name": "grey100",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 0.9490196108818054,
+          "g": 0.95686274766922,
+          "b": 0.9647058844566345,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:14",
+      "name": "grey200",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 0.8980392217636108,
+          "g": 0.9098039269447327,
+          "b": 0.9215686321258545,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:15",
+      "name": "grey400",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 0.6901960968971252,
+          "g": 0.7215686440467834,
+          "b": 0.7568627595901489,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:16",
+      "name": "grey500",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 0.545098066329956,
+          "g": 0.5843137502670288,
+          "b": 0.6313725709915161,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:17",
+      "name": "grey600",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 0.41960784792900085,
+          "g": 0.4627451002597809,
+          "b": 0.5176470875740051,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:18",
+      "name": "grey700",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 0.30588236451148987,
+          "g": 0.3490196168422699,
+          "b": 0.40784314274787903,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:19",
+      "name": "grey800",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 0.20000000298023224,
+          "g": 0.239215686917305,
+          "b": 0.29411765933036804,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:20",
+      "name": "grey900",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 0.09803921729326248,
+          "g": 0.12156862765550613,
+          "b": 0.1568627506494522,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:21",
+      "name": "orange",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 1,
+          "g": 0.49803921580314636,
+          "b": 0.19607843458652496,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:22",
+      "name": "orangeSoft",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 1,
+          "g": 0.9450980424880981,
+          "b": 0.9098039269447327,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:23",
+      "name": "orangeDark",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 0.6509804129600525,
+          "g": 0.239215686917305,
+          "b": 0,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:24",
+      "name": "orangeInk",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 0.2078431397676468,
+          "g": 0.10196078568696976,
+          "b": 0.0470588244497776,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:25",
+      "name": "purple",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 0.9019607901573181,
+          "g": 0.800000011920929,
+          "b": 1,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:26",
+      "name": "purpleSoft",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 0.9647058844566345,
+          "g": 0.9411764740943909,
+          "b": 0.9882352948188782,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:27",
+      "name": "purpleInk",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 0.3960784375667572,
+          "g": 0.2666666805744171,
+          "b": 0.5411764979362488,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:28",
+      "name": "green",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 0.007843137718737125,
+          "g": 0.4627451002597809,
+          "b": 0.2823529541492462,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:29",
+      "name": "greenSoft",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 0.9411764740943909,
+          "g": 0.9803921580314636,
+          "b": 0.9647058844566345,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:30",
+      "name": "red",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 0.8235294222831726,
+          "g": 0.125490203499794,
+          "b": 0.1882352977991104,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:31",
+      "name": "redSoft",
+      "type": "COLOR",
+      "values": {
+        "2858:0": {
+          "r": 1,
+          "g": 0.9333333373069763,
+          "b": 0.9333333373069763,
+          "a": 1
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:32",
+      "name": "color/canvas",
+      "type": "COLOR",
+      "values": {
+        "2858:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:2858:13"
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:33",
+      "name": "color/surface",
+      "type": "COLOR",
+      "values": {
+        "2858:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:2858:11"
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:34",
+      "name": "color/inset",
+      "type": "COLOR",
+      "values": {
+        "2858:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:2858:12"
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:35",
+      "name": "color/divider",
+      "type": "COLOR",
+      "values": {
+        "2858:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:2858:14"
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:36",
+      "name": "color/ink",
+      "type": "COLOR",
+      "values": {
+        "2858:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:2858:20"
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:37",
+      "name": "color/body",
+      "type": "COLOR",
+      "values": {
+        "2858:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:2858:18"
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:38",
+      "name": "color/muted",
+      "type": "COLOR",
+      "values": {
+        "2858:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:2858:17"
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:39",
+      "name": "color/disabled",
+      "type": "COLOR",
+      "values": {
+        "2858:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:2858:15"
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:40",
+      "name": "color/brand",
+      "type": "COLOR",
+      "values": {
+        "2858:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:2858:21"
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:41",
+      "name": "color/brandSoft",
+      "type": "COLOR",
+      "values": {
+        "2858:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:2858:22"
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:42",
+      "name": "color/brandText",
+      "type": "COLOR",
+      "values": {
+        "2858:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:2858:23"
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:43",
+      "name": "color/onBrand",
+      "type": "COLOR",
+      "values": {
+        "2858:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:2858:24"
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:44",
+      "name": "color/purple",
+      "type": "COLOR",
+      "values": {
+        "2858:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:2858:25"
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:45",
+      "name": "color/purpleSoft",
+      "type": "COLOR",
+      "values": {
+        "2858:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:2858:26"
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:46",
+      "name": "color/purpleText",
+      "type": "COLOR",
+      "values": {
+        "2858:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:2858:27"
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:47",
+      "name": "color/success",
+      "type": "COLOR",
+      "values": {
+        "2858:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:2858:28"
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:48",
+      "name": "color/successSoft",
+      "type": "COLOR",
+      "values": {
+        "2858:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:2858:29"
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:49",
+      "name": "color/error",
+      "type": "COLOR",
+      "values": {
+        "2858:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:2858:30"
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:50",
+      "name": "color/errorSoft",
+      "type": "COLOR",
+      "values": {
+        "2858:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:2858:31"
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:51",
+      "name": "color/inverse",
+      "type": "COLOR",
+      "values": {
+        "2858:1": {
+          "type": "VARIABLE_ALIAS",
+          "id": "VariableID:2858:11"
+        }
+      }
+    },
+    {
+      "id": "VariableID:2858:52",
+      "name": "space/0",
+      "type": "FLOAT",
+      "values": {
+        "2858:1": 0
+      }
+    },
+    {
+      "id": "VariableID:2858:53",
+      "name": "space/4",
+      "type": "FLOAT",
+      "values": {
+        "2858:1": 4
+      }
+    },
+    {
+      "id": "VariableID:2858:54",
+      "name": "space/8",
+      "type": "FLOAT",
+      "values": {
+        "2858:1": 8
+      }
+    },
+    {
+      "id": "VariableID:2858:55",
+      "name": "space/12",
+      "type": "FLOAT",
+      "values": {
+        "2858:1": 12
+      }
+    },
+    {
+      "id": "VariableID:2858:56",
+      "name": "space/16",
+      "type": "FLOAT",
+      "values": {
+        "2858:1": 16
+      }
+    },
+    {
+      "id": "VariableID:2858:57",
+      "name": "space/20",
+      "type": "FLOAT",
+      "values": {
+        "2858:1": 20
+      }
+    },
+    {
+      "id": "VariableID:2858:58",
+      "name": "space/24",
+      "type": "FLOAT",
+      "values": {
+        "2858:1": 24
+      }
+    },
+    {
+      "id": "VariableID:2858:59",
+      "name": "space/32",
+      "type": "FLOAT",
+      "values": {
+        "2858:1": 32
+      }
+    },
+    {
+      "id": "VariableID:2858:60",
+      "name": "space/40",
+      "type": "FLOAT",
+      "values": {
+        "2858:1": 40
+      }
+    },
+    {
+      "id": "VariableID:2858:61",
+      "name": "space/48",
+      "type": "FLOAT",
+      "values": {
+        "2858:1": 48
+      }
+    },
+    {
+      "id": "VariableID:2858:62",
+      "name": "space/64",
+      "type": "FLOAT",
+      "values": {
+        "2858:1": 64
+      }
+    },
+    {
+      "id": "VariableID:2858:63",
+      "name": "radius/8",
+      "type": "FLOAT",
+      "values": {
+        "2858:1": 8
+      }
+    },
+    {
+      "id": "VariableID:2858:64",
+      "name": "radius/12",
+      "type": "FLOAT",
+      "values": {
+        "2858:1": 12
+      }
+    },
+    {
+      "id": "VariableID:2858:65",
+      "name": "radius/16",
+      "type": "FLOAT",
+      "values": {
+        "2858:1": 16
+      }
+    },
+    {
+      "id": "VariableID:2858:66",
+      "name": "radius/20",
+      "type": "FLOAT",
+      "values": {
+        "2858:1": 20
+      }
+    },
+    {
+      "id": "VariableID:2858:67",
+      "name": "radius/24",
+      "type": "FLOAT",
+      "values": {
+        "2858:1": 24
+      }
+    },
+    {
+      "id": "VariableID:2858:68",
+      "name": "radius/32",
+      "type": "FLOAT",
+      "values": {
+        "2858:1": 32
+      }
+    },
+    {
+      "id": "VariableID:2858:69",
+      "name": "radius/999",
+      "type": "FLOAT",
+      "values": {
+        "2858:1": 999
+      }
+    }
+  ],
+  "styles": [
+    {
+      "id": "S:6c250541e9275b556248da52be584d1fae3b7b68,",
+      "name": "AX TDS/Display",
+      "font": {
+        "family": "Pretendard Variable",
+        "style": "Bold",
+        "variationSettings": {
+          "wght": 700
+        }
+      },
+      "size": 48,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 56
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      }
+    },
+    {
+      "id": "S:85ca909a9604678995b3800c8cb0343d460c7fd7,",
+      "name": "AX TDS/T1",
+      "font": {
+        "family": "Pretendard Variable",
+        "style": "Bold",
+        "variationSettings": {
+          "wght": 700
+        }
+      },
+      "size": 30,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 40
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      }
+    },
+    {
+      "id": "S:085a4a5be8e849b08c9cd86ab8f8292efbbc5813,",
+      "name": "AX TDS/T2",
+      "font": {
+        "family": "Pretendard Variable",
+        "style": "Bold",
+        "variationSettings": {
+          "wght": 700
+        }
+      },
+      "size": 26,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 35
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      }
+    },
+    {
+      "id": "S:b340e8cfa57dd9c8635ca5aaa407908137a13f4d,",
+      "name": "AX TDS/T3",
+      "font": {
+        "family": "Pretendard Variable",
+        "style": "Bold",
+        "variationSettings": {
+          "wght": 700
+        }
+      },
+      "size": 22,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 31
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      }
+    },
+    {
+      "id": "S:f3487c1e46673a169795a8ccb0fdb5fe830f8431,",
+      "name": "AX TDS/T4",
+      "font": {
+        "family": "Pretendard Variable",
+        "style": "SemiBold",
+        "variationSettings": {
+          "wght": 600
+        }
+      },
+      "size": 20,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 29
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      }
+    },
+    {
+      "id": "S:553bce1e91cf6130b8b866b12c07a1fed6b1c953,",
+      "name": "AX TDS/T5",
+      "font": {
+        "family": "Pretendard Variable",
+        "style": "Regular",
+        "variationSettings": {
+          "wght": 400
+        }
+      },
+      "size": 17,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 25.5
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      }
+    },
+    {
+      "id": "S:4b89f12bc455f32415b4cea5542ac6478c4d048c,",
+      "name": "AX TDS/T5 strong",
+      "font": {
+        "family": "Pretendard Variable",
+        "style": "SemiBold",
+        "variationSettings": {
+          "wght": 600
+        }
+      },
+      "size": 17,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 25.5
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      }
+    },
+    {
+      "id": "S:67262b1f059bf29505c188443bcb070fd6d1d424,",
+      "name": "AX TDS/T6",
+      "font": {
+        "family": "Pretendard Variable",
+        "style": "Regular",
+        "variationSettings": {
+          "wght": 400
+        }
+      },
+      "size": 15,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 22.5
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      }
+    },
+    {
+      "id": "S:3f9dc30b734b6299d566ec8c7887e150cc58cc2e,",
+      "name": "AX TDS/T6 strong",
+      "font": {
+        "family": "Pretendard Variable",
+        "style": "SemiBold",
+        "variationSettings": {
+          "wght": 600
+        }
+      },
+      "size": 15,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 22.5
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      }
+    },
+    {
+      "id": "S:7118a3582e66a548103e780aca2b20aab05fe288,",
+      "name": "AX TDS/T7",
+      "font": {
+        "family": "Pretendard Variable",
+        "style": "Medium",
+        "variationSettings": {
+          "wght": 500
+        }
+      },
+      "size": 13,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 19.5
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      }
+    },
+    {
+      "id": "S:cfd29d59b7a92c88d76942c80f85f225dae07552,",
+      "name": "AX TDS/Caption",
+      "font": {
+        "family": "Pretendard Variable",
+        "style": "Medium",
+        "variationSettings": {
+          "wght": 500
+        }
+      },
+      "size": 12,
+      "lineHeight": {
+        "unit": "PIXELS",
+        "value": 18
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      }
+    }
+  ],
+  "screens": [
+    {
+      "id": "2859:12",
+      "name": "01 · Foundations & components",
+      "width": 1320,
+      "height": 1394
+    },
+    {
+      "id": "2859:13",
+      "name": "02 · Components",
+      "width": 1000,
+      "height": 1510
+    },
+    {
+      "id": "2859:14",
+      "name": "H01 · 홈",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2859:15",
+      "name": "P01 · 프로그램",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2859:16",
+      "name": "M04 · 스탬프",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2859:17",
+      "name": "P02 · 신청형 상세",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2859:18",
+      "name": "P05 · 전체 시간표",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2859:19",
+      "name": "A01 · 입장",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2859:20",
+      "name": "P03 · 신청 확인",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2859:21",
+      "name": "P04 · 신청 결과",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2864:170",
+      "name": "01 · Page definitions / source mapping",
+      "width": 1680,
+      "height": 2705
+    },
+    {
+      "id": "2866:163",
+      "name": "E01 · 현장 체험",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2866:164",
+      "name": "M01 · 나의 참여",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2866:165",
+      "name": "M05 · 내 보상",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2866:166",
+      "name": "M02 · 내 일정",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2866:167",
+      "name": "E02 · 체험 안내",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2866:168",
+      "name": "Q02 · QR 스캔",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2866:169",
+      "name": "Q03 · 적립 결과",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2871:198",
+      "name": "E01 · 앱 체험",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2871:257",
+      "name": "P02 · 자유 입장 상세",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2905:460",
+      "name": "illustration/통찰전문성/챗봇",
+      "width": 200,
+      "height": 200
+    },
+    {
+      "id": "2871:290",
+      "name": "M06 · 보상 상세",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2871:305",
+      "name": "M03 · 신청 관리",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2871:338",
+      "name": "M03 · 취소 확인",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2871:379",
+      "name": "M02 · 빈 일정",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "2879:245",
+      "name": "Caption / H01 · 홈",
+      "width": 390,
+      "height": 53
+    },
+    {
+      "id": "2879:248",
+      "name": "Caption / P01 · 프로그램",
+      "width": 390,
+      "height": 53
+    },
+    {
+      "id": "2879:251",
+      "name": "Caption / E01 · 현장 체험",
+      "width": 390,
+      "height": 53
+    },
+    {
+      "id": "2879:254",
+      "name": "Caption / M01 · 나의 참여",
+      "width": 390,
+      "height": 53
+    },
+    {
+      "id": "2879:257",
+      "name": "Caption / P02 · 자유 입장 상세",
+      "width": 390,
+      "height": 53
+    },
+    {
+      "id": "2879:260",
+      "name": "Caption / P02 · 신청형 상세",
+      "width": 390,
+      "height": 53
+    },
+    {
+      "id": "2879:263",
+      "name": "Caption / P03 · 신청 확인",
+      "width": 390,
+      "height": 53
+    },
+    {
+      "id": "2879:266",
+      "name": "Caption / P04 · 신청 결과",
+      "width": 390,
+      "height": 53
+    },
+    {
+      "id": "2879:269",
+      "name": "Caption / M02 · 내 일정",
+      "width": 390,
+      "height": 53
+    },
+    {
+      "id": "2879:272",
+      "name": "Caption / M03 · 신청 관리",
+      "width": 390,
+      "height": 53
+    },
+    {
+      "id": "2879:275",
+      "name": "Caption / M03 · 취소 확인",
+      "width": 390,
+      "height": 53
+    },
+    {
+      "id": "2879:278",
+      "name": "Caption / M02 · 빈 일정",
+      "width": 390,
+      "height": 53
+    },
+    {
+      "id": "2879:281",
+      "name": "Caption / E01 · 앱 체험",
+      "width": 390,
+      "height": 53
+    },
+    {
+      "id": "2879:284",
+      "name": "Caption / E02 · 체험 안내",
+      "width": 390,
+      "height": 53
+    },
+    {
+      "id": "2879:287",
+      "name": "Caption / Q02 · QR 스캔",
+      "width": 390,
+      "height": 53
+    },
+    {
+      "id": "2879:290",
+      "name": "Caption / Q03 · 적립 결과",
+      "width": 390,
+      "height": 53
+    },
+    {
+      "id": "2879:293",
+      "name": "Caption / M04 · 스탬프",
+      "width": 390,
+      "height": 53
+    },
+    {
+      "id": "2879:296",
+      "name": "Caption / M05 · 내 보상",
+      "width": 390,
+      "height": 53
+    },
+    {
+      "id": "2879:299",
+      "name": "Caption / M06 · 보상 상세",
+      "width": 390,
+      "height": 53
+    },
+    {
+      "id": "2879:308",
+      "name": "Caption / P05 · 전체 시간표",
+      "width": 390,
+      "height": 53
+    }
+  ]
+}

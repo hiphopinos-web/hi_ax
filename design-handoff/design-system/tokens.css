@@ -1,0 +1,64 @@
+/* LOCKED: AX-TDS-2026.09.21-v1. Source: Figma page 2858:8. */
+@font-face { font-family: "Pretendard Variable"; src: url("../assets/PretendardVariable.ttf") format("truetype"); font-weight: 100 900; font-display: swap; }
+:root {
+  --ax-font: "Pretendard Variable", sans-serif;
+  --ax-color-canvas: #f2f4f6;
+  --ax-color-surface: #ffffff;
+  --ax-color-inset: #f9fafb;
+  --ax-color-divider: #e5e8eb;
+  --ax-color-ink: #191f28;
+  --ax-color-body: #4e5968;
+  --ax-color-muted: #6b7684;
+  --ax-color-disabled: #b0b8c1;
+  --ax-color-brand: #ff7f32;
+  --ax-color-brandSoft: #fff1e8;
+  --ax-color-brandText: #a63d00;
+  --ax-color-onBrand: #351a0c;
+  --ax-color-purple: #e6ccff;
+  --ax-color-purpleSoft: #f6f0fc;
+  --ax-color-purpleText: #65448a;
+  --ax-color-success: #027648;
+  --ax-color-successSoft: #f0faf6;
+  --ax-color-error: #d22030;
+  --ax-color-errorSoft: #ffeeee;
+  --ax-color-inverse: #ffffff;
+  --ax-space-0: 0px;
+  --ax-space-4: 4px;
+  --ax-space-8: 8px;
+  --ax-space-12: 12px;
+  --ax-space-16: 16px;
+  --ax-space-20: 20px;
+  --ax-space-24: 24px;
+  --ax-space-32: 32px;
+  --ax-space-40: 40px;
+  --ax-space-48: 48px;
+  --ax-space-64: 64px;
+  --ax-radius-8: 8px;
+  --ax-radius-12: 12px;
+  --ax-radius-16: 16px;
+  --ax-radius-20: 20px;
+  --ax-radius-24: 24px;
+  --ax-radius-32: 32px;
+  --ax-radius-999: 999px;
+  --ax-type-display: 700 3rem/3.5rem var(--ax-font);
+  --ax-type-t1: 700 1.875rem/2.5rem var(--ax-font);
+  --ax-type-t2: 700 1.625rem/2.1875rem var(--ax-font);
+  --ax-type-t3: 700 1.375rem/1.9375rem var(--ax-font);
+  --ax-type-t4: 600 1.25rem/1.8125rem var(--ax-font);
+  --ax-type-t5: 400 1.0625rem/1.59375rem var(--ax-font);
+  --ax-type-t5-strong: 600 1.0625rem/1.59375rem var(--ax-font);
+  --ax-type-t6: 400 0.9375rem/1.40625rem var(--ax-font);
+  --ax-type-t6-strong: 600 0.9375rem/1.40625rem var(--ax-font);
+  --ax-type-t7: 500 0.8125rem/1.21875rem var(--ax-font);
+  --ax-type-caption: 500 0.75rem/1.125rem var(--ax-font);
+  --ax-page-inset: 24px;
+  --ax-header-height: 64px;
+  --ax-nav-height: 80px;
+  --ax-button-height: 56px;
+  --ax-touch-size: 48px;
+  --ax-card-shadow: 0 4px 16px rgba(25.5,30.6,40.8,.04);
+  --ax-sheet-shadow: 0 16px 48px rgba(25.5,30.6,40.8,.16);
+  /* Handoff implementation additions; not new Figma variables. */
+  --ax-app-max: 480px;
+  --ax-focus-width: 2px;
+}

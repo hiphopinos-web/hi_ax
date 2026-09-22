@@ -1,0 +1,5 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Rounded QR corners">
+<path id="Vector" d="M11 4H9C7.67392 4 6.40215 4.52678 5.46447 5.46447C4.52678 6.40215 4 7.67392 4 9V11M21 4H23C24.3261 4 25.5979 4.52678 26.5355 5.46447C27.4732 6.40215 28 7.67392 28 9V11M28 21V23C28 24.3261 27.4732 25.5979 26.5355 26.5355C25.5979 27.4732 24.3261 28 23 28H21M11 28H9C7.67392 28 6.40215 27.4732 5.46447 26.5355C4.52678 25.5979 4 24.3261 4 23V21" stroke="#4E5968" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</svg>
