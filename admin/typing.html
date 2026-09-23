@@ -5,9 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>타자왕전 · 선수</title>
-<!-- v4.13 (260922 사용자 확정 A안) 1F 현장 타자왕전 · 다인 대전 · 선수 노트북 화면
+<!-- v4.20 (260923 사용자 확정) 1F 현장 타자왕전 · AX 단어 소나기 대전 · 선수 노트북 화면
+     게임은 참가자 앱과 같은 공용 엔진(../assets/rain-engine.js)을 쓴다. 단어 풀과 규칙이 두 곳에서 어긋날 수 없다.
+     판마다 서버가 정수 시드 하나를 준다. 네 기기가 그 시드로 같은 단어 순서를 각자 돌리고, 1초마다 점수·타수·정확도·목숨만 올린다.
+     시간 제한은 없다. 목숨이 떨어지면 그 선수의 판이 끝난다(안전 상한은 서버 설정).
      관리코드 없이 열린다. 참가는 진행자가 연 판에만 된다: 좌석 링크(#k=..&s=2 · 콘솔 「타자왕전」이 발급) 또는 그 판의 4자리 판 코드.
-     화면은 사이니지 세계(design.md §0~§5 · 블랙 스테이지 + 어두운 도트 격자 + Vibrant Orange). 외부 리소스를 쓰지 않는다.
+     화면 테두리는 사이니지 세계(design.md §0~§5 · 블랙 스테이지 + 어두운 도트 격자 + Vibrant Orange) · 게임판 안쪽은 엔진이 그리는 오렌지 사다리 도트 세계.
      이 파일은 public 저장소에 올라간다. 관리코드·백엔드 비밀값을 적지 않는다. -->
 <style>
 :root{
@@ -61,40 +64,29 @@ main{max-width:1180px;margin:0 auto;padding:12px 28px 48px}
 .oth i{font-style:normal;width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#1A1A1A;color:var(--tx2);font-size:16px}
 .oth.me i{background:var(--o100);color:#000}
 .oth.empty{color:var(--tx3);font-weight:500}
-/* 카운트다운 */
-.cd{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:62vh}
-.cd b{font-size:240px;font-weight:700;line-height:1;color:var(--o100)}
-.cd span{font-size:22px;color:var(--tx2);margin-top:18px}
-/* 경기 */
-.hud{display:flex;gap:28px;align-items:flex-end;margin-top:4px}
-.hud div{display:flex;flex-direction:column}
-.hud b{font-size:40px;font-weight:700;line-height:1.1}
-.hud span{font-size:13px;color:var(--tx3);font-weight:600}
-.hud .left{margin-left:auto;text-align:right}
-.hud .left b{color:var(--o100)}
-.txt{margin-top:18px;padding:26px 30px;border-radius:24px;background:var(--face);font-size:34px;font-weight:600;line-height:1.7;letter-spacing:0;word-break:break-all}
-.txt span{border-radius:4px}
-.txt .ok{color:var(--o100)}
-.txt .todo{color:var(--tx3)}
-.txt .cw{color:var(--tx);box-shadow:inset 0 -3px 0 rgba(255,255,255,.35)}
-.txt .ng{color:#fff;background:var(--ng)}
-.txt .cmp{color:var(--tx);box-shadow:inset 0 -3px 0 var(--o100)}
-.txt .cur{box-shadow:inset 3px 0 0 var(--o100)}
-.inw{margin-top:18px;display:flex;gap:14px;align-items:center}
-.in{flex:1;height:76px;padding:0 24px;border-radius:18px;border:2px solid var(--line);background:#0B0B0B;font-size:32px;font-weight:600;outline:none}
-.in:focus{border-color:var(--o100)}
-.in.bad{border-color:var(--ng);background:#1F0B0C}
-.in:disabled{opacity:.5}
-.lanes{margin-top:22px;display:flex;flex-direction:column;gap:8px}
-.ln{display:grid;grid-template-columns:44px 150px minmax(0,1fr) 92px;gap:14px;align-items:center;font-size:17px;font-weight:700}
-.ln .no{width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#1A1A1A;color:var(--tx2);font-size:15px}
-.ln.me .no{background:var(--o100);color:#000}
-.ln .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.trk{position:relative;height:12px;border-radius:99px;background:#1A1A1A;overflow:hidden}
-.trk i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--hio);transition:width .9s linear}
-.ln.me .trk i{background:var(--o100)}
-.ln .v{text-align:right;color:var(--tx2)}
-.ln.fin .v{color:var(--o100)}
+/* 경기 · 소나기 */
+#play{position:fixed;inset:0;display:flex;flex-direction:column;background:#000}
+.hud{display:flex;align-items:center;gap:26px;padding:14px 28px;border-bottom:1px solid var(--line);flex:none}
+.hud .u{display:flex;flex-direction:column;min-width:96px}
+.hud .u span{font-size:12px;font-weight:700;color:var(--tx3)}
+.hud .u b{font-size:30px;font-weight:700;line-height:1.1}
+.hud .u b.hot{color:var(--ng)}
+.hud .ht{display:flex;gap:6px;margin-left:4px}
+.hud .ht i{display:block;line-height:0;color:#3A3A3A;fill:currentColor}
+.hud .ht i.on{color:var(--o100)}
+.hud .ht i.hit{color:var(--ng)}
+.hud .who{margin-left:auto;font-size:16px;font-weight:700;color:var(--tx2)}
+.cvbox{flex:1;min-height:0;position:relative;background:#FFEBE0}
+#rgCv{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;touch-action:none}
+.rg-tip{padding:6px 28px 0;font-size:15px;font-weight:700;color:var(--o100)}
+.rg-tip[hidden]{display:none}
+.rg-form{flex:none;display:flex;gap:14px;padding:16px 28px calc(16px + env(safe-area-inset-bottom,0px));background:#000;border-top:1px solid var(--line)}
+.rg-form input{flex:1;height:72px;padding:0 24px;border-radius:16px;border:2px solid var(--line);background:#0B0B0B;font-size:30px;font-weight:600;outline:none;transition:border-color .1s,background .1s}
+.rg-form input:focus{border-color:var(--line)}
+.rg-form.hit input{border-color:var(--o100)}
+.rg-form.miss input,.rg-form.auto input{border-color:#4A4A4A;background:#151515}
+.rg-form input:disabled{opacity:.5}
+.rg-form button{min-width:140px;border-radius:16px;background:var(--o100);color:#000;font-size:22px;font-weight:700}
 /* 결과 */
 .res{margin-top:22px;display:flex;flex-direction:column;gap:10px}
 .rr{display:grid;grid-template-columns:72px minmax(0,1fr) 150px 120px 110px;gap:14px;align-items:center;padding:16px 22px;border-radius:16px;background:var(--face);font-size:22px;font-weight:700}
@@ -103,29 +95,22 @@ main{max-width:1180px;margin:0 auto;padding:12px 28px 48px}
 .rr .c{text-align:right}
 .rr .c small{display:block;font-size:12px;color:var(--tx3);font-weight:600}
 .banner{margin-top:14px;font-size:18px;color:var(--tx2)}
-@media(max-width:900px){.wait{grid-template-columns:1fr}.seats{grid-template-columns:repeat(2,minmax(0,1fr))}.rr{grid-template-columns:52px minmax(0,1fr) 110px 90px;font-size:18px}.rr .x{display:none}.ln{grid-template-columns:40px 100px minmax(0,1fr) 80px}.txt{font-size:26px}}
+.mine{display:flex;flex-wrap:wrap;gap:12px 40px;margin-top:18px;font-size:20px;font-weight:700;color:var(--tx2)}
+.mine b{color:var(--o100)}
+@media(max-width:900px){.wait{grid-template-columns:1fr}.seats{grid-template-columns:repeat(2,minmax(0,1fr))}.rr{grid-template-columns:52px minmax(0,1fr) 110px 90px;font-size:18px}.rr .x{display:none}.hud{gap:14px;padding:10px 16px}.hud .u b{font-size:22px}.rg-form{padding:10px 16px}.rg-form input{height:56px;font-size:22px}}
 </style>
 </head>
 <body>
 <div class="top"><span class="brand">AX Festival 2026</span><span class="t" id="topT">1F 현장 타자왕전</span><div class="r"><span id="net" class="pill">연결 중</span></div></div>
 <main id="view"></main>
+<script src="../assets/rain-engine.js"></script>
 <script>
 /* 백엔드 URL 은 비밀이 아니다(앱 소스에도 있다) */
 var BE = "https://script.google.com/macros/s/AKfycbwjCaSSUnQ7W1lrM8T426Cn_LgKs_UhI0Qi5XRVk-_eF-oD55-Wwjsot0DkPJCX9JqMBA/exec";
 function el(id){ return document.getElementById(id); }
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
 function ls(k,v){ try{ if(v===undefined) return localStorage.getItem(k)||""; if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){ return ""; } }
-/* 타수 = 자판을 누르는 횟수 · 백엔드 raceKeys 와 글자 그대로 같다(test_backend 71절이 대조한다) */
-function raceKeys(s) {
-  var n = 0, J2 = [9, 10, 11, 14, 15, 16, 19], T2 = [3, 5, 6, 9, 10, 11, 12, 13, 14, 15, 18];
-  s = String(s || '');
-  for (var i = 0; i < s.length; i++) {
-    var c = s.charCodeAt(i) - 0xAC00;
-    if (c >= 0 && c <= 11171) { var t = c % 28, j = Math.floor(c / 28) % 21; n += 1 + (J2.indexOf(j) >= 0 ? 2 : 1) + (t ? (T2.indexOf(t) >= 0 ? 2 : 1) : 0); }
-    else n += 1;
-  }
-  return n;
-}
+var HEART='<svg viewBox="0 0 7 6" width="26" height="22" shape-rendering="crispEdges" aria-hidden="true"><path d="M0 0h3v2H0zM4 0h3v2H4zM0 2h7v2H0zM1 4h5v1H1zM2 5h3v1H2z"/></svg>';
 /* JSONP · 콘솔과 같은 방식(GitHub Pages 에서 GAS 로 fetch 는 CORS 리다이렉트에 걸린다) · 서버 시계 차이를 함께 잰다 */
 var _cbN=0;
 function call(action, params, done, fail){
@@ -157,13 +142,14 @@ function myTok(){ return M?ls("race_tok_"+M.id):""; }
 function mySeat(){ return M?Number(ls("race_seat_"+M.id))||0:0; }
 function inGame(){ return !!(M&&myTok()&&mySeat()&&(M.rows||[]).some(function(r){ return r.s===mySeat(); })); }
 
-/* ── 폴링 · 판 없음 2초 · 대기·경기 1초 · 응답이 온 뒤 다음을 부른다(겹치지 않게) ── */
+/* ── 폴링 · 판 없음 2초 · 대기·경기 1초 · 응답이 온 뒤 다음을 부른다(겹치지 않게)
+      경기 중에는 진행 요약만 올린다(점수·터뜨린 단어·최고 콤보·정확도·남은 목숨·버틴 시간) · 좌표는 보내지 않는다 ── */
 var _pt=null;
 function poll(){
   clearTimeout(_pt);
-  var playing=M&&M.st==="run"&&inGame()&&G&&G.id===M.id;
+  var playing=M&&M.st==="run"&&inGame()&&G&&G.id===M.id&&!G.fin;
   var a=playing?"race_prog":"race_state", p={};
-  if(playing){ p={ id:M.id, s:mySeat(), tok:myTok(), pos:G.pos, errs:G.errs }; }
+  if(playing){ var s=rgStat(); p={ id:M.id, s:mySeat(), tok:myTok(), sc:s.score, hits:s.hits, combo:s.combo, acc:s.acc, lv:s.lives, el:s.el }; }
   call(a, p, function(r){ take(r&&r.st?r.st:r); next(); }, function(){ next(); });
   function next(){ _pt=setTimeout(poll, !M||M.st==="closed"||M.st==="done"?2000:1000); }
 }
@@ -171,14 +157,14 @@ function take(r){
   if(!r||!r.ok) return;
   var prev=M; M=r.m;
   if(M&&M.st==="run"&&inGame()&&(!G||G.id!==M.id)) gameInit();
-  if(G&&M&&G.id===M.id&&M.st==="done") gameStop();
+  if(G&&M&&G.id===M.id&&M.st==="done"&&RG.on) rgStop();
   paint(prev);
 }
 
 /* ── 화면 ── */
 function paint(prev){
   var v=el("view"), key=scene();
-  if(key==="play"||key==="count"){ if(SHOW!==key+(M&&M.id)){ SHOW=key+M.id; v.innerHTML=key==="count"?countHtml():playHtml(); if(key==="play") playMount(); } if(key==="play") playTick(); else countTick(); return; }
+  if(key==="play"){ if(SHOW!=="play"+M.id){ SHOW="play"+M.id; v.innerHTML=playHtml(); playMount(); } return; }
   if(key==="join"&&SHOW==="join"+M.id){ joinSeatsPaint(); return; }   /* 입력 중에는 다시 그리지 않는다(한글 조합이 끊긴다) */
   SHOW=key+(M?M.id:"");
   v.innerHTML=key==="join"?joinHtml():key==="wait"?waitHtml():key==="done"?doneHtml():key==="watch"?watchHtml():key==="rest"?restHtml():idleHtml();
@@ -187,15 +173,15 @@ function paint(prev){
 function scene(){
   if(!M||M.st==="closed") return "idle";
   if(M.st==="open") return inGame()?"wait":P.fixed&&P.s>M.n?"rest":"join";
-  if(M.st==="run"){ if(!inGame()) return "watch"; return snow()<M.t0?"count":"play"; }
+  if(M.st==="run"){ if(!inGame()) return "watch"; return "play"; }
   if(M.st==="done") return "done";
   return "idle";
 }
 function restHtml(){
-  return '<div class="cd" style="min-height:56vh;align-items:flex-start"><p class="h1">이번 판은 '+M.n+'석입니다</p><p class="lead">'+P.s+'번 자리는 이번 판을 쉽니다. 다음 판을 기다려 주세요.</p></div>';
+  return '<div style="margin-top:8vh"><p class="h1">이번 판은 '+M.n+'석입니다</p><p class="lead">'+P.s+'번 자리는 이번 판을 쉽니다. 다음 판을 기다려 주세요.</p></div>';
 }
 function idleHtml(){
-  return '<div class="cd" style="min-height:56vh;align-items:flex-start"><p class="h1">다음 판을 기다리고 있습니다</p>'+
+  return '<div style="margin-top:8vh"><p class="h1">다음 판을 기다리고 있습니다</p>'+
     '<p class="lead">진행자가 판을 열면 이 화면에서 이름을 넣습니다.</p>'+
     (P.fixed?'':'<p class="hint">좌석 링크로 열지 않은 화면입니다. 판이 열리면 판 코드를 넣어 참가합니다.</p>')+'</div>';
 }
@@ -205,10 +191,10 @@ function joinHtml(){
     h+='<label class="lbl" for="fCode">판 코드 4자리</label><input id="fCode" class="fld code n" inputmode="numeric" maxlength="4" autocomplete="off" value="'+esc(f.code)+'" oninput="P.form.code=this.value.replace(/\\D/g,\'\')">'+
       '<p class="lbl" style="margin-top:22px">자리</p><div class="seats" id="seatBox"></div>';
   }
-  h+='<div class="row" style="margin-top:22px"><div><label class="lbl" for="fName">이름 또는 닉네임 (TV에 나옵니다)</label><input id="fName" class="fld" maxlength="12" autocomplete="off" spellcheck="false" value="'+esc(f.name)+'" oninput="P.form.name=this.value" onkeydown="if(event.key===\'Enter\'&&!event.isComposing)join()"></div>'+
+  h+='<div class="row" style="margin-top:22px"><div><label class="lbl" for="fName">이름 또는 닉네임 (화면에 나옵니다)</label><input id="fName" class="fld" maxlength="12" autocomplete="off" spellcheck="false" value="'+esc(f.name)+'" oninput="P.form.name=this.value" onkeydown="if(event.key===\'Enter\'&&!event.isComposing)join()"></div>'+
     '<div style="flex:0 0 220px;min-width:0"><label class="lbl" for="fEmp">사번 (선택)</label><input id="fEmp" class="fld n" maxlength="12" inputmode="numeric" autocomplete="off" value="'+esc(f.emp)+'" oninput="P.form.emp=this.value" onkeydown="if(event.key===\'Enter\'&&!event.isComposing)join()"></div></div>'+
     '<div style="margin-top:24px;display:flex;gap:12px;align-items:center"><button class="cta" id="joinBtn" onclick="join()">참가하기</button></div><p class="err" id="jErr">'+esc(P.err)+'</p>'+
-    '<p class="hint">사번은 시상 확인용으로 기록에만 남고 TV에는 나오지 않습니다.</p></div>';
+    '<p class="hint">사번은 시상 확인용으로 기록에만 남고 화면에는 나오지 않습니다.</p></div>';
   setTimeout(joinSeatsPaint,0);
   return h;
 }
@@ -229,7 +215,8 @@ function join(){
   if(!s) return jErr(JOIN_ERR.seat);
   if(!p.name) return jErr(JOIN_ERR.name);
   var old=ls("race_tok_"+M.id); if(old&&Number(ls("race_seat_"+M.id))===s) p.tok=old;
-  P.busy=true; el("joinBtn").disabled=true; jErr("");
+  var bt=el("joinBtn"); if(!bt) return;   /* 등록 화면이 아닐 때(진행 중인 판을 보고 있을 때) 눌리지 않게 */
+  P.busy=true; bt.disabled=true; jErr("");
   call("race_join", p, function(r){
     P.busy=false;
     if(r&&r.ok){ ls("race_tok_"+M.id,r.tok); ls("race_seat_"+M.id,String(r.s)); P.err=""; P.form={ name:"", emp:"", code:"" }; take(r); return; }
@@ -247,7 +234,7 @@ function seatRows(){
 function waitHtml(){
   var r=(M.rows||[]).filter(function(x){ return x.s===mySeat(); })[0]||{};
   return '<div class="wait"><div><p class="lbl">내 자리</p><p class="me-seat n">'+mySeat()+'</p><p class="me-name">'+esc(r.name)+'</p>'+
-    '<p class="lead" style="margin-top:18px">진행자가 시작하면 3, 2, 1 뒤에 모두 같은 문장이 나옵니다. 어절을 맞게 치고 띄어쓰기를 누르면 다음 어절로 넘어갑니다.</p>'+
+    '<p class="lead" style="margin-top:18px">진행자가 시작하면 3, 2, 1 뒤에 단어가 떨어집니다. 단어를 치고 Enter 를 누르면 터집니다. 시간 제한은 없고, 목숨 '+(M.lives||5)+'개를 다 잃으면 끝납니다.</p>'+
     '<button class="ghost" style="margin-top:20px" onclick="leave()">자리 비우기</button></div>'+
     '<div class="others">'+seatRows()+'</div></div>';
 }
@@ -256,112 +243,81 @@ function leave(){
   call("race_leave",{ s:mySeat(), tok:myTok() },function(r){ ls("race_tok_"+M.id,null); ls("race_seat_"+M.id,null); take(r&&r.ok?r:{ok:true,now:0,m:M}); });
 }
 function watchHtml(){
-  return '<p class="h1">진행 중인 판입니다</p><p class="lead">이 판이 끝나면 다음 판에 참가할 수 있습니다.</p><div class="lanes" style="margin-top:28px">'+lanesHtml()+'</div>';
+  return '<p class="h1">진행 중인 판입니다</p><p class="lead">이 판이 끝나면 다음 판에 참가할 수 있습니다.</p><div class="res">'+rowsHtml()+'</div>';
 }
 function doneHtml(){
-  var mine=mySeat();
-  var h='<p class="h1">'+(M.why==="time"?"시간 끝":"경기 끝")+'</p><div class="res">';
+  return '<p class="h1">이번 판 결과</p><div class="res">'+rowsHtml()+'</div><p class="banner">다음 판은 진행자가 엽니다.</p>';
+}
+function rowsHtml(){
+  var mine=mySeat(), h="";
   (M.rows||[]).forEach(function(r){
     h+='<div class="rr'+(r.s===mine&&inGame()?" me":"")+'"><span class="rk n">'+r.rank+'위</span><span>'+esc(r.name)+' <small style="color:var(--tx3);font-size:14px">'+r.s+'번 자리</small></span>'+
-      '<span class="c n">'+(r.fin?(Math.round(r.el/100)/10).toFixed(1)+"초":Math.round(r.pos/Math.max(1,M.len)*100)+"%")+'<small>'+(r.fin?"완주":"진행")+'</small></span>'+
-      '<span class="c n">'+r.cpm+'<small>분당 타수</small></span><span class="c n x">'+r.acc+'%<small>정확도</small></span></div>';
+      '<span class="c n">'+Number(r.score||0).toLocaleString()+'<small>점수</small></span>'+
+      '<span class="c n">'+(r.hits||0)+'<small>터뜨린 단어</small></span><span class="c n x">'+(r.acc||0)+'%<small>정확도</small></span></div>';
   });
-  return h+'</div><p class="banner">다음 판은 진행자가 엽니다.</p>';
+  return h||'<p class="lead">아직 기록이 없습니다.</p>';
 }
 
-/* ── 카운트다운 ── */
-function countHtml(){ return '<div class="cd"><b class="n" id="cdN">3</b><span>'+mySeat()+'번 자리 · 같은 문장이 곧 나옵니다</span></div>'; }
-function countTick(){
-  var b=el("cdN"); if(!b||!M) return;
-  var left=M.t0-snow();
-  if(left<=0){ paint(); return; }
-  b.textContent=Math.min(3,Math.ceil(left/1000));
-  requestAnimationFrame(countTick);
-}
-
-/* ── 경기 · 어절 단위 · 맞게 친 어절 + 띄어쓰기 = 다음 어절 · 마지막 어절은 맞으면 바로 완주
-   한글 조합 중인 마지막 글자는 판정하지 않는다(ㅎ → 하 → 한 을 오타로 보지 않게) · 붙여넣기·끌어 놓기는 막는다 ── */
+/* ═══ 경기 · 공용 엔진(rain-engine.js) ═══
+   서버가 t0(지금 + 4초)와 시드를 못박는다. 기기 시계가 달라도 서버 시계 차이(P.off)로 보정해 같은 순간에 시작한다.
+   엔진은 rgPlayOpen / rgPlayClose / rgEndFinal 세 개를 이 화면에서 찾아 부른다. */
 function gameInit(){
-  G={ id:M.id, text:M.text, words:M.text.split(" "), wi:0, base:0, pos:0, errs:0, wrong:false, comp:false, fin:false, sent:false, v:"" };
+  G={ id:M.id, fin:false, sent:false, res:null, why:"" };
+  SHOW="";
+  paint();
 }
-function gameStop(){ if(G) G.over=true; }
 function playHtml(){
-  return '<div class="hud"><div><b class="n" id="hCpm">0</b><span>분당 타수</span></div><div><b class="n" id="hAcc">100%</b><span>정확도</span></div><div><b class="n" id="hPos">0%</b><span>진행</span></div>'+
-    '<div class="left"><b class="n" id="hLeft">'+M.lim+'</b><span>남은 초</span></div></div>'+
-    '<div class="txt" id="txt"></div>'+
-    '<div class="inw"><input id="in" class="in" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="여기에 입력" '+
-    'onpaste="return false" ondrop="return false" oninput="typed(event)" onkeydown="keyd(event)"></div>'+
-    '<div class="lanes" id="lanes"></div>';
+  var n=M.lives||5, hearts=""; for(var i=0;i<n;i++) hearts+='<i class="on">'+HEART+'</i>';
+  var me=(M.rows||[]).filter(function(x){ return x.s===mySeat(); })[0]||{};
+  return '<div id="play"><div class="hud">'+
+    '<div class="u"><span>점수</span><b class="n" id="rgHudSc">0</b></div>'+
+    '<div class="u"><span>버틴 시간</span><b class="n" id="rgHudTm">0.0초</b></div>'+
+    '<div class="ht" id="rgHudHt">'+hearts+'</div>'+
+    '<div class="who">'+mySeat()+'번 자리 · '+esc(me.name||"")+'</div></div>'+
+    '<div class="cvbox"><canvas id="rgCv"></canvas></div>'+
+    '<p class="rg-tip" id="rgTip" hidden>한글 자판으로 바꿔 주세요</p>'+
+    '<form class="rg-form" id="rgForm" onsubmit="event.preventDefault(); rgEnter()">'+
+    '<input id="rgIn" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" inputmode="text" maxlength="12" placeholder="떨어지는 단어를 치고 Enter" '+
+    'onpaste="event.preventDefault()" ondrop="event.preventDefault()" oninput="rgLive(event)">'+
+    '<button type="submit" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()">쏘기</button></form></div>';
 }
-/* 조합 이벤트는 on* 속성이 없어서 addEventListener 로만 받는다 · Chrome 순서 = input(조합 중) → compositionend */
-function playMount(){ txtPaint(); var i=el("in"); if(i){ i.addEventListener("compositionstart",function(){ if(G) G.comp=true; }); i.addEventListener("compositionend",function(){ if(G){ G.comp=false; typed(); } }); i.focus(); document.addEventListener("click",refocus); } }
-function refocus(){ var i=el("in"); if(i&&!i.disabled) i.focus(); }
-function keyd(e){ if(e.key==="Enter") e.preventDefault(); }
-function typed(e){
-  if(!G||G.fin||G.over) return;
-  var inp=el("in"); if(!inp) return;
-  if(e&&typeof e.isComposing==="boolean") G.comp=e.isComposing;
-  var v=inp.value, w=G.words[G.wi], last=G.wi===G.words.length-1;
-  if(!last&&v===w+" "){ G.base+=w.length+1; G.wi++; inp.value=""; G.wrong=false; G.v=""; G.comp=false; G.pos=G.base; after(); return; }
-  if(last&&v===w){ G.base+=w.length; G.v=v; G.pos=G.text.length; finish(); return; }
-  var tgt=last?w:w+" ", judged=G.comp&&v.length?v.slice(0,-1):v, ok=tgt.indexOf(judged)===0;
-  if(!ok&&!G.wrong) G.errs++;
-  G.wrong=!ok; G.v=v;
-  var k=0; while(k<judged.length&&judged.charAt(k)===tgt.charAt(k)) k++;
-  G.pos=G.base+k;
-  after();
+function playMount(){
+  var cd=Math.max(0.2,(M.t0-snow())/1000);
+  rgStart("race", { seed:M.seed||1, lives:M.lives, cap:M.cap, cd:cd });
 }
-function after(){ var i=el("in"); if(i) i.className="in"+(G.wrong?" bad":""); txtPaint(); hud(); }
-function txtPaint(){
-  var t=el("txt"); if(!t||!G) return;
-  var w=G.words[G.wi]||"", wEnd=G.base+w.length, v=G.v, judged=G.comp&&v.length?v.slice(0,-1):v, h="";
-  for(var i=0;i<G.text.length;i++){
-    var ch=G.text.charAt(i), c;
-    if(G.fin||i<G.base) c="ok";
-    else if(i<wEnd||(i===wEnd&&!G.fin)){
-      var j=i-G.base;
-      if(j<judged.length) c=judged.charAt(j)===ch?"ok":"ng";
-      else if(G.comp&&j===judged.length&&v.length) c="cmp";
-      else c="cw"+(j===v.length?" cur":"");
-    } else c="todo";
-    h+='<span class="'+c+'">'+(ch===" "?"&nbsp;":esc(ch))+'</span>';
-  }
-  t.innerHTML=h;
+/* 엔진이 판을 열 때 부른다 · DOM 은 이미 playHtml 이 그려 두었으므로 크기만 잡는다 */
+function rgPlayOpen(){ RGP.on=true; RGP.touch=rgTouch(); fitNow(); }
+function rgPlayClose(){ RGP.on=false; }
+function fitNow(){
+  var cv=el("rgCv"); if(!cv) return;
+  var b=cv.parentNode;
+  rgFit(cv, b.clientWidth, b.clientHeight);
 }
-function hud(){
-  if(!G||!M) return;
-  var el0=Math.max(0,snow()-M.t0), min=el0/60000, left=Math.max(0,Math.ceil((M.t0+M.lim*1000-snow())/1000));
-  var cpm=G.fin&&G.el?Math.round(raceKeys(G.text)/(G.el/60000)):min>0.02?Math.round(raceKeys(G.text.slice(0,G.pos))/min):0;
-  var a=el("hCpm"); if(a) a.textContent=cpm;
-  a=el("hAcc"); if(a) a.textContent=(G.pos+G.errs?Math.round(G.pos/(G.pos+G.errs)*100):100)+"%";
-  a=el("hPos"); if(a) a.textContent=Math.round(G.pos/G.text.length*100)+"%";
-  a=el("hLeft"); if(a) a.textContent=G.fin?"완주":left;
-}
-function finish(){
-  G.fin=true; G.el=snow()-M.t0;
-  var i=el("in"); if(i){ i.value=""; i.disabled=true; i.placeholder="완주 · 다른 선수를 기다립니다"; i.className="in"; }
-  document.removeEventListener("click",refocus);
-  txtPaint(); hud(); sendFin();
+window.addEventListener("resize", function(){ if(RGP.on) fitNow(); });
+document.addEventListener("click", function(){ if(RGP.on&&RG.on) rgFocus(); });
+/* 엔진이 마무리 화면 1.2초를 보여 준 뒤 부른다 · 개인 종료를 서버에 한 번 알린다 */
+function rgEndFinal(why){
+  var s=rgStat();
+  rgStop();
+  if(!G) return;
+  G.fin=true; G.why=why; G.res=s;
+  var i=el("rgIn"); if(i){ i.disabled=true; i.placeholder=why==="cap"?"안전 상한 · 다른 선수를 기다립니다":"끝 · 다른 선수를 기다립니다"; }
+  var p=el("play"); if(p) p.insertAdjacentHTML("beforeend",
+    '<div style="position:absolute;inset:0;background:rgba(0,0,0,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">'+
+    '<p class="h1">'+(why==="cap"?"여기까지":"목숨을 다 잃었어요")+'</p>'+
+    '<p style="font-size:64px;font-weight:700;color:#fff" class="n">'+s.score.toLocaleString()+'<span style="font-size:24px;color:var(--tx3)"> 점</span></p>'+
+    '<p class="lead">터뜨린 단어 '+s.hits+'개 · 최고 콤보 '+s.combo+' · 정확도 '+s.acc+'% · '+(s.el/1000).toFixed(1)+'초</p>'+
+    '<p class="hint">다른 선수가 끝나면 순위가 나옵니다.</p></div>');
+  sendFin();
 }
 function sendFin(){
   if(!G||G.sent||!M||M.st!=="run") return;
-  call("race_fin",{ id:M.id, s:mySeat(), tok:myTok(), txt:G.words.join(" "), errs:G.errs },function(r){
-    if(r&&r.ok){ G.sent=true; if(r.m&&r.m.rows){ var me=r.m.rows.filter(function(x){ return x.s===mySeat(); })[0]; if(me&&me.fin) G.el=me.el; } take(r); }
+  var s=G.res||rgStat();
+  call("race_fin",{ id:M.id, s:mySeat(), tok:myTok(), why:G.why, sc:s.score, hits:s.hits, combo:s.combo, acc:s.acc, lv:s.lives, el:s.el },function(r){
+    if(r&&r.ok){ G.sent=true; take(r); }
     else if(r&&r.reason==="state"){ G.sent=true; take(r.st); }
     else setTimeout(sendFin,1000);
   },function(){ setTimeout(sendFin,1000); });
-}
-function playTick(){ hud(); var l=el("lanes"); if(l) l.innerHTML=lanesHtml(); if(M&&M.st==="run"&&snow()>=M.t0+M.lim*1000&&G&&!G.fin){ var i=el("in"); if(i) i.disabled=true; } }
-setInterval(function(){ if(SHOW.indexOf("play")===0) hud(); },250);
-function lanesHtml(){
-  var by={}; (M.rows||[]).forEach(function(r){ by[r.s]=r; });
-  var seats=(M.rows||[]).map(function(r){ return r.s; }).sort(), len=M.len||1, h="";
-  seats.forEach(function(s){
-    var r=by[s], me=s===mySeat()&&inGame(), pos=me&&G?Math.max(G.pos,r.pos):r.pos, fin=r.fin||(me&&G&&G.fin);
-    h+='<div class="ln'+(me?" me":"")+(fin?" fin":"")+'"><span class="no n">'+s+'</span><span class="nm">'+esc(r.name)+'</span><span class="trk"><i style="width:'+Math.min(100,pos/len*100).toFixed(1)+'%"></i></span>'+
-      '<span class="v n">'+(r.fin?r.rank+"위 · "+(Math.round(r.el/100)/10).toFixed(1)+"초":fin?"완주":r.cpm+"타")+'</span></div>';
-  });
-  return h;
 }
 paint();
 poll();

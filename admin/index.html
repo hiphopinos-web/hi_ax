@@ -350,8 +350,8 @@ table.brk tr.tot td{border-bottom:0;border-top:1px solid var(--line3)}
 .rlink{min-width:0;width:100%;font-size:var(--fs-c);color:var(--tx2)}
 .rbar{height:8px;border-radius:99px;background:var(--navy05);overflow:hidden;min-width:120px}
 .rbar i{display:block;height:100%;background:var(--navy);border-radius:99px;transition:width .9s linear}
-/* ── v4.13 타자왕전 · TV 전체 화면 (사이니지 세계 · design.md §0~§5 · 블랙 스테이지 + 어두운 도트 격자 + Vibrant Orange)
-   크기는 1920 폭 기준 비율(vw) · 글자는 움직이지 않고 막대와 점(KV 01)만 움직인다 ── */
+/* ── v4.20 타자왕전 · 큰 화면 (사이니지 세계 · design.md §0~§5 · 블랙 스테이지 + 어두운 도트 격자 + Vibrant Orange)
+   크기는 1920 폭 기준 비율(vw) · 경기 중에는 선수마다 요약 카드 한 장(1 · 2 · 4분할) · 연보라(#E6CCFF)는 「오늘 1등」 라벨에만 찍는다 ── */
 #rtv{position:fixed;inset:0;z-index:58;background:#000;color:#fff;display:none;overflow:hidden;letter-spacing:-.01em;cursor:default}
 #rtv.on{display:block}
 #rtv canvas{position:absolute;inset:0;width:100%;height:100%}
@@ -374,22 +374,32 @@ table.brk tr.tot td{border-bottom:0;border-top:1px solid var(--line3)}
 #rtv .seat.on .no{color:#FF963E}
 #rtv .cd{font-size:24vw;font-weight:700;line-height:1;color:#FF7E31;text-align:center}
 #rtv .cdn{display:flex;justify-content:center;gap:3vw;font-size:2vw;font-weight:700;color:rgba(255,255,255,.72);margin-top:2vw}
-#rtv .txt{font-size:1.75vw;line-height:1.6;color:rgba(255,255,255,.6);background:rgba(255,255,255,.06);border-radius:1.2vw;padding:1.1vw 1.6vw;margin-top:1.6vw}
-#rtv .lanes{display:flex;flex-direction:column;justify-content:center;gap:1.6vw;flex:1}
-#rtv .ln{display:grid;grid-template-columns:4.4vw 15vw minmax(0,1fr) 9vw 7vw;gap:1.4vw;align-items:center}
-#rtv .ln .sn{width:3.6vw;height:3.6vw;border-radius:50%;background:#1A1A1A;display:flex;align-items:center;justify-content:center;font-size:1.6vw;font-weight:700;color:rgba(255,255,255,.72)}
-#rtv .ln .nm{font-size:2.4vw;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#rtv .trk{position:relative;height:3.6vw}
-#rtv .trk .dots{position:absolute;left:0;right:0;top:50%;height:.5vw;margin-top:-.25vw;background-image:radial-gradient(circle,#333 40%,transparent 45%);background-size:1.2vw .5vw;background-repeat:repeat-x}
-#rtv .trk .fill{position:absolute;left:0;top:50%;height:.7vw;margin-top:-.35vw;border-radius:99px;background:#FF963E;transition:width .95s linear}
-#rtv .trk .head{position:absolute;top:50%;width:2.6vw;height:2.6vw;margin:-1.3vw 0 0 -1.3vw;border-radius:50%;background:#FF7E31;transition:left .95s linear;display:flex;align-items:center;justify-content:center}
-#rtv .trk .head i{width:.9vw;height:.9vw;border-radius:50%;background:#E6CCFF}
-#rtv .trk .flag{position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:1.2vw;font-weight:700;color:rgba(255,255,255,.35)}
-#rtv .ln.fin .fill{background:#FF7E31}
-#rtv .ln.fin .head{width:auto;height:auto;margin:0;transform:translate(-100%,-50%);border-radius:99px;padding:.35vw 1.2vw;font-size:1.6vw;font-weight:800;color:#000}
-#rtv .ln .sv{text-align:right}
-#rtv .ln .sv b{display:block;font-size:2.6vw;font-weight:700;line-height:1.1}
-#rtv .ln .sv span{font-size:1vw;color:rgba(255,255,255,.48);font-weight:600}
+/* 경기 중 · 요약 카드 격자 (v4.20 · 1분할 · 2분할 · 4분할) */
+#rtv .grid{flex:1;display:grid;gap:1.6vw;min-height:0}
+#rtv .grid.g1{grid-template-columns:1.55fr 1fr}
+#rtv .grid.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+#rtv .grid.g4{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
+#rtv .pl{position:relative;border-radius:1.8vw;background:rgba(255,255,255,.07);padding:2vw 2.4vw;display:flex;flex-direction:column;justify-content:center;gap:.6vw;min-height:0;overflow:hidden;border:.25vw solid transparent}
+#rtv .pl.lead{border-color:#FF7E31;background:rgba(255,126,49,.16)}
+#rtv .pl.fin{background:rgba(255,255,255,.04)}
+#rtv .pl.empty{align-items:center;justify-content:center;background:rgba(255,255,255,.03)}
+#rtv .pl.empty .nm{font-size:1.8vw;color:rgba(255,255,255,.28);font-weight:500}
+#rtv .pl.best{background:rgba(230,204,255,.08)}
+#rtv .pl.best .no{color:#E6CCFF}
+#rtv .pl.best .sc{color:#E6CCFF}
+#rtv .pl .pt{display:flex;align-items:baseline;gap:1vw}
+#rtv .pl .no{font-size:1.3vw;font-weight:600;color:rgba(255,255,255,.48)}
+#rtv .pl .rk{margin-left:auto;font-size:1.9vw;font-weight:700;color:#FF963E}
+#rtv .pl .nm{font-size:2.6vw;font-weight:700;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rtv .pl .sc{font-size:7vw;font-weight:700;line-height:1;color:#FF7E31}
+#rtv .pl.solo .sc,#rtv .grid.g1 .sc{font-size:9vw}
+#rtv .grid.g4 .sc{font-size:5.4vw}
+#rtv .pl .hh{display:flex;gap:.6vw;margin-top:.3vw}
+#rtv .pl .hh i{width:1.5vw;height:1.5vw;border-radius:.3vw;background:#3A3A3A;display:block}
+#rtv .pl .hh i.on{background:#FF7E31}
+#rtv .pl .sub{font-size:1.4vw;font-weight:600;color:rgba(255,255,255,.6)}
+#rtv .pl .badge{position:absolute;right:1.6vw;bottom:1.4vw;font-size:1.2vw;font-weight:700;color:rgba(255,255,255,.48)}
+#rtv .pl .badge:empty{display:none}
 #rtv .res{display:flex;flex-direction:column;gap:1vw;margin-top:2.4vw}
 #rtv .rr{display:grid;grid-template-columns:7vw minmax(0,1fr) 14vw 11vw 10vw;gap:1.4vw;align-items:center;padding:1.3vw 2vw;border-radius:1.4vw;background:rgba(255,255,255,.07)}
 #rtv .rr.w{background:rgba(255,126,49,.2)}
@@ -492,7 +502,7 @@ var TABS = [
   { id:"idea", n:"아이디어", d:"참가자가 낸 아이디어 한 줄을 봅니다. 18F 커피챗 매칭 때 분야별로 묶어 봅니다." },
   { id:"survey", n:"설문", d:"오늘 한 판 설문 집계입니다. 답은 이름 없이 저장되어 사람 단위 조회는 없습니다." },
   { id:"typing", n:"게임", d:"AX 올림픽 점수 계수와 당일 잠금 · 게임별 전원 점수 · 1F 현장 타자왕전과 닉네임을 관리합니다." },
-  { id:"race", n:"타자왕전", d:"1F 현장 타자 대전(2~4명)을 열고 시작하고 TV에 띄웁니다. 선수 노트북은 좌석 링크로 이 판에만 참가합니다." },
+  { id:"race", n:"타자왕전", d:"1F 현장 단어 소나기 대전(1~4명)을 열고 시작하고 큰 화면에 띄웁니다. 선수 노트북은 좌석 링크로 이 판에만 참가합니다." },
   { id:"notice", n:"공지", d:"참가자 앱 LED 띠와 실시간 안내에 나가는 공지를 발송하고 중지합니다." },
   { id:"photo", n:"포토부스", d:"AI 포토부스 원격 대기열을 호출하고 완료 처리합니다." },
   { id:"art", n:"사생대회", d:"본선 공개 작품을 관리합니다. 좋아요 1인 3표이고 앱에는 작가가 나오지 않습니다." }
@@ -860,7 +870,7 @@ var GUIDE={
   idea:[["목록","최신 아이디어가 위에 옵니다. 테스트 계정은 빠져 있고 「테스트 계정 포함」으로 볼 수 있습니다."],["분야별 묶음","18F 커피챗 매칭 때 씁니다. 같은 분야에서 커피챗을 신청한 사람이 위에 옵니다."],["CSV","지금 걸러 보는 목록 그대로 내려받습니다."]],
   survey:[["집계","문항마다 선택 비율 · 점수 분포 · 한 줄 답을 봅니다."],["이름 없음","답은 사번 없이 저장됩니다. 사람 단위 조회는 없습니다."]],
   typing:[["AX 올림픽 · 점수 계수","종목별 계수를 고치면 미리보기에 예시 기록의 점수가 바로 보입니다. <b>저장</b>하면 규칙판(rev)이 1 오르고 이미 낸 기록까지 전원 점수가 새 계수로 다시 계산됩니다."],["당일 잠금","리허설 재보정을 마친 뒤 10/26 아침에 <b>당일 잠금 켜기</b>를 누릅니다. 잠긴 동안에는 저장이 거부되고, 해제는 언제든 됩니다."],["게임별 통계","다섯 종목 전원 점수 · 최고 점수 중앙 · 만점 도달 · CSV 입니다. 행의 대표 기록을 누르면 점수 구성이 펼쳐집니다. 부문 통계는 두지 않습니다."],["O/X 문항","AI O/X 문항별 정답률 · 판자 · 낙하 · O 선택 비율 · 평균 시간입니다. 답이 틀린 문항은 체크한 뒤 <b>선택 문항 끄기</b>로 출제에서 뺍니다. 규칙 잠금과 별개라 당일에도 됩니다."],["타자왕전 · 닉네임","Outro 호명용 상위 5와 부적절한 닉네임 숨김·초기화입니다."]],
-  race:[["준비","아침에 <b>좌석 링크</b>를 선수 노트북마다 한 번 엽니다. 관리코드는 필요 없고, 진행자가 연 판에만 참가됩니다."],["판 열기","좌석 수(2~4)를 고르고 <b>판 열기</b>를 누르면 선수 노트북에 이름 입력이 나옵니다. 2명부터 <b>시작</b>할 수 있습니다."],["TV","<b>TV 화면 열기</b>는 전체 화면 대전 화면입니다. 마우스를 움직이면 아래 오른쪽에 진행 버튼이 나옵니다(N 판 열기 · S 시작 · E 지금 끝내기 · R 결과와 시상)."],["기록","모두 완주하거나 120초가 지나면 결과가 「타자대전」 시트에 한 번 기록됩니다. <b>오늘 기록</b>에서 완주 속도 순위와 CSV 를 봅니다."]],
+  race:[["준비","아침에 <b>좌석 링크</b>를 선수 노트북마다 한 번 엽니다. 관리코드는 필요 없고, 진행자가 연 판에만 참가됩니다."],["판 열기","좌석 수(1~4)를 고르고 <b>판 열기</b>를 누르면 선수 노트북에 이름 입력이 나옵니다. 한 명만 앉아도 <b>시작</b>할 수 있습니다."],["큰 화면","<b>큰 화면 열기</b>는 전체 화면 대전 화면입니다. 1명이면 카드 한 장과 오늘 1등, 2명이면 2분할, 3~4명이면 4분할입니다. 마우스를 움직이면 아래 오른쪽에 진행 버튼이 나옵니다(N 판 열기 · S 시작 · E 지금 끝내기 · R 결과와 시상)."],["기록","시간 제한은 없고 목숨을 다 잃으면 끝납니다. 모두 끝나면 결과가 「타자대전」 시트에 한 번 기록됩니다. <b>오늘 기록</b>에서 점수 순위와 CSV 를 봅니다. 판 길이는 설정 시트의 타자대전_목숨과 타자대전_상한초로 조절합니다."]],
   notice:[["발송","제목과 내용을 넣고 발송하면 모든 참가자 앱에 나갑니다."],["중지","송출 중인 공지를 중지하면 다음 동기화(10초) 때 전 기기에서 사라집니다."]],
   photo:[["호출","<b>다음 번호 호출</b>을 누르면 맨 앞 번호의 앱에 「지금 입장하세요」가 뜹니다."],["건너뛰기 · 완료","호출 후 10분 안에 오지 않으면 건너뛰기, 도착하면 완료입니다."]],
   art:[["설정","접수 폼 주소와 두 마감 시각을 저장합니다."],["공개","작품을 공개 · 샘플 · 숨김으로 바꿉니다."],["시상","좋아요 순위와 CSV 로 시상합니다."]]
@@ -2453,23 +2463,15 @@ function photoAct(act, emp, no){
   else go();
 }
 
-/* ══════════════════ 7-7. 타자왕전 · 1F 현장 다인 대전 (v4.13 · 사용자 확정 260922 A안) ══════════════════
-   선수 노트북 2~4대 = admin/typing.html (관리코드 없음 · 좌석 링크 또는 판 코드로 이 판에만 참가)
-   진행 = 이 메뉴 「진행」 · TV = 「TV 화면」(전체 화면 · 사이니지 세계). 판 상태는 서버 캐시에만 있고 시트에는 판이 끝날 때 결과만 쓴다.
+/* ══════════════════ 7-7. 타자왕전 · 1F 현장 단어 소나기 대전 (v4.20 · 사용자 확정 260923) ══════════════════
+   선수 노트북 1~4대 = admin/typing.html (관리코드 없음 · 좌석 링크 또는 판 코드로 이 판에만 참가)
+   게임 = AX 단어 소나기. 서버가 판마다 정수 시드 하나를 주고, 기기마다 그 시드로 같은 단어 순서를 각자 돌린다.
+   GAS 왕복이 1.0~1.6초라 떨어지는 단어를 그림으로 옮길 수는 없다(260923 실측). 그래서 이 화면은 요약 카드 격자만 그린다.
+   인원별 화면: 1명 = 카드 한 장 + 오늘 1등 현황판 · 2명 = 좌우 2분할 · 3~4명 = 2×2 4분할.
+   진행 = 이 메뉴 「진행」 · 큰 화면 = 「TV 화면」(전체 화면 · 사이니지 세계). 판 상태는 서버 캐시에만 있고 시트에는 판이 끝날 때 결과만 쓴다.
    폴링: 이 메뉴를 보는 동안 race_state 2초(판 없음 4초) · TV 를 켜면 TV 가 1초로 대신 부른다(둘이 겹치지 않는다).
-   판 코드·좌석 링크 키·사번은 race_host(관리코드)로만 받는다. 기록은 「타자대전」 시트에만 쌓이고 기존 현장 타자왕전(소나기) 상위 5 와 섞이지 않는다. */
-var RACE={ n:4, m:null, host:null, key:"", off:0, rtt:1e9, t:null, sig:"", hostAt:0, hostId:"", hostJoin:-1, lastSt:"" };
-/* 타수 = 자판을 누르는 횟수 · 백엔드 raceKeys 와 글자 그대로 같다(test_backend 71절이 대조한다) */
-function raceKeys(s) {
-  var n = 0, J2 = [9, 10, 11, 14, 15, 16, 19], T2 = [3, 5, 6, 9, 10, 11, 12, 13, 14, 15, 18];
-  s = String(s || '');
-  for (var i = 0; i < s.length; i++) {
-    var c = s.charCodeAt(i) - 0xAC00;
-    if (c >= 0 && c <= 11171) { var t = c % 28, j = Math.floor(c / 28) % 21; n += 1 + (J2.indexOf(j) >= 0 ? 2 : 1) + (t ? (T2.indexOf(t) >= 0 ? 2 : 1) : 0); }
-    else n += 1;
-  }
-  return n;
-}
+   판 코드·좌석 링크 키·사번은 race_host(관리코드)로만 받는다. 기록은 「타자대전」 시트에만 쌓이고 기존 현장 타자왕전(타자기록 site) 상위 5 와 섞이지 않는다. */
+var RACE={ n:4, m:null, host:null, key:"", off:0, rtt:1e9, t:null, sig:"", hostAt:0, hostId:"", hostJoin:-1, lastSt:"", top:null, topAt:0 };
 function rnow(){ return Date.now()+RACE.off; }
 /* 상태 받기 · 서버 시계 차이를 함께 잰다(카운트다운·남은 초가 선수 화면과 맞게) */
 function raceCall(a, p, done, fail){
@@ -2482,8 +2484,8 @@ function raceTake(r){
   if(r.key!==undefined){ RACE.host=m; RACE.key=r.key||""; RACE.hostAt=Date.now(); RACE.hostId=m?m.id:""; RACE.hostJoin=m?(m.rows||[]).length:-1; }
   if(m&&m.n&&(!RACE.m||RACE.m.id!==m.id)) RACE.n=m.n;   /* 좌석 수는 마지막 판을 따른다(N 키 · 다음 판 열기) · 콘솔 칩으로 바꾼다 */
   RACE.m=m; RACE.lastSt=m?m.id+":"+m.st:"";
-  /* 판이 끝나면 오늘 기록을 새로 받는다 */
-  if(m&&m.st==="done"&&prevSt!==m.id+":done"&&prevSt){ for(var k in _cache) if(k.indexOf("race_list")===0) delete _cache[k]; if(ST.tab==="race") reload(["rlist"]); }
+  /* 판이 끝나면 오늘 기록을 새로 받는다 · 큰 화면의 1인 현황판도 이때 갱신한다 */
+  if(m&&m.st==="done"&&prevSt!==m.id+":done"&&prevSt){ for(var k in _cache) if(k.indexOf("race_list")===0) delete _cache[k]; if(ST.tab==="race") reload(["rlist"]); raceTopPull(); }
   /* 새 판이거나 앉은 사람이 바뀌면 콘솔 전용 값(판 코드·사번)을 다시 받는다 */
   if(ST.tab==="race"&&m&&(m.id!==RACE.hostId||(m.st==="open"&&(m.rows||[]).length!==RACE.hostJoin))&&Date.now()-RACE.hostAt>1500) raceHostPull();
   var sig=JSON.stringify(m||null);
@@ -2491,6 +2493,12 @@ function raceTake(r){
   if(RTV.on) rtvPaint();
 }
 function raceHostPull(done){ RACE.hostAt=Date.now(); raceCall("race_host",{},function(r){ raceTake(r); done&&done(r); },function(){ done&&done(null); }); }
+/* 오늘 점수 1등 · 1인 판에서 상대 대신 「오늘 1등」을 옆에 세운다(혼자 쳐도 겨룰 대상이 있게) · 판이 끝날 때와 큰 화면을 열 때만 부른다 */
+function raceTopPull(){
+  if(Date.now()-RACE.topAt<20000) return;
+  RACE.topAt=Date.now();
+  raceCall("race_list",{},function(r){ if(r&&r.ok){ RACE.top=(r.top||[])[0]||null; if(RTV.on){ RTV.key=""; rtvPaint(); } } },function(){});
+}
 function racePoll(){
   clearTimeout(RACE.t);
   if(ST.tab!=="race"||RTV.on||!key()) return;
@@ -2547,10 +2555,12 @@ function raceCopy(s){
 }
 function raceCopyOld(t){ var a=document.createElement("textarea"); a.value=t; document.body.appendChild(a); a.select(); try{ document.execCommand("copy"); }catch(e){} document.body.removeChild(a); }
 var RACE_ST={ open:["선수 모집","warn"], run:["경기 중","pri"], done:["끝남 · 결과","ok"], closed:["닫힘","off"] };
-function raceSec(ms){ return (Math.round(Number(ms||0)/100)/10).toFixed(1)+"초"; }   /* 시트 소요(초)와 같은 반올림(0.1초) */
+function raceSec(ms){ return (Math.round(Number(ms||0)/100)/10).toFixed(1)+"초"; }   /* 시트 버틴 시간(초)과 같은 반올림(0.1초) */
+function raceHearts(r,m){ var n=(m&&m.lives)||5, lv=r.lives==null?n:r.lives, h=""; for(var i=0;i<n;i++) h+='<span style="color:'+(i<lv?"#FF7E31":"#3A3A3A")+'">'+(i<lv?"◆":"◇")+'</span>'; return h; }
+function raceQuiet(r,m){ return m&&m.st==="run"&&!r.fin&&r.quiet>3000; }   /* 마지막 보고 뒤 3초 넘게 조용 = 연결 끊김(판 진행에는 영향 없음) */
 function viewRace(){
   var s=sub()||"live";
-  var h=tabHead('<button class="btn pri" onclick="rtvOpen()">TV 화면 열기</button>');
+  var h=tabHead('<button class="btn pri" onclick="rtvOpen()">큰 화면 열기</button>');
   h+=chips([{v:"live",n:"진행"},{v:"log",n:"오늘 기록",c:(ST.data.rlist||{}).games}], s, "setSub");
   return h+(s==="log"?raceLogHtml():raceLiveHtml());
 }
@@ -2558,12 +2568,12 @@ function raceLiveHtml(){
   var m=RACE.m, st=m?m.st:"", hm=RACE.host&&m&&RACE.host.id===m.id?RACE.host:null, live=st==="open"||st==="run";
   var joined=m?(m.rows||[]).length:0, tb='<div class="toolbar">';
   if(!live){
-    tb+='<span class="cap">좌석 수</span>'+[2,3,4].map(function(n){ return '<button class="fchip'+(RACE.n===n?" on":"")+'" onclick="raceN('+n+')">'+n+'석</button>'; }).join("")+
+    tb+='<span class="cap">좌석 수</span>'+[1,2,3,4].map(function(n){ return '<button class="fchip'+(RACE.n===n?" on":"")+'" onclick="raceN('+n+')">'+n+'석</button>'; }).join("")+
       '<button class="btn pri" onclick="raceOpen()">'+(st==="done"?"다음 판 열기":"판 열기")+' · '+RACE.n+'석</button>';
     if(st==="done") tb+='<button class="btn" onclick="raceClose()">결과 닫기</button>';
   } else if(st==="open"){
-    tb+='<button class="btn pri" onclick="raceStart()" '+(joined<2?"disabled":"")+'>시작 · '+joined+'명</button><button class="btn danger" onclick="raceClose()">판 닫기</button>'+
-      (joined<2?'<span class="cap">2명부터 시작할 수 있습니다</span>':'');
+    tb+='<button class="btn pri" onclick="raceStart()" '+(joined<1?"disabled":"")+'>시작 · '+joined+'명</button><button class="btn danger" onclick="raceClose()">판 닫기</button>'+
+      (joined<1?'<span class="cap">한 명이라도 앉으면 시작할 수 있습니다</span>':'');
   } else {
     tb+='<button class="btn" onclick="raceEnd()">지금 끝내기</button><button class="btn danger" onclick="raceClose()">판 닫기 (기록 없이 취소)</button>';
   }
@@ -2579,15 +2589,15 @@ function raceLiveHtml(){
     body='<div class="row" style="gap:28px;margin-bottom:14px;align-items:flex-end">'+
       '<div><div class="cap">판 코드 · 좌석 링크 없이 참가할 때</div><div class="rcode">'+esc(hm?hm.code:"····")+'</div></div>'+
       (hm&&hm.codeLocked?tag("판 코드 잠김 · 오답 30회","bad"):"")+
-      (m.text?'<div style="flex:1;min-width:280px"><div class="cap">이번 문장 · '+m.len+'자 · '+m.keys+'타</div><div class="muted">'+esc(m.text)+'</div></div>':'')+'</div>'+
-      '<div class="wrap"><table class="tb"><tr><th>좌석</th><th>이름</th><th>사번</th><th>상태</th><th>진행</th><th class="tdr">분당 타수</th><th class="tdr">정확도</th><th class="tdr">처리</th></tr>'+
+      (m.seed?'<div><div class="cap">이번 판 시드 · 기기마다 같은 단어 순서</div><div class="n muted">'+esc(String(m.seed))+' · 목숨 '+(m.lives||5)+' · 안전 상한 '+(m.cap||180)+'초</div></div>':'')+'</div>'+
+      '<div class="wrap"><table class="tb"><tr><th>좌석</th><th>이름</th><th>사번</th><th>상태</th><th class="tdr">점수</th><th class="tdr">터뜨린 단어</th><th class="tdr">정확도</th><th>목숨</th><th class="tdr">처리</th></tr>'+
       seats.map(function(s){ var r=by[s], e=(hby[s]||{}).emp||"";
-        if(!r) return '<tr><td class="n"><b>'+s+'</b></td><td colspan="7" class="cap">비어 있음</td></tr>';
-        var stt=st==="open"?tag("대기"):r.fin?tag(r.rank+"위 · "+raceSec(r.el),"ok"):st==="done"?tag(r.rank+"위 · 미완주","off"):tag("치는 중","pri");
-        var pct=m.len?Math.round(r.pos/m.len*100):0;
+        if(!r) return '<tr><td class="n"><b>'+s+'</b></td><td colspan="8" class="cap">비어 있음</td></tr>';
+        var stt=st==="open"?tag("대기"):r.fin?tag(r.rank+"위 · "+raceSec(r.el),"ok"):raceQuiet(r,m)?tag("연결 끊김","bad"):st==="done"?tag(r.rank+"위","off"):tag(r.rank+"위 · 치는 중","pri");
         return '<tr class="hv"><td class="n"><b>'+s+'</b></td><td><b>'+esc(r.name)+'</b></td><td class="n">'+esc(e||"-")+'</td><td>'+stt+'</td>'+
-          '<td>'+(st==="open"?'<span class="cap">-</span>':'<div class="row" style="flex-wrap:nowrap"><div class="rbar" style="flex:1"><i style="width:'+pct+'%"></i></div><span class="n cap">'+pct+'%</span></div>')+'</td>'+
-          '<td class="n tdr">'+(st==="open"?"-":r.cpm)+'</td><td class="n tdr">'+(st==="open"?"-":r.acc+"%")+'</td>'+
+          '<td class="n tdr"><b>'+(st==="open"?"-":Number(r.score||0).toLocaleString())+'</b></td>'+
+          '<td class="n tdr">'+(st==="open"?"-":(r.hits||0)+"개 · 콤보 "+(r.combo||0))+'</td><td class="n tdr">'+(st==="open"?"-":r.acc+"%")+'</td>'+
+          '<td>'+(st==="open"?'<span class="cap">-</span>':raceHearts(r,m))+'</td>'+
           '<td><div class="acts">'+(st==="open"?'<button class="btn sm danger" onclick="raceKick('+s+')">비우기</button>':'')+'</div></td></tr>';
       }).join("")+'</table></div>';
   }
@@ -2598,44 +2608,51 @@ function raceLiveHtml(){
     [1,2,3,4].map(function(s){ return '<tr><td class="n"><b>'+s+'</b></td><td><input class="in rlink" readonly value="'+esc(raceSeatLink(s))+'" onclick="this.select()"></td><td><div class="acts"><button class="btn sm" onclick="raceCopy('+s+')">복사</button></div></td></tr>'; }).join("")+
     '</table></div>';
   h+=card("좌석 링크", "관리코드 없이 열리고, 진행자가 연 판에만 참가됩니다", links, RACE.key?'<button class="btn sm danger" onclick="raceKeyIssue(1)">다시 발급</button>':'');
-  h+=memo('<ol><li>아침에 <b>좌석 링크</b>를 선수 노트북 2~4대에서 하나씩 엽니다(1번 노트북 = 1번 링크). 전체 화면(F11)으로 둡니다.</li>'+
-    '<li>TV에 연결한 노트북에서 이 메뉴의 <b>TV 화면 열기</b>를 누릅니다. TV 화면 아래 오른쪽에 마우스를 올리면 진행 버튼이 나옵니다(N 판 열기 · S 시작 · R 결과와 시상 전환 · E 지금 끝내기).</li>'+
-    '<li><b>판 열기</b> → 선수가 이름을 넣으면 TV와 이 표에 뜹니다 → 2명 이상이면 <b>시작</b> → 4초 카운트다운 뒤 같은 문장이 나옵니다.</li>'+
-    '<li>모두 완주하거나 120초가 지나면 끝나고 결과가 「타자대전」 시트에 한 번 기록됩니다. TV는 결과를 보여 준 뒤 시상 화면으로 넘어갑니다.</li></ol>'+
-    '<p>순위는 완주 순서(서버 시계), 못 한 선수는 친 글자 수 순입니다. 오타는 고쳐야 다음 어절로 넘어가고 정확도에 반영됩니다. 이 기록은 기존 현장 타자왕전(단어 소나기) 상위 5와 섞이지 않습니다.</p>');
+  h+=memo('<ol><li>아침에 <b>좌석 링크</b>를 선수 노트북 1~4대에서 하나씩 엽니다(1번 노트북 = 1번 링크). 전체 화면(F11)으로 둡니다.</li>'+
+    '<li>큰 화면에 연결한 노트북에서 이 메뉴의 <b>큰 화면 열기</b>를 누릅니다. 아래 오른쪽에 마우스를 올리면 진행 버튼이 나옵니다(N 판 열기 · S 시작 · R 결과와 시상 전환 · E 지금 끝내기).</li>'+
+    '<li><b>판 열기</b> → 선수가 이름을 넣으면 큰 화면과 이 표에 뜹니다 → 한 명만 앉아도 <b>시작</b>할 수 있습니다 → 4초 카운트다운 뒤 같은 단어가 떨어집니다.</li>'+
+    '<li>혼자일 때는 카드 한 장 옆에 <b>오늘 1등</b>이 섭니다. 2명이면 좌우 2분할, 3~4명이면 2×2 4분할입니다.</li>'+
+    '<li>모두 끝나면(목숨 소진 또는 안전 상한) 결과가 「타자대전」 시트에 한 번 기록됩니다. 큰 화면은 결과를 보여 준 뒤 시상 화면으로 넘어갑니다.</li></ol>'+
+    '<p>시간 제한은 없습니다. 목숨을 다 잃으면 그 선수의 판이 끝납니다. 순위는 점수 순(같으면 정확도 → 최고 콤보)입니다.</p>'+
+    '<p>판마다 서버가 시드 하나를 주고 기기마다 그 시드로 같은 단어 순서를 각자 돌립니다. 떨어지는 단어 자체는 서버를 거치지 않으므로 네트워크가 느려도 판정이 흔들리지 않습니다. 이 화면에는 1초마다 점수·터뜨린 단어·정확도·목숨만 올라옵니다.</p>'+
+    '<p>한 판 길이는 봇 시뮬레이션에서 평균 79초(느린 타자 44초 · 보통 62초 · 빠름 81초 · 아주 빠름 95초 · 최장 120초)였습니다. 길이를 바꾸려면 설정 시트의 <b>타자대전_목숨</b>(기본 5)과 <b>타자대전_상한초</b>(기본 180)를 고칩니다. 다음 판부터 적용됩니다.</p>'+
+    '<p>이 기록은 기존 현장 타자왕전(타자기록 시트) 상위 5와 섞이지 않습니다.</p>');
   return h;
 }
+function raceWhy(w){ return w==="cap"?"안전 상한":w==="host"?"진행자 종료":"목숨 소진"; }
 function raceLogHtml(){
   var d=ST.data.rlist||{ rows:[], top:[], games:0 };
-  var fin=(d.rows||[]).filter(function(r){ return r.fin; });
-  var h='<div class="kpis">'+kpi("오늘 판",d.games||0,"판")+kpi("선수 기록",(d.rows||[]).length,"명")+kpi("완주",fin.length,"명")+kpi("최고 분당 타수",(d.top&&d.top[0]?d.top[0].cpm:0),"타",d.top&&d.top[0]?esc(d.top[0].name)+" · 정확도 "+d.top[0].acc+"%":"")+'</div>';
-  h+=card("완주 기록 · 분당 타수 상위 10","같은 판 안의 순위는 완주 순서 · 여기서는 판을 넘어 속도로 줄 세웁니다",
-    '<div class="wrap"><table class="tb"><tr><th>순위</th><th>이름</th><th>사번</th><th class="tdr">분당 타수</th><th class="tdr">정확도</th><th class="tdr">소요</th><th>판 순위</th><th>시각</th></tr>'+
-    ((d.top||[]).length?d.top.map(function(r,i){ return '<tr class="hv"><td class="n"><b>'+(i+1)+'</b></td><td><b>'+esc(r.name)+'</b></td><td class="n">'+esc(r.emp||"-")+'</td><td class="n tdr">'+r.cpm+'</td><td class="n tdr">'+r.acc+'%</td><td class="n tdr">'+r.sec.toFixed(1)+'초</td><td class="n">'+r.rank+'위</td><td class="n cap">'+esc(short(r.ts))+'</td></tr>'; }).join(""):emptyRow(8,"아직 완주 기록이 없습니다"))+'</table></div>',
+  var best=(d.top||[])[0];
+  var h='<div class="kpis">'+kpi("오늘 판",d.games||0,"판")+kpi("선수 기록",(d.rows||[]).length,"명")+
+    kpi("최고 점수",best?best.score:0,"점",best?esc(best.name)+" · 정확도 "+best.acc+"%":"")+
+    kpi("평균 판 길이",(d.rows||[]).length?Math.round((d.rows||[]).reduce(function(a,r){ return a+r.sec; },0)/(d.rows||[]).length):0,"초","한 사람이 기계를 잡는 시간")+'</div>';
+  h+=card("점수 상위 10","판을 넘어 점수로 줄 세웁니다 · 큰 화면의 1인 현황판이 이 1등을 보여 줍니다",
+    '<div class="wrap"><table class="tb"><tr><th>순위</th><th>이름</th><th>사번</th><th class="tdr">점수</th><th class="tdr">터뜨린 단어</th><th class="tdr">최고 콤보</th><th class="tdr">정확도</th><th class="tdr">버틴 시간</th><th>시각</th></tr>'+
+    ((d.top||[]).length?d.top.map(function(r,i){ return '<tr class="hv"><td class="n"><b>'+(i+1)+'</b></td><td><b>'+esc(r.name)+'</b></td><td class="n">'+esc(r.emp||"-")+'</td><td class="n tdr"><b>'+Number(r.score).toLocaleString()+'</b></td><td class="n tdr">'+r.hits+'</td><td class="n tdr">'+r.combo+'</td><td class="n tdr">'+r.acc+'%</td><td class="n tdr">'+r.sec.toFixed(1)+'초</td><td class="n cap">'+esc(short(r.ts))+'</td></tr>'; }).join(""):emptyRow(9,"아직 기록이 없습니다"))+'</table></div>',
     '<button class="btn sm" onclick="raceCsv()">CSV</button>');
   h+=card("판별 기록","최근 판부터 · 좌석마다 한 줄",
-    '<div class="wrap scrolly"><table class="tb"><tr><th>시각</th><th>판</th><th>순위</th><th>좌석</th><th>이름</th><th>사번</th><th>결과</th><th class="tdr">분당 타수</th><th class="tdr">정확도</th><th class="tdr">오타</th></tr>'+
+    '<div class="wrap scrolly"><table class="tb"><tr><th>시각</th><th>판</th><th>순위</th><th>좌석</th><th>이름</th><th>사번</th><th class="tdr">점수</th><th class="tdr">단어</th><th class="tdr">정확도</th><th class="tdr">버틴 시간</th><th>끝난 이유</th></tr>'+
     ((d.rows||[]).length?d.rows.map(function(r){ return '<tr class="hv"><td class="n cap">'+esc(short(r.ts))+'</td><td class="n cap">'+esc(r.id)+'</td><td class="n"><b>'+r.rank+'</b></td><td class="n">'+r.s+'</td><td><b>'+esc(r.name)+'</b></td><td class="n">'+esc(r.emp||"-")+'</td>'+
-      '<td>'+(r.fin?tag("완주 "+r.sec.toFixed(1)+"초","ok"):tag("미완주 "+(r.len?Math.round(r.pos/r.len*100):0)+"%","off"))+'</td><td class="n tdr">'+r.cpm+'</td><td class="n tdr">'+r.acc+'%</td><td class="n tdr">'+r.errs+'</td></tr>'; }).join(""):emptyRow(10,"아직 끝난 판이 없습니다"))+'</table></div>');
+      '<td class="n tdr"><b>'+Number(r.score).toLocaleString()+'</b></td><td class="n tdr">'+r.hits+'</td><td class="n tdr">'+r.acc+'%</td><td class="n tdr">'+r.sec.toFixed(1)+'초</td><td class="cap">'+esc(raceWhy(r.why))+'</td></tr>'; }).join(""):emptyRow(11,"아직 끝난 판이 없습니다"))+'</table></div>');
   return h;
 }
 function raceCsv(){
   var rows=(ST.data.rlist||{}).rows||[];
-  var out=["시각,판,순위,좌석,이름,사번,완주,소요(초),분당 타수,정확도,진행 글자,전체 글자,오타"].concat(rows.map(function(r){
-    return [r.ts,r.id,r.rank,r.s,csvq(r.name),r.emp||"",r.fin?"Y":"N",r.fin?r.sec:"",r.cpm,r.acc,r.pos,r.len,r.errs].join(",");
+  var out=["시각,판,순위,좌석,이름,사번,점수,터뜨린 단어,최고 콤보,정확도,남은 목숨,버틴 시간(초),끝난 이유,시드"].concat(rows.map(function(r){
+    return [r.ts,r.id,r.rank,r.s,csvq(r.name),r.emp||"",r.score,r.hits,r.combo,r.acc,r.lives,r.sec,raceWhy(r.why),r.seed].join(",");
   }));
   var blob=new Blob(["﻿"+out.join("\n")],{type:"text/csv;charset=utf-8"});
   var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="타자대전_기록.csv"; a.click(); URL.revokeObjectURL(a.href);
 }
-/* 남은 초 · 콘솔 표 위 작은 숫자(네트워크 없이 250ms 틱) */
-setInterval(function(){ var e=el("raceLeft"), m=RACE.m; if(!e||!m||m.st!=="run") return; var l=Math.ceil((m.t0+m.lim*1000-rnow())/1000); e.textContent=l>m.lim?"시작 "+Math.ceil((m.t0-rnow())/1000)+"초 전":"남은 "+Math.max(0,l)+"초"; },250);
+/* 지난 시간 · 콘솔 표 위 작은 숫자(네트워크 없이 250ms 틱) · 시간 제한이 없으므로 남은 초가 아니라 경과를 센다 */
+setInterval(function(){ var e=el("raceLeft"), m=RACE.m; if(!e||!m||m.st!=="run") return; var g=rnow()-m.t0; e.textContent=g<0?"시작 "+Math.ceil(-g/1000)+"초 전":Math.floor(g/1000)+"초째"; },250);
 
 /* ── TV 전체 화면 ── */
 var RTV={ on:false, t:null, key:"", view:"", doneAt:0, doneId:"", pin:"", ui:null };
 function rtvOpen(){
   RTV.on=true; RTV.key=""; el("rtv").className="on"; clearTimeout(RACE.t);
   try{ var d=document.documentElement; if(d.requestFullscreen) d.requestFullscreen().catch(function(){}); }catch(e){}
-  rtvGrid(); rtvUi(); rtvPaint(); rtvPoll();
+  rtvGrid(); rtvUi(); raceTopPull(); rtvPaint(); rtvPoll();
 }
 function rtvClose(){
   RTV.on=false; clearTimeout(RTV.t); el("rtv").className="";
@@ -2686,7 +2703,7 @@ function rtvCtl(){
   var m=RACE.m||{}, st=m.st;
   return '<div class="ctl">'+
     '<button onclick="'+(st==="open"||st==="run"?"raceOpenForce({n:"+RACE.n+"})":"raceAct(\'race_open\',{n:"+RACE.n+"},\'판을 열었습니다\')")+'">'+(st==="done"?"다음 판":"판 열기")+' · '+RACE.n+'석<span class="k">N</span></button>'+
-    '<button onclick="raceStart()" '+(st==="open"&&(m.rows||[]).length>=2?"":"disabled")+'>시작<span class="k">S</span></button>'+
+    '<button onclick="raceStart()" '+(st==="open"&&(m.rows||[]).length>=1?"":"disabled")+'>시작<span class="k">S</span></button>'+
     '<button onclick="raceEnd()" '+(st==="run"?"":"disabled")+'>지금 끝내기<span class="k">E</span></button>'+
     '<button onclick="RTV.pin=RTV.view===\'award\'?\'result\':\'award\';rtvPaint()" '+(st==="done"?"":"disabled")+'>결과 · 시상<span class="k">R</span></button>'+
     '<button onclick="rtvClose()">나가기</button></div>';
@@ -2706,7 +2723,7 @@ function rtvPaint(){
 function rtvIdleHtml(){ return rtvHead()+'<div class="bd"><p class="ey">1F 현장 타자왕전</p><p class="hl">타자왕전</p><p class="sb">다음 판을 준비하고 있습니다.</p></div>'; }
 function rtvOpenHtml(){
   var m=RACE.m, by={}; (m.rows||[]).forEach(function(r){ by[r.s]=r; });
-  var h=rtvHead('<span class="n">'+(m.rows||[]).length+' / '+m.n+'명</span>')+'<div class="bd"><p class="ey">선수 모집</p><p class="hl">같은 문장, 먼저 끝까지</p><p class="sb">자리의 노트북에 이름을 넣으면 여기에 나옵니다.</p>'+
+  var h=rtvHead('<span class="n">'+(m.rows||[]).length+' / '+m.n+'명</span>')+'<div class="bd"><p class="ey">선수 모집</p><p class="hl">같은 단어, 더 오래 더 많이</p><p class="sb">자리의 노트북에 이름을 넣으면 여기에 나옵니다.</p>'+
     '<div class="seats" style="grid-template-columns:repeat('+m.n+',minmax(0,1fr))">';
   for(var s=1;s<=m.n;s++){ var r=by[s]; h+='<div class="seat'+(r?" on":" empty")+'"><span class="no n">'+s+'번 자리</span><span class="nm">'+(r?esc(r.name):"비어 있음")+'</span></div>'; }
   return h+'</div></div>';
@@ -2723,41 +2740,64 @@ function rtvCountTick(){
   b.textContent=Math.min(3,Math.ceil(left/1000));
   requestAnimationFrame(rtvCountTick);
 }
+/* ── 경기 중 · 요약 카드 격자 ──
+   떨어지는 단어를 그대로 옮기지 않는다(GAS 왕복 1.0~1.6초 · 260923 실측). 선수가 1초마다 올리는 요약값만 크게 보여 준다.
+   1명 = 카드 한 장 + 오늘 1등 현황판 · 2명 = 좌우 2분할 · 3~4명 = 2×2 4분할(빈 칸은 「다음 선수 자리」). */
+function rtvHearts(r,m){
+  var n=(m&&m.lives)||5, lv=r.lives==null?n:r.lives, h="";
+  for(var i=0;i<n;i++) h+='<i class="'+(i<lv?"on":"")+'"></i>';
+  return h;
+}
+function rtvCard(r,m,cls){
+  if(!r) return '<div class="pl empty"><span class="nm">다음 선수 자리</span></div>';
+  return '<div class="pl'+(cls||"")+'" id="rtvP'+r.s+'"><div class="pt"><span class="no n">'+r.s+'번 자리</span><span class="rk n" id="rtvR'+r.s+'">'+r.rank+'위</span></div>'+
+    '<span class="nm">'+esc(r.name)+'</span>'+
+    '<b class="sc n" id="rtvS'+r.s+'">'+Number(r.score||0).toLocaleString()+'</b>'+
+    '<div class="hh" id="rtvHt'+r.s+'">'+rtvHearts(r,m)+'</div>'+
+    '<span class="sub n" id="rtvB'+r.s+'">콤보 '+(r.combo||0)+' · 정확도 '+(r.acc||0)+'% · '+raceSec(r.el)+'</span>'+
+    '<span class="badge" id="rtvG'+r.s+'"></span></div>';
+}
+function rtvTopCard(){
+  var t=RACE.top;
+  return '<div class="pl best"><div class="pt"><span class="no">오늘 1등</span></div>'+
+    (t?'<span class="nm">'+esc(t.name)+'</span><b class="sc n">'+Number(t.score).toLocaleString()+'</b><span class="sub n">단어 '+t.hits+'개 · 콤보 '+t.combo+' · 정확도 '+t.acc+'%</span>'
+      :'<span class="nm" style="opacity:.4">아직 기록이 없습니다</span><b class="sc n" style="opacity:.25">0</b><span class="sub">오늘 첫 기록을 남겨 보세요</span>')+'</div>';
+}
 function rtvRunHtml(){
-  var m=RACE.m, seats=(m.rows||[]).slice().sort(function(a,b){ return a.s-b.s; });
-  return rtvHead('<span>남은</span><b class="n" id="rtvLeft">'+m.lim+'</b><span>초</span>')+
-    '<div class="txt">'+esc(m.text)+'</div><div class="lanes">'+seats.map(function(r){
-      return '<div class="ln" id="rtvL'+r.s+'"><span class="sn n">'+r.s+'</span><span class="nm">'+esc(r.name)+'</span>'+
-        '<div class="trk"><div class="dots"></div><div class="fill" id="rtvF'+r.s+'" style="width:0"></div><div class="head" id="rtvH'+r.s+'" style="left:0"><i></i></div><span class="flag">완주</span></div>'+
-        '<div class="sv"><b class="n" id="rtvC'+r.s+'">0</b><span>분당 타수</span></div><div class="sv"><b class="n" id="rtvA'+r.s+'">100%</b><span>정확도</span></div></div>';
-    }).join("")+'</div>';
+  var m=RACE.m, rows=(m.rows||[]).slice().sort(function(a,b){ return a.s-b.s; }), n=rows.length;
+  var head=rtvHead('<span>진행</span><b class="n" id="rtvLeft">0</b><span>초째</span>');
+  if(n<=1) return head+'<div class="bd"><div class="grid g1">'+rtvCard(rows[0],m," solo")+rtvTopCard()+'</div></div>';
+  if(n===2) return head+'<div class="bd"><div class="grid g2">'+rows.map(function(r){ return rtvCard(r,m); }).join("")+'</div></div>';
+  var cells=[rows[0],rows[1],rows[2],rows[3]];
+  return head+'<div class="bd"><div class="grid g4">'+cells.map(function(r){ return rtvCard(r,m); }).join("")+'</div></div>';
 }
 function rtvRunUpd(){
   var m=RACE.m; if(!m) return;
   (m.rows||[]).forEach(function(r){
-    var p=m.len?Math.min(100,r.pos/m.len*100):0, L=el("rtvL"+r.s); if(!L) return;
-    el("rtvF"+r.s).style.width=p+"%";
-    var hd=el("rtvH"+r.s); hd.style.left=p+"%";
-    if(r.fin&&L.className.indexOf("fin")<0){ L.className="ln fin"; hd.innerHTML=r.rank+"위 · "+raceSec(r.el); }
-    el("rtvC"+r.s).textContent=r.cpm; el("rtvA"+r.s).textContent=r.acc+"%";
+    var P=el("rtvP"+r.s); if(!P) return;
+    el("rtvS"+r.s).textContent=Number(r.score||0).toLocaleString();
+    el("rtvR"+r.s).textContent=r.rank+"위";
+    el("rtvHt"+r.s).innerHTML=rtvHearts(r,m);
+    el("rtvB"+r.s).textContent="콤보 "+(r.combo||0)+" · 정확도 "+(r.acc||0)+"% · "+raceSec(r.el);
+    el("rtvG"+r.s).textContent=r.fin?"끝":raceQuiet(r,m)?"연결 끊김":"";
+    P.className="pl"+(P.className.indexOf("solo")>=0?" solo":"")+(r.rank===1?" lead":"")+(r.fin?" fin":"");
   });
 }
-setInterval(function(){ var e=el("rtvLeft"), m=RACE.m; if(!RTV.on||!e||!m||m.st!=="run") return; e.textContent=Math.max(0,Math.ceil((m.t0+m.lim*1000-rnow())/1000)); },250);
+setInterval(function(){ var e=el("rtvLeft"), m=RACE.m; if(!RTV.on||!e||!m||m.st!=="run") return; e.textContent=Math.max(0,Math.floor((rnow()-m.t0)/1000)); },250);
 setInterval(function(){ if(RTV.on&&RACE.m&&RACE.m.st==="done"&&!RTV.pin&&RTV.view==="result"&&Date.now()-RTV.doneAt>=8000) rtvPaint(); },500);
-function rtvRec(r){ return r.fin?raceSec(r.el):Math.round(r.pos/Math.max(1,RACE.m.len)*100)+"%"; }
 function rtvResultHtml(){
   var m=RACE.m;
-  return rtvHead('<span>'+(m.why==="time"?"시간 끝":"경기 끝")+'</span>')+'<div class="bd"><p class="ey">결과</p><div class="res">'+(m.rows||[]).map(function(r){
+  return rtvHead('<span>'+(m.why==="cap"?"안전 상한":"판 끝")+'</span>')+'<div class="bd"><p class="ey">이번 판 결과</p><div class="res">'+(m.rows||[]).map(function(r){
     return '<div class="rr'+(r.rank===1?" w":"")+'"><span class="rk n">'+r.rank+'위</span><span class="nm">'+esc(r.name)+'</span>'+
-      '<span class="c n">'+rtvRec(r)+'<small>'+(r.fin?"완주":"진행")+'</small></span><span class="c n">'+r.cpm+'<small>분당 타수</small></span><span class="c n">'+r.acc+'%<small>정확도</small></span></div>';
+      '<span class="c n">'+Number(r.score||0).toLocaleString()+'<small>점수</small></span><span class="c n">'+(r.hits||0)+'<small>터뜨린 단어</small></span><span class="c n">'+(r.acc||0)+'%<small>정확도</small></span></div>';
   }).join("")+'</div></div>';
 }
 function rtvAwardHtml(){
   var m=RACE.m, rows=m.rows||[], top=rows[0];
-  var order=rows.length>=3?[1,0,2]:[1,0];
+  var order=rows.length>=3?[1,0,2]:rows.length===2?[1,0]:[0];
   return rtvHead()+'<div class="bd" style="justify-content:flex-start;padding-top:2vw"><p class="ey">이번 판 1위</p><p class="hl">'+esc(top?top.name:"")+'</p>'+
     '<div class="pod">'+order.map(function(i){ var r=rows[i]; if(!r) return "";
-      return '<div class="pc p'+r.rank+'"><span class="nm">'+esc(r.name)+'</span><span class="rc n">'+rtvRec(r)+' · 분당 '+r.cpm+'타 · '+r.acc+'%</span><div class="blk n">'+r.rank+'</div></div>'; }).join("")+'</div></div>';
+      return '<div class="pc p'+r.rank+'"><span class="nm">'+esc(r.name)+'</span><span class="rc n">'+Number(r.score||0).toLocaleString()+'점 · 단어 '+(r.hits||0)+'개 · '+(r.acc||0)+'%</span><div class="blk n">'+r.rank+'</div></div>'; }).join("")+'</div></div>';
 }
 
 /* ══════════════════ 9. v4.16 폰 관리자 모드 축소로 넘어온 화면 (앱 v4.15 · GAS @86) ══════════════════
