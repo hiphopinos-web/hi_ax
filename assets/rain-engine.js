@@ -9,6 +9,7 @@
    화면 쪽이 반드시 갖춰야 하는 DOM id: rgCv(캔버스) · rgIn(입력창) · rgForm(입력 폼) · rgTip(자판 안내) ·
      rgHudSc(점수) · rgHudTm(시간) · rgHudHt(하트 묶음).
    소리는 있으면 쓴다(전역 sfx) · 없으면 조용히 넘어간다.
+   캐릭터는 행사 챗봇 원본(assets/bot.js 의 botDotCv)을 쓴다 · 화면 쪽이 bot.js 를 이 파일보다 먼저 읽는다 · 없으면 캐릭터만 빠지고 게임은 그대로 돈다.
 
    판정: 입력창의 완성 문자열을 Enter(모바일 완료)로 제출 · 화면 단어와 정확히 같으면 터짐(같은 단어가 여럿이면 가장 아래).
    한 판 = 목숨 RAIN_LIVES · 바닥선에 닿으면 목숨 -1 · RAIN_STAGE_SEC 마다 단계 상승 · 마지막 단계 뒤에도 계속 빨라진다.
@@ -47,15 +48,12 @@ var RAIN_EXTRA_EVERY = 30;                    /* 램프 시작 뒤 이 초마다
 var RAIN_BANDS = [[330, 2, 3], [420, 3, 4], [520, 4, 5], [1e9, 5, 5]];   /* [판 높이 미만, 동시 단어 최대, 단계 수] · 휴대폰 */
 var RAIN_FONT = '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif';
 var RAIN_PAL = { o100: "#FF7E31", o60: "#FFA46E", o50: "#FFB284", o30: "#FFCFB0", o25: "#FFD8C1", o10: "#FFEBE0", deep: "#D64524", ink: "#000000", w: "#FFFFFF", gray: "#B8AEA6", dim: "#8A817B", soil: "#7A3E1C", soil2: "#6A3417", trunk: "#5E3218" };
-/* 마스코트 「미위」 · 오렌지 도트 몸통 · 세로로 벌어지는 입 · 콤보 5 이상이면 작은 친구가 옆에 붙는다(ME 가 WE 가 되는 연출) */
-var MEWE_SPR = {
-  closed: ["...OOOOOO...", ".OOOOOOOOOO.", ".OOWOOOOWOO.", ".OOKOOOOKOO.", "OOOOOOOOOOOO", "OOOOOOOOOOOO", "OODDDDDDDDOO", "OOOOOOOOOOOO", ".OOOOOOOOOO.", "..OOOOOOOO..", "..OO....OO.."],
-  open: ["...OOOOOO...", ".OOOOOOOOOO.", ".OOWOOOOWOO.", ".OOKOOOOKOO.", "OOOOOOOOOOOO", "OOKKKKKKKKOO", "OOKKKKKKKKOO", "OOKKWWWWKKOO", ".OOOOOOOOOO.", "..OOOOOOOO..", "..OO....OO.."],
-  buddy: ["..LLLL..", ".LLLLLL.", "LLWLLWLL", "LLKLLKLL", "LLLLLLLL", "LLDDDDLL", ".LLLLLL.", ".LL..LL."],
-  duck: ["..OOOOOOOOOO..", ".OOWOOOOOOWOO.", "OOOKOOOOOOKOOO", "OOOOOOOOOOOOOO", "OODDDDDDDDDDOO", ".OO.OO..OO.OO."]
-};
+/* 캐릭터 = 행사 챗봇 원본(assets/bot.js) · 260923 사용자 지시로 옛 오렌지 도트 마스코트(세로로 벌어지는 입 · 콤보 친구)를 걷어냈다(design.md A-5 5-15).
+   원본 형태는 바꾸지 않는다 · 옛 연출은 몸 전체 움직임으로만 옮겼다: 입 벌리기 → 명중 때 몸 전체 한 번 튀기기(RG.mas.hop) · 콤보 5 이상 = 작은 챗봇 하나가 옆에 붙는다(개수·크기만 · ME 가 WE 가 되는 연출).
+   크기는 도트 칸 수로 고정한다(서기 22×26 = 점프 러너와 같은 칸 수 · 친구 17×20) · 도트 한 칸 = L.D / 2 CSS px · 그리는 상자는 옛 마스코트 자리(L.masW × L.masH) 안이다. */
+var RG_BOT = { w: 22, h: 26, bw: 17, bh: 20 };
 
-var RG = { on: false, mode: "app", big: false, raf: 0, last: 0, t0: 0, cd: 0, words: [], ghost: [], seq: 0, parts: [], pops: [], lives: RAIN_LIVES, score: 0, hits: 0, tries: 0, combo: 0, maxCombo: 0, stage: 1, spawnT: 0, shake: 0, banner: null, shot: null, mas: { x: 90, tx: 90, open: 0 }, res: null, L: null, dpr: 1, seed: 0, rs: 0, lives0: RAIN_LIVES, cap: RAIN_CAP_SEC };
+var RG = { on: false, mode: "app", big: false, raf: 0, last: 0, t0: 0, cd: 0, words: [], ghost: [], seq: 0, parts: [], pops: [], lives: RAIN_LIVES, score: 0, hits: 0, tries: 0, combo: 0, maxCombo: 0, stage: 1, spawnT: 0, shake: 0, banner: null, shot: null, mas: { x: 90, tx: 90, hop: 0 }, res: null, L: null, dpr: 1, seed: 0, rs: 0, lives0: RAIN_LIVES, cap: RAIN_CAP_SEC };
 var RGP = { on: false, touch: false };
 
 /* ── 화면에 기대지 않는 작은 도구 ── */
@@ -95,28 +93,18 @@ function rgApplyTune(o) {
   if (o.cap > 0) RG.cap = Math.max(30, Math.min(900, Math.round(o.cap)));
 }
 
-/* ── 스프라이트 · 외곽선을 한 번 구워 둔다 ── */
+/* ── 도트 배열 그리기 · 지금은 점프 코인(JP_COIN)만 쓴다 · 캐릭터를 도트 배열로 새로 그리지 않는다(원본 챗봇만) ── */
 function rgSprite(ctx, rows, x, y, pal) {
   for (var r = 0; r < rows.length; r++) for (var c = 0; c < rows[r].length; c++) {
     var k = rows[r].charAt(c); if (k === ".") continue;
     ctx.fillStyle = pal[k]; ctx.fillRect(x + c, y + r, 1, 1);
   }
 }
-var RG_SPR = {};
-function rgSprCv(name) {
-  if (RG_SPR[name]) return RG_SPR[name];
-  var rows = MEWE_SPR[name], c = document.createElement("canvas");
-  c.width = rows[0].length; c.height = rows.length;
-  var g = c.getContext("2d");
-  rgSprite(g, rows, 0, 0, { O: RAIN_PAL.o100, W: RAIN_PAL.w, K: RAIN_PAL.ink, D: RAIN_PAL.deep, L: RAIN_PAL.o60 });
-  /* 외곽선 · 한 칸 키운 캔버스에 검정 실루엣을 네 방향으로 찍고 그 위에 원본 */
-  var o = document.createElement("canvas"); o.width = c.width + 2; o.height = c.height + 2;
-  var og = o.getContext("2d");
-  var sil = document.createElement("canvas"); sil.width = c.width; sil.height = c.height;
-  var sg = sil.getContext("2d"); sg.drawImage(c, 0, 0); sg.globalCompositeOperation = "source-in"; sg.fillStyle = RAIN_PAL.ink; sg.fillRect(0, 0, c.width, c.height);
-  [[0, 1], [2, 1], [1, 0], [1, 2]].forEach(function (d) { og.drawImage(sil, d[0], d[1]); });
-  og.drawImage(c, 1, 1);
-  return (RG_SPR[name] = o);
+/* 챗봇 그리기 · (가운데 x, 바닥 y) 기준 · 원본 도트가 아직 안 읽혔으면 이 프레임은 건너뛴다(카운트다운 사이에 읽힌다) */
+function rgBotDraw(ctx, cx, gy, dw, dh, u) {
+  if (typeof botDotCv !== "function") return;
+  var c = botDotCv(dw, dh); if (!c) return;
+  ctx.drawImage(c, Math.round(cx - dw * u / 2), Math.round(gy - dh * u), Math.round(dw * u), Math.round(dh * u));
 }
 
 /* ── 배치 ── 판 크기 → 규칙 · 모든 값은 CSS px ── */
@@ -125,7 +113,7 @@ function rgLayout(W, H, big) {
   L.D = big ? 4 : 3;                                        /* 도트 단위 */
   L.font = big ? (W >= 1200 ? 32 : W >= 900 ? 30 : 28) : 18;
   L.boxH = Math.round(L.font * 1.6); L.padX = Math.round(L.font * 0.5);
-  L.masW = 14 * L.D; L.masH = 13 * L.D;                      /* 마스코트 12×11 + 외곽선 1 도트 */
+  L.masW = 14 * L.D; L.masH = 13 * L.D;                      /* 캐릭터 자리 · 판정선(L.floor)이 이 높이에 기댄다 · v4.20 값 그대로 · 챗봇(22×26 도트 × L.D/2)은 이 상자 안에 선다 */
   L.soil = (H < 330 ? 6 : 9) * L.D;
   L.ground = H - L.soil;
   L.floor = L.ground - L.masH - L.D;                          /* 단어 상자 아래가 여기 닿으면 놓침 */
@@ -299,7 +287,7 @@ function rgStart(mode, opt) {
   RG.words = []; RG.ghost = []; RG.seq = 0; RG.parts = []; RG.pops = []; RG.bag = null; RG.recent = []; RG.surv = 0;
   RG.lives = RG.lives0; RG.score = 0; RG.hits = 0; RG.tries = 0;
   RG.combo = 0; RG.maxCombo = 0; RG.stage = 1; RG.spawnT = 0.3; RG.shake = 0; RG.banner = null; RG.shot = null; RG.res = null; RG.ending = null; RG.heartHit = 0;
-  RG.mas = { x: 90, tx: 90, open: 0, set: false };
+  RG.mas = { x: 90, tx: 90, hop: 0, set: false };
   RG.cd = opt.cd != null ? opt.cd : 3.2; RG.t0 = 0; RG.on = true; RG.last = performance.now(); RG.L = null; RG.hud = "";
   RG.paused = false; RG.composing = false; RG.pendingEnter = false; RG.typed = ""; RG.lastHit = null; RG.latT = 0; RG.tip = false;
   RG.big = RG.mode !== "app" || (!rgTouch() && window.innerWidth >= 700);
@@ -394,9 +382,9 @@ function rgUpdate(dt, now) {
   if (RG.banner) { RG.banner.t -= dt; if (RG.banner.t <= 0) RG.banner = null; }
   if (RG.shot) { RG.shot.t -= dt; if (RG.shot.t <= 0) RG.shot = null; }
   if (RG.shake > 0) RG.shake -= dt;
-  if (RG.mas.open > 0) RG.mas.open -= dt;
+  if (RG.mas.hop > 0) RG.mas.hop -= dt;
   RG.mas.x += (RG.mas.tx - RG.mas.x) * Math.min(1, dt * 8);
-  if (RG.mas.open <= 0) RG.mas.tx += (L.W / 2 - RG.mas.tx) * Math.min(1, dt * 1.5);
+  if (!(RG.mas.hop > 0)) RG.mas.tx += (L.W / 2 - RG.mas.tx) * Math.min(1, dt * 1.5);
 }
 /* 파티클 · 눈요기라 시드를 쓰지 않는다 */
 function rgBurst(x, y, n, cols) {
@@ -430,7 +418,7 @@ function rgSubmit() {
   var mult = 1 + 0.2 * Math.min(RG.combo - 1, 10), pts = Math.round(wd.text.length * 10 * mult);
   RG.score += pts;
   var cx = wd.x + wd.bw / 2, cy = rgWordY(wd) + L.boxH / 2;
-  RG.mas.tx = Math.max(L.masW / 2, Math.min(L.W - L.masW / 2, cx)); RG.mas.open = 0.25;
+  if (!rgReduced()) { RG.mas.tx = Math.max(L.masW / 2, Math.min(L.W - L.masW / 2, cx)); RG.mas.hop = 0.25; }   /* 동작 줄이기 = 제자리에서 쏜다(옮겨 가기·튀기기 없음) */
   RG.shot = { x0: RG.mas.tx, y0: L.ground - L.masH, x1: cx, y1: cy, t: 0.12 };
   rgBurst(cx, cy, 16, [RAIN_PAL.o100, RAIN_PAL.ink, RAIN_PAL.w, RAIN_PAL.o50]);
   RG.pops.push({ x: cx, y: cy, text: "+" + pts, t: 0.8, c: RAIN_PAL.w, s: 14 });
@@ -537,10 +525,11 @@ function rgDraw(ctx, now) {
     ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(Math.round(sx - q / 2), Math.round(sy - q / 2), q, q);
     ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(Math.round(sx - q / 2) + 2, Math.round(sy - q / 2) + 2, q - 4, q - 4);
   }
-  /* 마스코트 미위 · 도트 단위 고정 크기 */
-  var bob = Math.floor(now / 300) % 2 * Math.round(L.D / 3);
-  ctx.drawImage(rgSprCv(RG.mas.open > 0 ? "open" : "closed"), Math.round(RG.mas.x - L.masW / 2), L.ground - L.masH + bob, L.masW, L.masH);
-  if (RG.combo >= 5) ctx.drawImage(rgSprCv("buddy"), Math.round(RG.mas.x + L.masW / 2), L.ground - 10 * L.D + (L.D - bob), 10 * L.D, 10 * L.D);
+  /* 챗봇 · 원본 도트(22×26 칸 · 한 칸 L.D/2) · 떠 있기 = 몸 전체 한 칸 오르내림 · 명중 = 몸 전체 한 번 튀기기 · 콤보 5 이상 = 작은 챗봇이 옆에 · 동작 줄이기 = 전부 멈춘다 */
+  var rm = rgReduced(), u = L.D / 2, bob = rm ? 0 : Math.floor(now / 300) % 2 * Math.round(L.D / 3);
+  var hop = rm || !(RG.mas.hop > 0) ? 0 : Math.round(Math.sin(Math.PI * (1 - RG.mas.hop / 0.25)) * 2 * L.D);
+  rgBotDraw(ctx, RG.mas.x, L.ground + bob - hop, RG_BOT.w, RG_BOT.h, u);
+  if (RG.combo >= 5) rgBotDraw(ctx, RG.mas.x + L.masW / 2 + RG_BOT.bw * u / 2, L.ground + (rm ? 0 : Math.round(L.D / 3) - bob), RG_BOT.bw, RG_BOT.bh, u);
   RG.parts.forEach(function (p) { ctx.fillStyle = p.c; ctx.fillRect(Math.round(p.x), Math.round(p.y), p.s, p.s); });
   ctx.textAlign = "center";
   RG.pops.forEach(function (p) {

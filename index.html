@@ -11,6 +11,8 @@
 <link rel="stylesheet" href="design-handoff/design-system/components.css">
 <script defer src="assets/axf_run.js"></script>
 <!-- AX 단어 소나기 공용 엔진 · 참가자 앱과 선수 화면(admin/typing.html)이 같이 쓴다 · defer 가 아니다(맨 위 상수를 파싱 중 코드가 바로 쓴다) -->
+<!-- 행사 캐릭터 챗봇 원본(BOT_SVG · 도트 래스터) · 앱과 선수 화면이 같이 쓴다 · 엔진보다 먼저 -->
+<script src="assets/bot.js"></script>
 <script src="assets/rain-engine.js"></script>
 <!-- 본문 서체 · 로컬 미설치 기기에서도 Pretendard로 렌더 (오프라인이면 시스템 고딕으로 자동 폴백) -->
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -415,7 +417,7 @@
   /* 모달 등장 = 제자리에서 페이드 + 살짝 확대 (일반적인 다이얼로그). 위치를 옮기는 translate 는 쓰지 않는다 */
   @keyframes popIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
   @keyframes dimIn { from { opacity: 0; } to { opacity: 1; } }
-  /* v3.46 「ME to WE 기억력」 · 보기 = 검정 무대 · 떠올리기 = 빈 칸 + 타일 · 완성 = 오렌지 테두리 + 미위 팝업 */
+  /* v3.46 「ME to WE 기억력」 · 보기 = 검정 무대 · 떠올리기 = 빈 칸 + 타일 · 완성 = 오렌지 테두리 + 챗봇 팝(v4.22) */
   .mem-stage { background: var(--ink); color: #fff; border-radius: 20px; padding: 18px 16px; text-align: center; margin-bottom: 12px; }
   .mem-stage .who { font-size: calc(12.5px * var(--fs)); font-weight: 800; letter-spacing: 0.08em; color: rgba(255,255,255,0.55); }
   .mem-sent { margin-top: 10px; font-size: calc(24px * var(--fs)); font-weight: 900; line-height: 1.4; word-break: keep-all; }
@@ -434,8 +436,7 @@
   .mslot.fill { border: 0; background: var(--mint); color: #fff; cursor: pointer; animation: blockPop 0.3s ease-out; }
   .mem-stage.done { box-shadow: inset 0 0 0 3px var(--mint); }
   .mem-stage.done .mslot.fill { cursor: default; animation: none; }
-  .mem-pop { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 6px 12px 6px 8px; border-radius: 999px; background: var(--mint); color: #fff; font-weight: 900; font-size: calc(13px * var(--fs)); animation: memPop 0.45s cubic-bezier(0.3, 1.4, 0.5, 1) 0.15s both; }
-  .mem-mascot { width: 28px; height: 26px; image-rendering: pixelated; image-rendering: crisp-edges; }
+  .mem-pop { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 6px 14px; border-radius: 999px; background: var(--mint); color: #fff; font-weight: 900; font-size: calc(13px * var(--fs)); animation: memPop 0.45s cubic-bezier(0.3, 1.4, 0.5, 1) 0.15s both; }
   @keyframes memPop { 0% { transform: scale(0.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
   .mem-tiles .ltile { padding: 13px 4px; word-break: keep-all; }
   .lgrid.two { grid-template-columns: repeat(2, 1fr); }
@@ -500,9 +501,6 @@
   #jpTx .jt-s { right: calc(var(--u) * 6); font-size: 15px; color: #000; }
   #jpTx .jt-sv { position: absolute; left: calc(var(--u) * 6); top: calc(var(--u) * 32); font-size: 17px; font-weight: 800; color: #D64524; letter-spacing: -0.01em; }
   #jpTx .jt-sv small { font-size: 13px; font-weight: 700; margin-left: 2px; }
-  #jpTx .jt-guide { position: absolute; left: 50%; top: calc(var(--u) * 116); transform: translateX(-50%); width: max-content; max-width: 92%; padding: 8px 14px; border-radius: 12px;
-    background: rgba(255, 255, 255, 0.92); border: 1.5px solid #000; text-align: center; font-size: 16px; font-weight: 800; line-height: 1.4; color: #000; transition: opacity 0.4s; }
-  #jpTx .jt-guide small { display: block; font-size: 15px; font-weight: 700; color: #5E5750; }
   #jpTx .jt-hint { position: absolute; left: 50%; top: calc(var(--u) * 48); transform: translateX(-50%); width: max-content; max-width: 92%; padding: 9px 14px; border-radius: 12px;
     background: #FF7E31; color: #fff; font-size: 16px; font-weight: 800; line-height: 1.35; text-align: center; box-shadow: 0 0 0 2px #000; }
   /* v4.00 AI 상식 글자 블록 · 공중(2단 점프 높이)에 뜬 문장 · 들이받으면 글자가 흩어지며 보너스 */
@@ -1480,7 +1478,7 @@
   .ox-wrong .ox-w p + p { margin-top: var(--ax-space-4); }
   .ox-wrong .ox-w b { color: var(--ax-color-ink); }
   @media (prefers-reduced-motion: reduce) { .oxb-lives.hit, .oxb-sc b.pop, .oxb-say.in { animation: none; } .oxb-tip { transition: none; } }
-  /* v4.09 기억력 라운드 완성 팝 · 미위(원본) 위에서 챗봇(원본)이 통통 뛰어다닌다 · 몸 전체만 움직인다(모양 변형 없음 · design.md A 5-6) */
+  /* v4.09 기억력 라운드 완성 팝 · 챗봇(원본)이 통통 뛰어다닌다 · 몸 전체만 움직인다(모양 변형 없음) · v4.22 옛 마스코트는 뺐다(design.md A-5 5-6 260923 번복) */
   .mem-hop { position: relative; display: block; height: 44px; margin: 8px auto 0; max-width: 220px; }
   .mem-hop svg { position: absolute; left: 0; bottom: 0; width: 36px; height: 36px; animation: memRoam 2.4s ease-in-out infinite alternate, memHop 0.4s cubic-bezier(0.3, 0, 0.7, 1) infinite alternate; }
   @keyframes memRoam { from { left: 0; } to { left: calc(100% - 36px); } }
@@ -5191,14 +5189,7 @@ function axDest(title, desc, act, onclick, done) {
     '<span class="axs-tx"><span class="ax-card-title">' + title + "</span>" + (desc ? '<span class="ax-meta">' + desc + "</span>" : "") + "</span>" +
     '<span class="ax-destination-action' + (done ? " axs-done" : "") + '">' + act + "</span></button>";
 }
-/* 챗봇 · 원본 벡터(참고자료 챗봇.svg · 200×200) 그대로 합성 · 눈 두 개만 깜빡임 대상(.eye) · 빈 화면과 불러오는 중에만 */
-var BOT_SVG = '<svg viewBox="0 0 200 200" fill="none" aria-hidden="true">' +
-  '<path d="M104.68 56.4898V43.0698C103.23 43.6498 101.66 43.9698 100 43.9698C98.3401 43.9698 96.7601 43.6398 95.3101 43.0598V56.4798C64.7401 58.8698 40.6701 84.4198 40.6701 115.6H40.6201V128.09H159.32V115.6C159.32 84.4098 135.25 58.8698 104.68 56.4798V56.4898Z" fill="#FFC56E"/>' +
-  '<path d="M149.96 156.2H50.0399C44.8699 156.2 40.6699 152 40.6699 146.83V131.22H159.32V146.83C159.32 152 155.12 156.2 149.95 156.2" fill="#FF7F32"/>' +
-  '<path d="M112.67 31.3099C112.67 38.2999 107 43.9699 100.01 43.9699C93.0203 43.9699 87.3403 38.2999 87.3403 31.3099C87.3403 24.3199 93.0103 18.6499 100.01 18.6499C107.01 18.6499 112.67 24.3199 112.67 31.3099Z" fill="#FF7F32"/>' +
-  '<path class="eye" d="M86.5902 99.9999C86.5902 102.94 84.2002 105.33 81.2602 105.33C78.3202 105.33 75.9302 102.94 75.9302 99.9999C75.9302 97.0599 78.3202 94.6699 81.2602 94.6699C84.2002 94.6699 86.5902 97.0599 86.5902 99.9999Z" fill="#282320"/>' +
-  '<path class="eye" d="M124.06 99.9999C124.06 102.94 121.67 105.33 118.73 105.33C115.79 105.33 113.4 102.94 113.4 99.9999C113.4 97.0599 115.79 94.6699 118.73 94.6699C121.67 94.6699 124.06 97.0599 124.06 99.9999Z" fill="#282320"/>' +
-  "</svg>";
+/* 챗봇 원본(BOT_SVG)과 도트 래스터(botDotLoad · botDotCv)는 assets/bot.js 한 곳에 있다(v4.22 · 선수 화면과 같이 쓴다) · <head> 에서 동기 script 로 먼저 읽는다 */
 /* v4.18 대기 변형 · 안테나 전파 호 3개 (원본 벡터에 없는 새 요소만 더한다 · 반지름 17·23·29 는 viewBox 200 안에 들어간다)
    중심 = 머리 방울 (100, 31.31) · 위쪽 120도 호 · 동작 줄이기에서는 CSS 가 멈춘다 */
 var BOT_WAVE = '<g class="ant">' +
@@ -7695,7 +7686,7 @@ function typeRankHtml(r, mode, big) {
     }).join("") : '<p class="muted">아직 기록이 없어요</p>') +
     (r.me ? '<p class="muted" style="margin-top:10px">내 순위 ' + r.me.rank + "위 · " + typeSec(r.me.score) + " 생존</p>" : "");
 }
-/* 시작 화면 미리보기 캔버스 · 마스코트와 떨어지는 단어 몇 개 (정지 화면) */
+/* 시작 화면 미리보기 캔버스 · 챗봇 둘(콤보 연출 모습)과 떨어지는 단어 몇 개 (정지 화면) · 챗봇 도트가 늦게 읽히면 읽힌 뒤 한 번 더 그린다 */
 function rgPreview() {
   var cv = el("rgPrev"); if (!cv) return;
   var w = cv.clientWidth || 300, h = 130, dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -7708,10 +7699,11 @@ function rgPreview() {
     var bw = Math.ceil(ctx.measureText(x[0]).width) + L.padX * 2, bx = Math.min(w - 8 - bw, Math.max(8, Math.round(w * x[1])));
     rgBox2(ctx, bx, x[2], bw, L.boxH, RAIN_PAL.w); ctx.fillStyle = RAIN_PAL.ink; ctx.fillText(x[0], bx + L.padX, x[2] + L.boxH / 2 + 1);
   });
-  ctx.drawImage(rgSprCv("open"), Math.round(w * 0.46 - L.masW / 2), L.ground - L.masH, L.masW, L.masH);
-  ctx.drawImage(rgSprCv("buddy"), Math.round(w * 0.46 + L.masW / 2), L.ground - 10 * L.D + L.D, 10 * L.D, 10 * L.D);
+  var u = L.D / 2, mx = Math.round(w * 0.46);
+  rgBotDraw(ctx, mx, L.ground, RG_BOT.w, RG_BOT.h, u);
+  rgBotDraw(ctx, mx + L.masW / 2 + RG_BOT.bw * u / 2, L.ground, RG_BOT.bw, RG_BOT.bh, u);
+  if (typeof BOT_DOT !== "undefined" && !BOT_DOT.ok) botDotLoad(rgPreview);
 }
-/* v3.36b 마스코트 외곽선 · 밝은 배경 위에서 오렌지 몸통이 묻히지 않게 검정 1px 테두리를 스프라이트에 굽는다 */
 function gameClear(flagKey) {
   if (!S.get(flagKey, false)) {
     S.set(flagKey, true);
@@ -9188,7 +9180,7 @@ function ttPreview(t) {
    전체화면 오버레이(visualViewport 높이) · 앱 이탈 시 자동 일시정지 · 3초 카운트다운 · 끝나는 순간 1.2초 멈춤 · 같은 결과 화면 ·
    게임 닉네임(타자 게임 닉네임 공용) · 끝까지 하면 미니게임 스탬프(gameClear). 점수는 숫자 하나.
    AX 팡·점프 순위판은 지금은 로컬 테스트용(가짜 닉네임 + 내 최고 기록) · 서버 순위는 게임이 정해진 뒤 연결한다.
-   비주얼: 오렌지 사다리 · 검정 · 흰색 · 16비트 도트 · 마스코트 미위 · 이모지 없음. */
+   비주얼: 오렌지 사다리 · 검정 · 흰색 · 16비트 도트 · 캐릭터 = 행사 챗봇 원본(assets/bot.js) · 이모지 없음. */
 var GS_GAMES = {
   /* v3.86 휴대폰 종목은 테트리스 · 소나기(type)는 1F 현장 타자왕전 전용으로만 남는다(앱 진입점 없음) */
   tetris: { name: "테트리스", view: "game_tetris", start: "ttStart()", best: "oly2_best_tetris", line: "블록을 옮기고 돌려서 줄을 채워요 · 아래 버튼으로" },
@@ -10158,7 +10150,7 @@ function pgPreview(t) {
   });
 }
 /* ════════════════ ME to WE 점프 · 탭 점프 러너 (60초 · 하트 3) ════════════════
-   미위가 자동으로 달린다 · 탭 = 점프 · 공중에서 한 번 더 탭 = 2단 점프 (PC 는 스페이스·위 화살표도).
+   챗봇이 자동으로 달린다(v4.08 · 원본 래스터 JP_BOT) · 탭 = 점프 · 공중에서 한 번 더 탭 = 2단 점프 (PC 는 스페이스·위 화살표도).
    장애물(상자 · 러버콘 · 계단 블록)에 부딪히면 하트 -1 후 1초 무적(깜빡임) · 첫 충돌로 끝나지 않는다.
    끝 = 60초 완주 또는 하트 3개 소진. 처음 10초는 장애물이 드물고 느리다 → 이후 조금씩 빨라진다.
    코인 = AX 토큰. 점수 = 코인 × 30 + 버틴 초 × 5 (v3.94 넘은 장애물 +20 폐지 · 순위는 생존 시간). 장애물 이름·모양은 중립적인 사물만(회사·동료를 부정적으로 그리지 않는다). */
@@ -10217,12 +10209,10 @@ function jpBotCv(w, h) {
   return JP_BOT.cv[k];
 }
 var JP_BOT_W = 22, JP_BOT_H = 26, JP_BOT_DH = 14;   /* 서기 22×26 · 엎드리기 22×14 */
-/* 그리기 · (x, 바닥 y) 기준 · 원본이 아직 안 읽혔으면 옛 도트 몸으로 대신 그린다(한 프레임도 비지 않게) */
+/* 그리기 · (x, 바닥 y) 기준 · 원본이 아직 안 읽혔으면 이 프레임은 건너뛴다(v4.22 옛 도트 마스코트 대체 그림 삭제 · 카운트다운 3.2초 사이에 읽힌다) */
 function jpBotDraw(ctx, x, gy, k, duck, lift) {
   var w = JP_BOT_W * k, h = (duck ? JP_BOT_DH : JP_BOT_H) * k, c = jpBotCv(w, h);
-  if (c) { ctx.drawImage(c, Math.round(x), Math.round(gy - h - (lift || 0))); return; }
-  if (duck) ctx.drawImage(rgSprCv("duck"), Math.round(x) - 5, Math.round(gy) - 16 * k, 32 * k, 16 * k);
-  else ctx.drawImage(rgSprCv("closed"), Math.round(x) - 3, Math.round(gy) - 26 * k - (lift || 0), 28 * k, 26 * k);
+  if (c) ctx.drawImage(c, Math.round(x), Math.round(gy - h - (lift || 0)));
 }
 function jpStop() { JP.on = false; if (JP.raf) cancelAnimationFrame(JP.raf); JP.raf = 0; if (JP.onKeyUp) document.removeEventListener("keyup", JP.onKeyUp); JP.duck = false; JP.press = null; gsOverlayClose("jump"); }
 function jpStart() {
@@ -10233,7 +10223,9 @@ function jpStart() {
     obs: [], coins: [], items: [], parts: [], pops: [], banner: null, shake: 0, dist: 0, nextObs: 70, coinN: 0, dodged: 0, hits: 0, jumpsN: 0, score: 0, speedUp: 0,
     item: null, itemT: 0, nextItem: JP_ITEM_EVERY, surv: 0, nextK: null, seen: {}, tx: {},
     bg: shuf(jpBgLines()), bgI: 0, bgNext: JP_BG_FIRST, fact: null, facts: [], duck: false, press: null, bag: null, lastSp: "", tutSeen: {}, pz: 0 };
-  gsOverlayOpen({ key: "jump", title: "ME to WE 점프", cw: JP_W, ch: JP_H, canvasId: "jpCv", noGesture: true,
+  /* v4.22 첫 안내(카운트다운 동안 · 기기에서 처음 3판) · 다른 네 게임과 같은 gsTutTake · v4.00 에 시작 직후 조작 안내 상자를 걷고 장애물 직전 안내만 남긴 뒤,
+     v4.08 에 첫 안내 훅을 팡·테트리스·기억력에만 달아서 점프는 첫 장애물이 올 때까지(카운트다운 뒤 약 2초) 아무 안내가 없었다(사용자 신고 260923) */
+  gsOverlayOpen({ key: "jump", title: "ME to WE 점프", cw: JP_W, ch: JP_H, canvasId: "jpCv", noGesture: true, tip: gsTutTake("jump"),
     bottom: '<div class="gs-foot">탭 = 점프 · 두 번 탭 = 2단 점프 · 꾸욱 = 엎드리기</div>',
     down: function (e) { e.preventDefault(); jpDown(); },
     up: function () { jpUp(); },
@@ -10609,7 +10601,7 @@ function jpObsDraw(ctx, o) {
   var wsh = o.k === "step" ? 24 : o.k === "cone" ? 16 : 18;
   ctx.fillStyle = "rgba(0,0,0,0.18)"; ctx.fillRect(x - 1, g - 1, wsh, 2);   /* v3.72 바닥 그림자 · 지면 위 물체로 읽히게 */
   if (o.k === "box") {
-    rgBox(ctx, x, g - 16, 16, 16, RAIN_PAL.deep);   /* v3.72 미위(O100)와 구분되게 한 단 진하게 */
+    rgBox(ctx, x, g - 16, 16, 16, RAIN_PAL.deep);   /* v3.72 러너 몸통(주황)과 구분되게 한 단 진하게 */
     ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(x + 1, g - 9, 14, 1);
     for (var i = 0; i < 12; i++) { ctx.fillRect(x + 2 + i, g - 14 + Math.floor(i / 2), 1, 1); }
     ctx.fillStyle = RAIN_PAL.o30; ctx.fillRect(x + 2, g - 14, 4, 2);
@@ -10744,7 +10736,7 @@ function jpPreview(t) {
    라운드마다 ① 보기: 검정 무대 카드에 문장 + 뜻 한 줄 · 6초 뒤 자동(빠른 모드 3초) 또는 「외웠어요」
    ② 떠올리기: 문장이 사라지고 단어 타일(문장 단어 + 미끼 1~2개)을 순서대로 눌러 다시 만든다 · 입력 없음
       틀린 타일 = 회색 흔들림 + 남은 시간 -2초(점수 감점 없음) · 놓인 타일을 다시 누르면 그 뒤까지 빠진다
-   ③ 완성: 오렌지 테두리 + 뜻 한 줄 한 번 더 + 미위 팝업.
+   ③ 완성: 오렌지 테두리 + 뜻 한 줄 한 번 더 + 챗봇 팝(v4.22).
    실패 없음 · 끝까지 하면 미니게임 스탬프 · 점수 = 맞힌 탭(연속 배수) + 라운드 완성 + 남은 시간 · 별 1~3개. */
 var GW = { on: false, timer: null, nextT: null };
 function gwStop() {
@@ -10902,12 +10894,10 @@ function gwRoundDone() {
     '<div class="mem-stage done"><p class="who">ROUND ' + (GW.r + 1) + " · 완성</p>" +
     (R.kind === "order" ? gwSlotsHtml(R, true) : '<p class="mem-sent">' + gwSentHtml(R) + "</p>") +
     '<p class="mem-mean">' + esc(R.mean) + "</p>" +
-    '<span class="mem-hop" aria-hidden="true">' + BOT_SVG + '</span>' +   /* v4.09 미위 위에서 챗봇이 통통 (design.md A 5-6) */
-    '<span class="mem-pop"><canvas class="mem-mascot" width="14" height="13"></canvas><span>ME to WE</span></span></div>' +
+    '<span class="mem-hop" aria-hidden="true">' + BOT_SVG + '</span>' +   /* v4.09 챗봇(원본)이 통통 · v4.22 옛 마스코트는 뺐다(design.md A-5 5-6 260923 번복) */
+    '<span class="mem-pop"><span>ME to WE</span></span></div>' +
     '<p class="gmsg" style="text-align:center">' + (GW.rw ? "이번 라운드 오답 " + GW.rw + "번" : "오답 없는 라운드 +" + olyRule().word.clean) + "</p>" +
     '<button class="btn mint" style="padding:15px" onclick="gwNext()">' + (last ? "결과 보기" : "다음 라운드") + "</button>";
-  var cv = root.querySelector(".mem-mascot");
-  if (cv) { var g = cv.getContext("2d"); g.imageSmoothingEnabled = false; g.drawImage(rgSprCv("open"), 0, 0); }
   sfx("dingdong");
   GW.nextT = setTimeout(gwNext, 5000);   /* 방치 대비 자동 진행 */
 }
@@ -11013,15 +11003,9 @@ function oxRunFever(T, R) {
    세계 좌표: x 오른쪽 · y 위 · z 앞(다리 방향) · 줄 간격 ROWD · 발판 중심 x = ∓PX · 물 높이 WATER
    카메라는 다리 흐름 s(줄 단위)를 따라간다 · s 줄의 발판 중심이 화면 아래 끝(y = H)에 온다 · 서 있는 줄 = 흐름 + 여유(lead) */
 var OXB = { ROWD: 3.0, PX: 1.1, PW: 1.5, PD: 1.7, WATER: -1.1, CH: 1.0, RAIL: 2.02, D0: 4.6, UP: 0.30 };
-var OXB_BOT = { img: null, ok: false, px: {} };
-function oxbBotLoad() {
-  if (OXB_BOT.img) return;
-  var svg = BOT_SVG.replace('<svg viewBox="0 0 200 200"', '<svg xmlns="http://www.w3.org/2000/svg" width="264" height="304" preserveAspectRatio="none" viewBox="40 18 120 138.2"').replace(/ class="eye"/g, "");
-  var im = new Image();
-  im.onload = function () { OXB_BOT.px = {}; OXB_BOT.ok = true; if (OXP && el("oxPrev")) oxPreview(OXP.t); };   /* v4.14 크기별 도트는 oxbBotPx 가 그때그때 만든다 */
-  im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
-  OXB_BOT.img = im;
-}
+/* v4.22 챗봇 도트는 공용 파일(assets/bot.js · botDotLoad · botDotCv)로 옮겼다 · 단어 소나기 엔진과 같은 함수를 쓴다 · 읽히면 시작 화면 미리보기를 다시 그린다 */
+function oxbBotReady() { if (OXP && el("oxPrev")) oxPreview(OXP.t); }
+function oxbBotLoad() { botDotLoad(oxbBotReady); }
 function oxbSideX(side) { return side === 0 ? -OXB.PX : side === 1 ? OXB.PX : 0; }
 function oxbSide() { var rays = [], n = 5 + Math.floor(Math.random() * 3);
   for (var k = 0; k < n; k++) { var a = (k / n) * Math.PI * 2 + Math.random() * 0.6, pts = [[0, 0]], r = 0;
@@ -11058,7 +11042,7 @@ var OXB_FONT = '"Pretendard Variable", Pretendard, -apple-system, "Apple SD Goth
 /* v4.14 16비트 도트 게임판 (사용자 확정 260922 · design.md A-1 게임판 내부는 게임 고유 디자인)
    장면은 낮은 해상도 캔버스에 그린다(도트 한 칸 = 약 OXB_PX.css CSS px · 기기 픽셀의 정수배) → 제한 팔레트 OXB_PAL 로 줄인다(4×4 순서 디더 · 계단식 원근이 저절로 생긴다) → 번지지 않게 확대.
    글자(황금 ×3 · 도착 · 떠오르는 점수 · 준비/시작)는 기기 해상도에 Pretendard 로 따로 그린다(도트 글꼴 없음) · 문제는 게임판 위 말풍선(DOM)이 맡는다.
-   챗봇은 원본 BOT_SVG 를 그 크기 그대로 작은 캔버스에 그려 도트로 만든 것만(oxbBotPx · 형태 불변) · 물은 채도 낮은 회청(게임판 안에서만) */
+   챗봇은 원본 BOT_SVG 를 그 크기 그대로 작은 캔버스에 그려 도트로 만든 것만(assets/bot.js botDotCv · 형태 불변) · 물은 채도 낮은 회청(게임판 안에서만) */
 var OXB_PX = { css: 3 };
 var OXB_PAL = [
   "FFFFFF", "FBFBF9", "F2F4F6", "E5E8EB", "D1D6DB", "B0B8C1", "8B95A1", "6B7684", "4E5968", "333D4B", "191F28",   /* 무채 */
@@ -11278,32 +11262,14 @@ function oxbGate(ctx, G, z) {
   var bh = l.s * 0.62; ctx.fillRect(lt.x - w / 2, lt.y - bh * 0.1, rt.x - lt.x + w, bh);
   G.labels.push({ s: "도착", x: (lt.x + rt.x) / 2, y: lt.y + bh * 0.4, sz: bh * 0.6, col: "#351A0C", w: 800 });
 }
-/* 챗봇 도트 · 원본 BOT_SVG 를 그 크기(도트 칸) 그대로 작은 캔버스에 그리고 가장자리 반투명만 정리한다(윤곽 = 알파 반 이상 · 색 = 원본 세 색 중 가까운 것) · 크기별 한 번 */
-function oxbBotPx(w, h) {
-  w = Math.max(4, Math.round(w)); h = Math.max(4, Math.round(h));
-  var C = OXB_BOT.px || (OXB_BOT.px = {}), key = w + "x" + h;
-  if (C[key]) return C[key];
-  var c = document.createElement("canvas"); c.width = w; c.height = h;
-  var x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(OXB_BOT.img, 0, 0, w, h);
-  var im = x.getImageData(0, 0, w, h), d = im.data, P = [[255, 197, 110], [255, 127, 50], [40, 35, 32]];
-  for (var i = 0; i < d.length; i += 4) {
-    if (d[i + 3] < 128) { d[i + 3] = 0; continue; }
-    /* 눈 가장자리(몸 색과 눈 색 사이)가 주황으로 잘못 가지 않게 · 붉은 기가 강하면 몸(노랑)·띠(주황) 중 파랑 값으로(주황만 80 미만 · 몸과 눈이 섞인 가장자리는 90 이상), 아니면 밝기로 몸·눈 */
-    var lum = d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11, bk = d[i] > 200 ? (d[i + 2] < 80 ? 1 : 0) : lum < 120 ? 2 : 0;
-    d[i] = P[bk][0]; d[i + 1] = P[bk][1]; d[i + 2] = P[bk][2]; d[i + 3] = 255;
-  }
-  x.putImageData(im, 0, 0);
-  if (Object.keys(C).length > 48) C = OXB_BOT.px = {};
-  return (C[key] = c);
-}
 function oxbBot(ctx, G) {
-  var c = G.ch, p = oxbP(G, c.x, c.y, c.z); if (!p || !OXB_BOT.ok) return;
+  var c = G.ch, p = oxbP(G, c.x, c.y, c.z); if (!p || !BOT_DOT.ok) return;
   var px = G.px || 1, h = OXB.CH * p.s, w = h * 264 / 304;
   if (c.y > -0.05) { var g = oxbP(G, c.x, 0, c.z); if (g) { var sc = Math.max(0.3, 1 - c.y * 0.35); ctx.fillStyle = "rgba(25,31,40," + (0.22 * sc) + ")"; ctx.beginPath(); ctx.ellipse(g.x, g.y, w * 0.42 * sc, w * 0.1 * sc, 0, 0, 7); ctx.fill(); } }
   ctx.save();
   if (c.y < 0) { var wl = oxbP(G, c.x, OXB.WATER, c.z); if (wl) { ctx.beginPath(); ctx.rect(0, 0, G.pr.W, oxbSnap(G, wl.y)); ctx.clip(); } }
   var sw = Math.round(w / px), sh = Math.round(h / px);
-  ctx.drawImage(oxbBotPx(sw, sh), oxbSnap(G, p.x - sw * px / 2), oxbSnap(G, p.y - sh * px), sw * px, sh * px);
+  ctx.drawImage(botDotCv(sw, sh), oxbSnap(G, p.x - sw * px / 2), oxbSnap(G, p.y - sh * px), sw * px, sh * px);
   ctx.restore();
 }
 function oxbParts(ctx, G) {
