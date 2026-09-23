@@ -1927,22 +1927,9 @@ var SESSIONS = [
 var TEN_ROOM = { fld: "10F 컨퍼런스룸", ta: "10F Heart 1 · 7~8", tb: "10F Heart 1 · 7~8", aws: "10F Heart 5 · 6", ms1: "10F · 장소 추후 안내", ms2: "10F · 장소 추후 안내" };
 function sessPlace(s) { return TEN_ROOM[s.id] || (s.fl + "F " + (ZONE_NM[s.zone] || "")).trim(); }
 var ZONE_NM = { hall: "대강당", heart18: "Heart 1 · 7~8", heart56: "Heart 5 · 6", conf: "컨퍼런스룸", tbd: "장소 추후 안내", promo: "포토부스 · 홍보존", lounge: "라운지", dap: "DAP ZONE" };
-/* ═══ 프로그램 탭 = 층별 아코디언 (v3.4) · 공간축은 프로그램 탭, 시간축은 일정 탭 ═══
-   FL_OPEN = 층별 상시 활동. 참가자가 가서 「하는 것」만 · 존 설명·시설·동선·운영 정보는 넣지 않는다(v3.0 삭제 유지).
-   스탬프가 걸린 활동은 sid 로 스탬프 탭 해당 카드에 위임한다(적립 UI 중복 구현 금지). */
-var FLTAG = { 1: "AX 전시·체험존", 10: "실습형 세션 A~E", 17: "키노트·파트너사 강연", 18: "AX 커피챗" };
-var FL_OPEN = {
-  1: [
-    { nm: "1F 전시", d: "AX Wall 관람", sid: "p1" },
-    { nm: "AX Now! 부스", d: "HI-Helper · HIDI-Q 체험", sid: "p2" },
-    { nm: "DAP Wall QR 퀴즈", d: "벽 QR 스캔 · 5문항", sid: "p7" },
-    { nm: "이벤트존 룰렛", d: "스탬프 3개 · 1인 1회", tap: "ppRouletteOpen()", tag: "보상" }
-  ],
-  10: [],
-  17: [],
-  18: []
-};
-var PROG = { fl: 1, sid: null, openSess: {}, cat: "all", mode: "list", tt: "all", ttOpen: {}, scroll: 0, cf: null, ok: null };   /* v4.15 tt = 시간표 [전체 | 나의 일정] · ttOpen = 펼친 행 */   /* v4.13 mode = 프로그램 탭 보기 [목록 | 시간표](design.md A-5 5-10) */   /* v4.05 cat = P01 필터 · scroll = 목록 스크롤 · cf = 신청 확인 · ok = 신청 결과 */   /* fl = 선택 층 (v3.7 · 기본 1F · 탭 왕복에도 유지) */
+/* 층별 상시 활동 표(FL_OPEN)와 층 머리 표기(FLTAG)는 260923 삭제 · 그것만 그리던 flListHtml 이 v4.15 시간표 재설계로 없어졌다.
+   상시 활동은 스탬프 탭 카드가, 프로그램 목록은 progRowHtml 이 맡는다. */
+var PROG = { fl: 1, sid: null, cat: "all", mode: "list", tt: "all", ttOpen: {}, scroll: 0, cf: null, ok: null };   /* v4.15 tt = 시간표 [전체 | 나의 일정] · ttOpen = 펼친 행 */   /* v4.13 mode = 프로그램 탭 보기 [목록 | 시간표](design.md A-5 5-10) */   /* v4.05 cat = P01 필터 · scroll = 목록 스크롤 · cf = 신청 확인 · ok = 신청 결과 */   /* fl = 선택 층 (v3.7 · 기본 1F · 탭 왕복에도 유지) */
 
 /* ═══ v3.52b 오늘 한 판 설문 = 틀만 (사용자 지시 260917 · 「문항이 아직 안 정해졌다 · 집만 지어 둬라」) ═══
    ※ 문항 미확정 · 아래 SURVEY_Q 는 기본 3문항일 뿐이다(참여자 화면에는 이 사실을 쓰지 않는다 · 콘솔 설문 탭에만 표시).
@@ -4261,9 +4248,6 @@ function progConfirm() {
     fin(PROG_ERR[why === "full" ? "full" : why === "dup" ? "dup" : why === "pre" ? "pre" : "etc"]);
   }, function () { fin(PROG_ERR.net); });
 }
-/* 옛 호출부 호환 · 신청은 확인 화면을 거친다 */
-function sessBook(id) { progApply(id); }
-function sessCancel(id) { progCancelOpen(id); }
 
 /* ── 바텀 시트 (M03) · 짧은 확인 하나를 아래에서 올린다 ──
    뒷배경 탭 · Esc · 안드로이드 하드웨어 뒤로로 닫힌다 · 포커스 고정 · 닫으면 누른 버튼으로 복귀 · 통신 중에는 닫히지 않는다.
@@ -4407,94 +4391,12 @@ function myPlanHtml() {
     '<p class="ax-meta">신청 취소는 신청 상세에서 할 수 있어요.</p></div>';
 }
 
-/* 층별 안내(progOpenFl·층 칩·존 스크롤)는 v47에서 폐기 · 안내는 타임라인과 현장 사이니지가 맡는다 */
-function seatRowHtml(s) {
-  var rem = sessRemain(s), pct = Math.round((s.cap - rem) / s.cap * 100);
-  return '<div class="seatrow' + (rem <= 0 ? " full" : "") + '"><div class="sb"><i style="width:' + pct + '%"></i></div><span class="sn">' + (rem <= 0 ? "만석" : "잔여 " + rem + "석 / " + s.cap) + "</span></div>";
-}
-
-/* ═══ 프로그램 탭 (v3.4 아코디언 → v3.7 상단 층 칩 + 하단 리스트, 260829 a0668b9 층 우선 구조 참조) ═══
-   층 칩 4개(기본 1F)를 누르면 그 층의 프로그램이 아래에 · 각 프로그램은 아코디언 접힘(전부 닫힘 기본).
-   신청형(세션 행 · 열면 인라인 신청)과 상시형(얇은 행 · 바로가기)의 무게 구분은 v3.4 그대로. */
-function progPickFl(n) { PROG.fl = n; App.render(); }
+/* ═══ 다른 화면에서 특정 층으로 들어오는 통로 (스탬프 03 · 홈 배너 등) ═══
+   v3.4 아코디언 · v3.7 층 칩 구조(progPickFl · progSessToggle · flListHtml · sessRowHtml · sessInlineHtml · ppGoCard · seatRowHtml)는
+   v4.15 시간표 재설계로 progRowHtml · progTimeHtml 이 대신하게 되면서 호출부가 사라졌다. 260923 삭제.
+   층별 상시 활동 표(FL_OPEN · FLTAG) · 아코디언 펼침 상태(PROG.openSess) · 신청 래퍼(sessBook · sessCancel)도 같이 나갔다.
+   층별 안내(progOpenFl · 존 스크롤)는 그 전 v47에서 이미 폐기됐다. */
 function progGoFl(n) { PROG.fl = n; PROG.cat = n === 17 ? "강연" : n === 10 ? "실습" : n === 18 ? "상담" : "all"; App.go("guide"); }   /* v4.05 층 → P01 필터 */   /* 다른 화면에서 특정 층으로 진입 (스탬프 03 등) */
-function progSessToggle(id) { PROG.openSess[id] = !PROG.openSess[id]; App.render(); }
-/* 상시형 중 스탬프가 걸린 활동은 스탬프 탭 해당 카드로 위임한다 · 카드를 열어 둔 채 진입 */
-function ppGoCard(id) { PP.open[id] = true; App.go("passport"); }
-/* 신청형 인라인 신청 UI · sess_d 의 핵심(잔여석·슬롯 선택·신청/취소)만 흡수.
-   붙임2 상세 표(주요내용·교육환경·산출물·비고) 같은 무거운 상세는 sess_d 가 계속 맡고 「자세히」로 넘긴다(통일감 우선). */
-function sessInlineHtml(s) {
-  var mine = sessMine(s.id);
-  /* v3.54 문구 규칙 · 첫 줄 = who 만 (부제는 행에 이미 있다) · 빈 줄은 그리지 않는다 */
-  var sq = function (t, first) { return t ? '<p class="sq"' + (first ? "" : ' style="margin-top:4px"') + ">" + esc(t) + "</p>" : ""; };
-  var h = sq(s.who, true);
-  if (s.kind === "link") {
-    h += sq(s.desc, !h) +
-      '<button class="btn mint" style="margin-top:10px" onclick="App.go(\'' + s.go + '\')">' + (s.id === "dap" ? "상담 신청" : "커피챗 신청") + "</button>";
-  } else if (s.kind === "open") {
-    h += sq(s.desc, !h);
-    return h;
-  } else if (s.kind === "info") {
-    /* v3.31b 10F 안내 전용 · 장소는 행 칩 · 「사전 신청자 대상」은 10F 층 머리에 한 번 */
-    h += sq(s.desc, !h) + (s.capNote ? sq("정원 " + s.capNote, !h && !s.desc) : "");
-  } else if (s.kind === "seat") {
-    h += sq(s.desc, !h) + seatRowHtml(s) +
-      (mine && mine.pre ? '<div class="tipbanner" style="margin-top:10px">사전 신청 완료</div><p class="sq" style="margin-top:6px">취소는 담당자 문의</p>' :
-        mine ? '<button type="button" class="ax-button axs-btn-danger" style="margin-top:10px" onclick="sessCancel(\'' + s.id + '\')">신청 취소하기</button>' :
-        sessRemain(s) <= 0 ? '<button class="btn" style="margin-top:10px" disabled>만석 · 취소되면 열립니다</button>' :
-          '<button class="btn mint" style="margin-top:10px" onclick="sessBook(\'' + s.id + '\')">신청하기</button>');
-  } else {
-    /* v3.21 B 원격 대기열 · 번호표 UI 는 일정 탭 상시 행·상세 화면과 같은 photoQueueHtml 하나 */
-    return h + photoQueueHtml();
-  }
-  h += '<p class="lnk" onclick="sessOpen(\'' + s.id + '\')">' + lnkChev("자세히") + "</p>";
-  return h;
-}
-/* 프로그램 신청형 행 = 공용 행 카드 · 시간이 있는 행은 일정 탭과 같은 좌측 두 줄 시간 뱃지 (v3.22)
-   신청 완료 = my(틴트+오렌지 링) · 만석 = dim · 평상 = 기본 */
-function sessRowHtml(s) {
-  var mine = s.kind === "seat" ? sessMine(s.id) : null;
-  var full = s.kind === "seat" && sessRemain(s) <= 0;
-  var tm = s.tm.split("~");
-  /* 대기열형 · 내 번호표가 살아 있으면 내 것(my), 호출이면 시간 뱃지 검정 */
-  var pq = s.kind === "queue" ? photoQ() : null, pqOn = pq && (pq.status === "wait" || pq.status === "call");
-  var st = mine ? "" :
-    s.kind === "open" ? '<span class="st">자유 참석</span>' :
-    s.kind === "info" ? "" :
-    s.kind === "seat" ? (full ? '<span class="badge gray">만석</span>' : '<span class="st">잔여 ' + sessRemain(s) + "석</span>") :
-      s.kind === "queue" ? '<span class="st">' + (pqOn ? pq.no + "번" : "대기 " + (photoPub().waiting || 0) + "팀") + "</span>" : '<span class="st">신청제</span>';
-  return rcHtml({
-    cls: mine || pqOn ? " my" : full ? " dim" : "",
-    onclick: "progSessToggle('" + s.id + "')",
-    left: tokBadge(tm[0], pqOn && pq.status === "call" && isBlack("call") ? "act" : mine || pqOn ? "mine" : full ? "dim" : "", tm[1] ? "~" + tm[1] : null),
-    title: esc(s.ttl), badges: mine ? '<span class="badge mint">' + (mine.pre ? "사전 신청" : "신청 완료") + "</span>" : "",
-    /* v3.40 · 10F 는 장소를 부제 앞에 (말줄임이 장소부터 자르지 않게) */
-    sub: esc(s.sub || s.who), right: st, place: sessPlace(s),
-    open: !!PROG.openSess[s.id], body: sessInlineHtml(s)
-  });
-}
-/* v3.26: 시간이 없는 상시형 행은 좌측 슬롯에 아이콘 대신 공용 시간 뱃지 자리에 「상시」(같은 박스 크기 · 제목 시작선 유지) */
-function flListHtml(n) {
-  /* 같은 시각이면 제목순(10F 세션 A→E) */
-  var sess = SESSIONS.filter(function (s) { return s.fl === n; }).sort(function (a, b) { return sessStartMin(a.tm) - sessStartMin(b.tm) || (a.ttl < b.ttl ? -1 : a.ttl > b.ttl ? 1 : 0); });
-  var acts = FL_OPEN[n] || [];
-  var cnt = function (k) { return sess.filter(function (s) { return s.kind === k; }).length; };
-  /* 10F 는 신청 여부와 무관하게 세션 수(세션 E 두 회차는 하나로) */
-  var nInfo = {}; sess.forEach(function (s) { if (s.kind === "info") nInfo[s.ttl.split(" · ")[0]] = 1; });
-  var nInfoN = Object.keys(nInfo).length, nBook = sess.length - cnt("open") - cnt("info");
-  var head = '<div class="sect" style="margin-top:2px"><b>' + n + "F · " + FLTAG[n] + '</b>' +
-    "<span>" + [n === 10 ? "사전 신청자 대상" : "", nInfoN ? "세션 " + nInfoN + "개" : "", cnt("open") ? "자유 참석 " + cnt("open") + "개" : "", nBook ? "신청 " + nBook + "개" : "", acts.length ? "상시 " + acts.length + "개" : ""].filter(Boolean).join(" · ") + "</span></div>";
-  var rows = sess.map(sessRowHtml).join("") +
-    acts.map(function (a) {
-      var sd = a.sid ? STAMPS.filter(function (x) { return x.id === a.sid; })[0] : null;
-      var tap = a.sid ? "ppGoCard('" + a.sid + "')" : a.tap || "";
-      /* 아이콘이 빠진 만큼 구분 정보는 보조 줄 앞에 둔다(스탬프 · 보상) */
-      var tag = sd ? "스탬프" : a.tag || "";
-      return rcHtml({ cls: "", onclick: tap, left: tokBadge("상시"), title: a.nm,
-        sub: (tag ? '<b class="nxt">' + tag + "</b> · " : "") + a.d, link: !!tap, chev: tap ? undefined : false });
-    }).join("");
-  return head + rows;
-}
 
 function menuItem(target, no, title, desc, badge) {
   return '<div class="mi" onclick="App.go(\'' + target + '\')"><span class="no">' + no + '</span>' +
@@ -4723,11 +4625,13 @@ function photoCancel() {
     if (res && res.ok) done(); else bad("취소하지 못했어요");
   }, function () { bad("서버에 연결할 수 없어요"); });
 }
-/* 번호표 UI · 프로그램 행 펼침 · 나의 참여 › 포토부스 대기 공용
+/* 번호표 UI · 나의 참여 › 포토부스 대기(Views.photoq) 한 곳에서만 쓴다 · 상태 카드만 그린다.
    v4.18 위계(사용자 결정 260923): 줄어드는 「앞 N팀」과 예상 입장이 주인공이다. 기다릴지 전시를 보고 올지 정하는 정보라서.
    고정 번호는 그 아래 한 줄로 받친다(스태프가 부르는 신원). 호출되면 「지금 입장하세요」와 번호가 주인공이 된다.
-   옛 btn mint 잔재는 현행 셸의 ax-button 으로 정리했다. */
-function photoQueueHtml(noBtn) {
+   260923 · 행동 버튼은 Views.photoq 의 아래 고정 바 하나가 맡는다(v4.09 결정). 카드 안에 버튼을 같이 그리던
+   옆 인자 갈래는 프로그램 행 펼침(sessInlineHtml)이 없어지면서 호출부가 사라져 지웠다.
+   인라인 호출부가 다시 생기면 버튼은 그 호출부가 붙인다. */
+function photoQueueHtml() {
   var q = photoQ(), pub = photoPub();
   var wait = pub.waiting || 0;
   if (q && q.status === "call") {
@@ -4738,15 +4642,12 @@ function photoQueueHtml(noBtn) {
     return '<div class="pq' + (near ? " call" : "") + '"><p class="k">내 앞에</p><p class="big">' + q.ahead + '팀</p>' +
       '<p class="s">예상 입장 <b>' + esc(q.eta) + "</b></p>" +
       (near ? '<p class="nt">곧 차례 · 1F 포토부스로 이동</p>' : "") +
-      '<p class="no2"><span>내 번호</span><b>' + q.no + "번</b></p></div>" +
-      (noBtn ? "" : '<button type="button" class="ax-button axs-btn-danger" onclick="photoCancelOpen()">번호표 취소하기</button>');
+      '<p class="no2"><span>내 번호</span><b>' + q.no + "번</b></p></div>";
   }
   if (q && q.status === "skip") {
-    return '<div class="pq dim"><p class="k">건너뛴 번호</p><p class="big">' + q.no + '번</p><p class="s">다시 줄을 서면 새 번호를 받아요</p></div>' +
-      (noBtn ? "" : '<button type="button" class="ax-button" id="pqTakeBtn" onclick="photoTakeOpen()">다시 줄 서기</button>');
+    return '<div class="pq dim"><p class="k">건너뛴 번호</p><p class="big">' + q.no + '번</p><p class="s">다시 줄을 서면 새 번호를 받아요</p></div>';
   }
-  if (noBtn) return '<div class="pq dim"><p class="k">지금 대기</p><p class="big">' + wait + '팀</p><p class="s">약 ' + wait * PHOTO.MIN + "분 · 촬영 2~3분 · 현장 출력</p></div>";
-  return '<button type="button" class="ax-button" id="pqTakeBtn" onclick="photoTakeOpen()">대기 번호 받기</button>';
+  return '<div class="pq dim"><p class="k">지금 대기</p><p class="big">' + wait + '팀</p><p class="s">약 ' + wait * PHOTO.MIN + "분 · 촬영 2~3분 · 현장 출력</p></div>";
 }
 function photoState() {
   var q = photoQ(), pub = photoPub();
@@ -5548,7 +5449,7 @@ var Views = {
     /* v4.08 결정 화면 형식 · 상태는 카드 · 행동은 아래 고정 · v4.09 버튼 하나(대기 번호 받기 · 다시 줄 서기 · 번호표 취소하기 → 확인 시트) · 호출 중에는 버튼 없음 */
     var q = photoQ(), st = q && q.status;
     return '<div class="ax-stack"><section class="ax-card"><div class="ax-stack-tight"><h2 class="ax-card-title">1F AI 포토부스</h2>' +
-      '<p class="ax-meta">1F 홍보존 · 10:00 – 17:00</p></div>' + photoQueueHtml(true) + "</section></div>" +
+      '<p class="ax-meta">1F 홍보존 · 10:00 – 17:00</p></div>' + photoQueueHtml() + "</section></div>" +
       (st === "call" ? "" : st === "wait" ? '<div class="axs-fix ax-bottom"><button type="button" class="ax-button axs-btn-danger" id="pqCxBtn" onclick="photoCancelOpen()">번호표 취소하기</button></div>'
         : '<div class="axs-fix ax-bottom"><button type="button" class="ax-button" id="pqTakeBtn" onclick="photoTakeOpen()">' + (st === "skip" ? "다시 줄 서기" : "대기 번호 받기") + "</button></div>");
   },
