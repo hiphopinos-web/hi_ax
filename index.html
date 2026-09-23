@@ -1610,6 +1610,173 @@
   /* 아래 고정 바의 꺼진 주 버튼 · canvas 바탕 위에서도 자리가 보이게 흰 면 + disabled 글자 */
   .axs-fix.ax-bottom .ax-button:disabled { background: var(--ax-color-surface); color: var(--ax-color-disabled); }
 </style>
+<style id="rtCss">
+  /* ═══════ v4.23 게임 화면 16비트 레트로 · 「바람의 나라」 감성 (260923 사용자 확정 · design.md A-5 5-16 · 정본 「레트로 시안/시안.html」 · 「레트로 레퍼런스 조사.md」 8절) ═══════
+     경계: 이 절의 규칙은 전부 .rt 아래에만 건다. .rt 는 게임 화면에만 붙는다 = #view(RT_VIEWS: 다섯 게임 · 단어 소나기 · 1F 현장 타자왕전 · 순위판 · 1F TV 현황판) + 게임 오버레이 #rgPlay.
+       홈 · 프로그램 · 신청 · 나의 참여는 Pretendard 와 AX-TDS 틀 그대로다. 도트 글꼴 이름은 이 절과 게임 캔버스(RT_FONT) 밖에 쓰지 않는다(검사 82절).
+     글꼴 = Neo둥근모(assets/neodgm.woff2 · OFL 1.1 · 라이선스 assets/OFL.txt · 한글 완성형 11,172자) · 없는 글자(한자 · 이모지 · 화살표)는 Pretendard 로 넘어간다.
+       굵기가 하나뿐이라 굵게를 주지 않는다 · 최소 16px(큰글씨 20px) · 늦게 읽히면 Pretendard 로 먼저 그린다(swap) · 줄 높이를 px 로 고정해 바뀔 때 줄이 튀지 않는다 ·
+       앱은 부팅 3초 뒤와 게임 화면에 들어설 때 미리 읽어 둔다(rtFontWarm).
+     색 = 이 아래 토큰 한 곳에서만 hex 를 쓴다(웜브라운 · 웜그레이는 rain-engine.js RAIN_PAL · RT_PAL 과 같은 값) · 파랑 · 민트 없음.
+     틀 문법 = 바깥 검정 한 칸(모서리 한 칸을 비운 계단) + 진한 나무 + 밝은 나무 베벨 + 속판 · 넥슨 이미지 · NES.css · RPGUI 파일은 쓰지 않고 문법만 CSS 로 직접 그린다. */
+  @font-face { font-family: "NeoDunggeunmo"; src: url("assets/neodgm.woff2") format("woff2"); font-display: swap; }
+  .rt {
+    --rt-font: "NeoDunggeunmo", "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif;
+    --rt-ink: #000000; --rt-night: #1B1712; --rt-bark: #2A2118; --rt-wood: #5E3218; --rt-wood2: #7A3E1C; --rt-tan: #D9A066; --rt-tan2: #E3B884; --rt-cream: #F3E7D8;
+    --rt-o100: #FF7E31; --rt-o60: #FFA46E; --rt-o30: #FFCFB0; --rt-o10: #FFEBE0; --rt-deep: #D64524; --rt-btn: #351A0C; --rt-dim: #8A817B; --rt-white: #FFFFFF;
+    --rt-f16: calc(16px * var(--fs)); --rt-f24: calc(24px * var(--fs)); --rt-f32: calc(32px * var(--fs)); --rt-f48: calc(48px * var(--fs));
+    --rt-l16: calc(24px * var(--fs)); --rt-l24: calc(32px * var(--fs)); --rt-l32: calc(40px * var(--fs)); --rt-l48: calc(56px * var(--fs));
+    --rt-line: 0 -3px 0 0 var(--rt-ink), 0 3px 0 0 var(--rt-ink), -3px 0 0 0 var(--rt-ink), 3px 0 0 0 var(--rt-ink);
+    --rt-line4: 0 -4px 0 0 var(--rt-ink), 0 4px 0 0 var(--rt-ink), -4px 0 0 0 var(--rt-ink), 4px 0 0 0 var(--rt-ink);
+    --rt-out2: 2px 0 0 var(--rt-ink), -2px 0 0 var(--rt-ink), 0 2px 0 var(--rt-ink), 0 -2px 0 var(--rt-ink), 2px 2px 0 var(--rt-ink), -2px -2px 0 var(--rt-ink), 2px -2px 0 var(--rt-ink), -2px 2px 0 var(--rt-ink);
+    --rt-out3: 3px 0 0 var(--rt-ink), -3px 0 0 var(--rt-ink), 0 3px 0 var(--rt-ink), 0 -3px 0 var(--rt-ink), 3px 3px 0 var(--rt-ink), -3px -3px 0 var(--rt-ink), 3px -3px 0 var(--rt-ink), -3px 3px 0 var(--rt-ink);
+  }
+  /* ── 틀 · 밝은 판(시작 카드 · 결과 아래 카드 · 순위판) / 어두운 판(결과 · 일시정지) ── */
+  .rt .rt-frame { margin: 3px; border: 0; border-radius: 0; padding: 22px 20px; background: var(--rt-o10); color: var(--rt-bark);
+    box-shadow: var(--rt-line), inset 0 0 0 4px var(--rt-wood), inset 0 0 0 7px var(--rt-tan); }
+  .rt .rt-frame.dk { background: var(--rt-night); color: var(--rt-cream); }
+  /* ── 오락실 버튼 · 주황 면 + 검정 계단 테두리 + 도트 명암 · 누르면 한 칸 내려앉는다 ── */
+  .rt .rt-btn { width: calc(100% - 8px); margin: 4px; min-height: 52px; padding: 12px 16px; border: 0; border-radius: 0; background: var(--rt-o100); color: var(--rt-btn);
+    font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16); letter-spacing: 0;
+    box-shadow: var(--rt-line4), inset -4px -4px 0 0 var(--rt-deep), inset 4px 4px 0 0 var(--rt-o60); }
+  .rt .rt-btn:active { transform: translateY(2px); box-shadow: var(--rt-line4), inset 4px 4px 0 0 var(--rt-deep); }
+  .rt .rt-btn.weak { background: var(--rt-tan2); color: var(--rt-bark); box-shadow: var(--rt-line4), inset -4px -4px 0 0 var(--rt-tan), inset 4px 4px 0 0 var(--rt-cream); }
+  .rt .rt-btn.weak:active { box-shadow: var(--rt-line4), inset 4px 4px 0 0 var(--rt-tan); }
+  .rt .rt-btn:disabled { background: var(--rt-dim); color: var(--rt-night); box-shadow: var(--rt-line4); transform: none; }
+  .rt .btn.mint { border: 0; border-radius: 0; margin: 4px 4px 12px; width: calc(100% - 8px); background: var(--rt-o100); color: var(--rt-btn); font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16);
+    box-shadow: var(--rt-line4), inset -4px -4px 0 0 var(--rt-deep), inset 4px 4px 0 0 var(--rt-o60); }
+  .rt .btn.mint:active { transform: translateY(2px); box-shadow: var(--rt-line4), inset 4px 4px 0 0 var(--rt-deep); }
+  /* ── 시작 화면 · 나무 틀 카드 + 도트 제목 줄 + 「▶ START」 ── */
+  .rt .gs-start .gs-card { gap: 16px; }
+  .rt .gs-prev { border-radius: 0; background: var(--rt-white); box-shadow: inset 0 0 0 2px var(--rt-ink); }
+  .rt .gs-sub { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16); color: var(--rt-deep); }
+  .rt .gs-ctl { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16); color: var(--rt-bark); }
+  .rt .gs-pts { color: var(--rt-wood); }
+  .rt .gs-best { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16); color: var(--rt-deep); }
+  .rt .ax-bottom .rt-btn { width: calc(100% - 8px); }
+  /* ── 게임 오버레이 · 어두운 오락실 몸통 + 갈색 상태창(HUD) ── */
+  #rgPlay.rt { background: var(--rt-bark); }
+  #rgPlay.rt .rgp-top { background: var(--rt-wood); border-bottom: 3px solid var(--rt-ink); box-shadow: inset 0 -3px 0 0 var(--rt-wood2); color: var(--rt-cream); }
+  #rgPlay.rt .rgp-t { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16); color: var(--rt-cream); }
+  #rgPlay.rt .rg-hud .rg-sc small, #rgPlay.rt .oxb-sc small { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; color: var(--rt-tan2); }
+  #rgPlay.rt .rg-hud .rg-sc b, #rgPlay.rt .rg-hud .rg-tm, #rgPlay.rt .oxb-sec, #rgPlay.rt .oxb-sc b { font-family: var(--rt-font); font-size: var(--rt-f24); font-weight: 400; line-height: var(--rt-l24); color: var(--rt-white); }
+  #rgPlay.rt .rg-hud .rg-tm.hot, #rgPlay.rt .oxb-sec.warn { color: var(--rt-o100); }
+  #rgPlay.rt .rgp-top .rgp-x, #rgPlay.rt .rgp-top .snd-btn { height: 40px; min-height: 40px; margin: 3px; padding: 0 12px; border: 0; border-radius: 0; background: var(--rt-tan2); color: var(--rt-bark);
+    font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; box-shadow: var(--rt-line), inset -3px -3px 0 0 var(--rt-tan); }
+  #rgPlay.rt .rgp-top .snd-btn.on { background: var(--rt-o100); color: var(--rt-btn); box-shadow: var(--rt-line), inset -3px -3px 0 0 var(--rt-deep); }
+  #rgPlay.rt .rgp-top .rgp-x.off, #rgPlay.rt .rgp-top .rgp-x:disabled { background: var(--rt-dim); color: var(--rt-night); box-shadow: var(--rt-line); }
+  #rgPlay.rt .oxb-bar { border-radius: 0; background: var(--rt-bark); }
+  #rgPlay.rt .oxb-bar i { border-radius: 0; }
+  #rgPlay.rt .rgp-mid canvas { border: 3px solid var(--rt-ink); border-radius: 0; box-shadow: 0 0 0 3px var(--rt-wood); }
+  #rgPlay.rt .rgp-mid.fill canvas { border: 0; box-shadow: none; }
+  #rgPlay.rt.tetris .rgp-mid, #rgPlay.rt .tt-pad, #rgPlay.rt .oxb-ctl { background: var(--rt-bark); border-top-color: var(--rt-ink); }
+  #rgPlay.rt .tt-dpad::before, #rgPlay.rt .tt-dpad::after { background: var(--rt-night); }
+  #rgPlay.rt .tt-cap { color: var(--rt-tan2); }
+  #rgPlay.rt .gs-foot { background: var(--rt-bark); border-top: 3px solid var(--rt-ink); color: var(--rt-tan2); }
+  #rgPlay.rt .rg-form { background: var(--rt-bark); border-top: 3px solid var(--rt-ink); }
+  #rgPlay.rt .rg-form .btn.mint { flex: none; width: auto; min-width: 72px; margin: 4px; }   /* 입력 줄의 「쓰기」 · 입력칸 폭을 먹지 않게 */
+  #rgPlay.rt .rg-tip { background: var(--rt-bark); color: var(--rt-o60); }
+  /* 일시정지 · 어두운 판 + 도트 제목 */
+  #rgPlay.rt .rgp-pause { background: var(--rt-night); }
+  #rgPlay.rt .rgp-pause p { font-family: var(--rt-font); font-size: var(--rt-f32); font-weight: 400; line-height: var(--rt-l32); color: var(--rt-o100); text-shadow: var(--rt-out2); }
+  #rgPlay.rt .rgp-pause small { color: var(--rt-tan2); }
+  #rgPlay.rt .rgp-pause .rt-btn { max-width: 320px; }
+  /* 점프 글자 레이어(캔버스 위 DOM) */
+  #rgPlay.rt #jpTx .jt-l, #rgPlay.rt #jpTx .jt-s { font-family: var(--rt-font); font-size: 16px; font-weight: 400; }
+  #rgPlay.rt #jpTx .jt-ban { font-family: var(--rt-font); font-size: 16px; font-weight: 400; }
+  /* ── 챗봇 안내 말풍선 · 바람의 나라식 대화창(초상 칸 + 이중 나무 테두리) · 초상 = assets/bot.js 원본 도트(botDotCv) ── */
+  .rt .gs-say { align-items: flex-end; gap: 6px; }
+  .rt .gs-say > .rt-bot { flex: none; box-sizing: content-box; width: 44px; height: 52px; margin: 3px; padding: 6px; background: var(--rt-o10); image-rendering: pixelated; image-rendering: crisp-edges;
+    box-shadow: var(--rt-line), inset 0 0 0 3px var(--rt-wood); animation: none; }
+  .rt .gs-say-b { margin: 3px; padding: 14px 16px; border-radius: 0; background: var(--rt-bark); color: var(--rt-cream); font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16);
+    box-shadow: var(--rt-line), inset 0 0 0 3px var(--rt-wood), inset 0 0 0 5px var(--rt-tan); }
+  .rt .gs-say-b::before { display: none; }
+  .rt .gs-say-b small { font-family: var(--rt-font); font-size: var(--rt-f16); line-height: var(--rt-l16); color: var(--rt-tan2); }
+  /* ── 기억력 · 상태창 · 문장 판 · 나무 이름표 타일 ── */
+  .rt .game-hud { margin: 3px 3px 12px; padding: 6px; gap: 6px; background: var(--rt-wood); box-shadow: var(--rt-line); }
+  .rt .game-hud .hud { border-radius: 0; background: var(--rt-bark); }
+  .rt .game-hud .hud .v { font-family: var(--rt-font); font-size: var(--rt-f24); font-weight: 400; line-height: var(--rt-l24); color: var(--rt-white); }
+  .rt .game-hud .hud .l { color: var(--rt-tan2); }
+  .rt .mem-stage { margin: 3px 3px 15px; border-radius: 0; background: var(--rt-night); box-shadow: var(--rt-line), inset 0 0 0 4px var(--rt-wood), inset 0 0 0 6px var(--rt-tan); padding: 22px 18px; }
+  .rt .mem-stage .who { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; letter-spacing: 0; color: var(--rt-tan2); }
+  .rt .mem-sent { font-family: var(--rt-font); font-size: var(--rt-f24); font-weight: 400; line-height: var(--rt-l24); color: var(--rt-cream); }
+  .rt .mem-sent .mem-yr { font-size: var(--rt-f24); }
+  .rt .mem-bar { border-radius: 0; background: var(--rt-bark); }
+  .rt .mem-bar i { background: var(--rt-o100); }
+  .rt .mem-stage.done { box-shadow: var(--rt-line), inset 0 0 0 4px var(--rt-o100), inset 0 0 0 6px var(--rt-tan); }
+  .rt .mslot { border-radius: 0; font-family: var(--rt-font); font-weight: 400; font-size: var(--rt-f16); }
+  .rt .mslot.fill { background: var(--rt-o100); color: var(--rt-btn); box-shadow: var(--rt-line); margin: 3px; }
+  .rt .lgrid { gap: 12px; padding: 3px; }
+  .rt .ltile { border-radius: 0; background: var(--rt-tan2); color: var(--rt-bark); font-family: var(--rt-font); font-weight: 400; font-size: var(--rt-f16); line-height: var(--rt-l16);
+    box-shadow: var(--rt-line), inset 0 -3px 0 0 var(--rt-tan), inset 0 3px 0 0 var(--rt-cream); }
+  .rt .ltile.used { background: var(--rt-dim); box-shadow: var(--rt-line); }
+  .rt .ltile.wrong { background: var(--rt-dim); }
+  /* ── 결과 화면 · 공용 GAME OVER 패널(rtGoHtml) · 다섯 게임 + 단어 소나기(앱 · 1F 현장) 한 틀 ── */
+  .rt .rt-go { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; padding: 26px 22px; }
+  .rt .rt-go-t { margin: 0; font-family: var(--rt-font); font-size: var(--rt-f48); font-weight: 400; line-height: var(--rt-l48); color: var(--rt-o100); text-shadow: var(--rt-out3); word-break: keep-all; }
+  .rt .rt-go-s { margin: 0; font-family: var(--rt-font); font-size: var(--rt-f16); line-height: var(--rt-l16); color: var(--rt-cream); }
+  .rt .rt-go-l { margin: 0; font-family: var(--rt-font); font-size: var(--rt-f16); line-height: var(--rt-l16); color: var(--rt-o60); }
+  .rt .rt-go .gs-sc { font-family: var(--rt-font); font-size: var(--rt-f48); font-weight: 400; line-height: var(--rt-l48); color: var(--rt-white); }
+  .rt .rt-go .gs-sc small { font-family: var(--rt-font); font-size: var(--rt-f24); color: var(--rt-tan2); }
+  .rt .rt-go .ax-description, .rt .rt-go .oly-res-head, .rt .rt-go .ax-type-t6-strong { color: var(--rt-tan2); }
+  .rt .rt-go .oly-brk th, .rt .rt-go .oly-brk td { border-top-color: var(--rt-wood); color: var(--rt-cream); }
+  .rt .rt-go .oly-brk th small { color: var(--rt-tan); }
+  .rt .rt-go .oly-brk td { color: var(--rt-tan2); }
+  .rt .rt-go .oly-brk td.n { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; color: var(--rt-white); }
+  .rt .rt-go .oly-brk tr.sum th, .rt .rt-go .oly-brk tr.sum td { border-top: 3px solid var(--rt-tan); }
+  .rt .rt-go .oly-brk tr.sum td.n { font-family: var(--rt-font); font-size: var(--rt-f24); font-weight: 400; color: var(--rt-o100); }
+  .rt .rt-go .oly-res-note { color: var(--rt-tan); }
+  .rt .rt-go .oly-res-me { border-radius: 0; background: var(--rt-bark); color: var(--rt-cream); box-shadow: inset 0 0 0 2px var(--rt-wood); }
+  .rt .rt-go .mem-stars span { color: var(--rt-wood); }
+  .rt .rt-go .mem-stars span.on { color: var(--rt-o100); }
+  .rt .rt-go .ox-res-big { font-family: var(--rt-font); font-size: var(--rt-f24); font-weight: 400; color: var(--rt-cream); }
+  .rt .rt-go .ox-res-big b { font-family: var(--rt-font); font-size: var(--rt-f48); font-weight: 400; color: var(--rt-o100); }
+  .rt .rt-go .ox-res-sub { color: var(--rt-tan2); }
+  .rt .rt-go .ox-titles span { border-radius: 0; background: var(--rt-bark); color: var(--rt-o60); box-shadow: inset 0 0 0 2px var(--rt-wood); }
+  .rt .rt-go .rt-go-rank { margin: 0; font-family: var(--rt-font); font-size: var(--rt-f16); line-height: var(--rt-l16); color: var(--rt-o60); }
+  .rt .gs-res-go { gap: 12px; padding: 4px 0; }
+  .rt .rt-extra { display: flex; flex-direction: column; gap: 16px; }
+  .rt .rt-extra .ax-card, .rt .rt-extra .card { margin: 3px; border: 0; border-radius: 0; background: var(--rt-o10); box-shadow: var(--rt-line), inset 0 0 0 4px var(--rt-wood), inset 0 0 0 7px var(--rt-tan); padding: 20px; }
+  .rt .rt-extra .ax-card-title { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16); color: var(--rt-bark); }
+  .rt .rt-extra .tipbanner { border-radius: 0; font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; }
+  /* ── 순위판(AX 올림픽 · 타자) · 나무 명부 ── */
+  .rt .oly-card { margin: 3px; border-radius: 0; background: var(--rt-o10); box-shadow: var(--rt-line), inset 0 0 0 4px var(--rt-wood), inset 0 0 0 7px var(--rt-tan); padding: 22px 20px; }
+  .rt .oly-card .ax-section-title { font-family: var(--rt-font); font-size: var(--rt-f24); font-weight: 400; line-height: var(--rt-l24); color: var(--rt-bark); }
+  .rt .oly-row { border-bottom-color: var(--rt-tan); }
+  .rt .oly-row .no, .rt .oly-row .sc, .rt .oly-pd-sc, .rt .oly-pd-st, .rt .oly-pd-no, .rt .ty-rank .no, .rt .ty-rank .sc { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; }
+  .rt .oly-row.me { border-radius: 0; box-shadow: inset 0 0 0 2px var(--rt-o100); }
+  .rt .oly-pd-st { border-radius: 0; background: var(--rt-tan2); color: var(--rt-bark); box-shadow: var(--rt-line); }
+  .rt .oly-pd.r1 .oly-pd-st { background: var(--rt-o100); color: var(--rt-btn); }
+  .rt .oly-card .ax-button { width: calc(100% - 8px); margin: 4px; border-radius: 0; background: var(--rt-o100); color: var(--rt-btn); font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16);
+    box-shadow: var(--rt-line4), inset -4px -4px 0 0 var(--rt-deep), inset 4px 4px 0 0 var(--rt-o60); }
+  .rt .oly-gap { border-bottom: 3px dotted var(--rt-tan); }
+  .rt .oly-pos { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16); color: var(--rt-deep); }
+  /* ── 1F TV 현황판(wall_type · 1280×720 이상 · 가로 · px 고정) · 어두운 무대 + 나무 명부 · 순위는 숫자만(메달·부문 비교 없음) ── */
+  #view.rt[data-v="wall_type"] { background: var(--rt-night); }
+  .rt .tytv .disp { font-family: var(--rt-font); font-size: 32px !important; font-weight: 400; letter-spacing: 0 !important; color: var(--rt-o100); text-shadow: var(--rt-out2); }
+  .rt .tytv .disp span { color: var(--rt-cream) !important; }
+  .rt .tytv .tytv-k { font-family: var(--rt-font); font-size: 16px; font-weight: 400; letter-spacing: 0; color: var(--rt-tan2); }
+  .rt .tytv .tytv-t { font-family: var(--rt-font); font-size: 32px; font-weight: 400; line-height: 40px; color: var(--rt-cream); }
+  .rt .tytv .tytv-seg { gap: 14px; margin-top: 16px; }
+  .rt .tytv .tytv-seg span { margin: 3px; padding: 6px 14px; border: 0; border-radius: 0; background: var(--rt-bark); color: var(--rt-tan2); font-family: var(--rt-font); font-size: 16px; font-weight: 400; opacity: 1; box-shadow: var(--rt-line); }
+  .rt .tytv .tytv-seg span.on { background: var(--rt-o100); color: var(--rt-btn); }
+  .rt .tytv .tytv-row { margin: 3px 3px 16px; border-radius: 0; background: var(--rt-bark); color: var(--rt-cream); font-family: var(--rt-font); font-weight: 400;
+    box-shadow: var(--rt-line), inset 0 0 0 4px var(--rt-wood), inset 0 0 0 6px var(--rt-tan); padding: 14px 22px; }
+  .rt .tytv .tytv-list.five .tytv-row { margin-bottom: 10px; padding: 12px 24px; font-size: 32px; }
+  .rt .tytv .tytv-row.top { background: var(--rt-bark); }
+  .rt .tytv .tytv-row .no { font-family: var(--rt-font); color: var(--rt-o100); text-shadow: var(--rt-out2); }
+  .rt .tytv .tytv-row.top .no { color: var(--rt-o100); }
+  .rt .tytv .tytv-row .sc { font-family: var(--rt-font); color: var(--rt-tan2); }
+  .rt .tytv .tytv-row .nm small, .rt .tytv .tytv-row .sc small { font-family: var(--rt-font); font-size: 16px; font-weight: 400; }
+  .rt .tytv .tytv-foot { color: var(--rt-tan2); opacity: 1; }
+  .rt .tvp b, .rt .tvp span, .rt .tvp i, .rt .tve-h, .rt .tve-no, .rt .tve-row .nm, .rt .tve-row .sc { font-family: var(--rt-font); font-weight: 400; }
+  .rt .tvp span { color: var(--rt-o100); }
+  .rt .tvp i { border-radius: 0; background: var(--rt-wood); box-shadow: var(--rt-line); color: var(--rt-cream); }
+  .rt .tvp.r1 i { background: var(--rt-o100); color: var(--rt-btn); }
+  .rt .tve { margin: 3px; border-radius: 0; background: var(--rt-bark); box-shadow: var(--rt-line), inset 0 0 0 3px var(--rt-wood); padding: 12px 12px 6px; }
+  .rt .tve-h { color: var(--rt-o100); }
+  @media (prefers-reduced-motion: reduce) { .rt .rt-btn:active, .rt .btn.mint:active { transform: none; } }
+</style>
 </head>
 <body>
 <div id="frame" class="splash-mode">
@@ -3619,6 +3786,8 @@ var App = {
       '<svg><use href="#qr-corners"/></svg><b>QR</b></span><span aria-hidden="true">QR 스캔</span></button>' +
       btn(T[2]) + btn(T[3]);
     el("view").dataset.v = v;
+    el("view").classList.toggle("rt", rtView(v));   /* v4.23 레트로 경계 · 게임 화면에만(design.md A-5 5-16) */
+    if (rtView(v)) rtFontWarm();
     if (v === "ideas" && IDEA.step) el("view").dataset.st = IDEA.step; else delete el("view").dataset.st;   /* v4.07 질문·완료는 하단 고정 버튼 자리를 비운다 */
     if (v === "scan_q" && QRS.stream) qrCamStop();   /* v4.06 video 요소를 다시 그리므로 카메라를 새로 붙인다 */
     var ae = document.activeElement, aeId = ae && ae.id && el("view").contains(ae) && /^(INPUT|TEXTAREA)$/.test(ae.tagName) ? ae.id : "", aeSel = aeId ? [ae.selectionStart, ae.selectionEnd] : null;
@@ -7562,6 +7731,25 @@ function drawWinner() {
 }
 
 /* ════════════════ 게임 공통 ════════════════ */
+/* ═══ v4.23 게임 화면 16비트 레트로 · 경계와 글꼴 (260923 사용자 확정 · design.md A-5 5-16) ═══
+   .rt 가 붙는 곳 = 아래 화면(#view) + 게임 오버레이(#rgPlay) 뿐이다. 홈 · 프로그램 · 신청 · 나의 참여에는 붙지 않는다.
+   글꼴(Neo둥근모 44KB)은 부팅 3초 뒤 한 번, 그리고 게임 화면에 들어설 때 미리 읽는다 · 읽기 전에는 Pretendard 로 그린다(swap) · 실패해도 게임은 그대로 돈다. */
+function rtView(v) { return ["game_tetris", "game_type", "game_pang", "game_jump", "game_word", "game_ox", "type_site", "type_rank", "oly_rank", "wall_type"].indexOf(v) >= 0; }
+var RT_FONT_WARM = 0, RT_BOT_URL = "";
+function rtFontWarm() {
+  if (RT_FONT_WARM || !document.fonts || !document.fonts.load) return;
+  RT_FONT_WARM = 1;
+  document.fonts.load('16px "NeoDunggeunmo"', "가A0").then(function () { RT_FONT_WARM = 2; }, function () { RT_FONT_WARM = 0; });
+}
+setTimeout(rtFontWarm, 3000);
+/* 말풍선 초상 · 챗봇 원본(assets/bot.js)의 도트 래스터(22×26 칸)를 그림 한 장으로 · 새로 그리지 않는다(design.md A-4) · 아직 안 읽혔으면 원본 SVG */
+function rtBotImg() {
+  if (RT_BOT_URL) return RT_BOT_URL;
+  var c = typeof botDotCv === "function" ? botDotCv(22, 26) : null;
+  if (!c) { if (typeof botDotLoad === "function") botDotLoad(); return ""; }
+  try { RT_BOT_URL = c.toDataURL("image/png"); } catch (e) { RT_BOT_URL = ""; }
+  return RT_BOT_URL;
+}
 /* ═══ AX 단어 소나기 · 참가자 앱 껍데기 (v4.20 · 260923) ═══
    규칙·그리기·판정·입력은 전부 assets/rain-engine.js 한 곳에 있다. 여기에는 이 앱에만 있는 것만 둔다:
    오버레이 골격(gsOverlay) · HUD·입력 HTML · 일시정지 UI · 끝난 뒤 기록 보내기 · 결과 카드.
@@ -7647,7 +7835,8 @@ function rgEndFinal(why) {
 function rgResultPaint() {
   var root = el("tgRoot"), r = RG.res; if (!root || !r) return;
   var rank = r.me ? r.me.rank : null;   /* v4.16 테스트 계정은 서버에 제출하지 않으므로(dry) 가짜 순위를 계산하지 않는다 */
-  root.innerHTML = gsResultHtml("type", { why: "done", label: "생존 기록", reason: "", score: (r.score / 100).toFixed(1) + "초 생존",
+  root.innerHTML = gsResultHtml("type", { why: "done", label: "생존 기록", title: r.why === "cap" ? "여기까지" : "GAME OVER", line: r.why === "cap" ? "최대 시간에 닿았어요" : "단어 " + (RG.lives0 || RAIN_LIVES) + "개를 놓쳤어요",
+    reason: "", score: (r.score / 100).toFixed(1) + "초 생존",
     stats: "터뜨린 단어 " + r.hits + "개 · 점수 " + Number(r.pts || 0).toLocaleString() + " · 최고 콤보 " + r.combo + " · 정확도 " + r.acc + "%",   /* v4.02 소나기는 올림픽 종목이 아니다 */
     rankLine: r.send === "sending" ? "순위 반영 중" : rank ? "앱 순위 " + rank + "위" : testEmp() ? "내 기록 · 테스트라 순위에 들어가지 않아요" : r.send === "range" ? "순위 미반영 · 기록 범위 초과" : "",
     banner: rank && rank <= 10 ? '<div class="tipbanner mb12">앱 상위 10 · 1F 현장 타자왕전 · 1·2등 Outro 호명</div>' : "" });
@@ -7694,11 +7883,13 @@ function rgPreview() {
   var ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.imageSmoothingEnabled = false;
   var L = rgLayout(w, h, false);
   rgWorldD(ctx, L);
-  ctx.font = rgFontStr(L.font); ctx.textBaseline = "middle"; ctx.textAlign = "left";
-  [["에이전트", 0.08, 10], ["공감", 0.66, 30], ["데이터", 0.36, 50]].forEach(function (x) {
+  ctx.font = rtFont(L.tf);
+  [["에이전트", 0.08, 10], ["공감", 0.66, 30], ["데이터", 0.36, 50]].forEach(function (x) {   /* v4.23 게임과 같은 나무 이름표(rgWordDraw) */
+    ctx.font = rtFont(L.tf);
     var bw = Math.ceil(ctx.measureText(x[0]).width) + L.padX * 2, bx = Math.min(w - 8 - bw, Math.max(8, Math.round(w * x[1])));
-    rgBox2(ctx, bx, x[2], bw, L.boxH, RAIN_PAL.w); ctx.fillStyle = RAIN_PAL.ink; ctx.fillText(x[0], bx + L.padX, x[2] + L.boxH / 2 + 1);
+    rgWordDraw(ctx, L, bx, x[2], bw, x[0], false, false, "");
   });
+  if (document.fonts && RT_FONT_WARM !== 2 && !rgPreview.fw) { rgPreview.fw = 1; rtFontWarm(); document.fonts.ready.then(function () { rgPreview.fw = 0; if (RT_FONT_WARM === 2) rgPreview(); }); }   /* 도트 글꼴이 늦게 오면 한 번 더 그린다 */
   var u = L.D / 2, mx = Math.round(w * 0.46);
   rgBotDraw(ctx, mx, L.ground, RG_BOT.w, RG_BOT.h, u);
   rgBotDraw(ctx, mx + L.masW / 2 + RG_BOT.bw * u / 2, L.ground, RG_BOT.bw, RG_BOT.bh, u);
@@ -7813,14 +8004,16 @@ function tsSiteHtml() {
       '<div id="tgRoot" style="max-width:420px;margin:0 auto"></div>';
   } else if (TS.phase === "done") {
     var r = TS.res || {};
-    h += '<div class="cho-box" style="padding:22px 16px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' + (r.why === "cap" ? "여기까지" : "GAME OVER") + " · " + esc(i && i.nick ? i.nick : "익명 참가자") + "</p>" +
-      '<p class="disp" style="font-size:48px;color:var(--mint);margin-top:6px">' + typeSec(r.score || 0) + "</p>" +
-      '<p class="hint">생존 기록 · 터뜨린 단어 ' + (r.hits || 0) + "개 · 최고 콤보 " + (r.combo || 0) + " · 정확도 " + (r.acc || 0) + "%</p>" +
-      '<p style="margin-top:8px;font-size:calc(16px * var(--fs));font-weight:800">' +
-      (TS.send === "sending" ? "기록 저장 중..." : TS.send === "ok" ? "현장 순위 " + (TS.me ? TS.me.rank + "위" : "-") + " · 저장 완료" :
-        "저장 실패 · " + esc(TS.why === "net" ? "서버 응답 없음" : TS_WHY[TS.why] || TS.why)) + "</p></div>" +
+    /* v4.23 공용 GAME OVER 패널(rtGoHtml) · 앱 다섯 게임 · 앱 솔로 소나기와 같은 틀 */
+    h += rtGoHtml({ title: r.why === "cap" ? "여기까지" : "GAME OVER", sub: "AX 단어 소나기 · " + (i && i.nick ? i.nick : "익명 참가자"),
+      line: r.why === "cap" ? "최대 시간에 닿았어요" : "단어 " + (RG.lives0 || RAIN_LIVES) + "개를 놓쳤어요",
+      body: '<p class="gs-sc">' + typeSec(r.score || 0) + "</p>" +
+        '<p class="ax-description">생존 기록 · 터뜨린 단어 ' + (r.hits || 0) + "개 · 최고 콤보 " + (r.combo || 0) + " · 정확도 " + (r.acc || 0) + "%</p>" +
+        '<p class="rt-go-rank">' +
+        (TS.send === "sending" ? "기록 저장 중..." : TS.send === "ok" ? "현장 순위 " + (TS.me ? TS.me.rank + "위" : "-") + " · 저장 완료" :
+          "저장 실패 · " + esc(TS.why === "net" ? "서버 응답 없음" : TS_WHY[TS.why] || TS.why)) + "</p>" }) +
       (TS.send === "fail" && TS.why !== "dup" ? '<button class="btn mint mb8" style="padding:15px" onclick="tsSend()">다시 보내기</button>' : "") +
-      (TS.send === "ok" && TS.rank ? '<div class="card mb12"><b style="color:var(--hi)">현장 상위 5</b>' + typeRankHtml({ top: TS.rank.top || [] }) + "</div>" : "") +
+      (TS.send === "ok" && TS.rank ? '<div class="rt-extra"><div class="card mb12"><b style="color:var(--hi)">현장 상위 5</b>' + typeRankHtml({ top: TS.rank.top || [] }) + "</div></div>" : "") +
       '<button class="btn ' + (TS.send === "ok" || TS.why === "dup" ? "mint" : "line") + '" style="padding:15px" onclick="tsReset()">다음 참가자</button>';
   }
   return h;
@@ -9001,24 +9194,25 @@ function ttEndFinal(why) {
   var root = el("ttRoot"); if (!root) return;
   var sc = olySubmit("tetris", parts);
   if (sc > prev) setTimeout(function () { sfx("best"); }, 250);
-  root.innerHTML = gsResultHtml("tetris", { why: why === "full" ? "done" : "over", label: why === "full" ? "만점" : "결과", reason: "",
+  root.innerHTML = gsResultHtml("tetris", { why: why === "full" ? "done" : "over", label: why === "full" ? "만점" : "결과", title: why === "full" ? "만점" : why === "time" ? "5분 완주" : "GAME OVER", reason: "",
     oly: { key: "tetris", parts: parts, score: sc, note: "참고 · 버틴 시간 " + surv.toFixed(1) + "초 · 레벨 " + parts.lv + " · 점수에는 들어가지 않아요" } });
   window.scrollTo(0, 0);
 }
 /* ── 그리기 · 전부 CSS px 좌표 (캔버스는 기기 해상도) ── */
 /* v3.95 블록 한 칸 · 모서리 3~4px · 가장자리 1px(채움보다 한 단 어둡게) · 위쪽 안쪽 하이라이트 1px · 아래쪽 안쪽 그늘 1px
    active = 지금 떨어지는 블록(더 밝게 · 하이라이트 진하게) · 글자는 채움 밝기에 맞춰 흰/먹 */
+/* v4.23 2단계(260923 사용자 확정 · 레트로 시안 §2) · 둥근 모서리 → 먹색 외곽선(큰 칸 2px) + 모서리 한 칸 비움 + 도트 명암(위·왼쪽 밝게 · 아래·오른쪽 어둡게)
+   칸 크기 · 자리 · 충돌 판정(ttHit)은 그대로다 · 그림만 바뀐다 · 옛 가장자리 색(TT_EDGE)은 이제 쓰지 않는다 */
 function ttCell(ctx, x, y, cell, kind, alpha, token, active) {
-  var col = ttFill(kind), r = cell >= 20 ? 4 : 3, pad = 1, w = cell - pad * 2, dark = ttInk(kind) === "#FFFFFF";
+  var col = ttFill(kind), pad = 1, w = cell - pad * 2, dark = ttInk(kind) === "#FFFFFF", e = cell >= 20 ? 2 : 1.5, hl = Math.max(1.5, Math.round(cell * 0.12));
+  var x0 = x + pad, y0 = y + pad;
   ctx.globalAlpha = alpha || 1;
-  ttRound(ctx, x + pad, y + pad, w, w, r);
-  ctx.fillStyle = active ? ttLift(col) : col; ctx.fill();
-  ctx.fillStyle = dark ? "rgba(255,255,255," + (active ? 0.34 : 0.22) + ")" : "rgba(255,255,255," + (active ? 0.9 : 0.7) + ")";
-  ctx.fillRect(x + pad + r - 1, y + pad + 1, w - r * 2 + 2, 1);
-  ctx.fillStyle = "rgba(0,0,0," + (dark ? 0.16 : 0.07) + ")";
-  ctx.fillRect(x + pad + r - 1, y + pad + w - 2, w - r * 2 + 2, 1);
-  ttRound(ctx, x + pad + 0.5, y + pad + 0.5, w - 1, w - 1, r - 0.5);
-  ctx.lineWidth = 1; ctx.strokeStyle = TT_EDGE[kind] || RAIN_PAL.dim; ctx.stroke();
+  ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(x0 + e, y0, w - 2 * e, w); ctx.fillRect(x0, y0 + e, w, w - 2 * e);
+  ctx.fillStyle = active ? ttLift(col) : col; ctx.fillRect(x0 + e, y0 + e, w - 2 * e, w - 2 * e);
+  ctx.fillStyle = dark ? "rgba(255,255,255," + (active ? 0.34 : 0.24) + ")" : "rgba(255,255,255," + (active ? 0.85 : 0.65) + ")";
+  ctx.fillRect(x0 + e, y0 + e, w - 2 * e, hl); ctx.fillRect(x0 + e, y0 + e, hl, w - 2 * e);
+  ctx.fillStyle = "rgba(0,0,0," + (dark ? 0.3 : 0.16) + ")";
+  ctx.fillRect(x0 + e, y0 + w - e - hl, w - 2 * e, hl); ctx.fillRect(x0 + w - e - hl, y0 + e, hl, w - 2 * e);
   if (token && cell >= TT_TOK_MIN) {   /* v3.87 글자 한 조각 */
     var two = token.length > 2 || /[가-힣]/.test(token) && token.length > 1;
     var fs = Math.round(cell * (two ? 0.38 : 0.46));
@@ -9043,15 +9237,13 @@ function ttDraw(ctx, now) {
   var d = TT.dpr || 1, cell = L.cell;
   ctx.setTransform(d, 0, 0, d, 0, 0);
   ctx.clearRect(0, 0, L.W, L.H);
-  ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, L.W, L.H);
+  ctx.fillStyle = RT_PAL.bark; ctx.fillRect(0, 0, L.W, L.H);   /* v4.23 어두운 오락실 몸통 */
   var sh = TT.shake > 0 ? Math.round((Math.random() - 0.5) * 3) : 0;
   ctx.save(); ctx.translate(L.ox + sh, L.oy);
-  /* v3.95 판 = 액자 패널 · 바깥 4px 웜그레이 테 + 얕은 그림자 · 안쪽 바탕 + 옅은 격자 */
-  ctx.save(); ctx.shadowColor = "rgba(31,27,24,0.14)"; ctx.shadowBlur = 8; ctx.shadowOffsetY = 2;
-  ttRound(ctx, -4, -4, L.bw + 8, L.bh + 8, 9); ctx.fillStyle = "#EFE8E2"; ctx.fill(); ctx.restore();
-  ttRound(ctx, -4.5, -4.5, L.bw + 9, L.bh + 9, 9.5); ctx.lineWidth = 1; ctx.strokeStyle = "#DDD3CB"; ctx.stroke();
-  ctx.fillStyle = "#FCFAF8"; ctx.fillRect(0, 0, L.bw, L.bh);
-  ctx.strokeStyle = "#F1EBE6"; ctx.lineWidth = 1;
+  /* v3.95 판 = 액자 패널 · 바깥 4px 웜그레이 테 + 얕은 그림자 · 안쪽 바탕 + 옅은 격자
+     v4.23 나무 이중 테두리(rtPanel · 6px · 세로 여백 MV 안에 든다) + 어두운 속판 + 옅은 크림 격자 */
+  rtPanel(ctx, -6, -6, L.bw + 12, L.bh + 12, 1.5, RT_PAL.bark);
+  ctx.strokeStyle = "rgba(243,231,216,0.08)"; ctx.lineWidth = 1;
   for (var gx = 1; gx < TT_COLS; gx++) { ctx.beginPath(); ctx.moveTo(gx * cell + 0.5, 0); ctx.lineTo(gx * cell + 0.5, L.bh); ctx.stroke(); }
   for (var gy = 1; gy < TT_ROWS; gy++) { ctx.beginPath(); ctx.moveTo(0, gy * cell + 0.5); ctx.lineTo(L.bw, gy * cell + 0.5); ctx.stroke(); }
   /* 쌓인 블록 */
@@ -9066,7 +9258,7 @@ function ttDraw(ctx, now) {
       if (!c.m[yy][xx]) continue;
       var gy2 = gyy + yy;
       if (gy2 >= 0 && gy2 !== c.y + yy) {
-        ctx.strokeStyle = "rgba(214,69,36,0.45)"; ctx.lineWidth = 1.5;   /* v3.95 유령 = 채움 없는 외곽선 */
+        ctx.strokeStyle = "rgba(255,164,110,0.75)"; ctx.lineWidth = 1.5;   /* v3.95 유령 = 채움 없는 외곽선 */   /* v4.23 어두운 판 위라 밝은 주황 */
         ctx.setLineDash([Math.max(2, Math.round(cell * 0.2)), Math.max(2, Math.round(cell * 0.12))]);
         ttRound(ctx, (c.x + xx) * cell + 2.25, gy2 * cell + 2.25, cell - 4.5, cell - 4.5, cell >= 20 ? 3.5 : 2.5);
         ctx.stroke(); ctx.setLineDash([]);
@@ -9088,7 +9280,7 @@ function ttDraw(ctx, now) {
         ctx.strokeStyle = RAIN_PAL.o100; ctx.lineWidth = 2; ctx.strokeRect(1, r * cell + 1, L.bw - 2, cell - 2);
       } else {   /* 접힘 · 줄 가운데로 얇아지며 사라진다 */
         var hh = cell * (1 - fk * fk);
-        ctx.fillStyle = "#FCFAF8"; ctx.fillRect(0, r * cell, L.bw, cell);
+        ctx.fillStyle = RT_PAL.bark; ctx.fillRect(0, r * cell, L.bw, cell);
         ctx.fillStyle = "rgba(255,126,49," + (0.85 * (1 - fk)).toFixed(2) + ")"; ctx.fillRect(0, r * cell + (cell - hh) / 2, L.bw, hh);
       }
     });
@@ -9098,14 +9290,13 @@ function ttDraw(ctx, now) {
     ctx.fillStyle = "rgba(255,126,49," + Math.max(0, TT.drop.t * 2) + ")";
     ctx.fillRect(0, Math.max(0, (TT.drop.y - 1) * cell), L.bw, cell);
   }
-  ctx.strokeStyle = "#D6CCC4"; ctx.lineWidth = 1; ctx.strokeRect(-0.5, -0.5, L.bw + 1, L.bh + 1);
-  ctx.restore();
+  ctx.restore();   /* v4.23 판 둘레 선은 나무 틀(rtPanel)이 맡는다 */
   /* 옆 칸 · 다음 블록 */
   ctx.save(); ctx.translate(L.sx, L.oy);
   var qh = Math.min(L.bh, Math.round(cell * 5.2) + 30);
-  ttRound(ctx, -0.5, -0.5, L.side + 1, qh + 1, 9); ctx.fillStyle = "#FCFAF8"; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = "#DDD3CB"; ctx.stroke();
-  ctx.fillStyle = "#6B625C"; ctx.font = "800 12px " + RAIN_FONT; ctx.textAlign = "center"; ctx.textBaseline = "top";
-  ctx.fillText("다음", L.side / 2, 7);
+  rtPanel(ctx, 0, 0, L.side, qh, 1, RT_PAL.bark);   /* v4.23 나무 틀(4px) · 도트 제목 */
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  rtText(ctx, "다음", L.side / 2, 7, 16, RT_PAL.cream, null);
   /* v3.87b 다음 블록 두 개 · 빈 줄·빈 칸을 떼고 실제 모양만 그린다 (좁은 옆 칸에서도 크게 보인다) */
   var q = (TT.nextQ || []).slice(0, 2), qy = 28;
   q.forEach(function (nk, qi) {
@@ -9139,17 +9330,10 @@ function ttMsgDraw(ctx, L) {
   rgStroke(ctx, m.text, L.ox + L.bw / 2, L.oy + 58 + (rgReduced() ? 0 : up * 5), RAIN_PAL.ink, RAIN_PAL.w, 4);
   ctx.restore();
 }
+/* v4.23 공용 끝 화면(rtEnd) · 문구는 그대로 */
 function ttEndDraw(ctx, L) {
-  var cy = L.oy + L.bh / 2;
-  ctx.fillStyle = "rgba(255,255,255,0.72)"; ctx.fillRect(0, L.oy, L.W, L.bh);
-  ttRound(ctx, L.ox + 6, cy - 40, L.bw - 12, 80, 16);
-  ctx.fillStyle = RAIN_PAL.w; ctx.fill();
-  ctx.lineWidth = 2; ctx.strokeStyle = RAIN_PAL.ink; ctx.stroke();
-  ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.fillStyle = RAIN_PAL.deep; ctx.font = "800 18px " + RAIN_FONT;
-  ctx.fillText(TT.ending.why === "full" ? "만점 " + olyFmt(olyCap()) : TT.ending.why === "time" ? "5분 완주" : "GAME OVER", L.ox + L.bw / 2, cy - 14);
-  ctx.fillStyle = RAIN_PAL.ink; ctx.font = "700 13px " + RAIN_FONT;
-  ctx.fillText(olyFmt(TT.score) + "점 · " + ttParts().lines + "줄", L.ox + L.bw / 2, cy + 12);
+  rtEnd(ctx, L.W, L.oy, L.oy + L.bh, TT.ending.why === "full" ? "만점 " + olyFmt(olyCap()) : TT.ending.why === "time" ? "5분 완주" : "GAME OVER",
+    olyFmt(TT.score) + "점 · " + ttParts().lines + "줄", { s: 3, tp: 32, sp: 16, maxW: 320 });
 }
 /* 시작 화면 미리보기 · 정지 화면 */
 /* v4.11 시작 화면 미리보기 · 실제 칸 그림(ttCell) · I 블록이 떨어져 맨 아래 줄을 채우고 지워진다 · 3.6초마다 반복 */
@@ -9161,8 +9345,8 @@ function ttPreview(t) {
   var ctx = cv.getContext("2d"); ctx.setTransform(k, 0, 0, k, 0, 0);
   var ox = Math.round((W - cols * cell) / 2), oy = Math.round((H - rows * cell) / 2);
   ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = "#FDFAF8"; ctx.fillRect(ox, oy, cols * cell, rows * cell);
-  ctx.strokeStyle = "#F0E9E4"; ctx.lineWidth = 1;
+  rtPanel(ctx, ox - 6, oy - 6, cols * cell + 12, rows * cell + 12, 1.5, RT_PAL.bark);   /* v4.23 게임과 같은 나무 틀 · 어두운 속판 */
+  ctx.strokeStyle = "rgba(243,231,216,0.08)"; ctx.lineWidth = 1;
   for (var i = 1; i < cols; i++) { ctx.beginPath(); ctx.moveTo(ox + i * cell + 0.5, oy); ctx.lineTo(ox + i * cell + 0.5, oy + rows * cell); ctx.stroke(); }
   for (var j = 1; j < rows; j++) { ctx.beginPath(); ctx.moveTo(ox, oy + j * cell + 0.5); ctx.lineTo(ox + cols * cell, oy + j * cell + 0.5); ctx.stroke(); }
   var stack = [[0, 6, "O"], [1, 6, "O"], [0, 5, "O"], [1, 5, "O"], [3, 6, "L"], [4, 6, "L"], [5, 6, "L"], [3, 5, "L"], [6, 6, "S"], [6, 5, "S"], [5, 5, "S"], [5, 4, "S"]];
@@ -9172,7 +9356,6 @@ function ttPreview(t) {
   if (full) cells = cells.filter(function (c) { return c[1] !== 6; }).map(function (c) { return [c[0], c[1] + 1, c[2]]; });   /* 맨 아래 줄이 지워지고 위가 한 칸 내려온다 */
   cells.forEach(function (c) { if (c[1] >= 0) ttCell(ctx, ox + c[0] * cell, oy + c[1] * cell, cell, c[2], 1, ""); });
   if (u >= fall && !full) { ctx.globalAlpha = 0.35 + 0.35 * Math.sin((u - fall) / flash * Math.PI); ctx.fillStyle = "#FFFFFF"; ctx.fillRect(ox, oy + 6 * cell, cols * cell, cell); ctx.globalAlpha = 1; }
-  ctx.strokeStyle = RAIN_PAL.ink; ctx.lineWidth = 2; ctx.strokeRect(ox - 1, oy - 1, cols * cell + 2, rows * cell + 2);
 }
 
 /* ════════════════ v3.45 휴대폰 미니게임 공통 틀 (사용자 결정 260917 · v3.50 전원 공개) ════════════════
@@ -9200,8 +9383,9 @@ function kbSync() {
 if (window.visualViewport) { window.visualViewport.addEventListener("resize", kbSync); window.visualViewport.addEventListener("scroll", kbSync); }
 function kbFocus(n) { setTimeout(function () { kbSync(); if (n && n.scrollIntoView) try { n.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) { n.scrollIntoView(); } }, 320); }
 var GS = { cur: null, vvh: null, onVis: null, onKey: null };
-/* v4.08 게임 안내 팝업 = 챗봇 말풍선 (design.md A-5 결정 5) · 문구는 그대로 · 원본 BOT_SVG 합성만 */
-function gsSayHtml(html) { return '<div class="gs-say">' + BOT_SVG + '<p class="gs-say-b">' + html + "</p></div>"; }
+/* v4.08 게임 안내 팝업 = 챗봇 말풍선 (design.md A-5 결정 5) · 문구는 그대로 · 원본 BOT_SVG 합성만
+   v4.23 바람의 나라식 대화창 · 초상 칸 = 원본 도트(rtBotImg) · 아직 안 읽혔으면 원본 BOT_SVG 그대로 */
+function gsSayHtml(html) { var u = rtBotImg(); return '<div class="gs-say">' + (u ? '<img class="rt-bot" src="' + u + '" alt="">' : BOT_SVG) + '<p class="gs-say-b">' + html + "</p></div>"; }
 /* 첫 안내 · 게임마다 기기에서 처음 3판까지 · 문구 = GS_GAMES[key].line (시작 화면 줄과 같다) */
 var GS_TUT_MAX = 3;
 function gsTutTake(key) {
@@ -9216,11 +9400,11 @@ function gsOverlayOpen(o) {
   GS.cur = o;
   var d = document.createElement("div");
   d.id = "rgPlay";
-  d.className = (o.flat ? "flat " : "") + (o.cls || "");
+  d.className = (o.flat ? "flat " : "") + (o.cls || "") + " rt";   /* v4.23 레트로 경계 */
   d.innerHTML = '<div class="rgp-top">' + (o.top || '<span class="rgp-t">' + esc(o.title) + '</span><span class="row" style="gap:6px;align-items:center">' + sndBtnHtml(false) + '<button class="rgp-x" type="button" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">일시정지</button></span>') + "</div>" +
     '<div class="rgp-mid' + (o.noGesture ? " nogest" : "") + (o.fill ? " fill" : "") + '" id="gsMid"><canvas id="' + o.canvasId + '" width="' + o.cw + '" height="' + o.ch + '"></canvas>' +
     (o.tip ? '<div class="gs-tip" id="gsTip">' + gsSayHtml(esc(o.tip)) + "</div>" : "") +
-    '<div class="rgp-pause" id="rgPause" hidden><p>일시정지</p><small id="rgPauseLeft"></small><button class="ax-button" type="button" onclick="gsResume()">계속하기</button><button class="ax-button ax-button-weak" type="button" onclick="gsQuit()">그만하기</button></div></div>' +
+    '<div class="rgp-pause" id="rgPause" hidden><p>일시정지</p><small id="rgPauseLeft"></small><button class="ax-button rt-btn" type="button" onclick="gsResume()">계속하기</button><button class="ax-button ax-button-weak rt-btn weak" type="button" onclick="gsQuit()">그만하기</button></div></div>' +
     (o.bottom || "");
   document.body.appendChild(d);
   document.documentElement.classList.add("rg-lock");
@@ -9351,27 +9535,20 @@ function gsHeart(ctx, hx, y, state, jy) {
   ctx.fillRect(hx, y + jy, 3, 2); ctx.fillRect(hx + 4, y + jy, 3, 2); ctx.fillRect(hx, y + 2 + jy, 7, 2); ctx.fillRect(hx + 1, y + 4 + jy, 5, 1); ctx.fillRect(hx + 2, y + 5 + jy, 3, 1);
   if (state === "off" || state === "hit") { ctx.fillStyle = RAIN_PAL.w; ctx.fillRect(hx + 3, y + 1 + jy, 1, 4); }
 }
+/* v4.23 배너 · 어두운 이름표 + 주황 도트 글자(rain-engine.js 레트로 틀) */
 function gsBannerDraw(ctx, G, W, y) {
   if (!G.banner) return;
-  rgBox(ctx, W / 2 - 50, y, 100, 22, RAIN_PAL.w); ctx.font = "bold 12px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.fillStyle = RAIN_PAL.deep; ctx.fillText(G.banner.text, W / 2, y + 11);
+  ctx.font = rtFont(16); var bw = Math.min(W - 8, Math.ceil(ctx.measureText(G.banner.text).width) + 24);
+  rtTag(ctx, W / 2 - bw / 2, y, bw, 26, RT_PAL.night, RT_PAL.bark, RAIN_PAL.ink);
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  rtText(ctx, G.banner.text, W / 2, y + 13, 16, RAIN_PAL.o100, null);
 }
-function gsCountDraw(ctx, cd, W, y0, y1) {
-  if (cd <= 0) return;
-  ctx.fillStyle = "rgba(255,255,255,0.55)"; ctx.fillRect(0, y0, W, y1 - y0);
-  ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = "bold 42px sans-serif";
-  rgStroke(ctx, cd > 1 ? String(Math.ceil(cd - 0.2)) : "GO", W / 2, (y0 + y1) / 2, RAIN_PAL.o100, RAIN_PAL.ink, 6);
-}
+/* v4.23 카운트다운 = 도트 글자(rtCount) · 48 = 도트 3배 */
+function gsCountDraw(ctx, cd, W, y0, y1) { rtCount(ctx, cd, W, y0, y1, 48); }
+/* v4.23 판 안 끝 화면 = 공용 나무 판(rtEnd · 소나기와 같은 한 벌) · 점프(180 폭 도트 판)는 한 칸 2 · 제목 32(도트 2배) */
 function gsEndDraw(ctx, ending, W, y0, y1, small) {
   if (!ending) return;
-  var cy = (y0 + y1) / 2;
-  ctx.fillStyle = "rgba(255,255,255,0.6)"; ctx.fillRect(0, y0, W, y1 - y0);
-  rgBox(ctx, 12, cy - 25, W - 24, 50, RAIN_PAL.w);
-  ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.font = "bold 16px sans-serif"; ctx.fillStyle = ending.why === "time" || ending.why === "full" ? RAIN_PAL.o100 : RAIN_PAL.deep;
-  ctx.fillText(ending.why === "full" ? "만점 " + olyFmt(olyCap()) : ending.why === "time" ? "TIME UP" : "GAME OVER", W / 2, cy - 9);
-  ctx.font = "bold 10px sans-serif"; ctx.fillStyle = RAIN_PAL.ink;
-  ctx.fillText(small, W / 2, cy + 11);
+  rtEnd(ctx, W, y0, y1, ending.why === "full" ? "만점 " + olyFmt(olyCap()) : ending.why === "time" ? "TIME UP" : "GAME OVER", small, { s: 2, tp: 32, sp: 16, maxW: W - 8 });
 }
 /* ── 공용 화면 조각 · 닉네임 · 시작 · 결과 ── */
 /* v4.08 AX-TDS 4단계 · 닉네임 = 입력·제출 화면 형식(전체 화면 · 아래 고정 주 버튼 + 약한 버튼) */
@@ -9390,7 +9567,7 @@ function gsStartHtml(key, o) {
   var g = GS_GAMES[key], nick = typeNick(), best = S.get(g.best, 0), D = GSP_DEMO[key];
   if (D) setTimeout(function () { gspMount(key); }, 0);
   return '<div id="' + o.rootId + '" class="ax-stack gs-root gs-start">' +
-    '<section class="ax-card gs-card"><h1 class="ax-sr-only">' + esc(g.name) + "</h1>" +   /* 게임 이름은 헤더가 알린다(5-4) */
+    '<section class="ax-card gs-card rt-frame"><h1 class="ax-sr-only">' + esc(g.name) + "</h1>" +   /* 게임 이름은 헤더가 알린다(5-4) */
     (D ? '<div class="gs-prev" id="gsPrev" aria-hidden="true">' + D.html() + "</div>" :
       o.previewId ? '<div class="rg-wrap' + (o.flat ? " flat" : "") + '"><canvas id="' + o.previewId + '" width="' + o.pw + '" height="' + o.ph + '"></canvas></div>' : "") +
     '<div class="gs-info">' + (o.sub ? '<p class="gs-sub">' + esc(o.sub) + "</p>" : "") + '<p class="gs-ctl">' + esc(g.line) + "</p>" +   /* v4.12 부제(AI O/X · 유리다리 건너기) */   /* 조작 한 줄 · 첫 안내 말풍선과 같은 문구 · 3판 제한 없이 항상 보인다 */
@@ -9398,7 +9575,7 @@ function gsStartHtml(key, o) {
     (best > 0 ? '<p class="gs-best">내 최고 ' + olyFmt(best) + "점</p>" : "") + "</div></section>" +
     '<div class="gs-links"><span>닉네임 <b>' + esc(nick) + '</b></span><button type="button" class="gs-edit" onclick="S.set(\'type_nick_edit\', true); App.render()">변경</button>' +
     '<span aria-hidden="true">·</span><button type="button" class="gs-edit" onclick="' + gsRankGo(key) + '">순위판</button>' + sndBtnHtml(false) + "</div>" +
-    '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" id="gsGo" onclick="gsBegin(\'' + key + '\')">게임 시작하기</button></div></div>';
+    '<div class="ax-bottom axs-fix"><button type="button" class="ax-button rt-btn" id="gsGo" aria-label="게임 시작하기" onclick="gsBegin(\'' + key + '\')">▶ START</button></div></div>';   /* v4.23 오락실 버튼 · 읽기 프로그램에는 「게임 시작하기」 */
 }
 /* ── v4.11 시작 화면 미리보기 · 게임의 실제 그리기 함수(판·장애물·블록·타일·문제 카드)로 짧은 데모를 반복한다 ──
    화면에 보일 때만 돈다(IntersectionObserver · 탭 숨김이면 멈춤) · 30fps 상한 · 동작 줄이기 = 대표 장면 한 장(still) ·
@@ -9423,7 +9600,7 @@ function gspMount(key) {
   GSP.key = key; GSP.box = box; GSP.t = 0;
   D.draw(D.still);   /* 대표 장면으로 크기를 잰다 */
   gspFit();
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (GSP.box === box) gspFit(); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (GSP.box === box) { gspFit(); if (!GSP.fn) D.draw(D.still); } });   /* v4.23 도트 글꼴이 늦게 와도 정지 화면을 다시 그린다 */
   if (rgReduced()) return;   /* 동작 줄이기 · 정지 화면 */
   GSP.fn = D.draw;
   D.draw(0);
@@ -9545,20 +9722,27 @@ function oxPreview(t) {
   var ctx = cv.getContext("2d"); ctx.setTransform(k, 0, 0, k, 0, 0); oxbDraw(ctx, OXP.G);
 }
 function gsRankGo(key) { return key === "type" ? "App.go('type_rank')" : "S.set('oly_tab', 'event'); S.set('oly_ev', '" + key + "'); App.go('oly_rank')"; }
-/* r = { why, reason, score, stats, rankLine, banner } · 세 게임 결과 화면 형식이 같다 */
+/* v4.23 공용 GAME OVER 패널 · 다섯 게임 + 단어 소나기(앱 솔로 · 1F 현장 타자왕전) 결과가 모두 이 한 틀을 쓴다(사용자 확정 260923 · design.md A-5 5-16 · 검사 82절)
+   어두운 판 · 나무 이중 테두리 · 계단 모서리 · 도트 글꼴 · 각진 오락실 버튼(부른 쪽이 rt-btn 으로 둔다) · 시안 §3
+   o = { title 큰 도트 제목(GAME OVER · TIME UP · CLEAR · 만점 …), sub 게임 이름 · 닉네임, line 게임 고유 한 줄(O/X 「풍덩」 · 소나기 「단어 5개를 놓쳤어요」), body 점수 · 구성 표 HTML } */
+function rtGoHtml(o) {
+  return '<section class="ax-card gs-res rt-go rt-frame dk"><p class="rt-go-t">' + esc(o.title) + "</p>" +
+    '<p class="rt-go-s">' + esc(o.sub) + "</p>" + (o.line ? '<p class="rt-go-l">' + esc(o.line) + "</p>" : "") + (o.body || "") + "</section>";
+}
+/* r = { why, title(v4.23 큰 제목 · 없으면 why 로), line(게임 고유 한 줄), reason, score, stats, rankLine, banner } · 여섯 게임 결과 화면 형식이 같다 */
 function gsResultHtml(key, r) {
   var g = GS_GAMES[key];
-  /* v4.08 AX-TDS 4단계 · 결과 = 흰 카드(점수 · 구성 표 · 내 위치) + 아래 버튼 줄(주 1 + 약한 2) */
-  return '<section class="ax-card gs-res"><p class="ax-meta">' +
-    esc(g.name) + " · " + (r.label || (r.why === "done" ? "완주" : r.why === "time" ? "TIME UP" : "GAME OVER")) + " · " + esc(typeNick() || "익명 참가자") + "</p>" +
-    (r.reason ? '<p class="ax-type-t6-strong">' + esc(r.reason) + "</p>" : "") +
-    (r.oly ? olyResultBody(r.oly) :
-    '<p class="gs-sc">' + (typeof r.score === "string" ? esc(r.score) : Number(r.score).toLocaleString()) + "</p>" +
-    '<p class="ax-description">' + r.stats + "<br>" + (r.rankLine || "") + "</p>") + "</section>" +
-    (r.banner || "") +
-    '<div class="ax-stack-tight gs-res-go"><button type="button" class="ax-button" onclick="' + g.start + '">다시 하기</button>' +
-    '<button type="button" class="ax-button ax-button-weak" onclick="' + gsRankGo(key) + '">순위판 보기</button>' +
-    '<button type="button" class="ax-button ax-button-weak" onclick="App.go(\'passport\')">스탬프 보기</button></div>';
+  /* v4.08 AX-TDS 4단계 · 결과 = 카드(점수 · 구성 표 · 내 위치) + 아래 버튼 줄(주 1 + 약한 2)
+     v4.23 카드 = 공용 GAME OVER 패널(rtGoHtml) · 버튼 = 오락실 버튼 · 아래 카드(AI 상식 · 라운드 · 틀린 문제)는 밝은 나무 틀(rt-extra) */
+  return rtGoHtml({ title: r.title || (r.why === "done" ? "CLEAR" : r.why === "time" ? "TIME UP" : "GAME OVER"), sub: g.name + " · " + (typeNick() || "익명 참가자"), line: r.line || "",
+      body: (r.reason ? '<p class="ax-type-t6-strong">' + esc(r.reason) + "</p>" : "") +
+        (r.oly ? olyResultBody(r.oly) :
+        '<p class="gs-sc">' + (typeof r.score === "string" ? esc(r.score) : Number(r.score).toLocaleString()) + "</p>" +
+        '<p class="ax-description">' + r.stats + "<br>" + (r.rankLine || "") + "</p>") }) +
+    (r.banner ? '<div class="rt-extra">' + r.banner + "</div>" : "") +
+    '<div class="ax-stack-tight gs-res-go"><button type="button" class="ax-button rt-btn" onclick="' + g.start + '">다시 하기</button>' +
+    '<button type="button" class="ax-button ax-button-weak rt-btn weak" onclick="' + gsRankGo(key) + '">순위판 보기</button>' +
+    '<button type="button" class="ax-button ax-button-weak rt-btn weak" onclick="App.go(\'passport\')">스탬프 보기</button></div>';
 }
 /* ════════════════ AX 팡 · 7×7 같은 그림 3개 맞추기 (60초 · 지는 조건 없음) ════════════════
    조작: 이웃한 두 칸을 밀어서 바꾸기 또는 한 칸 탭 → 옆 칸 탭. 맞는 줄이 안 생기면 튕기듯 제자리로 돌아간다.
@@ -10000,14 +10184,15 @@ function pgText(ctx, text, x, y, size, weight, col, align) {
 }
 function pgDraw(ctx, now) {
   ctx.setTransform(PG.k, 0, 0, PG.k, 0, 0);
-  ctx.fillStyle = PG_C.w; ctx.fillRect(0, 0, PG_W, PG_H);
+  ctx.fillStyle = RAIN_PAL.o10; ctx.fillRect(0, 0, PG_W, PG_H);   /* v4.23 살구 바탕(공용 프레임 5-14 · 점프 · 소나기와 같다) */
   /* 위 · 점수(앱 숫자 스타일) · 콤보 팝 · 남은 시간 막대 */
   /* v3.79 진행 막대가 주인공 · 퍼센트를 크게 · 시간은 작게 옆에 */
   var elp = PG.t0 ? pgEl(now) : 0, frac = Math.min(1, PG.tiles / PG_GOAL), shown = Math.max(0, Math.min(1, PG.bar || 0));
   var pctN = Math.round(shown * 100), near = frac >= 0.9;
-  pgText(ctx, pctN + "%", PG_OX, 13, 17, 800, near ? PG_C.o100 : PG_C.tx);
-  pgText(ctx, PG.tiles + " / " + PG_GOAL, PG_OX + (pctN >= 100 ? 50 : pctN >= 10 ? 38 : 28), 16, 8, 700, PG_C.muted);
-  pgText(ctx, (Math.round(elp * 10) / 10).toFixed(1) + "초", PG_W - PG_OX, 14, 9, 700, PG_C.muted, "right");
+  /* v4.23 HUD 숫자 = 도트 글꼴 · 캔버스 16 단위(화면 약 25px) · 초 12 단위(화면 약 19px) · 16px 밑으로 그려지지 않는다 */
+  ctx.textAlign = "left"; ctx.textBaseline = "middle"; rtText(ctx, pctN + "%", PG_OX, 14, 16, near ? PG_C.o100 : PG_C.tx, null);
+  pgText(ctx, PG.tiles + " / " + PG_GOAL, PG_OX + (pctN >= 100 ? 36 : pctN >= 10 ? 28 : 20), 16, 8, 700, PG_C.muted);
+  ctx.textAlign = "right"; rtText(ctx, (Math.round(elp * 10) / 10).toFixed(1) + "초", PG_W - PG_OX, 14, 12, PG_C.tx, null);
   if (PG.combo) {
     var cp = Math.min(1, PG.combo.t / 0.2), cs = 1.3 - 0.3 * pgEase(cp, "out"), ca = PG.combo.t > 0.8 ? Math.max(0, 1 - (PG.combo.t - 0.8) / 0.3) : 1;
     ctx.save(); ctx.globalAlpha = ca; ctx.translate(PG_W / 2, 18); ctx.scale(cs, cs);
@@ -10056,18 +10241,26 @@ function pgDraw(ctx, now) {
       pgFinDraw(ctx, now);
       return;
     }
-    ctx.fillStyle = "rgba(255,255,255,0.82)"; ctx.fillRect(0, PG_OY - 4, PG_W, PG_N * PG_TS + 8);
     if (PG.ending) {
-      pgRR(ctx, 22, PG_OY + 52, PG_W - 44, 60, 10); ctx.fillStyle = PG_C.w; ctx.fill(); ctx.lineWidth = 0.8; ctx.strokeStyle = PG_C.line; ctx.stroke();
-      pgText(ctx, "시간 종료", PG_W / 2, PG_OY + 74, 14, 800, PG_C.tx, "center");
-      pgText(ctx, "터뜨린 칸 " + PG.tiles + " / " + PG_GOAL, PG_W / 2, PG_OY + 94, 9, 700, PG_C.o100, "center");
+      /* v4.23 공용 끝 화면(rtEnd · 소나기 · 다섯 게임 한 벌) · 캔버스 단위(180 폭) · 제목 24(화면 약 38px) · 한 줄 12(약 19px) · 옛 「시간 종료」 카드 대신 */
+      rtEnd(ctx, PG_W, PG_OY - 4, PG_OY + PG_N * PG_TS + 4, PG.ending.why === "time" ? "TIME UP" : "GAME OVER", "터뜨린 칸 " + PG.tiles + " / " + PG_GOAL, { s: 1.5, tp: 24, sp: 12, maxW: PG_W - 12 });
     } else {
+      ctx.fillStyle = "rgba(255,255,255,0.82)"; ctx.fillRect(0, PG_OY - 4, PG_W, PG_N * PG_TS + 8);
       var n = PG.cd > 1 ? String(Math.ceil(PG.cd - 0.2)) : "시작", f = PG.cd % 1, s = 1 + 0.15 * Math.max(0, f - 0.7) / 0.3;
       ctx.save(); ctx.translate(PG_W / 2, PG_OY + PG_N * PG_TS / 2); ctx.scale(s, s);
-      pgText(ctx, n, 0, 0, n.length > 1 ? 22 : 40, 800, PG_C.o100, "center");
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      rtText(ctx, n, 0, 0, n.length > 1 ? 24 : 40, PG_C.o100, RAIN_PAL.ink);   /* v4.23 도트 카운트다운 */
       ctx.restore();
     }
   }
+}
+/* v4.23 2단계(260923 사용자 확정 · 레트로 시안 §2) · 타일 = 먹색 외곽선 1.4 + 모서리 한 칸 비움 + 도트 명암(위·왼쪽 밝게 · 아래·오른쪽 어둡게) · 판정 상자와 무관한 그림뿐 */
+function pgPxTile(ctx, h, fill) {
+  var e = 1.4, x = -h, w = h * 2, d = 1.6;
+  ctx.fillStyle = PG_C.ink; ctx.fillRect(x + e, x, w - 2 * e, w); ctx.fillRect(x, x + e, w, w - 2 * e);
+  ctx.fillStyle = fill; ctx.fillRect(x + e, x + e, w - 2 * e, w - 2 * e);
+  ctx.fillStyle = "rgba(255,255,255,0.45)"; ctx.fillRect(x + e, x + e, w - 2 * e, d); ctx.fillRect(x + e, x + e, d, w - 2 * e);
+  ctx.fillStyle = "rgba(0,0,0,0.18)"; ctx.fillRect(x + e, x + w - e - d, w - 2 * e, d); ctx.fillRect(x + w - e - d, x + e, d, w - 2 * e);
 }
 function pgBoardDraw(ctx, b, now, live) {
   /* v3.74 완주 연출 · 열마다 시차를 두고 아래로 무너진다 · 모션 줄이기면 그 자리에서 사라진다 */
@@ -10095,14 +10288,13 @@ function pgBoardDraw(ctx, b, now, live) {
     var sel = live && PG.sel && PG.sel[0] === r && PG.sel[1] === c;
     ctx.save(); ctx.globalAlpha = al; ctx.translate(cx, cy); ctx.scale(sc, sc);
     if (isHint) {   /* v3.66 오렌지 테두리 고리 · 타일보다 한 겹 밖에 */
-      pgRR(ctx, -13.4, -13.4, 26.8, 26.8, 6);
+      pgRR(ctx, -13.4, -13.4, 26.8, 26.8, 1.5);   /* v4.23 각진 고리 */
       ctx.lineWidth = 2.2; ctx.strokeStyle = PG_C.o100; ctx.stroke();
     }
     var st = PG_TILE[t.t], half = 10.8;
-    pgRR(ctx, -half, -half, half * 2, half * 2, 4.2);
-    ctx.fillStyle = st.fill; ctx.fill(); ctx.lineWidth = 0.75; ctx.strokeStyle = st.line; ctx.stroke();
+    pgPxTile(ctx, half, st.fill);   /* v4.23 2단계 · 둥근 얇은 선 → 먹색 외곽선 + 계단 모서리 + 도트 명암 · 칸 크기 · 자리 · 판정은 그대로(그림만) */
     pgIconDraw(ctx, t.t, 0, 0, 13.5, st.ic);
-    if (sel) { pgRR(ctx, -half - 1.4, -half - 1.4, half * 2 + 2.8, half * 2 + 2.8, 5.4); ctx.lineWidth = 1.6; ctx.strokeStyle = PG_C.o100; ctx.stroke(); }
+    if (sel) { pgRR(ctx, -half - 1.4, -half - 1.4, half * 2 + 2.8, half * 2 + 2.8, 1.5); ctx.lineWidth = 1.6; ctx.strokeStyle = PG_C.o100; ctx.stroke(); }
     ctx.restore();
   }
   if (live) PG.lines.forEach(function (l) {
@@ -10141,7 +10333,7 @@ function pgPreview(t) {
   PGD.nw.forEach(function (x) { x.born = Math.max(0, 0.3 - (u - 1.3)); });
   var ctx = cv.getContext("2d");
   ctx.setTransform(k, 0, 0, k, 0, 0);
-  ctx.fillStyle = PG_C.w; ctx.fillRect(0, 0, PG_W, 174);
+  ctx.fillStyle = RAIN_PAL.o10; ctx.fillRect(0, 0, PG_W, 174);   /* v4.23 게임과 같은 살구 바탕 */
   ctx.translate(0, -(PG_OY - 3));
   pgBoardDraw(ctx, b, 0, false);
   if (!PGD.done && u < 1.0) [a, z].forEach(function (q) {   /* 게임의 힌트 고리와 같은 모양 */
@@ -10545,7 +10737,7 @@ function jpEndFinal(why) {
     '<p class="ax-meta">1개 = 점수 +' + olyRule().jump.fact + "</p>" +
     (facts.length ? '<ul class="gs-list">' + facts.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>"
       : '<p class="ax-description">공중의 글자 블록을 2단 점프로 들이받으면 모을 수 있어요</p>') + "</section>";
-  root.innerHTML = gsResultHtml("jump", { why: why === "full" ? "done" : "over", label: why === "full" ? "만점" : "결과", reason: "",
+  root.innerHTML = gsResultHtml("jump", { why: why === "full" ? "done" : "over", label: why === "full" ? "만점" : "결과", title: why === "full" ? "만점" : why === "time" ? "TIME UP" : "GAME OVER", reason: "",
     oly: { key: "jump", parts: parts, score: sc, note: "참고 · 버틴 시간 " + (parts.surv / 100).toFixed(1) + "초 · 부딪힘 " + JP.hits + "번 · 버틴 시간은 점수에 들어가지 않아요" }, banner: fh });
   window.scrollTo(0, 0);
 }
@@ -10920,7 +11112,7 @@ function gwFinish() {
   if (sc > prev) setTimeout(function () { sfx("best"); }, 700);
   var root = el("gwRoot"); if (!root) return;
   var st = ""; for (var i = 0; i < 3; i++) st += '<span class="' + (i < stars ? "on" : "") + '">★</span>';
-  root.innerHTML = gsResultHtml("word", { why: "done", label: "ALL CLEAR", reason: "",
+  root.innerHTML = gsResultHtml("word", { why: "done", label: "ALL CLEAR", title: "ALL CLEAR", reason: "",
     oly: { key: "word", parts: parts, score: sc, head: '<span class="mem-stars">' + st + "</span>",
       note: "참고 · 떠올린 시간 " + (parts.used / 100).toFixed(1) + "초 · 보기 시간은 점수와 무관해요" },
     banner: GW.rounds.map(function (R) {
@@ -11175,13 +11367,14 @@ function oxbDrawTx(ctx, G) {
     ctx.fillStyle = l.col; ctx.fillText(l.s, l.x, l.y);
   });
   oxbFloats(ctx, G);
-  if (G.big) oxbBig(ctx, G, G.big.s, G.big.c, G.big.sub);
+  if (G.big) { if (G.big.end) rtEnd(ctx, G.pr.W, 0, G.pr.H, G.big.end, G.big.line, { s: 3, tp: 32, sp: 16, maxW: 320 }); else oxbBig(ctx, G, G.big.s, G.big.c, G.big.sub); }   /* v4.23 끝 = 공용 나무 판 */
 }
 function oxbBig(ctx, G, s, col, sub) {
   var W = G.pr.W, y = Math.max(40, Math.min(G.pr.HY * 0.5 + 18, G.pr.H * 0.2));
-  ctx.font = "800 " + Math.round(Math.min(W, 420) * 0.12) + "px " + OXB_FONT; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.lineWidth = 6; ctx.strokeStyle = "rgba(255,255,255,.92)"; ctx.strokeText(s, W / 2, y); ctx.fillStyle = col; ctx.fillText(s, W / 2, y);
-  if (sub) { ctx.font = "700 " + Math.round(Math.min(W, 420) * 0.045) + "px " + OXB_FONT; ctx.lineWidth = 4; ctx.strokeText(sub, W / 2, y + Math.min(W, 420) * 0.085); ctx.fillStyle = "#191F28"; ctx.fillText(sub, W / 2, y + Math.min(W, 420) * 0.085); }
+  /* v4.23 도트 글자(rtText · 검정 한 칸 테두리) · 16의 배수로만 */
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  rtText(ctx, s, W / 2, y, Math.max(32, Math.round(Math.min(W, 420) * 0.12 / 16) * 16), col, RAIN_PAL.ink);
+  if (sub) rtText(ctx, sub, W / 2, y + Math.min(W, 420) * 0.095, 16, "#191F28", RAIN_PAL.w);
 }
 function oxbRow(ctx, G, r) {
   var z = r.z, B = OXB;
@@ -11671,7 +11864,7 @@ function oxArrive() {
   OX.st = "arrive";
   oxbAnim(G, { kind: "arc", x0: G.ch.x, y0: 0, z0: G.ch.z, x1: 0, y1: 0, z1: d.z + 0.6, h: 1.3, dur: rgReduced() ? 0.25 : 0.45, done: function () {
     G.cur = d.i; OX.side = 0;
-    G.big = { s: "도착", c: "#FF7F32", sub: "보너스 +" + T.arr };
+    G.big = { s: "도착", c: "#FF7F32", sub: "보너스 +" + T.arr, end: "CLEAR", line: "도착 · 보너스 +" + T.arr };   /* v4.23 공용 나무 판 */
     for (var i = 0; i < (rgReduced() ? 30 : 110); i++) G.confetti.push(oxbConf(G));
     stampBuzz([20, 40, 20, 40, 60]); sfx("fanfare");
     oxSetQ("도착 · 보너스 +" + T.arr, "ok", "");
@@ -11685,8 +11878,9 @@ function oxEnd(why, tl) {
   if (!OX.on || OX.ending) return;
   OX.st = "end"; OX.tl = why === "time" ? Math.max(0, Math.round(tl || 0)) : 0;
   var G = OX.G;
-  if (why === "time") { G.big = { s: "시간 끝", c: "#D22030" }; oxSetQ("시간이 다 됐어요", "no", ""); sfx("over"); }
-  if (why === "life") { G.big = { s: "풍덩", c: "#D22030", sub: "목숨을 모두 잃었어요" }; oxSetQ("목숨을 모두 잃었어요", "no", ""); sfx("over"); }
+  /* v4.23 끝 = 공용 나무 판(end = 큰 제목 · line = 게임 고유 한 줄 · 「풍덩」은 판 안 한 줄로 남긴다) */
+  if (why === "time") { G.big = { s: "시간 끝", c: "#D22030", end: "TIME UP", line: "시간 끝" }; oxSetQ("시간이 다 됐어요", "no", ""); sfx("over"); }
+  if (why === "life") { G.big = { s: "풍덩", c: "#D22030", sub: "목숨을 모두 잃었어요", end: "GAME OVER", line: "풍덩 · 목숨을 모두 잃었어요" }; oxSetQ("목숨을 모두 잃었어요", "no", ""); sfx("over"); }
   G.danger = 0;
   oxHud(true);
   OX.ending = { t: why === "arrive" ? 1.0 : 1.3, why: why };
@@ -11703,6 +11897,7 @@ function oxEndFinal(why) {
   var ok = X.c1 + X.c2 + X.c3, N = R.per[0] + R.per[1] + R.per[2], ans = X.items.filter(function (it) { return it.ans === "O" || it.ans === "X"; }), avg = ans.length ? ans.reduce(function (a, it) { return a + it.t; }, 0) / ans.length / 100 : 0;
   var titles = oxTitles(X), label = why === "arrive" ? "도착" : why === "life" ? "목숨 소진" : "시간 끝";
   root.innerHTML = gsResultHtml("ox", { why: why === "arrive" ? "done" : why === "time" ? "time" : "over", label: label, reason: "",
+    line: why === "life" ? "풍덩 · 목숨을 모두 잃었어요" : why === "time" ? "시간 끝" : "도착",   /* v4.23 게임 고유 문구는 패널 안 한 줄 */
     oly: { key: "ox", parts: parts, score: sc,
       top: '<p class="ox-res-big">정답 <b>' + ok + "</b></p>" +
         '<p class="ox-res-sub">' + (why === "arrive" ? "다리 끝까지 " + N + "줄" : N + "줄 중 " + X.n + "줄") + " · 한 문제 평균 " + avg.toFixed(1) + "초 · 최대 " + X.mx + "연속" + (X.fl ? " · 늦어서 떨어짐 " + X.fl + "번" : "") + "</p>" +

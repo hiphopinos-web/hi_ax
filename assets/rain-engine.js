@@ -16,6 +16,8 @@
    시간 제한은 없다(사용자 확정 260923) · 목숨이 떨어지면 끝난다 · 안전 상한(RAIN_CAP_SEC)은 기계를 오래 붙잡지 않게 하는 장치일 뿐이다.
    점수 = 글자 수 × 10 × 콤보 배수(1 + 0.2 × min(콤보-1, 10), 최대 3배) · 정확도 = 제출 중 명중 비율.
    비주얼: 오렌지 사다리 + 검정 + 흰색 + 웜그레이·웜브라운만 · 도트 단위 고정(판이 작아지면 도트 개수만 준다).
+   v4.23(260923) 16비트 레트로 · 단어 = 나무 이름표 · 글자 = Neo둥근모 · 판 안 GAME OVER = 공용 나무 판(rtEnd) · 이 파일 아래 「레트로 틀」 한 벌을 앱 다섯 게임도 같이 쓴다.
+     판정(글자 일치 · 바닥선)·시드·단어 순서·단어 상자 높이(L.boxH)는 그대로다 · 글꼴이 바뀌어 상자 폭(bw)만 글자에 맞게 달라진다(자리 잡기에만 쓰는 값).
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ═══ 단어 풀 · 여기 한 곳 ═══
@@ -48,6 +50,14 @@ var RAIN_EXTRA_EVERY = 30;                    /* 램프 시작 뒤 이 초마다
 var RAIN_BANDS = [[330, 2, 3], [420, 3, 4], [520, 4, 5], [1e9, 5, 5]];   /* [판 높이 미만, 동시 단어 최대, 단계 수] · 휴대폰 */
 var RAIN_FONT = '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif';
 var RAIN_PAL = { o100: "#FF7E31", o60: "#FFA46E", o50: "#FFB284", o30: "#FFCFB0", o25: "#FFD8C1", o10: "#FFEBE0", deep: "#D64524", ink: "#000000", w: "#FFFFFF", gray: "#B8AEA6", dim: "#8A817B", soil: "#7A3E1C", soil2: "#6A3417", trunk: "#5E3218" };
+/* ═══ v4.23 레트로 틀 · 게임판 안 공용 한 벌 (260923 사용자 확정 · design.md A-5 5-16 · 정본 시안 「레트로 시안/시안.html」) ═══
+   쓰는 곳 = 단어 소나기(앱 솔로 · 1F 현장 · 선수 화면 admin/typing.html) + 앱 다섯 게임의 판 안 GAME OVER·카운트다운(팡 · 테트리스 · 점프 · O/X).
+   글꼴 = Neo둥근모(assets/neodgm.woff2 · OFL 1.1 · 한글 완성형 11,172자 전부 들어 있음 · 260923 실측) · 없는 글자(한자 · 이모지 · 화살표)는 Pretendard로 넘어간다.
+     굵기가 하나뿐이라 굵게를 주지 않는다(가짜 굵게가 도트를 뭉갠다) · 화면에 그려지는 크기 16px 이상에서만 쓴다 · 캔버스는 글꼴이 읽히기 전에는 Pretendard로 그리고 다음 프레임부터 바뀐다.
+   색 = 오렌지 사다리 · 검정 · 흰색 · 위 RAIN_PAL 의 웜브라운(trunk = 진한 나무) · 밝은 나무 두 톤 · 어두운 판 두 톤 · 크림 글자. 파랑·민트 없음.
+   넥슨 이미지·UI, NES.css·RPGUI 파일은 쓰지 않는다 · 이중 테두리 · 계단 모서리 · 하드 테두리 글자라는 문법만 직접 그린다. */
+var RT_FONT = '"NeoDunggeunmo", ' + RAIN_FONT;
+var RT_PAL = { night: "#1B1712", bark: "#2A2118", wood: "#5E3218", tan: "#D9A066", tan2: "#E3B884", cream: "#F3E7D8" };
 /* 캐릭터 = 행사 챗봇 원본(assets/bot.js) · 260923 사용자 지시로 옛 오렌지 도트 마스코트(세로로 벌어지는 입 · 콤보 친구)를 걷어냈다(design.md A-5 5-15).
    원본 형태는 바꾸지 않는다 · 옛 연출은 몸 전체 움직임으로만 옮겼다: 입 벌리기 → 명중 때 몸 전체 한 번 튀기기(RG.mas.hop) · 콤보 5 이상 = 작은 챗봇 하나가 옆에 붙는다(개수·크기만 · ME 가 WE 가 되는 연출).
    크기는 도트 칸 수로 고정한다(서기 22×26 = 점프 러너와 같은 칸 수 · 친구 17×20) · 도트 한 칸 = L.D / 2 CSS px · 그리는 상자는 옛 마스코트 자리(L.masW × L.masH) 안이다. */
@@ -113,6 +123,7 @@ function rgLayout(W, H, big) {
   L.D = big ? 4 : 3;                                        /* 도트 단위 */
   L.font = big ? (W >= 1200 ? 32 : W >= 900 ? 30 : 28) : 18;
   L.boxH = Math.round(L.font * 1.6); L.padX = Math.round(L.font * 0.5);
+  L.tf = big ? 32 : 16;                                       /* v4.23 이름표 글자 · 도트 글꼴은 16의 배수에서 또렷하다 · 상자 높이(L.boxH)는 위 값 그대로 */
   L.masW = 14 * L.D; L.masH = 13 * L.D;                      /* 캐릭터 자리 · 판정선(L.floor)이 이 높이에 기댄다 · v4.20 값 그대로 · 챗봇(22×26 도트 × L.D/2)은 이 상자 안에 선다 */
   L.soil = (H < 330 ? 6 : 9) * L.D;
   L.ground = H - L.soil;
@@ -126,6 +137,7 @@ function rgLayout(W, H, big) {
   return L;
 }
 function rgFontStr(px) { return "800 " + px + "px " + RAIN_FONT; }
+function rtFont(px) { return Math.round(px) + "px " + RT_FONT; }
 function rgWordY(w) { var L = RG.L; return L.top + Math.min(1, w.p) * L.fallPx; }
 function rgRamp(sec) { return Math.max(RAIN_RAMP_MIN, 1 - Math.max(0, sec - RAIN_RAMP_FROM) / RAIN_RAMP_SPAN * (1 - RAIN_RAMP_MIN)); }
 function rgElapsed(now) { return RG.t0 ? (now - RG.t0) / 1000 : 0; }
@@ -140,7 +152,7 @@ function rgFit(cv, w, h) {
   var oldFont = RG.L ? RG.L.font : 0;
   RG.L = rgLayout(w, h, RG.big);
   var ctx = cv.getContext("2d");
-  if (oldFont !== RG.L.font) { ctx.font = rgFontStr(RG.L.font); RG.words.forEach(function (x) { x.bw = Math.ceil(ctx.measureText(x.text).width) + RG.L.padX * 2; }); }
+  if (oldFont !== RG.L.font) { ctx.font = rtFont(RG.L.tf); RG.words.forEach(function (x) { x.bw = Math.ceil(ctx.measureText(x.text).width) + RG.L.padX * 2; }); }
   RG.words.forEach(function (x) { x.x = Math.max(8, Math.min(w - 8 - x.bw, x.x)); });
   if (!RG.mas.set) { RG.mas.x = RG.mas.tx = w / 2; RG.mas.set = true; }
   RG.mas.x = Math.min(RG.mas.x, w - RG.L.masW / 2); RG.mas.tx = Math.min(RG.mas.tx, w - RG.L.masW / 2);
@@ -315,7 +327,7 @@ function rgFx(dt) {
 function rgSpawn(sec) {
   var L = RG.L, cv = rgEl("rgCv"); if (!L || !cv) return false;
   var ctx = cv.getContext("2d"), text = rgPickWord();
-  ctx.font = rgFontStr(L.font);
+  ctx.font = rtFont(L.tf);
   var bw = Math.ceil(ctx.measureText(text).width) + L.padX * 2;
   var maxX = Math.max(8, L.W - 8 - bw), lw = (L.W - 16) / L.lanes, upper = L.top + L.boxH * 3;
   var near = RG.seed ? RG.ghost : RG.words;
@@ -422,7 +434,7 @@ function rgSubmit() {
   RG.shot = { x0: RG.mas.tx, y0: L.ground - L.masH, x1: cx, y1: cy, t: 0.12 };
   rgBurst(cx, cy, 16, [RAIN_PAL.o100, RAIN_PAL.ink, RAIN_PAL.w, RAIN_PAL.o50]);
   RG.pops.push({ x: cx, y: cy, text: "+" + pts, t: 0.8, c: RAIN_PAL.w, s: 14 });
-  if (RG.combo >= 3) RG.pops.push({ x: cx, y: cy - 20, text: "COMBO x" + RG.combo, t: 0.9, c: RAIN_PAL.o60, s: 16 });
+  if (RG.combo >= 3) RG.pops.push({ x: cx, y: cy - (RG.L && RG.L.big ? 36 : 20), text: "COMBO x" + RG.combo, t: 0.9, c: RAIN_PAL.o60, s: 16 });   /* v4.23 노트북 배치는 팝 글자가 32 라 한 줄 더 띄운다(표시만) */
   if (!rgReduced()) RG.shake = Math.max(RG.shake, 0.06);
   rgFlash("hit");
   rgSfx("hit", RG.combo);
@@ -450,6 +462,79 @@ function rgBox2(ctx, x, y, w, h, fill) {
   x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
   ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(x, y, w, h);
   ctx.fillStyle = fill || RAIN_PAL.w; ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
+}
+/* ── v4.23 레트로 틀 (그리기) ── */
+/* 계단 모서리 사각 · 네 모서리를 한 칸(s)씩 두 단 깎는다 */
+function rtStep(ctx, x, y, w, h, s, fill) {
+  x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
+  ctx.fillStyle = fill;
+  ctx.fillRect(x + 2 * s, y, w - 4 * s, h); ctx.fillRect(x + s, y + s, w - 2 * s, h - 2 * s); ctx.fillRect(x, y + 2 * s, w, h - 4 * s);
+}
+/* 나무 이중 테두리 판 · 바깥 검정 한 칸 → 진한 나무 두 칸 → 밝은 나무 한 칸 → 속판 · s = 도트 한 칸 */
+function rtPanel(ctx, x, y, w, h, s, body) {
+  rtStep(ctx, x, y, w, h, s, RAIN_PAL.ink);
+  rtStep(ctx, x + s, y + s, w - 2 * s, h - 2 * s, s, RT_PAL.wood);
+  ctx.fillStyle = RT_PAL.tan; ctx.fillRect(Math.round(x + 3 * s), Math.round(y + 3 * s), Math.round(w - 6 * s), Math.round(h - 6 * s));
+  ctx.fillStyle = body || RT_PAL.night; ctx.fillRect(Math.round(x + 4 * s), Math.round(y + 4 * s), Math.round(w - 8 * s), Math.round(h - 8 * s));
+}
+/* 이름표 · 검정 계단 테두리 두 칸 + 도트 명암(위 밝게 · 아래 어둡게) · 떨어지는 단어 · 소나기 배너가 쓴다 */
+function rtTag(ctx, x, y, w, h, fill, lite, dark) {
+  x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
+  rtStep(ctx, x, y, w, h, 2, RAIN_PAL.ink);
+  ctx.fillStyle = fill; ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
+  ctx.fillStyle = lite; ctx.fillRect(x + 4, y + 2, w - 8, 2);
+  ctx.fillStyle = dark; ctx.fillRect(x + 4, y + h - 4, w - 8, 2);
+}
+/* 도트 글자 · 여덟 방향 검정 테두리(번짐 없음 · 16px 마다 한 칸) · 정렬·기준선은 부른 쪽이 정한다 */
+function rtText(ctx, text, x, y, px, fill, line) {
+  ctx.font = rtFont(px);
+  if (line) {
+    var o = Math.max(1, Math.round(px / 16));
+    ctx.fillStyle = line;
+    for (var dy = -o; dy <= o; dy += o) for (var dx = -o; dx <= o; dx += o) if (dx || dy) ctx.fillText(text, Math.round(x + dx), Math.round(y + dy));
+  }
+  ctx.fillStyle = fill; ctx.fillText(text, Math.round(x), Math.round(y));
+}
+/* 판 안 끝 화면 · 다섯 게임 + 소나기 공용 · 판(y0~y1)을 어둡게 덮고 가운데 나무 판에 제목(주황 · 검정 테두리) + 게임 고유 한 줄(크림)
+   o = { s 도트 한 칸, tp 제목 크기, sp 한 줄 크기, maxW 판 최대 폭, col 제목 색 } · 제목이 폭을 넘으면 8px 씩 줄인다(16 밑으로는 안 줄인다) */
+function rtEnd(ctx, W, y0, y1, title, sub, o) {
+  o = o || {};
+  var s = o.s || 2, tp = o.tp || 32, sp = o.sp || 16, pw = Math.min(W - 2 * s, o.maxW || 320);
+  ctx.save();
+  ctx.fillStyle = "rgba(27,23,18,0.55)"; ctx.fillRect(0, y0, W, y1 - y0);
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.font = rtFont(tp);
+  while (tp > 16 && ctx.measureText(title).width > pw - 14 * s) { tp -= 8; ctx.font = rtFont(tp); }
+  if (sub) { ctx.font = rtFont(sp); pw = Math.min(W - 2 * s, Math.max(pw, Math.ceil(ctx.measureText(sub).width) + 14 * s)); }
+  var ph = 14 * s + Math.round(tp * 1.15) + (sub ? Math.round(sp * 1.25) + 2 * s : 0);
+  var px = Math.round(W / 2 - pw / 2), py = Math.round((y0 + y1) / 2 - ph / 2);
+  rtPanel(ctx, px, py, pw, ph, s, RT_PAL.night);
+  var ty = py + 7 * s + Math.round(tp * 0.575);
+  rtText(ctx, title, W / 2, ty, tp, o.col || RAIN_PAL.o100, RAIN_PAL.ink);
+  if (sub) rtText(ctx, sub, W / 2, ty + Math.round(tp * 0.575) + 2 * s + Math.round(sp * 0.625), sp, RT_PAL.cream, null);
+  ctx.restore();
+}
+/* 카운트다운 · 3 · 2 · 1 · GO (도트 글자) */
+function rtCount(ctx, cd, W, y0, y1, px) {
+  if (cd <= 0) return;
+  ctx.save();
+  ctx.fillStyle = "rgba(255,255,255,0.55)"; ctx.fillRect(0, y0, W, y1 - y0);
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  rtText(ctx, cd > 1 ? String(Math.ceil(cd - 0.2)) : "GO", W / 2, (y0 + y1) / 2, px || 48, RAIN_PAL.o100, RAIN_PAL.ink);
+  ctx.restore();
+}
+/* 떨어지는 단어 한 개 · 게임과 시작 화면 미리보기가 같이 쓴다 · on = 지금 치고 있는 단어 · danger = 바닥선 가까이 · tv = 친 앞부분 */
+function rgWordDraw(ctx, L, x, y, bw, text, on, danger, tv) {
+  if (on) rtTag(ctx, x, y, bw, L.boxH, RAIN_PAL.o10, RAIN_PAL.w, RAIN_PAL.o30);
+  else if (danger) rtTag(ctx, x, y, bw, L.boxH, RAIN_PAL.o60, RAIN_PAL.o30, RAIN_PAL.deep);
+  else rtTag(ctx, x, y, bw, L.boxH, RT_PAL.tan2, RT_PAL.cream, RT_PAL.tan);
+  if (on) { ctx.strokeStyle = RAIN_PAL.o100; ctx.lineWidth = 2; ctx.strokeRect(Math.round(x) - 2, Math.round(y) - 2, Math.round(bw) + 4, Math.round(L.boxH) + 4); }
+  ctx.font = rtFont(L.tf); ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  var tx = Math.round(x + L.padX), ty = Math.round(y + L.boxH / 2);
+  if (on && tv) {
+    ctx.fillStyle = RAIN_PAL.deep; ctx.fillText(tv, tx, ty);
+    ctx.fillStyle = RT_PAL.bark; ctx.fillText(text.slice(tv.length), tx + ctx.measureText(tv).width, ty);
+  } else { ctx.fillStyle = RT_PAL.bark; ctx.fillText(text, tx, ty); }
 }
 function rgStroke(ctx, text, x, y, fill, line, lw) {
   ctx.lineWidth = lw || 3; ctx.strokeStyle = line || RAIN_PAL.ink; ctx.lineJoin = "round";
@@ -502,23 +587,10 @@ function rgDraw(ctx, now) {
   /* 위험선 (점선) */
   ctx.fillStyle = RAIN_PAL.deep;
   for (var lx = 0; lx < L.W; lx += 3 * L.D) ctx.fillRect(lx, L.floor, 2 * L.D, 2);
-  /* 단어 · 흰 말풍선 상자 · 글자 크기 고정 · 지금 치고 있는 글자와 맞는 단어를 짚어 준다 */
-  ctx.font = rgFontStr(L.font); ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  /* 단어 · v4.23 나무 이름표(rgWordDraw) · 글자 크기 고정 · 지금 치고 있는 글자와 맞는 단어를 짚어 준다 */
   var tIdx = rgTypedIdx(), tv = RG.typed || "";
   RG.words.forEach(function (w, wi) {
-    var y = rgWordY(w), danger = w.p > 0.78, on = wi === tIdx;
-    rgBox2(ctx, w.x, y, w.bw, L.boxH, on ? RAIN_PAL.o10 : danger ? RAIN_PAL.o25 : RAIN_PAL.w);
-    if (on) {
-      ctx.strokeStyle = RAIN_PAL.o100; ctx.lineWidth = 2;
-      ctx.strokeRect(Math.round(w.x) - 1.5, Math.round(y) - 1.5, Math.round(w.bw) + 3, Math.round(L.boxH) + 3);
-    }
-    var tx = Math.round(w.x + L.padX), ty = Math.round(y + L.boxH / 2 + 1);
-    if (on && tv) {
-      ctx.fillStyle = RAIN_PAL.deep; ctx.fillText(tv, tx, ty);
-      ctx.fillStyle = RAIN_PAL.ink; ctx.fillText(w.text.slice(tv.length), tx + ctx.measureText(tv).width, ty);
-    } else {
-      ctx.fillStyle = RAIN_PAL.ink; ctx.fillText(w.text, tx, ty);
-    }
+    rgWordDraw(ctx, L, w.x, rgWordY(w), w.bw, w.text, wi === tIdx, w.p > 0.78, tv);
   });
   if (RG.shot) {
     var k = 1 - RG.shot.t / 0.12, sx = RG.shot.x0 + (RG.shot.x1 - RG.shot.x0) * k, sy = RG.shot.y0 + (RG.shot.y1 - RG.shot.y0) * k, q = 2 * L.D;
@@ -532,28 +604,22 @@ function rgDraw(ctx, now) {
   if (RG.combo >= 5) rgBotDraw(ctx, RG.mas.x + L.masW / 2 + RG_BOT.bw * u / 2, L.ground + (rm ? 0 : Math.round(L.D / 3) - bob), RG_BOT.bw, RG_BOT.bh, u);
   RG.parts.forEach(function (p) { ctx.fillStyle = p.c; ctx.fillRect(Math.round(p.x), Math.round(p.y), p.s, p.s); });
   ctx.textAlign = "center";
-  RG.pops.forEach(function (p) {
-    ctx.font = rgFontStr(L.big ? Math.round(p.s * 1.6) : p.s);   /* 노트북 배치는 글자 판 자체가 커서 팝도 한 단계 크게 */
+  RG.pops.forEach(function (p) {   /* v4.23 도트 글자 · 16 밑으로 줄이지 않는다 · 노트북 배치는 한 단계 크게(32) */
+    var ps = L.big ? 32 : 16; ctx.font = rtFont(ps);
     var tw = ctx.measureText(p.text).width / 2 + 6;
-    rgStroke(ctx, p.text, Math.round(Math.max(tw, Math.min(L.W - tw, p.x))), Math.round(p.y), p.c, RAIN_PAL.ink, 4);
+    rtText(ctx, p.text, Math.max(tw, Math.min(L.W - tw, p.x)), p.y, ps, p.c, RAIN_PAL.ink);
   });
-  if (RG.banner) {
-    ctx.font = rgFontStr(18); var bw = ctx.measureText(RG.banner.text).width + 32, by = Math.round(L.floor * 0.42);
-    rgBox2(ctx, L.W / 2 - bw / 2, by, bw, 34, RAIN_PAL.w); ctx.fillStyle = RAIN_PAL.deep; ctx.fillText(RG.banner.text, L.W / 2, by + 18);
+  if (RG.banner) {   /* v4.23 어두운 이름표 배너 · 주황 도트 글자 */
+    var bs = L.big ? 32 : 16, bh = L.big ? 52 : 34;
+    ctx.font = rtFont(bs); var bw = ctx.measureText(RG.banner.text).width + 32, by = Math.round(L.floor * 0.42);
+    rtTag(ctx, L.W / 2 - bw / 2, by, bw, bh, RT_PAL.night, RT_PAL.bark, RAIN_PAL.ink);
+    rtText(ctx, RG.banner.text, L.W / 2, by + bh / 2, bs, RAIN_PAL.o100, null);
   }
-  if (RG.ending) {
-    var ew = Math.min(L.W - 32, 300), eh = 92, ey = Math.round(Math.max(8, L.floor / 2 - eh / 2));
-    ctx.fillStyle = "rgba(255,255,255,0.6)"; ctx.fillRect(0, 0, L.W, L.floor);
-    rgBox2(ctx, L.W / 2 - ew / 2, ey, ew, eh, RAIN_PAL.w);
-    ctx.font = rgFontStr(26); ctx.fillStyle = RG.ending.why === "cap" ? RAIN_PAL.o100 : RAIN_PAL.deep;
-    ctx.fillText(RG.ending.why === "cap" ? "여기까지" : "GAME OVER", L.W / 2, ey + 34);
-    ctx.font = rgFontStr(15); ctx.fillStyle = RAIN_PAL.ink;
-    ctx.fillText(RG.ending.why === "cap" ? "최대 시간에 닿았어요" : "단어 " + RG.lives0 + "개를 놓쳤어요", L.W / 2, ey + 66);
+  if (RG.ending) {   /* v4.23 공용 끝 화면(rtEnd) · 게임 고유 한 줄은 판 안에 그대로 */
+    rtEnd(ctx, L.W, 0, L.floor, RG.ending.why === "cap" ? "여기까지" : "GAME OVER", RG.ending.why === "cap" ? "최대 시간에 닿았어요" : "단어 " + RG.lives0 + "개를 놓쳤어요",
+      { s: L.D, tp: L.big ? 48 : 32, sp: L.big ? 32 : 16, maxW: L.big ? 640 : 320 });
   }
-  if (RG.cd > 0) {
-    ctx.fillStyle = "rgba(255,255,255,0.55)"; ctx.fillRect(0, 0, L.W, L.floor);
-    ctx.font = rgFontStr(L.big ? 96 : 64); rgStroke(ctx, RG.cd > 1 ? String(Math.ceil(RG.cd - 0.2)) : "GO", L.W / 2, Math.round(L.floor / 2), RAIN_PAL.o100, RAIN_PAL.ink, 8);
-  }
+  if (RG.cd > 0) rtCount(ctx, RG.cd, L.W, 0, L.floor, L.big ? 96 : 64);
   ctx.restore();
 }
 
