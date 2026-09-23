@@ -8619,6 +8619,17 @@ function ttLift(hex) {
 /* v3.87 (사용자 요청 260918) 블록마다 짧은 말 한 조각 · 장식일 뿐 설명·팝업은 없다.
    블록 한 칸에만 찍는다(모든 칸에 쓰면 판이 지저분하다) · 칸이 TT_TOK_MIN 보다 작으면 글자를 아예 안 쓴다(뭉개느니 빼는 쪽). */
 var TT_TOKEN = { I: "ME", O: "to", T: "WE", S: "AX", Z: "공감", J: "참여", L: "연결" };
+/* v4.21 (사용자 확정 260923) 흩어져 떨어지던 조각이 맞물려 한 번에 여러 줄이 사라지는 순간에만 한 줄.
+   한 줄 지우기는 너무 자주 일어나 걸지 않는다(플래시카드가 되면 재미가 죽는다 · 단어 소나기에서 겪은 실패).
+   블록 위 브랜드 글자(TT_TOKEN)는 그대로 두고, 자리도 겹치지 않는다. 점수·판정에는 관여하지 않는다. */
+var TT_LINE_MSG = [
+  "흩어진 기록이 한 번에 모여 답이 됐다",
+  "따로면 못 봤을 걸 한 번에 봤다",
+  "쌓여만 있던 것이 정리됐다",
+  "조각들이 맞아떨어지니 그림이 보였다",
+  "여기저기 있던 자료가 하나로 합쳐졌다"
+];
+var TT_LINE_MSG4 = "이만큼이 한 번에 풀리는 걸, 보통은 못 본다";   /* 4줄 = 가장 드문 한 판 · 이때만 따로 */
 var TT_TOK_MIN = 23;
 var TT_CLEAR_SEC = 0.2, TT_FLASH_SEC = 0.08;   /* v3.95 줄 지우기 연출 · 흰 번쩍 0.08초 → 세로로 접힘 0.12초 (구 0.28초 깜빡임) */
 var TT_LV_LINES = 3;   /* v3.87e (사용자 피드백 260918 「단계가 30% 정도 빨리 올라가면 좋겠다」) 레벨 상승에 필요한 줄 수 5 → 3 · 4줄로는 보통 한 판(2~4줄)에서 레벨이 한 번도 안 올랐다(실측) */
@@ -8729,11 +8740,22 @@ function ttParts() {
   var c = TT.clears, lines = c[0] + 2 * c[1] + 3 * c[2] + 4 * c[3];
   return { blk: TT.locked || 0, c1: c[0], c2: c[1], c3: c[2], c4: c[3], lines: lines, lv: Math.min(15, 1 + Math.floor(lines / TT_LV_LINES)), surv: Math.round((TT.surv || 0) * 100), pz: TT.pz || 0 };
 }
+/* v4.21 2줄 이상 한 번에 지웠을 때 한 줄 · 같은 문장이 연달아 나오지 않게 비복원으로 뽑는다 */
+function ttLineMsg(n) {
+  if (TT.ending) return;
+  if (n >= 4) { TT.msg = { text: TT_LINE_MSG4, t: 1.6 }; return; }
+  if (!TT.msgQ || !TT.msgQ.length) {
+    TT.msgQ = TT_LINE_MSG.slice();
+    for (var i = TT.msgQ.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = TT.msgQ[i]; TT.msgQ[i] = TT.msgQ[j]; TT.msgQ[j] = t; }
+  }
+  TT.msg = { text: TT.msgQ.pop(), t: 1.4 };
+}
 /* 블록을 놓을 때마다 점수 다시 계산 · 팝 = 블록 +10(60개까지) · 줄 「2줄 +120」 · 3,000 에 닿으면 만점 종료 */
 function ttScore(s0, n) {
   TT.score = olyScore("tetris", ttParts());
   var d = TT.score - s0, x = TT.L ? TT.L.bw / 2 : 100;
   if (n) TT.pops.push({ x: x, y: 40, text: n + "줄 +" + d, t: 0.9, c: RAIN_PAL.o100 });
+  if (n >= 2) ttLineMsg(n);   /* v4.21 점수(위 줄)를 다 계산한 뒤 표시만 얹는다 */
   else if (d > 0) TT.pops.push({ x: x, y: 58, text: "+" + d, t: 0.5, c: RAIN_PAL.ink });
   if (TT.score >= olyCap() && !TT.ending) ttEnd("full");
 }
@@ -8795,7 +8817,7 @@ function ttStart() {
   TT = { on: true, paused: false, ending: null, raf: 0, cd: 3.2, t0: 0, last: performance.now(), L: null, dpr: 1,
     grid: ttGridNew(), tok: ttGridNew(), bag: null, cur: null, nextK: null, lines: 0, score: 0, level: 1, pieces: 0, surv: 0,
     clears: [0, 0, 0, 0], gt: 0, lockT: 0, lockN: 0, flash: null, drop: null, rep: null, held: [], sw: null, locked: 0, pz: 0,
-    parts: [], pops: [], banner: null, shake: 0, hud: "" };
+    parts: [], pops: [], banner: null, msg: null, shake: 0, hud: "" };
   TT.nextQ = [ttNextKey(), ttNextKey()];   /* v3.87b 다음 블록 두 개를 보여 준다 */
   TT.nextK = TT.nextQ[0];
   gsOverlayOpen({ key: "tetris", title: "테트리스", top: ttTopHtml(), fill: true, cls: "tetris", cw: 200, ch: 360, canvasId: "ttCv", flat: true, tip: gsTutTake("tetris"),
@@ -8925,6 +8947,7 @@ function ttFrame() {
   if (TT.on && !TT.paused) TT.raf = requestAnimationFrame(ttFrame);
 }
 function ttUpdate(dt, now) {
+  if (TT.msg) { TT.msg.t -= dt; if (TT.msg.t <= 0) TT.msg = null; }   /* v4.21 줄 문구 · 연출뿐이라 멈춤·끝남과 무관하게 스스로 사라진다 */
   if (TT.ending) {
     TT.ending.t -= dt; gsFx(TT, dt);
     if (TT.ending.t <= 0) ttEndFinal(TT.ending.why);
@@ -9107,8 +9130,22 @@ function ttDraw(ctx, now) {
   ctx.restore();
   gsFxDraw(ctx, TT, L.W);
   if (TT.banner) { ctx.save(); ctx.translate(L.ox, 0); gsBannerDraw(ctx, TT, L.bw, L.oy + 8); ctx.restore(); }
+  if (TT.msg) ttMsgDraw(ctx, L);
   gsCountDraw(ctx, TT.cd, L.W, L.oy, L.oy + L.bh);
   if (TT.ending) ttEndDraw(ctx, L);
+}
+/* v4.21 줄 문구 · 기존 줄 팝 바로 아래 · 상자 없이 흰 테두리 글자만 써서 떨어지는 블록을 가리지 않는다 · 1.4초 뒤 사라진다 */
+function ttMsgDraw(ctx, L) {
+  var m = TT.msg, up = m.t > 1.05 ? (m.t - 1.05) / 0.35 : 0;
+  var size = 12, maxW = L.bw - 6;
+  ctx.font = "800 " + size + "px " + RAIN_FONT;
+  var w = ctx.measureText(m.text).width;
+  if (w > maxW) { size = Math.max(8, size * maxW / w); ctx.font = "800 " + size + "px " + RAIN_FONT; }
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.save();
+  ctx.globalAlpha = Math.max(0, Math.min(1, m.t / 0.4));
+  rgStroke(ctx, m.text, L.ox + L.bw / 2, L.oy + 58 + (rgReduced() ? 0 : up * 5), RAIN_PAL.ink, RAIN_PAL.w, 4);
+  ctx.restore();
 }
 function ttEndDraw(ctx, L) {
   var cy = L.oy + L.bh / 2;
@@ -9537,6 +9574,9 @@ function gsResultHtml(key, r) {
    4개 이상 한 줄 = 그 자리에 특수 블록(가로 줄로 만들면 가로 한 줄, 세로면 세로 한 줄을 지운다 · 한 종류만).
    움직일 수가 없으면 자동으로 섞고 · 5초 입력이 없으면 가능한 수 두 칸이 부드럽게 맥박친다.
    v3.48 (사용자 피드백 260917 · 16비트 느낌은 필요 없다) · 이 게임만 앱의 모던 플랫 스타일:
+   v4.21 (사용자 확정 260923 · 위 v3.48 결정을 뒤집는다 · 이력이라 지우지 않고 남긴다) 게임판 프레임만 16비트로 되돌린다:
+   gsOverlayOpen 의 flat 을 떼어 점프·소나기와 같은 공용 프레임(검정 2px 테 · 12px 라운드 · 도트 확대)을 되찾는다.
+   타일 외곽선·팔레트 재작업(2단계)은 리허설 뒤 결정이라 손대지 않는다 · 시작·결과·일시정지 화면은 v4.08 AX-TDS 그대로.
    흰 바탕 · 둥근 사각 타일(그림자 없음, 얇은 선) · SICO 문법 벡터 아이콘 5종(모양 + 채움색 둘 다로 구분) ·
    특수 블록 = 검정 타일 + 흰 화살표 선 + O100 테두리 · 앱 기본 글꼴 · 캔버스는 기기 해상도로 그린다(도트 확대 없음).
    채움: 말풍선 흰색 · 톱니 검정 · 차트 O100 · 전구 O10 · 반짝임 O50 (아이콘은 흰색 또는 검정). 점 파티클 = KV 도트 격자 모티프. */
@@ -9548,6 +9588,18 @@ var PG_GOAL = 80, PG_MAX_SEC = 120;   /* v3.74 실측 · 한 수에 평균 4~5�
 /* v3.79 완주 연출을 더 음미할 수 있게 (사용자 피드백 260918) · 무너짐 2초 → 슬로건 한 줄씩 0.4초 간격 → 3.5초 머무름 */
 var PG_FIN = { fall: 2.0, hold: 3.5, step: 0.4 };
 var PG_MILE = [[0.25, ""], [0.5, "절반"], [0.75, "조금 남았어요"]];   /* 진행 이정표 · 25%는 맥박만 */
+/* v4.21 (사용자 확정 260923) 한 번 밀었는데 알아서 계속 터지는 순간 = 이미 게임 안에 있는 「자동화」 장면이다.
+   그 순간에만 한 줄이 스친다. 가르치는 말이 아니라 알아채는 말이고, 새 화면·멈춤은 없다(기존 안내 줄 자리).
+   v3.73 이 타일마다 낱말·설명을 붙였다가 하루 만에 걷힌 이유(「교육 기능이 어설프다」)를 반복하지 않는다: 타일은 그대로 둔다. */
+var PG_CHAIN_MSG = [
+  "이 보고서, 지난달에도 같은 틀로 만들었다",
+  "이 회신, 저번 주에도 비슷하게 썼다",
+  "이 정리, 할 때마다 순서가 같다",
+  "이 아이디어, 회의 때마다 다시 나온다",
+  "이 화면, 몇 번째 같은 방식으로 채우고 있다"
+];
+var PG_MSG_AT = [1, 4, 8];   /* 한 판에 최대 3번 · 1·4·8번째 연쇄에서만 (v3.73 의 「매판 여러 번」이 잔소리가 됐다) */
+var PG_FIN_MSG = "오늘 몇 번은, AI에게 맡겨도 됐을 반복이었다";   /* 완주 연출 첫 줄 · 결과 카드에는 넣지 않는다(design.md 문구 규칙) */
 var PG_HINT_FIRST = 5, PG_HINT_AGAIN = 5;   /* v3.74 힌트 · 첫 5초 · 이후 5초마다 (v3.66 의 3초는 너무 빨랐다) */
 var PG_C = { o100: "#FF7E31", o50: "#FFB284", o10: "#FFEBE0", ink: "#111111", w: "#FFFFFF", line: "#E6E0DB", track: "#EFEDEB", muted: "#8A817B", tx: "#1A1A1A" };
 /* v3.74 (사용자 피드백 260918 「교육 기능이 어설프다」) v3.73 타일 낱말·설명 줄은 걷어냈다 · 타일은 그냥 그림이다.
@@ -9677,8 +9729,8 @@ function pgStart() {
   pgStop();
   SFX.site = false;
   PG = { on: true, paused: false, ending: null, raf: 0, cd: 3.2, t0: 0, last: performance.now(), b: pgBoardInit(), phase: "idle", sel: null, pair: null, drag: null, k: 1,
-    idle: 0, hint: null, hintN: 0, hintT: 0, bar: 0, barPulse: 0, mile: 0, chain: 0, clrT: 0, lines: [], parts: [], pops: [], banner: null, combo: null, score: 0, tiles: 0, maxChain: 0, specials: 0, moves: 0, shuffles: 0, bad: 0, pz: 0 };
-  gsOverlayOpen({ key: "pang", title: "AX 팡", cw: PG_W, ch: PG_H, canvasId: "pgCv", noGesture: true, flat: true, tip: gsTutTake("pang"),
+    idle: 0, hint: null, hintN: 0, hintT: 0, bar: 0, barPulse: 0, mile: 0, chain: 0, clrT: 0, lines: [], parts: [], pops: [], banner: null, combo: null, msgQ: null, chainEv: 0, score: 0, tiles: 0, maxChain: 0, specials: 0, moves: 0, shuffles: 0, bad: 0, pz: 0 };
+  gsOverlayOpen({ key: "pang", title: "AX 팡", cw: PG_W, ch: PG_H, canvasId: "pgCv", noGesture: true, tip: gsTutTake("pang"),
     bottom: '<div class="gs-foot">이웃한 두 칸을 밀어서 바꾸거나, 한 칸 누르고 옆 칸을 누르세요</div>',
     down: pgDown, move: pgMove, up: pgUp, resized: pgFit,
     running: function () { return PG.on && !PG.paused && !PG.ending; }, isPaused: function () { return !!PG.paused; },
@@ -9769,6 +9821,22 @@ function pgDots(x, y, n) {
     PG.parts.push({ x: x, y: y, a: a, d: 9 + Math.random() * 7, t: 0, life: 0.34 + Math.random() * 0.08, r: 0.9 + Math.random() * 0.7, c: cols[i % cols.length] });
   }
 }
+/* v4.21 글자가 칸을 넘지 않게 크기를 줄여 맞춘다 (긴 한 줄이 판 밖으로 나가면 읽히지 않는다) */
+function pgFitSize(ctx, text, base, maxW, weight) {
+  ctx.font = weight + " " + base + "px " + PG_FONT;
+  var w = ctx.measureText(text).width;
+  return w <= maxW ? base : Math.max(6, base * maxW / w);
+}
+/* v4.21 연쇄 문구 · 같은 문장이 한 판에 두 번 나오지 않게 비복원으로 뽑는다 */
+function pgChainMsg() {
+  PG.chainEv = (PG.chainEv || 0) + 1;
+  if (PG.ending || PG_MSG_AT.indexOf(PG.chainEv) < 0) return;
+  if (!PG.msgQ || !PG.msgQ.length) {
+    PG.msgQ = PG_CHAIN_MSG.slice();
+    for (var i = PG.msgQ.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = PG.msgQ[i]; PG.msgQ[i] = PG.msgQ[j]; PG.msgQ[j] = t; }
+  }
+  PG.banner = { text: PG.msgQ.pop(), t: 1.4, msg: true };
+}
 /* 터뜨리기 · 4개 이상 줄은 그 자리(바꾼 칸이 있으면 그 칸)에 특수 블록 · 특수 블록이 터지면 그 줄 전체 */
 function pgClear(runs) {
   PG.chain++;
@@ -9788,6 +9856,7 @@ function pgClear(runs) {
   PG.score += gain; PG.tiles += cnt; PG.maxChain = Math.max(PG.maxChain, PG.chain);
   if (n) PG.pops.push({ x: sx / n, y: sy / n, text: "+" + cnt + "칸", t: 0, life: 0.7 });   /* v4.02 점수는 완주 시간 · 팝은 진행(칸)만 */
   if (PG.chain >= 2) PG.combo = { n: mult, t: 0 };
+  if (PG.chain === 2) pgChainMsg();   /* v4.21 한 수에 한 번만(연쇄가 3·4단으로 이어져도 다시 뜨지 않는다) · 점수 계산(위 줄)이 끝난 뒤라 올림픽 점수와 무관 */
   /* v3.74 목표 타일을 다 터뜨리면 완주 · 시간이 기록이 된다 */
   if (!PG.ending && PG.tiles >= PG_GOAL) pgEnd("goal");
   sfx(PG.chain >= 2 ? "cascade" : "ppok", PG.chain);
@@ -9817,7 +9886,7 @@ function pgFx(dt) {
   while (PG.mile < PG_MILE.length && goalFrac >= PG_MILE[PG.mile][0]) {
     var mtxt = PG_MILE[PG.mile][1];
     PG.barPulse = 0.5;
-    if (mtxt) PG.banner = { text: mtxt, t: 1.0 };
+    if (mtxt && !(PG.banner && PG.banner.msg)) PG.banner = { text: mtxt, t: 1.0 };   /* v4.21 연쇄 문구가 떠 있으면 덮지 않는다 */
     PG.mile++;
   }
   if (PG.banner) { PG.banner.t -= dt; if (PG.banner.t <= 0) PG.banner = null; }
@@ -9893,16 +9962,19 @@ function pgFinDraw(ctx, now) {
   var gone = (PG_FIN.fall + PG_FIN.hold) - e.t, rm = rgReduced();
   var line = function (i) { return rm ? 1 : Math.max(0, Math.min(1, (gone - (PG_FIN.fall * 0.5 + i * PG_FIN.step)) / 0.45)); };
   ctx.save();
+  /* v4.21 슬로건 앞 한 줄 · 완주 연출 안에만 둔다(결과 카드에는 넣지 않는다) */
   ctx.globalAlpha = line(0);
-  pgText(ctx, "ME to WE", PG_W / 2, PG_OY + 58, 26, 900, PG_C.o100, "center");
+  pgText(ctx, PG_FIN_MSG, PG_W / 2, PG_OY + 26, pgFitSize(ctx, PG_FIN_MSG, 9, PG_W - 16, "700"), 700, PG_C.muted, "center");
   ctx.globalAlpha = line(1);
-  pgText(ctx, "나의 업무 혁신,", PG_W / 2, PG_OY + 84, 11, 800, PG_C.tx, "center");
+  pgText(ctx, "ME to WE", PG_W / 2, PG_OY + 58, 26, 900, PG_C.o100, "center");
   ctx.globalAlpha = line(2);
-  pgText(ctx, "우리 회사의 AX가 되다", PG_W / 2, PG_OY + 100, 11, 800, PG_C.tx, "center");
+  pgText(ctx, "나의 업무 혁신,", PG_W / 2, PG_OY + 84, 11, 800, PG_C.tx, "center");
   ctx.globalAlpha = line(3);
+  pgText(ctx, "우리 회사의 AX가 되다", PG_W / 2, PG_OY + 100, 11, 800, PG_C.tx, "center");
+  ctx.globalAlpha = line(4);
   pgText(ctx, (PG.fin / 100).toFixed(1) + "초", PG_W / 2, PG_OY + 132, 26, 900, PG_C.o100, "center");
   pgText(ctx, "완주 = " + olyFmt(PG.sc) + "점", PG_W / 2, PG_OY + 150, 9, 700, PG_C.muted, "center");
-  if (PG.finBest) { ctx.globalAlpha = line(4); pgText(ctx, "내 최고 기록", PG_W / 2, PG_OY + 166, 9, 800, PG_C.o100, "center"); }
+  if (PG.finBest) { ctx.globalAlpha = line(5); pgText(ctx, "내 최고 기록", PG_W / 2, PG_OY + 166, 9, 800, PG_C.o100, "center"); }
   ctx.restore();
 }
 /* 기다리지 않아도 되게 · 아래 버튼이나 화면 탭으로 결과로 넘어간다 */
@@ -9977,10 +10049,11 @@ function pgDraw(ctx, now) {
   pgText(ctx, "같은 그림 3개를 한 줄로", PG_W / 2, by + 11, 8, 600, PG_C.muted, "center");
   if (PG.banner) {
     /* v3.73 안내 줄은 판 아래 정보 줄 자리에 · 타일을 가리거나 판을 밀지 않는다 */
-    ctx.font = "700 9px " + PG_FONT;
-    var bw = Math.min(PG_W - 8, ctx.measureText(PG.banner.text).width + 18), by2 = PG_OY + PG_N * PG_TS + 2;
+    /* v4.21 연쇄 문구는 문장이라 길다 · 칸을 넘지 않게 글자 크기를 줄여 맞춘다 */
+    var bfs = pgFitSize(ctx, PG.banner.text, 9, PG_W - 24, "700");
+    var bw = Math.min(PG_W - 6, ctx.measureText(PG.banner.text).width + 16), by2 = PG_OY + PG_N * PG_TS + 2;
     pgRR(ctx, PG_W / 2 - bw / 2, by2, bw, 17, 8); ctx.fillStyle = PG_C.ink; ctx.fill();
-    pgText(ctx, PG.banner.text, PG_W / 2, by2 + 9, 9, 700, PG_C.w, "center");
+    pgText(ctx, PG.banner.text, PG_W / 2, by2 + 9, bfs, 700, PG_C.w, "center");
   }
   if (PG.ending || PG.cd > 0) {
     if (PG.ending && PG.ending.done) {
