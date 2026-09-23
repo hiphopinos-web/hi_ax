@@ -13,6 +13,9 @@
      화면 테두리는 사이니지 세계(design.md §0~§5 · 블랙 스테이지 + 어두운 도트 격자 + Vibrant Orange) · 게임판 안쪽은 엔진이 그리는 오렌지 사다리 도트 세계.
      이 파일은 public 저장소에 올라간다. 관리코드·백엔드 비밀값을 적지 않는다. -->
 <style>
+/* v4.23 (260923) 공용 엔진(rain-engine.js)이 판 안 글자를 Neo둥근모(도트 글꼴 · OFL 1.1 · ../assets/OFL.txt)로 그린다 · 이 화면에도 같은 글꼴 파일을 건다.
+   게임판 안(캔버스)에만 쓰인다 · 이 화면의 틀(HUD · 등록 · 결과)은 사이니지 세계 그대로 · 읽히기 전에는 Pretendard 로 그리고 다음 프레임부터 바뀐다. */
+@font-face{ font-family:"NeoDunggeunmo"; src:url("../assets/neodgm.woff2") format("woff2"); font-display:swap; }
 :root{
   --bk:#000000; --grid:#262626; --o100:#FF7E31; --hio:#FF963E; --o50:#FFB284; --o25:#FFD8C1; --lp:#E6CCFF;
   --tx:#FFFFFF; --tx2:rgba(255,255,255,.72); --tx3:rgba(255,255,255,.48); --line:rgba(255,255,255,.16); --face:rgba(255,255,255,.06);
@@ -110,6 +113,7 @@ main{max-width:1180px;margin:0 auto;padding:12px 28px 48px}
 /* 백엔드 URL 은 비밀이 아니다(앱 소스에도 있다) */
 var BE = "https://script.google.com/macros/s/AKfycbwjCaSSUnQ7W1lrM8T426Cn_LgKs_UhI0Qi5XRVk-_eF-oD55-Wwjsot0DkPJCX9JqMBA/exec";
 function el(id){ return document.getElementById(id); }
+try{ if(document.fonts&&document.fonts.load) document.fonts.load('16px "NeoDunggeunmo"', "가A0"); }catch(e){}   /* v4.23 판 안 도트 글꼴을 판이 열리기 전에 미리 읽는다 */
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
 function ls(k,v){ try{ if(v===undefined) return localStorage.getItem(k)||""; if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){ return ""; } }
 var HEART='<svg viewBox="0 0 7 6" width="26" height="22" shape-rendering="crispEdges" aria-hidden="true"><path d="M0 0h3v2H0zM4 0h3v2H4zM0 2h7v2H0zM1 4h5v1H1zM2 5h3v1H2z"/></svg>';
