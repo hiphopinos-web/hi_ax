@@ -1135,7 +1135,16 @@
   .axs-bot .eye { transform-box: fill-box; transform-origin: center; animation: axsBlink 4.6s linear infinite; }
   @keyframes axsFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
   @keyframes axsBlink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.12); } }
-  @media (prefers-reduced-motion: reduce) { .axs-bot svg, .axs-bot .eye { animation: none; } }
+  /* v4.18 대기 변형 · 머리 방울(안테나 · 원본 cx100 cy31.3 r12.67) 위로 동심원 호 3개가 차례로 퍼진다.
+     원본 벡터의 path 는 한 줄도 고치지 않고 호만 더한 합성이다(design.md A-4) · 대기 상태에서만 켠다. */
+  .axs-bot .ant path { fill: none; stroke: var(--ax-color-brand); stroke-width: 4; stroke-linecap: round; opacity: 0; animation: axsWave 1.6s ease-out infinite; }
+  .axs-bot .ant path:nth-child(2) { animation-delay: 0.18s; }
+  .axs-bot .ant path:nth-child(3) { animation-delay: 0.36s; }
+  @keyframes axsWave { 0% { opacity: 0; } 14% { opacity: 0.95; } 60% { opacity: 0; } 100% { opacity: 0; } }
+  /* 동작 줄이기 · 떠 있기 · 깜빡임 · 전파를 모두 멈춘다(호는 옅게 남는다) */
+  @media (prefers-reduced-motion: reduce) { .axs-bot svg, .axs-bot .eye, .axs-bot .ant path { animation: none; } .axs-bot .ant path { opacity: 0.3; } }
+  /* 화면이 통째로 비어서 기다리는 자리 · 로그인·입장 처리 중 (버튼 안 잠김 상태에는 쓰지 않는다) */
+  #axsWait { position: fixed; inset: 0; z-index: 130; display: flex; align-items: center; justify-content: center; padding: var(--ax-page-inset); background: var(--ax-color-canvas); }
   /* 재방문·비밀번호 찾기 화면 · 입력 56 / 주 버튼 56 모양만 A01 에 맞춘다 */
   #quick input, #pwlost input { min-height: var(--ax-button-height); border: 1px solid var(--ax-color-divider); border-radius: var(--ax-radius-12); background: var(--ax-color-inset); color: var(--ax-color-ink); }
   #quick input:focus, #pwlost input:focus { border-color: var(--ax-color-ink); }
@@ -1244,7 +1253,10 @@
   .axs-empty .axs-bot { align-items: flex-start; padding: 0; }
   /* 취소 시트 · 바닥 가림막은 ink 를 섞어 만든다(새 색 없음) */
   #axsSheet { position: fixed; inset: 0; z-index: 70; display: flex; align-items: flex-end; justify-content: center; background: color-mix(in srgb, var(--ax-color-ink) 40%, transparent); }
-  #axsSheet .ax-sheet { width: 100%; max-width: var(--ax-app-max); padding-bottom: max(var(--ax-space-32), env(safe-area-inset-bottom)); color: var(--ax-color-ink); }
+  #axsSheet .ax-sheet { width: 100%; max-width: var(--ax-app-max); max-height: 88vh; overflow-y: auto; padding-bottom: max(var(--ax-space-32), env(safe-area-inset-bottom)); color: var(--ax-color-ink); }
+  /* 아래에서 올라오는 시트임을 알리는 손잡이 · 뒷배경을 눌러 닫는다 */
+  #axsSheet .axs-kv { grid-template-columns: 72px minmax(0, 1fr); row-gap: var(--ax-space-12); }
+  .axs-grab { flex: none; align-self: center; width: 40px; height: 4px; margin: calc(var(--ax-space-8) * -1) 0 calc(var(--ax-space-8) * -1); border-radius: 999px; background: var(--ax-color-divider); }
   #axsSheet .ax-type-t2 { color: var(--ax-color-ink); }
   /* ═══ AX-TDS v1 3단계 · 체험 E01/E02 · 스캔 Q02 · 결과 Q03 · 계단 (260922 · 토큰만 · hex 없음) ═══ */
   #view[data-v="exp_g"], #view[data-v="scan_res"], #view[data-v="stair"] { padding-bottom: calc(176px + env(safe-area-inset-bottom)); }
@@ -1578,6 +1590,14 @@
   .pq.act { background: var(--ax-color-brand); }
   .pq.act .k, .pq.act .big, .pq.act .s { color: var(--ax-color-onBrand); }
   .pq.call { box-shadow: inset 0 0 0 2px var(--ax-color-brand); }
+  /* v4.18 위계(사용자 결정 260923) · 줄어드는 앞 팀 수와 예상 시각이 주인공, 고정 번호는 아래 한 줄로 받친다 */
+  .pq .s b { color: var(--ax-color-ink); }
+  .pq .no2 { display: flex; align-items: baseline; justify-content: center; gap: var(--ax-space-8); margin-top: var(--ax-space-12); padding-top: var(--ax-space-12); border-top: 1px solid var(--ax-color-divider); }
+  .pq .no2 span { font: var(--ax-type-t7); color: var(--ax-color-muted); }
+  .pq .no2 b { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
+  .pq.act .no2 { border-top-color: rgba(255, 255, 255, 0.35); }
+  .pq.act .no2 span { color: rgba(255, 255, 255, 0.8); }
+  .pq.act .no2 b { color: var(--ax-color-onBrand); }
   /* 비밀번호 찾기 · 전체 화면 */
   #pwlost { align-items: stretch; justify-content: center; padding: 0; background: var(--ax-color-canvas); }
   #pwlost .axs-pw { display: flex; flex-direction: column; width: 100%; max-width: var(--ax-app-max); min-height: 100%; }
@@ -2888,6 +2908,7 @@ function ideaCchat(yes) {
 /* 나중에 마음이 바뀐 사람 · 커피챗 상세(P02)의 주 버튼 · 아이디어가 1건 이상일 때만 */
 function cchatApply() {
   if (S.get("cchat", null) || !ideaMineN()) return;
+  sheetClose(true);   /* v4.18 확인 시트에서 온다 · 요청은 낙관 저장이라 기다릴 것이 없다 */
   scheduleCoffeechat();
   if (S.get("cchat", null)) notice({ title: "커피챗 신청 완료", body: "매칭되면 자리와 시간을 앱에서 알려 드려요" });
   App.render();
@@ -3736,6 +3757,8 @@ try { history.replaceState({ axf: 0 }, ""); navRepush(); } catch (e) {}
 window.addEventListener("popstate", function () {
   var app = el("app");
   if (!app || app.hidden) { navRepush(); return; }                       /* 입장 전 화면은 그대로 유지 */
+  /* v4.18 바텀 시트가 열려 있으면 뒤로 = 시트 닫기 (통신 중에는 닫지 않고 그대로 둔다) */
+  if (el("axsSheet")) { if (!SHEET.busy) sheetClose(); navRepush(); return; }
   if (el("modal")) { if (typeof qrScanClose === "function" && el("qrVideo")) qrScanClose(); else modalClose(); navRepush(); return; }
   var fss = el("fsSheet"); if (fss && !fss.hidden) { fsSheet(false); navRepush(); return; }
   if (App.current === "wall_tv") { tvClose(); navRepush(); return; }
@@ -4156,7 +4179,7 @@ function progDetail(s) {
     if (!c) {
       /* v4.07 자동 요청 폐기 · 아이디어가 있으면 바로 신청, 없으면 아이디어부터 */
       D.secB = CCHAT_TXT.replace(" · ", "<br>") + "<br>자리와 시간은 매칭 후 앱에서 알려 드려요.";
-      if (ideaMineN()) { D.help = "제출한 아이디어로 신청해요"; D.btn = progBtn("커피챗 신청하기", "cchatApply()", "", "cchatApplyBtn"); }
+      if (ideaMineN()) { D.help = "제출한 아이디어로 신청해요"; D.btn = progBtn("커피챗 신청하기", "cchatApplyOpen()", "", "cchatApplyBtn"); }
       else { D.help = "아이디어를 한 줄 남기면 신청할 수 있어요"; D.btn = progBtn("아이디어 남기기", "App.go(\'ideas\')"); }
     } else {
       D.secT = "신청한 커피챗이에요";
@@ -4174,7 +4197,7 @@ function progApply(id) {
   if (!s) return;
   if (id === "dap") { if (!DAPSEL || resvTaken(DAPSEL)) { DAPSEL = null; App.render(); return; } PROG.cf = { id: "dap", slot: DAPSEL, busy: false, err: null }; }
   else { if (s.kind !== "seat" || sessMine(id)) return; PROG.cf = { id: id, busy: false, err: null }; }
-  App.go("sess_cf");
+  sheetApplyOpen();   /* v4.18 전체 화면 P03 → 바텀 시트 (Views.sess_cf 는 넘침 대비 예비 화면으로 남겨 둔다) */
 }
 var PROG_ERR = {
   net: { t: "연결이 불안정해 신청하지 못했어요", b: "신청은 아직 되지 않았어요. 잠시 뒤 다시 시도해 주세요." },
@@ -4203,12 +4226,13 @@ function progConfirm() {
   var s = progById(c.id), u = S.get("user", {}) || {};
   if (!s) return;
   c.busy = true; c.err = null;
-  App.render();
+  sheetBusy(true);
   var fin = function (err) {
     c.busy = false;
-    if (err) { c.err = err; if (App.current === "sess_cf") App.render(); return; }
+    /* 실패는 시트 안에 사유와 다음 행동 · 성공해야만 결과(P04)로 넘어간다 */
+    if (err) { c.err = err; sheetFail({ t: err.t, b: err.b, act: err.act, lbl: err.lbl }); return; }
     PROG.ok = { id: c.id, slot: c.slot || "" }; PROG.cf = null;
-    App.go("sess_ok");
+    App.go("sess_ok");   /* App.go 가 시트를 닫는다 */
     delete App.from.sess_ok;   /* 결과에서 뒤로 = 프로그램 목록 (확인 화면으로 돌아가지 않는다) */
   };
   var live = BE.on && u.empId;
@@ -4241,17 +4265,23 @@ function progConfirm() {
 function sessBook(id) { progApply(id); }
 function sessCancel(id) { progCancelOpen(id); }
 
-/* ── 신청 취소 확인 시트 (M03-cancel) · 포커스 고정 · Esc 닫기 · 닫으면 누른 버튼으로 복귀 · 실패하면 신청 유지 ── */
-var SHEET = { id: null, busy: false, err: "", back: null };
-function progCancelOpen(id) {
-  var s = progById(id);
-  if (!s) return;
-  if (id !== "dap" && id !== "cchat") { var m = sessMine(id); if (!m) return; if (m.test) { toast("테스트 항목이에요 · 서버에 쓰지 않습니다"); return; } if (m.pre) return; }
-  SHEET.id = id; SHEET.busy = false; SHEET.err = "";
-  SHEET.back = (document.activeElement && document.activeElement.id) || "cxBtn";
+/* ── 바텀 시트 (M03) · 짧은 확인 하나를 아래에서 올린다 ──
+   뒷배경 탭 · Esc · 안드로이드 하드웨어 뒤로로 닫힌다 · 포커스 고정 · 닫으면 누른 버튼으로 복귀 · 통신 중에는 닫히지 않는다.
+   v4.18 (사용자 결정 260923) 취소 확인에만 쓰던 것을 신청 확인·번호표 받기까지 넓혔다.
+   자유 입력이 있거나 긴 화면(아이디어 제출 · 설문 · 게임)은 전체 화면 그대로 둔다. 뒷배경 탭으로 쓰던 글이 사라지지 않게(design.md A 5-7).
+   spec = { id, title, lead(이미 이스케이프한 html), kv[[이름, 값]], keep(있으면 유지 버튼), go, goLbl, goBusy, danger, arg, back }
+   err  = { t, b, act, lbl } · act 가 있으면 확정 버튼이 그 행동으로 바뀐다(시트를 닫고 이동). */
+var SHEET = { id: null, busy: false, err: null, back: null, spec: null };
+function sheetOpen(spec) {
+  SHEET.id = spec.id || "x"; SHEET.busy = false; SHEET.err = null; SHEET.spec = spec;
+  SHEET.back = (document.activeElement && document.activeElement.id) || spec.back || "";
   sheetPaint(true);
 }
+function sheetBusy(on) { SHEET.busy = !!on; if (on) SHEET.err = null; if (el("axsSheet")) sheetPaint(); }
+function sheetFail(err) { SHEET.busy = false; SHEET.err = typeof err === "string" ? { t: err } : err; if (el("axsSheet")) sheetPaint(); }
 function sheetPaint(first) {
+  var sp = SHEET.spec;
+  if (!sp) return;
   var w = el("axsSheet");
   if (!w) {
     w = document.createElement("div"); w.id = "axsSheet";
@@ -4259,28 +4289,25 @@ function sheetPaint(first) {
     w.addEventListener("keydown", sheetKey);
     el("frame").appendChild(w);
   }
-  if (SHEET.id === "photo") {   /* v4.09 포토부스 번호표 */
-    var pq = photoQ() || {};
-    w.innerHTML = '<div class="ax-sheet" role="dialog" aria-modal="true" aria-labelledby="axsSheetT">' +
-      '<h2 class="ax-type-t2" id="axsSheetT">번호표를 취소할까요?</h2>' +
-      '<p class="ax-body">1F AI 포토부스 ' + esc(pq.no || "") + "번" + (pq.eta ? "<br>예상 입장 " + esc(pq.eta) : "") + "</p>" +
-      (SHEET.err ? '<div class="axs-err" role="alert"><b>' + esc(SHEET.err) + "</b><span>번호표는 그대로 유지돼요.</span></div>" : "") +
-      '<div class="ax-stack-tight axs-gap12"><button type="button" class="ax-button" onclick="sheetClose()"' + (SHEET.busy ? " disabled" : "") + ">번호표 유지하기</button>" +
-      '<button type="button" class="ax-button axs-btn-danger" onclick="photoCancel()"' + (SHEET.busy ? ' disabled aria-busy="true"' : "") + ">" + (SHEET.busy ? "취소하는 중" : SHEET.err ? "다시 시도하기" : "번호표 취소하기") + "</button></div></div>";
-    var pb = w.querySelectorAll("button:not([disabled])");
-    if (pb.length && (first || !w.contains(document.activeElement))) pb[0].focus();
-    return;
-  }
-  var s = progById(SHEET.id), d = progDetail(s);
-  var when = s.id === "dap" ? (myResv() || {}).slot || "" : s.id === "cchat" ? (S.get("cchat", {}) || {}).round || "" : progTm(s.tm);
+  var e = SHEET.err, dis = SHEET.busy;
+  var go = e && e.act
+    ? '<button type="button" class="ax-button" onclick="sheetClose(true); ' + e.act + '">' + esc(e.lbl || "이동") + "</button>"
+    : '<button type="button" class="ax-button' + (sp.danger ? " axs-btn-danger" : "") + '" id="axsSheetGo" onclick="' + sp.go + '"' +
+      (dis ? ' disabled aria-busy="true"' : "") + ">" + esc(dis ? sp.goBusy : e ? "다시 시도하기" : sp.goLbl) + "</button>";
+  var keep = sp.keep ? '<button type="button" class="ax-button" onclick="sheetClose()"' + (dis ? " disabled" : "") + ">" + esc(sp.keep) + "</button>" : "";
+  /* 유지 버튼이 없는 시트(신청 확인 등)는 닫기 X 를 머리 줄에 둔다 · 뒷배경 탭·뒤로도 같은 일을 한다 */
   w.innerHTML = '<div class="ax-sheet" role="dialog" aria-modal="true" aria-labelledby="axsSheetT">' +
-    '<h2 class="ax-type-t2" id="axsSheetT">신청을 취소할까요?</h2>' +
-    '<p class="ax-body">' + esc(d.cat + (d.org && d.cat.indexOf(d.org) < 0 ? " · " + d.org : "")) + (when ? "<br>10월 26일 " + esc(when) : "") + "</p>" +
-    (SHEET.err ? '<div class="axs-err" role="alert"><b>' + esc(SHEET.err) + "</b><span>신청은 그대로 유지돼요.</span></div>" : "") +
-    '<div class="ax-stack-tight axs-gap12"><button type="button" class="ax-button" onclick="sheetClose()"' + (SHEET.busy ? " disabled" : "") + ">신청 유지하기</button>" +
-    '<button type="button" class="ax-button axs-btn-danger" onclick="progCancelGo()"' + (SHEET.busy ? ' disabled aria-busy="true"' : "") + ">" + (SHEET.busy ? "취소하는 중" : SHEET.err ? "다시 시도하기" : "신청 취소하기") + "</button></div></div>";
-  var b = w.querySelectorAll("button:not([disabled])");
-  if (b.length && (first || !w.contains(document.activeElement))) b[0].focus();
+    '<span class="axs-grab" aria-hidden="true"></span>' +
+    (sp.keep ? '<h2 class="ax-type-t2" id="axsSheetT">' + esc(sp.title) + "</h2>"
+      : '<div class="axs-mhead"><h2 class="ax-type-t2" id="axsSheetT">' + esc(sp.title) +
+        '</h2><button type="button" class="axs-x" onclick="sheetClose()"' + (dis ? " disabled" : "") + ' aria-label="닫기">' + X_SVG + "</button></div>") +
+    (sp.lead ? '<p class="ax-body">' + sp.lead + "</p>" : "") +
+    (sp.kv && sp.kv.length && !e ? '<dl class="ax-inset axs-kv">' + sp.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl>" : "") +
+    (e ? '<div class="axs-err" role="alert"><b>' + esc(e.t) + "</b>" + (e.b ? "<span>" + esc(e.b) + "</span>" : "") + "</div>" : "") +
+    '<div class="ax-stack-tight axs-gap12">' + keep + go + "</div></div>";
+  /* 위험한 확정은 유지 버튼에, 그 밖에는 주 버튼에 포커스를 둔다(닫기 X 에 먼저 걸리지 않게) */
+  var f = w.querySelector(sp.keep ? "button:not([disabled])" : "#axsSheetGo:not([disabled])") || w.querySelector("button:not([disabled])");
+  if (f && (first || !w.contains(document.activeElement))) f.focus();
 }
 function sheetKey(e) {
   var w = el("axsSheet"); if (!w) return;
@@ -4294,13 +4321,41 @@ function sheetKey(e) {
 }
 function sheetClose(silent) {
   var w = el("axsSheet"); if (w) w.remove();
-  SHEET.busy = false;
+  SHEET.busy = false; SHEET.err = null; SHEET.spec = null;
   if (!silent && SHEET.back) { var t = el(SHEET.back); if (t) t.focus(); }
 }
+/* 신청 취소 확인 (M03-cancel) · 실패하면 신청을 그대로 유지한다 */
+function progCancelOpen(id) {
+  var s = progById(id);
+  if (!s) return;
+  if (id !== "dap" && id !== "cchat") { var m = sessMine(id); if (!m) return; if (m.test) { toast("테스트 항목이에요 · 서버에 쓰지 않습니다"); return; } if (m.pre) return; }
+  var d = progDetail(s);
+  var when = id === "dap" ? (myResv() || {}).slot || "" : id === "cchat" ? (S.get("cchat", {}) || {}).round || "" : progTm(s.tm);
+  sheetOpen({ id: "cancel", arg: id, danger: true, back: "cxBtn", title: "신청을 취소할까요?",
+    lead: esc(d.cat + (d.org && d.cat.indexOf(d.org) < 0 ? " · " + d.org : "")) + (when ? "<br>10월 26일 " + esc(when) : ""),
+    keep: "신청 유지하기", go: "progCancelGo()", goLbl: "신청 취소하기", goBusy: "취소하는 중" });
+}
+/* 신청 확인 (P03) · v4.18 전체 화면 대신 시트 · 큰글씨에서도 짧게 유지되는 내용만 담는다 */
+function sheetApplyOpen() {
+  var c = PROG.cf, s = c && progById(c.id);
+  if (!s) return;
+  var d = progDetail(s);
+  sheetOpen({ id: "apply", back: "cfGo", title: "신청할까요?",
+    lead: '<b>' + esc(d.title) + "</b><br>" + esc(d.cat + (d.org && d.cat.indexOf(d.org) < 0 ? " · " + d.org : "")),
+    kv: d.cfKv, go: "progConfirm()", goLbl: "신청하기", goBusy: "신청하는 중" });
+}
+/* 커피챗 신청 확인 · 자리와 시간은 매칭 뒤에 정해진다 */
+function cchatApplyOpen() {
+  if (S.get("cchat", null) || !ideaMineN()) return;
+  sheetOpen({ id: "cchat", back: "cchatApplyBtn", title: "커피챗을 신청할까요?",
+    lead: "AX 커피챗 · 18F 라운지",
+    kv: [["자리·시간", "매칭 후 앱에서 안내"], ["내 아이디어", ideaMineN() + "건 제출"]],
+    go: "cchatApply()", goLbl: "커피챗 신청하기", goBusy: "신청하는 중" });
+}
 function progCancelGo() {
-  if (SHEET.busy || !SHEET.id) return;
-  var id = SHEET.id, u = S.get("user", {}) || {};
-  SHEET.busy = true; SHEET.err = ""; sheetPaint();
+  if (SHEET.busy || !SHEET.spec) return;
+  var id = SHEET.spec.arg, u = S.get("user", {}) || {};
+  sheetBusy(true);
   var ok = function () {
     if (id === "dap") S.set("resv", resvAll().filter(function (r) { return !(r.mine && RESV_LIVE.indexOf(r.status) >= 0); }));
     else if (id === "cchat") { S.set("cchat", null); CCHAT_CX_TS = Date.now(); }
@@ -4314,7 +4369,7 @@ function progCancelGo() {
     mySched();
     delete App.from.guide_time;   /* 내 일정에서 뒤로 = 나의 참여 (취소한 상세로 돌아가지 않는다) */
   };
-  var bad = function (m) { SHEET.busy = false; SHEET.err = m; if (el("axsSheet")) sheetPaint(); };
+  var bad = function (m) { sheetFail({ t: m, b: "신청은 그대로 유지돼요." }); };
   if (!BE.on || !u.empId) return ok();
   var act = id === "dap" ? "resv_cancel" : id === "cchat" ? "cchat_cancel" : "sess_cancel";
   beCall({ action: act, emp: u.empId, sess: id }, function (res) {
@@ -4616,40 +4671,48 @@ function photoAlertHtml() {
   return rcHtml({ cls: " my", onclick: "photoGoMine()", link: true, left: tokBadge(q.no + "번", call && isBlack("call") ? "act" : "mine"),
     title: call ? "지금 입장하세요" : "곧 차례예요", sub: call ? "1F 포토부스 · 10분 안에 입장" : "1F 포토부스 · 예상 " + q.eta });
 }
+/* v4.18 번호표 받기도 확인 시트로 받는다(사용자 결정 260923) · 받기 전에 지금 대기와 예상 입장을 한 번 보여 준다 */
+function photoTakeOpen() {
+  var u = S.get("user", {}) || {};
+  if (BE.on && !u.empId) { toast("사번으로 입장한 뒤 받을 수 있어요"); return; }
+  var wait = photoPub().waiting || 0, again = (photoQ() || {}).status === "skip";
+  sheetOpen({ id: "photake", back: "pqTakeBtn", title: again ? "다시 줄을 설까요?" : "번호표를 받을까요?",
+    lead: "1F AI 포토부스",
+    kv: [["지금 대기", wait + "팀"], ["예상 입장", photoEta(wait)], ["촬영", "2~3분 · 현장 출력"]],
+    go: "photoTake()", goLbl: again ? "다시 줄 서기" : "번호표 받기", goBusy: "받는 중" });
+}
 function photoTake() {
+  if (SHEET.busy) return;
   if (!BE.on) {
     var pub = photoPub(), ahead = pub.waiting || 0, no = (pub.serving || 0) + ahead + 1;
     S.set("photo_pub", { waiting: ahead + 1, serving: pub.serving || 0, min: PHOTO.MIN });
     S.set("photoq", { no: no, status: "wait", ahead: ahead, eta: photoEta(ahead) });
+    sheetClose(true);
     notice({ key: "photo:" + no, title: "포토부스 " + no + "번", body: "예상 입장 " + photoEta(ahead) });
     return;
   }
   var u = S.get("user", {}) || {};
-  if (!u.empId) { toast("사번으로 입장한 뒤 받을 수 있어요"); return; }
-  if (PHOTO.busy) return;
-  PHOTO.busy = true;
+  if (!u.empId) { sheetFail("사번으로 입장한 뒤 받을 수 있어요"); return; }
+  sheetBusy(true);
   beCall({ action: "photo_take", emp: u.empId }, function (res) {
-    PHOTO.busy = false;
-    if (!res || !res.ok) {
-      toast("번호표를 받지 못했어요. 다시 시도해주세요");
-      return;
-    }
+    if (!res || !res.ok) { sheetFail({ t: "번호표를 받지 못했어요", b: "잠시 뒤 다시 시도해 주세요." }); return; }
     S.set("photoq", { no: res.no, status: "wait", ahead: res.ahead, eta: res.eta });
+    sheetClose(true);
     notice({ key: "photo:" + res.no, title: "포토부스 " + res.no + "번", body: "예상 입장 " + res.eta });
-  }, function () { PHOTO.busy = false; toast("서버에 연결할 수 없어요"); });
+  }, function () { sheetFail({ t: "서버에 연결할 수 없어요", b: "네트워크를 확인해 주세요." }); });
 }
-/* v4.09 번호표 취소 = M03 취소 확인 시트(신청 취소와 같은 틀 · design.md A 5-6) · 실패하면 번호표 유지 */
+/* v4.09 번호표 취소 = 취소 확인 시트(신청 취소와 같은 틀 · design.md A 5-6) · 실패하면 번호표 유지 */
 function photoCancelOpen() {
   var q = photoQ(); if (!q || q.status !== "wait") return;
-  SHEET.id = "photo"; SHEET.busy = false; SHEET.err = "";
-  SHEET.back = (document.activeElement && document.activeElement.id) || "";
-  sheetPaint(true);
+  sheetOpen({ id: "photocx", danger: true, back: "pqCxBtn", title: "번호표를 취소할까요?",
+    lead: "1F AI 포토부스 " + esc(String(q.no)) + "번" + (q.eta ? "<br>예상 입장 " + esc(q.eta) : ""),
+    keep: "번호표 유지하기", go: "photoCancel()", goLbl: "번호표 취소하기", goBusy: "취소하는 중" });
 }
 function photoCancel() {
   if (SHEET.busy) return;
   var done = function () { S.set("photoq", null); sheetClose(true); notice({ title: "번호표 취소됨" }); };
-  var bad = function (m) { SHEET.busy = false; SHEET.err = m; if (el("axsSheet")) sheetPaint(); };
-  SHEET.busy = true; SHEET.err = ""; if (el("axsSheet")) sheetPaint();
+  var bad = function (m) { sheetFail({ t: m, b: "번호표는 그대로 유지돼요." }); };
+  sheetBusy(true);
   if (!BE.on) {
     var pub = photoPub();
     S.set("photo_pub", { waiting: Math.max(0, (pub.waiting || 1) - 1), serving: pub.serving || 0, min: PHOTO.MIN });
@@ -4660,7 +4723,10 @@ function photoCancel() {
     if (res && res.ok) done(); else bad("취소하지 못했어요");
   }, function () { bad("서버에 연결할 수 없어요"); });
 }
-/* 번호표 UI · 프로그램 행 펼침·일정 탭 상시 행·상세 화면 공용 */
+/* 번호표 UI · 프로그램 행 펼침 · 나의 참여 › 포토부스 대기 공용
+   v4.18 위계(사용자 결정 260923): 줄어드는 「앞 N팀」과 예상 입장이 주인공이다. 기다릴지 전시를 보고 올지 정하는 정보라서.
+   고정 번호는 그 아래 한 줄로 받친다(스태프가 부르는 신원). 호출되면 「지금 입장하세요」와 번호가 주인공이 된다.
+   옛 btn mint 잔재는 현행 셸의 ax-button 으로 정리했다. */
 function photoQueueHtml(noBtn) {
   var q = photoQ(), pub = photoPub();
   var wait = pub.waiting || 0;
@@ -4668,16 +4734,19 @@ function photoQueueHtml(noBtn) {
     return '<div class="pq' + (isBlack("call") ? " act" : " call") + '"><p class="k">지금 입장하세요</p><p class="big">' + q.no + '번</p><p class="s">1F 포토부스 · 10분 안에 입장</p></div>';
   }
   if (q && q.status === "wait") {
-    return '<div class="pq"><p class="k">예상 입장</p><p class="big">' + esc(q.eta) + '</p><p class="s">앞 <b>' + q.ahead + "팀</b> · 내 번호 " + q.no + "번</p>" +
-      (q.ahead <= 2 ? '<p class="nt">곧 차례 · 1F 포토부스로 이동</p>' : "") + "</div>" +
+    var near = q.ahead <= 2;
+    return '<div class="pq' + (near ? " call" : "") + '"><p class="k">내 앞에</p><p class="big">' + q.ahead + '팀</p>' +
+      '<p class="s">예상 입장 <b>' + esc(q.eta) + "</b></p>" +
+      (near ? '<p class="nt">곧 차례 · 1F 포토부스로 이동</p>' : "") +
+      '<p class="no2"><span>내 번호</span><b>' + q.no + "번</b></p></div>" +
       (noBtn ? "" : '<button type="button" class="ax-button axs-btn-danger" onclick="photoCancelOpen()">번호표 취소하기</button>');
   }
   if (q && q.status === "skip") {
-    return '<div class="pq dim"><p class="k">건너뛴 번호</p><p class="big">' + q.no + '번</p></div>' +
-      (noBtn ? "" : '<button class="btn mint" onclick="photoTake()">다시 줄 서기</button>');
+    return '<div class="pq dim"><p class="k">건너뛴 번호</p><p class="big">' + q.no + '번</p><p class="s">다시 줄을 서면 새 번호를 받아요</p></div>' +
+      (noBtn ? "" : '<button type="button" class="ax-button" id="pqTakeBtn" onclick="photoTakeOpen()">다시 줄 서기</button>');
   }
   if (noBtn) return '<div class="pq dim"><p class="k">지금 대기</p><p class="big">' + wait + '팀</p><p class="s">약 ' + wait * PHOTO.MIN + "분 · 촬영 2~3분 · 현장 출력</p></div>";
-  return '<button class="btn mint" onclick="photoTake()">대기 번호 받기</button>';   /* v3.54 대기 팀 수는 행 상태에 이미 있다 */
+  return '<button type="button" class="ax-button" id="pqTakeBtn" onclick="photoTakeOpen()">대기 번호 받기</button>';
 }
 function photoState() {
   var q = photoQ(), pub = photoPub();
@@ -5272,7 +5341,28 @@ var BOT_SVG = '<svg viewBox="0 0 200 200" fill="none" aria-hidden="true">' +
   '<path class="eye" d="M86.5902 99.9999C86.5902 102.94 84.2002 105.33 81.2602 105.33C78.3202 105.33 75.9302 102.94 75.9302 99.9999C75.9302 97.0599 78.3202 94.6699 81.2602 94.6699C84.2002 94.6699 86.5902 97.0599 86.5902 99.9999Z" fill="#282320"/>' +
   '<path class="eye" d="M124.06 99.9999C124.06 102.94 121.67 105.33 118.73 105.33C115.79 105.33 113.4 102.94 113.4 99.9999C113.4 97.0599 115.79 94.6699 118.73 94.6699C121.67 94.6699 124.06 97.0599 124.06 99.9999Z" fill="#282320"/>' +
   "</svg>";
-function botHtml(msg) { return '<div class="axs-bot" role="status">' + BOT_SVG + '<p class="ax-description">' + msg + "</p></div>"; }
+/* v4.18 대기 변형 · 안테나 전파 호 3개 (원본 벡터에 없는 새 요소만 더한다 · 반지름 17·23·29 는 viewBox 200 안에 들어간다)
+   중심 = 머리 방울 (100, 31.31) · 위쪽 120도 호 · 동작 줄이기에서는 CSS 가 멈춘다 */
+var BOT_WAVE = '<g class="ant">' +
+  '<path d="M85.28 22.81 A17 17 0 0 1 114.72 22.81"/>' +
+  '<path d="M80.08 19.81 A23 23 0 0 1 119.92 19.81"/>' +
+  '<path d="M74.89 16.81 A29 29 0 0 1 125.11 16.81"/>' +
+  "</g>";
+/* o.wait = 대기 중(전파 켜기) · 화면이 통째로 비어서 기다리는 자리에만 쓴다.
+   버튼 안 잠김 상태와 QR 스캔 화면에는 쓰지 않는다(design.md A-5 5번). */
+function botHtml(msg, o) {
+  var w = o && o.wait;
+  return '<div class="axs-bot" role="status"' + (w ? ' aria-busy="true"' : "") + ">" +
+    BOT_SVG.replace("</svg>", (w ? BOT_WAVE : "") + "</svg>") +
+    '<p class="ax-description">' + msg + "</p></div>";
+}
+/* 전체 화면 대기 덮개 · 로그인·입장 처리처럼 화면 전체가 멈춰 기다리는 순간에만 */
+function botWait(on, msg) {
+  var w = el("axsWait");
+  if (!on) { if (w) w.remove(); return; }
+  if (!w) { w = document.createElement("div"); w.id = "axsWait"; document.body.appendChild(w); }
+  w.innerHTML = '<div class="ax-stack">' + botHtml(msg || "확인하는 중", { wait: 1 }) + "</div>";
+}
 
 /* ── 홈 (H01) · 공지 카드 한 장 → [포토부스 호출] → 인사 → 진행 중 카드(주 행동) → 전체 시간표 · 체험 찾기 → 광고판(사용자 결정 예외) ── */
 function homeNoticeHtml() {
@@ -5460,7 +5550,7 @@ var Views = {
     return '<div class="ax-stack"><section class="ax-card"><div class="ax-stack-tight"><h2 class="ax-card-title">1F AI 포토부스</h2>' +
       '<p class="ax-meta">1F 홍보존 · 10:00 – 17:00</p></div>' + photoQueueHtml(true) + "</section></div>" +
       (st === "call" ? "" : st === "wait" ? '<div class="axs-fix ax-bottom"><button type="button" class="ax-button axs-btn-danger" id="pqCxBtn" onclick="photoCancelOpen()">번호표 취소하기</button></div>'
-        : ax2Btn(st === "skip" ? "다시 줄 서기" : "대기 번호 받기", "photoTake()"));
+        : '<div class="axs-fix ax-bottom"><button type="button" class="ax-button" id="pqTakeBtn" onclick="photoTakeOpen()">' + (st === "skip" ? "다시 줄 서기" : "대기 번호 받기") + "</button></div>");
   },
 
   notices: function () {
@@ -6126,7 +6216,7 @@ function admListHtml() {
     return '<button type="button" class="ax-filter-button" aria-pressed="' + (p === x[0]) + '" onclick="rosterPick(\'' + x[0] + '\')">' + x[1] + "</button>";
   }).join("") + "</div>";
   var body = !BE.on ? '<p class="ax-description">서버에 연결되면 명단이 보여요</p>' :
-    !d ? '<p class="ax-description">명단을 불러오는 중이에요</p>' :
+    !d ? botHtml("명단을 불러오는 중이에요", { wait: 1 }) :
       '<div class="ax-row"><p class="ax-meta">신청 ' + d.n.all + " · 입장 " + d.n.in + " · 노쇼 " + d.n.noshow + '</p><button type="button" class="ax-link axs-plain" onclick="ROSTER.data[\'' + p + '\'] = null; rosterLoad(); App.render()">새로고침</button></div>' +
       (!d.rows.length ? '<p class="ax-description">아직 명단이 없어요</p>' : '<div class="axs-rows ax-stack-tight axs-gap12">' + d.rows.map(function (r) { return rosterRowHtml(r, p); }).join("") + "</div>");
   return chips + body + '<p class="ax-meta">취소 · 시간 변경 · 매칭은 AXF CONTROL에서 해요</p>';
@@ -6960,7 +7050,7 @@ function stairFloorPick(label) {
   for (var f = 1; f <= 18; f++) b += '<button type="button" class="axs-slot" aria-pressed="' + (STR.pick === f) + '"' + (STR.busy ? " disabled" : "") + ' onclick="stairPick(' + f + ')">' + f + "F</button>";
   return '<p class="ax-type-t6-strong">' + label + "</p>" +
     '<div class="axs-slots axs-fl6">' + b + '<button type="button" class="axs-slot axs-none" aria-pressed="' + (STR.pick === 0) + '"' + (STR.busy ? " disabled" : "") + ' onclick="stairPick(0)">계단을 쓰지 않았어요</button></div>' +
-    (STR.busy ? botHtml("확인하는 중") : "") +
+    (STR.busy ? botHtml("확인하는 중", { wait: 1 }) : "") +
     (STR.err ? '<div class="axs-err" role="alert"><b>처리하지 못했어요</b>' + esc(STR.err) + "</div>" : "");
 }
 /* v4.08 보정 화면 아래 고정 · v4.09 버튼 하나 = 고른 층으로 보정하기(고르기 전엔 꺼짐) · 나가기는 헤더 뒤로 */
@@ -6970,7 +7060,7 @@ function stairPickBtn() {
 }
 function stairHtml() {
   var o = STR.res || {}, s = stairState(), goal = s.goal || 10, m = STR.mode;
-  if (m === "load" || (STR.busy && m !== "fix" && m !== "reclass")) return { body: botHtml("확인하는 중"), btn: "" };
+  if (m === "load" || (STR.busy && m !== "fix" && m !== "reclass")) return { body: botHtml("확인하는 중", { wait: 1 }), btn: "" };
   if (m === "start") {
     var since = o.since || (s.leg && s.leg.since) || Date.now();
     return { body:
@@ -8252,7 +8342,7 @@ function typeRankPull(mode, cb) {
 /* v3.80 기록 = 버틴 시간(1/100초) · 화면에는 「n초」 로 보여 준다 */
 function typeSec(v) { return (Number(v || 0) / 100).toFixed(1) + "초"; }
 function typeRankHtml(r, mode, big) {
-  if (!r) return '<p class="muted">순위를 불러오는 중입니다</p>';
+  if (!r) return botHtml("순위를 불러오는 중이에요", { wait: 1 });
   var top = r.top || [];
   return (top.length ? top.map(function (x) {
       return '<div class="ty-rank' + (x.me ? " me" : "") + '"><span class="no">' + x.rank + '</span><span class="nm">' + esc(x.name) + '</span><span class="sc">' + typeSec(x.score) + "</span></div>";
@@ -9099,7 +9189,7 @@ function olyRankHtml() {
     return '<button type="button" role="tab" aria-selected="' + (tab === t[0]) + '" onclick="S.set(\'oly_tab\', \'' + t[0] + '\'); App.render()">' + t[1] + "</button>";
   }).join("") + "</div>";
   var h = '<div class="ax-stack oly-rk">' + seg;   /* v4.16 항상 실서버 값 · 가짜 닉네임 안내 삭제 */
-  if (!b || !b.overall) return h + botHtml("순위를 불러오는 중이에요") + "</div>";
+  if (!b || !b.overall) return h + botHtml("순위를 불러오는 중이에요", { wait: 1 }) + "</div>";
   var at = b.t ? String(b.t).slice(11, 16) : "";
   if (tab === "event") {
     var ev = olyEv(evk), mv = me.ev[evk], list = (b.perEvent && b.perEvent[evk]) || [];
@@ -12729,7 +12819,8 @@ function xitionRun(switchNow) {
     if (!/^\d{4}$/.test(pin)) { show("비밀번호 4자리를 입력해 주세요."); return; }
     qe.style.display = "none";
     btn.disabled = true; btn.textContent = "확인 중…";
-    var reset = function () { btn.disabled = false; btn.textContent = "입장"; };
+    botWait(true, "확인하는 중");   /* v4.18 화면 전체가 멈춰 기다리는 자리 · 챗봇 안테나 전파 */
+    var reset = function () { botWait(false); btn.disabled = false; btn.textContent = "입장"; };
     beHash(known.empId, pin).then(function (h) {
       beCall({ action: "login", emp: known.empId, name: known.name, h: h }, function (res) {
         reset();
@@ -12748,6 +12839,7 @@ function xitionRun(switchNow) {
         if (res.dept) S.set("dept", res.dept);
         knownSet({ empId: known.empId, name: res.name || known.name, dept: res.dept || "" });
         el("quick").hidden = true;
+        botWait(false);
         enterApp();
         beStats();
         a2hsAuto();
@@ -12801,7 +12893,8 @@ function xitionRun(switchNow) {
     if (!/^\d{4}$/.test(pin)) { show("비밀번호 4자리를 정해 주세요."); return; }
 
     btn.disabled = true; btn.textContent = "확인 중…";
-    var reset = function () { btn.disabled = false; btn.textContent = "페스티벌 입장"; };
+    botWait(true, "확인하는 중");
+    var reset = function () { botWait(false); btn.disabled = false; btn.textContent = "페스티벌 입장"; };
     beHash(id, pin).then(function (h) {
       beCall({ action: "login", emp: id, name: nm, h: h }, function (res) {
         reset();
@@ -12818,6 +12911,7 @@ function xitionRun(switchNow) {
         S.set("user", { empId: id, name: res.name || nm, dept: res.dept || "" });
         if (res.dept) S.set("dept", res.dept);
         knownSet({ empId: id, name: res.name || nm, dept: res.dept || "" });   /* 다음 접속엔 비밀번호만 */
+        botWait(false);
         enterApp();
         beStats();
         a2hsAuto();
