@@ -2411,6 +2411,72 @@ function bePush(kind, val, once, onOk) {
       }
     });
 }
+/* ── v4.27 접속 기록 (260924 사용자 질문 「바탕화면 바로가기로 접속하면 로그에 안 잡히나」) ──────────────
+   앱을 열 때 1회(open) · 30분 넘게 가렸다가 돌아올 때 1회(back) · 로그인 직후 사번을 붙여 1회(login).
+   서버 「접속」 시트에만 쓴다(운영 참여 로그와 분리) · 결과를 기다리지 않고 실패도 무시한다(부팅 속도와 무관).
+   기기ID = 이 기기 저장소에 만든 무작위 값(사번·이름과 무관) · 아이폰 홈 화면 앱은 사파리와 저장소가 따로라 기기ID 도 따로 생긴다.
+   데모(#demo) · TV(#tv=) 는 기록하지 않는다 · 테스트 계정(기억된 계정 포함)은 test=1 로 보내 서버가 집계에서 뺀다.
+   주소의 #s= · #q= 는 scanLinkTake 가 곧 지우므로 여기서 먼저 읽어 둔다(QR 링크 진입 표시). */
+var VISIT = { hash0: String(location.hash || ""), hidAt: 0, first: false, did: "", BACK_MS: 30 * 60 * 1000 };
+/* 경로 판별 · 홈 화면 앱(standalone 계열)이 먼저 · 그다음 인앱 브라우저 UA · 나머지는 브라우저 */
+function visitRoute(ua, sa) {
+  ua = String(ua || "");
+  if (sa) return "app";
+  if (/KAKAOTALK/i.test(ua)) return "kakao";
+  if (/NAVER\(inapp|NAVER\//.test(ua)) return "naver";
+  if (/Instagram|FBAN|FBAV|FB_IAB|Line\/|DaumApps|Teams\/|Slack\/|; wv\)/i.test(ua)) return "inapp";
+  if (/iPhone|iPad|iPod/.test(ua) && !/Safari\//.test(ua)) return "inapp";   /* 아이폰 앱 속 웹뷰는 Safari 표기가 없다(홈 화면 앱은 위에서 이미 걸렀다) */
+  return "browser";
+}
+function visitDev(ua, touch) {
+  ua = String(ua || "");
+  if (/Android/i.test(ua)) return "android";
+  if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && touch > 1)) return "ios";   /* 아이패드는 맥 UA + 터치 */
+  if (/Windows|Macintosh|CrOS|X11|Linux/.test(ua)) return "pc";
+  return "etc";
+}
+function visitStandalone() {
+  try {
+    if (window.navigator.standalone === true) return true;
+    return ["standalone", "fullscreen", "minimal-ui", "window-controls-overlay"].some(function (m) { return window.matchMedia("(display-mode: " + m + ")").matches; });
+  } catch (e) { return false; }
+}
+function visitSkip() { return /^#(demo|tv=)/i.test(VISIT.hash0) || /cap/.test(VISIT.hash0); }
+/* 기기ID · 처음 만든 순간이 이 기기의 첫 방문 · 저장소를 못 쓰면 이번 방문만의 값(첫 방문 표시 없음) */
+function visitDid() {
+  if (VISIT.did) return VISIT.did;
+  var id = "";
+  try { id = localStorage.getItem("axf_vid") || ""; } catch (e) {}
+  if (!/^[a-z0-9]{8,32}$/.test(id)) {
+    var b = new Uint8Array(9);
+    try { crypto.getRandomValues(b); } catch (e) { for (var i = 0; i < 9; i++) b[i] = Math.floor(Math.random() * 256); }
+    id = "";
+    for (var j = 0; j < 9; j++) id += ("0" + b[j].toString(36)).slice(-2);
+    var kept = false;
+    try { localStorage.setItem("axf_vid", id); kept = localStorage.getItem("axf_vid") === id; } catch (e) {}
+    VISIT.first = kept;
+  }
+  VISIT.did = id;
+  return id;
+}
+function visitSend(why) {
+  try {
+    if (!GAS_URL || !BE.on || visitSkip()) return;
+    var u = S.get("user", {}) || {}, kn = knownGet() || {};
+    var ua = navigator.userAgent;
+    var p = { action: "visit", did: visitDid(), route: visitRoute(ua, visitStandalone()), dev: visitDev(ua, navigator.maxTouchPoints || 0), why: why };
+    if (why !== "back" && /^#(s|q)=/i.test(VISIT.hash0)) p.entry = "qr";
+    if (VISIT.first) { p.first = 1; VISIT.first = false; }
+    if (u.empId) p.emp = u.empId;
+    if (TEST_EMP.indexOf(String(u.empId || kn.empId || "")) >= 0) p.test = 1;
+    beCall(p, function () {}, function () {});
+  } catch (e) {}
+}
+document.addEventListener("visibilitychange", function () {
+  if (document.hidden) { VISIT.hidAt = Date.now(); return; }
+  if (VISIT.hidAt && Date.now() - VISIT.hidAt >= VISIT.BACK_MS) visitSend("back");
+  VISIT.hidAt = 0;
+});
 /* ── v3.88 비밀번호 분실 요청 (사용자 요청 260918) ──────────────────────────────
    앱은 사번·이름만 보낸다 · 비밀번호 값은 만들지도 보여 주지도 않는다.
    서버는 명부와 짝이 맞을 때만 「비번요청」 시트에 한 줄을 남기고, 맞지 않아도 응답은 똑같다(누가 있는지 떠보지 못하게).
@@ -12601,6 +12667,7 @@ function xitionRun(switchNow) {
         enterApp();
         beStats();
         a2hsAuto();
+        visitSend("login");   /* v4.27 같은 방문에 사번을 붙여 한 번 더 · 비로그인 → 로그인 전환 */
       }, function () { reset(); show("서버에 연결할 수 없어요. 네트워크를 확인해주세요."); });
     });
   }
@@ -12673,6 +12740,7 @@ function xitionRun(switchNow) {
         enterApp();
         beStats();
         a2hsAuto();
+        visitSend("login");   /* v4.27 같은 방문에 사번을 붙여 한 번 더 · 비로그인 → 로그인 전환 */
         if (res.isNew) setTimeout(function () {
           notice({ key: "pin", title: "비밀번호가 등록되었어요", body: "다음 입장에도 같은 4자리" });
         }, 700);
@@ -12683,6 +12751,8 @@ function xitionRun(switchNow) {
     });
   });
 })();
+/* v4.27 접속 기록 · 앱을 연 기록 · 부팅이 끝난 뒤 조용히 한 번(결과를 기다리지 않는다 · 데모 · TV 는 visitSkip 이 거른다) */
+setTimeout(function () { visitSend("open"); }, 1500);
 </script>
 </body>
 </html>
