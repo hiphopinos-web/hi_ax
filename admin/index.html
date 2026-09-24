@@ -498,7 +498,8 @@ var TABS = [
   { id:"dash",  n:"대시보드", d:"지금 처리할 일과 오늘의 숫자를 한 화면에 봅니다." },
   { id:"acct",  n:"계정", d:"로그인한 사람과 비밀번호 분실 요청을 처리합니다." },
   { id:"stamp", n:"스탬프", d:"사번이나 이름으로 한 사람을 골라 스탬프를 부여하거나 취소합니다." },
-  { id:"apply", n:"신청", d:"상담 승인 · 커피챗 매칭 · 강의신청 · 사전 신청 명단을 처리합니다." },
+  { id:"apply", n:"신청", d:"상담 승인 · 커피챗 매칭 · 담당 명단을 처리합니다. 17F 강연은 자유 참석이라 신청이 없습니다(v4.26)." },
+  { id:"att", n:"17F 출석", d:"17F 강연 QR 출석 인원 · 출석률 · 시간대별 입장 흐름입니다. 부문 통계는 두지 않습니다." },
   { id:"idea", n:"아이디어", d:"참가자가 낸 아이디어 한 줄을 봅니다. 18F 커피챗 매칭 때 분야별로 묶어 봅니다." },
   { id:"survey", n:"설문", d:"오늘 한 판 설문 집계입니다. 답은 이름 없이 저장되어 사람 단위 조회는 없습니다." },
   { id:"typing", n:"게임", d:"AX 올림픽 점수 계수와 당일 잠금 · 게임별 전원 점수 · 1F 현장 타자왕전과 닉네임을 관리합니다." },
@@ -525,17 +526,16 @@ var GRANT_IDS = ["p1","p2","p3","st"];
 function revokeIds(){ var d=ST.data.stamp||{}; return d.revokeIds||STAMP_ORDER; }
 /* 백엔드 SESS_META · SESS_CAP 과 같은 id */
 var SESS_NAME = {
-  /* v3.31b · 17F 오전은 자유 참석(옛 신청 기록 표시용) · 오후 파트너사 강연은 신청제(사전 신청 + 앱 신청) */
-  key:"17F 기조연설 (자유 참석)", road:"17F 내부 강연 (자유 참석)", l1:"17F AWS 강연 (13:30)", l2:"17F MS 강연 (15:10)",
+  /* v4.26 (260924) 17F 네 프로그램은 전부 자유 참석 · 신청이 없다 · 이름은 옛 신청 기록 표시용으로만 남긴다 · 출석은 17F 출석 메뉴 */
+  key:"17F 기조연설 (자유 참석)", road:"17F 내부 강연 (자유 참석)", l1:"17F AWS 강연 (자유 참석)", l2:"17F MS 강연 (자유 참석)",
   fld:"세션 A · 영업·보상 현장", ta:"세션 B · 통계 현황 리포팅", tb:"세션 C · 외부자료 리서치", aws:"세션 D · 바이브 코딩 (AWS)", ms1:"세션 E · 1회차 13:30 (MS)", ms2:"세션 E · 2회차 15:00 (MS)",
   photo:"AI 포토부스", kring:"키링 DIY (260917 폐기)"
 };
 /* 상담 상태 · 시트 드롭다운과 같은 목록 */
 var RESV_STATUS = ["신청","승인","체크인","완료","노쇼","취소"];
 var CC_STATUS = ["대기","매칭","참석","완료","취소"];
-/* v3.31b · 10F 실습형 세션은 사전 신청(앱 밖) · 신청 현황에서 제외 (출석은 앱 운영자 스캔 집계) */
+/* v3.31b · 10F 실습형 세션은 사전 신청(앱 밖) · 앱 신청 없음 · v4.26 17F 사전 신청 명단 상수는 걷어냈다 */
 var TEN_SESS = ["fld","ta","tb","aws","ms1","ms2"];
-var PRE_SESS = ["l1","l2"];
 
 /* ══════════════════ 1. 공통 ══════════════════ */
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
@@ -681,7 +681,7 @@ function runOps(items, onEach, onDone){
   next();
 }
 function op(action, params){ return function(cb){ call(action, params, function(r){ cb(!!(r&&r.ok), r||{}); }, function(e){ cb(false, e||{reason:"network"}); }); }; }
-function why(r){ r=r||{}; return {network:"서버 응답 없음",timeout:"서버 응답 없음",notfound:"대상을 찾지 못했습니다",param:"입력값 오류",pre:"사전 신청 명단 인원입니다",notable:"테이블이 없습니다"}[r.reason]||r.reason||r.err||"실패"; }
+function why(r){ r=r||{}; return {network:"서버 응답 없음",timeout:"서버 응답 없음",notfound:"대상을 찾지 못했습니다",param:"입력값 오류",open:"자유 참석 강연이라 신청이 없습니다",notable:"테이블이 없습니다"}[r.reason]||r.reason||r.err||"실패"; }
 
 /* 처리 이력 · 이 콘솔 탭에서 한 처리만 기억한다(서버 기록은 참여 기록·운영 로그가 정본) */
 var HIST={};
@@ -731,10 +731,11 @@ document.addEventListener("visibilitychange",function(){ if(!document.hidden&&ke
 
 /* 탭별로 필요한 액션만 부른다 */
 var NEED={
-  dash:[{k:"stats",a:"stats"},{k:"acct",a:"acct_list"},{k:"stamp",a:"stamp_people"},{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"},{k:"photo",a:"photo_list"}],
+  dash:[{k:"stats",a:"stats"},{k:"acct",a:"acct_list"},{k:"stamp",a:"stamp_people"},{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"att",a:"att_stats"},{k:"photo",a:"photo_list"}],
   acct:[{k:"acct",a:"acct_list"},{k:"pwreq",a:"pw_req_list"}],
   stamp:[{k:"stamp",a:"stamp_people"},{k:"acct",a:"acct_list"},{k:"stair",a:"stair_list"},{k:"sstat",a:"stair_stats"},{k:"sy",a:"sync",p:{emp:""}}],
-  apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"sess",a:"sess_list"},{k:"pre",a:"pre_list"}],
+  apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"}],   /* v4.26 강의신청 현황(sess_list) · 사전 신청 명단(pre_list)은 걷어냈다 */
+  att:[{k:"att",a:"att_stats"}],
   idea:[{k:"idea",a:"idea_list"},{k:"cchat",a:"cchat_list"}],
   survey:[{k:"survey",a:"survey_list"}],
   typing:[{k:"nick",a:"type_nick_list"},{k:"tres",a:"type_result"},{k:"olyr",a:"oly_result"},{k:"gstats",a:"game_stats"},{k:"stats",a:"stats"},{k:"oxs",a:"ox_stats"}],
@@ -745,7 +746,7 @@ var NEED={
 };
 /* v4.16 서브탭에서만 쓰는 액션 · 그 서브탭을 열 때만 부른다(함수면 지금 고른 값으로 만든다 · 담당 명단은 프로그램마다 다른 요청) */
 var SUBNEED={
-  "stamp:ops":[{k:"slist",a:"stamp_list"}],
+  "stamp:ops":[{k:"slist",a:"stamp_list"},{k:"alist",a:"att_list"}],
   "stamp:wq":[{k:"wq",a:"wq_get"}],
   "apply:roster":function(){ return [{k:"ros_"+ROS.prog,a:"staff_roster",p:{prog:ROS.prog}}]; }
 };
@@ -807,7 +808,6 @@ function applyOvr(){
     if(same) delete ST.ovr[k]; else for(var f2 in o.p) r[f2]=o.p[f2]; }); }
   ap((ST.data.resv||{}).rows, function(r){ return "resv:"+r.id; });
   ap((ST.data.cchat||{}).rows, function(r){ return "cc:"+normE(r.emp); });
-  ap((ST.data.sess||{}).rows, function(r){ return "ss:"+normE(r.emp)+":"+r.sid; });
 }
 
 /* 값을 고칠 때 있던 자리를 지킨다. 화면을 통째로 다시 그리므로 스크롤·포커스를 직접 되돌린다. */
@@ -820,7 +820,7 @@ function render(){
   if(missing.length&&ST.busy){
     h=tabHead()+'<div class="card"><p class="muted"><span class="spin"></span>서버에서 불러오는 중입니다. 보통 2~5초 걸립니다.</p></div>';
   } else {
-    try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="notice"?viewNotice():ST.tab==="survey"?viewSurvey():ST.tab==="typing"?viewTyping():ST.tab==="photo"?viewPhoto():ST.tab==="art"?viewArt():ST.tab==="race"?viewRace():ST.tab==="idea"?viewIdea():viewApply(); }
+    try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="notice"?viewNotice():ST.tab==="survey"?viewSurvey():ST.tab==="typing"?viewTyping():ST.tab==="photo"?viewPhoto():ST.tab==="art"?viewArt():ST.tab==="race"?viewRace():ST.tab==="idea"?viewIdea():ST.tab==="att"?viewAtt():viewApply(); }
     catch(e){ h='<div class="err-banner">화면을 그리는 중 오류가 났습니다: '+esc(e.message)+'</div>'; }
   }
   if(ST.err) h='<div class="err-banner">일부 데이터를 못 받았습니다('+esc(ST.err.reason||"")+'). 새로고침을 눌러 주세요. 표시된 값은 마지막으로 받은 것입니다.</div>'+h;
@@ -840,7 +840,7 @@ function drwClose(silent){ ST.drw=null; el("drw").className=""; el("drwBg").clas
 function renderDrawer(){
   var d=ST.drw, box=el("drw");
   if(!d){ box.className=""; el("drwBg").className=""; return; }
-  var h=d.kind==="resv"?drwResv(d.k):d.kind==="cc"?drwCchat(d.k):d.kind==="ss"?drwSess(d.k):"";
+  var h=d.kind==="resv"?drwResv(d.k):d.kind==="cc"?drwCchat(d.k):"";
   if(!h){ ST.drw=null; box.className=""; el("drwBg").className=""; return; }
   var keep=box.querySelector("textarea"), memoV=keep&&keep===document.activeElement?keep.value:null;
   var sc=(box.querySelector(".db")||{}).scrollTop||0;
@@ -854,7 +854,6 @@ function personHist(emp){
   var e=normE(emp), out=[];
   ((ST.data.resv||{}).rows||[]).forEach(function(r){ if(normE(r.emp)===e) out.push(["상담 "+hhmm(r.slot), r.status, short(r.ts)]); });
   ((ST.data.cchat||{}).rows||[]).forEach(function(r){ if(normE(r.emp)===e) out.push(["커피챗"+(r.tag?" · "+r.tag:""), r.status, short(r.ts)]); });
-  ((ST.data.sess||{}).rows||[]).forEach(function(r){ if(normE(r.emp)===e) out.push([SESS_NAME[r.sid]||r.sid, r.status, short(r.ts)]); });
   var h='<h3>신청 기록</h3>'+(out.length?'<ul class="hist">'+out.map(function(x){ return '<li><span class="t">'+esc(x[2])+'</span><span style="flex:1">'+esc(x[0])+'</span>'+tag(x[1], RESV_TAG[x[1]]||CC_TAG[x[1]]||"off")+'</li>'; }).join("")+'</ul>':'<p class="cap">없음</p>');
   var hs=HIST[e]||[];
   h+='<h3>이 콘솔에서 한 처리</h3>'+(hs.length?'<ul class="hist">'+hs.map(function(x){ return '<li><span class="t">'+esc(x.t)+'</span><span>'+esc(x.x)+'</span></li>'; }).join("")+'</ul>':'<p class="cap">아직 없음 · 서버 기록은 시트가 정본입니다</p>');
@@ -866,7 +865,8 @@ var GUIDE={
   dash:[["지금 처리할 일","숫자가 있는 줄의 <b>처리하기</b>를 누르면 그 메뉴의 그 필터로 바로 갑니다."],["숫자 타일","가입·스탬프·룰렛·응모권 · 참여 기록을 30초마다 새로 받습니다."],["아래 표","스탬프 보유 분포 · 강연 정원 대비 · 상담·커피챗 흐름입니다. 흐름 칸을 누르면 신청 탭의 그 상태로 갑니다."]],
   acct:[["분실 요청","앱에서 온 비밀번호 분실 요청이 위에 쌓입니다. <b>사원증이나 얼굴로 본인 확인을 먼저</b> 합니다."],["초기화","초기화하면 본인이 앱에서 다음에 넣는 4자리가 새 비밀번호가 됩니다. 비밀번호 값은 어디에도 보이지 않습니다."],["처리자 이름","한 번 적어 두면 이 브라우저가 기억하고 운영 로그에 함께 남깁니다."]],
   stamp:[["사람 찾기","왼쪽 칸에 사번이나 이름을 넣고 한 사람을 고릅니다."],["8칸 확인","획득한 칸은 네이비, 획득 경로(현장 QR · 담당자 부여 · 앱 자동)가 칸 안에 보입니다."],["부여","현장 QR 01·02·03 과 계단 07 만 <b>부여</b>할 수 있습니다. 앱 자동 04·05·06 과 설문 08 은 앱 안의 행동이라 부여하지 않습니다."],["취소","지금은 8칸 모두 <b>취소</b>할 수 있습니다(테스트 기간 · 설정 「스탬프취소_범위」 = 전체). 취소한 칸은 같은 행동으로 다시 받을 수 있습니다. 확인 창에서 보상 변화를 먼저 보여 주고, 룰렛을 이미 돌렸거나 발급된 응모권이 줄어드는 취소는 서버가 거부합니다."],["되돌리기","처리 직후 알림의 <b>되돌리기</b>로 바로 원래대로 돌릴 수 있습니다. 모든 부여·취소는 참여 기록에 행으로 남습니다(지우지 않음)."]],
-  apply:[["처리할 것","기본 필터는 <b>처리할 것</b>입니다. 칩의 숫자는 상태별 건수입니다."],["다음 행동","행마다 지금 상태에서 할 다음 행동 하나가 네이비 버튼입니다(신청 → 승인 → 체크인 → 완료). 노쇼·취소는 옆의 적갈 버튼입니다."],["여러 건","왼쪽 칸을 체크하면 위에 일괄 처리 바가 뜹니다(상담 일괄 승인·취소 · 커피챗 일괄 매칭·취소). 강의신청은 현황만 봅니다."],["상세","행을 누르면 오른쪽에 상세 패널이 열립니다. 이력 확인과 메모 저장, 처리까지 거기서 합니다."],["되돌리기","승인·노쇼·취소·매칭은 처리 뒤 7초 동안 알림에 <b>되돌리기</b>가 뜹니다. 체크인·완료·참석은 스탬프 03 이 적립되어 되돌리기가 없습니다."]],
+  apply:[["처리할 것","기본 필터는 <b>처리할 것</b>입니다. 칩의 숫자는 상태별 건수입니다."],["다음 행동","행마다 지금 상태에서 할 다음 행동 하나가 네이비 버튼입니다(신청 → 승인 → 체크인 → 완료). 노쇼·취소는 옆의 적갈 버튼입니다."],["여러 건","왼쪽 칸을 체크하면 위에 일괄 처리 바가 뜹니다(상담 일괄 승인·취소 · 커피챗 일괄 매칭·취소)."],["상세","행을 누르면 오른쪽에 상세 패널이 열립니다. 이력 확인과 메모 저장, 처리까지 거기서 합니다."],["되돌리기","승인·노쇼·취소·매칭은 처리 뒤 7초 동안 알림에 <b>되돌리기</b>가 뜹니다. 체크인·완료·참석은 스탬프 03 이 적립되어 되돌리기가 없습니다."]],
+  att:[["숫자","프로그램별 출석 인원과 출석률(분모 = 앱 가입자, 테스트 계정 제외)입니다. 17F 에 왔어도 QR 을 찍지 않은 사람은 세지 못합니다."],["흐름","10분 단위로 처음 출석한 사람 수입니다. 입구 혼잡 시각을 봅니다."],["테스트","테스트 계정 기록은 기본으로 빠집니다. 「테스트 계정 포함」으로 확인하고, 리허설이 끝나면 「테스트 기록 지우기」를 누릅니다."],["QR","출석 QR 코드는 스탬프 › 현장 운영의 부스 QR 표(a17)에 있습니다."]],
   idea:[["목록","최신 아이디어가 위에 옵니다. 테스트 계정은 빠져 있고 「테스트 계정 포함」으로 볼 수 있습니다."],["분야별 묶음","18F 커피챗 매칭 때 씁니다. 같은 분야에서 커피챗을 신청한 사람이 위에 옵니다."],["CSV","지금 걸러 보는 목록 그대로 내려받습니다."]],
   survey:[["집계","문항마다 선택 비율 · 점수 분포 · 한 줄 답을 봅니다."],["이름 없음","답은 사번 없이 저장됩니다. 사람 단위 조회는 없습니다."]],
   typing:[["AX 올림픽 · 점수 계수","종목별 계수를 고치면 미리보기에 예시 기록의 점수가 바로 보입니다. <b>저장</b>하면 규칙판(rev)이 1 오르고 이미 낸 기록까지 전원 점수가 새 계수로 다시 계산됩니다."],["당일 잠금","리허설 재보정을 마친 뒤 10/26 아침에 <b>당일 잠금 켜기</b>를 누릅니다. 잠긴 동안에는 저장이 거부되고, 해제는 언제든 됩니다."],["게임별 통계","다섯 종목 전원 점수 · 최고 점수 중앙 · 만점 도달 · CSV 입니다. 행의 대표 기록을 누르면 점수 구성이 펼쳐집니다. 부문 통계는 두지 않습니다."],["O/X 문항","AI O/X 문항별 정답률 · 판자 · 낙하 · O 선택 비율 · 평균 시간입니다. 답이 틀린 문항은 체크한 뒤 <b>선택 문항 끄기</b>로 출제에서 뺍니다. 규칙 잠금과 별개라 당일에도 됩니다."],["타자왕전 · 닉네임","Outro 호명용 상위 5와 부적절한 닉네임 숨김·초기화입니다."]],
@@ -897,15 +897,12 @@ function barRow(label, n, max, right, over){ return '<tr><td class="l">'+label+'
  * 위계: 숫자 타일 한 줄 → 지금 처리할 일(대기 건수 + 바로가기) → 세부 표 */
 function viewDash(){
   var st=ST.data.stats||{}, ac=(ST.data.acct||{}).rows||[], sp=(ST.data.stamp||{}).rows||[], roster=(ST.data.acct||{}).roster||0;
-  var rv=(ST.data.resv||{}).rows||[], cc=(ST.data.cchat||{}).rows||[], ss=ST.data.sess||{rows:[],cap:{}}, ph0=(ST.data.photo&&ST.data.photo.ok)?(ST.data.photo.rows||[]):[];
+  var rv=(ST.data.resv||{}).rows||[], cc=(ST.data.cchat||{}).rows||[], at0=ST.data.att||{}, ph0=(ST.data.photo&&ST.data.photo.ok)?(ST.data.photo.rows||[]):[];
   var dist=[0,0,0,0,0,0,0,0,0]; var roul=0, tickets=0, issued=0, hasTk=false, active=0;
   sp.forEach(function(r){ dist[Math.min(8,r.n)]++; if(r.n>0) active++; if(r.roulette) roul++; tickets+=reward(r.n).tickets; if(r.tk!=null){ hasTk=true; issued+=r.tk; } });
   var eligible=sp.filter(function(r){return r.n>=3;}).length;
   var rvBy={}; rv.forEach(function(r){ rvBy[r.status]=(rvBy[r.status]||0)+1; });
   var ccBy={}; cc.forEach(function(r){ ccBy[r.status]=(ccBy[r.status]||0)+1; });
-  var sessN={}; ss.rows.forEach(function(r){ if(r.status!=="취소") sessN[r.sid]=(sessN[r.sid]||0)+1; });
-  var sessIds=Object.keys(ss.cap||{}).filter(function(k){return k!=="photo"&&k!=="kring"&&TEN_SESS.indexOf(k)<0;});
-  var pre=ss.pre||{}, over=sessIds.filter(function(id){ return (sessN[id]||0)+(PRE_SESS.indexOf(id)>=0?(pre[id]||0):0)>(ss.cap[id]||0); });
   var pw=pwWait();
 
   var h=tabHead(st.t?'<span class="cap">서버 시각 <b class="n">'+esc(st.t)+'</b></span>':'');
@@ -922,9 +919,8 @@ function viewDash(){
     { v:rvBy["신청"]||0, t:"상담 승인 대기", d:"1F DAP존 · 신청 상태", go:"goTo('apply','resv','신청')" },
     { v:rvBy["승인"]||0, t:"상담 체크인 대기", d:"승인됐고 아직 오지 않음", go:"goTo('apply','resv','승인')" },
     { v:ccBy["대기"]||0, t:"커피챗 매칭 대기", d:"18F 라운지 · 회차와 테이블 배정", go:"goTo('apply','cchat','대기')" },
-    { v:ph0.length, t:"포토부스 대기", d:"호출할 번호표", go:"go('photo')" },
-    { v:over.length, t:"정원 초과 강연", d:over.length?over.map(function(id){return SESS_NAME[id]||id;}).join(" · "):"17F 오후 강연 · 사전 신청 포함", go:"goTo('apply','sess')" }
-  ];
+    { v:ph0.length, t:"포토부스 대기", d:"호출할 번호표", go:"go('photo')" }
+  ];   /* v4.26 강연 정원 초과 알림은 17F 자유 참석 전환으로 뺐다 */
   todo.sort(function(a,b){ return (b.v?1:0)-(a.v?1:0); });
   var hot=todo.filter(function(x){return x.v;}).length;
   h+='<div class="grid g57">'+
@@ -937,9 +933,9 @@ function viewDash(){
       endList.map(function(s){ return '<div class="fs end" onclick="goTo(\'apply\',\''+sub0+'\',\''+s+'\')"><div class="l">'+esc(s)+'</div><div class="v">'+(by[s]||0)+'</div></div>'; }).join("")+'</div>';
   }
   var mx=Math.max.apply(null,dist.concat([1]));
-  var capCard=card("강연 신청 · 정원 대비","취소 제외 · 17F 오후는 사전 신청 포함",
-    '<table class="tb plain bartb">'+sessIds.map(function(id){ var p0=PRE_SESS.indexOf(id)>=0?(pre[id]||0):0, n=(sessN[id]||0)+p0, cap=ss.cap[id]||0; return barRow('<b>'+esc(SESS_NAME[id]||id)+'</b>', n, cap, n+' / '+cap, n>cap); }).join("")+'</table>'+
-    '<p class="cap mt8">정원 초과는 적갈 막대로 표시됩니다.</p>');
+  /* v4.26 17F 출석 · 프로그램별 인원과 출석률(분모 = 앱 가입자) · 누르면 17F 출석 메뉴 */
+  var capCard=card("17F 출석",at0.ok?"QR 출석 "+(at0.people||0)+"명 · 분모 "+(at0.denom||0)+"명(앱 가입자)":"집계를 받지 못했습니다",
+    (at0.ok?attBars(at0):'<div class="empty">백엔드 v4.26(출석) 배포 뒤에 보입니다.</div>')+'<p class="cap mt8"><a href="#" onclick="go(\'att\');return false">17F 출석 메뉴에서 시간대별 흐름 보기</a></p>');
   h+='<div>'+card("상담 흐름","1F DAP존 · 전체 "+rv.length+"건 · 칸을 누르면 그 상태 목록으로",flow(["신청","승인","체크인","완료"],rvBy,["노쇼","취소"],"resv"))+
     card("커피챗 흐름","18F 라운지 · 전체 "+cc.length+"명",flow(["대기","매칭","참석","완료"],ccBy,["취소"],"cchat"))+capCard+'</div></div>';
   h+='<div class="grid g2">'+card("스탬프 보유 분포","참여 기록이 있는 사람 "+sp.length+"명",
@@ -1267,11 +1263,12 @@ function rouletteOut(on){
  * 체크박스로 여러 건을 골라 일괄 처리 · 행을 누르면 오른쪽 상세 패널 · 처리 뒤 그 행만 바로 고친다(목록을 다시 받지 않는다).
  * 취소·노쇼는 확인 창을 거치고, 처리 뒤 7초 동안 알림에 「되돌리기」(이전 상태로 다시 세팅)가 뜬다. */
 function viewApply(){
-  var s=sub()||"resv", rv=(ST.data.resv||{}).rows||[], cc=(ST.data.cchat||{}).rows||[], ss=(ST.data.sess||{}).rows||[];
+  var s=sub()||"resv", rv=(ST.data.resv||{}).rows||[], cc=(ST.data.cchat||{}).rows||[];
+  if(s!=="resv"&&s!=="cchat"&&s!=="roster") s="resv";   /* v4.26 옛 서브탭(강의신청 현황 · 사전 신청 명단)으로 저장돼 있으면 상담으로 */
   var h=tabHead(byBox());
   h+=chips([{v:"resv",n:"상담 승인",c:rv.filter(function(r){return r.status==="신청";}).length},{v:"cchat",n:"커피챗 매칭",c:cc.filter(function(r){return r.status==="대기";}).length},
-    {v:"sess",n:"강의신청 현황",c:ss.filter(function(r){return r.status!=="취소";}).length},{v:"pre",n:"사전 신청 명단"},{v:"roster",n:"담당 명단"}], s, "setSub");
-  return h+(s==="roster"?viewRoster():s==="resv"?viewResv():s==="cchat"?viewCchat():s==="pre"?viewPre():viewSess());
+    {v:"roster",n:"담당 명단"}], s, "setSub");
+  return h+(s==="roster"?viewRoster():s==="cchat"?viewCchat():viewResv());
 }
 function selKeys(prefix){ return Object.keys(ST.sel).filter(function(k){ return ST.sel[k]&&k.indexOf(prefix)===0; }).map(function(k){ return k.slice(prefix.length); }); }
 function selToggle(k, on){ if(on) ST.sel[k]=1; else delete ST.sel[k]; render(); }
@@ -1485,233 +1482,80 @@ function drwCchat(emp){
   return h+personHist(r.emp)+'</div>';
 }
 
-/* ── 강의신청 · 정원 선착순이라 승인 없음 · 현황만 본다(운영자 취소는 두지 않는다 · 260919 사용자 확정) ── */
-function ssRows(){ return ((ST.data.sess||{}).rows||[]); }
-function viewSess(){
-  var d=ST.data.sess||{rows:[],cap:{}}, rows=d.rows.slice(), f=ST.filt||"all";
-  var n={}; rows.forEach(function(r){ if(r.status!=="취소") n[r.sid]=(n[r.sid]||0)+1; });
-  var ids=Object.keys(d.cap||{}).filter(function(k){return k!=="photo"&&k!=="kring"&&TEN_SESS.indexOf(k)<0;});
-  var pre=d.pre||{}, left=d.left||{};
-  var shown=rows.filter(function(r){ return match(r,["emp","name","sid","slot"]) && (f==="all"||r.sid===f) && r.status!=="취소"; });
-  shown.sort(function(a,b){ return a.sid<b.sid?-1:a.sid>b.sid?1:(a.ts<b.ts?-1:1); });
-  var h='<div class="kpis">'+ids.map(function(id){ var c=n[id]||0, p0=PRE_SESS.indexOf(id)>=0?(pre[id]||0):0, cap=d.cap[id]||0;
-    return '<div class="kpi link" onclick="setFilt(\''+id+'\')" style="'+(f===id?"border-color:var(--navy)":"")+'"><div class="l">'+esc(SESS_NAME[id]||id)+'</div><div class="v">'+(c+p0)+'<em>/ '+cap+'</em></div><div class="x">앱 '+c+(p0?' · 사전 '+p0:'')+(left[id]!=null?' · 잔여 '+left[id]:'')+'</div><div class="bar'+(c+p0>cap?" over":"")+'"><i style="width:'+pct(c+p0,cap)+'%"></i></div></div>'; }).join("")+'</div>';
-  var body=chips([{v:"all",n:"모든 세션",c:rows.filter(function(r){return r.status!=="취소";}).length}].concat(ids.map(function(id){ return {v:id,n:SESS_NAME[id]||id,c:n[id]||0}; })), f, "setFilt");
-  body+='<div class="toolbar">'+searchBox("사번 · 이름 검색")+'<span class="cnt"><b>'+shown.length+'</b>건 · 취소 제외</span></div>';
-  body+='<div class="wrap"><table class="tb"><tr><th>세션</th><th>슬롯</th><th>이름</th><th>신청 시각</th><th>상태</th></tr>'+
-    shown.slice(0,600).map(function(r){
-      return '<tr class="hv click" onclick="drwOpen(\'ss\',\''+jq(normE(r.emp)+"|"+r.sid)+'\')"><td><b>'+esc(SESS_NAME[r.sid]||r.sid)+'</b></td><td class="n">'+esc(hhmm(r.slot)||"-")+'</td><td><div class="who2">'+esc(r.name)+'<small class="n">'+esc(r.emp)+'</small></div></td><td class="n cap">'+esc(short(r.ts))+'</td><td>'+tag(r.status,"")+'</td></tr>'; }).join("")+
-    (!shown.length?emptyRow(5,"신청이 없습니다."):'')+'</table></div>';
-  body+=memo('<p>강의신청은 정원 선착순이라 승인 단계가 없고, 콘솔에서 처리하지 않습니다(현황만). 행을 누르면 그 사람의 신청 기록을 봅니다.</p>'+
-    '<p>17F 오후 강연 잔여 = 정원 - 사전 신청 - 앱 신청'+PRE_SESS.map(function(id){ return ' · '+esc(SESS_NAME[id])+' 사전 '+(pre[id]||0)+' · 잔여 '+(left[id]!=null?left[id]:"-"); }).join("")+'. 10F 실습형 세션은 사전 신청(앱 밖)이라 여기서 제외합니다. 정원을 바꾸려면 백엔드 SESS_CAP 을 수정해야 합니다.</p>');
-  return h+card("","",body);
-}
-function ssFind(k){ var a=String(k).split("|"); return ssRows().filter(function(r){ return normE(r.emp)===a[0]&&r.sid===a[1]&&r.status!=="취소"; })[0]; }
-function drwSess(k){
-  var r=ssFind(k); if(!r) return "";
-  var h=drwHead(r.name, '사번 '+esc(r.emp))+'<div class="db"><h3>강의신청</h3><div class="row" style="justify-content:space-between"><b>'+esc(SESS_NAME[r.sid]||r.sid)+'</b>'+tag(r.status,"")+'</div><p class="cap mt8">신청 '+esc(short(r.ts))+(r.slot?' · 슬롯 '+esc(hhmm(r.slot)):'')+'</p>'+
-    '<p class="cap mt8">정원 선착순이라 승인 단계가 없습니다. 콘솔에서는 현황만 봅니다.</p>';
-  return h+personHist(r.emp)+'</div>';
-}
+/* v4.26 (260924) 강의신청 현황(viewSess · drwSess)은 17F 자유 참석 전환으로 걷어냈다 · 옛 신청 행은 시트 「강의신청」에 그대로 있다 */
 
-/* ══════════════════ 7-3b. 사전 신청 명단 (v3.31b) ══════════════════
- * 엑셀(.xlsx) · CSV 를 브라우저 안에서만 읽는다. 의존성 없음: xlsx 는 zip 이라 중앙 디렉터리를 읽고
- * DecompressionStream("deflate-raw") 로 시트 XML 만 풀어 DOMParser 로 읽는다. .xls(구 바이너리)는 다른 이름으로 저장 안내.
- * 파일·파싱 결과는 메모리(PRE)에만 두고 저장소(localStorage 등)·콘솔 로그에 남기지 않는다. 반영이 끝나면 비운다.
- * 전송은 JSONP(GET) URL 한계 때문에 20행씩 청크 · 서버는 마지막 청크가 와서 전부 모였을 때만 한 번에 교체한다. */
-var PRE={ file:"", rows:null, errs:[], warn:[], busy:false, pct:0 };
-var PRE_CHUNK=20;
-function preSidOf(v){
-  var raw=String(v||"").trim().toLowerCase(), t=raw.replace(/\s/g,"");
-  if(t==="l1"||/aws/.test(t)||/아마존/.test(t)) return "l1";
-  if(t==="l2"||/(^|[^a-z])ms([^a-z]|$)/.test(raw)||/microsoft|마이크로소프트/.test(t)) return "l2";
-  return "";
-}
-function preHeadKey(v){
-  var t=String(v||"").replace(/\s/g,"").toLowerCase();
-  if(/^(세션|세션id|세션명|강연|강연명|session|sid)$/.test(t)) return "sid";
-  if(/^(사번|직원번호|사원번호|임직원번호|emp|empid|employeeid)$/.test(t)) return "emp";
-  if(/^(이름|성명|name)$/.test(t)) return "name";
-  if(/^(부문|부서|소속|dept|department)$/.test(t)) return "dept";
-  return "";
-}
-function preTemplate(){
-  var csv="\uFEFF세션,사번,이름,부문\r\nAWS,000000,홍길동,예시부문\r\nMS,000001,김예시,예시부문\r\n";
-  var a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
-  a.download="사전신청_양식.csv"; a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); },1000);
-}
-function preReset(){ PRE={ file:"", rows:null, errs:[], warn:[], busy:false, pct:0 }; render(); }
-function preDrop(e){ e.preventDefault(); var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f) preRead(f); }
-function prePick(inp){ var f=inp.files&&inp.files[0]; inp.value=""; if(f) preRead(f); }
-function preRead(f){
-  var name=f.name||"", ext=(name.split(".").pop()||"").toLowerCase();
-  if(ext==="xls"){ toast("옛 .xls 형식은 읽지 못합니다. 엑셀에서 .xlsx 로 다른 이름 저장 후 올려 주세요"); return; }
-  if(ext!=="xlsx"&&ext!=="csv"){ toast(".xlsx 또는 .csv 파일만 올릴 수 있습니다"); return; }
-  PRE.file=name; PRE.rows=null; render();
-  var fr=new FileReader();
-  fr.onload=function(){
-    var p=ext==="csv"?Promise.resolve(csvParse(decodeText(fr.result))):xlsxRows(fr.result);
-    p.then(function(grid){ preCheck(grid); render(); }).catch(function(err){ PRE.file=""; toast("파일을 읽지 못했습니다: "+(err&&err.message||"형식 오류")); render(); });
-  };
-  fr.readAsArrayBuffer(f);
-}
-/* 한국어 윈도 엑셀의 CSV 는 CP949 일 수 있다 · UTF-8 로 먼저 읽고 깨지면 EUC-KR */
-function decodeText(buf){
-  try{ return new TextDecoder("utf-8",{fatal:true}).decode(buf).replace(/^\uFEFF/,""); }
-  catch(e){ return new TextDecoder("euc-kr").decode(buf); }
-}
-function csvParse(t){
-  var rows=[], row=[], cur="", q=false;
-  for(var i=0;i<t.length;i++){
-    var c=t[i];
-    if(q){ if(c==='"'){ if(t[i+1]==='"'){ cur+='"'; i++; } else q=false; } else cur+=c; }
-    else if(c==='"') q=true;
-    else if(c===","){ row.push(cur); cur=""; }
-    else if(c==="\n"||c==="\r"){ if(c==="\r"&&t[i+1]==="\n") i++; row.push(cur); rows.push(row); row=[]; cur=""; }
-    else cur+=c;
-  }
-  if(cur!==""||row.length){ row.push(cur); rows.push(row); }
-  return rows;
-}
-/* xlsx = zip · 첫 번째 시트만 읽는다 */
-function xlsxRows(buf){
-  if(typeof DecompressionStream==="undefined") return Promise.reject(new Error("이 브라우저는 xlsx 압축 해제를 지원하지 않습니다. CSV 로 저장해 올려 주세요"));
-  var u=new Uint8Array(buf), dv=new DataView(buf), eocd=-1;
-  for(var i=u.length-22;i>=0&&i>u.length-66000;i--){ if(dv.getUint32(i,true)===0x06054b50){ eocd=i; break; } }
-  if(eocd<0) return Promise.reject(new Error("xlsx 파일이 아닙니다"));
-  var n=dv.getUint16(eocd+10,true), off=dv.getUint32(eocd+16,true), ent={};
-  var td=new TextDecoder("utf-8");
-  for(var k=0;k<n;k++){
-    if(dv.getUint32(off,true)!==0x02014b50) break;
-    var meth=dv.getUint16(off+10,true), csz=dv.getUint32(off+20,true), fnl=dv.getUint16(off+28,true), exl=dv.getUint16(off+30,true), cml=dv.getUint16(off+32,true), loc=dv.getUint32(off+42,true);
-    ent[td.decode(u.subarray(off+46,off+46+fnl))]={ meth:meth, csz:csz, loc:loc };
-    off+=46+fnl+exl+cml;
-  }
-  function file(nm){
-    var e=ent[nm]; if(!e) return Promise.resolve(null);
-    var lfn=dv.getUint16(e.loc+26,true), lex=dv.getUint16(e.loc+28,true), start=e.loc+30+lfn+lex, data=u.subarray(start,start+e.csz);
-    if(e.meth===0) return Promise.resolve(td.decode(data));
-    if(e.meth!==8) return Promise.reject(new Error("지원하지 않는 압축 방식"));
-    var ds=new DecompressionStream("deflate-raw");
-    return new Response(new Blob([data]).stream().pipeThrough(ds)).arrayBuffer().then(function(b){ return td.decode(b); });
-  }
-  var sheetName=Object.keys(ent).filter(function(x){ return /^xl\/worksheets\/sheet\d+\.xml$/.test(x); }).sort()[0];
-  if(!sheetName) return Promise.reject(new Error("시트를 찾지 못했습니다"));
-  return Promise.all([file("xl/sharedStrings.xml"), file(sheetName)]).then(function(r){
-    var dp=new DOMParser(), ss=[];
-    if(r[0]){ var sd=dp.parseFromString(r[0],"application/xml"); var si=sd.getElementsByTagName("si");
-      for(var a=0;a<si.length;a++){ var ts=si[a].getElementsByTagName("t"), str=""; for(var b=0;b<ts.length;b++) str+=ts[b].textContent; ss.push(str); } }
-    var wd=dp.parseFromString(r[1],"application/xml"), out=[], rws=wd.getElementsByTagName("row");
-    for(var ri=0;ri<rws.length;ri++){
-      var cs=rws[ri].getElementsByTagName("c"), line=[];
-      for(var ci=0;ci<cs.length;ci++){
-        var ref=cs[ci].getAttribute("r")||"", col=0, m=ref.match(/^[A-Z]+/);
-        if(m) for(var z=0;z<m[0].length;z++) col=col*26+(m[0].charCodeAt(z)-64);
-        col=col?col-1:line.length;
-        var tp=cs[ci].getAttribute("t"), vEl=cs[ci].getElementsByTagName("v")[0], val="";
-        if(tp==="s") val=vEl?(ss[+vEl.textContent]||""):"";
-        else if(tp==="inlineStr"){ var it=cs[ci].getElementsByTagName("t"); for(var y=0;y<it.length;y++) val+=it[y].textContent; }
-        else val=vEl?vEl.textContent:"";
-        while(line.length<col) line.push("");
-        line[col]=val;
-      }
-      out.push(line);
-    }
-    return out;
-  });
-}
-/* 검증 · 오류 행은 반영에서 제외 대상, 경고는 반영 가능 */
-function preCheck(grid){
-  grid=(grid||[]).filter(function(r){ return r&&r.some(function(c){ return String(c||"").trim()!==""; }); });
-  if(!grid.length){ PRE.rows=[]; PRE.errs=[{line:0,msg:"빈 파일입니다"}]; return; }
-  var head=grid[0].map(preHeadKey), ix={};
-  head.forEach(function(k,i){ if(k&&!(k in ix)) ix[k]=i; });
-  PRE.errs=[]; PRE.warn=[]; PRE.rows=[];
-  if(!("sid" in ix)||!("emp" in ix)){ PRE.errs.push({line:1,msg:"첫 행에 「세션」「사번」 열이 필요합니다"}); return; }
-  var seen={};
-  for(var i=1;i<grid.length;i++){
-    var r=grid[i], rawS=String(r[ix.sid]||"").trim(), emp=String(r[ix.emp]||"").trim().replace(/\.0$/,"");
-    var sid=preSidOf(rawS), line=i+1, msg="";
-    if(!sid) msg="알 수 없는 세션 「"+rawS+"」";
-    else if(!emp) msg="사번이 비어 있음";
-    else if(!/^[A-Za-z0-9]+$/.test(emp)) msg="사번 형식 이상 「"+emp+"」";
-    else { var key=sid+"|"+emp.replace(/^0+(?=.)/,"").toUpperCase(); if(seen[key]) msg="같은 세션 사번 중복 ("+seen[key]+"행과 같음)"; else seen[key]=line; }
-    var row={ line:line, sid:sid, emp:emp, name:"name" in ix?String(r[ix.name]||"").trim():"", dept:"dept" in ix?String(r[ix.dept]||"").trim():"", err:msg };
-    if(msg) PRE.errs.push({line:line,msg:msg});
-    PRE.rows.push(row);
-  }
-}
-function preSummary(){
-  var by={}; (PRE.rows||[]).forEach(function(r){ if(!r.err) by[r.sid]=(by[r.sid]||0)+1; });
-  return by;
-}
-function preApply(){
-  var good=(PRE.rows||[]).filter(function(r){ return !r.err; }), by=preSummary(), S2=(ST.data.pre||{}).sess||{};
-  var sids=PRE_SESS.filter(function(id){ return by[id]; });
-  if(!good.length||PRE.busy) return;
-  dialog({ t:"사전 신청 명단을 교체할까요?", s:"올린 파일에 있는 세션의 명단을 통째로 바꿉니다."+(PRE.errs.length?" 오류 "+PRE.errs.length+"행은 제외합니다.":""),
-    who:sids.map(function(id){ return esc(SESS_NAME[id])+" · 기존 "+((S2[id]||{}).list||0)+"명 → 새 "+by[id]+"명"; }).join("<br>"), ok:"교체",
-    onOk:function(){ dlgForce(); preSend(good, sids); } });
-}
-function preSend(good, sids){
-  var up="u"+Date.now().toString(36)+Math.random().toString(36).slice(2,8), chunks=[];
-  for(var i=0;i<good.length;i+=PRE_CHUNK) chunks.push(good.slice(i,i+PRE_CHUNK).map(function(r){ return [r.sid,r.emp,r.name,r.dept]; }));
-  PRE.busy=true; PRE.pct=0; render();
-  var k=0;
-  (function next(){
-    call("pre_upload",{ up:up, i:k, n:chunks.length, sids:sids.join(","), rows:JSON.stringify(chunks[k]) },function(r){
-      if(!r||!r.ok){ PRE.busy=false; render(); toast("반영 실패 ("+(r&&r.reason||"")+") · 기존 명단은 그대로입니다"); return; }
-      k++; PRE.pct=Math.round(k/chunks.length*100); render();
-      if(k<chunks.length) return next();
-      var msg=Object.keys(r.change||{}).map(function(id){ return (SESS_NAME[id]||id)+" "+r.change[id].before+"→"+r.change[id].after+"명"; }).join(" · ");
-      preReset(); toast("반영 완료 · "+msg); reload(["pre"]);
-    },function(e){ PRE.busy=false; render(); toast("서버 응답 없음 · 기존 명단은 그대로입니다. 다시 반영하세요"); });
-  })();
-}
-function preClear(id){
-  var x=((ST.data.pre||{}).sess||{})[id]||{};
-  dialog({ t:"명단을 비울까요?", s:"사전 신청 명단만 지웁니다. 앱 신청은 그대로입니다.", who:esc(SESS_NAME[id])+" · "+(x.list||0)+"명", ok:"비우기",
-    onOk:function(){ call("pre_clear",{sess:id},function(r){ dlgForce(); if(r&&r.ok){ toast(SESS_NAME[id]+" 명단 "+r.removed+"명 비움"); reload(["pre"]); } else toast("실패: "+(r&&r.reason||"")); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
-}
+/* v4.26 (260924) 17F 오후 강연 사전 신청 명단 엑셀 업로드(7-3b · PRE · pre_upload · pre_clear)는 걷어냈다 · 시트 「사전신청」의 행은 지우지 않았다 */
+
 /* ══════════════════ 7-5. 설문 (v3.35) ══════════════════
  * 답은 사번 없이 저장된다(서버 설문응답 시트). 여기도 사람 단위가 아니라 집계만 본다.
  * 문항 문구는 앱 SURVEY 상수와 같게 둔다(기획 확정 시 두 곳을 함께 바꾼다). */
-var SURVEY_PLACE_NAME = { p1:"1F AX 전시·체험존", p2:"AX Now! 체험 부스", p7:"DAP Wall QR 퀴즈", p3:"17F 오후 파트너사 강연", dap:"DAP ZONE 과제상담", cchat:"18F AX 커피챗" };
+var SURVEY_PLACE_NAME = { p1:"1F AX 전시·체험존", p2:"AX Now! 체험 부스", p7:"DAP Wall QR 퀴즈", p3:"17F 강연", dap:"DAP ZONE 과제상담", cchat:"18F AX 커피챗" };
 /* v3.52b 설문 = 범용 틀 · 문항은 앱 SURVEY_Q 한 곳 · 서버가 문항 id 별로 형식별 기본 집계만 준다(선택 비율 · 점수 분포 · 한 줄) */
 /* v3.58 AI 사생대회 · 1차 심사는 앱 밖에서 · 여기에는 본선 공개할 작품만 올린다.
    앱에는 상태가 '공개'·'샘플' 인 것만, 작가 없이(번호·제목·설명) 나간다 · '샘플' 은 좋아요·순위에서 빠지고 화면에 「샘플」 워터마크가 얹힌다 · 좋아요 1인 3표 · 시상 확인용 실명은 이 화면에만 있다.
    이미지는 GAS 릴레이가 아니라 정적 호스팅이다: 원본을 내려받아 긴 변 1080px + 섬네일 320px 로 줄이고
    웹배포용/assets/art/ 에 <작품ID>.jpg · <작품ID>_t.jpg 로 넣은 뒤 시트 「파일」 칸에 <작품ID>.jpg 만 적는다. */
 
-function viewPre(){
-  var d=ST.data.pre||{sess:{}}, S2=d.sess||{};
-  var h='<div class="grid g2" style="margin-top:0">'+PRE_SESS.map(function(id){ var x=S2[id]||{};
-    return card(SESS_NAME[id], "잔여 "+(x.left!=null?x.left:"-"),
-      '<div class="wrap"><table class="tb"><tr><td>정원</td><td class="n tdr"><b>'+(x.cap!=null?x.cap:"-")+'</b></td></tr>'+
-      '<tr><td>사전 신청 명단</td><td class="n tdr"><b>'+(x.list||0)+'</b>명</td></tr>'+
-      '<tr><td>설정값 폴백 (명단이 없을 때만)</td><td class="n tdr">'+(x.cfg||0)+'</td></tr>'+
-      '<tr><td>잔여 계산에 쓰는 사전 신청</td><td class="n tdr"><b>'+(x.used||0)+'</b></td></tr>'+
-      '<tr><td>앱 신청</td><td class="n tdr">'+(x.app||0)+'</td></tr>'+
-      '<tr><td>잔여</td><td class="n tdr"><b>'+(x.left!=null?x.left:"-")+'</b></td></tr></table></div>',
-      '<button class="btn sm danger" onclick="preClear(\''+id+'\')">명단 비우기</button>'); }).join("")+'</div>';
-  var body='<div class="row"><button class="btn sm" onclick="preTemplate()">양식 내려받기 (CSV)</button><span class="cap">.xlsx · .csv · 옛 .xls 는 .xlsx 로 저장 후 · 최근 반영 '+esc(d.at||"-")+'</span></div>'+
-    '<label class="drop" ondragover="event.preventDefault()" ondrop="preDrop(event)">'+
-    '<input type="file" accept=".xlsx,.csv,.xls" style="display:none" onchange="prePick(this)"><b>'+(PRE.file?esc(PRE.file):"파일을 끌어다 놓거나 눌러서 고르기")+'</b>'+
-    (PRE.file&&!PRE.rows?'<p class="cap" style="margin:6px 0 0"><span class="spin"></span>읽는 중</p>':'')+'</label>';
-  if(PRE.rows){
-    var by=preSummary(), ok=PRE.rows.filter(function(r){return !r.err;}).length;
-    body+='<h2 class="mt16" style="font-size:var(--fs-b);font-weight:700;margin-bottom:8px">미리보기</h2><div class="wrap"><table class="tb"><tr><th>세션</th><th class="tdr">반영할 인원</th><th class="tdr">현재 명단</th><th class="tdr">정원</th><th>확인</th></tr>'+
-      PRE_SESS.filter(function(id){ return by[id]; }).map(function(id){ var x=S2[id]||{}, over=x.cap!=null&&(by[id]+(x.app||0))>x.cap;
-        return '<tr><td><b>'+esc(SESS_NAME[id])+'</b></td><td class="n tdr"><b>'+by[id]+'</b></td><td class="n tdr">'+(x.list||0)+'</td><td class="n tdr">'+(x.cap!=null?x.cap:"-")+'</td><td>'+(over?tag("정원 초과 (앱 신청 "+(x.app||0)+" 포함)","bad"):tag("정원 안","ok"))+'</td></tr>'; }).join("")+
-      (!ok?emptyRow(5,"반영할 행이 없습니다."):'')+'</table></div>';
-    if(PRE.errs.length) body+='<div class="err-banner mt12">오류 '+PRE.errs.length+'행 · 반영에서 제외됩니다<br>'+PRE.errs.slice(0,30).map(function(e){ return (e.line?e.line+'행 · ':'')+esc(e.msg); }).join("<br>")+(PRE.errs.length>30?'<br>외 '+(PRE.errs.length-30)+'행':'')+'</div>';
-    body+='<div class="row mt12"><button class="btn pri" '+(ok&&!PRE.busy?'':'disabled ')+'onclick="preApply()">'+(PRE.busy?'<span class="spin"></span>반영 중 '+PRE.pct+'%':(PRE.errs.length?'오류 행 제외하고 반영':'반영'))+'</button><button class="btn ghost" onclick="preReset()">취소</button></div>';
-  }
-  body+=memo('<p>첫 행 헤더 · 필수 열 「세션」「사번」 · 선택 열 「이름」「부문」 · 세션 값은 l1 / l2 또는 AWS / MS. 올린 파일에 들어 있는 세션의 명단을 통째로 교체합니다(다시 올려도 두 배가 되지 않습니다).</p>'+
-    '<p>잔여 = 정원 - 사전 신청 - 앱 신청. 명단이 올라와 있으면 명단 인원을 쓰고, 명단이 없을 때만 설정 시트의 사전신청수_l1·l2 를 씁니다.</p>'+
-    '<p>명부에 없는 사번 경고는 이 콘솔이 명부 사번 목록을 받지 않아 표시하지 않습니다(개인정보 최소 전송).</p>');
-  return h+card("엑셀로 명단 올리기","17F 오후 강연 사전 신청",body);
+/* ══════════════════ 7-6. 17F 출석 (v4.26 · 260924 사용자 확정) ══════════════════
+ * 17F 강연은 전부 자유 참석 · 참가자가 대강당 입구 QR 을 찍고 프로그램을 골라 출석한다(서버 att_claim).
+ * 여기는 집계만 본다: 프로그램별 출석 인원 · 출석률 · 시간대별 입장 흐름 · 여러 프로그램 출석 분포. 부문 통계는 두지 않는다(260917 결정).
+ * 출석률 분모 = 앱 가입자(계정 시트 · 테스트 계정 제외) · 서버 att_stats 가 계산한다.
+ * 테스트 계정(310555) 기록은 기본 집계에서 빠진다 · 「테스트 포함」으로 볼 수 있고 「테스트 기록 지우기」(att_wipe)로 지운다.
+ * 출석 QR 코드는 스탬프 › 현장 운영 › 부스 QR 표(codes.json a17)에 있다. */
+var ATTV={ test:false, day:"", data:null, busy:false };
+function attCur(){ return (ATTV.test||ATTV.day)?ATTV.data:ST.data.att; }
+function attOpt(k, v){
+  ATTV[k]=v; ATTV.data=null;
+  if(!ATTV.test&&!ATTV.day){ render(); return; }
+  ATTV.busy=true; render();
+  call("att_stats",{ test:ATTV.test?"1":"", day:ATTV.day },function(r){ ATTV.busy=false; ATTV.data=r; render(); },function(){ ATTV.busy=false; ATTV.data={ ok:false, reason:"network" }; render(); });
 }
+function attWipe(){
+  var d=attCur()||ST.data.att||{};
+  dialog({ t:"테스트 출석 기록을 지울까요?", s:"테스트 계정(310555) 출석 행만 지웁니다. 실제 참가자 출석은 지워지지 않습니다.", who:"테스트 기록 "+(d.test||0)+"건", ok:"지우기", danger:true,
+    onOk:function(){ call("att_wipe",{},function(r){ dlgForce(); if(r&&r.ok){ toast("테스트 출석 "+r.removed+"건 지움"); ATTV.data=null; ATTV.test=false; reload(["att"]); } else toast("실패: "+why(r)); },
+      function(){ dlgForce(); toast("서버 응답 없음"); }); } });
+}
+var ATT_SHORT={ key:"기조", road:"내부", l1:"AWS", l2:"MS" };
+function attBars(d){
+  var progs=d.progs||[], den=d.denom||0;
+  return '<table class="tb plain bartb">'+progs.map(function(x){
+    return barRow('<b>'+esc(x.n)+'</b> <span class="cap n">'+x.cnt+'명 · '+esc(x.s)+'–'+esc(x.e)+'</span>', x.cnt, den||1, '<b class="n">'+x.rate+'%</b>'); }).join("")+'</table>';
+}
+function viewAtt(){
+  var d=attCur(), base=ST.data.att||{};
+  var h=tabHead('<button class="btn sm" onclick="ATTV.data=null;reload([\'att\'])">새로고침</button>');
+  if(ATTV.busy) return h+'<div class="card"><p class="muted"><span class="spin"></span>서버에서 불러오는 중입니다.</p></div>';
+  if(!d||!d.ok) return h+'<div class="err-banner">출석 집계를 받지 못했습니다('+esc(why(d))+'). 백엔드가 v4.26(출석) 이상인지 확인합니다.</div>';
+  var progs=d.progs||[], mt=d.multi||{}, two=(mt[2]||0)+(mt[3]||0)+(mt[4]||0);
+  var days=Object.keys(base.days||{}).sort();
+  h+=chips([{v:"",n:"모든 날짜",c:null}].concat(days.map(function(k){ return { v:k, n:k.slice(5).replace("-","/"), c:(base.days||{})[k] }; })), ATTV.day, "attDay")+
+    '<div class="toolbar"><label class="cap" style="display:flex;align-items:center;gap:6px"><input type="checkbox" '+(ATTV.test?"checked ":"")+'onchange="attOpt(\'test\',this.checked)">테스트 계정 포함</label>'+
+    '<span class="cap">테스트 기록 '+(d.test||0)+'건'+(ATTV.test?' · 지금 포함해서 셉니다':' · 빼고 셉니다')+'</span><span class="sp"></span>'+
+    (d.test?'<button class="btn sm danger" onclick="attWipe()">테스트 기록 지우기</button>':'')+
+    '<span class="cnt">'+esc(short(d.t))+' 기준 · 창검사 '+(d.win?"ON":"OFF")+'</span></div>';
+  h+='<div class="kpis">'+
+    kpi("17F 출석 인원",d.people||0,"명","하나 이상 출석 · 출석률 분모 "+(d.denom||0)+"명(앱 가입자 · 테스트 제외)")+
+    kpi("두 개 이상 출석",two,"명","2개 "+(mt[2]||0)+" · 3개 "+(mt[3]||0)+" · 4개 "+(mt[4]||0))+
+    progs.map(function(x){ return kpi(x.n, x.cnt, "명", "출석률 "+x.rate+"% · 출석 "+esc(x.open)+"–"+esc(x.e)); }).join("")+
+  '</div>';
+  /* 시간대별 입장 흐름 · 10분 버킷 · 막대 = 그 10분에 처음 출석한 사람 수 */
+  var fl=d.flow||[], fmx=Math.max.apply(null,[1].concat(fl.map(function(f){ return progs.reduce(function(a,x){ return a+(f[x.id]||0); },0); })));
+  var flowT=fl.length?'<table class="tb plain bartb">'+fl.map(function(f){
+      var tot=progs.reduce(function(a,x){ return a+(f[x.id]||0); },0);
+      var parts=progs.filter(function(x){ return f[x.id]; }).map(function(x){ return (ATT_SHORT[x.id]||x.id)+" "+f[x.id]; }).join(" · ");
+      return barRow('<b class="n">'+esc(f.t)+'</b> <span class="cap">'+esc(parts)+'</span>', tot, fmx, '<b class="n">'+tot+'</b>명'); }).join("")+'</table>'
+    :'<div class="empty">아직 출석 기록이 없습니다.</div>';
+  h+='<div class="grid g2">'+card("프로그램별 출석","분모 "+(d.denom||0)+"명(앱 가입자) · 출석 = 시작 "+(d.lead||15)+"분 전 ~ 종료", attBars(d))+
+    card("시간대별 입장 흐름",(d.bucket||10)+"분 단위 · 처음 출석한 시각 기준", flowT)+'</div>';
+  h+=memo('<p><b>출석률</b> = 그 프로그램에 QR 로 출석한 사람 ÷ 앱 가입자(계정 시트, 테스트 계정 제외). 17F 에 오고도 QR 을 찍지 않은 사람은 세지 못합니다. 대강당 좌석 수 대비 비율이 필요하면 좌석 수로 따로 나눕니다.</p>'+
+    '<p><b>출석 규칙</b> · 참가자가 대강당 입구 QR 을 찍으면 지금 진행 중인 강연이 미리 골라진 시트가 뜹니다. 시작 '+(d.lead||15)+'분 전부터 종료까지인 강연만 고를 수 있고, 시간은 서버가 다시 확인합니다. 한 사람이 여러 강연에 출석할 수 있고 같은 강연은 한 번만 셉니다.</p>'+
+    '<p><b>스탬프</b> · 그 사람의 첫 출석에서 스탬프 03 「프로그램 참여」가 적립됩니다(DAP 상담 · 커피챗으로 이미 받았으면 그대로).</p>'+
+    '<p><b>QR</b> · 출석 QR 코드는 스탬프 › 현장 운영의 부스 QR 표에 있고 codes.json(a17)으로 인쇄 원본을 만듭니다. 코드를 바꾸면 입구 인쇄물을 다시 붙입니다.</p>'+
+    '<p>부문별 집계는 두지 않습니다(260917 결정). 이 화면의 숫자에는 사번 · 이름이 없습니다.</p>');
+  return h;
+}
+function attDay(v){ attOpt("day", v||""); }
 
 /* ══════════════════ 7-5. AI 사생대회 ══════════════════ */
 function viewArt(){
@@ -2869,11 +2713,11 @@ function ideaCsv(){
   csvDl("아이디어_"+new Date().toISOString().slice(0,10)+".csv", out.join("\n"));
 }
 
-/* ── 9-2. 담당 명단 · 17F AWS · MS 강연 · 1F DAP 과제상담 · 18F 커피챗 ──
+/* ── 9-2. 담당 명단 · 1F DAP 과제상담 · 18F 커피챗 (v4.26 17F 강연은 자유 참석이라 명단 없음) ──
  * 폰 관리자 「내 담당 명단」과 같은 목록. 콘솔은 노쇼 표시 · 해제만 한다(입장 처리는 폰 스캔).
  * 노쇼 표시는 담당표시 시트 한 줄이고 원장(신청 · 상담 · 커피챗 시트)은 그대로다. 좌석 · 슬롯 반환은 각 신청 화면에서. */
-var ROS_PROGS=[{v:"l1",n:"17F AWS 강연"},{v:"l2",n:"17F MS 강연"},{v:"dap",n:"1F DAP 과제상담"},{v:"cchat",n:"18F 커피챗"}];
-var ROS={ prog:"l1", f:"all" };
+var ROS_PROGS=[{v:"dap",n:"1F DAP 과제상담"},{v:"cchat",n:"18F 커피챗"}];
+var ROS={ prog:"dap", f:"all" };
 function rosName(p){ var x=ROS_PROGS.filter(function(o){ return o.v===p; })[0]; return x?x.n:p; }
 function rosData(p){ return ST.data["ros_"+(p||ROS.prog)]; }
 function rosProg(v){ ROS.prog=v; ROS.f="all"; ST.q=""; load(); render(); }
@@ -2890,20 +2734,19 @@ function viewRoster(){
   body+='<div class="toolbar">'+searchBox("사번 · 이름 · 부문 검색")+'<span class="sp"></span><span class="cnt"><b>'+shown.length+'</b> / '+rows.length+'명 · '+esc(short(d.t))+' 기준</span>'+
     '<button class="btn sm" onclick="reload([\'ros_'+p+'\'])">이 명단 새로고침</button></div>';
   var th=p==="dap"?'<th>슬롯</th>':p==="cchat"?'<th>회차</th><th>테이블</th>':'';
-  var th2=p==="l1"||p==="l2"?'<th>신청 경로</th>':p==="dap"?'<th>상담 상태</th>':'<th>매칭 상태</th>';
+  var th2=p==="dap"?'<th>상담 상태</th>':'<th>매칭 상태</th>';
   var cols=4+(p==="cchat"?2:p==="dap"?1:0)+1;
   body+='<div class="wrap"><table class="tb"><tr>'+th+'<th>이름</th><th>부문</th>'+th2+'<th>담당 상태</th><th class="tdr">노쇼</th></tr>'+
     shown.map(function(r){ var k=jq(r.emp);
       var pre=p==="dap"?'<td class="n"><b>'+esc(hhmm(r.slot))+'</b></td>':p==="cchat"?'<td class="n">'+(r.round?esc(hhmm(r.round)):'<span class="cap">미정</span>')+'</td><td>'+esc(r.table||"-")+'</td>':'';
-      var raw=p==="l1"||p==="l2"?esc(r.src||""):tag(r.raw, p==="dap"?RESV_TAG[r.raw]:CC_TAG[r.raw]);
+      var raw=tag(r.raw, p==="dap"?RESV_TAG[r.raw]:CC_TAG[r.raw]);
       var st=tag(r.st, r.st==="입장"?"ok":r.st==="노쇼"?"bad":"warn");
       var act=r.st==="신청"?'<button class="btn sm danger" onclick="rosMark(\''+k+'\',\'noshow\')">노쇼 표시</button>':
         r.st==="노쇼"?(p==="dap"&&r.raw==="노쇼"?'<span class="cap">상담 화면에서 처리됨</span>':'<button class="btn sm" onclick="rosMark(\''+k+'\',\'clear\')">노쇼 해제</button>'):'<span class="cap">-</span>';
       return '<tr class="hv">'+pre+'<td><div class="who2">'+esc(r.name||"-")+'<small class="n">'+esc(r.emp)+'</small></div></td><td>'+esc(r.dept||"")+'</td><td>'+raw+'</td><td>'+st+'</td><td><div class="acts">'+act+'</div></td></tr>'; }).join("")+
     (!shown.length?emptyRow(cols, rows.length?"조건에 맞는 사람이 없습니다.":"명단이 비어 있습니다."):"")+'</table></div>';
   if(p==="dap") body+='<div class="note mt12 row"><span style="flex:1">DAP 노쇼 <b>표시</b>는 명단 표시만 합니다. 슬롯을 비워 다른 사람이 신청하게 하려면 상담 승인 화면에서 그 신청을 「노쇼」로 바꿉니다.</span><button class="btn sm pri" onclick="goTo(\'apply\',\'resv\',\'승인\')">상담 승인 화면으로</button></div>';
-  if(p==="l1"||p==="l2") body+='<div class="note mt12">노쇼 표시는 강연 좌석을 돌려주지 않습니다. 강연 신청 취소는 참가자 본인이 앱에서 합니다(콘솔의 운영자 취소는 260919에 없앴습니다).</div>';
-  body+=memo('<p>현장 담당자 폰의 「내 담당 명단」과 같은 목록입니다. <b>입장</b>은 담당자가 폰으로 참가자 QR을 찍을 때 바뀝니다(강연 = 체크인 시트, 상담 = 「체크인」, 커피챗 = 「참석」).</p>'+
+  body+=memo('<p>현장 담당자 폰의 「내 담당 명단」과 같은 목록입니다. <b>입장</b>은 담당자가 폰으로 참가자 QR을 찍을 때 바뀝니다(상담 = 「체크인」, 커피챗 = 「참석」).</p>'+
     '<p><b>노쇼 표시</b>는 담당표시 시트에 한 줄 남기는 표시입니다. 신청 · 상담 · 커피챗 원장은 바뀌지 않습니다. 이미 입장한 사람은 노쇼로 표시할 수 없고, 노쇼로 표시된 사람이 나중에 입장하면 표시가 자동으로 풀립니다.</p>'+
     '<p>DAP 상담을 상담 승인 화면에서 「노쇼」로 바꾼 경우(원장 노쇼)는 여기서 해제하지 않습니다. 상담 승인 화면의 되돌리기를 씁니다.</p>');
   return h+card("",rosName(p),body);
@@ -3127,9 +2970,12 @@ function wqLockSet(on){
  * 콘솔은 서버 코드를 보여 주고 codes.json 을 내려준다. 그 파일을 QR 테스트/ 에 넣고 qr_mother.py 를 돌리면 out/light · out/dark 에 실제 코드판이 나온다.
  * (260922 확인: 지금 out/ 의 p1~p3 는 codes.json 에 부스 코드가 없어 견본 코드 AXSSAMPLE 로 만든 것이다 · 인쇄 금지) */
 function boothRows(){ return ((ST.data.slist||{}).rows||[]).slice().sort(function(a,b){ return (a.id<b.id?-1:1); }); }
+/* v4.26 옛 17F 좌석 QR(p3)은 인쇄하지 않는다(서버가 att 로 거절) · 17F 출석 QR = a17(att_list) */
+var BOOTH_PRINT=["p1","p2"];
 function qrCodesJson(){
   var out={};
-  boothRows().forEach(function(r){ if(STAMP_META[r.id]&&!STAMP_META[r.id].old) out[r.id]=r.code; });
+  boothRows().forEach(function(r){ if(BOOTH_PRINT.indexOf(r.id)>=0) out[r.id]=r.code; });
+  var al=ST.data.alist; if(al&&al.ok&&al.code) out.a17=al.code;
   ((ST.data.stair||{}).rows||[]).forEach(function(r){ out["st"+("0"+r.fl).slice(-2)+"-"+r.r]=r.code; });
   return out;
 }
@@ -3144,17 +2990,19 @@ function qrCodesDl(){
 function boothCard(){
   var d=ST.data.slist, rows=boothRows();
   if(!d) return card("부스 QR","인쇄용 · 스탬프 01 · 02 · 03",'<p class="muted"><span class="spin"></span>코드를 불러오는 중입니다.</p>');
-  var cur=rows.filter(function(r){ return STAMP_META[r.id]&&!STAMP_META[r.id].old; }), old=rows.filter(function(r){ return !(STAMP_META[r.id]&&!STAMP_META[r.id].old); });
-  return card("부스 QR","인쇄용 · 스탬프 01 · 02 · 03 · 코드를 바꾸면 다시 인쇄",
+  var cur=rows.filter(function(r){ return BOOTH_PRINT.indexOf(r.id)>=0; }), old=rows.filter(function(r){ return BOOTH_PRINT.indexOf(r.id)<0; });
+  var al=ST.data.alist, attRow=al&&al.ok&&al.code?'<tr><td>'+tag("17F 출석")+'</td><td style="white-space:nowrap"><b>17F 대강당 입구</b></td><td class="n" style="white-space:nowrap">강연마다 시작 '+(al.lead||15)+'분 전 ~ 종료</td><td class="n"><b>'+esc(al.code)+'</b></td>'+
+    '<td class="n cap">'+esc(appBase())+'#s='+esc(al.code)+'</td><td class="n cap">a17.png</td><td>'+tag("운영","ok")+'</td></tr>':'';
+  return card("부스 QR","인쇄용 · 스탬프 01 · 02 · 17F 출석 · 코드를 바꾸면 다시 인쇄",
     (cur.length?'<div class="wrap"><table class="tb"><tr><th>스탬프</th><th>지점</th><th>운영 시간</th><th>코드</th><th>QR 내용</th><th>인쇄 파일</th><th>상태</th></tr>'+cur.map(function(r){
       return '<tr><td>'+tag("스탬프 "+STAMP_META[r.id].no)+'</td><td style="white-space:nowrap"><b>'+esc(r.name)+'</b></td><td class="n" style="white-space:nowrap">'+esc(hhmm(r.s))+' ~ '+esc(hhmm(r.e))+'</td><td class="n"><b>'+esc(r.code)+'</b></td>'+
-        '<td class="n cap">'+esc(appBase())+'#s='+esc(r.code)+'</td><td class="n cap">'+esc(r.id)+'.png</td><td>'+(r.on?tag("운영","ok"):tag("꺼짐","off"))+'</td></tr>'; }).join("")+'</table></div>'
+        '<td class="n cap">'+esc(appBase())+'#s='+esc(r.code)+'</td><td class="n cap">'+esc(r.id)+'.png</td><td>'+(r.on?tag("운영","ok"):tag("꺼짐","off"))+'</td></tr>'; }).join("")+attRow+'</table></div>'
       :'<div class="empty">설치된 부스 지점이 없습니다. 백엔드 stamp_install 로 만듭니다.</div>')+
-    (old.length?'<p class="cap mt8">옛 지점 '+old.map(function(r){ return esc(r.id+" "+r.name)+(r.on?" (운영 중)":" (꺼짐)"); }).join(" · ")+' · 인쇄하지 않습니다.</p>':'')+
-    '<div class="row mt12"><button class="btn pri" onclick="qrCodesDl()">codes.json 내려받기 (부스 + 계단)</button><span class="cap">인쇄 원본을 만드는 파일입니다. 아래 운영 메모의 순서대로 씁니다.</span></div>'+
-    memo('<ol><li><b>codes.json 내려받기</b>를 눌러 받은 파일로 <code>QR 테스트/codes.json</code>을 바꿉니다(부스 3곳 + 계단 36곳의 지금 서버 코드).</li>'+
+    (old.length?'<p class="cap mt8">인쇄하지 않는 지점 '+old.map(function(r){ return esc(r.id+" "+r.name)+(r.id==="p3"?" (17F 좌석 QR 폐지 · 담당자 적립용 · 17F 는 출석 QR)":r.on?" (운영 중)":" (꺼짐)"); }).join(" · ")+'</p>':'')+
+    '<div class="row mt12"><button class="btn pri" onclick="qrCodesDl()">codes.json 내려받기 (부스 + 17F 출석 + 계단)</button><span class="cap">인쇄 원본을 만드는 파일입니다. 아래 운영 메모의 순서대로 씁니다.</span></div>'+
+    memo('<ol><li><b>codes.json 내려받기</b>를 눌러 받은 파일로 <code>QR 테스트/codes.json</code>을 바꿉니다(부스 2곳 + 17F 출석 1곳 + 계단 36곳의 지금 서버 코드).</li>'+
       '<li><code>QR 테스트</code> 폴더에서 <code>python qr_mother.py</code>를 돌립니다. 모든 QR을 다시 만들고 인식 검증까지 합니다(실패가 있으면 종료코드 1).</li>'+
-      '<li><code>QR 테스트/out/light</code>(흰 벽) 또는 <code>/dark</code>(어두운 곳)의 <b>p1.png · p2.png · p3.png</b>를 인쇄합니다. 라벨에 「견본」이 보이면 인쇄하지 않습니다.</li>'+
+      '<li><code>QR 테스트/out/light</code>(흰 벽) 또는 <code>/dark</code>(어두운 곳)의 <b>p1.png · p2.png · a17.png</b>를 인쇄합니다(a17 = 17F 대강당 입구 출석, 라이트). 라벨에 「견본」이 보이면 인쇄하지 않습니다.</li>'+
       '<li>붙인 뒤 폰 기본 카메라로 한 번 찍어 이 표의 코드로 적립되는지 확인합니다.</li></ol>'+
       '<p>260922 기준 <code>QR 테스트/out</code>의 p1~p3은 부스 코드 없이 만든 <b>견본(AXSSAMPLE)</b>입니다. 반드시 위 순서로 다시 만듭니다. 코드 전면 교체(stamp_rotate)를 하면 인쇄물도 다시 뽑습니다.</p>'));
 }
