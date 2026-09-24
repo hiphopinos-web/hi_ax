@@ -782,14 +782,14 @@ function rgDraw(ctx, now) {
   ctx.restore();
   if (L.pan) rgSideDraw(ctx, L);
 }
-/* v4.29 대기 화면 · 어두운 이름표 + 도트 글자 깜빡임(0.53초마다 주황 ↔ 진한 나무) · 동작 줄이기 = 주황 고정 */
+/* v4.29 대기 화면 · 어두운 이름표 + 도트 글자 밝기 깜빡임(0.53초마다 O100 ↔ 어두운 오렌지 · 글자는 늘 보인다) · 동작 줄이기 = 주황 고정 */
 function rgWaitDraw(ctx, L, now) {
   var on = rgReduced() || Math.floor(now / 530) % 2 === 0, px = L.big ? 32 : 16, th = L.big ? 56 : 34, t = "SPACE를 눌러 시작";
   ctx.save();
   ctx.font = rtFont(px); ctx.textAlign = "center"; ctx.textBaseline = "middle";
   var tw = Math.ceil(ctx.measureText(t).width) + (L.big ? 48 : 28), y = Math.round(L.floor * 0.42);
   rtTag(ctx, L.W / 2 - tw / 2, y, tw, th, RT_PAL.night, RT_PAL.bark, RAIN_PAL.ink);
-  rtText(ctx, t, L.W / 2, y + th / 2, px, on ? RAIN_PAL.o100 : RT_PAL.wood, null);   /* 꺼진 박자는 진한 나무색(빈 상자로 보이지 않게) */
+  rtText(ctx, t, L.W / 2, y + th / 2, px, on ? RAIN_PAL.o100 : RAIN_PAL.deep, null);   /* 글자는 사라지지 않고 밝기만 오간다(O100 ↔ 어두운 오렌지) · 빈 상자로 보이지 않게 */
   ctx.restore();
 }
 /* v4.29 옆판 · 테트리스 문법 · 나무 이중 테두리 판(rtPanel) · 위 NEXT 3개(RG.next) · 가운데 TOP 5(RG.top · 화면 쪽이 서버 순위판을 읽어 넣는다) · 아래 점수·목숨·단계
