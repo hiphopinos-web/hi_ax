@@ -46,6 +46,7 @@ header.top{position:sticky;top:0;z-index:30;height:60px;background:var(--sf);bor
 nav.tabs{display:flex;gap:2px;min-width:0;overflow-x:auto;scrollbar-width:none}
 nav.tabs::-webkit-scrollbar{display:none}
 nav.tabs button{padding:7px 12px;border-radius:var(--r-s);font-weight:600;color:var(--tx3);white-space:nowrap;flex-shrink:0}
+@media (max-width:1365px){ nav.tabs button{padding:7px 9px} }   /* v4.27 접속 메뉴가 늘어 1280 폭에서 마지막 탭이 잘리던 것 */
 nav.tabs button:hover{background:var(--bg);color:var(--tx)}
 nav.tabs button.on{background:var(--navy);color:#fff}
 .tbadge{display:inline-block;margin-left:6px;min-width:18px;padding:0 6px;border-radius:99px;background:var(--brand);color:#fff;
@@ -127,6 +128,12 @@ textarea.in{height:auto;min-height:72px;padding:9px 12px;resize:vertical;width:1
 .bar{height:8px;border-radius:99px;background:var(--navy05);overflow:hidden}
 .bar i{display:block;height:100%;background:var(--navy);border-radius:99px}
 .bar.over i{background:var(--bad)}
+/* v4.27 접속 · 경로별 비율 한 줄(누적 막대) + 범례 */
+.vstk{display:flex;height:14px;border-radius:99px;background:var(--navy05);overflow:hidden;margin:4px 0 10px}
+.vstk i{display:block;height:100%}
+.vleg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:var(--fs-s);color:var(--tx2);margin-bottom:12px}
+.vleg span{display:inline-flex;align-items:center;gap:6px}
+.vleg i{display:inline-block;width:10px;height:10px;border-radius:3px}
 
 /* 표 */
 .wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-s)}
@@ -500,6 +507,7 @@ var TABS = [
   { id:"stamp", n:"스탬프", d:"사번이나 이름으로 한 사람을 골라 스탬프를 부여하거나 취소합니다." },
   { id:"apply", n:"신청", d:"상담 승인 · 커피챗 매칭 · 담당 명단을 처리합니다. 17F 강연은 자유 참석이라 신청이 없습니다(v4.26)." },
   { id:"att", n:"17F 출석", d:"17F 강연 QR 출석 인원 · 출석률 · 시간대별 입장 흐름입니다. 부문 통계는 두지 않습니다." },
+  { id:"visit", n:"접속", d:"앱을 연 사람 수와 들어온 경로(홈 화면 앱 · 브라우저 · 카카오톡 등) · 시간대별 흐름 · 로그인 전 이탈입니다. 부문 통계는 두지 않습니다." },
   { id:"idea", n:"아이디어", d:"참가자가 낸 아이디어 한 줄을 봅니다. 18F 커피챗 매칭 때 분야별로 묶어 봅니다." },
   { id:"survey", n:"설문", d:"오늘 한 판 설문 집계입니다. 답은 이름 없이 저장되어 사람 단위 조회는 없습니다." },
   { id:"typing", n:"게임", d:"AX 올림픽 점수 계수와 당일 잠금 · 게임별 전원 점수 · 1F 현장 타자왕전과 닉네임을 관리합니다." },
@@ -736,6 +744,7 @@ var NEED={
   stamp:[{k:"stamp",a:"stamp_people"},{k:"acct",a:"acct_list"},{k:"stair",a:"stair_list"},{k:"sstat",a:"stair_stats"},{k:"sy",a:"sync",p:{emp:""}}],
   apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"}],   /* v4.26 강의신청 현황(sess_list) · 사전 신청 명단(pre_list)은 걷어냈다 */
   att:[{k:"att",a:"att_stats"}],
+  visit:[{k:"visit",a:"visit_stats"}],   /* v4.27 접속 기록 · 오늘(서버 날짜) */
   idea:[{k:"idea",a:"idea_list"},{k:"cchat",a:"cchat_list"}],
   survey:[{k:"survey",a:"survey_list"}],
   typing:[{k:"nick",a:"type_nick_list"},{k:"tres",a:"type_result"},{k:"olyr",a:"oly_result"},{k:"gstats",a:"game_stats"},{k:"stats",a:"stats"},{k:"oxs",a:"ox_stats"}],
@@ -820,7 +829,7 @@ function render(){
   if(missing.length&&ST.busy){
     h=tabHead()+'<div class="card"><p class="muted"><span class="spin"></span>서버에서 불러오는 중입니다. 보통 2~5초 걸립니다.</p></div>';
   } else {
-    try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="notice"?viewNotice():ST.tab==="survey"?viewSurvey():ST.tab==="typing"?viewTyping():ST.tab==="photo"?viewPhoto():ST.tab==="art"?viewArt():ST.tab==="race"?viewRace():ST.tab==="idea"?viewIdea():ST.tab==="att"?viewAtt():viewApply(); }
+    try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="notice"?viewNotice():ST.tab==="survey"?viewSurvey():ST.tab==="typing"?viewTyping():ST.tab==="photo"?viewPhoto():ST.tab==="art"?viewArt():ST.tab==="race"?viewRace():ST.tab==="idea"?viewIdea():ST.tab==="att"?viewAtt():ST.tab==="visit"?viewVisit():viewApply(); }
     catch(e){ h='<div class="err-banner">화면을 그리는 중 오류가 났습니다: '+esc(e.message)+'</div>'; }
   }
   if(ST.err) h='<div class="err-banner">일부 데이터를 못 받았습니다('+esc(ST.err.reason||"")+'). 새로고침을 눌러 주세요. 표시된 값은 마지막으로 받은 것입니다.</div>'+h;
@@ -866,7 +875,8 @@ var GUIDE={
   acct:[["분실 요청","앱에서 온 비밀번호 분실 요청이 위에 쌓입니다. <b>사원증이나 얼굴로 본인 확인을 먼저</b> 합니다."],["초기화","초기화하면 본인이 앱에서 다음에 넣는 4자리가 새 비밀번호가 됩니다. 비밀번호 값은 어디에도 보이지 않습니다."],["처리자 이름","한 번 적어 두면 이 브라우저가 기억하고 운영 로그에 함께 남깁니다."]],
   stamp:[["사람 찾기","왼쪽 칸에 사번이나 이름을 넣고 한 사람을 고릅니다."],["8칸 확인","획득한 칸은 네이비, 획득 경로(현장 QR · 담당자 부여 · 앱 자동)가 칸 안에 보입니다."],["부여","현장 QR 01·02·03 과 계단 07 만 <b>부여</b>할 수 있습니다. 앱 자동 04·05·06 과 설문 08 은 앱 안의 행동이라 부여하지 않습니다."],["취소","지금은 8칸 모두 <b>취소</b>할 수 있습니다(테스트 기간 · 설정 「스탬프취소_범위」 = 전체). 취소한 칸은 같은 행동으로 다시 받을 수 있습니다. 확인 창에서 보상 변화를 먼저 보여 주고, 룰렛을 이미 돌렸거나 발급된 응모권이 줄어드는 취소는 서버가 거부합니다."],["되돌리기","처리 직후 알림의 <b>되돌리기</b>로 바로 원래대로 돌릴 수 있습니다. 모든 부여·취소는 참여 기록에 행으로 남습니다(지우지 않음)."]],
   apply:[["처리할 것","기본 필터는 <b>처리할 것</b>입니다. 칩의 숫자는 상태별 건수입니다."],["다음 행동","행마다 지금 상태에서 할 다음 행동 하나가 네이비 버튼입니다(신청 → 승인 → 체크인 → 완료). 노쇼·취소는 옆의 적갈 버튼입니다."],["여러 건","왼쪽 칸을 체크하면 위에 일괄 처리 바가 뜹니다(상담 일괄 승인·취소 · 커피챗 일괄 매칭·취소)."],["상세","행을 누르면 오른쪽에 상세 패널이 열립니다. 이력 확인과 메모 저장, 처리까지 거기서 합니다."],["되돌리기","승인·노쇼·취소·매칭은 처리 뒤 7초 동안 알림에 <b>되돌리기</b>가 뜹니다. 체크인·완료·참석은 스탬프 03 이 적립되어 되돌리기가 없습니다."]],
-  att:[["숫자","프로그램별 출석 인원과 출석률(분모 = 앱 가입자, 테스트 계정 제외)입니다. 17F 에 왔어도 QR 을 찍지 않은 사람은 세지 못합니다."],["흐름","10분 단위로 처음 출석한 사람 수입니다. 입구 혼잡 시각을 봅니다."],["테스트","테스트 계정 기록은 기본으로 빠집니다. 「테스트 계정 포함」으로 확인하고, 리허설이 끝나면 「테스트 기록 지우기」를 누릅니다."],["QR","출석 QR 코드는 스탬프 › 현장 운영의 부스 QR 표(a17)에 있습니다."]],
+  att:[["숫자","프로그램별 출석 인원과 출석률(분모 = 대강당 좌석 수)입니다. 17F 에 왔어도 QR 을 찍지 않은 사람은 세지 못합니다."],["흐름","10분 단위로 처음 출석한 사람 수입니다. 입구 혼잡 시각을 봅니다."],["테스트","테스트 계정 기록은 기본으로 빠집니다. 「테스트 계정 포함」으로 확인하고, 리허설이 끝나면 「테스트 기록 지우기」를 누릅니다."],["QR","출석 QR 코드는 스탬프 › 현장 운영의 부스 QR 표(a17)에 있습니다."]],
+  visit:[["접속자","그날 앱을 연 사람 수입니다. 로그인한 사람은 사번 하나로, 끝까지 로그인하지 않은 기기는 기기 하나를 한 명으로 셉니다."],["경로","홈 화면 앱 · 브라우저 · 카카오톡 · 네이버 · 인앱 기타입니다. 한 사람이 두 경로로 들어오면 두 줄에 모두 셉니다."],["이탈","앱을 열고 로그인하지 않은 기기 수입니다. 아이폰은 홈 화면 앱이 사파리와 로그인을 따로 쓰므로 홈 화면 앱 줄의 이탈을 봅니다."],["테스트","테스트 계정과 그 기기의 기록은 기본으로 빠집니다. 리허설이 끝나면 「테스트 기록 지우기」를 누릅니다."]],
   idea:[["목록","최신 아이디어가 위에 옵니다. 테스트 계정은 빠져 있고 「테스트 계정 포함」으로 볼 수 있습니다."],["분야별 묶음","18F 커피챗 매칭 때 씁니다. 같은 분야에서 커피챗을 신청한 사람이 위에 옵니다."],["CSV","지금 걸러 보는 목록 그대로 내려받습니다."]],
   survey:[["집계","문항마다 선택 비율 · 점수 분포 · 한 줄 답을 봅니다."],["이름 없음","답은 사번 없이 저장됩니다. 사람 단위 조회는 없습니다."]],
   typing:[["AX 올림픽 · 점수 계수","종목별 계수를 고치면 미리보기에 예시 기록의 점수가 바로 보입니다. <b>저장</b>하면 규칙판(rev)이 1 오르고 이미 낸 기록까지 전원 점수가 새 계수로 다시 계산됩니다."],["당일 잠금","리허설 재보정을 마친 뒤 10/26 아침에 <b>당일 잠금 켜기</b>를 누릅니다. 잠긴 동안에는 저장이 거부되고, 해제는 언제든 됩니다."],["게임별 통계","다섯 종목 전원 점수 · 최고 점수 중앙 · 만점 도달 · CSV 입니다. 행의 대표 기록을 누르면 점수 구성이 펼쳐집니다. 부문 통계는 두지 않습니다."],["O/X 문항","AI O/X 문항별 정답률 · 판자 · 낙하 · O 선택 비율 · 평균 시간입니다. 답이 틀린 문항은 체크한 뒤 <b>선택 문항 끄기</b>로 출제에서 뺍니다. 규칙 잠금과 별개라 당일에도 됩니다."],["타자왕전 · 닉네임","Outro 호명용 상위 5와 부적절한 닉네임 숨김·초기화입니다."]],
@@ -933,8 +943,8 @@ function viewDash(){
       endList.map(function(s){ return '<div class="fs end" onclick="goTo(\'apply\',\''+sub0+'\',\''+s+'\')"><div class="l">'+esc(s)+'</div><div class="v">'+(by[s]||0)+'</div></div>'; }).join("")+'</div>';
   }
   var mx=Math.max.apply(null,dist.concat([1]));
-  /* v4.26 17F 출석 · 프로그램별 인원과 출석률(분모 = 앱 가입자) · 누르면 17F 출석 메뉴 */
-  var capCard=card("17F 출석",at0.ok?"QR 출석 "+(at0.people||0)+"명 · 분모 "+(at0.denom||0)+"명(앱 가입자)":"집계를 받지 못했습니다",
+  /* v4.26 17F 출석 · 프로그램별 인원과 출석률(v4.27 분모 = 대강당 좌석 · 서버 ATT_SEATS) · 누르면 17F 출석 메뉴 */
+  var capCard=card("17F 출석",at0.ok?"QR 출석 "+(at0.people||0)+"명 · 분모 "+(at0.denom||0)+"석(대강당 좌석)":"집계를 받지 못했습니다",
     (at0.ok?attBars(at0):'<div class="empty">백엔드 v4.26(출석) 배포 뒤에 보입니다.</div>')+'<p class="cap mt8"><a href="#" onclick="go(\'att\');return false">17F 출석 메뉴에서 시간대별 흐름 보기</a></p>');
   h+='<div>'+card("상담 흐름","1F DAP존 · 전체 "+rv.length+"건 · 칸을 누르면 그 상태 목록으로",flow(["신청","승인","체크인","완료"],rvBy,["노쇼","취소"],"resv"))+
     card("커피챗 흐름","18F 라운지 · 전체 "+cc.length+"명",flow(["대기","매칭","참석","완료"],ccBy,["취소"],"cchat"))+capCard+'</div></div>';
@@ -1499,7 +1509,7 @@ var SURVEY_PLACE_NAME = { p1:"1F AX 전시·체험존", p2:"AX Now! 체험 부�
 /* ══════════════════ 7-6. 17F 출석 (v4.26 · 260924 사용자 확정) ══════════════════
  * 17F 강연은 전부 자유 참석 · 참가자가 대강당 입구 QR 을 찍고 프로그램을 골라 출석한다(서버 att_claim).
  * 여기는 집계만 본다: 프로그램별 출석 인원 · 출석률 · 시간대별 입장 흐름 · 여러 프로그램 출석 분포. 부문 통계는 두지 않는다(260917 결정).
- * 출석률 분모 = 앱 가입자(계정 시트 · 테스트 계정 제외) · 서버 att_stats 가 계산한다.
+ * 출석률 분모 = 대강당 좌석 수(v4.27 · 260924 사용자 확정 · 서버 ATT_SEATS 235 한 곳) · 서버 att_stats 가 계산해 denom 으로 준다.
  * 테스트 계정(310555) 기록은 기본 집계에서 빠진다 · 「테스트 포함」으로 볼 수 있고 「테스트 기록 지우기」(att_wipe)로 지운다.
  * 출석 QR 코드는 스탬프 › 현장 운영 › 부스 QR 표(codes.json a17)에 있다. */
 var ATTV={ test:false, day:"", data:null, busy:false };
@@ -1520,7 +1530,7 @@ var ATT_SHORT={ key:"기조", road:"내부", l1:"AWS", l2:"MS" };
 function attBars(d){
   var progs=d.progs||[], den=d.denom||0;
   return '<table class="tb plain bartb">'+progs.map(function(x){
-    return barRow('<b>'+esc(x.n)+'</b> <span class="cap n">'+x.cnt+'명 · '+esc(x.s)+'–'+esc(x.e)+'</span>', x.cnt, den||1, '<b class="n">'+x.rate+'%</b>'); }).join("")+'</table>';
+    return barRow('<b>'+esc(x.n)+'</b> <span class="cap n">'+x.cnt+'명 · '+esc(x.s)+'–'+esc(x.e)+'</span>', x.cnt, den||1, '<b class="n">'+x.rate+'%</b>', den&&x.cnt>den); }).join("")+'</table>';
 }
 function viewAtt(){
   var d=attCur(), base=ST.data.att||{};
@@ -1535,7 +1545,7 @@ function viewAtt(){
     (d.test?'<button class="btn sm danger" onclick="attWipe()">테스트 기록 지우기</button>':'')+
     '<span class="cnt">'+esc(short(d.t))+' 기준 · 창검사 '+(d.win?"ON":"OFF")+'</span></div>';
   h+='<div class="kpis">'+
-    kpi("17F 출석 인원",d.people||0,"명","하나 이상 출석 · 출석률 분모 "+(d.denom||0)+"명(앱 가입자 · 테스트 제외)")+
+    kpi("17F 출석 인원",d.people||0,"명","하나 이상 출석 · 출석률 분모 "+(d.denom||0)+"석(대강당 좌석)")+
     kpi("두 개 이상 출석",two,"명","2개 "+(mt[2]||0)+" · 3개 "+(mt[3]||0)+" · 4개 "+(mt[4]||0))+
     progs.map(function(x){ return kpi(x.n, x.cnt, "명", "출석률 "+x.rate+"% · 출석 "+esc(x.open)+"–"+esc(x.e)); }).join("")+
   '</div>';
@@ -1546,9 +1556,9 @@ function viewAtt(){
       var parts=progs.filter(function(x){ return f[x.id]; }).map(function(x){ return (ATT_SHORT[x.id]||x.id)+" "+f[x.id]; }).join(" · ");
       return barRow('<b class="n">'+esc(f.t)+'</b> <span class="cap">'+esc(parts)+'</span>', tot, fmx, '<b class="n">'+tot+'</b>명'); }).join("")+'</table>'
     :'<div class="empty">아직 출석 기록이 없습니다.</div>';
-  h+='<div class="grid g2">'+card("프로그램별 출석","분모 "+(d.denom||0)+"명(앱 가입자) · 출석 = 시작 "+(d.lead||15)+"분 전 ~ 종료", attBars(d))+
+  h+='<div class="grid g2">'+card("프로그램별 출석","분모 "+(d.denom||0)+"석(대강당 좌석) · 출석 = 시작 "+(d.lead||15)+"분 전 ~ 종료", attBars(d))+
     card("시간대별 입장 흐름",(d.bucket||10)+"분 단위 · 처음 출석한 시각 기준", flowT)+'</div>';
-  h+=memo('<p><b>출석률</b> = 그 프로그램에 QR 로 출석한 사람 ÷ 앱 가입자(계정 시트, 테스트 계정 제외). 17F 에 오고도 QR 을 찍지 않은 사람은 세지 못합니다. 대강당 좌석 수 대비 비율이 필요하면 좌석 수로 따로 나눕니다.</p>'+
+  h+=memo('<p><b>출석률</b> = 그 강연에 QR 로 출석한 사람 ÷ 대강당 좌석 '+(d.denom||0)+'석. 17F 에 오고도 QR 을 찍지 않은 사람은 세지 못합니다. 서서 듣는 사람까지 출석하면 100%를 넘을 수 있고 그 줄은 막대가 적갈색으로 바뀝니다.</p>'+
     '<p><b>출석 규칙</b> · 참가자가 대강당 입구 QR 을 찍으면 지금 진행 중인 강연이 미리 골라진 시트가 뜹니다. 시작 '+(d.lead||15)+'분 전부터 종료까지인 강연만 고를 수 있고, 시간은 서버가 다시 확인합니다. 한 사람이 여러 강연에 출석할 수 있고 같은 강연은 한 번만 셉니다.</p>'+
     '<p><b>스탬프</b> · 그 사람의 첫 출석에서 스탬프 03 「프로그램 참여」가 적립됩니다(DAP 상담 · 커피챗으로 이미 받았으면 그대로).</p>'+
     '<p><b>QR</b> · 출석 QR 코드는 스탬프 › 현장 운영의 부스 QR 표에 있고 codes.json(a17)으로 인쇄 원본을 만듭니다. 코드를 바꾸면 입구 인쇄물을 다시 붙입니다.</p>'+
@@ -1556,6 +1566,72 @@ function viewAtt(){
   return h;
 }
 function attDay(v){ attOpt("day", v||""); }
+
+/* ══════════════════ 7-4b. 접속 기록 (v4.27 · 260924 사용자 질문) ══════════════════
+ * 「바탕화면 바로가기로 접속하면 로그에 안 잡히나」 · 앱이 열 때 · 30분 넘게 가렸다 돌아올 때 · 로그인 직후 서버 「접속」 시트에 한 줄씩 남긴다(visit).
+ * 여기는 집계만 본다: 접속자(고유 사번 + 끝까지 비로그인인 기기) · 경로별 비율 · 기기별 · 시간대별 흐름 · 로그인 전 이탈.
+ * 부문 통계는 두지 않는다(260917 결정) · 사번 · 이름 · 기기ID 는 이 화면에 나오지 않는다.
+ * 테스트 계정(310555)과 그 기기의 기록은 기본 집계에서 빠진다 · 「테스트 포함」으로 보고 「테스트 기록 지우기」(visit_wipe)로 지운다. */
+var VISV={ test:false, day:"", data:null, busy:false };
+function visCur(){ return (VISV.test||VISV.day)?VISV.data:ST.data.visit; }
+function visOpt(k, v){
+  VISV[k]=v; VISV.data=null;
+  if(!VISV.test&&!VISV.day){ render(); return; }
+  VISV.busy=true; render();
+  call("visit_stats",{ test:VISV.test?"1":"", day:VISV.day },function(r){ VISV.busy=false; VISV.data=r; render(); },function(){ VISV.busy=false; VISV.data={ ok:false, reason:"network" }; render(); });
+}
+function visDay(v){ visOpt("day", v||""); }
+function visWipe(){
+  var d=visCur()||ST.data.visit||{};
+  dialog({ t:"테스트 접속 기록을 지울까요?", s:"테스트 계정(310555)과 그 계정으로 로그인한 기기의 접속 행만 지웁니다. 실제 참가자 기록은 지워지지 않습니다.", who:"테스트 기록 "+(d.test||0)+"건", ok:"지우기", danger:true,
+    onOk:function(){ call("visit_wipe",{},function(r){ dlgForce(); if(r&&r.ok){ toast("테스트 접속 "+r.removed+"건 지움"); VISV.data=null; VISV.test=false; reload(["visit"]); } else toast("실패: "+why(r)); },
+      function(){ dlgForce(); toast("서버 응답 없음"); }); } });
+}
+var VIS_TONE={ app:"var(--navy)", browser:"var(--tx3)", kakao:"var(--line3)", naver:"var(--navy1)", inapp:"var(--line)" };
+/* 경로별 비율 한 줄 · 홈 화면 앱만 네이비 · 나머지는 회색 단계 · 한 사람이 두 경로면 두 칸에 모두 들어가 합이 100 을 넘을 수 있어 칸 너비는 접속자 합 기준으로 다시 나눈다 */
+function visStack(routes){
+  var sum=routes.reduce(function(a,x){ return a+x.cnt; },0)||1;
+  return '<div class="vstk">'+routes.filter(function(x){ return x.cnt; }).map(function(x){ return '<i style="width:'+(x.cnt/sum*100).toFixed(2)+'%;background:'+VIS_TONE[x.id]+'" title="'+esc(x.n)+' '+x.cnt+'명"></i>'; }).join("")+'</div>'+
+    '<div class="vleg">'+routes.map(function(x){ return '<span><i style="background:'+VIS_TONE[x.id]+'"></i>'+esc(x.n)+' <b class="n">'+x.cnt+'</b>명 · '+x.rate+'%</span>'; }).join("")+'</div>';
+}
+function viewVisit(){
+  var d=visCur(), base=ST.data.visit||{};
+  var h=tabHead('<button class="btn sm" onclick="VISV.data=null;reload([\'visit\'])">새로고침</button>');
+  if(VISV.busy) return h+'<div class="card"><p class="muted"><span class="spin"></span>서버에서 불러오는 중입니다.</p></div>';
+  if(!d||!d.ok) return h+'<div class="err-banner">접속 집계를 받지 못했습니다('+esc(why(d))+'). 백엔드가 v4.27(접속 기록) 이상인지 확인합니다.</div>';
+  var routes=d.routes||[], devs=d.devs||[], wy=d.why||{}, app=routes.filter(function(x){ return x.id==="app"; })[0]||{ cnt:0, rate:0, leave:0 };
+  var days=Object.keys(base.days||{}).sort(), today=base.day||"";
+  if(today&&days.indexOf(today)<0) days.push(today);
+  h+=chips(days.map(function(k){ return { v:k===today?"":k, n:(k===today?"오늘 ":"")+k.slice(5).replace("-","/"), c:(base.days||{})[k]||0 }; }), VISV.day, "visDay")+
+    '<div class="toolbar"><label class="cap" style="display:flex;align-items:center;gap:6px"><input type="checkbox" '+(VISV.test?"checked ":"")+'onchange="visOpt(\'test\',this.checked)">테스트 계정 포함</label>'+
+    '<span class="cap">테스트 기록 '+(d.test||0)+'건'+(VISV.test?' · 지금 포함해서 셉니다':' · 빼고 셉니다')+'</span><span class="sp"></span>'+
+    (d.test?'<button class="btn sm danger" onclick="visWipe()">테스트 기록 지우기</button>':'')+
+    '<span class="cnt">'+esc(d.day||"")+' · '+esc(short(d.t))+' 기준</span></div>';
+  h+='<div class="kpis">'+
+    kpi("접속자",d.visitors||0,"명","로그인 "+(d.people||0)+"명 + 비로그인 기기 "+(d.leave||0)+"대 · 접속 "+(d.rows||0)+"회")+
+    kpi("홈 화면 앱",app.cnt,"명","접속자의 "+app.rate+"% · 그중 로그인 전 이탈 "+(app.leave||0)+"대")+
+    kpi("로그인 전 이탈",d.leave||0,"대","앱을 열고 로그인하지 않은 기기 · 열고 로그인한 기기 "+(d.conv||0)+"대")+
+    kpi("QR 링크로 진입",d.qr||0,"명","벽 QR 을 휴대폰 카메라로 찍고 들어온 사람")+
+  '</div>';
+  var flow=d.flow||[], fmx=Math.max.apply(null,[1].concat(flow.map(function(f){ return f.total; })));
+  var flowT=flow.length?'<table class="tb plain bartb">'+flow.map(function(f){
+      var parts=routes.filter(function(x){ return f[x.id]; }).map(function(x){ return x.n+" "+f[x.id]; }).join(" · ");
+      return barRow('<b class="n">'+esc(f.t)+'</b> <span class="cap">'+esc(parts)+'</span>', f.total, fmx, '<b class="n">'+f.total+'</b>명'); }).join("")+'</table>'
+    :'<div class="empty">아직 접속 기록이 없습니다.</div>';
+  var nV=d.visitors||0;
+  var routeT='<table class="tb plain bartb">'+routes.map(function(x){
+      return barRow('<b>'+esc(x.n)+'</b> <span class="cap n">접속 '+x.rows+'회'+(x.leave?' · 이탈 '+x.leave+'대':'')+'</span>', x.cnt, nV||1, '<b class="n">'+x.cnt+'</b>명 · '+x.rate+'%'); }).join("")+'</table>';
+  var devT='<table class="tb plain bartb">'+devs.filter(function(x){ return x.cnt||x.id!=="etc"; }).map(function(x){
+      return barRow('<b>'+esc(x.n)+'</b>', x.cnt, nV||1, '<b class="n">'+x.cnt+'</b>명 · '+x.rate+'%'); }).join("")+'</table>';
+  h+=card("경로별 비율","접속자 "+nV+"명 기준 · 두 경로를 쓴 사람 "+(d.multi||0)+"명", visStack(routes)+routeT);
+  h+='<div class="grid g2">'+card("시간대별 흐름",(d.bucket||30)+"분 단위 · 그 시간에 앱을 연 사람", flowT)+
+    card("기기","안드로이드 · 아이폰 · PC", devT+'<p class="cap" style="margin-top:10px">열기 '+(wy.open||0)+'회 · 30분 뒤 복귀 '+(wy.back||0)+'회 · 로그인 '+(wy.login||0)+'회 · 이 기기 첫 방문 '+(d.first||0)+'대'+(d.drop?' · 서버가 바빠 못 쓴 기록 '+d.drop+'건':'')+'</p>')+'</div>';
+  h+=memo('<p><b>무엇을 세나</b> · 앱을 열 때, 30분 넘게 다른 앱을 보다 돌아올 때, 로그인 직후에 한 줄씩 남습니다. 같은 기기 · 같은 경로 · 같은 로그인 상태는 '+(d.dedup||5)+'분 안에 한 번만 남깁니다.</p>'+
+    '<p><b>경로</b> · 홈 화면 앱 = 홈 화면 아이콘으로 연 설치형 화면(주소창 없음) · 브라우저 = 크롬 · 사파리 · 삼성 인터넷 · 웨일 등 · 카카오톡 · 네이버 = 그 앱 안의 브라우저 · 인앱 기타 = 인스타그램 · 라인 · 팀즈 등 앱 속 브라우저. 삼성 인터넷이나 크롬에서 「홈 화면에 바로가기」로 만든 아이콘이 브라우저 탭으로 열리면 브라우저로 셉니다.</p>'+
+    '<p><b>아이폰 홈 화면 앱</b> · 사파리와 저장소가 따로라 홈 화면 앱을 처음 열면 로그인 화면부터 나옵니다. 홈 화면 앱 줄의 이탈이 크면 현장 안내가 필요하다는 뜻입니다.</p>'+
+    '<p><b>이 화면에 없는 것</b> · 사번 · 이름 · 부문 · 기기ID. 부문별 집계는 두지 않습니다(260917 결정). 원본 행은 「접속」 시트에 있고 행사 후 개인 기록 폐기(clearOpsData) 때 함께 지웁니다.</p>');
+  return h;
+}
 
 /* ══════════════════ 7-5. AI 사생대회 ══════════════════ */
 function viewArt(){
