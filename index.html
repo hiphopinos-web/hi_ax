@@ -7997,7 +7997,9 @@ function rtBotImg() {
    오버레이 골격(gsOverlay) · HUD·입력 HTML · 일시정지 UI · 끝난 뒤 기록 보내기 · 결과 카드.
    선수 화면(admin/typing.html)이 같은 엔진으로 대전을 돌린다. 단어 풀과 난이도는 두 곳에서 어긋날 수 없다.
    260923 사용자 확정: 단어 풀은 260917 원본 61개(뜻 없음) · 게임 중 뜻 표시와 되새김 화면은 만들지 않는다 ·
-   시간 제한 없음(목숨이 떨어지면 끝) · 안전 상한은 엔진 RAIN_CAP_SEC. */
+   시간 제한 없음(목숨이 떨어지면 끝) · 안전 상한은 엔진 RAIN_CAP_SEC.
+   v4.29(260924 사용자 확정) 영어 단어 0개 · 영문 자판 로마자 → 한글 · 넓은 화면 솔로 옆판(NEXT · TOP 5 · 점수·목숨·단계) · 키보드 기기는 스페이스로 시작(엔진).
+     이 앱이 맡는 것 = 옆판 TOP 5 읽기(rgSideTopPull) · 시작 화면 · 결과 화면 스페이스(rgSpaceKey). */
 function rgBeep(freq, dur, type, vol) {   /* v3.51 · 공용 효과음 엔진 경유 (sfx) */
   if (!sndOn()) return;
   var c = sfxCtx(); if (!c) return;
@@ -8017,10 +8019,22 @@ function rgTopHtml() {
 function rgPlayOpen() {
   RGP.on = true; RGP.touch = rgTouch();   /* 입력창 안내 문구가 기기에 맞게 나오게 먼저 켠다 */
   gsOverlayOpen({ key: "type", title: "AX 단어 소나기", top: rgTopHtml(), fill: true, cls: "rain" + (RG.big ? " big" : ""), cw: 180, ch: 300, canvasId: "rgCv", bottom: rgFormHtml(),
-    down: function (e) { e.preventDefault(); rgFocus(); },
+    down: function (e) { e.preventDefault(); if (RG.wait) rgBegin(); rgFocus(); },   /* v4.29 대기 화면은 판을 눌러도 시작 */
     resized: rgFit,
     running: function () { return RG.on && !RG.paused && !RG.ending; }, isPaused: function () { return !!RG.paused; },
     pause: rgPause, resume: rgResume, quit: rgQuit });
+  rgSideTopPull();
+}
+/* v4.29 넓은 화면 옆판 TOP 5 · 서버 순위판(type_rank) 읽기만 · 앱 솔로 = 앱 순위 · 1F 현장 = 현장 순위
+   판 도중에 App.render 가 불리면 게임이 멈추므로 S.set(axf-store) 을 쓰지 않고 엔진 값(RG.top)만 바꾼다 · 서버가 없으면(데모) 빈 목록 */
+function rgSideTopPull() {
+  if (!rgSideOn()) return;
+  var mode = RG.mode === "site" ? "site" : "app", c = S.get("type_rank_" + mode, null);
+  var conv = function (r) { return ((r && r.top) || []).slice(0, 5).map(function (x) { return { no: x.rank, name: x.name, val: typeSec(x.score), me: !!x.me }; }); };
+  if (c) RG.top = conv(c);
+  if (!BE.on) { if (!c) RG.top = []; return; }
+  var u = S.get("user", {}) || {};
+  beCall({ action: "type_rank", mode: mode, emp: u.empId || "", n: 5 }, function (r) { if (r && r.ok && RG.on) RG.top = conv(r); }, function () { if (RG.on && !RG.top) RG.top = []; });
 }
 function rgPlayClose() { RGP.on = false; gsOverlayClose("type"); }
 function rgFormHtml() {
@@ -8058,6 +8072,7 @@ function rgEndFinal(why) {
   if (!RG.on) return;
   rgStop();
   var s = rgStat(), surv = Math.round((RG.surv || 0) * 100);
+  RG.resAt = performance.now();   /* v4.29 결과 직후 1초는 스페이스 「다시 하기」를 받지 않는다(치던 손이 눌러 버린다) */
   RG.res = { why: why, score: surv, pts: s.score, hits: s.hits, combo: s.combo, acc: s.acc, me: null, send: "", prev: Number(S.get("type_best", 0)) || 0 };   /* v4.28 prev = 이번 판 전 내 최고(결과 「신기록!」) */
   if (RG.mode === "app") {
     if (surv > S.get("type_best", 0)) setTimeout(function () { sfx("best"); }, 250);
@@ -8083,7 +8098,25 @@ function rgResultPaint() {
     l3: r.send === "sending" ? "순위 반영 중" : rank ? "앱 순위 " + rank + "위" : testEmp() ? "테스트 계정 · 순위 제외" : r.send === "range" ? "순위 미반영 · 기록 범위 초과" : "",
     fold: "기록 자세히 보기", ref: [["터뜨린 단어", r.hits + "개"], ["점수", Number(r.pts || 0).toLocaleString()], ["최고 콤보", r.combo], ["정확도", r.acc + "%"]],
     banner: rank && rank <= 10 ? '<div class="tipbanner mb12">앱 상위 10 · 1F 현장 타자왕전 · 1·2등 Outro 호명</div>' : "" });
+  var again = root.querySelector(".gs-res-go .rt-btn");
+  if (again && !rgTouch()) again.textContent = "다시 하기 · SPACE";   /* v4.29 키보드 기기 */
 }
+/* v4.29 스페이스 · 앱 솔로 시작 화면(▶ START 와 같다 · 대기 화면을 건너뛰고 바로 카운트다운) · 결과 화면(다시 하기 · 1초 뒤부터)
+   입력칸 · 모달 · 게임 오버레이 위에서는 받지 않는다 · 판 안(대기 화면)의 스페이스는 엔진(rgKeyDoc)이 받는다 */
+function rgSpaceKey(e) {
+  if (App.current !== "game_type" || GS.cur || RG.on) return;
+  if (e.code !== "Space" && e.key !== " ") return;
+  if (e.repeat || e.isComposing || e.keyCode === 229 || e.ctrlKey || e.metaKey || e.altKey || el("modal")) return;
+  var t = e.target || {};
+  if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable) return;
+  if (el("gsGo")) { e.preventDefault(); RGP.go = sndChosen(); gsBegin("type"); return; }   /* 소리 선택 카드가 뜨면 고른 뒤 대기 화면부터 */
+  if (document.querySelector("#tgRoot .gs-res-go")) {
+    e.preventDefault();
+    if (performance.now() - (RG.resAt || 0) < 1000) return;
+    RGP.go = true; rgStart("app");
+  }
+}
+document.addEventListener("keydown", rgSpaceKey);
 /* ── 닉네임 · 순위판 ── */
 function typeNick() { return S.get("type_nick", ""); }
 function typeNickValid(v) {

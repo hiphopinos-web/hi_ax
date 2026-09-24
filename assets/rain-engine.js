@@ -18,15 +18,20 @@
    비주얼: 오렌지 사다리 + 검정 + 흰색 + 웜그레이·웜브라운만 · 도트 단위 고정(판이 작아지면 도트 개수만 준다).
    v4.23(260923) 16비트 레트로 · 단어 = 나무 이름표 · 글자 = Neo둥근모 · 판 안 GAME OVER = 공용 나무 판(rtEnd) · 이 파일 아래 「레트로 틀」 한 벌을 앱 다섯 게임도 같이 쓴다.
      판정(글자 일치 · 바닥선)·시드·단어 순서·단어 상자 높이(L.boxH)는 그대로다 · 글꼴이 바뀌어 상자 폭(bw)만 글자에 맞게 달라진다(자리 잡기에만 쓰는 값).
+   v4.29(260924 사용자 확정) 소나기 묶음 네 가지:
+     ① 영어 단어 전부 제외(AX · AI · DAP) · 판이 영단어로 열리던 원인이었다.
+     ② 영문 자판이어도 한글로 친다 · 누른 로마자 키를 두벌식으로 바꿔 입력창에 넣는다(rgHgAdd · 조합 · 받침 넘김 · Backspace 낱자 단위) · 한글 자판 조합(IME)은 건드리지 않는다.
+     ③ 넓은 화면 솔로 = 판 폭을 줄이고 오른쪽 옆판(NEXT 3개 · TOP 5 · 점수·목숨·단계) · 대전과 휴대폰은 그대로.
+     ④ 솔로(app · site) 키보드 기기는 대기 화면에서 스페이스를 눌러 본인이 시작한다 · 터치 기기와 대전(방 시작)은 그대로.
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ═══ 단어 풀 · 여기 한 곳 ═══
    260917 원본(행사 어휘 73개 · 뜻 없음)으로 되돌렸다. 260918 의 「AI 기본 소양 30개 + 칸마다 뜻」은 폐기(사용자 확정 260923).
    게임 중에 긴 글·모달·정지를 넣지 않는다. 뜻 표시도 되새김 화면도 두지 않는다.
-   확정 문서·앱에 이미 있는 어휘에서 짧은 단어 위주 · 공백이 든 말(ME to WE 등)은 판정이 어려워 뺐다 · 영문은 자판 전환 부담으로 3개만.
+   확정 문서·앱에 이미 있는 어휘에서 짧은 단어 위주 · 공백이 든 말(ME to WE 등)은 판정이 어려워 뺐다.
+   v4.29(260924 사용자 확정) 영어 단어는 하나도 두지 않는다(AX · AI · DAP 삭제) · 1단계(3자 이하)가 영단어로 열려 자판 전환부터 시켰다 · 로마자 키는 두벌식 한글로 바뀌어 들어간다(아래 rgHgAdd).
    단계가 오를수록 긴 단어 비중이 커진다(1단계 3자 이하 · 2단계부터 전부). */
 var RAIN_WORDS = [
-  "AX", "AI", "DAP",
   "공감", "참여", "확산", "체화", "혁신", "연결", "실습", "전시", "체험", "상담", "강연", "세션", "설문", "계단", "퀴즈", "경품", "추첨", "시상", "분석", "요약", "현장", "영업", "보상", "전략", "채널", "교안", "동료", "업무", "본사", "룰렛",
   "데이터", "로드맵", "자동화", "커피챗", "스탬프", "리포트", "응모권", "대강당", "광화문", "파이썬", "노트북", "클로드", "키노트", "알림봇", "정리표", "산출물", "체크인", "라이브", "챌린지", "리서치", "실시간", "새정보",
   "에이전트", "프롬프트", "대시보드", "아이디어", "코파일럿", "하이디큐", "기조연설", "예측모델", "포토부스", "우수사례", "파트너사", "외부자료", "문서작성", "통계현황", "반복작업",
@@ -48,6 +53,7 @@ var RAIN_RAMP_SPAN = 60;                      /* 이 초에 걸쳐 RAIN_RAMP_MIN
 var RAIN_RAMP_MIN = 0.45;                     /* 낙하 시간·등장 간격의 하한 배율 */
 var RAIN_EXTRA_EVERY = 30;                    /* 램프 시작 뒤 이 초마다 동시 단어 +1 (최대 +2) */
 var RAIN_BANDS = [[330, 2, 3], [420, 3, 4], [520, 4, 5], [1e9, 5, 5]];   /* [판 높이 미만, 동시 단어 최대, 단계 수] · 휴대폰 */
+var RAIN_SIDE_MIN = 960;                      /* v4.29 옆판을 붙이는 캔버스 최소 폭(판 640 + 옆판 260 + 여백) · 이보다 좁으면 옛 배치 그대로 */
 var RAIN_FONT = '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif';
 var RAIN_PAL = { o100: "#FF7E31", o60: "#FFA46E", o50: "#FFB284", o30: "#FFCFB0", o25: "#FFD8C1", o10: "#FFEBE0", deep: "#D64524", ink: "#000000", w: "#FFFFFF", gray: "#B8AEA6", dim: "#8A817B", soil: "#7A3E1C", soil2: "#6A3417", trunk: "#5E3218" };
 /* ═══ v4.23 레트로 틀 · 게임판 안 공용 한 벌 (260923 사용자 확정 · design.md A-5 5-16 · 정본 시안 「레트로 시안/시안.html」) ═══
@@ -63,8 +69,8 @@ var RT_PAL = { night: "#1B1712", bark: "#2A2118", wood: "#5E3218", tan: "#D9A066
    크기는 도트 칸 수로 고정한다(서기 22×26 = 점프 러너와 같은 칸 수 · 친구 17×20) · 도트 한 칸 = L.D / 2 CSS px · 그리는 상자는 옛 마스코트 자리(L.masW × L.masH) 안이다. */
 var RG_BOT = { w: 22, h: 26, bw: 17, bh: 20 };
 
-var RG = { on: false, mode: "app", big: false, raf: 0, last: 0, t0: 0, cd: 0, words: [], ghost: [], seq: 0, parts: [], pops: [], lives: RAIN_LIVES, score: 0, hits: 0, tries: 0, combo: 0, maxCombo: 0, stage: 1, spawnT: 0, shake: 0, banner: null, shot: null, mas: { x: 90, tx: 90, hop: 0 }, res: null, L: null, dpr: 1, seed: 0, rs: 0, lives0: RAIN_LIVES, cap: RAIN_CAP_SEC };
-var RGP = { on: false, touch: false };
+var RG = { on: false, mode: "app", big: false, raf: 0, last: 0, t0: 0, cd: 0, words: [], ghost: [], seq: 0, parts: [], pops: [], lives: RAIN_LIVES, score: 0, hits: 0, tries: 0, combo: 0, maxCombo: 0, stage: 1, spawnT: 0, shake: 0, banner: null, shot: null, mas: { x: 90, tx: 90, hop: 0 }, res: null, L: null, dpr: 1, seed: 0, rs: 0, lives0: RAIN_LIVES, cap: RAIN_CAP_SEC, wait: false, next: null, top: null, hk: false };
+var RGP = { on: false, touch: false, go: false };
 
 /* ── 화면에 기대지 않는 작은 도구 ── */
 function rgEl(id) { return document.getElementById(id); }
@@ -118,8 +124,16 @@ function rgBotDraw(ctx, cx, gy, dw, dh, u) {
 }
 
 /* ── 배치 ── 판 크기 → 규칙 · 모든 값은 CSS px ── */
-function rgLayout(W, H, big) {
-  var L = { W: W, H: H, big: big };
+/* v4.29 side = 넓은 화면 솔로 옆판 · 판 폭(L.W)을 줄이고 캔버스 폭(L.CW) 오른쪽에 옆판(L.pan) · 판 규칙(레인 · 낙하 · 판정선)은 줄인 폭으로 계산한다
+   판 = 높이 × 1.1(640 이상) · 옆판 = 캔버스 폭의 20%(260~380) · 둘을 가운데 모은다(L.ox = 판 왼쪽 끝) */
+function rgLayout(W, H, big, side) {
+  var L = { W: W, H: H, big: big, CW: W, ox: 0, pan: null };
+  if (side && big && W >= RAIN_SIDE_MIN) {
+    var pw = Math.max(260, Math.min(380, Math.round(W * 0.2))), gap = 16;
+    var bw = Math.max(640, Math.min(W - pw - 3 * gap, Math.round(H * 1.1)));
+    var ox = Math.round((W - bw - gap - pw) / 2);
+    L.W = W = bw; L.ox = ox; L.pan = { x: ox + bw + gap, y: 12, w: pw, h: H - 24 };
+  }
   L.D = big ? 4 : 3;                                        /* 도트 단위 */
   L.font = big ? (W >= 1200 ? 32 : W >= 900 ? 30 : 28) : 18;
   L.boxH = Math.round(L.font * 1.6); L.padX = Math.round(L.font * 0.5);
@@ -136,6 +150,8 @@ function rgLayout(W, H, big) {
   L.fallPx = Math.max(10, L.floor - L.boxH - L.top);
   return L;
 }
+/* 옆판을 붙이는 판인가 · 넓은 화면(RG.big) 솔로만 · 대전(race)은 네 기기 화면을 똑같이 둔다 */
+function rgSideOn() { return !!RG.big && RG.mode !== "race"; }
 function rgFontStr(px) { return "800 " + px + "px " + RAIN_FONT; }
 function rtFont(px) { return Math.round(px) + "px " + RT_FONT; }
 function rgWordY(w) { var L = RG.L; return L.top + Math.min(1, w.p) * L.fallPx; }
@@ -146,16 +162,16 @@ function rgElapsed(now) { return RG.t0 ? (now - RG.t0) / 1000 : 0; }
 function rgFit(cv, w, h) {
   if (!w || !h) return;
   var dpr = Math.min(2, window.devicePixelRatio || 1);
-  if (RG.L && RG.L.W === w && RG.L.H === h && cv.width === Math.round(w * dpr)) return;   /* visualViewport scroll 로 같은 크기가 또 오면 무시 */
+  if (RG.L && RG.L.CW === w && RG.L.H === h && cv.width === Math.round(w * dpr)) return;   /* visualViewport scroll 로 같은 크기가 또 오면 무시 */
   cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
   RG.dpr = cv.width / w;
   var oldFont = RG.L ? RG.L.font : 0;
-  RG.L = rgLayout(w, h, RG.big);
-  var ctx = cv.getContext("2d");
+  RG.L = rgLayout(w, h, RG.big, rgSideOn());
+  var ctx = cv.getContext("2d"), gw = RG.L.W;   /* 판 폭 · 옆판이 있으면 캔버스보다 좁다 */
   if (oldFont !== RG.L.font) { ctx.font = rtFont(RG.L.tf); RG.words.forEach(function (x) { x.bw = Math.ceil(ctx.measureText(x.text).width) + RG.L.padX * 2; }); }
-  RG.words.forEach(function (x) { x.x = Math.max(8, Math.min(w - 8 - x.bw, x.x)); });
-  if (!RG.mas.set) { RG.mas.x = RG.mas.tx = w / 2; RG.mas.set = true; }
-  RG.mas.x = Math.min(RG.mas.x, w - RG.L.masW / 2); RG.mas.tx = Math.min(RG.mas.tx, w - RG.L.masW / 2);
+  RG.words.forEach(function (x) { x.x = Math.max(8, Math.min(gw - 8 - x.bw, x.x)); });
+  if (!RG.mas.set) { RG.mas.x = RG.mas.tx = gw / 2; RG.mas.set = true; }
+  RG.mas.x = Math.min(RG.mas.x, gw - RG.L.masW / 2); RG.mas.tx = Math.min(RG.mas.tx, gw - RG.L.masW / 2);
   rgDraw(ctx, performance.now());
 }
 
@@ -164,12 +180,16 @@ function rgFit(cv, w, h) {
    판정은 input 이벤트에서 조합 중 글자까지 포함해 본다(iOS 는 compositionend 가 늦게 와서 기다리면 단어가 안 터진다) · 같은 단어 중복 판정은 400ms 안에서 막는다.
    비우기는 value = "" 한 줄 · 조합이 열려 있을 때만 같은 노드를 한 번 blur→focus 해서 조합 버퍼를 끊는다.
    실시간 판정(터치 기기만): 입력이 떨어지는 단어와 정확히 같아지는 순간 Enter 없이 터진다 · PC 는 Enter 판정 유지.
-   ※ 이 두 가지(아이폰 핫픽스 · 입력창 자동 비우기)는 260923 에도 유지 결정. 재미와 무관한 순수 개선이다. */
+   ※ 이 두 가지(아이폰 핫픽스 · 입력창 자동 비우기)는 260923 에도 유지 결정. 재미와 무관한 순수 개선이다.
+   v4.29 영문 자판 = 로마자 키를 두벌식 한글로 바꿔 넣는다 · 노트북은 keydown(e.code = 누른 자리 · Shift = 쌍자음 · CapsLock 무시) · 휴대폰은 beforeinput(한 글자씩 들어올 때) ·
+     조합으로 들어오는 로마자(휴대폰 영문 자판 단어 조합)는 값을 건드리지 않고 판정만 한글로 본다(조합 중에 값을 바꾸면 자판이 글자를 되풀이한다) · 조합이 끝나면 바꿔 넣는다.
+     한글 자판 조합(isComposing · keyCode 229)은 손대지 않는다 · RG.hk = 지금 마지막 글자가 이 변환으로 만든 열린 글자(다음 키가 붙는다) · 다른 입력·지우기·이동이 오면 닫힌다. */
 function rgBindInput(inp) {
   if (!inp || inp._rgb) return; inp._rgb = 1;
-  inp.addEventListener("compositionstart", function () { RG.composing = true; });
+  inp.addEventListener("compositionstart", function () { RG.composing = true; RG.hk = false; });
   inp.addEventListener("compositionend", function () { rgCompEnd(); });
-  inp.addEventListener("keydown", function (e) { if (e.key === "Escape" && inp === rgEl("rgIn")) { e.preventDefault(); rgAutoClear(); } });   /* Esc = 즉시 비우기 */
+  inp.addEventListener("keydown", function (e) { if (e.key === "Escape" && inp === rgEl("rgIn")) { e.preventDefault(); rgAutoClear(); return; } rgHgKey(e, inp); });   /* Esc = 즉시 비우기 · 그 밖 = 로마자 → 한글 */
+  inp.addEventListener("beforeinput", function (e) { rgHgBefore(e, inp); });
 }
 function rgFocus() { var i = rgEl("rgIn"); if (i && document.activeElement !== i) i.focus(); }
 function rgCompEnd() {
@@ -196,11 +216,14 @@ function rgEnter() {
   setTimeout(rgSubmit, 0);
 }
 function rgLive(e) {
-  if (!RGP.on || !RG.on || RG.cd > 0 || RG.ending || RG.paused) return;
   var inp = rgEl("rgIn"); if (!inp) return;
-  var v = inp.value.trim();
+  var raw = inp.value, lat = /[A-Za-z]/.test(raw);
+  if (e && !lat) RG.hk = false;                   /* v4.29 다른 입력(한글 자판 조합 · 지우기)이 들어왔다 → 로마자 조합은 닫는다 */
+  if (lat && !RG.composing && !(e && e.isComposing)) { raw = rgHangulize(raw, RG.hk).slice(0, 12); inp.value = raw; RG.hk = true; lat = false; }   /* 조합 없이 들어온 로마자는 그 자리에서 한글로 */
+  if (!RGP.on || !RG.on || RG.cd > 0 || RG.ending || RG.paused) return;
+  var v = (lat ? rgHangulize(raw, RG.hk) : raw).trim();   /* 조합 중 로마자(휴대폰 영문 자판)는 값을 두고 판정만 한글로 본다 */
   RG.typed = v;                                   /* 조합 중 글자도 화면에서 짚어 준다 */
-  RG.latT = rgLatinOnly(v) ? (RG.latT || performance.now()) : 0;
+  RG.latT = rgLatinOnly(raw.trim()) ? (RG.latT || performance.now()) : 0;   /* 안내 한 줄은 보조 · 로마자가 한글로 안 바뀐 채 2초 남아 있을 때만 */
   if (!RG.latT) rgTipShow(false);
   if (RGP.touch && v && RG.words.some(function (w) { return w.text === v; })) { rgSubmit(); return; }
   rgCheckInput(v);
@@ -226,9 +249,91 @@ function rgJm(s) {
 }
 function rgPre(w, v) { if (w.jm == null || w.jmOf !== w.text) { w.jm = rgJm(w.text); w.jmOf = w.text; } return w.jm.indexOf(rgJm(v)) === 0; }
 function rgPrefixAlive(v) { return RG.words.some(function (w) { return rgPre(w, v); }); }
+/* ═══ v4.29 두벌식 변환 · 영문 자판으로 눌러도 한글이 들어간다 (260924 사용자 확정) ═══
+   영어 단어가 없으니 로마자 입력은 전부 한글 의도다 · 키 자리 = 두벌식 표준 배열 · Shift = 쌍자음(ㄲㄸㅃㅆㅉ)·ㅒ·ㅖ · 다른 글자는 Shift 무시.
+   조합 규칙(한글 자판과 같다): 자음은 받침으로 붙고(ㄸㅃㅉ 는 받침이 안 된다) · 받침 + 자음이 겹받침이면 합친다 · 받침 뒤 모음이 오면 받침(겹받침은 뒤 자음)이 다음 글자 초성으로 넘어간다 ·
+   모음 + 모음이 겹모음이면 합친다 · 홀로 선 자음 + 모음 = 글자 · Backspace = 마지막 낱자 하나(겹받침·겹모음도 한 낱자씩). */
+var RG_HV = "ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ",
+  RG_HT = "_ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ",   /* 받침 · 0 = 없음 */
+  RG_HVV = { "ㅗㅏ": "ㅘ", "ㅗㅐ": "ㅙ", "ㅗㅣ": "ㅚ", "ㅜㅓ": "ㅝ", "ㅜㅔ": "ㅞ", "ㅜㅣ": "ㅟ", "ㅡㅣ": "ㅢ" },
+  RG_HTT = { "ㄱㅅ": "ㄳ", "ㄴㅈ": "ㄵ", "ㄴㅎ": "ㄶ", "ㄹㄱ": "ㄺ", "ㄹㅁ": "ㄻ", "ㄹㅂ": "ㄼ", "ㄹㅅ": "ㄽ", "ㄹㅌ": "ㄾ", "ㄹㅍ": "ㄿ", "ㄹㅎ": "ㅀ", "ㅂㅅ": "ㅄ" },
+  RG_HKEY = { Q: "ㅂㅃ", W: "ㅈㅉ", E: "ㄷㄸ", R: "ㄱㄲ", T: "ㅅㅆ", Y: "ㅛ", U: "ㅕ", I: "ㅑ", O: "ㅐㅒ", P: "ㅔㅖ", A: "ㅁ", S: "ㄴ", D: "ㅇ", F: "ㄹ", G: "ㅎ", H: "ㅗ", J: "ㅓ", K: "ㅏ", L: "ㅣ", Z: "ㅋ", X: "ㅌ", C: "ㅊ", V: "ㅍ", B: "ㅠ", N: "ㅜ", M: "ㅡ" };
+/* 키 → 낱자 · k = 로마자(대소문자 무관) · sh = Shift */
+function rgHgMap(k, sh) { var m = RG_HKEY[String(k).toUpperCase()] || ""; return sh && m.length > 1 ? m.charAt(1) : m.charAt(0); }
+function rgHgSyl(c, v, t) { return String.fromCharCode(0xAC00 + (c * 21 + v) * 28 + t); }
+function rgHgKey2(map, ch) { for (var k in map) if (map[k] === ch) return k; return ""; }
+/* 문자열 s 끝에 낱자 j 를 친다 · open = 마지막 글자가 아직 열려 있다(이어 붙여도 된다) */
+function rgHgAdd(s, j, open) {
+  if (!j) return s;
+  var last = s.slice(-1), head = s.slice(0, -1), code = last ? last.charCodeAt(0) - 0xAC00 : -1, isV = RG_HV.indexOf(j) >= 0;
+  if (open && last) {
+    if (code >= 0 && code <= 11171) {
+      var c = Math.floor(code / 588), v = Math.floor((code % 588) / 28), t = code % 28;
+      if (!isV) {
+        if (!t) { var ti = RG_HT.indexOf(j); if (ti > 0) return head + rgHgSyl(c, v, ti); }
+        else { var tt = RG_HTT[RG_HT.charAt(t) + j]; if (tt) return head + rgHgSyl(c, v, RG_HT.indexOf(tt)); }
+      } else if (t) {   /* 받침 넘김 · 겹받침은 뒤 자음만 넘어간다 */
+        var sp = rgHgKey2(RG_HTT, RG_HT.charAt(t)), mv = sp ? sp.charAt(1) : RG_HT.charAt(t);
+        return head + rgHgSyl(c, v, sp ? RG_HT.indexOf(sp.charAt(0)) : 0) + rgHgSyl(RG_CHO.indexOf(mv), RG_HV.indexOf(j), 0);
+      } else { var vv = RG_HVV[RG_HV.charAt(v) + j]; if (vv) return head + rgHgSyl(c, RG_HV.indexOf(vv), 0); }
+    } else if (isV) {
+      var ci = RG_CHO.indexOf(last); if (ci >= 0) return head + rgHgSyl(ci, RG_HV.indexOf(j), 0);
+      var lv = RG_HVV[last + j]; if (lv) return head + lv;
+    }
+  }
+  return s + j;
+}
+/* 마지막 낱자 하나 지우기 · { s, on } · 글자가 다 지워지면 닫힌다(다음 Backspace 는 앞 글자를 통째로) */
+function rgHgBack(s) {
+  var last = s.slice(-1), head = s.slice(0, -1), code = last ? last.charCodeAt(0) - 0xAC00 : -1;
+  if (code >= 0 && code <= 11171) {
+    var c = Math.floor(code / 588), v = Math.floor((code % 588) / 28), t = code % 28;
+    if (t) { var sp = rgHgKey2(RG_HTT, RG_HT.charAt(t)); return { s: head + rgHgSyl(c, v, sp ? RG_HT.indexOf(sp.charAt(0)) : 0), on: true }; }
+    var vs = rgHgKey2(RG_HVV, RG_HV.charAt(v));
+    return { s: head + (vs ? rgHgSyl(c, RG_HV.indexOf(vs.charAt(0)), 0) : RG_CHO.charAt(c)), on: true };
+  }
+  var lv = rgHgKey2(RG_HVV, last); if (lv) return { s: head + lv.charAt(0), on: true };
+  return { s: head, on: false };
+}
+/* 로마자가 섞인 값 전체를 한글로 · 첫 로마자 앞은 그대로 두고 그 앞 글자가 열려 있으면(open) 이어 붙인다 · 대문자 = Shift */
+function rgHangulize(raw, open) {
+  var f = raw.search(/[A-Za-z]/); if (f < 0) return raw;
+  var out = raw.slice(0, f), op = !!open && f > 0;
+  for (var i = f; i < raw.length; i++) {
+    var ch = raw.charAt(i);
+    if (/[A-Za-z]/.test(ch)) { out = rgHgAdd(out, rgHgMap(ch, ch !== ch.toLowerCase()), op); op = true; }
+    else { out += ch; op = false; }
+  }
+  return out;
+}
+/* 입력창 값 = 판정에 쓰는 글자(로마자가 남아 있으면 한글로 본 값) */
+function rgInVal() { var inp = rgEl("rgIn"); if (!inp) return ""; var raw = inp.value; return (/[A-Za-z]/.test(raw) ? rgHangulize(raw, RG.hk) : raw).trim(); }
+/* 노트북 · 로마자 키 = 누른 자리(e.code)로 · 한글 자판 조합(229 · isComposing)과 단축키는 그대로 둔다 */
+function rgHgKey(e, inp) {
+  if (e.isComposing || e.keyCode === 229 || RG.composing || e.ctrlKey || e.metaKey || e.altKey || inp.disabled) return;
+  var k = e.key || "", m = /^Key([A-Z])$/.exec(e.code || "");
+  if (k === "Backspace") { if (RG.hk && inp.value && inp.selectionStart === inp.value.length && inp.selectionEnd === inp.value.length) { e.preventDefault(); rgHgDel(inp); } return; }
+  if (m && /^[A-Za-z]$/.test(k)) { e.preventDefault(); rgHgPut(inp, rgHgMap(m[1], e.shiftKey)); return; }
+  if (k.length === 1 || /^(Enter|Tab|Delete|Home|End|Arrow)/.test(k)) RG.hk = false;   /* 다른 글자 · 이동 = 조합 끝 */
+}
+/* 휴대폰 · 조합 없이 한 글자씩 들어오는 로마자(쿼티 영문 · 예측 끔) · 조합으로 들어오면 rgLive 가 판정만 한글로 본다 */
+function rgHgBefore(e, inp) {
+  if (e.isComposing || RG.composing || inp.disabled) return;
+  var d = e.data || "";
+  if (e.inputType === "insertText" && /^[A-Za-z]$/.test(d)) { e.preventDefault(); rgHgPut(inp, rgHgMap(d, d !== d.toLowerCase())); }
+  else if (e.inputType === "deleteContentBackward" && RG.hk && inp.value && inp.selectionStart === inp.value.length && inp.selectionEnd === inp.value.length) { e.preventDefault(); rgHgDel(inp); }
+}
+function rgHgPut(inp, j) {
+  if (!j) return;
+  var s = rgHgAdd(inp.value, j, RG.hk);
+  if (s.length > 12) return;   /* 입력창 maxlength 12 · 값을 코드로 넣으면 maxlength 가 걸리지 않는다 */
+  inp.value = s; RG.hk = true;
+  rgLive(null);
+}
+function rgHgDel(inp) { var b = rgHgBack(inp.value); inp.value = b.s; RG.hk = b.on; rgLive(null); }
 function rgAutoClear() {
   var inp = rgEl("rgIn"); if (!inp || !inp.value) return;
-  var v = inp.value.trim(), keep = "";
+  var v = rgInVal(), keep = "";
   for (var n = v.length - 1; n > 0; n--) { if (rgPrefixAlive(v.slice(0, n))) { keep = v.slice(0, n); break; } }
   if (keep && !RG.composing) { inp.value = keep; RG.typed = keep; if (document.activeElement !== inp) inp.focus(); }
   else { rgClearInput(); RG.typed = ""; }
@@ -238,7 +343,7 @@ function rgAutoClear() {
 function rgCheckInput(v) {
   if (!RG.on || RG.cd > 0 || RG.ending || RG.paused) return;
   var inp = rgEl("rgIn"); if (!inp) return;
-  if (v == null) v = inp.value.trim();
+  if (v == null) v = rgInVal();
   RG.typed = v;   /* 지금 치고 있는 글자 · 그리기에서 맞는 단어를 짚어 준다 */
   if (!v) return;
   if (rgJamoTail(v)) return;    /* 아직 만들어지는 중인 낱자 · 자동 비우기 보류 */
@@ -253,7 +358,7 @@ function rgTypedIdx() {
   return hit;
 }
 function rgClearInput() {
-  RG.typed = "";
+  RG.typed = ""; RG.hk = false;
   var inp = rgEl("rgIn"); if (!inp) return;
   inp.value = "";
   if (RG.composing) {
@@ -301,11 +406,21 @@ function rgPickWord() {
   }
   return pool[0];
 }
+/* v4.29 솔로는 다음 세 단어를 미리 뽑아 둔다 · 옆판 NEXT = RG.next 그대로 = 실제로 내려올 차례(rgSpawn 이 앞에서 하나씩 꺼낸다).
+   미리 뽑아도 겹치지 않는다: 뽑을 때 화면 단어와 최근 6개를 거르고, 그 사이에 나올 단어(앞 차례 셋)는 최근 6개 안에 있다.
+   대전(시드)은 v4.28 순서 그대로 둔다(옆판이 없고, 뽑는 시점이 바뀌면 옛 판과 순서가 달라진다). */
+function rgNextFill() { var q = RG.next || (RG.next = []); while (q.length < 3) q.push(rgPickWord()); return q; }
+function rgNextWord() {
+  if (RG.seed) return rgPickWord();
+  var w = rgNextFill().shift(); rgNextFill();
+  return w;
+}
 
 /* ═══ 판 ═══ */
 function rgStop() { RG.on = false; if (RG.raf) cancelAnimationFrame(RG.raf); RG.raf = 0; if (typeof rgPlayClose === "function") rgPlayClose(); }
 /* mode: "app" 솔로 · "site" 스태프 노트북 솔로 · "race" 서버 대전(시드 필수)
-   opt: { seed, lives, cap, t0, cd } · t0 을 주면(대전) 그 시각에 맞춰 시작한다 */
+   opt: { seed, lives, cap, t0, cd, wait } · t0 을 주면(대전) 그 시각에 맞춰 시작한다
+   v4.29 wait = 대기 화면(「SPACE를 눌러 시작」) · 기본 = 솔로 + 키보드 기기 · 터치 기기와 대전은 바로 카운트다운 · RGP.go = 스페이스로 들어왔으니 대기를 건너뛴다 */
 function rgStart(mode, opt) {
   opt = opt || {};
   rgStop();
@@ -320,11 +435,31 @@ function rgStart(mode, opt) {
   RG.cd = opt.cd != null ? opt.cd : 3.2; RG.t0 = 0; RG.on = true; RG.last = performance.now(); RG.L = null; RG.hud = "";
   RG.paused = false; RG.composing = false; RG.pendingEnter = false; RG.typed = ""; RG.lastHit = null; RG.latT = 0; RG.tip = false;
   RG.big = RG.mode !== "app" || (!rgTouch() && window.innerWidth >= 700);
+  RG.wait = opt.wait != null ? !!opt.wait : (RG.mode !== "race" && !rgTouch() && !RGP.go);
+  RGP.go = false;
+  RG.next = null; RG.top = null; RG.hk = false;
+  if (!RG.seed) rgNextFill();   /* 대기 화면부터 옆판 NEXT 가 보인다 */
   try { if (typeof SFX !== "undefined") SFX.site = RG.mode !== "app"; } catch (e) {}
   if (typeof rgPlayOpen === "function") rgPlayOpen();
   var inp = rgEl("rgIn"); rgBindInput(inp); if (inp) inp.focus();
   RG.raf = requestAnimationFrame(rgFrame);
 }
+/* 대기 → 카운트다운 · 스페이스(키보드) · 판을 누르기(마우스) */
+function rgBegin() {
+  if (!RG.on || !RG.wait || RG.paused) return;
+  RG.wait = false; RG.last = performance.now();
+  rgClearInput();   /* 기다리는 동안 친 글자는 버린다 */
+  rgSfx("click");
+}
+/* 문서 전체에서 스페이스를 먼저 받는다(입력창에 공백이 들어가기 전) · 대기 중일 때만 · 판 도중 스페이스는 원래대로 */
+function rgKeyDoc(e) {
+  if (!RG.on || !RG.wait || RG.paused) return;
+  if (e.code !== "Space" && e.key !== " ") return;
+  if (e.isComposing || e.keyCode === 229) return;
+  e.preventDefault();
+  if (!e.repeat) rgBegin();
+}
+if (typeof document !== "undefined" && document && typeof document.addEventListener === "function") document.addEventListener("keydown", rgKeyDoc, true);
 function rgFrame() {
   if (!RG.on || RG.paused) return;
   var now = performance.now(), dt = Math.min(0.05, (now - RG.last) / 1000);
@@ -343,7 +478,7 @@ function rgFx(dt) {
    대전에서는 겹침 검사도 유령 목록으로 본다(누가 얼마나 쳤는지와 무관하게 같은 자리) */
 function rgSpawn(sec) {
   var L = RG.L, cv = rgEl("rgCv"); if (!L || !cv) return false;
-  var ctx = cv.getContext("2d"), text = rgPickWord();
+  var ctx = cv.getContext("2d"), text = rgNextWord();
   ctx.font = rtFont(L.tf);
   var bw = Math.ceil(ctx.measureText(text).width) + L.padX * 2;
   var maxX = Math.max(8, L.W - 8 - bw), lw = (L.W - 16) / L.lanes, upper = L.top + L.boxH * 3;
@@ -371,6 +506,7 @@ function rgUpdate(dt, now) {
     if (RG.ending.t <= 0) { var w = RG.ending.why; RG.ending = null; if (typeof rgEndFinal === "function") rgEndFinal(w); }
     return;
   }
+  if (RG.wait) { rgFx(dt); return; }   /* v4.29 대기 · 스페이스를 기다린다 */
   if (RG.heartHit > 0) RG.heartHit -= dt;
   if (RG.cd > 0) {
     var before = Math.ceil(RG.cd);
@@ -426,7 +562,7 @@ function rgBurst(x, y, n, cols) {
 }
 function rgSubmit() {
   var inp = rgEl("rgIn"); if (!inp || !RG.on || RG.cd > 0 || RG.ending || RG.paused) return;
-  var v = inp.value.trim();
+  var v = rgInVal();
   if (!v) { if (inp.value) { rgClearInput(); rgFlash("auto"); }  /* 빈 판정(공백만)도 즉시 비움 · 오타 아님 */
     return; }
   var tnow = performance.now();
@@ -598,7 +734,12 @@ function rgDraw(ctx, now) {
   rgHud(now);
   ctx.setTransform(RG.dpr, 0, 0, RG.dpr, 0, 0);
   ctx.imageSmoothingEnabled = false;
+  if (L.pan) {   /* v4.29 옆판 배치 · 바깥은 어두운 판 · 게임판 양옆 먹색 테두리 */
+    ctx.fillStyle = RT_PAL.night; ctx.fillRect(0, 0, L.CW, L.H);
+    ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(L.ox - 4, 0, L.W + 8, L.H);
+  }
   ctx.save();
+  if (L.pan) { ctx.translate(L.ox, 0); ctx.beginPath(); ctx.rect(0, 0, L.W, L.H); ctx.clip(); }
   if (RG.shake > 0) ctx.translate(Math.round((Math.random() - 0.5) * 6), Math.round((Math.random() - 0.5) * 6));
   rgWorldD(ctx, L);
   /* 위험선 (점선) */
@@ -636,9 +777,74 @@ function rgDraw(ctx, now) {
     rtEnd(ctx, L.W, 0, L.floor, RG.ending.why === "cap" ? "여기까지" : "GAME OVER", RG.ending.why === "cap" ? "최대 시간에 닿았어요" : "단어 " + RG.lives0 + "개를 놓쳤어요",
       { s: L.D, tp: L.big ? 48 : 32, sp: L.big ? 32 : 16, maxW: L.big ? 640 : 320 });
   }
-  if (RG.cd > 0) rtCount(ctx, RG.cd, L.W, 0, L.floor, L.big ? 96 : 64);
+  if (RG.wait) rgWaitDraw(ctx, L, now);
+  else if (RG.cd > 0) rtCount(ctx, RG.cd, L.W, 0, L.floor, L.big ? 96 : 64);
   ctx.restore();
+  if (L.pan) rgSideDraw(ctx, L);
+}
+/* v4.29 대기 화면 · 어두운 이름표 + 도트 글자 깜빡임(0.53초마다 주황 ↔ 진한 나무) · 동작 줄이기 = 주황 고정 */
+function rgWaitDraw(ctx, L, now) {
+  var on = rgReduced() || Math.floor(now / 530) % 2 === 0, px = L.big ? 32 : 16, th = L.big ? 56 : 34, t = "SPACE를 눌러 시작";
+  ctx.save();
+  ctx.font = rtFont(px); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  var tw = Math.ceil(ctx.measureText(t).width) + (L.big ? 48 : 28), y = Math.round(L.floor * 0.42);
+  rtTag(ctx, L.W / 2 - tw / 2, y, tw, th, RT_PAL.night, RT_PAL.bark, RAIN_PAL.ink);
+  rtText(ctx, t, L.W / 2, y + th / 2, px, on ? RAIN_PAL.o100 : RT_PAL.wood, null);   /* 꺼진 박자는 진한 나무색(빈 상자로 보이지 않게) */
+  ctx.restore();
+}
+/* v4.29 옆판 · 테트리스 문법 · 나무 이중 테두리 판(rtPanel) · 위 NEXT 3개(RG.next) · 가운데 TOP 5(RG.top · 화면 쪽이 서버 순위판을 읽어 넣는다) · 아래 점수·목숨·단계
+   RG.top = null(불러오는 중) · [](기록 없음) · [{ no, name, val, me }] · 글자는 16 · 32(도트 글꼴이 또렷한 크기)만 쓴다 · 옆판 높이 700 미만은 한 단계 작게 */
+function rgSideDraw(ctx, L) {
+  var P = L.pan; if (!P) return;
+  var s = 2, cmp = P.h < 700, hp = cmp ? 16 : 32, tp = cmp ? 16 : 32, th = cmp ? 32 : 52, rh = cmp ? 22 : 28, bh = cmp ? 36 : 46;
+  var ix = P.x + 5 * s + 8, right = P.x + P.w - 5 * s - 8, iw = right - ix, cy = P.y + 5 * s + 10;
+  ctx.save();
+  rtPanel(ctx, P.x, P.y, P.w, P.h, s, RT_PAL.night);
+  ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  rtText(ctx, "NEXT", ix, cy + hp / 2, hp, RAIN_PAL.o100, RAIN_PAL.ink); cy += hp + (cmp ? 8 : 12);
+  var q = RG.next || [];
+  for (var i = 0; i < 3; i++) {
+    if (q[i]) {
+      ctx.font = rtFont(tp); var bw = Math.min(iw, Math.ceil(ctx.measureText(q[i]).width) + tp);
+      if (i === 0) rtTag(ctx, ix, cy, bw, th, RT_PAL.tan2, RT_PAL.cream, RT_PAL.tan);
+      else rtTag(ctx, ix, cy, bw, th, RT_PAL.bark, RT_PAL.wood, RAIN_PAL.ink);
+      ctx.textAlign = "left"; rtText(ctx, q[i], ix + tp / 2, cy + th / 2, tp, i === 0 ? RT_PAL.bark : RT_PAL.cream, null);
+    }
+    cy += th + (cmp ? 6 : 10);
+  }
+  var by = P.y + P.h - 5 * s - 10 - bh * 3;
+  [["점수", RG.score.toLocaleString()], ["목숨", null], ["단계", String(RG.stage)]].forEach(function (r, k) {
+    var yy = by + k * bh + bh / 2;
+    ctx.textAlign = "left"; rtText(ctx, r[0], ix, yy, hp, RT_PAL.tan, null);
+    if (r[1] != null) { ctx.textAlign = "right"; rtText(ctx, r[1], right, yy, 32, RAIN_PAL.o100, RAIN_PAL.ink); }
+    else rgSideHearts(ctx, right, yy, cmp ? 3 : 4);
+  });
+  cy += cmp ? 8 : 14;
+  ctx.textAlign = "left"; rtText(ctx, "TOP 5", ix, cy + hp / 2, hp, RAIN_PAL.o100, RAIN_PAL.ink); cy += hp + (cmp ? 8 : 12);
+  var top = RG.top, lim = by - 8;
+  if (!top || !top.length) rtText(ctx, top ? "아직 기록이 없어요" : "불러오는 중", ix, cy + rh / 2, 16, RT_PAL.tan, null);
+  else for (var j = 0; j < Math.min(5, top.length) && cy + rh <= lim; j++) {
+    var x = top[j], yy = cy + rh / 2, val = String(x.val || ""), nm = String(x.name || "");
+    ctx.textAlign = "left"; rtText(ctx, String(x.no), ix, yy, 16, RAIN_PAL.o100, null);
+    ctx.textAlign = "right"; rtText(ctx, val, right, yy, 16, RT_PAL.cream, null);
+    ctx.font = rtFont(16);
+    var nx = ix + 24, mw = right - ctx.measureText(val).width - 12 - nx;
+    while (nm.length > 1 && ctx.measureText(nm).width > mw) nm = nm.slice(0, -1);
+    ctx.textAlign = "left"; rtText(ctx, nm, nx, yy, 16, x.me ? RAIN_PAL.o60 : RT_PAL.cream, null);
+    cy += rh;
+  }
+  ctx.restore();
+}
+/* 옆판 하트 · 앱 HUD 하트와 같은 7×6 도트 · 남은 목숨 O100 · 잃은 목숨 진한 나무 · 오른쪽 끝 맞춤 */
+function rgSideHearts(ctx, right, cy, k) {
+  var n = RG.lives0 || RAIN_LIVES, w = 7 * k, x0 = right - n * (w + k) + k, y = Math.round(cy - 3 * k);
+  for (var i = 0; i < n; i++) {
+    var x = x0 + i * (w + k);
+    ctx.fillStyle = i < RG.lives ? RAIN_PAL.o100 : RT_PAL.wood;
+    [[0, 0, 3, 2], [4, 0, 3, 2], [0, 2, 7, 2], [1, 4, 5, 1], [2, 5, 3, 1]].forEach(function (r) { ctx.fillRect(x + r[0] * k, y + r[1] * k, r[2] * k, r[3] * k); });
+  }
 }
 
 /* Node 에서 규칙만 따로 돌려 보기 위한 통로(판 길이 시뮬레이션) · 브라우저에서는 쓰지 않는다 */
-if (typeof module !== "undefined" && module.exports) module.exports = { RG: RG, RAIN_WORDS: RAIN_WORDS, rgSeed: rgSeed, rgRnd: rgRnd, rgShuf: rgShuf, rgPickWord: rgPickWord, rgLayout: rgLayout, rgUpdate: rgUpdate, rgSpawn: rgSpawn, rgStat: rgStat, rgRamp: rgRamp };
+if (typeof module !== "undefined" && module.exports) module.exports = { RG: RG, RAIN_WORDS: RAIN_WORDS, rgSeed: rgSeed, rgRnd: rgRnd, rgShuf: rgShuf, rgPickWord: rgPickWord, rgLayout: rgLayout, rgUpdate: rgUpdate, rgSpawn: rgSpawn, rgStat: rgStat, rgRamp: rgRamp,
+  rgNextFill: rgNextFill, rgNextWord: rgNextWord, rgHgMap: rgHgMap, rgHgAdd: rgHgAdd, rgHgBack: rgHgBack, rgHangulize: rgHangulize, RGP: RGP };
