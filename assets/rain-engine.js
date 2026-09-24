@@ -23,6 +23,9 @@
      ② 영문 자판이어도 한글로 친다 · 누른 로마자 키를 두벌식으로 바꿔 입력창에 넣는다(rgHgAdd · 조합 · 받침 넘김 · Backspace 낱자 단위) · 한글 자판 조합(IME)은 건드리지 않는다.
      ③ 넓은 화면 솔로 = 판 폭을 줄이고 오른쪽 옆판(NEXT 3개 · TOP 5 · 점수·목숨·단계) · 대전과 휴대폰은 그대로.
      ④ 솔로(app · site) 키보드 기기는 대기 화면에서 스페이스를 눌러 본인이 시작한다 · 터치 기기와 대전(방 시작)은 그대로.
+   v4.32(260924 사용자 확정) 넓은 화면 3단 배치 · 왼쪽 판(게임 전 = 시작 안내 · 게임 중 = NEXT 3개 + 점수·목숨·단계) · 가운데 게임판(세로가 긴 비율) · 오른쪽 판(순위 TOP 10 · 내 기록 강조).
+     앱 솔로(넓은 화면)와 1F 현장 셀프 모드가 같은 배치 · 휴대폰 · 폭 960 미만 · 대전(선수 화면)은 그대로.
+     효과음 채움 · 오타(rgmiss) · 콤보 5·10·15…(rgcombo) · 마지막 목숨(rglast) · 소리는 화면 쪽 sfx 가 있을 때만(선수 화면에는 없다).
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ═══ 단어 풀 · 여기 한 곳 ═══
@@ -53,7 +56,7 @@ var RAIN_RAMP_SPAN = 60;                      /* 이 초에 걸쳐 RAIN_RAMP_MIN
 var RAIN_RAMP_MIN = 0.45;                     /* 낙하 시간·등장 간격의 하한 배율 */
 var RAIN_EXTRA_EVERY = 30;                    /* 램프 시작 뒤 이 초마다 동시 단어 +1 (최대 +2) */
 var RAIN_BANDS = [[330, 2, 3], [420, 3, 4], [520, 4, 5], [1e9, 5, 5]];   /* [판 높이 미만, 동시 단어 최대, 단계 수] · 휴대폰 */
-var RAIN_SIDE_MIN = 960;                      /* v4.29 옆판을 붙이는 캔버스 최소 폭(판 640 + 옆판 260 + 여백) · 이보다 좁으면 옛 배치 그대로 */
+var RAIN_SIDE_MIN = 960;                      /* v4.29 옆판을 붙이는 캔버스 최소 폭 · v4.32 3단(왼쪽 판 + 게임판 + 오른쪽 판) · 이보다 좁으면 옛 배치 그대로 */
 var RAIN_FONT = '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif';
 var RAIN_PAL = { o100: "#FF7E31", o60: "#FFA46E", o50: "#FFB284", o30: "#FFCFB0", o25: "#FFD8C1", o10: "#FFEBE0", deep: "#D64524", ink: "#000000", w: "#FFFFFF", gray: "#B8AEA6", dim: "#8A817B", soil: "#7A3E1C", soil2: "#6A3417", trunk: "#5E3218" };
 /* ═══ v4.23 레트로 틀 · 게임판 안 공용 한 벌 (260923 사용자 확정 · design.md A-5 5-16 · 정본 시안 「레트로 시안/시안.html」) ═══
@@ -69,7 +72,7 @@ var RT_PAL = { night: "#1B1712", bark: "#2A2118", wood: "#5E3218", tan: "#D9A066
    크기는 도트 칸 수로 고정한다(서기 22×26 = 점프 러너와 같은 칸 수 · 친구 17×20) · 도트 한 칸 = L.D / 2 CSS px · 그리는 상자는 옛 마스코트 자리(L.masW × L.masH) 안이다. */
 var RG_BOT = { w: 22, h: 26, bw: 17, bh: 20 };
 
-var RG = { on: false, mode: "app", big: false, raf: 0, last: 0, t0: 0, cd: 0, words: [], ghost: [], seq: 0, parts: [], pops: [], lives: RAIN_LIVES, score: 0, hits: 0, tries: 0, combo: 0, maxCombo: 0, stage: 1, spawnT: 0, shake: 0, banner: null, shot: null, mas: { x: 90, tx: 90, hop: 0 }, res: null, L: null, dpr: 1, seed: 0, rs: 0, lives0: RAIN_LIVES, cap: RAIN_CAP_SEC, wait: false, next: null, top: null, hk: false };
+var RG = { on: false, mode: "app", big: false, raf: 0, last: 0, t0: 0, cd: 0, words: [], ghost: [], seq: 0, parts: [], pops: [], lives: RAIN_LIVES, score: 0, hits: 0, tries: 0, combo: 0, maxCombo: 0, stage: 1, spawnT: 0, shake: 0, banner: null, shot: null, mas: { x: 90, tx: 90, hop: 0 }, res: null, L: null, dpr: 1, seed: 0, rs: 0, lives0: RAIN_LIVES, cap: RAIN_CAP_SEC, wait: false, next: null, top: null, topT: "", who: "", hk: false };   /* v4.32 topT = 오른쪽 판 제목 · who = 왼쪽 판 도전자 닉네임(현장 셀프) · 화면 쪽이 넣는다 */
 var RGP = { on: false, touch: false, go: false };
 
 /* ── 화면에 기대지 않는 작은 도구 ── */
@@ -124,15 +127,19 @@ function rgBotDraw(ctx, cx, gy, dw, dh, u) {
 }
 
 /* ── 배치 ── 판 크기 → 규칙 · 모든 값은 CSS px ── */
-/* v4.29 side = 넓은 화면 솔로 옆판 · 판 폭(L.W)을 줄이고 캔버스 폭(L.CW) 오른쪽에 옆판(L.pan) · 판 규칙(레인 · 낙하 · 판정선)은 줄인 폭으로 계산한다
-   판 = 높이 × 1.1(640 이상) · 옆판 = 캔버스 폭의 20%(260~380) · 둘을 가운데 모은다(L.ox = 판 왼쪽 끝) */
+/* v4.29 side = 넓은 화면 솔로 옆판 · 판 폭(L.W)을 줄이고 캔버스 안에 판을 붙인다 · 판 규칙(레인 · 낙하 · 판정선)은 줄인 폭으로 계산한다
+   v4.32 3단 · 게임판 = 높이 × 0.8(440~760 · 세로가 긴 비율) · 캔버스 가운데 · 양옆 판 = 남은 폭을 반씩(200~420) · 왼쪽 L.lp · 오른쪽 L.pan
+   좁으면(960 부근) 양옆 판 200 을 먼저 지키고 게임판이 줄어든다 · L.ox = 게임판 왼쪽 끝 */
 function rgLayout(W, H, big, side) {
-  var L = { W: W, H: H, big: big, CW: W, ox: 0, pan: null };
+  var L = { W: W, H: H, big: big, CW: W, ox: 0, pan: null, lp: null };
   if (side && big && W >= RAIN_SIDE_MIN) {
-    var pw = Math.max(260, Math.min(380, Math.round(W * 0.2))), gap = 16;
-    var bw = Math.max(640, Math.min(W - pw - 3 * gap, Math.round(H * 1.1)));
-    var ox = Math.round((W - bw - gap - pw) / 2);
-    L.W = W = bw; L.ox = ox; L.pan = { x: ox + bw + gap, y: 12, w: pw, h: H - 24 };
+    var gap = 16, bw = Math.max(440, Math.min(760, Math.round(H * 0.8))), pw = Math.floor((W - bw - 4 * gap) / 2);
+    if (pw < 200) { pw = 200; bw = W - 2 * pw - 4 * gap; }
+    pw = Math.min(420, pw);
+    var ox = Math.round((W - bw) / 2);
+    L.W = W = bw; L.ox = ox;
+    L.lp = { x: ox - gap - pw, y: 12, w: pw, h: H - 24 };
+    L.pan = { x: ox + bw + gap, y: 12, w: pw, h: H - 24 };
   }
   L.D = big ? 4 : 3;                                        /* 도트 단위 */
   L.font = big ? (W >= 1200 ? 32 : W >= 900 ? 30 : 28) : 18;
@@ -539,7 +546,7 @@ function rgUpdate(dt, now) {
       RG.pops.push({ x: wd.x + wd.bw / 2, y: L.floor - 10, text: "놓침 · 하트 -1", t: 0.9, c: RAIN_PAL.deep, s: 14 });
       rgSfx("floor");
       rgCheckInput();   /* 치고 있던 단어가 바닥에 닿아 사라졌으면 입력창을 바로 비운다 */
-      if (RG.lives === 1) RG.banner = { text: "마지막 목숨", t: 1.0 };
+      if (RG.lives === 1) { RG.banner = { text: "마지막 목숨", t: 1.0 }; rgSfx("rglast"); }   /* v4.32 경고음 */
       if (RG.lives <= 0) { rgEnd("lives"); return; }
     }
   }
@@ -572,9 +579,9 @@ function rgSubmit() {
   var hit = -1;
   RG.words.forEach(function (w, i) { if (w.text === v && (hit < 0 || w.p > RG.words[hit].p)) hit = i; });
   if (hit < 0) {
-    /* 오타에 벌칙 없음 · 콤보를 끊지 않고 테두리 한 번 + 짧은 소리만 · 하트도 줄지 않는다 */
+    /* 오타에 벌칙 없음 · 콤보를 끊지 않고 테두리 한 번 + 짧은 소리만 · 하트도 줄지 않는다 · v4.32 오타 소리(rgmiss · 낮은 두 음) · 자동 비우기(tik)와 구별 */
     rgFlash("miss");
-    rgSfx("tik");
+    rgSfx("rgmiss");
     return;
   }
   var L = RG.L, wd = RG.words.splice(hit, 1)[0];
@@ -591,6 +598,7 @@ function rgSubmit() {
   if (!rgReduced()) RG.shake = Math.max(RG.shake, 0.06);
   rgFlash("hit");
   rgSfx("hit", RG.combo);
+  if (RG.combo >= 5 && RG.combo % 5 === 0) rgSfx("rgcombo", RG.combo / 5);   /* v4.32 콤보 5 · 10 · 15 … 오르는 음 한 줄 */
 }
 function rgEnd(why) {
   if (!RG.on || RG.ending) return;
@@ -780,7 +788,7 @@ function rgDraw(ctx, now) {
   if (RG.wait) rgWaitDraw(ctx, L, now);
   else if (RG.cd > 0) rtCount(ctx, RG.cd, L.W, 0, L.floor, L.big ? 96 : 64);
   ctx.restore();
-  if (L.pan) rgSideDraw(ctx, L);
+  if (L.pan) { rgLeftDraw(ctx, L); rgSideDraw(ctx, L); }   /* v4.32 3단 · 흔들림 밖 */
 }
 /* v4.29 대기 화면 · 어두운 이름표 + 도트 글자 밝기 깜빡임(0.53초마다 O100 ↔ 어두운 오렌지 · 글자는 늘 보인다) · 동작 줄이기 = 주황 고정 */
 function rgWaitDraw(ctx, L, now) {
@@ -792,25 +800,50 @@ function rgWaitDraw(ctx, L, now) {
   rtText(ctx, t, L.W / 2, y + th / 2, px, on ? RAIN_PAL.o100 : RAIN_PAL.deep, null);   /* 글자는 사라지지 않고 밝기만 오간다(O100 ↔ 어두운 오렌지) · 빈 상자로 보이지 않게 */
   ctx.restore();
 }
-/* v4.29 옆판 · 테트리스 문법 · 나무 이중 테두리 판(rtPanel) · 위 NEXT 3개(RG.next) · 가운데 TOP 5(RG.top · 화면 쪽이 서버 순위판을 읽어 넣는다) · 아래 점수·목숨·단계
-   RG.top = null(불러오는 중) · [](기록 없음) · [{ no, name, val, me }] · 글자는 16 · 32(도트 글꼴이 또렷한 크기)만 쓴다 · 옆판 높이 700 미만은 한 단계 작게 */
-function rgSideDraw(ctx, L) {
-  var P = L.pan; if (!P) return;
-  var s = 2, cmp = P.h < 700, hp = cmp ? 16 : 32, tp = cmp ? 16 : 32, th = cmp ? 32 : 52, rh = cmp ? 22 : 28, bh = cmp ? 36 : 46;
+/* v4.32 3단 배치의 양옆 판 · 나무 이중 테두리 판(rtPanel) · 글자는 16 · 32(도트 글꼴이 또렷한 크기)만 쓴다 · 판 높이 500 미만은 제목도 16 · 순위 줄은 높이 700 · 폭 400 이상에서만 32 */
+/* 한 줄 폭을 넘으면 띄어쓰기에서 나눈다(16px 안내 문장용) */
+function rgWrap(ctx, text, maxW) {
+  var out = [], line = "";
+  String(text).split(" ").forEach(function (w) {
+    var t = line ? line + " " + w : w;
+    if (line && ctx.measureText(t).width > maxW) { out.push(line); line = w; } else line = t;
+  });
+  if (line) out.push(line);
+  return out;
+}
+/* 왼쪽 판 · 도전자(현장 셀프 · RG.who) · 게임 전(대기) = 시작 안내 · 게임 중 = NEXT 3개(RG.next) · 아래 점수·목숨·단계 */
+function rgLeftDraw(ctx, L) {
+  var P = L.lp; if (!P) return;
+  var s = 2, cmp = P.h < 500, hp = cmp ? 16 : 32, tp = cmp ? 16 : 32, th = cmp ? 32 : 52, bh = cmp ? 36 : 46, lh = cmp ? 24 : 30;
   var ix = P.x + 5 * s + 8, right = P.x + P.w - 5 * s - 8, iw = right - ix, cy = P.y + 5 * s + 10;
   ctx.save();
   rtPanel(ctx, P.x, P.y, P.w, P.h, s, RT_PAL.night);
   ctx.textBaseline = "middle"; ctx.textAlign = "left";
-  rtText(ctx, "NEXT", ix, cy + hp / 2, hp, RAIN_PAL.o100, RAIN_PAL.ink); cy += hp + (cmp ? 8 : 12);
-  var q = RG.next || [];
-  for (var i = 0; i < 3; i++) {
-    if (q[i]) {
-      ctx.font = rtFont(tp); var bw = Math.min(iw, Math.ceil(ctx.measureText(q[i]).width) + tp);
-      if (i === 0) rtTag(ctx, ix, cy, bw, th, RT_PAL.tan2, RT_PAL.cream, RT_PAL.tan);
-      else rtTag(ctx, ix, cy, bw, th, RT_PAL.bark, RT_PAL.wood, RAIN_PAL.ink);
-      ctx.textAlign = "left"; rtText(ctx, q[i], ix + tp / 2, cy + th / 2, tp, i === 0 ? RT_PAL.bark : RT_PAL.cream, null);
+  if (RG.who) {
+    ctx.font = rtFont(hp); var who = String(RG.who);
+    while (who.length > 1 && ctx.measureText(who).width > iw) who = who.slice(0, -1);
+    rtText(ctx, who, ix, cy + hp / 2, hp, RAIN_PAL.o100, RAIN_PAL.ink); cy += hp + (cmp ? 4 : 8);
+    rtText(ctx, "도전 중", ix, cy + 8, 16, RT_PAL.tan, null); cy += 16 + (cmp ? 12 : 20);
+  }
+  if (RG.wait) {
+    rtText(ctx, "시작 안내", ix, cy + hp / 2, hp, RAIN_PAL.o100, RAIN_PAL.ink); cy += hp + (cmp ? 10 : 16);
+    ctx.font = rtFont(16);
+    ["SPACE를 누르면 시작", "떨어지는 단어를 치고 Enter", "단어가 바닥에 닿으면 목숨 하나", "목숨 " + (RG.lives0 || RAIN_LIVES) + "개를 다 잃으면 끝"].forEach(function (t, k) {
+      rgWrap(ctx, t, iw).forEach(function (ln) { rtText(ctx, ln, ix, cy + lh / 2, 16, k === 0 ? RAIN_PAL.o60 : RT_PAL.cream, null); cy += lh; });
+      cy += cmp ? 4 : 8;
+    });
+  } else {
+    rtText(ctx, "NEXT", ix, cy + hp / 2, hp, RAIN_PAL.o100, RAIN_PAL.ink); cy += hp + (cmp ? 8 : 12);
+    var q = RG.next || [];
+    for (var i = 0; i < 3; i++) {
+      if (q[i]) {
+        ctx.font = rtFont(tp); var bw = Math.min(iw, Math.ceil(ctx.measureText(q[i]).width) + tp);
+        if (i === 0) rtTag(ctx, ix, cy, bw, th, RT_PAL.tan2, RT_PAL.cream, RT_PAL.tan);
+        else rtTag(ctx, ix, cy, bw, th, RT_PAL.bark, RT_PAL.wood, RAIN_PAL.ink);
+        ctx.textAlign = "left"; rtText(ctx, q[i], ix + tp / 2, cy + th / 2, tp, i === 0 ? RT_PAL.bark : RT_PAL.cream, null);
+      }
+      cy += th + (cmp ? 6 : 10);
     }
-    cy += th + (cmp ? 6 : 10);
   }
   var by = P.y + P.h - 5 * s - 10 - bh * 3;
   [["점수", RG.score.toLocaleString()], ["목숨", null], ["단계", String(RG.stage)]].forEach(function (r, k) {
@@ -819,18 +852,31 @@ function rgSideDraw(ctx, L) {
     if (r[1] != null) { ctx.textAlign = "right"; rtText(ctx, r[1], right, yy, 32, RAIN_PAL.o100, RAIN_PAL.ink); }
     else rgSideHearts(ctx, right, yy, cmp ? 3 : 4);
   });
-  cy += cmp ? 8 : 14;
-  ctx.textAlign = "left"; rtText(ctx, "TOP 5", ix, cy + hp / 2, hp, RAIN_PAL.o100, RAIN_PAL.ink); cy += hp + (cmp ? 8 : 12);
-  var top = RG.top, lim = by - 8;
+  ctx.restore();
+}
+/* 오른쪽 판 · 순위 TOP 10(RG.top · 화면 쪽이 서버 순위판을 읽어 넣는다) · 내 기록(me) = 진한 나무 띠 + 주황 글자
+   RG.top = null(불러오는 중) · [](기록 없음) · [{ no, name, val, me }] · 제목 = RG.topT(화면 쪽) 또는 「TOP 10」 · 넓은 판(400 이상 · 높이 700 이상)은 32 */
+function rgSideDraw(ctx, L) {
+  var P = L.pan; if (!P) return;
+  var s = 2, cmp = P.h < 500, hp = cmp ? 16 : 32, rf = P.h >= 700 && P.w >= 400 ? 32 : 16, rh = rf === 32 ? 46 : cmp ? 26 : 34;
+  var ix = P.x + 5 * s + 8, right = P.x + P.w - 5 * s - 8, iw = right - ix, cy = P.y + 5 * s + 10, lim = P.y + P.h - 5 * s - 10;
+  ctx.save();
+  rtPanel(ctx, P.x, P.y, P.w, P.h, s, RT_PAL.night);
+  ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  rtText(ctx, RG.topT || "TOP 10", ix, cy + hp / 2, hp, RAIN_PAL.o100, RAIN_PAL.ink); cy += hp + (cmp ? 10 : 18);
+  var top = RG.top;
   if (!top || !top.length) rtText(ctx, top ? "아직 기록이 없어요" : "불러오는 중", ix, cy + rh / 2, 16, RT_PAL.tan, null);
-  else for (var j = 0; j < Math.min(5, top.length) && cy + rh <= lim; j++) {
-    var x = top[j], yy = cy + rh / 2, val = String(x.val || ""), nm = String(x.name || "");
-    ctx.textAlign = "left"; rtText(ctx, String(x.no), ix, yy, 16, RAIN_PAL.o100, null);
-    ctx.textAlign = "right"; rtText(ctx, val, right, yy, 16, RT_PAL.cream, null);
-    ctx.font = rtFont(16);
-    var nx = ix + 24, mw = right - ctx.measureText(val).width - 12 - nx;
+  else for (var j = 0; j < Math.min(10, top.length) && cy + rh <= lim; j++) {
+    var x = top[j], yy = cy + rh / 2, val = String(x.val || ""), nm = String(x.name || ""), no = String(x.no);
+    if (x.me) rtTag(ctx, ix - 6, cy + 2, iw + 12, rh - 4, RT_PAL.wood, RAIN_PAL.soil, RAIN_PAL.ink);
+    ctx.font = rtFont(rf);
+    var nx = ix + ctx.measureText("10").width + 10;
+    ctx.textAlign = "left"; rtText(ctx, no, ix, yy, rf, x.me || x.no <= 3 ? RAIN_PAL.o100 : RT_PAL.tan, null);
+    ctx.textAlign = "right"; rtText(ctx, val, right, yy, rf, x.me ? RAIN_PAL.o100 : RT_PAL.cream, null);
+    ctx.font = rtFont(rf);
+    var mw = right - ctx.measureText(val).width - 12 - nx;
     while (nm.length > 1 && ctx.measureText(nm).width > mw) nm = nm.slice(0, -1);
-    ctx.textAlign = "left"; rtText(ctx, nm, nx, yy, 16, x.me ? RAIN_PAL.o60 : RT_PAL.cream, null);
+    ctx.textAlign = "left"; rtText(ctx, nm, nx, yy, rf, x.me ? RAIN_PAL.o100 : RT_PAL.cream, null);
     cy += rh;
   }
   ctx.restore();
@@ -847,4 +893,4 @@ function rgSideHearts(ctx, right, cy, k) {
 
 /* Node 에서 규칙만 따로 돌려 보기 위한 통로(판 길이 시뮬레이션) · 브라우저에서는 쓰지 않는다 */
 if (typeof module !== "undefined" && module.exports) module.exports = { RG: RG, RAIN_WORDS: RAIN_WORDS, rgSeed: rgSeed, rgRnd: rgRnd, rgShuf: rgShuf, rgPickWord: rgPickWord, rgLayout: rgLayout, rgUpdate: rgUpdate, rgSpawn: rgSpawn, rgStat: rgStat, rgRamp: rgRamp,
-  rgNextFill: rgNextFill, rgNextWord: rgNextWord, rgHgMap: rgHgMap, rgHgAdd: rgHgAdd, rgHgBack: rgHgBack, rgHangulize: rgHangulize, RGP: RGP };
+  rgNextFill: rgNextFill, rgNextWord: rgNextWord, rgWrap: rgWrap, rgHgMap: rgHgMap, rgHgAdd: rgHgAdd, rgHgBack: rgHgBack, rgHangulize: rgHangulize, RGP: RGP };
