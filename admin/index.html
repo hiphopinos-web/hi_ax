@@ -1706,11 +1706,19 @@ function viewTyping(){
 }
 function viewTypeNick(){
   var rows=((ST.data.nick||{}).rows||[]).filter(function(r){ return match(r,["emp","nick","name"]); });
-  var tr=ST.data.tres||{top:[],win:[]};
-  var h=card("1F 현장 타자왕전 상위 5","Outro 호명용 · 결선 시간대 "+esc((tr.win||[]).join(" · ")),
+  var tr=ST.data.tres||{top:[],win:[]}, tries=tr.tries||3;
+  /* v4.32 1F 현장 셀프 모드 · 참가자가 노트북에서 스스로 · 도전 횟수(type_self_cfg · 설정 타자셀프_횟수) · 도전 시간(type_cfg · 설정 타자_결선) · 노트북 주소 · 토너먼트(타자왕전 판)와 별개 */
+  var h=card("1F 현장 셀프 모드","참가자가 노트북에서 스스로 · 1인 "+tries+"회 · 순위는 사람마다 최고 기록 하나",
+    '<div class="row"><span class="cap" style="width:72px">도전 횟수</span><input class="in" id="selfTries" style="min-width:0;width:80px" inputmode="numeric" value="'+tries+'"><button class="btn" onclick="selfTriesSave()">저장</button><span class="cap">1~9회</span></div>'+
+    '<div class="row mt8"><span class="cap" style="width:72px">도전 시간</span><input class="in" id="selfWin" style="min-width:0;width:240px" value="'+esc((tr.win||[]).join(",").replace(/~/g,"-"))+'"><button class="btn" onclick="selfWinSave()">저장</button><span class="cap">예 12:00-13:00,15:00-16:00</span></div>'+
+    '<div class="row mt8"><span class="cap" style="width:72px">노트북 주소</span><input class="in" readonly style="min-width:0;flex:1" value="'+esc(selfLink())+'"><button class="btn sm" onclick="selfLinkCopy()">주소 복사</button></div>'+
+    memo('<p>켜는 법 · ① 노트북 크롬에서 위 주소를 엽니다 ② 관리코드를 넣고 효과음(기본 켜짐)을 고른 뒤 「셀프 모드 켜기」 ③ 이후 화면은 참가자 전용입니다(새로 고침·재부팅해도 유지) ④ 끄기·효과음 = 화면 왼쪽 아래 「관리」 → 관리코드.</p>'+
+      '<p>참가자는 사번 → 닉네임 → SPACE 로 시작합니다. 시작하는 순간 1회로 셉니다(중간에 그만둬도 돌려주지 않음). 테스트 사번(310555)은 기록을 남기지 않습니다. 종일 받으려면 도전 시간을 09:00-18:00 처럼 넓힙니다.</p>'+
+      '<p>토너먼트(타자왕전 판 · 선수 노트북 typing.html)와 기록·설정이 따로입니다. 셀프 최고 기록 명단은 서버 type_self_best 로 읽습니다(예선 통과자용).</p>'));
+  h+=card("1F 현장 타자왕전 상위 5","Outro 호명용 · 셀프 도전 시간 "+esc((tr.win||[]).join(" · ")),
     '<div class="wrap"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">생존</th><th class="tdr">정확도</th><th>기록 시각</th></tr>'+
     ((tr.top||[]).length?tr.top.map(function(r){ return '<tr><td class="n"><b>'+r.rank+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name)+'</td><td class="n">'+esc(r.emp)+'</td><td class="n tdr">'+tySec(r.score)+'</td><td class="n tdr">'+r.acc+'%</td><td class="n cap">'+esc(short(r.ts))+'</td></tr>'; }).join(""):emptyRow(7,"아직 현장 기록이 없습니다."))+'</table></div>'+
-    memo('<p>AX 단어 소나기(노트북 전용 · 앱 종목은 테트리스) · 1인 1회 · 오래 버틴 순 · 동점은 정확도, 그다음 먼저 기록한 쪽.</p>'));
+    memo('<p>AX 단어 소나기 · 1F 현장 셀프 모드 · 1인 '+tries+'회 중 최고 기록 · 오래 버틴 순 · 동점은 정확도, 그다음 먼저 기록한 쪽.</p>'));
   h+=card("미니게임 닉네임","2~8자 · 중복·금칙어·명부 실명은 서버가 거부 · 숨기면 순위판에 「이름 숨김」",
     '<div class="toolbar">'+searchBox("닉네임 · 사번 · 이름 검색")+'<span class="cnt"><b>'+rows.length+'</b>명</span></div>'+
     '<div class="wrap scrolly"><table class="tb"><tr><th>닉네임</th><th>상태</th><th>사번</th><th>이름</th><th class="tdr">앱 최고 생존</th><th class="tdr">현장 생존</th><th class="tdr">처리</th></tr>'+
@@ -1887,6 +1895,19 @@ function gameWipe(){
       if(r&&r.ok) { toast("삭제 · 게임 "+r.game+"행 · 타자 "+r.type+"행"); reload(["gstats","tres"]); }
       else toast(r&&r.reason==="notest"?"테스트 사번만 지울 수 있습니다":"삭제 실패"+((r&&r.reason)?" ("+r.reason+")":""));
     },function(){ dlgForce(); toast("서버 연결 실패"); }); } });
+}
+/* v4.32 1F 현장 셀프 모드 · 도전 횟수 · 도전 시간 · 노트북 주소 */
+function selfLink(){ return location.href.split("#")[0].split("?")[0].replace(/admin\/[^\/]*$/,"")+"index.html#self"; }
+function selfLinkCopy(){ var t=selfLink(), ok=function(){ toast("셀프 모드 주소를 복사했습니다"); }; try{ navigator.clipboard.writeText(t).then(ok,function(){ raceCopyOld(t); ok(); }); }catch(e){ raceCopyOld(t); ok(); } }
+function selfTriesSave(){
+  var v=((el("selfTries")||{}).value||"").trim();
+  if(!/^[1-9]$/.test(v)){ toast("1~9 사이 숫자를 넣어 주세요"); return; }
+  call("type_self_cfg",{tries:v},function(r){ if(r&&r.ok){ toast("도전 횟수 "+r.tries+"회로 바꿨습니다"); reload(["tres"]); } else toast("실패: "+why(r)); },function(){ toast("서버 응답 없음"); });
+}
+function selfWinSave(){
+  var v=((el("selfWin")||{}).value||"").replace(/\s/g,"");
+  if(!/^\d{1,2}:\d{2}-\d{1,2}:\d{2}(,\d{1,2}:\d{2}-\d{1,2}:\d{2})*$/.test(v)){ toast("12:00-13:00,15:00-16:00 형식으로 넣어 주세요"); return; }
+  call("type_cfg",{win:v},function(r){ if(r&&r.ok){ toast("도전 시간을 바꿨습니다"); reload(["tres"]); } else toast("실패: "+why(r)); },function(){ toast("서버 응답 없음"); });
 }
 function nickHide(emp,on){ call("type_nick_hide",{emp:emp,on:on},function(r){ if(r&&r.ok){ toast(on?"닉네임을 숨겼습니다":"숨김을 해제했습니다"); reload(["nick"]); } else toast("실패: "+why(r)); },function(){ toast("서버 응답 없음"); }); }
 function nickReset(emp){
