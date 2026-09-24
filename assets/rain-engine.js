@@ -208,7 +208,24 @@ function rgLive(e) {
 /* 치던 단어가 사라지면 입력창을 바로 비운다 · 「아직 맞는 앞부분」까지만 남긴다(오타 한 글자 때문에 단어를 통째로 잃지 않게).
    조합이 열려 있을 때는 앞부분만 남기지 않는다(IME 가 그 글자 위에 계속 조합해서 뒤죽박죽이 된다) → 통째로 비운다.
    자동으로 지운 글자는 오타(RG.tries)로 세지 않는다 → 점수·정확도 불변. */
-function rgPrefixAlive(v) { return RG.words.some(function (w) { return w.text.indexOf(v) === 0; }); }
+/* v4.25 한글 조합 중간 상태까지 살리는 앞부분 판정 · 두벌식은 치는 도중 「공감」→「고」, 「세션」→「셋」, 「확산」→「홗」 을 반드시 거친다.
+   글자 그대로 비교하면 이 순간 「맞는 단어 없음」이 되어 입력창이 비워졌다(260924 · 음절 조합 키보드 = PC 윈도우 IME · Gboard · 아이폰에서 받침 단어를 못 맞힘).
+   그래서 값과 단어를 자모열로 풀어 앞부분을 비교한다 · 겹받침·겹모음도 낱자로 푼다(ㄳ→ㄱㅅ · ㅘ→ㅗㅏ). */
+var RG_CHO = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ",
+  RG_JUNG = ["ㅏ", "ㅐ", "ㅑ", "ㅒ", "ㅓ", "ㅔ", "ㅕ", "ㅖ", "ㅗ", "ㅗㅏ", "ㅗㅐ", "ㅗㅣ", "ㅛ", "ㅜ", "ㅜㅓ", "ㅜㅔ", "ㅜㅣ", "ㅠ", "ㅡ", "ㅡㅣ", "ㅣ"],
+  RG_JONG = ["", "ㄱ", "ㄲ", "ㄱㅅ", "ㄴ", "ㄴㅈ", "ㄴㅎ", "ㄷ", "ㄹ", "ㄹㄱ", "ㄹㅁ", "ㄹㅂ", "ㄹㅅ", "ㄹㅌ", "ㄹㅍ", "ㄹㅎ", "ㅁ", "ㅂ", "ㅂㅅ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"],
+  RG_LONE = { "ㄳ": "ㄱㅅ", "ㄵ": "ㄴㅈ", "ㄶ": "ㄴㅎ", "ㄺ": "ㄹㄱ", "ㄻ": "ㄹㅁ", "ㄼ": "ㄹㅂ", "ㄽ": "ㄹㅅ", "ㄾ": "ㄹㅌ", "ㄿ": "ㄹㅍ", "ㅀ": "ㄹㅎ", "ㅄ": "ㅂㅅ", "ㅘ": "ㅗㅏ", "ㅙ": "ㅗㅐ", "ㅚ": "ㅗㅣ", "ㅝ": "ㅜㅓ", "ㅞ": "ㅜㅔ", "ㅟ": "ㅜㅣ", "ㅢ": "ㅡㅣ" };
+function rgJm(s) {
+  var o = "";
+  for (var i = 0; i < s.length; i++) {
+    var ch = s.charAt(i), c = s.charCodeAt(i) - 0xAC00;
+    if (c >= 0 && c <= 11171) o += RG_CHO.charAt(Math.floor(c / 588)) + RG_JUNG[Math.floor((c % 588) / 28)] + RG_JONG[c % 28];
+    else o += RG_LONE[ch] || ch;
+  }
+  return o;
+}
+function rgPre(w, v) { if (w.jm == null || w.jmOf !== w.text) { w.jm = rgJm(w.text); w.jmOf = w.text; } return w.jm.indexOf(rgJm(v)) === 0; }
+function rgPrefixAlive(v) { return RG.words.some(function (w) { return rgPre(w, v); }); }
 function rgAutoClear() {
   var inp = rgEl("rgIn"); if (!inp || !inp.value) return;
   var v = inp.value.trim(), keep = "";
@@ -232,7 +249,7 @@ function rgCheckInput(v) {
 function rgTypedIdx() {
   var v = RG.typed || "", hit = -1;
   if (!v) return -1;
-  RG.words.forEach(function (w, i) { if (w.text.indexOf(v) === 0 && (hit < 0 || w.p > RG.words[hit].p)) hit = i; });
+  RG.words.forEach(function (w, i) { if (rgPre(w, v) && (hit < 0 || w.p > RG.words[hit].p)) hit = i; });   /* v4.25 조합 중간(셋·홗)에도 짚은 단어가 깜빡이지 않게 */
   return hit;
 }
 function rgClearInput() {
