@@ -2215,62 +2215,171 @@ var IDEA_TAGS = ["영업", "보상", "마케팅", "본사·통계", "기타"];
 var DEFAULT_NOTICES = [
   { id: "n1", title: "AX Festival 2026에 오신 것을 환영합니다", body: "자리에서도 페스티벌 안에 있을 수 있어요. 미니게임 한 판, 아이디어 한 줄 · 1분이면 충분합니다.", ts: 0, pinned: true }
 ];
-/* 「ME to WE 기억력」 문제 은행 · v3.67 · AI 기본 소양 (사용자 확정 260918 · 「AI가 뭔지 개념 중심 · 친숙해지는 일반 개념」)
-   한 판 = 문장 2 + 순서 1을 무작위로 뽑는다 · 최근에 나온 문항(mem_seen)은 먼저 빼고, 다 돌면 초기화 ·
-   한 판 안에 같은 문항 없음 · 타일 순서는 매번 섞고, 미끼는 문항마다 후보 pool 3~5개에서 무작위.
+/* 「ME to WE 기억력」 문제 은행 v2 · v4.30 (사용자 확정 260924 · 정본 「기억력 문제 은행 v2.md/.json」 · 문장 40 + 순서 12)
+   lv = 난이도(1 쉬움 · 2 보통 · 3 어려움 · O/X 은행과 같은 이름) · dom = 분야(concept AI 개념 · safety 사내 안전 수칙 · O/X 로드맵 분야는 넣지 않는다).
+   한 판 = 순서 1 + 문장 2 · 쉬움 → 보통 → 어려움 한 문항씩(gwPick) · 최근에 나온 문항(mem_seen)은 먼저 빼고, 다 돌면 전체에서 ·
+   한 판 안에 같은 문항 없음 · 타일 순서는 매번 섞고, 미끼는 문항마다 후보 pool 4~5개에서 무작위.
    제작 규칙: ①처음 접하는 사람도 바로 읽히는 쉬운 말 ②특정 제품·회사 홍보 금지 ③확인되지 않은 숫자·단정 금지
    ④겁주는 말·과장(「AI가 다 해 준다」) 금지 ⑤미끼는 정답과 비슷한 말 금지(정답 단어와 겹치면 안 된다)
    ⑥게임 시작 화면의 개념 문장(슬로건·로드맵)과 겹치지 않게 은행에는 넣지 않는다.
-   v3.57 행사 정보 은행(프로그램·시간·인원)은 MEM_ROUNDS_EVENT 로 남겨 두었다(휴면 · 부르는 곳 없음). */
+   문항을 고치면 json → 여기 순서로 (검사 39절이 json 과 대조) · v3.57 행사 정보 은행(프로그램·시간·인원)은 MEM_ROUNDS_EVENT 로 남겨 두었다(휴면 · 부르는 곳 없음). */
 var MEM_ROUNDS = [
-  { id: "gen", kind: "sentence", words: ["생성형", "AI는", "새로운", "글과", "그림을", "만들어요"],
-    pool: ["회의실", "엘리베이터", "점심시간", "복사기", "달력"],
+  { id: "gen", kind: "sentence", lv: 1, dom: "concept", words: ["생성형", "AI는", "새로운", "글과", "그림을", "만들어요"],
+    pool: ["회의실", "복사기", "자전거", "창문", "게시판"],
     mean: "찾아 주는 것이 아니라 새로 만들어 줍니다" },
-  { id: "prm", kind: "sentence", words: ["프롬프트는", "AI에게", "주는", "질문이나", "지시예요"],
-    pool: ["우산", "화분", "자전거", "복사기", "회의실"],
+  { id: "prm", kind: "sentence", lv: 1, dom: "concept", words: ["프롬프트는", "AI에게", "주는", "질문이나", "지시예요"],
+    pool: ["엘리베이터", "달력", "우산", "주차장", "구내식당"],
     mean: "우리가 입력하는 말이 곧 프롬프트입니다" },
-  { id: "lrn", kind: "sentence", words: ["AI는", "배운", "내용을", "엮어", "답을", "만들어요"],
-    pool: ["달력", "엘리베이터", "우산", "점심시간", "화분"],
+  { id: "lrn", kind: "sentence", lv: 2, dom: "concept", words: ["AI는", "배운", "내용을", "엮어", "답을", "만들어요"],
+    pool: ["점심시간", "화분", "계단", "냉장고", "정수기"],
     mean: "사람처럼 이해했다기보다 배운 것을 조합합니다" },
-  { id: "chk", kind: "sentence", words: ["AI의", "답은", "사람이", "확인한", "뒤에", "씁니다"],
-    pool: ["복사기", "자전거", "회의실", "달력", "우산"],
+  { id: "chk", kind: "sentence", lv: 1, dom: "concept", words: ["AI의", "답은", "사람이", "확인한", "뒤에", "씁니다"],
+    pool: ["복사기", "자전거", "창문", "게시판", "시계"],
     mean: "마지막 판단은 사람 몫입니다" },
-  { id: "hal", kind: "sentence", words: ["모르는", "것도", "그럴듯하게", "말할", "때가", "있어요"],
-    pool: ["점심시간", "화분", "엘리베이터", "복사기", "자전거"],
+  { id: "hal", kind: "sentence", lv: 2, dom: "concept", words: ["모르는", "것도", "그럴듯하게", "말할", "때가", "있어요"],
+    pool: ["달력", "우산", "주차장", "구내식당", "회의실"],
     mean: "틀린 내용을 자신 있게 말하기도 합니다" },
-  { id: "spc", kind: "sentence", words: ["질문이", "구체적일수록", "답이", "좋아져요"],
-    pool: ["우산", "달력", "회의실", "점심시간", "화분"],
+  { id: "spc", kind: "sentence", lv: 1, dom: "concept", words: ["질문이", "구체적일수록", "답이", "좋아져요"],
+    pool: ["화분", "계단", "냉장고", "정수기", "엘리베이터"],
     mean: "상황과 목적을 함께 적으면 답이 달라집니다" },
-  { id: "fmt", kind: "sentence", words: ["원하는", "형식도", "함께", "적어요"],
-    pool: ["자전거", "복사기", "엘리베이터", "우산", "달력"],
-    mean: "표·목록·세 줄 요약처럼 형태를 정해 주면 편합니다" },
-  { id: "agn", kind: "sentence", words: ["처음", "답이", "아쉬우면", "다시", "물어요"],
-    pool: ["화분", "회의실", "점심시간", "자전거", "엘리베이터"],
+  { id: "fmt", kind: "sentence", lv: 1, dom: "concept", words: ["원하는", "형식도", "함께", "적어요"],
+    pool: ["자전거", "창문", "게시판", "시계", "점심시간"],
+    mean: "표, 목록, 세 줄 요약처럼 형태를 정해 주면 편합니다" },
+  { id: "agn", kind: "sentence", lv: 1, dom: "concept", words: ["처음", "답이", "아쉬우면", "다시", "물어요"],
+    pool: ["우산", "주차장", "구내식당", "회의실", "복사기"],
     mean: "질문을 바꿔 다시 물으면 답이 나아집니다" },
-  { id: "sec", kind: "sentence", words: ["회사", "자료는", "내부", "규정을", "먼저", "확인해요"],
-    pool: ["우산", "점심시간", "달력", "화분", "복사기"],
+  { id: "sec", kind: "sentence", lv: 2, dom: "safety", words: ["회사", "자료는", "내부", "규정을", "먼저", "확인해요"],
+    pool: ["계단", "냉장고", "정수기", "엘리베이터", "달력"],
     mean: "어디에 올려도 되는지부터 봅니다" },
-  { id: "exm", kind: "sentence", words: ["예시를", "주면", "원하는", "답에", "가까워져요"],
-    pool: ["엘리베이터", "자전거", "회의실", "달력", "우산"],
+  { id: "exm", kind: "sentence", lv: 1, dom: "concept", words: ["예시를", "주면", "원하는", "답에", "가까워져요"],
+    pool: ["창문", "게시판", "시계", "점심시간", "화분"],
     mean: "좋은 예를 하나 보여 주면 비슷하게 맞춰 줍니다" },
-  { id: "new", kind: "sentence", words: ["AI는", "최신", "정보를", "모를", "때가", "있어요"],
-    pool: ["복사기", "화분", "점심시간", "자전거", "회의실"],
+  { id: "new", kind: "sentence", lv: 2, dom: "concept", words: ["AI는", "최신", "정보를", "모를", "때가", "있어요"],
+    pool: ["주차장", "구내식당", "회의실", "복사기", "자전거"],
     mean: "배운 시점 뒤의 일은 빠져 있을 수 있습니다" },
-  { id: "drf", kind: "sentence", words: ["초안은", "AI가", "판단은", "사람이"],
-    pool: ["달력", "우산", "엘리베이터", "회의실", "화분"],
+  { id: "drf", kind: "sentence", lv: 1, dom: "concept", words: ["초안은", "AI가", "판단은", "사람이"],
+    pool: ["냉장고", "정수기", "엘리베이터", "달력", "우산"],
     mean: "빠른 초안을 받아 사람이 다듬는 방식입니다" },
-  { id: "ouse", kind: "order", pairs: [["1", "하고 싶은 일 정하기"], ["2", "구체적으로 묻기"], ["3", "답 확인하기"], ["4", "다시 묻기"]],
-    pool: ["복사기 고치기", "점심 먹기", "우산 챙기기", "화분 옮기기"],
+  { id: "mlf", kind: "sentence", lv: 1, dom: "concept", words: ["머신러닝은", "AI의", "한", "분야예요"],
+    pool: ["게시판", "시계", "점심시간", "화분", "계단"],
+    mean: "AI를 만드는 여러 방법 중 하나입니다" },
+  { id: "srch", kind: "sentence", lv: 1, dom: "concept", words: ["AI로", "자료도", "찾아요"],
+    pool: ["구내식당", "회의실", "복사기", "자전거", "창문"],
+    mean: "질문에 맞는 자료를 찾아 줍니다" },
+  { id: "mist", kind: "sentence", lv: 1, dom: "concept", words: ["AI는", "실수도", "해요"],
+    pool: ["정수기", "엘리베이터", "달력", "우산", "주차장"],
+    mean: "완벽하지 않아 확인이 필요합니다" },
+  { id: "aud", kind: "sentence", lv: 1, dom: "concept", words: ["읽을", "사람을", "알려주면", "답이", "좋아져요"],
+    pool: ["시계", "점심시간", "화분", "계단", "냉장고"],
+    mean: "누가 볼 글인지 말해 주면 더 잘 맞춰줍니다" },
+  { id: "lang", kind: "sentence", lv: 1, dom: "concept", words: ["여러", "언어로", "AI에", "묻고", "답할", "수", "있어요"],
+    pool: ["회의실", "복사기", "자전거", "창문", "게시판"],
+    mean: "영어가 아니어도 괜찮습니다" },
+  { id: "len", kind: "sentence", lv: 1, dom: "concept", words: ["답의", "길이도", "정해", "달라고", "할", "수", "있어요"],
+    pool: ["엘리베이터", "달력", "우산", "주차장", "구내식당"],
+    mean: "세 줄로, 한 문단으로처럼 정할 수 있습니다" },
+  { id: "tone", kind: "sentence", lv: 1, dom: "concept", words: ["답의", "말투도", "바꿔", "달라고", "할", "수", "있어요"],
+    pool: ["점심시간", "화분", "계단", "냉장고", "정수기"],
+    mean: "보고서체, 안내문체처럼 정할 수 있습니다" },
+  { id: "img", kind: "sentence", lv: 1, dom: "concept", words: ["글로", "설명하면", "그림도", "그려", "줘요"],
+    pool: ["복사기", "자전거", "창문", "게시판", "시계"],
+    mean: "원하는 장면을 글로 적으면 이미지를 만듭니다" },
+  { id: "unk", kind: "sentence", lv: 1, dom: "concept", words: ["모르는", "사내", "규정은", "AI도", "알지", "못해요"],
+    pool: ["달력", "우산", "주차장", "구내식당", "회의실"],
+    mean: "배운 적 없는 내용은 답하지 못합니다" },
+  { id: "dpl", kind: "sentence", lv: 2, dom: "concept", words: ["딥러닝은", "머신러닝", "안의", "한", "방법이에요"],
+    pool: ["화분", "계단", "냉장고", "정수기", "엘리베이터"],
+    mean: "더 큰 개념 안에 딥러닝이 있습니다" },
+  { id: "tok", kind: "sentence", lv: 2, dom: "concept", words: ["토큰은", "AI가", "글을", "나누는", "처리", "단위예요"],
+    pool: ["자전거", "창문", "게시판", "시계", "점심시간"],
+    mean: "단어나 글자 조각 단위로 계산합니다" },
+  { id: "ctx", kind: "sentence", lv: 2, dom: "concept", words: ["대화가", "길어지면", "앞", "내용을", "놓칠", "수", "있어요"],
+    pool: ["우산", "주차장", "구내식당", "회의실", "복사기"],
+    mean: "한 번에 볼 수 있는 양을 넘으면 그렇습니다" },
+  { id: "bias", kind: "sentence", lv: 2, dom: "concept", words: ["학습", "데이터가", "치우치면", "답도", "치우쳐요"],
+    pool: ["계단", "냉장고", "정수기", "엘리베이터", "달력"],
+    mean: "데이터가 한쪽으로 쏠리면 그대로 드러납니다" },
+  { id: "role", kind: "sentence", lv: 2, dom: "concept", words: ["역할을", "정해주면", "답의", "관점이", "또렷해져요"],
+    pool: ["창문", "게시판", "시계", "점심시간", "화분"],
+    mean: "담당자로서처럼 역할을 주면 좋습니다" },
+  { id: "step", kind: "sentence", lv: 2, dom: "concept", words: ["복잡한", "일은", "단계로", "나눠", "시켜요"],
+    pool: ["주차장", "구내식당", "회의실", "복사기", "자전거"],
+    mean: "큰 일을 작은 단계로 나누면 안정적입니다" },
+  { id: "cite", kind: "sentence", lv: 3, dom: "concept", words: ["AI가", "알려준", "출처도", "확인이", "필요해요"],
+    pool: ["냉장고", "정수기", "엘리베이터", "달력", "우산"],
+    mean: "없는 자료를 지어낼 때가 있습니다" },
+  { id: "sum", kind: "sentence", lv: 3, dom: "concept", words: ["요약하면", "중요한", "내용이", "빠질", "수", "있어요"],
+    pool: ["게시판", "시계", "점심시간", "화분", "계단"],
+    mean: "원문과 대조해서 확인합니다" },
+  { id: "grd", kind: "sentence", lv: 3, dom: "concept", words: ["근거", "자료를", "주고", "그", "안에서만", "답하게", "해요"],
+    pool: ["구내식당", "회의실", "복사기", "자전거", "창문"],
+    mean: "엉뚱한 답을 줄이는 방법입니다" },
+  { id: "mm", kind: "sentence", lv: 3, dom: "concept", words: ["멀티모달", "AI는", "글과", "그림을", "함께", "다뤄요"],
+    pool: ["정수기", "엘리베이터", "달력", "우산", "주차장"],
+    mean: "소리, 이미지도 같이 입력받습니다" },
+  { id: "agt", kind: "sentence", lv: 3, dom: "concept", words: ["AI", "에이전트는", "도구를", "써", "가며", "일을", "해요"],
+    pool: ["시계", "점심시간", "화분", "계단", "냉장고"],
+    mean: "검색, 파일 같은 도구를 골라 씁니다" },
+  { id: "dpf", kind: "sentence", lv: 3, dom: "concept", words: ["딥페이크는", "AI가", "만든", "가짜", "영상이나", "음성이에요"],
+    pool: ["회의실", "복사기", "자전거", "창문", "게시판"],
+    mean: "진짜처럼 보여도 출처를 확인합니다" },
+  { id: "pii", kind: "sentence", lv: 1, dom: "safety", words: ["고객", "개인정보는", "외부", "AI에", "넣지", "않아요"],
+    pool: ["엘리베이터", "달력", "우산", "주차장", "구내식당"],
+    mean: "이름, 연락처 같은 정보는 입력하지 않습니다" },
+  { id: "pw", kind: "sentence", lv: 1, dom: "safety", words: ["비밀번호는", "AI", "대화창에", "넣지", "않아요"],
+    pool: ["점심시간", "화분", "계단", "냉장고", "정수기"],
+    mean: "계정 정보는 어떤 AI에도 넣지 않습니다" },
+  { id: "gnrl", kind: "sentence", lv: 1, dom: "safety", words: ["민감한", "내용은", "빼고", "일반화해서", "물어요"],
+    pool: ["복사기", "자전거", "창문", "게시판", "시계"],
+    mean: "회사명, 고객명 대신 바꿔서 묻습니다" },
+  { id: "tool", kind: "sentence", lv: 2, dom: "safety", words: ["업무", "자료는", "회사가", "허용한", "도구에", "써요"],
+    pool: ["달력", "우산", "주차장", "구내식당", "회의실"],
+    mean: "허용된 도구인지 먼저 확인합니다" },
+  { id: "phone", kind: "sentence", lv: 2, dom: "safety", words: ["개인", "폰", "무료", "앱에는", "업무", "자료를", "넣지", "않아요"],
+    pool: ["화분", "계단", "냉장고", "정수기", "엘리베이터"],
+    mean: "회사 관리 밖의 앱이라 그렇습니다" },
+  { id: "cap", kind: "sentence", lv: 2, dom: "safety", words: ["캡처한", "화면도", "AI가", "글자를", "읽을", "수", "있어요"],
+    pool: ["자전거", "창문", "게시판", "시계", "점심시간"],
+    mean: "이미지도 글처럼 다룹니다" },
+  { id: "resp", kind: "sentence", lv: 3, dom: "safety", words: ["AI", "결과를", "업무에", "쓴", "책임은", "쓴", "사람에게", "있어요"],
+    pool: ["우산", "주차장", "구내식당", "회의실", "복사기"],
+    mean: "AI가 만들었어도 책임은 쓴 사람 몫입니다" },
+  { id: "ouse", kind: "order", lv: 1, dom: "concept", pairs: [["1", "하고 싶은 일 정하기"], ["2", "구체적으로 묻기"], ["3", "답 확인하기"], ["4", "다시 묻기"]],
+    pool: ["복사기 고치기", "화분 옮기기", "자전거 타기", "냉장고 정리하기"],
     mean: "AI에게 일을 맡기는 순서입니다" },
-  { id: "oprm", kind: "order", pairs: [["1", "상황 알려주기"], ["2", "원하는 것 말하기"], ["3", "형식 정하기"]],
-    pool: ["자리 정하기", "달력 넘기기", "우산 펴기", "화분 주기"],
+  { id: "oprm", kind: "order", lv: 1, dom: "concept", pairs: [["1", "상황 알려주기"], ["2", "원하는 것 말하기"], ["3", "형식 정하기"]],
+    pool: ["점심 먹기", "엘리베이터 타기", "계단 오르기", "창문 닫기"],
     mean: "좋은 질문을 만드는 순서입니다" },
-  { id: "ochk", kind: "order", pairs: [["1", "답 읽기"], ["2", "사실 확인하기"], ["3", "고쳐 쓰기"]],
-    pool: ["점심 고르기", "복사하기", "우산 접기", "화분 놓기"],
+  { id: "ochk", kind: "order", lv: 2, dom: "concept", pairs: [["1", "답 읽기"], ["2", "사실 확인하기"], ["3", "고쳐 쓰기"]],
+    pool: ["우산 챙기기", "달력 보기", "주차장 찾기", "시계 보기"],
     mean: "받은 답을 쓰기 전 순서입니다" },
-  { id: "osec", kind: "order", pairs: [["1", "규정 확인하기"], ["2", "민감한 내용 빼기"], ["3", "결과 다시 보기"]],
-    pool: ["엘리베이터 타기", "달력 보기", "자전거 타기", "점심 먹기"],
-    mean: "회사 자료를 다룰 때의 순서입니다" }
+  { id: "osec", kind: "order", lv: 2, dom: "safety", pairs: [["1", "규정 확인하기"], ["2", "민감한 내용 빼기"], ["3", "결과 다시 보기"]],
+    pool: ["화분 옮기기", "자전거 타기", "냉장고 정리하기", "복사기 고치기"],
+    mean: "회사 자료를 다룰 때의 순서입니다" },
+  { id: "odrw", kind: "order", lv: 1, dom: "concept", pairs: [["1", "무엇을 그릴지 정하기"], ["2", "자세히 설명하기"], ["3", "결과 보고 다시 요청하기"]],
+    pool: ["엘리베이터 타기", "계단 오르기", "창문 닫기", "점심 먹기"],
+    mean: "AI로 그림 만드는 순서입니다" },
+  { id: "omtg", kind: "order", lv: 2, dom: "safety", pairs: [["1", "녹음 시작 알리기"], ["2", "녹음하기"], ["3", "요약 확인하기"], ["4", "필요한 사람에게 나누기"]],
+    pool: ["달력 보기", "주차장 찾기", "시계 보기", "우산 챙기기"],
+    mean: "회의 녹음을 AI로 정리하는 순서입니다" },
+  { id: "ouse2", kind: "order", lv: 2, dom: "concept", pairs: [["1", "답 받기"], ["2", "사실 확인하기"], ["3", "필요한 부분만 고르기"], ["4", "내 손으로 다듬기"]],
+    pool: ["자전거 타기", "냉장고 정리하기", "복사기 고치기", "화분 옮기기"],
+    mean: "AI 결과를 업무에 쓰는 순서입니다" },
+  { id: "otool", kind: "order", lv: 3, dom: "safety", pairs: [["1", "필요한 일 정하기"], ["2", "허용된 도구인지 보기"], ["3", "작게 써보기"], ["4", "결과 확인하기"], ["5", "넓혀서 쓰기"]],
+    pool: ["계단 오르기", "창문 닫기", "점심 먹기", "엘리베이터 타기"],
+    mean: "새 도구를 업무에 들이는 순서입니다" },
+  { id: "opii", kind: "order", lv: 2, dom: "safety", pairs: [["1", "이름, 연락처 지우기"], ["2", "알아볼 정보 남았는지 보기"], ["3", "확인 뒤 쓰기"]],
+    pool: ["주차장 찾기", "시계 보기", "우산 챙기기", "달력 보기"],
+    mean: "개인정보가 섞인 자료를 다루는 순서입니다" },
+  { id: "ofix", kind: "order", lv: 1, dom: "concept", pairs: [["1", "무엇이 틀렸는지 짚기"], ["2", "원하는 방향 다시 말하기"], ["3", "다시 받은 답 확인하기"]],
+    pool: ["냉장고 정리하기", "복사기 고치기", "화분 옮기기", "자전거 타기"],
+    mean: "AI 답에 문제가 있을 때 순서입니다" },
+  { id: "osum", kind: "order", lv: 3, dom: "concept", pairs: [["1", "자료 모으기"], ["2", "요약 범위 정해 시키기"], ["3", "빠진 내용 찾기"], ["4", "원문과 대조하기"]],
+    pool: ["창문 닫기", "점심 먹기", "엘리베이터 타기", "계단 오르기"],
+    mean: "많은 자료를 AI로 요약하는 순서입니다" },
+  { id: "odrf", kind: "order", lv: 1, dom: "concept", pairs: [["1", "주제와 형식 알려주기"], ["2", "초안 받기"], ["3", "내 문장으로 다듬기"]],
+    pool: ["시계 보기", "우산 챙기기", "달력 보기", "주차장 찾기"],
+    mean: "AI로 초안 쓰고 마무리하는 순서입니다" }
 ];
 /* v3.57 행사 정보 은행 · 휴면 (되살리려면 위 MEM_ROUNDS 와 바꿔 끼운다) */
 var MEM_ROUNDS_EVENT = [
@@ -8592,8 +8701,9 @@ var OLY_RULE = {
   jump: { obs: 40, coin: 5, fact: 100, pauseMax: 3 },
   tetris: { block: 10, blockMax: 60, line: 50, lineFull: 30, lineAfter: 10, multi: [0, 0, 20, 60, 120], pauseMax: 3 },
   word: { tiers: [[50, 200], [80, 130], [120, 90], [200, 60]], base: 30, clean: 40, wrong: 50 },
-  /* v4.14 유리다리 12줄(사용자 확정 260922 · 보정 「올림픽 보정/ox_bridge_sim.js」) · rowT = 줄 시간 첫 줄 → 마지막 줄(1/100초 · 두 번째 값이 속도 상한 · 평균 5초) · lead = 여유 줄(1/100줄) [시작, 떨어진 뒤·최소, 최대] */
-  ox: { sec: 6000, per: [4, 4, 4], lives: 3, base: [40, 45, 50], pen: 80, hasty: 60, speed: 20, full: 100, limit: 400, combo: 6, comboMax: 5,
+  /* v4.30 출제 비율 쉬움 6 · 보통 5 · 어려움 1(마지막 · 사용자 확정 260924) · 재보정 어려움 기본 50 → 55 · 오답·낙하 −80 → −120 (「올림픽 보정/ox_v430_sim.js」 · 다섯 종목 균형 유지)
+     v4.14 유리다리 12줄(사용자 확정 260922 · 보정 「올림픽 보정/ox_bridge_sim.js」) · rowT = 줄 시간 첫 줄 → 마지막 줄(1/100초 · 두 번째 값이 속도 상한 · 평균 5초) · lead = 여유 줄(1/100줄) [시작, 떨어진 뒤·최소, 최대] */
+  ox: { sec: 6000, per: [6, 5, 1], lives: 3, base: [40, 45, 55], pen: 120, hasty: 60, speed: 20, full: 100, limit: 400, combo: 6, comboMax: 5,
     feverAt: 5, feverLen: 3, feverMul: 2, goldMul: 3, bonusAt: 10, bonusSec: 300, pass: 1, lock: 30,
     rowT: [600, 400], lead: [130, 100, 150], arrive: 100, lifeBonus: 50, secBonus: 12, pauseMax: 3 }
 };
@@ -10690,14 +10800,63 @@ function pgPreview(t) {
    안전 상한 5분 · 올림픽 환산은 기록/목표(길수록 좋다) · 목표 60초(6000 = 1/100초) · 팡(빠를수록 좋다)과 반대 방향이다. */
 var JP_W = 180, JP_H = 240, JP_GY = 196, JP_PX = 30, JP_MAX_SEC = 300, JP_HEARTS = 3, JP_G = 820, JP_JV = 300, JP_JV2 = 245, JP_INV = 1.0;
 var JP_ITEM_EVERY = 15, JP_ITEM_SEC = 5;   /* 아이템 · 15초마다 하나 · 5초 동안 */
-/* v3.98 AI 상식 문장 · 새로 짓지 않고 「ME to WE 기억력」 문제 은행(MEM_ROUNDS 문장형)을 그대로 쓴다 · JP_BG_MAX 자 이하만
+/* v3.98 AI 상식 문장 · v4.30 (사용자 확정 260924) 기억력 은행에서 빌려 쓰지 않고 점프 전용 JP_FACTS(정본 「기억력 문제 은행 v2」 점프 30문장 · O/X 참 명제 결) · JP_BG_MAX 자 이하만
    v4.00 (사용자 요청 260919) 흘러가는 배경 → 공중에 뜬 글자 블록(2단 점프 미션) · 들이받으면 글자가 흩어지며 점수 보너스 · 결과 화면에 획득 목록
    블록 = 바닥에서 80~110 높이(1단 점프 머리 최고 75 · 2단 점프 113) · 앞뒤 장애물과 떨어뜨려 회피와 동시에 요구하지 않는다 */
 var JP_BG_MAX = 21, JP_BG_FIRST = 7, JP_BG_EVERY = 10;
 var JP_FACT = { w: 104, h: 30, lo: 80 };   /* v4.02 블록 점수는 올림픽 규칙 jump.fact(기본 100 · v4.00 의 임시 +150 폐지) */
-function jpBgLines() {
-  return MEM_ROUNDS.filter(function (R) { return R.kind === "sentence"; }).map(function (R) { return R.words.join(" "); })
-    .filter(function (t) { return t.length <= JP_BG_MAX; });
+var JP_FACTS = [
+  { id: "jp01", lv: 1, dom: "concept", text: "AI는 배운 것을 조합해 답해요" },
+  { id: "jp02", lv: 1, dom: "concept", text: "AI 답은 사람이 확인 후 써요" },
+  { id: "jp03", lv: 1, dom: "concept", text: "질문이 구체적이면 답도 좋아져요" },
+  { id: "jp04", lv: 1, dom: "concept", text: "새 답을 원하면 다시 물어봐요" },
+  { id: "jp05", lv: 1, dom: "concept", text: "AI도 가끔 틀린 답을 해요" },
+  { id: "jp06", lv: 1, dom: "concept", text: "AI는 최신 소식을 모를 때도 있어요" },
+  { id: "jp07", lv: 1, dom: "concept", text: "그림도 글로 설명해 만들 수 있어요" },
+  { id: "jp08", lv: 1, dom: "concept", text: "AI는 여러 언어로 답해요" },
+  { id: "jp09", lv: 1, dom: "concept", text: "복잡한 일은 나눠서 시켜요" },
+  { id: "jp10", lv: 2, dom: "concept", text: "AI 결과의 출처도 확인해요" },
+  { id: "jp11", lv: 2, dom: "concept", text: "요약에도 빠진 내용이 있을 수 있어요" },
+  { id: "jp12", lv: 2, dom: "concept", text: "역할을 정해주면 답이 또렷해져요" },
+  { id: "jp13", lv: 1, dom: "concept", text: "형식을 정해주면 편해져요" },
+  { id: "jp14", lv: 1, dom: "safety", text: "고객 정보는 AI에 넣지 않아요" },
+  { id: "jp15", lv: 1, dom: "safety", text: "비밀번호는 AI에 넣지 않아요" },
+  { id: "jp16", lv: 1, dom: "safety", text: "민감한 내용은 바꿔서 물어요" },
+  { id: "jp17", lv: 2, dom: "safety", text: "대외비는 허용된 도구에서만 써요" },
+  { id: "jp18", lv: 2, dom: "safety", text: "캡처한 화면도 AI가 읽어요" },
+  { id: "jp19", lv: 2, dom: "safety", text: "링크는 열기 전에 주소를 봐요" },
+  { id: "jp20", lv: 1, dom: "safety", text: "회사 자료는 규정부터 확인해요" },
+  { id: "jp21", lv: 3, dom: "safety", text: "출처 모를 확장 프로그램은 피해요" },
+  { id: "jp22", lv: 3, dom: "safety", text: "AI 쓴 결과의 책임은 나에게 있어요" },
+  { id: "jp23", lv: 2, dom: "concept", text: "토큰은 AI가 글을 나눈 단위예요" },
+  { id: "jp24", lv: 3, dom: "concept", text: "컨텍스트가 길면 앞부분을 놓쳐요" },
+  { id: "jp25", lv: 3, dom: "concept", text: "멀티모달 AI는 그림도 같이 봐요" },
+  { id: "jp26", lv: 3, dom: "concept", text: "딥페이크는 진짜처럼 보이는 가짜예요" },
+  { id: "jp27", lv: 3, dom: "concept", text: "AI 에이전트는 도구를 써서 일해요" },
+  { id: "jp28", lv: 3, dom: "concept", text: "학습 데이터가 치우치면 답도 치우쳐요" },
+  { id: "jp29", lv: 1, dom: "concept", text: "초안은 AI, 마무리는 사람이 해요" },
+  { id: "jp30", lv: 1, dom: "concept", text: "메모도 AI가 정리해 줘요" }
+];
+var JP_FACT_W = [50, 40, 10];   /* v4.30 난이도 가중 · 쉬움 50 · 보통 40 · 어려움 10 (사용자 확정 260924) */
+/* 한 판에 나올 문장 순서 · 한 줄마다 난이도를 가중 무작위로 고르고(쉬움 50 · 보통 40 · 어려움 10), 그 난이도에서 아직 안 나온 문장을 무작위로 ·
+   다 쓴 난이도는 가중에서 빠진다(한 판 안 같은 문장 반복 없음) · 30문장을 다 쓰면 처음부터 · n = 만들 줄 수(기본 JP_FACTS 개수 · 5분 상한이면 30줄 안팎) */
+function jpBgLines(n) {
+  var by = [[], [], []], left = [[], [], []], out = [];
+  JP_FACTS.forEach(function (f) { if (f.text.length <= JP_BG_MAX && f.lv >= 1 && f.lv <= 3) by[f.lv - 1].push(f.text); });
+  var fill = function () { for (var k = 0; k < 3; k++) left[k] = shuf(by[k].slice()); };
+  n = n || JP_FACTS.length;
+  fill();
+  for (var i = 0; i < n; i++) {
+    var tot = 0, r, d;
+    for (d = 0; d < 3; d++) if (left[d].length) tot += JP_FACT_W[d];
+    if (!tot) { fill(); for (d = 0; d < 3; d++) if (left[d].length) tot += JP_FACT_W[d]; }
+    if (!tot) break;
+    r = Math.random() * tot;
+    for (d = 0; d < 3; d++) { if (!left[d].length) continue; r -= JP_FACT_W[d]; if (r < 0) break; }
+    if (d > 2) for (d = 2; !left[d].length; d--);
+    out.push(left[d].pop());
+  }
+  return out;
 }
 /* 장애물 판정 사각형 [가로 시작, 폭, 높이, 바닥에서 뜬 높이(없으면 0)] · 그린 모양과 판정이 같다
    v3.94 중반 이후 새 유형 (사용자 요청 260918 「중간 이후 입체적인 방해 장치」):
@@ -10754,7 +10913,7 @@ function jpStart() {
   JP = { on: true, paused: false, ending: null, raf: 0, cd: 3.2, t0: 0, last: performance.now(), py: JP_GY, vy: 0, jumps: 0, hearts: JP_HEARTS, inv: 0, heartHit: 0,
     obs: [], coins: [], items: [], parts: [], pops: [], banner: null, shake: 0, dist: 0, nextObs: 70, coinN: 0, dodged: 0, hits: 0, jumpsN: 0, score: 0, speedUp: 0,
     item: null, itemT: 0, nextItem: JP_ITEM_EVERY, surv: 0, nextK: null, seen: {}, tx: {},
-    bg: shuf(jpBgLines()), bgI: 0, bgNext: JP_BG_FIRST, fact: null, facts: [], duck: false, press: null, bag: null, lastSp: "", tip: jpTipHtml(gsTutTake("jump")), say: null, tutSeen: {}, pz: 0 };
+    bg: jpBgLines(), bgI: 0, bgNext: JP_BG_FIRST, fact: null, facts: [], duck: false, press: null, bag: null, lastSp: "", tip: jpTipHtml(gsTutTake("jump")), say: null, tutSeen: {}, pz: 0 };
   /* v4.22 첫 안내(카운트다운 동안) · 다른 네 게임과 같은 gsTutTake · v4.00 에 시작 직후 조작 안내 상자를 걷고 장애물 직전 안내만 남긴 뒤,
      v4.08 에 첫 안내 훅을 팡·테트리스·기억력에만 달아서 점프는 첫 장애물이 올 때까지(카운트다운 뒤 약 2초) 아무 안내가 없었다(사용자 신고 260923)
      v4.28 (사용자 260924 「첫 안내가 상단에 나와서 잘 이해가 안 된다 · 장애물 안내와 같은 형태 · 같은 위치로」) 점프만 첫 안내를 장애물 안내 칸(jtHint · jpHintNow)에 띄운다 ·
@@ -11298,29 +11457,31 @@ function gwStop() {
   if (GW.nextT) { clearTimeout(GW.nextT); GW.nextT = null; }
   GW.on = false;
 }
-/* v3.57 · 한 판 문항 뽑기 · 최근에 나온 것부터 빼고, 후보가 떨어지면 그 종류만 초기화(은행 한 바퀴) · 한 판 안 중복 없음 · 쉬운 것부터(정답 단어 수 오름차순) */
+/* v4.30 한 판 문항 뽑기 · 쉬움 → 보통 → 어려움 한 문항씩(사용자 확정 260924) · 순서 문항을 먼저 뽑아 그 난이도 자리를 채우고,
+   남은 두 난이도에서 문장을 하나씩 · 정답 타일 합이 MEM_TILES 에 맞는 짝을 고른다(맞는 짝이 없으면 가장 가까운 짝) ·
+   최근에 나온 문항(mem_seen)은 되도록 빼고, 모자라면 전체에서(은행 한 바퀴) · 한 판 안 중복 없음 · 화면 순서 = 난이도 오름차순(어려움이 마지막) */
 function gwPick() {
   var seen = S.get("mem_seen", []) || [], out = [];
-  /* v3.92 한 판 정답 타일 합을 MEM_TILES 로 맞춘다 · 순서 문항을 먼저 뽑고, 남은 칸 수에 맞는 문장 두 개를 고른다
-     (맞는 짝이 없으면 가장 가까운 짝) · 최근에 나온 문항은 되도록 빼고, 모자라면 한 바퀴 초기화 */
   var fresh = function (R) { return seen.indexOf(R.id) < 0; };
   var ords = MEM_ROUNDS.filter(function (R) { return R.kind === "order"; });
   var sens = MEM_ROUNDS.filter(function (R) { return R.kind === "sentence"; });
   var oPool = ords.filter(fresh); if (!oPool.length) oPool = ords;
   var o = oPool[Math.floor(Math.random() * oPool.length)];
   out.push(o);
+  var lvs = [1, 2, 3].filter(function (lv) { return lv !== o.lv; });
   var need = MEM_TILES - gwAnswer(o).length, pairs = [], best = 99;
   [sens.filter(fresh), sens].some(function (pool) {
+    var A = pool.filter(function (R) { return R.lv === lvs[0]; }), B = pool.filter(function (R) { return R.lv === lvs[1]; });
     pairs = []; best = 99;
-    for (var a = 0; a < pool.length; a++) for (var b = a + 1; b < pool.length; b++) {
-      var d = Math.abs(gwAnswer(pool[a]).length + gwAnswer(pool[b]).length - need);
+    for (var a = 0; a < A.length; a++) for (var b = 0; b < B.length; b++) {
+      var d = Math.abs(gwAnswer(A[a]).length + gwAnswer(B[b]).length - need);
       if (d < best) { best = d; pairs = []; }
-      if (d === best) pairs.push([pool[a], pool[b]]);
+      if (d === best) pairs.push([A[a], B[b]]);
     }
     return pairs.length && best === 0;
   });
   if (pairs.length) { var pk = pairs[Math.floor(Math.random() * pairs.length)]; out.push(pk[0], pk[1]); }
-  out.sort(function (a, b) { return gwAnswer(a).length - gwAnswer(b).length; });
+  out.sort(function (a, b) { return a.lv - b.lv; });
   S.set("mem_seen", seen.concat(out.map(function (R) { return R.id; })).slice(-MEM_SEEN_MAX));
   return out;
 }
