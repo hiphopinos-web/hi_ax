@@ -5793,13 +5793,15 @@ var Views = {
       ["계단 이용", sst.leg ? "진행 중 · " + sst.leg.fl + "F 시작" : "1F~18F · 누적 " + (sst.total || 0) + " / " + (sst.goal || 10) + "개 층", "stairOpen()", "st"]
     ] : [
       ["미니게임", "한 판 끝까지 · AX 올림픽 순위", "App.go('games')", "p4"],
-      ["아이디어 한 줄", "내 업무의 변화 아이디어 남기기", "App.go('ideas')", "p5"],
+      ["아이디어 한 줄", "내 업무의 변화 아이디어 · 제출하면 커피챗 신청", "App.go('ideas')", "p5"],
       ["오늘 한 판 설문", SURVEY.open + "부터 · 스탬프 1개 필요", "App.go('survey')", "sv"]
     ];
     return '<div class="ax-stack">' +   /* v4.06 탭 첫 화면 큰 제목·부제 삭제(사용자 결정 260922) · 스캔은 가운데 QR 버튼과 각 안내 화면 */
       tabs + '<div class="axs-list" role="tabpanel">' + list.map(row).join("") + "</div>" +
-      /* v4.35 (사용자 확정 260925) 신청으로 가는 줄 하나 · 칸(현장에서 / 앱에서)은 그대로 두고 두 칸 모두 아래에 · 누르면 프로그램 탭 「신청 가능」 목록(progAppGo) · 신청 화면은 프로그램 탭 한 곳 */
-      '<div class="axs-list">' + axDest("신청이 필요한 프로그램", "DAP 과제상담 · AX 커피챗", "보기", "progAppGo()") + "</div>" +
+      /* v4.41 (사용자 260925 「다른 것들과 디자인적으로 구분 · 현장에서에만」) v4.35 의 한 줄(두 칸 모두 · 체험 행과 같은 모양 · 누르면 탭이 바뀜)을 바꿨다.
+         현장에서에만 · 체험 행 아래 제목 「신청이 필요한 프로그램」 + 프로그램 탭과 같은 행(progRowHtml · 층 표시 + 신청 상태 칩) · 누르면 그 프로그램 상세(progOpen) ·
+         DAP 상담(1F) · 커피챗(18F)은 현장 프로그램이고, 1F 를 돌다 「지금 남은 상담 시간」을 보는 자리가 여기다 · 앱에서 칸은 아이디어 행 설명에 커피챗 조건만 붙인다 */
+      (seg === "site" ? '<div class="axs-lst"><h2 class="ax-card-title">신청이 필요한 프로그램</h2>' + ["dap", "cchat"].map(function (id) { var s = progById(id); return s ? progRowHtml(s) : ""; }).join("") + "</div>" : "") +
       (seg === "site" ? scanQNote() : "") +
       "</div>";
   },
