@@ -1867,6 +1867,11 @@
   .rt .tsf-big.o { color: var(--rt-o100); }
   .rt .tsf-hint { color: var(--rt-tan); }
   .rt .tsf-msg { min-height: var(--rt-l16); color: var(--rt-o60); }
+  .rt .tsf-ln { min-height: var(--rt-l16); color: var(--rt-tan); }   /* v4.33 칸 바로 아래 한 줄 · 안내(황갈) · 확인됨(밝은 황갈) · 오류(오렌지) */
+  .rt .tsf-ln.ok { color: var(--rt-cream); }
+  .rt .tsf-ln.bad { color: var(--rt-o60); }
+  .rt .tsf-hint.go { color: var(--rt-o100); }
+  .rt .tsf.form .tsf-r { filter: brightness(0.55); }   /* v4.33 입력 중에는 시선이 왼쪽으로 · 오른쪽 순위판 살짝 어둡게(가운데 판의 막은 캔버스 tsfPrevDraw) */
   .rt .tsf-in { box-sizing: border-box; width: calc(100% - 6px); height: 64px; margin: 3px; padding: 0 14px; border: 0; border-radius: 0; outline: none; background: var(--rt-cream); color: var(--rt-bark); font-family: var(--rt-font); font-size: var(--rt-f32); font-weight: 400; line-height: var(--rt-l32); box-shadow: var(--rt-line); }
   .rt .tsf-in:focus { box-shadow: var(--rt-line), inset 0 0 0 4px var(--rt-o100); }
   .rt .tsf-in:disabled { background: var(--rt-dim); }
@@ -8345,22 +8350,48 @@ function gameClear(flagKey) {
    화면 = 넓은 화면 3단(왼쪽 입력·안내 / 가운데 판 / 오른쪽 현장 TOP 10) · 판 도중은 엔진 3단(rgLeftDraw · rgSideDraw) · 실명은 받지도 띄우지도 않는다(닉네임만).
    토너먼트(대전 · admin/typing.html · 콘솔 「타자왕전」 판 · race_* · 「타자대전」 시트)와 코드 · 저장 키 · 서버 액션을 나눈다 · 같이 쓰는 것은 판 엔진(assets/rain-engine.js)뿐.
    이 기기 저장 = self_on · self_key(관리코드) · site_sound(효과음 · 기본 켬). 옛 스태프 진행(QR 찍고 시작 · v3.37 type_site_check/submit)은 이 화면으로 대체했다. */
-var TSF = { phase: "emp", emp: "", nick: "", nickIn: "", info: null, msg: "", busy: false, ticket: "", res: null, sub: null, send: "", why: "", top: null, topT: 0, resAt: 0, idle: 0, t: null, unl: false, snd: true, cfg: null };
+/* v4.33(260925 사용자 확정) 사번과 닉네임을 한 판에서 같이 넣는다 · phase = form(입력) → play → result
+   사번은 다 치면(6자리 이상에서 0.4초 멈춤) 또는 Tab·Enter 에서 서버 확인 · 있던 닉네임은 손대지 않은 닉네임 칸에 채운다 · 두 칸이 유효하면 SPACE 로 시작(닉네임에는 공백이 없으므로 SPACE = 시작)
+   empIn = 사번 칸 · emp = 서버에 물어본 사번 · chk = "" | busy | ok | bad · info = 확인 결과(ok 일 때만) · nickOk = 서버에 있는 닉네임(바꾸지 않았으면 다시 저장하지 않는다) · touched = 닉네임 칸을 사람이 건드렸다
+   em · nm = 사번 · 닉네임 칸 바로 아래 한 줄(emBad · nmBad = 오류) · 입력 중에는 판을 다시 그리지 않고 그 줄만 고친다(tsfPaint · 한글 조합이 깨지지 않게) */
+var TSF = { phase: "form", msg: "", emp: "", empIn: "", nick: "", nickIn: "", nickOk: "", touched: false, info: null, chk: "", em: "", emBad: false, nm: "", nmBad: false, busy: false, dt: null, ticket: "", res: null, sub: null, send: "", why: "", top: null, topT: 0, resAt: 0, idle: 0, t: null, unl: false, snd: true, cfg: null };
 var TSF_WHY = { param: "사번을 숫자로 입력해 주세요", unknown: "명부에서 찾을 수 없는 사번이에요", window: "지금은 도전 시간이 아니에요", auth: "관리코드가 바뀌었어요 · 스태프를 불러 주세요", range: "기록이 범위를 넘어 저장하지 않았어요", net: "서버 응답이 없어요 · 잠시 뒤 다시 해 주세요" };
 function tsfOn() { return S.get("self_on", false) === true && !!S.get("self_key", ""); }
 function tsfKey() { return S.get("self_key", ""); }
 function tsfLimit() { return (TSF.info && TSF.info.limit) || (TSF.cfg && TSF.cfg.tries) || 3; }
-function tsfLimitMsg(r) { return "오늘 도전 " + ((r && r.limit) || tsfLimit()) + "회를 모두 쓰셨어요 · 참여해 주셔서 고마워요"; }
-/* 다음 사람 · 입력 화면으로(순위판은 그대로) */
+function tsfLimitMsg(r) { return "오늘 도전 " + ((r && r.limit) || tsfLimit()) + "회를 모두 쓰셨어요"; }   /* v4.33 사번 칸 아래 한 줄에 들어가게 */
+/* 다음 사람 · 입력 화면으로(순위판은 그대로) · msg = 사번 칸 아래 한 줄(서버가 시작을 거절한 사유 등) */
 function tsfReset(msg) {
   var keep = { top: TSF.top, topT: TSF.topT, t: TSF.t, unl: TSF.unl, cfg: TSF.cfg };
-  TSF = { phase: "emp", emp: "", nick: "", nickIn: "", info: null, msg: msg || "", busy: false, ticket: "", res: null, sub: null, send: "", why: "", top: keep.top, topT: keep.topT, resAt: 0, idle: Date.now(), t: keep.t, unl: keep.unl, snd: true, cfg: keep.cfg };
+  clearTimeout(TSF.dt);
+  TSF = { phase: "form", msg: "", emp: "", empIn: "", nick: "", nickIn: "", nickOk: "", touched: false, info: null, chk: "", em: msg || "", emBad: !!msg, nm: "", nmBad: false, busy: false, dt: null, ticket: "", res: null, sub: null, send: "", why: "", top: keep.top, topT: keep.topT, resAt: 0, idle: Date.now(), t: keep.t, unl: keep.unl, snd: true, cfg: keep.cfg };
   if (App.current === "type_site") { App.render(); tsfRankPull(true); }
 }
 function tsfPoke() { TSF.idle = Date.now(); }
-function tsfMsg(m) { TSF.msg = m || ""; var n = el("tsfMsg"); if (n) n.textContent = TSF.msg; }
-function tsfFocus() {
-  setTimeout(function () { var n = el(TSF.phase === "nick" ? "tsfNick" : "tsfEmp"); if (n && !n.disabled) { n.focus(); try { n.setSelectionRange(n.value.length, n.value.length); } catch (e) {} } }, 30);
+function tsfEmpVal() { var n = el("tsfEmp"); return (n ? n.value : TSF.empIn).replace(/\D/g, ""); }
+function tsfNickVal() { var n = el("tsfNick"); return (n ? n.value : TSF.nickIn).replace(/\s/g, ""); }
+/* 두 칸이 다 유효하다 = 서버가 지금 칸의 사번을 받아 줬고(도전 시간 안 · 남은 도전 있음) 닉네임이 형식에 맞다 */
+function tsfFormOk() { return TSF.phase === "form" && TSF.chk === "ok" && !!TSF.info && TSF.emp === tsfEmpVal() && !typeNickValid(tsfNickVal()); }
+function tsfEm(m, bad) { TSF.em = m || ""; TSF.emBad = !!bad; tsfPaint(); }
+function tsfNm(m, bad) { TSF.nm = m || ""; TSF.nmBad = !!bad; tsfPaint(); }
+/* 입력 중 화면 고치기 · 칸 아래 두 줄 · 아래 안내 · 판 전체 class(오른쪽 어둡게) · 가운데 막(캔버스) · 입력칸 노드는 건드리지 않는다 */
+function tsfPaint() {
+  if (App.current !== "type_site" || TSF.phase !== "form") return;
+  var a = el("tsfEmpLn"), b = el("tsfNickLn"), k = el("tsfKeys"), ok = tsfFormOk();
+  if (a) { a.textContent = TSF.em || "숫자만"; a.className = "tsf-ln" + (TSF.emBad ? " bad" : TSF.chk === "ok" && TSF.em ? " ok" : ""); }
+  if (b) { b.textContent = TSF.nm || "2~8자 · 한글·영문·숫자"; b.className = "tsf-ln" + (TSF.nmBad ? " bad" : ""); }
+  if (k) { k.textContent = ok ? "SPACE를 눌러 시작" : "Tab·Enter 다음 칸"; k.className = "tsf-hint" + (ok ? " go" : ""); }
+  tsfPrevDraw();
+}
+/* 포커스 · 기본 = 아직 안 끝난 칸(사번이 확인됐으면 닉네임) · sel = 칸 전체 선택(오류 난 사번 위에 다음 사람이 바로 친다) */
+function tsfFocus(id, sel) {
+  setTimeout(function () {
+    if (TSF.phase !== "form" || el("modal")) return;
+    var n = el(id || (TSF.chk === "ok" && TSF.emp === tsfEmpVal() ? "tsfNick" : "tsfEmp"));
+    if (!n || n.disabled) return;
+    n.focus();
+    try { if (sel) n.select(); else n.setSelectionRange(n.value.length, n.value.length); } catch (e) {}
+  }, 30);
 }
 /* 가운데 판 폭 · 엔진 3단(rgLayout)과 같은 규칙 · 높이 × 0.8(440~760) · 양옆 판 200 을 먼저 지킨다 */
 function tsfBw() {
@@ -8432,33 +8463,29 @@ function tsfSndGo() {
 /* ── 참가자 화면 ── */
 function tsfHtml() {
   var ph = TSF.phase;
-  return '<div class="tsf"><div class="tsf-grid" style="--tsf-bw:' + tsfBw() + 'px">' +
+  return '<div class="tsf' + (ph === "form" ? " form" : "") + '"><div class="tsf-grid" style="--tsf-bw:' + tsfBw() + 'px">' +
     '<section class="tsf-p tsf-l">' + tsfLeftHtml() + "</section>" +
     '<section class="tsf-c"><canvas id="tsfCv" aria-hidden="true"></canvas>' + (ph === "result" ? '<div class="tsf-res">' + tsfResHtml() + "</div>" : "") + "</section>" +
     '<section class="tsf-p tsf-r"><p class="tsf-t">현장 TOP 10</p><div id="tsfRank">' + tsfRankHtml() + "</div></section>" +
     '</div><button type="button" class="tsf-adm" onclick="tsfAdmin()">관리</button></div>';
 }
 function tsfLeftHtml() {
-  var ph = TSF.phase, i = TSF.info || {}, h = '<p class="tsf-t">AX 단어 소나기</p><p class="tsf-s">1F 현장 셀프 도전</p>';
-  if (ph === "nick" || ph === "ready") {
-    h += '<p class="tsf-k">남은 도전</p><p class="tsf-big">' + i.left + '회 <span class="tsf-s">/ ' + i.limit + "회</span></p>" +
-      (i.best ? '<p class="tsf-hint">내 최고 ' + typeSec(i.best) + "</p>" : "");
-    if (ph === "nick") h += '<label class="tsf-k" for="tsfNick">닉네임 · 순위판에 나오는 이름</label>' +
-      '<input id="tsfNick" class="tsf-in" maxlength="8" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" value="' + esc(TSF.nickIn) + '"' + (TSF.busy ? " disabled" : "") +
-      ' oninput="TSF.nickIn = this.value; tsfPoke()" onkeydown="onEnter(event, tsfNickGo)">' +
-      '<p class="tsf-hint">2~8자 · 한글·영문·숫자 · Enter</p>';
-    else h += '<p class="tsf-k">닉네임</p><p class="tsf-big o">' + esc(TSF.nick) + "</p>" +
-      '<p class="tsf-go">SPACE를 눌러 시작</p><p class="tsf-hint">다른 사번이면 Esc</p>';
-  } else if (ph === "result") {
+  var ph = TSF.phase, ok = tsfFormOk(), h = '<p class="tsf-t">AX 단어 소나기</p><p class="tsf-s">1F 현장 셀프 도전</p>';
+  if (ph === "result") {
     h += '<p class="tsf-k">다음 도전자</p><p class="tsf-go">SPACE를 눌러 처음으로</p><p class="tsf-hint" id="tsfCount">15초 뒤 처음 화면</p>';
   } else {
+    /* v4.33 사번 · 닉네임 한 판 · 칸마다 바로 아래 한 줄(안내 · 남은 도전 · 오류) · 키는 문서에서 받는다(tsfKeyDoc) */
     h += '<label class="tsf-k" for="tsfEmp">사번</label>' +
-      '<input id="tsfEmp" class="tsf-in" inputmode="numeric" pattern="[0-9]*" maxlength="10" autocomplete="off" value="' + esc(TSF.emp) + '"' + (TSF.busy ? " disabled" : "") +
-      ' oninput="numOnly(this, event)" data-imeend="num" onkeydown="onEnter(event, tsfCheck)">' +
-      '<p class="tsf-hint">숫자로 입력하고 Enter</p>';
+      '<input id="tsfEmp" class="tsf-in" inputmode="numeric" pattern="[0-9]*" maxlength="10" autocomplete="off" value="' + esc(TSF.empIn) + '"' +
+      ' oninput="numOnly(this, event); tsfEmpIn(this)" data-imeend="tsfemp" aria-describedby="tsfEmpLn">' +
+      '<p class="tsf-ln' + (TSF.emBad ? " bad" : TSF.chk === "ok" && TSF.em ? " ok" : "") + '" id="tsfEmpLn" role="status">' + esc(TSF.em || "숫자만") + "</p>" +
+      '<label class="tsf-k" for="tsfNick">닉네임 · 순위판에 나오는 이름</label>' +
+      '<input id="tsfNick" class="tsf-in" maxlength="8" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" value="' + esc(TSF.nickIn) + '"' +
+      ' oninput="tsfNickIn(this, event)" data-imeend="tsfnick" aria-describedby="tsfNickLn">' +
+      '<p class="tsf-ln' + (TSF.nmBad ? " bad" : "") + '" id="tsfNickLn" role="status">' + esc(TSF.nm || "2~8자 · 한글·영문·숫자") + "</p>" +
+      '<p class="tsf-hint' + (ok ? " go" : "") + '" id="tsfKeys">' + (ok ? "SPACE를 눌러 시작" : "Tab·Enter 다음 칸") + "</p>";
   }
-  return h + '<p class="tsf-msg" id="tsfMsg" role="status">' + esc(TSF.msg) + "</p>" +
-    '<div class="tsf-rule"><p>1인 ' + tsfLimit() + "회 · 최고 기록으로 순위</p><p>목숨 " + RAIN_LIVES + "개를 다 잃으면 끝</p></div>";
+  return h + '<div class="tsf-rule"><p>1인 ' + tsfLimit() + "회 · 최고 기록으로 순위</p><p>목숨 " + RAIN_LIVES + "개를 다 잃으면 끝</p></div>";
 }
 /* 오른쪽 · 현장 TOP 10 · 결과 화면에서만 방금 도전한 사람의 줄(me)을 짚는다(다음 사람에게 남의 줄을 짚어 보이지 않게) */
 function tsfRankHtml() {
@@ -8491,23 +8518,26 @@ function tsfPrevDraw() {
   rgWorldD(ctx, L);
   ctx.fillStyle = RAIN_PAL.deep;
   for (var lx = 0; lx < L.W; lx += 3 * L.D) ctx.fillRect(lx, L.floor, 2 * L.D, 2);
-  var span = Math.max(10, L.floor - L.boxH - L.top);
-  [["공감", 0.1, 0.08], ["데이터", 0.52, 0.3], ["에이전트", 0.18, 0.62]].forEach(function (x) {
+  var span = Math.max(10, L.floor - L.boxH - L.top), veil = TSF.phase === "form" && !tsfFormOk();
+  if (!veil) [["공감", 0.1, 0.08], ["데이터", 0.52, 0.3], ["에이전트", 0.18, 0.62]].forEach(function (x) {   /* 막 아래에는 단어를 그리지 않는다(큰 안내와 겹치지 않게) */
     ctx.font = rtFont(L.tf);
     var bw = Math.ceil(ctx.measureText(x[0]).width) + L.padX * 2, bx = Math.min(w - 8 - bw, Math.max(8, Math.round(w * x[1])));
     rgWordDraw(ctx, L, bx, L.top + x[2] * span, bw, x[0], false, false, "");
   });
   var bob = rgReduced() ? 0 : Math.floor(now / 300) % 2 * Math.round(L.D / 3);
   rgBotDraw(ctx, Math.round(w / 2), L.ground + bob, RG_BOT.w, RG_BOT.h, L.D / 2);
-  if (TSF.phase === "ready") rgWaitDraw(ctx, L, now);
-  else if (TSF.phase === "emp" || TSF.phase === "nick") {
-    var t = TSF.phase === "nick" ? "닉네임을 정해 주세요" : "사번을 넣어 주세요", px = 32, th = 56;
-    ctx.save(); ctx.font = rtFont(px); ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    var tw = Math.ceil(ctx.measureText(t).width) + 48, y = Math.round(L.floor * 0.42);
-    rtTag(ctx, L.W / 2 - tw / 2, y, tw, th, RT_PAL.night, RT_PAL.bark, RAIN_PAL.ink);
-    rtText(ctx, t, L.W / 2, y + th / 2, px, RT_PAL.cream, null);
-    ctx.restore();
-  }
+  if (TSF.phase !== "form") return;
+  if (tsfFormOk()) { rgWaitDraw(ctx, L, now); return; }   /* 두 칸이 차면 막을 걷고 「SPACE를 눌러 시작」(v4.29b 밝기 깜빡임 · 동작 줄이기면 고정) */
+  /* v4.33 입력 전·입력 중 · 판 위에 어두운 막 + 큰 도트 글자 두 줄(도트 글꼴이 또렷한 16 배수 · 판 폭에 맞춰 48 또는 32) */
+  ctx.save();
+  ctx.fillStyle = "rgba(24,22,20,0.72)"; ctx.fillRect(0, 0, w, h);
+  var ln = ["사번과 닉네임을", "입력하세요"], px = 48;
+  ctx.font = rtFont(px);
+  if (ctx.measureText(ln[0]).width > w - 48) px = 32;
+  var gap = Math.round(px * 1.4), y0 = Math.round(L.floor * 0.42) - gap / 2;
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ln.forEach(function (s, k) { rtText(ctx, s, w / 2, y0 + k * gap, px, RT_PAL.cream, RAIN_PAL.ink); });
+  ctx.restore();
 }
 /* 화면에 붙은 뒤 · 0.265초 시계(깜빡임 · 가만히 있으면 처음으로 · 결과 15초) · 순위 20초마다 */
 function tsfMount() {
@@ -8527,47 +8557,84 @@ function tsfTick() {
     var left = Math.max(0, 15 - Math.floor((performance.now() - TSF.resAt) / 1000)), c = el("tsfCount");
     if (c) c.textContent = left + "초 뒤 처음 화면";
     if (left <= 0 && TSF.send !== "sending") { tsfReset(); tsfFocus(); }
-  } else if ((TSF.phase === "nick" || TSF.phase === "ready") && now - TSF.idle > 45000) { tsfReset(); tsfFocus(); }   /* 자리를 뜬 사람의 닉네임이 다음 사람에게 남지 않게 */
-  else if (TSF.phase === "emp" && TSF.msg && now - TSF.idle > 20000) tsfMsg("");
+  } else if (TSF.phase === "form" && !TSF.busy) {
+    var has = !!(tsfEmpVal() || tsfNickVal());
+    if (has && now - TSF.idle > 45000) { tsfReset(); tsfFocus(); }   /* 자리를 뜬 사람의 사번·닉네임이 다음 사람에게 남지 않게 */
+    else if (!has && (TSF.em || TSF.nm) && now - TSF.idle > 20000) { TSF.em = ""; TSF.emBad = false; TSF.nm = ""; TSF.nmBad = false; tsfPaint(); }
+  }
   tsfRankPull();
 }
-/* ① 사번 */
-function tsfCheck() {
-  var v = ((el("tsfEmp") || {}).value || "").trim();
-  if (TSF.busy) return;
-  if (!/^\d{3,10}$/.test(v)) { tsfMsg(TSF_WHY.param); sfx("rgmiss"); return; }
-  if (!BE.on) { tsfMsg("서버에 연결할 수 없어요"); return; }
-  TSF.busy = true; TSF.emp = v; TSF.msg = "확인 중"; App.render();
+/* ① 사번 칸 · 글자마다 · 칸이 바뀌면 앞 확인은 버린다(자동으로 채운 닉네임도 비운다 · 다른 사람 것) · 6자리 이상에서 0.4초 멈추면 다 친 것으로 보고 확인 */
+function tsfEmpIn(n) {
+  if (IME.on) return;
+  var v = tsfEmpVal(); TSF.empIn = v; tsfPoke();
+  if (v !== TSF.emp && (TSF.chk || TSF.em)) {
+    TSF.info = null; TSF.chk = ""; TSF.emp = ""; TSF.em = ""; TSF.emBad = false;
+    if (!TSF.touched) { TSF.nickIn = ""; TSF.nickOk = ""; TSF.nm = ""; TSF.nmBad = false; var nn = el("tsfNick"); if (nn) nn.value = ""; }
+  }
+  clearTimeout(TSF.dt);
+  if (v.length >= 6) TSF.dt = setTimeout(function () { tsfCheck(true); }, 400);
+  tsfPaint();
+}
+/* 서버 확인(type_self_check · 관리코드) · auto = 입력 멈춤(형식 오류를 띄우지 않는다) · 응답이 올 때 칸이 바뀌어 있으면 버린다 */
+function tsfCheck(auto) {
+  clearTimeout(TSF.dt);
+  var v = tsfEmpVal();
+  if (TSF.phase !== "form") return;
+  if (!/^\d{3,10}$/.test(v)) { if (!auto) { tsfEm(v ? TSF_WHY.param : "사번을 입력해 주세요", true); sfx("rgmiss"); } return; }
+  if (v === TSF.emp && (TSF.chk === "busy" || TSF.chk === "ok")) return;
+  if (!BE.on) { tsfEm("서버에 연결할 수 없어요", true); return; }
+  TSF.emp = v; TSF.chk = "busy"; TSF.info = null; tsfEm("확인 중", false);
+  var bad = function (m) { TSF.chk = "bad"; tsfEm(m, true); sfx("rgmiss"); var a = document.activeElement; if (a && a.id === "tsfNick" && !a.value) tsfFocus("tsfEmp", true); };
   beCall({ action: "type_self_check", key: tsfKey(), emp: v }, function (r) {
-    TSF.busy = false;
-    if (!r || !r.ok) { TSF.msg = TSF_WHY[r && r.reason] || "확인하지 못했어요 · 다시 입력해 주세요"; sfx("rgmiss"); App.render(); tsfFocus(); return; }
-    if (!r.inWin) { TSF.msg = TSF_WHY.window + " · " + (r.win || []).join(" · "); TSF.emp = ""; sfx("rgmiss"); App.render(); tsfFocus(); return; }
-    if (r.left <= 0) { TSF.msg = tsfLimitMsg(r); TSF.emp = ""; sfx("rgmiss"); App.render(); tsfFocus(); return; }
-    TSF.info = r; TSF.nickIn = r.nick || ""; TSF.phase = "nick"; TSF.msg = r.hiddenNick ? "닉네임을 새로 정해 주세요" : "";
-    sfx("scan"); App.render(); tsfFocus();
-  }, function () { TSF.busy = false; TSF.msg = TSF_WHY.net; App.render(); tsfFocus(); });
+    if (TSF.phase !== "form" || TSF.emp !== v) return;
+    if (!r || !r.ok) { bad(TSF_WHY[r && r.reason] || "확인하지 못했어요 · 다시 Enter"); return; }
+    if (!r.inWin) { bad(TSF_WHY.window + " · " + (r.win || []).join(" · ")); return; }
+    if (r.left <= 0) { bad(tsfLimitMsg(r)); return; }
+    TSF.info = r; TSF.chk = "ok"; TSF.nickOk = r.nick || "";
+    if (!TSF.touched && r.nick) { TSF.nickIn = r.nick; var nn = el("tsfNick"); if (nn) nn.value = r.nick; TSF.nm = ""; TSF.nmBad = false; }
+    if (r.hiddenNick && !TSF.touched) { TSF.nm = "닉네임을 새로 정해 주세요"; TSF.nmBad = true; }
+    tsfEm("남은 도전 " + r.left + "회 / " + r.limit + "회" + (r.best ? " · 내 최고 " + typeSec(r.best) : ""), false);
+    sfx("scan");
+  }, function () { if (TSF.phase === "form" && TSF.emp === v) bad(TSF_WHY.net); });
 }
-/* ② 닉네임 · 규칙과 거절 사유는 타자 닉네임과 같다(type_nick_set) · 테스트 사번은 저장하지 않는다 */
-function tsfNickGo() {
-  var v = ((el("tsfNick") || {}).value || "").trim(), bad = typeNickValid(v), i = TSF.info;
+/* ② 닉네임 칸 · 공백은 받지 않는다(규칙 = 타자 닉네임 · 한글·영문·숫자 2~8자) · 조합 중에는 값을 고치지 않는다 · 형식에 없는 글자만 바로 알린다(짧은 건 SPACE·Enter 때) */
+function tsfNickIn(n, e) {
+  TSF.touched = true; tsfPoke();
+  if (!(e && e.isComposing) && !IME.on && /\s/.test(n.value)) n.value = n.value.replace(/\s/g, "");
+  TSF.nickIn = n.value;
+  var v = n.value.replace(/\s/g, "");
+  TSF.nm = v && /[^0-9A-Za-z가-힣ㄱ-ㅎㅏ-ㅣ]/.test(v) ? "한글·영문·숫자만 쓸 수 있어요" : ""; TSF.nmBad = !!TSF.nm;
+  tsfPaint();
+}
+/* 닉네임 확정 · 규칙과 거절 사유는 타자 닉네임과 같다(type_nick_set) · 서버에 있는 것 그대로거나 테스트 사번이면 저장하지 않는다 · go = 저장 뒤 바로 시작(SPACE) */
+function tsfNickSave(go) {
+  var i = TSF.info, v = tsfNickVal(), bad = typeNickValid(v), emp = TSF.emp;
   if (!i || TSF.busy) return;
-  if (bad) { tsfMsg(bad); sfx("rgmiss"); return; }
-  if (v === (i.nick || "") || i.test) { TSF.nick = v; tsfReady(); return; }
-  TSF.busy = true; TSF.nickIn = v; TSF.msg = "저장 중"; App.render();
-  beCall({ action: "type_nick_set", emp: TSF.emp, nick: v }, function (r) {
+  if (bad) { tsfNm(v ? "한글·영문·숫자 2~8자만 쓸 수 있어요" : "닉네임을 입력해 주세요", true); sfx("rgmiss"); tsfFocus("tsfNick"); return; }   /* 규칙은 typeNickValid 그대로 · 문구만 한 줄로 */
+  if (v === TSF.nickOk || i.test) { TSF.nick = v; if (go) tsfGo(); else { tsfNm("", false); sfx("click"); } return; }
+  TSF.busy = true; tsfNm("저장 중", false);
+  beCall({ action: "type_nick_set", emp: emp, nick: v }, function (r) {
     TSF.busy = false;
-    if (r && r.ok) { TSF.nick = r.nick; i.nick = r.nick; tsfReady(); return; }
-    TSF.msg = TYPE_NICK_WHY[r && r.reason] || "저장하지 못했어요 · 다시 Enter"; sfx("rgmiss"); App.render(); tsfFocus();
-  }, function () { TSF.busy = false; TSF.msg = TSF_WHY.net; App.render(); tsfFocus(); });
+    if (TSF.phase !== "form" || TSF.emp !== emp) return;
+    if (r && r.ok) { TSF.nick = r.nick; TSF.nickOk = r.nick; i.nick = r.nick; tsfNm("", false); if (go) tsfGo(); else sfx("click"); return; }
+    tsfNm(TYPE_NICK_WHY[r && r.reason] || "저장하지 못했어요 · 다시 SPACE", true); sfx("rgmiss"); tsfFocus("tsfNick", true);
+  }, function () { TSF.busy = false; if (TSF.phase === "form") { tsfNm(TSF_WHY.net, true); tsfFocus("tsfNick"); } });
 }
-function tsfReady() {
-  TSF.phase = "ready"; TSF.msg = ""; tsfPoke();
-  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
-  sfx("click"); App.render();
+/* SPACE · 사번이 아직이면 확인부터(시작은 다음 SPACE) · 닉네임이 틀리면 그 칸 아래 한 줄 · 둘 다 되면 저장(필요할 때만) 뒤 시작 */
+function tsfSpace() {
+  if (TSF.phase !== "form" || TSF.busy) return;
+  var v = tsfEmpVal();
+  if (!(TSF.chk === "ok" && TSF.info && TSF.emp === v)) {
+    if (TSF.chk === "bad" && TSF.emp === v) { sfx("rgmiss"); tsfFocus("tsfEmp", true); return; }
+    tsfCheck(false); tsfFocus("tsfEmp"); return;
+  }
+  tsfNickSave(true);
 }
 /* ③ SPACE · 서버에 시작을 알리고(이때 1회를 쓴다) 바로 카운트다운 · 서버가 거절하면(횟수 · 시간 · 명부) 판을 접는다 */
 function tsfGo() {
-  if (TSF.phase !== "ready" || !TSF.info) return;
+  if (!tsfFormOk()) return;
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   TSF.phase = "play"; TSF.res = null; TSF.sub = null; TSF.send = ""; TSF.ticket = "";
   beCall({ action: "type_self_start", key: tsfKey(), emp: TSF.emp }, function (r) {
     if (r && r.ok) { TSF.ticket = r.ticket || ""; return; }
@@ -8607,24 +8674,46 @@ function tsfResHtml() {
       rtFoldHtml("기록 자세히 보기", rtFoldSec("참고 기록", rtRefTable([["터뜨린 단어", (r.hits || 0) + "개"], ["최고 콤보", r.combo || 0], ["정확도", (r.acc || 0) + "%"]]))) });
   return h;
 }
-/* 키보드 · 준비 = SPACE 시작 · Esc 처음으로 · 결과 = SPACE 처음으로(1.5초 뒤부터 · 치던 손이 눌러 버린다) · 첫 키에서 소리 길을 연다 */
+/* 키보드 · 입력(form) = 칸 안이든 밖이든 여기서 받는다 · 결과 = SPACE 처음으로(1.5초 뒤부터 · 치던 손이 눌러 버린다) · 첫 키에서 소리 길을 연다
+   v4.33 Tab = 사번 ↔ 닉네임만 오간다(「관리」 단추로 새지 않게) · 사번에서 Tab·Enter = 확인 + 닉네임 칸 · 닉네임에서 Enter = 닉네임 확정 · SPACE = 시작(닉네임에는 공백이 없다) · Esc = 처음으로
+   한글 조합 중 SPACE 는 조합이 끝난 값을 보고 시작한다(글자에 붙은 공백은 버린다) */
 function tsfKeyDoc(e) {
   if (App.current !== "type_site" || !tsfOn() || RG.on || GS.cur || el("modal")) return;
   tsfPoke();
   if (!TSF.unl && S.get("site_sound", true) === true) { TSF.unl = true; sfxUnlock(); }
   var sp = e.code === "Space" || e.key === " ";
-  if (TSF.phase === "ready") {
-    if (sp) { e.preventDefault(); if (!e.repeat) tsfGo(); }
-    else if (e.key === "Escape") { e.preventDefault(); tsfReset(); tsfFocus(); }
-  } else if (TSF.phase === "result") {
+  if (TSF.phase === "result") {
     if (sp) { e.preventDefault(); if (!e.repeat && performance.now() - TSF.resAt > 1500) { tsfReset(); tsfFocus(); } }
-  } else if (TSF.phase === "nick" && e.key === "Escape") { e.preventDefault(); tsfReset(); tsfFocus(); }
-  else if ((TSF.phase === "emp" || TSF.phase === "nick") && !TSF.busy) {   /* 칸 밖(판을 눌렀다든가)에서 친 키도 칸으로 · Enter 는 그 단계 확인 */
-    var n = el(TSF.phase === "nick" ? "tsfNick" : "tsfEmp"), t = e.target || {};
-    if (!n || t === n || e.ctrlKey || e.metaKey || e.altKey) return;
-    if (onEnter(e, TSF.phase === "nick" ? tsfNickGo : tsfCheck)) return;
-    if (e.key && e.key.length === 1) n.focus();
+    return;
   }
+  if (TSF.phase !== "form" || e.ctrlKey || e.metaKey || e.altKey) return;
+  var t = e.target || {}, onEmp = t.id === "tsfEmp", onNick = t.id === "tsfNick", comp = e.isComposing || e.keyCode === 229 || IME.on;
+  if (e.key === "Escape") { e.preventDefault(); tsfReset(); tsfFocus(); return; }
+  if (sp) {
+    e.preventDefault();
+    if (e.repeat) return;
+    if (onNick && comp) setTimeout(function () { var n = el("tsfNick"); if (n && /\s/.test(n.value)) { n.value = n.value.replace(/\s/g, ""); TSF.nickIn = n.value; } tsfSpace(); }, 60);
+    else tsfSpace();
+    return;
+  }
+  if (e.key === "Tab") {
+    e.preventDefault();
+    if (onNick) { tsfFocus("tsfEmp"); return; }
+    if (onEmp && tsfEmpVal()) tsfCheck(false);
+    tsfFocus(onEmp ? "tsfNick" : undefined);
+    return;
+  }
+  if (onEmp) { onEnter(e, function () { tsfCheck(false); if (/^\d{3,10}$/.test(tsfEmpVal())) tsfFocus("tsfNick"); }); return; }
+  if (onNick) {
+    onEnter(e, function () {
+      if (!(TSF.chk === "ok" && TSF.emp === tsfEmpVal())) { if (TSF.chk !== "busy") tsfCheck(false); tsfFocus("tsfEmp"); return; }
+      tsfNickSave(false);
+    });
+    return;
+  }
+  if (TSF.busy) return;
+  if (onEnter(e, function () { tsfFocus(); })) return;   /* 칸 밖(판을 눌렀다든가)에서 친 키도 칸으로 */
+  if (e.key && e.key.length === 1) { var n = el(TSF.chk === "ok" && TSF.emp === tsfEmpVal() ? "tsfNick" : "tsfEmp"); if (n) n.focus(); }
 }
 document.addEventListener("keydown", tsfKeyDoc);
 window.addEventListener("resize", function () { if (App.current === "type_site" && tsfOn() && !RG.on) { var g = document.querySelector(".tsf-grid"); if (g) g.style.setProperty("--tsf-bw", tsfBw() + "px"); tsfPrevDraw(); } });
@@ -10016,6 +10105,8 @@ document.addEventListener("compositionend", function (e) {
   var t = e.target, k = t && t.getAttribute ? t.getAttribute("data-imeend") : "";
   if (k === "num") setTimeout(function () { numOnly(t); }, 0);
   else if (k === "nick") setTimeout(function () { typeNickInput(t.value); }, 0);
+  else if (k === "tsfemp") setTimeout(function () { numOnly(t); tsfEmpIn(t); }, 0);   /* v4.33 셀프 사번 · 조합이 끝나면 숫자 정리 뒤 확인 */
+  else if (k === "tsfnick") setTimeout(function () { tsfNickIn(t); }, 0);   /* v4.33 셀프 닉네임 · 조합이 끝나면 공백 버림 · 형식 줄 */
 }, true);
 document.addEventListener("focusout", function () { IME.on = false; }, true);
 /* 숫자 칸 정리(사번 · PIN) · 사번은 전부 숫자(사용자 확정 260924) · 숫자 외 글자(붙여넣은 공백 · 한글 자판에서 친 글자)를 뺀다.
