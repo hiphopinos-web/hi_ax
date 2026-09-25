@@ -4461,7 +4461,7 @@ function progMine(id) {
 }
 /* 목록 상태 한 줄 [글, 색] · ok = success · off = muted · "" = brandText */
 function progState(s) {
-  if (s.kind === "open") return attMineAt(s.id) ? ["출석 완료", "ok"] : ["자유 입장", ""];   /* v4.26 17F 는 출석하면 「출석 완료」 */
+  if (s.kind === "open") return attMineAt(s.id) ? ["출석 완료", "ok"] : [s.id === "expo" ? "자유 입장" : "자유 참석", ""];   /* v4.26 17F 는 출석하면 「출석 완료」 · v4.38 강연 = 「자유 참석」(시간표 딱지와 같은 말) · 전시 = 「자유 입장」 */
   if (s.kind === "info") return sessMine(s.id) ? ["사전 신청 완료", "ok"] : ["사전 신청자 대상", ""];
   if (s.id === "dap") {
     var r = myResv();
@@ -4520,14 +4520,14 @@ function progDetail(s) {
     D.title = s.id === "road" || par ? s.sub : s.ttl;
     if (par) { D.org = org; D.who = s.who; D.av = org || "AX"; D.whoSub = org + " · 파트너사 강연"; }
     else if (s.who) { D.who = s.who; D.av = s.who.length <= 4 ? s.who : "AX"; D.whoSub = s.id === "road" ? "내부 강연" : s.sub; }
-    D.st = at ? "출석 완료" : "자유 입장"; D.stc = "ok";
-    D.kv = [["일시", s.id === "expo" ? "10월 26일 · 행사 시간 중" : day + progTm(s.tm)], ["장소", pl], ["참여 방법", s.id === "expo" ? "별도 신청 없이 자유 관람" : "별도 신청 없이 자유 입장"]];
+    D.st = at ? "출석 완료" : s.id === "expo" ? "자유 입장" : "자유 참석"; D.stc = "ok";
+    D.kv = [["일시", s.id === "expo" ? "10월 26일 · 행사 시간 중" : day + progTm(s.tm)], ["장소", pl], ["참여 방법", s.id === "expo" ? "신청 없이 자유 관람" : "신청 없이 자유 참석"]];
     if (ap) D.kv.push(["출석", at ? at + " 출석 완료" : "입구 QR 스캔 · " + attWinLbl(ap)]);
     D.secB = s.id === "expo" ? "AX Wall 관람, AX Now! 부스 체험, DAP Wall QR 퀴즈에 참여하고 스탬프를 모아 보세요." :
       ap ? "별도 신청 없이 참여할 수 있어요.<br>대강당 입구 QR을 찍으면 출석이 기록돼요." + (s.desc ? "<br>" + esc(s.desc) : "") :
       "별도 신청 없이 참여할 수 있어요. 시작 시간에 맞춰<br>" + esc(pl) + "으로 와 주세요.";
     if (s.id === "expo") D.link = '<button type="button" class="ax-link axs-plain axs-self" onclick="App.tab(\'exp\')">체험에서 시작하기</button>';
-    D.help = ap && !at ? "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요" : D.cat + "은 사전 신청이 필요하지 않아요";
+    D.help = ap && !at ? "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요" : s.id === "expo" ? "신청 없이 자유롭게 둘러볼 수 있어요" : "신청을 받지 않는 강연이에요";   /* v4.38 (사용자 260925) 17F 는 사전 신청제 → 신청을 받지 않음 · 「사전 신청」이라는 말을 쓰지 않는다 */
     D.btn = ap && !at ? progBtn("출석 QR 스캔", "scanOpen(\'a17\')") : timeBtn;
     return D;
   }
