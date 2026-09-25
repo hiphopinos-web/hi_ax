@@ -5797,6 +5797,8 @@ var Views = {
     ];
     return '<div class="ax-stack">' +   /* v4.06 탭 첫 화면 큰 제목·부제 삭제(사용자 결정 260922) · 스캔은 가운데 QR 버튼과 각 안내 화면 */
       tabs + '<div class="axs-list" role="tabpanel">' + list.map(row).join("") + "</div>" +
+      /* v4.35 (사용자 확정 260925) 신청으로 가는 줄 하나 · 칸(현장에서 / 앱에서)은 그대로 두고 두 칸 모두 아래에 · 누르면 프로그램 탭 「신청 가능」 목록(progAppGo) · 신청 화면은 프로그램 탭 한 곳 */
+      '<div class="axs-list">' + axDest("신청이 필요한 프로그램", "DAP 과제상담 · AX 커피챗", "보기", "progAppGo()") + "</div>" +
       (seg === "site" ? scanQNote() : "") +
       "</div>";
   },
