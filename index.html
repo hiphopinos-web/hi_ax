@@ -4303,7 +4303,7 @@ function myItems(withTest) {
     else if (x.t === "cchat") it = { place: "18F 라운지", min: t2m(x.round), go: "App.go('ev_cchat')", badge: x.round, label: x.round, title: "AX 커피챗", gTitle: "AX 커피챗", sub: "TABLE " + x.table + " · 테스트", gSub: "18F 라운지 TABLE " + x.table + " · 테스트", kind: "cchat", iv: [t2m(x.round), t2m(x.round) + 20] };
     else if (x.t === "photo") { var eta = hm2(Math.min(now + x.ahead * 3, 23 * 60)); it = { place: "1F 포토부스", min: t2m(eta), go: "photoGoMine()", badge: x.no + "번", label: eta, title: "AI 포토부스", gTitle: "AI 포토부스 대기표", sub: "예상 입장 " + eta + " · 앞 " + x.ahead + "팀 · 테스트", gSub: x.no + "번 · 앞 " + x.ahead + "팀 · 예상 입장 " + eta + " · 테스트", photo: true, kind: "photo", iv: null }; }
     else if (x.t === "sess") {
-      var s0 = sessById(x.id); if (!s0) return;
+      var s0 = sessById(x.id); if (!s0 || s0.fl !== 10) return;   /* v4.37 17F 는 v4.26 부터 자유 참석이라 내 일정에 오를 수 없다 · 그 전에 기기에 저장된 테스트 항목(l1 · l2 등)은 여기서 거른다 */
       var pp = s0.tm.split("~");
       if (s0.fl === 10 && hasTen) return;
       it = { place: sessPlace(s0), min: t2m(pp[0]), go: "sessOpen('" + x.id + "')", badge: pp[0], label: pp[0], title: s0.ttl, gTitle: s0.ttl, sub: s0.tm + " · 테스트", gSub: sessPlace(s0) + " · " + s0.tm + " · 테스트", kind: "sess:" + x.id, ten: s0.fl === 10, iv: [t2m(pp[0]), t2m(pp[1])] };
@@ -4766,7 +4766,7 @@ function myPlanHtml() {
   }
   var cards = items.map(function (x) {
     var k = x.kind, chip, cc = "ok", lbl = "신청 상세 보기";
-    if (k.indexOf("sess:") === 0) chip = x.test ? "테스트" : /사전/.test(x.sub) ? "사전 신청" : "신청 완료";
+    if (k.indexOf("sess:") === 0) { chip = x.test ? "테스트" : /사전/.test(x.sub) ? "사전 신청" : "신청 완료"; lbl = "상세 보기"; }   /* v4.37 10F 세션은 앱 신청 · 취소가 없다(사전 신청 안내 전용) */
     else if (k === "resv") { var r = myResv(); chip = x.test ? "테스트" : (r && RESV_ST[r.status]) || "신청 완료"; if (r && (r.status === "requested" || r.status === "booked")) cc = ""; }
     else if (k === "cchat") chip = x.test ? "테스트" : "매칭 완료";
     else { chip = x.call ? "지금 입장" : "대기 " + x.badge; cc = x.call ? "" : "ok"; lbl = "대기 상세 보기"; }
