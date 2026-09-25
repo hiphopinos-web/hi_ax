@@ -12071,23 +12071,25 @@ function oxbQuad(ctx, G, pts, fill, stroke, lw) {
 }
 /* v4.14 16비트 도트 게임판 (사용자 확정 260922 · design.md A-1 게임판 내부는 게임 고유 디자인)
    장면은 낮은 해상도 캔버스에 그린다(도트 한 칸 = 약 OXB_PX.css CSS px · 기기 픽셀의 정수배) → 제한 팔레트 OXB_PAL 로 줄인다 → 번지지 않게 확대.
-   v4.28 (사용자 260924 「해상도만 낮춘 것 같다 · 다른 게임 감성과 맞춰라」) 팡 타일 · 테트리스 블록과 같은 16비트 문법으로 다시 그렸다(design.md A-5 5-18):
-   발판 = 두꺼운 먹색 외곽선 + 모서리 한 칸 비움 + 도트 명암(위 · 왼쪽 밝게 · 아래 · 오른쪽 어둡게) + 앞면 두께(oxbTile) · 멀어지는 발판도 같은 모양이 크기만 작게(원근으로 찌그러뜨리지 않는다) ·
-   O · X = 도트 글자(OXB_GLYPH) · 하늘 = 웜 오렌지 띠 · 물 = 웜브라운 띠(회색 · 흰 체크 디더 폐기) · 난간 = 나무 기둥과 손잡이 · 데크 = 나무 판 · 떨어지는 「풍덩」도 같은 팔레트 · 파랑 · 민트 없음.
+   v4.28 은 발판을 원근 없는 크림 타일 · 나무 난간 · 갈색 물로 바꿨다 → v4.34 (사용자 260925 「너무 정신이 없어 유리 계단인지 알아보지도 못한다 · 기존 버전 위에 새 디자인 문법만 얹어라」)
+   구도 = v4.27 그대로(원근으로 멀어지는 유리판 두 줄 · 강철 보 세 줄 · 물 · 오렌지 데크 · 나무 · 밧줄 없음) ·
+   얹은 문법 = 평면 색 띠(디더 · 격자 점 없음) · 유리판 먹선 외곽(다음 줄 두 칸) + 위 · 왼쪽 밝은 한 칸 + 유리 반사 도트 선 · O · X = 도트 글자(OXB_GLYPH) · 금 = 도트 한 칸 선.
+   외곽선은 밟는 것(유리판 · 데크 · 도착 문)만 · 보 · 기둥 · 물은 선 없이 면만(주인공이 먼저 보이게).
    글자(떠오르는 점수 · ×3 · 도착 · 준비/시작)는 기기 해상도에 도트 글꼴(rtText · 16 · 24 · 32)로 따로 그린다 · 문제는 게임판 위 말풍선(DOM)이 맡는다.
    챗봇은 원본 BOT_SVG 를 그 크기 그대로 작은 캔버스에 그려 도트로 만든 것만(assets/bot.js botDotCv · 형태 불변) */
 var OXB_PX = { css: 3 };
 var OXB_PAL = [
-  "FFFFFF", "000000", "1B1712", "2A2118", "5E3218", "7A3E1C", "8A5A2B", "A8743F", "D9A066", "E3B884", "F3E7D8",   /* 흰 · 먹 · 웜브라운 · 나무 · 크림 */
-  "FFEBE0", "FFE3CF", "FFCFB0", "FFB284", "FFA46E", "FF7E31", "FF7F32", "E0661C", "D64524", "A63D00", "351A0C",   /* 오렌지 사다리 */
+  "FFFFFF", "F2F4F6", "E5E8EB", "D1D6DB", "B0B8C1", "8B95A1", "6B7684", "4E5968", "333D4B", "191F28", "000000",   /* 무채 · 먹 */
+  "E4EAEE", "D3DDE4", "BCCBD5", "A3B5C2", "8A9EAD", "73889A",                                                       /* 물 · 유리 · 채도 낮은 회청 */
+  "FFF1E8", "FFEBE0", "FFE3CF", "FFCFB0", "FFB284", "FFA46E", "FF7E31", "FF7F32", "E0661C", "D64524", "A63D00", "351A0C",   /* 오렌지 사다리 */
   "FFF4D9", "FFD88F", "FFC56E", "E0962E",                                                                           /* 황금 */
-  "E6F4EC", "3FA876", "027648",                                                                                     /* 정답 초록 */
+  "E6F4EC", "9ED9BC", "3FA876", "027648",                                                                           /* 정답 초록 */
   "FBE3E5", "EE8C96", "D22030",                                                                                     /* 오답 빨강 */
+  "F3E7D8", "E3B884", "D9A066", "A8743F", "8A5A2B", "5E3218",                                                       /* 크림 · 나무(떠오르는 글자 · 챗봇) */
   "282320"                                                                                                          /* 챗봇 눈 */
 ];
 /* O · X 도트 글자 · 한 줄 = 비트(왼쪽이 높은 자리) · 큰 발판 7칸 · 작은 발판 5칸 · [0] = O · [1] = X */
 var OXB_GLYPH = { 7: [[0x1C, 0x3E, 0x63, 0x63, 0x63, 0x3E, 0x1C], [0x63, 0x77, 0x3E, 0x1C, 0x3E, 0x77, 0x63]], 5: [[0x0E, 0x11, 0x11, 0x11, 0x0E], [0x11, 0x0A, 0x04, 0x0A, 0x11]] };
-var OXB_RH = 0.62;   /* 난간 손잡이 높이(세계 좌표) */
 var OXB_LUT = null;
 /* 15비트 색 → 가장 가까운 팔레트 색(밝기 가중) · 처음 한 번만 만든다 */
 function oxbLutBuild() {
@@ -12127,36 +12129,32 @@ function oxbDraw(ctx, G) {
 /* 도트 장면 · 하늘 → 먼 물가 → 물 → 난간 → 줄(멀리서 가까이 · 챗봇은 제 줄 앞에) → 파티클 → 색종이 */
 function oxbDrawPx(ctx, G) {
   var pr = G.pr, W = pr.W, H = pr.H, B = OXB, px = G.px || 1, fv = G.fever > 0, hy = Math.max(0, oxbSnap(G, pr.HY));
-  /* 하늘 · 웜 오렌지 네 단 띠(디더 없음) · 피버면 한 단 더 진하게 */
-  var sky = fv ? ["#FFE3CF", "#FFCFB0", "#FFB284", "#FFA46E"] : ["#FFEBE0", "#FFE3CF", "#FFCFB0", "#FFB284"];
+  /* 하늘 · 옅은 웜 네 단 띠 · 피버면 한 단 더 진하게 */
+  var sky = fv ? ["#FFE3CF", "#FFCFB0", "#FFB284", "#FFA46E"] : ["#FFFFFF", "#FFF1E8", "#FFEBE0", "#FFE3CF"];
   for (var i = 0; i < 4; i++) { var ya = oxbSnap(G, hy * i / 4), yb = oxbSnap(G, hy * (i + 1) / 4); ctx.fillStyle = sky[i]; ctx.fillRect(0, ya, W, yb - ya); }
-  /* 먼 물가 · 지평선에 나무색 두 줄 */
-  ctx.fillStyle = "#A8743F"; ctx.fillRect(0, hy, W, px * 2); ctx.fillStyle = "#7A3E1C"; ctx.fillRect(0, hy + px * 2, W, px);
-  /* 물 · 웜브라운 네 단 띠(가까울수록 어둡게) · 물결은 세계 좌표에 있어 다리와 함께 흐른다 */
-  var w0 = hy + px * 3, wh = Math.max(0, H - w0), wc = ["#7A3E1C", "#5E3218", "#2A2118", "#1B1712"], wb = [0, 0.14, 0.38, 0.72, 1];
-  for (var q = 0; q < 4; q++) { var qa = oxbSnap(G, w0 + wh * wb[q]), qb = oxbSnap(G, w0 + wh * wb[q + 1]); ctx.fillStyle = wc[q]; ctx.fillRect(0, qa, W, qb - qa); }
+  /* 물 · 회청 네 단 띠(가까울수록 진하게) · 지평선 흰 한 줄 · 물결은 세계 좌표에 있어 다리와 함께 흐른다 */
+  var wh = Math.max(0, H - hy), wc = ["#E4EAEE", "#D3DDE4", "#BCCBD5", "#A3B5C2"], wb = [0, 0.14, 0.38, 0.72, 1];
+  for (var q = 0; q < 4; q++) { var qa = oxbSnap(G, hy + wh * wb[q]), qb = oxbSnap(G, hy + wh * wb[q + 1]); ctx.fillStyle = wc[q]; ctx.fillRect(0, qa, W, qb - qa); }
+  ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, hy, W, px);
   var z0 = Math.floor(G.cam.z / 1.3) * 1.3 + 1.3;
   for (var wz = z0; wz < z0 + 46; wz += 1.3) {
     var sd = Math.sin(wz * 12.9898) * 43758.5453; sd -= Math.floor(sd);
     for (var kk = 0; kk < 3; kk++) {
       var wx = ((sd * (kk + 3) * 7.3) % 1) * 12 - 6 + Math.sin(G.gt * 0.8 + wz + kk) * 0.4, p = oxbP(G, wx, B.WATER, wz);
-      if (!p || p.y < w0 + 2 * px || p.s < 14) continue; var len = Math.max(px, oxbSnap(G, p.s * 0.5));
-      ctx.fillStyle = p.s > 45 ? "#D9A066" : "#A8743F"; ctx.fillRect(oxbSnap(G, p.x - len), oxbSnap(G, p.y), len * 2, px);
+      if (!p || p.y < hy + 2 * px || p.s < 14) continue; var len = Math.max(px, oxbSnap(G, p.s * 0.5));
+      ctx.fillStyle = p.s > 45 ? "#FFFFFF" : "#E4EAEE"; ctx.fillRect(oxbSnap(G, p.x - len), oxbSnap(G, p.y), len * 2, px);
     }
   }
   G.rings = G.rings.filter(function (rg) { return G.gt - rg.t0 < 1.1; });
   G.rings.forEach(function (rg) {
     var age = G.gt - rg.t0; if (age < 0) return; var p = oxbP(G, rg.x, rg.y == null ? B.WATER : rg.y, rg.z); if (!p) return;
-    var r = (0.3 + age * 1.8 * rg.amt) * p.s; ctx.strokeStyle = rg.col ? rg.col.replace("A", String(0.9 * (1 - age / 1.1))) : "rgba(243,231,216," + (0.9 * (1 - age / 1.1)) + ")"; ctx.lineWidth = oxbLw(G, rg.col ? 3 : 2);
+    var r = (0.3 + age * 1.8 * rg.amt) * p.s; ctx.strokeStyle = rg.col ? rg.col.replace("A", String(0.9 * (1 - age / 1.1))) : "rgba(255,255,255," + (0.9 * (1 - age / 1.1)) + ")"; ctx.lineWidth = oxbLw(G, rg.col ? 3 : 2);
     ctx.beginPath(); ctx.ellipse(p.x, p.y, r, r * 0.3, 0, 0, 7); ctx.stroke();
   });
-  /* 난간 · 나무 · 바닥 보(가운데 · 양옆) + 양옆 손잡이(기둥은 줄마다 oxbRow) */
+  /* 강철 보 세 줄(가운데 · 양옆) · 선 없이 면만 */
   var zn = G.cam.z + 0.35, zf = G.rows[G.rows.length - 1].z + 6;
   [-B.RAIL, 0, B.RAIL].forEach(function (x) {
-    oxbQuad(ctx, G, [[x - 0.08, -0.06, zn], [x + 0.08, -0.06, zn], [x + 0.08, -0.06, zf], [x - 0.08, -0.06, zf]], "#5E3218");
-  });
-  [-B.RAIL, B.RAIL].forEach(function (x) {
-    oxbQuad(ctx, G, [[x, OXB_RH - 0.07, zn], [x, OXB_RH + 0.07, zn], [x, OXB_RH + 0.07, zf], [x, OXB_RH - 0.07, zf]], "#A8743F", "#000000", px);
+    oxbQuad(ctx, G, [[x - 0.07, -0.06, zn], [x + 0.07, -0.06, zn], [x + 0.07, -0.06, zf], [x - 0.07, -0.06, zf]], "#8B95A1");
   });
   var drawn = false;
   for (var n = G.rows.length - 1; n >= 0; n--) {
@@ -12234,62 +12232,64 @@ function oxbDotLine(ctx, G, x0, y0, x1, y1) {
 function oxbRow(ctx, G, r) {
   var z = r.z, B = OXB, px = G.px || 1;
   if (r.deck) {
-    /* 데크 · 나무 판(먹색 외곽선 · 앞면 · 가로 판자 줄) */
+    /* 데크 · 오렌지 판(v4.27 색) + 먹색 외곽선 + 앞면 */
     var zA = r.i === 0 ? z - 4 : z - B.PD / 2, zB = r.i === 0 ? z + B.PD / 2 : z + 5;
-    oxbQuad(ctx, G, [[-B.RAIL - 0.1, 0, zA], [B.RAIL + 0.1, 0, zA], [B.RAIL + 0.1, 0, zB], [-B.RAIL - 0.1, 0, zB]], "#D9A066", "#000000", px);
-    for (var zz = Math.ceil(zA / 0.9) * 0.9; zz < zB; zz += 0.9) {
-      var dl = oxbP(G, -B.RAIL - 0.1, 0, zz), dr = oxbP(G, B.RAIL + 0.1, 0, zz);
-      if (dl && dr) { ctx.fillStyle = "#A8743F"; ctx.fillRect(oxbSnap(G, dl.x) + px, oxbSnap(G, dl.y), oxbSnap(G, dr.x - dl.x) - 2 * px, px); }
-    }
-    oxbQuad(ctx, G, [[-B.RAIL - 0.1, 0, zA], [B.RAIL + 0.1, 0, zA], [B.RAIL + 0.1, -0.3, zA], [-B.RAIL - 0.1, -0.3, zA]], "#8A5A2B", "#000000", px);
+    oxbQuad(ctx, G, [[-B.RAIL - 0.1, 0, zA], [B.RAIL + 0.1, 0, zA], [B.RAIL + 0.1, 0, zB], [-B.RAIL - 0.1, 0, zB]], "#FFE3CF", "#191F28", px);
+    oxbQuad(ctx, G, [[-B.RAIL - 0.1, 0, zA], [B.RAIL + 0.1, 0, zA], [B.RAIL + 0.1, -0.28, zA], [-B.RAIL - 0.1, -0.28, zA]], "#FFB284", "#191F28", px);
     if (r.i !== 0) oxbGate(ctx, G, z + 2.6);
     return;
   }
-  if (r.i % 3 === 0) [-B.RAIL, B.RAIL].forEach(function (x) { oxbQuad(ctx, G, [[x - 0.1, -0.2, z], [x + 0.1, -0.2, z], [x + 0.1, B.WATER, z], [x - 0.1, B.WATER, z]], "#5E3218"); });
-  /* 난간 기둥 · 나무(먹색 외곽선 + 왼쪽 밝은 한 칸) */
-  [-B.RAIL, B.RAIL].forEach(function (x) {
-    var b = oxbP(G, x, -0.06, z), t = oxbP(G, x, OXB_RH + 0.07, z); if (!b || !t) return;
-    var w = Math.max(px, oxbSnap(G, 0.16 * b.s)), x0 = oxbSnap(G, b.x - w / 2), y0 = oxbSnap(G, t.y), h = oxbSnap(G, b.y) - y0;
-    if (h <= 0) return;
-    if (w >= 3 * px) { ctx.fillStyle = "#000000"; ctx.fillRect(x0 - px, y0 - px, w + 2 * px, h + 2 * px); }
-    ctx.fillStyle = "#8A5A2B"; ctx.fillRect(x0, y0, w, h);
-    if (w >= 3 * px) { ctx.fillStyle = "#A8743F"; ctx.fillRect(x0, y0, px, h); }
-  });
-  oxbQuad(ctx, G, [[-B.RAIL, -0.06, z - B.PD / 2 - 0.05], [B.RAIL, -0.06, z - B.PD / 2 - 0.05], [B.RAIL, -0.06, z - B.PD / 2 + 0.08], [-B.RAIL, -0.06, z - B.PD / 2 + 0.08]], "#7A3E1C");
+  /* 기둥(세 줄마다) · 가로 보 · 선 없이 면만 */
+  if (r.i % 3 === 0) [-B.RAIL, B.RAIL].forEach(function (x) { oxbQuad(ctx, G, [[x - 0.1, -0.2, z], [x + 0.1, -0.2, z], [x + 0.1, B.WATER, z], [x - 0.1, B.WATER, z]], "#8A9EAD"); });
+  oxbQuad(ctx, G, [[-B.RAIL, -0.06, z - B.PD / 2 - 0.05], [B.RAIL, -0.06, z - B.PD / 2 - 0.05], [B.RAIL, -0.06, z - B.PD / 2 + 0.08], [-B.RAIL, -0.06, z - B.PD / 2 + 0.08]], "#8B95A1");
   var up = r.i === G.next, fv = G.fever > 0 && r.i >= G.next;
   for (var s = 0; s < 2; s++) oxbPlank(ctx, G, r, s, up, fv);
 }
-/* 발판 · 윗면 중심 · 먼 끝 · 가까운 끝을 투영해 화면에 반듯한 한 장(oxbTile)으로 그린다 · 폭 = 발판 폭 × 원근 배율 · 높이 = 먼 끝 ~ 가까운 끝 */
+/* 유리판 한 장 · 원근 그대로(v4.27) · 반투명 흰 면 → 팔레트로 줄이면 아래 물빛이 비친 옅은 회청이 된다 · 앞면 두께 · 먹선 외곽 · 위 · 왼쪽 밝은 한 칸 · 반사 도트 선 */
 function oxbPlank(ctx, G, r, s, up, fv) {
   var sd = r.sides[s], B = OXB, RMo = rgReduced(); if (sd.st === "broken") return;
-  var cx = oxbSideX(s), z = r.z, jit = sd.crack > 0.55 && !RMo ? (Math.random() - 0.5) * 0.04 * sd.crack : 0, dip = -0.1 * Math.sin(sd.flex * Math.PI) + 0.1 * Math.sin(sd.flex * Math.PI * 2) * sd.flex;
+  var cx = oxbSideX(s), z = r.z, hw = B.PW / 2, hd = B.PD / 2, jit = sd.crack > 0.55 && !RMo ? (Math.random() - 0.5) * 0.04 * sd.crack : 0, dip = -0.1 * Math.sin(sd.flex * Math.PI) + 0.1 * Math.sin(sd.flex * Math.PI * 2) * sd.flex;
   cx += jit;
-  var c = oxbP(G, cx, dip, z), fr = oxbP(G, cx, dip, z + B.PD / 2), nr = oxbP(G, cx, dip, z - B.PD / 2);
-  if (!c || !fr || !nr) return;
-  var px = G.px || 1, w = Math.max(3 * px, oxbSnap(G, B.PW * c.s)), yb = oxbSnap(G, nr.y), h = Math.max(2 * px, yb - oxbSnap(G, fr.y), oxbSnap(G, w * 0.22)), x = oxbSnap(G, c.x - w / 2), y = yb - h, th = Math.max(px, oxbSnap(G, 0.2 * c.s));   /* 윗면은 폭의 0.22 이상(얇은 막대로 보이지 않게 · 가까운 끝 기준으로 위로 늘린다) */
-  var past = r.i < G.next, e = up && w >= 20 * px ? 2 * px : px;
-  var col = r.gold ? ["#FFC56E", "#FFF4D9", "#E0962E", "#A63D00"] : up ? ["#FFFFFF", "#FFFFFF", "#FFCFB0", "#D9A066"] : ["#F3E7D8", "#FFFFFF", "#E3B884", "#A8743F"];
-  if (r.reveal === s || sd.glow > 0.35) col = ["#E6F4EC", "#FFFFFF", "#3FA876", "#027648"];
-  if (w < 10 * px) { ctx.fillStyle = col[0]; ctx.fillRect(x, y, w, h); ctx.fillStyle = col[3]; ctx.fillRect(x, y + h, w, th); return; }   /* 아주 먼 발판 · 외곽선 없이 면과 앞면만(먹선이 검은 띠로 뭉치지 않게) */
-  oxbTile(ctx, G, x, y, w, h, th, col, fv && !past ? "#FF7E31" : "#000000", e);
-  /* 황금 발판 · 밝은 세로 띠가 지나간다(동작 줄이기면 없음) */
-  if (r.gold && !RMo && h > 3 * px && w > 8 * px) { var sh = (G.gt * 0.6 + r.i * 0.37) % 1; ctx.fillStyle = "#FFF4D9"; ctx.fillRect(oxbSnap(G, x + e + (w - 2 * e - 2 * px) * sh), y + e, 2 * px, h - e - px); }
-  /* 금 · 도트 한 칸 선(윗면 안에서만) */
-  if (sd.crack > 0 && h > 3 * px) {
-    var mx = x + w / 2, my = y + h / 2, cl = function (v) { return Math.max(-0.45, Math.min(0.45, v)); };
-    ctx.fillStyle = "#000000";
+  var ps = [[cx - hw, dip, z - hd], [cx + hw, dip, z - hd], [cx + hw, dip, z + hd], [cx - hw, dip, z + hd]].map(function (p) { return oxbP(G, p[0], p[1], p[2]); });
+  if (ps.some(function (p) { return !p; })) return;
+  var px = G.px || 1, past = r.i < G.next, far = ps[0].s < 40, ok = r.reveal === s || sd.glow > 0.35;
+  var glass = r.gold ? "#FFC56E" : ok ? "#E6F4EC" : up ? "rgba(255,255,255,.62)" : "rgba(255,255,255,.4)";
+  var line = sd.glow > 0 || ok ? "#027648" : fv && !past ? "#FF7E31" : r.gold ? "#A63D00" : far ? "#6B7684" : "#191F28";   /* 먼 줄은 먹선을 옅게(검은 띠로 뭉치지 않게) */
+  /* 앞면 두께 */
+  oxbQuad(ctx, G, [[cx - hw, dip, z - hd], [cx + hw, dip, z - hd], [cx + hw, dip - 0.12, z - hd], [cx - hw, dip - 0.12, z - hd]], r.gold ? "#E0962E" : ok ? "#3FA876" : "#8A9EAD");
+  ctx.beginPath(); ctx.moveTo(ps[0].x, ps[0].y); for (var i = 1; i < 4; i++) ctx.lineTo(ps[i].x, ps[i].y); ctx.closePath();
+  ctx.fillStyle = glass; ctx.fill();
+  if (sd.glow > 0) { ctx.fillStyle = "rgba(2,118,72," + (0.4 * sd.glow) + ")"; ctx.fill(); }
+  ctx.lineWidth = oxbLw(G, (up || fv) && !far ? 2 * px : px); ctx.strokeStyle = line; ctx.stroke();
+  /* 위 · 왼쪽 밝은 한 칸 + 반사 도트 선(가까운 판만) · 황금은 반사 선이 옆으로 흐른다 */
+  if (!far) {
+    var ins = 0.09, a = oxbP(G, cx - hw + ins, dip, z + hd - ins), b = oxbP(G, cx + hw - ins, dip, z + hd - ins), c0 = oxbP(G, cx - hw + ins, dip, z - hd + ins);
+    ctx.fillStyle = "#FFFFFF";
+    if (a && b && c0) { oxbDotLine(ctx, G, a.x, a.y, b.x, b.y); oxbDotLine(ctx, G, a.x, a.y, c0.x, c0.y); }
+    var u = r.gold && !RMo ? -0.35 + ((G.gt * 0.6 + r.i * 0.37) % 1) * 0.7 : -0.28, g0 = oxbP(G, cx + hw * u - hw * 0.12, dip, z + hd * 0.55), g1 = oxbP(G, cx + hw * u + hw * 0.18, dip, z - hd * 0.45);
+    ctx.fillStyle = r.gold ? "#FFF4D9" : "#FFFFFF";
+    if (g0 && g1) { oxbDotLine(ctx, G, g0.x, g0.y, g1.x, g1.y); oxbDotLine(ctx, G, g0.x + px, g0.y, g1.x + px, g1.y); }
+  }
+  /* 금 · 도트 한 칸 선(원근 그대로) */
+  if (sd.crack > 0) {
+    ctx.fillStyle = "#191F28";
     sd.rays.forEach(function (ray) {
       var segs = (ray.length - 1) * Math.min(1, sd.crack * 1.15);
       for (var k = 1; k <= Math.ceil(segs) && k < ray.length; k++) {
         var f = k <= segs ? 1 : segs - Math.floor(segs), u0 = ray[k - 1][0], v0 = ray[k - 1][1], u1 = u0 + (ray[k][0] - u0) * f, v1 = v0 + (ray[k][1] - v0) * f;
-        oxbDotLine(ctx, G, mx + cl(u0) * w, my - cl(v0) * h, mx + cl(u1) * w, my - cl(v1) * h);
+        var p0 = oxbP(G, cx + u0 * B.PW, dip, z + v0 * B.PD), p1 = oxbP(G, cx + u1 * B.PW, dip, z + v1 * B.PD);
+        if (p0 && p1) oxbDotLine(ctx, G, p0.x, p0.y, p1.x, p1.y);
       }
     });
   }
-  /* O · X 도트 글자 · 다음 줄은 진하게 · 지난 줄 · 먼 줄은 옅게 · 정답 드러냄은 초록 */
-  var gc = r.reveal === s || sd.glow > 0.2 ? "#027648" : s === 0 ? (up ? "#FF7E31" : past ? "#FFCFB0" : "#FFA46E") : (up ? "#000000" : past ? "#E3B884" : "#8A5A2B");
-  oxbGlyph(ctx, G, s, x + w / 2, y + (h - px) / 2, w - 2 * e, h - e - px, gc);
-  if (r.gold && up) G.labels.push({ s: "×3", x: x + w / 2, y: y + h + th + 12, sz: 16, col: "#A63D00", stroke: "#FFF4D9" });
+  /* O · X 도트 글자 · 판 가운데 · 다음 줄은 진하게 · 뒤 줄은 옅게 · 지난 줄은 더 옅게 · 정답 드러냄은 초록 */
+  var c = oxbP(G, cx, dip, z);
+  if (c) {
+    var gw = (ps[1].x - ps[0].x + ps[2].x - ps[3].x) / 2, gh = ps[0].y - ps[3].y;
+    var gc = r.reveal === s || sd.glow > 0.2 ? "#027648" : s === 0 ? (up ? "#FF7E31" : past ? "#FFCFB0" : "#FFA46E") : (up ? "#191F28" : past ? "#B0B8C1" : "#6B7684");
+    oxbGlyph(ctx, G, s, c.x, c.y, gw, gh * 0.8, gc);
+    if (r.gold && up) G.labels.push({ s: "×3", x: c.x, y: ps[0].y + 14, sz: 16, col: "#A63D00", stroke: "#FFF4D9" });
+  }
 }
 function oxbGate(ctx, G, z) {
   var B = OXB, px = G.px || 1, l = oxbP(G, -B.RAIL, 0, z), r = oxbP(G, B.RAIL, 0, z), lt = oxbP(G, -B.RAIL, 2.6, z), rt = oxbP(G, B.RAIL, 2.6, z);
@@ -12318,14 +12318,14 @@ function oxbParts(ctx, G) {
   var px = G.px || 1;
   for (var i = 0; i < G.parts.length; i++) {
     var q = G.parts[i], p = oxbP(G, q.x, q.y, q.z); if (!p) continue; var age = (G.gt - q.t0) / q.life;
-    if (q.k === "shard") {   /* 깨진 발판 조각 · 크림 · 나무 테두리 */
+    if (q.k === "shard") {   /* 깨진 유리 조각 · 흰 면 · 회색 테두리 */
       if (q.y < OXB.WATER + 0.05) continue;
       var s = Math.max(px, q.sz * p.s); ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(q.rot);
-      ctx.fillStyle = q.gold ? "#FFC56E" : "#F3E7D8"; ctx.strokeStyle = "#8A5A2B"; ctx.lineWidth = oxbLw(G, 1);
+      ctx.fillStyle = q.gold ? "#FFC56E" : "#FFFFFF"; ctx.strokeStyle = "#6B7684"; ctx.lineWidth = oxbLw(G, 1);
       ctx.beginPath(); ctx.moveTo(-s, -s * 0.4); ctx.lineTo(s * 0.8, -s * 0.7); ctx.lineTo(s * 0.2, s * 0.8); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
-    } else if (q.k === "drop") {   /* 물보라 · 네모 도트 · 크림 → 모래 */
+    } else if (q.k === "drop") {   /* 물보라 · 네모 도트 · 흰 → 물빛 */
       var ds = Math.max(px, oxbSnap(G, q.sz * p.s * 2));
-      ctx.globalAlpha = Math.max(0, 0.95 - age * 0.5); ctx.fillStyle = age < 0.35 ? "#F3E7D8" : "#D9A066"; ctx.fillRect(oxbSnap(G, p.x - ds / 2), oxbSnap(G, p.y - ds / 2), ds, ds); ctx.globalAlpha = 1;
+      ctx.globalAlpha = Math.max(0, 0.95 - age * 0.5); ctx.fillStyle = age < 0.35 ? "#FFFFFF" : "#D3DDE4"; ctx.fillRect(oxbSnap(G, p.x - ds / 2), oxbSnap(G, p.y - ds / 2), ds, ds); ctx.globalAlpha = 1;
     } else if (q.k === "emb") {   /* 피버 불꽃 · 위로 떠오르며 작아지는 도트 */
       var es = Math.max(px, oxbSnap(G, q.sz * p.s * (1 - age * 0.6)));
       ctx.fillStyle = age < 0.3 ? "#FFF4D9" : age < 0.6 ? "#FFC56E" : "#FF7F32"; ctx.fillRect(oxbSnap(G, p.x - es / 2), oxbSnap(G, p.y - es / 2), es, es);
