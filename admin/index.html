@@ -774,6 +774,9 @@ function pwTake(out){
 ST.seq=0;
 /* opts.only = 이 탭의 NEED 중 이 키들만 받는다(처리 직후 그 액션만 다시 받을 때 씀 · reload() 참고).
    opts.force = 캐시를 무시하고 반드시 서버를 부른다(수동 새로고침). 둘 다 없으면 탭 전체를 캐시에 맡겨 필요한 만큼만 서버를 부른다. */
+/* v4.46 커피챗 희망 시간 · 앱이 tag 뒤에 「 / 희망 ○○」을 붙여 보낸다(서버 GAS 수정 없이) · 받자마자 tag(관심 분야)와 pref(희망 시간)로 나눈다 · 서버가 pref 칸을 따로 주면 그쪽이 우선 */
+var CC_SEP=" / 희망 ";
+function ccSplitPref(){ ((ST.data.cchat||{}).rows||[]).forEach(function(r){ var t=String(r.tag||""), i=t.indexOf(CC_SEP); if(i<0) return; if(!r.pref) r.pref=t.slice(i+CC_SEP.length); r.tag=t.slice(0,i); }); }
 function load(manual, opts){
   if(!key()) return;
   opts=opts||{};
@@ -783,9 +786,10 @@ function load(manual, opts){
   var seq=++ST.seq;
   ST.busy=true; stampTick();
   callAllCached(need, !!opts.force, function(out,err){
-    if(seq!==ST.seq){ for(var k0 in out) if(out[k0]) ST.data[k0]=out[k0]; pwTake(out); applyOvr(); return; }   /* 데이터는 챙기고 화면은 안 건드린다 */
+    if(seq!==ST.seq){ for(var k0 in out) if(out[k0]) ST.data[k0]=out[k0]; ccSplitPref(); pwTake(out); applyOvr(); return; }   /* 데이터는 챙기고 화면은 안 건드린다 */
     ST.busy=false;
     for(var k in out) if(out[k]) ST.data[k]=out[k];
+    ccSplitPref();
     pwTake(out);
     applyOvr();
     ST.at=new Date(); ST.err=err;

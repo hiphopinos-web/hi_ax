@@ -3127,7 +3127,7 @@ function scheduleCoffeechat() {
     var ideas = S.get("ideas", []);
     var last = ideas.length ? ideas[ideas.length - 1] : {};
     var fail = function () { S.set("cchat", null); notice({ key: "cchatR:fail", title: "커피챗 신청이 전달되지 않았어요", body: "잠시 뒤 커피챗 상세에서 다시 신청해 주세요" }); App.render(); };
-    beCall({ action: "cchat_req", emp: u.empId, name: u.name || "", dept: S.get("dept", null) || "", tag: last.tag || "", pref: cchatPrefTxt() },   /* v4.45 pref = 선호 시간대(서버 GAS 가 「희망시간」 칸에 저장해야 콘솔에 보인다) */
+    beCall({ action: "cchat_req", emp: u.empId, name: u.name || "", dept: S.get("dept", null) || "", tag: (last.tag || "") + CCHAT_TAG_SEP + cchatPrefTxt(), pref: cchatPrefTxt() },   /* v4.45 pref = 선호 시간대(서버 GAS 가 「희망시간」 칸에 저장해야 콘솔에 보인다) */
       function (res) { if (!res || !res.ok) fail(); }, fail);
     return;   /* 매칭은 운영자가 콘솔에서 · 완료되면 sync 폴링이 팝업을 띄운다 */
   }
@@ -3359,6 +3359,8 @@ var CCHAT_TXT = "커피와 쿠키를 드려요 · 멘토와 내 고민을 가볍
    선호 시간대 = 여러 개 고를 수 있다 · 「언제든 좋아요」는 혼자 · 하나 이상 골라야 신청 · 서버에는 사람이 읽는 글(pref)로 보낸다(콘솔 커피챗 표 「희망 시간」) */
 var CCHAT_PREF = [["13", "13~14시"], ["14", "14~15시"], ["15", "15~16시"], ["16", "16~17시"], ["any", "언제든 좋아요"]];
 var CCHAT_NOTE = "매칭되면 하이웍스로 알려 드려요 · 앱 나의 참여에서도 볼 수 있어요";
+/* v4.46 서버(GAS)는 cchat_req 의 tag 를 이미 저장 · 콘솔에 돌려준다 · 선호 시간대를 tag 뒤에 붙여 보내 서버 수정 없이 콘솔 「희망 시간」에 보이게 한다(콘솔이 CCHAT_TAG_SEP 로 다시 나눈다) · pref 파라미터도 같이 보낸다(나중에 GAS 가 칸을 만들면 그쪽이 우선) */
+var CCHAT_TAG_SEP = " / 희망 ";
 function cchatPref() { var a = S.get("cchat_pref", []); return Array.isArray(a) ? a : []; }
 function cchatPrefTxt(a) { a = a || cchatPref(); return CCHAT_PREF.filter(function (x) { return a.indexOf(x[0]) >= 0; }).map(function (x) { return x[1]; }).join(" · "); }
 function cchatPrefToggle(v, where) {
@@ -6772,7 +6774,7 @@ function beSync() {
         if (mine2 && Date.now() - mine2.ts > 30000) { mine2.status = "canceled"; S.set("resv", all); }
       }
       /* v4.07 서버에 대기 중인 요청이 있는데 이 기기에 없으면(자동 요청 시절 행 · 다른 기기) 보여 줘서 취소할 수 있게 한다 · 방금 취소한 30초는 제외 */
-      if (res.my.cchat && res.my.cchat.status === "대기" && !S.get("cchat", null) && Date.now() - CCHAT_CX_TS > 30000) S.set("cchat", { status: "pending", pref: res.my.cchat.pref || "", ts: Date.now() });
+      if (res.my.cchat && res.my.cchat.status === "대기" && !S.get("cchat", null) && Date.now() - CCHAT_CX_TS > 30000) S.set("cchat", { status: "pending", pref: res.my.cchat.pref || String(res.my.cchat.tag || "").split(CCHAT_TAG_SEP)[1] || "", ts: Date.now() });
       if (!res.my.cchat) {
         var c0 = S.get("cchat", null);
         if (c0 && Date.now() - (c0.ts || 0) > 30000) S.set("cchat", null);
