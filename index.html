@@ -661,21 +661,36 @@
   #modal .rfx-chest { position: absolute; left: 50%; bottom: 0; width: 150px; height: 118px; margin-left: -75px; overflow: visible; }
   #modal .rfx-lid { transform-origin: 20px 56px; transition: transform 0.38s cubic-bezier(.3,1.6,.5,1); }
   #modal .rfx-rays { opacity: 0; transform-origin: 70px 50px; transition: opacity 0.3s; }
-  #modal .rfx:not(.open):not(.wait) .rfx-chest { animation: rfxNudge 2.4s ease-in-out infinite; }
-  #modal .rfx.wait .rfx-chest { animation: rfxShake 0.5s ease-in-out infinite; }
+  #modal .rfx:not(.open) .rfx-stage { animation: rfxNudge 2.4s ease-in-out infinite; }
+  #modal .rfx-front { pointer-events: none; }
   #modal .rfx.open .rfx-lid { transform: translate(-2px, -6px) rotate(-14deg); }
   #modal .rfx.open .rfx-rays { opacity: 1; animation: rfxSpin 6s linear infinite; }
-  #modal .rfx-num { position: absolute; left: 50%; top: 2px; transform: translate(-50%, 40px) scale(0.5); opacity: 0; padding: 8px 18px; border-radius: 14px; background: var(--ax-color-surface); border: 2px solid var(--ax-color-brand); color: var(--ax-color-brandText); font-family: var(--disp); font-weight: 800; font-size: calc(30px * var(--fs)); letter-spacing: 0.08em; font-variant-numeric: tabular-nums; white-space: nowrap; transition: transform 0.45s cubic-bezier(.3,1.5,.5,1) 0.18s, opacity 0.2s 0.18s; pointer-events: none; }
+  #modal .rfx-num { position: absolute; left: 50%; top: 4px; transform: translate(-50%, 118px) scale(0.45); opacity: 0; padding: 8px 18px; border-radius: 14px; background: var(--ax-color-surface); border: 2px solid var(--ax-color-brand); color: var(--ax-color-brandText); font-family: var(--disp); font-weight: 800; font-size: calc(30px * var(--fs)); letter-spacing: 0.08em; font-variant-numeric: tabular-nums; white-space: nowrap; pointer-events: none; }   /* v4.43 시작 = 몸통 안(앞면에 가려짐) */
   #modal .rfx-num.wait { font-size: calc(15px * var(--fs)); letter-spacing: 0; }
-  #modal .rfx.open .rfx-num { transform: translate(-50%, 0) scale(1); opacity: 1; }
+  #modal .rfx.open .rfx-num { opacity: 1; animation: rfxPop 0.85s ease-out 0.12s both; }
+  #modal .rfx-num.roll { color: var(--ax-color-muted); }
+  #modal .rfx-num.land { animation: rfxLand 0.36s ease-out both !important; }
+  @keyframes rfxPop { 0% { transform: translate(-50%, 118px) scale(0.45); } 15% { transform: translate(-50%, 104px) scale(0.5); } 50% { transform: translate(-50%, -16px) scale(1.1); } 72% { transform: translate(-50%, 5px) scale(0.97); } 100% { transform: translate(-50%, 0) scale(1); } }
+  @keyframes rfxLand { 0% { transform: translate(-50%, 0) scale(1); } 40% { transform: translate(-50%, -8px) scale(1.12); } 100% { transform: translate(-50%, 0) scale(1); } }
   #modal .rfx-cap { margin-top: 8px; text-align: center; font-size: calc(13px * var(--fs)); color: var(--muted); }
   @keyframes rfxNudge { 0%, 80%, 100% { transform: translateY(0); } 85% { transform: translateY(-5px) rotate(-3deg); } 90% { transform: translateY(0) rotate(3deg); } 95% { transform: translateY(-2px); } }
-  @keyframes rfxShake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
   @keyframes rfxSpin { to { transform: rotate(360deg); } }
-  @media (prefers-reduced-motion: reduce) { #modal .rfx-chest, #modal .rfx-rays, #modal .rfx-bot svg, #modal .rfx-bot .ant path { animation: none !important; } #modal .rfx-lid, #modal .rfx-num { transition: none; } #modal .rfx-bot .ant path { opacity: 0.3; } }
+  @media (prefers-reduced-motion: reduce) { #modal .rfx-stage, #modal .rfx-rays, #modal .rfx-bot svg, #modal .rfx-bot .ant path { animation: none !important; } #modal .rfx-lid { transition: none; } #modal .rfx-num, #modal .rfx.open .rfx-num, #modal .rfx-num.land { animation: none !important; transform: translate(-50%, 0) scale(1); } #modal .rfx-bot .ant path { opacity: 0.3; } }
   #modal .mcard { width: 100%; max-width: 360px; max-height: 82dvh; overflow-y: auto; background: var(--paper); border: 0; border-radius: 20px; padding: 20px; position: relative; animation: popIn 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
   /* v4.13 모달·시트 머리 한 줄 · 제목 | X(48 터치) · X 는 본문 위에 떠 있지 않는다(겹침 없음) */
   #modal .mcard { padding: var(--ax-space-8) var(--ax-space-20) var(--ax-space-20); }
+  /* v4.43 (사용자 260925 「팝업을 한 가지 규칙으로 · 따로 노는 팝업 없이」) 가운데 카드 팝업(modalOpen · 보상 알림 · 응모권 · 룰렛 · 안내)을 신청 확인 바텀 시트(#axsSheet · M03)와 같은 모양으로.
+     아래에서 올라온다 · 위 모서리 32 · 손잡이 · 제목 t2 · 닫기 X · 주 버튼 = ax-button(브랜드 · 56) · 보조 버튼 = ax-button-weak · 뒷배경 = 먹 40% */
+  #modal { align-items: flex-end; padding: 0; background: color-mix(in srgb, var(--ax-color-ink) 40%, transparent); }
+  #modal .mcard { max-width: var(--ax-app-max); max-height: 88vh; border-radius: var(--ax-radius-32) var(--ax-radius-32) 0 0; padding: var(--ax-space-12) var(--ax-space-24) max(var(--ax-space-32), env(safe-area-inset-bottom)); background: var(--ax-color-surface); box-shadow: var(--ax-sheet-shadow); animation: mSheetUp 0.26s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  #modal .mcard::before { content: ""; display: block; width: 40px; height: 4px; margin: 0 auto var(--ax-space-4); border-radius: 999px; background: var(--ax-color-divider); }
+  #modal .axs-mtitle { font: var(--ax-type-t2); padding-top: var(--ax-space-8); }
+  #modal .btn { min-height: var(--ax-button-height); padding: var(--ax-space-16); border-radius: var(--ax-radius-16); font: var(--ax-type-t5-strong); }
+  #modal .btn.mint { background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
+  #modal .btn.line { border: 0; background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); }
+  #modal .ntc-b { font: var(--ax-type-t5); color: var(--ax-color-body); }
+  @keyframes mSheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce) { #modal .mcard { animation: none; } }
   .axs-mhead { display: flex; align-items: flex-start; gap: var(--ax-space-8); margin: 0 calc(-1 * var(--ax-space-12)) var(--ax-space-4) 0; }
   .axs-mtitle { flex: 1; min-width: 0; margin: 0; padding-top: var(--ax-space-12); font: var(--ax-type-t5-strong); color: var(--ax-color-ink); word-break: keep-all; }
   .axs-x { flex: none; width: var(--ax-touch-size); height: var(--ax-touch-size); display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: var(--ax-radius-12); background: transparent; color: var(--ax-color-muted); cursor: pointer; }
@@ -3053,8 +3068,10 @@ function checkRewards() {
     notice({ key: "rw:roulette", title: "룰렛 1회 열림", body: "1F 이벤트존에서 내 QR 제시", go: "rewards", focus: "roulette", goLbl: "내 보상에서 보기" });
   }
   var t = raffleTickets(n);
+  if (t < S.get("raffle_seen", 0)) S.set("raffle_seen", t);   /* v4.43 스탬프가 줄면(관리자 취소 · 테스트 게임 기록 초기화) 안내 기준도 내린다 · 다시 채우면 상자가 다시 뜬다(버그 260925 · 테스트 사번에서 안 뜸) */
   if (t > S.get("raffle_seen", 0)) {
     S.set("raffle_seen", t);
+    if (BE.on && !testEmp() && raffleNums().length < t) beSync();   /* v4.43 새 번호를 미리 받아 둔다 · 스탬프 연출이 도는 동안 도착해 상자를 열면 바로 보인다 */
     notice({ key: "rw:raffle", raffle: t, title: (n >= STAMP_BONUS ? "보너스 · " : "") + "추첨 응모권 " + t + "장", body: "자동 응모 · 결과는 행사 후 개별 안내", go: "rewards", focus: "raffle", goLbl: "내 보상에서 보기" });   /* v4.42 raffle = 보물상자 팝업(rfxHtml) */
   }
 }
@@ -5226,6 +5243,8 @@ function testGameResetGo(withNick) {
   /* 미니게임 스탬프(p4)와 그 도장 기록만 뺀다 · 다른 스탬프는 그대로 */
   S.set("stamps", S.get("stamps", []).filter(function (id) { return id !== "p4"; }));
   S.set("pp_seen", S.get("pp_seen", []).filter(function (id) { return id !== "p4"; }));
+  if (stampCount() < 3) S.set("roulette_open", false);   /* v4.43 문턱 아래로 내려가면 룰렛 안내도 다시 뜨게(testStampUndo 와 같은 규칙) */
+  checkRewards();   /* v4.43 응모권 안내 기준을 줄어든 개수에 맞춘다 */
   OLY.board = null; OLY.t = 0;
   TYAW.data = null; TYTV.app = null; TYTV.site = null;
   GW = { on: false, timer: null, nextT: null }; PG.on = false; JP.on = false; RG.on = false;
@@ -5627,41 +5646,48 @@ function ppRouletteOpen() {
 /* v4.42 응모권 보물상자 팝업 · 새 응모권이 생긴 순간 한 번(checkRewards → notice raffle) · 다시 보는 곳은 기존 추첨 안내 모달(ppDrawOpen) · 내 보상
    닫힌 상자(살짝 들썩) + 챗봇 한 줄 → 상자 또는 「상자 열기」 → 뚜껑이 열리며 새 번호 칩이 떠오른다 → 챗봇 「행운을 빌어요」
    번호는 서버가 발급한다(sync my.tickets) · 아직 없으면 챗봇 「꺼내는 중」 + 곧바로 beSync · 8초 안에 안 오면 「발급 중 · 곧 내 보상에」로 닫는다 */
-var RFX_CHEST = '<svg class="rfx-chest" viewBox="0 0 140 110" aria-hidden="true">' +
+/* 상자 = 뒤 층(빛살 · 그림자 · 속 · 뚜껑) + 번호 칩 + 앞 층(몸통 앞면 · 자물쇠) · 번호가 몸통 안에서 튀어 올라 앞면 위로 나온다 */
+var RFX_BACK = '<svg class="rfx-chest" viewBox="0 0 140 110" aria-hidden="true">' +
   '<g class="rfx-rays">' + [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map(function (a) { return '<rect x="68" y="-18" width="4" height="30" rx="2" fill="#FFC56E" transform="rotate(' + a + ' 70 50)"/>'; }).join("") + "</g>" +
-  '<ellipse cx="70" cy="104" rx="52" ry="5" fill="rgba(0,0,0,.12)"/>' +
-  '<rect x="20" y="54" width="100" height="46" rx="6" fill="#E0661C"/><rect x="20" y="64" width="100" height="6" fill="#FFC56E"/>' +
-  '<rect x="34" y="54" width="9" height="46" fill="#A63D00"/><rect x="97" y="54" width="9" height="46" fill="#A63D00"/>' +
+  '<ellipse cx="70" cy="104" rx="52" ry="5" fill="rgba(0,0,0,.12)"/><rect x="22" y="50" width="96" height="14" rx="3" fill="#5E3218"/>' +
   '<g class="rfx-lid"><path d="M20 56 V40 Q20 22 38 22 H102 Q120 22 120 40 V56 Z" fill="#FF7F32"/><rect x="20" y="48" width="100" height="8" fill="#FFC56E"/>' +
   '<rect x="34" y="24" width="9" height="32" fill="#A63D00"/><rect x="97" y="24" width="9" height="32" fill="#A63D00"/><path d="M30 30 Q34 26 44 26" stroke="#FFF1E8" stroke-width="3" fill="none" stroke-linecap="round"/></g>' +
-  '<rect x="61" y="48" width="18" height="20" rx="3" fill="#FFC56E" stroke="#A63D00" stroke-width="2"/><circle cx="70" cy="56" r="2.6" fill="#A63D00"/><rect x="69" y="57" width="2" height="6" fill="#A63D00"/>' +
+  "</svg>";
+var RFX_FRONT = '<svg class="rfx-chest rfx-front" viewBox="0 0 140 110" aria-hidden="true">' +
+  '<rect x="20" y="56" width="100" height="44" rx="6" fill="#E0661C"/><rect x="20" y="64" width="100" height="6" fill="#FFC56E"/>' +
+  '<rect x="34" y="56" width="9" height="44" fill="#A63D00"/><rect x="97" y="56" width="9" height="44" fill="#A63D00"/>' +
+  '<rect x="61" y="52" width="18" height="20" rx="3" fill="#FFC56E" stroke="#A63D00" stroke-width="2"/><circle cx="70" cy="60" r="2.6" fill="#A63D00"/><rect x="69" y="61" width="2" height="6" fill="#A63D00"/>' +
   "</svg>";
 function rfxHtml(o) {
   var n = stampCount();
   return '<div class="rfx" id="rfx" data-t="' + (o.raffle || 1) + '">' +
     '<div class="rfx-say"><span class="rfx-bot">' + BOT_SVG.replace("</svg>", BOT_WAVE + "</svg>") + '</span><p class="rfx-b" id="rfxSay">스탬프 ' + n + "개를 모았어요!<br>상자를 열어 응모 번호를 받아 가세요</p></div>" +
-    '<button type="button" class="rfx-stage" onclick="rfxOpen()" aria-label="보물상자 열기">' + RFX_CHEST + '<span class="rfx-num" id="rfxNum" aria-live="polite"></span></button>' +
+    '<button type="button" class="rfx-stage" onclick="rfxOpen()" aria-label="보물상자 열기">' + RFX_BACK + '<span class="rfx-num" id="rfxNum" aria-live="polite"></span>' + RFX_FRONT + '</button>' +
     '<p class="rfx-cap" id="rfxCap">' + esc(o.body || "") + "</p>" +
     '<div id="rfxBtns"><button class="btn mint" style="margin-top:14px" onclick="rfxOpen()">상자 열기</button><button class="btn line" style="margin-top:8px" onclick="modalClose()">나중에 보기</button></div></div>';
 }
+/* v4.43 누르는 즉시 연다(서버를 기다리지 않는다) · 번호가 이미 있으면 그 번호가 튀어 오르고, 아직이면 숫자가 굴러가다 도착하는 순간 멈춘다 · 8초 넘으면 「발급 중」 */
 function rfxOpen() {
-  var w = el("rfx"); if (!w || w.classList.contains("open") || w.classList.contains("wait")) return;
-  var t = +w.getAttribute("data-t") || 1, t0 = Date.now();
-  var got = function () { var num = raffleNums()[t - 1]; if (num) { rfxShow(String(num)); return true; } return false; };
-  if (got()) return;
-  w.classList.add("wait"); el("rfxSay").textContent = "응모 번호를 꺼내고 있어요…";
-  el("rfxBtns").innerHTML = '<button class="btn line" style="margin-top:14px" onclick="modalClose()">나중에 보기</button>';
-  if (BE.on) beSync();
+  var w = el("rfx"); if (!w || w.classList.contains("open")) return;
+  var t = +w.getAttribute("data-t") || 1, t0 = Date.now(), nm = el("rfxNum"), num = raffleNums()[t - 1];
+  w.classList.add("open");
+  if (num) { rfxLand(String(num), false); return; }   /* 이미 있으면 상자에서 튀어 오르는 연출(rfxPop) 그대로 */
+  nm.classList.add("roll"); el("rfxSay").textContent = "응모 번호를 꺼내고 있어요…";
+  el("rfxBtns").innerHTML = '<button class="btn line" style="margin-top:14px" onclick="modalClose()">나중에 보기</button>';   /* 굴러가는 동안 「상자 열기」는 할 일이 없다 */
+  if (BE.on && !testEmp()) beSync();
   var iv = setInterval(function () {
     if (!el("rfx")) { clearInterval(iv); return; }
-    if (got()) { clearInterval(iv); return; }
-    if (Date.now() - t0 > 8000) { clearInterval(iv); rfxShow(""); }
-  }, 500);
+    var got = raffleNums()[t - 1];
+    if (got) { clearInterval(iv); rfxLand(String(got), true); return; }
+    if (Date.now() - t0 > 8000) { clearInterval(iv); rfxLand("", true); return; }
+    nm.textContent = String(1000 + Math.floor(Math.random() * 9000));
+  }, 70);
+  nm.textContent = String(1000 + Math.floor(Math.random() * 9000));
 }
-function rfxShow(num) {
+function rfxLand(num, late) {   /* late = 굴러가던 숫자가 멈추는 순간 · 한 번 통 튄다 */
   var w = el("rfx"); if (!w) return;
-  var nm = el("rfxNum"); nm.textContent = num || "발급 중"; nm.classList.toggle("wait", !num);
-  w.classList.remove("wait"); w.classList.add("open");
+  var nm = el("rfxNum"); nm.classList.remove("roll"); nm.textContent = num || "발급 중"; nm.classList.toggle("wait", !num);
+  if (late) { nm.classList.remove("land"); void nm.offsetWidth; nm.classList.add("land"); }
   el("rfxSay").innerHTML = num ? "행운을 빌어요!<br>17:00 Outro에서 추첨해요" : "번호가 아직 발급 중이에요<br>곧 내 보상에 나타나요";
   el("rfxCap").textContent = num ? "내 응모 번호 · 결과는 행사 후 개별 안내" : "자동 응모는 이미 됐어요 · 결과는 행사 후 개별 안내";
   el("rfxBtns").innerHTML = '<button class="btn mint" style="margin-top:14px" onclick="noticeGo(\'rewards\',\'raffle\')">내 보상에서 보기</button><button class="btn line" style="margin-top:8px" onclick="modalClose()">확인</button>';
