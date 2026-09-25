@@ -4657,8 +4657,8 @@ function sheetOpen(spec) {
   SHEET.back = (document.activeElement && document.activeElement.id) || spec.back || "";
   sheetPaint(true);
 }
-function sheetBusy(on) { SHEET.busy = !!on; if (on) SHEET.err = null; if (el("axsSheet")) sheetPaint(); }
-function sheetFail(err) { SHEET.busy = false; SHEET.err = typeof err === "string" ? { t: err } : err; if (el("axsSheet")) sheetPaint(); }
+function sheetBusy(on) { SHEET.busy = !!on; if (on) SHEET.err = null; if (el("axsSheet")) sheetPaint(); botWait(!!on, SHEET.spec && SHEET.spec.goBusy); }   /* v4.36 서버 기다리는 동안 챗봇 덮개 · 문구 = 버튼의 「…하는 중」 */
+function sheetFail(err) { botWait(false); SHEET.busy = false; SHEET.err = typeof err === "string" ? { t: err } : err; if (el("axsSheet")) sheetPaint(); }
 function sheetPaint(first) {
   var sp = SHEET.spec;
   if (!sp) return;
@@ -4702,6 +4702,7 @@ function sheetKey(e) {
 }
 function sheetClose(silent) {
   var w = el("axsSheet"); if (w) w.remove();
+  if (SHEET.busy) botWait(false);   /* v4.36 확정 응답으로 닫힐 때 덮개도 걷는다 */
   SHEET.busy = false; SHEET.err = null; SHEET.spec = null;
   if (!silent && SHEET.back) { var t = el(SHEET.back); if (t) t.focus(); }
 }
@@ -5635,7 +5636,7 @@ var BOT_WAVE = '<g class="ant">' +
   '<path d="M74.89 16.81 A29 29 0 0 1 125.11 16.81"/>' +
   "</g>";
 /* o.wait = 대기 중(전파 켜기) · 화면이 통째로 비어서 기다리는 자리에만 쓴다.
-   버튼 안 잠김 상태와 QR 스캔 화면에는 쓰지 않는다(design.md A-5 5번). */
+   v4.36 (사용자 확정 260925 「서버 응답을 기다리는 동안 챗봇」) 로그인뿐 아니라 시트 확정(신청 · 취소 · 번호표 · 출석)과 설문 제출도 botWait 덮개를 쓴다 · QR 스캔 화면에는 쓰지 않는다. */
 function botHtml(msg, o) {
   var w = o && o.wait;
   return '<div class="axs-bot" role="status"' + (w ? ' aria-busy="true"' : "") + ">" +
@@ -6952,9 +6953,9 @@ function svSubmit() {
   if (testMode()) { done(null); awardStamp("sv"); return; }
   if (!BE.on) { toast("서버에 연결되지 않아 제출할 수 없어요."); return; }
   var u = S.get("user", {}) || {};
-  SV.busy = true; App.render();
+  SV.busy = true; App.render(); botWait(true, "제출하는 중");   /* v4.36 서버 기다리는 동안 챗봇 덮개 */
   beCall({ action: "survey_submit", emp: u.empId || "", ans: JSON.stringify(ans) }, function (res) {
-    SV.busy = false;
+    SV.busy = false; botWait(false);
     if (!res || !res.ok) {
       if (res && res.reason === "dup") { S.set("survey_done", true); S.set("survey_draft", null); App.render(); toast("이미 제출하셨어요"); return; }
       toast(res && res.reason === "closed" ? "설문은 " + SURVEY.open + "부터 열려요" : "제출하지 못했어요. 다시 눌러 주세요.");
@@ -6964,7 +6965,7 @@ function svSubmit() {
     stampSync(res.stamps);
     if (res.stamp && !res.stamp.dup && !stampOverlay("sv")) toast("스탬프 적립 · 오늘 한 판 설문");
     checkRewards();
-  }, function () { SV.busy = false; App.render(); toast("서버에 연결할 수 없어요. 다시 눌러 주세요."); });
+  }, function () { SV.busy = false; botWait(false); App.render(); toast("서버에 연결할 수 없어요. 다시 눌러 주세요."); });
 }
 function svBalBars(q, mine) {   /* 휴면 · SURVEY_FEATURES.balance */
   if (!SURVEY_FEATURES.balance) return "";
@@ -7258,7 +7259,7 @@ function attSpec() {
     w.next ? "다음 출석 · <b>" + esc(w.next.nm) + "</b><br>" + hm2(attFrom(w.next)) + "부터 (" + w.next.s + " 시작)" : "오늘 17F 강연 출석이 끝났어요";
   return { id: "att", title: w.open.length ? "17F 강연 출석" : "지금은 출석 시간이 아니에요", lead: lead, body: list + tmRow, go: "sheetClose()", goLbl: "확인" };
 }
-function attRepaint() { SHEET.busy = false; SHEET.spec = attSpec(); if (el("axsSheet")) sheetPaint(); }
+function attRepaint() { if (SHEET.busy) botWait(false); SHEET.busy = false; SHEET.spec = attSpec(); if (el("axsSheet")) sheetPaint(); }
 function attPick(id) { if (SHEET.busy || ATT.res) return; ATT.sel = id; SHEET.err = null; attRepaint(); }
 function attTmSet(v) { S.set("att_tm", /^\d{1,2}:\d{2}$/.test(v || "") ? v : ""); ATT.res = null; ATT.sel = attWin(attNow()).sel; SHEET.err = null; attRepaint(); }
 function attGo() {
