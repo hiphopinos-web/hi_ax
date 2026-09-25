@@ -4527,7 +4527,7 @@ function progDetail(s) {
       ap ? "별도 신청 없이 참여할 수 있어요.<br>대강당 입구 QR을 찍으면 출석이 기록돼요." + (s.desc ? "<br>" + esc(s.desc) : "") :
       "별도 신청 없이 참여할 수 있어요. 시작 시간에 맞춰<br>" + esc(pl) + "으로 와 주세요.";
     if (s.id === "expo") D.link = '<button type="button" class="ax-link axs-plain axs-self" onclick="App.tab(\'exp\')">체험에서 시작하기</button>';
-    D.help = ap && !at ? "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요" : s.id === "expo" ? "신청 없이 자유롭게 둘러볼 수 있어요" : "신청을 받지 않는 강연이에요";   /* v4.38 (사용자 260925) 17F 는 사전 신청제 → 신청을 받지 않음 · 「사전 신청」이라는 말을 쓰지 않는다 */
+    D.help = ap && !at ? "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요" : s.id === "expo" ? "신청 없이 자유롭게 둘러볼 수 있어요" : "신청 없이 참여 가능한 강연이에요";   /* v4.38 (사용자 260925) 17F 는 사전 신청제 → 신청을 받지 않음 · 「사전 신청」이라는 말을 쓰지 않는다 */
     D.btn = ap && !at ? progBtn("출석 QR 스캔", "scanOpen(\'a17\')") : timeBtn;
     return D;
   }
