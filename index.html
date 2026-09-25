@@ -1743,6 +1743,13 @@
   #rgPlay.rt .rg-form { background: var(--rt-bark); border-top: 3px solid var(--rt-ink); }
   #rgPlay.rt .rg-form .btn.mint { flex: none; width: auto; min-width: 72px; margin: 4px; }   /* 입력 줄의 「쓰기」 · 입력칸 폭을 먹지 않게 */
   #rgPlay.rt .rg-tip { background: var(--rt-bark); color: var(--rt-o60); }
+  /* v4.51(260925 사용자) 소나기 넓은 화면 3단(.side · rgFormFit) · 입력칸 = 가운데 판 폭 · 판 바로 아래 · 판 틀(먹 3 · O100 4 · 먹 3)을 그대로 이어 받아 판과 한 기둥 · 바깥은 캔버스와 같은 어두운 판 */
+  #rgPlay.rt.side { background: var(--rt-night); }
+  #rgPlay.rt.side .rg-form { box-sizing: border-box; flex: none; margin-bottom: 12px; padding: 12px 14px; gap: 10px; background: var(--rt-bark); border: 3px solid var(--rt-ink); border-top: 0; box-shadow: inset 0 0 0 4px var(--rt-o100), inset 0 0 0 7px var(--rt-ink); }
+  #rgPlay.rt.side .rg-form .input { height: 56px; border: 3px solid var(--rt-ink); border-radius: 0; background: var(--rt-cream); color: var(--rt-bark); font-size: 24px; }
+  #rgPlay.rt.side .rg-form .input:focus { outline: none; box-shadow: inset 0 0 0 3px var(--rt-o100); }
+  #rgPlay.rt.side .rg-form .btn.mint { height: 56px; margin: 0; }
+  #rgPlay.rt.side .rg-tip { box-sizing: border-box; flex: none; background: transparent; }
   /* 일시정지 · 어두운 판 + 도트 제목 */
   #rgPlay.rt .rgp-pause { background: var(--rt-night); }
   #rgPlay.rt .rgp-pause p { font-family: var(--rt-font); font-size: var(--rt-f32); font-weight: 400; line-height: var(--rt-l32); color: var(--rt-o100); text-shadow: var(--rt-out2); }
@@ -1922,8 +1929,16 @@
   .rt .tsf-in:focus { box-shadow: var(--rt-line), inset 0 0 0 4px var(--rt-o100); }
   .rt .tsf-in:disabled { background: var(--rt-dim); }
   .rt .tsf-go { margin-top: 12px; padding: 12px 14px; font-size: var(--rt-f32); line-height: var(--rt-l32); color: var(--rt-o100); background: var(--rt-bark); box-shadow: var(--rt-line); text-align: center; animation: tsfBlink 1.06s steps(1) infinite; }
-  .rt .tsf-rule { margin-top: auto; padding-top: 12px; border-top: 3px solid var(--rt-wood); color: var(--rt-tan2); }
-  .rt .tsf-c { position: relative; min-width: 0; min-height: 0; margin: 3px; background: var(--rt-o10); box-shadow: 0 0 0 3px var(--rt-ink), 0 0 0 6px var(--rt-wood); }
+  .rt .tsf-rule { gap: 4px; color: var(--rt-tan2); }
+  /* v4.51(260925 사용자) 가운데 판만 전체 높이 · 틀 한 단계 강하게(판 안쪽부터 먹 3 · O100 4 · 먹 3 = 게임 중 캔버스 틀과 같다) · 왼쪽 = 위쪽 상자만 · 오른쪽 = 순위표(행 수만큼) */
+  .rt .tsf-l { min-width: 0; min-height: 0; align-self: start; display: flex; flex-direction: column; gap: 12px; }
+  .rt .tsf-c { position: relative; min-width: 0; min-height: 0; margin: 10px; background: var(--rt-o10); box-shadow: 0 0 0 3px var(--rt-ink), 0 0 0 7px var(--rt-o100), 0 0 0 10px var(--rt-ink); }
+  .rt .tsf-r { box-sizing: border-box; min-width: 0; align-self: start; margin: 3px; overflow: hidden; background: var(--rt-night); box-shadow: var(--rt-line); }
+  .rt .tsf-band { margin: 0; padding: 12px 16px; font-size: var(--rt-f32); line-height: var(--rt-l32); color: var(--rt-night); background: var(--rt-o100); box-shadow: inset 0 2px 0 0 var(--rt-o60), inset 0 -2px 0 0 var(--rt-deep); border-bottom: 3px solid var(--rt-ink); }
+  .rt .tsf-r .tsf-row { padding: 8px 16px; }
+  .rt .tsf-r .tsf-row:nth-child(even) { background: var(--rt-bark); }
+  .rt .tsf-r .tsf-row.me { background: var(--rt-wood); box-shadow: none; }
+  .rt .tsf-r > div > .tsf-hint { margin: 0; padding: 8px 16px; }
   .rt .tsf-c canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; }
   .rt .tsf-res { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(27,23,18,0.55); }
   .rt .tsf-res .rt-go { width: 100%; max-width: 560px; margin: 0; }
@@ -1936,7 +1951,7 @@
   .rt .tsf-row.me .no, .rt .tsf-row.me .sc { color: var(--rt-o100); }
   .rt .tsf-row i { font-style: normal; color: var(--rt-dim); }
   .rt .tsf-adm { position: absolute; left: 12px; bottom: 2px; z-index: 5; padding: 2px 8px; border: 0; background: transparent; color: var(--rt-dim); font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; opacity: 0.5; cursor: pointer; }
-  @media (max-height: 800px) { .rt .tsf-row { font-size: var(--rt-f16); line-height: var(--rt-l16); padding: 5px 8px; } .rt .tsf-p { padding: 18px 18px; gap: 6px; } .rt .tsf-in { height: 52px; } .rt .tsf-go { margin-top: 6px; padding: 8px 10px; } }
+  @media (max-height: 800px) { .rt .tsf-band { padding: 8px 14px; font-size: var(--rt-f24); line-height: var(--rt-l24); } .rt .tsf-r .tsf-row { padding: 6px 14px; } .rt .tsf-row { font-size: var(--rt-f16); line-height: var(--rt-l16); padding: 5px 8px; } .rt .tsf-p { padding: 18px 18px; gap: 6px; } .rt .tsf-in { height: 52px; } .rt .tsf-go { margin-top: 6px; padding: 8px 10px; } }
   @media (min-height: 1000px) { .rt .tsf-p { font-size: var(--rt-f24); line-height: var(--rt-l24); } .rt .tsf-big .tsf-s { font-size: var(--rt-f24); } }
   @media (max-width: 959px) { .rt .tsf { height: auto; min-height: 100dvh; overflow: visible; } .rt .tsf-grid { grid-template-columns: minmax(0, 1fr); } .rt .tsf-c { display: none; } }
 </style>
@@ -8412,7 +8427,7 @@ function rgPlayOpen() {
   RGP.on = true; RGP.touch = rgTouch();   /* 입력창 안내 문구가 기기에 맞게 나오게 먼저 켠다 */
   gsOverlayOpen({ key: "type", title: "AX 단어 소나기", top: rgTopHtml(), fill: true, cls: "rain" + (RG.big ? " big" : ""), cw: 180, ch: 300, canvasId: "rgCv", bottom: rgFormHtml(),
     down: function (e) { e.preventDefault(); if (RG.wait) rgBegin(); rgFocus(); },   /* v4.29 대기 화면은 판을 눌러도 시작 */
-    resized: rgFit,
+    resized: function (cv, w, h) { rgFit(cv, w, h); rgFormFit(); },
     running: function () { return RG.on && !RG.paused && !RG.ending; }, isPaused: function () { return !!RG.paused; },
     pause: rgPause, resume: rgResume, quit: rgQuit });
   rgSideTopPull();
@@ -8431,6 +8446,15 @@ function rgSideTopPull() {
   beCall({ action: "type_rank", mode: mode, emp: site ? TSF.emp : u.empId || "", n: 10 }, function (r) { if (r && r.ok && RG.on) RG.top = conv(r); }, function () { if (RG.on && !RG.top) RG.top = []; });
 }
 function rgPlayClose() { RGP.on = false; gsOverlayClose("type"); }
+/* v4.51(260925 사용자) 넓은 화면 3단 · 입력칸 = 가운데 판 폭(틀 포함) · 판 바로 아래 · 엔진 배치(RG.L)를 따른다(판 틀 L.fr 과 같은 세 겹) · 옆판이 없으면(휴대폰 · 좁은 창) 옛 모양 그대로 */
+function rgFormFit() {
+  var d = el("rgPlay"), L = RG.L, on = !!(L && L.pan); if (!d) return;
+  d.classList.toggle("side", on);
+  ["rgForm", "rgTip"].forEach(function (id) {
+    var n = el(id); if (!n) return;
+    n.style.marginLeft = on ? L.ox - L.fr + "px" : ""; n.style.width = on ? L.W + 2 * L.fr + "px" : "";
+  });
+}
 function rgFormHtml() {
   return '<p class="rg-tip" id="rgTip" hidden>한글 자판으로 바꿔 주세요</p>' +
     '<form class="rg-form" id="rgForm" onsubmit="event.preventDefault(); rgEnter()">' + rgInputHtml() +
@@ -8700,13 +8724,13 @@ function tsfSndGo() {
 function tsfHtml() {
   var ph = TSF.phase;
   return '<div class="tsf' + (ph === "form" ? " form" : "") + '"><div class="tsf-grid" style="--tsf-bw:' + tsfBw() + 'px">' +
-    '<section class="tsf-p tsf-l">' + tsfLeftHtml() + "</section>" +
+    '<div class="tsf-l">' + tsfLeftHtml() + "</div>" +   /* v4.51 왼쪽 = 위쪽 상자 두 개(입력 · 규칙) · 아래는 비운다 */
     '<section class="tsf-c"><canvas id="tsfCv" aria-hidden="true"></canvas>' + (ph === "result" ? '<div class="tsf-res">' + tsfResHtml() + "</div>" : "") + "</section>" +
-    '<section class="tsf-p tsf-r"><p class="tsf-t">현장 TOP 10</p><div id="tsfRank">' + tsfRankHtml() + "</div></section>" +
+    '<section class="tsf-r"><p class="tsf-band">현장 TOP 10</p><div id="tsfRank">' + tsfRankHtml() + "</div></section>" +   /* v4.51 순위표 = 머리띠 + 줄무늬 · 행 수만큼 */
     '</div><button type="button" class="tsf-adm" onclick="tsfAdmin()">관리</button></div>';
 }
 function tsfLeftHtml() {
-  var ph = TSF.phase, ok = tsfFormOk(), h = '<p class="tsf-t">AX 단어 소나기</p><p class="tsf-s">1F 현장 셀프 도전</p>';
+  var ph = TSF.phase, ok = tsfFormOk(), h = '<section class="tsf-p"><p class="tsf-t">AX 단어 소나기</p><p class="tsf-s">1F 현장 셀프 도전</p>';
   if (ph === "result") {
     h += '<p class="tsf-k">다음 도전자</p><p class="tsf-go">SPACE를 눌러 처음으로</p><p class="tsf-hint" id="tsfCount">15초 뒤 처음 화면</p>';
   } else {
@@ -8721,7 +8745,7 @@ function tsfLeftHtml() {
       '<p class="tsf-ln' + (TSF.nmBad ? " bad" : "") + '" id="tsfNickLn" role="status">' + esc(TSF.nm || "2~8자 · 한글·영문·숫자") + "</p>" +
       '<p class="tsf-hint' + (ok ? " go" : "") + '" id="tsfKeys">' + (ok ? "SPACE를 눌러 시작" : "Tab·Enter 다음 칸") + "</p>";
   }
-  return h + '<div class="tsf-rule"><p>1인 ' + tsfLimit() + "회 · 최고 기록으로 순위</p><p>목숨 " + RAIN_LIVES + "개를 다 잃으면 끝</p></div>";
+  return h + '</section><section class="tsf-p tsf-rule"><p>1인 ' + tsfLimit() + "회 · 최고 기록으로 순위</p><p>목숨 " + RAIN_LIVES + "개를 다 잃으면 끝</p></section>";
 }
 /* 오른쪽 · 현장 TOP 10 · 결과 화면에서만 방금 도전한 사람의 줄(me)을 짚는다(다음 사람에게 남의 줄을 짚어 보이지 않게) */
 function tsfRankHtml() {
