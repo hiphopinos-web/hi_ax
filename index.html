@@ -8893,14 +8893,15 @@ function tsfSend() {
   TSF.send = "sending"; TSF.why = "";
   var paint = function () { if (App.current === "type_site" && TSF.phase === "result") App.render(); };
   beCall({ action: "type_self_submit", key: tsfKey(), emp: TSF.emp, ticket: TSF.ticket, score: r.score, hits: r.hits, combo: r.combo, acc: r.acc }, function (x) {
-    if (x && x.ok) { TSF.send = "ok"; TSF.sub = x; if (x.top) { TSF.top = { ok: true, top: x.top, me: x.me }; TSF.topT = Date.now(); } if (x.pb && !x.dry) setTimeout(function () { sfx("best"); }, 250); }
+    if (x && x.ok) { TSF.send = "ok"; TSF.sub = x; if (x.top) { TSF.top = { ok: true, top: x.top, me: x.me }; TSF.topT = Date.now(); } if (x.pb) setTimeout(function () { sfx("best"); }, 250); }   /* v4.34(260925) 테스트 사번도 실제로 저장되어 dry 가 없다 */
     else { TSF.send = "fail"; TSF.why = (x && x.reason) || ""; }
     TSF.resAt = performance.now(); paint();
   }, function () { TSF.send = "fail"; TSF.why = "net"; TSF.resAt = performance.now(); paint(); });
 }
 function tsfResHtml() {
   var r = TSF.res || {}, x = TSF.sub || {}, h = "", lim = x.limit || tsfLimit();
-  var rank = TSF.send === "sending" ? "기록 저장 중" : TSF.send === "ok" ? (x.dry ? "테스트 사번 · 순위 제외" : (x.pb ? "신기록!" : "내 최고 " + typeSec(x.best || 0)) + (x.me ? " · 현장 " + x.me.rank + "위" : "")) :
+  /* v4.34(260925) 테스트 사번도 실제로 저장되어 dry 가 없다 · TSF.emp 가 테스트 사번이면 줄 끝에만 표시 */
+  var rank = TSF.send === "sending" ? "기록 저장 중" : TSF.send === "ok" ? (x.pb ? "신기록!" : "내 최고 " + typeSec(x.best || 0)) + (x.me ? " · 현장 " + x.me.rank + "위" : "") + (TEST_EMP.indexOf(TSF.emp) >= 0 ? " · 테스트 사번" : "") :
     "저장하지 못했어요 · " + (TSF.why === "net" ? "서버 응답 없음" : TSF.why === "limit" ? "도전 횟수를 넘었어요" : TSF_WHY[TSF.why] || TSF.why);
   var left = TSF.send === "ok" ? (x.left > 0 ? "남은 도전 " + x.left + "회" : "도전 " + lim + "회를 모두 쓰셨어요 · 고마워요") : "";
   h += rtGoHtml({ title: r.why === "cap" ? "여기까지" : "GAME OVER", sub: "AX 단어 소나기 · " + (TSF.nick || "익명 참가자"),
