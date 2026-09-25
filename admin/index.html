@@ -742,7 +742,7 @@ var NEED={
   dash:[{k:"stats",a:"stats"},{k:"acct",a:"acct_list"},{k:"stamp",a:"stamp_people"},{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"att",a:"att_stats"},{k:"photo",a:"photo_list"}],
   acct:[{k:"acct",a:"acct_list"},{k:"pwreq",a:"pw_req_list"}],
   stamp:[{k:"stamp",a:"stamp_people"},{k:"acct",a:"acct_list"},{k:"stair",a:"stair_list"},{k:"sstat",a:"stair_stats"},{k:"sy",a:"sync",p:{emp:""}}],
-  apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"}],   /* v4.26 강의신청 현황(sess_list) · 사전 신청 명단(pre_list)은 걷어냈다 */
+  apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"noti",a:"sync",p:{emp:""}}],   /* v4.47 noti = 커피챗 마감 신호(현재 공지) */   /* v4.26 강의신청 현황(sess_list) · 사전 신청 명단(pre_list)은 걷어냈다 */
   att:[{k:"att",a:"att_stats"}],
   visit:[{k:"visit",a:"visit_stats"}],   /* v4.27 접속 기록 · 오늘(서버 날짜) */
   idea:[{k:"idea",a:"idea_list"},{k:"cchat",a:"cchat_list"}],
@@ -1397,6 +1397,7 @@ function viewCchat(){
   rows.sort(function(a,b){ return ((ord[a.status]!=null?ord[a.status]:9)-(ord[b.status]!=null?ord[b.status]:9))||(a.ts<b.ts?-1:1); });
   var shown=rows.filter(function(r){ return match(r,["emp","name","dept","tag","pref","table"]) && (f==="all"||(f==="todo"&&(r.status==="대기"||r.status==="매칭"||r.status==="참석"))||r.status===f); });
   var h=chips([{v:"todo",n:"처리할 것",c:(by["대기"]||0)+(by["매칭"]||0)+(by["참석"]||0)},"|",{v:"대기",n:"대기",c:by["대기"]||0},">",{v:"매칭",n:"매칭",c:by["매칭"]||0},">",{v:"참석",n:"참석",c:by["참석"]||0},">",{v:"완료",n:"완료",c:by["완료"]||0},"|",{v:"취소",n:"취소",c:by["취소"]||0},{v:"all",n:"전체",c:rows.length}], f, "setFilt");
+  h+=ccCapHtml(rows);
   var sel=selKeys("c:").map(ccBy).filter(Boolean), body='';
   if(sel.length){
     var canM=sel.filter(function(r){return r.status==="대기"||r.status==="매칭";}).length, canC=canM;
@@ -1423,6 +1424,39 @@ function viewCchat(){
     (!shown.length?emptyRow(9,f==="todo"?"처리할 커피챗이 없습니다.":"해당하는 신청이 없습니다."):'')+'</table></div>';
   body+=memo('<p>회차와 테이블을 넣고 매칭을 누르면 참가자 앱에 「18F 라운지 · 회차 · 테이블」로 뜹니다. 같은 관심 태그끼리 한 테이블에 묶는 것이 기본입니다. 여러 명을 체크하면 같은 회차·테이블로 한 번에 매칭합니다.</p><p>테이블에 온 사람은 「참석」 또는 「완료」를 누르면 스탬프 03 「프로그램 참여」가 적립됩니다(1인 1회). 그래서 참석·완료에는 되돌리기가 없습니다. 매칭·취소는 7초 동안 되돌릴 수 있습니다.</p>');
   return h+card("", "", body);
+}
+/* v4.47 선착순 정원 · 수동 마감 스위치 (앱 CCHAT_CAP · CCHAT_CLOSE_T 와 같은 값)
+   서버가 정원을 세지 않는다 · 마감 = 제목이 CC_CLOSE_T 인 공지를 보낸다(notice_set) · 앱은 이 공지를 참가자에게 띄우지 않고 신청만 막는다 · 다시 열기 = 그 공지 중지(notice_clear)
+   한계: 서버 공지는 한 번에 하나다 · 마감 중에 다른 공지를 보내면 그 뒤에 앱을 처음 여는 사람에게는 마감이 전달되지 않는다(이미 받은 기기는 유지) */
+var CC_CAP=30, CC_CLOSE_T="[운영] 커피챗 신청 마감";
+function ccCloseMem(v){ try{ if(v===undefined) return localStorage.getItem("axf_cc_close")||""; if(v) localStorage.setItem("axf_cc_close",v); else localStorage.removeItem("axf_cc_close"); }catch(e){ return ""; } }
+function ccCloseId(){ var cur=((ST.data.noti||{}).notice)||null; if(cur&&cur.title===CC_CLOSE_T){ if(ccCloseMem()!==cur.id) ccCloseMem(cur.id); return cur.id; } return ccCloseMem(); }
+function ccCapHtml(rows){
+  var n=rows.filter(function(r){ return r.status!=="취소"; }).length, id=ccCloseId(), cur=((ST.data.noti||{}).notice)||null, over=n>=CC_CAP;
+  var lost=id&&!(cur&&cur.id===id);
+  return '<div class="bulk"><span class="c">선착순 <b>'+n+' / '+CC_CAP+'명</b> (취소 제외) · '+(id?tag("신청 마감 중","pri"):over?tag("정원 도달","warn"):tag("신청 받는 중","off"))+'</span>'+
+    (id?'<button class="btn sm" onclick="ccClose(0)">신청 다시 열기</button>':'<button class="btn sm '+(over?"pri":"danger")+'" onclick="ccClose(1)">신청 마감</button>')+
+    (lost?'<span class="cap">마감 뒤 다른 공지가 나가 앱을 처음 여는 사람에게는 마감이 안 보일 수 있습니다 · 필요하면 다시 열었다가 마감하세요</span>':'')+'</div>';
+}
+function ccClose(on){
+  var cur=((ST.data.noti||{}).notice)||null, id=ccCloseId();
+  if(on){
+    dialog({ t:"커피챗 신청을 마감할까요?", s:"참가자 앱의 커피챗 신청 버튼이 「신청 마감」으로 바뀝니다(다음 동기화 · 10초). 이미 들어온 신청은 그대로입니다. 참가자에게 공지로 뜨지는 않습니다."+
+        (cur&&cur.title!==CC_CLOSE_T?"<br><br><b>지금 송출 중인 공지 「"+esc(cur.title)+"」</b>는 이 신호로 바뀌어, 앱을 처음 여는 사람에게는 더 이상 가지 않습니다.":""), ok:"신청 마감", danger:true,
+      onOk:function(){ dlgForce();
+        call("notice_set",{title:CC_CLOSE_T,body:"커피챗 선착순 "+CC_CAP+"명 마감 · 앱이 신청 버튼을 막는 신호(참가자 화면에 안 뜸)"},function(r){
+          if(r&&r.ok){ toast("커피챗 신청을 마감했습니다"); reload(["noti"]); } else toast("마감 실패: "+why(r));
+        },function(){ toast("서버 응답 없음"); });
+      } });
+    return;
+  }
+  if(!id){ toast("마감 신호를 찾지 못했습니다 · 공지 탭을 확인하세요"); return; }
+  dialog({ t:"커피챗 신청을 다시 열까요?", s:"참가자 앱의 커피챗 신청 버튼이 다시 켜집니다(다음 동기화 · 10초).", ok:"다시 열기",
+    onOk:function(){ dlgForce();
+      call("notice_clear",{id:id},function(r){
+        if(r&&r.ok){ ccCloseMem(""); toast("커피챗 신청을 다시 열었습니다"); reload(["noti"]); } else toast("실패: "+why(r));
+      },function(){ toast("서버 응답 없음"); });
+    } });
 }
 function ccMatch(emps, bulk){
   var bd=ST.bulk||{}, rows=emps.map(ccBy).filter(function(r){ return r&&(r.status==="대기"||r.status==="매칭"); });
@@ -1924,7 +1958,7 @@ function viewNotice(){
   var d=(ST.data.noti&&ST.data.noti.ok)?ST.data.noti:{}, cur=d.notice||null;
   var h=tabHead();
   h+=card("지금 송출 중", cur?tag("송출 중","pri"):tag("없음","off"),
-    (cur?'<p><b>'+esc(cur.title)+'</b></p><p class="muted mt8">'+esc(cur.body)+'</p><p class="cap mt8">'+esc(cur.id)+'</p>':'<div class="empty">송출 중인 공지가 없습니다.</div>'),
+    (cur?'<p><b>'+esc(cur.title)+'</b></p><p class="muted mt8">'+esc(cur.body)+'</p><p class="cap mt8">'+esc(cur.id)+'</p>'+(cur.title===CC_CLOSE_T?'<p class="cap mt8">v4.47 커피챗 마감 신호입니다 · 참가자 화면에는 뜨지 않습니다 · 중지하면 커피챗 신청이 다시 열립니다 · 새 공지를 보내면 앱을 처음 여는 사람에게는 마감이 전달되지 않습니다</p>':''):'<div class="empty">송출 중인 공지가 없습니다.</div>'),
     cur?'<button class="btn danger" onclick="noticeStopC(\''+jq(cur.id)+'\')">공지 중지 (전 기기)</button>':'');
   h+='<div class="grid g2">'+card("새 공지 발송","모든 참가자 기기",
     '<label class="fld">제목<input class="in" id="ntT" placeholder="예: 1F 전시, 지금 한산해요" style="width:100%"></label>'+
@@ -2380,7 +2414,8 @@ function noticeSendGo(t,b){
 function noticeSend(){
   var t=(el("ntT").value||"").trim(), b=(el("ntB").value||"").trim();
   if(!t){ toast("제목을 입력하세요"); el("ntT").focus(); return; }
-  dialog({ t:"공지를 발송할까요?", s:"모든 참가자 기기의 LED 띠·실시간 안내에 나갑니다.", who:"<b>"+esc(t)+"</b><br>"+esc(b), ok:"발송",
+  var ccx=((ST.data.noti||{}).notice||{}).title===CC_CLOSE_T;
+  dialog({ t:"공지를 발송할까요?", s:"모든 참가자 기기의 LED 띠·실시간 안내에 나갑니다."+(ccx?"<br><br><b>지금 커피챗 신청 마감 중입니다.</b> 이 공지를 보내면 앱을 처음 여는 사람에게는 마감이 전달되지 않습니다.":""), who:"<b>"+esc(t)+"</b><br>"+esc(b), ok:"발송",
     onOk:function(){ dlgForce(); noticeSendGo(t,b); } });
 }
 function noticeTpl(i){
