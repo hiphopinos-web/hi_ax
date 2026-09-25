@@ -3068,6 +3068,7 @@ function focusPulse(f) {
 /* 스탬프 개수로 열리는 보상 안내 (260909 · v3.39) · 3개=룰렛 1회, 4~7개=사후 추첨 응모 1~4장 */
 function checkRewards() {
   var n = stampCount();
+  bonusRlCheck();   /* v4.47 */
   if (n >= 3 && !S.get("roulette_open", false)) {
     S.set("roulette_open", true);
     notice({ key: "rw:roulette", title: "룰렛 1회 열림", body: "1F 이벤트존에서 내 QR 제시", go: "rewards", focus: "roulette", goLbl: "내 보상에서 보기" });
@@ -3120,7 +3121,7 @@ function stampPendRetry() {
    또는 커피챗 상세의 「커피챗 신청하기」로 나중에 신청한다. 아이디어·스탬프(p5)는 답과 무관하게 유지.
    서버에 닿지 않으면 로컬 신청을 되돌리고 알린다(조용히 대기로 남겨 두면 매칭 담당자 목록에 없다). */
 function scheduleCoffeechat() {
-  if (S.get("cchat", null) || !ideaMineN() || !cchatPref().length) return;   /* v4.45 아이디어 한 줄 · 선호 시간대가 사전 조건 · 가장 아래에서 한 번 더 막는다 */
+  if (S.get("cchat", null) || !ideaMineN() || !cchatPref().length || cchatClosed()) return;   /* v4.47 마감 · v4.45 아이디어 한 줄 · 선호 시간대가 사전 조건 · 가장 아래에서 한 번 더 막는다 */
   S.set("cchat", { status: "pending", pref: cchatPrefTxt(), ts: Date.now() });
   var u = S.get("user", {});
   if (BE.on && u.empId) {
@@ -3361,6 +3362,59 @@ var CCHAT_PREF = [["13", "13~14시"], ["14", "14~15시"], ["15", "15~16시"], ["
 var CCHAT_NOTE = "매칭되면 하이웍스로 알려 드려요 · 앱 나의 참여에서도 볼 수 있어요";
 /* v4.46 서버(GAS)는 cchat_req 의 tag 를 이미 저장 · 콘솔에 돌려준다 · 선호 시간대를 tag 뒤에 붙여 보내 서버 수정 없이 콘솔 「희망 시간」에 보이게 한다(콘솔이 CCHAT_TAG_SEP 로 다시 나눈다) · pref 파라미터도 같이 보낸다(나중에 GAS 가 칸을 만들면 그쪽이 우선) */
 var CCHAT_TAG_SEP = " / 희망 ";
+/* v4.47 (사용자 260925 · 화요일 회의에서 숫자 확정 예정) 커피챗 선착순 · 멘토 2명 각자 테이블 · 회차당 최대 4명 · 20분
+   정원은 서버가 세지 않는다 · 운영자가 콘솔 커피챗 표에서 「신청 마감」을 켠다(수동 스위치)
+   마감 신호 = 서버 수정 없이 콘솔 공지(notice_set)를 빌린다 · 제목이 CCHAT_CLOSE_T 인 공지는 참가자 화면에 띄우지 않고 마감 표시로만 쓴다 · 공지 중지(notice_clear)가 다시 열기
+   나중에 GAS 가 sync 에 cchatOut 을 주면 그쪽을 따른다(rouletteOut 과 같은 모양) */
+var CCHAT_CAP = 30;
+var CCHAT_CLOSE_T = "[운영] 커피챗 신청 마감";
+function cchatClosed() { return !!S.get("cchat_out", false) || !!S.get("cchat_close_id", ""); }
+/* v4.47 보너스 룰렛 · 커피챗 · DAP 과제상담에 참석하면 각각 룰렛 1회 더(합쳐 최대 2회)
+   열림 = 서버 상태로 판정(커피챗 참석 · 완료 / DAP 체크인 · 완료) · 사용 = 서버 roulette_redeem 이 1인 1회라 쓸 수 없다 → 1F 룰렛 직원이 참가자 화면에서 [사용 처리](이 기기에 저장)
+   QR 을 보여 주지 않는다(직원이 룰렛 스캔으로 찍으면 기본 1회권이 차감된다) */
+var BONUS_RL = [{ k: "cchat", nm: "커피챗", why: "커피챗 참석" }, { k: "dap", nm: "DAP 과제상담", why: "DAP 과제상담 참석" }];
+var BONUS_RL_TXT = "참석하면 룰렛 1회 더";
+function bonusRlOpen(k) {
+  if (k === "cchat") return !!S.get("cchat_att", false);
+  var r = myResv();
+  return !!(r && (r.status === "checked" || r.status === "done"));
+}
+function bonusRlUsed(k) { return !!(S.get("bonus_rl_used", {}) || {})[k]; }
+function bonusRlCheck() {
+  if (!(S.get("user", {}) || {}).empId || el("app").hidden) return;   /* 로그인 전 동기화에서 안내를 소진하지 않게(로그인 화면이 닫히면 큐가 사라진다) */
+  var seen = S.get("bonus_rl_seen", {}) || {}, chg = false;
+  BONUS_RL.forEach(function (b) {
+    if (!bonusRlOpen(b.k) || seen[b.k]) return;
+    seen[b.k] = 1; chg = true;
+    notice({ key: "rw:bonus:" + b.k, title: "보너스 룰렛 1회 열림", body: b.why + " · 1F 이벤트존에서 이 화면 제시", go: "rewards", goLbl: "내 보상에서 보기" });
+  });
+  if (chg) S.set("bonus_rl_seen", seen);
+}
+var BRL = { arm: "" };
+function bonusRlModal(k) {
+  var b = BONUS_RL.filter(function (x) { return x.k === k; })[0];
+  if (!b) return;
+  var used = bonusRlUsed(k), open = bonusRlOpen(k), out0 = !!S.get("roulette_out", false) && !used, u = S.get("user", {}) || {};
+  BRL.arm = "";
+  var head = '<div class="axs-chiprow">' + (used ? '<span class="axs-chip off">사용 완료</span>' : !open ? '<span class="axs-chip off">' + b.nm + " 참석 후 열림</span>" : out0 ? '<span class="axs-chip off">룰렛 소진</span>' : '<span class="axs-chip">사용 가능 · 1회</span>') + "</div>";
+  var body = !open ? '<p class="ax-description" style="margin-top:8px">' + b.nm + "에 참석하면 열려요</p>" :
+    used ? '<p class="ax-description" style="margin-top:8px">사용 처리됐어요</p>' :
+    out0 ? '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));font-weight:800;color:var(--hi)">룰렛 소진</p>' :
+    '<div class="ax-inset ax-stack-tight axs-gift" style="margin-top:8px"><p class="ax-card-title axs-center-tx">보너스 룰렛 · ' + esc(b.nm) + '</p><p class="ax-type-t5-strong axs-center-tx">' + esc(u.name || "") + " · " + esc(u.empId || "") + "</p></div>" +
+    '<p class="ax-description" style="margin-top:10px">1F 이벤트존 룰렛 부스에서 이 화면을 보여 주세요<br>직원이 아래 버튼으로 사용 처리해요 · QR 스캔 없음</p>' +
+    '<button type="button" class="ax-button ax-button-weak" id="brlUse" style="margin-top:10px" onclick="bonusRlUse(\'' + k + '\')">직원 확인 · 사용 처리</button>';
+  modalOpen(head + body + '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "보너스 룰렛 1회권");
+}
+/* 잘못 누르지 않게 두 번 누른다 · 첫 번째는 버튼 글이 바뀐다 */
+function bonusRlUse(k) {
+  if (BRL.arm !== k) { BRL.arm = k; var bt = el("brlUse"); if (bt) { bt.textContent = "한 번 더 누르면 사용 처리"; bt.className = "ax-button"; } return; }
+  var m = S.get("bonus_rl_used", {}) || {};
+  m[k] = Date.now(); S.set("bonus_rl_used", m);
+  BRL.arm = "";
+  toast("보너스 룰렛 사용 처리 · 바로 돌리세요");
+  bonusRlModal(k);
+  App.render();
+}
 function cchatPref() { var a = S.get("cchat_pref", []); return Array.isArray(a) ? a : []; }
 function cchatPrefTxt(a) { a = a || cchatPref(); return CCHAT_PREF.filter(function (x) { return a.indexOf(x[0]) >= 0; }).map(function (x) { return x[1]; }).join(" · "); }
 function cchatPrefToggle(v, where) {
@@ -3387,6 +3441,7 @@ function ideaCchat(yes) {
 /* 나중에 마음이 바뀐 사람 · 커피챗 상세(P02)의 주 버튼 · 아이디어가 1건 이상일 때만 */
 function cchatApply() {
   if (S.get("cchat", null) || !ideaMineN() || !cchatPref().length) return;
+  if (cchatClosed()) { sheetClose(true); toast("커피챗 신청이 마감됐어요"); App.render(); return; }   /* v4.47 시트를 여는 사이 마감 */
   sheetClose(true);   /* v4.18 확인 시트에서 온다 · 요청은 낙관 저장이라 기다릴 것이 없다 */
   scheduleCoffeechat();
   if (S.get("cchat", null)) notice({ title: "커피챗 신청 완료", body: "희망 " + cchatPrefTxt() + " · " + CCHAT_NOTE });
@@ -4624,7 +4679,7 @@ function progDetail(s) {
       D.secT = "신청한 상담이에요";
       D.secB = r.status === "requested" || r.status === "booked" ? "운영자가 승인하면 앱에서 알려 드려요." :
         r.status === "approved" ? "시작 5분 전까지 1F 미팅룸 2 앞에서 체크인해 주세요. 시작 10분이 지나면 노쇼로 처리돼요." :
-        r.status === "checked" ? "업무 설명 → 병목 → 개선방안 순서로 진행돼요." : "상담을 마쳤어요. 아래 코드를 DAP ZONE 데스크에 보여 주고 사은품을 받으세요.";
+        r.status === "checked" ? "업무 설명 → 병목 → 개선방안 순서로 진행돼요.<br>보너스 룰렛 1회가 열렸어요 · 내 보상에서 확인해요." : "상담을 마쳤어요. 아래 코드를 DAP ZONE 데스크에 보여 주고 사은품을 받으세요.<br>보너스 룰렛 1회도 열렸어요 · 내 보상에서 확인해요.";
       if (r.status === "done") D.extra = '<div class="ax-inset ax-stack-tight axs-gift"><p class="ax-card-title">사은품 교환권 · 1회</p>' + qrHtml() + '<p class="ax-type-t5-strong axs-center-tx">GIFT-' + esc((S.get("user", {}) || {}).empId || "") + '</p><p class="ax-meta axs-center-tx">중복 수령 방지 코드예요</p></div>';
       if (RESV_LIVE.indexOf(r.status) >= 0 && r.status !== "checked") { D.help = "참여가 어려우면 신청을 취소할 수 있어요"; D.btn = cxBtn; }
       else { D.help = ""; D.btn = progBtn("내 일정 보기", "mySched()", "ax-button-weak"); }
@@ -4639,7 +4694,7 @@ function progDetail(s) {
       '<section class="ax-stack-tight axs-gap12"><div class="ax-row"><h2 class="ax-section-title">상담 시간 선택</h2><span class="ax-meta">남은 시간 ' + resvRemain() + "개</span></div>" +
       '<div class="axs-slots" role="group" aria-label="상담 시간">' + slots.filter(function (t) { return t2m(t) < lunchM; }).map(cell).join("") +
       '<p class="ax-meta axs-lunch">점심시간 ' + conf.lunch + "–" + conf.lunchEnd + "</p>" + slots.filter(function (t) { return t2m(t) >= lunchM; }).map(cell).join("") + "</div></section>";
-    D.secB = "업무 설명 → 병목 → 개선방안 순서로 30분 진행해요.<br>상담을 완료하면 사은품을 드려요.";
+    D.secB = "업무 설명 → 병목 → 개선방안 순서로 30분 진행해요.<br>상담을 완료하면 사은품을 드려요.<br>" + BONUS_RL_TXT + " · 1F 이벤트존";   /* v4.47 */
     D.help = DAPSEL ? "선택한 시간 " + DAPSEL + " · 1F DAP ZONE 미팅룸 2" : "상담 시간을 먼저 골라 주세요";
     D.btn = DAPSEL ? progBtn("이 시간으로 신청하기", "progApply(\'dap\')") : progBtn("이 시간으로 신청하기", "", "", "", true);
     return D;
@@ -4649,10 +4704,18 @@ function progDetail(s) {
     D.cat = "커피챗"; D.title = "멘토와 가벼운 시간"; D.who = "AX 멘토와 함께"; D.av = "AX"; D.whoSub = "18F 라운지";   /* v4.13 인원 · 부서 · 소요 시간 표기 삭제(사용자 260922) · 매칭 뒤 실제 자리 · 시각은 그대로 */
     D.kv = [["일시", mt ? day + c.round : "시간은 매칭 후 앱에서 안내"], ["장소", mt ? "18F 라운지 · TABLE " + c.table : "18F 라운지"], ["참여 방법", "아이디어 제출 후 참석 신청"]];
     D.link = '<button type="button" class="ax-link axs-plain axs-self" onclick="cchatModal()">진행 방식 보기</button>';
+    if (S.get("cchat_att", false)) {
+      /* v4.47 참석이 서버에 찍힘 · 취소 대신 보너스 룰렛 */
+      D.st = "참석 완료"; D.stc = "ok"; D.secT = "참석한 커피챗이에요";
+      D.secB = "함께해 주셔서 고마워요.<br>보너스 룰렛 1회가 열렸어요 · 1F 이벤트존에서 보여 주세요.";
+      D.help = ""; D.btn = progBtn("보너스 룰렛 보기", "bonusRlModal(\'cchat\')");
+      return D;
+    }
     if (!c) {
       /* v4.07 자동 요청 폐기 · 아이디어가 있으면 바로 신청, 없으면 아이디어부터 */
-      D.secB = CCHAT_TXT.replace(" · ", "<br>") + "<br>신청할 때 고른 시간대에 맞춰 매칭해요.<br>" + CCHAT_NOTE.replace(" · ", "<br>");
-      if (ideaMineN()) { D.help = "제출한 아이디어로 신청해요"; D.btn = progBtn("커피챗 신청하기", "cchatApplyOpen()", "", "cchatApplyBtn"); }
+      D.secB = CCHAT_TXT.replace(" · ", "<br>") + "<br>신청할 때 고른 시간대에 맞춰 매칭해요.<br>" + CCHAT_NOTE.replace(" · ", "<br>") + "<br><b>" + BONUS_RL_TXT + "</b> · 선착순 " + CCHAT_CAP + "명";   /* v4.47 */
+      if (cchatClosed()) { D.st = "마감"; D.stc = "off"; D.help = "선착순 " + CCHAT_CAP + "명이 모두 찼어요"; D.btn = progBtn("신청 마감", "", "", "", true); }
+      else if (ideaMineN()) { D.help = "제출한 아이디어로 신청해요"; D.btn = progBtn("커피챗 신청하기", "cchatApplyOpen()", "", "cchatApplyBtn"); }
       else { D.help = "아이디어를 한 줄 남기면 신청할 수 있어요"; D.btn = progBtn("아이디어 남기기", "App.go(\'ideas\')"); }
     } else {
       D.secT = "신청한 커피챗이에요";
@@ -4807,7 +4870,7 @@ function cchatApplyOpen() {
 /* v4.45 신청 시트 · 선호 시간대 칩(고르기 전에는 신청 버튼 잠금) · 안내 = 하이웍스 + 앱 나의 참여 */
 function cchatSheetSpec() {
   var ok = cchatPref().length > 0;
-  return { id: "cchat", back: "cchatApplyBtn", title: "커피챗을 신청할까요?", lead: "AX 커피챗 · 18F 라운지<br>고른 시간대에 맞춰 매칭해요",
+  return { id: "cchat", back: "cchatApplyBtn", title: "커피챗을 신청할까요?", lead: "AX 커피챗 · 18F 라운지<br>고른 시간대에 맞춰 매칭해요<br>" + BONUS_RL_TXT + " · 선착순 " + CCHAT_CAP + "명",
     body: cchatPrefHtml("sheet"), kv: [["내 아이디어", ideaMineN() + "건 제출"], ["매칭 안내", "하이웍스 · 앱 나의 참여"]],
     go: "cchatApply()", goLbl: ok ? "커피챗 신청하기" : "시간대를 골라 주세요", goBusy: "신청하는 중", goOff: !ok };
 }
@@ -5294,6 +5357,7 @@ function testStampResetGo() {
   S.set("stamps", []); S.set("pp_seen", []);                               /* 스탬프 · 레일 카운트 롤업 기준값 */
   S.set("pp_glow3", false); S.set("roulette_used", false); S.set("roulette_open", false);
   S.set("raffle_seen", 0); S.set("raffle_nums", []); S.set("raffle_opened", 0);
+  S.set("bonus_rl_used", {}); S.set("bonus_rl_seen", {});   /* v4.47 */
   var me0 = (S.get("user", {}) || {}).empId; S.set("ideas", S.get("ideas", []).filter(function (i) { return i.empId !== me0; })); S.set("cchat_pref", []);   /* v4.45 아이디어(p5)를 지우면 이 기기의 내 아이디어도 · 남아 있으면 스탬프 없이 커피챗이 열렸다 */                       /* 응모권 안내 기준 · 서버 번호 캐시 */
   toast("테스트 · 스탬프 상태를 초기화했어요");
   App.render();
@@ -5844,6 +5908,12 @@ function rewItems() {
   var n = stampCount(), used = !!S.get("roulette_used", false), out0 = !!S.get("roulette_out", false), t = raffleTickets(n), items = [];
   if (n >= 3) items.push({ k: "roulette", used: used, chip: used ? "사용 완료" : out0 ? "룰렛 소진" : "사용 가능", off: used || out0, nm: "룰렛 1회권", big: "1회",
     why: "1F 이벤트존 룰렛 · 내 QR 제시", go: "ppRouletteOpen()" });
+  BONUS_RL.forEach(function (b) {   /* v4.47 보너스 룰렛 · 참석해서 열린 것만 */
+    if (!bonusRlOpen(b.k)) return;
+    var bu = bonusRlUsed(b.k);
+    items.push({ k: "bonus_" + b.k, used: bu, chip: bu ? "사용 완료" : out0 ? "룰렛 소진" : "사용 가능", off: bu || out0, nm: "보너스 룰렛 · " + b.nm, big: "1회",
+      why: b.why + " · 1F 이벤트존 · 이 화면 제시", go: "bonusRlModal(\'" + b.k + "\')" });
+  });
   if (t) items.push({ k: "raffle", used: false, chip: "자동 응모", off: false, nm: "사후 추첨 응모권", big: t + "장", why: "스탬프 " + Math.min(n, REWARD_CAP) + "개 · 17:00 Outro 추첨", go: "ppDrawOpen()" });
   return items;
 }
@@ -5983,7 +6053,7 @@ var Views = {
         '<button type="button" class="ax-button ax-button-weak" onclick="' + x.go + '">사용 방법 보기</button></section>';
     }).join("") || botHtml(f === "used" ? "사용한 보상이 없어요" : "아직 받은 보상이 없어요");
     return '<div class="ax-stack">' + tabs + cards +
-      '<p class="ax-description">룰렛은 스탬프 3개, 응모권은 4개부터 생겨요.<br>달성한 보상만 이곳에 표시됩니다.</p></div>';
+      '<p class="ax-description">룰렛은 스탬프 3개, 응모권은 4개부터 생겨요.<br>커피챗 · DAP 과제상담에 참석하면 룰렛이 1회씩 더 생겨요.<br>달성한 보상만 이곳에 표시됩니다.</p></div>';
   },
 
   /* ═══ 포토부스 대기 · 나의 참여 › 목적지 · 기존 번호표 UI 를 그대로 담는다(새 대기 UI 는 가이드에 정의가 없다) ═══ */
@@ -6088,15 +6158,16 @@ var Views = {
     var mine = S.get("ideas", []).filter(function (i) { return i.empId === (S.get("user", {}).empId); });
     var cchat = S.get("cchat", null);
     /* v4.07 제출 뒤 두 장 · 질문(예 = 주 버튼 · 아니요 = 약한 버튼) → 완료 */
+    if (IDEA.step === "ask" && cchatClosed()) IDEA.step = "done";   /* v4.47 마감이면 묻지 않는다 */
     if (IDEA.step === "ask") {
       return '<div class="ax-stack axs-okwrap">' +
         '<div class="ax-stack-tight axs-gap12 axs-center-tx"><p class="ax-meta">아이디어 제출 완료</p><h1 class="ax-type-t2">커피챗에 참석하시겠어요?</h1>' +
         '<p class="ax-body">' + CCHAT_TXT.replace(" · ", "<br>") + "</p></div>" +
-        '<div class="ax-card ax-stack-tight axs-gap12"><p class="ax-card-title">AX 커피챗 · 18F 라운지</p><p class="ax-description">고른 시간대에 맞춰 매칭해요<br>' + CCHAT_NOTE.replace(" · ", "<br>") + "</p></div>" + cchatPrefHtml("ask") + "</div>" +
+        '<div class="ax-card ax-stack-tight axs-gap12"><p class="ax-card-title">AX 커피챗 · 18F 라운지</p><p class="ax-description"><b>' + BONUS_RL_TXT + "</b> · 선착순 " + CCHAT_CAP + "명<br>고른 시간대에 맞춰 매칭해요<br>" + CCHAT_NOTE.replace(" · ", "<br>") + "</p></div>" + cchatPrefHtml("ask") + "</div>" +
         '<div class="ax-bottom axs-fix">' + progBtn(cchatPref().length ? "참석할게요" : "시간대를 골라 주세요", "ideaCchat(1)", "", "ideaYes", !cchatPref().length) + progBtn("참석하지 않을게요", "ideaCchat(0)", "ax-button-weak", "ideaNo") + "</div>";   /* v4.45 선호 시간대를 골라야 참석 */
     }
     if (IDEA.step === "done") {
-      var cl = !cchat ? "커피챗은 프로그램 › 상담에서 언제든 신청할 수 있어요" : cchat.status === "matched" ? "커피챗 매칭 완료 · " + esc(cchat.round) + " TABLE " + esc(cchat.table) : "커피챗 신청 완료 · " + CCHAT_NOTE;
+      var cl = !cchat ? (cchatClosed() ? "커피챗은 선착순 " + CCHAT_CAP + "명이 모두 찼어요" : "커피챗은 프로그램 › 상담에서 언제든 신청할 수 있어요") : cchat.status === "matched" ? "커피챗 매칭 완료 · " + esc(cchat.round) + " TABLE " + esc(cchat.table) : "커피챗 신청 완료 · " + CCHAT_NOTE;
       return '<div class="ax-stack axs-okwrap">' +
         '<span class="axs-okmark">완료</span>' +
         '<div class="ax-stack-tight axs-gap12 axs-center-tx"><h1 class="ax-type-t2">아이디어를 제출했어요</h1>' +
@@ -6740,6 +6811,7 @@ function beSync() {
     BE.stats.wall = res.wall;
     BE.stats.sess = res.sess || null;
     if ("rouletteOut" in res && !!res.rouletteOut !== S.get("roulette_out", false)) S.set("roulette_out", !!res.rouletteOut);   /* v3.33 */
+    if ("cchatOut" in res && !!res.cchatOut !== S.get("cchat_out", false)) S.set("cchat_out", !!res.cchatOut);   /* v4.47 GAS 가 생기면 */
     /* v3.14 공지 중지: 서버가 내려준 중지 id 는 로컬에서도 지운다(LED 띠·뱃지·목록·팝업이 자연 소멸).
        중지 목록에 든 공지는 다시 추가하지 않는다 · notice 가 null 이면 신규 추가 없음 */
     var nOff = res.noticeOff || [];
@@ -6747,9 +6819,12 @@ function beSync() {
       var nz0 = S.get("notices", []);
       var kept = nz0.filter(function (x) { return nOff.indexOf(x.id) < 0; });
       if (kept.length !== nz0.length) S.set("notices", kept);
+      if (S.get("cchat_close_id", "") && nOff.indexOf(S.get("cchat_close_id", "")) >= 0) S.set("cchat_close_id", "");   /* v4.47 콘솔이 마감 신호를 중지 = 다시 열기 */
     }
+    /* v4.47 커피챗 마감 신호 · 참가자 공지로 쌓지 않는다 */
+    if (res.notice && res.notice.title === CCHAT_CLOSE_T && res.notice.id && nOff.indexOf(res.notice.id) < 0 && S.get("cchat_close_id", "") !== res.notice.id) S.set("cchat_close_id", res.notice.id);
     if (res.photo && JSON.stringify(res.photo) !== JSON.stringify(S.get("photo_pub", null))) S.set("photo_pub", res.photo);   /* v3.21 B 공개 대기 요약 */
-    if (res.notice && res.notice.id && nOff.indexOf(res.notice.id) < 0) {
+    if (res.notice && res.notice.id && res.notice.title !== CCHAT_CLOSE_T && nOff.indexOf(res.notice.id) < 0) {
       var nz = S.get("notices", []);
       if (!nz.some(function (x) { return x.id === res.notice.id; })) {
         nz.unshift({ id: res.notice.id, title: res.notice.title || "", body: res.notice.body || "", ts: res.notice.ts || Date.now() });
@@ -6779,6 +6854,8 @@ function beSync() {
         var c0 = S.get("cchat", null);
         if (c0 && Date.now() - (c0.ts || 0) > 30000) S.set("cchat", null);
       }
+      var ccAtt = !!(res.my.cchat && (res.my.cchat.status === "참석" || res.my.cchat.status === "완료"));   /* v4.47 보너스 룰렛 · 18F 입장 스캔 또는 콘솔 참석 · 완료 */
+      if (ccAtt !== !!S.get("cchat_att", false)) S.set("cchat_att", ccAtt);
       if (res.my.cchat && res.my.cchat.status === "매칭") {
         var c = S.get("cchat", null);
         var sr = hhmm(res.my.cchat.round), stb = String(res.my.cchat.table || "");
@@ -6820,6 +6897,7 @@ function beSync() {
     }
     if (el("mtCv")) mtSync();
     checkMyState();
+    bonusRlCheck();   /* v4.47 커피챗 · DAP 참석이 서버에 찍히면 보너스 룰렛 안내 한 번 */
     qrMineCheck();   /* v4.06 내 QR 이 열려 있으면 방금 바뀐 것 한 줄(확인됨) */
     if (App.current === "home") App.render();
   });
@@ -7882,6 +7960,7 @@ function qrMineStateHtml() {
   /* 룰렛 1회권 · QR을 내미는 가장 흔한 순간이라 여기서도 상태를 같이 보여준다 (260909) */
   if (stampCount() >= 3) out.push('<div class="qst"><span class="l">1F 룰렛 1회권</span><b>' +
     (S.get("roulette_used", false) ? "사용 완료" : "스캔하면 차감") + "</b></div>");
+  BONUS_RL.forEach(function (b) { if (bonusRlOpen(b.k) && !bonusRlUsed(b.k)) out.push('<div class="qst"><span class="l">보너스 룰렛 · ' + esc(b.nm) + "</span><b>내 보상에서 사용 처리</b></div>"); });   /* v4.47 */
   return out.length ? '<div class="qstate">' + out.join("") + "</div>" : "";
 }
 
@@ -8035,7 +8114,7 @@ function scanDone(emp, sp, res) {
         why === "skipped" ? res.no + "번은 건너뛴 번호예요 · 새 번호 받기 안내" :
           why === "already" ? res.no + "번은 이미 입장 처리됐어요" :
             why === "need" ? "스탬프 3개 미만 · 차감 불가 (현재 " + (res.n || 0) + "개)" :
-              why === "used" ? "이미 룰렛을 돌린 참가자예요" :
+              why === "used" ? "이미 룰렛을 돌린 참가자예요 · 보너스 룰렛은 참가자 앱 내 보상에서 사용 처리" :
                 why === "auth" ? "관리코드가 맞지 않아요 · 관리자 모드를 다시 열어 주세요" :
                   "처리하지 못했어요" + (why || err ? " (" + (why || err.slice(0, 40)) + ")" : "");
     scanLog(emp, nm + msg, false, true);
