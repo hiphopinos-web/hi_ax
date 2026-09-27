@@ -8413,13 +8413,16 @@ function rgBeep(freq, dur, type, vol) {   /* v3.51 · 공용 효과음 엔진 �
   try { if (c.state !== "running") c.resume(); sfxTone(freq, dur, { type: type || "square", vol: Math.min(0.5, (vol || 0.06) * 6) }); } catch (e) {}
 }
 var RG_HEART = '<svg viewBox="0 0 7 6" width="17" height="15" shape-rendering="crispEdges" aria-hidden="true"><path d="M0 0h3v2H0zM4 0h3v2H4zM0 2h7v2H0zM1 4h5v1H1zM2 5h3v1H2z"/></svg>';
+/* v4.52(260928 사용자 확정) 옆판(왼쪽 상자 rgLeftDraw)이 이미 점수·목숨을 보여주므로(v4.51) 위 줄은 중복 ·
+   옆판이 있을 때(rgSideOn, 넓은 화면 솔로 · 1F 셀프)는 시간만 남긴다 · 좁은 화면(옆판 없음)과 대전은 그대로 셋 다 보인다 */
 function rgTopHtml() {
+  var side = typeof rgSideOn === "function" && rgSideOn();
   var hearts = "", n = RG.lives0 || RAIN_LIVES;
   for (var i = 0; i < n; i++) hearts += '<i class="on">' + RG_HEART + "</i>";
   return '<div class="rg-hud">' +
-    '<span class="rg-sc"><small>점수</small><b id="rgHudSc">0</b></span>' +
+    (side ? "" : '<span class="rg-sc"><small>점수</small><b id="rgHudSc">0</b></span>') +
     '<span class="rg-tm" id="rgHudTm">0.0초</span>' +
-    '<span class="rg-ht" id="rgHudHt">' + hearts + "</span>" +
+    (side ? "" : '<span class="rg-ht" id="rgHudHt">' + hearts + "</span>") +
     (RG.mode === "site" ? "" : sndBtnHtml(false) +
     '<button class="rg-ib rgp-x" type="button" data-on="계속" data-off="멈춤" aria-label="일시정지" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">멈춤</button>') + "</div>";
 }
