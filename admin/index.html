@@ -505,6 +505,7 @@ var TABS = [
   { id:"dash",  n:"대시보드", d:"지금 처리할 일과 오늘의 숫자를 한 화면에 봅니다." },
   { id:"acct",  n:"계정", d:"로그인한 사람과 비밀번호 분실 요청을 처리합니다." },
   { id:"stamp", n:"스탬프", d:"사번이나 이름으로 한 사람을 골라 스탬프를 부여하거나 취소합니다." },
+  { id:"qr", n:"QR", d:"현장에 붙는 QR 전부입니다. 무엇을 인쇄해 어디에 붙이고, 지금 찍히고 있는지 한곳에서 봅니다." },
   { id:"apply", n:"신청", d:"상담 승인 · 커피챗 매칭 · 담당 명단을 처리합니다. 17F 강연은 자유 참석이라 신청이 없습니다(v4.26)." },
   { id:"att", n:"17F 출석", d:"17F 강연 QR 출석 인원 · 출석률 · 시간대별 입장 흐름입니다. 부문 통계는 두지 않습니다." },
   { id:"visit", n:"접속", d:"앱을 연 사람 수와 들어온 경로(홈 화면 앱 · 브라우저 · 카카오톡 등) · 시간대별 흐름 · 로그인 전 이탈입니다. 부문 통계는 두지 않습니다." },
@@ -710,7 +711,7 @@ el("key").addEventListener("keydown",function(e){ if(e.key==="Enter") unlock(); 
 
 /* ══════════════════ 3. 라우팅 · 폴링 ══════════════════ */
 /* subs = 메뉴별 서브탭 · sel = 표에서 고른 행 · ovr = 처리 직후 서버 반영 전까지 덮어 보여 줄 값 · drw = 열린 상세 패널 */
-var ST={ tab:"dash", subs:{ apply:"resv", stamp:"one", typing:"oly", race:"live", idea:"list" }, q:"", filt:"", data:{}, busy:false, at:null, sel:{}, ovr:{}, drw:null, draft:{}, bulk:{}, sp:{ q:"", emp:"" } };
+var ST={ tab:"dash", subs:{ apply:"resv", stamp:"one", qr:"list", typing:"oly", race:"live", idea:"list" }, q:"", filt:"", data:{}, busy:false, at:null, sel:{}, ovr:{}, drw:null, draft:{}, bulk:{}, sp:{ q:"", emp:"" } };
 /* 탭을 바꾸면 먼저 갖고 있는 데이터로 즉시 그리고, 그 다음 서버에서 받아 다시 그린다.
    안 그러면 응답이 올 때까지(1~3초) 이전 탭 내용이 새 탭 이름 아래 그대로 보인다. */
 /* load() 를 먼저 불러 busy 를 세운 뒤 그린다. 반대로 하면 첫 진입에 「가입 계정 0명」처럼 0 으로 그려진다. */
@@ -742,6 +743,7 @@ var NEED={
   dash:[{k:"stats",a:"stats"},{k:"acct",a:"acct_list"},{k:"stamp",a:"stamp_people"},{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"att",a:"att_stats"},{k:"photo",a:"photo_list"}],
   acct:[{k:"acct",a:"acct_list"},{k:"pwreq",a:"pw_req_list"}],
   stamp:[{k:"stamp",a:"stamp_people"},{k:"acct",a:"acct_list"},{k:"stair",a:"stair_list"},{k:"sstat",a:"stair_stats"},{k:"sy",a:"sync",p:{emp:""}}],
+  qr:[{k:"slist",a:"stamp_list"},{k:"alist",a:"att_list"},{k:"stair",a:"stair_list"},{k:"sstat",a:"stair_stats"},{k:"qrs",a:"qr_stats"}],   /* v4.53 QR 메뉴 · 부스·출석·계단 코드 + 오늘 스캔 수(계단은 stair_stats · 나머지는 qr_stats) */
   apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"noti",a:"sync",p:{emp:""}}],   /* v4.47 noti = 커피챗 마감 신호(현재 공지) */   /* v4.26 강의신청 현황(sess_list) · 사전 신청 명단(pre_list)은 걷어냈다 */
   att:[{k:"att",a:"att_stats"}],
   visit:[{k:"visit",a:"visit_stats"}],   /* v4.27 접속 기록 · 오늘(서버 날짜) */
@@ -755,7 +757,7 @@ var NEED={
 };
 /* v4.16 서브탭에서만 쓰는 액션 · 그 서브탭을 열 때만 부른다(함수면 지금 고른 값으로 만든다 · 담당 명단은 프로그램마다 다른 요청) */
 var SUBNEED={
-  "stamp:ops":[{k:"slist",a:"stamp_list"},{k:"alist",a:"att_list"}],
+  /* v4.53 "stamp:ops" 가 부르던 stamp_list · att_list 는 QR 메뉴(NEED.qr)로 옮겼다 */
   "stamp:wq":[{k:"wq",a:"wq_get"}],
   "apply:roster":function(){ return [{k:"ros_"+ROS.prog,a:"staff_roster",p:{prog:ROS.prog}}]; }
 };
@@ -833,7 +835,7 @@ function render(){
   if(missing.length&&ST.busy){
     h=tabHead()+'<div class="card"><p class="muted"><span class="spin"></span>서버에서 불러오는 중입니다. 보통 2~5초 걸립니다.</p></div>';
   } else {
-    try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="notice"?viewNotice():ST.tab==="survey"?viewSurvey():ST.tab==="typing"?viewTyping():ST.tab==="photo"?viewPhoto():ST.tab==="art"?viewArt():ST.tab==="race"?viewRace():ST.tab==="idea"?viewIdea():ST.tab==="att"?viewAtt():ST.tab==="visit"?viewVisit():viewApply(); }
+    try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="qr"?viewQr():ST.tab==="notice"?viewNotice():ST.tab==="survey"?viewSurvey():ST.tab==="typing"?viewTyping():ST.tab==="photo"?viewPhoto():ST.tab==="art"?viewArt():ST.tab==="race"?viewRace():ST.tab==="idea"?viewIdea():ST.tab==="att"?viewAtt():ST.tab==="visit"?viewVisit():viewApply(); }
     catch(e){ h='<div class="err-banner">화면을 그리는 중 오류가 났습니다: '+esc(e.message)+'</div>'; }
   }
   if(ST.err) h='<div class="err-banner">일부 데이터를 못 받았습니다('+esc(ST.err.reason||"")+'). 새로고침을 눌러 주세요. 표시된 값은 마지막으로 받은 것입니다.</div>'+h;
@@ -878,8 +880,9 @@ var GUIDE={
   dash:[["지금 처리할 일","숫자가 있는 줄의 <b>처리하기</b>를 누르면 그 메뉴의 그 필터로 바로 갑니다."],["숫자 타일","가입·스탬프·룰렛·응모권 · 참여 기록을 30초마다 새로 받습니다."],["아래 표","스탬프 보유 분포 · 강연 정원 대비 · 상담·커피챗 흐름입니다. 흐름 칸을 누르면 신청 탭의 그 상태로 갑니다."]],
   acct:[["분실 요청","앱에서 온 비밀번호 분실 요청이 위에 쌓입니다. <b>사원증이나 얼굴로 본인 확인을 먼저</b> 합니다."],["초기화","초기화하면 본인이 앱에서 다음에 넣는 4자리가 새 비밀번호가 됩니다. 비밀번호 값은 어디에도 보이지 않습니다."],["처리자 이름","한 번 적어 두면 이 브라우저가 기억하고 운영 로그에 함께 남깁니다."]],
   stamp:[["사람 찾기","왼쪽 칸에 사번이나 이름을 넣고 한 사람을 고릅니다."],["8칸 확인","획득한 칸은 네이비, 획득 경로(현장 QR · 담당자 부여 · 앱 자동)가 칸 안에 보입니다."],["부여","현장 QR 01·02·03 과 계단 07 만 <b>부여</b>할 수 있습니다. 앱 자동 04·05·06 과 설문 08 은 앱 안의 행동이라 부여하지 않습니다."],["취소","지금은 8칸 모두 <b>취소</b>할 수 있습니다(테스트 기간 · 설정 「스탬프취소_범위」 = 전체). 취소한 칸은 같은 행동으로 다시 받을 수 있습니다. 확인 창에서 보상 변화를 먼저 보여 주고, 룰렛을 이미 돌렸거나 발급된 응모권이 줄어드는 취소는 서버가 거부합니다."],["되돌리기","처리 직후 알림의 <b>되돌리기</b>로 바로 원래대로 돌릴 수 있습니다. 모든 부여·취소는 참여 기록에 행으로 남습니다(지우지 않음)."]],
+  qr:[["전체 목록","현장에 붙는 QR 전부를 한 표로 봅니다. 「오늘 스캔」이 지금 찍히고 있는지입니다(앱 링크 · 안내판은 집계 없음)."],["코드 · 인쇄","서버 코드와 인쇄 파일 경로입니다. <b>codes.json 내려받기</b>로 지금 코드를 받아 QR 담당이 인쇄 원본을 다시 만듭니다. 「견본 · 인쇄 금지」는 아직 서버 코드로 만들지 않은 파일입니다."],["설치 점검","오늘 스캔이 없는 부스 · 출석 · Wall 과 계단 36곳의 스캔 없음 · 주소 불일치를 봅니다."],["클로즈 베타","이번 베타에 붙이는 13장 점검표입니다. 붙인 뒤 운영진 폰으로 한 번씩 찍어 「찍힘」이 켜지는지 봅니다."]],
   apply:[["처리할 것","기본 필터는 <b>처리할 것</b>입니다. 칩의 숫자는 상태별 건수입니다."],["다음 행동","행마다 지금 상태에서 할 다음 행동 하나가 네이비 버튼입니다(신청 → 승인 → 체크인 → 완료). 노쇼·취소는 옆의 적갈 버튼입니다."],["여러 건","왼쪽 칸을 체크하면 위에 일괄 처리 바가 뜹니다(상담 일괄 승인·취소 · 커피챗 일괄 매칭·취소)."],["상세","행을 누르면 오른쪽에 상세 패널이 열립니다. 이력 확인과 메모 저장, 처리까지 거기서 합니다."],["되돌리기","승인·노쇼·취소·매칭은 처리 뒤 7초 동안 알림에 <b>되돌리기</b>가 뜹니다. 체크인·완료·참석은 스탬프 03 이 적립되어 되돌리기가 없습니다."]],
-  att:[["숫자","프로그램별 출석 인원과 출석률(분모 = 대강당 좌석 수)입니다. 17F 에 왔어도 QR 을 찍지 않은 사람은 세지 못합니다."],["흐름","10분 단위로 처음 출석한 사람 수입니다. 입구 혼잡 시각을 봅니다."],["테스트","테스트 계정 기록은 기본으로 빠집니다. 「테스트 계정 포함」으로 확인하고, 리허설이 끝나면 「테스트 기록 지우기」를 누릅니다."],["QR","출석 QR 코드는 스탬프 › 현장 운영의 부스 QR 표(a17)에 있습니다."]],
+  att:[["숫자","프로그램별 출석 인원과 출석률(분모 = 대강당 좌석 수)입니다. 17F 에 왔어도 QR 을 찍지 않은 사람은 세지 못합니다."],["흐름","10분 단위로 처음 출석한 사람 수입니다. 입구 혼잡 시각을 봅니다."],["테스트","테스트 계정 기록은 기본으로 빠집니다. 「테스트 계정 포함」으로 확인하고, 리허설이 끝나면 「테스트 기록 지우기」를 누릅니다."],["QR","출석 QR 코드는 QR 메뉴 › 코드 · 인쇄(a17)에 있습니다."]],
   visit:[["접속자","그날 앱을 연 사람 수입니다. 로그인한 사람은 사번 하나로, 끝까지 로그인하지 않은 기기는 기기 하나를 한 명으로 셉니다."],["경로","홈 화면 앱 · 브라우저 · 카카오톡 · 네이버 · 인앱 기타입니다. 한 사람이 두 경로로 들어오면 두 줄에 모두 셉니다."],["이탈","앱을 열고 로그인하지 않은 기기 수입니다. 아이폰은 홈 화면 앱이 사파리와 로그인을 따로 쓰므로 홈 화면 앱 줄의 이탈을 봅니다."],["테스트","테스트 계정과 그 기기의 기록은 기본으로 빠집니다. 리허설이 끝나면 「테스트 기록 지우기」를 누릅니다."]],
   idea:[["목록","최신 아이디어가 위에 옵니다. 테스트 계정은 빠져 있고 「테스트 계정 포함」으로 볼 수 있습니다."],["분야별 묶음","18F 커피챗 매칭 때 씁니다. 같은 분야에서 커피챗을 신청한 사람이 위에 옵니다."],["CSV","지금 걸러 보는 목록 그대로 내려받습니다."]],
   survey:[["집계","문항마다 선택 비율 · 점수 분포 · 한 줄 답을 봅니다."],["이름 없음","답은 사번 없이 저장됩니다. 사람 단위 조회는 없습니다."]],
@@ -1057,7 +1060,7 @@ function pwReset(btn){
 function viewStamp(){
   var rows=((ST.data.stamp||{}).rows||[]), s=sub()||"one";
   var h=tabHead(byBox());
-  h+=chips([{v:"one",n:"개인 발급 · 취소"},{v:"all",n:"전체 현황",c:rows.length},{v:"stair",n:"계단"},{v:"wq",n:"QR 퀴즈 문항"},{v:"ops",n:"현장 운영 · 인쇄용 QR"}], s, "setSub");
+  h+=chips([{v:"one",n:"개인 발급 · 취소"},{v:"all",n:"전체 현황",c:rows.length},{v:"stair",n:"계단"},{v:"wq",n:"QR 퀴즈 문항"},{v:"ops",n:"현장 운영"}], s, "setSub");
   if(s==="all") h+=viewStampAll(rows);
   else if(s==="wq") h+=viewWq();
   else if(s==="stair") h+=viewStairStats();
@@ -1206,26 +1209,15 @@ function viewStampAll(rows){
 function viewStairStats(){
   var d=ST.data.sstat||{}, spots=d.spots||[], people=d.people||[], selfRows=d.selfRows||[], fl0=d.floors||{}, cn=d.counts||{};
   var never=spots.filter(function(x){ return !x.n; }).length, mis=spots.filter(function(x){ return x.mis>0; }).length;
-  var byFR={}; spots.forEach(function(x){ byFR[x.fl+"-"+x.r]=x; });
   var h='<div class="kpis">'+
     kpi("오늘 함께 오른 층수",fl0.total||0,"개 층","스캔 종료 "+(fl0.scan||0)+" · 자기 신고 "+(fl0.self||0))+
     kpi("오늘 시작 · 종료",(cn.start||0)+" / "+(cn.end||0),"","중복 "+(cn.dup||0)+" · 보정 대기 "+(cn.fixq||0)+" · 자기 신고 "+(cn.self||0)+"건")+
     kpi("스탬프 목표",d.goal||10,"개 층","누적이 닿는 순간 계단(07) 적립")+
     '</div>';
-  h+=card("설치 점검표","36곳(1F~18F × 비상계단 1·2) · 스캔 없음 "+never+"곳 · 주소 불일치 "+mis+"곳",
-    '<div class="wrap"><table class="tb"><tr><th>층</th><th>비상계단 1</th><th>비상계단 2</th></tr>'+
-    (function(){ var out=[];
-      for(var fl=18; fl>=1; fl--){
-        out.push('<tr><td class="n"><b>'+fl+'F</b></td>'+[1,2].map(function(r){
-          var x=byFR[fl+"-"+r];
-          if(!x) return '<td class="cap">미설치</td>';
-          var st=!x.n?tag("스캔 없음","bad"):x.mis>0?tag("불일치 "+x.mis+"건","warn"):tag("정상","ok");
-          return '<td><div class="row" style="gap:4px">'+st+(x.on?"":tag("꺼짐","off"))+'</div><div class="cap mt8">누적 '+x.n+' · 오늘 '+x.today+(x.last?' · '+esc(short(x.last)):'')+'</div></td>';
-        }).join("")+'</tr>');
-      }
-      return out.join("");
-    })()+
-    '</table></div>');
+  /* v4.53 설치 점검표(36곳)는 QR › 설치 점검으로 옮겼다(stairCheckTable) · 여기는 안내 한 줄 */
+  h+=card("설치 점검표","QR 메뉴로 옮겼습니다",
+    '<p class="muted" style="font-size:var(--fs-s)">36곳 설치 점검표(스캔 없음 '+never+'곳 · 주소 불일치 '+mis+'곳)는 <b>QR</b> 메뉴의 「설치 점검」 서브탭에 있습니다.</p>'+
+    '<div class="row mt12"><button class="btn" onclick="goTo(\'qr\',\'check\')">QR › 설치 점검 열기</button></div>');
   h+=card("자기 신고 기록","최근 50건 · 최신 순 · 시작 뒤 30분 넘어 다른 층이거나 같은 층 2분 넘어 재스캔하면 본인이 직접 지난 구간의 도착 층을 고른 기록",
     '<div class="wrap scrolly" style="max-height:360px"><table class="tb"><tr><th>시각</th><th>사번</th><th>이름</th><th>구간</th><th class="tdr">층수</th></tr>'+
     selfRows.map(function(r){ return '<tr><td class="n cap">'+esc(short(r.ts))+'</td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.name||"")+'</td><td class="n">'+r.from+'F → '+r.to+'F</td><td class="n tdr"><b>'+r.floors+'</b></td></tr>'; }).join("")+
@@ -1239,28 +1231,20 @@ function viewStairStats(){
     '</table></div>');
   h+=memo('<p>계단은 방화문 앞 QR로 시작과 종료를 찍는 방식입니다(1F~18F × 비상계단 1·2, 36곳). 오늘 오른 층수 합이 10개 층에 닿는 순간 계단(07) 스탬프가 적립됩니다. 층·방향·횟수 제한은 없습니다.</p>'+
     '<p>같은 층에서 2분 안에 다시 스캔하면 중복(무시), 시작 뒤 30분이 넘어 다른 층이면 다음 스캔 전에 본인이 지난 구간의 도착 층을 먼저 고릅니다(자기 신고 · 「자기 신고 기록」에 남고 누적에 들어갑니다).</p>'+
-    '<p><b>설치 점검표</b>의 「스캔 없음」은 QR이 아직 한 번도 찍히지 않은 지점입니다(미설치이거나 인쇄물이 안 붙었을 가능성). 「불일치」는 QR 주소의 층·경로가 서버에 등록된 지점과 달라 붙은 자리가 틀렸을 가능성입니다. 두 경우 다 인쇄물 위치를 현장에서 확인하세요.</p>'+
+    '<p><b>설치 점검표</b>(QR › 설치 점검)의 「스캔 없음」은 QR이 아직 한 번도 찍히지 않은 지점입니다(미설치이거나 인쇄물이 안 붙었을 가능성). 「불일치」는 QR 주소의 층·경로가 서버에 등록된 지점과 달라 붙은 자리가 틀렸을 가능성입니다. 두 경우 다 인쇄물 위치를 현장에서 확인하세요.</p>'+
     '<p>오늘 함께 오른 층수와 자기 신고·상위 기록은 이 서브탭(관리코드)에만 있습니다. 참가자 화면·올림픽·순위·경품에는 넣지 않습니다.</p>');
   return h;
 }
 /* v3.33·v3.34 운영 · 룰렛 소진 안내 스위치 + 계단 지점 코드(인쇄용) */
 function viewStairOps(){
-  var out=!!((ST.data.sy||{}).rouletteOut), rows=((ST.data.stair||{}).rows||[]);
+  var out=!!((ST.data.sy||{}).rouletteOut);
   var h='<div class="grid g2" style="margin-top:0">'+card("룰렛 소진 안내", out?tag("안내 켜짐","warn"):tag("안내 꺼짐","off"),
     '<p class="muted" style="font-size:var(--fs-s)">켜면 참가자 앱의 룰렛 쿠폰 창과 스탬프 보상 레일에 「오늘 준비한 룰렛이 모두 소진되었습니다」가 뜹니다. 응모권은 그대로입니다.</p>'+
     '<div class="row mt12"><button class="btn '+(out?"":"danger")+'" onclick="rouletteOut('+(out?0:1)+')">'+(out?"안내 끄기":"소진 안내 켜기")+'</button></div>');
-  /* v3.65 DAP Wall QR 퀴즈 · 벽 QR 내용이 바뀐다(앱 주소 뒤 #q=wall1|wall2|wall3) · 스캔한 벽의 문제만 열린다 */
-  h+=card("DAP Wall 퀴즈 QR","인쇄용",
-    '<div class="wrap"><table class="tb"><tr><th>벽</th><th>QR 내용</th></tr>'+
-    ["wall1","wall2","wall3"].map(function(w,i){ return '<tr><td><b>WALL '+(i+1)+'</b></td><td class="n">'+esc(appBase())+'index.html#q='+w+'</td></tr>'; }).join("")+'</table></div>'+
-    memo('<p>벽마다 다른 QR 을 붙입니다. 스캔하면 그 벽의 세트만 열리고, 한 세트를 끝내면 「QR 퀴즈」 스탬프가 적립됩니다(점수 기준 없음). 문항은 「QR 퀴즈 문항」 서브탭에서 고칩니다.</p><p>인쇄 파일은 <code>QR 테스트/out/light</code> 또는 <code>/dark</code>의 <b>wall1.png ~ wall3.png</b>입니다. 서버 코드가 없는 고정 주소라 다시 만들 필요가 없습니다(인쇄본은 index.html 을 뺀 짧은 주소이고 두 주소 모두 같은 퀴즈를 엽니다).</p>'))+'</div>';
-  h+=boothCard();
-  h+=card("계단 지점 QR","인쇄용 · 방화문 앞 · 36곳(1F~18F × 비상계단 1·2) · 지점마다 시작 · 종료 겸용 QR 1개",
-    (rows.length?'<div class="wrap"><table class="tb"><tr><th>지점</th><th>층</th><th>코드</th><th>상태</th></tr>'+rows.map(function(r){ return '<tr><td><b>'+esc(r.name)+'</b></td><td class="n">'+esc(r.fl)+'F</td><td class="n">'+esc(r.code)+'</td><td>'+(r.on?tag("운영","ok"):tag("꺼짐","off"))+'</td></tr>'; }).join("")+'</table></div>':'<div class="empty">설치된 계단 지점이 없습니다. 백엔드 stair_install 로 36곳(1F~18F × 비상계단 1·2)을 만듭니다. 옛 계단실 안 4곳(18F·17F·10F·1F)은 같이 꺼집니다.</div>')+
-    memo('<p>지점마다 <b>방화문 앞</b>(복도 쪽, 계단실 문을 열기 전)에 붙입니다. 포스터 2장 이상 인쇄를 권합니다(한 장이면 스캔 줄이 생깁니다).</p>'+
-      '<p>참가자가 QR을 찍으면 그 지점에서 시작 또는 종료로 판정됩니다(같은 지점, 같은 QR). 진행 중 시작이 없으면 시작, 다른 층이면 종료로 그 구간의 층수가 오늘 누적에 더해집니다. 누적이 10개 층에 닿는 순간 계단(07) 스탬프가 적립됩니다. 층·방향·횟수 제한은 없습니다(자세한 판정은 이 메뉴의 「계단」 서브탭 참고).</p>'+
-      '<p>인쇄 파일은 <code>QR 테스트/out/light</code> 또는 <code>/dark</code> 폴더의 <b>st01-1.png ~ st18-2.png</b>(층 두 자리 + 경로 1·2, 36장)입니다. 붙이기 전에 이 표의 코드와 파일이 같은 지점인지 확인하세요.</p>'+
-      '<p>계단실 구간은 통신이 약해도 앱이 스캔을 저장했다가 연결되면 자동으로 보냅니다.</p>'));
+  /* v4.53 (사용자 지시 260928) DAP Wall · 부스 · 17F 출석 · 계단 지점 QR 카드와 codes.json 은 QR 메뉴(viewQr)로 옮겼다 · 여기는 안내 한 줄만 */
+  h+=card("인쇄용 QR","QR 메뉴로 옮겼습니다",
+    '<p class="muted" style="font-size:var(--fs-s)">DAP Wall 퀴즈 · 부스 · 17F 출석 · 계단 지점 QR 표와 codes.json 내려받기는 <b>QR</b> 메뉴의 「코드 · 인쇄」 서브탭에 있습니다.</p>'+
+    '<div class="row mt12"><button class="btn" onclick="goTo(\'qr\',\'print\')">QR › 코드 · 인쇄 열기</button></div>')+'</div>';
   return h;
 }
 /* 참가자 앱 주소 · 콘솔 경로(…/admin/index.html)에서 admin/ 을 뗀 것. GitHub Pages 의 /hi_ax/ 같은 저장소 경로를 지킨다
@@ -1549,7 +1533,7 @@ var SURVEY_PLACE_NAME = { p1:"1F AX 전시·체험존", p2:"AX Now! 체험 부�
  * 여기는 집계만 본다: 프로그램별 출석 인원 · 출석률 · 시간대별 입장 흐름 · 여러 프로그램 출석 분포. 부문 통계는 두지 않는다(260917 결정).
  * 출석률 분모 = 대강당 좌석 수(v4.27 · 260924 사용자 확정 · 서버 ATT_SEATS 235 한 곳) · 서버 att_stats 가 계산해 denom 으로 준다.
  * 테스트 계정(310555) 기록은 기본 집계에서 빠진다 · 「테스트 포함」으로 볼 수 있고 「테스트 기록 지우기」(att_wipe)로 지운다.
- * 출석 QR 코드는 스탬프 › 현장 운영 › 부스 QR 표(codes.json a17)에 있다. */
+ * 출석 QR 코드는 QR 메뉴 › 코드 · 인쇄(codes.json a17)에 있다(v4.53 · 옛 자리 = 스탬프 › 현장 운영). */
 var ATTV={ test:false, day:"", data:null, busy:false };
 function attCur(){ return (ATTV.test||ATTV.day)?ATTV.data:ST.data.att; }
 function attOpt(k, v){
@@ -1599,7 +1583,7 @@ function viewAtt(){
   h+=memo('<p><b>출석률</b> = 그 강연에 QR 로 출석한 사람 ÷ 대강당 좌석 '+(d.denom||0)+'석. 17F 에 오고도 QR 을 찍지 않은 사람은 세지 못합니다. 서서 듣는 사람까지 출석하면 100%를 넘을 수 있고 그 줄은 막대가 적갈색으로 바뀝니다.</p>'+
     '<p><b>출석 규칙</b> · 참가자가 대강당 입구 QR 을 찍으면 지금 진행 중인 강연이 미리 골라진 시트가 뜹니다. 시작 '+(d.lead||15)+'분 전부터 종료까지인 강연만 고를 수 있고, 시간은 서버가 다시 확인합니다. 한 사람이 여러 강연에 출석할 수 있고 같은 강연은 한 번만 셉니다.</p>'+
     '<p><b>스탬프</b> · 그 사람의 첫 출석에서 스탬프 03 「프로그램 참여」가 적립됩니다(DAP 상담 · 커피챗으로 이미 받았으면 그대로).</p>'+
-    '<p><b>QR</b> · 출석 QR 코드는 스탬프 › 현장 운영의 부스 QR 표에 있고 codes.json(a17)으로 인쇄 원본을 만듭니다. 코드를 바꾸면 입구 인쇄물을 다시 붙입니다.</p>'+
+    '<p><b>QR</b> · 출석 QR 코드는 QR 메뉴 › 코드 · 인쇄에 있고 codes.json(a17)으로 인쇄 원본을 만듭니다. 코드를 바꾸면 입구 인쇄물을 다시 붙입니다.</p>'+
     '<p>부문별 집계는 두지 않습니다(260917 결정). 이 화면의 숫자에는 사번 · 이름이 없습니다.</p>');
   return h;
 }
@@ -3128,19 +3112,136 @@ function boothCard(){
   if(!d) return card("부스 QR","인쇄용 · 스탬프 01 · 02 · 03",'<p class="muted"><span class="spin"></span>코드를 불러오는 중입니다.</p>');
   var cur=rows.filter(function(r){ return BOOTH_PRINT.indexOf(r.id)>=0; }), old=rows.filter(function(r){ return BOOTH_PRINT.indexOf(r.id)<0; });
   var al=ST.data.alist, attRow=al&&al.ok&&al.code?'<tr><td>'+tag("17F 출석")+'</td><td style="white-space:nowrap"><b>17F 대강당 입구</b></td><td class="n" style="white-space:nowrap">강연마다 시작 '+(al.lead||15)+'분 전 ~ 종료</td><td class="n"><b>'+esc(al.code)+'</b></td>'+
-    '<td class="n cap">'+esc(appBase())+'#s='+esc(al.code)+'</td><td class="n cap">a17.png</td><td>'+tag("운영","ok")+'</td></tr>':'';
+    '<td class="n cap">'+esc(appBase())+'#s='+esc(al.code)+'</td><td class="n cap">print/a17_A4_light.png</td><td>'+tag("운영","ok")+'</td></tr>':'';
   return card("부스 QR","인쇄용 · 스탬프 01 · 02 · 17F 출석 · 코드를 바꾸면 다시 인쇄",
     (cur.length?'<div class="wrap"><table class="tb"><tr><th>스탬프</th><th>지점</th><th>운영 시간</th><th>코드</th><th>QR 내용</th><th>인쇄 파일</th><th>상태</th></tr>'+cur.map(function(r){
       return '<tr><td>'+tag("스탬프 "+STAMP_META[r.id].no)+'</td><td style="white-space:nowrap"><b>'+esc(r.name)+'</b></td><td class="n" style="white-space:nowrap">'+esc(hhmm(r.s))+' ~ '+esc(hhmm(r.e))+'</td><td class="n"><b>'+esc(r.code)+'</b></td>'+
-        '<td class="n cap">'+esc(appBase())+'#s='+esc(r.code)+'</td><td class="n cap">'+esc(r.id)+'.png</td><td>'+(r.on?tag("운영","ok"):tag("꺼짐","off"))+'</td></tr>'; }).join("")+attRow+'</table></div>'
+        '<td class="n cap">'+esc(appBase())+'#s='+esc(r.code)+'</td><td class="n cap">'+esc(r.id)+'.png'+(QR_SAMPLE_IDS.indexOf(r.id)>=0?' '+tag("견본 · 인쇄 금지","bad"):'')+'</td><td>'+(r.on?tag("운영","ok"):tag("꺼짐","off"))+'</td></tr>'; }).join("")+attRow+'</table></div>'
       :'<div class="empty">설치된 부스 지점이 없습니다. 백엔드 stamp_install 로 만듭니다.</div>')+
     (old.length?'<p class="cap mt8">인쇄하지 않는 지점 '+old.map(function(r){ return esc(r.id+" "+r.name)+(r.id==="p3"?" (17F 좌석 QR 폐지 · 담당자 적립용 · 17F 는 출석 QR)":r.on?" (운영 중)":" (꺼짐)"); }).join(" · ")+'</p>':'')+
     '<div class="row mt12"><button class="btn pri" onclick="qrCodesDl()">codes.json 내려받기 (부스 + 17F 출석 + 계단)</button><span class="cap">인쇄 원본을 만드는 파일입니다. 아래 운영 메모의 순서대로 씁니다.</span></div>'+
     memo('<ol><li><b>codes.json 내려받기</b>를 눌러 받은 파일로 <code>QR 테스트/codes.json</code>을 바꿉니다(부스 2곳 + 17F 출석 1곳 + 계단 36곳의 지금 서버 코드).</li>'+
       '<li><code>QR 테스트</code> 폴더에서 <code>python qr_mother.py</code>를 돌립니다. 모든 QR을 다시 만들고 인식 검증까지 합니다(실패가 있으면 종료코드 1).</li>'+
-      '<li><code>QR 테스트/out/light</code>(흰 벽) 또는 <code>/dark</code>(어두운 곳)의 <b>p1.png · p2.png · a17.png</b>를 인쇄합니다(a17 = 17F 대강당 입구 출석, 라이트). 라벨에 「견본」이 보이면 인쇄하지 않습니다.</li>'+
+      '<li><code>QR 테스트/out/light</code>(흰 벽) 또는 <code>/dark</code>(어두운 곳)의 <b>p1.png · p2.png</b>, 17F 출석은 <b>out/print/a17_A4_light.png</b>(A4)를 인쇄합니다. 라벨에 「견본」이 보이면 인쇄하지 않습니다.</li>'+
       '<li>붙인 뒤 폰 기본 카메라로 한 번 찍어 이 표의 코드로 적립되는지 확인합니다.</li></ol>'+
-      '<p>260922 기준 <code>QR 테스트/out</code>의 p1~p3은 부스 코드 없이 만든 <b>견본(AXSSAMPLE)</b>입니다. 반드시 위 순서로 다시 만듭니다. 코드 전면 교체(stamp_rotate)를 하면 인쇄물도 다시 뽑습니다.</p>'));
+      '<p><code>QR 테스트/out</code>의 p1 · p2 는 부스 코드 없이 만든 <b>견본(AXSSAMPLE)</b>이라 「견본 · 인쇄 금지」 배지가 붙어 있습니다. 반드시 위 순서로 다시 만들고, 실제 코드로 만든 뒤에는 콘솔 QR_SAMPLE_IDS 를 비웁니다. 코드 전면 교체(stamp_rotate · stair_rotate · att_rotate)는 백엔드 액션만 있고 이 콘솔에는 버튼이 없습니다.</p>'));
+}
+
+/* ── 9-5. QR 메뉴 (v4.53 · 사용자 지시 260928) ── 현장에 붙는 QR 전부를 한곳에서. 스탬프 › 현장 운영에 흩어져 있던 Wall · 부스 · 17F 출석 · 계단 · codes.json 카드를 옮겼다.
+ * 목록의 근거 = QR 상호작용 기획.md §1-1 · §5 + QR 테스트/out/manifest.json 의 id(app · wall1~3 · p1 · p2 · a17 · roulette · photo · st01-1~st18-2 · t_* 8종은 테스트 전용이라 표에 없다).
+ * 인쇄 파일 = QR 테스트/out/light|dark/<id>.png (a17 은 out/print/a17_A4_light.png). manifest 의 version 값은 띄우지 않는다(디자인 재생성으로 바뀐다 · id 와 경로로만 다룬다).
+ * 오늘 스캔 수 = 부스 · 17F 출석 · Wall 은 qr_stats(60초 캐시) · 계단은 stair_stats(spots[].today) · 앱 링크 · 안내판은 집계 없음. 부문 통계 없음. */
+var QR_SAMPLE_IDS=["p1","p2"];   /* out/ 의 이 파일은 codes.json 에 부스 코드가 없어 견본 코드(AXSSAMPLE)로 만든 것 · 「견본 · 인쇄 금지」 · codes.json 으로 다시 만든 뒤 비운다 */
+var QR_BETA=["p1","p2","a17","wall1","wall2","wall3","st01-1","st01-2","st02-1","st02-2","st10-1","st10-2","app"];   /* 클로즈 베타 부착 13장 (사용자 확정 260928) */
+var QR_GRP={ app:"앱 링크", wall:"Wall", booth:"부스", att:"출석", stair:"계단", sign:"안내판" };
+function qrFile(id, theme){ return id==="a17"?"QR 테스트/out/print/a17_A4_light.png":"QR 테스트/out/"+(theme||"light")+"/"+id+".png"; }
+function qrStId(fl, r){ return "st"+("0"+fl).slice(-2)+"-"+r; }
+/* 표 한 줄 = { id, grp, name, place, time?, data(QR 내용), code?, file, st(on|off|sample|retired|fixed), today?(null = 집계 없음), todayAll?, note?, last?, n?, mis? } */
+function qrItems(){
+  var base=appBase(), qs=ST.data.qrs||{}, bo=qs.booth||{}, al=ST.data.alist, byId={}, out=[];
+  ((ST.data.sstat||{}).spots||[]).forEach(function(x){ byId[x.id]=x; });
+  out.push({ id:"app", grp:"app", name:"AX Festival 2026 앱", place:"포스터 · 안내 데스크 · 시연", data:base, file:qrFile("app"), st:"fixed", today:null });
+  ["wall1","wall2","wall3"].forEach(function(w,i){ out.push({ id:w, grp:"wall", name:"DAP Wall 퀴즈 · WALL "+(i+1), place:"1F 전시 벽 "+(i+1), data:base+"#q="+w, file:qrFile(w), st:"fixed", today:qs.wall?qs.wall.today:null, note:"세 벽 합계", last:qs.wall?qs.wall.last:"" }); });
+  boothRows().forEach(function(r){
+    if(BOOTH_PRINT.indexOf(r.id)<0){ if(r.id==="p3") out.push({ id:"p3", grp:"booth", name:"프로그램 참여 · 17F 좌석 QR", place:"폐지 · 인쇄 안 함 · 17F 는 출석 QR(a17)", data:"", code:r.code, file:"", st:"retired", today:null }); return; }
+    var b=bo[r.id]||{};
+    out.push({ id:r.id, grp:"booth", name:"스탬프 "+STAMP_META[r.id].no+" · "+r.name, place:{ p1:"1F 전시존 끝 입간판", p2:"AX Now! 부스 스태프 카드" }[r.id]||r.name, time:hhmm(r.s)+" ~ "+hhmm(r.e),
+      data:base+"#s="+r.code, code:r.code, file:qrFile(r.id), st:!r.on?"off":QR_SAMPLE_IDS.indexOf(r.id)>=0?"sample":"on", today:b.today==null?null:b.today, todayAll:b.todayAll, last:b.last||"" });
+  });
+  if(al&&al.ok&&al.code) out.push({ id:"a17", grp:"att", name:"17F 출석", place:"17F 대강당 입구", time:"강연마다 시작 "+(al.lead||15)+"분 전 ~ 종료", data:base+"#s="+al.code, code:al.code, file:qrFile("a17"), st:"on", today:qs.att?qs.att.today:null, note:qs.att?"사람 "+qs.att.people:"", last:qs.att?qs.att.last:"" });
+  ((ST.data.stair||{}).rows||[]).forEach(function(r){ var id=qrStId(r.fl,r.r), x=byId[id]||{};
+    out.push({ id:id, grp:"stair", name:r.name, place:r.fl+"F 비상계단 "+r.r+" 방화문 앞", data:base+"#s="+r.code+"&fl="+r.fl+"&r="+r.r, code:r.code, file:qrFile(id), st:r.on?"on":"off", today:x.today==null?null:x.today, n:x.n, mis:x.mis, last:x.last||"" }); });
+  out.push({ id:"roulette", grp:"sign", name:"룰렛 데스크 안내판", place:"1F 룰렛 데스크", data:base, file:qrFile("roulette"), st:"fixed", today:null, note:"앱 링크 QR · 적립 QR 아님" });
+  out.push({ id:"photo", grp:"sign", name:"AI 포토부스 안내판", place:"1F AI 포토부스", data:base, file:qrFile("photo"), st:"fixed", today:null, note:"앱 링크 QR · 적립 QR 아님" });
+  return out;
+}
+function qrSt(it){ return it.st==="on"?tag("운영","ok"):it.st==="off"?tag("꺼짐","off"):it.st==="retired"?tag("폐지 · 인쇄 안 함","off"):it.st==="sample"?tag("운영","ok")+' '+tag("견본 · 인쇄 금지","bad"):tag("고정 주소"); }
+/* 오늘 스캔 칸 · null = 집계 없음(앱 링크 · 안내판 · 서버 응답 전) */
+function qrToday(it){ if(it.today==null) return '<span class="cap">집계 없음</span>'; return '<b>'+it.today+'</b>'+(it.note?' <span class="cap">'+esc(it.note)+'</span>':'')+(it.last?'<div class="cap">마지막 '+esc(short(it.last))+'</div>':''); }
+function viewQr(){
+  var s=sub()||"list", items=qrItems();
+  var h=tabHead();
+  h+=chips([{v:"list",n:"전체 목록",c:items.length},{v:"print",n:"코드 · 인쇄"},{v:"check",n:"설치 점검"},{v:"beta",n:"클로즈 베타",c:QR_BETA.length}], s, "setSub");
+  if(s==="print") h+=viewQrPrint();
+  else if(s==="check") h+=viewQrCheck(items);
+  else if(s==="beta") h+=viewQrBeta(items);
+  else h+=viewQrList(items);
+  h+=memo('<p>QR 은 세 갈래입니다. <b>서버 코드가 있는 QR</b>(부스 p1 · p2 · 17F 출석 a17 · 계단 36곳)은 코드가 바뀌면 인쇄물을 다시 붙입니다. <b>고정 주소 QR</b>(앱 링크 · DAP Wall 1~3 · 룰렛 · 포토부스 안내판)은 다시 만들 일이 없습니다. p3(17F 좌석 QR)은 폐지라 인쇄하지 않습니다.</p>'+
+    '<p>오늘 스캔 수는 부스 · 17F 출석 · Wall 은 서버 qr_stats(60초 캐시), 계단은 stair_stats 입니다. 앱 링크 · 안내판 QR 은 집계가 없습니다(찍어도 서버에 남지 않음). 테스트 사번(310555) 기록은 빠집니다. 부스는 「현장 QR」 경로만 세고 담당자 부여는 빼며, Wall 은 앱이 어느 벽인지 보내지 않아 세 벽 합계입니다.</p>'+
+    '<p>인쇄 파일은 <code>QR 테스트/out/light</code>(흰 벽) 또는 <code>/dark</code>(어두운 곳)의 <code>&lt;id&gt;.png</code>, 17F 출석은 <code>out/print/a17_A4_light.png</code>(A4)입니다. 파일은 QR 담당 대화가 <code>qr_mother.py</code> 로 다시 만듭니다(콘솔은 id 와 경로만 다룹니다). 테스트 전용 8종(<code>t_*</code>)은 인식 검증용이라 표에 없습니다.</p>'+
+    '<p>코드 전면 교체(stamp_rotate · stair_rotate · att_rotate)는 백엔드 액션만 있고 이 콘솔에는 버튼이 없습니다.</p>');
+  return h;
+}
+function viewQrList(items){
+  var q=ST.q.toLowerCase(), rows=items.filter(function(it){ return !q||[it.id,it.name,it.place,it.code||"",QR_GRP[it.grp]].some(function(v){ return String(v).toLowerCase().indexOf(q)>=0; }); });
+  var qs=ST.data.qrs||{};
+  var h='<div class="toolbar">'+searchBox("id · 이름 · 붙는 곳 · 코드")+'<span class="cnt"><b>'+rows.length+'</b> / '+items.length+'장 · 스캔 수 갱신 '+esc(qs.t?short(qs.t):"-")+'</span></div>';
+  h+='<div class="wrap"><table class="tb"><tr><th>구분</th><th>이름</th><th>붙는 곳</th><th>QR 내용</th><th>코드</th><th>인쇄 파일</th><th>상태</th><th class="tdr">오늘 스캔</th></tr>'+
+    rows.map(function(it){ return '<tr><td>'+tag(QR_GRP[it.grp])+'</td><td><b>'+esc(it.name)+'</b><small class="cap" style="display:block">'+esc(it.id)+'</small></td><td>'+esc(it.place)+(it.time?'<div class="cap">'+esc(it.time)+'</div>':'')+'</td>'+
+      '<td class="n cap" style="word-break:break-all">'+(it.data?esc(it.data):'-')+'</td><td class="n">'+(it.code?'<b>'+esc(it.code)+'</b>':'<span class="cap">없음</span>')+'</td><td class="n cap">'+(it.file?esc(it.file):'-')+'</td><td>'+qrSt(it)+'</td><td class="n tdr">'+qrToday(it)+'</td></tr>'; }).join("")+
+    (!rows.length?emptyRow(8,"찾는 QR 이 없습니다."):'')+'</table></div>';
+  return h;
+}
+/* v3.65 DAP Wall QR 퀴즈 · 벽 QR 내용이 바뀐다(앱 주소 뒤 #q=wall1|wall2|wall3) · 스캔한 벽의 문제만 열린다 */
+function wallCard(){
+  return card("DAP Wall 퀴즈 QR","인쇄용 · 고정 주소 · 다시 만들 일 없음",
+    '<div class="wrap"><table class="tb"><tr><th>벽</th><th>QR 내용</th><th>인쇄 파일</th></tr>'+
+    ["wall1","wall2","wall3"].map(function(w,i){ return '<tr><td><b>WALL '+(i+1)+'</b></td><td class="n">'+esc(appBase())+'#q='+w+'</td><td class="n cap">'+esc(qrFile(w))+'</td></tr>'; }).join("")+'</table></div>'+
+    memo('<p>벽마다 다른 QR 을 붙입니다. 스캔하면 그 벽의 세트만 열리고, 한 세트를 끝내면 「QR 퀴즈」 스탬프가 적립됩니다(점수 기준 없음). 문항은 스탬프 › 「QR 퀴즈 문항」 서브탭에서 고칩니다.</p><p>서버 코드가 없는 고정 주소라 다시 만들 필요가 없습니다. 인쇄본은 index.html 을 뺀 짧은 주소이고, <code>index.html#q=wall1</code> 도 같은 퀴즈를 엽니다.</p>'));
+}
+function stairCard(){
+  var rows=((ST.data.stair||{}).rows||[]);
+  return card("계단 지점 QR","인쇄용 · 방화문 앞 · 36곳(1F~18F × 비상계단 1·2) · 지점마다 시작 · 종료 겸용 QR 1개",
+    (rows.length?'<div class="wrap scrolly" style="max-height:420px"><table class="tb"><tr><th>지점</th><th>층</th><th>코드</th><th>QR 내용</th><th>인쇄 파일</th><th>상태</th></tr>'+rows.map(function(r){ var id=qrStId(r.fl,r.r);
+      return '<tr><td><b>'+esc(r.name)+'</b></td><td class="n">'+esc(r.fl)+'F</td><td class="n"><b>'+esc(r.code)+'</b></td><td class="n cap">'+esc(appBase()+'#s='+r.code+'&fl='+r.fl+'&r='+r.r)+'</td><td class="n cap">'+esc(id)+'.png</td><td>'+(r.on?tag("운영","ok"):tag("꺼짐","off"))+'</td></tr>'; }).join("")+'</table></div>':'<div class="empty">설치된 계단 지점이 없습니다. 백엔드 stair_install 로 36곳(1F~18F × 비상계단 1·2)을 만듭니다. 옛 계단실 안 4곳(18F·17F·10F·1F)은 같이 꺼집니다.</div>')+
+    memo('<p>지점마다 <b>방화문 앞</b>(복도 쪽, 계단실 문을 열기 전)에 붙입니다. 포스터 2장 이상 인쇄를 권합니다(한 장이면 스캔 줄이 생깁니다).</p>'+
+      '<p>참가자가 QR을 찍으면 그 지점에서 시작 또는 종료로 판정됩니다(같은 지점, 같은 QR). 진행 중 시작이 없으면 시작, 다른 층이면 종료로 그 구간의 층수가 오늘 누적에 더해집니다. 누적이 10개 층에 닿는 순간 계단(07) 스탬프가 적립됩니다. 층·방향·횟수 제한은 없습니다(자세한 판정은 스탬프 › 「계단」 서브탭 참고).</p>'+
+      '<p>인쇄 파일은 <code>QR 테스트/out/light</code> 또는 <code>/dark</code> 폴더의 <b>st01-1.png ~ st18-2.png</b>(층 두 자리 + 경로 1·2, 36장)입니다. 붙이기 전에 이 표의 코드와 파일이 같은 지점인지 확인하세요.</p>'+
+      '<p>계단실 구간은 통신이 약해도 앱이 스캔을 저장했다가 연결되면 자동으로 보냅니다.</p>'));
+}
+function viewQrPrint(){ return boothCard()+wallCard()+stairCard(); }
+/* 계단 36곳 설치 점검표 · 스탬프 › 계단에서 옮겨 옴(v4.53) · 스캔 없음 = 누적 0 · 불일치 = QR 주소의 층·경로가 등록 지점과 다름 */
+function stairCheckTable(spots){
+  var byFR={}; spots.forEach(function(x){ byFR[x.fl+"-"+x.r]=x; });
+  var out=[];
+  for(var fl=18; fl>=1; fl--){
+    out.push('<tr><td class="n"><b>'+fl+'F</b></td>'+[1,2].map(function(r){
+      var x=byFR[fl+"-"+r];
+      if(!x) return '<td class="cap">미설치</td>';
+      var st=!x.n?tag("스캔 없음","bad"):x.mis>0?tag("불일치 "+x.mis+"건","warn"):tag("정상","ok");
+      return '<td><div class="row" style="gap:4px">'+st+(x.on?"":tag("꺼짐","off"))+'</div><div class="cap mt8">누적 '+x.n+' · 오늘 '+x.today+(x.last?' · '+esc(short(x.last)):'')+'</div></td>';
+    }).join("")+'</tr>');
+  }
+  return '<div class="wrap"><table class="tb"><tr><th>층</th><th>비상계단 1</th><th>비상계단 2</th></tr>'+out.join("")+'</table></div>';
+}
+function viewQrCheck(items){
+  var spots=((ST.data.sstat||{}).spots||[]);
+  var never=spots.filter(function(x){ return !x.n; }).length, mis=spots.filter(function(x){ return x.mis>0; }).length;
+  var top=items.filter(function(it){ return (it.grp==="booth"&&it.st!=="retired")||it.grp==="att"||it.grp==="wall"; });
+  var noScan=top.filter(function(it){ return it.today!=null&&!it.today; }).length;
+  var h='<div class="kpis">'+kpi("오늘 스캔 없음 · 부스 · 출석 · Wall",noScan,"곳","부스 2 · 17F 출석 1 · Wall 3 중")+kpi("계단 · 스캔 없음",never,"곳","36곳 중 · 한 번도 찍히지 않은 지점")+kpi("계단 · 주소 불일치",mis,"곳","QR 주소의 층·경로가 등록 지점과 다름")+'</div>';
+  h+=card("부스 · 17F 출석 · Wall","오늘 스캔 수 기준 · 0 이면 「오늘 스캔 없음」",
+    '<div class="wrap"><table class="tb"><tr><th>구분</th><th>이름</th><th>붙는 곳</th><th class="tdr">오늘 스캔</th><th>점검</th></tr>'+
+    top.map(function(it){ var st=it.st==="off"?tag("꺼짐","off"):it.today==null?tag("집계 없음","off"):!it.today?tag("오늘 스캔 없음","bad"):tag("찍히는 중","ok");
+      return '<tr><td>'+tag(QR_GRP[it.grp])+'</td><td><b>'+esc(it.name)+'</b></td><td>'+esc(it.place)+'</td><td class="n tdr">'+qrToday(it)+'</td><td>'+st+'</td></tr>'; }).join("")+'</table></div>');
+  h+=card("계단 설치 점검표","36곳(1F~18F × 비상계단 1·2) · 스캔 없음 "+never+"곳 · 주소 불일치 "+mis+"곳", stairCheckTable(spots));
+  h+=memo('<p>「오늘 스캔 없음」은 오늘 아직 한 번도 찍히지 않은 QR 입니다(미설치이거나 인쇄물이 안 붙었거나, 아직 아무도 안 온 것). 계단의 「스캔 없음」은 누적으로 한 번도 찍히지 않은 지점, 「불일치」는 QR 주소의 층·경로가 서버에 등록된 지점과 달라 붙은 자리가 틀렸을 가능성입니다. 두 경우 다 인쇄물 위치를 현장에서 확인하세요.</p>');
+  return h;
+}
+function viewQrBeta(items){
+  var byId={}; items.forEach(function(it){ byId[it.id]=it; });
+  var list=QR_BETA.map(function(id){ return byId[id]||{ id:id, grp:id==="app"?"app":id==="a17"?"att":/^st/.test(id)?"stair":/^wall/.test(id)?"wall":"booth", name:id, place:"서버 응답 전", file:qrFile(id), st:"off", today:null }; });
+  var hit=list.filter(function(it){ return it.today!=null&&it.today>0; }).length, none=list.filter(function(it){ return it.today!=null&&!it.today; }).length, smp=list.filter(function(it){ return it.st==="sample"; }).length;
+  var h='<div class="kpis">'+kpi("베타 부착 QR",list.length,"장","부스 2 · 17F 출석 1 · Wall 3 · 계단 6 · 앱 링크 1")+kpi("찍힘",hit,"장","오늘 스캔 1건 이상")+kpi("안 찍힘",none,"장","집계가 있는 QR 중 오늘 0건")+kpi("견본 · 인쇄 금지",smp,"장","codes.json 으로 다시 만든 뒤 인쇄")+'</div>';
+  h+=card("베타 점검표","붙이는 순서대로 · 항목마다 인쇄 파일 · 붙일 곳 · 오늘 스캔 · 찍힘",
+    '<div class="wrap"><table class="tb"><tr><th class="tdr">#</th><th>구분</th><th>이름</th><th>인쇄 파일</th><th>붙일 곳</th><th>코드</th><th class="tdr">오늘 스캔</th><th>찍힘</th></tr>'+
+    list.map(function(it,i){ var f=it.today==null?tag("집계 없음","off"):it.today?tag("찍힘","ok"):tag("안 찍힘","bad");
+      return '<tr><td class="n tdr">'+(i+1)+'</td><td>'+tag(QR_GRP[it.grp])+'</td><td><b>'+esc(it.name)+'</b><small class="cap" style="display:block">'+esc(it.id)+'</small></td><td class="n cap">'+esc(it.file||"-")+(it.st==="sample"?' '+tag("견본 · 인쇄 금지","bad"):'')+'</td><td>'+esc(it.place)+'</td><td class="n">'+(it.code?'<b>'+esc(it.code)+'</b>':'<span class="cap">없음</span>')+'</td><td class="n tdr">'+qrToday(it)+'</td><td>'+f+'</td></tr>'; }).join("")+'</table></div>'+
+    '<div class="row mt12"><button class="btn pri" onclick="qrCodesDl()">codes.json 내려받기</button><span class="cap">부스 2 + 17F 출석 1 + 계단 36 의 지금 서버 코드 · 인쇄 원본을 만드는 파일</span></div>');
+  h+=memo('<p><b>베타 인쇄물은 새 가운데 배지(ME to WE 심볼 · 민면) 디자인 한 가지로 통일</b>합니다. QR 담당의 재생성 · 판독 검증이 끝났다는 신호 뒤에 인쇄하고, 옛 글자 채움 디자인과 섞지 않습니다(섞으면 인식률 비교가 오염됩니다).</p>'+
+    '<p>순서: ① codes.json 내려받기 → <code>QR 테스트/codes.json</code> 교체 → QR 담당이 <code>qr_mother.py</code> 로 재생성 · 검증 ② 위 표의 인쇄 파일 13장 인쇄(a17 은 A4) ③ 붙일 곳에 부착 ④ 운영진 폰으로 한 번씩 찍어 이 표의 「찍힘」이 켜지는지 확인(앱 링크는 앱이 열리는지만 확인 · 60초 캐시라 바로 안 보이면 새로고침).</p>'+
+    '<p>p1 · p2 가 「견본 · 인쇄 금지」이면 아직 codes.json 이 서버 코드로 바뀌지 않은 상태입니다. 그 파일을 붙이면 찍어도 적립되지 않습니다.</p>');
+  return h;
 }
 
 /* ══════════════════ 8. 시작 ══════════════════ */
