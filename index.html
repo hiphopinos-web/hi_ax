@@ -5900,6 +5900,18 @@ function homeNoticeHtml() {
     '<span class="ax-card-title">' + esc(latest.title) + "</span>" + (latest.body ? '<span class="ax-meta">' + esc(latest.body) + "</span>" : "") + "</span>" +
     '<span class="ax-destination-action">전체</span></button>';
 }
+/* v4.55 클로즈 베타 홈 배너 · 서버 설정 「베타_폼」 값이 있을 때만 홈 맨 위 흰 줄로 노출.
+   서버가 행사 전날(10/25)부터는 값이 있어도 빈 문자열을 내려보내 자동으로 숨긴다(기기 시계가 아니라 서버 날짜 기준). */
+function betaBannerHtml() {
+  var url = S.get("beta_form", "");
+  if (!url) return "";
+  return axDest("클로즈 베타 중", "", lnkChev("의견 보내기"), "betaFormOpen()");
+}
+function betaFormOpen() {
+  var url = S.get("beta_form", "");
+  if (!url) return;
+  window.open(url, "_blank", "noopener");
+}
 /* v4.13 홈 「전체 시간표」 = 프로그램 탭 시간표 보기(design.md A-5 5-10) · 분류는 전체로 · 진행 중이면 그 줄이 보이게 */
 function homeSched() { PROG.mode = "time"; PROG.cat = "all"; PROG.tt = "all"; PROG.open = false; PROG.scroll = 0; App.tab("guide"); }
 function homeNowGo() { homeSched(); var n = document.querySelector(".axs-tl.now"); if (n) n.scrollIntoView({ block: "center" }); }
@@ -5987,6 +5999,7 @@ var Views = {
      1단계 H01(진행 중 카드 · 시간표 · 체험 찾기)의 homeNowHtml 은 남겨 둔다(다른 곳에서 부르지 않는다). */
   home: function () {
     return '<div class="ax-stack">' +
+      betaBannerHtml() +   /* v4.55 클로즈 베타 배너 · 맨 위 흰 줄 · 값 없으면 빈 문자열 */
       homeNoticeHtml() +
       photoAlertHtml() +
       billboardHtml() +
@@ -6835,6 +6848,7 @@ function beSync() {
     BE.stats.sess = res.sess || null;
     if ("rouletteOut" in res && !!res.rouletteOut !== S.get("roulette_out", false)) S.set("roulette_out", !!res.rouletteOut);   /* v3.33 */
     if ("cchatOut" in res && !!res.cchatOut !== S.get("cchat_out", false)) S.set("cchat_out", !!res.cchatOut);   /* v4.47 GAS 가 생기면 */
+    if ("betaForm" in res && (res.betaForm || "") !== S.get("beta_form", "")) S.set("beta_form", res.betaForm || "");   /* v4.55 클로즈 베타 배너 링크(없으면 빈 문자열) */
     /* v3.14 공지 중지: 서버가 내려준 중지 id 는 로컬에서도 지운다(LED 띠·뱃지·목록·팝업이 자연 소멸).
        중지 목록에 든 공지는 다시 추가하지 않는다 · notice 가 null 이면 신규 추가 없음 */
     var nOff = res.noticeOff || [];
