@@ -2902,9 +2902,16 @@ function knownSet(o) {
 function knownClear() {
   try { window.localStorage.removeItem(LS_KNOWN); } catch (e) {}
 }
+/* v4.54 (260928 스트레스 테스트 계획 조사) 기기에 남는 대기열 · 진행 상태는 찍은 사번에 묶는다.
+   폰을 다른 사람이 이어 쓰면 앞 사람의 미전송 스캔이 다음 로그인 사번으로 전송될 수 있었다.
+   scan_q 항목.emp · stamp_pend 항목.emp · stair.emp · 지금 로그인 사번과 다르거나 없으면(v4.53 이전 저장분) 읽을 때 빼고 보내지 않는다.
+   아이디어(ideas)는 이미 empId 로 묶여 있다(ideaFlush) · 로그아웃은 셋을 아예 지운다(확인 창 없음) */
+var OWN_KEYS = ["scan_q", "stamp_pend", "stair"];
+function ownEmp() { return String((S.get("user", {}) || {}).empId || ""); }
+function ownIs(x) { var e = ownEmp(); return !!e && !!x && typeof x === "object" && String(x.emp || "") === e; }
 function axfLogout() {
-  try { localStorage.removeItem("axf_user"); localStorage.removeItem("axf_admin_authed"); } catch (e) {}
-  delete MEM.user; delete MEM.admin_authed;
+  try { ["user", "admin_authed"].concat(OWN_KEYS).forEach(function (k) { localStorage.removeItem("axf_" + k); }); } catch (e) {}
+  delete MEM.user; delete MEM.admin_authed; OWN_KEYS.forEach(function (k) { delete MEM[k]; });
   knownClear();
   location.href = location.pathname;
 }
@@ -3119,8 +3126,9 @@ function awardStamp(id) {
    · push 가 성공했는데 목록에 안 들어오면(서버가 적립하지 않음) 30초 뒤 대기에서 빠져 서버 목록을 따른다
    · push 가 실패했으면 sync 때마다 다시 보낸다 · 10분이 지나면 포기하고 서버 목록을 따른다 */
 var STAMP_PEND_MAX = 600000, STAMP_PEND_OK = 30000, STAMP_PEND_RETRY = 20000;
-function stampPend() { var p = S.get("stamp_pend", {}); return p && typeof p === "object" ? p : {}; }
-function stampPendAdd(id) { var p = stampPend(); p[id] = { t: Date.now(), ok: 0, try: Date.now() }; S.set("stamp_pend", p); }
+/* v4.54 지금 사번의 항목만 · 다른 사번 · 사번 없는 옛 항목은 빼고 돌려준다(다음 저장 때 사라진다 · 다시 보내지 않는다) */
+function stampPend() { var p = S.get("stamp_pend", {}), o = {}; if (p && typeof p === "object") Object.keys(p).forEach(function (id) { if (ownIs(p[id])) o[id] = p[id]; }); return o; }
+function stampPendAdd(id) { var p = stampPend(); p[id] = { t: Date.now(), ok: 0, try: Date.now(), emp: ownEmp() }; S.set("stamp_pend", p); }
 function stampPendSend(id) {
   var sd = STAMPS.find(function (x) { return x.id === id; });
   bePush("stamp:" + id, sd ? sd.title : id, true, function () {
@@ -6892,7 +6900,7 @@ function beSync() {
          내 차례가 되면 한 번만 알린다 · 폴링마다 토스트가 뜨지 않게 직전 상태와 비교. */
       if (res.my.checkin) S.set("checkin", res.my.checkin);
       if (res.my.stamps) { stampSync(res.my.stamps); stampPendRetry(); }
-      if (res.my.stair && JSON.stringify(res.my.stair) !== JSON.stringify(S.get("stair", null))) S.set("stair", res.my.stair);   /* v4.06 계단 진행 · 서버가 정본 */   /* 스탬프는 서버가 정본 · v3.97 빈 목록 포함 · 못 보낸 적립은 다시 보낸다 */
+      if (res.my.stair) { var st9 = Object.assign({}, res.my.stair, { emp: String(u.empId || "") }); if (JSON.stringify(st9) !== JSON.stringify(S.get("stair", null))) S.set("stair", st9); }   /* v4.06 계단 진행 · 서버가 정본 · v4.54 물어본 사번을 붙여 저장 */   /* 스탬프는 서버가 정본 · v3.97 빈 목록 포함 · 못 보낸 적립은 다시 보낸다 */
       if ("roulette" in res.my && !testEmp()) S.set("roulette_used", !!res.my.roulette);   /* 룰렛 사용 여부도 서버가 정본 (260909) · 테스트 사번은 로컬 */
       if (res.my.tickets && !testEmp()) S.set("raffle_nums", res.my.tickets);   /* v3.12 응모권 번호 · 서버 발급 정본 */
       /* v3.21 B 포토부스 번호표 · 서버가 정본(없으면 null) · 바뀐 경우에만 저장해 불필요한 재렌더를 막는다 */
@@ -7561,12 +7569,14 @@ function attStamp(res) {
 }
 
 /* ═══ 스캔 대기열 · 통신이 약한 곳(계단 복도 등) · 찍은 순서대로 보낸다 ═══
-   항목 = { k: "stamp" | "stair", code, fl, r, ts(기기 시각) } · 옛 항목({code, ts})은 코드 접두로 가른다.
+   항목 = { k: "stamp" | "stair", code, fl, r, ts(기기 시각), emp(찍은 사번 · v4.54) } · 옛 항목({code, ts})은 코드 접두로 가른다.
+   v4.54 scanQList 는 지금 로그인 사번의 항목만 돌려준다 · 다른 사번 · 사번 없는 옛 항목은 보내지 않고 다음 저장 때 버린다.
    부스는 같은 코드를 한 번만 담는다(서버가 1인 1회) · 계단은 시작·종료가 따로라 모두 담는다. */
 var SCANQ = { busy: false };
-function scanQList() { return S.get("scan_q", []) || []; }
+function scanQList() { var q = S.get("scan_q", []); return Array.isArray(q) ? q.filter(ownIs) : []; }
 function scanQKind(x) { return x.k || (/^AXW/i.test(String(x.code || "")) ? "stair" : "stamp"); }
 function scanQAdd(it) {
+  it.emp = ownEmp();
   var q = scanQList(), up = String(it.code).toUpperCase(), stair = scanQKind(it) === "stair";
   if (stair || !q.some(function (x) { return scanQKind(x) === "stamp" && String(x.code).toUpperCase() === up; })) q.push(it);
   S.set("scan_q", q.slice(-30));
@@ -7582,6 +7592,7 @@ function scanQFlush() {
   if (!q.length || !u.empId) return;
   if (navigator.onLine === false) return;
   var it = q[0], stair = scanQKind(it) === "stair";
+  if (String(it.emp) !== String(u.empId)) return;   /* v4.54 scanQList 가 이미 거르지만 한 번 더 · 다른 사번 항목은 절대 보내지 않는다 */
   SCANQ.busy = true;
   var drop = function () { var qq = scanQList(); if (qq.length && qq[0].code === it.code && qq[0].ts === it.ts) qq.shift(); S.set("scan_q", qq); };
   var p = stair ? { action: "stair_scan", emp: u.empId, code: it.code, fl: it.fl || "", r: it.r || "", t: it.ts || "" } : { action: "stamp_claim", emp: u.empId, code: it.code };
@@ -7600,7 +7611,9 @@ document.addEventListener("visibilitychange", function () { if (!document.hidden
    로컬 상태 S "stair" = { leg: { fl, r, route, at, since } | null, total, goal } · 서버 sync my.stair 가 정본 */
 var STR = { mode: "idle", res: null, sc: null, busy: false, err: "", pick: null, tick: null };
 var STAIR_SAFE = "뛰지 마세요 · 방화문은 닫아 주세요";
-function stairState() { var s = S.get("stair", null); return s && typeof s === "object" ? s : { leg: null, total: 0, goal: 10 }; }
+/* v4.54 다른 사번 · 사번 없는 옛 상태는 없는 것으로 본다(진행 중 표시 · 도착 층 안내가 다음 사람에게 뜨지 않게) · 서버 sync 가 곧 내 것을 채운다 */
+function stairState() { var s = S.get("stair", null); return ownIs(s) ? s : { leg: null, total: 0, goal: 10 }; }
+function stairPut(s) { S.set("stair", Object.assign({}, s, { emp: ownEmp() })); }
 function stairRoute(r) { return r == 2 ? "비상계단 2" : r == 1 ? "비상계단 1" : ""; }
 function stairByCode(code, fl, r, t) {
   var u = S.get("user", {}) || {};
@@ -7635,7 +7648,7 @@ function stairDone(res, sc, late, act) {
   if (res.leg === "start") s.leg = { fl: res.fl, r: res.r, route: res.route, at: res.at, since: res.since || sc.t || Date.now() };
   else if (res.leg === "dup" || res.leg === "fix") s.leg = res.from ? { fl: res.from.fl, r: res.from.r, route: res.from.route, at: res.from.at, since: res.from.since || 0 } : s.leg;
   else s.leg = null;
-  S.set("stair", s);
+  stairPut(s);
   var st = res.stamp;
   if (st && !st.dup && !st.revoked && !st.kept && st.id === "st") {
     ppSeenAdd("st");
