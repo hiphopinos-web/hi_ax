@@ -2909,11 +2909,59 @@ function knownClear() {
 var OWN_KEYS = ["scan_q", "stamp_pend", "stair"];
 function ownEmp() { return String((S.get("user", {}) || {}).empId || ""); }
 function ownIs(x) { var e = ownEmp(); return !!e && !!x && typeof x === "object" && String(x.emp || "") === e; }
+/* v4.56 (260928 사용자 확정) 로그아웃 = 사람별 기록을 모두 지운다 · 기기 설정만 남긴다.
+   v4.54 는 대기열 셋만 지워 스탬프 · 예약 · 커피챗 · 포토부스 번호 · 설문 · 아이디어 초안이 남았고, 다음 사람이 로그인하면 동기화(최대 10초) 전까지 앞 사람 것이 보였다(310555 는 스탬프를 서버로 덮지 않아 계속 남았다).
+   이 기기에 두는 키(axf_ 접두)는 반드시 아래 두 목록 중 하나에 적는다 · 검사 96절이 앱에서 쓰는 키를 모두 뽑아 대조한다(분류가 빠지면 실패).
+   STORE_DEVICE = 남긴다(사람과 무관 · 소리 · 글자 크기 · 안내 본 횟수 · 스태프 거치 설정 · 서버 공용 값 캐시)
+   STORE_PERSON = 지운다(사람별 기록) · 로그아웃은 STORE_DEVICE 가 아닌 axf_ 키를 모두 지우므로 목록에 없는 새 키도 지워진다(남기려면 STORE_DEVICE 에 적는다).
+   끝이 * 인 항목 = 앞부분이 같은 키 전부(type_rank_app · oly2_done_pang 처럼 뒤가 바뀌는 키).
+   같은 사람이 로그아웃 뒤 다시 들어와도 쓰던 설문 · 아이디어 초안은 지워진다(사용자 감수). */
+var STORE_DEVICE = ["vid", "a2hs", "fs", "t",
+  "site_sound", "game_sound", "rain_sound", "jp_tut",
+  "self_on", "self_key", "scan_spot", "adm_tab", "zone_sent", "roster_prog", "tyaw_tab", "tyaw_hide", "tyaw_oly_pg",
+  "type_rank_*", "oly_tab", "oly_ev",
+  "notices", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "wq_srv", "wq_v", "survey_agg", "photo_pub", "resv_conf",
+  "ax_line_i", "art_demo_n", "ev_phase"];
+var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_role", "dept",
+  "stamps", "pp_seen", "pp_glow3", "stamp_pend", "scan_q", "stair", "checkin", "queue", "photoq", "resv", "sess_my", "att_mine", "att_tm",
+  "cchat", "cchat_pref", "cchat_att", "ideas", "idea_draft", "survey_draft", "survey_done", "survey_mine", "survey_force", "noti_seen",
+  "raffle_seen", "raffle_opened", "raffle_nums", "roulette_used", "roulette_open", "bonus_rl_used", "bonus_rl_seen", "draw_winner",
+  "wave_extra", "wq_attempts", "test_mine", "type_nick", "type_nick_edit", "type_best", "mem_seen", "ox_seen",
+  "pang_best", "jump_best", "gw_best", "gw_time_best", "tt_best", "pang_cleared", "jump_cleared", "gw_cleared", "type_cleared", "tetris_cleared", "ox_cleared",
+  "oly2_best_*", "oly2_done_*"];
+function storeIsDevice(k) {
+  k = String(k || "");
+  return STORE_DEVICE.some(function (d) { return d.slice(-1) === "*" ? k.indexOf(d.slice(0, -1)) === 0 : k === d; });
+}
+/* 사람별 기록을 지운다 · 이 기기 저장(axf_ 접두 중 STORE_DEVICE 아닌 것 전부)과 메모리 거울(MEM)을 함께 · 새로 고침 없이도 S.get 이 앞 사람 값을 돌려주지 않는다.
+   all = 로그아웃 · 이 탭의 sessionStorage(보관 중인 스캔 링크 · 마지막 탭)까지 · 로그인 때(personClaim)는 로그인 전에 연 스캔 링크를 이어 처리해야 하므로 남긴다 */
+function personWipe(all) {
+  try {
+    var ks = [];
+    for (var i = 0; i < localStorage.length; i++) { var n = localStorage.key(i); if (n && n.indexOf("axf_") === 0 && !storeIsDevice(n.slice(4))) ks.push(n); }
+    ks.forEach(function (n) { localStorage.removeItem(n); });
+  } catch (e) {}
+  Object.keys(MEM).forEach(function (k) { if (!storeIsDevice(k)) delete MEM[k]; });
+  if (typeof IDEA !== "undefined") IDEA.draft = null;
+  if (!all) return;
+  try {
+    var ss = [];
+    for (var j = 0; j < sessionStorage.length; j++) { var m = sessionStorage.key(j); if (m && m.indexOf("axf_") === 0) ss.push(m); }
+    ss.forEach(function (m) { sessionStorage.removeItem(m); });
+  } catch (e) {}
+  if (typeof SCANLINK !== "undefined") SCANLINK.mem = null;
+}
+/* 로그인 때 · 이 기기의 사람별 기록 주인(owner)이 다른 사번이면 먼저 지운다 · v4.55 이전 로그아웃이 남긴 기록(owner 없음)도 여기서 걸러진다 */
+function personClaim(emp) {
+  emp = String(emp || "");
+  if (String(S.get("owner", "") || "") !== emp) personWipe(false);
+  S.put("owner", emp);
+}
 function axfLogout() {
-  try { ["user", "admin_authed"].concat(OWN_KEYS).forEach(function (k) { localStorage.removeItem("axf_" + k); }); } catch (e) {}
-  delete MEM.user; delete MEM.admin_authed; OWN_KEYS.forEach(function (k) { delete MEM[k]; });
+  personWipe(true);
   knownClear();
-  location.href = location.pathname;
+  LS_OK = false;   /* 다시 불러오기 전에 도착한 동기화 응답(beSync 의 checkin · stamps 등)이 지운 기록을 기기에 다시 쓰지 않게 · 메모리에만 남고 새로 불러오면 사라진다 */
+  location.href = location.pathname;   /* 새로 불러오므로 화면 상태(전역 변수)도 처음부터 */
 }
 
 function beStats() {
@@ -13597,6 +13645,7 @@ function xitionRun(switchNow) {
           el("quickPin").value = "";
           return;
         }
+        personClaim(known.empId);   /* v4.56 */
         S.set("user", { empId: known.empId, name: res.name || known.name, dept: res.dept || "" });
         if (res.dept) S.set("dept", res.dept);
         knownSet({ empId: known.empId, name: res.name || known.name, dept: res.dept || "" });
@@ -13648,6 +13697,7 @@ function xitionRun(switchNow) {
     err.style.display = "none";
 
     if (!BE.on) {                       /* 서버 없이 단독 동작 (기존 방식) */
+      personClaim(id);   /* v4.56 */
       S.set("user", { empId: id, name: nm });
       enterApp();
       a2hsAuto();
@@ -13671,6 +13721,7 @@ function xitionRun(switchNow) {
           show((res && msg[res.reason]) || "연결에 실패했어요. 잠시 후 다시 시도해주세요.");
           return;
         }
+        personClaim(id);   /* v4.56 로그인 사번이 이 기기 기록 주인과 다르면 먼저 지운다 */
         S.set("user", { empId: id, name: res.name || nm, dept: res.dept || "" });
         if (res.dept) S.set("dept", res.dept);
         knownSet({ empId: id, name: res.name || nm, dept: res.dept || "" });   /* 다음 접속엔 비밀번호만 */
