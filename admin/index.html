@@ -3098,7 +3098,7 @@ function wqLockSet(on){
 
 /* ── 9-4. 부스 QR · 인쇄용 코드 · 인쇄 원본은 QR 테스트/qr_mother.py 가 만든다(브랜드 도안 + 인식 검증) ──
  * 콘솔은 서버 코드를 보여 주고 codes.json 을 내려준다. 그 파일을 QR 테스트/ 에 넣고 qr_mother.py 를 돌리면 out/light · out/dark 에 실제 코드판이 나온다.
- * (260922 확인: 지금 out/ 의 p1~p3 는 codes.json 에 부스 코드가 없어 견본 코드 AXSSAMPLE 로 만든 것이다 · 인쇄 금지) */
+ * (260929: out/ 의 p1 · p2 는 실제 서버 코드(codes.json)로 다시 만들었다. codes.json 에 코드가 없으면 견본 AXSSAMPLE 로 만들어지고 그때 「견본 · 인쇄 금지」 배지가 붙는다) */
 function boothRows(){ return ((ST.data.slist||{}).rows||[]).slice().sort(function(a,b){ return (a.id<b.id?-1:1); }); }
 /* v4.26 옛 17F 좌석 QR(p3)은 인쇄하지 않는다(서버가 att 로 거절) · 17F 출석 QR = a17(att_list) */
 var BOOTH_PRINT=["p1","p2"];
@@ -3134,14 +3134,14 @@ function boothCard(){
       '<li><code>QR 테스트</code> 폴더에서 <code>python qr_mother.py</code>를 돌립니다. 모든 QR을 다시 만들고 인식 검증까지 합니다(실패가 있으면 종료코드 1).</li>'+
       '<li><code>QR 테스트/out/light</code>(흰 벽) 또는 <code>/dark</code>(어두운 곳)의 <b>p1.png · p2.png</b>, 17F 출석은 <b>out/print/a17_A4_light.png</b>(A4)를 인쇄합니다. 라벨에 「견본」이 보이면 인쇄하지 않습니다.</li>'+
       '<li>붙인 뒤 폰 기본 카메라로 한 번 찍어 이 표의 코드로 적립되는지 확인합니다.</li></ol>'+
-      '<p><code>QR 테스트/out</code>의 p1 · p2 는 부스 코드 없이 만든 <b>견본(AXSSAMPLE)</b>이라 「견본 · 인쇄 금지」 배지가 붙어 있습니다. 반드시 위 순서로 다시 만들고, 실제 코드로 만든 뒤에는 콘솔 QR_SAMPLE_IDS 를 비웁니다. 코드 전면 교체(stamp_rotate · stair_rotate · att_rotate)는 백엔드 액션만 있고 이 콘솔에는 버튼이 없습니다.</p>'));
+      '<p><code>QR 테스트/out</code>의 p1 · p2 는 실제 서버 코드로 만든 것이라 배지가 없습니다. 부스 코드 없이 만든 <b>견본(AXSSAMPLE)</b>이면 「견본 · 인쇄 금지」 배지가 붙으니(콘솔 QR_SAMPLE_IDS), 그때는 위 순서로 다시 만듭니다. 코드 전면 교체(stamp_rotate · stair_rotate · att_rotate)는 백엔드 액션만 있고 이 콘솔에는 버튼이 없습니다.</p>'));
 }
 
 /* ── 9-5. QR 메뉴 (v4.53 · 사용자 지시 260928) ── 현장에 붙는 QR 전부를 한곳에서. 스탬프 › 현장 운영에 흩어져 있던 Wall · 부스 · 17F 출석 · 계단 · codes.json 카드를 옮겼다.
  * 목록의 근거 = QR 상호작용 기획.md §1-1 · §5 + QR 테스트/out/manifest.json 의 id(app · wall1~3 · p1 · p2 · a17 · roulette · photo · st01-1~st18-2 · t_* 8종은 테스트 전용이라 표에 없다).
  * 인쇄 파일 = QR 테스트/out/light|dark/<id>.png (a17 은 out/print/a17_A4_light.png). manifest 의 version 값은 띄우지 않는다(디자인 재생성으로 바뀐다 · id 와 경로로만 다룬다).
  * 오늘 스캔 수 = 부스 · 17F 출석 · Wall 은 qr_stats(60초 캐시) · 계단은 stair_stats(spots[].today) · 앱 링크 · 안내판은 집계 없음. 부문 통계 없음. */
-var QR_SAMPLE_IDS=["p1","p2"];   /* out/ 의 이 파일은 codes.json 에 부스 코드가 없어 견본 코드(AXSSAMPLE)로 만든 것 · 「견본 · 인쇄 금지」 · codes.json 으로 다시 만든 뒤 비운다 */
+var QR_SAMPLE_IDS=[];   /* 견본 코드(AXSSAMPLE)로 만든 out/ 파일의 id 를 적으면 「견본 · 인쇄 금지」 배지가 붙는다 · 260929 p1 · p2 를 실제 코드로 다시 만들어 비움 */
 var QR_BETA=["p1","p2","a17","wall1","wall2","wall3","st01-1","st01-2","st02-1","st02-2","st10-1","st10-2","app"];   /* 클로즈 베타 부착 13장 (사용자 확정 260928) */
 var QR_GRP={ app:"앱 링크", wall:"Wall", booth:"부스", att:"출석", stair:"계단", sign:"안내판" };
 function qrFile(id, theme){ return id==="a17"?"QR 테스트/out/print/a17_A4_light.png":"QR 테스트/out/"+(theme||"light")+"/"+id+".png"; }
