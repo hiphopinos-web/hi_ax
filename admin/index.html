@@ -520,7 +520,7 @@ var TABS = [
 /* v4.02 (사용자 확정 260919) AI 사생대회 폐기 · 메뉴에서 숨긴다, 코드는 그대로 둔다 · 다시 켜려면 true (앱 ART_ON 과 같은 이름) */
 var ART_ON = false;
 if(!ART_ON) TABS = TABS.filter(function(t){ return t.id!=="art"; });
-/* 앱 STAMPS 와 맞춘다 · v3.33 8칸(계단 st · 설문 sv 추가), v3.39 보상은 7개에서 끝. 번호는 콘솔 표 머리용 약칭일 뿐 앱에는 없다.
+/* 앱 STAMPS 와 맞춘다 · v3.33 8칸(계단 st · 설문 sv 추가), v4.58 개수는 6개가 한도(8칸 중 아무거나 6개). 번호는 콘솔 표 머리용 약칭일 뿐 앱에는 없다.
    폐기된 ID 는 옛 로그에 남아 있을 수 있어 표기만 한다(서버 stamp_people 는 old 로 따로 준다). */
 var STAMP_META = {
   p1:{ no:"01", n:"1F 전시" }, p2:{ no:"02", n:"부스 체험" }, p3:{ no:"03", n:"프로그램 참여" },
@@ -901,9 +901,11 @@ function pwBy(){ try{ return localStorage.getItem("axf_desk")||""; }catch(e){ re
 function pwBySet(v){ try{ localStorage.setItem("axf_desk",v||""); }catch(e){} }
 function byBox(){ return '<input class="in" style="min-width:0;width:150px" placeholder="처리자 이름" value="'+esc(pwBy())+'" oninput="pwBySet(this.value)">'; }
 
-/* 스탬프 개수 → 보상 (v3.60 사용자 확정 260918 · 6개가 끝 · 7개째는 보너스) · 앱·서버와 같은 식 */
-var STAMP_DENOM=6, STAMP_BONUS=7, RAFFLE_MAX=4;
-function reward(n){ n=Math.min(STAMP_BONUS,n); return { roulette:n>=3, tickets: Math.max(0, Math.min(RAFFLE_MAX, n-3)) }; }
+/* 스탬프 개수 → 보상 (v4.58 사용자 확정 260929 · 개수는 6개가 한도 · 3개 룰렛 · 4·5·6개 응모권 1·2·3장 · 최대 3장) · 앱·서버와 같은 식
+   서버 stamp_people 의 n = 개수(최대 6) · got = 받은 칸 수(기록 그대로 · 최대 8) · 옛 서버(n 이 8까지)여도 여기서 6으로 자른다 */
+var STAMP_DENOM=6, RAFFLE_MAX=3;
+function capN(n){ return Math.min(STAMP_DENOM, n||0); }
+function reward(n){ n=capN(n); return { roulette:n>=3, tickets: Math.max(0, Math.min(RAFFLE_MAX, n-3)) }; }
 function stampCells(ids){
   return '<div class="stamps">'+STAMP_ORDER.map(function(id){ var got=ids.indexOf(id)>=0; return '<span class="st'+(got?" got":"")+'" title="'+esc(STAMP_META[id].n)+'">'+STAMP_META[id].no+'</span>'; }).join("")+
     ids.filter(function(id){return STAMP_ORDER.indexOf(id)<0;}).map(function(id){ var m=STAMP_META[id]||{n:id}; return '<span class="st old" title="'+esc(m.n)+' · 폐기된 항목">'+esc(id.replace("p",""))+'</span>'; }).join("")+'</div>';
@@ -915,8 +917,8 @@ function barRow(label, n, max, right, over){ return '<tr><td class="l">'+label+'
 function viewDash(){
   var st=ST.data.stats||{}, ac=(ST.data.acct||{}).rows||[], sp=(ST.data.stamp||{}).rows||[], roster=(ST.data.acct||{}).roster||0;
   var rv=(ST.data.resv||{}).rows||[], cc=(ST.data.cchat||{}).rows||[], at0=ST.data.att||{}, ph0=(ST.data.photo&&ST.data.photo.ok)?(ST.data.photo.rows||[]):[];
-  var dist=[0,0,0,0,0,0,0,0,0]; var roul=0, tickets=0, issued=0, hasTk=false, active=0;
-  sp.forEach(function(r){ dist[Math.min(8,r.n)]++; if(r.n>0) active++; if(r.roulette) roul++; tickets+=reward(r.n).tickets; if(r.tk!=null){ hasTk=true; issued+=r.tk; } });
+  var dist=[0,0,0,0,0,0,0]; var roul=0, tickets=0, issued=0, hasTk=false, active=0;
+  sp.forEach(function(r){ dist[capN(r.n)]++; if(r.n>0) active++; if(r.roulette) roul++; tickets+=reward(r.n).tickets; if(r.tk!=null){ hasTk=true; issued+=r.tk; } });
   var eligible=sp.filter(function(r){return r.n>=3;}).length;
   var rvBy={}; rv.forEach(function(r){ rvBy[r.status]=(rvBy[r.status]||0)+1; });
   var ccBy={}; cc.forEach(function(r){ ccBy[r.status]=(ccBy[r.status]||0)+1; });
@@ -925,9 +927,9 @@ function viewDash(){
   var h=tabHead(st.t?'<span class="cap">서버 시각 <b class="n">'+esc(st.t)+'</b></span>':'');
   h+='<div class="kpis">'+
     kpi("가입 계정",ac.length,"명",roster?'명부 '+roster+'명 중 '+pct(ac.length,roster)+'%':'',"go('acct')")+
-    kpi("스탬프 참여",active,"명",'1개 이상 · 평균 '+(active?(sp.reduce(function(a,r){return a+r.n;},0)/active).toFixed(1):"0")+'개',"go('stamp')")+
+    kpi("스탬프 참여",active,"명",'1개 이상 · 평균 '+(active?(sp.reduce(function(a,r){return a+capN(r.n);},0)/active).toFixed(1):"0")+'개',"go('stamp')")+
     kpi("룰렛 자격",eligible,"명",'3개 이상 · 사용 '+roul+'명 · 남음 '+Math.max(0,eligible-roul)+'명')+
-    kpi("추첨 응모권",tickets,"장",hasTk?'자격 기준 · 번호 발급 '+issued+'장':'4개 1장 · 5개 2장 · 6개 3장 · 7개 4장')+
+    kpi("추첨 응모권",tickets,"장",hasTk?'자격 기준 · 번호 발급 '+issued+'장':'4개 1장 · 5개 2장 · 6개 3장')+
     kpi("참여 기록",(st.wall||0).toLocaleString(),"건","스탬프 · 아이디어 · 게임 · 룰렛 전체")+
   '</div>';
 
@@ -956,7 +958,7 @@ function viewDash(){
   h+='<div>'+card("상담 흐름","1F DAP존 · 전체 "+rv.length+"건 · 칸을 누르면 그 상태 목록으로",flow(["신청","승인","체크인","완료"],rvBy,["노쇼","취소"],"resv"))+
     card("커피챗 흐름","18F 라운지 · 전체 "+cc.length+"명",flow(["대기","매칭","참석","완료"],ccBy,["취소"],"cchat"))+capCard+'</div></div>';
   h+='<div class="grid g2">'+card("스탬프 보유 분포","참여 기록이 있는 사람 "+sp.length+"명",
-    '<table class="tb plain bartb">'+dist.map(function(c,i){ var rw=i>=3?(i===3?"룰렛":i<=7?"응모 "+(i-3)+"장":"응모 4장"):""; return barRow('<b class="n">'+i+'개</b>'+(rw?' <span class="cap">'+rw+'</span>':''), c, mx, c+'명'); }).join("")+'</table>'+
+    '<table class="tb plain bartb">'+dist.map(function(c,i){ var rw=i>=3?(i===3?"룰렛":i<STAMP_DENOM?"응모 "+(i-3)+"장":"응모 "+RAFFLE_MAX+"장 · 한도"):""; return barRow('<b class="n">'+i+'개</b>'+(rw?' <span class="cap">'+rw+'</span>':''), c, mx, c+'명'); }).join("")+'</table>'+
     '<p class="cap mt8">가입만 하고 아무것도 안 한 사람은 0개에 들어가지 않습니다.</p>');
   var dm=(st.depts&&st.depts.length)?st.depts[0].n:1;
   h+=card("부문별 참여 기록","참여 기록 행 수 기준 · 상위 12",(st.depts&&st.depts.length)?'<table class="tb plain bartb">'+st.depts.slice(0,12).map(function(d){ return barRow(esc(d.d), d.n, dm, d.n.toLocaleString()); }).join("")+'</table>':'<div class="empty">아직 기록이 없습니다.</div>')+'</div>';
@@ -1066,12 +1068,12 @@ function viewStamp(){
   else if(s==="stair") h+=viewStairStats();
   else if(s==="ops") h+=viewStairOps();
   else h+=viewStampOne();
-  h+=memo('<p>스탬프는 8칸, 보상은 7개에서 끝납니다(3개 룰렛 · 4~7개 응모 1~4장 · 8번째는 추가 보상 없음). 계단(07)은 방화문 앞 QR로 시작과 종료를 찍어 오늘 오른 층수가 10개 층에 닿으면 적립됩니다(1F~18F × 비상계단 1·2, 36곳). 설문(08)은 제출 시 적립됩니다.</p>'+
+  h+=memo('<p>스탬프는 8칸이고 개수는 6개가 한도입니다(8칸 중 아무거나 6개 · 3개 룰렛 · 4~6개 응모 1~3장). 7·8번째 칸을 받아도 기록은 남지만 개수·보상은 6에서 멈춥니다. 계단(07)은 방화문 앞 QR로 시작과 종료를 찍어 오늘 오른 층수가 10개 층에 닿으면 적립됩니다(1F~18F × 비상계단 1·2, 36곳). 설문(08)은 제출 시 적립됩니다.</p>'+
     '<p>담당자 부여는 현장 QR 3종(01·02·03)과 계단(07)이 됩니다. 계단은 정상적으로는 참가자가 36곳 QR로 자동 적립하고, 담당자 부여는 스캔이 안 될 때의 예외 처리입니다. 앱 자동 적립 3종(04·05·06)은 앱 안에서 하는 행동이라 부여 대상이 아닙니다. 부여는 참여 기록에 「담당자 부여」로 남습니다.</p>'+
     '<p>담당자 취소 범위는 설정 시트 「스탬프취소_범위」가 정합니다. 지금은 <b>'+esc((ST.data.stamp||{}).revokeScope||"전체")+'</b>입니다(전체 = 8칸 모두 · 현장 = 01·02·03·07 만). 테스트 기간이라 전체로 두었습니다. <b>행사 전 현장으로 전환 검토.</b></p>'+
     '<p>취소는 기록을 지우지 않고 참여 기록에 「담당자 취소」 행을 남깁니다. 취소한 칸은 같은 행동으로 다시 받을 수 있습니다(현장 QR·부여 · 앱 미니게임·아이디어·QR 퀴즈 · 설문 재제출). 설문을 취소하면 다시 제출해 스탬프를 받을 수 있지만, 답은 이름 없이 저장돼 첫 답을 지울 수 없으므로 재제출한 답은 저장하지 않습니다(집계 이중 계산 방지).</p>'+
     '<p>보상과 부딪치는 취소는 서버가 거부합니다. 룰렛을 이미 돌렸는데 3개 미만이 되는 경우, 이미 발급된 응모권 장수가 취소 뒤 자격보다 많아지는 경우입니다(응모권 번호는 되돌리지 않는 원장). 이때는 경품 담당과 먼저 정리합니다.</p>'+
-    '<p>참가자 앱은 다음 동기화(10초 주기)에 서버 목록을 따라갑니다. 단, 취소로 스탬프가 0개가 되면 앱이 빈 목록을 무시해 기기 화면에 이전 칸이 남을 수 있습니다(서버 기록과 보상 판정은 정상).</p>');
+    '<p>참가자 앱은 다음 동기화(30초 주기)에 서버 목록을 따라갑니다. 단, 취소로 스탬프가 0개가 되면 앱이 빈 목록을 무시해 기기 화면에 이전 칸이 남을 수 있습니다(서버 기록과 보상 판정은 정상).</p>');
   return h;
 }
 /* 한 사람 · 계정 목록과 스탬프 집계를 사번으로 합친다(스탬프가 0개인 사람도 찾을 수 있어야 부여한다) */
@@ -1091,7 +1093,7 @@ function viewStampOne(){
   var h='<div class="sp"><div class="lnb"><input class="in" placeholder="사번 · 이름 · 부문으로 찾기" value="'+esc(ST.sp.q)+'" oninput="spQ(this.value)">'+
     '<div class="cap">'+(q?'검색 결과 '+list.length+'명':'최근 기록 순 · 스탬프 0개인 사람은 검색으로 찾습니다')+'</div><ul>'+
     list.slice(0,80).map(function(r){ var on=cur&&normE(cur.emp)===normE(r.emp);
-      return '<li><button class="'+(on?"on":"")+'" onclick="spSel(\''+jq(r.emp)+'\')"><div style="min-width:0"><div class="nm">'+esc(r.name||"(이름 없음)")+'</div><div class="em">'+esc(r.emp)+(r.dept?' · '+esc(r.dept):'')+'</div></div><span class="c">'+r.n+' / 8</span></button></li>'; }).join("")+
+      return '<li><button class="'+(on?"on":"")+'" onclick="spSel(\''+jq(r.emp)+'\')"><div style="min-width:0"><div class="nm">'+esc(r.name||"(이름 없음)")+'</div><div class="em">'+esc(r.emp)+(r.dept?' · '+esc(r.dept):'')+'</div></div><span class="c">'+capN(r.n)+' / '+STAMP_DENOM+'</span></button></li>'; }).join("")+
     (list.length>80?'<li class="cap" style="padding:8px">80명까지 표시 · 검색으로 좁혀 주세요</li>':'')+(!list.length?'<li class="cap" style="padding:8px">찾는 사람이 없습니다. 가입 전인 사람은 스탬프를 받을 수 없습니다.</li>':'')+'</ul></div>';
   h+='<div>'+(cur?spPanel(cur):'<div class="card"><div class="empty">왼쪽에서 사번이나 이름으로 한 사람을 고르세요.<br>8칸 상태를 보고 바로 부여하거나 취소할 수 있습니다.</div></div>')+'</div></div>';
   return h;
@@ -1103,11 +1105,11 @@ function spVia(r, id){
   return s+(v.t?' · '+hhmm(v.t):'');
 }
 function spPanel(r){
-  var n=r.n||0, rw=reward(n), tk=r.tk||0;
+  var got=r.got!=null?r.got:(r.stamps||[]).length, n=capN(r.n), rw=reward(n), tk=r.tk||0;
   var h='<div class="card" style="margin-top:0"><div class="pp-h"><div><div class="nm">'+esc(r.name||"(이름 없음)")+'</div><div class="em">사번 '+esc(r.emp)+(r.dept?' · '+esc(r.dept):'')+(r.last?' · 마지막 기록 '+esc(short(r.last)):'')+'</div></div>'+
     '<div class="r"><button class="btn sm ghost" onclick="spSel(\'\')">선택 해제</button></div></div>';
   h+='<div class="pp-sum">'+
-    '<div><div class="l">보유</div><div class="v">'+n+'<em>/ 8</em></div><div class="x">'+(n>=STAMP_BONUS?"보상 끝 (7개)":"다음 보상까지 "+(n<3?3-n:1)+"개")+'</div></div>'+
+    '<div><div class="l">보유</div><div class="v">'+n+'<em>/ '+STAMP_DENOM+'</em></div><div class="x">'+(n>=STAMP_DENOM?"한도 도달"+(got>STAMP_DENOM?" · 받은 칸 "+got:""):"다음 보상까지 "+(n<3?3-n:1)+"개")+'</div></div>'+
     '<div><div class="l">룰렛</div><div class="v" style="font-size:var(--fs-h2);margin-top:6px">'+(r.roulette?tag("사용함","off"):rw.roulette?tag("돌릴 수 있음","pri"):tag("3개부터","off"))+'</div><div class="x">1인 1회 · 1F 이벤트존</div></div>'+
     '<div><div class="l">응모권</div><div class="v">'+rw.tickets+'<em>장 자격</em></div><div class="x">번호 발급 '+tk+'장'+(tk<rw.tickets?' · 앱이 다음 동기화에 발급':'')+'</div></div></div>';
   h+='<div class="slots">'+STAMP_ORDER.map(function(id){
@@ -1124,7 +1126,7 @@ function spPanel(r){
 }
 /* 보상 변화 줄 · 확인 창 「영향」 */
 function rwImpact(n0, n1, extra){
-  var a=reward(n0), b=reward(n1), out=[["스탬프", n0+"개 → "+n1+"개", "chg"]];
+  var a=reward(n0), b=reward(n1), out=[["스탬프", capN(n0)+"개 → "+capN(n1)+"개"+(n0>STAMP_DENOM||n1>STAMP_DENOM?" (받은 칸 "+n0+" → "+n1+" · 한도 6)":""), capN(n0)!==capN(n1)?"chg":""]];
   if(a.roulette!==b.roulette) out.push(["룰렛 자격", b.roulette?"생김":"없어짐", b.roulette?"chg":"loss"]);
   else out.push(["룰렛 자격", a.roulette?"그대로 (있음)":"그대로 (없음)"]);
   if(a.tickets!==b.tickets) out.push(["응모권 자격", a.tickets+"장 → "+b.tickets+"장", b.tickets>a.tickets?"chg":"loss"]);
@@ -1137,12 +1139,12 @@ function spApply(emp, stamps, id, via){
   var d=ST.data.stamp=ST.data.stamp||{rows:[]}, k=normE(emp), r=null;
   for(var i=0;i<d.rows.length;i++) if(normE(d.rows[i].emp)===k){ r=d.rows[i]; break; }
   if(!r){ var b=spRow(emp)||{emp:emp,name:"",dept:""}; r={ emp:b.emp, name:b.name, dept:b.dept, stamps:[], via:{}, n:0, roulette:false, tk:0, rv:0, last:"" }; d.rows.unshift(r); }
-  r.stamps=(stamps||[]).filter(function(x){ return STAMP_ORDER.indexOf(x)>=0; }); r.n=r.stamps.length; r.via=r.via||{};
+  r.stamps=(stamps||[]).filter(function(x){ return STAMP_ORDER.indexOf(x)>=0; }); r.got=r.stamps.length; r.n=capN(r.got); r.via=r.via||{};
   if(via) r.via[id]={ v:via, t:nowHMS() }; else delete r.via[id];
   r.last=r.last||"";
 }
 function stGrant(emp, id, quiet){
-  var r=spRow(emp)||{emp:emp,n:0}, m=STAMP_META[id], n0=r.n||0;
+  var r=spRow(emp)||{emp:emp,n:0}, m=STAMP_META[id], n0=r.got!=null?r.got:(r.stamps||[]).length;
   function doIt(){
     call("stamp_grant",{emp:emp,id:id},function(res){
       dlgForce();
@@ -1192,14 +1194,14 @@ function stRevokeGo(emp, id, quiet){
 }
 function viewStampAll(rows){
   var f=ST.filt||"all";
-  var shown=rows.filter(function(r){ return match(r,["emp","name","dept"]) && (f==="all"||(f==="3"&&r.n>=3)||(f==="4"&&r.n>=4)||(f==="r"&&r.roulette)||(f==="rv"&&r.rv)); });
+  var shown=rows.filter(function(r){ return match(r,["emp","name","dept"]) && (f==="all"||(f==="3"&&r.n>=3)||(f==="4"&&r.n>=4)||(f==="6"&&capN(r.n)>=STAMP_DENOM)||(f==="r"&&r.roulette)||(f==="rv"&&r.rv)); });
   var h='<div class="kpis">'+kpi("기록 있는 사람",rows.length,"명")+kpi("3개 이상",rows.filter(function(r){return r.n>=3;}).length,"명","룰렛 자격")+kpi("룰렛 사용",rows.filter(function(r){return r.roulette;}).length,"명")+kpi("응모권 자격 합계",rows.reduce(function(a,r){return a+reward(r.n).tickets;},0),"장")+'</div>';
-  var body=chips([{v:"all",n:"전체",c:rows.length},{v:"3",n:"3개 이상",c:rows.filter(function(r){return r.n>=3;}).length},{v:"4",n:"4개 이상",c:rows.filter(function(r){return r.n>=4;}).length},{v:"r",n:"룰렛 사용",c:rows.filter(function(r){return r.roulette;}).length},{v:"rv",n:"취소 기록 있음",c:rows.filter(function(r){return r.rv;}).length}], f, "setFilt")+
+  var body=chips([{v:"all",n:"전체",c:rows.length},{v:"3",n:"3개 이상",c:rows.filter(function(r){return r.n>=3;}).length},{v:"4",n:"4개 이상",c:rows.filter(function(r){return r.n>=4;}).length},{v:"6",n:"6개 · 한도 도달",c:rows.filter(function(r){return capN(r.n)>=STAMP_DENOM;}).length},{v:"r",n:"룰렛 사용",c:rows.filter(function(r){return r.roulette;}).length},{v:"rv",n:"취소 기록 있음",c:rows.filter(function(r){return r.rv;}).length}], f, "setFilt")+
     '<div class="toolbar">'+searchBox("사번 · 이름 · 부문 검색")+'<span class="cnt"><b>'+shown.length+'</b> / '+rows.length+'명</span></div>';
   body+='<div class="wrap scrolly" style="max-height:640px"><table class="tb"><tr><th>사번</th><th>이름</th><th>부문</th><th class="tdr">개수</th><th>'+STAMP_ORDER.map(function(id){return STAMP_META[id].no;}).join(" ")+'</th><th>보상</th><th>마지막 기록</th><th class="tdr"></th></tr>'+
     shown.slice(0,400).map(function(r){ var rw=reward(r.n);
-      return '<tr class="hv click" onclick="ST.sp.emp=\''+jq(r.emp)+'\';setSub(\'one\')"><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td><td>'+esc(r.dept)+'</td><td class="n tdr"><b>'+r.n+'</b></td><td>'+stampCells(r.stamps)+'</td>'+
-        '<td><div class="row" style="gap:4px">'+(rw.roulette?tag("룰렛 "+(r.roulette?"사용":"가능"),r.roulette?"off":"pri"):'')+(rw.tickets?tag("응모 "+rw.tickets+"장"):'')+(!rw.roulette?'<span class="cap">'+(3-r.n)+'개 더</span>':'')+'</div></td>'+
+      return '<tr class="hv click" onclick="ST.sp.emp=\''+jq(r.emp)+'\';setSub(\'one\')"><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td><td>'+esc(r.dept)+'</td><td class="n tdr"><b>'+capN(r.n)+'</b></td><td>'+stampCells(r.stamps)+'</td>'+
+        '<td><div class="row" style="gap:4px">'+(rw.roulette?tag("룰렛 "+(r.roulette?"사용":"가능"),r.roulette?"off":"pri"):'')+(rw.tickets?tag("응모 "+rw.tickets+"장"):'')+(!rw.roulette?'<span class="cap">'+(3-capN(r.n))+'개 더</span>':'')+'</div></td>'+
         '<td class="n cap">'+esc(short(r.last))+'</td><td class="tdr"><button class="btn sm">관리</button></td></tr>'; }).join("")+
     (shown.length>400?'<tr><td colspan="8" class="cap">400명까지만 표시합니다. 검색으로 좁혀 주세요.</td></tr>':'')+(!shown.length?emptyRow(8,"해당하는 사람이 없습니다."):'')+'</table></div>';
   return h+card("사람별 수집 내역","행을 누르면 개인 발급 · 취소 화면으로 갑니다",body);
