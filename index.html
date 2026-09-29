@@ -304,6 +304,17 @@
   /* 완료 도장 (v3.20 A안) · 칸 안에 맞춘다(넘침 제거) · -12도 기울기는 SVG 안에서 · 잉크 질감 필터는 생략 유지(작은 크기 가독) */
   .stampmk { position: relative; flex: none; display: flex; align-items: center; justify-content: center; }
   .stampmk svg { display: block; }
+  /* v4.70 활동 화면 스탬프 표시 · 받기 전 회색(disabled) · 받은 뒤 패스포트 완료 도장 그대로 · 칩 · 제목 줄은 도장 자리만큼 비운다 */
+  .axs-sthost { position: relative; }
+  .axs-stag { flex: none; width: 52px; height: 52px; color: var(--ax-color-disabled); pointer-events: none; }
+  .axs-stag svg { display: block; }
+  .axs-stag:not(.on) { border-radius: 50%; background: var(--ax-color-surface); }   /* 받기 전 = 흰 면 위 회색 도장(회색 바탕에서 묻히지 않게) */
+  .axs-sthost > .axs-stag { position: absolute; top: -6px; right: 0; }
+  .ax-card.axs-sthost > .axs-stag { top: calc(var(--ax-space-24) - 6px); right: var(--ax-space-20); }
+  .axs-sthost > .axs-chiprow, .axs-sthost > .ax-title, .axs-sthost > .ax-meta, .axs-sthost > .axs-gauge, .axs-sthost > h1 { padding-right: 64px; }
+  .axs-sthost > .axs-gauge { margin-right: 64px; padding-right: 0; }
+  .axs-stline { display: flex; align-items: center; justify-content: space-between; gap: var(--ax-space-12); min-height: 52px; }
+  .axs-stline > .ax-meta { min-width: 0; }
   /* v3.47 도장 연출 강화 (사용자 요청 260917 · 더 또렷하게) · 문법: 낙하(3.3배·0.6→1) → 착지 찌그러짐 0.92 → 잉크 링 2겹 · 잉크 튐 · 흔들림 · 잔광 · 전체 0.5초 착지, 1초 안에 원상태
      transform·opacity 만 움직인다 · 튐 입자는 보일 때만 만들고 끝나면 DOM 에서 지운다 */
   .stampmk .ring { position: absolute; left: 0; top: 0; width: 100%; height: 100%; border: 2.5px solid var(--mint); border-radius: 999px; pointer-events: none; opacity: 0; animation: inkRing 0.55s ease-out var(--land, 0.3s) both; }
@@ -1137,6 +1148,9 @@
   #view[data-v="home"] .rc .ls .ico { border-color: var(--ax-color-divider); background: var(--ax-color-inset); color: var(--ax-color-muted); }
   /* 하단 메뉴 80 · 홈 / 프로그램 / [QR 스캔] / 체험 / 나의 참여 (가운데 QR = 사용자 결정 260922 승인 예외 · 5칸 균등) */
   #tabbar.ax-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: var(--ax-app-max); z-index: 40; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  /* v4.70 (사용자 요청 260930 · 하단 메뉴가 회색 본문과 붙어 보인다) 위쪽 구분선 = 헤더 아래 선과 같은 토큰 · 1px · 안쪽 그림자라 높이는 그대로 ·
+     가운데 QR 원의 흰 테두리(6px)가 선 위에 그려져 원 주위만 끊긴다 */
+  #tabbar.ax-nav { box-shadow: inset 0 1px 0 var(--axs-divider-strong), 0 -2px 8px rgba(25, 31, 40, 0.04); }   /* 옅은 그림자 = 헤더 .scrolled 그림자를 위아래로 뒤집은 값(본문은 늘 메뉴 밑으로 지나간다) */
   #tabbar .ax-nav-link { position: relative; padding: 0; border: 0; background: transparent; cursor: pointer; }
   #tabbar .axs-scan { min-height: var(--ax-nav-height); padding: 0; border: 0; background: transparent; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--ax-space-4); color: var(--ax-color-muted); font: var(--ax-type-caption); }
   /* 원 40 · 아이콘 자리(24)보다 16 크게 위로 넓혀 라벨 줄이 옆 탭과 같은 높이에 온다 · 원은 메뉴 안에 머문다(겹침 없음) · 누르는 자리는 칸 전체(80) */
@@ -5602,7 +5616,7 @@ function testStampResetGo() {
 /* 완료 도장 (v3.20 사용자 확정 A안) · 카드 56px·오버레이 148px 같은 SVG 함수.
    textPath 의 path id 는 인스턴스마다 유일하게(한 화면 도장 여러 개 = id 충돌 시 글자 소실) · href+xlink:href 병기(iOS 구버전) */
 var SEAL_N = 0;
-function stampSealSvg(size, color) {
+function stampSealSvg(size, color, mid, midSz) {   /* v4.70 mid = 가운데 글자(기본 「완료」) · 활동 화면 받기 전 도장이 쓴다 */
   var u = "seal" + (++SEAL_N);
   var C = color || "#D64524";
   return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
@@ -5615,7 +5629,7 @@ function stampSealSvg(size, color) {
     '<text fill="' + C + '" font-family="Pretendard, Arial, sans-serif" font-size="10" font-weight="800" letter-spacing="1.5"><textPath href="#' + u + 'b" xlink:href="#' + u + 'b" startOffset="50%" text-anchor="middle">2026</textPath></text>' +
     '<text x="12.5" y="53.5" fill="' + C + '" font-size="9" text-anchor="middle">★</text>' +
     '<text x="87.5" y="53.5" fill="' + C + '" font-size="9" text-anchor="middle">★</text>' +
-    '<text x="50" y="57" fill="' + C + '" font-family="\'Pretendard Variable\', Pretendard, sans-serif" font-size="19" font-weight="900" letter-spacing="-0.5" text-anchor="middle">완료</text>' +
+    '<text x="50" y="57" fill="' + C + '" font-family="\'Pretendard Variable\', Pretendard, sans-serif" font-size="' + (midSz || 19) + '" font-weight="900" letter-spacing="-0.5" text-anchor="middle">' + (mid == null ? "완료" : mid) + '</text>' +
     "</g></svg>";
 }
 function stampMarkHtml(withRing, size) {
@@ -5623,6 +5637,22 @@ function stampMarkHtml(withRing, size) {
   /* v3.47 · 새로 찍히는 도장 = 잉크 링 2겹 + 잔광(같은 도장을 밝은 오렌지로 겹쳐 잠깐 올렸다 내린다) */
   return '<span class="stampmk" style="width:' + size + 'px;height:' + size + 'px">' + stampSealSvg(size) +
     (withRing ? '<span class="sglow">' + stampSealSvg(size, "#FF7E31") + '</span><span class="ring"></span><span class="ring r2"></span>' : "") + "</span>";
+}
+/* v4.70 (사용자 요청 260930) 활동 화면 오른쪽 위 스탬프 표시 · 패스포트 완료 도장(stampSealSvg)을 그대로 쓴다(새 모티프 없음).
+   받기 전 = 회색 도장 · 가운데 「스탬프」(미니게임은 종목 진행 n/3) · 받은 뒤 = 패스포트 완료 카드와 같은 도장 「완료」.
+   판정은 스탬프 카드와 같은 원천(S stamps = 서버 sync + 이 기기 적립) · 6개 한도 뒤 7·8번째로 받은 것도 기록이 있으니 「완료」.
+   도장 연출은 붙이지 않는다(완료 팝이 따로 있다) · 화면을 다시 그릴 때 색만 바뀐다. */
+var STAG_SZ = 52;
+function stampTagHtml(id) {
+  if (S.get("stamps", []).indexOf(id) >= 0) return '<span class="axs-stag on" role="img" aria-label="스탬프 받음">' + stampSealSvg(STAG_SZ) + "</span>";
+  var mg = id === "p4" ? Math.min(MG_NEED, mgDone()) + "/" + MG_NEED : "";
+  return '<span class="axs-stag" role="img" aria-label="' + (mg ? "스탬프 · 종목 " + mg : "스탬프 받기 전") + '">' + stampSealSvg(STAG_SZ, "currentColor", mg || "스탬프", mg ? 22 : 17) + "</span>";
+}
+/* 줄 모양 · 왼쪽 글(없으면 빈칸) + 오른쪽 도장 · 제목·칩 줄이 없는 화면(미니게임 · QR 퀴즈 목록 · 설문 결과)이 쓴다 */
+function stampLineHtml(id, left) { return '<div class="axs-stline">' + (left || "<span></span>") + stampTagHtml(id) + "</div>"; }
+/* 프로그램 상세 · p3 에 들어가는 것(17F 강연 · DAP 상담 · 커피챗 · 10F 는 P3_INCLUDE_10F) */
+function progStampId(s) {
+  return s && ((s.fl === 17 && PROG_CAT[s.id] === "강연") || s.id === "dap" || s.id === "cchat" || (P3_INCLUDE_10F && s.fl === 10 && PROG_CAT[s.id] === "실습")) ? "p3" : "";
 }
 /* 잉크 튐 · 도장 가장자리에서 바깥으로 · O100~O30 사다리 · 보일 때만 만들고 0.9초 뒤 지운다 · scale 0.5 = 카드 인라인(절반 크기) */
 var INK_COLS = ["#FF7E31", "#FF7E31", "#FFA46E", "#FFB284", "#FFCFB0"];
@@ -6274,7 +6304,7 @@ var Views = {
   exp_g: function () { return expGuideHtml(); },
   scan_q: function () { return scanQHtml(); },
   scan_res: function () { var r = scanResHtml(); return '<div class="ax-stack axs-res">' + r.body + "</div>" + r.btn; },
-  stair: function () { var r = stairHtml(); return '<div class="ax-stack axs-stairv">' + r.body + "</div>" + r.btn; },
+  stair: function () { var r = stairHtml(); return '<div class="ax-stack axs-stairv' + (STR.mode === "start" ? " axs-sthost" : "") + '">' + r.body + "</div>" + r.btn; },   /* v4.70 진행 중만 오른쪽 위 도장 */
 
   /* ═══ 미니게임 · 체험 › 앱에서 · 기존 AX 올림픽 허브(종목 4 + 순위판·포디움 입구) 그대로 (게임 화면 재디자인은 4단계) ═══ */
   games: function () {
@@ -6422,7 +6452,7 @@ var Views = {
        쓴 내용은 어떤 경우에도 지우지 않는다(IDEA.draft · 기기 저장 idea_draft · 다시 그려도 그대로) · 공백은 글자 수에서 뺀다 */
     var dr = ideaDraft(), n = ideaLen(dr), tag = IDEA.tag || pickedTag;
     return '<div class="ax-stack axs-form">' +
-      '<div class="ax-stack-tight axs-gap12"><h1 class="ax-type-t2">문득 떠오른<br>&ldquo;이거 AI로 되겠는데?&rdquo;</h1>' +
+      '<div class="ax-stack-tight axs-gap12 axs-sthost">' + stampTagHtml("p5") + '<h1 class="ax-type-t2">문득 떠오른<br>&ldquo;이거 AI로 되겠는데?&rdquo;</h1>' +
       '<p class="ax-body" id="ideaAward">한 줄이면 충분해요 · ' + IDEA_AWARD_TXT + "</p></div>" +
       '<div class="ax-stack-tight"><label class="ax-sr-only" for="ideaText">아이디어 한 줄</label>' +
       '<textarea id="ideaText" class="ax-field axs-ta" rows="3" maxlength="200" placeholder="예: 보상 접수 메일, 요약해서 시스템에 자동 입력되면 좋겠다" oninput="ideaInput(this.value)" onfocus="kbFocus(this)" aria-describedby="ideaLeft">' + esc(dr) + "</textarea>" +
@@ -6481,17 +6511,17 @@ var Views = {
     var d = svDraft(), Q = SURVEY_Q, n = Q.length, priv = '<p class="scap" style="margin:0 2px 8px">답은 이름 없이 저장됩니다 · 제출하면 스탬프 1개</p>';
     if (surveyDone()) {
       var m = S.get("survey_mine", null), a = svAgg();
-      return '<div class="card mb12"><b style="font-size:calc(17px * var(--fs));color:var(--hi)">제출 완료</b></div>' +
+      return '<div class="card mb12">' + stampLineHtml("sv", '<b style="font-size:calc(17px * var(--fs));color:var(--hi)">제출 완료</b>') + "</div>" +
         (SURVEY_FEATURES.balance ? '<div class="card soft mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">다음엔 뭘 더? · 지금까지 ' + (a && a.n ? a.n.toLocaleString() + "명" : "") + "</b>" +
           SURVEY_LEGACY.balance.map(function (q, i) { return '<p class="sq" style="margin-top:10px"><b>' + esc(q[0]) + " vs " + esc(q[1]) + "</b></p>" + svBalBars(i, m && m.bal ? m.bal[i] : null); }).join("") + "</div>" : "");
     }
-    if (!surveyOpen()) return '<div class="ax-stack">' + botHtml(SURVEY.open + "에 열려요") + "</div>";
-    if (surveyLock() === "nostamp") return '<div class="ax-stack">' + botHtml("스탬프를 하나 모으면 열려요") + '<button type="button" class="ax-button ax-button-weak" onclick="App.go(\'passport\')">스탬프 보기</button></div>';
+    if (!surveyOpen()) return '<div class="ax-stack">' + stampLineHtml("sv") + botHtml(SURVEY.open + "에 열려요") + "</div>";
+    if (surveyLock() === "nostamp") return '<div class="ax-stack">' + stampLineHtml("sv") + botHtml("스탬프를 하나 모으면 열려요") + '<button type="button" class="ax-button ax-button-weak" onclick="App.go(\'passport\')">스탬프 보기</button></div>';
     /* v4.08 입력·제출 화면 형식 · 전체 화면 · 하단 메뉴 숨김 · 아래 고정(다음/제출하기 + 2번째 문항부터 이전) · 답은 그대로 저장(survey_draft)
        v4.09 첫 문항의 약한 나가기 버튼 삭제(나가기는 헤더 뒤로) · 「이전」은 남긴다(헤더 뒤로는 설문 자체를 나가서 문항 이동을 대신하지 못한다) */
     var step = Math.max(1, Math.min(d.step || 1, n)), q = Q[step - 1], last = step === n;
     return '<div class="ax-stack axs-form">' +
-      '<div class="ax-stack-tight axs-gap12"><p class="ax-meta">' + step + " / " + n + " · 답은 이름 없이 저장돼요</p>" +
+      '<div class="ax-stack-tight axs-gap12 axs-sthost">' + stampTagHtml("sv") + '<p class="ax-meta">' + step + " / " + n + " · 답은 이름 없이 저장돼요</p>" +
       '<div class="axs-gauge" role="img" aria-label="' + step + " / " + n + '"><i style="width:' + Math.round(step / n * 100) + '%"></i></div>' +
       '<h1 class="ax-type-t3">' + esc(q.q) + (q.optional ? ' <span class="axs-chip off">선택</span>' : "") + "</h1></div>" +
       '<div class="axs-svin">' + svInputHtml(q, d.a[q.id]) + "</div></div>" +
@@ -6548,9 +6578,9 @@ var Views = {
   sess_d: function () {
     var s = progById(PROG.sid);
     if (!s) return '<div class="ax-stack">' + botHtml("프로그램을 찾을 수 없어요") + '<button type="button" class="ax-button ax-button-weak" onclick="App.tab(\'guide\')">프로그램 보기</button></div>';
-    var d = progDetail(s);
+    var d = progDetail(s), stp = progStampId(s);
     return '<div class="ax-stack">' +
-      '<section class="ax-card axs-pd">' +   /* v4.06 색 통일 · 흰 페이지 → canvas 위 흰 카드 */
+      '<section class="ax-card axs-pd' + (stp ? " axs-sthost" : "") + '">' + (stp ? stampTagHtml(stp) : "") +   /* v4.70 p3 에 들어가는 프로그램만 오른쪽 위 도장 */   /* v4.06 색 통일 · 흰 페이지 → canvas 위 흰 카드 */
       '<div class="axs-chiprow"><span class="axs-chip cat">' + esc(d.cat) + "</span>" + (d.st ? '<span class="axs-chip ' + d.stc + '">' + esc(d.st) + "</span>" : "") + "</div>" +
       '<h1 class="ax-title">' + esc(d.title) + "</h1>" +
       (d.who ? '<div class="axs-who"><span class="axs-av" aria-hidden="true">' + esc(d.av) + '</span><span class="axs-tx"><span class="ax-card-title">' + esc(d.who) + '</span><span class="ax-description">' + esc(d.whoSub) + "</span></span></div>" : "") +
@@ -6632,7 +6662,7 @@ var Views = {
         '<div style="flex:1"><b style="font-size:calc(15.5px * var(--fs));color:' + (done ? "var(--hi)" : "var(--muted)") + '">' + esc(s.name) + '</b>' +
         '<p class="muted" style="font-size:calc(13.5px * var(--fs));margin-top:2px">' + esc(s.theme) + "</p></div>" + badge + "</div>";
     }).join("");
-    return setCards +
+    return stampLineHtml("p7", '<p class="ax-meta">한 세트를 끝내면 스탬프</p>') + setCards +   /* v4.70 오른쪽 위 도장 */
       '<div class="card soft mt16"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">참여 방법</b>' +
       '<p class="muted" style="margin-top:6px;font-size:calc(14.5px * var(--fs));line-height:1.8">벽의 QR을 스캔하면 그 벽의 문제가 열려요 · 한 세트를 끝내면 적립</p>' +
       '<p class="muted" style="margin-top:6px;font-size:calc(13.5px * var(--fs))">정답은 1F 벽 전시 안에 있어요</p>' +
@@ -8019,7 +8049,7 @@ function stairHtml() {
   if (m === "start") {
     var since = o.since || (s.leg && s.leg.since) || Date.now();
     return { body:
-      '<div class="axs-chiprow"><span class="axs-chip">진행 중</span>' + (o.leg === "dup" ? '<span class="axs-chip off">이미 시작함</span>' : "") + (o.reclass ? '<span class="axs-chip off">새로 시작으로 바꿈</span>' : "") + "</div>" +
+      stampTagHtml("st") + '<div class="axs-chiprow"><span class="axs-chip">진행 중</span>' + (o.leg === "dup" ? '<span class="axs-chip off">이미 시작함</span>' : "") + (o.reclass ? '<span class="axs-chip off">새로 시작으로 바꿈</span>' : "") + "</div>" +
       (o.reclass && o.stamp && o.stamp.revoked ? '<p class="ax-meta">누적이 ' + goal + "개 층 아래라 계단 스탬프가 취소됐어요</p>" : "") +
       '<div class="axs-strow"><div class="ax-stack-tight"><h1 class="ax-title">계단 이용 시작</h1>' +
       '<p class="axs-st-big">' + o.fl + "F · " + esc(o.route || stairRoute(o.r)) + "</p></div>" + stairDotsHtml(since) + "</div>" +
@@ -8101,7 +8131,7 @@ var EXP_GUIDE = {
 };
 function expGuide(id) { EXPG.id = EXP_GUIDE[id] ? id : "p1"; App.go("exp_g"); }
 function expGuideHtml() {
-  var id = EXPG.id, g = EXP_GUIDE[id], done = S.get("stamps", []).indexOf(id) >= 0, s = stairState();
+  var id = EXPG.id, g = EXP_GUIDE[id], s = stairState();
   var steps = g.steps.map(function (x, i) {
     return '<li><span class="axs-no">0' + (i + 1) + '</span><span class="axs-tx"><b class="ax-type-t5-strong">' + x[0] + '</b><span class="ax-meta">' + esc(x[1]) + "</span></span></li>";
   }).join("");
@@ -8111,8 +8141,8 @@ function expGuideHtml() {
       (s.leg ? '<p class="ax-description">진행 중 · ' + s.leg.fl + "F " + esc(s.leg.route || stairRoute(s.leg.r)) + " 시작 · " + esc(s.leg.at || "") + "</p>" +
         '<button type="button" class="ax-button ax-button-weak" onclick="stairOpen()">진행 화면 보기</button>' : "") + "</section>";
   }
-  return '<div class="ax-stack">' +
-    '<div class="axs-chiprow"><span class="axs-chip">' + esc(g.chip) + "</span>" + (done ? '<span class="axs-chip ok">적립 완료</span>' : "") + "</div>" +
+  return '<div class="ax-stack axs-sthost">' + stampTagHtml(id) +   /* v4.70 오른쪽 위 도장 · 옛 「적립 완료」 칩은 도장이 대신한다 */
+    '<div class="axs-chiprow"><span class="axs-chip">' + esc(g.chip) + "</span></div>" +
     '<div class="ax-stack-tight"><h1 class="ax-title">' + g.h + '</h1><p class="ax-description">' + esc(g.d) + "</p></div>" +
     prog +
     '<ol class="axs-steps">' + steps + "</ol>" +
@@ -10074,7 +10104,8 @@ function olyResultBody(o) {
 function olyHubHtml() {
   olyPull();
   var me = olyMe(), op = olyOverallPos(me);
-  return '<section class="ax-card oly-sum"><div><p class="ax-meta">내 AX 올림픽 총점</p><p class="oly-sum-n">' + olyFmt(me.total) + "<small> / " + olyFmt(olyMax()) + "</small></p></div>" +
+  return stampLineHtml("p4", '<p class="ax-meta">서로 다른 ' + MG_NEED + "종목 · 종목마다 한 판</p>") +   /* v4.70 스탬프 조건 + 도장(n/3) */
+    '<section class="ax-card oly-sum"><div><p class="ax-meta">내 AX 올림픽 총점</p><p class="oly-sum-n">' + olyFmt(me.total) + "<small> / " + olyFmt(olyMax()) + "</small></p></div>" +
     '<p class="ax-meta oly-sum-r">종목 ' + me.done + "/" + OLY_EVENTS.length + (op ? "<br>" + esc(op) : "") + "</p></section>" +
     OLY_EVENTS.map(function (e) {
       var v = me.ev[e.key], lw = v && v.medal ? olyLw(v.medal, 48) : "";
