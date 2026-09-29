@@ -109,9 +109,14 @@ main{max-width:1180px;margin:0 auto;padding:12px 28px 48px}
 <!-- 행사 캐릭터 챗봇 원본(assets/bot.js) · 소나기 엔진이 캐릭터를 여기서 그린다 · 엔진보다 먼저 -->
 <script src="../assets/bot.js"></script>
 <script src="../assets/rain-engine.js"></script>
+<!-- v4.61 서버 주소 한 곳(앱 · 콘솔과 같은 파일) -->
+<script src="../assets/server.js"></script>
 <script>
-/* 백엔드 URL 은 비밀이 아니다(앱 소스에도 있다) */
-var BE = "https://script.google.com/macros/s/AKfycbwjCaSSUnQ7W1lrM8T426Cn_LgKs_UhI0Qi5XRVk-_eF-oD55-Wwjsot0DkPJCX9JqMBA/exec";
+/* 백엔드 URL 은 비밀이 아니다(앱 소스에도 있다) · v4.61 주소는 ../assets/server.js 한 곳 · 못 읽었으면 기본값(옛 GAS) · 옛 서버가 잠기면 응답 moved 로 새 주소(콘솔과 같은 규칙) */
+var BE_DEFAULT = "https://script.google.com/macros/s/AKfycbwjCaSSUnQ7W1lrM8T426Cn_LgKs_UhI0Qi5XRVk-_eF-oD55-Wwjsot0DkPJCX9JqMBA/exec";
+function beUrlOk(u){ return typeof u==="string" && /^https:\/\/([a-z0-9-]+\.[a-z0-9-]+\.workers\.dev|script\.google\.com\/macros\/s\/[\w-]{20,})\/exec$/.test(u); }
+var BE = beUrlOk(typeof AXF_SERVER==="string"?AXF_SERVER:"") ? AXF_SERVER : BE_DEFAULT;
+function beMoved(res){ if(res&&beUrlOk(res.moved)&&res.moved!==BE){ BE=res.moved; return true; } return false; }
 function el(id){ return document.getElementById(id); }
 try{ if(document.fonts&&document.fonts.load) document.fonts.load('16px "NeoDunggeunmo"', "가A0"); }catch(e){}   /* v4.23 판 안 도트 글꼴을 판이 열리기 전에 미리 읽는다 */
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
@@ -119,13 +124,14 @@ function ls(k,v){ try{ if(v===undefined) return localStorage.getItem(k)||""; if(
 var HEART='<svg viewBox="0 0 7 6" width="26" height="22" shape-rendering="crispEdges" aria-hidden="true"><path d="M0 0h3v2H0zM4 0h3v2H4zM0 2h7v2H0zM1 4h5v1H1zM2 5h3v1H2z"/></svg>';
 /* JSONP · 콘솔과 같은 방식(GitHub Pages 에서 GAS 로 fetch 는 CORS 리다이렉트에 걸린다) · 서버 시계 차이를 함께 잰다 */
 var _cbN=0;
-function call(action, params, done, fail){
+function call(action, params, done, fail, again){
   var name="__axr"+(++_cbN), sc=document.createElement("script"), q=[], t0=Date.now();
   params=params||{}; params.action=action; params.callback=name; params._=t0;
   for(var k in params) if(params[k]!=null&&params[k]!=="") q.push(encodeURIComponent(k)+"="+encodeURIComponent(params[k]));
   var timer=setTimeout(function(){ cleanup(); net(false); fail&&fail({ok:false,reason:"network"}); },12000);
   function cleanup(){ clearTimeout(timer); try{delete window[name];}catch(e){window[name]=undefined;} if(sc.parentNode) sc.parentNode.removeChild(sc); }
   window[name]=function(res){ cleanup(); net(true); var t1=Date.now();
+    if(res&&res.moved&&beMoved(res)&&res.reason==="moved"&&!again){ call(action, params, done, fail, 1); return; }
     if(res&&res.now){ var rtt=t1-t0; if(rtt<=P.rtt+150){ P.off=res.now-(t0+t1)/2; P.rtt=Math.min(P.rtt,rtt); } }
     done&&done(res); };
   sc.onerror=function(){ cleanup(); net(false); fail&&fail({ok:false,reason:"network"}); };

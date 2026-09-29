@@ -492,10 +492,17 @@ td.itx{min-width:280px;max-width:520px;white-space:normal;line-height:1.55}
     <div class="oa"><button class="btn" id="dlgCancel" onclick="dlgClose()">닫기</button><button class="btn pri" id="dlgOk" onclick="dlgGo()">확인</button></div>
   </div>
 </div>
+<!-- v4.61 서버 주소 한 곳(앱과 같은 파일 · 전환은 이 파일 한 줄) -->
+<script src="../assets/server.js"></script>
 <script>
 /* ══════════════════ 0. 설정 ══════════════════ */
-/* 백엔드 URL 은 비밀이 아니다(앱 소스에도 있다). 관리코드는 파일에 두지 않는다. */
-var BE = "https://script.google.com/macros/s/AKfycbwjCaSSUnQ7W1lrM8T426Cn_LgKs_UhI0Qi5XRVk-_eF-oD55-Wwjsot0DkPJCX9JqMBA/exec";
+/* 백엔드 URL 은 비밀이 아니다(앱 소스에도 있다). 관리코드는 파일에 두지 않는다.
+   v4.61 (260929 서버 이전) 주소는 ../assets/server.js 의 AXF_SERVER 한 곳 · 못 읽었으면 기본값(옛 GAS).
+   옛 서버가 읽기 전용으로 잠기면 응답 moved 로 새 주소를 알려 준다 → 주소를 바꾸고(이 화면이 떠 있는 동안만) 쓰기(reason moved)는 새 주소로 한 번 다시 보낸다. */
+var BE_DEFAULT = "https://script.google.com/macros/s/AKfycbwjCaSSUnQ7W1lrM8T426Cn_LgKs_UhI0Qi5XRVk-_eF-oD55-Wwjsot0DkPJCX9JqMBA/exec";
+function beUrlOk(u){ return typeof u==="string" && /^https:\/\/([a-z0-9-]+\.[a-z0-9-]+\.workers\.dev|script\.google\.com\/macros\/s\/[\w-]{20,})\/exec$/.test(u); }
+var BE = beUrlOk(typeof AXF_SERVER==="string"?AXF_SERVER:"") ? AXF_SERVER : BE_DEFAULT;
+function beMoved(res){ if(res&&beUrlOk(res.moved)&&res.moved!==BE){ BE=res.moved; return true; } return false; }
 /* v4.10 (260922) 참가자 앱과 같은 서버에 부담을 주지 않게 30초 자동 폴링을 5분으로 늦춘다.
    화면(탭)마다 필요한 액션만 메모리 캐시(§1-1)에 5분 동안 담아 둔다. 그 안에서는 탭을 옮겨도 서버를 다시 부르지 않는다. */
 var POLL_MS = 300000;
@@ -623,14 +630,14 @@ function emptyRow(n, msg){ return '<tr><td colspan="'+n+'"><div class="empty">'+
 
 /* JSONP · 백엔드가 callback 파라미터를 지원한다. GitHub Pages 에서 GAS 로 fetch 는 CORS 리다이렉트에 걸린다. */
 var _cbN=0;
-function call(action, params, done, fail){
+function call(action, params, done, fail, again){
   var name="__axf"+(++_cbN), sc=document.createElement("script"), q=[];
   params=params||{}; params.action=action; params.callback=name; params._=Date.now();
   if(!("key" in params)) params.key=key();
   for(var k in params) if(params[k]!=null) q.push(encodeURIComponent(k)+"="+encodeURIComponent(params[k]));
   var timer=setTimeout(function(){ cleanup(); fail&&fail({ok:false,reason:"timeout"}); },15000);
   function cleanup(){ clearTimeout(timer); try{delete window[name];}catch(e){window[name]=undefined;} if(sc.parentNode) sc.parentNode.removeChild(sc); }
-  window[name]=function(res){ cleanup(); if(res&&res.ok===false&&res.reason==="auth"){ lock("관리코드가 맞지 않습니다. 다시 입력하세요."); return; } done&&done(res); };
+  window[name]=function(res){ cleanup(); if(res&&res.moved&&beMoved(res)&&res.reason==="moved"&&!again){ call(action, params, done, fail, 1); return; } if(res&&res.ok===false&&res.reason==="auth"){ lock("관리코드가 맞지 않습니다. 다시 입력하세요."); return; } done&&done(res); };
   sc.onerror=function(){ cleanup(); fail&&fail({ok:false,reason:"network"}); };
   sc.src=BE+"?"+q.join("&");
   document.head.appendChild(sc);
@@ -2968,12 +2975,13 @@ function wqWhy(r){ r=r||{};
   return why(r);
 }
 /* POST · 응답은 JSON · 관리코드는 본문으로(주소에 남지 않는다) */
-function callPost(action, params, done, fail){
+function callPost(action, params, done, fail, again){
   var body=new URLSearchParams(); params=params||{}; params.action=action; if(!("key" in params)) params.key=key();
   for(var k in params) if(params[k]!=null) body.append(k, params[k]);
   var ctl=window.AbortController?new AbortController():null, timer=setTimeout(function(){ if(ctl) ctl.abort(); },25000);
   fetch(BE,{ method:"POST", body:body, redirect:"follow", signal:ctl?ctl.signal:undefined }).then(function(r){ return r.text(); }).then(function(t){
     clearTimeout(timer); var res=null; try{ res=JSON.parse(t); }catch(e){ res={ ok:false, reason:"network" }; }
+    if(res&&res.moved&&beMoved(res)&&res.reason==="moved"&&!again){ callPost(action, params, done, fail, 1); return; }
     if(res&&res.ok===false&&res.reason==="auth"){ lock("관리코드가 맞지 않습니다. 다시 입력하세요."); return; }
     done&&done(res);
   }).catch(function(){ clearTimeout(timer); fail&&fail({ ok:false, reason:"network" }); });
