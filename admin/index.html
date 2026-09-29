@@ -560,6 +560,10 @@ function jq(s){ return String(s==null?"":s).replace(/[^0-9A-Za-z_\-.:가-힣]/g,
 function el(id){ return document.getElementById(id); }
 function key(){ try{ return sessionStorage.getItem("axf_adm_key")||""; }catch(e){ return window.__k||""; } }
 function setKey(v){ try{ sessionStorage.setItem("axf_adm_key",v); }catch(e){ window.__k=v; } }
+/* v4.66 (QA 3단계 260930) 스태프 토큰 · 코드를 맞히면 서버(v4.65~)가 tok 을 준다 · 모든 요청에 같이 보내면 그 연결(와이파이 주소)이 잠겨도 통과한다
+   코드와 같은 곳(이 탭 동안)에 둔다 · 옛 서버는 tok 을 주지 않고 읽지도 않는다(빈 값이면 예전과 같다) */
+function tok(){ try{ return sessionStorage.getItem("axf_adm_tok")||""; }catch(e){ return window.__t||""; } }
+function setTok(v){ try{ sessionStorage.setItem("axf_adm_tok",v||""); }catch(e){ window.__t=v||""; } }
 function normE(v){ return String(v==null?"":v).replace(/\s/g,"").toUpperCase().replace(/^0+(?=.)/,""); }
 function nowHMS(){ var d=new Date(); return ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)+":"+("0"+d.getSeconds()).slice(-2); }
 /* 알림 · o.undo 가 있으면 「되돌리기」 버튼을 몇 초 동안 띄운다 */
@@ -634,14 +638,31 @@ function call(action, params, done, fail, again){
   var name="__axf"+(++_cbN), sc=document.createElement("script"), q=[];
   params=params||{}; params.action=action; params.callback=name; params._=Date.now();
   if(!("key" in params)) params.key=key();
+  if(!("tok" in params)&&tok()) params.tok=tok();
   for(var k in params) if(params[k]!=null) q.push(encodeURIComponent(k)+"="+encodeURIComponent(params[k]));
   var timer=setTimeout(function(){ cleanup(); fail&&fail({ok:false,reason:"timeout"}); },15000);
   function cleanup(){ clearTimeout(timer); try{delete window[name];}catch(e){window[name]=undefined;} if(sc.parentNode) sc.parentNode.removeChild(sc); }
-  window[name]=function(res){ cleanup(); if(res&&res.moved&&beMoved(res)&&res.reason==="moved"&&!again){ call(action, params, done, fail, 1); return; } if(res&&res.ok===false&&res.reason==="auth"){ lock("관리코드가 맞지 않습니다. 다시 입력하세요."); return; } done&&done(res); };
+  window[name]=function(res){ cleanup(); if(res&&res.moved&&beMoved(res)&&res.reason==="moved"&&!again){ call(action, params, done, fail, 1); return; } if(authGate(res, action)) return; if(lockedGate(res, fail, action)) return; done&&done(res); };
   sc.onerror=function(){ cleanup(); fail&&fail({ok:false,reason:"network"}); };
   sc.src=BE+"?"+q.join("&");
   document.head.appendChild(sc);
 }
+/* v4.66 (QA 3단계) 응답 한 곳에서 거르기 · admin_check 는 잠금 화면(unlockWith)이 직접 본다
+   auth = 저장한 코드 · 토큰이 틀림(코드가 바뀜) → 버리고 잠금 화면 · 옛 코드로 계속 부르면 이 연결의 틀린 횟수가 쌓여 잠긴다
+   locked = 이 연결(와이파이 주소)이 잠김 · 받은 값을 데이터로 쓰지 않는다(예전에는 「0명 · 대기 없음」으로 그려졌다) · 실패로 넘긴다 */
+function authGate(res, action){
+  if(action==="admin_check"||!(res&&res.ok===false&&res.reason==="auth")) return false;
+  lock("관리코드가 바뀌었거나 맞지 않습니다. 다시 입력하세요."); return true;
+}
+function lockedGate(res, fail, action){
+  /* 연결 잠금은 retry(남은 초)가 함께 온다 · 올림픽 규칙 잠금(oly_rule) · Wall 문항 잠금(wq_set)의 locked 는 retry 가 없어 그 화면이 직접 본다 */
+  if(action==="admin_check"||!(res&&res.ok===false&&res.reason==="locked"&&res.retry!=null)) return false;
+  ST.locked={ until:Date.now()+(Number(res.retry)||600)*1000 };
+  fail&&fail({ ok:false, reason:"locked", retry:res.retry });
+  return true;
+}
+function lockedMin(){ return ST.locked?Math.max(1,Math.ceil((ST.locked.until-Date.now())/60000)):10; }
+function lockedMsg(){ return "이 연결(와이파이 주소)에서 코드를 여러 번 틀려 약 "+lockedMin()+"분 동안 잠겼습니다. 급하면 휴대폰 테더링 등 다른 연결로 여세요."; }
 function callAll(list, done){
   var out={}, left=list.length, err=null;
   if(!left) return done(out,null);
@@ -697,22 +718,36 @@ function runOps(items, onEach, onDone){
   next();
 }
 function op(action, params){ return function(cb){ call(action, params, function(r){ cb(!!(r&&r.ok), r||{}); }, function(e){ cb(false, e||{reason:"network"}); }); }; }
-function why(r){ r=r||{}; return {network:"서버 응답 없음",timeout:"서버 응답 없음",notfound:"대상을 찾지 못했습니다",param:"입력값 오류",open:"자유 참석 강연이라 신청이 없습니다",notable:"테이블이 없습니다"}[r.reason]||r.reason||r.err||"실패"; }
+function why(r){ r=r||{}; if(r.reason==="locked") return r.retry!=null?"이 연결이 잠김 · 약 "+lockedMin()+"분":"잠겨 있습니다"; if(r.reason==="state") return "그 사이 다른 곳에서 먼저 바뀌었습니다"+(r.cur?" (지금 "+r.cur+")":""); return {network:"서버 응답 없음",timeout:"서버 응답 없음",notfound:"대상을 찾지 못했습니다",param:"입력값 오류",open:"자유 참석 강연이라 신청이 없습니다",notable:"테이블이 없습니다",taken:"그 시간은 이미 다른 사람이 잡았습니다",dup:"이 사람은 이미 다른 상담이 있습니다",round:"회차 시간이 올바르지 않습니다",calling:"이미 호출 중인 번호가 있습니다",win:"도전 시간 형식이 올바르지 않습니다"}[r.reason]||r.reason||r.err||"실패"; }
 
 /* 처리 이력 · 이 콘솔 탭에서 한 처리만 기억한다(서버 기록은 참여 기록·운영 로그가 정본) */
 var HIST={};
 function hist(emp, text){ var k=normE(emp); (HIST[k]=HIST[k]||[]).unshift({t:nowHMS(), x:text}); }
 
 /* ══════════════════ 2. 잠금 ══════════════════ */
-function lock(msg){ setKey(""); el("lock").style.display="flex"; el("lockErr").textContent=msg||""; el("key").value=""; setTimeout(function(){el("key").focus();},50); }
+function lock(msg){ setKey(""); setTok(""); clearTimeout(_poll); el("lock").style.display="flex"; el("lockErr").textContent=msg||""; el("key").value=""; setTimeout(function(){el("key").focus();},50); }
 function unlock(){
   var v=el("key").value.trim(); if(!v){ el("lockErr").textContent="코드를 입력하세요."; return; }
+  unlockWith(v);
+}
+/* 코드 확인 한 곳 · 입력칸(unlock)과 시작 때 토큰 받기(bootTok)가 쓴다 · 토큰은 보내지 않는다(지금 친 코드를 본다) */
+function unlockWith(v){
   el("lockErr").innerHTML='<span class="spin"></span>확인 중';
-  call("admin_check",{key:v},function(r){
-    if(r&&r.ok&&r.role==="admin"){ setKey(v); el("lock").style.display="none"; el("lockErr").textContent=""; go(ST.tab); }
+  call("admin_check",{key:v,tok:""},function(r){
+    if(r&&r.ok&&r.role==="admin"){ setKey(v); setTok(r.tok||""); ST.locked=null; el("lock").style.display="none"; el("lockErr").textContent=""; go(ST.tab); }
     else if(r&&r.ok&&r.role==="grade"){ el("lockErr").textContent="등급코드입니다. 이 콘솔은 관리코드가 필요합니다."; }
+    else if(r&&r.reason==="locked"){ ST.locked={ until:Date.now()+(Number(r.retry)||600)*1000 }; el("lockErr").textContent=lockedMsg(); }
     else el("lockErr").textContent="관리코드가 맞지 않습니다.";
   },function(){ el("lockErr").textContent="서버에 연결할 수 없습니다. 네트워크를 확인하세요."; });
+}
+/* 시작(새로 고침) 때 · 먼저 한 번 확인해 토큰을 받고(옛 콘솔 · 옛 서버에서 들어온 탭도) 그 뒤에 불러온다
+   토큰이 맞으면 잠긴 연결에서도 통과한다 · 코드가 바뀌었으면 여기서 한 번만 틀리고 잠금 화면으로 간다(예전에는 탭의 요청 7~8건이 한꺼번에 틀렸다) */
+function bootTok(done){
+  call("admin_check",{key:key()},function(r){
+    if(r&&r.ok&&r.role==="admin"){ setTok(r.tok||""); done(); }
+    else if(r&&r.reason==="locked"){ ST.locked={ until:Date.now()+(Number(r.retry)||600)*1000 }; done(); }
+    else lock(r&&r.ok?"등급코드입니다. 이 콘솔은 관리코드가 필요합니다.":"관리코드가 바뀌었거나 맞지 않습니다. 다시 입력하세요.");
+  },function(){ done(); });
 }
 el("key").addEventListener("keydown",function(e){ if(e.key==="Enter") unlock(); });
 
@@ -841,11 +876,14 @@ function render(){
   var missing=needOf(ST.tab).filter(function(it){ return !ST.data[it.k]; });
   if(missing.length&&ST.busy){
     h=tabHead()+'<div class="card"><p class="muted"><span class="spin"></span>서버에서 불러오는 중입니다. 보통 2~5초 걸립니다.</p></div>';
+  } else if(missing.length&&ST.err&&ST.err.reason==="locked"){
+    h=tabHead()+'<div class="card"><div class="empty">서버가 이 연결을 잠가 이 메뉴의 값을 받지 못했습니다. 숫자를 0 으로 그리지 않습니다.</div></div>';   /* v4.66 예전에는 「0명 · 대기 없음」으로 보였다 */
   } else {
     try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="qr"?viewQr():ST.tab==="notice"?viewNotice():ST.tab==="survey"?viewSurvey():ST.tab==="typing"?viewTyping():ST.tab==="photo"?viewPhoto():ST.tab==="art"?viewArt():ST.tab==="race"?viewRace():ST.tab==="idea"?viewIdea():ST.tab==="att"?viewAtt():ST.tab==="visit"?viewVisit():viewApply(); }
     catch(e){ h='<div class="err-banner">화면을 그리는 중 오류가 났습니다: '+esc(e.message)+'</div>'; }
   }
-  if(ST.err) h='<div class="err-banner">일부 데이터를 못 받았습니다('+esc(ST.err.reason||"")+'). 새로고침을 눌러 주세요. 표시된 값은 마지막으로 받은 것입니다.</div>'+h;
+  if(ST.err&&ST.err.reason==="locked") h='<div class="err-banner"><b>서버가 이 연결을 잠갔습니다.</b> '+esc(lockedMsg())+' 잠금이 풀리면 이 탭을 새로 고칩니다. 한 번 들어온 탭은 그 뒤로 잠금을 받지 않습니다.</div>'+h;
+  else if(ST.err) h='<div class="err-banner">일부 데이터를 못 받았습니다('+esc(why(ST.err))+'). 새로고침을 눌러 주세요. 표시된 값은 마지막으로 받은 것입니다.</div>'+h;
   v.innerHTML=h;
   if(fIdx>=0){ var f2=v.querySelectorAll("input,select,textarea"); if(f2[fIdx]){ try{f2[fIdx].focus({preventScroll:true});}catch(e){f2[fIdx].focus();} try{ if(selS!=null) f2[fIdx].setSelectionRange(selS,selE); }catch(e){} } }
   window.scrollTo(0,top);
@@ -884,7 +922,7 @@ function personHist(emp){
 
 /* ── 사용 안내 · 번호 단계 ── */
 var GUIDE={
-  dash:[["지금 처리할 일","숫자가 있는 줄의 <b>처리하기</b>를 누르면 그 메뉴의 그 필터로 바로 갑니다."],["숫자 타일","가입·스탬프·룰렛·응모권 · 참여 기록을 30초마다 새로 받습니다."],["아래 표","스탬프 보유 분포 · 강연 정원 대비 · 상담·커피챗 흐름입니다. 흐름 칸을 누르면 신청 탭의 그 상태로 갑니다."]],
+  dash:[["지금 처리할 일","숫자가 있는 줄의 <b>처리하기</b>를 누르면 그 메뉴의 그 필터로 바로 갑니다."],["숫자 타일","가입·스탬프·룰렛·응모권 · 참여 기록을 5분마다 새로 받습니다. 바로 보려면 오른쪽 위 <b>새로고침</b>을 누릅니다."],["아래 표","스탬프 보유 분포 · 강연 정원 대비 · 상담·커피챗 흐름입니다. 흐름 칸을 누르면 신청 탭의 그 상태로 갑니다."]],
   acct:[["분실 요청","앱에서 온 비밀번호 분실 요청이 위에 쌓입니다. <b>사원증이나 얼굴로 본인 확인을 먼저</b> 합니다."],["초기화","초기화하면 본인이 앱에서 다음에 넣는 4자리가 새 비밀번호가 됩니다. 비밀번호 값은 어디에도 보이지 않습니다."],["처리자 이름","한 번 적어 두면 이 브라우저가 기억하고 운영 로그에 함께 남깁니다."]],
   stamp:[["사람 찾기","왼쪽 칸에 사번이나 이름을 넣고 한 사람을 고릅니다."],["8칸 확인","획득한 칸은 네이비, 획득 경로(현장 QR · 담당자 부여 · 앱 자동)가 칸 안에 보입니다."],["부여","현장 QR 01·02·03 과 계단 07 만 <b>부여</b>할 수 있습니다. 앱 자동 04·05·06 과 설문 08 은 앱 안의 행동이라 부여하지 않습니다."],["취소","지금은 8칸 모두 <b>취소</b>할 수 있습니다(테스트 기간 · 설정 「스탬프취소_범위」 = 전체). 취소한 칸은 같은 행동으로 다시 받을 수 있습니다. 확인 창에서 보상 변화를 먼저 보여 주고, 룰렛을 이미 돌렸거나 발급된 응모권이 줄어드는 취소는 서버가 거부합니다."],["되돌리기","처리 직후 알림의 <b>되돌리기</b>로 바로 원래대로 돌릴 수 있습니다. 모든 부여·취소는 참여 기록에 행으로 남습니다(지우지 않음)."]],
   qr:[["전체 목록","현장에 붙는 QR 전부를 한 표로 봅니다. 「오늘 스캔」이 지금 찍히고 있는지입니다(앱 링크 · 안내판은 집계 없음)."],["코드 · 인쇄","서버 코드와 인쇄 파일 경로입니다. <b>codes.json 내려받기</b>로 지금 코드를 받아 QR 담당이 인쇄 원본을 다시 만듭니다. 「견본 · 인쇄 금지」는 아직 서버 코드로 만들지 않은 파일입니다."],["설치 점검","오늘 스캔이 없는 부스 · 출석 · Wall 과 계단 36곳의 스캔 없음 · 주소 불일치를 봅니다."],["클로즈 베타","이번 베타에 붙이는 13장 점검표입니다. 붙인 뒤 운영진 폰으로 한 번씩 찍어 「찍힘」이 켜지는지 봅니다."]],
@@ -1156,9 +1194,9 @@ function stGrant(emp, id, quiet){
     call("stamp_grant",{emp:emp,id:id},function(res){
       dlgForce();
       if(res&&res.ok){
-        if(res.dup){ toast("이미 있는 스탬프입니다 · "+m.no+" "+m.n); reload(["stamp"]); return; }
+        if(res.dup){ toast("이미 있는 스탬프입니다 · "+(res.who||r.name||emp)+" · "+m.no+" "+m.n); reload(["stamp"]); return; }
         spApply(emp, res.stamps, id, "담당자 부여"); hist(emp, m.no+" "+m.n+" 부여"); render();
-        toast((quiet?"되돌렸습니다 · ":"부여했습니다 · ")+(r.name||emp)+" · "+m.no+" "+m.n, quiet?{}:{ undo:function(){ stRevokeGo(emp,id,true); } });
+        toast((quiet?"되돌렸습니다 · ":"부여했습니다 · ")+(res.who||r.name||emp)+" · "+m.no+" "+m.n, quiet?{}:{ undo:function(){ stRevokeGo(emp,id,true); } });   /* v4.66 res.who = 서버가 확인한 참가자 이름(v4.65~ · 옛 서버는 없음) */
       } else toast("부여 실패: "+(res&&res.reason==="noid"?"부여할 수 없는 항목입니다":why(res)));
     },function(){ dlgForce(); toast("서버 응답 없음"); });
   }
@@ -1248,7 +1286,7 @@ function viewStairStats(){
 function viewStairOps(){
   var out=!!((ST.data.sy||{}).rouletteOut);
   var h='<div class="grid g2" style="margin-top:0">'+card("룰렛 소진 안내", out?tag("안내 켜짐","warn"):tag("안내 꺼짐","off"),
-    '<p class="muted" style="font-size:var(--fs-s)">켜면 참가자 앱의 룰렛 쿠폰 창과 스탬프 보상 레일에 「오늘 준비한 룰렛이 모두 소진되었습니다」가 뜹니다. 응모권은 그대로입니다.</p>'+
+    '<p class="muted" style="font-size:var(--fs-s)">켜면 참가자 앱의 룰렛 쿠폰 창과 스탬프 보상 레일에 「오늘 준비한 룰렛이 모두 소진되었습니다」가 뜹니다. 켜 있는 동안 스태프 폰이 참가자 QR 을 찍어도 룰렛 1회를 쓰지 않고 「룰렛 소진 · 차감하지 않았어요」로 답합니다(서버 v4.65~). 응모권은 그대로입니다.</p>'+
     '<div class="row mt12"><button class="btn '+(out?"":"danger")+'" onclick="rouletteOut('+(out?0:1)+')">'+(out?"안내 끄기":"소진 안내 켜기")+'</button></div>');
   /* v4.53 (사용자 지시 260928) DAP Wall · 부스 · 17F 출석 · 계단 지점 QR 카드와 codes.json 은 QR 메뉴(viewQr)로 옮겼다 · 여기는 안내 한 줄만 */
   h+=card("인쇄용 QR","QR 메뉴로 옮겼습니다",
@@ -1262,7 +1300,7 @@ function appBase(){ return location.origin+location.pathname.replace(/admin\/[^\
 function rouletteOut(on){
   function go0(){ call("roulette_out",{on:on?1:0},function(r){ dlgForce(); if(r&&r.ok){ toast(r.out?"룰렛 소진 안내를 켰습니다":"룰렛 소진 안내를 껐습니다"); reload(["sy"]); } else toast("실패: "+why(r)); },function(){ dlgForce(); toast("서버 응답 없음"); }); }
   if(!on) return go0();
-  dialog({ t:"룰렛 소진 안내를 켤까요?", s:"참가자 앱 전체에 바로 표시됩니다. 응모권은 그대로입니다.", ok:"켜기", danger:true, onOk:go0 });
+  dialog({ t:"룰렛 소진 안내를 켤까요?", s:"참가자 앱 전체에 바로 표시되고, 켜 있는 동안 스태프 폰이 참가자 QR 을 찍어도 룰렛을 차감하지 않습니다. 응모권은 그대로입니다.", ok:"켜기", danger:true, onOk:go0 });
 }
 
 /* ══════════════════ 7. 신청 ══════════════════
@@ -1332,15 +1370,17 @@ function resvDo(ids, status, opt){
     var prev={}; rows.forEach(function(r){ prev[r.id]=r.status; });
     var items=rows.map(function(r){ var target=opt.undo?opt.undo[r.id]:status;
       r.status=target; ovrSet("resv:"+r.id,{status:target});
-      return { r:r, run:op("resv_set",{id:r.id,status:target}) }; });
+      return { r:r, run:op("resv_set",{id:r.id,status:target,from:prev[r.id]}) }; });   /* v4.66 from = 이 화면이 본 상태 · 새 서버는 그 사이 바뀌었으면 state 로 거절(두 운영자 동시 처리) · 옛 서버는 읽지 않는다 */
     render();
     runOps(items, function(it,ok,res){
-      if(!ok){ it.r.status=prev[it.r.id]; delete ST.ovr["resv:"+it.r.id]; }
+      if(!ok){ it.r.status=(res&&res.reason==="state"&&res.cur)?res.cur:prev[it.r.id]; delete ST.ovr["resv:"+it.r.id]; }
       else { hist(it.r.emp, "상담 "+hhmm(it.r.slot)+" "+(opt.undo?"되돌림 → ":"")+it.r.status+(res.stamp&&!res.stamp.dup?" · 스탬프 03 적립":"")); if(!opt.undo) delete ST.sel["r:"+it.r.id]; }
     }, function(okN,bad){
       render();
+      if(bad.some(function(b){ return b.res&&/^(state|taken|dup)$/.test(b.res.reason); })) reload(["resv"]);
       var who=rows.length===1?rows[0].name+" · ":"";
-      var msg=opt.undo?"되돌렸습니다 · "+who+okN+"건":who+status+(rows.length>1?" "+okN+"건":"")+(bad.length?" · 실패 "+bad.length+"건 ("+why(bad[0].res)+")":"")+(skip?" · 해당 없음 "+skip+"건 제외":"");
+      var msg=(rows.length===1&&bad.length)?(opt.undo?"되돌리지 못했습니다 · ":"처리하지 못했습니다 · ")+who+why(bad[0].res)
+        :opt.undo?"되돌렸습니다 · "+who+okN+"건":who+status+(rows.length>1?" "+okN+"건":"")+(bad.length?" · 실패 "+bad.length+"건 ("+why(bad[0].res)+")":"")+(skip?" · 해당 없음 "+skip+"건 제외":"");
       var undoIds=items.filter(function(it){ return bad.every(function(b){ return b.it!==it; }); }).map(function(it){ return it.r.id; });
       toast(msg, (!opt.undo&&RESV_UNDO[status]&&undoIds.length)?{ undo:function(){ var back={}; undoIds.forEach(function(id){ back[id]=prev[id]; }); resvDo(undoIds, "", { undo:back }); } }:{});
     });
@@ -1353,11 +1393,17 @@ function resvDo(ids, status, opt){
     who:rows.length===1?esc(rows[0].name)+'<span>사번 '+esc(rows[0].emp)+' · 슬롯 '+esc(hhmm(rows[0].slot))+' · 지금 '+esc(rows[0].status)+'</span>':namesOf(rows),
     ok:(danger?status+" 처리":status)+(rows.length>1?" "+rows.length+"건":""), danger:danger, onOk:go0 });
 }
-function resvMemoSave(id){
-  var r=resvById(id), t=el("drwMemo"); if(!r||!t) return;
-  var m=t.value, old=r.memo;
+function resvMemoSave(id, st){
+  var r=resvById(id), t=el("drwMemo"); if(!r||(!t&&st==null)) return;
+  var m=st!=null?st.m:t.value, old=st!=null?st.old:r.memo, cur=st!=null?st.cur:r.status;
   r.memo=m; render();
-  call("resv_set",{id:id,status:r.status,memo:m},function(res){ if(res&&res.ok){ hist(r.emp,"상담 메모 저장"); toast("메모를 저장했습니다"); render(); } else { r.memo=old; render(); toast("메모 저장 실패: "+why(res)); } },function(){ r.memo=old; render(); toast("서버 응답 없음"); });
+  /* v4.66 from · 예전에는 메모만 저장해도 그 사이 다른 운영자가 바꾼 상태를 이 화면의 옛 상태로 되돌렸다
+     그 사이 상태가 바뀌었으면(state) 새 상태 그대로 메모만 한 번 다시 보낸다(쓴 메모를 잃지 않게) */
+  call("resv_set",{id:id,status:cur,from:cur,memo:m},function(res){
+    if(res&&res.ok){ hist(r.emp,"상담 메모 저장"); toast(st!=null?"메모를 저장했습니다 · 그 사이 상태가 「"+cur+"」(으)로 바뀌어 있었습니다":"메모를 저장했습니다"); if(st!=null) reload(["resv"]); render(); }
+    else if(res&&res.reason==="state"&&res.cur&&st==null){ r.status=res.cur; resvMemoSave(id,{ m:m, old:old, cur:res.cur }); }
+    else { r.memo=old; render(); toast("메모 저장 실패: "+why(res)); if(res&&res.reason==="state") reload(["resv"]); }
+  },function(){ r.memo=old; render(); toast("서버 응답 없음"); });
 }
 function stepsHtml(list, cur, ends){
   var i0=list.indexOf(cur);
@@ -1460,7 +1506,7 @@ function ccMatch(emps, bulk){
   function go0(){
     dlgForce();
     var items=plan.map(function(p){ p.r.status="매칭"; p.r.round=p.round; p.r.table=p.table; ovrSet("cc:"+normE(p.r.emp),{status:"매칭",table:p.table});
-      return { p:p, run:op("cchat_set",{emp:p.r.emp,round:p.round,table:p.table}) }; });
+      return { p:p, run:op("cchat_set",{emp:p.r.emp,round:p.round,table:p.table,from:p.prev.status}) }; });
     render();
     runOps(items, function(it,ok){
       var p=it.p;
@@ -1468,8 +1514,9 @@ function ccMatch(emps, bulk){
       else { hist(p.r.emp, "커피챗 매칭 "+p.round+" · "+p.table); delete ST.draft[normE(p.r.emp)]; delete ST.sel["c:"+normE(p.r.emp)]; }
     }, function(okN,bad){
       render();
+      if(bad.some(function(b){ return b.res&&b.res.reason==="state"; })) reload(["cchat"]);
       var good=items.filter(function(it){ return bad.every(function(b){ return b.it!==it; }); }).map(function(it){ return it.p; });
-      toast((rows.length===1?rows[0].name+" · "+plan[0].round+" · "+plan[0].table:"매칭 "+okN+"명")+(bad.length?" · 실패 "+bad.length+"명":""), good.length?{ undo:function(){ ccRestore(good); } }:{});
+      toast((rows.length===1&&bad.length)?"매칭하지 못했습니다 · "+rows[0].name+" · "+why(bad[0].res):(rows.length===1?rows[0].name+" · "+plan[0].round+" · "+plan[0].table:"매칭 "+okN+"명")+(bad.length?" · 실패 "+bad.length+"명 ("+why(bad[0].res)+")":""), good.length?{ undo:function(){ ccRestore(good); } }:{});
     });
   }
   if(rows.length===1) return go0();
@@ -1477,12 +1524,12 @@ function ccMatch(emps, bulk){
 }
 /* 되돌리기 · 이전이 대기면 cchat_status 대기(회차·테이블 비움), 이전이 매칭이면 옛 회차·테이블로 cchat_set 또는 cchat_status 매칭 */
 function ccRestore(plans){
-  var items=plans.map(function(p){ var r=p.r, pv=p.prev;
-    var run=pv.status==="대기"?op("cchat_status",{emp:r.emp,status:"대기"}):(pv.round&&pv.table&&(hhmm(r.round)!==pv.round||r.table!==pv.table))?op("cchat_set",{emp:r.emp,round:pv.round,table:pv.table}):op("cchat_status",{emp:r.emp,status:pv.status});
+  var items=plans.map(function(p){ var r=p.r, pv=p.prev, cur=r.status;   /* cur = 방금 이 화면이 바꾼 상태 · 그 사이 누가 또 바꿨으면 새 서버가 state 로 거절 */
+    var run=pv.status==="대기"?op("cchat_status",{emp:r.emp,status:"대기",from:cur}):(pv.round&&pv.table&&(hhmm(r.round)!==pv.round||r.table!==pv.table))?op("cchat_set",{emp:r.emp,round:pv.round,table:pv.table,from:cur}):op("cchat_status",{emp:r.emp,status:pv.status,from:cur});
     r.status=pv.status; r.round=pv.status==="대기"?"":pv.round; r.table=pv.status==="대기"?"":pv.table; ovrSet("cc:"+normE(r.emp),{status:pv.status});
     return { r:r, run:run }; });
   render();
-  runOps(items, function(it,ok){ if(ok) hist(it.r.emp,"커피챗 되돌림 → "+it.r.status); }, function(okN,bad){ if(bad.length) reload(["cchat"]); else render(); toast(bad.length?"되돌리기 실패 "+bad.length+"건 · 목록을 다시 받았습니다":"되돌렸습니다 · "+okN+"건"); });
+  runOps(items, function(it,ok){ if(ok) hist(it.r.emp,"커피챗 되돌림 → "+it.r.status); }, function(okN,bad){ if(bad.length) reload(["cchat"]); else render(); toast(bad.length?"되돌리기 실패 "+bad.length+"건 ("+why(bad[0].res)+") · 목록을 다시 받았습니다":"되돌렸습니다 · "+okN+"건"); });
 }
 function ccDo(emps, status){
   var okFrom={ "참석":["매칭"], "완료":["매칭","참석"], "취소":["대기","매칭"] }[status];
@@ -1491,15 +1538,16 @@ function ccDo(emps, status){
   function go0(){
     dlgForce();
     var plan=rows.map(function(r){ return { r:r, prev:{status:r.status, round:hhmm(r.round), table:r.table||""} }; });
-    var items=plan.map(function(p){ p.r.status=status; ovrSet("cc:"+normE(p.r.emp),{status:status}); return { p:p, run:op("cchat_status",{emp:p.r.emp,status:status}) }; });
+    var items=plan.map(function(p){ p.r.status=status; ovrSet("cc:"+normE(p.r.emp),{status:status}); return { p:p, run:op("cchat_status",{emp:p.r.emp,status:status,from:p.prev.status}) }; });
     render();
     runOps(items, function(it,ok,res){ var p=it.p;
-      if(!ok){ p.r.status=p.prev.status; delete ST.ovr["cc:"+normE(p.r.emp)]; }
+      if(!ok){ p.r.status=(res&&res.reason==="state"&&res.cur)?res.cur:p.prev.status; delete ST.ovr["cc:"+normE(p.r.emp)]; }
       else { hist(p.r.emp,"커피챗 "+status+(res.stamp&&!res.stamp.dup?" · 스탬프 03 적립":"")); delete ST.sel["c:"+normE(p.r.emp)]; }
     }, function(okN,bad){
       render();
+      if(bad.some(function(b){ return b.res&&b.res.reason==="state"; })) reload(["cchat"]);
       var good=items.filter(function(it){ return bad.every(function(b){ return b.it!==it; }); }).map(function(it){ return it.p; });
-      toast((rows.length===1?rows[0].name+" · "+status:status+" "+okN+"명")+(bad.length?" · 실패 "+bad.length+"명 ("+why(bad[0].res)+")":""), (status==="취소"&&good.length)?{ undo:function(){ ccRestore(good); } }:{});
+      toast((rows.length===1&&bad.length)?"처리하지 못했습니다 · "+rows[0].name+" · "+why(bad[0].res):(rows.length===1?rows[0].name+" · "+status:status+" "+okN+"명")+(bad.length?" · 실패 "+bad.length+"명 ("+why(bad[0].res)+")":""), (status==="취소"&&good.length)?{ undo:function(){ ccRestore(good); } }:{});
     });
   }
   if(status!=="취소") return go0();
@@ -1938,7 +1986,14 @@ function selfTriesSave(){
 function selfWinSave(){
   var v=((el("selfWin")||{}).value||"").replace(/\s/g,"");
   if(!/^\d{1,2}:\d{2}-\d{1,2}:\d{2}(,\d{1,2}:\d{2}-\d{1,2}:\d{2})*$/.test(v)){ toast("12:00-13:00,15:00-16:00 형식으로 넣어 주세요"); return; }
-  call("type_cfg",{win:v},function(r){ if(r&&r.ok){ toast("도전 시간을 바꿨습니다"); reload(["tres"]); } else toast("실패: "+why(r)); },function(){ toast("서버 응답 없음"); });
+  /* v4.66 (QA 3단계) 시각 범위 · 시작 < 끝 · 25:00 · 16:30-09:30 처럼 한 번도 열리지 않는 값을 막는다(서버도 같은 기준) */
+  var m2=function(t){ var a=t.split(":"); return Number(a[0])*60+Number(a[1]); };
+  var bad=v.split(",").filter(function(w){ var a=w.split("-"), s0=m2(a[0]), e0=m2(a[1]); return !(Number(a[0].split(":")[1])<60&&Number(a[1].split(":")[1])<60&&s0<e0&&e0<=1440); });
+  if(bad.length){ toast("시작이 끝보다 앞서야 하고 24:00 까지입니다 · "+bad.join(", ")); return; }
+  var old=((ST.data.tres||{}).win||[]).join(",").replace(/~/g,"-");
+  if(v===old){ toast("지금 값과 같습니다"); return; }
+  dialog({ t:"도전 시간을 바꿀까요?", s:"1F 셀프 노트북이 바로 이 시간에만 도전을 받습니다(현장 타자왕전 기록도 같은 시간).", who:esc(old||"-")+' → <b>'+esc(v)+'</b>', ok:"저장",
+    onOk:function(){ call("type_cfg",{win:v},function(r){ dlgForce(); if(r&&r.ok){ toast("도전 시간을 바꿨습니다 · "+(r.win||v)); reload(["tres"]); } else toast("실패: "+why(r)); },function(e){ dlgForce(); toast(e&&e.reason==="locked"?why(e):"서버 응답 없음"); }); } });
 }
 function nickHide(emp,on){ call("type_nick_hide",{emp:emp,on:on},function(r){ if(r&&r.ok){ toast(on?"닉네임을 숨겼습니다":"숨김을 해제했습니다"); reload(["nick"]); } else toast("실패: "+why(r)); },function(){ toast("서버 응답 없음"); }); }
 function nickReset(emp){
@@ -2424,15 +2479,18 @@ function noticeStopC(id){
       },function(){ toast("서버 응답 없음"); });
     } });
 }
-function photoAct(act, emp, no){
+function photoAct(act, emp, no, force){
   var go=function(){
     var p={spot:"q_photo"}; if(emp) p.emp=emp;
+    if(act==="call"&&!force) p.one=1;   /* v4.66 새 서버 · 이미 호출 중인 번호가 있으면 calling 으로 거절(연타 · 두 운영자 동시 호출) · 옛 서버는 읽지 않는다 */
     call(act==="call"?"q_call":act==="skip"?"q_skip":"q_done", p, function(r){
-      if(r&&r.ok){ toast((r.no?r.no+"번 · ":"")+(act==="call"?"호출했습니다":act==="skip"?"건너뛰었습니다":"완료 처리했습니다")); reload(["photo"]); }
-      else toast(r&&r.reason==="empty"?"대기 중인 번호가 없습니다":"실패: "+(r&&r.reason||""));
-    },function(){ toast("서버 응답 없음"); });
+      if(r&&r.ok){ toast((r.no?r.no+"번 · ":"")+(r.name?r.name+" · ":"")+(act==="call"?"호출했습니다":act==="skip"?"건너뛰었습니다":"완료 처리했습니다")); reload(["photo"]); }
+      else if(r&&r.reason==="calling") dialog({ t:(r.no?r.no+"번을 ":"")+"호출 중입니다", s:"보통은 그 번호를 <b>완료</b>하거나 <b>건너뛰기</b>한 뒤에 다음 번호를 부릅니다. 한 번에 두 팀을 부를 때만 함께 호출합니다.", ok:"다음 번호도 호출", onOk:function(){ dlgForce(); photoAct("call","",0,1); } });
+      else { toast(r&&r.reason==="empty"?"대기 중인 번호가 없습니다":r&&r.reason==="notfound"?"이미 처리되었거나 줄에 없는 번호입니다 · 목록을 다시 받았습니다":"처리하지 못했습니다 · "+why(r)); reload(["photo"]); }   /* 다른 운영자가 먼저 처리했으면(notfound) 목록을 다시 받는다 */
+    },function(e){ toast(e&&e.reason==="locked"?why(e):"서버 응답 없음"); });
   };
-  if(act==="skip") dialog({ t:"건너뛸까요?", s:"호출 후 10분 안에 오지 않은 번호를 건너뜁니다. 참가자는 앱에서 다시 줄을 설 수 있습니다.", who:"<b>"+no+"번</b> · "+esc(emp), ok:"건너뛰기", onOk:function(){ dlgForce(); go(); } });
+  if(act==="skip"){ var row=(((ST.data.photo||{}).rows)||[]).filter(function(x){ return normE(x.emp)===normE(emp); })[0]||{};
+    dialog({ t:"건너뛸까요?", s:"호출 후 10분 안에 오지 않은 번호를 건너뜁니다. 참가자는 앱에서 다시 줄을 설 수 있습니다. 되돌리기는 없습니다.", who:"<b>"+no+"번</b> · "+esc(row.name||"")+'<span>사번 '+esc(emp)+'</span>', ok:"건너뛰기", danger:true, onOk:function(){ dlgForce(); go(); } }); }
   else go();
 }
 
@@ -2970,19 +3028,20 @@ var WQ_WHY={ sets:"세트 구성이 맞지 않습니다(1~3개)", id:"세트 id�
   qs:"세트마다 문항은 1~10개입니다", q:"문항 문장이 비었거나 200자를 넘습니다", o:"보기는 2~5개, 보기마다 1~80자입니다", a:"정답이 보기 범위 밖입니다", off:"멈춘 세트 목록이 맞지 않습니다" };
 function wqWhy(r){ r=r||{};
   if(r.reason==="bad") return "서버가 거절했습니다 · "+(WQ_WHY[r.field]||r.field||"형식 오류");
-  if(r.reason==="locked") return "잠겨 있어 저장할 수 없습니다. 잠금을 풀고 다시 저장하세요";
+  if(r.reason==="locked"&&r.retry==null) return "잠겨 있어 저장할 수 없습니다. 잠금을 풀고 다시 저장하세요";
   if(r.reason==="json") return "서버가 보낸 문항을 읽지 못했습니다";
   return why(r);
 }
 /* POST · 응답은 JSON · 관리코드는 본문으로(주소에 남지 않는다) */
 function callPost(action, params, done, fail, again){
-  var body=new URLSearchParams(); params=params||{}; params.action=action; if(!("key" in params)) params.key=key();
+  var body=new URLSearchParams(); params=params||{}; params.action=action; if(!("key" in params)) params.key=key(); if(!("tok" in params)&&tok()) params.tok=tok();
   for(var k in params) if(params[k]!=null) body.append(k, params[k]);
   var ctl=window.AbortController?new AbortController():null, timer=setTimeout(function(){ if(ctl) ctl.abort(); },25000);
   fetch(BE,{ method:"POST", body:body, redirect:"follow", signal:ctl?ctl.signal:undefined }).then(function(r){ return r.text(); }).then(function(t){
     clearTimeout(timer); var res=null; try{ res=JSON.parse(t); }catch(e){ res={ ok:false, reason:"network" }; }
     if(res&&res.moved&&beMoved(res)&&res.reason==="moved"&&!again){ callPost(action, params, done, fail, 1); return; }
-    if(res&&res.ok===false&&res.reason==="auth"){ lock("관리코드가 맞지 않습니다. 다시 입력하세요."); return; }
+    if(authGate(res, action)) return;
+    if(lockedGate(res, fail, action)) return;
     done&&done(res);
   }).catch(function(){ clearTimeout(timer); fail&&fail({ ok:false, reason:"network" }); });
 }
@@ -3071,7 +3130,7 @@ function wqSave(){
   dialog({ t:"Wall QR 퀴즈 문항을 저장할까요?", s:"저장하면 참가자 앱이 다음 동기화(10초 안)에 새 문항을 받습니다. 이미 퀴즈를 끝내고 받은 스탬프는 그대로입니다.",
     x:imp(d.sets.map(function(s){ return [wqLabel(s.id)+(wqT(s.name)!==wqLabel(s.id)?" · "+wqT(s.name):""), s.qs.length+"문항"+(d.off.indexOf(s.id)>=0?" · 멈춤":""), d.off.indexOf(s.id)>=0?"loss":"chg"]; })),
     ok:"저장", onOk:function(){
-      wqSend({ sets:JSON.stringify(wqPayload(d)), off:JSON.stringify(d.off) }, function(r){ return "저장했습니다 · 판 "+r.v; },
+      wqSend({ sets:JSON.stringify(wqPayload(d)), off:JSON.stringify(d.off) }, function(r){ return "저장했습니다"+(wqVerAt(r.v)?" · "+wqVerAt(r.v)+" 판":""); },
         function(){ wqRestore(prev); });
     } });
 }
@@ -3256,7 +3315,7 @@ function viewQrBeta(items){
 
 /* ══════════════════ 8. 시작 ══════════════════ */
 renderTabs();
-if(key()){ el("lock").style.display="none"; load(); render(); } else lock();
+if(key()){ el("lock").style.display="none"; ST.busy=true; render(); bootTok(function(){ ST.busy=false; if(key()){ load(); render(); } }); } else lock();
 </script>
 </body>
 </html>
