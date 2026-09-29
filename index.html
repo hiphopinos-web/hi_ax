@@ -2668,6 +2668,8 @@ function beCall(params, done, fail, again) {
   for (var k in params) if (Object.prototype.hasOwnProperty.call(params, k)) {
     q.push(encodeURIComponent(k) + "=" + encodeURIComponent(params[k]));
   }
+  var sesP = typeof sesParam === "function" ? sesParam(params) : "";   /* v4.67 참가자 세션 토큰 · 내 사번 쓰기에만 · 호출한 쪽의 params 는 고치지 않는다(저장된 대기열에 옛 토큰이 남지 않게) */
+  if (sesP) q.push("ses=" + encodeURIComponent(sesP));
   q.push("callback=" + cb);
   var sc = document.createElement("script"), settled = false;
   var cleanup = function () {
@@ -2679,6 +2681,7 @@ function beCall(params, done, fail, again) {
   }, 15000);
   window[cb] = function (res) {
     if (settled) return; settled = true; clearTimeout(timer); cleanup();
+    if (res && typeof sesSeen === "function") sesSeen(res, params);   /* v4.67 서버 시계(now) · 토큰 거절(ses) */
     if (res && res.moved && beMoved(res) && res.reason === "moved" && !again) { beCall(params, done, fail, 1); return; }   /* v4.61 옛 서버 잠김 · 새 주소로 한 번 다시 */
     if (done) done(res);
   };
@@ -2710,6 +2713,108 @@ function beHash(emp, pin) {
     g = ((g ^ (msg.charCodeAt(i) * 31)) * 0x85ebca6b) >>> 0;
   }
   return Promise.resolve(("00000000" + h.toString(16)).slice(-8) + ("00000000" + g.toString(16)).slice(-8));
+}
+
+/* ── v4.67 (QA 5a 260930) 참가자 세션 토큰 · 참가자 QR 서명 ──────────────
+   로그인 응답의 ses(서버가 서명한 토큰 · 저장하지 않는 방식)를 로그인 정보(user.ses)에 둔다 · 참가자 쓰기에 붙인다(beCall 한 곳 · sesParam)
+     붙이는 조건 = 보내는 사번이 로그인한 사번 · 관리 요청(key · tok)이 아님 · 옛 서버는 ses 를 주지 않아 아무것도 붙지 않는다(예전과 같다)
+   서버 설정 「세션필수」가 켜졌는데 토큰이 없거나(옛 앱에서 로그인한 사람) 쓰기가 ses 로 거절되면 비밀번호를 한 번 다시 받는다(sesAsk)
+     열린 창(바텀 시트 · 모달)이 있으면 닫힐 때까지 기다린다 · 닫으면 20초 동안 다시 띄우지 않는다
+   내 QR = AXU:사번:체크섬:발급 시각:QR 시각:서명 12 · 서명 = SHA-256(AXQ | ses | 사번 | QR 시각) 앞 12글자 · 폰이 스스로 만든다(끊겨도 나온다 · 서버에 묻지 않는다)
+     QR 시각 = 서버 시계에 맞춘 초(login · sync 응답 now · 이 기기 설정 toff) · 20초 단위 · 열린 내 QR 은 4초마다 보고 바뀌면 다시 그린다(qrLiveTick)
+     서버는 120초 지난 QR(캡처)을 세션필수 ON 에서 거절한다 · 토큰이 없으면 예전 QR(AXU:사번:체크섬) */
+var SES = { off: null, need: false, askedAt: 0, busy: false };   /* off = 서버 시계 - 이 기기 시계(ms) · 처음 쓸 때 저장값을 읽는다(S 는 이 줄보다 아래에서 만들어진다) */
+function sesOff() { if (SES.off === null) { try { SES.off = Number(S.get("toff", 0)) || 0; } catch (e) { SES.off = 0; } } return SES.off; }
+var QR_STEP = 20;
+function sesParam(params) {
+  if (!params || params.key || params.tok || params.action === "login" || params.emp == null) return "";
+  var u = S.get("user", {}) || {};
+  return u.ses && u.empId && String(params.emp).trim() === String(u.empId).trim() ? String(u.ses) : "";
+}
+function sesSeen(res, params) {
+  if (typeof res.now === "number" && res.now > 1.6e12) {
+    var off = Math.round(res.now - Date.now());
+    if (Math.abs(off - sesOff()) > 1500) { SES.off = off; S.put("toff", off); }
+  }
+  if (res.ok === false && res.reason === "ses" && params && !params.key) { SES.need = true; setTimeout(sesAsk, 300); }
+}
+function sesNowSec() { return Math.floor((Date.now() + sesOff()) / 1000); }
+/* 동기 SHA-256(글자 → 16진) · QR 을 그리는 순간 바로 써야 해서 crypto.subtle(비동기 · https 전용) 대신 · 검사 108절이 node crypto 와 대조 */
+var SHA_KH = null;
+function sha256hex(str) {
+  if (!SHA_KH) {
+    var k = [], h = [], comp = {}, n = 0, c, i;
+    for (c = 2; n < 64; c++) {
+      if (comp[c]) continue;
+      for (i = c * c; i < 400; i += c) comp[i] = 1;
+      if (n < 8) h[n] = (Math.pow(c, 0.5) * 4294967296) | 0;
+      k[n++] = (Math.pow(c, 1 / 3) * 4294967296) | 0;
+    }
+    SHA_KH = { k: k, h: h };
+  }
+  var K = SHA_KH.k, H = SHA_KH.h.slice(), b = unescape(encodeURIComponent(String(str))), L = b.length, w = [], j, t;
+  for (j = 0; j < L; j++) w[j >> 2] |= b.charCodeAt(j) << (24 - (j % 4) * 8);
+  w[L >> 2] |= 0x80 << (24 - (L % 4) * 8);
+  var nw = (((L + 8) >> 6) + 1) * 16;
+  for (j = 0; j < nw; j++) w[j] = w[j] | 0;
+  w[nw - 1] = L * 8; w[nw - 2] = Math.floor(L / 536870912);
+  var ro = function (x, r) { return (x >>> r) | (x << (32 - r)); };
+  for (var o = 0; o < nw; o += 16) {
+    var W = w.slice(o, o + 16), a = H[0], bb = H[1], cc = H[2], d = H[3], e = H[4], f = H[5], g = H[6], hh = H[7];
+    for (t = 0; t < 64; t++) {
+      if (t >= 16) {
+        var x15 = W[t - 15], x2 = W[t - 2];
+        W[t] = (W[t - 16] + (ro(x15, 7) ^ ro(x15, 18) ^ (x15 >>> 3)) + W[t - 7] + (ro(x2, 17) ^ ro(x2, 19) ^ (x2 >>> 10))) | 0;
+      }
+      var t1 = (hh + (ro(e, 6) ^ ro(e, 11) ^ ro(e, 25)) + ((e & f) ^ (~e & g)) + K[t] + W[t]) | 0;
+      var t2 = ((ro(a, 2) ^ ro(a, 13) ^ ro(a, 22)) + ((a & bb) ^ (a & cc) ^ (bb & cc))) | 0;
+      hh = g; g = f; f = e; e = (d + t1) | 0; d = cc; cc = bb; bb = a; a = (t1 + t2) | 0;
+    }
+    H[0] = (H[0] + a) | 0; H[1] = (H[1] + bb) | 0; H[2] = (H[2] + cc) | 0; H[3] = (H[3] + d) | 0;
+    H[4] = (H[4] + e) | 0; H[5] = (H[5] + f) | 0; H[6] = (H[6] + g) | 0; H[7] = (H[7] + hh) | 0;
+  }
+  var out = "";
+  for (j = 0; j < 8; j++) out += ("0000000" + (H[j] >>> 0).toString(16)).slice(-8);
+  return out;
+}
+/* 비밀번호 한 번 더 · 로그인과 같은 해시 · 같은 서버 액션(login) · 성공하면 토큰만 바꾼다(기록은 그대로) */
+function sesAsk() {
+  var u = S.get("user", {}) || {};
+  if (!BE.on || !u.empId || SES.busy || el("sesPin")) return;
+  if (!SES.need && u.ses) return;
+  if (el("modal") || Date.now() - SES.askedAt < 20000) return;   /* 다른 창이 열려 있으면 닫힌 뒤(modalClose) · 방금 닫았으면 20초 뒤 */
+  SES.askedAt = Date.now();
+  modalOpen('<p class="myqr-nm" style="margin-top:4px">' + esc(u.name || "") + "<span>" + esc(u.empId || "") + "</span></p>" +
+    '<input id="sesPin" class="input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" enterkeyhint="go" autocomplete="off" placeholder="비밀번호 4자리" style="margin-top:12px;text-align:center" oninput="numOnly(this, event)" onkeydown="onEnter(event, sesPinGo)">' +
+    '<p id="sesErr" role="alert" style="display:none;margin-top:8px;font-size:calc(14px * var(--fs));font-weight:700;color:#E5484D"></p>' +
+    '<button id="sesGo" class="btn mint" style="margin-top:10px" onclick="sesPinGo()">확인</button>', "비밀번호 다시 입력");
+  setTimeout(function () { try { el("sesPin").focus(); } catch (e) {} }, 150);
+}
+function sesPinGo() {
+  var u = S.get("user", {}) || {}, pin = el("sesPin") ? el("sesPin").value.trim() : "", er = el("sesErr"), btn = el("sesGo");
+  var show = function (m) { if (er) { er.textContent = m; er.style.display = "block"; } };
+  if (SES.busy) return;
+  if (!/^\d{4}$/.test(pin)) { show("비밀번호 4자리를 입력해 주세요."); return; }
+  SES.busy = true; if (btn) { btn.disabled = true; btn.textContent = "확인 중…"; }
+  var reset = function () { SES.busy = false; if (btn) { btn.disabled = false; btn.textContent = "확인"; } };
+  beHash(u.empId, pin).then(function (h) {
+    beCall({ action: "login", emp: u.empId, name: u.name || "", h: h }, function (res) {
+      reset();
+      if (!res || !res.ok) {
+        show(res && res.reason === "lock" ? "비밀번호를 여러 번 틀렸어요. 10분 뒤 다시 시도하거나 운영 데스크에 문의해 주세요." :
+          res && res.reason === "pw" ? "비밀번호가 맞지 않습니다." : "연결에 실패했어요. 잠시 후 다시 시도해주세요.");
+        if (el("sesPin")) el("sesPin").value = "";
+        return;
+      }
+      var cur = S.get("user", {}) || {};
+      if (String(cur.empId || "") !== String(u.empId || "")) return;   /* 그 사이 로그아웃 · 다른 사번 */
+      cur.ses = res.ses || ""; S.put("user", cur);
+      SES.need = false;
+      modalClose();
+      toast("확인됐어요");
+      beSync();   /* 저장해 둔 스캔 · 스탬프 · 기록을 새 토큰으로 곧바로 다시 보낸다 */
+    }, function () { reset(); show("서버에 연결할 수 없어요. 네트워크를 확인해주세요."); });
+  });
 }
 /* 유효 참여 1건 = 별 1개. once=true 면 같은 종류는 1회만 인정 */
 function bePush(kind, val, once, onOk) {
@@ -2991,7 +3096,7 @@ var STORE_DEVICE = ["vid", "a2hs", "fs", "t",
   "self_on", "self_key", "self_tok", "scan_spot", "adm_tab", "zone_sent", "roster_prog", "tyaw_tab", "tyaw_hide", "tyaw_oly_pg",
   "type_rank_*", "oly_tab", "oly_ev",
   "notices", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "wq_srv", "wq_v", "survey_agg", "photo_pub", "resv_conf",
-  "ax_line_i", "art_demo_n", "ev_phase"];
+  "ax_line_i", "art_demo_n", "ev_phase", "toff"];
 var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_role", "adm_tok", "dept",
   "stamps", "pp_seen", "pp_glow3", "stamp_pend", "scan_q", "stair", "checkin", "queue", "photoq", "resv", "sess_my", "att_mine", "att_tm",
   "cchat", "cchat_pref", "cchat_att", "ideas", "idea_draft", "survey_draft", "survey_done", "survey_mine", "survey_force", "noti_seen",
@@ -3309,6 +3414,7 @@ function modalClose() {
   if (typeof QRM !== "undefined" && QRM.timer) { qrMineOff(); QRM.msg = ""; }   /* v4.06 내 QR 3초 동기화는 패널이 열려 있는 동안만 */
   if (NOTICE.cur) NOTICE.cur = null;   /* v3.53 팝업이든 다른 모달이든 닫히면 다음 팝업 */
   if (NOTICE.q.length) { clearTimeout(NOTICE.t); NOTICE.t = setTimeout(noticePump, 250); }
+  if (typeof SES !== "undefined" && SES.need) setTimeout(sesAsk, 400);   /* v4.67 다른 창 때문에 미룬 비밀번호 창 */
 }
 
 /* ── v10: 과제상담 예약 (v5 p23~25) ── */
@@ -5868,7 +5974,7 @@ function ppRouletteOpen() {
     body = '<p class="muted" style="margin-top:8px;font-size:calc(14.5px * var(--fs))">스탬프 3개 · 1F 이벤트존 · 1인 1회</p>';
   } else {
     var txt = myQrText();
-    body = (txt ? '<div class="myqr">' + qrTextSvg(txt, 190) + "</div>" :
+    body = (txt ? '<div class="myqr">' + myQrSvg(190) + "</div>" :
       '<p class="muted" style="margin-top:10px">사번으로 입장 후 QR 발급</p>') +
       '<p class="muted" style="margin-top:10px;font-size:calc(13.5px * var(--fs));line-height:1.65">1F 이벤트존 룰렛 부스에서 QR 제시</p>';
   }
@@ -6972,6 +7078,7 @@ function beSync(after) {
     if (res && res.ok && res.poll >= 30 && res.poll <= 120) POLL.base = res.poll * 1000;   /* v4.57 운영이 붐비는 시간에 서버 설정으로 폴링을 늘린다(재배포 없이) */
     if (after) after(!!(res && res.ok));
     if (!res || !res.ok) return;
+    if (u.empId && (res.ses === 1 && !u.ses || SES.need)) setTimeout(sesAsk, 600);   /* v4.67 세션필수 ON · 토큰 없는 로그인(옛 앱)이면 비밀번호 한 번 더 */
     if (scanQList().length) setTimeout(scanQFlush, 200 + beJit());   /* v3.34b 연결이 살아났으면 저장된 스캔 재전송 · v4.57 0~5초 무작위 지연 */
     setTimeout(ideaFlush, 400 + beJit());
     setTimeout(olyPendFlush, 600 + beJit());   /* v4.64 못 보낸 미니게임 기록 다시 보내기 */
@@ -7577,7 +7684,7 @@ function stampByCode(v, t) {
   return true;
 }
 /* v4.57 서버 예외 응답(ok:false · err 만 있고 reason 없음) = 잠금 대기 초과 · 시트 붐빔 · 판정이 아니라 「지금 처리 못 함」 */
-function beBusy(res) { return !!(res && !res.ok && ((res.err && !res.reason) || (res.reason === "busy" && res.retry) || (res.reason === "moved" && res.moved))); }   /* v4.61 새 서버 과부하(busy + retry) · 옛 서버 잠김(moved)도 저장 후 다시 보내기 */
+function beBusy(res) { return !!(res && !res.ok && ((res.err && !res.reason) || (res.reason === "busy" && res.retry) || (res.reason === "moved" && res.moved) || res.reason === "ses")); }   /* v4.61 새 서버 과부하(busy + retry) · 옛 서버 잠김(moved)도 저장 후 다시 보내기 */
 /* 서버 응답 하나로 로컬을 맞춘다 · stamps 배열이 정본 */
 function boothDone(res, late, code) {
   if (!res || !res.ok) {
@@ -8084,13 +8191,36 @@ function qrSum(t) {
   return ("0" + h.toString(36)).toUpperCase().slice(-2);
 }
 function myQrText() {
-  var e = String((S.get("user", {}) || {}).empId || "").trim();
-  return e ? "AXU:" + e + ":" + qrSum(e) : "";
+  var u = S.get("user", {}) || {}, e = String(u.empId || "").trim();
+  if (!e) return "";
+  var base = "AXU:" + e + ":" + qrSum(e), m = /^([0-9a-z]{1,9})\.[0-9a-f]{32}$/.exec(String(u.ses || ""));
+  if (!m || !/^\d{3,10}$/.test(e)) return base;   /* v4.67 토큰이 없으면(옛 서버 · 옛 로그인) 예전 QR */
+  var qt = (Math.floor(sesNowSec() / QR_STEP) * QR_STEP).toString(36);
+  return base + ":" + m[1] + ":" + qt + ":" + sha256hex("AXQ|" + u.ses + "|" + e + "|" + qt).slice(0, 12);
 }
-/* 참가자 QR이면 사번을, 아니면 null */
+/* 참가자 QR이면 사번을, 아니면 null · v4.67 서명 붙은 QR(뒤 세 칸)도 · 서명 확인은 서버(qr 로 보낸다) */
 function qrParseUser(raw) {
-  var m = /^AXU:(\d{3,10}):([0-9A-Z]{2})$/.exec(String(raw || "").trim());
+  var m = /^AXU:(\d{3,10}):([0-9A-Z]{2})(?::[0-9a-z]{1,9}:[0-9a-z]{1,9}:[0-9a-f]{12})?$/.exec(String(raw || "").trim());
   return m && qrSum(m[1]) === m[2] ? m[1] : null;
+}
+/* v4.67 내 QR 그림 · 서명 QR 은 20초마다 글자가 바뀐다 · 열려 있는 동안 4초마다 보고 바뀌면 그 그림만 바꾼다 */
+var QRLIVE = { t: null, txt: "" };
+function myQrSvg(px) {
+  var t = myQrText(); QRLIVE.txt = t;
+  if (!QRLIVE.t) QRLIVE.t = setInterval(qrLiveTick, 4000);
+  return qrTextSvg(t, px).replace("<svg ", '<svg data-myqr="' + px + '" ');
+}
+function qrLiveTick() {
+  var n = document.querySelectorAll("svg[data-myqr]");
+  if (!n.length) { clearInterval(QRLIVE.t); QRLIVE.t = null; return; }
+  var t = myQrText();
+  if (t === QRLIVE.txt) return;
+  QRLIVE.txt = t;
+  Array.prototype.forEach.call(n, function (sv) {
+    var px = sv.getAttribute("data-myqr"), box = document.createElement("div");
+    box.innerHTML = qrTextSvg(t, Number(px)).replace("<svg ", '<svg data-myqr="' + px + '" ');
+    if (box.firstChild && sv.parentNode) sv.parentNode.replaceChild(box.firstChild, sv);
+  });
 }
 /* 모듈 매트릭스 → 인쇄·화면 공용 SVG. 행 단위 런렝스로 묶어 도형 수를 줄인다 */
 function qrPaint(isDark, n, px) {
@@ -8134,7 +8264,7 @@ function qrPanelHtml(inner) {
   var u = S.get("user", {}) || {}, txt = myQrText();
   var body = !txt ?
     '<p class="muted" style="margin-top:12px;font-size:calc(14.5px * var(--fs))">사번으로 입장하면 내 QR이 발급됩니다.</p>' :
-    '<div class="myqr' + (QRM.msg ? " axs-qrok" : "") + '">' + qrTextSvg(txt, 216) + (QRM.msg ? '<span class="axs-okbadge">' + OK_SVG + "</span>" : "") + "</div>" +
+    '<div class="myqr' + (QRM.msg ? " axs-qrok" : "") + '">' + myQrSvg(216) + (QRM.msg ? '<span class="axs-okbadge">' + OK_SVG + "</span>" : "") + "</div>" +
     '<p class="myqr-nm">' + esc(u.name || "") + "<span>" + esc(u.empId || "") + "</span></p>" +
     (QRM.msg ? '<p class="axs-okline" role="status"><b>확인됨</b> · ' + esc(QRM.msg) + "</p>" : "") +
     '<p class="muted" style="margin-top:8px;text-align:center;font-size:calc(13.5px * var(--fs));line-height:1.65">' +
@@ -8288,7 +8418,7 @@ function scanHit(raw) {
   if (!sp) return;
   if (!BE.on) { scanLog(emp, "서버 미연결 · 기록되지 않음", false); return; }
   if (sp.kind === "roulette" && S.get("roulette_out", false)) { scanLog(emp, "룰렛 소진 · 차감하지 않았어요", false); beSync(); return; }   /* v4.65 옛 서버는 소진이어도 차감한다 · 운영자가 방금 풀었을 수 있으니 곧바로 한 번 새로 받는다(다음 스캔부터 반영) */
-  var params = { key: admKey(), tok: admTok(), emp: emp };
+  var params = { key: admKey(), tok: admTok(), emp: emp, qr: String(raw).trim() };   /* v4.67 찍은 글자 그대로 · 서버가 서명 · 시간을 본다(콘솔 · 담당자 적립은 qr 없음) */
   if (sp.kind === "sess") { params.action = "sess_in"; params.sess = sp.id; }
   else if (sp.kind === "roster") { params.action = "staff_mark"; params.prog = sp.id; params.mark = "in"; }
   else if (sp.kind === "photo") params.action = "photo_enter";
@@ -8309,8 +8439,11 @@ function scanDone(emp, sp, res) {
       return;
     }
     if (why === "auth") { scanLog(emp, "관리코드가 바뀌었어요 · 다시 입력해 주세요", false, true); admAuthLost(); return; }   /* v4.65 */
-    var nm = res && res.name && sp.kind !== "stamp" ? res.name + " · " : "";   /* stamp_grant 의 name 은 스탬프 이름 */
+    var nm = res && res.name && (sp.kind !== "stamp" || /^qr/.test(why || "")) ? res.name + " · " : "";   /* stamp_grant 의 name 은 스탬프 이름 · QR 거절의 name 은 참가자 이름 */
     var msg = why === "locked" ? admLockedMsg(res) :
+      why === "qrexp" ? "지난 QR이에요 · 참가자 폰에서 내 QR을 다시 열어 주세요" :   /* v4.67 캡처 · 시계가 크게 틀린 폰 */
+      why === "qr" ? "확인할 수 없는 QR이에요 · 참가자 폰에서 내 QR을 다시 열어 주세요" :
+      why === "qrold" ? "옛 QR이에요 · 참가자 앱을 새로 고친 뒤 다시 찍어 주세요" :
       why === "out" ? "룰렛 소진 · 차감하지 않았어요" :
       why === "window" ? "지금은 입장 시간이 아니에요 (" + (res.open || "") + ")" :
       why === "notfound" ? (sp.kind === "photo" ? "대기 번호가 없어요 · 앱에서 번호 받기 안내" : "신청 명단에 없어요") :
@@ -9076,7 +9209,7 @@ function tsfNickSave(go) {
   if (bad) { tsfNm(v ? "한글·영문·숫자 2~8자만 쓸 수 있어요" : "닉네임을 입력해 주세요", true); sfx("rgmiss"); tsfFocus("tsfNick"); return; }   /* 규칙은 typeNickValid 그대로 · 문구만 한 줄로 */
   if (v === TSF.nickOk || i.test) { TSF.nick = v; if (go) tsfGo(); else { tsfNm("", false); sfx("click"); } return; }
   TSF.busy = true; tsfNm("저장 중", false);
-  beCall({ action: "type_nick_set", emp: emp, nick: v }, function (r) {
+  beCall({ action: "type_nick_set", emp: emp, nick: v, key: tsfKey(), tok: tsfTok() }, function (r) {   /* v4.67 셀프 노트북은 참가자 토큰이 없다 · 관리코드 · 스태프 토큰으로 서버 세션필수를 통과 */
     TSF.busy = false;
     if (TSF.phase !== "form" || TSF.emp !== emp) return;
     if (r && r.ok) { TSF.nick = r.nick; TSF.nickOk = r.nick; i.nick = r.nick; tsfNm("", false); if (go) tsfGo(); else sfx("click"); return; }
@@ -13854,7 +13987,7 @@ function xitionRun(switchNow) {
           return;
         }
         personClaim(known.empId);   /* v4.56 */
-        S.set("user", { empId: known.empId, name: res.name || known.name, dept: res.dept || "" });
+        S.set("user", { empId: known.empId, name: res.name || known.name, dept: res.dept || "", ses: res.ses || "" });   /* v4.67 참가자 세션 토큰(새 서버만) */
         if (res.dept) S.set("dept", res.dept);
         knownSet({ empId: known.empId, name: res.name || known.name, dept: res.dept || "" });
         el("quick").hidden = true;
@@ -13931,7 +14064,7 @@ function xitionRun(switchNow) {
           return;
         }
         personClaim(id);   /* v4.56 로그인 사번이 이 기기 기록 주인과 다르면 먼저 지운다 */
-        S.set("user", { empId: id, name: res.name || nm, dept: res.dept || "" });
+        S.set("user", { empId: id, name: res.name || nm, dept: res.dept || "", ses: res.ses || "" });   /* v4.67 참가자 세션 토큰(새 서버만) */
         if (res.dept) S.set("dept", res.dept);
         knownSet({ empId: id, name: res.name || nm, dept: res.dept || "" });   /* 다음 접속엔 비밀번호만 */
         botWait(false);
