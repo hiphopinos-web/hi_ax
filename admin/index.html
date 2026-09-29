@@ -783,7 +783,7 @@ document.addEventListener("visibilitychange",function(){ if(!document.hidden&&ke
 /* 탭별로 필요한 액션만 부른다 */
 var NEED={
   dash:[{k:"stats",a:"stats"},{k:"acct",a:"acct_list"},{k:"stamp",a:"stamp_people"},{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"att",a:"att_stats"},{k:"photo",a:"photo_list"}],
-  acct:[{k:"acct",a:"acct_list"},{k:"pwreq",a:"pw_req_list"}],
+  acct:[{k:"acct",a:"acct_list"},{k:"pwreq",a:"pw_req_list"},{k:"sesst",a:"sess_stats"}],   /* v4.68 참가자 본인 확인 숫자(세션필수를 켜기 전에 본다 · 옛 서버는 없음) */
   stamp:[{k:"stamp",a:"stamp_people"},{k:"acct",a:"acct_list"},{k:"stair",a:"stair_list"},{k:"sstat",a:"stair_stats"},{k:"sy",a:"sync",p:{emp:""}}],
   qr:[{k:"slist",a:"stamp_list"},{k:"alist",a:"att_list"},{k:"stair",a:"stair_list"},{k:"sstat",a:"stair_stats"},{k:"qrs",a:"qr_stats"}],   /* v4.53 QR 메뉴 · 부스·출석·계단 코드 + 오늘 스캔 수(계단은 stair_stats · 나머지는 qr_stats) */
   apply:[{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"noti",a:"sync",p:{emp:""}}],   /* v4.47 noti = 커피챗 마감 신호(현재 공지) */   /* v4.26 강의신청 현황(sess_list) · 사전 신청 명단(pre_list)은 걷어냈다 */
@@ -1021,6 +1021,7 @@ function viewAcct(){
   var h=tabHead();
   h+='<div class="kpis">'+kpi("가입 계정",rows.length,"명")+kpi("명부",roster,"명","가입률 "+pct(rows.length,roster)+"%")+kpi("부문 수",Object.keys(byDept).length,"개")+kpi("비밀번호 초기화 대기",waiting,"명",waiting?"본인이 앱에서 새 비밀번호를 넣으면 풀립니다":"")+'</div>';
   h+=viewPwReq();
+  h+=viewSesStats();
   var body='<div class="toolbar">'+searchBox("사번 · 이름 · 부문 검색")+'<span class="cnt"><b>'+shown.length+'</b> / '+rows.length+'명</span></div>';
   body+='<div class="wrap scrolly" style="max-height:620px"><table class="tb"><tr><th>사번</th><th>이름</th><th>부문</th><th>가입</th><th>최근 접속</th><th>비밀번호</th><th class="tdr">처리</th></tr>'+
     shown.slice(0,500).map(function(r){ var wait=r.pw===false;
@@ -1032,6 +1033,30 @@ function viewAcct(){
   h+=card("가입 계정","최근 접속 순",body);
   h+=card("부문별 가입","",'<div class="row">'+Object.keys(byDept).sort(function(a,b){return byDept[b]-byDept[a];}).map(function(d){ return '<span class="tag off">'+esc(d)+' <b class="n">'+byDept[d]+'</b></span>'; }).join("")+'</div>');
   return h;
+}
+/* ── v4.68 (QA 5 260930) 참가자 본인 확인(세션 토큰) 숫자 · 보기만 · 켜고 끄는 버튼은 두지 않는다(관리 통로 도구 sessRequireOn · Off) ──
+ * 서버 sess_stats(관리코드) · 오늘 줄 = 토큰 맞음 · 토큰 없는 쓰기 · 틀린 토큰 · PIN 초기화 전 토큰 · 토큰 없이 쓴 사람 수 · 스태프 스캔 QR 결과
+ * 옛 서버(sess_stats 없음)는 「운영 서버에 아직 없음」 한 줄 · 사번 목록은 보이지 않는다 */
+function viewSesStats(){
+  var d=ST.data.sesst;
+  if(!d) return "";
+  if(!d.ok) return card("참가자 본인 확인","",'<div class="note">이 서버에는 아직 이 숫자가 없습니다. 서버를 새로 올린 뒤 보입니다.</div>');
+  var days=d.days||[], today=String(d.t||"").slice(0,10), t=null;
+  days.forEach(function(x){ if(x.day===today) t=x; });
+  t=t||{};
+  var n=function(v){ return Number(v||0).toLocaleString(); };
+  var writes=(t.ok||0)+(t.none||0)+(t.bad||0)+(t.old||0);
+  var h='<div class="kpis">'+
+    kpi("스위치",d.on?"켜짐":"꺼짐","",d.on?"토큰 없는 쓰기 · 개인 정보 읽기 거절":"거절 없이 세기만")+
+    kpi("토큰 없는 쓰기",n(t.none),"건","사람 "+n(t.emps)+"명")+
+    kpi("틀린 토큰",n(t.bad),"건",(t.bad?"0 이 아니면 켜지 않습니다":"")+(t.old?(t.bad?" · ":"")+"PIN 초기화 전 토큰 "+n(t.old)+"건":""))+
+    kpi("토큰 맞음",n(t.ok),"건",writes?"오늘 쓰기의 "+pct(t.ok||0,writes)+"%":"")+
+    kpi("QR 확인",n(t.q_ok),"건","지난 "+n(t.q_qrexp)+" · 옛 "+n(t.q_qrold)+" · 틀림 "+n(t.q_qr))+
+    '</div>';
+  var rows=days.slice().reverse().map(function(x){ return '<tr><td class="n">'+esc(x.day)+'</td><td class="n tdr">'+n(x.ok)+'</td><td class="n tdr">'+n(x.none)+'</td><td class="n tdr">'+n(x.emps)+'</td><td class="n tdr">'+n(x.bad)+'</td><td class="n tdr">'+n(x.old)+'</td><td class="n tdr">'+n(x.q_ok)+'</td><td class="n tdr">'+n(x.q_qrexp)+'</td><td class="n tdr">'+n(x.q_qrold)+'</td><td class="n tdr">'+n(x.q_qr)+'</td></tr>'; }).join("");
+  h+=memo('<div class="wrap"><table class="tb"><tr><th>날짜</th><th class="tdr">맞음</th><th class="tdr">없음</th><th class="tdr">사람</th><th class="tdr">틀림</th><th class="tdr">초기화 전</th><th class="tdr">QR 맞음</th><th class="tdr">지난 QR</th><th class="tdr">옛 QR</th><th class="tdr">QR 틀림</th></tr>'+(rows||emptyRow(10,"아직 기록이 없습니다."))+'</table></div>'+
+    '<p>스위치는 이 화면에서 바꾸지 않습니다. 켜는 날과 명령은 운영 배포 안내를 봅니다. PIN 초기화로 세대가 올라간 사람 '+n(d.gens)+'명.</p>', "날짜별 숫자");
+  return card("참가자 본인 확인","세션 토큰 · 오늘",h,'<button class="btn sm" onclick="reload([\'sesst\'])">새로고침</button>');
 }
 /* ── v3.88 비밀번호 분실 요청 (앱 → 운영 데스크) ──────────────────────────────
  * 앱에서 사번·이름만 보낸 요청이 여기에 쌓인다. 데스크에서 「본인 확인」을 하고 초기화를 누르면
