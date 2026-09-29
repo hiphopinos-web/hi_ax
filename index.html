@@ -782,7 +782,7 @@
   .rail .rb { position: relative; height: 10px; border-radius: 999px; background: var(--white); margin: calc(22px + 12px * var(--fs)) 15px 0; }
   .rail .rb i { display: block; height: 100%; border-radius: 999px; background: var(--mint); }
   /* v3.6 상태 위계: 미도달 마커·틱 = 회색 · 도달 = 오렌지 · 사용 가능한 룰렛 = 검정(행동할 것, 화면당 검정 1곳) */
-  /* v3.44c 마커 = 아이콘(3 룰렛 · 4~7 응모권) · 필요한 개수는 마커 위 작은 숫자 · 상태는 색으로만: 잠김 회색 · 다음 목표 옅은 주황 링 + 은은한 맥박(화면에 하나) · 도달 O100 채움 흰 아이콘 */
+  /* v3.44c 마커 = 아이콘(3 룰렛 · 4~6 응모권) · 필요한 개수는 마커 위 작은 숫자 · 상태는 색으로만: 잠김 회색 · 다음 목표 옅은 주황 링 + 은은한 맥박(화면에 하나) · 도달 O100 채움 흰 아이콘 */
   .rail .mk { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 30px; height: 30px; border-radius: 999px; border: 2px solid var(--dimln); background: var(--dim); color: #B9B2AC; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
   .rail .mk svg { width: 17px; height: 17px; display: block; }
   .rail .mk .no { position: absolute; left: 50%; bottom: calc(100% + 3px); transform: translateX(-50%); font-family: var(--disp); font-size: calc(10.5px * var(--fs)); font-weight: 800; line-height: 1; color: var(--faint); white-space: nowrap; pointer-events: none; }
@@ -805,7 +805,7 @@
      숫자는 칸 폭(360px 기준 70px)에 맞춰 최대한 크게 · 4자리 글자 폭 58px@21px · 큰글씨 모드도 같은 21px(더 키우면 칸을 넘는다) · 좁은 폰은 5.9vw 로 줄어든다 */
   .rail .rnum { margin-top: 9px; padding-top: 9px; border-top: 1px dashed var(--tint2); }
   .rail .rnum .lb { font-size: calc(12px * var(--fs)); font-weight: 800; color: var(--acc2); }
-  .rail .rnum .tkts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 6px; }
+  .rail .rnum .tkts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 6px; }
   .rail .rnum .tkt { display: flex; align-items: center; justify-content: center; min-width: 0; height: 40px; padding: 0; border-radius: 10px; background: var(--white); font-size: min(21px, 5.9vw); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; }
   .rail .rnum .tkt.new, .tkt.new { border: 0; background: var(--ax-color-brand); color: var(--ax-color-onBrand); font-family: inherit; font-size: min(calc(12.5px * var(--fs)), 13px); font-weight: 800; letter-spacing: 0; line-height: 1.25; cursor: pointer; }   /* v4.44 열기 전 응모권 · 누르면 상자 시트 */
   .rail .rnum .tkt.wait { font-size: min(calc(12px * var(--fs)), 13px); letter-spacing: 0; }
@@ -929,11 +929,6 @@
   .tytv-brand { font-family: var(--disp); font-weight: 800; letter-spacing: 0.03em; font-size: 24px; }
   .tytv-brand span { color: var(--mint-deep); }
   /* v3.50 AX 올림픽 · 허브 · 메달 */
-  /* v3.60 보너스 칸 · 본줄과 점선으로 갈라 둔다 · 6개 전에는 눈에 띄지 않게 */
-  .rail .rb .gap { position: absolute; top: -6px; bottom: -6px; width: 0; border-left: 2px dotted var(--line); }
-  .rail .mk.bonus { border-style: dashed; }
-  .rail .lbls span.bonus { color: var(--faint); }
-  .rail .lbls span.bonus.on { color: var(--acc2); }
   /* v4.13 홈 나의 일정 · 안쪽 스크롤(myscroll) 폐지 · 3개 + 목록 바로 아래 전폭 「일정 더보기 +N」(48 터치 · Weak 면) */
   .axs-more { display: flex; margin-top: var(--ax-space-8); min-height: var(--ax-touch-size); padding: var(--ax-space-12) var(--ax-space-16); font: var(--ax-type-t6-strong); }
   .oly-hub { margin-top: 10px; }
@@ -2139,9 +2134,8 @@ var STAMPS = [
   { id: "p4", title: "미니게임", short: "미니게임", desc: "미니게임 1종 끝까지 한 판", where: "1분", inapp: 1 },
   { id: "p5", title: "아이디어 한 줄", short: "아이디어", desc: "아이디어 1건 제출", where: "1분", inapp: 1, tap: "App.go('ideas')", cta: "아이디어 쓰기" },
   { id: "p7", title: "전시 QR 퀴즈", short: "QR 퀴즈", desc: "벽 QR 스캔 · 한 세트 완료", where: "약 10분", tap: "App.go('wq_list')", cta: "QR 퀴즈 풀기" },
-  /* v3.34b (260917 사용자 확정) 계단 · 계단실 안 QR 한 번 = 적립 · 층·방향·횟수·시간 조건 없음 · 판정·적립은 서버(stamp_claim)
+  /* v4.06 (260919 사용자 확정) 계단 B안 · 방화문 앞 QR 로 시작과 끝을 찍는다 · 당일 누적 10개 층이 되는 종료 스캔에서 적립 · 판정·적립은 서버(stair_scan)
      site: 담당자 적립 가능 (서버 stamp_grant 가 st 를 받는다) */
-  /* v4.06 (260919 사용자 확정) 계단 B안 · 방화문 앞 QR 로 시작과 끝 · 누적 10개 층이 되는 종료 스캔에서 적립 · 판정은 서버(stair_scan) */
   { id: "st", title: "계단 이용", short: "계단", desc: "방화문 앞 QR · 시작과 끝에 찍기 · 누적 10개 층", where: "", site: 1, tap: "stairOpen()", cta: "계단 안내" },
   /* v3.35 오늘 한 판 설문 · 14:30 부터 · 제출만 하면 적립(답 내용 무관) · 판정·적립은 서버(survey_submit) */
   { id: "sv", title: "오늘 한 판 설문", short: "설문", desc: "설문 제출", where: "60초", inapp: 1, tap: "App.go('survey')", cta: "설문 시작" }
@@ -2160,30 +2154,29 @@ var STAMP_ICONS = {
 };
 /* 보상 (260909 확정) · 확정지급 사다리·즉석경품 응모권 폐지, 스탬프 개수 하나로만 계산한다.
    3개 = 1F 이벤트존 실물 룰렛 1회 (1인 1회 · 내 QR 제시 → 운영자 스캔 차감)
-   4~7개 = 사후 추첨 응모 1~4장 (v3.39 사용자 확정 · 자동 계산 · 별도 행동 불필요 · 결과는 행사 종료 후 개별 안내) */
+   4·5·6개 = 사후 추첨 응모 1·2·3장 (260929 사용자 확정 · 최대 3장 · 자동 계산 · 별도 행동 불필요 · 결과는 행사 종료 후 개별 안내) */
 var REWARD_LADDER = [
   { n: 3, nm: "룰렛 1회", d: "1F 이벤트존 실물 룰렛 · 1인 1회 · 내 QR 제시" },
   { n: 4, nm: "사후 추첨 응모 1장", d: "자동 응모 · 결과는 행사 종료 후 개별 안내" },
   { n: 5, nm: "사후 추첨 응모 2장", d: "자동 응모" },
-  { n: 6, nm: "사후 추첨 응모 3장", d: "자동 응모" },
-  { n: 7, nm: "사후 추첨 응모 4장", d: "자동 응모" }
+  { n: 6, nm: "사후 추첨 응모 3장", d: "자동 응모" }
 ];
-/* v3.33 · 칸은 8개 · v3.39 보상은 7개에서 끝 (3개 룰렛 · 4~7개 응모 1~4장) · 8번째는 다른 칸 대신 채울 수 있는 선택지 */
-/* v3.60 (사용자 확정 260918) 스탬프는 6개가 끝 · 그다음 1개는 보너스(응모권 1장 더) · 8번째 카드는 빈칸을 채우는 다른 길일 뿐 보상이 없다.
+/* v3.33 · 칸은 8개 · v4.58 (사용자 확정 260929) 스탬프는 8종 중 아무거나 6개가 한도 · 6개를 모으면 끝.
+   7·8번째를 받아도 기록(stamps)은 남기되 개수·보상은 6에서 멈춘다 · 3개 = 룰렛 1회 · 4·5·6개 = 응모권 1·2·3장(최대 3장).
    화면 분모·보상 계산·서버 발급이 전부 이 상수들에서 나온다 (앱 STAMP_DENOM = 서버 STAMP_DENOM). */
 var STAMP_TOTAL = 8;            /* 카드 수 */
-var STAMP_DENOM = 6;            /* 화면 분모 · 레일 헤더 · 완료 팝 */
-var STAMP_BONUS = 7;            /* 보너스 칸 · 여기까지가 보상 계산 상한 */
-var RAFFLE_MAX = 4;             /* 응모권 최대 */
-var REWARD_CAP = STAMP_BONUS;
+var STAMP_DENOM = 6;            /* 개수 상한 · 화면 분모 · 레일 헤더 · 완료 팝 */
+var RAFFLE_MAX = 3;             /* 응모권 최대 */
+var REWARD_CAP = STAMP_DENOM;   /* 보상 계산 상한 = 개수 상한 */
 /* 서버가 준 stamps 배열에는 정의 밖 id(구 p6·p8, 계단 p9 등)가 남아 있을 수 있다.
-   표시·보상 계산은 전부 이 함수로 센다. */
-function stampCount() {
+   stampGot = 받은 종류 수(기록 그대로 · 최대 8) · stampCount = 화면·보상의 개수(최대 6) · 표시·보상 계산은 전부 stampCount 로 센다. */
+function stampGot() {
   return S.get("stamps", []).filter(function (id) {
     return STAMPS.some(function (s) { return s.id === id; });
   }).length;
 }
-/* 3개 = 룰렛(응모권 0) · 4·5·6 = 1·2·3장 · 7 = 보너스 4장 · 8 이상도 4장 */
+function stampCount() { return Math.min(STAMP_DENOM, stampGot()); }
+/* 3개 = 룰렛(응모권 0) · 4·5·6 = 1·2·3장 · 6개 넘게 받아도 3장 */
 function raffleTickets(n) { return Math.max(0, Math.min(RAFFLE_MAX, Math.min(REWARD_CAP, n) - 3)); }
 var TIMELINE = [
   /* v3.29 공식 공지 붙임1·2(260917) 기준 · 순서 = 시작 시각순 · NOW_INDEX(데모 1 = 기조연설) 가 이 순서를 가리킨다 */
@@ -2936,7 +2929,7 @@ var STORE_DEVICE = ["vid", "a2hs", "fs", "t",
 var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_role", "dept",
   "stamps", "pp_seen", "pp_glow3", "stamp_pend", "scan_q", "stair", "checkin", "queue", "photoq", "resv", "sess_my", "att_mine", "att_tm",
   "cchat", "cchat_pref", "cchat_att", "ideas", "idea_draft", "survey_draft", "survey_done", "survey_mine", "survey_force", "noti_seen",
-  "raffle_seen", "raffle_opened", "raffle_nums", "roulette_used", "roulette_open", "bonus_rl_used", "bonus_rl_seen", "draw_winner",
+  "raffle_seen", "raffle_opened", "raffle_nums", "roulette_used", "roulette_open", "draw_winner",
   "wave_extra", "wq_attempts", "test_mine", "type_nick", "type_nick_edit", "type_best", "mem_seen", "ox_seen",
   "pang_best", "jump_best", "gw_best", "gw_time_best", "tt_best", "pang_cleared", "jump_cleared", "gw_cleared", "type_cleared", "tetris_cleared", "ox_cleared",
   "oly2_best_*", "oly2_done_*"];
@@ -3149,10 +3142,9 @@ function focusPulse(f) {
 }
 
 /* ── 보상·커피챗 ── (커피 나눔 바·잔량 표시는 260917 폐기) */
-/* 스탬프 개수로 열리는 보상 안내 (260909 · v3.39) · 3개=룰렛 1회, 4~7개=사후 추첨 응모 1~4장 */
+/* 스탬프 개수로 열리는 보상 안내 (260909 · v4.58) · 3개=룰렛 1회, 4·5·6개=사후 추첨 응모 1·2·3장 */
 function checkRewards() {
   var n = stampCount();
-  bonusRlCheck();   /* v4.47 */
   if (n >= 3 && !S.get("roulette_open", false)) {
     S.set("roulette_open", true);
     notice({ key: "rw:roulette", title: "룰렛 1회 열림", body: "1F 이벤트존에서 내 QR 제시", go: "rewards", focus: "roulette", goLbl: "내 보상에서 보기" });
@@ -3454,52 +3446,6 @@ var CCHAT_TAG_SEP = " / 희망 ";
 var CCHAT_CAP = 30;
 var CCHAT_CLOSE_T = "[운영] 커피챗 신청 마감";
 function cchatClosed() { return !!S.get("cchat_out", false) || !!S.get("cchat_close_id", ""); }
-/* v4.47 보너스 룰렛 · 커피챗 · DAP 과제상담에 참석하면 각각 룰렛 1회 더(합쳐 최대 2회)
-   열림 = 서버 상태로 판정(커피챗 참석 · 완료 / DAP 체크인 · 완료) · 사용 = 서버 roulette_redeem 이 1인 1회라 쓸 수 없다 → 1F 룰렛 직원이 참가자 화면에서 [사용 처리](이 기기에 저장)
-   QR 을 보여 주지 않는다(직원이 룰렛 스캔으로 찍으면 기본 1회권이 차감된다) */
-var BONUS_RL = [{ k: "cchat", nm: "커피챗", why: "커피챗 참석" }, { k: "dap", nm: "DAP 과제상담", why: "DAP 과제상담 참석" }];
-var BONUS_RL_TXT = "참석하면 룰렛 1회 더";
-function bonusRlOpen(k) {
-  if (k === "cchat") return !!S.get("cchat_att", false);
-  var r = myResv();
-  return !!(r && (r.status === "checked" || r.status === "done"));
-}
-function bonusRlUsed(k) { return !!(S.get("bonus_rl_used", {}) || {})[k]; }
-function bonusRlCheck() {
-  if (!(S.get("user", {}) || {}).empId || el("app").hidden) return;   /* 로그인 전 동기화에서 안내를 소진하지 않게(로그인 화면이 닫히면 큐가 사라진다) */
-  var seen = S.get("bonus_rl_seen", {}) || {}, chg = false;
-  BONUS_RL.forEach(function (b) {
-    if (!bonusRlOpen(b.k) || seen[b.k]) return;
-    seen[b.k] = 1; chg = true;
-    notice({ key: "rw:bonus:" + b.k, title: "보너스 룰렛 1회 열림", body: b.why + " · 1F 이벤트존에서 이 화면 제시", go: "rewards", goLbl: "내 보상에서 보기" });
-  });
-  if (chg) S.set("bonus_rl_seen", seen);
-}
-var BRL = { arm: "" };
-function bonusRlModal(k) {
-  var b = BONUS_RL.filter(function (x) { return x.k === k; })[0];
-  if (!b) return;
-  var used = bonusRlUsed(k), open = bonusRlOpen(k), out0 = !!S.get("roulette_out", false) && !used, u = S.get("user", {}) || {};
-  BRL.arm = "";
-  var head = '<div class="axs-chiprow">' + (used ? '<span class="axs-chip off">사용 완료</span>' : !open ? '<span class="axs-chip off">' + b.nm + " 참석 후 열림</span>" : out0 ? '<span class="axs-chip off">룰렛 소진</span>' : '<span class="axs-chip">사용 가능 · 1회</span>') + "</div>";
-  var body = !open ? '<p class="ax-description" style="margin-top:8px">' + b.nm + "에 참석하면 열려요</p>" :
-    used ? '<p class="ax-description" style="margin-top:8px">사용 처리됐어요</p>' :
-    out0 ? '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));font-weight:800;color:var(--hi)">룰렛 소진</p>' :
-    '<div class="ax-inset ax-stack-tight axs-gift" style="margin-top:8px"><p class="ax-card-title axs-center-tx">보너스 룰렛 · ' + esc(b.nm) + '</p><p class="ax-type-t5-strong axs-center-tx">' + esc(u.name || "") + " · " + esc(u.empId || "") + "</p></div>" +
-    '<p class="ax-description" style="margin-top:10px">1F 이벤트존 룰렛 부스에서 이 화면을 보여 주세요<br>직원이 아래 버튼으로 사용 처리해요 · QR 스캔 없음</p>' +
-    '<button type="button" class="ax-button ax-button-weak" id="brlUse" style="margin-top:10px" onclick="bonusRlUse(\'' + k + '\')">직원 확인 · 사용 처리</button>';
-  modalOpen(head + body + '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "보너스 룰렛 1회권");
-}
-/* 잘못 누르지 않게 두 번 누른다 · 첫 번째는 버튼 글이 바뀐다 */
-function bonusRlUse(k) {
-  if (BRL.arm !== k) { BRL.arm = k; var bt = el("brlUse"); if (bt) { bt.textContent = "한 번 더 누르면 사용 처리"; bt.className = "ax-button"; } return; }
-  var m = S.get("bonus_rl_used", {}) || {};
-  m[k] = Date.now(); S.set("bonus_rl_used", m);
-  BRL.arm = "";
-  toast("보너스 룰렛 사용 처리 · 바로 돌리세요");
-  bonusRlModal(k);
-  App.render();
-}
 function cchatPref() { var a = S.get("cchat_pref", []); return Array.isArray(a) ? a : []; }
 function cchatPrefTxt(a) { a = a || cchatPref(); return CCHAT_PREF.filter(function (x) { return a.indexOf(x[0]) >= 0; }).map(function (x) { return x[1]; }).join(" · "); }
 function cchatPrefToggle(v, where) {
@@ -4764,7 +4710,7 @@ function progDetail(s) {
       D.secT = "신청한 상담이에요";
       D.secB = r.status === "requested" || r.status === "booked" ? "운영자가 승인하면 앱에서 알려 드려요." :
         r.status === "approved" ? "시작 5분 전까지 1F 미팅룸 2 앞에서 체크인해 주세요. 시작 10분이 지나면 노쇼로 처리돼요." :
-        r.status === "checked" ? "업무 설명 → 병목 → 개선방안 순서로 진행돼요.<br>보너스 룰렛 1회가 열렸어요 · 내 보상에서 확인해요." : "상담을 마쳤어요. 아래 코드를 DAP ZONE 데스크에 보여 주고 사은품을 받으세요.<br>보너스 룰렛 1회도 열렸어요 · 내 보상에서 확인해요.";
+        r.status === "checked" ? "업무 설명 → 병목 → 개선방안 순서로 진행돼요." : "상담을 마쳤어요. 아래 코드를 DAP ZONE 데스크에 보여 주고 사은품을 받으세요.";
       if (r.status === "done") D.extra = '<div class="ax-inset ax-stack-tight axs-gift"><p class="ax-card-title">사은품 교환권 · 1회</p>' + qrHtml() + '<p class="ax-type-t5-strong axs-center-tx">GIFT-' + esc((S.get("user", {}) || {}).empId || "") + '</p><p class="ax-meta axs-center-tx">중복 수령 방지 코드예요</p></div>';
       if (RESV_LIVE.indexOf(r.status) >= 0 && r.status !== "checked") { D.help = "참여가 어려우면 신청을 취소할 수 있어요"; D.btn = cxBtn; }
       else { D.help = ""; D.btn = progBtn("내 일정 보기", "mySched()", "ax-button-weak"); }
@@ -4779,7 +4725,7 @@ function progDetail(s) {
       '<section class="ax-stack-tight axs-gap12"><div class="ax-row"><h2 class="ax-section-title">상담 시간 선택</h2><span class="ax-meta">남은 시간 ' + resvRemain() + "개</span></div>" +
       '<div class="axs-slots" role="group" aria-label="상담 시간">' + slots.filter(function (t) { return t2m(t) < lunchM; }).map(cell).join("") +
       '<p class="ax-meta axs-lunch">점심시간 ' + conf.lunch + "–" + conf.lunchEnd + "</p>" + slots.filter(function (t) { return t2m(t) >= lunchM; }).map(cell).join("") + "</div></section>";
-    D.secB = "업무 설명 → 병목 → 개선방안 순서로 30분 진행해요.<br>상담을 완료하면 사은품을 드려요.<br>" + BONUS_RL_TXT + " · 1F 이벤트존";   /* v4.47 */
+    D.secB = "업무 설명 → 병목 → 개선방안 순서로 30분 진행해요.<br>상담을 완료하면 사은품을 드려요.";
     D.help = DAPSEL ? "선택한 시간 " + DAPSEL + " · 1F DAP ZONE 미팅룸 2" : "상담 시간을 먼저 골라 주세요";
     D.btn = DAPSEL ? progBtn("이 시간으로 신청하기", "progApply(\'dap\')") : progBtn("이 시간으로 신청하기", "", "", "", true);
     return D;
@@ -4790,15 +4736,15 @@ function progDetail(s) {
     D.kv = [["일시", mt ? day + c.round : "시간은 매칭 후 앱에서 안내"], ["장소", mt ? "18F 라운지 · TABLE " + c.table : "18F 라운지"], ["참여 방법", "아이디어 제출 후 참석 신청"]];
     D.link = '<button type="button" class="ax-link axs-plain axs-self" onclick="cchatModal()">진행 방식 보기</button>';
     if (S.get("cchat_att", false)) {
-      /* v4.47 참석이 서버에 찍힘 · 취소 대신 보너스 룰렛 */
+      /* v4.47 참석이 서버에 찍힘 · 취소 버튼 대신 참석 완료 */
       D.st = "참석 완료"; D.stc = "ok"; D.secT = "참석한 커피챗이에요";
-      D.secB = "함께해 주셔서 고마워요.<br>보너스 룰렛 1회가 열렸어요 · 1F 이벤트존에서 보여 주세요.";
-      D.help = ""; D.btn = progBtn("보너스 룰렛 보기", "bonusRlModal(\'cchat\')");
+      D.secB = "함께해 주셔서 고마워요.";
+      D.help = ""; D.btn = progBtn("내 일정 보기", "mySched()", "ax-button-weak");
       return D;
     }
     if (!c) {
       /* v4.07 자동 요청 폐기 · 아이디어가 있으면 바로 신청, 없으면 아이디어부터 */
-      D.secB = CCHAT_TXT.replace(" · ", "<br>") + "<br>신청할 때 고른 시간대에 맞춰 매칭해요.<br>" + CCHAT_NOTE.replace(" · ", "<br>") + "<br><b>" + BONUS_RL_TXT + "</b> · 선착순 " + CCHAT_CAP + "명";   /* v4.47 */
+      D.secB = CCHAT_TXT.replace(" · ", "<br>") + "<br>신청할 때 고른 시간대에 맞춰 매칭해요.<br>" + CCHAT_NOTE.replace(" · ", "<br>") + "<br>선착순 " + CCHAT_CAP + "명";   /* v4.47 */
       if (cchatClosed()) { D.st = "마감"; D.stc = "off"; D.help = "선착순 " + CCHAT_CAP + "명이 모두 찼어요"; D.btn = progBtn("신청 마감", "", "", "", true); }
       else if (ideaMineN()) { D.help = "제출한 아이디어로 신청해요"; D.btn = progBtn("커피챗 신청하기", "cchatApplyOpen()", "", "cchatApplyBtn"); }
       else { D.help = "아이디어를 한 줄 남기면 신청할 수 있어요"; D.btn = progBtn("아이디어 남기기", "App.go(\'ideas\')"); }
@@ -4955,7 +4901,7 @@ function cchatApplyOpen() {
 /* v4.45 신청 시트 · 선호 시간대 칩(고르기 전에는 신청 버튼 잠금) · 안내 = 하이웍스 + 앱 나의 참여 */
 function cchatSheetSpec() {
   var ok = cchatPref().length > 0;
-  return { id: "cchat", back: "cchatApplyBtn", title: "커피챗을 신청할까요?", lead: "AX 커피챗 · 18F 라운지<br>고른 시간대에 맞춰 매칭해요<br>" + BONUS_RL_TXT + " · 선착순 " + CCHAT_CAP + "명",
+  return { id: "cchat", back: "cchatApplyBtn", title: "커피챗을 신청할까요?", lead: "AX 커피챗 · 18F 라운지<br>고른 시간대에 맞춰 매칭해요<br>선착순 " + CCHAT_CAP + "명",
     body: cchatPrefHtml("sheet"), kv: [["내 아이디어", ideaMineN() + "건 제출"], ["매칭 안내", "하이웍스 · 앱 나의 참여"]],
     go: "cchatApply()", goLbl: ok ? "커피챗 신청하기" : "시간대를 골라 주세요", goBusy: "신청하는 중", goOff: !ok };
 }
@@ -5442,7 +5388,6 @@ function testStampResetGo() {
   S.set("stamps", []); S.set("pp_seen", []);                               /* 스탬프 · 레일 카운트 롤업 기준값 */
   S.set("pp_glow3", false); S.set("roulette_used", false); S.set("roulette_open", false);
   S.set("raffle_seen", 0); S.set("raffle_nums", []); S.set("raffle_opened", 0);
-  S.set("bonus_rl_used", {}); S.set("bonus_rl_seen", {});   /* v4.47 */
   var me0 = (S.get("user", {}) || {}).empId; S.set("ideas", S.get("ideas", []).filter(function (i) { return i.empId !== me0; })); S.set("cchat_pref", []);   /* v4.45 아이디어(p5)를 지우면 이 기기의 내 아이디어도 · 남아 있으면 스탬프 없이 커피챗이 열렸다 */                       /* 응모권 안내 기준 · 서버 번호 캐시 */
   toast("테스트 · 스탬프 상태를 초기화했어요");
   App.render();
@@ -5506,14 +5451,14 @@ function stampOverlay(id) {
   if (!SPOP.cur) setTimeout(spNext, 0);   /* 적립으로 생긴 재렌더가 끝난 뒤 목표 좌표를 잡는다 */
   return true;
 }
-/* 목표 · 스탬프 탭 = 그 카드의 도장 칸 · 홈 = 방금 채워진 레일 자리(1·2 틱, 3~7 마커) · 그 외 = 하단 탭바 「스탬프」 아이콘 · 탭바가 없으면 오른쪽 위 */
+/* 목표 · 스탬프 탭 = 그 카드의 도장 칸 · 홈 = 방금 채워진 레일 자리(1·2 틱, 3~6 마커 · 6개를 넘긴 적립은 개수 칸) · 그 외 = 하단 탭바 「스탬프」 아이콘 · 탭바가 없으면 오른쪽 위 */
 function spTarget(id) {
   var v = App.current, t = null, kind = "";
   if (v === "passport") {
     var rh = document.querySelector('#view .rc .rh[onclick*="ppToggle(\'' + id + '\')"]'), rc = rh && rh.closest(".rc");
     t = rc && rc.querySelector(".rt .stampmk"); if (t) kind = "card";
   } else if (v === "home") {
-    var rail = document.querySelector("#view .rail"), n = stampCount();
+    var rail = document.querySelector("#view .rail"), n = stampGot();
     if (rail) {
       if (n >= 1 && n <= 2) t = rail.querySelectorAll(".tick")[n - 1];
       else if (n >= 3 && n <= REWARD_CAP) t = rail.querySelectorAll(".mk")[n - 3];
@@ -5533,9 +5478,10 @@ function spNext() {
   if (!sd) { SPOP.cur = null; return; }
   delete SPOP.ids[sd.id];
   var rm = rgReduced(), n = stampCount();
-  /* v4.44 (사용자 260925 · 레드팀 토론) 모든 개수에 다음 보상 한 줄 · 1 · 2개째 = 룰렛까지 남은 수(새 팝업 없음) · 4개째부터 = 무엇을 받는지 그대로 */
-  var hint = n === 1 || n === 2 ? "룰렛까지 " + (3 - n) + "개" : n === 3 ? "룰렛 1회 열림" : n === STAMP_BONUS ? "보너스 · 응모권 " + raffleTickets(n) + "장 · 번호 발급" :
-    n >= 4 && n <= STAMP_DENOM ? "응모권 " + raffleTickets(n) + "장 · 번호 발급" : "";
+  /* v4.44 (사용자 260925 · 레드팀 토론) 모든 개수에 다음 보상 한 줄 · 1 · 2개째 = 룰렛까지 남은 수(새 팝업 없음) · 4개째부터 = 무엇을 받는지 그대로
+     v4.58 6개를 넘긴 적립(7·8번째)은 개수 · 보상이 그대로라 「6개 모두 모았어요」 */
+  var hint = stampGot() > STAMP_DENOM ? STAMP_DENOM + "개 모두 모았어요" : n === 1 || n === 2 ? "룰렛까지 " + (3 - n) + "개" : n === 3 ? "룰렛 1회 열림" :
+    n >= 4 ? "응모권 " + raffleTickets(n) + "장 · 번호 발급" : "";
   var fr = el("frame").getBoundingClientRect(), fw = Math.min(fr.width || innerWidth, innerWidth);
   var S0 = Math.round(Math.min(320, fw * 0.6)), cx = Math.round(fr.width ? fr.left + fr.width / 2 : innerWidth / 2), cy = Math.round(innerHeight * 0.4);
   var d = document.createElement("div");
@@ -5747,8 +5693,9 @@ function stampCardsHtml(st, newly) {
     if (!s) return;
     (st.indexOf(s.id) >= 0 ? done : todo).push([s, e[1]]);
   });
-  var next = todo.length ? todo[0][0].id : null;   /* 다음 추천 = 미완료 그룹 첫 카드 */
-  var out = '<div class="sect" style="margin-top:14px"><b>스탬프 ' + STAMPS.length + '종</b><span>' + STAMP_DENOM + '개가 끝 · 그다음 1개는 보너스</span></div>';
+  var full = stampCount() >= STAMP_DENOM;   /* v4.58 6개 한도 도달 · 남은 카드는 흐린 채로 · 다음 추천 없음 */
+  var next = todo.length && !full ? todo[0][0].id : null;   /* 다음 추천 = 미완료 그룹 첫 카드 */
+  var out = '<div class="sect" style="margin-top:14px"><b>스탬프 ' + STAMPS.length + '종</b><span>' + (full ? STAMP_DENOM + "개 모두 모았어요" : "아무거나 " + STAMP_DENOM + "개") + "</span></div>";
   done.forEach(function (e) { out += scardHtml(e[0], true, false, newly); });
   var cap = null;
   todo.forEach(function (e) {
@@ -5758,25 +5705,24 @@ function stampCardsHtml(st, newly) {
   return out;
 }
 /* 보상 레일 (v3.1) · 사다리 카드+룰렛 쿠폰 카드를 한 줄로. 마커 3=룰렛(탭=쿠폰 모달) · 4~6=응모(탭=추첨 안내 모달).
-   v3.2: 레일은 6단이다(v3.39 부터 7단). 1·2 지점에도 보상 없는 회색 틱을 둬서 1~2개인 사용자도 진행이 레일 위에 찍혀 보이게 한다.
+   v3.2: 레일은 6단이다(v4.58 다시 6단 · 6개가 한도 · 칸 끝 = 6). 1·2 지점에도 보상 없는 회색 틱을 둬서 1~2개인 사용자도 진행이 레일 위에 찍혀 보이게 한다.
    홈·스탬프 탭 공용 컴포넌트 (design.md 컴포넌트 일관성) · home=true 는 컴팩트 변형(캡션 축약 + 하단 CTA)일 뿐 시각 문법은 동일. */
 /* v3.44c 레일 아이콘 · SICO 선 아이콘 문법 · 룰렛 판(바늘 + 살 3개) · 응모권(양옆 홈 + 절취선) */
 var RAIL_ICO = {
   wheel: SICO + '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V6M12 13.5l6.5 3.75M12 13.5l-6.5 3.75"/><path d="M10 2.5h4L12 5z" fill="currentColor" stroke-width="1.2"/></svg>',
   ticket: SICO + '<path d="M3.5 7h17v3.2a1.8 1.8 0 0 0 0 3.6V17h-17v-3.2a1.8 1.8 0 0 0 0-3.6z"/><path d="M14.5 7.5v1.6M14.5 11.2v1.6M14.5 14.9v1.6"/></svg>'
 };
-/* v3.44c (사용자 요청 260917 · 규칙 문장이 많다) · 설명 줄 삭제 · 라벨은 짧게(룰렛 · 1장~4장) · 규칙 설명은 마커를 누르면 뜨는 모달에만 */
+/* v3.44c (사용자 요청 260917 · 규칙 문장이 많다) · 설명 줄 삭제 · 라벨은 짧게(룰렛 · 1장~3장) · 규칙 설명은 마커를 누르면 뜨는 모달에만 */
 function railHtml(n, glow, dispN, home) {
   if (dispN == null) dispN = n;
   var shown = Math.min(STAMP_DENOM, dispN);
   n = Math.min(REWARD_CAP, n); dispN = Math.min(REWARD_CAP, dispN);
   var out0 = S.get("roulette_out", false);
   var used = S.get("roulette_used", false);
-  /* v3.60 · 3~6 이 본줄, 7 은 점선 뒤 「보너스」 · 6 을 채우기 전에는 보너스를 강조하지 않는다 */
-  var marks = [[3, "룰렛", "ppRouletteOpen()", "wheel", used ? "룰렛 사용 완료" : "룰렛 1회"], [4, "1장", "ppDrawOpen()", "ticket", "추첨 응모 1장"], [5, "2장", "ppDrawOpen()", "ticket", "추첨 응모 2장"], [6, "3장", "ppDrawOpen()", "ticket", "추첨 응모 3장"], [STAMP_BONUS, "보너스", "ppDrawOpen()", "ticket", "보너스 · 추첨 응모 " + RAFFLE_MAX + "장"]];
-  var RAIL_MAIN = 80;   /* 본줄이 차지하는 폭(%) · 나머지는 보너스 칸 */
-  var railPos = function (k) { return k <= STAMP_DENOM ? k / STAMP_DENOM * RAIL_MAIN : 94; };
-  var nextAt = n < STAMP_DENOM ? Math.max(3, n + 1) : n < REWARD_CAP ? REWARD_CAP : 0;   /* 다음 목표 마커 하나만 강조 */
+  /* v4.58 · 1~6 한 줄 · 6 이 레일 끝(7번째 칸 폐지 · 사용자 확정 260929) */
+  var marks = [[3, "룰렛", "ppRouletteOpen()", "wheel", used ? "룰렛 사용 완료" : "룰렛 1회"], [4, "1장", "ppDrawOpen()", "ticket", "추첨 응모 1장"], [5, "2장", "ppDrawOpen()", "ticket", "추첨 응모 2장"], [6, "3장", "ppDrawOpen()", "ticket", "추첨 응모 3장"]];
+  var railPos = function (k) { return k / STAMP_DENOM * 100; };
+  var nextAt = n < STAMP_DENOM ? Math.max(3, n + 1) : 0;   /* 다음 목표 마커 하나만 강조 */
   var mk = "", lb = "";
   [1, 2].forEach(function (k) {
     mk += '<span class="tick' + (n >= k ? " on" : "") + '" style="left:' + railPos(k).toFixed(1) + '%"></span>';
@@ -5784,28 +5730,26 @@ function railHtml(n, glow, dispN, home) {
   marks.forEach(function (m) {
     var pos = railPos(m[0]).toFixed(1) + "%";
     /* 사용 가능해진 룰렛(3 도달·미사용)은 검정 = 지금 행동할 것 (v3.6 상태 위계) · 검정을 못 받으면 오렌지 채움 + 틴트 링(avail) */
-    var bonus = m[0] === STAMP_BONUS;
-    var st = m[0] === 3 && n >= 3 && !used ? (isBlack("roulette") ? " act" : " on avail") : n >= m[0] ? " on" : m[0] === nextAt && !(bonus && n < STAMP_DENOM) ? " next" : "";
-    mk += '<button class="mk' + st + (bonus ? " bonus" : "") + (m[0] === 3 && glow ? " glow" : "") + '" style="left:' + pos + '" onclick="' + m[2] + '" aria-label="스탬프 ' + m[0] + "개 · " + m[4] + '">' +
+    var st = m[0] === 3 && n >= 3 && !used ? (isBlack("roulette") ? " act" : " on avail") : n >= m[0] ? " on" : m[0] === nextAt ? " next" : "";
+    mk += '<button class="mk' + st + (m[0] === 3 && glow ? " glow" : "") + '" style="left:' + pos + '" onclick="' + m[2] + '" aria-label="스탬프 ' + m[0] + "개 · " + m[4] + '">' +
       RAIL_ICO[m[3]] + '<span class="no">' + m[0] + "</span></button>";
-    lb += '<span class="' + (n >= m[0] ? "on" : m[0] === nextAt && !(bonus && n < STAMP_DENOM) ? "next" : "") + (bonus ? " bonus" : "") + '" style="left:' + pos + '">' + m[1] + "</span>";
+    lb += '<span class="' + (n >= m[0] ? "on" : m[0] === nextAt ? "next" : "") + '" style="left:' + pos + '">' + m[1] + "</span>";
   });
   return '<div class="rail">' +
     '<div class="hd"><span class="nm">스탬프 보상</span><span class="cnt"><span id="ppCnt">' + shown + "</span><small> / " + STAMP_DENOM + "</small></span></div>" +
-    '<div class="rb"><i style="width:' + railPos(Math.min(n, REWARD_CAP)).toFixed(1) + '%"></i><span class="gap" style="left:' + RAIL_MAIN + '%"></span>' + mk + "</div>" +
+    '<div class="rb"><i style="width:' + railPos(n).toFixed(1) + '%"></i>' + mk + "</div>" +
     '<div class="lbls">' + lb + "</div>" +
-    (out0 ? '<p class="cap">룰렛 소진</p>' : dispN >= STAMP_BONUS ? '<p class="cap">보너스까지 완료 · 응모권 ' + RAFFLE_MAX + '장</p>' :
-      dispN >= STAMP_DENOM ? '<p class="cap">' + STAMP_DENOM + '개 완성 · 보너스 한 칸 남음</p>' : "") +
+    (out0 ? '<p class="cap">룰렛 소진</p>' : dispN >= STAMP_DENOM ? '<p class="cap">' + STAMP_DENOM + "개 모두 모았어요</p>" : "") +
     raffleNumsHtml(n) +
     "</div>";
 }
 /* v3.31c 내 응모 번호 · 응모권 1장 이상일 때만 · 서버 번호가 아직 없으면 「발급 중」 회색 (v3.12 모달과 같은 규칙) */
-function raffleNums() { return testMode() ? ["1026", "2026", "3026", "4026"] : S.get("raffle_nums", []); }
+function raffleNums() { return testMode() ? ["1026", "2026", "3026"] : S.get("raffle_nums", []); }
 function raffleNumsHtml(n) {
   var t = raffleTickets(Math.min(REWARD_CAP, n));
   if (!t) return "";
   var nums = raffleNums(), chips = "", op = rfxOpened(t);
-  for (var i = 0; i < 4; i++) chips += i >= t ? '<span class="gap"></span>' : i >= op ? '<button type="button" class="tkt new" onclick="event.stopPropagation(); rfxReopen()">새 번호<br>확인</button>' :   /* v4.44 상자를 열기 전에는 번호를 먼저 보여 주지 않는다 */
+  for (var i = 0; i < RAFFLE_MAX; i++) chips += i >= t ? '<span class="gap"></span>' : i >= op ? '<button type="button" class="tkt new" onclick="event.stopPropagation(); rfxReopen()">새 번호<br>확인</button>' :   /* v4.44 상자를 열기 전에는 번호를 먼저 보여 주지 않는다 */
     i < nums.length ? '<span class="tkt">' + esc(nums[i]) + "</span>" : '<span class="tkt wait">발급 중</span>';
   return '<div class="rnum"><p class="lb">내 응모 번호</p><div class="tkts">' + chips + "</div></div>";
 }
@@ -5849,7 +5793,7 @@ var RFX_FRONT = '<svg class="rfx-chest rfx-front" viewBox="0 0 140 110" aria-hid
 /* v4.44 (사용자 260925 · 레드팀 토론) 제목 = 「응모 완료 · 번호 확인」(도장 연출 한 줄 「응모권 N장 · 번호 발급」과 겹치지 않게) · 닫힌 상자 첫 줄에 「응모는 이미 됐어요」(닫아도 손해 없음을 먼저)
    v4.49 모든 응모권을 직접 연다(5개째부터 저절로 열던 것 폐지 · 사용자 260925) · 열 때 아직 안 연 번호를 모두 꺼낸다(4개째를 「나중에 보기」로 닫았어도 빠지는 번호가 없다)
    자동으로 닫지 않는다(천천히 읽는 사람이 번호를 놓친다) · 주 버튼 = [확인] 하나 */
-function rfxTitle(t) { return (t >= RAFFLE_MAX && stampCount() >= STAMP_BONUS ? "보너스 " : "") + "응모 완료 · 번호 확인"; }
+function rfxTitle(t) { return "응모 완료 · 번호 확인"; }
 function rfxOpened(t) { var o = S.get("raffle_opened", null); return o === null ? t : Math.min(o, t); }   /* 상자를 연 응모권 수 · 기록이 없으면(이 버전 전) 다 연 것으로 */
 function rfxHtml(o) {
   var t = o.raffle || 1, first = true;   /* v4.49 (사용자 260925 「두 번째 · 세 번째도 내가 열어야 · 처음 응모번호와 같게」) 모든 응모권을 직접 연다 · 버튼 · 문구 모양이 같다 */
@@ -5910,7 +5854,7 @@ function ppDrawOpen() {
     }
     tickets = '<div class="tkts">' + chips + "</div>";
   }
-  modalOpen('<p class="muted" style="font-size:calc(14.5px * var(--fs));line-height:1.7">4개 1장 · 5개 2장 · 6개 3장 · 보너스 ' + RAFFLE_MAX + '장 · 자동 응모<br>지금 <b style="color:var(--hi)">' + t + '장</b></p>' +
+  modalOpen('<p class="muted" style="font-size:calc(14.5px * var(--fs));line-height:1.7">4개 1장 · 5개 2장 · 6개 3장 · 자동 응모<br>지금 <b style="color:var(--hi)">' + t + '장</b></p>' +
     tickets +
     '<p class="muted" style="margin-top:8px;font-size:calc(13.5px * var(--fs));line-height:1.65">17:00 Outro 추첨 · 결과는 행사 후 개별 안내</p>' +
     '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "사후 추첨 응모");
@@ -6002,23 +5946,16 @@ function rewItems() {
   var n = stampCount(), used = !!S.get("roulette_used", false), out0 = !!S.get("roulette_out", false), t = raffleTickets(n), items = [];
   if (n >= 3) items.push({ k: "roulette", used: used, chip: used ? "사용 완료" : out0 ? "룰렛 소진" : "사용 가능", off: used || out0, nm: "룰렛 1회권", big: "1회",
     why: "1F 이벤트존 룰렛 · 내 QR 제시", go: "ppRouletteOpen()" });
-  BONUS_RL.forEach(function (b) {   /* v4.47 보너스 룰렛 · 참석해서 열린 것만 */
-    if (!bonusRlOpen(b.k)) return;
-    var bu = bonusRlUsed(b.k);
-    items.push({ k: "bonus_" + b.k, used: bu, chip: bu ? "사용 완료" : out0 ? "룰렛 소진" : "사용 가능", off: bu || out0, nm: "보너스 룰렛 · " + b.nm, big: "1회",
-      why: b.why + " · 1F 이벤트존 · 이 화면 제시", go: "bonusRlModal(\'" + b.k + "\')" });
-  });
   if (t) items.push({ k: "raffle", used: false, chip: "자동 응모", off: false, nm: "사후 추첨 응모권", big: t + "장", why: "스탬프 " + Math.min(n, REWARD_CAP) + "개 · 17:00 Outro 추첨", go: "ppDrawOpen()" });
   return items;
 }
 function rewPick(f) { REW.f = f; App.render(); }
 
-/* ── 스탬프 · 숫자는 현행 운영: 카드 8종 · 분모 6 · 7번째 보너스 · 보상 계산 상한 REWARD_CAP · 현황 모양은 홈과 같은 railHtml(v4.10) ── */
+/* ── 스탬프 · 숫자는 현행 운영: 카드 8종 · 개수 상한 6 · 응모권 최대 3장 · 현황 모양은 홈과 같은 railHtml(v4.10) ── */
 function stampGoalText(n) {
   if (n < 3) return (3 - n) + "개 더 모으면 룰렛 1회";
   if (n < STAMP_DENOM) return "1개 더 모으면 응모권 " + raffleTickets(n + 1) + "장";
-  if (n < STAMP_BONUS) return "1개 더 모으면 보너스 응모권 1장";
-  return "보너스까지 완료 · 응모권 " + RAFFLE_MAX + "장";
+  return STAMP_DENOM + "개 모두 모았어요 · 응모권 " + RAFFLE_MAX + "장";
 }
 function stampHeroHtml(n, glow) {
   /* v4.10 (사용자 결정 260922) 홈과 같은 railHtml 재사용 · M04 숫자 칸 폐기 · 한쪽을 고치면 양쪽이 같이 바뀐다 */
@@ -6026,7 +5963,7 @@ function stampHeroHtml(n, glow) {
   return railHtml(n, glow, null, false) +
     '<button type="button" class="ax-button ax-button-weak" onclick="App.tab(\'exp\')">스탬프 모으러 가기</button>' +
     axDest("내 보상", "사용 가능한 보상만 따로 확인", rw + "개", "App.go('rewards')") +
-    '<p class="ax-description">완료한 활동은 한 번만 적립돼요.<br>' + STAMP_BONUS + "번째 스탬프는 보너스 보상으로 연결돼요.</p>";
+    '<p class="ax-description">완료한 활동은 한 번만 적립돼요.<br>8종 중 ' + STAMP_DENOM + "개를 모으면 끝이에요.</p>";
 }
 
 /* ── 체험 (E01) · 현장에서 / 앱에서 · 현장은 기존 스캔·활동 화면으로 연결만(내부 재디자인은 3단계) ── */
@@ -6258,7 +6195,7 @@ var Views = {
       return '<div class="ax-stack axs-okwrap">' +
         '<div class="ax-stack-tight axs-gap12 axs-center-tx"><p class="ax-meta">아이디어 제출 완료</p><h1 class="ax-type-t2">커피챗에 참석하시겠어요?</h1>' +
         '<p class="ax-body">' + CCHAT_TXT.replace(" · ", "<br>") + "</p></div>" +
-        '<div class="ax-card ax-stack-tight axs-gap12"><p class="ax-card-title">AX 커피챗 · 18F 라운지</p><p class="ax-description"><b>' + BONUS_RL_TXT + "</b> · 선착순 " + CCHAT_CAP + "명<br>고른 시간대에 맞춰 매칭해요<br>" + CCHAT_NOTE.replace(" · ", "<br>") + "</p></div>" + cchatPrefHtml("ask") + "</div>" +
+        '<div class="ax-card ax-stack-tight axs-gap12"><p class="ax-card-title">AX 커피챗 · 18F 라운지</p><p class="ax-description">선착순 ' + CCHAT_CAP + "명<br>고른 시간대에 맞춰 매칭해요<br>" + CCHAT_NOTE.replace(" · ", "<br>") + "</p></div>" + cchatPrefHtml("ask") + "</div>" +
         '<div class="ax-bottom axs-fix">' + progBtn(cchatPref().length ? "참석할게요" : "시간대를 골라 주세요", "ideaCchat(1)", "", "ideaYes", !cchatPref().length) + progBtn("참석하지 않을게요", "ideaCchat(0)", "ax-button-weak", "ideaNo") + "</div>";   /* v4.45 선호 시간대를 골라야 참석 */
     }
     if (IDEA.step === "done") {
@@ -6971,7 +6908,7 @@ function beSync(after) {
         var c0 = S.get("cchat", null);
         if (c0 && Date.now() - (c0.ts || 0) > 30000) S.set("cchat", null);
       }
-      var ccAtt = !!(res.my.cchat && (res.my.cchat.status === "참석" || res.my.cchat.status === "완료"));   /* v4.47 보너스 룰렛 · 18F 입장 스캔 또는 콘솔 참석 · 완료 */
+      var ccAtt = !!(res.my.cchat && (res.my.cchat.status === "참석" || res.my.cchat.status === "완료"));   /* v4.47 커피챗 참석 표시 · 18F 입장 스캔 또는 콘솔 참석 · 완료 */
       if (ccAtt !== !!S.get("cchat_att", false)) S.set("cchat_att", ccAtt);
       if (res.my.cchat && res.my.cchat.status === "매칭") {
         var c = S.get("cchat", null);
@@ -7014,7 +6951,6 @@ function beSync(after) {
     }
     if (el("mtCv")) mtSync();
     checkMyState();
-    bonusRlCheck();   /* v4.47 커피챗 · DAP 참석이 서버에 찍히면 보너스 룰렛 안내 한 번 */
     qrMineCheck();   /* v4.06 내 QR 이 열려 있으면 방금 바뀐 것 한 줄(확인됨) */
     if (App.current === "home") App.render();
   }, function () { if (after) after(false); });
@@ -7480,6 +7416,7 @@ function scanResHtml() {
 }
 /* 적립 결과 한 줄 · 서버가 확인한 개수로만 */
 function srGoalLine(n) {
+  if (stampGot() > STAMP_DENOM) return STAMP_DENOM + "개 모두 모았어요";   /* v4.58 7·8번째 적립 · 개수 · 보상 그대로 */
   if (n === 3) return "룰렛 1회가 열렸어요 · 1F 이벤트존";
   if (n >= 4 && n <= REWARD_CAP) return "사후 추첨 응모권 " + raffleTickets(n) + "장 · 자동 응모";
   return stampGoalText(n);
@@ -8093,7 +8030,6 @@ function qrMineStateHtml() {
   /* 룰렛 1회권 · QR을 내미는 가장 흔한 순간이라 여기서도 상태를 같이 보여준다 (260909) */
   if (stampCount() >= 3) out.push('<div class="qst"><span class="l">1F 룰렛 1회권</span><b>' +
     (S.get("roulette_used", false) ? "사용 완료" : "스캔하면 차감") + "</b></div>");
-  BONUS_RL.forEach(function (b) { if (bonusRlOpen(b.k) && !bonusRlUsed(b.k)) out.push('<div class="qst"><span class="l">보너스 룰렛 · ' + esc(b.nm) + "</span><b>내 보상에서 사용 처리</b></div>"); });   /* v4.47 */
   return out.length ? '<div class="qstate">' + out.join("") + "</div>" : "";
 }
 
@@ -8247,7 +8183,7 @@ function scanDone(emp, sp, res) {
         why === "skipped" ? res.no + "번은 건너뛴 번호예요 · 새 번호 받기 안내" :
           why === "already" ? res.no + "번은 이미 입장 처리됐어요" :
             why === "need" ? "스탬프 3개 미만 · 차감 불가 (현재 " + (res.n || 0) + "개)" :
-              why === "used" ? "이미 룰렛을 돌린 참가자예요 · 보너스 룰렛은 참가자 앱 내 보상에서 사용 처리" :
+              why === "used" ? "이미 룰렛을 돌린 참가자예요" :
                 why === "auth" ? "관리코드가 맞지 않아요 · 관리자 모드를 다시 열어 주세요" :
                   "처리하지 못했어요" + (why || err ? " (" + (why || err.slice(0, 40)) + ")" : "");
     scanLog(emp, nm + msg, false, true);
