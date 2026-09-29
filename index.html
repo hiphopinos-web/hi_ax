@@ -1897,7 +1897,7 @@
     .rt .tytv .tytv-foot { margin-top: 22px; }
   }
   /* ── v4.59 1F 타자왕 부스 세로 TV 하이스코어(#tv=type&fix=site · wall_type 부스 갈래) · 1080×1920 설계 px · 가로 TV 는 hsK() 배율로 가운데 세로 판 + 양옆 도트 여백 ──
-     도드라지는 것 = 머리 간판(HIGH SCORE)과 1위 줄뿐 · 2·3위는 순위 숫자 · 기록만 오렌지 · 나머지는 나무 명부 톤 */
+     도드라지는 것 = 머리 간판(HIGH SCORE)과 1·2위 줄(v4.60 260929: Outro 에서 1·2등 호명 · 1위 O100 면 · 2위 O60 면 한 단계 옅게) · 3위는 순위 숫자 · 기록만 오렌지 · 나머지는 나무 명부 톤 */
   .rt .hs { position: fixed; inset: 0; z-index: 50; overflow: hidden; background: radial-gradient(circle, var(--rt-wood) 0 2px, transparent 2.5px) 0 0 / 36px 36px, var(--rt-night); }
   .rt .hs-bd { position: absolute; left: 50%; top: 50%; width: 1080px; height: 1920px; margin: -960px 0 0 -540px; transform-origin: 50% 50%; box-sizing: border-box; padding: 0 64px;
     display: flex; flex-direction: column; justify-content: center; color: var(--rt-cream); font-family: var(--rt-font); font-weight: 400; }
@@ -1915,8 +1915,9 @@
   .rt .hs-row .nm.long { font-size: 44px; }
   .rt .hs-row .sc { flex: none; margin-left: 24px; text-align: right; white-space: nowrap; color: var(--rt-tan2); }
   .rt .hs-row.r1 { background: var(--rt-o100); }
-  .rt .hs-row.r1 .no, .rt .hs-row.r1 .nm, .rt .hs-row.r1 .sc { color: var(--rt-btn); }
-  .rt .hs-row.r2 .no, .rt .hs-row.r3 .no, .rt .hs-row.r2 .sc, .rt .hs-row.r3 .sc { color: var(--rt-o100); }
+  .rt .hs-row.r2 { background: var(--rt-o60); }
+  .rt .hs-row.r1 .no, .rt .hs-row.r1 .nm, .rt .hs-row.r1 .sc, .rt .hs-row.r2 .no, .rt .hs-row.r2 .nm, .rt .hs-row.r2 .sc { color: var(--rt-btn); }
+  .rt .hs-row.r3 .no, .rt .hs-row.r3 .sc { color: var(--rt-o100); }
   .rt .hs-row.nil .no { color: var(--rt-dim); }
   .rt .hs-row.new { animation: hsNew 1.6s ease-out 2; }
   .rt .hs-foot { margin-top: 44px; display: flex; align-items: center; gap: 28px; }
