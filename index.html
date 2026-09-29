@@ -7078,6 +7078,7 @@ function beSync(after) {
     if (res && res.ok && res.poll >= 30 && res.poll <= 120) POLL.base = res.poll * 1000;   /* v4.57 운영이 붐비는 시간에 서버 설정으로 폴링을 늘린다(재배포 없이) */
     if (after) after(!!(res && res.ok));
     if (!res || !res.ok) return;
+    if (u.empId && res.sesNeed === 1) SES.need = true;   /* v4.68 세션필수 ON 인데 토큰이 없거나 지난 토큰(PIN 초기화) · 서버가 개인 부분(my)을 빼고 보냈다 · 이 기기 기록은 그대로 둔다 */
     if (u.empId && (res.ses === 1 && !u.ses || SES.need)) setTimeout(sesAsk, 600);   /* v4.67 세션필수 ON · 토큰 없는 로그인(옛 앱)이면 비밀번호 한 번 더 */
     if (scanQList().length) setTimeout(scanQFlush, 200 + beJit());   /* v3.34b 연결이 살아났으면 저장된 스캔 재전송 · v4.57 0~5초 무작위 지연 */
     setTimeout(ideaFlush, 400 + beJit());
