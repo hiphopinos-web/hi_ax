@@ -1059,6 +1059,7 @@
   /* 좁은 폭 · 360 미만은 「2026」을 빼고, 320 대는 글자 크기 토글을 설정(톱니) 시트로만 둔다(시트에 같은 선택지가 있다) */
   #topbar { container-type: inline-size; container-name: axh; }   /* 헤더 내용이 화면 폭을 밀지 않게 · 폭 판정은 컨테이너 기준(내용 폭 = 화면 - 48) */
   @container axh (max-width: 326px) { #topbar .axs-wm span { display: none; } }
+  @container axh (max-width: 384px) { .fs-big #topbar .axs-wm span { display: none; } }   /* v4.64 (QA 260930) 크게 · 큰글씨는 워드마크가 커져 390 폭에서 「2026」이 토글 밑으로 들어갔다 */
   @container axh (max-width: 311px) { #topbar .axs-hrow .axs-fs { display: none; } #topbar .axs-wm span { display: inline; } }
   #topbar .axs-sp { flex: 1; }
   #topbar .axs-wm { flex: 0 1 auto; min-width: 0; display: flex; align-items: center; gap: var(--ax-space-4); min-height: var(--ax-touch-size); padding: 0; border: 0; background: transparent; cursor: pointer; font: var(--ax-type-t5-strong); white-space: nowrap; color: var(--ax-color-ink); }
@@ -2997,7 +2998,7 @@ var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_ro
   "raffle_seen", "raffle_opened", "raffle_nums", "roulette_used", "roulette_open", "draw_winner",
   "wave_extra", "wq_attempts", "test_mine", "type_nick", "type_nick_edit", "type_best", "mem_seen", "ox_seen",
   "pang_best", "jump_best", "gw_best", "gw_time_best", "tt_best", "pang_cleared", "jump_cleared", "gw_cleared", "type_cleared", "tetris_cleared", "ox_cleared",
-  "oly2_best_*", "oly2_done_*"];
+  "oly2_best_*", "oly2_done_*", "oly_pend"];
 function storeIsDevice(k) {
   k = String(k || "");
   return STORE_DEVICE.some(function (d) { return d.slice(-1) === "*" ? k.indexOf(d.slice(0, -1)) === 0 : k === d; });
@@ -3061,6 +3062,7 @@ function fsGet() {
 }
 function fsApply(v, save) {
   document.documentElement.style.setProperty("--fs", v);
+  document.documentElement.classList.toggle("fs-big", v > 1);   /* v4.64 헤더 워드마크 「2026」 숨김 기준(CSS .fs-big) */
   /* 저장은 사용자가 직접 고른 순간에만 · "아직 안 골랐음"을 알아야 안내를 1회 띄울 수 있다 */
   if (save) { try { localStorage.setItem(LS_FS, v); } catch (e) {} }
 }
@@ -3142,12 +3144,13 @@ var NOTICE = { q: [], cur: null, last: {}, t: 0 };
 function notice(o) {
   var k = o.key || (o.title + "|" + (o.body || ""));
   if ((NOTICE.cur && NOTICE.cur.k === k) || NOTICE.q.some(function (x) { return x.k === k; }) || Date.now() - (NOTICE.last[k] || 0) < 3000) return;
-  o.k = k; NOTICE.q.push(o);
+  o.k = k;
+  if (o.urgent) NOTICE.q.unshift(o); else NOTICE.q.push(o);   /* v4.64 (QA 260930) 급한 것(포토부스 입장 등)은 쌓인 안내보다 먼저 */
   if (o.urgent && el("rgPlay")) toast(o.title);   /* 게임 중에도 급한 것은 제목만 먼저 · 팝업은 게임을 나온 뒤 */
   clearTimeout(NOTICE.t); NOTICE.t = setTimeout(noticePump, 60);
 }
 function noticeBusy() {
-  return !!((typeof qrGated === "function" && qrGated()) || SPOP.cur || SPOP.q.length || el("spop") || el("modal") || el("rgPlay") || el("app").hidden ||
+  return !!((typeof qrGated === "function" && qrGated()) || SPOP.cur || SPOP.q.length || el("spop") || el("modal") || el("axsSheet") || el("rgPlay") || el("app").hidden ||
     App.current === "admin" || App.current === "scan_res" || App.current === "stair" || SIGNAGE.indexOf(App.current) >= 0);   /* v4.06 결과·계단 화면이 연출이다 · 보상 안내는 나온 뒤 */
 }
 function noticePump() {
@@ -3324,9 +3327,14 @@ function resvAll() { return S.get("resv", []); }
 /* v17: 승인 플로우 · requested(신청) → approved(승인) → checked(체크인) → done. booked는 구버전 호환 */
 var RESV_LIVE = ["requested", "booked", "approved", "checked"];
 var RESV_HOLD = ["requested", "booked", "approved", "checked", "done"];
+/* v4.64 (QA 1단계 260930) 남이 잡은 시간 · 예전에는 이 기기 기록만 봐서 서버에 잡힌 시간도 「신청 가능」 · 「남은 시간 12개」로 보였고 신청해야 알았다.
+   taken = 서버 sync 의 resvTaken(시간 글자만 · 이름 없음 · 옛 서버는 보내지 않아 null = 예전과 같다) · miss = 방금 「다른 분이 신청」으로 돌아온 시간(다음 sync 까지) */
+var RESV_SRV = { taken: null, miss: {} };
 function resvTaken(slot) {
-  return resvAll().some(function (r) { return r.room === 2 && r.slot === slot && RESV_HOLD.indexOf(r.status) >= 0; });
+  if (resvAll().some(function (r) { return r.room === 2 && r.slot === slot && RESV_HOLD.indexOf(r.status) >= 0; })) return true;
+  return !!RESV_SRV.miss[slot] || (RESV_SRV.taken || []).indexOf(slot) >= 0;
 }
+function dapRepick() { DAPSEL = null; PROG.cf = null; App.render(); }   /* 시트는 sheetPaint 의 act 가 먼저 닫는다 · 상담 화면에 머물러 다시 고른다 */
 function resvRemain() {
   var n = 0;
   resvSlots().forEach(function (s) { if (!resvTaken(s)) n++; });
@@ -3361,7 +3369,7 @@ function bookResv() {
       }
     });
   }
-  notice({ title: "상담 신청 완료", body: slot + " · 1F Meeting Room 2 · 승인되면 알림" });
+  notice({ title: "상담 신청 완료", body: slot + " · 1F DAP ZONE 미팅룸 2 · 승인되면 알림" });
 }
 function cancelResv() {
   var u = S.get("user", {});
@@ -3543,7 +3551,10 @@ function cchatApply() {
   if (S.get("cchat", null)) notice({ title: "커피챗 신청 완료", body: "희망 " + cchatPrefTxt() + " · " + CCHAT_NOTE });
   App.render();
 }
-function ideaMineN() { var e = (S.get("user", {}) || {}).empId; return S.get("ideas", []).filter(function (i) { return i.empId === e; }).length; }
+function ideaMineN() {
+  var e = (S.get("user", {}) || {}).empId, n = S.get("ideas", []).filter(function (i) { return i.empId === e; }).length;
+  return n || (S.get("stamps", []).indexOf("p5") >= 0 ? 1 : 0);   /* v4.64 (QA 260930) 아이디어는 이 기기에만 남는다 · 다른 기기 · 다시 로그인하면 0 이라 커피챗을 못 열었다 · 서버 스탬프 p5(아이디어 한 줄) = 낸 사람 */
+}
 /* v4.15 (사용자 확정 260922) 아이디어 서버 저장 · 커피챗 매칭에 필수 · 콘솔이 idea_list 로 본다.
    제출 ID(cid)를 같이 보내 재전송해도 한 번만 쓴다 · 서버에 닿으면 srv 에 시각 · 닿지 않은 내 것은 sync 때 다시 보낸다(옛 기기 로컬 아이디어도 이 길로 올라간다) */
 var IDEA_SENDING = {};
@@ -3561,6 +3572,7 @@ function ideaFlush() {
   S.get("ideas", []).forEach(function (x) { if (!x.srv && x.empId === e) ideaSend(x); });
 }
 function boothStamp() {
+  if (!testMode()) { scanOpen("p2"); return; }   /* v4.64 (QA 260930) 실계정은 체험 QR 로만 · 시연 적립은 테스트 모드에만 */
   if (S.get("stamps", []).indexOf("p2") >= 0) { toast("AX Now! 체험 스탬프는 이미 적립했어요."); return; }
   awardStamp("p2");
   waveBump();
@@ -4835,7 +4847,7 @@ function progApply(id) {
 }
 var PROG_ERR = {
   net: { t: "연결이 불안정해 신청하지 못했어요", b: "신청은 아직 되지 않았어요. 잠시 뒤 다시 시도해 주세요." },
-  taken: { t: "방금 다른 분이 신청한 시간이에요", b: "다른 시간을 골라 주세요.", act: "App.back()", lbl: "시간 다시 고르기" },
+  taken: { t: "방금 다른 분이 신청한 시간이에요", b: "다른 시간을 골라 주세요.", act: "dapRepick()", lbl: "시간 다시 고르기" },   /* v4.64 App.back() 은 상담 화면을 떠났다 */
   dupR: { t: "이미 진행 중인 상담 신청이 있어요", b: "내 일정에서 확인해 주세요.", act: "mySched()", lbl: "내 일정 보기" },
   etc: { t: "신청하지 못했어요", b: "잠시 뒤 다시 시도해 주세요." }
 };
@@ -4871,6 +4883,7 @@ function progConfirm() {
     }
     beCall({ action: "resv_book", emp: u.empId, name: u.name || "", dept: S.get("dept", null) || "", slot: c.slot }, function (res) {
       if (res && res.ok) { progDapSave(c.slot, res.id); fin(null); }
+      else if (res && res.reason === "taken") { RESV_SRV.miss[c.slot] = 1; fin(PROG_ERR.taken); }   /* v4.64 그 칸을 바로 마감으로 */
       else fin(res && res.reason === "taken" ? PROG_ERR.taken : res && res.reason === "dup" ? PROG_ERR.dupR : PROG_ERR.etc);
     }, function () { fin(PROG_ERR.net); });
   }
@@ -5245,9 +5258,11 @@ function photoTake() {
   sheetBusy(true);
   beCall({ action: "photo_take", emp: u.empId }, function (res) {
     if (!res || !res.ok) { sheetFail({ t: "번호표를 받지 못했어요", b: "잠시 뒤 다시 시도해 주세요." }); return; }
+    var near = res.ahead <= 2;   /* v4.64 (QA 260930) 받자마자 「곧 차례」 팝업이 한 번 더 뜨지 않게 · 이 팝업에 같이 적는다 · photoq 를 쓰기 전에(쓰는 순간 checkMyState 가 돈다) */
+    if (near) { var sn = S.get("noti_seen", {}); sn.photoNear = res.no; S.set("noti_seen", sn); }
     S.set("photoq", { no: res.no, status: "wait", ahead: res.ahead, eta: res.eta });
     sheetClose(true);
-    notice({ key: "photo:" + res.no, title: "포토부스 " + res.no + "번", body: "예상 입장 " + res.eta });
+    notice({ key: "photo:" + res.no, title: "포토부스 " + res.no + "번", body: (near ? "곧 차례 · 1F 포토부스로 이동 · " : "") + "예상 입장 " + res.eta });
   }, function () { sheetFail({ t: "서버에 연결할 수 없어요", b: "네트워크를 확인해 주세요." }); });
 }
 /* v4.09 번호표 취소 = 취소 확인 시트(신청 취소와 같은 틀 · design.md A 5-6) · 실패하면 번호표 유지 */
@@ -5269,7 +5284,7 @@ function photoCancel() {
   }
   var u = S.get("user", {}) || {};
   beCall({ action: "photo_cancel", emp: u.empId || "" }, function (res) {
-    if (res && res.ok) done(); else bad("취소하지 못했어요");
+    if (res && (res.ok || res.reason === "notfound")) done(); else bad("취소하지 못했어요");   /* v4.64 notfound = 서버에는 이미 없다(호출 · 완료 · 다른 기기 취소) · 이 기기 번호표만 지운다 */
   }, function () { bad("서버에 연결할 수 없어요"); });
 }
 /* 번호표 UI · 나의 참여 › 포토부스 대기(Views.photoq) 한 곳에서만 쓴다 · 상태 카드만 그린다.
@@ -6171,7 +6186,7 @@ var Views = {
         '<button type="button" class="ax-button ax-button-weak" onclick="' + x.go + '">사용 방법 보기</button></section>';
     }).join("") || botHtml(f === "used" ? "사용한 보상이 없어요" : "아직 받은 보상이 없어요");
     return '<div class="ax-stack">' + tabs + cards +
-      '<p class="ax-description">룰렛은 스탬프 3개, 응모권은 4개부터 생겨요.<br>커피챗 · DAP 과제상담에 참석하면 룰렛이 1회씩 더 생겨요.<br>달성한 보상만 이곳에 표시됩니다.</p></div>';
+      '<p class="ax-description">룰렛은 스탬프 3개, 응모권은 4개부터 생겨요.<br>달성한 보상만 이곳에 표시됩니다.</p></div>';
   },
 
   /* ═══ 포토부스 대기 · 나의 참여 › 목적지 · 기존 번호표 UI 를 그대로 담는다(새 대기 UI 는 가이드에 정의가 없다) ═══ */
@@ -6478,21 +6493,23 @@ var Views = {
   /* ── v10 【신규 C】 AX Now! 부스 연동 · v5 p28·31~41 ── */
   /* v3.64 · 부스 소개와 위치 안내만 남긴다 (피드백·질문·시연 신청 블록은 사용자 확정으로 삭제) */
   booth: function () {
+    /* v4.64 (QA 1단계 260930) 옛 검정 카드 · 파랑 뱃지 · 「완료 QR 스캔 (시연)」 버튼을 걷어냈다.
+       실계정도 그 버튼으로 p2 가 서버에 적립됐다(QR · 적립 시간 우회 · QA 실측). 시연 버튼은 테스트 모드(데모 · 310555)에만 · 실계정은 체험 QR 스캔으로만.
+       모양은 체험 안내(E02)와 같은 AX-TDS 카드 · 단계 목록 · 하단 고정 버튼 하나 */
     var got2 = S.get("stamps", []).indexOf("p2") >= 0;
-    return '' +
-      '<div class="card mb12" style="background:var(--ink)"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.1em;color:var(--mint)">AX NOW! · 1F 부스 2종</p>' +
-      '<p style="margin-top:6px;font-size:calc(19px * var(--fs));font-weight:800;color:#fff;line-height:1.4">설명이 아닌,<br>체험으로 증명합니다</p>' +
-      '<p class="muted" style="margin-top:6px;font-size:calc(14.5px * var(--fs))">부스 1곳 체험 = 스탬프 1개</p></div>' +
-      '<div class="card mb8"><div class="row" style="justify-content:space-between"><b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">① HI-Helper</b><span class="badge blue">10.1 OPEN</span></div>' +
-      '<p class="muted" style="margin-top:4px;font-size:calc(14.5px * var(--fs))">보험 설계를 돕는 LLM 비서</p>' +
-      '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));line-height:1.8;color:var(--tx)">STEP 1 · 내 보험 설계해보기<br>STEP 2 · HiDI-Helper 체험<br>STEP 3 · 체험 완료 QR 스캔</p></div>' +
-      '<div class="card mb12"><div class="row" style="justify-content:space-between"><b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">② HIDI-Q</b><span class="badge blue">11.1 OPEN</span></div>' +
-      '<p class="muted" style="margin-top:4px;font-size:calc(14.5px * var(--fs))">업무 문서 AI 비서 · 5분</p>' +
-      '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));line-height:1.8;color:var(--tx)">STEP 1 · 부서 키트 + 질문 셋 수령<br>STEP 2 · 업로드 → 질의응답 → 초안 생성<br>STEP 3 · 체험 완료 QR 스캔</p>' +
-      '<p style="margin-top:6px;font-size:calc(12.5px * var(--fs));color:var(--faint)">세션 종료 시 자료 삭제</p></div>' +
-      '<div class="card" style="border-color:var(--mint-deep)"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">체험 완료 스탬프</b>' +
-      '<p class="muted" style="margin-top:4px;font-size:calc(13.5px * var(--fs))">체험 후 스태프 QR 스캔</p>' +
-      '<button class="btn' + (got2 ? " gray" : " mint") + '" style="margin-top:10px" onclick="boothStamp()">' + (got2 ? "적립 완료 ✔" : "완료 QR 스캔 (시연)") + "</button></div>";
+    var booth = function (nm, open, sub, steps, note) {
+      return '<section class="ax-card ax-stack-tight axs-gap12"><div class="ax-row"><h2 class="ax-section-title">' + nm + '</h2><span class="axs-chip">' + open + "</span></div>" +
+        '<p class="ax-description">' + sub + "</p>" +
+        '<ol class="axs-steps">' + steps.map(function (x, k) { return '<li><span class="axs-no">0' + (k + 1) + '</span><span class="axs-tx"><b class="ax-type-t5-strong">' + x + "</b></span></li>"; }).join("") + "</ol>" +
+        (note ? '<p class="ax-meta">' + note + "</p>" : "") + "</section>";
+    };
+    return '<div class="ax-stack">' +
+      '<div class="axs-chiprow"><span class="axs-chip">AX Now! · 1F 부스 2종</span>' + (got2 ? '<span class="axs-chip ok">적립 완료</span>' : "") + "</div>" +
+      '<div class="ax-stack-tight"><h1 class="ax-title">설명이 아닌,<br>체험으로 증명합니다</h1><p class="ax-description">부스 1곳 체험 = 스탬프 1개 · 체험 후 스태프 QR 스캔</p></div>' +
+      booth("HI-Helper", "10.1 OPEN", "보험 설계를 돕는 LLM 비서", ["내 보험 설계해보기", "HiDI-Helper 체험", "체험 완료 QR 스캔"], "") +
+      booth("HIDI-Q", "11.1 OPEN", "업무 문서 AI 비서 · 5분", ["부서 키트 + 질문 셋 수령", "업로드 → 질의응답 → 초안 생성", "체험 완료 QR 스캔"], "세션 종료 시 자료 삭제") +
+      (testMode() && !got2 ? '<button type="button" class="ax-button ax-button-weak" onclick="boothStamp()">완료 QR 스캔 (시연 · 테스트 모드)</button>' : "") +
+      "</div>" + ax2Btn(got2 ? "스탬프 확인하기" : "체험 QR 스캔하기", got2 ? "expStamp('p2')" : "scanOpen('p2')");
   },
 
   /* ── v10 【신규 B】 DAP Wall QR 퀴즈 ── */
@@ -6894,7 +6911,7 @@ function checkMyState() {
   var my = myResv();
   if (my && my.status === "approved" && seen.resv !== my.id + ":approved") {
     seen.resv = my.id + ":approved"; changed = true;
-    notifyUser("과제상담 승인 완료", "1F Meeting Room 2", "dap");
+    notifyUser("과제상담 승인 완료", "1F DAP ZONE 미팅룸 2", "dap");
   }
   if (my && my.status === "canceled" && seen.resvX !== my.id + ":canceled") {
     seen.resvX = my.id + ":canceled"; changed = true;
@@ -6913,6 +6930,7 @@ function checkMyState() {
   }
   if (pq && pq.status === "call" && seen.photoCall !== pq.no) {
     seen.photoCall = pq.no; changed = true;
+    NOTICE.q = NOTICE.q.filter(function (x) { return x.k !== "photo:" + pq.no; });   /* v4.64 묵은 「예상 입장」 팝업은 버린다 */
     notifyUser("지금 입장하세요", "1F 포토부스 · " + pq.no + "번 · 10분 안에 입장", "photoq", "");
   }
   if (changed) S.set("noti_seen", seen);
@@ -6945,7 +6963,9 @@ function beSync(after) {
     if (after) after(!!(res && res.ok));
     if (!res || !res.ok) return;
     if (scanQList().length) setTimeout(scanQFlush, 200 + beJit());   /* v3.34b 연결이 살아났으면 저장된 스캔 재전송 · v4.57 0~5초 무작위 지연 */
-    setTimeout(ideaFlush, 400 + beJit());   /* v4.15 서버에 아직 닿지 않은 내 아이디어 다시 보내기 */
+    setTimeout(ideaFlush, 400 + beJit());
+    setTimeout(olyPendFlush, 600 + beJit());   /* v4.64 못 보낸 미니게임 기록 다시 보내기 */
+    if (Array.isArray(res.resvTaken)) { RESV_SRV.taken = res.resvTaken.map(hhmm); RESV_SRV.miss = {}; }   /* v4.64 잡힌 상담 시간(새 서버만 보낸다) */   /* v4.15 서버에 아직 닿지 않은 내 아이디어 다시 보내기 */
     if (res.wqv != null && res.wqv !== S.get("wq_v", 0)) { if (res.wqv) wqPull(); else { S.set("wq_srv", null); S.set("wq_v", 0); } }   /* v4.15 Wall QR 퀴즈 문항 판이 바뀌면 받아 온다 · 0 = 서버 문항 없음(내장 문항) */
     if (!BE.stats) BE.stats = {};
     BE.stats.wall = res.wall;
@@ -9739,9 +9759,30 @@ function olySubmit(key, parts) {
     if (why === "ver") toast("앱이 새로 나왔어요 · 새로고침한 뒤 다시 해 주세요");
     else if (why === "mismatch") { toast("점수 규칙이 바뀌었어요 · 새로고침한 뒤 다시 해 주세요"); olyPull(true); }
     else if (why === "range") toast("이번 판은 순위에 올리지 않았어요");
+    else if (beBusy(r)) olyPendAdd(key, body, score);   /* v4.64 서버 붐빔 · 다음 동기화 때 다시 */
     olyResMeFill(key);
-  }, function () { olyResMeFill(key); });
+  }, function () { olyPendAdd(key, body, score); olyResMeFill(key); });
   return score;
+}
+/* v4.64 (QA 1단계 260930) 판 기록을 서버에 못 보냈으면(연결 끊김 · 붐빔) 이 기기에 두었다가 다음 동기화 때 다시 보낸다.
+   예전에는 그대로 사라져, 이 기기 종목 수(n / 3)는 올라가는데 서버는 몰라 스탬프(p4)가 나오지 않았다.
+   사번에 묶는다(ownIs) · 1시간 · 20판까지 · 한 번에 한 판 · 서버가 받았든 거절했든(ver · mismatch · range) 한 번 답을 받으면 버린다(같은 판을 두 번 올리지 않게) */
+var OLY_PEND_MAX = 3600000, OLY_PEND = { busy: false };
+function olyPend() { var a = S.get("oly_pend", []); return Array.isArray(a) ? a.filter(function (x) { return ownIs(x) && Date.now() - (x.t || 0) < OLY_PEND_MAX; }) : []; }
+function olyPendAdd(key, body, score) { var a = olyPend(); if (a.length >= 20) a.shift(); a.push({ key: key, body: body, score: score, t: Date.now(), emp: ownEmp() }); S.set("oly_pend", a); }
+function olyPendFlush() {
+  var a = olyPend(), u = S.get("user", {}) || {};
+  if (!a.length) { if ((S.get("oly_pend", []) || []).length) S.set("oly_pend", []); return; }
+  if (OLY_PEND.busy || !BE.on || !u.empId || testEmp()) return;
+  OLY_PEND.busy = true;
+  var x = a[0];
+  beCall({ action: "game_submit", emp: u.empId, name: u.name || "", game: x.key, v: "g5", parts: JSON.stringify(x.body), score: x.score }, function (r) {
+    OLY_PEND.busy = false;
+    if (!r || beBusy(r)) return;
+    S.set("oly_pend", olyPend().filter(function (y) { return !(y.t === x.t && y.key === x.key); }));
+    if (r.ok) { if (OLY.board) OLY.board.me = r.me; else OLY.board = { me: r.me }; mgStampCheck(r.p4 || null); }
+    if (olyPend().length) setTimeout(olyPendFlush, 400);
+  }, function () { OLY_PEND.busy = false; });
 }
 /* ── 월계수 표식 (A안 · 디자인 시안/포디움 표식/A_월계수 · 도트 잎 + ME to WE 심볼 + 순위 원) ──
    원본 SVG(각 150KB · 원 3,098개)를 같은 좌표의 선 끝 둥근 점 경로로 줄였다(모양·색 동일) · 숫자는 윤곽선(NotoSansKR 800) ·
@@ -13778,6 +13819,7 @@ function xitionRun(switchNow) {
         if (!res || !res.ok) {
           var msg = {
             pw: "비밀번호가 맞지 않습니다. 처음 정한 4자리를 입력해 주세요.",
+            lock: "비밀번호를 여러 번 틀렸어요. 10분 뒤 다시 시도하거나 운영 데스크에 문의해 주세요.",
             notfound: "명부에서 찾을 수 없습니다. 운영진에게 문의해주세요.",
             name: "이름이 명부와 일치하지 않습니다.",
             param: "다시 시도해주세요."
@@ -13857,6 +13899,7 @@ function xitionRun(switchNow) {
             notfound: "명부에 없는 사번입니다. 운영진에게 문의해주세요.",
             name: "사번과 이름이 일치하지 않습니다.",
             pw: "비밀번호가 맞지 않습니다. 처음 정한 4자리를 입력해 주세요.",
+            lock: "비밀번호를 여러 번 틀렸어요. 10분 뒤 다시 시도하거나 운영 데스크에 문의해 주세요.",
             param: "입력값을 다시 확인해주세요."
           };
           show((res && msg[res.reason]) || "연결에 실패했어요. 잠시 후 다시 시도해주세요.");
