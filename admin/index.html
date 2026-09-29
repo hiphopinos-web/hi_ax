@@ -782,7 +782,7 @@ document.addEventListener("visibilitychange",function(){ if(!document.hidden&&ke
 
 /* 탭별로 필요한 액션만 부른다 */
 var NEED={
-  dash:[{k:"stats",a:"stats"},{k:"acct",a:"acct_list"},{k:"stamp",a:"stamp_people"},{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"att",a:"att_stats"},{k:"photo",a:"photo_list"}],
+  dash:[{k:"stats",a:"stats"},{k:"acct",a:"acct_list"},{k:"stamp",a:"stamp_people"},{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"att",a:"att_stats"},{k:"photo",a:"photo_list"},{k:"crowd",a:"crowd_log"}],   /* v4.71 혼잡 제보(옛 서버는 없음 · 한 줄 안내) */
   acct:[{k:"acct",a:"acct_list"},{k:"pwreq",a:"pw_req_list"},{k:"sesst",a:"sess_stats"}],   /* v4.68 참가자 본인 확인 숫자(세션필수를 켜기 전에 본다 · 옛 서버는 없음) */
   stamp:[{k:"stamp",a:"stamp_people"},{k:"acct",a:"acct_list"},{k:"stair",a:"stair_list"},{k:"sstat",a:"stair_stats"},{k:"sy",a:"sync",p:{emp:""}}],
   qr:[{k:"slist",a:"stamp_list"},{k:"alist",a:"att_list"},{k:"stair",a:"stair_list"},{k:"sstat",a:"stair_stats"},{k:"qrs",a:"qr_stats"}],   /* v4.53 QR 메뉴 · 부스·출석·계단 코드 + 오늘 스캔 수(계단은 stair_stats · 나머지는 qr_stats) */
@@ -977,6 +977,7 @@ function viewDash(){
     kpi("추첨 응모권",tickets,"장",hasTk?'자격 기준 · 번호 발급 '+issued+'장':'4개 1장 · 5개 2장 · 6개 3장')+
     kpi("참여 기록",(st.wall||0).toLocaleString(),"건","스탬프 · 아이디어 · 게임 · 룰렛 전체")+
   '</div>';
+  h+=viewCrowd();   /* v4.71 혼잡 제보 · 지금 상태 · 이력 · 설정 */
 
   var todo=[
     { v:pw, t:"비밀번호 분실 요청", d:"본인 확인 후 초기화", go:"go('acct')" },
@@ -1057,6 +1058,59 @@ function viewSesStats(){
   h+=memo('<div class="wrap"><table class="tb"><tr><th>날짜</th><th class="tdr">맞음</th><th class="tdr">없음</th><th class="tdr">사람</th><th class="tdr">틀림</th><th class="tdr">초기화 전</th><th class="tdr">QR 맞음</th><th class="tdr">지난 QR</th><th class="tdr">옛 QR</th><th class="tdr">QR 틀림</th></tr>'+(rows||emptyRow(10,"아직 기록이 없습니다."))+'</table></div>'+
     '<p>스위치는 이 화면에서 바꾸지 않습니다. 켜는 날과 명령은 운영 배포 안내를 봅니다. PIN 초기화로 세대가 올라간 사람 '+n(d.gens)+'명.</p>', "날짜별 숫자");
   return card("참가자 본인 확인","세션 토큰 · 오늘",h,'<button class="btn sm" onclick="reload([\'sesst\'])">새로고침</button>');
+}
+/* ── v4.71 (260930 사용자 확정 · 「혼잡도 제보 기획.md」 권장안) 혼잡 제보 · 1F 로비 · 엘리베이터(1F 승강기 홀 상행 대기) ──
+ * 서버 crowd_log(관리코드) = 지금 상태(참가자 앱과 같은 조각) · 이력 끝 30줄 · 설정 · 대리 해소 = crowd_set clear(관리코드 · 이력 역할 「관리」)
+ * 설정 = crowd_cfg · 계단 연결(혼잡_계단 · 총무 피난계단 승인 전 OFF) · 예상 창(혼잡_예상창) · 예상 날짜(혼잡_예상일 · 비우면 매일) · 유효 분(혼잡_유효분)
+ * 제보는 1F 스태프 폰(관리자 모드 › 혼잡 제보)이 한다 · 이 화면은 보기 · 해소 · 설정만 · 옛 서버(crowd_log 없음)는 한 줄 안내 */
+var CROWD_NM={ e:"엘리베이터", l:"1F 로비" }, CROWD_ID={ e:"elev", l:"lobby" };
+function crowdHm(t){ var d=new Date(t), p=function(n){ return (n<10?"0":"")+n; }; return p(d.getHours())+":"+p(d.getMinutes()); }
+function crowdWin(w){ return String(w||"").replace(/-/g,"~"); }
+function viewCrowd(){
+  var d=ST.data.crowd;
+  if(!d) return "";
+  if(!d.ok) return card("혼잡 제보","",'<div class="note">이 서버에는 아직 혼잡 제보가 없습니다. 서버를 새로 올린 뒤 보입니다.</div>');
+  var c=d.crowd||{}, cf=d.cfg||{}, rows=(d.rows||[]).slice(0,20);
+  var cells='<div class="grid g2" style="margin-top:0">'+["e","l"].map(function(k){
+    var j=c[k]&&c[k].x>Date.now()?c[k]:null, st, sub, act="";
+    if(j){ st=tag("혼잡","bad"); sub=crowdHm(j.at)+" 제보 · "+Math.max(1,Math.ceil((j.x-Date.now())/60000))+"분 남음"; act='<button class="btn sm danger" onclick="crowdClear(\''+k+'\')">대리 해소</button>'; }
+    else if(k==="e"&&c.p){ st=tag("예상","warn"); sub=crowdWin(c.p)+" · 설정한 예상 창"; }
+    else { st=tag("제보 없음","off"); sub=""; }
+    return '<div class="card" style="margin-top:0"><div class="row" style="justify-content:space-between"><b>'+CROWD_NM[k]+'</b>'+st+'</div>'+
+      (sub?'<p class="cap mt8">'+esc(sub)+'</p>':'')+(k==="e"&&c.w?'<p class="cap">스태프 확인 시간 '+esc(crowdWin(c.w))+'</p>':'')+(act?'<div class="row mt8">'+act+'</div>':'')+'</div>'; }).join("")+'</div>';
+  var tb='<div class="wrap mt12"><table class="tb"><tr><th>시각</th><th>대상</th><th>동작</th><th>누가</th></tr>'+
+    rows.map(function(r){ return '<tr><td class="n cap">'+esc(short(r.t))+'</td><td>'+esc(r.tgt)+'</td><td>'+tag(r.act, r.act==="혼잡"?"bad":r.act==="해소"?"off":"warn")+'</td><td class="cap">'+esc(r.role==="관리"?"콘솔 · 관리코드":"스태프 · 등급코드")+'</td></tr>'; }).join("")+
+    (!rows.length?emptyRow(4,"아직 제보가 없습니다."):"")+'</table></div>'+(d.total>rows.length?'<p class="cap mt8">최근 '+rows.length+'줄 · 전체 '+d.total+'줄(시트 「혼잡제보」)</p>':'');
+  var set='<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><b>계단 연결</b>'+(cf.stair?tag("켜짐","warn"):tag("꺼짐","off"))+
+    '<button class="btn sm '+(cf.stair?"":"danger")+'" onclick="crowdStair('+(cf.stair?0:1)+')">'+(cf.stair?"끄기":"켜기")+'</button>'+
+    '<span class="cap">켜면 엘리베이터 혼잡 카드에 「계단 이용」(계단 스탬프 화면)이 붙습니다. 총무 피난계단 승인 뒤에 켭니다.</span></div>'+
+    '<div class="row mt12" style="gap:8px;flex-wrap:wrap;align-items:flex-end">'+
+    '<label class="cap">예상 창(쉼표로 여러 개 · 비우면 끔)<br><input id="crWin" class="in" style="min-width:320px" value="'+esc(cf.win||"")+'" placeholder="11:00-11:20,13:20-13:40"></label>'+
+    '<label class="cap">예상 날짜(비우면 매일)<br><input id="crDay" class="in" style="width:130px" value="'+esc(cf.day||"")+'" placeholder="2026-10-26"></label>'+
+    '<label class="cap">제보 유효(분)<br><input id="crMin" class="in" style="width:80px" inputmode="numeric" value="'+esc(cf.min||15)+'"></label>'+
+    '<button class="btn pri" onclick="crowdCfgSave()">저장</button></div>'+
+    '<p class="cap mt8">예상은 엘리베이터 칸에만 「예상」으로 표시하고(스태프가 창 안에서 해소하면 그 창은 접힘), 홈 위 카드로 올리지 않습니다. 스태프 폰에는 창 시작 5분 전부터 「확인 시간」 칩이 뜹니다.</p>';
+  return card("혼잡 제보","1F 스태프 제보 · "+(cf.min||15)+"분 뒤 저절로 꺼짐 · "+esc(short(d.t)),cells+tb+memo(set,"설정 · 계단 연결 · 예상 창"),'<button class="btn sm" onclick="reload([\'crowd\'])">새로고침</button>');
+}
+function crowdClear(k){
+  dialog({ t:CROWD_NM[k]+" 제보를 해소할까요?", s:"참가자 앱의 「혼잡」 표시가 곧바로 「제보 없음」이 됩니다(앱은 다음 동기화 · 최대 약 30초). 스태프가 다시 혼잡을 제보할 수 있습니다.", ok:"해소", danger:true,
+    onOk:function(){ call("crowd_set",{tgt:CROWD_ID[k],act:"clear"},function(r){ dlgForce(); if(r&&r.ok){ toast(CROWD_NM[k]+" · 해소"); reload(["crowd"]); } else toast("실패: "+why(r)); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
+}
+function crowdCfgGo(p, msg){
+  call("crowd_cfg",p,function(r){ dlgForce(); if(r&&r.ok){ toast(msg); reload(["crowd"]); } else toast("실패: "+({win:"예상 창 형식이 올바르지 않습니다(예: 11:00-11:20,13:20-13:40 · 시작 < 끝 · 8개까지)",day:"날짜 형식은 2026-10-26 입니다",min:"유효 분은 1~60 입니다",stair:"스위치 값 오류"}[(r||{}).reason]||why(r))); },function(){ dlgForce(); toast("서버 응답 없음"); });
+}
+function crowdStair(on){
+  dialog({ t:on?"계단 연결을 켤까요?":"계단 연결을 끌까요?", s:on?"엘리베이터가 혼잡하면 참가자 홈 카드에 「계단 이용」이 붙고 누르면 계단 스탬프 화면으로 갑니다. <b>총무 피난계단 승인</b>을 받은 뒤에 켭니다.":"홈 카드에서 「계단 이용」을 뺍니다. 혼잡 표시는 그대로입니다.", ok:on?"켜기":"끄기", danger:!!on,
+    onOk:function(){ crowdCfgGo({stair:on?"ON":"OFF"}, on?"계단 연결을 켰습니다":"계단 연결을 껐습니다"); } });
+}
+function crowdCfgSave(){
+  var cf=((ST.data.crowd||{}).cfg)||{}, w=el("crWin").value.replace(/\s+/g,""), dy=el("crDay").value.trim(), mn=el("crMin").value.trim();
+  var p={}, lines=[];
+  if(w!==(cf.win||"")){ p.win=w; lines.push("예상 창 · "+(cf.win||"(끔)")+" → "+(w||"(끔)")); }
+  if(dy!==(cf.day||"")){ p.day=dy; lines.push("예상 날짜 · "+(cf.day||"(매일)")+" → "+(dy||"(매일)")); }
+  if(mn!==String(cf.min||15)){ p.min=mn; lines.push("유효 분 · "+(cf.min||15)+" → "+mn); }
+  if(!lines.length){ toast("바뀐 값이 없습니다"); return; }
+  dialog({ t:"혼잡 제보 설정을 저장할까요?", s:lines.map(esc).join("<br>")+"<br>참가자 앱에는 다음 동기화부터 적용됩니다.", ok:"저장", onOk:function(){ crowdCfgGo(p, "저장했습니다"); } });
 }
 /* ── v3.88 비밀번호 분실 요청 (앱 → 운영 데스크) ──────────────────────────────
  * 앱에서 사번·이름만 보낸 요청이 여기에 쌓인다. 데스크에서 「본인 확인」을 하고 초기화를 누르면
