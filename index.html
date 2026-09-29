@@ -766,7 +766,13 @@
     .bill .bko { position: static; opacity: 1; animation: none; transform: none; }
   }
   .bill canvas { flex: none; width: 42%; height: 100%; display: block; }
-  /* 층별 혼잡도 압축 스트립 · 막대 4개라 높이는 내용 기준, 라운드·면·테두리·좌우 패딩·최소 높이는 공용 행 카드(.rc)와 동일 (v3.22) */
+  /* 층별 혼잡도 압축 스트립 · 막대 4개라 높이는 내용 기준 (v3.22) · v3.31c 삭제 → v4.62 (260929 사용자 결정) 홈 맨 아래로 복원 · 홈 카드 문법(흰 surface · 반경 20)과 토큰만 */
+  .cstrip { padding: var(--ax-space-12) var(--ax-space-16); border-radius: var(--ax-radius-20); background: var(--ax-color-surface); }
+  .cstrip .row4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--ax-space-8); }
+  .cstrip .fl { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .cstrip .bar { height: 6px; margin-top: var(--ax-space-4); border-radius: 3px; background: var(--ax-color-canvas); overflow: hidden; }
+  .cstrip .bar i { display: block; height: 100%; border-radius: 3px; }
+  .cstrip .st { margin: var(--ax-space-4) 0 0; font: var(--ax-type-caption); color: var(--ax-color-muted); white-space: nowrap; }
   /* 홈 나의 일정 목록형(.mine .r)은 v3.22 폐지 · 개별 공용 행 카드(.rc)로 */
   /* 홈 스탬프 카드(.chal)는 v3.2 폐지 · 홈도 스탬프 탭과 같은 railHtml 공용 컴포넌트를 쓴다 */
   /* 공지 한 줄 */
@@ -5148,6 +5154,24 @@ function myCouponHtml() {
     railHtml(stampCount(), false, null, true);
 }
 
+/* v4.62 층별 혼잡도 · 홈 맨 아래 (260929 사용자 결정 · v3.31c 삭제를 되돌림).
+   모양은 v3.22 압축 스트립(층 4칸 · 막대 · 상태 한 단어). 옛 값은 시뮬레이션(CROWD_SIM)이라 되살리지 않는다.
+   참가자 앱이 읽을 수 있는 혼잡도 원천이 아직 없다(존 등급 · 재실 실측은 관리코드 전용 ops_snapshot 에만 있다).
+   원천이 생기기 전까지 crowdGrade 는 빈 값 · 막대는 비우고 「정보 없음」. 가짜 수치를 넣지 않는다.
+   색은 design.md 시맨틱(여유 success · 보통 muted · 혼잡 error) 토큰만. 실제 운영 방식(1F 스태프 제보)은 별도 설계 뒤 연결. */
+var CROWD_FLOORS = [1, 10, 17, 18];
+var CROWD_BAND = { "여유": [34, "var(--ax-color-success)"], "보통": [67, "var(--ax-color-muted)"], "혼잡": [100, "var(--ax-color-error)"] };
+function crowdGrade(fl) { return ""; }
+function crowdStripHtml() {
+  return '<div class="sect"><b>층별 혼잡도</b></div>' +
+    '<div class="cstrip"><div class="row4">' + CROWD_FLOORS.map(function (fl) {
+      var g = crowdGrade(fl), b = CROWD_BAND[g];
+      return '<div><p class="fl">' + fl + 'F</p>' +
+        '<div class="bar"><i style="width:' + (b ? b[0] + "%;background:" + b[1] : "0") + '"></i></div>' +
+        '<p class="st"' + (b ? ' style="color:' + b[1] + '"' : "") + ">" + (b ? g : "정보 없음") + "</p></div>";
+    }).join("") + "</div></div>";
+}
+
 /* ════════════════ 일정 탭 행 (v3.5) · 좌측 시간 레일 + 우측 제목 · 부가 설명은 공용 아코디언 접힘 ════════════════ */
 /* v3.21 일정 탭 = 세 탭: all 전체 일정(시간표만) / always 상시 프로그램 / mine 내 일정 */
 var SCHED = { open: {}, tab: "all" };
@@ -6043,6 +6067,7 @@ var Views = {
      행사 전체에 관한 것(프로그램 목록·혼잡도·월·게임·아이디어)은 각 탭이 맡는다. ═══ */
   /* v3.13 홈 위계 재배치 (사용자 확정): 스탬프 → 나의 일정(지금·다음 흡수) → 광고판 (v3.50 예외 자리는 포토부스 알림만).
      v3.31c (260917 사용자 확정) 층별 혼잡도 참여자 화면 삭제 · 홈 = [포토부스 알림] → 광고판 → 스탬프 → 나의 일정.
+     v4.62 (260929 사용자 결정) 층별 혼잡도를 홈 맨 아래(나의 일정 다음)에 되살린다 · 260917 삭제 결정을 뒤집음.
      운영 쪽 존 등급 입력(ZONE_GRADE)·백엔드 grade·입장 스캔 동선 집계는 유지.
      히어로(지금 진행 중)는 나의 일정 첫 줄로 흡수 · 스탬프는 행사 전·당일·후 항상 맨 위 */
   /* ═══ 홈 (H01 · AX-TDS v1 260922) = 지금 할 일 ═══
@@ -6061,6 +6086,7 @@ var Views = {
       '<section class="axs-sec axs-railgo" onclick="if (!event.target.closest(\'.mk, .sect span\')) App.go(\'passport\')">' + myCouponHtml() + "</section>" +   /* 레일 면을 누르면 나의 참여 › 스탬프 · 마커는 v4.02 대로 룰렛·응모 안내 */
       artBannerHtml() +
       '<section class="axs-sec">' + myScheduleHtml() + "</section>" +
+      '<section class="axs-sec">' + crowdStripHtml() + "</section>" +   /* v4.62 층별 혼잡도 복원(260929) */
       "</div>";
   },
 
@@ -6364,7 +6390,7 @@ var Views = {
      층 아코디언 레이어 제거로 프로그램까지 한 번 탭 · 리스트 안 신청형/상시형 무게 구분은 v3.4 유지. ═══ */
   /* ═══ 프로그램 P01 (AX-TDS v1 2단계 · 260922) · 필터 전체 / 강연 / 실습 / 상담 · 층은 48 배지로만 ═══
      행 = 제목 → 설명 → 일시·장소 → 상태 · 행을 누르면 상세(P02) · 돌아오면 필터와 스크롤을 그대로(PROG.cat · PROG.scroll).
-     1F 혼잡도는 넣지 않는다(260917 사용자 결정 · 참여자 화면에서 삭제). 포토부스·부스·퀴즈는 체험 탭 몫. */
+     혼잡도는 이 탭에 넣지 않는다 · 층별 혼잡도는 홈 맨 아래 스트립(v4.62 · 260929 복원). 포토부스·부스·퀴즈는 체험 탭 몫. */
   /* v4.13 두 층(사용자 결정 260922 · design.md A-5 5-10) · 1층 세그먼트 [목록 | 시간표](체험 탭과 같은 axs-seg) · 2층 분류 칩(두 보기 공통) · 시간표 = 옛 P05(guide_time 전체) */
   guide: function () {
     var cat = PROG.cat || "all", mode = PROG.mode === "time" ? "time" : "list", CATS = [["all", "전체"], ["강연", "강연"], ["실습", "실습"], ["상담", "상담"]];
