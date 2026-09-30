@@ -2659,7 +2659,7 @@ function photoAct(act, emp, no, force){
    2분 전 배너 = 모든 메뉴 위에 「17:00 경품 추첨 시작 · 1분 40초 뒤」 + [+5분] [취소] · 새 화면을 열지 않은 운영자도 본다.
    목록은 60초마다(소켓이 붙어 있으면 5분 · 서버가 알리면 곧바로) 새로 받는다. 옛 서버(sched_list 없음)는 한 줄 안내.
    실시간 연결(ops 방) = 서버가 ws 를 주면 콘솔이 스태프 토큰으로 붙는다 · 포토부스 줄이 바뀌면 포토부스 · 대시보드를 새로 받는다 · 예약이 바뀌면 목록을 새로 받는다. */
-var SCHK={ notice:"공지", outro:"Outro", crowd_notify:"혼잡 만료 알림", visit_slot:"관람 시간 알림" };
+var SCHK={ notice:"공지", outro:"Outro", crowd_notify:"혼잡 만료 알림", visit_slot:"관람 시간 알림", cchat_remind:"커피챗 10분 전" };   /* v4.77 커피챗 10분 전 = 서버가 매칭 회차마다 잡는다(매칭 · 변경 · 취소 때 다시 맞춘다) */
 var SCH_TAG={ "대기":"warn","실행중":"pri","완료":"ok","취소":"off","지남":"bad","오류":"bad" };
 var SCH_PRE=[
   { n:"Outro 5분 전", kind:"outro", t:"Outro 5분 전", b:"17F 대강당 · 17:00 시작", at:"16:55", tgt:"all" },
@@ -2677,7 +2677,7 @@ function viewSched(){
   var rows=d.rows||[], now=Date.now(), open=rows.filter(function(r){ return r.st==="대기"||r.st==="실행중"; });
   var tb='<div class="wrap"><table class="tb"><tr><th>실행 시각</th><th>종류</th><th>내용</th><th>상태</th><th>결과</th><th class="tdr">처리</th></tr>'+
     rows.map(function(r){ var wait=r.st==="대기", soon=wait&&r.ms-now<=(d.soonMs||120000)&&r.ms>now;
-      var what=r.kind==="notice"||r.kind==="outro"?'<b>'+esc(r.title)+'</b>'+(r.body?'<div class="cap">'+esc(r.body)+'</div>':'')+(r.push?'<div class="mt8">'+tag("푸시","pri")+' <span class="cap">'+esc(r.pdesc||"")+'</span></div>':''):r.kind==="visit_slot"?esc(r.slot)+(r.f?'<div class="cap">'+esc(r.f)+'층</div>':''):r.kind==="crowd_notify"?esc(r.tgt==="elev"?"엘리베이터":r.tgt==="lobby"?"1F 로비":r.tgt):"";
+      var what=r.kind==="notice"||r.kind==="outro"?'<b>'+esc(r.title)+'</b>'+(r.body?'<div class="cap">'+esc(r.body)+'</div>':'')+(r.push?'<div class="mt8">'+tag("푸시","pri")+' <span class="cap">'+esc(r.pdesc||"")+'</span></div>':''):r.kind==="visit_slot"?esc(r.slot)+(r.f?'<div class="cap">'+esc(r.f)+'층</div>':''):r.kind==="cchat_remind"?'18F 커피챗 '+esc(r.slot)+'<div class="cap">매칭된 사람에게 푸시</div>':r.kind==="crowd_notify"?esc(r.tgt==="elev"?"엘리베이터":r.tgt==="lobby"?"1F 로비":r.tgt):"";
       return '<tr class="hv'+(soon?" soon":"")+'"><td class="n"><b>'+esc(String(r.at).slice(5).replace("-","/"))+'</b>'+(wait&&r.ms>now?'<div class="cap">'+schLeft(r.ms)+' 뒤</div>':'')+'</td><td>'+esc(SCHK[r.kind]||r.kname||r.kind)+'<div class="cap">'+esc(r.by||"")+'</div></td><td>'+what+'</td>'+
         '<td>'+tag(r.st, SCH_TAG[r.st]||"off")+'</td><td class="cap">'+esc(r.res||"")+'</td>'+
         '<td>'+(wait?'<div class="acts"><button class="btn sm" onclick="schEdit(\''+jq(r.id)+'\',\'run\')">지금 실행</button><button class="btn sm" onclick="schEdit(\''+jq(r.id)+'\',\'delay\')">+5분</button><button class="btn sm danger" onclick="schEdit(\''+jq(r.id)+'\',\'cancel\')">취소</button></div>':'<div class="acts"><span class="cap">-</span></div>')+'</td></tr>'; }).join("")+
