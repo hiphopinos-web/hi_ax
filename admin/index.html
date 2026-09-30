@@ -2980,15 +2980,32 @@ function ideaCsv(){
 }
 
 /* ── 9-2. 담당 명단 · 1F DAP 과제상담 · 18F 커피챗 (v4.26 17F 강연은 자유 참석이라 명단 없음) ──
- * 폰 관리자 「내 담당 명단」과 같은 목록. 콘솔은 노쇼 표시 · 해제만 한다(입장 처리는 폰 스캔).
+ * v4.72 (260930 QA 6 결정 · 스태프 폰에서 담당 명단 탭을 뺀 대신) 콘솔이 입장 처리 · 노쇼 표시 · 노쇼 해제를 모두 한다. 서버는 staff_mark(in · noshow · clear) 그대로.
+ *   입장 처리 = 상담 체크인 · 커피챗 참석과 같다(스탬프 03 적립 · 노쇼 표시가 있었으면 서버가 풀어 준다). 서버에 입장을 되돌리는 길이 없어 되돌리기는 없고, 그래서 확인 창을 거친다.
+ *   두 운영자 충돌 · 서버 staff_mark 는 from 을 읽지 않는다. 그래서 누르는 순간 명단을 한 번 새로 받아 이 화면이 본 상태(st · raw · 줄 id)와 같을 때만 보낸다. 다르면 그 행만 새 상태로 고치고 보내지 않는다.
+ *   같은 사람의 줄이 둘이면(첫 상담을 마친 사람의 두 번째 상담) 서버 staff_mark 가 고르는 줄과 같은 규칙(진행 중 → 입장한 줄 → 나머지)으로 버튼을 그 줄에만 둔다. 옛 서버는 시간 순 첫 줄을 골라 「이미 입장」(dup)으로 답한다 · 그러면 성공으로 그리지 않고 명단을 다시 받는다.
  * 노쇼 표시는 담당표시 시트 한 줄이고 원장(신청 · 상담 · 커피챗 시트)은 그대로다. 좌석 · 슬롯 반환은 각 신청 화면에서. */
 var ROS_PROGS=[{v:"dap",n:"1F DAP 과제상담"},{v:"cchat",n:"18F 커피챗"}];
 var ROS={ prog:"dap", f:"all" };
+var ROS_LAB={ "in":"입장 처리", noshow:"노쇼 표시", clear:"노쇼 해제" };
+var ROS_RAW_IN={ dap:"체크인", cchat:"참석" };
 function rosName(p){ var x=ROS_PROGS.filter(function(o){ return o.v===p; })[0]; return x?x.n:p; }
 function rosData(p){ return ST.data["ros_"+(p||ROS.prog)]; }
 function rosProg(v){ ROS.prog=v; ROS.f="all"; ST.q=""; load(); render(); }
 function rosFilt(v){ ROS.f=v; render(); }
 function rosCount(rows){ var n={ all:rows.length, "신청":0, "입장":0, "노쇼":0 }; rows.forEach(function(r){ n[r.st]=(n[r.st]||0)+1; }); return n; }
+/* 서버 staffMark_ 가 같은 사람의 여러 줄에서 고르는 순서 · 진행 중(신청 · 승인 · 대기 · 매칭) → 입장한 줄(체크인 · 참석) → 나머지 · 같으면 앞 줄 */
+function rosRk(r){ var w=r.raw; return w==="신청"||w==="승인"||w==="대기"||w==="매칭"?0:w==="체크인"||w==="참석"?1:2; }
+function rosPick(rows, emp){ var e=normE(emp), cur=null; (rows||[]).forEach(function(r){ if(normE(r.emp)===e&&(!cur||rosRk(r)<rosRk(cur))) cur=r; }); return cur; }
+function rosActs(p, r, rows){
+  var k=jq(r.emp);
+  if(r.st==="입장") return '<span class="cap">입장 처리됨</span>';
+  if(p==="dap"&&r.raw==="노쇼") return '<span class="cap">상담 화면에서 처리됨</span>';
+  if(rosPick(rows,r.emp)!==r) return '<span class="cap">같은 사람의 다른 줄에서 처리</span>';
+  var bin='<button class="btn sm pri" onclick="rosMark(\''+k+'\',\'in\')">입장 처리</button>';
+  return r.st==="노쇼"?bin+'<button class="btn sm" onclick="rosMark(\''+k+'\',\'clear\')">노쇼 해제</button>'
+    :bin+'<button class="btn sm danger" onclick="rosMark(\''+k+'\',\'noshow\')">노쇼 표시</button>';
+}
 function viewRoster(){
   var d=rosData(), p=ROS.prog;
   var h=chips(ROS_PROGS.map(function(o){ var x=rosData(o.v); return { v:o.v, n:o.n, c:x&&x.ok?(x.rows||[]).length:null }; }), p, "rosProg");
@@ -3002,40 +3019,81 @@ function viewRoster(){
   var th=p==="dap"?'<th>슬롯</th>':p==="cchat"?'<th>회차</th><th>테이블</th>':'';
   var th2=p==="dap"?'<th>상담 상태</th>':'<th>매칭 상태</th>';
   var cols=4+(p==="cchat"?2:p==="dap"?1:0)+1;
-  body+='<div class="wrap"><table class="tb"><tr>'+th+'<th>이름</th><th>부문</th>'+th2+'<th>담당 상태</th><th class="tdr">노쇼</th></tr>'+
-    shown.map(function(r){ var k=jq(r.emp);
+  body+='<div class="wrap"><table class="tb"><tr>'+th+'<th>이름</th><th>부문</th>'+th2+'<th>담당 상태</th><th class="tdr">처리</th></tr>'+
+    shown.map(function(r){
       var pre=p==="dap"?'<td class="n"><b>'+esc(hhmm(r.slot))+'</b></td>':p==="cchat"?'<td class="n">'+(r.round?esc(hhmm(r.round)):'<span class="cap">미정</span>')+'</td><td>'+esc(r.table||"-")+'</td>':'';
       var raw=tag(r.raw, p==="dap"?RESV_TAG[r.raw]:CC_TAG[r.raw]);
       var st=tag(r.st, r.st==="입장"?"ok":r.st==="노쇼"?"bad":"warn");
-      var act=r.st==="신청"?'<button class="btn sm danger" onclick="rosMark(\''+k+'\',\'noshow\')">노쇼 표시</button>':
-        r.st==="노쇼"?(p==="dap"&&r.raw==="노쇼"?'<span class="cap">상담 화면에서 처리됨</span>':'<button class="btn sm" onclick="rosMark(\''+k+'\',\'clear\')">노쇼 해제</button>'):'<span class="cap">-</span>';
-      return '<tr class="hv">'+pre+'<td><div class="who2">'+esc(r.name||"-")+'<small class="n">'+esc(r.emp)+'</small></div></td><td>'+esc(r.dept||"")+'</td><td>'+raw+'</td><td>'+st+'</td><td><div class="acts">'+act+'</div></td></tr>'; }).join("")+
+      return '<tr class="hv">'+pre+'<td><div class="who2">'+esc(r.name||"-")+'<small class="n">'+esc(r.emp)+'</small></div></td><td>'+esc(r.dept||"")+'</td><td>'+raw+'</td><td>'+st+'</td><td><div class="acts">'+rosActs(p,r,rows)+'</div></td></tr>'; }).join("")+
     (!shown.length?emptyRow(cols, rows.length?"조건에 맞는 사람이 없습니다.":"명단이 비어 있습니다."):"")+'</table></div>';
   if(p==="dap") body+='<div class="note mt12 row"><span style="flex:1">DAP 노쇼 <b>표시</b>는 명단 표시만 합니다. 슬롯을 비워 다른 사람이 신청하게 하려면 상담 승인 화면에서 그 신청을 「노쇼」로 바꿉니다.</span><button class="btn sm pri" onclick="goTo(\'apply\',\'resv\',\'승인\')">상담 승인 화면으로</button></div>';
-  body+=memo('<p>현장 담당자 폰의 「내 담당 명단」과 같은 목록입니다. <b>입장</b>은 담당자가 폰으로 참가자 QR을 찍을 때 바뀝니다(상담 = 「체크인」, 커피챗 = 「참석」).</p>'+
-    '<p><b>노쇼 표시</b>는 담당표시 시트에 한 줄 남기는 표시입니다. 신청 · 상담 · 커피챗 원장은 바뀌지 않습니다. 이미 입장한 사람은 노쇼로 표시할 수 없고, 노쇼로 표시된 사람이 나중에 입장하면 표시가 자동으로 풀립니다.</p>'+
-    '<p>DAP 상담을 상담 승인 화면에서 「노쇼」로 바꾼 경우(원장 노쇼)는 여기서 해제하지 않습니다. 상담 승인 화면의 되돌리기를 씁니다.</p>');
+  body+=memo('<p><b>입장 처리</b>는 참가자 폰이 꺼졌거나 QR을 못 찍을 때 운영자가 대신 누릅니다. 상담은 「체크인」, 커피챗은 「참석」으로 바뀌고 스탬프 03 「프로그램 참여」가 적립됩니다(1인 1회). 입장은 콘솔에서 되돌릴 수 없어 누르기 전에 확인 창이 뜹니다. 참가자가 폰으로 QR을 찍어도 같은 결과입니다.</p>'+
+    '<p><b>노쇼 표시</b>는 담당표시 시트에 한 줄 남기는 표시입니다. 신청 · 상담 · 커피챗 원장은 바뀌지 않습니다. 이미 입장한 사람은 노쇼로 표시할 수 없고, 노쇼로 표시된 사람이 입장하면 표시가 자동으로 풀립니다(입장과 노쇼가 함께 남지 않습니다).</p>'+
+    '<p>같은 사람이 상담을 두 번 잡았으면(첫 상담을 마친 뒤 두 번째) 진행 중인 줄에만 버튼이 있습니다. 두 운영자가 같은 사람을 동시에 누르면, 나중에 누른 쪽은 「그 사이 바뀌었습니다」로 멈추고 그 행만 새 상태로 바뀝니다.</p>'+
+    '<p>DAP 상담을 상담 승인 화면에서 「노쇼」로 바꾼 경우(원장 노쇼)는 여기서 처리하지 않습니다. 상담 승인 화면의 되돌리기를 씁니다.</p>');
   return h+card("",rosName(p),body);
 }
-function rosRow(emp){ var d=rosData(); return ((d&&d.rows)||[]).filter(function(r){ return normE(r.emp)===normE(emp); })[0]; }
+function rosRow(emp){ var d=rosData(); return rosPick((d&&d.rows)||[], emp); }
+/* 서버가 새로 준 줄(f)의 상태를 이 화면의 그 행(r)에 옮긴다 · 이 행만 */
+function rosSync(r, f){ r.st=f.st; r.raw=f.raw; }
+function rosWho(p, r){ return esc(r.name||"-")+'<span>사번 '+esc(r.emp)+' · '+esc(rosName(p))+(r.slot?' · 슬롯 '+esc(hhmm(r.slot)):"")+(r.round?' · '+esc(hhmm(r.round))+' '+esc(r.table||""):"")+' · 지금 '+esc(r.raw||"")+(r.st==="노쇼"?' · 노쇼 표시됨':"")+'</span>'; }
+/* 입장 · 노쇼 · 해제 · 한 사람의 그 줄 하나만 바꾼다(undo = 알림의 되돌리기에서 온 호출이라 확인 창이 없다) */
 function rosMark(emp, mark, undo){
   var p=ROS.prog, r=rosRow(emp); if(!r){ toast("명단에서 찾지 못했습니다"); return; }
-  function go0(){
+  var st0=r.st, raw0=r.raw, id0=r.id||"", who=r.name||r.emp;
+  function fail(res){
+    var why0=({in:"이미 입장한 사람이라 노쇼로 표시할 수 없습니다",notfound:"명단에 없는 사번입니다 (신청이 취소됐을 수 있습니다)",param:"입력값 오류",prog:"프로그램 이름 오류",ledger_noshow:"상담 원장이 이미 노쇼라 여기서 해제할 수 없습니다. 상담 승인 화면에서 처리하세요."}[(res||{}).reason])||why(res);
+    toast("실패: "+why0);
+    if(res&&/^(notfound|taken|dup|in)$/.test(res.reason)) reload(["ros_"+p]);
+  }
+  function send(){
     call("staff_mark",{prog:p,emp:r.emp,mark:mark},function(res){
       dlgForce();
-      if(res&&res.ok){
-        var before=r.st; r.st=res.st||r.st;
-        hist(r.emp, rosName(p)+" "+(mark==="noshow"?"노쇼 표시":"노쇼 해제")+(undo?"(되돌림)":""));
-        render();
-        var msg=(r.name||r.emp)+" · "+(res.dup?"이미 "+r.st+" 상태입니다":mark==="noshow"?"노쇼로 표시했습니다":"노쇼 표시를 풀었습니다");
-        toast(msg, (!undo&&!res.dup&&before!==r.st)?{ undo:function(){ rosMark(r.emp, mark==="noshow"?"clear":"noshow", true); } }:{});
-      } else toast("실패: "+({in:"이미 입장한 사람이라 노쇼로 표시할 수 없습니다",notfound:"명단에 없는 사번입니다",param:"입력값 오류",prog:"프로그램 이름 오류",ledger_noshow:"상담 원장이 이미 노쇼라 여기서 해제할 수 없습니다. 상담 승인 화면에서 처리하세요."}[(res||{}).reason]||why(res)));
+      if(!(res&&res.ok)){ fail(res); return; }
+      /* 입장을 눌렀는데 서버가 「이미 입장」(dup)으로 답했다 · 이 화면이 본 상태는 입장이 아니었으니 성공이 아니다
+         (그 사이 다른 곳에서 처리됐거나, 같은 사람의 두 번째 줄을 옛 서버가 첫 줄로 본 것) · 명단을 다시 받는다 */
+      if(mark==="in"&&res.dup&&st0!=="입장"){ toast("처리되지 않았습니다 · "+who+" · 서버가 이 사람을 이미 입장으로 보고 있습니다. 명단을 다시 받습니다"); reload(["ros_"+p]); return; }
+      var before=r.st;
+      r.st=res.st||r.st;
+      if(mark==="in"&&r.st==="입장"){
+        r.raw=ROS_RAW_IN[p];
+        /* 신청 화면 목록도 같은 상태로(그 목록을 다음에 열 때 옛 상태가 보이지 않게) */
+        if(p==="dap"&&r.id){ ovrSet("resv:"+r.id,{status:"체크인"}); var rv=resvById(r.id); if(rv) rv.status="체크인"; }
+        if(p==="cchat"){ ovrSet("cc:"+normE(r.emp),{status:"참석"}); var cc=ccBy(r.emp); if(cc) cc.status="참석"; }
+      }
+      var newStamp=!!(res.stamp&&!res.stamp.dup);
+      hist(r.emp, rosName(p)+" "+ROS_LAB[mark]+(undo?"(되돌림)":"")+(mark==="in"&&newStamp?" · 스탬프 03 적립":""));
+      render();
+      if(mark==="in"){ toast(who+" · "+(res.dup?"이미 입장 상태입니다":"입장 처리했습니다"+(newStamp?" · 스탬프 03 적립":"")+(p==="dap"?" · 상담 체크인":" · 커피챗 참석"))); return; }
+      var msg=who+" · "+(res.dup?"이미 "+r.st+" 상태입니다":mark==="noshow"?"노쇼로 표시했습니다":"노쇼 표시를 풀었습니다");
+      toast(msg, (!undo&&!res.dup&&before!==r.st)?{ undo:function(){ rosMark(r.emp, mark==="noshow"?"clear":"noshow", true); } }:{});
+    },function(){ dlgForce(); toast("서버 응답 없음"); });
+  }
+  /* 두 운영자 충돌 방지 · 서버 staff_mark 는 from 을 읽지 않는다 · 보내기 직전에 명단을 새로 받아 이 화면이 본 상태와 같을 때만 보낸다 */
+  function go0(){
+    call("staff_roster",{prog:p},function(fr){
+      if(!(fr&&fr.ok)){ dlgForce(); toast("실패: "+why(fr)); return; }
+      var f=rosPick(fr.rows, r.emp);
+      if(!f){ dlgForce(); toast("명단에서 사라졌습니다 · "+who+" · 다른 곳에서 취소됐을 수 있습니다. 명단을 다시 받습니다"); reload(["ros_"+p]); return; }
+      if(f.st!==st0||f.raw!==raw0||(id0&&(f.id||"")!==id0)){
+        dlgForce();
+        if(!id0||(f.id||"")===id0){ rosSync(r, f); render(); toast("그 사이 다른 곳에서 바뀌었습니다 · "+who+" · 지금 「"+(f.st==="신청"?f.raw:f.st+" · "+f.raw)+"」 · 다시 확인하세요"); }
+        else { toast("그 사이 다른 곳에서 바뀌었습니다 · "+who+" · 명단을 다시 받습니다"); reload(["ros_"+p]); }
+        return;
+      }
+      send();
     },function(){ dlgForce(); toast("서버 응답 없음"); });
   }
   if(undo) return go0();
+  if(mark==="in"){
+    dialog({ t:"입장 처리할까요?",
+      s:(p==="dap"?"상담을 「체크인」으로 바꾸고":"커피챗을 「참석」으로 바꾸고")+" 스탬프 03 「프로그램 참여」를 적립합니다."+(r.st==="노쇼"?" 노쇼 표시는 풀립니다.":"")+"<br>참가자 앱에 바로 반영되고, 콘솔에서는 <b>되돌릴 수 없습니다</b>. 참가자가 눈앞에 있는지 확인한 뒤 누르세요.",
+      who:rosWho(p,r), ok:"입장 처리", onOk:go0 });
+    return;
+  }
   dialog({ t:mark==="noshow"?"노쇼로 표시할까요?":"노쇼 표시를 풀까요?",
     s:mark==="noshow"?"담당표시 시트에 「노쇼」 한 줄을 남깁니다. 신청 원장은 바뀌지 않고 좌석 · 슬롯도 돌려주지 않습니다. 처리 뒤 7초 동안 <b>되돌리기</b>가 뜹니다.":"담당 상태를 「신청」으로 되돌립니다. 원장은 그대로입니다.",
-    who:esc(r.name||"-")+'<span>사번 '+esc(r.emp)+' · '+esc(rosName(p))+(r.slot?' · 슬롯 '+esc(hhmm(r.slot)):"")+(r.round?' · '+esc(hhmm(r.round))+' '+esc(r.table||""):"")+'</span>',
+    who:rosWho(p,r),
     ok:mark==="noshow"?"노쇼 표시":"해제", danger:mark==="noshow", onOk:go0 });
 }
 
