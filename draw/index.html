@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lucky Draw · AX Festival 2026</title>
+<meta name="robots" content="noindex">
+<!-- 17F 대강당 Outro 경품 추첨 송출 화면 · 16:9 · 운영자 노트북에서 전체 화면(F) · 조작 창(P)
+     모든 자산이 이 폴더 안에 있다(서체 · 홍보부 모션 엔진 · 워드마크 · 소리는 합성) · 인터넷이 끊겨도 데모·추첨이 돈다 -->
+<link rel="icon" href="../icons/icon-192.png">
+<style>
+  @font-face { font-family: "AXP"; src: url("assets/PretendardVariable.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+  :root {
+    --o: #FF7E31; --hi: #FF963E; --pu: #E6CCFF; --o50: #FFB284; --o25: #FFD8C1;
+    --ink: #000; --txt: rgba(255,255,255,.86); --sub: rgba(255,255,255,.58); --faint: rgba(255,255,255,.34);
+    --brand: var(--o);
+    --f: "AXP", "Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; cursor: none; }
+  body { font-family: var(--f); color: var(--txt); word-break: keep-all; -webkit-font-smoothing: antialiased; }
+  body.st-orange { --brand: #fff; --txt: #fff; --sub: rgba(255,255,255,.82); --faint: rgba(255,255,255,.6); }
+  #cv { position: fixed; left: 0; top: 0; display: block; }
+  .vid { position: fixed; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; opacity: 0; pointer-events: none; object-fit: cover; }
+  .vid.blend { mix-blend-mode: screen; }
+  body.ctl .vid { display: none; }
+  /* 1920×1080 논리 무대 · JS 가 화면에 맞춰 배율만 준다 · 글자는 제자리 · 투명도로만 나타난다(design.md §4 원칙 1) */
+  #frame { position: fixed; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; pointer-events: none; }
+  .tab { font-variant-numeric: tabular-nums; }
+
+  #lock { position: absolute; left: 72px; top: 58px; right: 72px; display: flex; justify-content: space-between; align-items: flex-start; }
+  #wm { width: 190px; color: var(--brand); }
+  #wm svg { display: block; width: 100%; height: auto; }
+  #slg { font-size: 30px; font-weight: 500; color: var(--brand); letter-spacing: -0.01em; }
+
+  .panel { position: absolute; left: 960px; top: 0; width: 890px; height: 1080px; opacity: 0; }
+  .full { position: absolute; inset: 0; opacity: 0; }
+  .eye { font-size: 42px; font-weight: 500; color: var(--brand); letter-spacing: -0.005em; }
+  .title { font-size: 92px; line-height: 1.22; font-weight: 600; color: var(--brand); letter-spacing: -0.01em; }
+  .meta { font-size: 38px; line-height: 1.5; font-weight: 500; color: var(--sub); }
+
+  #pIdle .eye { position: absolute; top: 322px; }
+  #pIdle .title { position: absolute; top: 388px; font-size: 132px; }
+  #pIdle .meta { position: absolute; top: 590px; }
+
+  #pCheck .eye { position: absolute; top: 250px; }
+  #pCheck .big { position: absolute; top: 300px; display: flex; align-items: baseline; gap: 26px; color: var(--o); }
+  #cBig { font-size: 250px; line-height: 1; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  #pCheck .big em { font-style: normal; font-size: 56px; font-weight: 600; }
+  #cMeta { position: absolute; top: 590px; font-size: 40px; font-weight: 600; color: var(--txt); }
+  #ticker { position: absolute; top: 672px; width: 860px; }
+  .trow { display: flex; align-items: center; gap: 14px; height: 72px; font-size: 34px; color: var(--sub); }
+  .trow:first-child { color: var(--txt); }
+  .trow:nth-child(3) { opacity: .66; } .trow:nth-child(4) { opacity: .36; }
+  .trow b { font-weight: 600; min-width: 150px; }
+  .chip { display: inline-block; padding: 6px 18px; border-radius: 999px; background: rgba(255,126,49,.16); color: var(--hi); font-size: 30px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  body.closed #pCheck .big { color: var(--o); }
+
+  #pMix .eye { position: absolute; top: 250px; }
+  #pMix .title { position: absolute; top: 306px; }
+  #mMeta { position: absolute; top: 440px; font-size: 40px; font-weight: 600; color: var(--txt); }
+  #mList { position: absolute; top: 530px; width: 820px; }
+  .wrow { display: flex; align-items: center; gap: 28px; height: 84px; border-top: 1px solid rgba(255,255,255,.12); font-size: 44px; font-weight: 600; color: var(--txt); }
+  .wrow .no { color: var(--o); font-variant-numeric: tabular-nums; min-width: 140px; }
+  #mCount { position: absolute; top: 960px; font-size: 30px; color: var(--faint); font-variant-numeric: tabular-nums; }
+
+  #pReveal { text-align: center; }
+  #rEye { position: absolute; left: 0; right: 0; top: 150px; font-size: 44px; font-weight: 600; color: #fff; }
+  #rNo { position: absolute; left: 0; right: 0; top: 214px; font-size: 30px; font-weight: 500; color: rgba(255,255,255,.8); }
+  #rName { position: absolute; left: 0; right: 0; top: 700px; font-size: 118px; font-weight: 700; color: #fff; letter-spacing: 0.02em; }
+  #rName small { display: block; font-size: 40px; font-weight: 500; margin-top: 6px; letter-spacing: 0; }
+  #rPrize { position: absolute; left: 0; right: 0; top: 872px; font-size: 54px; font-weight: 600; color: #fff; }
+  #rAbs { position: absolute; left: 0; right: 0; top: 700px; font-size: 96px; font-weight: 700; color: #fff; opacity: 0; }
+
+  #pCard .eye { position: absolute; top: 322px; color: #fff; }
+  #pCard .title { position: absolute; top: 388px; font-size: 150px; color: #fff; }
+  #pCard .meta { position: absolute; top: 600px; color: #fff; font-size: 48px; font-weight: 600; }
+
+  #pBoard .eye { position: absolute; top: 170px; }
+  #pBoard .title { position: absolute; top: 226px; }
+  #bList { position: absolute; top: 380px; width: 860px; --rows: 5; }
+  .brow { display: grid; grid-template-columns: 170px 1fr auto; align-items: center; height: calc(560px / max(5, var(--rows))); max-height: 104px; border-top: 1px solid rgba(255,255,255,.12);
+          font-size: calc(min(46px, 560px / var(--rows) * .46)); font-weight: 600; color: var(--txt); }
+  .brow .no { color: var(--o); font-variant-numeric: tabular-nums; }
+  .brow .pz { color: var(--sub); font-weight: 500; font-size: .78em; }
+
+  #pEnd .eye { position: absolute; top: 330px; }
+  #pEnd .title { position: absolute; top: 396px; font-size: 128px; font-weight: 500; }
+  #pEnd .meta { position: absolute; top: 560px; font-size: 50px; color: var(--o); font-weight: 600; }
+
+  #demoMark { position: absolute; left: 72px; bottom: 44px; font-size: 22px; font-weight: 600; color: var(--faint); display: none; letter-spacing: .02em; }
+  body.demo #demoMark { display: block; }
+  #toast { position: absolute; right: 72px; bottom: 40px; font-size: 24px; font-weight: 600; color: var(--faint); opacity: 0; }
+  #toast.soft { color: var(--sub); }
+  #hud { position: absolute; left: 72px; bottom: 80px; font-size: 22px; color: #9f9; font-family: Consolas, monospace; display: none; }
+  body.hud-on #hud { display: block; }
+
+  #help { position: absolute; left: 50%; top: 50%; width: 1040px; transform: translate(-50%, -50%); background: rgba(12,12,12,.94); border-radius: 36px; padding: 48px 56px; display: none; color: #fff; }
+  body.help-on #help { display: block; }
+  #help h2 { font-size: 40px; font-weight: 600; color: var(--o); margin-bottom: 24px; }
+  #help table { width: 100%; border-collapse: collapse; font-size: 28px; }
+  #help td { padding: 9px 0; border-top: 1px solid rgba(255,255,255,.1); vertical-align: top; }
+  #help td:first-child { width: 270px; color: var(--hi); font-weight: 600; }
+  #help p { margin-top: 20px; font-size: 22px; color: rgba(255,255,255,.55); }
+
+  /* 조작 창 모드 (#control) · 운영자 노트북 화면 */
+  body.ctl { cursor: auto; overflow: auto; background: #F2F4F6; color: #191F28; }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<!-- 힉스필드 AI 영상 2편(코드로 못 만드는 실사 질감만) · 인트로 스팅 · 당첨 순간 점 폭발(screen 합성) · 파일이 없어도 화면은 돈다 -->
+<video id="vIntro" class="vid" src="assets/intro.mp4" muted playsinline preload="auto"></video>
+<video id="vBurst" class="vid blend" src="assets/burst.mp4" muted playsinline preload="auto"></video>
+<div id="frame">
+  <div id="lock"><div id="wm"></div><div id="slg">ME to WE</div></div>
+
+  <section id="pIdle" class="panel">
+    <p class="eye">Lucky Draw</p>
+    <h1 class="title">경품 추첨</h1>
+    <div class="meta" id="idleMeta"></div>
+  </section>
+
+  <section id="pCheck" class="panel">
+    <p class="eye" id="cEye">Check-in</p>
+    <div class="big"><span id="cBig">0</span><em>개의 공</em></div>
+    <p id="cMeta"></p>
+    <div id="ticker"></div>
+  </section>
+
+  <section id="pMix" class="panel">
+    <p class="eye" id="mEye"></p>
+    <h2 class="title" id="mTitle"></h2>
+    <p id="mMeta"></p>
+    <div id="mList"></div>
+    <p id="mCount"></p>
+  </section>
+
+  <section id="pReveal" class="full">
+    <p id="rEye"></p>
+    <p id="rNo">응모 번호</p>
+    <p id="rName"></p>
+    <p id="rAbs">부재 · 다시 추첨합니다</p>
+    <p id="rPrize"></p>
+  </section>
+
+  <section id="pCard" class="panel">
+    <p class="eye" id="kEye"></p>
+    <h2 class="title" id="kTitle"></h2>
+    <p class="meta" id="kMeta"></p>
+  </section>
+
+  <section id="pBoard" class="panel">
+    <p class="eye">Winners.</p>
+    <h2 class="title">오늘의 당첨</h2>
+    <div id="bList"></div>
+  </section>
+
+  <section id="pEnd" class="panel">
+    <p class="eye">Thank you.</p>
+    <h2 class="title">ME to WE :</h2>
+    <p class="meta">나의 업무 혁신, 우리 회사의 AX가 되다</p>
+  </section>
+
+  <div id="demoMark">DEMO · 가짜 참가자 데이터</div>
+  <div id="toast"></div>
+  <div id="hud"></div>
+
+  <div id="help">
+    <h2>조작표</h2>
+    <table>
+      <tr><td>Space · Enter · → · PageDown</td><td>다음 단계 (체크인 시작 → 마감 → 라운드 → 섞기 → 추첨 → 확정)</td></tr>
+      <tr><td>C 두 번</td><td>체크인 마감</td></tr>
+      <tr><td>R 두 번</td><td>당첨자 부재 · 다시 추첨 (공개 화면에서)</td></tr>
+      <tr><td>U 두 번</td><td>마지막 당첨 취소 (공을 통에 되돌림)</td></tr>
+      <tr><td>1 ~ 9</td><td>라운드 바로 가기 (섞는 중에만)</td></tr>
+      <tr><td>V</td><td>인트로 영상 (대기 화면에서)</td></tr>
+      <tr><td>E 두 번 · I 두 번</td><td>끝 화면(ME to WE) · 대기 화면</td></tr>
+      <tr><td>P</td><td>조작 창 열기 (경품 표 · 데이터 · 기록)</td></tr>
+      <tr><td>F · M · G · H</td><td>전체 화면 · 소리 켜기/끄기 · fps 표시 · 이 표</td></tr>
+      <tr><td>D · A (데모)</td><td>10명 체크인 · 자동 체크인 켜기/끄기</td></tr>
+    </table>
+    <p>당첨은 공 단위 균등 무작위(암호 난수)로 버튼을 누르는 순간 정해지고 곧바로 저장됩니다. 새로고침해도 같은 결과로 돌아옵니다. 연속으로 눌러도 연출이 끝날 때까지 다음 입력을 받지 않습니다.</p>
+  </div>
+</div>
+<script src="../assets/server.js"></script>
+<script src="assets/axf_engine.js"></script>
+<script src="assets/wordmark.js"></script>
+<script src="assets/sfx.js"></script>
+<script src="assets/draw.js"></script>
+<script src="assets/control.js"></script>
+</body>
+</html>
