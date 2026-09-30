@@ -792,7 +792,8 @@
   /* v4.73 (260930 사용자 결정) 엘리베이터 혼잡 + 계단 스위치 ON 이면 칸 자체가 계단 스탬프 화면으로 가는 버튼 · 「계단 이용」 + 셰브론 한 줄 */
   .cstrip2 button.cc { display: block; width: 100%; border: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; }
   .cstrip2 .go { margin: var(--ax-space-4) 0 0; font: var(--ax-type-caption); font-weight: 700; color: var(--ax-color-brandText); white-space: nowrap; }
-/* v4.76 웹 푸시 · 혼잡 「풀리면 알림」 · 알림 안내 시트(예시 카드 · 작은 글씨 · 아이폰 단계) · 설정 › 알림 · 홈 화면 앱 첫 화면 카드 */
+/* v4.76 웹 푸시 · 혼잡 「풀리면 알림」 · 알림 안내 시트(예시 카드 · 작은 글씨 · 아이폰 단계) · 설정 › 알림 · 홈 화면 앱 첫 화면 카드
+   v4.76d 클래스 이름을 axs-psteps · axs-psets · axs-pset 으로 나눴다(v4.76 이 기존 프로그램 행 axs-prow · 가이드 단계 axs-steps 와 같은 이름을 써서 프로그램 목록 행이 가운데로 몰렸다) */
 .cwatch { display: flex; flex-wrap: wrap; gap: var(--ax-space-4) var(--ax-space-16); margin-top: var(--ax-space-8); }
 .cwatch .cw-go { font: var(--ax-type-t7); font-weight: 700; color: var(--ax-color-brandText); min-height: 44px; }
 .cwatch .cw-on { margin: 0; min-height: 44px; display: flex; align-items: center; font: var(--ax-type-t7); color: var(--ax-color-muted); }
@@ -802,19 +803,21 @@
 .axs-pex b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
 .axs-pex span { font: var(--ax-type-t7); color: var(--ax-color-body); }
 .axs-pnote { margin: var(--ax-space-8) 0 0; font: var(--ax-type-caption); color: var(--ax-color-muted); }
-.axs-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ax-space-12); }
-.axs-steps li { display: flex; gap: var(--ax-space-12); align-items: center; font: var(--ax-type-t6); color: var(--ax-color-ink); }
-.axs-steps .n { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t7); font-weight: 700; }
-.axs-prows { display: flex; flex-direction: column; border-radius: var(--ax-radius-16); background: var(--ax-color-canvas); }
-.axs-prow { display: flex; justify-content: space-between; align-items: center; gap: var(--ax-space-12); min-height: 52px; padding: 0 var(--ax-space-16); font: var(--ax-type-t6); color: var(--ax-color-ink); }
-.axs-prow b { font: var(--ax-type-t6-strong); color: var(--ax-color-muted); }
-button.axs-prow { width: 100%; border: 0; background: none; text-align: left; cursor: pointer; }
+.axs-psteps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ax-space-12); }
+.axs-psteps li { display: flex; gap: var(--ax-space-12); align-items: center; font: var(--ax-type-t6); color: var(--ax-color-ink); }
+.axs-psteps .n { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t7); font-weight: 700; }
+.axs-psets { display: flex; flex-direction: column; border-radius: var(--ax-radius-16); background: var(--ax-color-canvas); }
+.axs-pset { display: flex; justify-content: space-between; align-items: center; gap: var(--ax-space-12); min-height: 52px; padding: 0 var(--ax-space-16); font: var(--ax-type-t6); color: var(--ax-color-ink); }
+.axs-pset b { font: var(--ax-type-t6-strong); color: var(--ax-color-muted); }
+button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cursor: pointer; }
 .axs-ptgl.on b { color: var(--ax-color-brandText); }
 .axs-flrs { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: var(--ax-space-8); margin-top: var(--ax-space-8); }
 .axs-flr { min-height: 44px; border: 0; border-radius: var(--ax-radius-8); background: var(--ax-color-canvas); color: var(--ax-color-body); font: var(--ax-type-t7); cursor: pointer; }
 .axs-flr.on { background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font-weight: 700; }
 .axs-sacard { display: flex; flex-direction: column; gap: var(--ax-space-4); padding: var(--ax-space-12) var(--ax-space-16); border-radius: var(--ax-radius-16); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t7); }
 .axs-sacard b { font: var(--ax-type-t6-strong); }
+/* v4.76d 위 display 규칙이 hidden 속성을 이겨서 「홈 화면 앱으로 열렸어요」 카드가 모든 로그인 화면에, 설정 시트 「알림」 줄이 알림 없는 서버에서도 보였다 */
+.axs-sacard[hidden], #fsSheet .fs-admin[hidden] { display: none; }
   .cstrip .row4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--ax-space-8); }
   .cstrip .fl { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .cstrip .bar { height: 6px; margin-top: var(--ax-space-4); border-radius: 3px; background: var(--ax-color-canvas); overflow: hidden; }
@@ -7740,7 +7743,7 @@ function pushAllow() {
 /* 아이폰 사파리 탭 · 알림은 홈 화면 앱에서만(iOS 16.4 · 설치 뒤 로그인을 다시 한다) */
 function pushIosSheet() {
   sheetOpen({ id: "pushios", title: "알림은 홈 화면 앱에서 받아요",
-    body: '<ol class="axs-steps"><li><span class="n">1</span>아래 공유 버튼을 누르세요</li><li><span class="n">2</span>홈 화면에 추가를 고르세요</li><li><span class="n">3</span>AX Festival 아이콘으로 열기</li></ol>' +
+    body: '<ol class="axs-psteps"><li><span class="n">1</span>아래 공유 버튼을 누르세요</li><li><span class="n">2</span>홈 화면에 추가를 고르세요</li><li><span class="n">3</span>AX Festival 아이콘으로 열기</li></ol>' +
       '<p class="axs-pnote">사번 · 이름 · 비밀번호 4자리로 다시 입장해요</p><p class="axs-pnote">Safari에서만 추가할 수 있어요. 다른 앱 안에서 열었다면 Safari로 열어 주세요</p>',
     go: "sheetClose()", goLbl: "확인" });
 }
@@ -7770,14 +7773,14 @@ function pushState() {
   return { st: "알림 꺼짐", act: "on" };
 }
 function pushTgl(nm, k, on) {
-  return '<button type="button" class="axs-prow axs-ptgl' + (on ? " on" : "") + '" role="switch" aria-checked="' + on + '" onclick="pushPrefSet(\'' + k + "', " + (on ? 0 : 1) + ')"><span>' + nm + "</span><b>" + (on ? "켜짐" : "꺼짐") + "</b></button>";
+  return '<button type="button" class="axs-pset axs-ptgl' + (on ? " on" : "") + '" role="switch" aria-checked="' + on + '" onclick="pushPrefSet(\'' + k + "', " + (on ? 0 : 1) + ')"><span>' + nm + "</span><b>" + (on ? "켜짐" : "꺼짐") + "</b></button>";
 }
 function pushSetPaint() {
   var s = pushState(), me = s.me || {}, rows = "";
   if (s.on) {
     var fl = Number(me.floor) || 0, fls = "";
     for (var f = 3; f <= 15; f++) fls += '<button type="button" class="axs-flr' + (f === fl ? " on" : "") + '" aria-pressed="' + (f === fl) + '" onclick="pushPrefSet(\'floor\', ' + f + ')">' + f + "층</button>";
-    rows = '<div class="axs-prows"><div class="axs-prow"><span>내 차례 · 매칭</span><b>켜짐</b></div>' + pushTgl("공지 · 추첨", "pub", me.pub !== 0) + pushTgl("관람 시간", "visit", me.visit === 1) + "</div>" +
+    rows = '<div class="axs-psets"><div class="axs-pset"><span>내 차례 · 매칭</span><b>켜짐</b></div>' + pushTgl("공지 · 추첨", "pub", me.pub !== 0) + pushTgl("관람 시간", "visit", me.visit === 1) + "</div>" +
       (me.visit === 1 ? '<p class="axs-pnote">근무 층</p><div class="axs-flrs">' + fls + "</div>" : "");
   }
   var go = s.act === "on" ? "pushSetOn()" : s.act === "ios" ? "sheetClose(true); pushIosSheet()" : s.act === "inapp" ? "sheetClose(true); pushInappSheet()" : "sheetClose()";
