@@ -789,6 +789,9 @@
   .cstrip2 .cc.jam .st { font: var(--ax-type-t6-strong); color: var(--ax-color-error); }
   .cstrip2 .cc.pred { background: var(--ax-color-brandSoft); }
   .cstrip2 .cc.pred .st { font: var(--ax-type-t6-strong); color: var(--ax-color-brandText); }
+  /* v4.73 (260930 사용자 결정) 엘리베이터 혼잡 + 계단 스위치 ON 이면 칸 자체가 계단 스탬프 화면으로 가는 버튼 · 「계단 이용」 + 셰브론 한 줄 */
+  .cstrip2 button.cc { display: block; width: 100%; border: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+  .cstrip2 .go { margin: var(--ax-space-4) 0 0; font: var(--ax-type-caption); font-weight: 700; color: var(--ax-color-brandText); white-space: nowrap; }
   .cstrip .row4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--ax-space-8); }
   .cstrip .fl { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .cstrip .bar { height: 6px; margin-top: var(--ax-space-4); border-radius: 3px; background: var(--ax-color-canvas); overflow: hidden; }
@@ -5346,21 +5349,16 @@ function crowdCell(k) {
   if (k === "e" && c.p) return { cls: " pred", st: "예상", sub: crowdWin(c.p) };
   return { cls: "", st: "제보 없음", sub: "" };
 }
+/* v4.73 (260930 사용자 결정) 엘리베이터 혼잡을 홈 맨 위 카드로 올리지 않는다 · 혼잡 표시는 이 2칸에서만.
+   「계단 이용」 + 셰브론 = 엘리베이터 칸이 혼잡(제보)이고 설정 혼잡_계단 ON(총무 피난계단 승인 뒤 · sync crowd.st)일 때만 · 칸을 누르면 계단 스탬프 화면(stairOpen) · OFF 면 누를 수 없는 표시 그대로 */
 function crowdStripHtml() {
+  var st = crowdGet() && crowdGet().st ? 1 : 0;
   return '<div class="sect"><b>혼잡 제보</b></div>' +
     '<div class="cstrip2">' + [["l", "1F 로비"], ["e", "엘리베이터"]].map(function (t) {
-      var x = crowdCell(t[0]);
-      return '<div class="cc' + x.cls + '"><p class="nm">' + t[1] + '</p><p class="st">' + x.st + "</p>" + (x.sub ? '<p class="sb">' + esc(x.sub) + "</p>" : "") + "</div>";
+      var x = crowdCell(t[0]), go = t[0] === "e" && x.cls === " jam" && st;
+      var inner = '<p class="nm">' + t[1] + '</p><p class="st">' + x.st + "</p>" + (x.sub ? '<p class="sb">' + esc(x.sub) + "</p>" : "") + (go ? '<p class="go">' + lnkChev("계단 이용") + "</p>" : "");
+      return go ? '<button type="button" class="cc' + x.cls + '" onclick="stairOpen()" aria-label="엘리베이터 혼잡 · 계단 이용">' + inner + "</button>" : '<div class="cc' + x.cls + '">' + inner + "</div>";
     }).join("") + "</div>";
-}
-/* 엘리베이터 혼잡(제보)일 때만 홈 위 카드 한 장 · 예상 · 로비는 올리지 않는다 · 「계단 이용」은 설정 혼잡_계단 ON(총무 피난계단 승인 뒤)일 때만 */
-function homeCrowdHtml() {
-  var j = crowdJam("e"), c = crowdGet() || {};
-  if (!j) return "";
-  var inner = '<span class="axs-tx"><span class="axs-chiprow"><span class="axs-chip bad">혼잡</span></span>' +
-    '<span class="ax-card-title">엘리베이터</span><span class="ax-meta">' + crowdHm(j.at) + " 제보</span></span>";
-  return c.st ? '<button type="button" class="ax-destination axs-dest axs-crowdtop" onclick="stairOpen()">' + inner + '<span class="ax-destination-action">계단 이용</span></button>'
-    : '<div class="ax-destination axs-dest axs-crowdtop">' + inner + "</div>";
 }
 
 /* ════════════════ 일정 탭 행 (v3.5) · 좌측 시간 레일 + 우측 제목 · 부가 설명은 공용 아코디언 접힘 ════════════════ */
@@ -6292,12 +6290,11 @@ var Views = {
       betaBannerHtml() +   /* v4.55 클로즈 베타 배너 · 맨 위 흰 줄 · 값 없으면 빈 문자열 */
       homeNoticeHtml() +
       photoAlertHtml() +
-      homeCrowdHtml() +   /* v4.71 엘리베이터 혼잡 제보 · 광고판 바로 위 · 최대 1장 */
       billboardHtml() +
       '<section class="axs-sec axs-railgo" onclick="if (!event.target.closest(\'.mk, .sect span\')) App.go(\'passport\')">' + myCouponHtml() + "</section>" +   /* 레일 면을 누르면 나의 참여 › 스탬프 · 마커는 v4.02 대로 룰렛·응모 안내 */
       artBannerHtml() +
       '<section class="axs-sec">' + myScheduleHtml() + "</section>" +
-      '<section class="axs-sec">' + crowdStripHtml() + "</section>" +   /* v4.62 층별 혼잡도 복원(260929) · v4.71 혼잡 제보 2칸 */
+      '<section class="axs-sec">' + crowdStripHtml() + "</section>" +   /* v4.62 층별 혼잡도 복원(260929) · v4.71 혼잡 제보 2칸 · v4.73 엘리베이터 혼잡은 홈 맨 위 카드 없이 이 2칸에서만 */
       "</div>";
   },
 
