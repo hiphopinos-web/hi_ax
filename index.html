@@ -792,6 +792,29 @@
   /* v4.73 (260930 사용자 결정) 엘리베이터 혼잡 + 계단 스위치 ON 이면 칸 자체가 계단 스탬프 화면으로 가는 버튼 · 「계단 이용」 + 셰브론 한 줄 */
   .cstrip2 button.cc { display: block; width: 100%; border: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; }
   .cstrip2 .go { margin: var(--ax-space-4) 0 0; font: var(--ax-type-caption); font-weight: 700; color: var(--ax-color-brandText); white-space: nowrap; }
+/* v4.76 웹 푸시 · 혼잡 「풀리면 알림」 · 알림 안내 시트(예시 카드 · 작은 글씨 · 아이폰 단계) · 설정 › 알림 · 홈 화면 앱 첫 화면 카드 */
+.cwatch { display: flex; flex-wrap: wrap; gap: var(--ax-space-4) var(--ax-space-16); margin-top: var(--ax-space-8); }
+.cwatch .cw-go { font: var(--ax-type-t7); font-weight: 700; color: var(--ax-color-brandText); min-height: 44px; }
+.cwatch .cw-on { margin: 0; min-height: 44px; display: flex; align-items: center; font: var(--ax-type-t7); color: var(--ax-color-muted); }
+.axs-pex { display: flex; gap: var(--ax-space-12); align-items: center; padding: var(--ax-space-12) var(--ax-space-16); border-radius: var(--ax-radius-16); background: var(--ax-color-canvas); }
+.axs-pex img { flex: none; width: 40px; height: 40px; border-radius: var(--ax-radius-8); }
+.axs-pex div { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.axs-pex b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+.axs-pex span { font: var(--ax-type-t7); color: var(--ax-color-body); }
+.axs-pnote { margin: var(--ax-space-8) 0 0; font: var(--ax-type-caption); color: var(--ax-color-muted); }
+.axs-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ax-space-12); }
+.axs-steps li { display: flex; gap: var(--ax-space-12); align-items: center; font: var(--ax-type-t6); color: var(--ax-color-ink); }
+.axs-steps .n { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t7); font-weight: 700; }
+.axs-prows { display: flex; flex-direction: column; border-radius: var(--ax-radius-16); background: var(--ax-color-canvas); }
+.axs-prow { display: flex; justify-content: space-between; align-items: center; gap: var(--ax-space-12); min-height: 52px; padding: 0 var(--ax-space-16); font: var(--ax-type-t6); color: var(--ax-color-ink); }
+.axs-prow b { font: var(--ax-type-t6-strong); color: var(--ax-color-muted); }
+button.axs-prow { width: 100%; border: 0; background: none; text-align: left; cursor: pointer; }
+.axs-ptgl.on b { color: var(--ax-color-brandText); }
+.axs-flrs { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: var(--ax-space-8); margin-top: var(--ax-space-8); }
+.axs-flr { min-height: 44px; border: 0; border-radius: var(--ax-radius-8); background: var(--ax-color-canvas); color: var(--ax-color-body); font: var(--ax-type-t7); cursor: pointer; }
+.axs-flr.on { background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font-weight: 700; }
+.axs-sacard { display: flex; flex-direction: column; gap: var(--ax-space-4); padding: var(--ax-space-12) var(--ax-space-16); border-radius: var(--ax-radius-16); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t7); }
+.axs-sacard b { font: var(--ax-type-t6-strong); }
   .cstrip .row4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--ax-space-8); }
   .cstrip .fl { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .cstrip .bar { height: 6px; margin-top: var(--ax-space-4); border-radius: 3px; background: var(--ax-color-canvas); overflow: hidden; }
@@ -2062,6 +2085,7 @@
           <h1 class="ax-section-title">ME to WE<br>나의 업무 혁신, 우리 회사의 AX가 되다</h1>
           <p class="ax-meta">10월 26일 월요일 · 광화문 본사</p>
         </div>
+        <div id="saCard" class="axs-sacard" hidden><b>홈 화면 앱으로 열렸어요</b><span>사번 · 이름 · 비밀번호 4자리로 한 번 더 입장해 주세요</span></div>
         <div class="ax-fields">
           <label class="ax-sr-only" for="empId">사번</label>
           <input class="ax-field" id="empId" inputmode="numeric" pattern="[0-9]*" placeholder="사번을 입력해 주세요" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" oninput="numOnly(this, event)" data-imeend="num" aria-describedby="err">
@@ -2161,12 +2185,11 @@
   <!-- 홈 화면에 추가 · 로그인 직후 전용 단계 화면 (기기별 방법이 달라 내용은 스크립트가 채움) -->
   <div id="a2hs" hidden>
     <div class="a-wrap">
-      <p class="a-eyebrow">마지막 한 단계</p>
       <span class="a-ico"><img src="icons/icon-192.png" alt=""></span>
-      <p class="a-t">홈 화면에<br>바로가기를 만드세요</p>
-      <p class="a-s">다음부터 QR 없이 <b>아이콘 한 번</b>으로 열립니다.<br>행사 당일, 여는 속도가 곧 참여 속도예요.</p>
+      <p class="a-t">홈 화면에 추가</p>
+      <p class="a-s">다음부터 아이콘 한 번으로 열려요</p>
       <div id="a2hsBody"></div>
-      <button class="a-later" onclick="a2hsSheet(false)"><span class="axs-lk">다음에 하기 · 우선 입장<svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
+      <button class="a-later" onclick="a2hsSheet(false)"><span class="axs-lk">닫기<svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
     </div>
   </div>
 
@@ -2176,6 +2199,7 @@
       <div class="axs-mhead"><h2 class="axs-mtitle fs-t" id="fsT">설정</h2><button type="button" class="axs-x" onclick="fsSheet(false)" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></div>
       <!-- v4.71 (260930 사용자 요청) 글자 크기는 헤더 「일반 · 큰글씨」 한 곳 · 설정 시트에서 뺐다(좁은 폰도 헤더에 남긴다) -->
       <p class="fs-lb">앱</p>
+      <button class="fs-admin" id="fsPush" hidden onclick="fsSheet(false); pushSetOpen()">알림<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
       <button class="fs-admin" onclick="fsSheet(false); a2hsSheet(true)">홈 화면에 바로가기 추가<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
       <p class="fs-lb">운영</p>
       <button class="fs-admin" onclick="fsSheet(false); App.go('admin')">관리자 모드<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
@@ -3021,7 +3045,7 @@ function isStandalone() {
   } catch (e) { return false; }
 }
 function isIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
-function isInApp() { return /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\//i.test(navigator.userAgent); }
+function isInApp() { var r = visitRoute(navigator.userAgent, visitStandalone()); return r === "kakao" || r === "naver" || r === "inapp"; }   /* v4.76 판별 한 곳(visitRoute · 안드로이드 웹뷰 · 아이폰 웹뷰 포함) */
 function a2hsDismissed() {
   try { return window.localStorage.getItem("axf_a2hs") === "1"; } catch (e) { return false; }
 }
@@ -3099,10 +3123,10 @@ function a2hsSheet(on) {
     h = '<button class="a-go" onclick="a2hsInstall()">홈 화면에 바로 추가</button>' +
       '<div class="a-note" style="text-align:center">버튼을 누르면 설치창이 뜨고, &ldquo;설치&rdquo;를 누르면 끝 · 3초면 됩니다.</div>';
   } else if (isIOS()) {
-    h = '<div class="a-step"><span class="n">1</span>아래 <span class="g">↑</span> 공유 버튼을 누르세요</div>' +
-      '<div class="a-step"><span class="n">2</span>&ldquo;홈 화면에 추가&rdquo;를 선택</div>' +
-      '<div class="a-step"><span class="n">3</span>오른쪽 위 &ldquo;추가&rdquo; · 끝!</div>' +
-      '<div class="a-note" style="text-align:center">추가가 끝나면 홈 화면의 <b>AX Festival</b> 아이콘으로 여세요.</div>';
+    h = '<div class="a-step"><span class="n">1</span>아래 공유 버튼을 누르세요</div>' +
+      '<div class="a-step"><span class="n">2</span>홈 화면에 추가를 고르세요</div>' +
+      '<div class="a-step"><span class="n">3</span>AX Festival 아이콘으로 열기</div>' +
+      '<div class="a-note" style="text-align:center">사번 · 이름 · 비밀번호 4자리로 다시 입장해요</div>';   /* v4.76 레드팀 채택 2 문구 · 아이폰 홈 화면 앱은 저장소가 따로라 다시 입장한다 */
   } else {
     h = a2hsSteps().map(function (s, i) {
       return '<div class="a-step"><span class="n">' + (i + 1) + '</span>' + s[0] + "</div>";
@@ -3121,8 +3145,9 @@ function a2hsCopy() {
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(u).then(done, function () {});
   else done();
 }
-/* 260829 사용자 지시 · 입장 직후 자동 노출과 홈 카드는 폐기, 설정 시트에서만 진입한다 */
-function a2hsAuto() { return; }
+/* 260829 사용자 지시 · 입장 직후 자동 노출과 홈 카드는 폐기, 설정 시트에서만 진입한다
+   v4.76 로그인 직후 한 번 · 설치 안내가 아니라 알림(허용된 기기는 이 사번으로 다시 등록 · 홈 화면 앱으로 처음 들어온 사람에게만 「알림을 켤까요?」) */
+function a2hsAuto() { setTimeout(pushFirst, 1800); }
 
 
 var LS_KNOWN = "axf_known";
@@ -3154,14 +3179,16 @@ var STORE_DEVICE = ["vid", "a2hs", "fs", "t",
   "self_on", "self_key", "self_tok", "scan_spot", "adm_tab", "zone_sent", "roster_prog", "tyaw_tab", "tyaw_hide", "tyaw_oly_pg",
   "type_rank_*", "oly_tab", "oly_ev",
   "notices", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "wq_srv", "wq_v", "survey_agg", "photo_pub", "resv_conf", "crowd",
-  "ax_line_i", "art_demo_n", "ev_phase", "toff"];
+  "ax_line_i", "art_demo_n", "ev_phase", "toff",
+  "push_ask", "push_first"];   /* v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) */
 var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_role", "adm_tok", "dept",
   "stamps", "pp_seen", "pp_glow3", "stamp_pend", "scan_q", "stair", "checkin", "queue", "photoq", "resv", "sess_my", "att_mine", "att_tm",
   "cchat", "cchat_pref", "cchat_att", "ideas", "idea_draft", "survey_draft", "survey_done", "survey_mine", "survey_force", "noti_seen",
   "raffle_seen", "raffle_opened", "raffle_nums", "roulette_used", "roulette_open", "draw_winner",
   "wave_extra", "wq_attempts", "test_mine", "type_nick", "type_nick_edit", "type_best", "mem_seen", "ox_seen",
   "pang_best", "jump_best", "gw_best", "gw_time_best", "tt_best", "pang_cleared", "jump_cleared", "gw_cleared", "type_cleared", "tetris_cleared", "ox_cleared",
-  "oly2_best_*", "oly2_done_*", "oly_pend"];
+  "oly2_best_*", "oly2_done_*", "oly_pend",
+  "push_me", "push_ep", "crowd_watch"];   /* v4.76 내 알림 설정 · 보낸 구독 주소 · 혼잡 풀리면 알림 */
 function storeIsDevice(k) {
   k = String(k || "");
   return STORE_DEVICE.some(function (d) { return d.slice(-1) === "*" ? k.indexOf(d.slice(0, -1)) === 0 : k === d; });
@@ -3191,10 +3218,13 @@ function personClaim(emp) {
   S.put("owner", emp);
 }
 function axfLogout() {
-  personWipe(true);
-  knownClear();
-  LS_OK = false;   /* 다시 불러오기 전에 도착한 동기화 응답(beSync 의 checkin · stamps 등)이 지운 기록을 기기에 다시 쓰지 않게 · 메모리에만 남고 새로 불러오면 사라진다 */
-  location.href = location.pathname;   /* 새로 불러오므로 화면 상태(전역 변수)도 처음부터 */
+  var fin = function () {
+    personWipe(true);
+    knownClear();
+    LS_OK = false;   /* 다시 불러오기 전에 도착한 동기화 응답(beSync 의 checkin · stamps 등)이 지운 기록을 기기에 다시 쓰지 않게 · 메모리에만 남고 새로 불러오면 사라진다 */
+    location.href = location.pathname;   /* 새로 불러오므로 화면 상태(전역 변수)도 처음부터 */
+  };
+  if (typeof pushLogout === "function") pushLogout(fin); else fin();   /* v4.76 이 기기 알림 구독을 먼저 지운다(공용 폰 · 다음 사람에게 앞 사람 알림이 가지 않게 · 1.5초 안) */
 }
 
 function beStats() {
@@ -3250,6 +3280,7 @@ function fsSheet(on) {
   var box = el("fsSheet");
   if (!box) return;
   if (on) fsPaint();
+  if (on && el("fsPush")) el("fsPush").hidden = !(typeof pushReady === "function" && pushReady());   /* v4.76 알림 · 새 서버(공개키)일 때만 */
   box.hidden = !on;
 }
 fsApply(fsGet());   /* 스플래시·로그인 화면부터 바로 적용 */
@@ -3438,7 +3469,7 @@ function scheduleCoffeechat() {
     var last = ideas.length ? ideas[ideas.length - 1] : {};
     var fail = function () { S.set("cchat", null); notice({ key: "cchatR:fail", title: "커피챗 신청이 전달되지 않았어요", body: "잠시 뒤 커피챗 상세에서 다시 신청해 주세요" }); App.render(); };
     beCall({ action: "cchat_req", emp: u.empId, name: u.name || "", dept: S.get("dept", null) || "", tag: (last.tag || "") + CCHAT_TAG_SEP + cchatPrefTxt(), pref: cchatPrefTxt() },   /* v4.45 pref = 선호 시간대(서버 GAS 가 「희망시간」 칸에 저장해야 콘솔에 보인다) */
-      function (res) { if (!res || !res.ok) fail(); }, fail);
+      function (res) { if (!res || !res.ok) fail(); else pushAsk("cchat", {}); }, fail);   /* v4.76 가치 순간 ② 「매칭되면 알려 드려요」 */
     return;   /* 매칭은 운영자가 콘솔에서 · 완료되면 sync 폴링이 팝업을 띄운다 */
   }
   setTimeout(function () {
@@ -4258,7 +4289,7 @@ setInterval(function () { tick++; if (["home", "screen", "wall_quiz", "wall_live
 BE.on = !!GAS_URL;
 if (BE.on) pollNext(beJit());   /* v4.57 첫 sync 0~5초 뒤 · 이후 pollNext 가 30초씩(실패 시 늘림) · stats 60초 폴링은 없앴다(앱은 stats 에서 월 숫자만 쓰고 sync 가 같은 값을 준다 · 요청 3분의 1 절감) */
 /* 서비스워커 · 안드로이드 홈 화면 설치창의 전제조건. 캐시는 전혀 하지 않는 무해 버전(sw.js) */
-if ("serviceWorker" in navigator && location.protocol === "https:") {
+if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(127\.0\.0\.1|localhost)$/.test(location.hostname))) {   /* v4.76 웹 푸시 · 로컬 QA 서버도 */
   try { navigator.serviceWorker.register("sw.js"); } catch (e) {}
 }
 function counters() {
@@ -4420,6 +4451,7 @@ var App = {
       if (this.PARENT[v] === prev) delete this.from[v]; else this.from[v] = prev;
     }
     this.current = v;
+    if (typeof wsRoleCheck === "function") wsRoleCheck();   /* v4.76 관리자 모드 = ops 방 */
     /* v3.15 새로 고침 복귀 · 현재 화면의 소속 탭을 sessionStorage 에 기억(같은 브라우저 탭에서만, 다음 방문은 홈).
        관리자·사이니지·게임 전체화면은 저장하지 않는다 · Lv2 는 소속 탭으로 저장된다 */
     try {
@@ -4444,6 +4476,7 @@ var App = {
   render: function () {
     if (typeof qrGated === "function" && qrGated()) { qrGateDefer("render"); return; }   /* v4.13 인식 화면(정지 프레임)을 지운 채 다시 그리지 않는다 */
     RENDER_HELD = false;   /* v4.25 보류해 둔 그리기는 이번 그리기로 끝 */
+    if (typeof wsRoleCheck === "function") wsRoleCheck();   /* v4.76 관리자 코드 확인 · 잠금 뒤 방 다시 고르기(같으면 아무 일도 안 한다) */
     var v = this.current;
     var tb = el("topbar"), par = this.parentOf(v);
     /* v4.04 헤더 = v4.02 구성 복원 (사용자 결정 260922 「헤더가 있는 게 더 갖춰진 느낌」)
@@ -4579,6 +4612,18 @@ function scanLinkTake() {
   return true;
 }
 scanLinkTake();
+/* v4.76 알림을 눌러 연 주소(#go=화면&n=사건키) · 주소에서 지우고 로그인 뒤 그 화면으로(pushGoRun) */
+var PUSHGO = null;
+function pushGoTake() {
+  var m = /^#go=([a-z_]{2,20})(?:&n=([^&]*))?/.exec(String(location.hash || ""));
+  if (!m) return false;
+  var tag = "";
+  try { tag = decodeURIComponent(m[2] || ""); } catch (e) {}
+  PUSHGO = { go: m[1], tag: tag };
+  try { history.replaceState(history.state, "", location.pathname + location.search); } catch (e) {}
+  return true;
+}
+pushGoTake();
 
 /* ── 뒤로가기 = 앱 안에서 위로 (v19) · 실수로 앱을 이탈하지 않게 히스토리 트랩 ── */
 var NAV = { lastBack: 0 };
@@ -5358,7 +5403,7 @@ function crowdStripHtml() {
       var x = crowdCell(t[0]), go = t[0] === "e" && x.cls === " jam" && st;
       var inner = '<p class="nm">' + t[1] + '</p><p class="st">' + x.st + "</p>" + (x.sub ? '<p class="sb">' + esc(x.sub) + "</p>" : "") + (go ? '<p class="go">' + lnkChev("계단 이용") + "</p>" : "");
       return go ? '<button type="button" class="cc' + x.cls + '" onclick="stairOpen()" aria-label="엘리베이터 혼잡 · 계단 이용">' + inner + "</button>" : '<div class="cc' + x.cls + '">' + inner + "</div>";
-    }).join("") + "</div>";
+    }).join("") + "</div>" + (typeof crowdWatchHtml === "function" ? crowdWatchHtml() : "");   /* v4.76 혼잡일 때만 「풀리면 알림」 */
 }
 
 /* ════════════════ 일정 탭 행 (v3.5) · 좌측 시간 레일 + 우측 제목 · 부가 설명은 공용 아코디언 접힘 ════════════════ */
@@ -5439,6 +5484,7 @@ function photoTake() {
     S.set("photoq", { no: res.no, status: "wait", ahead: res.ahead, eta: res.eta });
     sheetClose(true);
     notice({ key: "photo:" + res.no, title: "포토부스 " + res.no + "번", body: (near ? "곧 차례 · 1F 포토부스로 이동 · " : "") + "예상 입장 " + res.eta });
+    pushAsk("photo", { no: res.no });   /* v4.76 가치 순간 ① · 번호표 팝업을 닫은 뒤 「차례가 되면 알려 드려요」 */
   }, function () { sheetFail({ t: "서버에 연결할 수 없어요", b: "네트워크를 확인해 주세요." }); });
 }
 /* v4.09 번호표 취소 = 취소 확인 시트(신청 취소와 같은 틀 · design.md A 5-6) · 실패하면 번호표 유지 */
@@ -7254,6 +7300,7 @@ function beSync(after) {
   beCall({ action: "sync", emp: u.empId || "" }, function (res) {
     if (res && res.ok && res.poll >= 30 && res.poll <= 120) POLL.base = res.poll * 1000;   /* v4.57 운영이 붐비는 시간에 서버 설정으로 폴링을 늘린다(재배포 없이) */
     if (res && res.ok) wsCfg(res.ws);   /* v4.75 소켓 설정(새 서버만 보낸다 · 없거나 0 이면 소켓을 닫고 폴링만) */
+    if (res && res.ok && typeof pushCfg === "function") pushCfg(res.push);   /* v4.76 웹 푸시 공개키(새 서버 · 비밀값 있는 Worker 만 · 없으면 알림 항목이 뜨지 않는다) */
     if (after) after(!!(res && res.ok));
     if (!res || !res.ok) return;
     if (u.empId && res.sesNeed === 1) SES.need = true;   /* v4.68 세션필수 ON 인데 토큰이 없거나 지난 토큰(PIN 초기화) · 서버가 개인 부분(my)을 빼고 보냈다 · 이 기기 기록은 그대로 둔다 */
@@ -7386,8 +7433,15 @@ function wsPollMs() { return wsLive() ? Math.max(POLL.base, (Number(WS.cfg.p) ||
 function wsRole() {
   if (/^#tv=/i.test(location.hash)) return "tv";
   if (/^#(self|demo)/i.test(location.hash) || (typeof tsfOn === "function" && tsfOn())) return "";
+  if (App.current === "admin" && S.get("admin_authed", false) && typeof admTok === "function" && (admTok() || admKey())) return "ops";   /* v4.76 스태프 폰(앱 관리자 모드) = ops 방 · 다른 스태프의 혼잡 제보가 곧바로 */
   var u = S.get("user", {}) || {};
   return u.empId ? "p" : "";
+}
+/* v4.76 화면이 바뀌면(관리자 모드에 들어가고 나오기 · 코드 확인) 방을 다시 고른다 · App.render 가 부른다(방이 같으면 아무 일도 안 한다) */
+function wsRoleCheck() {
+  if (!WS.cfg) return;
+  if (WS.ws && WS.role !== wsRole()) { wsClose("role"); WS.fails = 0; WS.no = false; }
+  if (!WS.ws && !WS.t) wsEnsure();
 }
 /* sync(또는 TV 가 부르는 sync)의 ws 값을 받는다 · 없거나 0 이면 소켓을 닫고 폴링만 */
 function wsCfg(c) {
@@ -7410,12 +7464,12 @@ function wsEnsure() {
 function wsOpen(role, u) {
   if (!WS.dev) WS.dev = "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);   /* 이 화면 한 번의 id · 같은 id 로 다시 붙으면 서버가 옛 연결을 닫는다 */
   WS.role = role; WS.emp = role === "p" ? String(u.empId) : ""; WS.ses = role === "p" ? String(u.ses || "") : "";
-  var url = wsUrl() + (role === "tv" ? "?r=tv" : "?r=p&s=" + wsShard(WS.emp, WS.cfg.n)), ws;
+  var url = wsUrl() + (role === "tv" ? "?r=tv" : role === "ops" ? "?r=ops" : "?r=p&s=" + wsShard(WS.emp, WS.cfg.n)), ws;
   try { ws = new WebSocket(url); } catch (e) { wsFail(); return; }
   WS.ws = ws; WS.st = "open"; WS.okAt = 0;
   ws.onopen = function () {
     if (WS.ws !== ws) return;
-    var hi = role === "tv" ? { t: "hello", v: "v4.75" } : { t: "hello", emp: WS.emp, ses: WS.ses, d: WS.dev, v: "v4.75" };
+    var hi = role === "tv" ? { t: "hello", v: "v4.76" } : role === "ops" ? { t: "hello", tok: admTok(), key: admTok() ? "" : admKey(), d: WS.dev, v: "v4.76" } : { t: "hello", emp: WS.emp, ses: WS.ses, d: WS.dev, v: "v4.76" };
     try { ws.send(JSON.stringify(hi)); } catch (e) {}
   };
   ws.onmessage = function (e) {
@@ -7453,7 +7507,7 @@ function wsUp(m) {
   var re = WS.hadOk;
   WS.st = "ok"; WS.okAt = Date.now(); WS.pongAt = Date.now(); WS.fails = 0; WS.hadOk = true;
   wsTimers(true);
-  if (re && WS.role === "p") wsSyncSoon(3000); else pollNext(wsPollMs());   /* 다시 붙었으면 그사이 놓친 것을 sync 1회로 · 처음이면 폴링만 늦춘다 */
+  if (re && WS.role !== "tv") wsSyncSoon(3000); else pollNext(wsPollMs());   /* 다시 붙었으면 그사이 놓친 것을 sync 1회로 · 처음이면 폴링만 늦춘다 */
   if (WS.role === "tv") tvWsPull(true);
 }
 function wsTimers(on) {
@@ -7499,6 +7553,11 @@ WS.h.me = function (m) {
   if (q && (q.status === "call" || q.status === "skip") && (!was || was.status !== q.status)) wsSyncSoon(2000);   /* 서버와 한 번 맞춘다 */
 };
 WS.h.sync = function () { wsSyncSoon(3000); };
+WS.h.crowd = function (m) { if (m.crowd && typeof crowdStore === "function") crowdStore(m.crowd); };   /* v4.76 혼잡 제보 · 홈 아래 2칸이 곧바로 */
+WS.h.ops = function (m) {   /* v4.76 스태프 폰 ops 방 · 혼잡 카드 곧바로(다른 스태프가 누른 제보 · 해소) */
+  if (WS.role !== "ops" || m.k !== "crowd") return;
+  if (m.crowd && typeof crowdStore === "function") crowdStore(m.crowd); else wsSyncSoon(1500);
+};
 WS.h.tv = function (m) { if (WS.role === "tv") tvWsPull(false, m.k); };
 /* TV · 힌트가 오면 기존 읽기 1회(순위판 · 올림픽) · 처음 붙었을 때도 1회 */
 function tvWsPull(all, k) {
@@ -7539,6 +7598,294 @@ function admVerify(v, done, keep) {
       done(res.role || "admin", v);
     } else toast(res && res.reason === "locked" ? admLockedMsg(res) : "코드가 올바르지 않습니다.");   /* v4.65 잠금은 틀린 코드와 다르게 */
   }, function () { toast("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요."); });
+}
+
+/* ════════════════ v4.76 웹 푸시 · 260930 사용자 확정 (루트 「웹 푸시 기획.md」 2 · 4장 · 「홈 화면 설치 유도 · 레드팀 토론.md」 3장 채택 1 · 2) ════════════════
+ * 원칙: 푸시는 「알림」이지 정본이 아니다 · 푸시에 실린 것은 모두 앱 안(sync)에도 있다 · 못 받아도 앱을 열면 같은 것을 본다.
+ * 켜지는 조건: sync 공용 push = { k: 공개키 }(새 서버 · 비밀값 있는 Worker) · 로그인 · 데모 · TV · 셀프 화면이 아님. 옛 서버(GAS)는 push 가 없어 아무것도 뜨지 않는다.
+ * 권한은 첫 화면에서 묻지 않는다: 가치가 생기는 순간 세 곳(포토부스 번호 받은 직후 · 커피챗 신청 직후 · 혼잡 「풀리면 알림」)과
+ *   홈 화면 앱으로 처음 입장한 직후 한 번 · 설정 › 알림 에서 언제든. 앱 안 안내 시트 → 브라우저 허용창 두 단계(시트를 X 로 닫아도 허용창은 소모되지 않는다).
+ *   같은 자리는 이 화면에서 한 번 · 하루 3번(axf_push_ask · 기기 저장) · 브라우저에서 「차단」이면 더 묻지 않는다.
+ * 환경(envKind): push(안드로이드 크롬 · 삼성 인터넷 · 엣지 · PC · 아이폰 홈 화면 앱) · ios-tab(아이폰 사파리 탭 → 홈 화면 추가 단계 시트)
+ *   · ios-old(iOS 16.3 이하 · 알림 항목 숨김) · inapp(카카오톡 · 네이버 · 하이웍스 등 앱 속 화면 → 다른 브라우저로 열기) · none.
+ * 앱을 열 때마다(첫 sync) 허용된 기기는 구독을 다시 확인해 서버에 보낸다(push_sub · 같은 기기 덮어쓰기 · 사번이 바뀌면 소유가 옮겨진다).
+ *   전에 보낸 주소인데 서버에 없었으면(had 0 · 410 · 연속 실패로 서버가 지웠다) 새로 구독한다(260930 실폰에서 410 을 봤다).
+ * 로그아웃 = 이 기기 구독을 지우고 서버에서도 해제(공용 폰에서 앞 사람 알림이 다음 사람에게 뜨지 않게).
+ * 알림을 누르면 서비스워커가 열린 앱 창에 화면 이동을 넘기거나 index.html#go=화면&n=사건키 로 연다(pushGoTake · 로그인 전이면 로그인 뒤).
+ * 앱 화면이 보이는 동안 온 푸시는 서비스워커가 OS 알림 대신 여기로 넘긴다(아이폰은 늘 OS 알림 · 실폰 확인 항목) · 포토 · 커피챗 · 공지는 sync 한 번으로(앱 안 팝업 한 곳) · 그 밖은 앱 안 팝업. */
+var PUSH = { k: "", booted: false, busy: false, asked: {}, after: null, me: null, firstWant: false };
+var PUSH_ASK_DAY = 3;
+function pushPerm() { try { return "Notification" in window ? Notification.permission : "denied"; } catch (e) { return "denied"; } }
+function pushIosVer(ua) { var m = /OS (\d+)_(\d+)/.exec(ua || ""); return m ? [Number(m[1]), Number(m[2])] : [17, 0]; }   /* 아이패드 데스크톱 UA 는 버전이 없다 · 최신으로 본다 */
+function envKind() {
+  var ua = navigator.userAgent || "", sa = visitStandalone(), r = visitRoute(ua, sa);
+  if (r === "kakao" || r === "naver" || r === "inapp") return "inapp";
+  var ok = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window && window.isSecureContext !== false;
+  if (visitDev(ua, navigator.maxTouchPoints || 0) === "ios") {
+    if (ok && sa) return "push";
+    var v = pushIosVer(ua);
+    return v[0] > 16 || (v[0] === 16 && v[1] >= 4) ? "ios-tab" : "ios-old";
+  }
+  return ok ? "push" : "none";
+}
+function pushReady() { return !!PUSH.k && BE.on && !!((S.get("user", {}) || {}).empId) && !/^#(demo|self|tv=)/i.test(VISIT.hash0) && !(typeof tsfOn === "function" && tsfOn()); }
+function pushB64(s) { s = String(s).replace(/-/g, "+").replace(/_/g, "/"); var b = atob(s + "===".slice((s.length + 3) % 4)), u = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; }
+function pushB64e(buf) { var u = new Uint8Array(buf), s = ""; for (var i = 0; i < u.length; i++) s += String.fromCharCode(u[i]); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+/* sync 공용 push · 공개키가 바뀌면(환경 · 키 교체) 다시 확인한다 */
+function pushCfg(p) {
+  var k = p && typeof p === "object" && p.k ? String(p.k) : "";
+  if (k === PUSH.k) return;
+  PUSH.k = k;
+  if (!k) return;
+  PUSH.booted = false;
+  setTimeout(pushBoot, 1200);
+  if (PUSH.firstWant) setTimeout(pushFirst, 1600);
+  if (el("fsPush")) el("fsPush").hidden = false;
+}
+function pushBoot() { if (PUSH.booted || !pushReady()) return; PUSH.booted = true; if (envKind() === "push" && pushPerm() === "granted") pushEnsure(); }
+function pushSw(cb) {
+  if (!("serviceWorker" in navigator)) { cb(null); return; }
+  var done = false, t = setTimeout(function () { if (!done) { done = true; cb(null); } }, 8000);
+  var fin = function (r) { if (!done) { done = true; clearTimeout(t); cb(r || null); } };
+  navigator.serviceWorker.getRegistration().then(function (r) { return r || navigator.serviceWorker.register("sw.js"); })
+    .then(function () { return navigator.serviceWorker.ready; }).then(fin, function () { fin(null); });
+}
+function pushKeySame(sub) { try { var k = sub.options && sub.options.applicationServerKey; return !k || pushB64e(k) === PUSH.k; } catch (e) { return true; } }
+/* 허용된 기기 · 구독을 확인하고(없거나 키가 바뀌었으면 새로) 서버에 보낸다 · then(ok, 까닭) */
+function pushEnsure(then, again) {
+  then = then || function () {};
+  if (!pushReady() || envKind() !== "push" || pushPerm() !== "granted") { then(false, "env"); return; }
+  if (PUSH.busy && !again) { then(false, "busy"); return; }
+  PUSH.busy = true;
+  var fin = function (ok, why) { PUSH.busy = false; then(ok, why); };
+  pushSw(function (reg) {
+    if (!reg || !reg.pushManager) { fin(false, "sw"); return; }
+    reg.pushManager.getSubscription().then(function (sub) {
+      if (sub && (!pushKeySame(sub) || again)) return sub.unsubscribe().then(function () { return null; }, function () { return null; });
+      return sub;
+    }).then(function (sub) {
+      return sub || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: pushB64(PUSH.k) });
+    }).then(function (sub) {
+      var j = sub && sub.toJSON ? sub.toJSON() : null, u = S.get("user", {}) || {};
+      if (!j || !j.endpoint || !j.keys) { fin(false, "sub"); return; }
+      beCall({ action: "push_sub", emp: u.empId, ep: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth, dev: visitDev(navigator.userAgent, navigator.maxTouchPoints || 0) }, function (r) {
+        if (!r || !r.ok) { fin(false, (r && r.reason) || "srv"); return; }
+        var was = S.get("push_ep", "");
+        S.put("push_ep", j.endpoint);
+        if (!r.had && was === j.endpoint && !again) { PUSH.busy = false; pushEnsure(then, true); return; }   /* 서버가 지운 주소(410 · 연속 실패) · 새로 구독 */
+        PUSH.me = r.push || null; S.set("push_me", r.push || null);
+        fin(true);
+      }, function () { fin(false, "net"); });
+    }).catch(function (e) { fin(false, "sub:" + ((e && e.name) || "")); });
+  });
+}
+function pushAskOk() { var a = S.get("push_ask", {}) || {}; return a.d !== new Date().toDateString() || (a.n || 0) < PUSH_ASK_DAY; }
+function pushAskMark() { var a = S.get("push_ask", {}) || {}, d = new Date().toDateString(); if (a.d !== d) a = { d: d, n: 0 }; a.n = (a.n || 0) + 1; S.put("push_ask", a); }
+/* 가치 순간 · ctx = photo | cchat | crowd | first · after(ok) = 켠 뒤 이어서 할 일(혼잡 감시 등) · 시트를 띄웠으면 true */
+function pushAsk(ctx, opt, after) {
+  if (!pushReady()) return false;
+  var k = envKind(), perm = pushPerm();
+  if (k === "push" && perm === "granted") { pushEnsure(after); return false; }
+  if (perm === "denied" || k === "none" || k === "ios-old") return false;
+  if (PUSH.asked[ctx] || !pushAskOk()) return false;
+  PUSH.asked[ctx] = 1;
+  pushAskMark();
+  PUSH.after = after || null;
+  pushSheetWait(ctx, opt || {}, 0);
+  return true;
+}
+/* 떠 있는 팝업(번호표 안내 등) · 시트 · 스탬프 연출이 닫힌 뒤에 */
+function pushSheetWait(ctx, opt, n) {
+  if (n > 150) return;
+  if (el("modal") || el("axsSheet") || SPOP.cur || SPOP.q.length || el("app").hidden || el("rgPlay")) { setTimeout(function () { pushSheetWait(ctx, opt, n + 1); }, 400); return; }
+  pushSheet(ctx, opt);
+}
+var PUSH_T = { photo: "차례가 되면 알려 드려요", cchat: "매칭되면 알려 드려요", crowd: "풀리면 알려 드려요", first: "알림을 켤까요?" };
+function pushExHtml(ctx, opt) {
+  var t = "지금 입장하세요", b = "1F 포토부스 · " + (opt.no || 14) + "번 · 10분 안에 입장";
+  if (ctx === "cchat") { t = "커피챗 매칭 완료"; b = "18F 라운지 · 15:00 · TABLE 3"; }
+  if (ctx === "crowd") { t = opt.tgt === "lobby" ? "1F 로비 혼잡이 풀렸어요" : "엘리베이터 혼잡이 풀렸어요"; b = (opt.tgt === "lobby" ? "1F 로비" : "1F 승강기 홀") + " · 15:07"; }
+  return '<div class="axs-pex" aria-hidden="true"><img src="icons/icon-192.png" alt=""><div><b>' + esc(t) + "</b><span>" + esc(b) + "</span></div></div>";
+}
+function pushSheet(ctx, opt) {
+  var k = envKind();
+  if (k === "ios-tab") { pushIosSheet(); return; }
+  if (k === "inapp") { pushInappSheet(); return; }
+  sheetOpen({ id: "push", title: PUSH_T[ctx] || PUSH_T.first, lead: ctx === "first" ? "포토부스 차례와 커피챗 매칭을 알려 드려요" : "앱을 닫아도 잠금 화면에 알림이 와요",
+    body: pushExHtml(ctx, opt) + '<p class="axs-pnote">허용하면 이 기기로 알림을 보냅니다. 행사 후 삭제됩니다</p>',
+    go: "pushAllow()", goLbl: "알림 받기", goBusy: "켜는 중" });
+}
+/* 브라우저 허용창은 사용자의 탭 안에서만(아이폰 규칙) · 허용되면 구독 → 서버 · 거절이면 시트만 닫는다(앱 안 알림은 그대로) */
+function pushAllow() {
+  if (SHEET.busy) return;
+  if (!("Notification" in window)) { sheetFail("이 브라우저는 알림을 받을 수 없어요"); return; }
+  sheetBusy(true);
+  var once = false;
+  var done = function (r) {
+    if (once) return;
+    once = true;
+    var a = PUSH.after;
+    PUSH.after = null;
+    if (r !== "granted") { sheetClose(true); App.render(); return; }
+    pushEnsure(function (ok) {
+      sheetClose(true);
+      toast(ok ? "알림을 켰어요" : "알림을 켜지 못했어요 · 설정 › 알림에서 다시");
+      if (a) a(ok);
+      App.render();
+    });
+  };
+  try { var pr = Notification.requestPermission(done); if (pr && pr.then) pr.then(done, function () { done("default"); }); } catch (e) { done("default"); }
+}
+/* 아이폰 사파리 탭 · 알림은 홈 화면 앱에서만(iOS 16.4 · 설치 뒤 로그인을 다시 한다) */
+function pushIosSheet() {
+  sheetOpen({ id: "pushios", title: "알림은 홈 화면 앱에서 받아요",
+    body: '<ol class="axs-steps"><li><span class="n">1</span>아래 공유 버튼을 누르세요</li><li><span class="n">2</span>홈 화면에 추가를 고르세요</li><li><span class="n">3</span>AX Festival 아이콘으로 열기</li></ol>' +
+      '<p class="axs-pnote">사번 · 이름 · 비밀번호 4자리로 다시 입장해요</p><p class="axs-pnote">Safari에서만 추가할 수 있어요. 다른 앱 안에서 열었다면 Safari로 열어 주세요</p>',
+    go: "sheetClose()", goLbl: "확인" });
+}
+function pushInappSheet() {
+  sheetOpen({ id: "pushin", title: "다른 브라우저로 열어 주세요", lead: "메신저 안에서는 알림을 받을 수 없어요",
+    body: '<p class="axs-pnote">오른쪽 위 메뉴에서 다른 브라우저로 열기 · 아이폰은 Safari · 안드로이드는 Chrome</p>',
+    go: "a2hsCopy(); sheetClose()", goLbl: "주소 복사" });
+}
+/* 로그인 직후(a2hsAuto) · 허용된 기기는 이 사번으로 다시 등록 · 홈 화면 앱으로 처음 들어온 사람에게만 한 번 묻는다 */
+function pushFirst() {
+  PUSH.firstWant = true;
+  if (!pushReady()) return;
+  PUSH.firstWant = false;
+  if (envKind() === "push" && pushPerm() === "granted") { pushEnsure(); return; }
+  if (!visitStandalone() || S.get("push_first", false)) return;
+  S.put("push_first", true);
+  pushAsk("first", {});
+}
+/* 설정 › 알림 · 상태 한 줄 + 내 차례 · 매칭(끌 수 없음) · 공지 · 추첨 · 관람 시간(근무 층) */
+function pushState() {
+  var k = envKind(), perm = pushPerm(), me = PUSH.me || S.get("push_me", null);
+  if (k === "inapp") return { st: "다른 브라우저로 열어야 켤 수 있어요", act: "inapp" };
+  if (k === "ios-tab") return { st: "홈 화면 앱에서만 켤 수 있어요", act: "ios" };
+  if (k !== "push") return { st: "이 기기는 알림을 받을 수 없어요" };
+  if (perm === "denied") return { st: "알림이 꺼져 있어요", sub: "브라우저 설정에서 알림을 허용해야 켜져요" };
+  if (perm === "granted" && me && me.n > 0) return { st: "알림 켜짐", on: 1, me: me };
+  return { st: "알림 꺼짐", act: "on" };
+}
+function pushTgl(nm, k, on) {
+  return '<button type="button" class="axs-prow axs-ptgl' + (on ? " on" : "") + '" role="switch" aria-checked="' + on + '" onclick="pushPrefSet(\'' + k + "', " + (on ? 0 : 1) + ')"><span>' + nm + "</span><b>" + (on ? "켜짐" : "꺼짐") + "</b></button>";
+}
+function pushSetPaint() {
+  var s = pushState(), me = s.me || {}, rows = "";
+  if (s.on) {
+    var fl = Number(me.floor) || 0, fls = "";
+    for (var f = 3; f <= 15; f++) fls += '<button type="button" class="axs-flr' + (f === fl ? " on" : "") + '" aria-pressed="' + (f === fl) + '" onclick="pushPrefSet(\'floor\', ' + f + ')">' + f + "층</button>";
+    rows = '<div class="axs-prows"><div class="axs-prow"><span>내 차례 · 매칭</span><b>켜짐</b></div>' + pushTgl("공지 · 추첨", "pub", me.pub !== 0) + pushTgl("관람 시간", "visit", me.visit === 1) + "</div>" +
+      (me.visit === 1 ? '<p class="axs-pnote">근무 층</p><div class="axs-flrs">' + fls + "</div>" : "");
+  }
+  var go = s.act === "on" ? "pushSetOn()" : s.act === "ios" ? "sheetClose(true); pushIosSheet()" : s.act === "inapp" ? "sheetClose(true); pushInappSheet()" : "sheetClose()";
+  var spec = { id: "pushset", title: "알림", lead: esc(s.st) + (s.sub ? "<br>" + esc(s.sub) : ""), body: rows, go: go, goLbl: s.act === "on" ? "알림 받기" : s.act ? "방법 보기" : "닫기", goBusy: "켜는 중" };
+  if (SHEET.id === "pushset" && el("axsSheet")) { SHEET.spec = spec; sheetPaint(); } else sheetOpen(spec);
+}
+function pushSetOpen() {
+  pushSetPaint();
+  var u = S.get("user", {}) || {};
+  if (BE.on && u.empId && PUSH.k) beCall({ action: "push_me", emp: u.empId }, function (r) {
+    if (r && r.ok) { PUSH.me = r.push || null; S.set("push_me", r.push || null); if (SHEET.id === "pushset" && el("axsSheet") && !SHEET.busy) pushSetPaint(); }
+  }, function () {});
+}
+function pushSetOn() { PUSH.after = function () { pushSetOpen(); }; pushAllow(); }
+/* k = pub | visit | floor · 같은 층을 다시 누르면 층을 비운다 */
+function pushPrefSet(k, v) {
+  var me = PUSH.me || S.get("push_me", null) || {}, u = S.get("user", {}) || {};
+  if (!u.empId || SHEET.busy) return;
+  var kinds = { pub: me.pub === 0 ? 0 : 1, visit: me.visit === 1 ? 1 : 0 }, p = { action: "push_pref", emp: u.empId };
+  if (k === "floor") p.floor = String(Number(me.floor) === v ? "" : v);
+  else { kinds[k] = v; p.kinds = JSON.stringify(kinds); }
+  SHEET.busy = true;
+  beCall(p, function (r) {
+    SHEET.busy = false;
+    if (r && r.ok) { PUSH.me = r.push || null; S.set("push_me", r.push || null); }
+    else toast("바꾸지 못했어요 · 잠시 뒤 다시");
+    if (SHEET.id === "pushset" && el("axsSheet")) pushSetPaint();
+  }, function () { SHEET.busy = false; toast("서버에 연결할 수 없어요"); });
+}
+/* 로그아웃 · 이 기기 구독 지우기 + 서버 해제(주소로 · 토큰 없이도) · 1.5초 안에 끝나지 않아도 로그아웃은 한다 */
+function pushLogout(next) {
+  var fin = false, go = function () { if (!fin) { fin = true; next(); } };
+  setTimeout(go, 1500);
+  try {
+    if (!("serviceWorker" in navigator)) { go(); return; }
+    navigator.serviceWorker.getRegistration().then(function (reg) { return reg && reg.pushManager ? reg.pushManager.getSubscription() : null; }).then(function (sub) {
+      if (!sub) { go(); return; }
+      var ep = sub.endpoint, u = S.get("user", {}) || {};
+      sub.unsubscribe().then(function () {}, function () {});
+      if (BE.on) beCall({ action: "push_unsub", emp: u.empId || "", ep: ep }, go, go); else go();
+    }, go);
+  } catch (e) { go(); }
+}
+/* 알림을 누름 · 화면 이동 + 같은 사건의 앱 안 팝업을 본 것으로(폴링 팝업이 다시 뜨지 않게) */
+function pushSeen(tag) {
+  var m, s = S.get("noti_seen", {}), chg = false;
+  if ((m = /^photo:(\d+):(near|call)$/.exec(tag || ""))) {
+    var no = Number(m[1]);
+    if (s.photoNear !== no) { s.photoNear = no; chg = true; }
+    if (m[2] === "call" && s.photoCall !== no) { s.photoCall = no; chg = true; }
+  } else if ((m = /^cchat:(\d{1,2}:\d{2}):(.+)$/.exec(tag || ""))) {
+    var k = "m:" + m[1] + m[2];
+    if (s.cchat !== k) { s.cchat = k; chg = true; }
+  }
+  if (chg) S.set("noti_seen", s);
+}
+function pushGo(go, tag) {
+  pushSeen(tag);
+  if (["home", "photoq", "ev_cchat", "dap"].indexOf(go) < 0) go = "home";
+  if (!((S.get("user", {}) || {}).empId) || el("app").hidden) { PUSHGO = { go: go, tag: tag || "" }; return; }
+  App.go(go);
+}
+function pushGoRun() { if (!PUSHGO) return; var g = PUSHGO; PUSHGO = null; pushGo(g.go, g.tag); }
+/* 앱 화면이 보일 때 온 푸시 · 포토 · 커피챗 · 공지는 sync 로(앱 안 팝업 한 곳) · 그 밖은 앱 안 팝업 */
+function pushIn(d) {
+  if (!d || document.visibilityState !== "visible") return;
+  var tag = String(d.tag || "");
+  if (/^(photo|cchat):/.test(tag) || /^N\d+$/.test(tag)) { if (typeof wsSyncSoon === "function") wsSyncSoon(800); return; }
+  if (!d.t) return;
+  notice({ key: "push:" + (tag || d.j || d.t), title: String(d.t), body: String(d.b || ""), go: d.go && d.go !== "home" ? d.go : "", urgent: !!d.u });
+}
+if ("serviceWorker" in navigator) {
+  try {
+    navigator.serviceWorker.addEventListener("message", function (e) {
+      var m = e.data || {};
+      if (m.axf === "go") pushGo(String(m.go || "home"), String(m.tag || ""));
+      else if (m.axf === "push") pushIn(m.d || {});
+    });
+  } catch (e) {}
+}
+/* 혼잡 「풀리면 알림」 · 그 대상이 지금 혼잡일 때만 · 한 번짜리(풀리거나 제보가 끝나면 알림 1건 · 90분) */
+var CWATCH_MS = 5400000;
+function crowdWatchGet() {
+  var w = S.get("crowd_watch", {}) || {}, o = {}, now = Date.now();
+  [["lobby", "l"], ["elev", "e"]].forEach(function (t) { if (w[t[0]] && now - w[t[0]] < CWATCH_MS && crowdJam(t[1])) o[t[0]] = w[t[0]]; });
+  return o;
+}
+function crowdWatchHtml() {
+  if (!pushReady() || envKind() === "ios-old" || envKind() === "none") return "";
+  var w = crowdWatchGet(), rows = [["l", "lobby", "1F 로비"], ["e", "elev", "엘리베이터"]].filter(function (t) { return crowdJam(t[0]); });
+  if (!rows.length) return "";
+  return '<div class="cwatch">' + rows.map(function (t) {
+    return w[t[1]] ? '<p class="cw-on">' + t[2] + " · 풀리면 알림 받는 중</p>"
+      : '<button type="button" class="ax-link cw-go" onclick="crowdWatchOn(\'' + t[1] + "')\">" + t[2] + " 풀리면 알림</button>";
+  }).join("") + "</div>";
+}
+function crowdWatchOn(tgt) {
+  var send = function () {
+    var u = S.get("user", {}) || {};
+    beCall({ action: "push_watch", emp: u.empId || "", tgt: tgt, on: "1" }, function (r) {
+      if (r && r.ok) { var w = S.get("crowd_watch", {}) || {}; w[tgt] = Date.now(); S.set("crowd_watch", w); toast("풀리면 알려 드려요"); return; }
+      toast({ nojam: "지금은 혼잡 제보가 없어요", max: "오늘은 더 켤 수 없어요", late: "18:00 뒤에는 알림을 보내지 않아요" }[r && r.reason] || "켜지 못했어요 · 잠시 뒤 다시");
+    }, function () { toast("서버에 연결할 수 없어요"); });
+  };
+  if (envKind() === "push" && pushPerm() === "granted") { pushEnsure(function (ok) { if (ok) send(); else toast("알림을 켜지 못했어요"); }); return; }
+  if (!pushAsk("crowd", { tgt: tgt }, function (ok) { if (ok) send(); })) {
+    if (pushPerm() === "denied") toast("브라우저 설정에서 알림을 허용해야 켜져요");
+    else { var k = envKind(); if (k === "ios-tab") pushIosSheet(); else if (k === "inapp") pushInappSheet(); }
+  }
 }
 
 /* ════════════════ 쿠폰 HTML ════════════════ */
@@ -14259,6 +14606,7 @@ function xitionRun(switchNow) {
     } catch (e) {}
     App.go(target);
     setTimeout(scanLinkRun, 400);
+    setTimeout(pushGoRun, 500);   /* v4.76 알림을 눌러 들어왔으면 그 화면으로 */
   }
   // 캡처 모드(#...cap): 프레임을 좌상단 고정 정폭으로 · 헤드리스 스크린샷용
   if (/cap/.test(location.hash)) {
@@ -14326,6 +14674,7 @@ function xitionRun(switchNow) {
     enterApp();
     return;
   }
+  if (visitStandalone() && el("saCard")) el("saCard").hidden = false;   /* v4.76 홈 화면 앱으로 처음 열림 · 로그인을 한 번 더 */
   var known = BE.on ? knownGet() : null;
   function quickLogin() {
     var pin = el("quickPin").value.trim();

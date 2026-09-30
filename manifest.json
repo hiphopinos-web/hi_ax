@@ -2,6 +2,7 @@
   "name": "AX Festival 2026",
   "short_name": "AX Festival",
   "description": "ME to WE · 나의 업무 혁신, 우리 회사의 AX가 되다",
+  "id": "./index.html",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
