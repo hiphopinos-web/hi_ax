@@ -3020,7 +3020,15 @@ function pushCfgHtml(){
     '<div class="pk"><b>보낼 수 있는 시간</b><input class="in" id="pxTime" style="min-width:0;width:140px" value="'+esc(st.time)+'" placeholder="08:30-18:30"><button class="btn sm" onclick="pushTimeSave()">저장</button>'+(st.win?tag("지금 안","ok"):tag("지금 밖 · 시험만","warn"))+'</div>'+
     '<div class="pk"><b>토큰 기준</b><span>'+esc(tk)+'</span>'+tag(st.tokReq?"지금 토큰 필요":"지금 토큰 없이","off")+
       '<span class="row" style="gap:6px;flex-wrap:nowrap"><select class="in sm" id="pxTok" style="min-width:0">'+o+'</select><button class="btn sm" onclick="pushTokAsk()">바꾸기</button></span>'+
-      '<p class="cap" style="width:100%">알림 구독 · 알림 설정 · 실시간 연결이 같은 기준을 씁니다. 기본은 토큰 필요(사용자 결정 260930) · 토큰 없는 폰은 소켓 대신 폴링 · 알림을 켤 수 없습니다.</p></div>');
+      '<p class="cap" style="width:100%">알림 구독 · 알림 설정 · 실시간 연결이 같은 기준을 씁니다. 기본은 토큰 필요(사용자 결정 260930) · 토큰 없는 폰은 소켓 대신 폴링 · 알림을 켤 수 없습니다.</p></div>'+
+    (st.ccDay?'<div class="pk"><b>커피챗 10분 전</b><input class="in" id="pxCcDay" style="min-width:0;width:140px" value="'+esc(st.ccDay)+'" placeholder="2026-10-26"><button class="btn sm" onclick="pushCcDaySave()">저장</button>'+
+      '<p class="cap" style="width:100%">매칭된 회차 시작 '+esc(String(st.ccPre||10))+'분 전에 그 사람에게 알림이 갑니다(예약 메뉴에 회차마다 한 줄). 날짜를 비우면 행사일 2026-10-26 · 시험 때만 오늘로 두고 끝나면 비웁니다.</p></div>':''));   /* v4.77 옛 서버(ccDay 없음)는 줄을 숨긴다 */
+}
+function pushCcDaySave(){
+  var st=pushSt()||{}, v=(el("pxCcDay").value||"").replace(/\s+/g,"");
+  if(v&&!/^\d{4}-\d\d-\d\d$/.test(v)){ toast("날짜 형식은 2026-10-26 입니다"); return; }
+  if(v===st.ccDay||(!v&&st.ccDay==="2026-10-26")){ toast("바뀐 값이 없습니다"); return; }
+  dialog({ t:"커피챗 알림 날짜를 바꿀까요?", s:esc(st.ccDay)+" → <b>"+esc(v||"2026-10-26(행사일)")+"</b><br>대기 중인 커피챗 10분 전 예약을 새 날짜로 다시 잡습니다.", ok:"저장", onOk:function(){ pushCfgGo({ ccDay:v }, "커피챗 알림 날짜 · "+(v||"행사일")); } });
 }
 function pushSendHtml(){
   var S=PF;
@@ -3132,7 +3140,7 @@ function pushHistHtml(){
 /* 설정 · push_cfg 는 push_stats 모양을 돌려준다 */
 /* 토큰 기준 값은 wsTok(서버 v4.76 · 스태프 토큰 tok 과 이름을 나눴다 · 잠긴 주소에서도 스태프 토큰으로 통과) */
 function pushCfgGo(p, msg){
-  call("push_cfg",p,function(r){ dlgForce(); if(r&&r.ok){ ST.data.pst=r; _cache[sig_("push_stats",{})]={ data:r, at:Date.now() }; toast(msg); render(); } else toast("실패: "+({ on:"스위치 값 오류", time:"시간 형식은 08:30-18:30 입니다(시작 < 끝)", wsTok:"토큰 기준 값 오류", param:"바꿀 값이 없습니다" }[(r||{}).reason]||pushWhy(r))); },function(){ dlgForce(); toast("서버 응답 없음"); });
+  call("push_cfg",p,function(r){ dlgForce(); if(r&&r.ok){ ST.data.pst=r; _cache[sig_("push_stats",{})]={ data:r, at:Date.now() }; toast(msg); render(); } else toast("실패: "+({ on:"스위치 값 오류", time:"시간 형식은 08:30-18:30 입니다(시작 < 끝)", wsTok:"토큰 기준 값 오류", ccDay:"날짜 형식은 2026-10-26 입니다", param:"바꿀 값이 없습니다" }[(r||{}).reason]||pushWhy(r))); },function(){ dlgForce(); toast("서버 응답 없음"); });
 }
 function pushOnAsk(on){
   dialog({ t:on?"알림 발송을 다시 켤까요?":"알림을 전체 정지할까요?",
