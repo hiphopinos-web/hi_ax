@@ -7238,7 +7238,7 @@ function pollTick() {
   POLL.t = null;
   if (document.hidden) return;
   beSync(function (ok) {
-    if (ok) { POLL.fails = 0; POLL.ms = POLL.base; pollNext(POLL.ms); }
+    if (ok) { POLL.fails = 0; POLL.ms = wsPollMs(); pollNext(POLL.ms); }   /* v4.75 소켓이 붙어 있으면 ws.p 초(기본 120) · 끊기면 평소(30초) */
     else { POLL.fails++; POLL.ms = Math.min(BE_POLL_MAX, POLL.ms * 2); pollNext(POLL.ms + beJit()); }
   });
 }
@@ -7252,6 +7252,7 @@ function beSync(after) {
   var u = S.get("user", {});
   beCall({ action: "sync", emp: u.empId || "" }, function (res) {
     if (res && res.ok && res.poll >= 30 && res.poll <= 120) POLL.base = res.poll * 1000;   /* v4.57 운영이 붐비는 시간에 서버 설정으로 폴링을 늘린다(재배포 없이) */
+    if (res && res.ok) wsCfg(res.ws);   /* v4.75 소켓 설정(새 서버만 보낸다 · 없거나 0 이면 소켓을 닫고 폴링만) */
     if (after) after(!!(res && res.ok));
     if (!res || !res.ok) return;
     if (u.empId && res.sesNeed === 1) SES.need = true;   /* v4.68 세션필수 ON 인데 토큰이 없거나 지난 토큰(PIN 초기화) · 서버가 개인 부분(my)을 빼고 보냈다 · 이 기기 기록은 그대로 둔다 */
@@ -7268,25 +7269,8 @@ function beSync(after) {
     if ("cchatOut" in res && !!res.cchatOut !== S.get("cchat_out", false)) S.set("cchat_out", !!res.cchatOut);   /* v4.47 GAS 가 생기면 */
     if ("betaForm" in res && (res.betaForm || "") !== S.get("beta_form", "")) S.set("beta_form", res.betaForm || "");   /* v4.55 클로즈 베타 배너 링크(없으면 빈 문자열) */
     if (res.crowd) crowdStore(res.crowd);   /* v4.71 혼잡 제보(새 서버만 보낸다 · 없으면 「제보 없음」 그대로) */
-    /* v3.14 공지 중지: 서버가 내려준 중지 id 는 로컬에서도 지운다(LED 띠·뱃지·목록·팝업이 자연 소멸).
-       중지 목록에 든 공지는 다시 추가하지 않는다 · notice 가 null 이면 신규 추가 없음 */
-    var nOff = res.noticeOff || [];
-    if (nOff.length) {
-      var nz0 = S.get("notices", []);
-      var kept = nz0.filter(function (x) { return nOff.indexOf(x.id) < 0; });
-      if (kept.length !== nz0.length) S.set("notices", kept);
-      if (S.get("cchat_close_id", "") && nOff.indexOf(S.get("cchat_close_id", "")) >= 0) S.set("cchat_close_id", "");   /* v4.47 콘솔이 마감 신호를 중지 = 다시 열기 */
-    }
-    /* v4.47 커피챗 마감 신호 · 참가자 공지로 쌓지 않는다 */
-    if (res.notice && res.notice.title === CCHAT_CLOSE_T && res.notice.id && nOff.indexOf(res.notice.id) < 0 && S.get("cchat_close_id", "") !== res.notice.id) S.set("cchat_close_id", res.notice.id);
+    beNoticeIn(res.notice, res.noticeOff || []);   /* v4.75 공지 · 중지는 소켓(WS.h.notice)과 같은 함수 */
     if (res.photo && JSON.stringify(res.photo) !== JSON.stringify(S.get("photo_pub", null))) S.set("photo_pub", res.photo);   /* v3.21 B 공개 대기 요약 */
-    if (res.notice && res.notice.id && res.notice.title !== CCHAT_CLOSE_T && nOff.indexOf(res.notice.id) < 0) {
-      var nz = S.get("notices", []);
-      if (!nz.some(function (x) { return x.id === res.notice.id; })) {
-        nz.unshift({ id: res.notice.id, title: res.notice.title || "", body: res.notice.body || "", ts: res.notice.ts || Date.now() });
-        S.set("notices", nz);
-      }
-    }
     if (res.my) {
       var all = resvAll();
       if (res.my.resv) {
@@ -7357,6 +7341,171 @@ function beSync(after) {
     if (App.current === "home") App.render();
   }, function () { if (after) after(false); });
 }
+/* v3.14 공지 중지: 서버가 내려준 중지 id 는 로컬에서도 지운다(LED 띠·뱃지·목록·팝업이 자연 소멸).
+   중지 목록에 든 공지는 다시 추가하지 않는다 · notice 가 null 이면 신규 추가 없음
+   v4.75 sync 와 소켓(WS.h.notice · noticeOff)이 같이 쓴다 · 공지 id 로 겹침을 거른다 */
+function beNoticeIn(n, nOff) {
+  nOff = nOff || [];
+  if (nOff.length) {
+    var nz0 = S.get("notices", []);
+    var kept = nz0.filter(function (x) { return nOff.indexOf(x.id) < 0; });
+    if (kept.length !== nz0.length) S.set("notices", kept);
+    if (S.get("cchat_close_id", "") && nOff.indexOf(S.get("cchat_close_id", "")) >= 0) S.set("cchat_close_id", "");   /* v4.47 콘솔이 마감 신호를 중지 = 다시 열기 */
+  }
+  /* v4.47 커피챗 마감 신호 · 참가자 공지로 쌓지 않는다 */
+  if (n && n.title === CCHAT_CLOSE_T && n.id && nOff.indexOf(n.id) < 0 && S.get("cchat_close_id", "") !== n.id) S.set("cchat_close_id", n.id);
+  if (n && n.id && n.title !== CCHAT_CLOSE_T && nOff.indexOf(n.id) < 0) {
+    var nz = S.get("notices", []);
+    if (!nz.some(function (x) { return x.id === n.id; })) {
+      nz.unshift({ id: n.id, title: n.title || "", body: n.body || "", ts: n.ts || Date.now() });
+      S.set("notices", nz);
+    }
+  }
+}
+/* ════════════════ v4.75 실시간 연결(웹 소켓) · 260930 사용자 확정 ════════════════
+ * 원칙: 소켓은 「빨리 알려 주는 통로」다 · 상태의 정본은 늘 sync 다(놓쳐도 다음 sync 가 맞춘다).
+ * 켜지는 조건: sync 응답에 ws(= { n: 조각 수, p: 연결 중 폴링 초 })가 있고 서버 주소가 workers.dev 일 때만. 옛 서버(GAS · 소켓 없는 Worker)는 ws 가 없어 지금처럼 폴링만.
+ * 방: 참가자 = p(사번 조각 · 세션 토큰 ses 로 hello) · TV(#tv=) = tv(인증 없음 · 순위판 힌트만).
+ * 연결 중에는 sync 폴링을 30초 → ws.p 초(기본 120)로 늦추고, 끊기면 곧바로 30초 폴링으로 돌아간다.
+ * 재연결: 열린 뒤 끊김(재배포 1006 등)은 실패로 세지 않고 0~10초 무작위 뒤 다시 · 열기 실패는 1 · 2 · 4 · 8초 → 30초 상한 + 지터 · 연달아 3번 실패하면 이 화면에서는 포기(폴링만).
+ * 닫힘 코드: 4000 = 같은 기기 새 연결로 바뀜 · 최대 개수(다시 열지 않는다) · 4001 = 인증 거절(토큰이 바뀌면 다시) · 4002 = 조각 바뀜(sync 로 다시 받고) · 4003 = hello 시간 초과.
+ * 화면이 5분 넘게 가려지면 닫고, 다시 보이면 sync 1회 + 다시 연결. 25초마다 핑(p → o) · 70초 넘게 답이 없으면 닫고 다시.
+ * 받는 것: notice · noticeOff(공지 · sync 와 같은 함수) · photo(포토부스 공개 현황) · me photoQ(내 번호 · 호출이면 곧바로 「지금 입장하세요」) · sync(힌트 · 0~3초 뒤 sync) · tv(TV 순위판 다시 받기). */
+var WS = { ws: null, st: "off", cfg: null, role: "", fails: 0, give: false, t: null, pingT: null, pongAt: 0, hidT: null, ids: [], dev: "", emp: "", ses: "", okAt: 0, h: {}, syncT: null };
+function wsUrl() { return /^https:\/\/[a-z0-9-]+\.[a-z0-9-]+\.workers\.dev\/exec$/.test(GAS_URL) ? GAS_URL.replace(/^https:/, "wss:").replace(/\/exec$/, "/ws") : ""; }
+/* 사번 → 조각 · 서버(hub.js shardOf)와 같은 식 */
+function wsShard(emp, n) {
+  var s = String(emp == null ? "" : emp).trim().replace(/\s/g, "").replace(/^0+(?=.)/, "").toUpperCase(), h = 0;
+  for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 1000003;
+  return h % Math.max(1, Number(n) || 1);
+}
+function wsLive() { return WS.st === "ok" && !!WS.cfg; }
+/* 연결 중 폴링 간격(ms) · 끊겨 있으면 평소 간격 */
+function wsPollMs() { return wsLive() ? Math.max(POLL.base, (Number(WS.cfg.p) || 120) * 1000) : POLL.base; }
+function wsRole() {
+  if (/^#tv=/i.test(location.hash)) return "tv";
+  if (/^#(self|demo)/i.test(location.hash) || (typeof tsfOn === "function" && tsfOn())) return "";
+  var u = S.get("user", {}) || {};
+  return u.empId ? "p" : "";
+}
+/* sync(또는 TV 가 부르는 sync)의 ws 값을 받는다 · 없거나 0 이면 소켓을 닫고 폴링만 */
+function wsCfg(c) {
+  var on = !!(c && typeof c === "object" && c.n >= 1);
+  if (!on) { WS.cfg = null; if (WS.ws) wsClose("off"); return; }
+  var shardChanged = WS.cfg && WS.cfg.n !== c.n;
+  WS.cfg = { n: Number(c.n) || 1, p: Number(c.p) || 120 };
+  if (shardChanged && WS.ws) wsClose("shard");
+  wsEnsure();
+}
+function wsEnsure() {
+  if (WS.give || !WS.cfg || WS.ws || WS.t || document.hidden || !BE.on || !wsUrl() || typeof WebSocket === "undefined") return;
+  var role = wsRole();
+  if (!role) return;
+  var u = S.get("user", {}) || {};
+  if (role === "p" && (WS.emp !== String(u.empId) || WS.ses !== String(u.ses || ""))) { WS.fails = 0; WS.no = false; }   /* 다른 사람 · 새 토큰이면 인증 거절 기록을 버린다 */
+  if (WS.no) return;
+  wsOpen(role, u);
+}
+function wsOpen(role, u) {
+  if (!WS.dev) WS.dev = "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);   /* 이 화면 한 번의 id · 같은 id 로 다시 붙으면 서버가 옛 연결을 닫는다 */
+  WS.role = role; WS.emp = role === "p" ? String(u.empId) : ""; WS.ses = role === "p" ? String(u.ses || "") : "";
+  var url = wsUrl() + (role === "tv" ? "?r=tv" : "?r=p&s=" + wsShard(WS.emp, WS.cfg.n)), ws;
+  try { ws = new WebSocket(url); } catch (e) { wsFail(); return; }
+  WS.ws = ws; WS.st = "open"; WS.okAt = 0;
+  ws.onopen = function () {
+    if (WS.ws !== ws) return;
+    var hi = role === "tv" ? { t: "hello", v: "v4.75" } : { t: "hello", emp: WS.emp, ses: WS.ses, d: WS.dev, v: "v4.75" };
+    try { ws.send(JSON.stringify(hi)); } catch (e) {}
+  };
+  ws.onmessage = function (e) {
+    if (WS.ws !== ws) return;
+    var d = e.data;
+    if (d === "o") { WS.pongAt = Date.now(); return; }
+    var m;
+    try { m = JSON.parse(d); } catch (x) { return; }
+    if (!m || typeof m.t !== "string") return;
+    if (m.t === "ok") { wsUp(m); return; }
+    if (m.t === "no") { if (m.reason === "ses" || m.reason === "auth") WS.no = true; return; }
+    if (m.id) { if (WS.ids.indexOf(m.id) >= 0) return; WS.ids.push(m.id); if (WS.ids.length > 64) WS.ids.shift(); }
+    var f = WS.h[m.t];
+    if (f) { try { f(m); } catch (x) {} }
+  };
+  ws.onclose = function (e) {
+    if (WS.ws !== ws) return;
+    var wasOk = WS.st === "ok", code = e && e.code;
+    WS.ws = null; WS.st = "off"; wsTimers(false);
+    if (wasOk) pollNext(POLL.base);   /* 끊기면 곧바로 평소 폴링으로 */
+    if (code === 4000 || WS.no || !WS.cfg) return;
+    if (code === 4002) { WS.cfg = null; pollNext(beJit()); return; }   /* 조각이 바뀌었다 · sync 가 새 값을 준다 */
+    if (wasOk) { WS.t = setTimeout(wsRetry, Math.random() * 10000); return; }   /* 열린 뒤 끊김(재배포 1006 등) · 실패로 세지 않는다 */
+    wsFail();
+  };
+  ws.onerror = function () {};
+}
+function wsRetry() { WS.t = null; wsEnsure(); }
+function wsFail() {
+  WS.ws = null; WS.st = "off";
+  if (++WS.fails >= 3) { WS.give = true; return; }   /* 이 화면에서는 소켓을 포기하고 폴링만 */
+  WS.t = setTimeout(wsRetry, Math.min(30000, 1000 * Math.pow(2, WS.fails - 1)) + Math.random() * 1000);
+}
+function wsUp(m) {
+  var re = WS.hadOk;
+  WS.st = "ok"; WS.okAt = Date.now(); WS.pongAt = Date.now(); WS.fails = 0; WS.hadOk = true;
+  wsTimers(true);
+  if (re && WS.role === "p") wsSyncSoon(3000); else pollNext(wsPollMs());   /* 다시 붙었으면 그사이 놓친 것을 sync 1회로 · 처음이면 폴링만 늦춘다 */
+  if (WS.role === "tv") tvWsPull(true);
+}
+function wsTimers(on) {
+  if (WS.pingT) { clearInterval(WS.pingT); WS.pingT = null; }
+  if (!on) return;
+  WS.pingT = setInterval(function () {
+    var ws = WS.ws;
+    if (!ws || WS.st !== "ok") return;
+    if (Date.now() - WS.pongAt > 70000) { try { ws.close(); } catch (e) {} return; }   /* 답 없는 연결(망 전환 · 반쯤 끊김) */
+    try { ws.send("p"); } catch (e) {}
+  }, 25000);
+}
+function wsClose(why) {
+  if (WS.t) { clearTimeout(WS.t); WS.t = null; }
+  var ws = WS.ws;
+  WS.ws = null; WS.st = "off"; wsTimers(false);
+  if (ws) { try { ws.close(1000, why || "bye"); } catch (e) {} }
+  if (BE.on && why !== "hidden") pollNext(POLL.base);
+}
+/* 힌트 · 전원이 한꺼번에 sync 하지 않게 0~ms 무작위 */
+function wsSyncSoon(ms) {
+  if (WS.syncT) return;
+  WS.syncT = setTimeout(function () { WS.syncT = null; if (POLL.t) { clearTimeout(POLL.t); POLL.t = null; } pollTick(); }, Math.floor(Math.random() * (ms || 3000)));
+}
+document.addEventListener("visibilitychange", function () {
+  if (document.hidden) {
+    if (WS.hidT) clearTimeout(WS.hidT);
+    WS.hidT = setTimeout(function () { WS.hidT = null; if (document.hidden) wsClose("hidden"); }, 300000);
+    return;
+  }
+  if (WS.hidT) { clearTimeout(WS.hidT); WS.hidT = null; }
+  wsEnsure();
+});
+/* 받는 곳 · 새 화면은 여기에 한 줄(WS.h.종류 = 함수) */
+WS.h.notice = function (m) { if (m.notice) { beNoticeIn(m.notice, null); if (App.current === "home") App.render(); } };
+WS.h.noticeOff = function (m) { if (Array.isArray(m.off)) beNoticeIn(null, m.off); };
+WS.h.photo = function (m) { if (m.photo && JSON.stringify(m.photo) !== JSON.stringify(S.get("photo_pub", null))) S.set("photo_pub", m.photo); };
+WS.h.me = function (m) {
+  if (m.k !== "photoQ" || WS.role !== "p") return;
+  var was = S.get("photoq", null), q = m.q || null;
+  if (JSON.stringify(q) === JSON.stringify(was)) return;
+  S.set("photoq", q);   /* axf-store → checkMyState(「지금 입장하세요」 · 곧 차례) · 다시 그리기 */
+  if (q && (q.status === "call" || q.status === "skip") && (!was || was.status !== q.status)) wsSyncSoon(2000);   /* 서버와 한 번 맞춘다 */
+};
+WS.h.sync = function () { wsSyncSoon(3000); };
+WS.h.tv = function (m) { if (WS.role === "tv") tvWsPull(false, m.k); };
+/* TV · 힌트가 오면 기존 읽기 1회(순위판 · 올림픽) · 처음 붙었을 때도 1회 */
+function tvWsPull(all, k) {
+  if (App.current !== "wall_type") return;
+  if (all || k === "site") { TYTV.pullT = 0; tyTvPull(); if (hsOn()) hsPull(); }
+  if ((all || k === "oly") && !TYTV.fix) olyPull(true);
+}
+
 /* ═══ 관리 코드 · 앱에 두지 않는다 (260830 보안) ═══
  * 구판은 FESTIVAL.adminCode에 상수로 박혀 있었고 저장소가 public이라, 소스만 열면
  * GAS 주소와 함께 읽혔다. 주소창만으로 전 참여자 공지 발송·가짜 쿠폰 발급이 가능했다.
@@ -9528,7 +9677,7 @@ window.addEventListener("resize", function () { if (App.current === "type_site" 
 /* ── 1F TV 순위판 · 로그인 없음 · 앱 상위 10 ↔ 현장 상위 5 번갈아(12초) · 닉네임만 · 30초마다 새로 받음 ── */
 var TYTV = { app: null, site: null, show: "site", pullT: 0, flip: null, fix: "" };   /* v4.59 fix = "site" 이면 부스 판(hsHtml) · 주소 #tv=type&fix=site 에서만 */
 function tyTvPull() {   /* v4.16 관리자·테스트 계정이어도 실서버 값 · 서버 없으면 빈 상태("도전을 기다려요") */
-  if (Date.now() - TYTV.pullT < 25000) return;
+  if (Date.now() - TYTV.pullT < (wsLive() ? 115000 : 25000)) return;   /* v4.75 소켓이 붙어 있으면 힌트(tv)로 받고 폴링은 안전망만 */
   TYTV.pullT = Date.now();
   ["site"].forEach(function (m) {   /* v3.86 TV 는 현장 기록만 받는다 */
     beCall({ action: "type_rank", mode: m, n: 5 }, function (r) { if (r && r.ok) { TYTV[m] = r; if (App.current === "wall_type") App.render(); } }, function () {});
@@ -9537,7 +9686,7 @@ function tyTvPull() {   /* v4.16 관리자·테스트 계정이어도 실서버 
 function tyTvTick() {
   if (App.current !== "wall_type") { clearInterval(TYTV.flip); TYTV.flip = null; return; }
   TYTV.show = TYTV.show === "site" ? "oly" : TYTV.show === "oly" ? "oly2" : "site";   /* v4.02 현장 타자 → 올림픽 종합 포디움 → 올림픽 종목별 1~3위 (12초씩) */
-  tyTvPull(); olyPull();
+  tyTvPull(); if (!wsLive() || Date.now() - OLY.t > 115000) olyPull();
   App.render();
 }
 function tyTvRows(r, n) {
@@ -9579,7 +9728,7 @@ function hsPull() {
     var top = r.top || [], keys = top.map(hsKey), hot = {}, n = 0;
     if (TYHS.keys) keys.forEach(function (k) { if (TYHS.keys.indexOf(k) < 0) { hot[k] = 1; n++; } });
     var same = !!TYHS.data && TYHS.keys.join("\n") === keys.join("\n") && TYHS.data.tries === r.tries;
-    TYHS.data = r; TYHS.keys = keys; TYHS.ms = BE_POLL_MS;
+    TYHS.data = r; TYHS.keys = keys; TYHS.ms = wsLive() ? Math.max(BE_POLL_MS, WS.cfg.p * 1000) : BE_POLL_MS;   /* v4.75 소켓 연결 중 = 힌트로 곧바로 · 폴링은 안전망 */
     hsNext(TYHS.ms);
     if (n) { TYHS.hot = hot; TYHS.hotT = Date.now() + 4000; setTimeout(function () { TYHS.hot = {}; if (hsOn()) App.render(); }, 4200); }
     if (!same && hsOn()) App.render();
