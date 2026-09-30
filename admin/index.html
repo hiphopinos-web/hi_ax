@@ -3013,14 +3013,14 @@ function pushDevHtml(){
 }
 function pushCfgHtml(){
   var st=pushSt();
-  var tk=st.tok==="ON"?"항상 토큰 필요":st.tok==="OFF"?"토큰 없이도 받음":"세션필수를 따름(지금 "+(st.ses?"켜짐":"꺼짐")+")";
-  var o=[["","세션필수를 따름"],["ON","항상 토큰 필요"],["OFF","토큰 없이도 받음"]].map(function(x){ return '<option value="'+x[0]+'"'+(st.tok===x[0]?" selected":"")+'>'+x[1]+'</option>'; }).join("");
+  var tk=st.tok==="OFF"?"토큰 없이도 받음(되돌림)":"토큰 필요(기본)";
+  var o=[["ON","토큰 필요(기본)"],["OFF","토큰 없이도 받음"]].map(function(x){ return '<option value="'+x[0]+'"'+((st.tok==="OFF"?"OFF":"ON")===x[0]?" selected":"")+'>'+x[1]+'</option>'; }).join("");
   return card("발송 설정","",
     '<div class="pk"><b>발송</b>'+(st.on?tag("켜짐","ok"):tag("전체 정지","bad"))+'<button class="btn sm '+(st.on?"danger":"pri")+'" onclick="pushOnAsk('+(st.on?0:1)+')">'+(st.on?"전체 정지":"다시 켜기")+'</button><span class="cap">정지하면 대기 작업도 취소되고 자동 알림도 나가지 않습니다.</span></div>'+
     '<div class="pk"><b>보낼 수 있는 시간</b><input class="in" id="pxTime" style="min-width:0;width:140px" value="'+esc(st.time)+'" placeholder="08:30-18:30"><button class="btn sm" onclick="pushTimeSave()">저장</button>'+(st.win?tag("지금 안","ok"):tag("지금 밖 · 시험만","warn"))+'</div>'+
     '<div class="pk"><b>토큰 기준</b><span>'+esc(tk)+'</span>'+tag(st.tokReq?"지금 토큰 필요":"지금 토큰 없이","off")+
       '<span class="row" style="gap:6px;flex-wrap:nowrap"><select class="in sm" id="pxTok" style="min-width:0">'+o+'</select><button class="btn sm" onclick="pushTokAsk()">바꾸기</button></span>'+
-      '<p class="cap" style="width:100%">알림 구독 · 알림 설정 · 실시간 연결이 같은 기준을 씁니다. 결정 전까지 「세션필수를 따름」으로 둡니다.</p></div>');
+      '<p class="cap" style="width:100%">알림 구독 · 알림 설정 · 실시간 연결이 같은 기준을 씁니다. 기본은 토큰 필요(사용자 결정 260930) · 토큰 없는 폰은 소켓 대신 폴링 · 알림을 켤 수 없습니다.</p></div>');
 }
 function pushSendHtml(){
   var S=PF;
@@ -3146,8 +3146,8 @@ function pushTimeSave(){
   dialog({ t:"보낼 수 있는 시간을 바꿀까요?", s:esc(st.time)+" → <b>"+esc(v)+"</b><br>이 시간 밖에서는 나에게 시험만 나갑니다(자동 알림 포함).", ok:"저장", onOk:function(){ pushCfgGo({ time:v }, "보낼 수 있는 시간 · "+v); } });
 }
 function pushTokAsk(){
-  var st=pushSt()||{}, v=el("pxTok").value, nm={ "":"세션필수를 따름", ON:"항상 토큰 필요", OFF:"토큰 없이도 받음" };
-  if(v===(st.tok||"")){ toast("바뀐 값이 없습니다"); return; }
+  var st=pushSt()||{}, v=el("pxTok").value, nm={ "":"토큰 필요(기본)", ON:"토큰 필요(기본)", OFF:"토큰 없이도 받음" };
+  if(v===(st.tok==="OFF"?"OFF":"ON")){ toast("바뀐 값이 없습니다"); return; }
   dialog({ t:"토큰 기준을 바꿀까요?", s:esc(nm[st.tok||""])+" → <b>"+esc(nm[v])+"</b><br>알림 구독 · 알림 설정 · 실시간 연결이 같은 기준을 씁니다."+(v==="ON"?"<br><b>토큰 없이 로그인한 폰(옛 로그인)은 알림을 켤 수 없고 실시간 연결도 끊깁니다.</b>":""), ok:"바꾸기", danger:v==="ON",
     onOk:function(){ pushCfgGo({ wsTok:v }, "토큰 기준 · "+nm[v]); } });
 }
