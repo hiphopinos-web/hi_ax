@@ -2,7 +2,7 @@
  * 목적: 안드로이드에서 "홈 화면에 추가" 네이티브 설치창을 띄울 수 있게 하는 것 · v4.76 웹 푸시 받기(아래).
  * ⚠ 캐시를 전혀 하지 않는다. 구버전이 폰에 고착되는 사고를 원천 차단하기 위함.
  *   (페이지 이동 요청만 네트워크로 그대로 통과시키고, 나머지는 브라우저 기본 동작에 맡긴다) */
-var SW_VERSION = "axf-2026-09-30-push";
+var SW_VERSION = "axf-2026-09-30-push2";
 
 self.addEventListener("install", function () {
   self.skipWaiting();                 // 새 버전이 곧바로 적용되도록
@@ -23,7 +23,8 @@ self.addEventListener("fetch", function (event) {
 });
 
 /* ── v4.76 (260930) 웹 푸시 · 받기 · 누르기 · 구독 바뀜 · 캐시 없음 원칙은 그대로 ─────────────
- * 본문 = { t: 제목, b: 내용, go: 열 화면, tag: 사건키, j: 작업, u: 급함 } · 서버가 RFC 8291 로 암호화해 보낸다(브라우저가 풀어 준다).
+ * 본문 = { t: 제목, b: 내용, go: 열 화면, tag: 사건키, j: 작업, u: 급함, q: 소리 없이 } · 서버가 RFC 8291 로 암호화해 보낸다(브라우저가 풀어 준다).
+ * v4.78 q = 1 이면 silent(소리 · 진동 없이 · 안드로이드 크롬 · 아이폰은 OS 설정을 따른다) · 혼잡 해소 · 관람 시간 · 콘솔 「소리 없이」.
  * 앱 화면이 보이면(안드로이드 크롬 · PC) OS 알림 대신 앱에 넘긴다(앱 안 팝업 한 곳) · 아이폰 · 맥 사파리는 늘 OS 알림(보이지 않는 푸시를 되풀이하면 구독이 끊긴다).
  * 누르면 열린 앱 창에 화면 이동을 넘기고 앞으로 · 창이 없으면 index.html#go=화면&n=사건키 로 연다. */
 function axfLenient() { var u = self.navigator.userAgent || ""; return /Chrome|Edg|SamsungBrowser|Firefox/.test(u) && !/iPhone|iPad|iPod/.test(u); }
@@ -35,7 +36,8 @@ self.addEventListener("push", function (event) {
     list.forEach(function (c) { try { c.postMessage({ axf: "push", d: d }); } catch (e) {} });
     if (vis.length && axfLenient()) return;
     var o = { body: String(d.b || ""), icon: "icons/icon-192.png", badge: "icons/badge-72.png", data: { go: d.go || "home", tag: d.tag || "" } };
-    if (d.tag) { o.tag = String(d.tag); o.renotify = !!d.u; }
+    if (d.tag) { o.tag = String(d.tag); o.renotify = !!d.u && !d.q; }
+    if (d.q) o.silent = true;
     return self.registration.showNotification(String(d.t || "AX Festival"), o);
   }));
 });

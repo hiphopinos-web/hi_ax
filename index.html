@@ -2971,6 +2971,7 @@ function visitSend(why) {
     var ua = navigator.userAgent;
     var p = { action: "visit", did: visitDid(), route: visitRoute(ua, visitStandalone()), dev: visitDev(ua, navigator.maxTouchPoints || 0), why: why };
     if (why !== "back" && /^#(s|q)=/i.test(VISIT.hash0)) p.entry = "qr";
+    else if (why !== "back" && /^#go=/i.test(VISIT.hash0)) p.entry = "push";   /* v4.78 A16 알림을 눌러 연 앱(서버 접속 기록 진입 「알림」 · 콘솔 「알림 눌림」) */
     if (VISIT.first) { p.first = 1; VISIT.first = false; }
     if (u.empId) p.emp = u.empId;
     if (TEST_EMP.indexOf(String(u.empId || kn.empId || "")) >= 0) p.test = 1;
@@ -3183,7 +3184,7 @@ var STORE_DEVICE = ["vid", "a2hs", "fs", "t",
   "type_rank_*", "oly_tab", "oly_ev",
   "notices", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "wq_srv", "wq_v", "survey_agg", "photo_pub", "resv_conf", "crowd",
   "ax_line_i", "art_demo_n", "ev_phase", "toff",
-  "push_ask", "push_first"];   /* v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) */
+  "push_ask", "push_first", "push_ask_ios"];   /* v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) · v4.78 아이폰 탭 · 앱 속 브라우저 안내는 하루 한 번 */
 var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_role", "adm_tok", "dept",
   "stamps", "pp_seen", "pp_glow3", "stamp_pend", "scan_q", "stair", "checkin", "queue", "photoq", "resv", "sess_my", "att_mine", "att_tm",
   "cchat", "cchat_pref", "cchat_att", "ideas", "idea_draft", "survey_draft", "survey_done", "survey_mine", "survey_force", "noti_seen",
@@ -6435,7 +6436,7 @@ var Views = {
     /* v4.08 결정 화면 형식 · 상태는 카드 · 행동은 아래 고정 · v4.09 버튼 하나(대기 번호 받기 · 다시 줄 서기 · 번호표 취소하기 → 확인 시트) · 호출 중에는 버튼 없음 */
     var q = photoQ(), st = q && q.status;
     return '<div class="ax-stack"><section class="ax-card"><div class="ax-stack-tight"><h2 class="ax-card-title">1F AI 포토부스</h2>' +
-      '<p class="ax-meta">1F 홍보존 · 10:00 – 17:00</p></div>' + photoQueueHtml() + "</section></div>" +
+      '<p class="ax-meta">1F 홍보존 · 10:00 – 17:00</p></div>' + photoQueueHtml() + (st === "wait" && typeof pushOffNote === "function" ? pushOffNote() : "") + "</section></div>" +
       (st === "call" ? "" : st === "wait" ? '<div class="axs-fix ax-bottom"><button type="button" class="ax-button axs-btn-danger" id="pqCxBtn" onclick="photoCancelOpen()">번호표 취소하기</button></div>'
         : '<div class="axs-fix ax-bottom"><button type="button" class="ax-button" id="pqTakeBtn" onclick="photoTakeOpen()">' + (st === "skip" ? "다시 줄 서기" : "대기 번호 받기") + "</button></div>");
   },
@@ -7616,8 +7617,10 @@ function admVerify(v, done, keep) {
  *   전에 보낸 주소인데 서버에 없었으면(had 0 · 410 · 연속 실패로 서버가 지웠다) 새로 구독한다(260930 실폰에서 410 을 봤다).
  * 로그아웃 = 이 기기 구독을 지우고 서버에서도 해제(공용 폰에서 앞 사람 알림이 다음 사람에게 뜨지 않게).
  * 알림을 누르면 서비스워커가 열린 앱 창에 화면 이동을 넘기거나 index.html#go=화면&n=사건키 로 연다(pushGoTake · 로그인 전이면 로그인 뒤).
- * 앱 화면이 보이는 동안 온 푸시는 서비스워커가 OS 알림 대신 여기로 넘긴다(아이폰은 늘 OS 알림 · 실폰 확인 항목) · 포토 · 커피챗 · 공지는 sync 한 번으로(앱 안 팝업 한 곳) · 그 밖은 앱 안 팝업. */
-var PUSH = { k: "", booted: false, busy: false, asked: {}, after: null, me: null, firstWant: false };
+ * 앱 화면이 보이는 동안 온 푸시는 서비스워커가 OS 알림 대신 여기로 넘긴다(아이폰은 늘 OS 알림 · 실폰 확인 항목) · 포토 · 커피챗 · 공지는 sync 한 번으로(앱 안 팝업 한 곳) · 그 밖은 앱 안 팝업.
+ * v4.78 (260930 레드팀 채택안 · 루트 「웹 푸시 레드팀 토론.md」) 관람 시간 행은 서버 발송 스위치가 켜졌을 때만(vis) · 시트 버튼 「허용을 눌러 주세요」 · 아이폰 탭 · 앱 속 안내는 하루 한 번 ·
+ *   서버가 푸시 없음(push = 0 · 행사 끝 · 옛 서버)을 알리면 이 기기 구독을 스스로 해제(전체 정지 { off: 1 } 은 숨기기만) · 알림이 꺼진 번호 보유자에게 한 줄 · 누르면 공지 목록(notices) · DAP 상담 알림. */
+var PUSH = { k: "", vis: 0, booted: false, busy: false, asked: {}, after: null, me: null, firstWant: false };
 var PUSH_ASK_DAY = 3;
 function pushPerm() { try { return "Notification" in window ? Notification.permission : "denied"; } catch (e) { return "denied"; } }
 function pushIosVer(ua) { var m = /OS (\d+)_(\d+)/.exec(ua || ""); return m ? [Number(m[1]), Number(m[2])] : [17, 0]; }   /* 아이패드 데스크톱 UA 는 버전이 없다 · 최신으로 본다 */
@@ -7638,13 +7641,25 @@ function pushB64e(buf) { var u = new Uint8Array(buf), s = ""; for (var i = 0; i 
 /* sync 공용 push · 공개키가 바뀌면(환경 · 키 교체) 다시 확인한다 */
 function pushCfg(p) {
   var k = p && typeof p === "object" && p.k ? String(p.k) : "";
+  PUSH.vis = p && typeof p === "object" && Number(p.vis) === 1 ? 1 : 0;   /* v4.78 A6 관람 시간 발송 스위치 */
+  if (p === 0) pushDrop();   /* v4.78 A15 서버가 푸시 없음(행사 끝 · 옛 서버) · 이 기기 구독을 스스로 해제(서버 호출 없이) */
   if (k === PUSH.k) return;
   PUSH.k = k;
-  if (!k) return;
+  if (!k) { if (el("fsPush")) el("fsPush").hidden = true; return; }
   PUSH.booted = false;
   setTimeout(pushBoot, 1200);
   if (PUSH.firstWant) setTimeout(pushFirst, 1600);
   if (el("fsPush")) el("fsPush").hidden = false;
+}
+/* v4.78 A15 · 이 기기 구독 해제(브라우저 구독 객체 · 저장한 주소 · 내 상태) · 서버에는 묻지 않는다(서버가 이미 푸시 없음이라고 했다) · 권한은 그대로라 다시 켜지면 앱을 열 때 새로 구독한다 */
+function pushDrop() {
+  if (!S.get("push_ep", "") && !PUSH.k) return;
+  S.put("push_ep", ""); S.set("push_me", null); PUSH.me = null; PUSH.booted = false;
+  try {
+    if (!("serviceWorker" in navigator) || !navigator.serviceWorker.getRegistration) return;
+    navigator.serviceWorker.getRegistration().then(function (reg) { return reg && reg.pushManager ? reg.pushManager.getSubscription() : null; })
+      .then(function (sub) { if (sub) sub.unsubscribe().then(function () {}, function () {}); }, function () {});
+  } catch (e) {}
 }
 function pushBoot() { if (PUSH.booted || !pushReady()) return; PUSH.booted = true; if (envKind() === "push" && pushPerm() === "granted") pushEnsure(); }
 function pushSw(cb) {
@@ -7691,6 +7706,14 @@ function pushAsk(ctx, opt, after) {
   var k = envKind(), perm = pushPerm();
   if (k === "push" && perm === "granted") { pushEnsure(after); return false; }
   if (perm === "denied" || k === "none" || k === "ios-old") return false;
+  if (k === "ios-tab" || k === "inapp") {   /* v4.78 A13 같은 「홈 화면에 추가」 · 「다른 브라우저」 안내는 하루 한 번(자리마다 되풀이하면 압박) */
+    var today = new Date().toDateString();
+    if (S.get("push_ask_ios", "") === today) return false;
+    S.put("push_ask_ios", today);
+    PUSH.after = null;
+    pushSheetWait(ctx, opt || {}, 0);
+    return true;
+  }
   if (PUSH.asked[ctx] || !pushAskOk()) return false;
   PUSH.asked[ctx] = 1;
   pushAskMark();
@@ -7706,7 +7729,7 @@ function pushSheetWait(ctx, opt, n) {
 }
 var PUSH_T = { photo: "차례가 되면 알려 드려요", cchat: "매칭되면 알려 드려요", crowd: "풀리면 알려 드려요", first: "알림을 켤까요?" };
 function pushExHtml(ctx, opt) {
-  var t = "지금 입장하세요", b = "1F 포토부스 · " + (opt.no || 14) + "번 · 10분 안에 입장";
+  var t = "포토부스 입장하세요", b = "1F · " + (opt.no || 14) + "번 · 10분 안에 입장";   /* v4.78 A10 실제 푸시 문구와 같게(제목에 주제어) */
   if (ctx === "cchat") { t = "커피챗 매칭 완료"; b = "18F 라운지 · 15:00 · TABLE 3"; }
   if (ctx === "crowd") { t = opt.tgt === "lobby" ? "1F 로비 혼잡이 풀렸어요" : "엘리베이터 혼잡이 풀렸어요"; b = (opt.tgt === "lobby" ? "1F 로비" : "1F 승강기 홀") + " · 15:07"; }
   return '<div class="axs-pex" aria-hidden="true"><img src="icons/icon-192.png" alt=""><div><b>' + esc(t) + "</b><span>" + esc(b) + "</span></div></div>";
@@ -7717,7 +7740,7 @@ function pushSheet(ctx, opt) {
   if (k === "inapp") { pushInappSheet(); return; }
   sheetOpen({ id: "push", title: PUSH_T[ctx] || PUSH_T.first, lead: ctx === "first" ? "포토부스 차례와 커피챗 매칭을 알려 드려요" : "앱을 닫아도 잠금 화면에 알림이 와요",
     body: pushExHtml(ctx, opt) + '<p class="axs-pnote">허용하면 이 기기로 알림을 보냅니다. 행사 후 삭제됩니다</p>',
-    go: "pushAllow()", goLbl: "알림 받기", goBusy: "켜는 중" });
+    go: "pushAllow()", goLbl: "알림 받기", goBusy: "허용을 눌러 주세요" });   /* v4.78 A13 브라우저 허용창이 떠 있는 동안 */
 }
 /* 브라우저 허용창은 사용자의 탭 안에서만(아이폰 규칙) · 허용되면 구독 → 서버 · 거절이면 시트만 닫는다(앱 안 알림은 그대로) */
 function pushAllow() {
@@ -7780,11 +7803,11 @@ function pushSetPaint() {
   if (s.on) {
     var fl = Number(me.floor) || 0, fls = "";
     for (var f = 3; f <= 15; f++) fls += '<button type="button" class="axs-flr' + (f === fl ? " on" : "") + '" aria-pressed="' + (f === fl) + '" onclick="pushPrefSet(\'floor\', ' + f + ')">' + f + "층</button>";
-    rows = '<div class="axs-psets"><div class="axs-pset"><span>내 차례 · 매칭</span><b>켜짐</b></div>' + pushTgl("공지 · 추첨", "pub", me.pub !== 0) + pushTgl("관람 시간", "visit", me.visit === 1) + "</div>" +
-      (me.visit === 1 ? '<p class="axs-pnote">근무 층</p><div class="axs-flrs">' + fls + "</div>" : "");
+    rows = '<div class="axs-psets"><div class="axs-pset"><span>내 차례 · 매칭</span><b>켜짐</b></div>' + pushTgl("공지 · 추첨", "pub", me.pub !== 0) + (PUSH.vis === 1 ? pushTgl("관람 시간", "visit", me.visit === 1) : "") + "</div>" +
+      (PUSH.vis === 1 && me.visit === 1 ? '<p class="axs-pnote">근무 층</p><div class="axs-flrs">' + fls + "</div>" : "");   /* v4.78 A6 관람 시간 행 · 근무 층은 서버 발송 스위치가 켜졌을 때만(꺼져 있으면 유령 스위치) */
   }
   var go = s.act === "on" ? "pushSetOn()" : s.act === "ios" ? "sheetClose(true); pushIosSheet()" : s.act === "inapp" ? "sheetClose(true); pushInappSheet()" : "sheetClose()";
-  var spec = { id: "pushset", title: "알림", lead: esc(s.st) + (s.sub ? "<br>" + esc(s.sub) : ""), body: rows, go: go, goLbl: s.act === "on" ? "알림 받기" : s.act ? "방법 보기" : "닫기", goBusy: "켜는 중" };
+  var spec = { id: "pushset", title: "알림", lead: esc(s.st) + (s.sub ? "<br>" + esc(s.sub) : ""), body: rows, go: go, goLbl: s.act === "on" ? "알림 받기" : s.act ? "방법 보기" : "닫기", goBusy: s.act === "on" ? "허용을 눌러 주세요" : "켜는 중" };
   if (SHEET.id === "pushset" && el("axsSheet")) { SHEET.spec = spec; sheetPaint(); } else sheetOpen(spec);
 }
 function pushSetOpen() {
@@ -7834,12 +7857,14 @@ function pushSeen(tag) {
   } else if ((m = /^cchat:(\d{1,2}:\d{2}):(.+)$/.exec(tag || ""))) {
     var k = "m:" + m[1] + m[2];
     if (s.cchat !== k) { s.cchat = k; chg = true; }
+  } else if ((m = /^dap:([A-Za-z0-9]+):ok$/.exec(tag || ""))) {   /* v4.78 D1 DAP 상담 승인 알림 = 앱 안 「과제상담 승인 완료」를 본 것으로 */
+    if (s.resv !== m[1] + ":approved") { s.resv = m[1] + ":approved"; chg = true; }
   }
   if (chg) S.set("noti_seen", s);
 }
 function pushGo(go, tag) {
   pushSeen(tag);
-  if (["home", "photoq", "ev_cchat", "dap"].indexOf(go) < 0) go = "home";
+  if (["home", "photoq", "ev_cchat", "dap", "notices"].indexOf(go) < 0) go = "home";   /* v4.78 A5 notices = 공지 목록(긴급 공지 · 대상 지정) */
   if (!((S.get("user", {}) || {}).empId) || el("app").hidden) { PUSHGO = { go: go, tag: tag || "" }; return; }
   App.go(go);
 }
@@ -7848,7 +7873,7 @@ function pushGoRun() { if (!PUSHGO) return; var g = PUSHGO; PUSHGO = null; pushG
 function pushIn(d) {
   if (!d || document.visibilityState !== "visible") return;
   var tag = String(d.tag || "");
-  if (/^(photo|cchat):/.test(tag) || /^N\d+$/.test(tag)) { if (typeof wsSyncSoon === "function") wsSyncSoon(800); return; }
+  if (/^(photo|cchat|dap):/.test(tag) || /^N\d+$/.test(tag)) { if (typeof wsSyncSoon === "function") wsSyncSoon(800); return; }   /* v4.78 dap: 승인은 앱 안 「과제상담 승인 완료」 한 곳 */
   if (!d.t) return;
   notice({ key: "push:" + (tag || d.j || d.t), title: String(d.t), body: String(d.b || ""), go: d.go && d.go !== "home" ? d.go : "", urgent: !!d.u });
 }
@@ -7860,6 +7885,13 @@ if ("serviceWorker" in navigator) {
       else if (m.axf === "push") pushIn(m.d || {});
     });
   } catch (e) {}
+}
+/* v4.78 A14 (사용자 승인 260930 · 문구 다이어트 예외 = 조건 고지) · 번호표를 기다리는데 이 기기 알림이 꺼져 있으면 한 줄 · 아이폰 사파리 탭은 다른 시트가 안내해서 없음 · 푸시 없는 서버도 없음 */
+function pushOffNote() {
+  if (!pushReady() || envKind() === "ios-tab") return "";
+  var me = PUSH.me || S.get("push_me", null);
+  if (pushPerm() === "granted" && me && me.n > 0) return "";
+  return '<p class="ax-meta" id="pqPushOff">알림이 꺼져 있어요 · 앱을 열어 두세요</p>';
 }
 /* 혼잡 「풀리면 알림」 · 그 대상이 지금 혼잡일 때만 · 한 번짜리(풀리거나 제보가 끝나면 알림 1건 · 90분) */
 var CWATCH_MS = 5400000;
