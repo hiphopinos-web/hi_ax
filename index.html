@@ -7222,7 +7222,8 @@ function checkMyState() {
   }
   if (pq && pq.status === "call" && seen.photoCall !== pq.no) {
     seen.photoCall = pq.no; changed = true;
-    NOTICE.q = NOTICE.q.filter(function (x) { return x.k !== "photo:" + pq.no; });   /* v4.64 묵은 「예상 입장」 팝업은 버린다 */
+    NOTICE.q = NOTICE.q.filter(function (x) { return x.k !== "photo:" + pq.no && x.k.indexOf("nu:곧 차례예요|") !== 0; });   /* v4.64 묵은 「예상 입장」 팝업은 버린다 · v4.75 「곧 차례예요」도 */
+    if (NOTICE.cur && NOTICE.cur.k.indexOf("nu:곧 차례예요|") === 0 && el("modal")) modalClose();   /* v4.75 소켓은 「곧 차례」와 「호출」이 1초 차로 온다 · 떠 있는 「곧 차례」를 닫고 호출을 바로 띄운다 */
     notifyUser("지금 입장하세요", "1F 포토부스 · " + pq.no + "번 · 10분 안에 입장", "photoq", "");
   }
   if (changed) S.set("noti_seen", seen);
