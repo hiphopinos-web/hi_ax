@@ -381,6 +381,23 @@ table.brk tr.tot td{border-bottom:0;border-top:1px solid var(--line3)}
 .pk:first-child{border-top:0;padding-top:0}
 .pk>b{min-width:132px}
 @media(max-width:720px){.pk>b{min-width:0;width:100%}}
+/* v4.78 알림 보류 창 · 프리셋 · 발송 옵션 · 숫자 설정 · 이름은 pz- 로 시작(다른 규칙과 겹치지 않게 · 117-콘솔 겹침 검사) */
+.pz-hold{margin-top:14px;display:flex;gap:16px;align-items:center;padding:14px 16px;border-radius:var(--r-s);background:var(--warn-bg);border:1px solid var(--warn-bd)}
+.pz-hold.pz-done{background:var(--soft);border-color:var(--line2)}
+.pz-n{font-size:var(--fs-kpi);font-weight:800;color:var(--warn);min-width:44px;text-align:center;font-variant-numeric:tabular-nums}
+.pz-t{font-weight:800;color:var(--tx)}
+.pz-s{font-size:var(--fs-s);color:var(--tx2);margin-top:2px}
+.pz-bar{margin-top:8px;height:6px;border-radius:3px;background:var(--line2);overflow:hidden}
+.pz-bar i{display:block;height:100%;background:var(--brand);transition:width .2s linear}
+.pz-acts{margin-top:14px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.pz-lab{font-size:var(--fs-c);font-weight:700;color:var(--tx3);margin-top:14px}
+.pz-pre{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.pz-rule{margin-top:12px;font-size:var(--fs-s);color:var(--tx2);padding:10px 12px;border:1px solid var(--line2);border-radius:var(--r-s);background:var(--soft)}
+.pz-opt{display:flex;gap:8px 16px;flex-wrap:wrap;align-items:center;margin-top:12px;font-size:var(--fs-s)}
+.pz-opt label{display:flex;gap:6px;align-items:center;font-weight:700}
+.pz-nums{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.pz-nums .in{min-width:0;width:84px}
+@media(max-width:720px){.pz-hold{gap:10px}.pz-acts .btn{flex:1}}
 .g75{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
 .g75>div>.card:first-child{margin-top:0}
 @media(max-width:1100px){.g75{grid-template-columns:minmax(0,1fr)}}
@@ -980,7 +997,7 @@ var GUIDE={
   typing:[["AX 올림픽 · 점수 계수","종목별 계수를 고치면 미리보기에 예시 기록의 점수가 바로 보입니다. <b>저장</b>하면 규칙판(rev)이 1 오르고 이미 낸 기록까지 전원 점수가 새 계수로 다시 계산됩니다."],["당일 잠금","리허설 재보정을 마친 뒤 10/26 아침에 <b>당일 잠금 켜기</b>를 누릅니다. 잠긴 동안에는 저장이 거부되고, 해제는 언제든 됩니다."],["게임별 통계","다섯 종목 전원 점수 · 최고 점수 중앙 · 만점 도달 · CSV 입니다. 행의 대표 기록을 누르면 점수 구성이 펼쳐집니다. 부문 통계는 두지 않습니다."],["O/X 문항","AI O/X 문항별 정답률 · 판자 · 낙하 · O 선택 비율 · 평균 시간입니다. 답이 틀린 문항은 체크한 뒤 <b>선택 문항 끄기</b>로 출제에서 뺍니다. 규칙 잠금과 별개라 당일에도 됩니다."],["타자왕전 · 닉네임","Outro 호명용 상위 5와 부적절한 닉네임 숨김·초기화입니다."]],
   race:[["준비","아침에 <b>좌석 링크</b>를 선수 노트북마다 한 번 엽니다. 관리코드는 필요 없고, 진행자가 연 판에만 참가됩니다."],["판 열기","좌석 수(1~4)를 고르고 <b>판 열기</b>를 누르면 선수 노트북에 이름 입력이 나옵니다. 한 명만 앉아도 <b>시작</b>할 수 있습니다."],["큰 화면","<b>큰 화면 열기</b>는 전체 화면 대전 화면입니다. 1명이면 카드 한 장과 오늘 1등, 2명이면 2분할, 3~4명이면 4분할입니다. 마우스를 움직이면 아래 오른쪽에 진행 버튼이 나옵니다(N 판 열기 · S 시작 · E 지금 끝내기 · R 결과와 시상)."],["기록","시간 제한은 없고 목숨을 다 잃으면 끝납니다. 모두 끝나면 결과가 「타자대전」 시트에 한 번 기록됩니다. <b>오늘 기록</b>에서 점수 순위와 CSV 를 봅니다. 판 길이는 설정 시트의 타자대전_목숨과 타자대전_상한초로 조절합니다."]],
   notice:[["발송","제목과 내용을 넣고 발송하면 모든 참가자 앱에 나갑니다. 앱을 보고 있는 폰(실시간 연결)은 곧바로, 나머지는 다음 동기화(30초 안)에 받습니다."],["중지","송출 중인 공지를 중지하면 연결된 폰은 곧바로, 나머지는 다음 동기화 때 사라집니다."],["푸시도 보내기","체크하면 대상과 인원 미리보기가 나오고, 확인 창을 거쳐 공지와 함께 푸시가 갑니다. 푸시가 막히면(정지 · 시간 밖 · 5분 안 같은 제목 · 하루 5회) 공지도 나가지 않습니다. 이미 나간 푸시는 회수되지 않습니다."],["예약","정해진 시각에 내야 하는 공지(Outro · 추첨)는 <b>예약</b> 메뉴에서 만듭니다."]],
-  sched:[["예약 만들기","종류 · 날짜 · 시각 · 제목을 넣고 <b>예약 만들기</b>를 누릅니다. 「Outro 5분 전」 · 「경품 추첨 시작」 버튼이 문구를 채웁니다(추첨 시각은 직접 넣습니다). <b>푸시도 보내기</b>를 켜면 그 시각에 푸시도 나갑니다(「경품 추첨 시작」은 응모권 보유자가 기본)."],["2분 전","실행 2분 전부터 모든 메뉴 위에 배너가 뜹니다. 진행이 밀리면 <b>+5분</b>, 하지 않을 거면 <b>취소</b>를 누릅니다."],["지금 실행","목록의 <b>지금 실행</b>은 시각을 기다리지 않고 바로 냅니다."],["관람 시간표","확정 전까지 <b>가상 데이터</b>입니다. 표를 고치고 저장할 수 있고, 발송 스위치는 표가 확정될 때까지 꺼 둡니다(켜면 관람 시간 푸시가 나갑니다)."]],
+  sched:[["예약 만들기","종류 · 날짜 · 시각 · 제목을 넣고 <b>예약 만들기</b>를 누릅니다. 「Outro 10분 전」 · 「경품 추첨 시작」 버튼이 문구를 채웁니다(추첨 시각은 직접 넣습니다). <b>푸시도 보내기</b>를 켜면 그 시각에 푸시도 나갑니다(「경품 추첨 시작」은 응모권 보유자가 기본)."],["2분 전","실행 2분 전부터 모든 메뉴 위에 배너가 뜹니다. 진행이 밀리면 <b>+5분</b>, 하지 않을 거면 <b>취소</b>를 누릅니다."],["지금 실행","목록의 <b>지금 실행</b>은 시각을 기다리지 않고 바로 냅니다."],["관람 시간표","확정 전까지 <b>가상 데이터</b>입니다. 표를 고치고 저장할 수 있고, 발송 스위치는 표가 확정될 때까지 꺼 둡니다(켜면 관람 시간 푸시가 나갑니다)."]],
   push:[["대상 · 미리보기","대상 종류와 조건을 고르면 0.4초 뒤 「대상 · 도달 가능 · 도달 불가」가 바로 나옵니다. 도달 불가는 알림을 구독하지 않은 사람이고, 그들에게는 앱 안 공지가 정본입니다."],["확인 창","제목 · 본문 · 대상 · 인원을 크게 다시 보여 줍니다. 전체이거나 300명 이상이면 <b>인원 숫자를 직접 넣어야</b> 보내기가 눌립니다."],["나에게 시험","본인 사번을 넣고 <b>나에게 보내기</b>를 누르면 그 사번 구독 기기(최대 3대)로만 갑니다. 시간대와 상한에 걸리지 않고, 결과가 그 자리에 나옵니다."],["이력 · 정지","보낸 것은 이력에 한 줄씩 남습니다(편집 불가). 이미 나간 알림은 회수되지 않습니다. 문제가 생기면 <b>전체 정지</b>로 대기 작업까지 멈춥니다."]],
   photo:[["호출","<b>다음 번호 호출</b>을 누르면 맨 앞 번호의 앱에 「지금 입장하세요」가 뜹니다."],["건너뛰기 · 완료","호출 후 10분 안에 오지 않으면 건너뛰기, 도착하면 완료입니다."]],
   art:[["설정","접수 폼 주소와 두 마감 시각을 저장합니다."],["공개","작품을 공개 · 샘플 · 숨김으로 바꿉니다."],["시상","좋아요 순위와 CSV 로 시상합니다."]]
@@ -2138,10 +2155,10 @@ function viewNotice(){
     cur?'<button class="btn danger" onclick="noticeStopC(\''+jq(cur.id)+'\')">공지 중지 (전 기기)</button>':'');
   /* v4.76 「푸시도 보내기」 · 푸시 있는 서버에서만 · 커피챗 마감 신호 제목에는 두지 않는다 · 입력은 NT 에 둔다(다시 그려도 남는다) */
   var pOk=!!pushSt(), ccT=NT.t.trim()===CC_CLOSE_T, pOn=pOk&&NT.push&&!ccT;
-  var nb='<label class="fld"><span>제목'+(pOn?' '+ccHtml("ntt",NT.t.length,"t"):'')+'</span><input class="in" id="ntT" '+(pOn?'maxlength="'+PUSH_MAX.t+'" ':'')+'value="'+esc(NT.t)+'" placeholder="예: 1F 전시, 지금 한산해요" style="width:100%" oninput="ntIn(\'t\',this.value)"></label>'+
-    '<label class="fld mt12"><span>내용'+(pOn?' '+ccHtml("ntb",NT.b.length,"b"):'')+'</span><input class="in" id="ntB" '+(pOn?'maxlength="'+PUSH_MAX.b+'" ':'')+'value="'+esc(NT.b)+'" placeholder="한두 문장" style="width:100%" oninput="ntIn(\'b\',this.value)"></label>'+
+  var nb=(pOk?'<div class="pz-rule" style="margin-top:0;margin-bottom:12px">'+esc(PUSH_RULE)+'</div>':'')+'<label class="fld"><span>제목'+(pOn?' '+ccHtml("ntt",NT.t.length,"t"):'')+'</span><input class="in" id="ntT" '+(pOn?'maxlength="'+PUSH_MAX.t+'" ':'')+'value="'+esc(NT.t)+'" placeholder="예: 17F 대강당 입장 지연" style="width:100%" oninput="ntIn(\'t\',this.value)"></label>'+
+    '<label class="fld mt12"><span>내용'+(pOn?' '+ccHtml("ntb",NT.b.length,"b"):'')+'</span><input class="in" id="ntB" '+(pOn?'maxlength="'+PUSH_MAX.b+'" ':'')+'value="'+esc(NT.b)+'" placeholder="예: 좌석 정리 중 · 5분 뒤 입장해 주세요" style="width:100%" oninput="ntIn(\'b\',this.value)"></label>'+
     (pOk&&!ccT?'<label class="row mt12" style="gap:8px;font-weight:700"><input type="checkbox" class="ck" '+(NT.push?"checked ":"")+'onchange="ntPush(this.checked)">푸시도 보내기</label>':'');
-  if(pOn) nb+='<div class="mt12">'+tgtHtml("nt")+'</div><div class="pv" id="pv_nt">'+pvHtml("nt")+'</div><div class="note warn mt12">'+esc(PUSH_SAFE)+'</div>';
+  if(pOn) nb+=pzPreHtml("nt",0)+'<div class="mt12">'+tgtHtml("nt")+'</div>'+pzOptHtml("nt")+'<div class="row mt12" style="gap:8px;align-items:flex-end"><label class="fld">보내는 사람'+pzByBox()+'</label></div><div class="pv" id="pv_nt">'+pvHtml("nt")+'</div>'+pzManNote()+'<div class="note warn mt12">'+esc(PUSH_SAFE)+'</div>';
   nb+='<div class="row mt12"><button class="btn pri" onclick="noticeSend()">'+(pOn?"공지 + 푸시 발송":"전체 발송")+'</button></div>';
   h+='<div class="grid g2">'+card("새 공지 발송",pOn?"모든 참가자 기기 · 푸시는 고른 대상":"모든 참가자 기기",nb);
   h+=card("템플릿","확인 창을 거쳐 발송 · 앱 공지만",NOTICE_TPL.map(function(t,i){
@@ -2608,19 +2625,24 @@ function noticeSend(){
     return;
   }
   var sp=tgtSpec(NT.f); if(sp.err){ toast(sp.err); return; }
+  if(pzHole(t,b)){ toast("○○ 칸을 채워 주세요"); return; }
+  if(!pzByOk()){ toast("보내는 사람 이름을 2글자 이상 넣으세요"); return; }
   clearTimeout(NT.q); NT.q=null;
   pvRun("nt", function(v){
     if(!v||v.err||!v.ok){ toast(v&&v.err?v.err:"미리보기 실패 · "+pushWhy(v)); return; }
     if(v.block){ dialog({ t:"푸시를 보낼 수 없습니다", s:esc(pushBlockMsg(v,v.block))+"<br>공지만 보내려면 「푸시도 보내기」를 끕니다." }); return; }
-    pushAsk({ head:"공지와 푸시를 보낼까요?", sub:"앱 공지(LED 띠 · 홈 카드)는 모든 참가자 기기에, 푸시는 아래 인원에게 갑니다. 이미 나간 푸시는 회수되지 않습니다."+ccm, t:t, b:b, go:"home", extra:"홈 공지 카드", pv:v,
-      send:function(cnt,force){ noticePushGo(t,b,v.spec,cnt,force); } });
+    var sil=pzSil("nt"), ttl=NT.long?3600:null;
+    pushAsk({ head:"공지와 푸시를 보낼까요?", sub:"앱 공지(LED 띠 · 홈 카드)는 모든 참가자 기기에, 푸시는 아래 인원에게 갑니다."+(v.hold?" 전체급은 "+v.hold+"초 보류 뒤 나가고 그 사이 취소할 수 있습니다.":" 이미 나간 푸시는 회수되지 않습니다.")+ccm, t:t, b:b, go:"notices", opt:(sil?"소리 없이":"소리 있음")+" · 유효 "+(ttl?60:(pushLim().ttl||30))+"분", pv:v,
+      send:function(cnt,force){ noticePushGo(t,b,v.spec,cnt,force,sil,ttl,v); } });
   });
 }
-function noticePushGo(t,b,spec,cnt,force){
-  call("notice_set",{ title:t, body:b, push:1, spec:JSON.stringify(spec), cnt:cnt, force:force?1:null, by:pwBy()||"콘솔" },function(r){
+function noticePushGo(t,b,spec,cnt,force,sil,ttl,v){
+  call("notice_set",{ title:t, body:b, push:1, spec:JSON.stringify(spec), cnt:cnt, force:force?1:null, by:pwBy(), quiet:sil?1:null, ttl:ttl||null },function(r){
     dlgForce();
-    if(r&&r.ok){ var p=r.push||{}; toast("발송했습니다 · "+t+(p.reason?" · 푸시 못 보냄("+pushWhy(p)+")":" · 푸시 "+(p.reach||0)+"명")); NT.t=""; NT.b=""; NT.pv=null; reload(["noti"]); pushPull(); return; }
-    if(r&&r.reason==="push") return pushAfter(r.push, null, function(c2,f2){ noticePushGo(t,b,spec,c2,f2); }, cnt, noticeSend, "공지도 나가지 않았습니다. ");
+    if(r&&r.ok){ var p=r.push||{}; if(!p.reason) pzLast({ spec:spec, go:"notices", desc:p.desc||"" }); toast("발송했습니다 · "+t+(p.reason?" · 푸시 못 보냄("+pushWhy(p)+")":" · 푸시 "+(p.reach||0)+"명"+(p.hold?" · "+p.hold+"초 뒤 나감":""))); NT.t=""; NT.b=""; NT.pv=null; NT.sil=null; NT.long=false; reload(["noti"]); pushPull();
+      if(p.hold&&p.id) pzOpen({ id:p.id, hold:p.hold, reach:p.reach||0, t:t, b:b, go:"notices", notice:true, sil:sil, ttlMin:ttl?60:(pushLim().ttl||30) });
+      return; }
+    if(r&&r.reason==="push") return pushAfter(r.push, null, function(c2,f2){ noticePushGo(t,b,spec,c2,f2,sil,ttl,v); }, cnt, noticeSend, "공지도 나가지 않았습니다. ");
     toast("발송 실패: "+(r&&r.reason||""));
   },function(){ dlgForce(); toast("서버 응답 없음"); });
 }
@@ -2659,10 +2681,10 @@ function photoAct(act, emp, no, force){
    2분 전 배너 = 모든 메뉴 위에 「17:00 경품 추첨 시작 · 1분 40초 뒤」 + [+5분] [취소] · 새 화면을 열지 않은 운영자도 본다.
    목록은 60초마다(소켓이 붙어 있으면 5분 · 서버가 알리면 곧바로) 새로 받는다. 옛 서버(sched_list 없음)는 한 줄 안내.
    실시간 연결(ops 방) = 서버가 ws 를 주면 콘솔이 스태프 토큰으로 붙는다 · 포토부스 줄이 바뀌면 포토부스 · 대시보드를 새로 받는다 · 예약이 바뀌면 목록을 새로 받는다. */
-var SCHK={ notice:"공지", outro:"Outro", crowd_notify:"혼잡 만료 알림", visit_slot:"관람 시간 알림", cchat_remind:"커피챗 10분 전" };   /* v4.77 커피챗 10분 전 = 서버가 매칭 회차마다 잡는다(매칭 · 변경 · 취소 때 다시 맞춘다) */
+var SCHK={ notice:"공지", outro:"Outro", crowd_notify:"혼잡 만료 알림", visit_slot:"관람 시간 알림", cchat_remind:"커피챗 10분 전", dap_remind:"DAP 상담 10분 전" };   /* v4.78 D1 DAP 상담 10분 전 = 서버가 승인된 상담 시간마다 잡는다 */   /* v4.77 커피챗 10분 전 = 서버가 매칭 회차마다 잡는다(매칭 · 변경 · 취소 때 다시 맞춘다) */
 var SCH_TAG={ "대기":"warn","실행중":"pri","완료":"ok","취소":"off","지남":"bad","오류":"bad" };
 var SCH_PRE=[
-  { n:"Outro 5분 전", kind:"outro", t:"Outro 5분 전", b:"17F 대강당 · 17:00 시작", at:"16:55", tgt:"all" },
+  { n:"Outro 10분 전", kind:"outro", t:"Outro 10분 전", b:"17F 대강당 · 17:00 시작", at:"16:50", tgt:"all" },   /* v4.78 A18 1F 에서 17F 까지 엘리베이터 대기 */
   { n:"경품 추첨 시작", kind:"outro", t:"경품 추첨 시작", b:"17F 대강당", at:"", tgt:"tickets" }   /* v4.76 푸시 대상 기본 = 응모권 보유자 */
 ];
 var SCHP={ t:null, off:false, at:0 };
@@ -2677,7 +2699,7 @@ function viewSched(){
   var rows=d.rows||[], now=Date.now(), open=rows.filter(function(r){ return r.st==="대기"||r.st==="실행중"; });
   var tb='<div class="wrap"><table class="tb"><tr><th>실행 시각</th><th>종류</th><th>내용</th><th>상태</th><th>결과</th><th class="tdr">처리</th></tr>'+
     rows.map(function(r){ var wait=r.st==="대기", soon=wait&&r.ms-now<=(d.soonMs||120000)&&r.ms>now;
-      var what=r.kind==="notice"||r.kind==="outro"?'<b>'+esc(r.title)+'</b>'+(r.body?'<div class="cap">'+esc(r.body)+'</div>':'')+(r.push?'<div class="mt8">'+tag("푸시","pri")+' <span class="cap">'+esc(r.pdesc||"")+'</span></div>':''):r.kind==="visit_slot"?esc(r.slot)+(r.f?'<div class="cap">'+esc(r.f)+'층</div>':''):r.kind==="cchat_remind"?'18F 커피챗 '+esc(r.slot)+'<div class="cap">매칭된 사람에게 푸시</div>':r.kind==="crowd_notify"?esc(r.tgt==="elev"?"엘리베이터":r.tgt==="lobby"?"1F 로비":r.tgt):"";
+      var what=r.kind==="notice"||r.kind==="outro"?'<b>'+esc(r.title)+'</b>'+(r.body?'<div class="cap">'+esc(r.body)+'</div>':'')+(r.push?'<div class="mt8">'+tag("푸시","pri")+' <span class="cap">'+esc(r.pdesc||"")+'</span></div>':''):r.kind==="visit_slot"?esc(r.slot)+(r.f?'<div class="cap">'+esc(r.f)+'층</div>':''):r.kind==="cchat_remind"?'18F 커피챗 '+esc(r.slot)+'<div class="cap">매칭된 사람에게 푸시</div>':r.kind==="dap_remind"?'1F DAP 상담 '+esc(r.slot)+'<div class="cap">승인된 사람에게 푸시</div>':r.kind==="crowd_notify"?esc(r.tgt==="elev"?"엘리베이터":r.tgt==="lobby"?"1F 로비":r.tgt):"";
       return '<tr class="hv'+(soon?" soon":"")+'"><td class="n"><b>'+esc(String(r.at).slice(5).replace("-","/"))+'</b>'+(wait&&r.ms>now?'<div class="cap">'+schLeft(r.ms)+' 뒤</div>':'')+'</td><td>'+esc(SCHK[r.kind]||r.kname||r.kind)+'<div class="cap">'+esc(r.by||"")+'</div></td><td>'+what+'</td>'+
         '<td>'+tag(r.st, SCH_TAG[r.st]||"off")+'</td><td class="cap">'+esc(r.res||"")+'</td>'+
         '<td>'+(wait?'<div class="acts"><button class="btn sm" onclick="schEdit(\''+jq(r.id)+'\',\'run\')">지금 실행</button><button class="btn sm" onclick="schEdit(\''+jq(r.id)+'\',\'delay\')">+5분</button><button class="btn sm danger" onclick="schEdit(\''+jq(r.id)+'\',\'cancel\')">취소</button></div>':'<div class="acts"><span class="cap">-</span></div>')+'</td></tr>'; }).join("")+
@@ -2695,7 +2717,7 @@ function viewSched(){
   if(pOn){
     mk+='<div class="row mt8" style="gap:14px;flex-wrap:wrap">'+[["all","전체 구독자"],["tickets","응모권 보유자"],["pick","대상 선택"]].map(function(x){ return '<label class="row" style="gap:6px"><input type="radio" name="scTg" class="ck" '+(SC.tgt===x[0]?"checked ":"")+'onchange="scTgt(\''+x[0]+'\')">'+x[1]+'</label>'; }).join("")+'</div>';
     if(SC.tgt==="pick") mk+='<div class="mt12">'+tgtHtml("sc",{ noEmps:1 })+'</div>';
-    mk+='<div class="pv" id="pv_sc">'+pvHtml("sc")+'</div><p class="cap mt8">실행할 때 대상을 다시 세고 인원 확인 없이 나갑니다. 보낼 수 있는 시간('+esc((pushSt()||{}).time||"")+') 밖이면 푸시는 나가지 않습니다.</p>';
+    mk+=pzOptHtml("sc")+'<div class="pv" id="pv_sc">'+pvHtml("sc")+'</div>'+pzManNote()+'<p class="cap mt8">실행할 때 대상을 다시 세고 인원 확인 · 보류 없이 나갑니다. 보낼 수 있는 시간('+esc((pushSt()||{}).time||"")+') · 발송 허용 날짜 밖이면 푸시는 나가지 않습니다.</p>';
   }
   mk+='<div class="row mt12">'+SCH_PRE.map(function(p,i){ return '<button class="btn sm ghost" onclick="schPre('+i+')">'+esc(p.n)+'</button>'; }).join("")+'<span style="flex:1"></span><button class="btn pri" onclick="schAdd()">예약 만들기</button></div>'+
     '<p class="cap mt8">그 시각에 서버가 앱 공지(LED 띠 · 홈 카드)를 냅니다. 2분 전부터 모든 메뉴 위에 배너가 뜨고 거기서 +5분 · 취소를 누를 수 있습니다. 3분 넘게 늦으면 보내지 않고 「지남」으로 남깁니다.</p>';
@@ -2730,7 +2752,7 @@ function schAdd(){
   if(!/^\d{4}-\d\d-\d\d$/.test(dy)||!/^\d\d:\d\d$/.test(tm)){ toast("날짜(2026-10-26)와 시각(17:00)을 넣으세요"); return; }
   if(!ti){ toast("제목을 넣으세요"); el("scTi").focus(); return; }
   /* v4.76 푸시도 보내기 · 대상은 실행할 때 서버가 다시 푼다 · 인원 확인 · 하루 5회 · 10분 간격은 보지 않는다(여기 미리보기로 본다) */
-  var push=!!(SC.push&&pushSt()), spec=null, pl="";
+  var push=!!(SC.push&&pushSt()), spec=null, pl="", sil=push&&pzSil("sc");
   if(push){
     var sp=pvSpec("sc"); if(sp.err){ toast(sp.err); return; }
     spec=sp.spec; var v=SC.pv&&SC.pv.ok?SC.pv:null, pst=pushSt();
@@ -2738,7 +2760,7 @@ function schAdd(){
       (hmIn(tm,pst.time)?"":"<br><b>"+esc(tm)+"은 보낼 수 있는 시간("+esc(pst.time)+") 밖이라 푸시는 나가지 않습니다.</b>")+(pst.on?"":"<br><b>지금 알림이 전체 정지 상태입니다.</b>");
   }
   dialog({ t:"예약을 만들까요?", s:"<b>"+esc(dy+" "+tm)+"</b>에 서버가 모든 참가자 앱에 공지를 냅니다(LED 띠 · 홈 카드). 2분 전부터 모든 메뉴 위에 배너가 뜨고 +5분 · 취소를 누를 수 있습니다."+pl, who:"<b>"+esc(ti)+"</b><br>"+esc(bo)+'<span>'+esc(SCHK[k]||k)+(push?" · 푸시":"")+'</span>', ok:"예약",
-    onOk:function(){ call("sched_add",{kind:k,at:dy+" "+tm,title:ti,body:bo,push:push?1:null,spec:push?JSON.stringify(spec):null,by:pwBy()||"콘솔"},function(r){ dlgForce(); if(r&&r.ok){ toast("예약했습니다 · "+tm+" "+ti+(push?" · 푸시":"")); SC.ti=""; SC.b=""; SC.hm=""; schPull(true); } else toast("실패: "+({range:"지금부터 1분 뒤 ~ 30일 안으로 넣으세요",at:"날짜 · 시각 형식이 올바르지 않습니다",text:"제목(40자) · 내용(120자)을 확인하세요",kind:"종류 오류",spec:"푸시 대상 조건이 올바르지 않습니다(예약은 개인 대상 불가)"}[(r||{}).reason]||why(r))); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
+    onOk:function(){ call("sched_add",{kind:k,at:dy+" "+tm,title:ti,body:bo,push:push?1:null,spec:push?JSON.stringify(spec):null,quiet:sil?1:null,by:pwBy()||"콘솔"},function(r){ dlgForce(); if(r&&r.ok){ toast("예약했습니다 · "+tm+" "+ti+(push?" · 푸시"+(sil?" · 소리 없이":""):"")); SC.ti=""; SC.b=""; SC.hm=""; SC.sil=null; schPull(true); } else toast("실패: "+({range:"지금부터 1분 뒤 ~ 30일 안으로 넣으세요",at:"날짜 · 시각 형식이 올바르지 않습니다",text:"제목(40자) · 내용(120자)을 확인하세요",kind:"종류 오류",spec:"푸시 대상 조건이 올바르지 않습니다(예약은 개인 대상 불가)"}[(r||{}).reason]||why(r))); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
 }
 function schEdit(id, op){
   var r=schRows().filter(function(x){ return x.id===id; })[0]||{};
@@ -2828,37 +2850,118 @@ document.addEventListener("visibilitychange",function(){ if(!document.hidden&&ke
    대상 = 서버가 명세(JSON)를 사번 목록으로 풀어 작업을 만들 때 고정한다 · 늘 구독한 사람과의 교집합이다.
    실수 방지(6-2) = 미리보기(0.4초 모아서) · 확인 창(전체이거나 300명 이상이면 인원 숫자 직접 입력) · 10분 안 전체 발송은 한 번 더(force) · 나에게 시험.
    부문은 대상 조건으로만(콘솔 안) · 부문별 숫자는 어디에도 두지 않는다. 실시간 연결 수는 서버 집계가 없어 두지 않는다. */
-var PUSH_REC={ t:24, b:80 }, PUSH_MAX={ t:40, b:120 };
-var PUSH_GO_N={ home:"홈", photoq:"포토부스 번호표", ev_cchat:"커피챗", dap:"DAP 과제상담" };
+var PUSH_REC={ t:20, b:40 }, PUSH_MAX={ t:40, b:120 };   /* v4.78 A11 잠금 화면 권장(제목 20 · 본문 40 · 핵심은 본문 앞 30자) · 서버 한도 40 · 120 */
+var PUSH_GO_N={ home:"홈", notices:"공지 목록", photoq:"포토부스 번호표", ev_cchat:"커피챗", dap:"DAP 과제상담" };   /* v4.78 A5 공지 목록 */
 var PUSH_TYPES=[["all","전체 구독자"],["emps","개인(사번)"],["dap","DAP 상담 신청자"],["cchat","커피챗 신청자"],["photo","포토부스 대기"],["group","그룹(올린 명단)"]];
 var PUSH_JOB_TAG={ "대기":"warn","처리중":"pri","완료":"ok","중단":"bad","취소":"off","건너뜀":"off" };
-var PUSH_AUTO=[["photo","포토부스"],["cchat","커피챗"],["crowd","혼잡 해소"]];
+var PUSH_AUTO=[["photo","포토부스"],["cchat","커피챗"],["dap","DAP 상담"],["crowd","혼잡 해소"]];   /* v4.78 D1 DAP 상담 승인 · 10분 전 */
 var PUSH_SAFE="화재·대피 같은 안전 통지는 사내 방송·기존 안전 채널이 정본입니다. 푸시는 도달을 보장하지 않습니다. 이미 나간 푸시는 회수되지 않습니다.";
+/* v4.78 A11 발송 기준 · 문구 프리셋 · 정정 프리셋(○○ 칸을 채워야 보낼 수 있다) · A8 17F 강연 시간(잠정)에는 「소리 없이」를 미리 켠다 */
+var PUSH_RULE="푸시로 보내는 것: 안전 · 입장 · 시작 · 장소 변경 · 지연. 앱 공지만 하는 것: 안내 · 홍보 · 한산 · 혼잡 소식.";
+var PUSH_PRE=[["입장 지연","17F 대강당 입장 지연","좌석 정리 중 · 5분 뒤 입장해 주세요"],["장소 변경","장소 변경 안내","○○ → ○○ · 시간은 그대로예요"],["시작 지연","시작 지연 안내","○○ · ○○:○○ 시작으로 바뀌었어요"],["재개","다시 시작합니다","○○ · 지금 입장할 수 있어요"]];
+var PUSH_FIX=[["정정: 앞선 알림 오발송","앞선 알림은 잘못 보냈어요 · 무시해 주세요"],["정정: 시간 변경","○○ · ○○:○○로 바뀌었어요"],["정정: 장소 변경","○○ → ○○로 바뀌었어요"],["상황 종료","○○ 상황이 끝났어요 · 평소대로 이용해 주세요"]];
+var PUSH_LECT=[["09:30","11:00"],["13:30","16:40"]];
 function tgtNew(){ return { type:"all", emps:"", cst:"", ahead:"", grp:"", smin:"", smax:"", tmin:"", roul:"", floors:"", dept:"", dev:"", open:false }; }
 /* 화면마다 입력을 여기 둔다(다시 그려도 남는다) · pf = 알림 메뉴 대상 지정 발송 · nt = 공지 발송 카드 · sc = 예약 만들기 */
-var PF={ t:"", b:"", go:"home", f:tgtNew(), pv:null, busy:false, seq:0, q:null };
-var NT={ t:"", b:"", push:false, f:tgtNew(), pv:null, busy:false, seq:0, q:null };
-var SC={ k:"outro", d:"", hm:"", ti:"", b:"", push:false, tgt:"all", f:tgtNew(), pv:null, busy:false, seq:0, q:null };
+var PF={ t:"", b:"", go:"notices", f:tgtNew(), pv:null, busy:false, seq:0, q:null, sil:null, long:false };   /* v4.78 sil = 소리 없이(null = 강연 시간이면 자동) · long = 60분 유효 */
+var NT={ t:"", b:"", push:false, f:tgtNew(), pv:null, busy:false, seq:0, q:null, sil:null, long:false };
+var SC={ k:"outro", d:"", hm:"", ti:"", b:"", push:false, tgt:"all", f:tgtNew(), pv:null, busy:false, seq:0, q:null, sil:null };
 var PSC={ pf:PF, nt:NT, sc:SC };
 var GF={ name:"", emps:"", memo:"", res:null };
 var PUSH={ test:null, tt:null, live:null };
 function pushSt(){ var d=ST.data.pst; return d&&d.ok&&d.rt?d:null; }
-function pushLim(){ return ((pushSt()||{}).limits)||{ day:12, all:5, gap:10, confirm:300, emps:50 }; }
+function pushLim(){ return ((pushSt()||{}).limits)||{ day:5, all:3, gap:10, confirm:300, emps:50, hold:10, ttl:30 }; }
+/* v4.78 발송자 이름(서버와 같은 규칙 · 2글자 이상 · 자동 이름 안 됨) · ○○ 칸 · 강연 시간 · 소리 없이 · 60분 */
+function pzByOk(){ var b=String(pwBy()||"").replace(/\s+/g,""); return b.length>=2&&["콘솔","예약","자동"].indexOf(b)<0; }
+function pzByBox(){ return '<input class="in" style="min-width:0;width:150px" placeholder="이름 2글자 이상" value="'+esc(pwBy())+'" oninput="pwBySet(this.value)">'; }
+function pzHole(t,b){ return /○/.test(String(t||"")+String(b||"")); }
+function pzHm(){ var d=new Date(); return ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2); }
+function lectAt(hm){ return /^\d\d:\d\d$/.test(hm||"")&&PUSH_LECT.some(function(w){ return hm>=w[0]&&hm<w[1]; }); }
+function pzSil(sc){ var S=PSC[sc]; if(S.sil!=null) return !!S.sil; return lectAt(sc==="sc"?scHmN():pzHm()); }
+function scHmN(){ var t=String(SC.hm||"").trim(); if(/^\d{3,4}$/.test(t)) t=("0"+t).slice(-4).replace(/(\d\d)(\d\d)/,"$1:$2"); if(/^\d:\d\d$/.test(t)) t="0"+t; return t; }
+function pzOptHtml(sc){
+  var S=PSC[sc], L=pushLim(), on=pzSil(sc), lec=lectAt(sc==="sc"?scHmN():pzHm());
+  return '<div class="pz-opt"><label><input type="checkbox" class="ck" '+(on?"checked ":"")+'onchange="PSC.'+sc+'.sil=this.checked?1:0">소리 없이</label>'+
+    (sc!=="sc"?'<label><input type="checkbox" class="ck" '+(S.long?"checked ":"")+'onchange="PSC.'+sc+'.long=this.checked">60분 동안 유효(기본 '+esc(String(L.ttl||30))+'분)</label>':'')+
+    (lec?'<span class="cap">'+(sc==="sc"?"그 시각은":"지금")+' 17F 강연 시간입니다</span>':'')+'</div>';
+}
+function pzManNote(){ var st=pushSt(); return st&&st.manual===0?'<div class="note warn mt12">수동 발송이 잠겨 있습니다(1단계). 공지 · 대상 지정 · 예약 알림은 나가지 않습니다.</div>':''; }
+function pzPreHtml(sc, fix){
+  return '<div class="pz-lab">문구 프리셋</div><div class="pz-pre">'+PUSH_PRE.map(function(p,i){ return '<button class="btn sm ghost" onclick="pzPre(\''+sc+'\','+i+')">'+esc(p[0])+'</button>'; }).join("")+'</div>'+
+    (fix?'<div class="pz-lab">정정 프리셋 · 직전 발송 대상으로 채웁니다</div><div class="pz-pre">'+PUSH_FIX.map(function(p,i){ return '<button class="btn sm ghost" onclick="pzFix('+i+')">'+esc(p[0])+'</button>'; }).join("")+'</div>':'');
+}
+function pzPre(sc,i){ var S=PSC[sc], p=PUSH_PRE[i]; if(!p) return; S.t=p[1]; S.b=p[2]; render(); pvq(sc,1); if(pzHole(p[1],p[2])) toast("○○ 칸을 채워 주세요"); }
+/* 정정 · 직전 발송(이 콘솔에서 보낸 대상 지정 · 공지 푸시)의 대상 조건을 그대로 채운다 · 보내기는 확인 창을 그대로 거친다 */
+function pzLast(v){ try{ if(v===undefined){ var s=localStorage.getItem("axf_push_last"); return s?JSON.parse(s):null; } localStorage.setItem("axf_push_last",JSON.stringify(v)); }catch(e){} return null; }
+function specToF(s){
+  var f=tgtNew(); s=s||{};
+  if(s.emps){ f.type="emps"; f.emps=s.emps.join(", "); }
+  else if(s.group==="dap") f.type="dap";
+  else if(s.group==="cchat"){ f.type="cchat"; f.cst=s.st||""; }
+  else if(s.group==="photo"){ f.type="photo"; f.ahead=s.maxAhead!=null?String(s.maxAhead):""; }
+  else if(s.group&&s.group.indexOf("g:")===0){ f.type="group"; f.grp=s.group.slice(2); }
+  if(s.stamps){ f.smin=String(s.stamps.min); f.smax=String(s.stamps.max); }
+  if(s.tickets) f.tmin=String(s.tickets.min);
+  if(s.roulette!=null) f.roul=String(s.roulette);
+  if(s.floors) f.floors=s.floors.join(",");
+  if(s.dept) f.dept=s.dept;
+  if(s.dev) f.dev=s.dev;
+  f.open=!!(f.smin||f.tmin||f.roul||f.floors||f.dept||f.dev);
+  return f;
+}
+function pzFix(i){
+  var p=PUSH_FIX[i], last=pzLast(); if(!p) return;
+  PF.t=p[0]; PF.b=p[1];
+  if(last&&last.spec){ PF.f=specToF(last.spec); PF.go=last.go||PF.go; toast("직전 발송 대상으로 채웠습니다 · "+(last.desc||"")+" · ○○ 칸을 채워 주세요"); }
+  else toast("직전 발송 대상을 모릅니다 · 대상을 고르고 ○○ 칸을 채워 주세요");
+  render(); pvq("pf",1);
+}
+/* v4.78 A2 보류 창 · 전체급은 서버가 hold 초 동안 내보내지 않는다 · 그 사이 「푸시만 취소」(push_cancel) · 공지는 「푸시 취소 · 공지도 중지」(notice=1) */
+var PZ={ t:null, id:"", end:0, hold:0, notice:false, done:false };
+function pzOpen(o){
+  clearInterval(PZ.t); PZ={ t:null, id:o.id, end:Date.now()+o.hold*1000-600, hold:o.hold, notice:!!o.notice, done:false };
+  var x='<div class="pmsg"><div class="t">'+esc(o.t)+'</div>'+(o.b?'<div class="b">'+esc(o.b)+'</div>':'')+'<div class="g">누르면 '+esc(PUSH_GO_N[o.go]||o.go)+' · '+(o.sil?"소리 없이":"소리 있음")+' · 유효 '+esc(String(o.ttlMin))+'분</div></div>'+
+    '<div class="pbig"><b>'+o.reach+'</b>명에게 보냅니다</div>'+
+    '<div class="pz-hold" id="pzBox"><b class="pz-n" id="pzN">'+o.hold+'</b><div style="flex:1;min-width:0"><p class="pz-t" id="pzT">초 뒤 발송</p><p class="pz-s" id="pzS">'+(o.notice?"앱 공지(홈 카드 · 목록)는 이미 나갔습니다. 취소해도 공지는 남습니다.":"취소하면 아무에게도 나가지 않습니다.")+'</p><div class="pz-bar"><i id="pzBar" style="width:100%"></i></div></div></div>'+
+    '<div class="pz-acts" id="pzActs"><button class="btn" onclick="pzCancel(0)">'+(o.notice?"푸시만 취소":"푸시 취소")+'</button>'+(o.notice?'<button class="btn danger" onclick="pzCancel(1)">푸시 취소 · 공지도 중지</button>':'')+'</div>';
+  dialog({ t:"알림을 보내는 중입니다", s:"전체급 발송은 "+o.hold+"초 뒤 나갑니다. 그 전에는 취소할 수 있습니다.", wide:true, x:x, ok:"닫기" });
+  PZ.t=setInterval(pzTick,200); pzTick();
+}
+function pzEnd(t,s){ PZ.done=true; clearInterval(PZ.t); var b=el("pzBox"), a=el("pzActs"); if(b) b.className="pz-hold pz-done"; if(el("pzN")) el("pzN").textContent=""; if(el("pzT")) el("pzT").textContent=t; if(el("pzS")) el("pzS").textContent=s; if(a) a.querySelectorAll("button").forEach(function(x){ x.disabled=true; }); if(el("pzBar")) el("pzBar").style.width="0"; pushPull(); }
+function pzTick(){
+  if(PZ.done) return;
+  if(!/\bon\b/.test(el("dlg").className)||!el("pzBox")){ clearInterval(PZ.t); return; }
+  var left=Math.max(0,PZ.end-Date.now());
+  el("pzN").textContent=String(Math.ceil(left/1000)); el("pzBar").style.width=(left/(PZ.hold*1000)*100).toFixed(1)+"%";
+  if(left<=0) pzEnd("나갔습니다","되돌릴 수 없습니다. 틀렸으면 알림 메뉴 · 대상 지정 발송의 정정 프리셋을 씁니다.");
+}
+function pzCancel(withN){
+  if(PZ.done||!PZ.id) return;
+  var a=el("pzActs"); if(a) a.querySelectorAll("button").forEach(function(x){ x.disabled=true; });
+  call("push_cancel",{ id:PZ.id, notice:withN?1:null, by:pwBy() },function(r){
+    if(r&&r.ok){ pzEnd("취소했습니다", withN?"푸시와 앱 공지를 모두 멈췄습니다.":PZ.notice?"푸시는 나가지 않습니다. 앱 공지는 남아 있습니다.":"아무에게도 나가지 않습니다."); toast(withN?"푸시를 취소하고 공지를 중지했습니다":"푸시를 취소했습니다"); if(PZ.notice) reload(["noti"]); return; }
+    if(r&&r.reason==="run"){ pzEnd("이미 나가기 시작했습니다","취소할 수 없습니다. 정정 프리셋을 씁니다."); return; }
+    if(a) a.querySelectorAll("button").forEach(function(x){ x.disabled=false; });
+    toast("취소 실패 · "+pushWhy(r));
+  },function(){ if(a) a.querySelectorAll("button").forEach(function(x){ x.disabled=false; }); toast("서버 응답 없음 · 다시 누릅니다"); });
+}
 function pushMe(v){ try{ if(v===undefined) return localStorage.getItem("axf_push_me")||""; localStorage.setItem("axf_push_me",v||""); }catch(e){} return ""; }
 function empsList(t){ var seen={}; return String(t||"").split(/[\s,;]+/).map(normE).filter(function(e){ if(!e||seen[e]) return false; seen[e]=1; return true; }); }
 function pushWhy(r){
   r=r||{}; var st=pushSt()||{}, L=pushLim();
   if(/unknown action/.test(String(r.err||""))) return "이 서버에는 알림 기능이 없어요";
   return ({ nopush:"이 서버에는 알림 기능이 없어요", text:"제목(40자) · 본문(120자)을 확인하세요", go:"열 화면 값이 올바르지 않습니다", spec:"대상 조건이 올바르지 않습니다", me:"본인 사번을 확인하세요",
-    confirm:"인원이 바뀌었습니다(지금 "+(r.reach!=null?r.reach:"?")+"명)", recent:(r.recent||"")+"분 전에 전체 발송이 있었습니다", dup:"같은 제목 · 같은 대상으로 5분 안에 보냈습니다",
-    allmax:"전체 발송은 하루 "+L.all+"회까지입니다", time:"보낼 수 있는 시간("+(r.time||st.time||"")+") 밖입니다", off:"전체 정지 중입니다", empty:"도달 가능한 사람이 없습니다(구독한 사람 0명)",
+    confirm:"인원이 바뀌었습니다(지금 "+(r.reach!=null?r.reach:"?")+"명)", recent:(r.recent||"")+"분 전에 전체급 발송이 있었습니다", dup:"같은 제목 · 같은 대상으로 5분 안에 보냈습니다",
+    allmax:"전체급 발송(전체 또는 "+L.confirm+"명 이상)은 하루 "+(r.allMax||L.all)+"회까지입니다", time:"보낼 수 있는 시간("+(r.time||st.time||"")+") 밖입니다", off:"전체 정지 중입니다", empty:"도달 가능한 사람이 없습니다(구독한 사람 0명)",
+    manual:"수동 발송이 잠겨 있습니다(1단계)", date:"오늘은 발송 허용 날짜가 아닙니다(나에게 시험만)", by:"보내는 사람 이름을 2글자 이상 넣으세요", ttl:"유효 시간 값이 올바르지 않습니다", run:"이미 나가기 시작해 취소할 수 없습니다", state:"이미 처리된 알림입니다",
     cap:"보내지 못했습니다 · 대상이 모두 오늘 받을 수 있는 수("+L.day+"건)를 넘었거나 그 사이 정지됐습니다", notfound:"대상을 찾지 못했습니다",
     name:"그룹 이름은 30자까지이고 따옴표 · 중괄호는 쓸 수 없습니다", emps:"사번을 넣으세요", size:"그룹은 "+(r.max||2000)+"명까지입니다" }[r.reason])||why(r);
 }
 function pushBlockMsg(v, b){
   var L=pushLim();
   return ({ off:"전체 정지 중이라 보낼 수 없습니다. 알림 메뉴에서 다시 켭니다.", time:"보낼 수 있는 시간("+(v.time||(pushSt()||{}).time||"")+") 밖입니다. 나에게 시험만 됩니다.",
-    dup:"같은 제목 · 같은 대상으로 5분 안에 보냈습니다.", allmax:"전체 발송은 하루 "+L.all+"회까지입니다(오늘 "+(v.allToday||0)+"회)." }[b])||b;
+    dup:"같은 제목 · 같은 대상으로 5분 안에 보냈습니다.", allmax:"전체급 발송(전체 또는 "+L.confirm+"명 이상)은 하루 "+(v.allMax||L.all)+"회까지입니다(오늘 "+(v.allToday||0)+"회). 알림 메뉴 › 발송 설정에서 올릴 수 있습니다.",
+    manual:"수동 발송 잠금(1단계) 중입니다. 알림 메뉴 › 발송 설정에서 풀면 보낼 수 있습니다.", date:"오늘은 발송 허용 날짜가 아닙니다. 나에게 시험만 됩니다." }[b])||b;
 }
 /* 대상 명세 · 종류 하나 + 조건(AND) · 「전체」에 조건이 붙으면 조건만 보낸다(서버: 조건만 있으면 전체 계정 중 조건에 맞는 사람 · 하루 5회 전체 발송에 세지 않는다) */
 function tgtSpec(f, noEmps){
@@ -2905,9 +3008,9 @@ function pvHtml(sc){
   var blk=isSc?(v.block==="off"?"off":""):v.block;
   if(blk) h+='<div class="blk">'+esc(pushBlockMsg(v,blk))+'</div>';
   if(!isSc){
-    if(v.recent) h+='<div class="wrn">'+v.recent+'분 전에 전체 발송이 있었습니다. 보내면 한 번 더 확인합니다.</div>';
-    if(v.allToday!=null) h+='<div>오늘 전체 발송 '+v.allToday+' / '+L.all+'회</div>';
-    if(v.need) h+='<div>'+(v.spec&&v.spec.all?"전체 발송":L.confirm+"명 이상")+'이라 확인 창에서 인원 숫자를 직접 넣습니다.</div>';
+    if(v.recent) h+='<div class="wrn">'+v.recent+'분 전에 전체급 발송이 있었습니다. 보내면 한 번 더 확인합니다.</div>';
+    if(v.allToday!=null) h+='<div>오늘 전체급 발송 '+v.allToday+' / '+(v.allMax||L.all)+'회</div>';
+    if(v.need) h+='<div>'+(v.spec&&v.spec.all?"전체 발송":L.confirm+"명 이상")+'이라 확인 창에서 인원 숫자를 직접 넣습니다.'+(v.hold?' 보내면 '+v.hold+'초 동안 보류하고 그 사이 취소할 수 있습니다.':'')+'</div>';
   }
   return h;
 }
@@ -2952,12 +3055,13 @@ function tgtHtml(sc, o){
 /* 확인 창 · 제목 · 본문 · 대상 · 인원을 크게 · need 면 인원 숫자를 직접 넣어야 [보내기] */
 function pushAsk(o){
   var v=o.pv, need=!!v.need;
-  var x='<div class="pmsg"><div class="t">'+esc(o.t)+'</div>'+(o.b?'<div class="b">'+esc(o.b)+'</div>':'')+'<div class="g">누르면 '+esc(PUSH_GO_N[o.go]||o.go)+' 화면'+(o.extra?' · '+esc(o.extra):'')+'</div></div>'+
+  var x='<div class="pmsg"><div class="t">'+esc(o.t)+'</div>'+(o.b?'<div class="b">'+esc(o.b)+'</div>':'')+'<div class="g">누르면 '+esc(PUSH_GO_N[o.go]||o.go)+' 화면'+(o.extra?' · '+esc(o.extra):'')+(o.opt?' · '+esc(o.opt):'')+'</div></div>'+
     '<div class="pbig"><b>'+v.reach+'</b>명에게 보냅니다<span>· 대상 '+v.n+'명 · 도달 불가 '+v.miss+'명 · 기기 '+v.subs+'대</span></div>'+
     '<p class="cap mt8">'+esc(v.desc)+'</p>'+
-    (v.recent?'<div class="note warn mt12">'+v.recent+'분 전에 전체 발송이 있었습니다.</div>':'')+
+    (v.recent?'<div class="note warn mt12">'+v.recent+'분 전에 전체급 발송이 있었습니다.</div>':'')+
     ((v.warn||[]).length?'<div class="note warn mt12">제목 · 본문에 '+esc(v.warn.join(" · "))+'가 있습니다. 잠금 화면에 보입니다.</div>':'')+
-    (need?'<label class="pcnt">확인: 도달 인원 숫자를 직접 넣으세요<input class="in" id="pcCnt" inputmode="numeric" autocomplete="off" placeholder="숫자" oninput="dlgGate()" onkeydown="if(event.key===\'Enter\')dlgGo()"></label>':'');
+    (need?'<label class="pcnt">확인: 도달 인원 숫자를 직접 넣으세요<input class="in" id="pcCnt" inputmode="numeric" autocomplete="off" placeholder="숫자" oninput="dlgGate()" onkeydown="if(event.key===\'Enter\')dlgGo()"></label>':'')+
+    (v.big?'<p class="cap mt8">나에게 시험 한 번 하셨나요'+(v.hold?' · 보내면 '+v.hold+'초 동안 취소할 수 있습니다':'')+'</p>':'');   /* v4.78 A11 강제 아님 · A2 보류 */
   dialog({ t:o.head, s:o.sub||"", wide:true, x:x, ok:"보내기", focus:need?"pcCnt":"",
     gate:need?function(){ var c=el("pcCnt"), t=c?c.value.replace(/[\s,]/g,""):""; return /^\d+$/.test(t)&&Number(t)===v.reach; }:null,
     onOk:function(){ o.send(need?v.reach:null, 0); } });
@@ -2966,7 +3070,7 @@ function pushAsk(o){
 function pushAfter(r, okFn, resend, cnt, again, pre){
   if(r&&r.ok) return okFn();
   var x=r||{};
-  if(x.reason==="recent") return dialog({ t:"10분 안에 전체 발송이 있었습니다", s:(pre||"")+x.recent+"분 전에 전체 발송이 나갔습니다. 같은 사람들이 또 받습니다. 그래도 보낼까요?", ok:"그래도 보내기", danger:true, onOk:function(){ resend(cnt,1); } });
+  if(x.reason==="recent") return dialog({ t:"10분 안에 전체급 발송이 있었습니다", s:(pre||"")+x.recent+"분 전에 전체급 발송이 나갔습니다. 같은 사람들이 또 받습니다. 그래도 보낼까요?", ok:"그래도 보내기", danger:true, onOk:function(){ resend(cnt,1); } });
   if(x.reason==="confirm"){ toast("그 사이 인원이 바뀌었습니다 · 지금 "+x.reach+"명 · 다시 확인합니다"); return again(); }
   dialog({ t:"보내지 못했습니다", s:(pre||"")+esc(pushWhy(x)) });
 }
@@ -2983,7 +3087,8 @@ function viewPush(){
   h+=card("발송 이력","공지 · 예약 · 대상 지정 · 시험은 한 줄씩 · 자동 알림은 오늘 묶음",'<div id="pxHist">'+pushHistHtml()+'</div>');
   var L=pushLim();
   h+=memo('<p><b>도달</b> · 알림을 구독한 기기에만 갑니다. 아이폰은 홈 화면 앱에서만 받습니다. 도달 불가 인원에게는 앱 안 공지가 정본입니다.</p>'+
-    '<p><b>상한</b> · 사람당 하루 '+L.day+'건(포토부스 · 커피챗 · 혼잡 해소 · 시험은 세지 않음) · 전체 발송 하루 '+L.all+'회 · 전체 발송 '+L.gap+'분 안이면 한 번 더 확인 · 같은 제목 · 같은 대상 5분 안 거절 · 개인 '+L.emps+'명까지 · 전체이거나 '+L.confirm+'명 이상이면 인원 숫자 확인.</p>'+
+    '<p><b>상한</b> · 사람당 하루 '+L.day+'건(포토부스 · 커피챗 · DAP 상담 · 혼잡 해소 · 시험은 세지 않음) · 전체급(전체 또는 '+L.confirm+'명 이상) 하루 '+L.all+'회 · 전체급 '+L.gap+'분 안이면 한 번 더 확인 · 같은 제목 · 같은 대상 5분 안 거절 · 개인 '+L.emps+'명까지 · 전체급은 인원 숫자 확인 뒤 '+(L.hold||0)+'초 보류(그 사이 취소).</p>'+
+    '<p><b>멈출 때</b> · 오발송이면 보류 창에서 취소 · 이미 나갔으면 1단계 수동 발송 잠금 + 정정 프리셋 · 자동 알림까지 문제면 2단계 전체 정지. 기준표는 「QA/푸시 운영 절차.md」.</p>'+
     '<p><b>문구</b> · 잠금 화면에 그대로 보입니다. 이름 · 부문 · 응모권 수 · 경품을 쓰지 않습니다. 제목 '+PUSH_REC.t+'자 · 본문 '+PUSH_REC.b+'자 안이면 잘리지 않습니다.</p>'+
     '<p><b>안전</b> · '+esc(PUSH_SAFE)+'</p>'+
     '<p><b>이 화면에 없는 것</b> · 부문별 숫자(부문 통계 금지) · 실시간 연결 수(서버 집계 없음).</p>');
@@ -2993,7 +3098,7 @@ function pushTopHtml(){
   var st=pushSt(), v=ST.data.visit||{}, routes=v.routes||[], vis=v.visitors||0, ppl=v.ok?(v.people||0):null;
   var rt=function(id){ return routes.filter(function(x){ return x.id===id; })[0]||{ cnt:0, rate:0 }; };
   var inN=rt("kakao").cnt+rt("naver").cnt+rt("inapp").cnt, td=st.today||{};
-  var chips='<div class="perr">'+(st.on?tag("발송 켜짐","ok"):tag("전체 정지","bad"))+(st.win?tag("보낼 수 있는 시간 "+st.time,"off"):tag("지금 시간 밖 · "+st.time+" · 시험만","warn"))+
+  var chips='<div class="perr">'+(st.on?tag("발송 켜짐","ok"):tag("전체 정지","bad"))+(st.manual===0?tag("수동 발송 잠김","bad"):"")+(st.dateOk===0?tag("오늘은 발송 날짜가 아닙니다 · 시험만","warn"):"")+(st.win?tag("보낼 수 있는 시간 "+st.time,"off"):tag("지금 시간 밖 · "+st.time+" · 시험만","warn"))+
     (st.err?'<span class="tag bad" style="white-space:normal">발송기 키 오류 · '+esc(st.err)+'</span><button class="btn sm danger" onclick="pushErrClear()">지우기</button>':'')+
     '<span class="cap">'+esc(short(st.t))+' 기준</span></div>';
   return chips+'<div class="kpis">'+
@@ -3002,7 +3107,8 @@ function pushTopHtml(){
     kpi("홈 화면 앱 접속",rt("app").rate||0,"%","오늘 접속자 "+vis+"명 중 "+rt("app").cnt+"명")+
     kpi("앱 속 브라우저",vis?Math.round(inN/vis*100):0,"%","카카오톡 "+rt("kakao").cnt+" · 네이버 "+rt("naver").cnt+" · 기타 "+rt("inapp").cnt+"명")+
     kpi("오늘 발송",td.jobs||0,"건","성공 "+(td.ok||0)+" · 실패 "+(td.fail||0)+" · 만료 정리 "+(td.gone||0))+
-    kpi("대기 작업",st.pend||0,"건",st.pend?"발송기가 처리하는 중":"없음")+
+    kpi("대기 작업",st.pend||0,"건",st.pend?"발송기가 처리하는 중(보류 포함)":"없음")+
+    (st.taps!=null?kpi("알림 눌림",st.taps,"건","오늘 알림을 눌러 연 횟수 · 도달이 아니라 하한선"):"")+
   '</div>';
 }
 function pushDevHtml(){
@@ -3015,14 +3121,20 @@ function pushCfgHtml(){
   var st=pushSt();
   var tk=st.tok==="OFF"?"토큰 없이도 받음(되돌림)":"토큰 필요(기본)";
   var o=[["ON","토큰 필요(기본)"],["OFF","토큰 없이도 받음"]].map(function(x){ return '<option value="'+x[0]+'"'+((st.tok==="OFF"?"OFF":"ON")===x[0]?" selected":"")+'>'+x[1]+'</option>'; }).join("");
+  var L=pushLim(), man=st.manual!==0, v78=st.manual!=null;   /* v4.78 옛 서버(manual 없음)는 새 줄을 숨긴다 */
   return card("발송 설정","",
-    '<div class="pk"><b>발송</b>'+(st.on?tag("켜짐","ok"):tag("전체 정지","bad"))+'<button class="btn sm '+(st.on?"danger":"pri")+'" onclick="pushOnAsk('+(st.on?0:1)+')">'+(st.on?"전체 정지":"다시 켜기")+'</button><span class="cap">정지하면 대기 작업도 취소되고 자동 알림도 나가지 않습니다.</span></div>'+
+    (v78?'<div class="pk"><b>1단계 수동 발송 잠금</b>'+(man?tag("풀림","ok"):tag("잠김","bad"))+'<button class="btn sm '+(man?"danger":"pri")+'" onclick="pushManAsk('+(man?0:1)+')">'+(man?"잠그기":"풀기")+'</button><span class="cap">공지 · 대상 지정 · 예약 알림만 막습니다. 포토부스 · 커피챗 · DAP 알림은 계속 나갑니다. 먼저 이것부터.</span></div>':'')+
+    '<div class="pk"><b>'+(v78?"2단계 전체 정지":"발송")+'</b>'+(st.on?tag("켜짐","ok"):tag("전체 정지","bad"))+'<button class="btn sm '+(st.on?"danger":"pri")+'" onclick="pushOnAsk('+(st.on?0:1)+')">'+(st.on?"전체 정지":"다시 켜기")+'</button><span class="cap">자동 알림까지 모두 멈추고 대기 작업을 취소합니다.</span></div>'+
     '<div class="pk"><b>보낼 수 있는 시간</b><input class="in" id="pxTime" style="min-width:0;width:140px" value="'+esc(st.time)+'" placeholder="08:30-18:30"><button class="btn sm" onclick="pushTimeSave()">저장</button>'+(st.win?tag("지금 안","ok"):tag("지금 밖 · 시험만","warn"))+'</div>'+
+    (v78?'<div class="pk"><b>발송 허용 날짜</b><input class="in" id="pxDates" style="min-width:0;width:240px" value="'+esc((st.dates||[]).join(", "))+'" placeholder="비우면 제한 없음 · 예: 2026-10-26"><button class="btn sm" onclick="pushDatesSave()">저장</button>'+(st.dateOk?tag((st.dates||[]).length?"오늘 허용":"제한 없음","ok"):tag("오늘은 발송 날짜 아님 · 시험만","warn"))+
+      '<p class="cap" style="width:100%">목록 밖 날짜에는 나에게 시험만 나갑니다(자동 알림 포함). 마지막 날짜가 지나면 참가자 폰이 알림 구독을 스스로 지웁니다. 10/22 동결 때 2026-10-26 을 넣고, 리허설 · 실폰 확인 날은 그날을 더합니다.</p></div>'+
+      '<div class="pk"><b>상한 · 보류 · 유효</b><span class="pz-nums"><label class="fld">사람당 하루<input class="in" id="pxDay" inputmode="numeric" value="'+esc(String(L.day))+'"></label><label class="fld">전체급 하루<input class="in" id="pxAll" inputmode="numeric" value="'+esc(String(L.all))+'"></label><label class="fld">보류(초)<input class="in" id="pxHold" inputmode="numeric" value="'+esc(String(L.hold))+'"></label><label class="fld">공지 유효(분)<input class="in" id="pxTtl" inputmode="numeric" value="'+esc(String(L.ttl))+'"></label><button class="btn sm" onclick="pushNumSave()">저장</button></span>'+
+      '<p class="cap" style="width:100%">사람당 하루 = 공지 · 추첨 · 대상 지정처럼 요청하지 않은 알림(포토부스 · 커피챗 · DAP · 혼잡 해소는 세지 않음). 전체급 = 전체 또는 '+esc(String(L.confirm))+'명 이상. 보류 = 전체급을 누른 뒤 취소할 수 있는 시간(0 = 끔). 긴급 상황에서 모자라면 여기서 올립니다.</p></div>':'')+
     '<div class="pk"><b>토큰 기준</b><span>'+esc(tk)+'</span>'+tag(st.tokReq?"지금 토큰 필요":"지금 토큰 없이","off")+
       '<span class="row" style="gap:6px;flex-wrap:nowrap"><select class="in sm" id="pxTok" style="min-width:0">'+o+'</select><button class="btn sm" onclick="pushTokAsk()">바꾸기</button></span>'+
       '<p class="cap" style="width:100%">알림 구독 · 알림 설정 · 실시간 연결이 같은 기준을 씁니다. 기본은 토큰 필요(사용자 결정 260930) · 토큰 없는 폰은 소켓 대신 폴링 · 알림을 켤 수 없습니다.</p></div>'+
     (st.ccDay?'<div class="pk"><b>커피챗 10분 전</b><input class="in" id="pxCcDay" style="min-width:0;width:140px" value="'+esc(st.ccDay)+'" placeholder="2026-10-26"><button class="btn sm" onclick="pushCcDaySave()">저장</button>'+
-      '<p class="cap" style="width:100%">매칭된 회차 시작 '+esc(String(st.ccPre||10))+'분 전에 그 사람에게 알림이 갑니다(예약 메뉴에 회차마다 한 줄). 날짜를 비우면 행사일 2026-10-26 · 시험 때만 오늘로 두고 끝나면 비웁니다.</p></div>':''));   /* v4.77 옛 서버(ccDay 없음)는 줄을 숨긴다 */
+      '<p class="cap" style="width:100%">매칭된 회차 · 승인된 DAP 상담 시작 '+esc(String(st.ccPre||10))+'분 전에 그 사람에게 알림이 갑니다(예약 메뉴에 시간마다 한 줄 · 커피챗 · DAP 둘 다 이 날짜). 날짜를 비우면 행사일 2026-10-26 · 시험 때만 오늘로 두고 끝나면 비웁니다.</p></div>':''));   /* v4.77 옛 서버(ccDay 없음)는 줄을 숨긴다 */
 }
 function pushCcDaySave(){
   var st=pushSt()||{}, v=(el("pxCcDay").value||"").replace(/\s+/g,"");
@@ -3032,13 +3144,14 @@ function pushCcDaySave(){
 }
 function pushSendHtml(){
   var S=PF;
-  var b=tgtHtml("pf")+
+  var b='<div class="pz-rule" style="margin-top:0;margin-bottom:12px">'+esc(PUSH_RULE)+'</div>'+tgtHtml("pf")+
     '<label class="fld mt16"><span>제목 '+ccHtml("pft",S.t.length,"t")+'</span><input class="in" maxlength="'+PUSH_MAX.t+'" style="width:100%" value="'+esc(S.t)+'" placeholder="예: 17F 대강당 입장 지연" oninput="pxIn(\'pf\',\'t\',this.value)"></label>'+
-    '<label class="fld mt12"><span>본문 '+ccHtml("pfb",S.b.length,"b")+'</span><input class="in" maxlength="'+PUSH_MAX.b+'" style="width:100%" value="'+esc(S.b)+'" placeholder="예: 좌석 정리 중입니다. 5분 뒤 입장해 주세요" oninput="pxIn(\'pf\',\'b\',this.value)"></label>'+
+    '<label class="fld mt12"><span>본문 '+ccHtml("pfb",S.b.length,"b")+'</span><input class="in" maxlength="'+PUSH_MAX.b+'" style="width:100%" value="'+esc(S.b)+'" placeholder="예: 좌석 정리 중 · 5분 뒤 입장해 주세요" oninput="pxIn(\'pf\',\'b\',this.value)"></label>'+
+    pzPreHtml("pf",1)+pzOptHtml("pf")+
     '<div class="row mt12" style="gap:8px;align-items:flex-end;flex-wrap:wrap"><label class="fld">누르면 열 화면<select class="in" style="min-width:0" onchange="PF.go=this.value">'+
       Object.keys(PUSH_GO_N).map(function(k){ return '<option value="'+k+'"'+(S.go===k?" selected":"")+'>'+PUSH_GO_N[k]+'</option>'; }).join("")+'</select></label>'+
-      '<label class="fld">보내는 사람'+byBox()+'</label></div>'+
-    '<div class="pv" id="pv_pf">'+pvHtml("pf")+'</div>'+
+      '<label class="fld">보내는 사람'+pzByBox()+'</label></div>'+
+    '<div class="pv" id="pv_pf">'+pvHtml("pf")+'</div>'+pzManNote()+
     '<div class="row mt12"><span class="cap" style="flex:1">보내기를 누르면 확인 창에서 한 번 더 봅니다.</span><button class="btn pri" onclick="pushSendAsk()">보내기</button></div>'+
     '<div class="note warn mt12">'+esc(PUSH_SAFE)+'</div>';
   return card("대상 지정 발송","대상은 늘 구독한 사람과의 교집합",b);
@@ -3047,27 +3160,31 @@ function pushSendAsk(){
   var S=PF;
   if(!S.t.trim()){ toast("제목을 넣으세요"); return; }
   var sp=tgtSpec(S.f); if(sp.err){ toast(sp.err); return; }
+  if(pzHole(S.t,S.b)){ toast("○○ 칸을 채워 주세요"); return; }
+  if(!pzByOk()){ toast("보내는 사람 이름을 2글자 이상 넣으세요"); return; }
   clearTimeout(S.q); S.q=null;
   pvRun("pf", function(v){
     if(!v||v.err||!v.ok){ toast(v&&v.err?v.err:"미리보기 실패 · "+pushWhy(v)); return; }
     if(v.block){ dialog({ t:"지금은 보낼 수 없습니다", s:esc(pushBlockMsg(v,v.block)) }); return; }
     if(!v.reach){ dialog({ t:"도달 가능한 사람이 없습니다", s:"대상 "+v.n+"명 중 알림을 구독한 사람이 없습니다. 앱 안 공지를 씁니다." }); return; }
-    pushAsk({ head:"알림을 보낼까요?", sub:"이미 나간 알림은 회수되지 않습니다.", t:S.t.trim(), b:S.b.trim(), go:S.go, pv:v, send:function(cnt,force){ pushSendGo(v.spec,cnt,force); } });
+    var sil=pzSil("pf"), ttl=S.long?3600:null;
+    pushAsk({ head:"알림을 보낼까요?", sub:v.hold?"전체급은 "+v.hold+"초 보류 뒤 나가고 그 사이 취소할 수 있습니다.":"이미 나간 알림은 회수되지 않습니다.", t:S.t.trim(), b:S.b.trim(), go:S.go, opt:(sil?"소리 없이":"소리 있음")+" · 유효 "+(ttl?60:(pushLim().ttl||30))+"분", pv:v, send:function(cnt,force){ pushSendGo(v.spec,cnt,force,sil,ttl); } });
   });
 }
-function pushSendGo(spec, cnt, force){
-  var S=PF, t=S.t.trim();
-  call("push_send",{ spec:JSON.stringify(spec), title:t, body:S.b.trim(), go:S.go, cnt:cnt, force:force?1:null, by:pwBy()||"콘솔" }, function(r){
+function pushSendGo(spec, cnt, force, sil, ttl){
+  var S=PF, t=S.t.trim(), b=S.b.trim(), go=S.go;
+  call("push_send",{ spec:JSON.stringify(spec), title:t, body:b, go:go, cnt:cnt, force:force?1:null, by:pwBy(), quiet:sil?1:null, ttl:ttl||null }, function(r){
     dlgForce();
-    pushAfter(r, function(){ toast("보냈습니다 · "+r.reach+"명 · 기기 "+r.subs+"대"); S.t=""; S.b=""; S.pv=null; render(); pvq("pf",1); pushPull(); },
-      function(c2,f2){ pushSendGo(spec,c2,f2); }, cnt, pushSendAsk);
+    pushAfter(r, function(){ pzLast({ spec:spec, go:go, desc:r.desc||"" }); toast("보냈습니다 · "+r.reach+"명 · 기기 "+r.subs+"대"+(r.hold?" · "+r.hold+"초 보류":"")); S.t=""; S.b=""; S.pv=null; S.sil=null; S.long=false; render(); pvq("pf",1); pushPull();
+        if(r.hold&&r.id) pzOpen({ id:r.id, hold:r.hold, reach:r.reach, t:t, b:b, go:go, notice:false, sil:sil, ttlMin:ttl?60:(pushLim().ttl||30) }); },
+      function(c2,f2){ pushSendGo(spec,c2,f2,sil,ttl); }, cnt, pushSendAsk);
   }, function(){ dlgForce(); toast("서버 응답 없음 · 발송 이력에서 나갔는지 먼저 봅니다"); pushPull(); });
 }
 /* 나에게 시험 · 본인 사번 구독 기기(최대 3대) · 20초까지 1초마다 · 그 뒤 90초까지 3초마다 push_job(발송기 재시도가 최대 약 40초) */
 function pushTestCard(){
   return card("나에게 시험","본인 구독 기기로만 · 시간대 · 상한 무관",
     '<div class="row" style="gap:8px;align-items:flex-end;flex-wrap:wrap"><label class="fld">본인 사번<input class="in" style="min-width:0;width:140px" inputmode="numeric" placeholder="사번" value="'+esc(pushMe())+'" oninput="pushMe(this.value.trim())"></label><button class="btn pri" onclick="pushTest()">나에게 보내기</button></div>'+
-    '<p class="cap mt8">대상 지정 발송 칸의 제목 · 본문 · 열 화면으로 보냅니다. 비어 있으면 「시험 알림」입니다. 이력에 「시험」으로 남습니다.</p>'+
+    '<p class="cap mt8">대상 지정 발송 칸의 제목 · 본문 · 열 화면으로 보냅니다. 비어 있으면 「[시험] 알림 확인」입니다. 이력에 「시험」으로 남습니다.</p>'+
     '<div id="ptRes" class="mt12">'+pushTestHtml()+'</div>');
 }
 function pushTestHtml(){
@@ -3081,7 +3198,7 @@ function pushTestPaint(){ var b=el("ptRes"); if(b) b.innerHTML=pushTestHtml(); }
 function pushTest(){
   var me=normE(pushMe()); if(!me){ toast("본인 사번을 넣으세요"); return; }
   if(PUSH.test&&!PUSH.test.done&&!PUSH.test.err) return;
-  var t=PF.t.trim()||"시험 알림", b=PF.b.trim()||("콘솔 시험 발송 · "+nowHMS());
+  var t=PF.t.trim()||"[시험] 알림 확인", b=PF.b.trim()||("콘솔 시험 발송 · "+nowHMS());   /* v4.78 A10 사번을 잘못 넣어 남의 폰에 떠도 시험인 줄 알게 */
   PUSH.test={ id:"", job:null, done:false }; pushTestPaint();
   call("push_send",{ test:1, me:me, title:t, body:b, go:PF.go, by:pwBy()||"콘솔" }, function(r){
     if(!(r&&r.ok)){ PUSH.test={ err:r&&r.reason==="empty"?"이 사번("+me+")으로 구독한 기기가 없습니다. 그 폰에서 앱을 열고 알림을 켭니다.":"보내지 못했습니다 · "+pushWhy(r) }; pushTestPaint(); return; }
@@ -3140,11 +3257,30 @@ function pushHistHtml(){
 /* 설정 · push_cfg 는 push_stats 모양을 돌려준다 */
 /* 토큰 기준 값은 wsTok(서버 v4.76 · 스태프 토큰 tok 과 이름을 나눴다 · 잠긴 주소에서도 스태프 토큰으로 통과) */
 function pushCfgGo(p, msg){
-  call("push_cfg",p,function(r){ dlgForce(); if(r&&r.ok){ ST.data.pst=r; _cache[sig_("push_stats",{})]={ data:r, at:Date.now() }; toast(msg); render(); } else toast("실패: "+({ on:"스위치 값 오류", time:"시간 형식은 08:30-18:30 입니다(시작 < 끝)", wsTok:"토큰 기준 값 오류", ccDay:"날짜 형식은 2026-10-26 입니다", param:"바꿀 값이 없습니다" }[(r||{}).reason]||pushWhy(r))); },function(){ dlgForce(); toast("서버 응답 없음"); });
+  call("push_cfg",p,function(r){ dlgForce(); if(r&&r.ok){ ST.data.pst=r; _cache[sig_("push_stats",{})]={ data:r, at:Date.now() }; toast(msg); render(); } else { var x=r||{}; toast("실패: "+({ on:"스위치 값 오류", time:"시간 형식은 08:30-18:30 입니다(시작 < 끝)", wsTok:"토큰 기준 값 오류", ccDay:"날짜 형식은 2026-10-26 입니다", param:"바꿀 값이 없습니다", manual:"잠금 값 오류", dates:"날짜 형식은 2026-10-26 입니다(쉼표로 여러 날 · 30개까지)", dayMax:"사람당 하루는 1~30", allMax:"전체급 하루는 1~30", hold:"보류는 0~60초", ttlMin:"공지 유효는 5~60분" }[x.reason]||pushWhy(r))); } },function(){ dlgForce(); toast("서버 응답 없음"); });
+}
+/* v4.78 A3 1단계 수동 발송 잠금 · A4 발송 허용 날짜 · A7 상한 · 보류 · 유효 */
+function pushManAsk(on){
+  dialog({ t:on?"수동 발송 잠금을 풀까요?":"수동 발송을 잠글까요?",
+    s:on?"공지 푸시 · 대상 지정 · 예약 알림이 다시 나갑니다.":"공지 푸시 · 대상 지정 · 예약 · 관람 시간 알림이 나가지 않고 <b>대기 · 보류 중인 사람 알림은 취소</b>됩니다. 포토부스 · 커피챗 · DAP · 혼잡 해소 알림은 계속 나갑니다. 앱 안 공지는 그대로 나갑니다.",
+    ok:on?"풀기":"잠그기", danger:!on, onOk:function(){ pushCfgGo({ manual:on?"ON":"OFF" }, on?"수동 발송 잠금을 풀었습니다":"수동 발송을 잠갔습니다(1단계)"); } });
+}
+function pushDatesSave(){
+  var st=pushSt()||{}, v=(el("pxDates").value||"").split(/[\s,]+/).filter(Boolean);
+  if(v.some(function(d){ return !/^\d{4}-\d\d-\d\d$/.test(d); })){ toast("날짜 형식은 2026-10-26 입니다(쉼표로 여러 날)"); return; }
+  var nv=v.filter(function(d,i){ return v.indexOf(d)===i; }).sort().join(","), ov=(st.dates||[]).join(",");
+  if(nv===ov){ toast("바뀐 값이 없습니다"); return; }
+  dialog({ t:"발송 허용 날짜를 바꿀까요?", s:esc(ov||"제한 없음")+" → <b>"+esc(nv||"제한 없음")+"</b><br>목록 밖 날짜에는 나에게 시험만 나갑니다. 마지막 날짜가 지나면 참가자 폰이 알림 구독을 지웁니다.", ok:"저장", onOk:function(){ pushCfgGo({ dates:nv }, "발송 허용 날짜 · "+(nv||"제한 없음")); } });
+}
+function pushNumSave(){
+  var L=pushLim(), f=[["pxDay","dayMax","사람당 하루",L.day,"건"],["pxAll","allMax","전체급 하루",L.all,"회"],["pxHold","hold","보류",L.hold,"초"],["pxTtl","ttlMin","공지 유효",L.ttl,"분"]], p={}, ch=[];
+  for(var i=0;i<f.length;i++){ var v=(el(f[i][0]).value||"").trim(); if(!/^\d{1,2}$/.test(v)){ toast(f[i][2]+" 값을 숫자로 넣으세요"); return; } if(Number(v)!==Number(f[i][3])){ p[f[i][1]]=v; ch.push(f[i][2]+" "+f[i][3]+" → <b>"+esc(v)+"</b>"+f[i][4]); } }
+  if(!ch.length){ toast("바뀐 값이 없습니다"); return; }
+  dialog({ t:"알림 상한 · 보류 · 유효를 바꿀까요?", s:ch.join("<br>")+"<br>바꾼 기록은 운영 로그에 남습니다.", ok:"저장", onOk:function(){ pushCfgGo(p, "알림 설정을 바꿨습니다"); } });
 }
 function pushOnAsk(on){
   dialog({ t:on?"알림 발송을 다시 켤까요?":"알림을 전체 정지할까요?",
-    s:on?"정지 동안 취소된 작업은 다시 나가지 않습니다.":"지금부터 모든 알림(공지 푸시 · 대상 지정 · 포토부스 · 커피챗 · 혼잡 해소 · 예약)이 나가지 않고 <b>대기 작업은 취소</b>됩니다. 앱 안 공지는 그대로 나갑니다.",
+    s:on?"정지 동안 취소된 작업은 다시 나가지 않습니다.":"지금부터 모든 알림(공지 푸시 · 대상 지정 · 포토부스 · 커피챗 · DAP · 혼잡 해소 · 예약)이 나가지 않고 <b>대기 작업은 취소</b>됩니다. 앱 안 공지는 그대로 나갑니다. 사람이 보내는 알림만 문제면 1단계 수동 발송 잠금을 먼저 씁니다.",
     ok:on?"다시 켜기":"전체 정지", danger:!on, onOk:function(){ pushCfgGo({ on:on?"ON":"OFF" }, on?"알림 발송을 켰습니다":"알림을 전체 정지했습니다"); } });
 }
 function pushTimeSave(){
