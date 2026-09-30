@@ -2316,7 +2316,7 @@ var TIMELINE = [
   /* v3.50 사회자 순서 (사용자 확정 260917) · Outro 문항 기능 폐지 · 설문 참여 안내 → 17:00 Outro */
   /* v3.63 (사용자 확정 260918) 「일단 빼자」 · 항목은 남기고 off 로 일정 탭에서만 감춘다 (설문 기능·송출 화면·홈/스탬프 입구는 그대로) */
   { off: 1, time: "16:45", end: "17:00", title: "설문 참여 안내", short: "오늘 한 판 설문 안내", place: "17F 대강당", desc: "60초 설문 · 스탬프 1개", tag: "자유 참석" },
-  { time: "17:00", end: "17:30", title: "Outro · DAP 시상", short: "DAP 우수 성과자 시상 · 경품 추첨", place: "17F 대강당", desc: "DAP 우수 성과자 시상 · 경품 추첨 · 결과는 개별 안내", tag: "피날레" }
+  { time: "17:00", end: "17:30", title: "Outro · DAP 시상", short: "DAP 우수 성과자 시상 · 경품 추첨", place: "17F 대강당", desc: "DAP 우수 성과자 시상 · 경품 현장 추첨 · 16:40부터 입구 QR 체크인", tag: "피날레" }   /* v4.79 무대 추첨 = 추첨 QR 체크인한 사람 */
 ];
 var NOW_INDEX = 1;
 /* ═══ 프로그램 카탈로그 · v3.29 공식 공지 붙임1·2(260917) 정본 ═══
@@ -4385,7 +4385,7 @@ var App = {
     if (v === "sess_d") return progMine(PROG.sid) ? "신청 관리" : "프로그램";
     if (v === "exp_g") return stampTitle(EXPG.id);
     if (v === "scan_q") return SCQ.ctx ? stampTitle(SCQ.ctx) + " 안내" : "QR 스캔";
-    if (v === "scan_res") return SR.st === "ok" ? "적립 완료" : SR.st === "saved" ? "스캔 저장됨" : "적립 결과";
+    if (v === "scan_res") return SR.st === "ok" ? "적립 완료" : SR.st === "saved" ? "스캔 저장됨" : SR.st === "draw" || SR.draw ? "추첨 체크인" : "적립 결과";   /* v4.79 추첨 체크인 */
     if (v === "stair") return "계단 이용";
     return this.TITLES[v] || "";
   },
@@ -6177,7 +6177,7 @@ function rfxLand(nums, late) {   /* nums = 번호 배열(없으면 null) · late
   var w = el("rfx"); if (!w) return;
   var nm = el("rfxNum"); nm.classList.remove("roll"); nm.innerHTML = nums ? nums.map(function (x) { return "<b>" + esc(x) + "</b>"; }).join("") : "발급 중"; nm.classList.toggle("wait", !nums);
   if (late) { nm.classList.remove("land"); void nm.offsetWidth; nm.classList.add("land"); }
-  el("rfxSay").innerHTML = nums ? (nums.length > 1 ? "번호 " + nums.length + "개가 나왔어요! 행운을 빌어요<br>17:00 Outro에서 추첨해요" : "행운을 빌어요!<br>17:00 Outro에서 추첨해요") : "번호가 아직 발급 중이에요<br>곧 내 보상에 나타나요";
+  el("rfxSay").innerHTML = nums ? (nums.length > 1 ? "번호 " + nums.length + "개가 나왔어요! 행운을 빌어요" : "행운을 빌어요!") + "<br>Outro 현장 추첨은 17F 입구 QR 체크인" : "번호가 아직 발급 중이에요<br>곧 내 보상에 나타나요";   /* v4.79 무대 추첨 = 추첨 QR 체크인한 사람만 */
   el("rfxCap").textContent = nums ? "내 응모 번호 · 결과는 행사 후 개별 안내" : "응모는 이미 됐어요 · 결과는 행사 후 개별 안내";
   el("rfxBtns").innerHTML = '<button class="btn mint" style="margin-top:14px" onclick="modalClose()">확인</button><button class="btn line" style="margin-top:8px" onclick="noticeGo(\'rewards\',\'raffle\')">내 보상에서 보기</button>';
   if (nums && typeof stampBuzz === "function") stampBuzz(30);
@@ -6197,7 +6197,7 @@ function ppDrawOpen() {
   }
   modalOpen('<p class="muted" style="font-size:calc(14.5px * var(--fs));line-height:1.7">4개 1장 · 5개 2장 · 6개 3장 · 자동 응모<br>지금 <b style="color:var(--hi)">' + t + '장</b></p>' +
     tickets +
-    '<p class="muted" style="margin-top:8px;font-size:calc(13.5px * var(--fs));line-height:1.65">17:00 Outro 추첨 · 결과는 행사 후 개별 안내</p>' +
+    '<p class="muted" style="margin-top:8px;font-size:calc(13.5px * var(--fs));line-height:1.65">사후 추첨 결과는 행사 후 개별 안내<br>17:00 Outro 현장 추첨 · 16:40부터 17F 입구 QR 체크인</p>' +   /* v4.79 무대 추첨과 사후 추첨을 나눈다 */
     '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "사후 추첨 응모");
 }
 
@@ -6287,7 +6287,7 @@ function rewItems() {
   var n = stampCount(), used = !!S.get("roulette_used", false), out0 = !!S.get("roulette_out", false), t = raffleTickets(n), items = [];
   if (n >= 3) items.push({ k: "roulette", used: used, chip: used ? "사용 완료" : out0 ? "룰렛 소진" : "사용 가능", off: used || out0, nm: "룰렛 1회권", big: "1회",
     why: "1F 이벤트존 룰렛 · 내 QR 제시", go: "ppRouletteOpen()" });
-  if (t) items.push({ k: "raffle", used: false, chip: "자동 응모", off: false, nm: "사후 추첨 응모권", big: t + "장", why: "스탬프 " + Math.min(n, REWARD_CAP) + "개 · 17:00 Outro 추첨", go: "ppDrawOpen()" });
+  if (t) items.push({ k: "raffle", used: false, chip: "자동 응모", off: false, nm: "사후 추첨 응모권", big: t + "장", why: "스탬프 " + Math.min(n, REWARD_CAP) + "개 · 결과는 행사 후 개별 안내", go: "ppDrawOpen()" });   /* v4.79 현장 추첨 안내는 추첨 안내 모달에 */
   return items;
 }
 function rewPick(f) { REW.f = f; App.render(); }
@@ -8302,6 +8302,7 @@ function qrRoute(raw, t) {
   if (!code) { srShow({ st: "fail", why: "nocode" }); return; }
   var fl = (raw.match(/[#&?]fl=(\d{1,2})\b/i) || [])[1] || "", r = (raw.match(/[#&?]r=([12])\b/i) || [])[1] || "";
   if (/^AXA/i.test(code) && !fl) { attByCode(code); return; }   /* v4.26 17F 출석 QR · 코드 판정은 서버(att_claim) */
+  if (/^AXD/i.test(code) && !fl) { drawByCode(code); return; }   /* v4.79 Outro 럭키드로우 추첨 체크인 QR · 코드 · 창 · 1인 1회는 서버(draw_in) */
   if (/^AXW/i.test(code) || fl) stairByCode(code, fl, r, t); else stampByCode(code, t);
 }
 function qrHandle(raw) { qrRoute(raw, Date.now()); }
@@ -8317,6 +8318,7 @@ var SR_WHY = {
   server: ["서버에 연결되지 않았어요", "scan", "다시 스캔"],
   stair: ["계단 QR은 계단 화면에서 처리돼요", "scan", "다시 스캔"],
   att: ["17F 강연은 대강당 입구 출석 QR로 적립돼요", "scan", "다시 스캔"],   /* v4.26 옛 17F 좌석 QR(p3 코드) */
+  dwin: ["추첨 체크인 시간이 아니에요", "exp", "확인"],   /* v4.79 창 · 날짜 밖(서버 window · day) */
   other: ["다시 스캔해 주세요", "scan", "다시 스캔"]
 };
 function srShow(o) {
@@ -8354,10 +8356,20 @@ function scanResHtml() {
       '<p class="ax-meta">저장된 스캔 ' + scanQList().length + "건</p>";
     return { body: h, btn: ax2Btn("확인", "srAct('exp')") };
   }
-  var w = SR_WHY[o.why] || SR_WHY.other;
-  h = '<span class="axs-chip err axs-self">적립되지 않음</span>' +
-    '<h1 class="ax-title">적립되지<br>않았어요</h1>' +
-    '<p class="ax-description">' + esc(w[0]) + (o.why === "window" && o.open ? " · " + esc(o.open) + " 적립" : "") + "</p>" +
+  if (o.st === "draw") {   /* v4.79 추첨 체크인 완료 · 응모 번호(공) 수 · 0장이면 한 줄 */
+    var dn = (o.nos || []).slice(0, 3);
+    h = '<div class="axs-res-bot">' + bot + "</div>" +
+      '<span class="axs-chip ok axs-self">' + (o.dup ? "이미 체크인 · " + esc(o.at) : "17F 대강당 · Outro") + "</span>" +
+      '<h1 class="ax-title">추첨 체크인<br>완료</h1>' +
+      '<section class="axs-res-card"><p class="ax-type-t7 axs-bt">응모 번호</p><p class="axs-res-n">' + (o.n ? o.n + "개" : "없음") + "</p>" +
+      '<p class="ax-description">' + (dn.length ? dn.map(esc).join(" · ") : "응모권이 없어요 · 스탬프 4개부터") + "</p></section>" +
+      (o.test ? '<p class="ax-meta">테스트 계정</p>' : "");
+    return { body: h, btn: ax2Btn("확인", "srAct('exp')") };
+  }
+  var w = SR_WHY[o.why] || SR_WHY.other, dw = !!o.draw;
+  h = '<span class="axs-chip err axs-self">' + (dw ? "체크인되지 않음" : "적립되지 않음") + "</span>" +
+    '<h1 class="ax-title">' + (dw ? "체크인되지<br>않았어요" : "적립되지<br>않았어요") + "</h1>" +
+    '<p class="ax-description">' + esc(w[0]) + (o.why === "window" && o.open ? " · " + esc(o.open) + " 적립" : o.why === "dwin" && o.open ? " · " + esc(o.open) : "") + "</p>" +
     (o.name ? '<p class="ax-meta">' + esc(o.name) + "</p>" : "");
   return { body: h, btn: ax2Btn(w[2], "srAct('" + w[1] + "')", w[1] === "exp" ? "" : "체험으로 돌아가기", "srAct('exp')") };
 }
@@ -8428,6 +8440,24 @@ function boothDone(res, late, code) {
   srShow({ st: "ok", id: id, name: name, test: test });
 }
 function ppSeenAdd(id) { var seen = S.get("pp_seen", []); if (seen.indexOf(id) < 0) { seen.push(id); S.set("pp_seen", seen); } }
+/* ═══ v4.79 Outro 럭키드로우 · 추첨 체크인 (사용자 결정 261001) ═══
+   17F 대강당 입구 추첨 QR(AXD…)을 찍으면 draw_in · 코드 · 창(기본 16:40~17:25) · 날짜 · 1인 1회는 서버가 판정한다 · 앱에 코드가 없다.
+   무대 추첨은 체크인한 사람의 응모 번호(공)만 쓴다 · 250개 사후 추첨은 따로다 · 스탬프 · 17F 출석과 무관하다.
+   결과 = scan_res 「추첨 체크인 완료 · 응모 번호 N개」 · 0장이어도 체크인은 된다(한 줄) · 오프라인 저장은 하지 않는다(서버 시계로 판정 · 다시 스캔). */
+var DRAWQ = { busy: false };
+function drawByCode(code) {
+  var u = S.get("user", {}) || {};
+  if (!u.empId) { srShow({ st: "fail", why: "param", draw: true }); return; }
+  if (!BE.on) { var dt = raffleTickets(Math.min(REWARD_CAP, stampCount())); srShow({ st: "draw", n: dt, nos: raffleNums().slice(0, dt), test: true }); return; }   /* 데모 · 서버 없음 */
+  if (DRAWQ.busy) return;
+  DRAWQ.busy = true;
+  beCall({ action: "draw_in", emp: u.empId, code: String(code || "").trim() }, function (res) {
+    DRAWQ.busy = false;
+    if (res && res.ok) { srShow({ st: "draw", n: Number(res.n) || 0, nos: Array.isArray(res.no) ? res.no : [], dup: !!res.dup, at: res.at || "", test: !!res.test }); return; }
+    var why = res && res.reason;
+    srShow({ st: "fail", draw: true, why: beBusy(res) ? "server" : why === "window" || why === "day" ? "dwin" : why === "nocode" || why === "param" ? why : "other", open: res && res.open ? String(res.open).replace("~", "–") : "" });
+  }, function () { DRAWQ.busy = false; srShow({ st: "fail", draw: true, why: "server" }); });
+}
 /* ═══ v4.26 17F QR 출석 (사용자 확정 260924) ═══
    17F 강연은 전부 자유 참석이다. 대강당 입구 QR 하나를 찍으면 프로그램 선택 시트(v4.18 바텀 시트)가 뜬다.
    지금 진행 중인 프로그램이 미리 골라져 있고, 참여자가 확인하거나 바꾼다.
