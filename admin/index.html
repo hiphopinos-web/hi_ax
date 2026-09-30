@@ -3055,7 +3055,7 @@ function pushSendGo(spec, cnt, force){
       function(c2,f2){ pushSendGo(spec,c2,f2); }, cnt, pushSendAsk);
   }, function(){ dlgForce(); toast("서버 응답 없음 · 발송 이력에서 나갔는지 먼저 봅니다"); pushPull(); });
 }
-/* 나에게 시험 · 본인 사번 구독 기기(최대 3대) · 1초마다 최대 20초 push_job */
+/* 나에게 시험 · 본인 사번 구독 기기(최대 3대) · 20초까지 1초마다 · 그 뒤 90초까지 3초마다 push_job(발송기 재시도가 최대 약 40초) */
 function pushTestCard(){
   return card("나에게 시험","본인 구독 기기로만 · 시간대 · 상한 무관",
     '<div class="row" style="gap:8px;align-items:flex-end;flex-wrap:wrap"><label class="fld">본인 사번<input class="in" style="min-width:0;width:140px" inputmode="numeric" placeholder="사번" value="'+esc(pushMe())+'" oninput="pushMe(this.value.trim())"></label><button class="btn pri" onclick="pushTest()">나에게 보내기</button></div>'+
@@ -3067,7 +3067,7 @@ function pushTestHtml(){
   if(T.err) return '<div class="note warn">'+esc(T.err)+'</div>';
   var j=T.job||{};
   return '<div class="note">'+(T.done?'':'<span class="spin"></span>')+'<b>'+(T.done?"결과":"보내는 중")+'</b> · 보낸 기기 <b class="n">'+(j.subs||T.subs0||0)+'</b> · 성공 <b class="n">'+(j.ok||0)+'</b> · 실패 <b class="n'+(j.fail?' pbad':'')+'">'+(j.fail||0)+'</b>'+(j.gone?' · 만료 정리 '+j.gone:'')+' '+tag(j.st||"대기",PUSH_JOB_TAG[j.st]||"warn")+
-    (j.res?'<div class="cap">'+esc(j.res)+'</div>':'')+(T.late?'<div class="cap">20초 안에 끝나지 않았습니다. 발송 이력에서 봅니다.</div>':'')+'</div>';
+    (j.res?'<div class="cap">'+esc(j.res)+'</div>':'')+(T.late?'<div class="cap">90초 안에 끝나지 않았습니다. 발송 이력에서 봅니다.</div>':!T.done&&T.t0&&Date.now()-T.t0>20000?'<div class="cap">재시도 중 · 계속 보는 중</div>':'')+'</div>';
 }
 function pushTestPaint(){ var b=el("ptRes"); if(b) b.innerHTML=pushTestHtml(); }
 function pushTest(){
@@ -3084,9 +3084,9 @@ function pushTestPoll(){
   var T=PUSH.test; if(!T||!T.id||T.done) return;
   clearTimeout(PUSH.tt);
   PUSH.tt=setTimeout(function(){
-    var end=function(fin){ if(fin||Date.now()-T.t0>20000){ T.done=true; T.late=!fin; pushPull(); } pushTestPaint(); if(!T.done) pushTestPoll(); };
+    var end=function(fin){ if(fin||Date.now()-T.t0>90000){ T.done=true; T.late=!fin; pushPull(); } pushTestPaint(); if(!T.done) pushTestPoll(); };
     call("push_job",{ id:T.id }, function(r){ if(PUSH.test!==T) return; if(r&&r.ok) T.job=r.job; end(!!(T.job&&["완료","중단","취소","건너뜀"].indexOf(T.job.st)>=0)); }, function(){ if(PUSH.test===T) end(false); });
-  },1000);
+  },T.t0&&Date.now()-T.t0>20000?3000:1000);
 }
 /* 그룹 · 10F 세션 신청자처럼 앱이 모르는 명단 · 명부 · 계정에 없는 사번은 빼고 저장(빨갛게) */
 function pushGrpCard(){
@@ -3130,10 +3130,9 @@ function pushHistHtml(){
   return t+a+(d.total>rows.length?'<p class="cap mt8">최근 '+rows.length+'줄 · 전체 '+d.total+'줄</p>':'');
 }
 /* 설정 · push_cfg 는 push_stats 모양을 돌려준다 */
-/* push_cfg 의 tok 은 「토큰 기준」 값이라 스태프 토큰(call 이 자동으로 붙이는 tok)과 이름이 겹친다 · 토큰 기준을 바꾸지 않을 때는 tok 을 보내지 않는다(관리코드로 확인 · 서버는 32글자가 아닌 tok 을 코드 확인에 쓰지 않는다) */
+/* 토큰 기준 값은 wsTok(서버 v4.76 · 스태프 토큰 tok 과 이름을 나눴다 · 잠긴 주소에서도 스태프 토큰으로 통과) */
 function pushCfgGo(p, msg){
-  if(!("tok" in p)) p.tok=null;
-  call("push_cfg",p,function(r){ dlgForce(); if(r&&r.ok){ ST.data.pst=r; _cache[sig_("push_stats",{})]={ data:r, at:Date.now() }; toast(msg); render(); } else toast("실패: "+({ on:"스위치 값 오류", time:"시간 형식은 08:30-18:30 입니다(시작 < 끝)", tok:"토큰 기준 값 오류", param:"바꿀 값이 없습니다" }[(r||{}).reason]||pushWhy(r))); },function(){ dlgForce(); toast("서버 응답 없음"); });
+  call("push_cfg",p,function(r){ dlgForce(); if(r&&r.ok){ ST.data.pst=r; _cache[sig_("push_stats",{})]={ data:r, at:Date.now() }; toast(msg); render(); } else toast("실패: "+({ on:"스위치 값 오류", time:"시간 형식은 08:30-18:30 입니다(시작 < 끝)", wsTok:"토큰 기준 값 오류", param:"바꿀 값이 없습니다" }[(r||{}).reason]||pushWhy(r))); },function(){ dlgForce(); toast("서버 응답 없음"); });
 }
 function pushOnAsk(on){
   dialog({ t:on?"알림 발송을 다시 켤까요?":"알림을 전체 정지할까요?",
@@ -3150,7 +3149,7 @@ function pushTokAsk(){
   var st=pushSt()||{}, v=el("pxTok").value, nm={ "":"세션필수를 따름", ON:"항상 토큰 필요", OFF:"토큰 없이도 받음" };
   if(v===(st.tok||"")){ toast("바뀐 값이 없습니다"); return; }
   dialog({ t:"토큰 기준을 바꿀까요?", s:esc(nm[st.tok||""])+" → <b>"+esc(nm[v])+"</b><br>알림 구독 · 알림 설정 · 실시간 연결이 같은 기준을 씁니다."+(v==="ON"?"<br><b>토큰 없이 로그인한 폰(옛 로그인)은 알림을 켤 수 없고 실시간 연결도 끊깁니다.</b>":""), ok:"바꾸기", danger:v==="ON",
-    onOk:function(){ pushCfgGo({ tok:v }, "토큰 기준 · "+nm[v]); } });
+    onOk:function(){ pushCfgGo({ wsTok:v }, "토큰 기준 · "+nm[v]); } });
 }
 function pushErrClear(){
   dialog({ t:"발송기 키 오류 표시를 지울까요?", s:"키를 고치지 않았으면 다음 발송 때 다시 뜹니다.", ok:"지우기", onOk:function(){ pushCfgGo({ clearErr:1 }, "오류 표시를 지웠습니다"); } });
