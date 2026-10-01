@@ -2349,7 +2349,7 @@ var STAMPS_V1 = [
   { id: "p7", title: "전시 QR 퀴즈", short: "QR 퀴즈", desc: "벽 QR 스캔 · 한 세트 완료", where: "약 10분", tap: "App.go('wq_list')", cta: "QR 퀴즈 풀기" },
   /* v4.06 (260919 사용자 확정) 계단 B안 · 방화문 앞 QR 로 시작과 끝을 찍는다 · 당일 누적 10개 층이 되는 종료 스캔에서 적립 · 판정·적립은 서버(stair_scan)
      site: 담당자 적립 가능 (서버 stamp_grant 가 st 를 받는다) */
-  { id: "st", title: "계단 이용", short: "계단", desc: "방화문 앞 QR · 시작과 끝에 찍기 · 누적 10개 층", where: "", site: 1, tap: "stairOpen()", cta: "계단 안내" },
+  { id: "st", title: "계단 이용", short: "계단", desc: "방화문 앞 QR · 시작과 끝에 찍기 · 한 개 층 이상", where: "", site: 1, tap: "stairOpen()", cta: "계단 안내" },
   /* v3.35 오늘 한 판 설문 · 14:30 부터 · 제출만 하면 적립(답 내용 무관) · 판정·적립은 서버(survey_submit) */
   { id: "sv", title: "오늘 한 판 설문", short: "설문", desc: "설문 제출", where: "60초", inapp: 1, tap: "App.go('survey')", cta: "설문 시작" }
 ];
@@ -2359,7 +2359,7 @@ function stampDefV1(id) { return STAMPS_V1.filter(function (s) { return s.id ===
    옛 p1(1F 전시) · p7(전시 QR 퀴즈)은 뺐다 · 서버 기록은 남고 이 목록에 없어서 세지 않는다(stampGot) */
 var STAMPS_V2 = [
   { id: "lg", title: "최초 로그인", short: "로그인", desc: "로그인하면 자동 적립", where: "자동", inapp: 1, auto: 1 },
-  { id: "qz", title: "AX 퀴즈", short: "AX 퀴즈", desc: "O/X 퀴즈 · 기억력 퀴즈 2종 · 종목마다 한 판", where: "O/X 퀴즈 · 기억력 퀴즈", inapp: 1, tap: "App.go('quiz')", cta: "AX 퀴즈 풀기" },
+  { id: "qz", title: "AX 퀴즈", short: "AX 퀴즈", desc: "O/X 12문제 · 한 판 완주", where: "AX 퀴즈", inapp: 1, tap: "App.go('quiz')", cta: "AX 퀴즈 풀기" },
   { id: "p4", title: "미니 게임", short: "미니 게임", desc: "AX 팡 · 점프 · 테트리스 3종 · 종목마다 한 판", where: "팡 · 점프 · 테트리스", inapp: 1, tap: "App.go('games')", cta: "미니 게임 하기" },
   STAMP_P2,
   stampDefV1("p5"), stampDefV1("p3"), stampDefV1("st"), stampDefV1("sv")
@@ -2559,172 +2559,143 @@ var IDEA_TAGS = ["영업", "보상", "마케팅", "본사·통계", "기타"];
 var DEFAULT_NOTICES = [
   { id: "n1", title: "AX Festival 2026에 오신 것을 환영합니다", body: "자리에서도 페스티벌 안에 있을 수 있어요. 미니게임 한 판, 아이디어 한 줄 · 1분이면 충분합니다.", ts: 0, pinned: true }
 ];
-/* 「ME to WE 기억력」 문제 은행 v2 · v4.30 (사용자 확정 260924 · 정본 「기억력 문제 은행 v2.md/.json」 · 문장 40 + 순서 12)
-   lv = 난이도(1 쉬움 · 2 보통 · 3 어려움 · O/X 은행과 같은 이름) · dom = 분야(concept AI 개념 · safety 사내 안전 수칙 · O/X 로드맵 분야는 넣지 않는다).
+/* 「ME to WE 기억력」 문제 은행 v3 · v4.92 (261001 사용자 승인 · 앱 개편 4묶음 · 1층 부스 판 기준 · 정본 「기억력 문제 은행 v3.json」 = 「QA/문제 은행 확정안 v1.json」 memory · 문장 37 + 순서 5)
+   lv = 난이도(1 쉬움 · 2 보통 · 3 어려움 · O/X 은행과 같은 이름) · dom = 1층 부스 구역(vision · lab · action · play · lounge · event) · 판 번호 출처는 json src 에만 둔다.
+   h = 힌트 코드(구역.줄.판 · json hint_codes · 판이 갈리면 빈 값 · 지금 화면은 쓰지 않는다 · 퀴즈 디자인 검토 4-2).
    한 판 = 순서 1 + 문장 2 · 쉬움 → 보통 → 어려움 한 문항씩(gwPick) · 최근에 나온 문항(mem_seen)은 먼저 빼고, 다 돌면 전체에서 ·
    한 판 안에 같은 문항 없음 · 타일 순서는 매번 섞고, 미끼는 문항마다 후보 pool 4~5개에서 무작위.
-   v4.31 (사용자 확정 260924) lang · len · tone 쉬움 → 보통, phone 8단어 → 7단어(「무료」 삭제) · 52문항 모두 한 판 조건(난이도 한 개씩 + 14칸)으로 나올 수 있다.
-   제작 규칙: ①처음 접하는 사람도 바로 읽히는 쉬운 말 ②특정 제품·회사 홍보 금지 ③확인되지 않은 숫자·단정 금지
-   ④겁주는 말·과장(「AI가 다 해 준다」) 금지 ⑤미끼는 정답과 비슷한 말 금지(정답 단어와 겹치면 안 된다)
-   ⑥게임 시작 화면의 개념 문장(슬로건·로드맵)과 겹치지 않게 은행에는 넣지 않는다.
+   v3 구성 = 난이도마다 문장 14 · 14 · 9 · 순서 2 · 2 · 1(모두 3단계) · 문장 타일 4 · 5 · 6 · 7개 · 정답 타일 합 14칸이 되는 판 조합 176가지 · 42문항 모두 나올 수 있다.
+   제작 규칙: ①처음 접하는 사람도 바로 읽히는 쉬운 말 ②외부 제품·회사 홍보 금지 ③판에 없는 숫자·단정 금지
+   ④겁주는 말·과장 금지 ⑤미끼는 정답과 비슷한 말 금지(정답 단어와 겹치면 안 된다)
+   ⑥게임 시작 화면 한 줄(AX_PRE.word)과 같은 문장은 넣지 않는다 · 보상(스탬프 · 룰렛) 문항은 내지 않는다.
    문항을 고치면 json → 여기 순서로 (검사 39절이 json 과 대조) · v3.57 행사 정보 은행(프로그램·시간·인원)은 MEM_ROUNDS_EVENT 로 남겨 두었다(휴면 · 부르는 곳 없음). */
 var MEM_ROUNDS = [
-  { id: "gen", kind: "sentence", lv: 1, dom: "concept", words: ["생성형", "AI는", "새로운", "글과", "그림을", "만들어요"],
-    pool: ["회의실", "복사기", "자전거", "창문", "게시판"],
-    mean: "찾아 주는 것이 아니라 새로 만들어 줍니다" },
-  { id: "prm", kind: "sentence", lv: 1, dom: "concept", words: ["프롬프트는", "AI에게", "주는", "질문이나", "지시예요"],
+  { id: "m01", kind: "sentence", lv: 1, dom: "lab", words: ["아이디어", "한", "줄을", "남겨요"],
+    pool: ["화분", "냉장고", "정수기", "시계"],
+    mean: "AX LAB의 QR로 쓸 수 있습니다", h: "lab.idea" },
+  { id: "m02", kind: "sentence", lv: 1, dom: "play", words: ["질문은", "하나씩", "나누어", "해요"],
+    pool: ["엘리베이터", "달력", "화분", "냉장고"],
+    mean: "한 번에 여러 개를 묻지 않습니다", h: "play.hq.tips" },
+  { id: "m03", kind: "sentence", lv: 1, dom: "play", words: ["HiDI-Q는", "긴", "문서를", "요약해요"],
+    pool: ["우산", "주차장", "구내식당", "회의실"],
+    mean: "핵심만 추려서 요약합니다", h: "play.hq.intro" },
+  { id: "m04", kind: "sentence", lv: 1, dom: "event", words: ["포토부스에서", "동료와", "사진을", "남겨요"],
+    pool: ["회의실", "복사기", "창문", "게시판"],
+    mean: "AI 포토로 추억을 남깁니다", h: "event.photo" },
+  { id: "m05", kind: "sentence", lv: 1, dom: "vision", words: ["사람을", "중심으로", "데이터와", "AI를", "연결해요"],
     pool: ["엘리베이터", "달력", "우산", "주차장", "구내식당"],
-    mean: "우리가 입력하는 말이 곧 프롬프트입니다" },
-  { id: "lrn", kind: "sentence", lv: 2, dom: "concept", words: ["AI는", "배운", "내용을", "엮어", "답을", "만들어요"],
-    pool: ["점심시간", "화분", "계단", "냉장고", "정수기"],
-    mean: "사람처럼 이해했다기보다 배운 것을 조합합니다" },
-  { id: "chk", kind: "sentence", lv: 1, dom: "concept", words: ["AI의", "답은", "사람이", "확인한", "뒤에", "씁니다"],
-    pool: ["복사기", "자전거", "창문", "게시판", "시계"],
-    mean: "마지막 판단은 사람 몫입니다" },
-  { id: "hal", kind: "sentence", lv: 2, dom: "concept", words: ["모르는", "것도", "그럴듯하게", "말할", "때가", "있어요"],
-    pool: ["달력", "우산", "주차장", "구내식당", "회의실"],
-    mean: "틀린 내용을 자신 있게 말하기도 합니다" },
-  { id: "spc", kind: "sentence", lv: 1, dom: "concept", words: ["질문이", "구체적일수록", "답이", "좋아져요"],
-    pool: ["화분", "계단", "냉장고", "정수기", "엘리베이터"],
-    mean: "상황과 목적을 함께 적으면 답이 달라집니다" },
-  { id: "fmt", kind: "sentence", lv: 1, dom: "concept", words: ["원하는", "형식도", "함께", "적어요"],
+    mean: "목표와 판단은 사람의 몫입니다", h: "vision.dbc" },
+  { id: "m06", kind: "sentence", lv: 1, dom: "lab", words: ["DAP는", "현업과", "함께", "푸는", "프로젝트예요"],
     pool: ["자전거", "창문", "게시판", "시계", "점심시간"],
-    mean: "표, 목록, 세 줄 요약처럼 형태를 정해 주면 편합니다" },
-  { id: "agn", kind: "sentence", lv: 1, dom: "concept", words: ["처음", "답이", "아쉬우면", "다시", "물어요"],
-    pool: ["우산", "주차장", "구내식당", "회의실", "복사기"],
-    mean: "질문을 바꿔 다시 물으면 답이 나아집니다" },
-  { id: "sec", kind: "sentence", lv: 2, dom: "safety", words: ["회사", "자료는", "내부", "규정을", "먼저", "확인해요"],
-    pool: ["계단", "냉장고", "정수기", "엘리베이터", "달력"],
-    mean: "어디에 올려도 되는지부터 봅니다" },
-  { id: "exm", kind: "sentence", lv: 1, dom: "concept", words: ["예시를", "주면", "원하는", "답에", "가까워져요"],
-    pool: ["창문", "게시판", "시계", "점심시간", "화분"],
-    mean: "좋은 예를 하나 보여 주면 비슷하게 맞춰 줍니다" },
-  { id: "new", kind: "sentence", lv: 2, dom: "concept", words: ["AI는", "최신", "정보를", "모를", "때가", "있어요"],
-    pool: ["주차장", "구내식당", "회의실", "복사기", "자전거"],
-    mean: "배운 시점 뒤의 일은 빠져 있을 수 있습니다" },
-  { id: "drf", kind: "sentence", lv: 1, dom: "concept", words: ["초안은", "AI가", "판단은", "사람이"],
-    pool: ["냉장고", "정수기", "엘리베이터", "달력", "우산"],
-    mean: "빠른 초안을 받아 사람이 다듬는 방식입니다" },
-  { id: "mlf", kind: "sentence", lv: 1, dom: "concept", words: ["머신러닝은", "AI의", "한", "분야예요"],
-    pool: ["게시판", "시계", "점심시간", "화분", "계단"],
-    mean: "AI를 만드는 여러 방법 중 하나입니다" },
-  { id: "srch", kind: "sentence", lv: 1, dom: "concept", words: ["AI로", "자료도", "찾아요"],
-    pool: ["구내식당", "회의실", "복사기", "자전거", "창문"],
-    mean: "질문에 맞는 자료를 찾아 줍니다" },
-  { id: "mist", kind: "sentence", lv: 1, dom: "concept", words: ["AI는", "실수도", "해요"],
-    pool: ["정수기", "엘리베이터", "달력", "우산", "주차장"],
-    mean: "완벽하지 않아 확인이 필요합니다" },
-  { id: "aud", kind: "sentence", lv: 1, dom: "concept", words: ["읽을", "사람을", "알려주면", "답이", "좋아져요"],
-    pool: ["시계", "점심시간", "화분", "계단", "냉장고"],
-    mean: "누가 볼 글인지 말해 주면 더 잘 맞춰줍니다" },
-  { id: "lang", kind: "sentence", lv: 2, dom: "concept", words: ["여러", "언어로", "AI에", "묻고", "답할", "수", "있어요"],
+    mean: "업무 문제를 데이터로 분석하고 해결합니다", h: "lab.dap" },
+  { id: "m07", kind: "sentence", lv: 1, dom: "action", words: ["현장", "동료가", "AI로", "직접", "만들었어요"],
+    pool: ["달력", "화분", "냉장고", "정수기", "엘리베이터"],
+    mean: "영업부터 보상까지 현장에서 시작된 AX입니다", h: "action.intro" },
+  { id: "m08", kind: "sentence", lv: 1, dom: "play", words: ["HiDI는", "현대해상의", "생성형", "AI", "브랜드예요"],
+    pool: ["우산", "주차장", "구내식당", "엘리베이터", "달력"],
+    mean: "Hyundai Insurance Data Intelligence의 약자입니다", h: "play.hq.hidi" },
+  { id: "m09", kind: "sentence", lv: 1, dom: "vision", words: ["AX는", "AI로", "일하는", "방식을", "바꾸는", "과정이에요"],
     pool: ["회의실", "복사기", "자전거", "창문", "게시판"],
-    mean: "영어가 아니어도 괜찮습니다" },
-  { id: "len", kind: "sentence", lv: 2, dom: "concept", words: ["답의", "길이도", "정해", "달라고", "할", "수", "있어요"],
-    pool: ["엘리베이터", "달력", "우산", "주차장", "구내식당"],
-    mean: "세 줄로, 한 문단으로처럼 정할 수 있습니다" },
-  { id: "tone", kind: "sentence", lv: 2, dom: "concept", words: ["답의", "말투도", "바꿔", "달라고", "할", "수", "있어요"],
-    pool: ["점심시간", "화분", "계단", "냉장고", "정수기"],
-    mean: "보고서체, 안내문체처럼 정할 수 있습니다" },
-  { id: "img", kind: "sentence", lv: 1, dom: "concept", words: ["글로", "설명하면", "그림도", "그려", "줘요"],
-    pool: ["복사기", "자전거", "창문", "게시판", "시계"],
-    mean: "원하는 장면을 글로 적으면 이미지를 만듭니다" },
-  { id: "unk", kind: "sentence", lv: 1, dom: "concept", words: ["모르는", "사내", "규정은", "AI도", "알지", "못해요"],
-    pool: ["달력", "우산", "주차장", "구내식당", "회의실"],
-    mean: "배운 적 없는 내용은 답하지 못합니다" },
-  { id: "dpl", kind: "sentence", lv: 2, dom: "concept", words: ["딥러닝은", "머신러닝", "안의", "한", "방법이에요"],
-    pool: ["화분", "계단", "냉장고", "정수기", "엘리베이터"],
-    mean: "더 큰 개념 안에 딥러닝이 있습니다" },
-  { id: "tok", kind: "sentence", lv: 2, dom: "concept", words: ["토큰은", "AI가", "글을", "나누는", "처리", "단위예요"],
-    pool: ["자전거", "창문", "게시판", "시계", "점심시간"],
-    mean: "단어나 글자 조각 단위로 계산합니다" },
-  { id: "ctx", kind: "sentence", lv: 2, dom: "concept", words: ["대화가", "길어지면", "앞", "내용을", "놓칠", "수", "있어요"],
+    mean: "AX는 AI Transformation의 약자입니다", h: "vision.metowe" },
+  { id: "m10", kind: "sentence", lv: 1, dom: "lab", words: ["코딩을", "몰라도", "누구나", "지원할", "수", "있어요"],
     pool: ["우산", "주차장", "구내식당", "회의실", "복사기"],
-    mean: "한 번에 볼 수 있는 양을 넘으면 그렇습니다" },
-  { id: "bias", kind: "sentence", lv: 2, dom: "concept", words: ["학습", "데이터가", "치우치면", "답도", "치우쳐요"],
-    pool: ["계단", "냉장고", "정수기", "엘리베이터", "달력"],
-    mean: "데이터가 한쪽으로 쏠리면 그대로 드러납니다" },
-  { id: "role", kind: "sentence", lv: 2, dom: "concept", words: ["역할을", "정해주면", "답의", "관점이", "또렷해져요"],
-    pool: ["창문", "게시판", "시계", "점심시간", "화분"],
-    mean: "담당자로서처럼 역할을 주면 좋습니다" },
-  { id: "step", kind: "sentence", lv: 2, dom: "concept", words: ["복잡한", "일은", "단계로", "나눠", "시켜요"],
-    pool: ["주차장", "구내식당", "회의실", "복사기", "자전거"],
-    mean: "큰 일을 작은 단계로 나누면 안정적입니다" },
-  { id: "cite", kind: "sentence", lv: 3, dom: "concept", words: ["AI가", "알려준", "출처도", "확인이", "필요해요"],
-    pool: ["냉장고", "정수기", "엘리베이터", "달력", "우산"],
-    mean: "없는 자료를 지어낼 때가 있습니다" },
-  { id: "sum", kind: "sentence", lv: 3, dom: "concept", words: ["요약하면", "중요한", "내용이", "빠질", "수", "있어요"],
-    pool: ["게시판", "시계", "점심시간", "화분", "계단"],
-    mean: "원문과 대조해서 확인합니다" },
-  { id: "grd", kind: "sentence", lv: 3, dom: "concept", words: ["근거", "자료를", "주고", "그", "안에서만", "답하게", "해요"],
-    pool: ["구내식당", "회의실", "복사기", "자전거", "창문"],
-    mean: "엉뚱한 답을 줄이는 방법입니다" },
-  { id: "mm", kind: "sentence", lv: 3, dom: "concept", words: ["멀티모달", "AI는", "글과", "그림을", "함께", "다뤄요"],
-    pool: ["정수기", "엘리베이터", "달력", "우산", "주차장"],
-    mean: "소리, 이미지도 같이 입력받습니다" },
-  { id: "agt", kind: "sentence", lv: 3, dom: "concept", words: ["AI", "에이전트는", "도구를", "써", "가며", "일을", "해요"],
-    pool: ["시계", "점심시간", "화분", "계단", "냉장고"],
-    mean: "검색, 파일 같은 도구를 골라 씁니다" },
-  { id: "dpf", kind: "sentence", lv: 3, dom: "concept", words: ["딥페이크는", "AI가", "만든", "가짜", "영상이나", "음성이에요"],
-    pool: ["회의실", "복사기", "자전거", "창문", "게시판"],
-    mean: "진짜처럼 보여도 출처를 확인합니다" },
-  { id: "pii", kind: "sentence", lv: 1, dom: "safety", words: ["고객", "개인정보는", "외부", "AI에", "넣지", "않아요"],
-    pool: ["엘리베이터", "달력", "우산", "주차장", "구내식당"],
-    mean: "이름, 연락처 같은 정보는 입력하지 않습니다" },
-  { id: "pw", kind: "sentence", lv: 1, dom: "safety", words: ["비밀번호는", "AI", "대화창에", "넣지", "않아요"],
-    pool: ["점심시간", "화분", "계단", "냉장고", "정수기"],
-    mean: "계정 정보는 어떤 AI에도 넣지 않습니다" },
-  { id: "gnrl", kind: "sentence", lv: 1, dom: "safety", words: ["민감한", "내용은", "빼고", "일반화해서", "물어요"],
-    pool: ["복사기", "자전거", "창문", "게시판", "시계"],
-    mean: "회사명, 고객명 대신 바꿔서 묻습니다" },
-  { id: "tool", kind: "sentence", lv: 2, dom: "safety", words: ["업무", "자료는", "회사가", "허용한", "도구에", "써요"],
-    pool: ["달력", "우산", "주차장", "구내식당", "회의실"],
-    mean: "허용된 도구인지 먼저 확인합니다" },
-  { id: "phone", kind: "sentence", lv: 2, dom: "safety", words: ["개인", "폰", "앱에는", "업무", "자료를", "넣지", "않아요"],
-    pool: ["화분", "계단", "냉장고", "정수기", "엘리베이터"],
-    mean: "회사 관리 밖의 앱이라 그렇습니다" },
-  { id: "cap", kind: "sentence", lv: 2, dom: "safety", words: ["캡처한", "화면도", "AI가", "글자를", "읽을", "수", "있어요"],
-    pool: ["자전거", "창문", "게시판", "시계", "점심시간"],
-    mean: "이미지도 글처럼 다룹니다" },
-  { id: "resp", kind: "sentence", lv: 3, dom: "safety", words: ["AI", "결과를", "업무에", "쓴", "책임은", "쓴", "사람에게", "있어요"],
-    pool: ["우산", "주차장", "구내식당", "회의실", "복사기"],
-    mean: "AI가 만들었어도 책임은 쓴 사람 몫입니다" },
-  { id: "ouse", kind: "order", lv: 1, dom: "concept", pairs: [["1", "하고 싶은 일 정하기"], ["2", "구체적으로 묻기"], ["3", "답 확인하기"], ["4", "다시 묻기"]],
-    pool: ["복사기 고치기", "화분 옮기기", "자전거 타기", "냉장고 정리하기"],
-    mean: "AI에게 일을 맡기는 순서입니다" },
-  { id: "oprm", kind: "order", lv: 1, dom: "concept", pairs: [["1", "상황 알려주기"], ["2", "원하는 것 말하기"], ["3", "형식 정하기"]],
-    pool: ["점심 먹기", "엘리베이터 타기", "계단 오르기", "창문 닫기"],
-    mean: "좋은 질문을 만드는 순서입니다" },
-  { id: "ochk", kind: "order", lv: 2, dom: "concept", pairs: [["1", "답 읽기"], ["2", "사실 확인하기"], ["3", "고쳐 쓰기"]],
+    mean: "직무와 부서에 관계없이 지원합니다", h: "lab.idea" },
+  { id: "m11", kind: "sentence", lv: 1, dom: "play", words: ["문서는", "최대", "5개까지", "올릴", "수", "있어요"],
+    pool: ["시계", "점심시간", "게시판", "자전거", "창문"],
+    mean: "올린 문서를 바탕으로 질문합니다", h: "play.hq.intro" },
+  { id: "m12", kind: "sentence", lv: 1, dom: "lab", words: ["내", "업무", "고민도", "DAP가", "될", "수", "있어요"],
+    pool: ["정수기", "시계", "자전거", "창문", "게시판"],
+    mean: "당신의 업무 고민도 DAP가 될 수 있습니다", h: "lab.idea" },
+  { id: "m13", kind: "sentence", lv: 1, dom: "play", words: ["AX", "PLAY에서", "HiDI-Q를", "써", "볼", "수", "있어요"],
+    pool: ["회의실", "복사기", "점심시간", "주차장", "구내식당"],
+    mean: "직접 써 보고 후기를 남길 수 있습니다", h: "" },
+  { id: "m14", kind: "sentence", lv: 1, dom: "lounge", words: ["혼자", "고민하던", "업무를", "이제", "함께", "풀어", "봐요"],
+    pool: ["달력", "엘리베이터", "화분", "냉장고", "우산"],
+    mean: "혼자(ME)에서 함께(WE)로 갑니다", h: "lounge.intro" },
+  { id: "m15", kind: "sentence", lv: 2, dom: "action", words: ["판매", "화법을", "AI가", "알려줘요"],
+    pool: ["엘리베이터", "화분", "냉장고", "정수기"],
+    mean: "AI컨설팅 도우미가 하는 일입니다", h: "action.consult" },
+  { id: "m16", kind: "sentence", lv: 2, dom: "play", words: ["피보험자", "동의를", "먼저", "받아요"],
+    pool: ["달력", "엘리베이터", "화분", "냉장고"],
+    mean: "신용정보원 조회에 필요합니다", h: "play.hh.tips" },
+  { id: "m17", kind: "sentence", lv: 2, dom: "play", words: ["출산예정일만", "넣으면", "태아보험을", "설계해요"],
+    pool: ["게시판", "우산", "회의실", "복사기"],
+    mean: "임신 주수별 필수 담보를 담아 줍니다", h: "play.hh.intro" },
+  { id: "m18", kind: "sentence", lv: 2, dom: "lounge", words: ["상담에서", "실행", "방향을", "구체화해요"],
+    pool: ["점심시간", "주차장", "구내식당", "달력"],
+    mean: "AX LOUNGE 상담의 마지막 단계입니다", h: "lounge.steps" },
+  { id: "m19", kind: "sentence", lv: 2, dom: "vision", words: ["2027년엔", "업무별", "전담", "Agent를", "만들어요"],
+    pool: ["점심시간", "주차장", "구내식당", "엘리베이터", "달력"],
+    mean: "영업, 보상 등 업무마다 Agent가 생깁니다", h: "vision.2027" },
+  { id: "m20", kind: "sentence", lv: 2, dom: "play", words: ["번역해도", "원본", "양식이", "그대로", "유지돼요"],
+    pool: ["시계", "자전거", "창문", "게시판", "우산"],
+    mean: "옮겨 적을 필요가 없습니다", h: "play.hq.intro" },
+  { id: "m21", kind: "sentence", lv: 2, dom: "play", words: ["문서를", "올리고", "물어보면", "대화하듯", "답해요"],
+    pool: ["회의실", "복사기", "점심시간", "주차장", "구내식당"],
+    mean: "HiDI-Q가 하는 일입니다", h: "vision.2026" },
+  { id: "m22", kind: "sentence", lv: 2, dom: "lab", words: ["데이터에", "근거한", "판단으로", "업무를", "개선해요"],
+    pool: ["우산", "화분", "냉장고", "정수기", "시계"],
+    mean: "효율을 높이고 일하는 방식을 바꿉니다", h: "lab.dap" },
+  { id: "m23", kind: "sentence", lv: 2, dom: "action", words: ["강북이는", "개인", "실적에", "맞춰", "시상을", "알려줘요"],
+    pool: ["복사기", "점심시간", "주차장", "구내식당", "달력"],
+    mean: "영업 현장의 시상 안내 도우미입니다", h: "action.sales" },
+  { id: "m24", kind: "sentence", lv: 2, dom: "play", words: ["하이헬퍼는", "보험", "설계를", "1분", "안에", "추천해요"],
+    pool: ["화분", "냉장고", "정수기", "시계", "자전거"],
+    mean: "계약 빅데이터를 바탕으로 추천합니다", h: "play.hh.helper" },
+  { id: "m25", kind: "sentence", lv: 2, dom: "play", words: ["HiDI-Q는", "문서를", "요약하고", "번역하고", "초안도", "만들어요"],
+    pool: ["엘리베이터", "달력", "우산", "회의실", "복사기"],
+    mean: "긴 문서도 양식 그대로 번역합니다", h: "play.hq.intro" },
+  { id: "m26", kind: "sentence", lv: 2, dom: "lab", words: ["지난", "우수", "과제는", "LAB에서", "볼", "수", "있어요"],
+    pool: ["자전거", "창문", "게시판", "회의실"],
+    mean: "2024~2025 우수 과제가 걸려 있습니다", h: "lab.history" },
+  { id: "m27", kind: "sentence", lv: 2, dom: "play", words: ["원하는", "상품과", "담보를", "골라", "AI", "추천을", "받아요"],
+    pool: ["점심시간", "주차장", "구내식당", "엘리베이터"],
+    mean: "맞춤 AI 추천 기능입니다", h: "play.hh.intro" },
+  { id: "m28", kind: "sentence", lv: 2, dom: "play", words: ["비교할", "자료는", "직접", "올려서", "비교하는", "게", "좋아요"],
+    pool: ["화분", "냉장고", "정수기", "시계"],
+    mean: "타사 약관을 찾아 비교하지 않습니다", h: "play.hq.tips" },
+  { id: "m29", kind: "sentence", lv: 3, dom: "play", words: ["바로컨설팅", "내역을", "먼저", "확인해요"],
+    pool: ["우산", "점심시간", "주차장", "구내식당"],
+    mean: "고객이 원하는 상품이 반영됐는지 봅니다", h: "play.hh.check" },
+  { id: "m30", kind: "sentence", lv: 3, dom: "play", words: ["기존", "계약을", "바탕으로", "추천해요"],
+    pool: ["회의실", "복사기", "우산", "점심시간"],
+    mean: "그래서 새 상품은 반영이 늦습니다", h: "play.hh.check" },
+  { id: "m31", kind: "sentence", lv: 3, dom: "vision", words: ["지금의", "DAP가", "나만의", "Agent의", "첫걸음이에요"],
+    pool: ["정수기", "시계", "자전거", "창문", "게시판"],
+    mean: "2028년 나만의 AI Agent로 이어집니다", h: "vision.2028" },
+  { id: "m32", kind: "sentence", lv: 3, dom: "action", words: ["하이핑거는", "통화녹취도", "AI로", "분석하는", "앱이에요"],
+    pool: ["달력", "엘리베이터", "화분", "냉장고", "정수기"],
+    mean: "보상 업무를 지원하는 앱입니다", h: "action.claims" },
+  { id: "m33", kind: "sentence", lv: 3, dom: "play", words: ["신상품은", "추천", "반영이", "늦을", "수", "있어요"],
+    pool: ["자전거", "창문", "게시판", "회의실", "복사기"],
+    mean: "새 상품과 담보는 시간이 걸립니다", h: "play.hh.check" },
+  { id: "m34", kind: "sentence", lv: 3, dom: "vision", words: ["각자", "업무에", "필요한", "Agent를", "직접", "만들어요"],
+    pool: ["복사기", "우산", "점심시간", "주차장", "구내식당"],
+    mean: "2028년 목표는 1인 1 AI Agent입니다", h: "vision.2028" },
+  { id: "m35", kind: "sentence", lv: 3, dom: "vision", words: ["법률", "Agent는", "판례와", "법령을", "찾아", "답변해요"],
+    pool: ["시계", "자전거", "창문", "게시판", "회의실"],
+    mean: "근거와 함께 답변을 제공합니다", h: "vision.2027" },
+  { id: "m36", kind: "sentence", lv: 3, dom: "vision", words: ["영업", "보상", "언더라이팅", "등", "업무별", "Agent가", "생겨요"],
+    pool: ["정수기", "시계", "엘리베이터", "화분"],
+    mean: "2027년 업무 영역별 Agent 계획입니다", h: "vision.2027" },
+  { id: "m37", kind: "sentence", lv: 3, dom: "vision", words: ["진단서와", "의료", "서류를", "읽고", "심사", "정보를", "확인해요"],
+    pool: ["달력", "냉장고", "우산", "주차장"],
+    mean: "의료심사 Agent가 하는 일입니다", h: "vision.2027" },
+  { id: "o01", kind: "order", lv: 1, dom: "play", pairs: [["1", "문서 올리기"], ["2", "질문하기"], ["3", "답 받기"]],
     pool: ["우산 챙기기", "달력 보기", "주차장 찾기", "시계 보기"],
-    mean: "받은 답을 쓰기 전 순서입니다" },
-  { id: "osec", kind: "order", lv: 2, dom: "safety", pairs: [["1", "규정 확인하기"], ["2", "민감한 내용 빼기"], ["3", "결과 다시 보기"]],
+    mean: "HiDI-Q 사용 순서입니다", h: "" },
+  { id: "o02", kind: "order", lv: 1, dom: "lounge", pairs: [["1", "고민을 들려주세요"], ["2", "가능성을 함께 찾아요"], ["3", "실행 방법을 설계해요"]],
     pool: ["화분 옮기기", "자전거 타기", "냉장고 정리하기", "복사기 고치기"],
-    mean: "회사 자료를 다룰 때의 순서입니다" },
-  { id: "odrw", kind: "order", lv: 1, dom: "concept", pairs: [["1", "무엇을 그릴지 정하기"], ["2", "자세히 설명하기"], ["3", "결과 보고 다시 요청하기"]],
+    mean: "AX LOUNGE 상담 순서입니다", h: "lounge.steps" },
+  { id: "o03", kind: "order", lv: 2, dom: "play", pairs: [["1", "피보험자 동의 받기"], ["2", "추천 방식 고르기"], ["3", "결과 확인하기"]],
     pool: ["엘리베이터 타기", "계단 오르기", "창문 닫기", "점심 먹기"],
-    mean: "AI로 그림 만드는 순서입니다" },
-  { id: "omtg", kind: "order", lv: 2, dom: "safety", pairs: [["1", "녹음 시작 알리기"], ["2", "녹음하기"], ["3", "요약 확인하기"], ["4", "필요한 사람에게 나누기"]],
-    pool: ["달력 보기", "주차장 찾기", "시계 보기", "우산 챙기기"],
-    mean: "회의 녹음을 AI로 정리하는 순서입니다" },
-  { id: "ouse2", kind: "order", lv: 2, dom: "concept", pairs: [["1", "답 받기"], ["2", "사실 확인하기"], ["3", "필요한 부분만 고르기"], ["4", "내 손으로 다듬기"]],
-    pool: ["자전거 타기", "냉장고 정리하기", "복사기 고치기", "화분 옮기기"],
-    mean: "AI 결과를 업무에 쓰는 순서입니다" },
-  { id: "otool", kind: "order", lv: 3, dom: "safety", pairs: [["1", "필요한 일 정하기"], ["2", "허용된 도구인지 보기"], ["3", "작게 써보기"], ["4", "결과 확인하기"], ["5", "넓혀서 쓰기"]],
-    pool: ["계단 오르기", "창문 닫기", "점심 먹기", "엘리베이터 타기"],
-    mean: "새 도구를 업무에 들이는 순서입니다" },
-  { id: "opii", kind: "order", lv: 2, dom: "safety", pairs: [["1", "이름, 연락처 지우기"], ["2", "알아볼 정보 남았는지 보기"], ["3", "확인 뒤 쓰기"]],
-    pool: ["주차장 찾기", "시계 보기", "우산 챙기기", "달력 보기"],
-    mean: "개인정보가 섞인 자료를 다루는 순서입니다" },
-  { id: "ofix", kind: "order", lv: 1, dom: "concept", pairs: [["1", "무엇이 틀렸는지 짚기"], ["2", "원하는 방향 다시 말하기"], ["3", "다시 받은 답 확인하기"]],
-    pool: ["냉장고 정리하기", "복사기 고치기", "화분 옮기기", "자전거 타기"],
-    mean: "AI 답에 문제가 있을 때 순서입니다" },
-  { id: "osum", kind: "order", lv: 3, dom: "concept", pairs: [["1", "자료 모으기"], ["2", "요약 범위 정해 시키기"], ["3", "빠진 내용 찾기"], ["4", "원문과 대조하기"]],
-    pool: ["창문 닫기", "점심 먹기", "엘리베이터 타기", "계단 오르기"],
-    mean: "많은 자료를 AI로 요약하는 순서입니다" },
-  { id: "odrf", kind: "order", lv: 1, dom: "concept", pairs: [["1", "주제와 형식 알려주기"], ["2", "초안 받기"], ["3", "내 문장으로 다듬기"]],
-    pool: ["시계 보기", "우산 챙기기", "달력 보기", "주차장 찾기"],
-    mean: "AI로 초안 쓰고 마무리하는 순서입니다" }
+    mean: "Hi-Helper 사용 순서입니다", h: "play.hh.tips" },
+  { id: "o04", kind: "order", lv: 2, dom: "vision", pairs: [["2026", "사내 LLM 도입"], ["2027", "업무 영역별 Agent"], ["2028", "1인 1 AI Agent"]],
+    pool: ["우산 챙기기", "달력 보기", "주차장 찾기", "시계 보기"],
+    mean: "AX 로드맵 대표 목표 순서입니다", h: "" },
+  { id: "o05", kind: "order", lv: 3, dom: "vision", pairs: [["2026", "HiDI-Q와 Hi-Helper"], ["2027", "의료심사와 법률 Agent"], ["2028", "나만의 AI Agent"]],
+    pool: ["화분 옮기기", "자전거 타기", "냉장고 정리하기", "복사기 고치기"],
+    mean: "AX 로드맵 주요 프로젝트 순서입니다", h: "" }
 ];
 /* v3.57 행사 정보 은행 · 휴면 (되살리려면 위 MEM_ROUNDS 와 바꿔 끼운다) */
 var MEM_ROUNDS_EVENT = [
@@ -4521,7 +4492,7 @@ var App = {
     ev_cchat: "내 커피챗",
     wq_list: "전시 QR 퀴즈", wq_play: "문제 풀이", floor1: "1F 부스",
     admin: "관리자 모드", screen: "송출용 화면", screen_survey: "", screen_words: "", game_word: "기억력 퀴즈", game_type: "타자 게임", game_tetris: "테트리스", type_site: "1F 현장 셀프 모드", wall_type: "", type_award: "", type_rank: "타자 순위",
-    game_pang: "AX 팡", game_jump: "ME to WE 점프", game_ox: "O/X 퀴즈", oly_rank: "미니 게임 순위",
+    game_pang: "AX 팡", game_jump: "ME to WE 점프", game_ox: "AX 퀴즈", oly_rank: "미니 게임 순위",
     art: "AI 사생대회", art_rank: "좋아요 순위", screen_art: "",
     wall_quiz: "", wall_wave: "", wall_live: "", wall_metowe: "", wall_tv: ""
   },
@@ -5646,12 +5617,12 @@ function nextStampHtml() {
     var nm = function (e) { return q ? e.name : e.short; };
     var sub = g.done.length ? g.done.map(nm).join(", ") + " 완료 · " + g.left.map(nm).join(", ") + " 남음" : g.left.map(nm).join(" · ");
     var nx = g.left[0];
-    return card(ch.concat(q ? "약 2분" : "약 3분"), esc(s.title) + " " + Math.min(need, g.done.length) + " / " + need, esc(sub), (nx ? (q ? nx.name : nx.short) : s.title) + " 시작", nx ? "App.go('" + nx.view + "')" : s.tap, ico);
+    return card(ch.concat(q ? "약 2분" : "약 3분"), esc(s.title) + (q && need <= 1 ? "" : " " + Math.min(need, g.done.length) + " / " + need), esc(sub), (nx ? (q ? nx.name : nx.short) : s.title) + " 시작", nx ? "App.go('" + nx.view + "')" : s.tap, ico);
   }
   if (s.id === "p2") return card(ch.concat("1F"), "AX PLAY", "HiDI-Q · Hi-Helper 체험 후 스태프 인증", "내 QR 보여주기", "qrPanelOpen('mine')", ico);
   if (s.id === "p5") return card(ch.concat("1분"), "아이디어 한 줄", "1F AX LAB QR로도 쓸 수 있어요", "아이디어 쓰기", "App.go('ideas')", ico);
   if (s.id === "p3") return card(ch, "프로그램 참여", "17F 강연 출석 · AX LOUNGE 상담 · AX 커피챗 중 하나", "시간표 보기", "homeSched()", ico);
-  if (s.id === "st") { var sst = stairState(); return card(ch, "계단 이용", sst.leg ? "진행 중 · " + sst.leg.fl + "F 시작" : "방화문 QR · 누적 " + (sst.total || 0) + " / " + (sst.goal || 10) + "개 층", sst.leg ? "진행 화면 보기" : "계단 안내", "stairOpen()", ico); }
+  if (s.id === "st") { var sst = stairState(); return card(ch, "계단 이용", sst.leg ? "진행 중 · " + sst.leg.fl + "F 시작" : stairLine(sst), sst.leg ? "진행 화면 보기" : "계단 안내", "stairOpen()", ico); }
   if (s.id === "sv") return card(ch.concat("60초"), "오늘 한 판 설문", "", "설문 시작", "App.go('survey')", ico);
   return card(ch, esc(s.title), esc(s.desc || ""), s.cta || "보기", s.tap || "App.tab('exp')", ico);
 }
@@ -6271,7 +6242,7 @@ function stampInnerHtml(s) {
   if (s.id === "st") {
     /* v4.06 계단 B안 · 누적 게이지 · 진행 중 한 줄 · 안전 문구 · 계단 화면 / 안내로 */
     var sst = stairState();
-    inner = '<p class="d">' + s.desc + "</p>" + stairGauge(sst.total || 0, sst.goal || 10) +
+    inner = '<p class="d">' + s.desc + "</p>" + stairGauge(sst.total || 0, sst.goal || 1) +
       (sst.leg ? '<p class="nt">진행 중 · ' + sst.leg.fl + "F 시작 · " + esc(sst.leg.at || "") + "</p>" : "") +
       '<p class="nt">' + STAIR_SAFE + "</p>" + scanQNote() +
       '<button class="btn mint" style="margin-top:10px" onclick="stairOpen()">' + (sst.leg ? "진행 화면 보기" : "계단 안내") + "</button>" +
@@ -6290,7 +6261,7 @@ function stampInnerHtml(s) {
       '<div class="oly-hub">' + olyHubHtml(true) + "</div>";
   } else if (s.id === "qz") {
     /* v4.83 AX 퀴즈 · O/X · 기억력 두 행(순위 없음 · 내 최고만) */
-    inner += (S.get("stamps", []).indexOf("qz") >= 0 ? "" : '<p class="d">종목 ' + Math.min(QZ_NEED, qzDone()) + " / " + QZ_NEED + "</p>") +
+    inner += (S.get("stamps", []).indexOf("qz") >= 0 || QZ_NEED <= 1 ? "" : '<p class="d">종목 ' + Math.min(QZ_NEED, qzDone()) + " / " + QZ_NEED + "</p>") +
       '<div class="oly-hub">' + quizHubHtml(true) + "</div>";
   } else if (s.auto) {
     /* v4.83 최초 로그인 · 버튼 없음(로그인 뒤 앱이 서버에 한 번 알리고 서버가 계정을 확인해 적립) */
@@ -6623,7 +6594,7 @@ function expStamp(id) {
 var CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2 8.8-9.4"/></svg>';
 /* 종목 타일 · 완료 = 연주황 「O/X 완료」 · 남음 = 흰 면 · 누르면 그 종목 시작 화면 */
 function stpTilesHtml(keys) {
-  var me = olyMe(), q = keys === OLY_QUIZ_KEYS;   /* AX 퀴즈 타일은 이름 그대로(O/X 퀴즈 · 기억력 퀴즈 · 사용자 확정 261001) */
+  var me = olyMe(), q = keys === OLY_QUIZ_KEYS;   /* AX 퀴즈 타일은 이름 그대로(v4.92 AX 퀴즈 한 판 · 옛 O/X 퀴즈 · 기억력 퀴즈 두 타일) */
   return '<div class="axs-tiles">' + olyKeysEvents(keys).map(function (e) {
     var d = !!me.ev[e.key];
     return '<button type="button" class="axs-tile' + (d ? " done" : "") + '" onclick="App.go(\'' + e.view + '\')">' + esc(q ? e.name : e.short) + (d ? " 완료" : "") + "</button>";
@@ -6632,12 +6603,12 @@ function stpTilesHtml(keys) {
 /* 행 한 줄 설명 · 화면에 없는 장소 · 시간 · 조건만(문구 다이어트) */
 function stpMeta(s, got) {
   if (s.id === "lg") return "";
-  if (s.id === "qz") return "2종 완주 · " + Math.min(QZ_NEED, qzDone()) + " / " + QZ_NEED;
+  if (s.id === "qz") return QZ_NEED <= 1 ? "한 판 완주" : QZ_NEED + "종 완주 · " + Math.min(QZ_NEED, qzDone()) + " / " + QZ_NEED;
   if (s.id === "p4") return (stampV2() ? "팡 · 점프 · 테트리스 3종 완주 · " : "서로 다른 3종목 · ") + Math.min(MG_NEED, mgDone()) + " / " + MG_NEED;
   if (s.id === "p2") return "1F · HiDI-Q · Hi-Helper";
   if (s.id === "p5") return "1분 · 1F AX LAB의 QR로도";
   if (s.id === "p3") return "17F 강연 출석 · AX LOUNGE 상담 · AX 커피챗";
-  if (s.id === "st") { var sst = stairState(); return sst.leg ? "진행 중 · " + sst.leg.fl + "F 시작" : "방화문 QR · 누적 " + (sst.total || 0) + " / " + (sst.goal || 10) + "개 층"; }
+  if (s.id === "st") { var sst = stairState(); return sst.leg ? "진행 중 · " + sst.leg.fl + "F 시작" : stairLine(sst); }
   if (s.id === "sv") return SURVEY.open + "부터 · 60초";
   return s.where || "";
 }
@@ -8978,7 +8949,7 @@ document.addEventListener("visibilitychange", function () { if (!document.hidden
 var STR = { mode: "idle", res: null, sc: null, busy: false, err: "", pick: null, tick: null };
 var STAIR_SAFE = "뛰지 마세요 · 방화문은 닫아 주세요";
 /* v4.54 다른 사번 · 사번 없는 옛 상태는 없는 것으로 본다(진행 중 표시 · 도착 층 안내가 다음 사람에게 뜨지 않게) · 서버 sync 가 곧 내 것을 채운다 */
-function stairState() { var s = S.get("stair", null); return ownIs(s) ? s : { leg: null, total: 0, goal: 10 }; }
+function stairState() { var s = S.get("stair", null); return ownIs(s) ? s : { leg: null, total: 0, goal: 1 }; }
 function stairPut(s) { S.set("stair", Object.assign({}, s, { emp: ownEmp() })); }
 function stairRoute(r) { return r == 2 ? "비상계단 2" : r == 1 ? "비상계단 1" : ""; }
 function stairByCode(code, fl, r, t) {
@@ -9014,7 +8985,7 @@ function stairDone(res, sc, late, act) {
     return;
   }
   var s = stairState();
-  s.total = res.total != null ? res.total : s.total; s.goal = res.goal || s.goal || 10;
+  s.total = res.total != null ? res.total : s.total; s.goal = res.goal || s.goal || 1;
   if (res.leg === "start") s.leg = { fl: res.fl, r: res.r, route: res.route, at: res.at, since: res.since || sc.t || Date.now() };
   else if (res.leg === "dup" || res.leg === "fix") s.leg = res.from ? { fl: res.from.fl, r: res.from.r, route: res.from.route, at: res.from.at, since: res.from.since || 0 } : s.leg;
   else s.leg = null;
@@ -9032,7 +9003,7 @@ function stairDone(res, sc, late, act) {
   }
   if (res.leg === "start" && !res.reclass) stampBuzz(25);
   if (late) {
-    var body = res.leg === "end" ? res.from.fl + "F → " + res.to.fl + "F · " + res.floors + "개 층 · 누적 " + res.total + " / " + s.goal
+    var body = res.leg === "end" ? res.from.fl + "F → " + res.to.fl + "F · " + res.floors + "개 층" + (s.goal > 1 ? " · 누적 " + res.total + " / " + s.goal : "")
       : res.leg === "start" ? res.fl + "F 시작 · " + stairRoute(res.r) : res.leg === "fix" ? "지난번 종료를 찍지 않았어요" : res.fl + "F";
     STR.res = res; STR.sc = sc; STR.mode = res.leg === "dup" ? "start" : res.leg;
     notice({ key: "stair:late:" + res.leg + ":" + (sc.t || ""), title: "저장한 계단 스캔 처리", body: body, go: "stair", goLbl: "계단 화면" });
@@ -9083,8 +9054,11 @@ function stairDotsHtml(since) {
   return '<div class="axs-stairs" aria-hidden="true"><svg viewBox="0 0 120 120">' + d + "</svg>" +
     '<span class="axs-stbot" style="left:' + (bx / 120 * 100).toFixed(1) + "%;top:" + (by / 160 * 100).toFixed(1) + '%">' + BOT_SVG + "</span></div>";
 }
+/* v4.92 (261001 사용자 확정) 목표 = 서버 goal(기본 1 · 한 개 층만 오르내려도 적립) · 1이면 막대 없이 한 줄 · 옛 서버(10)면 누적 막대 */
+function stairLine(s) { var g = s.goal || 1, t = s.total || 0; return g > 1 ? "방화문 QR · 누적 " + t + " / " + g + "개 층" : t >= g ? "방화문 QR · " + t + "개 층 이동" : "방화문 QR · 한 개 층 이상"; }
 function stairGauge(total, goal) {
-  var pct = Math.min(100, Math.round((total || 0) / (goal || 10) * 100));
+  if ((goal || 1) <= 1) return '<p class="ax-type-t6-strong">' + ((total || 0) >= 1 ? "오늘 " + total + "개 층 이동" : "한 개 층만 이동해도 적립") + "</p>";
+  var pct = Math.min(100, Math.round((total || 0) / goal * 100));
   return '<div class="axs-gauge" role="img" aria-label="누적 ' + total + " / " + goal + '개 층"><i style="width:' + pct + '%"></i></div>' +
     '<p class="ax-type-t6-strong">누적 ' + total + (total >= goal ? "개 층" : " / " + goal + "개 층") + "</p>";
 }
@@ -9102,13 +9076,13 @@ function stairPickBtn() {
   return '<div class="axs-fix ax-bottom"><button type="button" class="ax-button" id="stGo" onclick="stairPickGo()"' + (p == null || STR.busy ? " disabled" : "") + ">" + (STR.busy ? "보정하는 중" : lbl) + "</button></div>";
 }
 function stairHtml() {
-  var o = STR.res || {}, s = stairState(), goal = s.goal || 10, m = STR.mode;
+  var o = STR.res || {}, s = stairState(), goal = s.goal || 1, m = STR.mode;
   if (m === "load" || (STR.busy && m !== "fix" && m !== "reclass")) return { body: botHtml("확인하는 중", { wait: 1 }), btn: "" };
   if (m === "start") {
     var since = o.since || (s.leg && s.leg.since) || Date.now();
     return { body:
       stampTagHtml("st") + '<div class="axs-chiprow"><span class="axs-chip">진행 중</span>' + (o.leg === "dup" ? '<span class="axs-chip off">이미 시작함</span>' : "") + (o.reclass ? '<span class="axs-chip off">새로 시작으로 바꿈</span>' : "") + "</div>" +
-      (o.reclass && o.stamp && o.stamp.revoked ? '<p class="ax-meta">누적이 ' + goal + "개 층 아래라 계단 스탬프가 취소됐어요</p>" : "") +
+      (o.reclass && o.stamp && o.stamp.revoked ? '<p class="ax-meta">' + (goal > 1 ? "누적이 " + goal + "개 층 아래라" : "이동한 층이 없어") + " 계단 스탬프가 취소됐어요</p>" : "") +
       '<div class="axs-strow"><div class="ax-stack-tight"><h1 class="ax-title">계단 이용 시작</h1>' +
       '<p class="axs-st-big">' + o.fl + "F · " + esc(o.route || stairRoute(o.r)) + "</p></div>" + stairDotsHtml(since) + "</div>" +
       '<p class="axs-safe">' + STAIR_SAFE + "</p>" +
@@ -9184,8 +9158,8 @@ var EXP_GUIDE = {
   p7: { chip: "1F · 약 10분", h: "벽 QR 퀴즈를<br>풀어 보세요", d: "DAP Wall 벽의 QR을 스캔하면 그 벽의 5문항이 열려요. 한 세트를 끝내면 스탬프를 받아요.",
     steps: [["벽 QR 스캔", "WALL 1~3 중 한 곳"], ["5문항 풀기", "보기를 골라 제출해요"], ["적립 확인", "처음 끝낸 세트에서 스탬프"]],
     meta: "", cta: "벽 QR 스캔하기", link: ["퀴즈 목록", "App.go('wq_list')"] },
-  st: { chip: "1F~18F · 비상계단 1·2", h: "계단으로<br>이동해 보세요", d: "출발 층과 도착 층 방화문 앞 QR을 찍으면 층수가 쌓여요. 누적 10개 층이면 스탬프를 받아요.",
-    steps: [["출발 층 QR 스캔", "방화문 앞 QR"], ["계단으로 이동", STAIR_SAFE], ["도착 층 QR 스캔", "오르기·내려가기 모두 층수 누적"]],
+  st: { chip: "1F~18F · 비상계단 1·2", h: "계단으로<br>이동해 보세요", d: "출발 층과 도착 층 방화문 앞 QR을 찍어요. 한 개 층만 이동해도 스탬프를 받아요.",
+    steps: [["출발 층 QR 스캔", "방화문 앞 QR"], ["계단으로 이동", STAIR_SAFE], ["도착 층 QR 스캔", "오르기·내려가기 모두 인정"]],
     meta: "", cta: "계단 QR 스캔하기" }
 };
 function expGuide(id) { EXPG.id = EXP_GUIDE[id] ? id : "p1"; App.go("exp_g"); }
@@ -9196,13 +9170,13 @@ function expGuideHtml() {
   }).join("");
   var prog = "";
   if (id === "st") {
-    prog = '<section class="ax-card axs-gap12">' + stairGauge(s.total || 0, s.goal || 10) +
+    prog = '<section class="ax-card axs-gap12">' + stairGauge(s.total || 0, s.goal || 1) +
       (s.leg ? '<p class="ax-description">진행 중 · ' + s.leg.fl + "F " + esc(s.leg.route || stairRoute(s.leg.r)) + " 시작 · " + esc(s.leg.at || "") + "</p>" +
         '<button type="button" class="ax-button ax-button-weak" onclick="stairOpen()">진행 화면 보기</button>' : "") + "</section>";
   }
   return '<div class="ax-stack axs-sthost">' + stampTagHtml(id) +   /* v4.70 오른쪽 위 도장 · 옛 「적립 완료」 칩은 도장이 대신한다 */
     '<div class="axs-chiprow"><span class="axs-chip">' + esc(g.chip) + "</span></div>" +
-    '<div class="ax-stack-tight"><h1 class="ax-title">' + g.h + '</h1><p class="ax-description">' + esc(g.d) + "</p></div>" +
+    '<div class="ax-stack-tight"><h1 class="ax-title">' + g.h + '</h1><p class="ax-description">' + esc(id === "st" && (s.goal || 1) > 1 ? "출발 층과 도착 층 방화문 앞 QR을 찍어요. 누적 " + s.goal + "개 층이면 스탬프를 받아요." : g.d) + "</p></div>" +
     prog +
     '<ol class="axs-steps">' + steps + "</ol>" +
     (g.meta ? '<p class="ax-meta">' + esc(g.meta) + "</p>" : "") +
@@ -10070,7 +10044,7 @@ function mgStampCheck(srv) {
   if (mgDone() >= MG_NEED) awardStamp("p4");
 }
 /* v4.83 AX 퀴즈 스탬프(qz) = O/X · 기억력 두 종목 모두 한 판 · 서버 game_submit 응답 qz 로 적립(없으면 이 기기 종목 수) · 옛 서버에는 qz 가 없다 */
-var QZ_NEED = 2;
+var QZ_NEED = 1;   /* v4.92 (261001 저녁 사용자 확정) AX 퀴즈 = O/X 한 판 완주 · 옛 2종(O/X · 기억력) 폐지 */
 function qzDone() { var me = olyMe(); return OLY_QUIZ_KEYS.filter(function (k) { return !!me.ev[k]; }).length; }
 function qzStampCheck(srv) {
   if (!stampV2()) return;
@@ -10805,13 +10779,16 @@ var OLY_EVENTS = [
   { key: "jump", name: "ME to WE 점프", short: "점프", view: "game_jump", best: "oly2_best_jump" },
   { key: "tetris", name: "테트리스", short: "테트리스", view: "game_tetris", best: "oly2_best_tetris" },
   { key: "word", name: "기억력 퀴즈", short: "기억력", view: "game_word", best: "oly2_best_word" },
-  { key: "ox", name: "O/X 퀴즈", short: "O/X", view: "game_ox", best: "oly2_best_ox" }
+  { key: "ox", name: "AX 퀴즈", short: "AX 퀴즈", view: "game_ox", best: "oly2_best_ox" }
 ];
 /* v4.83 (261001 사용자 확정 · 앱 개편 1묶음) 미니 게임 = 팡 · 점프 · 테트리스 · 종합 = 세 종목 최고 한 판 합(만점 9,000) · 종합 자격 = 세 종목 모두 1판 이상
    AX 퀴즈 = O/X · 기억력 · 게임으로 묶지 않는다(사용자 수정 261001) · 순위 · 점수판에 넣지 않는다(내 최고 기록만) · 점수 식 · 서버 재계산은 그대로
    종합 종목은 서버가 알려 준다(oly_board oev · 새 서버) · 받은 순위판이 옛 서버 것이면 다섯 종목(옛 서버 숫자 그대로) · 아직 못 받았으면 지금 체계 판 */
-var OLY_MINI_KEYS = ["pang", "jump", "tetris"], OLY_QUIZ_KEYS = ["ox", "word"];
-function olyIsQuiz(key) { return OLY_QUIZ_KEYS.indexOf(key) >= 0; }
+/* v4.92 (261001 저녁 사용자 확정) AX 퀴즈 = O/X 한 판 · 기억력 퀴즈는 진입점만 숨긴다(QUIZ_WORD · 코드 · 은행 · 옛 기록은 그대로)
+   OLY_QUIZ_KEYS = 스탬프 판정 · 퀴즈 목록 · OLY_NOT_MINI = 미니 게임 · 순위에서 빼는 종목(기억력도 계속 뺀다) */
+var QUIZ_WORD = false;
+var OLY_MINI_KEYS = ["pang", "jump", "tetris"], OLY_QUIZ_KEYS = QUIZ_WORD ? ["ox", "word"] : ["ox"], OLY_NOT_MINI = ["ox", "word"];
+function olyIsQuiz(key) { return OLY_NOT_MINI.indexOf(key) >= 0; }
 function olyAllKeys() { return OLY_EVENTS.map(function (e) { return e.key; }); }
 function olyOvKeys(src) {
   var b = src || OLY.board;
@@ -10837,99 +10814,111 @@ var OLY_RULE = {
     feverAt: 5, feverLen: 3, feverMul: 2, goldMul: 3, bonusAt: 10, bonusSec: 300, pass: 1, lock: 30,
     rowT: [600, 400], lead: [130, 100, 150], arrive: 100, lifeBonus: 50, secBonus: 12, pauseMax: 3 }
 };
-/* v4.09 AI O/X 문제 은행 (원본 「AI OX 문제은행.json」 86문제 · 올림픽 보정/ox_bank_build.py 가 만든다 · 서버 OX_KEY 와 검사 68절이 대조)
-   id · c 분야(1 AI 기초·생성형 AI · 2 사내 AI 안전 수칙 · 3 현대해상 AX 로드맵) · lv 난이도 · q 문장 · a 정답 · e 해설 · g 짝 그룹(한 판에 하나) ·
-   rv 검수 통과(0 이면 문장 옆 「(예시)」 · 사용자 결정 260922 · 86문제 전부 출시) · 답이 틀린 문항은 서버 설정 OX_OFF 로 뺀다 */
+/* v4.09 AI O/X 문제 은행 · v4.92 (261001 사용자 승인 · 앱 개편 4묶음) 정본 「QA/문제 은행 확정안 v1.json」 ox 95문제 = 1층 부스 F01~F82 + 기존 A 13 · 서버 OX_KEY 와 검사 68절이 대조
+   id · c 분야(1 AI 기초·생성형 AI · 4 1층 부스) · lv 난이도 · q 문장 · a 정답 · e 해설 · g 짝 그룹(한 판에 하나) · z 1층 구역(틀린 문제 카드 「다시 볼 곳」 · OX_ZONE) ·
+   h 힌트 코드(구역.줄.판 · 기억력 문제 은행 v3.json hint_codes · 판이 갈리거나 판 근거가 없으면 빈 값 · 지금 화면은 쓰지 않는다) ·
+   rv 검수 통과(0 이면 문장 옆 「(예시)」 · 지금 은행은 모두 1) · 답이 틀린 문항은 서버 설정 OX_OFF 로 뺀다 · 옛 86문제에서 빠진 73개(A 31 · S 21 · R 21)는 서버 OX_KEY_OLD 가 옛 기록 채점에만 쓴다 */
 var OX_BANK = [
-  { id: "A01", c: 1, lv: 1, q: "머신러닝은 AI의 한 분야다", a: "O", e: "데이터에서 규칙을 스스로 배우는 방법이 머신러닝이다.", g: "mlai", rv: 1 },
-  { id: "A02", c: 1, lv: 1, q: "AI가 자신 있게 말하면 사실이다", a: "X", e: "틀린 내용도 자신 있게 말할 수 있어 따로 확인한다.", g: "conf", rv: 1 },
-  { id: "A03", c: 1, lv: 1, q: "같은 질문에도 AI 답은 달라질 수 있다", a: "O", e: "생성형 AI는 답을 매번 확률적으로 새로 만든다.", g: "var", rv: 1 },
-  { id: "A04", c: 1, lv: 1, q: "질문은 짧을수록 늘 좋은 답이 나온다", a: "X", e: "상황과 목적을 함께 적어야 답이 나아진다.", g: "ctxq", rv: 1 },
-  { id: "A05", c: 1, lv: 1, q: "읽을 사람을 알려 주면 답이 나아진다", a: "O", e: "누구에게 무엇을 위해 쓰는지 알면 맞춤 답을 준다.", g: "ctxq", rv: 1 },
-  { id: "A06", c: 1, lv: 1, q: "AI를 쓰면 사람의 검토는 필요 없다", a: "X", e: "AI 결과는 사람이 확인하고 책임지고 쓴다.", g: "human", rv: 1 },
-  { id: "A07", c: 1, lv: 1, q: "영어로 물어야만 AI가 답한다", a: "X", e: "한국어를 비롯한 여러 언어로 묻고 답할 수 있다.", g: "", rv: 1 },
-  { id: "A08", c: 1, lv: 1, q: "AI는 계산을 한 번도 틀리지 않는다", a: "X", e: "숫자와 계산도 틀릴 수 있어 원자료로 검산한다.", g: "", rv: 1 },
-  { id: "A09", c: 1, lv: 1, q: "AI에게 답의 분량을 정해 줄 수 있다", a: "O", e: "「세 줄로」처럼 길이를 정하면 그에 맞춰 답한다.", g: "", rv: 1 },
-  { id: "A10", c: 1, lv: 1, q: "AI 답의 말투도 바꿔 달라고 할 수 있다", a: "O", e: "보고서체, 안내문체처럼 말투도 정해 줄 수 있다.", g: "", rv: 1 },
-  { id: "A11", c: 1, lv: 1, q: "코딩을 몰라도 말로 AI에게 일을 시킨다", a: "O", e: "평소 쓰는 말로 지시하면 되어 코딩은 필수가 아니다.", g: "", rv: 0 },
-  { id: "A12", c: 1, lv: 1, q: "글로 설명해서 AI로 그림을 만들 수 있다", a: "O", e: "원하는 그림을 글로 설명하면 이미지를 만들어 준다.", g: "", rv: 1 },
-  { id: "A13", c: 1, lv: 1, q: "AI는 배운 적 없는 사내 규정도 안다", a: "X", e: "사내 문서를 보지 못한 AI는 사내 규정을 모른다.", g: "", rv: 1 },
-  { id: "A14", c: 1, lv: 1, q: "AI 말투가 공손하면 내용도 정확하다", a: "X", e: "말투와 정확성은 별개라 내용을 따로 확인한다.", g: "conf", rv: 1 },
-  { id: "A15", c: 1, lv: 1, q: "생성형 AI는 있는 글을 찾아 그대로 보여 준다", a: "X", e: "배운 내용을 바탕으로 새 문장을 만들어 낸다.", g: "gen", rv: 1 },
-  { id: "A16", c: 1, lv: 2, q: "딥러닝은 머신러닝보다 넓은 개념이다", a: "X", e: "딥러닝은 머신러닝 안에 있는 한 방법이다.", g: "mlai", rv: 1 },
-  { id: "A17", c: 1, lv: 2, q: "LLM은 다음에 올 말을 예측하며 글을 쓴다", a: "O", e: "앞의 글을 보고 다음 조각(토큰)을 하나씩 이어 붙인다.", g: "gen", rv: 1 },
-  { id: "A18", c: 1, lv: 2, q: "AI 답은 늘 최신 인터넷 자료에서 나온다", a: "X", e: "검색 기능이 없으면 학습한 시점까지의 내용으로 답한다.", g: "", rv: 0 },
-  { id: "A19", c: 1, lv: 2, q: "할루시네이션은 AI가 지어낸 틀린 답이다", a: "O", e: "그럴듯하지만 틀린 내용을 만들어 내는 현상이다.", g: "conf", rv: 1 },
-  { id: "A20", c: 1, lv: 2, q: "토큰은 AI가 글을 잘게 나눈 처리 단위다", a: "O", e: "AI는 글을 단어나 글자 조각 단위로 나눠 계산한다.", g: "tok", rv: 1 },
-  { id: "A21", c: 1, lv: 2, q: "대화가 길어도 AI는 처음 내용을 다 기억한다", a: "X", e: "한 번에 볼 수 있는 양을 넘으면 앞 내용을 놓칠 수 있다.", g: "ctx", rv: 0 },
-  { id: "A22", c: 1, lv: 2, q: "멀티모달 AI는 글과 이미지를 함께 다룬다", a: "O", e: "글, 이미지, 음성처럼 여러 형태를 함께 입력받는다.", g: "mm", rv: 1 },
-  { id: "A23", c: 1, lv: 2, q: "사진 속 글자를 AI가 읽을 수 있다", a: "O", e: "이미지를 다루는 AI는 사진 속 글자도 읽어 낸다.", g: "mm", rv: 1 },
-  { id: "A24", c: 1, lv: 2, q: "AI 에이전트는 도구를 써 가며 일을 해낸다", a: "O", e: "목표를 받으면 검색, 파일 같은 도구를 골라 쓴다.", g: "agent", rv: 1 },
-  { id: "A25", c: 1, lv: 2, q: "AI 학습 데이터에는 편향이 섞일 수 있다", a: "O", e: "데이터가 한쪽으로 치우치면 답에도 그대로 드러난다.", g: "", rv: 1 },
-  { id: "A26", c: 1, lv: 2, q: "역할을 정해 주면 답의 관점이 분명해진다", a: "O", e: "「인사 담당자로서」처럼 역할을 주면 관점이 맞춰진다.", g: "", rv: 1 },
-  { id: "A27", c: 1, lv: 2, q: "복잡한 일은 단계로 나눠 시키면 좋다", a: "O", e: "큰 일을 작은 단계로 나누면 결과가 안정된다.", g: "", rv: 1 },
-  { id: "A28", c: 1, lv: 2, q: "AI가 알려 준 출처는 모두 실제로 있다", a: "X", e: "없는 논문이나 링크를 지어낼 때도 있어 확인한다.", g: "cite", rv: 1 },
-  { id: "A29", c: 1, lv: 2, q: "AI가 요약하면 빠지는 내용이 없다", a: "X", e: "중요한 내용을 빼먹을 수 있어 원문과 대조한다.", g: "", rv: 1 },
-  { id: "A30", c: 1, lv: 2, q: "자료를 주고 그 자료만 보고 답하게 한다", a: "O", e: "근거 자료를 함께 주면 엉뚱한 답이 줄어든다.", g: "", rv: 1 },
-  { id: "A31", c: 1, lv: 2, q: "딥페이크는 AI로 만든 가짜 영상·음성이다", a: "O", e: "진짜처럼 보여도 가짜일 수 있어 출처를 확인한다.", g: "", rv: 1 },
-  { id: "A32", c: 1, lv: 3, q: "트랜스포머는 요즘 언어 모델의 기반 구조다", a: "O", e: "2017년에 소개된 구조로 오늘날 LLM 대부분이 쓴다.", g: "tf", rv: 1 },
-  { id: "A33", c: 1, lv: 3, q: "트랜스포머 구조는 2010년에 처음 나왔다", a: "X", e: "2017년 논문 「Attention Is All You Need」에서 나왔다.", g: "tf", rv: 1 },
-  { id: "A34", c: 1, lv: 3, q: "한글 한 글자는 언제나 토큰 1개다", a: "X", e: "모델마다 나누는 방식이 달라 글자 수와 같지 않다.", g: "tok", rv: 1 },
-  { id: "A35", c: 1, lv: 3, q: "컨텍스트 창은 AI가 한 번에 보는 글의 양이다", a: "O", e: "이 범위를 넘는 앞 내용은 답에 반영되지 않는다.", g: "ctx", rv: 1 },
-  { id: "A36", c: 1, lv: 3, q: "RAG는 자료를 찾아 붙여 답하게 하는 방식이다", a: "O", e: "검색한 문서를 근거로 함께 넣어 답을 만든다.", g: "rag", rv: 1 },
-  { id: "A37", c: 1, lv: 3, q: "RAG를 쓰면 할루시네이션이 완전히 사라진다", a: "X", e: "틀린 답이 줄어들 뿐 사라지지 않아 확인이 필요하다.", g: "rag", rv: 1 },
-  { id: "A38", c: 1, lv: 3, q: "파인튜닝은 모델을 목적에 맞게 더 학습시킨다", a: "O", e: "추가 데이터로 모델 자체를 조정하는 방법이다.", g: "ft", rv: 1 },
-  { id: "A39", c: 1, lv: 3, q: "파인튜닝은 질문할 때마다 새로 한다", a: "X", e: "한 번 학습시켜 두고 쓰며, 질문마다 하지 않는다.", g: "ft", rv: 1 },
-  { id: "A40", c: 1, lv: 3, q: "「모르면 모른다고 해」라고 요청할 수 있다", a: "O", e: "모른다고 답해도 된다고 알려 주면 지어낸 답이 줄어든다.", g: "", rv: 1 },
-  { id: "A41", c: 1, lv: 3, q: "「하지 말 것」만 적는 게 가장 좋은 지시다", a: "X", e: "하지 말 것보다 해야 할 것을 적는 편이 낫다.", g: "", rv: 1 },
-  { id: "A42", c: 1, lv: 3, q: "AI가 쓴 글인지 늘 정확히 가려낼 수 있다", a: "X", e: "판별 도구도 자주 틀려서 AI 작성 여부를 단정할 수 없다.", g: "", rv: 0 },
-  { id: "A43", c: 1, lv: 3, q: "AI라는 말은 1950년대에 처음 쓰였다", a: "O", e: "1955년 다트머스 연구 제안서에서 처음 쓰였다.", g: "", rv: 1 },
-  { id: "A44", c: 1, lv: 3, q: "AI 에이전트는 사람 확인 없이 다 해도 된다", a: "X", e: "중요한 단계마다 사람이 확인하도록 설계한다.", g: "agent", rv: 1 },
-  { id: "S01", c: 2, lv: 1, q: "고객 개인정보는 외부 AI에 넣지 않는다", a: "O", e: "이름, 연락처, 주민번호 같은 정보는 입력하지 않는다.", g: "pii", rv: 0 },
-  { id: "S02", c: 2, lv: 1, q: "대외비 문서는 외부 AI에 올려도 된다", a: "X", e: "대외비는 회사가 허용한 도구와 범위에서만 다룬다.", g: "secret", rv: 0 },
-  { id: "S03", c: 2, lv: 1, q: "비밀번호는 AI 대화창에 넣지 않는다", a: "O", e: "계정 정보는 어떤 AI에도 입력하지 않는다.", g: "", rv: 0 },
-  { id: "S04", c: 2, lv: 1, q: "동료의 개인정보도 외부 AI에 넣지 않는다", a: "O", e: "임직원 정보도 개인정보라 고객 정보처럼 다룬다.", g: "pii", rv: 0 },
-  { id: "S05", c: 2, lv: 1, q: "보안이 걱정되면 AI를 아예 쓰면 안 된다", a: "X", e: "민감한 정보를 빼고 허용된 도구로 쓰면 된다.", g: "", rv: 0 },
-  { id: "S06", c: 2, lv: 1, q: "AI 답은 확인 없이 고객에게 보내도 된다", a: "X", e: "밖으로 나가는 글은 사람이 확인한 뒤 보낸다.", g: "", rv: 0 },
-  { id: "S07", c: 2, lv: 1, q: "민감한 내용은 빼고 일반화해서 묻는다", a: "O", e: "회사명, 고객명 대신 「A사」처럼 바꿔 묻는다.", g: "", rv: 0 },
-  { id: "S08", c: 2, lv: 1, q: "사내 규정은 사내 원문으로 확인한다", a: "O", e: "AI 답이 틀릴 수 있어 규정은 원문을 기준으로 본다.", g: "", rv: 0 },
-  { id: "S09", c: 2, lv: 2, q: "이름만 지우면 고객 정보를 넣어도 된다", a: "X", e: "다른 정보를 조합하면 누군지 알 수 있어 위험하다.", g: "pii", rv: 0 },
-  { id: "S10", c: 2, lv: 2, q: "업무 자료는 회사가 허용한 AI 도구에 쓴다", a: "O", e: "어떤 도구가 허용됐는지는 사내 기준을 따른다.", g: "tool", rv: 0 },
-  { id: "S11", c: 2, lv: 2, q: "개인 폰 무료 AI 앱에 업무 자료를 넣는다", a: "X", e: "개인 앱은 회사 관리 밖이라 업무 자료를 넣지 않는다.", g: "tool", rv: 0 },
-  { id: "S12", c: 2, lv: 2, q: "외부 AI에 넣은 내용은 학습에 쓰일 수 있다", a: "O", e: "서비스 설정에 따라 입력 내용이 저장, 학습될 수 있다.", g: "", rv: 0 },
-  { id: "S13", c: 2, lv: 2, q: "화면 캡처 이미지는 유출 걱정이 없다", a: "X", e: "캡처 속 글자도 AI가 읽으므로 글과 똑같이 다룬다.", g: "", rv: 0 },
-  { id: "S14", c: 2, lv: 2, q: "AI 결과를 업무에 쓴 책임은 쓴 사람에게 있다", a: "O", e: "AI가 만든 내용이라도 업무에 쓴 사람이 책임진다.", g: "", rv: 0 },
-  { id: "S15", c: 2, lv: 2, q: "AI 답의 링크는 열기 전에 주소를 본다", a: "O", e: "없는 주소나 위험한 사이트로 이어질 수 있다.", g: "", rv: 0 },
-  { id: "S16", c: 2, lv: 3, q: "출처 모를 AI 확장 프로그램도 설치한다", a: "X", e: "브라우저 확장은 화면 내용을 읽을 수 있어 허용된 것만 쓴다.", g: "tool", rv: 0 },
-  { id: "S17", c: 2, lv: 3, q: "사내 소스 코드는 외부 AI에 올리지 않는다", a: "O", e: "코드에는 시스템 구조와 접속 정보가 담겨 있다.", g: "", rv: 0 },
-  { id: "S18", c: 2, lv: 3, q: "대화를 지우면 서비스 기록도 바로 사라진다", a: "X", e: "서비스마다 보관 기간이 달라 바로 지워진다고 볼 수 없다.", g: "", rv: 0 },
-  { id: "S19", c: 2, lv: 3, q: "회의 녹음을 AI로 요약하면 참석자에게 알린다", a: "O", e: "녹음하고 요약한다는 사실을 참석자에게 먼저 알린다.", g: "", rv: 0 },
-  { id: "S20", c: 2, lv: 3, q: "AI가 만든 결과물은 저작권 걱정이 없다", a: "X", e: "학습 자료와 비슷한 결과가 나올 수 있어 확인한다.", g: "", rv: 0 },
-  { id: "S21", c: 2, lv: 3, q: "보안 등급과 상관없이 파일을 AI에 올린다", a: "X", e: "보안 등급에 따라 올릴 수 있는 곳이 정해져 있다.", g: "secret", rv: 0 },
-  { id: "R01", c: 3, lv: 1, q: "HIDI-Q는 사내 생성형 AI 서비스다", a: "O", e: "사내 문서를 바탕으로 검색, 요약을 돕는 서비스다.", g: "hq", rv: 0 },
-  { id: "R02", c: 3, lv: 1, q: "1인 1 Agent는 IT 부서만 만든다는 뜻이다", a: "X", e: "각자 자기 업무에 맞는 Agent를 직접 만들어 쓴다는 뜻이다.", g: "p1a", rv: 0 },
-  { id: "R03", c: 3, lv: 1, q: "HIDI-Q는 요약과 번역을 도와준다", a: "O", e: "HIDI-Q는 검색, 요약, 번역, 기획안 작성을 돕는다.", g: "hqf", rv: 0 },
-  { id: "R04", c: 3, lv: 1, q: "로드맵에서 최종 의사결정은 AI가 내린다", a: "X", e: "AI가 분석과 선택지를 내고 사람이 최종 결정한다.", g: "", rv: 0 },
-  { id: "R05", c: 3, lv: 1, q: "로드맵이 지향하는 것은 「1인 1 Agent」다", a: "O", e: "누구나 자기 업무용 Agent를 쓰는 시대를 지향한다.", g: "p1a", rv: 0 },
-  { id: "R06", c: 3, lv: 1, q: "Agent Builder는 코딩 없이 쓴다", a: "O", e: "No-Code 방식으로 임직원이 직접 만들게 하는 도구다.", g: "", rv: 0 },
-  { id: "R07", c: 3, lv: 1, q: "회사는 외부 모델만 쓰고 자체 모델은 없다", a: "X", e: "업무별 작은 모델(sLLM) 자체 구축을 계획하고 있다.", g: "llm", rv: 0 },
-  { id: "R08", c: 3, lv: 2, q: "HIDI-Q 1단계는 2028년 오픈 계획이다", a: "X", e: "HIDI-Q 1단계는 2026년 10월 오픈 계획이다.", g: "hqo", rv: 0 },
-  { id: "R09", c: 3, lv: 2, q: "HIDI-Q 1단계는 사내 문서로 답한다", a: "O", e: "1단계는 문서 기반 답변이고, 이후 지식을 더해 간다.", g: "hqs", rv: 0 },
-  { id: "R10", c: 3, lv: 2, q: "HIDI-Q는 처음부터 사외 뉴스까지 답한다", a: "X", e: "사외 지식 추가는 2027년 3단계 계획이다.", g: "hqs", rv: 0 },
-  { id: "R11", c: 3, lv: 2, q: "생성형 AI 다음 단계는 AI Agent다", a: "O", e: "생성형 AI, AI Agent, Agentic AI 순서로 발전한다.", g: "stage", rv: 0 },
-  { id: "R12", c: 3, lv: 2, q: "로드맵에서 Agentic AI는 첫 단계다", a: "X", e: "Agentic AI는 생성형 AI, AI Agent 다음의 마지막 단계다.", g: "stage", rv: 0 },
-  { id: "R13", c: 3, lv: 2, q: "Agent를 모두 연 뒤에 생성형 AI를 연다", a: "X", e: "생성형 AI 서비스를 먼저 열고 Agent를 차례로 연다.", g: "", rv: 0 },
-  { id: "R14", c: 3, lv: 2, q: "Agent의 핵심은 회사 데이터와 업무 학습이다", a: "O", e: "현대해상 데이터와 업무 프로세스를 배우는 것이 핵심이다.", g: "", rv: 0 },
-  { id: "R15", c: 3, lv: 2, q: "사내 Agent 플랫폼은 외부 LLM만 쓴다", a: "X", e: "내부 LLM과 외부 LLM을 함께 쓰는 구조다.", g: "llm", rv: 0 },
-  { id: "R16", c: 3, lv: 2, q: "사내 Agent는 Hi-Works에서 부른다", a: "O", e: "개발되는 Agent는 Hi-Works에서 호출하도록 계획돼 있다.", g: "", rv: 0 },
-  { id: "R17", c: 3, lv: 3, q: "HIDI-Q는 LLM에 RAG를 더한 구조다", a: "O", e: "질문과 관련된 사내 문서를 찾아 LLM이 답하게 한다.", g: "hqf", rv: 0 },
-  { id: "R18", c: 3, lv: 3, q: "MCP는 AI와 회사 시스템을 잇는 방식이다", a: "O", e: "기존 시스템을 MCP 서버로 감싸 Agent가 쓰게 한다.", g: "", rv: 0 },
-  { id: "R19", c: 3, lv: 3, q: "A2A는 사람과 AI가 대화하는 방식이다", a: "X", e: "A2A는 서로 다른 Agent끼리 통신하는 표준 방식이다.", g: "", rv: 0 },
-  { id: "R20", c: 3, lv: 3, q: "인프라 3단계 끝은 AI Agent 인프라다", a: "O", e: "파이프라인, 거버넌스, AI Agent 인프라 순서로 간다.", g: "", rv: 0 },
-  { id: "R21", c: 3, lv: 3, q: "문서 자산화는 AI 활용과 관계없는 일이다", a: "X", e: "문서가 정리돼야 AI가 찾아 쓸 수 있는 기반 작업이다.", g: "", rv: 0 }
+  { id: "A02", c: 1, lv: 1, q: "AI가 자신 있게 말하면 사실이다", a: "X", e: "틀린 내용도 자신 있게 말할 수 있어 따로 확인한다.", g: "conf", rv: 1, h: "" },
+  { id: "A03", c: 1, lv: 1, q: "같은 질문에도 AI 답은 달라질 수 있다", a: "O", e: "생성형 AI는 답을 매번 확률적으로 새로 만든다.", g: "var", rv: 1, h: "" },
+  { id: "A04", c: 1, lv: 1, q: "질문은 짧을수록 늘 좋은 답이 나온다", a: "X", e: "상황과 목적을 함께 적어야 답이 나아진다.", g: "ctxq", rv: 1, h: "" },
+  { id: "A05", c: 1, lv: 1, q: "읽을 사람을 알려 주면 답이 나아진다", a: "O", e: "누구에게 무엇을 위해 쓰는지 알면 맞춤 답을 준다.", g: "ctxq", rv: 1, h: "" },
+  { id: "A06", c: 1, lv: 1, q: "AI를 쓰면 사람의 검토는 필요 없다", a: "X", e: "AI 결과는 사람이 확인하고 책임지고 쓴다.", g: "human", rv: 1, h: "" },
+  { id: "A09", c: 1, lv: 1, q: "AI에게 답의 분량을 정해 줄 수 있다", a: "O", e: "「세 줄로」처럼 길이를 정하면 그에 맞춰 답한다.", g: "", rv: 1, h: "" },
+  { id: "A10", c: 1, lv: 1, q: "AI 답의 말투도 바꿔 달라고 할 수 있다", a: "O", e: "보고서체, 안내문체처럼 말투도 정해 줄 수 있다.", g: "", rv: 1, h: "" },
+  { id: "A19", c: 1, lv: 2, q: "할루시네이션은 AI가 지어낸 틀린 답이다", a: "O", e: "그럴듯하지만 틀린 내용을 만들어 내는 현상이다.", g: "conf", rv: 1, h: "" },
+  { id: "A26", c: 1, lv: 2, q: "역할을 정해 주면 답의 관점이 분명해진다", a: "O", e: "「인사 담당자로서」처럼 역할을 주면 관점이 맞춰진다.", g: "", rv: 1, h: "" },
+  { id: "A27", c: 1, lv: 2, q: "복잡한 일은 단계로 나눠 시키면 좋다", a: "O", e: "큰 일을 작은 단계로 나누면 결과가 안정된다.", g: "", rv: 1, h: "" },
+  { id: "A28", c: 1, lv: 2, q: "AI가 알려 준 출처는 모두 실제로 있다", a: "X", e: "없는 논문이나 링크를 지어낼 때도 있어 확인한다.", g: "cite", rv: 1, h: "" },
+  { id: "A29", c: 1, lv: 2, q: "AI가 요약하면 빠지는 내용이 없다", a: "X", e: "중요한 내용을 빼먹을 수 있어 원문과 대조한다.", g: "", rv: 1, h: "" },
+  { id: "A30", c: 1, lv: 2, q: "자료를 주고 그 자료만 보고 답하게 한다", a: "O", e: "근거 자료를 함께 주면 엉뚱한 답이 줄어든다.", g: "", rv: 1, h: "" },
+  { id: "F01", c: 4, lv: 1, q: "AX는 AI로 일하는 방식을 바꾸는 과정이다", a: "O", e: "AI를 활용해 일하는 방식을 바꿔가는 과정이다.", g: "ax", rv: 1, z: "vision", h: "vision.metowe" },
+  { id: "F02", c: 4, lv: 1, q: "AX의 X는 Experience를 뜻한다", a: "X", e: "AX는 AI Transformation의 약자다.", g: "ax", rv: 1, z: "vision", h: "vision.metowe" },
+  { id: "F03", c: 4, lv: 1, q: "슬로건은 나의 경험을 우리의 가능성으로 잇는다", a: "O", e: "나의 경험이 모여 우리의 큰 가능성이 된다.", g: "slg", rv: 1, z: "vision", h: "vision.metowe" },
+  { id: "F04", c: 4, lv: 1, q: "데이터와 AI 활용의 중심에는 사람이 있다", a: "O", e: "사람을 중심으로 데이터와 AI를 연결한다.", g: "dbc", rv: 1, z: "vision", h: "vision.dbc" },
+  { id: "F05", c: 4, lv: 1, q: "Agent는 목표에 맞춰 도구를 연결한다", a: "O", e: "목표에 맞춰 도구와 작업을 연결하는 역할이다.", g: "agd", rv: 1, z: "vision", h: "vision.dbc" },
+  { id: "F06", c: 4, lv: 1, q: "2026년 로드맵의 키워드는 공감과 참여다", a: "O", e: "2026년은 공감과 참여, AX 필요성을 체감하는 해다.", g: "r26", rv: 1, z: "vision", h: "vision.2026" },
+  { id: "F07", c: 4, lv: 1, q: "2028년 목표는 전사 1인 1 AI Agent다", a: "O", e: "각자 업무에 필요한 Agent를 스스로 만드는 플랫폼이다.", g: "r28", rv: 1, z: "vision", h: "vision.2028" },
+  { id: "F08", c: 4, lv: 1, q: "AX는 AI를 쓰지 않고 일하는 방식이다", a: "X", e: "AI를 활용해 일하는 방식을 바꿔가는 과정이다.", g: "ax", rv: 1, z: "vision", h: "vision.metowe" },
+  { id: "F09", c: 4, lv: 1, q: "현대해상은 AI만으로 일하는 회사를 지향한다", a: "X", e: "사람을 중심으로 데이터와 AI, Agent를 연결한다.", g: "dbc", rv: 1, z: "vision", h: "vision.dbc" },
+  { id: "F10", c: 4, lv: 2, q: "목표를 정하고 결과를 판단하는 쪽은 AI다", a: "X", e: "목표를 정하고 결과를 판단하는 쪽은 사람이다.", g: "dbc", rv: 1, z: "vision", h: "vision.dbc" },
+  { id: "F11", c: 4, lv: 2, q: "2026년에는 생성형 AI 서비스를 오픈한다", a: "O", e: "사내 LLM 도입과 생성형 AI 서비스 오픈이 2026년이다.", g: "r26", rv: 1, z: "vision", h: "vision.2026" },
+  { id: "F12", c: 4, lv: 2, q: "사내 LLM 도입은 2028년 계획이다", a: "X", e: "사내 LLM 도입은 2026년이다. 2028년은 1인 1 AI Agent다.", g: "r26", rv: 1, z: "vision", h: "" },
+  { id: "F13", c: 4, lv: 2, q: "2026년 주요 프로젝트에 HiDI-Q가 있다", a: "O", e: "2026년 주요 프로젝트로 소개된다.", g: "pj26", rv: 1, z: "vision", h: "vision.2026" },
+  { id: "F14", c: 4, lv: 2, q: "2027년 로드맵의 키워드는 혁신과 연결이다", a: "X", e: "2027년은 확산과 체화다. 혁신과 연결은 2028년이다.", g: "r27", rv: 1, z: "vision", h: "" },
+  { id: "F15", c: 4, lv: 2, q: "2027년에는 업무별 AI Agent를 구축한다", a: "O", e: "영업, 보상 등 각 업무에 전담 Agent를 만든다.", g: "r27", rv: 1, z: "vision", h: "vision.2027" },
+  { id: "F16", c: 4, lv: 2, q: "의료심사 Agent는 2026년에 구축한다", a: "X", e: "의료심사 Agent는 2027년 주요 프로젝트 계획이다.", g: "agt", rv: 1, z: "vision", h: "vision.2027" },
+  { id: "F17", c: 4, lv: 2, q: "2028년 로드맵의 키워드는 공감과 참여다", a: "X", e: "2028년은 혁신과 연결이다. 공감과 참여는 2026년이다.", g: "r28", rv: 1, z: "vision", h: "" },
+  { id: "F18", c: 4, lv: 3, q: "의료심사 Agent는 심사 정보 확인을 돕는다", a: "O", e: "진단서 등 의료 서류에서 심사 정보를 확인하게 돕는다.", g: "agt", rv: 1, z: "vision", h: "vision.2027" },
+  { id: "F19", c: 4, lv: 3, q: "법률 Agent는 근거 없이 답변을 제공한다", a: "X", e: "판례와 법령을 찾아 근거와 함께 답변한다.", g: "agt", rv: 1, z: "vision", h: "vision.2027" },
+  { id: "F20", c: 4, lv: 3, q: "1인 1 AI Agent는 IT 부서만 만든다", a: "X", e: "각자 자기 업무에 필요한 Agent를 스스로 만든다.", g: "r28", rv: 1, z: "vision", h: "vision.2028" },
+  { id: "F21", c: 4, lv: 3, q: "1인 1 Agent는 쌓인 데이터를 학습한다", a: "O", e: "2026~2027년 데이터를 학습해 업무를 잘 아는 AI가 된다.", g: "r28b", rv: 1, z: "vision", h: "vision.2028" },
+  { id: "F22", c: 4, lv: 3, q: "지금의 DAP는 나만의 Agent의 첫걸음이다", a: "O", e: "지금 참여하는 DAP가 2028년 나만의 Agent로 이어진다.", g: "r28c", rv: 1, z: "vision", h: "vision.2028" },
+  { id: "F23", c: 4, lv: 3, q: "2027년은 현업 AX 경험을 가속화하는 해다", a: "O", e: "2027년은 확산과 체화, 현업 AX 경험 가속화다.", g: "r27b", rv: 1, z: "vision", h: "vision.2027" },
+  { id: "F24", c: 4, lv: 3, q: "2028년은 비즈니스 모델 혁신을 이루는 해다", a: "O", e: "2028년은 혁신과 연결, 비즈니스 모델 혁신 달성이다.", g: "r28d", rv: 1, z: "vision", h: "vision.2028" },
+  { id: "F25", c: 4, lv: 1, q: "AX LAB에서는 지난 우수 과제를 볼 수 없다", a: "X", e: "AX LAB의 History 판에 지난 우수 과제가 있다.", g: "hist", rv: 1, z: "lab", h: "lab.history" },
+  { id: "F26", c: 4, lv: 1, q: "DAP는 현업과 데이터사이언스파트가 함께한다", a: "O", e: "현업과 함께 업무 문제를 데이터로 분석하고 푼다.", g: "dap", rv: 1, z: "lab", h: "lab.dap" },
+  { id: "F27", c: 4, lv: 1, q: "DAP는 데이터 분석 프로젝트의 줄임말이다", a: "O", e: "DAP는 데이터 분석 프로젝트의 줄임말이다.", g: "dapn", rv: 1, z: "lab", h: "lab.dap" },
+  { id: "F28", c: 4, lv: 1, q: "DAP에 지원하려면 코딩을 할 줄 알아야 한다", a: "X", e: "코딩과 데이터를 몰라도 누구나 지원할 수 있다.", g: "dapc", rv: 1, z: "lab", h: "lab.idea" },
+  { id: "F29", c: 4, lv: 1, q: "DAP는 직무와 부서에 관계없이 지원할 수 있다", a: "O", e: "직무와 부서에 관계없이 누구나 지원할 수 있다.", g: "dapc", rv: 1, z: "lab", h: "lab.idea" },
+  { id: "F30", c: 4, lv: 1, q: "내 업무 고민도 DAP가 될 수 있다", a: "O", e: "당신의 업무 고민도 DAP가 될 수 있다.", g: "dapm", rv: 1, z: "lab", h: "lab.idea" },
+  { id: "F31", c: 4, lv: 1, q: "AX LAB QR로 아이디어 한 줄을 쓸 수 있다", a: "O", e: "QR을 스캔해 내 아이디어 한 줄을 작성할 수 있다.", g: "idea", rv: 1, z: "lab", h: "lab.idea" },
+  { id: "F32", c: 4, lv: 1, q: "지난 우수 과제는 AX LAB에서 볼 수 있다", a: "O", e: "AX LAB의 History 판에 2024~2025 우수 과제가 있다.", g: "hist", rv: 1, z: "lab", h: "lab.history" },
+  { id: "F33", c: 4, lv: 2, q: "DAP는 현업 없이 데이터사이언스파트만 한다", a: "X", e: "현업과 데이터사이언스파트가 함께 푼다.", g: "dap", rv: 1, z: "lab", h: "lab.dap" },
+  { id: "F34", c: 4, lv: 2, q: "DAP는 데이터에 근거한 판단으로 업무를 개선한다", a: "O", e: "데이터 근거로 업무 효율을 높이고 일하는 방식을 바꾼다.", g: "dap", rv: 1, z: "lab", h: "lab.dap" },
+  { id: "F35", c: 4, lv: 2, q: "DAP는 IT 부서 직원만 지원할 수 있다", a: "X", e: "직무와 부서에 관계없이 누구나 지원할 수 있다.", g: "dapc", rv: 1, z: "lab", h: "lab.idea" },
+  { id: "F36", c: 4, lv: 2, q: "보험사기 분석 고도화는 2025년 우수 과제였다", a: "O", e: "자동차 보험사기 분석 시스템 고도화가 2025년 우수 과제다.", g: "hist", rv: 1, z: "lab", h: "lab.history" },
+  { id: "F37", c: 4, lv: 3, q: "2025년 최우수 과제는 유의질환 예측모델이다", a: "O", e: "장기손사 유의질환 예측모델 개발이 2025년 최우수다.", g: "hist", rv: 1, z: "lab", h: "lab.history" },
+  { id: "F38", c: 4, lv: 3, q: "판결문 자동검색 모델은 2024년 최우수 과제였다", a: "O", e: "자동차보상 법원 판결문 자동검색 모델이 2024년 최우수다.", g: "hist", rv: 1, z: "lab", h: "lab.history" },
+  { id: "F39", c: 4, lv: 3, q: "2025년 최우수 과제는 판결문 자동검색 모델이다", a: "X", e: "2025년 최우수는 장기손사 유의질환 예측모델이다.", g: "hist", rv: 1, z: "lab", h: "lab.history" },
+  { id: "F40", c: 4, lv: 1, q: "in Action 사례는 현장 동료가 만들었다", a: "O", e: "현장을 가장 잘 아는 구성원이 직접 해결책을 만들었다.", g: "ia", rv: 1, z: "action", h: "action.intro" },
+  { id: "F41", c: 4, lv: 1, q: "in Action에서 영업과 보상 사례를 본다", a: "O", e: "영업부터 보상까지 현장에서 시작된 AX를 소개한다.", g: "ia2", rv: 1, z: "action", h: "action.intro" },
+  { id: "F42", c: 4, lv: 2, q: "하이핑거는 영업 시상을 안내하는 앱이다", a: "X", e: "하이핑거는 보상 업무를 지원하는 앱이다.", g: "ap2", rv: 1, z: "action", h: "action.claims" },
+  { id: "F43", c: 4, lv: 2, q: "강북이는 개인 맞춤형 시상을 안내하는 앱이다", a: "O", e: "개인 실적에 맞춰 시상 안내를 해 주는 영업 도우미다.", g: "gb", rv: 1, z: "action", h: "action.sales" },
+  { id: "F44", c: 4, lv: 2, q: "강북이는 보상 업무를 돕는 앱이다", a: "X", e: "강북이는 영업 현장의 시상 안내 앱이다.", g: "gb", rv: 1, z: "action", h: "action.sales" },
+  { id: "F45", c: 4, lv: 2, q: "AI컨설팅 도우미는 보상 업무를 돕는 앱이다", a: "X", e: "AI컨설팅 도우미는 판매 화법을 제공하는 앱이다.", g: "ap", rv: 1, z: "action", h: "action.consult" },
+  { id: "F46", c: 4, lv: 2, q: "하이핑거는 보상 업무를 지원하는 앱이다", a: "O", e: "약도, 판례 검색, 통화녹취 분석 등을 돕는다.", g: "ap2", rv: 1, z: "action", h: "action.claims" },
+  { id: "F47", c: 4, lv: 3, q: "하이핑거는 의료기록 이미지 분석을 돕는다", a: "O", e: "의료기록 이미지 분석이 기능 중 하나다.", g: "hp2", rv: 1, z: "action", h: "action.claims" },
+  { id: "F48", c: 4, lv: 3, q: "하이핑거에는 통화녹취 분석 기능이 있다", a: "O", e: "통화녹취 분석 비서가 기능 중 하나다.", g: "hp", rv: 1, z: "action", h: "action.claims" },
+  { id: "F49", c: 4, lv: 1, q: "HiDI-Q는 요약 기능이 없다", a: "X", e: "긴 문서에서 중요한 내용만 추려서 요약한다.", g: "hqf", rv: 1, z: "play", h: "play.hq.intro" },
+  { id: "F50", c: 4, lv: 1, q: "결과물은 「정리해줘」처럼 짧게 시키는 게 좋다", a: "X", e: "A4 1장, 존댓말처럼 형태를 구체적으로 알려 준다.", g: "tipf", rv: 1, z: "play", h: "play.hq.tips" },
+  { id: "F51", c: 4, lv: 1, q: "HiDI는 현대해상의 생성형 AI 브랜드다", a: "O", e: "Hyundai Insurance Data Intelligence의 약자다.", g: "hidi", rv: 1, z: "play", h: "play.hq.hidi" },
+  { id: "F52", c: 4, lv: 1, q: "HiDI-Q에는 문서를 5개까지 올릴 수 있다", a: "O", e: "최대 5개까지 올리고 그 내용으로 질문한다.", g: "hq5", rv: 1, z: "play", h: "play.hq.intro" },
+  { id: "F53", c: 4, lv: 1, q: "HiDI-Q에는 문서를 한 개만 올릴 수 있다", a: "X", e: "최대 5개까지 올릴 수 있다.", g: "hq5", rv: 1, z: "play", h: "play.hq.intro" },
+  { id: "F54", c: 4, lv: 1, q: "HiDI-Q는 긴 문서의 핵심을 요약해 준다", a: "O", e: "긴 문서에서 중요한 내용만 추려서 요약한다.", g: "hqf", rv: 1, z: "play", h: "play.hq.intro" },
+  { id: "F55", c: 4, lv: 1, q: "문서는 아무거나 통째로 올리는 게 좋다", a: "X", e: "필요한 자료의 필요한 부분만 올린다.", g: "tipu", rv: 1, z: "play", h: "play.hq.tips" },
+  { id: "F56", c: 4, lv: 1, q: "결과물의 형태는 구체적으로 알려 주는 게 좋다", a: "O", e: "A4 1장, 존댓말처럼 형태를 구체적으로 알려 준다.", g: "tipf", rv: 1, z: "play", h: "play.hq.tips" },
+  { id: "F57", c: 4, lv: 1, q: "Hi-Helper는 설계를 1분 안에 추천한다", a: "O", e: "계약 빅데이터를 바탕으로 1분 안에 추천한다.", g: "hh1", rv: 1, z: "play", h: "play.hh.helper" },
+  { id: "F58", c: 4, lv: 1, q: "Hi-Helper는 설계 추천에 하루가 걸린다", a: "X", e: "1분 안에 추천하는 AI 프로그램이다.", g: "hh1", rv: 1, z: "play", h: "play.hh.helper" },
+  { id: "F59", c: 4, lv: 1, q: "AX PLAY에서 HiDI-Q를 써 볼 수 있다", a: "O", e: "AX PLAY에서 직접 써 보고 후기를 남긴다.", g: "pl", rv: 1, z: "play", h: "" },
+  { id: "F60", c: 4, lv: 2, q: "HiDI-Q는 번역하면 원본 양식이 사라진다", a: "X", e: "원본 양식 그대로 번역해 준다.", g: "hqt", rv: 1, z: "play", h: "play.hq.intro" },
+  { id: "F61", c: 4, lv: 2, q: "HiDI-Q는 보고서 초안을 만들 수 없다", a: "X", e: "Word, Excel, PPT 기반 보고서 초안을 받는다.", g: "hqr", rv: 1, z: "play", h: "play.hq.intro" },
+  { id: "F62", c: 4, lv: 2, q: "Hi-Helper로 태아보험은 설계할 수 없다", a: "X", e: "출산예정일만 넣으면 태아보험을 설계한다.", g: "hhf", rv: 1, z: "play", h: "play.hh.intro" },
+  { id: "F63", c: 4, lv: 2, q: "Hi-Helper는 추천 방식을 고를 수 없다", a: "X", e: "원클릭과 맞춤 AI 추천 중에 고른다.", g: "hhm", rv: 1, z: "play", h: "play.hh.tips" },
+  { id: "F64", c: 4, lv: 2, q: "HiDI-Q는 번역해도 원본 양식을 유지한다", a: "O", e: "양식 그대로 번역해 옮겨 적을 필요가 없다.", g: "hqt", rv: 1, z: "play", h: "play.hq.intro" },
+  { id: "F65", c: 4, lv: 2, q: "HiDI-Q에는 암호화된 문서를 올릴 수 없다", a: "X", e: "암호화된 문서를 그대로 올리고 내려받을 수 있다.", g: "hqs", rv: 1, z: "play", h: "play.hq.intro" },
+  { id: "F66", c: 4, lv: 2, q: "HiDI-Q로 보고서 초안을 받아 볼 수 있다", a: "O", e: "Word, Excel, PPT 기반 보고서 초안을 받는다.", g: "hqr", rv: 1, z: "play", h: "play.hq.intro" },
+  { id: "F67", c: 4, lv: 2, q: "비교할 자료는 직접 올려서 비교하는 게 좋다", a: "O", e: "비교할 약관은 직접 올리고 비교한다.", g: "tipc", rv: 1, z: "play", h: "play.hq.tips" },
+  { id: "F68", c: 4, lv: 2, q: "질문은 한꺼번에 여러 개 묻는 게 좋다", a: "X", e: "질문은 하나씩 나누어 한다.", g: "tipq", rv: 1, z: "play", h: "play.hq.tips" },
+  { id: "F69", c: 4, lv: 2, q: "Hi-Helper는 피보험자 동의를 먼저 받는다", a: "O", e: "신용정보원 정보 조회를 위해 먼저 동의를 받는다.", g: "hhc", rv: 1, z: "play", h: "play.hh.tips" },
+  { id: "F70", c: 4, lv: 2, q: "Hi-Helper는 추천안 3개를 비교해 준다", a: "O", e: "추천 설계안 TOP1~3을 비교해 볼 수 있다.", g: "hhr", rv: 1, z: "play", h: "play.hh.tips" },
+  { id: "F71", c: 4, lv: 2, q: "태아보험 설계는 출산예정일만 넣으면 된다", a: "O", e: "임신 주수별 필수 담보를 담아 설계한다.", g: "hhf", rv: 1, z: "play", h: "play.hh.intro" },
+  { id: "F72", c: 4, lv: 3, q: "Hi-Helper는 신상품도 바로 추천에 반영한다", a: "X", e: "신상품과 신담보는 반영까지 시간이 걸린다.", g: "hhn", rv: 1, z: "play", h: "play.hh.check" },
+  { id: "F73", c: 4, lv: 3, q: "바로컨설팅 내역은 먼저 확인해 두는 게 좋다", a: "O", e: "고객이 원하는 상품이 추천에 반영됐는지 확인한다.", g: "hhb", rv: 1, z: "play", h: "play.hh.check" },
+  { id: "F74", c: 4, lv: 1, q: "AX LOUNGE는 업무 고민을 이야기하는 곳이다", a: "O", e: "바꾸고 싶은 업무와 반복되는 불편을 이야기한다.", g: "lg", rv: 1, z: "lounge", h: "" },
+  { id: "F75", c: 4, lv: 1, q: "AX LOUNGE에서는 혼자 고민을 풀어야 한다", a: "X", e: "혼자 고민하던 업무를 함께 풀어 본다.", g: "lg", rv: 1, z: "lounge", h: "lounge.intro" },
+  { id: "F76", c: 4, lv: 2, q: "LOUNGE에서 데이터사이언스파트와 상담한다", a: "O", e: "AI와 데이터를 활용할 방법을 함께 살펴본다.", g: "lg2", rv: 1, z: "lounge", h: "lounge.steps" },
+  { id: "F77", c: 4, lv: 2, q: "AX LOUNGE 상담은 실행 방향을 구체화한다", a: "O", e: "상담 내용을 바탕으로 단계별 실행 방향을 정한다.", g: "lg3", rv: 1, z: "lounge", h: "lounge.steps" },
+  { id: "F78", c: 4, lv: 1, q: "AI 포토부스는 AX LAB에 있다", a: "X", e: "AI 포토부스는 EVENT 구역에 있다.", g: "ph", rv: 1, z: "event", h: "event.photo" },
+  { id: "F79", c: 4, lv: 1, q: "스탬프 1개만 모으면 룰렛을 돌릴 수 있다", a: "X", e: "룰렛 이벤트는 스탬프 3개가 조건이다.", g: "rl", rv: 1, z: "event", h: "event.roulette" },
+  { id: "F80", c: 4, lv: 1, q: "스탬프 3개를 모으면 룰렛을 돌릴 수 있다", a: "O", e: "룰렛 이벤트는 스탬프 3개가 조건이다.", g: "rl", rv: 1, z: "event", h: "event.roulette" },
+  { id: "F81", c: 4, lv: 1, q: "AI 포토부스에서 동료와 사진을 남길 수 있다", a: "O", e: "동료들과 AI 포토로 추억을 남긴다.", g: "ph", rv: 1, z: "event", h: "event.photo" },
+  { id: "F82", c: 4, lv: 2, q: "AX 타자왕은 떨어지는 단어를 입력하는 게임이다", a: "O", e: "떨어지는 단어를 입력하는 EVENT 구역 게임이다.", g: "ty", rv: 1, z: "event", h: "event.typingking" }
 ];
+var OX_ZONE = { vision: "AX VISION", lab: "AX LAB", action: "AX in Action", play: "AX PLAY", lounge: "AX LOUNGE", event: "EVENT" };   /* z → 구역 이름 · 1층 판 구역 */
 var OX_KEY = {};   /* id: [난이도, 정답, 짝, 검수, 문장] · 서버 OX_KEY 와 같은 모양(채점 식을 글자 그대로 같게 쓰려고) */
 OX_BANK.forEach(function (x) { OX_KEY[x.id] = [x.lv, x.a, x.g, x.rv, x.q]; });
+function oxKey(id) { return OX_KEY[id]; }   /* v4.92 채점 식이 부르는 정답 찾기 · 앱은 지금 은행만 · 서버 oxKey_ 는 옛 id 표(OX_KEY_OLD)도 본다 */
 var OLY_MEDAL = ["", "금메달", "은메달", "동메달"];
 var OLY = { board: null, t: 0 };
 function olyRule() {
@@ -10977,7 +10966,7 @@ function oxTally(ql, R, gold) {
     T.rt = oxRowT(R, i); T.lim = Math.ceil(T.lead * T.rt / 100);
     T.end = T.life <= 0 ? 'life' : T.n >= N ? 'arrive' : T.used >= T.dl ? 'time' : '';
     if (i >= list.length) break;
-    var m = /^([ASR]\d{2})\.([OXPT])\.(\d{1,5})$/.exec(list[i]), k = m && OX_KEY[m[1]], ans = m ? m[2] : '', t = m ? Number(m[3]) : 0;
+    var m = /^([ASRF]\d{2})\.([OXPT])\.(\d{1,5})$/.exec(list[i]), k = m && oxKey(m[1]), ans = m ? m[2] : '', t = m ? Number(m[3]) : 0;
     if (!k || T.end || (ans === 'T' ? t !== T.lim : t >= T.lim) || t >= T.dl - T.used) { T.ok = false; T.pts = 0; return T; }
     var lv = k[0], it = { id: m[1], lv: lv, a: k[1], g: k[2], ans: ans, t: t, lim: T.lim, right: ans === k[1], gold: gold.indexOf(i) >= 0, mul: 1, pts: 0 };
     T.n++;
@@ -11207,7 +11196,7 @@ function olyResCmp(key) {
 /* v4.83 AX 퀴즈 = 「AX 퀴즈 n/2 완주」(순위 · 총점 없음) · 미니 게임 = 「미니 게임 n/3종목 · 총점」(옛 서버면 올림픽 n/5종목) */
 function olyResOly(key) {
   var me = olyMe();
-  if (olyIsQuiz(key)) return "AX 퀴즈 " + me.qdone + "/" + OLY_QUIZ_KEYS.length + " 완주";
+  if (olyIsQuiz(key)) return QZ_NEED <= 1 ? (me.qdone >= 1 ? "AX 퀴즈 완주" : "") : "AX 퀴즈 " + me.qdone + "/" + OLY_QUIZ_KEYS.length + " 완주";
   return (olyOvName() === "미니 게임" ? "미니 게임 " : "올림픽 ") + me.done + "/" + olyOvKeys().length + "종목 · 총점 " + olyFmt(me.total) + "점";
 }
 /* 결과 접힘 안 「내 위치」 · 종목 순위 · 종합(자격 전이면 남은 종목) · 서버 응답이 오면 다시 채운다 · v4.83 AX 퀴즈는 순위가 없어 빈칸 */
@@ -11260,7 +11249,7 @@ function olyHubHtml() {
 function quizHubHtml() {
   olyPull();
   var me = olyMe();
-  return (stampV2() ? stampLineHtml("qz", '<p class="ax-meta">O/X 퀴즈 · 기억력 퀴즈 · 종목마다 한 판</p>') : "") +
+  return (stampV2() ? stampLineHtml("qz", '<p class="ax-meta">' + (QUIZ_WORD ? "O/X 퀴즈 · 기억력 퀴즈 · 종목마다 한 판" : "O/X 12문제 · 한 판 완주") + "</p>") : "") +
     olyKeysEvents(OLY_QUIZ_KEYS).map(function (e) {
       var v = me.ev[e.key];
       return rcHtml({ cls: v ? " done" : "", onclick: "App.go('" + e.view + "')", link: true, left: rcIcon(STAMP_ICONS.qz),
@@ -11945,7 +11934,7 @@ var GS_GAMES = {
   pang: { name: "AX 팡", view: "game_pang", start: "pgStart()", best: "oly2_best_pang", line: "같은 그림 3개를 한 줄로 맞춰 터뜨려요 · 밀어서 바꾸기" },
   jump: { name: "ME to WE 점프", view: "game_jump", start: "jpStart()", best: "oly2_best_jump", line: "화면을 탭하면 점프 · 두 번 탭하면 2단 점프 · 꾹 누르면 엎드리기" },
   word: { name: "기억력 퀴즈", view: "game_word", start: "gwStart()", best: "oly2_best_word", line: "문장을 외워 단어 타일을 순서대로" },
-  ox: { name: "O/X 퀴즈", view: "game_ox", start: "oxStart()", best: "oly2_best_ox", line: "맞으면 화면 왼쪽 O, 틀리면 오른쪽 X · 발판이 아래 끝에 닿기 전에" }
+  ox: { name: "AX 퀴즈", view: "game_ox", start: "oxStart()", best: "oly2_best_ox", line: "맞으면 화면 왼쪽 O, 틀리면 오른쪽 X · 발판이 아래 끝에 닿기 전에" }
 };
 /* v4.08 키보드가 올라와도 입력칸과 아래 고정 버튼이 가려지지 않게 · 가려진 높이를 --kb 로 넘긴다 · 포커스한 칸은 보이는 곳 가운데로 */
 function kbSync() {
@@ -12984,42 +12973,43 @@ function pgPreview(t) {
    안전 상한 5분 · 올림픽 환산은 기록/목표(길수록 좋다) · 목표 60초(6000 = 1/100초) · 팡(빠를수록 좋다)과 반대 방향이다. */
 var JP_W = 180, JP_H = 240, JP_GY = 196, JP_PX = 30, JP_MAX_SEC = 300, JP_HEARTS = 3, JP_G = 820, JP_JV = 300, JP_JV2 = 245, JP_INV = 1.0;
 var JP_ITEM_EVERY = 15, JP_ITEM_SEC = 5;   /* 아이템 · 15초마다 하나 · 5초 동안 */
-/* v3.98 AI 상식 문장 · v4.30 (사용자 확정 260924) 기억력 은행에서 빌려 쓰지 않고 점프 전용 JP_FACTS(정본 「기억력 문제 은행 v2」 점프 30문장 · O/X 참 명제 결) · JP_BG_MAX 자 이하만
+/* v3.98 AI 상식 문장 · v4.30 (사용자 확정 260924) 기억력 은행에서 빌려 쓰지 않고 점프 전용 JP_FACTS(O/X 참 명제 결) · JP_BG_MAX 자 이하만
+   v4.92 (261001 사용자 승인 · 앱 개편 4묶음) 1층 부스 판 기준 30문장 · 정본 「기억력 문제 은행 v3.json」 jump = 「QA/문제 은행 확정안 v1.json」 jump · dom = 1층 구역
    v4.00 (사용자 요청 260919) 흘러가는 배경 → 공중에 뜬 글자 블록(2단 점프 미션) · 들이받으면 글자가 흩어지며 점수 보너스 · 결과 화면에 획득 목록
    블록 = 바닥에서 80~110 높이(1단 점프 머리 최고 75 · 2단 점프 113) · 앞뒤 장애물과 떨어뜨려 회피와 동시에 요구하지 않는다 */
 var JP_BG_MAX = 21, JP_BG_FIRST = 7, JP_BG_EVERY = 10;
 var JP_FACT = { w: 104, h: 30, lo: 80 };   /* v4.02 블록 점수는 올림픽 규칙 jump.fact(기본 100 · v4.00 의 임시 +150 폐지) */
 var JP_FACTS = [
-  { id: "jp01", lv: 1, dom: "concept", text: "AI는 배운 것을 조합해 답해요" },
-  { id: "jp02", lv: 1, dom: "concept", text: "AI 답은 사람이 확인 후 써요" },
-  { id: "jp03", lv: 1, dom: "concept", text: "질문이 구체적이면 답도 좋아져요" },
-  { id: "jp04", lv: 1, dom: "concept", text: "새 답을 원하면 다시 물어봐요" },
-  { id: "jp05", lv: 1, dom: "concept", text: "AI도 가끔 틀린 답을 해요" },
-  { id: "jp06", lv: 1, dom: "concept", text: "AI는 최신 소식을 모를 때도 있어요" },
-  { id: "jp07", lv: 1, dom: "concept", text: "그림도 글로 설명해 만들 수 있어요" },
-  { id: "jp08", lv: 1, dom: "concept", text: "AI는 여러 언어로 답해요" },
-  { id: "jp09", lv: 1, dom: "concept", text: "복잡한 일은 나눠서 시켜요" },
-  { id: "jp10", lv: 2, dom: "concept", text: "AI 결과의 출처도 확인해요" },
-  { id: "jp11", lv: 2, dom: "concept", text: "요약에도 빠진 내용이 있을 수 있어요" },
-  { id: "jp12", lv: 2, dom: "concept", text: "역할을 정해주면 답이 또렷해져요" },
-  { id: "jp13", lv: 1, dom: "concept", text: "형식을 정해주면 편해져요" },
-  { id: "jp14", lv: 1, dom: "safety", text: "고객 정보는 AI에 넣지 않아요" },
-  { id: "jp15", lv: 1, dom: "safety", text: "비밀번호는 AI에 넣지 않아요" },
-  { id: "jp16", lv: 1, dom: "safety", text: "민감한 내용은 바꿔서 물어요" },
-  { id: "jp17", lv: 2, dom: "safety", text: "대외비는 허용된 도구에서만 써요" },
-  { id: "jp18", lv: 2, dom: "safety", text: "캡처한 화면도 AI가 읽어요" },
-  { id: "jp19", lv: 2, dom: "safety", text: "링크는 열기 전에 주소를 봐요" },
-  { id: "jp20", lv: 1, dom: "safety", text: "회사 자료는 규정부터 확인해요" },
-  { id: "jp21", lv: 3, dom: "safety", text: "출처 모를 확장 프로그램은 피해요" },
-  { id: "jp22", lv: 3, dom: "safety", text: "AI 쓴 결과의 책임은 나에게 있어요" },
-  { id: "jp23", lv: 2, dom: "concept", text: "토큰은 AI가 글을 나눈 단위예요" },
-  { id: "jp24", lv: 3, dom: "concept", text: "컨텍스트가 길면 앞부분을 놓쳐요" },
-  { id: "jp25", lv: 3, dom: "concept", text: "멀티모달 AI는 그림도 같이 봐요" },
-  { id: "jp26", lv: 3, dom: "concept", text: "딥페이크는 진짜처럼 보이는 가짜예요" },
-  { id: "jp27", lv: 3, dom: "concept", text: "AI 에이전트는 도구를 써서 일해요" },
-  { id: "jp28", lv: 3, dom: "concept", text: "학습 데이터가 치우치면 답도 치우쳐요" },
-  { id: "jp29", lv: 1, dom: "concept", text: "초안은 AI, 마무리는 사람이 해요" },
-  { id: "jp30", lv: 1, dom: "concept", text: "메모도 AI가 정리해 줘요" }
+  { id: "jp01", lv: 1, dom: "vision", text: "AX는 AI로 일하는 방식을 바꿔요" },
+  { id: "jp02", lv: 1, dom: "vision", text: "중심에는 언제나 사람이 있어요" },
+  { id: "jp03", lv: 1, dom: "vision", text: "판단과 결정은 사람이 해요" },
+  { id: "jp04", lv: 1, dom: "lab", text: "아이디어 한 줄을 남겨 봐요" },
+  { id: "jp05", lv: 1, dom: "vision", text: "2027년은 확산과 체화의 해예요" },
+  { id: "jp06", lv: 1, dom: "vision", text: "2028년은 혁신과 연결의 해예요" },
+  { id: "jp07", lv: 1, dom: "lab", text: "DAP는 현업과 함께 풀어요" },
+  { id: "jp08", lv: 1, dom: "lab", text: "코딩을 몰라도 지원할 수 있어요" },
+  { id: "jp09", lv: 1, dom: "lab", text: "내 고민도 DAP가 될 수 있어요" },
+  { id: "jp10", lv: 1, dom: "action", text: "현장 동료가 직접 만들었어요" },
+  { id: "jp11", lv: 1, dom: "play", text: "문서는 5개까지 올려요" },
+  { id: "jp12", lv: 1, dom: "play", text: "필요한 부분만 올려요" },
+  { id: "jp13", lv: 1, dom: "play", text: "질문은 하나씩 나누어 해요" },
+  { id: "jp14", lv: 1, dom: "lounge", text: "업무 고민, 함께 풀어 봐요" },
+  { id: "jp15", lv: 2, dom: "vision", text: "2027년엔 업무별 Agent예요" },
+  { id: "jp16", lv: 2, dom: "vision", text: "Agent는 도구와 작업을 연결해요" },
+  { id: "jp17", lv: 2, dom: "lab", text: "데이터로 판단해 일해요" },
+  { id: "jp18", lv: 2, dom: "action", text: "영업 시상을 알려 주는 앱이 있어요" },
+  { id: "jp19", lv: 2, dom: "play", text: "HiDI-Q는 문서를 읽고 답해요" },
+  { id: "jp20", lv: 2, dom: "play", text: "번역해도 원본 양식 그대로예요" },
+  { id: "jp21", lv: 2, dom: "play", text: "보고서 초안도 받아 볼 수 있어요" },
+  { id: "jp22", lv: 2, dom: "play", text: "하이헬퍼는 1분 안에 추천해요" },
+  { id: "jp23", lv: 2, dom: "play", text: "추천 전에 동의를 먼저 받아요" },
+  { id: "jp24", lv: 2, dom: "play", text: "태아보험도 설계할 수 있어요" },
+  { id: "jp25", lv: 2, dom: "lounge", text: "고민에서 실행 방법까지 정해요" },
+  { id: "jp26", lv: 3, dom: "play", text: "신상품은 반영이 늦을 수 있어요" },
+  { id: "jp27", lv: 3, dom: "play", text: "바로컨설팅 내역을 먼저 봐요" },
+  { id: "jp28", lv: 3, dom: "action", text: "통화녹취도 AI가 분석해요" },
+  { id: "jp29", lv: 3, dom: "vision", text: "법률 Agent는 근거와 함께 답해요" },
+  { id: "jp30", lv: 3, dom: "vision", text: "지금의 DAP가 첫걸음이 돼요" }
 ];
 var JP_FACT_W = [50, 40, 10];   /* v4.30 난이도 가중 · 쉬움 50 · 보통 40 · 어려움 10 (사용자 확정 260924) */
 /* 한 판에 나올 문장 순서 · 한 줄마다 난이도를 가중 무작위로 고르고(쉬움 50 · 보통 40 · 어려움 10), 그 난이도에서 아직 안 나온 문장을 무작위로 ·
@@ -13836,7 +13826,7 @@ function gwFinish() {
    점수 = oxTally(서버 oxTally_ 와 같은 식) · 판마다 서버 토큰(ox_start)이 황금 발판 자리를 정한다 · 토큰이 없으면 황금 없이.
    시계와 다리 흐름은 게임 시간으로 잰다 · 앱을 벗어나면 멈춘다(판이 보이지 않게 문제도 가린다) · 직접 멈춤은 판당 pauseMax 번.
    챗봇은 원본 BOT_SVG 래스터화만 · 이동과 튀기기만(형태 변형 없음). 해설은 결과 화면 「틀린 문제」 카드에만. */
-var OX_TITLE = { 1: "AI 기초 마스터", 2: "안전 수칙 마스터", 3: "AX 로드맵 마스터" }, OX_TITLE_MIN = 4;   /* 한 판에 그 분야를 4문제 이상 풀고 모두 맞히면 · 점수와 무관 */
+var OX_TITLE = { 4: "AX 1층 마스터" }, OX_TITLE_MIN = 4;   /* 한 판에 그 분야를 4문제 이상 풀고 모두 맞히면 · 점수와 무관 · v4.92 1층 부스 분야(c 4) 하나 · 옛 분야 2 · 3 은 은행에서 빠졌다 */
 var OX_SEEN_MAX = 60, OX_TK_AGE = 9000000;   /* 최근 본 문항 · 토큰은 2시간 30분까지 쓴다(서버 3시간) */
 var OXS = { tk: "", at: 0, ratio: {}, min: 20, off: [], busy: false };
 var OX = { on: false };
@@ -13863,7 +13853,7 @@ function oxRatioText(id) {
   return o >= 50 ? "직원 " + o + "%가 O를 골랐어요" : "직원 " + (100 - o) + "%가 X를 골랐어요";
 }
 /* 한 판 뽑기 · 난이도마다 per 개 · 짝 그룹은 한 판에 하나(어려운 난이도가 먼저 차지) · 난이도 묶음마다 O·X 각 60%까지 · 최근 본 문항은 뒤로(모자라면 그 난이도만 비움) · 끈 문항 제외
-   은행 86문제를 판마다 12개씩 돌려 쓴다(최근 본 60개를 뒤로 미뤄 몇 판이면 전부 나온다) */
+   은행 95문제(v4.92)를 판마다 12개씩 돌려 쓴다(최근 본 60개를 뒤로 미뤄 몇 판이면 전부 나온다) */
 function oxPick() {
   var R = olyRule().ox, off = oxOffList(), seen = S.get("ox_seen", []) || [], used = {}, out = [[], [], []];
   var free = function (x) { return off.indexOf(x.id) < 0 && !used[x.id] && !(x.g && used["g:" + x.g]); };
@@ -14328,7 +14318,7 @@ function oxStart() {
   OX = { on: true, paused: false, ending: null, raf: 0, last: performance.now(), pz: 0, st: "count", goT: 1.3, el: 0, recs: [], list: list, tk: tk, gold: gold,
     T: oxTally("", R, gold), G: oxbScene(list, gold), tmr: [], clk: R.sec, clkT: R.sec, wrongs: [], hud: "", tip: tip, pd: 0, sw: null, crackTick: -1, sayX: null, fr: { n: 0, s: 0 } };
   /* v4.14 조작 안내는 게임판 아래 말풍선으로 첫 문제에서만 잠깐(oxTipShow) · 오버레이 공용 안내(위쪽)는 쓰지 않는다 */
-  gsOverlayOpen({ key: "ox", title: "O/X 퀴즈", top: oxTopHtml(R), fill: true, cls: "oxb", cw: 360, ch: 400, canvasId: "oxCv", flat: true, noGesture: true,
+  gsOverlayOpen({ key: "ox", title: "AX 퀴즈", top: oxTopHtml(R), fill: true, cls: "oxb", cw: 360, ch: 400, canvasId: "oxCv", flat: true, noGesture: true,
     bottom: oxCtlHtml(R),
     resized: oxFit,
     down: function (e) { e.preventDefault(); OX.sw = { x: e.clientX, y: e.clientY }; },
@@ -14659,7 +14649,7 @@ function oxEndFinal(why) {
 function oxTitles(X) {
   var by = {};
   X.items.forEach(function (it) { if (it.ans !== "O" && it.ans !== "X") return; var c = (OX_BANK.filter(function (b) { return b.id === it.id; })[0] || {}).c; var o = by[c] || (by[c] = { n: 0, ok: 0 }); o.n++; if (it.right) o.ok++; });
-  return [1, 2, 3].filter(function (c) { return by[c] && by[c].n >= OX_TITLE_MIN && by[c].ok === by[c].n; }).map(function (c) { return OX_TITLE[c]; });
+  return Object.keys(OX_TITLE).filter(function (c) { return by[c] && by[c].n >= OX_TITLE_MIN && by[c].ok === by[c].n; }).map(function (c) { return OX_TITLE[c]; });
 }
 /* 틀린 문제 카드 · 점수 카드와 따로(260918 교육 문구 금지의 승인된 예외 · 사용자 결정 260922) · 최대 3줄 · 늦어서 떨어진 문제도 넣는다 · 모두의 선택 비율은 여기서 보여 준다 */
 function oxWrongHtml(X) {
@@ -14668,7 +14658,7 @@ function oxWrongHtml(X) {
   return '<section class="ax-card ax-stack-tight ox-wrong"><h2 class="ax-card-title">틀린 문제</h2>' + bad.slice(0, 3).map(function (it) {
     var b = OX_BANK.filter(function (x) { return x.id === it.id; })[0], r = oxRatioText(it.id);
     return '<div class="ox-w"><p class="ax-body">' + esc(b.q) + (b.rv ? "" : ' <small class="ox-ex">(예시)</small>') + "</p>" +
-      '<p class="ax-meta"><b>정답 ' + b.a + "</b>" + (it.ans === "T" ? " · 늦어서 떨어짐" : "") + " · " + esc(b.e) + "</p>" + (r ? '<p class="ax-meta">' + esc(r) + "</p>" : "") + "</div>";
+      '<p class="ax-meta"><b>정답 ' + b.a + "</b>" + (it.ans === "T" ? " · 늦어서 떨어짐" : "") + " · " + esc(b.e) + (OX_ZONE[b.z] ? " 다시 볼 곳: " + OX_ZONE[b.z] : "") + "</p>" + (r ? '<p class="ax-meta">' + esc(r) + "</p>" : "") + "</div>";
   }).join("") + (bad.length > 3 ? '<p class="ax-meta">외 ' + (bad.length - 3) + "문제</p>" : "") + "</section>";
 }
 
