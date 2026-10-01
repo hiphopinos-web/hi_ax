@@ -1803,7 +1803,7 @@ function attDay(v){ attOpt("day", v||""); }
  * 공 = 응모 번호 하나(당첨 확률은 공 단위) · 1인 1회 당첨 · 부재면 그 사람의 공을 뺀다 · 진행은 송출 화면(../draw/)이 하고 결정을 draw_log 로 보낸다.
  * 이 화면은 보기와 설정만: 체크인 인원 · 통 안의 공 · 당첨 기록 · 추첨 코드 · 체크인 시간 · 날짜(draw_stats · draw_cfg).
  * 당첨 기록에는 실명이 있다(상품 전달용 · 이 화면만 · 송출 화면은 가린 이름) · 부문 통계는 두지 않는다 · 새 CSS 는 dw- 로 시작한다. */
-var DRAW_WHY={ code:"코드는 AXD + 6자입니다(QR 테스트/codes.json 의 d17)", win:"시간 형식은 16:40-17:25 입니다(시작 < 끝)", day:"날짜 형식은 2026-10-26 입니다(비우면 매일)" };
+var DRAW_WHY={ code:"코드는 AXD + 6자입니다(QR코드/codes.json 의 d17)", win:"시간 형식은 16:40-17:25 입니다(시작 < 끝)", day:"날짜 형식은 2026-10-26 입니다(비우면 매일)" };
 function drawRecTag(r){
   if(r.st==="win") return r.live?tag("당첨","ok"):tag("당첨 · 취소됨","off");
   if(r.st==="absent") return r.live?tag("부재","warn"):tag("부재 · 취소됨","off");
@@ -4124,8 +4124,8 @@ function wqLockSet(on){
   } });
 }
 
-/* ── 9-4. 부스 QR · 인쇄용 코드 · 인쇄 원본은 QR 테스트/qr_mother.py 가 만든다(브랜드 도안 + 인식 검증) ──
- * 콘솔은 서버 코드를 보여 주고 codes.json 을 내려준다. 그 파일을 QR 테스트/ 에 넣고 qr_mother.py 를 돌리면 out/light · out/dark 에 실제 코드판이 나온다.
+/* ── 9-4. 부스 QR · 인쇄용 코드 · 인쇄 원본은 QR코드/qr_mother.py 가 만든다(브랜드 도안 + 인식 검증) ──
+ * 콘솔은 서버 코드를 보여 주고 codes.json 을 내려준다. 그 파일을 QR코드/ 에 넣고 qr_mother.py 를 돌리면 out/light 에 실제 코드판이 나온다(261001 다크판 폐기 · 라이트 한 가지).
  * (260929: out/ 의 p1 · p2 는 실제 서버 코드(codes.json)로 다시 만들었다. codes.json 에 코드가 없으면 견본 AXSSAMPLE 로 만들어지고 그때 「견본 · 인쇄 금지」 배지가 붙는다) */
 function boothRows(){ return ((ST.data.slist||{}).rows||[]).slice().sort(function(a,b){ return (a.id<b.id?-1:1); }); }
 /* v4.26 옛 17F 좌석 QR(p3)은 인쇄하지 않는다(서버가 att 로 거절) · 17F 출석 QR = a17(att_list) */
@@ -4159,21 +4159,21 @@ function boothCard(){
       :'<div class="empty">설치된 부스 지점이 없습니다. 백엔드 stamp_install 로 만듭니다.</div>')+
     (old.length?'<p class="cap mt8">인쇄하지 않는 지점 '+old.map(function(r){ return esc(r.id+" "+r.name)+(r.id==="p3"?" (17F 좌석 QR 폐지 · 담당자 적립용 · 17F 는 출석 QR)":r.on?" (운영 중)":" (꺼짐)"); }).join(" · ")+'</p>':'')+
     '<div class="row mt12"><button class="btn pri" onclick="qrCodesDl()">codes.json 내려받기 (부스 + 17F 출석 + 계단)</button><span class="cap">인쇄 원본을 만드는 파일입니다. 아래 운영 메모의 순서대로 씁니다.</span></div>'+
-    memo('<ol><li><b>codes.json 내려받기</b>를 눌러 받은 파일로 <code>QR 테스트/codes.json</code>을 바꿉니다(부스 2곳 + 17F 출석 1곳 + 계단 36곳의 지금 서버 코드).</li>'+
-      '<li><code>QR 테스트</code> 폴더에서 <code>python qr_mother.py</code>를 돌립니다. 모든 QR을 다시 만들고 인식 검증까지 합니다(실패가 있으면 종료코드 1).</li>'+
-      '<li><code>QR 테스트/out/light</code>(흰 벽) 또는 <code>/dark</code>(어두운 곳)의 <b>p1.png · p2.png</b>, 17F 출석은 <b>out/print/a17_A4_light.png</b>(A4)를 인쇄합니다. 라벨에 「견본」이 보이면 인쇄하지 않습니다.</li>'+
+    memo('<ol><li><b>codes.json 내려받기</b>를 눌러 받은 파일로 <code>QR코드/codes.json</code>을 바꿉니다(부스 2곳 + 17F 출석 1곳 + 계단 36곳의 지금 서버 코드).</li>'+
+      '<li><code>QR코드</code> 폴더에서 <code>python qr_mother.py</code>를 돌립니다. 모든 QR을 다시 만들고 인식 검증까지 합니다(실패가 있으면 종료코드 1).</li>'+
+      '<li><code>QR코드/out/light</code>의 <b>p1.png · p2.png</b>, 17F 출석은 <b>out/print/a17_A4_light.png</b>(A4)를 인쇄합니다. 라벨에 「견본」이 보이면 인쇄하지 않습니다.</li>'+
       '<li>붙인 뒤 폰 기본 카메라로 한 번 찍어 이 표의 코드로 적립되는지 확인합니다.</li></ol>'+
-      '<p><code>QR 테스트/out</code>의 p1 · p2 는 실제 서버 코드로 만든 것이라 배지가 없습니다. 부스 코드 없이 만든 <b>견본(AXSSAMPLE)</b>이면 「견본 · 인쇄 금지」 배지가 붙으니(콘솔 QR_SAMPLE_IDS), 그때는 위 순서로 다시 만듭니다. 코드 전면 교체(stamp_rotate · stair_rotate · att_rotate)는 백엔드 액션만 있고 이 콘솔에는 버튼이 없습니다.</p>'));
+      '<p><code>QR코드/out</code>의 p1 · p2 는 실제 서버 코드로 만든 것이라 배지가 없습니다. 부스 코드 없이 만든 <b>견본(AXSSAMPLE)</b>이면 「견본 · 인쇄 금지」 배지가 붙으니(콘솔 QR_SAMPLE_IDS), 그때는 위 순서로 다시 만듭니다. 코드 전면 교체(stamp_rotate · stair_rotate · att_rotate)는 백엔드 액션만 있고 이 콘솔에는 버튼이 없습니다.</p>'));
 }
 
 /* ── 9-5. QR 메뉴 (v4.53 · 사용자 지시 260928) ── 현장에 붙는 QR 전부를 한곳에서. 스탬프 › 현장 운영에 흩어져 있던 Wall · 부스 · 17F 출석 · 계단 · codes.json 카드를 옮겼다.
- * 목록의 근거 = QR 상호작용 기획.md §1-1 · §5 + QR 테스트/out/manifest.json 의 id(app · wall1~3 · p1 · p2 · a17 · roulette · photo · st01-1~st18-2 · t_* 8종은 테스트 전용이라 표에 없다).
- * 인쇄 파일 = QR 테스트/out/light|dark/<id>.png (a17 은 out/print/a17_A4_light.png). manifest 의 version 값은 띄우지 않는다(디자인 재생성으로 바뀐다 · id 와 경로로만 다룬다).
+ * 목록의 근거 = QR 상호작용 기획.md §1-1 · §5 + QR코드/out/manifest.json 의 id(app · wall1~3 · p1 · p2 · a17 · roulette · photo · st01-1~st18-2 · t_* 8종은 테스트 전용이라 표에 없다).
+ * 인쇄 파일 = QR코드/out/light/<id>.png (a17 은 out/print/a17_A4_light.png). manifest 의 version 값은 띄우지 않는다(디자인 재생성으로 바뀐다 · id 와 경로로만 다룬다).
  * 오늘 스캔 수 = 부스 · 17F 출석 · Wall 은 qr_stats(60초 캐시) · 계단은 stair_stats(spots[].today) · 앱 링크 · 안내판은 집계 없음. 부문 통계 없음. */
 var QR_SAMPLE_IDS=[];   /* 견본 코드(AXSSAMPLE)로 만든 out/ 파일의 id 를 적으면 「견본 · 인쇄 금지」 배지가 붙는다 · 260929 p1 · p2 를 실제 코드로 다시 만들어 비움 */
 var QR_BETA=["p1","p2","a17","wall1","wall2","wall3","st01-1","st01-2","st02-1","st02-2","st10-1","st10-2","app"];   /* 클로즈 베타 부착 13장 (사용자 확정 260928) */
 var QR_GRP={ app:"앱 링크", wall:"Wall", booth:"부스", att:"출석", draw:"추첨", stair:"계단", sign:"안내판" };
-function qrFile(id, theme){ return id==="a17"||id==="d17"?"QR 테스트/out/print/"+id+"_A4_light.png":"QR 테스트/out/"+(theme||"light")+"/"+id+".png"; }   /* v4.79 추첨 체크인 d17 도 A4 */
+function qrFile(id){ return id==="a17"||id==="d17"?"QR코드/out/print/"+id+"_A4_light.png":"QR코드/out/light/"+id+".png"; }   /* v4.79 추첨 체크인 d17 도 A4 */
 function qrStId(fl, r){ return "st"+("0"+fl).slice(-2)+"-"+r; }
 /* 표 한 줄 = { id, grp, name, place, time?, data(QR 내용), code?, file, st(on|off|sample|retired|fixed), today?(null = 집계 없음), todayAll?, note?, last?, n?, mis? } */
 function qrItems(){
@@ -4209,7 +4209,7 @@ function viewQr(){
   else h+=viewQrList(items);
   h+=memo('<p>QR 은 세 갈래입니다. <b>서버 코드가 있는 QR</b>(부스 p1 · p2 · 17F 출석 a17 · 계단 36곳)은 코드가 바뀌면 인쇄물을 다시 붙입니다. <b>고정 주소 QR</b>(앱 링크 · DAP Wall 1~3 · 룰렛 · 포토부스 안내판)은 다시 만들 일이 없습니다. p3(17F 좌석 QR)은 폐지라 인쇄하지 않습니다.</p>'+
     '<p>오늘 스캔 수는 부스 · 17F 출석 · Wall 은 서버 qr_stats(60초 캐시), 계단은 stair_stats 입니다. 앱 링크 · 안내판 QR 은 집계가 없습니다(찍어도 서버에 남지 않음). 테스트 사번(310555) 기록은 빠집니다. 부스는 「현장 QR」 경로만 세고 담당자 부여는 빼며, Wall 은 앱이 어느 벽인지 보내지 않아 세 벽 합계입니다.</p>'+
-    '<p>인쇄 파일은 <code>QR 테스트/out/light</code>(흰 벽) 또는 <code>/dark</code>(어두운 곳)의 <code>&lt;id&gt;.png</code>, 17F 출석은 <code>out/print/a17_A4_light.png</code>(A4)입니다. 파일은 QR 담당 대화가 <code>qr_mother.py</code> 로 다시 만듭니다(콘솔은 id 와 경로만 다룹니다). 테스트 전용 8종(<code>t_*</code>)은 인식 검증용이라 표에 없습니다.</p>'+
+    '<p>인쇄 파일은 <code>QR코드/out/light</code>의 <code>&lt;id&gt;.png</code>, 17F 출석은 <code>out/print/a17_A4_light.png</code>(A4)입니다. 파일은 QR 담당 대화가 <code>qr_mother.py</code> 로 다시 만듭니다(콘솔은 id 와 경로만 다룹니다). 테스트 전용 8종(<code>t_*</code>)은 인식 검증용이라 표에 없습니다.</p>'+
     '<p>코드 전면 교체(stamp_rotate · stair_rotate · att_rotate)는 백엔드 액션만 있고 이 콘솔에는 버튼이 없습니다.</p>');
   return h;
 }
@@ -4237,7 +4237,7 @@ function stairCard(){
       return '<tr><td><b>'+esc(r.name)+'</b></td><td class="n">'+esc(r.fl)+'F</td><td class="n"><b>'+esc(r.code)+'</b></td><td class="n cap">'+esc(appBase()+'#s='+r.code+'&fl='+r.fl+'&r='+r.r)+'</td><td class="n cap">'+esc(id)+'.png</td><td>'+(r.on?tag("운영","ok"):tag("꺼짐","off"))+'</td></tr>'; }).join("")+'</table></div>':'<div class="empty">설치된 계단 지점이 없습니다. 백엔드 stair_install 로 36곳(1F~18F × 비상계단 1·2)을 만듭니다. 옛 계단실 안 4곳(18F·17F·10F·1F)은 같이 꺼집니다.</div>')+
     memo('<p>지점마다 <b>방화문 앞</b>(복도 쪽, 계단실 문을 열기 전)에 붙입니다. 포스터 2장 이상 인쇄를 권합니다(한 장이면 스캔 줄이 생깁니다).</p>'+
       '<p>참가자가 QR을 찍으면 그 지점에서 시작 또는 종료로 판정됩니다(같은 지점, 같은 QR). 진행 중 시작이 없으면 시작, 다른 층이면 종료로 그 구간의 층수가 오늘 누적에 더해집니다. 누적이 10개 층에 닿는 순간 계단(07) 스탬프가 적립됩니다. 층·방향·횟수 제한은 없습니다(자세한 판정은 스탬프 › 「계단」 서브탭 참고).</p>'+
-      '<p>인쇄 파일은 <code>QR 테스트/out/light</code> 또는 <code>/dark</code> 폴더의 <b>st01-1.png ~ st18-2.png</b>(층 두 자리 + 경로 1·2, 36장)입니다. 붙이기 전에 이 표의 코드와 파일이 같은 지점인지 확인하세요.</p>'+
+      '<p>인쇄 파일은 <code>QR코드/out/light</code> 폴더의 <b>st01-1.png ~ st18-2.png</b>(층 두 자리 + 경로 1·2, 36장)입니다. 붙이기 전에 이 표의 코드와 파일이 같은 지점인지 확인하세요.</p>'+
       '<p>계단실 구간은 통신이 약해도 앱이 스캔을 저장했다가 연결되면 자동으로 보냅니다.</p>'));
 }
 function viewQrPrint(){ return boothCard()+wallCard()+stairCard(); }
@@ -4280,7 +4280,7 @@ function viewQrBeta(items){
       return '<tr><td class="n tdr">'+(i+1)+'</td><td>'+tag(QR_GRP[it.grp])+'</td><td><b>'+esc(it.name)+'</b><small class="cap" style="display:block">'+esc(it.id)+'</small></td><td class="n cap">'+esc(it.file||"-")+(it.st==="sample"?' '+tag("견본 · 인쇄 금지","bad"):'')+'</td><td>'+esc(it.place)+'</td><td class="n">'+(it.code?'<b>'+esc(it.code)+'</b>':'<span class="cap">없음</span>')+'</td><td class="n tdr">'+qrToday(it)+'</td><td>'+f+'</td></tr>'; }).join("")+'</table></div>'+
     '<div class="row mt12"><button class="btn pri" onclick="qrCodesDl()">codes.json 내려받기</button><span class="cap">부스 2 + 17F 출석 1 + 계단 36 의 지금 서버 코드 · 인쇄 원본을 만드는 파일</span></div>');
   h+=memo('<p><b>인쇄물은 일반 QR(검정 정사각 모듈 · 장식 없음) 한 가지로 통일</b>합니다(261001). QR 담당의 재생성 · 판독 검증이 끝났다는 신호 뒤에 인쇄하고, 옛 ME to WE 배지판과 섞지 않습니다. 이미 붙인 옛 QR은 담긴 주소 · 코드가 같아 그대로 찍힙니다.</p>'+
-    '<p>순서: ① codes.json 내려받기 → <code>QR 테스트/codes.json</code> 교체 → QR 담당이 <code>qr_mother.py</code> 로 재생성 · 검증 ② 위 표의 인쇄 파일 13장 인쇄(a17 은 A4) ③ 붙일 곳에 부착 ④ 운영진 폰으로 한 번씩 찍어 이 표의 「찍힘」이 켜지는지 확인(앱 링크는 앱이 열리는지만 확인 · 60초 캐시라 바로 안 보이면 새로고침).</p>'+
+    '<p>순서: ① codes.json 내려받기 → <code>QR코드/codes.json</code> 교체 → QR 담당이 <code>qr_mother.py</code> 로 재생성 · 검증 ② 위 표의 인쇄 파일 13장 인쇄(a17 은 A4) ③ 붙일 곳에 부착 ④ 운영진 폰으로 한 번씩 찍어 이 표의 「찍힘」이 켜지는지 확인(앱 링크는 앱이 열리는지만 확인 · 60초 캐시라 바로 안 보이면 새로고침).</p>'+
     '<p>p1 · p2 가 「견본 · 인쇄 금지」이면 아직 codes.json 이 서버 코드로 바뀌지 않은 상태입니다. 그 파일을 붙이면 찍어도 적립되지 않습니다.</p>');
   return h;
 }
