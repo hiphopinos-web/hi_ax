@@ -101,10 +101,17 @@
   #lgx .lgx-st { font: var(--ax-type-t7); color: var(--ax-color-muted); }
   #lgx .lgx-next:empty { display: none; }
   #lgx .lgx-home { align-self: center; min-height: 48px; padding: 0 var(--ax-space-16); border: 0; background: transparent; cursor: pointer; }
+  /* v4.89 도장 직후 질문 · 고르기 전에는 다음 카드와 「홈으로」를 접는다(주황 주 버튼 하나) */
+  #lgx .lgx-ask { display: flex; flex-direction: column; gap: var(--ax-space-12); }
+  #lgx .lgx-ask[hidden], #lgx.ask .lgx-next, #lgx.ask .lgx-home { display: none; }
+  #lgx .lgx-askq { margin: var(--ax-space-4) 0 var(--ax-space-4); font: var(--ax-type-t4); color: var(--ax-color-ink); }
+  #lgx .lgx-qrnote { margin: 0 0 var(--ax-space-12); }
   #lgx .lgx-auto { position: relative; overflow: hidden; }
   #lgx .lgx-auto.run::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--ax-color-onBrand); opacity: 0.35; transform-origin: left center; animation: lgxAuto 1.6s linear forwards; }
   @keyframes lgxAuto { from { transform: scaleX(0); } to { transform: scaleX(1); } }
   /* 키보드가 올라오면(kbSync · kb-on) 로그인 화면을 보이는 높이로 줄이고 띠 · 슬로건 · 안내 한 줄을 접는다 → 입력칸 3개와 주 버튼이 한 화면에 */
+  .axs-eask { display: flex; flex-direction: column; gap: var(--ax-space-12); }   /* v4.89 홈 질문 카드 */
+  .axs-eask .axs-eask-qr { align-self: center; min-height: 44px; padding: 0 var(--ax-space-16); border: 0; background: transparent; cursor: pointer; }
   html.kb-on #splash { bottom: var(--kb, 0px); }
   html.kb-on #splash .lgx-band, html.kb-on #entryForm .axs-login-main > .ax-stack-tight, html.kb-on #pinNote, html.kb-on #entryForm .ax-bottom .ax-link { display: none; }
   /* 키보드가 화면 높이를 줄이는 기기(높이 560 미만)도 같은 접기 · 큰글씨 + 낮은 폰(720 이하)은 띠를 접는다(슬로건이 세 줄이 된다) */
@@ -2269,7 +2276,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   <div id="a2hs" hidden>
     <div class="a-wrap">
       <span class="a-ico"><img src="icons/icon-192.png" alt=""></span>
-      <p class="a-t" id="a2hsT">홈 화면에 추가</p>
+      <p class="a-t" id="a2hsT">바로가기 설치</p>
       <p class="a-s">다음부터 아이콘 한 번으로 열려요</p>
       <div id="a2hsBody"></div>
       <button class="a-later" onclick="a2hsSheet(false)"><span class="axs-lk">닫기<svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
@@ -2283,7 +2290,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
       <!-- v4.71 (260930 사용자 요청) 글자 크기는 헤더 「일반 · 큰글씨」 한 곳 · 설정 시트에서 뺐다(좁은 폰도 헤더에 남긴다) -->
       <p class="fs-lb" id="fsLbApp">앱</p>
       <button class="fs-admin" id="fsPush" hidden onclick="fsSheet(false); pushSetOpen()">알림<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
-      <button class="fs-admin" id="fsA2hs" onclick="fsSheet(false); a2hsSheet(true)"><span id="fsA2hsT" class="fs-lbl">홈 화면에 추가</span><span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
+      <button class="fs-admin" id="fsA2hs" onclick="fsSheet(false); a2hsSheet(true)"><span id="fsA2hsT" class="fs-lbl">바로가기 설치</span><span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
       <p class="fs-lb">운영</p>
       <button class="fs-admin" onclick="fsSheet(false); App.go('admin')">관리자 모드<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
       <button class="fs-admin" onclick="axfLogout()">로그아웃 · 다른 사번으로 입장<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
@@ -3179,7 +3186,7 @@ function a2hsInstall() {
     a2hsSheet(false);
     if (r && r.outcome === "accepted") {
       a2hsMarkDismissed();
-      notice({ key: "a2hs", title: "설치 완료", body: "홈 화면의 AX Festival 아이콘으로 열기" });
+      notice({ key: "a2hs", title: "바로가기 설치 완료", body: "홈 화면의 AX Festival 아이콘으로 열기" });
       App.render();
     }
   });
@@ -3221,10 +3228,11 @@ function a2hsSteps() {
   ];
 }
 
-/* v4.88 (사용자 261001 「홈 화면에 추가와 설치가 섞여 있다」) 기기마다 한 단어만 쓴다
-   설치창(beforeinstallprompt)이 온 브라우저(안드로이드 크롬 · 삼성 인터넷 · 엣지) = 「앱 설치」 · 아이폰 · 설치창이 없는 브라우저 = 「홈 화면에 추가」
-   이미 홈 화면 앱으로 열려 있으면 설정 줄을 감춘다 · 메신저 안 브라우저도 같은 단어 규칙(「홈 화면에 추가」) */
-function a2hsWord() { return A2HS.deferred ? "앱 설치" : "홈 화면에 추가"; }
+/* v4.88 (사용자 261001 「홈 화면에 추가와 설치가 섞여 있다」) → v4.89 (사용자 표현 「바로가기 설치」로 통일)
+   우리 앱의 버튼 · 메뉴 이름 = 「바로가기 설치」 하나(설정 줄 · 안내 제목 · 버튼 · 완료 알림 · 최초 로그인 질문)
+   단계 안내 안에서 기기 메뉴 이름을 인용할 때만 그 기기 표기(「홈 화면에 추가」 · 「현재 페이지 추가」 · 「설치」)를 따옴표로 쓴다
+   이미 홈 화면 앱으로 열려 있으면 설정 줄을 감춘다 */
+function a2hsWord() { return "바로가기 설치"; }
 function a2hsRow() {
   var b = el("fsA2hs"), t = el("fsA2hsT");
   if (!b) return;
@@ -3234,10 +3242,11 @@ function a2hsRow() {
   if (lb) lb.hidden = b.hidden && (!pu || pu.hidden);
 }
 /* 하단 시트 · 입장 직후 1회 자동 + 설정에서 수동 호출 */
-function a2hsSheet(on) {
+function a2hsSheet(on, top) {   /* v4.89 top = 최초 로그인 장면 위로 띄운다 · 닫으면 A2HS.after(장면 시트가 다음 카드로) */
   var box = el("a2hs");
   if (!box) return;
-  if (!on) { box.hidden = true; A2HS.open = false; return; }
+  if (!on) { box.hidden = true; A2HS.open = false; box.style.zIndex = ""; var af = A2HS.after; A2HS.after = null; if (af) af(); return; }
+  if (top) box.style.zIndex = "395";
   A2HS.open = true;
   if (el("a2hsT")) el("a2hsT").textContent = a2hsWord();
   var body = el("a2hsBody"), h = "";
@@ -3247,14 +3256,14 @@ function a2hsSheet(on) {
   if (isStandalone()) {
     h = '<div class="a-note" style="text-align:center">이미 홈 화면 아이콘으로 열고 계세요. 추가로 하실 일이 없습니다.</div>';
   } else if (isInApp()) {
-    h = '<div class="a-note">지금은 <b>메신저 안 브라우저</b>라 홈 화면에 추가할 수 없어요.<br>' +
-      '오른쪽 위 메뉴에서 <b>&ldquo;다른 브라우저로 열기&rdquo;</b>를 누른 뒤 다시 시도해주세요.</div>' + copyRow;
+    h = '<div class="a-note">지금은 <b>메신저 안 브라우저</b>라 바로가기를 설치할 수 없어요.<br>' +
+      (isIOS() ? '메뉴에서 <b>&ldquo;Safari로 열기&rdquo;</b>를 누른 뒤 다시 시도해 주세요.</div>' : '오른쪽 위 메뉴에서 <b>&ldquo;다른 브라우저로 열기&rdquo;</b>를 누른 뒤 다시 시도해 주세요.</div>') + copyRow;
   } else if (A2HS.deferred) {
-    h = '<button class="a-go" onclick="a2hsInstall()">앱 설치</button>' +
+    h = '<button class="a-go" onclick="a2hsInstall()">바로가기 설치</button>' +
       '<div class="a-note" style="text-align:center">설치창에서 &ldquo;설치&rdquo;를 누르면 끝</div>';
   } else if (isIOS()) {
     h = '<div class="a-step"><span class="n">1</span>아래 공유 버튼을 누르세요</div>' +
-      '<div class="a-step"><span class="n">2</span>홈 화면에 추가를 고르세요</div>' +
+      '<div class="a-step"><span class="n">2</span>&ldquo;홈 화면에 추가&rdquo;를 고르세요</div>' +
       '<div class="a-step"><span class="n">3</span>AX Festival 아이콘으로 열기</div>' +
       '<div class="a-note" style="text-align:center">사번 · 이름 · 비밀번호 4자리로 다시 입장해요</div>';   /* v4.76 레드팀 채택 2 문구 · 아이폰 홈 화면 앱은 저장소가 따로라 다시 입장한다 */
   } else {
@@ -3308,7 +3317,7 @@ var STORE_DEVICE = ["vid", "a2hs", "fs", "t",
   "site_sound", "game_sound", "rain_sound", "jp_tut",
   "self_on", "self_key", "self_tok", "scan_spot", "adm_tab", "zone_sent", "roster_prog", "tyaw_tab", "tyaw_hide", "tyaw_oly_pg",
   "type_rank_*", "oly_tab", "oly_ev",
-  "notices", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "wq_srv", "wq_v", "survey_agg", "photo_pub", "resv_conf", "crowd", "stv",
+  "notices", "entry_pref", "entry_ask_day", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "wq_srv", "wq_v", "survey_agg", "photo_pub", "resv_conf", "crowd", "stv",
   "ax_line_i", "art_demo_n", "ev_phase", "toff",
   "push_ask", "push_first", "push_ask_ios"];   /* v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) · v4.78 아이폰 탭 · 앱 속 브라우저 안내는 하루 한 번 */
 var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_role", "adm_tok", "adm_emp", "dept",
@@ -6672,7 +6681,7 @@ var Views = {
       betaBannerHtml() +   /* v4.55 클로즈 베타 배너 · 맨 위 흰 줄 · 값 없으면 빈 문자열 */
       homeNoticeHtml() +
       photoAlertHtml() +
-      drawCardHtml() +   /* v4.84 Outro 추첨 체크인(16:40~17:25 · 체크인 전만) · 광고판 위 조건부 자리 */
+      drawCardHtml() + entryAskHtml() +   /* v4.84 Outro 추첨 체크인(16:40~17:25 · 체크인 전만) · 광고판 위 조건부 자리 · v4.89 접속 방법 질문(하루 한 번) */
       billboardHtml() +
       '<section class="axs-sec axs-railgo" onclick="if (!event.target.closest(\'.mk, .sect span\')) App.tab(\'exp\')">' + myCouponHtml() + "</section>" +   /* v4.84 레일 면을 누르면 스탬프 탭 · 마커는 v4.02 대로 룰렛·응모 안내 */
       nextStampHtml() +   /* v4.84 (앱 개편 2묶음 · 기획안 5-2) 다음 스탬프 카드 한 장 */
@@ -15548,19 +15557,77 @@ function lgxSheetHtml() {
     '<div class="axs-nx-t"><div class="ax-stack-tight"><h2 class="ax-section-title">' + t + "</h2></div></div>" +
     '<button type="button" class="ax-button lgx-auto">' + lbl + "</button></section>" };
 }
+/* v4.89 (사용자 261001 「앞으로도 계속 접속 어떻게 할 건지 묻게 만들고, QR로 접속하기 or 바로가기 설치하기 · 바로가기 설치하기 쪽에 주황색」)
+   도장이 찍힌 직후 시트의 첫 단계 = 「앞으로 어떻게 들어올까요?」 · 주 버튼(주황) 바로가기 설치하기 · 약한 버튼 QR로 접속하기
+   그동안 다음 스탬프(또는 찍은 QR) 카드와 「홈으로」는 접어 둔다(시트에 주황 주 버튼이 둘이 되지 않게) · 고르면 같은 시트가 다음 카드로 넘어간다
+   묻지 않는 경우 = 이미 홈 화면 앱(standalone) · 이 기기에서 이미 골랐다(entry_pref · 기기 기준) */
+function lgxAskWanted() { return !isStandalone() && !S.get("entry_pref", null); }
+var LGXASK = { cur: null, scan: false };
+function lgxAskHtml() {
+  return '<div class="lgx-ask" hidden><p class="lgx-askq">앞으로 어떻게 들어올까요?</p>' +
+    '<button type="button" class="ax-button" onclick="lgxAskApp()">바로가기 설치하기</button>' +
+    '<button type="button" class="ax-button ax-button-weak" onclick="lgxAskQr()">QR로 접속하기</button></div>';
+}
+/* 바로가기 설치하기 · 설치창이 있으면(안드로이드 크롬 · 삼성 인터넷 · 엣지) 그 자리에서 · 아니면 기기별 안내(아이폰 = 공유 → 홈 화면에 추가 · 메신저 안 브라우저 = 다른 브라우저로 열기) · 끝나면 다음 카드 */
+function lgxAskApp() {
+  S.put("entry_pref", "app"); S.put("entry_ask_day", entryDay());
+  if (A2HS.deferred) {
+    var ev = A2HS.deferred; A2HS.deferred = null;
+    try { ev.prompt(); } catch (e) { lgxAskDone("app"); return; }
+    ev.userChoice.then(function (r) {
+      if (r && r.outcome === "accepted") { a2hsMarkDismissed(); notice({ key: "a2hs", title: "바로가기 설치 완료", body: "홈 화면의 AX Festival 아이콘으로 열기" }); }
+      lgxAskDone("app");
+    }, function () { lgxAskDone("app"); });
+    return;
+  }
+  A2HS.after = function () { lgxAskDone("app"); };
+  a2hsSheet(true, true);   /* 장면 위로 띄운다 · 닫으면 after */
+}
+function lgxAskQr() { S.put("entry_pref", "qr"); S.put("entry_ask_day", entryDay()); lgxAskDone("qr"); }
+function lgxAskDone(how) {
+  var cur = LGXASK.cur; LGXASK.cur = null;
+  if (!cur || !cur.d.parentNode || LGX.cur !== cur) return;
+  var ask = cur.d.querySelector(".lgx-ask"); if (ask) ask.parentNode.removeChild(ask);
+  if (how === "qr") { var nx = cur.d.querySelector(".lgx-next"); if (nx) nx.insertAdjacentHTML("afterbegin", '<p class="ax-meta lgx-qrnote">입구와 각 층의 QR을 찍으면 다시 들어와요</p>'); }
+  cur.d.classList.remove("ask");
+  if (LGXASK.scan) lgxScanGo(cur);
+}
+/* v4.89 홈 질문 카드 · 장면을 보지 않은 재로그인 사람(entry_pref 없음)과 「QR로 접속하기」를 고른 사람에게 하루 한 번(entry_ask_day · 기기 기준)
+   홈 맨 위 조건부 자리(광고판 위) · 무거운 팝업이 아니라 카드 · 홈 주 버튼(다음 스탬프)과 겹치지 않게 바로가기 설치하기는 약한 버튼(연주황) · QR 은 글자 링크
+   그날 처음 보인 순간 기록하고, 이 방문 동안에는(홈이 4초마다 다시 그려져도) 고를 때까지 그대로 둔다 · 홈 화면 앱 · 이미 설치를 고른 사람 · 장면 중에는 없음 */
+var HOMEASK = { on: false };
+function entryDay() { var d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
+function entryAskHtml() {
+  if (isStandalone() || S.get("entry_pref", null) === "app" || LGX.cur) return "";
+  if (!HOMEASK.on) { if (S.get("entry_ask_day", "") === entryDay()) return ""; HOMEASK.on = true; S.put("entry_ask_day", entryDay()); }
+  return '<section class="ax-card axs-eask"><h2 class="ax-section-title">앞으로 어떻게 들어올까요?</h2>' +
+    '<button type="button" class="ax-button ax-button-weak" onclick="entryAskApp()">바로가기 설치하기</button>' +
+    '<button type="button" class="ax-link axs-eask-qr" onclick="entryAskQr()">QR로 접속하기</button></section>';
+}
+function entryAskApp() { HOMEASK.on = false; lgxAskApp(); App.render(); }
+function entryAskQr() { HOMEASK.on = false; S.put("entry_pref", "qr"); toast("입구와 각 층의 QR을 찍으면 다시 들어와요"); App.render(); }
+/* 찍은 QR 카드 · 1.6초 뒤 저절로 이어 간다(버튼에 진행 막대) */
+function lgxScanGo(cur) {
+  var b = cur.d.querySelector(".lgx-auto"); if (b) b.classList.add("run");
+  setTimeout(function () { if (LGX.cur === cur) lgxClose("scan"); }, 1600);
+}
 /* 장면 시작 · cover() = 화면을 다 덮은 순간 그 뒤에서 앱으로 바꾼다 · mode = send | ok | test */
 function lgxStart(emp, mode, cover, demo) {
   lgxMark(emp);
-  var sh = lgxSheetHtml(), band = el("kvCv");
+  var sh = lgxSheetHtml(), band = el("kvCv"), ask = lgxAskWanted();
   if (!band || !band.offsetWidth || el("splash").classList.contains("gone")) band = null;
   var cur = lgxPlay({ band: band, sheet: sh.html,
     onCover: cover,
     onSettle: function () {
-      if (!sh.scan) return;
-      var b = cur.d.querySelector(".lgx-auto"); if (b) b.classList.add("run");
-      setTimeout(function () { if (LGX.cur === cur) lgxClose("scan"); }, 1600);
+      if (ask) {   /* 도장 직후 · 질문이 먼저 · 고른 뒤 다음 카드 */
+        LGXASK.cur = cur; LGXASK.scan = sh.scan;
+        var q = cur.d.querySelector(".lgx-ask"); if (q) q.hidden = false;
+        return;
+      }
+      if (sh.scan) lgxScanGo(cur);
     },
-    onClose: function (how) { lgxAfter(how); } });
+    onClose: function (how) { LGXASK.cur = null; lgxAfter(how); } });
+  if (ask) { cur.d.classList.add("ask"); cur.d.querySelector(".lgx-next").insertAdjacentHTML("beforebegin", lgxAskHtml()); }
   if (demo) return cur;
   if (mode === "test" || mode === "ok") { lgxLocal(); lgxSrv("ok"); }
   else lgxPush(function (r) { if (r === "added" || r === "dup") { lgxLocal(); lgxSrv("ok"); } else lgxSrv(r === "none" ? "none" : "fail"); });
