@@ -64,14 +64,39 @@
   #splash { position: absolute; inset: 0; z-index: 100; background: var(--paper); display: flex; flex-direction: column; overflow: hidden; }
   #splash.gone { display: none; }
   .kvfill { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-  /* A01 (AX-TDS v1) · 헤더 64 → 모션 상자(342:160) → 슬로건 → 입력 56 × 3 → 하단 주 버튼. 모션은 v29 원본 엔진(AXF 시퀀스)을 상자 안에서 돌린다 */
-  #kvCv { display: block; width: 100%; height: 100%; }
-  #splash .ax-header { padding-top: env(safe-area-inset-top); height: calc(var(--ax-header-height) + env(safe-area-inset-top)); flex-basis: auto; }
-  #entryForm { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-  #entryForm .axs-login-main { flex: 1; min-height: 0; overflow-y: auto; padding: var(--ax-space-24); display: flex; flex-direction: column; gap: var(--ax-space-24); }
-  #entryForm .ax-bottom { padding-bottom: max(var(--ax-space-24), env(safe-area-inset-bottom)); }
-  #entryForm .ax-bottom .ax-link { align-self: center; border: 0; background: transparent; padding: 0; cursor: pointer; }
-  #err { display: none; color: var(--ax-color-error); font: var(--ax-type-t7); }
+  /* ═══ v4.94 로그인 첫 화면 「B 수면형」(261001 사용자 「권장대로」 · design.md A-5 3-1 · 정본 「디자인 시안/로그인 화면/검토.md」 5장)
+     화면 전체가 최초 로그인 장면(LGX)의 첫 프레임이다. 위 흰 무대 = 포스터 헤더(행사명 2줄 · 메타 · 슬로건) + 점 하나(나),
+     가운데 수평선, 아래 주황 수면 위에 입력칸. 점 · 수평선 자리는 lfFit() 가 계산한다(대기 모션 값은 LF 상수 한 곳).
+     예외 3건(design.md A-5 3-1): 오렌지 면 = 화면 절반 · 주 버튼 = ax-button-dark · 앱 헤더 줄 대신 포스터 헤더. 주황 위 작은 글자는 onBrand 만(흰 글자 금지) */
+  .axs-lf { background: var(--ax-color-surface); }
+  .axs-lf > canvas[data-lgx] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
+  .axs-lf .lf-head { position: relative; z-index: 2; padding: calc(env(safe-area-inset-top) + var(--ax-space-20)) var(--ax-space-24) 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--ax-space-12); align-items: end; pointer-events: none; }
+  .axs-lf .lf-title { margin: 0; display: flex; flex-direction: column; font-size: 34px; line-height: 36px; font-weight: 700; letter-spacing: -0.01em; color: var(--ax-color-brand); }   /* 행사명 = 20px 이상 600 이상(design.md §3) · 큰글씨 배율 제외(px) */
+  .axs-lf .lf-title span { display: block; white-space: nowrap; }
+  .axs-lf .lf-meta { margin: 0; display: flex; flex-direction: column; align-items: flex-end; text-align: right; font: var(--ax-type-t7); color: var(--ax-color-muted); }
+  .axs-lf .lf-slogan { grid-column: 1 / -1; margin: var(--ax-space-12) 0 0; font: var(--ax-type-t6); color: var(--ax-color-ink); }
+  .axs-lf .lf-slogan b { display: block; font: var(--ax-type-t6-strong); }
+  .axs-lf .lf-form { position: absolute; z-index: 3; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: var(--ax-space-12); padding: 0 var(--ax-space-24) max(var(--ax-space-24), env(safe-area-inset-bottom)); }
+  .axs-lf .lf-row2 { display: grid; grid-template-columns: minmax(0, 0.82fr) minmax(0, 1fr); gap: var(--ax-space-12); }
+  /* 뜨는 라벨 · 비었을 때 = 칸 안 글자 · 입력하면 위로 작게 남는다(무엇을 넣은 칸인지 보인다) */
+  .axs-lf .lf-f { position: relative; display: block; min-width: 0; margin: 0; }
+  .axs-lf .lf-f input { display: block; width: 100%; min-height: 56px; margin: 0; border: 1px solid transparent; border-radius: var(--ax-radius-12); background: var(--ax-color-surface); padding: calc(var(--ax-space-8) + 0.9375rem) var(--ax-space-16) var(--ax-space-4); color: var(--ax-color-ink); font: 500 1rem/1.25 var(--ax-font); letter-spacing: 0; text-align: left; outline: none; box-shadow: none; }
+  .axs-lf .lf-f input:focus { border-color: var(--ax-color-ink); }
+  .axs-lf .lf-f input:focus-visible { outline: none; }   /* 칸 테두리(ink)가 초점 표시 · 바깥 고리를 겹쳐 두르지 않는다 */
+  .axs-lf .lf-f > span { position: absolute; left: 17px; right: var(--ax-space-8); top: 50%; transform: translateY(-50%); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 500 0.9375rem/1.25 var(--ax-font); color: var(--ax-color-body); pointer-events: none; transition: top 0.12s, transform 0.12s, font-size 0.12s; }
+  .axs-lf .lf-f input:focus + span, .axs-lf .lf-f input:not(:placeholder-shown) + span, .axs-lf .lf-f input:-webkit-autofill + span { top: 6px; transform: none; font-size: 0.75rem; color: var(--ax-color-muted); }
+  .axs-lf .lf-note { margin: 0; font: var(--ax-type-t7); color: var(--ax-color-onBrand); }
+  .axs-lf .axs-pend { align-self: center; margin: 0; padding: var(--ax-space-4) var(--ax-space-12); border-radius: var(--ax-radius-8); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t7); text-align: center; }   /* QR 목적지 한 줄(scanLinkNote) */
+  #err, #qErr { display: none; }
+  .axs-lf #err, .axs-lf #qErr { align-self: flex-start; margin: 0; padding: var(--ax-space-4) var(--ax-space-12); border-radius: var(--ax-radius-8); background: var(--ax-color-surface); color: var(--ax-color-error); font: var(--ax-type-t7); }   /* 주황 위에 빨강 글자를 직접 놓지 않는다 · 흰 알약 */
+  .axs-lf .lf-go { display: flex; flex-direction: column; gap: var(--ax-space-4); margin-top: var(--ax-space-4); }
+  .axs-lf .lf-go .ax-link { align-self: center; border: 0; background: transparent; padding: 0; cursor: pointer; color: var(--ax-color-onBrand); text-decoration: underline; text-underline-offset: 3px; }
+  .axs-lf .lf-go .ax-button:disabled { background: var(--ax-color-canvas); color: var(--ax-color-disabled); }
+  .axs-lf .lf-who { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 var(--ax-space-8); margin: 0; font: var(--ax-type-t4); color: var(--ax-color-onBrand); }
+  .axs-lf .lf-who span { font: var(--ax-type-t6); }
+  /* 입장 순간 · 점 · 수평선은 제자리, 글자와 입력만 투명도로 사라진다(LF.fade · 장면이 같은 그림으로 덮는다) */
+  .axs-lf .lf-head, .axs-lf .lf-form { transition: opacity 0.2s; }
+  .axs-lf.lf-out .lf-head, .axs-lf.lf-out .lf-form { opacity: 0; pointer-events: none; }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
   .note { text-align: center; font-size: calc(12.5px * var(--fs)); line-height: 1.5; color: var(--muted); }
 
@@ -81,10 +106,6 @@
   #xition canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   /* ═══ v4.87 최초 로그인 장면(LGX) · 1막 로그인 띠 · 2막 거울 · 3막 도장과 다음 행동 ═══
      띠·무대는 v29 스테이지(흰 면 + 주황 면 + 도트 격자) · 시트·버튼은 AX-TDS 토큰(design.md A-1 「월드는 배경까지」) */
-  .lgx-band { position: relative; flex: 1 1 auto; min-height: 72px; max-height: 340px; margin: calc(-1 * var(--ax-space-24)) calc(-1 * var(--ax-space-24)) 0; }
-  /* 키가 낮은 폰(375×667 큰글씨 등) · 간격을 16 으로 줄여 입력칸 3개와 주 버튼이 한 화면에 */
-  @media (max-height: 720px) { #entryForm .axs-login-main { gap: var(--ax-space-16); } #entryForm .axs-login-main .lgx-band { margin-bottom: var(--ax-space-8); } }
-  .lgx-band canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   #lgx { position: fixed; inset: 0; z-index: 390; overflow: hidden; touch-action: none; contain: strict; }   /* v4.90 장면 안 배치가 바깥(로그인 · 앱) 배치 계산을 다시 부르지 않게 */
   #lgx > canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   #lgx .lgx-skip { position: absolute; z-index: 2; top: calc(env(safe-area-inset-top) + var(--ax-space-8)); right: max(var(--ax-space-8), calc((100vw - var(--ax-app-max, 480px)) / 2 + var(--ax-space-8))); min-height: 48px; padding: 0 var(--ax-space-16); border: 0; border-radius: var(--ax-radius-999, 999px); background: rgba(255, 255, 255, 0.92); color: var(--ax-color-ink); font: var(--ax-type-t6-strong); cursor: pointer; }
@@ -109,14 +130,23 @@
   #lgx .lgx-auto { position: relative; overflow: hidden; }
   #lgx .lgx-auto.run::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--ax-color-onBrand); opacity: 0.35; transform-origin: left center; animation: lgxAuto 1.6s linear forwards; }
   @keyframes lgxAuto { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-  /* 키보드가 올라오면(kbSync · kb-on) 로그인 화면을 보이는 높이로 줄이고 띠 · 슬로건 · 안내 한 줄을 접는다 → 입력칸 3개와 주 버튼이 한 화면에 */
   .axs-eask { display: flex; flex-direction: column; gap: var(--ax-space-12); }   /* v4.89 홈 질문 카드 */
   .axs-eask .axs-eask-qr { align-self: center; min-height: 44px; padding: 0 var(--ax-space-16); border: 0; background: transparent; cursor: pointer; }
-  html.kb-on #splash { bottom: var(--kb, 0px); }
-  html.kb-on #splash .lgx-band, html.kb-on #entryForm .axs-login-main > .ax-stack-tight, html.kb-on #pinNote, html.kb-on #entryForm .ax-bottom .ax-link { display: none; }
-  /* 키보드가 화면 높이를 줄이는 기기(높이 560 미만)도 같은 접기 · 큰글씨 + 낮은 폰(720 이하)은 띠를 접는다(슬로건이 세 줄이 된다) */
-  @media (max-height: 720px) { html.fs-big #splash .lgx-band { display: none; } }
-  @media (max-height: 560px) { #splash .lgx-band, #entryForm .axs-login-main > .ax-stack-tight, #pinNote, #entryForm .ax-bottom .ax-link { display: none; } }
+  /* v4.94 키보드가 올라오면(kbSync · kb-on) 로그인 화면을 보이는 높이로 줄인다 · 띠는 숨기지 않고 얇은 점 띠로 남긴다(행사명 한 줄 + 점 + 수평선)
+     메타 · 슬로건 · 안내 · QR 한 줄 · 링크 · 홈 화면 앱 카드만 접는다 → 입력칸 3개와 주 버튼이 한 화면에 · 점 자리가 모자라면 점만 숨긴다(lfFit) */
+  html.kb-on #splash, html.kb-on #quick { bottom: var(--kb, 0px); }
+  html.kb-on .axs-lf .lf-meta, html.kb-on .axs-lf .lf-slogan, html.kb-on .axs-lf .lf-note, html.kb-on .axs-lf .axs-pend, html.kb-on .axs-lf .lf-go .ax-link, html.kb-on .axs-lf #saCard { display: none; }
+  html.kb-on .axs-lf .lf-title { flex-direction: row; gap: var(--ax-space-8); font-size: 22px; line-height: 28px; }
+  html.kb-on .axs-lf .lf-head { padding-top: calc(env(safe-area-inset-top) + var(--ax-space-12)); }
+  html.kb-on .axs-lf .lf-form { gap: var(--ax-space-8); padding-bottom: var(--ax-space-12); }
+  /* 키가 낮은 화면(680 이하)은 슬로건을 접는다(장면 끝에 다시 나온다) · 키보드가 화면 높이를 줄이는 기기(560 미만)는 키보드 상태와 같은 접기 */
+  @media (max-height: 680px) { .axs-lf .lf-slogan { display: none; } }
+  @media (max-height: 560px) {
+    .axs-lf .lf-meta, .axs-lf .lf-note, .axs-lf .axs-pend, .axs-lf .lf-go .ax-link, .axs-lf #saCard { display: none; }
+    .axs-lf .lf-title { flex-direction: row; gap: var(--ax-space-8); font-size: 22px; line-height: 28px; }
+    .axs-lf .lf-head { padding-top: calc(env(safe-area-inset-top) + var(--ax-space-12)); }
+    .axs-lf .lf-form { gap: var(--ax-space-8); padding-bottom: var(--ax-space-12); }
+  }
 
   /* 홈 화면에 추가 · 로그인 직후 전용 단계 화면 (풀스크린) */
   #a2hs { position: fixed; inset: 0; z-index: 120; background: var(--paper); overflow-y: auto; animation: fadeIn 0.3s; }
@@ -139,8 +169,9 @@
   #a2hs .a-later { width: 100%; margin-top: 10px; border: 0; background: none; cursor: pointer; font-family: inherit; font-size: calc(14.5px * var(--fs)); font-weight: 700; color: var(--faint); padding: 8px; }
   #a2hs .a-url { margin-top: 8px; padding: 10px 12px; background: var(--card); border: 0; border-radius: 10px; font-size: calc(12.5px * var(--fs)); color: var(--muted); word-break: break-all; }
 
-  /* 재방문 · 비밀번호만 받는 화면 (영상 스플래시 없이 바로) */
-  #quick, #pwlost { position: absolute; inset: 0; z-index: 110; background: var(--paper); display: flex; align-items: center; justify-content: center; padding: 24px; }
+  /* 재방문 · 비밀번호만 받는 화면 · v4.94 첫 화면과 같은 수면형(.axs-lf · 캔버스 qCv) */
+  #quick { position: absolute; inset: 0; z-index: 110; overflow: hidden; }
+  #pwlost { position: absolute; inset: 0; z-index: 110; background: var(--paper); display: flex; align-items: center; justify-content: center; padding: 24px; }
   #quick[hidden], #pwlost[hidden] { display: none; }
   /* v3.88 비밀번호 분실 요청 · 카드 문법은 재방문 화면과 같게 */
   #pwlost .q-card { width: 100%; max-width: 340px; text-align: center; }
@@ -151,19 +182,11 @@
   #pwlost .pw-ok { margin-top: 16px; font-size: calc(16px * var(--fs)); font-weight: 800; line-height: 1.6; color: var(--hi); }
   #pwlost .pw-err { margin-top: 10px; font-size: calc(13.5px * var(--fs)); font-weight: 700; color: var(--bad); min-height: 1px; }
   #pwlost .pw-link, #panel .pw-link { display: block; width: 100%; margin-top: 10px; border: 0; background: none; cursor: pointer; font-family: inherit; font-size: calc(14px * var(--fs)); font-weight: 700; color: var(--muted); text-decoration: underline; }
-  #quick .q-card { width: 100%; max-width: 340px; text-align: center; }
-  #quick .q-eyebrow, #pwlost .q-eyebrow { font-size: calc(14px * var(--fs)); font-weight: 800; letter-spacing: -0.01em; color: var(--mint); }
-  #quick .q-hello, #pwlost .q-hello { margin-top: 14px; font-size: 26px; font-weight: 800; color: var(--hi); letter-spacing: -0.02em; }
-  #quick .q-who { margin-top: 8px; font-size: calc(15.5px * var(--fs)); color: var(--muted); }
-  #quick .q-who b { color: var(--hi); font-weight: 800; }
-  #quick .q-who span { margin-left: 7px; color: var(--faint); font-family: var(--disp); font-size: calc(14.5px * var(--fs)); }
-  #quick input { width: 100%; margin-top: 26px; border-radius: 16px; border: 1.5px solid transparent; background: var(--card); padding: 16px; font-size: 20px; font-weight: 800; letter-spacing: 0.5em; text-align: center; color: var(--hi); outline: none; }
-  #quick input:focus { border-color: var(--mint); }
-  #quick input::placeholder { letter-spacing: 0; font-size: calc(16.5px * var(--fs)); font-weight: 700; color: var(--faint); }
-  #qErr { display: none; margin-top: 10px; font-size: calc(14.5px * var(--fs)); font-weight: 700; color: #E5484D; }
-  #quick .q-go, #pwlost .q-go { width: 100%; margin-top: 14px; border: 0; cursor: pointer; border-radius: 12px; background: var(--mint); padding: 16px; font-family: inherit; font-size: calc(16.5px * var(--fs)); font-weight: 800; color: var(--ax-color-onBrand); }
-  #quick .q-go:disabled, #pwlost .q-go:disabled { opacity: 0.5; }
-  #quick .q-other, #pwlost .q-other { width: 100%; margin-top: 10px; border: 0; background: none; cursor: pointer; font-family: inherit; font-size: calc(14.5px * var(--fs)); font-weight: 700; color: var(--faint); text-decoration: underline; text-underline-offset: 3px; padding: 8px; }
+  #pwlost .q-eyebrow { font-size: calc(14px * var(--fs)); font-weight: 800; letter-spacing: -0.01em; color: var(--mint); }
+  #pwlost .q-hello { margin-top: 14px; font-size: 26px; font-weight: 800; color: var(--hi); letter-spacing: -0.02em; }
+  #pwlost .q-go { width: 100%; margin-top: 14px; border: 0; cursor: pointer; border-radius: 12px; background: var(--mint); padding: 16px; font-family: inherit; font-size: calc(16.5px * var(--fs)); font-weight: 800; color: var(--ax-color-onBrand); }
+  #pwlost .q-go:disabled { opacity: 0.5; }
+  #pwlost .q-other { width: 100%; margin-top: 10px; border: 0; background: none; cursor: pointer; font-family: inherit; font-size: calc(14.5px * var(--fs)); font-weight: 700; color: var(--faint); text-decoration: underline; text-underline-offset: 3px; padding: 8px; }
 
   /* ───────── 앱 셸 ─────────
      헤더 v16 · 아이덴티티(네이비칩 + 톱니)는 전 화면 고정, 그 아래 줄만 화면에 따라 바뀐다.
@@ -1286,12 +1309,12 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   @media (prefers-reduced-motion: reduce) { .axs-bot svg, .axs-bot .eye, .axs-bot .ant path { animation: none; } .axs-bot .ant path { opacity: 0.3; } }
   /* 화면이 통째로 비어서 기다리는 자리 · 로그인·입장 처리 중 (버튼 안 잠김 상태에는 쓰지 않는다) */
   #axsWait { position: fixed; inset: 0; z-index: 130; display: flex; align-items: center; justify-content: center; padding: var(--ax-page-inset); background: var(--ax-color-canvas); }
-  /* 재방문·비밀번호 찾기 화면 · 입력 56 / 주 버튼 56 모양만 A01 에 맞춘다 */
-  #quick input, #pwlost input { min-height: var(--ax-button-height); border: 1px solid var(--ax-color-divider); border-radius: var(--ax-radius-12); background: var(--ax-color-inset); color: var(--ax-color-ink); }
-  #quick input:focus, #pwlost input:focus { border-color: var(--ax-color-ink); }
-  #quick .q-go, #pwlost .q-go { min-height: var(--ax-button-height); border-radius: var(--ax-radius-16); background: var(--ax-color-brand); color: var(--ax-color-onBrand); font: var(--ax-type-t5-strong); }
-  #quick .q-eyebrow, #pwlost .q-eyebrow { color: var(--ax-color-brandText); }
-  #quick .q-hello, #pwlost .q-hello { font: var(--ax-type-t3); letter-spacing: 0; color: var(--ax-color-ink); }
+  /* 비밀번호 찾기 화면 · 입력 56 / 주 버튼 56 모양만 A01 에 맞춘다(재방문 #quick 은 v4.94 수면형 .axs-lf) */
+  #pwlost input { min-height: var(--ax-button-height); border: 1px solid var(--ax-color-divider); border-radius: var(--ax-radius-12); background: var(--ax-color-inset); color: var(--ax-color-ink); }
+  #pwlost input:focus { border-color: var(--ax-color-ink); }
+  #pwlost .q-go { min-height: var(--ax-button-height); border-radius: var(--ax-radius-16); background: var(--ax-color-brand); color: var(--ax-color-onBrand); font: var(--ax-type-t5-strong); }
+  #pwlost .q-eyebrow { color: var(--ax-color-brandText); }
+  #pwlost .q-hello { font: var(--ax-type-t3); letter-spacing: 0; color: var(--ax-color-ink); }
   /* ═══ AX-TDS v1 2단계 · 프로그램 P01 · 상세 P02 · 확인 P03 · 결과 P04 · 시간표 P05 · 내 일정 M02 · 관리 M03 · 취소 시트 (260922) ═══
      흰 페이지(P01·P02·P04·P05·M02·M03)는 surface, 확인(P03)은 canvas 위 흰 카드 · 주 행동은 하단 고정 바(메뉴는 숨김) */
   body[data-pg="w"], body[data-pg="w"] #frame, body[data-pg="w"] #topbar.ax-header { background: var(--ax-color-surface); }
@@ -2231,46 +2254,46 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
 <body>
 <div id="frame" class="splash-mode">
 
-  <!-- ═══════ 스플래시 ═══════ -->
-  <section id="splash" data-phase="ready">
-    <header class="ax-header ax-header-brand"><span>AX Festival 2026</span></header>
-    <form id="entryForm" novalidate>
-      <div class="axs-login-main">
-        <div class="lgx-band"><canvas id="kvCv" data-lgx="1" aria-hidden="true"></canvas></div>
-        <div class="ax-stack-tight">
-          <h1 class="ax-section-title">ME to WE :<br>나의 경험을 우리의 가능성으로</h1>
-          <p class="ax-meta">10월 26일 월요일 · 광화문 본사</p>
-        </div>
-        <div id="saCard" class="axs-sacard" hidden><b>홈 화면 앱으로 열렸어요</b><span>사번 · 이름 · 비밀번호 4자리로 한 번 더 입장해 주세요</span></div>
-        <div class="ax-fields">
-          <label class="ax-sr-only" for="empId">사번</label>
-          <input class="ax-field" id="empId" inputmode="numeric" pattern="[0-9]*" placeholder="사번을 입력해 주세요" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" oninput="numOnly(this, event)" data-imeend="num" aria-describedby="err">
-          <label class="ax-sr-only" for="userName">이름</label>
-          <input class="ax-field" id="userName" placeholder="이름을 입력해 주세요" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="next" aria-describedby="err">
-          <label class="ax-sr-only" for="userPin">비밀번호 숫자 4자리</label>
-          <input class="ax-field" id="userPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" enterkeyhint="go" oninput="numOnly(this, event)" placeholder="비밀번호 숫자 4자리를 입력해 주세요" autocomplete="off" aria-describedby="pinNote err">
-        </div>
-        <p class="ax-meta" id="pinNote">처음 입장하면 이 4자리가 비밀번호로 정해집니다 · 사내 비밀번호 사용 금지</p>
-        <p id="err" role="alert"></p>
+  <!-- ═══════ 스플래시 · v4.94 로그인 첫 화면 「B 수면형」 · 화면 전체 = 최초 로그인 장면(LGX)의 첫 프레임 ═══════ -->
+  <section id="splash" class="axs-lf" data-phase="ready">
+    <canvas id="kvCv" data-lgx="1" aria-hidden="true"></canvas>
+    <div class="lf-head">
+      <h1 class="lf-title"><span>AX Festival</span> <span>2026</span></h1>
+      <p class="lf-meta"><span>10월 26일 (월)</span><span>광화문 본사</span></p>
+      <p class="lf-slogan"><b>ME to WE :</b><span>나의 경험을 우리의 가능성으로</span></p>
+    </div>
+    <form id="entryForm" class="lf-form" novalidate>
+      <div id="saCard" class="axs-sacard" hidden><b>홈 화면 앱으로 열렸어요</b><span>사번 · 이름 · 비밀번호 4자리로 한 번 더 입장해 주세요</span></div>
+      <div class="lf-row2">
+        <label class="lf-f"><input id="empId" inputmode="numeric" pattern="[0-9]*" placeholder=" " autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" oninput="numOnly(this, event)" data-imeend="num" aria-describedby="err"><span>사번</span></label>
+        <label class="lf-f"><input id="userName" placeholder=" " autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="next" aria-describedby="err"><span>이름</span></label>
       </div>
-      <div class="ax-bottom">
-        <button type="submit" class="ax-button">페스티벌 입장</button>
+      <label class="lf-f"><input id="userPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" enterkeyhint="go" oninput="numOnly(this, event)" placeholder=" " autocomplete="off" aria-describedby="pinNote err"><span>비밀번호 숫자 4자리</span></label>
+      <p class="lf-note" id="pinNote">처음 입장하면 이 4자리가 비밀번호로 정해집니다&nbsp;· 사내 비밀번호 사용 금지</p>
+      <p id="err" role="alert"></p>
+      <div class="lf-go">
+        <button type="submit" class="ax-button ax-button-dark">페스티벌 입장</button>
         <button type="button" class="ax-link" onclick="pwLostOpen()">비밀번호를 잊었어요</button>
       </div>
     </form>
   </section>
 
-  <!-- ═══════ 재방문 · 비밀번호만 입력 (스플래시 건너뜀) ═══════ -->
-  <section id="quick" hidden>
-    <div class="q-card">
-      <p class="q-eyebrow">AX Festival 2026</p>
-      <p class="q-hello">환영합니다</p>
-      <p class="q-who"><b id="qName"></b><span id="qEmp"></span></p>
-      <input id="quickPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" enterkeyhint="go" placeholder="비밀번호 4자리" autocomplete="off" oninput="numOnly(this, event)">
-      <p id="qErr"></p>
-      <button id="qBtn" class="q-go">입장</button>
-      <button id="qOther" class="q-other">다른 사번으로 입장</button>
-      <button type="button" class="pw-link" onclick="pwLostOpen()">비밀번호를 잊었어요</button>
+  <!-- ═══════ 재방문 · 비밀번호만 입력 (스플래시 건너뜀) · v4.94 첫 화면과 같은 수면형 ═══════ -->
+  <section id="quick" class="axs-lf" hidden>
+    <canvas id="qCv" data-lgx="1" aria-hidden="true"></canvas>
+    <div class="lf-head">
+      <h1 class="lf-title"><span>AX Festival</span> <span>2026</span></h1>
+      <p class="lf-meta"><span>10월 26일 (월)</span><span>광화문 본사</span></p>
+    </div>
+    <div class="lf-form">
+      <p class="lf-who"><b id="qName"></b><span id="qEmp"></span></p>
+      <label class="lf-f"><input id="quickPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" enterkeyhint="go" placeholder=" " autocomplete="off" oninput="numOnly(this, event)" aria-describedby="qErr"><span>비밀번호 숫자 4자리</span></label>
+      <p id="qErr" role="alert"></p>
+      <div class="lf-go">
+        <button type="button" id="qBtn" class="ax-button ax-button-dark">입장</button>
+        <button type="button" id="qOther" class="ax-link">다른 사번으로 입장</button>
+        <button type="button" class="ax-link" onclick="pwLostOpen()">비밀번호를 잊었어요</button>
+      </div>
     </div>
   </section>
 
@@ -8719,7 +8742,7 @@ function scanLinkNote() {
     if (!box || box.querySelector(".axs-pend")) return;
     var n = document.createElement("p");
     n.className = "ax-meta axs-pend"; n.setAttribute("role", "status"); n.textContent = msg;
-    var at = id === "quick" ? box.querySelector("#qBtn") : box.querySelector(".ax-bottom");
+    var at = box.querySelector(".lf-go");   /* v4.94 두 화면 모두 버튼 묶음 바로 위 */
     if (at && at.parentNode) at.parentNode.insertBefore(n, at);
   });
 }
@@ -15319,47 +15342,83 @@ function lgxDots(cx, P, a, lq) {
   cx.globalAlpha = 1;
 }
 
-/* ── 1막 · 로그인 화면 띠 ── 띠 안 수평선 = 높이의 60% */
+/* ── v4.94 로그인 첫 화면 「B 수면형」 · 대기 모션 시작값 한 곳(261001 · 실기기에서 조정) ──
+   breath = 점 숨쉬기 주기(초) · amp = 지름 ±비율 · ripple = 수면 파문 주기(초 · 두 겹이 반 주기씩) · dMin / dMax = 점 지름 범위(모자라면 점만 숨긴다)
+   gap = 수평선과 입력칸 사이(수면에 비친 점 자리 · 클수록 주황 면이 높아진다) · lineMax = 수평선이 내려갈 수 있는 한계(화면 높이 비율) · fade = 입장 순간 글자 · 입력이 사라지는 시간(초) */
+var LF = { breath: 6, amp: 0.045, ripple: 5.2, dMin: 28, dMax: 72, gap: 30, lineMax: 0.5, fade: 0.2 };
+/* 점 · 수평선 자리 · 헤더 아래 ~ 입력칸 위 빈자리에서 · 점 위 여백 + 출렁임 26 · 수면에 비친 점 자리 gap */
+function lfFit(host, cv) {
+  var cr = cv.getBoundingClientRect(), H = cr.height, hd = host.querySelector(".lf-head"), fm = host.querySelector(".lf-form");
+  if (!H || !hd || !fm) return null;
+  var hb = hd.getBoundingClientRect().bottom - cr.top, ft = fm.getBoundingClientRect().top - cr.top, raw = (ft - hb - LF.gap - 26) / 2;
+  if (raw < LF.dMin) return { line: Math.max(0, Math.min(ft, hb + 6)), D: 24, hide: true };   /* 점 자리가 모자라면 점만 숨기고 수평선(얇은 띠)은 남긴다 */
+  var D = Math.min(LF.dMax, raw), line = Math.max(Math.min(ft - D - LF.gap, H * LF.lineMax), hb + 26 + D);   /* 수평선은 화면 lineMax 까지 · 단 점이 헤더에 닿지 않을 만큼은 내린다 */
+  return { line: line, D: D, hide: false };
+}
+/* 로그인 화면에서 지금 보이는 대기 캔버스(첫 화면 kvCv · 재방문 qCv) · 없으면 null */
+function lfBand() {
+  var ids = ["kvCv", "qCv"];
+  for (var i = 0; i < ids.length; i++) {
+    var c = el(ids[i]), h = c && c.closest ? c.closest(".axs-lf") : null;
+    if (c && c.offsetWidth && h && !h.hidden && !h.classList.contains("gone")) return c;
+  }
+  return null;
+}
+/* ── 1막 · 로그인 화면 ── 띠 안 수평선 = 높이의 60% · v4.94 g.fit(lfFit) 이 있으면 화면 전체 수면형(수평선 · 점 지름 · 숨쉬기 · 파문 LF) */
 function lgxIdleDraw(cx, W, H, r, t, still, g) {
-  var line = r.y + r.h * 0.6, cxm = g.cx;
+  var f = g.fit, line = f ? r.y + f.line : r.y + r.h * 0.6, cxm = g.cx;
   cx.save(); cx.beginPath(); cx.rect(r.x, r.y, r.w, r.h); cx.clip();
   cx.fillStyle = LGX_C.bgW; cx.fillRect(r.x, r.y, r.w, line - r.y);
   cx.fillStyle = LGX_C.bgO; cx.fillRect(r.x, line, r.w, r.y + r.h - line);
   cx.save(); cx.beginPath(); cx.rect(r.x, r.y, r.w, line - r.y); cx.clip(); cx.drawImage(g.gw, 0, 0, W, H); cx.restore();
   cx.save(); cx.beginPath(); cx.rect(r.x, line, r.w, r.y + r.h - line); cx.clip(); cx.drawImage(g.go, 0, 0, W, H);
-  var P = 2.6, ph = still ? 0.5 : (t % P) / P, D = Math.max(20, Math.min(44, r.h * 0.2));
+  var P = f ? LF.ripple : 2.6, ph = still ? 0.5 : (t % P) / P, D = f ? f.D : Math.max(20, Math.min(44, r.h * 0.2));
+  if (f && !still) D *= 1 + LF.amp * Math.sin(t * 6.2832 / LF.breath);   /* 아주 느린 숨쉬기 */
   if (!still) for (var k = 0; k < 2; k++) {   /* 수면 물결 */
     var u = ((t + k * P / 2) % P) / P, rx = D * 0.6 + u * r.w * 0.42;
     cx.globalAlpha = 0.5 * (1 - u); cx.strokeStyle = "#FFFFFF"; cx.lineWidth = 1.5;
     cx.beginPath(); cx.ellipse(cxm, line, rx, rx * 0.11, 0, 0, 3.1416); cx.stroke();
   }
   cx.globalAlpha = 1; cx.restore();
-  var bob = still ? 0 : (0.5 - 0.5 * Math.cos(ph * 6.2832)), y = line - D * 0.5 - 6 - bob * Math.min(14, r.h * 0.08);
-  lgxDot(cx, cxm, y, D, LGX_C.o, 1);
-  lgxDot(cx, cxm, 2 * line - y, D, LGX_C.w, 0.62);   /* 수면에 비친 나 */
+  var bob = still ? 0 : (0.5 - 0.5 * Math.cos(ph * 6.2832)), y = line - D * 0.5 - 6 - bob * Math.min(14, r.h * 0.08), hid = !!(f && f.hide);
+  if (!hid) {
+    lgxDot(cx, cxm, y, D, LGX_C.o, 1);
+    lgxDot(cx, cxm, 2 * line - y, D, LGX_C.w, 0.62);   /* 수면에 비친 나 */
+  }
   cx.restore();
-  return { line: line, x: cxm, y: y, d: D };
+  return { line: line, x: cxm, y: y, d: hid ? 0 : D };   /* 점을 숨긴 화면이면 장면에서 점이 0 에서 자란다 */
 }
 function lgxIdleMount(cv) {
   if (!cv || cv._lgx) return;
-  var st = cv._lgx = { raf: 0, t0: performance.now() }, still = lgxRM();
+  var st = cv._lgx = { raf: 0, t0: performance.now(), hold: 0, fit: null, dirty: 1, drawn: 0 }, still = lgxRM();
+  var host = cv.closest ? cv.closest(".axs-lf") : null;   /* v4.94 로그인 첫 화면 · 재방문 = 화면 전체 캔버스 · 헤더 · 입력칸 크기가 바뀌면(키보드 · 글꼴 · 큰글씨) 자리를 다시 잰다 */
+  if (host && window.ResizeObserver) { try { st.ro = new ResizeObserver(function () { st.dirty = 1; }); st.ro.observe(cv); [".lf-head", ".lf-form"].forEach(function (q) { var n = host.querySelector(q); if (n) st.ro.observe(n); }); } catch (e) { st.ro = null; } }
   setTimeout(function () { try { lgxSym(); lgxSprites(); } catch (e) {} }, 400);   /* 원본 심볼 글자 나누기(점 1,037개 비교)를 로그인 화면에서 미리 · 입장 순간 끊김 방지 */
-  function fr() {
-    if (!cv.isConnected) { cv._lgx = null; return; }
+  function draw() {
     var w = cv.clientWidth, h = cv.clientHeight;
-    if (!w || !h || cv.style.visibility === "hidden") { st.raf = requestAnimationFrame(fr); return; }   /* 2막이 같은 그림을 이어 그리는 동안 쉰다 */
+    if (!w || !h) return 0;
     var dpr = Math.min(2, window.devicePixelRatio || 1), W = Math.floor(w * dpr), H = Math.floor(h * dpr), br = cv.getBoundingClientRect();
     if (cv.width !== W || cv.height !== H || !st.g || st.g.vw !== innerWidth || st.g.vh !== innerHeight) {
       cv.width = W; cv.height = H;
       st.g = { gw: lgxGrid(innerWidth, innerHeight, dpr, false), go: lgxGrid(innerWidth, innerHeight, dpr, true), vw: innerWidth, vh: innerHeight };
     }
+    if (host && (st.dirty || !st.fit || !st.ro)) { st.fit = lfFit(host, cv); st.dirty = 0; }
     var cx = cv.getContext("2d");
     cx.setTransform(dpr, 0, 0, dpr, -br.left * dpr, -br.top * dpr);   /* 뷰포트 좌표로 그린다 · 격자가 2막과 같은 자리 */
     cx.clearRect(br.left, br.top, w, h);
     var fw = Math.min(innerWidth, 480), cxm = (innerWidth - fw) / 2 + fw / 2;
-    st.last = lgxIdleDraw(cx, innerWidth, innerHeight, { x: br.left, y: br.top, w: w, h: h }, (performance.now() - st.t0) / 1000, still, { gw: st.g.gw, go: st.g.go, cx: cxm });
-    if (!still) st.raf = requestAnimationFrame(fr);
+    st.last = lgxIdleDraw(cx, innerWidth, innerHeight, { x: br.left, y: br.top, w: w, h: h }, (performance.now() - st.t0) / 1000, still, { gw: st.g.gw, go: st.g.go, cx: cxm, fit: host ? st.fit : null });
+    st.dw = w; st.dh = h;
+    return 1;
   }
+  function fr() {
+    if (!cv.isConnected) { if (st.ro) st.ro.disconnect(); cv._lgx = null; return; }
+    st.raf = requestAnimationFrame(fr);
+    if (st.hold || cv.style.visibility === "hidden") return;   /* 2막이 같은 그림을 이어 그리는 동안 쉰다(입장 순간 마지막 그림 그대로) */
+    if (still && st.drawn && !st.dirty && st.dw === cv.clientWidth && st.dh === cv.clientHeight) return;   /* 동작 줄이기 · 멈춘 그림 · 크기가 바뀔 때만 다시 */
+    st.drawn = draw();
+  }
+  st.now = function () { if (!st.dirty && st.drawn && st.dw === cv.clientWidth && st.dh === cv.clientHeight) return 1; return draw(); };   /* 입장 순간 · 자리가 바뀌었으면(키보드가 막 닫힘 등) 한 장 더 그려 장면이 이어받을 자리(last)를 맞춘다 · 그대로면 마지막 그림 그대로 */
   st.raf = requestAnimationFrame(fr);
 }
 function lgxIdleAll() { var l = document.querySelectorAll("canvas[data-lgx]"); for (var i = 0; i < l.length; i++) lgxIdleMount(l[i]); }
@@ -15384,12 +15443,25 @@ function lgxPlay(o) {
   document.body.appendChild(d);
   var cv = d.querySelector("canvas"), cur = LGX.cur = { o: o, d: d, cv: cv, rm: rm, mode: o.mode || LGX.mode, srv: o.srv || "wait", t0: performance.now(), raf: 0, skip: 0, stamped: false, lq: false, dts: [], covered: false, sparks: null, closed: false };
   var band = o.band || null;
-  if (band) { var br = band.getBoundingClientRect(); cur.idle = (band._lgx && band._lgx.last) || null; cur.br = { x: br.left, y: br.top, w: br.width, h: br.height }; band.style.visibility = "hidden"; }
+  if (band) {
+    if (band._lgx && band._lgx.now) { try { band._lgx.now(); } catch (e) {} }   /* v4.94 키보드가 닫힌 뒤의 자리로 한 장 더 */
+    var br = band.getBoundingClientRect(); cur.idle = (band._lgx && band._lgx.last) || null; cur.br = { x: br.left, y: br.top, w: br.width, h: br.height };
+    var lfh = band.closest ? band.closest(".axs-lf") : null;
+    if (lfh && o.fade > 0) {   /* v4.94 로그인 첫 화면 = 장면의 첫 프레임 · 점 · 수평선은 제자리 · 글자와 입력만 투명도로 사라지고 장면이 같은 그림 위에 겹쳐 올라온다 */
+      cur.lfh = lfh; d.style.opacity = "0";
+      if (band._lgx) band._lgx.hold = 1;
+    } else band.style.visibility = "hidden";
+  }
   d.querySelector(".lgx-skip").addEventListener("click", function () { lgxSkip(); });
   d.querySelector(".lgx-home").addEventListener("click", function () { lgxClose("home"); });
   /* 다음 행동 카드의 버튼 · 장면을 먼저 닫고 그 버튼이 원래 하던 일(화면 이동)을 그대로 한다 */
   d.querySelector(".lgx-next").addEventListener("click", function (e) { if (e.target.closest && e.target.closest("button")) lgxClose("go"); }, true);
   lgxLayout(cur);
+  if (cur.lfh) {   /* 배치 계산(lgxLayout)이 끝난 뒤에 글자 · 입력을 걷는다(강제 스타일 계산을 한 번 줄인다) */
+    cur.lfh.classList.add("lf-out");
+    try { d.animate([{ opacity: 0 }, { opacity: 1 }], { duration: o.fade * 1000, fill: "forwards" }); } catch (e) {}
+    setTimeout(function () { d.style.opacity = ""; if (!cur.closed) band.style.visibility = "hidden"; }, o.fade * 1000 + 30);
+  }
   if (rm) cur.skip = LGX.T.end;
   cur.raf = requestAnimationFrame(function f(now) { if (cur.closed) return; lgxFrame(cur, now); cur.raf = requestAnimationFrame(f); });
   return cur;
@@ -15468,7 +15540,8 @@ function lgxClose(how) {
   var cur = LGX.cur; if (!cur || cur.closed) return;
   cur.closed = true; cancelAnimationFrame(cur.raf); LGX.cur = null;
   var d = cur.d;
-  if (cur.o.band) cur.o.band.style.visibility = "";
+  if (cur.o.band) { cur.o.band.style.visibility = ""; if (cur.o.band._lgx) cur.o.band._lgx.hold = 0; }
+  if (cur.lfh) cur.lfh.classList.remove("lf-out");
   if (!cur.covered && cur.o.onCover) { cur.covered = true; cur.o.onCover(); }
   d.style.pointerEvents = "none";
   /* 홈을 그린 다음 프레임에 걷는다(같은 프레임에 겹치면 걷힘이 끊긴다) */
@@ -15488,7 +15561,7 @@ function lgxFrame(cur, now) {
   /* 무대 · 띠 → 화면 전체 · 수평선 · to 가 들어오면 수면이 빠져 흰 무대만 남는다 */
   var e0 = lgxEIO(t / T.exp), R = cur.br ? { x: cur.br.x * (1 - e0), y: cur.br.y * (1 - e0), w: cur.br.w + (W - cur.br.w) * e0, h: cur.br.h + (H - cur.br.h) * e0 } : { x: 0, y: 0, w: W, h: H };
   /* v4.90 뒤에서 앱 화면으로 바꾸는 일(홈 그리기)은 장면이 닫힐 때 한 번(lgxClose) · 장면 도중에는 무거운 일을 하지 않는다 */
-  var line0 = cur.br ? cur.br.y + cur.br.h * 0.6 : L.yh, line = t < T.exp ? line0 + (L.yh - line0) * e0 : L.yh;
+  var line0 = cur.br ? (cur.idle && cur.idle.line != null ? cur.idle.line : cur.br.y + cur.br.h * 0.6) : L.yh, line = t < T.exp ? line0 + (L.yh - line0) * e0 : L.yh;   /* v4.94 1막이 그린 수평선에서 시작 */
   if (t >= T.to + 0.55) line = L.yh + (H + 8 - L.yh) * lgxEIO((t - T.to - 0.55) / 0.75);   /* to 가 틈에 들어선 뒤 수면이 천천히 빠진다 */
   cx.save(); cx.beginPath(); cx.rect(R.x, R.y, R.w, R.h); cx.clip();
   cx.globalAlpha = cur.br ? 1 : lgxEO(t / 0.3);
@@ -15770,9 +15843,8 @@ function lgxScanGo(cur) {
 /* 장면 시작 · cover() = 화면을 다 덮은 순간 그 뒤에서 앱으로 바꾼다 · mode = send | ok | test */
 function lgxStart(emp, mode, cover, demo) {
   lgxMark(emp);
-  var sh = lgxSheetHtml(), band = el("kvCv"), ask = lgxAskWanted();
-  if (!band || !band.offsetWidth || el("splash").classList.contains("gone")) band = null;
-  var cur = lgxPlay({ band: band, sheet: (ask ? '<p class="ax-meta lgx-qrnote" style="visibility:hidden">입구와 각 층의 QR을 찍으면 다시 들어와요</p>' : "") + sh.html,
+  var sh = lgxSheetHtml(), band = lfBand(), ask = lgxAskWanted();   /* v4.94 첫 화면(kvCv) 또는 재방문(qCv) */
+  var cur = lgxPlay({ band: band, fade: band ? LF.fade : 0, sheet: (ask ? '<p class="ax-meta lgx-qrnote" style="visibility:hidden">입구와 각 층의 QR을 찍으면 다시 들어와요</p>' : "") + sh.html,
     onCover: cover,
     onSettle: function () {
       if (ask) {   /* 도장 직후 · 질문이 먼저 · 고른 뒤 다음 카드 */
@@ -15936,6 +16008,7 @@ function lgxHasLgShown() { return S.get("stamps", []).indexOf("lg") >= 0; }
     var show = function (m) { qe.textContent = m; qe.style.display = "block"; };
     if (!/^\d{4}$/.test(pin)) { show("비밀번호 4자리를 입력해 주세요."); return; }
     qe.style.display = "none";
+    try { el("quickPin").blur(); } catch (e) {}   /* v4.94 키보드를 먼저 닫는다(서버를 기다리는 동안 · 장면은 키보드 없는 화면에서 시작) */
     btn.disabled = true; btn.textContent = "확인 중…";
     botWait(true, "확인하는 중");   /* v4.18 화면 전체가 멈춰 기다리는 자리 · 챗봇 안테나 전파 */
     var reset = function () { botWait(false); btn.disabled = false; btn.textContent = "입장"; };
@@ -15958,9 +16031,9 @@ function lgxHasLgShown() { return S.get("stamps", []).indexOf("lg") >= 0; }
         S.set("user", { empId: known.empId, name: res.name || known.name, dept: res.dept || "", ses: res.ses || "" });   /* v4.67 참가자 세션 토큰(새 서버만) */
         if (res.dept) S.set("dept", res.dept);
         knownSet({ empId: known.empId, name: res.name || known.name, dept: res.dept || "" });
-        el("quick").hidden = true;
         botWait(false);
-        lgxEnter(res, function () { enterApp(); a2hsAuto(); }, function () { enterNow(true); });   /* v4.87 최초 로그인이면 장면 · 아니면 예전 입장 */
+        /* v4.87 최초 로그인이면 장면 · 아니면 예전 입장 · v4.94 재방문 화면은 장면이 덮은 뒤(또는 예전 입장 직전)에 걷는다(장면이 이 화면의 점에서 시작) */
+        lgxEnter(res, function () { el("quick").hidden = true; enterApp(); a2hsAuto(); }, function () { el("quick").hidden = true; enterNow(true); });
         beSync();   /* v4.57 로그인 직후 내 상태를 곧바로(예전 stats 한 번 대신) */
         visitSend("login");   /* v4.27 같은 방문에 사번을 붙여 한 번 더 · 비로그인 → 로그인 전환 */
       }, function () { reset(); show("서버에 연결할 수 없어요. 네트워크를 확인해주세요."); });
@@ -15971,6 +16044,7 @@ function lgxHasLgShown() { return S.get("stamps", []).indexOf("lg") >= 0; }
     el("qName").textContent = known.name || "";
     el("qEmp").textContent = known.empId;
     el("quick").hidden = false;
+    lgxIdleAll();   /* v4.94 재방문 화면도 첫 화면과 같은 점 · 수평선(qCv) */
     setTimeout(function () { try { el("quickPin").focus(); } catch (e) {} }, 150);
     el("qBtn").addEventListener("click", quickLogin);
     el("quickPin").addEventListener("keydown", function (e) { onEnter(e, quickLogin); });
@@ -15987,7 +16061,7 @@ function lgxHasLgShown() { return S.get("stamps", []).indexOf("lg") >= 0; }
 
   /* 오프라인(서버 미연결)이면 비밀번호 입력을 숨긴다 */
   if (!BE.on) {
-    if (el("userPin")) el("userPin").style.display = "none";
+    if (el("userPin")) el("userPin").parentNode.style.display = "none";   /* v4.94 뜨는 라벨째 */
     if (el("pinNote")) el("pinNote").style.display = "none";
   }
 
@@ -15997,7 +16071,7 @@ function lgxHasLgShown() { return S.get("stamps", []).indexOf("lg") >= 0; }
     var nm = el("userName").value.trim();
     var pin = el("userPin") ? el("userPin").value.trim() : "";
     var err = el("err");
-    var btn = el("entryForm").querySelector("button");
+    var btn = el("entryForm").querySelector("button[type=submit]");
     var show = function (m) { err.textContent = m; err.style.display = "block"; };
     /* 사번 형식은 회사마다 달라 느슨하게 받고, 실제 확인은 서버(명부)가 한다 */
     if (!/^[A-Za-z0-9-]{3,15}$/.test(id)) { show("사번을 확인해주세요."); return; }
@@ -16012,6 +16086,7 @@ function lgxHasLgShown() { return S.get("stamps", []).indexOf("lg") >= 0; }
       return;
     }
     if (!/^\d{4}$/.test(pin)) { show("비밀번호 4자리를 정해 주세요."); return; }
+    try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) {}   /* v4.94 키보드를 먼저 닫는다(장면은 키보드 없는 화면에서 시작) */
 
     btn.disabled = true; btn.textContent = "확인 중…";
     botWait(true, "확인하는 중");
