@@ -782,7 +782,7 @@ function call(action, params, done, fail, again){
   if(!("aemp" in params)&&aemp()) params.aemp=aemp();   /* v4.85 코드(key)는 보내지 않는다 */
   if(!("tok" in params)&&tok()) params.tok=tok();
   for(var k in params) if(params[k]!=null) q.push(encodeURIComponent(k)+"="+encodeURIComponent(params[k]));
-  var timer=setTimeout(function(){ cleanup(); fail&&fail({ok:false,reason:"timeout"}); },15000);
+  var timer=setTimeout(function(){ cleanup(); window[name]=function(){}; fail&&fail({ok:false,reason:"timeout"}); },15000);   /* v4.85 늦게 온 응답이 「함수 아님」 오류를 내지 않게 빈 함수를 남긴다 */
   function cleanup(){ clearTimeout(timer); try{delete window[name];}catch(e){window[name]=undefined;} if(sc.parentNode) sc.parentNode.removeChild(sc); }
   window[name]=function(res){ cleanup(); if(res&&res.moved&&beMoved(res)&&res.reason==="moved"&&!again){ call(action, params, done, fail, 1); return; } if(authGate(res, action)) return; if(lockedGate(res, fail, action)) return; done&&done(res); };
   sc.onerror=function(){ cleanup(); fail&&fail({ok:false,reason:"network"}); };
@@ -2078,6 +2078,13 @@ function dcConn(){
   if(a>5) return ["bad","화면 끊김 · "+Math.round(a)+"초 전 보고"];
   return ["ok","화면 연결됨 · "+Math.round(a)+"초 전"];
 }
+/* v4.85 「섞기 남은」 · 예전에는 섞은 시간(mixing_s)을 보여 「추첨」이 켜진 순간에도 31초였다(럭키드로우 에이전트 261001 발견)
+   화면 draw_scr 의 need_s = 첫 추첨 최소 섞기(minMix)까지 남은 초(0 에서 멈춘다 · 두 번째 추첨부터 0) · need_s 가 없는 옛 화면은 추첨 버튼이 켜졌으면 0초 */
+function dcMixLeft(s){
+  if(!s||s.scene!=="mix") return "-";
+  if(s.need_s!=null&&isFinite(Number(s.need_s))) return Math.max(0,Math.ceil(Number(s.need_s)))+"초";
+  return Array.isArray(s.ready)&&s.ready.indexOf("draw")>=0?"0초":"-";
+}
 function viewDrawRun(d){
   return '<div id="dcRoot">'+dcFill(DC.sig=dcBody(d))+'</div>';
 }
@@ -2092,7 +2099,7 @@ function dcBody(d){
     '<span class="dc-acts"><button class="btn sm" onclick="dcOpenScreen()">추첨 화면 열기</button><button class="btn sm" onclick="dcCopy()">주소 복사</button></span></div>';
   /* 지금 화면 한 줄 · 노트북(1366 × 768)에서 버튼이 접히지 않게 KPI 카드 대신 낮은 칸 다섯 개 */
   var stat='<div class="dc-stat">'+[["지금 화면", s?(DC_SCN[sc]||sc||"-"):"보고 없음"],["체크인", (s?s.checked:(d.in||0))+"명"+(d.closed?" · 마감":"")],["통 안의 공", (s?s.pool:(d.balls||0))+"개"],
-    ["라운드 · 칸", s&&(s.round||s.slot)?(s.round||"-")+(s.slot?" · "+s.slot:""):"-"],["섞기 남은", s&&sc==="mix"&&s.mixing_s?Math.ceil(s.mixing_s)+"초":"-"]].map(function(x){ return '<div><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>'; }).join("")+'</div>';
+    ["라운드 · 칸", s&&(s.round||s.slot)?(s.round||"-")+(s.slot?" · "+s.slot:""):"-"],["섞기 남은", dcMixLeft(s)]].map(function(x){ return '<div><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>'; }).join("")+'</div>';
   var rej=s&&s.rej&&s.rej.seq&&s.rej.seq>DC.rejOff&&(!DC.cmd||s.rej.seq>=DC.cmd.seq-3)?
     '<div class="dc-rej"><b>화면이 「'+esc(DC_NAME[s.rej.cmd]||s.rej.cmd)+'」(#'+s.rej.seq+')를 받지 않았습니다.</b> '+esc(s.rej.why||"이유 없음")+' <button class="btn sm" onclick="dcRejOff('+Number(s.rej.seq)+')">확인</button></div>':"";
   var btn=function(b, cls){ var ok=dcReady(b.c), arm=DC.arm&&DC.arm.c===b.c, busy=DC.busy===b.c;

@@ -128,7 +128,7 @@ function call(action, params, done, fail, again){
   var name="__axr"+(++_cbN), sc=document.createElement("script"), q=[], t0=Date.now();
   params=params||{}; params.action=action; params.callback=name; params._=t0;
   for(var k in params) if(params[k]!=null&&params[k]!=="") q.push(encodeURIComponent(k)+"="+encodeURIComponent(params[k]));
-  var timer=setTimeout(function(){ cleanup(); net(false); fail&&fail({ok:false,reason:"network"}); },12000);
+  var timer=setTimeout(function(){ cleanup(); window[name]=function(){}; net(false); fail&&fail({ok:false,reason:"network"}); },12000);   /* v4.85 늦게 온 응답이 오류를 내지 않게 빈 함수를 남긴다 */
   function cleanup(){ clearTimeout(timer); try{delete window[name];}catch(e){window[name]=undefined;} if(sc.parentNode) sc.parentNode.removeChild(sc); }
   window[name]=function(res){ cleanup(); net(true); var t1=Date.now();
     if(res&&res.moved&&beMoved(res)&&res.reason==="moved"&&!again){ call(action, params, done, fail, 1); return; }
