@@ -3260,7 +3260,7 @@ var STORE_DEVICE = ["vid", "a2hs", "fs", "t",
   "notices", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "wq_srv", "wq_v", "survey_agg", "photo_pub", "resv_conf", "crowd", "stv",
   "ax_line_i", "art_demo_n", "ev_phase", "toff",
   "push_ask", "push_first", "push_ask_ios"];   /* v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) · v4.78 아이폰 탭 · 앱 속 브라우저 안내는 하루 한 번 */
-var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_role", "adm_tok", "dept",
+var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_role", "adm_tok", "adm_emp", "dept",
   "stamps", "pp_seen", "pp_glow3", "stamp_pend", "lg_try", "scan_q", "stair", "checkin", "queue", "photoq", "resv", "sess_my", "att_mine", "att_tm",
   "cchat", "cchat_pref", "cchat_att", "ideas", "idea_draft", "survey_draft", "survey_done", "survey_mine", "survey_force", "noti_seen",
   "raffle_seen", "raffle_opened", "raffle_nums", "roulette_used", "roulette_open", "draw_winner",
@@ -3590,7 +3590,7 @@ function modalOpen(html, title) {
   el("frame").appendChild(d);
 }
 function modalClose() {
-  STAFFK = "";   /* 담당자 코드를 화면과 함께 버린다 */ var m = el("modal"); if (m) m.remove();
+  STAFFK = ""; STAFFE = ""; STAFFT = "";   /* 담당자 코드 · 사번 · 토큰을 화면과 함께 버린다 */ var m = el("modal"); if (m) m.remove();
   if (typeof QRM !== "undefined" && QRM.timer) { qrMineOff(); QRM.msg = ""; }   /* v4.06 내 QR 동기화(v4.71 6초)는 패널이 열려 있는 동안만 */
   if (NOTICE.cur) NOTICE.cur = null;   /* v3.53 팝업이든 다른 모달이든 닫히면 다음 팝업 */
   if (NOTICE.q.length) { clearTimeout(NOTICE.t); NOTICE.t = setTimeout(noticePump, 250); }
@@ -6986,8 +6986,10 @@ var Views = {
        실계정도 그 버튼으로 p2 가 서버에 적립됐다(QR · 적립 시간 우회 · QA 실측). 시연 버튼은 테스트 모드(데모 · 310555)에만 · 실계정은 체험 QR 스캔으로만.
        모양은 체험 안내(E02)와 같은 AX-TDS 카드 · 단계 목록 · 하단 고정 버튼 하나 */
     var got2 = S.get("stamps", []).indexOf("p2") >= 0;
+    /* v4.86 (261001 사용자 확정) 오픈 날짜 칩은 날짜가 확인될 때까지 비운다 · 확인되면 여기에만 적는다(예 "11.1 OPEN") · 빈 값 = 칩 없음 */
+    var OPEN = { hidiq: "", helper: "" };
     var booth = function (nm, open, sub, steps, note) {
-      return '<section class="ax-card ax-stack-tight axs-gap12"><div class="ax-row"><h2 class="ax-section-title">' + nm + '</h2><span class="axs-chip">' + open + "</span></div>" +
+      return '<section class="ax-card ax-stack-tight axs-gap12"><div class="ax-row"><h2 class="ax-section-title">' + nm + "</h2>" + (open ? '<span class="axs-chip">' + open + "</span>" : "") + "</div>" +
         '<p class="ax-description">' + sub + "</p>" +
         '<ol class="axs-steps">' + steps.map(function (x, k) { return '<li><span class="axs-no">0' + (k + 1) + '</span><span class="axs-tx"><b class="ax-type-t5-strong">' + x + "</b></span></li>"; }).join("") + "</ol>" +
         (note ? '<p class="ax-meta">' + note + "</p>" : "") + "</section>";
@@ -6996,8 +6998,8 @@ var Views = {
     return '<div class="ax-stack">' +
       '<div class="axs-chiprow"><span class="axs-chip">1F AX PLAY · 2종</span>' + (got2 ? '<span class="axs-chip ok">적립 완료</span>' : "") + "</div>" +
       '<div class="ax-stack-tight"><h1 class="ax-title">HiDI-Q · Hi-Helper<br>직접 써 보기</h1><p class="ax-description">1곳 체험 = 스탬프 1개 · 체험 후 스태프가 내 QR 스캔</p></div>' +
-      booth("HiDI-Q", "11.1 OPEN", "문서를 올리고 질문하는 대화형 AI", ["문서 올리기", "질문하고 답 받기", "스태프에게 내 QR 보여주기"], "체험이 끝나면 올린 자료는 지워져요") +
-      booth("Hi-Helper (하이헬퍼)", "10.1 OPEN", "보험 설계를 1분 안에 추천하는 AI", ["피보험자 동의", "추천 방식 고르기", "스태프에게 내 QR 보여주기"], "") +
+      booth("HiDI-Q", OPEN.hidiq, "문서를 올리고 질문하는 대화형 AI", ["문서 올리기", "질문하고 답 받기", "스태프에게 내 QR 보여주기"], "체험이 끝나면 올린 자료는 지워져요") +
+      booth("Hi-Helper (하이헬퍼)", OPEN.helper, "보험 설계를 1분 안에 추천하는 AI", ["피보험자 동의", "추천 방식 고르기", "스태프에게 내 QR 보여주기"], "") +
       (testMode() && !got2 ? '<button type="button" class="ax-button ax-button-weak" onclick="boothStamp()">완료 처리 (시연 · 테스트 모드)</button>' : "") +
       "</div>" + ax2Btn(got2 ? "스탬프 확인하기" : "내 QR 보여주기", got2 ? "expStamp('p2')" : "qrPanelOpen('mine')");
   },
@@ -7365,7 +7367,7 @@ function crowdSend(t, a) {
   if (!BE.on) { toast("서버에 연결되지 않아 기록되지 않아요"); return; }
   if (CRW.busy) return;
   CRW.busy = t; App.render();
-  beCall({ action: "crowd_set", key: admKey(), tok: admTok(), tgt: t, act: a }, function (res) {
+  beCall(admA({ action: "crowd_set", tgt: t, act: a }), function (res) {
     CRW.busy = "";
     if (res && res.reason === "auth") { admAuthLost(); return; }
     if (!res || !res.ok) {
@@ -7412,7 +7414,7 @@ function rosterLoad() {
   var p = rosterProg();
   if (!BE.on || ROSTER.loading === p) return;
   ROSTER.loading = p;
-  beCall({ action: "staff_roster", key: admKey(), tok: admTok(), prog: p }, function (res) {
+  beCall(admA({ action: "staff_roster", prog: p }), function (res) {
     ROSTER.loading = "";
     if (res && res.reason === "auth") { ROSTER.data = {}; admAuthLost(); return; }   /* v4.65 */
     if (res && res.ok) ROSTER.data[p] = res;
@@ -7429,7 +7431,7 @@ function rosterMark(emp, mark) {
   var p = rosterProg();
   if (!BE.on || ROSTER.busy) return;
   ROSTER.busy = emp; App.render();
-  beCall({ action: "staff_mark", key: admKey(), tok: admTok(), prog: p, emp: emp, mark: mark }, function (res) {
+  beCall(admA({ action: "staff_mark", prog: p, emp: emp, mark: mark }), function (res) {
     ROSTER.busy = "";
     if (res && res.reason === "auth") { ROSTER.data = {}; admAuthLost(); return; }   /* v4.65 */
     if (res && res.ok) toast((res.name || emp) + " · " + (mark === "in" ? (res.dup ? "이미 입장 처리됐어요" : "입장 처리했어요") : mark === "noshow" ? "노쇼로 표시했어요" : "노쇼 표시를 풀었어요"));
@@ -7724,7 +7726,7 @@ function wsOpen(role, u) {
   WS.ws = ws; WS.st = "open"; WS.okAt = 0;
   ws.onopen = function () {
     if (WS.ws !== ws) return;
-    var hi = role === "tv" ? { t: "hello", v: "v4.76" } : role === "ops" ? { t: "hello", tok: admTok(), key: admTok() ? "" : admKey(), d: WS.dev, v: "v4.76" } : { t: "hello", emp: WS.emp, ses: WS.ses, d: WS.dev, v: "v4.76" };
+    var hi = role === "tv" ? { t: "hello", v: "v4.76" } : role === "ops" ? { t: "hello", tok: admTok(), key: admTok() ? "" : admKey(), d: WS.dev, v: "v4.76", emp: admEmp() } : { t: "hello", emp: WS.emp, ses: WS.ses, d: WS.dev, v: "v4.76" };
     try { ws.send(JSON.stringify(hi)); } catch (e) {}
   };
   ws.onmessage = function (e) {
@@ -7830,28 +7832,48 @@ function admKey() { return S.get("adm_key", ""); }
 function admRole() { return S.get("adm_role", ""); }
 /* v4.65 (QA 2단계 260930) 스태프 토큰 · 새 서버가 코드를 맞힌 기기에 준다(admin_check tok) · 함께 보내면 틀린 코드 잠금(같은 와이파이)에 막히지 않는다 · 옛 서버는 주지 않아 빈 값 */
 function admTok() { return S.get("adm_tok", ""); }
-function admLock() { S.set("adm_key", ""); S.set("adm_role", ""); S.set("adm_tok", ""); S.set("admin_authed", false); App.render(); }
+/* v4.86 (261001 · 서버 v4.85 관리자 명단) 스태프 사번 · 로그인한 폰에서 관리자 모드를 열면 admin_check 에 사번(aemp) · 명단 구분(asc a) · 참가자 세션(ases)을 같이 보낸다
+   새 서버가 사번(emp)과 사람 토큰을 돌려주면 adm_emp 로 두고 관리 요청(admA) · 소켓 hello 에 싣는다 · 명단에서 빠지면 그 토큰이 곧바로 auth(admAuthLost)
+   옛 서버(명단 없음)는 emp 를 주지 않아 adm_emp 가 비고 예전처럼 코드 · 기기 토큰만 · 명단을 아직 저장하지 않은 서버는 코드만 맞으면 들어온다(서버 admIn_ 이행) */
+function admEmp() { return S.get("adm_emp", ""); }
+/* 관리 요청 인증 한 곳 · 토큰이 있으면 코드는 보내지 않는다(코드가 바뀐 뒤 옛 코드로 틀린 횟수가 쌓이지 않게) · 토큰이 없으면(옛 서버) 코드 · 사번이 있으면 aemp */
+function admA(o) {
+  var t = admTok(), e = admEmp();
+  o.tok = t;
+  if (!t) o.key = admKey();
+  if (e) { o.aemp = e; if (!t) o.asc = "a"; }
+  return o;
+}
+function admLock() { S.set("adm_key", ""); S.set("adm_role", ""); S.set("adm_tok", ""); S.set("adm_emp", ""); S.set("admin_authed", false); App.render(); }
 /* v4.65 서버 잠금(reason locked · 이 연결에서 코드를 30번 틀림 · 10분) 문구 · retry = 남은 초 */
 function admLockedMsg(r) { var m = Math.max(1, Math.ceil(Number((r && r.retry) || 600) / 60)); return "코드를 여러 번 틀려 이 연결이 잠겼어요 · " + m + "분 뒤 다시 · 급하면 모바일 데이터로 바꿔 주세요"; }
 /* v4.65 저장해 둔 코드가 더는 맞지 않는다(코드를 바꿈) · 같은 코드로 계속 보내면 틀린 횟수가 쌓여 이 연결이 잠기므로 지우고 다시 받는다 */
-function admAuthLost() { admLock(); toast("관리코드가 바뀌었어요 · 다시 입력해 주세요"); }
+/* v4.86 사번으로 들어온 폰은 명단에서 빠져도 auth 다(서버가 둘을 가르지 않는다) */
+function admLostMsg() { return admEmp() ? "코드가 바뀌었거나 명단에서 빠졌어요" : "관리코드가 바뀌었어요"; }
+function admAuthLost() { var m = admLostMsg(); admLock(); toast(m + " · 다시 입력해 주세요"); }
 /* keep=false 면 코드를 이 기기에 남기지 않는다.
    담당자 적립은 **참가자 폰**에서 도는 화면이라, 여기서 관리코드를 저장하면
-   그 참가자 기기에 코드가 영구히 남는다(260830 발견 · cd92d8c에서 들어간 회귀). */
-function admVerify(v, done, keep) {
+   그 참가자 기기에 코드가 영구히 남는다(260830 발견 · cd92d8c에서 들어간 회귀).
+   v4.86 staffEmp = 담당자 적립에서 스태프가 친 사번(참가자 세션은 싣지 않는다 · 그 폰의 로그인은 참가자 것) · done(역할, 코드, 응답) */
+function admVerify(v, done, keep, staffEmp) {
   v = String(v || "").trim();
   if (!v) { toast("코드를 입력해 주세요"); return; }
   /* 서버가 판정하므로 서버 없이는 열 수 없다. 로컬 비교로 되돌리면 상수가 되살아난다. */
   if (!BE.on) { toast("서버에 연결되지 않아 관리자 모드를 열 수 없습니다."); return; }
-  beCall({ action: "admin_check", key: v }, function (res) {
+  var u = S.get("user", {}) || {}, q = { action: "admin_check", key: v };
+  if (keep === false) { if (staffEmp) { q.aemp = String(staffEmp); q.asc = "a"; } }
+  else if (u.empId) { q.aemp = String(u.empId); q.asc = "a"; if (u.ses) q.ases = String(u.ses); }   /* v4.86 로그인 안 한 폰은 예전처럼 코드만(기기) */
+  beCall(q, function (res) {
     if (res && res.ok) {
       if (keep !== false) {
         S.set("adm_key", v);
         S.set("adm_role", res.role || "admin");
         S.set("adm_tok", res.tok || "");   /* v4.65 */
+        S.set("adm_emp", res.emp && res.tok ? String(res.emp) : "");   /* v4.86 새 서버만 · 옛 서버는 빈 값(예전 방식) */
       }
-      done(res.role || "admin", v);
-    } else toast(res && res.reason === "locked" ? admLockedMsg(res) : "코드가 올바르지 않습니다.");   /* v4.65 잠금은 틀린 코드와 다르게 */
+      done(res.role || "admin", v, res);
+    } else if (res && res.reason === "ses") { SES.need = true; toast("로그인 확인이 필요해요 · 비밀번호를 넣은 뒤 다시 확인해 주세요"); setTimeout(sesAsk, 300); }   /* v4.86 이 폰의 로그인 토큰이 그 사번 것이 아님 · 지남 */
+    else toast(res && res.reason === "locked" ? admLockedMsg(res) : q.aemp ? "명단에 없는 사번이거나 코드가 맞지 않아요" : "코드가 올바르지 않습니다.");   /* v4.65 잠금은 틀린 코드와 다르게 */
   }, function () { toast("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요."); });
 }
 
@@ -9360,7 +9382,7 @@ function zgSend(zone, grade) {
   if (!BE.on) { toast("서버가 연결되지 않아 기록되지 않습니다"); return; }
   if (ZG.busy) return;
   ZG.busy = zone; App.render();
-  beCall({ action: "zone_grade", key: admKey(), tok: admTok(), zone: zone, grade: grade }, function (res) {
+  beCall(admA({ action: "zone_grade", zone: zone, grade: grade }), function (res) {
     ZG.busy = "";
     if (res && res.reason === "auth") { admAuthLost(); return; }   /* v4.65 */
     if (!res || !res.ok) {
@@ -9426,7 +9448,7 @@ function scanHit(raw) {
   if (!sp) return;
   if (!BE.on) { scanLog(emp, "서버 미연결 · 기록되지 않음", false); scanShow("bad", emp, "기록되지 않았어요", "서버에 연결되지 않았어요"); return; }
   if (sp.kind === "roulette" && S.get("roulette_out", false)) { scanLog(emp, "룰렛 소진 · 차감하지 않았어요", false); scanShow("bad", emp, "룰렛 소진", "차감하지 않았어요"); beSync(); return; }   /* v4.65 옛 서버는 소진이어도 차감한다 · 운영자가 방금 풀었을 수 있으니 곧바로 한 번 새로 받는다(다음 스캔부터 반영) */
-  var params = { key: admKey(), tok: admTok(), emp: emp, qr: String(raw).trim() };   /* v4.67 찍은 글자 그대로 · 서버가 서명 · 시간을 본다(콘솔 · 담당자 적립은 qr 없음) */
+  var params = admA({ emp: emp, qr: String(raw).trim() });   /* v4.67 찍은 글자 그대로 · 서버가 서명 · 시간을 본다(콘솔 · 담당자 적립은 qr 없음) */
   if (sp.kind === "sess") { params.action = "sess_in"; params.sess = sp.id; }
   else if (sp.kind === "roster") { params.action = "staff_mark"; params.prog = sp.id; params.mark = "in"; }
   else if (sp.kind === "photo") params.action = "photo_enter";
@@ -9448,7 +9470,7 @@ function scanDone(emp, sp, res) {
       SCAN.last = "";                       /* 같은 QR을 곧바로 다시 찍을 수 있게 중복 가드 해제 */
       return;
     }
-    if (why === "auth") { scanLog(emp, "관리코드가 바뀌었어요 · 다시 입력해 주세요", false, true); scanShow("bad", emp, "관리코드가 바뀌었어요", "다시 입력해 주세요"); admAuthLost(); return; }   /* v4.65 */
+    if (why === "auth") { var lm = admLostMsg(); scanLog(emp, lm + " · 다시 입력해 주세요", false, true); scanShow("bad", emp, lm, "다시 입력해 주세요"); admAuthLost(); return; }   /* v4.65 */
     var nm = res && res.name && (sp.kind !== "stamp" || /^qr/.test(why || "")) ? res.name + " · " : "";   /* stamp_grant 의 name 은 스탬프 이름 · QR 거절의 name 은 참가자 이름 */
     var msg = why === "locked" ? admLockedMsg(res) :
       why === "qrexp" ? "지난 QR이에요 · 참가자 폰에서 내 QR을 다시 열어 주세요" :   /* v4.67 캡처 · 시계가 크게 틀린 폰 */
@@ -9524,20 +9546,26 @@ function staffStampOpen() {
       "<span>" + s.title + "</span>" +
       '<span style="font-weight:800;color:' + (done ? "var(--faint)" : "var(--acc2)") + '">' + (done ? "적립 완료" : lnkChev("적립")) + "</span></button>";
   }).join("");
-  modalOpen('<p class="muted" style="font-size:calc(13.5px * var(--fs))">QR이 인식되지 않을 때 쓰는 우회 경로입니다. 참가자분은 담당자에게 화면을 보여주시고, <b style="color:var(--hi)">담당자가 확인 후 부여</b>합니다. 코드는 이 기기에 저장되지 않습니다.</p>' +
+  modalOpen('<p class="muted" style="font-size:calc(13.5px * var(--fs))">QR이 인식되지 않을 때 쓰는 우회 경로입니다. 참가자분은 담당자에게 화면을 보여주시고, <b style="color:var(--hi)">담당자가 확인 후 부여</b>합니다. 사번과 코드는 이 기기에 저장되지 않습니다.</p>' +
     '<div id="staffBox" style="margin-top:12px">' +
-    '<input id="staffCode" class="input" inputmode="numeric" pattern="[0-9]*" enterkeyhint="go" autocomplete="off" placeholder="담당자 코드" style="text-align:center" onkeydown="onEnter(event, staffStampAuth)">' +
+    '<input id="staffEmp" class="input" inputmode="numeric" pattern="[0-9]*" enterkeyhint="next" autocomplete="off" placeholder="담당자 사번" style="text-align:center" oninput="numOnly(this, event)" data-imeend="num">' +
+    '<input id="staffCode" class="input" inputmode="numeric" pattern="[0-9]*" enterkeyhint="go" autocomplete="off" placeholder="담당자 코드" style="margin-top:8px;text-align:center" onkeydown="onEnter(event, staffStampAuth)">' +
     '<button class="btn mint" style="margin-top:9px" onclick="staffStampAuth()">확인</button></div>' +
     '<div id="staffList" hidden>' + rows + "</div>", "담당자 적립");
 }
 /* v4.25 담당자 코드 확인 · e31eb79(260830)에서 주석 교체와 함께 지워져 「확인」이 ReferenceError 로 멈춰 있었다.
-   keep=false = 코드를 이 참가자 폰에 저장하지 않는다(admVerify 주석) · 코드는 STAFFK 메모리에만 */
+   keep=false = 코드를 이 참가자 폰에 저장하지 않는다(admVerify 주석) · 코드는 STAFFK 메모리에만
+   v4.86 스태프 사번 칸 · 새 서버는 사번 명단(앱)으로 확인하고 사람 토큰을 준다(STAFFT · 메모리에만) · 적립은 그 토큰 + 사번(aemp) · 옛 서버는 코드 그대로 */
+var STAFFE = "", STAFFT = "";
 function staffStampAuth() {
-  admVerify(el("staffCode").value, function (role, key) {
+  var se = String((el("staffEmp") || {}).value || "").trim().toUpperCase();
+  if (!se) { toast("담당자 사번을 입력해 주세요"); return; }
+  admVerify(el("staffCode").value, function (role, key, res) {
     STAFFK = key;
+    STAFFE = res && res.emp && res.tok ? String(res.emp) : ""; STAFFT = STAFFE ? String(res.tok) : "";
     if (el("staffBox")) el("staffBox").hidden = true;
     if (el("staffList")) el("staffList").hidden = false;
-  }, false);
+  }, false, se);
 }
 /* 담당자 적립 · 코드를 거치지 않고 담당자 권한으로 부여한다.
    코드를 참가자 폰에 내려보내면 그 참가자가 부스 코드를 다 갖게 되므로 stamp_grant 를 쓴다.
@@ -9546,12 +9574,14 @@ function staffStampGive(id) {
   if (!BE.on) { toast("서버에 연결되지 않아 적립할 수 없습니다."); return; }
   if (!STAFFK) { toast("담당자 코드를 다시 입력해주세요."); return; }
   var u = S.get("user", {}) || {};
-  var key = STAFFK;
+  var key = STAFFK, se = STAFFE, st = STAFFT;
   modalClose();                       /* STAFFK 는 여기서 비워지므로 위에서 미리 복사해 둔다 */
-  beCall({ action: "stamp_grant", key: key, emp: u.empId || "", id: id },
+  var q = { action: "stamp_grant", emp: u.empId || "", id: id };
+  if (se && st) { q.tok = st; q.aemp = se; } else q.key = key;   /* v4.86 사람 토큰이 있으면 코드는 보내지 않는다 */
+  beCall(q,
     function (res) {
       if (!res || !res.ok) {
-        toast(res && res.reason === "auth" ? "담당자 코드가 올바르지 않습니다." :
+        toast(res && res.reason === "auth" ? (se ? "명단에 없는 사번이거나 코드가 맞지 않아요" : "담당자 코드가 올바르지 않습니다.") :
           res && res.reason === "noid" ? "담당자가 부여할 수 없는 스탬프입니다." : "적립하지 못했습니다.");
         return;
       }
@@ -10452,7 +10482,7 @@ function olyAwardPull(force) {
   if (!BE.on) return;   /* v4.16 서버 없는 로컬 미리보기 · 가짜 예시 이름 대신 빈 상태("불러오는 중") */
   if (!force && Date.now() - OLYAW.t < 20000) return;
   OLYAW.t = Date.now();
-  beCall({ action: "oly_result", key: admKey(), tok: admTok() }, function (r) {
+  beCall(admA({ action: "oly_result" }), function (r) {
     if (r && r.ok) { OLYAW.data = r; if (App.current === "type_award") App.render(); }
     else toast(r && r.reason === "auth" ? "관리자 모드에서 코드를 먼저 입력해 주세요" : r && r.reason === "locked" ? admLockedMsg(r) : "결과를 불러오지 못했습니다");   /* v4.65 이 화면은 앱 관리자 모드 코드를 쓴다(콘솔 아님) · 토큰 · 잠금 문구 */
   }, function () { toast("서버 응답 없음"); });
@@ -10491,7 +10521,7 @@ function tyAwardPull(force) {
   if (!BE.on) return;   /* v4.16 서버 없는 로컬 미리보기 · 가짜 예시 이름 대신 빈 상태("불러오는 중") */
   if (!force && Date.now() - TYAW.t < 20000) return;
   TYAW.t = Date.now();
-  beCall({ action: "type_result", key: admKey(), tok: admTok() }, function (r) {
+  beCall(admA({ action: "type_result" }), function (r) {
     if (r && r.ok) { TYAW.data = r; if (App.current === "type_award") App.render(); }
     else toast(r && r.reason === "auth" ? "관리자 모드에서 코드를 먼저 입력해 주세요" : r && r.reason === "locked" ? admLockedMsg(r) : "결과를 불러오지 못했습니다");   /* v4.65 */
   }, function () { toast("서버 응답 없음"); });
