@@ -633,17 +633,32 @@ var ART_ON = false;
 if(!ART_ON) TABS = TABS.filter(function(t){ return t.id!=="art"; });
 /* 앱 STAMPS 와 맞춘다 · v3.33 8칸(계단 st · 설문 sv 추가), v4.58 개수는 6개가 한도(8칸 중 아무거나 6개). 번호는 콘솔 표 머리용 약칭일 뿐 앱에는 없다.
    폐기된 ID 는 옛 로그에 남아 있을 수 있어 표기만 한다(서버 stamp_people 는 old 로 따로 준다). */
-var STAMP_META = {
-  p1:{ no:"01", n:"1F 전시" }, p2:{ no:"02", n:"부스 체험" }, p3:{ no:"03", n:"프로그램 참여" },
+var STAMP_META_V1 = {
+  p1:{ no:"01", n:"1F 전시" }, p2:{ no:"02", n:"AX PLAY" }, p3:{ no:"03", n:"프로그램 참여" },
   p4:{ no:"04", n:"미니게임" }, p5:{ no:"05", n:"아이디어" }, p7:{ no:"06", n:"QR 퀴즈" },
   st:{ no:"07", n:"계단 이용" }, sv:{ no:"08", n:"오늘 한 판 설문" },
   p6:{ no:"", n:"포토부스", old:1 }, p8:{ no:"", n:"미니게임", old:1 }, p9:{ no:"", n:"계단(구)", old:1 }
 };
-var STAMP_ORDER = ["p1","p2","p3","p4","p5","p7","st","sv"];
+/* v4.83 (261001 사용자 확정 · 앱 개편 1묶음) 새 8종 · 번호 = 앱 · 서버 STAMP_IDS 순서 · 옛 p1(1F 전시) · p7(QR 퀴즈) 기록은 「폐기된 옛 항목」으로만(개수에 안 들어감) */
+var STAMP_META_V2 = {
+  lg:{ no:"01", n:"최초 로그인" }, qz:{ no:"02", n:"AX 퀴즈" }, p4:{ no:"03", n:"미니 게임" }, p2:{ no:"04", n:"AX PLAY" },
+  p5:{ no:"05", n:"아이디어" }, p3:{ no:"06", n:"프로그램 참여" }, st:{ no:"07", n:"계단 이용" }, sv:{ no:"08", n:"오늘 한 판 설문" },
+  p1:{ no:"", n:"1F 전시", old:1 }, p7:{ no:"", n:"QR 퀴즈", old:1 },
+  p6:{ no:"", n:"포토부스", old:1 }, p8:{ no:"", n:"미니게임", old:1 }, p9:{ no:"", n:"계단(구)", old:1 }
+};
+var STAMP_ORDER_V1 = ["p1","p2","p3","p4","p5","p7","st","sv"], STAMP_ORDER_V2 = ["lg","qz","p4","p2","p5","p3","st","sv"];
+var STAMP_META = STAMP_META_V2, STAMP_ORDER = STAMP_ORDER_V2;
 /* v3.95 담당자 부여 = 현장 QR 3종 + 계단 · 앱 자동 3종(04·05·06)과 설문(08)은 앱 안의 행동이라 부여하지 않는다.
    v3.95b 담당자 취소 범위는 서버가 정한다(설정 「스탬프취소_범위」 전체 = 8종 · 현장 = 4종) · stamp_people.revokeIds 를 따르고, 못 받았으면 8종으로 본다(서버가 다시 판정한다). */
-var GRANT_IDS = ["p1","p2","p3","st"];
+var GRANT_IDS = ["p2","p3","st"];
 function revokeIds(){ var d=ST.data.stamp||{}; return d.revokeIds||STAMP_ORDER; }
+/* v4.83 서버가 칸 순서(ids) · 담당자 부여 목록(grantIds)을 주면 새 8종 · stamp_people 를 받았는데 ids 가 없으면 옛 서버(옛 8종) · 아직 안 받았으면 새 8종 · render 마다 맞춘다 */
+function stSync(){
+  var d=ST.data.stamp||{}, old=d.ok&&!d.ids;
+  STAMP_META=old?STAMP_META_V1:STAMP_META_V2;
+  STAMP_ORDER=old?STAMP_ORDER_V1:(d.ids||STAMP_ORDER_V2);
+  GRANT_IDS=old?["p1","p2","p3","st"]:(d.grantIds||["p2","p3","st"]);
+}
 /* 백엔드 SESS_META · SESS_CAP 과 같은 id */
 var SESS_NAME = {
   /* v4.26 (260924) 17F 네 프로그램은 전부 자유 참석 · 신청이 없다 · 이름은 옛 신청 기록 표시용으로만 남긴다 · 출석은 17F 출석 메뉴 */
@@ -980,6 +995,7 @@ function applyOvr(){
 
 /* 값을 고칠 때 있던 자리를 지킨다. 화면을 통째로 다시 그리므로 스크롤·포커스를 직접 되돌린다. */
 function render(){
+  stSync();   /* v4.83 스탬프 칸 체계(새 8종 · 옛 서버면 옛 8종) */
   var v=el("view"), top=window.scrollY, ae=document.activeElement, fIdx=-1, selS=null, selE=null;
   if(ae&&v.contains(ae)&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName)){ var fl=v.querySelectorAll("input,select,textarea"); for(var i=0;i<fl.length;i++) if(fl[i]===ae){fIdx=i;break;} try{ selS=ae.selectionStart; selE=ae.selectionEnd; }catch(e){} }
   var h="";
@@ -2244,8 +2260,8 @@ function gstCard(g){
     '<tbody id="gtb_'+g+'">'+gstRowsHtml(g)+'</tbody></table></div>', '<button class="btn sm" onclick="gstCsv(\''+g+'\')">CSV</button>');
 }
 function olyAllHtml(){
-  var d=ST.data.gstats||{}, O=d.oly, ev=d.events||OLY_EV;
-  if(!O) return card("AX 올림픽 · 전원 명단","",'<p class="cap">불러오는 중</p>');
+  var d=ST.data.gstats||{}, O=d.oly, ev=d.oev||d.events||OLY_EV, nm=d.oev?"미니 게임":"AX 올림픽";   /* v4.83 종합 = 미니 게임 세 종목(oev) · AX 퀴즈는 종목별 통계 카드에만 */
+  if(!O) return card(nm+" · 전원 명단","",'<p class="cap">불러오는 중</p>');
   var q=(GQ.oly||"").trim().toLowerCase(), max=d.max||12000, step=d.distStep||(max/8);
   var rows=O.rows.filter(function(r){ return gstMatch(r,q); });
   var bars=(O.dist||[]).map(function(n,i){ var hi=i===(O.dist.length-1)?max:(i+1)*step-1; return tag(n0(i*step)+'~'+n0(hi)+'점 '+n+'명',n?"":"off"); }).join(" ");
@@ -2254,7 +2270,7 @@ function olyAllHtml(){
       ev.map(function(g){ return '<td class="n tdr">'+(r.ev[g]?n0(r.ev[g].best)+"점":'<span class="cap">-</span>')+'</td>'; }).join("")+
       '<td class="n tdr"><b>'+n0(r.total)+'점</b></td><td class="n tdr">'+r.done+' / '+ev.length+'</td></tr>';
   }).join(""):emptyRow(6+ev.length, O.rows.length?"검색 결과가 없습니다.":"아직 기록이 없습니다.");
-  return card("AX 올림픽 · 전원 명단", '참여 '+O.players+'명 · '+ev.length+'종목 완료 '+O.finishers+'명 · 만점 '+n0(max)+'점 (종목 상한 '+n0(d.cap||3000)+' × '+ev.length+')',
+  return card(nm+" · 전원 명단", '참여 '+O.players+'명 · '+ev.length+'종목 완료 '+O.finishers+'명 · 만점 '+n0(max)+'점 (종목 상한 '+n0(d.cap||3000)+' × '+ev.length+')'+(d.qstat?' · AX 퀴즈(순위 없음) 참여 '+d.qstat.players+'명 · 2종 완주 '+d.qstat.finishers+'명':''),
     '<div class="row" style="gap:6px;margin-bottom:12px"><span class="cap">총점 분포 · '+n0(step)+'점 구간</span> '+bars+'</div>'+
     '<div class="toolbar"><input class="in" placeholder="닉네임 · 이름 · 사번 검색" value="'+esc(GQ.oly||"")+'" oninput="GQ.oly=this.value; render()">'+
     '<span class="cnt"><b>'+rows.length+'</b> / '+O.rows.length+'명</span></div>'+
@@ -2271,7 +2287,7 @@ function viewGameStats(){
 function viewOly(){
   var d=ST.data.olyr||{};
   if(!d.ok||!d.rule) return card("AX 올림픽","",'<p class="cap">'+(d.reason?"불러오지 못했습니다 · "+esc(d.reason):"불러오는 중")+'</p>');
-  var ev=d.events||OLY_EV, S=d.rule, lk=!!d.locked, D=olyDraft(), R=D.rule, dirty=olyDiff(S,R);
+  var ev=d.events||OLY_EV, S=d.rule, lk=!!d.locked, D=olyDraft(), R=D.rule, dirty=olyDiff(S,R), oev=d.oev||ev, onm=d.oev?"미니 게임 세 종목":"다섯 종목";   /* v4.83 계수 편집 = 다섯 종목 그대로 · 종합 · 시상 = oev(미니 게임 세 종목) */
   var stale=OLYD&&OLYD.rev!==S.rev;
   var fld=function(i){ var f=OLY_F[i], e=D.err[i];
     return '<label class="fld olyfl"><span>'+esc(f.n)+(f.u?' <span class="cap">('+esc(f.u)+')</span>':'')+'</span>'+
@@ -2282,7 +2298,7 @@ function viewOly(){
     '<button class="btn sm'+(lk?"":" danger")+'" onclick="olyLock('+(lk?0:1)+')">'+(lk?"잠금 해제":"당일 잠금 켜기")+'</button></div>';
   var body=(lk?'<div class="err-banner" style="color:var(--navy);background:var(--navy05);border-color:var(--navy1)">잠겨 있어 계수를 바꿀 수 없습니다. 고치려면 먼저 <b>잠금 해제</b>를 누릅니다.</div>':'')+
     (stale?'<div class="err-banner">고치는 사이에 다른 곳에서 규칙이 저장되었습니다(rev '+S.rev+'). <b>변경 취소</b>를 누른 뒤 다시 고쳐 주세요.</div>':'')+
-    '<div class="olyev"><div class="olyh"><b>공통</b><span class="cap">종합 만점 = '+ev.length+' × 상한 = '+(D.err[0]?"-":n0(ev.length*R.cap))+'점</span></div><div class="olyf">'+idx("").map(fld).join("")+'</div></div>'+
+    '<div class="olyev"><div class="olyh"><b>공통</b><span class="cap">종합 만점 = '+oev.length+' × 상한 = '+(D.err[0]?"-":n0(oev.length*R.cap))+'점</span></div><div class="olyf">'+idx("").map(fld).join("")+'</div></div>'+
     ev.map(function(g){
       return '<div class="olyev"><div class="olyh"><b>'+esc(GST_NAME[g])+'</b><span class="cap">'+esc(olyRuleLine(g,R))+'</span></div>'+
         olyFieldsHtml(idx(g),fld)+olyPrevHtml(g,S,R,D)+'</div>';
@@ -2292,16 +2308,16 @@ function viewOly(){
   body+=(errs.length?'<div class="err-banner mt12">저장 전에 고칠 곳 '+errs.length+'개<br>'+errs.map(esc).join("<br>")+'</div>':'')+
     '<div class="row mt12"><button class="btn pri" onclick="olySave()"'+(lk||errs.length||!dirty.length||stale?" disabled":"")+'>저장 (rev '+S.rev+' → '+(S.rev+1)+')</button>'+
     '<button class="btn ghost" onclick="olyReset()"'+(OLYD?"":" disabled")+'>변경 취소</button></div>'+
-    memo('<p>점수 = 게임 화면에 보이는 행동 점수 그대로입니다. 종목 점수는 그 종목 최고 한 판, 종합은 다섯 종목 최고의 합이고 종합 순위는 다섯 종목 모두 한 판 이상 한 사람만 듭니다.</p>'+
+    memo('<p>점수 = 게임 화면에 보이는 행동 점수 그대로입니다. 종목 점수는 그 종목 최고 한 판, 종합은 '+onm+' 최고의 합이고 종합 순위는 '+onm+' 모두 한 판 이상 한 사람만 듭니다.'+(d.oev?' AX 퀴즈(O/X · 기억력)는 순위 · 시상에 들지 않고 계수는 완주 판정 · 내 기록에만 씁니다.':'')+'</p>'+
       '<p>저장하면 이미 낸 기록도 <b>저장된 구성 요소를 새 계수로 다시 계산</b>해 전원이 같은 규칙으로 다시 줄 섭니다. 규칙판(rev)은 저장할 때마다 1씩 오르고 기록 행에 남습니다.</p>'+
       '<p>미리보기 예시는 봇 보정의 보통 · 잘함 · 최상 참고치입니다(설계 문서 §4). 멈춤 허용 횟수, 팡 완주 칸, AI O/X 판자 허용·입력 잠금은 점수가 아니라 서버 개연성 검사에 쓰는 값입니다.</p>'+
       '<p><b>AI O/X 유리다리</b>는 문제를 읽는 동안 다리가 한 줄씩 내려옵니다. 한 문제에 쓸 수 있는 시간 = 여유 줄 × 그 줄의 내려오는 시간이고, 답하면 여유가 한 줄 늘어납니다(최대까지). 다리는 뒤로 갈수록 느려질 수 없고, 가장 짧은 읽을 시간(여유 줄 최소 × 줄 시간 끝)은 2초 이상이어야 서버가 받습니다.</p>'+
       '<p>리허설 뒤 게임별 통계의 최고 점수 중앙값을 보고 재보정한 다음, <b>10/26 당일 아침에 잠급니다.</b> 잠긴 동안에는 저장이 거부되고 해제만 됩니다.</p>');
-  var h=card("점수 계수","규칙판 rev "+S.rev+" · 종목 상한 "+n0(S.cap)+" · 만점 "+n0(ev.length*S.cap),body,head);
-  h+=card("종합 상위 10","Outro 호명용 (1~3위) · 다섯 종목 모두 한 판 이상 · 동점은 다섯 종목을 먼저 마친 쪽 · 명예 시상(경품 없음)",'<div class="wrap"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">총점</th><th>다섯 종목 완료 시각</th></tr>'+
-    ((d.overall||[]).length?d.overall.map(function(r){ return '<tr><td class="n"><b>'+r.rank+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name)+'</td><td class="n">'+esc(r.emp)+'</td><td class="n tdr"><b>'+n0(r.total)+'점</b></td><td class="n cap">'+esc(short(r.doneAt))+'</td></tr>'; }).join(""):emptyRow(6,"아직 다섯 종목을 다 한 사람이 없습니다."))+'</table></div>');
+  var h=card("점수 계수","규칙판 rev "+S.rev+" · 종목 상한 "+n0(S.cap)+" · 만점 "+n0(oev.length*S.cap),body,head);
+  h+=card("종합 상위 10","Outro 호명용 (1~3위) · "+onm+" 모두 한 판 이상 · 동점은 "+onm+"을 먼저 마친 쪽 · 명예 시상(경품 없음)",'<div class="wrap"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">총점</th><th>'+onm+' 완료 시각</th></tr>'+
+    ((d.overall||[]).length?d.overall.map(function(r){ return '<tr><td class="n"><b>'+r.rank+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name)+'</td><td class="n">'+esc(r.emp)+'</td><td class="n tdr"><b>'+n0(r.total)+'점</b></td><td class="n cap">'+esc(short(r.doneAt))+'</td></tr>'; }).join(""):emptyRow(6,"아직 "+onm+"을 다 한 사람이 없습니다."))+'</table></div>');
   var per=d.perEvent||{}, prow=[];
-  ev.forEach(function(g){ (per[g]||[]).forEach(function(r,i){ prow.push('<tr'+(i?'':' class="olytop"')+'><td>'+(i?'':'<b>'+esc(GST_NAME[g])+'</b>')+'</td><td class="n"><b>'+r.rank+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name)+'</td><td class="n">'+esc(r.emp)+'</td><td class="n tdr"><b>'+n0(r.score)+'점</b></td><td class="n">'+esc(r.key||"")+'</td></tr>'); });
+  oev.forEach(function(g){ (per[g]||[]).forEach(function(r,i){ prow.push('<tr'+(i?'':' class="olytop"')+'><td>'+(i?'':'<b>'+esc(GST_NAME[g])+'</b>')+'</td><td class="n"><b>'+r.rank+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name)+'</td><td class="n">'+esc(r.emp)+'</td><td class="n tdr"><b>'+n0(r.score)+'점</b></td><td class="n">'+esc(r.key||"")+'</td></tr>'); });
     if(!(per[g]||[]).length) prow.push('<tr class="olytop"><td><b>'+esc(GST_NAME[g])+'</b></td><td colspan="6" class="cap">아직 기록이 없습니다</td></tr>'); });
   h+=card("종목별 1~3위","Outro 호명용 · 동점은 먼저 달성한 쪽 · 기록 칸은 「테트리스 41줄」처럼 말할 대표 기록",'<div class="wrap"><table class="tb"><tr><th>종목</th><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">점수</th><th>대표 기록</th></tr>'+prow.join("")+'</table></div>');
   return h;
