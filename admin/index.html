@@ -4279,7 +4279,7 @@ function viewQrBeta(items){
     list.map(function(it,i){ var f=it.today==null?tag("집계 없음","off"):it.today?tag("찍힘","ok"):tag("안 찍힘","bad");
       return '<tr><td class="n tdr">'+(i+1)+'</td><td>'+tag(QR_GRP[it.grp])+'</td><td><b>'+esc(it.name)+'</b><small class="cap" style="display:block">'+esc(it.id)+'</small></td><td class="n cap">'+esc(it.file||"-")+(it.st==="sample"?' '+tag("견본 · 인쇄 금지","bad"):'')+'</td><td>'+esc(it.place)+'</td><td class="n">'+(it.code?'<b>'+esc(it.code)+'</b>':'<span class="cap">없음</span>')+'</td><td class="n tdr">'+qrToday(it)+'</td><td>'+f+'</td></tr>'; }).join("")+'</table></div>'+
     '<div class="row mt12"><button class="btn pri" onclick="qrCodesDl()">codes.json 내려받기</button><span class="cap">부스 2 + 17F 출석 1 + 계단 36 의 지금 서버 코드 · 인쇄 원본을 만드는 파일</span></div>');
-  h+=memo('<p><b>베타 인쇄물은 새 가운데 배지(ME to WE 심볼 · 민면) 디자인 한 가지로 통일</b>합니다. QR 담당의 재생성 · 판독 검증이 끝났다는 신호 뒤에 인쇄하고, 옛 글자 채움 디자인과 섞지 않습니다(섞으면 인식률 비교가 오염됩니다).</p>'+
+  h+=memo('<p><b>인쇄물은 일반 QR(검정 정사각 모듈 · 장식 없음) 한 가지로 통일</b>합니다(261001). QR 담당의 재생성 · 판독 검증이 끝났다는 신호 뒤에 인쇄하고, 옛 ME to WE 배지판과 섞지 않습니다. 이미 붙인 옛 QR은 담긴 주소 · 코드가 같아 그대로 찍힙니다.</p>'+
     '<p>순서: ① codes.json 내려받기 → <code>QR 테스트/codes.json</code> 교체 → QR 담당이 <code>qr_mother.py</code> 로 재생성 · 검증 ② 위 표의 인쇄 파일 13장 인쇄(a17 은 A4) ③ 붙일 곳에 부착 ④ 운영진 폰으로 한 번씩 찍어 이 표의 「찍힘」이 켜지는지 확인(앱 링크는 앱이 열리는지만 확인 · 60초 캐시라 바로 안 보이면 새로고침).</p>'+
     '<p>p1 · p2 가 「견본 · 인쇄 금지」이면 아직 codes.json 이 서버 코드로 바뀌지 않은 상태입니다. 그 파일을 붙이면 찍어도 적립되지 않습니다.</p>');
   return h;
