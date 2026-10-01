@@ -849,6 +849,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
 .axs-sacard b { font: var(--ax-type-t6-strong); }
 /* v4.76d 위 display 규칙이 hidden 속성을 이겨서 「홈 화면 앱으로 열렸어요」 카드가 모든 로그인 화면에, 설정 시트 「알림」 줄이 알림 없는 서버에서도 보였다 */
 .axs-sacard[hidden], #fsSheet .fs-admin[hidden] { display: none; }
+#fsSheet .fs-lb[hidden] { display: none; }   /* v4.88 설정 「앱」 제목 · 줄이 다 숨으면 */
   .cstrip .row4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--ax-space-8); }
   .cstrip .fl { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .cstrip .bar { height: 6px; margin-top: var(--ax-space-4); border-radius: 3px; background: var(--ax-color-canvas); overflow: hidden; }
@@ -932,6 +933,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #fsSheet .fs-lb:first-of-type { margin-top: 16px; }
   #fsSheet .fs-admin { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 9px; cursor: pointer; background: var(--card); border: 0; border-radius: 14px; padding: 15px 16px; font-family: inherit; font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); }
   #fsSheet .fs-admin span { color: var(--faint); }
+  #fsSheet .fs-admin .fs-lbl { color: inherit; }   /* v4.88 줄 이름이 span 이라도 본문 색(앱 설치 · 홈 화면에 추가) */
   #fsSheet .fs-close { margin-top: 18px; cursor: pointer; }   /* v4.13 검정 → Weak(보조 버튼 규칙) */
   .rrow { display: flex; align-items: center; gap: 9px; padding: 6px 0; }
   .rrow .rno { flex: none; width: 21px; height: 21px; border-radius: 7px; background: var(--white); border: 0; display: flex; align-items: center; justify-content: center; font-size: calc(12.5px * var(--fs)); font-weight: 900; color: var(--muted); }
@@ -1477,6 +1479,11 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-gauge i { display: block; height: 100%; border-radius: var(--ax-radius-999); background: var(--ax-color-brand); }
   .axs-fl6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .axs-fl6 .axs-none { grid-column: 1 / -1; font: var(--ax-type-t6-strong); }
+  /* v4.88 커피챗 선호 시간대 = 상담 시간 칸과 같은 칸 · 여러 개 고르기는 체크 표시로 알린다 · 「언제든 좋아요」는 한 줄 전체 */
+  .axs-cpref .axs-none { grid-column: 1 / -1; }
+  .axs-cpref-pg .axs-slot:not([aria-pressed="true"]) { background: var(--ax-color-surface); }
+  .axs-multi .axs-slot { display: inline-flex; align-items: center; justify-content: center; gap: var(--ax-space-4); }
+  .axs-multi .axs-slot[aria-pressed="true"]::before { content: ""; flex: none; width: 9px; height: 5px; margin-top: -3px; border-left: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); }
   /* 내 QR · 운영자가 찍으면 「확인됨」 */
   .myqr { position: relative; }
   .axs-okbadge { position: absolute; left: 50%; top: 50%; width: 72px; height: 72px; transform: translate(-50%, -50%); border-radius: var(--ax-radius-999); background: var(--ax-color-brandSoft); color: var(--ax-color-ink); display: grid; place-items: center; }
@@ -2262,7 +2269,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   <div id="a2hs" hidden>
     <div class="a-wrap">
       <span class="a-ico"><img src="icons/icon-192.png" alt=""></span>
-      <p class="a-t">홈 화면에 추가</p>
+      <p class="a-t" id="a2hsT">홈 화면에 추가</p>
       <p class="a-s">다음부터 아이콘 한 번으로 열려요</p>
       <div id="a2hsBody"></div>
       <button class="a-later" onclick="a2hsSheet(false)"><span class="axs-lk">닫기<svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
@@ -2274,9 +2281,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
     <div class="fs-box" role="dialog" aria-modal="true" aria-labelledby="fsT">
       <div class="axs-mhead"><h2 class="axs-mtitle fs-t" id="fsT">설정</h2><button type="button" class="axs-x" onclick="fsSheet(false)" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></div>
       <!-- v4.71 (260930 사용자 요청) 글자 크기는 헤더 「일반 · 큰글씨」 한 곳 · 설정 시트에서 뺐다(좁은 폰도 헤더에 남긴다) -->
-      <p class="fs-lb">앱</p>
+      <p class="fs-lb" id="fsLbApp">앱</p>
       <button class="fs-admin" id="fsPush" hidden onclick="fsSheet(false); pushSetOpen()">알림<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
-      <button class="fs-admin" onclick="fsSheet(false); a2hsSheet(true)">홈 화면에 바로가기 추가<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
+      <button class="fs-admin" id="fsA2hs" onclick="fsSheet(false); a2hsSheet(true)"><span id="fsA2hsT" class="fs-lbl">홈 화면에 추가</span><span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
       <p class="fs-lb">운영</p>
       <button class="fs-admin" onclick="fsSheet(false); App.go('admin')">관리자 모드<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
       <button class="fs-admin" onclick="axfLogout()">로그아웃 · 다른 사번으로 입장<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
@@ -3209,17 +3216,30 @@ function a2hsSteps() {
   ];
   return [
     ["오른쪽 위 <span class=\"g\">⋮</span> 메뉴를 누르세요", ""],
-    ["<b>&ldquo;홈 화면에 추가&rdquo;</b> 또는 <b>&ldquo;앱 설치&rdquo;</b> 선택", ""],
+    ["<b>&ldquo;홈 화면에 추가&rdquo;</b> 선택", ""],
     ["<b>&ldquo;추가&rdquo;</b> · 끝!", ""]
   ];
 }
 
+/* v4.88 (사용자 261001 「홈 화면에 추가와 설치가 섞여 있다」) 기기마다 한 단어만 쓴다
+   설치창(beforeinstallprompt)이 온 브라우저(안드로이드 크롬 · 삼성 인터넷 · 엣지) = 「앱 설치」 · 아이폰 · 설치창이 없는 브라우저 = 「홈 화면에 추가」
+   이미 홈 화면 앱으로 열려 있으면 설정 줄을 감춘다 · 메신저 안 브라우저도 같은 단어 규칙(「홈 화면에 추가」) */
+function a2hsWord() { return A2HS.deferred ? "앱 설치" : "홈 화면에 추가"; }
+function a2hsRow() {
+  var b = el("fsA2hs"), t = el("fsA2hsT");
+  if (!b) return;
+  b.hidden = isStandalone();
+  if (t) t.textContent = a2hsWord();
+  var lb = el("fsLbApp"), pu = el("fsPush");
+  if (lb) lb.hidden = b.hidden && (!pu || pu.hidden);
+}
 /* 하단 시트 · 입장 직후 1회 자동 + 설정에서 수동 호출 */
 function a2hsSheet(on) {
   var box = el("a2hs");
   if (!box) return;
   if (!on) { box.hidden = true; A2HS.open = false; return; }
   A2HS.open = true;
+  if (el("a2hsT")) el("a2hsT").textContent = a2hsWord();
   var body = el("a2hsBody"), h = "";
   var url = location.origin + location.pathname;
   var copyRow = '<div class="a-url" onclick="a2hsCopy()">' + url +
@@ -3227,11 +3247,11 @@ function a2hsSheet(on) {
   if (isStandalone()) {
     h = '<div class="a-note" style="text-align:center">이미 홈 화면 아이콘으로 열고 계세요. 추가로 하실 일이 없습니다.</div>';
   } else if (isInApp()) {
-    h = '<div class="a-note">지금은 <b>메신저 안 브라우저</b>라 바로가기를 만들 수 없어요.<br>' +
+    h = '<div class="a-note">지금은 <b>메신저 안 브라우저</b>라 홈 화면에 추가할 수 없어요.<br>' +
       '오른쪽 위 메뉴에서 <b>&ldquo;다른 브라우저로 열기&rdquo;</b>를 누른 뒤 다시 시도해주세요.</div>' + copyRow;
   } else if (A2HS.deferred) {
-    h = '<button class="a-go" onclick="a2hsInstall()">홈 화면에 바로 추가</button>' +
-      '<div class="a-note" style="text-align:center">버튼을 누르면 설치창이 뜨고, &ldquo;설치&rdquo;를 누르면 끝 · 3초면 됩니다.</div>';
+    h = '<button class="a-go" onclick="a2hsInstall()">앱 설치</button>' +
+      '<div class="a-note" style="text-align:center">설치창에서 &ldquo;설치&rdquo;를 누르면 끝</div>';
   } else if (isIOS()) {
     h = '<div class="a-step"><span class="n">1</span>아래 공유 버튼을 누르세요</div>' +
       '<div class="a-step"><span class="n">2</span>홈 화면에 추가를 고르세요</div>' +
@@ -3243,7 +3263,7 @@ function a2hsSheet(on) {
     }).join("") +
       /* 메뉴가 안 보인다는 제보가 실제로 있었다. 화면을 스크롤하면 툴바가 숨는 브라우저가 많다. */
       '<div class="a-note">메뉴가 안 보이면 화면을 <b>살짝 아래로</b> 내려 주소창을 꺼낸 뒤 다시 찾아보세요.</div>' +
-      '<div class="a-note" style="margin-top:8px">그래도 안 되면 아래 주소를 복사해 브라우저 즐겨찾기에 넣어두셔도 됩니다.</div>' + copyRow;
+      '<div class="a-note" style="margin-top:8px">그래도 안 되면 아래 주소를 복사해 브라우저 즐겨찾기에 넣어 두세요.</div>' + copyRow;
   }
   body.innerHTML = h;
   box.hidden = false;
@@ -3391,6 +3411,7 @@ function fsSheet(on) {
   if (!box) return;
   if (on) fsPaint();
   if (on && el("fsPush")) el("fsPush").hidden = !(typeof pushReady === "function" && pushReady());   /* v4.76 알림 · 새 서버(공개키)일 때만 */
+  if (on) a2hsRow();   /* v4.88 앱 설치 · 홈 화면에 추가 한 단어 · 홈 화면 앱이면 숨김 · 줄이 다 숨으면 「앱」 제목도 */
   box.hidden = !on;
 }
 fsApply(fsGet());   /* 스플래시·로그인 화면부터 바로 적용 */
@@ -3850,8 +3871,10 @@ function cchatPrefToggle(v, where) {
 }
 function cchatPrefHtml(where) {
   var a = cchatPref();
-  return '<div class="ax-stack-tight"><p class="ax-type-t6-strong">선호 시간대 <span class="ax-meta">여러 개 고를 수 있어요</span></p><div class="axs-chiprow" role="group" aria-label="선호 시간대">' +
-    CCHAT_PREF.map(function (x) { return '<button type="button" class="axs-chip" aria-pressed="' + (a.indexOf(x[0]) >= 0) + '" onclick="cchatPrefToggle(\'' + x[0] + "','" + where + "')\">" + x[1] + "</button>"; }).join("") + "</div></div>";
+  /* v4.88 (사용자 261001 「선호 시간대 버튼이 너무 작다」) AX LOUNGE 상담 시간 칸(axs-slots · axs-slot · 높이 48 · 반경 12 · 고르면 주황)을 그대로 쓴다 · 4칸 한 줄 + 「언제든 좋아요」 한 줄
+     여러 개 고를 수 있으니 고른 칸 앞에 체크 표시(axs-multi) · 질문 화면(회색 바탕)에서는 칸을 흰 면으로(axs-cpref-pg) */
+  return '<div class="ax-stack-tight"><p class="ax-type-t6-strong">선호 시간대 <span class="ax-meta">여러 개 고를 수 있어요</span></p><div class="axs-slots axs-multi axs-cpref' + (where === "sheet" ? "" : " axs-cpref-pg") + '" role="group" aria-label="선호 시간대 · 여러 개 선택">' +
+    CCHAT_PREF.map(function (x) { return '<button type="button" class="axs-slot' + (x[0] === "any" ? " axs-none" : "") + '" aria-pressed="' + (a.indexOf(x[0]) >= 0) + '" onclick="cchatPrefToggle(\'' + x[0] + "','" + where + "')\">" + x[1] + "</button>"; }).join("") + "</div></div>";
 }
 var IDEA_AWARD_TXT = "우수 아이디어는 17:00 Outro에서 시상해요";
 function ideaCchat(yes) {
