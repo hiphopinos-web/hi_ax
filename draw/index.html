@@ -6,7 +6,7 @@
 <title>Lucky Draw · AX Festival 2026</title>
 <meta name="robots" content="noindex">
 <!-- 17F 대강당 Outro 경품 추첨 송출 화면 · 16:9 · 운영자 노트북에서 전체 화면(F) · 조작 창(P)
-     모든 자산이 이 폴더 안에 있다(서체 · 홍보부 모션 엔진 · 워드마크 · three.js 로컬 번들 · 소리는 합성) · v2 공만 입체(WebGL2 · 통과 연출은 v1) · 인터넷이 끊겨도 데모·추첨이 돈다 -->
+     모든 자산이 이 폴더 안에 있다(서체 · 홍보부 모션 엔진 · 워드마크 · three.js 로컬 번들 · 소리는 합성) · v3 유리 통이 돌다가 서면 6시 틈으로 공 하나가 떨어진다(물리 결정) · 공은 입체(WebGL2) · 체크인 QR(qrgen.js · 로컬) · 인터넷이 끊겨도 데모·추첨이 돈다 -->
 <link rel="icon" href="../icons/icon-192.png">
 <style>
   @font-face { font-family: "AXP"; src: url("assets/PretendardVariable.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
@@ -29,41 +29,65 @@
   #frame { position: fixed; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; pointer-events: none; }
   .tab { font-variant-numeric: tabular-nums; }
 
-  #lock { position: absolute; left: 72px; top: 58px; right: 72px; display: flex; justify-content: space-between; align-items: flex-start; }
+  /* v3 균형 그리드 · 바깥 여백 120 · 왼쪽 단 = 통(중심 600, 590 · 고리 지름 824 · 위 178 ~ 아래 1002)
+   *   오른쪽 단 = 정보(x 1104 ~ 1800) · 세로 기준선 236(위) · 590(가운데 = 통 중심) · 944(아래) · 모든 장면이 이 선에 붙는다 */
+  #lock { position: absolute; left: 120px; top: 64px; right: 120px; display: flex; justify-content: space-between; align-items: flex-start; }
   #wm { width: 190px; color: var(--brand); }
   #wm svg { display: block; width: 100%; height: auto; }
   #slg { font-size: 30px; font-weight: 500; color: var(--brand); letter-spacing: -0.01em; }
 
-  .panel { position: absolute; left: 960px; top: 0; width: 890px; height: 1080px; opacity: 0; }
+  .panel { position: absolute; left: 1104px; top: 0; width: 696px; height: 1080px; opacity: 0; }
   .full { position: absolute; inset: 0; opacity: 0; }
-  .eye { font-size: 42px; font-weight: 500; color: var(--brand); letter-spacing: -0.005em; }
-  .title { font-size: 92px; line-height: 1.22; font-weight: 600; color: var(--brand); letter-spacing: -0.01em; }
+  .col { position: absolute; left: 0; right: 0; top: 236px; height: 708px; display: flex; flex-direction: column; }   /* 위 기준선 ~ 아래 기준선 */
+  .mid { position: absolute; left: 0; right: 0; top: 590px; transform: translateY(-50%); }                          /* 통 중심 높이에 가운데 */
+  .eye { font-size: 42px; line-height: 1.2; font-weight: 500; color: var(--brand); letter-spacing: -0.005em; }
+  .title { font-size: 92px; line-height: 1.18; font-weight: 600; color: var(--brand); letter-spacing: -0.01em; }
   .meta { font-size: 38px; line-height: 1.5; font-weight: 500; color: var(--sub); }
 
-  #pIdle .eye { position: absolute; top: 322px; }
-  #pIdle .title { position: absolute; top: 388px; font-size: 132px; }
-  #pIdle .meta { position: absolute; top: 590px; }
+  /* 체크인 QR(대기 · 체크인 장면) · 일반 QR(흰 바탕 · 검정 정사각 · 여백 4칸) · 한 변 420(화면 높이의 39%) · 대강당 뒷줄에서도 찍히게 */
+  .qrow { display: flex; gap: 32px; align-items: stretch; }
+  .qbox { position: relative; width: 420px; height: 420px; flex: none; border-radius: 6px; }
+  .qr { display: block; width: 420px; height: 420px; image-rendering: pixelated; image-rendering: crisp-edges; border-radius: 6px; }
+  .qmsg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 26px; line-height: 1.5; color: var(--sub); border: 3px dotted rgba(255,255,255,.3); border-radius: 6px; opacity: 0; }
+  .qclosed { font-size: 76px; font-weight: 700; color: #fff; letter-spacing: 0.02em; }
+  .qside { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .qcap { font-size: 40px; line-height: 1.3; font-weight: 700; color: var(--txt); }
+  .qcap2 { font-size: 32px; line-height: 1.3; font-weight: 600; color: var(--o); margin-top: 10px; }
+  .qnote { font-size: 24px; line-height: 1.5; color: var(--sub); margin-top: auto; }
+  .qdemo { font-size: 20px; color: var(--faint); margin-top: 8px; }
 
-  #pCheck .eye { position: absolute; top: 250px; }
-  #pCheck .big { position: absolute; top: 300px; display: flex; align-items: baseline; gap: 26px; color: var(--o); }
-  #cBig { font-size: 250px; line-height: 1; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-  #pCheck .big em { font-style: normal; font-size: 56px; font-weight: 600; }
-  #cMeta { position: absolute; top: 590px; font-size: 40px; font-weight: 600; color: var(--txt); }
-  #ticker { position: absolute; top: 672px; width: 860px; }
-  .trow { display: flex; align-items: center; gap: 14px; height: 72px; font-size: 34px; color: var(--sub); }
+  #pIdle .col { justify-content: center; }
+  #pIdle .title { font-size: 96px; margin-top: 6px; }
+  #pIdle .qrow { margin-top: 30px; }
+  body.remote #help, body.remote #hud, body.remote #toast { display: none !important; }   /* 원격 · 대형 화면에 운영 흔적 없음 */
+  /* 원격 · 처음 한 번 관리코드 입력(노트북에서 전체 화면 전에) · 연결되면 사라진다 */
+  #keyBox { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 420px; max-width: calc(100% - 32px); background: #141414; border: 1px solid rgba(255,255,255,.16); border-radius: 16px; padding: 24px; display: none; cursor: auto; z-index: 20; font-family: var(--f); color: #fff; }
+  body.needkey #keyBox { display: block; } body.needkey { cursor: auto; }
+  #keyBox h2 { font-size: 20px; font-weight: 600; margin-bottom: 6px; } #keyBox p { font-size: 14px; color: rgba(255,255,255,.6); margin-bottom: 14px; line-height: 1.5; }
+  #keyBox input { width: 100%; height: 44px; border-radius: 10px; border: 1px solid rgba(255,255,255,.2); background: #000; color: #fff; padding: 0 12px; font-size: 16px; }
+  #keyBox button { margin-top: 12px; width: 100%; height: 44px; border: 0; border-radius: 10px; background: var(--o); color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; }
+  #keyBox .err { color: var(--o25); font-size: 13px; margin-top: 8px; min-height: 18px; }
+
+  #pCheck .qrow { margin-top: 22px; }
+  .qstat .lab { font-size: 26px; line-height: 1.3; font-weight: 500; color: var(--sub); }
+  .qstat .num { display: flex; align-items: baseline; gap: 8px; color: var(--o); margin-bottom: 26px; }
+  .qstat .num span { font-size: 80px; line-height: 1.05; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .qstat .num em { font-style: normal; font-size: 30px; font-weight: 600; }
+  #ticker { margin-top: auto; }
+  .trow { display: flex; align-items: center; gap: 14px; height: 64px; font-size: 32px; color: var(--sub); border-top: 1px solid rgba(255,255,255,.1); }
   .trow:first-child { color: var(--txt); }
-  .trow:nth-child(3) { opacity: .66; } .trow:nth-child(4) { opacity: .36; }
-  .trow b { font-weight: 600; min-width: 150px; }
-  .chip { display: inline-block; padding: 6px 18px; border-radius: 999px; background: rgba(255,126,49,.16); color: var(--hi); font-size: 30px; font-weight: 600; font-variant-numeric: tabular-nums; }
-  body.closed #pCheck .big { color: var(--o); }
+  .trow b { font-weight: 600; min-width: 140px; }
+  .chip { display: inline-block; padding: 5px 16px; border-radius: 999px; background: rgba(255,126,49,.16); color: var(--hi); font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
-  #pMix .eye { position: absolute; top: 250px; }
-  #pMix .title { position: absolute; top: 306px; }
-  #mMeta { position: absolute; top: 440px; font-size: 40px; font-weight: 600; color: var(--txt); }
-  #mList { position: absolute; top: 530px; width: 820px; }
-  .wrow { display: flex; align-items: center; gap: 28px; height: 84px; border-top: 1px solid rgba(255,255,255,.12); font-size: 44px; font-weight: 600; color: var(--txt); }
+  #pMix .title { margin-top: 8px; }
+  #mMeta { font-size: 40px; line-height: 1.4; font-weight: 600; color: var(--txt); margin-top: 18px; }
+  #mList { margin-top: 34px; }
+  .wrow { display: flex; align-items: center; gap: 28px; height: 80px; border-top: 1px solid rgba(255,255,255,.12); font-size: 42px; font-weight: 600; color: var(--txt); }
   .wrow .no { color: var(--o); font-variant-numeric: tabular-nums; min-width: 140px; }
-  #mCount { position: absolute; top: 960px; font-size: 30px; color: var(--faint); font-variant-numeric: tabular-nums; }
+  .stat { margin-top: auto; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.12); display: flex; align-items: baseline; gap: 14px; color: var(--sub); }
+  .stat .lab { font-size: 32px; font-weight: 500; margin-right: 10px; }
+  .stat b { font-size: 76px; line-height: 1; font-weight: 700; color: var(--txt); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .stat em { font-style: normal; font-size: 34px; font-weight: 600; }
 
   #pReveal { text-align: center; }
   #rEye { position: absolute; left: 0; right: 0; top: 150px; font-size: 44px; font-weight: 600; color: #fff; }
@@ -73,27 +97,25 @@
   #rPrize { position: absolute; left: 0; right: 0; top: 872px; font-size: 54px; font-weight: 600; color: #fff; }
   #rAbs { position: absolute; left: 0; right: 0; top: 700px; font-size: 96px; font-weight: 700; color: #fff; opacity: 0; }
 
-  #pCard .eye { position: absolute; top: 322px; color: #fff; }
-  #pCard .title { position: absolute; top: 388px; font-size: 150px; color: #fff; }
-  #pCard .meta { position: absolute; top: 600px; color: #fff; font-size: 48px; font-weight: 600; }
+  #pCard .eye { color: #fff; }
+  #pCard .title { font-size: 150px; color: #fff; margin-top: 12px; }
+  #pCard .meta { color: #fff; font-size: 48px; font-weight: 600; margin-top: 30px; }
 
-  #pBoard .eye { position: absolute; top: 170px; }
-  #pBoard .title { position: absolute; top: 226px; }
-  #bList { position: absolute; top: 380px; width: 860px; --rows: 5; }
-  .brow { display: grid; grid-template-columns: 170px 1fr auto; align-items: center; height: calc(560px / max(5, var(--rows))); max-height: 104px; border-top: 1px solid rgba(255,255,255,.12);
-          font-size: calc(min(46px, 560px / var(--rows) * .46)); font-weight: 600; color: var(--txt); }
+  #pBoard .title { margin-top: 8px; }
+  #bList { margin-top: 40px; flex: 1; --rows: 5; }
+  .brow { display: grid; grid-template-columns: 150px 1fr auto; align-items: center; height: calc(520px / max(5, var(--rows))); max-height: 104px; border-top: 1px solid rgba(255,255,255,.12);
+          font-size: calc(min(44px, 520px / var(--rows) * .46)); font-weight: 600; color: var(--txt); }
   .brow .no { color: var(--o); font-variant-numeric: tabular-nums; }
   .brow .pz { color: var(--sub); font-weight: 500; font-size: .78em; }
 
-  #pEnd .eye { position: absolute; top: 330px; }
-  #pEnd .title { position: absolute; top: 396px; font-size: 128px; font-weight: 500; }
-  #pEnd .meta { position: absolute; top: 560px; font-size: 50px; color: var(--o); font-weight: 600; }
+  #pEnd .title { font-size: 128px; font-weight: 500; margin-top: 14px; }
+  #pEnd .meta { font-size: 50px; color: var(--o); font-weight: 600; margin-top: 30px; }
 
-  #demoMark { position: absolute; left: 72px; bottom: 44px; font-size: 22px; font-weight: 600; color: var(--faint); display: none; letter-spacing: .02em; }
+  #demoMark { position: absolute; left: 120px; bottom: 44px; font-size: 22px; font-weight: 600; color: var(--faint); display: none; letter-spacing: .02em; }
   body.demo #demoMark { display: block; }
-  #toast { position: absolute; right: 72px; bottom: 40px; font-size: 24px; font-weight: 600; color: var(--faint); opacity: 0; }
+  #toast { position: absolute; right: 120px; bottom: 40px; font-size: 24px; font-weight: 600; color: var(--faint); opacity: 0; }
   #toast.soft { color: var(--sub); }
-  #hud { position: absolute; left: 72px; bottom: 80px; font-size: 22px; color: #9f9; font-family: Consolas, monospace; display: none; }
+  #hud { position: absolute; left: 120px; bottom: 80px; font-size: 22px; color: #9f9; font-family: Consolas, monospace; display: none; }
   body.hud-on #hud { display: block; }
 
   #help { position: absolute; left: 50%; top: 50%; width: 1040px; transform: translate(-50%, -50%); background: rgba(12,12,12,.94); border-radius: 36px; padding: 48px 56px; display: none; color: #fff; }
@@ -109,6 +131,7 @@
 </style>
 </head>
 <body>
+<form id="keyBox" autocomplete="off"><h2>추첨 화면 연결</h2><p>관리코드를 넣으면 관리 콘솔 「추첨 › 진행」의 명령을 받습니다. 넣은 다음 F 로 전체 화면.</p><input id="keyIn" type="password" aria-label="관리코드" placeholder="관리코드"><button type="submit">연결</button><p class="err" id="keyErr"></p></form>
 <canvas id="cv"></canvas>
 <canvas id="gl"></canvas>
 <canvas id="fx"></canvas>
@@ -118,26 +141,41 @@
 <div id="frame">
   <div id="lock"><div id="wm"></div><div id="slg">ME to WE</div></div>
 
-  <section id="pIdle" class="panel">
+  <section id="pIdle" class="panel"><div class="col">
     <p class="eye">Lucky Draw</p>
     <h1 class="title">경품 추첨</h1>
-    <div class="meta" id="idleMeta"></div>
-  </section>
+    <div class="qrow">
+      <div class="qbox"><canvas id="qrI" class="qr"></canvas><p class="qmsg" id="qrIm"></p></div>
+      <div class="qside qstat">
+        <p class="qcap">QR을 찍어<br>추첨에<br>체크인하세요</p>
+        <p class="lab" style="margin-top:28px">체크인</p><p class="num"><span id="iCnt">0</span><em>명</em></p>
+        <p class="qnote">시작하면 마감</p>
+        <p class="qdemo" id="qrId"></p>
+      </div>
+    </div>
+  </div></section>
 
-  <section id="pCheck" class="panel">
+  <section id="pCheck" class="panel"><div class="col">
     <p class="eye" id="cEye">Check-in</p>
-    <div class="big"><span id="cBig">0</span><em>개의 공</em></div>
-    <p id="cMeta"></p>
+    <div class="qrow">
+      <div class="qbox"><canvas id="qrC" class="qr"></canvas><p class="qmsg" id="qrCm"></p></div>
+      <div class="qside qstat">
+        <p class="lab">체크인</p><p class="num"><span id="cMeta">0</span><em>명</em></p>
+        <p class="lab">응모 공</p><p class="num"><span id="cBig">0</span><em>개</em></p>
+        <p class="qnote" id="cCap">찍으면 추첨 체크인<br>시작하면 마감</p>
+        <p class="qdemo" id="qrCd"></p>
+      </div>
+    </div>
     <div id="ticker"></div>
-  </section>
+  </div></section>
 
-  <section id="pMix" class="panel">
+  <section id="pMix" class="panel"><div class="col">
     <p class="eye" id="mEye"></p>
     <h2 class="title" id="mTitle"></h2>
     <p id="mMeta"></p>
     <div id="mList"></div>
-    <p id="mCount"></p>
-  </section>
+    <div id="mCount" class="stat"></div>
+  </div></section>
 
   <section id="pReveal" class="full">
     <p id="rEye"></p>
@@ -147,23 +185,23 @@
     <p id="rPrize"></p>
   </section>
 
-  <section id="pCard" class="panel">
+  <section id="pCard" class="panel"><div class="mid">
     <p class="eye" id="kEye"></p>
     <h2 class="title" id="kTitle"></h2>
     <p class="meta" id="kMeta"></p>
-  </section>
+  </div></section>
 
-  <section id="pBoard" class="panel">
+  <section id="pBoard" class="panel"><div class="col">
     <p class="eye">Winners.</p>
     <h2 class="title">오늘의 당첨</h2>
     <div id="bList"></div>
-  </section>
+  </div></section>
 
-  <section id="pEnd" class="panel">
+  <section id="pEnd" class="panel"><div class="mid">
     <p class="eye">Thank you.</p>
     <h2 class="title">ME to WE :</h2>
-    <p class="meta">나의 업무 혁신, 우리 회사의 AX가 되다</p>
-  </section>
+    <p class="meta">나의 경험을 우리의 가능성으로</p>
+  </div></section>
 
   <div id="demoMark">DEMO · 가짜 참가자 데이터</div>
   <div id="toast"></div>
@@ -183,13 +221,14 @@
       <tr><td>F · M · G · H</td><td>전체 화면 · 소리 켜기/끄기 · fps · 품질 표시 · 이 표</td></tr>
       <tr><td>D · A (데모)</td><td>10명 체크인 · 자동 체크인 켜기/끄기</td></tr>
     </table>
-    <p>당첨은 공 단위 균등 무작위(암호 난수)로 버튼을 누르는 순간 정해지고 곧바로 저장됩니다. 새로고침해도 같은 결과로 돌아옵니다. 연속으로 눌러도 연출이 끝날 때까지 다음 입력을 받지 않습니다.</p>
+    <p>누르는 순간 암호 난수로 통 안의 공을 흔들고 감속을 시작합니다. 통이 서서 6시 틈으로 처음 떨어진 공이 당첨이고, 그 순간 저장됩니다. 공개 중에 새로고침하면 같은 결과로 돌아오고, 감속 중에 새로고침하면 결과 없이 다시 뽑습니다. 마감 뒤 첫 추첨은 10초 이상 섞은 다음에 받습니다. 연속으로 눌러도 연출이 끝날 때까지 다음 입력을 받지 않습니다.</p>
   </div>
 </div>
 <script src="../assets/server.js"></script>
 <script src="assets/axf_engine.js"></script>
 <script src="assets/wordmark.js"></script>
 <script src="assets/sfx.js"></script>
+<script src="assets/qrgen.js"></script>
 <script src="assets/three.min.js"></script>
 <script src="assets/balls3d.js"></script>
 <script src="assets/draw.js"></script>

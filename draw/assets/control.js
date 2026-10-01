@@ -12,7 +12,7 @@ window.AXDRAW_CONTROL = function () {
   function send(m) { m.axd = 1; try { if (window.opener && !window.opener.closed) { window.opener.postMessage(m, "*"); return; } } catch (e) {} try { bc && bc.postMessage(m); } catch (e) {} }
   function cmd(c, a) { send({ type: "cmd", cmd: c, arg: a }); }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
-  var SCN = { idle: "대기", checkin: "체크인 중", closed: "체크인 마감", card: "라운드 카드", mix: "섞는 중", tension: "추첨 연출", exit: "배출", reveal: "당첨 공개", board: "결과판", end: "끝 화면" };
+  var SCN = { idle: "대기", checkin: "체크인 중", closed: "체크인 마감", card: "라운드 카드", mix: "섞는 중", tension: "감속 · 배출 대기", exit: "배출", reveal: "당첨 공개", board: "결과판", end: "끝 화면" };
   var NEXT = { idle: "체크인 시작", checkin: "체크인 마감(두 번)", closed: "첫 라운드 카드", card: "섞기 시작", mix: "추첨", reveal: "확정 · 다음", board: "끝 화면", end: "" };
 
   var css = document.createElement("style");
@@ -50,6 +50,7 @@ window.AXDRAW_CONTROL = function () {
     '<label>데모 체크인 속도</label><input id="f-demoRate" type="number" min="1" max="60">' +
     '<label>1인 1회 당첨</label><input id="f-one" type="checkbox">' +
     '<label>부재 시 공 제외</label><input id="f-abs" type="checkbox">' +
+    '<label>첫 추첨 최소 섞기</label><input id="f-minmix" type="text" placeholder="0:30, 5:20, 10:10" title="체크인 분:초 · 체크인이 그 분 이상이면 그 초">' +
     '<label>체크인한 분만</label><input id="f-chk" type="checkbox">' +
     '<label>이름 표시</label><select id="f-name"><option value="mask">가운데 가림 (홍*동)</option><option value="none">번호만</option></select>' +
     '<label>부서 표시</label><input id="f-dept" type="checkbox">' +
@@ -75,7 +76,9 @@ window.AXDRAW_CONTROL = function () {
   $("k-saver").onclick = function () { send({ type: "cfg", cfg: { rounds: rounds } }); };
   $("k-savecfg").onclick = function () {
     var c = { mode: $("f-mode").value, demoN: +$("f-demoN").value || 170, demoRate: +$("f-demoRate").value || 9, onePerPerson: $("f-one").checked, absentRemove: $("f-abs").checked,
-      checkinOnly: $("f-chk").checked, nameMode: $("f-name").value, showDept: $("f-dept").checked, tickerNames: $("f-tick").checked, beat: $("f-beat").checked, server: $("f-srv").value.trim() };
+      checkinOnly: $("f-chk").checked, nameMode: $("f-name").value, showDept: $("f-dept").checked, tickerNames: $("f-tick").checked, beat: $("f-beat").checked, server: $("f-srv").value.trim(),
+      minMix: ($("f-minmix").value || "").split(",").map(function (x) { var a = x.split(":"); return [+a[0], +a[1]]; }).filter(function (x) { return x[0] >= 0 && x[1] > 0; }) };
+    if (!c.minMix.length) delete c.minMix;
     if ($("f-key").value) c.key = $("f-key").value;
     send({ type: "cfg", cfg: c });
   };
@@ -99,7 +102,7 @@ window.AXDRAW_CONTROL = function () {
     $("k-next").disabled = !NEXT[m.scene];
     $("k-mute").textContent = m.muted ? "소리 켜기" : "소리 끄기";
     if (m.toast) $("k-toast").textContent = m.toast;
-    $("k-srv").textContent = "서버: " + (m.srv.url || "주소 없음") + (m.srv.status ? " · " + m.srv.status : "") + (m.srv.log ? " · " + m.srv.log : "") + (m.srv.queue ? " · 미전송 " + m.srv.queue : "");
+    $("k-srv").textContent = "서버: " + (m.srv.url || "주소 없음") + (m.srv.status ? " · " + m.srv.status : "") + (m.srv.log ? " · " + m.srv.log : "") + (m.srv.queue ? " · 미전송 " + m.srv.queue : "") + (m.srv.close ? " · " + m.srv.close : "") + (m.qr ? " · 체크인 QR " + (m.qr.code || m.qr.st || "없음") : "");
     $("k-log").innerHTML = m.results.slice().reverse().map(function (r) {
       return "<tr><td>" + esc(r.rname || "") + " " + r.slot + "</td><td><b>" + r.no + "</b></td><td>" + esc(maskN(r.nm)) + "</td><td>" + ({ win: "당첨", absent: "부재", undone: "취소" }[r.st] || r.st) + "</td><td>" + String(r.at).slice(11, 19) + "</td></tr>";
     }).join("") || '<tr><td colspan="5" class="c-mut">아직 없음</td></tr>';
@@ -107,7 +110,7 @@ window.AXDRAW_CONTROL = function () {
       cfgLoaded = true; var c = m.cfg;
       rounds = JSON.parse(JSON.stringify(c.rounds)); drawRounds();
       $("f-mode").value = c.mode; $("f-demoN").value = c.demoN; $("f-demoRate").value = c.demoRate; $("f-one").checked = c.onePerPerson; $("f-abs").checked = c.absentRemove;
-      $("f-chk").checked = c.checkinOnly; $("f-name").value = c.nameMode; $("f-dept").checked = c.showDept; $("f-tick").checked = c.tickerNames; $("f-beat").checked = c.beat; $("f-srv").value = c.server || "";
+      $("f-chk").checked = c.checkinOnly; $("f-name").value = c.nameMode; $("f-dept").checked = c.showDept; $("f-tick").checked = c.tickerNames; $("f-beat").checked = c.beat; $("f-srv").value = c.server || ""; $("f-minmix").value = (c.minMix || []).map(function (x) { return x[0] + ":" + x[1]; }).join(", ");
     }
   }
   document.addEventListener("keydown", function (e) { if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; if (e.key === " " || e.key === "Enter") { e.preventDefault(); cmd("next"); } });

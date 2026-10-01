@@ -1,12 +1,19 @@
 /* ═══════════════════════════════════════════════════════════════════════════
- * AX Festival 2026 · Outro 럭키드로우 송출 화면 v2 (17F 대강당 · 16:9)
- *   v2(261001) = v1 의 통(점 고리) · 투입구 · 배출구 · 물리 · 연출을 그대로 두고 공만 입체로 그린다(assets/balls3d.js · WebGL2 · 정면 직교)
- *   캔버스 3겹: #cv 스테이지 · 통 · 심볼 → #gl 공(구형 음영 · 하이라이트 · 구르면 번호가 표면을 따라 돈다 · 접지 그림자) → #fx 고리 · 입자 · 도트 레터링
+ * AX Festival 2026 · Outro 럭키드로우 송출 화면 v3 (17F 대강당 · 16:9)
+ *   v2(261001) = 공만 입체(assets/balls3d.js · WebGL2 · 정면 직교)
+ *   v3(261001) = 물리적 개연성 · 통 = 유리 구(사용자 확정) · 공 하나 겨우 빠질 틈 하나가 통과 함께 돈다
+ *                섞기 = 시계 방향으로 계속 돌고 공이 벽에 딸려 올라갔다 굴러 떨어진다(텀블링 · 도는 동안은 틈으로 빠지지 않는다)
+ *                체크인 = 통이 천천히 돌다가 틈이 12시에 올 때 서서 그 틈으로 공을 묶어 넣는다
+ *                추첨 = 감속해 틈을 6시에 세운다 → 중력으로 공 하나가 떨어진다(물리 결정) → 점 하나가 틈을 막고 다시 돈다
+ *                떨어진 공을 카메라가 따라가 화면 가운데에서 바로 터진다 · 공을 옮겨 다니는 하이라이트 없음
+ *                화면 = 균형 그리드(통 중심 600, 590 · 오른쪽 정보 단 1104~1800) · 대기 · 체크인 장면에 체크인 QR(인쇄하지 않는다)
+ *   캔버스 3겹: #cv 스테이지 · 통 · 심볼 → #gl 공(구형 음영 · 구르면 번호가 표면을 따라 돈다 · 접지 그림자) → #fx 고리 · 입자 · 도트 레터링
  *   WebGL 이 안 되는 기계는 v1 의 2D 공 그림으로 자동 대체한다(행사가 멈추지 않게)
  *   디자인 정본 = AX페스티벌/design.md v29 (블랙·오렌지 스테이지 · 도트 격자 · KV 오브젝트 · 글자 정지 · 점으로 모이고 흩어진다)
  *   홍보부 원본 = assets/axf_engine.js (01 Me to WE · 02 Circle 좌표·계산식) · assets/wordmark.js (09 워드마크 아웃라인)
  *   공 1개 = 응모권 1장(4·5·6개 스탬프 = 1·2·3장, 번호 0001~9999 · 서버 raffle 원장과 같은 형식)
- *   당첨은 공 단위 균등 무작위(crypto.getRandomValues) · 물리 연출은 결과를 바꾸지 않는다.
+ *   당첨 = 6시 틈을 처음 통과한 공(연출이 곧 결과) · 버튼 순간 crypto.getRandomValues 로 물리 난수를 다시 심고 감속 시간과 모든 공을 흔든다
+ *   당첨 · 부재로 빠진 분의 공은 감속 전에 통에서 이미 빠져 있다(1인 1회) · 마감 뒤 첫 추첨은 10초 이상 섞은 다음 · 안 떨어지면 통을 살짝 흔든다
  * ═══════════════════════════════════════════════════════════════════════════ */
 (function () {
   "use strict";
@@ -18,9 +25,11 @@
 
   /* ─────────────── 상수 · 무대 좌표(1920×1080 논리 좌표) ─────────────── */
   var W0 = 1920, H0 = 1080, PITCH = 30;               /* 도트 격자 = 폭/64 */
-  var DX = 505, DY = 578, DR = 392;                     /* 추첨 통(원) 중심·안쪽 반지름 · 왼쪽 50% 가 오브젝트 자리 */
-  var RING = DR + 20, GATE = 0.92, INLET = -Math.PI / 2; /* 점 고리 반지름 · 배출구 각도(오른쪽 아래) · 투입구(위) */
-  var TRAY = { x: 905, y: 1000 };                        /* v2 · 받침을 왼쪽으로(오른쪽 글자 「통 안의 공」과 겹치지 않게) */
+  var DX = 600, DY = 590, DR = 392;                     /* 추첨 통(원) 중심·안쪽 반지름 · v3 균형 그리드(왼쪽 단 가운데 · 세로 가운데 = 오른쪽 정보 블록 가운데) */
+  /* v3 · 통에 공 하나 겨우 빠질 틈 하나(통과 함께 돈다)
+   *   체크인 = 틈을 12시에 세우고 위에서 공을 넣는다 · 섞기 = 시계 방향으로 계속 돈다(틈이 움직여 공이 빠지지 못한다)
+   *   추첨 = 감속해 틈을 6시에 세운다 → 중력으로 공 하나가 떨어진다 → 그 순간 점 하나가 틈을 막고 통이 다시 돈다 */
+  var TOP = -Math.PI / 2, SIX = Math.PI / 2, GAPW = 1.12;   /* 틈 폭 = 공 지름 × 1.12 */
   var C = { o: "#FF7E31", o7: "#FF7F32", hi: "#FF963E", pu: "#E6CCFF", o50: "#FFB284", o25: "#FFD8C1", w: "#FFFFFF", k: "#000000", g: "#6B6B6B" };
   var FONT = '"AXP", "Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif';
   var LS_CFG = "axfDraw.cfg.v1", LS_ST = "axfDraw.state.v1";
@@ -35,6 +44,7 @@
       { name: "ROUND 02", prize: "경품 B", count: 1 },
       { name: "FINAL", prize: "경품 C", count: 1 }
     ],
+    minMix: [[0, 30], [5, 20], [10, 10]],   /* 마감 뒤 첫 추첨 최소 섞기 · [체크인 분 이상, 초] · 실제 행사(약 20분) = 10초 · 짧은 체크인(리허설)은 더 길게(공정성 시험 simck · 261001 확정) */
     onePerPerson: true,      /* 1인 1회 당첨 · 당첨 즉시 그 사람의 나머지 공을 뺀다 */
     absentRemove: true,      /* 재추첨(부재) 때 그 사람의 공을 뺀다 */
     checkinOnly: true,       /* 체크인한 사람만 대상 · 끄면 응모권 보유자 전원 */
@@ -51,17 +61,19 @@
   if (REC || BENCH) CFG = JSON.parse(JSON.stringify(DEF));
   if (REC) { CFG.rounds = [{ name: "ROUND 01", prize: "경품 A", count: 2 }, { name: "FINAL", prize: "경품 C", count: 1 }]; CFG.demoRate = 20; }   /* 쇼릴 대본 전용 */
   if (QPAL) CFG.pal = QPAL;
+  if (Q.get("remote") === "1" && !REC && !BENCH) CFG.mode = Q.get("mode") === "demo" ? "demo" : "server";   /* 콘솔이 여는 원격 화면(../draw/?remote=1) = 서버 모드 · 모의 시험은 &mode=demo */
   function load(k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
   function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 
   /* ─────────────── 난수 ─────────────── */
   function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   var rng = mulberry(REC ? 20261026 : (Date.now() & 0xffffff));
-  function fair(n) {                                   /* 0..n-1 균등 · 실제 추첨은 암호 난수(나머지 편향 제거) */
-    if (REC) return Math.floor(rng() * n);
-    var a = new Uint32Array(1), lim = Math.floor(4294967296 / n) * n;
-    do { crypto.getRandomValues(a); } while (a[0] >= lim);
-    return a[0] % n;
+  /* v3 · 추첨 버튼 순간 · 암호 난수 n 개(0..1) · 물리 난수 씨앗도 여기서 다시 심는다(녹화 모드만 고정 씨앗) */
+  function cryptoUnits(n) {
+    var out = new Float64Array(n), k = 0;
+    if (REC) { for (; k < n; k++) out[k] = rng(); return out; }
+    while (k < n) { var m = Math.min(16384, n - k), a = new Uint32Array(m); crypto.getRandomValues(a); for (var j = 0; j < m; j++) out[k++] = a[j] / 4294967296; }
+    return out;
   }
   function hash(i) { var v = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return v - Math.floor(v); }
   function clamp(x, a, b) { return x < a ? a : x > b ? b : x; }
@@ -79,7 +91,7 @@
   /* ─────────────── 추첨 상태 (새로고침·브라우저 재시작에도 이어진다) ───────────────
    * pool.people[pk] = { nm, dp, nos:[번호…] } · arrived = 체크인 순서 · results = 당첨 기록(결정 즉시 저장 · 새로고침으로 다시 뽑을 수 없다) */
   var ST = (REC || BENCH) ? null : load(LS_ST, null);
-  if (!ST || ST.v !== 1) ST = { v: 1, seed: Math.floor(Math.random() * 1e9), scene: "idle", pool: null, arrived: [], closed: false, round: 0, results: [], out: {}, src: CFG.mode };
+  if (!ST || ST.v !== 1) ST = { v: 1, seed: REC ? 20261026 : Math.floor(Math.random() * 1e9), scene: "idle", pool: null, arrived: [], closed: false, round: 0, results: [], out: {}, src: CFG.mode };
   function persist() { if (!REC && !BENCH) save(LS_ST, ST); pushCtl(); }
 
   /* ─────────────── 데이터 어댑터 ─────────────── */
@@ -198,7 +210,7 @@
 
   /* ─────────────── 캔버스 · 뷰 변환 ─────────────── */
   var cv, cx, glEl, fxEl, fx, GL = null, vw = 0, vh = 0, dpr = 1, vs = 1, vox = 0, voy = 0, frameEl;
-  var gridBlack = null, gridOrange = null, BASEVS = 0;
+  var gridBlack = null, gridOrange = null, BASEVS = 0, FRS = { s: 1, ox: 0, oy: 0 };
   function resize() {
     var w = REC ? 1920 : window.innerWidth, h = REC ? 1080 : window.innerHeight;
     dpr = REC ? 1 : Math.min(window.devicePixelRatio || 1, 2);
@@ -210,6 +222,7 @@
     var s = Math.min(w / W0, h / H0);
     vs = s * dpr; vox = (w - W0 * s) / 2 * dpr; voy = (h - H0 * s) / 2 * dpr; BASEVS = vs;
     frameEl.style.transform = "translate(" + (w - W0 * s) / 2 + "px," + (h - H0 * s) / 2 + "px) scale(" + s + ")";
+    FRS.s = s; FRS.ox = (w - W0 * s) / 2; FRS.oy = (h - H0 * s) / 2;
     ["vIntro", "vBurst"].forEach(function (id) { var v = document.getElementById(id); if (v) v.style.transform = frameEl.style.transform; });
     gridBlack = makeGrid("black"); gridOrange = makeGrid("orange");
     atlas.key = "";
@@ -267,8 +280,73 @@
   var bs = new Uint8Array(MAXB), bno = new Array(MAXB), bpk = new Array(MAXB), bnoI = new Int32Array(MAXB);
   var bq = new Float32Array(MAXB * 4), bflag = new Uint8Array(MAXB), bcont = new Uint8Array(MAXB), bao = new Float32Array(MAXB), bnum = new Float32Array(MAXB);
   var NB = 0, R = 22, RT = 22, nAlive = 0, nInside = 0;
-  var MIX = { e: 0, target: 0, omega: 0.06, rot: 0 };
+  var MIX = { e: 0, target: 0, w: 0.2, rot: 0 };       /* e = 섞기 세기(통 회전 목표) · w = 통 각속도(rad/s · + = 시계 방향) · rot = 통 회전각(벽 속도와 같다) */
+  var GAP = { a0: TOP, latch: 0, latchV: 0, live: false, pull: 0 };   /* 틈 각도 = a0 + rot · latch 1 = 점 하나가 틈을 막는다 · live = 이번 추첨에서 통과를 받는 중 */
+  var DRM = { mode: "spin", at: 0, rock: 0, hold: 0 };   /* 통 움직임 · spin 돈다 · park 감속해 세운다 · hold 서 있다(at = 세운 방향) */
+  var PARK = { th0: 0, D: 0, Td: 1, k: 1, t0: 0, at: 0 };
+  var TUNE = { fill: 0.56, wmix: 1.4, fins: 0, finL: 2.6, surge: 0, surgeW: 4, surgeA: 3, rest: 0, restV: 0.08 };   /* fins = 통 안쪽 날개 수(통돌이 세탁조처럼 공을 들어 올려 뿌린다 · 섞임) · finL = 날개 길이(공 반지름 배수) */
+  function finLen() { return Math.max(TUNE.finL * R, 34); }
+  /* 날개 · 틈에서 360/(n+1) 간격 · 벽에서 안쪽으로 짧게 · 통과 함께 돈다 */
+  function finAng(k) { return gapAng() + (k + 1) * 6.2832 / (TUNE.fins + 1); }
+  function finPush(i, rr) {
+    var L = finLen(), ft = 3, any = false;
+    for (var k = 0; k < TUNE.fins; k++) {
+      var a = finAng(k), c = Math.cos(a), sn = Math.sin(a), x1 = DX + c * DR, y1 = DY + sn * DR, x0 = DX + c * (DR - L), y0 = DY + sn * (DR - L);
+      var ux = x1 - x0, uy = y1 - y0, wx = bx[i] - x0, wy = by[i] - y0, tt = clamp((wx * ux + wy * uy) / (L * L), 0, 1);
+      var px = x0 + ux * tt, py = y0 + uy * tt, dx = bx[i] - px, dy = by[i] - py, d = Math.hypot(dx, dy), m = rr + ft;
+      if (d < m && d > 1e-6) { var q = (m - d) / d; bx[i] += dx * q; by[i] += dy * q; any = true; }
+    }
+    return any;
+  }                 /* 통 안 공 면적 비율 · 섞기 각속도(0.2 + wmix) */
+  var KICK = { p: 0.004, v: 0.3 };                      /* 도는 동안 공이 가끔 튄다(스텝당 확률 · 반지름 배수 속도) · 섞임을 돕는다(공정성 시험으로 값을 정했다) */
+  var FRIC = 0.08, WALLK = 0.12;                        /* 공끼리 · 벽과 공의 마찰(통이 돌면 공이 딸려 올라간다) */
+  function gapAng() { return GAP.a0 + MIX.rot; }
+  function gapHalfW() { return R * GAPW; }              /* 틈 반폭(px) */
+  function gapEdgeA() { return Math.asin(Math.min(0.99, gapHalfW() / DR)); }   /* 틈 끝점의 각도 반폭 */
+  function angDiff(a, b) { return Math.atan2(Math.sin(a - b), Math.cos(a - b)); }
+  /* 감속해 틈을 at 방향에 세운다 · 3차 에르밋 곡선 · 시작 속도는 지금 속도 · 끝 속도 0 · stretch = 감속 시간 배율(추첨 때 암호 난수) */
+  function startPark(at, minD, stretch, tmin, tmax) {
+    var w0 = Math.max(Math.abs(MIX.w), 0.25), D = ((at - gapAng()) % 6.2832 + 6.2832) % 6.2832;
+    while (D < minD) D += 6.2832;
+    PARK.th0 = MIX.rot; PARK.D = D; PARK.at = at; PARK.t0 = T;
+    PARK.Td = clamp(D / w0 * (stretch || 1), tmin || 0.8, tmax || 2.0); PARK.k = clamp(w0 * PARK.Td / D, 0, 3);   /* k < 1 이면 한 번 빨라졌다가 선다 */
+    DRM.mode = "park"; DRM.at = at;
+  }
+  /* 통 움직임 · spin = 각속도가 목표로(체크인 0.8 · 대기 0.2 · 섞기 1.6 rad/s) · park = 감속해 틈을 세운다 · hold = 서 있다
+   * 체크인 중에도 통은 천천히 돈다 · 넣을 공이 있으면 틈이 12시로 다가올 때 자연스럽게 감속해 세우고, 그 틈으로 묶어서 넣은 뒤 다시 돈다(최대 2.6초)
+   * 체크인 밖(재추첨 · 취소로 돌아오는 공)은 바로 틈을 12시에 세운다 · 추첨 배출 뒤에는 0.35초 뒤 다시 돈다 */
+  var LOADW = 0.8, MIXT = 0, MINMIX = 10, CHKSIM = false, DROPT = 0;
+  function minMixFor(m) { if (REC) return 10; var r = CFG.minMix && CFG.minMix.length ? CFG.minMix : DEF.minMix, v = 10;   /* 쇼릴(녹화)은 10초 고정 */ r.forEach(function (x) { if (m >= x[0]) v = x[1]; }); return v; }
+  function dropsDue() { for (var k = 0; k < DROPS.length; k++) if (DROPS[k].at <= T) return true; return false; }
+  function drumStep(dt, chk) {
+    var due = dropsDue();
+    if (DRM.mode === "spin") {
+      var wt = chk ? LOADW : 0.2 + TUNE.wmix * MIX.e;
+      MIX.w += (wt - MIX.w) * Math.min(1, dt * 1.5); MIX.rot += MIX.w * dt;
+      if (due && SC !== "tension" && SC !== "exit") {
+        var D = ((TOP - gapAng()) % 6.2832 + 6.2832) % 6.2832;
+        if (!chk) startPark(TOP, 0.4, 0.9, 0.9, 1.8);
+        else if (D > 0.3 && D < 0.75) startPark(TOP, 0.2, 1, 0.4, 1.6);   /* 틈이 12시로 다가올 때만 · 남은 각도만큼 자연스럽게 선다 */
+      }
+    } else if (DRM.mode === "park") { if (SC !== "tension" || CHKSIM) stepPark(); }
+    else if (DRM.mode === "hold") {
+      MIX.w = 0;
+      if (DRM.at === TOP) {
+        var held = T - DRM.t0, more = due && !(chk && held > 2.6);
+        if (!more && !nFalling && held > 0.35) DRM.mode = "spin";
+      }
+      if (DRM.at === SIX && DRW.resume && T >= DRW.resume) { DRW.resume = 0; DRM.mode = "spin"; }
+    }
+  }
+  function stepPark() {
+    var u = clamp((T - PARK.t0) / PARK.Td, 0, 1), k = PARK.k;
+    var f = k * u + (3 - 2 * k) * u * u + (k - 2) * u * u * u, fp = (1 - u) * (k + (6 - 3 * k) * u);
+    MIX.rot = PARK.th0 + PARK.D * f; MIX.w = PARK.D / PARK.Td * fp;
+    if (u >= 1) { DRM.mode = "hold"; DRM.hold = MIX.rot; DRM.t0 = T; MIX.w = 0; return true; }
+    return false;
+  }
   var PH = { acc: 0, h: 1 / 120, impacts: 0, impactV: 0, ms: 0 };
+  var ORD = new Int32Array(MAXB), ORDN = -1;
   var grid = { cs: 0, gw: 0, gh: 0, x0: 0, y0: 0, cnt: null, idx: null, cell: new Int32Array(MAXB) };
   var ballOfNo = {};
   function addBall(no, pk, x, y, vx, vy, st) {
@@ -310,35 +388,33 @@
       bao[i] += (ao - bao[i]) * 0.15;
     }
   }
+  var nFalling = 0;
   function countAlive() {
-    var a = 0, n = 0;
-    for (var i = 0; i < NB; i++) if (bs[i]) { a++; if (bs[i] === 2) n++; }
-    nAlive = a; nInside = n;
+    var a = 0, n = 0, f = 0;
+    for (var i = 0; i < NB; i++) if (bs[i]) { a++; if (bs[i] === 2) n++; else if (bs[i] === 1) f++; }
+    nAlive = a; nInside = n; nFalling = f;
   }
-  function targetRadius() { return clamp(Math.sqrt(0.56 * DR * DR / Math.max(nAlive, 150)), 5.2, 24); }   /* v2 · 번호가 읽히게 조금 크게(면적 56%) */
+  function targetRadius() { return clamp(Math.sqrt(TUNE.fill * DR * DR / Math.max(nAlive, 150)), 5.2, 24); }   /* v2 · 번호가 읽히게 조금 크게(면적 56%) */
   function physStep(h) {
-    var g = 2600, i, j, e = MIX.e, rr = R, lim = DR - rr, tt = T;
-    /* 1. 적분 + 믹싱 힘(바닥 공기 분사 · 소용돌이 · 난류) */
-    var damp = e > 0.05 ? 0.9985 : 0.996, vmax = rr * 0.9;
+    var g = 2600, i, j, rr = R, lim = DR - rr;
+    /* 1. 적분 · 중력뿐(분사 없음) · 통이 돌며 벽 마찰로 끌어올린 공이 굴러 떨어진다(텀블링) */
+    var damp = 0.9982, vmax = rr * 0.9, pull = GAP.pull, ga0 = gapAng(), kickP = KICK.p * clamp((Math.abs(MIX.w) - 0.4) / 1.2, 0, 1);
+    var gpx = DX + Math.cos(ga0) * DR, gpy = DY + Math.sin(ga0) * DR;
     for (i = 0; i < NB; i++) {
       var s = bs[i]; if (!s || s === 3) continue;
       var vx = (bx[i] - bpx[i]) * damp, vy = (by[i] - bpy[i]) * damp;
       var sp = Math.hypot(vx, vy); if (sp > vmax) { vx *= vmax / sp; vy *= vmax / sp; }
       var ax = 0, ay = g;
-      if (s === 2 && e > 0) {
-        var dx = bx[i] - DX, dy = by[i] - DY, d = Math.hypot(dx, dy) + 1e-3, ph = bph[i] * 6.2832;
-        if (dy > -DR * 0.1) ay -= e * 5400 * (0.5 + 0.5 * Math.sin(tt * 6.1 + ph * 3 + dx * 0.02)) * (dy / DR + 0.5);   /* 바닥 공기 분사 */
-        ax += e * 380 * (-dy / d) - e * dx * 2.4;                                                                   /* 약한 소용돌이 + 가운데로 */
-        ay += e * 380 * (dx / d) - e * dy * 1.2;
-        ax += e * 2600 * Math.sin(by[i] * 0.012 + tt * 2.7 + ph) * Math.cos(bx[i] * 0.009 - tt * 1.3);               /* 소용돌이 난류(자리마다 다르다) */
-        ay += e * 2600 * Math.cos(bx[i] * 0.011 + tt * 2.1) * Math.sin(by[i] * 0.008 + tt * 1.7 + ph);
-        if (rng() < e * 0.007) { var ka = rng() * 6.2832, kv = rr * (0.3 + rng() * 0.4); vx += Math.cos(ka) * kv; vy += Math.sin(ka) * kv - rr * 0.2; }   /* 튀는 공 */
-      }
+      if (s === 2 && kickP > 0 && rng() < kickP) { var ka = rng() * 6.2832, kv = rr * KICK.v * (0.5 + rng() * 0.5); vx += Math.cos(ka) * kv; vy += Math.sin(ka) * kv - rr * 0.1; }   /* 통 안쪽 요철에 튀는 공(섞임) */
+      if (pull > 0 && s === 2) { var sgx = gpx - bx[i], sgy = gpy - by[i], sgd = Math.hypot(sgx, sgy) + 1; if (sgd < DR * 0.5) { ax += pull * 2400 * sgx / sgd; ay += pull * 2400 * sgy / sgd; } }   /* 마지막 안전장치(9초) */
       bpx[i] = bx[i]; bpy[i] = by[i];
       bx[i] += vx + ax * h * h; by[i] += vy + ay * h * h;
       if (bx[i] !== bx[i] || by[i] !== by[i]) { bx[i] = DX; by[i] = DY; bpx[i] = DX; bpy[i] = DY; NANFIX++; }   /* NaN 방어 */
     }
-    /* 2. 충돌 · 격자에 담고 이웃 칸만 본다 */
+    /* 2. 충돌 · 격자에 담고 이웃 칸만 본다
+     *    처리 순서를 매 스텝 섞는다 · 순서대로 풀면 번호가 낮은 공이 바닥으로 가라앉는 편향이 생긴다(v3 실측 · 공정성) */
+    if (ORDN !== NB) { for (i = 0; i < NB; i++) ORD[i] = i; ORDN = NB; }
+    for (i = NB - 1; i > 0; i--) { j = Math.floor(rng() * (i + 1)); var tmp = ORD[i]; ORD[i] = ORD[j]; ORD[j] = tmp; }
     var cs = rr * 2, x0 = DX - DR - cs, y0 = DY - DR - cs * 3, gw = Math.ceil((DR * 2 + cs * 2) / cs) + 1, gh = Math.ceil((DR * 2 + cs * 4) / cs) + 1, nc = gw * gh;
     if (!grid.cnt || grid.cnt.length < nc + 1) { grid.cnt = new Int32Array(nc + 1); grid.idx = new Int32Array(MAXB); }
     var cnt = grid.cnt, idx = grid.idx, cell = grid.cell;
@@ -355,7 +431,7 @@
       var fillp = grid.fillp || (grid.fillp = new Int32Array(MAXB));
       if (fillp.length < nc) fillp = grid.fillp = new Int32Array(nc + 64);
       for (c = 0; c < nc; c++) fillp[c] = cnt[c];
-      for (i = 0; i < NB; i++) if (cell[i] >= 0) idx[fillp[cell[i]]++] = i;
+      for (var oi = 0; oi < NB; oi++) { i = ORD[oi]; if (cell[i] >= 0) idx[fillp[cell[i]]++] = i; }   /* 칸 안 순서 = 무작위(아래 참고) */
       var dd = cs * cs, imp = 0, impV = 0;
       for (var gyy = 0; gyy < gh; gyy++) for (var gxx = 0; gxx < gw; gxx++) {
         var c0 = gyy * gw + gxx, a0 = cnt[c0], a1 = cnt[c0 + 1];
@@ -377,38 +453,63 @@
               bx[i] -= nxx * mi; by[i] -= nyy * mi; bx[j] += nxx * mj; by[j] += nyy * mj;
               if (it === 0) {
                 if (bcont[i] < 255) bcont[i]++; if (bcont[j] < 255) bcont[j]++;
-                var rv = ((bx[j] - bpx[j]) - (bx[i] - bpx[i])) * nxx + ((by[j] - bpy[j]) - (by[i] - bpy[i])) * nyy;
+                var rvx = (bx[j] - bpx[j]) - (bx[i] - bpx[i]), rvy = (by[j] - bpy[j]) - (by[i] - bpy[i]), rv = rvx * nxx + rvy * nyy;
                 if (rv < -1.6) { imp++; if (-rv > impV) impV = -rv; }
+                if (TUNE.rest && rv < -rr * TUNE.restV && wi && wj) {   /* 튕김(반발) · 빠르게 부딪힌 공끼리만 · 섞임을 돕는다 */
+                  var jr = -rv * TUNE.rest * 0.5; bpx[i] += nxx * jr; bpy[i] += nyy * jr; bpx[j] -= nxx * jr; bpy[j] -= nyy * jr;
+                }
+                if (wi && wj) {                         /* 접선 마찰 · 공 더미가 덩어리로 딸려 올라갔다가 무너진다 */
+                  var fr = (rvy * nxx - rvx * nyy) * FRIC * 0.5;
+                  bpx[i] += nyy * fr; bpy[i] -= nxx * fr; bpx[j] -= nyy * fr; bpy[j] += nxx * fr;
+                }
               }
             }
           }
         }
       }
       if (it === 0) { PH.impacts += imp; if (impV > PH.impactV) PH.impactV = impV; }
-      /* 3. 벽 · 통 안의 공은 원 안으로 · 벽이 돌면 마찰로 끌려간다 */
-      var wall = MIX.omega * DR * h, eRest = e > 0.05 ? 0.55 : 0.25;
+      /* 3. 벽 · 통 안의 공은 원 안으로 · 벽이 돌면 마찰로 끌려 올라간다
+       *    틈 안에서는 벽 대신 틈 양 끝점과 부딪힌다 · 틈 폭이 공 지름보다 조금 넓어 정면에 온 공만 빠진다
+       *    통이 도는 동안(추첨 대기 아님)은 공이 틈에 반쯤 걸쳐도 끝점이 쓸어 되돌린다 · 반지름 0.7 이상 들어가지 못한다 */
+      var wall = MIX.w * DR * h, eRest = 0.22, ga = gapAng(), ea = gapEdgeA(), gcx = Math.cos(ga), gsy = Math.sin(ga);
+      var e1x = DX + Math.cos(ga - ea) * DR, e1y = DY + Math.sin(ga - ea) * DR, e2x = DX + Math.cos(ga + ea) * DR, e2y = DY + Math.sin(ga + ea) * DR;
+      var open = GAP.latch < 0.5, live = GAP.live && open, candI = -1, candD = 0, inner = DR - rr * 0.3, half = Math.max(0, gapHalfW() - rr);
       for (i = 0; i < NB; i++) {
         var st = bs[i]; if (!st || st === 3) continue;
         var wx = bx[i] - DX, wy = by[i] - DY, wd = Math.hypot(wx, wy);
-        if (st === 1) {
-          if (by[i] < DY - DR + rr * 2) { var cw = Math.max(4, 58 - rr); if (bx[i] < DX - cw) bx[i] = DX - cw; if (bx[i] > DX + cw) bx[i] = DX + cw; bpx[i] = bx[i] - (bx[i] - bpx[i]) * 0.3; }
-          if (wd < lim - 1 && by[i] > DY - DR + rr) { bs[i] = 2; bland[i] = T; if (!REC || true) landSound(); }
+        if (st === 1) {                                 /* 넣는 공 · 12시 틈 바로 위에서 틈 폭 안으로만 떨어진다 */
+          if (by[i] < DY - DR + rr * 2) { var cxg = DX + gcx * DR; if (bx[i] < cxg - half) bx[i] = cxg - half; if (bx[i] > cxg + half) bx[i] = cxg + half; bpx[i] = bx[i] - (bx[i] - bpx[i]) * 0.3; }
+          if (wd < lim - 1 && by[i] > DY - DR + rr) { bs[i] = 2; bland[i] = T; landSound(); }
           continue;
         }
-        if (wd > lim) {
-          if (wd > DR + rr * 6) { bx[i] = DX + (rng() - 0.5) * 40; by[i] = DY; bpx[i] = bx[i]; bpy[i] = by[i]; ESCFIX++; continue; }   /* 빠져나간 공 복구 */
-          var nx = wx / wd, ny = wy / wd;
-          bx[i] = DX + nx * lim; by[i] = DY + ny * lim;
-          var vx2 = bx[i] - bpx[i], vy2 = by[i] - bpy[i], vn = vx2 * nx + vy2 * ny;
-          if (vn > 0) { vx2 -= (1 + eRest) * vn * nx; vy2 -= (1 + eRest) * vn * ny; }
-          var tx = -ny, ty = nx, vt = vx2 * tx + vy2 * ty, k = 0.025;
-          vx2 += tx * (wall - vt) * k; vy2 += ty * (wall - vt) * k;
-          bpx[i] = bx[i] - vx2; bpy[i] = by[i] - vy2;
+        if (TUNE.fins && wd > DR - finLen() - rr * 1.2 && finPush(i, rr)) { wx = bx[i] - DX; wy = by[i] - DY; wd = Math.hypot(wx, wy); }
+        if (wd <= lim) continue;
+        if (wd > DR + rr * 6) { bx[i] = DX + (rng() - 0.5) * 40; by[i] = DY; bpx[i] = bx[i]; bpy[i] = by[i]; ESCFIX++; continue; }   /* 빠져나간 공 복구 */
+        var nx = wx / wd, ny = wy / wd, da = Math.atan2(ny * gcx - nx * gsy, nx * gcx + ny * gsy);
+        if (open && Math.abs(da) < ea) {
+          edgePush(i, e1x, e1y, rr); edgePush(i, e2x, e2y, rr);
+          wx = bx[i] - DX; wy = by[i] - DY; wd = Math.hypot(wx, wy);
+          var ok = live && !ST.out[bpk[i]];
+          if (!ok && wd > inner) { bx[i] = DX + wx / wd * inner; by[i] = DY + wy / wd * inner; var vo = (bx[i] - bpx[i]) * wx / wd + (by[i] - bpy[i]) * wy / wd; if (vo > 0) { bpx[i] += wx / wd * vo; bpy[i] += wy / wd * vo; } }
+          else if (ok && wd > DR + rr * 0.5 && wd - DR > candD) { candI = i; candD = wd - DR; }
+          continue;
         }
+        bx[i] = DX + nx * lim; by[i] = DY + ny * lim;
+        var vx2 = bx[i] - bpx[i], vy2 = by[i] - bpy[i], vn = vx2 * nx + vy2 * ny;
+        if (vn > 0) { vx2 -= (1 + eRest) * vn * nx; vy2 -= (1 + eRest) * vn * ny; }
+        var tx = -ny, ty = nx, vt = vx2 * tx + vy2 * ty;
+        vx2 += tx * (wall - vt) * WALLK; vy2 += ty * (wall - vt) * WALLK;
+        bpx[i] = bx[i] - vx2; bpy[i] = by[i] - vy2;
       }
+      /* 처음 통과한 공 = 당첨 · 한 스텝(1/120초)에 여럿이면 번호 순서가 아니라 더 빠져나간 공 · 그 순간 점 하나가 틈을 막는다 */
+      if (candI >= 0) { GAP.latch = 1; capture(candI); }
     }
     /* 4. 굴림 · 접선 속도로 회전(숫자가 돌아간다) */
     for (i = 0; i < NB; i++) if (bs[i] === 2) ba[i] += (bx[i] - bpx[i]) / rr * 0.9;
+  }
+  function edgePush(i, ex, ey, rr) {                    /* 틈 끝점(통 테두리 끝)과 공 · 끝점은 통과 함께 움직인다 */
+    var dx = bx[i] - ex, dy = by[i] - ey, d = Math.hypot(dx, dy);
+    if (d < rr && d > 1e-6) { var p = (rr - d) / d; bx[i] += dx * p; by[i] += dy * p; }
   }
   var lastDrop = 0, NANFIX = 0, ESCFIX = 0;
   function landSound() { if (T - lastDrop > 0.045) { lastDrop = T; SFX.play("drop", rng()); } }
@@ -478,58 +579,79 @@
   }
 
   /* ─────────────── 추첨 통 · 점 고리(KV 02 Connection) ─────────────── */
-  var DRUM = { inlet: 0, inletT: 0, gate: 0, gateT: 0, pulse: 0, alpha: 1, glow: 0 };
+  var DRUM = { pulse: 0, alpha: 1 };
+  /* 통 = 유리 구(사용자 확정 261001 · 3안) · 옅은 웜 그레이 유리 · 프레넬 테두리 · 하이라이트(굴절 없음)
+   *   틈은 뚫린 구멍(가장자리 하이라이트) · 미세 점 무늬와 반짝임이 통과 함께 돈다 · 받침 · 관 없음 */
   function drawDrum() {
-    var n = 132, i, beatWave = DRUM.pulse;
+    var ga = gapAng(), ea = gapEdgeA();
     cx.setTransform(vs, 0, 0, vs, vox, voy);
     cx.globalAlpha = DRUM.alpha;
-    /* 안 1(무채색 통) = 작은 점은 옅은 회색 · 굵은 점만 조금 밝게 · 안 2 = v1 오렌지 3단(02 Circle 원본) */
-    var neutral = CFG.pal !== 2, tiers = neutral ? ["rgba(255,255,255,0.34)", "rgba(255,255,255,0.74)"] : [C.o, C.hi, C.pu];
-    for (var tier = 0; tier < tiers.length; tier++) {
-      cx.fillStyle = tiers[tier]; cx.beginPath();
-      for (i = 0; i < n; i++) {
-        var rank = i * 13 % 36, base = rank < 7 ? 8 : rank < 18 ? 4.6 : 2.6;
-        if (neutral ? (tier === 0) === (rank < 7) : (tier > 0 && rank >= 7)) continue;
-        var a = i / n * 6.2832 + MIX.rot;
-        /* 투입구·배출구 자리에서는 점이 작아져 틈이 열린다(고리 자체는 계속 돈다) */
-        var gi = gapK(a, INLET, 0.2) * DRUM.inlet, gg = gapK(a, GATE, 0.2) * DRUM.gate;
-        var k = 1 - Math.max(gi, gg);
-        if (k <= 0.02) continue;
-        var wave = 1 + 0.45 * beatWave * Math.max(0, Math.cos(a - MIX.rot * 3 - T * 4)) + 0.25 * DRUM.glow;
-        var r = base * k * wave * (neutral || tier === 0 ? 1 : tier === 1 ? 18 / 38 : 8 / 38);
-        var rr = RING + (rank < 7 ? 0 : rank < 18 ? 6 : 12) * 0 + 0;
-        var x = DX + Math.cos(a) * rr, y = DY + Math.sin(a) * rr;
-        cx.moveTo(x + r, y); cx.arc(x, y, r, 0, 6.2832);
-      }
-      cx.fill();
-    }
-    /* 투입구 위 안내 점선 · 체크인 중에만 */
-    if (DRUM.inlet > 0.05) {
-      cx.fillStyle = (CFG.pal !== 2 ? "rgba(255,255,255," : "rgba(255,150,62,") + (0.5 * DRUM.inlet).toFixed(3) + ")"; cx.beginPath();
-      for (var y2 = DY - RING - 30; y2 > -20; y2 -= 26) { var ph = ((T * 90) % 26); cx.moveTo(DX + 2.4, y2 + ph); cx.arc(DX, y2 + ph, 2.4, 0, 6.2832); }
-      cx.fill();
-    }
+    drawGlassBack(ga, ea);
+    drawLatch(ga, ea);
     cx.globalAlpha = 1;
   }
-  function gapK(a, c, w) { var d = Math.atan2(Math.sin(a - c), Math.cos(a - c)); return Math.max(0, 1 - Math.abs(d) / w); }
+  /* 유리 · 뒷면(공 뒤) = 아주 옅은 웜 그레이 몸통 + 미세 점 무늬(돈다) */
+  var GLD = null;
+  function drawGlassBack(ga, ea) {
+    var g = cx.createRadialGradient(DX - DR * 0.25, DY - DR * 0.3, 0, DX, DY, DR + 14);
+    g.addColorStop(0, "rgba(255,244,236,0.13)"); g.addColorStop(0.6, "rgba(255,236,224,0.085)"); g.addColorStop(0.93, "rgba(255,222,204,0.16)"); g.addColorStop(1, "rgba(255,222,204,0)");   /* 밝고 옅은 웜 그레이(검게 번들거리지 않게) */
+    cx.fillStyle = g; cx.beginPath(); cx.arc(DX, DY, DR + 14, 0, 6.2832); cx.fill();
+    if (!GLD) { GLD = []; for (var k = 0; k < 160; k++) { var rr = Math.sqrt(hash(k * 3 + 1)) * 0.97, aa = hash(k * 7 + 2) * 6.2832; GLD.push([rr, aa, 0.8 + hash(k * 11 + 5) * 1.0]); } }
+    cx.fillStyle = "rgba(255,236,224,0.16)"; cx.beginPath();
+    for (var j = 0; j < GLD.length; j++) { var d = GLD[j], a2 = d[1] + MIX.rot, x = DX + Math.cos(a2) * d[0] * DR, y = DY + Math.sin(a2) * d[0] * DR; cx.moveTo(x + d[2], y); cx.arc(x, y, d[2], 0, 6.2832); }
+    cx.fill();
+  }
+  /* 유리 · 앞면(공 앞 · #fx) = 프레넬 테두리 + 고정 하이라이트(조명) + 통과 함께 도는 반짝임 + 구멍 가장자리 하이라이트 */
+  function drawGlassFront() {
+    var ga = gapAng(), ea = gapEdgeA(), ro = DR + 14, ri = DR - 4;
+    cx.setTransform(vs, 0, 0, vs, vox, voy);
+    cx.globalAlpha = DRUM.alpha;
+    var g = cx.createRadialGradient(DX, DY, ri - 6, DX, DY, ro);
+    g.addColorStop(0, "rgba(255,238,226,0)"); g.addColorStop(0.5, "rgba(255,238,226,0.22)"); g.addColorStop(0.82, "rgba(255,240,230,0.42)"); g.addColorStop(1, "rgba(255,238,226,0)");
+    cx.fillStyle = g; cx.beginPath();
+    cx.arc(DX, DY, ro, ga + ea, ga - ea + 6.2832); cx.arc(DX, DY, ri - 6, ga - ea + 6.2832, ga + ea, true); cx.closePath(); cx.fill();
+    var hb = cx.createRadialGradient(DX - DR * 0.42, DY - DR * 0.5, 0, DX - DR * 0.42, DY - DR * 0.5, DR * 0.45);
+    hb.addColorStop(0, "rgba(255,251,247,0.2)"); hb.addColorStop(1, "rgba(255,251,247,0)");
+    cx.fillStyle = hb; cx.beginPath(); cx.arc(DX - DR * 0.42, DY - DR * 0.5, DR * 0.45, 0, 6.2832); cx.fill();
+    cx.lineCap = "round";
+    cx.strokeStyle = "rgba(255,252,248,0.46)"; cx.lineWidth = 7; cx.beginPath(); cx.arc(DX, DY, DR * 0.87, -2.56, -1.96); cx.stroke();
+    cx.strokeStyle = "rgba(255,252,248,0.3)"; cx.lineWidth = 4.5; cx.beginPath(); cx.arc(DX, DY, DR * 0.87, -2.78, -2.66); cx.stroke();
+    cx.strokeStyle = "rgba(255,236,224,0.13)"; cx.lineWidth = 3; cx.beginPath(); cx.arc(DX, DY, DR * 0.94, 0.75, 1.25); cx.stroke();
+    cx.strokeStyle = "rgba(255,246,238,0.16)"; cx.lineWidth = 3; cx.beginPath();   /* 통과 함께 도는 반짝임 셋 */
+    [0.6, 2.5, 4.4].forEach(function (a0) { var a = a0 + MIX.rot; if (Math.abs(angDiff(a, ga)) < 0.4) return; cx.moveTo(DX + Math.cos(a) * DR * 0.95, DY + Math.sin(a) * DR * 0.95); cx.arc(DX, DY, DR * 0.95, a, a + 0.2); });
+    cx.stroke();
+    cx.strokeStyle = "rgba(255,252,248,0.75)"; cx.lineWidth = 3; cx.beginPath();   /* 구멍 가장자리 */
+    for (var s = -1; s <= 1; s += 2) { var aa = ga + s * ea, c = Math.cos(aa), sn = Math.sin(aa); cx.moveTo(DX + c * (DR - 1), DY + sn * (DR - 1)); cx.lineTo(DX + c * (DR + 12), DY + sn * (DR + 12)); }
+    cx.stroke();
+    cx.lineCap = "butt"; cx.globalAlpha = 1;
+  }
+  /* 점 하나가 틈을 막는다(첫 공이 지나간 순간) · 틈 뒤쪽 끝에서 미끄러져 들어온다 */
+  function drawLatch(ga, ea) {
+    var v = GAP.latchV; if (v < 0.02) return;
+    var rad = DR + 5, a = ga - ea * (1 - v) * 1.6;
+    var x = DX + Math.cos(a) * rad, y = DY + Math.sin(a) * rad, r = clamp(gapHalfW() * 0.55, 4, 9);
+    cx.globalAlpha = DRUM.alpha * clamp(v * 1.5, 0, 1);
+    cx.fillStyle = C.hi; cx.beginPath(); cx.arc(x, y, r, 0, 6.2832); cx.fill();
+    cx.globalAlpha = DRUM.alpha;
+  }
 
-  /* v2 · 공은 #gl 에 입체로 · 방금 들어온 공의 고리와 긴장 구간 하이라이트 고리는 #fx 에 */
-  var S3 = { NB: 0, x: bx, y: by, q: bq, r: 0, bs: bs, num: bnum, flag: bflag, ao: bao, heroI: -1, hx: 0, hy: 0, hr: 0, hq: [0, 0, 0, 1], hnum: 0, t: 0, dim: 1 };
-  function drawBallsGL(alphaAll) {
-    var ex = SC === "exit" && WIN.i >= 0, cs = CAM.s;
-    /* 사라질 때는 투명도로(오렌지 스테이지 위에서 검게 보이지 않게) · 배출 중에만 어둡게(당첨 공은 그대로) */
+  /* 공은 #gl 에 입체로 · 방금 들어온 공의 고리만 #fx 에(공을 고르는 하이라이트는 없다 · v3) */
+  var S3 = { NB: 0, x: bx, y: by, q: bq, r: 0, bs: bs, num: bnum, flag: bflag, ao: bao, heroI: -1, hx: 0, hy: 0, hr: 0, hq: [0, 0, 0, 1], hnum: 0, t: 0, dim: 1, hflag: 0 };
+  function drawBallsGL(alphaAll, dim) {
+    var ex = SC === "exit" && WIN.i >= 0, cs = CAM.s, ox = CAM.ox + CAM.jx, oy = CAM.oy + CAM.jy;
+    /* 사라질 때는 투명도로(오렌지 스테이지 위에서 검게 보이지 않게) · 배출 중에는 통 쪽 공만 어둡게(당첨 공은 그대로) */
     glEl.style.opacity = SC === "exit" ? "1" : alphaAll.toFixed(3);
-    S3.NB = NB; S3.r = R * cs; S3.t = T; S3.dim = SC === "exit" ? alphaAll : 1; S3.heroI = ex ? WIN.i : -1;
-    if (ex) { var p = winPos(), o = WIN.i * 4; S3.hx = p.x; S3.hy = p.y; S3.hr = winRad(); S3.hq[0] = bq[o]; S3.hq[1] = bq[o + 1]; S3.hq[2] = bq[o + 2]; S3.hq[3] = bq[o + 3]; S3.hnum = bnum[WIN.i]; S3.hflag = (WIN.z || 0) > 0.05 ? 0 : 2; }
+    S3.NB = NB; S3.r = R * cs; S3.t = T; S3.dim = SC === "exit" ? dim : 1; S3.heroI = ex ? WIN.i : -1; S3.hflag = 0;
+    if (ex) { var p = winPos(), o = WIN.i * 4; S3.hx = p.x; S3.hy = p.y; S3.hr = winRad(); S3.hq[0] = bq[o]; S3.hq[1] = bq[o + 1]; S3.hq[2] = bq[o + 2]; S3.hq[3] = bq[o + 3]; S3.hnum = bnum[WIN.i]; }
     else S3.hr = 0;
-    if (cs !== 1) {                                    /* 긴장 구간 카메라 다가가기 · 공 좌표에도 같은 배율 */
+    if (cs !== 1 || ox !== 0 || oy !== 0) {            /* 카메라(다가가기 · 흔들림 · 따라가기) · 공 좌표에도 같은 변환 */
       if (!S3.cx) { S3.cx = new Float32Array(MAXB); S3.cy = new Float32Array(MAXB); }
-      for (var i2 = 0; i2 < NB; i2++) { S3.cx[i2] = DX + (bx[i2] - DX) * cs; S3.cy[i2] = (DY - 20) + (by[i2] - (DY - 20)) * cs; }
+      for (var i2 = 0; i2 < NB; i2++) { S3.cx[i2] = bx[i2] * cs + ox; S3.cy[i2] = by[i2] * cs + oy; }
       S3.x = S3.cx; S3.y = S3.cy;
     } else { S3.x = bx; S3.y = by; }
     GL.frame(S3);
     var i;
-    fx.setTransform(vs * cs, 0, 0, vs * cs, vox + DX * vs * (1 - cs), voy + (DY - 20) * vs * (1 - cs));
+    fx.setTransform(vs * cs, 0, 0, vs * cs, vox + ox * vs, voy + oy * vs);
     fx.globalAlpha = alphaAll * 0.9; fx.lineWidth = 2.5; fx.strokeStyle = C.hi; fx.beginPath();
     for (i = 0; i < NB; i++) {
       if (bs[i] !== 2) continue;
@@ -537,11 +659,6 @@
       var rr = R * (1.1 + u * 1.3); fx.moveTo(bx[i] + rr, by[i]); fx.arc(bx[i], by[i], rr, 0, 6.2832);
     }
     fx.stroke();
-    if (HOP.cur >= 0 && bs[HOP.cur] === 2) {
-      var j = HOP.cur, big = HOP.locked ? 1.34 + 0.12 * Math.sin(T * 18) : 1.32;
-      fx.globalAlpha = alphaAll; fx.lineWidth = HOP.locked ? 4 : 3; fx.strokeStyle = C.w;
-      fx.beginPath(); fx.arc(bx[j], by[j], R * big, 0, 6.2832); fx.stroke();
-    }
     fx.globalAlpha = 1;
   }
   function drawBalls(alphaAll) {
@@ -551,12 +668,12 @@
     if (atlas.small) {
       cx.setTransform(vs, 0, 0, vs, vox, voy);
       cx.fillStyle = C.o; cx.beginPath();
-      for (i = 0; i < NB; i++) { if (!bs[i] || bs[i] === 3 || i === HOP.cur) continue; cx.moveTo(bx[i] + R, by[i]); cx.arc(bx[i], by[i], R, 0, 6.2832); }
+      for (i = 0; i < NB; i++) { if (!bs[i] || bs[i] === 3) continue; cx.moveTo(bx[i] + R, by[i]); cx.arc(bx[i], by[i], R, 0, 6.2832); }
       cx.fill();
     } else {
       var cell = atlas.cell, cols = atlas.cols, sc = ps / ((cell - 2) / 2), half = cell / 2;   /* 아틀라스는 기본 배율로 한 번 · 카메라 배율은 여기서 곱한다 */
       for (i = 0; i < NB; i++) {
-        if (!bs[i] || bs[i] === 3 || i === HOP.cur) continue;
+        if (!bs[i] || bs[i] === 3) continue;
         var co = Math.cos(ba[i]) * sc, si = Math.sin(ba[i]) * sc;
         cx.setTransform(co, si, -si, co, vox + bx[i] * vs, voy + by[i] * vs);
         cx.drawImage(atlas.c, (i % cols) * cell, Math.floor(i / cols) * cell, cell, cell, -half, -half, cell, cell);
@@ -571,14 +688,6 @@
       var rr = R * (1.1 + u * 1.3); cx.moveTo(bx[i] + rr, by[i]); cx.arc(bx[i], by[i], rr, 0, 6.2832);
     }
     cx.globalAlpha = (alphaAll == null ? 1 : alphaAll) * 0.9; cx.stroke(); cx.globalAlpha = 1;
-    /* 긴장 구간 · 옮겨 다니는 하이라이트 */
-    if (HOP.cur >= 0 && bs[HOP.cur] === 2) {
-      var j = HOP.cur, big = HOP.locked ? 1 + 0.12 * Math.sin(T * 18) : 1.18;
-      cx.setTransform(vs, 0, 0, vs, vox, voy);
-      cx.fillStyle = C.w; cx.beginPath(); cx.arc(bx[j], by[j], R * big * 1.28, 0, 6.2832); cx.fill();
-      cx.fillStyle = HOP.locked ? C.hi : C.o; cx.beginPath(); cx.arc(bx[j], by[j], R * big, 0, 6.2832); cx.fill();
-      if (R * vs >= 7) { cx.fillStyle = "#1A0B02"; cx.font = "700 " + (R * big * 0.74).toFixed(1) + "px " + FONT; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText(bno[j], bx[j], by[j] + R * 0.05); }
-    }
   }
 
   /* ─────────────── 힉스필드 영상 · 장면 시계로 재생(녹화 모드에서는 프레임마다 위치를 맞춘다) ─────────────── */
@@ -614,13 +723,13 @@
 
   /* ─────────────── 장면 ─────────────── */
   var T = 0, sceneT0 = 0, SC = ST.scene === "idle" ? "idle" : "restore";
-  var HOP = { cur: -1, list: [], k: 0, locked: false };
-  var WIN = { i: -1, r: null, x: 0, y: 0, rad: 0, path: null };
+  var DRAW = { t0: 0, boosted: false, hearts: 0 };
+  var WIN = { i: -1, r: null, x: 0, y: 0, rad: 0, z: 0 };
   var DIG = { n: 0, sx: null, sy: null, tx: null, ty: null, dl: null, t0: 0, out: 0, ox: 0, oy: 0 };
   var ARR = { q: [], acc: 0, t: 0, lastPk: [] };
   var ME = { pts: null, t0: 0, from: null };
   var busyUntil = 0, confirmKey = null, confirmT = 0;
-  function scene(s) { SC = s; sceneT0 = T; ST.scene = s === "restore" ? ST.scene : s; document.body.dataset.scene = s; persist(); uiScene(); }
+  function scene(s) { SC = s; sceneT0 = T; ST.scene = s === "restore" ? ST.scene : s; document.body.dataset.scene = s; persist(); uiScene(); if (CMD) scrPush(true); }
   function sT() { return T - sceneT0; }
   function rounds() { return CFG.rounds && CFG.rounds.length ? CFG.rounds : DEF.rounds; }
   function curRound() { return rounds()[Math.min(ST.round, rounds().length - 1)]; }
@@ -631,7 +740,7 @@
     return out;
   }
 
-  /* 체크인 · 한 사람의 공 1~3개가 차례로 투입구로 떨어진다 */
+  /* 체크인 · 한 사람의 공 1~3개가 줄을 서서 틈이 12시에 올 때 들어간다 */
   function queueArrival(pk) {
     if (ST.arrived.indexOf(pk) >= 0 || ARR.q.indexOf(pk) >= 0) return;
     ARR.q.push(pk);
@@ -647,12 +756,17 @@
   }
   var DROPS = [];
   function stepDrops() {
+    if (!(DRM.mode === "hold" && DRM.at === TOP)) return;   /* 틈이 12시에 서 있을 때만 넣는다 */
+    if ((SC === "checkin" || CHKSIM) && T - DRM.t0 > 2.6) return;
+    if (T < DROPT) return;
     for (var k = 0; k < DROPS.length; k++) {
       var d = DROPS[k]; if (T < d.at) continue;
       DROPS.splice(k--, 1);
       if (ballOfNo[d.no] != null) continue;
-      var jx = (rng() - 0.5) * Math.min(60, DR * 0.14);
-      addBall(d.no, d.pk, DX + jx, -30 - rng() * 30, jx * 0.4, 420 + rng() * 200, 1);
+      DROPT = T + 0.02;                               /* 초당 50개까지 · 틈으로 쏟아붓는다 */
+      var gx = DX + Math.cos(gapAng()) * DR, jx = (rng() - 0.5) * Math.max(0, gapHalfW() - R) * 1.6;   /* 12시 틈 바로 위에서 떨어진다 */
+      addBall(d.no, d.pk, gx + jx, -30 - rng() * 30, 0, 420 + rng() * 200, 1);
+      break;
     }
   }
   function stepArrivals(dt) {
@@ -694,6 +808,7 @@
   }
   function act(cmd, arg) {
     keepAwake();
+    if (remote() && cmd !== "mute" && cmd !== "fs") return;   /* 원격 · 무해한 키만(전체 화면 · 소리) · 진행은 관리 콘솔 */
     if (T < busyUntil && cmd !== "mute" && cmd !== "fs" && cmd !== "help" && cmd !== "hud") return;
     SFX.ensure();
     switch (cmd) {
@@ -741,7 +856,10 @@
       case "checkin": return twice("close", "한 번 더 누르면 체크인을 마감합니다", closeCheckin);
       case "closed": return goCard();
       case "card": if (sT() > 0.8) return goMix(); return;
-      case "mix": if (sT() > 1.2) return draw(); return;
+      case "mix":
+        if (sT() <= 1.2) return;
+        if (!ST.results.length && MIXT < MINMIX) { toast("섞는 중 · " + Math.ceil(MINMIX - MIXT) + "초 뒤 추첨", true); return; }   /* 마감 뒤 첫 추첨은 충분히 섞은 다음(공정성 시험으로 정한 값) */
+        return draw();
       case "reveal": if (sT() > 1.4) return confirmWin(); return;
       case "board": return goEnd();
       case "end": return;
@@ -750,17 +868,23 @@
   function startCheckin() {
     if (CFG.mode === "demo" && (!ST.pool || ST.pool.kind !== "demo")) ST.pool = demoPool(CFG.demoN, ST.seed);
     if (CFG.mode === "server" && !ST.pool) serverLoad(function () { pushCtl(); });
+    if (!QRS.mat) qrCode();
     ARR.auto = CFG.mode === "demo";
     /* ME to WE 심볼 점이 흩어져 떨어진다 → 빈 통 */
     scatterSymbol();
-    DRUM.inletT = 1; scene("checkin"); lock(0.6);
+    if (!ST.ckAt) { ST.ckAt = REC ? T * 1000 : Date.now(); persist(); }   /* 체크인 길이(분) → 첫 추첨 최소 섞기 */
+    DRM.mode = "spin"; MIX.target = 0; scene("checkin"); lock(0.6);   /* 체크인 중에도 통은 천천히 돈다 · 틈이 12시에 올 때 묶어서 넣는다 */
     SFX.play("whoosh", 0.9);
-    if (CFG.mode === "server") { if (SRV.polling) clearInterval(SRV.polling); SRV.polling = setInterval(function () { if (SC === "checkin" && SRV.hasPool) serverLoad(function () {}); }, 3000); }
+    if (CFG.mode === "server") { if (SRV.polling) clearInterval(SRV.polling); SRV.polling = setInterval(function () { if ((SC === "idle" || SC === "checkin") && SRV.hasPool) serverLoad(function () {}); }, 3000); }
   }
   function closeCheckin() {
     if (SC !== "checkin") return;
     ARR.q.length = 0; ARR.auto = false; DROPS.length = DROPS.filter(function (d) { return d.at <= T + 0.5; }).length ? DROPS.length : 0;
-    ST.closed = true; DRUM.inletT = 0; if (SRV.polling) { clearInterval(SRV.polling); SRV.polling = null; }
+    qrBurst(); MIXT = 0; MIX.target = (LOADW - 0.2) / TUNE.wmix;
+    ST.ckMin = ST.ckAt ? ((REC ? T * 1000 : Date.now()) - ST.ckAt) / 60000 : 0; MINMIX = minMixFor(ST.ckMin);
+    ST.closed = true; if (SRV.polling) { clearInterval(SRV.polling); SRV.polling = null; }
+    /* 서버 체크인도 닫는다 · draw_cfg 에 closed 가 생기면 쓰인다 · 지금 서버는 모르는 값을 무시하고 설정을 그대로 돌려준다(쓰기 없음) */
+    if (CFG.mode === "server") jsonp("draw_cfg", { closed: 1 }, function (res) { SRV.closeStatus = res && res.ok ? (res.closed ? "서버 체크인 닫힘" : "서버가 닫기를 아직 모름 · 화면만 마감") : "서버 닫기 실패 · 화면만 마감"; pushCtl(); });
     scene("closed"); lock(0.8); SFX.play("stamp");
   }
   function goCard() {
@@ -770,75 +894,166 @@
     stageTo("black", 960, 540, 0.6); scene("mix"); lock(0.6); MIX.target = 1;
   }
   function draw() {
+    if (DRM.mode !== "spin" || DROPS.length || nFalling) { toast("공을 넣는 중입니다 · 잠시 뒤 다시", true); return "loading"; }
+    /* 이미 당첨 · 부재로 빠질 분의 공은 먼저 모두 뺀다(남은 팝 예약도 지금 처리) · 통에 남은 공은 전부 당첨 자격이 있다 */
+    OUTPOP = null; POPS.length = 0;
+    var i, gone = 0;
+    for (i = 0; i < NB; i++) if ((bs[i] === 2 || bs[i] === 1) && ST.out[bpk[i]]) { popBall(i); gone++; }
+    if (gone) toast("빠질 공 " + gone + "개를 먼저 뺐습니다", true);
     var el = eligible();
-    if (!el.length) { toast("통에 공이 없습니다"); return; }
+    if (!el.length) { toast("통에 공이 없습니다"); return "empty"; }
     var r = curRound(), wins = roundWins(ST.round).length;
-    if (wins >= r.count) { toast("이 라운드 인원이 다 찼습니다"); return; }
-    var w = el[fair(el.length)];
-    /* 결정 즉시 기록 · 새로고침해도 같은 결과로 돌아온다 */
-    var res = { id: "r" + Date.now().toString(36) + Math.floor(rng() * 1e4), round: ST.round, slot: wins + 1, no: bno[w], pk: bpk[w],
-      nm: (ST.pool.people[bpk[w]] || {}).nm || "", dp: (ST.pool.people[bpk[w]] || {}).dp || "", prize: r.prize, rname: r.name, at: new Date().toISOString(), st: "win", pool: el.length };
-    ST.results.push(res); ST.pending = res.id; if (CFG.onePerPerson) ST.out[res.pk] = "win"; persist(); serverLog(res);
-    WIN.i = w; WIN.r = res;
-    /* 틱 스케줄 · 빠르게 옮겨 다니다 느려지며 당첨 공에 멈춘다 */
-    HOP.list = []; var t = 0, n = 26;
-    for (var k = 0; k < n; k++) {
-      var u = k / (n - 1), gap = 0.045 + 0.34 * Math.pow(u, 2.4);
-      t += gap;
-      var pick = k === n - 1 ? w : el[Math.floor(rng() * el.length)];
-      if (pick === w && k < n - 1) pick = el[(el.indexOf(w) + 1) % el.length];
-      HOP.list.push([t, pick, u]);
-    }
-    HOP.k = 0; HOP.cur = -1; HOP.locked = false; HOP.dur = t + 0.45;
+    if (wins >= r.count) { toast("이 라운드 인원이 다 찼습니다"); return "full"; }
+    /* (가) 물리 결정 · 버튼 순간 암호 난수로 물리 난수 씨앗을 다시 심고, 감속 시간과 통 안 모든 공의 속도를 흔든다
+     *     통은 감속해 틈을 6시에 세운다 · 틈을 처음 통과한 공이 당첨 */
+    var u = cryptoUnits(2 + NB * 2);
+    rng = mulberry(Math.floor(u[0] * 4294967296));
+    for (i = 0; i < NB; i++) if (bs[i] === 2) { var ka = u[2 + i * 2] * 6.2832, kv = R * 0.12 * u[3 + i * 2]; bpx[i] -= Math.cos(ka) * kv; bpy[i] -= Math.sin(ka) * kv; }
+    startPark(SIX, Math.PI * 0.6, 1 + 0.35 * u[1], 2.2, 4.6);
+    DRAW.t0 = T; DRAW.stopT = -1; DRAW.heart = T + 0.5; DRAW.tick = Math.floor(MIX.rot / (6.2832 / 24)); DRAW.n0 = el.length; DRAW.resume = 0;
+    GAP.live = false; GAP.latch = 0; GAP.pull = 0;
+    ST.drawing = 1;
     scene("tension"); lock(99);
-    SFX.play("riser", t);
-    [0, 0.85, 1.55, 2.15, 2.6].forEach(function (d) { if (d < t) HEARTS.push(T + d); });
+    SFX.play("riser", PARK.Td + 0.4);
   }
-  var HEARTS = [];
-  function stepTension() {
-    var u = sT() / HOP.dur;
-    MIX.target = u < 0.55 ? 1.35 : Math.max(0.12, 1.35 * (1 - (u - 0.55) / 0.35));
-    while (HOP.k < HOP.list.length && sT() >= HOP.list[HOP.k][0]) {
-      var hp = HOP.list[HOP.k]; if (HOP.cur >= 0) bflag[HOP.cur] = 0; HOP.cur = hp[1]; bflag[HOP.cur] = 1;
-      if (HOP.k === HOP.list.length - 1) { HOP.locked = true; bflag[HOP.cur] = 2; SFX.play("lock"); DRUM.glow = 1; }
-      else SFX.play("tick", hp[2]);
-      HOP.k++;
+  /* 감속 → 6시 멈춤 → 떨어지기를 기다린다 · 1.5초 안에 안 떨어지면 통을 살짝 흔들고(6시 근처 ±) · 6초부터 틈이 가까운 공을 끌고 · 9초에 가장 가까운 공을 통과시킨다
+   * 실제 화면과 공정성 시험(monteCarlo)이 같은 함수를 쓴다 */
+  function drawTick(sfx) {
+    if (DRM.mode === "park") {
+      if (stepPark()) { GAP.live = true; DRAW.stopT = T; if (sfx) { SFX.play("stamp"); CAM.amp = 2.6; } }
+      else if (PARK.th0 + PARK.D - MIX.rot < 0.05) GAP.live = true;   /* 틈이 6시 3도 안으로 들어와 거의 선 다음부터 받는다 */
+      return;
     }
-    if (sT() >= HOP.dur) startExit();
+    if (DRM.mode !== "hold" || DRAW.stopT < 0) return;
+    var w = T - DRAW.stopT, rock = w > 1.5 ? Math.min(0.06, 0.02 + (w - 1.5) * 0.012) : 0;
+    var nr = DRM.hold + rock * Math.sin((w - 1.5) * 6.2832 * 2.6);
+    MIX.w = (nr - MIX.rot) / Math.max(1e-3, EXDT); MIX.rot = nr;
+    GAP.pull = w > 6 ? clamp((w - 6) / 2, 0, 1) : 0;
+    if (w > 9) {
+      var best = -1, bd = 1e9, ga = gapAng(), gx = DX + Math.cos(ga) * DR, gy = DY + Math.sin(ga) * DR;
+      for (var i = 0; i < NB; i++) if (bs[i] === 2 && !ST.out[bpk[i]]) { var d = Math.hypot(bx[i] - gx, by[i] - gy); if (d < bd) { bd = d; best = i; } }
+      if (best >= 0) { GAP.latch = 1; capture(best); }
+    }
   }
-  function startExit() {
-    var i = WIN.i;
-    bs[i] = 3; WIN.x = bx[i]; WIN.y = by[i]; WIN.a = ba[i];
-    var gin = { x: DX + Math.cos(GATE) * (DR - R * 1.2), y: DY + Math.sin(GATE) * (DR - R * 1.2) };
-    var gout = { x: DX + Math.cos(GATE) * (RING + 60), y: DY + Math.sin(GATE) * (RING + 60) };
-    WIN.path = { s: { x: bx[i], y: by[i] }, gin: gin, gout: gout, tray: TRAY };
-    DRUM.gateT = 1; MIX.target = 0.08; WIN.z = 0; WIN.zs = 0;
+  function stepTension() {
+    drawTick(true);
+    var tk = Math.floor(MIX.rot / (6.2832 / 24));      /* 통 톱니 소리 · 감속하며 간격이 벌어진다 */
+    if (tk !== DRAW.tick) { DRAW.tick = tk; SFX.play("clack", 0.35); }
+    if (T >= DRAW.heart) { SFX.play("heart"); DRAW.heart = T + Math.max(0.55, 0.95 - sT() * 0.08); }
+  }
+  /* 처음 통과한 공 · 이 순간 당첨이 정해지고 바로 저장된다(새로고침해도 같은 결과) · 점 하나가 틈을 막고 통이 다시 돈다 */
+  function capture(i) {
+    GAP.live = false; GAP.pull = 0;
+    if (MC.on) { MC.hit = i; return; }
+    var el = eligible().length, r = curRound(), wins = roundWins(ST.round).length, pp = ST.pool.people[bpk[i]] || {};
+    var res = { id: "r" + Date.now().toString(36) + Math.floor(rng() * 1e4), round: ST.round, slot: wins + 1, no: bno[i], pk: bpk[i],
+      nm: pp.nm || "", dp: pp.dp || "", prize: r.prize, rname: r.name, at: new Date().toISOString(), st: "win", pool: el, sec: +(T - DRAW.t0).toFixed(2) };
+    ST.results.push(res); ST.pending = res.id; ST.drawing = 0; if (CFG.onePerPerson) ST.out[res.pk] = "win"; persist(); serverLog(res);
+    WIN.i = i; WIN.r = res; WIN.z = 0; WIN.w = 0;
+    /* 떨어지는 공의 월드 위치 · 속도(카메라가 따라간다) */
+    WIN.xw = bx[i]; WIN.yw = by[i]; WIN.vxw = (bx[i] - bpx[i]) / PH.h * 0.5 + 40; WIN.vyw = Math.max(150, (by[i] - bpy[i]) / PH.h);
+    WIN.cs0 = CAM.s; WIN.ox0 = CAM.ox; WIN.oy0 = CAM.oy;
+    bs[i] = 3; bx[i] = -9999; by[i] = -9999; bpx[i] = bx[i]; bpy[i] = by[i];   /* 통 물리에서 뺀다(그림은 화면 좌표로) */
+    DRW.resume = T + 0.35;
     scene("exit"); lock(99);
-    SFX.play("roll", 1.1);
+    SFX.play("drop", 0.2); SFX.play("lock");
   }
-  var EXDT = 1 / 60;
+  /* 배출 → 공개 · 틈으로 떨어진 공을 카메라가 따라 내려간다(통은 위로 밀려나며 어두워진다) · 공은 화면 가운데로 오며 다가와 커지고 닿는 순간 터진다(멈춤 없음) */
+  var EX = { T: 0.86, HR: 130, G: 1700, SF: 1.2 }, EXDT = 1 / 60, DRW = { resume: 0 };
   function stepExit() {
-    var t = sT(), P = WIN.path, i = WIN.i, x, y;
-    if (t < 0.55) { var u = EIO(t / 0.55); x = P.s.x + (P.gin.x - P.s.x) * u; y = P.s.y + (P.gin.y - P.s.y) * u; }
-    else if (t < 1.3) {
-      var v = EIO((t - 0.55) / 0.75), a = 1 - v;
-      x = a * a * P.gin.x + 2 * a * v * P.gout.x + v * v * P.tray.x;
-      y = a * a * P.gin.y + 2 * a * v * P.gout.y + v * v * P.tray.y;
-      if (t > 0.95) DRUM.gateT = 0;
-    } else { x = P.tray.x; y = P.tray.y - Math.abs(Math.sin((t - 1.3) * 14)) * 18 * Math.max(0, 1 - (t - 1.3) / 0.35); }
-    var mvx = x - bx[i], mvy = y - by[i], mv = Math.hypot(mvx, mvy);
-    bpx[i] = bx[i]; bpy[i] = by[i]; bx[i] = x; by[i] = y; ba[i] += mv / R;
-    var dtx = Math.max(EXDT, 1e-3);
-    if (t < 1.55) integQuat(i * 4, mvy / R / dtx * 0.9, mvx / R / dtx * 0.9, 0, dtx);   /* 배출구 · 받침까지 구른다 */
-    else slerpTo(i * 4, [0, 0, 0, 1], 0.06 + 0.5 * EIO((t - 1.55) / 1.05));            /* 커지는 동안 번호가 정면으로 */
-    WIN.x = x; WIN.y = y; WIN.a = ba[i];
-    /* 줌 · 공이 화면 가운데로 커진다 */
-    WIN.z = EIO((t - 1.55) / 1.05);
-    if (t > 1.55 && !WIN.zs) { WIN.zs = 1; WIN.aZ = Math.atan2(Math.sin(ba[i]), Math.cos(ba[i])); SFX.play("whoosh", 1.0); fade($("pMix"), 0, 0.35); }
-    if (t >= 2.6) startReveal();
+    var t = sT(), i = WIN.i, dur = EX.T;
+    var xw = WIN.xw + WIN.vxw * t, yw = WIN.yw + WIN.vyw * t + 0.5 * EX.G * t * t;   /* 월드에서 떨어진다 */
+    var w = EIO(t / dur), sc = WIN.cs0 + (EX.SF - WIN.cs0) * w;
+    var osx = WIN.ox0 + WIN.xw * (WIN.cs0 - sc), osy = WIN.oy0 + WIN.yw * (WIN.cs0 - sc);   /* 시작 카메라(틈 자리를 고정한 채 배율만) */
+    CAM.s = sc; CAM.ox = osx + (960 - xw * sc - osx) * w; CAM.oy = osy + (470 - yw * sc - osy) * w;
+    var dtx = Math.max(EXDT, 1e-3), zf = clamp(t / dur, 0, 1);
+    CAM.amp *= Math.exp(-dtx * 6);
+    var vy = WIN.vyw + EX.G * t;
+    if (zf < 0.55) integQuat(i * 4, -vy / R * 0.45, WIN.vxw / R * 0.45, 0, dtx);   /* 떨어지며 구른다 */
+    else slerpTo(i * 4, [0, 0, 0, 1], 0.08 + 0.5 * EIO((zf - 0.55) / 0.45));    /* 다가오며 번호가 정면으로 */
+    ba[i] += vy * dtx / R;
+    WIN.w = w; WIN.sx = xw * sc + CAM.ox + CAM.jx; WIN.sy = yw * sc + CAM.oy + CAM.jy; WIN.a = ba[i];
+    WIN.z = Math.pow(EIO(clamp((t - 0.12) / (dur - 0.12), 0, 1)), 1.6);
+    if (!WIN.flew) { WIN.flew = true; WIN.aZ = Math.atan2(Math.sin(ba[i]), Math.cos(ba[i])); SFX.play("whoosh", 0.7); fade($("pMix"), 0, 0.3); }
+    if (t >= dur) startReveal();
   }
-  function winRad() { return R + (330 - R) * (WIN.z || 0); }
-  function winPos() { var z = WIN.z || 0; return { x: WIN.x + (960 - WIN.x) * z, y: WIN.y + (470 - WIN.y) * z }; }
+  function winRad() { var rs = R * CAM.s; return rs + (EX.HR - rs) * (WIN.z || 0); }
+  function winPos() { return { x: WIN.sx, y: WIN.sy }; }
+  /* 공정성 점검용(시험 도구만 부른다) · 같은 물리로 추첨을 n 번 돌린다 · 기록은 남기지 않는다
+   * 돌려주는 값: [당첨 공, 누른 뒤 초, 누른 순간 높이 순위, 통 안 공 수] · MC.spinEsc = 도는 동안 빠진 공 · MC.second = 첫 공 뒤 0.8초 동안 빠진 공 */
+  var MC = { on: false, hit: -1, spinEsc: 0, second: 0 };
+  function mcEscapes() { var n = 0; for (var i = 0; i < NB; i++) if (bs[i] === 2 && Math.hypot(bx[i] - DX, by[i] - DY) > DR + R * 0.5) n++; return n; }
+  /* 체크인부터 다시 · n 개 공이 L 초 동안 고르게 도착(도착 순서 = 체크인 순서) → 통이 돌며 묶어서 받는다 → 마감 → 카드 2초 → mixSec 섞기 → 추첨 1회
+   * 돌려주는 값: [당첨 공의 체크인 순서(0 = 처음), 누른 뒤 초, 통 안 공 수] · 실제 화면과 같은 drumStep · stepDrops · drawTick · physStep 을 쓴다 */
+  function simDraw(n, L, mixSec) {
+    var h = PH.h, i, k = 0, t = 0, times = [], esc = 0, sec2 = 0, st = 0;
+    MC.on = true; CHKSIM = true; EXDT = h;
+    for (i = 0; i < NB; i++) bs[i] = 0; NB = 0; ballOfNo = {}; DROPS.length = 0; POPS.length = 0; OUTPOP = null;
+    for (i = 0; i < n; i++) times.push(rng() * L); times.sort(function (a, b) { return a - b; });
+    DRM.mode = "spin"; MIX.e = 0; MIX.target = 0; GAP.live = false; GAP.latch = 0; GAP.pull = 0; DROPT = 0;
+    while (t < L + 40) {
+      t += h; T += h;
+      while (k < n && times[k] <= t) { DROPS.push({ at: T, no: "s" + k, pk: "s" + k }); k++; }
+      if (k >= n && !DROPS.length && !nFalling && DRM.mode === "spin") break;
+      countAlive(); RT = targetRadius(); R += (RT - R) * Math.min(1, h * 1.2);
+      drumStep(h, true); stepDrops(); physStep(h);
+      if (++st % 12 === 0) esc += mcEscapes();
+    }
+    CHKSIM = false;
+    for (t = 0; t < 2 + mixSec; t += h) {                     /* 마감 · 카드(약 2초 · 체크인 속도) → 섞기 */
+      T += h; MIX.e += ((t < 2 ? (LOADW - 0.2) / TUNE.wmix : 1) - MIX.e) * Math.min(1, h * 2.2);
+      countAlive(); R += (targetRadius() - R) * Math.min(1, h * 1.2); drumStep(h, false); physStep(h);
+      if (++st % 12 === 0) esc += mcEscapes();
+    }
+    var el = eligible().length, u = cryptoUnits(2 + NB * 2);
+    rng = mulberry(Math.floor(u[0] * 4294967296));
+    for (i = 0; i < NB; i++) if (bs[i] === 2) { var ka = u[2 + i * 2] * 6.2832, kv = R * 0.12 * u[3 + i * 2]; bpx[i] -= Math.cos(ka) * kv; bpy[i] -= Math.sin(ka) * kv; }
+    startPark(SIX, Math.PI * 0.6, 1 + 0.35 * u[1], 2.2, 4.6); DRAW.stopT = -1;
+    MC.hit = -1; t = 0;
+    while (MC.hit < 0 && t < 20) { t += h; T += h; drawTick(false); physStep(h); }
+    var w = MC.hit;
+    if (w >= 0) { bs[w] = 0; DRW.resume = T + 0.35; }        /* 첫 공은 통 밖으로 · 점이 틈을 막고 0.35초 뒤 다시 돈다 · 둘째 공을 센다 */
+    for (var t2 = 0; t2 < 1.2; t2 += h) { T += h; drumStep(h, false); physStep(h); if (++st % 6 === 0) sec2 += mcEscapes(); }
+    MC.on = false;
+    return [w >= 0 ? +String(bno[w]).slice(1) : -1, +t.toFixed(2), el, esc, sec2];
+  }
+  function monteCarlo(n, mixSec, fresh) {
+    var out = [], h = PH.h, k, i, saveT = T, saveDT = EXDT;
+    MC.on = true; EXDT = h;
+    for (var tr = 0; tr < n; tr++) {
+      DRM.mode = "spin"; MIX.e = 1; GAP.live = false; GAP.latch = 0; GAP.pull = 0;
+      if (fresh) {                                    /* 체크인 직후처럼 · 넣은 순서대로 아래부터 쌓인 더미 · 통은 천천히 돌던 상태에서 섞기 시작 */
+        var ids = [], ps = [];
+        for (i = 0; i < NB; i++) if (bs[i] === 2) { ids.push(i); ps.push([bx[i], by[i]]); }
+        ps.sort(function (a, b) { return b[1] - a[1]; });
+        ids.forEach(function (id, q) { bx[id] = ps[q][0]; by[id] = ps[q][1]; bpx[id] = bx[id]; bpy[id] = by[id]; });
+        MIX.w = 0.2; MIX.e = 0;
+        for (k = 0; k < 1.0 / h; k++) { T += h; MIX.e += (1 - MIX.e) * Math.min(1, h * 2.2); MIX.w += (0.2 + TUNE.wmix * MIX.e - MIX.w) * Math.min(1, h * 1.5); MIX.rot += MIX.w * h; physStep(h); }
+        if (TUNE.surge) for (k = 0; k < TUNE.surge / h; k++) { T += h; var wt2 = k * h < TUNE.surge * 0.6 ? TUNE.surgeW : 0.2 + TUNE.wmix; MIX.w += (wt2 - MIX.w) * Math.min(1, h * TUNE.surgeA); MIX.rot += MIX.w * h; physStep(h); }   /* 크게 한 번 돌린다(시험) */   /* 라운드 카드(약 1초) */
+      }
+      var ms = mixSec + rng() * 1.0;
+      for (k = 0; k < ms / h; k++) { T += h; MIX.e += (1 - MIX.e) * Math.min(1, h * 2.2); MIX.w += (0.2 + TUNE.wmix * MIX.e - MIX.w) * Math.min(1, h * 1.5); MIX.rot += MIX.w * h; physStep(h); if (k % 12 === 0) MC.spinEsc += mcEscapes(); }
+      var el = eligible(), ys = el.map(function (j) { return by[j]; }).sort(function (a, b) { return a - b; });
+      var u = cryptoUnits(2 + NB * 2);
+      rng = mulberry(Math.floor(u[0] * 4294967296));
+      for (i = 0; i < NB; i++) if (bs[i] === 2) { var ka = u[2 + i * 2] * 6.2832, kv = R * 0.12 * u[3 + i * 2]; bpx[i] -= Math.cos(ka) * kv; bpy[i] -= Math.sin(ka) * kv; }
+      var y0 = new Float32Array(NB); for (i = 0; i < NB; i++) y0[i] = by[i];
+      startPark(SIX, Math.PI * 0.6, 1 + 0.35 * u[1], 2.2, 4.6); DRAW.stopT = -1; DRAW.t0 = T;
+      MC.hit = -1; var t = 0;
+      while (MC.hit < 0 && t < 20) { t += h; T += h; drawTick(false); physStep(h); }
+      var w = MC.hit, rank = -1;
+      if (w >= 0) { rank = 0; for (k = 0; k < ys.length; k++) if (ys[k] < y0[w]) rank++; rank /= ys.length; }
+      if (w >= 0) { bs[w] = 3; bx[w] = -9999; by[w] = -9999; }
+      /* 첫 공 뒤 · 점이 틈을 막고 통이 다시 돈다 · 0.8초 동안 빠지는 공을 센다 */
+      DRM.mode = "spin";
+      for (k = 0; k < 0.8 / h; k++) { T += h; if (k * h > 0.35) { MIX.w += (0.2 + TUNE.wmix * 0.7 - MIX.w) * Math.min(1, h * 1.5); } MIX.rot += MIX.w * h; physStep(h); if (k % 6 === 0) MC.second += mcEscapes(); }
+      out.push([w, +t.toFixed(2), +rank.toFixed(3), el.length]);
+      if (w >= 0) { bs[w] = 2; bx[w] = DX + (rng() - 0.5) * 100; by[w] = DY; bpx[w] = bx[w]; bpy[w] = by[w]; }   /* 공을 통에 되돌린다(점검이라 기록 없음) */
+      GAP.live = false; GAP.latch = 0; GAP.pull = 0;
+    }
+    MC.on = false; T = saveT; EXDT = saveDT;
+    return out;
+  }
 
   /* 공개 · 공이 터져 점이 되고, 점이 모여 번호가 된다(도트 레터링) */
   var digCanvas = null;
@@ -873,7 +1088,7 @@
     SFX.play("hit");
     vidStart("burst");
     bs[WIN.i] = 0; bflag[WIN.i] = 0; delete ballOfNo[bno[WIN.i]];
-    HOP.cur = -1; DRUM.glow = 0; WIN.zs = 0;
+    WIN.flew = false; GAP.live = false; GAP.pull = 0;
     scene("reveal"); lock(1.2);
     uiReveal(WIN.r);
   }
@@ -936,7 +1151,7 @@
       if (SC === "reveal" || SC === "board") { DIG.out = 0.001; DIG.ox = 960; DIG.oy = 1300; stageTo("black"); scene("mix"); MIX.target = 1; }
       persist(); toast("마지막 당첨을 취소했습니다 · " + r.no, true); uiMix(); return;
     }
-    toast("취소할 당첨이 없습니다");
+    toast("취소할 당첨이 없습니다"); return "none";
   }
   function goIdle() {
     stageTo("black"); DIG.n = 0; MIX.target = 0; scene(ST.arrived.length ? "closed" : "idle");
@@ -1020,23 +1235,21 @@
     T += dt;
     /* 믹싱 에너지 · 목표로 부드럽게 */
     MIX.e += (MIX.target - MIX.e) * Math.min(1, dt * (MIX.target > MIX.e ? 2.2 : 1.6));
-    var om = SC === "idle" || SC === "checkin" || SC === "closed" ? 0.07 : 0.07 + MIX.e * 1.5;
-    MIX.omega += (om - MIX.omega) * Math.min(1, dt * 1.5);
-    MIX.rot += MIX.omega * dt * 0.35;
-    DRUM.inlet += (DRUM.inletT - DRUM.inlet) * Math.min(1, dt * 4);
-    DRUM.gate += (DRUM.gateT - DRUM.gate) * Math.min(1, dt * 7);
+    drumStep(dt, SC === "checkin");
+    if (SC === "mix" && ST.closed) MIXT += dt;                 /* 마감 뒤 섞은 시간(첫 추첨 최소 섞기) */
+    if (GAP.latch > 0 && DRM.mode === "spin" && Math.abs(MIX.w) > 0.7 && SC !== "exit" && SC !== "tension") GAP.latch = 0;   /* 다시 돌면 막았던 점이 빠진다 */
+    GAP.latchV += ((GAP.latch ? 1 : 0) - GAP.latchV) * Math.min(1, dt * 16);
     DRUM.pulse *= Math.exp(-dt * 5);
-    DRUM.glow *= Math.exp(-dt * 1.5);
-    CAM.t = SC === "tension" ? 1 + 0.08 * EIO(sT() / 3.2) : 1;
-    CAM.s += (CAM.t - CAM.s) * Math.min(1, dt * (SC === "tension" ? 3 : 1.6));
+    stepCam(dt);
     /* 박자 · 섞는 동안 120bpm · 고리 점이 박자에 맞춰 부푼다 */
     if (MIX.e > 0.3 && (SC === "mix" || SC === "tension")) {
       beatT -= dt;
       if (beatT <= 0) { beatT += SC === "tension" ? 0.25 : 0.5; beatN++; DRUM.pulse = 1; if (CFG.beat && SC === "mix") SFX.play("beat", beatN % 4 === 1); }
     } else beatT = 0;
-    var airL = MIX.e > 0.05 ? Math.round(Math.min(1, MIX.e) * 20) / 20 : 0;
+    /* 바람 소리 · 통이 빠를수록 크다(감속하면 잦아든다) */
+    var airL = Math.round(clamp(Math.abs(MIX.w) / 2.2, 0, 1) * 0.8 * 20) / 20;
+    if (airL < 0.05) airL = 0;
     if (airL !== lastAir) { lastAir = airL; SFX.play("air", airL); }
-    for (var h = 0; h < HEARTS.length; h++) if (T >= HEARTS[h]) { SFX.play("heart"); HEARTS.splice(h--, 1); }
     stepDrops();
     stepArrivals(dt);
     if (OUTPOP && T >= OUTPOP.t) { if (CFG.onePerPerson || ST.out[OUTPOP.pk] === "absent") popPerson(OUTPOP.pk); OUTPOP = null; }
@@ -1068,6 +1281,7 @@
     stepVideos();
     for (var ti = 0; ti < TIMERS.length; ti++) if (T >= TIMERS[ti][0]) { var fn = TIMERS[ti][1]; TIMERS.splice(ti--, 1); fn(); }
     uiTick();
+    scrPush(false);
   }
   function render() {
     var t0 = performance.now();
@@ -1075,26 +1289,30 @@
     fx.setTransform(1, 0, 0, 1, 0, 0); fx.clearRect(0, 0, vw, vh);
     drawStage();
     var worldA = 1;
-    if (SC === "exit") worldA = 1 - 0.75 * (WIN.z || 0);
     if (SC === "reveal" || SC === "card") worldA = STG.to ? 0.3 * (1 - clamp((T - STG.t0) / STG.dur, 0, 1)) : 0;
     if (SC === "end") worldA = 0;
     if (SC === "board") worldA = 0.55;
     if (worldA > 0.01) {
-      /* 카메라 · 추첨 연출 동안 통으로 천천히 다가간다 */
+      /* 카메라 · 감속하는 동안 6시 틈 쪽으로 조금 다가가고(멈출 때 한 번 흔들림), 공이 떨어지면 따라간다 */
       var vs0 = vs, vox0 = vox, voy0 = voy, cs = CAM.s;
-      vs = vs0 * cs; vox = vox0 + DX * vs0 * (1 - cs); voy = voy0 + (DY - 20) * vs0 * (1 - cs);
+      vs = vs0 * cs; vox = vox0 + (CAM.ox + CAM.jx) * vs0; voy = voy0 + (CAM.oy + CAM.jy) * vs0;
       DRUM.alpha = worldA;
       drawDrum();
       if (SC === "idle") drawSymbolIdle(clamp(sT() / 0.8, 0, 1));
       if (!GL) drawBalls(worldA);
       vs = vs0; vox = vox0; voy = voy0;
     }
-    if (SC === "exit" && WIN.z > 0) {                  /* 줌 동안 통과 공을 어둡게 · v1 과 같다 */
+    var ew = SC === "exit" ? (WIN.w || 0) : 0;
+    if (ew > 0) {                                      /* 따라가는 동안 통 쪽을 어둡게 · 공은 그대로 */
       cx.setTransform(vs, 0, 0, vs, vox, voy);
-      cx.fillStyle = "rgba(0,0,0," + (0.55 * WIN.z).toFixed(3) + ")"; cx.fillRect(-vox / vs, -voy / vs, vw / vs, vh / vs);
+      cx.fillStyle = "rgba(0,0,0," + (0.62 * ew).toFixed(3) + ")"; cx.fillRect(-vox / vs, -voy / vs, vw / vs, vh / vs);
     }
-    if (GL) { if (worldA > 0.01 || SC === "exit") drawBallsGL(worldA * (SC === "exit" ? 1 - 0.55 * (WIN.z || 0) : 1)); else GL.clear(); }
+    if (GL) { if (worldA > 0.01 || SC === "exit") drawBallsGL(worldA, 1 - 0.62 * ew); else GL.clear(); }
     cx = fx;
+    if (worldA > 0.01) {           /* 유리 앞면은 공 위에(#fx) · 카메라 그대로 */
+      var vs1 = vs, vox1 = vox, voy1 = voy; vs = vs1 * CAM.s; vox = vox1 + (CAM.ox + CAM.jx) * vs1; voy = voy1 + (CAM.oy + CAM.jy) * vs1;
+      DRUM.alpha = worldA * (1 - 0.62 * ew); drawGlassFront(); vs = vs1; vox = vox1; voy = voy1;
+    }
     if (!GL && SC === "exit") drawWinner();
     if (SC === "card") drawCardObject();
     drawDigits();
@@ -1103,12 +1321,27 @@
     cx = mainCx;
     RD.ms = RD.ms * 0.9 + (performance.now() - t0) * 0.1;
   }
-  var RD = { ms: 0 }, CAM = { s: 1, t: 1 };
+  var RD = { ms: 0 };
+  /* 카메라 · 화면 = 월드 × s + (ox, oy) + 흔들림(jx, jy) · 기본은 그대로(1, 0, 0) */
+  var CAM = { s: 1, ox: 0, oy: 0, jx: 0, jy: 0, amp: 0 };
+  function stepCam(dt) {
+    if (SC !== "exit") {
+      if (SC === "reveal" && STG.to) return;             /* 오렌지 스테이지가 덮는 동안은 그대로 · 덮인 뒤 원래대로 */
+      var ts = 1, amp = 0, k = Math.min(1, dt * 3);
+      if (SC === "tension") { ts = 1 + 0.07 * EIO(sT() / 3); amp = 0.3 + 0.9 * clamp(Math.abs(MIX.w) / 1.6, 0, 1); }   /* 틈(6시) 쪽으로 천천히 다가간다 */
+      if (SC === "reveal") { CAM.s = 1; CAM.ox = 0; CAM.oy = 0; CAM.amp = 0; }
+      CAM.s += (ts - CAM.s) * k;
+      CAM.ox += (DX * (1 - ts) - CAM.ox) * k; CAM.oy += ((DY + DR * 0.55) * (1 - ts) - CAM.oy) * k;
+      CAM.amp += (amp - CAM.amp) * Math.min(1, dt * (CAM.amp > amp ? 2.5 : 4));
+    }
+    var a = CAM.amp, ph = T;
+    CAM.jx = a * (0.6 * Math.sin(ph * 37.1) + 0.4 * Math.sin(ph * 23.3 + 1.7));
+    CAM.jy = a * (0.6 * Math.sin(ph * 31.7 + 0.6) + 0.4 * Math.sin(ph * 19.9 + 2.9));
+  }
   function drawWinner() {
     var p = winPos(), r = winRad(), z = WIN.z || 0;
     cx.setTransform(vs, 0, 0, vs, vox, voy);
     if (z > 0) { cx.fillStyle = "rgba(0,0,0," + (0.55 * z).toFixed(3) + ")"; cx.fillRect(-vox / vs, -voy / vs, vw / vs, vh / vs); }
-    cx.fillStyle = C.w; cx.beginPath(); cx.arc(p.x, p.y, r * 1.12 + 4 * (1 - z), 0, 6.2832); cx.fill();
     cx.fillStyle = C.o; cx.beginPath(); cx.arc(p.x, p.y, r, 0, 6.2832); cx.fill();
     cx.save(); cx.translate(p.x, p.y); cx.rotate(z > 0 ? WIN.aZ * (1 - z) : WIN.a);
     cx.fillStyle = "#1A0B02"; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.font = "800 " + (r * 0.62).toFixed(1) + "px " + FONT;
@@ -1124,7 +1357,7 @@
       sx /= n; sy /= n; CARDC = { x: sx, y: sy, r: Math.hypot(pts[0][0] - sx, pts[0][1] - sy) };
     }
     var s = 470 / CARDC.r;                               /* 고리 반지름 470 · 중심은 왼쪽 끝 가까이 → 화면 밖으로 잘린다(design.md §4 원칙 5) */
-    axfDraw(cx, "circle", axfF() * 0.6, { x: 330 - CARDC.x * s, y: 540 - CARDC.y * s, s: s }, [C.w, "#FFE3D2", C.pu], a);
+    axfDraw(cx, "circle", axfF() * 0.6, { x: 420 - CARDC.x * s, y: 590 - CARDC.y * s, s: s }, [C.w, "#FFE3D2", C.pu], a);
   }
 
   /* ─────────────── DOM · 글자는 움직이지 않는다(투명도만) ─────────────── */
@@ -1154,22 +1387,74 @@
       if (id === on) { if (s !== "exit") fade($(id), 1, 0.35, 0.22); }
       else fade($(id), 0, 0.2);
     });
-    if (s === "idle") set("idleMeta", idleMeta());
+    if (s === "idle") uiIdleCount();
     if (s === "checkin" || s === "closed") uiCheck();
     if (s === "mix" || s === "tension" || s === "exit") uiMix();
     if (s === "card") uiCard();
     if (s === "board") uiBoard();
     pushCtl();
   }
-  function idleMeta() {
-    return "<p>앱 응모권 1장 = 공 1개</p><p>" + (CFG.checkinOnly ? "체크인한 분의 공만 통에 들어갑니다" : "응모권을 가진 모든 분의 공이 들어갑니다") + "</p>" + (CFG.onePerPerson ? "<p>한 분은 한 번만 당첨됩니다</p>" : "");
+  /* ─── 체크인 QR · 앱 주소 #s=<추첨 코드>(앱 qrRoute 의 AXD 경로 · draw_in) · 코드는 하드코딩하지 않는다
+   *     서버 모드 = 관리코드로 draw_stats 의 code · 데모 = 가짜 코드(찍어도 체크인되지 않는다) · 마감되면 점으로 흩어진다 ─── */
+  var QRS = { code: "", url: "", mat: null, st: "", gone: false };
+  function appBase() {
+    if (CFG.appBase) return CFG.appBase;
+    if (/^https?:$/.test(location.protocol)) return location.origin + location.pathname.replace(/draw\/[^\/]*$/, "").replace(/[^\/]*$/, "");
+    return "https://hiphopinos-web.github.io/hi_ax/";   /* 오프라인(file://)으로 연 경우 · 배포 주소 */
   }
+  function qrCode(done) {
+    if (CFG.mode !== "server") { qrSet("AXDDEMO00", "데모 코드 · 찍어도 체크인되지 않습니다"); if (done) done(); return; }
+    QRS.st = "불러오는 중";
+    jsonp("draw_stats", {}, function (res) {
+      if (res && res.ok && res.code) qrSet(String(res.code), "");
+      else { QRS.mat = null; QRS.code = ""; QRS.st = res && res.ok ? "서버 업데이트 뒤 표시" : "QR 코드를 불러오지 못했습니다<br>조작 창의 관리코드를 확인하세요"; qrShow(); }
+      if (res && res.ok && res.closed != null) SRV.srvClosed = +res.closed;   /* 서버 체크인 마감 여부(추첨_마감) · 없으면 옛 서버 */
+      pushCtl(); if (done) done();
+    });
+  }
+  function qrSet(code, note) {
+    QRS.code = code; QRS.url = appBase() + "#s=" + code; QRS.st = ""; QRS.note = note || "";
+    try { QRS.mat = window.AXQR ? window.AXQR.make(QRS.url) : null; } catch (e) { QRS.mat = null; QRS.st = "QR 을 만들지 못했습니다"; }
+    ["qrI", "qrC"].forEach(function (id) {
+      var c = $(id); if (!c) return;
+      var q = QRS.mat; if (!q) { c.width = 1; c.height = 1; return; }
+      var n = q.size + 8, sc = 4; c.width = n * sc; c.height = n * sc;   /* 모듈 4px 로 그리고 CSS 가 420px 로 늘린다(가장자리 선명 · pixelated) */
+      var g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.fillStyle = "#000";
+      for (var y = 0; y < q.size; y++) for (var x = 0; x < q.size; x++) if (q.get(x, y)) g.fillRect((x + 4) * sc, (y + 4) * sc, sc, sc);
+    });
+    qrShow();
+  }
+  function qrShow() {
+    var closed = !!ST.closed, ok = !!QRS.mat && !closed;
+    [["qrI", "qrIm", "qrId"], ["qrC", "qrCm", "qrCd"]].forEach(function (k) {
+      var c = $(k[0]), m = $(k[1]); if (!c || !m) return;
+      if (!QRS.gone || !closed) c.style.opacity = ok ? "1" : "0";
+      m.innerHTML = closed ? '<span class="qclosed">마감</span>' : QRS.st || "";
+      m.style.opacity = closed || (!QRS.mat && QRS.st) ? "1" : "0";
+      set(k[2], ok ? esc(QRS.note || "") : "");
+    });
+  }
+  /* 마감 · QR 모듈이 점으로 흩어져 떨어진다(design.md · 점으로 모이고 흩어진다) */
+  function qrBurst() {
+    var c = $("qrC"), q = QRS.mat; if (!c || !q || SC !== "checkin") return;
+    var r = c.getBoundingClientRect(); if (!r.width) return;
+    var x0 = (r.left - FRS.ox) / FRS.s, y0 = (r.top - FRS.oy) / FRS.s, cell = r.width / FRS.s / (q.size + 8), cxq = x0 + r.width / FRS.s / 2, cyq = y0 + r.height / FRS.s / 2;
+    for (var y = 0; y < q.size; y++) for (var x = 0; x < q.size; x++) {
+      if (!q.get(x, y)) continue;
+      var px = x0 + (x + 4.5) * cell, py = y0 + (y + 4.5) * cell, a = Math.atan2(py - cyq, px - cxq), sp = 120 + rng() * 380;
+      spark(px, py, Math.cos(a) * sp + (rng() - 0.5) * 80, Math.sin(a) * sp - 160 * rng(), 0.8 + rng() * 0.7, cell * 0.46, (x + y) % 5 === 0 ? 0 : 3, 1100, 1.2);
+    }
+    QRS.gone = true; c.style.opacity = "0";
+  }
+  function uiIdleCount() { set("iCnt", (ST.arrived.length + ARR.q.length).toLocaleString("en-US")); }
   function uiCheck() {
     var balls = 0; ST.arrived.forEach(function (pk) { var p = ST.pool && ST.pool.people[pk]; if (p) balls += p.nos.length; });
     set("cEye", ST.closed ? "Check-in closed." : "Check-in");
     set("cBig", balls.toLocaleString("en-US"));
-    set("cMeta", (ST.closed ? "체크인 마감 · " : "체크인 ") + ST.arrived.length.toLocaleString("en-US") + "명");
-    var rows = ST.closed ? "" : ARR.lastPk.map(function (pk) {
+    set("cMeta", ST.arrived.length.toLocaleString("en-US"));
+    set("cCap", ST.closed ? "체크인을 마감했습니다" + (SRV.late && !remote() ? "<br>마감 뒤 " + SRV.late + "명(통에 넣지 않음)" : "") : "QR을 찍어 추첨에 체크인하세요<br>시작하면 마감");
+    qrShow();
+    var rows = ST.closed ? "" : ARR.lastPk.slice(0, 2).map(function (pk) {
       var p = ST.pool.people[pk]; if (!p) return "";
       var nm = CFG.tickerNames && CFG.nameMode === "mask" && p.nm ? '<b>' + esc(mask(p.nm)) + "</b>" : "";
       return '<div class="trow">' + nm + p.nos.map(function (n) { return '<span class="chip">' + n + "</span>"; }).join("") + "</div>";
@@ -1203,13 +1488,15 @@
   var tickN = 0;
   function uiTick() {
     if ((tickN++ % 6) !== 0) return;
-    set("mCount", "통 안의 공 " + nInside.toLocaleString("en-US") + "개");
+    if (SC === "idle") uiIdleCount();
+    set("mCount", '<span class="lab">통 안의 공</span><b>' + nInside.toLocaleString("en-US") + "</b><em>개</em>");
     if (document.body.classList.contains("hud-on")) set("hud", Math.round(FPS.v) + " fps · 공 " + nAlive + " · r " + R.toFixed(1) + " · 품질 " + QA.tier + (GL ? " · 입체" : " · 2D 대체") + " · 물리 " + PH.ms.toFixed(1) + "ms · 그리기 " + RD.ms.toFixed(1) + "ms");
     if (SC === "mix") { var r = curRound(), n = roundWins(ST.round, true).length; set("mMeta", n >= r.count ? "추첨 완료" : r.count + "명 중 " + Math.min(r.count, n + 1) + "번째 추첨"); }
   }
   var toastUntil = 0;
   function toast(msg, soft) {
     if (REC && !soft) return;
+    if (remote()) { CMD.msg = msg || ""; pushCtl(msg); return; }   /* 원격 · 대형 화면에 운영 안내를 띄우지 않는다(상태 보고로) */
     var el = $("toast"); el.textContent = msg; el.classList.toggle("soft", !!soft);
     fade(el, msg ? 1 : 0, 0.2); toastUntil = msg ? T + 2.6 : 0;
     pushCtl(msg);
@@ -1227,6 +1514,7 @@
       CFG = Object.assign(CFG, m.cfg); save(LS_CFG, CFG);
       if (m.cfg.mode && m.cfg.mode !== ST.src && SC === "idle") { ST.pool = null; ST.src = m.cfg.mode; }
       if (m.cfg.key != null) { try { sessionStorage.setItem("axfDraw.key", m.cfg.key); } catch (e) {} delete CFG.key; }
+      if (m.cfg.mode || m.cfg.key != null || m.cfg.server != null || m.cfg.appBase != null) { qrCode(); remoteBoot(); }   /* 체크인 QR 코드를 다시 받는다 · 원격 연결 */
       document.body.classList.toggle("demo", CFG.mode === "demo");
       if (GL && m.cfg.pal) GL.setPalette(CFG.pal);
       uiScene();
@@ -1235,7 +1523,7 @@
   }
   function snapshot(msg) {
     return { axd: 1, type: "state", scene: SC, cfg: CFG, round: ST.round, results: ST.results, arrived: ST.arrived.length, balls: nAlive, inside: nInside,
-      closed: ST.closed, muted: !SFX.on, srv: { status: SRV.status, log: SRV.logStatus || "", queue: SRV.queue.length, hasPool: !!SRV.hasPool, url: CFG.server || window.AXF_SERVER || "" },
+      closed: ST.closed, muted: !SFX.on, qr: { code: QRS.code, url: QRS.url, st: String(QRS.st || "").replace(/<br>/g, " ") }, srv: { close: SRV.closeStatus || "", status: SRV.status, log: SRV.logStatus || "", queue: SRV.queue.length, hasPool: !!SRV.hasPool, url: CFG.server || window.AXF_SERVER || "" },
       pool: ST.pool ? ST.pool.order.length : 0, toast: msg || "", fps: Math.round(FPS.v), demo: CFG.mode === "demo", q: QA.tier, gl: !!GL, late: SRV.late || 0, state: SRV.stateStatus || "" };
   }
   var lastPush = 0;
@@ -1246,15 +1534,175 @@
     try { bc && bc.postMessage(s); } catch (e) {}
   }
   function resetAll() {
-    ST = { v: 1, seed: Math.floor(Math.random() * 1e9), scene: "idle", pool: null, arrived: [], closed: false, round: 0, results: [], out: {}, src: CFG.mode };
-    NB = 0; ballOfNo = {}; pn = 0; DIG.n = 0; DROPS.length = 0; ARR.q.length = 0; ARR.lastPk.length = 0; POPS.length = 0; HEARTS.length = 0;
+    var keepSeq = ST.cmdSeq || {};
+    ST = { cmdSeq: keepSeq, v: 1, seed: Math.floor(Math.random() * 1e9), scene: "idle", pool: null, arrived: [], closed: false, round: 0, results: [], out: {}, src: CFG.mode };
+    NB = 0; ballOfNo = {}; pn = 0; DIG.n = 0; DROPS.length = 0; ARR.q.length = 0; ARR.lastPk.length = 0; POPS.length = 0;
     SRV.queue = []; save("axfDraw.q", []); SRV.since = ""; SRV.hasPool = false; SRV.stateChecked = true; SRV.late = 0; SRV.lateSeen = {}; if (SRV.polling) { clearInterval(SRV.polling); SRV.polling = null; }
-    for (var qi = 0; qi < MAXB; qi++) bflag[qi] = 0; HOP.cur = -1;
+    for (var qi = 0; qi < MAXB; qi++) bflag[qi] = 0;
+    GAP.live = false; GAP.latch = 0; GAP.pull = 0; DRM.mode = "spin"; ST.drawing = 0;
     QA.tier = -1; applyTier(0, "처음부터");
-    stageTo("black"); MIX.target = 0; DRUM.inletT = 0; ME.t0 = T; save(LS_ST, ST);
-    document.body.classList.remove("closed");
+    stageTo("black"); MIX.target = 0; ME.t0 = T; save(LS_ST, ST);
+    document.body.classList.remove("closed"); QRS.gone = false; qrShow();
     scene("idle"); toast("처음 상태로 되돌렸습니다", true);
   }
+
+  /* ─────────────── 원격 조종 (관리 콘솔 → 서버 → 이 화면 · 사용자 확정 261001) ───────────────
+   * 대형 화면에는 운영 흔적(조작 창 · 조작표 · 안내 토스트 · fps)을 띄우지 않는다 · 키는 F(전체 화면) · M(소리)만
+   * 원격 = 주소 ?remote=1 · 서버 모드면 기본 원격(?remote=0 이면 로컬 키 조작 · 테스트 병행)
+   * 규약(서버 정본 d932d21942fb · 261001)
+   *   받기: ① 웹 소켓 wss …/ws?r=draw · hello { t:'hello', key } · 명령 { t:'draw', cmd, arg, seq, at, id } (같은 방의 drawscr 는 무시)
+   *         ② 소켓이 없으면 2초마다 보내는 draw_scr 의 응답 cmd { seq, cmd, arg, at } 로 받는다(30초보다 오래된 명령은 실행하지 않고 기준만 옮긴다)
+   *         ③ 모의 명령기(같은 브라우저 BroadcastChannel axf-draw-remote · 로컬 시험용)
+   *   seq 는 서버가 매기는 단조 증가 · 출처(srv · mock)마다 처리한 seq 를 기억해 다시 하지 않는다(멱등) · 화면을 켤 때 서버의 마지막 명령은 기준점으로만
+   *   absent · undo 의 arg = 대상 draw_log id · 화면의 대상과 다르면 거절한다
+   *   보내기: 2초마다 draw_scr s = JSON { scene, pool, checked, round, slot, mixing_s, need_s, ready:[지금 받을 수 있는 명령], closed, last:{id,no,nm,round,slot,prize,st}, rej:{seq,cmd,why}, ver }
+   * 공정성: 당첨은 이 화면 물리가 정하고 draw_log 로 기록한다 · 콘솔은 보기만 한다(부재 · 취소는 명령) */
+  function remote() { return Q.has("remote") ? Q.get("remote") !== "0" : CFG.mode === "server"; }
+  var CMD = { based: false, rej: null, last: null, msg: "", scrT: 0, scrEvery: 2, pollT: null, scrBusy: false, scrNo: 0 };
+  var RBC = null;
+  try { RBC = new BroadcastChannel("axf-draw-remote"); RBC.onmessage = function (e) { var m = e.data; if (m && m.axr && m.t === "draw") remoteCmd(m.cmd, m.arg, m.seq, "mock"); }; } catch (e) {}
+  function cmdSeqOf(src) { ST.cmdSeq = ST.cmdSeq || {}; return +ST.cmdSeq[src] || 0; }
+  function remoteCmd(c, arg, seq, src) {
+    seq = +seq || 0; src = src || "srv";
+    if (!c || (seq && seq <= cmdSeqOf(src))) return;     /* 이미 처리한 명령 */
+    if (seq) { ST.cmdSeq[src] = seq; persist(); }
+    var why = "";
+    try { why = runCmd(String(c), arg); } catch (e) { why = "error"; }
+    CMD.last = { seq: seq, src: src, cmd: c, ok: !why, why: why || "" };
+    CMD.rej = why ? { seq: seq, cmd: c, why: why } : null;
+    scrPush(true);
+  }
+  /* 명령이 지금 가능한지 · "" = 가능 · 아니면 사유(콘솔에 rej 로 보고) */
+  function cmdWhy(c, arg) {
+    if (c === "reset_screen") return "";
+    if (T < busyUntil) return "busy";
+    switch (c) {
+      case "idle": return SC === "tension" || SC === "exit" ? "drawing" : SC === "idle" ? "same" : "";
+      case "intro": case "checkin": return SC !== "idle" ? "scene" : "";
+      case "close": return SC !== "checkin" ? "scene" : "";
+      case "round":
+        if (!ST.closed) return "notclosed";
+        if (["closed", "mix", "card"].indexOf(SC) < 0) return "scene";
+        if (arg != null && arg !== "" && !(+arg >= 0 && +arg < rounds().length)) return "round";
+        return "";
+      case "mix": return SC !== "card" && SC !== "closed" ? "scene" : SC === "card" && sT() <= 0.8 ? "busy" : "";
+      case "draw":
+        if (SC !== "mix") return "scene";
+        if (sT() <= 1.2) return "busy";
+        if (!ST.results.length && MIXT < MINMIX) return "mixing:" + Math.ceil(MINMIX - MIXT);
+        if (DRM.mode !== "spin" || DROPS.length || nFalling) return "loading";
+        if (roundWins(ST.round).length >= curRound().count) return "full";
+        return eligible().length ? "" : "empty";
+      case "confirm": return SC !== "reveal" ? "scene" : sT() <= 1.4 ? "busy" : "";
+      case "absent": return SC !== "reveal" ? "scene" : arg && WIN.r && String(arg) !== String(WIN.r.id) ? "id" : "";
+      case "undo":
+        var lw = null; for (var k = ST.results.length - 1; k >= 0 && !lw; k--) if (ST.results[k].st === "win") lw = ST.results[k];
+        if (!lw) return "none";
+        if (SC === "tension" || SC === "exit") return "drawing";
+        return arg && String(arg) !== String(lw.id) ? "id" : "";
+      case "board": return SC !== "mix" && SC !== "closed" ? "scene" : "";
+      case "end": return SC === "tension" || SC === "exit" ? "drawing" : SC === "end" ? "same" : "";
+    }
+    return "unknown";
+  }
+  var CMDS = ["idle", "intro", "checkin", "close", "round", "mix", "draw", "confirm", "absent", "undo", "board", "end", "reset_screen"];
+  function runCmd(c, arg) {
+    var why = cmdWhy(c, arg); if (why) return why;
+    SFX.ensure();
+    switch (c) {
+      case "reset_screen": resetAll(); return "";
+      case "idle": goIdle(); return "";
+      case "intro": if (!vid("intro").ok) { startCheckin(); return ""; } playIntro(true); return "";
+      case "checkin": startCheckin(); return "";
+      case "close": closeCheckin(); return "";
+      case "round": if (arg != null && arg !== "") { ST.round = +arg; persist(); } goCard(); return "";
+      case "mix": goMix(); return "";
+      case "draw": return draw() || "";
+      case "confirm": confirmWin(); return "";
+      case "absent": redraw(); return "";
+      case "undo": return undoLast() || "";
+      case "board": scene("board"); MIX.target = 0.15; return "";
+      case "end": goEnd(); return "";
+    }
+    return "unknown";
+  }
+  function scrState() {
+    var last = null;
+    for (var k = ST.results.length - 1; k >= 0 && !last; k--) { var r = ST.results[k]; last = { id: r.id, no: r.no, nm: r.nm ? mask(r.nm) : "", st: r.st, round: r.round, slot: r.slot, prize: r.prize, at: r.at }; }
+    return { scene: SC, pool: nInside, checked: ST.arrived.length + ARR.q.length, round: ST.round, slot: roundWins(ST.round, true).length + 1, mixing_s: +MIXT.toFixed(1), need_s: !ST.results.length && ST.closed ? Math.max(0, Math.ceil(MINMIX - MIXT)) : 0,
+      ready: CMDS.filter(function (c) { return c !== "reset_screen" && !cmdWhy(c, ""); }), closed: !!ST.closed, last: last, rej: CMD.rej, seq: cmdSeqOf("srv"), msg: CMD.msg, ver: "v3", remote: remote() };
+  }
+  /* 상태 보고 · 2초마다(서버가 draw_scr 를 모르면 15초마다 다시 시도) · 명령을 받으면 바로 */
+  function scrPush(now) {
+    if (REC || BENCH) return;
+    if (!now && T < CMD.scrT) return;
+    CMD.scrT = T + (CMD.scrNo ? 15 : CMD.scrEvery);
+    var s = scrState();
+    try { RBC && RBC.postMessage({ axr: 1, t: "scr", s: s }); } catch (e) {}
+    if (CFG.mode !== "server" || !sessionKey() || CMD.scrBusy) return;
+    CMD.scrBusy = true;
+    var js = JSON.stringify(s); if (js.length > 3000) { s.last = s.last ? { id: s.last.id, no: s.last.no, st: s.last.st } : null; s.msg = ""; js = JSON.stringify(s); }
+    jsonp("draw_scr", { s: js, sid: "main" }, function (res) {
+      CMD.scrBusy = false; CMD.scrNo = res && res.err === "unknown action" ? 1 : 0;
+      if (!res || !res.ok) return;
+      var c = res.cmd;
+      if (!CMD.based) { if (c && c.seq) { ST.cmdSeq = ST.cmdSeq || {}; ST.cmdSeq.srv = Math.max(cmdSeqOf("srv"), +c.seq || 0); persist(); } CMD.based = true; return; }   /* 켤 때는 기준점만 */
+      if (!c || !c.cmd || !(+c.seq > cmdSeqOf("srv")) || WSD.st === "ok") return;
+      var at = typeof c.at === "number" ? c.at : Date.parse(c.at || ""), now = res.t ? (typeof res.t === "number" ? res.t : Date.parse(res.t)) : Date.now();
+      if (at && now && now - at > 30000) { ST.cmdSeq.srv = +c.seq; persist(); CMD.rej = { seq: +c.seq, cmd: c.cmd, why: "stale" }; return; }   /* 30초보다 오래된 명령은 실행하지 않는다 */
+      remoteCmd(c.cmd, c.arg, c.seq, "srv");
+    });
+  }
+  /* 30초마다 draw_stats(관리코드) · 추첨 코드 · 서버 마감 여부(명령은 draw_scr 응답과 소켓으로 받는다) */
+  function cmdPoll() {
+    if (CFG.mode !== "server" || !sessionKey()) return;
+    jsonp("draw_stats", {}, function (res) {
+      if (!res || !res.ok) return;
+      if (res.code && res.code !== QRS.code) qrSet(String(res.code), "");
+      if (res.closed != null) SRV.srvClosed = +res.closed;
+    });
+  }
+  function remoteBoot() {
+    document.body.classList.toggle("remote", remote());
+    keyAsk();
+    if (CMD.pollT) clearInterval(CMD.pollT);
+    CMD.pollT = setInterval(function () { if (remote()) cmdPoll(); }, 30000);
+    if (remote()) { wsdOpen(); scrPush(true); }
+  }
+  /* 원격 · 관리코드가 없으면 처음 한 번 묻는다(대형 화면을 띄우기 전 노트북에서) · 이 창의 세션에만 둔다 */
+  function keyAsk() {
+    var need = remote() && CFG.mode === "server" && !sessionKey();
+    document.body.classList.toggle("needkey", need);
+    var f = document.getElementById("keyBox"); if (!f || f._on) return; f._on = true;
+    f.addEventListener("submit", function (e) {
+      e.preventDefault(); var v = (document.getElementById("keyIn").value || "").trim(); if (!v) return;
+      try { sessionStorage.setItem("axfDraw.key", v); } catch (x) {}
+      document.getElementById("keyIn").value = ""; document.getElementById("keyErr").textContent = "확인 중";
+      jsonp("draw_stats", {}, function (res) {
+        if (res && res.ok) { document.body.classList.remove("needkey"); document.getElementById("keyErr").textContent = ""; WSD.give = false; WSD.fails = 0; qrCode(); remoteBoot(); if (!ST.pool) serverLoad(function () { pushCtl(); }); if (!SRV.polling && !ST.closed) SRV.polling = setInterval(function () { if ((SC === "idle" || SC === "checkin") && SRV.hasPool) serverLoad(function () { uiIdleCount(); }); }, 3000); }
+        else { try { sessionStorage.removeItem("axfDraw.key"); } catch (x) {} document.getElementById("keyErr").textContent = "연결되지 않았습니다 · " + (res && (res.reason || res.err) || "응답 없음"); }
+      });
+    });
+    f.addEventListener("keydown", function (e) { e.stopPropagation(); });
+  }
+  /* 웹 소켓 · wss …/ws?r=draw · hello = 관리코드 · 서버에 방이 없거나 막히면 세 번 시도 뒤 폴링만 쓴다 */
+  var WSD = { ws: null, st: "off", fails: 0, give: false, t: null, ping: null, dev: "drw" + Math.floor(Math.random() * 1e9).toString(36) };
+  function wsdUrl() { var u = CFG.server || window.AXF_SERVER || ""; return /^https:\/\/[a-z0-9-]+\.[a-z0-9-]+\.workers\.dev\/exec$/.test(u) ? u.replace(/^https:/, "wss:").replace(/\/exec$/, "/ws?r=draw") : ""; }
+  function wsdOpen() {
+    if (!remote() || CFG.mode !== "server" || !sessionKey() || WSD.ws || WSD.t || WSD.give || !wsdUrl() || typeof WebSocket === "undefined") return;
+    var ws; try { ws = new WebSocket(wsdUrl()); } catch (e) { wsdFail(); return; }
+    WSD.ws = ws; WSD.st = "open";
+    ws.onopen = function () { if (WSD.ws === ws) try { ws.send(JSON.stringify({ t: "hello", key: sessionKey(), d: WSD.dev })); } catch (e) {} };
+    ws.onmessage = function (e) {
+      if (WSD.ws !== ws || e.data === "o") return;
+      var m; try { m = JSON.parse(e.data); } catch (x) { return; }
+      if (m.t === "ok") { WSD.st = "ok"; WSD.fails = 0; clearInterval(WSD.ping); WSD.ping = setInterval(function () { try { ws.send("p"); } catch (x) {} }, 25000); return; }
+      if (m.t === "no") { WSD.give = true; return; }
+      if (m.t === "draw" && CMD.based) remoteCmd(m.cmd, m.arg, m.seq, "srv");   /* drawscr 등 다른 종류는 무시 */
+    };
+    ws.onclose = function () { if (WSD.ws !== ws) return; var was = WSD.st === "ok"; WSD.ws = null; WSD.st = "off"; clearInterval(WSD.ping); if (WSD.give) return; if (was) { WSD.t = setTimeout(function () { WSD.t = null; wsdOpen(); }, 1500); return; } wsdFail(); };
+  }
+  function wsdFail() { WSD.ws = null; WSD.st = "off"; if (++WSD.fails >= 3) { WSD.give = true; return; } WSD.t = setTimeout(function () { WSD.t = null; wsdOpen(); }, 1000 * Math.pow(2, WSD.fails)); }
 
   /* ─────────────── 키보드 (프레젠터 리모컨의 PageDown · → 도 「다음」) ─────────────── */
   function onKey(e) {
@@ -1287,6 +1735,7 @@
     if (GL) GL.setPalette(CFG.pal);
     if (!GL) glEl.style.display = "none";
     applyTier(0, "시작");
+    MINMIX = minMixFor(ST.ckMin || 0);
     set("wm", AXF_WORDMARK);
     resize(); window.addEventListener("resize", function () { resize(); });
     document.addEventListener("keydown", onKey);
@@ -1301,25 +1750,32 @@
       rebuildBalls();
       var s = ST.scene, last = ST.results[ST.results.length - 1];
       document.body.classList.toggle("closed", !!ST.closed);
-      if ((s === "tension" || s === "exit" || s === "reveal") && last && last.st === "win") {
+      if ((s === "exit" || s === "reveal") && last && last.st === "win" && ST.pending === last.id) {
         /* 결정된 당첨을 그대로 다시 보여 준다 */
         WIN.r = last; WIN.x = 960; WIN.y = 470; WIN.z = 1; WIN.i = -1;
         var bi = ballOfNo[last.no]; if (bi != null) killBall(bi);
         SC = "exit"; startRevealRestore();
-      } else if (s === "checkin") { SC = "checkin"; DRUM.inletT = 1; scene("checkin"); ARR.auto = false; if (CFG.mode === "server") SRV.polling = setInterval(function () { if (SC === "checkin" && SRV.hasPool) serverLoad(function () {}); }, 3000); }
+      } else if (s === "checkin") { SC = "checkin"; DRM.mode = "spin"; scene("checkin"); ARR.auto = false; if (CFG.mode === "server") SRV.polling = setInterval(function () { if (SC === "checkin" && SRV.hasPool) serverLoad(function () {}); }, 3000); }
       else if (s === "card") { SC = "mix"; goCard(); }
       else if (s === "board") scene("board");
       else if (s === "end") { scene("mix"); goEnd(); }
       else if (s === "closed") scene("closed");
       else if (s === "intro") scene("idle");
       else { scene("mix"); MIX.target = 1; }
-      toast("이어서 진행합니다 · 당첨 " + ST.results.filter(function (r) { return r.st === "win"; }).length + "건", true);
+      var wasDrawing = s === "tension" || ST.drawing; ST.drawing = 0;   /* 공이 틈을 지나기 전이면 결정이 없다 · 다시 누르면 된다 */
+      toast("이어서 진행합니다 · 당첨 " + ST.results.filter(function (r) { return r.st === "win"; }).length + "건" + (wasDrawing && SC === "mix" ? " · 감속 중이던 추첨은 결과 없이 다시 뽑습니다" : ""), true);
     } else scene("idle");
     if (CFG.mode === "server" && ST.pool == null) serverLoad(function () { pushCtl(); });
     if (SRV.queue.length) flushQueue();
+    qrCode();
+    remoteBoot();
+    /* 서버 모드 · 대기 화면부터 체크인 명단을 읽는다(공은 체크인 장면이 시작되면 들어간다 · 그 전에는 숫자만) */
+    if (CFG.mode === "server" && !SRV.polling && !ST.closed) SRV.polling = setInterval(function () { if ((SC === "idle" || SC === "checkin") && SRV.hasPool) serverLoad(function () { uiIdleCount(); }); }, 3000);
     if (!REC) requestAnimationFrame(loop);
-    window.__axd = { act: act, state: function () { return ST; }, cfg: function () { return CFG; }, boost: function (e) { MIX.target = e; },
-      srv: function () { return { status: SRV.status, log: SRV.logStatus || "", queue: SRV.queue.length, since: SRV.since, state: SRV.stateStatus || "", late: SRV.late || 0, balls: SRV.balls }; },
+    window.__axd = { act: act, state: function () { return ST; }, cfg: function () { return CFG; }, boost: function (e) { MIX.target = e; }, kick: KICK, tune: TUNE, sim: function (n, L, m, reps) { var out = []; for (var r = 0; r < (reps || 1); r++) out.push(simDraw(n, L, m)); return out; }, minmix: function (v) { if (v != null) MINMIX = v; return MINMIX; }, mc: function (n, m, f) { var r = monteCarlo(n, m, f); return { res: r, spinEsc: MC.spinEsc, second: MC.second }; }, pos: function () { return { x: Array.prototype.slice.call(bx, 0, NB), y: Array.prototype.slice.call(by, 0, NB), s: Array.prototype.slice.call(bs, 0, NB) }; }, 
+      scene: function () { return SC; }, gate: function () { return { mode: DRM.mode, live: GAP.live, latch: GAP.latch, w: +MIX.w.toFixed(2), gap: +(((gapAng() % 6.2832) + 6.2832) % 6.2832).toFixed(3) }; },
+      wsKill: function () { WSD.give = true; clearTimeout(WSD.t); if (WSD.ws) try { WSD.ws.close(); } catch (e) {} },   /* 시험용 · 소켓을 끊고 다시 붙지 않는다(폴링 폴백 확인) */
+      srv: function () { return { ws: WSD.st, wsGive: WSD.give, based: CMD.based, seq: cmdSeqOf("srv"), qr: QRS.code, qrUrl: QRS.url, close: SRV.closeStatus || "", status: SRV.status, log: SRV.logStatus || "", queue: SRV.queue.length, since: SRV.since, state: SRV.stateStatus || "", late: SRV.late || 0, balls: SRV.balls }; },
       debug: function () { var out = 0, nan = 0, maxd = 0; for (var i = 0; i < NB; i++) { if (bs[i] !== 2) continue; var d = Math.hypot(bx[i] - DX, by[i] - DY); if (d !== d || bq[i * 4] !== bq[i * 4]) nan++; if (d > DR + 2) out++; if (d > maxd) maxd = d; }
         return { n: nInside, out: out, nan: nan, maxd: Math.round(maxd), lim: Math.round(DR - R), R: +R.toFixed(1), fps: Math.round(FPS.v), q: QA.tier, qlog: QA.log.slice(-4), gl: !!GL, nanfix: NANFIX, escfix: ESCFIX, phys: +PH.ms.toFixed(2), draw: +RD.ms.toFixed(2) }; } };
   }
@@ -1336,32 +1792,37 @@
   /* ─────────────── 쇼릴 녹화 모드 (?rec=1) · 고정 시계 · 대본대로 조작 ─────────────── */
   if (REC) {
     SFX.log = []; SFX.clock = function () { return T; };
-    var SCRIPT = CLIP ? [[1.5, "next"]] : [
-      [0.0, "intro"],                /* 힉스필드 인트로 스팅 */
-      [7.3, "next"],                 /* 체크인 시작 */
-      [18.8, "close"], [19.05, "close"],
-      [20.4, "next"],                /* ROUND 01 카드 */
-      [22.8, "next"],                /* 섞기 */
-      [25.6, "next"],                /* 추첨 1 */
-      [36.4, "next"],                /* 확정 */
-      [38.0, "next"],                /* 추첨 2 */
-      [47.8, "redraw"], [48.05, "redraw"],   /* 부재 · 다시 추첨 */
-      [49.6, "next"],                /* 추첨 3 */
-      [60.4, "next"],                /* 확정 → FINAL 카드(자동) */
-      [64.4, "next"],                /* 섞기 */
-      [66.2, "next"],                /* FINAL 추첨 */
-      [77.4, "next"],                /* 확정 → 결과판 */
-      [81.2, "next"]                 /* 끝 화면 */
+    /* 대본 · [기다릴 장면 | null, 그 뒤 초, 명령] · 추첨 시간은 물리가 정하므로 장면을 기다려 다음 명령을 낸다 */
+    var SCRIPT = CLIP ? [[null, +(Q.get("clip") || 2.5) || 2.5, "next"]] : [
+      [null, 0.0, "intro"],          /* 힉스필드 인트로 스팅 */
+      [null, 7.3, "next"],           /* 체크인 시작 */
+      [null, 14.0, "close"], [null, 0.25, "close"],
+      [null, 1.3, "next"],           /* ROUND 01 카드 */
+      ["card", 2.6, "next"],         /* 섞기 · 통이 돈다 */
+      ["mix", 10.4, "next"],         /* 추첨 1 · 마감 뒤 첫 추첨은 10초 이상 섞은 다음 */
+      ["reveal", 3.5, "next"],       /* 확정 */
+      ["mix", 3.0, "next"],          /* 추첨 2 */
+      ["reveal", 2.5, "redraw"], [null, 0.25, "redraw"],   /* 부재 · 다시 추첨 */
+      ["mix", 3.0, "next"],          /* 추첨 3 */
+      ["reveal", 3.5, "next"],       /* 확정 → FINAL 카드(자동) */
+      ["card", 2.8, "next"],         /* 섞기 */
+      ["mix", 4.0, "next"],          /* FINAL 추첨 */
+      ["reveal", 4.0, "next"],       /* 확정 → 결과판 */
+      ["board", 4.5, "next"]         /* 끝 화면 */
     ];
-    var si = 0;
+    var si = 0, stepBase = 0, waitSeen = -1;
     window.__rec = {
       boot: function () { boot(); },
       frame: function (dt) {
         dt = dt || 1 / 30;
-        while (si < SCRIPT.length && T >= SCRIPT[si][0]) {
-          var c = SCRIPT[si][1];
-          busyUntil = 0; act(c);
-          si++;
+        while (si < SCRIPT.length) {
+          var e = SCRIPT[si];
+          if (e[0] && SC !== e[0]) { waitSeen = -1; break; }
+          if (e[0] && waitSeen < 0) waitSeen = T;
+          if (T < (e[0] ? waitSeen : stepBase) + e[1]) break;
+          busyUntil = 0; act(e[2]);
+          if (e[2] === "next" && e[0] === "mix" && SC === "mix") break;   /* 아직 못 뽑으면(섞기 · 넣는 중) 다음 프레임에 다시 */
+          stepBase = T; waitSeen = -1; si++;
         }
         update(dt); render();
         return T;
@@ -1376,6 +1837,7 @@
         }
         return T;
       },
+      done: function () { return si >= SCRIPT.length; },
       sfx: function () { return SFX.log; },
       t: function () { return T; }
     };
