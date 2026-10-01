@@ -1893,24 +1893,24 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
        = 프로그램 › 상시 운영(Views.guide · seg always) · 구역 상세(zone_d) · (다음 판) AX 퀴즈 판 퀴즈.
        다음 작업은 자기 화면 컨테이너에 axs-pan 을 붙이고 아래 K1~K5 를 그대로 쓴다(새로 만들지 않는다 · 검사 132절이 정의 한 번 · 경계를 본다).
      ── 공통 부품 K 시작 ──
-     K1 axs-sign  구역 간판(현장 부스 사인 · 주황 면 + 흰 도트 영문) · .sm 12자 이상 · .lg 구역 상세(카드 폭 3.5 : 1) · .chip 퀴즈 구역 칩(높이 28)
-                  글자 px 고정(사인 그림이라 큰글씨에서도 한 줄) · 그림 교체 지점은 스크립트 ZONE_SIGN_IMG · zoneSign 한 곳(<img> 도 같은 상자)
-     K2 axs-bar   판 제목 막대(왼쪽 3px ink 막대 + 제목 b + 작은 부제 span) · .stm 막대 문장 한 줄
+     K1 axs-sign  구역 간판 = 포인트 칩(현장 부스 사인 · 주황 면 + 흰 도트 영문 · 높이 24 · 글자 13px) · .sm 12자 이상(12px) · .lg 구역 상세(높이 26 · 14px) · .chip 퀴즈 구역 칩(기본과 같은 크기)
+                  v4.94 (261002 사용자 「너무 크고 튄다 · 포인트 요소로 쓰이는 정도」) 옛 줄 간판 188x54 · 상세 카드 폭 간판을 칩으로 줄였다 · 한 화면에 큰 주황 면 없음
+                  글자 px 고정(사인 글자라 큰글씨에서도 한 줄) · 그림 교체 지점은 스크립트 ZONE_SIGN_IMG · zoneSign 한 곳(<img> 는 같은 높이 · 폭은 그림 비율)
+     K2 axs-bar   판 제목 막대(왼쪽 3px ink 막대 + 제목 b + 작은 부제 span) · .stm 부제 한 줄(막대 없음 · 회색 t6 · v4.94 「한글 부제는 회색 톤 · 작게」)
      K3 axs-pill  검정 알약(ink 면 + 흰 글자 · 높이 24 · 스탬프 번호 · 문항 번호) · .ok 완료(초록) · 옆 이름은 axs-pt
      K4 axs-rule  얇은 ink 줄(1px) · 옛 .axs-hr(옅은 구분선)과 이름이 겹쳐 axs-rule 로 지었다(v4.76 클래스 겹침 사고)
      K5 axs-dot   주황 점 라벨 · axs-todo 「하는 일」 주황 점 목록 ═══════ */
-  .axs-pan .axs-sign { display: inline-flex; align-items: center; justify-content: center; flex: none; box-sizing: border-box; width: 188px; height: 54px; margin: 4px; padding: 0 6px; overflow: hidden;
-    border-radius: 2px; background: var(--ax-color-brand); color: #FFFFFF; box-shadow: 0 0 0 3px var(--ax-color-surface), 0 0 0 4px #D9D9D9;
-    font-family: "NeoDunggeunmo", var(--ax-font); font-size: 32px; font-weight: 400; line-height: 1; letter-spacing: 0; white-space: nowrap; text-shadow: 0.5px 0 0 #FFFFFF; }
-  .axs-pan .axs-sign.sm { font-size: 26px; }
-  .axs-pan .axs-sign.lg { width: calc(100% - 8px); height: auto; aspect-ratio: 3.5 / 1; font-size: 48px; }
-  .axs-pan .axs-sign.lg.sm { font-size: 32px; }
-  .axs-pan .axs-sign.chip { width: auto; height: 28px; margin: 0; padding: 0 10px; font-size: 16px; box-shadow: none; }
+  .axs-pan .axs-sign { display: inline-flex; align-items: center; justify-content: center; flex: none; align-self: flex-start; box-sizing: border-box; width: auto; height: 24px; margin: 0; padding: 0 8px; overflow: hidden;
+    border-radius: 4px; background: var(--ax-color-brand); color: #FFFFFF;
+    font-family: "NeoDunggeunmo", var(--ax-font); font-size: 13px; font-weight: 400; line-height: 1; letter-spacing: 0; white-space: nowrap; }
+  .axs-pan .axs-sign.sm { font-size: 12px; }
+  .axs-pan .axs-sign.lg { height: 26px; padding: 0 10px; font-size: 14px; }
+  .axs-pan .axs-sign.lg.sm { font-size: 13px; }
   .axs-pan img.axs-sign { padding: 0; object-fit: contain; }
   .axs-pan .axs-bar { display: flex; flex-direction: column; gap: 2px; margin: var(--ax-space-4) 0 var(--ax-space-4) 2px; padding: 1px 0 1px 10px; border-left: 3px solid var(--ax-color-ink); }
   .axs-pan .axs-bar b { font: var(--ax-type-t4); color: var(--ax-color-ink); }
   .axs-pan .axs-bar span { font: var(--ax-type-caption); color: var(--ax-color-muted); }
-  .axs-pan .axs-bar.stm { display: block; margin: 0; padding-left: 12px; font: var(--ax-type-t4); color: var(--ax-color-ink); word-break: keep-all; }
+  .axs-pan .axs-bar.stm { display: block; margin: 0; padding: 0; border: 0; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }   /* 부제 · 막대 없음 · 회색 15px 일반 굵기 */
   .axs-pan .axs-pill { display: inline-flex; align-items: center; min-height: 24px; padding: 0 10px; border-radius: 999px; background: var(--ax-color-ink); color: #FFFFFF; font: var(--ax-type-t7); font-weight: 700; white-space: nowrap; }
   .axs-pan .axs-pill.ok { background: var(--ax-color-successSoft); color: var(--ax-color-success); }
   .axs-pan .axs-pt { font: var(--ax-type-caption); color: var(--ax-color-body); }
@@ -1928,7 +1928,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pan .axs-zr .zrt, .axs-pan .axs-zfl .zrt { display: flex; align-items: center; gap: var(--ax-space-8); flex: none; }
   .axs-pan .axs-zr .axs-chev, .axs-pan .axs-zfl .axs-chev { flex: none; width: 20px; height: 20px; color: var(--ax-color-muted); }
   .axs-pan .axs-zr .tx, .axs-pan .axs-zfl .tx, .axs-pan .axs-zin .tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .axs-pan .axs-zr .k { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-pan .axs-zr .k { font: var(--ax-type-t6); color: var(--ax-color-body); }   /* v4.94 한국어 한 줄 = 부제(간판 칩 아래 · 회색 일반 굵기) */
   .axs-pan .axs-zr .f, .axs-pan .axs-zfl .f, .axs-pan .axs-zin .tx span { font: var(--ax-type-caption); color: var(--ax-color-muted); }
   .axs-pan .cr { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
   .axs-pan .axs-zc { display: flex; flex-direction: column; padding: var(--ax-space-16) var(--ax-space-16) var(--ax-space-4); border-radius: var(--ax-radius-20); background: var(--ax-color-surface); }
@@ -1941,6 +1941,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pan .axs-zfl .tx b { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
   .axs-pan .axs-zfl .tx .k { font: var(--ax-type-t7); color: var(--ax-color-body); }
   .axs-pan .axs-zdt { display: flex; flex-direction: column; gap: var(--ax-space-16); padding: var(--ax-space-20); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); }
+  .axs-pan .axs-zdt > .axs-sign + .axs-bar.stm { margin-top: calc(var(--ax-space-8) * -1); }   /* 칩과 부제는 한 묶음 */
   .axs-pan .axs-zdt .axs-kv { grid-template-columns: 56px minmax(0, 1fr); row-gap: var(--ax-space-8); }
   .fs-big .axs-pan .axs-zr .hd, .fs-big .axs-pan .axs-zfl, .fs-big .axs-pan .axs-zin { flex-wrap: wrap; }
   .fs-big .axs-pan .axs-zin .tx { flex: 1 1 100%; }
@@ -5150,20 +5151,20 @@ var FLOOR1 = [
   { id: "vision", grp: "see", sign: "AX VISION", kor: "회사가 가는 방향을 보는 곳", fact: "AX 로드맵 · 영상", st: "",
     stm: "회사가 어디로 가는지 보는 곳", todo: ["AX 로드맵 2026~2028을 봐요", "키비주얼 영상을 봐요"] },
   { id: "lab", grp: "see", sign: "AX LAB", kor: "DAP 과제를 보는 곳", fact: "우수 과제 · 아이디어 한 줄 QR", st: "p5", stl: "아이디어 한 줄",
-    stm: "데이터 분석 과제(DAP)를 보고 내 아이디어를 남기는 곳", todo: ["우수 과제와 2026 프로젝트를 봐요", "끝 판 QR로 아이디어 한 줄을 써요"], btn: ["아이디어 쓰기", "App.go('ideas')"] },
+    stm: "DAP 과제 보고 아이디어 남기는 곳", todo: ["우수 과제와 2026 프로젝트를 봐요", "끝 판 QR로 아이디어 한 줄을 써요"], btn: ["아이디어 쓰기", "App.go('ideas')"] },
   { id: "action", grp: "see", sign: "AX in Action", kor: "AI 업무 사례를 보는 곳", fact: "동료가 만든 앱 3개", st: "",
-    stm: "동료가 AI로 직접 만든 현장 앱을 보는 곳", todo: ["영업 2개, 보상 1개 현장 앱 사례를 봐요", "현장 인터뷰 영상을 봐요"] },
+    stm: "동료가 AI로 만든 현장 앱을 보는 곳", todo: ["영업 2개, 보상 1개 현장 앱 사례를 봐요", "현장 인터뷰 영상을 봐요"] },
   { id: "lounge", grp: "do", sign: "AX LOUNGE", kor: "업무 고민을 상담하는 곳", fact: "", st: "p3", stl: "프로그램 참여",
-    stm: "업무 고민을 데이터사이언스파트와 이야기하는 곳", todo: ["고민을 이야기하고 방향을 함께 찾아요", "앱에서 30분 상담을 신청해요", "상담이 끝나면 스탬프를 받아요"] },
+    stm: "데이터사이언스파트와 업무 고민 상담", todo: ["고민을 이야기하고 방향을 함께 찾아요", "앱에서 30분 상담을 신청해요", "상담이 끝나면 스탬프를 받아요"] },
   { id: "play", grp: "do", sign: "AX PLAY", kor: "AI를 직접 써 보는 곳", fact: "HiDI-Q · Hi-Helper", st: "p2", stl: "AX PLAY 체험",
     stm: "HiDI-Q와 Hi-Helper를 직접 써 보는 곳", todo: ["노트북에서 HiDI-Q, Hi-Helper를 써 봐요", "스태프에게 내 QR을 보여 주면 스탬프를 받아요"], btn: ["체험 안내", "App.go('booth')"] },
   { id: "event", grp: "do", sign: "EVENT", kor: "사진 · 룰렛 · 타자왕이 있는 곳", fact: "", st: "",
-    stm: "사진 찍고, 룰렛 돌리고, 타자 겨루는 곳", todo: ["AI 포토부스에서 번호표를 받아요", "스탬프 3개를 모으면 룰렛 1회예요", "1F 타자왕 순위를 봐요"] }
+    stm: "사진 · 룰렛 · 타자 겨루기", todo: ["AI 포토부스에서 번호표를 받아요", "스탬프 3개를 모으면 룰렛 1회예요", "1F 타자왕 순위를 봐요"] }
 ];
 function zoneById(id) { return FLOOR1.filter(function (z) { return z.id === id; })[0] || null; }
 function zoneOpen(id) { PROG.zone = id; App.go("zone_d"); }
 /* ── 구역 간판 그림 교체 지점(여기 한 곳) · 홍보부 사인 원본 SVG 가 오면 경로를 넣는다(예: "AX LOUNGE": "assets/sign/ax_lounge.svg")
-   같은 상자(줄 188x54 · 상세 카드 폭 3.5 : 1)에 <img> 로 들어간다 · 비어 있으면 Neo둥근모 근사(design.md A-5 5-19) · 12자 이상은 sm(글자 줄임) ── */
+   같은 높이(줄 24 · 상세 26 · v4.94 포인트 칩)에 <img> 로 들어간다 · 비어 있으면 Neo둥근모 근사(design.md A-5 5-19) · 12자 이상은 sm(글자 줄임) ── */
 var ZONE_SIGN_IMG = {};
 function zoneSign(nm, cls) {
   var c = "axs-sign" + (nm.length >= 12 ? " sm" : "") + (cls ? " " + cls : "");
@@ -5224,7 +5225,7 @@ function progAlwaysHtml() {
     '<button type="button" class="axs-zfl" onclick="progOpen(\'cchat\')"><span class="tx"><b>AX 커피챗</b><span class="k">아이디어를 놓고 이야기하는 곳</span><span class="f">' + esc(ccSub) + "</span></span>" +
     '<span class="zrt">' + zoneChip(ccChip) + CHEV_SVG + "</span></button></section>";
 }
-/* 구역 상세 · 간판 크게 → 막대 문장 → 알약 줄 → 얇은 ink 줄 → 하는 일(주황 점) → (사실 표) → 행동 버튼 하나(있을 때만) · 뒤로 = 프로그램 */
+/* 구역 상세 · 간판 칩(v4.94 포인트 크기) → 부제 한 줄 → 알약 줄 → 얇은 ink 줄 → 하는 일(주황 점) → (사실 표) → 행동 버튼 하나(있을 때만) · 뒤로 = 프로그램 */
 function zoneDetailHtml() {
   var z = zoneById(PROG.zone) || FLOOR1[0], L = zoneLive(z), pill = zonePill(z);
   var cr = pill ? pill + (L.tm ? '<span class="axs-pt">· ' + esc(L.tm) + "</span>" : "") : '<span class="axs-pt">자유 관람 · 스탬프 없음</span>';
