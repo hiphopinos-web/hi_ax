@@ -8272,7 +8272,7 @@ function scanLinkRun() {
 function scanLinkNote() {
   var p = scanLinkPeek();
   if (!p) return;
-  var msg = /^#q=/i.test(p.raw) ? "로그인하면 퀴즈로 이어져요" : "로그인하면 이어서 적립";
+  var msg = /^#q=idea\b/i.test(p.raw) ? "로그인하면 아이디어 한 줄로 이어져요" : /^#q=/i.test(p.raw) ? "로그인하면 퀴즈로 이어져요" : "로그인하면 이어서 적립";   /* v4.80 아이디어 한 줄 QR */
   ["entryForm", "quick"].forEach(function (id) {
     var box = el(id);
     if (!box || box.querySelector(".axs-pend")) return;
@@ -8292,6 +8292,7 @@ window.addEventListener("hashchange", function () {
 function qrRoute(raw, t) {
   raw = String(raw || "").trim();
   if (qrParseUser(raw)) { notice({ key: "claim:user", title: "참가자 QR이에요", body: "부스·전시 QR 스캔", go: "scan_q", goLbl: "다시 스캔" }); return; }
+  if (/#q=idea\b/i.test(raw)) { App.go("ideas"); return; }   /* v4.80 (사용자 승인 261001) 1층 부서 출력용 아이디어 한 줄 QR · 서버 판정 없음 · 적립은 제출 때(p5) · #go= 는 알림 진입 집계라 쓰지 않는다 */
   var mq = raw.match(/#q=(wall[0-9]+)/i);
   if (mq) {
     var wid = mq[1].toLowerCase();
