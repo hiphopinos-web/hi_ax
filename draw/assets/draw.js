@@ -121,7 +121,7 @@
     params = Object.assign({}, params, { action: action, callback: name, _: Date.now() });
     var code = sessionKey(); if (code) params.key = code;
     for (var k in params) if (params[k] != null) q.push(encodeURIComponent(k) + "=" + encodeURIComponent(params[k]));
-    var timer = setTimeout(function () { clean(); done({ ok: false, reason: "timeout" }); }, 15000);
+    var timer = setTimeout(function () { clean(); window[name] = function () {}; done({ ok: false, reason: "timeout" }); }, 15000);   /* 늦게 온 응답이 오류를 내지 않게 빈 함수를 남긴다 */
     function clean() { clearTimeout(timer); try { delete window[name]; } catch (e) { window[name] = undefined; } if (sc.parentNode) sc.parentNode.removeChild(sc); }
     window[name] = function (res) { clean(); done(res || { ok: false }); };
     sc.onerror = function () { clean(); done({ ok: false, reason: "network" }); };
