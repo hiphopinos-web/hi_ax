@@ -414,6 +414,35 @@ table.brk tr.tot td{border-bottom:0;border-top:1px solid var(--line3)}
 .qv-sec{margin-top:16px;border:1px solid var(--line2);border-radius:var(--r-s);padding:10px 14px;background:var(--soft)}
 .qv-sec>summary{cursor:pointer;font-weight:700}
 .qv-sec .qv-grid{margin-top:12px}
+/* v4.82 추첨 › 진행(럭키드로우 원격 진행) · 이름은 dc- 로 시작(다른 규칙과 겹치지 않게 · 122-콘솔 겹침 검사) */
+.dc-top{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;margin:16px 0 12px}
+.dc-acts{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.dc-conn{display:inline-flex;align-items:center;font-size:var(--fs-s);font-weight:700;border-radius:99px;padding:4px 12px;border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.dc-conn.ok{color:var(--ok);background:var(--ok-bg);border-color:var(--ok-bd)}
+.dc-conn.bad{color:var(--bad);background:var(--bad-bg);border-color:var(--bad-bd)}
+.dc-rej{margin-bottom:12px;padding:12px 14px;border:1px solid var(--bad-bd);background:var(--bad-bg);color:var(--bad);border-radius:var(--r-s);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dc-stat{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.dc-stat div{background:var(--soft);border:1px solid var(--line2);border-radius:var(--r-s);padding:8px 12px;min-width:0}
+.dc-stat span{display:block;font-size:var(--fs-c);color:var(--tx3);font-weight:600}
+.dc-stat b{display:block;font-size:var(--fs-h2);font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dc-stat div:first-child b{color:var(--navy)}
+.dc-pad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.dc-b{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:60px;padding:8px 10px;border:1px solid var(--line3);border-radius:var(--r);background:var(--sf);color:var(--tx);font-size:var(--fs-h2);font-weight:800;line-height:1.3;text-align:center}
+.dc-b em{font-style:normal;font-size:var(--fs-c);font-weight:600;color:var(--tx3)}
+.dc-b:hover:not(:disabled){border-color:var(--navy);color:var(--navy)}
+.dc-b.go{background:var(--navy);border-color:var(--navy);color:#fff}
+.dc-b.go em{color:var(--navy1)}
+.dc-b.go:hover:not(:disabled){background:var(--navy8);color:#fff}
+.dc-b.arm,.dc-b.arm:hover:not(:disabled){background:var(--bad);border-color:var(--bad);color:#fff}
+.dc-b.arm em{color:#fff}
+.dc-b:disabled{opacity:.35;cursor:default}
+.dc-b.sm{min-height:40px;flex-direction:row;gap:8px;padding:6px 14px;font-size:var(--fs-b)}
+.dc-sub{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.dc-win{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.dc-no{font-size:var(--fs-kpi);font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;letter-spacing:.04em;border:1px solid var(--navy1);background:var(--navy05);border-radius:var(--r-s);padding:4px 14px}
+.dc-nm{font-size:var(--fs-h1);font-weight:800}
+.dc-mc{font-size:var(--fs-h2);line-height:1.7}
+@media(max-width:720px){.dc-pad{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .g75{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
 .g75>div>.card:first-child{margin-top:0}
 @media(max-width:1100px){.g75{grid-template-columns:minmax(0,1fr)}}
@@ -587,7 +616,7 @@ var TABS = [
   { id:"qr", n:"QR", d:"현장에 붙는 QR 전부입니다. 무엇을 인쇄해 어디에 붙이고, 지금 찍히고 있는지 한곳에서 봅니다." },
   { id:"apply", n:"신청", d:"상담 승인 · 커피챗 매칭 · 담당 명단을 처리합니다. 17F 강연은 자유 참석이라 신청이 없습니다(v4.26)." },
   { id:"att", n:"17F 출석", d:"17F 강연 QR 출석 인원 · 출석률 · 시간대별 입장 흐름입니다. 부문 통계는 두지 않습니다." },
-  { id:"draw", n:"추첨", d:"Outro 현장 추첨 체크인 인원 · 통 안의 공 수 · 당첨 기록과 추첨 코드 · 체크인 시간입니다. 추첨 진행은 송출 화면(draw/)이 합니다." },
+  { id:"draw", n:"추첨", d:"Outro 현장 추첨을 이 콘솔에서 진행합니다. 대형 스크린의 추첨 화면에 명령을 보내고, 체크인 인원 · 당첨 기록 · 추첨 코드를 봅니다." },
   { id:"visit", n:"접속", d:"앱을 연 사람 수와 들어온 경로(홈 화면 앱 · 브라우저 · 카카오톡 등) · 시간대별 흐름 · 로그인 전 이탈입니다. 부문 통계는 두지 않습니다." },
   { id:"idea", n:"아이디어", d:"참가자가 낸 아이디어 한 줄을 봅니다. 18F 커피챗 매칭 때 분야별로 묶어 봅니다." },
   { id:"survey", n:"설문", d:"오늘 한 판 설문 집계입니다. 답은 이름 없이 저장되어 사람 단위 조회는 없습니다." },
@@ -832,7 +861,7 @@ el("key").addEventListener("keydown",function(e){ if(e.key==="Enter") unlock(); 
 
 /* ══════════════════ 3. 라우팅 · 폴링 ══════════════════ */
 /* subs = 메뉴별 서브탭 · sel = 표에서 고른 행 · ovr = 처리 직후 서버 반영 전까지 덮어 보여 줄 값 · drw = 열린 상세 패널 */
-var ST={ tab:"dash", subs:{ apply:"resv", stamp:"one", qr:"img", typing:"oly", race:"live", idea:"list" }, q:"", filt:"", data:{}, busy:false, at:null, sel:{}, ovr:{}, drw:null, draft:{}, bulk:{}, sp:{ q:"", emp:"" } };
+var ST={ tab:"dash", subs:{ apply:"resv", stamp:"one", qr:"img", typing:"oly", race:"live", idea:"list", draw:"run" }, q:"", filt:"", data:{}, busy:false, at:null, sel:{}, ovr:{}, drw:null, draft:{}, bulk:{}, sp:{ q:"", emp:"" } };
 /* 탭을 바꾸면 먼저 갖고 있는 데이터로 즉시 그리고, 그 다음 서버에서 받아 다시 그린다.
    안 그러면 응답이 올 때까지(1~3초) 이전 탭 내용이 새 탭 이름 아래 그대로 보인다. */
 /* load() 를 먼저 불러 busy 를 세운 뒤 그린다. 반대로 하면 첫 진입에 「가입 계정 0명」처럼 0 으로 그려진다. */
@@ -1822,9 +1851,14 @@ function drawRecTag(r){
   return tag("취소","off");
 }
 function viewDraw(){
-  var d=ST.data.draw;
+  var d=ST.data.draw, sv=sub()||"run";
   var h=tabHead('<button class="btn sm" onclick="reload([\'draw\'])">새로고침</button>');
+  h+=chips([{v:"run",n:"진행"},{v:"stat",n:"현황 · 설정"}], sv, "setSub");   /* v4.82 진행 = 원격 진행 패널(7-6c) */
   if(!d||!d.ok) return h+'<div class="err-banner">추첨 현황을 받지 못했습니다('+esc(why(d))+'). 백엔드가 v4.79(추첨) 이상인지 확인합니다.</div>';
+  if(sv==="run") return h+viewDrawRun(d)+memo('<p><b>준비</b> · 대형 스크린 PC 에서 「추첨 화면 열기」(또는 복사한 주소)로 추첨 화면을 원격 모드로 띄우고, 화면에 관리코드를 넣은 뒤 전체 화면(F)으로 둡니다. 이 노트북은 사회자 옆에 둡니다. 위 표시가 「화면 연결됨」이면 화면이 2초마다 상태를 보내고 있습니다. 5초 넘게 보고가 없으면 붉게 바뀝니다.</p>'+
+    '<p><b>버튼</b> · 지금 장면에서 화면이 받는 명령만 켜지고, 다음 차례 버튼은 남색으로 채워집니다. 체크인 마감 · 부재 · 마지막 취소 · 끝 화면 · 화면 초기화는 3초 안에 두 번 눌러야 나갑니다. 체크인 마감은 서버의 체크인도 함께 닫고, 체크인 시작은 닫혀 있던 체크인을 다시 엽니다.</p>'+
+    '<p><b>당첨</b> · 공은 화면이 뽑고 기록합니다. 이 콘솔은 결과를 바꾸지 않습니다. 당첨자가 없으면 「부재 · 다시 추첨」, 잘못 확정했으면 「마지막 취소」를 보냅니다. 실명 · 부서는 상품 전달용으로 이 화면에만 나옵니다(화면은 가린 이름).</p>'+
+    '<p><b>끊겼을 때</b> · 명령은 서버에 남아 있어 화면이 다시 연결되면 마지막 명령을 확인합니다. 오래된 명령은 다시 실행하지 않습니다. 화면이 거절한 명령은 위에 붉은 알림으로 뜹니다. 시험 때는 추첨 화면의 조작 창(P 키)도 같이 쓸 수 있습니다.</p>');
   h+='<div class="kpis">'+
     kpi("추첨 체크인",d.in||0,"명",(d.closed?"<b>마감</b> · ":"")+"응모권 있음 "+(d.withT||0)+" · 없음 "+(d.zero||0)+(d.test?" · 테스트 "+d.test+" 따로":""))+
     kpi("통 안의 공",d.balls||0,"개","응모 번호 수 · 당첨 확률은 공 단위")+
@@ -1832,7 +1866,7 @@ function viewDraw(){
   '</div>';
   var recs=d.recs||[];
   var tb='<div class="wrap"><table class="tb"><tr><th>시각</th><th>회차 · 칸</th><th>번호</th><th>이름</th><th>경품</th><th>상태</th></tr>'+
-    recs.map(function(r){ return '<tr><td class="n cap">'+esc(short(r.t))+'</td><td class="n">'+esc(r.round||"-")+(r.slot?" · "+esc(r.slot):"")+'</td><td class="n"><span class="dw-no">'+esc(r.no||"-")+'</span></td><td>'+esc(r.name||r.nm||"")+'</td><td>'+esc(r.prize||"")+'</td><td>'+drawRecTag(r)+'</td></tr>'; }).join("")+
+    recs.map(function(r){ return '<tr><td class="n cap">'+esc(short(r.t))+'</td><td class="n">'+esc(r.round||"-")+(r.slot?" · "+esc(r.slot):"")+'</td><td class="n"><span class="dw-no">'+esc(r.no||"-")+'</span></td><td>'+esc(r.name||r.nm||"")+(r.dept?' <span class="cap">'+esc(r.dept)+'</span>':'')+'</td><td>'+esc(r.prize||"")+'</td><td>'+drawRecTag(r)+'</td></tr>'; }).join("")+
     (!recs.length?emptyRow(6,"아직 추첨 기록이 없습니다."):"")+'</table></div>'+(d.total>recs.length?'<p class="cap mt8">최근 '+recs.length+'줄 · 전체 '+d.total+'줄(시트 「추첨기록」)</p>':'');
   var set='<div class="dw-set">'+
     '<label class="cap">추첨 코드(인쇄물과 같아야 함)<br><input id="dwCode" class="in dw-code" value="'+esc(d.code||"")+'" placeholder="AXD + 6자" autocomplete="off" spellcheck="false"></label>'+
@@ -1863,6 +1897,175 @@ function drawCfgSave(){
   if(!lines.length){ toast("바뀐 것이 없습니다"); return; }
   dialog({ t:"추첨 설정을 바꿀까요?", s:lines.map(esc).join("<br>")+(p.code?"<br><b>코드를 바꾸면 입구 인쇄물의 QR 이 더 이상 체크인되지 않습니다.</b>":""), ok:"저장", danger:!!p.code,
     onOk:function(){ call("draw_cfg",p,function(r){ dlgForce(); if(r&&r.ok){ toast("추첨 설정을 저장했습니다"); ST.data.draw=r; reload(["draw"]); } else toast("실패: "+(DRAW_WHY[r&&r.reason]||why(r))); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
+}
+
+/* ══════════════════ 7-6c. 럭키드로우 원격 진행 · 추첨 › 진행 (v4.82 · 261001 사용자 「통제 화면은 ADMIN 쪽에」) ══════════════════
+ * 대형 스크린에는 추첨 화면(../draw/?remote=1)만 띄우고, 사회자 옆 노트북 한 대에서 이 패널로 명령을 보낸다.
+ * 보내기 = draw_cmd(cmd · arg · rid) · 서버가 seq 를 매겨 소켓 방 draw 로 방송한다 · 같은 rid 로 다시 보내도 한 번만(응답 again).
+ * 화면 상태 = 화면이 2초마다 보내는 draw_scr · 소켓 drawscr(바뀔 때) + draw_stats 의 scr(2~5초 폴링)로 받는다.
+ * 당첨은 화면이 정하고 draw_log 로 기록한다 · 이 패널은 결과를 바꾸지 않는다 · 부재 · 취소도 명령이다(arg = 방금 당첨 기록 id).
+ * 되돌리기 어려운 명령(마감 · 부재 · 취소 · 끝 · 화면 초기화)은 두 번 누른다(3초 안) · 실명 · 부서는 이 콘솔만(상품 전달용) · 새 CSS 는 dc- 로 시작한다. */
+var DC_SCN={ idle:"대기", checkin:"체크인 중", closed:"체크인 마감", card:"라운드 카드", mix:"섞는 중", tension:"감속 · 배출 대기", exit:"배출", reveal:"당첨 공개", board:"결과판", end:"끝 화면", intro:"인트로" };
+/* 버튼 순서 = 진행 순서 · two = 두 번 누르기 */
+var DC_BTN=[
+  { c:"checkin", n:"체크인 시작" }, { c:"close", n:"체크인 마감", two:1 }, { c:"round", n:"라운드 시작" },
+  { c:"mix", n:"섞기" }, { c:"draw", n:"추첨" }, { c:"confirm", n:"확정" },
+  { c:"absent", n:"부재 · 다시 추첨", two:1 }, { c:"undo", n:"마지막 취소", two:1 }, { c:"board", n:"결과판" },
+  { c:"end", n:"끝 화면", two:1 }, { c:"idle", n:"대기 화면" }
+];
+var DC_SUB=[ { c:"intro", n:"인트로 영상" }, { c:"reset_screen", n:"화면 초기화", two:1 } ];
+/* 화면이 ready(받는 명령 목록)를 보내지 않을 때만 쓰는 장면별 기본 규칙 */
+var DC_MAP={ idle:["checkin","intro","board","end"], intro:["idle","checkin"], checkin:["close","idle"], closed:["round","idle"], card:["mix","undo","board","idle"], mix:["draw"], tension:[], exit:[],
+  reveal:["confirm","absent","undo"], board:["round","undo","end","idle"], end:["idle"] };
+var DC_NEXT={ idle:"checkin", checkin:"close", closed:"round", card:"mix", mix:"draw", reveal:"confirm", board:"end", end:"idle" };
+/* 사회자 멘트 · 장면마다 한두 문장(화면에 나오지 않는다) */
+var DC_MC={
+  idle:"잠시 뒤 경품 추첨을 시작합니다. 앱을 열어 두세요.",
+  intro:"지금부터 AX Festival 2026 경품 추첨을 시작하겠습니다.",
+  checkin:"화면의 QR 을 앱으로 찍으면 추첨 체크인이 됩니다. 응모권이 있는 분의 번호가 공이 되어 통에 들어갑니다.",
+  closed:"체크인을 마감했습니다. 통 안의 공이 오늘 응모하신 번호입니다. 첫 경품을 뽑겠습니다.",
+  card:"이번에는 {round} 경품을 뽑겠습니다. 경품은 화면에 나온 대로 소개합니다.",
+  mix:"공을 섞고 있습니다. 잠시 뒤 한 개가 나옵니다.",
+  tension:"곧 나옵니다.", exit:"나왔습니다.",
+  reveal:"{no}번, {nm} 님 축하드립니다. 앞으로 나와 주세요. 30초 안에 안 계시면 다시 뽑겠습니다.",
+  board:"오늘 당첨되신 분들입니다. 모두 축하드립니다.",
+  end:"함께해 주셔서 감사합니다. 남은 경품은 행사 뒤 따로 추첨해 안내합니다."
+};
+var DC={ on:false, ws:null, st:"off", t:null, fails:0, give:false, ping:null, pongAt:0, poll:null, scr:null, scrAt:0, cmd:null, sent:null, busy:"", arm:null, rejOff:0, sig:"", log:[] };
+function dcOn(){ return !!key()&&ST.tab==="draw"&&(sub()||"run")==="run"; }
+function dcUrl(){ return /^https:\/\/[a-z0-9-]+\.[a-z0-9-]+\.workers\.dev\/exec$/.test(BE)?BE.replace(/^https:/,"wss:").replace(/\/exec$/,"/ws?r=draw"):""; }
+/* 패널을 열면 소켓 + 폴링을 켜고, 다른 화면으로 가면 끈다(1초마다 확인) */
+setInterval(function(){
+  var on=dcOn();
+  if(on&&!DC.on){ DC.on=true; DC.give=false; DC.fails=0; dcOpen(); dcPull(); }
+  else if(!on&&DC.on){ DC.on=false; dcClose(); clearTimeout(DC.poll); DC.poll=null; }
+  if(DC.on) dcAge();
+},1000);
+function dcPull(){
+  clearTimeout(DC.poll); DC.poll=null;
+  if(!DC.on) return;
+  call("draw_stats",{},function(r){
+    if(r&&r.ok){ ST.data.draw=r; DC.cmd=r.cmd||null; if(r.scr&&(!DC.scr||r.scr.age<dcAgeNow()-0.5)){ DC.scr=r.scr; DC.scrAt=Date.now()-r.scr.age*1000; } else if(!r.scr&&dcAgeNow()>DRAW_SCR_GONE) DC.scr=null; }
+    dcPaint(); if(DC.on) DC.poll=setTimeout(dcPull, DC.st==="ok"?5000:2000);
+  },function(){ dcPaint(); if(DC.on) DC.poll=setTimeout(dcPull,3000); });
+}
+var DRAW_SCR_GONE=120;
+function dcOpen(){
+  if(DC.ws||DC.t||DC.give||!DC.on||!dcUrl()||typeof WebSocket==="undefined") return;
+  var ws; try{ ws=new WebSocket(dcUrl()); }catch(e){ dcFail(); return; }
+  DC.ws=ws; DC.st="open";
+  ws.onopen=function(){ if(DC.ws!==ws) return; try{ ws.send(JSON.stringify(tok()?{t:"hello",tok:tok()}:{t:"hello",key:key()})); }catch(e){} };
+  ws.onmessage=function(e){ if(DC.ws!==ws) return; if(e.data==="o"){ DC.pongAt=Date.now(); return; } var m; try{ m=JSON.parse(e.data); }catch(x){ return; }
+    if(m.t==="ok"){ DC.st="ok"; DC.fails=0; DC.pongAt=Date.now(); dcPing(true); dcPaint(); return; }
+    if(m.t==="no"){ DC.give=true; return; }
+    if(m.t==="drawscr"&&m.s){ var s={}; for(var k in m.s) s[k]=m.s[k]; s.sid=m.sid||"main"; s.age=0; DC.scr=s; DC.scrAt=Date.now(); dcPaint(); return; }
+    if(m.t==="draw"&&m.seq){ DC.cmd={ seq:m.seq, cmd:m.cmd, arg:m.arg||"", at:m.at }; if(DC.sent&&DC.sent.seq===m.seq) DC.sent.ws=Date.now(); dcPaint(); } };
+  ws.onclose=function(e){ if(DC.ws!==ws) return; var was=DC.st==="ok"; DC.ws=null; DC.st="off"; dcPing(false); dcPaint();
+    if(e&&(e.code===4000||e.code===4001)||DC.give||!DC.on) return;
+    if(was){ DC.t=setTimeout(function(){ DC.t=null; dcOpen(); },500+Math.random()*2000); return; }
+    dcFail(); };
+}
+function dcFail(){ DC.ws=null; DC.st="off"; if(++DC.fails>=4){ DC.give=true; return; } DC.t=setTimeout(function(){ DC.t=null; dcOpen(); },1000*Math.pow(2,DC.fails-1)+Math.random()*1000); }
+function dcPing(on){ clearInterval(DC.ping); DC.ping=null; if(on) DC.ping=setInterval(function(){ if(!DC.ws||DC.st!=="ok") return; if(Date.now()-DC.pongAt>70000){ try{ DC.ws.close(); }catch(e){} return; } try{ DC.ws.send("p"); }catch(e){} },25000); }
+function dcClose(){ clearTimeout(DC.t); DC.t=null; var ws=DC.ws; DC.ws=null; DC.st="off"; dcPing(false); if(ws){ try{ ws.close(1000); }catch(e){} } }
+function dcAgeNow(){ return DC.scr?Math.max(0,(Date.now()-DC.scrAt)/1000):Infinity; }
+/* 받은 지 몇 초 · 1초마다 글자만 바꾼다(버튼을 다시 그리지 않아 누르는 중에 사라지지 않게) */
+function dcAge(){
+  var p=el("dcAge"); if(!p) return;
+  if(DC.scr&&dcAgeNow()>DRAW_SCR_GONE+5){ DC.scr=null; dcPaint(); return; }
+  var c=dcConn(); p.className="dc-conn "+c[0]; p.textContent=c[1];
+}
+/* 이 명령을 지금 누를 수 있는가 · 화면이 ready 목록을 주면 그것만 · 아니면 장면별 기본 규칙 · 보고가 없으면 모두(시험 · 화면이 거절하면 알림) */
+function dcReady(c){
+  if(c==="reset_screen") return true;
+  var s=DC.scr; if(!s) return true;
+  if(Object.prototype.toString.call(s.ready)==="[object Array]") return s.ready.indexOf(c)>=0;
+  return (DC_MAP[s.scene]||[]).indexOf(c)>=0;
+}
+function dcRid(){ return "c"+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function dcPress(c){
+  var b=DC_BTN.concat(DC_SUB).filter(function(x){ return x.c===c; })[0]; if(!b||DC.busy) return;
+  if(!dcReady(c)){ toast("지금 장면에서는 보낼 수 없습니다"); return; }
+  if(b.two&&!(DC.arm&&DC.arm.c===c&&Date.now()-DC.arm.at<3000)){ DC.arm={ c:c, at:Date.now() }; dcPaint(true); setTimeout(function(){ if(DC.arm&&DC.arm.c===c&&Date.now()-DC.arm.at>=3000){ DC.arm=null; dcPaint(true); } },3100); return; }
+  DC.arm=null;
+  var last=(DC.scr&&DC.scr.last)||null, arg=(c==="absent"||c==="undo")&&last&&last.id?last.id:"";
+  if(arg&&!/^[0-9A-Za-z_.:-]{1,40}$/.test(arg)) arg="";
+  dcSend(c, arg, dcRid(), 0);
+}
+function dcSend(c, arg, rid, tries){
+  DC.busy=c; dcPaint(true);
+  var t0=Date.now();
+  call("draw_cmd",{ cmd:c, arg:arg, rid:rid },function(r){
+    DC.busy="";
+    if(r&&r.ok){ DC.sent={ seq:r.seq, cmd:r.cmd, at:Date.now(), ms:Date.now()-t0, again:!!r.again }; DC.cmd={ seq:r.seq, cmd:r.cmd, arg:r.arg, at:r.at };
+      DC.log.unshift({ seq:r.seq, c:r.cmd, at:nowHMS() }); DC.log=DC.log.slice(0,8);
+      if(ST.data.draw&&"closed" in r) ST.data.draw.closed=r.closed;
+      toast((DC_NAME[c]||c)+" 보냄 · #"+r.seq); }
+    else toast("보내지 못했습니다: "+(r&&r.reason==="cmd"?"서버가 이 명령을 모릅니다(v4.82 이전 서버)":why(r)));
+    dcPaint(true);
+  },function(e){
+    if(tries<1&&e&&(e.reason==="timeout"||e.reason==="network")){ dcSend(c, arg, rid, tries+1); return; }   /* 같은 rid 로 한 번 더 · 서버가 이미 받았으면 같은 seq 를 돌려준다 */
+    DC.busy=""; toast("서버 응답 없음 · 다시 눌러 주세요"); dcPaint(true);
+  });
+}
+var DC_NAME={}; DC_BTN.concat(DC_SUB).forEach(function(b){ DC_NAME[b.c]=b.n; });
+function dcRejOff(seq){ DC.rejOff=seq; dcPaint(true); }
+function dcOpenScreen(){ window.open(dcScreenUrl(),"axf_draw"); }
+function dcScreenUrl(){ try{ return new URL("../draw/?remote=1", location.href).href; }catch(e){ return "../draw/?remote=1"; } }
+function dcCopy(){ var t=dcScreenUrl(), ok=function(){ toast("추첨 화면 주소를 복사했습니다"); }; try{ navigator.clipboard.writeText(t).then(ok,function(){ raceCopyOld(t); ok(); }); }catch(e){ raceCopyOld(t); ok(); } }
+/* 바뀐 것이 있을 때만 다시 그린다 · force = 버튼 상태(누름 · 보내는 중)가 바뀜 */
+function dcPaint(force){
+  if(!DC.on) return;
+  var box=el("dcRoot"); if(!box){ return; }
+  var h=dcBody(ST.data.draw||{});
+  if(!force&&h===DC.sig) { dcAge(); return; }
+  DC.sig=h; box.innerHTML=dcFill(h); dcAge();
+}
+function dcMc(s){
+  var t=DC_MC[s.scene]||"", last=s.last||{};
+  return t.replace("{round}", s.round||"다음").replace("{no}", last.no||"○○○○").replace("{nm}", last.nm||"당첨자");
+}
+/* 연결 표시 · 5초 넘게 보고가 없으면 붉게 */
+function dcConn(){
+  var a=dcAgeNow(), s=DC.scr;
+  if(!s) return ["bad","화면 보고 없음"];
+  if(a>5) return ["bad","화면 끊김 · "+Math.round(a)+"초 전 보고"];
+  return ["ok","화면 연결됨 · "+Math.round(a)+"초 전"];
+}
+function viewDrawRun(d){
+  return '<div id="dcRoot">'+dcFill(DC.sig=dcBody(d))+'</div>';
+}
+/* 받은 지 몇 초는 매초 바뀌므로 비교(DC.sig)에서 빼고 그릴 때만 넣는다 */
+function dcFill(h){ var c=dcConn(); return h.replace("@@DCCONN@@",'<span id="dcAge" class="dc-conn '+c[0]+'">'+esc(c[1])+'</span>');
+}
+function dcBody(d){
+  if(!("cmd" in d)) return '<div class="err-banner">지금 서버는 원격 진행(v4.82) 이전입니다. 운영 서버 배포 뒤에 이 패널을 씁니다. 그 전에는 추첨 화면의 조작 창으로 진행합니다.</div>';
+  var s=DC.scr, sc=s?s.scene:"", nx=s?DC_NEXT[sc]:"";
+  var head='<div class="dc-top">@@DCCONN@@'+
+    '<span class="cap">'+(DC.st==="ok"?"실시간 연결":"실시간 연결 없음 · 2초마다 확인")+(d.scrs&&d.scrs.length>1?" · 화면 "+d.scrs.length+"대가 보고 중":"")+(s&&s.ver?" · 화면 "+esc(s.ver):"")+'</span>'+
+    '<span class="dc-acts"><button class="btn sm" onclick="dcOpenScreen()">추첨 화면 열기</button><button class="btn sm" onclick="dcCopy()">주소 복사</button></span></div>';
+  /* 지금 화면 한 줄 · 노트북(1366 × 768)에서 버튼이 접히지 않게 KPI 카드 대신 낮은 칸 다섯 개 */
+  var stat='<div class="dc-stat">'+[["지금 화면", s?(DC_SCN[sc]||sc||"-"):"보고 없음"],["체크인", (s?s.checked:(d.in||0))+"명"+(d.closed?" · 마감":"")],["통 안의 공", (s?s.pool:(d.balls||0))+"개"],
+    ["라운드 · 칸", s&&(s.round||s.slot)?(s.round||"-")+(s.slot?" · "+s.slot:""):"-"],["섞기 남은", s&&sc==="mix"&&s.mixing_s?Math.ceil(s.mixing_s)+"초":"-"]].map(function(x){ return '<div><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>'; }).join("")+'</div>';
+  var rej=s&&s.rej&&s.rej.seq&&s.rej.seq>DC.rejOff&&(!DC.cmd||s.rej.seq>=DC.cmd.seq-3)?
+    '<div class="dc-rej"><b>화면이 「'+esc(DC_NAME[s.rej.cmd]||s.rej.cmd)+'」(#'+s.rej.seq+')를 받지 않았습니다.</b> '+esc(s.rej.why||"이유 없음")+' <button class="btn sm" onclick="dcRejOff('+Number(s.rej.seq)+')">확인</button></div>':"";
+  var btn=function(b, cls){ var ok=dcReady(b.c), arm=DC.arm&&DC.arm.c===b.c, busy=DC.busy===b.c;
+    return '<button class="dc-b'+(cls||"")+(b.c===nx&&ok?" go":"")+(arm?" arm":"")+(b.two?" two":"")+'"'+(ok&&!DC.busy?'':' disabled')+' onclick="dcPress(\''+b.c+'\')">'+
+      '<span>'+(busy?'<span class="spin"></span>보내는 중':arm?'한 번 더 누르면 '+esc(b.n):esc(b.n))+'</span>'+(b.two?'<em>'+(arm?"3초 안에":"두 번 눌러요")+'</em>':'')+'</button>'; };
+  var pad='<div class="dc-pad">'+DC_BTN.map(function(b){ return btn(b); }).join("")+'</div>'+
+    '<div class="dc-sub">'+DC_SUB.map(function(b){ return btn(b," sm"); }).join("")+
+    '<span class="cap">'+(DC.cmd?"마지막 명령 #"+DC.cmd.seq+" "+esc(DC_NAME[DC.cmd.cmd]||DC.cmd.cmd)+(DC.sent&&DC.sent.seq===DC.cmd.seq?" · 서버 "+DC.sent.ms+"ms"+(DC.sent.again?" · 재전송(한 번만 처리)":""):""):"보낸 명령 없음")+'</span></div>';
+  var left=card("진행", s?(Object.prototype.toString.call(s.ready)==="[object Array]"?"화면이 지금 받는 명령만 켜집니다":"지금 장면에서 보낼 수 있는 버튼만 켜집니다"):"화면 보고가 없어 모든 버튼이 켜져 있습니다", stat+pad);
+  /* 방금 당첨 · 번호 · 가린 이름은 화면과 같게 · 실명 · 부서는 이 콘솔만 */
+  var last=s&&s.last&&s.last.no?s.last:null, rec=null;
+  if(last&&last.id) rec=((d.recs||[]).filter(function(r){ return r.id===last.id; })[0])||null;
+  var won=last?'<div class="dc-win"><div class="dc-no">'+esc(last.no)+'</div><div><div class="dc-nm">'+esc(last.nm||"")+'</div><div class="cap">'+esc((last.round||"")+(last.slot?" · "+last.slot:""))+'</div></div>'+
+      (last.st&&last.st!=="win"?tag(last.st==="absent"?"부재":last.st==="undo"?"취소":last.st,"off"):tag("당첨","ok"))+'</div>'+
+    imp([["경품", esc(last.prize||(rec&&rec.prize)||"-")],["실명", rec?esc(rec.name||"-"):'<span class="cap">기록 확인 중</span>'],["부서", rec?esc(rec.dept||"-"):'<span class="cap">-</span>']])
+    :'<div class="empty">아직 당첨 공개가 없습니다.</div>';
+  var right=card("방금 당첨", "실명 · 부서는 상품 전달용 · 이 화면만", won)+
+    card("사회자 멘트", s?esc(DC_SCN[sc]||sc):"장면 모름", '<p class="dc-mc">'+esc(s?dcMc(s):DC_MC.idle)+'</p>');
+  return head+rej+'<div class="grid g75"><div>'+left+'</div><div>'+right+'</div></div>';
 }
 
 /* ══════════════════ 7-4b. 접속 기록 (v4.27 · 260924 사용자 질문) ══════════════════
