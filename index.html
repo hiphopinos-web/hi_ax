@@ -1630,7 +1630,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   @keyframes memRoam { from { left: 0; } to { left: calc(100% - 36px); } }
   @keyframes memHop { from { transform: translateY(0); } to { transform: translateY(-12px); } }
   @media (prefers-reduced-motion: reduce) { .mem-hop svg { animation: none; left: calc(50% - 18px); } }
-  @media (min-width: 1200px) { .tve-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+  @media (min-width: 1200px) { .tve-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } .tve-grid.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }   /* v4.83 미니 게임 세 종목 */
   .gs-say { display: flex; align-items: flex-end; gap: var(--ax-space-8); text-align: left; }
   .gs-say > svg { flex: none; width: 48px; height: 48px; display: block; animation: axsFloat 3.2s ease-in-out infinite; }
   .gs-say .eye { transform-box: fill-box; transform-origin: center; animation: axsBlink 4.6s linear infinite; }
@@ -2248,9 +2248,12 @@ var FESTIVAL = {
    v3.1: p4는 카드 안에서 게임 입구를 직접 그린다(stampInnerHtml 특례) · v3.50 「미니게임」 = 게임 중 아무거나 한 판(전원 공개 · v4.09 AI O/X 포함 5종). */
 /* v3.52 · 10F 실습형 세션 입장도 p3 로 셀지 · 서버 P3_INCLUDE_10F 와 함께 바꾼다 (기본 끔) */
 var P3_INCLUDE_10F = false;
-var STAMPS = [
+/* v4.83 (261001 사용자 확정 · 앱 개편 1묶음) p2 = AX PLAY · 체험 뒤 스태프가 내 QR 을 찍는다(부스 QR 은 보관 · 스태프 모드 목적 타일 「AX PLAY」) · 옛 · 새 체계 둘 다 이 정의를 쓴다 */
+var STAMP_P2 = { id: "p2", title: "AX PLAY", short: "AX PLAY", desc: "1F AX PLAY에서 HiDI-Q 또는 Hi-Helper 체험", where: "1F · 스태프 인증", site: 1, staff: 1, tap: "qrPanelOpen('mine')", cta: "내 QR 보여주기", note: "체험 후 스태프가 내 QR을 스캔" };
+/* v4.83 옛 8종(서버 sync 에 stv 가 없는 옛 서버와 붙었을 때만 쓴다 · 운영 서버 배포 전 호환) */
+var STAMPS_V1 = [
   { id: "p1", title: "1F 전시", short: "1F 전시", desc: "전시존 끝 QR 입간판 스캔", where: "약 5분", site: 1, tap: "qrScanOpen()", cta: "QR 스캔" },
-  { id: "p2", title: "AX Now! 체험", short: "부스 체험", desc: "HIDI-Q 또는 HI-Helper 부스 1곳 체험", where: "약 5분", site: 1, tap: "App.go('booth')", cta: "부스 안내 보기", note: "체험 후 스태프 QR 스캔" },
+  STAMP_P2,
   /* v3.52 (사용자 확정 260917) p3 = 프로그램 참여 · DAP 과제상담 · AX 커피챗 중 1회 · 적립은 서버가 확인(상담 체크인/완료·커피챗 접수/완료)
      v4.26 (260924 A안) 17F 는 대강당 입구 QR 첫 출석(att_claim)으로 적립 · 옛 좌석 QR · 입장 스캔 · 신청 기록 경로는 걷어냈다 */
   { id: "p3", title: "프로그램 참여", short: "프로그램", desc: "17F 강연 QR 출석 · DAP 과제상담 · AX 커피챗 중 1회" + (P3_INCLUDE_10F ? " · 10F 실습형 세션" : ""), where: "", site: 1, tap: "progGoFl(17)", cta: "17F 강연 보기" },
@@ -2263,13 +2266,30 @@ var STAMPS = [
   /* v3.35 오늘 한 판 설문 · 14:30 부터 · 제출만 하면 적립(답 내용 무관) · 판정·적립은 서버(survey_submit) */
   { id: "sv", title: "오늘 한 판 설문", short: "설문", desc: "설문 제출", where: "60초", inapp: 1, tap: "App.go('survey')", cta: "설문 시작" }
 ];
+function stampDefV1(id) { return STAMPS_V1.filter(function (s) { return s.id === id; })[0]; }
+/* v4.83 (261001 사용자 확정) 새 8종 · 번호 순서 = 1 최초 로그인 · 2 AX 퀴즈 · 3 미니 게임 · 4 AX PLAY · 5 아이디어 한 줄 · 6 프로그램 참여 · 7 계단 · 8 설문
+   AX 퀴즈(O/X · 기억력)는 게임이 아니라 따로 둔다(사용자 수정 261001 · 이름 · 아이콘 · 진입 화면이 미니 게임과 다르다 · 순위 없음)
+   옛 p1(1F 전시) · p7(전시 QR 퀴즈)은 뺐다 · 서버 기록은 남고 이 목록에 없어서 세지 않는다(stampGot) */
+var STAMPS_V2 = [
+  { id: "lg", title: "최초 로그인", short: "로그인", desc: "로그인하면 자동 적립", where: "자동", inapp: 1, auto: 1 },
+  { id: "qz", title: "AX 퀴즈", short: "AX 퀴즈", desc: "O/X 퀴즈 · 기억력 퀴즈 2종 · 종목마다 한 판", where: "O/X · 기억력", inapp: 1, tap: "App.go('quiz')", cta: "AX 퀴즈 풀기" },
+  { id: "p4", title: "미니 게임", short: "미니 게임", desc: "AX 팡 · 점프 · 테트리스 3종 · 종목마다 한 판", where: "팡 · 점프 · 테트리스", inapp: 1, tap: "App.go('games')", cta: "미니 게임 하기" },
+  STAMP_P2,
+  stampDefV1("p5"), stampDefV1("p3"), stampDefV1("st"), stampDefV1("sv")
+];
+/* 지금 쓰는 체계 · 기본 = 새 8종(이 기기가 마지막으로 본 서버 판 · 없으면 2) · beSync 가 서버 stv 로 바꾼다(stampVerSet · PP_ORDER 정의 뒤에서 처음 부른다) */
+var STAMP_V = 2, STAMPS = STAMPS_V2;
+function stampV2() { return STAMP_V === 2; }
 /* 스탬프 픽토그램 · 탭 아이콘과 같은 기하 라인(stroke=currentColor) · 이모지 금지 원칙 유지 */
 var SICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">';
 var STAMP_ICONS = {
+  /* v4.83 lg = 문으로 들어가는 화살표 · qz = 말풍선 물음표(퀴즈) · p4 = 게임 패드(미니 게임 · 퀴즈와 다른 모양) */
+  lg: SICO + '<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M3.5 12h11"/><path d="M10.5 8l4 4-4 4"/></svg>',
+  qz: SICO + '<path d="M4 5h16v10.5h-7.2L8.6 19.6V15.5H4z"/><path d="M9.9 8.6a2.2 2.2 0 0 1 4.3.7c0 1.5-2.1 1.6-2.1 2.9"/><path d="M12.1 13.4h.01"/></svg>',
   p1: SICO + '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 15.6l4.6-4.2 3.4 3 4-4.6L21 15"/><circle cx="8.6" cy="9.2" r="1.3"/></svg>',
   p2: SICO + '<path d="M7.5 4.5l11 6.4-4.8 1.3-1.3 4.8z"/><path d="M4 4l1.6 1.6M4 9.5h2.2M9.5 4v2.2"/></svg>',
   p3: SICO + '<rect x="3" y="4" width="18" height="11.5" rx="2"/><path d="M12 15.5v4"/><path d="M8 19.5h8"/><path d="M7.5 11.8l3.2-3.3 2.6 2.6 3.2-3.8"/></svg>',
-  p4: SICO + '<path d="M4 5h16v10.5h-7.2L8.6 19.6V15.5H4z"/><path d="M9.9 8.6a2.2 2.2 0 0 1 4.3.7c0 1.5-2.1 1.6-2.1 2.9"/><path d="M12.1 13.4h.01"/></svg>',
+  p4: SICO + '<path d="M7.5 8h9a4.5 4.5 0 0 1 4.3 5.8l-.9 3.1a2.2 2.2 0 0 1-3.8.8L14.4 16H9.6l-1.7 1.7a2.2 2.2 0 0 1-3.8-.8l-.9-3.1A4.5 4.5 0 0 1 7.5 8z"/><path d="M8 10.8v3M6.5 12.3h3"/><path d="M15.6 11.4h.01M17.4 13.2h.01"/></svg>',
   p5: SICO + '<path d="M12 3a6 6 0 0 1 6 6c0 2.3-1.3 3.6-2.3 4.7-.6.7-.9 1.3-1 2.3h-5.4c-.1-1-.4-1.6-1-2.3C7.3 12.6 6 11.3 6 9a6 6 0 0 1 6-6z"/><path d="M9.8 19.5h4.4"/><path d="M10.6 22h2.8"/></svg>',
   st: SICO + '<path d="M3 20h5v-4h4v-4h4V8h5"/><path d="M3 20h18"/></svg>',
   sv: SICO + '<rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 8.5h8M8 12.5h8M8 16.5h5"/></svg>',
@@ -2280,9 +2300,9 @@ var STAMP_ICONS = {
    4·5·6개 = 사후 추첨 응모 1·2·3장 (260929 사용자 확정 · 최대 3장 · 자동 계산 · 별도 행동 불필요 · 결과는 행사 종료 후 개별 안내) */
 var REWARD_LADDER = [
   { n: 3, nm: "룰렛 1회", d: "1F 이벤트존 실물 룰렛 · 1인 1회 · 내 QR 제시" },
-  { n: 4, nm: "사후 추첨 응모 1장", d: "자동 응모 · 결과는 행사 종료 후 개별 안내" },
-  { n: 5, nm: "사후 추첨 응모 2장", d: "자동 응모" },
-  { n: 6, nm: "사후 추첨 응모 3장", d: "자동 응모" }
+  { n: 4, nm: "행운권 1장", d: "자동 발급 · 결과는 행사 종료 후 개별 안내" },   /* v4.83 사용자 표시 용어 「행운권」(서버 내부 용어 응모권 · raffle 은 그대로) */
+  { n: 5, nm: "행운권 2장", d: "자동 발급" },
+  { n: 6, nm: "행운권 3장", d: "자동 발급" }
 ];
 /* v3.33 · 칸은 8개 · v4.58 (사용자 확정 260929) 스탬프는 8종 중 아무거나 6개가 한도 · 6개를 모으면 끝.
    7·8번째를 받아도 기록(stamps)은 남기되 개수·보상은 6에서 멈춘다 · 3개 = 룰렛 1회 · 4·5·6개 = 응모권 1·2·3장(최대 3장).
@@ -2425,7 +2445,7 @@ var SURVEY_LEGACY = {
 };
 /* 다녀간 곳 카드 · 이 사람의 스탬프·신청 기록에서 다녀간 곳만 (안 간 곳은 묻지 않는다) */
 var SURVEY_PLACES = [
-  ["p1", "1F AX 전시·체험존"], ["p2", "AX Now! 체험 부스"], ["p7", "DAP Wall QR 퀴즈"],
+  ["p1", "1F AX 전시·체험존"], ["p2", "1F AX PLAY"], ["p7", "DAP Wall QR 퀴즈"],
   ["p3", "17F 강연"], ["dap", "DAP ZONE 과제상담"], ["cchat", "18F AX 커피챗"]
 ];
 var IDEA_TAGS = ["영업", "보상", "마케팅", "본사·통계", "기타"];
@@ -3182,11 +3202,11 @@ var STORE_DEVICE = ["vid", "a2hs", "fs", "t",
   "site_sound", "game_sound", "rain_sound", "jp_tut",
   "self_on", "self_key", "self_tok", "scan_spot", "adm_tab", "zone_sent", "roster_prog", "tyaw_tab", "tyaw_hide", "tyaw_oly_pg",
   "type_rank_*", "oly_tab", "oly_ev",
-  "notices", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "wq_srv", "wq_v", "survey_agg", "photo_pub", "resv_conf", "crowd",
+  "notices", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "wq_srv", "wq_v", "survey_agg", "photo_pub", "resv_conf", "crowd", "stv",
   "ax_line_i", "art_demo_n", "ev_phase", "toff",
   "push_ask", "push_first", "push_ask_ios"];   /* v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) · v4.78 아이폰 탭 · 앱 속 브라우저 안내는 하루 한 번 */
 var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_role", "adm_tok", "dept",
-  "stamps", "pp_seen", "pp_glow3", "stamp_pend", "scan_q", "stair", "checkin", "queue", "photoq", "resv", "sess_my", "att_mine", "att_tm",
+  "stamps", "pp_seen", "pp_glow3", "stamp_pend", "lg_try", "scan_q", "stair", "checkin", "queue", "photoq", "resv", "sess_my", "att_mine", "att_tm",
   "cchat", "cchat_pref", "cchat_att", "ideas", "idea_draft", "survey_draft", "survey_done", "survey_mine", "survey_force", "noti_seen",
   "raffle_seen", "raffle_opened", "raffle_nums", "roulette_used", "roulette_open", "draw_winner",
   "wave_extra", "wq_attempts", "test_mine", "type_nick", "type_nick_edit", "type_best", "mem_seen", "ox_seen",
@@ -3423,7 +3443,7 @@ function checkRewards() {
     if (S.get("raffle_opened", null) === null) S.set("raffle_opened", S.get("raffle_seen", 0));   /* v4.44 이 버전 전에 이미 안내한 응모권은 연 것으로 친다 */
     S.set("raffle_seen", t);
     if (BE.on && !testEmp() && raffleNums().length < t) beSync();   /* v4.43 새 번호를 미리 받아 둔다 · 스탬프 연출이 도는 동안 도착해 상자를 열면 바로 보인다 */
-    notice({ key: "rw:raffle", raffle: t, title: rfxTitle(t), body: "응모 완료 · 결과는 행사 후 개별 안내", go: "rewards", focus: "raffle", goLbl: "내 보상에서 보기" });   /* v4.42 raffle = 보물상자 팝업(rfxHtml) */
+    notice({ key: "rw:raffle", raffle: t, title: rfxTitle(t), body: "행운권 발급 · 결과는 행사 후 개별 안내", go: "rewards", focus: "raffle", goLbl: "내 보상에서 보기" });   /* v4.42 raffle = 보물상자 팝업(rfxHtml) */
   }
 }
 /* 앱 안 행동으로 붙는 3종(미니게임·아이디어·전시 QR 퀴즈) 전용.
@@ -3437,6 +3457,17 @@ function awardStamp(id) {
   if (!stampOverlay(id)) toast("스탬프 적립 · " + (sd ? sd.title : id) + " · 스탬프 " + stampCount() + "개");
   if (!testEmp() && BE.on) { stampPendAdd(id); stampPendSend(id); }   /* v3.19 테스트 사번은 서버에 적립하지 않는다 · v3.97 서버 확인 전까지 대기 목록 */
   checkRewards();
+}
+/* v4.83 (261001) 스탬프 1 「최초 로그인」 · 새 체계(stv 2) 서버와 동기화한 뒤 서버 목록에 lg 가 없으면 한 번 보낸다(로그인 직후 · 이미 로그인된 기기 모두)
+   서버가 계정을 확인해 적립한다(push stamp:lg · 앱이 보냈다고 쓰지 않는다) · 같은 사번은 30분에 한 번만 시도(서버가 거절해도 도장이 반복해서 뜨지 않게) · 테스트 사번은 이 기기에만 */
+function lgCheck(list) {
+  var emp = String((S.get("user", {}) || {}).empId || "");
+  if (!stampV2() || !emp) return;
+  if ((list || []).indexOf("lg") >= 0 || S.get("stamps", []).indexOf("lg") >= 0 || stampPend().lg) return;
+  var tr = S.get("lg_try", null);
+  if (tr && tr.emp === emp && Date.now() - (tr.t || 0) < 1800000) return;
+  S.set("lg_try", { emp: emp, t: Date.now() });
+  awardStamp("lg");
 }
 /* ── v3.97 보내기 전 적립(대기 목록) · 서버 스탬프 목록이 정본이되, 아직 서버에 닿지 않은 내 적립은 지우지 않는다 ──
    stamp_pend = { id: { t: 적립 시각, ok: 서버가 push 를 받은 시각(0 = 아직) } }
@@ -3684,7 +3715,7 @@ function wqSubmit() {
   S.set("wq_attempts", at);
   WQ.submitted = true;
   WQ.result = { correct: correct, total: WQ.qs.length };
-  awardStamp("p7");   /* v3.65 점수와 무관 · 한 세트를 끝내면 적립 (다른 세트는 추가 적립 없음 · awardStamp 가 중복을 거른다) · v3.97 첫 응시 여부가 아니라 스탬프 목록 기준 → 취소 뒤 다시 풀면 재적립 */
+  if (!stampV2()) awardStamp("p7");   /* v4.83 새 8종에 전시 QR 퀴즈 없음(옛 서버일 때만) · v3.65 점수와 무관 · 한 세트를 끝내면 적립 (다른 세트는 추가 적립 없음 · awardStamp 가 중복을 거른다) · v3.97 첫 응시 여부가 아니라 스탬프 목록 기준 → 취소 뒤 다시 풀면 재적립 */
   waveBump();
   App.render();
 }
@@ -4345,8 +4376,8 @@ var App = {
     booth: "exp", wq_list: "exp", wq_play: "wq_list",
     /* v4.06 3단계 · 현장 안내 E02 · 스캔 Q02 · 결과 Q03 · 계단 화면 */
     exp_g: "exp", scan_q: "exp", scan_res: "exp", stair: "exp",
-    games: "exp", ideas: "exp", survey: "exp", ideas_mine: "ideas",
-    game_word: "games", game_type: "games", game_tetris: "games", game_pang: "games", game_jump: "games", game_ox: "games", oly_rank: "games", type_rank: "game_type",
+    games: "exp", quiz: "exp", ideas: "exp", survey: "exp", ideas_mine: "ideas",
+    game_word: "quiz", game_type: "games", game_tetris: "games", game_pang: "games", game_jump: "games", game_ox: "quiz", oly_rank: "games", type_rank: "game_type",   /* v4.83 퀴즈 두 종목의 뒤로가기 = AX 퀴즈 */
     art: "home", art_rank: "art", screen_art: "admin",   /* v4.01 AI 사생대회 폐기 · 진입은 막혀 있다 */
     /* 프로그램 · 신청 (2단계에서 재디자인) */
     dap: "guide", ev_cchat: "guide", sess_d: "guide", sess_cf: "sess_d", sess_ok: "guide",
@@ -4355,15 +4386,15 @@ var App = {
   },
   TITLES: {
     home: "AX Festival", guide: "프로그램", exp: "체험", my: "나의 참여",
-    passport: "스탬프", rewards: "내 보상", photoq: "포토부스 대기", games: "미니게임",
+    passport: "스탬프", rewards: "내 보상", photoq: "포토부스 대기", games: "미니 게임", quiz: "AX 퀴즈",
     notices: "공지", dap: "과제상담 신청",
-    booth: "AX Now! 부스",
+    booth: "AX PLAY",
     ideas: "아이디어 한 줄", ideas_mine: "내가 낸 아이디어", survey: "오늘 한 판 설문",
     sess_d: "프로그램", sess_cf: "신청 확인", sess_ok: "신청 완료",
     ev_cchat: "내 커피챗",
     wq_list: "DAP Wall QR 퀴즈", wq_play: "문제 풀이",
     admin: "관리자 모드", screen: "송출용 화면", screen_survey: "", screen_words: "", game_word: "ME to WE 기억력", game_type: "타자 게임", game_tetris: "테트리스", type_site: "1F 현장 셀프 모드", wall_type: "", type_award: "", type_rank: "타자 순위",
-    game_pang: "AX 팡", game_jump: "ME to WE 점프", game_ox: "AI O/X", oly_rank: "AX 올림픽",
+    game_pang: "AX 팡", game_jump: "ME to WE 점프", game_ox: "AI O/X", oly_rank: "미니 게임 순위",
     art: "AI 사생대회", art_rank: "좋아요 순위", screen_art: "",
     wall_quiz: "", wall_wave: "", wall_live: "", wall_metowe: "", wall_tv: ""
   },
@@ -5694,9 +5725,9 @@ function testGameResetGo(withNick) {
   testOverlayDrop(null);
   GAME_KEYS.forEach(function (k) { S.del(k); });
   if (withNick) S.del("type_nick");
-  /* 미니게임 스탬프(p4)와 그 도장 기록만 뺀다 · 다른 스탬프는 그대로 */
-  S.set("stamps", S.get("stamps", []).filter(function (id) { return id !== "p4"; }));
-  S.set("pp_seen", S.get("pp_seen", []).filter(function (id) { return id !== "p4"; }));
+  /* 미니게임 스탬프(p4)와 그 도장 기록만 뺀다 · 다른 스탬프는 그대로 · v4.83 AX 퀴즈(qz)도 게임 기록에서 나오므로 같이 뺀다 */
+  S.set("stamps", S.get("stamps", []).filter(function (id) { return id !== "p4" && id !== "qz"; }));
+  S.set("pp_seen", S.get("pp_seen", []).filter(function (id) { return id !== "p4" && id !== "qz"; }));
   if (stampCount() < 3) S.set("roulette_open", false);   /* v4.43 문턱 아래로 내려가면 룰렛 안내도 다시 뜨게(testStampUndo 와 같은 규칙) */
   checkRewards();   /* v4.43 응모권 안내 기준을 줄어든 개수에 맞춘다 */
   OLY.board = null; OLY.t = 0;
@@ -5934,16 +5965,33 @@ function ppAfterRender(n, oldN, glow) {
 }
 /* 기본 순서 = 장소 그룹순: 1F 3건(01 전시·02 부스·06 QR퀴즈) → 17F(03) → 앱(04·05).
    완료 카드는 위로 올라온다(완료 그룹 상단, 그 안에서 기본 순서 유지) · 그룹 캡션은 미완료 구간에만 얇게. */
-var PP_ORDER = [["p1", "1F"], ["p2", "1F"], ["p7", "1F"], ["p3", "17F · 1F · 18F"], ["st", "계단"], ["p4", "앱"], ["p5", "앱"], ["sv", "앱"]];
+var PP_ORDER_V1 = [["p1", "1F"], ["p2", "1F"], ["p7", "1F"], ["p3", "17F · 1F · 18F"], ["st", "계단"], ["p4", "앱"], ["p5", "앱"], ["sv", "앱"]];
+/* v4.83 새 8종 · 번호 순서 그대로 · 묶음 제목 없음(수단 칩은 2묶음) */
+var PP_ORDER_V2 = [["lg", ""], ["qz", ""], ["p4", ""], ["p2", ""], ["p5", ""], ["p3", ""], ["st", ""], ["sv", ""]];
+var PP_ORDER = PP_ORDER_V2;
 /* v4.06 방금 적립한 현장 스탬프 · 같은 층에서 아직 안 한 현장 스탬프 하나 (QR 상호작용 기획 2-3) · 코칭 문장 없이 버튼 라벨만 */
-var PP_NEXT = { p1: ["p7", "p2"], p2: ["p7", "p1"], p7: ["p1", "p2"], p3: ["sv", "p5"] };
+var PP_NEXT_V1 = { p1: ["p7", "p2"], p2: ["p7", "p1"], p7: ["p1", "p2"], p3: ["sv", "p5"] };
+var PP_NEXT_V2 = { p2: ["p5", "sv"], p3: ["sv", "p5"] };
+var PP_NEXT = PP_NEXT_V2;
+/* v4.83 스탬프 체계 판 바꾸기 · 2 = 새 8종(새 서버 sync stv 2) · 1 = 옛 8종(stv 없는 옛 서버) · 바뀌었으면 true(부른 쪽이 다시 그린다) */
+function stampVerSet(v) {
+  v = v === 2 ? 2 : 1;
+  var chg = v !== STAMP_V;
+  STAMP_V = v;
+  STAMPS = v === 2 ? STAMPS_V2 : STAMPS_V1;
+  PP_ORDER = v === 2 ? PP_ORDER_V2 : PP_ORDER_V1;
+  PP_NEXT = v === 2 ? PP_NEXT_V2 : PP_NEXT_V1;
+  if (S.get("stv", 0) !== v) S.set("stv", v);
+  return chg;
+}
+stampVerSet(S.get("stv", 2) === 1 ? 1 : 2);
 function ppNextHtml(id) {
   var st = S.get("stamps", []), c = PP_NEXT[id] || [];
   for (var i = 0; i < c.length; i++) {
     var n = c[i];
     if (st.indexOf(n) >= 0) continue;
     if (n === "sv" && surveyLock()) continue;
-    var lb = { p1: "1F 전시 · QR 스캔", p2: "AX Now! 체험 · 부스 안내", p7: "전시 QR 퀴즈 · QR 스캔", sv: "오늘 한 판 설문", p5: "아이디어 쓰기" }[n];
+    var lb = { p1: "1F 전시 · QR 스캔", p2: "AX PLAY · 안내", p7: "전시 QR 퀴즈 · QR 스캔", sv: "오늘 한 판 설문", p5: "아이디어 쓰기" }[n];
     var go = { p1: "expGuide('p1')", p2: "expGuide('p2')", p7: "expGuide('p7')", sv: "App.go('survey')", p5: "App.go('ideas')" }[n];
     return '<button class="btn line" style="margin-top:8px" onclick="' + go + '">' + lb + "</button>";
   }
@@ -5986,16 +6034,22 @@ function stampInnerHtml(s) {
       '<button class="btn line" style="margin-top:8px" onclick="scanOpen(\'a17\')">17F 출석 QR 스캔</button>' +
       '<p class="lnk sub" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</p>";
   } else if (s.id === "p4") {
-    /* v3.50 · AX 올림픽 허브 · 종목 행 카드 · 내 환산 점수·메달 · 총점 · v4.63 3종목 진행 한 줄 */
+    /* v3.50 · AX 올림픽 허브 · 종목 행 카드 · 내 환산 점수·메달 · 총점 · v4.63 3종목 진행 한 줄 · v4.83 미니 게임 3종만(퀴즈는 qz 카드) */
     inner += (S.get("stamps", []).indexOf("p4") >= 0 ? "" : '<p class="d">종목 ' + Math.min(MG_NEED, mgDone()) + " / " + MG_NEED + "</p>") +
-      '<div class="oly-hub">' + olyHubHtml() + "</div>";
+      '<div class="oly-hub">' + olyHubHtml(true) + "</div>";
+  } else if (s.id === "qz") {
+    /* v4.83 AX 퀴즈 · O/X · 기억력 두 행(순위 없음 · 내 최고만) */
+    inner += (S.get("stamps", []).indexOf("qz") >= 0 ? "" : '<p class="d">종목 ' + Math.min(QZ_NEED, qzDone()) + " / " + QZ_NEED + "</p>") +
+      '<div class="oly-hub">' + quizHubHtml(true) + "</div>";
+  } else if (s.auto) {
+    /* v4.83 최초 로그인 · 버튼 없음(로그인 뒤 앱이 서버에 한 번 알리고 서버가 계정을 확인해 적립) */
   } else {
     /* v3.12: 적립방식(how) 뱃지 삭제 · 참여자에게 필요한 건 desc 와 바로가기뿐 */
     inner += '<button class="btn mint" style="margin-top:10px" onclick="' + s.tap + '">' + s.cta + "</button>";
     if (s.site) {
       inner += scanQNote();   /* v3.34b 저장된 스캔이 있으면 한 줄 */
-      /* v3.1: 현장 적립형(01·02·03)은 QR 스캔·담당자 적립을 카드 안에서 바로 (보조 카드 폐지) */
-      if (s.tap !== "qrScanOpen()") inner += '<button class="btn line" style="margin-top:8px" onclick="qrScanOpen()">QR 스캔</button>';
+      /* v3.1: 현장 적립형(01·02·03)은 QR 스캔·담당자 적립을 카드 안에서 바로 (보조 카드 폐지) · v4.83 스태프 인증(AX PLAY)은 참가자가 찍을 QR 이 없다 */
+      if (s.tap !== "qrScanOpen()" && !s.staff) inner += '<button class="btn line" style="margin-top:8px" onclick="qrScanOpen()">QR 스캔</button>';
       /* v3.12: 예외 경로는 최하위 회색 텍스트 링크 (design.md 보조 대안 행동 규정) */
       inner += '<p class="lnk sub" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</p>";
     }
@@ -6040,7 +6094,7 @@ function stampCardsHtml(st, newly) {
   done.forEach(function (e) { out += scardHtml(e[0], true, false, newly); });
   var cap = null;
   todo.forEach(function (e) {
-    if (e[1] !== cap) { cap = e[1]; out += '<p class="scap">' + cap + "</p>"; }
+    if (e[1] && e[1] !== cap) { cap = e[1]; out += '<p class="scap">' + cap + "</p>"; }   /* v4.83 새 8종은 묶음 제목 없음 */
     out += scardHtml(e[0], false, e[0].id === next, newly);
   });
   return out;
@@ -6061,7 +6115,7 @@ function railHtml(n, glow, dispN, home) {
   var out0 = S.get("roulette_out", false);
   var used = S.get("roulette_used", false);
   /* v4.58 · 1~6 한 줄 · 6 이 레일 끝(7번째 칸 폐지 · 사용자 확정 260929) */
-  var marks = [[3, "룰렛", "ppRouletteOpen()", "wheel", used ? "룰렛 사용 완료" : "룰렛 1회"], [4, "1장", "ppDrawOpen()", "ticket", "추첨 응모 1장"], [5, "2장", "ppDrawOpen()", "ticket", "추첨 응모 2장"], [6, "3장", "ppDrawOpen()", "ticket", "추첨 응모 3장"]];
+  var marks = [[3, "룰렛", "ppRouletteOpen()", "wheel", used ? "룰렛 사용 완료" : "룰렛 1회"], [4, "1장", "ppDrawOpen()", "ticket", "행운권 1장"], [5, "2장", "ppDrawOpen()", "ticket", "행운권 2장"], [6, "3장", "ppDrawOpen()", "ticket", "행운권 3장"]];   /* v4.83 사용자 표시 용어 「행운권」 */
   var railPos = function (k) { return k / STAMP_DENOM * 100; };
   var nextAt = n < STAMP_DENOM ? Math.max(3, n + 1) : 0;   /* 다음 목표 마커 하나만 강조 */
   var mk = "", lb = "";
@@ -6092,7 +6146,7 @@ function raffleNumsHtml(n) {
   var nums = raffleNums(), chips = "", op = rfxOpened(t);
   for (var i = 0; i < RAFFLE_MAX; i++) chips += i >= t ? '<span class="gap"></span>' : i >= op ? '<button type="button" class="tkt new" onclick="event.stopPropagation(); rfxReopen()">새 번호<br>확인</button>' :   /* v4.44 상자를 열기 전에는 번호를 먼저 보여 주지 않는다 */
     i < nums.length ? '<span class="tkt">' + esc(nums[i]) + "</span>" : '<span class="tkt wait">발급 중</span>';
-  return '<div class="rnum"><p class="lb">내 응모 번호</p><div class="tkts">' + chips + "</div></div>";
+  return '<div class="rnum"><p class="lb">내 행운권 번호</p><div class="tkts">' + chips + "</div></div>";
 }
 /* 룰렛 쿠폰 모달 · 내 QR + 사용 여부 (사용 여부는 서버 my.roulette 가 정본, sync 가 roulette_used 로 받아쓴다) */
 function ppRouletteOpen() {
@@ -6134,11 +6188,11 @@ var RFX_FRONT = '<svg class="rfx-chest rfx-front" viewBox="0 0 140 110" aria-hid
 /* v4.44 (사용자 260925 · 레드팀 토론) 제목 = 「응모 완료 · 번호 확인」(도장 연출 한 줄 「응모권 N장 · 번호 발급」과 겹치지 않게) · 닫힌 상자 첫 줄에 「응모는 이미 됐어요」(닫아도 손해 없음을 먼저)
    v4.49 모든 응모권을 직접 연다(5개째부터 저절로 열던 것 폐지 · 사용자 260925) · 열 때 아직 안 연 번호를 모두 꺼낸다(4개째를 「나중에 보기」로 닫았어도 빠지는 번호가 없다)
    자동으로 닫지 않는다(천천히 읽는 사람이 번호를 놓친다) · 주 버튼 = [확인] 하나 */
-function rfxTitle(t) { return "응모 완료 · 번호 확인"; }
+function rfxTitle(t) { return "행운권 발급 · 번호 확인"; }   /* v4.83 「응모 완료」 → 「행운권 발급」 */
 function rfxOpened(t) { var o = S.get("raffle_opened", null); return o === null ? t : Math.min(o, t); }   /* 상자를 연 응모권 수 · 기록이 없으면(이 버전 전) 다 연 것으로 */
 function rfxHtml(o) {
   var t = o.raffle || 1, first = true;   /* v4.49 (사용자 260925 「두 번째 · 세 번째도 내가 열어야 · 처음 응모번호와 같게」) 모든 응모권을 직접 연다 · 버튼 · 문구 모양이 같다 */
-  var say = (t === 1 ? "스탬프 " + stampCount() + "개!" : "응모권 " + t + "장째!") + " 응모는 이미 됐어요<br>상자를 열어 번호를 확인하세요";
+  var say = (t === 1 ? "스탬프 " + stampCount() + "개!" : "행운권 " + t + "장째!") + " 행운권은 이미 발급됐어요<br>상자를 열어 번호를 확인하세요";
   return '<div class="rfx" id="rfx" data-t="' + t + '">' +
     '<div class="rfx-say"><span class="rfx-bot">' + BOT_SVG.replace("</svg>", BOT_WAVE + "</svg>") + '</span><p class="rfx-b" id="rfxSay">' + say + "</p></div>" +
     '<button type="button" class="rfx-stage" onclick="rfxOpen()" aria-label="보물상자 열기">' + RFX_BACK + '<span class="rfx-num" id="rfxNum" aria-live="polite"></span>' + RFX_FRONT + "</button>" +
@@ -6178,7 +6232,7 @@ function rfxLand(nums, late) {   /* nums = 번호 배열(없으면 null) · late
   var nm = el("rfxNum"); nm.classList.remove("roll"); nm.innerHTML = nums ? nums.map(function (x) { return "<b>" + esc(x) + "</b>"; }).join("") : "발급 중"; nm.classList.toggle("wait", !nums);
   if (late) { nm.classList.remove("land"); void nm.offsetWidth; nm.classList.add("land"); }
   el("rfxSay").innerHTML = nums ? (nums.length > 1 ? "번호 " + nums.length + "개가 나왔어요! 행운을 빌어요" : "행운을 빌어요!") + "<br>Outro 현장 추첨은 17F 입구 QR 체크인" : "번호가 아직 발급 중이에요<br>곧 내 보상에 나타나요";   /* v4.79 무대 추첨 = 추첨 QR 체크인한 사람만 */
-  el("rfxCap").textContent = nums ? "내 응모 번호 · 결과는 행사 후 개별 안내" : "응모는 이미 됐어요 · 결과는 행사 후 개별 안내";
+  el("rfxCap").textContent = nums ? "내 행운권 번호 · 결과는 행사 후 개별 안내" : "행운권은 이미 발급됐어요 · 결과는 행사 후 개별 안내";
   el("rfxBtns").innerHTML = '<button class="btn mint" style="margin-top:14px" onclick="modalClose()">확인</button><button class="btn line" style="margin-top:8px" onclick="noticeGo(\'rewards\',\'raffle\')">내 보상에서 보기</button>';
   if (nums && typeof stampBuzz === "function") stampBuzz(30);
   App.render();   /* 레일의 「새 번호 확인」 칩을 번호로 바꾼다 */
@@ -6195,10 +6249,10 @@ function ppDrawOpen() {
     }
     tickets = '<div class="tkts">' + chips + "</div>";
   }
-  modalOpen('<p class="muted" style="font-size:calc(14.5px * var(--fs));line-height:1.7">4개 1장 · 5개 2장 · 6개 3장 · 자동 응모<br>지금 <b style="color:var(--hi)">' + t + '장</b></p>' +
+  modalOpen('<p class="muted" style="font-size:calc(14.5px * var(--fs));line-height:1.7">스탬프 4개 1장 · 5개 2장 · 6개 3장 · 자동 발급<br>지금 <b style="color:var(--hi)">' + t + '장</b></p>' +
     tickets +
-    '<p class="muted" style="margin-top:8px;font-size:calc(13.5px * var(--fs));line-height:1.65">사후 추첨 결과는 행사 후 개별 안내<br>17:00 Outro 현장 추첨 · 16:40부터 17F 입구 QR 체크인</p>' +   /* v4.79 무대 추첨과 사후 추첨을 나눈다 */
-    '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "사후 추첨 응모");
+    '<p class="muted" style="margin-top:8px;font-size:calc(13.5px * var(--fs));line-height:1.65">행운권 추첨 결과는 행사 후 개별 안내<br>17:00 Outro 현장 추첨 · 16:40부터 17F 입구 QR 체크인</p>' +   /* v4.79 무대 추첨과 사후 추첨을 나눈다 · v4.83 사용자 표시 용어 「행운권」 */
+    '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "행운권");
 }
 
 /* ════════════════ 화면 (Lv1) ════════════════ */
@@ -6287,7 +6341,7 @@ function rewItems() {
   var n = stampCount(), used = !!S.get("roulette_used", false), out0 = !!S.get("roulette_out", false), t = raffleTickets(n), items = [];
   if (n >= 3) items.push({ k: "roulette", used: used, chip: used ? "사용 완료" : out0 ? "룰렛 소진" : "사용 가능", off: used || out0, nm: "룰렛 1회권", big: "1회",
     why: "1F 이벤트존 룰렛 · 내 QR 제시", go: "ppRouletteOpen()" });
-  if (t) items.push({ k: "raffle", used: false, chip: "자동 응모", off: false, nm: "사후 추첨 응모권", big: t + "장", why: "스탬프 " + Math.min(n, REWARD_CAP) + "개 · 결과는 행사 후 개별 안내", go: "ppDrawOpen()" });   /* v4.79 현장 추첨 안내는 추첨 안내 모달에 */
+  if (t) items.push({ k: "raffle", used: false, chip: "자동 발급", off: false, nm: "행운권", big: t + "장", why: "스탬프 " + Math.min(n, REWARD_CAP) + "개 · 결과는 행사 후 개별 안내", go: "ppDrawOpen()" });   /* v4.79 현장 추첨 안내는 추첨 안내 모달에 */
   return items;
 }
 function rewPick(f) { REW.f = f; App.render(); }
@@ -6295,8 +6349,8 @@ function rewPick(f) { REW.f = f; App.render(); }
 /* ── 스탬프 · 숫자는 현행 운영: 카드 8종 · 개수 상한 6 · 응모권 최대 3장 · 현황 모양은 홈과 같은 railHtml(v4.10) ── */
 function stampGoalText(n) {
   if (n < 3) return (3 - n) + "개 더 모으면 룰렛 1회";
-  if (n < STAMP_DENOM) return "1개 더 모으면 응모권 " + raffleTickets(n + 1) + "장";
-  return STAMP_DENOM + "개 모두 모았어요 · 응모권 " + RAFFLE_MAX + "장";
+  if (n < STAMP_DENOM) return "1개 더 모으면 행운권 " + raffleTickets(n + 1) + "장";
+  return STAMP_DENOM + "개 모두 모았어요 · 행운권 " + RAFFLE_MAX + "장";
 }
 function stampHeroHtml(n, glow) {
   /* v4.10 (사용자 결정 260922) 홈과 같은 railHtml 재사용 · M04 숫자 칸 폐기 · 한쪽을 고치면 양쪽이 같이 바뀐다 */
@@ -6366,7 +6420,7 @@ var Views = {
       '<button type="button" class="ax-button" onclick="App.go(\'passport\')">스탬프 보기</button></section>' +
       '<div class="axs-list">' +
       axDest("내 일정", "신청한 프로그램과 예약", chev(nSched + "개"), "mySched()") +
-      axDest("내 보상", "룰렛 1회권과 응모권", chev(rw + "개"), "App.go('rewards')") +
+      axDest("내 보상", "룰렛 1회권과 행운권", chev(rw + "개"), "App.go('rewards')") +
       axDest("신청·대기 현황", "신청한 것과 대기 번호", chev(st), stGo) +
       "</div></div>";
   },
@@ -6382,17 +6436,29 @@ var Views = {
       '<button type="button" role="tab" aria-selected="' + (seg === "app") + '" onclick="expSeg(\'app\')">앱에서</button></div>';
     var sst = stairState();
     /* v4.06 E01-onsite · 행 → 체험 안내(E02) → QR 스캔(Q02) → 결과(Q03) · 계단은 진행 중이면 진행 화면 */
-    var list = seg === "site" ? [
+    var stairRow = ["계단 이용", sst.leg ? "진행 중 · " + sst.leg.fl + "F 시작" : "1F~18F · 누적 " + (sst.total || 0) + " / " + (sst.goal || 10) + "개 층", "stairOpen()", "st"];
+    /* v4.83 (261001) 새 8종 · 1F 전시(p1) · 전시 QR 퀴즈(p7) 행을 뺐다 · AX 퀴즈는 미니 게임과 다른 행(게임으로 묶지 않는다 · 사용자 수정 261001) · 옛 서버면 예전 목록 */
+    var list = seg === "site" ? (stampV2() ? [
+      ["AX PLAY", "HiDI-Q · Hi-Helper · 스태프 인증", "expGuide('p2')", "p2"],
+      ["AI 포토부스", "1F · 현장 대기 접수", "App.go('photoq')", ""],
+      stairRow
+    ] : [
       ["1F 전시", "1F · 약 5분", "expGuide('p1')", "p1"],
-      ["AX Now! 체험", "HIDI-Q / HI-Helper · 약 5분", "expGuide('p2')", "p2"],
+      ["AX PLAY", "HiDI-Q · Hi-Helper · 스태프 인증", "expGuide('p2')", "p2"],
       ["전시 QR 퀴즈", "1F · 약 10분", "expGuide('p7')", "p7"],
       ["AI 포토부스", "1F · 현장 대기 접수", "App.go('photoq')", ""],
-      ["계단 이용", sst.leg ? "진행 중 · " + sst.leg.fl + "F 시작" : "1F~18F · 누적 " + (sst.total || 0) + " / " + (sst.goal || 10) + "개 층", "stairOpen()", "st"]
-    ] : [
-      ["미니게임", "서로 다른 종목 " + Math.min(MG_NEED, mgDone()) + " / " + MG_NEED, "App.go('games')", "p4"],   /* v4.63 3종목 진행 */
+      stairRow
+    ]) : (stampV2() ? [
+      ["AX 퀴즈", "O/X · 기억력 " + Math.min(QZ_NEED, qzDone()) + " / " + QZ_NEED, "App.go('quiz')", "qz"],
+      ["미니 게임", "팡 · 점프 · 테트리스 " + Math.min(MG_NEED, mgDone()) + " / " + MG_NEED, "App.go('games')", "p4"],
       ["아이디어 한 줄", "내 업무의 변화 아이디어 · 제출하면 커피챗 신청", "App.go('ideas')", "p5"],
       ["오늘 한 판 설문", SURVEY.open + "부터 · 스탬프 1개 필요", "App.go('survey')", "sv"]
-    ];
+    ] : [
+      ["AX 퀴즈", "O/X · 기억력", "App.go('quiz')", ""],
+      ["미니 게임", "서로 다른 종목 " + Math.min(MG_NEED, mgDone()) + " / " + MG_NEED, "App.go('games')", "p4"],   /* v4.63 3종목 진행 */
+      ["아이디어 한 줄", "내 업무의 변화 아이디어 · 제출하면 커피챗 신청", "App.go('ideas')", "p5"],
+      ["오늘 한 판 설문", SURVEY.open + "부터 · 스탬프 1개 필요", "App.go('survey')", "sv"]
+    ]);
     return '<div class="ax-stack">' +   /* v4.06 탭 첫 화면 큰 제목·부제 삭제(사용자 결정 260922) · 스캔은 가운데 QR 버튼과 각 안내 화면 */
       tabs + '<div class="axs-list" role="tabpanel">' + list.map(row).join("") + "</div>" +
       /* v4.41 (사용자 260925 「다른 것들과 디자인적으로 구분 · 현장에서에만」) v4.35 의 한 줄(두 칸 모두 · 체험 행과 같은 모양 · 누르면 탭이 바뀜)을 바꿨다.
@@ -6412,6 +6478,10 @@ var Views = {
   /* ═══ 미니게임 · 체험 › 앱에서 · 기존 AX 올림픽 허브(종목 4 + 순위판·포디움 입구) 그대로 (게임 화면 재디자인은 4단계) ═══ */
   games: function () {
     return '<div class="oly-hub">' + olyHubHtml() + "</div>";
+  },
+  /* v4.83 (261001 사용자 수정) AX 퀴즈 · 게임 허브와 따로 · O/X · 기억력 */
+  quiz: function () {
+    return '<div class="oly-hub">' + quizHubHtml() + "</div>";
   },
 
   /* ═══ 내 보상 (M05 모양 · 1단계) · 사용 가능 / 사용 완료 · 사용 방법은 기존 모달(룰렛 QR · 응모 번호) ═══ */
@@ -6471,9 +6541,10 @@ var Views = {
     return '<div class="screen-wrap tytv"><div class="row" style="justify-content:space-between;flex-wrap:wrap;padding-top:8px">' +
       '<b class="tytv-brand">AX Festival <span>2026</span></b>' +
       '<div class="row" style="gap:6px">' + tvBtns() + (S.get("admin_authed", false) ? '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button>' : "") + "</div></div>" +
-      '<p class="tytv-k">' + (oly ? "AX 올림픽 · 종합 순위" : oly2 ? "AX 올림픽 · 종목별 1~3위" : "AX 단어 소나기 · 1F 현장 타자왕전") + "</p>" +
-      '<p class="tytv-t">' + (oly ? "다섯 종목 최고 점수 합계 · " + olyFmt(olyMax()) + "점 만점" : oly2 ? "팡 · 점프 · 테트리스 · 기억력 · O/X" : "현장 타자왕전 상위 5") + "</p>" +
-      '<div class="tytv-seg"><span class="' + (site ? "on" : "") + '">현장 타자 5</span><span class="' + (oly ? "on" : "") + '">올림픽 종합</span><span class="' + (oly2 ? "on" : "") + '">올림픽 종목별</span></div>' +
+      /* v4.83 (261001) 종합 = 미니 게임 세 종목(옛 서버면 다섯 종목 · 순위판 oev 로 고른다) · AX 퀴즈는 TV 순위에 없다 */
+      '<p class="tytv-k">' + (oly ? olyOvName() + " · 종합 순위" : oly2 ? olyOvName() + " · 종목별 1~3위" : "AX 단어 소나기 · 1F 현장 타자왕전") + "</p>" +
+      '<p class="tytv-t">' + (oly ? olyOvSum() + " 최고 점수 합계 · " + olyFmt(olyMax()) + "점 만점" : oly2 ? olyOvEvents().map(function (e) { return e.short; }).join(" · ") : "현장 타자왕전 상위 5") + "</p>" +
+      '<div class="tytv-seg"><span class="' + (site ? "on" : "") + '">현장 타자 5</span><span class="' + (oly ? "on" : "") + '">' + (olyOvName() === "미니 게임" ? "미니 게임" : "올림픽") + ' 종합</span><span class="' + (oly2 ? "on" : "") + '">' + (olyOvName() === "미니 게임" ? "미니 게임" : "올림픽") + " 종목별</span></div>" +
       (oly ? olyTvPodium() : oly2 ? olyTvEvents() : '<div class="tytv-list five">' + tyTvRows(r, 5) + "</div>") +
       '<p class="tytv-foot">' + (oly || oly2 ? "종목마다 최고 한 판 · 종목 최대 " + olyFmt(olyCap()) + "점 · 명예 순위" : "운영 " + esc(winTxt) + " · 1인 " + ((TYTV.site && TYTV.site.tries) || 3) + "회 · 최고 기록 · 1·2등은 17:00 Outro에서 호명") + "</p></div>";   /* v4.16 가짜 닉네임 표기 삭제 · TV 는 항상 실서버 값 */
   },
@@ -6765,7 +6836,7 @@ var Views = {
         '<div style="flex:1"><b style="font-size:calc(15.5px * var(--fs));color:' + (done ? "var(--hi)" : "var(--muted)") + '">' + esc(s.name) + '</b>' +
         '<p class="muted" style="font-size:calc(13.5px * var(--fs));margin-top:2px">' + esc(s.theme) + "</p></div>" + badge + "</div>";
     }).join("");
-    return stampLineHtml("p7", '<p class="ax-meta">한 세트를 끝내면 스탬프</p>') + setCards +   /* v4.70 오른쪽 위 도장 */
+    return (stampV2() ? "" : stampLineHtml("p7", '<p class="ax-meta">한 세트를 끝내면 스탬프</p>')) + setCards +   /* v4.70 오른쪽 위 도장 · v4.83 새 8종이면 도장 없음 */
       '<div class="card soft mt16"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">참여 방법</b>' +
       '<p class="muted" style="margin-top:6px;font-size:calc(14.5px * var(--fs));line-height:1.8">벽의 QR을 스캔하면 그 벽의 문제가 열려요 · 한 세트를 끝내면 적립</p>' +
       '<p class="muted" style="margin-top:6px;font-size:calc(13.5px * var(--fs))">정답은 1F 벽 전시 안에 있어요</p>' +
@@ -6886,7 +6957,7 @@ var Views = {
 
   game_word: function () {
     gwStop();
-    if (gsNeedNick()) return gsNickHtml("word");   /* v3.50d 모든 게임이 같은 닉네임(type_nick) · 이미 있으면 묻지 않는다 */
+    /* v4.83 AX 퀴즈는 순위가 없어 닉네임을 묻지 않는다(v3.50d 모든 게임 같은 닉네임 · 미니 게임만) */
     return gsStartHtml("word", { rootId: "gwRoot" });   /* v4.11 공용 시작 틀 · v4.28 점수 공식 줄은 결과 「점수 계산 보기」 안(gsRuleText) */
   },
 
@@ -6917,8 +6988,7 @@ var Views = {
   /* ═══ v4.12 AI O/X · 유리다리 건너기 · 시작 화면에서 판 토큰(황금 자리)·모두의 선택 비율을 미리 받는다 ═══ */
   game_ox: function () {
     oxStop();
-    if (gsNeedNick()) return gsNickHtml("ox");
-    oxPrefetch();
+    oxPrefetch();   /* v4.83 AX 퀴즈는 닉네임을 묻지 않는다 */
     return gsStartHtml("ox", { rootId: "oxRoot", sub: "유리다리 건너기" });   /* v4.28 시간·줄·목숨 줄은 결과 접힘 안(gsRuleText) · 판자 삭제 */
   },
   /* ═══ v3.50 AX 올림픽 순위판 · 종합(전 종목 완주자) · 종목별(금은동) ═══
@@ -7307,6 +7377,7 @@ function beSync(after) {
     if (res && res.ok && typeof pushCfg === "function") pushCfg(res.push);   /* v4.76 웹 푸시 공개키(새 서버 · 비밀값 있는 Worker 만 · 없으면 알림 항목이 뜨지 않는다) */
     if (after) after(!!(res && res.ok));
     if (!res || !res.ok) return;
+    if (stampVerSet(res.stv === 2 ? 2 : 1)) setTimeout(function () { App.render(); }, 0);   /* v4.83 스탬프 체계 판 · 새 서버 stv 2 = 새 8종 · 없으면 옛 서버(옛 8종) · 스탬프 목록 맞추기(stampSync)보다 먼저 */
     if (u.empId && res.sesNeed === 1) SES.need = true;   /* v4.68 세션필수 ON 인데 토큰이 없거나 지난 토큰(PIN 초기화) · 서버가 개인 부분(my)을 빼고 보냈다 · 이 기기 기록은 그대로 둔다 */
     if (u.empId && (res.ses === 1 && !u.ses || SES.need)) setTimeout(sesAsk, 600);   /* v4.67 세션필수 ON · 토큰 없는 로그인(옛 앱)이면 비밀번호 한 번 더 */
     if (scanQList().length) setTimeout(scanQFlush, 200 + beJit());   /* v3.34b 연결이 살아났으면 저장된 스캔 재전송 · v4.57 0~5초 무작위 지연 */
@@ -7368,7 +7439,7 @@ function beSync(after) {
       /* v5 · 체크인·대기 상태는 서버가 정본이다(운영 데스크 스캐너가 쓰므로 앱은 받아쓰기만 한다).
          내 차례가 되면 한 번만 알린다 · 폴링마다 토스트가 뜨지 않게 직전 상태와 비교. */
       if (res.my.checkin) S.set("checkin", res.my.checkin);
-      if (res.my.stamps) { stampSync(res.my.stamps); stampPendRetry(); }
+      if (res.my.stamps) { stampSync(res.my.stamps); stampPendRetry(); lgCheck(res.my.stamps); }   /* v4.83 최초 로그인 스탬프 */
       if (res.my.stair) { var st9 = Object.assign({}, res.my.stair, { emp: String(u.empId || "") }); if (JSON.stringify(st9) !== JSON.stringify(S.get("stair", null))) S.set("stair", st9); }   /* v4.06 계단 진행 · 서버가 정본 · v4.54 물어본 사번을 붙여 저장 */   /* 스탬프는 서버가 정본 · v3.97 빈 목록 포함 · 못 보낸 적립은 다시 보낸다 */
       if ("roulette" in res.my && !testEmp()) S.set("roulette_used", !!res.my.roulette);   /* 룰렛 사용 여부도 서버가 정본 (260909) · 테스트 사번은 로컬 */
       if (res.my.tickets && !testEmp()) S.set("raffle_nums", res.my.tickets);   /* v3.12 응모권 번호 · 서버 발급 정본 */
@@ -8297,6 +8368,7 @@ function qrRoute(raw, t) {
   if (mq) {
     var wid = mq[1].toLowerCase();
     if (!/^wall[1-3]$/.test(wid)) { srShow({ st: "fail", why: "nocode" }); return; }
+    if (stampV2()) { srShow({ st: "fail", why: "retired" }); return; }   /* v4.83 (261001) 전시 QR 퀴즈는 스탬프 8종에서 빠졌다 · 보관 QR 을 찍으면 안내만 */
     wqOpenQr(wid); return;
   }
   var m = raw.match(/#s=([A-Za-z0-9]+)/i), code = m ? m[1] : (/^[A-Za-z0-9]{3,12}$/.test(raw) ? raw : "");
@@ -8321,6 +8393,7 @@ var SR_WHY = {
   att: ["17F 강연은 대강당 입구 출석 QR로 적립돼요", "scan", "다시 스캔"],   /* v4.26 옛 17F 좌석 QR(p3 코드) */
   dwin: ["추첨 체크인 시간이 아니에요", "exp", "확인"],   /* v4.79 창 · 날짜 밖(서버 window · day) */
   dclosed: ["체크인이 마감됐어요", "exp", "확인"],   /* v4.81 사회자 마감 뒤(서버 closed · 사용자 결정 261001) */
+  retired: ["지금은 쓰지 않는 QR이에요", "scan", "다시 스캔"],   /* v4.83 전시 QR 퀴즈 벽 QR */
   other: ["다시 스캔해 주세요", "scan", "다시 스캔"]
 };
 function srShow(o) {
@@ -8833,9 +8906,10 @@ var EXP_GUIDE = {
   p1: { chip: "1F · 약 5분", h: "1층 전시를<br>둘러보세요", d: "전시를 보고, 끝에 있는 QR을 스캔하면 스탬프를 받을 수 있어요.",
     steps: [["전시 관람", "1F 전시존을 자유롭게 둘러봐요"], ["QR 스캔", "전시존 끝 QR 입간판을 찾아요"], ["적립 확인", "결과 화면에서 스탬프를 확인해요"]],
     meta: "09:00~17:30 적립 · 1인 1회", cta: "전시 QR 스캔하기" },
-  p2: { chip: "1F · 약 5분", h: "AX Now! 부스를<br>체험해 보세요", d: "HIDI-Q 또는 HI-Helper 부스 1곳을 체험하고, 스태프가 든 QR을 스캔해요.",
-    steps: [["부스 체험", "HIDI-Q · HI-Helper 중 1곳"], ["QR 스캔", "체험 후 스태프가 든 QR"], ["적립 확인", "결과 화면에서 스탬프를 확인해요"]],
-    meta: "09:30~16:30 적립 · 1인 1회", cta: "체험 QR 스캔하기", link: ["부스 안내 보기", "App.go('booth')"] },
+  /* v4.83 (261001) AX PLAY · 스태프 인증 · 참가자가 찍는 부스 QR 은 보관 · 체험 뒤 스태프가 내 QR 을 찍는다(스태프 모드 목적 타일 「AX PLAY」) */
+  p2: { chip: "1F · AX PLAY", h: "AX PLAY에서<br>체험해 보세요", d: "HiDI-Q 또는 Hi-Helper를 체험한 뒤 스태프에게 내 QR을 보여 주세요.",
+    steps: [["부스 체험", "HiDI-Q · Hi-Helper 중 1곳"], ["내 QR 보여주기", "스태프가 내 QR을 스캔"], ["적립 확인", "스탬프 탭에서 확인"]],
+    meta: "09:30~16:30 · 1인 1회", cta: "내 QR 보여주기", act: "qrPanelOpen('mine')" },
   p7: { chip: "1F · 약 10분", h: "벽 QR 퀴즈를<br>풀어 보세요", d: "DAP Wall 벽의 QR을 스캔하면 그 벽의 5문항이 열려요. 한 세트를 끝내면 스탬프를 받아요.",
     steps: [["벽 QR 스캔", "WALL 1~3 중 한 곳"], ["5문항 풀기", "보기를 골라 제출해요"], ["적립 확인", "처음 끝낸 세트에서 스탬프"]],
     meta: "", cta: "벽 QR 스캔하기", link: ["퀴즈 목록", "App.go('wq_list')"] },
@@ -8863,7 +8937,7 @@ function expGuideHtml() {
     (g.meta ? '<p class="ax-meta">' + esc(g.meta) + "</p>" : "") +
     scanQNote() +
     (g.link ? '<button type="button" class="ax-link axs-plain axs-self" onclick="' + g.link[1] + '">' + g.link[0] + "</button>" : "") +
-    "</div>" + ax2Btn(g.cta, "scanOpen('" + id + "')");
+    "</div>" + ax2Btn(g.cta, g.act || "scanOpen('" + id + "')");   /* v4.83 act = 스캔 대신 할 일(AX PLAY = 내 QR) */
 }
 
 /* ═══ Q02 · 활동 QR 인식 · 카메라 권한 → 검증 요청 → 결과 ═══ */
@@ -9146,11 +9220,11 @@ var SCAN_SPOTS = [
   { id: "dap", nm: "1F DAP 과제상담", kind: "roster", lb: "DAP 상담 입장", tsub: "신청 명단", will: "DAP 상담 입장 처리", cond: "신청 명단에 있는 사람만" },
   { id: "cchat", nm: "18F AX 커피챗", kind: "roster", lb: "커피챗 입장", tsub: "신청 명단", will: "커피챗 입장 처리", cond: "신청 명단에 있는 사람만" },
   { id: "q_photo", nm: "1F AI 포토부스", kind: "photo", lb: "포토부스 입장", tsub: "다음 번호 호출", will: "포토부스 입장 · 다음 번호 호출", cond: "앱에서 받은 대기 번호" },   /* 번호는 참가자가 앱에서 받는다 · 찍으면 입장 + 다음 호출 */
-  { id: "p1", nm: "1F 전시", kind: "stamp", lb: "1F 전시 스탬프", tsub: "적립", will: "1F 전시 스탬프 적립" },
-  { id: "p2", nm: "AX Now! 체험", kind: "stamp", lb: "AX Now! 스탬프", tsub: "적립", will: "AX Now! 스탬프 적립" },
+  /* v4.83 (261001) 1F 전시(p1) 스탬프 폐지 · AX PLAY(p2) = 체험 뒤 스태프가 참가자 내 QR 을 찍어 적립(스탬프 4) */
+  { id: "p2", nm: "AX PLAY", kind: "stamp", lb: "AX PLAY 스탬프", tsub: "체험 확인 · 적립", will: "AX PLAY 스탬프 적립", cond: "HiDI-Q 또는 Hi-Helper 체험을 마친 사람" },
   { id: "roulette", nm: "1F 이벤트존 룰렛", kind: "roulette", lb: "룰렛 체크인", tsub: "1회 사용", will: "룰렛 1회 사용", cond: "스탬프 3개 이상 · 1인 1회" }   /* 260909 · 스탬프 3개=1회, 판정은 서버 */
 ];
-var SCAN_TILES = ["roulette", "q_photo", "p1", "p2", "dap", "cchat", "sess"];   /* 자주 쓰는 룰렛 · 포토 · 스탬프가 위 · 10F 세션은 한 타일에서 A~E */
+var SCAN_TILES = ["roulette", "q_photo", "p2", "dap", "cchat", "sess"];   /* 자주 쓰는 룰렛 · 포토 · 스탬프(AX PLAY)가 위 · 10F 세션은 한 타일에서 A~E · v4.83 1F 전시 타일 삭제 */
 function scanSpot(id) { return SCAN_SPOTS.filter(function (s) { return s.id === id; })[0] || null; }
 var SCAN = { spot: S.get("scan_spot", ""), log: [], last: "", lastT: 0, on: false, pick: false, sub: "", res: null };
 
@@ -9710,10 +9784,19 @@ function gameClear(flagKey) {
    한 종목 = 기록을 제출한 판(olySubmit · 팡은 완주 · O/X 는 한 줄 이상) · 같은 종목 여러 판 = 1종목 · 라이브 퀴즈 폐기 · 타자(1F)는 종목이 아니다
    서버 계정 = 서버가 game_submit 응답(p4)으로 알려 줄 때만 적립 · 테스트 계정 · 서버 없음 = 이 기기 종목 수로 */
 var MG_NEED = 3;
-function mgDone() { return olyMe().done; }
+/* v4.83 새 체계 = 팡 · 점프 · 테트리스 세 종목 모두 · 옛 서버(stv 없음)는 옛 규칙(다섯 종목 중 서로 다른 3종목) 그대로 */
+function mgDone() { var me = olyMe(), keys = stampV2() ? OLY_MINI_KEYS : olyAllKeys(); return keys.filter(function (k) { return !!me.ev[k]; }).length; }
 function mgStampCheck(srv) {
   if (srv) { if (srv.got) awardStamp("p4"); return; }
   if (mgDone() >= MG_NEED) awardStamp("p4");
+}
+/* v4.83 AX 퀴즈 스탬프(qz) = O/X · 기억력 두 종목 모두 한 판 · 서버 game_submit 응답 qz 로 적립(없으면 이 기기 종목 수) · 옛 서버에는 qz 가 없다 */
+var QZ_NEED = 2;
+function qzDone() { var me = olyMe(); return OLY_QUIZ_KEYS.filter(function (k) { return !!me.ev[k]; }).length; }
+function qzStampCheck(srv) {
+  if (!stampV2()) return;
+  if (srv) { if (srv.got) awardStamp("qz"); return; }
+  if (qzDone() >= QZ_NEED) awardStamp("qz");
 }
 
 /* ════════════════ v4.32 1F 현장 셀프 모드 · 단어 소나기 셀프 아케이드 (260924 사용자 확정) ════════════════
@@ -10183,7 +10266,7 @@ var OLYAW = { data: null, t: 0 };
 function olyAwardTabs(cur) {
   var st = "background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap";
   return '<div class="row" style="gap:6px;margin-top:12px">' + [["type", "타자왕전"], ["oly", "AX 올림픽"]].map(function (t) {
-    return '<button class="chip" style="' + (cur === t[0] ? "background:var(--mint);color:#fff;border-color:var(--mint);white-space:nowrap" : st) + '" onclick="S.set(\'tyaw_tab\', \'' + t[0] + '\')">' + t[1] + "</button>";
+    return '<button class="chip" style="' + (cur === t[0] ? "background:var(--mint);color:#fff;border-color:var(--mint);white-space:nowrap" : st) + '" onclick="S.set(\'tyaw_tab\', \'' + t[0] + '\')">' + (t[0] === "oly" ? olyOvName(OLYAW.data) : t[1]) + "</button>";   /* v4.83 「미니 게임」(옛 서버 「AX 올림픽」) */
   }).join("") + "</div>";
 }
 function olyAwardPull(force) {
@@ -10209,8 +10292,8 @@ function olyAwardHtml() {
     '<div class="row" style="gap:6px;margin-top:8px">' + [["all", "종합 1~3위"], ["event", "종목별 1~3위"]].map(function (t) {
       return '<button class="chip" style="' + (pg === t[0] ? "background:var(--mint);color:#fff;border-color:var(--mint);white-space:nowrap" : st) + '" onclick="S.set(\'tyaw_oly_pg\', \'' + t[0] + '\')">' + t[1] + "</button>";
     }).join("") + "</div>" +
-    '<p class="tytv-k">17:00 OUTRO · 명예 시상</p><p class="tytv-t">' + (pg === "event" ? "AX 올림픽 종목별 1~3위" : "AX 올림픽 종합 1~3위") + "</p>" +
-    (pg === "event" ? '<div class="tve-grid aw">' + OLY_EVENTS.map(function (e) {
+    '<p class="tytv-k">17:00 OUTRO · 명예 시상</p><p class="tytv-t">' + olyOvName(d) + (pg === "event" ? " 종목별 1~3위" : " 종합 1~3위") + "</p>" +   /* v4.83 시상 = 미니 게임 세 종목(oly_result oev) */
+    (pg === "event" ? '<div class="tve-grid aw' + (olyOvEvents(d).length === 3 ? " n3" : "") + '">' + olyOvEvents(d).map(function (e) {
       var l = ((d && d.perEvent) || {})[e.key] || [];
       return '<div class="tve"><p class="tve-h">' + esc(e.name) + "</p>" + [0, 1, 2].map(function (i) {
         var x = l[i];
@@ -10219,7 +10302,7 @@ function olyAwardHtml() {
     }).join("") + "</div>"
       : top.length ? '<div class="awp-stage">' + [top[1], top[0], top[2]].map(function (x, k) {
         var r = [2, 1, 3][k];
-        return '<div class="awp r' + r + '">' + (x ? olyLw(r, r === 1 ? 240 : 180) + "<b>" + esc(x.nick || "익명 참가자") + "</b>" + (hide ? "" : "<small>" + esc(x.name || "") + (x.dept ? " · " + esc(x.dept) : "") + "</small>") + "<span>" + olyFmt(x.total) + "<em> / " + olyFmt(olyMax()) + "</em></span>" : "") + "<i>" + r + "</i></div>";
+        return '<div class="awp r' + r + '">' + (x ? olyLw(r, r === 1 ? 240 : 180) + "<b>" + esc(x.nick || "익명 참가자") + "</b>" + (hide ? "" : "<small>" + esc(x.name || "") + (x.dept ? " · " + esc(x.dept) : "") + "</small>") + "<span>" + olyFmt(x.total) + "<em> / " + olyFmt(olyMax(d)) + "</em></span>" : "") + "<i>" + r + "</i></div>";
       }).join("") + "</div>" : '<p style="padding:24px 4px;opacity:0.7">' + (d ? "아직 전 종목 완주자가 없습니다" : "불러오는 중") + "</p>") +
     '<p class="tytv-foot">명예 시상 · 경품 없음 · 전 종목 완주자만 · 동점은 전 종목 완료가 이른 쪽</p></div>';
 }
@@ -10404,12 +10487,12 @@ function sndChoose(on, key) {
    출처는 확정 문서만: 슬로건 「ME to WE」(「AX : 」 접두 없음) · 3개년 로드맵 · 공식 공지 붙임1·2 프로그램 제목 · DAP.
    게임 흐름을 끊지 않게 한 줄(3초 이내) · 시작 화면 = 규칙 옆 한 줄 · 결과 카드 = 「오늘의 AX 한 줄」(돌아가며). */
 var AX_PRE = {
-  pang: "ME to WE · 나의 업무 혁신, 우리 회사의 AX가 되다",
+  pang: "ME to WE · 나의 경험을 우리의 가능성으로",
   jump: "AX 로드맵 2026의 키워드는 「공감과 참여」예요",
   word: "2026 공감과 참여 → 2027 확산과 체화 → 2028 혁신과 연결"
 };
 var AX_TODAY = [
-  "ME to WE · 나의 업무 혁신, 우리 회사의 AX가 되다",
+  "ME to WE · 나의 경험을 우리의 가능성으로",
   "AX 로드맵 · 2026 공감과 참여 → 2027 확산과 체화 → 2028 혁신과 연결",
   "17F 09:40 기조연설 · AI 환경과 전략 (CTO)",
   "17F 10:30 내부 강연 · 현대해상 AX 로드맵 (디지털전략본부장)",
@@ -10445,6 +10528,23 @@ var OLY_EVENTS = [
   { key: "word", name: "ME to WE 기억력", short: "기억력", view: "game_word", best: "oly2_best_word" },
   { key: "ox", name: "AI O/X", short: "O/X", view: "game_ox", best: "oly2_best_ox" }
 ];
+/* v4.83 (261001 사용자 확정 · 앱 개편 1묶음) 미니 게임 = 팡 · 점프 · 테트리스 · 종합 = 세 종목 최고 한 판 합(만점 9,000) · 종합 자격 = 세 종목 모두 1판 이상
+   AX 퀴즈 = O/X · 기억력 · 게임으로 묶지 않는다(사용자 수정 261001) · 순위 · 점수판에 넣지 않는다(내 최고 기록만) · 점수 식 · 서버 재계산은 그대로
+   종합 종목은 서버가 알려 준다(oly_board oev · 새 서버) · 받은 순위판이 옛 서버 것이면 다섯 종목(옛 서버 숫자 그대로) · 아직 못 받았으면 지금 체계 판 */
+var OLY_MINI_KEYS = ["pang", "jump", "tetris"], OLY_QUIZ_KEYS = ["ox", "word"];
+function olyIsQuiz(key) { return OLY_QUIZ_KEYS.indexOf(key) >= 0; }
+function olyAllKeys() { return OLY_EVENTS.map(function (e) { return e.key; }); }
+function olyOvKeys(src) {
+  var b = src || OLY.board;
+  if (b && Array.isArray(b.oev) && b.oev.length) return b.oev;
+  if (b && (b.overall || b.events)) return olyAllKeys();   /* 옛 서버 응답(oev 없음) */
+  return stampV2() ? OLY_MINI_KEYS : olyAllKeys();
+}
+function olyOvEvents(src) { var k = olyOvKeys(src); return OLY_EVENTS.filter(function (e) { return k.indexOf(e.key) >= 0; }); }
+function olyKeysEvents(keys) { return keys.map(function (k) { return olyEv(k); }); }
+/* 이름 · 미니 게임 세 종목이면 「미니 게임」 · 옛 서버 다섯 종목이면 예전 이름 「AX 올림픽」 */
+function olyOvName(src) { return olyOvKeys(src).length === OLY_MINI_KEYS.length ? "미니 게임" : "AX 올림픽"; }
+function olyOvSum(src) { return olyOvKeys(src).length === OLY_MINI_KEYS.length ? "팡 · 점프 · 테트리스" : "다섯 종목"; }
 /* 폴백 규칙 · 서버 OLY_RULE_DEFAULT 와 같은 값 (팡 base = 기준 초 · pow = 지수 · 260919 봇 재보정) */
 var OLY_RULE = {
   rev: 1, cap: 3000,
@@ -10559,7 +10659,7 @@ function olyRule() {
     r.ox && r.ox.sec > 0 && r.ox.base && r.ox.base.length === 3 && r.ox.per && r.ox.per.length === 3 && r.ox.lives > 0 && r.ox.rowT && r.ox.rowT.length === 2 && r.ox.lead && r.ox.lead.length === 3 ? r : OLY_RULE;
 }
 function olyCap() { return olyRule().cap; }
-function olyMax() { return OLY_EVENTS.length * olyCap(); }
+function olyMax(src) { return olyOvKeys(src).length * olyCap(); }   /* v4.83 미니 게임 3 × 3,000 = 9,000(옛 서버는 다섯 종목 15,000) */
 function olyEv(key) { return OLY_EVENTS.filter(function (e) { return e.key === key; })[0]; }
 function olyFmt(n) { return Math.round(Number(n) || 0).toLocaleString(); }
 /* 점수 계산 · 서버 olyScore_ 와 글자 그대로 같은 식 (검사 60절이 같은 parts 로 대조) */
@@ -10669,15 +10769,19 @@ function olyPull(force) {   /* v4.16 관리자·테스트 계정이어도 순위
 }
 /* 내 현황 · 종목 점수는 이 기기 최고와 서버 최고 중 큰 쪽(바로 보이게) · 순위·메달·위치는 서버 값(없으면 숨긴다) */
 function olyMe() {
-  var sv = (OLY.board && OLY.board.me) || null, me = { total: 0, done: 0, ev: {}, rank: sv ? sv.rank : 0, up: sv ? sv.up : 0, podium: sv ? sv.podium : 0, lead: sv ? sv.lead : 0, sv: !!sv };
+  var sv = (OLY.board && OLY.board.me) || null, me = { total: 0, done: 0, qdone: 0, ev: {}, rank: sv ? sv.rank : 0, up: sv ? sv.up : 0, podium: sv ? sv.podium : 0, lead: sv ? sv.lead : 0, sv: !!sv };
+  var ovk = olyOvKeys();
   OLY_EVENTS.forEach(function (e) {
-    var sve = sv && sv.ev && sv.ev[e.key], best = Math.max(Number(S.get(e.best, 0)) || 0, sve ? sve.best : 0);
+    var sve = sv && sv.ev && sv.ev[e.key], best = Math.max(Number(S.get(e.best, 0)) || 0, sve ? sve.best : 0), q = olyIsQuiz(e.key);
     if (best > 0 || sve || S.get("oly2_done_" + e.key, 0)) {
-      me.ev[e.key] = { best: best, rank: sve ? sve.rank : 0, medal: sve ? sve.medal : 0, up: sve ? sve.up : 0, podium: sve ? sve.podium : 0, lead: sve ? sve.lead : 0, sync: !!sve && sve.best === best };
-      me.total += best; me.done++;
+      /* v4.83 AX 퀴즈는 순위 · 메달을 보이지 않는다(옛 서버가 순위를 보내도) */
+      me.ev[e.key] = { best: best, rank: sve && !q ? sve.rank : 0, medal: sve && !q ? sve.medal : 0, up: sve && !q ? sve.up : 0, podium: sve && !q ? sve.podium : 0, lead: sve && !q ? sve.lead : 0, sync: !!sve && sve.best === best };
+      if (ovk.indexOf(e.key) >= 0) { me.total += best; me.done++; }
+      if (q) me.qdone++;
     }
   });
-  me.left = OLY_EVENTS.length - me.done;
+  me.left = ovk.length - me.done;
+  me.qleft = OLY_QUIZ_KEYS.length - me.qdone;
   return me;
 }
 /* 판이 끝나면 한 번 · parts = 종목별 구성 요소 · 점수는 여기서 계산해 함께 보낸다 · 이 기기 최고는 oly2_best_<종목> */
@@ -10689,12 +10793,12 @@ function olySubmit(key, parts) {
   OLY.last = { key: key, score: score, best: score > Math.max(prev, svb), prev: Math.max(prev, svb) };
   var u = S.get("user", {}) || {};
   OLY.t = 0;
-  if (!BE.on || !u.empId || testEmp()) { mgStampCheck(null); return score; }   /* v4.16 테스트 계정은 서버에 쓰지 않는다(dry) · 순위판(olyPull)은 항상 실서버 값 · v4.63 스탬프는 이 기기 종목 수로 */
+  if (!BE.on || !u.empId || testEmp()) { mgStampCheck(null); qzStampCheck(null); return score; }   /* v4.16 테스트 계정은 서버에 쓰지 않는다(dry) · 순위판(olyPull)은 항상 실서버 값 · v4.63 스탬프는 이 기기 종목 수로 */
   var body = {};
   Object.keys(parts).forEach(function (k) { body[k] = k === "ql" || k === "tk" ? String(parts[k] || "") : Math.max(0, Math.round(Number(parts[k]) || 0)); });   /* v4.09 O/X 문항 기록·토큰은 문자열 */
   var gid = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);   /* v4.68 (QA 5) 판 번호 · 다시 보낼 때도 같은 값 · 새 서버는 같은 판을 한 줄만 쓴다(옛 서버는 읽지 않는다) */
   beCall({ action: "game_submit", emp: u.empId, name: u.name || "", game: key, v: "g5", parts: JSON.stringify(body), score: score, gid: gid }, function (r) {
-    if (r && r.ok) { if (OLY.board) OLY.board.me = r.me; else OLY.board = { me: r.me }; olyResMeFill(key); mgStampCheck(r.p4 || null); return; }   /* v4.63 세 번째 종목이면 서버가 적립해 알려 준다 · p4 가 없는 응답(새 규칙 전 서버)이면 이 기기 종목 수로 */
+    if (r && r.ok) { if (OLY.board) OLY.board.me = r.me; else OLY.board = { me: r.me }; olyResMeFill(key); mgStampCheck(r.p4 || null); qzStampCheck(r.qz || null); return; }   /* v4.63 세 번째 종목이면 서버가 적립해 알려 준다 · p4 가 없는 응답(새 규칙 전 서버)이면 이 기기 종목 수로 · v4.83 qz 도 같은 방식 */
     var why = r && r.reason;
     if (why === "ver") toast("앱이 새로 나왔어요 · 새로고침한 뒤 다시 해 주세요");
     else if (why === "mismatch") { toast("점수 규칙이 바뀌었어요 · 새로고침한 뒤 다시 해 주세요"); olyPull(true); }
@@ -10720,7 +10824,7 @@ function olyPendFlush() {
     OLY_PEND.busy = false;
     if (!r || beBusy(r)) return;
     S.set("oly_pend", olyPend().filter(function (y) { return !(y.t === x.t && y.key === x.key); }));
-    if (r.ok) { if (OLY.board) OLY.board.me = r.me; else OLY.board = { me: r.me }; mgStampCheck(r.p4 || null); }
+    if (r.ok) { if (OLY.board) OLY.board.me = r.me; else OLY.board = { me: r.me }; mgStampCheck(r.p4 || null); qzStampCheck(r.qz || null); }
     if (olyPend().length) setTimeout(olyPendFlush, 400);
   }, function () { OLY_PEND.busy = false; });
 }
@@ -10766,7 +10870,7 @@ function olyEvPos(key, v) {
 }
 /* 종합 한 줄 · 「종합 12위 · 동메달까지 1,150점」 · 자격 전이면 「종합 순위까지 2종목 · 테트리스 · 기억력」 */
 function olyOverallPos(me) {
-  if (me.left) return "종합 순위까지 " + me.left + "종목 · " + OLY_EVENTS.filter(function (e) { return !me.ev[e.key]; }).map(function (e) { return e.short; }).join(" · ");
+  if (me.left) return "종합 순위까지 " + me.left + "종목 · " + olyOvEvents().filter(function (e) { return !me.ev[e.key]; }).map(function (e) { return e.short; }).join(" · ");
   if (testEmp()) return "내 기록 · 테스트라 순위에 들어가지 않아요";   /* v4.16 테스트 계정은 서버에 쓰지 않아 순위 계산이 안 된다(가짜 순위 대신 안내) */
   if (!me.sv || !me.rank) return "";
   var t = olyPosText(me);
@@ -10821,16 +10925,22 @@ function olyResCmp(key) {
   return "내 최고 " + olyFmt(best) + "점";
 }
 /* 결과 셋째 줄 · AX 올림픽 진행 */
-function olyResOly() { var me = olyMe(); return "올림픽 " + me.done + "/" + OLY_EVENTS.length + "종목 · 총점 " + olyFmt(me.total) + "점"; }
-/* 결과 접힘 안 「내 위치」 · 종목 순위 · 종합(자격 전이면 남은 종목) · 서버 응답이 오면 다시 채운다 */
+/* v4.83 AX 퀴즈 = 「AX 퀴즈 n/2 완주」(순위 · 총점 없음) · 미니 게임 = 「미니 게임 n/3종목 · 총점」(옛 서버면 올림픽 n/5종목) */
+function olyResOly(key) {
+  var me = olyMe();
+  if (olyIsQuiz(key)) return "AX 퀴즈 " + me.qdone + "/" + OLY_QUIZ_KEYS.length + " 완주";
+  return (olyOvName() === "미니 게임" ? "미니 게임 " : "올림픽 ") + me.done + "/" + olyOvKeys().length + "종목 · 총점 " + olyFmt(me.total) + "점";
+}
+/* 결과 접힘 안 「내 위치」 · 종목 순위 · 종합(자격 전이면 남은 종목) · 서버 응답이 오면 다시 채운다 · v4.83 AX 퀴즈는 순위가 없어 빈칸 */
 function olyResMeHtml(key) {
-  var me = olyMe(), v = me.ev[key], left = OLY_EVENTS.filter(function (e) { return !me.ev[e.key]; }).map(function (e) { return e.short; }).join(" · ");
+  if (olyIsQuiz(key)) return "";
+  var me = olyMe(), v = me.ev[key], left = olyOvEvents().filter(function (e) { return !me.ev[e.key]; }).map(function (e) { return e.short; }).join(" · ");
   return rtFoldSec("내 위치", rtRefTable([["종목", v ? olyEvPos(key, v) : ""], me.left ? ["남은 종목", left] : ["종합", olyOverallPos(me)]]));
 }
 function olyResMeFill(key) {
   var d = el("olyResMe"); if (d) d.innerHTML = olyResMeHtml(key);
   var c = el("olyResCmp"); if (c) c.textContent = olyResCmp(key);
-  var t = el("olyResOly"); if (t) t.textContent = olyResOly();
+  var t = el("olyResOly"); if (t) t.textContent = olyResOly(key);
   var m = el("olyResLw"), v = olyMe().ev[key];
   if (m) m.innerHTML = v && v.medal ? olyLw(v.medal, 64) : "";
 }
@@ -10841,29 +10951,43 @@ function olyResultBody(o) {
   return '<div id="olyResLw" class="oly-res-lw">' + (v && v.medal ? olyLw(v.medal, 64) : "") + "</div>" +
     '<p class="gs-sc">' + olyFmt(o.score) + "<small>점</small></p>" + (o.deco || "") +
     '<p class="gs-l2" id="olyResCmp">' + esc(olyResCmp(o.key)) + "</p>" +
-    '<p class="gs-l3" id="olyResOly">' + esc(olyResOly()) + "</p>" +
+    '<p class="gs-l3" id="olyResOly">' + esc(olyResOly(o.key)) + "</p>" +
     rtFoldHtml("점수 계산 보기", rtFoldSec("점수 구성", olyBreakHtml(o.key, o.parts, o.score)) +
       rtFoldSec("참고 기록", rtRefTable(o.ref) + (o.extra || "")) +
       rtFoldSec("점수 규칙", '<p class="rt-fold-p">' + esc(gsRuleText(o.key)) + "</p>") +
       '<div id="olyResMe">' + olyResMeHtml(o.key) + "</div>");
 }
 /* ── 스탬프 탭 올림픽 허브 (§7.5) ── */
+/* v4.83 (261001) 미니 게임 허브 · 팡 · 점프 · 테트리스 세 행만(AX 퀴즈는 quizHubHtml · 화면 quiz) · 총점 = 종합 종목 합 */
 function olyHubHtml() {
   olyPull();
-  var me = olyMe(), op = olyOverallPos(me);
-  return stampLineHtml("p4", '<p class="ax-meta">서로 다른 ' + MG_NEED + "종목 · 종목마다 한 판</p>") +   /* v4.70 스탬프 조건 + 도장(n/3) */
-    '<section class="ax-card oly-sum"><div><p class="ax-meta">내 AX 올림픽 총점</p><p class="oly-sum-n">' + olyFmt(me.total) + "<small> / " + olyFmt(olyMax()) + "</small></p></div>" +
-    '<p class="ax-meta oly-sum-r">종목 ' + me.done + "/" + OLY_EVENTS.length + (op ? "<br>" + esc(op) : "") + "</p></section>" +
-    OLY_EVENTS.map(function (e) {
+  var me = olyMe(), op = olyOverallPos(me), nm = olyOvName();
+  return stampLineHtml("p4", '<p class="ax-meta">' + (stampV2() ? "팡 · 점프 · 테트리스 · 종목마다 한 판" : "서로 다른 " + MG_NEED + "종목 · 종목마다 한 판") + "</p>") +   /* v4.70 스탬프 조건 + 도장(n/3) */
+    '<section class="ax-card oly-sum"><div><p class="ax-meta">내 ' + nm + " 총점</p><p class=\"oly-sum-n\">" + olyFmt(me.total) + "<small> / " + olyFmt(olyMax()) + "</small></p></div>" +
+    '<p class="ax-meta oly-sum-r">종목 ' + me.done + "/" + olyOvKeys().length + (op ? "<br>" + esc(op) : "") + "</p></section>" +
+    olyKeysEvents(OLY_MINI_KEYS).map(function (e) {
       var v = me.ev[e.key], lw = v && v.medal ? olyLw(v.medal, 48) : "";
       return rcHtml({ cls: v ? " done" : "", onclick: "App.go('" + e.view + "')", link: true, left: lw ? '<span class="oly-lwbox">' + lw + "</span>" : tokBadge(e.short, v ? "mine" : ""),
         title: esc(e.name),
         sub: v ? "최고 " + olyFmt(v.best) + (me.sv && v.rank ? " · 종목 " + v.rank + "위" : "") : "",
         right: '<span class="st">' + (v ? olyFmt(v.best) : "-") + "</span>" });
     }).join("") +
-    '<button type="button" class="ax-button ax-button-weak oly-rank-go" onclick="App.go(\'oly_rank\')">AX 올림픽 순위판</button>' +
+    '<button type="button" class="ax-button ax-button-weak oly-rank-go" onclick="App.go(\'oly_rank\')">' + (nm === "미니 게임" ? "미니 게임 순위" : "AX 올림픽 순위판") + "</button>" +
     (testMode() ? '<button class="btn test" style="margin-top:8px" onclick="testGameReset(false)">테스트 · 게임 기록만 초기화</button>' +
       '<button class="btn test" style="margin-top:6px" onclick="testGameReset(true)">테스트 · 닉네임까지 초기화</button>' : "");
+}
+/* v4.83 (261001 사용자 수정) AX 퀴즈 · 게임 허브 밖의 별도 활동(1층 부스 내용을 배우는 퀴즈) · O/X · 기억력 두 행 · 순위판 · 총점 없음 · 내 최고와 완주만
+   스탬프 2(qz) 는 두 종목 모두 한 판 · 옛 서버(stv 없음)에는 qz 스탬프가 없어 도장 줄을 그리지 않는다 */
+function quizHubHtml() {
+  olyPull();
+  var me = olyMe();
+  return (stampV2() ? stampLineHtml("qz", '<p class="ax-meta">O/X · 기억력 · 종목마다 한 판</p>') : "") +
+    olyKeysEvents(OLY_QUIZ_KEYS).map(function (e) {
+      var v = me.ev[e.key];
+      return rcHtml({ cls: v ? " done" : "", onclick: "App.go('" + e.view + "')", link: true, left: rcIcon(STAMP_ICONS.qz),
+        title: esc(e.name), sub: v ? "완주 · 내 최고 " + olyFmt(v.best) : "", right: '<span class="st">' + (v ? "완주" : "") + "</span>" });
+    }).join("") +
+    '<p class="ax-meta">순위 없음 · 내 최고 기록만</p>';
 }
 /* v4.16 (사용자 확정 260922) 가짜 참가자 목업(OLY_FAKE·olyTestBoard·olyPosOf) 삭제 · 관리자·테스트 계정도 실서버 oly_board 를 읽는다 */
 /* ── 순위판 조각 (§7.3) ── */
@@ -10885,8 +11009,8 @@ function olyRowHtml(x, val, sub, big, me) {
 /* 순위판 화면 (oly_rank) · 종합 = 포디움 2-1-3 + 4~10위 + 내 줄 · 종목별 = 1~3위 72px 행 + 4~10위 + 내 줄 */
 function olyRankHtml() {
   olyPull();
-  var b = OLY.board, tab = S.get("oly_tab", "all") === "event" ? "event" : "all", evk = S.get("oly_ev", OLY_EVENTS[0].key), me = olyMe(), nick = typeNick() || "나";
-  if (!olyEv(evk)) evk = OLY_EVENTS[0].key;
+  var b = OLY.board, tab = S.get("oly_tab", "all") === "event" ? "event" : "all", evk = S.get("oly_ev", OLY_EVENTS[0].key), me = olyMe(), nick = typeNick() || "나", OVE = olyOvEvents();
+  if (!OVE.some(function (e) { return e.key === evk; })) evk = OVE[0].key;   /* v4.83 퀴즈 종목은 순위판 칩이 없다 */
   var seg = '<div class="axs-seg" role="tablist" aria-label="순위 구분">' + [["all", "종합"], ["event", "종목별"]].map(function (t) {
     return '<button type="button" role="tab" aria-selected="' + (tab === t[0]) + '" onclick="S.set(\'oly_tab\', \'' + t[0] + '\'); App.render()">' + t[1] + "</button>";
   }).join("") + "</div>";
@@ -10895,7 +11019,7 @@ function olyRankHtml() {
   var at = b.t ? String(b.t).slice(11, 16) : "";
   if (tab === "event") {
     var ev = olyEv(evk), mv = me.ev[evk], list = (b.perEvent && b.perEvent[evk]) || [];
-    h += '<div class="axs-chiprow" role="group" aria-label="종목">' + OLY_EVENTS.map(function (e) {
+    h += '<div class="axs-chiprow" role="group" aria-label="종목">' + OVE.map(function (e) {
       return '<button type="button" class="axs-chip" aria-pressed="' + (e.key === evk) + '" onclick="S.set(\'oly_ev\', \'' + e.key + '\'); App.render()">' + esc(e.short) + "</button>";
     }).join("") + "</div>";
     var mine = function (x) { return x.me || (me.sv && mv && mv.rank && x.rank === mv.rank); };
@@ -10911,8 +11035,8 @@ function olyRankHtml() {
     var rest = ov.slice(3).map(function (x) { return olyRowHtml(x, olyFmt(x.total), "", false, isMe(x)); }).join("");
     if (me.sv && me.rank > ov.length) rest += '<div class="oly-gap"></div>' + olyRowHtml({ rank: me.rank, name: nick + " (나)" }, olyFmt(me.total), "", false, true);
     var op = olyOverallPos(me);
-    h += '<section class="ax-card oly-card"><div class="ax-stack-tight"><h2 class="ax-section-title">종합 순위</h2><p class="ax-description">다섯 종목 최고 점수 합계' + (at ? " · " + at + " 기준" : "") + " · " + olyFmt(olyMax()) + "점 만점</p></div>" +
-      (ov.length ? olyPodiumHtml(top) + '<div class="oly-list">' + rest + "</div>" : '<p class="ax-description">아직 다섯 종목을 모두 한 사람이 없어요</p>') +
+    h += '<section class="ax-card oly-card"><div class="ax-stack-tight"><h2 class="ax-section-title">종합 순위</h2><p class="ax-description">' + olyOvSum() + " 최고 점수 합계" + (at ? " · " + at + " 기준" : "") + " · " + olyFmt(olyMax()) + "점 만점</p></div>" +
+      (ov.length ? olyPodiumHtml(top) + '<div class="oly-list">' + rest + "</div>" : '<p class="ax-description">아직 ' + (OVE.length === 3 ? "세" : "다섯") + " 종목을 모두 한 사람이 없어요</p>") +
       '<p class="oly-pos">' + (op ? esc(op) : me.done ? "내 총점 " + olyFmt(me.total) : "한 판 하면 순위에 올라가요") + "</p></section>";
   }
   return h + '<p class="ax-meta">명예 순위 · 경품 없음 · Outro에서 종합 1~3위 호명</p></div>';
@@ -10928,8 +11052,8 @@ function olyTvPodium() {
   return '<div class="tvp-wrap"><div class="tvp-stage">' + slot(ov[1], 2) + slot(ov[0], 1) + slot(ov[2], 3) + '</div><div class="tytv-list tvp-rest">' + rest + "</div></div>";
 }
 function olyTvEvents() {
-  var pe = (OLY.board && OLY.board.perEvent) || {};
-  return '<div class="tve-grid">' + OLY_EVENTS.map(function (e) {
+  var pe = (OLY.board && OLY.board.perEvent) || {}, ev = olyOvEvents();   /* v4.83 종목별 = 미니 게임 세 종목(퀴즈 순위 없음) */
+  return '<div class="tve-grid' + (ev.length === 3 ? " n3" : "") + '">' + ev.map(function (e) {
     var l = pe[e.key] || [];
     return '<div class="tve"><p class="tve-h">' + esc(e.name) + "</p>" + [0, 1, 2].map(function (i) {
       var x = l[i];
@@ -11779,8 +11903,9 @@ function gsStartHtml(key, o) {
       o.previewId ? '<div class="rg-wrap gs-demo-host' + (o.flat ? " flat" : "") + '" aria-hidden="true"><canvas id="' + o.previewId + '" width="' + o.pw + '" height="' + o.ph + '"></canvas>' + GS_DEMO_TAG + "</div>" : "") +
     '<div class="gs-info">' + (o.sub ? '<p class="gs-sub">' + esc(o.sub) + "</p>" : "") + '<p class="gs-ctl">' + esc(g.line) + "</p>" +   /* v4.12 부제(AI O/X · 유리다리 건너기) */   /* 조작 한 줄 · 첫 안내 말풍선과 같은 문구 · 3판 제한 없이 항상 보인다 */
     (best > 0 ? '<p class="gs-best">내 최고 ' + (key === "type" ? typeSec(best) + " 생존" : olyFmt(best) + "점") + "</p>" : "") + "</div></section>" +
+    (olyIsQuiz(key) ? '<div class="gs-links">' + sndBtnHtml(false) + "</div>" :   /* v4.83 AX 퀴즈 = 닉네임 · 순위판 링크 없음 */
     '<div class="gs-links"><span>닉네임 <b>' + esc(nick) + '</b></span><button type="button" class="gs-edit" onclick="S.set(\'type_nick_edit\', true); App.render()">변경</button>' +
-    '<span aria-hidden="true">·</span><button type="button" class="gs-edit" onclick="' + gsRankGo(key) + '">순위판</button>' + sndBtnHtml(false) + "</div>" +
+    '<span aria-hidden="true">·</span><button type="button" class="gs-edit" onclick="' + gsRankGo(key) + '">순위판</button>' + sndBtnHtml(false) + "</div>") +
     '<div class="ax-bottom axs-fix"><button type="button" class="ax-button rt-btn" id="gsGo" aria-label="게임 시작하기" onclick="gsBegin(\'' + key + '\')">▶ START</button></div></div>';   /* v4.23 오락실 버튼 · 읽기 프로그램에는 「게임 시작하기」 */
 }
 /* ── v4.11 시작 화면 미리보기 · 게임의 실제 그리기 함수(판·장애물·블록·타일·문제 카드)로 짧은 데모를 반복한다 ──
@@ -11941,11 +12066,13 @@ function gsResultHtml(key, r) {
   /* v4.08 AX-TDS 4단계 · 결과 = 카드(점수 · 구성 표 · 내 위치) + 아래 버튼 줄(주 1 + 약한 2)
      v4.23 카드 = 공용 GAME OVER 패널(rtGoHtml) · 버튼 = 오락실 버튼 · 아래 카드(AI 상식 · 라운드 · 틀린 문제)는 밝은 나무 틀(rt-extra)
      v4.28 (사용자 260924 「점수가 왜 이렇게 산정됐는지가 너무 구구절절」) 보이는 것 = 세 줄(점수 · 내 최고 비교 · AX 올림픽 진행) · 나머지는 「점수 계산 보기」 접힘 */
-  return rtGoHtml({ title: r.title || (r.why === "done" ? "CLEAR" : r.why === "time" ? "TIME UP" : "GAME OVER"), sub: g.name + " · " + (typeNick() || "익명 참가자"), line: r.line || "",
+  var qzR = olyIsQuiz(key);   /* v4.83 AX 퀴즈 = 순위판 없음 · 닉네임 없음 · 두 번째 버튼은 AX 퀴즈 목록 */
+  return rtGoHtml({ title: r.title || (r.why === "done" ? "CLEAR" : r.why === "time" ? "TIME UP" : "GAME OVER"), sub: qzR ? g.name : g.name + " · " + (typeNick() || "익명 참가자"), line: r.line || "",
       body: r.oly ? olyResultBody(r.oly) : gsPlainBody(key, r) }) +
     (r.banner ? '<div class="rt-extra">' + r.banner + "</div>" : "") +
     '<div class="ax-stack-tight gs-res-go"><button type="button" class="ax-button rt-btn" onclick="' + g.start + '">다시 하기</button>' +
-    '<button type="button" class="ax-button ax-button-weak rt-btn weak" onclick="' + gsRankGo(key) + '">순위판 보기</button>' +
+    (qzR ? '<button type="button" class="ax-button ax-button-weak rt-btn weak" onclick="App.go(\'quiz\')">AX 퀴즈 보기</button>' :
+      '<button type="button" class="ax-button ax-button-weak rt-btn weak" onclick="' + gsRankGo(key) + '">순위판 보기</button>') +
     '<button type="button" class="ax-button ax-button-weak rt-btn weak" onclick="App.go(\'passport\')">스탬프 보기</button></div>';
 }
 /* v4.28 결과 접힘 조각 · 여섯 곳(다섯 게임 + 단어 소나기 앱 솔로 · 1F 현장)이 같이 쓴다 · 「점수에는 들어가지 않아요」 같은 설명 문장 대신 제목 줄(점수 구성 · 참고 기록 · 점수 규칙 · 내 위치)로 나눈다 */
@@ -12373,9 +12500,9 @@ function pgFinDraw(ctx, now) {
   ctx.globalAlpha = line(1);
   pgText(ctx, "ME to WE", PG_W / 2, PG_OY + 58, 26, 900, PG_C.o100, "center");
   ctx.globalAlpha = line(2);
-  pgText(ctx, "나의 업무 혁신,", PG_W / 2, PG_OY + 84, 11, 800, PG_C.tx, "center");
+  pgText(ctx, "나의 경험을", PG_W / 2, PG_OY + 84, 11, 800, PG_C.tx, "center");   /* v4.83 슬로건 부제 「나의 경험을 우리의 가능성으로」(261001 확정) */
   ctx.globalAlpha = line(3);
-  pgText(ctx, "우리 회사의 AX가 되다", PG_W / 2, PG_OY + 100, 11, 800, PG_C.tx, "center");
+  pgText(ctx, "우리의 가능성으로", PG_W / 2, PG_OY + 100, 11, 800, PG_C.tx, "center");
   ctx.globalAlpha = line(4);
   pgText(ctx, (PG.fin / 100).toFixed(1) + "초", PG_W / 2, PG_OY + 132, 26, 900, PG_C.o100, "center");
   pgText(ctx, "완주 = " + olyFmt(PG.sc) + "점", PG_W / 2, PG_OY + 150, 9, 700, PG_C.muted, "center");
@@ -14714,7 +14841,8 @@ function xitionRun(switchNow) {
     /* 서버 sync 가 시드를 덮어 화면마다 스탬프 수가 달라졌다. 데모는 결정적이어야 한다 */
     GAS_URL = ""; BE.on = false;
     S.set("user", { empId: "1234", name: "박형동" });
-    S.set("stamps", ["p1", "p4", "p7"]);   /* 3/6 = 룰렛 열림 · p7은 아래 wq 통과 시드와 정합 */
+    stampVerSet(2);
+    S.set("stamps", ["lg", "qz", "p4"]);   /* 3/6 = 룰렛 열림 · v4.83 새 8종(최초 로그인 · AX 퀴즈 · 미니 게임) */
     S.set("roulette_open", true);
     /* v3.40 · 캡처(&cap)만 결정적 고정 시드 · 일반 데모는 테스트 오버레이(test_mine)가 내 일정을 채운다 */
     if (/cap/.test(location.hash)) {
