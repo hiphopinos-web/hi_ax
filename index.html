@@ -2425,6 +2425,13 @@ var TIMELINE = [
   { off: 1, time: "16:45", end: "17:00", title: "설문 참여 안내", short: "오늘 한 판 설문 안내", place: "17F 대강당", desc: "60초 설문 · 스탬프 1개", tag: "자유 참석" },
   { time: "17:00", end: "17:30", title: "Outro · DAP 시상", short: "DAP 우수 성과자 시상 · 경품 추첨", place: "17F 대강당", desc: "DAP 우수 성과자 시상 · 경품 현장 추첨 · 16:40부터 입구 QR 체크인", tag: "피날레" }   /* v4.79 무대 추첨 = 추첨 QR 체크인한 사람 */
 ];
+/* v4.91 (사용자 261001 「A~E 사전 신청 세션이 여기에 있을 이유가 있을까」 · main 결정) 10F 실습형 세션 A~E 줄은 「전체」 시간표 · 홈 「진행 중」 · 다음 일정에서 숨긴다
+   현장참여자는 신청도 입장도 못 해 「나도 갈 수 있나」 혼동만 준다 · 사전신청자에게 필요한 것은 내 세션 하나(3묶음: 명단 업로드 → 나의 일정에 내 세션 카드 · tenMineCard)
+   코드(TIMELINE 항목 · tenListHtml · 세션 상세)는 남긴다 · TEN_ALL = true 면 예전처럼 보인다 */
+var TEN_ALL = false;
+TIMELINE.forEach(function (t) { if (t.title === "10F 실습형 세션 A~E" && !TEN_ALL) t.off = 1; });
+/* 3묶음 훅 자리 · 사전신청자로 확인된 사람의 「나의 일정」 맨 위에 내 세션 카드 한 장(장소 · 시간) · 지금은 빈 값 */
+function tenMineCard() { return ""; }
 /* v4.84 지금 줄 = 기기 시각 · 옛 NOW_INDEX(데모 고정 1 = 기조연설)는 행사 당일에도 기조연설에 머물렀다(시안 2 와 달랐다)
    시간 칸 안이면 그 줄 · 사이 시간이면 다음 줄 · 마지막이 끝난 뒤면 마지막 줄 · 시간 미정(always) · 숨김(off) 줄은 건너뛴다 */
 function hmNow() { var d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
@@ -4497,7 +4504,7 @@ var App = {
     /* v4.06 3단계 · 현장 안내 E02 · 스캔 Q02 · 결과 Q03 · 계단 화면 */
     exp_g: "exp", scan_q: "exp", scan_res: "exp", stair: "exp",
     games: "exp", quiz: "exp", ideas: "exp", survey: "exp", ideas_mine: "ideas",
-    game_word: "quiz", game_type: "games", game_tetris: "games", game_pang: "games", game_jump: "games", game_ox: "quiz", oly_rank: "games", type_rank: "exp", floor1: "guide",   /* v4.83 퀴즈 두 종목의 뒤로가기 = AX 퀴즈 */
+    game_word: "quiz", game_type: "games", game_tetris: "games", game_pang: "games", game_jump: "games", game_ox: "quiz", oly_rank: "games", type_rank: "guide", floor1: "guide",   /* v4.83 퀴즈 두 종목의 뒤로가기 = AX 퀴즈 */
     art: "home", art_rank: "art", screen_art: "admin",   /* v4.01 AI 사생대회 폐기 · 진입은 막혀 있다 */
     /* 프로그램 · 신청 (2단계에서 재디자인) */
     dap: "guide", ev_cchat: "guide", sess_d: "guide", sess_cf: "sess_d", sess_ok: "guide",
@@ -4985,9 +4992,11 @@ function progTTMineChip(pid) {
   if (pid === "dap") { var r = myResv(); return (r && RESV_ST[r.status]) || "신청함"; }
   return "신청함";
 }
+/* v4.91 (사용자 261001 「아코디언을 펼치고 가는 것보다 자세히 보기로 한 번에」) 줄을 누르면 바로 그 상세로 · 이동 표시 = 오른쪽 셰브론(CHEV_SVG)
+   갈 곳이 없는 줄(Intro · Outro)은 누를 수 없고, 펼침에만 있던 한 줄(누가 · 무엇 · 체크인)을 제목 아래에 둔다 */
 function progTTRow(k, o) {
-  return rcHtml({ cls: o.cls, onclick: "progTTOpen('" + k + "')", left: tokBadge(o.t0, o.tok, o.t1 ? "~" + o.t1 : null),
-    title: esc(o.title) + (o.mine ? '<span class="ax-sr-only"> · 내 일정</span>' : ""), badges: o.badge || "", open: !!PROG.ttOpen[k], body: o.body, chev: "svg" });
+  return rcHtml({ cls: o.cls + (o.go ? "" : " na"), onclick: o.go || "", link: !!o.go, chev: o.go ? undefined : false, left: tokBadge(o.t0, o.tok, o.t1 ? "~" + o.t1 : null),
+    title: esc(o.title) + (o.mine ? '<span class="ax-sr-only"> · 내 일정</span>' : ""), badges: o.badge || "", sub: o.sub ? esc(o.sub) : "" });
 }
 function progTTBody(desc, kv, go, lbl) {
   return '<div class="axs-ttb">' + (desc ? '<p class="ax-description">' + esc(desc) + "</p>" : "") +
@@ -5008,7 +5017,7 @@ function progTTAllHtml() {
     if (t.always || t.off) return;
     rows.push({ k: "t" + i, t: t, pid: TL_PROG[t.title] || "", now: ph === "live" && hmN >= t2m(t.time) && hmN < t2m(t.end), past: ph === "after" || (ph === "live" && hmN >= t2m(t.end)) });   /* v4.84 기기 시각 · 오후 동시 진행 줄은 둘 다 진행 중 */
   });
-  /* v4.84 (앱 개편 2묶음) 상담 · 커피챗은 시간표 아래 「시간 상관없이」 메뉴로 옮겼다 · 시간표에는 내 상담 시각 · 매칭된 커피챗 회차만 */
+  /* v4.84 (앱 개편 2묶음) 상담 · 커피챗은 시간표 아래 「상시 운영」 메뉴로 옮겼다 · 시간표에는 내 상담 시각 · 매칭된 커피챗 회차만 */
   TL_SPAN.forEach(function (t, i) {   /* v4.16 (사용자 지적 260922) 신청한 DAP 상담은 운영 시간 대신 내 상담 시각에 놓는다 */
     var r = t.pid === "dap" && progTTMine(t.pid) ? myResv() : null, c = t.pid === "cchat" ? S.get("cchat", null) : null;
     if (r && r.slot) {
@@ -5027,12 +5036,10 @@ function progTTAllHtml() {
     var tag = mine || r.now || r.past ? "" : ten ? "사전 신청자" : /^17F/.test(t.place || "") ? "자유 참석" : "";   /* v4.84 닫힌 행 오른쪽 옅은 딱지(시안 2) */
     var dur = t.time && !r.span ? " · " + (t2m(t.end) - t2m(t.time)) + "분" : "";
     return progTTRow(r.k, {
-      t0: t.time || "미정", t1: t.time ? t.end : "", title: t.title, mine: mine,
+      t0: t.time || "미정", t1: t.time ? t.end : "", title: t.title, mine: mine, go: go, sub: go ? "" : (t.desc || t.short || ""),
       cls: (mine ? " my" : r.past ? " past" : "") + (r.now ? " now" : ""),
       tok: r.now ? (nowAct ? "act" : "") : mine ? "mine" : r.past ? "dim" : "",
-      badge: r.now ? '<span class="axs-chip">진행 중</span>' : mine ? '<span class="axs-chip">' + esc(progTTMineChip(pid)) + "</span>" : tag ? '<span class="axs-ttag">' + tag + "</span>" : "",
-      body: progTTBody(t.short || t.desc, [["시간", t.time ? t.time + " – " + t.end + dur : "시간 미정"], ["장소", t.place], ["참여", mine ? progTTMineLbl(pid) : t.tag]],
-        go, f1 ? "1F 부스 6구역 보기" : "자세히 보기") + (ten ? tenListHtml() : "")
+      badge: r.now ? '<span class="axs-chip">진행 중</span>' : mine ? '<span class="axs-chip">' + esc(progTTMineChip(pid)) + "</span>" : tag ? '<span class="axs-ttag">' + tag + "</span>" : ""
     });
   };
   var sec = function (nm, rs) {
@@ -5052,15 +5059,14 @@ function progTTMineHtml(items) {
       '<button type="button" class="ax-button ax-button-weak" onclick="progAppGo()">신청할 수 있는 프로그램 보기</button></div>';
   }
   var callAct = isBlack("call");
-  return '<section class="axs-ttsec"><div class="ax-row"><h2 class="ax-section-title">10월 26일 · ' + items.length + "개</h2></div>" +
+  return tenMineCard() + '<section class="axs-ttsec"><div class="ax-row"><h2 class="ax-section-title">10월 26일 · ' + items.length + "개</h2></div>" +
     items.map(function (x, j) {
       var call = !!x.call, t0 = x.min < 0 ? "지금" : x.iv ? hm2(x.iv[0]) : x.label, t1 = x.min >= 0 && x.iv ? hm2(x.iv[1]) : "";
       var wait = x.photo || x.kind.indexOf("queue:") === 0;
       var chip = call ? "입장 차례" : wait ? "대기 " + x.badge : x.kind === "cchat" ? "매칭됨" : x.kind === "resv" ? progTTMineChip("dap") : "신청함";   /* v4.16 닫힌 행 상태 칩 · DAP 은 승인 단계까지 보여준다(전체 탭과 통일) */
       return progTTRow("m" + j, {
-        t0: t0, t1: t1, title: x.gTitle, cls: " my" + (call ? " now" : ""), tok: call && callAct ? "act" : "mine",
-        badge: '<span class="axs-chip">' + esc(chip) + "</span>",
-        body: progTTBody(x.gSub, [["장소", x.place || ""]], x.go, wait ? "대기 상세 보기" : x.kind === "stair" ? "계단 안내 보기" : "자세히 보기")
+        t0: t0, t1: t1, title: x.gTitle, cls: " my" + (call ? " now" : ""), tok: call && callAct ? "act" : "mine", go: x.go || "", sub: x.go ? "" : (x.gSub || ""),
+        badge: '<span class="axs-chip">' + esc(chip) + "</span>"
       });
     }).join("") + '<p class="ax-meta">신청 취소는 신청 상세에서 할 수 있어요</p></section>';
 }
@@ -5073,14 +5079,15 @@ function tenListHtml() {
       '<span class="ax-meta">' + esc(s.sub) + "</span><span class=\"ax-meta\">" + esc(progTm(s.tm) + " · " + sessPlace(s) + (s.capNote ? " · " + s.capNote : "")) + "</span></span>" + CHEV_SVG + "</button>";
   }).join("") + "</div>";
 }
-/* 「시간 상관없이」 메뉴 · 행 = 이름 · 층 + 지금 상태 한 줄 · 오른쪽 행동 하나 */
+/* 「상시 운영」 메뉴 · 행 = 이름 · 층 + 지금 상태 한 줄 · 오른쪽 행동 하나 */
 function progMenuHtml() {
   var r = myResv(), rLive = r && RESV_HOLD.indexOf(r.status) >= 0, c = S.get("cchat", null), pq = photoQ(), pqOn = pq && (pq.status === "wait" || pq.status === "call");
   var dapSub = rLive ? (RESV_ST[r.status] || "신청 완료") + " · " + r.slot : resvRemain() > 0 ? "남은 시간 " + resvRemain() + "개" : "마감";
   var ccSub = S.get("cchat_att", false) ? "참석 완료" : c ? (c.status === "matched" ? "매칭 완료 · " + c.round : "매칭 대기") : cchatClosed() ? "마감" : ideaMineN() ? "아이디어 제출 완료" : "아이디어 제출 후 신청";
   var pqSub = pqOn ? (pq.status === "call" ? "입장 차례 · " + pq.no + "번" : "대기 " + pq.no + "번 · 앞 " + (pq.ahead || 0) + "팀") : "지금 대기 " + (photoPub().waiting || 0) + "팀";
-  return '<section class="axs-ttsec" id="pmenu"><div class="ax-row"><h2 class="ax-section-title">시간 상관없이</h2></div><div class="axs-list">' +
+  return '<section class="axs-ttsec" id="pmenu"><div class="ax-row"><h2 class="ax-section-title">상시 운영</h2></div><div class="axs-list">' +
     axDest("1F 부스 6구역", "AX VISION · LAB · in Action · LOUNGE · PLAY · EVENT", "보기", "App.go('floor1')") +
+    axDest("1F 타자왕 · 실시간 순위", "1F EVENT", "보기", "typeSiteRankGo()") +   /* v4.91 (사용자 261001) 스탬프 탭에서 옮김 · EVENT 구역 이벤트라 1F 부스 바로 아래 */
     axDest("AX LOUNGE 상담", "1F · " + esc(dapSub), rLive ? "내 신청" : resvRemain() > 0 ? "신청" : "보기", "progOpen('dap')") +
     axDest("AX 커피챗", "18F · " + esc(ccSub), c ? "내 신청" : "신청", "progOpen('cchat')") +
     axDest("AI 포토부스", "1F · " + esc(pqSub), pqOn ? "내 번호" : "대기 접수", "App.go('photoq')") +
@@ -5141,7 +5148,7 @@ var PROG_APPLY = ["dap", "cchat", "photo"];
 function progPass(s) { var cat = PROG.cat || "all"; return (cat === "all" || PROG_CAT[s.id] === cat) && (!PROG.open || PROG_APPLY.indexOf(s.id) >= 0); }
 function progOpenOnly() { PROG.open = !PROG.open; App.render(); }
 /* 내 일정의 두 버튼 · 프로그램 [목록] + 「신청 가능」 켠 상태 */
-function progAppGo() {   /* v4.84 목록 보기 폐지 · 시간표 [전체] 아래 「시간 상관없이」 메뉴로 */
+function progAppGo() {   /* v4.84 목록 보기 폐지 · 시간표 [전체] 아래 「상시 운영」 메뉴로 */
   PROG.tt = "all"; PROG.scroll = 0; App.tab("guide");
   setTimeout(function () { var m = el("pmenu"); if (m) m.scrollIntoView({ block: "start" }); }, 60);
 }
@@ -6735,9 +6742,7 @@ var Views = {
       '<section class="axs-sec">' + railHtml(n, glow, null, false) + "</section>" +
       '<section class="axs-sec"><div class="sect"><b>스탬프 ' + STAMPS.length + "종</b><span>" + (full ? STAMP_DENOM + "개 모두 모았어요" : STAMP_DENOM + "개까지 인정") + "</span></div>" +
       '<div class="axs-stps">' + STAMPS.map(function (s, i) { return stpRowHtml(s, i, st, full); }).join("") + "</div>" +
-      scanQNote() + '<p class="lnk sub" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</p></section>" +
-      '<section class="axs-sec"><div class="sect"><b>구경하고 겨루기</b><span>스탬프 없음</span></div>' +
-      axDest("1F 타자왕", "1F EVENT · 현장 순위", "보기", "typeSiteRankGo()") + "</section></div>";
+      scanQNote() + '<p class="lnk sub" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</p></section></div>";   /* v4.91 1F 타자왕(스탬프 아님)은 프로그램 탭 「상시 운영」로 옮겼다 */
   },
   /* v4.84 옛 「현장에서 / 앱에서」 체험 화면은 지웠다 · 아래 exp_g(체험 안내) · 스캔 · 결과 · 계단은 그대로 */
 
@@ -6976,7 +6981,7 @@ var Views = {
      행 = 제목 → 설명 → 일시·장소 → 상태 · 행을 누르면 상세(P02) · 돌아오면 필터와 스크롤을 그대로(PROG.cat · PROG.scroll).
      혼잡도는 이 탭에 넣지 않는다 · 층별 혼잡도는 홈 맨 아래 스트립(v4.62 · 260929 복원). 포토부스·부스·퀴즈는 체험 탭 몫. */
   /* v4.13 두 층(사용자 결정 260922 · design.md A-5 5-10) · 1층 세그먼트 [목록 | 시간표](체험 탭과 같은 axs-seg) · 2층 분류 칩(두 보기 공통) · 시간표 = 옛 P05(guide_time 전체) */
-  /* v4.84 (261001 사용자 지시 · 앱 개편 2묶음 · 기획안 5-3) 목록 보기 · 분류 칩 · 「신청 가능」 칩 삭제 · 탭 = 시간표 [전체 | 나의 일정] 하나 + 그 아래 「시간 상관없이」 메뉴
+  /* v4.84 (261001 사용자 지시 · 앱 개편 2묶음 · 기획안 5-3) 목록 보기 · 분류 칩 · 「신청 가능」 칩 삭제 · 탭 = 시간표 [전체 | 나의 일정] 하나 + 그 아래 「상시 운영」 메뉴
      (1F 부스 6구역 · AX LOUNGE 상담 · AX 커피챗 · AI 포토부스) · 260922 v4.13 두 층(목록 | 시간표)을 뒤집었다 */
   guide: function () {
     return '<div class="ax-stack">' + progTimeHtml() + (PROG.tt === "mine" ? "" : progMenuHtml()) + "</div>";
@@ -7068,7 +7073,7 @@ var Views = {
       (testMode() && !got2 ? '<button type="button" class="ax-button ax-button-weak" onclick="boothStamp()">완료 처리 (시연 · 테스트 모드)</button>' : "") +
       "</div>" + ax2Btn(got2 ? "스탬프 확인하기" : "내 QR 보여주기", got2 ? "expStamp('p2')" : "qrPanelOpen('mine')");
   },
-  /* v4.84 1F 부스 6구역(프로그램 탭 「시간 상관없이」 · 시간표 점심 행) */
+  /* v4.84 1F 부스 6구역(프로그램 탭 「상시 운영」 · 시간표 점심 행) */
   floor1: function () { return floor1Html(); },
 
   /* ── v10 【신규 B】 DAP Wall QR 퀴즈 ── */
