@@ -85,7 +85,7 @@
   /* 키가 낮은 폰(375×667 큰글씨 등) · 간격을 16 으로 줄여 입력칸 3개와 주 버튼이 한 화면에 */
   @media (max-height: 720px) { #entryForm .axs-login-main { gap: var(--ax-space-16); } #entryForm .axs-login-main .lgx-band { margin-bottom: var(--ax-space-8); } }
   .lgx-band canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-  #lgx { position: fixed; inset: 0; z-index: 390; overflow: hidden; touch-action: none; }
+  #lgx { position: fixed; inset: 0; z-index: 390; overflow: hidden; touch-action: none; contain: strict; }   /* v4.90 장면 안 배치가 바깥(로그인 · 앱) 배치 계산을 다시 부르지 않게 */
   #lgx > canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   #lgx .lgx-skip { position: absolute; z-index: 2; top: calc(env(safe-area-inset-top) + var(--ax-space-8)); right: max(var(--ax-space-8), calc((100vw - var(--ax-app-max, 480px)) / 2 + var(--ax-space-8))); min-height: 48px; padding: 0 var(--ax-space-16); border: 0; border-radius: var(--ax-radius-999, 999px); background: rgba(255, 255, 255, 0.92); color: var(--ax-color-ink); font: var(--ax-type-t6-strong); cursor: pointer; }
   #lgx .lgx-lock { position: absolute; z-index: 1; left: 50%; transform: translateX(-50%); width: min(100%, var(--ax-app-max, 480px)); padding: 0 var(--ax-space-24); text-align: center; color: var(--ax-color-brand, #FF7F32); opacity: 0; pointer-events: none; }   /* 흰 무대 위 브랜드 문구 = Vibrant Orange · 두 줄 모두 20px 이상 600 이상(design.md §3 크기 조건) */
@@ -4634,6 +4634,7 @@ var App = {
   render: function () {
     if (typeof qrGated === "function" && qrGated()) { qrGateDefer("render"); return; }   /* v4.13 인식 화면(정지 프레임)을 지운 채 다시 그리지 않는다 */
     RENDER_HELD = false;   /* v4.25 보류해 둔 그리기는 이번 그리기로 끝 */
+    if (typeof LGX !== "undefined" && LGX.cur) { RENDER_HELD = true; return; }   /* v4.90 최초 로그인 장면 중에는 뒤 화면을 그리지 않는다(저장 · 동기화마다 그리던 무게가 장면을 끊었다) · 장면이 닫힐 때 그린다 */
     if (typeof wsRoleCheck === "function") wsRoleCheck();   /* v4.76 관리자 코드 확인 · 잠금 뒤 방 다시 고르기(같으면 아무 일도 안 한다) */
     var v = this.current;
     var tb = el("topbar"), par = this.parentOf(v);
@@ -15075,26 +15076,32 @@ function xitionRun(switchNow) {
    거울: M 을 위아래로 뒤집으면 W 다. 소문자 e 는 뒤집으면 e 가 아니므로 수면에는 원본 「We」 줄이 바로 선 채 비친다(마법 거울 · A안).
    B안(대문자 ME/WE 덩어리 → to 가 들어오며 원본 글자꼴로 변형)은 시안 비교용으로 남긴다(LGX.mode · 앱 기본 A).
    글자(부제)는 움직이지 않는다(투명도만). 움직이는 것은 점뿐이다(design.md §4). 점 3층 크기 비(38:18:8) · 보라 핵 물결은 원본 엔진과 같다. */
-var LGX = { cur: null, mode: "A", T: {
-  exp: 0.5,          /* 띠 → 화면 전체 */
-  ringIn: 0.42,      /* 동료 점 날아들기 시작 */
-  spin: 0.92,        /* 원 회전 시작 */
-  burst: 1.36,       /* 원이 터져 Me 로 */
-  drop: 2.0,         /* 떨어지기 시작 */
-  hit: 2.24,         /* 수평선에 닿음 · 반사 시작 */
-  to: 3.4,           /* 반듯한 거울 장면(약 0.6초 머묾) 뒤 · to 가 끼어든다 */
-  land: 4.36,        /* 원본 심볼에 안착(기울기까지) */
-  end: 5.0,          /* 로고 장면(약 0.65초 머묾 · 부제 함께) 뒤 · 시트 */
-  fly: 5.24,         /* 나의 점이 도장 칸으로(시트가 올라와 로고가 자리를 잡은 뒤) */
-  stamp: 5.66        /* 도장 */
+var LGX = { cur: null, mode: "A", T: {   /* v4.90 (사용자 261001 「6초에 쫓겨 부드럽지 못하다 · 여유 있게 · 말랑말랑」) 도장까지 약 8.4초 · 박자마다 숨 · 스프링 도착 */
+  exp: 0.7,          /* 띠 → 화면 전체 */
+  ringIn: 0.6,       /* 동료 점 날아들기 시작(1.3초에 걸쳐 차례로) */
+  spin: 1.7,         /* 원 회전 시작 */
+  burst: 2.4,        /* 원이 터져 Me 로(약 1초에 걸쳐 모임) */
+  drop: 3.55,        /* 떨어지기 시작 */
+  hit: 3.85,         /* 수평선에 닿음 · 반사 시작 */
+  to: 5.45,          /* 반듯한 거울 장면(약 0.9초 머묾) 뒤 · to 가 끼어든다 */
+  land: 6.95,        /* 원본 심볼에 안착 · 두세 번 작게 출렁임 */
+  end: 7.8,          /* 로고 장면 머묾(부제 함께) 뒤 · 시트 */
+  fly: 7.98,         /* 나의 점이 도장 칸으로 */
+  stamp: 8.44        /* 도장 */
 } };
 var LGX_C = { o: ["#FF7F32", "#FF963E", "#E6CCFF"], w: ["#FFFFFF", "#FFD2B6", "#FFFFFF"], bgW: "#FFFFFF", bgO: "#FF7F32" };
-var LGX_LD = [0.36, 0.4, 0.34, 0.38, 0.38, 0.42];   /* 글자별 안착 시작(to 기준 초) · M e t o W e · 먼저 두 줄이 벌어지고 to 가 수평선을 따라 들어온 뒤 다 함께 원본 자리로 */
+var LGX_LD = [0.5, 0.58, 0.44, 0.52, 0.56, 0.64];   /* 글자별 안착 시작(to 기준 초) · M e t o W e · 먼저 두 줄이 벌어지고 to 가 수평선을 따라 들어온 뒤 다 함께 원본 자리로 */
 function lgxCl(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 function lgxEO(x) { x = lgxCl(x); return 1 - Math.pow(1 - x, 3); }
 function lgxEI(x) { x = lgxCl(x); return x * x * x; }
 function lgxEIO(x) { x = lgxCl(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
 function lgxBack(x, c) { x = lgxCl(x); c = c == null ? 1.9 : c; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); }
+/* v4.90 스프링(감쇠 진동) · u = 0~1(정해진 시간 안) · z = 감쇠(작을수록 더 출렁) · f = 그 시간 동안 진동 수 · 1을 넘었다 돌아온다(오버슈트) · u ≥ 1 이면 정확히 1 */
+function lgxSpring(u, z, f) {
+  if (u <= 0) return 0; if (u >= 1) return 1;
+  var w = 6.2832 * f, wd = w * Math.sqrt(1 - z * z), e = Math.exp(-z * w * u);
+  return 1 - e * (Math.cos(wd * u) + (z * w / wd) * Math.sin(wd * u));
+}
 function lgxH(i) { var v = Math.sin(i * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); }
 /* 원본 심볼(AXF_DATA.me · 1,037점 · 격자 24)을 글자 6개로 나눈다 · 붙어 있는 점끼리 한 글자 · 윗선 순서 = M · e · t · o · W · e */
 function lgxSym() {
@@ -15161,19 +15168,32 @@ function lgxDot(cx, x, y, d, cols, a) {
   cx.globalAlpha = 1;
 }
 /* 점 무리 · 층마다 한 경로로 모아 그린다(프레임당 fill 6번) · P = [x, y, 지름, 면(0 = 주황 점 · 1 = 흰 점), 핵 끔] */
+/* v4.90 점 그림(스프라이트) · 바깥 원 · 안쪽(가운데 + 핵) · 안쪽(핵 꺼짐)을 면별로 한 번 그려 두고 drawImage 로 찍는다(호 3,000개를 매 프레임 그리던 것보다 가볍다)
+   바깥을 모두 먼저 찍고 안쪽을 그 위에 찍는다(겹친 바깥 원이 이웃의 안쪽 점을 가리지 않게 · 원본 3층 구조와 같다) · 로그인 화면에서 미리 만든다 */
+function lgxSprites() {
+  if (LGX.spr) return LGX.spr;
+  var Z = 96, mk = function (fn) { var c = document.createElement("canvas"); c.width = c.height = Z; var x = c.getContext("2d"); fn(x); return c; };
+  var circ = function (x, col, r) { x.fillStyle = col; x.beginPath(); x.arc(Z / 2, Z / 2, r, 0, 6.2832); x.fill(); };
+  var o = {};
+  [["o", LGX_C.o], ["w", LGX_C.w]].forEach(function (k) {
+    o[k[0] + "0"] = mk(function (x) { circ(x, k[1][0], Z / 2); });
+    o[k[0] + "1"] = mk(function (x) { circ(x, k[1][1], Z * 9 / 38); circ(x, k[1][2], Z * 4 / 38); });
+    o[k[0] + "2"] = mk(function (x) { circ(x, k[1][1], Z * 9 / 38); });
+  });
+  LGX.spr = o;
+  return o;
+}
 function lgxDots(cx, P, a, lq) {
-  for (var side = 0; side < 2; side++) {
-    var cols = side ? LGX_C.w : LGX_C.o;
-    for (var tier = 0; tier < (lq ? 1 : 3); tier++) {
-      var any = false, k = tier === 0 ? 0.5 : tier === 1 ? 9 / 38 : 4 / 38;
-      cx.fillStyle = cols[tier]; cx.beginPath();
-      for (var i = 0; i < P.length; i++) {
-        var q = P[i]; if (q[3] !== side || q[2] <= 0.3 || (tier === 2 && q[4])) continue;
-        var r = q[2] * k; cx.moveTo(q[0] + r, q[1]); cx.arc(q[0], q[1], r, 0, 6.2832); any = true;
-      }
-      if (any) { cx.globalAlpha = a == null ? 1 : a; cx.fill(); cx.globalAlpha = 1; }
+  var sp = lgxSprites(), i, q, r, nm = ["o", "w"];
+  cx.globalAlpha = a == null ? 1 : a;
+  for (var pass = 0; pass < (lq ? 1 : 2); pass++) {
+    for (i = 0; i < P.length; i++) {
+      q = P[i]; if (q[2] <= 0.3) continue;
+      r = q[2] / 2;
+      cx.drawImage(sp[nm[q[3]] + (pass === 0 ? "0" : q[4] ? "2" : "1")], q[0] - r, q[1] - r, q[2], q[2]);
     }
   }
+  cx.globalAlpha = 1;
 }
 
 /* ── 1막 · 로그인 화면 띠 ── 띠 안 수평선 = 높이의 60% */
@@ -15200,7 +15220,7 @@ function lgxIdleDraw(cx, W, H, r, t, still, g) {
 function lgxIdleMount(cv) {
   if (!cv || cv._lgx) return;
   var st = cv._lgx = { raf: 0, t0: performance.now() }, still = lgxRM();
-  setTimeout(function () { try { lgxSym(); } catch (e) {} }, 400);   /* 원본 심볼 글자 나누기(점 1,037개 비교)를 로그인 화면에서 미리 · 입장 순간 끊김 방지 */
+  setTimeout(function () { try { lgxSym(); lgxSprites(); } catch (e) {} }, 400);   /* 원본 심볼 글자 나누기(점 1,037개 비교)를 로그인 화면에서 미리 · 입장 순간 끊김 방지 */
   function fr() {
     if (!cv.isConnected) { cv._lgx = null; return; }
     var w = cv.clientWidth, h = cv.clientHeight;
@@ -15310,10 +15330,10 @@ function lgxLayout(cur) {
   }
   cur.pt = pt; cur.up = up; cur.dn = dn;
 }
-function lgxRot(t) { var s = t - LGX.T.spin; return s <= 0 ? 0 : 7 * s * s; }
+function lgxRot(t) { var s = t - LGX.T.spin; return s <= 0 ? 0 : 4.2 * s * s; }
 function lgxRingPos(cur, i, t) {
   var L = cur.L, a = cur.ring[i].a0 + lgxRot(t);   /* 캔버스 각도 · 27번(3π/2) = 12시 */
-  var rr = L.Rr * (1 - 0.08 * lgxEIO((t - (LGX.T.burst - 0.14)) / 0.14));
+  var rr = L.Rr * (1 - 0.1 * lgxEIO((t - (LGX.T.burst - 0.22)) / 0.22));
   return [L.cx + Math.cos(a) * rr, L.ringCy + Math.sin(a) * rr];
 }
 function lgxSkip() { var cur = LGX.cur; if (!cur) return; var t = lgxNow(cur); if (t < LGX.T.end) cur.skip += LGX.T.end - t; }
@@ -15327,9 +15347,9 @@ function lgxClose(how) {
   var d = cur.d;
   if (cur.o.band) cur.o.band.style.visibility = "";
   if (!cur.covered && cur.o.onCover) { cur.covered = true; cur.o.onCover(); }
-  try { d.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: "forwards" }); } catch (e) {}
   d.style.pointerEvents = "none";
-  setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); }, 220);
+  /* 홈을 그린 다음 프레임에 걷는다(같은 프레임에 겹치면 걷힘이 끊긴다) */
+  requestAnimationFrame(function () { try { d.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, fill: "forwards" }); } catch (e) {} setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); }, 240); });
   if (cur.o.onClose) cur.o.onClose(how, cur.stamped);
 }
 /* 한 프레임 · 시간(t)만으로 모든 점의 자리가 정해진다(같은 t = 같은 그림 · 캡처 · 건너뛰기) */
@@ -15338,15 +15358,15 @@ function lgxFrame(cur, now) {
   if (innerWidth !== L.W || innerHeight !== L.H) { lgxLayout(cur); L = cur.L; }
   var W = L.W, H = L.H;
   /* 프레임이 떨어지면(평균 26ms 넘음) 가운데 · 핵 층을 빼고 그린다 */
-  if (cur.lastNow) { cur.dts.push(now - cur.lastNow); if (cur.dts.length > 12) cur.dts.shift(); if (cur.dts.length === 12 && !cur.lq) { var sm = 0; cur.dts.forEach(function (v) { sm += v; }); if (sm / 12 > 26) cur.lq = true; } }
+  /* 첫 0.6초(시작 한 번 무거운 프레임)는 빼고 · 12프레임 가운데값이 22ms 를 넘으면(45fps 아래가 이어지면) 줄인다 · 한 번 튄 프레임으로는 줄이지 않는다 */
+  if (cur.lastNow && t > 0.6) { cur.dts.push(now - cur.lastNow); if (cur.dts.length > 12) cur.dts.shift(); if (cur.dts.length === 12 && !cur.lq) { var md = cur.dts.slice().sort(function (x, y) { return x - y; })[6]; if (md > 22) cur.lq = true; } }
   cur.lastNow = now;
   cx.setTransform(L.dpr, 0, 0, L.dpr, 0, 0); cx.clearRect(0, 0, W, H);
   /* 무대 · 띠 → 화면 전체 · 수평선 · to 가 들어오면 수면이 빠져 흰 무대만 남는다 */
   var e0 = lgxEIO(t / T.exp), R = cur.br ? { x: cur.br.x * (1 - e0), y: cur.br.y * (1 - e0), w: cur.br.w + (W - cur.br.w) * e0, h: cur.br.h + (H - cur.br.h) * e0 } : { x: 0, y: 0, w: W, h: H };
-  /* 뒤에서 앱 화면으로 바꾸는 때 = 거울 장면이 머무는 동안(움직임이 가장 적다 · 홈을 그리는 무게가 낙하·착지 박자를 끊지 않게) */
-  if (!cur.covered && t >= T.to - 0.4) { cur.covered = true; if (cur.o.onCover) cur.o.onCover(); }
+  /* v4.90 뒤에서 앱 화면으로 바꾸는 일(홈 그리기)은 장면이 닫힐 때 한 번(lgxClose) · 장면 도중에는 무거운 일을 하지 않는다 */
   var line0 = cur.br ? cur.br.y + cur.br.h * 0.6 : L.yh, line = t < T.exp ? line0 + (L.yh - line0) * e0 : L.yh;
-  if (t >= T.to + 0.34) line = L.yh + (H + 8 - L.yh) * lgxEIO((t - T.to - 0.34) / 0.5);   /* to 가 틈에 들어선 뒤 수면이 빠진다 */
+  if (t >= T.to + 0.55) line = L.yh + (H + 8 - L.yh) * lgxEIO((t - T.to - 0.55) / 0.75);   /* to 가 틈에 들어선 뒤 수면이 천천히 빠진다 */
   cx.save(); cx.beginPath(); cx.rect(R.x, R.y, R.w, R.h); cx.clip();
   cx.globalAlpha = cur.br ? 1 : lgxEO(t / 0.3);
   cx.fillStyle = LGX_C.bgW; cx.fillRect(R.x, R.y, R.w, Math.max(0, Math.min(line, R.y + R.h) - R.y));
@@ -15359,71 +15379,83 @@ function lgxFrame(cur, now) {
   var id = cur.idle, D0 = id ? id.d : 30, my0 = id ? id.y : line - 22;
   if (t < T.burst) {
     var mx = L.cx, myy, md;
-    if (t < T.ringIn + 0.5) {
-      var e1 = lgxEO((t - 0.08) / 0.55);
-      myy = my0 + (L.ringCy - my0) * e1 - Math.sin(lgxCl((t - 0.08) / 0.55) * 3.1416) * 18; md = D0 + D0 * 0.25 * e1;
+    if (t < T.ringIn + 0.75) {
+      var e1 = lgxSpring((t - 0.12) / 0.95, 0.5, 1.3);
+      myy = my0 + (L.ringCy - my0) * e1 - Math.sin(lgxCl((t - 0.12) / 0.95) * 3.1416) * 22; md = D0 + D0 * 0.25 * Math.min(1, e1);
     } else {
-      var e2 = lgxEIO((t - (T.ringIn + 0.5)) / 0.32), rp = lgxRingPos(cur, 27, t);
+      var e2 = lgxSpring((t - (T.ringIn + 0.75)) / 0.6, 0.55, 1.2), rp = lgxRingPos(cur, 27, t);
       mx = L.cx + (rp[0] - L.cx) * e2; myy = L.ringCy + (rp[1] - L.ringCy) * e2; md = D0 * 1.25 + (ringD - D0 * 1.25) * e2;
     }
     mineP = [mx, myy, md, 0];
     for (i = 0; i < 36; i++) {
       if (i === 27) continue;
-      var k1 = (t - T.ringIn - 0.36 * lgxH(i)) / 0.46;
+      var k1 = (t - T.ringIn - 0.6 * lgxH(i)) / 0.8;
       if (k1 <= 0) continue;
       var tp = lgxRingPos(cur, i, t), ang = cur.ring[i].a0 + (lgxH(i + 50) - 0.5) * 0.9, far = Math.max(W, H) * 0.85;
-      var sx = L.cx + Math.cos(ang) * far, sy0 = L.ringCy + Math.sin(ang) * far, b = lgxBack(k1);
-      Pd.push([sx + (tp[0] - sx) * b, sy0 + (tp[1] - sy0) * b, cur.ring[i].d * Math.min(1, k1 * 2.2), 0]);
+      var sx = L.cx + Math.cos(ang) * far, sy0 = L.ringCy + Math.sin(ang) * far, b = lgxSpring(k1, 0.42, 1.5);
+      var st1 = 1 + 0.25 * Math.max(0, 1 - k1 * 1.6);   /* 날아오는 동안 길게 늘어났다(스트레치) 도착하며 둥글게 */
+      Pd.push([sx + (tp[0] - sx) * b, sy0 + (tp[1] - sy0) * b, cur.ring[i].d * Math.min(1, k1 * 2.2) * st1, 0]);
     }
   }
   /* ── 거울 장면의 두 줄 · 윗줄 = 원이 터져 공중에 모임 → 낙하 → 수평선 · 수면 = 닿는 순간 한 줄씩 피어남 ── */
-  var gyOff = -L.air, sq = 1, amp = 0, isA = cur.mode !== "B";
-  if (t >= T.drop) { var an = lgxCl((t - T.drop) / 0.12), fall = lgxEI((t - T.drop - 0.08) / (T.hit - T.drop - 0.08)); gyOff = -L.air - Math.sin(an * 3.1416) * 8 * (fall > 0 ? 0 : 1) + L.air * fall; }
-  if (t >= T.hit) { gyOff = 0; var hk = (t - T.hit) / 0.34; if (hk < 1) sq = 1 - 0.1 * Math.sin(hk * 3.1416 * 2) * (1 - hk); amp = 4 * Math.max(0, 1 - (t - T.hit) / 0.9); }
+  var gyOff = -L.air, sq = 1, sxq = 1, amp = 0, isA = cur.mode !== "B";
+  if (t >= T.drop) {   /* 살짝 움츠렸다(예비 동작) 떨어지며 세로로 늘어난다(스트레치) */
+    var an = lgxCl((t - T.drop) / 0.14), fall = lgxEI((t - T.drop - 0.1) / (T.hit - T.drop - 0.1));
+    gyOff = -L.air - Math.sin(an * 3.1416) * 10 * (fall > 0 ? 0 : 1) + L.air * fall; sq = 1 + 0.07 * fall; sxq = 1 - 0.035 * fall;
+  }
+  if (t >= T.hit) {   /* 착지 · 납작해졌다(스쿼시) 감쇠 진동으로 돌아온다 · 부피는 지킨다(가로로 퍼짐) */
+    gyOff = 0; var hk = t - T.hit;
+    sq = hk < 1.2 ? 1 - 0.17 * Math.exp(-4.5 * hk) * Math.cos(11 * hk) : 1; sxq = 1 + (1 - sq) * 0.55;
+    amp = 5 * Math.max(0, 1 - hk / 1.6);
+  }
   var layerOn = t >= T.burst - 0.02 && (isA ? t < T.to : t < T.to + 0.25), layerA = isA ? 1 : 1 - lgxCl((t - T.to) / 0.25);
   if (layerOn) {
     var seenSrc = {}, out = isA ? Pd : Pb;
     for (i = 0; i < cur.up.length; i++) {
       q = cur.up[i];
-      var x = q.m[0], y = L.yh - (L.yh - q.m[1]) * sq + gyOff, dd = L.dM, k2 = (t - T.burst - 0.2 * ((q.m[0] - L.x0) / L.fw)) / 0.44;
+      var x = L.cx + (q.m[0] - L.cx) * sxq, y = L.yh - (L.yh - q.m[1]) * sq + gyOff, dd = L.dM, k2 = (t - T.burst - 0.36 * ((q.m[0] - L.x0) / L.fw) - 0.07 * lgxH(i)) / 0.7;   /* 점마다 조금씩 늦게(오버랩) */
       if (k2 < 1) {
         if (k2 <= 0) {   /* 아직 출발 전 · 원의 자기 점 자리(같은 원 점에서 나가는 점이 여럿이라 한 번만) */
           var s0 = lgxRingPos(cur, q.src, t);
           if (q.mine) mineP = [s0[0], s0[1], ringD, 0]; else if (!seenSrc[q.src]) { seenSrc[q.src] = 1; Pd.push([s0[0], s0[1], cur.ring[q.src].d, 0]); }
           continue;
         }
-        var rp0 = lgxRingPos(cur, q.src, T.burst), tang = cur.ring[q.src].a0 + lgxRot(T.burst) - 3.1416, ek2 = lgxEO(k2), iu = 1 - ek2;
-        var c1x = rp0[0] + Math.cos(tang) * L.Rr * 0.5, c1y = rp0[1] + Math.sin(tang) * L.Rr * 0.5;
-        x = iu * iu * rp0[0] + 2 * iu * ek2 * c1x + ek2 * ek2 * x; y = iu * iu * rp0[1] + 2 * iu * ek2 * c1y + ek2 * ek2 * y;
-        dd = cur.ring[q.src].d * (1 - ek2) + dd * ek2;
+        var rp0 = lgxRingPos(cur, q.src, T.burst), tang = cur.ring[q.src].a0 + lgxRot(T.burst) - 3.1416, ek2 = lgxSpring(k2, 0.55, 1.35), ec = Math.min(1, ek2), iu = 1 - ec;
+        var c1x = rp0[0] + Math.cos(tang) * L.Rr * 0.5, c1y = rp0[1] + Math.sin(tang) * L.Rr * 0.5, tx0 = x, ty0 = y;
+        x = iu * iu * rp0[0] + 2 * iu * ec * c1x + ec * ec * tx0; y = iu * iu * rp0[1] + 2 * iu * ec * c1y + ec * ec * ty0;
+        if (ek2 > 1) { x += (tx0 - c1x) * (ek2 - 1) * 0.5; y += (ty0 - c1y) * (ek2 - 1) * 0.5; }   /* 넘쳤다 돌아오기 · 곡선 끝 방향으로만 */
+        dd = cur.ring[q.src].d * (1 - Math.min(1, ek2)) + dd * Math.min(1, ek2);
       }
       var qq = [x, y, dd, y > line ? 1 : 0];
       if (q.mine && isA) mineP = qq; else out.push(qq);
     }
     if (t >= T.hit) for (i = 0; i < cur.dn.length; i++) {
       q = cur.dn[i];
-      var kr = (t - T.hit - ((q.m[1] - L.yh) / (24 * L.sm)) * 0.025) / 0.22;
+      var kr = (t - T.hit - ((q.m[1] - L.yh) / (24 * L.sm)) * 0.04) / 0.45;   /* 수면 쪽으로 한 줄씩 · 톡 튀어나와 출렁 */
       if (kr <= 0) continue;
-      out.push([q.m[0] + amp * Math.sin(q.m[1] * 0.08 + t * 15), q.m[1], L.dM * Math.min(lgxBack(kr), 1.25), q.m[1] > line ? 1 : 0]);
+      out.push([L.cx + (q.m[0] - L.cx) * (2 - sxq) + amp * Math.sin(q.m[1] * 0.06 + t * 9), q.m[1], L.dM * lgxSpring(kr, 0.38, 1.6), q.m[1] > line ? 1 : 0]);
     }
   }
   /* ── to 가 끼어든다 · 두 줄이 밀리며 원본 심볼 자리로(크기도 원본 배율로) · 수면이 빠지면 흰 점이 주황으로 ── */
   if (t >= T.to) {
-    var wave = t >= T.land ? ((t - T.land) * 0.5) % 1 : -1, eS = lgxEIO((t - T.end) / 0.36), kS = 1 + (L.kS - 1) * eS, tyS = L.gTopH + (L.gTopS - L.gTopH) * eS;
+    var wave = t >= T.land ? ((t - T.land) * 0.5) % 1 : -1, eS = lgxEIO((t - T.end) / 0.45), kS = 1 + (L.kS - 1) * eS, tyS = L.gTopH + (L.gTopS - L.gTopH) * eS;
+    /* 안착 뒤 두세 번 작게 출렁이고 멈춘다(로고 전체 배율 · 가운데 기준) */
+    var wb = t >= T.land - 0.15 ? 1 + 0.03 * Math.exp(-4 * (t - T.land + 0.15)) * Math.sin(14 * (t - T.land + 0.15)) : 1, wcy = L.gTopH + 607 * L.sf;
     for (i = 0; i < cur.pt.length; i++) {
       q = cur.pt[i];
       var x2, y2, d2;
-      var ek = lgxBack((t - T.to - LGX_LD[q.g]) / 0.5, 1.2), sp = lgxEO((t - T.to) / 0.22) * (1 - lgxCl(ek));
+      var ek = lgxSpring((t - T.to - LGX_LD[q.g] - 0.05 * lgxH(i + 7)) / 0.95, 0.62, 1.3), sp = lgxSpring((t - T.to) / 0.5, 0.5, 1.3) * (1 - lgxCl(ek));   /* 점마다 조금씩 늦게 · 스프링 */
       if (q.s) {   /* 벌어짐(윗줄은 위로 · 수면 줄은 아래로) → 원본 자리 */
         if (!isA && t < T.to + 0.04) continue;
-        var bx2 = q.s[0], by2 = q.s[1] + (q.g < 2 ? -1 : 1) * L.gap * sp, es = lgxEIO((t - T.to - LGX_LD[q.g] - 0.1) / 0.42);   /* 기울기는 자리보다 살짝 늦게 따라온다 */
+        var bx2 = q.s[0], by2 = q.s[1] + (q.g < 2 ? -1 : 1) * L.gap * sp, es = lgxSpring((t - T.to - LGX_LD[q.g] - 0.16) / 0.8, 0.5, 1.3);   /* 기울기는 자리보다 살짝 늦게 따라온다 */
         x2 = bx2 + (q.f0[0] - q.s[0]) * ek + (q.f[0] - q.f0[0]) * es; y2 = by2 + (q.f[1] - q.s[1]) * ek; d2 = L.dM + (L.dF - L.dM) * Math.min(1, lgxCl(ek));
       } else {   /* to · 벌어진 틈으로 오른쪽 밖에서 수평선을 따라 들어온다 → 원본 자리 */
-        var ke = lgxEO((t - T.to - 0.08 - 0.04 * (q.g - 2)) / 0.26);
+        var ke = lgxSpring((t - T.to - 0.12 - 0.06 * (q.g - 2)) / 0.6, 0.6, 1.2);
         if (ke <= 0) continue;
         var gx2 = q.gp[0], gy2 = q.gp[1], slide = (W + 60 - L.toX0) * (1 - ke);
         x2 = gx2 + slide + (q.f[0] - gx2) * ek; y2 = gy2 + (q.f[1] - gy2) * ek; d2 = L.dM * 0.72 + (L.dF - L.dM * 0.72) * lgxCl(ek);
       }
+      if (wb !== 1) { x2 = L.cx + (x2 - L.cx) * wb; y2 = wcy + (y2 - wcy) * wb; d2 *= wb; }
       if (eS > 0) { x2 = L.cx + (x2 - L.cx) * kS; y2 = tyS + (y2 - L.gTopH) * kS; d2 *= kS; }   /* 시트가 올라오면 시트 위 칸으로 */
       var off5 = wave >= 0 && !cur.lq && (((sy.rank[i] - wave) % 1 + 1) % 1) < 0.06;   /* 원본처럼 보라 핵이 물결로 꺼졌다 켜진다 */
       var q5 = [x2, y2, d2, y2 > line ? 1 : 0, off5];
@@ -15438,21 +15470,21 @@ function lgxFrame(cur, now) {
     cx.save(); cx.beginPath(); cx.rect(0, line, W, H); cx.clip(); lgxDots(cx, RR, ra, true); cx.restore();
   }
   /* ── 닿는 순간 · 물결 · 섬광 · 튀는 점 ── */
-  if (t >= T.hit && t < T.hit + 1.1) {
+  if (t >= T.hit && t < T.hit + 2.2) {
     var hu = t - T.hit, gwid = (sy.box[1].x1 - sy.box[0].x0) * L.sm;
     cx.save(); cx.beginPath(); cx.rect(0, line, W, H); cx.clip();
-    for (var r3 = 0; r3 < 3; r3++) {
-      var ru = lgxCl((hu - r3 * 0.12) / 0.9); if (ru <= 0) continue;
-      var rx2 = gwid * 0.5 + ru * L.fw * 0.5;
-      cx.globalAlpha = 0.7 * (1 - ru); cx.strokeStyle = "#FFFFFF"; cx.lineWidth = 2;
+    for (var r3 = 0; r3 < 4; r3++) {   /* 물결 4겹 · 1.6초에 걸쳐 화면 폭 너머까지 */
+      var ru = lgxCl((hu - r3 * 0.22) / 1.6); if (ru <= 0 || ru >= 1) continue;
+      var rx2 = gwid * 0.45 + lgxEO(ru) * L.fw * 0.75;
+      cx.globalAlpha = 0.6 * (1 - ru); cx.strokeStyle = "#FFFFFF"; cx.lineWidth = 2;
       cx.beginPath(); cx.ellipse(L.cx, line, rx2, rx2 * 0.12, 0, 0, 3.1416); cx.stroke();
     }
     cx.globalAlpha = Math.max(0, 1 - hu / 0.28); cx.fillStyle = "#FFFFFF"; cx.fillRect(L.x0, line, L.fw, 4);
     cx.restore(); cx.globalAlpha = 1;
     if (!cur.sparks) { cur.sparks = []; for (var z0 = 0; z0 < (cur.lq ? 14 : 34); z0++) { var hx = lgxH(z0 * 3.7); cur.sparks.push([L.cx - gwid / 2 + hx * gwid, (lgxH(z0) - 0.5) * 260 + (hx - 0.5) * 120, -(140 + lgxH(z0 + 9) * 320) * (z0 % 3 === 0 ? -0.6 : 1), 2 + lgxH(z0 + 4) * 4]); } }
-    if (hu < 0.8) {
+    if (hu < 1.0) {
       var Sp = [];
-      for (var z = 0; z < cur.sparks.length; z++) { var s1 = cur.sparks[z], yy = line + s1[2] * hu + 700 * hu * hu; Sp.push([s1[0] + s1[1] * hu, yy, s1[3] * (1 - hu / 0.8) * 2.2, yy > line ? 1 : 0]); }
+      for (var z = 0; z < cur.sparks.length; z++) { var s1 = cur.sparks[z], yy = line + s1[2] * hu * 0.85 + 520 * hu * hu; Sp.push([s1[0] + s1[1] * hu * 0.85, yy, s1[3] * (1 - hu) * 2.2, yy > line ? 1 : 0]); }
       lgxDots(cx, Sp, 1, true);
     }
   }
@@ -15461,9 +15493,9 @@ function lgxFrame(cur, now) {
   cx.restore();
   /* ── 3막 · 부제 · 시트 · 나의 점이 도장 칸으로 ── */
   var d = cur.d, lock = d.querySelector(".lgx-lock");
-  var eL = lgxEIO((t - T.end) / 0.36);
+  var eL = lgxEIO((t - T.end) / 0.45);
   lock.style.top = Math.round(L.lockTopH + (L.lockTopS - L.lockTopH) * eL) + "px";
-  lock.style.opacity = (lgxCl((t - (T.land - 0.06)) / 0.3) * (L.lockOff ? 1 - eL : 1)).toFixed(3);
+  lock.style.opacity = (lgxCl((t - (T.land - 0.1)) / 0.45) * (L.lockOff ? 1 - eL : 1)).toFixed(3);
   if (t >= T.end && !cur.shown) { cur.shown = true; d.classList.add("on"); }
   d.querySelector(".lgx-skip").style.display = t >= T.end ? "none" : "";
   var seal = d.querySelector(".lgx-seal");
@@ -15570,7 +15602,7 @@ function lgxAskHtml() {
 }
 /* 바로가기 설치하기 · 설치창이 있으면(안드로이드 크롬 · 삼성 인터넷 · 엣지) 그 자리에서 · 아니면 기기별 안내(아이폰 = 공유 → 홈 화면에 추가 · 메신저 안 브라우저 = 다른 브라우저로 열기) · 끝나면 다음 카드 */
 function lgxAskApp() {
-  S.put("entry_pref", "app"); S.put("entry_ask_day", entryDay());
+  S.put("entry_pref", "app"); S.put("entry_ask_day", entryDay()); HOMEASK.on = false;
   if (A2HS.deferred) {
     var ev = A2HS.deferred; A2HS.deferred = null;
     try { ev.prompt(); } catch (e) { lgxAskDone("app"); return; }
@@ -15583,12 +15615,13 @@ function lgxAskApp() {
   A2HS.after = function () { lgxAskDone("app"); };
   a2hsSheet(true, true);   /* 장면 위로 띄운다 · 닫으면 after */
 }
-function lgxAskQr() { S.put("entry_pref", "qr"); S.put("entry_ask_day", entryDay()); lgxAskDone("qr"); }
+function lgxAskQr() { S.put("entry_pref", "qr"); S.put("entry_ask_day", entryDay()); HOMEASK.on = false; lgxAskDone("qr"); }
 function lgxAskDone(how) {
   var cur = LGXASK.cur; LGXASK.cur = null;
   if (!cur || !cur.d.parentNode || LGX.cur !== cur) return;
   var ask = cur.d.querySelector(".lgx-ask"); if (ask) ask.parentNode.removeChild(ask);
-  if (how === "qr") { var nx = cur.d.querySelector(".lgx-next"); if (nx) nx.insertAdjacentHTML("afterbegin", '<p class="ax-meta lgx-qrnote">입구와 각 층의 QR을 찍으면 다시 들어와요</p>'); }
+  var qn = cur.d.querySelector(".lgx-qrnote");   /* 자리는 처음부터 잡아 두었다(시트 높이가 바뀌어 부제를 가리지 않게) */
+  if (qn) { if (how === "qr") qn.style.visibility = ""; else qn.parentNode.removeChild(qn); }
   cur.d.classList.remove("ask");
   if (LGXASK.scan) lgxScanGo(cur);
 }
@@ -15598,7 +15631,7 @@ function lgxAskDone(how) {
 var HOMEASK = { on: false };
 function entryDay() { var d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
 function entryAskHtml() {
-  if (isStandalone() || S.get("entry_pref", null) === "app" || LGX.cur) return "";
+  if (isStandalone() || S.get("entry_pref", null) === "app" || LGX.cur || el("app").hidden || !(S.get("user", {}) || {}).empId) return "";   /* 앱이 보일 때만 그날을 센다 */
   if (!HOMEASK.on) { if (S.get("entry_ask_day", "") === entryDay()) return ""; HOMEASK.on = true; S.put("entry_ask_day", entryDay()); }
   return '<section class="ax-card axs-eask"><h2 class="ax-section-title">앞으로 어떻게 들어올까요?</h2>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="entryAskApp()">바로가기 설치하기</button>' +
@@ -15616,7 +15649,7 @@ function lgxStart(emp, mode, cover, demo) {
   lgxMark(emp);
   var sh = lgxSheetHtml(), band = el("kvCv"), ask = lgxAskWanted();
   if (!band || !band.offsetWidth || el("splash").classList.contains("gone")) band = null;
-  var cur = lgxPlay({ band: band, sheet: sh.html,
+  var cur = lgxPlay({ band: band, sheet: (ask ? '<p class="ax-meta lgx-qrnote" style="visibility:hidden">입구와 각 층의 QR을 찍으면 다시 들어와요</p>' : "") + sh.html,
     onCover: cover,
     onSettle: function () {
       if (ask) {   /* 도장 직후 · 질문이 먼저 · 고른 뒤 다음 카드 */
