@@ -103,6 +103,18 @@
     }, this);
     this.clack(t, 1);
   };
+  /* v3.1 · 틈의 미닫이 문 · 열림 = 짧게 미끄러지는 소리 + 끝에서 「철컥」 · 닫힘 = 짧은 「탁」 · v = 크기(체크인 중 넣을 때는 작게) */
+  P.hatch = function (when, open, v) {
+    var t = this.t(when), c = this.ctx; v = v == null ? 1 : v;
+    var sd = open ? 0.2 : 0.09;
+    var n = this.nz(t, sd), bp = c.createBiquadFilter(), g = c.createGain();
+    bp.type = "bandpass"; bp.Q.value = 2.2; bp.frequency.setValueAtTime(open ? 900 : 1400, t); bp.frequency.exponentialRampToValueAtTime(open ? 2600 : 2000, t + sd);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16 * v, t + sd * 0.6); g.gain.exponentialRampToValueAtTime(0.0001, t + sd);
+    n.connect(bp); bp.connect(g); this.out(g, 0.2);
+    var tc = t + sd, o = this.osc("square", open ? 82 : 110, tc, 0.14), lp = c.createBiquadFilter(), g2 = c.createGain();
+    lp.type = "lowpass"; lp.frequency.value = 700; this.env(g2, tc, 0.002, 0.3 * v, 0.12); o.connect(lp); lp.connect(g2); this.out(g2, 0.25);
+    this.clack(tc, 0.9 * v); if (open) this.clack(tc + 0.035, 0.6 * v);
+  };
   /* 배출구 · 굴러 나가는 소리 */
   P.roll = function (when, dur) {
     var t = this.t(when), c = this.ctx;

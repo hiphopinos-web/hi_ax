@@ -7,6 +7,9 @@
  *                추첨 = 감속해 틈을 6시에 세운다 → 중력으로 공 하나가 떨어진다(물리 결정) → 점 하나가 틈을 막고 다시 돈다
  *                떨어진 공을 카메라가 따라가 화면 가운데에서 바로 터진다 · 공을 옮겨 다니는 하이라이트 없음
  *                화면 = 균형 그리드(통 중심 600, 590 · 오른쪽 정보 단 1104~1800) · 대기 · 체크인 장면에 체크인 QR(인쇄하지 않는다)
+ *   v3.1(261001) = 틈에 미닫이 문 · 섞는 동안 문이 닫혀 있어 틈은 벽이다(보이지 않는 처리 없음) · 통이 6시에 선 뒤 잠깐 쉬고 「철컥」 문이 옆으로 열린다
+ *                → 처음 빠진 공이 당첨 → 문이 바로 닫힌다 · 체크인 · 되돌림 때도 12시에서 같은 문이 열리고 닫힌다
+ *                글자 맞춤(fitText) · 이름 · 부서 · 경품 = 한 줄 맞춤 축소 → 최소 크기 아래면 두 줄 → 그래도 넘치면 말줄임 · 부서는 이름 아래 따로 줄
  *   캔버스 3겹: #cv 스테이지 · 통 · 심볼 → #gl 공(구형 음영 · 구르면 번호가 표면을 따라 돈다 · 접지 그림자) → #fx 고리 · 입자 · 도트 레터링
  *   WebGL 이 안 되는 기계는 v1 의 2D 공 그림으로 자동 대체한다(행사가 멈추지 않게)
  *   디자인 정본 = AX페스티벌/design.md v29 (블랙·오렌지 스테이지 · 도트 격자 · KV 오브젝트 · 글자 정지 · 점으로 모이고 흩어진다)
@@ -281,7 +284,20 @@
   var bq = new Float32Array(MAXB * 4), bflag = new Uint8Array(MAXB), bcont = new Uint8Array(MAXB), bao = new Float32Array(MAXB), bnum = new Float32Array(MAXB);
   var NB = 0, R = 22, RT = 22, nAlive = 0, nInside = 0;
   var MIX = { e: 0, target: 0, w: 0.2, rot: 0 };       /* e = 섞기 세기(통 회전 목표) · w = 통 각속도(rad/s · + = 시계 방향) · rot = 통 회전각(벽 속도와 같다) */
-  var GAP = { a0: TOP, latch: 0, latchV: 0, live: false, pull: 0 };   /* 틈 각도 = a0 + rot · latch 1 = 점 하나가 틈을 막는다 · live = 이번 추첨에서 통과를 받는 중 */
+  var GAP = { a0: TOP, live: false, pull: 0 };          /* 틈 각도 = a0 + rot · live = 이번 추첨에서 통과를 받는 중 */
+  /* v3.1 · 틈의 미닫이 문(통과 함께 돈다) · v = 열린 정도 0..1 · 닫혀 있으면 틈 자리는 그냥 벽이다
+   *   문은 넣을 때(12시)와 뽑을 때(6시 · 정지 뒤 DOORWAIT 초)만 열린다 · 처음 빠진 공이 지나가면 바로 닫힌다(물리는 그 스텝에 닫힘 · 그림은 0.12초) */
+  var DOOR = { v: 0, tgt: 0, openT: -1 }, DOORWAIT = 0.55, DOOROPEN = 0.26, DOORSHUT = 0.12;
+  function doorOpen() { return DOOR.tgt === 1 && DOOR.v >= 0.9; }   /* 문이 공 지름 이상 열린 다음부터 통과 */
+  function doorSet(open, vol) {
+    var t = open ? 1 : 0; if (DOOR.tgt === t) return;
+    DOOR.tgt = t; DOOR.openT = -1;
+    if (!MC.on && vol !== 0) SFX.play("hatch", open ? 1 : 0, vol == null ? 1 : vol);
+  }
+  function stepDoor(h) {
+    if (DOOR.tgt) { DOOR.v = Math.min(1, DOOR.v + h / DOOROPEN); if (DOOR.v >= 0.9 && DOOR.openT < 0) DOOR.openT = T; }
+    else DOOR.v = Math.max(0, DOOR.v - h / DOORSHUT);
+  }
   var DRM = { mode: "spin", at: 0, rock: 0, hold: 0 };   /* 통 움직임 · spin 돈다 · park 감속해 세운다 · hold 서 있다(at = 세운 방향) */
   var PARK = { th0: 0, D: 0, Td: 1, k: 1, t0: 0, at: 0 };
   var TUNE = { fill: 0.56, wmix: 1.4, fins: 0, finL: 2.6, surge: 0, surgeW: 4, surgeA: 3, rest: 0, restV: 0.08 };   /* fins = 통 안쪽 날개 수(통돌이 세탁조처럼 공을 들어 올려 뿌린다 · 섞임) · finL = 날개 길이(공 반지름 배수) */
@@ -333,7 +349,8 @@
       MIX.w = 0;
       if (DRM.at === TOP) {
         var held = T - DRM.t0, more = due && !(chk && held > 2.6);
-        if (!more && !nFalling && held > 0.35) DRM.mode = "spin";
+        if (more || nFalling) doorSet(1, chk || CHKSIM ? 0.35 : 0.7);   /* 12시 · 문을 열고 넣는다(체크인 중에는 작게) */
+        else if (held > 0.35) { doorSet(0, chk || CHKSIM ? 0.35 : 0.7); if (DOOR.v <= 0.02) DRM.mode = "spin"; }   /* 다 넣으면 닫고 다시 돈다 */
       }
       if (DRM.at === SIX && DRW.resume && T >= DRW.resume) { DRW.resume = 0; DRM.mode = "spin"; }
     }
@@ -397,6 +414,7 @@
   function targetRadius() { return clamp(Math.sqrt(TUNE.fill * DR * DR / Math.max(nAlive, 150)), 5.2, 24); }   /* v2 · 번호가 읽히게 조금 크게(면적 56%) */
   function physStep(h) {
     var g = 2600, i, j, rr = R, lim = DR - rr;
+    stepDoor(h);
     /* 1. 적분 · 중력뿐(분사 없음) · 통이 돌며 벽 마찰로 끌어올린 공이 굴러 떨어진다(텀블링) */
     var damp = 0.9982, vmax = rr * 0.9, pull = GAP.pull, ga0 = gapAng(), kickP = KICK.p * clamp((Math.abs(MIX.w) - 0.4) / 1.2, 0, 1);
     var gpx = DX + Math.cos(ga0) * DR, gpy = DY + Math.sin(ga0) * DR;
@@ -469,11 +487,12 @@
       }
       if (it === 0) { PH.impacts += imp; if (impV > PH.impactV) PH.impactV = impV; }
       /* 3. 벽 · 통 안의 공은 원 안으로 · 벽이 돌면 마찰로 끌려 올라간다
-       *    틈 안에서는 벽 대신 틈 양 끝점과 부딪힌다 · 틈 폭이 공 지름보다 조금 넓어 정면에 온 공만 빠진다
-       *    통이 도는 동안(추첨 대기 아님)은 공이 틈에 반쯤 걸쳐도 끝점이 쓸어 되돌린다 · 반지름 0.7 이상 들어가지 못한다 */
+       *    v3.1 · 문이 닫혀 있으면 틈 자리도 벽이다(섞는 동안 · 보이는 그대로)
+       *    문이 열리면 벽 대신 틈 양 끝점과 부딪힌다 · 틈 폭이 공 지름보다 조금 넓어 정면에 온 공만 빠진다
+       *    문이 열려 있어도 통과를 받지 않는 때(12시에서 넣는 중)는 공이 틈에 반쯤 걸쳐도 되돌린다 */
       var wall = MIX.w * DR * h, eRest = 0.22, ga = gapAng(), ea = gapEdgeA(), gcx = Math.cos(ga), gsy = Math.sin(ga);
       var e1x = DX + Math.cos(ga - ea) * DR, e1y = DY + Math.sin(ga - ea) * DR, e2x = DX + Math.cos(ga + ea) * DR, e2y = DY + Math.sin(ga + ea) * DR;
-      var open = GAP.latch < 0.5, live = GAP.live && open, candI = -1, candD = 0, inner = DR - rr * 0.3, half = Math.max(0, gapHalfW() - rr);
+      var open = doorOpen(), live = GAP.live && open, candI = -1, candD = 0, inner = DR - rr * 0.3, half = Math.max(0, gapHalfW() - rr);
       for (i = 0; i < NB; i++) {
         var st = bs[i]; if (!st || st === 3) continue;
         var wx = bx[i] - DX, wy = by[i] - DY, wd = Math.hypot(wx, wy);
@@ -501,8 +520,8 @@
         vx2 += tx * (wall - vt) * WALLK; vy2 += ty * (wall - vt) * WALLK;
         bpx[i] = bx[i] - vx2; bpy[i] = by[i] - vy2;
       }
-      /* 처음 통과한 공 = 당첨 · 한 스텝(1/120초)에 여럿이면 번호 순서가 아니라 더 빠져나간 공 · 그 순간 점 하나가 틈을 막는다 */
-      if (candI >= 0) { GAP.latch = 1; capture(candI); }
+      /* 처음 통과한 공 = 당첨 · 한 스텝(1/120초)에 여럿이면 번호 순서가 아니라 더 빠져나간 공 · 그 순간 문이 닫힌다(capture) */
+      if (candI >= 0) capture(candI);
     }
     /* 4. 굴림 · 접선 속도로 회전(숫자가 돌아간다) */
     for (i = 0; i < NB; i++) if (bs[i] === 2) ba[i] += (bx[i] - bpx[i]) / rr * 0.9;
@@ -587,7 +606,6 @@
     cx.setTransform(vs, 0, 0, vs, vox, voy);
     cx.globalAlpha = DRUM.alpha;
     drawGlassBack(ga, ea);
-    drawLatch(ga, ea);
     cx.globalAlpha = 1;
   }
   /* 유리 · 뒷면(공 뒤) = 아주 옅은 웜 그레이 몸통 + 미세 점 무늬(돈다) */
@@ -623,16 +641,27 @@
     cx.strokeStyle = "rgba(255,252,248,0.75)"; cx.lineWidth = 3; cx.beginPath();   /* 구멍 가장자리 */
     for (var s = -1; s <= 1; s += 2) { var aa = ga + s * ea, c = Math.cos(aa), sn = Math.sin(aa); cx.moveTo(DX + c * (DR - 1), DY + sn * (DR - 1)); cx.lineTo(DX + c * (DR + 12), DY + sn * (DR + 12)); }
     cx.stroke();
-    cx.lineCap = "butt"; cx.globalAlpha = 1;
+    cx.lineCap = "butt";
+    drawDoor(ga, ea);
+    cx.globalAlpha = 1;
   }
-  /* 점 하나가 틈을 막는다(첫 공이 지나간 순간) · 틈 뒤쪽 끝에서 미끄러져 들어온다 */
-  function drawLatch(ga, ea) {
-    var v = GAP.latchV; if (v < 0.02) return;
-    var rad = DR + 5, a = ga - ea * (1 - v) * 1.6;
-    var x = DX + Math.cos(a) * rad, y = DY + Math.sin(a) * rad, r = clamp(gapHalfW() * 0.55, 4, 9);
-    cx.globalAlpha = DRUM.alpha * clamp(v * 1.5, 0, 1);
-    cx.fillStyle = C.hi; cx.beginPath(); cx.arc(x, y, r, 0, 6.2832); cx.fill();
+  /* v3.1 · 미닫이 문 · 통 테두리에 붙은 짧은 호 모양 판(무채색) · 테두리 레일을 따라 시계 방향으로 밀려 열린다(감방 문 감시창처럼)
+   *   닫힘 = 틈을 덮는다 · 열림 = 옆 테두리 위로 겹쳐 간다 · 레일(가는 선 두 줄)이 늘 보여 「여닫는 문」으로 읽힌다 */
+  function drawDoor(ga, ea) {
+    var pad = 7 / DR, dh = ea + pad, run = 2 * dh + 4 / DR, v = DOOR.v, e = DOOR.tgt ? EIO(v) : v, sl = e * run;
+    var r0 = DR - 3, r1 = DR + 15, a0 = ga - dh + sl, a1 = ga + dh + sl;
     cx.globalAlpha = DRUM.alpha;
+    cx.strokeStyle = "rgba(255,248,242,0.34)"; cx.lineWidth = 2; cx.beginPath();   /* 레일 · 닫힌 자리 ~ 열린 자리 */
+    cx.arc(DX, DY, r1 + 3, ga - dh - 1 / DR, ga + dh + run + 1 / DR);
+    cx.moveTo(DX + Math.cos(ga + dh + run + 1 / DR) * (r0 - 3), DY + Math.sin(ga + dh + run + 1 / DR) * (r0 - 3));
+    cx.arc(DX, DY, r0 - 3, ga + dh + run + 1 / DR, ga - dh - 1 / DR, true);
+    cx.stroke();
+    cx.fillStyle = "rgba(250,246,242,0.95)"; cx.beginPath();                     /* 문짝 */
+    cx.arc(DX, DY, r1, a0, a1); cx.arc(DX, DY, r0, a1, a0, true); cx.closePath(); cx.fill();
+    cx.fillStyle = "rgba(0,0,0,0.42)"; cx.beginPath();                            /* 손잡이 점 셋 */
+    var gr = clamp(dh * DR * 0.12, 1.4, 2.6), rm = (r0 + r1) / 2;
+    for (var k = -1; k <= 1; k++) { var aa = (a0 + a1) / 2 + k * gr * 2.6 / rm, x = DX + Math.cos(aa) * rm, y = DY + Math.sin(aa) * rm; cx.moveTo(x + gr, y); cx.arc(x, y, gr, 0, 6.2832); }
+    cx.fill();
   }
 
   /* 공은 #gl 에 입체로 · 방금 들어온 공의 고리만 #fx 에(공을 고르는 하이라이트는 없다 · v3) */
@@ -756,7 +785,7 @@
   }
   var DROPS = [];
   function stepDrops() {
-    if (!(DRM.mode === "hold" && DRM.at === TOP)) return;   /* 틈이 12시에 서 있을 때만 넣는다 */
+    if (!(DRM.mode === "hold" && DRM.at === TOP) || !doorOpen()) return;   /* 틈이 12시에 서 있고 문이 열렸을 때만 넣는다 */
     if ((SC === "checkin" || CHKSIM) && T - DRM.t0 > 2.6) return;
     if (T < DROPT) return;
     for (var k = 0; k < DROPS.length; k++) {
@@ -910,29 +939,34 @@
     rng = mulberry(Math.floor(u[0] * 4294967296));
     for (i = 0; i < NB; i++) if (bs[i] === 2) { var ka = u[2 + i * 2] * 6.2832, kv = R * 0.12 * u[3 + i * 2]; bpx[i] -= Math.cos(ka) * kv; bpy[i] -= Math.sin(ka) * kv; }
     startPark(SIX, Math.PI * 0.6, 1 + 0.35 * u[1], 2.2, 4.6);
-    DRAW.t0 = T; DRAW.stopT = -1; DRAW.heart = T + 0.5; DRAW.tick = Math.floor(MIX.rot / (6.2832 / 24)); DRAW.n0 = el.length; DRAW.resume = 0;
-    GAP.live = false; GAP.latch = 0; GAP.pull = 0;
+    DRAW.t0 = T; DRAW.stopT = -1; DRAW.opened = false; DRAW.heart = T + 0.5; DRAW.tick = Math.floor(MIX.rot / (6.2832 / 24)); DRAW.n0 = el.length; DRAW.resume = 0;
+    GAP.live = false; GAP.pull = 0; doorSet(0, 0);
     ST.drawing = 1;
     scene("tension"); lock(99);
     SFX.play("riser", PARK.Td + 0.4);
   }
-  /* 감속 → 6시 멈춤 → 떨어지기를 기다린다 · 1.5초 안에 안 떨어지면 통을 살짝 흔들고(6시 근처 ±) · 6초부터 틈이 가까운 공을 끌고 · 9초에 가장 가까운 공을 통과시킨다
-   * 실제 화면과 공정성 시험(monteCarlo)이 같은 함수를 쓴다 */
+  /* 감속 → 6시 멈춤(쿵) → DOORWAIT 초 정적 → 「철컥」 문이 옆으로 열린다 → 떨어지기를 기다린다
+   *   v3.1 · 문이 열린 뒤 1.2초 안에 안 떨어지면 통을 살짝 흔들고(6시 근처 ±) · 4초부터 틈이 가까운 공을 끌고 · 6초에 가장 가까운 공을 통과시킨다(마지막 안전장치)
+   *   한 공이 지나가면 그 스텝에 문이 닫혀 둘째 공은 나오지 못한다
+   * 실제 화면과 공정성 시험(simDraw · monteCarlo)이 같은 함수를 쓴다 */
+  var ROCK0 = 1.2, PULL0 = 4, FORCE0 = 6;
   function drawTick(sfx) {
     if (DRM.mode === "park") {
-      if (stepPark()) { GAP.live = true; DRAW.stopT = T; if (sfx) { SFX.play("stamp"); CAM.amp = 2.6; } }
-      else if (PARK.th0 + PARK.D - MIX.rot < 0.05) GAP.live = true;   /* 틈이 6시 3도 안으로 들어와 거의 선 다음부터 받는다 */
+      if (stepPark()) { DRAW.stopT = T; if (sfx) { SFX.play("stamp"); CAM.amp = 2.6; } }
       return;
     }
     if (DRM.mode !== "hold" || DRAW.stopT < 0) return;
-    var w = T - DRAW.stopT, rock = w > 1.5 ? Math.min(0.06, 0.02 + (w - 1.5) * 0.012) : 0;
-    var nr = DRM.hold + rock * Math.sin((w - 1.5) * 6.2832 * 2.6);
+    if (!DRAW.opened) { if (T - DRAW.stopT >= DOORWAIT) { DRAW.opened = true; doorSet(1, sfx ? 1 : 0); } return; }
+    if (DOOR.openT < 0) return;                          /* 문이 공 지름만큼 열릴 때까지 */
+    GAP.live = true;
+    var w = T - DOOR.openT, rock = w > ROCK0 ? Math.min(0.06, 0.02 + (w - ROCK0) * 0.012) : 0;
+    var nr = DRM.hold + rock * Math.sin((w - ROCK0) * 6.2832 * 2.6);
     MIX.w = (nr - MIX.rot) / Math.max(1e-3, EXDT); MIX.rot = nr;
-    GAP.pull = w > 6 ? clamp((w - 6) / 2, 0, 1) : 0;
-    if (w > 9) {
+    GAP.pull = w > PULL0 ? clamp((w - PULL0) / 2, 0, 1) : 0;
+    if (w > FORCE0) {
       var best = -1, bd = 1e9, ga = gapAng(), gx = DX + Math.cos(ga) * DR, gy = DY + Math.sin(ga) * DR;
       for (var i = 0; i < NB; i++) if (bs[i] === 2 && !ST.out[bpk[i]]) { var d = Math.hypot(bx[i] - gx, by[i] - gy); if (d < bd) { bd = d; best = i; } }
-      if (best >= 0) { GAP.latch = 1; capture(best); }
+      if (best >= 0) { if (!MC.on) MC.forced = (MC.forced || 0) + 1; else MC.forcedSim = (MC.forcedSim || 0) + 1; capture(best); }
     }
   }
   function stepTension() {
@@ -943,7 +977,7 @@
   }
   /* 처음 통과한 공 · 이 순간 당첨이 정해지고 바로 저장된다(새로고침해도 같은 결과) · 점 하나가 틈을 막고 통이 다시 돈다 */
   function capture(i) {
-    GAP.live = false; GAP.pull = 0;
+    GAP.live = false; GAP.pull = 0; doorSet(0, MC.on ? 0 : 0.5);   /* 지나간 그 스텝에 문이 닫힌다 */
     if (MC.on) { MC.hit = i; return; }
     var el = eligible().length, r = curRound(), wins = roundWins(ST.round).length, pp = ST.pool.people[bpk[i]] || {};
     var res = { id: "r" + Date.now().toString(36) + Math.floor(rng() * 1e4), round: ST.round, slot: wins + 1, no: bno[i], pk: bpk[i],
@@ -990,7 +1024,7 @@
     MC.on = true; CHKSIM = true; EXDT = h;
     for (i = 0; i < NB; i++) bs[i] = 0; NB = 0; ballOfNo = {}; DROPS.length = 0; POPS.length = 0; OUTPOP = null;
     for (i = 0; i < n; i++) times.push(rng() * L); times.sort(function (a, b) { return a - b; });
-    DRM.mode = "spin"; MIX.e = 0; MIX.target = 0; GAP.live = false; GAP.latch = 0; GAP.pull = 0; DROPT = 0;
+    DRM.mode = "spin"; MIX.e = 0; MIX.target = 0; GAP.live = false; GAP.pull = 0; DROPT = 0; DOOR.tgt = 0; DOOR.v = 0; DOOR.openT = -1; MC.forcedSim = 0;
     while (t < L + 40) {
       t += h; T += h;
       while (k < n && times[k] <= t) { DROPS.push({ at: T, no: "s" + k, pk: "s" + k }); k++; }
@@ -1008,20 +1042,20 @@
     var el = eligible().length, u = cryptoUnits(2 + NB * 2);
     rng = mulberry(Math.floor(u[0] * 4294967296));
     for (i = 0; i < NB; i++) if (bs[i] === 2) { var ka = u[2 + i * 2] * 6.2832, kv = R * 0.12 * u[3 + i * 2]; bpx[i] -= Math.cos(ka) * kv; bpy[i] -= Math.sin(ka) * kv; }
-    startPark(SIX, Math.PI * 0.6, 1 + 0.35 * u[1], 2.2, 4.6); DRAW.stopT = -1;
+    startPark(SIX, Math.PI * 0.6, 1 + 0.35 * u[1], 2.2, 4.6); DRAW.stopT = -1; DRAW.opened = false; doorSet(0, 0);
     MC.hit = -1; t = 0;
     while (MC.hit < 0 && t < 20) { t += h; T += h; drawTick(false); physStep(h); }
     var w = MC.hit;
     if (w >= 0) { bs[w] = 0; DRW.resume = T + 0.35; }        /* 첫 공은 통 밖으로 · 점이 틈을 막고 0.35초 뒤 다시 돈다 · 둘째 공을 센다 */
     for (var t2 = 0; t2 < 1.2; t2 += h) { T += h; drumStep(h, false); physStep(h); if (++st % 6 === 0) sec2 += mcEscapes(); }
     MC.on = false;
-    return [w >= 0 ? +String(bno[w]).slice(1) : -1, +t.toFixed(2), el, esc, sec2];
+    return [w >= 0 ? +String(bno[w]).slice(1) : -1, +t.toFixed(2), el, esc, sec2, MC.forcedSim || 0];
   }
   function monteCarlo(n, mixSec, fresh) {
     var out = [], h = PH.h, k, i, saveT = T, saveDT = EXDT;
     MC.on = true; EXDT = h;
     for (var tr = 0; tr < n; tr++) {
-      DRM.mode = "spin"; MIX.e = 1; GAP.live = false; GAP.latch = 0; GAP.pull = 0;
+      DRM.mode = "spin"; MIX.e = 1; GAP.live = false; GAP.pull = 0; DOOR.tgt = 0; DOOR.v = 0; DOOR.openT = -1; DRAW.opened = false;
       if (fresh) {                                    /* 체크인 직후처럼 · 넣은 순서대로 아래부터 쌓인 더미 · 통은 천천히 돌던 상태에서 섞기 시작 */
         var ids = [], ps = [];
         for (i = 0; i < NB; i++) if (bs[i] === 2) { ids.push(i); ps.push([bx[i], by[i]]); }
@@ -1049,7 +1083,7 @@
       for (k = 0; k < 0.8 / h; k++) { T += h; if (k * h > 0.35) { MIX.w += (0.2 + TUNE.wmix * 0.7 - MIX.w) * Math.min(1, h * 1.5); } MIX.rot += MIX.w * h; physStep(h); if (k % 6 === 0) MC.second += mcEscapes(); }
       out.push([w, +t.toFixed(2), +rank.toFixed(3), el.length]);
       if (w >= 0) { bs[w] = 2; bx[w] = DX + (rng() - 0.5) * 100; by[w] = DY; bpx[w] = bx[w]; bpy[w] = by[w]; }   /* 공을 통에 되돌린다(점검이라 기록 없음) */
-      GAP.live = false; GAP.latch = 0; GAP.pull = 0;
+      GAP.live = false; GAP.pull = 0; DOOR.tgt = 0; DOOR.openT = -1;
     }
     MC.on = false; T = saveT; EXDT = saveDT;
     return out;
@@ -1237,8 +1271,6 @@
     MIX.e += (MIX.target - MIX.e) * Math.min(1, dt * (MIX.target > MIX.e ? 2.2 : 1.6));
     drumStep(dt, SC === "checkin");
     if (SC === "mix" && ST.closed) MIXT += dt;                 /* 마감 뒤 섞은 시간(첫 추첨 최소 섞기) */
-    if (GAP.latch > 0 && DRM.mode === "spin" && Math.abs(MIX.w) > 0.7 && SC !== "exit" && SC !== "tension") GAP.latch = 0;   /* 다시 돌면 막았던 점이 빠진다 */
-    GAP.latchV += ((GAP.latch ? 1 : 0) - GAP.latchV) * Math.min(1, dt * 16);
     DRUM.pulse *= Math.exp(-dt * 5);
     stepCam(dt);
     /* 박자 · 섞는 동안 120bpm · 고리 점이 박자에 맞춰 부푼다 */
@@ -1328,7 +1360,10 @@
     if (SC !== "exit") {
       if (SC === "reveal" && STG.to) return;             /* 오렌지 스테이지가 덮는 동안은 그대로 · 덮인 뒤 원래대로 */
       var ts = 1, amp = 0, k = Math.min(1, dt * 3);
-      if (SC === "tension") { ts = 1 + 0.07 * EIO(sT() / 3); amp = 0.3 + 0.9 * clamp(Math.abs(MIX.w) / 1.6, 0, 1); }   /* 틈(6시) 쪽으로 천천히 다가간다 */
+      if (SC === "tension") {                           /* 틈(6시) 쪽으로 천천히 다가간다 · 선 뒤에는 문 쪽으로 조금 더(정적 · 문이 열리는 한 박자) */
+        ts = 1 + 0.07 * EIO(sT() / 3) + (DRAW.stopT >= 0 ? 0.09 * EIO((T - DRAW.stopT) / 0.7) : 0);
+        amp = 0.3 + 0.9 * clamp(Math.abs(MIX.w) / 1.6, 0, 1);
+      }
       if (SC === "reveal") { CAM.s = 1; CAM.ox = 0; CAM.oy = 0; CAM.amp = 0; }
       CAM.s += (ts - CAM.s) * k;
       CAM.ox += (DX * (1 - ts) - CAM.ox) * k; CAM.oy += ((DY + DR * 0.55) * (1 - ts) - CAM.oy) * k;
@@ -1462,28 +1497,69 @@
     set("ticker", rows);
     document.body.classList.toggle("closed", !!ST.closed);
   }
+  /* v3.1 글자 맞춤 · 한 줄로 mx px 에서 시작해 칸에 맞게 줄인다 → mn 아래로 내려가야 하면 mn 에서 두 줄(lines 2) → 그래도 넘치면 말줄임
+   *   1920×1080 논리 무대 안에서 재므로(화면 배율은 #frame 변환) 1280×720 · 4K 에서도 같은 결과 · 글꼴이 늦게 오면 refitAll 로 다시 */
+  function fitText(el, mx, mn, lines) {
+    if (!el) return;
+    el._fit = [mx, mn, lines];
+    var s = el.style; el.classList.remove("ell"); el.classList.remove("cl2");
+    s.fontSize = mx + "px"; s.whiteSpace = "nowrap";
+    var W = el.clientWidth; if (!W || !el.textContent) return;
+    var sw = el.scrollWidth; if (sw <= W + 0.5) return;
+    for (var f = Math.min(mx - 0.5, Math.floor(mx * W / sw * 2) / 2); f >= mn; f -= 0.5) { s.fontSize = f + "px"; if (el.scrollWidth <= W + 0.5) return; }
+    s.fontSize = mn + "px";
+    if (lines >= 2) {
+      s.whiteSpace = "normal";
+      var lh = parseFloat(getComputedStyle(el).lineHeight) || mn * 1.3;
+      if (el.scrollHeight > lh * 2 + 2 || el.scrollWidth > W + 0.5) el.classList.add("cl2");
+    } else el.classList.add("ell");
+  }
+  function refitAll() {
+    var a = document.querySelectorAll(".fit"); for (var k = 0; k < a.length; k++) if (a[k]._fit) fitText(a[k], a[k]._fit[0], a[k]._fit[1], a[k]._fit[2]);
+    fitMList();
+  }
+  /* 당첨자 한 줄 · 이름(가림)과 부서를 따로 둔다(부서는 이름 아래 · 결과판 7명 이상이면 이름 옆) */
+  function whoHtml(w) {
+    var named = CFG.nameMode === "mask" && w.nm, dp = named && CFG.showDept && w.dp ? String(w.dp).trim() : "";
+    return '<span class="who"><span class="nm fit">' + esc(named ? mask(w.nm) : "응모 번호 " + w.no) + "</span>" + (dp ? '<span class="dp fit">' + esc(dp) + "</span>" : "") + "</span>";
+  }
   function uiMix() {
     var r = curRound(), wins = roundWins(ST.round, true), n = wins.length;
-    set("mEye", esc(r.name));
-    set("mTitle", esc(r.prize));
+    set("mEye", esc(r.name)); fitText($("mEye"), 42, 30, 1);
+    set("mTitle", esc(r.prize)); fitText($("mTitle"), 92, 60, 2);
     set("mMeta", SC === "mix" && n >= r.count ? "추첨 완료" : r.count + "명 중 " + Math.min(r.count, n + 1) + "번째 추첨");
-    set("mList", wins.map(function (w) { return '<div class="wrow"><span class="no">' + w.no + '</span><span class="nm">' + esc(nameOf(w)) + "</span></div>"; }).join(""));
+    var L = $("mList"), h = wins.map(function (w) { return '<div class="wrow"><span class="no">' + w.no + "</span>" + whoHtml(w) + "</div>"; }).join("");
+    if (L && L._h !== h) { L._h = h; L.innerHTML = h; fitMList(); }
   }
-  function nameOf(w) { if (CFG.nameMode !== "mask" || !w.nm) return "응모 번호 " + w.no; return mask(w.nm) + (CFG.showDept && w.dp ? " · " + w.dp : ""); }
+  /* 섞기 화면 「이번 라운드 당첨」 · 줄마다 맞춘 다음, 칸을 넘치면 오래된 줄부터 접고 맨 위에 「앞의 n명」 */
+  function fitMList() {
+    var L = $("mList"); if (!L) return;
+    var a = L.querySelectorAll(".wrow"), k, hasDp = !!L.querySelector(".dp");   /* 부서가 있으면 줄을 조금 낮게(한 라운드 3명이 접히지 않게) */
+    for (k = 0; k < a.length; k++) { a[k].style.display = ""; var nm = a[k].querySelector(".nm"), dp = a[k].querySelector(".dp"); fitText(nm, hasDp ? 38 : 42, 28, 1); if (dp) fitText(dp, 24, 20, 2); }
+    var more = L.querySelector(".wmore"); if (more) more.remove();
+    if (L.scrollHeight <= L.clientHeight + 1 || a.length < 2) return;
+    more = document.createElement("div"); more.className = "wmore"; L.insertBefore(more, L.firstChild);
+    for (k = 0; k < a.length - 1 && L.scrollHeight > L.clientHeight + 1; k++) { a[k].style.display = "none"; more.textContent = "앞의 " + (k + 1) + "명 · 결과판에서"; }
+  }
   function uiReveal(r) {
-    var ri = r.round, rr = rounds()[ri];
-    set("rEye", esc(rr.name) + " · " + r.slot + " / " + rr.count);
-    set("rName", CFG.nameMode === "mask" && r.nm ? esc(mask(r.nm)) + (CFG.showDept && r.dp ? '<small>' + esc(r.dp) + "</small>" : "") : "앱의 응모 번호를 확인해 주세요");
-    set("rPrize", esc(rr.prize));
-    fade($("rName"), 0, 0); fade($("rPrize"), 0, 0); fade($("rAbs"), 0, 0);
-    fade($("rName"), 1, 0.35, 0.95); fade($("rPrize"), 1, 0.35, 1.05);
+    var ri = r.round, rr = rounds()[ri], named = CFG.nameMode === "mask" && r.nm;
+    set("rEye", esc(rr.name) + " · " + r.slot + " / " + rr.count); fitText($("rEye"), 44, 30, 1);
+    set("rName", named ? esc(mask(r.nm)) : "앱의 응모 번호를 확인해 주세요"); fitText($("rName"), named ? 118 : 72, named ? 76 : 48, 2);
+    set("rDept", named && CFG.showDept && r.dp ? esc(String(r.dp).trim()) : ""); fitText($("rDept"), 44, 34, 2);
+    set("rPrize", esc(rr.prize)); fitText($("rPrize"), 54, 38, 2);
+    fade($("rWho"), 0, 0); fade($("rPrize"), 0, 0); fade($("rAbs"), 0, 0);
+    fade($("rWho"), 1, 0.35, 0.95); fade($("rPrize"), 1, 0.35, 1.05);
   }
-  function uiAbsent() { fade($("rName"), 0, 0.2); fade($("rPrize"), 0, 0.2); fade($("rAbs"), 1, 0.2); }
-  function uiCard() { var r = curRound(); set("kEye", esc(r.name)); set("kTitle", esc(r.prize)); set("kMeta", r.count + "명 추첨"); }
+  function uiAbsent() { fade($("rWho"), 0, 0.2); fade($("rPrize"), 0, 0.2); fade($("rAbs"), 1, 0.2); }
+  function uiCard() { var r = curRound(); set("kEye", esc(r.name)); fitText($("kEye"), 42, 30, 1); set("kTitle", esc(r.prize)); fitText($("kTitle"), 150, 96, 2); set("kMeta", r.count + "명 추첨"); }
   function uiBoard() {
-    var all = ST.results.filter(function (r) { return r.st === "win" && r.id !== ST.pending; });
-    set("bList", all.map(function (w) { return '<div class="brow"><span class="no">' + w.no + '</span><span class="nm">' + esc(nameOf(w)) + '</span><span class="pz">' + esc(w.prize) + "</span></div>"; }).join(""));
-    $("bList").style.setProperty("--rows", Math.max(5, all.length));
+    var all = ST.results.filter(function (r) { return r.st === "win" && r.id !== ST.pending; }), n = all.length, L = $("bList");
+    set("bList", all.map(function (w) { return '<div class="brow"><span class="no">' + w.no + "</span>" + whoHtml(w) + '<span class="pz fit">' + esc(w.prize) + "</span></div>"; }).join(""));
+    L.style.setProperty("--rows", Math.max(5, n)); L.classList.toggle("compact", n > 6);
+    var fs = Math.min(44, 508 / Math.max(5, n) * 0.46), two = n <= 5 ? 2 : 1;   /* 5명 이하 = 줄 높이에 두 줄 여유 */
+    L.querySelectorAll(".nm").forEach(function (e) { fitText(e, fs, fs * 0.72, 1); });
+    L.querySelectorAll(".dp").forEach(function (e) { fitText(e, n > 6 ? Math.max(15, fs * 0.72) : fs * 0.6, n > 6 ? 14 : fs * 0.46, n > 6 ? 1 : two); });   /* 7명 이상은 이름 옆 한 줄(14px 아래로 줄이지 않고 말줄임) */
+    L.querySelectorAll(".pz").forEach(function (e) { fitText(e, fs * 0.78, fs * 0.5, two); });
   }
   var tickN = 0;
   function uiTick() {
@@ -1539,7 +1615,7 @@
     NB = 0; ballOfNo = {}; pn = 0; DIG.n = 0; DROPS.length = 0; ARR.q.length = 0; ARR.lastPk.length = 0; POPS.length = 0;
     SRV.queue = []; save("axfDraw.q", []); SRV.since = ""; SRV.hasPool = false; SRV.stateChecked = true; SRV.late = 0; SRV.lateSeen = {}; if (SRV.polling) { clearInterval(SRV.polling); SRV.polling = null; }
     for (var qi = 0; qi < MAXB; qi++) bflag[qi] = 0;
-    GAP.live = false; GAP.latch = 0; GAP.pull = 0; DRM.mode = "spin"; ST.drawing = 0;
+    GAP.live = false; GAP.pull = 0; DOOR.tgt = 0; DOOR.openT = -1; DRM.mode = "spin"; ST.drawing = 0;
     QA.tier = -1; applyTier(0, "처음부터");
     stageTo("black"); MIX.target = 0; ME.t0 = T; save(LS_ST, ST);
     document.body.classList.remove("closed"); QRS.gone = false; qrShow();
@@ -1741,7 +1817,7 @@
     document.addEventListener("keydown", onKey);
     document.addEventListener("fullscreenchange", function () { setTimeout(resize, 50); });
     document.body.classList.toggle("demo", CFG.mode === "demo");
-    if (document.fonts && document.fonts.load) document.fonts.load("800 40px AXP").then(function () { atlas.key = ""; if (GL) GL.refreshGlyphs(); });
+    if (document.fonts && document.fonts.load) document.fonts.load("800 40px AXP").then(function () { atlas.key = ""; if (GL) GL.refreshGlyphs(); refitAll(); });
     if (BENCH) {
       ST.pool = demoPool(BENCH, 99); ST.arrived = []; var c = 0;
       ST.pool.order.forEach(function (pk) { var p = ST.pool.people[pk]; if (c < BENCH) { if (c + p.nos.length > BENCH) p.nos.length = BENCH - c; ST.arrived.push(pk); c += p.nos.length; } });
@@ -1773,7 +1849,31 @@
     if (CFG.mode === "server" && !SRV.polling && !ST.closed) SRV.polling = setInterval(function () { if ((SC === "idle" || SC === "checkin") && SRV.hasPool) serverLoad(function () { uiIdleCount(); }); }, 3000);
     if (!REC) requestAnimationFrame(loop);
     window.__axd = { act: act, state: function () { return ST; }, cfg: function () { return CFG; }, boost: function (e) { MIX.target = e; }, kick: KICK, tune: TUNE, sim: function (n, L, m, reps) { var out = []; for (var r = 0; r < (reps || 1); r++) out.push(simDraw(n, L, m)); return out; }, minmix: function (v) { if (v != null) MINMIX = v; return MINMIX; }, mc: function (n, m, f) { var r = monteCarlo(n, m, f); return { res: r, spinEsc: MC.spinEsc, second: MC.second }; }, pos: function () { return { x: Array.prototype.slice.call(bx, 0, NB), y: Array.prototype.slice.call(by, 0, NB), s: Array.prototype.slice.call(bs, 0, NB) }; }, 
-      scene: function () { return SC; }, gate: function () { return { mode: DRM.mode, live: GAP.live, latch: GAP.latch, w: +MIX.w.toFixed(2), gap: +(((gapAng() % 6.2832) + 6.2832) % 6.2832).toFixed(3) }; },
+      /* 시험용 · (가) 회전을 빠르게 하면 틈 앞을 지나는 공이 얼마나 느는가 · wmix 로 sec 초 섞으며 1초에 틈 앞(벽에 닿은 채 틈 폭 안)에 새로 들어오는 공 수 */
+      gapProbe: function (sec, wmix) {
+        var keep = TUNE.wmix, h = PH.h, inWin = new Uint8Array(MAXB), enters = 0, steps = 0, occ = 0; TUNE.wmix = wmix; MC.on = true; MIX.e = 1; MIX.target = 1; DRM.mode = "spin"; doorSet(0, 0);
+        for (var t = 0; t < sec + 2; t += h) {
+          T += h; MIX.w += (0.2 + TUNE.wmix - MIX.w) * Math.min(1, h * 1.5); MIX.rot += MIX.w * h; physStep(h);
+          if (t < 2) continue;
+          var ga = gapAng(), ea = gapEdgeA(), lim = DR - R, n = 0; steps++;
+          for (var i = 0; i < NB; i++) { if (bs[i] !== 2) { inWin[i] = 0; continue; } var wx = bx[i] - DX, wy = by[i] - DY, wd = Math.hypot(wx, wy), da = Math.abs(angDiff(Math.atan2(wy, wx), ga)), w = wd > lim - R * 0.3 && da < ea ? 1 : 0; if (w && !inWin[i]) enters++; inWin[i] = w; n += w; }
+          occ += n;
+        }
+        TUNE.wmix = keep; MC.on = false;
+        return { wmix: wmix, w: +(0.2 + wmix).toFixed(2), entersPerSec: +(enters / sec).toFixed(1), meanInGap: +(occ / steps).toFixed(2), wallSpeedPx: Math.round((0.2 + wmix) * DR) };
+      },
+      /* 시험용 · 긴 이름 · 부서 배치 · kind = reveal | mix | board · rows = [{nm, dp, no, prize}] · 결과를 바꾸지 않도록 화면 글자만 그린다 */
+      textTest: function (kind, rows, opt) {
+        if (!BENCH) return "bench only";                  /* ?bench= 화면에서만(기록을 저장하지 않는다) */
+        opt = opt || {}; CFG.showDept = opt.dept !== false; CFG.nameMode = opt.nameMode || "mask";
+        var rs = rows.map(function (x, k) { return { id: "t" + k, round: 0, slot: k + 1, no: x.no || pad4(1000 + k * 37), pk: "t" + k, nm: x.nm, dp: x.dp, prize: x.prize || curRound().prize, st: "win" }; });
+        if (kind === "reveal") { ST.results = rs.slice(0, 1); ST.pending = "t0"; WIN.r = rs[0]; startRevealRestore(); fade($("rWho"), 1, 0); fade($("rPrize"), 1, 0); }
+        if (kind === "mix") { ST.results = rs; ST.pending = null; ST.round = 0; DIG.n = 0; if (opt.count) CFG.rounds = [{ name: opt.rname || "ROUND 01", prize: opt.prize || "경품 A", count: opt.count }]; STG.base = "black"; document.body.classList.remove("st-orange"); scene("mix"); }
+        if (kind === "board") { ST.results = rs; ST.pending = null; DIG.n = 0; STG.base = "black"; document.body.classList.remove("st-orange"); scene("board"); }
+        var out = []; document.querySelectorAll(".fit").forEach(function (e) { if (!e.offsetParent && getComputedStyle(e).display === "none") return; if (!e.textContent) return; var r = e.getBoundingClientRect(); out.push({ id: e.id || e.className, t: e.textContent.slice(0, 40), fs: e.style.fontSize, cls: e.className, over: e.scrollWidth > e.clientWidth + 1 && !e.classList.contains("ell") && !e.classList.contains("cl2") }); });
+        return out;
+      },
+      scene: function () { return SC; }, gate: function () { return { mode: DRM.mode, live: GAP.live, door: +DOOR.v.toFixed(2), doorOpen: doorOpen(), w: +MIX.w.toFixed(2), gap: +(((gapAng() % 6.2832) + 6.2832) % 6.2832).toFixed(3) }; },
       wsKill: function () { WSD.give = true; clearTimeout(WSD.t); if (WSD.ws) try { WSD.ws.close(); } catch (e) {} },   /* 시험용 · 소켓을 끊고 다시 붙지 않는다(폴링 폴백 확인) */
       srv: function () { return { ws: WSD.st, wsGive: WSD.give, based: CMD.based, seq: cmdSeqOf("srv"), qr: QRS.code, qrUrl: QRS.url, close: SRV.closeStatus || "", status: SRV.status, log: SRV.logStatus || "", queue: SRV.queue.length, since: SRV.since, state: SRV.stateStatus || "", late: SRV.late || 0, balls: SRV.balls }; },
       debug: function () { var out = 0, nan = 0, maxd = 0; for (var i = 0; i < NB; i++) { if (bs[i] !== 2) continue; var d = Math.hypot(bx[i] - DX, by[i] - DY); if (d !== d || bq[i * 4] !== bq[i * 4]) nan++; if (d > DR + 2) out++; if (d > maxd) maxd = d; }

@@ -6,7 +6,7 @@
 <title>Lucky Draw · AX Festival 2026</title>
 <meta name="robots" content="noindex">
 <!-- 17F 대강당 Outro 경품 추첨 송출 화면 · 16:9 · 운영자 노트북에서 전체 화면(F) · 조작 창(P)
-     모든 자산이 이 폴더 안에 있다(서체 · 홍보부 모션 엔진 · 워드마크 · three.js 로컬 번들 · 소리는 합성) · v3 유리 통이 돌다가 서면 6시 틈으로 공 하나가 떨어진다(물리 결정) · 공은 입체(WebGL2) · 체크인 QR(qrgen.js · 로컬) · 인터넷이 끊겨도 데모·추첨이 돈다 -->
+     모든 자산이 이 폴더 안에 있다(서체 · 홍보부 모션 엔진 · 워드마크 · three.js 로컬 번들 · 소리는 합성) · v3 유리 통이 돌다가 서면 6시 틈으로 공 하나가 떨어진다(물리 결정) · v3.1 틈에 미닫이 문(섞는 동안 닫힘 · 정지 뒤 열림) · 이름 · 부서 글자 맞춤 · 공은 입체(WebGL2) · 체크인 QR(qrgen.js · 로컬) · 인터넷이 끊겨도 데모·추첨이 돈다 -->
 <link rel="icon" href="../icons/icon-192.png">
 <style>
   @font-face { font-family: "AXP"; src: url("assets/PretendardVariable.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
@@ -28,6 +28,10 @@
   /* 1920×1080 논리 무대 · JS 가 화면에 맞춰 배율만 준다 · 글자는 제자리 · 투명도로만 나타난다(design.md §4 원칙 1) */
   #frame { position: fixed; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; pointer-events: none; }
   .tab { font-variant-numeric: tabular-nums; }
+  /* v3.1 글자 맞춤(draw.js fitText) · 한 줄 맞춤 축소 → 최소 크기 아래면 두 줄 → 그래도 넘치면 말줄임 · 띄어쓰기 없는 긴 영문도 줄을 바꿀 수 있게 */
+  .fit { display: block; min-width: 0; overflow-wrap: anywhere; }
+  .fit.ell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fit.cl2 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; white-space: normal; }
 
   /* v3 균형 그리드 · 바깥 여백 120 · 왼쪽 단 = 통(중심 600, 590 · 고리 지름 824 · 위 178 ~ 아래 1002)
    *   오른쪽 단 = 정보(x 1104 ~ 1800) · 세로 기준선 236(위) · 590(가운데 = 통 중심) · 944(아래) · 모든 장면이 이 선에 붙는다 */
@@ -76,14 +80,18 @@
   #ticker { margin-top: auto; }
   .trow { display: flex; align-items: center; gap: 14px; height: 64px; font-size: 32px; color: var(--sub); border-top: 1px solid rgba(255,255,255,.1); }
   .trow:first-child { color: var(--txt); }
-  .trow b { font-weight: 600; min-width: 140px; }
+  .trow b { font-weight: 600; min-width: 140px; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: none; }
   .chip { display: inline-block; padding: 5px 16px; border-radius: 999px; background: rgba(255,126,49,.16); color: var(--hi); font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
   #pMix .title { margin-top: 8px; }
   #mMeta { font-size: 40px; line-height: 1.4; font-weight: 600; color: var(--txt); margin-top: 18px; }
-  #mList { margin-top: 34px; }
-  .wrow { display: flex; align-items: center; gap: 28px; height: 80px; border-top: 1px solid rgba(255,255,255,.12); font-size: 42px; font-weight: 600; color: var(--txt); }
-  .wrow .no { color: var(--o); font-variant-numeric: tabular-nums; min-width: 140px; }
+  #mList { margin-top: 26px; flex: 1 1 0; min-height: 0; overflow: hidden; }   /* 넘치면 오래된 줄부터 접고 「앞의 n명」 */
+  .wrow { display: grid; grid-template-columns: 140px minmax(0, 1fr); column-gap: 28px; align-items: center; min-height: 80px; padding: 8px 0; border-top: 1px solid rgba(255,255,255,.12); font-size: 42px; font-weight: 600; color: var(--txt); }
+  .wrow .no { color: var(--o); font-variant-numeric: tabular-nums; }
+  .who { display: block; min-width: 0; }
+  .wrow .nm { font-size: 42px; line-height: 1.2; }
+  .wrow .dp { font-size: 24px; line-height: 1.25; font-weight: 500; color: var(--sub); margin-top: 2px; }
+  .wmore { height: 52px; display: flex; align-items: center; border-top: 1px solid rgba(255,255,255,.12); font-size: 26px; font-weight: 500; color: var(--sub); }
   .stat { margin-top: auto; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.12); display: flex; align-items: baseline; gap: 14px; color: var(--sub); }
   .stat .lab { font-size: 32px; font-weight: 500; margin-right: 10px; }
   .stat b { font-size: 76px; line-height: 1; font-weight: 700; color: var(--txt); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
@@ -92,9 +100,13 @@
   #pReveal { text-align: center; }
   #rEye { position: absolute; left: 0; right: 0; top: 150px; font-size: 44px; font-weight: 600; color: #fff; }
   #rNo { position: absolute; left: 0; right: 0; top: 214px; font-size: 30px; font-weight: 500; color: rgba(255,255,255,.8); }
-  #rName { position: absolute; left: 0; right: 0; top: 700px; font-size: 118px; font-weight: 700; color: #fff; letter-spacing: 0.02em; }
-  #rName small { display: block; font-size: 40px; font-weight: 500; margin-top: 6px; letter-spacing: 0; }
-  #rPrize { position: absolute; left: 0; right: 0; top: 872px; font-size: 54px; font-weight: 600; color: #fff; }
+  /* v3.1 · 이름 · 부서 · 경품이 한 기둥으로 쌓인다(부서가 두 줄이 되어도 경품과 겹치지 않는다) */
+  #rTxt { position: absolute; left: 160px; right: 160px; top: 676px; display: flex; flex-direction: column; }
+  #rWho { opacity: 0; }
+  #rName { font-size: 118px; line-height: 1.12; font-weight: 700; color: #fff; letter-spacing: 0.02em; }
+  #rDept { font-size: 44px; line-height: 1.3; font-weight: 500; color: rgba(255,255,255,.92); margin-top: 6px; }
+  #rDept:empty { display: none; }
+  #rPrize { font-size: 54px; line-height: 1.3; font-weight: 600; color: #fff; margin-top: 24px; opacity: 0; }
   #rAbs { position: absolute; left: 0; right: 0; top: 700px; font-size: 96px; font-weight: 700; color: #fff; opacity: 0; }
 
   #pCard .eye { color: #fff; }
@@ -103,10 +115,14 @@
 
   #pBoard .title { margin-top: 8px; }
   #bList { margin-top: 40px; flex: 1; --rows: 5; }
-  .brow { display: grid; grid-template-columns: 150px 1fr auto; align-items: center; height: calc(520px / max(5, var(--rows))); max-height: 104px; border-top: 1px solid rgba(255,255,255,.12);
-          font-size: calc(min(44px, 520px / var(--rows) * .46)); font-weight: 600; color: var(--txt); }
+  .brow { display: grid; grid-template-columns: 150px minmax(0, 1fr) minmax(0, max-content); column-gap: 20px; align-items: center; height: calc(508px / max(5, var(--rows))); max-height: 104px; border-top: 1px solid rgba(255,255,255,.12);
+          font-size: calc(min(44px, 508px / max(5, var(--rows)) * .46)); font-weight: 600; color: var(--txt); overflow: hidden; }
   .brow .no { color: var(--o); font-variant-numeric: tabular-nums; }
-  .brow .pz { color: var(--sub); font-weight: 500; font-size: .78em; }
+  .brow .nm { line-height: 1.12; }
+  .brow .dp { line-height: 1.2; font-weight: 500; color: var(--sub); }
+  .brow .pz { color: var(--sub); font-weight: 500; line-height: 1.2; max-width: 200px; text-align: right; }
+  #bList.compact .who { display: flex; align-items: baseline; gap: .45em; }   /* 7명 이상 · 이름 옆에 부서 한 줄 */
+  #bList.compact .nm { flex: none; max-width: 60%; } #bList.compact .dp { flex: 1 1 0; }
 
   #pEnd .title { font-size: 128px; font-weight: 500; margin-top: 14px; }
   #pEnd .meta { font-size: 50px; color: var(--o); font-weight: 600; margin-top: 30px; }
@@ -170,24 +186,23 @@
   </div></section>
 
   <section id="pMix" class="panel"><div class="col">
-    <p class="eye" id="mEye"></p>
-    <h2 class="title" id="mTitle"></h2>
+    <p class="eye fit" id="mEye"></p>
+    <h2 class="title fit" id="mTitle"></h2>
     <p id="mMeta"></p>
     <div id="mList"></div>
     <div id="mCount" class="stat"></div>
   </div></section>
 
   <section id="pReveal" class="full">
-    <p id="rEye"></p>
+    <p id="rEye" class="fit"></p>
     <p id="rNo">응모 번호</p>
-    <p id="rName"></p>
+    <div id="rTxt"><div id="rWho"><p id="rName" class="fit"></p><p id="rDept" class="fit"></p></div><p id="rPrize" class="fit"></p></div>
     <p id="rAbs">부재 · 다시 추첨합니다</p>
-    <p id="rPrize"></p>
   </section>
 
   <section id="pCard" class="panel"><div class="mid">
-    <p class="eye" id="kEye"></p>
-    <h2 class="title" id="kTitle"></h2>
+    <p class="eye fit" id="kEye"></p>
+    <h2 class="title fit" id="kTitle"></h2>
     <p class="meta" id="kMeta"></p>
   </div></section>
 
@@ -221,7 +236,7 @@
       <tr><td>F · M · G · H</td><td>전체 화면 · 소리 켜기/끄기 · fps · 품질 표시 · 이 표</td></tr>
       <tr><td>D · A (데모)</td><td>10명 체크인 · 자동 체크인 켜기/끄기</td></tr>
     </table>
-    <p>누르는 순간 암호 난수로 통 안의 공을 흔들고 감속을 시작합니다. 통이 서서 6시 틈으로 처음 떨어진 공이 당첨이고, 그 순간 저장됩니다. 공개 중에 새로고침하면 같은 결과로 돌아오고, 감속 중에 새로고침하면 결과 없이 다시 뽑습니다. 마감 뒤 첫 추첨은 10초 이상 섞은 다음에 받습니다. 연속으로 눌러도 연출이 끝날 때까지 다음 입력을 받지 않습니다.</p>
+    <p>누르는 순간 암호 난수로 통 안의 공을 흔들고 감속을 시작합니다. 통이 6시에 서고 잠깐 뒤 틈의 미닫이 문이 열립니다. 그 틈으로 처음 떨어진 공이 당첨이고, 그 순간 문이 닫히며 저장됩니다. 공개 중에 새로고침하면 같은 결과로 돌아오고, 감속 중에 새로고침하면 결과 없이 다시 뽑습니다. 마감 뒤 첫 추첨은 10초 이상 섞은 다음에 받습니다. 연속으로 눌러도 연출이 끝날 때까지 다음 입력을 받지 않습니다.</p>
   </div>
 </div>
 <script src="../assets/server.js"></script>
