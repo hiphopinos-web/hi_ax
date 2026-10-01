@@ -6,7 +6,7 @@
 <title>Lucky Draw · AX Festival 2026</title>
 <meta name="robots" content="noindex">
 <!-- 17F 대강당 Outro 경품 추첨 송출 화면 · 16:9 · 운영자 노트북에서 전체 화면(F) · 조작 창(P)
-     모든 자산이 이 폴더 안에 있다(서체 · 홍보부 모션 엔진 · 워드마크 · 소리는 합성) · 인터넷이 끊겨도 데모·추첨이 돈다 -->
+     모든 자산이 이 폴더 안에 있다(서체 · 홍보부 모션 엔진 · 워드마크 · three.js 로컬 번들 · 소리는 합성) · v2 공만 입체(WebGL2 · 통과 연출은 v1) · 인터넷이 끊겨도 데모·추첨이 돈다 -->
 <link rel="icon" href="../icons/icon-192.png">
 <style>
   @font-face { font-family: "AXP"; src: url("assets/PretendardVariable.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
@@ -20,7 +20,8 @@
   html, body { width: 100%; height: 100%; overflow: hidden; background: #000; cursor: none; }
   body { font-family: var(--f); color: var(--txt); word-break: keep-all; -webkit-font-smoothing: antialiased; }
   body.st-orange { --brand: #fff; --txt: #fff; --sub: rgba(255,255,255,.82); --faint: rgba(255,255,255,.6); }
-  #cv { position: fixed; left: 0; top: 0; display: block; }
+  #cv, #gl, #fx { position: fixed; left: 0; top: 0; display: block; }
+  #gl, #fx { pointer-events: none; }
   .vid { position: fixed; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; opacity: 0; pointer-events: none; object-fit: cover; }
   .vid.blend { mix-blend-mode: screen; }
   body.ctl .vid { display: none; }
@@ -109,6 +110,8 @@
 </head>
 <body>
 <canvas id="cv"></canvas>
+<canvas id="gl"></canvas>
+<canvas id="fx"></canvas>
 <!-- 힉스필드 AI 영상 2편(코드로 못 만드는 실사 질감만) · 인트로 스팅 · 당첨 순간 점 폭발(screen 합성) · 파일이 없어도 화면은 돈다 -->
 <video id="vIntro" class="vid" src="assets/intro.mp4" muted playsinline preload="auto"></video>
 <video id="vBurst" class="vid blend" src="assets/burst.mp4" muted playsinline preload="auto"></video>
@@ -169,15 +172,15 @@
   <div id="help">
     <h2>조작표</h2>
     <table>
-      <tr><td>Space · Enter · → · PageDown</td><td>다음 단계 (체크인 시작 → 마감 → 라운드 → 섞기 → 추첨 → 확정)</td></tr>
+      <tr><td>Space · Enter · → · PageDown</td><td>다음 단계 (첫 번에 인트로 한 번 → 체크인 → 마감 → 라운드 → 섞기 → 추첨 → 확정)</td></tr>
       <tr><td>C 두 번</td><td>체크인 마감</td></tr>
       <tr><td>R 두 번</td><td>당첨자 부재 · 다시 추첨 (공개 화면에서)</td></tr>
       <tr><td>U 두 번</td><td>마지막 당첨 취소 (공을 통에 되돌림)</td></tr>
       <tr><td>1 ~ 9</td><td>라운드 바로 가기 (섞는 중에만)</td></tr>
-      <tr><td>V</td><td>인트로 영상 (대기 화면에서)</td></tr>
+      <tr><td>V</td><td>인트로 다시 보기 (대기 화면 · 이미 틀었으면 두 번)</td></tr>
       <tr><td>E 두 번 · I 두 번</td><td>끝 화면(ME to WE) · 대기 화면</td></tr>
       <tr><td>P</td><td>조작 창 열기 (경품 표 · 데이터 · 기록)</td></tr>
-      <tr><td>F · M · G · H</td><td>전체 화면 · 소리 켜기/끄기 · fps 표시 · 이 표</td></tr>
+      <tr><td>F · M · G · H</td><td>전체 화면 · 소리 켜기/끄기 · fps · 품질 표시 · 이 표</td></tr>
       <tr><td>D · A (데모)</td><td>10명 체크인 · 자동 체크인 켜기/끄기</td></tr>
     </table>
     <p>당첨은 공 단위 균등 무작위(암호 난수)로 버튼을 누르는 순간 정해지고 곧바로 저장됩니다. 새로고침해도 같은 결과로 돌아옵니다. 연속으로 눌러도 연출이 끝날 때까지 다음 입력을 받지 않습니다.</p>
@@ -187,6 +190,8 @@
 <script src="assets/axf_engine.js"></script>
 <script src="assets/wordmark.js"></script>
 <script src="assets/sfx.js"></script>
+<script src="assets/three.min.js"></script>
+<script src="assets/balls3d.js"></script>
 <script src="assets/draw.js"></script>
 <script src="assets/control.js"></script>
 </body>

@@ -4,7 +4,7 @@ window.AXDRAW_CONTROL = function () {
   "use strict";
   document.body.className = "ctl";
   document.documentElement.style.overflow = "auto"; document.documentElement.style.cursor = "auto"; document.documentElement.style.background = "#F2F4F6";
-  document.getElementById("cv").remove();
+  ["cv", "gl", "fx"].forEach(function (id) { var el = document.getElementById(id); if (el) el.remove(); });
   document.getElementById("frame").remove();
   var S = null, bc = null;
   try { bc = new BroadcastChannel("axf-draw"); bc.onmessage = function (e) { recv(e.data); }; } catch (e) {}

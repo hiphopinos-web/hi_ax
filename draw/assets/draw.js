@@ -1,5 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════════════
- * AX Festival 2026 · Outro 럭키드로우 송출 화면 (17F 대강당 · 16:9)
+ * AX Festival 2026 · Outro 럭키드로우 송출 화면 v2 (17F 대강당 · 16:9)
+ *   v2(261001) = v1 의 통(점 고리) · 투입구 · 배출구 · 물리 · 연출을 그대로 두고 공만 입체로 그린다(assets/balls3d.js · WebGL2 · 정면 직교)
+ *   캔버스 3겹: #cv 스테이지 · 통 · 심볼 → #gl 공(구형 음영 · 하이라이트 · 구르면 번호가 표면을 따라 돈다 · 접지 그림자) → #fx 고리 · 입자 · 도트 레터링
+ *   WebGL 이 안 되는 기계는 v1 의 2D 공 그림으로 자동 대체한다(행사가 멈추지 않게)
  *   디자인 정본 = AX페스티벌/design.md v29 (블랙·오렌지 스테이지 · 도트 격자 · KV 오브젝트 · 글자 정지 · 점으로 모이고 흩어진다)
  *   홍보부 원본 = assets/axf_engine.js (01 Me to WE · 02 Circle 좌표·계산식) · assets/wordmark.js (09 워드마크 아웃라인)
  *   공 1개 = 응모권 1장(4·5·6개 스탬프 = 1·2·3장, 번호 0001~9999 · 서버 raffle 원장과 같은 형식)
@@ -8,7 +11,8 @@
 (function () {
   "use strict";
   var Q = new URLSearchParams(location.search);
-  var REC = Q.has("rec"), BENCH = +Q.get("bench") || 0;
+  var REC = Q.has("rec"), BENCH = +Q.get("bench") || 0, CLIP = Q.has("clip"), NOGL = Q.has("nogl");
+  var FORCEQ = Q.has("q") ? +Q.get("q") : -1, QSTART = Q.has("qs") ? +Q.get("qs") : -1, QPAL = Q.has("pal") ? +Q.get("pal") : 0;
   var CONTROL = location.hash === "#control";
   if (CONTROL) { window.addEventListener("DOMContentLoaded", function () { window.AXDRAW_CONTROL && window.AXDRAW_CONTROL(); }); return; }
 
@@ -16,7 +20,7 @@
   var W0 = 1920, H0 = 1080, PITCH = 30;               /* 도트 격자 = 폭/64 */
   var DX = 505, DY = 578, DR = 392;                     /* 추첨 통(원) 중심·안쪽 반지름 · 왼쪽 50% 가 오브젝트 자리 */
   var RING = DR + 20, GATE = 0.92, INLET = -Math.PI / 2; /* 점 고리 반지름 · 배출구 각도(오른쪽 아래) · 투입구(위) */
-  var TRAY = { x: 1015, y: 985 };
+  var TRAY = { x: 905, y: 1000 };                        /* v2 · 받침을 왼쪽으로(오른쪽 글자 「통 안의 공」과 겹치지 않게) */
   var C = { o: "#FF7E31", o7: "#FF7F32", hi: "#FF963E", pu: "#E6CCFF", o50: "#FFB284", o25: "#FFD8C1", w: "#FFFFFF", k: "#000000", g: "#6B6B6B" };
   var FONT = '"AXP", "Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif';
   var LS_CFG = "axfDraw.cfg.v1", LS_ST = "axfDraw.state.v1";
@@ -26,7 +30,7 @@
     mode: "demo",            /* demo | server */
     demoN: 170,              /* 데모 참가자 수 */
     demoRate: 9,             /* 데모 체크인 속도(명/초 최대) */
-    rounds: [                /* 경품 단계 · 기획 문서에 품목이 없어 자리표시 · 중간워크숍 「앱 행운권 추첨 5인」 기준 합계 5명 */
+    rounds: [                /* 경품 단계 · 무대 5명(261001 확정) · 품목은 사용자가 줄 때까지 자리표시 */
       { name: "ROUND 01", prize: "경품 A", count: 3 },
       { name: "ROUND 02", prize: "경품 B", count: 1 },
       { name: "FINAL", prize: "경품 C", count: 1 }
@@ -38,12 +42,15 @@
     showDept: false,
     tickerNames: true,       /* 체크인 티커에 가린 이름 */
     beat: true,
+    intro: true,             /* 첫 Space 에 실사 인트로 1회(261001 확정) · 건너뛰기 = Space */
+    pal: 1,                  /* 색 대비 · 1 = 통 무채색 + 오렌지 공(261001 사용자 확정) · 2 = 통 오렌지 + 크림 공(비교안 보관 · ?pal=2) */
     server: ""
   };
   var CFG = load(LS_CFG, null);
   CFG = Object.assign(JSON.parse(JSON.stringify(DEF)), CFG || {});
   if (REC || BENCH) CFG = JSON.parse(JSON.stringify(DEF));
   if (REC) { CFG.rounds = [{ name: "ROUND 01", prize: "경품 A", count: 2 }, { name: "FINAL", prize: "경품 C", count: 1 }]; CFG.demoRate = 20; }   /* 쇼릴 대본 전용 */
+  if (QPAL) CFG.pal = QPAL;
   function load(k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
   function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 
@@ -120,10 +127,13 @@
         (res.rows || []).forEach(function (r) {
           if (!ST.pool.people[r.pk]) { ST.pool.people[r.pk] = { nm: r.nm || "", dp: r.dp || "", nos: (r.no || []).map(String) }; ST.pool.order.push(r.pk); }
           else ST.pool.people[r.pk].nos = (r.no || []).map(String);
-          if (r.in && CFG.checkinOnly) queueArrival(r.pk);
+          if (r.x && !ST.out[r.pk] && (r.x === "win" ? CFG.onePerPerson : CFG.absentRemove)) ST.out[r.pk] = r.x;   /* 서버 기록에 이미 당첨 · 부재 */
+          if (r.in && CFG.checkinOnly && !ST.closed) queueArrival(r.pk);
+          else if (r.in && CFG.checkinOnly && ST.closed) lateIn(r.pk);
         });
-        SRV.since = res.cursor || SRV.since;
+        SRV.since = res.cursor || SRV.since; SRV.balls = res.balls;
         if (!CFG.checkinOnly) ST.pool.order.forEach(queueArrival);
+        if (!SRV.stateChecked) { SRV.stateChecked = true; serverState(); }
         done(true); return;
       }
       if (res && res.err === "unknown action") {
@@ -146,6 +156,29 @@
       SRV.status = "실패 · " + (res && (res.reason || res.err) || "응답 없음"); done(false);
     });
   }
+  /* 마감 뒤 체크인 · 화면에는 넣지 않고 개수만 센다(마감은 마감) */
+  function lateIn(pk) { if (ST.arrived.indexOf(pk) < 0) { SRV.lateSeen = SRV.lateSeen || {}; if (!SRV.lateSeen[pk]) { SRV.lateSeen[pk] = 1; SRV.late = (SRV.late || 0) + 1; } } }
+  /* 예비 노트북 복원 · 이 브라우저에 기록이 없는데 서버 추첨기록이 있으면 그대로 가져온다(같은 당첨을 다시 뽑지 않게) */
+  function serverState() {
+    jsonp("draw_state", {}, function (res) {
+      if (!res || !res.ok) { SRV.stateStatus = "draw_state 실패 · " + (res && (res.reason || res.err) || "응답 없음"); return; }
+      SRV.stateStatus = "draw_state " + (res.n || 0) + "줄";
+      if (ST.results.length || !res.rows || !res.rows.length) return;
+      var byId = {}, list = [];
+      res.rows.forEach(function (r) {
+        if (r.st === "undo") { if (byId[r.id]) byId[r.id].st = "undone"; return; }
+        var x = byId[r.id];
+        if (!x) { x = { id: r.id, round: +r.round || 0, slot: +r.slot || 1, no: String(r.no), pk: r.pk, nm: "", dp: "", prize: r.prize, rname: "", at: r.at, st: r.st, pool: 0, srv: 1 }; byId[r.id] = x; list.push(x); }
+        else x.st = r.st;
+        var pp = ST.pool && ST.pool.people[r.pk]; if (pp) x.nm = pp.nm;
+      });
+      ST.results = list;
+      list.forEach(function (x) { if (x.st === "win" && CFG.onePerPerson) ST.out[x.pk] = "win"; if (x.st === "absent" && CFG.absentRemove) ST.out[x.pk] = "absent"; });
+      var rs = rounds(); ST.round = 0;
+      while (ST.round < rs.length - 1 && roundWins(ST.round).length >= rs[ST.round].count) ST.round++;
+      persist(); toast("서버 추첨기록 " + list.length + "건을 이어받았습니다", true);
+    });
+  }
   /* 당첨 기록 전송 · 새 액션 draw_log · 없거나 끊기면 로컬 큐에 두고 다시 보낸다(화면 진행은 막지 않는다) */
   function serverLog(r) {
     if (CFG.mode !== "server") return;
@@ -158,13 +191,13 @@
     var e = SRV.queue[0];
     jsonp("draw_log", e, function (res) {
       SRV.flushing = false;
-      if (res && (res.ok || res.reason === "dup")) { SRV.queue.shift(); save("axfDraw.q", SRV.queue); flushQueue(); }
+      if (res && (res.ok || res.reason === "dup")) { SRV.logStatus = res.reason === "dup" ? "서버에 같은 분의 다른 당첨이 있습니다 · " + (res.id || "") : "기록됨" + (res.again ? "(이미 있음)" : "") + (res.warn ? " · 명단 밖 pk" : ""); SRV.queue.shift(); save("axfDraw.q", SRV.queue); flushQueue(); }
       else { SRV.logStatus = res && res.err === "unknown action" ? "draw_log 없음 · 로컬 기록만" : "전송 대기 " + SRV.queue.length; if (!(res && res.err === "unknown action")) setTimeout(flushQueue, 5000); }
     });
   }
 
   /* ─────────────── 캔버스 · 뷰 변환 ─────────────── */
-  var cv, cx, vw = 0, vh = 0, dpr = 1, vs = 1, vox = 0, voy = 0, frameEl;
+  var cv, cx, glEl, fxEl, fx, GL = null, vw = 0, vh = 0, dpr = 1, vs = 1, vox = 0, voy = 0, frameEl;
   var gridBlack = null, gridOrange = null, BASEVS = 0;
   function resize() {
     var w = REC ? 1920 : window.innerWidth, h = REC ? 1080 : window.innerHeight;
@@ -172,13 +205,15 @@
     var px = w * h * dpr * dpr, cap = 2560 * 1440;       /* 4K 노트북에서도 내장 그래픽이 버티게 픽셀 수 상한 */
     if (px > cap) dpr *= Math.sqrt(cap / px);
     vw = Math.round(w * dpr); vh = Math.round(h * dpr);
-    cv.width = vw; cv.height = vh; cv.style.width = w + "px"; cv.style.height = h + "px";
+    cv.width = vw; cv.height = vh; fxEl.width = vw; fxEl.height = vh;
+    [cv, fxEl, glEl].forEach(function (c) { c.style.width = w + "px"; c.style.height = h + "px"; });
     var s = Math.min(w / W0, h / H0);
     vs = s * dpr; vox = (w - W0 * s) / 2 * dpr; voy = (h - H0 * s) / 2 * dpr; BASEVS = vs;
     frameEl.style.transform = "translate(" + (w - W0 * s) / 2 + "px," + (h - H0 * s) / 2 + "px) scale(" + s + ")";
     ["vIntro", "vBurst"].forEach(function (id) { var v = document.getElementById(id); if (v) v.style.transform = frameEl.style.transform; });
     gridBlack = makeGrid("black"); gridOrange = makeGrid("orange");
     atlas.key = "";
+    if (GL) GL.resize(vw, vh, vs, vox, voy);
   }
   /* 도트 격자 · 움직이지 않는다 · 1.5% 점등(design.md §2) · 레터박스 바깥까지 같은 격자로 채운다 */
   function makeGrid(kind) {
@@ -230,6 +265,7 @@
   var bx = new Float32Array(MAXB), by = new Float32Array(MAXB), bpx = new Float32Array(MAXB), bpy = new Float32Array(MAXB);
   var ba = new Float32Array(MAXB), bph = new Float32Array(MAXB), bborn = new Float32Array(MAXB), bland = new Float32Array(MAXB);
   var bs = new Uint8Array(MAXB), bno = new Array(MAXB), bpk = new Array(MAXB), bnoI = new Int32Array(MAXB);
+  var bq = new Float32Array(MAXB * 4), bflag = new Uint8Array(MAXB), bcont = new Uint8Array(MAXB), bao = new Float32Array(MAXB), bnum = new Float32Array(MAXB);
   var NB = 0, R = 22, RT = 22, nAlive = 0, nInside = 0;
   var MIX = { e: 0, target: 0, omega: 0.06, rot: 0 };
   var PH = { acc: 0, h: 1 / 120, impacts: 0, impactV: 0, ms: 0 };
@@ -240,16 +276,46 @@
     if (i >= MAXB) { NB--; return -1; }
     bx[i] = x; by[i] = y; bpx[i] = x - (vx || 0) * PH.h; bpy[i] = y - (vy || 0) * PH.h;
     ba[i] = rng() * 6.28; bph[i] = hash(i + 1); bborn[i] = T; bland[i] = -9; bs[i] = st || 1; bno[i] = no; bpk[i] = pk; bnoI[i] = +no;
+    bnum[i] = numOf(no); bflag[i] = 0; bao[i] = 1; bcont[i] = 0; randQuat(i);
     ballOfNo[no] = i;
     return i;
   }
-  function killBall(i) { if (bs[i]) { bs[i] = 0; delete ballOfNo[bno[i]]; } }
+  function killBall(i) { if (bs[i]) { bs[i] = 0; bflag[i] = 0; delete ballOfNo[bno[i]]; } }
+  function numOf(no) { var d = String(no || "").replace(/\D/g, ""); return d ? +d.slice(-4) : 0; }
+  function randQuat(i) {                               /* 균등 무작위 회전 · 번호 면이 처음부터 제각각 */
+    var u1 = rng(), u2 = rng() * 6.2832, u3 = rng() * 6.2832, a = Math.sqrt(1 - u1), b = Math.sqrt(u1), o = i * 4;
+    bq[o] = a * Math.sin(u2); bq[o + 1] = a * Math.cos(u2); bq[o + 2] = b * Math.sin(u3); bq[o + 3] = b * Math.cos(u3);
+  }
+  function integQuat(o, wx, wy, wz, dt) {
+    var qx = bq[o], qy = bq[o + 1], qz = bq[o + 2], qw = bq[o + 3], hd = 0.5 * dt;
+    var nx = qx + hd * (wx * qw + wy * qz - wz * qy), ny = qy + hd * (wy * qw + wz * qx - wx * qz), nz = qz + hd * (wz * qw + wx * qy - wy * qx), nw = qw - hd * (wx * qx + wy * qy + wz * qz);
+    var l = Math.sqrt(nx * nx + ny * ny + nz * nz + nw * nw);
+    if (!(l > 1e-6)) { bq[o] = 0; bq[o + 1] = 0; bq[o + 2] = 0; bq[o + 3] = 1; return; }
+    bq[o] = nx / l; bq[o + 1] = ny / l; bq[o + 2] = nz / l; bq[o + 3] = nw / l;
+  }
+  function slerpTo(o, q, s) {                          /* nlerp · 짧은 쪽으로 */
+    var d = bq[o] * q[0] + bq[o + 1] * q[1] + bq[o + 2] * q[2] + bq[o + 3] * q[3], sg = d < 0 ? -1 : 1, k;
+    for (k = 0; k < 4; k++) bq[o + k] += (q[k] * sg - bq[o + k]) * s;
+    var l = Math.hypot(bq[o], bq[o + 1], bq[o + 2], bq[o + 3]) || 1;
+    for (k = 0; k < 4; k++) bq[o + k] /= l;
+  }
+  /* 굴림 · 공은 통 뒷면(화면) 위를 구르듯 돈다 · ω = (뒷면 법선 +z) × v / r → 번호가 공 표면을 따라 지나간다 */
+  function spinBalls(dt) {
+    var inv = 1 / (PH.h * R);
+    for (var i = 0; i < NB; i++) {
+      if (bs[i] !== 2 && bs[i] !== 1) continue;
+      var vx = (bx[i] - bpx[i]) * inv, vy = -(by[i] - bpy[i]) * inv;   /* 월드 y 위 */
+      integQuat(i * 4, -vy * 0.9, vx * 0.9, 0, dt);
+      var ao = 1 - 0.38 * clamp((bcont[i] - 2) / 5, 0, 1);
+      bao[i] += (ao - bao[i]) * 0.15;
+    }
+  }
   function countAlive() {
     var a = 0, n = 0;
     for (var i = 0; i < NB; i++) if (bs[i]) { a++; if (bs[i] === 2) n++; }
     nAlive = a; nInside = n;
   }
-  function targetRadius() { return clamp(Math.sqrt(0.5 * DR * DR / Math.max(nAlive, 150)), 5.2, 23); }
+  function targetRadius() { return clamp(Math.sqrt(0.56 * DR * DR / Math.max(nAlive, 150)), 5.2, 24); }   /* v2 · 번호가 읽히게 조금 크게(면적 56%) */
   function physStep(h) {
     var g = 2600, i, j, e = MIX.e, rr = R, lim = DR - rr, tt = T;
     /* 1. 적분 + 믹싱 힘(바닥 공기 분사 · 소용돌이 · 난류) */
@@ -270,12 +336,13 @@
       }
       bpx[i] = bx[i]; bpy[i] = by[i];
       bx[i] += vx + ax * h * h; by[i] += vy + ay * h * h;
-      if (bx[i] !== bx[i] || by[i] !== by[i]) { bx[i] = DX; by[i] = DY; bpx[i] = DX; bpy[i] = DY; }   /* NaN 방어 */
+      if (bx[i] !== bx[i] || by[i] !== by[i]) { bx[i] = DX; by[i] = DY; bpx[i] = DX; bpy[i] = DY; NANFIX++; }   /* NaN 방어 */
     }
     /* 2. 충돌 · 격자에 담고 이웃 칸만 본다 */
     var cs = rr * 2, x0 = DX - DR - cs, y0 = DY - DR - cs * 3, gw = Math.ceil((DR * 2 + cs * 2) / cs) + 1, gh = Math.ceil((DR * 2 + cs * 4) / cs) + 1, nc = gw * gh;
     if (!grid.cnt || grid.cnt.length < nc + 1) { grid.cnt = new Int32Array(nc + 1); grid.idx = new Int32Array(MAXB); }
     var cnt = grid.cnt, idx = grid.idx, cell = grid.cell;
+    for (i = 0; i < NB; i++) bcont[i] = 0;
     for (var it = 0; it < 2; it++) {
       cnt.fill(0, 0, nc + 1);
       for (i = 0; i < NB; i++) {
@@ -309,6 +376,7 @@
               var mi = ov * wi / ws, mj = ov * wj / ws;
               bx[i] -= nxx * mi; by[i] -= nyy * mi; bx[j] += nxx * mj; by[j] += nyy * mj;
               if (it === 0) {
+                if (bcont[i] < 255) bcont[i]++; if (bcont[j] < 255) bcont[j]++;
                 var rv = ((bx[j] - bpx[j]) - (bx[i] - bpx[i])) * nxx + ((by[j] - bpy[j]) - (by[i] - bpy[i])) * nyy;
                 if (rv < -1.6) { imp++; if (-rv > impV) impV = -rv; }
               }
@@ -328,7 +396,7 @@
           continue;
         }
         if (wd > lim) {
-          if (wd > DR + rr * 6) { bx[i] = DX + (rng() - 0.5) * 40; by[i] = DY; bpx[i] = bx[i]; bpy[i] = by[i]; continue; }   /* 빠져나간 공 복구 */
+          if (wd > DR + rr * 6) { bx[i] = DX + (rng() - 0.5) * 40; by[i] = DY; bpx[i] = bx[i]; bpy[i] = by[i]; ESCFIX++; continue; }   /* 빠져나간 공 복구 */
           var nx = wx / wd, ny = wy / wd;
           bx[i] = DX + nx * lim; by[i] = DY + ny * lim;
           var vx2 = bx[i] - bpx[i], vy2 = by[i] - bpy[i], vn = vx2 * nx + vy2 * ny;
@@ -342,7 +410,7 @@
     /* 4. 굴림 · 접선 속도로 회전(숫자가 돌아간다) */
     for (i = 0; i < NB; i++) if (bs[i] === 2) ba[i] += (bx[i] - bpx[i]) / rr * 0.9;
   }
-  var lastDrop = 0;
+  var lastDrop = 0, NANFIX = 0, ESCFIX = 0;
   function landSound() { if (T - lastDrop > 0.045) { lastDrop = T; SFX.play("drop", rng()); } }
 
   /* ─────────────── 공 스프라이트 아틀라스 · 번호가 적힌 오렌지 공(평면 · 그림자 없음) ─────────────── */
@@ -361,9 +429,9 @@
     c.font = "700 " + (ps * 0.74).toFixed(1) + "px " + FONT;
     for (var i = 0; i < n; i++) {
       var col = i % cols, row = Math.floor(i / cols), x = col * cell + cell / 2, y = row * cell + cell / 2;
-      c.fillStyle = C.o; c.beginPath(); c.arc(x, y, ps, 0, 6.2832); c.fill();
-      if (ps >= 10) { c.fillStyle = "#1A0B02"; c.fillText(bno[i] || "", x, y + ps * 0.05); }
-      else { c.fillStyle = C.pu; c.beginPath(); c.arc(x, y, ps * 0.22, 0, 6.2832); c.fill(); }   /* 번호가 안 읽히는 크기에서는 KV 01 링 점(보라 핵) */
+      c.fillStyle = CFG.pal === 2 ? "#FFF4EC" : C.o; c.beginPath(); c.arc(x, y, ps, 0, 6.2832); c.fill();
+      if (ps >= 10) { c.fillStyle = CFG.pal === 2 ? "#D64524" : "#1A0B02"; c.fillText(bno[i] || "", x, y + ps * 0.05); }
+      else { c.fillStyle = "#FFEBE0"; c.beginPath(); c.arc(x, y, ps * 0.22, 0, 6.2832); c.fill(); }   /* 번호가 안 읽히는 크기에서는 KV 01 링 점(핵 O10 · 261001 파랑 계열 금지) */
     }
     atlas.cell = cell; atlas.cols = cols; atlas.key = key;
   }
@@ -415,19 +483,20 @@
     var n = 132, i, beatWave = DRUM.pulse;
     cx.setTransform(vs, 0, 0, vs, vox, voy);
     cx.globalAlpha = DRUM.alpha;
-    var tiers = [C.o, C.hi, C.pu];
-    for (var tier = 0; tier < 3; tier++) {
+    /* 안 1(무채색 통) = 작은 점은 옅은 회색 · 굵은 점만 조금 밝게 · 안 2 = v1 오렌지 3단(02 Circle 원본) */
+    var neutral = CFG.pal !== 2, tiers = neutral ? ["rgba(255,255,255,0.34)", "rgba(255,255,255,0.74)"] : [C.o, C.hi, C.pu];
+    for (var tier = 0; tier < tiers.length; tier++) {
       cx.fillStyle = tiers[tier]; cx.beginPath();
       for (i = 0; i < n; i++) {
         var rank = i * 13 % 36, base = rank < 7 ? 8 : rank < 18 ? 4.6 : 2.6;
-        if (tier > 0 && rank >= 7) continue;
+        if (neutral ? (tier === 0) === (rank < 7) : (tier > 0 && rank >= 7)) continue;
         var a = i / n * 6.2832 + MIX.rot;
         /* 투입구·배출구 자리에서는 점이 작아져 틈이 열린다(고리 자체는 계속 돈다) */
         var gi = gapK(a, INLET, 0.2) * DRUM.inlet, gg = gapK(a, GATE, 0.2) * DRUM.gate;
         var k = 1 - Math.max(gi, gg);
         if (k <= 0.02) continue;
         var wave = 1 + 0.45 * beatWave * Math.max(0, Math.cos(a - MIX.rot * 3 - T * 4)) + 0.25 * DRUM.glow;
-        var r = base * k * wave * (tier === 0 ? 1 : tier === 1 ? 18 / 38 : 8 / 38);
+        var r = base * k * wave * (neutral || tier === 0 ? 1 : tier === 1 ? 18 / 38 : 8 / 38);
         var rr = RING + (rank < 7 ? 0 : rank < 18 ? 6 : 12) * 0 + 0;
         var x = DX + Math.cos(a) * rr, y = DY + Math.sin(a) * rr;
         cx.moveTo(x + r, y); cx.arc(x, y, r, 0, 6.2832);
@@ -436,7 +505,7 @@
     }
     /* 투입구 위 안내 점선 · 체크인 중에만 */
     if (DRUM.inlet > 0.05) {
-      cx.fillStyle = "rgba(255,150,62," + (0.5 * DRUM.inlet).toFixed(3) + ")"; cx.beginPath();
+      cx.fillStyle = (CFG.pal !== 2 ? "rgba(255,255,255," : "rgba(255,150,62,") + (0.5 * DRUM.inlet).toFixed(3) + ")"; cx.beginPath();
       for (var y2 = DY - RING - 30; y2 > -20; y2 -= 26) { var ph = ((T * 90) % 26); cx.moveTo(DX + 2.4, y2 + ph); cx.arc(DX, y2 + ph, 2.4, 0, 6.2832); }
       cx.fill();
     }
@@ -444,6 +513,37 @@
   }
   function gapK(a, c, w) { var d = Math.atan2(Math.sin(a - c), Math.cos(a - c)); return Math.max(0, 1 - Math.abs(d) / w); }
 
+  /* v2 · 공은 #gl 에 입체로 · 방금 들어온 공의 고리와 긴장 구간 하이라이트 고리는 #fx 에 */
+  var S3 = { NB: 0, x: bx, y: by, q: bq, r: 0, bs: bs, num: bnum, flag: bflag, ao: bao, heroI: -1, hx: 0, hy: 0, hr: 0, hq: [0, 0, 0, 1], hnum: 0, t: 0, dim: 1 };
+  function drawBallsGL(alphaAll) {
+    var ex = SC === "exit" && WIN.i >= 0, cs = CAM.s;
+    /* 사라질 때는 투명도로(오렌지 스테이지 위에서 검게 보이지 않게) · 배출 중에만 어둡게(당첨 공은 그대로) */
+    glEl.style.opacity = SC === "exit" ? "1" : alphaAll.toFixed(3);
+    S3.NB = NB; S3.r = R * cs; S3.t = T; S3.dim = SC === "exit" ? alphaAll : 1; S3.heroI = ex ? WIN.i : -1;
+    if (ex) { var p = winPos(), o = WIN.i * 4; S3.hx = p.x; S3.hy = p.y; S3.hr = winRad(); S3.hq[0] = bq[o]; S3.hq[1] = bq[o + 1]; S3.hq[2] = bq[o + 2]; S3.hq[3] = bq[o + 3]; S3.hnum = bnum[WIN.i]; S3.hflag = (WIN.z || 0) > 0.05 ? 0 : 2; }
+    else S3.hr = 0;
+    if (cs !== 1) {                                    /* 긴장 구간 카메라 다가가기 · 공 좌표에도 같은 배율 */
+      if (!S3.cx) { S3.cx = new Float32Array(MAXB); S3.cy = new Float32Array(MAXB); }
+      for (var i2 = 0; i2 < NB; i2++) { S3.cx[i2] = DX + (bx[i2] - DX) * cs; S3.cy[i2] = (DY - 20) + (by[i2] - (DY - 20)) * cs; }
+      S3.x = S3.cx; S3.y = S3.cy;
+    } else { S3.x = bx; S3.y = by; }
+    GL.frame(S3);
+    var i;
+    fx.setTransform(vs * cs, 0, 0, vs * cs, vox + DX * vs * (1 - cs), voy + (DY - 20) * vs * (1 - cs));
+    fx.globalAlpha = alphaAll * 0.9; fx.lineWidth = 2.5; fx.strokeStyle = C.hi; fx.beginPath();
+    for (i = 0; i < NB; i++) {
+      if (bs[i] !== 2) continue;
+      var u = (T - bland[i]) / 0.55; if (u < 0 || u > 1) continue;
+      var rr = R * (1.1 + u * 1.3); fx.moveTo(bx[i] + rr, by[i]); fx.arc(bx[i], by[i], rr, 0, 6.2832);
+    }
+    fx.stroke();
+    if (HOP.cur >= 0 && bs[HOP.cur] === 2) {
+      var j = HOP.cur, big = HOP.locked ? 1.34 + 0.12 * Math.sin(T * 18) : 1.32;
+      fx.globalAlpha = alphaAll; fx.lineWidth = HOP.locked ? 4 : 3; fx.strokeStyle = C.w;
+      fx.beginPath(); fx.arc(bx[j], by[j], R * big, 0, 6.2832); fx.stroke();
+    }
+    fx.globalAlpha = 1;
+  }
   function drawBalls(alphaAll) {
     buildAtlas();
     var i, ps = R * vs;
@@ -503,7 +603,7 @@
       else op = 0.95 * clamp(t / 0.15, 0, 1) * clamp((4.2 - t) / 1.2, 0, 1);
       if (v.cut) op *= clamp(1 - (T - v.cut) / 0.3, 0, 1);
       v.el.style.opacity = op.toFixed(3);
-      if (t >= (k === "intro" ? dur - 0.1 : 4.2)) { vidStop(k); if (k === "intro" && SC === "intro") { scene("idle"); lock(0.4); } }
+      if (t >= (k === "intro" ? dur - 0.1 : 4.2) || (v.cut && T - v.cut >= 0.3)) { vidStop(k); if (k === "intro" && SC === "intro") introDone(); }
     }
   }
   function vidSeeks() {                                  /* 녹화용 · [요소, 초] */
@@ -611,10 +711,23 @@
       case "help": document.body.classList.toggle("help-on"); return;
       case "hud": document.body.classList.toggle("hud-on"); return;
       case "ctl": openControl(); return;
-      case "intro": if (SC === "idle" && vidStart("intro")) { scene("intro"); lock(1); SFX.play("riser", 3.6); setTimeoutSim(function () { SFX.play("hit"); }, 3.9); } return;
+      case "intro":
+        if (SC !== "idle") return;
+        if (ST.introDone) return twice("intro", "인트로는 이미 재생했습니다 · 한 번 더 누르면 다시 재생합니다", function () { playIntro(false); });
+        return playIntro(false);
       case "reset": resetAll(); return;
       case "reload": if (CFG.mode === "server") serverLoad(function () { pushCtl(); }); return;
     }
+  }
+  var INTRO_NEXT = false;
+  function playIntro(thenCheckin) {
+    if (!vidStart("intro")) { if (thenCheckin) startCheckin(); return; }
+    ST.introDone = true; INTRO_NEXT = !!thenCheckin; persist();
+    scene("intro"); lock(1); SFX.play("riser", 3.6); setTimeoutSim(function () { SFX.play("hit"); }, 3.9);
+  }
+  function introDone() {
+    if (INTRO_NEXT) { INTRO_NEXT = false; scene("idle"); startCheckin(); }
+    else { scene("idle"); lock(0.4); }
   }
   function twice(k, msg, fn) {
     if (confirmKey === k && T - confirmT < 2.5) { confirmKey = null; toast(""); fn(); return; }
@@ -623,7 +736,8 @@
   function lock(sec) { busyUntil = T + sec; }
   function next() {
     switch (SC) {
-      case "idle": return startCheckin();
+      case "intro": vidCut("intro"); lock(0.5); return;   /* 인트로 건너뛰기 */
+      case "idle": if (CFG.intro && !ST.introDone) return playIntro(true); return startCheckin();
       case "checkin": return twice("close", "한 번 더 누르면 체크인을 마감합니다", closeCheckin);
       case "closed": return goCard();
       case "card": if (sT() > 0.8) return goMix(); return;
@@ -641,12 +755,12 @@
     scatterSymbol();
     DRUM.inletT = 1; scene("checkin"); lock(0.6);
     SFX.play("whoosh", 0.9);
-    if (CFG.mode === "server") SRV.polling = setInterval(function () { if (SC === "checkin" && SRV.hasPool) serverLoad(function () {}); }, 3000);
+    if (CFG.mode === "server") { if (SRV.polling) clearInterval(SRV.polling); SRV.polling = setInterval(function () { if (SC === "checkin" && SRV.hasPool) serverLoad(function () {}); }, 3000); }
   }
   function closeCheckin() {
     if (SC !== "checkin") return;
     ARR.q.length = 0; ARR.auto = false; DROPS.length = DROPS.filter(function (d) { return d.at <= T + 0.5; }).length ? DROPS.length : 0;
-    ST.closed = true; DRUM.inletT = 0; if (SRV.polling) clearInterval(SRV.polling);
+    ST.closed = true; DRUM.inletT = 0; if (SRV.polling) { clearInterval(SRV.polling); SRV.polling = null; }
     scene("closed"); lock(0.8); SFX.play("stamp");
   }
   function goCard() {
@@ -685,8 +799,8 @@
     var u = sT() / HOP.dur;
     MIX.target = u < 0.55 ? 1.35 : Math.max(0.12, 1.35 * (1 - (u - 0.55) / 0.35));
     while (HOP.k < HOP.list.length && sT() >= HOP.list[HOP.k][0]) {
-      var hp = HOP.list[HOP.k]; HOP.cur = hp[1];
-      if (HOP.k === HOP.list.length - 1) { HOP.locked = true; SFX.play("lock"); DRUM.glow = 1; }
+      var hp = HOP.list[HOP.k]; if (HOP.cur >= 0) bflag[HOP.cur] = 0; HOP.cur = hp[1]; bflag[HOP.cur] = 1;
+      if (HOP.k === HOP.list.length - 1) { HOP.locked = true; bflag[HOP.cur] = 2; SFX.play("lock"); DRUM.glow = 1; }
       else SFX.play("tick", hp[2]);
       HOP.k++;
     }
@@ -702,6 +816,7 @@
     scene("exit"); lock(99);
     SFX.play("roll", 1.1);
   }
+  var EXDT = 1 / 60;
   function stepExit() {
     var t = sT(), P = WIN.path, i = WIN.i, x, y;
     if (t < 0.55) { var u = EIO(t / 0.55); x = P.s.x + (P.gin.x - P.s.x) * u; y = P.s.y + (P.gin.y - P.s.y) * u; }
@@ -711,8 +826,11 @@
       y = a * a * P.gin.y + 2 * a * v * P.gout.y + v * v * P.tray.y;
       if (t > 0.95) DRUM.gateT = 0;
     } else { x = P.tray.x; y = P.tray.y - Math.abs(Math.sin((t - 1.3) * 14)) * 18 * Math.max(0, 1 - (t - 1.3) / 0.35); }
-    var mv = Math.hypot(x - bx[i], y - by[i]);
+    var mvx = x - bx[i], mvy = y - by[i], mv = Math.hypot(mvx, mvy);
     bpx[i] = bx[i]; bpy[i] = by[i]; bx[i] = x; by[i] = y; ba[i] += mv / R;
+    var dtx = Math.max(EXDT, 1e-3);
+    if (t < 1.55) integQuat(i * 4, mvy / R / dtx * 0.9, mvx / R / dtx * 0.9, 0, dtx);   /* 배출구 · 받침까지 구른다 */
+    else slerpTo(i * 4, [0, 0, 0, 1], 0.06 + 0.5 * EIO((t - 1.55) / 1.05));            /* 커지는 동안 번호가 정면으로 */
     WIN.x = x; WIN.y = y; WIN.a = ba[i];
     /* 줌 · 공이 화면 가운데로 커진다 */
     WIN.z = EIO((t - 1.55) / 1.05);
@@ -727,7 +845,7 @@
   function buildDigits(text) {
     if (!digCanvas) digCanvas = document.createElement("canvas");
     var w = 1600, h = 520; digCanvas.width = w; digCanvas.height = h;
-    var c = digCanvas.getContext("2d");
+    var c = digCanvas.getContext("2d", { willReadFrequently: true });
     c.clearRect(0, 0, w, h); c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle";
     c.font = "800 440px " + FONT; c.fillText(text, w / 2, h / 2 + 20);
     var d = c.getImageData(0, 0, w, h).data, pts = [], step = 15;
@@ -754,7 +872,7 @@
     for (var k2 = 0; k2 < 420; k2++) { var a2 = rng() * 6.2832, s2 = 300 + rng() * 1500; spark(p.x, p.y, Math.cos(a2) * s2, Math.sin(a2) * s2 - 400, 1.6 + rng() * 1.6, 3 + rng() * 9, [3, 3, 4, 2, 1][k2 % 5], 900, 1.4); }
     SFX.play("hit");
     vidStart("burst");
-    bs[WIN.i] = 0; delete ballOfNo[bno[WIN.i]];
+    bs[WIN.i] = 0; bflag[WIN.i] = 0; delete ballOfNo[bno[WIN.i]];
     HOP.cur = -1; DRUM.glow = 0; WIN.zs = 0;
     scene("reveal"); lock(1.2);
     uiReveal(WIN.r);
@@ -877,6 +995,24 @@
     if (t > u0) axfDraw(cx, "me", axfF(), b, null, clamp((t - u0) / 0.6, 0, 1));
   }
 
+  /* ─────────────── 품질 · 공 수와 실제 fps 로 자동으로 낮춘다 ───────────────
+   * 0 최고 · 1(구 분할 20×14) · 2(14×10 · 접지 그림자 끔 · 글리프 64px · 해상도 0.85) · 3(10×8 · 가림 그림자 끔 · 해상도 0.7) */
+  var QA = { tier: -1, low: 0, changedT: -9, log: [] };
+  function tierForCount(n) { return n <= 900 ? 0 : n <= 1700 ? 1 : n <= 2600 ? 2 : 3; }
+  function applyTier(t, why) {
+    t = clamp(t, 0, 3); if (FORCEQ >= 0) t = FORCEQ;
+    if (t === QA.tier) return;
+    QA.tier = t; QA.changedT = T; QA.log.push([Math.round(T), t, why]); if (QA.log.length > 20) QA.log.shift();
+    if (GL) GL.setQuality(t);
+  }
+  function stepQuality(dt) {
+    var want = tierForCount(nAlive);
+    if (want > QA.tier && QSTART < 0) applyTier(want, "공 " + nAlive);
+    if (REC || FORCEQ >= 0 || !GL) return;
+    if (FPS.v < 54 && T - QA.changedT > 2.5 && QA.tier < 3 && FPS.frames > 90) { QA.low += dt; if (QA.low > 1.5) { QA.low = 0; applyTier(QA.tier + 1, Math.round(FPS.v) + "fps"); } }
+    else QA.low = 0;
+  }
+
   /* ─────────────── 매 프레임 ─────────────── */
   var beatT = 0, beatN = 0, clackT = 0, lastAir = -1, TIMERS = [];
   function setTimeoutSim(fn, sec) { TIMERS.push([T + sec, fn]); }
@@ -908,14 +1044,17 @@
     if (NEXTCARD && T >= NEXTCARD) { NEXTCARD = 0; goCard(); }
     if (DIG.out > 0) { DIG.out += dt / 0.7; if (DIG.out >= 1) { DIG.n = 0; DIG.out = 0; } }
     if (SC === "tension") stepTension();
+    EXDT = dt;
     if (SC === "exit") stepExit();
     /* 반지름 · 공이 늘면 작아진다 */
     countAlive(); RT = targetRadius(); R += (RT - R) * Math.min(1, dt * 1.2);
+    stepQuality(dt);
     /* 물리 · 고정 스텝 */
     var t0 = performance.now();
     PH.acc += dt; var steps = 0;
     while (PH.acc >= PH.h && steps < 6) { physStep(PH.h); PH.acc -= PH.h; steps++; }
     if (steps >= 6) PH.acc = 0;
+    spinBalls(dt);
     PH.ms = PH.ms * 0.9 + (performance.now() - t0) * 0.1;
     if (MIX.e > 0.25 && PH.impacts) {
       clackT -= dt;
@@ -932,6 +1071,8 @@
   }
   function render() {
     var t0 = performance.now();
+    var mainCx = cx;
+    fx.setTransform(1, 0, 0, 1, 0, 0); fx.clearRect(0, 0, vw, vh);
     drawStage();
     var worldA = 1;
     if (SC === "exit") worldA = 1 - 0.75 * (WIN.z || 0);
@@ -945,14 +1086,21 @@
       DRUM.alpha = worldA;
       drawDrum();
       if (SC === "idle") drawSymbolIdle(clamp(sT() / 0.8, 0, 1));
-      drawBalls(worldA);
+      if (!GL) drawBalls(worldA);
       vs = vs0; vox = vox0; voy = voy0;
     }
-    if (SC === "exit" || (SC === "tension" && false)) drawWinner();
+    if (SC === "exit" && WIN.z > 0) {                  /* 줌 동안 통과 공을 어둡게 · v1 과 같다 */
+      cx.setTransform(vs, 0, 0, vs, vox, voy);
+      cx.fillStyle = "rgba(0,0,0," + (0.55 * WIN.z).toFixed(3) + ")"; cx.fillRect(-vox / vs, -voy / vs, vw / vs, vh / vs);
+    }
+    if (GL) { if (worldA > 0.01 || SC === "exit") drawBallsGL(worldA * (SC === "exit" ? 1 - 0.55 * (WIN.z || 0) : 1)); else GL.clear(); }
+    cx = fx;
+    if (!GL && SC === "exit") drawWinner();
     if (SC === "card") drawCardObject();
     drawDigits();
     if (SC === "end") drawEnd();
     drawParticles();
+    cx = mainCx;
     RD.ms = RD.ms * 0.9 + (performance.now() - t0) * 0.1;
   }
   var RD = { ms: 0 }, CAM = { s: 1, t: 1 };
@@ -1056,7 +1204,7 @@
   function uiTick() {
     if ((tickN++ % 6) !== 0) return;
     set("mCount", "통 안의 공 " + nInside.toLocaleString("en-US") + "개");
-    if (document.body.classList.contains("hud-on")) set("hud", Math.round(FPS.v) + " fps · 공 " + nAlive + " · r " + R.toFixed(1) + " · 물리 " + PH.ms.toFixed(1) + "ms · 그리기 " + RD.ms.toFixed(1) + "ms");
+    if (document.body.classList.contains("hud-on")) set("hud", Math.round(FPS.v) + " fps · 공 " + nAlive + " · r " + R.toFixed(1) + " · 품질 " + QA.tier + (GL ? " · 입체" : " · 2D 대체") + " · 물리 " + PH.ms.toFixed(1) + "ms · 그리기 " + RD.ms.toFixed(1) + "ms");
     if (SC === "mix") { var r = curRound(), n = roundWins(ST.round, true).length; set("mMeta", n >= r.count ? "추첨 완료" : r.count + "명 중 " + Math.min(r.count, n + 1) + "번째 추첨"); }
   }
   var toastUntil = 0;
@@ -1079,6 +1227,8 @@
       CFG = Object.assign(CFG, m.cfg); save(LS_CFG, CFG);
       if (m.cfg.mode && m.cfg.mode !== ST.src && SC === "idle") { ST.pool = null; ST.src = m.cfg.mode; }
       if (m.cfg.key != null) { try { sessionStorage.setItem("axfDraw.key", m.cfg.key); } catch (e) {} delete CFG.key; }
+      document.body.classList.toggle("demo", CFG.mode === "demo");
+      if (GL && m.cfg.pal) GL.setPalette(CFG.pal);
       uiScene();
     }
     if (m.type === "hello") pushCtl();
@@ -1086,7 +1236,7 @@
   function snapshot(msg) {
     return { axd: 1, type: "state", scene: SC, cfg: CFG, round: ST.round, results: ST.results, arrived: ST.arrived.length, balls: nAlive, inside: nInside,
       closed: ST.closed, muted: !SFX.on, srv: { status: SRV.status, log: SRV.logStatus || "", queue: SRV.queue.length, hasPool: !!SRV.hasPool, url: CFG.server || window.AXF_SERVER || "" },
-      pool: ST.pool ? ST.pool.order.length : 0, toast: msg || "", fps: Math.round(FPS.v), demo: CFG.mode === "demo" };
+      pool: ST.pool ? ST.pool.order.length : 0, toast: msg || "", fps: Math.round(FPS.v), demo: CFG.mode === "demo", q: QA.tier, gl: !!GL, late: SRV.late || 0, state: SRV.stateStatus || "" };
   }
   var lastPush = 0;
   function pushCtl(msg) {
@@ -1098,7 +1248,9 @@
   function resetAll() {
     ST = { v: 1, seed: Math.floor(Math.random() * 1e9), scene: "idle", pool: null, arrived: [], closed: false, round: 0, results: [], out: {}, src: CFG.mode };
     NB = 0; ballOfNo = {}; pn = 0; DIG.n = 0; DROPS.length = 0; ARR.q.length = 0; ARR.lastPk.length = 0; POPS.length = 0; HEARTS.length = 0;
-    SRV.queue = []; save("axfDraw.q", []); SRV.since = "";
+    SRV.queue = []; save("axfDraw.q", []); SRV.since = ""; SRV.hasPool = false; SRV.stateChecked = true; SRV.late = 0; SRV.lateSeen = {}; if (SRV.polling) { clearInterval(SRV.polling); SRV.polling = null; }
+    for (var qi = 0; qi < MAXB; qi++) bflag[qi] = 0; HOP.cur = -1;
+    QA.tier = -1; applyTier(0, "처음부터");
     stageTo("black"); MIX.target = 0; DRUM.inletT = 0; ME.t0 = T; save(LS_ST, ST);
     document.body.classList.remove("closed");
     scene("idle"); toast("처음 상태로 되돌렸습니다", true);
@@ -1117,11 +1269,11 @@
   }
 
   /* ─────────────── FPS ─────────────── */
-  var FPS = { v: 60, n: 0, t: 0 };
+  var FPS = { v: 60, n: 0, t: 0, frames: 0 };
   var lastNow = 0;
   function loop(now) {
     var dt = lastNow ? (now - lastNow) / 1000 : 1 / 60; lastNow = now;
-    FPS.n++; FPS.t += dt; if (FPS.t >= 0.5) { FPS.v = FPS.n / FPS.t; FPS.n = 0; FPS.t = 0; }
+    FPS.n++; FPS.frames++; FPS.t += dt; if (FPS.t >= 0.5) { FPS.v = FPS.n / FPS.t; FPS.n = 0; FPS.t = 0; }
     update(Math.min(dt, 1 / 30));
     render();
     requestAnimationFrame(loop);
@@ -1130,16 +1282,21 @@
   /* ─────────────── 시작 ─────────────── */
   function boot() {
     cv = document.getElementById("cv"); cx = cv.getContext("2d", { alpha: false }); frameEl = document.getElementById("frame");
+    glEl = document.getElementById("gl"); fxEl = document.getElementById("fx"); fx = fxEl.getContext("2d");
+    GL = (!NOGL && window.AXB && window.AXB.init(glEl, { rec: REC })) ? window.AXB : null;
+    if (GL) GL.setPalette(CFG.pal);
+    if (!GL) glEl.style.display = "none";
+    applyTier(0, "시작");
     set("wm", AXF_WORDMARK);
     resize(); window.addEventListener("resize", function () { resize(); });
     document.addEventListener("keydown", onKey);
     document.addEventListener("fullscreenchange", function () { setTimeout(resize, 50); });
     document.body.classList.toggle("demo", CFG.mode === "demo");
-    if (document.fonts && document.fonts.load) document.fonts.load("700 40px AXP").then(function () { atlas.key = ""; });
+    if (document.fonts && document.fonts.load) document.fonts.load("800 40px AXP").then(function () { atlas.key = ""; if (GL) GL.refreshGlyphs(); });
     if (BENCH) {
       ST.pool = demoPool(BENCH, 99); ST.arrived = []; var c = 0;
       ST.pool.order.forEach(function (pk) { var p = ST.pool.people[pk]; if (c < BENCH) { if (c + p.nos.length > BENCH) p.nos.length = BENCH - c; ST.arrived.push(pk); c += p.nos.length; } });
-      rebuildBalls(); ST.closed = true; scene("mix"); MIX.target = 1; document.body.classList.add("hud-on");
+      rebuildBalls(); ST.closed = true; applyTier(QSTART >= 0 ? QSTART : tierForCount(nAlive), "bench"); scene("mix"); MIX.target = 1; if (!REC) document.body.classList.add("hud-on");
     } else if (SC === "restore") {
       rebuildBalls();
       var s = ST.scene, last = ST.results[ST.results.length - 1];
@@ -1149,7 +1306,7 @@
         WIN.r = last; WIN.x = 960; WIN.y = 470; WIN.z = 1; WIN.i = -1;
         var bi = ballOfNo[last.no]; if (bi != null) killBall(bi);
         SC = "exit"; startRevealRestore();
-      } else if (s === "checkin") { SC = "checkin"; DRUM.inletT = 1; scene("checkin"); ARR.auto = false; }
+      } else if (s === "checkin") { SC = "checkin"; DRUM.inletT = 1; scene("checkin"); ARR.auto = false; if (CFG.mode === "server") SRV.polling = setInterval(function () { if (SC === "checkin" && SRV.hasPool) serverLoad(function () {}); }, 3000); }
       else if (s === "card") { SC = "mix"; goCard(); }
       else if (s === "board") scene("board");
       else if (s === "end") { scene("mix"); goEnd(); }
@@ -1161,8 +1318,10 @@
     if (CFG.mode === "server" && ST.pool == null) serverLoad(function () { pushCtl(); });
     if (SRV.queue.length) flushQueue();
     if (!REC) requestAnimationFrame(loop);
-    window.__axd = { act: act, state: function () { return ST; }, cfg: function () { return CFG; },
-      debug: function () { var out = 0, nan = 0, maxd = 0; for (var i = 0; i < NB; i++) { if (bs[i] !== 2) continue; var d = Math.hypot(bx[i] - DX, by[i] - DY); if (d !== d) nan++; if (d > DR + 2) out++; if (d > maxd) maxd = d; } return { n: nInside, out: out, nan: nan, maxd: Math.round(maxd), R: +R.toFixed(1), fps: Math.round(FPS.v) }; } };
+    window.__axd = { act: act, state: function () { return ST; }, cfg: function () { return CFG; }, boost: function (e) { MIX.target = e; },
+      srv: function () { return { status: SRV.status, log: SRV.logStatus || "", queue: SRV.queue.length, since: SRV.since, state: SRV.stateStatus || "", late: SRV.late || 0, balls: SRV.balls }; },
+      debug: function () { var out = 0, nan = 0, maxd = 0; for (var i = 0; i < NB; i++) { if (bs[i] !== 2) continue; var d = Math.hypot(bx[i] - DX, by[i] - DY); if (d !== d || bq[i * 4] !== bq[i * 4]) nan++; if (d > DR + 2) out++; if (d > maxd) maxd = d; }
+        return { n: nInside, out: out, nan: nan, maxd: Math.round(maxd), lim: Math.round(DR - R), R: +R.toFixed(1), fps: Math.round(FPS.v), q: QA.tier, qlog: QA.log.slice(-4), gl: !!GL, nanfix: NANFIX, escfix: ESCFIX, phys: +PH.ms.toFixed(2), draw: +RD.ms.toFixed(2) }; } };
   }
   function startRevealRestore() {
     var bi = WIN.i; WIN.i = 0; bs[0] = bs[0];
@@ -1177,7 +1336,7 @@
   /* ─────────────── 쇼릴 녹화 모드 (?rec=1) · 고정 시계 · 대본대로 조작 ─────────────── */
   if (REC) {
     SFX.log = []; SFX.clock = function () { return T; };
-    var SCRIPT = [
+    var SCRIPT = CLIP ? [[1.5, "next"]] : [
       [0.0, "intro"],                /* 힉스필드 인트로 스팅 */
       [7.3, "next"],                 /* 체크인 시작 */
       [18.8, "close"], [19.05, "close"],
