@@ -8302,7 +8302,7 @@ function qrRoute(raw, t) {
   var m = raw.match(/#s=([A-Za-z0-9]+)/i), code = m ? m[1] : (/^[A-Za-z0-9]{3,12}$/.test(raw) ? raw : "");
   if (!code) { srShow({ st: "fail", why: "nocode" }); return; }
   var fl = (raw.match(/[#&?]fl=(\d{1,2})\b/i) || [])[1] || "", r = (raw.match(/[#&?]r=([12])\b/i) || [])[1] || "";
-  if (/^AXA/i.test(code) && !fl) { attByCode(code); return; }   /* v4.26 17F 출석 QR · 코드 판정은 서버(att_claim) */
+  if (/^AXA/i.test(code) && !fl) { attByCode(code, (raw.match(/[#&?]p=([a-z0-9]{1,8})(?![a-z0-9])/i) || [])[1] || ""); return; }   /* v4.26 17F 출석 QR · 코드 판정은 서버(att_claim) · v4.81 &p=강연 id = 강연별 출석 QR(PPT) · 바로 출석 */
   if (/^AXD/i.test(code) && !fl) { drawByCode(code); return; }   /* v4.79 Outro 럭키드로우 추첨 체크인 QR · 코드 · 창 · 1인 1회는 서버(draw_in) */
   if (/^AXW/i.test(code) || fl) stairByCode(code, fl, r, t); else stampByCode(code, t);
 }
@@ -8320,6 +8320,7 @@ var SR_WHY = {
   stair: ["계단 QR은 계단 화면에서 처리돼요", "scan", "다시 스캔"],
   att: ["17F 강연은 대강당 입구 출석 QR로 적립돼요", "scan", "다시 스캔"],   /* v4.26 옛 17F 좌석 QR(p3 코드) */
   dwin: ["추첨 체크인 시간이 아니에요", "exp", "확인"],   /* v4.79 창 · 날짜 밖(서버 window · day) */
+  dclosed: ["체크인이 마감됐어요", "exp", "확인"],   /* v4.81 사회자 마감 뒤(서버 closed · 사용자 결정 261001) */
   other: ["다시 스캔해 주세요", "scan", "다시 스캔"]
 };
 function srShow(o) {
@@ -8456,7 +8457,7 @@ function drawByCode(code) {
     DRAWQ.busy = false;
     if (res && res.ok) { srShow({ st: "draw", n: Number(res.n) || 0, nos: Array.isArray(res.no) ? res.no : [], dup: !!res.dup, at: res.at || "", test: !!res.test }); return; }
     var why = res && res.reason;
-    srShow({ st: "fail", draw: true, why: beBusy(res) ? "server" : why === "window" || why === "day" ? "dwin" : why === "nocode" || why === "param" ? why : "other", open: res && res.open ? String(res.open).replace("~", "–") : "" });
+    srShow({ st: "fail", draw: true, why: beBusy(res) ? "server" : why === "window" || why === "day" ? "dwin" : why === "closed" ? "dclosed" : why === "nocode" || why === "param" ? why : "other", open: res && res.open ? String(res.open).replace("~", "–") : "" });
   }, function () { DRAWQ.busy = false; srShow({ st: "fail", draw: true, why: "server" }); });
 }
 /* ═══ v4.26 17F QR 출석 (사용자 확정 260924) ═══
@@ -8467,6 +8468,9 @@ function drawByCode(code) {
    한 사람이 여러 프로그램에 출석할 수 있다(같은 프로그램은 1회) · 첫 출석에서 스탬프 「프로그램 참여」 1회(서버 · A안).
    프로그램 표는 여기 한 곳 · 서버 ATT_PROGS 와 같아야 한다(검사 85절) · Outro 는 넣지 않는다 · 파트너 강연 시간은 잠정(이 표만 고친다).
    시각 모의: 테스트 모드(310555 · 데모)만 시트 안 「테스트 시각」 · 서버도 테스트 사번만 tm 을 받는다.
+   v4.81 (사용자 결정 261001) 강연별 출석 QR = 같은 출석 코드 + &p=<강연 id>(key · road · l1 · l2) · 강의장 PPT 에 띄운다.
+     찍으면 고르기 없이 그 강연으로 바로 att_claim · 시트는 결과(출석 · 이미 출석 · 시간 밖)만 · 서버는 바뀌지 않았다(옛 서버에서도 그대로 된다).
+     모르는 p 는 무시하고 고르기 시트(a17 그대로) · p 를 모르는 옛 앱(열린 탭)도 고르기 시트로 간다.
    오프라인 저장은 하지 않는다(출석은 서버 시계로 판정 · 연결이 안 되면 다시 시도). */
 var ATT_17F = { lead: 15, progs: [
   { id: "key", nm: "기조연설", sub: "Intro 포함", s: "09:30", e: "10:20" },
@@ -8474,7 +8478,7 @@ var ATT_17F = { lead: 15, progs: [
   { id: "l1", nm: "파트너사 강연 · AWS", sub: "Agentic AI 시대의 일하는 방식 변화", s: "13:30", e: "15:00" },
   { id: "l2", nm: "파트너사 강연 · MS", sub: "AI와 친해지기", s: "15:10", e: "16:40" }
 ] };
-var ATT = { code: "", sel: "", res: null };
+var ATT = { code: "", sel: "", res: null, fix: "" };
 function attProg(id) { for (var i = 0; i < ATT_17F.progs.length; i++) if (ATT_17F.progs[i].id === id) return ATT_17F.progs[i]; return null; }
 function attMine() { return S.get("att_mine", {}) || {}; }
 function attMineAt(id) { return attMine()[id] || ""; }
@@ -8495,13 +8499,13 @@ function attWin(t) {
   });
   return { open: open, sel: sel, next: next };
 }
-function attByCode(code) {
+function attByCode(code, fixId) {
   var u = S.get("user", {}) || {};
   if (!u.empId) { srShow({ st: "fail", why: "param" }); return; }
-  var w = attWin(attNow());
-  ATT.code = String(code || "").trim(); ATT.res = null; ATT.sel = w.sel;
-  var pid = w.sel || (w.open[0]) || (w.next && w.next.id) || "l2";
-  var go = function () { PROG.sid = pid; App.go("sess_d"); sheetOpen(attSpec()); };   /* 뒤에는 그 강연 상세 · 시트를 닫으면 출석 상태가 보인다 */
+  var w = attWin(attNow()), fx = attProg(String(fixId || "").toLowerCase());
+  ATT.code = String(code || "").trim(); ATT.res = null; ATT.sel = fx ? fx.id : w.sel; ATT.fix = fx ? fx.id : "";
+  var pid = fx ? fx.id : w.sel || (w.open[0]) || (w.next && w.next.id) || "l2";
+  var go = function () { PROG.sid = pid; App.go("sess_d"); sheetOpen(attSpec()); if (fx) attGo(); };   /* 뒤에는 그 강연 상세 · 시트를 닫으면 출석 상태가 보인다 · v4.81 강연별 QR 은 바로 출석 */
   if (typeof qrGated === "function" && qrGated()) qrGateDefer(go); else go();
 }
 function attRowHtml(x, t, mine) {
@@ -8521,6 +8525,8 @@ function attSpec() {
         (r.test ? '<p class="ax-meta">테스트 계정 · 출석은 테스트 기록 · 스탬프는 이 기기에만</p>' : ""),
       go: "sheetClose()", goLbl: "확인" };
   }
+  if (ATT.fix) { var fx = attProg(ATT.fix);   /* v4.81 강연별 QR · 고르기 없음 · 실패하면 「다시 시도하기」 */
+    return { id: "att", title: "17F 강연 출석", lead: "<b>" + esc(fx.nm) + "</b>", body: tmRow, go: "attGo()", goLbl: "출석하기", goBusy: "출석하는 중" }; }
   var t = attNow(), w = attWin(t), mine = attMine();
   var list = '<div class="axs-attl" role="radiogroup" aria-label="출석할 강연">' + ATT_17F.progs.map(function (x) { return attRowHtml(x, t, mine); }).join("") + "</div>";
   if (w.sel) return { id: "att", title: "17F 강연 출석", lead: "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요", body: list + tmRow,
