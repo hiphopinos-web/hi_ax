@@ -264,6 +264,18 @@ details.memo .mb ol{padding-left:18px}
 #lock .box p{color:var(--tx2);margin:6px 0 18px;font-size:var(--fs-s)}
 #lock input{width:100%;text-align:center;font-size:var(--fs-h2);letter-spacing:.2em;height:44px}
 #lock .err{color:var(--bad);font-size:var(--fs-c);min-height:18px;margin-top:8px}
+#lock #aemp{letter-spacing:.06em}
+/* v4.85 권한 메뉴 · 공용 코드 입력 */
+.role.rolebtn{cursor:pointer}
+.role.rolebtn:hover{background:var(--navy1)}
+.role.rolebtn.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.admf{display:grid;gap:10px}
+.admf label{display:grid;gap:4px;font-size:var(--fs-c);color:var(--tx3);font-weight:600}
+.admf .in{width:100%;min-width:0;letter-spacing:.2em;font-variant-numeric:tabular-nums}
+.admh{font-size:var(--fs-c);color:var(--tx3);min-height:18px}
+.admh.ok{color:var(--ok)}
+.admh.bad{color:var(--bad)}
+.note.warnl{color:var(--warn);background:var(--warn-bg);border-color:var(--warn-bd);margin-top:16px}
 
 /* 확인 창 · 제목 · 설명 · 대상 · 영향 · 오른쪽 버튼 */
 .overlay{position:fixed;inset:0;background:rgba(8,24,74,.42);z-index:60;display:none;align-items:flex-start;justify-content:center;padding:72px 16px;overflow:auto}
@@ -558,11 +570,12 @@ td.itx{min-width:280px;max-width:520px;white-space:normal;line-height:1.55}
 <div id="lock">
   <div class="box">
     <b>AXF CONTROL</b>
-    <p>운영 관리 콘솔입니다. 관리코드를 입력하세요.</p>
-    <input id="key" class="in" type="password" inputmode="numeric" autocomplete="off" placeholder="관리코드">
+    <p>운영 관리 콘솔입니다. 사번과 관리코드를 입력하세요.</p>
+    <input id="aemp" class="in" type="text" inputmode="numeric" autocomplete="off" placeholder="사번" aria-label="사번" maxlength="12">   <!-- v4.85 (261001) 사번 명단 + 공용 코드 -->
+    <input id="key" class="in" type="password" inputmode="numeric" autocomplete="off" placeholder="관리코드" aria-label="관리코드" style="margin-top:8px">
     <div class="err" id="lockErr"></div>
     <button class="btn pri" style="width:100%;margin-top:8px;height:44px" onclick="unlock()">들어가기</button>
-    <p class="src" style="margin:14px 0 0">코드는 이 브라우저 탭이 열려 있는 동안만 기억합니다. 탭을 닫으면 다시 입력합니다.</p>
+    <p class="src" style="margin:14px 0 0">명단에 있는 사번만 들어옵니다. 탭을 닫으면 다시 입력합니다.</p>
   </div>
 </div>
 
@@ -571,7 +584,7 @@ td.itx{min-width:280px;max-width:520px;white-space:normal;line-height:1.55}
   <nav class="tabs" id="tabs"></nav>
   <div class="hr">
     <button class="btn sm ghost" onclick="guide()">사용 안내</button>
-    <span class="role">관리자</span>
+    <span class="role" id="roleTag" role="button">관리자</span>
     <span id="stamp" class="cap">·</span>
     <button class="btn sm" onclick="refresh()">새로고침</button>
     <button class="btn sm ghost" onclick="lock()">잠금</button>
@@ -626,7 +639,8 @@ var TABS = [
   { id:"sched", n:"예약", d:"정해진 시각에 서버가 공지 · Outro 안내를 스스로 냅니다. 관람 시간표(가상 데이터)와 혼잡 만료 알림 자리도 여기서 봅니다." },
   { id:"push", n:"알림", d:"웹 푸시 구독 현황 · 대상 지정 발송 · 나에게 시험 · 발송 이력 · 그룹 명단 · 전체 정지입니다. 부문 통계는 두지 않습니다." },
   { id:"photo", n:"포토부스", d:"AI 포토부스 원격 대기열을 호출하고 완료 처리합니다." },
-  { id:"art", n:"사생대회", d:"본선 공개 작품을 관리합니다. 좋아요 1인 3표이고 앱에는 작가가 나오지 않습니다." }
+  { id:"art", n:"사생대회", d:"본선 공개 작품을 관리합니다. 좋아요 1인 3표이고 앱에는 작가가 나오지 않습니다." },
+  { id:"adm", n:"권한", d:"콘솔과 앱 스태프 화면에 들어올 사번 명단, 공용 코드를 관리합니다. 슈퍼관리자에게만 보이고 머리의 「슈퍼관리자 · 권한」으로 엽니다." }   /* v4.85 (261001) */
 ];
 /* v4.02 (사용자 확정 260919) AI 사생대회 폐기 · 메뉴에서 숨긴다, 코드는 그대로 둔다 · 다시 켜려면 true (앱 ART_ON 과 같은 이름) */
 var ART_ON = false;
@@ -677,8 +691,13 @@ function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){retu
 /* onclick 안에 넣는 문자열 · 사번·ID 는 영숫자라 그 밖의 글자는 버린다 */
 function jq(s){ return String(s==null?"":s).replace(/[^0-9A-Za-z_\-.:가-힣]/g,""); }
 function el(id){ return document.getElementById(id); }
-function key(){ try{ return sessionStorage.getItem("axf_adm_key")||""; }catch(e){ return window.__k||""; } }
-function setKey(v){ try{ sessionStorage.setItem("axf_adm_key",v); }catch(e){ window.__k=v; } }
+/* v4.85 (261001 사용자 확정) 사번 명단 + 공용 코드 · 코드는 로그인 때 한 번 POST 로 보내고 이 탭에도 두지 않는다
+   이 탭에는 사번(aemp)과 사람 토큰(tok · 서버가 사번 · 명단 · 지금 코드로 계산)만 둔다 · 모든 요청에 둘을 같이 보낸다
+   명단에서 빠지거나 코드가 바뀌면 서버가 auth → 잠금 화면(authGate) · 예전 탭에 남은 코드(axf_adm_key)는 지운다 */
+function aemp(){ try{ return sessionStorage.getItem("axf_adm_emp")||""; }catch(e){ return window.__e||""; } }
+function setAemp(v){ try{ sessionStorage.setItem("axf_adm_emp",v||""); }catch(e){ window.__e=v||""; } }
+function authed(){ return !!(tok()&&aemp()); }
+try{ sessionStorage.removeItem("axf_adm_key"); }catch(e){}
 /* v4.66 (QA 3단계 260930) 스태프 토큰 · 코드를 맞히면 서버(v4.65~)가 tok 을 준다 · 모든 요청에 같이 보내면 그 연결(와이파이 주소)이 잠겨도 통과한다
    코드와 같은 곳(이 탭 동안)에 둔다 · 옛 서버는 tok 을 주지 않고 읽지도 않는다(빈 값이면 예전과 같다) */
 function tok(){ try{ return sessionStorage.getItem("axf_adm_tok")||""; }catch(e){ return window.__t||""; } }
@@ -760,7 +779,7 @@ var _cbN=0;
 function call(action, params, done, fail, again){
   var name="__axf"+(++_cbN), sc=document.createElement("script"), q=[];
   params=params||{}; params.action=action; params.callback=name; params._=Date.now();
-  if(!("key" in params)) params.key=key();
+  if(!("aemp" in params)&&aemp()) params.aemp=aemp();   /* v4.85 코드(key)는 보내지 않는다 */
   if(!("tok" in params)&&tok()) params.tok=tok();
   for(var k in params) if(params[k]!=null) q.push(encodeURIComponent(k)+"="+encodeURIComponent(params[k]));
   var timer=setTimeout(function(){ cleanup(); fail&&fail({ok:false,reason:"timeout"}); },15000);
@@ -775,7 +794,7 @@ function call(action, params, done, fail, again){
    locked = 이 연결(와이파이 주소)이 잠김 · 받은 값을 데이터로 쓰지 않는다(예전에는 「0명 · 대기 없음」으로 그려졌다) · 실패로 넘긴다 */
 function authGate(res, action){
   if(action==="admin_check"||!(res&&res.ok===false&&res.reason==="auth")) return false;
-  lock("관리코드가 바뀌었거나 맞지 않습니다. 다시 입력하세요."); return true;
+  lock("관리코드가 바뀌었거나 명단에서 빠졌습니다. 다시 입력하세요."); return true;
 }
 function lockedGate(res, fail, action){
   /* 연결 잠금은 retry(남은 초)가 함께 온다 · 올림픽 규칙 잠금(oly_rule) · Wall 문항 잠금(wq_set)의 locked 는 retry 가 없어 그 화면이 직접 본다 */
@@ -848,46 +867,55 @@ var HIST={};
 function hist(emp, text){ var k=normE(emp); (HIST[k]=HIST[k]||[]).unshift({t:nowHMS(), x:text}); }
 
 /* ══════════════════ 2. 잠금 ══════════════════ */
-function lock(msg){ setKey(""); setTok(""); clearTimeout(_poll); if(typeof opsClose==="function"){ opsClose(); clearTimeout(SCHP.t); } el("lock").style.display="flex"; el("lockErr").textContent=msg||""; el("key").value=""; setTimeout(function(){el("key").focus();},50); }
+function lock(msg){ setTok(""); ST.me=null; meTag(); clearTimeout(_poll); if(typeof opsClose==="function"){ opsClose(); clearTimeout(SCHP.t); } el("lock").style.display="flex"; el("lockErr").textContent=msg||""; el("key").value=""; el("aemp").value=aemp(); setTimeout(function(){ el(aemp()?"key":"aemp").focus(); },50); }
 function unlock(){
-  var v=el("key").value.trim(); if(!v){ el("lockErr").textContent="코드를 입력하세요."; return; }
-  unlockWith(v);
+  var e=normE(el("aemp").value), v=el("key").value.trim();
+  if(!e){ el("lockErr").textContent="사번을 입력하세요."; el("aemp").focus(); return; }
+  if(!v){ el("lockErr").textContent="코드를 입력하세요."; el("key").focus(); return; }
+  unlockWith(e, v);
 }
-/* 코드 확인 한 곳 · 입력칸(unlock)과 시작 때 토큰 받기(bootTok)가 쓴다 · 토큰은 보내지 않는다(지금 친 코드를 본다) */
-function unlockWith(v){
+/* 로그인 한 곳 · v4.85 사번 + 코드를 POST 본문으로(주소에 남지 않게) · 서버가 명단을 먼저 보고, 명단 밖이면 코드가 맞았는지 알려 주지 않는다 */
+function unlockWith(e, v){
   el("lockErr").innerHTML='<span class="spin"></span>확인 중';
-  call("admin_check",{key:v,tok:""},function(r){
-    if(r&&r.ok&&r.role==="admin"){ setKey(v); setTok(r.tok||""); ST.locked=null; el("lock").style.display="none"; el("lockErr").textContent=""; go(ST.tab); opsBoot(); schPull(true); }   /* v4.75 실시간 연결 · 예약 목록 */
+  callPost("admin_check",{key:v,aemp:e,asc:"c",tok:""},function(r){
+    if(r&&r.ok&&r.role==="admin"){ setAemp(e); setTok(r.tok||""); ST.me={ emp:r.emp||e, sup:r.sup?1:0 }; meTag(); renderTabs(); ST.locked=null; el("key").value=""; el("lock").style.display="none"; el("lockErr").textContent=""; go(ST.tab); opsBoot(); schPull(true); }   /* v4.75 실시간 연결 · 예약 목록 */
     else if(r&&r.ok&&r.role==="grade"){ el("lockErr").textContent="등급코드입니다. 이 콘솔은 관리코드가 필요합니다."; }
-    else if(r&&r.reason==="locked"){ ST.locked={ until:Date.now()+(Number(r.retry)||600)*1000 }; el("lockErr").textContent=lockedMsg(); }
-    else el("lockErr").textContent="관리코드가 맞지 않습니다.";
+    else if(r&&r.reason==="locked"){ ST.locked={ until:Date.now()+(Number(r.retry)||600)*1000 }; el("lockErr").textContent="여러 번 틀려 약 "+lockedMin()+"분 동안 잠겼습니다. 잠시 뒤 다시 하세요."; }
+    else if(r&&r.reason==="param") el("lockErr").textContent="사번을 확인하세요.";
+    else if(r&&r.reason==="network") el("lockErr").textContent="서버에 연결할 수 없습니다. 네트워크를 확인하세요.";
+    else el("lockErr").textContent="명단에 없는 사번이거나 관리코드가 맞지 않습니다.";
   },function(){ el("lockErr").textContent="서버에 연결할 수 없습니다. 네트워크를 확인하세요."; });
 }
-/* 시작(새로 고침) 때 · 먼저 한 번 확인해 토큰을 받고(옛 콘솔 · 옛 서버에서 들어온 탭도) 그 뒤에 불러온다
-   토큰이 맞으면 잠긴 연결에서도 통과한다 · 코드가 바뀌었으면 여기서 한 번만 틀리고 잠금 화면으로 간다(예전에는 탭의 요청 7~8건이 한꺼번에 틀렸다) */
+/* 시작(새로 고침) 때 · 저장한 사람 토큰이 아직 맞는지 한 번(adm_me · 코드를 보내지 않는다) · 슈퍼관리자면 「권한」 메뉴를 보인다
+   명단에서 빠졌거나 코드가 바뀌었으면 auth → authGate 가 잠금 화면으로 · 옛 서버(adm_me 모름)면 그대로 들어간다 */
 function bootTok(done){
-  call("admin_check",{key:key()},function(r){
-    if(r&&r.ok&&r.role==="admin"){ setTok(r.tok||""); done(); }
+  call("adm_me",{},function(r){
+    if(r&&r.ok&&r.role==="admin"){ ST.me={ emp:r.emp||aemp(), sup:r.sup?1:0 }; meTag(); renderTabs(); done(); }
     else if(r&&r.reason==="locked"){ ST.locked={ until:Date.now()+(Number(r.retry)||600)*1000 }; done(); }
-    else lock(r&&r.ok?"등급코드입니다. 이 콘솔은 관리코드가 필요합니다.":"관리코드가 바뀌었거나 맞지 않습니다. 다시 입력하세요.");
+    else if(r&&r.err==="unknown action") done();
+    else lock(r&&r.ok?"등급코드입니다. 이 콘솔은 관리코드가 필요합니다.":"다시 입력하세요.");
   },function(){ done(); });
 }
+/* 머리의 역할 표시 · 사번은 마우스를 올렸을 때만 */
+function meTag(){ var t=el("roleTag"), sp=!!(ST.me&&ST.me.sup); if(!t) return; t.textContent=sp?"슈퍼관리자 · 권한":"관리자"; t.title=ST.me&&ST.me.emp?"사번 "+ST.me.emp:""; t.className="role"+(sp?" rolebtn":"")+(sp&&ST.tab==="adm"?" on":""); t.onclick=sp?function(){ go("adm"); }:null; }
 el("key").addEventListener("keydown",function(e){ if(e.key==="Enter") unlock(); });
+el("aemp").addEventListener("keydown",function(e){ if(e.key==="Enter"){ if(el("key").value) unlock(); else el("key").focus(); } });
 
 /* ══════════════════ 3. 라우팅 · 폴링 ══════════════════ */
 /* subs = 메뉴별 서브탭 · sel = 표에서 고른 행 · ovr = 처리 직후 서버 반영 전까지 덮어 보여 줄 값 · drw = 열린 상세 패널 */
-var ST={ tab:"dash", subs:{ apply:"resv", stamp:"one", qr:"img", typing:"oly", race:"live", idea:"list", draw:"run" }, q:"", filt:"", data:{}, busy:false, at:null, sel:{}, ovr:{}, drw:null, draft:{}, bulk:{}, sp:{ q:"", emp:"" } };
+var ST={ tab:"dash", me:null, subs:{ apply:"resv", stamp:"one", qr:"img", typing:"oly", race:"live", idea:"list", draw:"run", adm:"ros" }, q:"", filt:"", data:{}, busy:false, at:null, sel:{}, ovr:{}, drw:null, draft:{}, bulk:{}, sp:{ q:"", emp:"" } };
 /* 탭을 바꾸면 먼저 갖고 있는 데이터로 즉시 그리고, 그 다음 서버에서 받아 다시 그린다.
    안 그러면 응답이 올 때까지(1~3초) 이전 탭 내용이 새 탭 이름 아래 그대로 보인다. */
 /* load() 를 먼저 불러 busy 를 세운 뒤 그린다. 반대로 하면 첫 진입에 「가입 계정 0명」처럼 0 으로 그려진다. */
-function go(t){ if(!ART_ON&&t==="art") t="dash"; ST.tab=t; ST.q=""; ST.filt=""; ST.sel={}; drwClose(true); renderTabs(); window.scrollTo(0,0); load(); render(); if(typeof raceTab==="function") raceTab(t==="race"); }
+function go(t){ if(!ART_ON&&t==="art") t="dash"; if(t==="adm"&&!supOn()) t="dash"; ST.tab=t; ST.q=""; ST.filt=""; ST.sel={}; drwClose(true); renderTabs(); window.scrollTo(0,0); load(); render(); if(typeof raceTab==="function") raceTab(t==="race"); }
 /* 대시보드 바로가기 · 탭 + 서브탭 + 필터까지 한 번에 */
 function goTo(t, sub, filt){ if(sub) ST.subs[t]=sub; go(t); if(filt){ ST.filt=filt; render(); } }
 function sub(){ return ST.subs[ST.tab]; }
 function renderTabs(){
   /* v3.88 계정 탭에 비밀번호 요청 대기 수를 배지로 (데스크가 놓치지 않게) */
   var wait=pwWait();
-  el("tabs").innerHTML=TABS.map(function(t){ var b=(t.id==="acct"&&wait)?'<em class="tbadge">'+wait+'</em>':''; return '<button class="'+(ST.tab===t.id?"on":"")+'" onclick="go(\''+t.id+'\')">'+esc(t.n)+b+'</button>'; }).join("");
+  meTag();
+  el("tabs").innerHTML=TABS.filter(function(t){ return t.id!=="adm"; }).map(function(t){   /* v4.85 권한은 머리의 「슈퍼관리자 · 권한」 버튼으로(탭 줄이 1440 폭을 넘지 않게) */ var b=(t.id==="acct"&&wait)?'<em class="tbadge">'+wait+'</em>':''; return '<button class="'+(ST.tab===t.id?"on":"")+'" onclick="go(\''+t.id+'\')">'+esc(t.n)+b+'</button>'; }).join("");
 }
 /* 수동 새로고침 · 지금 화면에 필요한 것만 캐시를 무시하고 강제로 다시 받는다. 연타 방지로 10초에 한 번만 서버를 부른다. */
 var _lastManual=0;
@@ -900,8 +928,8 @@ function refresh(){
 var _poll=null;
 /* 5분마다 지금 보는 화면(탭)에 필요한 액션만 다시 받는다. 캐시가 아직 5분 안이면 실제 서버 호출 없이 그대로 끝난다.
    탭이 가려져 있으면(document.hidden) 쉬고, 다시 보일 때 한 번 확인한다. */
-function schedule(){ clearTimeout(_poll); _poll=setTimeout(function(){ if(!document.hidden && key()) load(); else schedule(); },POLL_MS); }
-document.addEventListener("visibilitychange",function(){ if(!document.hidden&&key()) load(); });
+function schedule(){ clearTimeout(_poll); _poll=setTimeout(function(){ if(!document.hidden && authed()) load(); else schedule(); },POLL_MS); }
+document.addEventListener("visibilitychange",function(){ if(!document.hidden&&authed()) load(); });
 
 /* 탭별로 필요한 액션만 부른다 */
 var NEED={
@@ -921,7 +949,8 @@ var NEED={
   sched:[{k:"sched",a:"sched_list"},{k:"pst",a:"push_stats"},{k:"pgrp",a:"push_group_list"}],
   push:[{k:"pst",a:"push_stats"},{k:"phist",a:"push_hist",p:{n:50}},{k:"pgrp",a:"push_group_list"},{k:"visit",a:"visit_stats"}],   /* v4.76 알림 메뉴 · 접속 비율은 visit_stats(오늘 · 테스트 제외) */   /* v4.75 예약 · 관람 시간표(옛 서버는 한 줄 안내) */
   photo:[{k:"photo",a:"photo_list"}],
-  art:[{k:"art",a:"art_all"}]
+  art:[{k:"art",a:"art_all"}],
+  adm:[{k:"adm",a:"adm_roster"}]   /* v4.85 권한 · 슈퍼관리자 */
 };
 /* v4.16 서브탭에서만 쓰는 액션 · 그 서브탭을 열 때만 부른다(함수면 지금 고른 값으로 만든다 · 담당 명단은 프로그램마다 다른 요청) */
 var SUBNEED={
@@ -948,7 +977,7 @@ ST.seq=0;
 var CC_SEP=" / 희망 ";
 function ccSplitPref(){ ((ST.data.cchat||{}).rows||[]).forEach(function(r){ var t=String(r.tag||""), i=t.indexOf(CC_SEP); if(i<0) return; if(!r.pref) r.pref=t.slice(i+CC_SEP.length); r.tag=t.slice(0,i); }); }
 function load(manual, opts){
-  if(!key()) return;
+  if(!authed()) return;
   opts=opts||{};
   var need=opts.only?needOf(ST.tab).filter(function(it){ return opts.only.indexOf(it.k)>=0; }):needOf(ST.tab);
   if(!opts.only&&!need.some(function(it){ return it.k==="pwreq"; })) need=need.concat([PWC]);
@@ -1006,7 +1035,7 @@ function render(){
   } else if(missing.length&&ST.err&&ST.err.reason==="locked"){
     h=tabHead()+'<div class="card"><div class="empty">서버가 이 연결을 잠가 이 메뉴의 값을 받지 못했습니다. 숫자를 0 으로 그리지 않습니다.</div></div>';   /* v4.66 예전에는 「0명 · 대기 없음」으로 보였다 */
   } else {
-    try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="qr"?viewQr():ST.tab==="notice"?viewNotice():ST.tab==="sched"?viewSched():ST.tab==="push"?viewPush():ST.tab==="survey"?viewSurvey():ST.tab==="typing"?viewTyping():ST.tab==="photo"?viewPhoto():ST.tab==="art"?viewArt():ST.tab==="race"?viewRace():ST.tab==="idea"?viewIdea():ST.tab==="att"?viewAtt():ST.tab==="draw"?viewDraw():ST.tab==="visit"?viewVisit():viewApply(); }
+    try{ h=ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="qr"?viewQr():ST.tab==="notice"?viewNotice():ST.tab==="sched"?viewSched():ST.tab==="push"?viewPush():ST.tab==="survey"?viewSurvey():ST.tab==="typing"?viewTyping():ST.tab==="photo"?viewPhoto():ST.tab==="art"?viewArt():ST.tab==="race"?viewRace():ST.tab==="idea"?viewIdea():ST.tab==="att"?viewAtt():ST.tab==="draw"?viewDraw():ST.tab==="visit"?viewVisit():ST.tab==="adm"?viewAdm():viewApply(); }
     catch(e){ h='<div class="err-banner">화면을 그리는 중 오류가 났습니다: '+esc(e.message)+'</div>'; }
   }
   if(ST.err&&ST.err.reason==="locked") h='<div class="err-banner"><b>서버가 이 연결을 잠갔습니다.</b> '+esc(lockedMsg())+' 잠금이 풀리면 이 탭을 새로 고칩니다. 한 번 들어온 탭은 그 뒤로 잠금을 받지 않습니다.</div>'+h;
@@ -1063,6 +1092,7 @@ var GUIDE={
   notice:[["발송","제목과 내용을 넣고 발송하면 모든 참가자 앱에 나갑니다. 앱을 보고 있는 폰(실시간 연결)은 곧바로, 나머지는 다음 동기화(30초 안)에 받습니다."],["중지","송출 중인 공지를 중지하면 연결된 폰은 곧바로, 나머지는 다음 동기화 때 사라집니다."],["푸시도 보내기","체크하면 대상과 인원 미리보기가 나오고, 확인 창을 거쳐 공지와 함께 푸시가 갑니다. 푸시가 막히면(정지 · 시간 밖 · 5분 안 같은 제목 · 하루 5회) 공지도 나가지 않습니다. 이미 나간 푸시는 회수되지 않습니다."],["예약","정해진 시각에 내야 하는 공지(Outro · 추첨)는 <b>예약</b> 메뉴에서 만듭니다."]],
   sched:[["예약 만들기","종류 · 날짜 · 시각 · 제목을 넣고 <b>예약 만들기</b>를 누릅니다. 「Outro 10분 전」 · 「경품 추첨 시작」 버튼이 문구를 채웁니다(추첨 시각은 직접 넣습니다). <b>푸시도 보내기</b>를 켜면 그 시각에 푸시도 나갑니다(「경품 추첨 시작」은 응모권 보유자가 기본)."],["2분 전","실행 2분 전부터 모든 메뉴 위에 배너가 뜹니다. 진행이 밀리면 <b>+5분</b>, 하지 않을 거면 <b>취소</b>를 누릅니다."],["지금 실행","목록의 <b>지금 실행</b>은 시각을 기다리지 않고 바로 냅니다."],["관람 시간표","확정 전까지 <b>가상 데이터</b>입니다. 표를 고치고 저장할 수 있고, 발송 스위치는 표가 확정될 때까지 꺼 둡니다(켜면 관람 시간 푸시가 나갑니다)."]],
   push:[["대상 · 미리보기","대상 종류와 조건을 고르면 0.4초 뒤 「대상 · 도달 가능 · 도달 불가」가 바로 나옵니다. 도달 불가는 알림을 구독하지 않은 사람이고, 그들에게는 앱 안 공지가 정본입니다."],["확인 창","제목 · 본문 · 대상 · 인원을 크게 다시 보여 줍니다. 전체이거나 300명 이상이면 <b>인원 숫자를 직접 넣어야</b> 보내기가 눌립니다."],["나에게 시험","본인 사번을 넣고 <b>나에게 보내기</b>를 누르면 그 사번 구독 기기(최대 3대)로만 갑니다. 시간대와 상한에 걸리지 않고, 결과가 그 자리에 나옵니다."],["이력 · 정지","보낸 것은 이력에 한 줄씩 남습니다(편집 불가). 이미 나간 알림은 회수되지 않습니다. 문제가 생기면 <b>전체 정지</b>로 대기 작업까지 멈춥니다."]],
+  adm:[["명단","콘솔 명단과 앱 스태프 명단은 따로입니다. 사번을 쉼표로 여러 명 넣을 수 있고, 이름은 계정 시트에서 찾습니다."],["처음 저장","명단을 처음 저장하는 순간부터 그 명단대로 들어옵니다. 저장 전에는 콘솔은 슈퍼관리자만, 앱은 코드만 맞으면 들어옵니다."],["빼기","빼는 즉시 그 사람의 로그인이 끊깁니다. 7초 안에 되돌리기로 다시 넣을 수 있습니다. 슈퍼관리자는 뺄 수 없습니다."],["공용 코드","새 코드를 두 번 넣어 바꿉니다. 바꾸면 그 코드를 쓰던 스태프 폰 · 셀프 노트북 · 추첨 화면 · 다른 콘솔이 새 코드를 다시 넣습니다."]],
   photo:[["호출","<b>다음 번호 호출</b>을 누르면 맨 앞 번호의 앱에 「지금 입장하세요」가 뜹니다."],["건너뛰기 · 완료","호출 후 10분 안에 오지 않으면 건너뛰기, 도착하면 완료입니다."]],
   art:[["설정","접수 폼 주소와 두 마감 시각을 저장합니다."],["공개","작품을 공개 · 샘플 · 숨김으로 바꿉니다."],["시상","좋아요 순위와 CSV 로 시상합니다."]]
 };
@@ -1948,7 +1978,7 @@ var DC_MC={
   end:"함께해 주셔서 감사합니다. 남은 경품은 행사 뒤 따로 추첨해 안내합니다."
 };
 var DC={ on:false, ws:null, st:"off", t:null, fails:0, give:false, ping:null, pongAt:0, poll:null, scr:null, scrAt:0, cmd:null, sent:null, busy:"", arm:null, rejOff:0, sig:"", log:[] };
-function dcOn(){ return !!key()&&ST.tab==="draw"&&(sub()||"run")==="run"; }
+function dcOn(){ return !!authed()&&ST.tab==="draw"&&(sub()||"run")==="run"; }
 function dcUrl(){ return /^https:\/\/[a-z0-9-]+\.[a-z0-9-]+\.workers\.dev\/exec$/.test(BE)?BE.replace(/^https:/,"wss:").replace(/\/exec$/,"/ws?r=draw"):""; }
 /* 패널을 열면 소켓 + 폴링을 켜고, 다른 화면으로 가면 끈다(1초마다 확인) */
 setInterval(function(){
@@ -1970,7 +2000,7 @@ function dcOpen(){
   if(DC.ws||DC.t||DC.give||!DC.on||!dcUrl()||typeof WebSocket==="undefined") return;
   var ws; try{ ws=new WebSocket(dcUrl()); }catch(e){ dcFail(); return; }
   DC.ws=ws; DC.st="open";
-  ws.onopen=function(){ if(DC.ws!==ws) return; try{ ws.send(JSON.stringify(tok()?{t:"hello",tok:tok()}:{t:"hello",key:key()})); }catch(e){} };
+  ws.onopen=function(){ if(DC.ws!==ws) return; try{ ws.send(JSON.stringify({t:"hello",tok:tok(),emp:aemp()}));   /* v4.85 사람 토큰 + 사번 */ }catch(e){} };
   ws.onmessage=function(e){ if(DC.ws!==ws) return; if(e.data==="o"){ DC.pongAt=Date.now(); return; } var m; try{ m=JSON.parse(e.data); }catch(x){ return; }
     if(m.t==="ok"){ DC.st="ok"; DC.fails=0; DC.pongAt=Date.now(); dcPing(true); dcPaint(); return; }
     if(m.t==="no"){ DC.give=true; return; }
@@ -3080,7 +3110,7 @@ function vslotOn(on){
 }
 /* 목록 받기 · 60초(소켓이 붙어 있으면 5분) · 옛 서버면 멈춘다 */
 function schPull(force){
-  if(!key()||SCHP.off) return;
+  if(!authed()||SCHP.off) return;
   if(!force&&document.hidden) return schNext();
   SCHP.at=Date.now();
   call("sched_list",{},function(r){
@@ -3106,14 +3136,14 @@ setInterval(function(){ schBanner(); var nb=schRows().filter(function(r){ return
 var OPS={ ws:null, st:"off", t:null, fails:0, give:false, cfg:null, ping:null, pongAt:0 };
 function opsUrl(){ return /^https:\/\/[a-z0-9-]+\.[a-z0-9-]+\.workers\.dev\/exec$/.test(BE)?BE.replace(/^https:/,"wss:").replace(/\/exec$/,"/ws?r=ops"):""; }
 function opsBoot(){
-  if(!key()||!opsUrl()||typeof WebSocket==="undefined") return;
+  if(!authed()||!opsUrl()||typeof WebSocket==="undefined") return;
   call("sync",{emp:""},function(r){ OPS.cfg=r&&r.ok&&r.ws&&r.ws.n?r.ws:null; if(OPS.cfg) opsOpen(); else opsClose(); },function(){});
 }
 function opsOpen(){
-  if(OPS.ws||OPS.t||OPS.give||!OPS.cfg||document.hidden||!key()) return;
+  if(OPS.ws||OPS.t||OPS.give||!OPS.cfg||document.hidden||!authed()) return;
   var ws; try{ ws=new WebSocket(opsUrl()); }catch(e){ opsFail(); return; }
   OPS.ws=ws; OPS.st="open";
-  ws.onopen=function(){ if(OPS.ws!==ws) return; try{ ws.send(JSON.stringify(tok()?{t:"hello",tok:tok()}:{t:"hello",key:key()})); }catch(e){} };
+  ws.onopen=function(){ if(OPS.ws!==ws) return; try{ ws.send(JSON.stringify({t:"hello",tok:tok(),emp:aemp()}));   /* v4.85 사람 토큰 + 사번 */ }catch(e){} };
   ws.onmessage=function(e){ if(OPS.ws!==ws) return; if(e.data==="o"){ OPS.pongAt=Date.now(); return; } var m; try{ m=JSON.parse(e.data); }catch(x){ return; }
     if(m.t==="ok"){ OPS.st="ok"; OPS.fails=0; OPS.pongAt=Date.now(); opsPing(true); schNext(); return; }
     if(m.t==="no"){ OPS.give=true; return; }
@@ -3135,7 +3165,7 @@ function opsOn(m){
   else if(m.k==="push"){ clearTimeout(OPS_T.push); OPS_T.push=setTimeout(function(){ if(ST.tab==="push"||ST.tab==="dash") pushPull(); else { delete _cache[sig_("push_stats",{})]; delete _cache[sig_("push_hist",{n:50})]; } },300); }
   else if(m.k==="crowd"){ if(ST.tab==="dash"){ clearTimeout(OPS_T.crowd); OPS_T.crowd=setTimeout(function(){ reload(["crowd"]); },300); } else delete _cache[sig_("crowd_log",{})]; }
 }
-document.addEventListener("visibilitychange",function(){ if(!document.hidden&&key()&&OPS.cfg&&!OPS.ws) opsOpen(); });
+document.addEventListener("visibilitychange",function(){ if(!document.hidden&&authed()&&OPS.cfg&&!OPS.ws) opsOpen(); });
 
 /* ══════════════════ 7-10. 알림(웹 푸시) · v4.76 (260930 · 「웹 푸시 기획.md」 5장 · 6장 · 「홈 화면 설치 유도 · 레드팀 토론.md」 채택 5) ══════════════════
    서버 push_stats · push_cfg · push_preview · push_send · push_job · push_hist · push_group_list · set · del (관리코드 · 스태프 토큰).
@@ -3651,7 +3681,7 @@ function raceTopPull(){
 }
 function racePoll(){
   clearTimeout(RACE.t);
-  if(ST.tab!=="race"||RTV.on||!key()) return;
+  if(ST.tab!=="race"||RTV.on||!authed()) return;
   raceCall("race_state",{},function(r){ raceTake(r); next(); },next);
   function next(){ clearTimeout(RACE.t); if(ST.tab==="race"&&!RTV.on) RACE.t=setTimeout(racePoll, RACE.m&&(RACE.m.st==="open"||RACE.m.st==="run")?2000:4000); }
 }
@@ -4239,7 +4269,7 @@ function wqWhy(r){ r=r||{};
 }
 /* POST · 응답은 JSON · 관리코드는 본문으로(주소에 남지 않는다) */
 function callPost(action, params, done, fail, again){
-  var body=new URLSearchParams(); params=params||{}; params.action=action; if(!("key" in params)) params.key=key(); if(!("tok" in params)&&tok()) params.tok=tok();
+  var body=new URLSearchParams(); params=params||{}; params.action=action; if(!("aemp" in params)&&aemp()) params.aemp=aemp(); if(!("tok" in params)&&tok()) params.tok=tok();
   for(var k in params) if(params[k]!=null) body.append(k, params[k]);
   var ctl=window.AbortController?new AbortController():null, timer=setTimeout(function(){ if(ctl) ctl.abort(); },25000);
   fetch(BE,{ method:"POST", body:body, redirect:"follow", signal:ctl?ctl.signal:undefined }).then(function(r){ return r.text(); }).then(function(t){
@@ -4249,6 +4279,94 @@ function callPost(action, params, done, fail, again){
     if(lockedGate(res, fail, action)) return;
     done&&done(res);
   }).catch(function(){ clearTimeout(timer); fail&&fail({ ok:false, reason:"network" }); });
+}
+/* ══════════════════ v4.85 (261001 사용자 확정) 권한 · 슈퍼관리자 전용 ══════════════════
+   명단 두 개(콘솔 c · 앱 스태프 a)와 공용 코드(관리코드 · 등급코드). 서버가 슈퍼관리자인지 본다(adm_roster · adm_roster_set · adm_code_set).
+   슈퍼관리자 사번 · 명단 값은 이 파일에 두지 않는다(공개 저장소 · 서버 설정이 정한다). 코드는 이 화면 메모리에만 두고 바꾸면 비운다.
+   ADM_APP_LIVE = 앱이 스태프 화면을 열 때 사번을 같이 보내는 판인가(앱 개편 뒤 true · 그 전에는 앱 명단 카드에 한 줄 안내) */
+var ADM_APP_LIVE=false;
+var ADMF={ c:"", a:"", a1:"", a2:"", g1:"", g2:"" };
+var ADM_SC={ c:{ n:"웹 관리 콘솔", d:"이 콘솔에 들어오는 사람" }, a:{ n:"앱 스태프 모드", d:"앱에서 스태프 화면(현장 부여 · QR 인증)을 여는 사람" } };
+function supOn(){ return !!(ST.me&&ST.me.sup); }
+function admWhy(r){ r=r||{}; return {emp:"사번 모양이 아닙니다",self:"슈퍼관리자는 명단에서 뺄 수 없습니다",max:"명단은 "+(r.max||200)+"명까지입니다",super:"슈퍼관리자만 할 수 있습니다",rule:"숫자 6~16자리로 넣으세요",twice:"두 번 넣은 코드가 다릅니다",weak:"같은 숫자 반복이나 이어진 숫자는 쓸 수 없습니다",same:"지금 코드와 같습니다",clash:"관리코드와 등급코드는 달라야 합니다",post:"이 서버는 코드 바꾸기를 받지 않습니다"}[r.reason]||why(r); }
+function viewAdm(){
+  var d=ST.data.adm, sv=sub()||"ros";
+  var h=tabHead()+chips([{v:"ros",n:"명단"},{v:"code",n:"공용 코드"}], sv, "setSub");
+  if(sv==="code") return h+admCodeView();
+  if(!d||!d.ok) return h+'<div class="card"><div class="empty">'+esc(d&&d.reason==="super"?"슈퍼관리자만 볼 수 있습니다.":"명단을 받지 못했습니다("+why(d)+"). 서버가 v4.85 이상인지 확인합니다.")+'</div></div>';
+  h+='<div class="grid g2" style="margin-top:0">'+admListCard("c",d)+admListCard("a",d)+'</div>';
+  h+=memo('<p><b>들어오는 방법</b> · 콘솔은 명단에 있는 사번 + 관리코드, 앱 스태프 화면은 로그인한 사번이 명단에 있고 관리코드나 등급코드가 맞을 때 열립니다. 명단 밖 사번은 코드가 맞아도 「명단에 없는 사번이거나 코드가 맞지 않습니다」로만 나옵니다.</p>'+
+    '<p><b>처음 저장</b> · 명단을 처음 저장하는 순간부터 그 명단대로 들어옵니다. 저장 전에는 콘솔은 슈퍼관리자만, 앱은 코드만 맞으면 열립니다(첫 배포 때 현장 폰이 갑자기 막히지 않게).</p>'+
+    '<p><b>빼기</b> · 빼면 그 사람의 콘솔 · 스태프 화면은 다음 요청에서 잠금 화면으로 갑니다. 슈퍼관리자는 두 명단 모두에서 뺄 수 없습니다.</p>'+
+    '<p><b>기기 화면</b> · 추첨 대형 화면 · 1F 셀프 노트북 · TV 는 사람이 아니라 명단을 보지 않고 코드만 봅니다. 코드를 바꾸면 이 기기들도 새 코드를 다시 넣습니다.</p>'+
+    '<p><b>잠금</b> · 같은 사번으로 10분에 10번 틀리면 그 사번은 10분 잠깁니다. 같은 연결(와이파이 주소)은 30번입니다.</p>'+
+    '<p><b>기록</b> · 명단 · 코드를 바꾼 사람과 시각이 시트 「운영로그」에 남습니다. 코드 값은 남지 않습니다. 이름은 계정 시트, 없으면 명부에서 찾습니다.</p>');
+  return h;
+}
+function admListCard(sc, d){
+  var L=d[sc]||{ rows:[] }, rows=L.rows||[], m=ADM_SC[sc];
+  var right=L.set?tag("적용 중 · "+rows.length+"명","ok"):tag(sc==="c"?"저장 전 · 슈퍼관리자만":"저장 전 · 코드만 맞으면","warn");
+  var note=(!L.set?'<p class="note" style="margin-bottom:12px">'+(sc==="c"?"아직 저장하지 않아 슈퍼관리자만 들어옵니다. 사번을 추가하면 그때부터 명단대로 들어옵니다.":"아직 저장하지 않아 코드만 맞으면 스태프 화면이 열립니다. 사번을 추가하면 그때부터 명단에 있는 사람만 엽니다.")+'</p>':'')+
+    (sc==="a"&&!ADM_APP_LIVE?'<p class="note warnl" style="margin:0 0 12px">지금 앱은 스태프 화면을 열 때 사번을 보내지 않아 이 명단이 아직 걸리지 않습니다. 앱 업데이트 뒤부터 적용됩니다.</p>':'');
+  var add='<div class="row" style="margin-bottom:12px;flex-wrap:nowrap"><input class="in" id="admIn_'+sc+'" style="flex:1;min-width:0" inputmode="numeric" autocomplete="off" placeholder="사번 · 여러 명은 쉼표로" value="'+esc(ADMF[sc])+'" oninput="ADMF.'+sc+'=this.value" onkeydown="if(event.key===\'Enter\')admAdd(\''+sc+'\')"><button class="btn pri" onclick="admAdd(\''+sc+'\')">추가</button></div>';
+  var tb='<div class="wrap scrolly" style="max-height:480px"><table class="tb"><tr><th>사번</th><th>이름</th><th>부문</th><th class="tdr"></th></tr>'+rows.map(function(r){
+    return '<tr class="hv"><td class="n">'+esc(r.emp)+'</td><td>'+(r.name?'<b>'+esc(r.name)+'</b>':'<span class="cap">이름 없음</span>')+'</td><td class="muted">'+esc(r.dept||"")+'</td>'+
+      '<td><div class="acts">'+(r.sup?tag("슈퍼관리자","pri"):'<button class="btn sm danger" onclick="admDel(\''+sc+'\',\''+jq(r.emp)+'\')">빼기</button>')+'</div></td></tr>';
+  }).join("")+'</table></div>';
+  return card(m.n, esc(m.d), note+add+tb, right);
+}
+/* 처리한 명단만 바꾼다(서버가 그 명단을 돌려준다) */
+function admPut(sc, list){ if(list&&ST.data.adm){ ST.data.adm[sc]=list; } render(); }
+function admAdd(sc, emps, quiet){
+  var v=String(emps!=null?emps:ADMF[sc]||"").trim(); if(!v){ toast("사번을 입력하세요"); return; }
+  var L=((ST.data.adm||{})[sc])||{};
+  var go_=function(after){ call("adm_roster_set",{sc:sc,op:"add",emps:v},function(r){ if(after) after(); if(r&&r.ok){ if(emps==null) ADMF[sc]=""; admPut(sc,r.list); toast(quiet?"되돌렸습니다 · "+r.done.join(", "):r.done.length?"추가했습니다 · "+r.done.join(", ")+(r.started?" · 이 명단 적용 시작":""):"이미 명단에 있습니다"); } else toast(admWhy(r)); },function(e){ if(after) after(); toast(admWhy(e)); }); };
+  if(sc==="a"&&!L.set&&!quiet){
+    dialog({ t:"앱 스태프 명단을 시작할까요?", s:"저장하는 순간부터 명단에 있는 사람만 앱 스태프 화면을 엽니다. 지금 코드로 일하는 스태프가 있으면 함께 넣으세요.", who:esc(v), ok:"명단 시작", onOk:function(){ go_(dlgForce); } });
+    return;
+  }
+  go_();
+}
+function admDel(sc, emp){
+  var L=((ST.data.adm||{})[sc])||{}, r0=(L.rows||[]).filter(function(r){ return r.emp===emp; })[0]||{ emp:emp };
+  dialog({ t:ADM_SC[sc].n+" 명단에서 뺄까요?", s:"빼는 즉시 이 사람의 "+(sc==="c"?"콘솔":"앱 스태프 화면")+" 로그인이 끊깁니다.", who:esc((r0.name?r0.name+" · ":"")+emp), ok:"빼기", danger:true,
+    onOk:function(){ call("adm_roster_set",{sc:sc,op:"del",emps:emp},function(r){ dlgForce(); if(r&&r.ok){ admPut(sc,r.list); toast("뺐습니다 · "+(r0.name||emp),{ undo:function(){ admAdd(sc,emp,true); } }); } else toast(admWhy(r)); },function(e){ dlgForce(); toast(admWhy(e)); }); } });
+}
+/* 공용 코드 · 두 번 입력 · 숫자만 · 바꾸면 이 콘솔은 새 토큰으로 이어진다 */
+function admCodeView(){
+  return '<p class="note warnl" style="margin-top:0">코드를 바꾸면 그 코드를 쓰던 스태프 폰 · 셀프 노트북 · 추첨 화면 · 다른 콘솔이 모두 새 코드를 다시 넣어야 합니다.</p>'+
+    '<div class="grid g2">'+admCodeCard("admin")+admCodeCard("grade")+'</div>'+
+    memo('<p><b>규칙</b> · 숫자 6~16자리입니다. 0으로 시작해도 됩니다. 같은 숫자 반복(111111)이나 이어진 숫자(123456)는 받지 않습니다. 관리코드와 등급코드는 달라야 합니다.</p>'+
+      '<p><b>되돌리기 없음</b> · 서버는 지금 코드를 보여 주지 않습니다. 새 코드를 먼저 적어 두고 바꿉니다. 이 콘솔은 바꾼 뒤에도 그대로 이어집니다.</p>'+
+      '<p><b>전달</b> · 새 코드는 직접 전합니다. 기록(시트 「운영로그」)에는 바꾼 사람 · 시각 · 자리수만 남습니다.</p>');
+}
+function admCodeCard(w){
+  var a=w==="admin", k1=a?"a1":"g1", k2=a?"a2":"g2";
+  return card(a?"관리코드":"등급코드", a?"콘솔 · 앱 스태프 화면 전체 권한":"앱 스태프의 혼잡 제보 · 존 등급만",
+    '<div class="admf"><label>새 코드<input class="in" id="adm_'+k1+'" type="password" inputmode="numeric" autocomplete="new-password" maxlength="16" value="'+esc(ADMF[k1])+'" oninput="admF(\''+w+'\',\''+k1+'\',this)"></label>'+
+    '<label>한 번 더<input class="in" id="adm_'+k2+'" type="password" inputmode="numeric" autocomplete="new-password" maxlength="16" value="'+esc(ADMF[k2])+'" oninput="admF(\''+w+'\',\''+k2+'\',this)" onkeydown="if(event.key===\'Enter\')admCodeGo(\''+w+'\')"></label>'+
+    '<div class="admh" id="admH_'+w+'">'+admHint(w)+'</div>'+
+    '<div class="row"><button class="btn danger" onclick="admCodeGo(\''+w+'\')">'+(a?"관리코드":"등급코드")+' 바꾸기</button></div></div>');
+}
+function admHint(w){
+  var a=w==="admin", v=ADMF[a?"a1":"g1"], v2=ADMF[a?"a2":"g2"];
+  if(!v) return "숫자 6~16자리";
+  if(!/^\d{6,16}$/.test(v)) return "숫자 6~16자리 · 지금 "+v.length+"자리";
+  if(!v2) return v.length+"자리 · 한 번 더 넣으세요";
+  return v===v2?v.length+"자리 · 두 칸이 같습니다":"두 칸이 다릅니다";
+}
+function admF(w, k, inp){
+  var v=String(inp.value||"").replace(/\D/g,"").slice(0,16); if(v!==inp.value) inp.value=v;
+  ADMF[k]=v; var h=el("admH_"+w), t=admHint(w); if(h){ h.textContent=t; h.className="admh"+(/같습니다$/.test(t)?" ok":/다릅니다|지금/.test(t)?" bad":""); }
+}
+function admCodeGo(w){
+  var a=w==="admin", k1=a?"a1":"g1", k2=a?"a2":"g2", v=ADMF[k1], v2=ADMF[k2], nm=a?"관리코드":"등급코드";
+  if(!/^\d{6,16}$/.test(v)){ toast("숫자 6~16자리로 넣으세요"); return; }
+  if(v!==v2){ toast("두 번 넣은 코드가 다릅니다"); return; }
+  dialog({ t:nm+"를 바꿀까요?", s:"그 코드를 쓰던 스태프 폰 · 셀프 노트북 · 추첨 화면 · 다른 콘솔이 모두 새 코드를 다시 넣어야 합니다.", who:"새 "+nm+" · "+v.length+"자리", ok:"바꾸기", danger:true,
+    onOk:function(){ callPost("adm_code_set",{which:w,code:v,code2:v2},function(r){ dlgForce();
+      if(r&&r.ok){ ADMF[k1]=""; ADMF[k2]=""; if(a&&r.tok) setTok(r.tok); render(); toast(nm+"를 바꿨습니다 · 다른 기기는 새 코드를 다시 넣습니다",{ ms:5000 }); }
+      else toast(admWhy(r)); },function(e){ dlgForce(); toast(admWhy(e)); }); } });
 }
 function wqPut(res){ ST.data.wq=res; _cache[sig_("wq_get",{})]={ data:res, at:Date.now() }; }
 function viewWq(){
@@ -4625,7 +4743,7 @@ function viewQrBeta(items){
 
 /* ══════════════════ 8. 시작 ══════════════════ */
 renderTabs();
-if(key()){ el("lock").style.display="none"; ST.busy=true; render(); bootTok(function(){ ST.busy=false; if(key()){ load(); render(); opsBoot(); schPull(true); } }); } else lock();   /* v4.75 실시간 연결(ops) · 예약 목록 · 2분 전 배너 */
+if(authed()){ el("lock").style.display="none"; ST.busy=true; render(); bootTok(function(){ ST.busy=false; if(authed()){ load(); render(); opsBoot(); schPull(true); } }); } else lock();   /* v4.85 사번 + 사람 토큰 */   /* v4.75 실시간 연결(ops) · 예약 목록 · 2분 전 배너 */
 </script>
 </body>
 </html>
