@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>AX Festival 2026 · ME to WE</title>
+<title>AX Passport · AX Festival 2026</title>
 <!-- 홈 화면에 추가 = 아이콘 한 번으로 실행 (설치·스토어 없음) -->
 <link rel="manifest" href="manifest.json">
 <!-- AX-TDS v1 (260922 · design.md §A) · 홍보부 앱 디자인 가이드 패키지의 잠긴 토큰·컴포넌트 · 이 두 파일은 고치지 않는다 -->
@@ -24,7 +24,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="AX Festival">
+<meta name="apple-mobile-web-app-title" content="AX Passport">
 <style>
   /* ═══════ AX Festival 2026 그래픽 시스템 v6 「홍보부 디자인안 · design.md v29」 ═══════
      흰 바탕 + 연주황(O10 틴트) 무보더 카드 + Vibrant Orange(#FF7E31) 브랜드 문구·CTA (260915 사용자: 회색 카드 대신 연주황으로 통일).
@@ -1839,7 +1839,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #pwlost h1 { color: var(--ax-color-ink); }
   /* 아래 고정 바의 꺼진 주 버튼 · canvas 바탕 위에서도 자리가 보이게 흰 면 + disabled 글자 */
   .axs-fix.ax-bottom .ax-button:disabled { background: var(--ax-color-surface); color: var(--ax-color-disabled); }
-  /* ═══ v4.84 (261001 앱 개편 2묶음) 홈 다음 스탬프 · 스탬프 탭 한 목록 · 프로그램 탭 메뉴 · 10F 세션 줄 · 1F 부스 6구역 (토큰만 · hex 없음) ═══ */
+  /* ═══ v4.84 (261001 앱 개편 2묶음) 홈 다음 스탬프 · 스탬프 탭 한 목록 · 프로그램 탭 메뉴 · 10F 세션 줄 · 1F 부스 5구역 (토큰만 · hex 없음) ═══ */
   #view[data-v="exp"] .axs-sec { display: flex; flex-direction: column; gap: var(--ax-space-12); }
   #view[data-v="exp"] .sect { margin: 0; align-items: center; }
   #view[data-v="exp"] .lnk.sub { margin: 0 var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-muted); cursor: pointer; }
@@ -2576,7 +2576,7 @@ var TIMELINE = [
   { time: "09:30", end: "09:40", title: "Intro · 개회", short: "CEO · AX 선포 및 Festival 개최 안내", place: "17F 대강당", desc: "CEO · AX 선포 및 Festival 개최 안내", tag: "자유 참석" },
   { time: "09:40", end: "10:20", title: "기조연설", short: "CTO · AI 환경 · 전략", place: "17F 대강당", desc: "CTO · AI 환경 · 전략", tag: "자유 참석" },
   { time: "10:30", end: "11:00", title: "내부 강연 · AX 로드맵", short: "디지털전략본부장 · 현대해상 AX 로드맵", place: "17F 대강당", desc: "디지털전략본부장 · 현대해상 AX 로드맵", tag: "자유 참석" },
-  { time: "11:00", end: "13:30", title: "점심 · 자유 관람", short: "1F 부스 6구역 관람", place: "1F 로비", desc: "1F 부스 6구역 관람", tag: "휴식" },
+  { time: "11:00", end: "13:30", title: "점심 · 자유 관람", short: "1F 부스 5구역 관람", place: "1F 로비", desc: "1F 부스 5구역 관람", tag: "휴식" },
   /* always=1 (v3.18): 기간이 길어서가 아니라 「그 시간 안에 아무 때나 들르는」 참여 방식이라 상시 묶음.
      10F 오후 세션(내내 참석)·점심(시간대 구분 역할)은 시간표 유지 */
   { time: "", end: "", title: "AX 커피챗", short: "시간은 매칭 후 앱에서 안내", place: "18F", desc: "시간은 매칭 후 앱에서 안내", tag: "매칭 후 안내", always: 1 },
@@ -3306,7 +3306,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.03";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.04";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -3338,7 +3338,7 @@ function a2hsInstall() {
     a2hsSheet(false);
     if (r && r.outcome === "accepted") {
       a2hsMarkDismissed();
-      notice({ key: "a2hs", title: "바로가기 설치 완료", body: "홈 화면의 AX Festival 아이콘으로 열기" });
+      notice({ key: "a2hs", title: "바로가기 설치 완료", body: "홈 화면의 AX Passport 아이콘으로 열기" });
       App.render();
     }
   });
@@ -3398,7 +3398,7 @@ function a2hsIosSteps(ua, touch) {
   var more = '<svg class="a-ic a-ic-more" role="img" aria-label="···" viewBox="0 0 24 24" fill="currentColor"><circle cx="5.5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="18.5" cy="12" r="1.9"/></svg>';
   var q = function (t) { return "<b>&ldquo;" + t + "&rdquo;</b>"; };
   var lead = (ipad ? "아이패드는" : "아이폰은") + " 아래 순서로 직접 추가해요";
-  var again = "홈 화면의 AX Festival 아이콘으로 열면 사번 · 이름 · 비밀번호 4자리로 다시 입장해요";
+  var again = "홈 화면의 AX Passport 아이콘으로 열면 사번 · 이름 · 비밀번호 4자리로 다시 입장해요";
   if (/CriOS|EdgiOS/.test(ua)) return { kind: "chrome", lead: lead, copy: true,
     steps: ["주소창 오른쪽 " + share + " 공유 버튼을 누르세요", q("홈 화면에 추가") + "를 누르세요", q("추가") + "를 누르세요"],
     notes: [again, "안 되면 Safari에서 열어 주세요"] };
@@ -5139,7 +5139,7 @@ function sessOpen(id) { PROG.sid = id; App.go("sess_d"); }
    취소는 확인 시트 → 서버 성공일 때만 로컬에서 지운다(실패하면 신청 유지). 데모(서버 없음)는 같은 규칙을 로컬로 판정한다. */
 var PROG_CAT = { key: "강연", road: "강연", l1: "강연", l2: "강연", fld: "실습", ta: "실습", tb: "실습", aws: "실습", ms1: "실습", ms2: "실습", dap: "상담", cchat: "상담", expo: "전시" };
 /* 1F 전시·체험존 = 자유 입장 상세(P02-free) 하나로만 목록에 둔다 · 부스·퀴즈·포토부스 적립과 대기는 체험·나의 참여 몫 */
-var EXPO = { id: "expo", fl: 1, zone: "expo", kind: "open", ttl: "1F 부스", sub: "AX VISION · AX LAB · AX in Action · AX PLAY · AX LOUNGE · EVENT", who: "", tm: "", desc: "" };
+var EXPO = { id: "expo", fl: 1, zone: "expo", kind: "open", ttl: "1F 부스", sub: "AX VISION · AX LAB · AX PLAY · AX LOUNGE · EVENT", who: "", tm: "", desc: "" };
 /* 시간표 행 → 상세 (# = 프로그램 목록 분류) */
 var TL_PROG = { "Intro · 개회": "intro", "마무리 연설": "outro", "기조연설": "key", "내부 강연 · AX 로드맵": "road", "점심 · 자유 관람": "#1F", "파트너사 강연 · AWS": "l1", "파트너사 강연 · MS": "l2", "10F 실습형 세션 A~E": "#실습" };
 /* v4.99 (사용자 261002 「Outro 설명이 너무 많다 · 기조연설처럼 한 장으로」) 17F Intro · Outro = 상세 한 장(sess_d · kind stage) · 시간표 줄은 제목 · 시간 · 장소만
@@ -5264,7 +5264,7 @@ function progTTAllHtml() {
     sec("오후", rows.filter(function (r) { return r.t.time && t2m(r.t.time) >= lu1; })) +
     sec("시간 미정", rows.filter(function (r) { return !r.t.time; }));
 }
-/* ═══ v4.84 (261001 앱 개편 2묶음 · 기획안 5-3) 프로그램 탭 아래 메뉴 · 10F 행 펼침 · 1F 부스 6구역 ═══ */
+/* ═══ v4.84 (261001 앱 개편 2묶음 · 기획안 5-3) 프로그램 탭 아래 메뉴 · 10F 행 펼침 · 1F 부스 5구역 ═══ */
 /* 10F 행 펼침 · 세션 A~E 다섯 줄(세션 E 는 회차 두 줄) · 읽기 전용 · 누르면 세션 상세(안내 전용 · 앱 신청 없음) · 사전 신청한 세션만 「내 세션」 */
 function tenListHtml() {
   return '<div class="axs-ten">' + SESSIONS.filter(function (s) { return s.fl === 10; }).map(function (s) {
@@ -5282,10 +5282,9 @@ function tenListHtml() {
 var FLOOR1 = [
   { id: "vision", grp: "see", sign: "AX VISION", kor: "회사가 가는 방향을 보는 곳", fact: "AX 로드맵 · 영상", st: "",
     stm: "회사가 어디로 가는지 보는 곳", todo: ["AX 로드맵 2026~2028을 봐요", "키비주얼 영상을 봐요"] },
-  { id: "lab", grp: "see", sign: "AX LAB", kor: "DAP 과제를 보는 곳", fact: "우수 과제 · 아이디어 한 줄 QR", st: "p5",
-    stm: "DAP 과제 보고 아이디어 남기는 곳", todo: ["우수 과제와 2026 프로젝트를 봐요", "끝 판 QR로 아이디어 한 줄을 써요"], btn: ["아이디어 쓰기", "App.go('ideas')"] },
-  { id: "action", grp: "see", sign: "AX in Action", kor: "AI 업무 사례를 보는 곳", fact: "동료가 만든 앱 3개", st: "",
-    stm: "동료가 AI로 만든 현장 앱을 보는 곳", todo: ["영업 2개, 보상 1개 현장 앱 사례를 봐요", "현장 인터뷰 영상을 봐요"] },
+  /* v5.04 (사용자 261002 · 1층 공간 발주안 261002 「동선 3. AX Lab = DAP + 현장 AX」) AX in Action 은 AX LAB 간판 아래 판이다 · 따로 두던 구역을 합쳤다 · 옛 id action 은 zoneKey 가 lab 으로 돌린다 */
+  { id: "lab", grp: "see", sign: "AX LAB", kor: "DAP 과제와 현장 AI 사례를 보는 곳", fact: "우수 과제 · 현장 앱 3개 · 아이디어 QR", st: "p5",
+    stm: "DAP 과제와 동료가 AI로 만든 현장 앱을 보는 곳", todo: ["우수 과제와 2026 프로젝트를 봐요", "끝 판 QR로 아이디어 한 줄을 써요", "AX in Action 판에서 영업 2개, 보상 1개 현장 앱과 인터뷰 영상을 봐요"], btn: ["아이디어 쓰기", "App.go('ideas')"] },
   { id: "lounge", grp: "do", sign: "AX LOUNGE", kor: "업무 고민을 상담하는 곳", fact: "", st: "p3",
     stm: "데이터사이언스파트와 업무 고민 상담", todo: ["고민을 이야기하고 방향을 함께 찾아요", "앱에서 30분 상담을 신청해요", "상담이 끝나면 스탬프를 받아요"] },
   { id: "play", grp: "do", sign: "AX PLAY", kor: "AI를 직접 써 보는 곳", fact: "HiDI-Q · Hi-Helper", st: "p2",
@@ -5293,7 +5292,8 @@ var FLOOR1 = [
   { id: "event", grp: "do", sign: "EVENT", kor: "사진 · 룰렛 · 타자왕이 있는 곳", fact: "", st: "",
     stm: "사진 · 룰렛 · 타자 겨루기", todo: ["AI 포토부스에서 번호표를 받아요", "스탬프 3개를 모으면 룰렛 1회예요", "1F 타자왕 순위를 봐요"] }
 ];
-function zoneById(id) { return FLOOR1.filter(function (z) { return z.id === id; })[0] || null; }
+function zoneKey(id) { return id === "action" ? "lab" : id; }   /* v5.04 옛 구역 id(퀴즈 z · 문제 은행 dom) → 지금 구역 */
+function zoneById(id) { id = zoneKey(id); return FLOOR1.filter(function (z) { return z.id === id; })[0] || null; }
 function zoneOpen(id) { PROG.zone = id; App.go("zone_d"); }
 /* ── 구역 간판 그림 교체 지점(여기 한 곳) · 홍보부 사인 원본 SVG 가 오면 경로를 넣는다(예: "AX LOUNGE": "assets/sign/ax_lounge.svg")
    같은 높이(줄 24 · 상세 26 · v4.94 포인트 칩)에 <img> 로 들어간다 · 비어 있으면 Neo둥근모 근사(design.md A-5 5-19) · 12자 이상은 sm(글자 줄임) ── */
@@ -5404,7 +5404,7 @@ function progState(s) {
 }
 var PROG_ROW = {
   key: ["기조연설", "AI 환경 · 전략"], road: ["내부 강연", "현대해상 AX 로드맵"],
-  dap: ["AX LOUNGE 상담", "DAP 과제상담 · 1:1 30분"], cchat: ["AX 커피챗", "멘토와 가벼운 시간 · 아이디어 제출 후 신청"], expo: ["1F 부스", "AX VISION · AX LAB · AX in Action · AX PLAY · AX LOUNGE · EVENT"],
+  dap: ["AX LOUNGE 상담", "DAP 과제상담 · 1:1 30분"], cchat: ["AX 커피챗", "멘토와 가벼운 시간 · 아이디어 제출 후 신청"], expo: ["1F 부스", "AX VISION · AX LAB · AX PLAY · AX LOUNGE · EVENT"],
   photo: ["AI 포토부스", "현장 대기 번호 받기"]
 };
 /* v4.13 ⓚ (사용자 260922) 앱에서 신청·대기를 받는 것 · 「신청 가능」 칩을 켜면 이것만 · 목록 · 시간표 공통 · 포토부스는 칩을 켰을 때만 목록에
@@ -5475,10 +5475,10 @@ function progDetail(s) {
     D.st = at ? "출석 완료" : s.id === "expo" ? "자유 입장" : "자유 참석"; D.stc = "ok";
     D.kv = [["일시", s.id === "expo" ? "10월 26일 · 행사 시간 중" : day + progTm(s.tm)], ["장소", pl], ["참여 방법", s.id === "expo" ? "신청 없이 자유 관람" : "신청 없이 자유 참석"]];
     if (ap) D.kv.push(["출석", at ? at + " 출석 완료" : "입구 QR 스캔 · " + attWinLbl(ap)]);
-    D.secB = s.id === "expo" ? "1F 로비 6구역 · AX VISION · AX LAB · AX in Action · AX PLAY · AX LOUNGE · EVENT" :
+    D.secB = s.id === "expo" ? "1F 로비 5구역 · AX VISION · AX LAB · AX PLAY · AX LOUNGE · EVENT" :
       ap ? "별도 신청 없이 참여할 수 있어요.<br>대강당 입구 QR을 찍으면 출석이 기록돼요." + (s.desc ? "<br>" + esc(s.desc) : "") :
       "별도 신청 없이 참여할 수 있어요. 시작 시간에 맞춰<br>" + esc(pl) + "으로 와 주세요.";
-    if (s.id === "expo") D.link = '<button type="button" class="ax-link axs-plain axs-self" onclick="App.go(\'floor1\')">1F 부스 6구역 보기</button>';
+    if (s.id === "expo") D.link = '<button type="button" class="ax-link axs-plain axs-self" onclick="App.go(\'floor1\')">1F 부스 5구역 보기</button>';
     D.help = ap && !at ? "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요" : s.id === "expo" ? "신청 없이 자유롭게 둘러볼 수 있어요" : "신청 없이 참여 가능한 강연이에요";   /* v4.38 (사용자 260925) 17F 는 사전 신청제 → 신청을 받지 않음 · 「사전 신청」이라는 말을 쓰지 않는다 */
     D.btn = ap && !at ? progBtn("출석 QR 스캔", "scanOpen(\'a17\')") : timeBtn;
     return D;
@@ -7288,8 +7288,8 @@ var Views = {
      혼잡도는 이 탭에 넣지 않는다 · 층별 혼잡도는 홈 맨 아래 스트립(v4.62 · 260929 복원). 포토부스·부스·퀴즈는 체험 탭 몫. */
   /* v4.13 두 층(사용자 결정 260922 · design.md A-5 5-10) · 1층 세그먼트 [목록 | 시간표](체험 탭과 같은 axs-seg) · 2층 분류 칩(두 보기 공통) · 시간표 = 옛 P05(guide_time 전체) */
   /* v4.84 (261001 사용자 지시 · 앱 개편 2묶음 · 기획안 5-3) 목록 보기 · 분류 칩 · 「신청 가능」 칩 삭제 · 탭 = 시간표 [전체 | 나의 일정] 하나 + 그 아래 「상시 운영」 메뉴
-     (1F 부스 6구역 · AX LOUNGE 상담 · AX 커피챗 · AI 포토부스) · 260922 v4.13 두 층(목록 | 시간표)을 뒤집었다 */
-  /* v4.93 (261001 사용자 확정 · IA 검토 8장 A1) 탭 맨 위 [시간표 | 상시 운영] · 상시 운영 = 1F 로비 6구역(현장 간판) + 18F AX 커피챗 · 판 문법 경계 axs-pan(design.md A-5 5-19) */
+     (1F 부스 5구역 · AX LOUNGE 상담 · AX 커피챗 · AI 포토부스) · 260922 v4.13 두 층(목록 | 시간표)을 뒤집었다 */
+  /* v4.93 (261001 사용자 확정 · IA 검토 8장 A1) 탭 맨 위 [시간표 | 상시 운영] · 상시 운영 = 1F 로비 5구역(현장 간판) + 18F AX 커피챗 · 판 문법 경계 axs-pan(design.md A-5 5-19) */
   guide: function () {
     var al = PROG.seg === "always";
     return '<div class="ax-stack' + (al ? " axs-pan" : "") + '">' + progSegHtml() + (al ? progAlwaysHtml() : progTimeHtml()) + "</div>";
@@ -11193,7 +11193,7 @@ var OX_BANK = [
   { id: "F84", c: 4, lv: 2, q: "AI컨설팅 도우미는 판매 화법을 알려 준다", a: "O", e: "상품의 강점을 판매 화법으로 제공하는 앱이다.", g: "ap", rv: 1, z: "action", h: "action.consult" },
   { id: "F85", c: 4, lv: 2, q: "Hi-Helper는 추천 설계안을 하나만 준다", a: "X", e: "추천 설계안 TOP1~3을 비교해 볼 수 있다.", g: "hhr", rv: 1, z: "play", h: "play.hh.tips" }
 ];
-var OX_ZONE = { vision: "AX VISION", lab: "AX LAB", action: "AX in Action", play: "AX PLAY", lounge: "AX LOUNGE", event: "EVENT" };   /* z → 구역 이름 · 1층 판 구역 */
+var OX_ZONE = { vision: "AX VISION", lab: "AX LAB", action: "AX LAB · AX in Action 판", play: "AX PLAY", lounge: "AX LOUNGE", event: "EVENT" };   /* z → 구역 이름 · 1층 판 구역 */
 var OX_KEY = {};   /* id: [난이도, 정답, 짝, 검수, 문장] · 서버 OX_KEY 와 같은 모양(채점 식을 글자 그대로 같게 쓰려고) */
 OX_BANK.forEach(function (x) { OX_KEY[x.id] = [x.lv, x.a, x.g, x.rv, x.q]; });
 function oxKey(id) { return OX_KEY[id]; }   /* v4.92 채점 식이 부르는 정답 찾기 · 앱은 지금 은행만 · 서버 oxKey_ 는 옛 id 표(OX_KEY_OLD)도 본다 */
@@ -11872,10 +11872,10 @@ function qzHubHtml() {
 function qzHint(id) {
   var it = qzItem(id); if (!it || !QZ_PANEL[it.h]) return;
   var zz = qzZone(it.z), st = zz && zz.st ? STAMPS.filter(function (s) { return s.id === zz.st; })[0] : null;
-  var map = '<div class="qz-map" role="list" aria-label="1F 부스 6구역">' + FLOOR1.map(function (z) { return '<span role="listitem" class="' + (z.id === it.z ? "on" : "") + '"' + (z.id === it.z ? ' aria-current="true"' : "") + ">" + esc(z.sign) + "</span>"; }).join("") + "</div>";
+  var map = '<div class="qz-map" role="list" aria-label="1F 부스 5구역">' + FLOOR1.map(function (z) { return '<span role="listitem" class="' + (z.id === zoneKey(it.z) ? "on" : "") + '"' + (z.id === zoneKey(it.z) ? ' aria-current="true"' : "") + ">" + esc(z.sign) + "</span>"; }).join("") + "</div>";
   var body = '<div class="axs-pan qz qz-hs">' + (zz ? zoneSign(zz.sign, "lg chip") : "") + '<p class="qz-lp">' + esc(qzLinePan(it.h)) + "</p>" +
     (QZ_NOSIGN[it.z] ? '<p class="ax-meta">' + esc(QZ_NOSIGN[it.z]) + "</p>" : "") +
-    '<p class="axs-dot">1F 부스 6구역</p>' + map +
+    '<p class="axs-dot">1F 부스 5구역</p>' + map +
     (st ? '<p class="qz-zin"><b>이 구역에서</b><span>' + esc(zz.stl || st.title) + " 스탬프</span></p>" : "") +
     '<p class="ax-meta">풀던 문제는 저장돼요</p></div>';
   sheetOpen({ id: "qzhint", title: "힌트", body: body, keep: "문제로 돌아가기", keepWeak: true, go: "sheetClose(true); zoneOpen('" + it.z + "')", goLbl: "이 구역 보기", back: "qzHintBtn" });
@@ -16376,7 +16376,7 @@ function lgxAskApp() {
     var ev = A2HS.deferred; A2HS.deferred = null;
     try { ev.prompt(); } catch (e) { lgxAskDone("app"); return; }
     ev.userChoice.then(function (r) {
-      if (r && r.outcome === "accepted") { a2hsMarkDismissed(); notice({ key: "a2hs", title: "바로가기 설치 완료", body: "홈 화면의 AX Festival 아이콘으로 열기" }); }
+      if (r && r.outcome === "accepted") { a2hsMarkDismissed(); notice({ key: "a2hs", title: "바로가기 설치 완료", body: "홈 화면의 AX Passport 아이콘으로 열기" }); }
       lgxAskDone("app");
     }, function () { lgxAskDone("app"); });
     return;
