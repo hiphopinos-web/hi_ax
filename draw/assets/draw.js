@@ -10,6 +10,8 @@
  *   v3.1(261001) = 틈에 미닫이 문 · 섞는 동안 문이 닫혀 있어 틈은 벽이다(보이지 않는 처리 없음) · 통이 6시에 선 뒤 잠깐 쉬고 「철컥」 문이 옆으로 열린다
  *                → 처음 빠진 공이 당첨 → 문이 바로 닫힌다 · 체크인 · 되돌림 때도 12시에서 같은 문이 열리고 닫힌다
  *                글자 맞춤(fitText) · 이름 · 부서 · 경품 = 한 줄 맞춤 축소 → 최소 크기 아래면 두 줄 → 그래도 넘치면 말줄임 · 부서는 이름 아래 따로 줄
+ *   v3.2(261002) = 공정성 · 섞기는 약 1.5초마다 방향을 바꿔 세게 돌린다(늦게 넣은 공이 머무는 바깥 고리를 깬다) · 공 면적 56 → 42%(굳은 가운데 없앰)
+ *                누른 순간 거꾸로 돌고 있어도 속도를 이어받아 감속 · 최소 섞기 시간은 실제로 섞는 동안만 · 넣은 공의 주황 고리 없앰(사용자 요청)
  *   캔버스 3겹: #cv 스테이지 · 통 · 심볼 → #gl 공(구형 음영 · 구르면 번호가 표면을 따라 돈다 · 접지 그림자) → #fx 고리 · 입자 · 도트 레터링
  *   WebGL 이 안 되는 기계는 v1 의 2D 공 그림으로 자동 대체한다(행사가 멈추지 않게)
  *   디자인 정본 = AX페스티벌/design.md v29 (블랙·오렌지 스테이지 · 도트 격자 · KV 오브젝트 · 글자 정지 · 점으로 모이고 흩어진다)
@@ -300,7 +302,7 @@
   }
   var DRM = { mode: "spin", at: 0, rock: 0, hold: 0 };   /* 통 움직임 · spin 돈다 · park 감속해 세운다 · hold 서 있다(at = 세운 방향) */
   var PARK = { th0: 0, D: 0, Td: 1, k: 1, t0: 0, at: 0 };
-  var TUNE = { fill: 0.56, wmix: 1.4, fins: 0, finL: 2.6, surge: 0, surgeW: 4, surgeA: 3, rest: 0, restV: 0.08 };   /* fins = 통 안쪽 날개 수(통돌이 세탁조처럼 공을 들어 올려 뿌린다 · 섞임) · finL = 날개 길이(공 반지름 배수) */
+  var TUNE = { fill: 0.42, wmix: 1.4, fins: 0, finL: 2.6, surge: 0, surgeW: 4, surgeA: 3, rest: 0, restV: 0.08 };   /* fins = 통 안쪽 날개 수(통돌이 세탁조처럼 공을 들어 올려 뿌린다 · 섞임) · finL = 날개 길이(공 반지름 배수) */
   function finLen() { return Math.max(TUNE.finL * R, 34); }
   /* 날개 · 틈에서 360/(n+1) 간격 · 벽에서 안쪽으로 짧게 · 통과 함께 돈다 */
   function finAng(k) { return gapAng() + (k + 1) * 6.2832 / (TUNE.fins + 1); }
@@ -320,12 +322,13 @@
   function gapHalfW() { return R * GAPW; }              /* 틈 반폭(px) */
   function gapEdgeA() { return Math.asin(Math.min(0.99, gapHalfW() / DR)); }   /* 틈 끝점의 각도 반폭 */
   function angDiff(a, b) { return Math.atan2(Math.sin(a - b), Math.cos(a - b)); }
-  /* 감속해 틈을 at 방향에 세운다 · 3차 에르밋 곡선 · 시작 속도는 지금 속도 · 끝 속도 0 · stretch = 감속 시간 배율(추첨 때 암호 난수) */
+  /* 감속해 틈을 at 방향에 세운다 · 3차 에르밋 곡선 · 시작 속도는 지금 속도 · 끝 속도 0 · stretch = 감속 시간 배율(추첨 때 암호 난수)
+   * v3.2 · 섞기가 앞뒤로 도니 누른 순간 통이 거꾸로 돌고 있을 수 있다 · 시작 속도를 부호 그대로 이어받는다(k < 0 이면 잠깐 거꾸로 가다가 돌아서 선다 · 순간 반전 없음) */
   function startPark(at, minD, stretch, tmin, tmax) {
-    var w0 = Math.max(Math.abs(MIX.w), 0.25), D = ((at - gapAng()) % 6.2832 + 6.2832) % 6.2832;
+    var w0 = Math.max(Math.abs(MIX.w), 0.25), ws = MIX.w < 0 ? -w0 : w0, D = ((at - gapAng()) % 6.2832 + 6.2832) % 6.2832;
     while (D < minD) D += 6.2832;
     PARK.th0 = MIX.rot; PARK.D = D; PARK.at = at; PARK.t0 = T;
-    PARK.Td = clamp(D / w0 * (stretch || 1), tmin || 0.8, tmax || 2.0); PARK.k = clamp(w0 * PARK.Td / D, 0, 3);   /* k < 1 이면 한 번 빨라졌다가 선다 */
+    PARK.Td = clamp(D / w0 * (stretch || 1), tmin || 0.8, tmax || 2.0); PARK.k = clamp(ws * PARK.Td / D, -3, 3);   /* k < 1 이면 한 번 빨라졌다가 선다 */
     DRM.mode = "park"; DRM.at = at;
   }
   /* 통 움직임 · spin = 각속도가 목표로(체크인 0.8 · 대기 0.2 · 섞기 1.6 rad/s) · park = 감속해 틈을 세운다 · hold = 서 있다
@@ -334,15 +337,32 @@
   var LOADW = 0.8, MIXT = 0, MINMIX = 10, CHKSIM = false, DROPT = 0;
   function minMixFor(m) { if (REC) return 10; var r = CFG.minMix && CFG.minMix.length ? CFG.minMix : DEF.minMix, v = 10;   /* 쇼릴(녹화)은 10초 고정 */ r.forEach(function (x) { if (m >= x[0]) v = x[1]; }); return v; }
   function dropsDue() { for (var k = 0; k < DROPS.length; k++) if (DROPS[k].at <= T) return true; return false; }
+  /* v3.2 · 섞기 = 통을 앞뒤로 번갈아 세게 돌린다(세탁조처럼 · 한쪽 약 1.5초 · 2.2 rad/s · 빠르게 방향을 바꾼다)
+   *   원인(공정성 조사 261002): 한 방향으로만 돌면 위 표면 → 벽 → 다시 위 표면으로 도는 바깥 고리가 생기고, 나중에 넣은 공은 위에 얹혀 이 고리에 머문다
+   *   6시 틈은 이 고리(벽에 붙은 공)에서 공을 받으므로 늦게 체크인한 공이 유리했다(공 1,000개 · 5분 체크인 · 마지막 10% 약 1.5배)
+   *   방향을 바꿀 때마다 표면층이 반대편에서 무너져 내린 공 밑에 묻히고 새 표면이 생긴다 → 표면 · 벽 고리가 몇 초 만에 통 전체와 섞인다
+   *   방향 전환 간격은 매번 조금씩 흔든다(0.85~1.15배)
+   *   체크인 중에는 예전처럼 천천히 한 방향으로 돈다(QR 을 찍는 동안 화면이 차분하게)
+   *   AG.ckb = 공을 넣고 문을 닫은 직후 흔드는 초(넣고 흔든다) · 시험해 보니 3초로 두면 마지막에 넣은 공이 묻혀 오히려 불리해져(공 300개 · 5분 · 10초 섞기 카이제곱 20) 0(끔)으로 둔다 */
+  var AG = { on: 1, w: 2.2, half: 1.5, k: 10, ph: 0, dir: 1, len: 1.5, ckb: 0, bu: 0 };
+  function agitating(chk) { return AG.on && (chk ? T < AG.bu : MIX.e >= 0.6); }
+  function spinStep(dt, chk) {
+    var wt, kk = 1.5;
+    if (!agitating(chk)) { wt = chk ? LOADW : 0.2 + TUNE.wmix * MIX.e; AG.ph = 0; AG.dir = 1; AG.len = AG.half; }
+    else {
+      AG.ph += dt; if (AG.ph >= AG.len) { AG.ph -= AG.len; AG.dir = -AG.dir; AG.len = AG.half * (0.85 + 0.3 * rng()); }
+      wt = AG.dir * AG.w; kk = AG.k;
+    }
+    MIX.w += (wt - MIX.w) * Math.min(1, dt * kk); MIX.rot += MIX.w * dt;
+  }
   function drumStep(dt, chk) {
     var due = dropsDue();
     if (DRM.mode === "spin") {
-      var wt = chk ? LOADW : 0.2 + TUNE.wmix * MIX.e;
-      MIX.w += (wt - MIX.w) * Math.min(1, dt * 1.5); MIX.rot += MIX.w * dt;
+      spinStep(dt, chk);
       if (due && SC !== "tension" && SC !== "exit") {
         var D = ((TOP - gapAng()) % 6.2832 + 6.2832) % 6.2832;
         if (!chk) startPark(TOP, 0.4, 0.9, 0.9, 1.8);
-        else if (D > 0.3 && D < 0.75) startPark(TOP, 0.2, 1, 0.4, 1.6);   /* 틈이 12시로 다가올 때만 · 남은 각도만큼 자연스럽게 선다 */
+        else if (D > 0.3 && D < 0.75 && T >= AG.bu) startPark(TOP, 0.2, 1, 0.4, 1.6);   /* 틈이 12시로 다가올 때만 · 남은 각도만큼 자연스럽게 선다 · 흔드는 중이면 끝난 뒤 */
       }
     } else if (DRM.mode === "park") { if (SC !== "tension" || CHKSIM) stepPark(); }
     else if (DRM.mode === "hold") {
@@ -350,7 +370,7 @@
       if (DRM.at === TOP) {
         var held = T - DRM.t0, more = due && !(chk && held > 2.6);
         if (more || nFalling) doorSet(1, chk || CHKSIM ? 0.35 : 0.7);   /* 12시 · 문을 열고 넣는다(체크인 중에는 작게) */
-        else if (held > 0.35) { doorSet(0, chk || CHKSIM ? 0.35 : 0.7); if (DOOR.v <= 0.02) DRM.mode = "spin"; }   /* 다 넣으면 닫고 다시 돈다 */
+        else if (held > 0.35) { doorSet(0, chk || CHKSIM ? 0.35 : 0.7); if (DOOR.v <= 0.02) { DRM.mode = "spin"; if (chk) AG.bu = T + AG.ckb; } }   /* 다 넣으면 닫고 다시 돈다 · 체크인 중이면 먼저 흔든다 */
       }
       if (DRM.at === SIX && DRW.resume && T >= DRW.resume) { DRW.resume = 0; DRM.mode = "spin"; }
     }
@@ -411,7 +431,10 @@
     for (var i = 0; i < NB; i++) if (bs[i]) { a++; if (bs[i] === 2) n++; else if (bs[i] === 1) f++; }
     nAlive = a; nInside = n; nFalling = f;
   }
-  function targetRadius() { return clamp(Math.sqrt(TUNE.fill * DR * DR / Math.max(nAlive, 150)), 5.2, 24); }   /* v2 · 번호가 읽히게 조금 크게(면적 56%) */
+  /* v3.2(261002) · 공 면적 56% → 42%(공 반지름 약 0.87배 · 공 300개 17.0 → 14.7px) · 통이 절반쯤만 찬다
+   *   56%는 쌓인 공이 통 가운데보다 높아, 가운데 공들이 어느 방향으로 돌려도 흘러내리지 않고 통과 함께 돌기만 했다(굳은 가운데)
+   *   흔들어 섞어도 그 안에 묻힌 공은 빠져나오지 못해 체크인 순서에 따라 유리 · 불리가 생겼다(공 300개 · 2분 체크인 · 10초 섞기 카이제곱 23) */
+  function targetRadius() { return clamp(Math.sqrt(TUNE.fill * DR * DR / Math.max(nAlive, 150)), 5.2, 24); }
   function physStep(h) {
     var g = 2600, i, j, rr = R, lim = DR - rr;
     stepDoor(h);
@@ -679,16 +702,7 @@
       S3.x = S3.cx; S3.y = S3.cy;
     } else { S3.x = bx; S3.y = by; }
     GL.frame(S3);
-    var i;
-    fx.setTransform(vs * cs, 0, 0, vs * cs, vox + ox * vs, voy + oy * vs);
-    fx.globalAlpha = alphaAll * 0.9; fx.lineWidth = 2.5; fx.strokeStyle = C.hi; fx.beginPath();
-    for (i = 0; i < NB; i++) {
-      if (bs[i] !== 2) continue;
-      var u = (T - bland[i]) / 0.55; if (u < 0 || u > 1) continue;
-      var rr = R * (1.1 + u * 1.3); fx.moveTo(bx[i] + rr, by[i]); fx.arc(bx[i], by[i], rr, 0, 6.2832);
-    }
-    fx.stroke();
-    fx.globalAlpha = 1;
+    /* v3.2(261002 사용자) · 방금 들어온 공에 퍼지던 주황 고리를 없앴다 · 넣기는 12시 문이 열리고 공이 떨어지는 움직임으로만 보인다 */
   }
   function drawBalls(alphaAll) {
     buildAtlas();
@@ -708,15 +722,7 @@
         cx.drawImage(atlas.c, (i % cols) * cell, Math.floor(i / cols) * cell, cell, cell, -half, -half, cell, cell);
       }
     }
-    /* 방금 들어온 공 · Hi Orange 고리가 한 번 퍼진다 */
-    cx.setTransform(vs, 0, 0, vs, vox, voy);
-    cx.lineWidth = 2.5; cx.strokeStyle = C.hi; cx.beginPath();
-    for (i = 0; i < NB; i++) {
-      if (bs[i] !== 2) continue;
-      var u = (T - bland[i]) / 0.55; if (u < 0 || u > 1) continue;
-      var rr = R * (1.1 + u * 1.3); cx.moveTo(bx[i] + rr, by[i]); cx.arc(bx[i], by[i], rr, 0, 6.2832);
-    }
-    cx.globalAlpha = (alphaAll == null ? 1 : alphaAll) * 0.9; cx.stroke(); cx.globalAlpha = 1;
+    cx.globalAlpha = 1;   /* v3.2 · 넣은 공의 주황 고리 없음(위와 같음) */
   }
 
   /* ─────────────── 힉스필드 영상 · 장면 시계로 재생(녹화 모드에서는 프레임마다 위치를 맞춘다) ─────────────── */
@@ -938,7 +944,7 @@
     var u = cryptoUnits(2 + NB * 2);
     rng = mulberry(Math.floor(u[0] * 4294967296));
     for (i = 0; i < NB; i++) if (bs[i] === 2) { var ka = u[2 + i * 2] * 6.2832, kv = R * 0.12 * u[3 + i * 2]; bpx[i] -= Math.cos(ka) * kv; bpy[i] -= Math.sin(ka) * kv; }
-    startPark(SIX, Math.PI * 0.6, 1 + 0.35 * u[1], 2.2, 4.6);
+    startPark(SIX, Math.PI * 0.6, 1 + 0.35 * u[1], 2.2, PARKMAX);
     DRAW.t0 = T; DRAW.stopT = -1; DRAW.opened = false; DRAW.heart = T + 0.5; DRAW.tick = Math.floor(MIX.rot / (6.2832 / 24)); DRAW.n0 = el.length; DRAW.resume = 0;
     GAP.live = false; GAP.pull = 0; doorSet(0, 0);
     ST.drawing = 1;
@@ -949,7 +955,7 @@
    *   v3.1 · 문이 열린 뒤 1.2초 안에 안 떨어지면 통을 살짝 흔들고(6시 근처 ±) · 4초부터 틈이 가까운 공을 끌고 · 6초에 가장 가까운 공을 통과시킨다(마지막 안전장치)
    *   한 공이 지나가면 그 스텝에 문이 닫혀 둘째 공은 나오지 못한다
    * 실제 화면과 공정성 시험(simDraw · monteCarlo)이 같은 함수를 쓴다 */
-  var ROCK0 = 1.2, PULL0 = 4, FORCE0 = 6;
+  var ROCK0 = 0.7, PULL0 = 4, FORCE0 = 6, PARKMAX = 4.0;   /* v3.2 · 흔들기 시작 1.2 → 0.7초 · 감속 최대 4.6 → 4.0초(공 300개에서 누른 뒤 7초를 넘는 일이 있었다 · 4.6초 때 2,700번 중 2번 · 4.2초 때 6,600번 중 1번) */
   function drawTick(sfx) {
     if (DRM.mode === "park") {
       if (stepPark()) { DRAW.stopT = T; if (sfx) { SFX.play("stamp"); CAM.amp = 2.6; } }
@@ -1018,14 +1024,31 @@
   var MC = { on: false, hit: -1, spinEsc: 0, second: 0 };
   function mcEscapes() { var n = 0; for (var i = 0; i < NB; i++) if (bs[i] === 2 && Math.hypot(bx[i] - DX, by[i] - DY) > DR + R * 0.5) n++; return n; }
   /* 체크인부터 다시 · n 개 공이 L 초 동안 고르게 도착(도착 순서 = 체크인 순서) → 통이 돌며 묶어서 받는다 → 마감 → 카드 2초 → mixSec 섞기 → 추첨 1회
-   * 돌려주는 값: [당첨 공의 체크인 순서(0 = 처음), 누른 뒤 초, 통 안 공 수] · 실제 화면과 같은 drumStep · stepDrops · drawTick · physStep 을 쓴다 */
+   * 돌려주는 값: [당첨 공의 체크인 순서(0 = 처음), 누른 뒤 초, 통 안 공 수, 도는 동안 빠진 공, 둘째 공, 마지막 안전장치, 섞은 초] · 실제 화면과 같은 drumStep · stepDrops · drawTick · physStep 을 쓴다
+   * v3.2 · mixSec 에 배열([10,20,30])을 주면 체크인 한 번에서 섞기 길이마다 추첨한다(그 순간 통 상태를 저장 → 추첨 → 되돌려 계속 섞는다 · 결과 배열)
+   *        섞은 시간은 화면의 MIXT 와 같이 통이 자유롭게 돌고 넣을 공이 없을 때만 센다 · 체크인 뒤에도 남은 공은 다 넣는다(상한 L + 600초) */
+  function simSave() { return { x: bx.slice(0, NB), y: by.slice(0, NB), px: bpx.slice(0, NB), py: bpy.slice(0, NB), s: bs.slice(0, NB), NB: NB, mix: Object.assign({}, MIX), drm: Object.assign({}, DRM), park: Object.assign({}, PARK), door: Object.assign({}, DOOR), gap: Object.assign({}, GAP), R: R, resume: DRW.resume }; }
+  function simRestore(v) { bx.set(v.x); by.set(v.y); bpx.set(v.px); bpy.set(v.py); bs.set(v.s); NB = v.NB; Object.assign(MIX, v.mix); Object.assign(DRM, v.drm); Object.assign(PARK, v.park); Object.assign(DOOR, v.door); Object.assign(GAP, v.gap); R = v.R; DRW.resume = v.resume; ORDN = -1; }
+  function simOne(mixed, esc) {
+    var h = PH.h, i, t = 0, sec2 = 0, st = 0, el = eligible().length, u = cryptoUnits(2 + NB * 2);
+    rng = mulberry(Math.floor(u[0] * 4294967296));
+    for (i = 0; i < NB; i++) if (bs[i] === 2) { var ka = u[2 + i * 2] * 6.2832, kv = R * 0.12 * u[3 + i * 2]; bpx[i] -= Math.cos(ka) * kv; bpy[i] -= Math.sin(ka) * kv; }
+    startPark(SIX, Math.PI * 0.6, 1 + 0.35 * u[1], 2.2, PARKMAX); DRAW.stopT = -1; DRAW.opened = false; doorSet(0, 0);
+    MC.hit = -1; MC.forcedSim = 0;
+    while (MC.hit < 0 && t < 20) { t += h; T += h; drawTick(false); physStep(h); }
+    var w = MC.hit;
+    if (w >= 0) { bs[w] = 0; DRW.resume = T + 0.35; }        /* 첫 공은 통 밖으로 · 점이 틈을 막고 0.35초 뒤 다시 돈다 · 둘째 공을 센다 */
+    for (var t2 = 0; t2 < 1.2; t2 += h) { T += h; drumStep(h, false); physStep(h); if (++st % 6 === 0) sec2 += mcEscapes(); }
+    return [w >= 0 ? +String(bno[w]).slice(1) : -1, +t.toFixed(2), el, esc, sec2, MC.forcedSim || 0, +mixed.toFixed(2)];
+  }
   function simDraw(n, L, mixSec) {
-    var h = PH.h, i, k = 0, t = 0, times = [], esc = 0, sec2 = 0, st = 0;
+    var h = PH.h, i, k = 0, t = 0, times = [], esc = 0, st = 0, many = Array.isArray(mixSec);
+    var mixes = (many ? mixSec : [mixSec]).map(Number).sort(function (a, b) { return a - b; }), out = [];
     MC.on = true; CHKSIM = true; EXDT = h;
-    for (i = 0; i < NB; i++) bs[i] = 0; NB = 0; ballOfNo = {}; DROPS.length = 0; POPS.length = 0; OUTPOP = null;
+    for (i = 0; i < NB; i++) bs[i] = 0; NB = 0; ballOfNo = {}; DROPS.length = 0; POPS.length = 0; OUTPOP = null; ORDN = -1;
     for (i = 0; i < n; i++) times.push(rng() * L); times.sort(function (a, b) { return a - b; });
     DRM.mode = "spin"; MIX.e = 0; MIX.target = 0; GAP.live = false; GAP.pull = 0; DROPT = 0; DOOR.tgt = 0; DOOR.v = 0; DOOR.openT = -1; MC.forcedSim = 0;
-    while (t < L + 40) {
+    while (t < L + 600) {
       t += h; T += h;
       while (k < n && times[k] <= t) { DROPS.push({ at: T, no: "s" + k, pk: "s" + k }); k++; }
       if (k >= n && !DROPS.length && !nFalling && DRM.mode === "spin") break;
@@ -1034,22 +1057,16 @@
       if (++st % 12 === 0) esc += mcEscapes();
     }
     CHKSIM = false;
-    for (t = 0; t < 2 + mixSec; t += h) {                     /* 마감 · 카드(약 2초 · 체크인 속도) → 섞기 */
-      T += h; MIX.e += ((t < 2 ? (LOADW - 0.2) / TUNE.wmix : 1) - MIX.e) * Math.min(1, h * 2.2);
-      countAlive(); R += (targetRadius() - R) * Math.min(1, h * 1.2); drumStep(h, false); physStep(h);
+    var mixed = 0, mi = 0;
+    for (t = 0; mi < mixes.length && t < 2 + mixes[mixes.length - 1] + 600; ) {   /* 마감 · 카드(약 2초 · 체크인 속도) → 섞기 */
+      if (t >= 2 && mixed >= mixes[mi] - 1e-9) { var sv = simSave(); out.push(simOne(mixed, esc)); esc = 0; simRestore(sv); mi++; continue; }
+      t += h; T += h; MIX.e += ((t < 2 ? (LOADW - 0.2) / TUNE.wmix : 1) - MIX.e) * Math.min(1, h * 2.2);
+      countAlive(); R += (targetRadius() - R) * Math.min(1, h * 1.2); drumStep(h, false); stepDrops(); physStep(h);
+      if (t >= 2 && DRM.mode === "spin" && !DROPS.length && !nFalling) mixed += h;
       if (++st % 12 === 0) esc += mcEscapes();
     }
-    var el = eligible().length, u = cryptoUnits(2 + NB * 2);
-    rng = mulberry(Math.floor(u[0] * 4294967296));
-    for (i = 0; i < NB; i++) if (bs[i] === 2) { var ka = u[2 + i * 2] * 6.2832, kv = R * 0.12 * u[3 + i * 2]; bpx[i] -= Math.cos(ka) * kv; bpy[i] -= Math.sin(ka) * kv; }
-    startPark(SIX, Math.PI * 0.6, 1 + 0.35 * u[1], 2.2, 4.6); DRAW.stopT = -1; DRAW.opened = false; doorSet(0, 0);
-    MC.hit = -1; t = 0;
-    while (MC.hit < 0 && t < 20) { t += h; T += h; drawTick(false); physStep(h); }
-    var w = MC.hit;
-    if (w >= 0) { bs[w] = 0; DRW.resume = T + 0.35; }        /* 첫 공은 통 밖으로 · 점이 틈을 막고 0.35초 뒤 다시 돈다 · 둘째 공을 센다 */
-    for (var t2 = 0; t2 < 1.2; t2 += h) { T += h; drumStep(h, false); physStep(h); if (++st % 6 === 0) sec2 += mcEscapes(); }
     MC.on = false;
-    return [w >= 0 ? +String(bno[w]).slice(1) : -1, +t.toFixed(2), el, esc, sec2, MC.forcedSim || 0];
+    return many ? out : out[0];
   }
   function monteCarlo(n, mixSec, fresh) {
     var out = [], h = PH.h, k, i, saveT = T, saveDT = EXDT;
@@ -1062,17 +1079,17 @@
         ps.sort(function (a, b) { return b[1] - a[1]; });
         ids.forEach(function (id, q) { bx[id] = ps[q][0]; by[id] = ps[q][1]; bpx[id] = bx[id]; bpy[id] = by[id]; });
         MIX.w = 0.2; MIX.e = 0;
-        for (k = 0; k < 1.0 / h; k++) { T += h; MIX.e += (1 - MIX.e) * Math.min(1, h * 2.2); MIX.w += (0.2 + TUNE.wmix * MIX.e - MIX.w) * Math.min(1, h * 1.5); MIX.rot += MIX.w * h; physStep(h); }
+        for (k = 0; k < 1.0 / h; k++) { T += h; MIX.e += (1 - MIX.e) * Math.min(1, h * 2.2); spinStep(h, false); physStep(h); }
         if (TUNE.surge) for (k = 0; k < TUNE.surge / h; k++) { T += h; var wt2 = k * h < TUNE.surge * 0.6 ? TUNE.surgeW : 0.2 + TUNE.wmix; MIX.w += (wt2 - MIX.w) * Math.min(1, h * TUNE.surgeA); MIX.rot += MIX.w * h; physStep(h); }   /* 크게 한 번 돌린다(시험) */   /* 라운드 카드(약 1초) */
       }
       var ms = mixSec + rng() * 1.0;
-      for (k = 0; k < ms / h; k++) { T += h; MIX.e += (1 - MIX.e) * Math.min(1, h * 2.2); MIX.w += (0.2 + TUNE.wmix * MIX.e - MIX.w) * Math.min(1, h * 1.5); MIX.rot += MIX.w * h; physStep(h); if (k % 12 === 0) MC.spinEsc += mcEscapes(); }
+      for (k = 0; k < ms / h; k++) { T += h; MIX.e += (1 - MIX.e) * Math.min(1, h * 2.2); spinStep(h, false); physStep(h); if (k % 12 === 0) MC.spinEsc += mcEscapes(); }
       var el = eligible(), ys = el.map(function (j) { return by[j]; }).sort(function (a, b) { return a - b; });
       var u = cryptoUnits(2 + NB * 2);
       rng = mulberry(Math.floor(u[0] * 4294967296));
       for (i = 0; i < NB; i++) if (bs[i] === 2) { var ka = u[2 + i * 2] * 6.2832, kv = R * 0.12 * u[3 + i * 2]; bpx[i] -= Math.cos(ka) * kv; bpy[i] -= Math.sin(ka) * kv; }
       var y0 = new Float32Array(NB); for (i = 0; i < NB; i++) y0[i] = by[i];
-      startPark(SIX, Math.PI * 0.6, 1 + 0.35 * u[1], 2.2, 4.6); DRAW.stopT = -1; DRAW.t0 = T;
+      startPark(SIX, Math.PI * 0.6, 1 + 0.35 * u[1], 2.2, PARKMAX); DRAW.stopT = -1; DRAW.t0 = T;
       MC.hit = -1; var t = 0;
       while (MC.hit < 0 && t < 20) { t += h; T += h; drawTick(false); physStep(h); }
       var w = MC.hit, rank = -1;
@@ -1270,7 +1287,7 @@
     /* 믹싱 에너지 · 목표로 부드럽게 */
     MIX.e += (MIX.target - MIX.e) * Math.min(1, dt * (MIX.target > MIX.e ? 2.2 : 1.6));
     drumStep(dt, SC === "checkin");
-    if (SC === "mix" && ST.closed) MIXT += dt;                 /* 마감 뒤 섞은 시간(첫 추첨 최소 섞기) */
+    if (SC === "mix" && ST.closed && DRM.mode === "spin" && !DROPS.length && !nFalling) MIXT += dt;   /* 마감 뒤 섞은 시간(첫 추첨 최소 섞기) · v3.2 · 남은 공을 넣으려 12시에 서 있는 동안은 세지 않는다 */
     DRUM.pulse *= Math.exp(-dt * 5);
     stepCam(dt);
     /* 박자 · 섞는 동안 120bpm · 고리 점이 박자에 맞춰 부푼다 */
