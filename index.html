@@ -1900,7 +1900,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
        = 프로그램 › 상시 운영(Views.guide · seg always) · 구역 상세(zone_d) · (다음 판) AX 퀴즈 판 퀴즈.
        다음 작업은 자기 화면 컨테이너에 axs-pan 을 붙이고 아래 K1~K5 를 그대로 쓴다(새로 만들지 않는다 · 검사 132절이 정의 한 번 · 경계를 본다).
      ── 공통 부품 K 시작 ──
-     K1 axs-sign  구역 간판 = 포인트 칩(현장 부스 사인 · 주황 면 + 흰 도트 영문 · 높이 24 · 글자 13px) · .sm 12자 이상(12px) · .lg 구역 상세(높이 26 · 14px) · .chip 퀴즈 구역 칩(기본과 같은 크기)
+     K1 axs-sign  구역 간판 = 포인트 칩(현장 부스 사인 · 주황 면 + 흰 도트 영문 · 높이 24 · 글자 13px) · .sm 12자 이상(12px) · .lg 구역 상세(높이 26 · 14px) · 퀴즈 구역 칩도 같은 칩(변형 없음 · 흰 글자 굵게 700 · 크기 그대로, 사용자 확정 261002)
                   v4.94 (261002 사용자 「너무 크고 튄다 · 포인트 요소로 쓰이는 정도」) 옛 줄 간판 188x54 · 상세 카드 폭 간판을 칩으로 줄였다 · 한 화면에 큰 주황 면 없음
                   글자 px 고정(사인 글자라 큰글씨에서도 한 줄) · 그림 교체 지점은 스크립트 ZONE_SIGN_IMG · zoneSign 한 곳(<img> 는 같은 높이 · 폭은 그림 비율)
      K2 axs-bar   판 제목 막대(왼쪽 3px ink 막대 + 제목 b + 작은 부제 span) · .stm 부제 한 줄(막대 없음 · 회색 t6 · v4.94 「한글 부제는 회색 톤 · 작게」)
@@ -1913,7 +1913,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
                   쓰는 법: 스크립트 stampMkHtml(스탬프 id, "한 단어") 한 줄 · 받은 판정은 S stamps(스탬프 탭 stpRowHtml · 도장 stampTagHtml 과 같은 원천) · 룰렛은 스탬프가 아니라 쓰지 않는다 ═══════ */
   .axs-pan .axs-sign { display: inline-flex; align-items: center; justify-content: center; flex: none; align-self: flex-start; box-sizing: border-box; width: auto; height: 24px; margin: 0; padding: 0 8px; overflow: hidden;
     border-radius: 4px; background: var(--ax-color-brand); color: #FFFFFF;
-    font-family: "NeoDunggeunmo", var(--ax-font); font-size: 13px; font-weight: 400; line-height: 1; letter-spacing: 0; white-space: nowrap; }
+    font-family: "NeoDunggeunmo", var(--ax-font); font-size: 13px; font-weight: 700; line-height: 1; letter-spacing: 0; white-space: nowrap; }
   .axs-pan .axs-sign.sm { font-size: 12px; }
   .axs-pan .axs-sign.lg { height: 26px; padding: 0 10px; font-size: 14px; }
   .axs-pan .axs-sign.lg.sm { font-size: 13px; }
@@ -1961,7 +1961,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .fs-big .axs-pan .axs-zr .hd, .fs-big .axs-pan .axs-zfl, .fs-big .axs-pan .axs-zin { flex-wrap: wrap; }
   .fs-big .axs-pan .axs-zin .tx { flex: 1 1 100%; }
   /* ── v4.96 AX 퀴즈 판 퀴즈 화면 조각(같은 경계 .axs-pan · 컨테이너 .axs-pan.qz · 힌트 시트 본문도 .axs-pan.qz) · 공통 부품 K 를 그대로 쓴다 ──
-     구역 칩 = K1 axs-sign .chip(오렌지 면 + 짙은 글자 · 사용자 확정 261001) · 문제 문장 = K2 axs-bar(막대 + 굵은 제목 b) · 문항 번호 = K3 axs-pill · 해설 위 = K4 axs-rule · 해설 = K5 axs-todo
+     구역 칩 = K1 axs-sign(오렌지 면 + 흰 굵은 글자 · 프로그램 탭 구역 칩과 같다 · 사용자 확정 261002) · 문제 문장 = K2 axs-bar(막대 + 굵은 제목 b) · 문항 번호 = K3 axs-pill · 해설 위 = K4 axs-rule · 해설 = K5 axs-todo
      파랑 없음 · 시계 · 목숨 · 점수 화면 없음 · 버튼 48px 이상 · 큰글씨(fs-big)는 O/X 버튼을 세로로 쌓는다 · 틀린 타일은 색만 바꾼다(움직임 없음 · 동작 줄이기와 같다) */
   .axs-pan.qz .qz-prog { display: flex; flex-direction: column; gap: var(--ax-space-8); }
   .axs-pan.qz .qz-prog p { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-body); }
@@ -1972,8 +1972,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pan.qz .qz-seg i.cur { background: var(--ax-color-ink); }
   .axs-pan.qz .qz-card { display: flex; flex-direction: column; gap: var(--ax-space-16); padding: var(--ax-space-20); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); }
   .axs-pan.qz .qz-top { display: flex; align-items: center; justify-content: space-between; gap: var(--ax-space-8); }
-  .axs-pan .axs-sign.chip { color: #351A0C; }   /* 퀴즈 구역 칩 = 오렌지 면 + 짙은 글자(대비 6.39 · 사용자 확정 261001 · 크기는 K1 포인트 칩 그대로) */
-  .axs-pan.qz .qz-stm { margin: 0; }
+    .axs-pan.qz .qz-stm { margin: 0; }
   .axs-pan.qz .qz-stm b { word-break: keep-all; }
   .axs-pan.qz .qz-gen { display: inline-flex; align-items: center; min-height: 28px; padding: 0 10px; border-radius: 4px; background: var(--ax-color-canvas); color: var(--ax-color-body); font: var(--ax-type-t7); font-weight: 600; }
   .axs-pan.qz .qz-ans { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ax-space-12); }
@@ -5379,7 +5378,7 @@ function progBtn(lbl, on, cls, id, dis) {
 /* 상세 한 장의 내용 · 화면(sess_d)과 확인(sess_cf)이 같은 값을 쓴다 */
 function progDetail(s) {
   var D = { cat: "", org: "", title: s.ttl, who: "", whoSub: "", av: "", st: "", stc: "", kv: [], cfKv: [], extra: "", secT: "참여 전 확인해 주세요", secB: "", link: "", help: "", btn: "" };
-  var day = "10월 26일 · ", pl = s.id === "expo" ? "1F 로비" : s.id === "dap" ? "1F AX LOUNGE (DAP ZONE 미팅룸 2)" : sessPlace(s);
+  var day = "10월 26일 · ", pl = s.id === "expo" ? "1F 로비" : s.id === "dap" ? "DAP ZONE 미팅룸 2" : sessPlace(s);
   var timeBtn = progBtn("전체 시간표 보기", "homeSched()");
   var cxBtn = progBtn("신청 취소하기", "progCancelOpen(\'" + s.id + "\')", "axs-btn-danger", "cxBtn");
   var st = progState(s); D.st = st[0]; D.stc = st[1];
@@ -11552,11 +11551,11 @@ function qzItem(id) {
   return { id: id, lv: b.lv, q: b.q, a: b.a, e: b.e, h: b.h || "", z: b.z || (b.h ? b.h.split(".")[0] : ""), key: null };
 }
 function qzZone(z) { return z ? zoneById(z) : null; }
-/* 구역 칩 · 오렌지 면 + 짙은 글자(사용자 확정 261001 · K1 axs-sign .chip) · 판 근거가 없으면 회색 「AX 상식」 */
+/* 구역 칩 · K1 axs-sign 그대로(오렌지 면 + 흰 굵은 글자 · 사용자 확정 261002) · 판 근거가 없으면 회색 「AX 상식」 */
 function qzChip(it, big) {
   var zz = qzZone(it.z);
   if (!zz) return '<span class="qz-gen">' + QZ_GEN + "</span>";
-  return zoneSign(zz.sign, big ? "lg chip" : "chip");
+  return zoneSign(zz.sign, big ? "lg" : "");
 }
 /* 출처 한 줄 「AX PLAY › HiDI-Q › Introduce 판」 · 줄이 없는 구역은 두 마디 */
 function qzSrc(h) {
