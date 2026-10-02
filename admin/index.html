@@ -475,6 +475,23 @@ table.brk tr.tot td{border-bottom:0;border-top:1px solid var(--line3)}
 .g75{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
 .g75>div>.card:first-child{margin-top:0}
 @media(max-width:1100px){.g75{grid-template-columns:minmax(0,1fr)}}
+/* ── v5.03 참여상 추첨 · 추첨 › 참여상 · fn- ── */
+.fn-step{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:4px 0 12px}
+.fn-step span{font-size:var(--fs-c);font-weight:700;border-radius:99px;padding:3px 10px;border:1px solid var(--line);color:var(--tx3);background:var(--sf);white-space:nowrap}
+.fn-step span.on{color:#fff;background:var(--navy);border-color:var(--navy)}
+.fn-step span.done{color:var(--navy);background:var(--navy05);border-color:var(--navy1)}
+.fn-rem{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.fn-rem label{display:flex;flex-direction:column;gap:4px;font-size:var(--fs-c);color:var(--tx2);font-weight:600;min-width:0}
+.fn-rem .in{min-width:0;width:100%;text-align:right;font-variant-numeric:tabular-nums}
+.fn-rem em{font-style:normal;color:var(--tx3);font-weight:500;font-variant-numeric:tabular-nums}
+.fn-sum{display:flex;gap:6px 16px;flex-wrap:wrap;align-items:baseline;margin-top:10px;font-size:var(--fs-s);color:var(--tx2)}
+.fn-sum b{font-size:var(--fs-h2);color:var(--tx);font-variant-numeric:tabular-nums}
+.fn-form{display:flex;gap:8px 12px;flex-wrap:wrap;align-items:flex-end}
+.fn-form label{display:flex;flex-direction:column;gap:4px;font-size:var(--fs-c);color:var(--tx2);font-weight:600;min-width:0}
+.fn-form .in{min-width:0}
+.fn-seed{font-family:Consolas,monospace;font-size:var(--fs-c);word-break:break-all;color:var(--tx2);text-align:right}
+.fn-go{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+@media(max-width:720px){.fn-rem{grid-template-columns:repeat(2,minmax(0,1fr))}.fn-form label{flex:1 1 100%}.fn-form .in{width:100%!important}}
 .err-banner{background:var(--bad-bg);color:var(--bad);border:1px solid var(--bad-bd);border-radius:var(--r-s);padding:10px 14px;font-size:var(--fs-s);margin-bottom:16px}
 .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--navy1);border-top-color:var(--navy);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px;margin-right:6px}
 @keyframes sp{to{transform:rotate(360deg)}}
@@ -646,7 +663,7 @@ var TABS = [
   { id:"qr", n:"QR", d:"현장에 붙는 QR 전부입니다. 무엇을 인쇄해 어디에 붙이고, 지금 찍히고 있는지 한곳에서 봅니다." },
   { id:"apply", n:"신청", d:"상담 승인 · 커피챗 매칭 · 담당 명단을 처리합니다. 17F 강연은 자유 참석이라 신청이 없습니다(v4.26)." },
   { id:"att", n:"17F 출석", d:"17F 강연 QR 출석 인원 · 출석률 · 시간대별 입장 흐름입니다. 부문 통계는 두지 않습니다." },
-  { id:"draw", n:"추첨", d:"Outro 현장 추첨을 이 콘솔에서 진행합니다. 대형 스크린의 추첨 화면에 명령을 보내고, 체크인 인원 · 당첨 기록 · 추첨 코드를 봅니다." },
+  { id:"draw", n:"추첨", d:"Outro 현장 추첨을 이 콘솔에서 진행합니다. 대형 스크린의 추첨 화면에 명령을 보내고, 체크인 인원 · 당첨 기록 · 추첨 코드와 참여상(스탬프 6개) 추첨을 다룹니다." },
   { id:"visit", n:"접속", d:"앱을 연 사람 수와 들어온 경로(홈 화면 앱 · 브라우저 · 카카오톡 등) · 시간대별 흐름 · 로그인 전 이탈입니다. 부문 통계는 두지 않습니다." },
   { id:"idea", n:"아이디어", d:"참가자가 낸 아이디어 한 줄을 봅니다. 18F 커피챗 매칭 때 분야별로 묶어 봅니다." },
   { id:"survey", n:"설문", d:"오늘 한 판 설문 집계입니다. 답은 이름 없이 저장되어 사람 단위 조회는 없습니다." },
@@ -662,6 +679,9 @@ var TABS = [
 /* v4.02 (사용자 확정 260919) AI 사생대회 폐기 · 메뉴에서 숨긴다, 코드는 그대로 둔다 · 다시 켜려면 true (앱 ART_ON 과 같은 이름) */
 var ART_ON = false;
 if(!ART_ON) TABS = TABS.filter(function(t){ return t.id!=="art"; });
+/* v5.03 (261002 사용자 결정) 1F AI 포토부스 현장 대기열 폐지(대기 번호 · 호출 없음) · 메뉴 · 대시보드 대기 수 · 알림 대상 「포토부스 대기」를 숨긴다 · 코드는 그대로 · 다시 켜려면 true */
+var PHOTO_Q_ON = false;
+if(!PHOTO_Q_ON) TABS = TABS.filter(function(t){ return t.id!=="photo"; });
 /* 앱 STAMPS 와 맞춘다 · v3.33 8칸(계단 st · 설문 sv 추가), v4.58 개수는 6개가 한도(8칸 중 아무거나 6개). 번호는 콘솔 표 머리용 약칭일 뿐 앱에는 없다.
    폐기된 ID 는 옛 로그에 남아 있을 수 있어 표기만 한다(서버 stamp_people 는 old 로 따로 준다). */
 var STAMP_META_V1 = {
@@ -926,7 +946,7 @@ var ST={ tab:"dash", me:null, subs:{ apply:"resv", stamp:"one", qr:"img", typing
 /* 탭을 바꾸면 먼저 갖고 있는 데이터로 즉시 그리고, 그 다음 서버에서 받아 다시 그린다.
    안 그러면 응답이 올 때까지(1~3초) 이전 탭 내용이 새 탭 이름 아래 그대로 보인다. */
 /* load() 를 먼저 불러 busy 를 세운 뒤 그린다. 반대로 하면 첫 진입에 「가입 계정 0명」처럼 0 으로 그려진다. */
-function go(t){ if(!ART_ON&&t==="art") t="dash"; if(t==="adm"&&!supOn()) t="dash"; ST.tab=t; ST.q=""; ST.filt=""; ST.sel={}; drwClose(true); renderTabs(); window.scrollTo(0,0); load(); render(); if(typeof raceTab==="function") raceTab(t==="race"); }
+function go(t){ if(!ART_ON&&t==="art") t="dash"; if(!PHOTO_Q_ON&&t==="photo") t="dash"; if(t==="adm"&&!supOn()) t="dash"; ST.tab=t; ST.q=""; ST.filt=""; ST.sel={}; drwClose(true); renderTabs(); window.scrollTo(0,0); load(); render(); if(typeof raceTab==="function") raceTab(t==="race"); }
 /* 대시보드 바로가기 · 탭 + 서브탭 + 필터까지 한 번에 */
 function goTo(t, sub, filt){ if(sub) ST.subs[t]=sub; go(t); if(filt){ ST.filt=filt; render(); } }
 function sub(){ return ST.subs[ST.tab]; }
@@ -952,7 +972,7 @@ document.addEventListener("visibilitychange",function(){ if(!document.hidden&&au
 
 /* 탭별로 필요한 액션만 부른다 */
 var NEED={
-  dash:[{k:"stats",a:"stats"},{k:"acct",a:"acct_list"},{k:"stamp",a:"stamp_people"},{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"att",a:"att_stats"},{k:"photo",a:"photo_list"},{k:"crowd",a:"crowd_log"},{k:"pst",a:"push_stats"}],   /* v4.76 알림 카드 · v4.71 혼잡 제보(옛 서버는 없음 · 한 줄 안내) */
+  dash:[{k:"stats",a:"stats"},{k:"acct",a:"acct_list"},{k:"stamp",a:"stamp_people"},{k:"resv",a:"resv_list"},{k:"cchat",a:"cchat_list"},{k:"att",a:"att_stats"},{k:"photo",a:"photo_list"},{k:"crowd",a:"crowd_log"},{k:"pst",a:"push_stats"}].filter(function(x){ return PHOTO_Q_ON||x.k!=="photo"; }),   /* v5.03 포토부스 대기열 폐지 · 대기 수를 받지 않는다 */   /* v4.76 알림 카드 · v4.71 혼잡 제보(옛 서버는 없음 · 한 줄 안내) */
   acct:[{k:"acct",a:"acct_list"},{k:"pwreq",a:"pw_req_list"},{k:"sesst",a:"sess_stats"}],   /* v4.68 참가자 본인 확인 숫자(세션필수를 켜기 전에 본다 · 옛 서버는 없음) */
   stamp:[{k:"stamp",a:"stamp_people"},{k:"acct",a:"acct_list"},{k:"stair",a:"stair_list"},{k:"sstat",a:"stair_stats"},{k:"sy",a:"sync",p:{emp:""}}],
   qr:[{k:"slist",a:"stamp_list"},{k:"alist",a:"att_list"},{k:"stair",a:"stair_list"},{k:"sstat",a:"stair_stats"},{k:"qrs",a:"qr_stats"},{k:"dstat",a:"draw_stats"}],   /* v4.79 추첨 체크인 QR(d17) */   /* v4.53 QR 메뉴 · 부스·출석·계단 코드 + 오늘 스캔 수(계단은 stair_stats · 나머지는 qr_stats) */
@@ -975,7 +995,8 @@ var NEED={
 var SUBNEED={
   /* v4.53 "stamp:ops" 가 부르던 stamp_list · att_list 는 QR 메뉴(NEED.qr)로 옮겼다 */
   "stamp:wq":[{k:"wq",a:"wq_get"}],
-  "apply:roster":function(){ return [{k:"ros_"+ROS.prog,a:"staff_roster",p:{prog:ROS.prog}}]; }
+  "apply:roster":function(){ return [{k:"ros_"+ROS.prog,a:"staff_roster",p:{prog:ROS.prog}}]; },
+  "draw:fin":[{k:"fin",a:"fin_state"}]   /* v5.03 참여상 · 옛 서버는 unknown action → 한 줄 안내 */
 };
 function needOf(t){ var x=SUBNEED[t+":"+(ST.subs[t]||"")], n=NEED[t]; return (typeof n==="function"?n():n).concat(typeof x==="function"?x():(x||[])); }
 /* v4.11 (사용자 승인 260922) 비밀번호 요청 배지 · 계정 탭 배지와 대시보드 「지금 처리할 일」은 대기 건수만 있으면 된다.
@@ -1164,7 +1185,7 @@ function viewDash(){
     { v:rvBy["승인"]||0, t:"상담 체크인 대기", d:"승인됐고 아직 오지 않음", go:"goTo('apply','resv','승인')" },
     { v:ccBy["대기"]||0, t:"커피챗 매칭 대기", d:"18F · 회차와 테이블 배정", go:"goTo('apply','cchat','대기')" },
     { v:ph0.length, t:"포토부스 대기", d:"호출할 번호표", go:"go('photo')" }
-  ];   /* v4.26 강연 정원 초과 알림은 17F 자유 참석 전환으로 뺐다 */
+  ].filter(function(x){ return PHOTO_Q_ON||x.t!=="포토부스 대기"; });   /* v5.03 포토부스 대기열 폐지 */   /* v4.26 강연 정원 초과 알림은 17F 자유 참석 전환으로 뺐다 */
   todo.sort(function(a,b){ return (b.v?1:0)-(a.v?1:0); });
   var hot=todo.filter(function(x){return x.v;}).length;
   h+='<div class="grid g57">'+
@@ -2188,8 +2209,9 @@ function drawRecTag(r){
 }
 function viewDraw(){
   var d=ST.data.draw, sv=sub()||"run";
-  var h=tabHead('<button class="btn sm" onclick="reload([\'draw\'])">새로고침</button>');
-  h+=chips([{v:"run",n:"진행"},{v:"stat",n:"현황 · 설정"}], sv, "setSub");   /* v4.82 진행 = 원격 진행 패널(7-6c) */
+  var h=tabHead('<button class="btn sm" onclick="reload('+(sv==="fin"?'[\'fin\']':'[\'draw\']')+')">새로고침</button>'+(sv==="fin"&&ST.data.fin&&ST.data.fin.ok?' '+tag((FIN_PH[ST.data.fin.ph]||["-"])[0],(FIN_PH[ST.data.fin.ph]||["",""])[1]):''));
+  h+=chips([{v:"run",n:"진행"},{v:"stat",n:"현황 · 설정"},{v:"fin",n:"참여상"}], sv, "setSub");   /* v4.82 진행 = 원격 진행 패널(7-6c) · v5.03 참여상(7-6d) */
+  if(sv==="fin") return h+viewFin();
   if(!d||!d.ok) return h+'<div class="err-banner">추첨 현황을 받지 못했습니다('+esc(why(d))+'). 백엔드가 v4.79(추첨) 이상인지 확인합니다.</div>';
   if(sv==="run") return h+viewDrawRun(d)+memo('<p><b>준비</b> · 대형 스크린 PC 에서 「추첨 화면 열기」(또는 복사한 주소)로 추첨 화면을 원격 모드로 띄우고, 화면에 관리코드를 넣은 뒤 전체 화면(F)으로 둡니다. 이 노트북은 사회자 옆에 둡니다. 위 표시가 「화면 연결됨」이면 화면이 2초마다 상태를 보내고 있습니다. 5초 넘게 보고가 없으면 붉게 바뀝니다.</p>'+
     '<p><b>버튼</b> · 지금 장면에서 화면이 받는 명령만 켜지고, 다음 차례 버튼은 남색으로 채워집니다. 체크인 마감 · 부재 · 마지막 취소 · 끝 화면 · 화면 초기화는 3초 안에 두 번 눌러야 나갑니다. 체크인 마감은 서버의 체크인도 함께 닫고, 체크인 시작은 닫혀 있던 체크인을 다시 엽니다.</p>'+
@@ -2235,13 +2257,269 @@ function drawCfgSave(){
     onOk:function(){ call("draw_cfg",p,function(r){ dlgForce(); if(r&&r.ok){ toast("추첨 설정을 저장했습니다"); ST.data.draw=r; reload(["draw"]); } else toast("실패: "+(DRAW_WHY[r&&r.reason]||why(r))); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
 }
 
+/* ══════════════════ 7-6d. 참여상 추첨 · 추첨 › 참여상 (v5.03 · 261002 사용자 결정 · 설계안 권장안 A) ══════════════════
+ * 순서 = ① 17:00 마감(서버 시각 자동) ② 룰렛 잔여 실사 5칸(입고표 − 룰렛 사용 횟수와 대조 · 경고만) ③ 대상 확정(fin_lock) ④ Outro 행운권 10명
+ *        ⑤ 참여상 추첨(fin_draw · 한 번만 · 서버가 시드 · 풀 해시를 남긴다) ⑥ 대형 화면 숫자 발표(draw_cmd fin) · 알림(그룹 참여상대상) ⑦ 배송 CSV(슈퍼관리자 PIN 뒤)
+ * 이 화면에 사람 이름이 나오는 곳 = 수동 제외 · 포함 목록 · 교체 확인 창뿐 · 당첨자 명단은 CSV 로만(fin_export · sp) · 부문 통계 없음 · 새 CSS 는 fn- 로 시작한다.
+ * 옛 서버(fin_state 모름)는 한 줄 안내 · 버튼을 그리지 않는다. */
+var FIN_GROUP="참여상대상";
+var FINV={ rem:null, cfg:null, ex:{ emp:"", why:"" }, vo:{ emp:"", why:"" }, busy:"", ver:null };
+var FIN_PH={ open:["마감 전","off"], wait:["마감 · 확정 전","warn"], lock:["대상 확정",""], drawn:["추첨 완료","ok"] };
+var FIN_WHY={ early:"마감 시각 전에는 확정할 수 없습니다", drawn:"이미 추첨했습니다. 설정 · 잔여 · 제외는 바꿀 수 없습니다", nolock:"먼저 대상을 확정합니다", stale:"확정 뒤 제외 · 포함 · 마감이 바뀌었습니다. 대상을 다시 확정합니다",
+  rem:"룰렛 잔여를 먼저 입력합니다", done:"이미 추첨했습니다. 결과는 그대로입니다", why:"사유를 적습니다", test:"테스트 사번은 대상에서 늘 빠집니다", notwin:"이 사번은 지금 당첨자가 아닙니다",
+  nodraw:"아직 추첨 전입니다", cut:"마감은 2026-10-26 17:00 형식입니다", hum:"가습기 수는 0~5000 입니다", stock:"입고 수량을 확인합니다", lucky:"행운권 당첨 수는 0~100 입니다",
+  warn:"경고율은 0~100 입니다", ship:"배송 날짜는 20자 안입니다", eventday:"행사일에는 비울 수 없습니다", max:"제외 · 포함 목록은 300명까지입니다", confirm:"확인 문구가 필요합니다", fin:"참여상 추첨 전입니다" };
+function finWhy(r){ r=r||{}; if(r.reason==="rem"&&r.id) return "빈 칸이 있거나 입고보다 많습니다("+finItemN(r.id)+(r.max!=null?" · 최대 "+r.max:"")+")"; if(r.reason==="notfound") return "명부 · 계정에 없는 사번이거나 목록에 없습니다"; return FIN_WHY[r.reason]||why(r); }
+function finOld(d){ return !!(d&&d.ok===false&&/unknown action/.test(String(d.err||""))); }
+function finItemN(id){ var it=(((ST.data.fin||{}).items)||[]).filter(function(x){ return x.id===id; })[0]; return it?it.n:id; }
+function finNum(v){ return Number(v||0).toLocaleString(); }
+/* 쓰기 한 곳 · 응답이 fin_state 모양이면 그대로 화면 값으로 · 확인 창은 dlgForce 로 닫는다 */
+function finCall(action, p, done){
+  FINV.busy=action; render();
+  call(action,p,function(r){ FINV.busy=""; dlgForce(); if(r&&r.ok&&r.v){ ST.data.fin=r; _cache={}; } if(done) done(r); render(); },
+    function(){ FINV.busy=""; dlgForce(); render(); toast("서버 응답 없음"); });
+}
+function finSteps(d){
+  var lw=d.lucky||{}, st=[["17:00 마감",d.ph!=="open"],["룰렛 잔여",!!d.rem],["대상 확정",d.ph==="lock"||d.ph==="drawn"],["행운권 "+(lw.wins||0)+"/"+(lw.need||10),(lw.wins||0)>=(lw.need||10)||d.ph==="drawn"],["참여상 추첨",d.ph==="drawn"]];
+  var cur=-1; for(var i=0;i<st.length;i++) if(!st[i][1]){ cur=i; break; }
+  return '<div class="fn-step">'+st.map(function(x,i){ return '<span class="'+(x[1]?"done":i===cur?"on":"")+'">'+(i+1)+' '+esc(x[0])+'</span>'; }).join("")+'</div>';
+}
+function viewFin(){
+  var d=ST.data.fin;
+  if(!d) return '<div class="card"><p class="muted"><span class="spin"></span>참여상 현황을 불러오는 중입니다.</p></div>';
+  if(finOld(d)) return '<div class="err-banner">지금 서버에는 참여상 추첨이 없습니다(v5.03 이전). 운영 서버 배포 뒤에 이 화면을 씁니다.</div>'+finMemo();
+  if(!d.ok) return '<div class="err-banner">참여상 현황을 받지 못했습니다('+esc(why(d))+').</div>';
+  var P=FIN_PH[d.ph]||["-",""], cfg=d.cfg||{}, lw=d.lucky||{}, h=finSteps(d);
+  var hum=cfg.hum||0, rs=d.remSum, dr=d.draw;
+  if(d.ph==="drawn"&&dr){
+    var sm=d.sum||{};
+    h+='<div class="kpis">'+kpi("대상",finNum(dr.N),"명",esc(String(dr.cut||cfg.cut).slice(11,16)||"17:00")+" 기준 스탬프 6개 · 행운권 당첨 "+(dr.lucky||0)+"명 제외")+
+      kpi("당첨",finNum(sm.win),"명","추첨 "+finNum(dr.W)+" · 승계 "+(sm.sub||0)+" · 취소 "+(sm["void"]||0))+
+      kpi("예비 · 미당첨",finNum((sm.reserve||0)+(sm.lose||0)),"명","예비 "+(sm.reserve||0)+"(앱에 안 보임) · 미당첨 "+(sm.lose||0))+
+      kpi("보관",finNum(Object.keys(dr.left||{}).reduce(function(a,k){ return a+(Number(dr.left[k])||0); },0)),"개","남은 상품 · 추후 활용")+'</div>';
+    h+='<div class="grid g75"><div>'+finResultCard(d)+'</div><div>'+finVoidCard(d)+finCsvCard(d)+'</div></div>';
+  } else {
+    var nPool=d.ph==="lock"&&d.lock?d.lock.n:(d.pool?d.pool.n:0);
+    h+='<div class="kpis">'+kpi(d.ph==="lock"?"대상 (확정)":"대상 (미리 보기)",finNum(nPool),"명",d.ph==="lock"&&d.lock?"확정 "+esc(short(d.lock.at))+(d.stale?' · '+tag("다시 확정 필요","warn"):""):(esc(String(d.cut).slice(11,16))+" 기준 스탬프 6개"+(d.pool?" · 마감 뒤 6개 "+d.pool.late+" · 테스트 "+d.pool.test+" 제외":"")))+
+      kpi("상품",finNum(hum+(rs||0)),"개","가습기 "+finNum(hum)+" + 룰렛 잔여 "+(rs==null?"입력 전":finNum(rs)))+
+      kpi("룰렛 잔여",rs==null?"-":finNum(rs),"개","예상 "+finNum(d.expect)+" = 입고 "+finNum(d.stockSum)+" − 룰렛 "+finNum(d.used)+"회"+(d.warn?" · "+tag("차이 큼","warn"):""))+
+      kpi("행운권 당첨",(lw.wins||0)+" / "+(lw.need||10),"명",cfg.dedupe?"참여상 추첨 때 제외":"제외하지 않음(설정)")+'</div>';
+    h+='<div class="grid g2">'+finRemCard(d)+finPoolCard(d)+'</div>'+finDrawCard(d);
+  }
+  h+=finCfgCard(d)+finMemo();
+  return h;
+}
+/* ── 룰렛 잔여 · 실사 5칸 · 입력하는 동안은 합계만 바꾼다(포커스 유지) ── */
+function finRemVals(d){ var src=FINV.rem||(d.rem&&d.rem.q)||{}, o={}; ((d.cfg||{}).stock||[]).forEach(function(x){ o[x.id]=src[x.id]==null?"":String(src[x.id]); }); return o; }
+function finRemIn(id, v){ var d=ST.data.fin||{}; if(!FINV.rem) FINV.rem=finRemVals(d); FINV.rem[id]=String(v).replace(/\D/g,"").slice(0,4); var b=el("fnRemSum"); if(b) b.innerHTML=finRemSumHtml(d); }
+function finRemSumHtml(d){
+  var v=finRemVals(d), stock=(d.cfg||{}).stock||[], sum=0, empty=false;
+  stock.forEach(function(x){ if(v[x.id]==="") empty=true; else sum+=Number(v[x.id]); });
+  var exp=Number(d.expect)||0, lim=Math.max(2,Math.ceil(exp*(Number((d.cfg||{}).warn)||5)/100)), diff=sum-exp, bad=!empty&&Math.abs(diff)>lim;
+  return '<span>입력 합계 <b>'+finNum(sum)+'</b>개</span><span>예상 <b>'+finNum(exp)+'</b>개 (입고 '+finNum(d.stockSum)+' − 룰렛 사용 '+finNum(d.used)+'회)</span>'+(empty?'<span class="cap">빈 칸이 있습니다</span>':bad?tag("차이 "+(diff>0?"+":"")+diff,"warn"):tag("차이 "+(diff>0?"+":"")+diff,"ok"));
+}
+function finRemCard(d){
+  var stock=(d.cfg||{}).stock||[], v=finRemVals(d), off=d.ph==="drawn";
+  var body='<div class="fn-rem">'+stock.map(function(x){ return '<label>'+esc(x.n)+'<input class="in" inputmode="numeric" maxlength="4" value="'+esc(v[x.id])+'" oninput="finRemIn(\''+jq(x.id)+'\',this.value)"'+(off?" disabled":"")+'><em>입고 '+finNum(x.q)+'</em></label>'; }).join("")+'</div>'+
+    '<div class="fn-sum" id="fnRemSum">'+finRemSumHtml(d)+'</div>'+
+    (d.warn?'<div class="note warn mt12">입력 합계 '+finNum(d.remSum)+'개, 예상 '+finNum(d.expect)+'개(입고 '+finNum(d.stockSum)+' − 룰렛 사용 '+finNum(d.used)+'회). 차이가 큽니다. 실사를 다시 확인하세요.</div>':'')+
+    '<div class="fn-go"><button class="btn pri" onclick="finRemSave()"'+(off||FINV.busy?" disabled":"")+'>'+(FINV.busy==="fin_rem"?'<span class="spin" style="border-color:rgba(255,255,255,.4);border-top-color:#fff"></span>저장 중':"잔여 저장")+'</button>'+
+    '<span class="cap">'+(d.rem?"저장 "+esc(short(d.rem.at))+(d.rem.by?" · "+esc(d.rem.by):""):"아직 입력 전")+(off?" · 추첨 뒤 잠김":"")+'</span></div>';
+  return card("룰렛 잔여","17:00 직후 부스 실물을 세어 넣습니다",body);
+}
+function finRemSave(){
+  var d=ST.data.fin||{}, v=finRemVals(d), stock=(d.cfg||{}).stock||[], p={}, rows=[], sum=0;
+  for(var i=0;i<stock.length;i++){ var x=stock[i]; if(v[x.id]===""){ toast(x.n+" 칸이 비었습니다"); return; } var n=Number(v[x.id]); if(n>x.q){ toast(x.n+"은 입고 "+x.q+"개보다 많을 수 없습니다"); return; } p[x.id]=n; sum+=n; rows.push([x.n, finNum(n)+"개"]); }
+  var exp=Number(d.expect)||0, lim=Math.max(2,Math.ceil(exp*(Number((d.cfg||{}).warn)||5)/100)), bad=Math.abs(sum-exp)>lim;
+  rows.push(["합계", finNum(sum)+"개", bad?"loss":"chg"]); rows.push(["예상", finNum(exp)+"개 (입고 "+finNum(d.stockSum)+" − 룰렛 "+finNum(d.used)+"회)"]);
+  dialog({ t:"룰렛 잔여를 저장할까요?", x:imp(rows), s:bad?"<b>예상과 차이가 큽니다.</b> 실사를 다시 확인하세요. 저장은 됩니다(막지 않습니다).":"추첨 전까지 다시 고칠 수 있습니다.", ok:"저장",
+    onOk:function(){ finCall("fin_rem",p,function(r){ if(r&&r.ok) toast(r.warn?"저장했습니다 · 예상과 차이가 큽니다":"룰렛 잔여를 저장했습니다"); else toast("실패: "+finWhy(r)); }); } });
+}
+/* ── 대상 · 수동 제외 · 포함 · 확정 ── */
+function finExIn(k, v){ FINV.ex[k]=v; }
+function finPoolCard(d){
+  var ex=d.ex||[], off=d.ph==="drawn", locked=d.ph==="lock";
+  var tb='<div class="wrap mt8"><table class="tb"><tr><th>구분</th><th>사번</th><th>이름</th><th>사유</th><th class="tdr"></th></tr>'+
+    ex.map(function(x){ return '<tr><td>'+(x.k==="ex"?tag("제외","warn"):tag("포함"))+'</td><td class="n">'+esc(x.e)+'</td><td>'+esc(x.name||"-")+'</td><td>'+esc(x.why)+'<div class="cap">'+esc(short(x.at))+(x.by?" · "+esc(x.by):"")+'</div></td><td class="tdr">'+(off?"":'<button class="btn sm" onclick="finExDel(\''+jq(x.e)+'\')">빼기</button>')+'</td></tr>'; }).join("")+
+    (!ex.length?emptyRow(5,"수동 제외 · 포함이 없습니다."):"")+'</table></div>';
+  var form=off?"":'<div class="fn-form mt12"><label>사번<input class="in" style="width:120px" inputmode="numeric" value="'+esc(FINV.ex.emp)+'" oninput="finExIn(\'emp\',this.value)"></label>'+
+    '<label style="flex:1 1 180px">사유<input class="in" style="width:100%" maxlength="60" value="'+esc(FINV.ex.why)+'" oninput="finExIn(\'why\',this.value)" placeholder="예: 부정 적립 확인 · 17:00 경계 이의"></label>'+
+    '<button class="btn" onclick="finExAdd(\'ex\')"'+(FINV.busy?" disabled":"")+'>수동 제외</button><button class="btn" onclick="finExAdd(\'in\')"'+(FINV.busy?" disabled":"")+'>수동 포함</button></div>';
+  var pv=d.pool||{}, lk=d.lock;
+  var head=imp([["17:00 기준 스탬프 6개", finNum(pv.n)+"명"+(locked||off?" (지금 기록 기준 미리 보기)":"")],["마감 뒤 6개 (대상 아님)", finNum(pv.late)+"명"],["테스트 사번 (늘 제외)", finNum(pv.test)+"명"],["수동 제외 · 포함", (pv.exM||0)+" · "+(pv.inM||0)+"명"]]);
+  var lockBtn=off?"":'<div class="fn-go"><button class="btn pri" onclick="finLockAsk()"'+(d.ph==="open"||FINV.busy?" disabled":"")+'>'+(FINV.busy==="fin_lock"?'<span class="spin" style="border-color:rgba(255,255,255,.4);border-top-color:#fff"></span>확정 중':locked?"다시 확정":"대상 확정")+'</button>'+
+    '<span class="cap">'+(d.ph==="open"?esc(String(d.cut).slice(0,16))+" 뒤에 확정합니다":locked&&lk?"확정 "+esc(short(lk.at))+" · "+finNum(lk.n)+"명 · 풀 해시 "+esc(String(lk.hash).slice(0,12)):"확정하면 시트 「참여상」에 대상이 한 줄씩 남습니다")+'</span></div>'+
+    (d.stale?'<div class="note warn mt8">확정 뒤 수동 제외 · 포함 · 마감이 바뀌었습니다. <b>다시 확정</b>해야 추첨할 수 있습니다.</div>':'');
+  return card("대상","17:00 서버 시각 기준 · 체크인 조건 없음",(off?"":head)+tb+form+lockBtn);
+}
+function finExAdd(op){
+  var e=normE(FINV.ex.emp), w=String(FINV.ex.why||"").trim();
+  if(!/^[0-9A-Z]{3,12}$/.test(e)){ toast("사번을 확인하세요"); return; }
+  if(!w){ toast("사유를 적습니다"); return; }
+  dialog({ t:op==="ex"?"이 사번을 참여상 대상에서 뺄까요?":"이 사번을 참여상 대상에 넣을까요?", who:esc(e)+"<span>"+esc(w)+"</span>", s:(op==="ex"?"제외":"포함")+" 사유가 운영로그에 남습니다. 추첨 전까지 「빼기」로 되돌릴 수 있습니다."+((ST.data.fin||{}).ph==="lock"?" <b>이미 확정했으면 다시 확정해야 추첨됩니다.</b>":""), ok:op==="ex"?"제외":"포함",
+    onOk:function(){ finCall("fin_exclude",{ op:op, emp:e, why:w },function(r){ if(r&&r.ok){ FINV.ex={ emp:"", why:"" }; toast((op==="ex"?"제외":"포함")+"했습니다 · "+e,{ undo:function(){ finCall("fin_exclude",{ op:"del", emp:e },function(x){ toast(x&&x.ok?"되돌렸습니다":"되돌리지 못했습니다: "+finWhy(x)); }); } }); } else toast("실패: "+finWhy(r)); }); } });
+}
+function finExDel(e){
+  dialog({ t:"목록에서 뺄까요?", who:esc(e), s:"수동 제외 · 포함을 없던 것으로 합니다. 운영로그에 남습니다.", ok:"빼기",
+    onOk:function(){ finCall("fin_exclude",{ op:"del", emp:e },function(r){ toast(r&&r.ok?"뺐습니다 · "+e:"실패: "+finWhy(r)); }); } });
+}
+function finLockAsk(){
+  var d=ST.data.fin||{}, pv=d.pool||{}, y=(d.lucky||{}).inPool||0, z=pv.exM||0;
+  dialog({ t:"참여상 대상을 확정할까요?", s:esc(String(d.cut).slice(11,16))+" 기준 스탬프 6개 <b>"+finNum(pv.n)+"명</b>을 확정합니다. 제외 "+(y+z)+"명(행운권 당첨 "+y+" · 수동 "+z+").<br>행운권 당첨자는 참여상 추첨 때 뺍니다. 추첨 전까지 다시 확정할 수 있습니다.", ok:d.ph==="lock"?"다시 확정":"확정",
+    onOk:function(){ finCall("fin_lock",{},function(r){ if(r&&r.ok) toast("대상 "+finNum(r.locked&&r.locked.n)+"명을 확정했습니다"); else toast("실패: "+finWhy(r)); }); } });
+}
+/* ── 추첨 ── */
+function finPlan(d){
+  var cfg=d.cfg||{}, hum=Number(cfg.hum)||0, L=Number(d.remSum)||0, N0=d.lock?Number(d.lock.n)||0:Number((d.pool||{}).n)||0, y=cfg.dedupe?Number((d.lucky||{}).inPool)||0:0, N=Math.max(0,N0-y), W=Math.min(N,hum+L);
+  return { hum:hum, L:L, N0:N0, y:y, N:N, W:W, res:Math.min(Number(cfg.reserve)||20,Math.max(0,N-W)) };
+}
+function finDrawCard(d){
+  var p=finPlan(d), lw=d.lucky||{}, ready=d.ph==="lock"&&!d.stale&&!!d.rem, need=(lw.wins||0)<(lw.need||10)&&(d.cfg||{}).dedupe;
+  var body=imp([["대상"+(d.ph==="lock"?" (확정)":" (미리 보기)"), finNum(p.N0)+"명"],["행운권 당첨 제외", p.y+"명"+(need?" · 행운권 진행 중 "+(lw.wins||0)+"/"+(lw.need||10):""), "loss"],["추첨 대상", finNum(p.N)+"명"],["상품", "가습기 "+finNum(p.hum)+" + 룰렛 잔여 "+(d.rem?finNum(p.L):"입력 전")],["당첨 (예상)", finNum(p.W)+"명 · 예비 "+p.res+"명", "chg"]])+
+    (p.N&&p.N<p.hum?'<div class="note mt12">대상 '+finNum(p.N)+'명이 가습기 '+finNum(p.hum)+'개보다 적습니다. 전원 가습기를 받고 '+finNum(p.hum-p.N)+'개가 남습니다.</div>':'')+
+    (need?'<div class="note warn mt12">행운권 추첨이 끝나지 않았습니다. 지금 진행하면 남은 행운권 당첨자가 제외되지 않습니다.</div>':'')+
+    '<div class="fn-go"><button class="btn danger fill" onclick="finDrawAsk()"'+(ready&&!FINV.busy?"":" disabled")+'>'+(FINV.busy==="fin_draw"?'<span class="spin" style="border-color:rgba(255,255,255,.4);border-top-color:#fff"></span>추첨 중':"참여상 추첨 실행")+'</button>'+
+    '<span class="cap">'+(!d.rem?"룰렛 잔여를 먼저 저장합니다":d.ph!=="lock"?"대상을 먼저 확정합니다":d.stale?"대상을 다시 확정합니다":"한 번만 실행됩니다 · 결과는 앱 내 보상에 바로 반영")+'</span></div>';
+  return card("참여상 추첨","서버가 한 번에 뽑습니다 · Outro 끝(약 17:20)",body);
+}
+function finDrawAsk(){
+  var d=ST.data.fin||{}, p=finPlan(d), lw=d.lucky||{}, need=(lw.wins||0)<(lw.need||10)&&(d.cfg||{}).dedupe;
+  dialog({ t:"참여상 추첨을 실행할까요?", who:"참여상 추첨<span>당첨 "+finNum(p.W)+"명 · 대상 "+finNum(p.N)+"명</span>",
+    x:imp([["가습기", finNum(p.hum)+"개"],["룰렛 잔여", finNum(p.L)+"개"],["행운권 당첨 제외", (lw.inPool||0)+"명 (지금 기록)"]])+
+      (need?'<label class="row mt12" style="gap:8px"><input type="checkbox" class="ck" id="fnAck" onchange="dlgGate()"><span>행운권 추첨이 끝나지 않았습니다('+(lw.wins||0)+'/'+(lw.need||10)+'). 지금 당첨자만 빼고 진행합니다.</span></label>':''),
+    s:"당첨 "+finNum(p.W)+"명(가습기 "+finNum(p.hum)+" · 룰렛 잔여 "+finNum(p.L)+"). <b>한 번 실행하면 되돌릴 수 없습니다.</b>", ok:"추첨 실행", danger:true,
+    gate:need?function(){ var c=el("fnAck"); return !!(c&&c.checked); }:null,
+    onOk:function(){ finCall("fin_draw",{ ack:need?"1":"" },function(r){
+      if(r&&r.ok){ var g=r.grp||{}; toast("참여상 추첨을 마쳤습니다 · 당첨 "+finNum(r.drawn&&r.drawn.W)+"명"+(g.ok?" · 알림 그룹 "+g.n+"명":" · 알림 그룹을 만들지 못했습니다("+(g.reason||"-")+")"),{ms:6000}); }
+      else toast("실패: "+finWhy(r)+(r&&r.reason==="lucky"?" ("+r.wins+"/"+r.need+")":""),{ms:5000}); }); } });
+}
+/* ── 결과 · 재현 검증 · 발표 · 알림 ── */
+function finResultCard(d){
+  var dr=d.draw||{}, sm=d.sum||{}, items=d.items||[], v=FINV.ver;
+  var tb='<div class="wrap"><table class="tb"><tr><th>상품</th><th class="tdr">당첨</th><th class="tdr">보관</th></tr>'+
+    items.map(function(it){ return '<tr><td>'+esc(it.n)+'</td><td class="tdr n">'+finNum((sm.items||{})[it.id])+'</td><td class="tdr n">'+finNum((dr.left||{})[it.id])+'</td></tr>'; }).join("")+'</table></div>';
+  var info=imp([["추첨 번호", esc(dr.id||"-")],["추첨 시각", esc(dr.at||"-")+(dr.by?" · 콘솔 "+esc(dr.by):"")],["대상 확정", esc((d.lock||{}).at||"-")+" · "+esc(String(dr.cut||""))+" 기준"],
+    ["행운권", (dr.dedupe?"당첨 "+(dr.lucky||0)+"명 제외":"제외 안 함")+(dr.ack?" · 행운권 진행 중("+dr.luckyWins+"/"+dr.luckyNeed+")에 실행":"")],["시드", '<span class="fn-seed">'+esc(dr.seed||"")+'</span>'],["풀 해시", '<span class="fn-seed">'+esc(dr.hash||"")+'</span>']]);
+  var ver=v?(v.ok&&v.same?'<div class="note mt12">'+tag("재현 같음","ok")+' 저장된 시드 · 대상 '+finNum(v.n)+'명 · 수량으로 다시 계산해 시트와 같습니다. 풀 해시 같음 · '+esc(short(v.t))+'</div>':
+      '<div class="note warn mt12"><b>재현 결과가 다릅니다.</b> '+(v.ok?'다른 줄 '+v.nDiff+'개'+(v.hashOk?"":" · 풀 해시 다름")+(v.diffs||[]).map(function(x){ return '<br>'+esc(x.e)+' · 계산 '+esc(x.want)+' · 시트 '+esc(x.got); }).join(""):esc(finWhy(v)))+' 시트를 손으로 고쳤는지 확인하고 서버 담당자에게 알립니다.</div>'):'';
+  var acts='<div class="fn-go"><button class="btn" onclick="finVerify()"'+(FINV.busy?" disabled":"")+'>'+(FINV.busy==="fin_verify"?'<span class="spin"></span>계산 중':"재현 검증")+'</button>'+
+    '<button class="btn pri" onclick="finShow()">대형 화면에 발표</button><button class="btn" onclick="finPush()">알림 보내기</button></div>';
+  return card("추첨 결과","이름 없이 숫자만 · 명단은 배송 CSV",tb+info+acts+ver);
+}
+function finVerify(){
+  FINV.busy="fin_verify"; render();
+  call("fin_verify",{},function(r){ FINV.busy=""; FINV.ver=r||{ ok:false }; render(); toast(r&&r.ok&&r.same?"재현 결과가 같습니다":"재현 결과를 확인하세요"); },function(){ FINV.busy=""; render(); toast("서버 응답 없음"); });
+}
+function finShow(){
+  var dr=(ST.data.fin||{}).draw||{};
+  dialog({ t:"대형 화면에 참여상 결과를 띄울까요?", s:"추첨 화면이 「참여상 추첨 결과 · 당첨 "+finNum(dr.W)+"명 · 대상 "+finNum(dr.N)+"명」 숫자 장면으로 바뀝니다. 이름 · 부문은 나오지 않습니다. 진행 패널의 「참여상 발표」와 같은 명령입니다.", ok:"발표",
+    onOk:function(){ call("draw_cmd",{ cmd:"fin", arg:"", rid:dcRid() },function(r){ dlgForce(); toast(r&&r.ok?"대형 화면에 보냈습니다 · #"+r.seq:"보내지 못했습니다: "+(r&&r.reason==="cmd"?"서버가 이 명령을 모릅니다(v5.03 이전 서버)":finWhy(r))); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
+}
+/* 알림 메뉴 · 대상 지정 발송에 그룹 「참여상대상」과 문구를 채워 연다(보내기는 그 화면의 확인 창을 그대로 거친다) · 잠금 화면 문구에 당첨 여부 · 이름 없음 */
+function finPush(){
+  PF.t="참여상 추첨 결과"; PF.b="내 보상에서 확인하세요"; PF.go="home"; PF.f=specToF({ group:"g:"+FIN_GROUP }); PF.pv=null;
+  go("push"); toast("알림 메뉴에 그룹 「"+FIN_GROUP+"」과 문구를 채웠습니다");
+}
+/* ── 교체 · 당첨 취소 → 예비 1순위 승계 ── */
+function finVoIn(k, v){ FINV.vo[k]=v; }
+function finVoidCard(d){
+  var body='<div class="fn-form"><label>사번<input class="in" style="width:120px" inputmode="numeric" value="'+esc(FINV.vo.emp)+'" oninput="finVoIn(\'emp\',this.value)"></label>'+
+    '<label style="flex:1 1 160px">사유<input class="in" style="width:100%" maxlength="60" value="'+esc(FINV.vo.why)+'" oninput="finVoIn(\'why\',this.value)" placeholder="예: 퇴사 · 배송 불가"></label>'+
+    '<button class="btn" onclick="finVoidAsk()"'+(FINV.busy?" disabled":"")+'>미리 보기</button></div>'+
+    '<p class="cap mt8">당첨을 취소하면 그 상품을 예비 1순위가 이어받습니다. 예비가 없으면 상품은 보관으로 갑니다. 교체 마감은 10/27 09:00 입니다.</p>';
+  return card("당첨 취소 · 승계","배송 불가 · 자격 취소",body);
+}
+function finVoidAsk(){
+  var e=normE(FINV.vo.emp), w=String(FINV.vo.why||"").trim();
+  if(!/^[0-9A-Z]{3,12}$/.test(e)){ toast("사번을 확인하세요"); return; }
+  if(!w){ toast("사유를 적습니다"); return; }
+  FINV.busy="fin_void"; render();
+  call("fin_void",{ emp:e, dry:"1" },function(r){
+    FINV.busy=""; render();
+    if(!r||!r.ok){ toast("실패: "+finWhy(r)); return; }
+    dialog({ t:"이 당첨을 취소할까요?", who:esc(r.name||"-")+" · "+esc(r.emp)+"<span>"+esc(r.item)+"</span>",
+      x:imp([["취소 사유", esc(w)],["승계", r.sub?esc(r.sub.name||"-")+" · "+esc(r.sub.emp)+" (예비 "+r.sub.rk+"순위)":"예비 없음 · 상품은 보관", r.sub?"chg":"loss"]]),
+      s:"<b>되돌릴 수 없습니다.</b> 승계자는 앱에서 당첨으로 바뀌고, 운영로그에 남습니다.", ok:"당첨 취소", danger:true,
+      onOk:function(){ call("fin_void",{ emp:e, why:w },function(x){ dlgForce(); if(x&&x.ok){ FINV.vo={ emp:"", why:"" }; toast("취소했습니다"+(x.sub?" · 예비 "+x.sub.rk+"순위 승계":" · 상품 보관"),{ms:5000}); reload(["fin"]); } else toast("실패: "+finWhy(x)); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
+  },function(){ FINV.busy=""; render(); toast("서버 응답 없음"); });
+}
+/* ── 배송 CSV · 슈퍼관리자 본인 확인(PIN) 뒤에만 · 서버에는 사번 · 이름 · 부문만 있다(소속 부서 · 배송지는 총무가 사번으로 붙인다) ── */
+function finCsvCard(d){
+  var body;
+  if(!supOn()) body='<div class="note">배송 목록은 슈퍼관리자만 내려받습니다. 슈퍼관리자 사번으로 이 콘솔에 들어와야 합니다.</div>';
+  else if(!supOk()) body='<div class="supg"><p class="muted" style="margin:0">배송 목록에는 당첨자 이름이 들어갑니다. 참가자 앱에 로그인할 때 쓰는 <b>PIN 4자리</b>를 넣으세요.</p>'+
+    '<div class="row"><input class="in pin" id="supPin" type="password" inputmode="numeric" autocomplete="off" maxlength="4" aria-label="앱 PIN 4자리" oninput="supPinIn(this)" onkeydown="if(event.key===\'Enter\')supGo()"'+(SUPV.busy?" disabled":"")+'>'+
+    '<button class="btn pri" onclick="supGo()"'+(SUPV.busy?" disabled":"")+'>'+(SUPV.busy?'<span class="spin" style="border-color:rgba(255,255,255,.4);border-top-color:#fff"></span>확인 중':"확인")+'</button></div>'+
+    '<div class="admh bad" role="alert">'+esc(SUPV.err)+'</div><p class="cap" style="margin:0">확인하면 30분 동안 씁니다. 「권한」 화면과 같은 확인입니다.</p></div>';
+  else body='<div class="fn-go" style="margin-top:0"><button class="btn pri" onclick="finCsv(\'list\')"'+(FINV.busy?" disabled":"")+'>배송 목록 CSV</button><button class="btn" onclick="finCsv(\'pack\')"'+(FINV.busy?" disabled":"")+'>포장 집계 CSV</button>'+
+    '<span class="cap">본인 확인 '+supLeftMin()+'분 남음</span></div><p class="cap mt8">배송 목록 = 순번 · 사번 · 이름 · 부문 · 상품명 · 수량 · 당첨 시각 · 추첨 번호 · 상태(정상 · 승계 · 취소). 소속 부서 · 배송지는 총무가 사번으로 인사 정보에서 붙입니다. 내려받으면 운영로그에 남습니다.</p>';
+  return card("배송 CSV","10/27 소속 부서로 배송",body);
+}
+function finCsv(kind){
+  FINV.busy="fin_export"; render();
+  call("fin_export",{},function(r){
+    FINV.busy=""; render();
+    if(!r||!r.ok){ toast("실패: "+(r&&r.reason==="spin"?"본인 확인이 필요합니다(PIN)":finWhy(r))); return; }
+    var day=String(r.t||"").slice(0,10).replace(/-/g,""), lines;
+    if(kind==="list"){
+      lines=[["순번","사번","이름","부문","상품명","수량","당첨 시각","추첨 번호","순위","상태","메모"].join(",")].concat(r.list.map(function(x){ return [x.no,x.emp,x.name,x.dept,x.item,x.qty,x.at,x.id,x.rk,x.st,x.memo].map(csvq).join(","); }));
+      csvDl("참여상_배송목록_"+r.id+".csv", lines.join("\n"));
+    } else {
+      var tot=0, keep={}; (r.keep||[]).forEach(function(k){ keep[k.item]=k.n; });
+      lines=[["상품명","포장 수량","보관 수량"].join(",")].concat(r.pack.map(function(x){ tot+=x.n; return [x.item,x.n,keep[x.item]||0].map(csvq).join(","); }));
+      lines.push(["합계",tot,""].map(csvq).join(","));
+      csvDl("참여상_포장집계_"+r.id+".csv", lines.join("\n"));
+    }
+    toast("내려받았습니다 · "+(kind==="list"?r.list.length+"줄":"상품 "+r.pack.length+"종")+(day?" · "+day:""));
+  },function(){ FINV.busy=""; render(); toast("서버 응답 없음"); });
+}
+/* ── 설정 · 마감 · 상품 수량 · 행운권 ── */
+function finCfgVals(d){ var c=d.cfg||{}, o=FINV.cfg; if(o) return o; o={ cut:c.cut||"", hum:String(c.hum==null?"":c.hum), lucky:String(c.lucky==null?"":c.lucky), dedupe:c.dedupe?"ON":"OFF", warn:String(c.warn==null?"":c.warn), ship:c.ship||"" }; (c.stock||[]).forEach(function(x){ o["q_"+x.id]=String(x.q); }); return o; }
+function finCfgIn(k, v){ var d=ST.data.fin||{}; if(!FINV.cfg) FINV.cfg=finCfgVals(d); FINV.cfg[k]=v; }
+function finCfgCard(d){
+  var v=finCfgVals(d), off=d.ph==="drawn", c=d.cfg||{}, dis=off?" disabled":"";
+  var f=function(k,l,w,ph){ return '<label>'+l+'<input class="in" style="width:'+w+'px" value="'+esc(v[k])+'" oninput="finCfgIn(\''+k+'\',this.value)"'+(ph?' placeholder="'+esc(ph)+'"':'')+dis+'></label>'; };
+  var body='<div class="fn-form">'+f("cut","마감(서버 시각)",160,"2026-10-26 17:00")+f("hum","가습기",90)+f("lucky","행운권 당첨 수",110)+
+    '<label>행운권 당첨자<select class="in" style="width:120px" onchange="finCfgIn(\'dedupe\',this.value)"'+dis+'><option value="ON"'+(v.dedupe==="ON"?" selected":"")+'>제외</option><option value="OFF"'+(v.dedupe==="OFF"?" selected":"")+'>제외 안 함</option></select></label>'+
+    f("warn","대조 경고 %",100)+f("ship","배송",90)+'</div>'+
+    '<div class="fn-form mt12">'+(c.stock||[]).map(function(x){ return f("q_"+x.id,esc(x.n)+" 입고",110); }).join("")+'</div>'+
+    '<div class="fn-go"><button class="btn" onclick="finCfgSave()"'+(off||FINV.busy?" disabled":"")+'>설정 저장</button><span class="cap">'+(off?"추첨 뒤에는 바꿀 수 없습니다":"마감을 바꾸면 확정을 다시 합니다")+'</span>'+
+    '<button class="btn sm ghost" style="margin-left:auto" onclick="finResetAsk()">시험 데이터 비우기</button></div>';
+  return memo(body,"참여상 설정 · 마감 "+String(c.cut||"").slice(11,16)+" · 가습기 "+finNum(c.hum)+" · 입고 "+finNum(d.stockSum));
+}
+function finCfgSave(){
+  var d=ST.data.fin||{}, c=d.cfg||{}, v=finCfgVals(d), p={}, rows=[];
+  if(String(v.cut).trim()!==String(c.cut)){ p.cut=String(v.cut).trim(); rows.push(["마감", esc(c.cut)+" → "+esc(p.cut), "chg"]); }
+  [["hum","가습기"],["lucky","행운권 당첨 수"],["warn","대조 경고 %"]].forEach(function(k){ if(String(v[k[0]]).trim()!==String(c[k[0]])){ p[k[0]]=String(v[k[0]]).trim(); rows.push([k[1], esc(c[k[0]])+" → "+esc(p[k[0]]), "chg"]); } });
+  if(v.dedupe!==(c.dedupe?"ON":"OFF")){ p.dedupe=v.dedupe; rows.push(["행운권 당첨자", v.dedupe==="ON"?"제외":"제외 안 함", "chg"]); }
+  if(String(v.ship).trim()!==String(c.ship)){ p.ship=String(v.ship).trim(); rows.push(["배송", esc(c.ship)+" → "+esc(p.ship), "chg"]); }
+  var st=(c.stock||[]).map(function(x){ return { id:x.id, n:x.n, q:Number(String(v["q_"+x.id]).trim()) }; }), sc=false;
+  (c.stock||[]).forEach(function(x,i){ if(st[i].q!==x.q){ sc=true; rows.push([x.n+" 입고", x.q+" → "+(isFinite(st[i].q)?st[i].q:"?"), "chg"]); } });
+  if(sc) p.stock=JSON.stringify(st);
+  if(!rows.length){ toast("바뀐 것이 없습니다"); return; }
+  dialog({ t:"참여상 설정을 바꿀까요?", x:imp(rows), s:"운영로그에 남습니다."+(p.cut&&d.ph==="lock"?" <b>마감을 바꾸면 대상을 다시 확정해야 합니다.</b>":""), ok:"저장",
+    onOk:function(){ finCall("fin_cfg",p,function(r){ toast(r&&r.ok?"설정을 저장했습니다":"실패: "+finWhy(r)); }); } });
+}
+function finResetAsk(){
+  dialog({ t:"참여상 시험 데이터를 비울까요?", s:"시트 「참여상」 · 확정 · 추첨 결과 · 룰렛 잔여 · 수동 목록 · 알림 그룹을 지웁니다. 마감 · 입고표 설정은 남습니다. 행사일(10/26)에는 서버가 받지 않습니다. <b>되돌릴 수 없습니다.</b>", ok:"비우기", danger:true,
+    onOk:function(){ call("fin_reset",{ confirm:"RESET" },function(r){ dlgForce(); if(r&&r.ok){ FINV.ver=null; toast("비웠습니다 · "+r.cleared+"줄"); reload(["fin"]); } else toast("실패: "+finWhy(r)); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
+}
+function finMemo(){
+  return memo('<p><b>대상</b> · '+'17:00 서버 시각까지 스탬프 6개인 사람입니다. 6개째의 서버 기록 시각이 17:00 이전이어야 하고, 17:00 뒤에 취소된 스탬프는 빠집니다. 체크인 조건은 없고 테스트 사번은 늘 빠집니다. 경계 이의는 「수동 포함」(사유 필수)으로 처리합니다.</p>'+
+    '<p><b>순서</b> · 17:00 마감 → 부스 실물을 세어 룰렛 잔여 저장 → 대상 확정 → Outro 행운권 10명 → 참여상 추첨(Outro 끝 약 17:20) → 대형 화면 발표 · 알림 → 17:40 배송 CSV → 10/27 09:00 교체 마감.</p>'+
+    '<p><b>추첨</b> · 서버가 추첨 순간 시드를 만들고 사번마다 해시 순위를 매깁니다. 가습기를 먼저 고정하고, 남는 자리는 룰렛 잔여 중 해시 순위로 고릅니다. 상품은 당첨자에게 무작위로 짝짓습니다. 대상이 상품보다 적으면 전원 받고 남은 상품은 보관입니다. 시드 · 풀 해시는 운영로그와 이 화면에 남고, 「재현 검증」이 같은 결과를 다시 계산합니다. 한 번만 실행됩니다.</p>'+
+    '<p><b>행운권</b> · 무대 행운권 1~6등 당첨자는 참여상에서 뺍니다. 행운권 추첨이 끝나기 전에 실행하면 확인 칸을 체크해야 하고, 그때까지의 당첨자만 빠집니다.</p>'+
+    '<p><b>발표</b> · 앱은 다음 동기화(30초 안)에 내 보상에 결과를 보여 줍니다. 대형 화면은 숫자만 보여 주고 「서버 추첨」이라고 적습니다. 알림은 그룹 「'+FIN_GROUP+'」(추첨할 때 서버가 만든다)으로 보내고, 잠금 화면 문구에 당첨 여부 · 이름을 쓰지 않습니다.</p>'+
+    '<p><b>개인정보</b> · 이름이 나가는 곳은 배송 CSV(슈퍼관리자 PIN 뒤) · 수동 목록 · 교체 확인 창뿐입니다. 부문별 집계는 두지 않습니다.</p>');
+}
+
 /* ══════════════════ 7-6c. 럭키드로우 원격 진행 · 추첨 › 진행 (v4.82 · 261001 사용자 「통제 화면은 ADMIN 쪽에」) ══════════════════
  * 대형 스크린에는 추첨 화면(../draw/?remote=1)만 띄우고, 사회자 옆 노트북 한 대에서 이 패널로 명령을 보낸다.
  * 보내기 = draw_cmd(cmd · arg · rid) · 서버가 seq 를 매겨 소켓 방 draw 로 방송한다 · 같은 rid 로 다시 보내도 한 번만(응답 again).
  * 화면 상태 = 화면이 2초마다 보내는 draw_scr · 소켓 drawscr(바뀔 때) + draw_stats 의 scr(2~5초 폴링)로 받는다.
  * 당첨은 화면이 정하고 draw_log 로 기록한다 · 이 패널은 결과를 바꾸지 않는다 · 부재 · 취소도 명령이다(arg = 방금 당첨 기록 id).
  * 되돌리기 어려운 명령(마감 · 부재 · 취소 · 끝 · 화면 초기화)은 두 번 누른다(3초 안) · 실명 · 부서는 이 콘솔만(상품 전달용) · 새 CSS 는 dc- 로 시작한다. */
-var DC_SCN={ idle:"대기", checkin:"체크인 중", closed:"체크인 마감", card:"라운드 카드", mix:"섞는 중", tension:"감속 · 배출 대기", exit:"배출", reveal:"당첨 공개", board:"결과판", end:"끝 화면", intro:"인트로" };
+var DC_SCN={ idle:"대기", checkin:"체크인 중", closed:"체크인 마감", card:"라운드 카드", mix:"섞는 중", tension:"감속 · 배출 대기", exit:"배출", reveal:"당첨 공개", board:"결과판", end:"끝 화면", intro:"인트로", fin:"참여상 발표" };
 /* 버튼 순서 = 진행 순서 · two = 두 번 누르기 */
 var DC_BTN=[
   { c:"checkin", n:"체크인 시작" }, { c:"close", n:"체크인 마감", two:1 }, { c:"round", n:"라운드 시작" },
@@ -2249,10 +2527,10 @@ var DC_BTN=[
   { c:"absent", n:"부재 · 다시 추첨", two:1 }, { c:"undo", n:"마지막 취소", two:1 }, { c:"board", n:"결과판" },
   { c:"end", n:"끝 화면", two:1 }, { c:"idle", n:"대기 화면" }
 ];
-var DC_SUB=[ { c:"intro", n:"인트로 영상" }, { c:"reset_screen", n:"화면 초기화", two:1 } ];
+var DC_SUB=[ { c:"intro", n:"인트로 영상" }, { c:"fin", n:"참여상 발표" }, { c:"reset_screen", n:"화면 초기화", two:1 } ];   /* v5.03 fin = 참여상 숫자 장면(숫자는 서버가 채운다 · 추첨 전이면 서버가 거절) */
 /* 화면이 ready(받는 명령 목록)를 보내지 않을 때만 쓰는 장면별 기본 규칙 */
-var DC_MAP={ idle:["checkin","intro","board","end"], intro:["idle","checkin"], checkin:["close","idle"], closed:["round","idle"], card:["mix","undo","board","idle"], mix:["draw"], tension:[], exit:[],
-  reveal:["confirm","absent","undo"], board:["round","undo","end","idle"], end:["idle"] };
+var DC_MAP={ idle:["checkin","intro","board","end","fin"], intro:["idle","checkin"], checkin:["close","idle"], closed:["round","idle","fin"], card:["mix","undo","board","idle"], mix:["draw"], tension:[], exit:[],
+  reveal:["confirm","absent","undo"], board:["round","undo","end","idle","fin"], end:["idle","fin"], fin:["end","idle","fin"] };
 var DC_NEXT={ idle:"checkin", checkin:"close", closed:"round", card:"mix", mix:"draw", reveal:"confirm", board:"end", end:"idle" };
 /* 사회자 멘트 · 장면마다 한두 문장(화면에 나오지 않는다) */
 var DC_MC={
@@ -2265,7 +2543,8 @@ var DC_MC={
   tension:"곧 나옵니다.", exit:"나왔습니다.",
   reveal:"{no}번, {nm} 님 축하드립니다. 앞으로 나와 주세요. 30초 안에 안 계시면 다시 뽑겠습니다.",
   board:"오늘 당첨되신 분들입니다. 모두 축하드립니다.",
-  end:"함께해 주셔서 감사합니다. 남은 경품은 행사 뒤 따로 추첨해 안내합니다."
+  end:"함께해 주셔서 감사합니다. 남은 경품은 행사 뒤 따로 추첨해 안내합니다.",
+  fin:"스탬프 6개를 모으신 분 중 추첨 결과를 발표합니다. 대상은 오늘 17시까지 6개를 모으신 {N}분이고, {W}분이 당첨됐습니다. 결과는 앱 내 보상에서 확인해 주세요. 상품은 내일 소속 부서로 보내 드립니다."   /* v5.03 참여상 · 숫자는 서버 값 */
 };
 var DC={ on:false, ws:null, st:"off", t:null, fails:0, give:false, ping:null, pongAt:0, poll:null, scr:null, scrAt:0, cmd:null, sent:null, busy:"", arm:null, rejOff:0, sig:"", log:[] };
 function dcOn(){ return !!authed()&&ST.tab==="draw"&&(sub()||"run")==="run"; }
@@ -2337,7 +2616,7 @@ function dcSend(c, arg, rid, tries){
       DC.log.unshift({ seq:r.seq, c:r.cmd, at:nowHMS() }); DC.log=DC.log.slice(0,8);
       if(ST.data.draw&&"closed" in r) ST.data.draw.closed=r.closed;
       toast((DC_NAME[c]||c)+" 보냄 · #"+r.seq); }
-    else toast("보내지 못했습니다: "+(r&&r.reason==="cmd"?"서버가 이 명령을 모릅니다(v4.82 이전 서버)":why(r)));
+    else toast("보내지 못했습니다: "+(r&&r.reason==="cmd"?"서버가 이 명령을 모릅니다("+(c==="fin"?"v5.03":"v4.82")+" 이전 서버)":r&&r.reason==="fin"?"참여상 추첨 전입니다(추첨 › 참여상에서 먼저 추첨)":why(r)));
     dcPaint(true);
   },function(e){
     if(tries<1&&e&&(e.reason==="timeout"||e.reason==="network")){ dcSend(c, arg, rid, tries+1); return; }   /* 같은 rid 로 한 번 더 · 서버가 이미 받았으면 같은 seq 를 돌려준다 */
@@ -2359,6 +2638,7 @@ function dcPaint(force){
 }
 function dcMc(s){
   var t=DC_MC[s.scene]||"", last=s.last||{};
+  if(s.scene==="fin"){ var fa=DC.cmd&&DC.cmd.cmd==="fin"?String(DC.cmd.arg||"").split("."):[], fd=((ST.data.fin||{}).draw)||{}; t=t.replace("{N}", Number(fa[1]||fd.N||0).toLocaleString()).replace("{W}", Number(fa[0]||fd.W||0).toLocaleString()); }   /* v5.03 참여상 · 명령 arg = 당첨.대상.마감 */
   return t.replace("{round}", s.round||"다음").replace("{no}", last.no||"○○○○").replace("{nm}", last.nm||"당첨자");
 }
 /* 연결 표시 · 5초 넘게 보고가 없으면 붉게 */
@@ -2554,12 +2834,12 @@ function viewTypeNick(){
   /* v4.32 1F 현장 셀프 모드 · 참가자가 노트북에서 스스로 · 도전 횟수(type_self_cfg · 설정 타자셀프_횟수) · 도전 시간(type_cfg · 설정 타자_결선) · 노트북 주소 · 토너먼트(타자왕전 판)와 별개 */
   var h=card("1F 현장 셀프 모드","참가자가 노트북에서 스스로 · 1인 "+tries+"회 · 순위는 사람마다 최고 기록 하나",
     '<div class="row"><span class="cap" style="width:72px">도전 횟수</span><input class="in" id="selfTries" style="min-width:0;width:80px" inputmode="numeric" value="'+tries+'"><button class="btn" onclick="selfTriesSave()">저장</button><span class="cap">1~9회</span></div>'+
-    '<div class="row mt8"><span class="cap" style="width:72px">도전 시간</span><input class="in" id="selfWin" style="min-width:0;width:240px" value="'+esc((tr.win||[]).join(",").replace(/~/g,"-"))+'"><button class="btn" onclick="selfWinSave()">저장</button><span class="cap">예 12:00-13:00,15:00-16:00</span></div>'+
+    '<div class="row mt8"><span class="cap" style="width:72px">타자왕 마감</span><input class="in" id="selfWin" style="min-width:0;width:240px" value="'+esc((tr.win||[]).join(",").replace(/~/g,"-"))+'"><button class="btn" onclick="selfWinSave()">저장</button><span class="cap">운영 시간 · 끝 = 마감 · 예 09:00-17:00</span></div>'+   /* v5.03 결선 없음 · 17:00 마감(서버 키 타자_결선 그대로) */
     '<div class="row mt8"><span class="cap" style="width:72px">노트북 주소</span><input class="in" readonly style="min-width:0;flex:1" value="'+esc(selfLink())+'"><button class="btn sm" onclick="selfLinkCopy()">주소 복사</button></div>'+
     memo('<p>켜는 법 · ① 노트북 크롬에서 위 주소를 엽니다 ② 관리코드를 넣고 효과음(기본 켜짐)을 고른 뒤 「셀프 모드 켜기」 ③ 이후 화면은 참가자 전용입니다(새로 고침·재부팅해도 유지) ④ 끄기·효과음 = 화면 왼쪽 아래 「관리」 → 관리코드.</p>'+
-      '<p>참가자는 사번 → 닉네임 → SPACE 로 시작합니다. 시작하는 순간 1회로 셉니다(중간에 그만둬도 돌려주지 않음). 테스트 사번(310555)은 기록을 남기지 않습니다. 종일 받으려면 도전 시간을 09:00-18:00 처럼 넓힙니다.</p>'+
+      '<p>참가자는 사번 → 닉네임 → SPACE 로 시작합니다. 시작하는 순간 1회로 셉니다(중간에 그만둬도 돌려주지 않음). 테스트 사번(310555)은 기록을 남기지 않습니다. 「타자왕 마감」은 운영 시간이고 끝 시각이 마감입니다(기본 09:00-17:00 · 결선 없음 · 1~3위는 Outro 시상).</p>'+
       '<p>토너먼트(타자왕전 판 · 선수 노트북 typing.html)와 기록·설정이 따로입니다. 셀프 최고 기록 명단은 서버 type_self_best 로 읽습니다(예선 통과자용).</p>'));
-  h+=card("1F 현장 타자왕전 상위 5","Outro 호명용 · 셀프 도전 시간 "+esc((tr.win||[]).join(" · ")),
+  h+=card("1F 현장 타자왕전 상위 5","Outro 1~3위 시상 · 타자왕 운영 "+esc((tr.win||[]).join(" · ")),
     '<div class="wrap"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">생존</th><th class="tdr">정확도</th><th>기록 시각</th></tr>'+
     ((tr.top||[]).length?tr.top.map(function(r){ return '<tr><td class="n"><b>'+r.rank+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name)+'</td><td class="n">'+esc(r.emp)+'</td><td class="n tdr">'+tySec(r.score)+'</td><td class="n tdr">'+r.acc+'%</td><td class="n cap">'+esc(short(r.ts))+'</td></tr>'; }).join(""):emptyRow(7,"아직 현장 기록이 없습니다."))+'</table></div>'+
     memo('<p>AX 단어 소나기 · 1F 현장 셀프 모드 · 1인 '+tries+'회 중 최고 기록 · 오래 버틴 순 · 동점은 정확도, 그다음 먼저 기록한 쪽.</p>'));
@@ -2757,8 +3037,8 @@ function selfWinSave(){
   if(bad.length){ toast("시작이 끝보다 앞서야 하고 24:00 까지입니다 · "+bad.join(", ")); return; }
   var old=((ST.data.tres||{}).win||[]).join(",").replace(/~/g,"-");
   if(v===old){ toast("지금 값과 같습니다"); return; }
-  dialog({ t:"도전 시간을 바꿀까요?", s:"1F 셀프 노트북이 바로 이 시간에만 도전을 받습니다(현장 타자왕전 기록도 같은 시간).", who:esc(old||"-")+' → <b>'+esc(v)+'</b>', ok:"저장",
-    onOk:function(){ call("type_cfg",{win:v},function(r){ dlgForce(); if(r&&r.ok){ toast("도전 시간을 바꿨습니다 · "+(r.win||v)); reload(["tres"]); } else toast("실패: "+why(r)); },function(e){ dlgForce(); toast(e&&e.reason==="locked"?why(e):"서버 응답 없음"); }); } });
+  dialog({ t:"타자왕 마감을 바꿀까요?", s:"1F 셀프 노트북이 바로 이 시간에만 도전을 받습니다(현장 타자왕전 기록도 같은 시간). 끝 시각이 마감입니다.", who:esc(old||"-")+' → <b>'+esc(v)+'</b>', ok:"저장",
+    onOk:function(){ call("type_cfg",{win:v},function(r){ dlgForce(); if(r&&r.ok){ toast("타자왕 마감을 바꿨습니다 · "+(r.win||v)); reload(["tres"]); } else toast("실패: "+why(r)); },function(e){ dlgForce(); toast(e&&e.reason==="locked"?why(e):"서버 응답 없음"); }); } });
 }
 function nickHide(emp,on){ call("type_nick_hide",{emp:emp,on:on},function(r){ if(r&&r.ok){ toast(on?"닉네임을 숨겼습니다":"숨김을 해제했습니다"); reload(["nick"]); } else toast("실패: "+why(r)); },function(){ toast("서버 응답 없음"); }); }
 function nickReset(emp){
@@ -3472,9 +3752,9 @@ document.addEventListener("visibilitychange",function(){ if(!document.hidden&&au
    부문은 대상 조건으로만(콘솔 안) · 부문별 숫자는 어디에도 두지 않는다. 실시간 연결 수는 서버 집계가 없어 두지 않는다. */
 var PUSH_REC={ t:20, b:40 }, PUSH_MAX={ t:40, b:120 };   /* v4.78 A11 잠금 화면 권장(제목 20 · 본문 40 · 핵심은 본문 앞 30자) · 서버 한도 40 · 120 */
 var PUSH_GO_N={ home:"홈", notices:"공지 목록", photoq:"포토부스 번호표", ev_cchat:"커피챗", dap:"AX LOUNGE 상담" };   /* v4.78 A5 공지 목록 */
-var PUSH_TYPES=[["all","전체 구독자"],["emps","개인(사번)"],["dap","DAP 상담 신청자"],["cchat","커피챗 신청자"],["photo","포토부스 대기"],["group","그룹(올린 명단)"]];
+var PUSH_TYPES=[["all","전체 구독자"],["emps","개인(사번)"],["dap","DAP 상담 신청자"],["cchat","커피챗 신청자"],["photo","포토부스 대기"],["group","그룹(올린 명단)"]].filter(function(x){ return PHOTO_Q_ON||x[0]!=="photo"; });   /* v5.03 포토부스 대기열 폐지 */
 var PUSH_JOB_TAG={ "대기":"warn","처리중":"pri","완료":"ok","중단":"bad","취소":"off","건너뜀":"off" };
-var PUSH_AUTO=[["photo","포토부스"],["cchat","커피챗"],["dap","DAP 상담"],["crowd","혼잡 해소"]];   /* v4.78 D1 DAP 상담 승인 · 10분 전 */
+var PUSH_AUTO=[["photo","포토부스"],["cchat","커피챗"],["dap","DAP 상담"],["crowd","혼잡 해소"]].filter(function(x){ return PHOTO_Q_ON||x[0]!=="photo"; });   /* v5.03 포토부스 대기열 폐지 */   /* v4.78 D1 DAP 상담 승인 · 10분 전 */
 var PUSH_SAFE="화재·대피 같은 안전 통지는 사내 방송·기존 안전 채널이 정본입니다. 푸시는 도달을 보장하지 않습니다. 이미 나간 푸시는 회수되지 않습니다.";
 /* v4.78 A11 발송 기준 · 문구 프리셋 · 정정 프리셋(○○ 칸을 채워야 보낼 수 있다) · A8 17F 강연 시간(잠정)에는 「소리 없이」를 미리 켠다 */
 var PUSH_RULE="푸시로 보내는 것: 안전 · 입장 · 시작 · 장소 변경 · 지연. 앱 공지만 하는 것: 안내 · 홍보 · 한산 · 혼잡 소식.";
@@ -4592,6 +4872,7 @@ function supOn(){ return !!(ST.me&&ST.me.sup); }
 var SUPV={ sp:"", until:0, busy:false, err:"", pin:"", legacy:false };
 var SP_ACT={ adm_roster:1, adm_roster_set:1, adm_code_set:1, acct_pwreset:1, pw_req_done:1 };
 SP_ACT.usr_reset_all=1;   /* v5.01 계정 › 전체 초기화(슈퍼관리자 · POST) */
+SP_ACT.fin_export=1;   /* v5.03 추첨 › 참여상 › 배송 CSV(슈퍼관리자) */
 function supOk(){ return SUPV.legacy||!!(SUPV.sp&&Date.now()<SUPV.until); }
 function supAttach(action, params){ if(SUPV.sp&&SP_ACT[action]&&!("sp" in params)) params.sp=SUPV.sp; }
 function supDrop(msg){ SUPV.sp=""; SUPV.until=0; SUPV.pin=""; SUPV.busy=false; SUPV.legacy=false; SUPV.err=msg||""; delete ST.data.adm; }

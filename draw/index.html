@@ -124,6 +124,14 @@
   #bList.compact .who { display: flex; align-items: baseline; gap: .45em; }   /* 7명 이상 · 이름 옆에 부서 한 줄 */
   #bList.compact .nm { flex: none; max-width: 60%; } #bList.compact .dp { flex: 1 1 0; }
 
+  /* v5.03 참여상 숫자 발표 · 서버 추첨 · 숫자만(이름 · 부문 · 상품별 수량 없음) · 통을 그리지 않는다 */
+  #pFin .fin-in { position: absolute; left: 160px; right: 160px; top: 540px; transform: translateY(-50%); text-align: center; }
+  #pFin .title { font-size: 96px; margin-top: 10px; }
+  .fin-big { font-size: 240px; line-height: 1.05; font-weight: 700; color: var(--o); letter-spacing: -0.03em; margin-top: 30px; white-space: nowrap; }
+  .fin-big.all { font-size: 168px; }
+  .fin-big em { font-style: normal; font-size: 96px; font-weight: 600; margin-left: 14px; letter-spacing: 0; }
+  #pFin .meta { margin-top: 28px; font-size: 48px; color: var(--txt); font-weight: 600; }
+  .fin-note { margin-top: 16px; font-size: 36px; line-height: 1.4; color: var(--sub); font-weight: 500; }
   #pEnd .title { font-size: 128px; font-weight: 500; margin-top: 14px; }
   #pEnd .meta { font-size: 50px; color: var(--o); font-weight: 600; margin-top: 30px; }
 
@@ -211,6 +219,14 @@
     <p class="eye">Winners.</p>
     <h2 class="title">오늘의 당첨</h2>
     <div id="bList"></div>
+  </div></section>
+
+  <section id="pFin" class="full"><div class="fin-in">
+    <p class="eye">서버 추첨</p>
+    <h2 class="title">참여상 추첨 결과</h2>
+    <p class="fin-big" id="fBig"></p>
+    <p class="meta" id="fMeta"></p>
+    <p class="fin-note" id="fNote"></p>
   </div></section>
 
   <section id="pEnd" class="panel"><div class="mid">
