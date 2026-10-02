@@ -334,7 +334,7 @@
   /* 통 움직임 · spin = 각속도가 목표로(체크인 0.8 · 대기 0.2 · 섞기 1.6 rad/s) · park = 감속해 틈을 세운다 · hold = 서 있다
    * 체크인 중에도 통은 천천히 돈다 · 넣을 공이 있으면 틈이 12시로 다가올 때 자연스럽게 감속해 세우고, 그 틈으로 묶어서 넣은 뒤 다시 돈다(최대 2.6초)
    * 체크인 밖(재추첨 · 취소로 돌아오는 공)은 바로 틈을 12시에 세운다 · 추첨 배출 뒤에는 0.35초 뒤 다시 돈다 */
-  var LOADW = 0.8, MIXT = 0, MINMIX = 10, CHKSIM = false, DROPT = 0;
+  var LOADW = 0.8, MIXT = 0, MIXSKIP = false, MIXSKIPAT = 0, MINMIX = 10, CHKSIM = false, DROPT = 0;
   function minMixFor(m) { if (REC) return 10; var r = CFG.minMix && CFG.minMix.length ? CFG.minMix : DEF.minMix, v = 10;   /* 쇼릴(녹화)은 10초 고정 */ r.forEach(function (x) { if (m >= x[0]) v = x[1]; }); return v; }
   function dropsDue() { for (var k = 0; k < DROPS.length; k++) if (DROPS[k].at <= T) return true; return false; }
   /* v3.2 · 섞기 = 통을 앞뒤로 번갈아 세게 돌린다(세탁조처럼 · 한쪽 약 1.5초 · 2.2 rad/s · 빠르게 방향을 바꾼다)
@@ -843,6 +843,7 @@
   }
   function act(cmd, arg) {
     keepAwake();
+    if (cmd === "skipmix") { if (canSkipMix() && !(T < busyUntil)) { SFX.ensure(); skipMix(); } return; }   /* 스페이스바 · 첫 추첨 최소 섞기 건너뛰기(원격에서도 받는다 · 추첨은 시작하지 않는다) */
     if (remote() && cmd !== "mute" && cmd !== "fs") return;   /* 원격 · 무해한 키만(전체 화면 · 소리) · 진행은 관리 콘솔 */
     if (T < busyUntil && cmd !== "mute" && cmd !== "fs" && cmd !== "help" && cmd !== "hud") return;
     SFX.ensure();
@@ -869,6 +870,15 @@
       case "reload": if (CFG.mode === "server") serverLoad(function () { pushCtl(); }); return;
     }
   }
+  /* 스페이스바 = 최소 섞기 시간 건너뛰기(261002) · 추첨을 시작하지는 않는다 · 로컬에서는 건너뛴 뒤 한 번 더 누르면 추첨 */
+  function canSkipMix() { return SC === "mix" && !!ST.closed && !ST.results.length && MIXT < MINMIX && sT() > 1.2; }
+  function skipMix() {
+    MIXSKIPAT = +MIXT.toFixed(1); MIXT = MINMIX; MIXSKIP = true;
+    var el = $("mixSkip"); if (el) { el.textContent = "섞기 건너뜀 · " + MIXSKIPAT + "초"; fade(el, 1, 0.2); mixSkipUntil = T + 1.8; }
+    if (remote()) { CMD.msg = "섞기 건너뜀"; pushCtl("섞기 건너뜀"); }
+    scrPush(true);
+  }
+  var mixSkipUntil = 0;
   var INTRO_NEXT = false;
   function playIntro(thenCheckin) {
     if (!vidStart("intro")) { if (thenCheckin) startCheckin(); return; }
@@ -915,7 +925,7 @@
   function closeCheckin() {
     if (SC !== "checkin") return;
     ARR.q.length = 0; ARR.auto = false; DROPS.length = DROPS.filter(function (d) { return d.at <= T + 0.5; }).length ? DROPS.length : 0;
-    qrBurst(); MIXT = 0; MIX.target = (LOADW - 0.2) / TUNE.wmix;
+    qrBurst(); MIXT = 0; MIXSKIP = false; MIXSKIPAT = 0; MIX.target = (LOADW - 0.2) / TUNE.wmix;
     ST.ckMin = ST.ckAt ? ((REC ? T * 1000 : Date.now()) - ST.ckAt) / 60000 : 0; MINMIX = minMixFor(ST.ckMin);
     ST.closed = true; if (SRV.polling) { clearInterval(SRV.polling); SRV.polling = null; }
     /* 서버 체크인도 닫는다 · draw_cfg 에 closed 가 생기면 쓰인다 · 지금 서버는 모르는 값을 무시하고 설정을 그대로 돌려준다(쓰기 없음) */
@@ -988,6 +998,7 @@
     var el = eligible().length, r = curRound(), wins = roundWins(ST.round).length, pp = ST.pool.people[bpk[i]] || {};
     var res = { id: "r" + Date.now().toString(36) + Math.floor(rng() * 1e4), round: ST.round, slot: wins + 1, no: bno[i], pk: bpk[i],
       nm: pp.nm || "", dp: pp.dp || "", prize: r.prize, rname: r.name, at: new Date().toISOString(), st: "win", pool: el, sec: +(T - DRAW.t0).toFixed(2) };
+    if (MIXSKIP && !ST.results.length) { res.mskip = 1; res.mixed = MIXSKIPAT; }   /* 첫 추첨 · 최소 섞기를 건너뛰었다(로컬 기록) */
     ST.results.push(res); ST.pending = res.id; ST.drawing = 0; if (CFG.onePerPerson) ST.out[res.pk] = "win"; persist(); serverLog(res);
     WIN.i = i; WIN.r = res; WIN.z = 0; WIN.w = 0;
     /* 떨어지는 공의 월드 위치 · 속도(카메라가 따라간다) */
@@ -1326,6 +1337,7 @@
     stepParticles(dt);
     if (ARR.dirty) { ARR.dirty = false; uiCheck(); }
     if (toastUntil && T > toastUntil) { toastUntil = 0; fade($("toast"), 0, 0.3); }
+    if (mixSkipUntil && T > mixSkipUntil) { mixSkipUntil = 0; fade($("mixSkip"), 0, 0.4); }
     stepFades();
     stepVideos();
     for (var ti = 0; ti < TIMERS.length; ti++) if (T >= TIMERS[ti][0]) { var fn = TIMERS[ti][1]; TIMERS.splice(ti--, 1); fn(); }
@@ -1722,7 +1734,7 @@
   function scrState() {
     var last = null;
     for (var k = ST.results.length - 1; k >= 0 && !last; k--) { var r = ST.results[k]; last = { id: r.id, no: r.no, nm: r.nm ? mask(r.nm) : "", st: r.st, round: r.round, slot: r.slot, prize: r.prize, at: r.at }; }
-    return { scene: SC, pool: nInside, checked: ST.arrived.length + ARR.q.length, round: ST.round, slot: roundWins(ST.round, true).length + 1, mixing_s: +MIXT.toFixed(1), need_s: !ST.results.length && ST.closed ? Math.max(0, Math.ceil(MINMIX - MIXT)) : 0,
+    return { scene: SC, pool: nInside, checked: ST.arrived.length + ARR.q.length, round: ST.round, slot: roundWins(ST.round, true).length + 1, mixing_s: +MIXT.toFixed(1), need_s: !ST.results.length && ST.closed ? Math.max(0, Math.ceil(MINMIX - MIXT)) : 0, mix_skip: !!MIXSKIP, mix_skip_at: MIXSKIP ? MIXSKIPAT : 0,
       ready: CMDS.filter(function (c) { return c !== "reset_screen" && !cmdWhy(c, ""); }), closed: !!ST.closed, last: last, rej: CMD.rej, seq: cmdSeqOf("srv"), msg: CMD.msg, ver: "v3", remote: remote() };
   }
   /* 상태 보고 · 2초마다(서버가 draw_scr 를 모르면 15초마다 다시 시도) · 명령을 받으면 바로 */
@@ -1802,6 +1814,7 @@
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     var k = e.key;
     if (e.repeat) return;                             /* 길게 눌러도 한 번 */
+    if (k === " " && canSkipMix()) { e.preventDefault(); act("skipmix"); return; }   /* 섞는 중 Space = 최소 섞기 건너뛰기(원격 포함) */
     var map = { " ": "next", Enter: "next", PageDown: "next", ArrowRight: "next", c: "close", C: "close", r: "redraw", R: "redraw", u: "undo", U: "undo",
       e: "end", E: "end", i: "idle", I: "idle", m: "mute", M: "mute", f: "fs", F: "fs", h: "help", H: "help", "?": "help", g: "hud", G: "hud", p: "ctl", P: "ctl",
       d: "add", D: "add", a: "auto", A: "auto", v: "intro", V: "intro" };
@@ -1865,7 +1878,7 @@
     /* 서버 모드 · 대기 화면부터 체크인 명단을 읽는다(공은 체크인 장면이 시작되면 들어간다 · 그 전에는 숫자만) */
     if (CFG.mode === "server" && !SRV.polling && !ST.closed) SRV.polling = setInterval(function () { if ((SC === "idle" || SC === "checkin") && SRV.hasPool) serverLoad(function () { uiIdleCount(); }); }, 3000);
     if (!REC) requestAnimationFrame(loop);
-    window.__axd = { act: act, state: function () { return ST; }, cfg: function () { return CFG; }, boost: function (e) { MIX.target = e; }, kick: KICK, tune: TUNE, sim: function (n, L, m, reps) { var out = []; for (var r = 0; r < (reps || 1); r++) out.push(simDraw(n, L, m)); return out; }, minmix: function (v) { if (v != null) MINMIX = v; return MINMIX; }, mc: function (n, m, f) { var r = monteCarlo(n, m, f); return { res: r, spinEsc: MC.spinEsc, second: MC.second }; }, pos: function () { return { x: Array.prototype.slice.call(bx, 0, NB), y: Array.prototype.slice.call(by, 0, NB), s: Array.prototype.slice.call(bs, 0, NB) }; }, 
+    window.__axd = { act: act, state: function () { return ST; }, cfg: function () { return CFG; }, boost: function (e) { MIX.target = e; }, kick: KICK, tune: TUNE, sim: function (n, L, m, reps) { var out = []; for (var r = 0; r < (reps || 1); r++) out.push(simDraw(n, L, m)); return out; }, minmix: function (v) { if (v != null) MINMIX = v; return MINMIX; }, mixskip: function () { return { skip: MIXSKIP, at: MIXSKIPAT, t: +MIXT.toFixed(1), can: canSkipMix() }; }, mc: function (n, m, f) { var r = monteCarlo(n, m, f); return { res: r, spinEsc: MC.spinEsc, second: MC.second }; }, pos: function () { return { x: Array.prototype.slice.call(bx, 0, NB), y: Array.prototype.slice.call(by, 0, NB), s: Array.prototype.slice.call(bs, 0, NB) }; }, 
       /* 시험용 · (가) 회전을 빠르게 하면 틈 앞을 지나는 공이 얼마나 느는가 · wmix 로 sec 초 섞으며 1초에 틈 앞(벽에 닿은 채 틈 폭 안)에 새로 들어오는 공 수 */
       gapProbe: function (sec, wmix) {
         var keep = TUNE.wmix, h = PH.h, inWin = new Uint8Array(MAXB), enters = 0, steps = 0, occ = 0; TUNE.wmix = wmix; MC.on = true; MIX.e = 1; MIX.target = 1; DRM.mode = "spin"; doorSet(0, 0);

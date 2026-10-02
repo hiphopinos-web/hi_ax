@@ -131,6 +131,7 @@
   body.demo #demoMark { display: block; }
   #toast { position: absolute; right: 120px; bottom: 40px; font-size: 24px; font-weight: 600; color: var(--faint); opacity: 0; }
   #toast.soft { color: var(--sub); }
+  #mixSkip { position: absolute; right: 28px; bottom: 18px; font-size: 15px; font-weight: 500; color: rgba(255,255,255,.34); opacity: 0; pointer-events: none; letter-spacing: .02em; }   /* 섞기 건너뜀 표시 · 아주 작게 · 원격 화면에서도 보인다 */
   #hud { position: absolute; left: 120px; bottom: 80px; font-size: 22px; color: #9f9; font-family: Consolas, monospace; display: none; }
   body.hud-on #hud { display: block; }
 
@@ -220,6 +221,7 @@
 
   <div id="demoMark">DEMO · 가짜 참가자 데이터</div>
   <div id="toast"></div>
+  <div id="mixSkip"></div>
   <div id="hud"></div>
 
   <div id="help">
