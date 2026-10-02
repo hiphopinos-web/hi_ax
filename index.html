@@ -169,6 +169,9 @@
   #a2hs .a-step .n { flex: none; width: 22px; height: 22px; border-radius: 7px; background: var(--hi); color: #fff; display: flex; align-items: center; justify-content: center; font-size: calc(12.5px * var(--fs)); font-weight: 900; }
   #a2hs .a-step .g { font-family: var(--disp); font-size: calc(16.5px * var(--fs)); color: var(--acc2); }
   #a2hs .a-go { width: 100%; margin-top: 14px; border: 0; cursor: pointer; border-radius: 12px; background: var(--mint); padding: 15px; font-family: inherit; font-size: calc(16.5px * var(--fs)); font-weight: 800; color: var(--ax-color-onBrand); }
+  #a2hs .a-lead { margin-bottom: 4px; text-align: center; font-size: calc(14.5px * var(--fs)); font-weight: 700; color: var(--tx); }   /* v5.01 아이폰 = 직접 추가(설치창 없음) */
+  .a-ic { display: inline-block; width: 1.25em; height: 1.25em; vertical-align: -0.24em; color: var(--hi); }
+  .a-ic-more { padding: 0 2px; border-radius: 6px; background: var(--ax-color-divider, #E6E8EB); }
   #a2hs .a-note { margin-top: 10px; font-size: calc(13.5px * var(--fs)); line-height: 1.6; color: var(--muted); }
   #a2hs .a-later { width: 100%; margin-top: 10px; border: 0; background: none; cursor: pointer; font-family: inherit; font-size: calc(14.5px * var(--fs)); font-weight: 700; color: var(--faint); padding: 8px; }
   #a2hs .a-url { margin-top: 8px; padding: 10px 12px; background: var(--card); border: 0; border-radius: 10px; font-size: calc(12.5px * var(--fs)); color: var(--muted); word-break: break-all; }
@@ -969,6 +972,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #fsSheet .fs-admin span { color: var(--faint); }
   #fsSheet .fs-admin .fs-lbl { color: inherit; }   /* v4.88 줄 이름이 span 이라도 본문 색(앱 설치 · 홈 화면에 추가) */
   #fsSheet .fs-close { margin-top: 18px; cursor: pointer; }   /* v4.13 검정 → Weak(보조 버튼 규칙) */
+  #fsSheet .fs-ver { margin: 10px 0 0; text-align: center; font-size: calc(12.5px * var(--fs)); color: var(--faint); }   /* v5.01 앱 버전 · 캡션 */
   .rrow { display: flex; align-items: center; gap: 9px; padding: 6px 0; }
   .rrow .rno { flex: none; width: 21px; height: 21px; border-radius: 7px; background: var(--white); border: 0; display: flex; align-items: center; justify-content: center; font-size: calc(12.5px * var(--fs)); font-weight: 900; color: var(--muted); }
   .rrow .rno.g { background: var(--tint2); color: var(--acc2); }
@@ -2464,11 +2468,12 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
       <!-- v4.71 (260930 사용자 요청) 글자 크기는 헤더 「일반 · 큰글씨」 한 곳 · 설정 시트에서 뺐다(좁은 폰도 헤더에 남긴다) -->
       <p class="fs-lb" id="fsLbApp">앱</p>
       <button class="fs-admin" id="fsPush" hidden onclick="fsSheet(false); pushSetOpen()">알림<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
-      <button class="fs-admin" id="fsA2hs" onclick="fsSheet(false); a2hsSheet(true)"><span id="fsA2hsT" class="fs-lbl">바로가기 설치</span><span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
+      <button class="fs-admin" id="fsA2hs" onclick="fsSheet(false); a2hsOpen()"><span id="fsA2hsT" class="fs-lbl">바로가기 설치</span><span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
       <p class="fs-lb">운영</p>
       <button class="fs-admin" onclick="fsSheet(false); App.go('admin')">관리자 모드<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
       <button class="fs-admin" onclick="axfLogout()">로그아웃 · 다른 사번으로 입장<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
       <button type="button" class="fs-close ax-button ax-button-weak" onclick="fsSheet(false)">닫기</button>
+      <p class="fs-ver" id="fsVer"></p>
     </div>
   </div>
   </div>
@@ -3317,6 +3322,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
+var APP_VER = "v5.01";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -3330,7 +3336,7 @@ function isStandalone() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
   } catch (e) { return false; }
 }
-function isIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
+function isIOS() { return visitDev(navigator.userAgent, navigator.maxTouchPoints || 0) === "ios" && !window.MSStream; }   /* v5.01 아이패드 데스크톱 UA(맥 + 터치)도 · visitDev 와 같은 기준 */
 function isInApp() { var r = visitRoute(navigator.userAgent, visitStandalone()); return r === "kakao" || r === "naver" || r === "inapp"; }   /* v4.76 판별 한 곳(visitRoute · 안드로이드 웹뷰 · 아이폰 웹뷰 포함) */
 function a2hsDismissed() {
   try { return window.localStorage.getItem("axf_a2hs") === "1"; } catch (e) { return false; }
@@ -3361,6 +3367,8 @@ function browserKind() {
   var u = navigator.userAgent;
   if (/SamsungBrowser/i.test(u)) return "samsung";
   if (/FxiOS|Firefox/i.test(u)) return "firefox";
+  if (/EdgiOS/i.test(u)) return "edgios";   /* v5.01 아이폰 엣지 · 크롬은 안드로이드와 메뉴 위치가 달라 따로 */
+  if (/CriOS/i.test(u)) return "crios";
   if (/EdgA|Edg\//i.test(u)) return "edge";
   if (/Whale/i.test(u)) return "whale";
   if (/Chrome|CriOS/i.test(u)) return "chrome";
@@ -3390,6 +3398,45 @@ function a2hsSteps() {
   ];
 }
 
+/* v5.01 (사용자 261002 「아이폰은 설치하기가 안 된다 · 모든 상황에서 되게」 · 조사 QA/아이폰 바로가기 설치 조사.md 7절 권장안)
+   아이폰 · 아이패드 안내는 이 함수 하나에서 만든다(바로가기 설치 안내 · 알림 안내 pushIosSheet 가 같이 쓴다 · 예전에는 두 곳 문구가 따로 놀았다)
+   사파리 26 이상 = 기본 배치에 공유 버튼이 안 보인다 · 주소창 오른쪽 「···」 › 공유 › 홈 화면에 추가 › 「웹 앱으로 열기」 켠 채 추가
+     (사파리 26 은 OS 표기를 18_6 으로 고정해 Version/N 으로 가른다)
+   사파리 17 · 18 = 아래 공유 버튼 › 목록을 올려 홈 화면에 추가 › 추가
+   크롬 · 엣지 = 주소창 오른쪽 공유 › 홈 화면에 추가 › 추가 · 실기기 확인 전이라 「안 되면 Safari에서」와 주소 복사
+   그 밖(파이어폭스 등) = Safari 에서 열기 + 주소 복사 · 아이패드 = 공유 버튼이 화면 위
+   ua · touch 를 받아서만 판별한다(검사가 이 함수만 떼어 돌린다) · 아이콘 = 인라인 SVG(aria-label 이 그 버튼 이름) */
+function a2hsIosSteps(ua, touch) {
+  ua = String(ua || "");
+  var ipad = /iPad/.test(ua) || (/Macintosh/.test(ua) && touch > 1);
+  var sv = Number((ua.match(/Version\/(\d+)/) || [])[1]) || 0;
+  var share = '<svg class="a-ic" role="img" aria-label="공유" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11"/><path d="M8.2 7.3 12 3.5l3.8 3.8"/><path d="M8.5 10.5H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1.5"/></svg>';
+  var more = '<svg class="a-ic a-ic-more" role="img" aria-label="···" viewBox="0 0 24 24" fill="currentColor"><circle cx="5.5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="18.5" cy="12" r="1.9"/></svg>';
+  var q = function (t) { return "<b>&ldquo;" + t + "&rdquo;</b>"; };
+  var lead = (ipad ? "아이패드는" : "아이폰은") + " 아래 순서로 직접 추가해요";
+  var again = "홈 화면의 AX Festival 아이콘으로 열면 사번 · 이름 · 비밀번호 4자리로 다시 입장해요";
+  if (/CriOS|EdgiOS/.test(ua)) return { kind: "chrome", lead: lead, copy: true,
+    steps: ["주소창 오른쪽 " + share + " 공유 버튼을 누르세요", q("홈 화면에 추가") + "를 누르세요", q("추가") + "를 누르세요"],
+    notes: [again, "안 되면 Safari에서 열어 주세요"] };
+  if (!/Version\/\d+/.test(ua) || !/Safari\//.test(ua) || /FxiOS|OPiOS|OPT\/|Whale|DuckDuckGo|GSA\//.test(ua)) return { kind: "other", lead: "", copy: true, steps: [],
+    notes: ["<b>Safari</b>에서 열어 주세요"] };
+  var add = sv >= 26 ? q("웹 앱으로 열기") + "를 켜 둔 채 " + q("추가") + "를 누르세요" : q("추가") + "를 누르세요";
+  if (ipad) return { kind: "ipad", lead: lead, copy: false,
+    steps: ["화면 위 주소창 오른쪽 " + share + " 공유 버튼을 누르세요", q("홈 화면에 추가") + "를 누르세요", add],
+    notes: (sv >= 26 ? ["공유 버튼이 안 보이면 주소창의 " + more + " 버튼 › " + q("공유") + "를 누르세요"] : []).concat([again]) };
+  if (sv >= 26) return { kind: "s26", lead: lead, copy: false,
+    steps: ["주소창 오른쪽 " + more + " 버튼을 누르세요", share + " " + q("공유") + "를 누르세요", q("홈 화면에 추가") + "를 누르세요", add],
+    notes: ["공유 버튼 " + share + "이 바로 보이면 그것을 누르세요", again] };
+  return { kind: "s18", lead: lead, copy: false,
+    steps: ["아래 " + share + " 공유 버튼을 누르세요", "목록을 올려 " + q("홈 화면에 추가") + "를 누르세요", add],
+    notes: [again] };
+}
+/* 안내가 실제로 떴는가 · 안 떴으면 조용히 실패하지 않고 토스트(v5.01) */
+function a2hsShown() { var b = el("a2hs"); return !!(b && !b.hidden && A2HS.open); }
+function a2hsOpen() {   /* 설정 › 바로가기 설치 줄 */
+  try { a2hsSheet(true); } catch (e) {}
+  if (!a2hsShown()) toast("설치 방법을 열지 못했어요. 화면을 새로 고친 뒤 다시 눌러 주세요");
+}
 /* v4.88 (사용자 261001 「홈 화면에 추가와 설치가 섞여 있다」) → v4.89 (사용자 표현 「바로가기 설치」로 통일)
    우리 앱의 버튼 · 메뉴 이름 = 「바로가기 설치」 하나(설정 줄 · 안내 제목 · 버튼 · 완료 알림 · 최초 로그인 질문)
    단계 안내 안에서 기기 메뉴 이름을 인용할 때만 그 기기 표기(「홈 화면에 추가」 · 「현재 페이지 추가」 · 「설치」)를 따옴표로 쓴다
@@ -3400,6 +3447,7 @@ function a2hsRow() {
   if (!b) return;
   b.hidden = isStandalone();
   if (t) t.textContent = a2hsWord();
+  var vv = el("fsVer"); if (vv) vv.textContent = "앱 " + APP_VER;   /* v5.01 열어 둔 옛 탭인지 가려내기 */
   var lb = el("fsLbApp"), pu = el("fsPush");
   if (lb) lb.hidden = b.hidden && (!pu || pu.hidden);
 }
@@ -3424,10 +3472,10 @@ function a2hsSheet(on, top) {   /* v4.89 top = 최초 로그인 장면 위로 �
     h = '<button class="a-go" onclick="a2hsInstall()">바로가기 설치</button>' +
       '<div class="a-note" style="text-align:center">설치창에서 &ldquo;설치&rdquo;를 누르면 끝</div>';
   } else if (isIOS()) {
-    h = '<div class="a-step"><span class="n">1</span>아래 공유 버튼을 누르세요</div>' +
-      '<div class="a-step"><span class="n">2</span>&ldquo;홈 화면에 추가&rdquo;를 고르세요</div>' +
-      '<div class="a-step"><span class="n">3</span>AX Festival 아이콘으로 열기</div>' +
-      '<div class="a-note" style="text-align:center">사번 · 이름 · 비밀번호 4자리로 다시 입장해요</div>';   /* v4.76 레드팀 채택 2 문구 · 아이폰 홈 화면 앱은 저장소가 따로라 다시 입장한다 */
+    var io = a2hsIosSteps(navigator.userAgent, navigator.maxTouchPoints || 0);   /* v5.01 사파리 26 · 사파리 17 · 18 · 크롬 · 엣지 · 그 밖 · 아이패드 */
+    h = (io.lead ? '<div class="a-lead">' + io.lead + "</div>" : "") +
+      io.steps.map(function (t, i) { return '<div class="a-step"><span class="n">' + (i + 1) + "</span><span>" + t + "</span></div>"; }).join("") +
+      io.notes.map(function (t) { return '<div class="a-note" style="text-align:center">' + t + "</div>"; }).join("") + (io.copy ? copyRow : "");   /* v4.76 레드팀 채택 2 문구 · 아이폰 홈 화면 앱은 저장소가 따로라 다시 입장한다 */
   } else {
     h = a2hsSteps().map(function (s, i) {
       return '<div class="a-step"><span class="n">' + (i + 1) + '</span>' + s[0] + "</div>";
@@ -8383,9 +8431,10 @@ function pushAllow() {
 }
 /* 아이폰 사파리 탭 · 알림은 홈 화면 앱에서만(iOS 16.4 · 설치 뒤 로그인을 다시 한다) */
 function pushIosSheet() {
+  var io = a2hsIosSteps(navigator.userAgent, navigator.maxTouchPoints || 0);   /* v5.01 바로가기 설치 안내와 같은 단계 */
   sheetOpen({ id: "pushios", title: "알림은 홈 화면 앱에서 받아요",
-    body: '<ol class="axs-psteps"><li><span class="n">1</span>아래 공유 버튼을 누르세요</li><li><span class="n">2</span>홈 화면에 추가를 고르세요</li><li><span class="n">3</span>AX Festival 아이콘으로 열기</li></ol>' +
-      '<p class="axs-pnote">사번 · 이름 · 비밀번호 4자리로 다시 입장해요</p><p class="axs-pnote">Safari에서만 추가할 수 있어요. 다른 앱 안에서 열었다면 Safari로 열어 주세요</p>',
+    body: (io.steps.length ? '<ol class="axs-psteps">' + io.steps.map(function (t, i) { return '<li><span class="n">' + (i + 1) + "</span><span>" + t + "</span></li>"; }).join("") + "</ol>" : "") +
+      io.notes.map(function (t) { return '<p class="axs-pnote">' + t + "</p>"; }).join("") + '<p class="axs-pnote">앱 안 브라우저에서는 추가할 수 없어요. Safari로 열어 주세요</p>',
     go: "sheetClose()", goLbl: "확인" });
 }
 function pushInappSheet() {
@@ -16276,7 +16325,12 @@ function lgxAskApp() {
     return;
   }
   A2HS.after = function () { lgxAskDone("app"); };
-  a2hsSheet(true, true);   /* 장면 위로 띄운다 · 닫으면 after */
+  try { a2hsSheet(true, true); } catch (e) {}   /* 장면 위로 띄운다 · 닫으면 after */
+  if (!a2hsShown()) {   /* v5.01 안내를 못 열었으면 토스트 · 장면은 다음 단계로 */
+    A2HS.after = null; A2HS.open = false;
+    setTimeout(function () { toast("설치 방법을 열지 못했어요. 설정 › 바로가기 설치에서 다시 열어 주세요"); }, 450);
+    lgxAskDone("app");
+  }
 }
 function lgxAskQr() { S.put("entry_pref", "qr"); S.put("entry_ask_day", entryDay()); HOMEASK.on = false; lgxAskDone("qr"); }
 function lgxAskDone(how) {
