@@ -118,9 +118,8 @@
   #lgx { position: fixed; inset: 0; z-index: 390; overflow: hidden; touch-action: none; contain: strict; }   /* v4.90 장면 안 배치가 바깥(로그인 · 앱) 배치 계산을 다시 부르지 않게 */
   #lgx > canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   #lgx .lgx-skip { position: absolute; z-index: 2; top: calc(env(safe-area-inset-top) + var(--ax-space-8)); right: max(var(--ax-space-8), calc((100vw - var(--ax-app-max, 480px)) / 2 + var(--ax-space-8))); min-height: 48px; padding: 0 var(--ax-space-16); border: 0; border-radius: var(--ax-radius-999, 999px); background: rgba(255, 255, 255, 0.92); color: var(--ax-color-ink); font: var(--ax-type-t6-strong); cursor: pointer; }
-  #lgx .lgx-lock { position: absolute; z-index: 1; left: 50%; transform: translateX(-50%); width: min(100%, var(--ax-app-max, 480px)); padding: 0 var(--ax-space-24); text-align: center; color: var(--ax-color-brand, #FF7F32); opacity: 0; pointer-events: none; }   /* 흰 무대 위 브랜드 문구 = Vibrant Orange · 두 줄 모두 20px 이상 600 이상(design.md §3 크기 조건) */
-  #lgx .lgx-lock b { display: block; font-size: 26px; font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; }
-  #lgx .lgx-lock span { display: block; margin-top: var(--ax-space-4); font-size: 20px; font-weight: 600; line-height: 1.45; }
+  #lgx .lgx-lock { position: absolute; z-index: 1; left: 50%; transform: translateX(-50%); width: min(100%, var(--ax-app-max, 480px)); padding: 0 var(--ax-space-24); text-align: center; color: var(--ax-color-brand, #FF7F32); opacity: 0; pointer-events: none; }   /* 흰 무대 위 브랜드 문구 = Vibrant Orange · 20px 이상 600 이상(design.md §3 크기 조건) · v5.03 「ME to WE :」 줄 삭제(심볼과 중복) · 부제 한 줄 */
+  #lgx .lgx-lock span { display: block; font-size: 20px; font-weight: 600; line-height: 1.45; }
   #lgx .lgx-sheet { position: absolute; z-index: 2; left: 50%; bottom: 0; transform: translateX(-50%); width: min(100%, var(--ax-app-max, 480px)); display: flex; flex-direction: column; gap: var(--ax-space-16); padding: var(--ax-space-24) var(--ax-space-24) max(var(--ax-space-16), env(safe-area-inset-bottom)); border-radius: var(--ax-radius-32, 32px) var(--ax-radius-32, 32px) 0 0; background: var(--ax-color-canvas); box-shadow: var(--ax-sheet-shadow, 0 -8px 32px rgba(25, 31, 40, 0.16)); opacity: 0; pointer-events: none; transition: opacity 0.2s; }
   #lgx.on .lgx-sheet { opacity: 1; pointer-events: auto; }
   #lgx .lgx-row { display: flex; align-items: center; gap: var(--ax-space-16); }
@@ -3305,7 +3304,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.02";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.03";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -15996,7 +15995,7 @@ function lgxPlay(o) {
   d.id = "lgx"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "최초 로그인");
   d.innerHTML = '<canvas aria-hidden="true"></canvas>' +
     '<button type="button" class="lgx-skip">건너뛰기</button>' +
-    '<div class="lgx-lock" aria-hidden="true"><b>ME to WE :</b><span>나의 경험을 우리의 가능성으로</span></div>' +
+    '<div class="lgx-lock" aria-hidden="true"><span>나의 경험을 우리의 가능성으로</span></div>' +   /* v5.03 (사용자 261002 「그림 아래 ME to WE 는 중복」) 부제 한 줄만 */
     '<div class="lgx-sheet">' +
       '<div class="lgx-row"><span class="lgx-seal" aria-hidden="true"></span><div class="lgx-rt"><b>최초 로그인</b><span class="lgx-st">적립 확인 중</span></div></div>' +
       '<div class="lgx-next">' + (o.sheet || "") + "</div>" +
