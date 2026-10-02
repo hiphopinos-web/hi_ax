@@ -2046,6 +2046,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-rwhd .axs-ph { width: 64px; height: 64px; }
   .axs-mprz { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--ax-color-divider); }   /* 모달 안 경품 목록 */
   .axs-mprz > p { margin: 0 0 10px; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-mprz .axs-pzm .axs-ph { width: 56px; height: 56px; }
   /* 커피 · 간식 사진 2장(18F 커피챗 · DAP 과제상담) · 사진 아래 한 줄 */
   .axs-treat { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ax-space-12); margin: 0; }
   .axs-treat figure { display: flex; flex-direction: column; gap: var(--ax-space-8); min-width: 0; margin: 0; }
@@ -2054,6 +2055,91 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-treat figcaption b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .axs-treat figcaption span { font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
   .fs-big .axs-prz .axs-ph { width: 64px; height: 64px; }
+  /* ═══════ v5.08 경품 포스터(prizes) · 입구 (261003 사용자 「경품 사진이 작다 · 포스터처럼 · 싼티 없이 · 스탬프 누적표에서 바로」 · 「제품 사진을 더 크게 부각」)
+     구성 = 표지(먹색 면 + 도트 격자 + 주황 3중 원 점 · 「Prizes」) → 행운권 → 참여상 → 룰렛 → 1F 타자왕(사진 없음 · 글 목록)
+     표지 먹색 면 = 이 화면 맨 위 한 구역 한정(design.md §1 스테이지 「블랙 = 포스터 블랙판」 · 앱 셸 블랙 금지의 예외 · 판 퀴즈 1F 판 문법과 같은 「구역 한정」) · 손이 닿는 줄은 앱 문법
+     사진 = 대표(행운권 1~3등 · 참여상 · 룰렛 1등) 폭 가득 정사각 · 나머지 2열 정사각 · 홀수로 남는 마지막 칸은 2칸 폭 넓은 카드(2:1)
+     글자 = 무채색 · 브랜드 주황 글자는 20px 이상 600 이상(제목 Prizes · 대표 등수)만 · 그보다 작은 주황 글자는 brandText · 파랑 · 이모지 · 그라데이션 없음
+     움직임 = 들어온 순간 한 번만(.in · 다시 그려도 반복하지 않는다) 표지 · 첫 카드가 차례로 떠오르고 첫 사진이 1.04 → 1 · 동작 줄이기에서는 없음 ═══════ */
+  .axs-pz { display: flex; flex-direction: column; }
+  .axs-pz-cv { position: relative; margin: calc(var(--ax-space-24) * -1) calc(var(--ax-page-inset) * -1) 0; padding: var(--ax-space-32) var(--ax-page-inset) var(--ax-space-24); overflow: hidden;
+    background-color: var(--ax-color-ink); color: var(--ax-color-inverse);
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.13) 1px, transparent 1.4px); background-size: 12px 12px; background-position: 6px 6px; }
+  .axs-pz-cv .lit { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: var(--ax-color-brand); }
+  .axs-pz-cv .ring { position: absolute; top: var(--ax-space-24); right: var(--ax-space-20); width: 64px; height: 64px; color: var(--ax-color-brand); }
+  .axs-pz-cv .ey { position: relative; margin: 0; font: var(--ax-type-t7); font-weight: 600; color: rgba(255, 255, 255, 0.72); }
+  .axs-pz-cv .ttl { position: relative; margin: var(--ax-space-4) 0 0; font: var(--ax-type-display); color: var(--ax-color-brand); }
+  .axs-pz-cv .sub { position: relative; margin: var(--ax-space-4) 0 0; font: var(--ax-type-t4); color: var(--ax-color-inverse); }
+  .axs-pz-cv .ways { position: relative; display: flex; flex-direction: column; margin-top: var(--ax-space-24); border-top: 1px solid rgba(255, 255, 255, 0.14); }
+  .axs-pz-cv .ways button { display: flex; align-items: center; gap: var(--ax-space-12); width: 100%; min-height: var(--ax-touch-size); padding: var(--ax-space-8) 2px; border: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.14); background: none; color: inherit; font-family: inherit; text-align: left; cursor: pointer; }
+  .axs-pz-cv .ways b { flex: 1 1 auto; min-width: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-inverse); }
+  .axs-pz-cv .ways span:not(.axs-pz-mt) { flex: none; font: var(--ax-type-t7); color: rgba(255, 255, 255, 0.66); }
+  .axs-pz-cv .ways .axs-chev { flex: none; width: 16px; height: 16px; color: rgba(255, 255, 255, 0.5); }
+  .axs-pz-cv .me { position: relative; margin: var(--ax-space-16) 0 0; font: var(--ax-type-t7); color: rgba(255, 255, 255, 0.72); }
+  .axs-pz-cv .me b { color: var(--ax-color-brand); font-weight: 700; }
+  /* 스탬프 개수 점 6개 · 켜진 점 = 조건 · 옅은 점 = 4 · 5 · 6개처럼 늘어나는 구간 */
+  .axs-pz-mt { display: inline-flex; flex: none; gap: 4px; }
+  .axs-pz-mt i { width: 8px; height: 8px; border-radius: 50%; background: var(--ax-color-divider); }
+  .axs-pz-mt i.on { background: var(--ax-color-brand); }
+  .axs-pz-mt i.pt { background: transparent; box-shadow: inset 0 0 0 1.5px var(--ax-color-brand); }
+  .axs-pz-cv .axs-pz-mt i { width: 9px; height: 9px; background: rgba(255, 255, 255, 0.18); }
+  .axs-pz-cv .axs-pz-mt i.on { background: var(--ax-color-brand); }
+  .axs-pz-cv .axs-pz-mt i.pt { background: transparent; box-shadow: inset 0 0 0 1.5px var(--ax-color-brand); }
+  .axs-pz-sec { display: flex; flex-direction: column; gap: var(--ax-space-12); margin-top: var(--ax-space-40); }
+  .axs-pz-sh { display: flex; flex-direction: column; gap: var(--ax-space-4); margin-bottom: var(--ax-space-4); scroll-margin-top: calc(var(--stick, 0px) + var(--ax-space-16)); }
+  .axs-pz-sh .en { margin: 0; font: var(--ax-type-caption); font-weight: 700; letter-spacing: 0.12em; color: var(--ax-color-brandText); }
+  .axs-pz-sh h2 { margin: 0; font: var(--ax-type-t2); color: var(--ax-color-ink); }
+  .axs-pz-sh .cd { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ax-space-8); margin: var(--ax-space-8) 0 0; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
+  /* 경품 카드 · 사진이 주인공 · 흰 카드 위 흰 바탕 사진이 이어지게(사진 바탕은 빌드에서 흰색으로 맞췄다) */
+  .axs-pz-c { display: flex; flex-direction: column; min-width: 0; margin: 0; overflow: hidden; border-radius: var(--ax-radius-24); background: var(--ax-color-surface); }
+  .axs-pz-ph { position: relative; display: block; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; background: var(--ax-color-surface); }
+  .axs-pz-ph img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .axs-pz-ph .smp { position: absolute; left: var(--ax-space-12); top: var(--ax-space-12); padding: 2px 8px; border-radius: var(--ax-radius-999); background: rgba(25, 31, 40, 0.06); color: var(--ax-color-muted); font-size: 11px; font-weight: 600; line-height: 16px; }
+  .axs-pz-c .tx { display: flex; align-items: baseline; gap: var(--ax-space-12); padding: var(--ax-space-16) var(--ax-space-20) var(--ax-space-20); }
+  .axs-pz-c .rk { flex: none; font: var(--ax-type-t3); color: var(--ax-color-brand); }
+  .axs-pz-c b { flex: 1 1 auto; min-width: 0; font: var(--ax-type-t4); font-weight: 700; color: var(--ax-color-ink); word-break: keep-all; }
+  .axs-pz-c .q { flex: none; font: var(--ax-type-t6-strong); color: var(--ax-color-muted); }
+  .axs-pz-gr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ax-space-12); }
+  .axs-pz-c.gr { border-radius: var(--ax-radius-20); }
+  .axs-pz-c.gr .smp { left: var(--ax-space-8); top: var(--ax-space-8); }
+  .axs-pz-c.gr .tx { flex-direction: column; align-items: flex-start; gap: 2px; padding: var(--ax-space-12) var(--ax-space-16) var(--ax-space-16); }
+  .axs-pz-c.gr .rk { font: var(--ax-type-t7); font-weight: 700; color: var(--ax-color-brandText); }
+  .axs-pz-c.gr b { font: var(--ax-type-t6-strong); }
+  .axs-pz-c.gr .q { font: var(--ax-type-t7); }
+  .axs-pz-c.wide { grid-column: 1 / -1; }
+  .axs-pz-c.wide .axs-pz-ph { aspect-ratio: 2 / 1; }
+  .axs-pz-nt { margin: 0 var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
+  .axs-pz-ls { margin: 0; padding: var(--ax-space-4) var(--ax-space-20); list-style: none; border-radius: var(--ax-radius-20); background: var(--ax-color-surface); }
+  .axs-pz-ls li { display: flex; align-items: baseline; gap: var(--ax-space-12); padding: var(--ax-space-16) 0; border-top: 1px solid var(--ax-color-divider); }
+  .axs-pz-ls li:first-child { border-top: 0; }
+  .axs-pz-ls .rk { flex: none; font: var(--ax-type-t5-strong); font-weight: 700; color: var(--ax-color-brandText); }
+  .axs-pz-ls b { flex: 1 1 auto; min-width: 0; font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
+  .axs-pz-ls .q { flex: none; font: var(--ax-type-t6); color: var(--ax-color-muted); }
+  .fs-big .axs-pz-c:not(.gr) .tx { flex-wrap: wrap; }
+  .fs-big .axs-pz-gr { grid-template-columns: minmax(0, 1fr); }
+  .fs-big .axs-pz-c.wide .axs-pz-ph { aspect-ratio: 1 / 1; }
+  @keyframes axsPzIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes axsPzZoom { from { transform: scale(1.04); } to { transform: none; } }
+  .axs-pz.in .axs-pz-cv > *, .axs-pz.in .axs-pz-sec:first-of-type > * { animation: axsPzIn 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .axs-pz.in .axs-pz-cv > .ttl { animation-delay: 0.06s; } .axs-pz.in .axs-pz-cv > .sub { animation-delay: 0.12s; } .axs-pz.in .axs-pz-cv > .ways { animation-delay: 0.18s; } .axs-pz.in .axs-pz-cv > .me { animation-delay: 0.24s; }
+  .axs-pz.in .axs-pz-sec:first-of-type > :nth-child(2) { animation-delay: 0.3s; }
+  .axs-pz.in .axs-pz-sec:first-of-type > :nth-child(2) img { animation: axsPzZoom 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both; }
+  @media (prefers-reduced-motion: reduce) { .axs-pz.in *, .axs-pz.in .axs-pz-cv > *, .axs-pz.in .axs-pz-sec:first-of-type > * { animation: none !important; } }
+  /* 입구 · 스탬프 보상 레일(홈 · 스탬프 탭) 아래 · 내 보상 · 사진 3장 + 「경품 보기」 · brandSoft 면(Weak 버튼 문법) */
+  .axs-pzgo { display: flex; align-items: center; gap: var(--ax-space-12); width: 100%; min-height: 56px; margin-top: var(--ax-space-16); padding: var(--ax-space-8) var(--ax-space-16) var(--ax-space-8) var(--ax-space-8); border: 0; border-radius: var(--ax-radius-16); background: var(--ax-color-brandSoft); color: var(--ax-color-ink); font-family: inherit; text-align: left; cursor: pointer; }
+  .axs-pzgo .th { display: inline-flex; flex: none; }
+  .axs-pzgo .th img { display: block; width: 40px; height: 40px; margin-left: -10px; border-radius: 50%; background: var(--ax-color-surface); box-shadow: 0 0 0 2px var(--ax-color-brandSoft); object-fit: cover; }
+  .axs-pzgo .th img:first-child { margin-left: 0; }
+  .axs-pzgo .tx { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; }
+  .axs-pzgo .tx b { font: var(--ax-type-t6-strong); color: var(--ax-color-brandText); }
+  .axs-pzgo .tx span { font: var(--ax-type-caption); color: var(--ax-color-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .axs-pzgo .axs-chev { flex: none; width: 20px; height: 20px; color: var(--ax-color-brandText); }
+  /* 모달 안 경품 한 줄 · 대표 사진 + 요약 + 「경품 보기」 (옛 목록 대신) */
+  .axs-pzm { display: flex; align-items: center; gap: var(--ax-space-12); width: 100%; padding: 0; border: 0; background: none; color: inherit; font-family: inherit; text-align: left; cursor: pointer; }
+  .axs-pzm .tx { display: flex; flex: 1 1 auto; flex-direction: column; gap: 2px; min-width: 0; }
+  .axs-pzm .tx b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }
+  .axs-pzm .tx span { font: var(--ax-type-t7); font-weight: 600; color: var(--ax-color-brandText); }
+  .axs-pzm .axs-chev { flex: none; width: 20px; height: 20px; color: var(--ax-color-brandText); }
 </style>
 <style id="rtCss">
   /* ═══════ v4.23 게임 화면 16비트 레트로 · 「바람의 나라」 감성 (260923 사용자 확정 · design.md A-5 5-16 · 정본 「레트로 시안/시안.html」 · 「레트로 레퍼런스 조사.md」 8절) ═══════
@@ -3339,7 +3425,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.07";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.08";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -4723,7 +4809,7 @@ var App = {
   PARENT: {
     notices: "home",
     /* 나의 참여 · 내 일정 / 스탬프 / 내 보상 / 포토부스 대기 (M01) */
-    passport: "my", guide_time: "my", rewards: "my", photoq: "my",
+    passport: "my", guide_time: "my", rewards: "my", photoq: "my", prizes: "my",   /* v5.08 경품 포스터 · 뒤로 = 들어온 곳(홈 · 스탬프 탭 · 내 보상 · 모달) */
     /* 체험 · 현장(부스·QR 퀴즈) / 앱(미니게임·아이디어·설문) (E01) */
     booth: "exp", wq_list: "exp", wq_play: "wq_list",
     /* v4.06 3단계 · 현장 안내 E02 · 스캔 Q02 · 결과 Q03 · 계단 화면 */
@@ -4738,7 +4824,7 @@ var App = {
   },
   TITLES: {
     home: "AX Festival", guide: "프로그램", exp: "스탬프", my: "나의 참여",
-    passport: "스탬프", rewards: "내 보상", photoq: "포토부스 대기", games: "미니 게임", quiz: "AX 퀴즈",
+    passport: "스탬프", rewards: "내 보상", prizes: "경품", photoq: "포토부스 대기", games: "미니 게임", quiz: "AX 퀴즈",
     notices: "공지", dap: "과제상담 신청",
     booth: "AX PLAY",
     ideas: "아이디어 한 줄", ideas_mine: "내가 낸 아이디어", survey: "오늘 한 판 설문",
@@ -6736,7 +6822,7 @@ function railHtml(n, glow, dispN, home) {
     '<div class="rb"><i style="width:' + railPos(n).toFixed(1) + '%"></i>' + mk + "</div>" +
     '<div class="lbls">' + lb + "</div>" +
     (out0 ? '<p class="cap">룰렛 소진</p>' : dispN >= STAMP_DENOM ? '<p class="cap">' + STAMP_DENOM + "개 모두 모았어요</p>" : "") +
-    raffleNumsHtml(n) +
+    raffleNumsHtml(n) + prizeGoHtml() +   /* v5.08 경품 보기 입구(홈 · 스탬프 탭 같은 레일) */
     "</div>";
 }
 /* v3.31c 내 응모 번호 · 응모권 1장 이상일 때만 · 서버 번호가 아직 없으면 「발급 중」 회색 (v3.12 모달과 같은 규칙) */
@@ -6945,11 +7031,11 @@ function rewItems() {
     why: "1F EVENT 룰렛 · 내 QR 제시", go: "ppRouletteOpen()" });
   if (t) items.push({ k: "raffle", used: false, chip: "자동 발급", off: false, nm: "행운권", big: t + "장", why: "스탬프 " + Math.min(n, REWARD_CAP) + "개 · 17:00 Outro 현장 추첨", go: "ppDrawOpen()" });   /* v4.79 현장 추첨 안내는 추첨 안내 모달에 · v5.04 옛 「결과는 행사 후 개별 안내」 폐기 */
   var fs = finState(), f = S.get("fin", null) || {};   /* v5.04 참여상 · 서버 my.fin 이 있을 때만(없으면 카드 없음 · 아래 경품 카드의 「6개 모으면 참여상 추첨 대상」 한 줄뿐) */
-  if (fs === "in") items.push({ k: "fin", used: false, chip: "추첨 대상", nm: "참여상 추첨", big: "1회", why: "17:00 기준 스탬프 6개 · 결과는 Outro에서 표시", go: "finInfoOpen()", btn: "안내 보기" });
-  if (fs === "wait") items.push({ k: "fin", used: false, chip: "추첨 대기", cc: "", nm: "참여상 추첨", big: "1회", why: "추첨 대상 마감 · 결과는 Outro에서 표시", go: "finInfoOpen()", btn: "안내 보기" });
-  if (fs === "win") items.push({ k: "fin", used: false, chip: "참여상 당첨", nm: esc(f.pz || "참여상"), big: "1개", pic: prizeByName(f.pz), why: "10/27 소속 부서로 배송", go: "finInfoOpen()", btn: "안내 보기" });
+  if (fs === "in") items.push({ k: "fin", used: false, chip: "추첨 대상", nm: "참여상 추첨", big: "1회", why: "스탬프 6개", go: "finInfoOpen()", btn: "안내 보기" });
+  if (fs === "wait") items.push({ k: "fin", used: false, chip: "추첨 대기", cc: "", nm: "참여상 추첨", big: "1회", why: "스탬프 6개", go: "finInfoOpen()", btn: "안내 보기" });
+  if (fs === "win") items.push({ k: "fin", used: false, chip: "참여상 당첨", nm: esc(f.pz || "참여상"), big: "1개", pic: prizeByName(f.pz), why: "추첨 행사 이후 소속 부서로 배송", go: "finInfoOpen()", btn: "안내 보기" });
   if (fs === "lose") items.push({ k: "fin", used: true, chip: "미당첨", off: true, nm: "참여상 추첨", big: "1회", why: finCountTxt(f) });
-  if (fs === "out") items.push({ k: "fin", used: true, chip: "대상 아님", off: true, nm: "참여상 추첨", big: "", why: "17:00 기준 스탬프 6개 · 행운권 당첨자 제외" });
+  if (fs === "out") items.push({ k: "fin", used: true, chip: "대상 아님", off: true, nm: "참여상 추첨", big: "", why: "17:00 기준 스탬프 6개" });
   return items;
 }
 function rewPick(f) { REW.f = f; App.render(); }
@@ -6998,22 +7084,82 @@ function prizeListHtml(kind, sm) {
       '<span class="q">' + p.q.toLocaleString() + g.unit + "</span></li>";
   }).join("") + "</ul>";
 }
-/* 모달 아래 경품표 한 묶음(룰렛 1회권 · 행운권 · 참여상 안내) */
-function prizeModalHtml(kind) { return '<div class="axs-mprz"><p>경품</p>' + prizeListHtml(kind, true) + "</div>"; }
+/* 모달 아래 경품 한 줄(룰렛 1회권 · 행운권 · 참여상 안내) · v5.08 옛 목록 대신 대표 사진 + 요약 + 「경품 보기」(포스터 그 구역으로) */
+function prizeModalHtml(kind) {
+  var g = PRIZES[kind]; if (!g) return "";
+  var p = g.list[0], sum = (p.rk ? p.rk + " " : "") + p.nm + (g.list.length > 1 ? " 외 " + (g.list.length - 1) + "종" : " " + p.q.toLocaleString() + g.unit);
+  return '<div class="axs-mprz"><button type="button" class="axs-pzm" onclick="prizeGo(\'' + kind + '\')">' + prizePhHtml(p) +
+    '<span class="tx"><b>' + esc(sum) + "</b><span>경품 보기</span></span>" + CHEV_SVG + "</button></div>";
+}
 function prizeByName(nm) {
   var hit = null; nm = String(nm || "");
   Object.keys(PRIZES).forEach(function (k) { PRIZES[k].list.forEach(function (p) { if (!hit && nm && (p.nm === nm || nm.indexOf(p.nm) >= 0 || p.nm.indexOf(nm) >= 0)) hit = p; }); });
   return hit;
 }
-/* 내 보상 아래 경품 카드 3장 · 조건 한 줄 + 목록 · 참여상 줄은 서버 필드와 무관하게 늘 같은 말(상태는 위 참여상 카드) */
+/* 내 보상 아래 · v5.08 경품 카드 3장을 걷고 입구 한 줄(경품은 포스터 한 곳에서 본다 · 중복 줄이기) */
 function prizeGuideHtml() {
-  var card = function (k, ttl, meta, more) {
-    return '<section class="ax-card axs-przc" data-prz="' + k + '"><div class="ax-stack-tight"><h3 class="ax-card-title">' + ttl + '</h3><p class="ax-meta">' + meta + "</p></div>" + prizeListHtml(k) + (more || "") + "</section>";
-  };
-  return '<h2 class="ax-section-title">경품</h2>' +
-    card("roulette", "룰렛", "스탬프 3개 · 1F EVENT 룰렛 · 1인 1회") +
-    card("draw", "행운권", "스탬프 4 · 5 · 6개 = 1 · 2 · 3장<br>17:00 Outro 추첨 · 17F 입구 QR 체크인") +
-    card("fin", "참여상", "6개 모으면 참여상 추첨 대상 · 17:00 기준", '<p class="axs-przn">Outro 때 남은 룰렛 경품도 함께 추첨 · 상품은 무작위<br>행운권 당첨자 제외 · 10/27 소속 부서로 배송</p>');
+  return '<h2 class="ax-section-title">경품</h2>' + prizeGoHtml();
+}
+/* ════════════════ v5.08 경품 포스터 (261003 사용자 요청 · 「경품 사진이 작다 · 포스터처럼 · 싼티 없이 · 스탬프 누적표에서 바로」 · 「제품 사진을 크게」) ════════════════
+   화면 id = prizes · 들어오는 곳 = 스탬프 보상 레일(홈 · 스탬프 탭) · 나의 참여 · 내 보상 · 룰렛 1회권 · 행운권 · 참여상 모달(그 구역으로 바로)
+   데이터는 위 PRIZES 한 곳 · 대표(PZ_HERO 개수만큼 앞에서부터) = 폭 가득 사진 · 나머지 2열 · 홀수로 남는 마지막 칸은 넓은 카드
+   참여상 설명은 두 줄만(FIN_NOTE · 사용자 261003 「이 두 가지 정보만 남겨 두고 나머지는 없애 줘」) */
+var FIN_NOTE = "Outro 때 남은 룰렛 경품도 함께 추첨 · 상품은 무작위<br>추첨 행사 이후 소속 부서로 배송";
+var PZ_HERO = { draw: 3, fin: 1, roulette: 1 };
+var PZ_SEC = [
+  { k: "draw", en: "LUCKY DRAW", t: "행운권 추첨", m: [4, 6], cd: "스탬프 4 · 5 · 6개 = 행운권 1 · 2 · 3장<br>17:00 Outro 현장 추첨 · 6등부터<br>17F 입구 QR 체크인" },
+  { k: "fin", en: "PARTICIPATION", t: "참여상", m: [6, 6], cd: "스탬프 6개", note: FIN_NOTE },
+  { k: "roulette", en: "ROULETTE", t: "룰렛", m: [3, 3], cd: "스탬프 3개 · 1F EVENT 룰렛 · 1인 1회" },
+  { k: "type", en: "TYPING KING", t: "1F 타자왕", cd: "17:00 Outro 시상 · 1F 현장 최고 기록 1~3위" }
+];
+var PZ = { t: 0 };
+var PZ_THUMB = ["ld1_ipad", "fin_humidifier", "rl1_tumbler"];   /* 입구 사진 3장 = assets/prize/t_<img>.webp(96px) */
+function prizeGo(k) { PROG.anchor = k ? "pz-" + k : ""; PZ.t = Date.now(); App.go("prizes"); }
+function prizeJump(k) {
+  var a = el("pz-" + k); if (!a) return;
+  var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  a.scrollIntoView({ block: "start", behavior: calm ? "auto" : "smooth" });
+}
+function prizeGoHtml(k) {
+  var th = PZ_THUMB.map(function (n) { return '<img src="' + PRIZE_DIR + "t_" + n + '.webp" alt="" width="96" height="96" loading="lazy" decoding="async" onerror="this.remove()">'; }).join("");
+  return '<button type="button" class="axs-pzgo" onclick="event.stopPropagation(); prizeGo(' + (k ? "'" + k + "'" : "") + ')"><span class="th" aria-hidden="true">' + th + "</span>" +
+    '<span class="tx"><b>경품 보기</b><span>아이패드 · 가습기 · 텀블러</span></span>' + CHEV_SVG + "</button>";
+}
+function pzMeter(a, b) {
+  var o = ""; for (var i = 0; i < STAMP_DENOM; i++) o += "<i" + (i < a ? ' class="on"' : i < b ? ' class="pt"' : "") + "></i>";
+  return '<span class="axs-pz-mt" aria-hidden="true">' + o + "</span>";
+}
+function pzCard(p, unit, cls) {
+  var ph = '<span class="axs-pz-ph">' + (p.img ? '<img src="' + PRIZE_DIR + p.img + '.webp" alt="" width="600" height="600" loading="lazy" decoding="async" onerror="this.remove()">' +
+    (PRIZE_SAMPLE && p.s !== 0 ? '<span class="smp">샘플</span>' : "") : "") + "</span>";
+  return '<article class="axs-pz-c' + cls + '">' + ph + '<div class="tx">' + (p.rk ? '<span class="rk">' + p.rk + "</span>" : "") +
+    "<b>" + esc(p.nm) + '</b><span class="q">' + p.q.toLocaleString() + unit + "</span></div></article>";
+}
+function prizeSecHtml(s) {
+  var g = PRIZES[s.k]; if (!g) return "";
+  var head = '<header class="axs-pz-sh" id="pz-' + s.k + '"><p class="en">' + s.en + "</p><h2>" + s.t + '</h2><p class="cd">' + (s.m ? pzMeter(s.m[0], s.m[1]) : "") + "<span>" + s.cd + "</span></p></header>";
+  var body;
+  if (s.k === "type") {
+    body = '<ul class="axs-pz-ls">' + g.list.map(function (p) { return '<li><span class="rk">' + p.rk + "</span><b>" + esc(p.nm) + '</b><span class="q">' + p.q + g.unit + "</span></li>"; }).join("") + "</ul>";
+  } else {
+    var hn = PZ_HERO[s.k] || 0, rest = g.list.slice(hn);
+    body = g.list.slice(0, hn).map(function (p) { return pzCard(p, g.unit, " hero"); }).join("") +
+      (rest.length ? '<div class="axs-pz-gr">' + rest.map(function (p, i) { return pzCard(p, g.unit, " gr" + (rest.length % 2 && i === rest.length - 1 ? " wide" : "")); }).join("") + "</div>" : "");
+  }
+  return '<section class="axs-pz-sec">' + head + body + (s.note ? '<p class="axs-pz-nt">' + s.note + "</p>" : "") + "</section>";
+}
+function prizeCoverHtml() {
+  var n = Math.min(STAMP_DENOM, stampCount());
+  var row = function (k, a, b, t, c) { return '<button type="button" onclick="prizeJump(\'' + k + '\')">' + pzMeter(a, b) + "<b>" + t + "</b><span>" + c + "</span>" + CHEV_SVG + "</button>"; };
+  var lit = [[3, 1], [23, 10], [13, 19], [27, 26], [6, 30]].map(function (d) { return '<span class="lit" style="left:' + (d[0] * 12 + 5) + "px;top:" + (d[1] * 12 + 5) + 'px"></span>'; }).join("");
+  return '<section class="axs-pz-cv">' + lit +
+    '<svg class="ring" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="none" stroke="currentColor" stroke-opacity=".35" stroke-width="2"/><circle cx="32" cy="32" r="20" fill="none" stroke="currentColor" stroke-opacity=".7" stroke-width="2"/><circle cx="32" cy="32" r="10" fill="currentColor"/></svg>' +
+    '<p class="ey">AX Festival 2026</p><h1 class="ttl">Prizes</h1><p class="sub">스탬프로 받는 경품</p>' +
+    '<div class="ways">' + row("draw", 4, 6, "행운권 추첨", "4 · 5 · 6개") + row("fin", 6, 6, "참여상", "6개") + row("roulette", 3, 3, "룰렛", "3개") + "</div>" +
+    '<p class="me">지금 내 스탬프 <b>' + n + "개</b></p></section>";
+}
+function prizePosterHtml() {
+  return '<div class="axs-pz' + (Date.now() - PZ.t < 900 ? " in" : "") + '">' + prizeCoverHtml() + PZ_SEC.map(prizeSecHtml).join("") + "</div>";
 }
 /* 참여상 상태 · 서버 sync my.fin 이 정본(없으면 null = 그리지 않는다 · 서버 배포 전에도 안전)
    my.fin 모양(설계안 6장 · 7장 · 서버 담당과 맞출 것) = { ph: "open" | "lock" | "done", cut: "17:00", in: 대상 여부, w: 당첨 여부(done 뒤), pz: 상품명, n: 대상 수, wn: 당첨 수 }
@@ -7033,7 +7179,7 @@ function finState() {
 }
 function finCountTxt(f) {
   var n = +f.n || 0, w = +f.wn || 0;
-  return n && w ? "대상 " + n.toLocaleString() + "명 중 " + w.toLocaleString() + "명 당첨" : n ? "대상 " + n.toLocaleString() + "명" : "17:00 기준 스탬프 6개 · 서버 추첨";
+  return n && w ? "대상 " + n.toLocaleString() + "명 중 " + w.toLocaleString() + "명 당첨" : n ? "대상 " + n.toLocaleString() + "명" : "스탬프 6개";
 }
 /* 6번째 스탬프 상자 팝업에 붙는 한 줄(별도 팝업 없음 · 설계안 5.7) */
 function rfxFinLine() {
@@ -7044,8 +7190,8 @@ function rfxFinLine() {
 function finInfoOpen() {
   var f = S.get("fin", null) || {}, st = finState(), p = st === "win" ? prizeByName(f.pz) : null;
   var head = st === "win" ? '<div class="axs-rwhd">' + prizePhHtml(p) + '<div class="ax-stack-tight"><p class="ax-meta">참여상 당첨</p><p class="ax-card-title">' + esc(f.pz || "") + "</p></div></div>" : "";
-  modalOpen(head + '<p class="muted" style="' + (head ? "margin-top:12px;" : "") + 'font-size:calc(14.5px * var(--fs));line-height:1.7">스탬프 6개 · 17:00 기준<br>대상 중 추첨 · 선착순 아님 · 행운권 당첨자 제외<br>상품은 추첨 뒤 무작위로 정해져요<br>결과는 Outro에서 이 화면에 표시<br>배송 10/27 · 소속 부서</p>' +
-    '<div class="axs-mprz"><p>경품</p>' + prizeListHtml("fin", true) + '<p class="axs-przn" style="margin-top:8px">Outro 때 남은 룰렛 경품도 함께 추첨</p></div>' +
+  modalOpen(head + '<p class="muted" style="' + (head ? "margin-top:12px;" : "") + 'font-size:calc(14.5px * var(--fs));line-height:1.7">스탬프 6개<br>' + FIN_NOTE + "</p>" +   /* v5.08 설명 두 줄만(사용자 261003) */
+    prizeModalHtml("fin") +
     '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "참여상");
 }
 /* 커피 · 간식 사진 2장 · 18F 커피챗 상세 · DAP 과제상담 상세 */
@@ -7176,7 +7322,8 @@ var Views = {
        v4.93 (261001 사용자 확정 · IA 검토 7-4 · 8장 A5) 스탬프 → 나의 일정(펼침 · 옛 「내 일정」 화면과 프로그램 [나의 일정]을 여기 한 곳으로) → 내 보상
        「신청·대기 현황」 행 삭제(내 일정과 같은 화면으로 가던 중복 · 대기 번호는 나의 일정 「지금」 줄) */
     return '<div class="ax-stack">' +   /* v4.06 탭 첫 화면 큰 제목 삭제(사용자 결정 260922 · 화면 이름은 헤더) */
-      '<div class="axs-list">' + axDest("스탬프", esc(stampGoalText(n)), chev(n + " / " + STAMP_DENOM), "App.tab('exp')") + "</div>" +
+      '<div class="axs-list">' + axDest("스탬프", esc(stampGoalText(n)), chev(n + " / " + STAMP_DENOM), "App.tab('exp')") +
+        axDest("경품", "행운권 · 참여상 · 룰렛", chev("보기"), "prizeGo()") + "</div>" +   /* v5.08 경품 포스터 입구 · 스탬프 줄 바로 아래 */
       myAgendaHtml() +
       '<div class="axs-list">' + axDest("내 보상", "룰렛 1회권과 행운권", chev(rw + "개"), "App.go('rewards')") + "</div></div>";
   },
@@ -7240,6 +7387,9 @@ var Views = {
     /* v5.04 경품 카드 3장(룰렛 · 행운권 · 참여상)은 사용 가능 보기에만 · 조건은 카드마다 한 줄이라 옛 하단 안내(「스탬프 3개면 룰렛, 4개부터 행운권」)는 뺐다 */
     return '<div class="ax-stack">' + tabs + cards + (f === "used" ? "" : prizeGuideHtml()) + "</div>";
   },
+
+  /* ═══ v5.08 경품 포스터 · 화면 조각은 prizePosterHtml(경품 안내 절) ═══ */
+  prizes: function () { return prizePosterHtml(); },
 
   /* ═══ 포토부스 대기 · 나의 참여 › 목적지 · 기존 번호표 UI 를 그대로 담는다(새 대기 UI 는 가이드에 정의가 없다) ═══ */
   photoq: function () {
@@ -8067,7 +8217,7 @@ function checkMyState() {
   var fin = S.get("fin", null);
   if (finState() === "win" && seen.fin !== "w:" + (fin.pz || "")) {
     seen.fin = "w:" + (fin.pz || ""); changed = true;
-    notice({ key: "fin:win", title: "참여상 당첨", body: (fin.pz ? fin.pz + " · " : "") + "10/27 배송", go: "rewards", focus: "fin", goLbl: "내 보상에서 보기" });
+    notice({ key: "fin:win", title: "참여상 당첨", body: (fin.pz ? fin.pz + " · " : "") + "추첨 행사 이후 소속 부서로 배송", go: "rewards", focus: "fin", goLbl: "내 보상에서 보기" });
   }
   if (changed) S.set("noti_seen", seen);
 }
