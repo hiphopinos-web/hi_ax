@@ -11073,103 +11073,58 @@ var OLY_RULE = {
 /* v4.09 AI O/X 문제 은행 · v4.92 (261001 사용자 승인 · 앱 개편 4묶음) 정본 「QA/문제 은행 확정안 v1.json」 ox 95문제 = 1층 부스 F01~F82 + 기존 A 13 · 서버 OX_KEY 와 검사 68절이 대조
    id · c 분야(1 AI 기초·생성형 AI · 4 1층 부스) · lv 난이도 · q 문장 · a 정답 · e 해설 · g 짝 그룹(한 판에 하나) · z 1층 구역(틀린 문제 카드 「다시 볼 곳」 · OX_ZONE) ·
    h 힌트 코드(구역.줄.판 · 기억력 문제 은행 v3.json hint_codes · 판이 갈리거나 판 근거가 없으면 빈 값 · 지금 화면은 쓰지 않는다) ·
-   rv 검수 통과(0 이면 문장 옆 「(예시)」 · 지금 은행은 모두 1) · 답이 틀린 문항은 서버 설정 OX_OFF 로 뺀다 · 옛 86문제에서 빠진 73개(A 31 · S 21 · R 21)는 서버 OX_KEY_OLD 가 옛 기록 채점에만 쓴다 */
+   rv 검수 통과(0 이면 문장 옆 「(예시)」 · 지금 은행은 모두 1) · 답이 틀린 문항은 서버 설정 OX_OFF 로 뺀다 · 옛 86문제에서 빠진 73개(A 31 · S 21 · R 21)는 서버 OX_KEY_OLD 가 옛 기록 채점에만 쓴다
+   v4.98 (261002 사용자 결정 · 「QA/문제 은행 품질 감사 v1.md」 5-2 · 5-3) 95 → 49문제 · 49개 뺌(서버 OX_KEY_OLD 로 · 채점만) · 문구 7곳 고침(A30 문장 · 해설 6) · 새 F83 ~ F85(QZ_NEW · 서버 bank 2 이상일 때만 낸다) */
 var OX_BANK = [
   { id: "A02", c: 1, lv: 1, q: "AI가 자신 있게 말하면 사실이다", a: "X", e: "틀린 내용도 자신 있게 말할 수 있어 따로 확인한다.", g: "conf", rv: 1, h: "" },
   { id: "A03", c: 1, lv: 1, q: "같은 질문에도 AI 답은 달라질 수 있다", a: "O", e: "생성형 AI는 답을 매번 확률적으로 새로 만든다.", g: "var", rv: 1, h: "" },
-  { id: "A04", c: 1, lv: 1, q: "질문은 짧을수록 늘 좋은 답이 나온다", a: "X", e: "상황과 목적을 함께 적어야 답이 나아진다.", g: "ctxq", rv: 1, h: "" },
   { id: "A05", c: 1, lv: 1, q: "읽을 사람을 알려 주면 답이 나아진다", a: "O", e: "누구에게 무엇을 위해 쓰는지 알면 맞춤 답을 준다.", g: "ctxq", rv: 1, h: "" },
-  { id: "A06", c: 1, lv: 1, q: "AI를 쓰면 사람의 검토는 필요 없다", a: "X", e: "AI 결과는 사람이 확인하고 책임지고 쓴다.", g: "human", rv: 1, h: "" },
-  { id: "A09", c: 1, lv: 1, q: "AI에게 답의 분량을 정해 줄 수 있다", a: "O", e: "「세 줄로」처럼 길이를 정하면 그에 맞춰 답한다.", g: "", rv: 1, h: "" },
   { id: "A10", c: 1, lv: 1, q: "AI 답의 말투도 바꿔 달라고 할 수 있다", a: "O", e: "보고서체, 안내문체처럼 말투도 정해 줄 수 있다.", g: "", rv: 1, h: "" },
   { id: "A19", c: 1, lv: 2, q: "할루시네이션은 AI가 지어낸 틀린 답이다", a: "O", e: "그럴듯하지만 틀린 내용을 만들어 내는 현상이다.", g: "conf", rv: 1, h: "" },
   { id: "A26", c: 1, lv: 2, q: "역할을 정해 주면 답의 관점이 분명해진다", a: "O", e: "「인사 담당자로서」처럼 역할을 주면 관점이 맞춰진다.", g: "", rv: 1, h: "" },
   { id: "A27", c: 1, lv: 2, q: "복잡한 일은 단계로 나눠 시키면 좋다", a: "O", e: "큰 일을 작은 단계로 나누면 결과가 안정된다.", g: "", rv: 1, h: "" },
   { id: "A28", c: 1, lv: 2, q: "AI가 알려 준 출처는 모두 실제로 있다", a: "X", e: "없는 논문이나 링크를 지어낼 때도 있어 확인한다.", g: "cite", rv: 1, h: "" },
   { id: "A29", c: 1, lv: 2, q: "AI가 요약하면 빠지는 내용이 없다", a: "X", e: "중요한 내용을 빼먹을 수 있어 원문과 대조한다.", g: "", rv: 1, h: "" },
-  { id: "A30", c: 1, lv: 2, q: "자료를 주고 그 자료만 보고 답하게 한다", a: "O", e: "근거 자료를 함께 주면 엉뚱한 답이 줄어든다.", g: "", rv: 1, h: "" },
-  { id: "F01", c: 4, lv: 1, q: "AX는 AI로 일하는 방식을 바꾸는 과정이다", a: "O", e: "AI를 활용해 일하는 방식을 바꿔가는 과정이다.", g: "ax", rv: 1, z: "vision", h: "vision.metowe" },
+  { id: "A30", c: 1, lv: 2, q: "근거 자료를 주면 엉뚱한 답이 줄어든다", a: "O", e: "「이 자료만 보고 답해 줘」처럼 범위를 정해 준다.", g: "", rv: 1, h: "" },
   { id: "F02", c: 4, lv: 1, q: "AX의 X는 Experience를 뜻한다", a: "X", e: "AX는 AI Transformation의 약자다.", g: "ax", rv: 1, z: "vision", h: "vision.metowe" },
-  { id: "F03", c: 4, lv: 1, q: "슬로건은 나의 경험을 우리의 가능성으로 잇는다", a: "O", e: "나의 경험이 모여 우리의 큰 가능성이 된다.", g: "slg", rv: 1, z: "vision", h: "vision.metowe" },
-  { id: "F04", c: 4, lv: 1, q: "데이터와 AI 활용의 중심에는 사람이 있다", a: "O", e: "사람을 중심으로 데이터와 AI를 연결한다.", g: "dbc", rv: 1, z: "vision", h: "vision.dbc" },
-  { id: "F05", c: 4, lv: 1, q: "Agent는 목표에 맞춰 도구를 연결한다", a: "O", e: "목표에 맞춰 도구와 작업을 연결하는 역할이다.", g: "agd", rv: 1, z: "vision", h: "vision.dbc" },
-  { id: "F06", c: 4, lv: 1, q: "2026년 로드맵의 키워드는 공감과 참여다", a: "O", e: "2026년은 공감과 참여, AX 필요성을 체감하는 해다.", g: "r26", rv: 1, z: "vision", h: "vision.2026" },
   { id: "F07", c: 4, lv: 1, q: "2028년 목표는 전사 1인 1 AI Agent다", a: "O", e: "각자 업무에 필요한 Agent를 스스로 만드는 플랫폼이다.", g: "r28", rv: 1, z: "vision", h: "vision.2028" },
-  { id: "F08", c: 4, lv: 1, q: "AX는 AI를 쓰지 않고 일하는 방식이다", a: "X", e: "AI를 활용해 일하는 방식을 바꿔가는 과정이다.", g: "ax", rv: 1, z: "vision", h: "vision.metowe" },
-  { id: "F09", c: 4, lv: 1, q: "현대해상은 AI만으로 일하는 회사를 지향한다", a: "X", e: "사람을 중심으로 데이터와 AI, Agent를 연결한다.", g: "dbc", rv: 1, z: "vision", h: "vision.dbc" },
   { id: "F10", c: 4, lv: 2, q: "목표를 정하고 결과를 판단하는 쪽은 AI다", a: "X", e: "목표를 정하고 결과를 판단하는 쪽은 사람이다.", g: "dbc", rv: 1, z: "vision", h: "vision.dbc" },
   { id: "F11", c: 4, lv: 2, q: "2026년에는 생성형 AI 서비스를 오픈한다", a: "O", e: "사내 LLM 도입과 생성형 AI 서비스 오픈이 2026년이다.", g: "r26", rv: 1, z: "vision", h: "vision.2026" },
-  { id: "F12", c: 4, lv: 2, q: "사내 LLM 도입은 2028년 계획이다", a: "X", e: "사내 LLM 도입은 2026년이다. 2028년은 1인 1 AI Agent다.", g: "r26", rv: 1, z: "vision", h: "vision.2026" },
-  { id: "F13", c: 4, lv: 2, q: "2026년 주요 프로젝트에 HiDI-Q가 있다", a: "O", e: "2026년 주요 프로젝트로 소개된다.", g: "pj26", rv: 1, z: "vision", h: "vision.2026" },
-  { id: "F14", c: 4, lv: 2, q: "2027년 로드맵의 키워드는 혁신과 연결이다", a: "X", e: "2027년은 확산과 체화다. 혁신과 연결은 2028년이다.", g: "r27", rv: 1, z: "vision", h: "vision.2027" },
+  { id: "F13", c: 4, lv: 2, q: "2026년 주요 프로젝트에 HiDI-Q가 있다", a: "O", e: "2026년 주요 프로젝트는 HiDI-Q와 Hi-Helper다.", g: "pj26", rv: 1, z: "vision", h: "vision.2026" },
   { id: "F15", c: 4, lv: 2, q: "2027년에는 업무별 AI Agent를 구축한다", a: "O", e: "영업, 보상 등 각 업무에 전담 Agent를 만든다.", g: "r27", rv: 1, z: "vision", h: "vision.2027" },
-  { id: "F16", c: 4, lv: 2, q: "의료심사 Agent는 2026년에 구축한다", a: "X", e: "의료심사 Agent는 2027년 주요 프로젝트 계획이다.", g: "agt", rv: 1, z: "vision", h: "vision.2027" },
-  { id: "F17", c: 4, lv: 2, q: "2028년 로드맵의 키워드는 공감과 참여다", a: "X", e: "2028년은 혁신과 연결이다. 공감과 참여는 2026년이다.", g: "r28", rv: 1, z: "vision", h: "vision.2028" },
   { id: "F18", c: 4, lv: 3, q: "의료심사 Agent는 심사 정보 확인을 돕는다", a: "O", e: "진단서 등 의료 서류에서 심사 정보를 확인하게 돕는다.", g: "agt", rv: 1, z: "vision", h: "vision.2027" },
-  { id: "F19", c: 4, lv: 3, q: "법률 Agent는 근거 없이 답변을 제공한다", a: "X", e: "판례와 법령을 찾아 근거와 함께 답변한다.", g: "agt", rv: 1, z: "vision", h: "vision.2027" },
   { id: "F20", c: 4, lv: 3, q: "1인 1 AI Agent는 IT 부서만 만든다", a: "X", e: "각자 자기 업무에 필요한 Agent를 스스로 만든다.", g: "r28", rv: 1, z: "vision", h: "vision.2028" },
   { id: "F21", c: 4, lv: 3, q: "1인 1 Agent는 쌓인 데이터를 학습한다", a: "O", e: "2026~2027년 데이터를 학습해 업무를 잘 아는 AI가 된다.", g: "r28b", rv: 1, z: "vision", h: "vision.2028" },
   { id: "F22", c: 4, lv: 3, q: "지금의 DAP는 나만의 Agent의 첫걸음이다", a: "O", e: "지금 참여하는 DAP가 2028년 나만의 Agent로 이어진다.", g: "r28c", rv: 1, z: "vision", h: "vision.2028" },
-  { id: "F23", c: 4, lv: 3, q: "2027년은 현업 AX 경험을 가속화하는 해다", a: "O", e: "2027년은 확산과 체화, 현업 AX 경험 가속화다.", g: "r27b", rv: 1, z: "vision", h: "vision.2027" },
-  { id: "F24", c: 4, lv: 3, q: "2028년은 비즈니스 모델 혁신을 이루는 해다", a: "O", e: "2028년은 혁신과 연결, 비즈니스 모델 혁신 달성이다.", g: "r28d", rv: 1, z: "vision", h: "vision.2028" },
-  { id: "F25", c: 4, lv: 1, q: "AX LAB에서는 지난 우수 과제를 볼 수 없다", a: "X", e: "AX LAB의 History 판에 지난 우수 과제가 있다.", g: "hist", rv: 1, z: "lab", h: "lab.history" },
-  { id: "F26", c: 4, lv: 1, q: "DAP는 현업과 데이터사이언스파트가 함께한다", a: "O", e: "현업과 함께 업무 문제를 데이터로 분석하고 푼다.", g: "dap", rv: 1, z: "lab", h: "lab.dap" },
-  { id: "F27", c: 4, lv: 1, q: "DAP는 데이터 분석 프로젝트의 줄임말이다", a: "O", e: "DAP는 데이터 분석 프로젝트의 줄임말이다.", g: "dapn", rv: 1, z: "lab", h: "lab.dap" },
+  { id: "F26", c: 4, lv: 1, q: "DAP는 현업과 데이터사이언스파트가 함께한다", a: "O", e: "매일 반복하는 업무 자동화도 과제가 될 수 있다.", g: "dap", rv: 1, z: "lab", h: "lab.dap" },
   { id: "F28", c: 4, lv: 1, q: "DAP에 지원하려면 코딩을 할 줄 알아야 한다", a: "X", e: "코딩과 데이터를 몰라도 누구나 지원할 수 있다.", g: "dapc", rv: 1, z: "lab", h: "lab.idea" },
-  { id: "F29", c: 4, lv: 1, q: "DAP는 직무와 부서에 관계없이 지원할 수 있다", a: "O", e: "직무와 부서에 관계없이 누구나 지원할 수 있다.", g: "dapc", rv: 1, z: "lab", h: "lab.idea" },
-  { id: "F30", c: 4, lv: 1, q: "내 업무 고민도 DAP가 될 수 있다", a: "O", e: "당신의 업무 고민도 DAP가 될 수 있다.", g: "dapm", rv: 1, z: "lab", h: "lab.idea" },
-  { id: "F31", c: 4, lv: 1, q: "AX LAB QR로 아이디어 한 줄을 쓸 수 있다", a: "O", e: "QR을 스캔해 내 아이디어 한 줄을 작성할 수 있다.", g: "idea", rv: 1, z: "lab", h: "lab.idea" },
-  { id: "F32", c: 4, lv: 1, q: "지난 우수 과제는 AX LAB에서 볼 수 있다", a: "O", e: "AX LAB의 History 판에 2024~2025 우수 과제가 있다.", g: "hist", rv: 1, z: "lab", h: "lab.history" },
-  { id: "F33", c: 4, lv: 2, q: "DAP는 현업 없이 데이터사이언스파트만 한다", a: "X", e: "현업과 데이터사이언스파트가 함께 푼다.", g: "dap", rv: 1, z: "lab", h: "lab.dap" },
-  { id: "F34", c: 4, lv: 2, q: "DAP는 데이터에 근거한 판단으로 업무를 개선한다", a: "O", e: "데이터 근거로 업무 효율을 높이고 일하는 방식을 바꾼다.", g: "dap", rv: 1, z: "lab", h: "lab.dap" },
-  { id: "F35", c: 4, lv: 2, q: "DAP는 IT 부서 직원만 지원할 수 있다", a: "X", e: "직무와 부서에 관계없이 누구나 지원할 수 있다.", g: "dapc", rv: 1, z: "lab", h: "lab.idea" },
-  { id: "F36", c: 4, lv: 2, q: "보험사기 분석 고도화는 2025년 우수 과제였다", a: "O", e: "자동차 보험사기 분석 시스템 고도화가 2025년 우수 과제다.", g: "hist", rv: 1, z: "lab", h: "lab.history" },
-  { id: "F37", c: 4, lv: 3, q: "2025년 최우수 과제는 유의질환 예측모델이다", a: "O", e: "장기손사 유의질환 예측모델 개발이 2025년 최우수다.", g: "hist", rv: 1, z: "lab", h: "lab.history" },
+  { id: "F29", c: 4, lv: 1, q: "DAP는 직무와 부서에 관계없이 지원할 수 있다", a: "O", e: "코딩이나 데이터 경험이 없어도 지원할 수 있다.", g: "dapc", rv: 1, z: "lab", h: "lab.idea" },
+  { id: "F30", c: 4, lv: 1, q: "내 업무 고민도 DAP가 될 수 있다", a: "O", e: "반복 업무, 자료 찾기, 예측 같은 고민이 과제가 된다.", g: "dapm", rv: 1, z: "lab", h: "lab.idea" },
+  { id: "F31", c: 4, lv: 1, q: "AX LAB QR로 아이디어 한 줄을 쓸 수 있다", a: "O", e: "QR을 찍어 한 줄을 쓰면 스탬프도 받는다.", g: "idea", rv: 1, z: "lab", h: "lab.idea" },
   { id: "F38", c: 4, lv: 3, q: "판결문 자동검색 모델은 2024년 최우수 과제였다", a: "O", e: "자동차보상 법원 판결문 자동검색 모델이 2024년 최우수다.", g: "hist", rv: 1, z: "lab", h: "lab.history" },
-  { id: "F39", c: 4, lv: 3, q: "2025년 최우수 과제는 판결문 자동검색 모델이다", a: "X", e: "2025년 최우수는 장기손사 유의질환 예측모델이다.", g: "hist", rv: 1, z: "lab", h: "lab.history" },
-  { id: "F40", c: 4, lv: 1, q: "in Action 사례는 현장 동료가 만들었다", a: "O", e: "현장을 가장 잘 아는 구성원이 직접 해결책을 만들었다.", g: "ia", rv: 1, z: "action", h: "action.intro" },
-  { id: "F41", c: 4, lv: 1, q: "in Action에서 영업과 보상 사례를 본다", a: "O", e: "영업부터 보상까지 현장에서 시작된 AX를 소개한다.", g: "ia2", rv: 1, z: "action", h: "action.intro" },
-  { id: "F42", c: 4, lv: 2, q: "하이핑거는 영업 시상을 안내하는 앱이다", a: "X", e: "하이핑거는 보상 업무를 지원하는 앱이다.", g: "ap2", rv: 1, z: "action", h: "action.claims" },
   { id: "F43", c: 4, lv: 2, q: "강북이는 개인 맞춤형 시상을 안내하는 앱이다", a: "O", e: "개인 실적에 맞춰 시상 안내를 해 주는 영업 도우미다.", g: "gb", rv: 1, z: "action", h: "action.sales" },
-  { id: "F44", c: 4, lv: 2, q: "강북이는 보상 업무를 돕는 앱이다", a: "X", e: "강북이는 영업 현장의 시상 안내 앱이다.", g: "gb", rv: 1, z: "action", h: "action.sales" },
-  { id: "F45", c: 4, lv: 2, q: "AI컨설팅 도우미는 보상 업무를 돕는 앱이다", a: "X", e: "AI컨설팅 도우미는 판매 화법을 제공하는 앱이다.", g: "ap", rv: 1, z: "action", h: "action.consult" },
   { id: "F46", c: 4, lv: 2, q: "하이핑거는 보상 업무를 지원하는 앱이다", a: "O", e: "약도, 판례 검색, 통화녹취 분석 등을 돕는다.", g: "ap2", rv: 1, z: "action", h: "action.claims" },
   { id: "F47", c: 4, lv: 3, q: "하이핑거는 의료기록 이미지 분석을 돕는다", a: "O", e: "의료기록 이미지 분석이 기능 중 하나다.", g: "hp2", rv: 1, z: "action", h: "action.claims" },
-  { id: "F48", c: 4, lv: 3, q: "하이핑거에는 통화녹취 분석 기능이 있다", a: "O", e: "통화녹취 분석 비서가 기능 중 하나다.", g: "hp", rv: 1, z: "action", h: "action.claims" },
-  { id: "F49", c: 4, lv: 1, q: "HiDI-Q는 요약 기능이 없다", a: "X", e: "긴 문서에서 중요한 내용만 추려서 요약한다.", g: "hqf", rv: 1, z: "play", h: "play.hq.intro" },
   { id: "F50", c: 4, lv: 1, q: "결과물은 「정리해줘」처럼 짧게 시키는 게 좋다", a: "X", e: "A4 1장, 존댓말처럼 형태를 구체적으로 알려 준다.", g: "tipf", rv: 1, z: "play", h: "play.hq.tips" },
   { id: "F51", c: 4, lv: 1, q: "HiDI는 현대해상의 생성형 AI 브랜드다", a: "O", e: "Hyundai Insurance Data Intelligence의 약자다.", g: "hidi", rv: 1, z: "play", h: "play.hq.hidi" },
   { id: "F52", c: 4, lv: 1, q: "HiDI-Q에는 문서를 5개까지 올릴 수 있다", a: "O", e: "최대 5개까지 올리고 그 내용으로 질문한다.", g: "hq5", rv: 1, z: "play", h: "play.hq.intro" },
-  { id: "F53", c: 4, lv: 1, q: "HiDI-Q에는 문서를 한 개만 올릴 수 있다", a: "X", e: "최대 5개까지 올릴 수 있다.", g: "hq5", rv: 1, z: "play", h: "play.hq.intro" },
   { id: "F54", c: 4, lv: 1, q: "HiDI-Q는 긴 문서의 핵심을 요약해 준다", a: "O", e: "긴 문서에서 중요한 내용만 추려서 요약한다.", g: "hqf", rv: 1, z: "play", h: "play.hq.intro" },
   { id: "F55", c: 4, lv: 1, q: "문서는 아무거나 통째로 올리는 게 좋다", a: "X", e: "필요한 자료의 필요한 부분만 올린다.", g: "tipu", rv: 1, z: "play", h: "play.hq.tips" },
   { id: "F56", c: 4, lv: 1, q: "결과물의 형태는 구체적으로 알려 주는 게 좋다", a: "O", e: "A4 1장, 존댓말처럼 형태를 구체적으로 알려 준다.", g: "tipf", rv: 1, z: "play", h: "play.hq.tips" },
   { id: "F57", c: 4, lv: 1, q: "Hi-Helper는 설계를 1분 안에 추천한다", a: "O", e: "계약 빅데이터를 바탕으로 1분 안에 추천한다.", g: "hh1", rv: 1, z: "play", h: "play.hh.helper" },
-  { id: "F58", c: 4, lv: 1, q: "Hi-Helper는 설계 추천에 하루가 걸린다", a: "X", e: "1분 안에 추천하는 AI 프로그램이다.", g: "hh1", rv: 1, z: "play", h: "play.hh.helper" },
-  { id: "F59", c: 4, lv: 1, q: "AX PLAY에서 HiDI-Q를 써 볼 수 있다", a: "O", e: "AX PLAY에서 직접 써 보고 후기를 남긴다.", g: "pl", rv: 1, z: "play", h: "play.hq.hidi" },
-  { id: "F60", c: 4, lv: 2, q: "HiDI-Q는 번역하면 원본 양식이 사라진다", a: "X", e: "원본 양식 그대로 번역해 준다.", g: "hqt", rv: 1, z: "play", h: "play.hq.intro" },
-  { id: "F61", c: 4, lv: 2, q: "HiDI-Q는 보고서 초안을 만들 수 없다", a: "X", e: "Word, Excel, PPT 기반 보고서 초안을 받는다.", g: "hqr", rv: 1, z: "play", h: "play.hq.intro" },
-  { id: "F62", c: 4, lv: 2, q: "Hi-Helper로 태아보험은 설계할 수 없다", a: "X", e: "출산예정일만 넣으면 태아보험을 설계한다.", g: "hhf", rv: 1, z: "play", h: "play.hh.intro" },
-  { id: "F63", c: 4, lv: 2, q: "Hi-Helper는 추천 방식을 고를 수 없다", a: "X", e: "원클릭과 맞춤 AI 추천 중에 고른다.", g: "hhm", rv: 1, z: "play", h: "play.hh.tips" },
   { id: "F64", c: 4, lv: 2, q: "HiDI-Q는 번역해도 원본 양식을 유지한다", a: "O", e: "양식 그대로 번역해 옮겨 적을 필요가 없다.", g: "hqt", rv: 1, z: "play", h: "play.hq.intro" },
   { id: "F65", c: 4, lv: 2, q: "HiDI-Q에는 암호화된 문서를 올릴 수 없다", a: "X", e: "암호화된 문서를 그대로 올리고 내려받을 수 있다.", g: "hqs", rv: 1, z: "play", h: "play.hq.intro" },
   { id: "F66", c: 4, lv: 2, q: "HiDI-Q로 보고서 초안을 받아 볼 수 있다", a: "O", e: "Word, Excel, PPT 기반 보고서 초안을 받는다.", g: "hqr", rv: 1, z: "play", h: "play.hq.intro" },
   { id: "F67", c: 4, lv: 2, q: "비교할 자료는 직접 올려서 비교하는 게 좋다", a: "O", e: "비교할 약관은 직접 올리고 비교한다.", g: "tipc", rv: 1, z: "play", h: "play.hq.tips" },
   { id: "F68", c: 4, lv: 2, q: "질문은 한꺼번에 여러 개 묻는 게 좋다", a: "X", e: "질문은 하나씩 나누어 한다.", g: "tipq", rv: 1, z: "play", h: "play.hq.tips" },
   { id: "F69", c: 4, lv: 2, q: "Hi-Helper는 피보험자 동의를 먼저 받는다", a: "O", e: "신용정보원 정보 조회를 위해 먼저 동의를 받는다.", g: "hhc", rv: 1, z: "play", h: "play.hh.tips" },
-  { id: "F70", c: 4, lv: 2, q: "Hi-Helper는 추천안 3개를 비교해 준다", a: "O", e: "추천 설계안 TOP1~3을 비교해 볼 수 있다.", g: "hhr", rv: 1, z: "play", h: "play.hh.tips" },
   { id: "F71", c: 4, lv: 2, q: "태아보험 설계는 출산예정일만 넣으면 된다", a: "O", e: "임신 주수별 필수 담보를 담아 설계한다.", g: "hhf", rv: 1, z: "play", h: "play.hh.intro" },
   { id: "F72", c: 4, lv: 3, q: "Hi-Helper는 신상품도 바로 추천에 반영한다", a: "X", e: "신상품과 신담보는 반영까지 시간이 걸린다.", g: "hhn", rv: 1, z: "play", h: "play.hh.check" },
-  { id: "F73", c: 4, lv: 3, q: "바로컨설팅 내역은 먼저 확인해 두는 게 좋다", a: "O", e: "고객이 원하는 상품이 추천에 반영됐는지 확인한다.", g: "hhb", rv: 1, z: "play", h: "play.hh.check" },
   { id: "F74", c: 4, lv: 1, q: "AX LOUNGE는 업무 고민을 이야기하는 곳이다", a: "O", e: "바꾸고 싶은 업무와 반복되는 불편을 이야기한다.", g: "lg", rv: 1, z: "lounge", h: "lounge.intro" },
-  { id: "F75", c: 4, lv: 1, q: "AX LOUNGE에서는 혼자 고민을 풀어야 한다", a: "X", e: "혼자 고민하던 업무를 함께 풀어 본다.", g: "lg", rv: 1, z: "lounge", h: "lounge.intro" },
-  { id: "F76", c: 4, lv: 2, q: "LOUNGE에서 데이터사이언스파트와 상담한다", a: "O", e: "AI와 데이터를 활용할 방법을 함께 살펴본다.", g: "lg2", rv: 1, z: "lounge", h: "lounge.steps" },
-  { id: "F77", c: 4, lv: 2, q: "AX LOUNGE 상담은 실행 방향을 구체화한다", a: "O", e: "상담 내용을 바탕으로 단계별 실행 방향을 정한다.", g: "lg3", rv: 1, z: "lounge", h: "lounge.steps" },
-  { id: "F78", c: 4, lv: 1, q: "AI 포토부스는 AX LAB에 있다", a: "X", e: "AI 포토부스는 EVENT 구역에 있다.", g: "ph", rv: 1, z: "event", h: "event.photo" },
-  { id: "F79", c: 4, lv: 1, q: "스탬프 1개만 모으면 룰렛을 돌릴 수 있다", a: "X", e: "룰렛 이벤트는 스탬프 3개가 조건이다.", g: "rl", rv: 1, z: "event", h: "event.roulette" },
-  { id: "F80", c: 4, lv: 1, q: "스탬프 3개를 모으면 룰렛을 돌릴 수 있다", a: "O", e: "룰렛 이벤트는 스탬프 3개가 조건이다.", g: "rl", rv: 1, z: "event", h: "event.roulette" },
-  { id: "F81", c: 4, lv: 1, q: "AI 포토부스에서 동료와 사진을 남길 수 있다", a: "O", e: "동료들과 AI 포토로 추억을 남긴다.", g: "ph", rv: 1, z: "event", h: "event.photo" },
-  { id: "F82", c: 4, lv: 2, q: "AX 타자왕은 떨어지는 단어를 입력하는 게임이다", a: "O", e: "떨어지는 단어를 입력하는 EVENT 구역 게임이다.", g: "ty", rv: 1, z: "event", h: "event.typingking" }
+  { id: "F80", c: 4, lv: 1, q: "스탬프 3개를 모으면 룰렛을 돌릴 수 있다", a: "O", e: "스탬프 4개 이상이면 행운권 번호를 받는다.", g: "rl", rv: 1, z: "event", h: "event.roulette" },
+  { id: "F83", c: 4, lv: 1, q: "in Action 앱은 외부 업체가 만들어 줬다", a: "X", e: "현장 구성원이 AI와 데이터로 직접 만들었다.", g: "ia", rv: 1, z: "action", h: "action.intro" },
+  { id: "F84", c: 4, lv: 2, q: "AI컨설팅 도우미는 판매 화법을 알려 준다", a: "O", e: "상품의 강점을 판매 화법으로 제공하는 앱이다.", g: "ap", rv: 1, z: "action", h: "action.consult" },
+  { id: "F85", c: 4, lv: 2, q: "Hi-Helper는 추천 설계안을 하나만 준다", a: "X", e: "추천 설계안 TOP1~3을 비교해 볼 수 있다.", g: "hhr", rv: 1, z: "play", h: "play.hh.tips" }
 ];
 var OX_ZONE = { vision: "AX VISION", lab: "AX LAB", action: "AX in Action", play: "AX PLAY", lounge: "AX LOUNGE", event: "EVENT" };   /* z → 구역 이름 · 1층 판 구역 */
 var OX_KEY = {};   /* id: [난이도, 정답, 짝, 검수, 문장] · 서버 OX_KEY 와 같은 모양(채점 식을 글자 그대로 같게 쓰려고) */
@@ -11511,6 +11466,9 @@ function olyHubHtml() {
    옛 서버(판 퀴즈를 모름 · range)면 이 기기에 두었다가 다음 동기화 때 다시 보낸다(qz_pend · 24시간)
    유리다리 O/X(game_ox · gsStartHtml)는 QUIZ_CARD = false 한 줄로 되돌린다(코드 보존 · 휴면) */
 var QZ_CARD = { per: [5, 4, 1], key: 1, pt: 100 };
+/* v4.98 문제 은행 판 번호(서버 OX_BANK_REV · ox_start card.bank) · QZ_NEW = 이 판에서 새로 넣은 O/X · 옛 서버는 모르는 id 로 거절하므로 서버가 bank 2 이상이라고 알려 줄 때만 낸다(oxOffList · 앱을 먼저 올려도 안전) */
+var QZ_BANK = 2, QZ_NEW = ["F83", "F84", "F85"];
+function oxNewOk() { return !!(OXS.card && OXS.card.bank >= QZ_BANK); }
 /* 핵심 순서형 · 서버 OX_KEYQ 와 id · 난이도 · 짝 그룹 · 조각 수가 같다(검사 141절) · 조각 = order 는 pairs 의 오른쪽 · sentence 는 words · 미끼(pool)는 지금 없다(D 는 서버 형식에만 남긴다)
    g = 같은 판에 내지 않는 O/X 짝 그룹(로드맵 키워드 · 목표 · 슬로건 문항이 정답을 미리 알려 주지 않게) */
 var QZ_KEYQ = [
@@ -11568,7 +11526,7 @@ function qzLinePan(h) { var p = QZ_PANEL[h]; return p ? (p[0] ? p[0] + " 줄 ›
 /* ── 이어 풀기 저장 · qz_run = { emp, t, q[10 ids], a[답 · O/X 또는 누른 순서], k(풀던 순서형 누른 차례), ks(순서형 타일 순서), see(해설을 연 문항 · -1) } ── */
 function qzRun() {
   var r = S.get("qz_run", null);
-  return r && ownIs(r) && Array.isArray(r.q) && r.q.length === qzN() && Array.isArray(r.a) ? r : null;
+  return r && ownIs(r) && Array.isArray(r.q) && r.q.length === qzN() && Array.isArray(r.a) && r.q.every(function (id) { return !!qzItem(id); }) ? r : null;   /* v4.98 은행에서 뺀 문항이 든 판(이 기기에 남은 옛 판)은 이어 풀지 않고 새 판 */
 }
 function qzN() { return QZ_CARD.per[0] + QZ_CARD.per[1] + QZ_CARD.per[2]; }
 function qzAnswered(r) { var n = 0; for (var i = 0; i < r.q.length; i++) if (r.a[i] != null) n++; return n; }
@@ -14445,11 +14403,11 @@ var OX_TITLE = { 4: "AX 1층 마스터" }, OX_TITLE_MIN = 4;   /* 한 판에 그
 var OX_SEEN_MAX = 60, OX_TK_AGE = 9000000;   /* 최근 본 문항 · 토큰은 2시간 30분까지 쓴다(서버 3시간) */
 var OXS = { tk: "", at: 0, ratio: {}, min: 20, off: [], busy: false };
 var OX = { on: false };
-function oxOffList() { var r = OLY.board && OLY.board.rule && OLY.board.rule.ox; return ((r && r.off) || []).concat(OXS.off || []); }
+function oxOffList() { var r = OLY.board && OLY.board.rule && OLY.board.rule.ox; return ((r && r.off) || []).concat(OXS.off || [], oxNewOk() ? [] : QZ_NEW); }   /* v4.98 새 문항은 새 서버(bank 2)에서만 */
 /* 판 토큰 · 모두의 선택 비율 · 끈 문항 · 시작 화면에서 미리 · 판을 시작하면 쓰고 다음 판 것을 곧바로 받는다 */
 function oxPrefetch(force) {
   if (testMode()) {
-    if (force || !OXS.tk) { var R = olyRule().ox; OXS.tk = Date.now().toString(36) + "." + (R.per[0] + Math.floor(Math.random() * R.per[1])) + "." + (R.per[0] + R.per[1] + Math.floor(Math.random() * R.per[2])) + ".local"; OXS.at = Date.now(); OXS.ratio = oxFakeRatio(); OXS.card = QZ_CARD; }
+    if (force || !OXS.tk) { var R = olyRule().ox; OXS.tk = Date.now().toString(36) + "." + (R.per[0] + Math.floor(Math.random() * R.per[1])) + "." + (R.per[0] + R.per[1] + Math.floor(Math.random() * R.per[2])) + ".local"; OXS.at = Date.now(); OXS.ratio = oxFakeRatio(); OXS.card = { per: QZ_CARD.per, key: QZ_CARD.key, bank: QZ_BANK }; }
     return;
   }
   if (!BE.on || OXS.busy || (!force && OXS.tk && Date.now() - OXS.at < 3600000)) return;
