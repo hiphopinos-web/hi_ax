@@ -1361,6 +1361,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-tt { display: flex; flex-direction: column; gap: var(--ax-space-24); }
   .axs-ttsec { display: flex; flex-direction: column; gap: var(--ax-space-8); }
   .axs-ttsec > .ax-row { margin-bottom: var(--ax-space-4); }
+  .axs-ttsec + .axs-ttsec { padding-top: var(--ax-space-24); border-top: 1px solid var(--ax-color-divider); }   /* v4.99c 오전 · 점심 · 오후 사이 옅은 선 한 줄(면 · 테두리 없음) · .axs-tt gap 24 + padding 24 */
   .axs-tt .rc { margin: 0; border: 0; border-radius: var(--ax-radius-20); background: var(--ax-color-surface); box-shadow: none; --rc-h: 64px; --rc-px: var(--ax-space-16); --rc-ls: 64px; --rc-gap: var(--ax-space-12); }
   .axs-tt .rc.my { background: var(--ax-color-brandSoft); box-shadow: none; }
   .axs-tt .rc.past { background: var(--ax-color-inset); }
@@ -5219,8 +5220,11 @@ function progTTAllHtml() {
     return '<section class="axs-ttsec"><div class="ax-row"><h2 class="ax-section-title">' + nm + "</h2>" +
       (hasNow ? '<span class="axs-chip">지금 ' + nowHM + "</span>" : "") + "</div>" + rs.map(row).join("") + "</section>";
   };
-  return sec("오전", rows.filter(function (r) { return r.t.time && t2m(r.t.time) < 12 * 60; })) +
-    sec("오후", rows.filter(function (r) { return r.t.time && t2m(r.t.time) >= 12 * 60; })) +
+  /* v4.99c (사용자 261002 「오전 / 점심 / 오후 세 가지로」) 점심 묶음 = 점심 줄(TL_PROG #1F)의 시작~끝 사이에 시작하는 줄 · 경계는 데이터의 점심 줄 시각 · 묶음 사이 옅은 선은 CSS(.axs-ttsec + .axs-ttsec) */
+  var lu = TIMELINE.filter(function (t) { return TL_PROG[t.title] === "#1F"; })[0], lu0 = lu ? t2m(lu.time) : 11 * 60, lu1 = lu ? t2m(lu.end) : 13 * 60 + 30;
+  return sec("오전", rows.filter(function (r) { return r.t.time && t2m(r.t.time) < lu0; })) +
+    sec("점심", rows.filter(function (r) { return r.t.time && t2m(r.t.time) >= lu0 && t2m(r.t.time) < lu1; })) +
+    sec("오후", rows.filter(function (r) { return r.t.time && t2m(r.t.time) >= lu1; })) +
     sec("시간 미정", rows.filter(function (r) { return !r.t.time; }));
 }
 /* ═══ v4.84 (261001 앱 개편 2묶음 · 기획안 5-3) 프로그램 탭 아래 메뉴 · 10F 행 펼침 · 1F 부스 6구역 ═══ */
