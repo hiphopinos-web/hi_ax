@@ -1960,6 +1960,66 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pan .axs-zdt .axs-kv { grid-template-columns: 56px minmax(0, 1fr); row-gap: var(--ax-space-8); }
   .fs-big .axs-pan .axs-zr .hd, .fs-big .axs-pan .axs-zfl, .fs-big .axs-pan .axs-zin { flex-wrap: wrap; }
   .fs-big .axs-pan .axs-zin .tx { flex: 1 1 100%; }
+  /* ── v4.96 AX 퀴즈 판 퀴즈 화면 조각(같은 경계 .axs-pan · 컨테이너 .axs-pan.qz · 힌트 시트 본문도 .axs-pan.qz) · 공통 부품 K 를 그대로 쓴다 ──
+     구역 칩 = K1 axs-sign .chip(오렌지 면 + 짙은 글자 · 사용자 확정 261001) · 문제 문장 = K2 axs-bar(막대 + 굵은 제목 b) · 문항 번호 = K3 axs-pill · 해설 위 = K4 axs-rule · 해설 = K5 axs-todo
+     파랑 없음 · 시계 · 목숨 · 점수 화면 없음 · 버튼 48px 이상 · 큰글씨(fs-big)는 O/X 버튼을 세로로 쌓는다 · 틀린 타일은 색만 바꾼다(움직임 없음 · 동작 줄이기와 같다) */
+  .axs-pan.qz .qz-prog { display: flex; flex-direction: column; gap: var(--ax-space-8); }
+  .axs-pan.qz .qz-prog p { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-body); }
+  .axs-pan.qz .qz-prog b { color: var(--ax-color-ink); }
+  .axs-pan.qz .qz-seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; }
+  .axs-pan.qz .qz-seg i { height: 6px; border-radius: 3px; background: var(--ax-color-divider); }
+  .axs-pan.qz .qz-seg i.on { background: var(--ax-color-brand); }
+  .axs-pan.qz .qz-seg i.cur { background: var(--ax-color-ink); }
+  .axs-pan.qz .qz-card { display: flex; flex-direction: column; gap: var(--ax-space-16); padding: var(--ax-space-20); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); }
+  .axs-pan.qz .qz-top { display: flex; align-items: center; justify-content: space-between; gap: var(--ax-space-8); }
+  .axs-pan .axs-sign.chip { color: #351A0C; }   /* 퀴즈 구역 칩 = 오렌지 면 + 짙은 글자(대비 6.39 · 사용자 확정 261001 · 크기는 K1 포인트 칩 그대로) */
+  .axs-pan.qz .qz-stm { margin: 0; }
+  .axs-pan.qz .qz-stm b { word-break: keep-all; }
+  .axs-pan.qz .qz-gen { display: inline-flex; align-items: center; min-height: 28px; padding: 0 10px; border-radius: 4px; background: var(--ax-color-canvas); color: var(--ax-color-body); font: var(--ax-type-t7); font-weight: 600; }
+  .axs-pan.qz .qz-ans { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ax-space-12); }
+  .axs-pan.qz .qz-ab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 80px; padding: 8px; border: 2px solid var(--ax-color-ink); border-radius: var(--ax-radius-16); background: var(--ax-color-surface); color: var(--ax-color-ink); font: var(--ax-type-t6-strong); font-family: inherit; cursor: pointer; }
+  .axs-pan.qz .qz-ab svg { width: 32px; height: 32px; }
+  .axs-pan.qz .qz-ab:disabled { cursor: default; }
+  .axs-pan.qz .qz-ab.ok { border-color: var(--ax-color-success); background: var(--ax-color-successSoft); color: var(--ax-color-success); }
+  .axs-pan.qz .qz-ab.no { border-color: var(--ax-color-error); background: var(--ax-color-errorSoft); color: var(--ax-color-error); }
+  .axs-pan.qz .qz-ab.dim { border-color: var(--ax-color-divider); color: var(--ax-color-muted); }
+  .fs-big .axs-pan.qz .qz-ans { grid-template-columns: 1fr; }
+  .fs-big .axs-pan.qz .qz-ab { flex-direction: row; gap: 12px; min-height: 72px; }
+  .axs-pan.qz .qz-hint { display: flex; align-items: center; justify-content: space-between; gap: var(--ax-space-8); width: 100%; min-height: 48px; padding: 0 4px; border: 0; border-top: 1px solid var(--ax-color-divider); background: transparent; color: var(--ax-color-brandText); font: var(--ax-type-t6-strong); font-family: inherit; text-align: left; cursor: pointer; }
+  .axs-pan.qz .qz-hint .axs-chev { flex: none; width: 20px; height: 20px; }
+  .axs-pan.qz .qz-fb { display: flex; flex-direction: column; gap: var(--ax-space-12); outline: none; }
+  .axs-pan.qz .qz-fh { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ax-space-8); margin: 0; font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
+  .axs-pan.qz .qz-fb .axs-todo p { font: var(--ax-type-t5); }
+  .axs-pan.qz .qz-src { margin: 0; font: var(--ax-type-t7); color: var(--ax-color-body); }
+  .axs-pan.qz .qz-slots { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ax-space-8); }
+  .axs-pan.qz .qz-slots.ord { flex-direction: column; align-items: stretch; }
+  .axs-pan.qz .qz-lead { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
+  .axs-pan.qz .qz-sl { display: flex; align-items: center; gap: var(--ax-space-8); min-width: 64px; min-height: 48px; padding: 0 12px; border: 1.5px dashed var(--ax-color-muted); border-radius: var(--ax-radius-12); background: var(--ax-color-inset); color: var(--ax-color-ink); font: var(--ax-type-t5-strong); }
+  .axs-pan.qz .qz-sl.f { border: 1.5px solid var(--ax-color-ink); background: var(--ax-color-surface); }
+  .axs-pan.qz .qz-sl.c { border: 2px solid var(--ax-color-brand); background: var(--ax-color-brandSoft); }
+  .axs-pan.qz .qz-tiles { display: flex; flex-wrap: wrap; gap: var(--ax-space-8); }
+  .axs-pan.qz .qz-tl { min-height: 48px; padding: 0 16px; border: 1.5px solid var(--ax-color-divider); border-radius: var(--ax-radius-12); background: var(--ax-color-surface); color: var(--ax-color-ink); font: var(--ax-type-t5-strong); font-family: inherit; cursor: pointer; }
+  .axs-pan.qz .qz-tl.u { background: var(--ax-color-inset); color: var(--ax-color-muted); cursor: default; }
+  .axs-pan.qz .qz-tl.w { border-color: var(--ax-color-error); background: var(--ax-color-errorSoft); color: var(--ax-color-error); }
+  .axs-pan.qz .qz-miss { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-error); }
+  .axs-pan.qz .qz-res { gap: var(--ax-space-8); align-items: flex-start; }
+  .axs-pan.qz .qz-big { margin: 0; font: var(--ax-type-t4); color: var(--ax-color-body); }
+  .axs-pan.qz .qz-big b { font-size: 1.875rem; line-height: 2.5rem; color: var(--ax-color-ink); }
+  .axs-pan.qz .qz-wr { gap: var(--ax-space-12); padding: 18px var(--ax-space-20); }
+  .axs-pan.qz .qz-wq { margin: 0; font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
+  .axs-pan.qz .qz-we { margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); }
+  .axs-pan.qz .qz-we b { color: var(--ax-color-ink); }
+  .axs-pan.qz .qz-hub { gap: var(--ax-space-12); }
+  .axs-pan.qz .qz-smkr { display: inline-flex; flex: none; align-items: center; gap: 6px; }
+  .axs-pan.qz .qz-stl { margin: 0; }
+  .axs-pan.qz .qz-lp { margin: 0; font: var(--ax-type-t4); color: var(--ax-color-ink); }
+  .axs-pan.qz .qz-map { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .axs-pan.qz .qz-map span { display: grid; place-items: center; min-height: 40px; padding: 2px 4px; border: 1.5px solid var(--ax-color-divider); border-radius: 10px; background: var(--ax-color-surface); color: var(--ax-color-muted); font: var(--ax-type-t7); font-weight: 600; text-align: center; }
+  .axs-pan.qz .qz-map span.on { border-color: var(--ax-color-brand); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); }
+  .axs-pan.qz .qz-zin { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 12px 16px; border-radius: var(--ax-radius-16); background: var(--ax-color-inset); }
+  .axs-pan.qz .qz-zin b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-pan.qz .qz-zin span { font: var(--ax-type-t7); color: var(--ax-color-body); }
+  .axs-pan.qz.qz-hs { gap: var(--ax-space-12); }
 </style>
 <style id="rtCss">
   /* ═══════ v4.23 게임 화면 16비트 레트로 · 「바람의 나라」 감성 (260923 사용자 확정 · design.md A-5 5-16 · 정본 「레트로 시안/시안.html」 · 「레트로 레퍼런스 조사.md」 8절) ═══════
@@ -2466,7 +2526,7 @@ function stampDefV1(id) { return STAMPS_V1.filter(function (s) { return s.id ===
    옛 p1(1F 전시) · p7(전시 QR 퀴즈)은 뺐다 · 서버 기록은 남고 이 목록에 없어서 세지 않는다(stampGot) */
 var STAMPS_V2 = [
   { id: "lg", title: "최초 로그인", short: "로그인", desc: "로그인하면 자동 적립", where: "자동", inapp: 1, auto: 1 },
-  { id: "qz", title: "AX 퀴즈", short: "AX 퀴즈", desc: "O/X 12문제 · 한 판 완주", where: "AX 퀴즈", inapp: 1, tap: "App.go('quiz')", cta: "AX 퀴즈 풀기" },
+  { id: "qz", title: "AX 퀴즈", short: "AX 퀴즈", desc: "10문제 · 모두 답하면 완주", where: "AX 퀴즈", inapp: 1, tap: "App.go('quiz')", cta: "AX 퀴즈 풀기" },
   { id: "p4", title: "미니 게임", short: "미니 게임", desc: "AX 팡 · 점프 · 테트리스 3종 · 종목마다 한 판", where: "팡 · 점프 · 테트리스", inapp: 1, tap: "App.go('games')", cta: "미니 게임 하기" },
   STAMP_P2,
   stampDefV1("p5"), stampDefV1("p3"), stampDefV1("st"), stampDefV1("sv")
@@ -2725,7 +2785,7 @@ var MEM_ROUNDS = [
     mean: "당신의 업무 고민도 DAP가 될 수 있습니다", h: "lab.idea" },
   { id: "m13", kind: "sentence", lv: 1, dom: "play", words: ["AX", "PLAY에서", "HiDI-Q를", "써", "볼", "수", "있어요"],
     pool: ["회의실", "복사기", "점심시간", "주차장", "구내식당"],
-    mean: "직접 써 보고 후기를 남길 수 있습니다", h: "" },
+    mean: "직접 써 보고 후기를 남길 수 있습니다", h: "play.hq.hidi" },
   { id: "m14", kind: "sentence", lv: 1, dom: "lounge", words: ["혼자", "고민하던", "업무를", "이제", "함께", "풀어", "봐요"],
     pool: ["달력", "엘리베이터", "화분", "냉장고", "우산"],
     mean: "혼자(ME)에서 함께(WE)로 갑니다", h: "lounge.intro" },
@@ -2749,7 +2809,7 @@ var MEM_ROUNDS = [
     mean: "옮겨 적을 필요가 없습니다", h: "play.hq.intro" },
   { id: "m21", kind: "sentence", lv: 2, dom: "play", words: ["문서를", "올리고", "물어보면", "대화하듯", "답해요"],
     pool: ["회의실", "복사기", "점심시간", "주차장", "구내식당"],
-    mean: "HiDI-Q가 하는 일입니다", h: "vision.2026" },
+    mean: "HiDI-Q가 하는 일입니다", h: "play.hq.intro" },
   { id: "m22", kind: "sentence", lv: 2, dom: "lab", words: ["데이터에", "근거한", "판단으로", "업무를", "개선해요"],
     pool: ["우산", "화분", "냉장고", "정수기", "시계"],
     mean: "효율을 높이고 일하는 방식을 바꿉니다", h: "lab.dap" },
@@ -2800,7 +2860,7 @@ var MEM_ROUNDS = [
     mean: "의료심사 Agent가 하는 일입니다", h: "vision.2027" },
   { id: "o01", kind: "order", lv: 1, dom: "play", pairs: [["1", "문서 올리기"], ["2", "질문하기"], ["3", "답 받기"]],
     pool: ["우산 챙기기", "달력 보기", "주차장 찾기", "시계 보기"],
-    mean: "HiDI-Q 사용 순서입니다", h: "" },
+    mean: "HiDI-Q 사용 순서입니다", h: "play.hq.intro" },
   { id: "o02", kind: "order", lv: 1, dom: "lounge", pairs: [["1", "고민을 들려주세요"], ["2", "가능성을 함께 찾아요"], ["3", "실행 방법을 설계해요"]],
     pool: ["화분 옮기기", "자전거 타기", "냉장고 정리하기", "복사기 고치기"],
     mean: "AX LOUNGE 상담 순서입니다", h: "lounge.steps" },
@@ -2809,10 +2869,10 @@ var MEM_ROUNDS = [
     mean: "Hi-Helper 사용 순서입니다", h: "play.hh.tips" },
   { id: "o04", kind: "order", lv: 2, dom: "vision", pairs: [["2026", "사내 LLM 도입"], ["2027", "업무 영역별 Agent"], ["2028", "1인 1 AI Agent"]],
     pool: ["우산 챙기기", "달력 보기", "주차장 찾기", "시계 보기"],
-    mean: "AX 로드맵 대표 목표 순서입니다", h: "" },
+    mean: "AX 로드맵 대표 목표 순서입니다", h: "vision.2026" },
   { id: "o05", kind: "order", lv: 3, dom: "vision", pairs: [["2026", "HiDI-Q와 Hi-Helper"], ["2027", "의료심사와 법률 Agent"], ["2028", "나만의 AI Agent"]],
     pool: ["화분 옮기기", "자전거 타기", "냉장고 정리하기", "복사기 고치기"],
-    mean: "AX 로드맵 주요 프로젝트 순서입니다", h: "" }
+    mean: "AX 로드맵 주요 프로젝트 순서입니다", h: "vision.2026" }
 ];
 /* v3.57 행사 정보 은행 · 휴면 (되살리려면 위 MEM_ROUNDS 와 바꿔 끼운다) */
 var MEM_ROUNDS_EVENT = [
@@ -3421,7 +3481,7 @@ var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_ro
   "raffle_seen", "raffle_opened", "raffle_nums", "roulette_used", "roulette_open", "draw_winner",
   "wave_extra", "wq_attempts", "test_mine", "type_nick", "type_nick_edit", "type_best", "mem_seen", "ox_seen",
   "pang_best", "jump_best", "gw_best", "gw_time_best", "tt_best", "pang_cleared", "jump_cleared", "gw_cleared", "type_cleared", "tetris_cleared", "ox_cleared",
-  "oly2_best_*", "oly2_done_*", "oly_pend", "draw_in",
+  "oly2_best_*", "oly2_done_*", "oly_pend", "draw_in", "qz_run", "qz_last", "qz_best", "qz_kseen", "qz_pend",
   "push_me", "push_ep", "crowd_watch"];   /* v4.76 내 알림 설정 · 보낸 구독 주소 · 혼잡 풀리면 알림 */
 function storeIsDevice(k) {
   k = String(k || "");
@@ -4592,7 +4652,7 @@ var App = {
     /* v4.06 3단계 · 현장 안내 E02 · 스캔 Q02 · 결과 Q03 · 계단 화면 */
     exp_g: "exp", scan_q: "exp", scan_res: "exp", stair: "exp",
     games: "exp", quiz: "exp", ideas: "exp", survey: "exp", ideas_mine: "ideas",
-    game_word: "quiz", game_type: "games", game_tetris: "games", game_pang: "games", game_jump: "games", game_ox: "quiz", oly_rank: "games", type_rank: "guide", floor1: "guide",   /* v4.83 퀴즈 두 종목의 뒤로가기 = AX 퀴즈 */
+    game_word: "quiz", game_type: "games", game_tetris: "games", game_pang: "games", game_jump: "games", game_ox: "quiz", quiz_play: "quiz", oly_rank: "games", type_rank: "guide", floor1: "guide",   /* v4.83 퀴즈 두 종목의 뒤로가기 = AX 퀴즈 */
     art: "home", art_rank: "art", screen_art: "admin",   /* v4.01 AI 사생대회 폐기 · 진입은 막혀 있다 */
     /* 프로그램 · 신청 (2단계에서 재디자인) */
     dap: "guide", ev_cchat: "guide", sess_d: "guide", sess_cf: "sess_d", sess_ok: "guide", zone_d: "guide",   /* v4.93 구역 상세 · 뒤로 = 프로그램(상시 운영) */
@@ -4609,7 +4669,7 @@ var App = {
     ev_cchat: "내 커피챗",
     wq_list: "전시 QR 퀴즈", wq_play: "문제 풀이", floor1: "1F 부스", zone_d: "1F 구역",
     admin: "관리자 모드", screen: "송출용 화면", screen_survey: "", screen_words: "", game_word: "기억력 퀴즈", game_type: "타자 게임", game_tetris: "테트리스", type_site: "1F 현장 셀프 모드", wall_type: "", type_award: "", type_rank: "타자 순위",
-    game_pang: "AX 팡", game_jump: "ME to WE 점프", game_ox: "AX 퀴즈", oly_rank: "미니 게임 순위",
+    game_pang: "AX 팡", game_jump: "ME to WE 점프", game_ox: "AX 퀴즈", quiz_play: "퀴즈 풀기", oly_rank: "미니 게임 순위",
     art: "AI 사생대회", art_rank: "좋아요 순위", screen_art: "",
     wall_quiz: "", wall_wave: "", wall_live: "", wall_metowe: "", wall_tv: ""
   },
@@ -4686,6 +4746,8 @@ var App = {
     /* v4.93 (261001 사용자 확정 · IA 검토 8장 A6) 옛 진입 별칭 · 라우트 id 는 그대로 받는다(해시 · 푸시 목적지 · 옛 onclick)
        floor1 = 프로그램 › 상시 운영 1F · my_sched · 내 일정(guide_time + SCHED.tab mine · mySched()) = 나의 참여 › 나의 일정 · 그 밖의 guide_time = 프로그램 › 시간표 */
     if (v === "my_sched") { SCHED.tab = "mine"; v = "guide_time"; }
+    if (v === "game_ox" && qzLive()) v = "quiz";   /* v4.96 유리다리는 휴면 · 옛 링크 · 타일 · 다음 스탬프는 판 퀴즈 목록으로 */
+    if (v === "quiz_play" && !qzLive()) v = "quiz";   /* 옛 서버(판 퀴즈를 모름)면 유리다리 목록 */
     if (v === "floor1") { PROG.seg = "always"; PROG.scroll = 0; PROG.anchor = "zone1f"; v = "guide"; }
     if (v === "guide_time") { if (SCHED.tab === "mine") { SCHED.tab = "all"; PROG.anchor = "mysched"; v = "my"; } else { PROG.mode = "time"; PROG.tt = "all"; PROG.seg = "time"; v = "guide"; } }
     if (typeof sheetClose === "function" && el("axsSheet")) sheetClose(true);
@@ -5492,7 +5554,7 @@ function sheetPaint(first) {
     ? '<button type="button" class="ax-button" onclick="sheetClose(true); ' + e.act + '">' + esc(e.lbl || "이동") + "</button>"
     : '<button type="button" class="ax-button' + (sp.danger ? " axs-btn-danger" : "") + '" id="axsSheetGo" onclick="' + sp.go + '"' +
       (dis ? ' disabled aria-busy="true"' : sp.goOff ? " disabled" : "") + ">" + esc(dis ? sp.goBusy : e ? "다시 시도하기" : sp.goLbl) + "</button>";
-  var keep = sp.keep ? '<button type="button" class="ax-button" onclick="sheetClose()"' + (dis ? " disabled" : "") + ">" + esc(sp.keep) + "</button>" : "";
+  var keep = sp.keep ? '<button type="button" class="ax-button' + (sp.keepWeak ? " ax-button-weak" : "") + '" onclick="sheetClose()"' + (dis ? " disabled" : "") + ">" + esc(sp.keep) + "</button>" : "";
   /* 유지 버튼이 없는 시트(신청 확인 등)는 닫기 X 를 머리 줄에 둔다 · 뒷배경 탭·뒤로도 같은 일을 한다 */
   w.innerHTML = '<div class="ax-sheet" role="dialog" aria-modal="true" aria-labelledby="axsSheetT">' +
     '<span class="axs-grab" aria-hidden="true"></span>' +
@@ -5795,6 +5857,10 @@ function nextStampHtml() {
   }
   var ico = STAMP_ICONS[s.id] || "", eye = "다음 스탬프", md = STAMP_MODE[s.id] || "";
   if (s.id === "qz" && QZ_NEED <= 1) return card(eye, md, "AX 퀴즈", "한 판 완주 · 약 2분", "퀴즈 시작", "App.go('game_ox')", ico);   /* v4.95 한 판뿐이라 종목 이름 · 진행 칸 없이 바로 시작 화면 */
+  if (s.id === "qz" && qzLive()) {   /* v4.96 판 퀴즈 · 풀던 판이 있으면 이어 풀기 */
+    var qr = qzRun();
+    return card(ch.concat("약 3분"), "AX 퀴즈", qr ? "이어 풀기 " + qzAnswered(qr) + " / " + qzN() : "1층 부스 내용 10문제", qr ? "이어 풀기" : "AX 퀴즈 시작", "qzStart(false)", ico);
+  }
   if (s.id === "qz" || s.id === "p4") {
     var q = s.id === "qz", g = nxEvents(q ? OLY_QUIZ_KEYS : (stampV2() ? OLY_MINI_KEYS : olyAllKeys())), need = q ? QZ_NEED : MG_NEED;
     var nm = function (e) { return q ? e.name : e.short; };
@@ -6117,7 +6183,7 @@ function testStampReset() {
    이 기기 기록만 지운다 · 순위판에 올라간 서버 기록은 관리 콘솔에서 지운다(참여자 앱에 삭제 기능을 두지 않는다). */
 var GAME_KEYS = ["pang_best", "jump_best", "gw_best", "gw_time_best", "tt_best", "type_best", "pang_cleared", "jump_cleared", "gw_cleared", "type_cleared",
   "oly2_best_pang", "oly2_best_jump", "oly2_best_tetris", "oly2_best_word", "oly2_best_ox", "oly2_done_pang", "oly2_done_jump", "oly2_done_tetris", "oly2_done_word", "oly2_done_ox", "ox_cleared", "ox_seen",
-  "oly_tab", "oly_ev", "mem_seen", "type_rank_app", "type_rank_site", "game_sound", "type_nick_edit", "art_demo_n"];
+  "oly_tab", "oly_ev", "mem_seen", "qz_run", "qz_last", "qz_best", "qz_kseen", "qz_pend", "type_rank_app", "type_rank_site", "game_sound", "type_nick_edit", "art_demo_n"];
 function testGameReset(withNick) {
   if (!testMode()) return;
   modalOpen('<p class="muted">이 기기의 미니게임 최고 기록·올림픽 점수·미니게임 스탬프를 지웁니다' + (withNick ? " (닉네임도 지웁니다)" : "") +
@@ -6915,8 +6981,9 @@ var Views = {
   },
   /* v4.83 (261001 사용자 수정) AX 퀴즈 · 게임 허브와 따로 · O/X · 기억력 */
   quiz: function () {
-    return '<div class="oly-hub">' + quizHubHtml() + "</div>";
+    return '<div class="oly-hub">' + (qzLive() ? qzHubHtml() : quizHubHtml()) + "</div>";   /* v4.96 판 퀴즈 목록(한 행) */
   },
+  quiz_play: function () { return quizPlayHtml(); },   /* v4.96 판 퀴즈 · 문항 · 해설 · 결과(헤더 · 하단 메뉴 그대로) */
 
   /* ═══ 내 보상 (M05 모양 · 1단계) · 사용 가능 / 사용 완료 · 사용 방법은 기존 모달(룰렛 QR · 응모 번호) ═══ */
   rewards: function () {
@@ -10962,6 +11029,8 @@ function axTodayHtml(dark) { return '<p class="ax-line' + (dark ? " dk" : "") + 
    계수는 서버 설정 「올림픽_점수」가 정본 · oly_board 응답의 rule 을 받아 쓴다 · 받기 전에는 아래 OLY_RULE(서버 기본값과 같은 값 · 검사 60절이 대조).
    제출 = 구성 요소(parts) + 점수 · 서버가 같은 식으로 다시 계산해 다르면 거부(mismatch) · 옛 기록(g1·g2 · v4.12 전 O/X g3)은 집계 제외 · 제출 버전 g4(v4.12) · 로컬 최고는 oly2_best_<종목>.
    명예 순위만(경품 없음) · 부문 통계·부문 메달 없음 · 공개 순위는 닉네임 · 1~3위 표식 = 월계수(A안 · 48px 미만으로 쓰지 않는다). */
+/* v4.96 (261001 사용자 확정) AX 퀴즈 = 판 퀴즈(quiz · quiz_play) · false 면 유리다리 O/X(game_ox)로 되돌린다(코드 보존 · 휴면) */
+var QUIZ_CARD = true;
 var OLY_EVENTS = [
   { key: "pang", name: "AX 팡", short: "팡", view: "game_pang", best: "oly2_best_pang" },
   { key: "jump", name: "ME to WE 점프", short: "점프", view: "game_jump", best: "oly2_best_jump" },
@@ -11031,12 +11100,12 @@ var OX_BANK = [
   { id: "F09", c: 4, lv: 1, q: "현대해상은 AI만으로 일하는 회사를 지향한다", a: "X", e: "사람을 중심으로 데이터와 AI, Agent를 연결한다.", g: "dbc", rv: 1, z: "vision", h: "vision.dbc" },
   { id: "F10", c: 4, lv: 2, q: "목표를 정하고 결과를 판단하는 쪽은 AI다", a: "X", e: "목표를 정하고 결과를 판단하는 쪽은 사람이다.", g: "dbc", rv: 1, z: "vision", h: "vision.dbc" },
   { id: "F11", c: 4, lv: 2, q: "2026년에는 생성형 AI 서비스를 오픈한다", a: "O", e: "사내 LLM 도입과 생성형 AI 서비스 오픈이 2026년이다.", g: "r26", rv: 1, z: "vision", h: "vision.2026" },
-  { id: "F12", c: 4, lv: 2, q: "사내 LLM 도입은 2028년 계획이다", a: "X", e: "사내 LLM 도입은 2026년이다. 2028년은 1인 1 AI Agent다.", g: "r26", rv: 1, z: "vision", h: "" },
+  { id: "F12", c: 4, lv: 2, q: "사내 LLM 도입은 2028년 계획이다", a: "X", e: "사내 LLM 도입은 2026년이다. 2028년은 1인 1 AI Agent다.", g: "r26", rv: 1, z: "vision", h: "vision.2026" },
   { id: "F13", c: 4, lv: 2, q: "2026년 주요 프로젝트에 HiDI-Q가 있다", a: "O", e: "2026년 주요 프로젝트로 소개된다.", g: "pj26", rv: 1, z: "vision", h: "vision.2026" },
-  { id: "F14", c: 4, lv: 2, q: "2027년 로드맵의 키워드는 혁신과 연결이다", a: "X", e: "2027년은 확산과 체화다. 혁신과 연결은 2028년이다.", g: "r27", rv: 1, z: "vision", h: "" },
+  { id: "F14", c: 4, lv: 2, q: "2027년 로드맵의 키워드는 혁신과 연결이다", a: "X", e: "2027년은 확산과 체화다. 혁신과 연결은 2028년이다.", g: "r27", rv: 1, z: "vision", h: "vision.2027" },
   { id: "F15", c: 4, lv: 2, q: "2027년에는 업무별 AI Agent를 구축한다", a: "O", e: "영업, 보상 등 각 업무에 전담 Agent를 만든다.", g: "r27", rv: 1, z: "vision", h: "vision.2027" },
   { id: "F16", c: 4, lv: 2, q: "의료심사 Agent는 2026년에 구축한다", a: "X", e: "의료심사 Agent는 2027년 주요 프로젝트 계획이다.", g: "agt", rv: 1, z: "vision", h: "vision.2027" },
-  { id: "F17", c: 4, lv: 2, q: "2028년 로드맵의 키워드는 공감과 참여다", a: "X", e: "2028년은 혁신과 연결이다. 공감과 참여는 2026년이다.", g: "r28", rv: 1, z: "vision", h: "" },
+  { id: "F17", c: 4, lv: 2, q: "2028년 로드맵의 키워드는 공감과 참여다", a: "X", e: "2028년은 혁신과 연결이다. 공감과 참여는 2026년이다.", g: "r28", rv: 1, z: "vision", h: "vision.2028" },
   { id: "F18", c: 4, lv: 3, q: "의료심사 Agent는 심사 정보 확인을 돕는다", a: "O", e: "진단서 등 의료 서류에서 심사 정보를 확인하게 돕는다.", g: "agt", rv: 1, z: "vision", h: "vision.2027" },
   { id: "F19", c: 4, lv: 3, q: "법률 Agent는 근거 없이 답변을 제공한다", a: "X", e: "판례와 법령을 찾아 근거와 함께 답변한다.", g: "agt", rv: 1, z: "vision", h: "vision.2027" },
   { id: "F20", c: 4, lv: 3, q: "1인 1 AI Agent는 IT 부서만 만든다", a: "X", e: "각자 자기 업무에 필요한 Agent를 스스로 만든다.", g: "r28", rv: 1, z: "vision", h: "vision.2028" },
@@ -11078,7 +11147,7 @@ var OX_BANK = [
   { id: "F56", c: 4, lv: 1, q: "결과물의 형태는 구체적으로 알려 주는 게 좋다", a: "O", e: "A4 1장, 존댓말처럼 형태를 구체적으로 알려 준다.", g: "tipf", rv: 1, z: "play", h: "play.hq.tips" },
   { id: "F57", c: 4, lv: 1, q: "Hi-Helper는 설계를 1분 안에 추천한다", a: "O", e: "계약 빅데이터를 바탕으로 1분 안에 추천한다.", g: "hh1", rv: 1, z: "play", h: "play.hh.helper" },
   { id: "F58", c: 4, lv: 1, q: "Hi-Helper는 설계 추천에 하루가 걸린다", a: "X", e: "1분 안에 추천하는 AI 프로그램이다.", g: "hh1", rv: 1, z: "play", h: "play.hh.helper" },
-  { id: "F59", c: 4, lv: 1, q: "AX PLAY에서 HiDI-Q를 써 볼 수 있다", a: "O", e: "AX PLAY에서 직접 써 보고 후기를 남긴다.", g: "pl", rv: 1, z: "play", h: "" },
+  { id: "F59", c: 4, lv: 1, q: "AX PLAY에서 HiDI-Q를 써 볼 수 있다", a: "O", e: "AX PLAY에서 직접 써 보고 후기를 남긴다.", g: "pl", rv: 1, z: "play", h: "play.hq.hidi" },
   { id: "F60", c: 4, lv: 2, q: "HiDI-Q는 번역하면 원본 양식이 사라진다", a: "X", e: "원본 양식 그대로 번역해 준다.", g: "hqt", rv: 1, z: "play", h: "play.hq.intro" },
   { id: "F61", c: 4, lv: 2, q: "HiDI-Q는 보고서 초안을 만들 수 없다", a: "X", e: "Word, Excel, PPT 기반 보고서 초안을 받는다.", g: "hqr", rv: 1, z: "play", h: "play.hq.intro" },
   { id: "F62", c: 4, lv: 2, q: "Hi-Helper로 태아보험은 설계할 수 없다", a: "X", e: "출산예정일만 넣으면 태아보험을 설계한다.", g: "hhf", rv: 1, z: "play", h: "play.hh.intro" },
@@ -11093,7 +11162,7 @@ var OX_BANK = [
   { id: "F71", c: 4, lv: 2, q: "태아보험 설계는 출산예정일만 넣으면 된다", a: "O", e: "임신 주수별 필수 담보를 담아 설계한다.", g: "hhf", rv: 1, z: "play", h: "play.hh.intro" },
   { id: "F72", c: 4, lv: 3, q: "Hi-Helper는 신상품도 바로 추천에 반영한다", a: "X", e: "신상품과 신담보는 반영까지 시간이 걸린다.", g: "hhn", rv: 1, z: "play", h: "play.hh.check" },
   { id: "F73", c: 4, lv: 3, q: "바로컨설팅 내역은 먼저 확인해 두는 게 좋다", a: "O", e: "고객이 원하는 상품이 추천에 반영됐는지 확인한다.", g: "hhb", rv: 1, z: "play", h: "play.hh.check" },
-  { id: "F74", c: 4, lv: 1, q: "AX LOUNGE는 업무 고민을 이야기하는 곳이다", a: "O", e: "바꾸고 싶은 업무와 반복되는 불편을 이야기한다.", g: "lg", rv: 1, z: "lounge", h: "" },
+  { id: "F74", c: 4, lv: 1, q: "AX LOUNGE는 업무 고민을 이야기하는 곳이다", a: "O", e: "바꾸고 싶은 업무와 반복되는 불편을 이야기한다.", g: "lg", rv: 1, z: "lounge", h: "lounge.intro" },
   { id: "F75", c: 4, lv: 1, q: "AX LOUNGE에서는 혼자 고민을 풀어야 한다", a: "X", e: "혼자 고민하던 업무를 함께 풀어 본다.", g: "lg", rv: 1, z: "lounge", h: "lounge.intro" },
   { id: "F76", c: 4, lv: 2, q: "LOUNGE에서 데이터사이언스파트와 상담한다", a: "O", e: "AI와 데이터를 활용할 방법을 함께 살펴본다.", g: "lg2", rv: 1, z: "lounge", h: "lounge.steps" },
   { id: "F77", c: 4, lv: 2, q: "AX LOUNGE 상담은 실행 방향을 구체화한다", a: "O", e: "상담 내용을 바탕으로 단계별 실행 방향을 정한다.", g: "lg3", rv: 1, z: "lounge", h: "lounge.steps" },
@@ -11135,7 +11204,7 @@ function olyScore(game, p, rule) {
     for (i = 0; i < R.tiers.length; i++) s += n("j" + i) * R.tiers[i][1];
     s += n("j" + R.tiers.length) * R.base + n("cl") * R.clean - n("wr") * R.wrong;
   } else if (game === "ox") {
-    s = oxTally(p && p.ql, R, oxGold(p && p.tk)).pts;
+    s = qzIsCard(p && p.ql) ? qzTally(p.ql).pts : oxTally(p && p.ql, R, oxGold(p && p.tk)).pts;   /* v4.96 판 퀴즈(정답 × 100) · 유리다리 */
   }
   return Math.max(0, Math.min(rule.cap, s));
 }
@@ -11209,7 +11278,7 @@ function olyKey(game, p) {
 function olyRuleLine(key) {
   var R = olyRule()[key], cap = olyFmt(olyCap());
   if (key === "pang") return R.goal + "칸 완주가 빠를수록 점수 · " + R.base + "초 = 1,000점 · 종목 최대 " + cap;
-  if (key === "jump") return "넘은 장애물 " + R.obs + " · 코인 " + R.coin + " · AI 상식 " + R.fact + " · 종목 최대 " + cap;
+  if (key === "jump") return "넘은 장애물 " + R.obs + " · 코인 " + R.coin + " · AX 상식 " + R.fact + " · 종목 최대 " + cap;
   if (key === "tetris") return "블록 " + R.block + "점(" + R.blockMax + "개까지) · 줄 " + R.line + "점 · 한 번에 여러 줄 보너스";   /* v4.28 「시간은 점수가 아니에요」 설명 문장은 결과 접힘의 참고 기록 표가 대신한다 */
   if (key === "word") return "빨리 맞힐수록 칸 점수가 커요 · 오답 −" + R.wrong + " · 오답 없는 라운드 +" + R.clean;
   if (key === "ox") return "정답 " + R.base[0] + "~" + R.base[2] + " · 빠르면 +" + R.speed + " · " + R.feverAt + "연속마다 피버 ×" + R.feverMul + " · 황금 발판 ×" + R.goldMul + " · 도착 +" + R.arrive + " · 오답·떨어짐 −" + R.pen;
@@ -11258,6 +11327,7 @@ function olySubmit(key, parts) {
     var why = r && r.reason;
     if (why === "ver") toast("앱이 새로 나왔어요 · 새로고침한 뒤 다시 해 주세요");
     else if (why === "mismatch") { toast("점수 규칙이 바뀌었어요 · 새로고침한 뒤 다시 해 주세요"); olyPull(true); }
+    else if (why === "range" && key === "ox" && qzIsCard(body.ql)) { qzPendAdd(body, score, gid); toast("기록을 아직 보내지 못했어요 · 잠시 뒤 다시 보내요"); }   /* v4.96 옛 서버(판 퀴즈를 모름) · 이 기기에 두었다가 다시 */
     else if (why === "range") toast("이번 판은 순위에 올리지 않았어요");
     else if (beBusy(r)) olyPendAdd(key, body, score, gid);   /* v4.64 서버 붐빔 · 다음 동기화 때 다시 */
     olyResMeFill(key);
@@ -11271,6 +11341,7 @@ var OLY_PEND_MAX = 3600000, OLY_PEND = { busy: false };
 function olyPend() { var a = S.get("oly_pend", []); return Array.isArray(a) ? a.filter(function (x) { return ownIs(x) && Date.now() - (x.t || 0) < OLY_PEND_MAX; }) : []; }
 function olyPendAdd(key, body, score, gid) { var a = olyPend(); if (a.length >= 20) a.shift(); a.push({ key: key, body: body, score: score, gid: gid || "", t: Date.now(), emp: ownEmp() }); S.set("oly_pend", a); }
 function olyPendFlush() {
+  qzPendFlush();   /* v4.96 판 퀴즈 판(옛 서버가 받지 않은 것) */
   var a = olyPend(), u = S.get("user", {}) || {};
   if (!a.length) { if ((S.get("oly_pend", []) || []).length) S.set("oly_pend", []); return; }
   if (OLY_PEND.busy || !BE.on || !u.empId || testEmp()) return;
@@ -11341,7 +11412,7 @@ function olyRowsFor(key, p) {
   } else if (key === "jump") {
     add("넘은 장애물", n("obs"), n("obs") + "개 × " + R.obs, n("obs") * R.obs);
     add("코인", n("coin"), n("coin") + "개 × " + R.coin, n("coin") * R.coin, "높은 코인은 2개");
-    add("AI 상식", n("fact"), n("fact") + "개 × " + R.fact, n("fact") * R.fact);
+    add("AX 상식", n("fact"), n("fact") + "개 × " + R.fact, n("fact") * R.fact);
   } else if (key === "tetris") {
     var b = Math.min(n("blk"), R.blockMax), ln = n("lines"), l1 = Math.min(ln, R.lineFull), l2 = Math.max(0, ln - R.lineFull);
     add("놓은 블록", b, b + "개 × " + R.block, b * R.block, R.blockMax + "개까지");
@@ -11431,6 +11502,363 @@ function olyHubHtml() {
     '<button type="button" class="ax-button ax-button-weak oly-rank-go" onclick="App.go(\'oly_rank\')">' + (nm === "미니 게임" ? "미니 게임 순위" : "AX 올림픽 순위판") + "</button>" +
     (testMode() ? '<button class="btn test" style="margin-top:8px" onclick="testGameReset(false)">테스트 · 게임 기록만 초기화</button>' +
       '<button class="btn test" style="margin-top:6px" onclick="testGameReset(true)">테스트 · 닉네임까지 초기화</button>' : "");
+}
+/* ═══ v4.96 AX 퀴즈 「판 퀴즈」 (261001 사용자 확정 · 「디자인 시안/AX 퀴즈/디자인 방향 검토.md」 권장안 · CLAUDE.md 스탬프 2번 하이브리드) ═══
+   1층 판 문법(공통 부품 K · 컨테이너 .axs-pan) · 시계 · 목숨 · 점수 화면 없음 · 답할 때마다 해설
+   힌트 = 1F 구역 › 줄 › 판 제목(번호 없음 · 감점 · 잠금 · 횟수 제한 없음 · 서버로 보내지 않는다)
+   한 판 = 10문항(쉬움 5 · 보통 4 · 어려움 1 · QZ_CARD = 서버 OX_CARD) · 그중 1문항 = 꼭 기억할 핵심 순서 맞추기(QZ_KEYQ = 서버 OX_KEYQ · 판마다 셋 중 하나 · 돌려 가며) · 나머지 O/X(OX_BANK)
+   이어 풀기 = 이 기기에 저장(qz_run · 사번에 묶음 · 다른 화면 · 앱을 닫아도 그대로) · 10문항을 모두 답하면 서버에 한 번 보낸다
+     ql = 「F06.O」 · 순서형 「K01.D123」(누른 조각 차례 · 1~9 바른 자리 · D 미끼) · 서버가 다시 채점 · 받은 판 = AX 퀴즈 완주(스탬프 2)
+   옛 서버(판 퀴즈를 모름 · range)면 이 기기에 두었다가 다음 동기화 때 다시 보낸다(qz_pend · 24시간)
+   유리다리 O/X(game_ox · gsStartHtml)는 QUIZ_CARD = false 한 줄로 되돌린다(코드 보존 · 휴면) */
+var QZ_CARD = { per: [5, 4, 1], key: 1, pt: 100 };
+/* 핵심 순서형 · 서버 OX_KEYQ 와 id · 난이도 · 짝 그룹 · 조각 수가 같다(검사 141절) · 조각 = order 는 pairs 의 오른쪽 · sentence 는 words · 미끼(pool)는 지금 없다(D 는 서버 형식에만 남긴다)
+   g = 같은 판에 내지 않는 O/X 짝 그룹(로드맵 키워드 · 목표 · 슬로건 문항이 정답을 미리 알려 주지 않게) */
+var QZ_KEYQ = [
+  { id: "K01", lv: 1, h: "vision.2026", g: ["r26", "r27", "r28"], kind: "order", q: "AX 로드맵 연도별 키워드를 순서대로 놓아 보세요",
+    pairs: [["2026", "공감과 참여"], ["2027", "확산과 체화"], ["2028", "혁신과 연결"]], pool: [], e: "AX 필요성을 체감하고, 현업 경험을 넓혀, 비즈니스 모델 혁신으로 잇는다." },
+  { id: "K02", lv: 1, h: "vision.metowe", g: ["slg"], kind: "sentence", q: "슬로건 「ME to WE :」 다음 문장을 순서대로 놓아 보세요", lead: "ME to WE :",
+    words: ["나의", "경험을", "우리의", "가능성으로"], pool: [], e: "나의 경험이 모여 우리의 큰 가능성이 된다." },
+  { id: "K03", lv: 2, h: "vision.2026", g: ["r26", "r27", "r28"], kind: "order", q: "AX 로드맵 연도별 대표 목표를 순서대로 놓아 보세요",
+    pairs: [["2026", "사내 LLM 도입"], ["2027", "업무 영역별 Agent"], ["2028", "1인 1 AI Agent"]], pool: [], e: "사내 LLM에서 시작해 업무별 Agent를 거쳐 1인 1 AI Agent로 간다." }
+];
+/* 서버가 판 퀴즈를 아는가 · ox_start 응답에 card 가 있으면 새 서버 · 없으면 옛 서버(false) → 유리다리 O/X 로 물러선다 · 받기 전(undefined)은 판 퀴즈
+   그래서 앱을 서버보다 먼저 올려도 된다(옛 서버에서는 예전 화면 그대로 · 판 퀴즈로 이미 다 푼 판은 qz_pend 로 기다렸다가 새 서버에 보낸다) */
+function qzLive() { return QUIZ_CARD && OXS.card !== false; }
+function qzKeyq(id) { return QZ_KEYQ.filter(function (k) { return k.id === id; })[0] || null; }
+function qzPieces(k) { return k.kind === "order" ? k.pairs.map(function (p) { return p[1]; }) : k.words; }
+/* 판 표기 · 힌트 코드(OX_BANK h · QZ_KEYQ h) → [줄, 판 제목] · 구역은 코드 앞 마디(FLOOR1 id) · 판 번호는 쓰지 않는다(현장에 인쇄되지 않음 · 사용자 261001)
+   정본 = 「기억력 문제 은행 v3.json」 hint_codes(검사 141절이 대조) · 판 제목은 현장 판에 인쇄된 영문 그대로 */
+var QZ_PANEL = {
+  "vision.cover": ["", "AX Festival 2026"], "vision.metowe": ["", "ME to WE :"], "vision.dbc": ["", "Data Business Company"],
+  "vision.2026": ["", "AX Roadmap 2026"], "vision.2027": ["", "2027"], "vision.2028": ["", "2028"],
+  "lab.dap": ["", "DAP"], "lab.history": ["", "History"], "lab.project": ["", "Project"], "lab.idea": ["", "아이디어 QR"],
+  "action.intro": ["", "AX in Action"], "action.sales": ["", "Sales AX"], "action.consult": ["", "AI컨설팅 도우미"], "action.claims": ["", "Claims AX"],
+  "lounge.intro": ["", "AX Lounge"], "lounge.steps": ["", "3단계"],
+  "play.hq.hidi": ["HiDI-Q", "HiDI"], "play.hq.intro": ["HiDI-Q", "Introduce"], "play.hq.tips": ["HiDI-Q", "Tips"], "play.hq.feedback": ["HiDI-Q", "Feedback"],
+  "play.hh.helper": ["Hi-Helper", "Hi-Helper"], "play.hh.intro": ["Hi-Helper", "Introduce"], "play.hh.tips": ["Hi-Helper", "Tips"], "play.hh.check": ["Hi-Helper", "Check Point."], "play.hh.feedback": ["Hi-Helper", "Feedback"],
+  "event.photo": ["", "AI 포토부스"], "event.roulette": ["", "룰렛 이벤트"], "event.typing": ["", "타자왕 게임"], "event.typingking": ["", "AX 타자왕"]
+};
+/* 구역 간판이 현장에 없는 구역 · 힌트에 옆 판 기준 한 줄(1층 부스 최종 정리 1장 · 판 14~18 · AX LAB 판 08~13 다음) */
+var QZ_NOSIGN = { action: "구역 간판이 없어요 · AX LAB 판 바로 다음, 「AX in Action」 제목 판부터예요" };
+var QZ_GEN = "AX 상식";   /* 판 근거가 없는 문항(A 13 · 힌트 없음)의 회색 칩 */
+var QZ = { tapBad: -1, tapAt: 0, sending: false };
+/* 문항 하나 · id → { id, lv, q, a(O/X 정답 · 순서형은 ''), e, h, z(구역 id), key(순서형 정의) } */
+function qzItem(id) {
+  var k = qzKeyq(id);
+  if (k) return { id: id, lv: k.lv, q: k.q, a: "", e: k.e, h: k.h, z: k.h.split(".")[0], key: k };
+  var b = OX_BANK.filter(function (x) { return x.id === id; })[0];
+  if (!b) return null;
+  return { id: id, lv: b.lv, q: b.q, a: b.a, e: b.e, h: b.h || "", z: b.z || (b.h ? b.h.split(".")[0] : ""), key: null };
+}
+function qzZone(z) { return z ? zoneById(z) : null; }
+/* 구역 칩 · 오렌지 면 + 짙은 글자(사용자 확정 261001 · K1 axs-sign .chip) · 판 근거가 없으면 회색 「AX 상식」 */
+function qzChip(it, big) {
+  var zz = qzZone(it.z);
+  if (!zz) return '<span class="qz-gen">' + QZ_GEN + "</span>";
+  return zoneSign(zz.sign, big ? "lg chip" : "chip");
+}
+/* 출처 한 줄 「AX PLAY › HiDI-Q › Introduce 판」 · 줄이 없는 구역은 두 마디 */
+function qzSrc(h) {
+  var p = QZ_PANEL[h], zz = h ? qzZone(h.split(".")[0]) : null;
+  if (!p || !zz) return "";
+  return [zz.sign].concat(p[0] ? [p[0]] : []).concat([p[1] + " 판"]).join(" › ");
+}
+function qzLinePan(h) { var p = QZ_PANEL[h]; return p ? (p[0] ? p[0] + " 줄 › " : "") + p[1] + " 판" : ""; }
+
+/* ── 이어 풀기 저장 · qz_run = { emp, t, q[10 ids], a[답 · O/X 또는 누른 순서], k(풀던 순서형 누른 차례), ks(순서형 타일 순서), see(해설을 연 문항 · -1) } ── */
+function qzRun() {
+  var r = S.get("qz_run", null);
+  return r && ownIs(r) && Array.isArray(r.q) && r.q.length === qzN() && Array.isArray(r.a) ? r : null;
+}
+function qzN() { return QZ_CARD.per[0] + QZ_CARD.per[1] + QZ_CARD.per[2]; }
+function qzAnswered(r) { var n = 0; for (var i = 0; i < r.q.length; i++) if (r.a[i] != null) n++; return n; }
+function qzCur(r) { for (var i = 0; i < r.q.length; i++) if (r.a[i] == null) return i; return -1; }
+function qzSave(r) { S.set("qz_run", r); }
+/* 한 판 뽑기 · 순서형 한 문항(QZ_KEYQ 에서 돌려 가며 · 끈 것 빼고) · O/X 는 난이도마다 per(순서형 자리만큼 하나 덜) · 짝 그룹 하나 · 최근 본 문항 뒤로 · O·X 각 60%까지(유리다리 oxPick 과 같은 규칙)
+   위 난이도 문항이 모자라면(끈 문항이 많을 때) 아래 난이도로 채운다(서버 per 판정이 허락하는 방향) · 순서형은 자기 난이도 칸 안 아무 자리 */
+function qzPick() {
+  var P = QZ_CARD.per, off = oxOffList(), seen = S.get("ox_seen", []) || [], used = {}, grp = {};
+  var kseen = S.get("qz_kseen", []) || [], keys = QZ_KEYQ.filter(function (k) { return off.indexOf(k.id) < 0; });
+  var key = null;
+  if (QZ_CARD.key > 0 && keys.length) {
+    var fresh = keys.filter(function (k) { return kseen.indexOf(k.id) < 0; });
+    key = shuf((fresh.length ? fresh : keys).slice())[0];
+    S.set("qz_kseen", (fresh.length ? kseen : []).concat([key.id]));
+    key.g.forEach(function (g) { grp[g] = 1; });
+  }
+  var free = function (x) { return off.indexOf(x.id) < 0 && !used[x.id] && !(x.g && grp[x.g]); };
+  var out = [[], [], []], carry = 0;
+  [3, 2, 1].forEach(function (lv) {
+    var d = lv - 1, need = P[d] - (key && key.lv === lv ? 1 : 0) + carry, cand = shuf(OX_BANK.filter(function (x) { return x.lv === lv && free(x); }));
+    var fr = cand.filter(function (x) { return seen.indexOf(x.id) < 0; });
+    if (fr.length < need) seen = seen.filter(function (id) { return !OX_KEY[id] || OX_KEY[id][0] !== lv; });
+    var order = fr.length < need ? cand : fr.concat(cand.filter(function (x) { return fr.indexOf(x) < 0; }));
+    var cap = Math.ceil(need * 0.6), cnt = { O: 0, X: 0 };
+    [true, false].forEach(function (bal) {
+      order.forEach(function (x) {
+        if (out[d].length >= need || !free(x) || (bal && cnt[x.a] >= cap)) return;
+        out[d].push(x.id); used[x.id] = 1; if (x.g) grp[x.g] = 1; cnt[x.a]++;
+      });
+    });
+    carry = need - out[d].length;   /* 모자라면 아래 난이도가 채운다 */
+  });
+  if (key) { var d0 = key.lv - 1; out[d0].splice(Math.floor(Math.random() * (out[d0].length + 1)), 0, key.id); }
+  var list = out[0].concat(out[1], out[2]);
+  S.set("ox_seen", seen.concat(list.filter(function (id) { return id.charAt(0) !== "K"; })).slice(-OX_SEEN_MAX));
+  return list;
+}
+function qzNew() {
+  var q = qzPick();
+  if (q.length !== qzN()) { toast("문제를 준비하지 못했어요 · 잠시 뒤 다시 해 주세요"); return null; }
+  var r = { emp: ownEmp(), t: Date.now(), q: q, a: q.map(function () { return null; }), k: "", ks: [], see: -1 };
+  qzSave(r);
+  S.set("qz_last", null);
+  return r;
+}
+function qzStart(fresh) {
+  if (fresh || !qzRun()) { if (!qzNew()) return; }
+  QZ.tapBad = -1;
+  oxPrefetch();   /* 모두의 선택 비율 · 끈 문항(판을 시작하기 전에 받아 두면 좋지만 기다리지 않는다) */
+  App.go("quiz_play");
+}
+
+/* ── 채점 · 서버 판 퀴즈 채점과 글자 그대로 같은 규칙(검사 141절이 무작위 판으로 대조) ── */
+function qzIsCard(ql) {
+  var s = String(ql == null ? "" : ql);
+  return !!s && s.split(",").every(function (x) { return /^[ASRF]\d{2}\.[OX]$/.test(x) || /^K\d{2}\.[1-9D]{1,24}$/.test(x); });
+}
+function qzTapMiss(seq, n) {
+  var want = 1, miss = 0;
+  for (var i = 0; i < seq.length; i++) {
+    if (want > n) return -1;
+    var c = seq.charAt(i);
+    if (c === String(want)) want++;
+    else { if (c !== "D" && Number(c) > n) return -1; miss++; }
+  }
+  return want > n ? miss : -1;
+}
+function qzTally(ql) {
+  var T = { ok: true, card: 1, items: [], n: 0, c1: 0, c2: 0, c3: 0, wr: 0, kq: 0, pts: 0, why: "" }, P = QZ_CARD.per, N = P[0] + P[1] + P[2];
+  var bad = function (w) { T.ok = false; T.pts = 0; T.why = w; return T; };
+  if (!qzIsCard(ql)) return bad("form");
+  var list = String(ql).split(","), seen = {}, grp = {}, cnt = [0, 0, 0, 0], prev = 1;
+  for (var i = 0; i < list.length; i++) {
+    var a = list[i].split("."), id = a[0], ans = a[1], it;
+    if (id.charAt(0) === "K") {
+      var q = qzKeyq(id);
+      if (!q) return bad("id");
+      var miss = qzTapMiss(ans, qzPieces(q).length);
+      if (miss < 0) return bad("tap");
+      it = { id: id, lv: q.lv, g: q.g, a: "", ans: ans, key: 1, miss: miss, right: miss === 0 };
+      T.kq++;
+    } else {
+      var k = oxKey(id);
+      if (!k) return bad("id");
+      it = { id: id, lv: k[0], g: k[2] ? [k[2]] : [], a: k[1], ans: ans, key: 0, right: ans === k[1] };
+    }
+    if (seen[id]) return bad("dup");
+    seen[id] = 1;
+    for (var j = 0; j < it.g.length; j++) { if (grp[it.g[j]]) return bad("grp"); grp[it.g[j]] = 1; }
+    if (it.lv < prev) return bad("lv");
+    prev = it.lv; cnt[it.lv]++; T.n++;
+    if (it.right) { T["c" + it.lv]++; T.pts += QZ_CARD.pt; } else T.wr++;
+    T.items.push(it);
+  }
+  if (T.n !== N) return bad("n");
+  if (cnt[1] > P[0] || cnt[1] + cnt[2] > P[0] + P[1]) return bad("per");
+  if (T.kq > QZ_CARD.key) return bad("key");
+  return T;
+}
+function qzQl(r) { return r.q.map(function (id, i) { return id + "." + r.a[i]; }).join(","); }
+function qzParts(ql) { var X = qzTally(ql); return { n: X.n, c1: X.c1, c2: X.c2, c3: X.c3, wr: X.wr, ql: ql }; }
+function qzRight(r) { var n = 0; r.q.forEach(function (id, i) { if (r.a[i] != null && qzIsRight(id, r.a[i])) n++; }); return n; }
+function qzIsRight(id, a) { var it = qzItem(id); if (!it) return false; return it.key ? qzTapMiss(String(a), qzPieces(it.key).length) === 0 : a === it.a; }
+/* 내 최고 · 서버 판 퀴즈 기록(ev.ox card · right)과 이 기기 qz_best 중 큰 쪽 · 유리다리 옛 기록은 세지 않는다 */
+function qzBest() {
+  var sv = OLY.board && OLY.board.me && OLY.board.me.ev && OLY.board.me.ev.ox, s = sv && sv.card ? Number(sv.right) || 0 : -1;
+  var l = S.get("qz_best", null);
+  l = l == null ? -1 : Number(l);
+  return Math.max(s, l);
+}
+function qzDoneEver() { var sv = OLY.board && OLY.board.me && OLY.board.me.ev && OLY.board.me.ev.ox; return (sv && sv.card) || S.get("qz_best", null) != null; }
+
+/* ── 답하기 ── */
+function qzAns(v) {
+  var r = qzRun(); if (!r) return App.go("quiz");
+  var i = qzCur(r);
+  if (i < 0 || r.see >= 0 || qzKeyq(r.q[i])) return;
+  r.a[i] = v === "O" ? "O" : "X"; r.see = i;
+  qzSave(r); sfx("tok");
+  App.render(); qzFocusFb();
+}
+/* 순서형 타일 · p = 조각 번호(1부터) 또는 0(미끼) · 바른 다음 조각이면 칸이 찬다 · 아니면 그 타일이 짧게 흔들리고 「순서가 달라요」 */
+function qzTap(p) {
+  var r = qzRun(); if (!r) return App.go("quiz");
+  var i = qzCur(r), k = i >= 0 ? qzKeyq(r.q[i]) : null;
+  if (!k || r.see >= 0) return;
+  var n = qzPieces(k).length, want = qzFilled(r.k) + 1, c = p > 0 ? String(p) : "D";
+  if (r.k.length >= 24) return;
+  r.k += c;
+  if (p === want) { QZ.tapBad = -1; sfx("tok"); }
+  else { QZ.tapBad = p; QZ.tapAt = Date.now(); sfx("ttuk"); }
+  if (qzFilled(r.k) >= n) { r.a[i] = r.k; r.k = ""; r.ks = []; r.see = i; QZ.tapBad = -1; }
+  qzSave(r); App.render();
+  if (r.see >= 0) qzFocusFb();
+}
+function qzFilled(seq) { var w = 1; for (var i = 0; i < seq.length; i++) if (seq.charAt(i) === String(w)) w++; return w - 1; }
+function qzNext() {
+  var r = qzRun(); if (!r) return App.go("quiz");
+  r.see = -1; qzSave(r);
+  if (qzCur(r) < 0) return qzFinish(r);
+  App.render();
+  var m = el("main"); if (m) m.scrollTop = 0;
+  window.scrollTo(0, 0);
+}
+function qzFocusFb() { setTimeout(function () { var f = el("qzFb"); if (f && f.scrollIntoView) f.scrollIntoView({ block: "nearest", behavior: qzRm() ? "auto" : "smooth" }); }, 30); }
+function qzRm() { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); }
+
+/* ── 다 풀면 · 서버에 한 번(olySubmit · 판 번호 gid · 붐비면 oly_pend) · 결과 화면은 qz_last 로 그린다 ── */
+function qzFinish(r) {
+  if (!qzClose(r)) { toast("이번 판을 채점하지 못했어요 · 새 판으로 다시 해 주세요"); return App.go("quiz"); }
+  App.render();
+  window.scrollTo(0, 0);
+}
+/* 판 닫기(화면을 다시 그리지 않는다 · 그리는 중에도 부를 수 있다) · 내 최고 · qz_last · 이어 풀기 지움 · 서버 제출 */
+function qzClose(r) {
+  var ql = qzQl(r), X = qzTally(ql);
+  S.set("qz_run", null);   /* 먼저 지운다 · 저장이 다시 그리기를 불러도 같은 판을 두 번 닫지 않는다 */
+  if (!X.ok) return false;
+  var right = X.c1 + X.c2 + X.c3, prev = S.get("qz_best", null);
+  if (prev == null || right > Number(prev)) S.set("qz_best", right);
+  S.set("qz_last", { emp: ownEmp(), t: Date.now(), ql: ql, right: right, best: Math.max(right, prev == null ? -1 : Number(prev), qzBest()) });
+  olySubmit("ox", qzParts(ql));
+  return true;
+}
+function qzLast() { var x = S.get("qz_last", null); return x && ownIs(x) && qzIsCard(x.ql) ? x : null; }
+
+/* ── 화면 ── */
+var QZ_O_SVG = '<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="10" fill="none" stroke="currentColor" stroke-width="4"/></svg>';
+var QZ_X_SVG = '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 8l16 16M24 8L8 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>';
+function qzProgHtml(r, i) {
+  var n = qzN(), a = qzAnswered(r);
+  return '<div class="qz-prog"><p><b>' + (i + 1) + " / " + n + '</b></p><div class="qz-seg" aria-hidden="true">' +
+    r.q.map(function (id, k) { return "<i" + (r.a[k] != null ? ' class="on"' : k === i ? ' class="cur"' : "") + "></i>"; }).join("") + "</div>" +
+    '<span class="ax-sr-only">' + a + "문제 답함</span></div>";
+}
+function quizPlayHtml() {
+  var last = qzLast(), r = qzRun();
+  if (!r && last) return qzResultHtml(last);
+  if (!r) return qzHubHtml();
+  var i = r.see >= 0 ? r.see : qzCur(r);
+  if (i < 0) { setTimeout(function () { var r2 = qzRun(); if (r2 && qzCur(r2) < 0) qzFinish(r2); }, 0); return '<div class="ax-stack axs-pan qz">' + botHtml("채점하는 중이에요", { wait: 1 }) + "</div>"; }   /* 그리는 중에는 저장 · 제출하지 않는다(다시 그리기가 겹친다) */
+  var it = qzItem(r.q[i]), see = r.see === i;
+  if (!it) { S.set("qz_run", null); return qzHubHtml(); }
+  var body = it.key ? qzKeyHtml(r, it, see) : qzOxHtml(r, it, see);
+  var hint = it.h && QZ_PANEL[it.h] ? '<button type="button" class="qz-hint" id="qzHintBtn" onclick="qzHint(\'' + it.id + '\')">힌트 · 1층에서 찾기' + CHEV_SVG + "</button>" : "";
+  var last1 = qzCur(r) < 0 || (see && qzAnswered(r) === qzN());
+  return '<div class="ax-stack axs-pan qz">' + qzProgHtml(r, i) +
+    '<section class="qz-card" aria-labelledby="qzStm"><div class="qz-top">' + qzChip(it) + '<span class="axs-pill">Q' + (i + 1) + "</span></div>" +
+    body + (see ? "" : hint) + (see ? qzFbHtml(it, r.a[i]) : "") + "</section>" +
+    (see ? '<button type="button" class="ax-button" onclick="qzNext()">' + (last1 ? "결과 보기" : "다음 문제") + "</button>" : "") + "</div>";
+}
+function qzOxHtml(r, it, see) {
+  var a = r.a[r.q.indexOf(it.id)];
+  var btn = function (v, lbl, svg) {
+    var cls = "qz-ab", dis = see ? " disabled" : "";
+    if (see) cls += v === it.a ? " ok" : v === a ? " no" : " dim";
+    return '<button type="button" class="' + cls + '" onclick="qzAns(\'' + v + '\')"' + dis + ' aria-label="' + lbl + (see && v === a ? " · 고른 답" : "") + '">' + svg + "<span>" + lbl + "</span></button>";
+  };
+  return '<div class="axs-bar qz-stm" id="qzStm"><b>' + esc(it.q) + "</b></div>" +
+    '<div class="qz-ans" role="group" aria-label="답">' + btn("O", "맞아요", QZ_O_SVG) + btn("X", "아니에요", QZ_X_SVG) + "</div>";
+}
+/* 순서형 · order = 연도 칸(검정 알약 라벨) · sentence = 앞 글(ME to WE :) + 빈 칸 · 타일 순서는 판에 한 번 섞어 저장(ks) */
+function qzKeyHtml(r, it, see) {
+  var k = it.key, pcs = qzPieces(k), n = pcs.length, seq = see ? r.a[r.q.indexOf(it.id)] : r.k, filled = see ? n : qzFilled(seq);
+  if (!see && (!Array.isArray(r.ks) || r.ks.length !== n + k.pool.length)) {
+    var ks = []; for (var j = 1; j <= n; j++) ks.push(j); k.pool.forEach(function () { ks.push(0); });
+    do { shuf(ks); } while (n > 1 && ks.join() === ks.slice().sort().join());   /* 처음부터 정답 순서로 놓이지 않게 */
+    r.ks = ks; qzSave(r);
+  }
+  var slot = function (j) {
+    var on = j < filled, lab = k.kind === "order" ? '<span class="axs-pill">' + esc(k.pairs[j][0]) + "</span>" : "";
+    return '<div class="qz-sl' + (on ? " f" : j === filled && !see ? " c" : "") + '">' + lab + "<span>" + (on ? esc(pcs[j]) : "") + "</span></div>";
+  };
+  var slots = '<div class="qz-slots' + (k.kind === "order" ? " ord" : "") + '">' + (k.lead ? '<span class="qz-lead">' + esc(k.lead) + "</span>" : "") + pcs.map(function (p, j) { return slot(j); }).join("") + "</div>";
+  var tiles = see ? "" : '<div class="qz-tiles" role="group" aria-label="조각">' + r.ks.map(function (p, t) {
+    var used = p > 0 && p <= filled, txt = p > 0 ? pcs[p - 1] : k.pool[t - n] || "", bad = QZ.tapBad === p && Date.now() - QZ.tapAt < 1500;
+    return '<button type="button" class="qz-tl' + (used ? " u" : "") + (bad ? " w" : "") + '" onclick="qzTap(' + p + ')"' + (used ? " disabled" : "") + ">" + esc(txt) + "</button>";
+  }).join("") + "</div>" + (QZ.tapBad >= 0 && Date.now() - QZ.tapAt < 1500 ? '<p class="qz-miss" role="status">순서가 달라요</p>' : '<p class="ax-meta">눌러서 순서대로 놓기</p>');
+  return '<div class="axs-bar qz-stm" id="qzStm"><b>' + esc(it.q) + "</b></div>" + slots + tiles;
+}
+/* 해설 · 얇은 ink 줄(K4) · 정답 / 오답 칩 · 「정답 O」 · 주황 점 해설(K5) · 출처(구역 › 줄 › 판) · 모두의 선택(20명 이상일 때) */
+function qzFbHtml(it, a) {
+  var ok = qzIsRight(it.id, a), src = qzSrc(it.h), ratio = it.key ? "" : oxRatioText(it.id);
+  var ans = it.key ? (it.key.kind === "order" ? it.key.pairs.map(function (p) { return p[0] + " " + p[1]; }).join(" → ") : (it.key.lead ? it.key.lead + " " : "") + it.key.words.join(" ")) : "정답 " + it.a;
+  var miss = it.key && !ok ? qzTapMiss(String(a), qzPieces(it.key).length) : 0;
+  return '<div class="qz-fb" id="qzFb" tabindex="-1"><hr class="axs-rule"><p class="qz-fh"><span class="axs-chip ' + (ok ? "ok" : "bad") + '">' + (ok ? "정답" : "오답") + "</span><b>" + esc(ans) + "</b></p>" +
+    (miss ? '<p class="ax-meta">' + miss + "번 다시 놓았어요</p>" : "") +
+    '<div class="axs-todo"><p>' + esc(it.e) + "</p></div>" +
+    (src ? '<p class="qz-src">' + esc(src) + "</p>" : "") + (ratio ? '<p class="ax-meta">' + esc(ratio) + "</p>" : "") + "</div>";
+}
+/* 결과 · 완주 · 정답 n / 10 · 내 최고 · 틀린 문제 전부(문장 · 정답 · 해설 · 「판에서 확인」 = 그 구역 상세) · 주 버튼 스탬프 보기 · 한 판 더 */
+function qzResultHtml(x) {
+  var X = qzTally(x.ql), N = qzN(), right = X.ok ? X.c1 + X.c2 + X.c3 : x.right || 0, best = Math.max(right, qzBest());
+  var wrong = X.ok ? X.items.filter(function (t) { return !t.right; }) : [];
+  var got = S.get("stamps", []).indexOf("qz") >= 0;
+  var rows = wrong.map(function (t) {
+    var it = qzItem(t.id); if (!it) return "";
+    var ans = it.key ? (it.key.kind === "order" ? it.key.pairs.map(function (p) { return p[0] + " " + p[1]; }).join(" → ") : (it.key.lead ? it.key.lead + " " : "") + it.key.words.join(" ")) : "정답 " + it.a;
+    var lp = it.h && QZ_PANEL[it.h] && it.z ? '<button type="button" class="qz-hint" onclick="zoneOpen(\'' + it.z + '\')">' + esc(qzLinePan(it.h)) + "에서 확인" + CHEV_SVG + "</button>" : "";
+    return '<section class="qz-card qz-wr"><div class="qz-top">' + qzChip(it) + '<span class="axs-chip bad">오답</span></div><p class="qz-wq">' + esc(it.q) + "</p>" +
+      '<p class="qz-we"><b>' + esc(ans) + "</b> · " + esc(it.e) + "</p>" + lp + "</section>";
+  }).join("");
+  return '<div class="ax-stack axs-pan qz">' +
+    '<section class="qz-card qz-res">' + (stampV2() ? '<span class="qz-smkr">' + stampMkHtml("qz", got ? "AX 퀴즈 스탬프" : "AX 퀴즈") + "</span>" : "") +
+    '<h2 class="ax-type-t2">AX 퀴즈 완주</h2><p class="qz-big"><b>' + right + "</b><span> / " + N + " 정답</span></p>" +
+    '<p class="ax-meta">내 최고 ' + Math.max(best, right) + " / " + N + "</p></section>" +
+    (wrong.length ? '<p class="axs-dot">틀린 문제 ' + wrong.length + "</p>" + rows : '<p class="axs-dot">모두 맞혔어요</p>') +
+    '<div class="ax-stack-tight"><button type="button" class="ax-button" onclick="App.tab(\'exp\')">스탬프 보기</button>' +
+    '<button type="button" class="ax-button ax-button-weak" onclick="qzStart(true)">한 판 더</button></div></div>';
+}
+/* 목록(quiz) · 한 행 · 상태 칩(시작 전 · 이어 풀기 n / 10 · 완주 · 내 최고 n / 10) · 진행 막대 · 주 버튼 하나 */
+function qzHubHtml() {
+  olyPull(); oxPrefetch();
+  var r = qzRun(), N = qzN(), a = r ? qzAnswered(r) : 0, best = qzBest(), done = qzDoneEver();
+  var chip = r ? '<span class="axs-chip">이어 풀기 ' + a + " / " + N + "</span>" : done ? '<span class="axs-chip ok">완주 · 내 최고 ' + Math.max(0, best) + " / " + N + "</span>" : '<span class="axs-chip off">시작 전</span>';
+  var seg = r ? '<div class="qz-seg" aria-hidden="true">' + r.q.map(function (id, k) { return "<i" + (r.a[k] != null ? ' class="on"' : "") + "></i>"; }).join("") + "</div>" : "";
+  return '<div class="ax-stack axs-pan qz">' +
+    '<section class="qz-card qz-hub"><div class="qz-top"><div class="ax-stack-tight"><h2 class="ax-section-title">AX 퀴즈</h2><p class="ax-meta">1층 부스 내용 10문제 · 모두 답하면 완주</p></div>' +
+    (stampV2() ? '<span class="qz-smkr">' + stampMkHtml("qz", "AX 퀴즈") + "</span>" : "") + "</div>" + '<p class="qz-stl">' + chip + "</p>" + seg +
+    '<button type="button" class="ax-button" onclick="qzStart(' + (r ? "false" : "true") + ')">' + (r ? "이어 풀기" : done ? "한 판 더" : "AX 퀴즈 시작") + "</button></section>" +
+    '<p class="ax-meta">순위 없음 · 시간 제한 없음 · 힌트는 1층 판에</p></div>';
+}
+/* 힌트 시트 · 구역 간판(크게) · 줄 › 판 · 6구역 칩(그 구역 강조) · 이 구역에서 받는 스탬프 · 「이 구역 보기」(구역 상세) · 「문제로 돌아가기」 */
+function qzHint(id) {
+  var it = qzItem(id); if (!it || !QZ_PANEL[it.h]) return;
+  var zz = qzZone(it.z), st = zz && zz.st ? STAMPS.filter(function (s) { return s.id === zz.st; })[0] : null;
+  var map = '<div class="qz-map" role="list" aria-label="1F 부스 6구역">' + FLOOR1.map(function (z) { return '<span role="listitem" class="' + (z.id === it.z ? "on" : "") + '"' + (z.id === it.z ? ' aria-current="true"' : "") + ">" + esc(z.sign) + "</span>"; }).join("") + "</div>";
+  var body = '<div class="axs-pan qz qz-hs">' + (zz ? zoneSign(zz.sign, "lg chip") : "") + '<p class="qz-lp">' + esc(qzLinePan(it.h)) + "</p>" +
+    (QZ_NOSIGN[it.z] ? '<p class="ax-meta">' + esc(QZ_NOSIGN[it.z]) + "</p>" : "") +
+    '<p class="axs-dot">1F 부스 6구역</p>' + map +
+    (st ? '<p class="qz-zin"><b>이 구역에서</b><span>' + esc(zz.stl || st.title) + " 스탬프</span></p>" : "") +
+    '<p class="ax-meta">풀던 문제는 저장돼요</p></div>';
+  sheetOpen({ id: "qzhint", title: "힌트", body: body, keep: "문제로 돌아가기", keepWeak: true, go: "sheetClose(true); zoneOpen('" + it.z + "')", goLbl: "이 구역 보기", back: "qzHintBtn" });
+}
+/* 옛 서버(판 퀴즈 형식을 모름 · range)에 보낸 판 · 이 기기에 두었다가(24시간) 동기화 때 10분에 한 번 다시 보낸다 */
+var QZ_PEND_MAX = 86400000, QZ_PEND_GAP = 600000;
+function qzPendAdd(body, score, gid) { S.set("qz_pend", { emp: ownEmp(), body: body, score: score, gid: gid || "", t: Date.now(), at: Date.now() }); }
+function qzPendFlush() {
+  var x = S.get("qz_pend", null), u = S.get("user", {}) || {};
+  if (!x) return;
+  if (!ownIs(x) || Date.now() - (x.t || 0) > QZ_PEND_MAX) { S.set("qz_pend", null); return; }
+  if (Date.now() - (x.at || 0) < QZ_PEND_GAP || !BE.on || !u.empId || testEmp()) return;
+  x.at = Date.now(); S.set("qz_pend", x);
+  beCall({ action: "game_submit", emp: u.empId, name: u.name || "", game: "ox", v: "g5", parts: JSON.stringify(x.body), score: x.score, gid: x.gid || "" }, function (r) {
+    if (!r || beBusy(r) || r.reason === "range") return;
+    S.set("qz_pend", null);
+    if (r.ok) { if (OLY.board) OLY.board.me = r.me; else OLY.board = { me: r.me }; qzStampCheck(r.qz || null); }
+  }, function () {});
 }
 /* v4.83 (261001 사용자 수정) AX 퀴즈 · 게임 허브 밖의 별도 활동(1층 부스 내용을 배우는 퀴즈) · O/X · 기억력 두 행 · 순위판 · 총점 없음 · 내 최고와 완주만
    스탬프 2(qz) 는 두 종목 모두 한 판 · 옛 서버(stv 없음)에는 qz 스탬프가 없어 도장 줄을 그리지 않는다 */
@@ -13299,7 +13727,7 @@ function jpStart() {
   tx.id = "jpTx";
   tx.innerHTML = '<span class="jt-l">ME to WE</span><span class="jt-s" id="jtScore">0</span><span class="jt-sv" id="jtSurv"></span>' +
     '<p class="jt-fact" id="jtFact" hidden></p>' +
-    '<div class="gs-qsay jt-say" id="jtSay" aria-live="polite" hidden><p class="gs-qsay-tag">AI 상식</p><p class="gs-qsay-t" id="jtSayT"></p></div>' +   /* v4.28 맞힌 AI 상식 문장 · 위쪽 고정 자리(O/X 문제 말풍선과 같은 조각) */
+    '<div class="gs-qsay jt-say" id="jtSay" aria-live="polite" hidden><p class="gs-qsay-tag">AX 상식</p><p class="gs-qsay-t" id="jtSayT"></p></div>' +   /* v4.28 맞힌 AI 상식 문장 · 위쪽 고정 자리(O/X 문제 말풍선과 같은 조각) */
     '<div class="jt-ban" id="jtBan" hidden></div>' +
     '<div class="jt-hint" id="jtHint" hidden></div>';
   mid.appendChild(tx);
@@ -13616,7 +14044,7 @@ function jpEndFinal(why) {
   if (sc > prev) setTimeout(function () { sfx("best"); }, 250);
   var facts = JP.facts.slice();
   /* v4.00 AI 상식 획득 목록 · v4.02 1개 = 점수 +100 */
-  var fh = '<section class="ax-card ax-stack-tight jp-facts"><h2 class="ax-card-title">AI 상식 ' + facts.length + "개 획득</h2>" +   /* v4.28 「1개 = 점수 +100」은 결과 접힘(점수 구성 · 점수 규칙)으로 */
+  var fh = '<section class="ax-card ax-stack-tight jp-facts"><h2 class="ax-card-title">AX 상식 ' + facts.length + "개 획득</h2>" +   /* v4.28 「1개 = 점수 +100」은 결과 접힘(점수 구성 · 점수 규칙)으로 */
     (facts.length ? '<ul class="gs-list">' + facts.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>"
       : '<p class="ax-description">공중의 글자 블록을 2단 점프로 들이받으면 모을 수 있어요</p>') + "</section>";
   root.innerHTML = gsResultHtml("jump", { why: why === "full" ? "done" : "over", label: why === "full" ? "만점" : "결과", title: why === "full" ? "만점" : why === "time" ? "TIME UP" : "GAME OVER", reason: "",
@@ -13650,7 +14078,7 @@ function jpFactTick(t, dx) {
   var b = jpBody(), top = JP_GY - JP_FACT.lo - JP_FACT.h;
   if (jpOverlap(b, { x: f.x, y: top, w: JP_FACT.w, h: JP_FACT.h })) {
     f.got = true; JP.facts.push(f.text); JP.say = { text: f.text, t: JP_SAY_SEC };
-    JP.pops.push({ x: JP_PX + 16, y: top - 6, text: "+" + olyRule().jump.fact + " AI 상식", t: 1.0, c: RAIN_PAL.o100 });
+    JP.pops.push({ x: JP_PX + 16, y: top - 6, text: "+" + olyRule().jump.fact + " AX 상식", t: 1.0, c: RAIN_PAL.o100 });
     for (var i = 0; i < 44; i++) {   /* 글자가 흩어지는 도트 · 블록 전체에서 사방으로 */
       var px = f.x + 6 + Math.random() * (JP_FACT.w - 12), py = top + 4 + Math.random() * (JP_FACT.h - 8), a = Math.random() * Math.PI * 2, v = 25 + Math.random() * 55;
       JP.parts.push({ x: px, y: py, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 25, t: 0.45 + Math.random() * 0.4, c: [RAIN_PAL.ink, RAIN_PAL.o100, RAIN_PAL.o60, "#5E5750"][i % 4] });
@@ -14022,14 +14450,14 @@ function oxOffList() { var r = OLY.board && OLY.board.rule && OLY.board.rule.ox;
 /* 판 토큰 · 모두의 선택 비율 · 끈 문항 · 시작 화면에서 미리 · 판을 시작하면 쓰고 다음 판 것을 곧바로 받는다 */
 function oxPrefetch(force) {
   if (testMode()) {
-    if (force || !OXS.tk) { var R = olyRule().ox; OXS.tk = Date.now().toString(36) + "." + (R.per[0] + Math.floor(Math.random() * R.per[1])) + "." + (R.per[0] + R.per[1] + Math.floor(Math.random() * R.per[2])) + ".local"; OXS.at = Date.now(); OXS.ratio = oxFakeRatio(); }
+    if (force || !OXS.tk) { var R = olyRule().ox; OXS.tk = Date.now().toString(36) + "." + (R.per[0] + Math.floor(Math.random() * R.per[1])) + "." + (R.per[0] + R.per[1] + Math.floor(Math.random() * R.per[2])) + ".local"; OXS.at = Date.now(); OXS.ratio = oxFakeRatio(); OXS.card = QZ_CARD; }
     return;
   }
   if (!BE.on || OXS.busy || (!force && OXS.tk && Date.now() - OXS.at < 3600000)) return;
   OXS.busy = true;
   beCall({ action: "ox_start" }, function (r) {
     OXS.busy = false;
-    if (r && r.ok) { OXS.tk = r.tk || ""; OXS.at = Date.now(); OXS.ratio = r.ratio || {}; OXS.min = r.min || 20; OXS.off = r.off || []; }
+    if (r && r.ok) { var cw = OXS.card; OXS.tk = r.tk || ""; OXS.at = Date.now(); OXS.ratio = r.ratio || {}; OXS.min = r.min || 20; OXS.off = r.off || []; OXS.card = r.card || false; if (cw !== OXS.card && (App.current === "quiz" || App.current === "quiz_play")) App.render(); }   /* v4.96 card = 판 퀴즈를 아는 서버 */
   }, function () { OXS.busy = false; });
 }
 /* 테스트 화면 · 가짜 비율(모든 문항 20명 이상) */
