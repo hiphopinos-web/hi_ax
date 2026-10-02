@@ -128,6 +128,8 @@
   #lgx .lgx-rt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   #lgx .lgx-rt b { font: var(--ax-type-t4); color: var(--ax-color-ink); }
   #lgx .lgx-st { font: var(--ax-type-t7); color: var(--ax-color-muted); }
+  #lgx .lgx-st .lgx-n { color: var(--ax-color-body); font-weight: 600; }   /* v5.03 (사용자 261002 「3개면 룰렛 1회가 너무 붙었다」) 개수 줄 · 보상 안내 줄을 두 줄로 나눈다 */
+  #lgx .lgx-st .lgx-rw { display: block; margin-top: 2px; }
   #lgx .lgx-next:empty { display: none; }
   #lgx .lgx-home:not(.lgx-go) { align-self: center; min-height: 48px; padding: 0 var(--ax-space-16); border: 0; background: transparent; cursor: pointer; }
   /* v4.89 도장 직후 질문 · 고르기 전에는 다음 카드와 「홈으로」를 접는다(주황 주 버튼 하나) */
@@ -16294,7 +16296,7 @@ function lgxStamp(cur) {
   var d = cur.d, seal = d.querySelector(".lgx-seal");
   if (typeof stampMarkHtml === "function") seal.innerHTML = stampMarkHtml(!cur.rm, seal.offsetWidth || 56);
   seal.classList.add("on");
-  d.querySelector(".lgx-st").textContent = "스탬프 1 / 6 · 3개면 룰렛 1회";
+  d.querySelector(".lgx-st").innerHTML = '<span class="lgx-n">스탬프 1 / 6</span><span class="lgx-rw">3개 모으면 룰렛 1회</span>';   /* v5.03 두 줄 */
   d.querySelector(".lgx-live").textContent = "최초 로그인 스탬프 적립 · 스탬프 1개";
   if (!cur.rm && typeof inkSplash === "function") inkSplash(seal.querySelector(".stampmk"), 10, 0.6);
   if (typeof stampBuzz === "function") stampBuzz([20, 30, 50]);
