@@ -2551,7 +2551,7 @@ var GQ={}, GX={};
 /* 서버 OLY_PARTS 와 같은 순서 · 1/100초 필드는 초로 보여 준다 */
 var OLY_PARTS={ pang:["fin","tiles","moves","bad","pz"], jump:["obs","coin","fact","hits","surv","pz"], tetris:["blk","c1","c2","c3","c4","lines","lv","surv","pz"], word:["j0","j1","j2","j3","j4","jx","wr","cl","used"],
   ox:["n","c1","c2","c3","wr","hs","fl","pa","sp","cb","fb","gb","gc","pn","hp","mx","used","life","arr","tl","pz"] };   /* v4.12 ox 유리다리 · 문항 기록 ql · 토큰 tk 는 CSV 에 싣지 않는다 */
-var OLY_PART_N={ fin:"완주(초)", tiles:"터뜨린 칸", moves:"바꾼 수", bad:"튕긴 수", pz:"멈춤", obs:"넘은 장애물", coin:"코인", fact:"AI 상식", hits:"부딪힘", surv:"버틴 시간(초)",
+var OLY_PART_N={ fin:"완주(초)", tiles:"터뜨린 칸", moves:"바꾼 수", bad:"튕긴 수", pz:"멈춤", obs:"넘은 장애물", coin:"코인", fact:"AX 상식", hits:"부딪힘", surv:"버틴 시간(초)",
   blk:"놓은 블록", c1:"1줄 삭제", c2:"2줄 동시", c3:"3줄 동시", c4:"4줄 동시", lines:"지운 줄", lv:"레벨", j0:"번개", j1:"빠름", j2:"좋음", j3:"보통", j4:"느림", jx:"틀린 뒤 칸", wr:"오답", cl:"무오답 라운드", used:"떠올린 시간(초)" };
 var OLY_CS={ fin:1, surv:1, used:1, tl:1 };
 /* v4.11 O/X 퀴즈 구성 요소 이름 · 키가 다른 종목(c1 · lv · used)과 겹쳐 따로 둔다 */
@@ -2611,7 +2611,7 @@ function olyPangCapSec(R,cap){ return R.base*Math.pow(1000/cap,1/R.pow); }
 function olyRuleLine(g,R){
   var P=R[g]; if(!P) return "";
   if(g==="pang") return P.goal+"칸 완주 · 1000 × ("+P.base+"초 ÷ 완주 초)^"+P.pow+" · "+olyPangCapSec(P,R.cap).toFixed(1)+"초 이하 = "+n0(R.cap);
-  if(g==="jump") return "장애물 "+P.obs+" · 코인 "+P.coin+" · AI 상식 "+P.fact+" · 버틴 시간은 점수 아님";
+  if(g==="jump") return "장애물 "+P.obs+" · 코인 "+P.coin+" · AX 상식 "+P.fact+" · 버틴 시간은 점수 아님";
   if(g==="tetris") return "블록 "+P.block+"("+P.blockMax+"개까지) · 줄 "+P.line+"("+P.lineFull+"줄까지, 그 뒤 "+P.lineAfter+") · 동시 +"+P.multi[2]+" · +"+P.multi[3]+" · +"+P.multi[4];
   if(g==="word") return P.tiers.map(function(t,i){ return OLY_TIER[i]+" "+t[1]; }).join(" · ")+" · 느림 "+P.base+" · 오답 −"+P.wrong+" · 무오답 +"+P.clean;
   if(g==="ox") return "유리다리 "+(P.per[0]+P.per[1]+P.per[2])+"줄 · "+(P.sec/100)+"초 · 목숨 "+P.lives+" · 기본 "+P.base.join("/")+" · 속도 +"+P.speed+" · 연속 +"+P.combo+" · 오답·낙하 −"+P.pen+" · 피버 ×"+P.feverMul+" · 황금 ×"+P.goldMul+" · 도착 "+P.arrive+" + 목숨×"+P.lifeBonus+" + 초×"+P.secBonus;
@@ -2629,7 +2629,7 @@ function olyBreak(g,p,rule){
   } else if(g==="jump"){
     o.push(["넘은 장애물", n("obs")+"개 × "+R.obs, n("obs")*R.obs]);
     o.push(["코인", n("coin")+"개 × "+R.coin, n("coin")*R.coin]);
-    o.push(["AI 상식", n("fact")+"개 × "+R.fact, n("fact")*R.fact]);
+    o.push(["AX 상식", n("fact")+"개 × "+R.fact, n("fact")*R.fact]);
     o.push(["부딪힘 · 버틴 시간", n("hits")+"번 · "+csS(n("surv")), null]);
   } else if(g==="tetris"){
     var ln=n("lines"), bk=Math.min(n("blk"),R.blockMax);
@@ -2679,7 +2679,7 @@ function rejDetail(r){
   if(r.game==="ox"){ var m=/^sum:(\w+)$/.exec(r.detail||""); return m?"구성 합계 불일치 · "+partN("ox",m[1]):(REJ_OX[r.detail]||r.detail); }
   return REJ_D[r.detail]||r.detail;
 }
-var REJ_D={ fin:"완주 시간", tiles:"칸 수", moves:"바꾼 수", speed:"너무 빠른 완주", pz:"멈춤 횟수", surv:"버틴 시간", obs:"장애물 수", coin:"코인 수", fact:"AI 상식 수", lines:"줄 합계", lv:"레벨", blk:"블록 수", jx:"틀린 뒤 칸", cl:"무오답 라운드", used:"떠올린 시간" };
+var REJ_D={ fin:"완주 시간", tiles:"칸 수", moves:"바꾼 수", speed:"너무 빠른 완주", pz:"멈춤 횟수", surv:"버틴 시간", obs:"장애물 수", coin:"코인 수", fact:"AX 상식 수", lines:"줄 합계", lv:"레벨", blk:"블록 수", jx:"틀린 뒤 칸", cl:"무오답 라운드", used:"떠올린 시간" };
 function olyRejHtml(){
   var d=ST.data.gstats||{}, J=d.rejects;
   if(!d.ok) return "";
@@ -2764,7 +2764,7 @@ var OLY_F=[
   { g:"pang", k:"pauseMax", n:"멈춤 허용", u:"회", i:1, lo:0, hi:10, h:"판당 직접 멈춤 · 넘으면 서버가 거부" },
   { g:"jump", k:"obs", n:"장애물 1개", u:"점", i:1, lo:0, hi:10000, h:"부딪히지 않고 넘은 장애물" },
   { g:"jump", k:"coin", n:"코인 1개", u:"점", i:1, lo:0, hi:10000, h:"높은 코인은 2개로 셉니다" },
-  { g:"jump", k:"fact", n:"AI 상식 1개", u:"점", i:1, lo:0, hi:10000, h:"글자 블록 들이받기" },
+  { g:"jump", k:"fact", n:"AX 상식 1개", u:"점", i:1, lo:0, hi:10000, h:"글자 블록 들이받기" },
   { g:"jump", k:"pauseMax", n:"멈춤 허용", u:"회", i:1, lo:0, hi:10, h:"판당 직접 멈춤 · 넘으면 서버가 거부" },
   { g:"tetris", k:"block", n:"블록 1개", u:"점", i:1, lo:0, hi:10000, h:"바닥에 고정된 블록" },
   { g:"tetris", k:"blockMax", n:"블록 점수 한도", u:"개", i:1, lo:0, hi:10000, h:"이 개수까지만 블록 점수" },
