@@ -332,12 +332,12 @@
       },
       handoff: 1.4
     },
-    /* 2 · 최초 로그인 장면 · 앱 LGX 를 검정 스테이지로 · 마지막 = 월의 심볼 자리 */
+    /* 2 · 최초 로그인 장면 · 앱 LGX(v5.02 · 원 단계 없음)를 검정 스테이지로 · 점 하나 → Me → We → to → 월의 심볼 자리 */
     login: {
-      dur: function () { return (LGS.T.land + 2.2) * CFG.loginSlow + 1.4; },
+      dur: function () { return (LGS.PRE + LGS.T.land + 2.2) * CFG.loginSlow + 1.4; },
       start: function (c) { c.st.L = LGX_CUR || (LGX_CUR = lgsLayout(lgsGeom())); c.st.L.sparks = null; },
       draw: function (c, t) {
-        var ts = Math.min(t / CFG.loginSlow, LGS.T.land + 2.2);
+        var ts = Math.min(t / CFG.loginSlow, LGS.PRE + LGS.T.land + 2.2) - LGS.PRE;   /* 앞 구간(점이 생김)은 음수 시각 */
         lgsFrame(c.st.L, cx, ts, { lq: LQ.on, water: waterFill });
         card(ts > LGS.T.land - 0.1 && t < c.dur - 1.2, "AX Festival 2026", "ME to WE :", "나의 경험을 우리의 가능성으로");
       },
@@ -431,7 +431,7 @@
     try {
       lgsSprites(); LGX_CUR = lgsLayout(lgsGeom());
       var off = document.createElement("canvas"); off.width = 64; off.height = 64; var oc = off.getContext("2d");
-      [1.0, 3.0, 4.2, 6.0, 7.5].forEach(function (t) { lgsFrame(LGX_CUR, oc, t, { lq: false, water: function () {} }); });
+      [-0.3, 0.9, 2.3, 4.2, 5.5].forEach(function (t) { lgsFrame(LGX_CUR, oc, t, { lq: false, water: function () {} }); });
       LGX_CUR.sparks = null;
       ["dot", "circle", "run", "me"].forEach(function (nm) { axfDraw(oc, nm, 10, { x: 0, y: 0, s: 0.05 }, null, 1, 0); });
     } catch (e) { if (window.console) console.warn("prewarm", e); }
