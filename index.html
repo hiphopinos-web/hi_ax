@@ -2299,13 +2299,14 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .rt .hs-row .sc { flex: none; margin-left: 24px; text-align: right; white-space: nowrap; color: var(--rt-tan2); }
   .rt .hs-row.r1 { background: var(--rt-o100); }
   .rt .hs-row.r2 { background: var(--rt-o60); }
-  .rt .hs-row.r1 .no, .rt .hs-row.r1 .nm, .rt .hs-row.r1 .sc, .rt .hs-row.r2 .no, .rt .hs-row.r2 .nm, .rt .hs-row.r2 .sc { color: var(--rt-btn); }
-  .rt .hs-row.r3 .no, .rt .hs-row.r3 .sc { color: var(--rt-o100); }
+  .rt .hs-row.r3 { background: var(--rt-o30); }   /* v5.06 3위도 면(사다리 O100 > O60 > O30 한 단계씩 옅게) */
+  .rt .hs-row.r1 .no, .rt .hs-row.r1 .nm, .rt .hs-row.r1 .sc, .rt .hs-row.r2 .no, .rt .hs-row.r2 .nm, .rt .hs-row.r2 .sc, .rt .hs-row.r3 .no, .rt .hs-row.r3 .nm, .rt .hs-row.r3 .sc { color: var(--rt-btn); }
   .rt .hs-row.nil .no { color: var(--rt-dim); }
   .rt .hs-row.new { animation: hsNew 1.6s ease-out 2; }
   .rt .hs-foot { margin-top: 44px; display: flex; align-items: center; gap: 28px; }
   .rt .hs-bot, .rt .hs-bot svg { flex: none; display: block; width: 88px; height: 104px; image-rendering: pixelated; }
   .rt .hs-foot p { font-size: 36px; line-height: 50px; color: var(--rt-tan2); }
+  .rt .hs-prz { margin-top: 24px; font-size: 36px; line-height: 50px; white-space: nowrap; color: var(--rt-o60); }   /* v5.06 경품 한 줄 · 가격 없음 */
   @media (prefers-reduced-motion: reduce) { .rt .hs-row.new { animation: none; box-shadow: inset 0 0 0 6px var(--rt-cream); } }
   .rt .tvp b, .rt .tvp span, .rt .tvp i, .rt .tve-h, .rt .tve-no, .rt .tve-row .nm, .rt .tve-row .sc { font-family: var(--rt-font); font-weight: 400; }
   .rt .tvp span { color: var(--rt-o100); }
@@ -3338,7 +3339,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.05";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.06";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -7047,7 +7048,7 @@ function treatHtml() {
 /* ── 스탬프 · 숫자는 현행 운영: 카드 8종 · 개수 상한 6 · 응모권 최대 3장 · 현황 모양은 홈과 같은 railHtml(v4.10) ── */
 function stampGoalText(n) {
   if (n < 3) return (3 - n) + "개 더 모으면 룰렛 1회";
-  if (n < STAMP_DENOM) return "1개 더 모으면 행운권 " + raffleTickets(n + 1) + "장";
+  if (n < STAMP_DENOM) return "1개 더 모으면 행운권 " + raffleTickets(n + 1) + "장" + (n === STAMP_DENOM - 1 && !finLate() ? " · 참여상 추첨" : "");   /* v5.06 6번째 = 참여상 추첨 대상도 되는 칸 · 17:00 뒤(finLate)에는 대상이 아니라 붙이지 않는다 */
   return STAMP_DENOM + "개 모두 모았어요 · 행운권 " + RAFFLE_MAX + "장";
 }
 function stampHeroHtml(n, glow) {
@@ -10957,7 +10958,7 @@ function tyTvRows(r, n) {
    받기 = 기존 공개 액션 type_rank(mode site · n 10) · 서버 수정 없음 · 테스트 사번 표시 규칙(10/25까지 보이고 10/26부터 뺌)은 서버가 한다.
    폴링 = 30초 · 화면이 가려지면 멈추고 보이면 곧바로 · 실패 30 → 60 → 120초 + 지터(v4.57 앱 폴링과 같은 규칙).
    새 기록(이전 응답에 없던 닉네임·기록 줄)은 4초 동안 살짝 강조 · 첫 응답은 강조하지 않는다 · 동작 줄이기면 깜빡임 없이 테두리만.
-   경품은 적지 않는다(사은품 비표시) · 도전 시간은 결정 대기라 적지 않는다. */
+   경품은 바닥 한 줄만(v5.06 사용자 확정 · 1·2등 키보드 · 3등 마우스 · 가격 없음) · 도전 시간은 결정 대기라 적지 않는다. */
 var TYHS = { data: null, t: null, ms: BE_POLL_MS, busy: false, keys: null, hot: {}, hotT: 0 };
 function tyTvFix(h) { var m = String(h || "").match(/[&?]fix=([a-z]+)/i); return m && m[1].toLowerCase() === "site" ? "site" : ""; }
 function hsOn() { return App.current === "wall_type" && TYTV.fix === "site"; }
@@ -11006,7 +11007,8 @@ function hsHtml() {
     (r && !top.length ? '<p class="hs-empty">첫 기록을 기다리고 있어요</p>' : "") +
     '<div class="hs-list">' + rows + "</div>" +
     '<div class="hs-foot">' + (u ? '<img class="hs-bot" src="' + u + '" alt="">' : '<span class="hs-bot">' + BOT_SVG + "</span>") +
-    "<p>1인 " + tries + "회 · 최고 기록 1개로 순위<br>17:00 마감 · 1~3위 Outro 시상</p></div></div></div>";   /* v5.05 (261002) 결선 없음 · 1~3위 */
+    "<p>1인 " + tries + "회 · 최고 기록 1개로 순위<br>17:00 마감 · 1~3위 Outro 시상</p></div>" +
+    '<p class="hs-prz">1·2등 기계식 키보드 · 3등 로지텍 마우스</p></div></div>';   /* v5.06 (261002 사용자 확정) 바닥 경품 한 줄 · 가격 없음 · v5.05 결선 없음 · 1~3위 */
 }
 
 /* v3.50 시상 · AX 올림픽 탭 · 종합 1~3위 호명(닉네임 + 실명) · 관리코드 oly_result */
