@@ -234,6 +234,17 @@ details.memo .mb ol{padding-left:18px}
 .pp-sum>div{border:1px solid var(--line);border-radius:var(--r-s);padding:12px 14px}
 .pp-sum .l{font-size:var(--fs-c);color:var(--tx3);font-weight:600}
 .pp-sum .v{font-size:var(--fs-h1);font-weight:800;font-variant-numeric:tabular-nums;margin-top:2px}
+/* v5.01 계정 › 한 사람 관리 · 전체 초기화 */
+.us-dz{border-color:var(--bad-bd)}
+.us-dz .ch h2{color:var(--bad)}
+.us-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.us-part{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-s);margin-top:8px;cursor:pointer}
+.us-part:hover{background:var(--soft)}
+.us-part .ck{margin-top:3px;flex-shrink:0}
+.us-part b{display:block;font-size:var(--fs-b)}
+.us-part .cap{display:block}
+.us-part .n{margin-left:auto;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.us-cmd{display:block;font-family:Consolas,"D2Coding",monospace;font-size:var(--fs-c);background:var(--soft);border:1px solid var(--line2);border-radius:var(--r-s);padding:8px 10px;margin-top:6px;word-break:break-all;user-select:all}
 .pp-sum .v em{font-style:normal;font-size:var(--fs-s);color:var(--tx3);font-weight:600;margin-left:3px}
 .pp-sum .x{font-size:var(--fs-c);color:var(--tx2);margin-top:2px}
 .slots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
@@ -630,7 +641,7 @@ var CACHE_MS = 300000;
 /* 메뉴마다 같은 뼈대: 제목 + 한 줄 설명(d) → 서브탭 칩 → 툴바 → 본문 */
 var TABS = [
   { id:"dash",  n:"대시보드", d:"지금 처리할 일과 오늘의 숫자를 한 화면에 봅니다." },
-  { id:"acct",  n:"계정", d:"로그인한 사람과 비밀번호 분실 요청을 처리합니다." },
+  { id:"acct",  n:"계정", d:"가입 계정과 비밀번호 분실 요청을 처리하고, 한 사람의 게임 기록 · 닉네임 · 접속 정보를 고치거나 초기화합니다." },
   { id:"stamp", n:"스탬프", d:"사번이나 이름으로 한 사람을 골라 스탬프를 부여하거나 취소합니다." },
   { id:"qr", n:"QR", d:"현장에 붙는 QR 전부입니다. 무엇을 인쇄해 어디에 붙이고, 지금 찍히고 있는지 한곳에서 봅니다." },
   { id:"apply", n:"신청", d:"상담 승인 · 커피챗 매칭 · 담당 명단을 처리합니다. 17F 강연은 자유 참석이라 신청이 없습니다(v4.26)." },
@@ -1180,14 +1191,14 @@ function viewDash(){
 }
 
 /* ══════════════════ 5. 계정 ══════════════════ */
-function viewAcct(){
+function viewAcctList(){   /* v5.01 계정 › 계정 목록(예전 계정 화면 그대로 · 머리와 칩은 viewAcct) */
   var rows=((ST.data.acct||{}).rows||[]).slice();
   rows.sort(function(a,b){ return (b.last||"")<(a.last||"")?-1:1; });
   var shown=rows.filter(function(r){ return match(r,["emp","name","dept"]); });
   var byDept={}; rows.forEach(function(r){ byDept[r.dept||"(미상)"]=(byDept[r.dept||"(미상)"]||0)+1; });
   /* pw===false 만 「초기화 대기」. 필드가 없으면(옛 백엔드) 등록으로 본다. */
   var waiting=rows.filter(function(r){ return r.pw===false; }).length, roster=(ST.data.acct||{}).roster||0;
-  var h=tabHead();
+  var h="";
   h+='<div class="kpis">'+kpi("가입 계정",rows.length,"명")+kpi("명부",roster,"명","가입률 "+pct(rows.length,roster)+"%")+kpi("부문 수",Object.keys(byDept).length,"개")+kpi("비밀번호 초기화 대기",waiting,"명",waiting?"본인이 앱에서 새 비밀번호를 넣으면 풀립니다":"")+'</div>';
   h+=viewPwReq();
   h+=viewSesStats();
@@ -1196,12 +1207,277 @@ function viewAcct(){
     shown.slice(0,500).map(function(r){ var wait=r.pw===false;
       return '<tr class="hv"><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td><td>'+esc(r.dept)+'</td><td class="n cap">'+esc(short(r.joined))+'</td><td class="n">'+esc(short(r.last))+'</td>'+
         '<td>'+(wait?tag("초기화 대기","warn"):tag("사용 중","off"))+'</td>'+
-        '<td class="tdr">'+(wait?'<span class="cap">새 비밀번호 입력 대기</span>':'<button class="btn sm" data-emp="'+esc(r.emp)+'" data-name="'+esc(r.name)+'" onclick="pwReset(this)">비밀번호 초기화</button>')+'</td></tr>'; }).join("")+
+        '<td class="tdr"><div class="acts">'+(wait?'<span class="cap">새 비밀번호 입력 대기</span>':'<button class="btn sm" data-emp="'+esc(r.emp)+'" data-name="'+esc(r.name)+'" onclick="pwReset(this)">비밀번호 초기화</button>')+'<button class="btn sm" onclick="usOpen(\''+jq(r.emp)+'\')">관리</button></div></td></tr>'; }).join("")+
     (shown.length>500?'<tr><td colspan="7" class="cap">500명까지만 표시합니다. 검색으로 좁혀 주세요.</td></tr>':'')+(!shown.length?emptyRow(7,"해당하는 계정이 없습니다."):'')+'</table></div>';
   body+=memo('<p>최근 접속 = 앱을 마지막으로 연 시각입니다(v3.83부터 앱 사용 중에도 갱신 · 약 10분 간격). 그 전 기록은 마지막 비밀번호 입력 시각입니다.</p><p>비밀번호 초기화는 지금 비밀번호를 지우고, 본인이 앱에서 다음에 입력하는 4자리를 새 비밀번호로 등록합니다. 스탬프·신청 기록은 그대로입니다. 운영 로그에 남습니다.</p>');
   h+=card("가입 계정","최근 접속 순",body);
   h+=card("부문별 가입","",'<div class="row">'+Object.keys(byDept).sort(function(a,b){return byDept[b]-byDept[a];}).map(function(d){ return '<span class="tag off">'+esc(d)+' <b class="n">'+byDept[d]+'</b></span>'; }).join("")+'</div>');
   return h;
+}
+/* ══════════════════ v5.01 (261002 사용자 요청) 계정 › 한 사람 관리 · 전체 초기화 ══════════════════
+ * 「admin 페이지에서 초기화나 수정을 할 수 있는 버튼(게임 정보 · 닉네임 · 접속 정보)」 · 한 사람씩 + 전체 한 번에
+ * 한 사람 = 사번 · 이름으로 찾아 고른 사람의 게임 기록(종목별 · 전체 · 스탬프 회수는 선택) · 닉네임(바꾸기 · 숨기기 · 지우기) · PIN 초기화 · 최초 로그인 되돌리기
+ *   서버 usr_info · usr_game_reset · usr_nick · usr_lg_reset(관리코드 · 처리한 콘솔 사번을 운영로그에) · PIN 은 예전 acct_pwreset
+ *   옛 서버(usr_info 모름) = 닉네임 숨기기 · 지우기(type_nick_hide · type_nick_reset)와 PIN 초기화만 · 나머지는 「서버 업데이트 뒤 사용」
+ * 전체 초기화 = 슈퍼관리자 + 본인 확인(sp · 30분) + 확인 문구 「전체 초기화」 직접 입력 · POST usr_reset_all · 먼저 미리 세기(dry)
+ *   서버가 실행 직전 시트 전체 사본을 만들고 직전 시각(at)을 돌려준다 · 되돌리기 = 관리 통로 시점 복구(pitr --at → --restore)
+ * 모든 쓰기는 확인 창(사번 · 이름 · 되돌릴 수 없음) · 처리한 사람 한 명만 다시 받는다 */
+var USR_WORD="전체 초기화";
+var USR_EV_UI=[ {k:"pang",n:"AX 팡",g:"미니 게임"}, {k:"jump",n:"ME to WE 점프",g:"미니 게임"}, {k:"tetris",n:"테트리스",g:"미니 게임"}, {k:"ox",n:"AX 퀴즈",g:"퀴즈"}, {k:"word",n:"기억력 퀴즈",g:"퀴즈 · 옛 종목"}, {k:"type",n:"타자(단어 소나기)",g:"앱 · 1F 현장 · 대전"} ];
+var USR_PARTS_UI=[
+  {k:"game",n:"게임 기록",d:"미니 게임 · AX 퀴즈 · 기억력 · 타자(앱 · 현장 · 대전) 기록 전부 · 순위판이 빈다",c:function(p){ return p.game+p.type+p.race; },on:1},
+  {k:"nick",n:"닉네임",d:"모든 닉네임 · 순위판에 「익명 참가자」 · 앱에서 다시 정한다",c:function(p){ return p.nick; },on:1},
+  {k:"lg",n:"최초 로그인 상태",d:"최초 로그인 스탬프를 거둔다 · 다음 로그인 때 최초 로그인 장면과 도장이 다시 나온다(스탬프는 남기면 보상과 부딪치는 사람은 건너뛴다)",c:function(p){ return p.lg; },on:1},
+  {k:"pin",n:"PIN 전체 초기화",d:"슈퍼관리자 계정을 뺀 모든 PIN · 다음 로그인에 넣는 4자리가 새 PIN · 로그인된 폰도 다시 넣는다",c:function(p){ return p.pin; },on:0,opt:1},
+  {k:"stamp",n:"스탬프 · 룰렛 · 응모권",d:"참여 기록(시트 「참여」)과 응모권 번호 전부 · 최초 로그인 상태도 함께 비워진다",c:function(p){ return p.log+p.raffle; },on:0,opt:1}
+];
+ST.subs.acct=ST.subs.acct||"list";
+ST.us={ q:"", emp:"", sel:{}, take:false };
+ST.ur={ parts:{ game:1, nick:1, lg:1, pin:0, stamp:0 }, plan:null, planKey:"", word:"", busy:false, last:null };
+SUBNEED["acct:one"]=[{k:"nick",a:"type_nick_list"}];   /* 옛 서버에서 닉네임을 보이려고 · 한 사람 정보(usr_info)는 고를 때 usFetch 가 따로 받는다(탭 전체가 「불러오는 중」으로 바뀌지 않게) */
+SUBNEED["acct:all"]=function(){ return [{k:"usrp",a:"usr_info",p:{emp:(ST.me&&ST.me.emp)||aemp()}}]; };   /* 서버가 새 액션을 아는지만 본다(내 사번 한 명 · 옛 서버면 unknown action) */
+function usOld(d){ return !!(d&&d.ok===false&&/unknown action/.test(String(d.err||""))); }
+function usNew(){ return '<span class="tag off">서버 업데이트 뒤 사용</span>'; }
+function usKey(emp){ return "usr_"+normE(emp); }
+function usAcct(emp){ var k=normE(emp); return (((ST.data.acct||{}).rows)||[]).filter(function(r){ return normE(r.emp)===k; })[0]||null; }
+function usNickRow(emp){ var k=normE(emp); return (((ST.data.nick||{}).rows)||[]).filter(function(r){ return normE(r.emp)===k; })[0]||null; }
+function usQ(v){ ST.us.q=v; render(); }
+function usSel(emp){ ST.us.emp=emp; ST.us.sel={}; ST.us.take=false; render(); }
+var US_IN={};
+function usFetch(emp){ var k=usKey(emp); if(US_IN[k]) return; US_IN[k]=1;
+  call("usr_info",{emp:emp},function(r){ delete US_IN[k]; ST.data[k]=r||{ok:false,reason:"network"}; render(); },function(e){ delete US_IN[k]; ST.data[k]=e||{ok:false,reason:"network"}; render(); }); }
+function usOpen(emp){ ST.us.emp=emp; ST.us.q=""; ST.us.sel={}; ST.us.take=false; setSub("one"); window.scrollTo(0,0); }
+function usReload(emp, more){ delete ST.data[usKey(emp)]; usFetch(emp); if(more) reload(more); }
+function usT(t){ return t?esc(short(t)):'<span class="cap">-</span>'; }
+function usSec(v){ return v==null?"-":(Number(v)/100).toFixed(2)+"초"; }
+function viewAcct(){
+  var s=sub()||"list"; if(s==="all"&&!supOn()) s="list";
+  var rows=((ST.data.acct||{}).rows||[]);
+  var h=tabHead()+chips([{v:"list",n:"계정 목록",c:rows.length},{v:"one",n:"한 사람 관리"}].concat(supOn()?[{v:"all",n:"전체 초기화"}]:[]), s, "setSub");
+  return h+(s==="one"?viewAcctOne():s==="all"?viewAcctAll():viewAcctList());
+}
+function viewAcctOne(){
+  var rows=((ST.data.acct||{}).rows||[]).slice(), q=ST.us.q.trim().toLowerCase(), list;
+  if(q) list=rows.filter(function(r){ return String(r.emp).toLowerCase().indexOf(q)>=0||String(r.name||"").toLowerCase().indexOf(q)>=0||String(r.dept||"").toLowerCase().indexOf(q)>=0; });
+  else list=rows.sort(function(a,b){ return (b.last||"")<(a.last||"")?-1:1; });
+  var cur=ST.us.emp;
+  var h='<div class="sp"><div class="lnb"><input class="in" placeholder="사번 · 이름 · 부문으로 찾기" value="'+esc(ST.us.q)+'" oninput="usQ(this.value)">'+
+    '<div class="cap">'+(q?'검색 결과 '+list.length+'명':'최근 접속 순 · 가입한 사람만')+'</div><ul>'+
+    list.slice(0,80).map(function(r){ var on=cur&&normE(cur)===normE(r.emp);
+      return '<li><button class="'+(on?"on":"")+'" onclick="usSel(\''+jq(r.emp)+'\')"><div style="min-width:0"><div class="nm">'+esc(r.name||"(이름 없음)")+'</div><div class="em">'+esc(r.emp)+(r.dept?' · '+esc(r.dept):'')+'</div></div>'+(r.pw===false?'<span class="c">PIN 대기</span>':'')+'</button></li>'; }).join("")+
+    (list.length>80?'<li class="cap" style="padding:8px">80명까지 표시 · 검색으로 좁혀 주세요</li>':'')+(!list.length?'<li class="cap" style="padding:8px">찾는 사람이 없습니다. 가입 전인 사람은 앱에 기록이 없습니다.</li>':'')+'</ul></div>';
+  h+='<div>'+(cur?usPanel(cur):'<div class="card" style="margin-top:0"><div class="empty">왼쪽에서 사번이나 이름으로 한 사람을 고르세요.<br>게임 기록 · 닉네임 · PIN · 최초 로그인 상태를 고치거나 초기화합니다.</div></div>')+'</div></div>';
+  return h+memo('<p><b>무엇이 바뀌나</b> · 게임 기록을 지우면 그 종목의 순위와 「내 최고」(서버)에서 빠집니다. 참가자 폰에 저장된 이 기기 최고 숫자는 로그아웃하거나 다른 기기로 들어가면 사라집니다.</p>'+
+    '<p><b>스탬프</b> · 게임 기록을 지워도 이미 받은 스탬프(미니 게임 · AX 퀴즈)는 기본으로 남깁니다. 「받은 스탬프도 회수」를 켜면 조건이 깨진 스탬프를 취소 행으로 거둡니다. 룰렛 · 응모권이 이미 나갔으면 서버가 거절하고 기록만 지웁니다.</p>'+
+    '<p><b>최초 로그인 되돌리기</b> · 시험용입니다. 그 사람 폰에서 <b>먼저 로그아웃</b>해 두세요. 로그인된 채로 두면 다음 동기화(30초 안)에 도장만 다시 찍히고 장면은 나오지 않습니다. 로그아웃 → 되돌리기 → 다시 로그인 순서면 최초 로그인 장면과 도장이 다시 나옵니다.</p>'+
+    '<p><b>기록</b> · 모든 처리는 시트 「운영로그」에 대상 사번 · 이름 · 무엇을 · 처리한 콘솔 사번과 시각으로 남습니다. PIN 값은 어디에도 남지 않습니다.</p>');
+}
+function usPanel(emp){
+  var k=normE(emp), d=ST.data[usKey(emp)], a=usAcct(emp), old=usOld(d);
+  if(!d){ setTimeout(function(){ usFetch(emp); },0); return '<div class="card" style="margin-top:0"><p class="muted"><span class="spin"></span>불러오는 중</p></div>'; }
+  if(!d.ok&&!old) return '<div class="card" style="margin-top:0"><div class="empty">'+esc(d.reason==="notfound"?"계정 · 명부에 없는 사번입니다":why(d))+'</div></div>';
+  var p=old?{ emp:a?a.emp:emp, name:a?a.name:"", dept:a?a.dept:"", acct:!!a, joined:a?a.joined:"", last:a?a.last:"", pw:a?a.pw!==false:null }:d;
+  var nm=esc(p.name||"(이름 없음)"), who=nm+'<span>사번 '+esc(p.emp)+(p.dept?' · '+esc(p.dept):'')+'</span>';
+  var h='<div class="card" style="margin-top:0"><div class="pp-h"><div><div class="nm">'+nm+'</div><div class="em">사번 '+esc(p.emp)+(p.dept?' · '+esc(p.dept):'')+(p.joined?' · 가입 '+esc(short(p.joined)):'')+(p.last?' · 최근 접속 '+esc(short(p.last)):'')+'</div></div>'+
+    '<div class="r">'+(p.sup?tag("슈퍼관리자","pri"):"")+(old?tag("옛 서버","warn"):"")+'<button class="btn sm ghost" onclick="usSel(\'\')">선택 해제</button><button class="btn sm" onclick="usReload(\''+jq(emp)+'\',[\'nick\'])">새로고침</button></div></div>';
+  if(d.eventDay) h+='<div class="note warn mt12"><b>오늘은 행사일입니다.</b> 지우기 전에 경품 · 시상 담당과 먼저 맞추세요.</div>';
+  h+='</div>';
+  /* 1. 게임 기록 */
+  var g='';
+  if(old) g='<div class="note">이 서버는 아직 사람별 게임 기록을 주지 않습니다. '+usNew()+'</div>';
+  else {
+    var G=d.games||{}, T=d.type||{}, sel=ST.us.sel;
+    g='<div class="wrap"><table class="tb"><tr><th style="width:36px"></th><th>종목</th><th class="tdr">판 수</th><th class="tdr">최고</th><th>마지막 기록</th></tr>'+
+      USR_EV_UI.map(function(e){
+        var x=G[e.k]||{n:0}, best;
+        if(e.k==="type") best=(T.app&&T.app.n?'앱 '+usSec(T.app.best):'')+(T.site&&T.site.n?(T.app&&T.app.n?' · ':'')+'현장 '+usSec(T.site.best):'')+(T.race&&T.race.n?' · 대전 '+T.race.n+'판':'');
+        else if(e.k==="ox"&&x.of) best=x.right+' / '+x.of+' 정답 · '+Number(x.best||0).toLocaleString()+'점';
+        else best=x.best==null?"":Number(x.best).toLocaleString()+'점'+(x.rank?' · '+x.rank+'위':'');
+        return '<tr'+(x.n?' class="hv"':'')+'><td>'+(x.n?'<input type="checkbox" class="ck" '+(sel[e.k]?"checked ":"")+'onchange="usPick(\''+e.k+'\',this.checked)" aria-label="'+esc(e.n)+' 고르기">':'')+'</td>'+
+          '<td><b>'+esc(e.n)+'</b> <span class="cap">'+esc(e.g)+'</span></td><td class="n tdr">'+(x.n||0)+'</td><td class="n tdr">'+(best||'<span class="cap">-</span>')+'</td><td class="n">'+usT(x.last)+'</td></tr>'; }).join("")+'</table></div>';
+    var nSel=USR_EV_UI.filter(function(e){ return sel[e.k]; }).length, any=USR_EV_UI.some(function(e){ return (G[e.k]||{}).n; });
+    g+='<div class="toolbar mt12"><label class="cap" style="display:flex;align-items:center;gap:6px"><input type="checkbox" class="ck" '+(ST.us.take?"checked ":"")+'onchange="ST.us.take=this.checked">받은 스탬프도 회수(미니 게임 · AX 퀴즈 · 기본 회수 안 함)</label><span class="sp"></span>'+
+      '<button class="btn sm danger" onclick="usGame(\''+jq(emp)+'\',\'sel\')"'+(nSel?'':' disabled')+'>고른 종목 지우기'+(nSel?' ('+nSel+')':'')+'</button>'+
+      '<button class="btn sm danger" onclick="usGame(\''+jq(emp)+'\',\'all\')"'+(any?'':' disabled')+'>게임 기록 전부 지우기</button></div>';
+  }
+  h+=card("게임 기록","순위 · 내 최고에서 빠집니다",g);
+  /* 2. 닉네임 */
+  var nk=old?(function(){ var r=usNickRow(emp); return r&&r.nick?{nick:r.nick,hidden:!!r.hidden}:null; })():d.nick;
+  var n='<div class="us-row"><span class="cap">지금</span>'+(nk?'<b style="font-size:var(--fs-h2)">'+esc(nk.nick)+'</b>'+(nk.hidden?tag("숨김 · 순위판에 「이름 숨김」","warn"):tag("공개","ok")):'<span class="muted">없음 · 순위판에 「익명 참가자」</span>')+'</div>';
+  n+='<div class="us-row mt12"><input id="usNick" class="in" style="min-width:200px" maxlength="8" placeholder="새 닉네임 (한글 · 영문 · 숫자 2~8자)"'+(old?' disabled':'')+' onkeydown="if(event.key===\'Enter\')usNickSet(\''+jq(emp)+'\')">'+
+    (old?usNew():'<button class="btn sm" onclick="usNickSet(\''+jq(emp)+'\')">바꾸기</button>')+'<span class="sp" style="flex:1"></span>'+
+    (nk?'<button class="btn sm" onclick="usNickOp(\''+jq(emp)+'\',\''+(nk.hidden?"show":"hide")+'\')">'+(nk.hidden?"숨김 해제":"숨기기")+'</button><button class="btn sm danger" onclick="usNickOp(\''+jq(emp)+'\',\'clear\')">닉네임 지우기</button>':'')+'</div>';
+  n+='<p class="cap mt8">바꾸기는 앱과 같은 규칙으로 서버가 다시 봅니다(금칙어 · 실명 · 남과 같은 닉네임 거절). 숨기기는 되돌릴 수 있고, 지우기는 본인이 앱에서 다시 정합니다.</p>';
+  h+=card("닉네임","게임 순위 · 타자 순위 · 1F TV 공통",n);
+  /* 3. 접속 정보 */
+  var pinT=p.pw===null||!p.acct?tag("가입 전","off"):p.pw?tag("사용 중","off"):tag("초기화 대기","warn");
+  var lgT=old?'<span class="cap">-</span>':d.lg?tag("받음","pri"):tag("안 받음","off");
+  var c='<div class="wrap"><table class="tb"><tr><th>항목</th><th>지금</th><th class="tdr">처리</th></tr>'+
+    '<tr><td><b>PIN</b><div class="cap">앱 로그인 4자리 · 값은 보이지 않습니다</div></td><td>'+pinT+'</td><td class="tdr">'+(p.acct&&p.pw?'<button class="btn sm danger" onclick="usPw(\''+jq(emp)+'\')">PIN 초기화</button>':'<span class="cap">'+(p.acct?"새 PIN 입력 대기":"계정 없음")+'</span>')+'</td></tr>'+
+    '<tr><td><b>최초 로그인</b><div class="cap">스탬프 01 · 받은 뒤에는 장면이 다시 나오지 않습니다</div></td><td>'+lgT+'</td><td class="tdr">'+(old?usNew():d.lg?'<button class="btn sm danger" onclick="usLg(\''+jq(emp)+'\')">최초 로그인 되돌리기</button>':'<span class="cap">되돌릴 것 없음</span>')+'</td></tr></table></div>';
+  if(p.sup) c+='<p class="cap mt8">슈퍼관리자 계정의 PIN 초기화는 「슈퍼관리자 · 권한」에서 본인 확인(PIN)을 한 뒤에만 됩니다.</p>';
+  h+=card("접속 정보","PIN · 최초 로그인 상태",c);
+  return h;
+}
+function usPick(k, on){ ST.us.sel[k]=!!on; render(); }
+function usEvName(k){ var e=USR_EV_UI.filter(function(x){ return x.k===k; })[0]; return e?e.n:k; }
+/* 게임 기록 지우기 · 먼저 dry 로 지울 줄 수를 받아 확인 창에 보인다 */
+function usGame(emp, mode){
+  var d=ST.data[usKey(emp)]||{}, evs=mode==="all"?"all":USR_EV_UI.filter(function(e){ return ST.us.sel[e.k]; }).map(function(e){ return e.k; }).join(",");
+  if(!evs){ toast("지울 종목을 고르세요"); return; }
+  var take=!!ST.us.take, who=esc(d.name||emp)+'<span>사번 '+esc(d.emp||emp)+'</span>';
+  toast("지울 기록을 세는 중",{ms:8000});
+  call("usr_game_reset",{emp:emp,ev:evs,dry:1},function(r){
+    el("toast").className="";
+    if(!r||!r.ok){ toast("실패: "+usWhy(r)); return; }
+    var rows=r.ev.map(function(k){ return [usEvName(k), (k==="type"?(r.del.type+r.del.race):r.del[k])+"줄", "loss"]; });
+    rows.push(["받은 스탬프", take?"조건이 깨지면 회수(미니 게임 · AX 퀴즈)":"그대로 둠", take?"loss":""]);
+    dialog({ t:(mode==="all"?"게임 기록을 전부":"고른 종목의 게임 기록을")+" 지울까요?", who:who, x:imp(rows), ok:"기록 "+r.total+"줄 지우기", danger:true,
+      s:"순위와 「내 최고」에서 빠집니다. <b>되돌릴 수 없습니다.</b> 운영로그에 남습니다.",
+      onOk:function(){
+        call("usr_game_reset",{emp:emp,ev:evs,stamps:take?1:""},function(x){
+          dlgForce();
+          if(x&&x.ok){
+            hist(emp,"게임 기록 지움 · "+x.ev.map(usEvName).join(", ")+" · "+x.total+"줄");
+            toast("지웠습니다 · "+x.total+"줄"+(x.revoked&&x.revoked.length?" · 스탬프 회수 "+x.revoked.length+"개":"")+(x.kept&&x.kept.length?" · 회수 못 함 "+x.kept.length+"개(보상)":""),{ms:5000});
+            ST.us.sel={}; usReload(emp);
+          } else toast("실패: "+usWhy(x));
+        },function(){ dlgForce(); toast("서버 응답 없음"); });
+      } });
+  },function(){ el("toast").className=""; toast("서버 응답 없음"); });
+}
+var USR_WHY={ format:"닉네임은 한글 · 영문 · 숫자 2~8자입니다", ban:"쓸 수 없는 말이 들어 있습니다", realname:"명부의 실명과 같은 닉네임은 쓸 수 없습니다", dup:"다른 사람이 쓰는 닉네임입니다", same:"지금 닉네임과 같습니다", nonick:"닉네임이 없습니다",
+  nostamp:"최초 로그인 스탬프가 없습니다", roulette:"룰렛을 이미 돌려 되돌리면 3개 미만이 됩니다. 경품 담당과 먼저 정리하세요", tickets:"응모권이 이미 발급돼 되돌릴 수 없습니다. 경품 담당과 먼저 정리하세요",
+  eventday:"행사일(10/26)에는 전체 초기화를 받지 않습니다", confirm:"확인 문구가 다릅니다", backup:"백업 사본을 만들지 못해 아무것도 지우지 않았습니다", post:"이 서버는 전체 초기화를 받지 않습니다" };
+function usWhy(r){ r=r||{}; return usOld(r)?"서버 업데이트 뒤 사용":USR_WHY[r.reason]||why(r); }
+function usNickSet(emp){
+  var d=ST.data[usKey(emp)]||{}, v=((el("usNick")||{}).value||"").trim();
+  if(!/^[0-9A-Za-z가-힣]{2,8}$/.test(v)){ toast(USR_WHY.format); return; }
+  var was=d.nick?d.nick.nick:"";
+  dialog({ t:"닉네임을 바꿀까요?", who:esc(d.name||emp)+'<span>사번 '+esc(d.emp||emp)+'</span>', x:imp([["지금", esc(was||"(없음)")],["새 닉네임", esc(v), "chg"]]), ok:"바꾸기",
+    s:"순위판 · 1F TV 에 곧바로 새 닉네임이 나옵니다. 운영로그에 이전 · 새 닉네임이 남습니다.",
+    onOk:function(){ call("usr_nick",{emp:emp,op:"set",nick:v},function(r){ dlgForce();
+      if(r&&r.ok){ hist(emp,"닉네임 "+(was||"(없음)")+" → "+v); toast("닉네임을 바꿨습니다 · "+v); usReload(emp,["nick"]); } else toast("실패: "+usWhy(r));
+    },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
+}
+function usNickOp(emp, op){
+  var d=ST.data[usKey(emp)]||{}, old=usOld(d), a=usAcct(emp)||{}, name=d.name||a.name||emp;
+  var run=function(after){
+    var act=old?(op==="clear"?"type_nick_reset":"type_nick_hide"):"usr_nick", prm=old?(op==="clear"?{emp:emp}:{emp:emp,on:op==="hide"?1:0}):{emp:emp,op:op};
+    call(act,prm,function(r){ after&&after();
+      if(r&&r.ok){ hist(emp,{hide:"닉네임 숨김",show:"닉네임 숨김 해제",clear:"닉네임 지움"}[op]);
+        toast({hide:"닉네임을 숨겼습니다",show:"숨김을 풀었습니다",clear:"닉네임을 지웠습니다"}[op], op==="hide"?{ undo:function(){ op="show"; run(); } }:{});
+        usReload(emp,["nick"]); }
+      else toast("실패: "+usWhy(r));
+    },function(){ after&&after(); toast("서버 응답 없음"); });
+  };
+  if(op!=="clear"){ run(); return; }
+  dialog({ t:"닉네임을 지울까요?", who:esc(name)+'<span>사번 '+esc(d.emp||emp)+'</span>', ok:"닉네임 지우기", danger:true,
+    s:"순위판에 「익명 참가자」로 나옵니다. 기록 점수는 남고, 본인이 앱에서 새 닉네임을 정할 수 있습니다. <b>지운 닉네임은 되돌릴 수 없습니다.</b>",
+    onOk:function(){ run(dlgForce); } });
+}
+function usPw(emp){
+  var d=ST.data[usKey(emp)]||{}, a=usAcct(emp)||{}, name=d.name||a.name||emp;
+  dialog({ t:"PIN 을 초기화할까요?", who:esc(name)+'<span>사번 '+esc(d.emp||a.emp||emp)+'</span>', ok:"PIN 초기화", danger:true,
+    s:"지금 PIN 이 지워지고 <b>본인이 앱에서 다음에 넣는 4자리가 새 PIN</b> 이 됩니다. 로그인돼 있던 폰도 PIN 을 다시 넣습니다. <b>되돌릴 수 없습니다.</b> 스탬프 · 신청 기록은 그대로이고 운영로그에 남습니다.",
+    onOk:function(){
+      call("acct_pwreset",{emp:emp},function(r){ dlgForce();
+        if(r&&r.ok){ if(ST.data.acct) (ST.data.acct.rows||[]).forEach(function(x){ if(normE(x.emp)===normE(emp)) x.pw=false; });
+          hist(emp,"PIN 초기화"); toast("PIN 을 초기화했습니다 · 본인이 앱에서 새 4자리를 넣으면 등록됩니다",{ms:5000}); usReload(emp); }
+        else toast("실패: "+(r&&r.reason==="notfound"?"계정에 없는 사번입니다":why(r)));
+      },function(){ dlgForce(); toast("서버 응답 없음"); });
+    } });
+}
+function usLg(emp){
+  var d=ST.data[usKey(emp)]||{}, who=esc(d.name||emp)+'<span>사번 '+esc(d.emp||emp)+'</span>';
+  toast("되돌릴 수 있는지 확인 중",{ms:8000});
+  call("usr_lg_reset",{emp:emp,dry:1},function(r){
+    el("toast").className="";
+    if(!r||!r.ok){ if(r&&(r.reason==="roulette"||r.reason==="tickets")) dialog({ t:"되돌릴 수 없습니다", who:who, s:esc(usWhy(r)) }); else toast("실패: "+usWhy(r)); return; }
+    dialog({ t:"최초 로그인 상태를 되돌릴까요?", who:who, ok:"되돌리기", danger:true, x:imp([["스탬프 01 최초 로그인","거둠(취소 행)","loss"],["스탬프 개수", (r.n||0)+"개 → "+(r.nAfter||0)+"개", "loss"]]),
+      s:"시험용입니다. <b>그 사람 폰에서 먼저 로그아웃</b>해 두세요. 다시 로그인하면 최초 로그인 장면과 도장이 다시 나옵니다. 로그인된 채로 두면 다음 동기화에 도장만 다시 찍힙니다. 운영로그에 남습니다.",
+      onOk:function(){
+        call("usr_lg_reset",{emp:emp},function(x){ dlgForce();
+          if(x&&x.ok){ hist(emp,"최초 로그인 되돌림"); toast("되돌렸습니다 · 로그아웃 뒤 다시 로그인하면 장면이 나옵니다",{ms:5000}); usReload(emp); }
+          else toast("실패: "+usWhy(x));
+        },function(){ dlgForce(); toast("서버 응답 없음"); });
+      } });
+  },function(){ el("toast").className=""; toast("서버 응답 없음"); });
+}
+/* ── 전체 초기화 · 슈퍼관리자 ── */
+function urParts(){ return USR_PARTS_UI.filter(function(x){ return ST.ur.parts[x.k]; }).map(function(x){ return x.k; }); }
+function urPick(k, on){ ST.ur.parts[k]=on?1:0; ST.ur.plan=null; render(); }
+function urWord(v){ ST.ur.word=v; var b=el("urGo"); if(b){ var ok=urReady(); b.disabled=!ok; } }
+function urReady(){ return !!(ST.ur.plan&&ST.ur.planKey===urParts().join(",")&&ST.ur.word===USR_WORD&&!ST.ur.busy); }
+function urPin(){
+  return '<div class="supg"><p class="muted" style="margin:0">전체 초기화는 슈퍼관리자 본인만 합니다. 참가자 앱에 로그인할 때 쓰는 <b>PIN 4자리</b>를 넣으세요.</p>'+
+    '<div class="row"><input class="in pin" id="supPin" type="password" inputmode="numeric" autocomplete="off" maxlength="4" aria-label="앱 PIN 4자리" oninput="supPinIn(this)" onkeydown="if(event.key===\'Enter\')supGo()"'+(SUPV.busy?" disabled":"")+'>'+
+    '<button class="btn pri" onclick="supGo()"'+(SUPV.busy?" disabled":"")+'>'+(SUPV.busy?'<span class="spin" style="border-color:rgba(255,255,255,.4);border-top-color:#fff"></span>확인 중':"확인")+'</button></div>'+
+    '<div class="admh bad" role="alert">'+esc(SUPV.err)+'</div><p class="cap" style="margin:0">확인하면 30분 동안 씁니다. 「권한」 화면과 같은 확인입니다.</p></div>';
+}
+function viewAcctAll(){
+  var pr=ST.data.usrp, h='';
+  if(usOld(pr)) return card("전체 초기화","",'<div class="note">이 서버는 아직 전체 초기화를 받지 않습니다. '+usNew()+'</div>')+urMemo();
+  if(!supOk()) return card("본인 확인","슈퍼관리자 본인의 앱 PIN",urPin())+urMemo();
+  var P=ST.ur.plan, pk=urParts().join(","), fresh=P&&ST.ur.planKey===pk;
+  var body='<div class="note warn"><b>행사 전 베타 정리용입니다.</b> 고른 것을 모든 참가자에게서 한 번에 지웁니다. 실행 직전 서버가 시트 전체 사본을 만들고, 되돌리기는 서버 담당자가 시점 복구로 합니다. 행사일(10/26)에는 서버가 받지 않습니다.</div>'+
+    USR_PARTS_UI.map(function(x){
+      return '<label class="us-part"><input type="checkbox" class="ck" '+(ST.ur.parts[x.k]?"checked ":"")+'onchange="urPick(\''+x.k+'\',this.checked)"><span><b>'+esc(x.n)+(x.opt?' <span class="tag off">선택</span>':'')+'</b><span class="cap">'+esc(x.d)+'</span></span>'+
+        '<span class="n">'+(fresh?Number(x.c(P.plan)).toLocaleString()+(x.k==="lg"||x.k==="pin"?"명":"줄"):"")+'</span></label>'; }).join("")+
+    '<div class="toolbar mt12"><button class="btn" onclick="urCount()"'+(pk&&!ST.ur.busy?'':' disabled')+'>'+(ST.ur.busy==="dry"?'<span class="spin"></span>세는 중':"미리 세기")+'</button>'+
+    '<span class="cap">'+(fresh?"센 시각 "+esc(short(P.t))+" · 고른 것을 바꾸면 다시 셉니다":"먼저 미리 세기로 지울 양을 확인합니다")+'</span></div>'+
+    '<div class="us-row mt12"><label class="cap" for="urWordIn">확인 문구 「'+USR_WORD+'」를 그대로 입력</label></div>'+
+    '<div class="us-row mt8"><input id="urWordIn" class="in" autocomplete="off" placeholder="'+USR_WORD+'" value="'+esc(ST.ur.word)+'" oninput="urWord(this.value)"'+(fresh?'':' disabled')+'>'+
+    '<button id="urGo" class="btn danger fill" onclick="urRun()"'+(urReady()?'':' disabled')+'>'+(ST.ur.busy==="run"?'<span class="spin" style="border-color:rgba(255,255,255,.4);border-top-color:#fff"></span>지우는 중':"전체 초기화 실행")+'</button></div>';
+  h+=card("전체 초기화","슈퍼관리자 · 본인 확인 "+supLeftMin()+"분 남음",body,'<button class="btn sm" onclick="supLock();render()">잠그기</button>','us-dz');
+  if(ST.ur.last) h+=card("마지막 실행","이 화면에서 한 것",urDone(ST.ur.last));
+  return h+urMemo();
+}
+/* 시점 복구 명령 · 서버 주소로 환경을 고른다(운영 hi = --production) · Worker 가 아니면(옛 GAS · 로컬) 시점 복구가 없어 백업 사본으로 */
+var UR_ENV={ "hi":"production --production", "hi-qa":"qa", "hi-rehearsal":"rehearsal", "hi-load":"loadtest" };
+function urCmd(at){ var base=String(BE).replace(/\/exec$/,""), m=base.match(/^https:\/\/(hi(?:-qa|-rehearsal|-load)?)\.[a-z0-9-]+\.workers\.dev$/), env=m?UR_ENV[m[1]]:"";
+  return env?'node tools/migrate.mjs pitr --to '+base+' --env '+env+' --at '+at:'이 서버는 시점 복구가 없습니다 · 위 백업 사본에서 되돌립니다'; }
+function urDone(r){
+  var lines=Object.keys(r.done||{}).map(function(k){ return [({game:"게임기록",type:"타자기록",race:"타자대전",nick:"닉네임",log:"참여(스탬프 · 룰렛)",raffle:"응모권",lg:"최초 로그인 거둠",pin:"PIN 초기화"})[k]||k, Number(r.done[k]).toLocaleString()+(k==="lg"||k==="pin"?"명":"줄"), "loss"]; });
+  if(r.skip&&r.skip.lg) lines.push(["최초 로그인 건너뜀", r.skip.lg+"명 · 룰렛 · 응모권과 부딪침"]);
+  lines.push(["백업 사본", esc(r.backup||"-")]); lines.push(["지우기 직전 시각", esc(r.atKst||"")+' <span class="cap">('+esc(r.at)+')</span>']);
+  return imp(lines)+'<p class="cap mt12">되돌리기 · 서버 담당자가 「서버 이전」 폴더에서 아래 명령으로 그 시각의 책갈피를 받고, 받은 책갈피로 <b>--restore</b> 합니다. 그 시각 뒤의 모든 기록(다른 참가자 활동 포함)이 함께 되돌아갑니다.</p>'+
+    '<code class="us-cmd">'+esc(urCmd(r.at))+'</code>';
+}
+function urMemo(){
+  return memo('<p><b>무엇을 지우나</b> · 게임 기록(게임기록 · 타자기록 · 타자대전 시트) · 닉네임(타자닉네임) · 최초 로그인 상태가 기본입니다. PIN 전체와 스탬프 · 룰렛 · 응모권은 고를 때만 지웁니다. 명부 · 계정 행 · 설정 · 운영로그는 남깁니다.</p>'+
+    '<p><b>순서</b> · 고르기 → 미리 세기 → 확인 문구 입력 → 실행 → 확인 창. 실행하면 서버가 먼저 시트 전체 사본을 만들고, 사본을 못 만들면 아무것도 지우지 않습니다.</p>'+
+    '<p><b>되돌리기</b> · 시점 복구(30일 안)로 지우기 직전 시각으로 되돌립니다. 명령은 실행 뒤 이 화면과 운영로그(「usr_reset_all」 줄의 직전 시각)에 남습니다. 절차는 「QA/운영 배포 안내.md」의 「콘솔 전체 초기화 되돌리기」.</p>'+
+    '<p><b>10/25 베타 정리와의 관계</b> · 편집기 함수 clearBetaData 는 참여 · 신청 · 접속 등 22종을 한꺼번에 비우는 별도 도구입니다. 이 화면은 그중 게임 · 닉네임 · 접속 정보만 고르는 좁은 도구입니다.</p>'+
+    '<p><b>참가자 폰</b> · 폰에 남은 「이 기기 최고」 · 닉네임 표시는 다음 로그인(로그아웃 뒤)에 서버 값을 따릅니다. 스탬프는 다음 동기화(30초 안)에 서버 목록을 따릅니다.</p>');
+}
+function urCount(){
+  var pk=urParts().join(",");
+  if(!pk){ toast("지울 것을 고르세요"); return; }
+  ST.ur.busy="dry"; render();
+  callPost("usr_reset_all",{parts:pk,dry:1},function(r){
+    ST.ur.busy=false;
+    if(r&&r.ok&&r.dry){ ST.ur.plan=r; ST.ur.planKey=pk; ST.ur.word=""; }
+    else toast("실패: "+usWhy(r));
+    render();
+  },function(e){ ST.ur.busy=false; render(); toast("실패: "+usWhy(e)); });
+}
+function urRun(){
+  if(!urReady()) return;
+  var pk=ST.ur.planKey, P=ST.ur.plan.plan;
+  var rows=USR_PARTS_UI.filter(function(x){ return ST.ur.parts[x.k]; }).map(function(x){ return [x.n, Number(x.c(P)).toLocaleString()+(x.k==="lg"||x.k==="pin"?"명":"줄"), "loss"]; });
+  dialog({ t:"모든 참가자의 기록을 지울까요?", who:"전체 초기화<span>고른 것 "+rows.length+"가지 · 처리 사번 "+esc((ST.me&&ST.me.emp)||aemp())+"</span>", x:imp(rows), ok:"지금 지우기", danger:true,
+    s:"<b>되돌릴 수 없습니다.</b> 서버가 실행 직전 사본을 만들고, 되돌리기는 서버 담당자의 시점 복구로만 합니다. 운영로그에 남습니다.",
+    onOk:function(){
+      ST.ur.busy="run";
+      callPost("usr_reset_all",{parts:pk,confirm:ST.ur.word},function(r){
+        dlgForce(); ST.ur.busy=false;
+        if(r&&r.ok){ ST.ur.last=r; ST.ur.plan=null; ST.ur.word=""; render();
+          dialog({ t:"전체 초기화를 마쳤습니다", s:"참가자 앱은 다음 동기화부터 바뀐 값을 따릅니다. 아래 시각과 명령을 서버 담당자에게 남겨 두세요.", x:urDone(r), ok:"확인했습니다", wide:true });
+          _cache={}; }
+        else { render(); toast("실패: "+usWhy(r),{ms:5000}); }
+      },function(e){ dlgForce(); ST.ur.busy=false; render(); toast("실패: "+usWhy(e)); });
+    } });
 }
 /* ── v4.68 (QA 5 260930) 참가자 본인 확인(세션 토큰) 숫자 · 보기만 · 켜고 끄는 버튼은 두지 않는다(관리 통로 도구 sessRequireOn · Off) ──
  * 서버 sess_stats(관리코드) · 오늘 줄 = 토큰 맞음 · 토큰 없는 쓰기 · 틀린 토큰 · PIN 초기화 전 토큰 · 토큰 없이 쓴 사람 수 · 스태프 스캔 QR 결과
@@ -4309,6 +4585,7 @@ function supOn(){ return !!(ST.me&&ST.me.sup); }
    서버가 spin(시간 지남 · PIN 이 바뀜 · 코드가 바뀜)을 주면 버리고 PIN 화면으로 · 옛 서버(adm_pin 모름)는 본인 확인 없이 예전처럼 연다(그 서버는 sp 를 요구하지 않는다) */
 var SUPV={ sp:"", until:0, busy:false, err:"", pin:"", legacy:false };
 var SP_ACT={ adm_roster:1, adm_roster_set:1, adm_code_set:1, acct_pwreset:1, pw_req_done:1 };
+SP_ACT.usr_reset_all=1;   /* v5.01 계정 › 전체 초기화(슈퍼관리자 · POST) */
 function supOk(){ return SUPV.legacy||!!(SUPV.sp&&Date.now()<SUPV.until); }
 function supAttach(action, params){ if(SUPV.sp&&SP_ACT[action]&&!("sp" in params)) params.sp=SUPV.sp; }
 function supDrop(msg){ SUPV.sp=""; SUPV.until=0; SUPV.pin=""; SUPV.busy=false; SUPV.legacy=false; SUPV.err=msg||""; delete ST.data.adm; }
