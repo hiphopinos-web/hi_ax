@@ -1221,6 +1221,7 @@ function viewAcctList(){   /* v5.01 계정 › 계정 목록(예전 계정 화�
  *   옛 서버(usr_info 모름) = 닉네임 숨기기 · 지우기(type_nick_hide · type_nick_reset)와 PIN 초기화만 · 나머지는 「서버 업데이트 뒤 사용」
  * 전체 초기화 = 슈퍼관리자 + 본인 확인(sp · 30분) + 확인 문구 「전체 초기화」 직접 입력 · POST usr_reset_all · 먼저 미리 세기(dry)
  *   서버가 실행 직전 시트 전체 사본을 만들고 직전 시각(at)을 돌려준다 · 되돌리기 = 관리 통로 시점 복구(pitr --at → --restore)
+ *   v5.02 새 서버는 직전 책갈피(bm)도 돌려준다 · 명령 = pitr --restore <bm> 한 줄 · bm 이 없으면(옛 서버) --at 명령에 「1분 남짓 앞이 될 수 있음」을 붙인다
  * 모든 쓰기는 확인 창(사번 · 이름 · 되돌릴 수 없음) · 처리한 사람 한 명만 다시 받는다 */
 var USR_WORD="전체 초기화";
 var USR_EV_UI=[ {k:"pang",n:"AX 팡",g:"미니 게임"}, {k:"jump",n:"ME to WE 점프",g:"미니 게임"}, {k:"tetris",n:"테트리스",g:"미니 게임"}, {k:"ox",n:"AX 퀴즈",g:"퀴즈"}, {k:"word",n:"기억력 퀴즈",g:"퀴즈 · 옛 종목"}, {k:"type",n:"타자(단어 소나기)",g:"앱 · 1F 현장 · 대전"} ];
@@ -1435,19 +1436,24 @@ function viewAcctAll(){
 }
 /* 시점 복구 명령 · 서버 주소로 환경을 고른다(운영 hi = --production) · Worker 가 아니면(옛 GAS · 로컬) 시점 복구가 없어 백업 사본으로 */
 var UR_ENV={ "hi":"production --production", "hi-qa":"qa", "hi-rehearsal":"rehearsal", "hi-load":"loadtest" };
-function urCmd(at){ var base=String(BE).replace(/\/exec$/,""), m=base.match(/^https:\/\/(hi(?:-qa|-rehearsal|-load)?)\.[a-z0-9-]+\.workers\.dev$/), env=m?UR_ENV[m[1]]:"";
-  return env?'node tools/migrate.mjs pitr --to '+base+' --env '+env+' --at '+at:'이 서버는 시점 복구가 없습니다 · 위 백업 사본에서 되돌립니다'; }
+function urCmd(r){ var base=String(BE).replace(/\/exec$/,""), m=base.match(/^https:\/\/(hi(?:-qa|-rehearsal|-load)?)\.[a-z0-9-]+\.workers\.dev$/), env=m?UR_ENV[m[1]]:"";
+  if(!env) return '이 서버는 시점 복구가 없습니다 · 위 백업 사본에서 되돌립니다';
+  var head='node tools/migrate.mjs pitr --to '+base+' --env '+env;
+  return r.bm?head+' --restore '+r.bm:head+' --at '+r.at; }
 function urDone(r){
   var lines=Object.keys(r.done||{}).map(function(k){ return [({game:"게임기록",type:"타자기록",race:"타자대전",nick:"닉네임",log:"참여(스탬프 · 룰렛)",raffle:"응모권",lg:"최초 로그인 거둠",pin:"PIN 초기화"})[k]||k, Number(r.done[k]).toLocaleString()+(k==="lg"||k==="pin"?"명":"줄"), "loss"]; });
   if(r.skip&&r.skip.lg) lines.push(["최초 로그인 건너뜀", r.skip.lg+"명 · 룰렛 · 응모권과 부딪침"]);
   lines.push(["백업 사본", esc(r.backup||"-")]); lines.push(["지우기 직전 시각", esc(r.atKst||"")+' <span class="cap">('+esc(r.at)+')</span>']);
-  return imp(lines)+'<p class="cap mt12">되돌리기 · 서버 담당자가 「서버 이전」 폴더에서 아래 명령으로 그 시각의 책갈피를 받고, 받은 책갈피로 <b>--restore</b> 합니다. 그 시각 뒤의 모든 기록(다른 참가자 활동 포함)이 함께 되돌아갑니다.</p>'+
-    '<code class="us-cmd">'+esc(urCmd(r.at))+'</code>';
+  if(r.bm) lines.push(["직전 책갈피", '<span class="cap">'+esc(r.bm)+'</span>']);
+  return imp(lines)+(r.bm
+    ?'<p class="cap mt12">되돌리기 · 서버 담당자가 「서버 이전」 폴더에서 아래 명령 한 줄을 실행합니다(지우기 바로 앞 책갈피로 되돌림). 실행 뒤의 모든 기록(다른 참가자 활동 포함)이 함께 되돌아갑니다.</p>'
+    :'<p class="cap mt12">되돌리기 · 서버 담당자가 「서버 이전」 폴더에서 아래 명령으로 그 시각의 책갈피를 받고, 받은 책갈피로 <b>--restore</b> 합니다. 시각으로 찾은 책갈피는 직전보다 1분 남짓 앞이 될 수 있어, 그 사이 기록도 함께 되돌아갑니다.</p>')+
+    '<code class="us-cmd">'+esc(urCmd(r))+'</code>';
 }
 function urMemo(){
   return memo('<p><b>무엇을 지우나</b> · 게임 기록(게임기록 · 타자기록 · 타자대전 시트) · 닉네임(타자닉네임) · 최초 로그인 상태가 기본입니다. PIN 전체와 스탬프 · 룰렛 · 응모권은 고를 때만 지웁니다. 명부 · 계정 행 · 설정 · 운영로그는 남깁니다.</p>'+
     '<p><b>순서</b> · 고르기 → 미리 세기 → 확인 문구 입력 → 실행 → 확인 창. 실행하면 서버가 먼저 시트 전체 사본을 만들고, 사본을 못 만들면 아무것도 지우지 않습니다.</p>'+
-    '<p><b>되돌리기</b> · 시점 복구(30일 안)로 지우기 직전 시각으로 되돌립니다. 명령은 실행 뒤 이 화면과 운영로그(「usr_reset_all」 줄의 직전 시각)에 남습니다. 절차는 「QA/운영 배포 안내.md」의 「콘솔 전체 초기화 되돌리기」.</p>'+
+    '<p><b>되돌리기</b> · 시점 복구(30일 안)로 지우기 바로 앞 책갈피로 되돌립니다. 명령은 실행 뒤 이 화면과 운영로그(「usr_reset_all」 줄의 직전 책갈피)에 남습니다. 절차는 「QA/운영 배포 안내.md」의 「콘솔 전체 초기화 되돌리기」.</p>'+
     '<p><b>10/25 베타 정리와의 관계</b> · 편집기 함수 clearBetaData 는 참여 · 신청 · 접속 등 22종을 한꺼번에 비우는 별도 도구입니다. 이 화면은 그중 게임 · 닉네임 · 접속 정보만 고르는 좁은 도구입니다.</p>'+
     '<p><b>참가자 폰</b> · 폰에 남은 「이 기기 최고」 · 닉네임 표시는 다음 로그인(로그아웃 뒤)에 서버 값을 따릅니다. 스탬프는 다음 동기화(30초 안)에 서버 목록을 따릅니다.</p>');
 }
