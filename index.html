@@ -3305,7 +3305,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.02";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.03";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -4730,7 +4730,7 @@ var App = {
     return false;
   },
   title: function (v) {
-    if (v === "guide_time") return "내 일정";   /* v4.13 전체 시간표는 프로그램 탭 시간표 보기 */
+    if (v === "guide_time") return "나의 일정";   /* v4.13 전체 시간표는 프로그램 탭 시간표 보기 */
     if (v === "sess_d") return progMine(PROG.sid) ? "신청 관리" : "프로그램";
     if (v === "exp_g") return stampTitle(EXPG.id);
     if (v === "scan_q") return SCQ.ctx ? stampTitle(SCQ.ctx) + " 안내" : "QR 스캔";
@@ -5203,7 +5203,7 @@ function progTTMineChip(pid) {
    갈 곳이 없는 줄은 누를 수 없고, 펼침에만 있던 한 줄(누가 · 무엇)을 제목 아래에 둔다 · v4.99 Intro · Outro 도 상세 한 장으로 간다(TL_PROG intro · outro) */
 function progTTRow(k, o) {
   return rcHtml({ cls: o.cls + (o.go ? "" : " na"), onclick: o.go || "", link: !!o.go, chev: o.go ? undefined : false, left: tokBadge(o.t0, o.tok, o.t1 ? "~" + o.t1 : null),
-    title: esc(o.title) + (o.mine ? '<span class="ax-sr-only"> · 내 일정</span>' : ""), badges: o.badge || "", sub: o.sub ? esc(o.sub) : "" });
+    title: esc(o.title) + (o.mine ? '<span class="ax-sr-only"> · 나의 일정</span>' : ""), badges: o.badge || "", sub: o.sub ? esc(o.sub) : "" });
 }
 function progTTBody(desc, kv, go, lbl) {
   return '<div class="axs-ttb">' + (desc ? '<p class="ax-description">' + esc(desc) + "</p>" : "") +
@@ -5488,8 +5488,8 @@ function progDetail(s) {
     D.kv = [["일시", day + progTm(s.tm)], ["장소", pl], ["정원", s.capNote || ""], ["참여 방법", "사전 신청자만 참여 · 현장 신청 없음"]];
     D.secT = "세션 안내";
     D.secB = (s.desc ? esc(s.desc) + "<br>" : "") + (s.info || []).map(function (it) { return "<b>" + esc(it[0]) + "</b> " + esc(it[1]); }).join("<br>");
-    D.help = mi ? "사전 신청 내역은 내 일정에서 확인할 수 있어요" : "앱에서는 신청을 받지 않아요";
-    D.btn = mi ? progBtn("내 일정 보기", "mySched()", "ax-button-weak") : timeBtn;
+    D.help = mi ? "사전 신청 내역은 나의 일정에서 확인할 수 있어요" : "앱에서는 신청을 받지 않아요";
+    D.btn = mi ? progBtn("나의 일정 보기", "mySched()", "ax-button-weak") : timeBtn;
     return D;
   }
   if (s.id === "dap") {
@@ -5506,7 +5506,7 @@ function progDetail(s) {
         r.status === "checked" ? "업무 설명 → 병목 → 개선방안 순서로 진행돼요." : "상담을 마쳤어요. 아래 코드를 AX LOUNGE 데스크에 보여 주고 사은품을 받으세요.";
       if (r.status === "done") D.extra = '<div class="ax-inset ax-stack-tight axs-gift"><p class="ax-card-title">사은품 교환권 · 1회</p>' + qrHtml() + '<p class="ax-type-t5-strong axs-center-tx">GIFT-' + esc((S.get("user", {}) || {}).empId || "") + '</p><p class="ax-meta axs-center-tx">중복 수령 방지 코드예요</p></div>';
       if (RESV_LIVE.indexOf(r.status) >= 0 && r.status !== "checked") { D.help = "참여가 어려우면 신청을 취소할 수 있어요"; D.btn = cxBtn; }
-      else { D.help = ""; D.btn = progBtn("내 일정 보기", "mySched()", "ax-button-weak"); }
+      else { D.help = ""; D.btn = progBtn("나의 일정 보기", "mySched()", "ax-button-weak"); }
       return D;
     }
     var conf = resvConf(), slots = resvSlots(), lunchM = t2m(conf.lunch);
@@ -5532,7 +5532,7 @@ function progDetail(s) {
       /* v4.47 참석이 서버에 찍힘 · 취소 버튼 대신 참석 완료 */
       D.st = "참석 완료"; D.stc = "ok"; D.secT = "참석한 커피챗이에요";
       D.secB = "함께해 주셔서 고마워요.";
-      D.help = ""; D.btn = progBtn("내 일정 보기", "mySched()", "ax-button-weak");
+      D.help = ""; D.btn = progBtn("나의 일정 보기", "mySched()", "ax-button-weak");
       return D;
     }
     if (!c) {
@@ -5564,7 +5564,7 @@ function progApply(id) {
 var PROG_ERR = {
   net: { t: "연결이 불안정해 신청하지 못했어요", b: "신청은 아직 되지 않았어요. 잠시 뒤 다시 시도해 주세요." },
   taken: { t: "방금 다른 분이 신청한 시간이에요", b: "다른 시간을 골라 주세요.", act: "dapRepick()", lbl: "시간 다시 고르기" },   /* v4.64 App.back() 은 상담 화면을 떠났다 */
-  dupR: { t: "이미 진행 중인 상담 신청이 있어요", b: "내 일정에서 확인해 주세요.", act: "mySched()", lbl: "내 일정 보기" },
+  dupR: { t: "이미 진행 중인 상담 신청이 있어요", b: "나의 일정에서 확인해 주세요.", act: "mySched()", lbl: "나의 일정 보기" },
   etc: { t: "신청하지 못했어요", b: "잠시 뒤 다시 시도해 주세요." }
 };
 function progDapSave(slot, beId) {
@@ -5870,11 +5870,11 @@ function myScheduleHtml() {
   var all0 = rows.length;
   if (evPhase() === "live") rows = rows.filter(function (r) { return r[7] == null || r[7] > hm0; });
   var head = '<div class="sect"><b>나의 일정</b>' +
-    '<span role="button" tabindex="0" aria-label="내 일정 바로가기" onclick="mySched()">' + lnkChev("바로가기") + "</span></div>";
+    '<span role="button" tabindex="0" aria-label="나의 일정 바로가기" onclick="mySched()">' + lnkChev("바로가기") + "</span></div>";
   /* v3.13: 첫 줄 = 「지금·다음」(구 히어로 흡수 · 시간 뱃지 공용 tok, 진행 중 = 검정) · v3.22 모든 행 = 공용 행 카드 */
   if (!rows.length) {
     return head + '<div class="axs-rows">' + schedNowRow() +
-      (all0 ? rcHtml({ cls: "", onclick: "mySched()", link: true, left: rcIcon(App.ICONS.guide_time), title: "남은 일정 없음", sub: "지난 일정은 내 일정에서" })
+      (all0 ? rcHtml({ cls: "", onclick: "mySched()", link: true, left: rcIcon(App.ICONS.guide_time), title: "남은 일정 없음", sub: "지난 일정은 나의 일정에서" })
         : rcHtml({ cls: "", onclick: "App.tab('guide')", link: true, left: rcIcon(App.ICONS.guide), title: "신청한 프로그램 없음", sub: "프로그램에서 신청" })) + "</div>";
   }
   /* v4.13 (사용자 결정 260922) 카드 안 스크롤(창 안의 창) 폐지 · 3개만 · 4개 이상이면 목록 바로 아래 전폭 버튼 「일정 더보기 +N」(숨은 개수) → 나의 참여 › 내 일정 · 3개 이하면 버튼 없음 */
@@ -5883,7 +5883,7 @@ function myScheduleHtml() {
     return rcHtml({ cls: " my", onclick: r[1], link: true, left: tokBadge(esc(r[2]), r[5]), title: esc(r[3]), sub: esc(r[4]), place: r[6] });
   }).join("");
   return head + '<div class="axs-rows">' + schedNowRow() + cards + "</div>" +
-    (more ? '<button type="button" class="ax-button ax-button-weak axs-more" onclick="mySched()" aria-label="내 일정 ' + more + '개 더 보기">일정 더보기 +' + more + "</button>" : "");
+    (more ? '<button type="button" class="ax-button ax-button-weak axs-more" onclick="mySched()" aria-label="나의 일정 ' + more + '개 더 보기">일정 더보기 +' + more + "</button>" : "");
 }
 
 /* 홈 · 스탬프 블록 (v3.2): 홈도 스탬프 탭과 같은 railHtml 공용 컴포넌트를 쓴다 (design.md 컴포넌트 일관성).
@@ -6199,7 +6199,7 @@ function parCardHtml(ph) {
   var tracks = PAR_PM.tracks.map(function (tr) {
     var mine = tr.ids.some(function (id) { return attProg(id) ? !!attMineAt(id) : !!sessMine(id); });
     return '<button class="par-t' + (mine ? " my" : "") + '" type="button" onclick="progGoFl(' + tr.fl + ')">' +
-      '<span class="hd"><b>' + esc(tr.nm) + "</b>" + (mine ? '<span class="badge mint">내 일정</span>' : "") + "</span>" +
+      '<span class="hd"><b>' + esc(tr.nm) + "</b>" + (mine ? '<span class="badge mint">나의 일정</span>' : "") + "</span>" +
       tr.items.map(function (it) { return '<span class="it">' + esc(it[0]) + "<small>" + esc(it[1]) + "</small></span>"; }).join("") +
       '<span class="nt">' + esc(tr.note) + "</span></button>";
   }).join("");
@@ -7330,7 +7330,7 @@ var Views = {
       '<section class="ax-card"><div class="ax-stack-tight"><p class="axs-cat">' + esc(d.cat + (d.org ? " · " + d.org : "")) + '</p><h2 class="ax-section-title">' + esc(d.title) + "</h2></div>" +
       '<div class="axs-hr"></div><dl class="axs-kv">' + kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl></section>" +
       (e ? '<div class="axs-err" role="alert"><b>' + esc(e.t) + "</b>" + (e.b ? "<span>" + esc(e.b) + "</span>" : "") + "</div>" :
-        '<p class="ax-description">신청 후에는 내 일정에서 확인할 수 있어요.</p>') +
+        '<p class="ax-description">신청 후에는 나의 일정에서 확인할 수 있어요.</p>') +
       "</div>" +
       '<div class="ax-bottom axs-fix">' +
       (e && e.act
@@ -7341,14 +7341,14 @@ var Views = {
   /* ═══ 신청 결과 P04 · 서버 성공(데모는 로컬 판정)일 때만 여기로 온다 ═══ */
   sess_ok: function () {
     var o = PROG.ok, s = o && progById(o.id);
-    if (!s) return '<div class="ax-stack">' + botHtml("신청 내역은 내 일정에서 확인해 주세요") + '<button type="button" class="ax-button" onclick="mySched()">내 일정 확인하기</button></div>';
+    if (!s) return '<div class="ax-stack">' + botHtml("신청 내역은 나의 일정에서 확인해 주세요") + '<button type="button" class="ax-button" onclick="mySched()">나의 일정 확인하기</button></div>';
     var dap = s.id === "dap", pl = dap ? "1F AX LOUNGE" : sessPlace(s);
     return '<div class="ax-stack axs-okwrap">' +
       '<span class="axs-okmark">완료</span>' +
       '<div class="ax-stack-tight axs-gap12 axs-center-tx"><h1 class="ax-type-t2">' + (dap ? "상담 신청이 접수됐어요" : "참여 신청이 완료됐어요") + "</h1>" +
       '<p class="ax-body">' + (dap ? "운영자가 승인하면 앱에서 알려 드려요." : "새로운 발견의 순간,<br>" + esc(pl) + "에서 만나요.") + "</p></div>" +
       '<div class="ax-card ax-stack-tight axs-gap12"><p class="ax-card-title">' + esc(s.ttl) + '</p><p class="ax-description">10월 26일 · ' + esc(dap ? o.slot + " · 30분" : progTm(s.tm)) + '</p><p class="ax-description">' + esc(pl) + "</p></div></div>" +
-      '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" onclick="mySched()">내 일정 확인하기</button>' +
+      '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" onclick="mySched()">나의 일정 확인하기</button>' +
       '<button type="button" class="ax-button ax-button-weak" onclick="App.tab(\'guide\')">다른 프로그램 둘러보기</button></div>';
   },
 
