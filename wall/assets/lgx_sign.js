@@ -1,9 +1,11 @@
-/* AX Festival 2026 · 스탬프 월 막간 「최초 로그인 장면」 사이니지판 (261002)
- * 참가자 앱 웹배포용/index.html v4.94 의 LGX(lgxSym · lgxLayout · lgxFrame)를 옮겼다. 안무 · 시간표 · 스프링 · 원본 좌표는 그대로다.
+/* AX Festival 2026 · 스탬프 월 막간 「최초 로그인 장면」 사이니지판 (261002 · v5.02 박자)
+ * 참가자 앱 웹배포용/index.html v5.02 의 LGX(lgxSym · lgxLayout · lgxSeed · lgxFrame)를 옮겼다. 박자표 · 스프링 · 원본 좌표는 그대로다.
  * 바뀐 것: 흰 면 + 주황 수면 → 검정 스테이지 + 어두운 수면(사이니지 블랙 스테이지 · design.md §1) · 수면에 비친 점은 흰 점 대신 어둡게 누른 원본 3색
+ *          로그인 입력이 없으므로 앞 구간(LGS.PRE) = 행사명 대신 수평선 위에 점 하나가 톡 생긴다(앱이 행사명을 못 읽을 때 쓰는 iris 와 같은 스프링)
  *          3막(도장 · 시트)은 없다 · 마지막 안착 자리 = 스탬프 월의 심볼 자리(그대로 월로 넘어간다)
- * 점(나) → 동료 점 원(02 Circle 순위 · 크기) → 반듯한 Me → 수평선에 닿으면 수면에 We → to 가 끼어들며 원본 심볼에 안착 */
-var LGS = { T: { ringIn: 0.6, spin: 1.7, burst: 2.4, drop: 3.55, hit: 3.85, to: 5.45, land: 6.95 }, sym: null, spr: null };
+ * 점(나) → 솟음 → 점이 곧바로 흩어져 반듯한 Me(v5.02 · 원 02 Circle 단계 없음) → 수평선에 닿으면 수면에 We → to 가 끼어들며 원본 심볼에 안착
+ * t = 0 은 점(나)이 다 생긴 순간 · 앞 구간은 음수 시각(-PRE ~ 0) · 월은 막간 시작 0.6초에 걸쳐 빠지고 그동안 점이 생긴다 */
+var LGS = { PRE: 0.6, T: { rise: 0.05, burst: 0.6, drop: 1.75, hit: 2.05, to: 3.65, land: 5.15 }, sym: null, spr: null };
 var LGS_LD = [0.5, 0.58, 0.44, 0.52, 0.56, 0.64];   /* 글자별 안착 시작(to 기준 초) · M e t o W e */
 var LGS_C = { o: ["#FF7F32", "#FF963E", "#E6CCFF"], w: ["#5C2C12", "#663816", "#4A4252"], d: ["#4A2410", "#57301A", "#3E3846"] };
 function lgsCl(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
@@ -77,16 +79,12 @@ function lgsLayout(G) {
   var rowW = (b1.x1 - b0.x0) + 40, rowH = (b0.y1 - b0.y0) + (b4.y1 - b4.y0) + 110;
   var fw = G.fw, cxm = G.cx, sm = Math.min((fw - 32) / rowW, G.hh * 0.78 / rowH), yh = G.cy, rowCx = (b0.x0 + b1.x1) / 2;
   var L = cur.L = { cx: cxm, x0: cxm - fw / 2, fw: fw, sm: sm, yh: yh, air: G.hh * 0.09, dM: 38 * sm, dF: 38 * G.S, xR: G.xR, yB: G.yB };
-  L.Rr = Math.min(fw * 0.42, rowW * sm * 0.58);
   var bt = sy.box[2], bo = sy.box[3];
   L.gap = (Math.max(bt.y1, bo.y1) - Math.min(bt.y0, bo.y0)) * sm * 0.72 / 2 + 6;
   L.toCx = (bt.x0 + bo.x1) / 2; L.toCy = (Math.min(bt.y0, bo.y0) + Math.max(bt.y1, bo.y1)) / 2; L.toS = sm * 0.72;
   L.toX0 = cxm + (bt.x0 - L.toCx) * L.toS - 20;
-  L.ringCy = yh - L.air - (b0.y1 - b0.y0 + 25) * sm / 2;
-  var s = L.Rr / 340, ring = [];
-  for (i = 0; i < 36; i++) { var rk = i * 13 % 36; ring.push({ a0: i * 6.2832 / 36, d: (i === 27 ? 52 : rk < 7 ? 38 : rk < 18 ? 22 : 12) * s * 1.25 }); }
-  cur.ring = ring;
-  var srcOf = function (x, y) { var an = Math.atan2(y - L.air - L.ringCy, x - cxm); return Math.round(((an % 6.2832) + 6.2832) % 6.2832 / (6.2832 / 36)) % 36; };
+  L.meCy = yh - L.air - (b0.y1 - b0.y0 + 25) * sm / 2;   /* 공중에 모인 Me 의 가운데 높이 · 점(나)이 여기까지 솟아 흩어진다 */
+  L.D0 = 30 * (L.dM / 22); L.y0 = yh - L.D0 / 2 - 6;     /* 점(나)이 생기는 자리 = 가운데 수평선 바로 위 */
   var P = sy.P, n = P.length, pt = [];
   for (i = 0; i < n; i++) {
     var g = sy.g[i], o = sy.off[g], q = { g: g, f: G.map(P[i][0], P[i][1]), f0: G.map(sy.X[i], P[i][1]) };
@@ -96,47 +94,31 @@ function lgsLayout(G) {
   }
   var up = [], dn = [];
   for (i = 0; i < n; i++) { var q4 = pt[i]; if (!q4.m) continue; q4.s = q4.m;
-    if (q4.g < 2) up.push({ m: q4.m, src: i === sy.mine ? 27 : srcOf(q4.m[0], q4.m[1]), mine: i === sy.mine }); else dn.push({ m: q4.m }); }
+    if (q4.g < 2) up.push({ m: q4.m, mine: i === sy.mine }); else dn.push({ m: q4.m }); }
+  /* 흩어지는 순서 · Me 가운데에서 가까운 점이 먼저(r = 0 ~ 1) */
+  var mx0 = 0, my0 = 0, rM = 1;
+  up.forEach(function (u) { mx0 += u.m[0]; my0 += u.m[1]; }); mx0 /= up.length || 1; my0 /= up.length || 1;
+  up.forEach(function (u) { u.r = Math.hypot(u.m[0] - mx0, u.m[1] - my0); rM = Math.max(rM, u.r); });
+  up.forEach(function (u) { u.r /= rM; });
   cur.pt = pt; cur.up = up; cur.dn = dn; cur.sparks = null;
   return cur;
 }
-function lgsRot(t) { var s = t - LGS.T.spin; return s <= 0 ? 0 : 4.2 * s * s; }
-function lgsRingPos(cur, i, t) {
-  var L = cur.L, a = cur.ring[i].a0 + lgsRot(t);
-  var rr = L.Rr * (1 - 0.1 * lgsEIO((t - (LGS.T.burst - 0.22)) / 0.22));
-  return [L.cx + Math.cos(a) * rr, L.ringCy + Math.sin(a) * rr];
+/* 점(나) · 생긴 자리에서 스프링으로 솟아 Me 가운데 높이로 · 흩어지기 전까지 조금 커진다 · [x, y, 지름, 면] · 앞 구간(t < 0)은 그 자리에서 톡 생긴다 */
+function lgsSeed(cur, t) {
+  var L = cur.L;
+  if (t < 0) return [L.cx, L.y0, L.D0 * lgsSpring((t + LGS.PRE) / LGS.PRE, 0.55, 1.25), 0];
+  var u = (t - LGS.T.rise) / 0.6, e = lgsSpring(u, 0.55, 1.2);
+  return [L.cx, L.y0 + (L.meCy - L.y0) * e - Math.sin(lgsCl(u) * 3.1416) * 22, L.D0 * (1 + 0.12 * lgsCl(e)), 0];
 }
 /* 수평선 높이 · to 가 틈에 들어선 뒤 수면이 천천히 빠진다 */
 function lgsLine(cur, t) { var L = cur.L, T = LGS.T; return t >= T.to + 0.55 ? L.yh + (L.yB + 8 - L.yh) * lgsEIO((t - T.to - 0.55) / 0.75) : L.yh; }
-/* 한 프레임 · 시간(t)만으로 모든 점의 자리가 정해진다 · cx 는 논리 좌표 변환이 걸린 상태 · env.water(line) = 수면 칠하기(월이 그린다) */
+/* 한 프레임 · 시간(t)만으로 모든 점의 자리가 정해진다 · t 는 -PRE 부터 · cx 는 논리 좌표 변환이 걸린 상태 · env.water(line) = 수면 칠하기(월이 그린다) */
 function lgsFrame(cur, cx, t, env) {
-  var T = LGS.T, L = cur.L, sy = lgsSym(), i, q, lq = !!env.lq;
+  var T = LGS.T, L = cur.L, sy = lgsSym(), i, q, lq = !!env.lq, a0 = lgsCl((t + LGS.PRE) / 0.5);
   var line = lgsLine(cur, t);
-  if (line < L.yB) env.water(line, Math.min(1, t / 0.5));
-  var Pd = [], mineP = null, ringD = cur.ring[27].d;
-  var D0 = 30 * (L.dM / 22), my0 = line - D0 * 0.5 - 8;
-  /* 점 하나(나) · 수면 위에서 숨 쉬다가 솟아 원 가운데로 → 원의 12시로 · 동료의 점이 사방에서 원으로 */
-  if (t < T.burst) {
-    var mx = L.cx, myy, md, grow = lgsSpring(t / 0.5, 0.5, 1.2);
-    if (t < T.ringIn + 0.75) {
-      var e1 = lgsSpring((t - 0.12) / 0.95, 0.5, 1.3);
-      myy = my0 + (L.ringCy - my0) * e1 - Math.sin(lgsCl((t - 0.12) / 0.95) * 3.1416) * 22; md = (D0 + D0 * 0.25 * Math.min(1, e1)) * Math.min(1, grow);
-    } else {
-      var e2 = lgsSpring((t - (T.ringIn + 0.75)) / 0.6, 0.55, 1.2), rp = lgsRingPos(cur, 27, t);
-      mx = L.cx + (rp[0] - L.cx) * e2; myy = L.ringCy + (rp[1] - L.ringCy) * e2; md = D0 * 1.25 + (ringD - D0 * 1.25) * e2;
-    }
-    mineP = [mx, myy, md, 0];
-    for (i = 0; i < 36; i++) {
-      if (i === 27) continue;
-      var k1 = (t - T.ringIn - 0.6 * lgsH(i)) / 0.8;
-      if (k1 <= 0) continue;
-      var tp = lgsRingPos(cur, i, t), ang = cur.ring[i].a0 + (lgsH(i + 50) - 0.5) * 0.9, far = L.fw * 1.1;
-      var sx = L.cx + Math.cos(ang) * far, sy0 = L.ringCy + Math.sin(ang) * far, b = lgsSpring(k1, 0.42, 1.5);
-      var st1 = 1 + 0.25 * Math.max(0, 1 - k1 * 1.6);
-      Pd.push([sx + (tp[0] - sx) * b, sy0 + (tp[1] - sy0) * b, cur.ring[i].d * Math.min(1, k1 * 2.2) * st1, 0]);
-    }
-  }
-  /* 거울 장면의 두 줄 · 윗줄 = 원이 터져 공중에 모임 → 낙하 → 수평선 · 수면 = 닿는 순간 한 줄씩 피어남 */
+  if (line < L.yB) env.water(line, a0);
+  var Pd = [], mineP = t < T.burst ? lgsSeed(cur, t) : null;   /* 점 하나(나) · 흩어지기 전까지 */
+  /* 거울 장면의 두 줄 · 윗줄 = 점(나)이 흩어져 공중에서 반듯한 Me 로 모임 → 낙하 → 수평선 · 수면 = 닿는 순간 한 줄씩 피어남 */
   var gyOff = -L.air, sq = 1, sxq = 1, amp = 0;
   if (t >= T.drop) {
     var an = lgsCl((t - T.drop) / 0.14), fall = lgsEI((t - T.drop - 0.1) / (T.hit - T.drop - 0.1));
@@ -147,22 +129,17 @@ function lgsFrame(cur, cx, t, env) {
     sq = hk < 1.2 ? 1 - 0.17 * Math.exp(-4.5 * hk) * Math.cos(11 * hk) : 1; sxq = 1 + (1 - sq) * 0.55;
     amp = 5 * Math.max(0, 1 - hk / 1.6);
   }
-  if (t >= T.burst - 0.02 && t < T.to) {
-    var seenSrc = {};
+  if (t >= T.burst && t < T.to) {
     for (i = 0; i < cur.up.length; i++) {
       q = cur.up[i];
-      var x = L.cx + (q.m[0] - L.cx) * sxq, y = L.yh - (L.yh - q.m[1]) * sq + gyOff, dd = L.dM, k2 = (t - T.burst - 0.36 * ((q.m[0] - L.x0) / L.fw) - 0.07 * lgsH(i)) / 0.7;
+      var x = L.cx + (q.m[0] - L.cx) * sxq, y = L.yh - (L.yh - q.m[1]) * sq + gyOff, dd = L.dM, dep = T.burst + (q.mine ? 0.34 : 0.3 * q.r + 0.06 * lgsH(i)), k2 = (t - dep) / 0.7;   /* Me 가운데에서 가까운 점부터(나는 맨 나중) */
       if (k2 < 1) {
-        if (k2 <= 0) {
-          var s0 = lgsRingPos(cur, q.src, t);
-          if (q.mine) mineP = [s0[0], s0[1], ringD, 0]; else if (!seenSrc[q.src]) { seenSrc[q.src] = 1; Pd.push([s0[0], s0[1], cur.ring[q.src].d, 0]); }
-          continue;
-        }
-        var rp0 = lgsRingPos(cur, q.src, T.burst), tang = cur.ring[q.src].a0 + lgsRot(T.burst) - 3.1416, ek2 = lgsSpring(k2, 0.55, 1.35), ec = Math.min(1, ek2), iu = 1 - ec;
-        var c1x = rp0[0] + Math.cos(tang) * L.Rr * 0.5, c1y = rp0[1] + Math.sin(tang) * L.Rr * 0.5, tx0 = x, ty0 = y;
-        x = iu * iu * rp0[0] + 2 * iu * ec * c1x + ec * ec * tx0; y = iu * iu * rp0[1] + 2 * iu * ec * c1y + ec * ec * ty0;
+        if (k2 <= 0) { if (q.mine) mineP = lgsSeed(cur, t); continue; }   /* 아직 점(나) 안에 있다 */
+        var s0 = lgsSeed(cur, dep), ek2 = lgsSpring(k2, 0.55, 1.35), ec = Math.min(1, ek2), iu = 1 - ec, tx0 = x, ty0 = y, ddx = tx0 - s0[0], ddy = ty0 - s0[1];
+        var c1x = s0[0] + (ddx * 0.62 + ddy * 0.78) * 0.55, c1y = s0[1] + (ddy * 0.62 - ddx * 0.78) * 0.55;   /* 소용돌이 방향으로 돌며 나간다(곡선 조절점 = 방향을 0.9 라디안 돌린 자리) */
+        x = iu * iu * s0[0] + 2 * iu * ec * c1x + ec * ec * tx0; y = iu * iu * s0[1] + 2 * iu * ec * c1y + ec * ec * ty0;
         if (ek2 > 1) { x += (tx0 - c1x) * (ek2 - 1) * 0.5; y += (ty0 - c1y) * (ek2 - 1) * 0.5; }
-        dd = cur.ring[q.src].d * (1 - Math.min(1, ek2)) + dd * Math.min(1, ek2);
+        dd = (q.mine ? s0[2] : L.dM * 0.35) * (1 - ec) + dd * ec;
       }
       var qq = [x, y, dd, y > line ? 1 : 0];
       if (q.mine) mineP = qq; else Pd.push(qq);
@@ -197,9 +174,9 @@ function lgsFrame(cur, cx, t, env) {
       if (i === sy.mine) mineP = q5; else Pd.push(q5);
     }
   }
-  /* 반사 · 처음의 점과 원은 수면에 옅게 비친다 */
-  if (t < T.burst + 0.3) {
-    var ra = 0.9 * (1 - lgsCl((t - T.burst) / 0.3)), RR = [];
+  /* 반사 · 점(나)과 흩어져 나오는 점은 수면에 옅게 비친다(Me 가 모이기 전에 사라진다) */
+  if (t < T.burst + 0.5) {
+    var ra = 0.9 * (1 - lgsCl((t - T.burst - 0.2) / 0.3)) * lgsCl((t + LGS.PRE) / 0.25), RR = [];
     for (i = 0; i < Pd.length; i++) if (Pd[i][1] < line) RR.push([Pd[i][0], 2 * line - Pd[i][1], Pd[i][2], 1]);
     if (mineP) RR.push([mineP[0], 2 * line - mineP[1], mineP[2], 1]);
     cx.save(); cx.beginPath(); cx.rect(-1e4, line, 2e4, 2e4); cx.clip(); lgsDots(cx, RR, ra, true); cx.restore();
@@ -226,5 +203,5 @@ function lgsFrame(cur, cx, t, env) {
   lgsDots(cx, Pd, 1, lq);
   if (mineP) lgsDots(cx, [mineP], 1, false);
   /* 수평선 · 수면이 빠지기 전까지 가는 오렌지 선 하나 */
-  if (line < L.yB) { cx.globalAlpha = 0.5 * Math.min(1, t / 0.5) * (1 - lgsCl((t - T.to - 0.55) / 0.6)); cx.fillStyle = "#FF7E31"; cx.fillRect(-1e4, line - 1, 2e4, 2); cx.globalAlpha = 1; }
+  if (line < L.yB) { cx.globalAlpha = 0.5 * a0 * (1 - lgsCl((t - T.to - 0.55) / 0.6)); cx.fillStyle = "#FF7E31"; cx.fillRect(-1e4, line - 1, 2e4, 2); cx.globalAlpha = 1; }
 }

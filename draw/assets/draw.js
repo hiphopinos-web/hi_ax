@@ -44,10 +44,13 @@
     mode: "demo",            /* demo | server */
     demoN: 170,              /* 데모 참가자 수 */
     demoRate: 9,             /* 데모 체크인 속도(명/초 최대) */
-    rounds: [                /* 경품 단계 · 무대 5명(261001 확정) · 품목은 사용자가 줄 때까지 자리표시 */
-      { name: "ROUND 01", prize: "경품 A", count: 3 },
-      { name: "ROUND 02", prize: "경품 B", count: 1 },
-      { name: "FINAL", prize: "경품 C", count: 1 }
+    rounds: [                /* 경품 단계 · v5.03 행운권 1~6등 10명(261002 · 경품/[26-10] AX Festival 상품.pdf 4쪽) · 이름 = 앱 PRIZES · 6등부터 1등 순 · 조작 창에서 바꾼다(이미 저장한 기기는 그 값) */
+      { name: "6등", prize: "현대백화점 상품권 10만원", count: 3 },
+      { name: "5등", prize: "풀리오 종아리 마사지기", count: 2 },
+      { name: "4등", prize: "에어팟 4", count: 2 },
+      { name: "3등", prize: "미닉스 음식물 처리기", count: 1 },
+      { name: "2등", prize: "신라호텔 파크뷰 뷔페 식사권 2매", count: 1 },
+      { name: "1등", prize: "아이패드", count: 1 }
     ],
     minMix: [[0, 30], [5, 20], [10, 10]],   /* 마감 뒤 첫 추첨 최소 섞기 · [체크인 분 이상, 초] · 실제 행사(약 20분) = 10초 · 짧은 체크인(리허설)은 더 길게(공정성 시험 simck · 261001 확정) */
     onePerPerson: true,      /* 1인 1회 당첨 · 당첨 즉시 그 사람의 나머지 공을 뺀다 */
@@ -1351,7 +1354,7 @@
     drawStage();
     var worldA = 1;
     if (SC === "reveal" || SC === "card") worldA = STG.to ? 0.3 * (1 - clamp((T - STG.t0) / STG.dur, 0, 1)) : 0;
-    if (SC === "end") worldA = 0;
+    if (SC === "end" || SC === "fin") worldA = 0;   /* v5.03 참여상 숫자 장면 · 통을 그리지 않는다(물리 연출 없음) */
     if (SC === "board") worldA = 0.55;
     if (worldA > 0.01) {
       /* 카메라 · 감속하는 동안 6시 틈 쪽으로 조금 다가가고(멈출 때 한 번 흔들림), 공이 떨어지면 따라간다 */
@@ -1444,10 +1447,10 @@
       if (u >= 1) FADES.splice(i--, 1);
     }
   }
-  var PANELS = { intro: "", idle: "pIdle", checkin: "pCheck", closed: "pCheck", mix: "pMix", tension: "pMix", exit: "pMix", reveal: "pReveal", card: "pCard", board: "pBoard", end: "pEnd" };
+  var PANELS = { intro: "", idle: "pIdle", checkin: "pCheck", closed: "pCheck", mix: "pMix", tension: "pMix", exit: "pMix", reveal: "pReveal", card: "pCard", board: "pBoard", end: "pEnd", fin: "pFin" };
   function uiScene() {
     var s = SC, on = PANELS[s];
-    ["pIdle", "pCheck", "pMix", "pReveal", "pCard", "pBoard", "pEnd"].forEach(function (id) {
+    ["pIdle", "pCheck", "pMix", "pReveal", "pCard", "pBoard", "pEnd", "pFin"].forEach(function (id) {
       if (id === on) { if (s !== "exit") fade($(id), 1, 0.35, 0.22); }
       else fade($(id), 0, 0.2);
     });
@@ -1456,6 +1459,7 @@
     if (s === "mix" || s === "tension" || s === "exit") uiMix();
     if (s === "card") uiCard();
     if (s === "board") uiBoard();
+    if (s === "fin") uiFin();
     pushCtl();
   }
   /* ─── 체크인 QR · 앱 주소 #s=<추첨 코드>(앱 qrRoute 의 AXD 경로 · draw_in) · 코드는 하드코딩하지 않는다
@@ -1580,6 +1584,19 @@
     fade($("rWho"), 1, 0.35, 0.95); fade($("rPrize"), 1, 0.35, 1.05);
   }
   function uiAbsent() { fade($("rWho"), 0, 0.2); fade($("rPrize"), 0, 0.2); fade($("rAbs"), 1, 0.2); }
+  /* v5.03 참여상 숫자 발표 · 명령 arg = 당첨 W . 대상 N . 마감 HHMM [. 배송 MMDD] · 숫자는 서버 값 그대로 · 이름 · 부문 · 상품별 수량 없음 · 「서버 추첨」을 숨기지 않는다 */
+  function finArg(a) {
+    var m = /^(\d{1,6})\.(\d{1,6})\.(\d{3,4})(?:\.(\d{3,4}))?$/.exec(String(a == null ? "" : a)); if (!m) return null;
+    var hm = ("0" + m[3]).slice(-4), md = m[4] ? ("0" + m[4]).slice(-4) : "";
+    return { w: +m[1], n: +m[2], cut: hm.slice(0, 2) + ":" + hm.slice(2), ship: md ? +md.slice(0, 2) + "/" + +md.slice(2) : "" };
+  }
+  function goFin() { DIG.n = 0; stageTo("black"); MIX.target = 0; scene("fin"); lock(0.8); SFX.play("whoosh", 0.8); }
+  function uiFin() {
+    var f = ST.fin || { w: 0, n: 0, cut: "17:00", ship: "" }, all = f.n > 0 && f.w >= f.n, nf = function (v) { return Number(v || 0).toLocaleString("en-US"); };
+    set("fBig", (all ? "대상 전원 " : "") + '<span class="tab">' + nf(all ? f.n : f.w) + "</span><em>명</em>"); $("fBig").classList.toggle("all", all);
+    set("fMeta", (all ? "" : "대상 " + nf(f.n) + "명 · ") + esc(f.cut) + " 기준 스탬프 6개");
+    set("fNote", "결과는 앱 내 보상에서 확인" + (f.ship ? " · " + esc(f.ship) + " 배송" : ""));
+  }
   function uiCard() { var r = curRound(); set("kEye", esc(r.name)); fitText($("kEye"), 42, 30, 1); set("kTitle", esc(r.prize)); fitText($("kTitle"), 150, 96, 2); set("kMeta", r.count + "명 추첨"); }
   function uiBoard() {
     var all = ST.results.filter(function (r) { return r.st === "win" && r.id !== ST.pending; }), n = all.length, L = $("bList");
@@ -1707,10 +1724,11 @@
         return arg && String(arg) !== String(lw.id) ? "id" : "";
       case "board": return SC !== "mix" && SC !== "closed" ? "scene" : "";
       case "end": return SC === "tension" || SC === "exit" ? "drawing" : SC === "end" ? "same" : "";
+      case "fin": return SC === "tension" || SC === "exit" ? "drawing" : arg != null && arg !== "" && !finArg(arg) ? "arg" : "";   /* v5.03 참여상 발표 · 추첨 중만 아니면 */
     }
     return "unknown";
   }
-  var CMDS = ["idle", "intro", "checkin", "close", "round", "mix", "draw", "confirm", "absent", "undo", "board", "end", "reset_screen"];
+  var CMDS = ["idle", "intro", "checkin", "close", "round", "mix", "draw", "confirm", "absent", "undo", "board", "end", "reset_screen", "fin"];
   function runCmd(c, arg) {
     var why = cmdWhy(c, arg); if (why) return why;
     SFX.ensure();
@@ -1728,6 +1746,7 @@
       case "undo": return undoLast() || "";
       case "board": scene("board"); MIX.target = 0.15; return "";
       case "end": goEnd(); return "";
+      case "fin": var fa = finArg(arg); if (!fa) return "arg"; ST.fin = fa; persist(); goFin(); return "";
     }
     return "unknown";
   }
@@ -1865,6 +1884,7 @@
       else if (s === "card") { SC = "mix"; goCard(); }
       else if (s === "board") scene("board");
       else if (s === "end") { scene("mix"); goEnd(); }
+      else if (s === "fin" && ST.fin) { MIX.target = 0; scene("fin"); }   /* v5.03 참여상 숫자 장면 그대로 */
       else if (s === "closed") scene("closed");
       else if (s === "intro") scene("idle");
       else { scene("mix"); MIX.target = 1; }
