@@ -713,6 +713,8 @@
   .ty-rank .nm { flex: 1; min-width: 0; font-weight: 800; color: var(--hi); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ty-rank .dp { font-size: calc(12.5px * var(--fs)); color: var(--faint); font-weight: 700; }
   .ty-rank .sc { font-family: var(--disp); color: var(--hi); }
+  .tyb-pz .c i { position: absolute; right: 4px; bottom: 2px; font-style: normal; font-family: "Pretendard Variable", Pretendard, sans-serif; font-size: 10px; line-height: 14px; color: var(--rt-dim); }   /* v5.14 순위판 상품 썸네일 「샘플」 딱지(도트 글꼴 아님 · 레트로 절 밖) */
+  @keyframes tybHot { 0%, 100% { box-shadow: inset 0 0 0 0 transparent; } 30% { box-shadow: inset 0 0 0 3px var(--rt-cream); } }   /* v5.14 1F 타자왕 순위판 줄 깜빡임(레트로 절은 .rt 규칙만) */
   .cho-box { background: var(--ink); border: 0; color: #fff; border-radius: 20px; padding: 22px 18px; text-align: center; margin-bottom: 12px; }
   .cho-box .hint { margin-top: 10px; font-size: calc(15.5px * var(--fs)); line-height: 1.65; opacity: 0.92; }
   /* v3.98 점프 시작 화면 big 규칙(검정 무대 전제)은 v4.08 AX-TDS 4단계 틀(.gs-card · .gs-how)로 바뀌었다 */
@@ -2478,6 +2480,47 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   @media (max-height: 800px) { .rt .tsf-band { padding: 8px 14px; font-size: var(--rt-f24); line-height: var(--rt-l24); } .rt .tsf-r .tsf-row { padding: 6px 14px; } .rt .tsf-row { font-size: var(--rt-f16); line-height: var(--rt-l16); padding: 5px 8px; } .rt .tsf-p { padding: 18px 18px; gap: 6px; } .rt .tsf-in { height: 52px; } .rt .tsf-go { margin-top: 6px; padding: 8px 10px; } }
   @media (min-height: 1000px) { .rt .tsf-p { font-size: var(--rt-f24); line-height: var(--rt-l24); } .rt .tsf-big .tsf-s { font-size: var(--rt-f24); } }
   @media (max-width: 959px) { .rt .tsf { height: auto; min-height: 100dvh; overflow: visible; } .rt .tsf-grid { grid-template-columns: minmax(0, 1fr); } .rt .tsf-c { display: none; } }
+  /* v5.14 1F 타자왕 순위판(앱 「타자 순위」 현장 탭 · tybHtml) · 시안 「디자인 시안/타자왕 순위판/타자왕_순위판_휴대폰.html」
+     HIGH SCORE = Neo둥근모 큰 글자(점 글자 아님 · design.md 5-20 7번 · 261003 사용자 A안) · 1~3위 O100 · O60 · O30 면 · 내 줄 크림 테두리
+     순위가 바뀌면 줄이 미끄러진다(top 전환) · 동작 줄이기 = 그 자리에 바로 */
+  .rt .tyb { --tyb-h: calc(40px * var(--fs)); margin: 3px 3px 0; padding: 18px 14px 16px; color: var(--rt-cream); font-family: var(--rt-font); font-weight: 400; letter-spacing: 0;
+    background: radial-gradient(circle, var(--rt-wood) 0 1px, transparent 1.3px) 0 0 / 18px 18px, var(--rt-night); box-shadow: var(--rt-line); }
+  .rt .tyb-h { margin: 0; font-family: var(--rt-font); font-weight: 400; font-size: var(--rt-f32); line-height: var(--rt-l32); color: var(--rt-o100); text-shadow: 3px 3px 0 var(--rt-deep); }
+  .rt .tyb-sub { margin: 6px 0 12px; font-size: var(--rt-f16); line-height: var(--rt-l16); color: var(--rt-cream); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rt .tyb-sub.nr { color: var(--rt-o100); }
+  .rt .tyb-list { padding: 4px; background: var(--rt-wood); box-shadow: 0 -2px 0 0 var(--rt-ink), 0 2px 0 0 var(--rt-ink), -2px 0 0 0 var(--rt-ink), 2px 0 0 0 var(--rt-ink); }
+  .rt .tyb-in { position: relative; overflow: hidden; height: calc(var(--tyb-h) * 10); }
+  .rt .tyb-r { position: absolute; left: 0; right: 0; height: var(--tyb-h); display: flex; align-items: center; padding: 0 12px; background: var(--rt-bark);
+    font-size: var(--rt-f16); line-height: var(--rt-l16); transition: top .8s cubic-bezier(.2, .7, .2, 1), opacity .5s, background .4s; }
+  .rt .tyb-r.e { background: var(--rt-night); }
+  .rt .tyb-r .no { flex: none; width: calc(36px * var(--fs)); color: var(--rt-tan); }
+  .rt .tyb-r .nm { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--rt-cream); }
+  .rt .tyb-r .sc { flex: none; margin-left: 8px; text-align: right; white-space: nowrap; color: var(--rt-tan2); }
+  .rt .tyb-r .tag { flex: none; margin-right: 8px; padding: 0 5px; background: var(--rt-cream); color: var(--rt-btn); font-size: var(--rt-f16); line-height: calc(20px * var(--fs)); display: none; }
+  .rt .tyb-r.nw .tag { display: block; }
+  .rt .tyb-r .gf { flex: none; width: 14px; height: 14px; margin-left: 8px; background: var(--rt-o100); position: relative; box-shadow: inset -2px -2px 0 var(--rt-deep); }
+  .rt .tyb-r .gf:before { content: ""; position: absolute; left: 6px; top: 0; width: 3px; height: 14px; background: var(--rt-cream); }
+  .rt .tyb-r .gf:after { content: ""; position: absolute; left: 0; top: 6px; width: 14px; height: 3px; background: var(--rt-cream); }
+  .rt .tyb-r.x .nm, .rt .tyb-r.x .sc { color: var(--rt-dim); }
+  .rt .tyb-r.r1 { background: var(--rt-o100); } .rt .tyb-r.r2 { background: var(--rt-o60); } .rt .tyb-r.r3 { background: var(--rt-o30); }
+  .rt .tyb-r.r1 .no, .rt .tyb-r.r1 .nm, .rt .tyb-r.r1 .sc, .rt .tyb-r.r2 .no, .rt .tyb-r.r2 .nm, .rt .tyb-r.r2 .sc, .rt .tyb-r.r3 .no, .rt .tyb-r.r3 .nm, .rt .tyb-r.r3 .sc { color: var(--rt-btn); }
+  .rt .tyb-r.me { box-shadow: inset 0 0 0 2px var(--rt-cream); }
+  .rt .tyb-r.r1.me, .rt .tyb-r.r2.me, .rt .tyb-r.r3.me { box-shadow: inset 0 0 0 3px var(--rt-btn); }
+  .rt .tyb-r.hot { animation: tybHot 1.6s ease-out 2; }
+  .rt .tyb-me { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; padding: 10px 14px; background: var(--rt-cream); color: var(--rt-btn);
+    box-shadow: 0 -2px 0 0 var(--rt-ink), 0 2px 0 0 var(--rt-ink), -2px 0 0 0 var(--rt-ink), 2px 0 0 0 var(--rt-ink), inset -3px -3px 0 var(--rt-tan); }
+  .rt .tyb-me .k { display: block; white-space: nowrap; font-size: var(--rt-f16); line-height: calc(20px * var(--fs)); color: var(--rt-wood); }
+  .rt .tyb-me .v { display: block; font-size: var(--rt-f24); line-height: var(--rt-l24); white-space: nowrap; }
+  .rt .tyb-me .lf { margin-left: auto; text-align: right; }
+  .rt .tyb-pz { display: flex; gap: 8px; width: 100%; margin: 18px 0 0; padding: 0; border: 0; background: none; cursor: pointer; font: inherit; color: inherit; }
+  .rt .tyb-pz .c { flex: 1; min-width: 0; height: calc(70px * var(--fs)); position: relative; display: flex; align-items: center; justify-content: center; background: var(--rt-white); box-shadow: inset 0 0 0 2px var(--rt-btn); }
+  .rt .tyb-pz .c img { width: calc(52px * var(--fs)); height: calc(52px * var(--fs)); object-fit: contain; }
+  .rt .tyb-pz .c b { position: absolute; left: 0; top: 0; padding: 0 5px; background: var(--rt-o100); color: var(--rt-btn); font-weight: 400; font-size: var(--rt-f16); line-height: calc(20px * var(--fs)); }
+  .rt .tyb-pz .c:nth-child(2) b { background: var(--rt-o60); } .rt .tyb-pz .c:nth-child(3) b { background: var(--rt-o30); }
+  .rt .tyb-pzn, .rt .tyb-ft { margin: 6px 0 0; font-size: var(--rt-f16); line-height: var(--rt-l16); color: var(--rt-o60); }
+  .rt .tyb-ft { margin-top: 14px; color: var(--rt-tan2); }
+  .rt .tyb-pzr { display: flex; gap: 8px; } .rt .tyb-pzr span { flex: 1; min-width: 0; text-align: center; word-break: keep-all; }
+  @media (prefers-reduced-motion: reduce) { .rt .tyb-r { transition: none; } .rt .tyb-r.hot { animation: none; } }
 </style>
 </head>
 <body>
@@ -8003,12 +8046,13 @@ var Views = {
   type_rank: function () {
     var mode = S.get("type_rank_tab", "app");
     var cached = S.get("type_rank_" + mode, null);   /* v4.16 관리자·테스트 계정도 실서버 캐시(가짜 닉네임 목업 삭제) */
+    var seg = '<div class="qseg" style="margin-bottom:10px"><button class="' + (mode === "app" ? "on" : "") + '" onclick="S.set(\'type_rank_tab\', \'app\'); App.render()">앱 순위 상위 10</button>' +
+      '<button class="' + (mode === "site" ? "on" : "") + '" onclick="S.set(\'type_rank_tab\', \'site\'); App.render()">1F 현장 TOP 10</button></div>';
+    if (mode === "site") { tybStart(); return seg + '<div id="tyRankBody">' + tybHtml(cached) + "</div>"; }   /* v5.14 1F 타자왕 순위판(tybHtml · 오락실 HIGH SCORE) */
     typeRankPull(mode, function (r) { if (App.current === "type_rank") { var b = el("tyRankBody"); if (b) b.innerHTML = typeRankHtml(r, mode); } });
-    return '<div class="qseg" style="margin-bottom:10px"><button class="' + (mode === "app" ? "on" : "") + '" onclick="S.set(\'type_rank_tab\', \'app\'); App.render()">앱 순위 상위 10</button>' +
-      '<button class="' + (mode === "site" ? "on" : "") + '" onclick="S.set(\'type_rank_tab\', \'site\'); App.render()">1F 현장 상위 5</button></div>' +
+    return seg +
       '<div class="card" id="tyRankBody">' + typeRankHtml(cached, mode) + "</div>" +
-      '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">' + (mode === "app" ? "오래 버틴 시간 순 · 최고 기록만 · 경품 없음" : "1F 셀프 도전 · 1인 " + ((cached && cached.tries) || 3) + "회 · 최고 점수 · 동점은 정확도 · 17:00 마감") + "</p>" +
-      (mode === "site" ? '<section class="ax-card axs-przc" data-prz="type" style="margin-top:12px"><div class="ax-stack-tight"><h3 class="ax-card-title">1F 타자왕 시상</h3><p class="ax-meta">17:00 Outro 시상 · 현장 최고 기록 1~3위</p></div>' + prizeListHtml("type") + "</section>" : "");   /* v5.05 (261002 사용자 확정) 1F 타자왕 경품 이름 · v5.09 사진(제조사 공식 컷) · 앱 순위는 명예 순위 그대로 */
+      '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">오래 버틴 시간 순 · 최고 기록만 · 경품 없음</p>';   /* v5.14 현장 탭은 위 tybHtml(1F 타자왕 시상 카드 → 판 아래 상품 썸네일) */
   },
 
   /* ═══ v4.15 폰 관리자 모드 (사용자 확정 260922 · `앱 관리자 모드 축소 기획.md`) ═══
@@ -10795,7 +10839,8 @@ function typeNickSave() {
 /* v4.16 (사용자 확정 260922) 관리자·테스트 계정이어도 순위판은 항상 실서버 값 · 가짜 닉네임 목업(typeTestTop·typeTestRank·TYPE_TEST_NICKS)은 삭제 */
 function typeRankPull(mode, cb) {
   var u = S.get("user", {}) || {};
-  beCall({ action: "type_rank", mode: mode, emp: u.empId || "", n: mode === "site" ? 5 : 10 }, function (r) { if (r && r.ok) { S.set("type_rank_" + mode, r); cb(r); } }, function () {});
+  if (mode === "site") TYB.at = Date.now();
+  beCall({ action: "type_rank", mode: mode, emp: u.empId || "", n: 10 }, function (r) { if (r && r.ok) { S.put("type_rank_" + mode, r); cb(r); } }, function () {});   /* v5.14 현장도 TOP 10 · 조용한 저장(S.put) · S.set 은 화면 전체를 다시 그려 그 그리기가 또 받기를 불러 끝없이 돌았다(261003 실측 초당 약 2회) */
 }
 /* v3.80 기록 = 버틴 시간(1/100초) · 화면에는 「n초」 로 보여 준다 */
 function typeSec(v) { return (Number(v || 0) / 100).toFixed(1) + "초"; }
@@ -10806,6 +10851,94 @@ function typeRankHtml(r, mode, big) {
       return '<div class="ty-rank' + (x.me ? " me" : "") + '"><span class="no">' + x.rank + '</span><span class="nm">' + esc(x.name) + '</span><span class="sc">' + (mode === "site" ? typePts(x.score) : typeSec(x.score)) + "</span></div>";
     }).join("") : '<p class="muted">아직 기록이 없어요</p>') +
     (r.me ? '<p class="muted" style="margin-top:10px">내 순위 ' + r.me.rank + "위 · " + (mode === "site" ? typePts(r.me.score) : typeSec(r.me.score) + " 생존") + "</p>" : "");   /* v5.12 1F 현장 = 점수 */
+}
+/* ── v5.14 1F 타자왕 순위판 · 앱 「타자 순위」 현장 탭(261003 · 시안 「디자인 시안/타자왕 순위판/타자왕_순위판_휴대폰.html」) ──
+   HIGH SCORE TOP 10(1~3위 O100 · O60 · O30 면 · 내 줄 강조) · 아래 바 「내 순위 · 내 최고 점수 · 남은 기회」 · 1~3위 상품 썸네일(누르면 경품 포스터 1F 타자왕)
+   20초마다 다시 받아(화면이 보일 때 · 이 탭일 때만) 바뀐 줄만 옮긴다: 새로 든 줄 = 아래에서 올라오며 NEW · 오른 줄 = 미끄러져 오르고 깜빡 · 점수는 세며 오른다 · 동작 줄이기 = 그 자리에 바로
+   받기 = type_rank(site · n 10 · emp) · 새 서버 = unit pts · left(남은 기회 · v5.14 서버) · 옛 서버(unit 없음 = 버틴 시간 · left 없음) = 시간으로 쓰고 남은 기회 칸을 뺀다
+   실명 없음(서버가 닉네임만 준다) · 부문 통계 없음 */
+var TYB = { iv: 0, keys: null, subT: 0, at: 0 };
+var TYB_REST = { on: false, nm: "" };   /* 4~10위 상품 줄 · 사용자 미정 · 기본 꺼짐 · on 이고 nm 이 있을 때만 줄마다 선물 표시 + 이름 한 줄 */
+var TYB_PZ_SHORT = ["체리 키보드", "MX Master 4", "AULA 키보드"];
+function tybVal(r, v) { return r && r.unit === "pts" ? Math.round(Number(v || 0)).toLocaleString() : typeSec(v); }
+function tybKeys(top) { var c = {}; return top.map(function (x) { var n = String(x.name || ""); c[n] = (c[n] || 0) + 1; return n + "#" + c[n]; }); }
+function tybCls(x, i) { return "tyb-r" + (i < 3 ? " r" + (i + 1) : "") + (i % 2 ? " e" : "") + (x && x.me ? " me" : "") + (x ? "" : " x"); }
+function tybTop(i) { return "calc(var(--tyb-h) * " + i + ")"; }
+function tybSubDef(r) { return !r ? "순위를 불러오는 중이에요" : (r.top || []).length ? "1F 타자왕 · 현장 TOP 10" : "아직 기록이 없어요"; }
+function tybRowInner(r, x, i) {
+  return '<span class="no">' + (i + 1) + '</span><span class="tag">NEW</span><span class="nm">' + (x ? esc(x.name) : "---") + "</span>" +
+    (TYB_REST.on && TYB_REST.nm && i >= 3 ? '<span class="gf" aria-hidden="true"></span>' : "") + '<span class="sc">' + (x ? tybVal(r, x.score) : "-") + "</span>";
+}
+function tybMeHtml(r) {
+  var u = S.get("user", {}) || {};
+  if (!r || !u.empId) return "";
+  var m = r.me;
+  return '<div class="tyb-me"><span><span class="k">내 순위</span><span class="v">' + (m ? m.rank + "위" : "-") + "</span></span>" +
+    '<span><span class="k">내 최고 ' + (r.unit === "pts" ? "점수" : "기록") + '</span><span class="v">' + (m ? tybVal(r, m.score) : "-") + "</span></span>" +
+    (typeof r.left === "number" ? '<span class="lf"><span class="k">남은 기회</span><span class="v">' + r.left + "회</span></span>" : "") + "</div>";
+}
+function tybHtml(r) {
+  var top = ((r && r.top) || []).slice(0, 10), keys = tybKeys(top), rows = "";
+  for (var i = 0; i < 10; i++) rows += '<div class="' + tybCls(top[i], i) + '" data-k="' + (top[i] ? esc(keys[i]) : "_" + i) + '" style="top:' + tybTop(i) + '">' + tybRowInner(r, top[i], i) + "</div>";
+  TYB.keys = r ? keys : null;
+  return '<section class="tyb" aria-label="1F 타자왕 현장 TOP 10"><h2 class="tyb-h">HIGH SCORE</h2>' +
+    '<p class="tyb-sub" id="tybSub" aria-live="polite">' + tybSubDef(r) + "</p>" +
+    '<div class="tyb-list"><div class="tyb-in" id="tybIn">' + rows + "</div></div>" +
+    '<div id="tybMe">' + tybMeHtml(r) + "</div>" +
+    '<button type="button" class="tyb-pz" onclick="prizeGo(\'type\')" aria-label="1F 타자왕 경품 보기">' + PRIZES.type.list.map(function (p) {
+      return '<span class="c"><b>' + p.rk + '</b><img src="' + PRIZE_DIR + p.img + '.webp" alt="" width="104" height="104" loading="lazy" decoding="async" onerror="this.remove()">' + (PRIZE_SAMPLE && p.s !== 0 ? "<i>샘플</i>" : "") + "</span>";
+    }).join("") + "</button>" +
+    '<p class="tyb-pzn tyb-pzr">' + TYB_PZ_SHORT.map(function (n) { return "<span>" + n + "</span>"; }).join("") + "</p>" +
+    (TYB_REST.on && TYB_REST.nm ? '<p class="tyb-pzn">4~10위 · ' + esc(TYB_REST.nm) + "</p>" : "") +
+    '<p class="tyb-ft" id="tybFt">' + tybFtHtml(r) + "</p></section>";
+}
+function tybFtHtml(r) { return "1인 " + ((r && r.tries) || 3) + "회 · 최고 " + (r && r.unit !== "pts" ? "기록" : "점수") + " · 동점은 정확도<br>17:00 마감 · 1~3위 Outro 시상"; }
+/* 받은 순위를 판에 · 줄은 data-k(닉네임 + 같은 이름 몇 번째)로 이어 붙여 옮긴다 · 처음 그린 판(TYB.keys 없음)은 표시만 */
+function tybApply(r) {
+  var host = el("tybIn"); if (!host || !r) return;
+  var top = (r.top || []).slice(0, 10), keys = tybKeys(top), prev = TYB.keys, map = {}, rm = rgReduced(), ev = "";
+  [].slice.call(host.children).forEach(function (e) { map[e.getAttribute("data-k")] = e; });
+  keys.forEach(function (k, i) {
+    var x = top[i], e = map[k], was = prev ? prev.indexOf(k) : -1, fresh = !!prev && was < 0 && i < prev.length, up = !!prev && was > i;
+    if (e) delete map[k];
+    else { e = document.createElement("div"); e.setAttribute("data-k", k); e.className = "tyb-r"; e.style.top = tybTop(10); e.style.opacity = "0"; host.appendChild(e); void e.offsetWidth; }
+    var oldV = e._v;
+    e.className = tybCls(x, i) + (fresh ? " nw hot" : up && !rm ? " hot" : "");
+    e.innerHTML = tybRowInner(r, x, i); e._v = Number(x.score) || 0;
+    e.style.top = tybTop(i); e.style.opacity = "1";
+    if (fresh || up) setTimeout(function () { e.classList.remove("nw"); e.classList.remove("hot"); }, 6000);
+    if (!ev && fresh) ev = "NEW RECORD · " + x.name + " " + (i + 1) + "위";
+    else if (!ev && up) ev = "RANK UP · " + x.name + " " + (i + 1) + "위";
+    if (!rm && typeof oldV === "number" && oldV !== e._v) tybCount(e.querySelector(".sc"), oldV, e._v, r);
+  });
+  for (var i = keys.length; i < 10; i++) {
+    var k = "_" + i, e = map[k];
+    if (e) delete map[k]; else { e = document.createElement("div"); e.setAttribute("data-k", k); host.appendChild(e); }
+    e.className = tybCls(null, i); e.innerHTML = tybRowInner(r, null, i); e.style.top = tybTop(i); e.style.opacity = "1";
+  }
+  Object.keys(map).forEach(function (k) { var e = map[k]; e.style.opacity = "0"; e.style.top = tybTop(10); setTimeout(function () { if (e.parentNode) e.parentNode.removeChild(e); }, 900); });
+  TYB.keys = keys;
+  var me = el("tybMe"); if (me) me.innerHTML = tybMeHtml(r);
+  var ft = el("tybFt"); if (ft) ft.innerHTML = tybFtHtml(r);
+  var sub = el("tybSub"); if (!sub) return;
+  if (ev) {
+    sub.textContent = ev; sub.className = "tyb-sub nr"; clearTimeout(TYB.subT);
+    TYB.subT = setTimeout(function () { var s2 = el("tybSub"); if (s2) { s2.textContent = tybSubDef(S.get("type_rank_site", null)); s2.className = "tyb-sub"; } }, 6000);
+  } else if (sub.className === "tyb-sub") sub.textContent = tybSubDef(r);
+}
+function tybCount(node, a, b, r) {
+  if (!node) return;
+  var t0 = Date.now(), d = 1200;
+  (function step() { var k = Math.min(1, (Date.now() - t0) / d); if (!node.isConnected) return; node.textContent = tybVal(r, a + (b - a) * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(step); })();
+}
+function tybOn() { return App.current === "type_rank" && S.get("type_rank_tab", "app") === "site"; }
+function tybGot(r) { if (tybOn()) tybApply(r); }
+function tybStart() {
+  if (Date.now() - (TYB.at || 0) > 8000) typeRankPull("site", tybGot);   /* 다른 저장으로 화면이 다시 그려질 때마다 받지 않는다 */
+  if (!TYB.iv) TYB.iv = setInterval(function () {
+    if (!tybOn()) { clearInterval(TYB.iv); TYB.iv = 0; return; }
+    if (!document.hidden) typeRankPull("site", tybGot);
+  }, 20000);
 }
 /* 시작 화면 미리보기 캔버스 · 챗봇 둘(콤보 연출 모습)과 떨어지는 단어 몇 개 (정지 화면) · 챗봇 도트가 늦게 읽히면 읽힌 뒤 한 번 더 그린다 */
 function rgPreview() {
