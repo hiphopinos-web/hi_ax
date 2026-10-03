@@ -318,6 +318,13 @@
    *   2) 이긴 면(앞 층)은 법선 쪽으로 진 면보다 층마다 5mm 앞에 오도록 정점을 옮긴다(이미 그만큼 앞이면 그대로) · polygonOffset 은 그대로 덧쓴다
    *   3) 바닥에 깔린 얇은 판(매트 · 문턱 · 띠 · 바닥 위 3cm 안의 위를 보는 면)은 1.5cm 띄운다(옆면 윗모서리도 같이) */
   var ZTOL = 0.01, ZGAP = 0.005, ZLIFT = 0.015;
+  /* v5.42 정점 위치를 고치기 전에 소수(Float32) 사본으로 · 모형은 압축(양자화 Int16 · normalized)이라 범위 끝 정점을 바깥으로 밀면 값이 넘쳐 반대쪽 끝으로 뒤집혔다
+   * (v5.40 사용자 261003 「여기 포스터 없어」 · 기둥 7.45 서쪽 면 포스터가 기둥 26.9 동쪽 면 안으로 넘어가 두 면 다 화강암의 구운 그림자만 까맣게 남음) */
+  function f32Pos(a) {
+    if (a.array instanceof Float32Array && !a.isInterleavedBufferAttribute && !a.normalized) return a.clone();
+    var n = a.count, arr = new Float32Array(n * 3); for (var i = 0; i < n; i++) { arr[i * 3] = a.getX(i); arr[i * 3 + 1] = a.getY(i); arr[i * 3 + 2] = a.getZ(i); }
+    G.f32n = (G.f32n || 0) + 1; return new T.BufferAttribute(arr, 3);
+  }
   function fixCoplanar(root) {
     var t0 = performance.now(), meshes = [], buckets = new Map(), va = new T.Vector3(), vb = new T.Vector3(), vc = new T.Vector3(), e1 = new T.Vector3(), e2 = new T.Vector3(), nn = new T.Vector3(), nTri = 0, bu = new T.Vector3(), bv = new T.Vector3();
     root.updateMatrixWorld(true);
@@ -402,7 +409,7 @@
       lvs.forEach(function (q) { splitFront(o, geo, idx, q[0], q[1], frs[q[0]]); });
     });
     function splitFront(o, geo, idx, lv, rs, fr) {
-      var g2 = new T.BufferGeometry(); for (var nm in geo.attributes) g2.setAttribute(nm, nm === 'position' ? geo.attributes[nm].clone() : geo.attributes[nm]); g2.setIndex(fr);
+      var g2 = new T.BufferGeometry(); for (var nm in geo.attributes) g2.setAttribute(nm, nm === 'position' ? f32Pos(geo.attributes[nm]) : geo.attributes[nm]); g2.setIndex(fr);
       /* 정점 옮기기 · 세계 법선 x 필요 거리 → 메시 좌표 · 한 정점을 여러 앞 면이 쓰면 가장 큰 값 */
       var inv = new T.Matrix3().setFromMatrix4(o.matrixWorld).invert(), p2 = g2.attributes.position, mv = new Map(), dv = new T.Vector3();
       rs.forEach(function (r) {
@@ -418,16 +425,21 @@
     }
     G.zfix = { tris: nTri, pairs: pairs, same: pairs - plist.length, tie: tie, moved: moved, pushed: pushed, maxPush: +maxPush.toFixed(4), lifted: lifted, posters: posters, meshes: names, ms: Math.round(performance.now() - t0) };
   }
-  /* 기둥 포스터(ME to WE 판 · 기둥 비우기 셰이더라 위 겹침 판정에서 빠진다) · 16비트 깊이에서 기둥 화강암과 겹쳐 까맣게 깜빡였다(사용자 캡처 오른쪽 위 판들) · 면마다 바깥으로 8mm */
+  /* 기둥 포스터(ME to WE 판 · 기둥 비우기 셰이더라 위 겹침 판정에서 빠진다) · 16비트 깊이에서 기둥 화강암과 겹쳐 까맣게 깜빡였다(사용자 캡처 오른쪽 위 판들) · 면마다 기둥 바깥으로 8mm */
   function liftPillarPosters(root) {
     var va = new T.Vector3(), vb = new T.Vector3(), vc = new T.Vector3(), nn = new T.Vector3(), cnt = 0;
     root.traverse(function (o) {
       if (!o.isMesh || !/^panel_/.test(o.name) || !underName(o, /^pillars$/)) return;
-      var geo = o.geometry, pos = geo.attributes.position, idx = geo.index, n = idx ? idx.count : pos.count, m = o.matrixWorld, inv = new T.Matrix3().setFromMatrix4(m).invert(), mv = new Map();
+      var geo = o.geometry, idx = geo.index, m = o.matrixWorld, inv = new T.Matrix3().setFromMatrix4(m).invert(), mv = new Map();
+      geo.setAttribute('position', f32Pos(geo.attributes.position)); var pos = geo.attributes.position, n = idx ? idx.count : pos.count;
       for (var t = 0; t < n; t += 3) {
         var ia = idx ? idx.getX(t) : t, ib = idx ? idx.getX(t + 1) : t + 1, ic = idx ? idx.getX(t + 2) : t + 2;
         va.fromBufferAttribute(pos, ia).applyMatrix4(m); vb.fromBufferAttribute(pos, ib).applyMatrix4(m); vc.fromBufferAttribute(pos, ic).applyMatrix4(m);
         nn.subVectors(vb, va).cross(vc.clone().sub(va)).normalize(); if (Math.abs(nn.y) > 0.3) continue;
+        /* v5.42 바깥 = 가장 가까운 기둥 가운데에서 먼 쪽(삼각형 감는 방향은 면마다 달라 v5.40 은 일부 면을 안으로 넣었다 · 사용자 261003 「여기 포스터 없어」 · 화강암의 구운 그림자만 까맣게 남음) */
+        var cx = (va.x + vb.x + vc.x) / 3, cz = (va.z + vb.z + vc.z) / 3, bp = null, bd = 1e9;
+        PIL.forEach(function (q) { var d = Math.hypot(cx - (q[0] - 16), cz - (6 - q[1])); if (d < bd) { bd = d; bp = q; } });
+        if (bp && nn.x * (cx - (bp[0] - 16)) + nn.z * (cz - (6 - bp[1])) < 0) nn.negate();
         [ia, ib, ic].forEach(function (vi) { if (!mv.has(vi)) mv.set(vi, nn.clone()); });
       }
       mv.forEach(function (d, vi) { d.multiplyScalar(0.008).applyMatrix3(inv); pos.setXYZ(vi, pos.getX(vi) + d.x, pos.getY(vi) + d.y, pos.getZ(vi) + d.z); cnt++; });
@@ -450,6 +462,7 @@
         [ia, ib, ic].forEach(function (vi, k) { hit.add(vi); var w = k === 0 ? va : k === 1 ? vb : vc; keys.add(Math.round(w.x * 500) + ',' + Math.round(w.z * 500)); });
       }
       if (!hit.size) return;
+      geo.setAttribute('position', f32Pos(pos)); pos = geo.attributes.position;
       var inv = new T.Matrix3().setFromMatrix4(m).invert(), dv = new T.Vector3(0, ZLIFT, 0).applyMatrix3(inv), vw = new T.Vector3();
       for (var i = 0; i < pos.count; i++) {
         if (!hit.has(i)) { vw.fromBufferAttribute(pos, i).applyMatrix4(m); if (vw.y > 0.03 || vw.y < -0.005 || !keys.has(Math.round(vw.x * 500) + ',' + Math.round(vw.z * 500))) continue; }
@@ -1503,10 +1516,10 @@
 
   /* ═══════════ 로비 음악(v5.38 · 사용자 261003 「1층 로비에서 잔잔한 음악이 나오면 좋겠어」 · v5.40 카페 음악으로 바꿈) ═══════════
    * v5.40 사용자 261003 「카페에 와 있는 것 같은 상큼한 기분 · 영감을 얻을 수 있을 것 같은 느낌」 · 소리 크기는 그대로(사용자 결정 · 마스터 0.42)
-   * 파일 없음 · Web Audio 로 그 자리에서 합성(저작권 걱정 없음 · 받는 용량 0) · 보사노바 카페(94bpm · F 장조)
+   * 파일 없음 · Web Audio 로 그 자리에서 합성(저작권 걱정 없음 · 받는 용량 0) · 로파이 카페(84bpm · D 장조 · 스윙) · v5.40 보사노바(A)와 미리 듣기 비교 뒤 사용자가 B 로 결정(261003)
    *   일렉트릭 피아노(FM 두 오실레이터 · 로즈 계열 · 트레몰로 · 천천히 좌우)로 메이저 7 · 9 화음을 엇박 리듬으로 친다 · 성부는 가까운 자리로 이어 간다
    *   화음 진행 8가지(I vi ii V · IV iii ii V · ii V I I 등)에서 무작위 · 가끔 대리 화음 · 마디 끝 ii V 쪼개기 · 같은 진행이 이어지지 않음
-   *   둥근 베이스(사인 + 삼각 · 낮은 거름) 보사 리듬 · 아주 작은 쉐이커(잡음 한 장을 돌려 씀) · 림 · 부드러운 킥
+   *   둥근 베이스(사인 + 삼각 · 낮은 거름) · 아주 작은 하이햇(잡음 한 장을 돌려 씀) · 브러시 스네어 · 부드러운 킥
    *   가끔 짧은 멜로디(2 · 4마디째에 주로 · 3~5음 · 앞 소절 리듬을 반쯤 다시 써서 이어지는 느낌) · 잔향 2.2초
    * 아끼기: 피아노 · 멜로디 동시 발음 최대 16(느린 기기 9) · 느린 기기 = 쉐이커 반 · 멜로디 덜
    * 켜고 끄기: 들어갈 때 2초 동안 커짐 · 나갈 때(검은 전환과 함께) 0.6초 동안 줄고 AudioContext 닫음(배터리) · 화면이 숨으면 멈춤(suspend) · 돌아오면 다시
@@ -1514,13 +1527,13 @@
    *   모바일 자동 재생 제한 = 여는 누름 안에서 만들고 · 그래도 멈춰 있으면 화면 첫 누름에서 다시 깨운다 · navigator.audioSession = ambient(듣던 음악을 끊지 않고 무음 모드를 따른다 · 닫으면 되돌림)
    * 끄려면 AXTour.open({ music: false }) · 버튼도 숨는다 */
   var MUS = { want: true, ctx: null, out: null, st: null, timer: 0, gen: 0, made: 0, deferred: false, oldType: null, lite: false };
-  var MUS_VOL = 0.42, MUS_TRIM = 0.36;   /* 미리 듣기 렌더 기준 최고 약 -15 dBFS · 평균(RMS) 약 -27 dBFS(배경 음악 크기 · v5.38 과 같게 맞춤) */
-  /* 스타일 · a = 보사노바 카페(앱) · b = 로파이(미리 듣기 비교용 · musOffline 에서만) */
-  var MSTY = {
+  var MUS_VOL = 0.42, TRIM_B = 0.42, SNV_B = 0.035;   /* 미리 듣기 렌더 기준 최고 약 -15 dBFS · 평균(RMS) 약 -27 dBFS(배경 음악 크기 · v5.38 과 같게 맞춤) */
+  /* 스타일 · b = 로파이(앱 · 사용자 261003 결정) · a = 보사노바(v5.40 · 되돌림 · 미리 듣기 비교용 · musOffline 에서만) · trim = 악기 합 크기(스타일마다 v5.38 크기에 맞춤) */
+  var MUS_STY = 'b', MSTY = {
     a: { bpm: 94, key: 53, swing: 0.03, comp: [[[0, 1.4], [1.5, 0.45], [2.5, 1.3]], [[0.5, 0.9], [2, 0.45], [3, 0.9]], [[0, 2.3], [2.5, 0.45], [3.5, 0.45]], [[1, 0.45], [1.5, 1.2], [3, 0.9]]],
-      bass: [[0, 0, 1.3], [1.5, 0, 0.45], [2, 7, 1.3], [3.5, 9, 0.45]], kick: [0, 2], rim: [[0, 1.5, 3], [1, 2.5]], hat: 0.5, mel: 0.55 },
+      bass: [[0, 0, 1.3], [1.5, 0, 0.45], [2, 7, 1.3], [3.5, 9, 0.45]], kick: [0, 2], rim: [[0, 1.5, 3], [1, 2.5]], hat: 0.5, mel: 0.55, trim: 0.36, snv: 0.07 },
     b: { bpm: 84, key: 50, swing: 0.16, comp: [[[0, 3.4]], [[0, 1.8], [2.5, 1.4]], [[0.5, 3]]],
-      bass: [[0, 0, 1.4], [2.5, 0, 0.4], [3, 7, 0.9]], kick: [0, 2.5], snare: [1, 3], hat: 0.5, mel: 0.45 }
+      bass: [[0, 0, 1.4], [2.5, 0, 0.4], [3, 7, 0.9]], kick: [0, 2.5], snare: [1, 3], hat: 0.5, mel: 0.45, trim: TRIM_B, snv: SNV_B, kv: 0.16 }
   };
   var MCH = { I: [4, 7, 11, 14], ii: [5, 9, 12, 16], iii: [7, 11, 14, 16], IV: [9, 12, 16, 19], V: [12, 14, 17, 21], vi: [12, 16, 19, 23], bVII: [14, 17, 21, 22] };
   var MROOT = { I: 0, ii: 2, iii: 4, IV: 5, V: 7, vi: 9, bVII: 10 };
@@ -1534,11 +1547,11 @@
     for (var ch = 0; ch < 2; ch++) { var d = b.getChannelData(ch); for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3.2); }
     return b;
   }
-  function musGraph(c, dest) {
+  function musGraph(c, dest, sty) {
     var master = c.createGain(); master.gain.value = 0;
-    var comp = c.createDynamicsCompressor(); comp.threshold.value = -20; comp.knee.value = 14; comp.ratio.value = 3; comp.attack.value = 0.01; comp.release.value = 0.35;
+    var comp = c.createDynamicsCompressor(); comp.threshold.value = -20; comp.knee.value = 14; comp.ratio.value = 3; comp.attack.value = 0.003; comp.release.value = 0.35;
     var tone = c.createBiquadFilter(); tone.type = 'lowpass'; tone.frequency.value = 6200; tone.Q.value = 0.3;
-    var trim = c.createGain(); trim.gain.value = MUS_TRIM;   /* 악기 합을 v5.38 크기에 맞춤(마스터 0.42 는 그대로) */
+    var trim = c.createGain(); trim.gain.value = (MSTY[sty] || MSTY[MUS_STY]).trim;   /* 악기 합을 v5.38 크기에 맞춤(마스터 0.42 는 그대로) */
     var bus = c.createGain(), dry = c.createGain(), send = c.createGain(), wet = c.createGain(), rev = c.createConvolver();
     dry.gain.value = 0.9; send.gain.value = 0.32; wet.gain.value = 0.5; rev.buffer = musImpulse(c, 2.2);
     bus.connect(dry); bus.connect(send); send.connect(rev); rev.connect(wet); dry.connect(tone); wet.connect(tone); tone.connect(trim); trim.connect(comp); comp.connect(master); master.connect(dest);
@@ -1557,7 +1570,7 @@
     var nz = c.createBuffer(1, Math.floor(c.sampleRate * 0.6), c.sampleRate), nd = nz.getChannelData(0); for (var i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
     return { master: master, ep: ep, bass: bass, perc: perc, hat: hat, rim: rim, snr: snr, mel: mel, noise: nz };
   }
-  function musState(t, sty) { return { t: t, sty: MSTY[sty] || MSTY.a, prog: null, pi: 4, prev: null, pm: 77, motif: null, bar: 0, vc: [] }; }
+  function musState(t, sty) { return { t: t, sty: MSTY[sty] || MSTY[MUS_STY], prog: null, pi: 4, prev: null, pm: 77, motif: null, bar: 0, vc: [] }; }
   /* 동시 발음 · 겹치는 소리 수가 넘으면 그 음은 건너뛴다(베이스 · 타악기는 세지 않음) */
   function vOk(st, t, end) {
     var lim = MUS.lite ? 9 : 16, n = 0; st.vc = st.vc.filter(function (q) { return q[1] > t - 0.05; });
@@ -1644,10 +1657,10 @@
       musBass(c, o, sw(b[0]), m, b[2] * beat);
     });
     /* 타악기 · 아주 작게 */
-    y.kick.forEach(function (b) { musKick(c, o, sw(b), 0.22 + Math.random() * 0.05); });
+    y.kick.forEach(function (b) { musKick(c, o, sw(b), (y.kv || 0.22) + Math.random() * 0.05); });
     for (var e = 0; e < 8; e++) { if (lite && e % 2) continue; var acc = e % 2 ? 0.05 : 0.028; musNoise(c, o, sw(e * y.hat), o.hat, acc * (0.8 + Math.random() * 0.4), e % 2 ? 0.07 : 0.045, null); }
     if (y.rim) y.rim[st.bar % 2].forEach(function (b) { musNoise(c, o, sw(b), o.rim, 0.11, 0.05, null); });
-    if (y.snare) y.snare.forEach(function (b) { musNoise(c, o, sw(b), o.snr, 0.07, 0.22, null); });
+    if (y.snare) y.snare.forEach(function (b) { musNoise(c, o, sw(b), o.snr, y.snv, 0.22, null); });
     /* 멜로디 · 2 · 4마디째에 주로(첫 마디는 쉼) */
     var pm = (st.pi % 2 === 1 ? y.mel : y.mel * 0.35) * (lite ? 0.6 : 1);
     if (st.bar > 0 && Math.random() < pm) musMelody(c, o, st, t0, beat, split ? 'V' : ch, nxt);
@@ -1720,12 +1733,12 @@
   }
   /* 미리 듣기 · 같은 합성을 OfflineAudioContext 로(시험 · 미리 듣기 파일용 · 앱 화면에는 쓰지 않음) · o = { rate, ch, style('a' 앱 · 'b' 로파이 비교) } */
   G.musOffline = function (sec, o) {
-    o = o || {}; var R = o.rate || 44100, OC = window.OfflineAudioContext || window.webkitOfflineAudioContext, c = new OC(o.ch || 2, Math.round(R * sec), R), g = musGraph(c, c.destination), st = musState(0.1, o.style);
+    o = o || {}; var R = o.rate || 44100, OC = window.OfflineAudioContext || window.webkitOfflineAudioContext, c = new OC(o.ch || 2, Math.round(R * sec), R), g = musGraph(c, c.destination, o.style), st = musState(0.1, o.style);
     g.master.gain.setValueAtTime(0, 0); g.master.gain.linearRampToValueAtTime(MUS_VOL, 2); g.master.gain.setValueAtTime(MUS_VOL, sec - 2.5); g.master.gain.linearRampToValueAtTime(0, sec - 0.1);
     musSchedule(c, g, st, sec);
     return c.startRendering();
   };
-  G.mus = function () { return { want: MUS.want, deferred: MUS.deferred, made: MUS.made, state: MUS.ctx ? MUS.ctx.state : 'none', timer: !!MUS.timer, gain: MUS.out ? +MUS.out.master.gain.value.toFixed(3) : null, session: navigator.audioSession ? navigator.audioSession.type : 'n/a' }; };
+  G.mus = function () { return { style: MUS_STY, want: MUS.want, deferred: MUS.deferred, made: MUS.made, state: MUS.ctx ? MUS.ctx.state : 'none', timer: !!MUS.timer, gain: MUS.out ? +MUS.out.master.gain.value.toFixed(3) : null, session: navigator.audioSession ? navigator.audioSession.type : 'n/a' }; };
 
   /* ═══════════ 시작 ═══════════ */
   function boot() {
@@ -1894,5 +1907,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, ver: 'v5.40', v3: true };
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, ver: 'v5.43', v3: true };
 })();
