@@ -764,6 +764,19 @@ td.itx{min-width:280px;max-width:520px;white-space:normal;line-height:1.55}
 .hv-el .row{justify-content:space-between;flex-wrap:nowrap}
 .hv-el b{font-size:var(--fs-b)}
 .hv-el span.m{font-size:var(--fs-c);color:var(--tx2);font-variant-numeric:tabular-nums}
+/* 261003 UI 정돈 · 요소 상태 띠 · 본부 요소 표 · 2열 KPI */
+.hv-st{display:flex;align-items:center;gap:12px 24px;flex-wrap:wrap;padding:16px 24px;background:var(--sf);border:1px solid var(--line);border-radius:var(--r);margin-bottom:16px}
+.hv-st .hv-nums{margin-top:0;gap:8px 24px}
+.hv-st .r{margin-left:auto;display:flex;gap:8px}
+.hv-st .btn.on{background:var(--navy05);border-color:var(--navy);color:var(--navy)}
+.hv-pn{margin:0 0 16px}
+.hv-logc{margin-top:16px}
+.chev{display:inline-block;width:7px;height:7px;border-right:1.5px solid var(--tx3);border-bottom:1.5px solid var(--tx3);transform:rotate(-45deg)}
+.kpis.k2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.kpis.k2 .kpi{border-radius:var(--r-s)}
+.todo .it.zero{padding:8px 4px}.todo .it.zero .v{font-size:var(--fs-h2)}
+.hv-ck .lnk{margin-left:auto}
+@media(max-width:720px){.hv-st{padding:16px}.hv-st .r{margin-left:0;width:100%}.hv-st .r .btn{flex:1}.hide-m{display:none}}
 .hv-fr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .hv-fr>.card{margin-top:0}
 @media(max-width:1100px){.hv-fr{grid-template-columns:minmax(0,1fr)}}
@@ -787,7 +800,7 @@ details.hv-dz>div{padding:0 16px 16px}
 details.hv-dz.off{border-color:var(--line)}
 details.hv-dz.off>summary b{color:var(--tx3)}
 .hv-lv{font-size:var(--fs-c);font-weight:700;color:var(--tx2);border:1px solid var(--line3);border-radius:6px;padding:0 8px}
-@media(max-width:720px){.hv-strip{padding:12px 12px}.hv-els{grid-template-columns:minmax(0,1fr)}.hr{flex-wrap:wrap;white-space:normal;gap:8px}.hr #stamp{display:none}}
+@media(max-width:720px){.hv-strip{padding:12px 12px}.hv-els{grid-template-columns:minmax(0,1fr)}.hr{white-space:normal;gap:8px}.hr #stamp .tx{display:none}}
 /* v5.21 경품·재고 · 이름은 iv- 로 시작(다른 규칙과 겹치지 않게) */
 .iv-bar{display:flex;align-items:center;gap:8px;min-width:120px}
 .iv-bar .bar{flex:1;min-width:56px}
@@ -5828,7 +5841,7 @@ var RACE_ON=false;    /* 1F 타자왕 = 셀프 노트북만 · 소나기 대전(
 var EVENT_DAY="2026-10-26";
 var MENUS=[
   { id:"hq", n:"본부", d:"지금 켜져 있는 것과 눌러야 할 것을 한 화면에 봅니다." },
-  { id:"el", n:"행사 요소", d:"요소마다 상태 · 통제 · 화면 · 기록 순서입니다. 세부 작업은 그 아래에 있습니다." },
+  { id:"el", n:"행사 요소", d:"위 띠에서 상태를 보고 통제 · 화면을 엽니다. 세부 작업은 그 아래, 기록은 맨 아래입니다." },
   { id:"ns", n:"공지·푸시", d:"참가자에게 보내기 · 정해진 시각에 보내기 · 발송 설정과 이력입니다." },
   { id:"fd", n:"현장 처리", d:"상담 · 커피챗 · 담당 명단 · PIN 분실 요청 · 스탬프 · 혼잡 제보를 처리합니다." },
   { id:"pp", n:"사람·권한", d:"계정 · 한 사람 관리 · 테스트 사번 · 권한 명단 · 공용 코드입니다." },
@@ -5937,7 +5950,7 @@ function hvBody(){
   var it=navCur(), p=navPart(), h="";
   if((it.sup||p.sup)&&!supOn()) return hvL3()+hvLockCard();
   var body=p.view&&HV_VIEW[p.view]?HV_VIEW[p.view]():viewLegacy();
-  if(it.el) return hvFrame(it.el)+(it.parts.length>1||p.view!=="viewElEmpty"?hvL3()+body:"");
+  if(it.el) return hvFrame(it.el)+(it.parts.length>1||p.view!=="viewElEmpty"?hvL3()+body:"")+hvLogCard(it.el);
   return hvL3("top")+body;
 }
 /* 머리 · 메뉴 제목 + 한 줄 설명 · 오른쪽 = 그 화면의 버튼(tabHead 로 모은 것) · 2단 칩 */
@@ -6102,14 +6115,22 @@ function hvDzRow(t, d, fn, sup){
   var lk=sup&&!supOn();
   return '<details class="hv-dz off mt12"><summary>'+LOCK_SVG+'<b>'+esc(t)+'</b><span class="cap">'+esc(d)+'</span></summary><div><button class="btn danger sm" '+(lk?'disabled title="슈퍼관리자 전용"':'onclick="'+fn+'"')+'>'+(lk?"슈퍼관리자 전용":"열기")+'</button></div></details>';
 }
+/* 261003 UI 정돈(사용자 결정) · 요소 4칸 틀 → 상태 띠 한 줄(상태 | 숫자 | 마지막 변경 | 통제 · 화면 단추) · 일하는 표가 바로 아래
+   통제 · 화면은 띠 단추로 펼치고(기능 그대로), 기록 5줄은 화면 맨 아래 카드(hvLogCard) · 세부 작업이 없는 요소(앱 · 룰렛 · 사이니지)는 통제 · 화면을 처음부터 펼친다 */
+var HVO={};
+function hvOnly(){ var it=navCur(); return it.parts.length<2&&navPart().view==="viewElEmpty"; }
+function hvOpenP(k, p){ HVO[k]=HVO[k]===p?"":p; render(); }
 function hvFrame(k){
-  var s=elSt(k), last=ctlRows(k,1)[0], rec=HV_ELREC[k];
-  var c1=card("상태","",'<div class="row">'+tag(s.p[0], s.p[1])+(last?'<span class="cap">마지막 변경 '+esc(last.t)+' · '+esc(last.x)+'</span>':'')+'</div><div class="hv-nums">'+s.nums.map(function(x){ return '<div><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>'; }).join("")+'</div>');
-  var c2=card("통제","",hvCtl(k));
-  var c3=card("화면","열기 · 주소 복사",hvScrHtml(k));
-  var c4=card("기록","최근 5줄",ctlHtml(k,5)+(rec?'<p class="cap mt8"><a href="#" onclick="go(\''+rec+'\');return false">기록 메뉴에서 더 보기</a></p>':''));
-  return '<div class="hv-fr">'+c1+c2+c3+c4+'</div>';
+  var s=elSt(k), last=ctlRows(k,1)[0], only=hvOnly(), op=only?"all":(HVO[k]||""), nScr=hvScreens(k).length;
+  var st='<div class="hv-st">'+tag(s.p[0], s.p[1])+'<div class="hv-nums">'+s.nums.map(function(x){ return '<div><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>'; }).join("")+'</div>'+
+    (last?'<span class="cap hv-last">마지막 변경 '+esc(last.t)+' · '+esc(last.x)+'</span>':'')+
+    (only?'':'<div class="r"><button class="btn sm'+(op==="ctl"?" on":"")+'" aria-expanded="'+(op==="ctl")+'" onclick="hvOpenP(\''+k+'\',\'ctl\')">통제</button><button class="btn sm'+(op==="scr"?" on":"")+'" aria-expanded="'+(op==="scr")+'" onclick="hvOpenP(\''+k+'\',\'scr\')">화면'+(nScr?' '+nScr:'')+'</button></div>')+'</div>';
+  var pn=op==="all"?'<div class="grid g2 hv-pn">'+card("통제","",hvCtl(k))+card("화면","열기 · 주소 복사",hvScrHtml(k))+'</div>':
+    op==="ctl"?'<div class="hv-pn">'+card("통제","",hvCtl(k),'<button class="btn sm" onclick="hvOpenP(\''+k+'\',\'ctl\')">접기</button>')+'</div>':
+    op==="scr"?'<div class="hv-pn">'+card("화면","열기 · 주소 복사",hvScrHtml(k),'<button class="btn sm" onclick="hvOpenP(\''+k+'\',\'scr\')">접기</button>')+'</div>':'';
+  return st+pn;
 }
+function hvLogCard(k){ var rec=HV_ELREC[k]; return '<div class="hv-logc">'+card("기록","최근 5줄",ctlHtml(k,5),rec?'<a class="lnk" href="#" onclick="go(\''+rec+'\');return false">기록 메뉴에서 더 보기</a>':'')+'</div>'; }
 function viewElEmpty(){ return ""; }
 
 /* ══ 본부 ══ */
@@ -6120,29 +6141,31 @@ function hvChecks(mode){
     day:[[!hvRo(),"서버 읽기 전용 꺼짐"],[!sy.rouletteOut,"룰렛 소진 안내 꺼짐(소진 전까지)","e_roul"],[d.ok?!!d.locked:null,"AX 올림픽 당일 잠금 켬","e_game"],[ps?!!ps.on:null,"웹 푸시 발송 켜짐","n_push"],[null,"추첨 화면 원격 연결 확인","e_draw"],[null,"타자왕 좌석 링크 · 부스 TV 열기","e_type"]],
     post:[[null,"참여상 배송 CSV 받기(슈퍼관리자)","e_draw"],[ps?!ps.on:null,"웹 푸시 전체 정지","n_push"],[null,"7일 안 개인 기록 폐기(서버 담당 · clearOpsData)"]]
   }[mode]||[];
-  return L.map(function(x){ var c=x[0]===true?"ok":x[0]===false?"warn":""; return '<div class="hv-ck '+c+'"><i></i><span>'+esc(x[1])+'</span>'+(x[2]?' <a class="cap" href="#" onclick="go(\''+x[2]+'\');return false">열기</a>':'')+'</div>'; }).join("");
+  return L.map(function(x){ var c=x[0]===true?"ok":x[0]===false?"warn":""; return '<div class="hv-ck '+c+'"><i></i><span>'+esc(x[1])+'</span>'+(x[2]?'<a class="lnk" href="#" onclick="go(\''+x[2]+'\');return false">열기</a>':'')+'</div>'; }).join("");
 }
 function viewHq(){
   var st=ST.data.stats||{}, ac=(ST.data.acct||{}).rows||[], sp=(ST.data.stamp||{}).rows||[], roster=(ST.data.acct||{}).roster||0;
   var active=0, roul=0, tickets=0; sp.forEach(function(r){ if(r.n>0) active++; if(r.roulette) roul++; tickets+=reward(r.n).tickets; });
   var eligible=sp.filter(function(r){ return r.n>=3; }).length, mode=hvMode(), env=hvEnv(), cn=hvConn(), cr=(ST.data.crowd&&ST.data.crowd.ok)?ST.data.crowd.crowd||{}:{};
   var hot=["e","l"].filter(function(k){ return cr[k]&&cr[k].x>Date.now(); });
-  var h='<div class="hv-strip"><span class="cap">모드</span><span class="hv-seg">'+["pre","day","post"].map(function(m){ return '<button class="'+(mode===m?"on":"")+'" onclick="hvModeSet(\''+m+'\')">'+HV_MODE_N[m]+'</button>'; }).join("")+'</span>'+
-    (mode!==hvModeAuto()?'<span class="cap">손으로 바꿈 · 날짜 기준은 '+HV_MODE_N[hvModeAuto()]+'</span>':'')+
-    tag(cn[0], cn[1])+tag(hvRo()?"읽기 전용 켜짐":"읽기 전용 꺼짐", hvRo()?"warn":"off")+tag(env[0], env[1])+
+  /* 261003 UI 정돈 · 모드 = 제목줄 오른쪽 분할 선택 · 서버 상태 = 띠 한 줄 · 왼쪽 7(지금 할 일 · 행사 요소 표) : 오른쪽 5(참여 · 점검 · 기록) */
+  tabHead((mode!==hvModeAuto()?'<span class="cap">손으로 바꿈 · 날짜 기준 '+HV_MODE_N[hvModeAuto()]+'</span>':'')+'<span class="hv-seg" title="모드">'+["pre","day","post"].map(function(m){ return '<button class="'+(mode===m?"on":"")+'" onclick="hvModeSet(\''+m+'\')">'+HV_MODE_N[m]+'</button>'; }).join("")+'</span>');
+  var h='<div class="hv-strip"><i class="dot '+(cn[1]==="ok"?"ok":cn[1]==="bad"?"bad":"")+'"></i><span><b>'+esc(cn[0])+'</b></span>'+tag(hvRo()?"읽기 전용 켜짐":"읽기 전용 꺼짐", hvRo()?"warn":"off")+tag(env[0], env[1])+
     (hot.length?'<a href="#" onclick="go(\'f_crowd\');return false">'+tag("혼잡 제보 "+hot.length+"곳","bad")+'</a>':'')+camChip()+
     '<span class="sp"></span>'+(st.t?'<span class="cap">서버 시각 <b class="n">'+esc(st.t)+'</b></span>':'')+'</div>';
   var r0=ST._right, todo=viewDash("todo"); ST._right=r0; var on=todo.filter(function(x){ return x.v; }), zero=todo.filter(function(x){ return !x.v; });
-  var todoH=(on.length?'<div class="todo">'+on.map(function(x){ return '<div class="it"><div class="v">'+x.v+'</div><div><div class="t">'+esc(x.t)+'</div><div class="d">'+esc(x.d)+'</div></div><button class="btn sm pri" onclick="'+x.go+'">처리하기</button></div>'; }).join("")+'</div>':'<div class="empty">지금 처리할 일이 없습니다.</div>')+
-    (zero.length?'<p class="cap mt8">0건 · '+zero.map(function(x){ return esc(x.t); }).join(" · ")+'</p>':'');
-  var left=card("지금 할 일", on.length?on.length+"가지 대기":"대기 없음", todoH+'<div class="mt16"><div class="cap" style="font-weight:700">'+HV_MODE_N[mode]+' 점검</div>'+hvChecks(mode)+'</div>');
-  var els=card("행사 요소","누르면 그 요소의 상태 · 통제 · 화면으로",'<div class="hv-els">'+HV_EL.map(function(e){ var s=elSt(e[0]); return '<button class="hv-el" onclick="go(\''+e[2]+'\')"><div class="row"><b>'+esc(e[1])+'</b>'+tag(s.p[0], s.p[1])+'</div><span class="m">'+esc(s.m)+'</span></button>'; }).join("")+
-    (function(){ var n=(ST.data.sy||{}).notice; return '<button class="hv-el" onclick="go(\'n_send\')"><div class="row"><b>공지</b>'+(n?tag("송출 중","pri"):tag("송출 없음","off"))+'</div><span class="m">'+esc(n?n.title:"앱 안 공지 없음")+'</span></button>'; })()+'</div>');
-  var kp='<div class="kpis mt16">'+kpi("가입 계정",ac.length,"명",roster?"명부 "+roster+"명 중 "+pct(ac.length,roster)+"%":"","go('p_acct')")+
+  var todoH='<div class="todo">'+on.map(function(x){ return '<div class="it"><div class="v">'+x.v+'</div><div><div class="t">'+esc(x.t)+'</div><div class="d">'+esc(x.d)+'</div></div><button class="btn sm pri" onclick="'+x.go+'">처리하기</button></div>'; }).join("")+
+    zero.map(function(x){ return '<div class="it zero"><div class="v">0</div><div class="t">'+esc(x.t)+'</div><span></span></div>'; }).join("")+'</div>'+(on.length?'':'<p class="cap mt8">지금 처리할 일이 없습니다.</p>');
+  var left=card("지금 할 일", on.length?on.length+"가지 대기":"대기 없음", todoH);
+  var elRow=function(nm, t, m, go0){ return '<tr class="click" onclick="'+go0+'"><td><b>'+esc(nm)+'</b></td><td>'+t+'</td><td class="cap">'+esc(m)+'</td><td class="tdr hide-m"><i class="chev"></i></td></tr>'; };
+  var els=card("행사 요소","줄을 누르면 그 요소로 갑니다",'<div class="wrap"><table class="tb hv-elt"><tr><th>요소</th><th>상태</th><th>지금</th><th class="hide-m"></th></tr>'+HV_EL.map(function(e){ var s=elSt(e[0]); return elRow(e[1], tag(s.p[0], s.p[1]), s.m, "go('"+e[2]+"')"); }).join("")+
+    (function(){ var n=(ST.data.sy||{}).notice; return elRow("공지", n?tag("송출 중","pri"):tag("송출 없음","off"), n?n.title:"앱 안 공지 없음", "go('n_send')"); })()+'</table></div>');
+  var chk=card(HV_MODE_N[mode]+" 점검","", hvChecks(mode));
+  var kp='<div class="kpis k2">'+kpi("가입 계정",ac.length,"명",roster?"명부 "+roster+"명 중 "+pct(ac.length,roster)+"%":"","go('p_acct')")+
     kpi("스탬프 참여",active,"명","1개 이상 · 평균 "+(active?(sp.reduce(function(a,r){ return a+capN(r.n); },0)/active).toFixed(1):"0")+"개","go('r_stamp')")+
     kpi("룰렛 자격",eligible,"명","3개 이상 · 사용 "+roul+"명","go('e_roul')")+kpi("추첨 응모권",tickets,"장","4개 1장 · 5개 2장 · 6개 3장")+'</div>';
   var log=card("최근 통제 기록","누가 · 언제 · 무엇을",ctlHtml("",5));
-  h+='<div class="grid g57" style="margin-top:0"><div>'+left+'</div><div>'+els+kp+log+'</div></div>';
+  h+='<div class="grid g75"><div>'+left+els+'</div><div>'+card("참여",roster?"명부 "+roster.toLocaleString()+"명 기준":"",kp)+chk+log+'</div></div>';
   return h;
 }
 /* 261003 카메라 계수 요약 칩(모아 보기 띠) · 카메라가 없거나 옛 서버면 아무것도 없다 · 혼잡 구역 = 빨강(혼잡 제보 칩과 같은 말) · 신호 없음 = 회색 */
