@@ -5,16 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Stamp Wall · AX Festival 2026</title>
 <meta name="robots" content="noindex">
-<!-- 1F 로비 스탠바이미 송출 화면 「ME to WE 스탬프 월」 v2 (261003)
-     로고가 주인공 · 홍보부 원본 심볼(01_Me_to_WE · 1,037점) · 스탬프 1개 = 점 하나가 켜진다 · 디머 단계마다 로고 전체가 한 칸씩 밝아진다
-     위 모서리 = 워드마크 + 슬로건 줄 · 아래 = 얇은 띠(스탬프 소개 카드) · 정보 칸 · 앱 QR 없음 · 글자는 모두 캔버스에 그린다
-     점등 장면 45초 ↔ 광고 장면 12~15초(광고판 시퀀스 · 스탬프 8종 · 최초 로그인 장면 · 경품) · 이정표 · 심볼 완성 · Outro 안내
+<!-- 1F 로비 스탠바이미 송출 화면 「ME to WE 스탬프 월」 v4c 「모여들기 · 최소 구성」 (261003)
+     같은 층에 홍보부 영상이 계속 돌아가므로 이 화면은 조용하게 · 스탬프 1개 = 점 1개가 아래에서 떠올라 로고(2,026점) 자리에 쌓인다
+     화면 위 = 워드마크 · 로고 · 오늘 모인 스탬프 숫자(2판부터 작은 「n판」) · 「점 1개 = 스탬프 1개」 · 글자는 모두 캔버스에 그린다
      가로 · 세로 = 화면 비율로 자동 · ?o=land|port 로 고정 · 데이터 = 공개 집계 stats(관리코드 없음 · 15초 폴링) · ?demo=1 은 서버 없이 가짜 적립 · 조작표 H -->
 <link rel="icon" href="../icons/icon-192.png">
 <style>
   @font-face { font-family: "AXP"; src: url("../draw/assets/PretendardVariable.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
   :root {
-    --o: #FF7E31; --hi: #FF963E; --pu: #E6CCFF;
+    --o: #FF7E31; --hi: #FF963E;
     --txt: rgba(255,255,255,.88); --sub: rgba(255,255,255,.58); --faint: rgba(255,255,255,.32);
     --f: "AXP", "Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif;
   }
@@ -24,14 +23,14 @@
   body.ptr { cursor: auto; }
   #cv { position: fixed; left: 0; top: 0; display: block; }
 
-  /* 논리 무대 · 가로 1920×1080 / 세로 1080×1920 · JS 가 화면에 맞춰 배율만 준다 · 상태 글자 두 줄만(데모 표시 · 연결 끊김) */
+  /* 논리 무대 · 가로 1920×1080 / 세로 1080×1920 · JS 가 화면에 맞춰 배율만 준다 · 상태 글자 두 줄만(데모 표시 · 연결 끊김) · 평소에는 보이지 않는다 */
   #frame { position: fixed; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; pointer-events: none; }
   body.port #frame { width: 1080px; height: 1920px; }
-  #demoMark { position: absolute; left: 72px; top: 178px; font-size: 20px; font-weight: 600; color: var(--faint); display: none; letter-spacing: .02em; }
-  body.port #demoMark { left: 56px; top: 156px; }
+  #demoMark { position: absolute; left: 72px; top: 150px; font-size: 20px; font-weight: 600; color: var(--faint); display: none; letter-spacing: .02em; }
+  body.port #demoMark { left: 64px; top: 152px; }
   body.demo #demoMark { display: block; }
-  #net { position: absolute; left: 72px; top: 208px; font-size: 20px; font-weight: 500; color: var(--faint); opacity: 0; transition: opacity .6s; }
-  body.port #net { left: 56px; top: 186px; }
+  #net { position: absolute; left: 72px; top: 180px; font-size: 20px; font-weight: 500; color: var(--faint); opacity: 0; transition: opacity .6s; }
+  body.port #net { left: 64px; top: 182px; }
   body.off #net { opacity: 1; }
   #hud { position: fixed; left: 12px; bottom: 12px; font: 14px/1.4 Consolas, monospace; color: #9f9; display: none; white-space: pre; z-index: 9; background: rgba(0,0,0,.6); padding: 4px 6px; }
   body.hud-on #hud { display: block; }
@@ -41,7 +40,7 @@
   body.ptr #fsBtn { opacity: 1; pointer-events: auto; }
   body.fs #fsBtn { display: none; }
 
-  #help { position: fixed; left: 50%; top: 50%; width: min(980px, calc(100% - 32px)); transform: translate(-50%, -50%); background: rgba(12,12,12,.95); border-radius: 28px; padding: 36px 44px; display: none; color: #fff; z-index: 11; }
+  #help { position: fixed; left: 50%; top: 50%; width: min(980px, calc(100% - 32px)); max-height: calc(100% - 32px); overflow: auto; transform: translate(-50%, -50%); background: rgba(12,12,12,.95); border-radius: 28px; padding: 36px 44px; display: none; color: #fff; z-index: 11; }
   body.help-on #help { display: block; }
   #help h2 { font-size: 30px; font-weight: 600; color: var(--o); margin-bottom: 16px; }
   #help table { width: 100%; border-collapse: collapse; font-size: 20px; }
@@ -62,21 +61,16 @@
   <h2>조작표</h2>
   <table>
     <tr><td>F · 전체 화면 버튼</td><td>전체 화면 켜기 · 끄기</td></tr>
-    <tr><td>H</td><td>이 표</td></tr>
-    <tr><td>G</td><td>fps · 단계 · 상태 표시</td></tr>
-    <tr><td>N</td><td>다음 광고 장면 바로 보기</td></tr>
-    <tr><td>1 ~ 7</td><td>장면 고르기 (광고판 · 최초 로그인 · 이정표 · Outro 안내 · 심볼 완성 · 스탬프 8종 · 경품)</td></tr>
-    <tr><td>↑ · ↓ (데모)</td><td>가짜 적립 속도 두 배 · 절반</td></tr>
-    <tr><td>Space (데모)</td><td>가짜 적립 멈춤 · 다시</td></tr>
-    <tr><td>J · K (데모)</td><td>스탬프 100개 더하기 · 심볼 완성 직전으로</td></tr>
+    <tr><td>H · G</td><td>이 표 · 상태 표시(fps · 적립 수 · 연결)</td></tr>
+    <tr><td>1 ~ 5 (데모)</td><td>시점 점프 09:30 · 10:30 · 12:29(1판 완성 직전) · 15:00(2판) · 17:00(3판)</td></tr>
+    <tr><td>↑ · ↓ · Space (데모)</td><td>데모 시계 두 배 · 절반 · 멈춤</td></tr>
+    <tr><td>B · J (데모)</td><td>지금 묶음 도착 8개 · 100개</td></tr>
   </table>
-  <p>운영 화면은 공개 집계만 읽습니다(관리코드 없음). 연결이 끊기면 마지막 값을 그대로 두고 다시 연결합니다. 방향은 화면 비율로 정하고, 주소 뒤 ?o=land 또는 ?o=port 로 고정할 수 있습니다.</p>
+  <p>운영 화면은 공개 집계만 읽습니다(관리코드 없음). 연결이 끊기면 마지막 값을 그대로 두고 다시 연결합니다. 방향은 화면 비율로 정하고, 주소 뒤 ?o=land 또는 ?o=port 로 고정할 수 있습니다. 데모는 ?demo=1.</p>
 </div>
 <script src="../assets/server.js"></script>
 <script src="../draw/assets/axf_engine.js"></script>
-<script src="../assets/axf_run.js"></script>
 <script src="../draw/assets/wordmark.js"></script>
-<script src="assets/lgx_sign.js"></script>
 <script src="assets/wall.js"></script>
 </body>
 </html>
