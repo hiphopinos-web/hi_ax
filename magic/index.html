@@ -61,7 +61,7 @@ let debug = qs.get('debug') === '1';
 let radiusScale = 1, swingBias = 0;   // swingBias: , . 키로 현장 튜닝 (초)
 const FONT = '"Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif';
 const ORANGE = '#FF7E31', ORANGE_L = '#FF963E', ORANGE_D = '#E5651A';
-const PLAY_SEC = 30, INTRO_SEC = 2.2, RESULT_SEC = 5, ABSENT_SEC = 6;
+const ABSENT_SEC = 6;
 
 const cv = document.getElementById('stage');
 const ctx = cv.getContext('2d');
@@ -111,6 +111,12 @@ const sfx = {
   tele() { noise(.45, .2, 6000, 600, .5, 'bandpass'); tone(1000, .3, 'sine', .1, -700); },
   no() { tone(240, .28, 'sawtooth', .08, -120); },
   boom() { noise(.9, .35, 1200, 100, .4, 'lowpass'); tone(90, .6, 'sine', .3, -50); [523, 659, 784, 1047].forEach((f, i) => tone(f, .5, 'triangle', .16, 0, .25 + i * .12)); },
+  hit() { noise(.3, .32, 2600, 220, .6); tone(160, .22, 'square', .12, -90); },
+  hurt() { tone(180, .5, 'sawtooth', .16, -110); noise(.35, .25, 900, 200, .7, 'lowpass'); },
+  tired() { tone(420, .7, 'triangle', .14, -300); tone(300, .6, 'triangle', .1, -200, .15); },
+  curse() { tone(330, .4, 'sine', .07, -120); },
+  boss() { tone(110, .9, 'sawtooth', .12, -40); noise(.8, .15, 400, 120, .6, 'lowpass'); },
+  merge() { [392, 523, 659, 784, 1047].forEach((f, i) => tone(f, .5, 'triangle', .15, 0, i * .06)); noise(.6, .15, 600, 5000, .6); },
   end() { tone(523, .16, 'triangle', .2); tone(659, .16, 'triangle', .2, 0, .14); tone(784, .16, 'triangle', .2, 0, .28); tone(1047, .5, 'triangle', .22, 0, .42); },
 };
 addEventListener('pointerdown', audio); addEventListener('keydown', audio);
@@ -140,7 +146,7 @@ const PALM = (() => { const p = handPose(0); return { x: (p[0].x + p[5].x + p[9]
 const place = (pose, cx, cy, s) => pose.map(p => ({ x: cx + (p.x - PALM.x) * s, y: cy + (p.y - PALM.y) * s }));
 
 /* ---------------- 손 입력: 카메라 / 마우스 시험 ---------------- */
-const mouse = { x: 960, y: 640, last: -1e9, shift: false, pose: 0 };   // pose 0 편 손 / 1 주먹 / 2 하트
+const mouse = { x: 960, y: 640, last: -1e9, shift: false, pose: 0, ax: 740, ay: 640, dual: false, extra: [] };   // pose 0 편 손 / 1 주먹 / 2 하트, (ax,ay) 두 번째 손의 대칭 중심(마우스를 천천히 따라온다), dual 2인 거울
 addEventListener('mousemove', e => { mouse.x = (e.clientX - cv._ox) / cv._s; mouse.y = (e.clientY - cv._oy) / cv._s; mouse.last = clk(); });
 const mh = { L: 100, Lt: 100, cs: [0, 0, 0, 0], pin: 0 };
 addEventListener('wheel', e => { if (!mouseMode) return; mh.Lt = clamp(mh.Lt * (e.deltaY < 0 ? 1.13 : 1 / 1.13), 60, 280); mouse.last = clk(); }, { passive: true });
@@ -170,24 +176,41 @@ function applyHand(tr, pts) {
 function updateInput(dt) {
   let list = [];
   if (mouseMode) {
-    if (now - mouse.last < ABSENT_SEC) {
+    if (!mouse.off && now - mouse.last < ABSENT_SEC) {
       const pz = POSES[mouse.pose], k = 1 - Math.exp(-dt * 14);
       mh.L = lerp(mh.L, mh.Lt, k); mh.Lt += (100 - mh.Lt) * dt * .25;
       for (let i = 0; i < 4; i++) mh.cs[i] = lerp(mh.cs[i], pz.cs[i], mouse.pose === 1 || mh.cs[0] > pz.cs[0] ? 1 - Math.exp(-dt * 22) : 1 - Math.exp(-dt * 22));
       mh.pin = lerp(mh.pin, pz.pin, 1 - Math.exp(-dt * 22));
       const pose = handPose(mh.cs, mh.pin);
       list.push(place(pose, mouse.x, mouse.y, mh.L));
-      if (mouse.shift) list.push(place(pose, W - mouse.x, H - mouse.y, mh.L));
+      const ka = 1 - Math.exp(-dt * .8); mouse.ax = lerp(mouse.ax, mouse.x, ka); mouse.ay = lerp(mouse.ay, mouse.y, ka);
+      if (mouse.shift) list.push(place(pose, 2 * mouse.ax - mouse.x, 2 * mouse.ay - mouse.y, mh.L));
+      if (mouse.dual) list.slice().forEach(p => list.push(p.map(q => ({ x: W - q.x, y: q.y }))));
+    }
+    for (const v of mouse.extra) {   // 시험용 가상 손(__ax.vhand): 자동 시험이 두 사람을 따로 움직인다
+      if (v.off) continue; const pz = POSES[v.pose], k = 1 - Math.exp(-dt * 22);
+      v.L = lerp(v.L, v.Lt, 1 - Math.exp(-dt * 14)); v.Lt += (100 - v.Lt) * dt * .25;
+      for (let i = 0; i < 4; i++) v.cs[i] = lerp(v.cs[i], pz.cs[i], k); v.pin = lerp(v.pin, pz.pin, k);
+      const pose = handPose(v.cs, v.pin); list.push(place(pose, v.x, v.y, v.L));
+      if (v.shift) list.push(place(pose, 2 * v.ax - v.x, 2 * v.ay - v.y, v.L));
     }
   } else if (rawHands && now - rawHands.t < .35) list = rawHands.list.map(h => h.pts);
   for (const t of hands) t.matched = false;
-  for (const pts of list) {
-    const m = metrics(pts), c = { x: m.cx, y: m.cy }; let best = null, bd = 1e9;
-    for (const t of hands) { if (t.matched) continue; const d = dist(t.c, c); if (d < bd) { bd = d; best = t; } }
-    if (best && bd < Math.max(450, best.L * 5)) { best.matched = true; applyHand(best, pts); }
-    else { const t = { id: nextHid++, hist: [], matched: true, lm: null, seen: now, fire: { fd: 0, lastFist: -9 }, heart: 0 }; applyHand(t, pts); hands.push(t); }
+  // 짝짓기: 모든 (새 손, 기존 손) 쌍을 거리순으로 묶는다(두 사람 손이 가운데서 가까워도 뒤바뀌지 않게, 직전 속도로 위치 예측)
+  const cs = list.map(pts => { const m = metrics(pts); return { x: m.cx, y: m.cy }; }), pairs = [], used = new Array(list.length).fill(false);
+  for (const t of hands) { const n = t.hist.length, pv = n >= 2 ? { x: t.c.x + (t.hist[n - 1].x - t.hist[n - 2].x), y: t.c.y + (t.hist[n - 1].y - t.hist[n - 2].y) } : t.c;
+    cs.forEach((c, i) => { const d = dist(pv, c); if (d < Math.max(450, t.L * 5)) pairs.push([d, i, t]); }); }
+  pairs.sort((a, b) => a[0] - b[0]);
+  for (const [, i, t] of pairs) { if (used[i] || t.matched) continue; used[i] = true; t.matched = true; applyHand(t, list[i]); }
+  for (let i = 0; i < list.length; i++) {
+    if (used[i]) continue; const pts = list[i];
+    { const t = { id: nextHid++, hist: [], matched: true, lm: null, seen: now, fire: { fd: 0, lastFist: -9 }, heart: 0, openT: 0, swapT: 0, pushR: 0, teleR: 0, fireP: 0, heartP: 0 }; applyHand(t, pts); t.side = t.c.x < 960 ? 0 : 1; hands.push(t); }
   }
   hands = hands.filter(t => now - t.seen < .6);
+  for (const t of hands) {   // 2인: 손을 x 위치로 왼쪽/오른쪽 사람에 배정(가운데를 잠깐 넘어도 유지)
+    const other = t.side === 0 ? t.c.x > 1080 : t.c.x < 840;
+    t.swapT = other ? t.swapT + dt : 0; if (t.swapT > .6) { t.side = 1 - t.side; t.swapT = 0; }
+  }
 }
 const liveHands = () => hands.filter(h => now - h.seen < .25).sort((a, b) => a.id - b.id);
 
@@ -280,7 +303,7 @@ function detect() {
   try {
     const r = hl.detectForVideo(video, ts), list = [];
     for (const lm of (r.landmarks || [])) { const pts = lm.map(p => mapPt(p.x, p.y)); list.push({ pts, L: Math.hypot(pts[0].x - pts[9].x, pts[0].y - pts[9].y) }); }
-    list.sort((a, b) => b.L - a.L); rawHands = { t: now, list: list.slice(0, 2) };
+    list.sort((a, b) => b.L - a.L); rawHands = { t: now, list: list.slice(0, 4) };   // 2인을 위해 4손까지(사람별로는 가장 큰 두 손만 쓴다)
   } catch (e) { console.warn('hand', e); }
 }
 
@@ -317,80 +340,108 @@ const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { c
 
 /* ---------------- 주문 정의 ---------------- */
 const SP = {
-  orb: { name: '에너지 구', how: '두 손을 마주 보게 벌리고 빙글빙글 돌리세요', card: '두 손으로 빙글빙글', need: 2, T: 3.4 },
-  push: { name: '발사', how: '손바닥을 펴서 앞으로 쭉 미세요', card: '손바닥 앞으로 쭉', need: 1, T: 2.6 },
-  fire: { name: '불꽃', how: '주먹을 쥐었다가 확 펴세요', card: '주먹 쥐었다 확 펴기', need: 1, T: 2.4 },
-  heart: { name: '하트', how: '엄지와 검지 끝을 맞대세요', card: '엄지 검지 끝 맞대기', need: 1, T: 2.6 },
-  tele: { name: '순간 이동', how: '편 손을 옆으로 쓸어 넘기세요', card: '편 손 옆으로 쓸기', need: 1, T: 2.6 },
+  orb: { name: '에너지 구', how: '두 손을 마주 보고 빙글빙글', need: 2, T: 3.4, cost: 35 },
+  push: { name: '발사', how: '편 손바닥을 앞으로 쭉', need: 1, T: 2.6, cost: 15 },
+  fire: { name: '불꽃', how: '주먹을 쥐고 잠깐, 확 펴기', need: 1, T: 2.4, cost: 10 },
+  tele: { name: '순간 이동', how: '편 손을 옆으로 쓸기', need: 1, T: 2.6, cost: 8 },
+  heart: { name: '하트', how: '엄지 검지 끝을 맞대고 멈춤', need: 1, T: 2.6, cost: 0 },
 };
-const PRACTICE = ['orb', 'push', 'fire'];
+const PRACTICE = ['orb', 'push', 'fire', 'tele', 'heart'];
+const COOL = .4;                 // 주문 뒤 전역 쿨다운(한 동작에 두 주문 금지)
+const FIST_HOLD = .2;            // 불꽃: 주먹 유지 시간
+const HEART_HOLD = .4;           // 하트: 정적 유지 시간
+const EN_MAX = 100, EN_REGEN = 6, EN_REGEN_DELAY = 1.2, HEART_GAIN = 55, EXHAUST_SEC = 3, EN_AFTER_EX = 35;
+const PUSH_THR = 1.3;            // 발사: 0.4초 안에 손 크기 배율
 
-/* ---------------- 판정 (주문마다 방식이 다르다) ---------------- */
-const J = { orb: { p: 0, hit: false, sum: 0, last: null, block: 0, mid: null, L: 100, d: 0 }, push: { p: 0, hit: false, ratio: 1, block: 0 }, fire: { p: 0, hit: false, block: 0 },
-  heart: { p: 0, hit: false, hold: 0, block: 0 }, tele: { p: 0, hit: false, dx: 0, block: 0 } };
-let lenient = false, coolUntil = 0;
-function resetDet(k) {
-  const j = J[k]; j.p = 0; j.hit = false; j.block = now + .7;
-  if (k === 'orb') { j.sum = 0; j.last = null; }
-  if (k === 'heart') { j.hold = 0; hands.forEach(h => h.heart = 0); }
-  if (k === 'fire') hands.forEach(h => { h.fire.fd = 0; h.fire.lastFist = -9; });
+/* ---------------- 손 → 플레이어 ---------------- */
+let G = null;                    // 한 판 상태
+const NP = () => (G && G.np) || 1;
+function region(side) { return NP() === 2 ? (side ? { x0: 960, x1: W, cx: 1440, w: 960 } : { x0: 0, x1: 960, cx: 480, w: 960 }) : { x0: 0, x1: W, cx: 960, w: W }; }
+function playerHands(i) { const lh = liveHands(), arr = NP() === 2 ? lh.filter(h => h.side === i) : lh.slice(); return arr.sort((a, b) => b.L - a.L).slice(0, 2); }
+function speedOf(h, win) {
+  const hs = h.hist; if (hs.length < 2) return 0; let s0 = hs[hs.length - 1];
+  for (let i = hs.length - 1; i >= 0; i--) { if (now - hs[i].t > win) break; s0 = hs[i]; }
+  const d = now - s0.t; return d > .05 ? Math.hypot(h.c.x - s0.x, h.c.y - s0.y) / d : 0;
 }
-function consume(k) { coolUntil = now + .8; resetDet(k); }
-function runDetectors(dt) {
-  for (const k in J) J[k].hit = false;
-  const hs = liveHands(), ok = now >= coolUntil;
-  { // 에너지 구: 두 손 사이 벡터의 누적 회전각(서로 반대 위상으로 돌아야 벡터가 돈다)
-    const j = J.orb, need = lenient ? 1.5 * Math.PI : 2.5 * Math.PI;
-    if (hs.length >= 2) {
-      const a = hs[0], b = hs[1], dd = dist(a.c, b.c);
-      j.mid = { x: (a.c.x + b.c.x) / 2, y: (a.c.y + b.c.y) / 2 }; j.L = (a.L + b.L) / 2; j.d = dd;
-      if (dd > j.L * 1.2) { const th = Math.atan2(b.c.y - a.c.y, b.c.x - a.c.x); if (j.last !== null) { const d = wrapA(th - j.last); if (Math.abs(d) < 2.0) j.sum += d; } j.last = th; } else j.last = null;
-    } else j.last = null;
-    j.p = clamp(Math.abs(j.sum) / need, 0, 1);
-    if (j.p >= 1 && ok && now >= j.block && j.mid) { j.hit = true; j.at = { x: j.mid.x, y: j.mid.y, L: j.L }; }
+// 손 하나의 동작 지표(매 프레임)
+function handFeat(h, dt) {
+  h.openT = h.open >= .55 ? h.openT + dt : 0;
+  const pinchPose = h.pinch < .45 && h.m.ext[0] > 1.1;
+  { // 불꽃: 주먹(하트 모양 제외)을 FIST_HOLD 이상 유지한 뒤 0.6초 안에 확 편다
+    const f = h.fire;
+    if (h.open < .3 && !pinchPose) { f.fd += dt; f.lastFist = now; }
+    else if (now - f.lastFist > .6) f.fd = 0;
+    const armed = f.fd >= FIST_HOLD && now - f.lastFist < .6;
+    h.fireOK = armed && h.open > .7;
+    h.fireP = h.open < .3 && !pinchPose ? Math.min(f.fd / FIST_HOLD, 1) * .5 : armed ? .5 + .5 * clamp((h.open - .3) / .4, 0, 1) : 0;
   }
-  { // 발사: 편 손의 크기(손목~중지뿌리)가 0.7초 안에 커짐
-    const j = J.push, thr = lenient ? 1.22 : 1.3; let best = 1, bh = null;
-    for (const h of hs) {
-      if (h.hist.length < 4 || now - h.hist[0].t < .2) continue;
-      let mn = 1e9; for (const s of h.hist) if (now - s.t <= .7) mn = Math.min(mn, s.L);
-      const r = h.L / mn; if (h.open >= .45 && r > best) { best = r; bh = h; }
-    }
-    j.ratio = best; j.p = clamp((best - 1) / (thr - 1), 0, 1);
-    if (j.p >= 1 && ok && now >= j.block && bh) { j.hit = true; j.at = { x: bh.c.x, y: bh.c.y, L: bh.L, h: bh }; }
+  { // 하트: 엄지·검지 끝 맞대기 + 나머지 접힘 + 손이 거의 멈춤을 HEART_HOLD 유지
+    const good = pinchPose && h.curled && speedOf(h, .3) < h.L * 1.2;
+    if (!good) h.heartLock = false;   // 한 번 하트를 낸 뒤에는 자세를 풀었다 다시 해야 한다
+    h.heart = good && !h.heartLock ? h.heart + dt : Math.max(0, h.heart - dt * 2);
+    h.heartP = clamp(h.heart / HEART_HOLD, 0, 1);
   }
-  { // 불꽃: 주먹 상태가 잠깐 유지된 뒤 편 손 상태로 전환
-    const j = J.fire; let bp = 0, bh = null, hit = null;
-    for (const h of hs) {
-      const f = h.fire;
-      if (h.open < .3) { f.fd += dt; f.lastFist = now; bp = Math.max(bp, Math.min(f.fd / .12, 1) * .5); }
-      else {
-        if (now - f.lastFist > .8) f.fd = 0;
-        if (f.fd >= .12 && now - f.lastFist < .8) { bp = Math.max(bp, .5 + .5 * clamp((h.open - .3) / .4, 0, 1)); if (h.open > .7) hit = h; }
-        else if (h.open > .7) f.fd = 0;
-      }
-    }
-    j.p = bp; if (hit && ok && now >= j.block) { j.hit = true; j.at = { x: hit.c.x, y: hit.c.y, L: hit.L, h: hit }; hit.fire.fd = 0; }
+  { // 발사: 편 손(0.25초 이상 편 상태)의 크기가 0.4초 안에 커짐(천천히 앞뒤로는 발사 아님)
+    let mn = 1e9; for (const s of h.hist) if (now - s.t <= .4 && s.open >= .5) mn = Math.min(mn, s.L);
+    h.pushR = h.hist.length >= 5 && h.openT >= .25 && h.open >= .6 && mn < 1e9 ? (h.L / mn - 1) / (PUSH_THR - 1) : 0;
   }
-  { // 하트: 엄지·검지 끝 근접 + 나머지 손가락 접힘이 잠깐 유지
-    const j = J.heart; let bp = 0, bh = null;
-    for (const h of hs) {
-      const good = h.pinch < .45 && h.curled && h.m.ext[0] > 1.1;
-      h.heart = good ? h.heart + dt : Math.max(0, h.heart - dt * 2);
-      const p = clamp(h.heart / (lenient ? .25 : .35), 0, 1); if (p > bp) { bp = p; bh = h; }
-    }
-    j.p = bp; if (bp >= 1 && ok && now >= j.block) { j.hit = true; j.at = { x: (bh.lm[4].x + bh.lm[8].x) / 2, y: (bh.lm[4].y + bh.lm[8].y) / 2, L: bh.L, h: bh }; }
+  { // 순간 이동: 편 손이 0.12~0.5초 사이에 가로로 크게 이동
+    const thr = NP() === 2 ? 420 : 500; let bx = 0;
+    if (h.open >= .5) for (const s of h.hist) { const age = now - s.t; if (age > .5 || age < .12) continue; const dx = h.c.x - s.x, dy = h.c.y - s.y; if (Math.abs(dy) < .7 * Math.abs(dx) && Math.abs(dx) > Math.abs(bx)) bx = dx; }
+    h.teleR = Math.abs(bx) / thr; h.teleDx = bx;
   }
-  { // 순간 이동: 편 손이 0.5초 안에 가로로 빠르게 이동
-    const j = J.tele, thr = lenient ? 400 : 520; let bp = 0, bh = null, bdx = 0;
-    for (const h of hs) {
-      if (h.open < .5) continue; let bx = 0;
-      for (const s of h.hist) { const age = now - s.t; if (age > .5 || age < .12) continue; const dx = h.c.x - s.x, dy = h.c.y - s.y; if (Math.abs(dy) < .7 * Math.abs(dx) && Math.abs(dx) > Math.abs(bx)) bx = dx; }
-      const p = Math.abs(bx) / thr; if (p > bp) { bp = p; bh = h; bdx = bx; }
-    }
-    j.dx = bdx; j.p = clamp(bp, 0, 1);
-    if (j.p >= 1 && ok && now >= j.block && bh) { j.hit = true; j.at = { x: bh.c.x, y: bh.c.y, L: bh.L, dir: Math.sign(bdx), h: bh }; }
+}
+
+function newOrb() { return { sum: 0, last: null, act: 0, charge: 0, held: false, mid: null, L: 100, d: 0, lost: 0 }; }
+function newPlayer(i) { return { i, hands: [], cool: 0, en: EN_MAX, exUntil: 0, wasEx: false, lastCast: -9, p: { orb: 0, push: 0, fire: 0, tele: 0, heart: 0 }, g: 0, posture: false, orb: newOrb(), done: false, absent: 0, ev: null }; }
+function resetOrb(pl) { pl.orb = newOrb(); }
+
+// 한 사람의 주문 판정. 결과는 pl.ev 에 하나만 담는다(쿨다운·탈진이면 없음)
+function detectPlayer(pl, dt) {
+  const hs = pl.hands, o = pl.orb, inBattle = G && G.ph[0] === 'b', need = inBattle ? 2 * Math.PI : 2.5 * Math.PI;
+  pl.ev = null;
+  let apart = false, moving = false;
+  if (hs.length >= 2) {
+    const [a, b] = hs[0].id < hs[1].id ? [hs[0], hs[1]] : [hs[1], hs[0]];
+    const dd = dist(a.c, b.c), L = (a.L + b.L) / 2;
+    o.mid = { x: (a.c.x + b.c.x) / 2, y: (a.c.y + b.c.y) / 2 }; o.L = L; o.d = dd; o.lost = 0;
+    apart = dd > L * 1.2 && dd < L * 8 && a.open > .45 && b.open > .45;     // 두 손이 마주 보고 벌어진 상태
+    moving = speedOf(a, .3) > L * .6 && speedOf(b, .3) > L * .6;          // 두 손이 모두 움직임
+    if (apart) {
+      const th = Math.atan2(b.c.y - a.c.y, b.c.x - a.c.x);
+      if (o.last !== null) { const d = wrapA(th - o.last); if (Math.abs(d) < 1.2) { if (moving) o.sum += d; o.act = lerp(o.act, Math.abs(d) / Math.max(dt, 1e-3), 1 - Math.exp(-dt * 5)); } }
+      o.last = th;
+    } else { o.last = null; o.act = lerp(o.act, 0, 1 - Math.exp(-dt * 5)); }
+  } else { o.last = null; o.act = lerp(o.act, 0, 1 - Math.exp(-dt * 5)); o.lost += dt; }
+  const rotating = apart && moving && o.act > 1.2;
+  if (!rotating && !o.held) o.sum = Math.sign(o.sum) * Math.max(0, Math.abs(o.sum) - Math.PI * .8 * dt);
+  o.charge = Math.abs(o.sum) / need; if (o.held) o.charge = Math.min(2, Math.max(1, o.charge));
+  if (o.held && o.lost > 1) { resetOrb(pl); return; }
+  pl.posture = o.held || (apart && (rotating || Math.abs(o.sum) > .5 * Math.PI));
+  // 진행도(가이드 게이지용)
+  let pf = 0, ph = 0, pp = 0, pt = 0;
+  for (const h of hs) { pf = Math.max(pf, h.fireP); ph = Math.max(ph, h.heartP); pp = Math.max(pp, h.pushR); pt = Math.max(pt, h.teleR); }
+  Object.assign(pl.p, { orb: Math.min(1, o.charge), fire: pf, heart: ph, push: clamp(pp, 0, 1), tele: clamp(pt, 0, 1) });
+  if (now < pl.cool || now < pl.exUntil) return;
+  if (!o.held && o.charge >= 1 && hs.length >= 2) { pl.ev = { k: 'orb', at: { x: o.mid.x, y: o.mid.y, L: o.L } }; return; }
+  if (o.held) { const h = hs.find(h => h.pushR >= 1); if (h) pl.ev = { k: 'release', at: { x: o.mid.x, y: o.mid.y, L: o.L, h }, charge: o.charge }; return; }
+  if (pl.posture) return;   // 두 손 에너지 구 자세에서는 한 손 주문을 받지 않는다
+  for (const h of hs) {
+    const at = { x: h.c.x, y: h.c.y, L: h.L, h };
+    if (h.fireOK) { pl.ev = { k: 'fire', at }; return; }
+    if (h.heartP >= 1) { pl.ev = { k: 'heart', at: { x: (h.lm[4].x + h.lm[8].x) / 2, y: (h.lm[4].y + h.lm[8].y) / 2, L: h.L, h } }; return; }
+    // 발사(손 크기 증가) vs 순간 이동(가로 이동): 두 지표 중 우세한 하나만
+    if (h.pushR >= 1 && h.pushR >= h.teleR) { pl.ev = { k: 'push', at }; return; }
+    if (h.teleR >= 1 && h.teleR > h.pushR) { at.dir = Math.sign(h.teleDx); pl.ev = { k: 'tele', at }; return; }
   }
+}
+const castLog = [];   // 시험용: 소비된 주문 기록
+function consumeEv(pl, ev) {
+  castLog.push({ k: ev.k, t: now, i: pl.i }); if (castLog.length > 500) castLog.shift();
+  pl.cool = now + COOL;
+  for (const h of pl.hands) { h.hist = h.hist.slice(-1); h.fire.fd = 0; h.heart = 0; if (ev.k === 'heart') h.heartLock = true; }
+  if (ev.k === 'release') resetOrb(pl);
+  else if (ev.k === 'orb') { if (G && G.ph[0] === 'b') { pl.orb.held = true; pl.orb.charge = 1; } else resetOrb(pl); }
 }
 
 /* ---------------- 입자 · 효과 ---------------- */
@@ -399,7 +450,7 @@ const snap = document.createElement('canvas'); snap.width = 960; snap.height = 5
 function spark(x, y, o) { P2.push(Object.assign({ x, y, vx: 0, vy: 0, g: 0, drag: 1, t: 0, life: 1, r: 8, r1: 0, col: '#fff', shape: 'dot', rot: 0, add: true }, o)); }
 function updateP2(dt) {
   for (const p of P2) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += p.g * dt; const d = Math.pow(p.drag, dt * 60); p.vx *= d; p.vy *= d; }
-  P2 = P2.filter(p => p.t < p.life); if (P2.length > 1600) P2.splice(0, P2.length - 1600);
+  P2 = P2.filter(p => p.t < p.life); if (P2.length > 2200) P2.splice(0, P2.length - 2200);
   for (const e of EFX) { e.t += dt; if (e.upd) e.upd(dt, e.t / e.dur); } EFX = EFX.filter(e => e.t < e.dur);
   if (tele) { tele.t += dt; if (tele.t > .6) tele = null; }
 }
@@ -418,39 +469,47 @@ function drawP2() {
     c.globalAlpha = clamp(1 - k, 0, 1);
     if (p.shape === 'heart') { c.save(); c.translate(p.x, p.y); c.rotate(p.rot + k * .6); c.fillStyle = p.col; c.shadowColor = 'rgba(255,126,49,.7)'; c.shadowBlur = 18; heartPath(c, r); c.fill(); c.restore(); }
     else if (p.shape === 'streak') { c.strokeStyle = p.col; c.lineWidth = r; c.lineCap = 'round'; c.beginPath(); c.moveTo(p.x, p.y); c.lineTo(p.x - p.vx * .05, p.y - p.vy * .05); c.stroke(); }
+    else if (p.shape === 'chip') { c.save(); c.translate(p.x, p.y); c.rotate(p.rot + p.t * 9); c.fillStyle = p.col; c.fillRect(-r, -r * .7, r * 2, r * 1.4); c.restore(); }
     else { c.fillStyle = p.col; c.beginPath(); c.arc(p.x, p.y, r, 0, 7); c.fill(); c.globalAlpha *= .22; c.beginPath(); c.arc(p.x, p.y, r * 2.4, 0, 7); c.fill(); }
   }
   c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
   for (const e of EFX) { ctx.save(); e.draw(e.t / e.dur, e.t); ctx.restore(); }
 }
-function cast(key, at) {
-  const x = at.x, y = at.y, L = at.L || 100, c1 = () => pick([ORANGE, '#fff', ORANGE_L, '#FFD0A8']);
-  sfx[key](); audio();
+const c1 = () => pick([ORANGE, '#fff', ORANGE_L, '#FFD0A8']);
+// 주문 시각 효과. o.vp = 발사 도착점, o.R = 불꽃 반경, o.slide = 순간 이동 화면 밀기(연습), o.r = 순간 이동 영역
+function castFx(key, at, o = {}) {
+  const x = at.x, y = at.y, L = at.L || 100;
+  if (sfx[key]) sfx[key](); audio();
   if (key === 'orb') {
-    flash = Math.max(flash, .4);
-    EFX.push({ t: 0, dur: 1.1, draw: k => { glowCircle(x, y, lerp(80, 420, easeOut(k)), (1 - k) * .9); ring(x, y, lerp(30, 460, easeOut(k)), 1 - k, 12, '#fff'); ring(x, y, lerp(30, 320, easeOut(k)), 1 - k, 8, ORANGE); } });
-    for (let i = 0; i < 80; i++) { const a = Math.random() * 7, s = rnd(200, 900); spark(x, y, { vx: Math.cos(a) * s, vy: Math.sin(a) * s, drag: .95, life: rnd(.6, 1.2), r: rnd(5, 11), col: c1() }); }
+    flash = Math.max(flash, .15);
+    EFX.push({ t: 0, dur: 1.1, draw: k => { glowCircle(x, y, lerp(80, 480, easeOut(k)), (1 - k) * .9); ring(x, y, lerp(30, 520, easeOut(k)), 1 - k, 14, '#fff'); ring(x, y, lerp(30, 360, easeOut(k)), 1 - k, 9, ORANGE); } });
+    for (let i = 0; i < 90; i++) { const a = Math.random() * 7, s = rnd(200, 1000); spark(x, y, { vx: Math.cos(a) * s, vy: Math.sin(a) * s, drag: .95, life: rnd(.6, 1.2), r: rnd(5, 12), col: c1() }); }
   } else if (key === 'push') {
-    const vp = { x: 960, y: 260 }; flash = Math.max(flash, .25);
-    EFX.push({ t: 0, dur: 1.1, draw: k => {
+    const vp = o.vp || { x: x, y: 240 };
+    EFX.push({ t: 0, dur: .9, draw: k => {
       const c = ctx; c.save(); c.globalCompositeOperation = 'lighter';
-      const g = c.createLinearGradient(x, y, vp.x, vp.y); g.addColorStop(0, `rgba(255,255,255,${.85 * (1 - k)})`); g.addColorStop(1, 'rgba(255,126,49,0)');
-      c.strokeStyle = g; c.lineWidth = L * 1.3 * (1 - k * .5); c.lineCap = 'round'; c.beginPath(); c.moveTo(x, y); c.lineTo(vp.x, vp.y); c.stroke(); c.restore();
-      for (let i = 0; i < 7; i++) { const e = Math.pow((k * 1.3 + i / 7) % 1, 1.5); ring(lerp(x, vp.x, e), lerp(y, vp.y, e), lerp(L * 1.5, 6, e), (1 - e) * (1 - k * .6), 7, i % 2 ? ORANGE : '#fff'); }
-      glowCircle(vp.x, vp.y, 60 + 300 * easeOut(k), (1 - k) * .8);
+      const g = c.createLinearGradient(x, y, vp.x, vp.y); g.addColorStop(0, `rgba(255,255,255,${.95 * (1 - k)})`); g.addColorStop(1, `rgba(255,150,70,${.8 * (1 - k)})`);
+      c.strokeStyle = g; c.lineWidth = Math.max(40, L * 1.2) * (1 - k * .6); c.lineCap = 'round'; c.beginPath(); c.moveTo(x, y); c.lineTo(vp.x, vp.y); c.stroke();
+      c.strokeStyle = `rgba(255,255,255,${1 - k})`; c.lineWidth = Math.max(10, L * .25) * (1 - k); c.beginPath(); c.moveTo(x, y); c.lineTo(vp.x, vp.y); c.stroke(); c.restore();
+      for (let i = 0; i < 6; i++) { const e = Math.pow((k * 1.4 + i / 6) % 1, 1.4); ring(lerp(x, vp.x, e), lerp(y, vp.y, e), lerp(L * 1.4, 20, e), (1 - e) * (1 - k * .6), 8, i % 2 ? ORANGE : '#fff'); }
+      glowCircle(vp.x, vp.y, 80 + 320 * easeOut(k), (1 - k) * .9);
     } });
   } else if (key === 'fire') {
-    flash = Math.max(flash, .5);
-    for (let i = 0; i < 40; i++) { const a = Math.random() * 7, s = rnd(150, 800); spark(x, y, { vx: Math.cos(a) * s, vy: Math.sin(a) * s - 150, g: -150, drag: .95, life: rnd(.5, 1.1), r: rnd(5, 12), col: pick([ORANGE, ORANGE_L, '#FFD08A', '#fff']) }); }
+    const R = o.R || L * 2.2;
+    for (let i = 0; i < 90; i++) { const a = Math.random() * 7, s = rnd(.4, 1) * R * 2.6; spark(x, y, { vx: Math.cos(a) * s, vy: Math.sin(a) * s - 120, g: -160, drag: .93, life: rnd(.5, 1.1), r: rnd(6, 15), col: pick([ORANGE, ORANGE_L, '#FFD08A', '#fff']) }); }
     EFX.push({ t: 0, dur: .9, upd: () => { const h = at.h && now - at.h.seen < .3 ? at.h.c : { x, y };
-      for (let i = 0; i < 3; i++) spark(h.x + rnd(-L * .5, L * .5), h.y + rnd(-L * .4, L * .2), { vx: rnd(-90, 90), vy: rnd(-560, -200), g: -200, drag: .97, life: rnd(.4, .9), r: rnd(6, 14), col: pick([ORANGE, ORANGE_L, '#FFD08A', '#fff']) }); },
-      draw: k => glowCircle(x, y, L * 2.2 * (1 - k * .5), .35 * (1 - k)) });
+      for (let i = 0; i < 4; i++) spark(h.x + rnd(-L * .5, L * .5), h.y + rnd(-L * .4, L * .2), { vx: rnd(-90, 90), vy: rnd(-600, -220), g: -200, drag: .97, life: rnd(.4, .9), r: rnd(7, 16), col: pick([ORANGE, ORANGE_L, '#FFD08A', '#fff']) }); },
+      draw: k => { glowCircle(x, y, R * 1.1 * (1 - k * .4), .55 * (1 - k)); ring(x, y, R * easeOut(k * 1.6), 1 - k, 14, ORANGE); ring(x, y, R * .8 * easeOut(k * 1.6), 1 - k, 8, '#fff'); } });
   } else if (key === 'heart') {
-    for (let i = 0; i < 18; i++) spark(x + rnd(-L * .8, L * .8), y - L * .3, { vx: rnd(-240, 240), vy: rnd(-460, -180), g: 80, drag: .985, life: rnd(1.3, 2.1), r: rnd(30, 62), r1: rnd(14, 30), col: pick([ORANGE, '#FFD2B5', '#fff', ORANGE_L]), shape: 'heart', add: false, rot: rnd(-.5, .5) });
-    EFX.push({ t: 0, dur: .9, draw: k => { glowCircle(x, y, L * 3 * easeOut(k), (1 - k) * .6); ring(x, y, L * 2.6 * easeOut(k), 1 - k, 8, '#fff'); } });
+    for (let i = 0; i < 22; i++) spark(x + rnd(-L * .8, L * .8), y - L * .3, { vx: rnd(-260, 260), vy: rnd(-480, -180), g: 80, drag: .985, life: rnd(1.3, 2.1), r: rnd(30, 66), r1: rnd(14, 30), col: pick([ORANGE, '#FFD2B5', '#fff', ORANGE_L]), shape: 'heart', add: false, rot: rnd(-.5, .5) });
+    EFX.push({ t: 0, dur: .9, draw: k => { glowCircle(x, y, L * 3.2 * easeOut(k), (1 - k) * .7); ring(x, y, L * 2.8 * easeOut(k), 1 - k, 9, '#fff'); } });
   } else if (key === 'tele') {
-    snapC.drawImage(cv, 0, 0, 960, 540); tele = { t: 0, dir: at.dir >= 0 ? 1 : -1 };
-    for (let i = 0; i < 30; i++) spark(tele.dir > 0 ? -50 : W + 50, rnd(80, 1000), { vx: tele.dir * rnd(2400, 4200), shape: 'streak', r: rnd(3, 8), life: rnd(.25, .5), col: pick(['#fff', ORANGE, ORANGE_L]) });
+    const dir = at.dir >= 0 ? 1 : -1;
+    if (o.slide) { snapC.drawImage(cv, 0, 0, 960, 540); tele = { t: 0, dir }; }
+    const r = o.r || { x0: 0, x1: W };
+    for (let i = 0; i < 40; i++) spark(dir > 0 ? r.x0 - 50 : r.x1 + 50, rnd(80, 1000), { vx: dir * rnd(2400, 4200), shape: 'streak', r: rnd(4, 10), life: rnd(.25, .5), col: pick(['#fff', ORANGE, ORANGE_L]) });
+    EFX.push({ t: 0, dur: .5, draw: k => { const c = ctx; c.save(); c.globalCompositeOperation = 'lighter'; c.globalAlpha = 1 - k; c.strokeStyle = '#fff'; c.lineWidth = 16 * (1 - k); c.lineCap = 'round';
+      const a0 = dir > 0 ? 0 : Math.PI; c.beginPath(); c.arc(x, y, L * (1.6 + k * 2.4), a0 - 1.2, a0 + 1.2); c.stroke(); c.restore(); } });
   }
 }
 function drawTele() {
@@ -459,6 +518,15 @@ function drawTele() {
   const ex = tele.dir > 0 ? x0 : x0 + W, g = c.createLinearGradient(ex - tele.dir * 160, 0, ex + tele.dir * 20, 0);
   g.addColorStop(0, 'rgba(255,126,49,0)'); g.addColorStop(.8, 'rgba(255,255,255,.85)'); g.addColorStop(1, 'rgba(255,255,255,0)');
   c.globalCompositeOperation = 'lighter'; c.fillStyle = g; c.fillRect(Math.min(ex - tele.dir * 160, ex + tele.dir * 20), 0, 180, H); c.restore();
+}
+// 적이 터지는 폭발(크기 s)
+function boom(x, y, s = 1, quiet = false) {
+  if (!quiet) sfx.hit();
+  if (G) { G.slow = Math.max(G.slow, .12 + .06 * s); }
+  shake = Math.max(shake, .5 + .3 * s);
+  EFX.push({ t: 0, dur: .7, draw: k => { glowCircle(x, y, lerp(60, 300 * s, easeOut(k)), (1 - k) * .95); ring(x, y, lerp(20, 260 * s, easeOut(k)), 1 - k, 12 * s, '#fff'); ring(x, y, lerp(10, 190 * s, easeOut(k)), 1 - k, 8 * s, ORANGE); } });
+  for (let i = 0; i < 26 + 30 * s; i++) { const a = Math.random() * 7, v = rnd(200, 1100) * Math.sqrt(s); spark(x, y, { vx: Math.cos(a) * v, vy: Math.sin(a) * v, drag: .94, life: rnd(.4, .9), r: rnd(5, 12) * Math.sqrt(s), col: c1() }); }
+  for (let i = 0; i < 10 * s; i++) { const a = Math.random() * 7, v = rnd(250, 700); spark(x, y, { vx: Math.cos(a) * v, vy: Math.sin(a) * v - 200, g: 1400, drag: .99, life: rnd(.6, 1.1), r: rnd(6, 13), col: pick(['#F7F7F5', '#D9D9D9']), shape: 'chip', add: false, rot: rnd(0, 7) }); }
 }
 
 /* ---------------- 손 그리기 ---------------- */
@@ -471,7 +539,7 @@ function drawHand(pts, a = 1) {
   pts.forEach((p, i) => { c.fillStyle = [4, 8, 12, 16, 20].includes(i) ? ORANGE_L : '#fff'; c.beginPath(); c.arc(p.x, p.y, Math.max(3, L * ([4, 8, 12, 16, 20].includes(i) ? .075 : .045)), 0, 7); c.fill(); });
   c.restore();
 }
-// 가상 손이 주문을 시연한다. (cx,cy)=중심, s=손바닥 길이(px). 반환 없음, 직접 그린다
+// 가상 손이 주문을 시연한다. (cx,cy)=중심, s=손바닥 길이(px)
 function drawDemo(key, t, cx, cy, s, a = 1) {
   const c = ctx, T = SP[key].T, u = (t % T) / T, op = (u > .88 ? 1 - (u - .88) / .12 : 1) * a;
   if (key === 'orb') {
@@ -495,76 +563,341 @@ function drawDemo(key, t, cx, cy, s, a = 1) {
     drawHand(place(handPose(0), cx + off, cy, s), op);
   }
 }
-function drawLiveHands() { for (const h of liveHands()) drawHand(h.lm, .95); }
+// 실전: 손가락 선 없이 손바닥 중심 글로우만
+function drawPalm(h, pl) {
+  const p = Math.max(h.fireP || 0, h.heartP || 0), ex = pl && now < pl.exUntil;
+  if (ex) { glowCircle(h.c.x, h.c.y, h.L * 1.1, .25, '170,170,170'); return; }
+  glowCircle(h.c.x, h.c.y, h.L * (1.3 + .5 * p), .42 + .4 * p);
+}
+
+/* ---------------- 적 그리기 (캔버스 도형) ---------------- */
+const INK = '#1C1F26', PAPER = '#F7F7F5';
+function eyes(x, y, s, gap, angry) {
+  const c = ctx; c.fillStyle = INK;
+  for (const d of [-1, 1]) { c.beginPath(); c.ellipse(x + d * gap * s, y, 5 * s, 6.5 * s, 0, 0, 7); c.fill(); }
+  if (angry) { c.strokeStyle = INK; c.lineWidth = 3.5 * s; c.lineCap = 'round'; for (const d of [-1, 1]) { c.beginPath(); c.moveTo(x + d * (gap + 8) * s, y - 13 * s); c.lineTo(x + d * (gap - 5) * s, y - 8 * s); c.stroke(); } }
+}
+function drawMini(x, y, s, ph) {   // 반복 업무 꼬마: 반복 화살표가 붙은 메모지
+  const c = ctx, w = 62 * s; c.save(); c.translate(x, y); c.rotate(Math.sin(ph) * .14);
+  c.shadowColor = 'rgba(0,0,0,.45)'; c.shadowBlur = 14 * s; c.shadowOffsetY = 5 * s;
+  c.fillStyle = PAPER; c.strokeStyle = INK; c.lineWidth = 4 * s; c.beginPath(); c.roundRect(-w / 2, -w / 2, w, w, 12 * s); c.fill(); c.shadowColor = 'transparent'; c.stroke();
+  const a1 = 1.2, cy0 = -8 * s, rr = 13 * s; c.strokeStyle = ORANGE; c.lineWidth = 5 * s; c.lineCap = 'round'; c.beginPath(); c.arc(0, cy0, rr, a1 - 4.9, a1); c.stroke();   // 반복 표시(돌아가는 화살표)
+  const ex = Math.cos(a1) * rr, ey = cy0 + Math.sin(a1) * rr, tx = -Math.sin(a1), ty = Math.cos(a1), nx = Math.cos(a1), ny = Math.sin(a1);
+  c.fillStyle = ORANGE; c.beginPath(); c.moveTo(ex + tx * 9 * s, ey + ty * 9 * s); c.lineTo(ex + nx * 8 * s - tx * 3 * s, ey + ny * 8 * s - ty * 3 * s); c.lineTo(ex - nx * 8 * s - tx * 3 * s, ey - ny * 8 * s - ty * 3 * s); c.closePath(); c.fill();
+  eyes(0, 17 * s, s * .7, 12, false);
+  c.restore();
+}
+function drawPaper(x, y, s, rot) {   // 서류 뭉치
+  const c = ctx, w = 120 * s, h = 150 * s; c.save(); c.translate(x, y); c.rotate(rot);
+  c.shadowColor = 'rgba(0,0,0,.45)'; c.shadowBlur = 20 * s; c.shadowOffsetY = 8 * s;
+  for (let i = 2; i >= 0; i--) { c.save(); c.translate(i * 11 * s, -i * 9 * s); c.rotate((i - 1) * .07); c.fillStyle = PAPER; c.strokeStyle = INK; c.lineWidth = 4 * s; c.beginPath(); c.roundRect(-w / 2, -h / 2, w, h, 8 * s); c.fill(); if (i === 0) c.shadowColor = 'transparent'; c.stroke(); c.restore(); }
+  c.shadowColor = 'transparent';
+  c.strokeStyle = '#BDBDBD'; c.lineWidth = 6 * s; c.lineCap = 'round'; for (let i = 0; i < 3; i++) { const yy = h * .1 + i * 20 * s; c.beginPath(); c.moveTo(-w * .32, yy); c.lineTo(w * (i === 2 ? .1 : .32), yy); c.stroke(); }
+  eyes(0, -h * .2, s * 1.4, 15, true);
+  c.fillStyle = ORANGE; c.beginPath(); c.roundRect(-w * .5 + 10 * s, -h * .5 - 12 * s, 16 * s, 34 * s, 5 * s); c.fill();
+  c.restore();
+}
+function drawGhost(x, y, s, a, t) {   // 야근 유령: 배에 밤 11시 시계
+  const c = ctx; c.save(); c.globalAlpha = a; c.translate(x, y);
+  c.shadowColor = 'rgba(0,0,0,.4)'; c.shadowBlur = 18 * s;
+  c.fillStyle = 'rgba(247,247,245,.94)'; c.strokeStyle = INK; c.lineWidth = 4.5 * s; c.beginPath(); c.arc(0, -10 * s, 64 * s, Math.PI, 0); c.lineTo(64 * s, 62 * s);
+  for (let i = 0; i < 4; i++) { const x1 = 64 * s - (i + 1) * 32 * s; c.quadraticCurveTo(x1 + 16 * s, (i % 2 ? 50 : 80) * s + Math.sin(t * 6 + i) * 5 * s, x1, 62 * s); }
+  c.closePath(); c.fill(); c.shadowColor = 'transparent'; c.stroke();
+  c.strokeStyle = INK; c.lineWidth = 4 * s; c.lineCap = 'round'; for (const d of [-1, 1]) { c.beginPath(); c.arc(d * 20 * s, -26 * s, 9 * s, .2, Math.PI - .2); c.stroke(); }   // 졸린 눈
+  c.fillStyle = '#fff'; c.lineWidth = 3.5 * s; c.beginPath(); c.arc(0, 22 * s, 24 * s, 0, 7); c.fill(); c.stroke();
+  c.strokeStyle = ORANGE; c.lineWidth = 4 * s; c.beginPath(); c.moveTo(0, 22 * s); c.lineTo(0, 6 * s); c.moveTo(0, 22 * s); c.lineTo(-9 * s, 14 * s); c.stroke();
+  c.restore();
+}
+function drawCurse(x, y, s, t) {   // 저주 구슬
+  const c = ctx; glowCircle(x, y, 70 * s, .35 + .2 * Math.sin(t * 10), '255,255,255');
+  c.save(); c.translate(x, y); c.fillStyle = INK; c.strokeStyle = '#fff'; c.lineWidth = 5 * s; c.beginPath(); c.arc(0, 0, 36 * s, 0, 7); c.fill(); c.stroke();
+  c.strokeStyle = ORANGE; c.lineWidth = 5 * s; c.lineCap = 'round'; c.beginPath(); c.arc(0, 0, 22 * s, t * 6, t * 6 + 4); c.stroke();
+  c.fillStyle = '#fff'; c.beginPath(); c.arc(0, 0, 5 * s, 0, 7); c.fill(); c.restore();
+}
+function drawBoss(e) {   // 레거시 보스: 표 화면이 뜬 오래된 모니터
+  const c = ctx, x = e.x, y = e.y + Math.sin(e.t * 1.6) * 6, s = e.s || 1, hit = e.hitT || 0;
+  c.save(); c.translate(x + (hit > 0 ? rnd(-10, 10) * hit : 0), y); c.scale(s, s);
+  c.shadowColor = 'rgba(0,0,0,.5)'; c.shadowBlur = 40; c.shadowOffsetY = 14;
+  c.fillStyle = INK; c.beginPath(); c.roundRect(-150, 175, 300, 40, 12); c.fill();
+  c.fillStyle = '#B9B9B4'; c.beginPath(); c.moveTo(-70, 140); c.lineTo(70, 140); c.lineTo(110, 185); c.lineTo(-110, 185); c.closePath(); c.fill();
+  c.fillStyle = '#D6D6D1'; c.strokeStyle = INK; c.lineWidth = 8; c.beginPath(); c.roundRect(-250, -190, 500, 340, 36); c.fill(); c.shadowColor = 'transparent'; c.stroke();
+  c.fillStyle = INK; c.beginPath(); c.roundRect(-205, -150, 410, 250, 22); c.fill();
+  c.save(); c.beginPath(); c.roundRect(-205, -150, 410, 250, 22); c.clip(); c.strokeStyle = 'rgba(255,126,49,.45)'; c.lineWidth = 3;
+  for (let gx = -205; gx <= 205; gx += 58) { c.beginPath(); c.moveTo(gx, -150); c.lineTo(gx, 100); c.stroke(); } for (let gy = -150; gy <= 100; gy += 36) { c.beginPath(); c.moveTo(-205, gy); c.lineTo(205, gy); c.stroke(); }
+  c.fillStyle = 'rgba(255,126,49,.35)'; c.fillRect(-205, -150, 410, 36); c.restore();
+  c.fillStyle = '#fff'; for (const d of [-1, 1]) { c.save(); c.translate(d * 78, -40); c.rotate(d * .25); c.fillRect(-36, -16, 72, 32); c.fillStyle = INK; c.fillRect(-8 + d * 10, -10, 18, 20); c.restore(); }
+  c.strokeStyle = '#fff'; c.lineWidth = 9; c.lineJoin = 'round'; c.beginPath(); c.moveTo(-80, 50); for (let i = 1; i <= 6; i++) c.lineTo(-80 + i * 160 / 6, 50 + (i % 2 ? -18 : 0)); c.stroke();
+  c.fillStyle = ORANGE; c.beginPath(); c.arc(200, 128, 9, 0, 7); c.fill();
+  if (hit > 0) { c.globalCompositeOperation = 'lighter'; c.fillStyle = `rgba(255,255,255,${hit * .7})`; c.beginPath(); c.roundRect(-250, -190, 500, 340, 36); c.fill(); }
+  c.restore();
+}
+function tag(x, y, name, weak, a = 1) {
+  const c = ctx; c.save(); c.globalAlpha *= a; c.font = `700 30px ${FONT}`; const w1 = c.measureText(name).width; c.font = `800 28px ${FONT}`; const w2 = c.measureText(weak).width;
+  const tw = w1 + w2 + 74, x0 = x - tw / 2;
+  c.fillStyle = 'rgba(10,12,16,.72)'; c.beginPath(); c.roundRect(x0, y - 26, tw, 52, 26); c.fill();
+  c.fillStyle = ORANGE; c.beginPath(); c.roundRect(x0 + w1 + 34, y - 20, w2 + 32, 40, 20); c.fill();
+  c.textBaseline = 'middle'; c.textAlign = 'left'; c.fillStyle = '#fff'; c.font = `700 30px ${FONT}`; c.fillText(name, x0 + 20, y + 1); c.font = `800 28px ${FONT}`; c.fillText(weak, x0 + w1 + 50, y + 1); c.restore();
+}
+
+/* ---------------- 소탕전: 적 ---------------- */
+const WAVES = [
+  { name: '웨이브 1', dur: 17, ev: [[.4, 'mini'], [2.8, 'paper'], [5.2, 'paper'], [7.6, 'mini'], [10, 'paper'], [12, 'mini'], [13, 'paper'], [15.4, 'paper']] },
+  { name: '웨이브 2', dur: 19, ev: [[.4, 'ghost'], [2, 'mini'], [3.8, 'paper'], [5.8, 'ghost'], [7.4, 'paper'], [9.2, 'mini'], [10.8, 'ghost'], [12, 'paper'], [14.2, 'paper'], [15.6, 'ghost'], [17.2, 'mini']] },
+];
+function spawn(type, side, o = {}) {
+  const r = region(side), e = Object.assign({ type, side, t: 0, id: ++G.eid, alive: true, x: r.cx, y: 500, s: 1 }, o.base || {});
+  if (type === 'mini') {
+    const fromL = Math.random() < .5;
+    e.x0 = fromL ? r.x0 - 140 : r.x1 + 140; e.y0 = rnd(420, 760); e.x1 = r.cx + rnd(-.22, .22) * r.w; e.y1 = rnd(480, 690); e.dur = o.dur || 7; e.wait = 0;
+    e.m = []; const n = o.n || 6; for (let i = 0; i < n; i++) { const a = i / n * 7 + rnd(-.3, .3), d = i ? rnd(46, 100) : 0; e.m.push({ ox: Math.cos(a) * d, oy: Math.sin(a) * d * .7, ph: rnd(0, 7), alive: true, x: 0, y: 0 }); }
+    e.x = e.x0; e.y = e.y0;
+  } else if (type === 'paper') {
+    e.x0 = r.cx + rnd(-.3, .3) * r.w; e.y0 = rnd(210, 300); e.x1 = clamp(e.x0 + rnd(-160, 160), r.x0 + 170, r.x1 - 170); e.y1 = rnd(540, 680); e.dur = o.dur || 6.5; e.rot = rnd(-.25, .25); e.x = e.x0; e.y = e.y0; e.s = .3;
+  } else if (type === 'ghost') {
+    e.x = r.cx + rnd(-.26, .26) * r.w; e.y = rnd(260, 310); e.shot = false; e.out = 0; e.a = 0;
+  } else if (type === 'boss') { e.x = 960; e.y = -320; e.s = .8; e.hp = e.max = 100; e.nextOrb = 3.5; e.nextMini = 8; e.n = 0; e.hitT = 0; }
+  G.en.push(e); return e;
+}
+function shootCurse(src, side) {
+  const r = region(side), boss = src.type === 'boss';
+  const c = { type: 'curse', side, t: 0, id: ++G.eid, alive: true, src, x0: boss ? (side ? src.x + 160 : NP() === 2 ? src.x - 160 : src.x) : src.x, y0: src.y + (boss ? 60 : 30), x1: r.cx + rnd(-140, 140), y1: 880, dur: boss ? 3.2 : 3.0, back: 0, s: .5 };
+  c.x = c.x0; c.y = c.y0; G.en.push(c); sfx.curse(); return c;
+}
+function killMini(e, m) { m.alive = false; G.kills++; boom(m.x, m.y, .55, true); if (!e.m.some(q => q.alive)) e.alive = false; }
+function killEnemy(e, s = 1) { e.alive = false; G.kills++; boom(e.x, e.y, s); }
+function hurt(x, y) {
+  if (G.ph !== 'b-wave' && G.ph !== 'b-boss' && G.ph !== 'b-intro') return;
+  G.life = Math.max(0, G.life - 1); G.hurt = 1; shake = Math.max(shake, 1.3); sfx.hurt();
+  EFX.push({ t: 0, dur: .6, draw: k => { ring(x, y, lerp(40, 260, easeOut(k)), 1 - k, 14, '#fff'); } });
+  if (G.life <= 0) { setPh('over'); sfx.no(); for (const e of G.en) e.flee = true; }
+}
+function updateEnemies(wdt) {
+  for (const e of G.en) {
+    if (!e.alive) continue; e.t += wdt;
+    if (e.flee) { e.fleeT = (e.fleeT || 0) + wdt; if (e.fleeT > .6) e.alive = false; continue; }
+    if (e.type === 'mini') {
+      const k = easeIO(e.t / e.dur), sc = lerp(.75, 1.25, k); e.x = lerp(e.x0, e.x1, k); e.y = lerp(e.y0, e.y1, k); e.s = sc;
+      for (const m of e.m) { m.x = e.x + m.ox * sc + Math.sin(e.t * 5 + m.ph) * 6; m.y = e.y + m.oy * sc + Math.abs(Math.sin(e.t * 9 + m.ph)) * -10; }
+      if (e.t >= e.dur) { e.wait += wdt; if (e.wait > .8) { e.alive = false; hurt(e.x, e.y); for (const m of e.m) if (m.alive) boom(m.x, m.y, .3, true); } }
+    } else if (e.type === 'paper') {
+      const k = clamp(e.t / e.dur, 0, 1); e.x = lerp(e.x0, e.x1, k); e.y = lerp(e.y0, e.y1, k); e.s = lerp(.3, 1.3, k * k);
+      if (k >= 1) { e.alive = false; hurt(e.x, e.y); boom(e.x, e.y, .6, true); }
+    } else if (e.type === 'ghost') {
+      e.a = e.leaving ? Math.max(0, e.a - wdt * 2) : Math.min(1, e.a + wdt * 2.5);
+      if (!e.shot && e.t > 1.3) { e.shot = true; e.c = shootCurse(e, e.side); }
+      if (e.leaving && e.a <= 0) e.alive = false;
+    } else if (e.type === 'curse') {
+      if (e.back > 0) {
+        e.back += wdt; const k = clamp(e.back / .45, 0, 1), tg = e.src && e.src.alive && e.src.type === 'ghost' ? e.src : { x: e.dir > 0 ? W + 200 : -200, y: e.by - 300 };
+        e.x = lerp(e.bx, tg.x, easeIO(k)); e.y = lerp(e.by, tg.y, easeIO(k)); e.s = lerp(e.bs, .6, k);
+        if (k >= 1) { e.alive = false; if (e.src && e.src.alive && e.src.type === 'ghost') killEnemy(e.src, .9); }
+      } else {
+        const k = clamp(e.t / e.dur, 0, 1), q = k * k; e.x = lerp(e.x0, e.x1, q); e.y = lerp(e.y0, e.y1, q); e.s = lerp(.5, 1.6, q);
+        if (k >= 1) { e.alive = false; hurt(e.x, e.y); if (e.src && e.src.type === 'ghost') e.src.leaving = true; }
+      }
+    } else if (e.type === 'boss') {
+      e.hitT = Math.max(0, e.hitT - wdt * 3);
+      if (e.t < 1.6) { e.y = lerp(-320, 450, easeOut(e.t / 1.6)); continue; }
+      if (G.merge || G.ph !== 'b-boss') continue;
+      e.nextOrb -= wdt; e.nextMini -= wdt;
+      if (e.nextOrb <= 0) { shootCurse(e, NP() === 2 ? (e.n++ % 2) : 0); e.nextOrb = 6.5; }
+      if (e.nextMini <= 0) { spawn('mini', NP() === 2 ? (e.n++ % 2) : 0, { n: 5 }); e.nextMini = 11; }
+    }
+  }
+  G.en = G.en.filter(e => e.alive);
+}
+
+/* ---------------- 소탕전: 주문 → 결과 ---------------- */
+function callout(text, x, y, size, col = '#fff') { if (G) { G.calls = G.calls.filter(c => c.x !== x); G.calls.push({ text, x, y, size, col, t: 0 }); } }   // 같은 자리 앞 주문 이름은 바로 지운다
+function exhaust(pl) { const cx = region(pl.i).cx; G.calls = G.calls.filter(c => c.x !== cx); pl.en = 0; pl.exUntil = now + EXHAUST_SEC; pl.wasEx = true; resetOrb(pl); sfx.tired(); }
+function battleCast(pl, ev) {
+  const k = ev.k, at = ev.at, r = region(pl.i), two = NP() === 2;
+  if (k === 'release' && two && G.ph === 'b-boss') return;   // 2인 보스는 합체 마법으로만
+  consumeEv(pl, ev);
+  const cost = k === 'release' ? 0 : SP[k].cost;
+  callout(k === 'release' ? '에너지 구 발사' : SP[k].name, r.cx, 520, two ? 150 : 190);
+  G.dim = Math.max(G.dim, .45);
+  if (k === 'fire') {
+    const R = Math.max(380, at.L * 3.6); castFx('fire', at, { R }); let n = 0;
+    for (const e of G.en) if (e.type === 'mini' && e.side === pl.i) for (const m of e.m) if (m.alive && Math.hypot(m.x - at.x, m.y - at.y) < R) { killMini(e, m); n++; }
+    if (n) { sfx.hit(); G.slow = Math.max(G.slow, .2); }
+  } else if (k === 'push') {
+    let best = null, bd = 1e9; for (const e of G.en) if (e.type === 'paper' && e.side === pl.i) { const d = Math.hypot(e.x - at.x, e.y - at.y) * .6 + Math.abs(e.x - at.x); if (d < bd) { bd = d; best = e; } }
+    castFx('push', at, { vp: best ? { x: best.x, y: best.y } : { x: at.x, y: 220 } });
+    if (best) killEnemy(best, 1);
+  } else if (k === 'tele') {
+    castFx('tele', at, { r });
+    for (const e of G.en) if (e.type === 'curse' && e.side === pl.i && e.back === 0) { e.back = 1e-4; e.bx = e.x; e.by = e.y; e.bs = e.s; e.dir = at.dir || 1; boom(e.x, e.y, .5, true); }
+  } else if (k === 'heart') {
+    castFx('heart', at); pl.en = Math.min(EN_MAX, pl.en + HEART_GAIN);
+  } else if (k === 'orb') {
+    castFx('orb', at);
+  } else if (k === 'release') {
+    sfx.push(); const boss = G.en.find(e => e.type === 'boss');
+    let tg = boss && G.ph === 'b-boss' ? boss : null;
+    if (!tg) { let bd = 1e9; for (const e of G.en) if (e.side === pl.i && e.type !== 'boss') { const d = Math.hypot(e.x - at.x, e.y - at.y); if (d < bd) { bd = d; tg = e; } } }
+    const tx = tg ? tg.x : r.cx, ty = tg ? tg.y : 320;
+    G.shots.push({ x: at.x, y: at.y, tx, ty, t: 0, dur: .4, charge: ev.charge || 1, side: pl.i, boss: tg && tg.type === 'boss' ? tg : null });
+  }
+  if (cost > 0) { pl.en = Math.max(0, pl.en - cost); pl.lastCast = now; if (pl.en <= 0) exhaust(pl); }
+  else if (k === 'release') pl.lastCast = now;
+}
+function updateShots(wdt) {
+  for (const s of G.shots) {
+    s.t += wdt; const k = clamp(s.t / s.dur, 0, 1), x = lerp(s.x, s.tx, easeIO(k)), y = lerp(s.y, s.ty, easeIO(k)); s.cx = x; s.cy = y;
+    if (s.merged) { spark(x + rnd(-40, 40), y + rnd(-40, 40), { r: rnd(8, 16), life: .3, col: c1() }); }
+    if (k >= 1 && !s.done) {
+      s.done = true; const R = 300 + 120 * s.charge;
+      boom(s.tx, s.ty, 1.4 + .4 * s.charge); flash = Math.max(flash, .3);
+      if (s.boss && s.boss.alive) {
+        const dmg = s.merged ? 999 : Math.round(50 * s.charge); s.boss.hp -= dmg; s.boss.hitT = 1;
+        if (!s.merged) pops.push({ text: `-${dmg}`, x: s.tx + 220, y: s.ty - 120, t: 0, dur: 1, size: 110, col: ORANGE_L, rise: 80 });
+        if (s.boss.hp <= 0) bossDie(s.boss);
+      } else {
+        for (const e of G.en) {
+          if (e.type === 'boss' || !e.alive) continue;
+          if (e.type === 'mini') { for (const m of e.m) if (m.alive && Math.hypot(m.x - s.tx, m.y - s.ty) < R) killMini(e, m); }
+          else if (Math.hypot(e.x - s.tx, e.y - s.ty) < R) { if (e.type === 'curse') { e.alive = false; boom(e.x, e.y, .5, true); } else killEnemy(e, .9); }
+        }
+      }
+    }
+  }
+  G.shots = G.shots.filter(s => !s.done);
+}
+function bossDie(b) {
+  b.alive = false; G.kills++; G.cleared = true; G.bossAt = { x: b.x, y: b.y };
+  for (const e of G.en) if (e !== b && e.alive) { e.alive = false; boom(e.x, e.y, .4, true); }
+  G.en = []; G.shots = []; G.merge = null;
+  sfx.boom(); flash = 1; G.white = 1; G.slow = .9; shake = 2;
+  EFX.push({ t: 0, dur: 2, draw: k => { glowCircle(b.x, b.y, lerp(120, 1300, easeOut(k)), (1 - k) * .95); ring(b.x, b.y, lerp(60, 1200, easeOut(k)), 1 - k, 22, '#fff'); ring(b.x, b.y, lerp(40, 900, easeOut(k)), 1 - k, 14, ORANGE); } });
+  for (let i = 0; i < 260; i++) { const a = Math.random() * 7, s = rnd(200, 1800); spark(b.x, b.y, { vx: Math.cos(a) * s, vy: Math.sin(a) * s, drag: .955, life: rnd(.8, 1.9), r: rnd(6, 15), col: c1() }); }
+  for (let i = 0; i < 40; i++) { const a = Math.random() * 7, s = rnd(300, 1100); spark(b.x, b.y, { vx: Math.cos(a) * s, vy: Math.sin(a) * s - 300, g: 1300, drag: .99, life: rnd(.9, 1.6), r: rnd(10, 22), col: pick(['#D6D6D1', INK, '#F7F7F5']), shape: 'chip', add: false, rot: rnd(0, 7) }); }
+  setPh('fin');
+}
+// 2인 보스: 둘의 에너지 구를 가운데로 모으면 합체 → 둘이 함께 밀면 발사
+function stepMerge(dt) {
+  const [A, B] = G.pl, boss = G.en.find(e => e.type === 'boss');
+  if (!boss || boss.t < 1.6) return;
+  if (!G.merge) {
+    if (A.orb.held && B.orb.held && A.orb.mid && B.orb.mid && B.orb.mid.x - A.orb.mid.x < 700) {
+      G.merge = { t: 0, charge: A.orb.charge + B.orb.charge, from: [{ ...A.orb.mid }, { ...B.orb.mid }], push: [-9, -9], x: 960, y: 640 };
+      resetOrb(A); resetOrb(B); A.cool = B.cool = now + COOL; sfx.merge(); G.calls = []; callout('합체', 960, 520, 230); G.dim = .6; flash = Math.max(flash, .6);
+    }
+    return;
+  }
+  const M = G.merge; M.t += dt;
+  G.pl.forEach((pl, i) => {
+    if (now < pl.cool) return; const h = pl.hands.find(h => h.pushR >= 1);
+    if (h) { M.push[i] = now; pl.cool = now + COOL; h.hist = h.hist.slice(-1); sfx.tap(); }
+  });
+  if (now - M.push[0] < 1.2 && now - M.push[1] < 1.2 && !M.fired) {
+    M.fired = true; sfx.push(); sfx.orb(); G.calls = []; callout('ME to WE', 960, 520, 200, ORANGE_L); G.dim = .7;
+    G.shots.push({ x: M.x, y: M.y, tx: boss.x, ty: boss.y, t: 0, dur: .5, charge: 3, side: 0, boss, merged: true });
+  }
+}
 
 /* ---------------- 흐름 ---------------- */
 const S = { mode: 'idle' };
-let F = null, idleT = 0, engT = 0, lostT = 0, absentT = 0, gauge = 0, lastMid = { x: 960, y: 540 };
-function toIdle() { S.mode = 'idle'; F = null; idleT = 0; engT = 0; lostT = 0; absentT = 0; gauge = 0; pops = []; fx = []; P2 = []; EFX = []; tele = null; flash = 0; lenient = false; }
-function startFlow() {
-  audio(); sfx.start(); S.mode = 'flow'; lostT = 0; absentT = 0; gauge = 0; lenient = false;
-  F = { ph: 'p-demo', t: 0, pi: 0, qi: 0, q: shuffle(Object.keys(SP)), score: 0, key: PRACTICE[0], rt: 0, ok: false };
-  for (const k in J) resetDet(k);
+let idleT = 0, engT = 0, SEL = null;
+function clearFx() { pops = []; fx = []; P2 = []; EFX = []; tele = null; flash = 0; shake = 0; }
+function toIdle() { S.mode = 'idle'; G = null; SEL = null; idleT = 0; engT = 0; clearFx(); }
+function toSelect() { S.mode = 'select'; SEL = { t: 0, g: [0, 0], absent: 0 }; sfx.tap(); }
+function startGame(np, skip = false) {
+  audio(); sfx.start(); S.mode = 'game'; clearFx(); SEL = null;
+  G = { np, ph: 'p-demo', t: 0, pi: 0, pl: [newPlayer(0)], life: 3, kills: 0, en: [], eid: 0, wave: 0, wt: 0, sched: [], shots: [], merge: null, calls: [], banner: null,
+    dim: 0, slow: 0, white: 0, hurt: 0, absent: 0, paused: false, cleared: false, grade: '' };
+  if (np === 2) G.pl.push(newPlayer(1));
+  for (const h of hands) h.side = h.c.x < 960 ? 0 : 1;
+  if (skip) setPh('b-intro');
 }
-function setPh(ph) { F.ph = ph; F.t = 0; lenient = ph[0] === 'x' || ph[0] === 'f'; }
-function gotoExam() { setPh('x-intro'); F.qi = 0; F.score = 0; F.key = null; }
-function gradeOf(n) { return n >= 5 ? '대마법사' : n === 4 ? '마법사' : n === 3 ? '견습 마법사' : '마법 입문자'; }
+function setPh(ph) { G.ph = ph; G.t = 0; for (const pl of G.pl) { pl.done = false; } }
+function startWave(i) {
+  const w = WAVES[i]; G.wave = i; G.wt = 0; G.sched = [];
+  for (let s = 0; s < NP(); s++) for (const [t, type] of w.ev) G.sched.push({ t: t + s * 1.1, type, side: s });
+  G.sched.sort((a, b) => a.t - b.t); G.banner = { text: w.name, t: 0 }; setPh('b-wave');
+}
+function startBoss() { G.banner = { text: '레거시 보스', t: 0 }; spawn('boss', 0); setPh('b-boss'); sfx.boss(); }
+function gradeOf() { return G.cleared ? (G.life >= 3 ? '대마법사' : '마법사') : G.kills >= 12 ? '견습 마법사' : '마법 입문자'; }
 
-function stepFlow(dt) {
-  F.t += dt;
-  const lh = liveHands(), big = lh.filter(h => h.L >= HAND_MIN).length, ph = F.ph;
-  const watching = ph === 'p-try' || ph === 'x-run' || ph === 'f-build' || ph === 'f-push';
-  const want = !watching ? 0 : ph === 'f-push' ? 1 : (F.key ? SP[F.key].need : 1);
-  if (watching && big < want) lostT += dt; else lostT = 0;
-  F.guide = lostT > .7 ? (lh.length > big ? '조금 더 가까이' : (want === 2 && big === 1 ? '두 손을 보여 주세요' : '손을 화면에 보여 주세요')) : null;
-  if (lh.length === 0) absentT += dt; else absentT = 0;
-  if (absentT > 10) { toIdle(); return; }
-  const key = F.key, paused = !!F.guide;
-  const target = (ph === 'p-try' || ph === 'x-run') ? J[key].p : ph === 'f-build' ? J.orb.p : 0;
-  gauge = lerp(gauge, target, 1 - Math.exp(-dt * 12));
-  if (J.orb.mid && lh.length >= 2) lastMid = J.orb.mid;
-  if (ph === 'p-demo') { if (F.t > 2.8) { setPh('p-try'); resetDet(key); } }
-  else if (ph === 'p-try') {
-    if (J[key].hit) { cast(key, J[key].at); consume(key); setPh('p-win'); pop('성공', 960, 330, { size: 110, col: ORANGE, dur: 1.2 }); }
-    else if (F.t > 35 && !paused) { sfx.no(); setPh('p-win'); F.skipped = true; }
-    else if (key === 'orb' && F.t % .3 < dt && J.orb.p > .05 && J.orb.p < 1) sfx.tick(J.orb.p);
-  } else if (ph === 'p-win') {
-    if (F.t > 1.8) { F.skipped = false; F.pi++; if (F.pi < PRACTICE.length) { F.key = PRACTICE[F.pi]; setPh('p-demo'); } else gotoExam(); }
-  } else if (ph === 'x-intro') { if (F.t > 2.2) { F.key = F.q[0]; setPh('x-ready'); } }
-  else if (ph === 'x-ready') { if (F.t > .9) { setPh('x-run'); F.rt = 0; resetDet(key); } }
-  else if (ph === 'x-run') {
-    if (!paused) F.rt += dt;
-    if (J[key].hit) { cast(key, J[key].at); consume(key); F.score++; F.ok = true; setPh('x-res'); pop('성공', 960, 330, { size: 110, col: ORANGE, dur: 1 }); }
-    else if (F.rt >= 3) { F.ok = false; sfx.no(); setPh('x-res'); pop('다음 문제', 960, 330, { size: 80, col: '#D9D9D9', dur: .9 }); }
-  } else if (ph === 'x-res') {
-    if (F.t > (F.ok ? 1.3 : .9)) { F.qi++; if (F.qi < F.q.length) { F.key = F.q[F.qi]; setPh('x-ready'); } else { F.key = 'orb'; setPh('f-build'); resetDet('orb'); } }
-  } else if (ph === 'f-build') {
-    if (J.orb.hit) { consume('orb'); resetDet('push'); setPh('f-push'); sfx.orb(); }
-    else if (F.t > 25) toIdle();
-  } else if (ph === 'f-push') {
-    if (J.push.hit || F.t > 7) { consume('push'); setPh('f-boom'); F.boomed = false; F.grade = gradeOf(F.score); sfx.push(); }
-  } else if (ph === 'f-boom') {
-    if (!F.boomed && F.t >= .8) {
-      F.boomed = true; sfx.boom(); flash = 1;
-      EFX.push({ t: 0, dur: 1.6, draw: k => { glowCircle(960, 470, lerp(100, 1100, easeOut(k)), (1 - k) * .9); ring(960, 470, lerp(60, 1000, easeOut(k)), 1 - k, 16, '#fff'); ring(960, 470, lerp(40, 760, easeOut(k)), 1 - k, 10, ORANGE); } });
-      for (let i = 0; i < 220; i++) { const a = Math.random() * 7, s = rnd(200, 1500); spark(960, 470, { vx: Math.cos(a) * s, vy: Math.sin(a) * s, drag: .955, life: rnd(.8, 1.8), r: rnd(5, 13), col: pick([ORANGE, '#fff', ORANGE_L, '#FFD0A8']) }); }
+function stepGame(dt) {
+  G.t += dt;
+  const two = NP() === 2;
+  for (const pl of G.pl) { pl.hands = playerHands(pl.i); pl.absent = pl.hands.length ? 0 : pl.absent + dt; }
+  const any = liveHands().length > 0; G.absent = any ? 0 : G.absent + dt;
+  if (G.absent > 10 && G.ph !== 'result') { toIdle(); return; }
+  for (const pl of G.pl) { detectPlayer(pl, dt); pl.g = lerp(pl.g, G.ph === 'p-try' ? pl.p[PRACTICE[G.pi]] : 0, 1 - Math.exp(-dt * 12)); }
+  G.calls.forEach(c => c.t += dt); G.calls = G.calls.filter(c => c.t < .8);
+  G.dim = Math.max(0, G.dim - dt * 2.2); G.white = Math.max(0, G.white - dt * 1.4); G.hurt = Math.max(0, G.hurt - dt * 1.6);
+  if (G.banner) { G.banner.t += dt; if (G.banner.t > 1.6) G.banner = null; }
+  const ph = G.ph;
+  if (ph === 'p-demo') { if (G.t > 1.6) setPh('p-try'); return; }
+  if (ph === 'p-try') {
+    const key = PRACTICE[G.pi], waiting = G.pl.some(pl => !pl.done && pl.hands.length < SP[key].need);
+    for (const pl of G.pl) {
+      if (pl.done || !pl.ev || pl.ev.k !== key) continue;
+      castFx(key, pl.ev.at, { slide: key === 'tele' && !two, r: region(pl.i), R: (pl.ev.at.L || 100) * 2.4 }); consumeEv(pl, pl.ev); pl.done = true;
+      callout(SP[key].name, region(pl.i).cx, 520, two ? 140 : 200); G.dim = .4;
     }
-    if (F.t > 8.4) toIdle();
+    if (key === 'orb' && G.t % .3 < dt) { const p = Math.max(...G.pl.map(pl => pl.p.orb)); if (p > .05 && p < 1) sfx.tick(p); }
+    if (G.pl.every(pl => pl.done)) { G.skipped = false; setPh('p-win'); }
+    else if (G.t > 14 && !waiting) { sfx.no(); G.skipped = true; setPh('p-win'); }
+    else if (G.t > 25) { G.skipped = true; setPh('p-win'); }
+    return;
   }
+  if (ph === 'p-win') { if (G.t > .9) { G.pi++; if (G.pi < PRACTICE.length) setPh('p-demo'); else setPh('b-intro'); } return; }
+  // ---- 소탕전 ----
+  if (ph === 'b-intro' || ph === 'b-wave' || ph === 'b-boss') {
+    G.paused = G.pl.every(pl => pl.absent > .8);
+    const wdt = G.paused ? 0 : dt * (G.slow > 0 ? .18 : 1); G.slow = Math.max(0, G.slow - dt);
+    for (const pl of G.pl) {
+      if (pl.wasEx && now >= pl.exUntil) { pl.wasEx = false; pl.en = EN_AFTER_EX; }
+      if (now >= pl.exUntil && now - pl.lastCast > EN_REGEN_DELAY) pl.en = Math.min(EN_MAX, pl.en + EN_REGEN * dt);
+      if (pl.ev && !G.merge && ph !== 'b-intro') battleCast(pl, pl.ev);
+    }
+    if (ph === 'b-intro') { if (G.t > 2.2) startWave(0); }
+    else if (ph === 'b-wave') {
+      G.wt += wdt;
+      while (G.sched.length && G.sched[0].t <= G.wt) { const s = G.sched.shift(); spawn(s.type, s.side); }
+      const w = WAVES[G.wave];
+      if ((!G.sched.length && !G.en.length && !G.shots.length) || G.wt > w.dur + 10) {
+        G.gapT = (G.gapT || 0) + dt;
+        if (G.wt > w.dur + 10) for (const e of G.en) e.flee = true;
+        if (G.gapT > 1) { G.gapT = 0; if (G.wave + 1 < WAVES.length) startWave(G.wave + 1); else startBoss(); }
+      }
+    } else if (ph === 'b-boss') {
+      if (two) stepMerge(dt);
+      if (G.t > 75) { G.life = 0; setPh('over'); sfx.no(); }
+    }
+    if (G.ph[0] === 'b') { updateEnemies(wdt); updateShots(wdt); }
+    return;
+  }
+  if (ph === 'fin') { G.slow = Math.max(0, G.slow - dt); if (G.t > 5.6) { G.grade = gradeOf(); setPh('result'); sfx.end(); } return; }
+  if (ph === 'over') { updateEnemies(dt); if (G.t > 2.6) { G.grade = gradeOf(); setPh('result'); } return; }
+  if (ph === 'result') { if (G.t > 6.5) toIdle(); }
 }
+// 대기: 손을 들면 ME/WE 선택으로
 function stepIdle(dt) {
   idleT += dt;
   const lh = liveHands(), big = lh.filter(h => h.L >= HAND_MIN).length;
-  engT = big ? engT + dt : 0; if (engT > .5) { startFlow(); return; }
+  engT = big ? engT + dt : 0; if (engT > .5) { toSelect(); return; }
   if (Math.random() < dt * 5) spark(rnd(0, W), H + 20, { vy: -rnd(40, 120), vx: rnd(-20, 20), r: rnd(3, 7), life: 5, col: ORANGE_L });
 }
+const BOX = [{ x: 170, y: 280, w: 720, h: 540, big: 'ME', sub: '혼자' }, { x: 1030, y: 280, w: 720, h: 540, big: 'WE', sub: '둘이서' }];
+function stepSelect(dt) {
+  SEL.t += dt; const lh = liveHands();
+  SEL.absent = lh.length ? 0 : SEL.absent + dt; if (SEL.absent > 5) { toIdle(); return; }
+  BOX.forEach((b, i) => {
+    const inside = lh.some(h => h.c.x > b.x && h.c.x < b.x + b.w && h.c.y > b.y && h.c.y < b.y + b.h);
+    SEL.g[i] = inside ? SEL.g[i] + dt : Math.max(0, SEL.g[i] - dt * 2);
+  });
+  const k = SEL.g.findIndex(g => g >= .6); if (k >= 0 && SEL.t > .5) startGame(k + 1);
+}
 
-/* ---------------- 그리기: 안내·가이드 ---------------- */
-function bigHand() { return liveHands().sort((a, b) => b.L - a.L)[0]; }
-function drawGuide(key) {
-  const c = ctx, h = bigHand(), t = now;
+/* ---------------- 그리기 ---------------- */
+function drawGuide(key, pl) {
+  const c = ctx, h = pl.hands[0], t = now, o = pl.orb;
   if (key === 'orb') {
-    const hs = liveHands(); if (hs.length < 2 || !J.orb.mid) return; const m = J.orb.mid, r = Math.max(60, J.orb.d / 2);
+    if (pl.hands.length < 2 || !o.mid) return; const m = o.mid, r = Math.max(60, o.d / 2);
     c.save(); c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = 6; c.setLineDash([22, 18]); c.lineDashOffset = -t * 60; c.beginPath(); c.arc(m.x, m.y, r, 0, 7); c.stroke(); c.setLineDash([]);
     const an = t * 3.2; c.translate(m.x + Math.cos(an) * r, m.y + Math.sin(an) * r); c.rotate(an + Math.PI / 2); c.fillStyle = ORANGE; c.beginPath(); c.moveTo(0, -22); c.lineTo(17, 12); c.lineTo(-17, 12); c.closePath(); c.fill(); c.restore();
   } else if (!h) return;
@@ -582,81 +915,178 @@ function drawGuide(key) {
     ring(h.c.x + dir * lerp(-len, len, easeIO(q)), y, 14, 1, 8, ORANGE); c.restore();
   }
 }
-function drawLiveOrb(p) {
-  const hs = liveHands(); if (hs.length < 2 || !J.orb.mid) return; const m = J.orb.mid, r = 30 + 200 * p;
-  glowCircle(m.x, m.y, r * 1.6, .7 + .3 * Math.sin(now * 12)); glowCircle(m.x, m.y, r * .7, .9);
-  ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 3; ctx.globalCompositeOperation = 'lighter';
-  for (const h of hs) for (let i = 0; i < 2; i++) { ctx.beginPath(); let x = h.c.x, y = h.c.y; ctx.moveTo(x, y); for (let k = 1; k <= 5; k++) { const q = k / 5; x = lerp(h.c.x, m.x, q) + (k < 5 ? rnd(-18, 18) : 0); y = lerp(h.c.y, m.y, q) + (k < 5 ? rnd(-18, 18) : 0); ctx.lineTo(x, y); } ctx.stroke(); }
+// 두 손 사이 에너지 구(충전 중 / 완성되어 들고 있음)
+function drawOrbOf(pl) {
+  const o = pl.orb; if (pl.hands.length < 2 || !o.mid) return;
+  const p = o.held ? o.charge : Math.min(1, o.charge); if (p < .03) return;
+  const m = o.mid, r = 26 + (o.held ? 90 + 60 * (o.charge - 1) : 120 * p);
+  glowCircle(m.x, m.y, r * 1.7, .65 + .25 * Math.sin(now * 12)); glowCircle(m.x, m.y, r * .75, .95);
+  if (o.held) { ring(m.x, m.y, r * .95, .9, 6, '#fff'); ring(m.x, m.y, r * 1.15, .6, 4, ORANGE); }
+  ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 3; ctx.globalCompositeOperation = 'lighter';
+  for (const h of pl.hands) for (let i = 0; i < 2; i++) { ctx.beginPath(); let x = h.c.x, y = h.c.y; ctx.moveTo(x, y); for (let k = 1; k <= 5; k++) { const q = k / 5; x = lerp(h.c.x, m.x, q) + (k < 5 ? rnd(-18, 18) : 0); y = lerp(h.c.y, m.y, q) + (k < 5 ? rnd(-18, 18) : 0); ctx.lineTo(x, y); } ctx.stroke(); }
   ctx.restore();
-  if (p > .02) { const a = now * (3 + p * 12); for (let i = 0; i < 3; i++) { const an = a + i * 2.1; spark(m.x + Math.cos(an) * r * 1.1, m.y + Math.sin(an) * r * 1.1, { r: 6, life: .35, col: i ? '#fff' : ORANGE_L }); } }
+  const a = now * (3 + p * 10); for (let i = 0; i < 3; i++) { const an = a + i * 2.1; spark(m.x + Math.cos(an) * r * 1.1, m.y + Math.sin(an) * r * 1.1, { r: 6, life: .35, col: i ? '#fff' : ORANGE_L }); }
 }
-function drawGauge(p, label) {
-  const c = ctx, w = 880, x = 960 - w / 2, y = 1000;
+function drawGauge(p, cx = 960, w = 880, y = 1000) {
+  const c = ctx, x = cx - w / 2;
   c.save(); c.fillStyle = 'rgba(10,12,16,.6)'; c.beginPath(); c.roundRect(x - 14, y - 26, w + 28, 52, 26); c.fill();
   c.fillStyle = 'rgba(255,255,255,.18)'; c.beginPath(); c.roundRect(x, y - 14, w, 28, 14); c.fill();
   if (p > .01) { const g = c.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, ORANGE_D); g.addColorStop(1, ORANGE_L); c.fillStyle = g; c.shadowColor = ORANGE; c.shadowBlur = 24; c.beginPath(); c.roundRect(x, y - 14, Math.max(28, w * p), 28, 14); c.fill(); }
   c.restore();
 }
-function head(title, how, y = 110) { pill(960, y + 6, Math.max(560, how.length * 50 + 120), 190, 'rgba(10,12,16,.55)'); txt(title, 960, y - 24, 88, '#fff'); txt(how, 960, y + 62, 46, '#FFD0A8', 'center', 700); }
+function head(title, how, y = 110) { ctx.save(); ctx.font = `700 46px ${FONT}`; const w = Math.max(ctx.measureText(how).width, title.length * 88) + 140; ctx.restore(); pill(960, y + 6, Math.max(560, w), 190, 'rgba(10,12,16,.58)'); txt(title, 960, y - 24, 88, '#fff'); txt(how, 960, y + 62, 46, '#FFD0A8', 'center', 700); }
 function drawGuideHand(msg) {
   const k = .55 + .25 * Math.sin(now * 4); drawHand(place(handPose(0), 960, 520, 230), k);
   pill(960, 880, msg.length * 78 + 160, 130, 'rgba(10,12,16,.62)'); txt(msg, 960, 880, 78, '#fff');
 }
+function sideMsg(i, msg) { const r = region(i); ctx.save(); ctx.font = `800 54px ${FONT}`; const w = ctx.measureText(msg).width + 90; ctx.restore(); pill(r.cx, 560, w, 100, 'rgba(10,12,16,.72)'); txt(msg, r.cx, 560, 54, '#fff'); }
+const SIDE = ['왼쪽', '오른쪽'];
 
 function drawIdle() {
   const c = ctx; c.fillStyle = 'rgba(8,10,14,.28)'; c.fillRect(0, 0, W, H);
-  const keys = Object.keys(SP), tot = keys.reduce((a, k) => a + SP[k].T, 0); let tt = idleT % tot, key = keys[0];
+  const keys = PRACTICE, tot = keys.reduce((a, k) => a + SP[k].T, 0); let tt = idleT % tot, key = keys[0];
   for (const k of keys) { if (tt < SP[k].T) { key = k; break; } tt -= SP[k].T; }
-  drawDemo(key, tt, 960, 470, 190, .9);
+  drawDemo(key, tt, 960, 450, 190, .9);
   const lh = liveHands(), small = lh.length && !lh.some(h => h.L >= HAND_MIN) && lh.some(h => h.L >= HAND_NEAR);
-  const msg = small ? '조금 더 가까이' : '손을 들어 보세요'; pill(960, 930, msg.length * 84 + 160, 140, 'rgba(10,12,16,.6)'); txt(msg, 960, 930, 88, '#fff');
+  const msg = small ? '조금 더 가까이' : '손을 들어 보세요'; pill(960, 900, msg.length * 84 + 160, 140, 'rgba(10,12,16,.6)'); txt(msg, 960, 900, 88, '#fff');
+  txt('업무 비효율 몬스터 소탕전', 960, 1010, 44, '#FFD0A8', 'center', 700);
 }
-function drawCard() {
-  const c = ctx, key = F.key, q = F.qi, e = F.ph === 'x-ready' ? easeOut(F.t / .4) : 1, x = 70 - 700 * (1 - e), y = 220, w = 560, h = 720;
-  c.save(); c.translate(x, 0); c.fillStyle = 'rgba(10,12,16,.68)'; c.strokeStyle = ORANGE; c.lineWidth = 5; c.beginPath(); c.roundRect(0, y, w, h, 44); c.fill(); c.stroke();
-  txt(`시험 ${q + 1}/${F.q.length}`, w / 2, y + 52, 38, '#D9D9D9', 'center', 700);
-  if (key === 'heart' || key === 'tele') { pill(w / 2, y + 112, 230, 56, ORANGE); txt('깜짝 주문', w / 2, y + 113, 34, '#fff'); }
-  c.save(); c.beginPath(); c.roundRect(10, y + 150, w - 20, 380, 30); c.clip(); drawDemo(key, F.ph === 'x-ready' ? F.t * .5 : F.t, w / 2, y + 345, { orb: 78, push: 88, fire: 140, heart: 150, tele: 92 }[key], 1); c.restore();
-  txt(SP[key].name, w / 2, y + 578, 84, '#fff'); txt(SP[key].card, w / 2, y + 642, 40, '#FFD0A8', 'center', 700);
-  const k = F.ph === 'x-run' ? 1 - F.rt / 3 : F.ph === 'x-ready' ? 1 : F.ok ? 1 - F.rt / 3 : 0;
-  c.fillStyle = 'rgba(255,255,255,.2)'; c.beginPath(); c.roundRect(50, y + h - 28, w - 100, 14, 7); c.fill();
-  if (k > 0) { c.fillStyle = k < .34 ? '#fff' : ORANGE; c.beginPath(); c.roundRect(50, y + h - 28, (w - 100) * clamp(k, 0, 1), 14, 7); c.fill(); }
-  c.restore();
+function drawSelect() {
+  const c = ctx; c.fillStyle = 'rgba(8,10,14,.5)'; c.fillRect(0, 0, W, H);
+  txt('손을 칸 안에 두세요', 960, 160, 76, '#fff');
+  BOX.forEach((b, i) => {
+    const g = clamp(SEL.g[i] / .6, 0, 1);
+    c.save(); c.fillStyle = 'rgba(10,12,16,.62)'; c.beginPath(); c.roundRect(b.x, b.y, b.w, b.h, 48); c.fill();
+    if (g > 0) { c.save(); c.beginPath(); c.roundRect(b.x, b.y, b.w, b.h, 48); c.clip(); c.fillStyle = 'rgba(255,126,49,.85)'; c.fillRect(b.x, b.y + b.h * (1 - g), b.w, b.h * g); c.restore(); }
+    c.strokeStyle = g > 0 ? ORANGE_L : 'rgba(255,255,255,.75)'; c.lineWidth = 8; c.beginPath(); c.roundRect(b.x, b.y, b.w, b.h, 48); c.stroke(); c.restore();
+    txt(b.big, b.x + b.w / 2, b.y + b.h / 2 - 40, 230, '#fff', 'center', 900); txt(b.sub, b.x + b.w / 2, b.y + b.h / 2 + 140, 72, g > 0 ? '#fff' : '#FFD0A8', 'center', 800);
+  });
+  for (const h of liveHands()) drawHand(h.lm, .9);
 }
-function drawMeToWe(k) {
+function drawPractice() {
+  const c = ctx, key = PRACTICE[G.pi], two = NP() === 2, ph = G.ph;
+  txt(`연습 ${G.pi + 1}/${PRACTICE.length}`, 70, 64, 40, '#D9D9D9', 'left', 700);
+  if (ph === 'p-demo') { c.fillStyle = 'rgba(8,10,14,.45)'; c.fillRect(0, 0, W, H); drawDemo(key, G.t + SP[key].T * .05, 960, 590, 200, 1); head(SP[key].name, SP[key].how, 190); return; }
+  if (two) { c.save(); const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(.5, 'rgba(255,255,255,.35)'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(958, 0, 4, H); c.restore(); }
+  for (const h of liveHands()) drawHand(h.lm, .95);
+  if (ph === 'p-try') {
+    head(SP[key].name, SP[key].how);
+    for (const pl of G.pl) { if (!pl.done) drawGuide(key, pl); if (key === 'orb') drawOrbOf(pl); }
+    c.save(); const bx = two ? 960 : 280, by = two ? 800 : 830, bs = two ? 300 : 440; c.beginPath(); c.roundRect(bx - bs / 2, by - bs / 2, bs, bs, 36); c.fillStyle = 'rgba(10,12,16,.55)'; c.fill(); c.clip(); drawDemo(key, now, bx, by, bs * .18, 1); c.restore();
+    for (const pl of G.pl) {
+      const r = region(pl.i);
+      if (pl.done) { pill(r.cx, 1000, 260, 90, ORANGE); txt('성공', r.cx, 1000, 56, '#fff'); }
+      else drawGauge(pl.g, two ? (pl.i ? 1440 + 90 : 480 - 90) : 960, two ? 560 : 880);
+    }
+  } else { pill(960, 116, 640, 130, 'rgba(10,12,16,.55)'); txt(G.skipped ? '다음 주문으로' : SP[key].name, 960, 116, 84, '#fff'); }
+}
+function drawEnemies() {
+  for (const e of G.en) {
+    const fa = e.flee ? 1 - (e.fleeT || 0) / .6 : 1; ctx.save(); ctx.globalAlpha = fa;
+    if (e.type === 'mini') { const al = e.m.filter(m => m.alive); for (const m of al) drawMini(m.x, m.y, e.s, e.t * 6 + m.ph); if (al.length) tag(e.x, Math.min(...al.map(m => m.y)) - 70 * e.s, '반복 업무', '불꽃', clamp(e.t * 2, 0, 1)); }
+    else if (e.type === 'paper') { drawPaper(e.x, e.y, e.s, e.rot); if (e.s > .45) tag(e.x, e.y - 110 * e.s - 20, '서류 뭉치', '발사'); }
+    else if (e.type === 'ghost') { drawGhost(e.x, e.y + Math.sin(e.t * 2.4) * 10, 1, e.a, e.t); if (e.a > .5) tag(e.x, e.y - 112, '야근 유령', '순간 이동', e.a); }
+    else if (e.type === 'curse') drawCurse(e.x, e.y, e.s, e.t);
+    else if (e.type === 'boss') {
+      drawBoss(e);
+      if (e.t > 1.2) { const w = 520, x = e.x - w / 2, y = e.y - 215; ctx.fillStyle = 'rgba(10,12,16,.7)'; ctx.beginPath(); ctx.roundRect(x - 10, y - 18, w + 20, 36, 18); ctx.fill(); ctx.fillStyle = ORANGE; ctx.beginPath(); ctx.roundRect(x, y - 9, w * clamp(e.hp / e.max, 0, 1), 18, 9); ctx.fill(); tag(e.x, y - 52, '레거시 보스', '에너지 구'); }
+    }
+    ctx.restore();
+  }
+}
+function drawEnergy(pl) {
+  const c = ctx, two = NP() === 2, r = region(pl.i), w = two ? 520 : 760, cx = r.cx + (two ? 30 : 30), x = cx - w / 2, y = 1012, ex = now < pl.exUntil;
+  c.save(); c.fillStyle = 'rgba(10,12,16,.66)'; c.beginPath(); c.roundRect(x - 120, y - 32, w + 140, 64, 32); c.fill();
+  c.fillStyle = 'rgba(255,255,255,.18)'; c.beginPath(); c.roundRect(x, y - 15, w, 30, 15); c.fill();
+  const p = clamp(pl.en / EN_MAX, 0, 1);
+  if (p > .01) { c.fillStyle = ex ? '#8A8A8A' : ORANGE; if (!ex) { c.shadowColor = ORANGE; c.shadowBlur = 18; } c.beginPath(); c.roundRect(x, y - 15, Math.max(30, w * p), 30, 15); c.fill(); }
+  c.restore(); txt('기력', x - 58, y + 1, 36, ex ? '#8A8A8A' : '#fff', 'center', 800);
+  if (ex) { const left = Math.ceil(pl.exUntil - now), size = two ? 150 : 210; pill(r.cx, 560, size * 2.4, size * 1.25, 'rgba(10,12,16,.78)'); txt('탈진', r.cx, 545, size, '#D9D9D9', 'center', 900); txt(`${left}초 뒤 회복`, r.cx, 560 + size * .55, size * .26, '#fff', 'center', 700); }
+}
+function drawLives() {
+  for (let i = 0; i < 3; i++) {
+    const x = 960 + (i - 1) * 92, y = 66, on = i < G.life, lost = i === G.life && G.hurt > 0; const c = ctx;
+    c.save(); c.translate(x, y + 14); const sc = lost ? 1 + (1 - G.hurt) * 1.2 : 1; c.scale(sc, sc); c.globalAlpha = lost ? G.hurt : 1;
+    heartPath(c, 30); if (on || lost) { c.fillStyle = lost ? '#fff' : ORANGE; c.shadowColor = 'rgba(0,0,0,.5)'; c.shadowBlur = 10; c.fill(); } else { c.strokeStyle = 'rgba(255,255,255,.45)'; c.lineWidth = 4; c.stroke(); }
+    c.restore();
+  }
+}
+function drawGame() {
+  const c = ctx, ph = G.ph, two = NP() === 2;
+  if (ph[0] === 'p') { drawPractice(); return; }
+  c.fillStyle = `rgba(8,10,14,${.2 + G.dim * .5})`; c.fillRect(0, 0, W, H);
+  if (two && ph !== 'result' && ph !== 'fin') { c.save(); const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(.5, 'rgba(255,255,255,.3)'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(958, 0, 4, H); c.restore(); }
+  if (ph === 'b-wave' || ph === 'b-boss' || ph === 'b-intro' || ph === 'over') {
+    drawEnemies();
+    for (const s of G.shots) { const r = s.merged ? 190 : 70 + 40 * s.charge; glowCircle(s.cx || s.x, s.cy || s.y, r * 1.6, 1); glowCircle(s.cx || s.x, s.cy || s.y, r * .7, 1); }
+    if (G.merge && !G.merge.fired) {
+      const M = G.merge, k = easeOut(M.t / .5), r = 150 + 12 * Math.sin(now * 10);
+      M.from.forEach(f => { const x = lerp(f.x, M.x, k), y = lerp(f.y, M.y, k); if (k < 1) glowCircle(x, y, 140, 1); });
+      glowCircle(M.x, M.y, r * 1.8 * k, 1); glowCircle(M.x, M.y, r * .8 * k, 1); ring(M.x, M.y, r * k, .9, 8, '#fff');
+      for (const pl of G.pl) for (const h of pl.hands) { c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 4; c.beginPath(); c.moveTo(h.c.x, h.c.y); c.lineTo(M.x + rnd(-20, 20), M.y + rnd(-20, 20)); c.stroke(); c.restore(); }
+    }
+    for (const pl of G.pl) { for (const h of pl.hands) drawPalm(h, pl); drawOrbOf(pl); }
+  }
+}
+function drawMeToWe(k, y = 470) {
   const c = ctx, parts = [['ME', 330, '#fff'], ['to', 210, ORANGE], ['WE', 330, '#fff']], gap = 46; c.save(); c.textBaseline = 'middle';
   const ws = parts.map(([s, z]) => { c.font = `900 ${z}px ${FONT}`; return c.measureText(s).width; }), tw = ws.reduce((a, b) => a + b, 0) + gap * 2; let x = 960 - tw / 2;
   parts.forEach(([s, z, col], i) => {
-    const kk = clamp((k - i * .13) / .5, 0, 1), sc = kk < 1 ? 1 + .35 * Math.sin(kk * Math.PI) * (1 - kk) + (kk - 1) : 1, ee = easeOut(kk), cx = x + ws[i] / 2;
-    c.save(); c.globalAlpha = ee; c.translate(cx, 470); c.scale(lerp(2.4, 1, ee) * (kk > .8 ? 1 + .05 * Math.sin((kk - .8) * 15) : 1), lerp(2.4, 1, ee)); c.font = `900 ${z}px ${FONT}`; c.textAlign = 'center';
+    const kk = clamp((k - i * .13) / .5, 0, 1), ee = easeOut(kk), cx = x + ws[i] / 2;
+    c.save(); c.globalAlpha = ee; c.translate(cx, y); c.scale(lerp(2.4, 1, ee), lerp(2.4, 1, ee)); c.font = `900 ${z}px ${FONT}`; c.textAlign = 'center';
     c.shadowColor = 'rgba(255,126,49,.9)'; c.shadowBlur = 50; c.fillStyle = col; c.fillText(s, 0, 0); c.shadowBlur = 0; c.restore(); x += ws[i] + gap;
   }); c.restore();
 }
-function drawFlow() {
-  const c = ctx, ph = F.ph, key = F.key;
-  if (ph === 'p-demo') { c.fillStyle = 'rgba(8,10,14,.45)'; c.fillRect(0, 0, W, H); txt(`연습 ${F.pi + 1}/3`, 960, 80, 44, '#D9D9D9', 'center', 700); drawDemo(key, F.t, 960, 560, 200, 1); head(SP[key].name, SP[key].how, 180); }
-  else if (ph === 'p-try' || ph === 'p-win') {
-    txt(`연습 ${F.pi + 1}/3`, 130, 70, 38, '#D9D9D9', 'left', 700); if (ph === 'p-try') { head(SP[key].name, SP[key].how); drawGuide(key); } else { pill(960, 116, 560, 130, 'rgba(10,12,16,.55)'); txt(F.skipped ? '다음 주문으로' : SP[key].name, 960, 116, 84, '#fff'); }
-    if (ph === 'p-try') { c.save(); c.beginPath(); c.roundRect(60, 600, 440, 440, 40); c.fillStyle = 'rgba(10,12,16,.55)'; c.fill(); c.clip(); drawDemo(key, now, 280, 830, 78, 1); c.restore(); drawGauge(gauge); }
-  } else if (ph === 'x-intro') { c.fillStyle = 'rgba(8,10,14,.5)'; c.fillRect(0, 0, W, H); txt('마법 시험', 960, 440, 170, '#fff'); pill(960, 620, 1100, 120, 'rgba(255,126,49,.95)'); txt('카드의 손동작을 따라 하세요', 960, 620, 64, '#fff'); }
-  else if (ph === 'x-ready' || ph === 'x-run' || ph === 'x-res') { drawCard(); if (ph === 'x-run') { drawGuide(key); drawGauge(gauge); } }
-  else if (ph === 'f-build') { head('에너지 구를 만드세요', '두 손으로 빙글빙글'); drawGauge(gauge); }
-  else if (ph === 'f-push') { head('앞으로 미세요', '손바닥을 펴서 쭉'); }
-  else if (ph === 'f-boom') {
-    const t = F.t; c.fillStyle = `rgba(8,10,14,${.5 * clamp(t / .6, 0, 1)})`; c.fillRect(0, 0, W, H);
-    if (t < .8) { const k = easeIO(t / .8), x = lerp(lastMid.x, 960, k), y = lerp(lastMid.y, 470, k), r = lerp(230, 70, k * k); glowCircle(x, y, r * 1.7, 1); glowCircle(x, y, r * .8, 1); }
-    else {
-      drawMeToWe((t - .8) / 1.1);
-      if (t > 2.4) { const k = easeOut((t - 2.4) / .5); c.save(); c.globalAlpha = k; txt('마법사 등급', 960, 700, 54, '#D9D9D9', 'center', 700); txt(F.grade, 960, 810, 150, ORANGE, 'center', 900); txt(`5문제 중 ${F.score}개 성공`, 960, 920, 56, '#fff', 'center', 700); c.restore(); }
-    }
+function drawGameTop() {
+  const c = ctx, ph = G.ph, two = NP() === 2;
+  if (ph[0] === 'p') return;
+  // 주문 이름(가운데 크게)
+  for (const k of G.calls) {
+    const e = k.t < .12 ? lerp(1.8, 1, easeOut(k.t / .12)) : 1, a = k.t > .4 ? 1 - (k.t - .4) / .4 : 1;
+    c.save(); c.globalAlpha = clamp(a, 0, 1); c.translate(k.x, k.y); c.scale(e, e); c.font = `900 ${k.size}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.shadowColor = 'rgba(255,126,49,.95)'; c.shadowBlur = 60; c.lineWidth = k.size * .08; c.strokeStyle = 'rgba(10,12,16,.6)'; c.strokeText(k.text, 0, 0); c.fillStyle = k.col; c.fillText(k.text, 0, 0); c.restore();
   }
+  if (ph === 'b-intro' || ph === 'b-wave' || ph === 'b-boss') {
+    drawLives(); txt(`소탕 ${G.kills}`, W - 60, 66, 56, '#fff', 'right', 800);
+    for (const pl of G.pl) drawEnergy(pl);
+    if (ph === 'b-intro') { const a = clamp(G.t / .3, 0, 1) * clamp((2.2 - G.t) / .3, 0, 1); c.save(); c.globalAlpha = a; pill(960, 470, 1500, 330, 'rgba(10,12,16,.72)'); txt('업무 비효율 몬스터', 960, 410, 120, '#fff', 'center', 900); txt('배운 마법으로 소탕', 960, 545, 70, ORANGE_L, 'center', 800); c.restore(); }
+    if (G.banner) { const b = G.banner, a = clamp(b.t / .2, 0, 1) * clamp((1.6 - b.t) / .4, 0, 1); c.save(); c.globalAlpha = a; txt(b.text, 960, 470, 170, '#fff', 'center', 900); c.restore(); }
+    if (ph === 'b-boss' && two) {
+      const boss = G.en.find(e => e.type === 'boss');
+      if (boss && boss.t > 1.6 && !G.banner) {
+        if (!G.merge) { pill(960, 160, 980, 84, 'rgba(10,12,16,.7)'); txt('두 사람의 에너지 구를 가운데로', 960, 160, 50, '#fff', 'center', 800); }
+        else if (!G.merge.fired) {
+          pill(960, 160, 760, 84, ORANGE); txt('둘이 함께 앞으로 쭉', 960, 160, 52, '#fff', 'center', 900);
+          G.pl.forEach((pl, i) => { const on = now - G.merge.push[i] < 1.2; pill(i ? 1440 : 480, 860, 260, 84, on ? ORANGE : 'rgba(10,12,16,.7)'); txt(on ? '밀기' : SIDE[i], i ? 1440 : 480, 860, 50, '#fff', 'center', 800); });
+        }
+      }
+    }
+    // 손이 안 보일 때
+    if (!G.banner && ph !== 'b-intro') {
+      if (two) G.pl.forEach(pl => { if (pl.absent > .8) sideMsg(pl.i, `${SIDE[pl.i]}: 손을 보여 주세요`); });
+      else if (G.pl[0].absent > .8) drawGuideHand('손을 보여 주세요');
+    }
+    if (G.hurt > 0) { c.save(); const g = c.createRadialGradient(960, 540, 420, 960, 540, 1150); g.addColorStop(0, 'rgba(229,101,26,0)'); g.addColorStop(1, `rgba(229,101,26,${.75 * G.hurt})`); c.fillStyle = g; c.fillRect(0, 0, W, H); c.restore(); }
+  } else if (ph === 'over') {
+    c.fillStyle = `rgba(8,10,14,${.6 * clamp(G.t / .5, 0, 1)})`; c.fillRect(0, 0, W, H);
+    txt('소탕 실패', 960, 480, 190, '#fff', 'center', 900); txt('생명이 모두 사라졌습니다', 960, 640, 56, '#D9D9D9', 'center', 700);
+  } else if (ph === 'fin') {
+    const t = G.t; c.fillStyle = `rgba(8,10,14,${.55 * clamp(t / .8, 0, 1)})`; c.fillRect(0, 0, W, H);
+    if (t > .7) drawMeToWe((t - .7) / 1.1);
+    if (t > 2.4) { c.save(); c.globalAlpha = easeOut((t - 2.4) / .5); txt('레거시 보스 소탕', 960, 760, 72, '#FFD0A8', 'center', 800); c.restore(); }
+  } else if (ph === 'result') {
+    c.fillStyle = 'rgba(8,10,14,.72)'; c.fillRect(0, 0, W, H); const e = easeOut(G.t / .5);
+    c.save(); c.globalAlpha = e; txt(G.cleared ? '소탕 완료' : '소탕 실패', 960, 400, 150, '#fff', 'center', 900);
+    txt(`소탕 ${G.kills} · ${G.grade}`, 960, 600, 110, ORANGE_L, 'center', 900); c.restore();
+  }
+  if (G.white > 0) { c.fillStyle = `rgba(255,255,255,${G.white * .9})`; c.fillRect(0, 0, W, H); }
 }
 
 function drawDebug() {
   const c = ctx; c.save(); c.font = `600 24px ${FONT}`; c.fillStyle = '#fff'; c.textAlign = 'left'; c.textBaseline = 'top'; c.shadowColor = 'rgba(0,0,0,.9)'; c.shadowBlur = 6;
-  const L = [`mode ${S.mode} ${F ? F.ph + ' key ' + F.key : ''} ${mouseMode ? 'mouse' : 'cam'} lenient ${lenient} fps ${fps | 0} 손 ${liveHands().length}`,
-    `orb ${J.orb.p.toFixed(2)} (회전 ${(J.orb.sum / Math.PI).toFixed(2)}π 거리 ${J.orb.d | 0})  push ${J.push.p.toFixed(2)} (배율 ${J.push.ratio.toFixed(2)})  fire ${J.fire.p.toFixed(2)}  heart ${J.heart.p.toFixed(2)}  tele ${J.tele.p.toFixed(2)} (dx ${J.tele.dx | 0})`];
-  for (const h of liveHands()) L.push(`손#${h.id} L ${h.L | 0}  open ${h.open.toFixed(2)}  pinch ${h.pinch.toFixed(2)}  curled ${h.curled}  ext ${h.m.ext.map(v => v.toFixed(2)).join('/')}  fd ${h.fire.fd.toFixed(2)} heart ${h.heart.toFixed(2)}`);
+  const L = [`mode ${S.mode} ${G ? G.ph + ' np ' + G.np + ' pi ' + G.pi + ' life ' + G.life + ' kills ' + G.kills + ' en ' + G.en.length : ''} ${mouseMode ? 'mouse' + (mouse.dual ? ' dual' : '') : 'cam'} fps ${fps | 0} 손 ${liveHands().length}`];
+  if (G) for (const pl of G.pl) L.push(`P${pl.i} 손 ${pl.hands.length} 기력 ${pl.en | 0} orb ${pl.orb.charge.toFixed(2)}${pl.orb.held ? ' held' : ''} act ${pl.orb.act.toFixed(1)} posture ${pl.posture} push ${pl.p.push.toFixed(2)} tele ${pl.p.tele.toFixed(2)} fire ${pl.p.fire.toFixed(2)} heart ${pl.p.heart.toFixed(2)}`);
+  for (const h of liveHands()) L.push(`손#${h.id} side ${h.side} L ${h.L | 0} open ${h.open.toFixed(2)} pinch ${h.pinch.toFixed(2)} curled ${h.curled} pushR ${(h.pushR || 0).toFixed(2)} teleR ${(h.teleR || 0).toFixed(2)} fd ${h.fire.fd.toFixed(2)}`);
   L.forEach((s, i) => c.fillText(s, 20, 140 + i * 32)); c.restore();
   for (const h of liveHands()) { c.save(); c.strokeStyle = '#fff'; c.setLineDash([8, 8]); c.lineWidth = 2; c.beginPath(); c.arc(h.c.x, h.c.y, h.L, 0, 7); c.stroke(); c.restore(); }
 }
@@ -844,12 +1274,15 @@ function drawCrowd() {   // 디버그(D)나 설정 패널이 열려 있을 때�
 }
 if (crowd.on) { cr.since = Date.now(); $('cpOn').checked = true; crowdInit().then(() => crSchedule(1500)); }   // 이중거울: 저장된 설정이 켜져 있으면 사람이 안 눌러도 자동 시작
 
-/* ---------------- 입력 키 ---------------- */
+/* ---------------- 입력 키 ----------------
+   P 연습 건너뛰기(대기·선택이면 ME로 바로 소탕전) · M ME 시작 · W WE 시작 · Esc 대기
+   마우스 시험(?mouse=1): 1 편 손 / 2 주먹 / 3 하트 · 스크롤 손 크기 · Shift 두 번째 손(마우스를 천천히 따라오는 점 대칭)
+   B 2인 거울(마우스 손을 가로로 뒤집은 손을 오른쪽 사람으로) · D 디버그 · F 전체 화면 · V 카메라 · C 계수 설정 */
 let fps = 60;
 addEventListener('keyup', e => { if (e.key === 'Shift') mouse.shift = false; });
 addEventListener('blur', () => { mouse.shift = false; });
 addEventListener('keydown', e => {
-  if (e.key === 'Shift') mouse.shift = true;
+  if (e.key === 'Shift' && !mouse.shift) { mouse.shift = true; mouse.ax = mouse.x + (mouse.x > 960 ? -220 : 220); mouse.ay = mouse.y; }
   // 한글 입력 상태에서도 동작하도록 글자·숫자 키는 물리 키(e.code)로 읽는다
   const k = /^Key[A-Z]$/.test(e.code) ? e.code.slice(3) : /^Digit\d$/.test(e.code) ? e.code.slice(5) : e.key;
   const tg = e.target && e.target.tagName; if (tg === 'INPUT' || tg === 'SELECT' || tg === 'TEXTAREA') return;
@@ -859,28 +1292,37 @@ addEventListener('keydown', e => {
   if (k === 'v' || k === 'V') { cycleCamera(); return; }
   if (k === 'd' || k === 'D') debug = !debug;
   else if (k === 'f' || k === 'F') { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => { }); }
-  else if (k === 'p' || k === 'P') { if (S.mode === 'idle') startFlow(); if (F && F.ph[0] === 'p') gotoExam(); }
+  else if (k === 'p' || k === 'P') { if (S.mode !== 'game') startGame(1, true); else if (G.ph[0] === 'p') setPh('b-intro'); }
+  else if (k === 'm' || k === 'M') { if (S.mode !== 'game') startGame(1); }
+  else if (k === 'w' || k === 'W') { if (S.mode !== 'game') startGame(2); }
+  else if (k === 'b' || k === 'B') { if (mouseMode) { mouse.dual = !mouse.dual; mouse.last = clk(); } }
   else if (k === '1' || k === '2' || k === '3') { if (mouseMode) { mouse.pose = +k - 1; mouse.last = clk(); } }
   else if (k === 'Escape') toIdle();
 });
 
 /* ---------------- 메인 루프 ---------------- */
 let prev = performance.now() / 1000;
-let simT = null;   // 시험용 가상 시계(?sim=1 또는 __ax.sim): 탭이 숨겨져도 한 프레임씩 직접 돌릴 수 있다
+let simT = null;   // 시험용 가상 시계(__ax.sim): 탭이 숨겨져도 한 프레임씩 직접 돌릴 수 있다
 const clk = () => simT === null ? performance.now() / 1000 : simT;
 function frame() { requestAnimationFrame(frame); if (simT === null) run(performance.now() / 1000); }
 function run(t) {
   now = t; const dt = Math.min(.05, now - prev); prev = now; fps = lerp(fps, 1 / Math.max(dt, .001), .05);
-  detect(); updateInput(dt); runDetectors(dt);
-  if (S.mode === 'idle') stepIdle(dt); else if (F) stepFlow(dt);
-  updateP2(dt); updateFx(dt);
+  detect(); updateInput(dt);
+  for (const h of liveHands()) handFeat(h, dt);
+  if (S.mode === 'idle') stepIdle(dt); else if (S.mode === 'select') stepSelect(dt); else if (G) stepGame(dt);
+  const wdt = G && G.slow > 0 ? dt * .25 : dt;
+  updateP2(wdt); updateFx(wdt);
   ctx.save();
-  if (shake > 0) ctx.translate(rnd(-1, 1) * shake * 12, rnd(-1, 1) * shake * 12);
+  if (shake > 0) ctx.translate(rnd(-1, 1) * shake * 14, rnd(-1, 1) * shake * 14);
   drawBackdrop();
-  if (S.mode === 'idle') drawIdle(); else if (F) drawFlow();
-  if (F) { const ph = F.ph; if (F.key === 'orb' && (ph === 'p-try' || ph === 'x-run' || ph === 'f-build')) drawLiveOrb(J.orb.p); else if (ph === 'f-push') drawLiveOrb(1); }
-  drawLiveHands(); drawP2(); drawFx();
-  if (F && F.guide) drawGuideHand(F.guide);
+  if (S.mode === 'idle') drawIdle(); else if (S.mode === 'select') drawSelect(); else if (G) drawGame();
+  drawP2(); drawFx();
+  if (G) drawGameTop();
+  if (G && G.ph === 'p-try') {
+    const key = PRACTICE[G.pi], need = SP[key].need;
+    if (NP() === 2) G.pl.forEach(pl => { if (!pl.done && pl.hands.length < need && G.t > .7) sideMsg(pl.i, `${SIDE[pl.i]}: ${need === 2 ? '두 손을' : '손을'} 보여 주세요`); });
+    else { const pl = G.pl[0]; if (pl.hands.length < need && G.t > .7) drawGuideHand(need === 2 && pl.hands.length === 1 ? '두 손을 보여 주세요' : '손을 화면에 보여 주세요'); }
+  }
   drawTele();
   ctx.restore();
   drawCrowd();
@@ -892,17 +1334,24 @@ if (!mouseMode) initCamera();
 
 // 시험용 훅 (캡처·자동 시험)
 window.__ax = {
-  sim(on = true) { simT = on ? performance.now() / 1000 : null; prev = clk(); },
+  sim(on = true) { simT = on ? Math.max(performance.now() / 1000, simT || 0, now) : null; prev = clk(); },   // 가상 시계는 뒤로 가지 않는다
   step(n = 1, dt = 1 / 30) { for (let i = 0; i < n; i++) { simT += dt; run(simT); } },
   async runFor(secs, fn, dt = 1 / 30) { const n = Math.round(secs / dt); for (let i = 0; i < n; i++) { if (fn) fn(i * dt, i); simT += dt; run(simT); } },
   setMouse(x, y) { mouse.x = x; mouse.y = y; mouse.last = clk(); },
-  hide() { mouse.last = -1e9; },
-  pose(n) { mouse.pose = n; mouse.last = clk(); }, shift(v) { mouse.shift = !!v; },
+  anchor(x, y) { mouse.ax = x; mouse.ay = y; },
+  hide() { mouse.last = -1e9; }, mouseOff(v = true) { mouse.off = !!v; },
+  vhand(o) { const v = Object.assign({ x: 480, y: 600, pose: 0, L: 100, Lt: 100, cs: [0, 0, 0, 0], pin: 0, shift: false, ax: 480, ay: 600, off: false }, o); mouse.extra.push(v); return v; }, vclear() { mouse.extra.length = 0; },
+  pose(n) { mouse.pose = n; mouse.last = clk(); }, shift(v) { if (v && !mouse.shift) { mouse.ax = mouse.x + (mouse.x > 960 ? -220 : 220); mouse.ay = mouse.y; } mouse.shift = !!v; }, dual(v) { mouse.dual = !!v; },
   wheel(n) { mh.Lt = clamp(mh.Lt * Math.pow(1.13, n), 60, 280); mouse.last = clk(); },
-  state: () => ({ mode: S.mode, ph: F && F.ph, key: F && F.key, score: F && F.score, q: F && F.q, pi: F && F.pi, qi: F && F.qi, guide: F && F.guide, J: JSON.parse(JSON.stringify(J, (k, v) => k === 'at' ? undefined : v)), hands: liveHands().map(h => ({ id: h.id, L: h.L | 0, open: +h.open.toFixed(2), pinch: +h.pinch.toFixed(2) })) }),
-  start: startFlow, idle: toIdle, skip() { gotoExam(); }, crowd, cr, crowdSet, crowdTick, dotState: () => dotInfo(),
+  state: () => ({ mode: S.mode, ph: G && G.ph, np: G && G.np, pi: G && G.pi, t: G && +G.t.toFixed(2), life: G && G.life, kills: G && G.kills, wave: G && G.wave, grade: G && G.grade, cleared: G && G.cleared, merge: !!(G && G.merge), sel: SEL && SEL.g.slice(),
+    pl: G ? G.pl.map(p => ({ en: +p.en.toFixed(1), ex: now < p.exUntil, done: p.done, hands: p.hands.length, orb: +p.orb.charge.toFixed(2), held: p.orb.held, posture: p.posture })) : [],
+    en: G ? G.en.map(e => ({ type: e.type, side: e.side, x: e.x | 0, y: e.y | 0, t: +e.t.toFixed(2), hp: e.hp, back: e.back > 0, n: e.m ? e.m.filter(m => m.alive).length : undefined })) : [],
+    hands: liveHands().map(h => ({ id: h.id, side: h.side, L: h.L | 0, open: +h.open.toFixed(2), pinch: +h.pinch.toFixed(2) })) }),
+  G: () => G, now: () => now, casts: castLog,
+  start: startGame, idle: toIdle, select: toSelect, skip() { if (G) setPh('b-intro'); }, setPh: ph => setPh(ph),
+  crowd, cr, crowdSet, crowdTick, dotState: () => dotInfo(),
   async crowdImage(url) { const im = new Image(); await new Promise((r, j) => { im.onload = r; im.onerror = j; im.src = url; }); cr.testSrc = { el: im, w: im.naturalWidth, h: im.naturalHeight }; },
-  async snap(name) { if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return 0;   // 시험 저장은 로컬 serve.py 전용
+  async snap(name) { if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return 0;   // 시험 저장은 로컬 서버 전용
     const b = await new Promise(r => cv.toBlob(r, 'image/png')); await fetch('/save/' + encodeURIComponent(name), { method: 'POST', body: b }); return b.size; },
 };
 </script>
