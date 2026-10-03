@@ -828,6 +828,7 @@
     /* 상태 줄 · 평소에는 없다 · 데모 표시 · 연결이 끊겼을 때만 */
     var sy = G.st.y; if (DEMO) { text("DEMO · 가짜 적립", 600, G.st.s, org ? "rgba(255,255,255,0.7)" : COL.faint, G.st.x, sy); sy += 32; }
     if (ST.off) text("연결 다시 시도 중 · 마지막 값 표시", 500, G.st.s, org ? "rgba(255,255,255,0.7)" : COL.faint, G.st.x, sy);
+    if (DEMO && T < SC.until) text(SC.label, 600, 26, org ? "rgba(255,255,255,0.85)" : COL.sub, G.FW / 2, 48, "center", null, cl((SC.until - T) / 0.5));
     drawTitle();
   }
   function drawTitle() {
@@ -925,7 +926,33 @@
     "t": function () { if (!SHOW) startShow("tl"); }, "b": function () { took(ST.target + 4); }, "j": function () { took(ST.target + 40); },
     " ": function () { DM.paused = !DM.paused; }, "h": function () { body.classList.toggle("help-on"); }
   };
+  /* 데모 장면 순서 · ← → 와 화면 좌우 가장자리 클릭(리모컨 포인터)으로 앞뒤로 · 양 끝에서 멈춘다 · 운영 주소에서는 없다 */
+  var SC = { i: -1, until: -1e4, label: "" };
+  var SCENES = [
+    ["불씨 0개", function () { setNow(0); }],
+    ["37개", function () { setNow(34); burstIn(3, 5); }],
+    ["120개", function () { setNow(120); }],
+    ["1차 완성", function () { moment(CFG.g1); }],
+    ["600개", function () { setNow(600); }],
+    ["Lv 2 순간", function () { moment(CFG.lv[1]); }],
+    ["1,200개", function () { setNow(1200); }],
+    ["Lv 3 순간", function () { moment(CFG.lv[2]); }],
+    ["2026 순간", function () { moment(CFG.lv[3]); }],
+    ["Lv 5 순간", function () { moment(CFG.lv[4]); }],
+    ["3,500개", function () { setNow(3500); }],
+    ["다시 보기", function () { setNow(1500); startShow("tl"); }]
+  ];
+  function sceneGo(d) {
+    var i = SC.i + d; if (i < 0 || i >= SCENES.length) return;
+    SC.i = i; SC.label = (i + 1) + " / " + SCENES.length + " · " + SCENES[i][0]; SC.until = T + 2; SCENES[i][1]();
+  }
+  DKEYS.ArrowRight = function () { sceneGo(1); }; DKEYS.ArrowLeft = function () { sceneGo(-1); };
+  DKEYS.ArrowUp = DKEYS.b; DKEYS.ArrowDown = DKEYS[" "];
   window.addEventListener("keydown", function (e) { var k = e.key.length === 1 ? e.key.toLowerCase() : e.key, f = KEYS[k] || (DEMO && DKEYS[k]); if (!f) return; f(); e.preventDefault(); });
+  window.addEventListener("click", function (e) {
+    if (!DEMO || body.classList.contains("help-on") || (e.target && e.target.id === "fsBtn")) return;
+    var x = e.clientX / window.innerWidth; if (x < 0.12) sceneGo(-1); else if (x > 0.88) sceneGo(1);
+  });
 
   /* ════════ 프레임 ════════ */
   var FPS = { n: 0, t: 0, v: 0 }, HUDN = 0;
