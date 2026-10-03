@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>AX Passport · AX Festival 2026</title>
+<title>AX Festival 2026 · ME to WE</title>
 <!-- 홈 화면에 추가 = 아이콘 한 번으로 실행 (설치·스토어 없음) -->
 <link rel="manifest" href="manifest.json">
 <!-- AX-TDS v1 (260922 · design.md §A) · 홍보부 앱 디자인 가이드 패키지의 잠긴 토큰·컴포넌트 · 이 두 파일은 고치지 않는다 -->
@@ -24,7 +24,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="AX Passport">
+<meta name="apple-mobile-web-app-title" content="AX Festival">
 <style>
   /* ═══════ AX Festival 2026 그래픽 시스템 v6 「홍보부 디자인안 · design.md v29」 ═══════
      흰 바탕 + 연주황(O10 틴트) 무보더 카드 + Vibrant Orange(#FF7E31) 브랜드 문구·CTA (260915 사용자: 회색 카드 대신 연주황으로 통일).
@@ -64,6 +64,11 @@
   #splash { position: absolute; inset: 0; z-index: 100; background: var(--paper); display: flex; flex-direction: column; overflow: hidden; }
   #splash.gone { display: none; }
   .kvfill { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  /* v5.10 점 글자(DotGlyph · design.md A-5 5-20) · 그림이라 큰글씨 배율을 받지 않는다(px) · 켜지는 움직임(.dgd)은 스탬프 팝 숫자 · 행운권 번호에만 · 동작 줄이기 = 켜진 모양 */
+  .dg { display: block; flex: none; overflow: visible; }
+  .dg .dgd { opacity: 0; transform-box: fill-box; transform-origin: center; animation: dgOn 0.24s ease-out forwards; }
+  @keyframes dgOn { 0% { opacity: 0; transform: scale(0.3); } 70% { opacity: 1; transform: scale(1.14); } 100% { opacity: 1; transform: scale(1); } }
+  @media (prefers-reduced-motion: reduce) { .dg .dgd { animation: none; opacity: 1; transform: none; } }
   /* ═══ v5.02 로그인 화면 v2 「전체 오렌지」(261002 사용자 확정 · design.md A-5 3-1 · 정본 「디자인 시안/로그인 화면/v2 계획.md」)
      로그인 첫 화면과 재방문(#quick)은 화면 전체가 주황 + 주황 격자(캔버스 lf-bg · 최초 로그인 장면의 수면과 같은 그림)인 정지 화면이다. 점 · 수평선 · 슬로건 · 날짜 · 장소 없음.
      위 = 흰 행사명 「AX Festival」 / 「2026」 40px 700(흰 글자는 이 한 요소만 · 대비 2.52 큰 글자 예외) · 아래 = 입력 3줄 + 검정 주 버튼(ax-button-dark) + 링크.
@@ -74,6 +79,7 @@
   .axs-lf .lf-head { position: absolute; z-index: 2; left: 0; right: 0; top: 0; padding: 0 var(--ax-space-24); overflow: hidden; pointer-events: none; }
   .axs-lf .lf-title { margin: 0; font-size: 40px; line-height: 42px; font-weight: 700; letter-spacing: -0.01em; color: var(--ax-color-inverse); }   /* 행사명 = 흰색 40px 700 · 큰글씨 배율 제외(px) · 키보드에 lfLayout 이 40 → 24 → 16 */
   .axs-lf .lf-title span { display: block; white-space: nowrap; }
+  .axs-lf .lf-name { margin: 0 0 12px; height: 14px; line-height: 0; color: var(--ax-color-inverse); }   /* v5.10 점 이름 AX PASSPORT(그림 · 14px) · 행사명 위에 작게 · 아래 간격은 lfLayout 이 12 → 8 */
   .axs-lf .lf-form { position: absolute; z-index: 3; left: 0; right: 0; top: 0; padding: 0 var(--ax-space-24); }
   .axs-lf .lf-form > * { display: block; margin: 0; }
   .axs-lf .lf-form > [hidden] { display: none; }
@@ -408,11 +414,12 @@
   #spop .sp-stage .stampmk { animation: stampDrop 0.5s cubic-bezier(0.3, 0.9, 0.4, 1) 0.12s both; }
   #spop .sp-text { position: absolute; text-align: center; color: #fff; padding: 0 16px; animation: fadeUp 0.2s ease-out 0.5s both; }
   #spop .sp-text b { display: block; font-size: calc(21px * var(--fs)); font-weight: 900; line-height: 1.35; word-break: keep-all; }
+  #spop .sp-text .sp-n { display: flex; justify-content: center; margin-top: 10px; line-height: 0; font-style: normal; }   /* v5.10 개수 = 점 글자 28px(흰 점) · 바뀐 숫자만 켜진다 */
   #spop .sp-text span { display: inline-block; margin-top: 10px; padding: 6px 16px; border-radius: 999px; background: rgba(25,31,40,0.82); font-size: calc(19px * var(--fs)); font-weight: 800; line-height: 1.4; color: #FFC56E; animation: fadeUp 0.2s ease-out 0.55s both; }   /* v4.44 짙은 띠 위 큰 글씨 · 도장 · 레일과 겹쳐도 읽힌다 */
   @keyframes stampDrop { 0% { transform: scale(3.2) rotate(14deg); opacity: 0.6; } 60% { transform: scale(1) rotate(-6deg); opacity: 1; } 76% { transform: scale(0.92) rotate(-3deg); } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
   #spop.rm .sp-dim, #spop.rm .sp-stage .stampmk, #spop.rm .sp-text, #spop.rm .sp-text span { animation: none; }
   #spop.rm .stampmk .ring, #spop.rm .stampmk .sglow, #spop.rm .stampmk .spl { display: none; }
-  #view.sp-shake { animation: cardShake 0.18s linear; }
+  #view.sp-shake, #lgx.sp-shake { animation: cardShake 0.18s linear; }   /* v5.07 최초 로그인 장면 위 도장도 같은 흔들림 */
   /* 안착 전 자리는 아직 비어 보이게 · 안착 순간 한 번 튕김 */
   .rail .tick.sp-wait { background: var(--dim) !important; border-color: var(--dimln) !important; }
   .rail .mk.sp-wait { background: var(--dim) !important; border-color: var(--dimln) !important; color: #B9B2AC !important; box-shadow: none !important; animation: none !important; }
@@ -747,9 +754,9 @@
   #modal .rfx.open .rfx-lid { transform: translate(-2px, -6px) rotate(-14deg); }
   #modal .rfx.open .rfx-rays { opacity: 1; animation: rfxSpin 6s linear infinite; }
   #modal .rfx-num { position: absolute; left: 50%; top: 4px; transform: translate(-50%, 118px) scale(0.45); opacity: 0; padding: 8px 18px; border-radius: 14px; background: var(--ax-color-surface); border: 2px solid var(--ax-color-brand); color: var(--ax-color-brandText); font-family: var(--disp); font-weight: 800; font-size: calc(30px * var(--fs)); letter-spacing: 0.08em; font-variant-numeric: tabular-nums; white-space: nowrap; pointer-events: none; }   /* v4.43 시작 = 몸통 안(앞면에 가려짐) */
-  #modal .rfx-num b { font-weight: inherit; }
+  #modal .rfx-num b { display: inline-block; vertical-align: top; font-weight: inherit; line-height: 0; }   /* v5.10 번호 = 점 글자(30px · 여러 개 24px · 굴러가는 동안 muted · 멈추면 brandText 점이 켜진다) */
   #modal .rfx-num.multi { max-width: 300px; white-space: normal; text-align: center; font-size: calc(24px * var(--fs)); line-height: 1.35; }
-  #modal .rfx-num.multi b { display: inline-block; margin: 0 8px; }   /* v4.44 번호 여러 개를 한꺼번에 */
+  #modal .rfx-num.multi b { display: inline-block; margin: 4px 8px; }   /* v4.44 번호 여러 개를 한꺼번에 */
   #modal .rfx-num.wait { font-size: calc(15px * var(--fs)); letter-spacing: 0; }
   #modal .rfx.open .rfx-num { opacity: 1; animation: rfxPop 0.85s ease-out 0.12s both; }
   #modal .rfx-num.roll { color: var(--ax-color-muted); }
@@ -1176,16 +1183,20 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #topbar.ax-header.scrolled { box-shadow: 0 2px 8px rgba(25, 31, 40, 0.04); }   /* v4.10 본문이 헤더 밑으로 스크롤될 때만 옅은 그림자(맨 위에서는 없음) */
   #topbar .axs-hrow { display: flex; align-items: center; gap: 0; min-height: var(--ax-header-height); }
   #topbar .axs-fs { margin-left: var(--ax-space-4); }
-  /* 좁은 폭 · 360 미만은 「2026」을 뺀다 · v4.71 설정 시트의 글자 크기를 뺐으므로 320 대에도 토글을 헤더에 남긴다(워드마크 · 토글 글자를 고정 크기로 줄이고 아이콘 칸 44) · 더 좁으면(270 이하) 워드마크를 뺀다(홈은 아래 탭) */
+  /* v5.10 앱 이름 = 점 이름 AX PASSPORT(화면에만 · 설치 이름 · 제목 · 알림은 「AX Festival」 그대로 · 사용자 261003) · 폭 사다리(점 px 고정 · 큰글씨 배율 없음)
+     390 이상 12px · 375 ~ 389 10.8px · 346 ~ 374 9.6px · 345 이하 = 글자 「AX Passport」 · v4.71 320 대에도 토글을 헤더에 남긴다(토글 글자 고정 · 아이콘 칸 44) · 더 좁으면(270 이하) 이름을 뺀다(홈은 아래 탭) */
   #topbar { container-type: inline-size; container-name: axh; }   /* 헤더 내용이 화면 폭을 밀지 않게 · 폭 판정은 컨테이너 기준(내용 폭 = 화면 - 48) */
-  @container axh (max-width: 326px) { #topbar .axs-wm span { display: none; } }
-  @container axh (max-width: 384px) { .fs-big #topbar .axs-wm span { display: none; } }   /* v4.64 (QA 260930) 크게 · 큰글씨는 워드마크가 커져 390 폭에서 「2026」이 토글 밑으로 들어갔다 */
-  @container axh (max-width: 384px) { .fs-big #topbar .axs-hrow .axs-wm { font-size: 17px; } .fs-big #topbar .axs-hrow .axs-fs button { padding: 0 6px; font-size: 13px; } }   /* v4.71 큰글씨 · 360 폭에서 「AX Festival」이 「AX Festiva」로 잘리던 것 · 워드마크 · 토글 글자만 고정 크기 */
-  @container axh (max-width: 311px) { #topbar .axs-hrow .axs-wm span { display: none; } #topbar .axs-hrow .axs-wm { font-size: 16px; } #topbar .axs-hrow .axs-fs { margin-left: 2px; } #topbar .axs-hrow .axs-fs button { padding: 0 6px; font-size: 13px; } #topbar .axs-hrow .axs-ib { width: 44px; } }   /* 아래 기본 규칙보다 앞에 있어 한 단계 더 좁혀 쓴다 */
+  @container axh (max-width: 341px) { #topbar .axs-hrow .axs-wm .dg { width: 125.81px; height: 10.8px; } }   /* 아래 기본 규칙보다 앞에 있어 .axs-hrow 로 한 단계 더 좁혀 쓴다 */
+  @container axh (max-width: 326px) { #topbar .axs-hrow .axs-wm .dg { width: 111.83px; height: 9.6px; } }
+  @container axh (max-width: 297px) { #topbar .axs-hrow .axs-wm .dg { display: none; } #topbar .axs-hrow .axs-wm .axs-wm-t { display: inline; } }
+  @container axh (max-width: 384px) { .fs-big #topbar .axs-hrow .axs-wm { font-size: 17px; } .fs-big #topbar .axs-hrow .axs-fs button { padding: 0 6px; font-size: 13px; } }   /* v4.71 큰글씨 · 좁은 폭 · 글자 이름 · 토글 글자만 고정 크기 */
+  @container axh (max-width: 311px) { #topbar .axs-hrow .axs-wm { font-size: 16px; } #topbar .axs-hrow .axs-fs { margin-left: 2px; } #topbar .axs-hrow .axs-fs button { padding: 0 6px; font-size: 13px; } #topbar .axs-hrow .axs-ib { width: 44px; } }   /* 아래 기본 규칙보다 앞에 있어 한 단계 더 좁혀 쓴다 */
   @container axh (max-width: 270px) { #topbar .axs-hrow .axs-wm { display: none; } }
   #topbar .axs-sp { flex: 1; }
   #topbar .axs-wm { flex: 0 1 auto; min-width: 0; display: flex; align-items: center; gap: var(--ax-space-4); min-height: var(--ax-touch-size); padding: 0; border: 0; background: transparent; cursor: pointer; font: var(--ax-type-t5-strong); white-space: nowrap; color: var(--ax-color-ink); }
-  #topbar .axs-wm span { color: var(--ax-color-brandText); }
+  #topbar .axs-wm .dg { width: 139.79px; height: 12px; }
+  #topbar .axs-wm .axs-wm-t { display: none; font: inherit; }
+  #topbar .axs-wm .axs-wm-t i { font-style: normal; color: var(--ax-color-brandText); }
   /* v4.06 (사용자 요청 260922) 글자 크기 토글 · 보이는 칩 32(안쪽 4 + 버튼 24) · 글자 T7 · 누르는 자리는 버튼 위아래 12씩 투명하게 넓혀 48 · 종·설정과 세로 가운데 */
   #topbar .axs-fs { flex: none; display: flex; align-items: center; gap: var(--ax-space-4); padding: var(--ax-space-4); border-radius: var(--ax-radius-12); background: var(--ax-color-divider); }
   #topbar .axs-fs button { position: relative; min-height: 24px; padding: 0 var(--ax-space-8); border: 0; border-radius: var(--ax-radius-8); background: transparent; color: var(--ax-color-body); font: var(--ax-type-t7); line-height: 24px; cursor: pointer; }
@@ -1904,9 +1915,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
        = 프로그램 › 상시 운영(Views.guide · seg always) · 구역 상세(zone_d) · (다음 판) AX 퀴즈 판 퀴즈.
        다음 작업은 자기 화면 컨테이너에 axs-pan 을 붙이고 아래 K1~K5 를 그대로 쓴다(새로 만들지 않는다 · 검사 132절이 정의 한 번 · 경계를 본다).
      ── 공통 부품 K 시작 ──
-     K1 axs-sign  구역 간판 = 포인트 칩(현장 부스 사인 · 주황 면 + 흰 도트 영문 · 높이 24 · 글자 13px) · .sm 12자 이상(12px) · .lg 구역 상세(높이 26 · 14px) · 퀴즈 구역 칩도 같은 칩(변형 없음 · 흰 글자 굵게 700 · 크기 그대로, 사용자 확정 261002)
+     K1 axs-sign  구역 간판 = 포인트 칩(현장 부스 사인 · 주황 면 + 흰 점 글자 · 높이 24 · 점 글자 12px) · .lg 구역 상세(높이 26 · 14px) · 퀴즈 구역 칩도 같은 칩(변형 없음 · 흰 점 · 크기 그대로, 사용자 확정 261002)
                   v4.94 (261002 사용자 「너무 크고 튄다 · 포인트 요소로 쓰이는 정도」) 옛 줄 간판 188x54 · 상세 카드 폭 간판을 칩으로 줄였다 · 한 화면에 큰 주황 면 없음
-                  글자 px 고정(사인 글자라 큰글씨에서도 한 줄) · 그림 교체 지점은 스크립트 ZONE_SIGN_IMG · zoneSign 한 곳(<img> 는 같은 높이 · 폭은 그림 비율)
+                  v5.10 글자 = 부스 원본 사인 글자(점 글자 DotGlyph · design.md A-5 5-20) · Neo둥근모 근사와 그림 교체 지점(ZONE_SIGN_IMG)은 폐기 · px 고정(큰글씨에서도 한 줄) · zoneSign 한 곳
      K2 axs-bar   판 제목 막대(왼쪽 3px ink 막대 + 제목 b + 작은 부제 span) · .stm 부제 한 줄(막대 없음 · 회색 t6 · v4.94 「한글 부제는 회색 톤 · 작게」)
      K3 axs-pill  검정 알약(ink 면 + 흰 글자 · 높이 24 · 문항 번호(Q4) 등) · .ok 완료(초록) · 옆 이름은 axs-pt
                   v4.95 (사용자 261002 「스탬프 5 · 스탬프 6 딱지가 이상하다」) 스탬프 표시에는 쓰지 않는다 → K6 axs-smk
@@ -1917,12 +1928,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
                   v4.99 구역 줄 · 구역 상세 · 18F 커피챗 줄은 K6 대신 활동 화면 도장(stampTagHtml · 줄 44px 셰브론 왼쪽 · 상세 52px 오른쪽 위) · K6 은 판 퀴즈가 쓴다
                   쓰는 법: 스크립트 stampMkHtml(스탬프 id, "한 단어") 한 줄 · 받은 판정은 S stamps(스탬프 탭 stpRowHtml · 도장 stampTagHtml 과 같은 원천) · 룰렛은 스탬프가 아니라 쓰지 않는다 ═══════ */
   .axs-pan .axs-sign { display: inline-flex; align-items: center; justify-content: center; flex: none; align-self: flex-start; box-sizing: border-box; width: auto; height: 24px; margin: 0; padding: 0 8px; overflow: hidden;
-    border-radius: 4px; background: var(--ax-color-brand); color: #FFFFFF;
-    font-family: "NeoDunggeunmo", var(--ax-font); font-size: 13px; font-weight: 700; line-height: 1; letter-spacing: 0; white-space: nowrap; }
-  .axs-pan .axs-sign.sm { font-size: 12px; }
-  .axs-pan .axs-sign.lg { height: 26px; padding: 0 10px; font-size: 14px; }
-  .axs-pan .axs-sign.lg.sm { font-size: 13px; }
-  .axs-pan img.axs-sign { padding: 0; object-fit: contain; }
+    border-radius: 4px; background: var(--ax-color-brand); color: #FFFFFF; line-height: 0; white-space: nowrap; }   /* v5.10 글자 = 점 글자 그림 12px(흰 점 · DotGlyph) */
+  .axs-pan .axs-sign.lg { height: 26px; padding: 0 10px; }   /* 구역 상세 · 점 글자 14px */
   .axs-pan .axs-bar { display: flex; flex-direction: column; gap: 2px; margin: var(--ax-space-4) 0 var(--ax-space-4) 2px; padding: 1px 0 1px 10px; border-left: 3px solid var(--ax-color-ink); }
   .axs-pan .axs-bar b { font: var(--ax-type-t4); color: var(--ax-color-ink); }
   .axs-pan .axs-bar span { font: var(--ax-type-caption); color: var(--ax-color-muted); }
@@ -2053,6 +2060,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-rwhd .axs-ph { width: 64px; height: 64px; }
   .axs-mprz { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--ax-color-divider); }   /* 모달 안 경품 목록 */
   .axs-mprz > p { margin: 0 0 10px; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-mprz .axs-pzm .axs-ph { width: 56px; height: 56px; }
   /* 커피 · 간식 사진 2장(18F 커피챗 · DAP 과제상담) · 사진 아래 한 줄 */
   .axs-treat { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ax-space-12); margin: 0; }
   .axs-treat figure { display: flex; flex-direction: column; gap: var(--ax-space-8); min-width: 0; margin: 0; }
@@ -2061,6 +2069,85 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-treat figcaption b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .axs-treat figcaption span { font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
   .fs-big .axs-prz .axs-ph { width: 64px; height: 64px; }
+  /* ═══════ v5.08 경품 포스터(prizes) · 입구 (261003 사용자 「경품 사진이 작다 · 포스터처럼 · 싼티 없이 · 스탬프 누적표에서 바로」 · 「제품 사진을 더 크게 부각」)
+     구성 = 표지(먹색 면 + 도트 격자 + 주황 3중 원 점 · 「Prizes」) → 행운권 → 참여상 → 룰렛 → 1F 타자왕(v5.09 사진 카드 · 1등 대표 + 2 · 3등 2열)
+     표지 먹색 면 = 이 화면 맨 위 한 구역 한정(design.md §1 스테이지 「블랙 = 포스터 블랙판」 · 앱 셸 블랙 금지의 예외 · 판 퀴즈 1F 판 문법과 같은 「구역 한정」) · 손이 닿는 줄은 앱 문법
+     사진 = 대표(행운권 1~3등 · 참여상 · 룰렛 1등) 폭 가득 정사각 · 나머지 2열 정사각 · 홀수로 남는 마지막 칸은 2칸 폭 넓은 카드(2:1)
+     글자 = 무채색 · 브랜드 주황 글자는 20px 이상 600 이상(제목 Prizes · 대표 등수)만 · 그보다 작은 주황 글자는 brandText · 파랑 · 이모지 · 그라데이션 없음
+     움직임 = 들어온 순간 한 번만(.in · 다시 그려도 반복하지 않는다) 표지 · 첫 카드가 차례로 떠오르고 첫 사진이 1.04 → 1 · 동작 줄이기에서는 없음 ═══════ */
+  .axs-pz { display: flex; flex-direction: column; }
+  .axs-pz-cv { position: relative; margin: calc(var(--ax-space-24) * -1) calc(var(--ax-page-inset) * -1) 0; padding: var(--ax-space-32) var(--ax-page-inset) var(--ax-space-24); overflow: hidden;
+    background-color: var(--ax-color-ink); color: var(--ax-color-inverse);
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.13) 1px, transparent 1.4px); background-size: 12px 12px; background-position: 6px 6px; }
+  .axs-pz-cv .lit { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: var(--ax-color-brand); }
+  .axs-pz-cv .ring { position: absolute; top: var(--ax-space-24); right: var(--ax-space-20); width: 64px; height: 64px; color: var(--ax-color-brand); }
+  .axs-pz-cv .ey { position: relative; margin: 0; font: var(--ax-type-t7); font-weight: 600; color: rgba(255, 255, 255, 0.72); }
+  .axs-pz-cv .ttl { position: relative; margin: var(--ax-space-12) 0 var(--ax-space-12); line-height: 0; color: var(--ax-color-brand); }   /* v5.10 점 글자 PRIZES 34px(먹색 면 위 주황 점) */
+  .axs-pz-cv .sub { position: relative; margin: var(--ax-space-4) 0 0; font: var(--ax-type-t4); color: var(--ax-color-inverse); }
+  .axs-pz-cv .ways { position: relative; display: flex; flex-direction: column; margin-top: var(--ax-space-24); border-top: 1px solid rgba(255, 255, 255, 0.14); }
+  .axs-pz-cv .ways button { display: flex; align-items: center; gap: var(--ax-space-12); width: 100%; min-height: var(--ax-touch-size); padding: var(--ax-space-8) 2px; border: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.14); background: none; color: inherit; font-family: inherit; text-align: left; cursor: pointer; }
+  .axs-pz-cv .ways b { flex: 1 1 auto; min-width: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-inverse); }
+  .axs-pz-cv .ways span:not(.axs-pz-mt) { flex: none; font: var(--ax-type-t7); color: rgba(255, 255, 255, 0.66); }
+  .axs-pz-cv .ways .axs-chev { flex: none; width: 16px; height: 16px; color: rgba(255, 255, 255, 0.5); }
+  .axs-pz-cv .me { position: relative; margin: var(--ax-space-16) 0 0; font: var(--ax-type-t7); color: rgba(255, 255, 255, 0.72); }
+  .axs-pz-cv .me b { color: var(--ax-color-brand); font-weight: 700; }
+  /* 스탬프 개수 점 6개 · 켜진 점 = 조건 · 옅은 점 = 4 · 5 · 6개처럼 늘어나는 구간 */
+  .axs-pz-mt { display: inline-flex; flex: none; gap: 4px; }
+  .axs-pz-mt i { width: 8px; height: 8px; border-radius: 50%; background: var(--ax-color-divider); }
+  .axs-pz-mt i.on { background: var(--ax-color-brand); }
+  .axs-pz-mt i.pt { background: transparent; box-shadow: inset 0 0 0 1.5px var(--ax-color-brand); }
+  .axs-pz-cv .axs-pz-mt i { width: 9px; height: 9px; background: rgba(255, 255, 255, 0.18); }
+  .axs-pz-cv .axs-pz-mt i.on { background: var(--ax-color-brand); }
+  .axs-pz-cv .axs-pz-mt i.pt { background: transparent; box-shadow: inset 0 0 0 1.5px var(--ax-color-brand); }
+  .axs-pz-sec { display: flex; flex-direction: column; gap: var(--ax-space-12); margin-top: var(--ax-space-40); }
+  .axs-pz-sh { display: flex; flex-direction: column; gap: var(--ax-space-4); margin-bottom: var(--ax-space-4); scroll-margin-top: calc(var(--stick, 0px) + var(--ax-space-16)); }
+  .axs-pz-sh .en { margin: 0; font: var(--ax-type-caption); font-weight: 700; letter-spacing: 0.12em; color: var(--ax-color-brandText); }
+  .axs-pz-sh h2 { margin: 0; font: var(--ax-type-t2); color: var(--ax-color-ink); }
+  .axs-pz-sh .cd { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ax-space-8); margin: var(--ax-space-8) 0 0; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
+  /* 경품 카드 · 사진이 주인공 · 흰 카드 위 흰 바탕 사진이 이어지게(사진 바탕은 빌드에서 흰색으로 맞췄다) */
+  .axs-pz-c { display: flex; flex-direction: column; min-width: 0; margin: 0; overflow: hidden; border-radius: var(--ax-radius-24); background: var(--ax-color-surface); }
+  .axs-pz-ph { position: relative; display: block; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; background: var(--ax-color-surface); }
+  .axs-pz-ph img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .axs-pz-ph .smp { position: absolute; left: var(--ax-space-12); top: var(--ax-space-12); padding: 2px 8px; border-radius: var(--ax-radius-999); background: rgba(25, 31, 40, 0.06); color: var(--ax-color-muted); font-size: 11px; font-weight: 600; line-height: 16px; }
+  .axs-pz-c .tx { display: flex; align-items: baseline; gap: var(--ax-space-12); padding: var(--ax-space-16) var(--ax-space-20) var(--ax-space-20); }
+  .axs-pz-c .rk { flex: none; font: var(--ax-type-t3); color: var(--ax-color-brand); }
+  .axs-pz-c b { flex: 1 1 auto; min-width: 0; font: var(--ax-type-t4); font-weight: 700; color: var(--ax-color-ink); word-break: keep-all; }
+  .axs-pz-c .q { flex: none; font: var(--ax-type-t6-strong); color: var(--ax-color-muted); }
+  .axs-pz-gr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ax-space-12); }
+  .axs-pz-c.gr { border-radius: var(--ax-radius-20); }
+  .axs-pz-c.gr .smp { left: var(--ax-space-8); top: var(--ax-space-8); }
+  .axs-pz-c.gr .tx { flex-direction: column; align-items: flex-start; gap: 2px; padding: var(--ax-space-12) var(--ax-space-16) var(--ax-space-16); }
+  .axs-pz-c.gr .rk { font: var(--ax-type-t7); font-weight: 700; color: var(--ax-color-brandText); }
+  .axs-pz-c.gr b { font: var(--ax-type-t6-strong); }
+  .axs-pz-c.gr .q { font: var(--ax-type-t7); }
+  .axs-pz-c.wide { grid-column: 1 / -1; }
+  .axs-pz-c.wide .axs-pz-ph { aspect-ratio: 2 / 1; }
+  .axs-pz-nt { margin: 0 var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
+  .fs-big .axs-pz-c:not(.gr) .tx { flex-wrap: wrap; }
+  .fs-big .axs-pz-gr { grid-template-columns: minmax(0, 1fr); }
+  .fs-big .axs-pz-c.wide .axs-pz-ph { aspect-ratio: 1 / 1; }
+  @keyframes axsPzIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes axsPzZoom { from { transform: scale(1.04); } to { transform: none; } }
+  .axs-pz.in .axs-pz-cv > *, .axs-pz.in .axs-pz-sec:first-of-type > * { animation: axsPzIn 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .axs-pz.in .axs-pz-cv > .ttl { animation-delay: 0.06s; } .axs-pz.in .axs-pz-cv > .sub { animation-delay: 0.12s; } .axs-pz.in .axs-pz-cv > .ways { animation-delay: 0.18s; } .axs-pz.in .axs-pz-cv > .me { animation-delay: 0.24s; }
+  .axs-pz.in .axs-pz-sec:first-of-type > :nth-child(2) { animation-delay: 0.3s; }
+  .axs-pz.in .axs-pz-sec:first-of-type > :nth-child(2) img { animation: axsPzZoom 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both; }
+  @media (prefers-reduced-motion: reduce) { .axs-pz.in *, .axs-pz.in .axs-pz-cv > *, .axs-pz.in .axs-pz-sec:first-of-type > * { animation: none !important; } }
+  /* 입구 · 스탬프 보상 레일(홈 · 스탬프 탭) 아래 · 내 보상 · 사진 3장 + 「경품 보기」 · brandSoft 면(Weak 버튼 문법) */
+  .axs-pzgo { display: flex; align-items: center; gap: var(--ax-space-12); width: 100%; min-height: 56px; margin-top: var(--ax-space-16); padding: var(--ax-space-8) var(--ax-space-16) var(--ax-space-8) var(--ax-space-8); border: 0; border-radius: var(--ax-radius-16); background: var(--ax-color-brandSoft); color: var(--ax-color-ink); font-family: inherit; text-align: left; cursor: pointer; }
+  .axs-pzgo .th { display: inline-flex; flex: none; }
+  .axs-pzgo .th img { display: block; width: 40px; height: 40px; margin-left: -10px; border-radius: 50%; background: var(--ax-color-surface); box-shadow: 0 0 0 2px var(--ax-color-brandSoft); object-fit: cover; }
+  .axs-pzgo .th img:first-child { margin-left: 0; }
+  .axs-pzgo .tx { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; }
+  .axs-pzgo .tx b { font: var(--ax-type-t6-strong); color: var(--ax-color-brandText); }
+  .axs-pzgo .tx span { font: var(--ax-type-caption); color: var(--ax-color-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .axs-pzgo .axs-chev { flex: none; width: 20px; height: 20px; color: var(--ax-color-brandText); }
+  /* 모달 안 경품 한 줄 · 대표 사진 + 요약 + 「경품 보기」 (옛 목록 대신) */
+  .axs-pzm { display: flex; align-items: center; gap: var(--ax-space-12); width: 100%; padding: 0; border: 0; background: none; color: inherit; font-family: inherit; text-align: left; cursor: pointer; }
+  .axs-pzm .tx { display: flex; flex: 1 1 auto; flex-direction: column; gap: 2px; min-width: 0; }
+  .axs-pzm .tx b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }
+  .axs-pzm .tx span { font: var(--ax-type-t7); font-weight: 600; color: var(--ax-color-brandText); }
+  .axs-pzm .axs-chev { flex: none; width: 20px; height: 20px; color: var(--ax-color-brandText); }
 </style>
 <style id="rtCss">
   /* ═══════ v4.23 게임 화면 16비트 레트로 · 「바람의 나라」 감성 (260923 사용자 확정 · design.md A-5 5-16 · 정본 「레트로 시안/시안.html」 · 「레트로 레퍼런스 조사.md」 8절) ═══════
@@ -2378,6 +2465,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   <section id="splash" class="axs-lf" data-phase="ready">
     <canvas id="kvCv" class="lf-bg" aria-hidden="true"></canvas>
     <div class="lf-head">
+      <p class="lf-name"></p>
       <h1 class="lf-title"><span>AX Festival</span> <span>2026</span></h1>
     </div>
     <form id="entryForm" class="lf-form" novalidate>
@@ -2396,6 +2484,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   <section id="quick" class="axs-lf" hidden>
     <canvas id="qCv" class="lf-bg" aria-hidden="true"></canvas>
     <div class="lf-head">
+      <p class="lf-name"></p>
       <h1 class="lf-title"><span>AX Festival</span> <span>2026</span></h1>
     </div>
     <div id="quickForm" class="lf-form">
@@ -2528,6 +2617,52 @@ var FESTIVAL = {
   mockOnline: 1842, mockIdeas: 214, mockGamePlayers: 1260,
   mockStamp3: 61, mockWave: 1128, mockWe: 0
 };
+/* v5.10 앱 이름(사용자 261003) · 화면에만 쓴다(헤더 · 로그인 점 이름 · 읽는 이름) · 설치 이름(manifest · apple 제목) · <title> · 알림 문구는 「AX Festival」 그대로 */
+var APP_NAME = "AX Passport";
+/* ════════════════ v5.10 점 글자 DotGlyph (부스 사인체 · 261003 사용자 결정 · design.md A-5 5-20 · 정본 「디자인 시안/도트 글자/계획.md」 · 글자표 = 같은 폴더 글자표.json) ════════════════
+   1층 부스 발주 .ai 의 구역 사인 글자(5 x 5 점 · 이웃 점 25% 겹침 · 효과 없음)를 SVG 도형으로 그린다. 폰트 · 그림 파일이 아니라 오프라인에서도 그대로다.
+   그리는 곳은 DotGlyph.svg 한 곳 · 부르는 곳은 허용 목록(검사 157절): 헤더 이름 · 로그인 이름 · 구역 간판 칩 · 경품 표지 PRIZES · 스탬프 팝 n / 6 · 행운권 번호.
+   영문 대문자 · 숫자 · 기호 / - . : + ! · ? 만(소문자는 대문자로 그린다 · 없는 글자는 건너뛴다 · 한글 없음). 읽는 이름(aria-label)을 늘 준다(hidden 이면 바깥 요소가 준다).
+   o = { h: 글자 높이 px · color: 점 색(기본 currentColor) · label: 읽는 이름(기본 text) · hidden: 읽지 않음 · accent: { n: 앞 글자 수, color } · cls
+         anim: 점이 차례로 켜짐(스탬프 팝 숫자 · 행운권 번호에만) · only: 켜지는 글자 번호(나머지는 켜진 채) · step: 점 간격 ms · delay: 시작 ms } */
+var DotGlyph = (function () {
+  var T = {"A":[".XXX.","X...X","XXXXX","X...X","X...X"],"B":["XXXX.","X...X","XXXXX","X...X","XXXX."],"C":[".XXXX","X....","X....","X....",".XXXX"],"D":["XXXX.","X...X","X...X","X...X","XXXX."],"E":["XXXXX","X....","XXXXX","X....","XXXXX"],"F":["XXXXX","X....","XXXX.","X....","X...."],"G":[".XXXX","X....","X.XXX","X...X",".XXXX"],"H":["X...X","X...X","XXXXX","X...X","X...X"],"I":["X","X","X","X","X"],"J":["....X","....X","....X","X...X",".XXX."],"K":["X...X","X..X.","XXX..","X..X.","X...X"],"L":["X....","X....","X....","X....","XXXXX"],"M":["X...X","XX.XX","X.X.X","X...X","X...X"],"N":["X...X","XX..X","X.X.X","X..XX","X...X"],"O":[".XXX.","X...X","X...X","X...X",".XXX."],"P":["XXXX.","X...X","XXXX.","X....","X...."],"Q":[".XXX.","X...X","X...X","X..XX",".XXXX"],"R":["XXXX.","X...X","XXXX.","X..X.","X...X"],"S":[".XXXX","X....",".XXX.","....X","XXXX."],"T":["XXXXX","..X..","..X..","..X..","..X.."],"U":["X...X","X...X","X...X","X...X",".XXX."],"V":["X...X","X...X","X...X",".X.X.","..X.."],"W":["X...X","X...X","X.X.X","XX.XX","X...X"],"X":["X...X",".X.X.","..X..",".X.X.","X...X"],"Y":["X...X",".X.X.","..X..","..X..","..X.."],"Z":["XXXXX","...X.","..X..",".X...","XXXXX"],"0":[".XXX.","X..XX","X.X.X","XX..X",".XXX."],"1":["..X..",".XX..","..X..","..X..",".XXX."],"2":[".XXX.","X...X","...X.","..X..","XXXXX"],"3":["XXXX.","....X",".XXX.","....X","XXXX."],"4":["X...X","X...X","XXXXX","....X","....X"],"5":["XXXXX","X....","XXXX.","....X","XXXX."],"6":[".XXX.","X....","XXXX.","X...X",".XXX."],"7":["XXXXX","....X","...X.","..X..","..X.."],"8":[".XXX.","X...X",".XXX.","X...X",".XXX."],"9":[".XXX.","X...X",".XXXX","....X",".XXX."],"/":["....X","...X.","..X..",".X...","X...."],"-":["...","...","XXX","...","..."],".":[".",".",".",".","X"],":":[".","X",".","X","."],"+":["...",".X.","XXX",".X.","..."],"!":["X","X","X",".","X"],"·":[".",".","X",".","."],"?":[".XXX.","X...X","...X.",".....","..X.."]};
+  var PX = 1, PY = 0.9715, D = 1.3081, LG = 0.571, WG = 2.8563, ORIG = "ABEGILNOPSTUVXY";
+  function layout(text) {
+    var s = String(text).toUpperCase(), x = 0, gap = 0, dots = [], first = true, w = 0, i, c, rows, cols, r, k;
+    for (i = 0; i < s.length; i++) {
+      c = s.charAt(i);
+      if (c === " ") { gap = WG; continue; }
+      rows = T[c]; if (!rows) continue;
+      if (!first) x += gap; first = false;
+      cols = rows[0].length;
+      for (k = 0; k < cols; k++) for (r = 0; r < 5; r++) if (rows[r].charAt(k) === "X") dots.push([x + k * PX, r * PY, i]);
+      w = x + (cols - 1) * PX + D; x = w; gap = LG;
+    }
+    return { dots: dots, w: w, h: 4 * PY + D };
+  }
+  function f(n) { return Math.round(n * 1000) / 1000; }
+  function attr(s) { return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;"); }
+  function pathOf(ds, color) {
+    if (!ds.length) return "";
+    var r = f(D / 2);
+    return "<path" + (color ? ' style="fill:' + color + '"' : "") + ' d="' + ds.map(function (d) { return "M" + f(d[0]) + " " + f(d[1] + D / 2) + "a" + r + " " + r + " 0 1 0 " + f(D) + " 0a" + r + " " + r + " 0 1 0 -" + f(D) + " 0z"; }).join("") + '"/>';
+  }
+  function svg(text, o) {
+    o = o || {};
+    var L = layout(text), h = o.h || 16, ac = o.accent || null, step = o.step || 26, at = o.delay || 0;
+    var tint = function (d) { return ac && d[2] < ac.n ? ac.color : ""; };
+    var lit = L.dots.filter(function (d) { return o.anim && (!o.only || o.only.indexOf(d[2]) >= 0); });
+    var still = L.dots.filter(function (d) { return lit.indexOf(d) < 0; });
+    var body = pathOf(still.filter(tint), ac && ac.color) + pathOf(still.filter(function (d) { return !tint(d); }), "") +
+      lit.map(function (d, j) { return '<circle class="dgd" cx="' + f(d[0] + D / 2) + '" cy="' + f(d[1] + D / 2) + '" r="' + f(D / 2) + '" style="' + (tint(d) ? "fill:" + tint(d) + ";" : "") + "animation-delay:" + Math.round(at + j * step) + 'ms"/>'; }).join("");
+    return '<svg class="dg' + (o.cls ? " " + o.cls : "") + '" viewBox="0 0 ' + f(L.w) + " " + f(L.h) + '" width="' + f(L.w * h / L.h) + '" height="' + h + '"' +
+      (o.color ? ' style="fill:' + o.color + '"' : ' fill="currentColor"') +
+      (o.hidden ? ' aria-hidden="true" focusable="false"' : ' role="img" aria-label="' + attr(o.label == null ? text : o.label) + '"') + ">" + body + "</svg>";
+  }
+  function width(text, h) { var L = layout(text); return L.w * (h || 16) / L.h; }
+  return { svg: svg, width: width, layout: layout, table: T, orig: ORIG, D: D };
+})();
 /* 적립 경로 6종 (260909 확정) · 완주 개념 폐기, 모은 개수가 그대로 보상 기준.
    short = 좁은 자리용 짧은 이름 · where = 층·소요시간 · inapp = 앱에서 바로 되는 칸(구분 뱃지)
    구 p6(포토부스)·p8(미니게임 별도 칸)은 폐지 · 미니게임은 04 미니게임에 통합.
@@ -3346,7 +3481,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.07";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.11";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -3378,7 +3513,7 @@ function a2hsInstall() {
     a2hsSheet(false);
     if (r && r.outcome === "accepted") {
       a2hsMarkDismissed();
-      notice({ key: "a2hs", title: "바로가기 설치 완료", body: "홈 화면의 AX Passport 아이콘으로 열기" });
+      notice({ key: "a2hs", title: "바로가기 설치 완료", body: "홈 화면의 AX Festival 아이콘으로 열기" });
       App.render();
     }
   });
@@ -3438,7 +3573,7 @@ function a2hsIosSteps(ua, touch) {
   var more = '<svg class="a-ic a-ic-more" role="img" aria-label="···" viewBox="0 0 24 24" fill="currentColor"><circle cx="5.5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="18.5" cy="12" r="1.9"/></svg>';
   var q = function (t) { return "<b>&ldquo;" + t + "&rdquo;</b>"; };
   var lead = (ipad ? "아이패드는" : "아이폰은") + " 아래 순서로 직접 추가해요";
-  var again = "홈 화면의 AX Passport 아이콘으로 열면 사번 · 이름 · 비밀번호 4자리로 다시 입장해요";
+  var again = "홈 화면의 AX Festival 아이콘으로 열면 사번 · 이름 · 비밀번호 4자리로 다시 입장해요";
   if (/CriOS|EdgiOS/.test(ua)) return { kind: "chrome", lead: lead, copy: true,
     steps: ["주소창 오른쪽 " + share + " 공유 버튼을 누르세요", q("홈 화면에 추가") + "를 누르세요", q("추가") + "를 누르세요"],
     notes: [again, "안 되면 Safari에서 열어 주세요"] };
@@ -3555,7 +3690,7 @@ var STORE_DEVICE = ["vid", "a2hs", "fs", "t",
   "ax_line_i", "art_demo_n", "ev_phase", "toff",
   "push_ask", "push_first", "push_ask_ios"];   /* v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) · v4.78 아이폰 탭 · 앱 속 브라우저 안내는 하루 한 번 */
 var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_role", "adm_tok", "adm_emp", "dept",
-  "stamps", "pp_seen", "pp_glow3", "stamp_pend", "lg_try", "lgx_seen", "scan_q", "stair", "checkin", "queue", "photoq", "resv", "sess_my", "att_mine", "att_tm",
+  "stamps", "pp_seen", "pp_base", "pp_glow3", "stamp_pend", "lg_try", "lgx_seen", "scan_q", "stair", "checkin", "queue", "photoq", "resv", "sess_my", "att_mine", "att_tm",
   "cchat", "cchat_pref", "cchat_att", "ideas", "idea_draft", "survey_draft", "survey_done", "survey_mine", "survey_force", "noti_seen",
   "raffle_seen", "raffle_opened", "raffle_nums", "roulette_used", "roulette_open", "draw_winner", "fin",
   "wave_extra", "wq_attempts", "test_mine", "type_nick", "type_nick_edit", "type_best", "mem_seen", "ox_seen",
@@ -4730,7 +4865,7 @@ var App = {
   PARENT: {
     notices: "home",
     /* 나의 참여 · 내 일정 / 스탬프 / 내 보상 / 포토부스 대기 (M01) */
-    passport: "my", guide_time: "my", rewards: "my", photoq: "my",
+    passport: "my", guide_time: "my", rewards: "my", photoq: "my", prizes: "my",   /* v5.08 경품 포스터 · 뒤로 = 들어온 곳(홈 · 스탬프 탭 · 내 보상 · 모달) */
     /* 체험 · 현장(부스·QR 퀴즈) / 앱(미니게임·아이디어·설문) (E01) */
     booth: "exp", wq_list: "exp", wq_play: "wq_list",
     /* v4.06 3단계 · 현장 안내 E02 · 스캔 Q02 · 결과 Q03 · 계단 화면 */
@@ -4745,7 +4880,7 @@ var App = {
   },
   TITLES: {
     home: "AX Festival", guide: "프로그램", exp: "스탬프", my: "나의 참여",
-    passport: "스탬프", rewards: "내 보상", photoq: "포토부스 대기", games: "미니 게임", quiz: "AX 퀴즈",
+    passport: "스탬프", rewards: "내 보상", prizes: "경품", photoq: "포토부스 대기", games: "미니 게임", quiz: "AX 퀴즈",
     notices: "공지", dap: "과제상담 신청",
     booth: "AX PLAY",
     ideas: "아이디어 한 줄", ideas_mine: "내가 낸 아이디어", survey: "오늘 한 판 설문",
@@ -4892,14 +5027,14 @@ var App = {
     if (!par) {
       var hu = S.get("user", {}) || {}, liveN = S.get("notices", []).length, big = fsGet() > 1;
       tb.innerHTML = '<div class="axs-hrow">' +
-        '<button type="button" class="axs-wm" onclick="App.tab(\'home\')" aria-label="AX Festival 2026 홈">AX Festival<span>2026</span></button>' +
+        '<button type="button" class="axs-wm" onclick="App.tab(\'home\')" aria-label="' + APP_NAME + ' 홈">' + DotGlyph.svg(APP_NAME, { h: 12, hidden: true, accent: { n: 2, color: "var(--ax-color-brand)" } }) + '<b class="axs-wm-t"><i>AX</i> Passport</b></button>' +   /* v5.10 점 이름(AX 주황 + PASSPORT 먹색) · 345 폭 이하는 글자 */
         '<span class="axs-sp"></span>' +
         '<span class="axs-fs" role="group" aria-label="글자 크기"><button type="button" aria-pressed="' + !big + '" onclick="fsPick(1)">일반</button>' +
         '<button type="button" aria-pressed="' + big + '" onclick="fsPick(1.25)">큰글씨</button></span>' +
         '<button type="button" class="axs-ib" onclick="App.go(\'notices\')" aria-label="공지' + (liveN ? " " + liveN + "건" : "") + '">' + BELL_SVG + (liveN ? '<span class="bdg" aria-hidden="true">' + liveN + "</span>" : "") + "</button>" +
         gear + "</div>" +
         (v === "home"
-          ? '<div class="axs-hgr"><span class="ax-meta">' + FESTIVAL.date.replace(/^2026\.\s*/, "") + " · " + FESTIVAL.place + " · " + FESTIVAL.timeRange + "</span>" +
+          ? '<div class="axs-hgr"><span class="ax-meta">' + FESTIVAL.name + " · " + FESTIVAL.date.replace(/^2026\.\s*/, "") + " · " + FESTIVAL.place + "</span>" +   /* v5.10 헤더가 앱 이름이 되어 행사명은 홈 첫 줄에(시간은 프로그램 탭) */
             '<p class="axs-hbig">' + (hu.name ? esc(hu.name) + "님, " : "") + "오늘 <b>하루의 코스</b></p></div>"
           : '<p class="axs-hroot">' + esc(this.title(v)) + "</p>");
     } else {
@@ -4929,7 +5064,7 @@ var App = {
       btn(T[2]) + btn(T[3]);
     el("view").dataset.v = v;
     el("view").classList.toggle("rt", rtView(v));   /* v4.23 레트로 경계 · 게임 화면에만(design.md A-5 5-16) */
-    if (rtView(v) || v === "zone_d" || (v === "guide" && PROG.seg === "always")) rtFontWarm();   /* v4.93 구역 간판(도트 글자)도 미리 읽기 */
+    if (rtView(v)) rtFontWarm();   /* v5.10 구역 간판은 점 글자 그림(DotGlyph)이라 도트 글꼴을 미리 읽지 않는다 */
     if (v === "ideas" && IDEA.step) el("view").dataset.st = IDEA.step; else delete el("view").dataset.st;   /* v4.07 질문·완료는 하단 고정 버튼 자리를 비운다 */
     if (v === "scan_q" && QRS.stream) qrCamStop();   /* v4.06 video 요소를 다시 그리므로 카메라를 새로 붙인다 */
     var ae = document.activeElement, aeId = ae && ae.id && el("view").contains(ae) && /^(INPUT|TEXTAREA)$/.test(ae.tagName) ? ae.id : "", aeSel = aeId ? [ae.selectionStart, ae.selectionEnd] : null;
@@ -4940,7 +5075,7 @@ var App = {
     if (aeId) { var aeN = el(aeId); if (aeN) { try { aeN.focus({ preventScroll: true }); if (aeSel) aeN.setSelectionRange(aeSel[0], aeSel[1]); } catch (e) {} } }   /* 다시 그려도 입력 중인 칸과 커서를 되돌린다 */
     if (v === "scan_q") setTimeout(scanQStart, 80);
     if (v === "stair" && STR.mode === "start") stairTickOn();
-    if (typeof SPOP !== "undefined" && SPOP.cur && !SPOP.cur.done) { var spT = spTarget(SPOP.cur.sd.id); if (spT.el) spT.el.classList.add("sp-wait"); }   /* v3.49 재렌더돼도 안착 전 자리는 비어 보이게 */
+    if (typeof SPOP !== "undefined" && SPOP.cur && !SPOP.cur.done) { var spT = spTgt(SPOP.cur); if (spT.el) spT.el.classList.add("sp-wait"); }   /* v3.49 재렌더돼도 안착 전 자리는 비어 보이게 */
     kvMountAll();
     updateLed();
     if (el("mtCv")) setTimeout(mtEnsure, 30); else if (MT.raf) mtStop();
@@ -5339,13 +5474,11 @@ var FLOOR1 = [
 function zoneKey(id) { return id === "action" ? "lab" : id; }   /* v5.04 옛 구역 id(퀴즈 z · 문제 은행 dom) → 지금 구역 */
 function zoneById(id) { id = zoneKey(id); return FLOOR1.filter(function (z) { return z.id === id; })[0] || null; }
 function zoneOpen(id) { PROG.zone = id; App.go("zone_d"); }
-/* ── 구역 간판 그림 교체 지점(여기 한 곳) · 홍보부 사인 원본 SVG 가 오면 경로를 넣는다(예: "AX LOUNGE": "assets/sign/ax_lounge.svg")
-   같은 높이(줄 24 · 상세 26 · v4.94 포인트 칩)에 <img> 로 들어간다 · 비어 있으면 Neo둥근모 근사(design.md A-5 5-19) · 12자 이상은 sm(글자 줄임) ── */
-var ZONE_SIGN_IMG = {};
+/* ── 구역 간판 칩 · v5.10 부스 원본 사인 글자(점 글자 DotGlyph · design.md A-5 5-20) · 줄 24 · 점 12px · 상세(lg) 26 · 점 14px
+   옛 Neo둥근모 근사와 그림 교체 지점 ZONE_SIGN_IMG 는 폐기(이 .ai 가 그 원본이다) · 읽는 이름은 칩(role img)이 준다 · 「AX in Action」은 대문자로 그린다 ── */
 function zoneSign(nm, cls) {
-  var c = "axs-sign" + (nm.length >= 12 ? " sm" : "") + (cls ? " " + cls : "");
-  if (ZONE_SIGN_IMG[nm]) return '<img class="' + c + '" src="' + esc(ZONE_SIGN_IMG[nm]) + '" alt="' + esc(nm) + '">';
-  return '<span class="' + c + '" role="img" aria-label="' + esc(nm) + '">' + esc(nm) + "</span>";
+  var c = "axs-sign" + (cls ? " " + cls : ""), big = /(^| )lg( |$)/.test(cls || "");
+  return '<span class="' + c + '" role="img" aria-label="' + esc(nm) + '">' + DotGlyph.svg(nm, { h: big ? 14 : 12, hidden: true }) + "</span>";
 }
 /* v4.95 (사용자 261002 「프로그램에도 회색 스탬프가 있다가 활동을 하면 색이 바뀌는 식」) 공통 부품 K6 · 작은 도장 + 한 단어 · 번호 없음
    받은 판정 = S stamps(스탬프 탭 줄 stpRowHtml · 활동 화면 도장 stampTagHtml 과 같은 원천) · 판 퀴즈 등 다른 판 화면도 이 함수 하나를 쓴다 */
@@ -6412,12 +6545,14 @@ function stampBuzz(pattern) {
    팝 약 0.7초(딤 · 화면 폭 60% 도장 A · 낙하·잉크 링 2겹·튐·진동 · 화면 흔들림) → 0.35초 멈춤 → 약 0.5초 위로 살짝 휜 곡선으로 작아지며 제자리 → 한 번 튕김.
    제자리: 스탬프 탭 = 그 카드 도장 칸(화면 밖이면 먼저 스크롤) · 홈 = 레일 자리 · 그 외 = 하단 탭바 스탬프 아이콘(점 배지) · 탭바가 없으면 오른쪽 위.
    어느 순간에 탭해도 바로 안착 · 연속 적립은 순차 재생 · 연출한 스탬프는 pp_seen 에 즉시 기록 · 모션 줄이기 = 가운데 정지 0.8초 후 사라짐, 흔들림·비행 없음. */
-var SPOP = { q: [], cur: null, ids: {} };
-function stampOverlay(id) {
+var SPOP = { q: [], cur: null, ids: {}, opt: {} };
+/* v5.07 op = { to(): 제자리 { el, kind }, shake: 흔들 화면, done(spCur): 안착 직후 } · 최초 로그인 장면(lgxPop)이 쓴다 · 장면이 떠 있어도 이 팝은 장면 위에서 바로 돈다 */
+function stampOverlay(id, op) {
   var sd = STAMPS.filter(function (s) { return s.id === id; })[0];
   if (!sd) return false;
-  var seen = S.get("pp_seen", []);
+  var seen = ppSeenGet();
   if (seen.indexOf(id) < 0) { seen.push(id); S.set("pp_seen", seen); }   /* 재생 중복 방지 · 스탬프 탭이 다시 그려져도 또 안 튄다 */
+  if (op) { if (!SPOP.opt) SPOP.opt = {}; SPOP.opt[id] = op; }
   if (SPOP.ids[id] || (SPOP.cur && SPOP.cur.sd.id === id)) return true;
   SPOP.ids[id] = 1; SPOP.q.push(sd);
   if (!SPOP.cur) setTimeout(spNext, 0);   /* 적립으로 생긴 재렌더가 끝난 뒤 목표 좌표를 잡는다 */
@@ -6443,12 +6578,24 @@ function spTarget(id) {
   }
   return { el: t, kind: kind };
 }
+/* v5.07 팝이 받은 제자리(최초 로그인 장면 = 시트의 도장 칸)가 있으면 그것 · 없으면 화면별 제자리 */
+function spTgt(cur) { return cur && cur.op && cur.op.to ? cur.op.to() : spTarget(cur.sd.id); }
+/* v5.10 팝의 개수 「n / 6」 = 점 글자 28px(흰 점 · design.md A-5 5-20) · 바뀐 숫자(앞 글자)만 글자가 뜬 뒤(0.55초) 점이 차례로 켜진다 · 6개를 넘긴 적립은 숫자가 그대로라 켜지지 않는다 · 동작 줄이기 = 켜진 모양 */
+function spNum(n, fresh) {
+  var t = n + " / " + STAMP_DENOM;
+  return '<i class="sp-n">' + DotGlyph.svg(t, { h: 28, label: t, anim: fresh, only: [0], delay: 550, step: 30 }) + "</i>";
+}
 function spNext() {
   if (SPOP.cur && !SPOP.cur.done) return;   /* 이미 재생 중 · 끝나면 spFinish 가 다음을 부른다 */
-  if (el("lgx")) { setTimeout(spNext, 400); return; }   /* v4.87 최초 로그인 장면이 끝난 뒤에 */
-  var sd = SPOP.q.shift();
+  var qi = 0, opt = SPOP.opt || {};
+  if (el("lgx")) {   /* v4.87 최초 로그인 장면이 끝난 뒤에 · v5.07 장면이 부른 도장(op)만 장면 위에서 바로 */
+    while (qi < SPOP.q.length && !opt[SPOP.q[qi].id]) qi++;
+    if (qi >= SPOP.q.length) { if (SPOP.q.length) setTimeout(spNext, 400); return; }
+  }
+  var sd = SPOP.q.splice(qi, 1)[0];
   if (!sd) { SPOP.cur = null; return; }
   delete SPOP.ids[sd.id];
+  var op = opt[sd.id] || null; delete opt[sd.id];
   var rm = rgReduced(), n = stampCount();
   /* v4.44 (사용자 260925 · 레드팀 토론) 모든 개수에 다음 보상 한 줄 · 1 · 2개째 = 룰렛까지 남은 수(새 팝업 없음) · 4개째부터 = 무엇을 받는지 그대로
      v4.58 6개를 넘긴 적립(7·8번째)은 개수 · 보상이 그대로라 「6개 모두 모았어요」 */
@@ -6460,12 +6607,12 @@ function spNext() {
   d.id = "spop"; if (rm) d.className = "rm";
   d.innerHTML = '<div class="sp-dim"></div>' +
     '<div class="sp-stage" style="left:' + (cx - S0 / 2) + "px;top:" + (cy - S0 / 2) + "px;width:" + S0 + "px;height:" + S0 + 'px">' + stampMarkHtml(!rm, S0) + "</div>" +
-    '<div class="sp-text" style="left:' + Math.round(cx - fw / 2) + "px;width:" + Math.round(fw) + "px;top:" + (cy + S0 / 2 + 16) + 'px"><b>' + esc(sd.title) + " · 스탬프 " + Math.min(STAMP_DENOM, n) + " / " + STAMP_DENOM + "</b>" +
+    '<div class="sp-text" style="left:' + Math.round(cx - fw / 2) + "px;width:" + Math.round(fw) + "px;top:" + (cy + S0 / 2 + 16) + 'px"><b>' + esc(sd.title) + " · 스탬프" + spNum(Math.min(STAMP_DENOM, n), !rm && stampGot() <= STAMP_DENOM) + "</b>" +
     (hint ? "<span>" + hint + "</span>" : "") + "</div>";
   document.body.appendChild(d);
-  var cur = SPOP.cur = { sd: sd, d: d, timers: [], anims: [], done: false, rm: rm };
+  var cur = SPOP.cur = { sd: sd, d: d, timers: [], anims: [], done: false, rm: rm, op: op, hint: hint };
   var at = function (fn, ms) { cur.timers.push(setTimeout(fn, ms)); };
-  var t0 = spTarget(sd.id); if (t0.el) t0.el.classList.add("sp-wait");
+  var t0 = spTgt(cur); if (t0.el) t0.el.classList.add("sp-wait");
   d.addEventListener("click", function () { spFinish(cur); });
   if (rm) {   /* 모션 줄이기 · 흔들림·비행 없음 · 가운데 정지 0.8초 → 사라짐 · 제자리 색만 바뀐다 */
     stampBuzz(25);
@@ -6477,7 +6624,7 @@ function spNext() {
   at(function () {
     stampBuzz([25, 40, 70]);
     SFX.site = false; if (S.get("game_sound", null) === true) sfx("kung");   /* v3.51 고른 적 없는 사람은 무음 */
-    var v = el("view"); if (v) { v.classList.remove("sp-shake"); void v.offsetWidth; v.classList.add("sp-shake"); }
+    var v = (op && op.shake) || el("view"); if (v) { v.classList.remove("sp-shake"); void v.offsetWidth; v.classList.add("sp-shake"); }
   }, 420);
   at(function () { spScroll(cur); }, 700);
   at(function () { spFly(cur); }, hint ? 1500 : 1050);   /* v4.44 한 줄이 있으면 0.45초 더 머문다(0.4초만 보여 읽지 못했다) */
@@ -6485,8 +6632,8 @@ function spNext() {
 /* 목표가 화면 밖이면 먼저 부드럽게 스크롤 */
 function spScroll(cur) {
   if (cur.done) return;
-  var t = spTarget(cur.sd.id);
-  if (!t.el || t.kind === "tab") return;
+  var t = spTgt(cur);
+  if (!t.el || t.kind === "tab" || t.kind === "lgx") return;
   t.el.classList.add("sp-wait");
   var r = t.el.getBoundingClientRect();
   if (r.top < 70 || r.bottom > innerHeight - 100) t.el.scrollIntoView({ block: "center", behavior: "smooth" });
@@ -6494,7 +6641,7 @@ function spScroll(cur) {
 /* 비행 · 비행 직전에 한 번만 좌표를 잡는다(스크롤이 아직 움직이면 멈출 때까지 최대 0.4초 기다림) · transform 만 */
 function spFly(cur, tries) {
   if (cur.done) return;
-  var t = spTarget(cur.sd.id);
+  var t = spTgt(cur);
   if (t.el) {
     t.el.classList.add("sp-wait");
     var r0 = t.el.getBoundingClientRect();
@@ -6536,7 +6683,8 @@ function spFinish(cur) {
   cur.timers.forEach(clearTimeout);
   cur.anims.forEach(function (a) { try { a.cancel(); } catch (e) {} });
   if (cur.d.parentNode) cur.d.parentNode.removeChild(cur.d);
-  var t = spTarget(cur.sd.id);
+  if (cur.op && cur.op.done) { try { cur.op.done(cur); } catch (e) {} }   /* v5.07 최초 로그인 장면 · 도장 칸에 도장을 그린 뒤 튕긴다 */
+  var t = spTgt(cur);
   Array.prototype.forEach.call(document.querySelectorAll(".sp-wait"), function (x) { x.classList.remove("sp-wait"); });
   if (t.el && !cur.rm) {
     var cls = t.kind === "rail" && t.el.id !== "ppCnt" ? "sp-bounce" : "sp-bounce";
@@ -6736,7 +6884,7 @@ function railHtml(n, glow, dispN, home) {
     '<div class="rb"><i style="width:' + railPos(n).toFixed(1) + '%"></i>' + mk + "</div>" +
     '<div class="lbls">' + lb + "</div>" +
     (out0 ? '<p class="cap">룰렛 소진</p>' : dispN >= STAMP_DENOM ? '<p class="cap">' + STAMP_DENOM + "개 모두 모았어요</p>" : "") +
-    raffleNumsHtml(n) +
+    raffleNumsHtml(n) + prizeGoHtml() +   /* v5.08 경품 보기 입구(홈 · 스탬프 탭 같은 레일) */
     "</div>";
 }
 /* v3.31c 내 응모 번호 · 응모권 1장 이상일 때만 · 서버 번호가 아직 없으면 「발급 중」 회색 (v3.12 모달과 같은 규칙) */
@@ -6818,7 +6966,7 @@ function rfxOpen() {
   nm.classList.add("roll"); el("rfxSay").textContent = "응모 번호를 꺼내고 있어요…";
   el("rfxBtns").innerHTML = '<button class="btn line" style="margin-top:14px" onclick="modalClose()">나중에 보기</button>';   /* 굴러가는 동안 「상자 열기」는 할 일이 없다 */
   if (BE.on && !testEmp()) beSync();
-  var roll = function () { var s = []; for (var k = from; k < t; k++) s.push(String(1000 + Math.floor(Math.random() * 9000))); nm.innerHTML = s.map(function (x) { return "<b>" + x + "</b>"; }).join(""); };
+  var roll = function () { var s = []; for (var k = from; k < t; k++) s.push(String(1000 + Math.floor(Math.random() * 9000))); nm.innerHTML = s.map(function (x) { return "<b>" + rfxDot(x, t - from > 1, false) + "</b>"; }).join(""); };   /* v5.10 굴러가는 숫자는 읽지 않는다(aria-live 가 70ms 마다 읽던 것) */
   var iv = setInterval(function () {
     if (!el("rfx")) { clearInterval(iv); return; }
     var g = pick();
@@ -6828,9 +6976,14 @@ function rfxOpen() {
   }, 70);
   roll();
 }
+/* v5.10 행운권 번호 = 점 글자(design.md A-5 5-20) · 하나 30px · 여러 개 24px · 멈출 때만 점이 차례로 켜지고 읽는 이름 = 번호(aria-live) · 굴러가는 동안은 읽지 않음 · 동작 줄이기 = 켜진 모양
+   번호 칩(내 보상 · 레일 · 추첨 안내)은 읽고 옮겨 적는 값이라 글자 그대로 둔다 */
+function rfxDot(x, multi, land) {
+  return DotGlyph.svg(String(x), land ? { h: multi ? 24 : 30, label: String(x), anim: !rgReduced(), step: 22 } : { h: multi ? 24 : 30, hidden: true });
+}
 function rfxLand(nums, late) {   /* nums = 번호 배열(없으면 null) · late = 굴러가던 숫자가 멈추는 순간 · 한 번 통 튄다 */
   var w = el("rfx"); if (!w) return;
-  var nm = el("rfxNum"); nm.classList.remove("roll"); nm.innerHTML = nums ? nums.map(function (x) { return "<b>" + esc(x) + "</b>"; }).join("") : "발급 중"; nm.classList.toggle("wait", !nums);
+  var nm = el("rfxNum"); nm.classList.remove("roll"); nm.innerHTML = nums ? nums.map(function (x) { return "<b>" + rfxDot(x, nums.length > 1, true) + "</b>"; }).join("") : "발급 중"; nm.classList.toggle("wait", !nums);
   if (late) { nm.classList.remove("land"); void nm.offsetWidth; nm.classList.add("land"); }
   el("rfxSay").innerHTML = nums ? (nums.length > 1 ? "번호 " + nums.length + "개가 나왔어요! 행운을 빌어요" : "행운을 빌어요!") + "<br>Outro 현장 추첨은 17F 입구 QR 체크인" + rfxFinLine() : "번호가 아직 발급 중이에요<br>곧 내 보상에 나타나요";   /* v4.79 무대 추첨 = 추첨 QR 체크인한 사람만 · v5.04 6개째는 참여상 한 줄(별도 팝업 없음) */
   el("rfxCap").textContent = nums ? "내 행운권 번호 · 17:00 Outro 추첨" : "행운권은 이미 발급됐어요 · 17:00 Outro 추첨";   /* v5.04 옛 「결과는 행사 후 개별 안내」(260909 사후 추첨 안) 폐기 */
@@ -6945,11 +7098,11 @@ function rewItems() {
     why: "1F EVENT 룰렛 · 내 QR 제시", go: "ppRouletteOpen()" });
   if (t) items.push({ k: "raffle", used: false, chip: "자동 발급", off: false, nm: "행운권", big: t + "장", why: "스탬프 " + Math.min(n, REWARD_CAP) + "개 · 17:00 Outro 현장 추첨", go: "ppDrawOpen()" });   /* v4.79 현장 추첨 안내는 추첨 안내 모달에 · v5.04 옛 「결과는 행사 후 개별 안내」 폐기 */
   var fs = finState(), f = S.get("fin", null) || {};   /* v5.04 참여상 · 서버 my.fin 이 있을 때만(없으면 카드 없음 · 아래 경품 카드의 「6개 모으면 참여상 추첨 대상」 한 줄뿐) */
-  if (fs === "in") items.push({ k: "fin", used: false, chip: "추첨 대상", nm: "참여상 추첨", big: "1회", why: "17:00 기준 스탬프 6개 · 결과는 Outro에서 표시", go: "finInfoOpen()", btn: "안내 보기" });
-  if (fs === "wait") items.push({ k: "fin", used: false, chip: "추첨 대기", cc: "", nm: "참여상 추첨", big: "1회", why: "추첨 대상 마감 · 결과는 Outro에서 표시", go: "finInfoOpen()", btn: "안내 보기" });
-  if (fs === "win") items.push({ k: "fin", used: false, chip: "참여상 당첨", nm: esc(f.pz || "참여상"), big: "1개", pic: prizeByName(f.pz), why: "10/27 소속 부서로 배송", go: "finInfoOpen()", btn: "안내 보기" });
+  if (fs === "in") items.push({ k: "fin", used: false, chip: "추첨 대상", nm: "참여상 추첨", big: "1회", why: "스탬프 6개", go: "finInfoOpen()", btn: "안내 보기" });
+  if (fs === "wait") items.push({ k: "fin", used: false, chip: "추첨 대기", cc: "", nm: "참여상 추첨", big: "1회", why: "스탬프 6개", go: "finInfoOpen()", btn: "안내 보기" });
+  if (fs === "win") items.push({ k: "fin", used: false, chip: "참여상 당첨", nm: esc(f.pz || "참여상"), big: "1개", pic: prizeByName(f.pz), why: "추첨 행사 이후 소속 부서로 배송", go: "finInfoOpen()", btn: "안내 보기" });
   if (fs === "lose") items.push({ k: "fin", used: true, chip: "미당첨", off: true, nm: "참여상 추첨", big: "1회", why: finCountTxt(f) });
-  if (fs === "out") items.push({ k: "fin", used: true, chip: "대상 아님", off: true, nm: "참여상 추첨", big: "", why: "17:00 기준 스탬프 6개 · 행운권 당첨자 제외" });
+  if (fs === "out") items.push({ k: "fin", used: true, chip: "대상 아님", off: true, nm: "참여상 추첨", big: "", why: "17:00 기준 스탬프 6개" });
   return items;
 }
 function rewPick(f) { REW.f = f; App.render(); }
@@ -6975,11 +7128,11 @@ var PRIZES = {
     { rk: "6등", nm: "현대백화점 상품권 10만원", q: 3, img: "ld6_hyundai" }] },
   fin: { unit: "개", list: [
     { rk: "", nm: "무선 무드등 가습기", q: 210, img: "fin_humidifier" }] },
-  /* v5.05 1F 타자왕 1~3위(17:00 Outro 시상) · 사진은 아직 없다(img 비움 = 빈 자리 · 파일이 오면 이름만 적는다) */
+  /* v5.05 1F 타자왕 1~3위(17:00 Outro 시상) · v5.09 (261003 사용자 확정) 새 상품 · 사진 = 제조사 공식 컷 */
   type: { unit: "명", list: [
-    { rk: "1등", nm: "기계식 키보드", q: 1, img: "" },
-    { rk: "2등", nm: "기계식 키보드", q: 1, img: "" },
-    { rk: "3등", nm: "로지텍 마우스", q: 1, img: "" }] }
+    { rk: "1등", nm: "체리 G80-3872 기계식 키보드", q: 1, img: "ty1_cherry" },
+    { rk: "2등", nm: "로지텍 MX Master 4 마우스", q: 1, img: "ty2_mxmaster4" },
+    { rk: "3등", nm: "AULA F108 Pro 기계식 키보드", q: 1, img: "ty3_aula" }] }
 };
 /* 커피 · 간식(18F 커피챗 · 1F DAP 과제상담) · 커피 = 페트병(우리 스티커 목업) · 간식 = 달곰 베이크샵 휘낭시에 · 스콘(블로그 사진 합성 · 임시) · 바꿀 때는 파일만 */
 var TREATS = [
@@ -6998,22 +7151,77 @@ function prizeListHtml(kind, sm) {
       '<span class="q">' + p.q.toLocaleString() + g.unit + "</span></li>";
   }).join("") + "</ul>";
 }
-/* 모달 아래 경품표 한 묶음(룰렛 1회권 · 행운권 · 참여상 안내) */
-function prizeModalHtml(kind) { return '<div class="axs-mprz"><p>경품</p>' + prizeListHtml(kind, true) + "</div>"; }
+/* 모달 아래 경품 한 줄(룰렛 1회권 · 행운권 · 참여상 안내) · v5.08 옛 목록 대신 대표 사진 + 요약 + 「경품 보기」(포스터 그 구역으로) */
+function prizeModalHtml(kind) {
+  var g = PRIZES[kind]; if (!g) return "";
+  var p = g.list[0], sum = (p.rk ? p.rk + " " : "") + p.nm + (g.list.length > 1 ? " 외 " + (g.list.length - 1) + "종" : " " + p.q.toLocaleString() + g.unit);
+  return '<div class="axs-mprz"><button type="button" class="axs-pzm" onclick="prizeGo(\'' + kind + '\')">' + prizePhHtml(p) +
+    '<span class="tx"><b>' + esc(sum) + "</b><span>경품 보기</span></span>" + CHEV_SVG + "</button></div>";
+}
 function prizeByName(nm) {
   var hit = null; nm = String(nm || "");
   Object.keys(PRIZES).forEach(function (k) { PRIZES[k].list.forEach(function (p) { if (!hit && nm && (p.nm === nm || nm.indexOf(p.nm) >= 0 || p.nm.indexOf(nm) >= 0)) hit = p; }); });
   return hit;
 }
-/* 내 보상 아래 경품 카드 3장 · 조건 한 줄 + 목록 · 참여상 줄은 서버 필드와 무관하게 늘 같은 말(상태는 위 참여상 카드) */
+/* 내 보상 아래 · v5.08 경품 카드 3장을 걷고 입구 한 줄(경품은 포스터 한 곳에서 본다 · 중복 줄이기) */
 function prizeGuideHtml() {
-  var card = function (k, ttl, meta, more) {
-    return '<section class="ax-card axs-przc" data-prz="' + k + '"><div class="ax-stack-tight"><h3 class="ax-card-title">' + ttl + '</h3><p class="ax-meta">' + meta + "</p></div>" + prizeListHtml(k) + (more || "") + "</section>";
-  };
-  return '<h2 class="ax-section-title">경품</h2>' +
-    card("roulette", "룰렛", "스탬프 3개 · 1F EVENT 룰렛 · 1인 1회") +
-    card("draw", "행운권", "스탬프 4 · 5 · 6개 = 1 · 2 · 3장<br>17:00 Outro 추첨 · 17F 입구 QR 체크인") +
-    card("fin", "참여상", "6개 모으면 참여상 추첨 대상 · 17:00 기준", '<p class="axs-przn">Outro 때 남은 룰렛 경품도 함께 추첨 · 상품은 무작위<br>행운권 당첨자 제외 · 10/27 소속 부서로 배송</p>');
+  return '<h2 class="ax-section-title">경품</h2>' + prizeGoHtml();
+}
+/* ════════════════ v5.08 경품 포스터 (261003 사용자 요청 · 「경품 사진이 작다 · 포스터처럼 · 싼티 없이 · 스탬프 누적표에서 바로」 · 「제품 사진을 크게」) ════════════════
+   화면 id = prizes · 들어오는 곳 = 스탬프 보상 레일(홈 · 스탬프 탭) · 나의 참여 · 내 보상 · 룰렛 1회권 · 행운권 · 참여상 모달(그 구역으로 바로)
+   데이터는 위 PRIZES 한 곳 · 대표(PZ_HERO 개수만큼 앞에서부터) = 폭 가득 사진 · 나머지 2열 · 홀수로 남는 마지막 칸은 넓은 카드
+   참여상 설명은 두 줄만(FIN_NOTE · 사용자 261003 「이 두 가지 정보만 남겨 두고 나머지는 없애 줘」) */
+var FIN_NOTE = "Outro 때 남은 룰렛 경품도 함께 추첨 · 상품은 무작위<br>추첨 행사 이후 소속 부서로 배송";
+var PZ_HERO = { draw: 3, fin: 1, roulette: 1, type: 1 };   /* v5.09 타자왕도 사진 카드(1등 대표 · 2 · 3등 2열) */
+var PZ_SEC = [
+  { k: "draw", en: "LUCKY DRAW", t: "행운권 추첨", m: [4, 6], cd: "스탬프 4 · 5 · 6개 = 행운권 1 · 2 · 3장<br>17:00 Outro 현장 추첨 · 6등부터<br>17F 입구 QR 체크인" },
+  { k: "fin", en: "PARTICIPATION", t: "참여상", m: [6, 6], cd: "스탬프 6개", note: FIN_NOTE },
+  { k: "roulette", en: "ROULETTE", t: "룰렛", m: [3, 3], cd: "스탬프 3개 · 1F EVENT 룰렛 · 1인 1회" },
+  { k: "type", en: "TYPING KING", t: "1F 타자왕", cd: "17:00 Outro 시상 · 1F 현장 최고 기록 1~3위" }
+];
+var PZ = { t: 0 };
+var PZ_THUMB = ["ld1_ipad", "fin_humidifier", "rl1_tumbler"];   /* 입구 사진 3장 = assets/prize/t_<img>.webp(96px) */
+function prizeGo(k) { PROG.anchor = k ? "pz-" + k : ""; PZ.t = Date.now(); App.go("prizes"); }
+function prizeJump(k) {
+  var a = el("pz-" + k); if (!a) return;
+  var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  a.scrollIntoView({ block: "start", behavior: calm ? "auto" : "smooth" });
+}
+function prizeGoHtml(k) {
+  var th = PZ_THUMB.map(function (n) { return '<img src="' + PRIZE_DIR + "t_" + n + '.webp" alt="" width="96" height="96" loading="lazy" decoding="async" onerror="this.remove()">'; }).join("");
+  return '<button type="button" class="axs-pzgo" onclick="event.stopPropagation(); prizeGo(' + (k ? "'" + k + "'" : "") + ')"><span class="th" aria-hidden="true">' + th + "</span>" +
+    '<span class="tx"><b>경품 보기</b><span>아이패드 · 가습기 · 텀블러</span></span>' + CHEV_SVG + "</button>";
+}
+function pzMeter(a, b) {
+  var o = ""; for (var i = 0; i < STAMP_DENOM; i++) o += "<i" + (i < a ? ' class="on"' : i < b ? ' class="pt"' : "") + "></i>";
+  return '<span class="axs-pz-mt" aria-hidden="true">' + o + "</span>";
+}
+function pzCard(p, unit, cls) {
+  var ph = '<span class="axs-pz-ph">' + (p.img ? '<img src="' + PRIZE_DIR + p.img + '.webp" alt="" width="600" height="600" loading="lazy" decoding="async" onerror="this.remove()">' +
+    (PRIZE_SAMPLE && p.s !== 0 ? '<span class="smp">샘플</span>' : "") : "") + "</span>";
+  return '<article class="axs-pz-c' + cls + '">' + ph + '<div class="tx">' + (p.rk ? '<span class="rk">' + p.rk + "</span>" : "") +
+    "<b>" + esc(p.nm) + '</b><span class="q">' + p.q.toLocaleString() + unit + "</span></div></article>";
+}
+function prizeSecHtml(s) {
+  var g = PRIZES[s.k]; if (!g) return "";
+  var head = '<header class="axs-pz-sh" id="pz-' + s.k + '"><p class="en">' + s.en + "</p><h2>" + s.t + '</h2><p class="cd">' + (s.m ? pzMeter(s.m[0], s.m[1]) : "") + "<span>" + s.cd + "</span></p></header>";
+  var hn = PZ_HERO[s.k] || 0, rest = g.list.slice(hn);
+  var body = g.list.slice(0, hn).map(function (p) { return pzCard(p, g.unit, " hero"); }).join("") +
+    (rest.length ? '<div class="axs-pz-gr">' + rest.map(function (p, i) { return pzCard(p, g.unit, " gr" + (rest.length % 2 && i === rest.length - 1 ? " wide" : "")); }).join("") + "</div>" : "");
+  return '<section class="axs-pz-sec">' + head + body + (s.note ? '<p class="axs-pz-nt">' + s.note + "</p>" : "") + "</section>";
+}
+function prizeCoverHtml() {
+  var n = Math.min(STAMP_DENOM, stampCount());
+  var row = function (k, a, b, t, c) { return '<button type="button" onclick="prizeJump(\'' + k + '\')">' + pzMeter(a, b) + "<b>" + t + "</b><span>" + c + "</span>" + CHEV_SVG + "</button>"; };
+  var lit = [[3, 1], [23, 10], [13, 19], [27, 26], [6, 30]].map(function (d) { return '<span class="lit" style="left:' + (d[0] * 12 + 5) + "px;top:" + (d[1] * 12 + 5) + 'px"></span>'; }).join("");
+  return '<section class="axs-pz-cv">' + lit +
+    '<svg class="ring" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="none" stroke="currentColor" stroke-opacity=".35" stroke-width="2"/><circle cx="32" cy="32" r="20" fill="none" stroke="currentColor" stroke-opacity=".7" stroke-width="2"/><circle cx="32" cy="32" r="10" fill="currentColor"/></svg>' +
+    '<p class="ey">AX Festival 2026</p><h1 class="ttl">' + DotGlyph.svg("PRIZES", { h: 34, label: "Prizes" }) + '</h1><p class="sub">스탬프로 받는 경품</p>' +
+    '<div class="ways">' + row("draw", 4, 6, "행운권 추첨", "4 · 5 · 6개") + row("fin", 6, 6, "참여상", "6개") + row("roulette", 3, 3, "룰렛", "3개") + "</div>" +
+    '<p class="me">지금 내 스탬프 <b>' + n + "개</b></p></section>";
+}
+function prizePosterHtml() {
+  return '<div class="axs-pz' + (Date.now() - PZ.t < 900 ? " in" : "") + '">' + prizeCoverHtml() + PZ_SEC.map(prizeSecHtml).join("") + "</div>";
 }
 /* 참여상 상태 · 서버 sync my.fin 이 정본(없으면 null = 그리지 않는다 · 서버 배포 전에도 안전)
    my.fin 모양(설계안 6장 · 7장 · 서버 담당과 맞출 것) = { ph: "open" | "lock" | "done", cut: "17:00", in: 대상 여부, w: 당첨 여부(done 뒤), pz: 상품명, n: 대상 수, wn: 당첨 수 }
@@ -7033,7 +7241,7 @@ function finState() {
 }
 function finCountTxt(f) {
   var n = +f.n || 0, w = +f.wn || 0;
-  return n && w ? "대상 " + n.toLocaleString() + "명 중 " + w.toLocaleString() + "명 당첨" : n ? "대상 " + n.toLocaleString() + "명" : "17:00 기준 스탬프 6개 · 서버 추첨";
+  return n && w ? "대상 " + n.toLocaleString() + "명 중 " + w.toLocaleString() + "명 당첨" : n ? "대상 " + n.toLocaleString() + "명" : "스탬프 6개";
 }
 /* 6번째 스탬프 상자 팝업에 붙는 한 줄(별도 팝업 없음 · 설계안 5.7) */
 function rfxFinLine() {
@@ -7044,8 +7252,8 @@ function rfxFinLine() {
 function finInfoOpen() {
   var f = S.get("fin", null) || {}, st = finState(), p = st === "win" ? prizeByName(f.pz) : null;
   var head = st === "win" ? '<div class="axs-rwhd">' + prizePhHtml(p) + '<div class="ax-stack-tight"><p class="ax-meta">참여상 당첨</p><p class="ax-card-title">' + esc(f.pz || "") + "</p></div></div>" : "";
-  modalOpen(head + '<p class="muted" style="' + (head ? "margin-top:12px;" : "") + 'font-size:calc(14.5px * var(--fs));line-height:1.7">스탬프 6개 · 17:00 기준<br>대상 중 추첨 · 선착순 아님 · 행운권 당첨자 제외<br>상품은 추첨 뒤 무작위로 정해져요<br>결과는 Outro에서 이 화면에 표시<br>배송 10/27 · 소속 부서</p>' +
-    '<div class="axs-mprz"><p>경품</p>' + prizeListHtml("fin", true) + '<p class="axs-przn" style="margin-top:8px">Outro 때 남은 룰렛 경품도 함께 추첨</p></div>' +
+  modalOpen(head + '<p class="muted" style="' + (head ? "margin-top:12px;" : "") + 'font-size:calc(14.5px * var(--fs));line-height:1.7">스탬프 6개<br>' + FIN_NOTE + "</p>" +   /* v5.08 설명 두 줄만(사용자 261003) */
+    prizeModalHtml("fin") +
     '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "참여상");
 }
 /* 커피 · 간식 사진 2장 · 18F 커피챗 상세 · DAP 과제상담 상세 */
@@ -7176,7 +7384,8 @@ var Views = {
        v4.93 (261001 사용자 확정 · IA 검토 7-4 · 8장 A5) 스탬프 → 나의 일정(펼침 · 옛 「내 일정」 화면과 프로그램 [나의 일정]을 여기 한 곳으로) → 내 보상
        「신청·대기 현황」 행 삭제(내 일정과 같은 화면으로 가던 중복 · 대기 번호는 나의 일정 「지금」 줄) */
     return '<div class="ax-stack">' +   /* v4.06 탭 첫 화면 큰 제목 삭제(사용자 결정 260922 · 화면 이름은 헤더) */
-      '<div class="axs-list">' + axDest("스탬프", esc(stampGoalText(n)), chev(n + " / " + STAMP_DENOM), "App.tab('exp')") + "</div>" +
+      '<div class="axs-list">' + axDest("스탬프", esc(stampGoalText(n)), chev(n + " / " + STAMP_DENOM), "App.tab('exp')") +
+        axDest("경품", "행운권 · 참여상 · 룰렛", chev("보기"), "prizeGo()") + "</div>" +   /* v5.08 경품 포스터 입구 · 스탬프 줄 바로 아래 */
       myAgendaHtml() +
       '<div class="axs-list">' + axDest("내 보상", "룰렛 1회권과 행운권", chev(rw + "개"), "App.go('rewards')") + "</div></div>";
   },
@@ -7240,6 +7449,9 @@ var Views = {
     /* v5.04 경품 카드 3장(룰렛 · 행운권 · 참여상)은 사용 가능 보기에만 · 조건은 카드마다 한 줄이라 옛 하단 안내(「스탬프 3개면 룰렛, 4개부터 행운권」)는 뺐다 */
     return '<div class="ax-stack">' + tabs + cards + (f === "used" ? "" : prizeGuideHtml()) + "</div>";
   },
+
+  /* ═══ v5.08 경품 포스터 · 화면 조각은 prizePosterHtml(경품 안내 절) ═══ */
+  prizes: function () { return prizePosterHtml(); },
 
   /* ═══ 포토부스 대기 · 나의 참여 › 목적지 · 기존 번호표 UI 를 그대로 담는다(새 대기 UI 는 가이드에 정의가 없다) ═══ */
   photoq: function () {
@@ -7718,7 +7930,7 @@ var Views = {
       '<button class="' + (mode === "site" ? "on" : "") + '" onclick="S.set(\'type_rank_tab\', \'site\'); App.render()">1F 현장 상위 5</button></div>' +
       '<div class="card" id="tyRankBody">' + typeRankHtml(cached, mode) + "</div>" +
       '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">' + (mode === "app" ? "오래 버틴 시간 순 · 최고 기록만 · 경품 없음" : "1F 셀프 도전 · 1인 " + ((cached && cached.tries) || 3) + "회 · 최고 기록 · 동점은 정확도 · 17:00 마감") + "</p>" +
-      (mode === "site" ? '<section class="ax-card axs-przc" data-prz="type" style="margin-top:12px"><div class="ax-stack-tight"><h3 class="ax-card-title">1F 타자왕 시상</h3><p class="ax-meta">17:00 Outro 시상 · 현장 최고 기록 1~3위</p></div>' + prizeListHtml("type") + "</section>" : "");   /* v5.05 (261002 사용자 확정) 1F 타자왕 경품 이름 · 사진 자리(아직 없음) · 앱 순위는 명예 순위 그대로 */
+      (mode === "site" ? '<section class="ax-card axs-przc" data-prz="type" style="margin-top:12px"><div class="ax-stack-tight"><h3 class="ax-card-title">1F 타자왕 시상</h3><p class="ax-meta">17:00 Outro 시상 · 현장 최고 기록 1~3위</p></div>' + prizeListHtml("type") + "</section>" : "");   /* v5.05 (261002 사용자 확정) 1F 타자왕 경품 이름 · v5.09 사진(제조사 공식 컷) · 앱 순위는 명예 순위 그대로 */
   },
 
   /* ═══ v4.15 폰 관리자 모드 (사용자 확정 260922 · `앱 관리자 모드 축소 기획.md`) ═══
@@ -8067,7 +8279,7 @@ function checkMyState() {
   var fin = S.get("fin", null);
   if (finState() === "win" && seen.fin !== "w:" + (fin.pz || "")) {
     seen.fin = "w:" + (fin.pz || ""); changed = true;
-    notice({ key: "fin:win", title: "참여상 당첨", body: (fin.pz ? fin.pz + " · " : "") + "10/27 배송", go: "rewards", focus: "fin", goLbl: "내 보상에서 보기" });
+    notice({ key: "fin:win", title: "참여상 당첨", body: (fin.pz ? fin.pz + " · " : "") + "추첨 행사 이후 소속 부서로 배송", go: "rewards", focus: "fin", goLbl: "내 보상에서 보기" });
   }
   if (changed) S.set("noti_seen", seen);
 }
@@ -9047,6 +9259,8 @@ function stampSync(list) {
      그 뒤 아이디어 도장(p5)만 본 기록에 들어가면, 스탬프 탭의 「새 스탬프 1개면 팝」 규칙이 예전 스탬프(예: 1F 전시)의 연출을 다시 틀었다.
      본 기록이 아예 없을 때(키 없음)의 첫 목록 = 기준선 · 본 것으로 조용히 적는다 · 그 뒤로 새로 생긴 스탬프만 한 번 팝 */
   if (S.get("pp_seen", null) === null) S.put("pp_seen", list.slice());
+  else if (S.get("pp_base", 0)) { var sb = S.get("pp_seen", []); list.forEach(function (id) { if (sb.indexOf(id) < 0) sb.push(id); }); S.put("pp_seen", sb); }   /* v5.07 기준선 대기(ppSeenGet) */
+  if (S.get("pp_base", 0)) S.put("pp_base", 0);
   var cur = S.get("stamps", []), chg = list.length !== cur.length;
   if (!chg) for (var i = 0; i < list.length; i++) if (cur.indexOf(list[i]) < 0) { chg = true; break; }
   if (chg) {
@@ -9262,7 +9476,11 @@ function boothDone(res, late, code) {
   if (late) { notice({ key: "claim:lateok:" + id, title: "저장한 스캔 적립", body: name + " · 스탬프 " + Math.min(STAMP_DENOM, stampCount()) + " / " + STAMP_DENOM, go: "card:" + id, goLbl: "스탬프 보기" }); return; }
   srShow({ st: "ok", id: id, name: name, test: test });
 }
-function ppSeenAdd(id) { var seen = S.get("pp_seen", []); if (seen.indexOf(id) < 0) { seen.push(id); S.set("pp_seen", seen); } }
+function ppSeenAdd(id) { var seen = ppSeenGet(); if (seen.indexOf(id) < 0) { seen.push(id); S.set("pp_seen", seen); } }
+/* v5.07 본 기록(pp_seen) 키가 없을 때(로그인 · 로그아웃 직후 · 첫 동기화 전) 도장 하나를 본 것으로 적으면 키가 생겨, 첫 동기화의 기준선(stampSync)이 건너뛰어졌다.
+   그러면 예전 스탬프가 「안 본 것」으로 남아 스탬프 탭에서 그 도장 연출이 다시 떴다(재로그인 때 최초 로그인 「이미 받음」 lgxLocal 이 동기화보다 먼저 오면).
+   그때는 기준선 대기 표시(pp_base)를 남겨 첫 동기화가 서버 목록을 본 것으로 합친다. */
+function ppSeenGet() { var s = S.get("pp_seen", null); if (s === null) { S.put("pp_base", 1); s = []; } return s; }
 /* ═══ v4.79 Outro 럭키드로우 · 추첨 체크인 (사용자 결정 261001) ═══
    17F 대강당 입구 추첨 QR(AXD…)을 찍으면 draw_in · 코드 · 창(기본 16:40~17:25) · 날짜 · 1인 1회는 서버가 판정한다 · 앱에 코드가 없다.
    무대 추첨은 체크인한 사람의 응모 번호(공)만 쓴다 · 250개 사후 추첨은 따로다 · 스탬프 · 17F 출석과 무관하다.
@@ -10968,7 +11186,7 @@ function tyTvRows(r, n) {
    받기 = 기존 공개 액션 type_rank(mode site · n 10) · 서버 수정 없음 · 테스트 사번 표시 규칙(10/25까지 보이고 10/26부터 뺌)은 서버가 한다.
    폴링 = 30초 · 화면이 가려지면 멈추고 보이면 곧바로 · 실패 30 → 60 → 120초 + 지터(v4.57 앱 폴링과 같은 규칙).
    새 기록(이전 응답에 없던 닉네임·기록 줄)은 4초 동안 살짝 강조 · 첫 응답은 강조하지 않는다 · 동작 줄이기면 깜빡임 없이 테두리만.
-   경품은 바닥 한 줄만(v5.06 사용자 확정 · 1·2등 키보드 · 3등 마우스 · 가격 없음) · 도전 시간은 결정 대기라 적지 않는다. */
+   경품은 바닥 한 줄만(v5.06 사용자 확정 · 가격 없음 · v5.09 1등 체리 키보드 · 2등 MX Master 4 · 3등 AULA 키보드) · 도전 시간은 결정 대기라 적지 않는다. */
 var TYHS = { data: null, t: null, ms: BE_POLL_MS, busy: false, keys: null, hot: {}, hotT: 0 };
 function tyTvFix(h) { var m = String(h || "").match(/[&?]fix=([a-z]+)/i); return m && m[1].toLowerCase() === "site" ? "site" : ""; }
 function hsOn() { return App.current === "wall_type" && TYTV.fix === "site"; }
@@ -11018,7 +11236,7 @@ function hsHtml() {
     '<div class="hs-list">' + rows + "</div>" +
     '<div class="hs-foot">' + (u ? '<img class="hs-bot" src="' + u + '" alt="">' : '<span class="hs-bot">' + BOT_SVG + "</span>") +
     "<p>1인 " + tries + "회 · 최고 기록 1개로 순위<br>17:00 마감 · 1~3위 Outro 시상</p></div>" +
-    '<p class="hs-prz">1·2등 기계식 키보드 · 3등 로지텍 마우스</p></div></div>';   /* v5.06 (261002 사용자 확정) 바닥 경품 한 줄 · 가격 없음 · v5.05 결선 없음 · 1~3위 */
+    '<p class="hs-prz">1등 체리 키보드 · 2등 MX Master 4 · 3등 AULA 키보드</p></div></div>';   /* v5.09 (261003 사용자 확정) 새 경품 짧은 이름 · v5.06 바닥 경품 한 줄 · 가격 없음 · v5.05 결선 없음 · 1~3위 */
 }
 
 /* v3.50 시상 · AX 올림픽 탭 · 종합 1~3위 호명(닉네임 + 실명) · 관리코드 oly_result */
@@ -15886,11 +16104,13 @@ function xitionRun(switchNow) {
          (v5.02 · 사용자 261002 「뜬금없는 동그란 원이 나왔다가 ME 가 된다 · 점이 새롭게 ME 로 바뀌는 게 좋겠다」 · 동료 점이 날아와 원을 이루던 02 Circle 단계 삭제)
          → 수평선에 내려앉는 순간 수면에 「We」가 비친다 → 반듯한 거울 장면이 머문다 → 그 사이로 원본 「to」가 끼어들고, 두 줄이 밀리며 원본 심볼의 삐딱한 배치에 그대로 안착한다
          (마지막 정지 프레임 = 원본 심볼의 점 좌표 · 합성만 · 다시 그리지 않는다) → 수면이 빠지고 부제 「ME to WE : 나의 경험을 우리의 가능성으로」가 처음이자 한 번 나온다.
-   3막 = 도장과 다음 행동: 나의 점이 도장 칸으로 날아가 「최초 로그인」 도장 → (접속 방법 질문) → 홈(v4.95 · 다음 스탬프 카드 없음) · 찍은 QR 이 있으면 그 카드 한 장.
+   3막 = 도장과 다음 행동: 「최초 로그인」 도장 → (접속 방법 질문) → 홈(v4.95 · 다음 스탬프 카드 없음) · 찍은 QR 이 있으면 그 카드 한 장.
+         v5.07 (사용자 261003 「최초 로그인 스탬프가 전체 화면에 찍히는 다른 애니메이션과 같은 형태여야 · 두 번째부터는 없어도」) 도장 = 다른 스탬프와 같은 전체 화면 팝(stampOverlay · SPOP)
+         → 시트의 도장 칸으로 안착. 나의 점이 도장 칸으로 날아가던 분신 · 시트 안 작은 도장은 걷었다. 두 번째 로그인부터는 장면도 팝도 없다(lgxEnter · 이미 받음 = 보통 입장).
    거울: M 을 위아래로 뒤집으면 W 다. 소문자 e 는 뒤집으면 e 가 아니므로 수면에는 원본 「We」 줄이 바로 선 채 비친다(마법 거울 · A안).
    B안(대문자 ME/WE 덩어리 → to 가 들어오며 원본 글자꼴로 변형)은 시안 비교용으로 남긴다(LGX.mode · 앱 기본 A).
    글자(부제)는 들어올 때 움직이지 않는다(투명도만) · v5.05 장면이 다 선 뒤 물결 한 번(lgxWave · 사용자 261002). 행사명은 글자가 아니라 점으로 바뀐 뒤 그 점이 움직인다(design.md §4 · v5.02 명시). 점 3층 크기 비(38:18:8) · 보라 핵 물결은 원본 엔진과 같다. */
-var LGX = { cur: null, mode: "A", PRE: { suck: 0.55, iris: 0.2 }, IRIS: 0.65, T: {   /* v5.02 박자 · t = 0 은 점(나)이 생기는 순간 · 앞 구간(PRE · 행사명 → 점)은 음수 시각 · 도장까지 6.94초 + 앞 구간 0.55 = 약 7.5초 */
+var LGX = { cur: null, mode: "A", PRE: { suck: 0.55, iris: 0.2 }, IRIS: 0.65, T: {   /* v5.02 박자 · t = 0 은 점(나)이 생기는 순간 · 앞 구간(PRE · 행사명 → 점)은 음수 시각 · v5.07 도장 팝 6.48(찍힘 약 6.9) + 앞 구간 0.55 = 약 7.5초 · 시트 칸 안착 약 8.5초 */
   rise: 0.05,        /* 점(나)이 솟아 Me 가운데 높이로(0.6초 스프링) · 그동안 하늘이 열린다(IRIS 0.65) */
   burst: 0.6,        /* 점이 흩어지며 반듯한 Me 로(가까운 점부터 0.36초에 걸쳐 · 점마다 0.7초 스프링 · 나는 맨 나중) */
   drop: 1.75,        /* 떨어지기 시작 */
@@ -15898,8 +16118,7 @@ var LGX = { cur: null, mode: "A", PRE: { suck: 0.55, iris: 0.2 }, IRIS: 0.65, T:
   to: 3.65,          /* 반듯한 거울 장면(약 0.9초 머묾) 뒤 · to 가 끼어든다 */
   land: 5.15,        /* 원본 심볼에 안착 · 두세 번 작게 출렁임 · 부제(핵심 메시지)가 나타난다 */
   end: 6.3,          /* 로고와 메시지가 머문 뒤(1.15초) 시트 */
-  fly: 6.48,         /* 나의 점이 도장 칸으로 */
-  stamp: 6.94        /* 도장 */
+  pop: 6.48          /* v5.07 도장 = 다른 스탬프와 같은 전체 화면 팝(stampOverlay · 딤 · 화면 폭 60% 도장 · 0.42초에 찍힘 · 1.5초 뒤 시트의 도장 칸으로 0.5초 비행) */
 } };
 var LGX_C = { o: ["#FF7F32", "#FF963E", "#E6CCFF"], w: ["#FFFFFF", "#FFD2B6", "#FFFFFF"], bgW: "#FFFFFF", bgO: "#FF7F32" };
 var LGX_LD = [0.5, 0.58, 0.44, 0.52, 0.56, 0.64];   /* 글자별 안착 시작(to 기준 초) · M e t o W e · 먼저 두 줄이 벌어지고 to 가 수평선을 따라 들어온 뒤 다 함께 원본 자리로 */
@@ -16020,8 +16239,9 @@ var LFBG = {};   /* 화면 크기 격자 두 장(주황 · 흰) · 로그인 화
 function lfLerp(a, b, t) { return a + (b - a) * t; }
 function lfSafe() { var s = el("lfSafe"); if (!s) return [0, 0]; var cs = getComputedStyle(s); return [parseFloat(cs.paddingTop) || 0, parseFloat(cs.paddingBottom) || 0]; }
 function lfLayout(host) {
-  var H = host.clientHeight, hd = host.querySelector(".lf-head"), fm = host.querySelector(".lf-form"), tt = host.querySelector(".lf-title");
+  var H = host.clientHeight, hd = host.querySelector(".lf-head"), fm = host.querySelector(".lf-form"), tt = host.querySelector(".lf-title"), nm = host.querySelector(".lf-name");
   if (!H || !hd || !fm || !tt) return null;
+  var nmH = nm ? nm.offsetHeight : 0;   /* v5.10 점 이름(14px) · 행사명 위 · 간격 12 → 8 · 행사명과 같이 접힌다 */
   var sa = lfSafe(), sat = sa[0], sab = sa[1], rows = [], ch = fm.children, i;
   for (i = 0; i < ch.length; i++) {
     var e = ch[i], ty = e.getAttribute("data-r");
@@ -16030,12 +16250,12 @@ function lfLayout(host) {
     rows.push({ el: e, t: ty, col: col, nat: ty === "field" ? 56 : col ? (e.firstElementChild ? e.firstElementChild.offsetHeight : 0) : e.offsetHeight });
   }
   function dims(P) {
-    var pA = Math.min(P, 1), pB = Math.max(0, P - 1), fs = lfLerp(lfLerp(40, 24, pA), 16, pB), lh = Math.round(fs * 1.05), gap = lfLerp(lfLerp(12, 8, pA), 6, pB), fh = 56 - 4 * pB, hf = 0, rr = [];
+    var pA = Math.min(P, 1), pB = Math.max(0, P - 1), fs = lfLerp(lfLerp(40, 24, pA), 16, pB), lh = Math.round(fs * 1.05), gap = lfLerp(lfLerp(12, 8, pA), 6, pB), fh = 56 - 4 * pB, hf = 0, rr = [], ng = nmH ? lfLerp(12, 8, pA) : 0;
     rows.forEach(function (r, k) {
       var kk = r.col ? Math.max(0, 1 - pA * 1.15) : 1, h = r.t === "field" ? fh : r.nat * kk, mt = k === 0 ? 0 : (r.t === "links" ? 4 : gap) * (r.col ? kk : 1);
       rr.push({ r: r, h: h, mt: mt, k: kk }); hf += h + mt;
     });
-    return { fs: fs, lh: lh, ht: 2 * lh * (1 - pB), hf: hf, rr: rr, pB: pB, pA: pA,
+    return { fs: fs, lh: lh, ht: (nmH + ng + 2 * lh) * (1 - pB), ng: ng, hf: hf, rr: rr, pB: pB, pA: pA,
       amin: sat + (16 + 12 * (1 - pA)) * (1 - pB) + 8 * pB, bmin: 4 + (12 - 8 * pA) * (1 - pB), cmin: lfLerp(24 + sab, 12, pA) };   /* 사이는 4 아래로 줄지 않는다(행사명과 첫 칸이 닿지 않게) */
   }
   var P = 0, d = dims(0);
@@ -16046,6 +16266,7 @@ function lfLayout(host) {
   hd.style.transform = "translateY(" + a.toFixed(1) + "px)"; hd.style.height = d.ht.toFixed(1) + "px";
   if (!LGX.cur) hd.style.opacity = base.toFixed(3);   /* 장면 도중에는 장면 시계(lfFade)가 투명도를 맡는다 */
   tt.style.fontSize = d.fs.toFixed(1) + "px"; tt.style.lineHeight = d.lh + "px";
+  if (nm) nm.style.marginBottom = d.ng.toFixed(1) + "px";
   fm.style.transform = "translateY(" + y.toFixed(1) + "px)";
   d.rr.forEach(function (o) {
     var e2 = o.r.el; e2.style.marginTop = o.mt.toFixed(1) + "px";
@@ -16075,8 +16296,14 @@ function lfBg(host) {
   cx.drawImage(g.go, 0, 0, innerWidth, innerHeight);
 }
 /* 붙이기 · 크기가 바뀌면(키보드 · 회전 · 글꼴) 한 프레임에 한 번 배경과 배치를 다시 · 여러 번 불러도 된다(kvMountAll) */
+/* v5.10 점 이름 AX PASSPORT(흰 점 14px · 읽는 이름 「AX Passport」) · 로그인 두 화면의 행사명 위 · 움직이지 않는다 */
+function lfName(host) {
+  var p = host.querySelector(".lf-name");
+  if (p && !p.firstChild) p.innerHTML = DotGlyph.svg(APP_NAME, { h: 14, label: APP_NAME });
+}
 function lfMount(host) {
   if (!host || host.hidden || host.classList.contains("gone")) return;
+  lfName(host);
   var s = host._lf;
   if (s && s.soon) { s.soon(); return; }
   s = host._lf = host._lf || {};
@@ -16119,6 +16346,8 @@ function lfTitleDots(host) {
   }
   var d = x.getImageData(0, 0, c.width, c.height).data;
   for (var yy = 0; yy < c.height; yy += G) for (var xx = 0; xx < c.width; xx += G) if (d[(yy * c.width + xx) * 4 + 3] > 120) pts.push([x0 + xx + 0.5, y0 + yy + 0.5]);
+  var ng = host.querySelector(".lf-name svg"), nb = ng && ng.getBoundingClientRect();   /* v5.10 점 이름은 이미 점이다 · 점 중심을 그대로 더한다(122개) */
+  if (nb && nb.height > 4) { var L = DotGlyph.layout(APP_NAME), u = nb.height / L.h; L.dots.forEach(function (q) { pts.push([nb.left + (q[0] + DotGlyph.D / 2) * u, nb.top + (q[1] + DotGlyph.D / 2) * u]); }); }
   return pts;
 }
 /* 장면 시계로 로그인 글자 · 입력이 투명도만 사라진다(행사명 0.1초 · 점이 같은 자리에 겹쳐 있다 · 입력 0.2초) · 다 사라진 뒤에는 쓰지 않는다 */
@@ -16474,43 +16703,37 @@ function lgxFrame(cur, now) {
   var seal = d.querySelector(".lgx-seal");
   if (cur.srv === "none" && !cur.rowHid) { cur.rowHid = true; d.querySelector(".lgx-row").style.display = "none"; }
   if (cur.srv === "none" && t >= T.end) lgxSettle(cur);
-  if (mineP && (t < T.fly || cur.srv === "none" || cur.rm || cur.stamped || cur.gaveUp)) {
+  if (mineP) {   /* v5.07 나의 점은 심볼 자리에 그대로(도장 칸으로 날아가던 분신은 걷었다 · 도장은 전체 화면 팝) */
     if (t < LGX.IRIS + 0.05) {   /* v5.02 점(나)은 하늘이 열린 자리에서는 주황, 아직 주황 바탕인 자리에서는 흰색(같은 점을 두 번 그리고 하늘 모양으로 가른다) */
       lgxDot(cx, mineP[0], mineP[1], mineP[2], LGX_C.w, 1);
       cx.save(); lgxSkyClip(cx, cur, t, W, L.yh); lgxDot(cx, mineP[0], mineP[1], mineP[2], LGX_C.o, 1); cx.restore();
     } else lgxDot(cx, mineP[0], mineP[1], mineP[2], mineP[3] ? LGX_C.w : LGX_C.o, 1);
   }
-  if (cur.rm && t >= T.end) { if (cur.srv === "ok") lgxStamp(cur); else if (cur.srv === "fail" || (cur.waitAt && t - cur.waitAt > 4)) lgxGiveUp(cur); else if (!cur.waitAt) cur.waitAt = t; }
-  else if (t >= T.fly && cur.srv !== "none" && !cur.stamped && !cur.gaveUp) {
-    /* 나의 점의 분신이 심볼에서 떨어져 도장 칸으로(심볼은 원본 그대로 남는다) */
-    var sr = seal.getBoundingClientRect(), tx2 = sr.left + sr.width / 2, ty2 = sr.top + sr.height / 2;
-    var from = cur.flyFrom || (cur.flyFrom = mineP ? [mineP[0], mineP[1], mineP[2]] : [L.cx, L.yh, L.dF]);
-    var kf2 = lgxCl((t - T.fly) / (T.stamp - T.fly)), ef = lgxEIO(kf2), iu2 = 1 - ef;
-    var fx = iu2 * iu2 * from[0] + 2 * iu2 * ef * (from[0] + tx2) / 2 + ef * ef * tx2;
-    var fy = iu2 * iu2 * from[1] + 2 * iu2 * ef * (Math.min(from[1], ty2) - 80) + ef * ef * ty2;
-    var fd = from[2] + (sr.width * 0.5 - from[2]) * ef;
-    if (kf2 >= 1) {
-      if (cur.srv === "ok") lgxStamp(cur);
-      else {   /* 서버를 기다린다 · 칸 위에서 맴돈다 · 4초 넘으면 조용히 내려놓는다 */
-        if (!cur.waitAt) cur.waitAt = t;
-        var wa = (t - cur.waitAt) * 7; fx = tx2 + Math.cos(wa) * 10; fy = ty2 + Math.sin(wa) * 10;
-        if (cur.srv === "fail" || t - cur.waitAt > 4) lgxGiveUp(cur);
-      }
+  /* v5.07 도장 = 다른 스탬프와 같은 전체 화면 팝(lgxPop) · 동작 줄이기도 같은 팝의 정지판(가운데 0.8초) · 서버를 기다리면 시트에 「적립 확인 중」 그대로 4초 · 실패면 「연결되면 자동 적립」 */
+  if (t >= T.pop && cur.srv !== "none" && !cur.popped && !cur.gaveUp) {
+    if (cur.srv === "ok") lgxPop(cur, t);
+    else {
+      if (!cur.waitAt) cur.waitAt = t;
+      if (cur.srv === "fail" || t - cur.waitAt > 4) lgxGiveUp(cur);
     }
-    if (mineP) lgxDot(cx, mineP[0], mineP[1], mineP[2], LGX_C.o, 1);
-    if (!cur.stamped && !cur.gaveUp) lgxDot(cx, fx, fy, fd, LGX_C.o, 1);
   }
+  if (cur.popped && !cur.stamped && t - cur.popAt > 6) lgxStamp(cur);   /* 팝이 안착을 알리지 못했으면(만일) 칸에 찍고 다음 단계로 */
 }
-function lgxStamp(cur) {
+/* v5.07 전체 화면 도장 팝 · 제자리 = 시트의 도장 칸 · 흔들림 = 장면 · 안착하면 칸에 도장(lgxStamp) */
+function lgxPop(cur, t) {
+  if (cur.popped) return;
+  cur.popped = true; cur.popAt = t;
+  var seal = cur.d.querySelector(".lgx-seal");
+  if (!stampOverlay("lg", { to: function () { return { el: seal, kind: "lgx" }; }, shake: cur.d, done: function (sp) { lgxStamp(cur, sp); } })) lgxStamp(cur);
+}
+function lgxStamp(cur, sp) {   /* sp = 안착한 팝(다음 보상 한 줄을 그대로 받는다) · 잉크 · 진동은 팝이 이미 냈다 */
   if (cur.stamped) return;
   cur.stamped = true;
-  var d = cur.d, seal = d.querySelector(".lgx-seal");
-  if (typeof stampMarkHtml === "function") seal.innerHTML = stampMarkHtml(!cur.rm, seal.offsetWidth || 56);
+  var d = cur.d, seal = d.querySelector(".lgx-seal"), n = Math.min(STAMP_DENOM, stampCount());
+  if (typeof stampMarkHtml === "function") seal.innerHTML = stampMarkHtml(false, seal.offsetWidth || 56);
   seal.classList.add("on");
-  d.querySelector(".lgx-st").innerHTML = '<span class="lgx-n">스탬프 1 / 6</span><span class="lgx-rw">3개 모으면 룰렛 1회</span>';   /* v5.03 두 줄 */
-  d.querySelector(".lgx-live").textContent = "최초 로그인 스탬프 적립 · 스탬프 1개";
-  if (!cur.rm && typeof inkSplash === "function") inkSplash(seal.querySelector(".stampmk"), 10, 0.6);
-  if (typeof stampBuzz === "function") stampBuzz([20, 30, 50]);
+  d.querySelector(".lgx-st").innerHTML = '<span class="lgx-n">스탬프 ' + n + " / " + STAMP_DENOM + "</span>" + (sp && sp.hint ? '<span class="lgx-rw">' + esc(sp.hint) + "</span>" : "");   /* v5.03 개수 줄 · 다음 보상 줄을 두 줄로(사용자 261002 「너무 붙었다」) */
+  d.querySelector(".lgx-live").textContent = "최초 로그인 스탬프 적립 · 스탬프 " + n + "개";
   lgxSettle(cur);
 }
 function lgxGiveUp(cur) {
@@ -16542,7 +16765,7 @@ function lgxHasLg() { return S.get("stamps", []).indexOf("lg") >= 0 || !!stampPe
 function lgxLocal() {
   var st = S.get("stamps", []);
   var seen = S.get("pp_seen", null);
-  if (seen === null) seen = st.slice();
+  if (seen === null) { seen = st.slice(); S.put("pp_base", 1); }   /* v5.07 첫 동기화가 서버 목록을 본 것으로 합친다(ppSeenGet) */
   if (seen.indexOf("lg") < 0) seen.push("lg");
   S.put("pp_seen", seen);
   if (st.indexOf("lg") < 0) { st.push("lg"); S.set("stamps", st); }
@@ -16594,7 +16817,7 @@ function lgxAskApp() {
     var ev = A2HS.deferred; A2HS.deferred = null;
     try { ev.prompt(); } catch (e) { lgxAskDone("app"); return; }
     ev.userChoice.then(function (r) {
-      if (r && r.outcome === "accepted") { a2hsMarkDismissed(); notice({ key: "a2hs", title: "바로가기 설치 완료", body: "홈 화면의 AX Passport 아이콘으로 열기" }); }
+      if (r && r.outcome === "accepted") { a2hsMarkDismissed(); notice({ key: "a2hs", title: "바로가기 설치 완료", body: "홈 화면의 AX Festival 아이콘으로 열기" }); }
       lgxAskDone("app");
     }, function () { lgxAskDone("app"); });
     return;

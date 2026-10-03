@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Stamp Wall · AX Festival 2026</title>
 <meta name="robots" content="noindex">
-<!-- 1F 로비 스탠바이미 송출 화면 「ME to WE 스탬프 월」(261002)
-     검정 스테이지 · 회색 점 격자 · 스탬프 1개 = 홍보부 원본 심볼(01_Me_to_WE · 1,037점)의 점 하나가 오렌지 3중 원으로 켜진다
-     가로 · 세로 자동 · 캔버스 하나 · 막간 4종(광고판 시퀀스 · 최초 로그인 장면 · 이정표 축하 · Outro 안내) + 심볼 완성 연출
-     데이터 = 공개 집계 stats(관리코드 없음 · 15초 폴링) · ?demo=1 은 서버 없이 가짜 적립 · 조작표 H -->
+<!-- 1F 로비 스탠바이미 송출 화면 「ME to WE 스탬프 월」 v2 (261003)
+     로고가 주인공 · 홍보부 원본 심볼(01_Me_to_WE · 1,037점) · 스탬프 1개 = 점 하나가 켜진다 · 디머 단계마다 로고 전체가 한 칸씩 밝아진다
+     위 모서리 = 워드마크 + 슬로건 줄 · 아래 = 얇은 띠(스탬프 소개 카드) · 정보 칸 · 앱 QR 없음 · 글자는 모두 캔버스에 그린다
+     점등 장면 45초 ↔ 광고 장면 12~15초(광고판 시퀀스 · 스탬프 8종 · 최초 로그인 장면 · 경품) · 이정표 · 심볼 완성 · Outro 안내
+     가로 · 세로 = 화면 비율로 자동 · ?o=land|port 로 고정 · 데이터 = 공개 집계 stats(관리코드 없음 · 15초 폴링) · ?demo=1 은 서버 없이 가짜 적립 · 조작표 H -->
 <link rel="icon" href="../icons/icon-192.png">
 <style>
   @font-face { font-family: "AXP"; src: url("../draw/assets/PretendardVariable.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
@@ -22,67 +23,21 @@
   body { font-family: var(--f); color: var(--txt); word-break: keep-all; -webkit-font-smoothing: antialiased; cursor: none; }
   body.ptr { cursor: auto; }
   #cv { position: fixed; left: 0; top: 0; display: block; }
-  .tab { font-variant-numeric: tabular-nums; }
 
-  /* 논리 무대 · 가로 1920×1080 / 세로 1080×1920 · JS 가 화면에 맞춰 배율만 준다 · 글자는 제자리 · 투명도로만 나타난다(design.md §4 원칙 1) */
+  /* 논리 무대 · 가로 1920×1080 / 세로 1080×1920 · JS 가 화면에 맞춰 배율만 준다 · 상태 글자 두 줄만(데모 표시 · 연결 끊김) */
   #frame { position: fixed; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; pointer-events: none; }
   body.port #frame { width: 1080px; height: 1920px; }
-  #wm { position: absolute; left: 120px; top: 64px; width: 190px; color: var(--o); }
-  body.port #wm { left: 80px; top: 64px; width: 170px; }
-  #wm svg { display: block; width: 100%; height: auto; }
-
-  /* 정보 칸 · 럭키드로우와 같은 오른쪽 단(x 1104 ~ 1800) · 세로 화면은 심볼 아래 */
-  #panel { position: absolute; left: 1104px; top: 150px; width: 696px; height: 850px; display: flex; flex-direction: column; }
-  body.port #panel { left: 80px; top: 1300px; width: 920px; height: 560px; display: grid; grid-template-columns: minmax(0, 1fr) 280px; grid-template-rows: auto auto 1fr; column-gap: 48px; }
-  .slg b { display: block; font-size: 60px; line-height: 1.15; font-weight: 500; color: var(--o); letter-spacing: -0.01em; }
-  .slg span { display: block; font-size: 34px; line-height: 1.35; font-weight: 500; color: var(--txt); margin-top: 6px; }
-  body.port .slg { grid-column: 1 / 3; }
-  body.port .slg b { font-size: 56px; } body.port .slg span { font-size: 32px; }
-  .cnt { margin-top: 44px; }
-  body.port .cnt { margin-top: 40px; grid-column: 1; }
-  .lab { font-size: 30px; line-height: 1.3; font-weight: 500; color: var(--sub); }
-  .num { display: flex; align-items: baseline; gap: 10px; color: var(--o); margin-top: 2px; }
-  .num span { font-size: 168px; line-height: 1; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-  .num em { font-style: normal; font-size: 40px; font-weight: 600; }
-  body.port .num span { font-size: 150px; }
-  .prog { display: flex; align-items: center; gap: 16px; margin-top: 20px; font-size: 28px; font-weight: 500; color: var(--sub); }
-  .chip { display: inline-block; padding: 5px 16px; border-radius: 999px; background: rgba(255,126,49,.16); color: var(--hi); font-size: 26px; font-weight: 600; white-space: nowrap; }
-  .bar { height: 4px; margin-top: 16px; background: rgba(255,255,255,.12); border-radius: 2px; overflow: hidden; }
-  .bar i { display: block; height: 100%; width: 0; background: var(--o); }
-  #feed { margin-top: 22px; flex: 1 1 0; min-height: 0; overflow: hidden; }
-  body.port #feed { grid-column: 1; margin-top: 18px; }
-  .frow { display: flex; align-items: center; gap: 14px; height: 52px; font-size: 26px; font-weight: 500; color: var(--sub); border-top: 1px solid rgba(255,255,255,.1); transition: opacity .5s; }
-  .frow:first-child { color: var(--txt); }
-  .frow s { text-decoration: none; display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--o); box-shadow: 0 0 0 4px rgba(255,126,49,.18); flex: none; }
-  .frow:not(:first-child) s { background: rgba(255,126,49,.45); box-shadow: none; }
-  .qrow { display: flex; gap: 28px; align-items: center; margin-top: 18px; }
-  body.port .qrow { grid-column: 2; grid-row: 2 / 4; flex-direction: column; align-items: flex-start; gap: 16px; margin-top: 40px; }
-  .qr { display: block; width: 200px; height: 200px; image-rendering: pixelated; image-rendering: crisp-edges; border-radius: 6px; background: #fff; flex: none; }
-  body.port .qr { width: 280px; height: 280px; }
-  .qcap { font-size: 34px; line-height: 1.3; font-weight: 700; color: var(--txt); }
-  .qnote { font-size: 24px; line-height: 1.45; color: var(--sub); margin-top: 8px; }
-  body.port .qcap { font-size: 30px; } body.port .qnote { font-size: 22px; }
-
-  /* 막간 글자 칸 · 세션 커버 3단(아이브로 · 제목 · 메타) · 정보 칸 자리에 투명도로만 */
-  #card { position: absolute; left: 1104px; top: 540px; width: 696px; transform: translateY(-50%); opacity: 0; }
-  body.port #card { left: 80px; top: 1580px; width: 920px; }
-  .eye { font-size: 42px; line-height: 1.2; font-weight: 500; color: var(--o); letter-spacing: -0.005em; }
-  .title { font-size: 92px; line-height: 1.18; font-weight: 600; color: var(--o); letter-spacing: -0.01em; margin-top: 14px; font-variant-numeric: tabular-nums; }
-  .meta { font-size: 38px; line-height: 1.45; font-weight: 500; color: var(--txt); margin-top: 22px; }
-  .meta:empty { display: none; }
-  #card.big .title { font-size: 168px; line-height: 1; font-weight: 700; letter-spacing: -0.02em; }
-
-  #demoMark { position: absolute; left: 120px; bottom: 30px; font-size: 20px; font-weight: 600; color: var(--faint); display: none; letter-spacing: .02em; }
-  body.port #demoMark { left: 80px; }
+  #demoMark { position: absolute; left: 72px; top: 178px; font-size: 20px; font-weight: 600; color: var(--faint); display: none; letter-spacing: .02em; }
+  body.port #demoMark { left: 56px; top: 156px; }
   body.demo #demoMark { display: block; }
-  #net { position: absolute; right: 120px; bottom: 30px; font-size: 20px; font-weight: 500; color: var(--faint); opacity: 0; transition: opacity .6s; }
-  body.port #net { right: 80px; }
+  #net { position: absolute; left: 72px; top: 208px; font-size: 20px; font-weight: 500; color: var(--faint); opacity: 0; transition: opacity .6s; }
+  body.port #net { left: 56px; top: 186px; }
   body.off #net { opacity: 1; }
-  #hud { position: fixed; left: 12px; top: 12px; font: 14px/1.4 Consolas, monospace; color: #9f9; display: none; white-space: pre; z-index: 9; }
+  #hud { position: fixed; left: 12px; bottom: 12px; font: 14px/1.4 Consolas, monospace; color: #9f9; display: none; white-space: pre; z-index: 9; background: rgba(0,0,0,.6); padding: 4px 6px; }
   body.hud-on #hud { display: block; }
 
   /* 전체 화면 버튼 · 화면 밖(배율 없음) · 리모컨 포인터 · 마우스가 움직일 때만 보인다 */
-  #fsBtn { position: fixed; right: 20px; bottom: 20px; z-index: 10; height: 48px; padding: 0 22px; border: 1px solid rgba(255,255,255,.22); border-radius: 12px; background: rgba(20,20,20,.88); color: #fff; font: 600 18px var(--f); cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .3s; }
+  #fsBtn { position: fixed; right: 20px; top: 20px; z-index: 10; height: 48px; padding: 0 22px; border: 1px solid rgba(255,255,255,.22); border-radius: 12px; background: rgba(20,20,20,.88); color: #fff; font: 600 18px var(--f); cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .3s; }
   body.ptr #fsBtn { opacity: 1; pointer-events: auto; }
   body.fs #fsBtn { display: none; }
 
@@ -96,24 +51,8 @@
 </style>
 </head>
 <body>
-<canvas id="cv"></canvas>
+<canvas id="cv" role="img" aria-label="ME to WE 스탬프 월 · AX Festival 2026"></canvas>
 <div id="frame">
-  <div id="wm"></div>
-  <section id="panel">
-    <div class="slg"><b>ME to WE :</b><span>나의 경험을 우리의 가능성으로</span></div>
-    <div class="cnt">
-      <p class="lab">오늘 모인 스탬프</p>
-      <p class="num"><span id="nBig" class="tab">0</span><em>개</em></p>
-      <p class="prog"><span class="chip" id="nRound">1번째 심볼</span><span id="nPart" class="tab">0 / 1,037</span></p>
-      <div class="bar"><i id="nBar"></i></div>
-    </div>
-    <div id="feed"></div>
-    <div class="qrow">
-      <canvas class="qr" id="qr" width="164" height="164" role="img" aria-label="AX Festival 2026 앱 QR"></canvas>
-      <div><p class="qcap" id="qCap">QR을 찍고<br>스탬프를 모으세요</p><p class="qnote" id="qNote">스탬프 하나가 점 하나로 켜집니다</p></div>
-    </div>
-  </section>
-  <section id="card"><p class="eye" id="cEye"></p><h2 class="title" id="cTitle"></h2><p class="meta" id="cMeta"></p></section>
   <div id="demoMark">DEMO · 가짜 적립</div>
   <div id="net">연결 다시 시도 중 · 마지막 값 표시</div>
 </div>
@@ -124,14 +63,14 @@
   <table>
     <tr><td>F · 전체 화면 버튼</td><td>전체 화면 켜기 · 끄기</td></tr>
     <tr><td>H</td><td>이 표</td></tr>
-    <tr><td>G</td><td>fps · 상태 표시</td></tr>
-    <tr><td>N</td><td>다음 막간 바로 보기</td></tr>
-    <tr><td>1 · 2 · 3 · 4 · 5</td><td>막간 고르기 (광고판 · 최초 로그인 · 이정표 · Outro 안내 · 심볼 완성)</td></tr>
+    <tr><td>G</td><td>fps · 단계 · 상태 표시</td></tr>
+    <tr><td>N</td><td>다음 광고 장면 바로 보기</td></tr>
+    <tr><td>1 ~ 7</td><td>장면 고르기 (광고판 · 최초 로그인 · 이정표 · Outro 안내 · 심볼 완성 · 스탬프 8종 · 경품)</td></tr>
     <tr><td>↑ · ↓ (데모)</td><td>가짜 적립 속도 두 배 · 절반</td></tr>
     <tr><td>Space (데모)</td><td>가짜 적립 멈춤 · 다시</td></tr>
     <tr><td>J · K (데모)</td><td>스탬프 100개 더하기 · 심볼 완성 직전으로</td></tr>
   </table>
-  <p>운영 화면은 공개 집계만 읽습니다(관리코드 없음). 연결이 끊기면 마지막 값을 그대로 두고 다시 연결합니다.</p>
+  <p>운영 화면은 공개 집계만 읽습니다(관리코드 없음). 연결이 끊기면 마지막 값을 그대로 두고 다시 연결합니다. 방향은 화면 비율로 정하고, 주소 뒤 ?o=land 또는 ?o=port 로 고정할 수 있습니다.</p>
 </div>
 <script src="../assets/server.js"></script>
 <script src="../draw/assets/axf_engine.js"></script>
