@@ -1183,6 +1183,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   html { font-size: calc(100% * var(--fs)); }                /* rem 타이포가 글자 크기 설정(--fs)을 따른다 */
   body { background: var(--ax-color-canvas); }
   #app :focus-visible, #splash :focus-visible { outline: var(--ax-focus-width) solid var(--ax-color-ink); outline-offset: var(--ax-space-4); }
+  /* v5.35b 포커스 고리는 키보드(Tab)일 때만 · 탭 · 프로그램 포커스(시트가 열리며 주 버튼에 focus())에는 검정 테두리가 생기지 않게 · html[data-kbd] 는 아래 스크립트가 keydown 에 켜고 포인터에 끈다 · 시트는 #app 밖이라 같은 고리를 따로 준다 */
+  html:not([data-kbd]) #frame :focus-visible { outline: none; }
+  html[data-kbd] #axsSheet :focus-visible { outline: var(--ax-focus-width) solid var(--ax-color-ink); outline-offset: var(--ax-space-4); }
   /* 헤더 64 · 화면 바탕과 같은 canvas 면 */
   /* v4.04 헤더 = v4.02 구성 복원(사용자 결정 260922) · 유틸 행 64(워드마크 · 일반/큰글씨 · 알림 종 · 설정) + 홈 인사 / 탭 루트 제목 · 상세 = 뒤로 + 제목 + 설정.
      가이드에서 벗어나는 것만 다듬었다: 흰 글자 → onBrand · 아이콘 터치 48 · 글자는 토큰 단계 · QR 아이콘 없음(가운데 QR 버튼) */
@@ -3694,8 +3697,12 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.35";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.35b";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
+/* v5.35b 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
+(function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
+  document.addEventListener("keydown", function (e) { if (e.key !== "Shift" && e.key !== "Control" && e.key !== "Alt" && e.key !== "Meta") h.setAttribute("data-kbd", "1"); }, true);
+  ["pointerdown", "touchstart", "mousedown"].forEach(function (t) { document.addEventListener(t, off, true); }); })();
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
   A2HS.deferred = e;
