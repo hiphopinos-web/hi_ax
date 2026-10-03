@@ -1492,6 +1492,31 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-sres-who .n { flex: none; font: var(--ax-type-caption); color: var(--ax-color-muted); }
   .axs-sres-h { margin: var(--ax-space-4) 0 0; font: var(--ax-type-t2); font-weight: 800; word-break: keep-all; }
   .axs-sres-s { margin: var(--ax-space-4) 0 0; font: var(--ax-type-t6); color: var(--ax-color-body); }
+  /* v5.34 경품 · 재고(스태프 폰) · 룰렛 등급 5버튼 · 체크인 존 키트 · 박스 열기 시트 */
+  .axs-inv { display: flex; flex-direction: column; gap: var(--ax-space-8); margin-top: var(--ax-space-12); }
+  .axs-inv-q { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-inv-d { margin: 0; font: var(--ax-type-t4); font-weight: 800; color: var(--ax-color-ink); }
+  .axs-inv-m { margin: var(--ax-space-8) 0 0; font: var(--ax-type-t6-strong); color: var(--ax-color-error); }
+  .axs-inv .axs-inv-m { margin: 0; }
+  .axs-inv-g { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ax-space-8); }
+  .axs-inv-b { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; min-height: 56px; padding: var(--ax-space-8) var(--ax-space-12); border: 0; border-radius: var(--ax-radius-12); background: var(--ax-color-surface); box-shadow: inset 0 0 0 1px var(--ax-color-divider); text-align: left; cursor: pointer; font-family: inherit; }
+  .axs-inv-b:last-child { grid-column: span 2; }
+  .axs-inv-b:active { background: var(--ax-color-brandSoft); }
+  .axs-inv-b b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }
+  .axs-inv-b small { font: var(--ax-type-caption); color: var(--ax-color-muted); }
+  .axs-inv-b small.low { color: var(--ax-color-error); font-weight: 700; }
+  .axs-inv-b[disabled], .axs-inv .ax-button[disabled] { opacity: 0.5; }
+  .axs-invlk { align-self: center; min-height: 44px; padding: 0 var(--ax-space-12); font: var(--ax-type-t7); color: var(--ax-color-muted); text-decoration: underline; text-underline-offset: 3px; }
+  .axs-ibx { display: flex; flex-direction: column; gap: var(--ax-space-8); margin-top: var(--ax-space-12); }
+  .axs-ibx-r { display: flex; align-items: center; justify-content: space-between; gap: var(--ax-space-12); padding: var(--ax-space-12); border-radius: var(--ax-radius-12); background: var(--ax-color-canvas); }
+  .axs-ibx-r > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .axs-ibx-r b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }
+  .axs-ibx-r span { font: var(--ax-type-caption); color: var(--ax-color-muted); }
+  .axs-ibx-r .ax-button { flex: none; width: auto; min-height: 44px; padding: 0 var(--ax-space-12); }
+  .axs-ibx-r.off { opacity: 0.55; }
+  .axs-ibx-last { display: flex; align-items: center; justify-content: space-between; gap: var(--ax-space-12); margin-top: var(--ax-space-12); padding: var(--ax-space-12); border-radius: var(--ax-radius-12); background: var(--ax-color-brandSoft); }
+  .axs-ibx-last b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-ibx-last .ax-button { flex: none; width: auto; min-height: 44px; padding: 0 var(--ax-space-12); }
   .axs-crowd.on { box-shadow: inset 0 0 0 2px var(--ax-color-error); }
   .axs-crst { flex: none; font: var(--ax-type-t6-strong); color: var(--ax-color-muted); }
   .axs-crst.bad { color: var(--ax-color-error); }
@@ -3668,7 +3693,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.33";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.34";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -3677,11 +3702,7 @@ window.addEventListener("beforeinstallprompt", function (e) {
      단계 안내 대신 한 번에 되는 버튼으로 바꿔 준다. */
   if (A2HS.open) a2hsSheet(true);
 });
-function isStandalone() {
-  try {
-    return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
-  } catch (e) { return false; }
-}
+function isStandalone() { return visitStandalone(); }   /* v5.34 standalone · fullscreen · minimal-ui 까지(visitRoute 와 같은 기준) */
 function isIOS() { return visitDev(navigator.userAgent, navigator.maxTouchPoints || 0) === "ios" && !window.MSStream; }   /* v5.01 아이패드 데스크톱 UA(맥 + 터치)도 · visitDev 와 같은 기준 */
 function isInApp() { var r = visitRoute(navigator.userAgent, visitStandalone()); return r === "kakao" || r === "naver" || r === "inapp"; }   /* v4.76 판별 한 곳(visitRoute · 안드로이드 웹뷰 · 아이폰 웹뷰 포함) */
 function a2hsDismissed() {
@@ -3700,7 +3721,7 @@ function a2hsInstall() {
     a2hsSheet(false);
     if (r && r.outcome === "accepted") {
       a2hsMarkDismissed();
-      notice({ key: "a2hs", title: "바로가기 설치 완료", body: "홈 화면의 AX Festival 아이콘으로 열기" });
+      notice({ key: "a2hs", title: a2hsWord() + " 완료", body: "홈 화면의 AX Festival 아이콘으로 열기" });
       App.render();
     }
   });
@@ -3736,6 +3757,11 @@ function a2hsSteps() {
     ["오른쪽 <span class=\"g\">⋮</span> 메뉴를 누르세요", ""],
     ["<b>&ldquo;홈 화면에 추가&rdquo;</b> 선택", ""],
     ["<b>&ldquo;추가&rdquo;</b> · 끝!", ""]
+  ];
+  if (k === "chrome" && a2hsAndChrome()) return [   /* v5.34 크롬 메뉴 = 「앱 설치」 · 없으면 「홈 화면에 추가」 › 「설치」(「바로가기 만들기」는 브라우저 탭으로 열린다) */
+    ["오른쪽 위 <span class=\"g\">⋮</span> 메뉴를 누르세요", ""],
+    ["<span><b>&ldquo;앱 설치&rdquo;</b> 선택<br>없으면 <b>&ldquo;홈 화면에 추가&rdquo;</b> 선택</span>", ""],   /* 한 덩어리(.a-step 은 flex · 줄바꿈이 칸으로 갈라지지 않게) */
+    ["<b>&ldquo;설치&rdquo;</b> · 끝!", ""]
   ];
   return [
     ["오른쪽 위 <span class=\"g\">⋮</span> 메뉴를 누르세요", ""],
@@ -3787,11 +3813,22 @@ function a2hsOpen() {   /* 설정 › 바로가기 설치 줄 */
    우리 앱의 버튼 · 메뉴 이름 = 「바로가기 설치」 하나(설정 줄 · 안내 제목 · 버튼 · 완료 알림 · 최초 로그인 질문)
    단계 안내 안에서 기기 메뉴 이름을 인용할 때만 그 기기 표기(「홈 화면에 추가」 · 「현재 페이지 추가」 · 「설치」)를 따옴표로 쓴다
    이미 홈 화면 앱으로 열려 있으면 설정 줄을 감춘다 */
-function a2hsWord() { return "바로가기 설치"; }
+/* v5.34 (사용자 261003 · 조사 「디자인 시안/알림 출처 표시/조사.md」 6 · 8절 결정 2) 안드로이드 크롬에서만 「앱 설치」(크롬 설치창 · 메뉴 이름과 같다) · 아이폰 · 삼성 인터넷 · 그 밖은 「바로가기 설치」 그대로 */
+function a2hsAndChrome() { var u = navigator.userAgent || ""; return /Android/i.test(u) && browserKind() === "chrome" && !/OPR\/|YaBrowser/.test(u) && !isInApp(); }
+function a2hsWord() { return a2hsAndChrome() ? "앱 설치" : "바로가기 설치"; }
+/* v5.34 이미 설치된 앱(getInstalledRelatedApps) · manifest 에 related_applications(webapp)가 있어야 값이 온다 · 지금 manifest 는 그대로라(WebAPK 재생성 방지) 보통 빈 목록 · 있으면 설치 권유를 숨긴다 */
+function a2hsInstalledCheck() {
+  try {
+    if (!navigator.getInstalledRelatedApps || isStandalone()) return;
+    navigator.getInstalledRelatedApps().then(function (l) { if (l && l.length) { A2HS.inst = true; if (typeof App !== "undefined" && App.render) App.render(); } }, function () {});
+  } catch (e) {}
+}
+a2hsInstalledCheck();
+function a2hsHide() { return isStandalone() || !!A2HS.inst; }
 function a2hsRow() {
   var b = el("fsA2hs"), t = el("fsA2hsT");
   if (!b) return;
-  b.hidden = isStandalone();
+  b.hidden = a2hsHide();
   if (t) t.textContent = a2hsWord();
   var vv = el("fsVer"); if (vv) vv.textContent = "앱 " + APP_VER;   /* v5.01 열어 둔 옛 탭인지 가려내기 */
   var lb = el("fsLbApp"), pu = el("fsPush");
@@ -3811,12 +3848,14 @@ function a2hsSheet(on, top) {   /* v4.89 top = 최초 로그인 장면 위로 �
     ' <b style="color:var(--hi)">· 눌러서 주소 복사</b></div>';
   if (isStandalone()) {
     h = '<div class="a-note" style="text-align:center">이미 홈 화면 아이콘으로 열고 계세요. 추가로 하실 일이 없습니다.</div>';
+  } else if (A2HS.inst) {   /* v5.34 설치돼 있는데 브라우저 탭으로 열었다 */
+    h = '<div class="a-note" style="text-align:center">이미 설치돼 있어요. 홈 화면의 AX Festival 아이콘으로 열어 주세요.</div>';
   } else if (isInApp()) {
     h = '<div class="a-note">지금은 <b>메신저 안 브라우저</b>라 바로가기를 설치할 수 없어요.<br>' +
       (isIOS() ? '메뉴에서 <b>&ldquo;Safari로 열기&rdquo;</b>를 누른 뒤 다시 시도해 주세요.</div>' : '오른쪽 위 메뉴에서 <b>&ldquo;다른 브라우저로 열기&rdquo;</b>를 누른 뒤 다시 시도해 주세요.</div>') + copyRow;
   } else if (A2HS.deferred) {
-    h = '<button class="a-go" onclick="a2hsInstall()">바로가기 설치</button>' +
-      '<div class="a-note" style="text-align:center">설치창에서 &ldquo;설치&rdquo;를 누르면 끝</div>';
+    h = '<button class="a-go" onclick="a2hsInstall()">' + a2hsWord() + '</button>' +
+      '<div class="a-note" style="text-align:center">' + (a2hsAndChrome() ? "설치창에서 &ldquo;설치&rdquo;를 누르세요" : "설치창에서 &ldquo;설치&rdquo;를 누르면 끝") + "</div>";
   } else if (isIOS()) {
     var io = a2hsIosSteps(navigator.userAgent, navigator.maxTouchPoints || 0);   /* v5.01 사파리 26 · 사파리 17 · 18 · 크롬 · 엣지 · 그 밖 · 아이패드 */
     h = (io.lead ? '<div class="a-lead">' + io.lead + "</div>" : "") +
@@ -3826,6 +3865,8 @@ function a2hsSheet(on, top) {   /* v4.89 top = 최초 로그인 장면 위로 �
     h = a2hsSteps().map(function (s, i) {
       return '<div class="a-step"><span class="n">' + (i + 1) + '</span>' + s[0] + "</div>";
     }).join("") +
+      (a2hsAndChrome() ? '<div class="a-note"><b>&ldquo;바로가기 만들기&rdquo;</b>는 고르지 마세요.</div>' +
+        '<div class="a-note" style="margin-top:8px">메뉴에 <b>&ldquo;앱에서 열기&rdquo;</b>가 보이면 이미 설치된 거예요. 그것을 누르세요.</div>' : "") +
       /* 메뉴가 안 보인다는 제보가 실제로 있었다. 화면을 스크롤하면 툴바가 숨는 브라우저가 많다. */
       '<div class="a-note">메뉴가 안 보이면 화면을 <b>살짝 아래로</b> 내려 주소창을 꺼낸 뒤 다시 찾아보세요.</div>' +
       '<div class="a-note" style="margin-top:8px">그래도 안 되면 아래 주소를 복사해 브라우저 즐겨찾기에 넣어 두세요.</div>' + copyRow;
@@ -3975,7 +4016,7 @@ function fsSheet(on) {
   var box = el("fsSheet");
   if (!box) return;
   if (on) fsPaint();
-  if (on && el("fsPush")) el("fsPush").hidden = !(typeof pushReady === "function" && pushReady());   /* v4.76 알림 · 새 서버(공개키)일 때만 */
+  if (on && el("fsPush")) el("fsPush").hidden = !(typeof pushReady === "function" && (pushReady() || pushRelogin()));   /* v4.76 알림 · 새 서버(공개키)일 때만 · v5.34 토큰 없는 옛 로그인도 줄을 보인다(다시 로그인 안내) */
   if (on) a2hsRow();   /* v4.88 앱 설치 · 홈 화면에 추가 한 단어 · 홈 화면 앱이면 숨김 · 줄이 다 숨으면 「앱」 제목도 */
   box.hidden = !on;
 }
@@ -8364,6 +8405,7 @@ function scanChoose(id) {
   if (qrScanSupported() && BE.on) scanStart();   /* 고르면 곧바로 찍는다(목적을 고른 손짓 = 카메라 허용 손짓) */
 }
 function scanRepick() { scanStop(); SCAN.pick = true; SCAN.sub = ""; App.render(); window.scrollTo(0, 0); }
+var INV_LNK = '<button type="button" class="ax-link axs-plain axs-invlk" onclick="invBoxOpen()">재고 · 박스 열기</button>';   /* v5.34 스캔 화면 맨 아래 작은 링크(타일 · 탭 아님) */
 function admScanHtml() {
   var sp = scanSpot(SCAN.spot), log = '<section class="ax-stack-tight axs-gap12"><h2 class="ax-meta">최근 스캔</h2><div class="ax-card axs-slog" id="scanLog">' + scanLogHtml() + "</div></section>";
   if (!sp || SCAN.pick) {
@@ -8373,7 +8415,7 @@ function admScanHtml() {
     }
     return '<h2 class="ax-section-title">무엇을 찍나요?</h2><div class="axs-stiles">' +
       SCAN_TILES.filter(function (id) { return PHOTO_Q || id !== "q_photo"; }).map(function (id) {   /* v5.05 포토부스 대기 폐지면 타일 없음 */ return id === "sess" ? '<button type="button" class="axs-stile" onclick="scanChoose(\'sess\')"><b>10F 세션 입장</b><span>A~E 고르기</span></button>' : scanTileHtml(scanSpot(id)); }).join("") + "</div>" +
-      (sp ? '<button type="button" class="ax-button ax-button-weak" onclick="SCAN.pick = false; App.render()">' + esc(sp.lb || sp.nm) + " 그대로 찍기</button>" : "") + log;
+      (sp ? '<button type="button" class="ax-button ax-button-weak" onclick="SCAN.pick = false; App.render()">' + esc(sp.lb || sp.nm) + " 그대로 찍기</button>" : "") + log + INV_LNK;
   }
   var w = scanWhat(sp), out = sp.kind === "roulette" && S.get("roulette_out", false);
   var will = '<section class="axs-will' + (out ? " bad" : "") + '"><div class="axs-srow"><p class="axs-will-k">지금 찍으면</p>' +
@@ -8382,7 +8424,7 @@ function admScanHtml() {
   var cam = SCAN.on
     ? '<div class="axs-scam"><video id="qrVideo" playsinline muted></video></div><button type="button" class="ax-button ax-button-weak" onclick="scanStop(); App.render()">스캔 멈추기</button>'
     : '<button type="button" class="ax-button axs-camgo" onclick="scanStart()">카메라 켜고 찍기</button>';
-  return will + cam + '<div id="scanRes">' + scanBigHtml() + "</div>" + log;
+  return will + cam + '<div id="scanRes">' + scanBigHtml() + "</div>" + log + INV_LNK;
 }
 /* 찍은 결과 한 장 · tone = ok(성공) | dup(이미 · 할 일 없음) | bad(실패) | wait(확인하는 중 · 붐빔) */
 function scanBigHtml() {
@@ -8390,7 +8432,7 @@ function scanBigHtml() {
   if (!r) return "";
   return '<section class="axs-sres ' + r.tone + '" role="status" aria-live="polite">' +
     '<p class="axs-sres-who">' + esc(r.who || "") + '<span class="n">' + esc(hhmmss(r.t)) + "</span></p>" +
-    '<p class="axs-sres-h">' + esc(r.head) + "</p>" + (r.sub ? '<p class="axs-sres-s">' + esc(r.sub) + "</p>" : "") + "</section>";
+    '<p class="axs-sres-h">' + esc(r.head) + "</p>" + (r.sub ? '<p class="axs-sres-s">' + esc(r.sub) + "</p>" : "") + (r.inv ? invResHtml(r) : "") + "</section>";
 }
 function hhmmss(t) { var d = new Date(t || Date.now()), p = function (n) { return (n < 10 ? "0" : "") + n; }; return p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds()); }
 function scanShow(tone, who, head, sub) {
@@ -8992,6 +9034,8 @@ function envKind() {
   return ok ? "push" : "none";
 }
 function pushReady() { var u = S.get("user", {}) || {}; return !!PUSH.k && BE.on && !!u.empId && !!u.ses && !/^#(demo|self|tv=)/i.test(VISIT.hash0) && !(typeof tsfOn === "function" && tsfOn()); }
+/* v5.34 로그인 토큰(ses)이 없는 옛 로그인 폰 · 알림 줄을 숨기지 않고 「다시 로그인하면 알림을 켤 수 있어요」 */
+function pushRelogin() { var u = S.get("user", {}) || {}; return !!PUSH.k && BE.on && !!u.empId && !u.ses && !/^#(demo|self|tv=)/i.test(VISIT.hash0) && !(typeof tsfOn === "function" && tsfOn()); }
 function pushB64(s) { s = String(s).replace(/-/g, "+").replace(/_/g, "/"); var b = atob(s + "===".slice((s.length + 3) % 4)), u = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; }
 function pushB64e(buf) { var u = new Uint8Array(buf), s = ""; for (var i = 0; i < u.length; i++) s += String.fromCharCode(u[i]); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
 /* sync 공용 push · 공개키가 바뀌면(환경 · 키 교체) 다시 확인한다 */
@@ -9168,6 +9212,11 @@ function pushSetPaint() {
   if (SHEET.id === "pushset" && el("axsSheet")) { SHEET.spec = spec; sheetPaint(); } else sheetOpen(spec);
 }
 function pushSetOpen() {
+  if (!pushReady() && pushRelogin()) {
+    sheetOpen({ id: "pushrl", title: "알림", lead: "다시 로그인하면 알림을 켤 수 있어요",
+      body: '<p class="axs-pnote">설정 › 로그아웃 · 다른 사번으로 입장 › 사번 · 이름 · 비밀번호로 다시 입장</p>', go: "sheetClose()", goLbl: "확인" });
+    return;
+  }
   pushSetPaint();
   var u = S.get("user", {}) || {};
   if (BE.on && u.empId && PUSH.k) beCall({ action: "push_me", emp: u.empId }, function (r) {
@@ -10572,9 +10621,11 @@ var SCAN_SPOTS = [
   { id: "q_photo", nm: "1F AI 포토부스", kind: "photo", lb: "포토부스 입장", tsub: "다음 번호 호출", will: "포토부스 입장 · 다음 번호 호출", cond: "앱에서 받은 대기 번호" },   /* 번호는 참가자가 앱에서 받는다 · 찍으면 입장 + 다음 호출 */
   /* v4.83 (261001) 1F 전시(p1) 스탬프 폐지 · AX PLAY(p2) = 체험 뒤 스태프가 참가자 내 QR 을 찍어 적립(스탬프 4) */
   { id: "p2", nm: "AX PLAY", kind: "stamp", lb: "AX PLAY 스탬프", tsub: "체험 확인 · 적립", will: "AX PLAY 스탬프 적립", cond: "HiDI-Q 또는 Hi-Helper 체험을 마친 사람" },
-  { id: "roulette", nm: "1F EVENT 룰렛", kind: "roulette", lb: "룰렛 체크인", tsub: "1회 사용", will: "룰렛 1회 사용", cond: "스탬프 3개 이상 · 1인 1회" }   /* 260909 · 스탬프 3개=1회, 판정은 서버 */
+  { id: "roulette", nm: "1F EVENT 룰렛", kind: "roulette", lb: "룰렛 체크인", tsub: "1회 사용", will: "룰렛 1회 사용", cond: "스탬프 3개 이상 · 1인 1회" },   /* 260909 · 스탬프 3개=1회, 판정은 서버 */
+  /* v5.34 (설계안 §10 결정 2) 사옥 밖 체크인 존(몽골텐트) · 찍으면 체크인 + 키트 지급 기록(inv_kit) · 10F 입장(sess_in)과 따로 */
+  { id: "kit", nm: "체크인 존 · 키트", kind: "kit", lb: "체크인 존 · 키트", tsub: "체크인 + 지급", will: "체크인 + 키트 지급", cond: "사전 신청 명단이면 바로 지급" }
 ];
-var SCAN_TILES = ["roulette", "q_photo", "p2", "dap", "cchat", "sess"];   /* 자주 쓰는 룰렛 · 포토 · 스탬프(AX PLAY)가 위 · 10F 세션은 한 타일에서 A~E · v4.83 1F 전시 타일 삭제 */
+var SCAN_TILES = ["roulette", "kit", "q_photo", "p2", "dap", "cchat", "sess"];   /* 자주 쓰는 룰렛 · 포토 · 스탬프(AX PLAY)가 위 · 10F 세션은 한 타일에서 A~E · v4.83 1F 전시 타일 삭제 */
 function scanSpot(id) { return SCAN_SPOTS.filter(function (s) { return s.id === id; })[0] || null; }
 var SCAN = { spot: PHOTO_Q || S.get("scan_spot", "") !== "q_photo" ? S.get("scan_spot", "") : "", log: [], last: "", lastT: 0, on: false, pick: false, sub: "", res: null };
 
@@ -10602,6 +10653,7 @@ function scanHit(raw) {
   else if (sp.kind === "roster") { params.action = "staff_mark"; params.prog = sp.id; params.mark = "in"; }
   else if (sp.kind === "photo") params.action = "photo_enter";
   else if (sp.kind === "stamp") { params.action = "stamp_grant"; params.id = sp.id; }
+  else if (sp.kind === "kit") params.action = "inv_kit";   /* v5.34 */
   else params.action = "roulette_redeem";
   scanLog(emp, "처리 중", null);
   scanShow("wait", emp, "확인하는 중", sp.will || sp.nm);
@@ -10632,6 +10684,8 @@ function scanDone(emp, sp, res) {
           why === "already" ? res.no + "번은 이미 입장 처리됐어요" :
             why === "need" ? "스탬프 3개 미만 · 차감 불가 (현재 " + (res.n || 0) + "개)" :
               why === "used" ? "이미 룰렛을 돌린 참가자예요" :
+                why === "spare0" ? "여유 키트 없음 · 룰렛 굿즈로 대체" :
+                /unknown action/i.test(err) ? "서버 갱신 전 · 기록되지 않음" :
                 why === "auth" ? "관리코드가 맞지 않아요 · 관리자 모드를 다시 열어 주세요" :
                   "처리하지 못했어요" + (why || err ? " (" + (why || err.slice(0, 40)) + ")" : "");
     scanLog(emp, nm + msg, false, true);
@@ -10639,6 +10693,7 @@ function scanDone(emp, sp, res) {
     scanShow(big[0], nm ? nm.slice(0, -3) : emp, big[1], big[2]);
     return;
   }
+  if (sp.kind === "kit") { kitDone(emp, res); return; }   /* v5.34 */
   var ok = sp.kind === "sess" || sp.kind === "roster" ? (res.dup ? "이미 입장 처리됨" : "입장 확인") :
     sp.kind === "photo" ? res.no + "번 입장" + (res.early ? "(순서보다 먼저)" : "") + " · " + (res.next ? res.next.no + "번 호출" : "대기 번호 없음") :
       sp.kind === "stamp" ? (res.dup ? "이미 받은 스탬프" : "스탬프 적립 · " + sp.nm) :
@@ -10652,6 +10707,182 @@ function scanDone(emp, sp, res) {
         sp.kind === "stamp" ? (dup ? "이미 받은 스탬프" : "스탬프 적립 완료") : "룰렛 체크인 완료",
     sp.kind === "photo" ? (res.next ? "다음 " + res.next.no + "번 호출" : "대기 번호 없음") + (res.early ? " · 순서보다 먼저" : "") :
       sp.kind === "roulette" ? "스탬프 " + (res.n || "") + "개 · 바로 돌리세요" : sp.nm);
+  if (sp.kind === "roulette" && !dup) invRoulStart(emp);   /* v5.34 결과 화면에 5등급 버튼 */
+}
+/* ═══ v5.34 경품 · 재고 · 스태프 폰 (설계 「디자인 시안/경품 재고/앱_명세.md」 · 설계안 §10 · 사용자 261003) ═══
+ * 새 탭 · 새 메뉴 없음(260930 「스캔 · 혼잡 제보만 크게」) · 참가자 화면에는 아무것도 없다 · 품목은 「키트」로만 · 가격 없음.
+ * ① 룰렛 결과 화면 5등급 버튼(inv_roulette · qr 없이) · 안 눌러도 다음 스캔으로 넘어간다(콘솔 「등급 미입력」) · 누르면 5초 「취소」(undo=1 · 서버 2분)
+ * ② 체크인 존 · 키트 타일(inv_kit) · 명단 = 지급 · 이미 = 시각 · 명단 밖 = 「키트 지급」 · 「지급 안 함」 · 여유 0 = spare0
+ * ③ 「재고 · 박스 열기」 작은 링크 → 시트(inv_left box · inv_box · inv_undo) · 박스당 수량이 없으면 흐리게
+ * 옛 서버(unknown action)면 버튼을 숨기고 한 줄 · 실패해도 룰렛 차감 · 체크인은 이미 끝난 일이다 */
+var INV_RG_LB = ["1등 텀블러", "2등 커피 + 키링", "3등 컵받침", "4등 판스티커", "5등 볼펜"];
+var INVS = { id: 0, emp: "", left: null, g: "", gt: 0, busy: false, off: false, msg: "", rid: "", rt: 0, box: null, bmsg: "", blast: null, bbusy: false };
+function invOld(r) { return !!(r && !r.ok && /unknown action/i.test(String(r.err || ""))); }
+function invPaint() { var b = el("scanRes"); if (b) b.innerHTML = scanBigHtml(); }
+function invMine() { return SCAN.res && SCAN.res.inv && SCAN.res.t === INVS.id; }
+function invAuth(r) { if (r && r.reason === "auth") { admAuthLost(); return true; } return false; }
+function invRoulStart(emp) {
+  if (!SCAN.res) return;
+  SCAN.res.inv = "roul";
+  INVS.id = SCAN.res.t; INVS.emp = emp; INVS.left = null; INVS.g = ""; INVS.gt = 0; INVS.busy = false; INVS.off = false; INVS.msg = "";
+  invPaint();
+  var id = INVS.id;
+  beCall(admA({ action: "inv_left" }), function (r) {
+    if (INVS.id !== id) return;
+    if (invOld(r)) INVS.off = true; else if (r && r.ok && r.r) INVS.left = r.r;
+    if (invMine()) invPaint();
+  }, function () {});
+}
+function invRoulPick(g) {
+  if (INVS.busy || !INVS.emp || !invMine()) return;
+  INVS.busy = true; INVS.msg = ""; invPaint();
+  var id = INVS.id;
+  beCall(admA({ action: "inv_roulette", emp: INVS.emp, g: String(g) }), function (r) {
+    if (INVS.id !== id) return;
+    INVS.busy = false;
+    if (invAuth(r)) return;
+    if (r && r.left) INVS.left = r.left;
+    if (invOld(r)) INVS.off = true;
+    else if (r && r.ok) { INVS.g = String(r.g || "r" + g).replace(/^r/, ""); INVS.gt = Date.now(); stampBuzz(40); setTimeout(function () { if (INVS.id === id && invMine()) invPaint(); }, 5100); }
+    else INVS.msg = r && r.reason === "dup" ? "이미 " + String(r.g || "").replace(/^r/, "") + "등으로 기록됨" :
+      r && r.reason === "noroul" ? "룰렛을 쓰지 않은 사번이에요" : r && r.reason === "locked" ? admLockedMsg(r) : "기록하지 못했어요 · 다시 눌러 주세요";
+    if (invMine()) invPaint();
+  }, function () { if (INVS.id !== id) return; INVS.busy = false; INVS.msg = "서버 응답 없음 · 다시 눌러 주세요"; if (invMine()) invPaint(); });
+}
+function invRoulUndo() {
+  if (INVS.busy || !INVS.g || !invMine()) return;
+  INVS.busy = true; invPaint();
+  var id = INVS.id;
+  beCall(admA({ action: "inv_roulette", emp: INVS.emp, undo: "1" }), function (r) {
+    if (INVS.id !== id) return;
+    INVS.busy = false;
+    if (invAuth(r)) return;
+    if (r && r.left) INVS.left = r.left;
+    if (r && (r.ok || r.reason === "none")) { INVS.g = ""; INVS.msg = "취소했어요 · 다시 고르세요"; }
+    else INVS.msg = r && r.reason === "late" ? "콘솔에서 되돌려 주세요" : "취소하지 못했어요 · 콘솔에서 되돌려 주세요";
+    if (invMine()) invPaint();
+  }, function () { if (INVS.id !== id) return; INVS.busy = false; INVS.msg = "서버 응답 없음 · 콘솔에서 확인해 주세요"; if (invMine()) invPaint(); });
+}
+function invLeftHtml(x) {
+  if (!x || x.left == null) return "";
+  var low = x.q ? x.left <= x.q * 0.1 : x.left <= 0;
+  return '<small' + (low ? ' class="low"' : "") + ">남은 " + Number(x.left) + "</small>";
+}
+function invKitGive() {
+  if (INVS.busy || !invMine()) return;
+  INVS.busy = true; INVS.msg = ""; invPaint();
+  var id = INVS.id, emp = INVS.emp;
+  beCall(admA({ action: "inv_kit", emp: emp, give: "1" }), function (r) {
+    if (INVS.id !== id) return;
+    INVS.busy = false;
+    if (invAuth(r)) return;
+    var R = SCAN.res;
+    if (r && r.ok && r.kit === "give") {
+      R.tone = "ok"; R.head = "키트 지급"; R.sub = "여유 키트에서" + (r.spare != null ? " · 남은 " + r.spare : ""); R.inv = "kitdone";
+      INVS.rid = String(r.rid || ""); INVS.rt = Date.now(); stampBuzz(60);
+      scanLog(emp, (r.name ? r.name + " · " : "") + "키트 지급(명단 밖)", true);
+      setTimeout(function () { if (INVS.id === id && invMine()) invPaint(); }, 5100);
+    } else if (r && r.reason === "spare0") { R.tone = "bad"; R.head = "여유 키트 없음"; R.sub = "룰렛 굿즈로 대체해 주세요"; R.inv = ""; stampBuzz([120, 80, 120]); }
+    else if (r && r.ok && r.kit === "dup") { R.tone = "dup"; R.head = "이미 지급됨"; R.sub = (r.at || "") + "에 받았어요"; R.inv = ""; }
+    else INVS.msg = r && r.reason === "locked" ? admLockedMsg(r) : "기록하지 못했어요 · 다시 눌러 주세요";
+    if (invMine() || SCAN.res === R) invPaint();
+  }, function () { if (INVS.id !== id) return; INVS.busy = false; INVS.msg = "서버 응답 없음 · 다시 눌러 주세요"; if (invMine()) invPaint(); });
+}
+function invKitSkip() { if (!invMine()) return; SCAN.res.inv = ""; SCAN.res.sub = "체크인만 기록했어요"; invPaint(); }
+function invKitUndo() {
+  if (INVS.busy || !INVS.rid || !invMine()) return;
+  INVS.busy = true; invPaint();
+  var id = INVS.id;
+  beCall(admA({ action: "inv_undo", rid: INVS.rid }), function (r) {
+    if (INVS.id !== id) return;
+    INVS.busy = false;
+    if (invAuth(r)) return;
+    var R = SCAN.res;
+    if (r && r.ok) { INVS.rid = ""; R.tone = "dup"; R.head = "지급 취소"; R.sub = "체크인만 남았어요"; R.inv = ""; scanLog(INVS.emp, "키트 지급 취소", null); }
+    else INVS.msg = "취소하지 못했어요 · 콘솔에서 되돌려 주세요";
+    invPaint();
+  }, function () { if (INVS.id !== id) return; INVS.busy = false; INVS.msg = "서버 응답 없음 · 콘솔에서 확인해 주세요"; if (invMine()) invPaint(); });
+}
+/* 체크인 존 스캔 결과 */
+function kitDone(emp, res) {
+  var who = res.name || emp, sp = res.spare == null ? "수량 미정" : String(res.spare);
+  if (res.kit === "give") { scanLog(emp, (res.name ? res.name + " · " : "") + "키트 지급", true, true); scanShow("ok", who, "키트 지급", res.pre ? "세션 " + res.pre + " · 사전 신청자" : "체크인 + 지급"); return; }
+  if (res.kit === "dup") { scanLog(emp, (res.name ? res.name + " · " : "") + "이미 지급됨", true, true); scanShow("dup", who, "이미 지급됨", (res.at || "") + "에 받았어요"); return; }
+  scanLog(emp, (res.name ? res.name + " · " : "") + "체크인 · 명단 밖", null, true);
+  scanShow("dup", who, "사전 신청 명단에 없어요", "여유 키트 " + sp + (res.list ? "" : " · 명단 대기 중"));
+  SCAN.res.inv = "kit";
+  INVS.id = SCAN.res.t; INVS.emp = emp; INVS.busy = false; INVS.msg = ""; INVS.rid = ""; INVS.rt = 0;
+  invPaint();
+}
+function invResHtml(r) {
+  if (r.t !== INVS.id) return "";
+  var msg = INVS.msg ? '<p class="axs-inv-m">' + esc(INVS.msg) + "</p>" : "", dis = INVS.busy ? " disabled" : "";
+  if (r.inv === "kit") return '<div class="axs-inv">' + msg + '<div class="axs-crbtn"><button type="button" class="ax-button" onclick="invKitGive()"' + dis + ">키트 지급</button>" +
+    '<button type="button" class="ax-button ax-button-weak" onclick="invKitSkip()"' + dis + ">지급 안 함</button></div></div>";
+  if (r.inv === "kitdone") return INVS.rid && Date.now() - INVS.rt < 5000 ? '<div class="axs-inv">' + msg + '<p class="axs-inv-q">5초 안에 취소할 수 있어요</p><button type="button" class="ax-button ax-button-weak" onclick="invKitUndo()"' + dis + ">취소</button></div>" : msg;
+  if (r.inv !== "roul") return "";
+  if (INVS.off) return '<p class="axs-inv-m">등급 기록은 서버 갱신 뒤</p>';
+  if (INVS.g) {
+    var can = Date.now() - INVS.gt < 5000;
+    return '<div class="axs-inv"><p class="axs-inv-d">기록했어요 · ' + esc(INVS.g) + "등</p>" + msg +
+      (can ? '<p class="axs-inv-q">5초 안에 취소할 수 있어요</p><button type="button" class="ax-button ax-button-weak" onclick="invRoulUndo()"' + dis + ">취소</button>" : "") + "</div>";
+  }
+  var L = INVS.left || {};
+  return '<div class="axs-inv"><p class="axs-inv-q">돌린 뒤 나온 등급을 눌러 주세요</p>' + msg + '<div class="axs-inv-g">' +
+    INV_RG_LB.map(function (lb, i) {
+      var x = L["r" + (i + 1)], zero = x && x.left != null && x.left <= 0;
+      return '<button type="button" class="axs-inv-b" onclick="invRoulPick(' + (i + 1) + ')"' + dis + "><b>" + esc(lb) + "</b>" + (zero ? '<small class="low">재고 없음 · 그래도 눌러 기록</small>' : invLeftHtml(x)) + "</button>";
+    }).join("") + "</div></div>";
+}
+/* ③ 재고 · 박스 열기 시트 */
+function invBoxBody() {
+  if (INVS.box === "old") return '<p class="axs-pnote">서버 갱신 뒤 쓸 수 있어요</p>';
+  if (!INVS.box) return '<p class="axs-pnote">불러오는 중</p>';
+  var dis = INVS.bbusy ? " disabled" : "";
+  var top = INVS.blast ? '<div class="axs-ibx-last"><b>기록했어요 · ' + esc(INVS.blast.n) + " " + INVS.blast.q + "개</b>" +
+    '<button type="button" class="ax-button ax-button-weak" onclick="invBoxUndo()"' + dis + ">방금 것 취소</button></div>" : "";
+  return top + (INVS.bmsg ? '<p class="axs-inv-m">' + esc(INVS.bmsg) + "</p>" : "") + '<div class="axs-ibx">' + INVS.box.map(function (b) {
+    var left = b.left == null ? "" : "남은 " + b.left;
+    if (!b.box) return '<div class="axs-ibx-r off"><div><b>' + esc(b.n) + "</b><span>박스당 수량 미정 · 콘솔에서 정함</span></div></div>";
+    return '<div class="axs-ibx-r"><div><b>' + esc(b.n) + "</b><span>" + esc(left + (left ? " · " : "") + "박스당 " + b.box) + '</span></div><button type="button" class="ax-button" onclick="invBoxGo(\'' + esc(b.id) + '\')"' + dis + ">박스 1개 열었음</button></div>";
+  }).join("") + "</div>";
+}
+function invBoxPaint() { if (SHEET.id === "invbox" && el("axsSheet")) { SHEET.spec.body = invBoxBody(); sheetPaint(); } }
+function invBoxOpen() {
+  INVS.box = null; INVS.bmsg = ""; INVS.blast = null; INVS.bbusy = false;
+  sheetOpen({ id: "invbox", title: "재고 · 박스 열기", lead: "박스를 열 때마다 눌러 주세요", body: invBoxBody(), go: "sheetClose()", goLbl: "닫기" });
+  if (!BE.on) { INVS.box = []; INVS.bmsg = "서버에 연결되지 않았어요"; invBoxPaint(); return; }
+  beCall(admA({ action: "inv_left" }), function (r) {
+    if (invAuth(r)) { sheetClose(true); return; }
+    INVS.box = invOld(r) ? "old" : r && r.ok && r.box ? r.box : [];
+    if (r && !r.ok && !invOld(r)) INVS.bmsg = "불러오지 못했어요 · 닫고 다시 열어 주세요";
+    invBoxPaint();
+  }, function () { INVS.box = []; INVS.bmsg = "서버 응답 없음 · 닫고 다시 열어 주세요"; invBoxPaint(); });
+}
+function invBoxGo(id) {
+  if (INVS.bbusy) return;
+  INVS.bbusy = true; INVS.bmsg = ""; invBoxPaint();
+  beCall(admA({ action: "inv_box", id: id }), function (r) {
+    INVS.bbusy = false;
+    if (invAuth(r)) { sheetClose(true); return; }
+    if (r && r.ok) {
+      INVS.blast = { rid: String(r.rid || ""), n: r.n || id, q: r.q };
+      (INVS.box || []).forEach(function (b) { if (b.id === id && r.left != null) b.left = r.left; });
+    } else INVS.bmsg = r && r.reason === "nobox" ? "박스당 수량 미정 · 콘솔에서 정함" : r && r.reason === "locked" ? admLockedMsg(r) : "기록하지 못했어요 · 다시 눌러 주세요";
+    invBoxPaint();
+  }, function () { INVS.bbusy = false; INVS.bmsg = "서버 응답 없음 · 다시 눌러 주세요"; invBoxPaint(); });
+}
+function invBoxUndo() {
+  if (INVS.bbusy || !INVS.blast) return;
+  INVS.bbusy = true; invBoxPaint();
+  var last = INVS.blast;
+  beCall(admA({ action: "inv_undo", rid: last.rid }), function (r) {
+    INVS.bbusy = false;
+    if (invAuth(r)) { sheetClose(true); return; }
+    if (r && r.ok) { INVS.blast = null; INVS.bmsg = "취소했어요"; (INVS.box || []).forEach(function (b) { if (b.id === r.id && r.left != null) b.left = r.left; }); }
+    else INVS.bmsg = "취소하지 못했어요 · 콘솔에서 되돌려 주세요";
+    invBoxPaint();
+  }, function () { INVS.bbusy = false; INVS.bmsg = "서버 응답 없음 · 콘솔에서 확인해 주세요"; invBoxPaint(); });
 }
 /* v4.71 실패 결과 크게 · [색, 제목, 한 줄] · dup = 이미 처리된 것(참가자에게 문제없음) */
 function scanBig(why, sp, res, err) {
@@ -10661,6 +10892,8 @@ function scanBig(why, sp, res, err) {
     why === "out" ? ["bad", "룰렛 소진", "차감하지 않았어요"] :
     why === "need" ? ["bad", "스탬프 3개 미만", "현재 " + (res.n || 0) + "개 · 차감하지 않았어요"] :
     why === "used" ? ["bad", "이미 사용함", "룰렛을 이미 돌린 참가자예요"] :
+    why === "spare0" ? ["bad", "여유 키트 없음", "룰렛 굿즈로 대체해 주세요"] :
+    /unknown action/i.test(String(err || "")) ? ["bad", "아직 쓸 수 없어요", "서버 갱신 뒤 다시 찍어 주세요"] :
     why === "window" ? ["bad", "입장 시간이 아니에요", res.open || ""] :
     why === "notfound" ? (sp.kind === "photo" ? ["bad", "대기 번호 없음", "앱에서 번호 받기 안내"] : ["bad", "신청 명단에 없음", sp.nm]) :
     why === "skipped" ? ["bad", res.no + "번 건너뛴 번호", "새 번호 받기 안내"] :
@@ -17711,11 +17944,11 @@ function lgxSheetHtml() {
    그동안 찍은 QR 카드와 「시작하기 · 홈으로」는 접어 둔다(시트에 주황 주 버튼이 둘이 되지 않게)
    v4.95 고르면 곧바로 홈(답이 곧 「시작」이다 · 버튼을 한 번 더 누르게 하지 않는다) · 찍은 QR 이 있으면 그 카드로 넘어가 저절로 이어 간다 · QR 을 고르면 홈에서 한 줄 안내
    묻지 않는 경우 = 이미 홈 화면 앱(standalone) · 이 기기에서 이미 골랐다(entry_pref · 기기 기준) */
-function lgxAskWanted() { return !isStandalone() && !S.get("entry_pref", null); }
+function lgxAskWanted() { return !a2hsHide() && !S.get("entry_pref", null); }
 var LGXASK = { cur: null, scan: false };
 function lgxAskHtml() {
   return '<div class="lgx-ask" hidden><p class="lgx-askq">앞으로 어떻게 들어올까요?</p>' +
-    '<button type="button" class="ax-button" onclick="lgxAskApp()">바로가기 설치하기</button>' +
+    '<button type="button" class="ax-button" onclick="lgxAskApp()">' + a2hsWord() + '하기</button>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="lgxAskQr()">QR로 접속하기</button></div>';
 }
 /* 바로가기 설치하기 · 설치창이 있으면(안드로이드 크롬 · 삼성 인터넷 · 엣지) 그 자리에서 · 아니면 기기별 안내(아이폰 = 공유 → 홈 화면에 추가 · 메신저 안 브라우저 = 다른 브라우저로 열기) · 끝나면 다음 카드 */
@@ -17725,7 +17958,7 @@ function lgxAskApp() {
     var ev = A2HS.deferred; A2HS.deferred = null;
     try { ev.prompt(); } catch (e) { lgxAskDone("app"); return; }
     ev.userChoice.then(function (r) {
-      if (r && r.outcome === "accepted") { a2hsMarkDismissed(); notice({ key: "a2hs", title: "바로가기 설치 완료", body: "홈 화면의 AX Festival 아이콘으로 열기" }); }
+      if (r && r.outcome === "accepted") { a2hsMarkDismissed(); notice({ key: "a2hs", title: a2hsWord() + " 완료", body: "홈 화면의 AX Festival 아이콘으로 열기" }); }
       lgxAskDone("app");
     }, function () { lgxAskDone("app"); });
     return;
@@ -17734,7 +17967,7 @@ function lgxAskApp() {
   try { a2hsSheet(true, true); } catch (e) {}   /* 장면 위로 띄운다 · 닫으면 after */
   if (!a2hsShown()) {   /* v5.01 안내를 못 열었으면 토스트 · 장면은 다음 단계로 */
     A2HS.after = null; A2HS.open = false;
-    setTimeout(function () { toast("설치 방법을 열지 못했어요. 설정 › 바로가기 설치에서 다시 열어 주세요"); }, 450);
+    setTimeout(function () { toast("설치 방법을 열지 못했어요. 설정 › " + a2hsWord() + "에서 다시 열어 주세요"); }, 450);
     lgxAskDone("app");
   }
 }
@@ -17754,10 +17987,10 @@ function lgxAskDone(how) {
 var HOMEASK = { on: false };
 function entryDay() { var d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
 function entryAskHtml() {
-  if (isStandalone() || S.get("entry_pref", null) === "app" || LGX.cur || el("app").hidden || !(S.get("user", {}) || {}).empId) return "";   /* 앱이 보일 때만 그날을 센다 */
+  if (a2hsHide() || S.get("entry_pref", null) === "app" || LGX.cur || el("app").hidden || !(S.get("user", {}) || {}).empId) return "";   /* 앱이 보일 때만 그날을 센다 */
   if (!HOMEASK.on) { if (S.get("entry_ask_day", "") === entryDay()) return ""; HOMEASK.on = true; S.put("entry_ask_day", entryDay()); }
   return '<section class="ax-card axs-eask"><h2 class="ax-section-title">앞으로 어떻게 들어올까요?</h2>' +
-    '<button type="button" class="ax-button ax-button-weak" onclick="entryAskApp()">바로가기 설치하기</button>' +
+    '<button type="button" class="ax-button ax-button-weak" onclick="entryAskApp()">' + a2hsWord() + '하기</button>' +
     '<button type="button" class="ax-link axs-eask-qr" onclick="entryAskQr()">QR로 접속하기</button></section>';
 }
 function entryAskApp() { HOMEASK.on = false; lgxAskApp(); App.render(); }
@@ -17936,6 +18169,7 @@ function lfBusy(btn, on, label) {
   var savedU = S.get("user", {});
   if (savedU && savedU.empId) {
     enterApp();
+    a2hsAuto();   /* v5.34 (311537 진단 · 사용자 261003) 로그인 유지로 홈 화면 앱을 처음 연 사람에게도 「알림을 켤까요?」 한 번(pushFirst · 기기당 1회 push_first · 차단이면 묻지 않음) · 허용된 기기는 다시 등록 */
     return;
   }
   if (visitStandalone() && el("saCard")) { el("saCard").hidden = false; lfSoon(); }   /* v4.76 홈 화면 앱으로 처음 열림 · 로그인을 한 번 더 */
