@@ -1537,7 +1537,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   body[data-pg="d"], body[data-pg="d"] #frame, body[data-pg="d"] #topbar.ax-header { background: var(--ax-color-ink); }
   body[data-pg="d"] #topbar .axs-htitle, body[data-pg="d"] #topbar .axs-back, body[data-pg="d"] #topbar .axs-ib { color: var(--ax-color-inverse); }
   body[data-pg="d"] #topbar.ax-header { border-bottom-color: var(--ax-color-body); }
-  #view[data-v="scan_q"] { padding-bottom: calc(260px + env(safe-area-inset-bottom)); }   /* v4.16 하단 시트에 「내 QR 보여주기」 추가로 60px 늘림 */
+  #view[data-v="scan_q"][data-qt="scan"] { padding-bottom: calc(200px + env(safe-area-inset-bottom)); }   /* v5.23 하단 시트 = 「담당자에게 적립 요청」 하나(「내 QR 보여주기」는 위 [내 QR] 탭으로) */
   .axs-scanwrap .ax-title, .axs-inv { color: var(--ax-color-inverse); }
   .axs-cam { position: relative; aspect-ratio: 1 / 1; border-radius: var(--ax-radius-24); overflow: hidden; background: var(--ax-color-body); }
   .axs-cam video { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -1579,6 +1579,12 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .myqr { position: relative; }
   .axs-okbadge { position: absolute; left: 50%; top: 50%; width: 72px; height: 72px; transform: translate(-50%, -50%); border-radius: var(--ax-radius-999); background: var(--ax-color-brandSoft); color: var(--ax-color-ink); display: grid; place-items: center; }
   .axs-okbadge svg { width: 40px; height: 40px; }
+  /* v5.23 QR 화면 [내 QR | QR 스캔] (사용자 261003) · 기본 내 QR(흰 카드 · 밝은 면) · 스캔 탭만 카메라 화면(짙은 면) */
+  .axs-qrcard { padding: var(--ax-space-8) var(--ax-space-16) var(--ax-space-20); background: var(--ax-color-surface); }
+  .axs-qrcard .myqr { margin-top: var(--ax-space-12); }
+  body[data-pg="d"] .axs-qrseg { background: var(--ax-color-body); }
+  body[data-pg="d"] .axs-qrseg button { color: var(--ax-color-disabled); }
+  body[data-pg="d"] .axs-qrseg button[aria-selected="true"] { background: var(--ax-color-surface); color: var(--ax-color-ink); }
   .axs-okline { margin-top: var(--ax-space-8); padding: var(--ax-space-12) var(--ax-space-16); border-radius: var(--ax-radius-12); background: var(--ax-color-brandSoft); color: var(--ax-color-ink); font: var(--ax-type-t6); text-align: center; }
   .axs-okline b { font-weight: 700; }
   @media (prefers-reduced-motion: reduce) { .axs-res-bot svg, .axs-stbot svg, .axs-res-bot .eye, .axs-stbot .eye { animation: none; } .axs-stbot { transition: none; } }
@@ -3633,7 +3639,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.22";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.23";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -4176,7 +4182,7 @@ function modalOpen(html, title) {
 }
 function modalClose() {
   STAFFK = ""; STAFFE = ""; STAFFT = "";   /* 담당자 코드 · 사번 · 토큰을 화면과 함께 버린다 */ var m = el("modal"); if (m) m.remove();
-  if (typeof QRM !== "undefined" && QRM.timer) { qrMineOff(); QRM.msg = ""; }   /* v4.06 내 QR 동기화(v4.71 6초)는 패널이 열려 있는 동안만 */
+  if (typeof QRM !== "undefined" && QRM.timer && !(App.current === "scan_q" && SCQ.tab === "mine")) { qrMineOff(); QRM.msg = ""; }   /* v4.06 내 QR 동기화(v4.71 6초)는 패널이 열려 있는 동안만 · v5.23 내 QR 탭 위에 뜬 다른 창이 닫혀도 계속 */
   if (NOTICE.cur) NOTICE.cur = null;   /* v3.53 팝업이든 다른 모달이든 닫히면 다음 팝업 */
   if (NOTICE.q.length) { clearTimeout(NOTICE.t); NOTICE.t = setTimeout(noticePump, 250); }
   if (typeof SES !== "undefined" && SES.need) setTimeout(sesAsk, 400);   /* v4.67 다른 창 때문에 미룬 비밀번호 창 */
@@ -5064,7 +5070,7 @@ var App = {
     if (v === "guide_time") return "나의 일정";   /* v4.13 전체 시간표는 프로그램 탭 시간표 보기 */
     if (v === "sess_d") return progMine(PROG.sid) ? "신청 관리" : "프로그램";
     if (v === "exp_g") return stampTitle(EXPG.id);
-    if (v === "scan_q") return SCQ.ctx ? stampTitle(SCQ.ctx) + " 안내" : "QR 스캔";
+    if (v === "scan_q") return SCQ.ctx ? stampTitle(SCQ.ctx) + " 안내" : "QR";   /* v5.23 [내 QR | QR 스캔] 두 탭 · 문맥 스캔(출석 · 계단 등)은 탭 없이 그 안내 */
     if (v === "scan_res") return SR.st === "ok" ? "적립 완료" : SR.st === "saved" ? "스캔 저장됨" : SR.st === "draw" || SR.draw ? "추첨 체크인" : "적립 결과";   /* v4.79 추첨 체크인 */
     if (v === "stair") return "계단 이용";
     if (v === "zone_d") { var zn = zoneById(PROG.zone); return zn ? zn.sign : this.TITLES[v]; }   /* v4.93 헤더 = 현장 간판 글자 그대로 */
@@ -5128,7 +5134,7 @@ var App = {
     if (typeof sheetClose === "function" && el("axsSheet")) sheetClose(true);
     if (v === "ideas" && this.current !== "ideas") IDEA.step = null;   /* v4.07 다시 들어오면 입력 폼부터 */
     if (this.current === "guide" && v !== "guide") PROG.scroll = window.scrollY;   /* 목록 스크롤 보존 (뒤로 오면 되돌린다) */   /* v4.01 AI 사생대회 폐기 · 배너·해시(#demo=art 등)·뒤로가기를 포함한 모든 진입을 홈으로 돌린다 */
-    if (this.current === "scan_q" && v !== "scan_q") { qrCamStop(); SCQ.paused = false; }   /* v4.06 Q02 를 떠나면 카메라를 끈다 */
+    if (this.current === "scan_q" && v !== "scan_q") { qrCamStop(); qrMineOff(); SCQ.paused = false; }   /* v4.06 Q02 를 떠나면 카메라를 끈다 · v5.23 내 QR 동기화도 */
     if (this.current === "game_word" && v !== "game_word") gwStop();
     if (this.current === "game_type" && v !== "game_type") rgStop();
       if (this.current === "game_tetris" && v !== "game_tetris") ttStop();
@@ -5205,7 +5211,7 @@ var App = {
     /* 헤더 높이를 실측해 sticky 기준선으로 넘긴다 */
     el("frame").style.setProperty("--stick", tb.offsetHeight + "px");
     var nav = el("tabbar");
-    document.body.dataset.pg = v === "scan_q" ? "d" : "";   /* v4.06 · 프로그램 탭 흰 페이지(v4.05) 폐지 · 다른 탭과 같은 canvas + 흰 카드 · Q02 스캔만 카메라 화면(짙은 면) */
+    document.body.dataset.pg = v === "scan_q" && SCQ.tab === "scan" ? "d" : "";   /* v5.23 내 QR 탭은 밝은 면 */   /* v4.06 · 프로그램 탭 흰 페이지(v4.05) 폐지 · 다른 탭과 같은 canvas + 흰 카드 · Q02 스캔만 카메라 화면(짙은 면) */
     nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "sess_d" || v === "sess_cf" || v === "sess_ok" || (v === "ideas" && IDEA.step) || ["exp_g", "scan_q", "scan_res", "stair"].indexOf(v) >= 0 || v === "game_word" || v === "game_type" || v === "game_tetris" || v === "game_pang" || v === "game_jump" || v === "game_ox" || v === "type_site") ? "none" : "";
     var activeTab = this.tabOf(v), ico = this.NAV_ICO;
     var btn = function (t) {
@@ -5213,12 +5219,13 @@ var App = {
         '<svg class="ax-icon" aria-hidden="true"><use href="#' + ico[t[0]] + '"/></svg><span>' + t[1] + "</span></button>";
     };
     var T = this.TABS;
-    /* 가운데 = 즉시 스캔 · 주황 원 + 짙은 글리프 · 가이드 헤더 QR 과 같은 둥근 모서리 그림(qr-corners) + QR 글자 */
+    /* 가운데 = QR 화면(v5.23 사용자 261003 · 기본 내 QR · 스캔은 탭) · 주황 원 + 짙은 글리프 · 가이드 헤더 QR 과 같은 둥근 모서리 그림(qr-corners) + QR 글자 */
     nav.innerHTML = btn(T[0]) + btn(T[1]) +
-      '<button class="axs-scan" onclick="scanOpen(\'\')" aria-label="QR 스캔"><span class="axs-scan-c" aria-hidden="true">' +
-      '<svg><use href="#qr-corners"/></svg><b>QR</b></span><span aria-hidden="true">QR 스캔</span></button>' +
+      '<button class="axs-scan" onclick="qrOpen()" aria-label="내 QR · QR 스캔"><span class="axs-scan-c" aria-hidden="true">' +
+      '<svg><use href="#qr-corners"/></svg><b>QR</b></span><span aria-hidden="true">내 QR</span></button>' +
       btn(T[2]) + btn(T[3]);
     el("view").dataset.v = v;
+    if (v === "scan_q") el("view").dataset.qt = SCQ.tab; else delete el("view").dataset.qt;
     el("view").classList.toggle("rt", rtView(v));   /* v4.23 레트로 경계 · 게임 화면에만(design.md A-5 5-16) */
     if (rtView(v)) rtFontWarm();   /* v5.10 구역 간판은 점 글자 그림(DotGlyph)이라 도트 글꼴을 미리 읽지 않는다 */
     if (v === "ideas" && IDEA.step) el("view").dataset.st = IDEA.step; else delete el("view").dataset.st;   /* v4.07 질문·완료는 하단 고정 버튼 자리를 비운다 */
@@ -5229,7 +5236,7 @@ var App = {
     var fixB = !!el("view").querySelector(".axs-fix.ax-bottom");
     if (fixB) { el("view").dataset.fix = "1"; nav.style.display = "none"; } else delete el("view").dataset.fix;
     if (aeId) { var aeN = el(aeId); if (aeN) { try { aeN.focus({ preventScroll: true }); if (aeSel) aeN.setSelectionRange(aeSel[0], aeSel[1]); } catch (e) {} } }   /* 다시 그려도 입력 중인 칸과 커서를 되돌린다 */
-    if (v === "scan_q") setTimeout(scanQStart, 80);
+    if (v === "scan_q") { if (SCQ.tab === "scan") setTimeout(scanQStart, 80); else if (!QRM.timer) qrMineOn(); }   /* v5.23 카메라는 스캔 탭에서만 · 내 QR 탭은 6초 동기화 */
     if (v === "stair" && STR.mode === "start") stairTickOn();
     if (typeof SPOP !== "undefined" && SPOP.cur && !SPOP.cur.done) { var spT = spTgt(SPOP.cur); if (spT.el) spT.el.classList.add("sp-wait"); }   /* v3.49 재렌더돼도 안착 전 자리는 비어 보이게 */
     kvMountAll();
@@ -7175,10 +7182,8 @@ function ppRouletteOpen() {
   } else if (n < 3) {
     body = '<p class="muted" style="margin-top:8px;font-size:calc(14.5px * var(--fs))">스탬프 3개 · 1F EVENT · 1인 1회</p>';
   } else {
-    var txt = myQrText();
-    body = (txt ? '<div class="myqr">' + myQrSvg(190) + "</div>" :
-      '<p class="muted" style="margin-top:10px">사번으로 입장 후 QR 발급</p>') +
-      '<p class="muted" style="margin-top:10px;font-size:calc(13.5px * var(--fs));line-height:1.65">1F EVENT 룰렛 부스에서 QR 제시</p>';
+    body = '<p class="muted" style="margin-top:10px;font-size:calc(13.5px * var(--fs));line-height:1.65">1F EVENT 룰렛 부스에서 QR 제시</p>' +
+      '<button type="button" class="ax-button" style="margin-top:10px" onclick="qrPanelOpen(\'mine\')">내 QR 보여주기</button>';   /* v5.23 내 QR 은 QR 화면 한 곳(룰렛 1회권 상태 줄 포함) */
   }
   modalOpen(head + body + prizeModalHtml("roulette") + '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "룰렛 1회권");   /* v5.04 경품표(사진 · 이름 · 수량) */
 }
@@ -7685,7 +7690,7 @@ var Views = {
   },
 
   /* ═══ 체험 (E01) · 현장에서 / 앱에서 ═══
-     현장 = 기존 스탬프 카드·부스·QR 퀴즈·포토부스 화면으로 연결 + 같은 스캔 기능(가운데 QR 버튼과 같은 qrPanelOpen('scan')).
+     현장 = 기존 스탬프 카드·부스·QR 퀴즈·포토부스 화면으로 연결 + 같은 스캔 기능(v5.23 가운데 QR 버튼 = QR 화면 [내 QR | QR 스캔]).
      앱 = 미니게임(AX 올림픽 순위·포디움 입구 포함) · 아이디어 · 설문. 작품 갤러리는 넣지 않는다(AI 사생대회 폐기 260919). */
   /* ═══ v4.84 (261001 앱 개편 2묶음 · 기획안 5-4 안 1 · 레드팀 채택) 스탬프 탭 = 하단 메뉴 「스탬프」(라우트 id 는 exp 유지 · 옛 passport 는 이 화면 별칭)
      레일 → 「스탬프 8종 · 6개까지 인정」 → 번호 순서 고정 한 목록(완료는 자리 그대로 체크만) · 행마다 수단 칩(폰으로 · 현장 · 스태프 인증)
@@ -10208,12 +10213,32 @@ function expGuideHtml() {
 }
 
 /* ═══ Q02 · 활동 QR 인식 · 카메라 권한 → 검증 요청 → 결과 ═══ */
-var SCQ = { ctx: "", err: "", paused: false };
+var SCQ = { ctx: "", err: "", paused: false, tab: "mine" };   /* v5.23 tab = mine(기본) | scan */
 var SCQ_TT = { p1: "전시 QR을", p2: "체험 QR을", p7: "벽 QR을", st: "계단 QR을", p3: "출석 QR을", a17: "출석 QR을" };
 function scanOpen(ctx) { if (sndOn()) sfxUnlock();   /* v4.13 인식음은 누른 순간에 소리 길을 연다(소리 설정을 따른다) */
-  SCQ.ctx = SCQ_TT[ctx] ? ctx : ""; SCQ.err = ""; SCQ.paused = false; if (App.current === "scan_q") App.render(); else App.go("scan_q"); }
+  SCQ.ctx = SCQ_TT[ctx] ? ctx : ""; SCQ.tab = "scan"; SCQ.err = ""; SCQ.paused = false; qrMineOff(); if (App.current === "scan_q") App.render(); else App.go("scan_q"); }
+/* v5.23 (사용자 261003) 가운데 QR 버튼 · 모든 「내 QR」 입구 = 같은 QR 화면의 [내 QR] 탭 · 카메라는 켜지 않는다 */
+function qrOpen() {
+  SCQ.ctx = ""; SCQ.tab = "mine"; SCQ.err = ""; SCQ.paused = false; QRM.msg = ""; qrCamStop();
+  if (App.current === "scan_q") App.render(); else App.go("scan_q");
+}
+function qrTab(t) {
+  if (t !== "scan") t = "mine";
+  if (t === SCQ.tab) return;
+  if (t === "scan" && sndOn()) sfxUnlock();
+  SCQ.tab = t; SCQ.ctx = ""; SCQ.err = ""; SCQ.paused = false; QRM.msg = "";
+  qrCamStop(); qrMineOff();
+  App.render();
+}
+function qrSegHtml() {
+  if (SCQ.ctx) return "";
+  return '<div class="axs-seg axs-qrseg" role="tablist" aria-label="QR">' +
+    '<button type="button" role="tab" aria-selected="' + (SCQ.tab === "mine") + '" onclick="qrTab(\'mine\')">내 QR</button>' +
+    '<button type="button" role="tab" aria-selected="' + (SCQ.tab === "scan") + '" onclick="qrTab(\'scan\')">QR 스캔</button></div>';
+}
 function qrScanOpen() { scanOpen(""); }
 function scanQHtml() {
+  if (SCQ.tab !== "scan") return '<div class="ax-stack axs-qrv">' + qrSegHtml() + '<section class="ax-card axs-qrcard">' + qrPanelHtml() + "</section></div>";
   var t = SCQ_TT[SCQ.ctx] || "QR을", can = qrScanSupported();
   var box = SCQ.paused
     ? '<div class="axs-cam axs-cam-off"><p class="ax-type-t5-strong">스캔을 멈췄어요</p><button type="button" class="ax-button ax-button-weak" onclick="scanOpen(SCQ.ctx)">다시 스캔</button></div>'
@@ -10222,16 +10247,15 @@ function scanQHtml() {
       '<p class="ax-description">' + (can ? "브라우저 설정에서 카메라 권한을 허용해 주세요" : "이 브라우저는 카메라 스캔을 지원하지 않아요") + "</p>" +
       (can ? '<button type="button" class="ax-button ax-button-weak" onclick="scanOpen(SCQ.ctx)">다시 시도</button>' : "") + "</div>"
     : '<div class="axs-cam"><video id="qrVideo" playsinline muted></video><span class="axs-cam-fr" aria-hidden="true"></span></div>';
-  return '<div class="ax-stack axs-scanwrap">' +
+  return '<div class="ax-stack axs-scanwrap">' + qrSegHtml() +
     '<h1 class="ax-title">' + t + "<br>화면 안에 맞춰주세요</h1>" + box +
     '<p class="ax-description axs-inv">촬영 버튼 없이 자동으로 인식해요</p>' +
     '<p class="ax-meta axs-inv" id="qrHint" hidden>QR에서 20~30cm 떨어뜨리고, 화면 밝기를 올려 보세요</p></div>' +
     '<div class="axs-fix ax-sheet axs-scansheet"><button type="button" class="ax-button ax-button-weak" onclick="qrCamStop(); staffStampOpen()">담당자에게 적립 요청</button>' +
-    '<button type="button" class="ax-button ax-button-weak" onclick="qrCamStop(); qrPanelOpen(\'mine\')">내 QR 보여주기</button>' +   /* v4.16 스탬프 개수와 무관 · 룰렛·대기 행과 같은 QR 화면 재사용 */
     '<p class="ax-meta">카메라 권한이 없으면 기본 카메라로 스캔할 수 있어요</p></div>';
 }
 function scanQStart() {
-  if (App.current !== "scan_q" || SCQ.err || SCQ.paused || !qrScanSupported() || QRS.stream) return;
+  if (App.current !== "scan_q" || SCQ.tab !== "scan" || SCQ.err || SCQ.paused || !qrScanSupported() || QRS.stream) return;
   qrCamStart();
 }
 
@@ -10347,11 +10371,10 @@ function qrTextSvg(text, px) {
 
 /* ── 참가자 패널 · 스캔과 내 QR을 한 자리에 (QR을 주고받는 순간은 하나다) ── */
 function qrPanelOpen(tab) {
-  /* v4.06 가운데 QR 버튼·부스 버튼 = Q02 스캔 화면 · 이 패널은 「내 QR 보여주기」 전용(나의 참여) */
+  /* v5.23 (사용자 261003) 모달을 걷고 QR 화면 하나로 · 「내 QR 보여주기」 입구(스탬프 AX PLAY 줄 · 체험 안내 · 부스 · 룰렛 1회권 · 일정 「지금」 줄)는 모두 [내 QR] 탭 */
   if (tab === "scan") { scanOpen(""); return; }
-  QRS.tab = "mine"; QRM.msg = "";
-  modalOpen(qrPanelHtml(), "내 QR");
-  qrMineOn();
+  QRS.tab = "mine";
+  qrOpen();
 }
 function qrPanelTab(t) { if (t === "scan") { modalClose(); scanOpen(""); } }
 var OK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
@@ -10364,7 +10387,7 @@ function qrPanelHtml(inner) {
     (QRM.msg ? '<p class="axs-okline" role="status"><b>확인됨</b> · ' + esc(QRM.msg) + "</p>" : "") +
     '<p class="muted" style="margin-top:8px;text-align:center;font-size:calc(13.5px * var(--fs));line-height:1.65">' +
     '이 QR을 <b style="color:var(--hi)">운영 데스크 스캐너</b>에 대 주세요<br>화면 밝기를 올리면 더 빨리 읽혀요</p>' + qrMineStateHtml();
-  var h = body + '<button class="btn line" style="margin-top:10px" onclick="modalClose()">닫기</button>';
+  var h = body;   /* v5.23 화면 안 카드 · 닫기는 헤더 뒤로 */
   return inner ? h : '<div id="qrPanel">' + h + "</div>";
 }
 /* 내 QR 아래에 지금 걸려 있는 대기·체크인을 같이 보여준다(QR을 꺼낸 이유가 대개 이것이다) */
@@ -11325,7 +11348,7 @@ function tsfScanTick() {
 }
 /* QR 한 장 · 모양 · 체크섬은 앱 qrParseUser 로 먼저 · 서명 · 시각 · 명부 · 남은 도전은 서버(type_self_check qr) */
 function tsfQr(raw) {
-  if (!qrParseUser(raw)) { tsfErr("참가자 앱의 내 QR이 아니에요", "앱 가운데 QR 버튼 → 내 QR 보여주기"); sfx("rgmiss"); return; }
+  if (!qrParseUser(raw)) { tsfErr("참가자 앱의 내 QR이 아니에요", "앱 가운데 QR 버튼 → 내 QR"); sfx("rgmiss"); return; }
   if (!BE.on) { tsfErr("서버에 연결할 수 없어요", "스태프를 불러 주세요"); return; }
   if (!TSF.unl && S.get("site_sound", true) === true) { TSF.unl = true; sfxUnlock(); }
   TSF.busy = true; tsfPh("check"); sfx("scan");
@@ -11375,7 +11398,7 @@ function tsfLeftHtml() {
   }
   if (ph === "result") return '<section class="tsf-p"><p class="tsf-k">다음 도전자</p><p class="tsf-go">앱의 내 QR을 비추세요</p><p class="tsf-hint" id="tsfCount">15초 뒤 처음 화면 · SPACE 바로</p></section>';
   return '<section class="tsf-p tsf-how"><p class="tsf-k">참가 방법</p>' +
-    "<p><b>1</b>QR을 노트북에 비추기</p><p class=\"tsf-sub\">앱 가운데 QR 버튼 → 내 QR 보여주기</p><p><b>2</b>SPACE로 시작</p><p><b>3</b>떨어지는 단어 입력</p></section>" +   /* v5.12 1층 판 46번 3단계와 같은 순서(261003) */
+    "<p><b>1</b>QR을 노트북에 비추기</p><p class=\"tsf-sub\">앱 가운데 QR 버튼 → 내 QR</p><p><b>2</b>SPACE로 시작</p><p><b>3</b>떨어지는 단어 입력</p></section>" +   /* v5.12 1층 판 46번 3단계와 같은 순서(261003) */
     '<section class="tsf-p tsf-rule"><p>1인 ' + tsfLimit() + "회 · 최고 점수로 순위</p><p>목숨 " + RAIN_LIVES + "개를 다 잃으면 끝</p><p>17:00 마감 · 1~3위 Outro 시상</p></section>";
 }
 /* 오른쪽 · HIGH SCORE TOP 5(결과 화면에서만 방금 도전한 사람 줄 · 다음 사람에게 남의 줄을 짚어 보이지 않게) + 점수 규칙 */
