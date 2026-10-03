@@ -24,6 +24,13 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .hd .tag { display: inline-block; vertical-align: 2px; margin-left: 4px; font-size: 12px; line-height: 20px; padding: 0 6px; border-radius: 6px; background: var(--canvas); color: var(--muted); font-weight: 600; }
 #axTour3 .hb { height: 44px; padding: 0 12px; border-radius: 12px; font-size: 16px; font-weight: 600; color: var(--body); white-space: nowrap; }
 #axTour3 .hb:active { background: var(--canvas); }
+/* v5.38 음악 버튼 · 도형으로 그린 스피커(켬 = 음파 두 줄 · 끔 = 엑스) · 도움말 왼쪽 */
+#axTour3 .hd .snd { width: 44px; padding: 0; display: grid; place-items: center; color: var(--body); }
+#axTour3 .hd .snd .x { display: none; }
+#axTour3 .hd .snd.off { color: var(--muted); }
+#axTour3 .hd .snd.off .w { display: none; }
+#axTour3 .hd .snd.off .x { display: inline; }
+#axTour3 .hd .snd[hidden] { display: none; }
 
 /* 무대 */
 #axTour3 .stage { position: relative; flex: 1; min-height: 0; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; background: #E9ECEF; }
@@ -81,6 +88,8 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 /* 움직임 줄이기 스위치(처음 안내 · 도움말) */
 #axTour3 .rmrow { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 14px; margin-bottom: 14px; border-radius: 16px; background: var(--canvas); cursor: pointer; }
 #axTour3 .rmrow .t { flex: 1; min-width: 0; }
+#axTour3 .rmrow + .rmrow { margin-top: -6px; }   /* v5.38 「움직임 줄이기」 · 「음악 없이」 두 줄 = 간격 8px */
+#axTour3 .rmrow[hidden] { display: none; }
 #axTour3 .rmrow .t b { display: block; font-size: 17px; line-height: 24px; }
 #axTour3 .rmrow .t span { display: block; font-size: 14px; line-height: 20px; color: var(--muted); }
 #axTour3 .rmrow input { position: absolute; opacity: 0; width: 1px; height: 1px; }
@@ -96,6 +105,11 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .pad::before { content: ""; position: absolute; inset: 22px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(25, 31, 40, .10); pointer-events: none; }
 #axTour3 .pad .knob { position: absolute; left: 50%; top: 50%; width: 58px; height: 58px; margin: -29px 0 0 -29px; border-radius: 50%; background: var(--brand); box-shadow: 0 2px 8px rgba(25, 31, 40, .25); pointer-events: none; }
 #axTour3 .pad.on { background: rgba(255, 255, 255, .72); }
+/* v5.38 조그 · 누르는 동안 = 손가락을 그대로 따라감(지연 없음) · 살짝 작게 + 그림자 줄임 · 떼면 0.18초 탄성으로 가운데(.back) · 밀린 쪽 링 가장자리 = 주황 은은하게(--kx · --ky · --ka) · 움직임 줄이기 = 바로 */
+#axTour3 .pad::after { content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none; opacity: var(--ka, 0); background: radial-gradient(circle at var(--kx, 50%) var(--ky, 50%), rgba(255, 127, 50, .55), rgba(255, 127, 50, 0) 46%); -webkit-mask: radial-gradient(circle, transparent 52px, #000 54px); mask: radial-gradient(circle, transparent 52px, #000 54px); transition: opacity .18s; }
+#axTour3 .pad.on .knob { transition: none; box-shadow: 0 1px 3px rgba(25, 31, 40, .22); }
+#axTour3 .pad.back .knob { transition: transform .18s cubic-bezier(.34, 1.56, .64, 1), box-shadow .18s; }
+#axTour3.rm .pad.back .knob, #axTour3.rm .pad::after { transition: none; }
 #axTour3 .dest { position: absolute; left: 0; top: 0; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; box-shadow: inset 0 0 0 3px var(--brand); pointer-events: none; animation: dest 1s ease-out infinite; }
 @keyframes dest { from { transform: scale(.5); opacity: 1; } to { transform: scale(1.3); opacity: 0; } }
 /* 구역 앞에서 떠오르는 큰 버튼 */

@@ -77,7 +77,7 @@
     var bc = document.createElement('canvas'); bc.width = 4; bc.height = 256; var bg = bc.getContext('2d'), gr = bg.createLinearGradient(0, 0, 0, 256);
     gr.addColorStop(0, '#FAFBFC'); gr.addColorStop(0.55, '#EEF0F2'); gr.addColorStop(1, '#DADDE1'); bg.fillStyle = gr; bg.fillRect(0, 0, 4, 256);
     scene.background = new T.CanvasTexture(bc); scene.background.colorSpace = T.SRGBColorSpace;
-    camera = new T.PerspectiveCamera(58, 1, 0.08, 300);
+    camera = new T.PerspectiveCamera(58, 1, 0.2, 140);   /* v5.38 깊이 정밀도(사용자 261003 갤럭시 「안내데스크 자리에서 까만 색이 깜빡」) · near 0.08 → 0.2 · far 300 → 140(스카이뷰 46m 안) */
     scene.add(new T.HemisphereLight(0xFFFFFF, 0xC9CED4, 2.0));
     var dl = new T.DirectionalLight(0xFFFFFF, 1.3); dl.position.set(-8, 20, 12); scene.add(dl);
     S = window.TourScene.build({ T: T, D: D, P: P, N3: N3, renderer: renderer, scene: scene, labelFont: '"Pretendard Variable", Pretendard, sans-serif' });
@@ -152,7 +152,17 @@
     }
     G.gridMs = Math.round(performance.now() - t0); G.gridTris = tris; G.gridSamples = samples;
   }
-  function free(x, z) { var c = gi(x, z); return c >= 0 && !wd[c] && (!reach || reach[c]); }
+  /* v5.38 스태프 챗봇 = 원기둥 충돌(캐릭터 몸 반지름 0.34 + 챗봇 0.34 + 여유 0.04) · 칸 지도(wd)에도 같은 원을 칸 번호로 꽉 채워 찍고, 걸음마다 거리로도 한 번 더 본다 */
+  var GUIDE_R = 0.72;
+  function blockDisc(x, z, r) {
+    var i0 = Math.floor((x - GX0) / GS), j0 = Math.floor((z - GZ0) / GS), n = Math.ceil(r / GS) + 1;
+    for (var dj = -n; dj <= n; dj++) for (var di = -n; di <= n; di++) {
+      var i = i0 + di, j = j0 + dj; if (i < 0 || j < 0 || i >= GW || j >= GH) continue;
+      if (Math.hypot(GX0 + (i + 0.5) * GS - x, GZ0 + (j + 0.5) * GS - z) <= r) wd[j * GW + i] = 1;
+    }
+  }
+  function nearGuide(x, z) { for (var k = 0; k < guides.length; k++) { var a = guides[k].at; if ((x - a[0]) * (x - a[0]) + (z - a[1]) * (z - a[1]) < GUIDE_R * GUIDE_R) return true; } return false; }
+  function free(x, z) { var c = gi(x, z); return c >= 0 && !wd[c] && (!reach || reach[c]) && !nearGuide(x, z); }
   function flood(x, z) {
     reach = null; var s = gi(x, z), r = new Uint8Array(GW * GH), qu = new Int32Array(GW * GH), h = 0, t = 0;
     if (s < 0 || wd[s]) return;
@@ -219,14 +229,151 @@
     });
   }
 
+  /* ═══════════ 겹친 면 깜빡임 막기(v5.38 · 사용자 261003 갤럭시 「안내데스크 자리에서 까만 색이 팔랄라락 깜빡」) ═══════════
+   * 원인: 모형(lobby.glb) 안에 같은 평면에 겹쳐 붙은 면이 있다(안내데스크 윗면 · 끝면 · 부스 앞면과 그 위 판 등 · 0~2mm 차이)
+   *   깊이 값이 같아 어느 쪽이 그려질지 기기 · 시점마다 바뀐다(z-fighting) · 데스크톱 GPU 는 우연히 한쪽만 이기고, 휴대폰 GPU 는 프레임마다 뒤집힌다
+   * 고침: 받은 뒤 축에 나란한 삼각형을 평면(4mm 안)별로 모아 실제로 겹치는 쌍을 찾고, 작은 쪽(판 · 띠 같은 덧붙임)을 따로 떼어 polygonOffset 으로 늘 앞에 그린다
+   *   모형을 다시 굽지 않는다 · 모형이 바뀌어도 저절로 따라온다 · 투명(유리) · 바닥 · 기둥은 건드리지 않는다 · 결과 = G.zfix */
+  function polyArea(P) { var s2 = 0; for (var i = 0; i < P.length; i++) { var a = P[i], b = P[(i + 1) % P.length]; s2 += a[0] * b[1] - b[0] * a[1]; } return Math.abs(s2) / 2; }
+  function clipTri(P, Q) {
+    for (var e = 0; e < 3 && P.length; e++) {
+      var a = Q[e], b = Q[(e + 1) % 3], out = [];
+      for (var i = 0; i < P.length; i++) {
+        var c = P[i], n = P[(i + 1) % P.length], sc = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]), sn = (b[0] - a[0]) * (n[1] - a[1]) - (b[1] - a[1]) * (n[0] - a[0]);
+        if (sc >= 0) out.push(c);
+        if ((sc >= 0) !== (sn >= 0)) { var t = sc / (sc - sn); out.push([c[0] + (n[0] - c[0]) * t, c[1] + (n[1] - c[1]) * t]); }
+      }
+      P = out;
+    }
+    return P.length > 2 ? P : [];
+  }
+  function isCw(p) { return ((p[1][0] - p[0][0]) * (p[2][1] - p[0][1]) - (p[1][1] - p[0][1]) * (p[2][0] - p[0][0])) < 0; }
+  function nameOf(o, re) { while (o) { if (o.name && re.test(o.name)) return o.name; o = o.parent; } return null; }
+  function fixCoplanar(root) {
+    var t0 = performance.now(), meshes = [], buckets = new Map(), va = new T.Vector3(), vb = new T.Vector3(), vc = new T.Vector3(), e1 = new T.Vector3(), e2 = new T.Vector3(), nn = new T.Vector3(), nTri = 0;
+    root.updateMatrixWorld(true);
+    root.traverse(function (o) {
+      if (!o.isMesh || !o.geometry || !o.geometry.attributes.position || !o.material || Array.isArray(o.material) || o.material.transparent) return;
+      if (/^(floor|paving)$/.test(o.name) || underName(o, /^pillars$/)) return;
+      var geo = o.geometry, pos = geo.attributes.position, idx = geo.index, n = idx ? idx.count : pos.count, m = o.matrixWorld, mi = meshes.length; meshes.push(o);
+      for (var t = 0; t < n; t += 3) {
+        va.fromBufferAttribute(pos, idx ? idx.getX(t) : t).applyMatrix4(m); vb.fromBufferAttribute(pos, idx ? idx.getX(t + 1) : t + 1).applyMatrix4(m); vc.fromBufferAttribute(pos, idx ? idx.getX(t + 2) : t + 2).applyMatrix4(m);
+        e1.subVectors(vb, va); e2.subVectors(vc, va); nn.crossVectors(e1, e2); var ar = nn.length() / 2; if (ar < 1e-6) continue; nn.multiplyScalar(0.5 / ar);
+        var ax = Math.abs(nn.x) > 0.999 ? 0 : Math.abs(nn.y) > 0.999 ? 1 : Math.abs(nn.z) > 0.999 ? 2 : -1; if (ax < 0) continue;
+        var u = (ax + 1) % 3, v = (ax + 2) % 3, P = [[va.getComponent(u), va.getComponent(v)], [vb.getComponent(u), vb.getComponent(v)], [vc.getComponent(u), vc.getComponent(v)]], flip = isCw(P); if (flip) P = [P[0], P[2], P[1]];
+        var r = { mi: mi, t: t, off: (va.getComponent(ax) + vb.getComponent(ax) + vc.getComponent(ax)) / 3, ar: ar, P: P, flip: flip, lv: 0,
+          u0: Math.min(P[0][0], P[1][0], P[2][0]), u1: Math.max(P[0][0], P[1][0], P[2][0]), v0: Math.min(P[0][1], P[1][1], P[2][1]), v1: Math.max(P[0][1], P[1][1], P[2][1]) };
+        var key = ax + ',' + (nn.getComponent(ax) > 0 ? 1 : -1) + ',' + Math.round(r.off / 0.004);
+        if (!buckets.has(key)) buckets.set(key, []); buckets.get(key).push(r); nTri++;
+      }
+    });
+    /* 이기는 쪽 = 구운 빛(라이트맵)이 밝은 면 · 굽는 동안 다른 면에 덮여 있던 면은 라이트맵이 까맣다(안내데스크 끝 윗면의 검은 네모가 바로 이것) · 밝기가 비슷하면 작은 면(덧붙인 판) */
+    var cvs = document.createElement('canvas'), cx2 = cvs.getContext('2d', { willReadFrequently: true }), imgs = new Map();
+    function lmAt(r, pts) {   /* 겹친 자리(pts · 평면 좌표)의 라이트맵 밝기 평균 · 삼각형 무게중심 좌표로 UV1 을 보간 */
+      var o = meshes[r.mi], tex = o.material.lightMap, uv = o.geometry.attributes.uv1, idx = o.geometry.index;
+      if (!tex || !tex.image || !uv || !tex.image.width) return -1;
+      try {
+        var im = tex.image, d = imgs.get(im);
+        if (!d) { cvs.width = im.width; cvs.height = im.height; cx2.drawImage(im, 0, 0); d = cx2.getImageData(0, 0, im.width, im.height); imgs.set(im, d); }
+        var vi = [idx ? idx.getX(r.t) : r.t, idx ? idx.getX(r.t + 1) : r.t + 1, idx ? idx.getX(r.t + 2) : r.t + 2];
+        if (r.flip) vi = [vi[0], vi[2], vi[1]];   /* 위(isCw)에서 뒤집은 순서와 맞춘다 */
+        var A = r.P[0], B = r.P[1], C = r.P[2], den = (B[1] - C[1]) * (A[0] - C[0]) + (C[0] - B[0]) * (A[1] - C[1]), sum = 0;
+        pts.forEach(function (q) {
+          var w0 = ((B[1] - C[1]) * (q[0] - C[0]) + (C[0] - B[0]) * (q[1] - C[1])) / den, w1 = ((C[1] - A[1]) * (q[0] - C[0]) + (A[0] - C[0]) * (q[1] - C[1])) / den, w2 = 1 - w0 - w1;
+          var u = w0 * uv.getX(vi[0]) + w1 * uv.getX(vi[1]) + w2 * uv.getX(vi[2]), v = w0 * uv.getY(vi[0]) + w1 * uv.getY(vi[1]) + w2 * uv.getY(vi[2]); if (tex.flipY) v = 1 - v;
+          var x = clamp(Math.floor(u * d.width), 0, d.width - 1), y = clamp(Math.floor(v * d.height), 0, d.height - 1), i = (y * d.width + x) * 4; sum += (d.data[i] + d.data[i + 1] + d.data[i + 2]) / 3;
+        });
+        return sum / pts.length;
+      } catch (e) { return -1; }
+    }
+    var pairs = 0, plist = [];   /* plist = [이긴 면, 진 면] */
+    function test(a, b) {
+      if (Math.abs(a.off - b.off) > 0.004 || Math.min(a.u1, b.u1) - Math.max(a.u0, b.u0) <= 0.003 || Math.min(a.v1, b.v1) - Math.max(a.v0, b.v0) <= 0.003) return;
+      var O = clipTri(a.P, b.P); if (O.length < 3 || polyArea(O) <= 2e-4) return;
+      pairs++;
+      var cu = 0, cv = 0; O.forEach(function (q) { cu += q[0] / O.length; cv += q[1] / O.length; });
+      var pts = [[cu, cv]].concat(O.map(function (q) { return [(q[0] + cu) / 2, (q[1] + cv) / 2]; }));
+      var la = lmAt(a, pts), lb = lmAt(b, pts), w = null;
+      if (la >= 0 && lb >= 0 && Math.abs(la - lb) > 16) w = la > lb ? a : b;
+      else if (Math.abs(a.ar - b.ar) > 1e-6) w = a.ar < b.ar ? a : b;
+      else if (a.mi !== b.mi) { var pa = !!nameOf(meshes[a.mi], /^panel_\d+$/), pb = !!nameOf(meshes[b.mi], /^panel_\d+$/); if (pa !== pb) w = pa ? a : b; }
+      if (w) plist.push([w, w === a ? b : a]);
+      if (window.__zdbg) window.__zdbg.push([meshes[a.mi].name, meshes[b.mi].name, +a.off.toFixed(3), Math.round(la), Math.round(lb), +a.ar.toFixed(3), +b.ar.toFixed(3), w === a ? 'a' : w === b ? 'b' : '-', [+cu.toFixed(2), +cv.toFixed(2)]]);   /* 시험용 · window.__zdbg 가 있을 때만 */
+    }
+    buckets.forEach(function (L, key) {
+      var k = key.split(','), up = buckets.get(k[0] + ',' + k[1] + ',' + (+k[2] + 1)) || [];
+      for (var i = 0; i < L.length; i++) { for (var j = i + 1; j < L.length; j++) test(L[i], L[j]); for (var q = 0; q < up.length; q++) test(L[i], up[q]); }
+    });
+    /* 층 매기기 · 이긴 면은 진 면보다 한 층 위(겹이 사슬처럼 이어져도 · 최대 3층) · 층마다 polygonOffset 을 한 칸씩 더 당긴다 */
+    for (var it = 0; it < 4; it++) plist.forEach(function (q) { var lw = q[0].lv || 0, ll = q[1].lv || 0; if (lw <= ll && ll < 3) q[0].lv = ll + 1; });
+    var tie = plist.filter(function (q) { return (q[0].lv || 0) <= (q[1].lv || 0); }).length;
+    var front = new Map(); buckets.forEach(function (L) { L.forEach(function (r) { if (r.lv) { var k = r.mi + ':' + r.lv; if (!front.has(k)) front.set(k, []); front.get(k).push(r.t); } }); });
+    var moved = 0, matC = new Map(), names = [];
+    var byMesh = new Map(); front.forEach(function (ts, k) { var mi = +k.split(':')[0]; if (!byMesh.has(mi)) byMesh.set(mi, []); byMesh.get(mi).push([+k.split(':')[1], ts]); });
+    byMesh.forEach(function (lvs, mi) { lvs.forEach(function (q) { splitFront(mi, q[0], q[1]); }); });
+    function splitFront(mi, lv, ts) {
+      var o = meshes[mi], geo = o.geometry, idx = geo.index, n = idx ? idx.count : geo.attributes.position.count, set = new Set(ts), keep = [], fr = [];
+      for (var t = 0; t < n; t += 3) { var arr = set.has(t) ? fr : keep; arr.push(idx ? idx.getX(t) : t, idx ? idx.getX(t + 1) : t + 1, idx ? idx.getX(t + 2) : t + 2); }
+      var g2 = new T.BufferGeometry(); for (var nm in geo.attributes) g2.setAttribute(nm, geo.attributes[nm]); g2.setIndex(fr);
+      geo.setIndex(keep);
+      var m0 = o.material, mk = m0.uuid + ':' + lv, m2 = matC.get(mk);
+      if (!m2) { m2 = m0.clone(); m2.polygonOffset = true; m2.polygonOffsetFactor = -lv; m2.polygonOffsetUnits = -4 * lv; matC.set(mk, m2); }
+      var f = new T.Mesh(g2, m2); f.name = o.name + '_front' + lv; f.userData = o.userData; f.matrixAutoUpdate = false; f.matrix.copy(o.matrix); o.parent.add(f); f.updateMatrixWorld(true);
+      moved += fr.length / 3; if (names.indexOf(o.name) < 0) names.push(o.name);
+    }
+    G.zfix = { tris: nTri, pairs: pairs, same: pairs - plist.length, tie: tie, moved: moved, meshes: names, ms: Math.round(performance.now() - t0) };
+  }
+
+  /* ═══════════ 정문(회전문) 또렷하게(v5.38 · 사용자 261003 「정문 유리문을 조금 더 표시 나게」) ═══════════
+   * 모형의 회전문(도면 x 17.3 · z 1.5 · 반지름 1.85 · 유리 높이 2.45)은 거의 투명해 문인지 잘 안 보였다 · 모형 위에 덧붙인다(모형 그대로)
+   * 먹색 금속 테(위 띠 · 바닥 문턱 원 · 세로 기둥 4) + 날개 4장(X 자 · 먹색 바깥 틀 · 손잡이 막대) + 아주 옅은 하늘빛 유리 + 은은한 세로 반사 + 1.05m 높이 점선 충돌 방지 띠 + 안쪽 바닥 매트
+   * 남쪽 벽(side_s) 묶음에 넣어 카메라가 문 밖으로 나가면 벽과 함께 숨는다 · 걷기 지도(buildGrid) 뒤에 붙여 걸음은 그대로 · 투명은 깊이를 쓰지 않는다(깜빡임 없음) */
+  function buildDoor() {
+    var host = S.lobby.getObjectByName('side_s') || S.lobby, c = toThree(17.3, 1.5), R = 1.85, H = 2.45;
+    var g = new T.Group(); g.name = 'doorA'; g.position.set(c.x, 0, c.z);
+    var ink = new T.MeshBasicMaterial({ color: 0x2B3036 }), ink2 = new T.MeshBasicMaterial({ color: 0x2B3036, side: T.DoubleSide }), mat = new T.MeshBasicMaterial({ color: 0x3A3F45, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -8 });
+    var rc = document.createElement('canvas'); rc.width = 256; rc.height = 8; var rg = rc.getContext('2d'), gr = rg.createLinearGradient(0, 0, 256, 0);
+    [[0, 0], [0.14, 0.55], [0.2, 0], [0.47, 0], [0.55, 0.35], [0.6, 0], [0.8, 0], [0.86, 0.45], [0.9, 0], [1, 0]].forEach(function (q) { gr.addColorStop(q[0], 'rgba(255,255,255,' + q[1] + ')'); });
+    rg.fillStyle = gr; rg.fillRect(0, 0, 256, 8);
+    var rt = new T.CanvasTexture(rc); rt.colorSpace = T.SRGBColorSpace; rt.wrapS = T.RepeatWrapping; rt.repeat.set(2, 1);
+    var tint = new T.MeshBasicMaterial({ color: 0xDCEBF3, transparent: true, opacity: 0.2, depthWrite: false, side: T.DoubleSide });
+    var shine = new T.MeshBasicMaterial({ map: rt, transparent: true, opacity: 0.55, depthWrite: false, side: T.DoubleSide });
+    var drum = new T.Mesh(new T.CylinderGeometry(R + 0.012, R + 0.012, H - 0.06, 48, 1, true), tint); drum.position.y = (H - 0.06) / 2 + 0.03; g.add(drum);
+    var gl2 = new T.Mesh(new T.CylinderGeometry(R + 0.016, R + 0.016, H - 0.06, 48, 1, true), shine); gl2.position.y = drum.position.y; g.add(gl2);
+    /* 충돌 방지 띠 · 1.05m 높이 점선(먹색 짧은 막대 줄) */
+    var dc = document.createElement('canvas'); dc.width = 64; dc.height = 8; var dg = dc.getContext('2d'); dg.fillStyle = 'rgba(43,48,54,.9)'; dg.fillRect(4, 1, 40, 6);
+    var dtx = new T.CanvasTexture(dc); dtx.colorSpace = T.SRGBColorSpace; dtx.wrapS = T.RepeatWrapping; dtx.repeat.set(56, 1);
+    var band = new T.Mesh(new T.CylinderGeometry(R + 0.02, R + 0.02, 0.06, 64, 1, true), new T.MeshBasicMaterial({ map: dtx, transparent: true, depthWrite: false, side: T.DoubleSide })); band.position.y = 1.05; g.add(band);
+    /* 먹색 테 · 위 띠 · 바닥 문턱 원 · 세로 기둥 4(45도마다) */
+    var top = new T.Mesh(new T.CylinderGeometry(R + 0.03, R + 0.03, 0.1, 48, 1, true), ink2); top.position.y = H - 0.05; g.add(top);
+    var sill = new T.Mesh(new T.RingGeometry(R - 0.06, R + 0.07, 64), mat); sill.rotation.x = -Math.PI / 2; sill.position.y = 0.012; g.add(sill);
+    [1, 3, 5, 7].forEach(function (k) { var a = k * Math.PI / 4, st = new T.Mesh(new T.BoxGeometry(0.07, H, 0.07), ink); st.position.set(Math.sin(a) * (R + 0.01), H / 2, Math.cos(a) * (R + 0.01)); g.add(st); });
+    /* 날개 4장 · X 자 · 유리 + 먹색 바깥 틀 + 아래 틀 + 손잡이 막대(1.0m) */
+    var post = new T.Mesh(new T.CylinderGeometry(0.07, 0.07, H, 16), ink); post.position.y = H / 2; g.add(post);
+    for (var k = 0; k < 4; k++) {
+      var w = new T.Group(); w.rotation.y = Math.PI / 4 + k * Math.PI / 2; g.add(w);
+      var L = R - 0.1, pane = new T.Mesh(new T.PlaneGeometry(L, H - 0.2), tint); pane.rotation.y = Math.PI / 2; pane.position.set(0, H / 2, L / 2 + 0.05); w.add(pane);
+      var stile = new T.Mesh(new T.BoxGeometry(0.05, H - 0.1, 0.05), ink); stile.position.set(0, H / 2, L + 0.03); w.add(stile);
+      var rail = new T.Mesh(new T.BoxGeometry(0.04, 0.05, L), ink); rail.position.set(0, 0.06, L / 2 + 0.05); w.add(rail);
+      var bar = new T.Mesh(new T.BoxGeometry(0.1, 0.035, L * 0.55), ink); bar.position.set(0, 1.0, L * 0.6); w.add(bar);
+    }
+    /* 안쪽 바닥 매트(로비 쪽 · 문턱 바로 안) */
+    var mt = new T.Mesh(new T.PlaneGeometry(2.4, 0.9), mat), mp = toThree(17.3, 1.5 + R + 0.55); mt.rotation.x = -Math.PI / 2; mt.position.set(mp.x - c.x, 0.01, mp.z - c.z); g.add(mt);
+    g.traverse(function (o) { o.userData = { door: true }; });
+    S.lobby.add(g); if (host !== S.lobby) { S.lobby.updateMatrixWorld(true); host.attach(g); }
+    G.door = 0; g.traverse(function (o) { if (o.isMesh) G.door++; });
+  }
+
   /* ═══════════ 받기 ═══════════ */
   function load() {
     $('load').hidden = false;
     S.load(BASE + 'lobby.glb?v=' + LABVER, function (k) { $('load').textContent = '모형 불러오는 중 ' + Math.round(k * 100) + '%'; var bt = $('blackT'); if (!bt.classList.contains('on')) bt.textContent = '불러오는 중 ' + Math.round(k * 100) + '%'; }, function () {
-      buildGrid(S.lobby); patchPillars(S.lobby);
+      fixCoplanar(S.lobby); buildGrid(S.lobby); patchPillars(S.lobby); buildDoor();
       var st = STOPS[0], f = nearestFree(st.x, st.z); flood(f[0], f[1]);
       STOPS.forEach(function (s) { var q = nearestFree(s.x, s.z); if (q) { s.x = q[0]; s.z = q[1]; } });
-      buildGuides(); hideCheckin(); buildTypingTv(); G.ceil = S.lobby.getObjectByName('ceiling');
+      buildGuides(); hideCheckin(); buildTypingTv();
+      STOPS.forEach(function (s) { if (!free(s.x, s.z)) { var q = nearestFree(s.x, s.z); if (q) { s.x = q[0]; s.z = q[1]; } } });   /* v5.38 멈춤 자리가 스태프 · TV 원 안이면 밖으로 */
+      G.ceil = S.lobby.getObjectByName('ceiling');
       G.loaded = true; $('load').hidden = true;
       placeAt(0, true); applyTarget();
       buildPins(); buildMini(); buildMags();
@@ -284,7 +431,7 @@
   function flash() { var f = $('fade'); f.style.transition = 'none'; f.style.opacity = 0.85; f.getBoundingClientRect(); f.style.transition = 'opacity .25s'; f.style.opacity = 0; setTimeout(function () { f.style.transition = ''; }, 300); }
   function arrive() {
     G.path = null; $('dest').hidden = true;
-    if (G.goal != null) { var s = STOPS[G.goal]; G.stop = G.goal; G.mode = 'stop'; G.hTo = s.look ? faceTo(s.look, s.x, s.z) : null; if (s.look) { var za = faceAz(s); G.azTo = G.az + Math.atan2(Math.sin(za - G.az), Math.cos(za - G.az)); } }   /* 구역 앞에 닿으면 그 판 줄이 정면이 되는 방위로 돌아선다(90도 단위) */
+    if (G.goal != null) { var s = STOPS[G.goal]; G.stop = G.goal; G.mode = 'stop'; if (s.look) { var za = faceAz(s); G.azTo = G.az + Math.atan2(Math.sin(za - G.az), Math.cos(za - G.az)); } }   /* 구역 앞에 닿으면 그 판 줄이 정면이 되는 방위로 돌아선다(90도 단위) */
     else { G.mode = 'free'; nearestStop(); }
     G.goal = null; updateUi(true);
   }
@@ -292,13 +439,23 @@
 
   /* 매 프레임 · 캐릭터 */
   var _v = new T.Vector3();
+  /* v5.38 스태프 챗봇과 겹치면 바깥으로 밀어낸다(어떤 이동이든 마지막에 한 번 · 막힌 칸이면 그대로) */
+  function pushOut() {
+    var p = planOf(G.pos);
+    for (var k = 0; k < guides.length; k++) {
+      var a = guides[k].at, dx = p[0] - a[0], dz = p[1] - a[1], d = Math.hypot(dx, dz);
+      if (d >= GUIDE_R) continue;
+      if (d < 1e-4) { dx = 1; dz = 0; d = 1; }
+      var nx = a[0] + dx / d * (GUIDE_R + 0.005), nz = a[1] + dz / d * (GUIDE_R + 0.005);
+      if (free(nx, nz)) { G.pos.copy(toThree(nx, nz)); p = [nx, nz]; }
+    }
+  }
   function stepBot(dt, now) {
     var moving = 0;
     if (G.mode === 'auto' && G.path) {
       var p = planOf(G.pos), q = G.path[G.pathI], dx = q[0] - p[0], dz = q[1] - p[1], d = Math.hypot(dx, dz), step = G.speed * dt;
       if (d <= step) { G.pos.copy(toThree(q[0], q[1])); G.pathI++; if (G.pathI >= G.path.length) arrive(); }
       else { var nx = p[0] + dx / d * step, nz = p[1] + dz / d * step; G.pos.copy(toThree(nx, nz)); }
-      if (d > 0.01) { var hT = Math.atan2(dx, -dz); G.h = angLerp(G.h, hT, 1 - Math.exp(-dt * 12)); }
       moving = Math.min(1, G.speed / 3);
     } else if (G.stick && (Math.abs(G.stick.x) + Math.abs(G.stick.y)) > 0.05) {
       /* 고정 패드 · 화면 기준 · 위 = 화면 위쪽으로 */
@@ -311,10 +468,16 @@
         if (free(tx, tz)) G.pos.copy(toThree(tx, tz));
         else if (free(tx, p0[1])) G.pos.copy(toThree(tx, p0[1]));
         else if (free(p0[0], tz)) G.pos.copy(toThree(p0[0], tz));
-        G.h = angLerp(G.h, Math.atan2(ux, uz), 1 - Math.exp(-dt * 10));
         moving = mag; G.mode = 'free';
       }
-    } else if (G.hTo != null) { G.h = angLerp(G.h, G.hTo, 1 - Math.exp(-dt * 8)); if (Math.abs(Math.atan2(Math.sin(G.hTo - G.h), Math.cos(G.hTo - G.h))) < 0.01) G.hTo = null; }
+    }
+    pushOut();
+    /* v5.38 몸 방향 = 늘 카메라 방위 G.az(사용자 261003 「항상 정면을 바라봤으면 · 방향키를 누르다 보면 삐딱하게 선다」)
+     * 옛 코드: 걷는 쪽으로 몸을 지수 보간(대각 · 짧게 누름 = 중간 각도에서 멈춤) + 구역 도착 = 판 쪽 정확한 각도 · 카메라 = 90도 반올림(서로 어긋남) + 판 보기 = 판 쪽으로 돈 채 남음
+     * 지금: 이동은 옆걸음 · 뒷걸음(몸은 그대로) · 몸이 도는 것은 좌로 · 우로 돌기(카메라)뿐 · 판 보기 들어가는 0.85초만 판 쪽으로 돌았다가 나오면서 카메라 방위로 돌아와 끝에서 정확히 같아진다 */
+    var A = G.anim, hb = G.az;
+    if (A && A.ph != null && (A.kind === 'in' || A.kind === 'out')) { var kk = clamp((now - A.t0) / A.dur, 0, 1); hb = A.kind === 'in' ? angLerp(G.az, A.ph, easeIO(clamp(kk / 0.5, 0, 1))) : angLerp(A.ph, G.az, easeIO(clamp(kk / 0.8, 0, 1))); }
+    G.h = hb;
     /* 모션 · 통통 + 기울임 + 발 */
     G.moveV += ((moving ? 1 : 0) - G.moveV) * (1 - Math.exp(-dt * 10));
     if (moving) G.walkT += dt * (7 + 5 * moving);
@@ -322,7 +485,7 @@
     bot.position.copy(G.pos); bot.rotation.y = G.h;
     botParts.body.position.y = Math.abs(s) * 0.045 * w; botParts.body.rotation.z = s * 0.07 * w; botParts.body.rotation.x = 0.06 * w;
     botParts.feet[0].position.z = 0.04 + s * 0.09 * w; botParts.feet[1].position.z = 0.04 - s * 0.09 * w;
-    return moving > 0.01 || w > 0.01 || G.hTo != null;
+    return moving > 0.01 || w > 0.01;
   }
 
   /* ═══════════ 카메라 · 위에서 40도 내려다보는 고정 시점(사용자 261003 실폰 「시선이 계속 바뀌는 것보다 스카이뷰 40도가 편하다」) ═══════════
@@ -439,8 +602,8 @@
       var m = makeGuide(!!s.hand); m.position.copy(toThree(q[0], q[1]));
       var h0 = Math.atan2(-fx, fz);   /* 평소 = 통로(판 반대쪽)를 본다 · three 방향 = (sin h, cos h), 도면 z 북쪽 = three -z */
       m.rotation.y = h0; S.lobby.add(m);
-      /* 걸음 막기 · 반지름 0.62m(캐릭터 여유 포함) */
-      for (var dz = -7; dz <= 7; dz++) for (var dx = -7; dx <= 7; dx++) if (dx * dx + dz * dz <= 40) { var c = gi(q[0] + dx * GS, q[1] + dz * GS); if (c >= 0) wd[c] = 1; }
+      /* 걸음 막기 · v5.38 칸 번호로 꽉 찬 원(옛 코드는 소수 좌표를 0.1m 씩 더해 칸을 구해 반올림 오차로 원 안에 빈칸이 줄줄이 생겼고, 캐릭터가 그 틈으로 스태프를 뚫고 지나갔다 · 사용자 261003 「캐릭터가 겹치는 버그」) */
+      blockDisc(q[0], q[1], GUIDE_R);
       guides.push({ m: m, stop: k, id: s.id, zone: s.zone, spot: s.spot || '', at: [q[0], q[1]], h: h0, h0: h0, text: s.say || ZT[s.zone] || '', go: s.go == null ? '판 보기 ▶' : s.go });
     });
   }
@@ -526,10 +689,10 @@
     var ps = D.zonePages(z), pk = pickFace(z, pg);
     var idx = pg ? ps.indexOf(pg) : (pk ? ps.indexOf(pk.pg) : null);
     if (RM || !pk || G.anim || !G.loaded) { if (RM) flash(); openSheet(z, idx); return; }
-    var c = pk.f.userData.c; G.hTo = Math.atan2(c.x - G.pos.x, c.z - G.pos.z); G.mode = G.mode === 'auto' ? 'free' : G.mode; G.path = null; G.stick = null;
+    var c = pk.f.userData.c, ph = Math.atan2(c.x - G.pos.x, c.z - G.pos.z); G.mode = G.mode === 'auto' ? 'free' : G.mode; G.path = null; G.stick = null;
     var sh = shotsFor(pk.f);
-    G.anim = { kind: 'in', t0: performance.now(), dur: 850, P0: G.camPos.clone(), L0: G.look.clone(), sh: sh, z: z, idx: idx };
-    G.lastFace = pk.f; $('gbub').hidden = true;
+    G.anim = { kind: 'in', t0: performance.now(), dur: 850, P0: G.camPos.clone(), L0: G.look.clone(), sh: sh, z: z, idx: idx, ph: ph };
+    G.lastFace = pk.f; G.lastPh = ph; $('gbub').hidden = true;
   }
   function stepAnim(now) {
     var A = G.anim, k = clamp((now - A.t0) / A.dur, 0, 1), sh = A.sh, pos = new T.Vector3(), look = new T.Vector3();
@@ -567,7 +730,7 @@
     if (RM || !G.lastFace || !G.loaded || G.scn !== 'lobby') { G.lastFace = null; return; }
     var sh = shotsFor(G.lastFace); G.lastFace = null;
     camera.position.copy(sh.P2); camera.lookAt(sh.L2); $('fade').style.opacity = 1;
-    G.anim = { kind: 'out', t0: performance.now(), dur: 750, sh: sh };
+    G.anim = { kind: 'out', t0: performance.now(), dur: 750, sh: sh, ph: G.lastPh };
   }
 
 
@@ -594,7 +757,7 @@
     var base = new T.Mesh(new T.CylinderGeometry(0.28, 0.28, 0.02, 20), dark); base.position.set(-0.05, 0.01, 0); gp.add(base);
     var at = [0.95, 1.25]; gp.position.copy(toThree(at[0], at[1])); S.lobby.add(gp);   /* 타자왕 판(39) 왼쪽(남쪽) · 동쪽(통로)을 봄 */
     gp.userData = { promo: true }; gp.traverse(function (o) { o.userData = { promo: true }; });
-    for (var dz = -5; dz <= 5; dz++) for (var dx = -5; dx <= 5; dx++) if (dx * dx + dz * dz <= 26) { var ci = gi(at[0] + dx * GS, at[1] + dz * GS); if (ci >= 0) wd[ci] = 1; }
+    blockDisc(at[0], at[1], 0.51);
   }
   /* 돋보기 · 딱 두 곳(사용자 261003 「이벤트 판은 크게 보기를 없애고 경품 보기 · 타자왕 광고 보기만」)
    * ① 룰렛 「경품 보기」(앱 경품 사진 · 가격 없음 · 샘플 딱지) ② 타자왕 「타자왕 광고 보기」(../tv/typing/?promo=1) · 다른 구역은 챗봇 말풍선 → 판 보기 */
@@ -766,18 +929,28 @@
     cv.addEventListener('wheel', function (e) { e.preventDefault(); setDist(G.dist * Math.exp(e.deltaY * 0.0012)); }, { passive: false });
     /* 고정 패드 · 바깥 원 안에서 손잡이를 민다 · 반지름 48px 이 최고 속도 */
     var pad = $('pad'), knob = $('knob'), pp = null;
+    /* v5.38 조그(엄지 스틱 · 사용자 261003 「안의 버튼이 내가 조작하는 방향으로 움직이는 느낌」) · 링은 고정 · 손잡이는 손가락을 따라 밀리되 링 안(35px)에 머문다
+     * 손잡이 자리 = 입력 그대로(손잡이가 가리키는 쪽 = 걷는 쪽) · 누르는 동안 살짝 작아지고 그림자가 줄며 밀린 쪽 링 가장자리가 은은하게 밝아진다 · 떼면 0.18초 탄성으로 가운데 · 움직임 줄이기 = 바로 */
+    function setKnob(sx, sy, on) {
+      pad.classList.toggle('on', !!on); pad.classList.toggle('back', !on);
+      knob.style.transform = on ? 'translate(' + (sx * 35).toFixed(1) + 'px,' + (sy * 35).toFixed(1) + 'px) scale(.92)' : '';   /* 손잡이(지름 58 · 눌림 .92)가 링(반지름 64) 안에 머물게 35px 까지 · 손가락은 48px 에서 최고 속도 */
+      var m = Math.hypot(sx, sy);
+      pad.style.setProperty('--ka', on && m > 0.12 ? Math.min(1, m).toFixed(2) : '0');
+      if (m > 0.01) { pad.style.setProperty('--kx', (50 + sx / m * 50).toFixed(1) + '%'); pad.style.setProperty('--ky', (50 + sy / m * 50).toFixed(1) + '%'); }
+    }
+    G.knob = function () { return { on: pad.classList.contains('on'), tf: knob.style.transform, ka: pad.style.getPropertyValue('--ka') }; };
     function padMove(e) {
       var r = pad.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, dx = e.clientX - cx, dy = e.clientY - cy, R = 48, m = Math.hypot(dx, dy), k = m > R ? R / m : 1;
-      knob.style.transform = 'translate(' + (dx * k).toFixed(1) + 'px,' + (dy * k).toFixed(1) + 'px)';
-      var sx = dx * k / R, sy = dy * k / R; G.stick = Math.hypot(sx, sy) < 0.12 ? { x: 0, y: 0 } : { x: sx, y: sy }; G.need = true;
+      var sx = dx * k / R, sy = dy * k / R; setKnob(sx, sy, true);
+      G.stick = Math.hypot(sx, sy) < 0.12 ? { x: 0, y: 0 } : { x: sx, y: sy }; G.need = true;
     }
     pad.addEventListener('pointerdown', function (e) {
       if (pp != null || !G.loaded || G.scn !== 'lobby') return; e.preventDefault();
       pp = e.pointerId; try { pad.setPointerCapture(e.pointerId); } catch (x) {}
-      pad.classList.add('on'); G.moved = true; G.path = null; G.goal = null; $('dest').hidden = true; padMove(e);
+      G.moved = true; G.path = null; G.goal = null; $('dest').hidden = true; padMove(e);
     });
     pad.addEventListener('pointermove', function (e) { if (e.pointerId === pp) padMove(e); });
-    function padEnd(e) { if (e.pointerId !== pp) return; pp = null; pad.classList.remove('on'); knob.style.transform = ''; G.stick = null; nearestStop(); updateUi(true); }
+    function padEnd(e) { if (e.pointerId !== pp) return; pp = null; setKnob(0, 0, false); G.stick = null; nearestStop(); updateUi(true); }
     pad.addEventListener('pointerup', padEnd); pad.addEventListener('pointercancel', padEnd);
     pad.addEventListener('contextmenu', function (e) { e.preventDefault(); });
     /* 키보드(데스크톱 확인용) · 화살표 = 걷기 */
@@ -785,9 +958,10 @@
     window.addEventListener('keydown', function (e) {
       if (!G.open) return;
       if (G.sheetOpen) return;
-      if (/^Arrow/.test(e.key)) { keys[e.key] = 1; G.stick = { x: (keys.ArrowRight ? 1 : 0) - (keys.ArrowLeft ? 1 : 0), y: (keys.ArrowDown ? 1 : 0) - (keys.ArrowUp ? 1 : 0) }; G.need = true; e.preventDefault(); }
+      if (/^Arrow/.test(e.key)) { keys[e.key] = 1; G.stick = keyStick(); setKnob(G.stick.x, G.stick.y, true); G.need = true; e.preventDefault(); }
     });
-    window.addEventListener('keyup', function (e) { if (!G.open) return; if (/^Arrow/.test(e.key)) { delete keys[e.key]; G.stick = Object.keys(keys).length ? { x: (keys.ArrowRight ? 1 : 0) - (keys.ArrowLeft ? 1 : 0), y: (keys.ArrowDown ? 1 : 0) - (keys.ArrowUp ? 1 : 0) } : null; if (!G.stick) { nearestStop(); updateUi(true); } } });
+    window.addEventListener('keyup', function (e) { if (!G.open) return; if (/^Arrow/.test(e.key)) { delete keys[e.key]; G.stick = Object.keys(keys).length ? keyStick() : null; if (G.stick) setKnob(G.stick.x, G.stick.y, true); else { setKnob(0, 0, false); nearestStop(); updateUi(true); } } });
+    function keyStick() { var x = (keys.ArrowRight ? 1 : 0) - (keys.ArrowLeft ? 1 : 0), y = (keys.ArrowDown ? 1 : 0) - (keys.ArrowUp ? 1 : 0), m = Math.hypot(x, y) || 1; return { x: x / m, y: y / m }; }   /* 대각 = 손잡이도 링 안 대각(길이 1) */
   }
   function isShown(o) { while (o) { if (!o.visible) return false; o = o.parent; } return true; }
   function tap(x, y) {
@@ -799,6 +973,7 @@
     for (var i = 0; i < hits.length; i++) {
       var h = hits[i], o = h.object; if (!isShown(o) || o === shadow) continue;
       var mat = o.material; if (mat && mat.transparent && mat.opacity < 0.3) continue;   /* 유리 · 바닥 강조 */
+      if (o.userData && o.userData.door && h.point.y > 0.2) continue;   /* v5.38 정문 덧붙임(유리 반사 · 띠 · 틀)은 누름을 막지 않는다 */
       var pn = planOf(h.point);
       /* 비워진 기둥은 지나친다 */
       var pi = PIL.findIndex(function (q) { return Math.abs(q[0] - pn[0]) < 0.8 && Math.abs(q[1] - pn[1]) < 0.8; });
@@ -973,7 +1148,149 @@
     }, 800);
   }
   function showHelp() { $('help').hidden = false; }
-  function hideHelp() { $('help').hidden = true; store.set('axfTour3Help', '1'); G.guardT = performance.now(); }   /* 닫는 탭이 아래 버튼까지 가지 않게 0.5초 막음 */
+  function hideHelp() { $('help').hidden = true; store.set('axfTour3Help', '1'); G.guardT = performance.now(); if (MUS.deferred) { MUS.deferred = false; musStart(2); } }   /* v5.38 첫 입장 음악 = 「시작하기」 누름에서 */   /* 닫는 탭이 아래 버튼까지 가지 않게 0.5초 막음 */
+
+  /* ═══════════ 로비 음악(v5.38 · 사용자 261003 「1층 로비에서 잔잔한 음악이 나오면 좋겠어」) ═══════════
+   * 파일 없음 · Web Audio 로 그 자리에서 합성(저작권 걱정 없음 · 받는 용량 0)
+   *   부드러운 패드 화음(삼각파 + 톱니파 살짝 · 낮은 거름 필터 · 2.6초 천천히 올라와 3.5초 동안 사라짐)이 7~10초마다 바뀐다
+   *   화음 순서 = D 장조 안에서 다음 화음을 무작위로 고르고(같은 화음 반복 없음) · 성부는 가까운 음으로 이어 간다 · 맨 아래 낮은 근음 하나
+   *   가끔 맑은 음(사인파 + 배음 · 종소리처럼 2.5초 감쇠) 1~3개 · 오음음계에서 무작위 · 3~8초 간격 · 잔향(합성한 3.2초 잔향)
+   *   박자 · 드럼 없음 · 소리 크기 낮게(마스터 0.42 · 압축기)
+   * 켜고 끄기: 들어갈 때 2초 동안 커짐 · 나갈 때(검은 전환과 함께) 0.6초 동안 줄고 AudioContext 닫음(배터리) · 화면이 숨으면 멈춤(suspend) · 돌아오면 다시
+   *   첫 입장 = 처음 안내의 「시작하기」(누름)에서 시작 · 「음악 없이」를 고르면 AudioContext 를 만들지 않는다 · 위쪽 스피커 버튼과 같은 설정(axfTour3Music · 기본 켬)
+   *   모바일 자동 재생 제한 = 여는 누름 안에서 만들고 · 그래도 멈춰 있으면 화면 첫 누름에서 다시 깨운다 · navigator.audioSession = ambient(듣던 음악을 끊지 않고 무음 모드를 따른다 · 닫으면 되돌림)
+   * 끄려면 AXTour.open({ music: false }) · 버튼도 숨는다 */
+  var MUS = { want: true, ctx: null, out: null, st: null, timer: 0, gen: 0, made: 0, deferred: false, oldType: null };
+  var MUS_VOL = 0.42;   /* 미리 듣기 렌더 기준 최고 약 -15 dBFS · 평균(RMS) 약 -27 dBFS(배경 음악 크기) */
+  function musOn() { return OPTS.music !== false; }
+  function musImpulse(c, sec) {
+    var n = Math.floor(c.sampleRate * sec), b = c.createBuffer(2, n, c.sampleRate);
+    for (var ch = 0; ch < 2; ch++) { var d = b.getChannelData(ch); for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.6); }
+    return b;
+  }
+  function musGraph(c, dest) {
+    var master = c.createGain(); master.gain.value = 0;
+    var comp = c.createDynamicsCompressor(); comp.threshold.value = -22; comp.knee.value = 18; comp.ratio.value = 3; comp.attack.value = 0.05; comp.release.value = 0.6;
+    var tone = c.createBiquadFilter(); tone.type = 'lowpass'; tone.frequency.value = 3600; tone.Q.value = 0.4;
+    var bus = c.createGain(), dry = c.createGain(), wet = c.createGain(), rev = c.createConvolver(), bell = c.createGain();
+    dry.gain.value = 0.75; wet.gain.value = 0.5; rev.buffer = musImpulse(c, 3.2); bell.gain.value = 1;
+    bus.connect(dry); bus.connect(rev); dry.connect(tone); rev.connect(wet); wet.connect(tone);
+    var bellDry = c.createGain(); bellDry.gain.value = 0.35; bell.connect(bellDry); bellDry.connect(tone); var bellWet = c.createGain(); bellWet.gain.value = 1.0; bell.connect(bellWet); bellWet.connect(rev);
+    tone.connect(comp); comp.connect(master); master.connect(dest);
+    return { master: master, bus: bus, bell: bell };
+  }
+  /* 화음(D 장조 · 근음에서 반음 수) · 다음으로 갈 수 있는 화음 */
+  var MCH = { I: [0, 4, 7, 11, 14], vi: [9, 12, 16, 19], IV: [5, 9, 12, 16, 19], ii: [2, 5, 9, 12, 16], iii: [4, 7, 11, 14], V: [7, 11, 14, 17] };
+  var MNX = { I: ['vi', 'IV', 'ii', 'iii'], vi: ['IV', 'ii', 'I'], IV: ['I', 'ii', 'V', 'vi'], ii: ['V', 'IV', 'vi'], iii: ['vi', 'IV'], V: ['I', 'vi', 'IV'] };
+  var MROOT = { I: 0, vi: 9, IV: 5, ii: 2, iii: 4, V: 7 }, MKEY = 50, MPENTA = [0, 2, 4, 7, 9];
+  function mhz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+  function musState(t) { return { t: t, ch: 'I', prev: [62, 66, 69, 73], bt: t + 3 + Math.random() * 3 }; }
+  function musVoice(prev, ch) {   /* 이전 성부에서 가장 가까운 화음 음으로(가끔 한 음은 한 옥타브 위아래로) */
+    var pcs = MCH[ch].map(function (x) { return (MKEY + x) % 12; }), out = [];
+    prev.forEach(function (p) {
+      var best = p, bd = 99;
+      for (var m = 52; m <= 76; m++) { if (pcs.indexOf(m % 12) < 0 || out.indexOf(m) >= 0) continue; var d = Math.abs(m - p) + Math.random() * 0.8; if (d < bd) { bd = d; best = m; } }
+      out.push(best);
+    });
+    return out.sort(function (a, b) { return a - b; });
+  }
+  function musPad(c, o, t, dur, notes, root) {
+    var att = 2.6, rel = 3.5, end = t + dur + rel;
+    var flt = c.createBiquadFilter(); flt.type = 'lowpass'; flt.Q.value = 0.5; flt.frequency.setValueAtTime(650, t); flt.frequency.linearRampToValueAtTime(1150 + Math.random() * 300, t + dur * 0.55); flt.frequency.linearRampToValueAtTime(700, end);
+    var g = c.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(1, t + att); g.gain.setValueAtTime(1, t + dur); g.gain.linearRampToValueAtTime(0, end);
+    flt.connect(g); g.connect(o.bus);
+    notes.forEach(function (m, i) {
+      [['triangle', -6, 0.05], ['sawtooth', 5, 0.012]].forEach(function (w) {
+        var os = c.createOscillator(), og = c.createGain(); os.type = w[0]; os.frequency.value = mhz(m); os.detune.value = w[1] + (Math.random() - 0.5) * 4; og.gain.value = w[2] * (i === notes.length - 1 ? 0.8 : 1);
+        os.connect(og); og.connect(flt); os.start(t); os.stop(end + 0.05);
+      });
+    });
+    var bs = c.createOscillator(), bg = c.createGain(); bs.type = 'sine'; bs.frequency.value = mhz(MKEY - 12 + root); bg.gain.value = 0.07; bs.connect(bg); bg.connect(g); bs.start(t); bs.stop(end + 0.05);
+  }
+  function musBell(c, o, t, m) {
+    var g = c.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.045, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0008, t + 2.6); g.connect(o.bell);
+    [[1, 1], [2.0, 0.22], [3.01, 0.06]].forEach(function (h) { var os = c.createOscillator(), og = c.createGain(); os.type = 'sine'; os.frequency.value = mhz(m) * h[0]; og.gain.value = h[1]; os.connect(og); og.connect(g); os.start(t); os.stop(t + 2.7); });
+  }
+  function musSchedule(c, o, st, until) {
+    while (st.t < until) {
+      var dur = 7 + Math.random() * 3, nx = MNX[st.ch], ch = nx[Math.floor(Math.random() * nx.length)];
+      st.ch = ch; st.prev = musVoice(st.prev, ch); musPad(c, o, st.t, dur, st.prev, MROOT[ch]); st.t += dur;
+    }
+    while (st.bt < until) {
+      var k = 1 + Math.floor(Math.random() * 3), base = 74 + Math.floor(Math.random() * 8), gap = 0.25 + Math.random() * 0.4;
+      for (var i = 0; i < k; i++) { var pc = MPENTA[Math.floor(Math.random() * MPENTA.length)], m = MKEY + 24 + pc + (Math.random() < 0.3 ? 12 : 0); if (m > 90) m -= 12; musBell(c, o, st.bt + i * gap, m); }
+      st.bt += 3 + Math.random() * 5;
+    }
+  }
+  function musTick() { if (MUS.ctx && MUS.out && MUS.ctx.state !== 'closed') musSchedule(MUS.ctx, MUS.out, MUS.st, MUS.ctx.currentTime + 1.5); }
+  function musStart(fade) {
+    if (!musOn() || !MUS.want || !G.open || document.hidden) return;
+    MUS.gen++;
+    if (!MUS.ctx) {
+      var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+      try { if (navigator.audioSession) { if (MUS.oldType == null) MUS.oldType = navigator.audioSession.type; navigator.audioSession.type = 'ambient'; } } catch (e) {}
+      try { MUS.ctx = new AC({ latencyHint: 'playback' }); } catch (e) { try { MUS.ctx = new AC(); } catch (e2) { MUS.ctx = null; return; } }
+      MUS.made++; MUS.out = musGraph(MUS.ctx, MUS.ctx.destination); MUS.st = musState(MUS.ctx.currentTime + 0.1);
+    }
+    var c = MUS.ctx; if (c.state === 'suspended') { try { c.resume(); } catch (e) {} }
+    var g = MUS.out.master.gain, now = c.currentTime; g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(MUS_VOL, now + (fade == null ? 2 : fade));
+    if (MUS.st.t < now) MUS.st.t = now + 0.05; if (MUS.st.bt < now) MUS.st.bt = now + 2;
+    if (!MUS.timer) MUS.timer = setInterval(musTick, 300);
+    musTick(); musUi();
+  }
+  function musStop(close, fade) {
+    clearInterval(MUS.timer); MUS.timer = 0;
+    var c = MUS.ctx; if (!c) { musUi(); return; }
+    var my = ++MUS.gen, f = fade == null ? 0.6 : fade;
+    try { var g = MUS.out.master.gain, now = c.currentTime; g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(0, now + f); } catch (e) {}
+    setTimeout(function () {
+      if (my !== MUS.gen || MUS.ctx !== c) return;
+      if (close) { try { c.close(); } catch (e) {} MUS.ctx = null; MUS.out = null; MUS.st = null; try { if (navigator.audioSession && MUS.oldType != null) { navigator.audioSession.type = MUS.oldType; MUS.oldType = null; } } catch (e) {} }
+      else { try { c.suspend(); } catch (e) {} }
+      musUi();
+    }, f * 1000 + 80);
+    musUi();
+  }
+  function musSet(on) {   /* 위쪽 스피커 버튼 · 처음 안내의 「음악 없이」 둘 다 이것 하나 */
+    MUS.want = !!on; store.set('axfTour3Music', on ? '1' : '0');
+    if (on) { if (!MUS.deferred || $('help').hidden) { MUS.deferred = false; musStart(1.2); } }
+    else musStop(true, 0.5);
+    musUi();
+  }
+  function musUi() {
+    var b = $('bSnd'), k = $('muChk'); if (!b) return;
+    b.hidden = !musOn(); b.classList.toggle('off', !MUS.want); b.setAttribute('aria-pressed', MUS.want ? 'true' : 'false'); b.setAttribute('aria-label', MUS.want ? '음악 끄기' : '음악 켜기');
+    if (k) k.checked = !MUS.want; var row = $('muRow'); if (row) row.hidden = !musOn();
+  }
+  function musOpen() {   /* 둘러보기를 여는 누름 안 · 처음 안내가 뜰 차례면 「시작하기」까지 기다린다 */
+    MUS.deferred = Q.get('nohelp') !== '1' && !store.get('axfTour3Help');
+    musUi(); if (!MUS.deferred) musStart(2);
+  }
+  function musWire() {
+    var v = store.get('axfTour3Music'); MUS.want = v !== '0';
+    $('bSnd').onclick = function () { musSet(!MUS.want); };
+    $('muChk').onchange = function () { musSet(!$('muChk').checked); };
+    /* 자동 재생이 막혀 멈춰 있으면 화면 첫 누름에서 깨운다(처음 안내가 떠 있는 동안 · 아직 고르기 전에는 시작하지 않음) */
+    ['pointerdown', 'touchend', 'keydown'].forEach(function (ev) {
+      ROOTEL.addEventListener(ev, function () {
+        if (!G.open || !musOn() || !MUS.want || MUS.deferred || !$('help').hidden || document.hidden) return;
+        if (!MUS.ctx || MUS.ctx.state === 'suspended') musStart(MUS.ctx ? 1 : 2);
+      }, true);
+    });
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { if (MUS.ctx) musStop(false, 0.15); }
+      else if (G.open && MUS.ctx && MUS.want) musStart(1.5);
+    });
+    musUi();
+  }
+  /* 미리 듣기 · 같은 합성을 OfflineAudioContext 로(시험 · 미리 듣기 파일용 · 앱 화면에는 쓰지 않음) */
+  G.musOffline = function (sec) {
+    var OC = window.OfflineAudioContext || window.webkitOfflineAudioContext, c = new OC(2, Math.round(44100 * sec), 44100), o = musGraph(c, c.destination), st = musState(0.1);
+    o.master.gain.setValueAtTime(0, 0); o.master.gain.linearRampToValueAtTime(MUS_VOL, 2); o.master.gain.setValueAtTime(MUS_VOL, sec - 2.5); o.master.gain.linearRampToValueAtTime(0, sec - 0.1);
+    musSchedule(c, o, st, sec);
+    return c.startRendering();
+  };
+  G.mus = function () { return { want: MUS.want, deferred: MUS.deferred, made: MUS.made, state: MUS.ctx ? MUS.ctx.state : 'none', timer: !!MUS.timer, gain: MUS.out ? +MUS.out.master.gain.value.toFixed(3) : null, session: navigator.audioSession ? navigator.audioSession.type : 'n/a' }; };
 
   /* ═══════════ 시작 ═══════════ */
   function boot() {
@@ -994,6 +1311,7 @@
     var rs = store.get('axfTour3RM'); if (rs === '1' || rs === '0') RM = rs === '1';
     ROOTEL.classList.toggle('rm', RM); $('rmChk').checked = RM;
     $('rmChk').onchange = function () { RM = $('rmChk').checked; store.set('axfTour3RM', RM ? '1' : '0'); ROOTEL.classList.toggle('rm', RM); G.need = true; };
+    musWire();
     $('bHelp').onclick = showHelp; $('hOk').onclick = hideHelp; $('help').addEventListener('click', function (e) { if (e.target === $('help')) hideHelp(); });
     wireSheet();
     G.showFps = Q.get('fps') === '1';
@@ -1005,7 +1323,7 @@
     requestAnimationFrame(loop);
   }
   /* 시험 · 녹화용 손잡이(앱에는 없음) */
-  G.api = { shotCamKeep: function (x, y, z, lx, ly, lz, face) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); if (face) { guides.forEach(function (g) { g.m.rotation.y = Math.atan2(camera.position.x - g.m.position.x, camera.position.z - g.m.position.z); }); bot.rotation.y = Math.atan2(camera.position.x - bot.position.x, camera.position.z - bot.position.z); } S.frame(camera, 'lobby'); if (G.ceil) G.ceil.visible = false; renderer.render(scene, camera); G.hold = true; }, shotCam: function (x, y, z, lx, ly, lz) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); var bv = bot.visible; bot.visible = false; S.frame(camera, 'lobby'); renderer.render(scene, camera); bot.visible = bv; G.hold = true; }, guides: function () { return guides.map(function (g) { return [g.zone, g.at, +g.h.toFixed(2)]; }); }, enter: function (zid, pg) { enterPanel(D.Z(zid), pg || null); }, pose: function (x, z, yaw, h) { G.pos.copy(toThree(x, z)); G.mode = 'free'; G.path = null; G.yaw = yaw; G.h = h == null ? yaw + Math.PI : h; G.yo = 0; G.need = true; }, goStop: goStop, openSheet: function (zid, i) { openSheet(D.Z(zid), i || 0); }, closeSheet: closeSheet, setPage: function (k) { setPage(k); }, tap: tap, walkTo: walkTo, plan: function () { return planOf(G.pos); }, cam: function () { return planOf(camera.position).concat([camera.position.y]); }, toCafe: toCafe, back: backTo1F, free: free, hw: function (x, z) { var c = gi(x, z); return c < 0 ? -1 : hw[c] * 0.05; } };
+  G.api = { scene: function () { return S; }, shotCamKeep: function (x, y, z, lx, ly, lz, face) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); if (face) { guides.forEach(function (g) { g.m.rotation.y = Math.atan2(camera.position.x - g.m.position.x, camera.position.z - g.m.position.z); }); bot.rotation.y = Math.atan2(camera.position.x - bot.position.x, camera.position.z - bot.position.z); } S.frame(camera, 'lobby'); if (G.ceil) G.ceil.visible = false; renderer.render(scene, camera); G.hold = true; }, shotCam: function (x, y, z, lx, ly, lz) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); var bv = bot.visible; bot.visible = false; S.frame(camera, 'lobby'); renderer.render(scene, camera); bot.visible = bv; G.hold = true; }, guides: function () { return guides.map(function (g) { return [g.zone, g.at, +g.h.toFixed(2)]; }); }, enter: function (zid, pg) { enterPanel(D.Z(zid), pg || null); }, pose: function (x, z, yaw, h) { G.pos.copy(toThree(x, z)); G.mode = 'free'; G.path = null; G.yaw = yaw; G.h = h == null ? yaw + Math.PI : h; G.yo = 0; G.need = true; }, goStop: goStop, openSheet: function (zid, i) { openSheet(D.Z(zid), i || 0); }, closeSheet: closeSheet, setPage: function (k) { setPage(k); }, tap: tap, walkTo: walkTo, plan: function () { return planOf(G.pos); }, cam: function () { return planOf(camera.position).concat([camera.position.y]); }, toCafe: toCafe, back: backTo1F, free: free, hw: function (x, z) { var c = gi(x, z); return c < 0 ? -1 : hw[c] * 0.05; } };
 
   /* ═══════════ 앱 안 열기 · 닫기 · 뒤로(v5.37 정식 앱 이식 · 사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) ═══════════
    * window.AXTour = { open(o), close(), back(), isOpen() } · 옛 tour.js 와 같은 약속(앱 tourOpen · 뒤로 가기 popstate 가 그대로 부른다)
@@ -1016,6 +1334,7 @@
     '  <header class="hd">\n' +
     '    <button type="button" class="hb back" id="t3-bClose" aria-label="둘러보기 닫기"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>\n' +
     '    <h1>1층 둘러보기 <span class="tag" id="t3-tag" hidden>시험판</span></h1>\n' +
+    '    <button type="button" class="hb snd" id="t3-bSnd" aria-pressed="true" aria-label="음악 끄기" hidden><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path class="w" d="M15.5 9a4.2 4.2 0 0 1 0 6"/><path class="w" d="M18.3 6.5a8 8 0 0 1 0 11"/><path class="x" d="M16 9.5l5 5M21 9.5l-5 5"/></svg></button>\n' +
     '    <button type="button" class="hb" id="t3-bHelp">도움말</button>\n' +
     '  </header>\n' +
     '  <main class="stage" id="t3-stage">\n' +
@@ -1069,6 +1388,7 @@
     '    <p class="h1t">왼쪽 동그라미로 걷고 오른쪽 버튼으로 돌리기 · 확대를 하며, 「다음 구역」을 누르면 알아서 걸어가요.</p>\n' +
     '    <div class="hdemo" aria-hidden="true"><span class="hbtn">다음 구역 ▶</span><span class="finger"></span></div>\n' +
     '    <label class="rmrow"><span class="t"><b>움직임 줄이기</b><span>어지러우면 켜세요</span></span><input type="checkbox" id="t3-rmChk" role="switch"><span class="sw" aria-hidden="true"></span></label>\n' +
+    '    <label class="rmrow" id="t3-muRow"><span class="t"><b>음악 없이</b><span>조용히 보려면 켜세요</span></span><input type="checkbox" id="t3-muChk" role="switch"><span class="sw" aria-hidden="true"></span></label>\n' +
     '    <button type="button" class="nb pri wide" id="t3-hOk">시작하기</button>\n' +
     '  </div>\n' +
     '</section>\n' +
@@ -1101,6 +1421,7 @@
     var k = stopOf(z.id, pg); if (k < 0) return;
     placeAt(k, true); G.moved = true; updateUi(true);
     if (pg && z.id !== 'event') PEND = { z: z, pg: pg };   /* EVENT 는 판 보기가 없다 */
+    if (PEND && MUS.deferred) { MUS.deferred = false; musStart(2); }   /* 판 보기로 바로 가면 처음 안내가 뜨지 않는다 · 음악은 지금(막히면 첫 누름에서) */
   }
   function afterIntro() { if (PEND) { var p = PEND; PEND = null; enterPanel(p.z, p.pg); return; } maybeHelp(); }
   function show() {
@@ -1110,10 +1431,10 @@
   }
   function open(o) {
     OPTS = o || {};
-    if (!ROOTEL) { buildDom(); show(); boot(); return; }
+    if (!ROOTEL) { buildDom(); show(); boot(); musOpen(); return; }
     if (G.open) { if (G.loaded) applyTarget(); return; }
     var bk = $('black'); bk.style.transition = 'none'; bk.style.opacity = 1; $('blackT').textContent = '';
-    show();
+    show(); musOpen();
     if (!G.loaded) return;   /* 아직 받는 중 · 받으면 load 가 자리를 잡는다 */
     G.moved = false; HOLD = null; G.stick = null; G.path = null; G.anim = null;
     placeAt(0, true); applyTarget(); updateUi(true);
@@ -1123,7 +1444,7 @@
     if (!ROOTEL || !G.open) return;
     if (!$('vid').hidden) closePromo();
     if (SH) { $('sheet').hidden = true; G.sheetOpen = false; SH = null; G.lastFace = null; }
-    $('help').hidden = true; G.anim = null; HOLD = null; G.stick = null;
+    $('help').hidden = true; G.anim = null; HOLD = null; G.stick = null; musStop(true, 0.6);   /* v5.38 음악 = 암전과 함께 줄고 닫힘 */
     var bk = $('black'); $('blackT').textContent = ''; $('blackT').classList.remove('on');
     bk.style.transition = RM ? 'none' : 'opacity .22s'; bk.style.opacity = 1;   /* 나갈 때 짧은 암전 */
     setTimeout(function () {
@@ -1138,5 +1459,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, ver: 'v5.37', v3: true };
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, ver: 'v5.38', v3: true };
 })();
