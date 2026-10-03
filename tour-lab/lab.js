@@ -11,7 +11,7 @@
  * 3D 를 못 그리면 평면 지도 + 구역 목록(시트는 같다). */
 (function () {
   'use strict';
-  var T = window.THREE, D = window.TOUR_DATA, BASE = '../assets/tour/', LABVER = 'v532a';
+  var T = window.THREE, D = window.TOUR_DATA, BASE = '../assets/tour/', LABVER = 'v535a';
   var Q = new URLSearchParams(location.search);
   var RM = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);   /* 기본 = 기기 설정 · 처음 안내 · 도움말의 「움직임 줄이기」로 바꾸면 이 기기에 기억(아래 start) */
   function $(id) { return document.getElementById(id); }

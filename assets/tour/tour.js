@@ -22,7 +22,7 @@
   var ZTXT = { vision: '회사가 가는 방향을 보는 곳', lab: 'DAP 과제를 보는 곳', action: 'AI 업무 사례를 보는 곳', play: 'AI를 직접 써 보는 곳', event: '사진 · 룰렛 · 타자왕이 있는 곳', lounge: '업무 고민을 상담하는 곳', cafe: '아이디어를 놓고 이야기하는 곳' };
 
   var R = null;   /* 열려 있는 동안의 상태 한 묶음 · 닫으면 버린다 */
-  var VER = 'v534a';   /* 모형 파일 캐시 깨기 · 모형을 바꾸면 올린다 */
+  var VER = 'v535a';   /* 모형 파일 캐시 깨기 · 모형을 바꾸면 올린다 */
   var ATLAS_IMG = {};   /* 아틀라스 그림은 닫아도 들고 있다(작다 · 약 180KB) */
   function $(k) { return R && R.el[k]; }
 
@@ -461,7 +461,7 @@
   }
   function mapSvg() {
     var B = D.BLD, s = 10, Y = function (z) { return (B.top - z) * s; }, X = function (x) { return x * s; }, LW = B.outline[1][0], CN = B.coreN, LN = B.lobbyN;   /* 숫자는 tour-data(= 3D 배치)에서만 */
-    var o = '<svg class="plan" viewBox="-8 -8 ' + Math.round((Math.max(LW, B.outside.x1) + 0.8) * s + 8) + ' ' + Math.round((B.top + 2.3) * s) + '" role="group" aria-label="1층 평면 지도. 위가 북쪽, 아래가 정문">';
+    var o = '<svg class="plan" viewBox="-8 -8 ' + Math.round((Math.max(LW, B.outside.x1) + 0.8) * s + 8) + ' ' + Math.round((B.top + 2.3) * s) + '" role="group" aria-label="1층 평면 지도. 아래가 정문">';
     o += '<defs><pattern id="trHz" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#EEF0F2"/><line x1="0" y1="0" x2="0" y2="6" stroke="#D9DDE2" stroke-width="2"/></pattern></defs>';
     o += '<polygon points="' + B.outline.map(function (q) { return X(q[0]) + ',' + Y(q[1]); }).join(' ') + '" fill="#FFFFFF" stroke="#CBD0D6" stroke-width="1.5"/>';
     var O = B.outside; o += '<rect x="' + X(O.x0) + '" y="' + Y(O.z1) + '" width="' + (O.x1 - O.x0) * s + '" height="' + (O.z1 - O.z0) * s + '" rx="3" fill="#EEF0F2"/><text class="lab" x="' + X((O.x0 + O.x1) / 2) + '" y="' + (Y(O.z1) - 3) + '" text-anchor="middle">건물 밖</text>';
@@ -493,7 +493,7 @@
   }
   function renderMap() {
     var m = $('map'), cafe = D.Z('cafe');
-    m.innerHTML = '<div class="card">' + mapSvg() + '<p class="cap">위가 북쪽 · 아래가 정문 · 구역을 누르면 판을 볼 수 있어요</p></div>' +
+    m.innerHTML = '<div class="card">' + mapSvg() + '<p class="cap">아래가 정문 · 구역을 누르면 판을 볼 수 있어요</p></div>' +
       '<button type="button" class="card cafe" data-z="cafe">' + BOTSVG + '<span style="flex:1;min-width:0"><span style="display:block;font-size:15px;line-height:22px;font-weight:700">18F AX 커피챗</span><span style="display:block;font-size:13px;line-height:20px;color:var(--t-muted)">' + esc(ztext(cafe).kor) + '</span></span>' + CHEV + '</button>' +
       (R.why ? '<p class="cap">평면 지도로 보여 주는 이유: ' + esc(R.why) + '</p>' : '');
     Array.prototype.forEach.call(m.querySelectorAll('[data-z]'), function (el) {
