@@ -1,0 +1,202 @@
+/* 1층 둘러보기 v3 · 공용 화면(앱 · 시험판) · 모든 규칙은 #axTour3 아래 · 원본 tour-lab/lab.css(gen_tour3.py) · 이 파일이 정본 */
+#axTour3 {
+  --brand: #FF7F32; --brandSoft: #FFF1E8; --brandText: #A63D00; --onBrand: #351A0C; --o25: #FFD8C1;
+  --canvas: #F2F4F6; --surface: #FFFFFF; --divider: #E5E8EB; --divider2: #CBD0D6;
+  --ink: #191F28; --body: #4E5968; --muted: #6B7684; --disabled: #B0B8C1;
+  --safeB: env(safe-area-inset-bottom, 0px); --safeT: env(safe-area-inset-top, 0px);
+  color-scheme: light;
+}
+#axTour3, #axTour3 * { box-sizing: border-box; }
+#axTour3 { margin: 0;  background: var(--canvas); color: var(--ink);  overscroll-behavior: none;
+  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif; letter-spacing: 0; -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
+html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
+#axTour3 { position: fixed; inset: 0; z-index: 9000; }
+#axTour3[hidden] { display: none !important; }
+#axTour3 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+#axTour3 button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+#axTour3 [hidden] { display: none !important; }
+#axTour3 .t3app { position: fixed; inset: 0; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; background: var(--canvas); }
+@media (min-width: 521px) { #axTour3 .t3app { box-shadow: 0 0 0 1px var(--divider); } }
+
+/* 헤더 */
+#axTour3 .hd { flex: none; display: flex; align-items: center; gap: 4px; height: calc(56px + var(--safeT)); padding: var(--safeT) 8px 0 16px; background: var(--surface); border-bottom: 1px solid var(--divider2); z-index: 5; }
+#axTour3 .hd h1 { flex: 1; margin: 0; font-size: 19px; line-height: 26px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#axTour3 .hd .tag { display: inline-block; vertical-align: 2px; margin-left: 4px; font-size: 12px; line-height: 20px; padding: 0 6px; border-radius: 6px; background: var(--canvas); color: var(--muted); font-weight: 600; }
+#axTour3 .hb { height: 44px; padding: 0 12px; border-radius: 12px; font-size: 16px; font-weight: 600; color: var(--body); white-space: nowrap; }
+#axTour3 .hb:active { background: var(--canvas); }
+
+/* 무대 */
+#axTour3 .stage { position: relative; flex: 1; min-height: 0; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; background: #E9ECEF; }
+#axTour3 #t3-cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
+#axTour3 .pins { position: absolute; inset: 0; pointer-events: none; }
+#axTour3 .pin { position: absolute; left: 0; top: 0; transform: translate(-50%, -100%); pointer-events: auto; display: flex; flex-direction: column; align-items: center; }
+#axTour3 .pin::before { content: ""; position: absolute; inset: -10px -8px; }
+#axTour3 .pin .st { width: 2px; height: 10px; background: var(--brand); }
+#axTour3 .pin .sg { pointer-events: none; }
+#axTour3 .pin.lm { pointer-events: none; }
+#axTour3 .pin.lm::before { content: none; }
+#axTour3 .pin.lm .s { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: 999px; background: rgba(25, 31, 40, .72); color: #fff; font-size: 13px; font-weight: 600; white-space: nowrap; line-height: 1; }
+#axTour3 .sg { display: inline-flex; align-items: center; height: 26px; padding: 0 9px; border-radius: 4px; background: var(--brand); color: #fff; font-size: 14px; font-weight: 700; white-space: nowrap; line-height: 1; flex: none; }
+#axTour3 .sg.ghost { background: var(--surface); color: var(--brandText); box-shadow: inset 0 0 0 1.5px var(--brand); }
+#axTour3 .cap { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); max-width: calc(100% - 32px); background: rgba(255, 255, 255, .95); border-radius: 999px; padding: 7px 16px; font-size: 16px; line-height: 22px; font-weight: 700; color: var(--ink); box-shadow: inset 0 0 0 1px var(--divider); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; z-index: 3; }
+#axTour3 .load { position: absolute; inset: 0; display: grid; place-items: center; font-size: 17px; font-weight: 600; color: var(--muted); pointer-events: none; }
+#axTour3 .load[hidden] { display: none; }
+#axTour3 .drag { display: none; position: absolute; left: 50%; top: 12px; transform: translateX(-50%); margin: 0; font-size: 15px; line-height: 22px; font-weight: 600; color: #fff; background: rgba(25, 31, 40, .78); border-radius: 999px; padding: 7px 14px; white-space: nowrap; pointer-events: none; transition: opacity .4s; z-index: 2; }
+#axTour3 .drag.off { opacity: 0; }
+/* 작은 지도 · 오른쪽 위 · 지도 위 = 화면 위(남쪽 정문) */
+#axTour3 .mini { position: absolute; right: 10px; top: 10px; width: 132px; padding: 5px; border-radius: 12px; background: rgba(255, 255, 255, .45); box-shadow: 0 2px 10px rgba(25, 31, 40, .16); z-index: 4; line-height: 0; }
+#axTour3 .mini svg { display: block; width: 100%; height: auto; }
+#axTour3 .mini .mz { fill: rgba(255, 241, 232, .7); stroke: #FF7F32; stroke-width: 1; }   /* 판 위 반투명(사용자 261003) · 윤곽은 주황으로 읽히게 */
+#axTour3 .mini .mz.next { fill: #FFD8C1; stroke: #FF7F32; stroke-width: 1.5; }
+#axTour3 .mini .mz.here { fill: #FF7F32; stroke: #A63D00; stroke-width: 1.5; }
+#axTour3 .mini:active { filter: brightness(.95); }
+/* 돋보기 표식 · 주황 원 + 흰 돋보기 · 화면에서 늘 같은 크기 · 누르면 그 요소를 크게 */
+#axTour3 .mags { position: absolute; inset: 0; pointer-events: none; }
+#axTour3 .mag { position: absolute; left: 0; top: 0; height: 34px; padding: 0 12px 0 9px; border-radius: 999px; background: var(--brand); color: #FFFFFF; display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; white-space: nowrap; box-shadow: 0 0 0 2px #FFFFFF, 0 2px 8px rgba(25, 31, 40, .25); pointer-events: auto; z-index: 2; }
+#axTour3 .mag::before { content: ""; position: absolute; inset: -8px; }
+#axTour3 .mag:active { filter: brightness(.92); }
+/* 타자왕 영상 시트 */
+#axTour3 .vid { position: fixed; inset: 0; z-index: 55; max-width: 520px; margin: 0 auto; background: #191F28; display: flex; flex-direction: column; }
+#axTour3 .vid .vbody { flex: 1; min-height: 0; display: grid; place-items: center; padding: 12px; }
+#axTour3 .vid iframe { border: 0; border-radius: 12px; background: #000; display: block; }
+/* 오른손 시점 버튼 · 십자(12시 확대 · 6시 축소 · 9시 좌로 돌기 · 3시 우로 돌기 · 가운데 작은 점 · 사용자 261003) */
+#axTour3 .ctl { position: absolute; right: 8px; bottom: 8px; display: grid; grid-template-columns: 58px 58px 58px; grid-template-rows: auto auto auto; gap: 0 2px; z-index: 4; }
+#axTour3 .ctl button { width: 58px; display: flex; flex-direction: column; align-items: center; gap: 1px; }
+#axTour3 .ctl .n { grid-column: 2; grid-row: 1; } #axTour3 .ctl .w { grid-column: 1; grid-row: 2; } #axTour3 .ctl .e { grid-column: 3; grid-row: 2; } #axTour3 .ctl .s { grid-column: 2; grid-row: 3; }
+#axTour3 .ctl .dot { grid-column: 2; grid-row: 2; align-self: center; justify-self: center; width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, .85); box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .2); margin-bottom: 14px; }
+#axTour3 .ctl .c { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .94); color: var(--ink); box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .18), 0 2px 10px rgba(25, 31, 40, .16); }
+#axTour3 .ctl .c svg { width: 24px; height: 24px; }
+#axTour3 .ctl .l { font-size: 12px; line-height: 15px; font-weight: 700; white-space: nowrap; color: #FFFFFF; text-shadow: 0 0 3px rgba(0, 0, 0, .75), 0 1px 2px rgba(0, 0, 0, .6); }   /* 흰 바탕 없앰(사용자 261003) · 흰 글자 + 어두운 그림자 */
+#axTour3 .ctl.la .l { color: var(--ink); text-shadow: 0 0 3px #FFFFFF, 0 0 2px #FFFFFF, 0 0 1px #FFFFFF; }   /* 비교안 ?lbl=a = 먹색 글자 + 흰 번짐 */
+#axTour3 .ctl button:active .c { background: var(--canvas); }
+#axTour3 .ctl button:disabled { opacity: .4; }
+/* 안내 챗봇 말풍선 · 머리 위 · 누르면 판 보기 */
+#axTour3 .gbub { position: absolute; left: 0; top: 0; max-width: calc(100vw - 16px); padding: 10px 10px 10px; border-radius: 18px; background: var(--surface); color: var(--ink); font-size: 16px; line-height: 22px; white-space: nowrap; font-weight: 700; text-align: left; box-shadow: 0 4px 16px rgba(25, 31, 40, .16); z-index: 3; word-break: keep-all; }
+#axTour3 .gbub::after { content: ""; position: absolute; left: 50%; bottom: -7px; margin-left: -7px; border: 7px solid transparent; border-bottom: 0; border-top-color: var(--surface); }
+#axTour3 .gbub #gbubT { display: block; padding: 0 4px; }
+#axTour3 .gbub .go { display: flex; align-items: center; justify-content: center; height: 48px; margin-top: 8px; border-radius: 12px; background: var(--brand); color: var(--onBrand); font-size: 17px; font-weight: 700; }   /* 엄지로 누르기 편한 큰 버튼 · 말풍선과 한 덩어리(사용자 261003) */
+#axTour3 .gbub .go[hidden] { display: none; }
+/* 판 보기 들어가기 · 나오기 · 순간이동 흰 화면 */
+#axTour3 .fade { position: fixed; inset: 0; background: #FFFFFF; opacity: 0; pointer-events: none; z-index: 45; }
+/* 움직임 줄이기 스위치(처음 안내 · 도움말) */
+#axTour3 .rmrow { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 14px; margin-bottom: 14px; border-radius: 16px; background: var(--canvas); cursor: pointer; }
+#axTour3 .rmrow .t { flex: 1; min-width: 0; }
+#axTour3 .rmrow .t b { display: block; font-size: 17px; line-height: 24px; }
+#axTour3 .rmrow .t span { display: block; font-size: 14px; line-height: 20px; color: var(--muted); }
+#axTour3 .rmrow input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+#axTour3 .rmrow .sw { flex: none; position: relative; width: 52px; height: 32px; border-radius: 999px; background: var(--disabled); transition: background .2s; }
+#axTour3 .rmrow .sw::after { content: ""; position: absolute; left: 3px; top: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(25, 31, 40, .25); transition: transform .2s; }
+#axTour3 .rmrow input:checked + .sw { background: var(--ink); }
+#axTour3 .rmrow input:checked + .sw::after { transform: translateX(20px); }
+#axTour3 .rmrow input:focus-visible + .sw { outline: 2px solid var(--ink); outline-offset: 2px; }
+#axTour3.rm .finger, #axTour3.rm .dest, #axTour3.rm .sheet, #axTour3.rm .list, #axTour3.rm .hcard, #axTour3.rm .cta { animation: none !important; }
+#axTour3.rm .rmrow .sw, #axTour3.rm .rmrow .sw::after { transition: none; }
+/* 고정 패드 · 왼쪽 아래 엄지 자리 · 늘 보임(사용자 261003 「가상 버튼이 아예 화면에 있는 게 낫다」) */
+#axTour3 .pad { position: absolute; left: 16px; bottom: 16px; width: 128px; height: 128px; border-radius: 50%; background: rgba(255, 255, 255, .55); box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .18), 0 2px 12px rgba(25, 31, 40, .14); touch-action: none; z-index: 4; -webkit-user-select: none; user-select: none; }
+#axTour3 .pad::before { content: ""; position: absolute; inset: 22px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(25, 31, 40, .10); pointer-events: none; }
+#axTour3 .pad .knob { position: absolute; left: 50%; top: 50%; width: 58px; height: 58px; margin: -29px 0 0 -29px; border-radius: 50%; background: var(--brand); box-shadow: 0 2px 8px rgba(25, 31, 40, .25); pointer-events: none; }
+#axTour3 .pad.on { background: rgba(255, 255, 255, .72); }
+#axTour3 .dest { position: absolute; left: 0; top: 0; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; box-shadow: inset 0 0 0 3px var(--brand); pointer-events: none; animation: dest 1s ease-out infinite; }
+@keyframes dest { from { transform: scale(.5); opacity: 1; } to { transform: scale(1.3); opacity: 0; } }
+/* 구역 앞에서 떠오르는 큰 버튼 */
+#axTour3 .slot { display: none; height: 60px; margin-bottom: 8px; position: relative; }   /* 「판 크게 보기 n장」 칸 없앰(사용자 261003 「화면을 가리는 요소」) · 판 보기는 스태프 말풍선 「판 보기」 · 판 직접 탭으로만 */
+#axTour3 .cta { position: absolute; inset: 0; width: 100%; padding: 4px 16px; border-radius: 16px; background: var(--brand); color: var(--onBrand); font-size: 19px; line-height: 26px; font-weight: 700; z-index: 5; display: flex; align-items: center; justify-content: center; gap: 10px; animation: rise .28s cubic-bezier(.2, .8, .2, 1); }
+#axTour3 .cta .n { font-size: 15px; font-weight: 600; opacity: .8; }
+#axTour3 .cta:active { filter: brightness(.95); }
+@keyframes rise { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+#axTour3 .bubble { position: absolute; left: 50%; top: 18%; transform: translateX(-50%); max-width: 280px; background: var(--surface); border-radius: 16px; padding: 12px 14px; font-size: 16px; line-height: 23px; font-weight: 600; color: var(--ink); box-shadow: 0 4px 16px rgba(25, 31, 40, .14); text-align: center; pointer-events: none; }
+#axTour3 .fps { position: absolute; right: 8px; top: 8px; font: 600 12px/16px ui-monospace, Consolas, monospace; color: var(--body); background: rgba(255, 255, 255, .92); border-radius: 6px; padding: 2px 6px; z-index: 9; }
+
+/* 아래 막대 · 이전 · 다음 구역(큰 글자 버튼) */
+#axTour3 .bar { flex: none; background: var(--surface); border-top: 1px solid var(--divider2); padding: 8px 16px calc(12px + var(--safeB)); z-index: 5; }
+#axTour3 .where { margin: 0; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 16px; background: var(--canvas); font-size: 16px; line-height: 22px; font-weight: 600; color: var(--body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 12px; }
+#axTour3 .cta:not([hidden]) + .where { visibility: hidden; }
+#axTour3 .row { display: flex; gap: 8px; }
+#axTour3 .nb { flex: 1; min-width: 0; height: 56px; border-radius: 14px; background: var(--canvas); color: var(--ink); font-size: 18px; font-weight: 700; white-space: nowrap; }
+#axTour3 .nb.pri { background: var(--ink); color: #fff; }
+#axTour3 .nb.wide { flex: 1 1 100%; }
+#axTour3 .nb:active { filter: brightness(.94); }
+#axTour3 .nb:disabled { opacity: .35; }
+
+/* 시트 공통 */
+#axTour3 .sheet, #axTour3 .list, #axTour3 .help { position: fixed; inset: 0; z-index: 50; max-width: 520px; margin: 0 auto; background: var(--canvas); display: flex; flex-direction: column; animation: sheetIn .26s cubic-bezier(.2, .8, .2, 1); }
+@keyframes sheetIn { from { transform: translateY(32px); opacity: 0; } to { transform: none; opacity: 1; } }
+#axTour3 .sh { flex: none; display: flex; align-items: center; gap: 8px; height: calc(60px + var(--safeT)); padding: var(--safeT) 8px 0 16px; background: var(--surface); border-bottom: 1px solid var(--divider2); }
+#axTour3 .sh b { flex: 1; min-width: 0; font-size: 18px; line-height: 26px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#axTour3 .sh .cnt { flex: none; font-size: 16px; font-weight: 700; color: var(--muted); }
+#axTour3 .sh .close { flex: none; height: 44px; padding: 0 14px; border-radius: 12px; background: var(--canvas); font-size: 17px; font-weight: 700; }
+
+/* 판 넘기기 · 카드 한 장 = 화면 폭 · 판 그림은 위아래 여백을 잘라 폭에 꽉 */
+#axTour3 .track-wrap { position: relative; flex: 1; min-height: 0; overflow: hidden; touch-action: pan-y; }
+#axTour3 .track { position: absolute; inset: 0; display: flex; will-change: transform; }
+#axTour3 .card { flex: none; display: flex; flex-direction: column; width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y; padding: 12px 12px 24px; }
+#axTour3 .card.zoom { overflow-x: auto; touch-action: pan-x pan-y; }
+#axTour3 .card h2 { flex: none; margin: 2px 4px 10px; font-size: 18px; line-height: 26px; font-weight: 700; color: var(--ink); }
+#axTour3 .card h2 .k { color: var(--brandText); margin-right: 6px; }
+/* 흰 판 카드 = 모든 판 같은 크기(남은 높이를 채움 · 사용자 261003 「흰 바탕은 늘 고정값」) · 그림은 위부터 · 긴 판은 카드가 늘어나 세로로 끌어 봄 · 가로 간판은 가운데 */
+#axTour3 .card .pic { position: relative; flex: 1 0 auto; width: 100%; background: #fff; box-shadow: 0 0 0 1px var(--divider); border-radius: 8px; overflow: hidden; }
+#axTour3 .card .pic.wide { display: flex; align-items: center; }
+#axTour3 .card .pic .im { flex: none; width: 100%; }
+#axTour3 .card .pic img { display: block; width: 100%; height: 100%; opacity: 0; transition: opacity .2s; }
+#axTour3 .card .pic img.on { opacity: 1; }
+#axTour3 .card.zoom .pic { width: 220%; }
+#axTour3 .sf { flex: none; display: flex; gap: 8px; padding: 10px 16px calc(12px + var(--safeB)); background: var(--surface); border-top: 1px solid var(--divider); }
+#axTour3 .sf .nb { flex: 1; }
+#axTour3 .sf #t3-pZoom { flex: 0 0 84px; }
+
+/* 구역 목록 */
+#axTour3 .lbody { flex: 1; overflow-y: auto; padding: 12px 16px 24px; }
+#axTour3 .lbody .zi, #axTour3 .map .zi { width: 100%; display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 14px; margin-bottom: 8px; border-radius: 16px; background: var(--surface); text-align: left; }
+#axTour3 .lbody .zi .t, #axTour3 .map .zi .t { flex: 1; min-width: 0; }
+#axTour3 .lbody .zi .t b, #axTour3 .map .zi .t b { display: block; font-size: 17px; line-height: 24px; }
+#axTour3 .lbody .zi .t span, #axTour3 .map .zi .t span { display: block; font-size: 14px; line-height: 20px; color: var(--muted); }
+#axTour3 .lbody .zi .go, #axTour3 .map .zi .go { flex: none; font-size: 15px; font-weight: 700; color: var(--brandText); }
+#axTour3 .lbody .mapcard, #axTour3 .map .mapcard { background: var(--surface); border-radius: 20px; padding: 10px 6px; margin-bottom: 12px; }
+#axTour3 .lbody .mapcard p, #axTour3 .map .mapcard p { margin: 6px 10px 2px; font-size: 13px; color: var(--muted); }
+#axTour3 svg.plan { display: block; width: 100%; height: auto; }
+#axTour3 svg.plan text { font-family: inherit; font-size: 8.5px; fill: #fff; font-weight: 700; }
+#axTour3 svg.plan text.lab { fill: #8B95A1; font-weight: 600; font-size: 7.5px; }
+#axTour3 svg.plan .zone { cursor: pointer; }
+#axTour3 svg.plan .zone .f { fill: var(--brandSoft); stroke: var(--o25); }
+#axTour3 svg.plan .me { fill: var(--ink); }
+
+/* 처음 안내 */
+#axTour3 .help { background: rgba(25, 31, 40, .55); justify-content: flex-end; animation: none; }
+#axTour3 .hcard { background: var(--surface); border-radius: 24px 24px 0 0; padding: 24px 20px calc(20px + var(--safeB)); animation: sheetIn .26s cubic-bezier(.2, .8, .2, 1); }
+#axTour3 .hcard .nb { display: block; width: 100%; }
+#axTour3 .h1t { margin: 0 0 18px; font-size: 21px; line-height: 31px; font-weight: 700; word-break: keep-all; }
+#axTour3 .hdemo { position: relative; height: 76px; margin-bottom: 18px; display: flex; align-items: center; justify-content: center; }
+#axTour3 .hbtn { display: inline-flex; align-items: center; height: 52px; padding: 0 22px; border-radius: 14px; background: var(--ink); color: #fff; font-size: 18px; font-weight: 700; }
+#axTour3 .finger { position: absolute; left: 58%; top: 40px; width: 30px; height: 30px; border-radius: 50%; background: var(--brand); opacity: .9; box-shadow: 0 0 0 6px rgba(255, 127, 50, .25); animation: tap 1.4s ease-in-out infinite; }
+@keyframes tap { 0%, 100% { transform: translate(14px, 18px); } 45%, 60% { transform: translate(0, 0) scale(.86); } }
+@media (prefers-reduced-motion: reduce) { #axTour3 .finger, #axTour3 .dest { animation: none; } #axTour3 .sheet, #axTour3 .list, #axTour3 .hcard, #axTour3 .cta { animation: none; } }
+
+/* 룰렛 상품 카드 · 사진 · 「샘플」 딱지(오른쪽 위 흰 바탕 · 앱 규칙) · 가격 없음 */
+#axTour3 .card.prize h2 { display: flex; align-items: baseline; gap: 6px; }
+#axTour3 .card.prize h2 .q { margin-left: auto; font-size: 15px; font-weight: 600; color: var(--muted); }
+#axTour3 .card.prize .pic { display: flex; align-items: flex-start; justify-content: center; padding: 16px; }
+#axTour3 .pz { display: flex; gap: 10px; width: 100%; max-width: 360px; }
+#axTour3 .pz .ph { position: relative; flex: 1; min-width: 0; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: #F9FAFB; }
+#axTour3 .pz .ph img { width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity .2s; }
+#axTour3 .pz .ph img.on { opacity: 1; }
+#axTour3 .pz .ph i { position: absolute; right: 6px; top: 6px; font-style: normal; font-size: 11px; line-height: 16px; font-weight: 700; color: var(--body); background: #FFFFFF; border-radius: 6px; padding: 0 6px; box-shadow: 0 0 0 1px var(--divider); }
+/* 3D 를 못 그리는 기기 · 안내 한 줄 */
+#axTour3 .nogl { position: absolute; inset: 0; margin: 0; display: grid; place-items: center; padding: 24px; text-align: center; font-size: 17px; line-height: 26px; font-weight: 600; color: var(--body); background: var(--canvas); z-index: 6; }
+/* 입장 암전 · 「1F · AX Festival 2026」 */
+#axTour3 .black { position: fixed; inset: 0; z-index: 70; background: #000; opacity: 1; pointer-events: none; display: grid; place-items: center; }
+#axTour3 .black .bt { margin: 0; color: rgba(255, 255, 255, .55); font-size: 15px; font-weight: 600; letter-spacing: 0; transition: opacity .25s, transform .25s; }
+#axTour3 .black .bt.on { color: #FFFFFF; font-size: 24px; font-weight: 700; animation: btIn .35s ease-out; }
+@keyframes btIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+#axTour3.rm .black .bt.on { animation: none; }
+
+#axTour3 .toast { position: fixed; left: 50%; bottom: calc(96px + var(--safeB)); transform: translateX(-50%) translateY(8px); max-width: calc(100% - 32px); background: rgba(25, 31, 40, .9); color: #fff; font-size: 15px; line-height: 22px; font-weight: 600; padding: 10px 16px; border-radius: 12px; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 80; white-space: nowrap; }
+#axTour3 .toast.on { opacity: 1; transform: translateX(-50%); }
+
+/* 앱 안 · 닫기(뒤로) 단추 */
+#axTour3 .hd .back { width: 44px; padding: 0; display: grid; place-items: center; margin-left: -8px; color: var(--ink); }
+#axTour3.standalone .hd .back { display: none; }
+/* 앱 안에서 앱 전역 규칙(.card · .row · .slot 등)이 새어 들지 않게 되돌림 */
+#axTour3 .card { background: none; border-radius: 0; border: 0; box-shadow: none; }
+#axTour3 .row { align-items: stretch; }
+#axTour3 .slot { border: 0; background: none; padding: 0; border-radius: 0; font-size: inherit; color: inherit; }
+#axTour3 h1, #axTour3 h2, #axTour3 p { letter-spacing: 0; }
