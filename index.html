@@ -2146,7 +2146,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pz-cv { position: relative; margin: calc(var(--ax-space-24) * -1) calc(var(--ax-page-inset) * -1) 0; padding: var(--ax-space-32) var(--ax-page-inset) var(--ax-space-24); overflow: hidden;
     background-color: var(--ax-color-ink); color: var(--ax-color-inverse);
     background-image: radial-gradient(circle, rgba(255, 255, 255, 0.13) 1px, transparent 1.4px); background-size: 12px 12px; background-position: 6px 6px; }
-  /* v5.16 표지(사용자 시안 261003) · 작은 행사명 · 큰 제목 · 「지금 내 스탬프」 카드 · 1~6 점 선 · v5.25 3~6 보상 = 눌러서 가는 네 줄 */
+  /* v5.16 표지(사용자 시안 261003) · 작은 행사명 · 큰 제목 · 「지금 내 스탬프」 카드 · 1~6 점 선 · v5.33 3~6 점 바로 아래 세로 카드 */
   .axs-pz-cv .ey { position: relative; margin: 0; font: var(--ax-type-t6); font-weight: 600; color: rgba(255, 255, 255, 0.6); }
   .axs-pz-cv .ttl { position: relative; margin: var(--ax-space-8) 0 0; font: var(--ax-type-t1); color: var(--ax-color-inverse); word-break: keep-all; }
   .axs-pz-cv .now { position: relative; display: flex; align-items: center; gap: var(--ax-space-12); margin-top: var(--ax-space-24); padding: var(--ax-space-16) var(--ax-space-20); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--ax-radius-20); background: rgba(255, 255, 255, 0.05); }
@@ -2156,42 +2156,46 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pz-cv .now .nx b, .axs-pz-cv .now .n { color: var(--ax-color-brand); }
   .axs-pz-cv .now .n { flex: none; margin: 0; font: 700 calc(17px * var(--fs)) / 1 var(--ax-font); white-space: nowrap; }
   .axs-pz-cv .now .n b { font-size: calc(44px * var(--fs)); font-weight: 800; letter-spacing: -0.02em; margin-right: 2px; }
-  /* v5.25 (사용자 261003 「1 ~ 6 점 너비가 같지 않다 · 1 · 2 를 짜부시켜 놨다」 · 「카드가 이동을 암시한다는 느낌이 없다」)
-     점 줄 = 1 ~ 6 같은 크기(32px) · 표지 안쪽 폭에 같은 간격(양끝 맞춤) · 점과 보상 줄은 세로로 맞추지 않는다
-     선 = 1번 점 가운데부터 6번 점 가운데까지 · 받은 만큼 주황(fl 폭 = (100% − 32px) × (n − 1) / 5 · 스크립트 prizeCoverHtml)
-     보상 줄 = 3 · 4 · 5 · 6 네 줄 한 묶음 · 줄마다 왼쪽 개수 점(점 줄과 같은 상태 문법) · 아이콘 · 보상 · 알약(달성 · 다음) · 오른쪽 셰브론
-     누르면 아래 그 구역(prizeJump) · 눌림 = 면이 밝아지고 셰브론이 오른쪽으로 2px */
-  .axs-pz-cv .stp { position: relative; display: flex; align-items: center; justify-content: space-between; height: 32px; margin-top: var(--ax-space-24); }
-  .axs-pz-cv .stp .ln, .axs-pz-cv .stp .fl { position: absolute; left: 16px; top: 50%; height: 2px; margin-top: -1px; }
-  .axs-pz-cv .stp .ln { right: 16px; background: rgba(255, 255, 255, 0.16); }
+  /* v5.33 (사용자 261003 「3 밑에 룰렛 · 4 밑에 행운권 있던 구조가 더 좋다」 · 「안 들어가면 글자 크기를 조정」 · 앞선 지적 「점 너비 같게」 · 「이동한다는 느낌」 · 「카드가 폭을 채우고 점 가운데 = 카드 가운데」 유지)
+     점 줄 · 카드 줄 = 같은 6칸 균등 격자(칸 사이 4px) · 점 1 ~ 6 = 같은 크기 32px · 칸 가운데 · 선 = 1번 칸 가운데부터 6번 칸 가운데까지(받은 만큼 주황 · fl 폭 = 스크립트)
+     1 · 2 아래 = 두 칸 합친 안내 칸(「보상은 3개부터」 · 누를 수 없음 · 3개 전 점선 · 3개부터 옅은 주황 실선) · 3 ~ 6 아래 = 좁은 세로 카드(점 가운데 = 카드 가운데)
+     카드 = 아이콘 · 이름 · 횟수(6 = + 참여상) · 알약(달성 · 다음) · 맨 아래 아래쪽 셰브론(아래 구역으로 간다) · 눌림 = 면 밝게 + 0.97 + 셰브론 아래로 2px
+     글자 = 좁은 칸에 맞춰 줄임(이름 12px · 횟수 17px · 큰글씨도 13px · 19px 에서 멈춤 · 360px 칸 49px 에서도 12px 이상 · 넘치면 두 줄) */
+  .axs-pz-cv .stp, .axs-pz-cv .cds { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); column-gap: 4px; }
+  .axs-pz-cv .stp { align-items: center; height: 32px; margin-top: var(--ax-space-24); }
+  .axs-pz-cv .stp > .c { position: relative; z-index: 1; display: flex; justify-content: center; }
+  .axs-pz-cv .stp .ln, .axs-pz-cv .stp .fl { position: absolute; left: calc((100% - 20px) / 12); top: 50%; height: 2px; margin-top: -1px; }
+  .axs-pz-cv .stp .ln { right: calc((100% - 20px) / 12); background: rgba(255, 255, 255, 0.16); }
   .axs-pz-cv .stp .fl { background: var(--ax-color-brand); }
-  .axs-pz-cv .stp i, .axs-pz-cv .cds .d { position: relative; z-index: 1; display: grid; flex: none; place-items: center; box-sizing: border-box; width: 32px; height: 32px; border: 2px solid rgba(255, 255, 255, 0.24); border-radius: 50%; background: var(--ax-color-ink); color: rgba(255, 255, 255, 0.66); font: 700 15px / 1 var(--ax-font); font-style: normal; }
-  .axs-pz-cv .stp i.on, .axs-pz-cv .cds .on .d { border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
-  .axs-pz-cv .stp i.nx, .axs-pz-cv .cds .nx .d { border-color: var(--ax-color-brand); color: var(--ax-color-inverse); }
-  .axs-pz-cv .cds { position: relative; display: flex; flex-direction: column; margin-top: var(--ax-space-16); overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: var(--ax-radius-16); background: rgba(255, 255, 255, 0.04); }
-  .axs-pz-cv .cds button { display: flex; align-items: center; gap: var(--ax-space-8); width: 100%; min-width: 0; min-height: 52px; margin: 0; padding: var(--ax-space-8) var(--ax-space-8) var(--ax-space-8) var(--ax-space-12); border: 0; border-top: 1px solid rgba(255, 255, 255, 0.1); background: transparent; color: rgba(255, 255, 255, 0.6); font-family: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background-color 0.12s ease; }
-  .axs-pz-cv .cds button:first-child { border-top: 0; }
-  .axs-pz-cv .cds .d { width: 28px; height: 28px; font-size: 14px; }
-  .axs-pz-cv .cds .i { display: block; flex: none; width: 20px; height: 20px; margin-left: var(--ax-space-4); color: rgba(255, 255, 255, 0.6); }
-  .axs-pz-cv .cds .i svg, .axs-pz-cv .cds .g svg { display: block; width: 100%; height: 100%; }
-  .axs-pz-cv .cds .tx { display: flex; flex: 1 1 auto; flex-direction: column; gap: 2px; min-width: 0; }
-  .axs-pz-cv .cds b { font: var(--ax-type-t6-strong); font-weight: 700; color: inherit; word-break: keep-all; }
-  .axs-pz-cv .cds .fn { display: inline-flex; align-items: center; gap: 4px; font: var(--ax-type-t7); font-weight: 600; word-break: keep-all; }
-  .axs-pz-cv .cds .g { display: block; flex: none; width: 14px; height: 14px; }
-  .axs-pz-cv .cds .tag { display: inline-flex; flex: none; align-items: center; gap: 2px; padding: 3px 9px; border: 1px solid rgba(255, 255, 255, 0.5); border-radius: var(--ax-radius-999); color: var(--ax-color-inverse); font: var(--ax-type-t7); font-weight: 700; white-space: nowrap; }
-  .axs-pz-cv .cds .tag svg { width: 12px; height: 12px; }
-  .axs-pz-cv .cds .tag.on { border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
-  .axs-pz-cv .cds .axs-chev { display: block; flex: none; width: 20px; height: 20px; color: rgba(255, 255, 255, 0.72); transition: transform 0.12s ease; }
-  .axs-pz-cv .cds button.on, .axs-pz-cv .cds button.nx { color: var(--ax-color-inverse); }
-  .axs-pz-cv .cds button.nx { background: rgba(255, 255, 255, 0.06); }
+  .axs-pz-cv .stp i { display: grid; flex: none; place-items: center; box-sizing: border-box; width: 32px; height: 32px; border: 2px solid rgba(255, 255, 255, 0.24); border-radius: 50%; background: var(--ax-color-ink); color: rgba(255, 255, 255, 0.66); font: 700 15px / 1 var(--ax-font); font-style: normal; }
+  .axs-pz-cv .stp i.on { border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
+  .axs-pz-cv .stp i.nx { border-color: var(--ax-color-brand); color: var(--ax-color-inverse); }
+  .axs-pz-cv .cds { align-items: stretch; margin-top: var(--ax-space-12); }
+  .axs-pz-cv .cds > * { display: flex; flex-direction: column; align-items: center; min-width: 0; margin: 0; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 14px; background: rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.62); text-align: center; }
+  .axs-pz-cv .cds .pre { grid-column: span 2; justify-content: center; gap: var(--ax-space-4); padding: 10px 6px; border-style: dashed; border-color: rgba(255, 255, 255, 0.18); background: transparent; }
+  .axs-pz-cv .cds .pre.done { border-style: solid; border-color: rgba(255, 127, 50, 0.5); }
+  .axs-pz-cv .cds .pre b { font: 800 min(calc(15px * var(--fs)), 17px) / 1.2 var(--ax-font); color: rgba(255, 255, 255, 0.85); }
+  .axs-pz-cv .cds button { gap: 3px; padding: 10px 1px 8px; font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background-color 0.12s ease, transform 0.12s ease; }
+  .axs-pz-cv .cds button.nx { border-color: rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.08); color: var(--ax-color-inverse); }
+  .axs-pz-cv .cds button.on { border-color: var(--ax-color-brand); color: var(--ax-color-inverse); }
+  .axs-pz-cv .cds button:active { background: rgba(255, 255, 255, 0.14); transform: scale(0.97); }
+  .axs-pz-cv .cds button:focus-visible { outline: 2px solid var(--ax-color-brand); outline-offset: 2px; }
+  @media (hover: hover) { .axs-pz-cv .cds button:hover { background: rgba(255, 255, 255, 0.1); } }
+  .axs-pz-cv .cds .i { display: block; flex: none; width: 22px; height: 22px; color: rgba(255, 255, 255, 0.66); }
   .axs-pz-cv .cds button.on .i { color: var(--ax-color-brand); }
   .axs-pz-cv .cds button.nx .i { color: var(--ax-color-inverse); }
-  .axs-pz-cv .cds button:active { background: rgba(255, 255, 255, 0.14); }
-  .axs-pz-cv .cds button:active .axs-chev { transform: translateX(2px); color: var(--ax-color-inverse); }
-  .axs-pz-cv .cds button:focus-visible { outline: 2px solid var(--ax-color-brand); outline-offset: -2px; }
-  @media (hover: hover) { .axs-pz-cv .cds button:hover { background: rgba(255, 255, 255, 0.09); } }
-  @media (prefers-reduced-motion: reduce) { .axs-pz-cv .cds button, .axs-pz-cv .cds .axs-chev { transition: none; } }
-  .fs-big .axs-pz-cv .cds .tag { font-size: 12px; }
+  .axs-pz-cv .cds .i svg, .axs-pz-cv .cds .g svg, .axs-pz-cv .cds .dn svg { display: block; width: 100%; height: 100%; }
+  .axs-pz-cv .cds .t { font: 600 min(calc(12px * var(--fs)), 13px) / 1.25 var(--ax-font); word-break: keep-all; }
+  .axs-pz-cv .cds b { font: 800 min(calc(17px * var(--fs)), 19px) / 1.15 var(--ax-font); color: inherit; white-space: nowrap; }
+  .axs-pz-cv .cds .fn { display: flex; flex-direction: column; align-items: center; gap: 1px; font: 600 12px / 1.2 var(--ax-font); }
+  .axs-pz-cv .cds .g { display: block; width: 14px; height: 14px; }
+  .axs-pz-cv .cds .bt { display: flex; flex-direction: column; align-items: center; gap: var(--ax-space-4); margin-top: auto; padding-top: var(--ax-space-4); }
+  .axs-pz-cv .cds .tag { display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 1px; height: 20px; padding: 0 5px; border: 1px solid rgba(255, 255, 255, 0.55); border-radius: var(--ax-radius-999); color: var(--ax-color-inverse); font: 700 12px / 1 var(--ax-font); white-space: nowrap; }
+  .axs-pz-cv .cds .tag svg { width: 10px; height: 10px; flex: none; }
+  .axs-pz-cv .cds .tag.on { border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
+  .axs-pz-cv .cds .dn { display: block; flex: none; width: 16px; height: 16px; color: rgba(255, 255, 255, 0.72); transition: transform 0.12s ease; }
+  .axs-pz-cv .cds button:active .dn { transform: translateY(2px); color: var(--ax-color-inverse); }
+  @media (prefers-reduced-motion: reduce) { .axs-pz-cv .cds button, .axs-pz-cv .cds .dn { transition: none; } .axs-pz-cv .cds button:active { transform: none; } }
   /* 스탬프 개수 점 6개 · 켜진 점 = 조건 · 옅은 점 = 4 · 5 · 6개처럼 늘어나는 구간 */
   .axs-pz-mt { display: inline-flex; flex: none; gap: 4px; }
   .axs-pz-mt i { width: 8px; height: 8px; border-radius: 50%; background: var(--ax-color-divider); }
@@ -2206,15 +2210,16 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pz-c { display: flex; flex-direction: column; min-width: 0; margin: 0; overflow: hidden; border-radius: var(--ax-radius-24); background: var(--ax-color-surface); }
   .axs-pz-ph { position: relative; display: block; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; background: var(--ax-color-surface); }
   .axs-pz-ph img { display: block; width: 100%; height: 100%; object-fit: cover; }
-  .axs-pz-ph .smp { position: absolute; left: var(--ax-space-12); top: var(--ax-space-12); padding: 2px 8px; border-radius: var(--ax-radius-999); background: rgba(25, 31, 40, 0.06); color: var(--ax-color-muted); font-size: 11px; font-weight: 600; line-height: 16px; }
-  .axs-pz-c .tx { display: flex; align-items: baseline; gap: var(--ax-space-12); padding: var(--ax-space-16) var(--ax-space-20) var(--ax-space-20); }
+  .axs-pz-ph .smp { position: absolute; right: var(--ax-space-12); top: var(--ax-space-12); padding: 2px 8px; border-radius: var(--ax-radius-999); background: rgba(255, 255, 255, 0.92); box-shadow: 0 0 0 1px rgba(25, 31, 40, 0.08); color: var(--ax-color-body); font-size: 11px; font-weight: 600; line-height: 16px; }   /* v5.33 오른쪽 위 · 어두운 사진 위에서도 읽히게 흰 바탕 */
+  .axs-pz-c .tx { display: flex; align-items: baseline; gap: var(--ax-space-12); padding: var(--ax-space-16) var(--ax-space-20) var(--ax-space-4); }   /* v5.33 등수 · 이름 · 수량 = 카드 맨 위(사진 위 · 사용자 261003 「스크롤하면 1등이 좌상단이어야」) */
+  .axs-pz-c > .axs-pz-ph { margin-top: auto; }   /* v5.33 2열에서 이름이 두 줄이어도 사진 아래 끝이 맞는다 */
   .axs-pz-c .rk { flex: none; font: var(--ax-type-t3); color: var(--ax-color-brand); }
   .axs-pz-c b { flex: 1 1 auto; min-width: 0; font: var(--ax-type-t4); font-weight: 700; color: var(--ax-color-ink); word-break: keep-all; }
   .axs-pz-c .q { flex: none; font: var(--ax-type-t6-strong); color: var(--ax-color-muted); }
   .axs-pz-gr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ax-space-12); }
   .axs-pz-c.gr { border-radius: var(--ax-radius-20); }
-  .axs-pz-c.gr .smp { left: var(--ax-space-8); top: var(--ax-space-8); }
-  .axs-pz-c.gr .tx { flex-direction: column; align-items: flex-start; gap: 2px; padding: var(--ax-space-12) var(--ax-space-16) var(--ax-space-16); }
+  .axs-pz-c.gr .smp { right: var(--ax-space-8); top: var(--ax-space-8); }
+  .axs-pz-c.gr .tx { flex-direction: column; align-items: flex-start; gap: 2px; padding: var(--ax-space-12) var(--ax-space-16) var(--ax-space-4); }
   .axs-pz-c.gr .rk { font: var(--ax-type-t7); font-weight: 700; color: var(--ax-color-brandText); }
   .axs-pz-c.gr b { font: var(--ax-type-t6-strong); }
   .axs-pz-c.gr .q { font: var(--ax-type-t7); }
@@ -2227,6 +2232,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-ph.two img { width: 50%; }
   /* v5.18 납작한 상품(타자왕 1등 키보드) = 사진 2:1 로 위아래 흰 여백을 잘라 칸을 채운다(object-fit cover · 가운데) */
   .axs-pz-c.flat .axs-pz-ph { aspect-ratio: 2 / 1; }
+  /* v5.33 (사용자 261003 「볼펜 그림이 잘렸다」) tall = 세로로 긴 사진 · 넓은 칸(2:1)에서 자르지 않고 전체(contain · 칸 높이 = 2열 사진과 같은 크기) */
+  .axs-pz-c.tall .axs-pz-ph img { object-fit: contain; }
   /* v5.18 스탬프와 별개 구역(1F 타자왕) · 위 구역들과 얇은 선으로 나눈다 · 조건 줄 앞 회색 알약 · 순위 보기 버튼 */
   .axs-pz-sec.sep { margin-top: var(--ax-space-48); padding-top: var(--ax-space-32); border-top: 1px solid var(--ax-color-divider); }
   .axs-pz-sh .sp { display: inline-flex; align-items: center; min-height: 24px; padding: 0 10px; border-radius: var(--ax-radius-999); background: var(--ax-color-inset); color: var(--ax-color-ink); font: var(--ax-type-t7); font-weight: 700; white-space: nowrap; }
@@ -3661,7 +3668,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.32";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.33";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -7410,7 +7417,7 @@ var PRIZES = {
     { rk: "2등", nm: "커피 + 키캡 키링", q: 100, img: "rl2_coffee", img2: "rl2_keyring" },   /* v5.18 합성 사진 대신 두 장 나란히(사용자 261003) */
     { rk: "3등", nm: "컵받침", q: 150, img: "rl3_coaster" },
     { rk: "4등", nm: "판스티커", q: 250, img: "rl4_sticker" },
-    { rk: "5등", nm: "볼펜", q: 400, img: "rl5_pen" }] },
+    { rk: "5등", nm: "볼펜", q: 400, img: "rl5_pen", tall: 1 }] },   /* v5.33 tall = 넓은 칸에서도 자르지 않는다(사선 볼펜 사진) */
   draw: { unit: "명", list: [
     { rk: "1등", nm: "아이패드", q: 1, img: "ld1_ipad" },
     { rk: "2등", nm: "신라호텔 파크뷰 뷔페 식사권 2매", q: 1, img: "ld2_shilla" },
@@ -7493,8 +7500,8 @@ function pzCard(p, unit, cls) {
   var im = function (n) { return '<img src="' + PRIZE_DIR + n + '.webp" alt="" width="600" height="600" loading="lazy" decoding="async" onerror="this.remove()">'; };
   var ph = '<span class="axs-pz-ph' + (p.img2 ? " two" : "") + '">' + (p.img ? im(p.img) + (p.img2 ? im(p.img2) : "") +
     (PRIZE_SAMPLE && p.s !== 0 ? '<span class="smp">샘플</span>' : "") : "") + "</span>";
-  return '<article class="axs-pz-c' + cls + (p.flat ? " flat" : "") + '">' + ph + '<div class="tx">' + (p.rk ? '<span class="rk">' + p.rk + "</span>" : "") +
-    "<b>" + esc(p.nm) + '</b><span class="q">' + p.q.toLocaleString() + unit + "</span></div></article>";
+  return '<article class="axs-pz-c' + cls + (p.flat ? " flat" : "") + (p.tall ? " tall" : "") + '"><div class="tx">' + (p.rk ? '<span class="rk">' + p.rk + "</span>" : "") +
+    "<b>" + esc(p.nm) + '</b><span class="q">' + p.q.toLocaleString() + unit + "</span></div>" + ph + "</article>";   /* v5.33 글 줄 먼저 · 사진 아래 */
 }
 function prizeSecHtml(s) {
   var g = PRIZES[s.k]; if (!g) return "";
@@ -7510,9 +7517,9 @@ function prizeSecHtml(s) {
 }
 /* v5.16 (사용자 시안 261003) 표지 = 작은 「AX Festival 2026」 · 큰 제목 「스탬프 개수별 경품」(옛 PRIZES 점 글자 · 조건 3줄은 걷었다)
    「지금 내 스탬프」 카드 = 다음 목표(주황 숫자) + 오른쪽 큰 주황 N개 · 6개면 「모두 모았어요」
-   1~6 점 선 = 받은 칸 주황 채움 · 다음 칸 주황 테두리 · 나머지 회색 테두리 · v5.25 여섯 점 같은 크기 · 같은 간격
-   v5.25 보상 = 눌러서 가는 네 줄(룰렛 1회 · 행운권 1 · 2 · 3장 + 참여상) · 줄 왼쪽 개수 점 · 오른쪽 셰브론 · 다음 줄에 「다음」 알약 · 달성한 줄은 「달성」
-   줄을 누르면 아래 그 구역(옛 조건 줄과 같은 prizeJump · 6개 줄 = 참여상 구역) */
+   1~6 점 선 = 받은 칸 주황 채움 · 다음 칸 주황 테두리 · 나머지 회색 테두리 · v5.33 6칸 균등 격자(점 · 카드 같은 칸)
+   v5.33 1 · 2 아래 = 「보상은 3개부터」 두 칸 · 3 ~ 6 아래 = 세로 카드(룰렛 1회 · 행운권 1 · 2 · 3장 + 참여상 · 다음 · 달성 알약 · 아래 셰브론)
+   카드를 누르면 아래 그 구역(옛 조건 줄과 같은 prizeJump · 6개 카드 = 참여상 구역) */
 var PZ_GIFT = SICO + '<path d="M4.5 11h15v9h-15z"/><path d="M3.5 7.5h17V11h-17zM12 7.5V20"/><path d="M12 7.5C11 5 8.4 3.9 7.4 5.2c-1 1.4.8 2.3 4.6 2.3zM12 7.5c1-2.5 3.6-3.6 4.6-2.3 1 1.4-.8 2.3-4.6 2.3z"/></svg>';
 var PZ_STEP = [
   { m: 3, k: "roulette", ico: "wheel", t: "룰렛", a: "1회" },
@@ -7524,21 +7531,22 @@ function pzNextTxt(n) {
   var s = PZ_STEP.filter(function (x) { return x.m > n; })[0];
   return s ? "<b>" + (s.m - n) + "개</b> 더 모으면 " + s.t + " " + s.a + (s.fin ? " · 참여상" : "") : "모두 모았어요";
 }
+var PZ_DOWN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 9.5 12 15l5.5-5.5"/></svg>';   /* v5.33 표지 카드 아래 셰브론 = 아래 구역으로 */
 function prizeCoverHtml() {
   var n = Math.min(STAMP_DENOM, stampCount()), nx = PZ_STEP.filter(function (x) { return x.m > n; })[0], nm = nx ? nx.m : 0, dots = "";
-  for (var i = 1; i <= STAMP_DENOM; i++) dots += '<i class="' + (i <= n ? "on" : i === n + 1 ? "nx" : "") + '">' + i + "</i>";   /* v5.25 1 ~ 6 같은 크기 · 같은 간격(양끝 맞춤) */
-  var fill = n >= 2 ? "calc((100% - 32px) * " + (n - 1) + " / " + (STAMP_DENOM - 1) + ")" : "0px";   /* 1번 점 가운데부터 받은 마지막 점 가운데까지 */
-  var rows = PZ_STEP.map(function (s) {
+  for (var i = 1; i <= STAMP_DENOM; i++) dots += '<span class="c"><i class="' + (i <= n ? "on" : i === n + 1 ? "nx" : "") + '">' + i + "</i></span>";   /* v5.33 6칸마다 점 하나 · 같은 크기 */
+  var fill = n >= 2 ? "calc(" + (n - 1) + " * ((100% - 20px) / 6 + 4px))" : "0px";   /* 1번 칸 가운데부터 받은 마지막 칸 가운데까지(칸 폭 + 칸 사이 4px) */
+  var cards = '<p class="pre' + (n >= 3 ? " done" : "") + '"><span class="t">보상은</span><b>3개부터</b></p>' + PZ_STEP.map(function (s) {
     var st = s.m <= n ? "on" : s.m === nm ? "nx" : "", lbl = "스탬프 " + s.m + "개 · " + s.t + " " + s.a + (s.fin ? " · 참여상" : "") + (st === "on" ? " · 달성" : st === "nx" ? " · 다음" : "");
-    return '<button type="button" class="' + st + '" onclick="prizeJump(\'' + s.k + '\')" aria-label="' + lbl + '"><span class="d" aria-hidden="true">' + s.m + "</span>" +
-      '<span class="i" aria-hidden="true">' + RAIL_ICO[s.ico] + '</span><span class="tx" aria-hidden="true"><b>' + s.t + " " + s.a + "</b>" +
-      (s.fin ? '<span class="fn">+ <span class="g">' + PZ_GIFT + "</span>참여상</span>" : "") + "</span>" +
-      (st === "nx" ? '<span class="tag" aria-hidden="true">다음</span>' : st === "on" ? '<span class="tag on" aria-hidden="true">' + CHECK_SVG + "달성</span>" : "") + CHEV_SVG + "</button>";
+    return '<button type="button" class="' + st + '" onclick="prizeJump(\'' + s.k + '\')" aria-label="' + lbl + '"><span class="i" aria-hidden="true">' + RAIL_ICO[s.ico] + "</span>" +
+      '<span class="t" aria-hidden="true">' + s.t + '</span><b aria-hidden="true">' + s.a + "</b>" +
+      (s.fin ? '<span class="fn" aria-hidden="true">+<span class="g">' + PZ_GIFT + "</span>참여상</span>" : "") +
+      '<span class="bt" aria-hidden="true">' + (st === "nx" ? '<span class="tag">다음</span>' : st === "on" ? '<span class="tag on">' + CHECK_SVG + "달성</span>" : "") + '<span class="dn">' + PZ_DOWN + "</span></span></button>";
   }).join("");
   return '<section class="axs-pz-cv"><p class="ey">AX Festival 2026</p><h1 class="ttl">스탬프 개수별 경품</h1>' +
     '<div class="now"><div class="tx"><p class="k">지금 내 스탬프</p><p class="nx">' + pzNextTxt(n) + '</p></div><p class="n"><b>' + n + "</b>개</p></div>" +
     '<div class="stp" role="img" aria-label="스탬프 ' + n + " / " + STAMP_DENOM + '"><span class="ln" aria-hidden="true"></span><span class="fl" aria-hidden="true" style="width:' + fill + '"></span>' + dots + "</div>" +
-    '<div class="cds">' + rows + "</div></section>";
+    '<div class="cds">' + cards + "</div></section>";
 }
 function prizePosterHtml() {
   return '<div class="axs-pz' + (Date.now() - PZ.t < 900 ? " in" : "") + '">' + prizeCoverHtml() + PZ_SEC.map(prizeSecHtml).join("") + "</div>";
