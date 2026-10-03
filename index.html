@@ -1382,9 +1382,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* 시간표 · v4.15 (사용자 결정 260922) 목록과 다른 모양 · v3.5 일정 탭 계열 = 왼쪽 시간 칸 + 제목 한 줄 닫힌 행 · 누르면 설명 펼침 · 토큰만
      행 = 흰 면(반경 20 · 높이 64) · 시간 칸 = canvas 면 두 줄(시작 T6 굵게 · ~끝 caption) · 내 항목 = brandSoft 틴트 · 진행 중 = 주황 테두리 2 · 지난 행 = inset 면 */
   .axs-tt { display: flex; flex-direction: column; gap: var(--ax-space-24); }
-  .axs-ttsec { display: flex; flex-direction: column; gap: var(--ax-space-8); }
-  .axs-ttsec > .ax-row { margin-bottom: var(--ax-space-4); }
-  .axs-ttsec + .axs-ttsec { padding-top: var(--ax-space-24); border-top: 1px solid var(--ax-color-divider); }   /* v4.99c 오전 · 점심 · 오후 사이 옅은 선 한 줄(면 · 테두리 없음) · .axs-tt gap 24 + padding 24 */
   .axs-tt .rc { margin: 0; border: 0; border-radius: var(--ax-radius-20); background: var(--ax-color-surface); box-shadow: none; --rc-h: 64px; --rc-px: var(--ax-space-16); --rc-ls: 64px; --rc-gap: var(--ax-space-12); }
   .axs-tt .rc.my { background: var(--ax-color-brandSoft); box-shadow: none; }
   .axs-tt .rc.past { background: var(--ax-color-inset); }
@@ -1406,6 +1403,42 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-ttb { display: flex; flex-direction: column; gap: var(--ax-space-12); padding-top: var(--ax-space-12); border-top: 1px solid var(--ax-color-divider); }
   .axs-ttb .axs-kv { row-gap: var(--ax-space-8); grid-template-columns: 56px minmax(0, 1fr); }
   .axs-ttb .ax-button { min-height: var(--ax-touch-size); padding: var(--ax-space-12); }
+  /* v5.21 시간표 = 점 노드 흐름 한 줄(사용자 261003 · 설계 「시간표 흐름/설계.md」 안 A · design.md A-5 5-10) · 시각 | 노드 + 레일 | 카드
+     노드 3상태(지남 O50 작은 점 · 지금 O100 큰 점 + O25 고리 하나 · 앞 = 속 빈 점) · 같이 진행 중인 다른 줄(on) = O100 작은 점
+     O25 · O50 = brand 를 흰색과 섞은 값(30% · 60% = design.md 오렌지 사다리 O25 · O50 과 같은 색 · 토큰에 없는 단이라 섞어 만든다)
+     레일 = 노드 가운데에서 다음 노드 가운데까지(카드 높이 · 줄 간격과 무관하게 끊기지 않는다) · 바탕 회색 점선 위에 흐른 만큼 덧칠(지난 구간 O50 · 지금 구간 O100)
+     카드 = 흰 면 · 지금 진행 중 하나만 주황 2px 테두리 · 지난 카드 = 면 없이 옅은 선 · 내 것은 칩 하나(틴트 없음) */
+  .axs-fl { --fl-o25: color-mix(in srgb, var(--ax-color-brand) 30%, var(--ax-color-surface)); --fl-o50: color-mix(in srgb, var(--ax-color-brand) 60%, var(--ax-color-surface)); --nc: calc(12px + 0.703125rem); display: flex; flex-direction: column; padding-bottom: var(--ax-space-8); }
+  .axs-fl .fr { display: grid; grid-template-columns: 2.75rem 24px minmax(0, 1fr); column-gap: var(--ax-space-8); padding-bottom: calc(10px + var(--ex, 0px)); }
+  .axs-fl .tm { padding-top: 12px; white-space: nowrap; font: var(--ax-type-t6-strong); font-variant-numeric: tabular-nums; color: var(--ax-color-ink); }
+  .axs-fl .fr.past .tm { color: var(--ax-color-muted); font-weight: 500; }
+  .axs-fl .fr.now .tm { color: var(--ax-color-brandText); }
+  .axs-fl .ln { position: relative; }
+  .axs-fl .nd { position: absolute; z-index: 2; left: 50%; top: calc(var(--nc) - 5px); width: 10px; height: 10px; border-radius: 50%; transform: translateX(-50%); background: var(--ax-color-canvas); box-shadow: inset 0 0 0 2px var(--ax-color-disabled); }
+  .axs-fl .fr.past .nd { background: var(--fl-o50); box-shadow: none; }
+  .axs-fl .fr.on .nd { background: var(--ax-color-brand); box-shadow: none; }
+  .axs-fl .fr.now .nd { top: calc(var(--nc) - 7px); width: 14px; height: 14px; background: var(--ax-color-brand); box-shadow: 0 0 0 4px var(--fl-o25); }
+  .axs-fl .rl { position: absolute; z-index: 1; left: 50%; width: 6px; margin-left: -3px; top: var(--nc); bottom: calc(-10px - var(--ex, 0px) - var(--nc)); }
+  .axs-fl .rl::before, .axs-fl .rl::after { content: ""; position: absolute; left: 0; right: 0; top: 0; background: radial-gradient(circle, var(--dc) 1.6px, transparent 2.1px) 50% 0 / 6px 9px repeat-y; }
+  .axs-fl .rl::before { --dc: var(--ax-color-disabled); bottom: 0; }
+  .axs-fl .rl::after { --dc: var(--fl-o50); height: calc(var(--p, 0) * 100%); }
+  .axs-fl .rl.cur::after { --dc: var(--ax-color-brand); }
+  .axs-fl .cs { display: flex; flex-direction: column; gap: var(--ax-space-8); min-width: 0; }
+  .axs-fl .fc { position: relative; display: block; width: 100%; margin: 0; padding: 12px 36px 12px 14px; border: 0; border-radius: var(--ax-radius-16); background: var(--ax-color-surface); box-shadow: inset 0 0 0 2px transparent; color: var(--ax-color-ink); text-align: left; font: inherit; cursor: pointer; }
+  .axs-fl .fc .mt { display: flex; align-items: center; gap: 6px; min-height: 14px; font: var(--ax-type-caption); color: var(--ax-color-muted); }
+  .axs-fl .fc .mt .dg { flex: none; color: var(--ax-color-body); }
+  .axs-fl .fc .mt .pl { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .axs-fl .fc .mt .e { margin-left: auto; flex: none; font-variant-numeric: tabular-nums; }
+  .axs-fl .fc .t { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 8px; margin-top: 4px; font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
+  .axs-fl .fc .t .tt { min-width: 0; }
+  .axs-fl .fc .t .axs-chip { min-height: 22px; padding: 0 var(--ax-space-8); }
+  .axs-fl .fc .s { display: block; margin-top: 2px; font: var(--ax-type-t7); color: var(--ax-color-muted); }
+  .axs-fl .fc .ac { display: block; margin-top: 6px; font: var(--ax-type-t7); font-weight: 600; color: var(--ax-color-brandText); }
+  .axs-fl .fc .chv { position: absolute; right: 10px; top: 50%; width: 20px; height: 20px; margin-top: -10px; color: var(--ax-color-disabled); }
+  .axs-fl .fc .chv .axs-chev { width: 20px; height: 20px; display: block; }
+  .axs-fl .fc.past { background: transparent; box-shadow: inset 0 0 0 1px var(--ax-color-divider); }
+  .axs-fl .fc.past .t { color: var(--ax-color-muted); font-weight: 500; }
+  .axs-fl .fc.focus { box-shadow: inset 0 0 0 2px var(--ax-color-brand); }
   /* [전체 | 나의 일정] = 목록의 분류 칩 자리 · 선택 상태는 위 [목록 | 시간표]와 같은 흰 면 + 진한 글자(v4.16 사용자 지적 260922: 주황 계열은 「내 항목」 의미로만 쓴다 · brandSoft 선택은 내 항목 틴트와 헷갈렸다) */
   .axs-seg.axs-seg-sub { padding: 0; gap: var(--ax-space-8); background: transparent; }
   .axs-seg.axs-seg-sub button { background: var(--ax-color-divider); color: var(--ax-color-body); }
@@ -1899,7 +1932,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-tile.done { border-color: var(--ax-color-brandSoft); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); }
   .fs-big .axs-tile { flex: 1 1 100%; }   /* 큰글씨 · 타일은 한 줄에 하나 */
   .axs-stpx { align-self: flex-start; margin-top: var(--ax-space-4); padding: var(--ax-space-4) var(--ax-space-8); border: 1px dashed var(--ax-color-disabled); border-radius: var(--ax-radius-8); background: transparent; color: var(--ax-color-muted); font: var(--ax-type-caption); cursor: pointer; }
-  .axs-ttag { font: var(--ax-type-caption); color: var(--ax-color-muted); white-space: nowrap; }
   .axs-tt .rc .tr .bgs { flex-shrink: 0; }   /* 딱지 · 진행 중 칩은 잘리지 않고 제목이 말줄임 */
   .axs-ten { display: flex; flex-direction: column; gap: var(--ax-space-8); margin-top: var(--ax-space-12); }
   .axs-tenr { display: flex; align-items: center; gap: var(--ax-space-8); width: 100%; min-height: var(--ax-touch-size); padding: var(--ax-space-12); border: 0; border-radius: var(--ax-radius-12); background: var(--ax-color-inset); color: var(--ax-color-ink); text-align: left; cursor: pointer; }
@@ -2899,7 +2931,8 @@ function tenMineCard() {
 }
 /* v4.84 지금 줄 = 기기 시각 · 옛 NOW_INDEX(데모 고정 1 = 기조연설)는 행사 당일에도 기조연설에 머물렀다(시안 2 와 달랐다)
    시간 칸 안이면 그 줄 · 사이 시간이면 다음 줄 · 마지막이 끝난 뒤면 마지막 줄 · 시간 미정(always) · 숨김(off) 줄은 건너뛴다 */
-function hmNow() { var d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
+/* v5.21 시험 시각 훅 · 시험 모드(testMode · 데모 #demo · 테스트 사번)에서만 S "att_tm"(출석 시험 시각과 같은 값)을 지금 시각으로 쓴다 · 데모 주소 &now=14:20 · 운영 참가자는 늘 기기 시각 */
+function hmNow() { var tm = ""; try { tm = attTm(); } catch (e) { tm = ""; } if (tm) return t2m(tm); var d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
 function nowIdx() {
   var hm = hmNow(), nx = -1, last = -1;
   for (var i = 0; i < TIMELINE.length; i++) {
@@ -3600,7 +3633,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.20";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.21";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -5133,6 +5166,7 @@ var App = {
     el("view").scrollTop = 0;
     window.scrollTo(0, v === "guide" && isBack ? PROG.scroll || 0 : 0);
     if (PROG.anchor) { var an = el(PROG.anchor); PROG.anchor = ""; if (an) an.scrollIntoView({ block: "start" }); }   /* v4.93 별칭 진입 · 그 자리로(scroll-margin-top = 헤더 높이) */
+    else if (v === "guide" && !isBack && PROG.seg !== "always") progFlowScroll();   /* v5.21 시간표에 들어오면 진행 중 카드가 보이게 */
     if (v === "wall_wave") wvStart();
     if (typeof checkMyState === "function") setTimeout(checkMyState, 80);
   },
@@ -5475,7 +5509,7 @@ var TL_SPAN = [
   { time: "", end: "", title: "AX 커피챗", place: "18F", pid: "cchat", short: "시간은 매칭 후 앱에서 안내", tag: "아이디어 제출 후 신청" }   /* v4.13 ⓛ 시각 미정 · 시간표 맨 아래 「시간 미정」 */
 ];
 /* v4.93 (261001 사용자 확정 · IA 검토 A1) 탭 맨 위 = [시간표 | 상시 운영] · 옛 [전체 | 나의 일정](progTT)은 걷었다(나의 일정 = 나의 참여 맨 위 한 곳) */
-function progSeg(g) { PROG.seg = g === "always" ? "always" : "time"; PROG.scroll = 0; App.render(); window.scrollTo(0, 0); }
+function progSeg(g) { PROG.seg = g === "always" ? "always" : "time"; PROG.scroll = 0; App.render(); window.scrollTo(0, 0); if (PROG.seg === "time") progFlowScroll(); }
 function progAlwaysGo() { PROG.seg = "always"; PROG.scroll = 0; PROG.anchor = "zone1f"; App.tab("guide"); }   /* 점심 줄 · 나의 일정 빈 상태 · 옛 「신청할 수 있는 프로그램 보기」 */
 function progTTOpen(k) { PROG.ttOpen[k] = !PROG.ttOpen[k]; App.render(); }
 /* 전체 시간표의 행이 내 것인가 · 17F 강연(출석) · 10F 실습형(사전 신청) · 과제상담 · 커피챗 */
@@ -5516,52 +5550,68 @@ function progSegHtml() {
     '<button type="button" role="tab" aria-selected="' + (g === "time") + '" onclick="progSeg(\'time\')">시간표</button>' +
     '<button type="button" role="tab" aria-selected="' + (g === "always") + '" onclick="progSeg(\'always\')">상시 운영</button></div>';
 }
-function progTimeHtml() { return '<div class="axs-tt">' + progTTAllHtml() + "</div>"; }
-function progTTAllHtml() {
-  var ph = evPhase(), hmN = hmNow(), nowHM = hm2(hmN), rows = [];
-  TIMELINE.forEach(function (t, i) {
-    if (t.always || t.off) return;
-    rows.push({ k: "t" + i, t: t, pid: TL_PROG[t.title] || "", now: ph === "live" && hmN >= t2m(t.time) && hmN < t2m(t.end), past: ph === "after" || (ph === "live" && hmN >= t2m(t.end)) });   /* v4.84 기기 시각 · 오후 동시 진행 줄은 둘 다 진행 중 */
+/* ═══ v5.21 시간표 = 점 노드 흐름 한 줄(사용자 261003 · 정본 「디자인 시안/프로그램 탭 개편/시간표 흐름/설계.md」 안 A · design.md A-5 5-10) ═══
+   보이는 것 = 자유 참석으로 갈 수 있는 것만(17F Intro · 기조연설 · 내부 강연 · 점심 · 파트너사 강연 2회 · Outro) · 1F 상시 · 18F 커피챗 운영 · 10F A~E 는 시간표에 없다(상시 운영 탭 · 세션 상세 몫)
+   개인 일정이 있으면 그 시간과 조금이라도 겹치는 자유 참석 줄을 빼고 그 자리에 내 일정 카드를 둔다: 10F 사전 신청 세션(tenMine) · 승인된 AX LOUNGE 상담(myResv approved 이후) · 매칭된 커피챗(cchat matched)
+   구획 제목(오전 · 점심 · 오후) · 「자유 참석」 딱지 · 「진행 중」 칩 · 맨 위 지금 시각 줄은 없다(사용자 261003) · 내 것 = 칩 하나(틴트 없음) · 강조 = 진행 중 카드 하나에 주황 테두리
+   왼쪽 시각 · 가운데 점 노드(지남 O50 작은 점 · 지금 O100 큰 점 하나 · 앞 = 속 빈 점) · 노드와 노드 사이는 끊김 없는 점선 레일(지난 구간 O50 · 지금 구간은 흐른 만큼 O100 · 남은 구간 회색) · 오른쪽 카드(층 점 글자 + 장소 + ~끝) */
+var FL_SUB = { intro: "CEO · AX 선포 · 개최 안내", key: "CTO · AI 환경 · 전략", road: "디지털전략본부장 · 현대해상 AX 로드맵", l1: "Agentic AI 시대의 일하는 방식 변화", l2: "AI와 친해지기", outro: "CSO · DAP 시상 · 현장 추첨" };
+var FL_DAP_OK = ["approved", "checked", "done"];   /* 상담은 승인된 예약부터 시간표에 들어간다(승인 대기는 나의 일정에만) */
+function progTimeHtml() { return '<div class="axs-fl" id="progFlow">' + progFlowHtml() + "</div>"; }
+/* 층 표시 = 점 글자(design.md A-5 5-20 · 12px · 읽는 이름 「17층」) */
+function flFloor(n) { return DotGlyph.svg(n + "F", { h: 12, label: n + "층" }); }
+function progFlowItems() {
+  var pub = [], mine = [];
+  TIMELINE.forEach(function (t) {
+    if (t.always || t.off || !t.time) return;
+    var pid = TL_PROG[t.title] || "", pm = /^(\d+)F\s*(.*)$/.exec(t.place || "") || ["", "", t.place || ""];
+    pub.push({ k: pid || t.title, pid: pid, a: t2m(t.time), b: t2m(t.end), t0: t.time, t1: t.end, ttl: t.title, sub: FL_SUB[pid] || "", fl: +pm[1] || 0, pl: pm[2],
+      go: pid === "#1F" ? "progAlwaysGo()" : pid && pid.charAt(0) !== "#" ? "progOpen('" + pid + "')" : "", chip: attProg(pid) && attMineAt(pid) ? "출석" : "", lec: !!attProg(pid) });
   });
-  /* v4.84 (앱 개편 2묶음) 상담 · 커피챗은 시간표 아래 「상시 운영」 메뉴로 옮겼다 · 시간표에는 내 상담 시각 · 매칭된 커피챗 회차만 */
-  TL_SPAN.forEach(function (t, i) {   /* v4.16 (사용자 지적 260922) 신청한 DAP 상담은 운영 시간 대신 내 상담 시각에 놓는다 */
-    var r = t.pid === "dap" && progTTMine(t.pid) ? myResv() : null, c = t.pid === "cchat" ? S.get("cchat", null) : null;
-    if (r && r.slot) {
-      var e0 = t2m(r.slot) + (RESV_CONF.step || 30);
-      rows.push({ k: "s" + i, t: { time: r.slot, end: hm2(e0), title: t.title, place: t.place, short: t.short, tag: t.tag }, pid: t.pid, span: false, now: false, past: ph === "after" });
-    } else if (c && c.status === "matched" && c.round) {
-      rows.push({ k: "s" + i, t: { time: c.round, end: hm2(t2m(c.round) + 20), title: t.title, place: t.place + " · TABLE " + c.table, short: "", tag: t.tag }, pid: t.pid, span: false, now: false, past: ph === "after" });
-    }
-  });
-  var tm1 = tenMine();   /* v4.93 (IA 검토 A4) 사전신청자 = 내 10F 세션 한 줄만(제목 「세션 B」 · 칩 「내 세션」) · 일반 「10F 실습형 세션 A~E」 줄은 계속 숨김(TEN_ALL) */
-  if (tm1) { var tp1 = tm1.tm.split("~"); rows.push({ k: "ten", t: { time: tp1[0], end: tp1[1], title: tm1.ttl, place: sessPlace(tm1) }, pid: tm1.id, ten1: true, now: ph === "live" && hmN >= t2m(tp1[0]) && hmN < t2m(tp1[1]), past: ph === "after" || (ph === "live" && hmN >= t2m(tp1[1])) }); }
-  rows.sort(function (a, b) { return (a.t.time ? t2m(a.t.time) : 9999) - (b.t.time ? t2m(b.t.time) : 9999) || (a.span ? 1 : 0) - (b.span ? 1 : 0) || (b.ten1 ? 1 : 0) - (a.ten1 ? 1 : 0); });   /* 시각 미정은 맨 아래 묶음 · 같은 시각이면 내 세션 먼저 */
-  var nowAct = isBlack("now");
-  var row = function (r) {
-    var t = r.t, pid = r.pid, mine = r.ten1 || progTTMine(pid);
-    var ten = pid === "#실습", f1 = pid === "#1F";
-    var go = f1 ? "progAlwaysGo()" : ten ? "" : pid ? "progOpen('" + pid + "')" : "";   /* v4.93 점심 줄 = 상시 운영 › 1F 로비 · 내 세션 줄 = 세션 상세 */
-    var tag = mine || r.now || r.past ? "" : ten ? "사전 신청자" : /^17F/.test(t.place || "") ? "자유 참석" : "";   /* v4.84 닫힌 행 오른쪽 옅은 딱지(시안 2) */
-    var dur = t.time && !r.span ? " · " + (t2m(t.end) - t2m(t.time)) + "분" : "";
-    return progTTRow(r.k, {
-      t0: t.time || "미정", t1: t.time ? t.end : "", title: t.title, mine: mine, go: go, sub: r.ten1 ? t.place : go ? "" : (t.desc || t.short || ""),
-      cls: (mine ? " my" : r.past ? " past" : "") + (r.now ? " now" : ""),
-      tok: r.now ? (nowAct ? "act" : "") : mine ? "mine" : r.past ? "dim" : "",
-      badge: r.now ? '<span class="axs-chip">진행 중</span>' : mine ? '<span class="axs-chip">' + esc(r.ten1 ? "내 세션" : progTTMineChip(pid)) + "</span>" : tag ? '<span class="axs-ttag">' + tag + "</span>" : ""
-    });
-  };
-  var sec = function (nm, rs) {
-    if (!rs.length) return "";
-    var hasNow = rs.some(function (r) { return r.now; });
-    return '<section class="axs-ttsec"><div class="ax-row"><h2 class="ax-section-title">' + nm + "</h2>" +
-      (hasNow ? '<span class="axs-chip">지금 ' + nowHM + "</span>" : "") + "</div>" + rs.map(row).join("") + "</section>";
-  };
-  /* v4.99c (사용자 261002 「오전 / 점심 / 오후 세 가지로」) 점심 묶음 = 점심 줄(TL_PROG #1F)의 시작~끝 사이에 시작하는 줄 · 경계는 데이터의 점심 줄 시각 · 묶음 사이 옅은 선은 CSS(.axs-ttsec + .axs-ttsec) */
-  var lu = TIMELINE.filter(function (t) { return TL_PROG[t.title] === "#1F"; })[0], lu0 = lu ? t2m(lu.time) : 11 * 60, lu1 = lu ? t2m(lu.end) : 13 * 60 + 30;
-  return sec("오전", rows.filter(function (r) { return r.t.time && t2m(r.t.time) < lu0; })) +
-    sec("점심", rows.filter(function (r) { return r.t.time && t2m(r.t.time) >= lu0 && t2m(r.t.time) < lu1; })) +
-    sec("오후", rows.filter(function (r) { return r.t.time && t2m(r.t.time) >= lu1; })) +
-    sec("시간 미정", rows.filter(function (r) { return !r.t.time; }));
+  var tm = tenMine();
+  if (tm) { var tp = tm.tm.split("~"); mine.push({ k: "ten", pid: tm.id, a: t2m(tp[0]), b: t2m(tp[1]), t0: tp[0], t1: tp[1], ttl: tm.ttl, sub: tm.sub, fl: 10, pl: sessPlace(tm).replace(/^\d+F\s*·?\s*/, ""), go: "progOpen('" + tm.id + "')", chip: "내 세션", mine: true }); }
+  var r = myResv();
+  if (r && r.slot && FL_DAP_OK.indexOf(r.status) >= 0) { var ra = t2m(r.slot); mine.push({ k: "dap", pid: "dap", a: ra, b: ra + (RESV_CONF.step || 30), t0: r.slot, t1: hm2(ra + (RESV_CONF.step || 30)), ttl: "AX LOUNGE 상담", sub: "", fl: 1, pl: "AX LOUNGE", go: "progOpen('dap')", chip: RESV_ST[r.status] || "승인 완료", mine: true }); }
+  var c = S.get("cchat", null);
+  if (c && c.status === "matched" && c.round) { var ca = t2m(c.round); mine.push({ k: "cchat", pid: "cchat", a: ca, b: ca + 20, t0: c.round, t1: hm2(ca + 20), ttl: "AX 커피챗", sub: "", fl: 18, pl: c.table ? "TABLE " + c.table : "", go: "progOpen('cchat')", chip: "매칭됨", mine: true }); }
+  /* 겹침 = 시간 구간이 조금이라도 겹치면(끝 = 다음 시작은 겹치지 않음) 그 공용 일정 줄(pub)을 뺀다 */
+  pub = pub.filter(function (p) { return !mine.some(function (m) { return m.a < p.b && p.a < m.b; }); });
+  return pub.concat(mine).sort(function (x, y) { return x.a - y.a || (y.mine ? 1 : 0) - (x.mine ? 1 : 0); });
+}
+function progFlowHtml() {
+  var ph = evPhase(), hmN = ph === "before" ? -1 : ph === "after" ? 99999 : hmNow(), its = progFlowItems(), g = [], by = {};
+  its.forEach(function (o) { if (!by[o.t0]) { by[o.t0] = { t0: o.t0, a: o.a, its: [] }; g.push(by[o.t0]); } by[o.t0].its.push(o); });
+  var act = its.filter(function (o) { return hmN >= o.a && hmN < o.b; });
+  act.sort(function (x, y) { return (y.mine ? 1 : 0) - (x.mine ? 1 : 0) || x.a - y.a; });
+  var focus = act[0] || null;
+  PROG.flKey = ph + hmN;
+  return g.map(function (r, i) {
+    var nx = g[i + 1], b = Math.max.apply(null, r.its.map(function (o) { return o.b; }));
+    var st = focus && r.its.indexOf(focus) >= 0 ? "now" : r.its.some(function (o) { return hmN >= o.a && hmN < o.b; }) ? "on" : hmN >= b ? "past" : "next";
+    var span = nx ? nx.a - r.a : 0, p = nx ? Math.max(0, Math.min(1, (hmN - r.a) / span)) : 0, ex = nx ? Math.min(52, Math.round(span * 0.35)) : 0;
+    var rl = nx ? '<i class="rl' + (p >= 1 ? " done" : p > 0 ? " cur" : "") + '" style="--p:' + p.toFixed(3) + '"></i>' : "";
+    return '<div class="fr ' + st + '" style="--ex:' + ex + 'px"><span class="tm">' + r.t0 + '</span><span class="ln" aria-hidden="true"><i class="nd"></i>' + rl + '</span><div class="cs">' +
+      r.its.map(function (o) { return progFlowCard(o, hmN, focus === o); }).join("") + "</div></div>";
+  }).join("");
+}
+function progFlowCard(o, hmN, isF) {
+  var past = hmN >= o.b, ac = isF && o.lec && !o.chip ? '<span class="ac">대강당 입구 QR로 출석</span>' : "";
+  return '<button type="button" class="fc' + (past ? " past" : "") + (isF ? " focus" : "") + '"' + (o.go ? ' onclick="' + o.go + '"' : " disabled") + ' data-fl="' + esc(o.k) + '">' +
+    '<span class="mt">' + (o.fl ? flFloor(o.fl) : "") + '<span class="pl">' + esc(o.pl) + '</span><span class="e">~' + o.t1 + "</span></span>" +
+    '<span class="t">' + (isF ? '<span class="ax-sr-only">진행 중 </span>' : "") + '<span class="tt">' + esc(o.ttl) + "</span>" + (o.chip ? '<span class="axs-chip">' + esc(o.chip) + "</span>" : "") + "</span>" +
+    (o.sub ? '<span class="s">' + esc(o.sub) + "</span>" : "") + ac + (past || !o.go ? "" : '<span class="chv">' + CHEV_SVG + "</span>") + "</button>";
+}
+/* 분 단위 갱신 · 시간표가 보이는 동안만 흐름 칸만 다시 그린다(스크롤 · 탭 상태 그대로) · 탭에 들어올 때 진행 중 카드가 화면 밖이면 가운데로 */
+setInterval(function () {
+  if (App.current !== "guide" || PROG.seg === "always" || document.hidden) return;
+  var f = el("progFlow"); if (!f) return;
+  var ph = evPhase(), k = ph + (ph === "before" ? -1 : ph === "after" ? 99999 : hmNow());
+  if (k !== PROG.flKey) f.innerHTML = progFlowHtml();
+}, 20000);
+function progFlowScroll() {
+  var c = document.querySelector("#progFlow .fc.focus"); if (!c) return;
+  var q = c.getBoundingClientRect(), tb = el("tabbar"), lim = window.innerHeight - (tb ? tb.offsetHeight : 0);
+  if (q.top < 120 || q.bottom > lim) c.scrollIntoView({ block: "center" });
 }
 /* ═══ v4.84 (261001 앱 개편 2묶음 · 기획안 5-3) 프로그램 탭 아래 메뉴 · 10F 행 펼침 · 1F 부스 6구역 ═══ */
 /* 10F 행 펼침 · 세션 A~E 다섯 줄(세션 E 는 회차 두 줄) · 읽기 전용 · 누르면 세션 상세(안내 전용 · 앱 신청 없음) · 사전 신청한 세션만 「내 세션」 */
@@ -17409,6 +17459,8 @@ function lfBusy(btn, on, label) {
     S.set("gw_cleared", true);
     S.set("dept", "보상부문");
     S.set("ev_phase", "live");
+    var nq = location.hash.match(/[&#]now=(\d{1,2}:\d{2})/);   /* v5.21 시험 시각 고정(hmNow · attNow) · 데모에서만 */
+    if (nq) S.set("att_tm", nq[1]);
     S.set("wq_attempts", [{ set: "wall1", correct: 4, total: 5, ts: Date.now() }]);
     /* v4.71 혼잡 제보 캡처 · &crowd=e(엘리베이터 혼잡) · l(로비 혼잡) · p(엘리베이터 예상) · s(계단 연결 ON) 글자를 섞어 쓴다 */
     var cq = location.hash.match(/crowd=([elps]+)/);
