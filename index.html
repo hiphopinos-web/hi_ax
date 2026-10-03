@@ -70,11 +70,12 @@
   @keyframes dgOn { 0% { opacity: 0; transform: scale(0.3); } 70% { opacity: 1; transform: scale(1.14); } 100% { opacity: 1; transform: scale(1); } }
   @media (prefers-reduced-motion: reduce) { .dg .dgd { animation: none; opacity: 1; transform: none; } }
   /* ═══ v5.02 로그인 화면 v2 「전체 오렌지」(261002 사용자 확정 · design.md A-5 3-1 · 정본 「디자인 시안/로그인 화면/v2 계획.md」)
-     로그인 첫 화면과 재방문(#quick)은 화면 전체가 주황 + 주황 격자(캔버스 lf-bg · 최초 로그인 장면의 수면과 같은 그림)인 정지 화면이다. 점 · 수평선 · 슬로건 · 날짜 · 장소 없음.
+     로그인 첫 화면과 재방문(#quick)은 화면 전체가 주황 + 주황 격자(캔버스 lf-bg · 최초 로그인 장면의 수면과 같은 그림)인 화면이다. v5.27 격자 점이 켜지고 꺼지는 점등 층(lf-fx · lfFx · 위치 고정 · 빛띠 없음 · 90초 뒤 정지 · 동작 줄이기면 정지). 수평선 · 슬로건 · 날짜 · 장소 없음.
      위 = 흰 행사명 「AX Festival」 / 「2026」 40px 700(흰 글자는 이 한 요소만 · 대비 2.52 큰 글자 예외) · 아래 = 입력 3줄 + 검정 주 버튼(ax-button-dark) + 링크.
      줄 자리는 lfLayout() 이 화면 높이로 계산한다(유동 배치 · data-r 줄). 주황 위 작은 글자는 onBrand(짙은 갈색) 600 만 · 오류는 흰 알약 · QR 한 줄은 brandSoft 알약 */
   .axs-lf { background: var(--ax-color-brand); }
   .axs-lf > canvas.lf-bg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
+  .axs-lf > canvas.lf-fx { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; pointer-events: none; }   /* v5.27 점등 층 · 바닥 격자(lf-bg) 위 · 글자 아래 */
   #lfSafe { position: absolute; left: 0; top: 0; width: 0; height: 0; visibility: hidden; pointer-events: none; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
   .axs-lf .lf-head { position: absolute; z-index: 2; left: 0; right: 0; top: 0; padding: 0 var(--ax-space-24); overflow: hidden; pointer-events: none; }
   .axs-lf .lf-title { margin: 0; font-size: 40px; line-height: 42px; font-weight: 700; letter-spacing: -0.01em; color: var(--ax-color-inverse); }   /* 행사명 = 흰색 40px 700 · 큰글씨 배율 제외(px) · 키보드에 lfLayout 이 40 → 24 → 16 */
@@ -2636,6 +2637,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   <!-- ═══════ 스플래시 · v5.02 로그인 화면 v2 「전체 오렌지」 · 흰 행사명 + 입력 3줄 + 검정 주 버튼 · 줄 자리는 lfLayout(유동 배치 · data-r) ═══════ -->
   <section id="splash" class="axs-lf" data-phase="ready">
     <canvas id="kvCv" class="lf-bg" aria-hidden="true"></canvas>
+    <canvas class="lf-fx" aria-hidden="true"></canvas>
     <div class="lf-head">
       <p class="lf-name"></p>
       <h1 class="lf-title"><span>AX Festival</span> <span>2026</span></h1>
@@ -2655,6 +2657,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   <!-- ═══════ 재방문 · 비밀번호만 입력 (스플래시 건너뜀) · v5.02 첫 화면과 같은 틀(전체 오렌지 · 유동 배치) ═══════ -->
   <section id="quick" class="axs-lf" hidden>
     <canvas id="qCv" class="lf-bg" aria-hidden="true"></canvas>
+    <canvas class="lf-fx" aria-hidden="true"></canvas>
     <div class="lf-head">
       <p class="lf-name"></p>
       <h1 class="lf-title"><span>AX Festival</span> <span>2026</span></h1>
@@ -3654,7 +3657,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.26";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.27";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -16803,7 +16806,7 @@ function lgxDots(cx, P, a, lq) {
 }
 
 /* ════════════════ v5.02 로그인 화면 v2 「전체 오렌지」 (261002 사용자 확정 · 정본 「디자인 시안/로그인 화면/v2 계획.md」 1-6 · design.md A-5 3-1) ════════════════
-   로그인 첫 화면(#splash)과 재방문(#quick)은 화면 전체가 주황 + 주황 격자인 정지 화면이다(캔버스 lf-bg · 장면의 수면과 같은 그림 lgxGrid · 같은 화면 좌표).
+   로그인 첫 화면(#splash)과 재방문(#quick)은 화면 전체가 주황 + 주황 격자다(캔버스 lf-bg · 장면의 수면과 같은 그림 lgxGrid · 같은 화면 좌표) · v5.27 그 위에 점등 층(lf-fx · lfFx).
    옛 1막(점 · 수평선 · 숨쉬기 · 파문 · 상수 LF · lfFit · lgxIdleMount)은 v5.02 에 걷었다. 행사명이 장면의 첫 재료다(빨려 듦).
    유동 배치 lfLayout: 모든 줄의 자리를 화면 높이 H 하나로 계산한다(같은 H = 같은 배치 · 키보드 열림 클래스에 기대지 않는다).
      균형 = 행사명(2줄 40/42) + 입력 묶음을 뺀 남는 공간 x 를 위 : 사이 : 아래 = 0.5 : 0.3 : 0.2 로 나눈다(위 최소 28 + 안전영역 · 사이 16 · 아래 24 + 안전영역).
@@ -16870,6 +16873,158 @@ function lfBg(host) {
   cx.fillStyle = LGX_C.bgO; cx.fillRect(br.left, br.top, w, h);
   cx.drawImage(g.go, 0, 0, innerWidth, innerHeight);
 }
+/* ════ v5.27 로그인 배경 점등(사용자 261003 · 시안 B 「점등만」 · 정본 「디자인 시안/로그인 배경/설계.md」 · design.md A-5 3-1 · 2절)
+   보이지 않는 빛 커튼 2장이 천천히 흐르고, 커튼이 지나는 자리의 격자 점이 켜진다(점마다 문턱과 일렁임이 달라 한꺼번에 켜지지 않는다).
+   점 자리는 lgxGrid 와 같다(화면 좌표 · 간격 28 · 가로 가운데 맞춤) · 위치는 고정, 밝기와 크기만 변한다 · 빛띠(그라데이션 면) 없음 · 바닥 격자는 lf-bg 그대로.
+   글자 자리(점 이름 · 행사명 · 안내 · 이름 사번 줄 · 오류 · QR 한 줄 · 링크)와 둘레 44px 는 점등 0 · 키보드로 압축되면(P > 0) 세기 절반.
+   30프레임 고정 · 점등 캔버스는 DPR 1.5 까지 · 멈춤 = 보인 시간 90초(켜진 정지 화면) · 동작 줄이기(켜진 한 장면) · 탭 가려짐 · 화면이 숨거나 걷힘(rAF 해제)
+   입장 = lgxPlay 시작에서 0.55초 동안 0 으로 가라앉고 멈춘다(lfFxSettle · 장면 앞 구간과 같은 길이) */
+var LFFX = { MAX: 90, STEP: 30, CALM: 44, STILL: 5.0, halo: null, bound: false, cur: [
+  { a: 0.46, rx: 0.56, ry: 0.62, rot: -18, px: 17, py: 23, ph: 0.2 },
+  { a: 0.55, rx: 0.46, ry: 0.55, rot: 14, px: 21, py: 29, ph: 1.9 }
+] };
+function lfFxH(i) { var v = Math.sin(i * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); }
+function lfFxSs(a, b, x) { x = lgxCl((x - a) / (b - a)); return x * x * (3 - 2 * x); }
+function lfFxHalo() {
+  if (LFFX.halo) return LFFX.halo;
+  var c = document.createElement("canvas"); c.width = c.height = 64;
+  var x = c.getContext("2d"), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0, "rgba(255,235,224,1)"); g.addColorStop(0.35, "rgba(255,235,224,0.45)"); g.addColorStop(1, "rgba(255,235,224,0)");
+  x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+  LFFX.halo = c; return c;
+}
+function lfFxMount(host) {
+  if (host._fx) return;
+  var cv = host.querySelector("canvas.lf-fx"); if (!cv || !cv.getContext) return;
+  host._fx = { cv: cv, x: cv.getContext("2d"), dots: [], W: 0, H: 0, dpr: 1, k: "", calmK: "", calmAt: 0, acc: 0, t0: 0, last: 0, run: false, raf: 0, settle: -1, settleMs: 550, done: false, rm: lgxRM(), lit: 0 };
+  if (LFFX.bound) return;
+  LFFX.bound = true;
+  var all = function (fn) { ["splash", "quick"].forEach(function (id) { var h = el(id); if (h && h._fx) fn(h); }); };
+  document.addEventListener("visibilitychange", function () { all(function (h) { if (document.hidden) lfFxStop(h); else lfFxKick(h); }); });
+  try {
+    var mq = window.matchMedia("(prefers-reduced-motion: reduce)"), onRm = function () { all(function (h) { lfFxStop(h); h._fx.rm = lgxRM(); lfFxKick(h); }); };
+    if (mq.addEventListener) mq.addEventListener("change", onRm); else if (mq.addListener) mq.addListener(onRm);
+  } catch (e) {}
+}
+/* 크기 · 점 목록(lgxGrid 와 같은 화면 좌표 → 화면 안 좌표) · 크기가 바뀔 때만 */
+function lfFxBuild(host) {
+  var f = host._fx, cv = f.cv, w = cv.clientWidth, h = cv.clientHeight; if (!w || !h) return false;
+  var br = cv.getBoundingClientRect(), dpr = Math.min(1.5, window.devicePixelRatio || 1), k = [w, h, Math.round(br.left), Math.round(br.top), innerWidth, innerHeight, dpr].join();
+  if (f.k === k) return true;
+  f.k = k; f.W = w; f.H = h; f.dpr = dpr; cv.width = Math.ceil(w * dpr); cv.height = Math.ceil(h * dpr); f.dots = []; f.calmK = "";
+  var GS = 28, ox = (innerWidth / 2) % GS, gx, gy, i = 0;
+  for (gy = GS / 2; gy < innerHeight; gy += GS) for (gx = ox; gx < innerWidth; gx += GS) {
+    var x = gx - br.left, y = gy - br.top;
+    if (x > -2 && y > -2 && x < w + 2 && y < h + 2) f.dots.push({ x: x, y: y, calm: 1, th: 0.05 + 0.25 * lfFxH(i + 5), ph: lfFxH(i + 9) * 6.2832 });
+    i++;
+  }
+  return true;
+}
+/* 글자 자리 · 글자 상자(행사명 · 안내 · 링크는 글자 폭만 · 알약 · 카드 · 점 이름은 상자째) 안 = 0 · 둘레 44px 에서 서서히 1 */
+function lfFxCalm(host) {
+  var f = host._fx, br = f.cv.getBoundingClientRect(), rs = [], i, b;
+  var q = host.querySelectorAll(".lf-name svg, .lf-title span, .lf-note, .lf-who, .lf-links .ax-link, #err, #qErr, .axs-pend, .axs-sacard");
+  for (i = 0; i < q.length; i++) {
+    var e = q[i]; b = null;
+    if (/^(SPAN|P|BUTTON)$/.test(e.tagName) && e.id !== "err" && e.id !== "qErr") { try { var rg = document.createRange(); rg.selectNodeContents(e); b = rg.getBoundingClientRect(); } catch (er) { b = null; } }
+    if (!b || !b.width) b = e.getBoundingClientRect();
+    if (b.width > 0 && b.height > 0) rs.push([b.left - br.left - 4, b.top - br.top - 4, b.right - br.left + 4, b.bottom - br.top + 4]);
+  }
+  f.dots.forEach(function (d) {
+    var m = 1;
+    for (var j = 0; j < rs.length; j++) { var r = rs[j], dx = Math.max(r[0] - d.x, 0, d.x - r[2]), dy = Math.max(r[1] - d.y, 0, d.y - r[3]); m = Math.min(m, lfFxSs(0, LFFX.CALM, Math.sqrt(dx * dx + dy * dy))); }
+    d.calm = m;
+  });
+}
+/* 한 장면 · t(초) → 그림(같은 t = 같은 그림) · k = 0..1 전체 세기 · 켜진 점 수를 돌려준다 */
+function lfFxDraw(f, t, k) {
+  var x = f.x, W = f.W, H = f.H, n = f.dots.length, cs = [], i, j, a = 6.2832 * t;
+  x.setTransform(f.dpr, 0, 0, f.dpr, 0, 0); x.clearRect(0, 0, W, H);
+  f.lit = 0;
+  if (k <= 0.004) return 0;
+  for (j = 0; j < LFFX.cur.length; j++) {
+    var cu = LFFX.cur[j], ra = (cu.rot + 9 * Math.sin(a / (cu.px * 0.7) + cu.ph)) * 0.017453;
+    cs.push({ cx: W * (0.5 + 0.38 * Math.sin(a / cu.px + cu.ph)), cy: H * (0.38 + 0.22 * Math.sin(a / cu.py + cu.ph * 1.7)), co: Math.cos(ra), si: Math.sin(ra), rx: cu.rx * W * (1 + 0.14 * Math.sin(a / (cu.py * 0.6) + cu.ph)), ry: cu.ry * H, a: cu.a });
+  }
+  var halo = lfFxHalo(), lit = 0;
+  x.fillStyle = "#FFFFFF";
+  for (i = 0; i < n; i++) {
+    var d = f.dots[i]; if (d.calm <= 0) continue;
+    var fv = 0;
+    for (j = 0; j < cs.length; j++) {
+      var s = cs[j], dx = d.x - s.cx, dy = d.y - s.cy, u = (dx * s.co + dy * s.si) / s.rx, v = (-dx * s.si + dy * s.co) / s.ry, dd = Math.sqrt(u * u + v * v);
+      if (dd < 1) { var pp = 1 - dd; fv += s.a * pp * Math.sqrt(pp) * (0.55 + 0.45 * pp); }   /* 커튼 가장자리 (1 - d)^1.6 의 가벼운 근사 */
+    }
+    var e = lfFxSs(d.th * 0.6, d.th * 0.6 + 0.62, Math.min(1, fv * 1.7)) * (0.78 + 0.22 * Math.sin(t * 1.7 + d.x * 0.045 + d.ph)) * d.calm * k;
+    if (e < 0.05) continue;
+    lit++;
+    if (e > 0.3) { var hs = 7 + 11 * e; x.globalAlpha = Math.min(1, 0.42 * e); x.drawImage(halo, d.x - hs, d.y - hs, hs * 2, hs * 2); }
+    x.globalAlpha = Math.min(1, 0.3 + 0.9 * e); x.beginPath(); x.arc(d.x, d.y, 0.9 + 1.9 * e, 0, 6.2832); x.fill();
+  }
+  x.globalAlpha = 1; f.lit = lit;
+  return lit;
+}
+function lfFxClear(f) { f.x.setTransform(1, 0, 0, 1, 0, 0); f.x.clearRect(0, 0, f.cv.width, f.cv.height); f.lit = 0; }
+function lfFxShow(host) { return !document.hidden && !host.hidden && !host.classList.contains("gone") && host.offsetWidth > 0; }
+function lfFxNow(f) { return f.done ? LFFX.MAX : f.acc + (f.run ? (performance.now() - f.t0) / 1000 : 0); }
+function lfFxK(host, f) {
+  var k = host._lf && host._lf.P > 0 ? 0.5 : 1;
+  if (f.settle >= 0) { var p = (performance.now() - f.settle) / f.settleMs; k *= p >= 1 ? 0 : 1 - p * p * (3 - 2 * p); }
+  return k;
+}
+function lfFxCalmTick(host, f, now) {   /* 배치가 바뀌면 곧바로 한 번 · 움직임(0.26초)이 끝난 뒤 한 번 더 */
+  var ck = f.k + "|" + (host._lf ? host._lf.key : "");
+  if (ck !== f.calmK) { f.calmK = ck; f.calmAt = now + 320; lfFxCalm(host); }
+  else if (f.calmAt && now >= f.calmAt) { f.calmAt = 0; lfFxCalm(host); }
+}
+function lfFxFrame(host) {
+  var f = host._fx; f.raf = 0;
+  if (!f.run) return;
+  if (!lfFxShow(host)) { lfFxStop(host); return; }
+  f.raf = requestAnimationFrame(function () { lfFxFrame(host); });
+  var now = performance.now();
+  if (now - f.last < LFFX.STEP - 3) return;   /* 30프레임 고정 · 천천히 흐르는 빛이라 60과 차이가 없다 */
+  f.last = now;
+  if (!lfFxBuild(host)) return;
+  lfFxCalmTick(host, f, now);
+  var k = lfFxK(host, f), t = lfFxNow(f);
+  if (f.settle >= 0 && k <= 0) { lfFxClear(f); lfFxStop(host); return; }   /* 입장 · 다 가라앉으면 멈춤 */
+  if (f.settle < 0 && t >= LFFX.MAX) { lfFxStop(host); f.done = true; lfFxDraw(f, LFFX.MAX, k); return; }   /* 90초 · 켜진 정지 화면 */
+  lfFxDraw(f, t, k);
+}
+function lfFxStop(host) {
+  var f = host && host._fx; if (!f) return;
+  if (f.raf) cancelAnimationFrame(f.raf);
+  f.raf = 0;
+  if (f.run) { f.acc += (performance.now() - f.t0) / 1000; f.run = false; }
+}
+function lfFxLoop(host) { var f = host._fx; f.run = true; f.t0 = performance.now(); f.last = 0; f.raf = requestAnimationFrame(function () { lfFxFrame(host); }); }
+/* 정지 한 장(동작 줄이기 · 90초 뒤) · 배치 움직임이 끝난 뒤 한 번 더 */
+function lfFxStill(host) {
+  var f = host._fx; if (f.run || f.settle >= 0 || !lfFxShow(host) || !lfFxBuild(host)) return;
+  lfFxCalm(host); lfFxDraw(f, f.rm ? LFFX.STILL : LFFX.MAX, lfFxK(host, f));
+  clearTimeout(f.stillTo); f.stillTo = setTimeout(function () { if (!f.run && f.settle < 0 && lfFxShow(host) && lfFxBuild(host)) { lfFxCalm(host); lfFxDraw(f, f.rm ? LFFX.STILL : LFFX.MAX, lfFxK(host, f)); } }, 320);
+}
+/* 시작 · 다시 보임 · 배치 바뀜(lfMount · soon) · 장면이 닫힘(lfFadeReset) */
+function lfFxKick(host) {
+  var f = host && host._fx; if (!f) return;
+  if (!LGX.cur && f.settle >= 0) { f.settle = -1; lfFxClear(f); }   /* 장면이 닫히고 로그인 화면이 남으면 되살린다 */
+  if (f.settle >= 0) return;
+  f.calmK = "";
+  if (f.run) return;
+  if (!lfFxShow(host)) return;
+  if (f.rm || f.done) { lfFxStill(host); return; }
+  if (!lfFxBuild(host)) return;
+  lfFxLoop(host);
+}
+/* 입장 · sec 동안 0 으로 가라앉힌 뒤 멈춘다 · 동작 줄이기 · 안 보이면 바로 지운다 */
+function lfFxSettle(host, sec) {
+  var f = host && host._fx; if (!f || f.settle >= 0) return;
+  f.settle = performance.now(); f.settleMs = (sec || 0.55) * 1000;
+  clearTimeout(f.stillTo);
+  if (f.rm || !lfFxShow(host)) { lfFxStop(host); lfFxClear(f); return; }
+  if (!f.run) lfFxLoop(host);
+}
 /* 붙이기 · 크기가 바뀌면(키보드 · 회전 · 글꼴) 한 프레임에 한 번 배경과 배치를 다시 · 여러 번 불러도 된다(kvMountAll) */
 /* v5.10 점 이름 AX PASSPORT(흰 점 14px · 읽는 이름 「AX Passport」) · 로그인 두 화면의 행사명 위 · 움직이지 않는다 */
 function lfName(host) {
@@ -16879,18 +17034,19 @@ function lfName(host) {
 function lfMount(host) {
   if (!host || host.hidden || host.classList.contains("gone")) return;
   lfName(host);
+  lfFxMount(host);   /* v5.27 점등 층 */
   var s = host._lf;
   if (s && s.soon) { s.soon(); return; }
   s = host._lf = host._lf || {};
   s.soon = function () {
     if (s.raf) return;
-    s.raf = requestAnimationFrame(function () { s.raf = 0; if (host.hidden || host.classList.contains("gone") || !host.offsetWidth) return; lfBg(host); lfLayout(host); });
+    s.raf = requestAnimationFrame(function () { s.raf = 0; if (host.hidden || host.classList.contains("gone") || !host.offsetWidth) return; lfBg(host); lfLayout(host); lfFxKick(host); });
   };
   if (window.ResizeObserver) { try { new ResizeObserver(s.soon).observe(host); } catch (e) {} }
   window.addEventListener("resize", s.soon);
   if (window.visualViewport) window.visualViewport.addEventListener("resize", s.soon);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(s.soon);
-  lfBg(host); lfLayout(host);
+  lfBg(host); lfLayout(host); lfFxKick(host);
   requestAnimationFrame(function () { requestAnimationFrame(function () { host.classList.add("lf-sm"); }); });   /* 첫 배치는 움직이지 않는다 · 그다음부터 0.26초 */
   setTimeout(function () { try { lgxSym(); lgxSprites(); } catch (e) {} }, 400);   /* 원본 심볼 글자 나누기(점 1,037개 비교) · 점 그림을 로그인 화면에서 미리 · 입장 순간 끊김 방지 */
 }
@@ -16940,6 +17096,7 @@ function lfFadeReset(host) {
   s.fa = s.fb = s.vis = null; host.style.visibility = "";
   if (hd) hd.style.opacity = s.baseOp == null ? "" : s.baseOp.toFixed(3);
   if (fm) { fm.style.opacity = ""; fm.style.pointerEvents = ""; }
+  lfFxKick(host);   /* v5.27 */
 }
 /* 오류 = 안내 한 줄 자리에 흰 알약 + 문제 칸 2px error 테두리 · 입력을 고치면 안내가 돌아온다(lfErrClear) */
 function lfErr(box, errEl, msg, inputId) {
@@ -16977,6 +17134,7 @@ function lgxPlay(o) {
     '<p class="ax-sr-only lgx-live" aria-live="polite"></p>';
   document.body.appendChild(d);
   var intro = o.intro === "suck" && o.sample && !rm ? "suck" : "iris";   /* 동작 줄이기 = 앞 구간 없이 마지막 장면으로 */
+  if (o.host) lfFxSettle(o.host, LGX.PRE.suck);   /* v5.27 로그인 배경 점등이 0.55초 동안 가라앉아 장면 첫 면(정지 격자)과 이어진다 */
   var cv = d.querySelector("canvas"), cur = LGX.cur = { intro: intro, pre: LGX.PRE[intro], wait: intro === "suck", w0: performance.now(), suck: null, o: o, d: d, cv: cv, rm: rm, mode: o.mode || LGX.mode, srv: o.srv || "wait", t0: performance.now(), raf: 0, skip: 0, stamped: false, lq: false, dts: [], covered: false, sparks: null, closed: false };
   d.querySelector(".lgx-skip").addEventListener("click", function () { lgxSkip(); });
   d.querySelector(".lgx-home").addEventListener("click", function () { lgxClose("home"); });
