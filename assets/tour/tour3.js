@@ -59,10 +59,11 @@
     ok: false, loaded: false, scn: 'lobby', need: true, last: 0, frames: [], probe: [], probed: false,
     pos: new T.Vector3(), h: 0, yaw: 0, Lcur: 4.6, H: 2.7, look: new T.Vector3(), camPos: new T.Vector3(),
     mode: 'stop', stop: 0, dist: 4.8, az: 0, azTo: 0, clock: 0, path: null, pathI: 0, speed: 0, walkT: 0, moveV: 0,
-    stick: null, near: null, ctaKey: '', fade: [1, 1, 1, 1, 1], fadeTo: [1, 1, 1, 1, 1],
+    stick: null, near: null, ctaKey: '', fade: [1, 1, 1, 1, 1], fadeTo: [1, 1, 1, 1, 1], fwdT: 0, run: 0, realV: 0, lean: 0, fov0: 58, fovK: 0,
     cafe: { th: 0.55, ph: 1.12, r: 11.5 }, sheetOpen: false
   };
   window.__lab = window.__tour3 = G;
+  G.r3 = function () { return { renderer: renderer, scene: scene, camera: camera, S: S }; };   /* 시험용(깊이 16비트 흉내 · 깜빡임 세기) */
 
   /* ═══════════ 3D 준비 ═══════════ */
   var renderer, scene, camera, S, bot, botParts = {}, shadow, pillarMats = [];
@@ -71,18 +72,19 @@
     try { renderer = new T.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' }); }
     catch (e) { return false; }
     if (!renderer.getContext()) return false;
+    try { var gl0 = renderer.getContext(); G.depthBits = gl0.getParameter(gl0.DEPTH_BITS); } catch (e) {}   /* v5.40 진단 · 깊이 비트(fps 표시에 함께) */
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75)); renderer.setClearColor(0xE9ECEF, 1);
     renderer.toneMapping = T.AgXToneMapping; renderer.toneMappingExposure = 1.0;
     scene = new T.Scene();
     var bc = document.createElement('canvas'); bc.width = 4; bc.height = 256; var bg = bc.getContext('2d'), gr = bg.createLinearGradient(0, 0, 0, 256);
     gr.addColorStop(0, '#FAFBFC'); gr.addColorStop(0.55, '#EEF0F2'); gr.addColorStop(1, '#DADDE1'); bg.fillStyle = gr; bg.fillRect(0, 0, 4, 256);
     scene.background = new T.CanvasTexture(bc); scene.background.colorSpace = T.SRGBColorSpace;
-    camera = new T.PerspectiveCamera(58, 1, 0.2, 140);   /* v5.38 깊이 정밀도(사용자 261003 갤럭시 「안내데스크 자리에서 까만 색이 깜빡」) · near 0.08 → 0.2 · far 300 → 140(스카이뷰 46m 안) */
+    camera = new T.PerspectiveCamera(58, 1, 0.5, 140);   /* v5.40 near 0.2 → 0.5(실기기 깊이 정밀도 2.5배 · 카메라는 늘 캐릭터 3.8m 뒤 위 · 판 크게 보기도 1.6m 밖) · v5.38 깊이 정밀도(사용자 261003 갤럭시 「안내데스크 자리에서 까만 색이 깜빡」) · near 0.08 → 0.2 · far 300 → 140(스카이뷰 46m 안) */
     scene.add(new T.HemisphereLight(0xFFFFFF, 0xC9CED4, 2.0));
     var dl = new T.DirectionalLight(0xFFFFFF, 1.3); dl.position.set(-8, 20, 12); scene.add(dl);
     S = window.TourScene.build({ T: T, D: D, P: P, N3: N3, renderer: renderer, scene: scene, labelFont: '"Pretendard Variable", Pretendard, sans-serif' });
     scene.add(S.lobby); scene.add(S.cafe);
-    buildBot(); scene.add(bot);
+    buildBot(); scene.add(bot); buildDust();
     cv.addEventListener('webglcontextlost', function (e) { e.preventDefault(); noGl('3D 화면이 끊겼어요 · 새로 고침해 주세요'); });
     G.ok = true;
     return true;
@@ -163,7 +165,18 @@
   }
   function nearGuide(x, z) { for (var k = 0; k < guides.length; k++) { var a = guides[k].at; if ((x - a[0]) * (x - a[0]) + (z - a[1]) * (z - a[1]) < GUIDE_R * GUIDE_R) return true; } return false; }
   function free(x, z) { var c = gi(x, z); return c >= 0 && !wd[c] && (!reach || reach[c]) && !nearGuide(x, z); }
+  /* v5.40 좁은 틈 메우기(끼임 봇 · 회전문 원과 HiDI-Q · AX in Action 부스 끝 사이처럼 몸 하나 겨우 들어가 막다른 틈에 끼였다)
+   * 걸을 수 있는 칸을 반지름 0.3m 원으로 깎았다가 다시 불린다(열기 · opening) · 폭 0.6m(몸 둘레 포함 실제 약 1.2m)보다 좁은 막다른 틈만 막히고 넓은 길은 그대로 · 모서리가 조금 둥글어진다 */
+  function openFree(k) {
+    var N = GW * GH, er = new Uint8Array(N), keep = new Uint8Array(N), offs = [], filled = 0;
+    for (var dj = -k; dj <= k; dj++) for (var di = -k; di <= k; di++) if (di * di + dj * dj <= k * k + 1) offs.push([di, dj]);
+    for (var j = k; j < GH - k; j++) for (var i = k; i < GW - k; i++) { var c = j * GW + i; if (wd[c]) continue; var ok = true; for (var q = 0; q < offs.length; q++) if (wd[c + offs[q][1] * GW + offs[q][0]]) { ok = false; break; } if (ok) er[c] = 1; }
+    for (var j2 = k; j2 < GH - k; j2++) for (var i2 = k; i2 < GW - k; i2++) { var c2 = j2 * GW + i2; if (!er[c2]) continue; for (var q2 = 0; q2 < offs.length; q2++) keep[c2 + offs[q2][1] * GW + offs[q2][0]] = 1; }
+    for (var c3 = 0; c3 < N; c3++) if (!wd[c3] && !keep[c3]) { wd[c3] = 1; filled++; }
+    G.slotFill = filled;
+  }
   function flood(x, z) {
+    if (G.slotFill == null) openFree(3);
     reach = null; var s = gi(x, z), r = new Uint8Array(GW * GH), qu = new Int32Array(GW * GH), h = 0, t = 0;
     if (s < 0 || wd[s]) return;
     r[s] = 1; qu[t++] = s;
@@ -183,6 +196,56 @@
     return null;
   }
   function segFree(x0, z0, x1, z1) { var L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.ceil(L / 0.05)); for (var i = 0; i <= n; i++) { var t = i / n; if (!free(x0 + (x1 - x0) * t, z0 + (z1 - z0) * t)) return false; } return true; }
+  /* v5.40 걷기 = 벽을 따라 미끄러짐(사용자 261003 「이상하게 중간에 끼이는 것 같아」 · 끼임 봇: 옛 방식은 부스 모서리 · 기둥 · 스태프 · 회전문처럼 둥근 둘레에서 멈췄다)
+   * 한 걸음을 0.05m 로 쪼개 본다(달리기 2배에도 벽 · 스태프를 뚫지 않는다) · 막히면 그 자리 벽의 바깥 방향(둘레 16점 중 막힌 점의 반대 쪽 합)을 구해 벽과 나란한 몫만큼 미끄러진다
+   * 둥근 것(회전문 2 · 스태프 · 타자왕 TV)을 정면으로 밀면 가까운 쪽으로 비켜 돈다(정면 몫이 작아도 절반 속도) · 그래도 막히면 옛 방식(한 축만) · 끝까지 막히면 그 자리 */
+  var RING16 = [], ROUND = [];
+  for (var rk = 0; rk < 16; rk++) RING16.push([Math.cos(rk * Math.PI / 8), Math.sin(rk * Math.PI / 8)]);
+  function wallN(x, z) {
+    var nx = 0, nz = 0, hit = 0;
+    for (var k = 0; k < 16; k++) { var c = RING16[k]; if (!free(x + c[0] * 0.14, z + c[1] * 0.14)) { nx -= c[0]; nz -= c[1]; hit++; } }
+    var L = Math.hypot(nx, nz); return hit && L > 1e-6 ? [nx / L, nz / L] : null;
+  }
+  function roundAt(x, z) {
+    for (var k = 0; k < ROUND.length; k++) { var r = ROUND[k]; if (Math.hypot(x - r.x, z - r.z) < r.r + 0.25) return r; }
+    for (var g = 0; g < guides.length; g++) { var a = guides[g].at; if (Math.hypot(x - a[0], z - a[1]) < GUIDE_R + 0.25) return guides[g].rd || (guides[g].rd = { x: a[0], z: a[1], r: GUIDE_R }); }
+    return null;
+  }
+  function slideStep(px, pz, ux, uz, s) {
+    var rd = roundAt(px, pz), w;
+    if (rd) { var dx = px - rd.x, dz = pz - rd.z, dl = Math.hypot(dx, dz) || 1; w = [dx / dl, dz / dl]; } else w = wallN(px, pz);
+    if (w) {
+      var dot = ux * w[0] + uz * w[1];
+      if (dot < 0) {
+        var sx = ux - dot * w[0], sz = uz - dot * w[1], sl = Math.hypot(sx, sz);
+        if (rd && sl < 0.5) {   /* 둥근 것 정면 · 접선 쪽(조금이라도 기운 쪽 · 없으면 지난번 쪽)으로 절반 속도 */
+          var tx0 = -w[1], tz0 = w[0], sg = sl > 0.03 ? (sx * tx0 + sz * tz0 >= 0 ? 1 : -1) : (rd.side || 1);
+          rd.side = sg; sx = tx0 * sg * 0.5; sz = tz0 * sg * 0.5; sl = 0.5;
+        }
+        if (sl > 0.02) {
+          var cand = [[px + sx * s, pz + sz * s], [px + sx * s + w[0] * s * 0.6, pz + sz * s + w[1] * s * 0.6], [px + sx * s * 0.5, pz + sz * s * 0.5]];
+          if (rd) {   /* 둥근 것 = 막힌 칸 바깥(반지름 + 칸 반 대각 0.075) 원 위로 옮겨 계단에 걸리지 않게 */
+            var qx = px + sx * s - rd.x, qz = pz + sz * s - rd.z, ql = Math.hypot(qx, qz) || 1, rr = Math.max(ql, rd.r + 0.075);
+            cand.unshift([rd.x + qx / ql * rr, rd.z + qz / ql * rr]);
+          }
+          for (var i = 0; i < cand.length; i++) if (free(cand[i][0], cand[i][1])) return cand[i];
+        }
+      }
+    }
+    var tx = px + ux * s, tz = pz + uz * s;
+    if (free(tx, pz)) return [tx, pz];
+    if (free(px, tz)) return [px, tz];
+    return null;
+  }
+  function moveStep(x, z, ux, uz, d) {
+    var n = Math.max(1, Math.ceil(d / 0.05)), s = d / n, px = x, pz = z, moved = 0;
+    for (var i = 0; i < n; i++) {
+      var tx = px + ux * s, tz = pz + uz * s;
+      if (!free(tx, tz)) { var q = slideStep(px, pz, ux, uz, s); if (!q) break; tx = q[0]; tz = q[1]; }
+      moved += Math.hypot(tx - px, tz - pz); px = tx; pz = tz;
+    }
+    return [px, pz, moved];
+  }
   /* A* (8방향) + 줄 당기기 */
   function findPath(x0, z0, x1, z1) {
     var s = gi(x0, z0), g = gi(x1, z1); if (s < 0 || g < 0) return null;
@@ -249,8 +312,16 @@
   }
   function isCw(p) { return ((p[1][0] - p[0][0]) * (p[2][1] - p[0][1]) - (p[1][1] - p[0][1]) * (p[2][0] - p[0][0])) < 0; }
   function nameOf(o, re) { while (o) { if (o.name && re.test(o.name)) return o.name; o = o.parent; } return null; }
+  /* v5.40 실기기 깜빡임 보강(사용자 261003 갤럭시 「여기에서도 팔라릭라라락 까만색이 나와」 · v5.38 은 데스크톱 GPU 기준이었다)
+   *   모바일 GPU 는 깊이 정밀도가 낮다(16비트면 6m 거리에서 약 3mm 단위) · polygonOffset 만으로는 모자라 앞 층을 실제로 띄운다
+   *   1) 겹침 판정 = 4mm → 1.5cm · 축에 나란하지 않은 면(법선을 2도 단위로 묶음)도 · 일부만 겹친 면도(겹친 넓이 0.4cm² 이상)
+   *   2) 이긴 면(앞 층)은 법선 쪽으로 진 면보다 층마다 5mm 앞에 오도록 정점을 옮긴다(이미 그만큼 앞이면 그대로) · polygonOffset 은 그대로 덧쓴다
+   *   3) 바닥에 깔린 얇은 판(매트 · 문턱 · 띠 · 바닥 위 3cm 안의 위를 보는 면)은 1.5cm 띄운다(옆면 윗모서리도 같이) */
+  var ZTOL = 0.01, ZGAP = 0.005, ZLIFT = 0.015;
   function fixCoplanar(root) {
-    var t0 = performance.now(), meshes = [], buckets = new Map(), va = new T.Vector3(), vb = new T.Vector3(), vc = new T.Vector3(), e1 = new T.Vector3(), e2 = new T.Vector3(), nn = new T.Vector3(), nTri = 0;
+    var t0 = performance.now(), meshes = [], buckets = new Map(), va = new T.Vector3(), vb = new T.Vector3(), vc = new T.Vector3(), e1 = new T.Vector3(), e2 = new T.Vector3(), nn = new T.Vector3(), nTri = 0, bu = new T.Vector3(), bv = new T.Vector3();
+    root.updateMatrixWorld(true);
+    var lifted = liftFloorPlates(root), posters = liftPillarPosters(root);
     root.updateMatrixWorld(true);
     root.traverse(function (o) {
       if (!o.isMesh || !o.geometry || !o.geometry.attributes.position || !o.material || Array.isArray(o.material) || o.material.transparent) return;
@@ -259,11 +330,21 @@
       for (var t = 0; t < n; t += 3) {
         va.fromBufferAttribute(pos, idx ? idx.getX(t) : t).applyMatrix4(m); vb.fromBufferAttribute(pos, idx ? idx.getX(t + 1) : t + 1).applyMatrix4(m); vc.fromBufferAttribute(pos, idx ? idx.getX(t + 2) : t + 2).applyMatrix4(m);
         e1.subVectors(vb, va); e2.subVectors(vc, va); nn.crossVectors(e1, e2); var ar = nn.length() / 2; if (ar < 1e-6) continue; nn.multiplyScalar(0.5 / ar);
-        var ax = Math.abs(nn.x) > 0.999 ? 0 : Math.abs(nn.y) > 0.999 ? 1 : Math.abs(nn.z) > 0.999 ? 2 : -1; if (ax < 0) continue;
-        var u = (ax + 1) % 3, v = (ax + 2) % 3, P = [[va.getComponent(u), va.getComponent(v)], [vb.getComponent(u), vb.getComponent(v)], [vc.getComponent(u), vc.getComponent(v)]], flip = isCw(P); if (flip) P = [P[0], P[2], P[1]];
-        var r = { mi: mi, t: t, off: (va.getComponent(ax) + vb.getComponent(ax) + vc.getComponent(ax)) / 3, ar: ar, P: P, flip: flip, lv: 0,
+        var ax = Math.abs(nn.x) > 0.999 ? 0 : Math.abs(nn.y) > 0.999 ? 1 : Math.abs(nn.z) > 0.999 ? 2 : -1, P, off, key, sg, nw;
+        if (ax >= 0) {
+          var u = (ax + 1) % 3, v = (ax + 2) % 3; sg = nn.getComponent(ax) > 0 ? 1 : -1;
+          P = [[va.getComponent(u), va.getComponent(v)], [vb.getComponent(u), vb.getComponent(v)], [vc.getComponent(u), vc.getComponent(v)]];
+          off = (va.getComponent(ax) + vb.getComponent(ax) + vc.getComponent(ax)) / 3 * sg; key = ax + ',' + sg; nw = [ax === 0 ? sg : 0, ax === 1 ? sg : 0, ax === 2 ? sg : 0];
+        } else {   /* 비스듬한 면 · 법선을 2도 단위로 묶고 그 평면 위 두 축으로 편다 */
+          var qx = Math.round(nn.x * 30), qy = Math.round(nn.y * 30), qz = Math.round(nn.z * 30), ql = Math.hypot(qx, qy, qz) || 1;
+          nw = [qx / ql, qy / ql, qz / ql]; bu.set(nw[0], nw[1], nw[2]); bv.set(Math.abs(nw[1]) < 0.9 ? 0 : 1, Math.abs(nw[1]) < 0.9 ? 1 : 0, 0).cross(bu).normalize(); var bw = new T.Vector3().crossVectors(bu, bv);
+          P = [[va.dot(bv), va.dot(bw)], [vb.dot(bv), vb.dot(bw)], [vc.dot(bv), vc.dot(bw)]];
+          off = (va.dot(bu) + vb.dot(bu) + vc.dot(bu)) / 3; key = 'g' + qx + ',' + qy + ',' + qz; sg = 1;
+        }
+        var flip = isCw(P); if (flip) P = [P[0], P[2], P[1]];
+        var r = { mi: mi, t: t, off: off, ar: ar, P: P, flip: flip, lv: 0, nw: nw, need: 0,
           u0: Math.min(P[0][0], P[1][0], P[2][0]), u1: Math.max(P[0][0], P[1][0], P[2][0]), v0: Math.min(P[0][1], P[1][1], P[2][1]), v1: Math.max(P[0][1], P[1][1], P[2][1]) };
-        var key = ax + ',' + (nn.getComponent(ax) > 0 ? 1 : -1) + ',' + Math.round(r.off / 0.004);
+        key += ',' + Math.round(off / ZTOL);
         if (!buckets.has(key)) buckets.set(key, []); buckets.get(key).push(r); nTri++;
       }
     });
@@ -288,8 +369,8 @@
     }
     var pairs = 0, plist = [];   /* plist = [이긴 면, 진 면] */
     function test(a, b) {
-      if (Math.abs(a.off - b.off) > 0.004 || Math.min(a.u1, b.u1) - Math.max(a.u0, b.u0) <= 0.003 || Math.min(a.v1, b.v1) - Math.max(a.v0, b.v0) <= 0.003) return;
-      var O = clipTri(a.P, b.P); if (O.length < 3 || polyArea(O) <= 2e-4) return;
+      if (Math.abs(a.off - b.off) > ZTOL || Math.min(a.u1, b.u1) - Math.max(a.u0, b.u0) <= 0.002 || Math.min(a.v1, b.v1) - Math.max(a.v0, b.v0) <= 0.002) return;
+      var O = clipTri(a.P, b.P); if (O.length < 3 || polyArea(O) <= 4e-5) return;
       pairs++;
       var cu = 0, cv = 0; O.forEach(function (q) { cu += q[0] / O.length; cv += q[1] / O.length; });
       var pts = [[cu, cv]].concat(O.map(function (q) { return [(q[0] + cu) / 2, (q[1] + cv) / 2]; }));
@@ -297,31 +378,86 @@
       if (la >= 0 && lb >= 0 && Math.abs(la - lb) > 16) w = la > lb ? a : b;
       else if (Math.abs(a.ar - b.ar) > 1e-6) w = a.ar < b.ar ? a : b;
       else if (a.mi !== b.mi) { var pa = !!nameOf(meshes[a.mi], /^panel_\d+$/), pb = !!nameOf(meshes[b.mi], /^panel_\d+$/); if (pa !== pb) w = pa ? a : b; }
+      else w = a.off >= b.off ? a : b;   /* 같은 메시 · 같은 넓이 = 이미 앞에 있는 쪽 */
       if (w) plist.push([w, w === a ? b : a]);
       if (window.__zdbg) window.__zdbg.push([meshes[a.mi].name, meshes[b.mi].name, +a.off.toFixed(3), Math.round(la), Math.round(lb), +a.ar.toFixed(3), +b.ar.toFixed(3), w === a ? 'a' : w === b ? 'b' : '-', [+cu.toFixed(2), +cv.toFixed(2)]]);   /* 시험용 · window.__zdbg 가 있을 때만 */
     }
     buckets.forEach(function (L, key) {
-      var k = key.split(','), up = buckets.get(k[0] + ',' + k[1] + ',' + (+k[2] + 1)) || [];
+      var k = key.split(','), last = +k.pop(), up = buckets.get(k.join(',') + ',' + (last + 1)) || [];
       for (var i = 0; i < L.length; i++) { for (var j = i + 1; j < L.length; j++) test(L[i], L[j]); for (var q = 0; q < up.length; q++) test(L[i], up[q]); }
     });
-    /* 층 매기기 · 이긴 면은 진 면보다 한 층 위(겹이 사슬처럼 이어져도 · 최대 3층) · 층마다 polygonOffset 을 한 칸씩 더 당긴다 */
+    /* 층 매기기 · 이긴 면은 진 면보다 한 층 위(겹이 사슬처럼 이어져도 · 최대 3층) · 앞 층은 진 면보다 층마다 ZGAP 앞으로(정점 이동) + polygonOffset */
     for (var it = 0; it < 4; it++) plist.forEach(function (q) { var lw = q[0].lv || 0, ll = q[1].lv || 0; if (lw <= ll && ll < 3) q[0].lv = ll + 1; });
     var tie = plist.filter(function (q) { return (q[0].lv || 0) <= (q[1].lv || 0); }).length;
-    var front = new Map(); buckets.forEach(function (L) { L.forEach(function (r) { if (r.lv) { var k = r.mi + ':' + r.lv; if (!front.has(k)) front.set(k, []); front.get(k).push(r.t); } }); });
-    var moved = 0, matC = new Map(), names = [];
-    var byMesh = new Map(); front.forEach(function (ts, k) { var mi = +k.split(':')[0]; if (!byMesh.has(mi)) byMesh.set(mi, []); byMesh.get(mi).push([+k.split(':')[1], ts]); });
-    byMesh.forEach(function (lvs, mi) { lvs.forEach(function (q) { splitFront(mi, q[0], q[1]); }); });
-    function splitFront(mi, lv, ts) {
-      var o = meshes[mi], geo = o.geometry, idx = geo.index, n = idx ? idx.count : geo.attributes.position.count, set = new Set(ts), keep = [], fr = [];
-      for (var t = 0; t < n; t += 3) { var arr = set.has(t) ? fr : keep; arr.push(idx ? idx.getX(t) : t, idx ? idx.getX(t + 1) : t + 1, idx ? idx.getX(t + 2) : t + 2); }
-      var g2 = new T.BufferGeometry(); for (var nm in geo.attributes) g2.setAttribute(nm, geo.attributes[nm]); g2.setIndex(fr);
+    for (var rl = 0; rl < 8; rl++) plist.forEach(function (q) { var w = q[0], l = q[1]; if (!w.lv) return; var nd = l.off + l.need + ZGAP - w.off; if (nd > w.need) w.need = Math.min(0.03, nd); });   /* 앞 층 자리 = 진 면(옮긴 뒤) + 5mm · 사슬이면 여러 번 */
+    var front = new Map(); buckets.forEach(function (L) { L.forEach(function (r) { if (r.lv) { var k = r.mi + ':' + r.lv; if (!front.has(k)) front.set(k, []); front.get(k).push(r); } }); });
+    var moved = 0, pushed = 0, maxPush = 0, matC = new Map(), names = [];
+    var byMesh = new Map(); front.forEach(function (rs, k) { var mi = +k.split(':')[0]; if (!byMesh.has(mi)) byMesh.set(mi, []); byMesh.get(mi).push([+k.split(':')[1], rs]); });
+    /* 한 메시의 모든 층을 원래 번호로 한 번에 나눈다(v5.38 은 층마다 나눈 뒤 바뀐 번호로 다음 층을 나눠 엉뚱한 면이 옮겨질 수 있었다) */
+    byMesh.forEach(function (lvs, mi) {
+      var o = meshes[mi], geo = o.geometry, idx = geo.index, n = idx ? idx.count : geo.attributes.position.count, own = new Map(), keep = [], frs = {};
+      lvs.forEach(function (q) { q[1].forEach(function (r) { own.set(r.t, q[0]); }); frs[q[0]] = []; });
+      for (var t = 0; t < n; t += 3) { var lv = own.get(t), arr = lv ? frs[lv] : keep; arr.push(idx ? idx.getX(t) : t, idx ? idx.getX(t + 1) : t + 1, idx ? idx.getX(t + 2) : t + 2); }
       geo.setIndex(keep);
+      lvs.forEach(function (q) { splitFront(o, geo, idx, q[0], q[1], frs[q[0]]); });
+    });
+    function splitFront(o, geo, idx, lv, rs, fr) {
+      var g2 = new T.BufferGeometry(); for (var nm in geo.attributes) g2.setAttribute(nm, nm === 'position' ? geo.attributes[nm].clone() : geo.attributes[nm]); g2.setIndex(fr);
+      /* 정점 옮기기 · 세계 법선 x 필요 거리 → 메시 좌표 · 한 정점을 여러 앞 면이 쓰면 가장 큰 값 */
+      var inv = new T.Matrix3().setFromMatrix4(o.matrixWorld).invert(), p2 = g2.attributes.position, mv = new Map(), dv = new T.Vector3();
+      rs.forEach(function (r) {
+        if (r.need <= 0) return;
+        for (var k = 0; k < 3; k++) { var vi = idx ? idx.getX(r.t + k) : r.t + k, old = mv.get(vi); if (!old || old.d < r.need) mv.set(vi, { d: r.need, n: r.nw }); }
+      });
+      mv.forEach(function (q, vi) { dv.set(q.n[0], q.n[1], q.n[2]).multiplyScalar(q.d).applyMatrix3(inv); p2.setXYZ(vi, p2.getX(vi) + dv.x, p2.getY(vi) + dv.y, p2.getZ(vi) + dv.z); pushed++; if (q.d > maxPush) maxPush = q.d; });
+      p2.needsUpdate = true; g2.computeBoundingSphere(); g2.computeBoundingBox();
       var m0 = o.material, mk = m0.uuid + ':' + lv, m2 = matC.get(mk);
-      if (!m2) { m2 = m0.clone(); m2.polygonOffset = true; m2.polygonOffsetFactor = -lv; m2.polygonOffsetUnits = -4 * lv; matC.set(mk, m2); }
+      if (!m2) { m2 = m0.clone(); m2.polygonOffset = true; m2.polygonOffsetFactor = -1; m2.polygonOffsetUnits = -1; matC.set(mk, m2); }   /* v5.40 앞뒤는 실제 거리(5mm)가 정한다 · 층마다 더 당기던 polygonOffset(-lv · -4lv)은 16비트 깊이에서 몇 cm 를 당겨 뒤 면(까만 라이트맵)이 판을 덮었다 · 모든 앞 층이 같은 작은 값 */
       var f = new T.Mesh(g2, m2); f.name = o.name + '_front' + lv; f.userData = o.userData; f.matrixAutoUpdate = false; f.matrix.copy(o.matrix); o.parent.add(f); f.updateMatrixWorld(true);
       moved += fr.length / 3; if (names.indexOf(o.name) < 0) names.push(o.name);
     }
-    G.zfix = { tris: nTri, pairs: pairs, same: pairs - plist.length, tie: tie, moved: moved, meshes: names, ms: Math.round(performance.now() - t0) };
+    G.zfix = { tris: nTri, pairs: pairs, same: pairs - plist.length, tie: tie, moved: moved, pushed: pushed, maxPush: +maxPush.toFixed(4), lifted: lifted, posters: posters, meshes: names, ms: Math.round(performance.now() - t0) };
+  }
+  /* 기둥 포스터(ME to WE 판 · 기둥 비우기 셰이더라 위 겹침 판정에서 빠진다) · 16비트 깊이에서 기둥 화강암과 겹쳐 까맣게 깜빡였다(사용자 캡처 오른쪽 위 판들) · 면마다 바깥으로 8mm */
+  function liftPillarPosters(root) {
+    var va = new T.Vector3(), vb = new T.Vector3(), vc = new T.Vector3(), nn = new T.Vector3(), cnt = 0;
+    root.traverse(function (o) {
+      if (!o.isMesh || !/^panel_/.test(o.name) || !underName(o, /^pillars$/)) return;
+      var geo = o.geometry, pos = geo.attributes.position, idx = geo.index, n = idx ? idx.count : pos.count, m = o.matrixWorld, inv = new T.Matrix3().setFromMatrix4(m).invert(), mv = new Map();
+      for (var t = 0; t < n; t += 3) {
+        var ia = idx ? idx.getX(t) : t, ib = idx ? idx.getX(t + 1) : t + 1, ic = idx ? idx.getX(t + 2) : t + 2;
+        va.fromBufferAttribute(pos, ia).applyMatrix4(m); vb.fromBufferAttribute(pos, ib).applyMatrix4(m); vc.fromBufferAttribute(pos, ic).applyMatrix4(m);
+        nn.subVectors(vb, va).cross(vc.clone().sub(va)).normalize(); if (Math.abs(nn.y) > 0.3) continue;
+        [ia, ib, ic].forEach(function (vi) { if (!mv.has(vi)) mv.set(vi, nn.clone()); });
+      }
+      mv.forEach(function (d, vi) { d.multiplyScalar(0.008).applyMatrix3(inv); pos.setXYZ(vi, pos.getX(vi) + d.x, pos.getY(vi) + d.y, pos.getZ(vi) + d.z); cnt++; });
+      pos.needsUpdate = true; geo.computeBoundingSphere(); geo.computeBoundingBox();
+    });
+    return cnt;
+  }
+  /* 바닥에 깔린 얇은 판 띄우기 · 바닥(floor · paving · base)이 아닌 메시에서 위를 보는 면 중 세 꼭짓점이 바닥 위 -0.5~3cm 인 것 + 같은 자리의 옆면 꼭짓점 → ZLIFT 만큼 위로 */
+  function liftFloorPlates(root) {
+    var va = new T.Vector3(), vb = new T.Vector3(), vc = new T.Vector3(), e1 = new T.Vector3(), e2 = new T.Vector3(), nn = new T.Vector3(), cnt = 0, done = new Set();
+    root.traverse(function (o) {
+      if (!o.isMesh || !o.geometry || !o.geometry.attributes.position || /^(floor|paving|base)$/.test(o.name) || underName(o, /^ceiling$/) || done.has(o.geometry)) return;
+      done.add(o.geometry);
+      var geo = o.geometry, pos = geo.attributes.position, idx = geo.index, n = idx ? idx.count : pos.count, m = o.matrixWorld, hit = new Set(), keys = new Set();
+      for (var t = 0; t < n; t += 3) {
+        var ia = idx ? idx.getX(t) : t, ib = idx ? idx.getX(t + 1) : t + 1, ic = idx ? idx.getX(t + 2) : t + 2;
+        va.fromBufferAttribute(pos, ia).applyMatrix4(m); vb.fromBufferAttribute(pos, ib).applyMatrix4(m); vc.fromBufferAttribute(pos, ic).applyMatrix4(m);
+        if (Math.max(va.y, vb.y, vc.y) > 0.03 || Math.min(va.y, vb.y, vc.y) < -0.005) continue;
+        e1.subVectors(vb, va); e2.subVectors(vc, va); nn.crossVectors(e1, e2).normalize(); if (nn.y < 0.99) continue;
+        [ia, ib, ic].forEach(function (vi, k) { hit.add(vi); var w = k === 0 ? va : k === 1 ? vb : vc; keys.add(Math.round(w.x * 500) + ',' + Math.round(w.z * 500)); });
+      }
+      if (!hit.size) return;
+      var inv = new T.Matrix3().setFromMatrix4(m).invert(), dv = new T.Vector3(0, ZLIFT, 0).applyMatrix3(inv), vw = new T.Vector3();
+      for (var i = 0; i < pos.count; i++) {
+        if (!hit.has(i)) { vw.fromBufferAttribute(pos, i).applyMatrix4(m); if (vw.y > 0.03 || vw.y < -0.005 || !keys.has(Math.round(vw.x * 500) + ',' + Math.round(vw.z * 500))) continue; }
+        pos.setXYZ(i, pos.getX(i) + dv.x, pos.getY(i) + dv.y, pos.getZ(i) + dv.z); cnt++;
+      }
+      pos.needsUpdate = true; geo.computeBoundingSphere(); geo.computeBoundingBox();
+    });
+    return cnt;
   }
 
   /* ═══════════ 정문(회전문) 또렷하게(v5.38 · 사용자 261003 「정문 유리문을 조금 더 표시 나게」) ═══════════
@@ -346,7 +482,7 @@
     var band = new T.Mesh(new T.CylinderGeometry(R + 0.02, R + 0.02, 0.06, 64, 1, true), new T.MeshBasicMaterial({ map: dtx, transparent: true, depthWrite: false, side: T.DoubleSide })); band.position.y = 1.05; g.add(band);
     /* 먹색 테 · 위 띠 · 바닥 문턱 원 · 세로 기둥 4(45도마다) */
     var top = new T.Mesh(new T.CylinderGeometry(R + 0.03, R + 0.03, 0.1, 48, 1, true), ink2); top.position.y = H - 0.05; g.add(top);
-    var sill = new T.Mesh(new T.RingGeometry(R - 0.06, R + 0.07, 64), mat); sill.rotation.x = -Math.PI / 2; sill.position.y = 0.012; g.add(sill);
+    var sill = new T.Mesh(new T.RingGeometry(R - 0.06, R + 0.07, 64), mat); sill.rotation.x = -Math.PI / 2; sill.position.y = 0.024; g.add(sill);
     [1, 3, 5, 7].forEach(function (k) { var a = k * Math.PI / 4, st = new T.Mesh(new T.BoxGeometry(0.07, H, 0.07), ink); st.position.set(Math.sin(a) * (R + 0.01), H / 2, Math.cos(a) * (R + 0.01)); g.add(st); });
     /* 날개 4장 · X 자 · 유리 + 먹색 바깥 틀 + 아래 틀 + 손잡이 막대(1.0m) */
     var post = new T.Mesh(new T.CylinderGeometry(0.07, 0.07, H, 16), ink); post.position.y = H / 2; g.add(post);
@@ -358,10 +494,19 @@
       var bar = new T.Mesh(new T.BoxGeometry(0.1, 0.035, L * 0.55), ink); bar.position.set(0, 1.0, L * 0.6); w.add(bar);
     }
     /* 안쪽 바닥 매트(로비 쪽 · 문턱 바로 안) */
-    var mt = new T.Mesh(new T.PlaneGeometry(2.4, 0.9), mat), mp = toThree(17.3, 1.5 + R + 0.55); mt.rotation.x = -Math.PI / 2; mt.position.set(mp.x - c.x, 0.01, mp.z - c.z); g.add(mt);
+    var mt = new T.Mesh(new T.PlaneGeometry(2.4, 0.9), mat), mp = toThree(17.3, 1.5 + R + 0.55); mt.rotation.x = -Math.PI / 2; mt.position.set(mp.x - c.x, 0.02, mp.z - c.z);   /* v5.40 바닥에서 2cm(16비트 깊이) */ g.add(mt);
     g.traverse(function (o) { o.userData = { door: true }; });
     S.lobby.add(g); if (host !== S.lobby) { S.lobby.updateMatrixWorld(true); host.attach(g); }
     G.door = 0; g.traverse(function (o) { if (o.isMesh) G.door++; });
+    /* v5.40 회전문 = 통째로 막힌 원(사용자 261003 「유리 회전문에는 물리 엔진이 적용 안 된 것 같아 · 중간에 끼인다」)
+     * 모형 칸 지도는 유리 원통 · 날개 사이 네 칸이 열려 있어 캐릭터가 문 안으로 들어가 날개 사이에 갇혔다 · 원 + 몸 반지름(0.32)을 꽉 막고 둥근 것 목록에 넣어 정면으로 밀면 비켜 돈다
+     * 동쪽 문 D(도면 32.6, 8.4 · 반지름 1.25)는 모형이 이미 막혀 있어 둥근 것 목록에만 넣는다 */
+    blockDisc(17.3, 1.5, R + 0.42); blockDisc(32.6, 8.4, 1.25 + 0.4); ROUND.push({ x: 17.3, z: 1.5, r: R + 0.42 }, { x: 32.6, z: 8.4, r: 1.25 + 0.4 });   /* 원 = 유리 + 몸 0.32 + 칸 0.1(모형 유리 칸이 0.1m 계단으로 삐져나와 둘레를 돌 때 걸리던 것을 매끈한 원으로 덮음) */
+    /* 동쪽 문 D 는 유리 원통이 거의 투명해 막힌 자리가 안 보였다(끼임 봇 · 보이지 않는 막힘) · 바닥 문턱 원 + 위 띠만 먹색으로 덧붙인다 */
+    var hd = S.lobby.getObjectByName('side_e') || S.lobby, cd = toThree(32.6, 8.4), gd = new T.Group(); gd.name = 'doorD'; gd.position.set(cd.x, 0, cd.z);
+    var sd = new T.Mesh(new T.RingGeometry(1.19, 1.32, 48), mat); sd.rotation.x = -Math.PI / 2; sd.position.y = 0.024; gd.add(sd);
+    var td = new T.Mesh(new T.CylinderGeometry(1.29, 1.29, 0.1, 48, 1, true), ink2); td.position.y = 2.4; gd.add(td);
+    gd.traverse(function (o) { o.userData = { door: true }; }); S.lobby.add(gd); if (hd !== S.lobby) { S.lobby.updateMatrixWorld(true); hd.attach(gd); }
   }
 
   /* ═══════════ 받기 ═══════════ */
@@ -371,7 +516,7 @@
       fixCoplanar(S.lobby); buildGrid(S.lobby); patchPillars(S.lobby); buildDoor();
       var st = STOPS[0], f = nearestFree(st.x, st.z); flood(f[0], f[1]);
       STOPS.forEach(function (s) { var q = nearestFree(s.x, s.z); if (q) { s.x = q[0]; s.z = q[1]; } });
-      buildGuides(); hideCheckin(); buildTypingTv();
+      buildGuides(); hideCheckin(); buildTypingTv(); buildTvs();
       STOPS.forEach(function (s) { if (!free(s.x, s.z)) { var q = nearestFree(s.x, s.z); if (q) { s.x = q[0]; s.z = q[1]; } } });   /* v5.38 멈춤 자리가 스태프 · TV 원 안이면 밖으로 */
       G.ceil = S.lobby.getObjectByName('ceiling');
       G.loaded = true; $('load').hidden = true;
@@ -456,21 +601,19 @@
       var p = planOf(G.pos), q = G.path[G.pathI], dx = q[0] - p[0], dz = q[1] - p[1], d = Math.hypot(dx, dz), step = G.speed * dt;
       if (d <= step) { G.pos.copy(toThree(q[0], q[1])); G.pathI++; if (G.pathI >= G.path.length) arrive(); }
       else { var nx = p[0] + dx / d * step, nz = p[1] + dz / d * step; G.pos.copy(toThree(nx, nz)); }
-      moving = Math.min(1, G.speed / 3);
+      moving = Math.min(1, G.speed / 3); G.fwdT = 0; G.run = 0; G.realV = 0;
     } else if (G.stick && (Math.abs(G.stick.x) + Math.abs(G.stick.y)) > 0.05) {
       /* 고정 패드 · 화면 기준 · 위 = 화면 위쪽으로 */
       /* 방향 기준은 끌기 시작할 때의 카메라로 고정한다(끄는 동안 카메라가 돌아도 같은 쪽으로 걷는다) */
       var fw = _v.set(Math.sin(G.az), 0, Math.cos(G.az));   /* 패드 위 = 화면 위쪽(시점을 돌려도 늘 화면 기준) */
       var rx = -fw.z, rz = fw.x, mx = rx * G.stick.x - fw.x * G.stick.y, mz = rz * G.stick.x - fw.z * G.stick.y, mag = Math.min(1, Math.hypot(mx, mz));
+      stepRun(dt);
       if (mag > 0.01) {
-        var sp = 3.2 * mag * dt, ux = mx / Math.hypot(mx, mz), uz = mz / Math.hypot(mx, mz), p0 = planOf(G.pos);
-        var tx = p0[0] + ux * sp, tz = p0[1] - uz * sp;
-        if (free(tx, tz)) G.pos.copy(toThree(tx, tz));
-        else if (free(tx, p0[1])) G.pos.copy(toThree(tx, p0[1]));
-        else if (free(p0[0], tz)) G.pos.copy(toThree(p0[0], tz));
+        var sp = WALK_V * mag * (1 + G.run) * dt, ux = mx / Math.hypot(mx, mz), uz = mz / Math.hypot(mx, mz), p0 = planOf(G.pos);
+        var q = moveStep(p0[0], p0[1], ux, -uz, sp); G.pos.copy(toThree(q[0], q[1])); G.realV = dt > 0 ? q[2] / dt : 0;
         moving = mag; G.mode = 'free';
       }
-    }
+    } else { G.fwdT = 0; G.run = 0; G.realV = 0; }
     pushOut();
     /* v5.38 몸 방향 = 늘 카메라 방위 G.az(사용자 261003 「항상 정면을 바라봤으면 · 방향키를 누르다 보면 삐딱하게 선다」)
      * 옛 코드: 걷는 쪽으로 몸을 지수 보간(대각 · 짧게 누름 = 중간 각도에서 멈춤) + 구역 도착 = 판 쪽 정확한 각도 · 카메라 = 90도 반올림(서로 어긋남) + 판 보기 = 판 쪽으로 돈 채 남음
@@ -480,12 +623,60 @@
     G.h = hb;
     /* 모션 · 통통 + 기울임 + 발 */
     G.moveV += ((moving ? 1 : 0) - G.moveV) * (1 - Math.exp(-dt * 10));
-    if (moving) G.walkT += dt * (7 + 5 * moving);
+    if (moving) G.walkT += dt * (7 + 5 * moving) * (1 + 0.6 * (G.run || 0));
     var w = RM ? 0 : G.moveV, s = Math.sin(G.walkT);
+    G.lean += ((RM ? 0 : 0.22 * (G.run || 0)) - G.lean) * (1 - Math.exp(-dt * 12));   /* 달리기 = 몸이 앞으로 살짝 기운다 */
     bot.position.copy(G.pos); bot.rotation.y = G.h;
-    botParts.body.position.y = Math.abs(s) * 0.045 * w; botParts.body.rotation.z = s * 0.07 * w; botParts.body.rotation.x = 0.06 * w;
+    botParts.body.position.y = Math.abs(s) * 0.045 * w; botParts.body.rotation.z = s * 0.07 * w; botParts.body.rotation.x = 0.06 * w + G.lean;
     botParts.feet[0].position.z = 0.04 + s * 0.09 * w; botParts.feet[1].position.z = 0.04 - s * 0.09 * w;
-    return moving > 0.01 || w > 0.01;
+    var dusty = stepDust(dt);
+    return moving > 0.01 || w > 0.01 || dusty || G.lean > 0.002;
+  }
+  /* ═══════════ 달리기(v5.40 · 사용자 261003 「앞 방향키를 계속 앞으로 하면 3초 정도 후에 달려 나가면 · 먼지 일으키는 느낌」) ═══════════
+   * 조그를 위로 끝까지(앞 몫 0.85 이상 · 대각 32도 안) 또는 키보드 위 화살표를 3초 이어 가면 달리기 · 속도 2배까지 0.3초에 걸쳐 오른다
+   * 앞 몫이 0.7 아래로 꺾이거나 손을 떼면 바로 걷기 속도 · 좌로 · 우로 돌기만으로는 풀리지 않는다 · 자동 걷기(구역 버튼 · 바닥 톡)는 달리지 않는다
+   * 달리는 동안: 발밑 먼지(점 입자 18개 · 뒤로 퍼짐) · 몸 앞으로 기울임 · 시야각 +7도 · 움직임 줄이기 = 먼지 · 시야각 · 기울임 없이 속도만 */
+  var WALK_V = 3.2, RUN_AFTER = 3.0, RUN_RAMP = 0.3, RUN_IN = 0.85, RUN_KEEP = 0.7;
+  function stepRun(dt) {
+    var st = G.stick, mg = Math.hypot(st.x, st.y), fwd = -st.y;   /* 패드 위 = y 음수 */
+    if (fwd >= (G.run > 0 ? RUN_KEEP : RUN_IN) && mg >= (G.run > 0 ? 0.75 : 0.9)) G.fwdT += dt; else { G.fwdT = 0; G.run = 0; return; }
+    if (G.fwdT >= RUN_AFTER) { if (!G.run) G.runAt = performance.now(); G.run = Math.min(1, G.run + dt / RUN_RAMP); }
+  }
+  /* 먼지 · 가벼운 스프라이트 18개를 돌려 쓴다(새로 만들지 않음) · 발 뒤에서 생겨 뒤로 · 옆으로 퍼지며 커지고 옅어진다(0.5~0.7초) */
+  var dust = [], dustAcc = 0, DUST_N = 18;
+  function buildDust() {
+    var c = document.createElement('canvas'); c.width = c.height = 32; var g = c.getContext('2d'), rg = g.createRadialGradient(16, 16, 1, 16, 16, 16);
+    rg.addColorStop(0, 'rgba(255,255,255,1)'); rg.addColorStop(0.55, 'rgba(255,255,255,.55)'); rg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = rg; g.fillRect(0, 0, 32, 32);
+    var tx = new T.CanvasTexture(c);
+    for (var i = 0; i < DUST_N; i++) {
+      var sp = new T.Sprite(new T.SpriteMaterial({ map: tx, color: 0x9C9389, transparent: true, depthWrite: false, opacity: 0 }));
+      sp.visible = false; sp.renderOrder = 4; scene.add(sp); dust.push({ s: sp, life: 0, t: 0, vx: 0, vy: 0, vz: 0, s0: 0.1, s1: 0.4 });
+    }
+  }
+  function stepDust(dt) {
+    var alive = false, on = !RM && G.run > 0.5 && (G.realV || 0) > 2.2 && G.scn === 'lobby';
+    if (on) {
+      dustAcc += dt * 30;
+      var bx = -Math.sin(G.h), bz = -Math.cos(G.h);   /* 몸 뒤쪽(three) */
+      while (dustAcc >= 1) {
+        dustAcc -= 1;
+        var d = null; for (var i = 0; i < dust.length; i++) if (dust[i].t >= dust[i].life) { d = dust[i]; break; }
+        if (!d) break;
+        var side = Math.random() < 0.5 ? -1 : 1, lx = -bz * side * 0.14, lz = bx * side * 0.14;
+        d.s.position.set(G.pos.x + bx * 0.22 + lx, 0.06, G.pos.z + bz * 0.22 + lz);
+        var spd = 0.7 + Math.random() * 0.6, lat = (Math.random() - 0.5) * 1.1;
+        d.vx = bx * spd - bz * lat; d.vz = bz * spd + bx * lat; d.vy = 0.25 + Math.random() * 0.35;
+        d.t = 0; d.life = 0.5 + Math.random() * 0.2; d.s0 = 0.12 + Math.random() * 0.06; d.s1 = 0.42 + Math.random() * 0.2; d.s.visible = true;
+      }
+    } else dustAcc = 0;
+    for (var k = 0; k < dust.length; k++) {
+      var q = dust[k]; if (q.t >= q.life) { if (q.s.visible) q.s.visible = false; continue; }
+      q.t += dt; var f = Math.min(1, q.t / q.life), e = 1 - Math.pow(1 - f, 2);
+      q.s.position.x += q.vx * dt * (1 - f * 0.7); q.s.position.z += q.vz * dt * (1 - f * 0.7); q.s.position.y += q.vy * dt * (1 - f);
+      var sc = q.s0 + (q.s1 - q.s0) * e; q.s.scale.set(sc, sc * 0.8, 1); q.s.material.opacity = 0.62 * Math.pow(1 - f, 1.2);
+      if (q.t >= q.life) q.s.visible = false; else alive = true;
+    }
+    return alive;
   }
 
   /* ═══════════ 카메라 · 위에서 40도 내려다보는 고정 시점(사용자 261003 실폰 「시선이 계속 바뀌는 것보다 스카이뷰 40도가 편하다」) ═══════════
@@ -503,10 +694,13 @@
   }
   function stepCam(dt) {
     var a0 = G.az; G.az = angLerp(G.az, G.azTo, dt && !RM ? 1 - Math.exp(-dt * (HOLD && HOLD.kind === 'rot' ? 14 : 7)) : 1); if (Math.abs(Math.atan2(Math.sin(G.azTo - G.az), Math.cos(G.azTo - G.az))) < 0.002) G.az = G.azTo;
-    var w = camWant(), k = dt && !RM ? (G.az !== a0 ? 1 : 1 - Math.exp(-dt * 5)) : 1;
+    var w = camWant(), k = dt && !RM ? (G.az !== a0 ? 1 : 1 - Math.exp(-dt * (5 + 3 * (G.run || 0)))) : 1;
     var moved = G.camPos.distanceToSquared(w.pos) > 1e-6 || G.look.distanceToSquared(w.look) > 1e-6;
     G.camPos.lerp(w.pos, k); G.look.lerp(w.look, k);
     camera.position.copy(G.camPos); camera.lookAt(G.look);
+    /* v5.40 달리기 = 시야각이 조금 넓어진다(+7도 · 움직임 줄이기 = 그대로) */
+    var fk = RM ? 0 : (G.run || 0), f0 = G.fovK; G.fovK += (fk - G.fovK) * (dt ? 1 - Math.exp(-dt * (fk > G.fovK ? 6 : 9)) : 1); if (Math.abs(G.fovK - fk) < 0.002) G.fovK = fk;
+    if (G.fovK !== f0) { camera.fov = G.fov0 + 7 * G.fovK; camera.updateProjectionMatrix(); moved = true; }
     /* 기둥 비우기 · 카메라 → 머리 선분이 기둥(높이 5m) 안을 지나면 */
     var hx = G.pos.x, hz = G.pos.z, cx = G.camPos.x, cz = G.camPos.z, cy = G.camPos.y, sx = hx - cx, sz = hz - cz, L2 = sx * sx + sz * sz || 1, any = false;
     for (var i = 0; i < PIL.length; i++) {
@@ -739,25 +933,182 @@
   function hideCheckin() {
     S.lobby.traverse(function (o) { if (o.name === 'checkin' || o.name === 'panel_41') o.visible = false; });
   }
-  var tvMat = null;
   function buildTypingTv() {
-    var c = document.createElement('canvas'); c.width = 180; c.height = 320; var g = c.getContext('2d');
-    var gr = g.createLinearGradient(0, 0, 0, 320); gr.addColorStop(0, '#2A1A10'); gr.addColorStop(1, '#191F28'); g.fillStyle = gr; g.fillRect(0, 0, 180, 320);
-    g.fillStyle = 'rgba(255,127,50,.35)'; for (var y = 8; y < 320; y += 12) for (var x = 8; x < 180; x += 12) if ((x * 7 + y * 3) % 5 === 0) g.fillRect(x, y, 3, 3);
-    g.fillStyle = '#FF7F32'; g.font = '800 30px "Pretendard Variable", Pretendard, sans-serif'; g.textAlign = 'center'; g.fillText('AX 타자왕', 90, 120);
-    g.fillStyle = '#FFFFFF'; g.font = '700 18px "Pretendard Variable", Pretendard, sans-serif'; g.fillText('1~3위 경품', 90, 156);
-    g.beginPath(); g.moveTo(76, 196); g.lineTo(76, 240); g.lineTo(112, 218); g.closePath(); g.fillStyle = '#FF7F32'; g.fill();
-    g.fillStyle = 'rgba(255,255,255,.8)'; g.font = '600 15px "Pretendard Variable", Pretendard, sans-serif'; g.fillText('재생 중', 90, 272);
-    var t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace;
-    tvMat = new T.MeshBasicMaterial({ map: t, toneMapped: false });
+    var tvMat = new T.MeshBasicMaterial({ color: 0x14171C, toneMapped: false });   /* v5.40 화면 그림은 tvAdd 가 픽셀 루프로 채운다(옛 한글 글자 그림 · 밝기 깜빡임은 걷음) */
     var gp = new T.Group(), dark = new T.MeshLambertMaterial({ color: 0x1D2127 });
     var frame = new T.Mesh(new T.BoxGeometry(0.06, 1.18, 0.68), dark); frame.position.set(0, 1.3, 0); gp.add(frame);
-    var scr = new T.Mesh(new T.PlaneGeometry(0.6, 1.08), tvMat); scr.rotation.y = Math.PI / 2; scr.position.set(0.032, 1.3, 0); gp.add(scr);
+    var scr = new T.Mesh(new T.PlaneGeometry(0.6, 1.08), tvMat); scr.rotation.y = Math.PI / 2; scr.position.set(0.04, 1.3, 0); gp.add(scr);
     var pole = new T.Mesh(new T.CylinderGeometry(0.03, 0.03, 0.72, 8), dark); pole.position.set(-0.05, 0.36, 0); gp.add(pole);
     var base = new T.Mesh(new T.CylinderGeometry(0.28, 0.28, 0.02, 20), dark); base.position.set(-0.05, 0.01, 0); gp.add(base);
     var at = [0.95, 1.25]; gp.position.copy(toThree(at[0], at[1])); S.lobby.add(gp);   /* 타자왕 판(39) 왼쪽(남쪽) · 동쪽(통로)을 봄 */
     gp.userData = { promo: true }; gp.traverse(function (o) { o.userData = { promo: true }; });
-    blockDisc(at[0], at[1], 0.51);
+    blockDisc(at[0], at[1], 0.51); ROUND.push({ x: at[0], z: at[1], r: 0.51 });
+    tvAdd(scr, 72, 128, 'typing');   /* v5.40 화면 = 타자왕 홍보 픽셀 루프(옛 글자 그림 「재생 중」 대신) */
+  }
+  /* ═══════════ TV 화면 재생(v5.40 · 사용자 261003 「tv 화면들이 까맣다 · 영상이 재생되면 좋겠어(16비트 영상이어도 좋아)」) ═══════════
+   * 영상 파일 없음 · 화면마다 작은 캔버스(가로 128x72 · 세로 64x80 · 타자왕 72x128)에 픽셀 그림을 초당 10장(느린 기기 6장) 그려 CanvasTexture 로 올린다(받는 용량 0)
+   * 화면 찾기 = 모형의 화면 면 색(정점 색 0.012 · 테두리 0.02 · 바닥 0.1)으로 찾는다 · 비전 · AX in Action · HiDI-Q · Hi-Helper TV 4대 + 포토부스 키오스크 1대 + 덧붙인 타자왕 TV 1대 = 6
+   * 장면(화면마다 순서 · 시작 시각을 달리함): 행사명 「AX Festival」 + 「2026」 · 「ME to WE」(ME 에서 WE 로 번지는 물결) · 오렌지 사다리 픽셀 물결 · 타자왕 TV 는 「TYPING KING」 타자 루프
+   * 글자 = 이 화면 전용 5x7 픽셀 글자(영문 · 숫자만 · 한글 없음 · 점 글자 DotGlyph 아님) · 표기 그대로(AX Festival 2026 · ME to WE)
+   * 아끼기: 화면 밖 · 등진 쪽 · 16m 밖 TV 는 그리지 않는다(마지막 장면 그대로) · 움직임 줄이기 = 정지 한 장 */
+  var TVS = [], TV_FPS = 10, tvLast = 0, TV_INK = 0.016, _fr = new T.Frustum(), _pm = new T.Matrix4(), _tv = new T.Vector3();
+  function px32(hex) { return (255 << 24 | (hex & 255) << 16 | (hex >> 8 & 255) << 8 | hex >> 16) >>> 0; }
+  function pxMix(a, b, k) { var r = ((a >> 16) & 255) * (1 - k) + ((b >> 16) & 255) * k, g = ((a >> 8) & 255) * (1 - k) + ((b >> 8) & 255) * k, bl = (a & 255) * (1 - k) + (b & 255) * k; return px32((Math.round(r) << 16) | (Math.round(g) << 8) | Math.round(bl)); }
+  var TVC = { bg: 0x14171C, dot: 0x2A2F37, o100: 0xFF7E31, o50: 0xFFB284, o25: 0xFFD8C1, o10: 0xFFEBE0, grey: 0xD9D9D9, white: 0xFFFFFF };
+  var TVP = {}; Object.keys(TVC).forEach(function (k) { TVP[k] = px32(TVC[k]); });
+  var LADDER = [TVP.o100, TVP.o50, TVP.o25, TVP.o10];
+  /* 5x7 픽셀 글자 · 줄마다 5비트(왼쪽이 큰 자리) */
+  var FONT = {
+    A: [14, 17, 17, 31, 17, 17, 17], E: [31, 16, 16, 30, 16, 16, 31], F: [31, 16, 16, 30, 16, 16, 16], G: [14, 17, 16, 23, 17, 17, 15], I: [14, 4, 4, 4, 4, 4, 14],
+    K: [17, 18, 20, 24, 20, 18, 17], M: [17, 27, 21, 21, 17, 17, 17], N: [17, 25, 21, 19, 17, 17, 17], O: [14, 17, 17, 17, 17, 17, 14], P: [30, 17, 17, 30, 16, 16, 16],
+    T: [31, 4, 4, 4, 4, 4, 4], W: [17, 17, 17, 21, 21, 21, 10], X: [17, 17, 10, 4, 10, 17, 17], Y: [17, 17, 10, 4, 4, 4, 4],
+    a: [0, 0, 14, 1, 15, 17, 15], e: [0, 0, 14, 17, 31, 16, 14], i: [4, 0, 12, 4, 4, 4, 14], l: [12, 4, 4, 4, 4, 4, 14], o: [0, 0, 14, 17, 17, 17, 14],
+    s: [0, 0, 15, 16, 14, 1, 30], t: [8, 8, 28, 8, 8, 9, 6], v: [0, 0, 17, 17, 17, 10, 4],
+    0: [14, 17, 19, 21, 25, 17, 14], 1: [4, 12, 4, 4, 4, 4, 14], 2: [14, 17, 1, 2, 4, 8, 31], 3: [31, 2, 4, 2, 1, 17, 14], 6: [6, 8, 16, 30, 17, 17, 14], 7: [31, 1, 2, 4, 8, 8, 8], ':': [0, 12, 12, 0, 12, 12, 0]
+  };
+  function txtW(s, k) { var w = 0; for (var i = 0; i < s.length; i++) w += (s[i] === ' ' ? 3 : 6) * k; return w - k; }
+  function txt(v, s, x, y, k, col, n) {   /* n = 앞에서 몇 글자까지(타자 효과) · col = 색 하나 또는 글자마다 색 함수 */
+    for (var i = 0; i < s.length && (n == null || i < n); i++) {
+      var ch = s[i]; if (ch === ' ') { x += 3 * k; continue; }
+      var gl = FONT[ch], c = typeof col === 'function' ? col(i, x) : col;
+      if (gl) for (var r = 0; r < 7; r++) for (var b = 0; b < 5; b++) if (gl[r] >> (4 - b) & 1) rect(v, x + b * k, y + r * k, k, k, c);
+      x += 6 * k;
+    }
+    return x;
+  }
+  function rect(v, x, y, w, h, c) {
+    x = Math.round(x); y = Math.round(y); var x1 = Math.min(v.cw, x + w), y1 = Math.min(v.ch, y + h);
+    for (var yy = Math.max(0, y); yy < y1; yy++) { var o = yy * v.cw; for (var xx = Math.max(0, x); xx < x1; xx++) v.buf[o + xx] = c; }
+  }
+  function grid(v, lit) {   /* 4칸 간격 점 격자 · lit(x, y) 가 0~1 을 주면 그만큼 주황 사다리로 켜진다 */
+    for (var y = 2; y < v.ch; y += 4) for (var x = 2; x < v.cw; x += 4) { var k = lit ? lit(x, y) : 0; v.buf[y * v.cw + x] = k > 0.02 ? (k > 0.75 ? TVP.o100 : k > 0.5 ? TVP.o50 : k > 0.25 ? pxMix(TVC.dot, TVC.o100, 0.55) : pxMix(TVC.dot, TVC.o100, 0.25)) : TVP.dot; }
+  }
+  var SCN = {
+    fest: function (v, t) {   /* 행사명 · 글자가 하나씩 켜지고 대각선 빛띠가 점 격자를 지나간다 */
+      var band = (t * 46) % (v.cw + v.ch + 60) - 30;
+      grid(v, function (x, y) { var d = Math.abs(x + y * 0.6 - band); return d < 10 ? 1 - d / 10 : 0; });
+      var land = v.cw > v.ch, n = Math.floor(t * 9);
+      if (land) {
+        var s1 = 'AX Festival', w1 = txtW(s1, 1), x1 = (v.cw - w1) / 2;
+        txt(v, s1, x1, 18, 1, function (i) { return i < 2 ? TVP.o100 : TVP.white; }, n);
+        if (n > 11) { var w2 = txtW('2026', 2); txt(v, '2026', (v.cw - w2) / 2, 32, 2, TVP.o50, Math.floor((t - 11 / 9) * 7)); }
+        if (n <= 11 && Math.floor(t * 3) % 2 === 0) rect(v, x1 + txtW(s1.slice(0, Math.min(n, 11)), 1) + 2, 18, 4, 7, TVP.o100);
+      } else {
+        var ls = ['AX', 'Festival', '2026'], cs = [TVP.o100, TVP.white, TVP.o50], y0 = Math.round((v.ch - 3 * 7 - 2 * 6) / 2), used = 0;
+        ls.forEach(function (s, li) { txt(v, s, (v.cw - txtW(s, 1)) / 2, y0 + li * 13, 1, cs[li], Math.max(0, n - used)); used += s.length; });
+      }
+    },
+    metowe: function (v, t) {   /* ME to WE · ME 에서 둥근 물결이 번져 WE 까지 닿으면 WE 가 주황으로 켜진다 */
+      var land = v.cw > v.ch, k = land ? 2 : 1, s = 'ME to WE';
+      var cx = land ? (v.cw - txtW(s, k)) / 2 + 5 * k : v.cw / 2, cy = land ? v.ch / 2 : v.ch / 2 - 13, R = (t * 34) % (v.cw * 1.3), R2 = (t * 34 + v.cw * 0.65) % (v.cw * 1.3);
+      grid(v, function (x, y) { var d = Math.hypot(x - cx, y - cy), a = Math.abs(d - R), b = Math.abs(d - R2); var m = Math.min(a, b); return m < 5 ? (1 - m / 5) * (1 - Math.min(1, d / (v.cw * 1.2))) : 0; });
+      var hitWE = (R > v.cw * 0.55 && R < v.cw * 0.9) || (R2 > v.cw * 0.55 && R2 < v.cw * 0.9);
+      if (land) {
+        var x0 = (v.cw - txtW(s, k)) / 2, y0 = (v.ch - 7 * k) / 2;
+        txt(v, s, x0, y0, k, function (i) { return i < 2 ? TVP.o100 : i < 5 ? TVP.grey : (hitWE ? TVP.o100 : TVP.white); });
+      } else {
+        var y1 = Math.round((v.ch - 3 * 7 - 2 * 6) / 2);
+        txt(v, 'ME', (v.cw - txtW('ME', 1)) / 2, y1, 1, TVP.o100); txt(v, 'to', (v.cw - txtW('to', 1)) / 2, y1 + 13, 1, TVP.grey); txt(v, 'WE', (v.cw - txtW('WE', 1)) / 2, y1 + 26, 1, hitWE ? TVP.o100 : TVP.white);
+      }
+    },
+    wave: function (v, t) {   /* 오렌지 사다리 물결 · 세 겹이 서로 다른 빠르기로 흐른다(막대 2칸 폭) */
+      rect(v, 0, 0, v.cw, v.ch, TVP.bg);
+      for (var x = 0; x < v.cw; x += 2) {
+        for (var L = 3; L >= 0; L--) {
+          var h = v.ch * (0.2 + 0.11 * L) + Math.sin(x * 0.07 + t * (1.6 - L * 0.3) + L * 1.7) * v.ch * 0.09 + Math.sin(x * 0.023 - t * 0.7 + L) * v.ch * 0.06;
+          var top = Math.round(v.ch - h); rect(v, x, top, 2, v.ch - top, LADDER[3 - L]);
+        }
+      }
+      for (var y = 1; y < v.ch; y += 4) for (var xx = 1; xx < v.cw; xx += 4) if (v.buf[y * v.cw + xx] === TVP.bg) v.buf[y * v.cw + xx] = TVP.dot;
+    },
+    typing: function (v, t) {   /* 타자왕 TV · TYPING KING 을 한 글자씩 치고 · TOP 3 · 17:00 · 아래 건반이 눌린다 · 7초 반복 */
+      var tt = t % 7, n = Math.floor(tt * 5);
+      grid(v, null);
+      var y0 = 14, k = 2, w1 = txtW('TYPING', k), w2 = txtW('KING', k);
+      var e1 = txt(v, 'TYPING', (v.cw - w1) / 2, y0, k, TVP.white, n);
+      var e2 = n > 6 ? txt(v, 'KING', (v.cw - w2) / 2, y0 + 20, k, TVP.o100, n - 6) : 0;
+      if (n <= 10 || Math.floor(t * 3) % 2 === 0) { var cx = n <= 6 ? e1 : e2, cy = n <= 6 ? y0 : y0 + 20; if (n < 10) rect(v, cx, cy, 4, 14, TVP.o100); }
+      if (n >= 11) { txt(v, 'TOP 3', (v.cw - txtW('TOP 3', 1)) / 2, 58, 1, TVP.o50); txt(v, '17:00', (v.cw - txtW('17:00', 1)) / 2, 70, 1, TVP.grey); }
+      /* 건반 3줄 · 치는 동안 무작위 칸이 주황으로 */
+      var seed = Math.floor(t * 6);
+      for (var r = 0; r < 3; r++) for (var c = 0; c < 8; c++) {
+        var kx = 4 + c * 8 + (r === 1 ? 2 : r === 2 ? 4 : 0), ky = 92 + r * 9; if (kx + 6 > v.cw) continue;
+        var on = n < 11 && ((seed * 7 + r * 13 + c * 5) % 17 === 0 || (seed * 3 + c + r * 5) % 23 === 0);
+        rect(v, kx, ky, 6, 7, on ? TVP.o100 : pxMix(TVC.dot, TVC.grey, 0.25)); rect(v, kx, ky + 6, 6, 1, pxMix(TVC.bg, TVC.dot, 0.5));
+      }
+      rect(v, 12, 119, v.cw - 24, 6, pxMix(TVC.dot, TVC.grey, 0.25));
+    }
+  };
+  var TV_SEQ = ['fest', 'metowe', 'wave'], TV_DUR = { fest: 7, metowe: 7, wave: 6 };
+  function tvAdd(mesh, cw, ch, kind) {
+    var cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+    var ctx = cv.getContext('2d'), img = ctx.createImageData(cw, ch), tex = new T.CanvasTexture(cv);
+    tex.colorSpace = T.SRGBColorSpace; tex.magFilter = T.NearestFilter; tex.minFilter = T.LinearFilter; tex.generateMipmaps = false;
+    mesh.material.map = tex; mesh.material.color.set(0xFFFFFF); mesh.material.polygonOffset = true; mesh.material.polygonOffsetFactor = -2; mesh.material.polygonOffsetUnits = -4; mesh.material.needsUpdate = true;   /* 아래 모형 화면(앞 층 · polygonOffset -1)보다 늘 앞 */
+    mesh.updateWorldMatrix(true, false);
+    var c = new T.Vector3().setFromMatrixPosition(mesh.matrixWorld), n = new T.Vector3(0, 0, 1).transformDirection(mesh.matrixWorld);
+    var v = { mesh: mesh, cv: cv, ctx: ctx, img: img, buf: new Uint32Array(img.data.buffer), tex: tex, cw: cw, ch: ch, kind: kind, c: c, n: n, sphere: new T.Sphere(c, 0.9),
+      i: TVS.length, ph: TVS.length * 2.3, on: false, drawn: 0, w: +(mesh.geometry.parameters.width || 0).toFixed(2), h: +(mesh.geometry.parameters.height || 0).toFixed(2) };
+    TVS.push(v); tvDraw(v, RM ? 30 : 0); return v;
+  }
+  function tvDraw(v, t) {
+    rect(v, 0, 0, v.cw, v.ch, TVP.bg);
+    var name;
+    if (v.kind === 'typing') { name = 'typing'; if (RM) t = 3.2; }
+    else if (RM) { name = 'fest'; t = 30; }
+    else {
+      var tot = 0; TV_SEQ.forEach(function (s) { tot += TV_DUR[s]; });
+      var tl = (t + v.ph) % tot, k = v.i % TV_SEQ.length;
+      for (var j = 0; j < TV_SEQ.length; j++) { name = TV_SEQ[(k + j) % TV_SEQ.length]; if (tl < TV_DUR[name]) break; tl -= TV_DUR[name]; }
+      t = tl;
+    }
+    SCN[name](v, t); v.scene = name;
+    v.ctx.putImageData(v.img, 0, 0); v.tex.needsUpdate = true; v.drawn++;
+  }
+  /* 모형의 화면 면 찾기 · 정점 색이 TV_INK 아래인 세로 면을 메시마다 1.2m 안에서 묶는다 · 화면 앞 1cm 에 그림 판을 덧붙인다(누르면 아래 모형과 같은 일 · userData 복사) */
+  function buildTvs() {
+    var va = new T.Vector3(), vb = new T.Vector3(), vc = new T.Vector3(), vn = new T.Vector3(), cl = [];
+    S.lobby.updateMatrixWorld(true);
+    S.lobby.traverse(function (o) {
+      if (!o.isMesh || !o.geometry || !o.geometry.attributes.color || !o.geometry.attributes.normal) return;
+      var g = o.geometry, pos = g.attributes.position, col = g.attributes.color, nrm = g.attributes.normal, idx = g.index, n = idx ? idx.count : pos.count;
+      for (var t = 0; t < n; t += 3) {
+        var ia = idx ? idx.getX(t) : t, ib = idx ? idx.getX(t + 1) : t + 1, ic = idx ? idx.getX(t + 2) : t + 2;
+        if (col.getX(ia) > TV_INK || col.getX(ib) > TV_INK || col.getX(ic) > TV_INK) continue;
+        vn.fromBufferAttribute(nrm, ia).transformDirection(o.matrixWorld); if (Math.abs(vn.y) > 0.3) continue;
+        va.fromBufferAttribute(pos, ia).applyMatrix4(o.matrixWorld); vb.fromBufferAttribute(pos, ib).applyMatrix4(o.matrixWorld); vc.fromBufferAttribute(pos, ic).applyMatrix4(o.matrixWorld);
+        var cx = (va.x + vb.x + vc.x) / 3, cy = (va.y + vb.y + vc.y) / 3, cz = (va.z + vb.z + vc.z) / 3, hit = null;
+        for (var k = 0; k < cl.length; k++) if (cl[k].o === o && Math.hypot(cl[k].cx - cx, cl[k].cz - cz) < 1.2) { hit = cl[k]; break; }
+        if (!hit) { hit = { o: o, cx: cx, cz: cz, b: new T.Box3(), n: new T.Vector3() }; cl.push(hit); }
+        hit.b.expandByPoint(va); hit.b.expandByPoint(vb); hit.b.expandByPoint(vc); hit.n.add(vn);
+      }
+    });
+    cl.forEach(function (q) {
+      var n = q.n.normalize(), sz = q.b.getSize(new T.Vector3()), w = Math.abs(n.x) > Math.abs(n.z) ? sz.z : sz.x, h = sz.y;
+      if (w < 0.3 || h < 0.3) return;
+      var land = w / h > 1.2, cw = land ? 128 : 64, ch = land ? 72 : Math.round(64 * h / w);
+      var m = new T.Mesh(new T.PlaneGeometry(w * 0.985, h * 0.985), new T.MeshBasicMaterial({ color: 0x14171C, toneMapped: false }));
+      var c = q.b.getCenter(new T.Vector3()); m.position.copy(c).addScaledVector(n, 0.01); m.rotation.y = Math.atan2(n.x, n.z);
+      m.name = 'tvScreen'; m.userData = Object.assign({}, q.o.userData, { tv: true }); S.lobby.add(m);
+      tvAdd(m, cw, ch, land ? 'tv' : 'kiosk');
+    });
+    G.tvN = TVS.length;
+  }
+  function tvStep(now) {
+    if (!TVS.length || G.tvOff) return false;   /* tvOff = 시험용(성능 비교) */
+    if (RM) { if (!G.tvRM) { G.tvRM = true; TVS.forEach(function (v) { tvDraw(v, 30); }); return true; } return false; }
+    if (G.tvRM) { G.tvRM = false; }
+    if (now - tvLast < 1000 / TV_FPS) return false;
+    tvLast = now; var tw = performance.now();
+    camera.updateMatrixWorld(); _fr.setFromProjectionMatrix(_pm.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+    var any = false, t = now / 1000;
+    TVS.forEach(function (v) {
+      _tv.copy(camera.position).sub(v.c);
+      v.on = _tv.length() < 16 && _tv.dot(v.n) > 0 && _fr.intersectsSphere(v.sphere) && isShown(v.mesh);
+      if (v.on) { tvDraw(v, t); any = true; }
+    });
+    G.tvOn = TVS.filter(function (v) { return v.on; }).length; var tm = performance.now() - tw; G.tvMs = G.tvMs == null ? tm : G.tvMs * 0.9 + tm * 0.1; G.tvMax = Math.max(G.tvMax || 0, tm);   /* 진단 · 한 번 그리는 데 든 시간 */
+    return any;
   }
   /* 돋보기 · 딱 두 곳(사용자 261003 「이벤트 판은 크게 보기를 없애고 경품 보기 · 타자왕 광고 보기만」)
    * ① 룰렛 「경품 보기」(앱 경품 사진 · 가격 없음 · 샘플 딱지) ② 타자왕 「타자왕 광고 보기」(../tv/typing/?promo=1) · 다른 구역은 챗봇 말풍선 → 판 보기 */
@@ -1001,7 +1352,7 @@
   function resize() {
     var r = $('stage').getBoundingClientRect(), W = Math.max(1, Math.round(r.width)), H = Math.max(1, Math.round(r.height));
     renderer.setSize(W, H, false); camera.aspect = W / H;
-    camera.fov = W / H < 0.75 ? 62 : 52; camera.updateProjectionMatrix(); S.resize(); G.need = true;
+    G.fov0 = W / H < 0.75 ? 62 : 52; camera.fov = G.fov0 + 7 * G.fovK; camera.updateProjectionMatrix(); S.resize(); G.need = true;
   }
   function loop(now) {
     requestAnimationFrame(loop);
@@ -1019,16 +1370,16 @@
     else if (G.scn === 'cafe') cafeCam();
     else if (!G.loaded) { camera.position.set(28 - 16, 22, 6 - (-14)); camera.lookAt(0, 0, 0.5); }
     if (G.bench) { G.pos.x += Math.sin(now * 0.001) * dt * 1.5; busy = true; }
+    if (G.loaded && G.scn === 'lobby' && tvStep(now)) busy = true;   /* v5.40 TV 화면 · 초당 10장 · 보이는 것만 */
     if (!busy && !G.need && !G.showFps) return;
     G.need = false;
-    if (tvMat) tvMat.color.setScalar(RM ? 1 : 0.86 + 0.14 * Math.sin((G.clock || 0) * 3));
     S.frame(camera, G.scn); if (G.ceil) G.ceil.visible = false; renderer.render(scene, camera); placePins(); mini(); placeBubble(); placeMags();
     var wm = performance.now() - w0; G.workMs = G.workMs == null ? wm : G.workMs * 0.95 + wm * 0.05; G.workMax = Math.max(G.workMax || 0, wm);
     if (!$('dest').hidden && G.destAt) { _p.copy(G.destAt).project(camera); $('dest').style.left = ((_p.x + 1) / 2 * $('stage').clientWidth).toFixed(1) + 'px'; $('dest').style.top = ((1 - _p.y) / 2 * $('stage').clientHeight).toFixed(1) + 'px'; }
     G.frames.push(now); while (G.frames.length && now - G.frames[0] > 1000) G.frames.shift();
-    if (G.showFps) { $('fps').hidden = false; $('fps').textContent = 'fps ' + G.frames.length + ' · ' + renderer.info.render.calls + ' draw · dpr ' + renderer.getPixelRatio(); }
+    if (G.showFps) { $('fps').hidden = false; $('fps').textContent = 'fps ' + G.frames.length + ' · ' + renderer.info.render.calls + ' draw · dpr ' + renderer.getPixelRatio() + ' · z' + G.depthBits; }
     if (G.bench) { G.bench.ts.push(now); if (now - G.bench.t0 > G.bench.ms) { var b = G.bench; G.bench = null; b.done(summ(b.ts)); } }
-    if (G.loaded && !G.probed) { G.probe.push(now); if (G.probe.length >= 50) { G.probed = true; var s = summ(G.probe); G.probeResult = s; if (s.p50 > 34) { renderer.setPixelRatio(1); S.lowPower(); resize(); } } }
+    if (G.loaded && !G.probed) { G.probe.push(now); if (G.probe.length >= 50) { G.probed = true; var s = summ(G.probe); G.probeResult = s; if (s.p50 > 34) { renderer.setPixelRatio(1); S.lowPower(); resize(); TV_FPS = 6; MUS.lite = true; } } }
   }
   function summ(ts) { var d = []; for (var i = 1; i < ts.length; i++) d.push(ts[i] - ts[i - 1]); d.sort(function (a, b) { return a - b; }); var sum = d.reduce(function (a, b) { return a + b; }, 0); return { frames: d.length, fps: +(1000 * d.length / Math.max(1, sum)).toFixed(1), p50: +(d[Math.floor(d.length * 0.5)] || 0).toFixed(1), p95: +(d[Math.floor(d.length * 0.95)] || 0).toFixed(1), dpr: renderer.getPixelRatio() }; }
   G.benchRun = function (ms) { return new Promise(function (res) { G.bench = { t0: performance.now(), ms: ms || 4000, ts: [], done: res }; }); };
@@ -1150,77 +1501,161 @@
   function showHelp() { $('help').hidden = false; }
   function hideHelp() { $('help').hidden = true; store.set('axfTour3Help', '1'); G.guardT = performance.now(); if (MUS.deferred) { MUS.deferred = false; musStart(2); } }   /* v5.38 첫 입장 음악 = 「시작하기」 누름에서 */   /* 닫는 탭이 아래 버튼까지 가지 않게 0.5초 막음 */
 
-  /* ═══════════ 로비 음악(v5.38 · 사용자 261003 「1층 로비에서 잔잔한 음악이 나오면 좋겠어」) ═══════════
-   * 파일 없음 · Web Audio 로 그 자리에서 합성(저작권 걱정 없음 · 받는 용량 0)
-   *   부드러운 패드 화음(삼각파 + 톱니파 살짝 · 낮은 거름 필터 · 2.6초 천천히 올라와 3.5초 동안 사라짐)이 7~10초마다 바뀐다
-   *   화음 순서 = D 장조 안에서 다음 화음을 무작위로 고르고(같은 화음 반복 없음) · 성부는 가까운 음으로 이어 간다 · 맨 아래 낮은 근음 하나
-   *   가끔 맑은 음(사인파 + 배음 · 종소리처럼 2.5초 감쇠) 1~3개 · 오음음계에서 무작위 · 3~8초 간격 · 잔향(합성한 3.2초 잔향)
-   *   박자 · 드럼 없음 · 소리 크기 낮게(마스터 0.42 · 압축기)
+  /* ═══════════ 로비 음악(v5.38 · 사용자 261003 「1층 로비에서 잔잔한 음악이 나오면 좋겠어」 · v5.40 카페 음악으로 바꿈) ═══════════
+   * v5.40 사용자 261003 「카페에 와 있는 것 같은 상큼한 기분 · 영감을 얻을 수 있을 것 같은 느낌」 · 소리 크기는 그대로(사용자 결정 · 마스터 0.42)
+   * 파일 없음 · Web Audio 로 그 자리에서 합성(저작권 걱정 없음 · 받는 용량 0) · 보사노바 카페(94bpm · F 장조)
+   *   일렉트릭 피아노(FM 두 오실레이터 · 로즈 계열 · 트레몰로 · 천천히 좌우)로 메이저 7 · 9 화음을 엇박 리듬으로 친다 · 성부는 가까운 자리로 이어 간다
+   *   화음 진행 8가지(I vi ii V · IV iii ii V · ii V I I 등)에서 무작위 · 가끔 대리 화음 · 마디 끝 ii V 쪼개기 · 같은 진행이 이어지지 않음
+   *   둥근 베이스(사인 + 삼각 · 낮은 거름) 보사 리듬 · 아주 작은 쉐이커(잡음 한 장을 돌려 씀) · 림 · 부드러운 킥
+   *   가끔 짧은 멜로디(2 · 4마디째에 주로 · 3~5음 · 앞 소절 리듬을 반쯤 다시 써서 이어지는 느낌) · 잔향 2.2초
+   * 아끼기: 피아노 · 멜로디 동시 발음 최대 16(느린 기기 9) · 느린 기기 = 쉐이커 반 · 멜로디 덜
    * 켜고 끄기: 들어갈 때 2초 동안 커짐 · 나갈 때(검은 전환과 함께) 0.6초 동안 줄고 AudioContext 닫음(배터리) · 화면이 숨으면 멈춤(suspend) · 돌아오면 다시
    *   첫 입장 = 처음 안내의 「시작하기」(누름)에서 시작 · 「음악 없이」를 고르면 AudioContext 를 만들지 않는다 · 위쪽 스피커 버튼과 같은 설정(axfTour3Music · 기본 켬)
    *   모바일 자동 재생 제한 = 여는 누름 안에서 만들고 · 그래도 멈춰 있으면 화면 첫 누름에서 다시 깨운다 · navigator.audioSession = ambient(듣던 음악을 끊지 않고 무음 모드를 따른다 · 닫으면 되돌림)
    * 끄려면 AXTour.open({ music: false }) · 버튼도 숨는다 */
-  var MUS = { want: true, ctx: null, out: null, st: null, timer: 0, gen: 0, made: 0, deferred: false, oldType: null };
-  var MUS_VOL = 0.42;   /* 미리 듣기 렌더 기준 최고 약 -15 dBFS · 평균(RMS) 약 -27 dBFS(배경 음악 크기) */
+  var MUS = { want: true, ctx: null, out: null, st: null, timer: 0, gen: 0, made: 0, deferred: false, oldType: null, lite: false };
+  var MUS_VOL = 0.42, MUS_TRIM = 0.36;   /* 미리 듣기 렌더 기준 최고 약 -15 dBFS · 평균(RMS) 약 -27 dBFS(배경 음악 크기 · v5.38 과 같게 맞춤) */
+  /* 스타일 · a = 보사노바 카페(앱) · b = 로파이(미리 듣기 비교용 · musOffline 에서만) */
+  var MSTY = {
+    a: { bpm: 94, key: 53, swing: 0.03, comp: [[[0, 1.4], [1.5, 0.45], [2.5, 1.3]], [[0.5, 0.9], [2, 0.45], [3, 0.9]], [[0, 2.3], [2.5, 0.45], [3.5, 0.45]], [[1, 0.45], [1.5, 1.2], [3, 0.9]]],
+      bass: [[0, 0, 1.3], [1.5, 0, 0.45], [2, 7, 1.3], [3.5, 9, 0.45]], kick: [0, 2], rim: [[0, 1.5, 3], [1, 2.5]], hat: 0.5, mel: 0.55 },
+    b: { bpm: 84, key: 50, swing: 0.16, comp: [[[0, 3.4]], [[0, 1.8], [2.5, 1.4]], [[0.5, 3]]],
+      bass: [[0, 0, 1.4], [2.5, 0, 0.4], [3, 7, 0.9]], kick: [0, 2.5], snare: [1, 3], hat: 0.5, mel: 0.45 }
+  };
+  var MCH = { I: [4, 7, 11, 14], ii: [5, 9, 12, 16], iii: [7, 11, 14, 16], IV: [9, 12, 16, 19], V: [12, 14, 17, 21], vi: [12, 16, 19, 23], bVII: [14, 17, 21, 22] };
+  var MROOT = { I: 0, ii: 2, iii: 4, IV: 5, V: 7, vi: 9, bVII: 10 };
+  var MPROG = [['I', 'vi', 'ii', 'V'], ['IV', 'iii', 'ii', 'V'], ['I', 'IV', 'iii', 'vi'], ['ii', 'V', 'I', 'I'], ['IV', 'V', 'iii', 'vi'], ['I', 'bVII', 'IV', 'I'], ['vi', 'ii', 'V', 'I'], ['IV', 'IV', 'I', 'I']];
+  var MSUB = { I: 'iii', iii: 'I', IV: 'ii', ii: 'IV', vi: 'I' }, MSCALE = [0, 2, 4, 7, 9, 11, 14];
   function musOn() { return OPTS.music !== false; }
+  function mhz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+  function mrand(a) { return a[Math.floor(Math.random() * a.length)]; }
   function musImpulse(c, sec) {
     var n = Math.floor(c.sampleRate * sec), b = c.createBuffer(2, n, c.sampleRate);
-    for (var ch = 0; ch < 2; ch++) { var d = b.getChannelData(ch); for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.6); }
+    for (var ch = 0; ch < 2; ch++) { var d = b.getChannelData(ch); for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3.2); }
     return b;
   }
   function musGraph(c, dest) {
     var master = c.createGain(); master.gain.value = 0;
-    var comp = c.createDynamicsCompressor(); comp.threshold.value = -22; comp.knee.value = 18; comp.ratio.value = 3; comp.attack.value = 0.05; comp.release.value = 0.6;
-    var tone = c.createBiquadFilter(); tone.type = 'lowpass'; tone.frequency.value = 3600; tone.Q.value = 0.4;
-    var bus = c.createGain(), dry = c.createGain(), wet = c.createGain(), rev = c.createConvolver(), bell = c.createGain();
-    dry.gain.value = 0.75; wet.gain.value = 0.5; rev.buffer = musImpulse(c, 3.2); bell.gain.value = 1;
-    bus.connect(dry); bus.connect(rev); dry.connect(tone); rev.connect(wet); wet.connect(tone);
-    var bellDry = c.createGain(); bellDry.gain.value = 0.35; bell.connect(bellDry); bellDry.connect(tone); var bellWet = c.createGain(); bellWet.gain.value = 1.0; bell.connect(bellWet); bellWet.connect(rev);
-    tone.connect(comp); comp.connect(master); master.connect(dest);
-    return { master: master, bus: bus, bell: bell };
+    var comp = c.createDynamicsCompressor(); comp.threshold.value = -20; comp.knee.value = 14; comp.ratio.value = 3; comp.attack.value = 0.01; comp.release.value = 0.35;
+    var tone = c.createBiquadFilter(); tone.type = 'lowpass'; tone.frequency.value = 6200; tone.Q.value = 0.3;
+    var trim = c.createGain(); trim.gain.value = MUS_TRIM;   /* 악기 합을 v5.38 크기에 맞춤(마스터 0.42 는 그대로) */
+    var bus = c.createGain(), dry = c.createGain(), send = c.createGain(), wet = c.createGain(), rev = c.createConvolver();
+    dry.gain.value = 0.9; send.gain.value = 0.32; wet.gain.value = 0.5; rev.buffer = musImpulse(c, 2.2);
+    bus.connect(dry); bus.connect(send); send.connect(rev); rev.connect(wet); dry.connect(tone); wet.connect(tone); tone.connect(trim); trim.connect(comp); comp.connect(master); master.connect(dest);
+    /* 피아노 · 트레몰로(4.8Hz) + 천천히 좌우(0.13Hz) */
+    var ep = c.createGain(), trem = c.createGain(), lfo = c.createOscillator(), lg = c.createGain();
+    trem.gain.value = 0.9; lfo.frequency.value = 4.8; lg.gain.value = 0.1; lfo.connect(lg); lg.connect(trem.gain); lfo.start();
+    ep.connect(trem);
+    if (c.createStereoPanner) { var pan = c.createStereoPanner(), pl = c.createOscillator(), pg = c.createGain(); pl.frequency.value = 0.13; pg.gain.value = 0.3; pl.connect(pg); pg.connect(pan.pan); pl.start(); trem.connect(pan); pan.connect(bus); }
+    else trem.connect(bus);
+    var bass = c.createGain(), bf = c.createBiquadFilter(); bf.type = 'lowpass'; bf.frequency.value = 820; bf.Q.value = 0.6; bass.connect(bf); bf.connect(dry);   /* 베이스는 잔향 없이 */
+    var perc = c.createGain(); perc.connect(bus);
+    var rim = c.createBiquadFilter(); rim.type = 'bandpass'; rim.frequency.value = 1700; rim.Q.value = 3; rim.connect(perc);
+    var snr = c.createBiquadFilter(); snr.type = 'bandpass'; snr.frequency.value = 2400; snr.Q.value = 0.7; snr.connect(perc);
+    var hat = c.createBiquadFilter(); hat.type = 'highpass'; hat.frequency.value = 6500; hat.connect(perc);
+    var mel = c.createGain(), ms = c.createGain(); ms.gain.value = 0.35; mel.connect(trem); mel.connect(ms); ms.connect(rev);   /* 멜로디는 잔향을 조금 더 */
+    var nz = c.createBuffer(1, Math.floor(c.sampleRate * 0.6), c.sampleRate), nd = nz.getChannelData(0); for (var i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+    return { master: master, ep: ep, bass: bass, perc: perc, hat: hat, rim: rim, snr: snr, mel: mel, noise: nz };
   }
-  /* 화음(D 장조 · 근음에서 반음 수) · 다음으로 갈 수 있는 화음 */
-  var MCH = { I: [0, 4, 7, 11, 14], vi: [9, 12, 16, 19], IV: [5, 9, 12, 16, 19], ii: [2, 5, 9, 12, 16], iii: [4, 7, 11, 14], V: [7, 11, 14, 17] };
-  var MNX = { I: ['vi', 'IV', 'ii', 'iii'], vi: ['IV', 'ii', 'I'], IV: ['I', 'ii', 'V', 'vi'], ii: ['V', 'IV', 'vi'], iii: ['vi', 'IV'], V: ['I', 'vi', 'IV'] };
-  var MROOT = { I: 0, vi: 9, IV: 5, ii: 2, iii: 4, V: 7 }, MKEY = 50, MPENTA = [0, 2, 4, 7, 9];
-  function mhz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
-  function musState(t) { return { t: t, ch: 'I', prev: [62, 66, 69, 73], bt: t + 3 + Math.random() * 3 }; }
-  function musVoice(prev, ch) {   /* 이전 성부에서 가장 가까운 화음 음으로(가끔 한 음은 한 옥타브 위아래로) */
-    var pcs = MCH[ch].map(function (x) { return (MKEY + x) % 12; }), out = [];
-    prev.forEach(function (p) {
-      var best = p, bd = 99;
-      for (var m = 52; m <= 76; m++) { if (pcs.indexOf(m % 12) < 0 || out.indexOf(m) >= 0) continue; var d = Math.abs(m - p) + Math.random() * 0.8; if (d < bd) { bd = d; best = m; } }
-      out.push(best);
+  function musState(t, sty) { return { t: t, sty: MSTY[sty] || MSTY.a, prog: null, pi: 4, prev: null, pm: 77, motif: null, bar: 0, vc: [] }; }
+  /* 동시 발음 · 겹치는 소리 수가 넘으면 그 음은 건너뛴다(베이스 · 타악기는 세지 않음) */
+  function vOk(st, t, end) {
+    var lim = MUS.lite ? 9 : 16, n = 0; st.vc = st.vc.filter(function (q) { return q[1] > t - 0.05; });
+    for (var i = 0; i < st.vc.length; i++) if (st.vc[i][0] <= t + 0.01 && st.vc[i][1] > t) n++;
+    if (n >= lim) return false; st.vc.push([t, end]); return true;
+  }
+  /* 로즈 계열 한 음 · 사인 반송파 + 사인 변조(비율 1 · 지수 감쇠) · 4노드 */
+  function epNote(c, dst, t, m, vel, dur, bright) {
+    var f = mhz(m), car = c.createOscillator(), mod = c.createOscillator(), mg = c.createGain(), g = c.createGain(), end = t + dur + 0.6;
+    car.frequency.value = f; mod.frequency.value = f * (bright ? 2 : 1); car.detune.value = (Math.random() - 0.5) * 6;
+    var ix = f * (bright ? 1.1 : 1.6) * (0.5 + vel * 0.6);
+    mg.gain.setValueAtTime(ix, t); mg.gain.exponentialRampToValueAtTime(ix * 0.12 + 1, t + 0.35); mg.gain.exponentialRampToValueAtTime(f * 0.05 + 1, end);
+    var a = 0.16 * vel; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a, t + 0.006); g.gain.setTargetAtTime(a * 0.3, t + 0.006, 0.4); g.gain.setTargetAtTime(0, t + dur, 0.11);   /* 잇따른 목표값 · 짧은 음도 튀지 않음 */
+    mod.connect(mg); mg.connect(car.frequency); car.connect(g); g.connect(dst);
+    car.start(t); mod.start(t); car.stop(end + 0.05); mod.stop(end + 0.05);
+  }
+  function musBass(c, o, t, m, dur) {
+    var a = c.createOscillator(), b = c.createOscillator(), g = c.createGain(), end = t + dur;
+    a.type = 'sine'; b.type = 'triangle'; a.frequency.value = b.frequency.value = mhz(m); b.detune.value = 4;
+    var bg = c.createGain(); bg.gain.value = 0.35; b.connect(bg); bg.connect(g); a.connect(g);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.3, t + 0.012); g.gain.setTargetAtTime(0.15, t + 0.012, 0.18); g.gain.setTargetAtTime(0, end, 0.04);
+    g.connect(o.bass); a.start(t); b.start(t); a.stop(end + 0.15); b.stop(end + 0.15);
+  }
+  function musNoise(c, o, t, dst, vel, dec, filt) {
+    var s = c.createBufferSource(), g = c.createGain(); s.buffer = o.noise;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vel, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + dec);
+    if (filt) { s.connect(filt); filt.connect(g); } else s.connect(g);
+    g.connect(dst); s.start(t, Math.random() * 0.4); s.stop(t + dec + 0.02);
+  }
+  function musKick(c, o, t, vel) {
+    var s = c.createOscillator(), g = c.createGain(); s.frequency.setValueAtTime(105, t); s.frequency.exponentialRampToValueAtTime(46, t + 0.12);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vel, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+    s.connect(g); g.connect(o.perc); s.start(t); s.stop(t + 0.32);
+  }
+  /* 가까운 자리로 · 자리 바꿈(전위) 4가지 × 옥타브 중 앞 화음과 움직임이 가장 작은 것 · 52~79 안 */
+  function musVoice(prev, ch, key) {
+    var v = MCH[ch], best = null, bd = 1e9;
+    for (var r = 0; r < v.length; r++) for (var o = -24; o <= 24; o += 12) {
+      var ns = v.map(function (x, i) { return key + x + o + (i < r ? 12 : 0); }).sort(function (a, b) { return a - b; });
+      if (ns[0] < 52 || ns[ns.length - 1] > 79) continue;
+      var d = prev ? ns.reduce(function (s, m, i) { return s + Math.abs(m - prev[i]); }, 0) : Math.abs(ns[1] - 64) * 4;
+      d += Math.random() * 1.5; if (d < bd) { bd = d; best = ns; }
+    }
+    return best || v.map(function (x) { return key + x; });
+  }
+  function musMelody(c, o, st, t0, beat, ch, nxt) {
+    var key = st.sty.key, pcs = MCH[ch].concat([MROOT[ch]]).map(function (x) { return (key + x) % 12; });
+    var scale = []; for (var m = 70; m <= 88; m++) if (MSCALE.some(function (x) { return (key + x) % 12 === m % 12; })) scale.push(m);
+    var RH = [[1, 1.5, 2.5], [0, 0.5, 1, 2], [2, 2.5, 3, 3.5], [0.5, 1, 2.5, 3], [1.5, 2, 2.5, 3.5], [0, 1.5, 3]], rh, steps;
+    if (st.motif && Math.random() < 0.5) { rh = st.motif.rh; steps = st.motif.steps.map(function (s) { return Math.random() < 0.3 ? -s : s; }); }
+    else { rh = mrand(RH); steps = rh.map(function () { return mrand([-2, -1, -1, 1, 1, 2, 0, 3]); }); }
+    st.motif = { rh: rh, steps: steps };
+    var idx = scale.indexOf(st.pm); if (idx < 0) { idx = 0; var bd = 99; scale.forEach(function (m, i) { if (Math.abs(m - st.pm) < bd) { bd = Math.abs(m - st.pm); idx = i; } }); }
+    rh.forEach(function (b, i) {
+      idx = clamp(idx + steps[i], 0, scale.length - 1);
+      var m = scale[idx];
+      if (i === rh.length - 1 || b === 0 || b === 2) { var bestM = m, bd2 = 99; scale.forEach(function (q) { if (pcs.indexOf(q % 12) >= 0 && Math.abs(q - m) < bd2) { bd2 = Math.abs(q - m); bestM = q; } }); m = bestM; idx = scale.indexOf(m); }
+      var t = t0 + b * beat + (b % 1 ? st.sty.swing * beat : 0), dur = (i === rh.length - 1 ? 1.2 : 0.42) * beat;
+      if (vOk(st, t, t + dur + 0.4)) epNote(c, o.mel, t, m, 0.5 + Math.random() * 0.25, dur, true);
+      st.pm = m;
     });
-    return out.sort(function (a, b) { return a - b; });
   }
-  function musPad(c, o, t, dur, notes, root) {
-    var att = 2.6, rel = 3.5, end = t + dur + rel;
-    var flt = c.createBiquadFilter(); flt.type = 'lowpass'; flt.Q.value = 0.5; flt.frequency.setValueAtTime(650, t); flt.frequency.linearRampToValueAtTime(1150 + Math.random() * 300, t + dur * 0.55); flt.frequency.linearRampToValueAtTime(700, end);
-    var g = c.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(1, t + att); g.gain.setValueAtTime(1, t + dur); g.gain.linearRampToValueAtTime(0, end);
-    flt.connect(g); g.connect(o.bus);
-    notes.forEach(function (m, i) {
-      [['triangle', -6, 0.05], ['sawtooth', 5, 0.012]].forEach(function (w) {
-        var os = c.createOscillator(), og = c.createGain(); os.type = w[0]; os.frequency.value = mhz(m); os.detune.value = w[1] + (Math.random() - 0.5) * 4; og.gain.value = w[2] * (i === notes.length - 1 ? 0.8 : 1);
-        os.connect(og); og.connect(flt); os.start(t); os.stop(end + 0.05);
+  function musBar(c, o, st) {
+    var y = st.sty, beat = 60 / y.bpm, t0 = st.t, key = y.key, lite = MUS.lite;
+    if (!st.prog || st.pi >= 4) { var np; do { np = mrand(MPROG); } while (np === st.base && MPROG.length > 1); st.base = np; st.prog = np.slice(); if (Math.random() < 0.3) { var k = Math.floor(Math.random() * 4); if (MSUB[st.prog[k]]) st.prog[k] = MSUB[st.prog[k]]; } st.pi = 0; }
+    var ch = st.prog[st.pi], nxt = st.pi < 3 ? st.prog[st.pi + 1] : 'I', split = ch === 'V' && st.pi === 3 && Math.random() < 0.35;
+    function sw(b) { return t0 + b * beat + (b % 1 ? y.swing * beat : 0); }
+    /* 피아노 */
+    var pat = mrand(y.comp), chords = split ? [['ii', 0, 2], ['V', 2, 4]] : [[ch, 0, 4]];
+    chords.forEach(function (cc) {
+      var vs = musVoice(st.prev, cc[0], key); st.prev = vs;
+      pat.forEach(function (h, hi) {
+        if (h[0] < cc[1] || h[0] >= cc[2]) return;
+        var t = sw(h[0]), dur = h[1] * beat, vel = (h[0] === 0 ? 0.78 : 0.62) + Math.random() * 0.12;
+        vs.forEach(function (m, i) { if (lite && i === 0 && hi > 0) return; var tn = t + i * (0.006 + Math.random() * 0.01); if (vOk(st, tn, tn + dur + 0.45)) epNote(c, o.ep, tn, m, vel * (i === vs.length - 1 ? 1 : 0.85), dur, false); });
       });
     });
-    var bs = c.createOscillator(), bg = c.createGain(); bs.type = 'sine'; bs.frequency.value = mhz(MKEY - 12 + root); bg.gain.value = 0.07; bs.connect(bg); bg.connect(g); bs.start(t); bs.stop(end + 0.05);
-  }
-  function musBell(c, o, t, m) {
-    var g = c.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.045, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0008, t + 2.6); g.connect(o.bell);
-    [[1, 1], [2.0, 0.22], [3.01, 0.06]].forEach(function (h) { var os = c.createOscillator(), og = c.createGain(); os.type = 'sine'; os.frequency.value = mhz(m) * h[0]; og.gain.value = h[1]; os.connect(og); og.connect(g); os.start(t); os.stop(t + 2.7); });
+    /* 베이스 · 근음 · 5도 · 마지막은 다음 화음으로 다가가기(반음 아래 · 위 또는 6도) */
+    var root = MROOT[split ? 'ii' : ch], nroot = MROOT[nxt];
+    y.bass.forEach(function (b, i) {
+      var r = split && b[0] >= 2 ? MROOT.V : root, m = key - 12 + r + b[1];
+      if (i === y.bass.length - 1 && Math.random() < 0.5) m = key - 12 + nroot + (Math.random() < 0.5 ? -1 : 1);
+      while (m > 50) m -= 12; while (m < 36) m += 12;
+      musBass(c, o, sw(b[0]), m, b[2] * beat);
+    });
+    /* 타악기 · 아주 작게 */
+    y.kick.forEach(function (b) { musKick(c, o, sw(b), 0.22 + Math.random() * 0.05); });
+    for (var e = 0; e < 8; e++) { if (lite && e % 2) continue; var acc = e % 2 ? 0.05 : 0.028; musNoise(c, o, sw(e * y.hat), o.hat, acc * (0.8 + Math.random() * 0.4), e % 2 ? 0.07 : 0.045, null); }
+    if (y.rim) y.rim[st.bar % 2].forEach(function (b) { musNoise(c, o, sw(b), o.rim, 0.11, 0.05, null); });
+    if (y.snare) y.snare.forEach(function (b) { musNoise(c, o, sw(b), o.snr, 0.07, 0.22, null); });
+    /* 멜로디 · 2 · 4마디째에 주로(첫 마디는 쉼) */
+    var pm = (st.pi % 2 === 1 ? y.mel : y.mel * 0.35) * (lite ? 0.6 : 1);
+    if (st.bar > 0 && Math.random() < pm) musMelody(c, o, st, t0, beat, split ? 'V' : ch, nxt);
+    st.pi++; st.bar++;
+    return 4 * beat;
   }
   function musSchedule(c, o, st, until) {
-    while (st.t < until) {
-      var dur = 7 + Math.random() * 3, nx = MNX[st.ch], ch = nx[Math.floor(Math.random() * nx.length)];
-      st.ch = ch; st.prev = musVoice(st.prev, ch); musPad(c, o, st.t, dur, st.prev, MROOT[ch]); st.t += dur;
-    }
-    while (st.bt < until) {
-      var k = 1 + Math.floor(Math.random() * 3), base = 74 + Math.floor(Math.random() * 8), gap = 0.25 + Math.random() * 0.4;
-      for (var i = 0; i < k; i++) { var pc = MPENTA[Math.floor(Math.random() * MPENTA.length)], m = MKEY + 24 + pc + (Math.random() < 0.3 ? 12 : 0); if (m > 90) m -= 12; musBell(c, o, st.bt + i * gap, m); }
-      st.bt += 3 + Math.random() * 5;
-    }
+    while (st.t < until) st.t += musBar(c, o, st);
   }
   function musTick() { if (MUS.ctx && MUS.out && MUS.ctx.state !== 'closed') musSchedule(MUS.ctx, MUS.out, MUS.st, MUS.ctx.currentTime + 1.5); }
   function musStart(fade) {
@@ -1234,7 +1669,7 @@
     }
     var c = MUS.ctx; if (c.state === 'suspended') { try { c.resume(); } catch (e) {} }
     var g = MUS.out.master.gain, now = c.currentTime; g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(MUS_VOL, now + (fade == null ? 2 : fade));
-    if (MUS.st.t < now) MUS.st.t = now + 0.05; if (MUS.st.bt < now) MUS.st.bt = now + 2;
+    if (MUS.st.t < now) MUS.st.t = now + 0.05;
     if (!MUS.timer) MUS.timer = setInterval(musTick, 300);
     musTick(); musUi();
   }
@@ -1283,11 +1718,11 @@
     });
     musUi();
   }
-  /* 미리 듣기 · 같은 합성을 OfflineAudioContext 로(시험 · 미리 듣기 파일용 · 앱 화면에는 쓰지 않음) */
-  G.musOffline = function (sec) {
-    var OC = window.OfflineAudioContext || window.webkitOfflineAudioContext, c = new OC(2, Math.round(44100 * sec), 44100), o = musGraph(c, c.destination), st = musState(0.1);
-    o.master.gain.setValueAtTime(0, 0); o.master.gain.linearRampToValueAtTime(MUS_VOL, 2); o.master.gain.setValueAtTime(MUS_VOL, sec - 2.5); o.master.gain.linearRampToValueAtTime(0, sec - 0.1);
-    musSchedule(c, o, st, sec);
+  /* 미리 듣기 · 같은 합성을 OfflineAudioContext 로(시험 · 미리 듣기 파일용 · 앱 화면에는 쓰지 않음) · o = { rate, ch, style('a' 앱 · 'b' 로파이 비교) } */
+  G.musOffline = function (sec, o) {
+    o = o || {}; var R = o.rate || 44100, OC = window.OfflineAudioContext || window.webkitOfflineAudioContext, c = new OC(o.ch || 2, Math.round(R * sec), R), g = musGraph(c, c.destination), st = musState(0.1, o.style);
+    g.master.gain.setValueAtTime(0, 0); g.master.gain.linearRampToValueAtTime(MUS_VOL, 2); g.master.gain.setValueAtTime(MUS_VOL, sec - 2.5); g.master.gain.linearRampToValueAtTime(0, sec - 0.1);
+    musSchedule(c, g, st, sec);
     return c.startRendering();
   };
   G.mus = function () { return { want: MUS.want, deferred: MUS.deferred, made: MUS.made, state: MUS.ctx ? MUS.ctx.state : 'none', timer: !!MUS.timer, gain: MUS.out ? +MUS.out.master.gain.value.toFixed(3) : null, session: navigator.audioSession ? navigator.audioSession.type : 'n/a' }; };
@@ -1323,7 +1758,7 @@
     requestAnimationFrame(loop);
   }
   /* 시험 · 녹화용 손잡이(앱에는 없음) */
-  G.api = { scene: function () { return S; }, shotCamKeep: function (x, y, z, lx, ly, lz, face) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); if (face) { guides.forEach(function (g) { g.m.rotation.y = Math.atan2(camera.position.x - g.m.position.x, camera.position.z - g.m.position.z); }); bot.rotation.y = Math.atan2(camera.position.x - bot.position.x, camera.position.z - bot.position.z); } S.frame(camera, 'lobby'); if (G.ceil) G.ceil.visible = false; renderer.render(scene, camera); G.hold = true; }, shotCam: function (x, y, z, lx, ly, lz) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); var bv = bot.visible; bot.visible = false; S.frame(camera, 'lobby'); renderer.render(scene, camera); bot.visible = bv; G.hold = true; }, guides: function () { return guides.map(function (g) { return [g.zone, g.at, +g.h.toFixed(2)]; }); }, enter: function (zid, pg) { enterPanel(D.Z(zid), pg || null); }, pose: function (x, z, yaw, h) { G.pos.copy(toThree(x, z)); G.mode = 'free'; G.path = null; G.yaw = yaw; G.h = h == null ? yaw + Math.PI : h; G.yo = 0; G.need = true; }, goStop: goStop, openSheet: function (zid, i) { openSheet(D.Z(zid), i || 0); }, closeSheet: closeSheet, setPage: function (k) { setPage(k); }, tap: tap, walkTo: walkTo, plan: function () { return planOf(G.pos); }, cam: function () { return planOf(camera.position).concat([camera.position.y]); }, toCafe: toCafe, back: backTo1F, free: free, hw: function (x, z) { var c = gi(x, z); return c < 0 ? -1 : hw[c] * 0.05; } };
+  G.api = { scene: function () { return S; }, shotCamKeep: function (x, y, z, lx, ly, lz, face) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); if (face) { guides.forEach(function (g) { g.m.rotation.y = Math.atan2(camera.position.x - g.m.position.x, camera.position.z - g.m.position.z); }); bot.rotation.y = Math.atan2(camera.position.x - bot.position.x, camera.position.z - bot.position.z); } S.frame(camera, 'lobby'); if (G.ceil) G.ceil.visible = false; renderer.render(scene, camera); G.hold = true; }, shotCam: function (x, y, z, lx, ly, lz) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); var bv = bot.visible; bot.visible = false; S.frame(camera, 'lobby'); renderer.render(scene, camera); bot.visible = bv; G.hold = true; }, guides: function () { return guides.map(function (g) { return [g.zone, g.at, +g.h.toFixed(2)]; }); }, enter: function (zid, pg) { enterPanel(D.Z(zid), pg || null); }, pose: function (x, z, yaw, h) { G.pos.copy(toThree(x, z)); G.mode = 'free'; G.path = null; G.yaw = yaw; G.h = h == null ? yaw + Math.PI : h; G.yo = 0; G.need = true; }, goStop: goStop, openSheet: function (zid, i) { openSheet(D.Z(zid), i || 0); }, closeSheet: closeSheet, setPage: function (k) { setPage(k); }, tap: tap, walkTo: walkTo, plan: function () { return planOf(G.pos); }, cam: function () { return planOf(camera.position).concat([camera.position.y]); }, toCafe: toCafe, back: backTo1F, free: free, hw: function (x, z) { var c = gi(x, z); return c < 0 ? -1 : hw[c] * 0.05; }, move: moveStep, round: function () { return ROUND.slice(); }, tvs: function () { return TVS.map(function (v) { return { kind: v.kind, w: v.w, h: v.h, at: planOf(v.c).map(function (q) { return +q.toFixed(2); }), on: v.on, n: v.n }; }); } };
 
   /* ═══════════ 앱 안 열기 · 닫기 · 뒤로(v5.37 정식 앱 이식 · 사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) ═══════════
    * window.AXTour = { open(o), close(), back(), isOpen() } · 옛 tour.js 와 같은 약속(앱 tourOpen · 뒤로 가기 popstate 가 그대로 부른다)
@@ -1459,5 +1894,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, ver: 'v5.38', v3: true };
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, ver: 'v5.40', v3: true };
 })();
