@@ -3000,21 +3000,21 @@ function viewTypeNick(){
     '<div class="row mt8"><span class="cap" style="width:72px">노트북 주소</span><input class="in" readonly style="min-width:0;flex:1" value="'+esc(selfLink())+'"><button class="btn sm" onclick="selfLinkCopy()">주소 복사</button></div>'+
     memo('<p>켜는 법 · ① 노트북 크롬에서 위 주소를 엽니다 ② 관리코드를 넣고 효과음(기본 켜짐)을 고른 뒤 「셀프 모드 켜기」 ③ 이후 화면은 참가자 전용입니다(새로 고침·재부팅해도 유지) ④ 끄기·효과음 = 화면 왼쪽 아래 「관리」 → 관리코드.</p>'+
       '<p>참가자는 앱의 내 QR 을 노트북 카메라에 비추고(게임 닉네임이 없으면 정한 뒤) SPACE 로 시작합니다(v5.12 · 사번 입력 없음 · 켤 때 카메라 권한 허용). 시작하는 순간 1회로 셉니다(중간에 그만둬도 돌려주지 않음). 테스트 사번(310555)은 기록을 남기지 않습니다. 「타자왕 마감」은 운영 시간이고 끝 시각이 마감입니다(기본 09:00-17:00 · 결선 없음 · 1~3위는 Outro 시상).</p>'+
-      '<p>토너먼트(타자왕전 판 · 선수 노트북 typing.html)와 기록·설정이 따로입니다. 셀프 최고 기록 명단은 서버 type_self_best 로 읽습니다(예선 통과자용).</p>'));
-  h+=card("1F 현장 타자왕전 상위 5","Outro 1~3위 시상 · 타자왕 운영 "+esc((tr.win||[]).join(" · ")),
+      ''));   /* v5.14 토너먼트(타자왕전 판) 안내는 지웠다 · 대전 · 결선 없음(261002) */
+  h+=card("1F 타자왕 상위 5","Outro 1~3위 시상 · 타자왕 운영 "+esc((tr.win||[]).join(" · ")),
     '<div class="wrap"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">점수</th><th class="tdr">정확도</th><th>기록 시각</th></tr>'+
     ((tr.top||[]).length?tr.top.map(function(r){ return '<tr><td class="n"><b>'+r.rank+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name)+'</td><td class="n">'+esc(r.emp)+'</td><td class="n tdr">'+Number(r.score||0).toLocaleString()+'점</td><td class="n tdr">'+r.acc+'%</td><td class="n cap">'+esc(short(r.ts))+'</td></tr>'; }).join(""):emptyRow(7,"아직 현장 기록이 없습니다."))+'</table></div>'+
     memo('<p>AX 단어 소나기 · 1F 현장 셀프 모드 · 1인 '+tries+'회 중 최고 점수 · 점수 높은 순(v5.12 · 단어 + 보너스 스테이지 + 목숨 보너스) · 동점은 정확도, 그다음 먼저 기록한 쪽.</p>'));
-  h+=card("미니게임 닉네임","2~8자 · 중복·금칙어·명부 실명은 서버가 거부 · 숨기면 순위판에 「이름 숨김」",
+  h+=card("게임 닉네임","2~8자 · 중복·금칙어·명부 실명은 서버가 거부 · 숨기면 순위판에 「이름 숨김」",
     '<div class="toolbar">'+searchBox("닉네임 · 사번 · 이름 검색")+'<span class="cnt"><b>'+rows.length+'</b>명</span></div>'+
-    '<div class="wrap scrolly"><table class="tb"><tr><th>닉네임</th><th>상태</th><th>사번</th><th>이름</th><th class="tdr">앱 최고 생존</th><th class="tdr">현장 점수</th><th class="tdr">처리</th></tr>'+
+    '<div class="wrap scrolly"><table class="tb"><tr><th>닉네임</th><th>상태</th><th>사번</th><th>이름</th><th class="tdr">현장 점수</th><th class="tdr">처리</th></tr>'+
     (rows.length?rows.map(function(r){ var k=jq(r.emp);
-      return '<tr class="hv"><td><b>'+esc(r.nick||"(초기화됨)")+'</b></td><td>'+(r.hidden?tag("숨김","off"):tag("공개","ok"))+'</td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.name)+'</td><td class="n tdr">'+tySec(r.app)+'</td><td class="n tdr">'+(r.site?Number(r.site).toLocaleString()+'점':'-')+'</td>'+
-        '<td><div class="acts"><button class="btn sm danger" onclick="nickReset(\''+k+'\')">초기화</button><button class="btn sm" onclick="nickHide(\''+k+'\','+(r.hidden?0:1)+')">'+(r.hidden?"숨김 해제":"숨기기")+'</button></div></td></tr>'; }).join(""):emptyRow(7,"닉네임이 없습니다."))+'</table></div>'+
+      return '<tr class="hv"><td><b>'+esc(r.nick||"(초기화됨)")+'</b></td><td>'+(r.hidden?tag("숨김","off"):tag("공개","ok"))+'</td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.name)+'</td><td class="n tdr">'+(r.site?Number(r.site).toLocaleString()+'점':'-')+'</td>'+
+        '<td><div class="acts"><button class="btn sm danger" onclick="nickReset(\''+k+'\')">초기화</button><button class="btn sm" onclick="nickHide(\''+k+'\','+(r.hidden?0:1)+')">'+(r.hidden?"숨김 해제":"숨기기")+'</button></div></td></tr>'; }).join(""):emptyRow(6,"닉네임이 없습니다."))+'</table></div>'+
     memo('<p>초기화하면 닉네임이 지워지고 순위판에 「익명 참가자」로 나옵니다. 참가자는 앱에서 새 닉네임을 다시 정할 수 있습니다. 기록 점수는 지우지 않습니다.</p>'));
   h+=card("리허설 기록 지우기","테스트 사번(310555)만 · 실제 참가자 사번은 서버가 거부",
     '<div class="row"><input class="in" id="gwEmp" style="min-width:0;width:160px" placeholder="테스트 사번" value="310555"><button class="btn danger" onclick="gameWipe()">기록 삭제</button></div>'+
-    '<p class="cap mt8">앱 게임기록과 현장 타자왕전 기록을 함께 지웁니다.</p>');
+    '<p class="cap mt8">앱 게임기록과 1F 타자왕 기록을 함께 지웁니다.</p>');
   return h;
 }
 function gstCard(g){
@@ -3048,8 +3048,8 @@ function olyAllHtml(){
     '<th class="tdr">총점</th><th class="tdr">종목</th></tr>'+body+'</table></div>', '<button class="btn sm" onclick="olyCsv()">CSV</button>');
 }
 function viewGameStats(){
-  var d=ST.data.gstats||{}, ev=d.events||OLY_EV;
-  return '<p class="cap" style="margin-bottom:4px">'+ev.length+'종목 전원 · 단위는 모두 점(게임 화면 점수 = 순위 점수) · 점수는 저장된 구성 요소를 지금 계수로 다시 계산한 값 · 부문 통계는 두지 않습니다</p>'+ev.map(gstCard).join("")+olyAllHtml()+olyRejHtml()+
+  var d=ST.data.gstats||{}, ev=d.events||OLY_EV, nev=OLD_GAME_ON?ev.length:(d.oev||["pang","jump","tetris"]).length;
+  return '<p class="cap" style="margin-bottom:4px">미니 게임 '+nev+'종목 전원 · 단위는 모두 점(게임 화면 점수 = 순위 점수) · 점수는 저장된 구성 요소를 지금 계수로 다시 계산한 값 · 부문 통계는 두지 않습니다</p>'+ev.filter(function(g){ return OLD_GAME_ON||(d.oev||["pang","jump","tetris"]).indexOf(g)>=0; }).map(gstCard).join("")+olyAllHtml()+olyRejHtml()+
     memo('<p>재보정은 카드마다 <b>최고 점수 중앙</b>을 봅니다. 목표는 보통 참가자 약 1,000 · 잘하는 사람 약 2,000 · 현실적 최고 약 2,850입니다. 1,000에서 크게 벗어난 종목은 AX 올림픽 서브탭에서 주 계수(팡 기준 시간 · 점프 장애물 · 테트리스 줄 · 기억력 퀴즈 등급 점수)를 같은 비율로 고칩니다. 만점 도달이 3%를 넘으면 체감 구간을 당깁니다.</p>'+
       '<p>옛 체계(g1·g2) 기록과 옛 O/X 퀴즈(60초 타임어택, g3) 기록은 시트에 남아 있지만 여기와 순위에는 들어가지 않습니다. 나머지 네 종목의 g3 기록은 그대로 셉니다.</p>');
 }
@@ -3068,7 +3068,7 @@ function viewOly(){
   var body=(lk?'<div class="err-banner" style="color:var(--navy);background:var(--navy05);border-color:var(--navy1)">잠겨 있어 계수를 바꿀 수 없습니다. 고치려면 먼저 <b>잠금 해제</b>를 누릅니다.</div>':'')+
     (stale?'<div class="err-banner">고치는 사이에 다른 곳에서 규칙이 저장되었습니다(rev '+S.rev+'). <b>변경 취소</b>를 누른 뒤 다시 고쳐 주세요.</div>':'')+
     '<div class="olyev"><div class="olyh"><b>공통</b><span class="cap">종합 만점 = '+oev.length+' × 상한 = '+(D.err[0]?"-":n0(oev.length*R.cap))+'점</span></div><div class="olyf">'+idx("").map(fld).join("")+'</div></div>'+
-    ev.map(function(g){
+    ev.filter(function(g){ return OX_GLASS_ON||g!=="ox"; }).map(function(g){
       return '<div class="olyev"><div class="olyh"><b>'+esc(GST_NAME[g])+'</b><span class="cap">'+esc(olyRuleLine(g,R))+'</span></div>'+
         olyFieldsHtml(idx(g),fld)+olyPrevHtml(g,S,R,D)+'</div>';
     }).join("");
@@ -3079,8 +3079,8 @@ function viewOly(){
     '<button class="btn ghost" onclick="olyReset()"'+(OLYD?"":" disabled")+'>변경 취소</button></div>'+
     memo('<p>점수 = 게임 화면에 보이는 행동 점수 그대로입니다. 종목 점수는 그 종목 최고 한 판, 종합은 '+onm+' 최고의 합이고 종합 순위는 '+onm+' 모두 한 판 이상 한 사람만 듭니다.'+(d.oev?' AX 퀴즈(O/X 퀴즈 · 기억력 퀴즈)는 순위 · 시상에 들지 않고 계수는 완주 판정 · 내 기록에만 씁니다.':'')+'</p>'+
       '<p>저장하면 이미 낸 기록도 <b>저장된 구성 요소를 새 계수로 다시 계산</b>해 전원이 같은 규칙으로 다시 줄 섭니다. 규칙판(rev)은 저장할 때마다 1씩 오르고 기록 행에 남습니다.</p>'+
-      '<p>미리보기 예시는 봇 보정의 보통 · 잘함 · 최상 참고치입니다(설계 문서 §4). 멈춤 허용 횟수, 팡 완주 칸, O/X 퀴즈 판자 허용·입력 잠금은 점수가 아니라 서버 개연성 검사에 쓰는 값입니다.</p>'+
-      '<p><b>O/X 퀴즈 유리다리</b>는 문제를 읽는 동안 다리가 한 줄씩 내려옵니다. 한 문제에 쓸 수 있는 시간 = 여유 줄 × 그 줄의 내려오는 시간이고, 답하면 여유가 한 줄 늘어납니다(최대까지). 다리는 뒤로 갈수록 느려질 수 없고, 가장 짧은 읽을 시간(여유 줄 최소 × 줄 시간 끝)은 2초 이상이어야 서버가 받습니다.</p>'+
+      '<p>미리보기 예시는 봇 보정의 보통 · 잘함 · 최상 참고치입니다(설계 문서 §4). 멈춤 허용 횟수, 팡 완주 칸은 점수가 아니라 서버 개연성 검사에 쓰는 값입니다.</p>'+
+      (OX_GLASS_ON?'<p><b>O/X 퀴즈 유리다리</b>는 문제를 읽는 동안 다리가 한 줄씩 내려옵니다. 한 문제에 쓸 수 있는 시간 = 여유 줄 × 그 줄의 내려오는 시간이고, 답하면 여유가 한 줄 늘어납니다(최대까지). 다리는 뒤로 갈수록 느려질 수 없고, 가장 짧은 읽을 시간(여유 줄 최소 × 줄 시간 끝)은 2초 이상이어야 서버가 받습니다.</p>':'')+
       '<p>리허설 뒤 게임별 통계의 최고 점수 중앙값을 보고 재보정한 다음, <b>10/26 당일 아침에 잠급니다.</b> 잠긴 동안에는 저장이 거부되고 해제만 됩니다.</p>');
   var h=card("점수 계수","규칙판 rev "+S.rev+" · 종목 상한 "+n0(S.cap)+" · 만점 "+n0(oev.length*S.cap),body,head);
   h+=card("종합 상위 10","Outro 호명용 (1~3위) · "+onm+" 모두 한 판 이상 · 동점은 "+onm+"을 먼저 마친 쪽 · 명예 시상(경품 없음)",'<div class="wrap"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">총점</th><th>'+onm+' 완료 시각</th></tr>'+
@@ -3107,7 +3107,7 @@ function oxRoomC(off, items){   /* 서버 oxRoom_ 와 같다 · 짝 그룹은 �
 function oxPctHtml(v){ return v==null?'<span class="cap">-</span>':(v<50?'<b class="chg">'+v+'%</b>':v+'%'); }
 function viewOxItems(){
   var d=ST.data.oxs||{};
-  if(!d.ok) return card("O/X 퀴즈 문항","",'<p class="cap">'+(d.reason?"불러오지 못했습니다 · "+esc(d.reason):"불러오는 중")+'</p>');
+  if(!d.ok) return card("AX 퀴즈 문항","",'<p class="cap">'+(d.reason?"불러오지 못했습니다 · "+esc(d.reason):"불러오는 중")+'</p>');
   var all=d.items||[], per=d.per||[7,7,6], room=d.room||[0,0,0];
   var q=(ST.q||"").trim().toLowerCase();
   var rows=all.filter(function(it){
@@ -3133,7 +3133,7 @@ function viewOxItems(){
       '<td class="n tdr">'+(it.avgT==null?'<span class="cap">-</span>':(it.avgT/100).toFixed(1)+"초")+'</td>'+
       '<td>'+(it.off?tag("꺼짐","bad"):tag("출제","off"))+'</td></tr>';
   }).join(""):emptyRow(14, all.length?"조건에 맞는 문항이 없습니다.":"문항이 없습니다.");
-  return card("O/X 퀴즈 문항","정답률 낮은 순 · g5(12줄 유리다리) 판만 센다 · 정답률·O 선택 비율·평균 시간은 판자·낙하를 뺀 답 기준 · 부문 통계 없음",
+  return card("AX 퀴즈 문항","정답률 낮은 순 · 판 퀴즈(옛 앱 판 포함) · 정답률·O 선택 비율·평균 시간은 판자·낙하를 뺀 답 기준 · 부문 통계 없음",
     sum+tb+'<div class="wrap scrolly"><table class="tb"><tr><th>'+ckAll("ox:",rows.map(function(x){ return x.id; }))+'</th><th>id</th><th>난이도</th><th>분야</th><th>문장</th><th>정답</th><th>검수</th><th class="tdr">출제 수</th><th class="tdr">정답률</th><th class="tdr">판자</th><th class="tdr">낙하</th><th class="tdr">O 선택</th><th class="tdr">평균 시간</th><th>상태</th></tr>'+body+'</table></div>'+
     memo('<p><b>끄기</b>는 답이 틀렸거나 문장이 애매한 문항을 배포 없이 출제에서 뺍니다. 앞으로 시작하는 판부터 빠지고, 이미 끝난 판의 점수는 그대로입니다.</p>'+
       '<p>점수 계수의 <b>당일 잠금과 별개</b>입니다. 잠겨 있어도 행사 당일 끄고 켤 수 있습니다.</p>'+
@@ -3490,7 +3490,7 @@ function tySec(v){ return v ? (Number(v)/100).toFixed(1)+"초" : "-"; }
  * v4.02 AX 올림픽 점수 체계 v2 (설계 정본 「AX 올림픽 점수 체계 v2.md」 §5 · §7.6): 단위는 네 종목 모두 점.
  * 점수 = 게임 화면에 보이는 행동 점수 그대로 · 종목 최고 한 판 · 종목 상한 cap · 종합 = 네 종목 최고의 합(만점 4 × cap).
  * 행마다 구성 요소(parts)를 펼쳐 점수가 어떻게 나왔는지 본다. 운영 전용 화면이라 실명·사번을 함께 보여 준다 · 부문은 어디에도 넣지 않는다. */
-var GST_NAME={ pang:"AX 팡", jump:"ME to WE 점프", tetris:"테트리스", word:"기억력 퀴즈", ox:"O/X 퀴즈" };
+var GST_NAME={ pang:"AX 팡", jump:"ME to WE 점프", tetris:"테트리스", word:"기억력 퀴즈", ox:"AX 퀴즈" };   /* v5.14 앱 현행 이름(game_ox = AX 퀴즈) */
 var OLY_NAME=GST_NAME, OLY_EV=["pang","jump","tetris","word","ox"];
 var GQ={}, GX={};
 /* 서버 OLY_PARTS 와 같은 순서 · 1/100초 필드는 초로 보여 준다 */
@@ -3701,6 +3701,8 @@ function olyCsv(){
 /* ── v4.02 AX 올림픽 점수 계수 편집 (oly_rule · 저장 rev +1 · lock Y|N) ──────────
  * 입력칸 목록 · 형식 검사는 서버 olyRuleOk_ 와 같은 범위 · cs = 화면은 초, 저장은 1/100초.
  * OLYD = 고치는 중인 값(입력 글자 그대로) · null 이면 서버 값. 폴링으로 다시 그려도 고치던 값은 남는다. */
+/* v5.14 OX_GLASS_ON = O/X 유리다리(옛 앱) 계수 칸 · OLD_GAME_ON = 게임별 통계에 AX 퀴즈 · 기억력 카드 · 둘 다 꺼 둔다(코드 보존) */
+var OX_GLASS_ON=false, OLD_GAME_ON=false;
 var OLY_F=[
   { g:"", k:"cap", n:"종목 상한", u:"점", i:1, lo:100, hi:100000, h:"한 판 점수가 이 값을 넘지 않습니다" },
   { g:"pang", k:"base", n:"기준 시간", u:"초", lo:1, hi:600, h:"이 시간에 완주하면 1,000점" },
@@ -5748,7 +5750,8 @@ function viewQrBeta(items){
  * 슈퍼 전용 항목(sup)은 숨기지 않고 자물쇠 칩으로 보인다 · 일반 운영자가 열면 「슈퍼관리자에게 요청」 한 장.
  * 폐기 잔재(사생대회 · 포토부스 대기열 · QR 퀴즈 문항 · 클로즈 베타 QR)는 시스템 › 보관으로 · 코드는 그대로 둔다(결정 6). */
 var QR_OLD_ON=false;   /* R5 · R6 · R7 · DAP Wall 퀴즈 QR · 룰렛 데스크 · 포토부스 안내판 · 스탬프 01(1F 전시) 행을 숨긴다 · 다시 보이려면 true */
-var OX_PASS_ON=false;  /* R9 · 올림픽 O/X 「판자 허용」 칸을 숨긴다 · 값은 서버 그대로 */
+var OX_PASS_ON=false;
+var RACE_ON=false;    /* 1F 타자왕 = 셀프 노트북만 · 소나기 대전(판 열기 · 좌석 링크 · 큰 화면 4분할) · 오늘 대전 기록은 끈다(261002 결선 · 대전 없음 · 사용자 261003 「없어진 기획은 콘솔에서 없앤다」) · 코드는 그대로 */  /* R9 · 올림픽 O/X 「판자 허용」 칸을 숨긴다 · 값은 서버 그대로 */
 var EVENT_DAY="2026-10-26";
 var MENUS=[
   { id:"hq", n:"본부", d:"지금 켜져 있는 것과 눌러야 할 것을 한 화면에 봅니다." },
@@ -5764,8 +5767,8 @@ function P(tab, sub, n, view, o){ var x={ tab:tab, sub:sub||"", n:n||"", view:vi
 var NAV=[
   { id:"hq", m:"hq", n:"본부", parts:[P("dash","","","viewHq")] },
   { id:"e_app", m:"el", n:"앱", el:"app", parts:[P("app","","","viewElEmpty")] },
-  { id:"e_game", m:"el", n:"AX 퀴즈·게임", el:"game", parts:[P("typing","oly","점수 계수 · 당일 잠금"),P("typing","ox","O/X 문항")] },
-  { id:"e_type", m:"el", n:"타자왕", el:"type", parts:[P("race","live","판 진행"),P("typing","type","닉네임 · 셀프 · 상위")] },
+  { id:"e_game", m:"el", n:"AX 퀴즈·게임", el:"game", parts:[P("typing","oly","점수 계수 · 당일 잠금"),P("typing","ox","AX 퀴즈 문항")] },
+  { id:"e_type", m:"el", n:"타자왕", el:"type", parts:[P("typing","type","1F 셀프 · 상위 · 닉네임")].concat(RACE_ON?[P("race","live","대전 판 진행")]:[]) },
   { id:"e_draw", m:"el", n:"럭키드로우·참여상", el:"draw", parts:[P("draw","run","원격 진행"),P("draw","stat","현황 · 설정"),P("draw","fin","참여상")] },
   { id:"e_roul", m:"el", n:"룰렛", el:"roul", parts:[P("stamp","ops","","viewElEmpty")] },
   { id:"e_sign", m:"el", n:"사이니지·월", el:"sign", parts:[P("sign","","","viewElEmpty")] },
@@ -5799,6 +5802,7 @@ var NAV=[
   { id:"s_danger", m:"sy", n:"위험 구역", parts:[P("danger","","위험 구역","viewDanger"),P("acct","all","전체 초기화",null,{ sup:1, pre:1 })] },
   { id:"s_arch", m:"sy", n:"보관", parts:[P("arch","","목록","viewArch"),P("stamp","wq","QR 퀴즈 문항"),P("qr","beta","클로즈 베타 QR"),P("photo","","포토부스 대기열"),P("art","","사생대회")] }
 ];
+NAV=NAV.filter(function(it){ return RACE_ON||it.id!=="r_race"; });
 var NAVBY={}; NAV.forEach(function(it){ NAVBY[it.id]=it; });
 ST.nav="hq"; ST.part={}; ST.lastNav={};
 try{ var _nv=sessionStorage.getItem("axf_hv_nav"); if(_nv&&NAVBY[_nv.split(":")[0]]){ ST.nav=_nv.split(":")[0]; ST.part[ST.nav]=Number(_nv.split(":")[1])||0; } }catch(e){}
@@ -5830,7 +5834,7 @@ function hvFieldWait(){ var rv=(ST.data.resv||{}).rows||[], cc=(ST.data.cchat||{
 var HV_ELNEED={
   app:[{k:"sy",a:"sync",p:{emp:""}},{k:"pst",a:"push_stats"}],
   game:[{k:"olyr",a:"oly_result"},{k:"oxs",a:"ox_stats"}],
-  type:[{k:"rlist",a:"race_list"}],
+  type:[{k:"tres",a:"type_result"}],
   draw:[{k:"draw",a:"draw_stats"}],
   roul:[{k:"stamp",a:"stamp_people"},{k:"sy",a:"sync",p:{emp:""}}],
   sign:[{k:"stats",a:"stats"}],
@@ -5839,7 +5843,7 @@ var HV_ELNEED={
 function hvNeedX(t){
   var it=navCur(), out=[];
   if(it.el&&HV_ELNEED[it.el]&&t===navPart().tab) out=HV_ELNEED[it.el].slice();
-  if(t==="dash"&&it.id==="hq") out=out.concat([{k:"crowd",a:"crowd_log"}]);
+  if(t==="dash"&&it.id==="hq") out=out.concat([{k:"crowd",a:"crowd_log"},{k:"tres",a:"type_result"}]);
   if(t==="danger") out=out.concat([{k:"slist",a:"stamp_list"},{k:"stair",a:"stair_list"},{k:"alist",a:"att_list"}]);
   if(t==="sys") out=out.concat([{k:"acct",a:"acct_list"}]);
   if(t==="cfg") out=out.concat(HVS.cfg?[{k:"cfgl",a:"cfg_list"}]:[]);
@@ -5942,12 +5946,12 @@ function elSt(k){
     o.m=(ps?(ps.on?"푸시 켜짐":"푸시 전체 정지"):"푸시 없음")+" · "+(hvRo()?"읽기 전용 켜짐":"읽기 전용 꺼짐"); }
   else if(k==="game"){ var d=ST.data.olyr||{}, ox=ST.data.oxs||{}, off=(ox.off||[]).length;
     o.p=d.ok?(d.locked?["당일 잠금","ok"]:["잠금 전","warn"]):["열어 보면 표시","off"];
-    o.nums=[["규칙판",d.rule?"rev "+(d.rule.rev||0):"-"],["꺼진 O/X 문항",ox.ok?off+"개":"-"]];
+    o.nums=[["규칙판",d.rule?"rev "+(d.rule.rev||0):"-"],["꺼진 AX 퀴즈 문항",ox.ok?off+"개":"-"]];
     o.m=d.ok?"규칙판 rev "+((d.rule||{}).rev||0)+(ox.ok?" · 꺼진 문항 "+off:""):"점수 계수 · O/X 문항"; }
-  else if(k==="type"){ var m0=RACE.m, s0=m0?m0.st:"", rl=ST.data.rlist||{};
-    o.p=s0==="run"?["진행 중","ok"]:s0==="open"?["판 열림","warn"]:["대기","off"];
-    o.nums=[["오늘 판",rl.ok?(rl.games||0)+"판":"-"],["지금 좌석",m0&&(s0==="open"||s0==="run")?(m0.rows||[]).length+"명":"-"],["기록 마감","17:00"]];
-    o.m=(rl.ok?"오늘 "+(rl.games||0)+"판":"판 기록")+" · 마감 17:00"; }
+  else if(k==="type"){ var tr=ST.data.tres||{}, top=tr.top||[], win=(tr.win||[]).join(" · ");   /* v5.14 1F 셀프 노트북 기준(대전 없음) */
+    o.p=!tr.ok&&!top.length?["열어 보면 표시","off"]:top.length?["기록 있음","ok"]:["기록 없음","off"];
+    o.nums=[["1위",top[0]?(top[0].nick||"-")+" · "+Number(top[0].score||0).toLocaleString()+"점":"-"],["도전 횟수",tr.tries?tr.tries+"회":"-"],["운영 시간",win||"-"]];
+    o.m=(top[0]?"1위 "+Number(top[0].score||0).toLocaleString()+"점":"1F 셀프")+(win?" · "+win:" · 마감 17:00"); }
   else if(k==="draw"){ var dr=ST.data.draw||ST.data.dstat||{}, fn=ST.data.fin||{};
     o.p=!dr.ok?["열어 보면 표시","off"]:dr.closed?["체크인 마감","off"]:dr.code?["체크인 받는 중","ok"]:["코드 없음","warn"];
     o.nums=[["추첨 체크인",dr.ok?(dr.in||0)+"명":"-"],["통 안의 공",dr.ok?(dr.balls||0)+"개":"-"],["참여상",fn.ok?(FIN_PH[fn.ph]||["-"])[0]:"-"]];
@@ -5967,7 +5971,7 @@ function elSt(k){
   return o;
 }
 var HV_EL=[["app","앱","e_app"],["game","AX 퀴즈·게임","e_game"],["type","타자왕","e_type"],["draw","럭키드로우·참여상","e_draw"],["roul","룰렛","e_roul"],["sign","사이니지·월","e_sign"],["qr","QR","e_qr"]];
-var HV_ELREC={ game:"r_game", type:"r_race", draw:"", roul:"r_stamp", sign:"r_sum", qr:"r_stair", app:"r_visit" };
+var HV_ELREC={ game:"r_game", type:"", draw:"", roul:"r_stamp", sign:"r_sum", qr:"r_stair", app:"r_visit" };
 
 /* ── 화면 열기 · 주소 복사 · 주소에는 코드 · 토큰을 넣지 않는다 ── */
 function hvOpen(u){ window.open(u, "_blank"); }
@@ -5975,7 +5979,7 @@ function hvCopy(u){ if(navigator.clipboard&&navigator.clipboard.writeText) navig
 function hvScreens(k){
   var A=appBase();
   if(k==="app") return [["참가자 앱","포스터 · 안내 데스크 · 시연",A]];
-  if(k==="type") return [["큰 화면 · 대전","1F 타자왕 부스 · 이 콘솔 위 전체 화면",null,"rtvOpen()"],["부스 TV · HIGH SCORE 세로","1F 타자왕 부스 세로 TV",A+"#tv=type&fix=site"],["TV 순환 · 현장 · 올림픽","1F 가로 TV",A+"#tv=type"],["셀프 노트북","1F 타자왕 셀프 노트북 · 코드를 그 화면에서 넣음",A+"#self"],["선수 좌석 링크","「판 진행」에서 좌석마다 발급",null,"navSel('e_type',0)"]];
+  if(k==="type") return (RACE_ON?[["큰 화면 · 대전","1F 타자왕 부스 · 이 콘솔 위 전체 화면",null,"rtvOpen()"]]:[]).concat([["부스 TV · HIGH SCORE 세로","1F 타자왕 부스 세로 TV",A+"#tv=type&fix=site"],["TV 순환 · 현장 · 미니 게임","1F 가로 TV",A+"#tv=type"],["셀프 노트북","1F 타자왕 셀프 노트북 · 코드를 그 화면에서 넣음",A+"#self"]]);
   if(k==="draw") return [["추첨 화면 · 원격","17F 대형 스크린 · 코드는 그 화면에서 넣음",dcScreenUrl()]];
   if(k==="sign") return [["ME to WE 스탬프 월","1F 스탠바이미 · 방향은 화면 비율로",A+"wall/"],["스탬프 월 · 가로 고정","",A+"wall/?o=land"],["스탬프 월 · 세로 고정","",A+"wall/?o=port"],["스탬프 월 · 데모","서버 없이 가짜 적립",A+"wall/?demo=1"],["타자왕 부스 TV","1F 세로 TV",A+"#tv=type&fix=site"],["타자왕 TV 순환","1F 가로 TV",A+"#tv=type"]];
   if(k==="qr") return [["QR 그림 · 내려받기","이 화면 아래 「QR 그림」",null,"navSel('e_qr',0)"]];
@@ -5999,11 +6003,11 @@ function hvCtl(k){
       hvDzRow("읽기 전용 스위치","켜면 앱의 쓰기가 모두 멈춥니다(서버 이전 · 비상용)","hvRoAsk()",1);
   } else if(k==="game"){
     var d=ST.data.olyr||{};
-    b+='<div class="row"><span class="cap">당일 잠금 '+(d.ok?(d.locked?tag("켜짐","ok"):tag("꺼짐","warn")):"-")+'</span><button class="btn" onclick="navSel(\'e_game\',0)">점수 계수 · 당일 잠금</button><button class="btn" onclick="navSel(\'e_game\',1)">O/X 문항 켜기 · 끄기</button></div>'+
+    b+='<div class="row"><span class="cap">당일 잠금 '+(d.ok?(d.locked?tag("켜짐","ok"):tag("꺼짐","warn")):"-")+'</span><button class="btn" onclick="navSel(\'e_game\',0)">점수 계수 · 당일 잠금</button><button class="btn" onclick="navSel(\'e_game\',1)">AX 퀴즈 문항 켜기 · 끄기</button></div>'+
       '<p class="cap mt8">켜고 끄는 버튼은 아래 세부 작업에 있습니다. 문항 끄기는 당일 잠금과 따로 됩니다.</p>';
   } else if(k==="type"){
-    b+='<div class="row"><button class="btn pri" onclick="rtvOpen()">큰 화면 열기</button><button class="btn" onclick="navSel(\'e_type\',0)">판 열기 · 시작 · 끝내기</button><button class="btn" onclick="navSel(\'e_type\',1)">닉네임 숨김 · 셀프 횟수</button></div>'+
-      '<p class="cap mt8">판 닫기(기록 없이 취소)는 판 진행 화면에서 확인 창을 거칩니다.</p>';
+    b+='<div class="row"><button class="btn" onclick="navSel(\'e_type\',0)">도전 횟수 · 운영 시간 · 닉네임 숨김</button></div>'+
+      '<p class="cap mt8">1F 셀프 노트북 기록 중 점수 높은 1~3위를 Outro 에서 시상합니다(17:00 마감).</p>';
   } else if(k==="draw"){
     var dr=ST.data.draw||{};
     b+='<div class="row"><button class="btn pri" onclick="navSel(\'e_draw\',0)">원격 진행</button>'+(dr.ok&&("closed" in dr)?'<button class="btn'+(dr.closed?'':' danger')+'" onclick="drawCloseSet('+(dr.closed?0:1)+')">'+(dr.closed?"체크인 다시 열기":"체크인 마감")+'</button>':'')+'<button class="btn" onclick="navSel(\'e_draw\',2)">참여상</button></div>'+
@@ -6206,6 +6210,8 @@ GUIDE.hq=[["모드","행사 전 · 당일 · 행사 후는 서버 날짜로 자�
 GUIDE.e_app=GUIDE.e_game=GUIDE.e_type=GUIDE.e_draw=GUIDE.e_roul=GUIDE.e_sign=GUIDE.e_qr=[["상태","알약 하나와 숫자 몇 개입니다. 「마지막 변경」은 가장 최근 통제 기록입니다."],["통제","켜고 끄는 버튼과 그 요소의 설정입니다. 위험한 것은 회색 상자 안에 접혀 있고, 눌러야 펼쳐집니다."],["화면","TV · 대형 스크린에 띄우는 화면입니다. <b>화면 열기</b>는 새 창, <b>주소 복사</b>는 송출 PC 에 붙여 넣을 주소입니다. 코드는 주소에 없고 그 화면에서 넣습니다."],["세부 작업","아래 칩이 예전 화면입니다. 기능은 그대로입니다."]];
 GUIDE.s_danger=[["등급","L1 = 되돌리기 알림 · L2 = 대상 · 인원 확인 창 · L3 = 슈퍼관리자 PIN → 미리 세기 → 확인 문구 → 결과 창(책갈피 · 되돌리기 명령)입니다."],["접힘","모든 줄이 접혀 있습니다. 눌러야 버튼이 보입니다."],["행사일","10/26 에는 전체 초기화를 열지 않습니다. 서버도 받지 않습니다."]];
 GUIDE.stamp=[["사람 찾기","왼쪽 칸에 사번이나 이름을 넣고 한 사람을 고릅니다."],["8칸 확인","획득한 칸은 네이비, 획득 경로(현장 QR · 담당자 부여 · 앱 자동)가 칸 안에 보입니다."],["부여","담당자 부여는 AX PLAY(04) · 프로그램 참여(06) · 계단(07)입니다(서버 grantIds). 최초 로그인 · AX 퀴즈 · 미니 게임 · 아이디어 · 설문은 앱 안의 행동이라 부여하지 않습니다."],["취소","취소 범위는 서버 설정 「스탬프취소_범위」가 정합니다. 확인 창에서 보상 변화를 먼저 보여 주고, 룰렛을 이미 돌렸거나 발급된 응모권이 줄어드는 취소는 서버가 거부합니다."],["되돌리기","처리 직후 알림의 <b>되돌리기</b>로 바로 원래대로 돌릴 수 있습니다. 모든 부여 · 취소는 참여 기록에 행으로 남습니다(지우지 않음)."]];
+GUIDE.typing=[["게임별 통계","미니 게임 세 종목(AX 팡 · ME to WE 점프 · 테트리스) 전원 점수 · 최고 점수 중앙 · 만점 도달 · CSV 입니다. AX 퀴즈는 한 판 완주만 보고 순위가 없어 카드가 없습니다."],["재보정","1,000점에서 크게 벗어난 종목은 행사 요소 › AX 퀴즈·게임 › 점수 계수에서 고칩니다."]];   /* v5.14 현재 기획으로 다시 씀(옛 다섯 종목 · O/X 문항 · 타자왕전 안내 삭제) */
+GUIDE.e_type=[["1F 셀프","1F 노트북에서 참가자가 앱의 내 QR 로 들어와 도전합니다. 도전 횟수와 운영 시간(끝 = 17:00 마감)을 바꿉니다."],["상위 5","점수 높은 순입니다. Outro 에서 1~3위를 시상합니다."],["화면","부스 세로 TV · 가로 TV 순환 · 셀프 노트북 주소입니다."]];
 /* ══════════════════ 8. 시작 ══════════════════ */
 (function(){ var p=navPart(); ST.tab=p.tab; if(p.sub) ST.subs[p.tab]=p.sub; })();   /* v5.14 새로 고침해도 보던 메뉴 그대로 */
 renderTabs();
