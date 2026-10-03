@@ -577,6 +577,7 @@
   #rgPlay .rg-hud .rg-ht i.last { animation: rgBlink 0.5s steps(1) infinite; }
   #rgPlay .rg-hud .rg-ht i.hit { color: #D64524; animation: tileShake 0.3s; }
   @keyframes rgBlink { 50% { opacity: 0.25; } }
+  @keyframes tsfGd { 0% { margin-top: 0; } 50% { margin-top: -6px; } }   /* v5.24 셀프 모드 카메라 상자 「내 QR」 그림이 위아래로 두 칸 */
   @keyframes tsfBlink { 50% { color: #D64524; } }   /* v4.32 셀프 모드 「SPACE를 눌러 시작」 · 글자는 사라지지 않고 밝기만 오간다(O100 ↔ 어두운 오렌지 · v4.29b) */
   #rgPlay .rg-hud .rg-ib.off { color: #B8AEA6; border-color: #D9D2CC; text-decoration: line-through; }
   #rgPlay .rg-hud .rg-ib, #rgPlay.rain .rg-hud .rgp-x { flex: none; min-width: 44px; height: 44px; padding: 0 8px; border: 2px solid #000; border-radius: 12px; background: #fff; font-weight: 800; font-size: 13px; color: #000; }
@@ -2519,8 +2520,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .rt .tsf-ln.ok { color: var(--rt-cream); }
   .rt .tsf-ln.bad { color: var(--rt-o60); }
   .rt .tsf-hint.go { color: var(--rt-o100); }
-@@@END
-
   .rt .tsf-in { box-sizing: border-box; width: calc(100% - 6px); height: 64px; margin: 3px; padding: 0 14px; border: 0; border-radius: 0; outline: none; background: var(--rt-cream); color: var(--rt-bark); font-family: var(--rt-font); font-size: var(--rt-f32); font-weight: 400; line-height: var(--rt-l32); box-shadow: var(--rt-line); }
   .rt .tsf-in:focus { box-shadow: var(--rt-line), inset 0 0 0 4px var(--rt-o100); }
   .rt .tsf-in:disabled { background: var(--rt-dim); }
@@ -2550,7 +2549,14 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* v5.12 (261003 사용자 결정) 1F 타자왕 아케이드 · 왼쪽 카메라 상자(거울 그림 · 네 귀퉁이 조준선) · 참가 방법 번호 · 가운데 DOM(닉네임 · 결과) · 오른쪽 점수 규칙 */
   .rt .tsf-cam { gap: 6px; }
   .rt .tsf-vid { position: relative; margin-top: 6px; aspect-ratio: 4 / 3; background: var(--rt-bark); box-shadow: var(--rt-line); overflow: hidden; }
-  .rt .tsf-vid video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+  .rt .tsf-vid video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); opacity: 0; }   /* v5.24(261003 사용자) 영상은 보이지 않게(인식은 뒤에서 계속) · 얼굴을 비추지 않는다 */
+  .rt .tsf-vid .tsf-gd { position: absolute; left: 50%; top: 40%; width: 26%; height: auto; transform: translate(-50%, -50%); animation: tsfGd 1.6s steps(2) infinite; }
+  .rt .tsf-vid canvas { position: absolute; left: 50%; top: 40%; width: 52%; aspect-ratio: 1; transform: translate(-50%, -50%); display: none; image-rendering: pixelated; box-shadow: 0 0 0 3px var(--rt-ink), 0 0 0 7px var(--rt-o100); background: var(--rt-cream); }
+  .rt .tsf-vid.snap canvas { display: block; }
+  .rt .tsf-vid.snap .tsf-gd, .rt .tsf-vid.mos .tsf-gd { display: none; }
+  .rt .tsf-vid.mos canvas { display: block; left: 0; top: 0; width: 100%; height: 100%; aspect-ratio: auto; transform: none; box-shadow: none; }
+  .rt .tsf-vid.snap.mos canvas { left: 50%; top: 40%; width: 52%; height: auto; aspect-ratio: 1; transform: translate(-50%, -50%); box-shadow: 0 0 0 3px var(--rt-ink), 0 0 0 7px var(--rt-o100); }
+  @media (prefers-reduced-motion: reduce) { .rt .tsf-vid .tsf-gd { animation: none; } }
   .rt .tsf-vid i { position: absolute; width: 20%; height: 20%; border: 0 solid var(--rt-o100); }
   .rt .tsf-vid .c1 { left: 18%; top: 8%; border-left-width: 6px; border-top-width: 6px; }
   .rt .tsf-vid .c2 { right: 18%; top: 8%; border-right-width: 6px; border-top-width: 6px; }
@@ -3639,7 +3645,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.23";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.24";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -11207,7 +11213,10 @@ function qzStampCheck(srv) {
    도전 횟수 = 서버 설정 타자셀프_횟수(기본 3 · 콘솔에서 바꾼다) · 화면은 서버가 준 남은 횟수만 보여 준다(앱이 세지 않는다).
    화면 = 넓은 화면 3단(왼쪽 카메라 · 참가 방법 · 도전자 / 가운데 판 / 오른쪽 HIGH SCORE · 점수 규칙) · 판 도중은 엔진 3단(rgLeftDraw · rgRaceDraw) · 실명은 받지도 띄우지도 않는다(닉네임만).
    토너먼트(대전 · admin/typing.html · 콘솔 「타자왕전」 판 · race_* · 「타자대전」 시트)와 코드 · 저장 키 · 서버 액션을 나눈다 · 같이 쓰는 것은 판 엔진(assets/rain-engine.js)뿐.
-   이 기기 저장 = self_on · self_key(관리코드) · self_tok · site_sound(효과음 · 기본 켬). 스태프 「관리」 = 왼쪽 아래 단추 또는 F2(관리코드). */
+   이 기기 저장 = self_on · self_key(관리코드) · self_tok · site_sound(효과음 · 기본 켬). 스태프 「관리」 = 왼쪽 아래 단추 또는 F2(관리코드).
+   v5.24(261003 사용자 피드백) 카메라 영상을 화면에 띄우지 않는다(얼굴이 비쳤다) · 평소 = 「내 QR을 비추세요」 그림 · QR 을 읽은 순간만 그 QR 부분을 잘라 2.6초 보인다(tsfSnap) ·
+     조준용 거친 점 모자이크(TSF_CAM_VIEW = "mosaic")는 대안으로만 둔다(기본 "off") · 보너스 스테이지 = 엔진 「비구름」(v5.24 절). */
+var TSF_CAM_VIEW = "off";   /* "off" = 영상 숨김(기본) · "mosaic" = 24 × 18 칸 점 모자이크(얼굴이 알아보이지 않는 크기) · 리허설 비교용 */
 var TSF = { ph: "attract", msg: "", emp: "", nick: "", info: null, busy: false, ticket: "", res: null, sub: null, send: "", why: "", top: null, topT: 0, resAt: 0, phAt: 0, idle: 0, t: null, raf: 0, unl: false, snd: true, cfg: null,
   cam: { stream: null, timer: null, err: "", last: "", lastT: 0, busy: false, cv: null, g: null }, race: null, err: null, nm: "", nmBad: false };
 var TSF_WHY = { param: "QR을 읽지 못했어요", unknown: "명부에서 찾을 수 없어요 · 스태프를 불러 주세요", window: "지금은 도전 시간이 아니에요", auth: "관리코드가 바뀌었어요 · 스태프를 불러 주세요", range: "기록이 범위를 넘어 저장하지 않았어요", net: "서버 응답이 없어요 · 잠시 뒤 다시 비춰 주세요",
@@ -11332,7 +11341,35 @@ function tsfDecode(v) {
   if (C.cv.width !== w || C.cv.height !== h) { C.cv.width = w; C.cv.height = h; }
   C.g.drawImage(v, 0, 0, w, h);
   var r = jsQR(C.g.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: "dontInvert" });
+  if (r && r.data) C.loc = r.location;   /* v5.24 읽은 QR 자리 · 그 부분만 잘라 보인다(tsfSnap) */
   return r && r.data ? r.data : null;
+}
+/* v5.24 QR 을 읽은 순간 · 방금 프레임에서 QR 네 귀퉁이 + 여백 15% 만 잘라 카메라 상자 가운데에 · 얼굴은 잘린다 · 2.6초 뒤 그림으로 돌아간다 */
+function tsfSnap() {
+  var C = TSF.cam, L = C.loc, cv = el("tsfSnap"), box = el("tsfVidBox"); if (!L || !C.cv || !cv || !box) return;
+  var xs = [L.topLeftCorner.x, L.topRightCorner.x, L.bottomLeftCorner.x, L.bottomRightCorner.x], ys = [L.topLeftCorner.y, L.topRightCorner.y, L.bottomLeftCorner.y, L.bottomRightCorner.y];
+  var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs), y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys), sz = Math.max(x1 - x0, y1 - y0) * 1.3, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+  cv.width = cv.height = 240;
+  var g = cv.getContext("2d"); g.imageSmoothingEnabled = false;
+  g.fillStyle = "#F3E7D8"; g.fillRect(0, 0, 240, 240);
+  try { g.drawImage(C.cv, cx - sz / 2, cy - sz / 2, sz, sz, 0, 0, 240, 240); } catch (e) {}
+  TSF.snapAt = performance.now(); box.classList.add("snap");
+}
+function tsfSnapTick() {
+  var box = el("tsfVidBox"); if (!box) return;
+  var on = TSF.snapAt && performance.now() - TSF.snapAt < 2600 && ["check", "join", "err", "nick", "ready"].indexOf(TSF.ph) >= 0;
+  if (!on && box.classList.contains("snap")) { box.classList.remove("snap"); TSF.snapAt = 0; }
+}
+/* v5.24 대안 · 거친 점 모자이크(TSF_CAM_VIEW = "mosaic") · 24 × 18 칸 · 밝기 네 단계를 오렌지 사다리 · 먹으로 · 거울 */
+function tsfMosaic(v) {
+  var cv = el("tsfSnap"), box = el("tsfVidBox"); if (!cv || !box || box.classList.contains("snap") || !v.videoWidth) return;
+  var C = TSF.cam;
+  if (!C.mc) { C.mc = document.createElement("canvas"); C.mc.width = 24; C.mc.height = 18; C.mg = C.mc.getContext("2d", { willReadFrequently: true }); }
+  C.mg.drawImage(v, 0, 0, 24, 18);
+  var d = C.mg.getImageData(0, 0, 24, 18).data, pal = ["#1B1712", "#5E3218", "#D9A066", "#FFA46E"];
+  cv.width = 24; cv.height = 18;
+  var g = cv.getContext("2d");
+  for (var y = 0; y < 18; y++) for (var x = 0; x < 24; x++) { var i = (y * 24 + x) * 4, lu = (d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11) / 256; g.fillStyle = pal[Math.min(3, Math.floor(lu * 4))]; g.fillRect(23 - x, y, 1, 1); }
 }
 function tsfScanTick() {
   if (App.current !== "type_site" || !tsfOn()) { tsfCamStop(); return; }
@@ -11340,10 +11377,12 @@ function tsfScanTick() {
   var open = TSF.ph === "attract" || TSF.ph === "err" || (TSF.ph === "result" && TSF.send !== "sending" && performance.now() - TSF.resAt > 5000);
   if (!open) return;
   var v = el("tsfVid"); if (!v || v.readyState < 2) return;
+  if (TSF_CAM_VIEW === "mosaic") tsfMosaic(v);
   var raw = tsfDecode(v); if (!raw) return;
   raw = String(raw).trim();
   if (raw === TSF.cam.last && Date.now() - TSF.cam.lastT < 4000) return;   /* 같은 QR 을 들고 있으면 4초에 한 번만 */
   TSF.cam.last = raw; TSF.cam.lastT = Date.now();
+  tsfSnap();
   tsfQr(raw);
 }
 /* QR 한 장 · 모양 · 체크섬은 앱 qrParseUser 로 먼저 · 서명 · 시각 · 명부 · 남은 도전은 서버(type_self_check qr) */
@@ -11378,7 +11417,7 @@ function tsfRacePull() {
 function tsfHtml() {
   return '<div class="tsf ph-' + TSF.ph + '"><div class="tsf-grid" style="--tsf-bw:' + tsfBw() + 'px">' +
     '<div class="tsf-l"><section class="tsf-p tsf-cam"><p class="tsf-t">AX 단어 소나기</p><p class="tsf-s">1F 타자왕 · 셀프 도전</p>' +
-    '<div class="tsf-vid"><video id="tsfVid" muted playsinline autoplay></video><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i><p id="tsfCamCap">' + esc(tsfCamCap()) + "</p></div></section>" +
+    '<div class="tsf-vid' + (TSF_CAM_VIEW === "mosaic" ? " mos" : "") + '" id="tsfVidBox"><video id="tsfVid" muted playsinline autoplay></video><svg class="tsf-gd" viewBox="0 0 24 30" shape-rendering="crispEdges" aria-hidden="true"><rect x="5" y="1" width="14" height="28" fill="#000"/><rect x="6" y="2" width="12" height="26" fill="#FF7E31"/><rect x="7" y="4" width="10" height="19" fill="#F3E7D8"/><path fill="#1B1712" d="M8 5h3v3H8zM13 5h3v3h-3zM8 12h3v3H8zM12 9h1v1h-1zM14 10h2v1h-2zM12 12h1v2h-1zM14 13h1v1h-1zM15 14h1v1h-1zM8 17h2v1H8zM11 16h3v1h-3zM8 20h1v1H8zM13 18h2v2h-2zM11 19h1v2h-1zM15 20h1v1h-1zM10 25h4v1h-4z"/><path fill="#F3E7D8" d="M9 6h1v1H9zM14 6h1v1h-1zM9 13h1v1H9z"/></svg><canvas id="tsfSnap" aria-hidden="true"></canvas><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i><p id="tsfCamCap">' + esc(tsfCamCap()) + "</p></div></section>" +
     '<div id="tsfLx">' + tsfLeftHtml() + "</div></div>" +
     '<section class="tsf-c"><canvas id="tsfCv" aria-hidden="true"></canvas><div class="tsf-ov" id="tsfOv">' + tsfOvHtml() + "</div></section>" +
     '<section class="tsf-r" id="tsfR">' + tsfRightHtml() + "</section>" +
@@ -11410,7 +11449,7 @@ function tsfRightHtml() {
     h += '<div class="tsf-row' + (i < 3 && x ? " top" : "") + (hl && x && x.me ? " me" : "") + '"><span class="no">' + (i + 1) + '</span><span class="nm">' + (x ? esc(x.name) : "<i>도전을 기다려요</i>") + '</span><span class="sc">' + (x ? typePts(x.score) : "") + "</span></div>";
   }
   if (r && hl && r.me && r.me.rank > 5) h += '<p class="tsf-hint">내 순위 ' + r.me.rank + "위 · " + typePts(r.me.score) + "</p>";
-  return h + '</div><div class="tsf-pts"><p class="tsf-k">점수</p><p>단어 = 글자 × 10 × 콤보(최대 3배)</p><p>단계마다 보너스 스테이지 · 문장 하나</p><p>정확하게 · 빨리 칠수록 보너스</p><p>180초까지 버티면 목숨 × ' + RAIN_LIFE_BONUS + "</p></div>";
+  return h + '</div><div class="tsf-pts"><p class="tsf-k">점수</p><p>단어 = 글자 × 10 × 콤보(최대 3배)</p><p>비구름이 걷히면 보너스 스테이지 · 숨은 문장</p><p>정확하게 · 빨리 칠수록 보너스</p><p>180초까지 버티면 목숨 × ' + RAIN_LIFE_BONUS + "</p></div>";
 }
 /* 가운데 판 위 DOM · 닉네임 칸(nick) · 결과(result) · 나머지는 캔버스(tsfPrevDraw) */
 function tsfOvHtml() {
@@ -11539,6 +11578,7 @@ function tsfTick() {
     if (left <= 0 && TSF.send !== "sending") tsfReset();
   }
   if (TSF.cam.stream && !TSF.cam.timer) tsfCamAttach();
+  tsfSnapTick();
   if (TSF.ph === "attract") tsfRankPull();
 }
 /* 닉네임 칸 · 공백은 받지 않는다(규칙 = 타자 닉네임 · 한글·영문·숫자 2~8자) · 조합 중에는 값을 고치지 않는다 · 형식에 없는 글자만 바로 알린다 */
