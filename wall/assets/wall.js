@@ -649,7 +649,7 @@
   }
   function drawPrizePage(list, t0, t, out) {
     var port = G.port, n = list.length, k, cols, sz, cw, rh, y0;
-    if (!port) { cols = n === 6 ? 3 : 5; sz = n === 6 ? 250 : 236; cw = n === 6 ? 420 : 320; rh = 380; y0 = n === 6 ? 120 : 300; }
+    if (!port) { cols = n === 6 ? 3 : 5; sz = 236; cw = n === 6 ? 420 : 320; rh = n === 6 ? 362 : 380; y0 = n === 6 ? 214 : 300; }   /* 6장(2줄) · 오른쪽 위 슬로건 줄(y 54~166)·하단 띠(y 962~)와 안 겹치게 아래로 */
     else { cols = 2; sz = 270; cw = 470; rh = 412; y0 = 300; }
     var nameS = port ? 34 : 30, rankS = port ? 26 : 24;
     for (k = 0; k < n; k++) {
@@ -661,7 +661,7 @@
   }
   function drawStamps(t, dur) {
     var port = G.port, cols = port ? 2 : 4, cw = port ? 470 : 380, rh = port ? 300 : 360, D = port ? 132 : 116;
-    var x0 = G.cxs - (cols - 1) * cw / 2, y0 = port ? 380 : 250, sp = lgsSprites();
+    var x0 = G.cxs - (cols - 1) * cw / 2, y0 = port ? 380 : 272, sp = lgsSprites();
     var nameS = port ? 44 : 38, condS = port ? 28 : 24, out = 1 - cl((t - (dur - 1.6)) / 1.2);
     for (var k = 0; k < AD_ST.length; k++) {
       var col = k % cols, row = Math.floor(k / cols), px = x0 + col * cw, py = y0 + row * rh;
