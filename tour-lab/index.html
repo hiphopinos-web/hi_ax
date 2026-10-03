@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#FFFFFF">
+<title>1층 둘러보기 시험판</title>
+<!-- 가상 1층 둘러보기 v3 시제품(261003) · 앱 본문(index.html)과 따로 · 모형 · 판 그림은 ../assets/tour/ 를 그대로 읽는다 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="lab.css?v=v532a">
+</head>
+<body>
+<div id="app">
+  <header class="hd">
+    <h1>1층 둘러보기 <span class="tag">시험판</span></h1>
+    <button type="button" class="hb" id="bList">구역 목록</button>
+    <button type="button" class="hb" id="bHelp">도움말</button>
+  </header>
+  <main class="stage" id="stage">
+    <canvas id="cv" aria-label="1층 로비 3D 모형"></canvas>
+    <div class="pins" id="pins"></div>
+    <div class="cap" id="cap" hidden></div>
+    <div class="load" id="load">모형 불러오는 중</div>
+    <div class="joy" id="joy" hidden><span class="knob" id="knob"></span></div>
+    <div class="dest" id="dest" hidden></div>
+    <p class="drag" id="drag">화면을 끌면 직접 걸어요</p>
+    <div class="bubble" id="bubble" hidden>아이디어 한 줄을 내면 커피챗을 신청할 수 있어요</div>
+    <div class="fps" id="fps" hidden></div>
+    <div class="map" id="map" hidden></div>
+  </main>
+  <nav class="bar" id="bar">
+    <div class="slot"><button type="button" class="cta" id="cta" hidden></button><p class="where" id="where">&nbsp;</p></div>
+    <div class="row" id="navRow">
+      <button type="button" class="nb" id="bPrev">◀ 이전 구역</button>
+      <button type="button" class="nb pri" id="bNext">다음 구역 ▶</button>
+    </div>
+    <div class="row" id="cafeRow" hidden>
+      <button type="button" class="nb pri wide" id="bBack1F">1층으로 돌아가기</button>
+    </div>
+  </nav>
+</div>
+
+<!-- 구역 판 보기 시트 -->
+<section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="구역 판 보기" hidden>
+  <header class="sh">
+    <span class="sg" id="shSign"></span>
+    <b id="shTitle"></b>
+    <span class="cnt" id="shCount"></span>
+    <button type="button" class="close" id="shClose">닫기</button>
+  </header>
+  <div class="track-wrap" id="trackWrap"><div class="track" id="track"></div></div>
+  <footer class="sf">
+    <button type="button" class="nb" id="pPrev">◀ 이전 판</button>
+    <button type="button" class="nb" id="pZoom">크게</button>
+    <button type="button" class="nb" id="pNext">다음 판 ▶</button>
+  </footer>
+</section>
+
+<!-- 구역 목록 -->
+<section class="list" id="list" role="dialog" aria-modal="true" aria-label="구역 목록" hidden>
+  <header class="sh"><b>어디로 갈까요?</b><button type="button" class="close" id="lClose">닫기</button></header>
+  <div class="lbody" id="lbody"></div>
+</section>
+
+<!-- 처음 안내 · 한 문장 -->
+<section class="help" id="help" role="dialog" aria-modal="true" aria-label="처음 안내" hidden>
+  <div class="hcard">
+    <p class="h1t">아래 「다음 구역」을 누르면 캐릭터가 알아서 걸어가요.</p>
+    <div class="hdemo" aria-hidden="true"><span class="hbtn">다음 구역 ▶</span><span class="finger"></span></div>
+    <button type="button" class="nb pri wide" id="hOk">시작하기</button>
+  </div>
+</section>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="../assets/tour/three.min.js"></script>
+<script src="../assets/tour/meshopt_decoder.js"></script>
+<script src="../assets/tour/GLTFLoader.js"></script>
+<script src="../assets/tour/tour-data.js?v=v532a"></script>
+<script src="../assets/tour/tour-scene.js?v=v532a"></script>
+<script src="lab.js?v=v532a"></script>
+</body>
+</html>

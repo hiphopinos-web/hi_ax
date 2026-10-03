@@ -22,7 +22,7 @@
   var ZTXT = { vision: '회사가 가는 방향을 보는 곳', lab: 'DAP 과제를 보는 곳', action: 'AI 업무 사례를 보는 곳', play: 'AI를 직접 써 보는 곳', event: '사진 · 룰렛 · 타자왕이 있는 곳', lounge: '업무 고민을 상담하는 곳', cafe: '아이디어를 놓고 이야기하는 곳' };
 
   var R = null;   /* 열려 있는 동안의 상태 한 묶음 · 닫으면 버린다 */
-  var VER = 'v519c';   /* 모형 파일 캐시 깨기 · 모형을 바꾸면 올린다 */
+  var VER = 'v532a';   /* 모형 파일 캐시 깨기 · 모형을 바꾸면 올린다 */
   var ATLAS_IMG = {};   /* 아틀라스 그림은 닫아도 들고 있다(작다 · 약 180KB) */
   function $(k) { return R && R.el[k]; }
 
@@ -38,6 +38,13 @@
     return 'background-image:url(' + BASE + D.ATLAS.files[a[0]] + ');background-size:' + (S * k).toFixed(1) + 'px ' + (S * k).toFixed(1) + 'px;background-position:' + (-(a[1] + 2) * k).toFixed(1) + 'px ' + (-(a[2] + 2) * k).toFixed(1) + 'px;background-repeat:no-repeat';
   }
   function detailSrc(p) { return BASE + 'd/p' + (p < 10 ? '0' : '') + p + '.webp'; }
+  /* 크게 보기 = 위아래(와 좌우 조금) 빈 여백을 잘라 낸 그림(v5.32 · tour-data CROP) · 받기 전 자리 그림도 같은 칸만 */
+  function cropSrc(p) { return BASE + 'd/c/p' + (p < 10 ? '0' : '') + p + '.webp'; }
+  function cropBg(p, w) {
+    var a = D.ATLAS.at[p]; if (!a) return '';
+    var S = D.ATLAS.size[a[0]], c = D.cropOf(p), cw = a[3] - 4, ch = a[4] - 4, k = w / (cw * (c[2] - c[0]));
+    return 'background-image:url(' + BASE + D.ATLAS.files[a[0]] + ');background-size:' + (S * k).toFixed(1) + 'px ' + (S * k).toFixed(1) + 'px;background-position:' + (-(a[1] + 2 + c[0] * cw) * k).toFixed(1) + 'px ' + (-(a[2] + 2 + c[1] * ch) * k).toFixed(1) + 'px;background-repeat:no-repeat';
+  }
   function signHtml(z, lg) {
     var h = HOST();
     if (z.id !== 'cafe' && h && h.sign) return '<span class="axs-pan tr-sgw">' + h.sign(z.name, !!lg) + '</span>';   /* 앱 간판 칩(점 글자) · 칩 모양은 앱 판 문법 절(.axs-pan .axs-sign) */
@@ -454,7 +461,7 @@
   }
   function mapSvg() {
     var B = D.BLD, s = 10, Y = function (z) { return (B.top - z) * s; }, X = function (x) { return x * s; }, LW = B.outline[1][0], CN = B.coreN, LN = B.lobbyN;   /* 숫자는 tour-data(= 3D 배치)에서만 */
-    var o = '<svg class="plan" viewBox="-8 -8 404 ' + Math.round((B.top + 2.3) * s) + '" role="group" aria-label="1층 평면 지도. 위가 북쪽, 아래가 정문">';
+    var o = '<svg class="plan" viewBox="-8 -8 ' + Math.round((Math.max(LW, B.outside.x1) + 0.8) * s + 8) + ' ' + Math.round((B.top + 2.3) * s) + '" role="group" aria-label="1층 평면 지도. 위가 북쪽, 아래가 정문">';
     o += '<defs><pattern id="trHz" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#EEF0F2"/><line x1="0" y1="0" x2="0" y2="6" stroke="#D9DDE2" stroke-width="2"/></pattern></defs>';
     o += '<polygon points="' + B.outline.map(function (q) { return X(q[0]) + ',' + Y(q[1]); }).join(' ') + '" fill="#FFFFFF" stroke="#CBD0D6" stroke-width="1.5"/>';
     var O = B.outside; o += '<rect x="' + X(O.x0) + '" y="' + Y(O.z1) + '" width="' + (O.x1 - O.x0) * s + '" height="' + (O.z1 - O.z0) * s + '" rx="3" fill="#EEF0F2"/><text class="lab" x="' + X((O.x0 + O.x1) / 2) + '" y="' + (Y(O.z1) - 3) + '" text-anchor="middle">건물 밖</text>';
@@ -596,13 +603,12 @@
     if (R.sel && R.mode === '3d' && R.g) flyTo(zoneView(R.g, R.sel), 800);
   }
   function layoutViewer() {
-    var V = R.V, p = V.list[V.i], s = D.pgSize(p), r = $('vs').getBoundingClientRect(), vi = $('vimg');
+    /* v5.32: 잘라 낸 그림을 화면 폭에 꽉 채운다(양옆 12px) · 화면보다 짧으면 위에 붙이고 · 길면 세로로 끌어 본다(사용자 261003 「꽉 차게」) */
+    var V = R.V, p = V.list[V.i], s = D.cropSize(p), r = $('vs').getBoundingClientRect(), vi = $('vimg');
     V.bw = r.width; V.bh = r.height;
-    V.iw = V.bw - 32; V.ih = V.iw * s[1] / s[0];
-    if (V.ih < V.bh - 32 && s[1] > s[0]) { V.ih = V.bh - 32; V.iw = V.ih * s[0] / s[1]; }
-    if (s[1] > s[0] && V.iw > V.bw - 32) { V.iw = V.bw - 32; V.ih = V.iw * s[1] / s[0]; }
+    V.iw = V.bw - 24; V.ih = V.iw * s[1] / s[0];
     vi.style.width = V.iw + 'px'; vi.style.height = V.ih + 'px';
-    V.s = 1; V.tx = (V.bw - V.iw) / 2; V.ty = V.ih < V.bh ? (V.bh - V.ih) / 2 : 16;
+    V.s = 1; V.tx = (V.bw - V.iw) / 2; V.ty = 12;
     return r;
   }
   function loadPanel(from) {
@@ -614,10 +620,10 @@
     var a = z ? acts(z)[0] : null; $('vAct').textContent = a ? a.lbl : ''; $('vAct').style.visibility = a ? '' : 'hidden';
     pic.alt = D.PG[p];
     var r = layoutViewer();
-    vi.setAttribute('style', 'width:' + V.iw + 'px;height:' + V.ih + 'px;' + thumbBg(p, V.iw, V.ih) + ';background-size:' + bgSize(p, V.iw) + ';opacity:0');
+    vi.setAttribute('style', 'width:' + V.iw + 'px;height:' + V.ih + 'px;' + cropBg(p, V.iw) + ';opacity:0');
     pic.style.opacity = 0; pic.removeAttribute('src');
-    var hi = new Image(); hi.onload = function () { if (R && R.V === V && V.list[V.i] === p) { pic.src = hi.src; pic.style.opacity = 1; } }; hi.src = detailSrc(p);
-    [V.list[V.i - 1], V.list[V.i + 1]].forEach(function (q) { if (q) { var im = new Image(); im.src = detailSrc(q); } });
+    var hi = new Image(); hi.onload = function () { if (R && R.V === V && V.list[V.i] === p) { pic.src = hi.src; pic.style.opacity = 1; } }; hi.src = cropSrc(p);
+    [V.list[V.i - 1], V.list[V.i + 1]].forEach(function (q) { if (q) { var im = new Image(); im.src = cropSrc(q); } });
     if (from && !RM()) {
       vi.style.transition = 'none'; vi.style.opacity = 1;
       vi.style.transform = 'translate(' + (from.x - r.left) + 'px,' + (from.y - r.top) + 'px) scale(' + (from.w / V.iw) + ')';
@@ -632,7 +638,7 @@
   function clampV() {
     var V = R.V, w = V.iw * V.s, h = V.ih * V.s;
     V.tx = w <= V.bw ? (V.bw - w) / 2 : Math.min(0, Math.max(V.bw - w, V.tx));
-    V.ty = h <= V.bh ? (V.bh - h) / 2 : Math.min(16, Math.max(V.bh - h - 16, V.ty));
+    V.ty = h <= V.bh - 24 ? 12 : Math.min(12, Math.max(V.bh - h - 12, V.ty));
   }
   function stepPanel(d) { var V = R.V, j = V.i + d; if (j < 0 || j >= V.list.length) return; V.i = j; $('vimg').style.transition = 'none'; loadPanel(null); }
   function wireViewer() {
@@ -652,7 +658,7 @@
       if (vg.kind === 'pan' && vp.size === 1) {
         var dx = p.x - p.x0, dy = p.y - p.y0; vg.moved = Math.max(vg.moved, Math.abs(dx) + Math.abs(dy));
         V.tx = vg.sx + dx; V.ty = vg.sy + dy;
-        if (V.iw * V.s <= V.bw + 1) { V.ty = Math.min(16, Math.max(V.bh - V.ih * V.s - 16, V.ty)); if (V.ih * V.s <= V.bh) V.ty = (V.bh - V.ih * V.s) / 2; }   /* 확대 전: 가로로 끌면 넘기기 */
+        if (V.iw * V.s <= V.bw + 1) { V.ty = Math.min(12, Math.max(V.bh - V.ih * V.s - 12, V.ty)); if (V.ih * V.s <= V.bh - 24) V.ty = 12; }   /* 확대 전: 가로로 끌면 넘기기 */
         else clampV();
         applyV();
       } else if (vg.kind === 'pinch' && vp.size >= 2) {
