@@ -3657,7 +3657,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.29";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.30";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -11479,7 +11479,7 @@ function tsfRightHtml() {
     h += '<div class="tsf-row' + (i < 3 && x ? " top" : "") + (hl && x && x.me ? " me" : "") + '"><span class="no">' + (i + 1) + '</span><span class="nm">' + (x ? esc(x.name) : "<i>도전을 기다려요</i>") + '</span><span class="sc">' + (x ? typePts(x.score) : "") + "</span></div>";
   }
   if (r && hl && r.me && r.me.rank > 5) h += '<p class="tsf-hint">내 순위 ' + r.me.rank + "위 · " + typePts(r.me.score) + "</p>";
-  return h + '</div><div class="tsf-pts"><p class="tsf-k">점수</p><p>단어 = 글자 × 10 × 콤보(최대 3배)</p><p>비구름이 걷히면 보너스 스테이지 · 숨은 문장</p><p>정확하게 · 빨리 칠수록 보너스</p><p>180초까지 버티면 목숨 × ' + RAIN_LIFE_BONUS + "</p></div>";
+  return h + '</div><div class="tsf-pts"><p class="tsf-k">점수</p><p>단어 = 글자 × 10 × 콤보(최대 3배)</p><p>구름이 다 비면 보너스 스테이지 · 문장 따라 치기</p><p>빠르고 정확할수록 보너스</p><p>180초까지 버티면 목숨 × ' + RAIN_LIFE_BONUS + "</p></div>";
 }
 /* 가운데 판 위 DOM · 닉네임 칸(nick) · 결과(result) · 나머지는 캔버스(tsfPrevDraw) */
 function tsfOvHtml() {
@@ -11558,24 +11558,68 @@ function tsfPrevDraw() {
     veil(0.7);
     rtDots(ctx, "TRY AGAIN", cx, y, dh * 0.9, RAIN_PAL.o60, { align: "center", line: RAIN_PAL.ink });
     if (TSF.err) { line(TSF.err.t1, y + dh + 44, 32, RT_PAL.cream); if (TSF.err.t2) line(TSF.err.t2, y + dh + 92, 16, RT_PAL.tan2); }
-  } else if (ph === "join" || ph === "ready") {
+  } else if (ph === "join") {
     veil(0.66);
     var n = rtDotsN("PLAYER JOIN"), lit = ph === "join" && !rm ? Math.floor(Math.min(1, el2 / 0.9) * n) : n;
-    if (ph === "join") rtDots(ctx, "PLAYER JOIN", cx, y, dh, RAIN_PAL.o100, { align: "center", line: RAIN_PAL.ink, lit: lit });
-    else rtDots(ctx, "PRESS SPACE", cx, y, Math.min(dh, Math.round(w * 0.06)), blink ? RAIN_PAL.o100 : RAIN_PAL.deep, { align: "center", line: RAIN_PAL.ink });   /* 준비 화면 · QR 만으로는 시작하지 않는다(261003) */
-    if (ph === "ready" || el2 > 0.9) {
+    rtDots(ctx, "PLAYER JOIN", cx, y, dh, RAIN_PAL.o100, { align: "center", line: RAIN_PAL.ink, lit: lit });
+    if (el2 > 0.9) {
       line(TSF.nick || "새 도전자", y + dh + 56, 48, RT_PAL.cream);
       line("남은 도전 " + TSF.info.left + "회 · " + (TSF.info.best ? "내 최고 " + typePts(TSF.info.best) : "첫 도전"), y + dh + 112, 16, RT_PAL.tan2);
     }
-    if (ph === "ready") {
-      var ty = Math.round(L.floor * 0.68), t = "SPACE를 눌러 시작", tw;
-      ctx.font = rtFont(32); tw = Math.ceil(ctx.measureText(t).width) + 48;
-      rtTag(ctx, cx - tw / 2, ty, tw, 56, RT_PAL.night, RT_PAL.bark, RAIN_PAL.ink);
-      ctx.textAlign = "center"; rtText(ctx, t, cx, ty + 28, 32, blink ? RAIN_PAL.o100 : RAIN_PAL.deep, null);
-      line("Tab 닉네임 바꾸기 · Esc 처음으로", ty + 84, 16, RT_PAL.tan2);
-    }
+  } else if (ph === "ready") {   /* 준비 화면 · QR 만으로는 시작하지 않는다(261003) · v5.30 규칙 세 줄을 여기서 한눈에(게임 중 설명은 줄였다) */
+    veil(0.96);
+    tsfReadyDraw(ctx, w, h, blink);
   } else if (ph === "nick" || ph === "result") veil(0.7);
   ctx.restore();
+}
+/* v5.30(261003 사용자 피드백) 준비 화면 · PRESS SPACE · 도전자 · 규칙 세 줄(그림 + 제목 + 조건) · SPACE를 눌러 시작
+   ① 구름에서 내리는 단어를 쳐서 없앤다 · 바닥에 닿으면 목숨 -1 ② 구름이 다 비면 보너스 스테이지 · 문장을 따라 친다 ③ 점수 = 단어 + 콤보 + 보너스 · 1인 n회 · 최고 점수로 순위
+   그림 = 16 × 14 칸 도트(구름과 비 · 문장 판과 커서 · 별) · 글자는 16 · 32 만 · 판 높이가 낮으면(680 미만) 간격만 줄인다 */
+var TSF_ICON = {
+  rain: ["....kkkk........", "...kcccckkkk....", ".kkcggggcccck...", "kccggggggggggk..", "kgggggggggggggk.", ".kkkkkkkkkkkkk..", "..d...d...d.....", "...d...d...d....", "..d...d...d.....", "................", ".kkkkkkkkkkkk...", ".kttttttttttk...", ".ktbbtbbtbbtk...", ".kkkkkkkkkkkk..."],
+  line: ["kkkkkkkkkkkkkkkk", "kwwwwwwwwwwwwwwk", "kwnnnnnnnnnnnnwk", "kwnccnccncccnnwk", "kwnnnnnnnnnnnnwk", "kwnccnccnnnnnnwk", "kwnnnnnoonnnnnwk", "kwnnnnnnnnnnnnwk", "kwwwwwwwwwwwwwwk", "kkkkkkkkkkkkkkkk"],
+  star: [".......kk.......", "......keok......", "......kook......", "kkkkkkoooookkkkk", ".keooooooooooook", "..kooooooooook..", "...koooooooook..", "...kooookoook...", "..koook..kooook.", "..kook....kook..", ".kkk........kkk."]
+};
+function tsfIconDraw(ctx, rows, x, y, u) {
+  var pal = { k: RAIN_PAL.ink, c: RT_PAL.cream, g: RAIN_PAL.gray, d: RAIN_PAL.dim, t: RT_PAL.tan2, b: RT_PAL.bark, o: RAIN_PAL.o100, e: RAIN_PAL.o30, w: RT_PAL.wood, n: RT_PAL.night };
+  for (var r = 0; r < rows.length; r++) for (var c = 0; c < rows[r].length; c++) { var k = rows[r].charAt(c); if (k === ".") continue; ctx.fillStyle = pal[k]; ctx.fillRect(Math.round(x + c * u), Math.round(y + r * u), u, u); }
+}
+function tsfReadyDraw(ctx, w, h, blink) {
+  var cx = w / 2, cmp = h < 680, y, dh = Math.min(cmp ? 34 : 44, Math.round(w * 0.06)), i = TSF.info || {};
+  var line = function (t, yy, px, col) { ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = rtFont(px); if (ctx.measureText(t).width > w - 32 && px > 16) px = 16; rtText(ctx, t, cx, yy, px, col, RAIN_PAL.ink); };
+  var rows = [
+    ["rain", "단어 치기", ["구름에서 내리는 단어를 쳐서 없애요", "바닥에 닿으면 목숨 -1 · 목숨 " + (RAIN_LIVES || 5) + "개"]],
+    ["line", "보너스 스테이지", ["구름이 다 비면 문장을 따라 쳐요", "빠르고 정확할수록 보너스"]],
+    ["star", "점수 · 순위", ["단어 + 콤보 + 보너스 스테이지", "1인 " + tsfLimit() + "회 · 최고 점수로 순위"]]
+  ];
+  var u = cmp ? 3 : 4, iw = 16 * u, px = 14, pw = w - 2 * px, pad = 16, tx = px + pad + iw + 18, tw = px + pw - pad - tx, hl = cmp ? 36 : 40, dl = cmp ? 20 : 24, gap = cmp ? 10 : 16;
+  ctx.font = rtFont(16);
+  rows.forEach(function (r) { var ls = []; r[2].forEach(function (t) { rgWrap(ctx, t, tw).forEach(function (x) { ls.push(x); }); }); r.ls = ls; r.h = Math.max(14 * u, hl + ls.length * dl); });
+  var ph = 2 * pad + 8 + rows.reduce(function (a, r) { return a + r.h; }, 0) + gap * (rows.length - 1), th = cmp ? 48 : 56;
+  var top = dh + (cmp ? 30 : 40) + 34 + (cmp ? 22 : 32), tot = top + ph + (cmp ? 18 : 28) + th + (cmp ? 30 : 36);   /* 세로 가운데(판 아래 땅 위) */
+  y = Math.max(cmp ? 24 : 36, Math.round((h * 0.9 - tot) / 2)) + dh / 2;
+  rtDots(ctx, "PRESS SPACE", cx, y, dh, blink ? RAIN_PAL.o100 : RAIN_PAL.deep, { align: "center", line: RAIN_PAL.ink });
+  y += dh / 2 + (cmp ? 30 : 40);
+  line(TSF.nick || "새 도전자", y, 32, RT_PAL.cream);
+  line("남은 도전 " + (i.left != null ? i.left : tsfLimit()) + "회 · " + (i.best ? "내 최고 " + typePts(i.best) : "첫 도전"), y + 34, 16, RT_PAL.tan2);
+  y += 34 + (cmp ? 22 : 32);
+  rtPanel(ctx, px, y, pw, ph, 2, RT_PAL.night);
+  var ry = y + pad + 4;
+  rows.forEach(function (r, k) {
+    tsfIconDraw(ctx, TSF_ICON[r[0]], px + pad, ry + Math.max(0, (r.h - TSF_ICON[r[0]].length * u) / 2), u);
+    ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(tx, ry + 4, 26, 26);
+    ctx.textAlign = "center"; ctx.textBaseline = "middle"; rtText(ctx, String(k + 1), tx + 13, ry + 17, 16, RT_PAL.night, null);
+    ctx.textAlign = "left"; rtText(ctx, r[1], tx + 36, ry + 17, 32, RAIN_PAL.o100, RAIN_PAL.ink);
+    r.ls.forEach(function (t, j) { rtText(ctx, t, tx, ry + hl + j * dl + dl / 2, 16, j ? RT_PAL.tan2 : RT_PAL.cream, null); });
+    ry += r.h;
+    if (k < rows.length - 1) { ctx.fillStyle = RT_PAL.wood; ctx.fillRect(px + pad, Math.round(ry + gap / 2 - 1), pw - 2 * pad, 2); ry += gap; }
+  });
+  y += ph + (cmp ? 18 : 28);
+  var t = "SPACE를 눌러 시작", tw2;
+  ctx.font = rtFont(32); tw2 = Math.ceil(ctx.measureText(t).width) + 48;
+  rtTag(ctx, cx - tw2 / 2, y, tw2, th, RT_PAL.night, RT_PAL.bark, RAIN_PAL.ink);
+  ctx.textAlign = "center"; ctx.textBaseline = "middle"; rtText(ctx, t, cx, y + th / 2, 32, blink ? RAIN_PAL.o100 : RAIN_PAL.deep, null);
+  line("Tab 닉네임 바꾸기 · Esc 처음으로", y + th + (cmp ? 20 : 26), 16, RT_PAL.tan2);
 }
 /* 화면에 붙은 뒤 · 0.265초 시계(단계 시간 · 가만히 있으면 처음으로 · 결과 15초) · 그림은 매 프레임(rAF) · 카메라 · 순위 20초마다 */
 function tsfMount() {
@@ -13770,7 +13814,7 @@ function gsStartHtml(key, o) {
     (best > 0 ? '<p class="gs-best">내 최고 ' + (key === "type" ? typeSec(best) + " 생존" : olyFmt(best) + "점") + "</p>" : "") + "</div></section>" +
     (olyIsQuiz(key) ? '<div class="gs-links">' + sndBtnHtml(false) + "</div>" :   /* v4.83 AX 퀴즈 = 닉네임 · 순위판 링크 없음 */
     '<div class="gs-links"><span>닉네임 <b>' + esc(nick) + '</b></span><button type="button" class="gs-edit" onclick="S.set(\'type_nick_edit\', true); App.render()">변경</button>' +
-    '<span aria-hidden="true">·</span><button type="button" class="gs-edit" onclick="' + gsRankGo(key) + '">순위판</button>' + sndBtnHtml(false) + "</div>") +
+    '<span aria-hidden="true">·</span><button type="button" class="gs-edit" onclick="' + gsRankGo(key) + '">' + (key === "type" ? "1F 타자왕 순위" : "순위판") + "</button>" + sndBtnHtml(false) + "</div>") +
     '<div class="ax-bottom axs-fix"><button type="button" class="ax-button rt-btn" id="gsGo" aria-label="게임 시작하기" onclick="gsBegin(\'' + key + '\')">▶ START</button></div></div>';   /* v4.23 오락실 버튼 · 읽기 프로그램에는 「게임 시작하기」 */
 }
 /* ── v4.11 시작 화면 미리보기 · 게임의 실제 그리기 함수(판·장애물·블록·타일·문제 카드)로 짧은 데모를 반복한다 ──
@@ -13937,7 +13981,7 @@ function gsResultHtml(key, r) {
     (r.banner ? '<div class="rt-extra">' + r.banner + "</div>" : "") +
     '<div class="ax-stack-tight gs-res-go"><button type="button" class="ax-button rt-btn" onclick="' + g.start + '">다시 하기</button>' +
     (qzR ? '<button type="button" class="ax-button ax-button-weak rt-btn weak" onclick="App.go(\'quiz\')">AX 퀴즈 보기</button>' :
-      '<button type="button" class="ax-button ax-button-weak rt-btn weak" onclick="' + gsRankGo(key) + '">순위판 보기</button>') +
+      '<button type="button" class="ax-button ax-button-weak rt-btn weak" onclick="' + gsRankGo(key) + '">' + (key === "type" ? "1F 타자왕 순위 보기" : "순위판 보기") + "</button>") +   /* v5.30 타자 = 1F 현장 순위판만 있다(사용자 261003) */
     '<button type="button" class="ax-button ax-button-weak rt-btn weak" onclick="App.go(\'passport\')">스탬프 보기</button></div>';
 }
 /* v4.28 결과 접힘 조각 · 여섯 곳(다섯 게임 + 단어 소나기 앱 솔로 · 1F 현장)이 같이 쓴다 · 「점수에는 들어가지 않아요」 같은 설명 문장 대신 제목 줄(점수 구성 · 참고 기록 · 점수 규칙 · 내 위치)로 나눈다 */

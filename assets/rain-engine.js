@@ -32,6 +32,8 @@
      목숨 보너스(안전 상한) · 대기 데모(rgAttractDraw) · 점 글자(rtDots) · 아래 「v5.12」 절 · 앱 솔로 · 대전 · 단어 판정 · 낙하 · 시드는 그대로.
    v5.24(261003 사용자 피드백) 보너스 스테이지 = 「비구름」 · 단계마다 튀어나오던 문장을 없앴다 · 판 위 비구름 하나가 단어 14~16개를 비로 내리고 다 내리면 걷히며 숨은 문장이 나온다(한 판 최대 3번) ·
      구름 HUD(남은 단어 칸) · CLOUD CLEAR → BONUS STAGE + 문장 → 3 · 2 · 1 → 입력 · 전환 · 카운트다운 · 결과 동안 입력칸을 비우고 막는다(readOnly · 조합 정리) · 아래 「v5.24」 절.
+   v5.30(261003 사용자 피드백) 비는 구름에서 내린다 · 구름 단어는 구름 폭 안에서 생겨 구름 아래 가장자리에서 나온다(구름이 좌우로 천천히 움직이고 · 생길 때 출렁 · 빗줄기 꼬리) · 내릴수록 구름이 작고 옅어진다 ·
+     보너스 들어갈 때 · 나올 때 전체 화면 도트 전환 + 제목 카드(BONUS STAGE · STAGE n) · 보너스 무대 = 밤 무대 · 문장 바로 밑 한 줄에 내가 친 글자(아래 입력칸은 숨김 · rgFormBns) · 점수 · 판정은 그대로.
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ═══ 단어 풀 · 여기 한 곳 ═══
@@ -176,7 +178,7 @@ function rgLayout(W, H, big, side) {
 function rgSideOn() { return !!RG.big && RG.mode !== "race"; }
 function rgFontStr(px) { return "800 " + px + "px " + RAIN_FONT; }
 function rtFont(px) { return Math.round(px) + "px " + RT_FONT; }
-function rgWordY(w) { var L = RG.L; return L.top + Math.min(1, w.p) * L.fallPx; }
+function rgWordY(w) { var L = RG.L; if (w.y0 == null) return L.top + Math.min(1, w.p) * L.fallPx; return w.y0 + Math.min(1, w.p) * Math.max(10, L.floor - L.boxH - w.y0); }   /* v5.30 구름 단어 = 구름 아래 가장자리(y0)에서 출발 · 바닥선까지 걸리는 시간은 그대로 */
 function rgRamp(sec) { return Math.max(RAIN_RAMP_MIN, 1 - Math.max(0, sec - RAIN_RAMP_FROM) / RAIN_RAMP_SPAN * (1 - RAIN_RAMP_MIN)); }
 function rgElapsed(now) { return RG.t0 ? (now - RG.t0) / 1000 : 0; }
 
@@ -479,6 +481,7 @@ function rgStart(mode, opt) {
   try { if (typeof SFX !== "undefined") SFX.site = RG.mode !== "app"; } catch (e) {}
   if (typeof rgPlayOpen === "function") rgPlayOpen();
   var inp = rgEl("rgIn"); rgBindInput(inp); if (inp) { inp.maxLength = 12; inp.readOnly = false; inp.focus(); }
+  rgFormBns(false);   /* v5.30 보너스에서 숨긴 입력칸을 되돌린다 */
   RG.raf = requestAnimationFrame(rgFrame);
 }
 /* 대기 → 카운트다운 · 스페이스(키보드) · 판을 누르기(마우스) */
@@ -521,6 +524,17 @@ function rgSpawn(sec) {
   var bw = Math.ceil(ctx.measureText(text).width) + L.padX * 2;
   var maxX = Math.max(8, L.W - 8 - bw), lw = (L.W - 16) / L.lanes, upper = L.top + L.boxH * 3;
   var near = RG.seed ? RG.ghost : RG.words;
+  if (cl) {   /* v5.30 구름 단어 · 구름 폭 안에서 생겨 구름 아래 가장자리에서 나온다 · 막 나온 단어와 겹치지 않는 자리를 여섯 번 찾는다 · 구름이 출렁인다 */
+    var G = rgCloudGeo(L, performance.now()), lo = Math.max(8, G.left), hi = Math.min(L.W - 8 - bw, G.right - bw), y0 = Math.max(L.top, G.bottom - L.boxH), cx = 0;
+    if (hi < lo) { lo = hi = Math.max(8, Math.min(L.W - 8 - bw, Math.round(G.x0 + G.w / 2 - bw / 2))); }
+    for (var t = 0; t < 6; t++) {
+      cx = Math.round(lo + rgRnd() * (hi - lo));
+      if (!near.some(function (w) { return rgWordY(w) < y0 + L.boxH * 2.5 && cx < w.x + w.bw + 8 && cx + bw + 8 > w.x; })) break;
+    }
+    var wc = { text: text, bw: bw, x: cx, y0: y0, p: 0, fall: RAIN_FALL[RG.stage - 1] * rgRamp(sec) * (0.94 + rgRnd() * 0.12), cl: true };
+    RG.words.push(wc); RG.seq++; RG.cloud.puff = RAIN_CLOUD_FX.puff;
+    return true;
+  }
   var lanes = []; for (var i = 0; i < L.lanes; i++) lanes.push(i);
   rgShuf(lanes);
   var jit = rgRnd(), fj = rgRnd();
@@ -579,6 +593,7 @@ function rgUpdate(dt, now) {
   var room = RG.seed ? RG.ghost.length <= L.maxWords + extra : RG.words.length < L.maxWords + extra;
   if (RG.cloud && !RG.cloud.seq.length) room = false;   /* v5.24 구름이 다 내렸다 · 남은 단어가 다 사라지면 걷힌다 */
   if (RG.spawnT <= 0 && room) RG.spawnT = rgSpawn(sec) ? RAIN_SPAWN[RG.stage - 1] * rgRamp(sec) : 0.25;
+  if (RG.cloud && RG.cloud.puff > 0) RG.cloud.puff -= dt;   /* v5.30 출렁임 */
   for (var i = RG.words.length - 1; i >= 0; i--) {
     var wd = RG.words[i];
     wd.p += dt / wd.fall;
@@ -797,16 +812,20 @@ function rgDraw(ctx, now) {
   ctx.save();
   if (L.pan) { ctx.translate(L.ox, L.oy); ctx.beginPath(); ctx.rect(0, 0, L.W, L.H); ctx.clip(); }
   if (RG.shake > 0) ctx.translate(Math.round((Math.random() - 0.5) * 6), Math.round((Math.random() - 0.5) * 6));
-  rgWorldD(ctx, L);
-  /* 위험선 (점선) */
-  ctx.fillStyle = RAIN_PAL.deep;
-  for (var lx = 0; lx < L.W; lx += 3 * L.D) ctx.fillRect(lx, L.floor, 2 * L.D, 2);
-  if (RG.bonusOn && (!RG.bonus || RG.bonus.ph === "clear")) rgCloudDraw(ctx, L, now);   /* v5.24 비구름 · 단어 뒤 */
+  if (RG.bonus && rgBonusScene(RG.bonus.ph)) rgBonusBg(ctx, L, now);   /* v5.30 보너스 무대(평소 판과 다른 밤 무대) */
+  else {
+    rgWorldD(ctx, L);
+    /* 위험선 (점선) */
+    ctx.fillStyle = RAIN_PAL.deep;
+    for (var lx = 0; lx < L.W; lx += 3 * L.D) ctx.fillRect(lx, L.floor, 2 * L.D, 2);
+  }
+  if (RG.bonusOn && !RG.bonus) rgRainTails(ctx, L, now);   /* v5.30 구름에서 막 나온 단어 위 빗줄기 */
   /* 단어 · v4.23 나무 이름표(rgWordDraw) · 글자 크기 고정 · 지금 치고 있는 글자와 맞는 단어를 짚어 준다 */
   var tIdx = rgTypedIdx(), tv = RG.typed || "";
   RG.words.forEach(function (w, wi) {
     rgWordDraw(ctx, L, w.x, rgWordY(w), w.bw, w.text, wi === tIdx, w.p > 0.78, tv);
   });
+  if (RG.bonusOn && (!RG.bonus || RG.bonus.ph === "clear")) rgCloudDraw(ctx, L, now);   /* v5.24 비구름 · v5.30 단어 앞(단어가 구름 몸통 뒤에서 나온다) */
   if (RG.bonus) rgBonusDraw(ctx, L, now);   /* v5.12 보너스 스테이지 문장 판 */
   if (RG.shot) {
     var k = 1 - RG.shot.t / 0.12, sx = RG.shot.x0 + (RG.shot.x1 - RG.shot.x0) * k, sy = RG.shot.y0 + (RG.shot.y1 - RG.shot.y0) * k, q = 2 * L.D;
@@ -840,6 +859,7 @@ function rgDraw(ctx, now) {
   else if (RG.cd > 0) rtCount(ctx, RG.cd, L.W, 0, L.floor, L.big ? 96 : 64);
   ctx.restore();
   if (L.pan) { rgLeftDraw(ctx, L); if (RG.race) rgRaceDraw(ctx, L, now); else rgSideDraw(ctx, L); }   /* v4.32 3단 · 흔들림 밖 · v5.12 1F 타자왕 = 오른쪽 판이 추월 레이스 */
+  if (RG.bonus) rgTransDraw(ctx, L);   /* v5.30 보너스 들어갈 때 · 나올 때 전체 화면 전환 · 제목 카드 */
 }
 /* v4.29 대기 화면 · 어두운 이름표 + 도트 글자 밝기 깜빡임(0.53초마다 O100 ↔ 어두운 오렌지 · 글자는 늘 보인다) · 동작 줄이기 = 주황 고정 */
 function rgWaitDraw(ctx, L, now) {
@@ -1017,6 +1037,10 @@ var RAIN_BONUS = { ch: 40, perfect: 600, sec: 50, intro: 2.6, show: 2.4, inMax: 
 /* v5.24 비구름 · 리허설로 조절하는 손잡이 · n = 구름마다 내리는 단어 수(첫째 · 둘째 · 셋째) · key = 핵심 단어 하나가 몇 번 내리나 · gap = 구름이 걷힌 뒤 맑은 틈(게임 초) ·
    max = 한 판 최대 구름 수 · clear = 구름이 걷히는 연출 초 · count = 문장 입력 전 카운트다운 초 · 첫 구름 약 35~40초(1~3단계 · 간격 2.2~1.6초) · 보통 판 1~2번 */
 var RAIN_CLOUD = { n: [14, 16, 16], key: 2, gap: 15, max: 3, clear: 1.4, count: 3, go: 0.3 };   /* go = 카운트다운 뒤 GO 를 보이며 입력을 더 막는 초 */
+/* v5.30 구름 모양 손잡이 · w0 + w1 = 꽉 찬 구름 폭(판 대비) · w0 = 다 내린 구름 폭 · drift = 좌우 한 바퀴 초 · puff = 단어가 생길 때 출렁이는 초 */
+var RAIN_CLOUD_FX = { w0: 0.40, w1: 0.22, drift: 28, amp: 0.6, puff: 0.32 };   /* amp = 좌우로 갈 수 있는 거리 중 쓰는 비율 */
+/* v5.30 보너스 전환 · wipe = 전체 화면 도트 닫힘 · 열림 초 · title = BONUS STAGE 카드 초 · back = 나올 때 STAGE n 카드 초 */
+var RAIN_TRANS = { wipe: 0.6, title: 1.6, back: 1.2 };
 var RAIN_LIFE_BONUS = 500;
 function rgBonusLim(n) { return Math.ceil(n * 0.8) + 6; }
 /* 편집 거리(글자 단위) */
@@ -1074,6 +1098,14 @@ function rgLock(on) {
   inp.readOnly = !!on;
   if (on) setTimeout(function () { if (RG.bonus && RG.bonus.ph !== "type" && inp.value) inp.value = ""; }, 60);
 }
+/* v5.30 보너스 화면은 판 안 장면(wout ~ bin) · 그 밖(clear · 전환 · 제목 카드)은 판이 아니다 */
+function rgBonusScene(ph) { return ph === "wout" || ph === "intro" || ph === "count" || ph === "type" || ph === "res" || ph === "bin"; }
+/* v5.30 보너스 동안 아래 일반 입력칸을 보이지 않게 · 입력은 숨긴 칸이 계속 받는다(포커스 · 한글 조합 그대로) · 칸 자리(판 아래 틀)는 그대로 두어 판 크기가 흔들리지 않는다 */
+function rgFormBns(on) {
+  var f = rgEl("rgForm"), inp = rgEl("rgIn");
+  if (f && f.children) Array.prototype.forEach.call(f.children, function (c) { c.style.opacity = on ? "0" : ""; c.style.pointerEvents = on ? "none" : ""; });
+  if (inp && inp.style) inp.style.caretColor = on ? "transparent" : "";
+}
 function rgBonusStart(now) {
   var L = RG.L, c = RG.cloud; if (!c) return;
   var text = c.text, lim = rgBonusLim(text.length);
@@ -1082,13 +1114,17 @@ function rgBonusStart(now) {
   RG.bonus = { text: text, keys: c.keys, lim: lim, left: lim, ph: "clear", t: RAIN_CLOUD.clear, at: now, typed: "", res: null, no: c.no };
   RG.inMax = RAIN_BONUS.inMax;
   var inp = rgEl("rgIn"); if (inp) { inp.maxLength = RAIN_BONUS.inMax; if (RG.bonusPh == null) RG.bonusPh = inp.placeholder; inp.placeholder = "구름이 걷히는 중"; }
-  rgLock(true); rgTipShow(false);
+  rgLock(true); rgTipShow(false); rgFormBns(true);
   rgSfx("rgbonus");
 }
+/* 단계 · clear(구름 걷힘) → win(전체 화면 닫힘) → title(BONUS STAGE 카드) → wout(열림 · 보너스 무대) → intro → count → type → res → bin(닫힘) → btitle(STAGE n 카드) → bout(열림 · 비 내리는 판) · type 말고는 입력칸이 막혀 있다 */
 function rgBonusTick(dt, now) {
-  var b = RG.bonus, inp = rgEl("rgIn"), was = b.t;
+  var b = RG.bonus, inp = rgEl("rgIn"), was = b.t, T = RAIN_TRANS;
   b.t -= dt;
-  if (b.ph === "clear") { if (b.t <= 0) { b.ph = "intro"; b.t = RAIN_BONUS.intro; if (inp) inp.placeholder = "문장을 읽어 두세요"; } return; }
+  if (b.ph === "clear") { if (b.t <= 0) { b.ph = "win"; b.t = T.wipe; } return; }
+  if (b.ph === "win") { if (b.t <= 0) { b.ph = "title"; b.t = T.title; rgSfx("rgjoin"); } return; }
+  if (b.ph === "title") { if (b.t <= 0) { b.ph = "wout"; b.t = T.wipe; } return; }
+  if (b.ph === "wout") { if (b.t <= 0) { b.ph = "intro"; b.t = RAIN_BONUS.intro; if (inp) inp.placeholder = "문장을 읽어 두세요"; } return; }
   if (b.ph === "intro") { if (b.t <= 0) { b.ph = "count"; b.t = RAIN_CLOUD.count; rgSfx("tick"); } return; }
   if (b.ph === "count") {
     if (b.t <= 0) { b.ph = "type"; b.typed = ""; b.go = RAIN_CLOUD.go; rgLock(true); rgSfx("go"); }   /* GO 0.3초 동안도 막아 둔다 · 카운트다운 중 누르던 키가 문장 앞에 섞이지 않게 */
@@ -1099,13 +1135,15 @@ function rgBonusTick(dt, now) {
     if (b.go > 0) { b.go -= dt; if (b.go <= 0) { b.typed = ""; rgLock(false); if (inp) inp.placeholder = "문장을 그대로 치고 Enter"; } return; }
     b.left = Math.max(0, b.left - dt); if (b.left <= 0) rgBonusEnd("time"); return;
   }
-  if (b.ph === "res" && b.t <= 0) {   /* 판으로 돌아간다 · 문장에 쓴 시간만큼 게임 시계를 민다 · 맑은 틈 뒤 다음 구름 */
+  if (b.ph === "res") { if (b.t <= 0) { b.ph = "bin"; b.t = T.wipe; } return; }
+  if (b.ph === "bin") { if (b.t <= 0) { b.ph = "btitle"; b.t = T.back; RG.cloud = null; rgSfx("level"); } return; }
+  if (b.ph === "btitle") { if (b.t <= 0) { b.ph = "bout"; b.t = T.wipe; } return; }
+  if (b.ph === "bout" && b.t <= 0) {   /* 판으로 돌아간다 · 보너스에 쓴 시간(전환 포함)만큼 게임 시계를 민다 · 맑은 틈 뒤 다음 구름 */
     RG.t0 += now - b.at; RG.bonus = null; RG.cloud = null; RG.inMax = 12;
     RG.cloudAt = RG.cloudN >= RAIN_CLOUD.max ? Infinity : rgElapsed(now) + RAIN_CLOUD.gap;
     if (inp) { inp.maxLength = 12; if (RG.bonusPh != null) inp.placeholder = RG.bonusPh; }
     RG.bonusPh = null;
-    rgLock(false); RG.spawnT = 0.4; RG.next = null; if (!RG.seed) rgNextFill();
-    RG.banner = { text: "LEVEL " + RG.stage, t: 1.3 }; rgSfx("level");
+    rgLock(false); rgFormBns(false); RG.spawnT = 0.4; RG.next = null; if (!RG.seed) rgNextFill();
   }
 }
 function rgBonusEnd(why) {
@@ -1116,99 +1154,178 @@ function rgBonusEnd(why) {
   rgLock(true);
   rgSfx(r.perfect ? "best" : r.ok ? "rgcombo" : "rgmiss", 2);
 }
-/* 구름 그림 · 판 폭에 맞춘 칸(도트) · 둥근 봉우리 다섯 + 아랫단 · 위 = 밝게 · 아래 = 어둡게 · 먹 테두리 · 판 크기마다 한 번 계산 */
-function rgCloudCells(L) {
-  if (L.cl) return L.cl;
-  var c = Math.max(4, Math.round(L.W / 52)), cols = Math.floor(L.W * 0.94 / c), rows = 8, cells = [], on = {};
-  var B = [[0.12, 5.4, 3.0], [0.3, 3.9, 4.0], [0.5, 3.4, 4.4], [0.7, 3.9, 4.0], [0.88, 5.4, 3.0]];
-  for (var y = 0; y < rows; y++) for (var x = 0; x < cols; x++) {
-    var fx = (x + 0.5) / cols, inside = y >= 5 && fx > 0.05 && fx < 0.95;
-    for (var k = 0; !inside && k < B.length; k++) { var dx = (x + 0.5 - B[k][0] * cols) / (B[k][2] * 1.6), dy = (y + 0.5 - B[k][1]) / (B[k][2] * 0.85); if (dx * dx + dy * dy <= 1) inside = true; }
-    if (inside) { on[x + "," + y] = 1; cells.push([x, y]); }
+/* v5.30 구름 모양 · 40 × 14 칸 한 벌(판 크기와 무관) · 봉우리 다섯 + 아랫단 · 칸 크기(c)만 판 · 남은 단어에 맞춰 바뀐다(정수라 도트가 뭉개지지 않는다) */
+var RG_CLS = null;
+function rgCloudShape() {
+  if (RG_CLS) return RG_CLS;
+  var cols = 40, rows = 14, cells = [], on = {};
+  var B = [[0.16, 8.6, 3.8], [0.36, 5.8, 5.2], [0.6, 4.6, 6.0], [0.83, 7.6, 4.4]], top = [];
+  for (var x = 0; x < cols; x++) {   /* 칸마다 맨 위 칸을 찾고 아래는 아랫단까지 채운다(봉우리 사이 구멍 없음) */
+    var fx = (x + 0.5) / cols, t = fx > 0.05 && fx < 0.95 ? 9 : rows;
+    for (var y = 0; y < t; y++) for (var k = 0; k < B.length; k++) { var dx = (x + 0.5 - B[k][0] * cols) / (B[k][2] * 0.95), dy = (y + 0.5 - B[k][1]) / B[k][2]; if (dx * dx + dy * dy <= 1) { t = y; break; } }
+    var bot = fx > 0.18 && fx < 0.82 ? 13 : fx > 0.09 && fx < 0.91 ? 12 : fx > 0.05 && fx < 0.95 ? 11 : -1;
+    for (var yy = t; yy <= bot; yy++) { on[x + "," + yy] = 1; cells.push([x, yy]); }
   }
   cells.forEach(function (p) { p.push(!on[p[0] + "," + (p[1] - 1)] ? 1 : !on[p[0] + "," + (p[1] + 1)] ? 2 : 0); });
-  L.cl = { c: c, cols: cols, rows: rows, x0: Math.round((L.W - cols * c) / 2), y0: 0, cells: cells };
-  return L.cl;
+  RG_CLS = { cols: cols, rows: rows, cells: cells };
+  return RG_CLS;
 }
-/* 판 위 비구름 · 남을수록 짙고 비울수록 옅다 · 아래로 빗줄기 · 가운데 이름표 「구름 n/3」 + 남은 단어 칸(■ = 남음 · □ = 내림)
-   맑은 틈 = 옅은 구름이 다시 모이며 「다음 구름 n초」 · 걷힘(clear) = 좌우로 갈라지며 위로 사라진다 · 동작 줄이기 = 갈라짐 · 빗줄기 없음 */
+/* v5.30 구름 자리 · 폭 = 판 × (0.40 + 0.22 × 아직 안 내린 비율) · 최소 240(가장 긴 단어 + 여백) · 천천히 좌우로(RAIN_CLOUD_FX.drift 초 한 바퀴) · 단어가 생기면 한 칸 출렁(puff)
+   단어는 이 폭 안에서 생기고 구름 아래 가장자리에서 나온다(rgSpawn) · 동작 줄이기 = 가운데 고정 · 출렁 없음 */
+function rgCloudGeo(L, now) {
+  var S = rgCloudShape(), cl = RG.cloud, X = RAIN_CLOUD_FX, f = cl ? cl.seq.length / Math.max(1, cl.n) : 1, rm = rgReduced();
+  var cw = Math.min(L.W - 16, Math.max(240, L.W * (X.w0 + X.w1 * f))), c = Math.max(3, Math.floor(cw / S.cols)), w = c * S.cols, h = c * S.rows;
+  var amp = Math.max(0, (L.W - w) / 2 - 10) * X.amp, mid = L.W / 2 + (rm ? 0 : amp * Math.sin((now || 0) / 1000 * Math.PI * 2 / X.drift));
+  var pf = cl && cl.puff > 0 ? cl.puff / X.puff : 0, dy = rm || !pf ? 0 : Math.round(c * Math.sin(Math.PI * (1 - pf)));
+  var x0 = Math.round(mid - w / 2), y0 = 4 + dy;
+  return { c: c, w: w, h: h, x0: x0, y0: y0, cols: S.cols, rows: S.rows, cells: S.cells, left: x0 + c, right: x0 + w - c, bottom: y0 + h, f: f, pf: pf };
+}
+/* 판 위 비구름 · 단어 앞에 그린다(단어가 구름 몸통 뒤에서 생겨 아래로 빠져나온다) · 남은 단어가 줄수록 작고 옅어진다(세 톤) · 단어가 생기는 순간 한 톤 어둡게 + 출렁
+   구름 몸통 안 「구름 n/3」 + 칸(■ 구름 안 · 주황 반 = 떨어지는 중 · 나무 = 끝남) · 맑은 틈 = 옅은 구름이 다시 모이며 「다음 구름 n초」 · 걷힘(clear) = 좌우로 갈라지며 위로 */
+var RG_CL_TONE = [["gray", "dim", "wood"], ["cream", "gray", "dim"], ["w", "cream", "gray"]];
+function rgClTone(i, k) { var n = RG_CL_TONE[i][k]; return RAIN_PAL[n] || RT_PAL[n]; }
 function rgCloudDraw(ctx, L, now) {
-  var G = rgCloudCells(L), c = G.c, b = RG.bonus, cl = RG.cloud, rm = rgReduced(), a, k = 0, gapT = -1, t;
+  var b = RG.bonus, cl = RG.cloud, rm = rgReduced(), a = 1, k = 0, gapT = -1, t, tone = 2;
+  var G = rgCloudGeo(L, now), c = G.c;
   if (b && b.ph === "clear") { k = 1 - Math.max(0, b.t) / RAIN_CLOUD.clear; a = 1 - k; t = "구름이 걷혀요"; }
-  else if (cl) { a = 0.4 + 0.6 * rgCloudRem() / cl.n; t = "구름 " + cl.no + "/" + RAIN_CLOUD.max; }
+  else if (cl) { tone = G.f > 0.6 ? 0 : G.f > 0.25 ? 1 : 2; if (G.pf > 0) tone = Math.max(0, tone - 1); t = "구름 " + cl.no + "/" + RAIN_CLOUD.max; }
   else if (RG.cloudN < RAIN_CLOUD.max && isFinite(RG.cloudAt)) { gapT = Math.max(0, RG.cloudAt - (RG.t0 ? rgElapsed(now) : 0)); a = 0.12 + 0.4 * (1 - Math.min(1, gapT / RAIN_CLOUD.gap)); t = "다음 구름 " + Math.ceil(gapT) + "초"; }
   else return;
-  var mid = G.x0 + G.cols * c / 2, lift = Math.round(k * G.rows * c * 1.2), sp = rm ? 0 : k * L.W * 0.35;
+  var mid = G.x0 + G.w / 2, lift = Math.round(k * G.h * 1.2), sp = rm ? 0 : k * L.W * 0.35;
   var X = function (p) { var x = G.x0 + p[0] * c; return Math.round(x + (x + c / 2 < mid ? -sp : sp)); };
   ctx.save();
-  ctx.globalAlpha = Math.max(0, Math.min(1, a));
-  ctx.fillStyle = RAIN_PAL.ink;
-  G.cells.forEach(function (p) { ctx.fillRect(X(p) - 2, G.y0 + p[1] * c - lift - 2, c + 4, c + 4); });
-  G.cells.forEach(function (p) { ctx.fillStyle = p[2] === 1 ? RT_PAL.cream : p[2] === 2 ? RAIN_PAL.dim : RAIN_PAL.gray; ctx.fillRect(X(p), G.y0 + p[1] * c - lift, c, c); });
-  if (cl && !b && !rm) {   /* 빗줄기 · 구름 아래 짧게 */
-    for (var i = 0; i < 9; i++) {
-      var ph = (now / 700 + i * 0.37) % 1, sx = G.x0 + ((i * 7 + 3) % G.cols) * c + Math.round(c / 2), sy = G.y0 + G.rows * c + Math.round(ph * L.D * 16);
-      ctx.globalAlpha = Math.max(0, Math.min(1, a)) * (1 - ph) * 0.8; ctx.fillStyle = RAIN_PAL.dim; ctx.fillRect(sx, sy, 2, L.D * 2);
+  if (cl && !b && !rm) {   /* 빗줄기 · 구름 폭 안에서만 · 구름 아래로 짧게 */
+    for (var i = 0; i < 10; i++) {
+      var ph = (now / 650 + i * 0.37) % 1, sx = G.x0 + ((i * 7 + 3) % (G.cols - 4) + 2) * c + Math.round(c / 2), sy = G.bottom + Math.round(ph * L.D * 14);
+      ctx.globalAlpha = (1 - ph) * 0.9; ctx.fillStyle = RAIN_PAL.dim; ctx.fillRect(sx, sy, 3, L.D * 2);
     }
   }
-  /* 이름표 */
-  var fp = L.big && L.W >= 560 ? 32 : 16, ps = fp === 32 ? 10 : 6, pg = fp === 32 ? 4 : 3, pips = cl && !b ? cl.n : 0, rem = pips ? rgCloudRem() : 0;
-  ctx.font = rtFont(fp);
-  var tw = Math.ceil(ctx.measureText(t).width), pw = pips ? pips * (ps + pg) - pg : 0, w = tw + (pw ? pw + 16 : 0) + 28, h = fp + 16;
-  if (w > L.W - 16 && pips) { ps = 5; pg = 2; pw = pips * (ps + pg) - pg; w = tw + pw + 44; }
-  var tx = Math.round(L.W / 2 - w / 2), ty = Math.round(G.y0 + G.rows * c * 0.55 - h / 2) - lift;
-  ctx.globalAlpha = b ? Math.max(0, 1 - k) : gapT >= 0 ? 0.85 : 1;
-  rtTag(ctx, tx, ty, w, h, RT_PAL.night, RT_PAL.bark, RAIN_PAL.ink);
-  ctx.textAlign = "left"; ctx.textBaseline = "middle";
-  rtText(ctx, t, tx + 14, ty + h / 2, fp, gapT >= 0 ? RT_PAL.tan2 : RT_PAL.cream, null);
-  for (var q = 0; q < pips; q++) { ctx.fillStyle = q < rem ? RAIN_PAL.o100 : RT_PAL.wood; ctx.fillRect(tx + 14 + tw + 16 + q * (ps + pg), Math.round(ty + h / 2 - ps / 2), ps, ps); }
+  ctx.globalAlpha = Math.max(0, Math.min(1, a));
+  ctx.fillStyle = RAIN_PAL.ink;
+  if (a >= 0.99) G.cells.forEach(function (p) { ctx.fillRect(X(p) - 2, G.y0 + p[1] * c - lift - 2, c + 4, c + 4); });   /* 먹 테두리는 꽉 찬 구름에만(반투명이면 칸마다 겹쳐 격자가 보인다) */
+  G.cells.forEach(function (p) { ctx.fillStyle = rgClTone(tone, p[2] === 1 ? 0 : p[2] === 2 ? 2 : 1); ctx.fillRect(X(p), G.y0 + p[1] * c - lift, c, c); });
+  ctx.textBaseline = "middle";
+  if (cl && !b) {   /* 이름 · 칸 · 구름 몸통 안 */
+    var n = cl.n, in0 = cl.seq.length, rem = rgCloudRem(), ps = 6, pg = 2, pw = n * (ps + pg) - pg, ly = Math.round(G.y0 + G.h * 0.44);
+    ctx.textAlign = "center"; rtText(ctx, t, mid, ly, 16, RT_PAL.cream, RAIN_PAL.ink);
+    var qx = Math.round(mid - pw / 2), qy = ly + 14;
+    ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(qx - 2, qy - 2, pw + 4, ps + 4);
+    for (var q = 0; q < n; q++) { ctx.fillStyle = q < in0 ? RAIN_PAL.o100 : q < rem ? RAIN_PAL.o30 : RT_PAL.wood; ctx.fillRect(qx + q * (ps + pg), qy, ps, ps); }
+  } else {   /* 이름표 · 걷힘 · 맑은 틈 */
+    var fp = L.big && L.W >= 560 ? 32 : 16;
+    ctx.font = rtFont(fp);
+    var w = Math.ceil(ctx.measureText(t).width) + 28, hh = fp + 16, tx = Math.round(mid - w / 2), ty = Math.round(G.y0 + G.h * 0.55 - hh / 2) - lift;
+    tx = Math.max(4, Math.min(L.W - 4 - w, tx));
+    ctx.globalAlpha = b ? Math.max(0, 1 - k) : 0.85;
+    rtTag(ctx, tx, ty, w, hh, RT_PAL.night, RT_PAL.bark, RAIN_PAL.ink);
+    ctx.textAlign = "left"; rtText(ctx, t, tx + 14, ty + hh / 2, fp, gapT >= 0 ? RT_PAL.tan2 : RT_PAL.cream, null);
+  }
   ctx.restore();
 }
-/* 문장 판 · 판 가운데 나무 판 · 머리 = 점 글자 BONUS STAGE · 문장(친 글자 = 밝게 · 틀린 글자 = 주황 바탕 · 아직 = 흐리게) · 시간 막대 · 결과 */
+/* v5.30 빗방울 꼬리 · 구름에서 막 나온 단어(p < 0.45) 위로 구름 아래 가장자리까지 끊긴 빗줄기 세 가닥 · 내려갈수록 옅어진다 */
+function rgRainTails(ctx, L, now) {
+  if (!RG.cloud || rgReduced()) return;
+  var G = rgCloudGeo(L, now), D = L.D;
+  ctx.save(); ctx.fillStyle = RAIN_PAL.dim;
+  RG.words.forEach(function (w) {
+    if (!w.cl || w.y0 == null || w.p >= 0.45) return;
+    var wy = rgWordY(w), y1 = Math.max(G.bottom - 2, wy - 18 * D);
+    ctx.globalAlpha = Math.min(1, (1 - w.p / 0.45) * 1.2);
+    for (var j = 0; j < 3; j++) {
+      var x = Math.round(w.x + w.bw * (0.25 + 0.25 * j)), off = (now / 40 + j * 5) % (4 * D);
+      for (var y = y1 + off; y < wy - 3; y += 4 * D) ctx.fillRect(x, Math.round(y), 3, Math.min(2 * D, wy - 3 - y));
+    }
+  });
+  ctx.restore();
+}
+/* v5.30 보너스 무대 · 평소 판(밝은 체크 · 나무 · 흙)과 확실히 다른 밤 무대 · 별 · 조명 두 줄기 · 주황 무대 바닥 */
+function rgBonusBg(ctx, L, now) {
+  var D = L.D, W = L.W, g = L.ground, rm = rgReduced();
+  ctx.fillStyle = RT_PAL.night; ctx.fillRect(0, 0, W, L.H);
+  for (var yy = 0; yy < g; yy += 2 * D) { ctx.fillStyle = (yy / (2 * D)) % 2 ? RT_PAL.night : RT_PAL.bark; ctx.fillRect(0, yy, W, D); }   /* 가는 줄무늬 · 화면 결 */
+  [[0.08, 1], [0.92, -1]].forEach(function (s) {   /* 조명 · 위에서 무대로 넓어지는 계단 띠 */
+    for (var y = 0; y < g; y += 2 * D) {
+      var k = y / g, cx = W * (s[0] + s[1] * 0.3 * k), hw = 6 * D + k * W * 0.16;
+      ctx.fillStyle = "rgba(255,126,49," + (0.05 + 0.07 * k).toFixed(3) + ")"; ctx.fillRect(Math.round(cx - hw), y, Math.round(2 * hw), 2 * D);
+    }
+  });
+  for (var i = 0; i < 34; i++) {   /* 별 · 자리는 고정 · 반짝임만 */
+    var sx = Math.round(((i * 61 + 17) % 97) / 97 * (W - 2 * D) + D), sy = Math.round(((i * 37 + 11) % 89) / 89 * g * 0.86);
+    var tw = rm ? 1 : (Math.floor(now / 380) + i) % 6;
+    if (!tw) continue;
+    ctx.fillStyle = i % 5 === 0 ? RAIN_PAL.o100 : i % 2 ? RT_PAL.tan2 : RAIN_PAL.o60;
+    if (i % 5 === 0 && tw > 2) { ctx.fillRect(sx - D, sy, 3 * D, D); ctx.fillRect(sx, sy - D, D, 3 * D); } else ctx.fillRect(sx, sy, D, D);
+  }
+  ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(0, g, W, 2);   /* 무대 바닥 */
+  ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(0, g + 2, W, 2 * D);
+  ctx.fillStyle = RAIN_PAL.o60; ctx.fillRect(0, g + 2, W, D / 2);
+  for (var r = 0, y2 = g + 2 + 2 * D; y2 < L.H; r++, y2 += 3 * D) for (var x = (r % 2) * -4 * D; x < W; x += 8 * D) {
+    ctx.fillStyle = RT_PAL.wood; ctx.fillRect(x, y2, 8 * D - 2, 3 * D - 2);
+    ctx.fillStyle = RT_PAL.bark; ctx.fillRect(x, y2 + 3 * D - 2, 8 * D, 2);
+  }
+}
+/* 문장 판 · 판 가운데 나무 판 · 머리 = 점 글자 BONUS STAGE · 문장 한 줄 + 바로 밑 내가 친 줄(같은 글자 크기 · 같은 칸 · 맞음 = 밝게 · 틀림 = 주황 바탕 · 조합 중 = 주황 글자 · 커서 깜빡임) · 시간 막대 · 결과
+   v5.30 아래 일반 입력칸은 보이지 않는다(rgFormBns) · 친 글자는 여기 한 곳에만 보인다 */
 function rgBonusDraw(ctx, L, now) {
   var b = RG.bonus; if (!b) return;
-  var big = L.big, s = big ? 3 : 2, fp = big ? 32 : 16, pw = Math.min(L.W - 2 * s, big ? 700 : 340), px = Math.round(L.W / 2 - pw / 2);
-  if (b.ph === "clear") {   /* v5.24 구름이 걷히는 순간 · 점 글자 CLOUD CLEAR 가 켜진다 · 판은 아직 그리지 않는다 */
-    var kc = 1 - Math.max(0, b.t) / RAIN_CLOUD.clear, n0 = rtDotsN("CLOUD CLEAR");
+  var big = L.big, s = big ? 3 : 2, fp = big ? 32 : 16, pw = Math.min(L.W - 2 * s, big ? 720 : 340), px = Math.round(L.W / 2 - pw / 2);
+  if (b.ph === "clear" || b.ph === "win") {   /* v5.24 구름이 걷히는 순간 · 점 글자 CLOUD CLEAR 가 켜진다 · 판은 아직 그리지 않는다 */
+    var kc = b.ph === "win" ? 1 : 1 - Math.max(0, b.t) / RAIN_CLOUD.clear, n0 = rtDotsN("CLOUD CLEAR");
     ctx.save(); ctx.fillStyle = "rgba(27,23,18," + (0.62 * kc).toFixed(3) + ")"; ctx.fillRect(0, 0, L.W, L.H);
     rtDots(ctx, "CLOUD CLEAR", L.W / 2, Math.round(L.floor * 0.4), big ? 40 : 26, RAIN_PAL.o100, { align: "center", line: RAIN_PAL.ink, lit: rgReduced() ? null : Math.ceil(Math.min(1, kc * 1.6) * n0) });
     ctx.restore();
     return;
   }
+  if (!rgBonusScene(b.ph)) return;
   var km = [];   /* v5.24 핵심 단어 자리 · 문장을 먼저 보여 줄 때 주황으로 짚는다(비로 내린 그 단어) */
   (b.keys || []).forEach(function (w) { var i = b.text.indexOf(w); if (i >= 0) for (var j = 0; j < w.length; j++) km[i + j] = 1; });
   ctx.save();
-  ctx.fillStyle = "rgba(27,23,18,0.62)"; ctx.fillRect(0, 0, L.W, L.H);
   ctx.font = rtFont(fp);
-  var lines = rgWrap(ctx, b.text, pw - 16 * s - 8), lh = Math.round(fp * 1.6), th = big ? 40 : 26;
-  var lpH = big ? 56 : 34, ph = 8 * s + th + 12 + lines.length * lh + 18 + (big ? 18 : 12) + 12 + lpH + 8 * s, py = Math.max(8, Math.round(L.floor * 0.46 - ph / 2));
+  var lines = rgWrap(ctx, b.text, pw - 16 * s - 8), lh = Math.round(fp * 1.5), rg = big ? 12 : 8, th = big ? 40 : 26;
+  var lpH = big ? 56 : 34, ph = 8 * s + th + 14 + lines.length * (2 * lh + rg) + 6 + (big ? 18 : 12) + 12 + lpH + 8 * s, py = Math.max(8, Math.round(L.floor * 0.46 - ph / 2));
   rtPanel(ctx, px, py, pw, ph, s, RT_PAL.night);
   var cy = py + 5 * s + th / 2, on = rgReduced() || Math.floor(now / 260) % 2 === 0;
   rtDots(ctx, "BONUS STAGE", L.W / 2, cy, th * 0.62, on ? RAIN_PAL.o100 : RAIN_PAL.o60, { align: "center", line: RAIN_PAL.ink });
   ctx.textAlign = "right"; ctx.textBaseline = "middle";
   rtText(ctx, b.no + "/" + RAIN_CLOUD.max, px + pw - 6 * s, cy, 16, RT_PAL.tan, null);
-  cy += th / 2 + 12;
-  /* 문장 · 글자마다 · 마지막 글자는 조합 중이면 맞는 앞부분으로 본다 */
-  var pre = b.ph === "intro" || b.ph === "count", typed = pre ? "" : String(b.typed || ""), k = 0;
+  cy += th / 2 + 14;
+  var pre = b.ph === "wout" || b.ph === "intro" || b.ph === "count", typed = pre ? "" : String(b.typed || ""), k = 0, cur = b.ph === "type" && !(b.go > 0), blink = rgReduced() || Math.floor(now / 400) % 2 === 0;
+  var mark = function (x, y, w) { ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(Math.round(x), Math.round(y + fp * 0.56), Math.max(6, Math.ceil(w)), 4); };   /* 커서 */
+  var bad = function (x, y, w, tc) { ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(Math.round(x), Math.round(y - fp * 0.62), Math.max(8, Math.ceil(w)), Math.round(fp * 1.24)); if (tc && tc !== " ") rtText(ctx, tc, x + Math.max(0, (w - ctx.measureText(tc).width) / 2), y, fp, RT_PAL.night, null); };
+  var ex = 0, ey = 0;
   ctx.textAlign = "left";
   lines.forEach(function (ln, li) {
     ctx.font = rtFont(fp);
-    var x = Math.round(L.W / 2 - ctx.measureText(ln).width / 2), y = cy + lh / 2;
+    var lw = ctx.measureText(ln).width, x = Math.round(L.W / 2 - lw / 2), y1 = cy + lh / 2, y2 = cy + lh + lh / 2;
+    ctx.fillStyle = RT_PAL.bark; ctx.fillRect(x - 10, Math.round(cy + lh + 2), Math.round(lw + 20), lh - 4);   /* 따라 쓰는 줄 · 어두운 띠 + 나무 밑줄 */
+    ctx.fillStyle = RT_PAL.wood; ctx.fillRect(x - 10, Math.round(cy + 2 * lh - 4), Math.round(lw + 20), 2);
     for (var i = 0; i < ln.length; i++, k++) {
-      var ch = ln.charAt(i), w = ctx.measureText(ch).width, tc = typed.charAt(k), col = RT_PAL.dim;   /* 아직 안 친 글자 = 흐린 회색 · 맞은 글자 = 크림 */
+      var ch = ln.charAt(i), w = ctx.measureText(ch).width, col = RT_PAL.cream;
+      if (pre) col = km[k] ? RAIN_PAL.o60 : RT_PAL.cream;
+      else if (k < typed.length) col = typed.charAt(k) === ch ? RT_PAL.tan : RT_PAL.cream;   /* 맞게 친 자리는 한 톤 내려 남은 곳이 보이게 */
+      else if (cur && k === typed.length) col = RAIN_PAL.o100;
+      if (ch !== " ") rtText(ctx, ch, x, y1, fp, col, null);
       if (k < typed.length) {
-        var last = k === typed.length - 1, good = tc === ch || (last && rgJm(ch).indexOf(rgJm(tc)) === 0);
-        if (good) col = RT_PAL.cream; else { ctx.fillStyle = RAIN_PAL.deep; ctx.fillRect(Math.round(x), Math.round(y - fp * 0.62), Math.ceil(w), Math.round(fp * 1.24)); col = RAIN_PAL.w; }
-      } else if (pre) col = km[k] ? RAIN_PAL.o60 : RT_PAL.cream;
-      else if (b.ph === "type" && k === typed.length) { ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(Math.round(x), Math.round(y + fp * 0.62), Math.max(4, Math.ceil(w)), 3); col = RAIN_PAL.o60; }
-      if (ch !== " ") rtText(ctx, ch, x, y, fp, col, null);
+        var tc = typed.charAt(k), last = k === typed.length - 1;
+        ctx.font = rtFont(fp);
+        if (tc === ch) { if (tc !== " ") rtText(ctx, tc, x + (w - ctx.measureText(tc).width) / 2, y2, fp, RAIN_PAL.w, null); }
+        else if (last && rgJm(ch).indexOf(rgJm(tc)) === 0) { rtText(ctx, tc, x + Math.max(0, (w - ctx.measureText(tc).width) / 2), y2, fp, RAIN_PAL.o60, null); ctx.fillStyle = RAIN_PAL.o60; ctx.fillRect(Math.round(x), Math.round(y2 + fp * 0.56), Math.ceil(w), 2); }   /* 한글 조합 중 */
+        else bad(x, y2, w, tc);
+      } else if (cur && k === typed.length && blink) mark(x, y2, w);
       x += w;
     }
-    cy += lh;
-    if (li < lines.length - 1) k++;   /* 줄을 나눈 자리의 띄어쓰기 한 칸 */
+    if (li < lines.length - 1) {   /* 줄을 나눈 자리의 띄어쓰기 한 칸 · 친 글자가 띄어쓰기가 아니면 줄 끝에 틀림으로 · 커서도 여기 */
+      var sw = ctx.measureText(" ").width;
+      if (k < typed.length) { if (typed.charAt(k) !== " ") bad(x + 4, y2, sw, typed.charAt(k)); }
+      else if (cur && k === typed.length && blink) mark(x + 4, y2, sw);
+      k++;
+    }
+    ex = x; ey = y2;
+    cy += 2 * lh + rg;
   });
+  if (typed.length > b.text.length) { ctx.font = rtFont(fp); var more = typed.slice(b.text.length, b.text.length + 3); for (var m = 0; m < more.length; m++) { var mw = Math.max(ctx.measureText(more.charAt(m)).width, fp / 2); bad(ex + 4, ey, mw, more.charAt(m)); ex += mw + 2; } }   /* 문장보다 더 친 글자 */
   /* 시간 막대 · 남은 시간 · 결과 */
-  cy += 6;
+  cy += 2;
   var bx = px + 6 * s, bw = pw - 12 * s, bh = big ? 18 : 12, fr = pre ? 1 : b.left / b.lim;
   ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(bx, cy, bw, bh);
   ctx.fillStyle = RT_PAL.bark; ctx.fillRect(bx + 2, cy + 2, bw - 4, bh - 4);
@@ -1216,16 +1333,63 @@ function rgBonusDraw(ctx, L, now) {
   cy += bh + 12;
   var lp = big ? 32 : 16;
   ctx.textAlign = "center";
-  if (b.ph === "intro") rtText(ctx, "BONUS · 비로 내린 단어가 이 문장에 숨어 있었어요", L.W / 2, cy + lp / 2, 16, RAIN_PAL.o60, null);
+  if (b.ph === "intro" || b.ph === "wout") rtText(ctx, "문장을 읽어 두세요", L.W / 2, cy + lp / 2, 16, RAIN_PAL.o60, null);
   else if (b.ph === "count") { rtText(ctx, String(Math.max(1, Math.ceil(b.t))), L.W / 2, cy + lpH / 2 - 4, big ? 48 : 32, RAIN_PAL.o100, RAIN_PAL.ink); }   /* v5.24 3 · 2 · 1 · 이 동안 입력칸은 막혀 있다 */
   else if (b.ph === "type" && b.go > 0) rtText(ctx, "GO", L.W / 2, cy + lpH / 2 - 4, big ? 48 : 32, RAIN_PAL.o100, RAIN_PAL.ink);
-  else if (b.ph === "type") rtText(ctx, b.left.toFixed(1) + "초 · Esc 처음부터 · 목숨은 줄지 않아요", L.W / 2, cy + lp / 2, 16, RT_PAL.cream, null);
+  else if (b.ph === "type") rtText(ctx, b.left.toFixed(1) + "초 · Enter 채점 · Esc 처음부터", L.W / 2, cy + lp / 2, 16, RT_PAL.cream, null);
   else if (b.res) {
     var r = b.res;
     rtText(ctx, (r.perfect ? "PERFECT  " : "") + "+" + r.pts.toLocaleString(), L.W / 2, cy + lp / 2 - (big ? 4 : 2), lp, RAIN_PAL.o100, RAIN_PAL.ink);
     rtText(ctx, "맞은 글자 " + r.ok + "/" + r.n + (r.perfect ? " · 남은 " + r.sec + "초" : ""), L.W / 2, cy + lp + (big ? 12 : 8), 16, RT_PAL.cream, null);
   }
   ctx.restore();
+}
+/* v5.30 전체 화면 전환 · 캔버스 전체(양옆 판 포함)를 큰 도트 칸이 왼쪽 위에서 오른쪽 아래로 덮고(win · bin) · 같은 순서로 걷힌다(wout · bout) · 막 바뀐 칸은 주황 · 동작 줄이기 = 어둡게 페이드 */
+function rgTransDraw(ctx, L) {
+  var b = RG.bonus; if (!b) return;
+  var ph = b.ph, T = RAIN_TRANS, W = L.CW, H = L.CH, close = ph === "win" || ph === "bin", open = ph === "wout" || ph === "bout", card = ph === "title" || ph === "btitle";
+  if (!close && !open && !card) return;
+  var p = card ? 1 : 1 - Math.max(0, b.t) / T.wipe;
+  ctx.save();
+  if (card) { ctx.fillStyle = RT_PAL.night; ctx.fillRect(0, 0, W, H); }
+  else if (rgReduced()) { ctx.globalAlpha = close ? p : 1 - p; ctx.fillStyle = RT_PAL.night; ctx.fillRect(0, 0, W, H); }
+  else {
+    var B = L.big ? 32 : 20, nx = Math.ceil(W / B), ny = Math.ceil(H / B);
+    for (var j = 0; j < ny; j++) for (var i = 0; i < nx; i++) {
+      var hs = (((i * 73856093) ^ (j * 19349663)) >>> 0) % 1000 / 1000, th = 0.8 * (i / nx * 0.55 + j / ny * 0.45) + 0.2 * hs;
+      var cov = close ? th < p : th >= p, edge = close ? p - th < 0.06 : th - p < 0.06;
+      if (!cov) continue;
+      ctx.fillStyle = edge ? RAIN_PAL.o100 : RT_PAL.night; ctx.fillRect(i * B, j * B, B, B);
+      if (edge) { ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(i * B, j * B + B - 3, B, 3); }
+    }
+  }
+  if (card) rgCardDraw(ctx, L, ph === "title");
+  ctx.restore();
+}
+/* v5.30 제목 카드 · 화면 가로 띠가 왼쪽에서 밀려 들어오고 점 글자가 켜진다 · 띠 위아래 전구가 번갈아 깜빡인다
+   들어갈 때 = 주황 띠 「BONUS STAGE」 + 「구름 n/3 클리어」 · 나올 때 = 나무 띠 「STAGE n」(지금 단계) + 이번 보너스 점수 */
+function rgCardDraw(ctx, L, bonus) {
+  var b = RG.bonus, W = L.CW, H = L.CH, T = RAIN_TRANS, dur = bonus ? T.title : T.back, e = dur - Math.max(0, b.t), rm = rgReduced(), now = performance.now();
+  var bh = Math.round(Math.min(H * 0.24, 200)), by = Math.round(H * 0.42 - bh / 2), q = rm ? 1 : Math.min(1, e / 0.32), sx = Math.round(-W * Math.pow(1 - q, 3));
+  ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(sx, by - 6, W, bh + 12);
+  ctx.fillStyle = bonus ? RAIN_PAL.o100 : RT_PAL.wood; ctx.fillRect(sx, by, W, bh);
+  ctx.fillStyle = bonus ? RAIN_PAL.o60 : RT_PAL.tan; ctx.fillRect(sx, by, W, 3);
+  ctx.fillStyle = bonus ? RAIN_PAL.deep : RT_PAL.bark; ctx.fillRect(sx, by + bh - 3, W, 3);
+  var lt = rm ? 0 : Math.floor(now / 160) % 2;
+  for (var x = 10, n = 0; x < W; x += 28, n++) {   /* 띠 위아래 전구 */
+    ctx.fillStyle = (n + lt) % 2 ? RT_PAL.cream : RAIN_PAL.o100;
+    ctx.fillRect(sx + x, by - 22, 8, 8); ctx.fillRect(sx + x, by + bh + 14, 8, 8);
+  }
+  var t = bonus ? "BONUS STAGE" : "STAGE " + RG.stage, dh = Math.round(Math.min(bh * 0.5, W * 0.07));
+  if (typeof DotGlyph !== "undefined" && DotGlyph.width) while (dh > 20 && DotGlyph.width(t, dh) > W * 0.86) dh -= 4;
+  var nd = rtDotsN(t), lit = rm || !nd ? null : Math.ceil(Math.min(1, Math.max(0, e - 0.2) / 0.5) * nd);
+  rtDots(ctx, t, sx + W / 2, by + bh / 2, dh, bonus ? RT_PAL.night : RAIN_PAL.o100, { align: "center", line: bonus ? null : RAIN_PAL.ink, lit: lit });
+  if (e < 0.5) return;
+  ctx.globalAlpha = rm ? 1 : Math.min(1, (e - 0.5) / 0.25);
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  var y = by + bh + 72, r = b.res;
+  if (bonus) { rtText(ctx, "구름 " + b.no + "/" + RAIN_CLOUD.max + " 클리어", W / 2, y, 32, RT_PAL.cream, RAIN_PAL.ink); rtText(ctx, "문장을 따라 치세요", W / 2, y + 48, 16, RT_PAL.tan2, null); }
+  else { rtText(ctx, "보너스 +" + (r ? r.pts : 0).toLocaleString(), W / 2, y, 32, RAIN_PAL.o100, RAIN_PAL.ink); rtText(ctx, "다시 비가 내려요", W / 2, y + 48, 16, RT_PAL.tan2, null); }
 }
 /* ── 추월 레이스 ── */
 function rgRaceRank(sc) { var l = (RG.race && RG.race.list) || [], n = 0; for (var i = 0; i < l.length; i++) if (l[i].score >= sc) n++; return n + 1; }
@@ -1379,4 +1543,5 @@ function rgAttractDraw(ctx, L, now) {
 if (typeof module !== "undefined" && module.exports) module.exports = { RG: RG, RAIN_WORDS: RAIN_WORDS, rgSeed: rgSeed, rgRnd: rgRnd, rgShuf: rgShuf, rgPickWord: rgPickWord, rgLayout: rgLayout, rgUpdate: rgUpdate, rgSpawn: rgSpawn, rgStat: rgStat, rgRamp: rgRamp,
   rgNextFill: rgNextFill, rgNextWord: rgNextWord, rgWrap: rgWrap, rgHgMap: rgHgMap, rgHgAdd: rgHgAdd, rgHgBack: rgHgBack, rgHangulize: rgHangulize, RGP: RGP,
   RAIN_BONUS_LINES: RAIN_BONUS_LINES, RAIN_BONUS: RAIN_BONUS, RAIN_LIFE_BONUS: RAIN_LIFE_BONUS, rgBonusLim: rgBonusLim, rgLev: rgLev, rgBonusScore: rgBonusScore, rgRaceRank: rgRaceRank,
-  rgRaceTick: rgRaceTick, rgSubmit: rgSubmit, rgEnd: rgEnd, rgBonusStart: rgBonusStart, RAIN_CLOUD: RAIN_CLOUD, rgCloudStart: rgCloudStart, rgCloudRem: rgCloudRem, rgLive: rgLive, rgHgKey: rgHgKey };
+  rgRaceTick: rgRaceTick, rgSubmit: rgSubmit, rgEnd: rgEnd, rgBonusStart: rgBonusStart, RAIN_CLOUD: RAIN_CLOUD, rgCloudStart: rgCloudStart, rgCloudRem: rgCloudRem, rgLive: rgLive, rgHgKey: rgHgKey,
+  rgCloudGeo: rgCloudGeo, RAIN_CLOUD_FX: RAIN_CLOUD_FX, RAIN_TRANS: RAIN_TRANS, rgWordY: rgWordY };
