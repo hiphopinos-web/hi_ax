@@ -117,6 +117,11 @@ textarea.in{height:auto;min-height:72px;padding:8px 12px;resize:vertical;width:1
 .in.sm{height:var(--h-sm);min-width:0;padding:0 8px;font-size:var(--fs-s)}
 .in.w-s{min-width:0;width:96px}.in.w-m{min-width:0;width:200px}
 .fld{display:flex;flex-direction:column;gap:6px;font-size:var(--fs-c);font-weight:600;color:var(--tx2)}
+.fld>.cap{font-weight:400}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.fgrid .fw{grid-column:1/-1}
+.row.nw{flex-wrap:nowrap}
+.dz-h{margin:24px 0 4px;padding-top:16px;border-top:1px solid var(--line);font-size:var(--fs-s);font-weight:700;color:var(--bad)}
 
 /* ── 카드 ── */
 .card{background:var(--sf);border:1px solid var(--line);border-radius:var(--r);padding:24px;margin-top:16px}
@@ -131,6 +136,7 @@ textarea.in{height:auto;min-height:72px;padding:8px 12px;resize:vertical;width:1
 .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .g57{grid-template-columns:minmax(0,5fr) minmax(0,7fr)}
 .kpis{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+@media(min-width:721px){.kpis:has(>.kpi:nth-child(7):last-child),.kpis:has(>.kpi:nth-child(8):last-child){grid-template-columns:repeat(4,minmax(0,1fr))}}   /* 261003 UI 정돈 · 7 · 8칸이 6 + 1 로 혼자 남지 않게 4열 */
 @media(max-width:1100px){.g2,.g3,.g57{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:720px){header.top{height:auto;flex-wrap:wrap;padding:0;gap:0}.brand{padding:12px 16px}.brand span{display:none}.hr{padding-right:16px;gap:8px}.live .tx,.acct .ae{display:none}
   nav.tabs{order:3;width:100%;height:44px;border-top:1px solid var(--line2);padding:0 4px;-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent);mask-image:linear-gradient(90deg,#000 85%,transparent)}
@@ -173,6 +179,8 @@ table.tb.plain{border:0}
 td .who2{font-weight:700;color:var(--tx)}
 td .who2 small,.who2 small{display:block;font-size:var(--fs-c);color:var(--tx2);font-weight:400}
 .scrolly{max-height:460px;overflow:auto}
+.wrap.scrolly{max-height:none!important}   /* 261003 UI 정돈 6단계 · 표 안 세로 스크롤 대신 20줄 + 「더 보기」(moreRows) */
+.more-rows{margin-top:8px}
 .ck{width:16px;height:16px;accent-color:var(--navy);cursor:pointer;vertical-align:middle}
 td.ckc,th.ckc{width:40px;text-align:center;padding-left:16px;padding-right:0}
 .acts{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:nowrap}
@@ -269,7 +277,7 @@ details.memo .mb ol{padding-left:16px}
 .pp-sum .v{font-size:var(--fs-h1);font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
 /* v5.01 계정 › 한 사람 관리 · 전체 초기화 */
 .us-dz{border-color:var(--bad-bd)}
-.us-dz .ch h2{color:var(--bad)}
+.us-dz .ch h2{color:var(--tx)}
 .us-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .us-part{display:flex;gap:12px;align-items:flex-start;padding:12px 12px;border:1px solid var(--line);border-radius:var(--r-s);margin-top:8px;cursor:pointer}
 .us-part:hover{background:var(--soft)}
@@ -813,10 +821,10 @@ td.itx{min-width:280px;max-width:520px;white-space:normal;line-height:1.55}
 .hv-ck i{width:8px;height:8px;border-radius:50%;background:var(--line3);flex-shrink:0}
 .hv-ck.ok i{background:var(--ok)}.hv-ck.warn i{background:var(--warn)}
 .hv-scr .acts{justify-content:flex-start}
-details.hv-dz{border:1px solid var(--bad-bd);border-radius:var(--r-s);margin-top:12px;background:var(--sf)}
+details.hv-dz{border:1px solid var(--line);border-radius:var(--r-s);margin-top:12px;background:var(--sf)}
 details.hv-dz>summary{cursor:pointer;list-style:none;padding:12px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 details.hv-dz>summary::-webkit-details-marker{display:none}
-details.hv-dz>summary b{color:var(--bad)}
+details.hv-dz>summary b{color:var(--tx)}   /* 261003 UI 정돈 · 위험 줄 제목은 검정 · 위험 색은 버튼만 · 등급은 L 표시와 확인 절차로 */
 details.hv-dz>div{padding:0 16px 16px}
 details.hv-dz.off{border-color:var(--line)}
 details.hv-dz.off>summary b{color:var(--tx3)}
@@ -1364,9 +1372,22 @@ function render(){
   if(ST.err&&ST.err.reason==="locked") h='<div class="bands err-banner">'+band("bad",'<b>서버가 이 연결을 잠갔습니다.</b> '+esc(lockedMsg())+' 잠금이 풀리면 이 탭을 새로 고칩니다. 한 번 들어온 탭은 그 뒤로 잠금을 받지 않습니다.')+'</div>'+h;
   else if(ST.err) h='<div class="bands err-banner">'+band("bad",'일부 데이터를 못 받았습니다('+esc(why(ST.err))+'). 표시된 값은 마지막으로 받은 것입니다.','<button class="btn sm" onclick="refresh()">다시 시도</button>')+'</div>'+h;
   v.innerHTML=hvHead()+h;
+  moreRows(v);
   if(fIdx>=0){ var f2=v.querySelectorAll("input,select,textarea"); if(f2[fIdx]){ try{f2[fIdx].focus({preventScroll:true});}catch(e){f2[fIdx].focus();} try{ if(selS!=null) f2[fIdx].setSelectionRange(selS,selE); }catch(e){} } }
   window.scrollTo(0,top);
   renderDrawer();
+}
+/* 261003 UI 정돈 6단계 · 긴 표(옛 세로 스크롤 표)는 20줄만 보이고 아래 「더 보기 · n줄 더」 · 누르면 이 화면에서 전부 · 줄 데이터 · 선택 · 검색은 그대로 */
+ST.more={};
+function moreRows(v){
+  [].forEach.call(v.querySelectorAll(".wrap.scrolly"),function(w,i){
+    var k=ST.nav+":"+navPi()+":"+i, rows=[].filter.call(w.querySelectorAll("tr"),function(tr){ return !tr.querySelector("th"); });
+    if(rows.length<=20||ST.more[k]) return;
+    rows.slice(20).forEach(function(tr){ tr.hidden=true; });
+    var b=document.createElement("button"); b.type="button"; b.className="btn sm more-rows"; b.textContent="더 보기 · "+(rows.length-20)+"줄 더";
+    b.onclick=function(){ ST.more[k]=1; render(); };
+    w.insertAdjacentElement("afterend", b);
+  });
 }
 function setQ(v){ ST.q=v; render(); }
 function setFilt(v){ ST.filt=v; ST.sel={}; render(); }
@@ -1426,7 +1447,7 @@ function guide(){
 }
 function pwBy(){ try{ return localStorage.getItem("axf_desk")||""; }catch(e){ return ""; } }
 function pwBySet(v){ try{ localStorage.setItem("axf_desk",v||""); }catch(e){} }
-function byBox(){ return '<input class="in" style="min-width:0;width:150px" placeholder="처리자 이름" value="'+esc(pwBy())+'" oninput="pwBySet(this.value)">'; }
+function byBox(){ return '<input class="in w-m" placeholder="처리자 이름" value="'+esc(pwBy())+'" oninput="pwBySet(this.value)">'; }
 
 /* 스탬프 개수 → 보상 (v4.58 사용자 확정 260929 · 개수는 6개가 한도 · 3개 룰렛 · 4·5·6개 응모권 1·2·3장 · 최대 3장) · 앱·서버와 같은 식
    서버 stamp_people 의 n = 개수(최대 6) · got = 받은 칸 수(기록 그대로 · 최대 8) · 옛 서버(n 이 8까지)여도 여기서 6으로 자른다 */
@@ -1603,7 +1624,7 @@ function usPanel(emp){
         return '<tr'+(x.n?' class="hv"':'')+'><td>'+(x.n?'<input type="checkbox" class="ck" '+(sel[e.k]?"checked ":"")+'onchange="usPick(\''+e.k+'\',this.checked)" aria-label="'+esc(e.n)+' 고르기">':'')+'</td>'+
           '<td><b>'+esc(e.n)+'</b> <span class="cap">'+esc(e.g)+'</span></td><td class="n tdr">'+(x.n||0)+'</td><td class="n tdr">'+(best||'<span class="cap">-</span>')+'</td><td class="n">'+usT(x.last)+'</td></tr>'; }).join("")+'</table></div>';
     var nSel=USR_EV_UI.filter(function(e){ return sel[e.k]; }).length, any=USR_EV_ALL.some(function(e){ return (G[e.k]||{}).n; });
-    g+='<div class="toolbar mt12"><label class="cap" style="display:flex;align-items:center;gap:6px"><input type="checkbox" class="ck" '+(ST.us.take?"checked ":"")+'onchange="ST.us.take=this.checked">받은 스탬프도 회수(미니 게임 · AX 퀴즈 · 기본 회수 안 함)</label><span class="sp"></span>'+
+    g+='<div class="toolbar mt12"><label class="cap" style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="ck" '+(ST.us.take?"checked ":"")+'onchange="ST.us.take=this.checked">받은 스탬프도 회수(미니 게임 · AX 퀴즈 · 기본 회수 안 함)</label><span class="sp"></span>'+
       '<button class="btn sm danger" onclick="usGame(\''+jq(emp)+'\',\'sel\')"'+(nSel?'':' disabled')+'>고른 종목 지우기'+(nSel?' ('+nSel+')':'')+'</button>'+
       '<button class="btn sm danger" onclick="usGame(\''+jq(emp)+'\',\'all\')"'+(any?'':' disabled')+'>게임 기록 전부 지우기</button></div>';
   }
@@ -1842,8 +1863,8 @@ function viewCrowd(){
     '<span class="cap">켜면 엘리베이터 혼잡 카드에 「계단 이용」(계단 스탬프 화면)이 붙습니다. 총무 피난계단 승인 뒤에 켭니다.</span></div>'+
     '<div class="row mt12" style="gap:8px;flex-wrap:wrap;align-items:flex-end">'+
     '<label class="cap">예상 창(쉼표로 여러 개 · 비우면 끔)<br><input id="crWin" class="in" style="min-width:320px" value="'+esc(cf.win||"")+'" placeholder="11:00-11:20,13:20-13:40"></label>'+
-    '<label class="cap">예상 날짜(비우면 매일)<br><input id="crDay" class="in" style="width:130px" value="'+esc(cf.day||"")+'" placeholder="2026-10-26"></label>'+
-    '<label class="cap">제보 유효(분)<br><input id="crMin" class="in" style="width:80px" inputmode="numeric" value="'+esc(cf.min||15)+'"></label>'+
+    '<label class="cap">예상 날짜(비우면 매일)<br><input id="crDay" class="in w-s" value="'+esc(cf.day||"")+'" placeholder="2026-10-26"></label>'+
+    '<label class="cap">제보 유효(분)<br><input id="crMin" class="in w-s" inputmode="numeric" value="'+esc(cf.min||15)+'"></label>'+
     '<button class="btn pri" onclick="crowdCfgSave()">저장</button></div>'+
     '<p class="cap mt8">예상은 엘리베이터 칸에만 「예상」으로 표시하고(스태프가 창 안에서 해소하면 그 창은 접힘), 홈 위 카드로 올리지 않습니다. 스태프 폰에는 창 시작 5분 전부터 「확인 시간」 칩이 뜹니다.</p>';
   return card("혼잡 제보","1F 스태프 제보 · "+(cf.min||15)+"분 뒤 저절로 꺼짐 · "+esc(short(d.t)),cells+tb+memo(set,"설정 · 계단 연결 · 예상 창"),'<button class="btn sm" onclick="reload([\'crowd\'])">새로고침</button>');
@@ -1990,7 +2011,7 @@ function spPanel(r){
     '<div class="r"><button class="btn sm ghost" onclick="spSel(\'\')">선택 해제</button></div></div>';
   h+='<div class="pp-sum">'+
     '<div><div class="l">보유</div><div class="v">'+n+'<em>/ '+STAMP_DENOM+'</em></div><div class="x">'+(n>=STAMP_DENOM?"한도 도달"+(got>STAMP_DENOM?" · 받은 칸 "+got:""):"다음 보상까지 "+(n<3?3-n:1)+"개")+'</div></div>'+
-    '<div><div class="l">룰렛</div><div class="v" style="font-size:var(--fs-h2);margin-top:6px">'+(r.roulette?tag("사용함","off"):rw.roulette?tag("돌릴 수 있음","pri"):tag("3개부터","off"))+'</div><div class="x">1인 1회 · 1F 이벤트존</div></div>'+
+    '<div><div class="l">룰렛</div><div class="v" style="font-size:var(--fs-h2);margin-top:8px">'+(r.roulette?tag("사용함","off"):rw.roulette?tag("돌릴 수 있음","pri"):tag("3개부터","off"))+'</div><div class="x">1인 1회 · 1F 이벤트존</div></div>'+
     '<div><div class="l">응모권</div><div class="v">'+rw.tickets+'<em>장 자격</em></div><div class="x">번호 발급 '+tk+'장'+(tk<rw.tickets?' · 앱이 다음 동기화에 발급':'')+'</div></div></div>';
   h+='<div class="slots">'+STAMP_ORDER.map(function(id){
     var m=STAMP_META[id], got=(r.stamps||[]).indexOf(id)>=0, canG=GRANT_IDS.indexOf(id)>=0, canR=revokeIds().indexOf(id)>=0;
@@ -2275,8 +2296,8 @@ function viewCchat(){
     var canM=sel.filter(function(r){return r.status==="대기"||r.status==="매칭";}).length, canC=canM;
     var bd=ST.bulk||{};
     body+='<div class="bulk"><span class="c"><b>'+sel.length+'명</b> 선택 · 같은 회차·테이블로 묶기</span>'+
-      '<input class="in sm" type="time" style="width:110px" value="'+esc(bd.round||"")+'" oninput="ST.bulk.round=this.value">'+
-      '<input class="in sm" style="width:90px" placeholder="테이블" value="'+esc(bd.table||"")+'" oninput="ST.bulk.table=this.value">'+
+      '<input class="in sm w-s" type="time" value="'+esc(bd.round||"")+'" oninput="ST.bulk.round=this.value">'+
+      '<input class="in sm w-s" placeholder="테이블" value="'+esc(bd.table||"")+'" oninput="ST.bulk.table=this.value">'+
       '<button class="btn sm pri" '+(canM?"":"disabled ")+'onclick="ccMatch(selKeys(\'c:\'),true)">일괄 매칭'+(canM?' '+canM:'')+'</button>'+
       '<button class="btn sm danger" '+(canC?"":"disabled ")+'onclick="ccDo(selKeys(\'c:\'),\'취소\')">일괄 취소'+(canC?' '+canC:'')+'</button>'+
       '<button class="btn sm ghost" onclick="selClear()">선택 해제</button></div>';
@@ -2284,8 +2305,8 @@ function viewCchat(){
   body+='<div class="toolbar">'+searchBox("사번 · 이름 · 태그 · 테이블 검색")+'<span class="cnt"><b>'+shown.length+'</b> / '+rows.length+'명</span></div>';
   body+='<div class="wrap"><table class="tb"><tr><th class="ckc">'+ckAll("c:",shown.map(function(r){return normE(r.emp);}))+'</th><th>이름</th><th>부문</th><th>관심 태그</th><th>희망 시간</th><th>신청</th><th>상태</th><th>회차 · 테이블</th><th class="tdr">다음 행동</th></tr>'+
     shown.map(function(r){ var s=r.status, k="c:"+normE(r.emp), e=jq(r.emp), act='';
-      if(s==="대기") act='<input class="in sm" type="time" style="width:104px" value="'+esc(ccVal(r,"round"))+'" onclick="event.stopPropagation()" oninput="ccDraft(\''+e+'\',\'round\',this.value)">'+
-        '<input class="in sm" style="width:76px" placeholder="테이블" value="'+esc(ccVal(r,"table"))+'" onclick="event.stopPropagation()" oninput="ccDraft(\''+e+'\',\'table\',this.value)">'+
+      if(s==="대기") act='<input class="in sm w-s" type="time" value="'+esc(ccVal(r,"round"))+'" onclick="event.stopPropagation()" oninput="ccDraft(\''+e+'\',\'round\',this.value)">'+
+        '<input class="in sm w-s" placeholder="테이블" value="'+esc(ccVal(r,"table"))+'" onclick="event.stopPropagation()" oninput="ccDraft(\''+e+'\',\'table\',this.value)">'+
         ''+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'취소\')">취소</button>')+'<button class="btn sm pri" style="min-width:72px" onclick="event.stopPropagation();ccMatch([\''+e+'\'])">매칭</button>';
       else if(s==="매칭") act=''+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'취소\')">취소</button>')+'<button class="btn sm" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'완료\')">완료</button><button class="btn sm pri" style="min-width:72px" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'참석\')">참석</button>';
       else if(s==="참석") act='<button class="btn sm pri" style="min-width:72px" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'완료\')">완료</button>';
@@ -2452,7 +2473,7 @@ function viewAtt(){
   var progs=d.progs||[], mt=d.multi||{}, two=(mt[2]||0)+(mt[3]||0)+(mt[4]||0);
   var days=Object.keys(base.days||{}).sort();
   h+=chips([{v:"",n:"모든 날짜",c:null}].concat(days.map(function(k){ return { v:k, n:k.slice(5).replace("-","/"), c:(base.days||{})[k] }; })), ATTV.day, "attDay")+
-    '<div class="toolbar"><label class="cap" style="display:flex;align-items:center;gap:6px"><input type="checkbox" '+(ATTV.test?"checked ":"")+'onchange="attOpt(\'test\',this.checked)">테스트 계정 포함</label>'+
+    '<div class="toolbar"><label class="cap" style="display:flex;align-items:center;gap:8px"><input type="checkbox" '+(ATTV.test?"checked ":"")+'onchange="attOpt(\'test\',this.checked)">테스트 계정 포함</label>'+
     '<span class="cap">테스트 기록 '+(d.test||0)+'건'+(ATTV.test?' · 지금 포함해서 셉니다':' · 빼고 셉니다')+'</span><span class="sp"></span>'+
     (d.test?'<a class="cap" href="#" onclick="go(\'s_danger\');return false">지우기는 시스템 › 위험 구역</a>':'')+   /* v5.14 기록 메뉴에는 쓰기 버튼을 두지 않는다 */
     '<span class="cnt">'+esc(short(d.t))+' 기준 · 창검사 '+(d.win?"ON":"OFF")+'</span></div>';
@@ -2511,8 +2532,8 @@ function viewDraw(){
     (!recs.length?emptyRow(6,"아직 추첨 기록이 없습니다."):"")+'</table></div>'+(d.total>recs.length?'<p class="cap mt8">최근 '+recs.length+'줄 · 전체 '+d.total+'줄(시트 「추첨기록」)</p>':'');
   var set='<div class="dw-set">'+
     '<label class="cap">추첨 코드(인쇄물과 같아야 함)<br><input id="dwCode" class="in dw-code" value="'+esc(d.code||"")+'" placeholder="AXD + 6자" autocomplete="off" spellcheck="false"></label>'+
-    '<label class="cap">체크인 시간<br><input id="dwWin" class="in" style="width:140px" value="'+esc(d.win||"")+'" placeholder="16:40-17:25"></label>'+
-    '<label class="cap">날짜(비우면 매일)<br><input id="dwDay" class="in" style="width:130px" value="'+esc(d.day||"")+'" placeholder="비우면 매일"></label>'+
+    '<label class="cap">체크인 시간<br><input id="dwWin" class="in w-m" value="'+esc(d.win||"")+'" placeholder="16:40-17:25"></label>'+
+    '<label class="cap">날짜(비우면 매일)<br><input id="dwDay" class="in w-s" value="'+esc(d.day||"")+'" placeholder="비우면 매일"></label>'+
     '<button class="btn pri" onclick="drawCfgSave()">저장</button>'+
     ('closed' in d?'<button class="btn'+(d.closed?'':' danger')+'" onclick="drawCloseSet('+(d.closed?0:1)+')">'+(d.closed?'체크인 다시 열기':'체크인 마감')+'</button>':'')+'</div>'+   /* v4.81 마감 · 사회자가 알리면 추첨 화면(또는 여기)이 닫는다 */
     '<p class="dw-note">'+(d.code?"":"<b>코드가 비어 있어 체크인을 받지 않습니다.</b> 인쇄물 코드(codes.json d17)를 넣고 저장합니다. ")+
@@ -2625,7 +2646,7 @@ function finPoolCard(d){
   var tb='<div class="wrap mt8"><table class="tb"><tr><th>구분</th><th>사번</th><th>이름</th><th>사유</th><th class="tdr"></th></tr>'+
     ex.map(function(x){ return '<tr><td>'+(x.k==="ex"?tag("제외","warn"):tag("포함"))+'</td><td class="n">'+esc(x.e)+'</td><td>'+esc(x.name||"-")+'</td><td>'+esc(x.why)+'<div class="cap">'+esc(short(x.at))+(x.by?" · "+esc(x.by):"")+'</div></td><td class="tdr">'+(off?"":'<button class="btn sm" onclick="finExDel(\''+jq(x.e)+'\')">빼기</button>')+'</td></tr>'; }).join("")+
     (!ex.length?emptyRow(5,"수동 제외 · 포함이 없습니다."):"")+'</table></div>';
-  var form=off?"":'<div class="fn-form mt12"><label>사번<input class="in" style="width:120px" inputmode="numeric" value="'+esc(FINV.ex.emp)+'" oninput="finExIn(\'emp\',this.value)"></label>'+
+  var form=off?"":'<div class="fn-form mt12"><label>사번<input class="in w-s" inputmode="numeric" value="'+esc(FINV.ex.emp)+'" oninput="finExIn(\'emp\',this.value)"></label>'+
     '<label style="flex:1 1 180px">사유<input class="in" style="width:100%" maxlength="60" value="'+esc(FINV.ex.why)+'" oninput="finExIn(\'why\',this.value)" placeholder="예: 부정 적립 확인 · 17:00 경계 이의"></label>'+
     '<button class="btn" onclick="finExAdd(\'ex\')"'+(FINV.busy?" disabled":"")+'>수동 제외</button><button class="btn" onclick="finExAdd(\'in\')"'+(FINV.busy?" disabled":"")+'>수동 포함</button></div>';
   var pv=d.pool||{}, lk=d.lock;
@@ -2706,7 +2727,7 @@ function finPush(){
 /* ── 교체 · 당첨 취소 → 예비 1순위 승계 ── */
 function finVoIn(k, v){ FINV.vo[k]=v; }
 function finVoidCard(d){
-  var body='<div class="fn-form"><label>사번<input class="in" style="width:120px" inputmode="numeric" value="'+esc(FINV.vo.emp)+'" oninput="finVoIn(\'emp\',this.value)"></label>'+
+  var body='<div class="fn-form"><label>사번<input class="in w-s" inputmode="numeric" value="'+esc(FINV.vo.emp)+'" oninput="finVoIn(\'emp\',this.value)"></label>'+
     '<label style="flex:1 1 160px">사유<input class="in" style="width:100%" maxlength="60" value="'+esc(FINV.vo.why)+'" oninput="finVoIn(\'why\',this.value)" placeholder="예: 퇴사 · 배송 불가"></label>'+
     '<button class="btn" onclick="finVoidAsk()"'+(FINV.busy?" disabled":"")+'>미리 보기</button></div>'+
     '<p class="cap mt8">당첨을 취소하면 그 상품을 예비 1순위가 이어받습니다. 예비가 없으면 상품은 보관으로 갑니다. 교체 마감은 10/27 09:00 입니다.</p>';
@@ -2763,7 +2784,7 @@ function finCfgCard(d){
   var v=finCfgVals(d), off=d.ph==="drawn", c=d.cfg||{}, dis=off?" disabled":"";
   var f=function(k,l,w,ph){ return '<label>'+l+'<input class="in" style="width:'+w+'px" value="'+esc(v[k])+'" oninput="finCfgIn(\''+k+'\',this.value)"'+(ph?' placeholder="'+esc(ph)+'"':'')+dis+'></label>'; };
   var body='<div class="fn-form">'+f("cut","마감(서버 시각)",160,"2026-10-26 17:00")+f("hum","가습기",90)+f("lucky","행운권 당첨 수",110)+
-    '<label>행운권 당첨자<select class="in" style="width:120px" onchange="finCfgIn(\'dedupe\',this.value)"'+dis+'><option value="ON"'+(v.dedupe==="ON"?" selected":"")+'>제외</option><option value="OFF"'+(v.dedupe==="OFF"?" selected":"")+'>제외 안 함</option></select></label>'+
+    '<label>행운권 당첨자<select class="in w-s" onchange="finCfgIn(\'dedupe\',this.value)"'+dis+'><option value="ON"'+(v.dedupe==="ON"?" selected":"")+'>제외</option><option value="OFF"'+(v.dedupe==="OFF"?" selected":"")+'>제외 안 함</option></select></label>'+
     f("warn","대조 경고 %",100)+f("ship","배송",90)+'</div>'+
     '<div class="fn-form mt12">'+(c.stock||[]).map(function(x){ return f("q_"+x.id,esc(x.n)+" 입고",110); }).join("")+'</div>'+
     '<div class="fn-go"><button class="btn" onclick="finCfgSave()"'+(off||FINV.busy?" disabled":"")+'>설정 저장</button><span class="cap">'+(off?"추첨 뒤에는 바꿀 수 없습니다":"마감을 바꾸면 확정을 다시 합니다")+'</span>'+
@@ -3010,7 +3031,7 @@ function viewVisit(){
   var days=Object.keys(base.days||{}).sort(), today=base.day||"";
   if(today&&days.indexOf(today)<0) days.push(today);
   h+=chips(days.map(function(k){ return { v:k===today?"":k, n:(k===today?"오늘 ":"")+k.slice(5).replace("-","/"), c:(base.days||{})[k]||0 }; }), VISV.day, "visDay")+
-    '<div class="toolbar"><label class="cap" style="display:flex;align-items:center;gap:6px"><input type="checkbox" '+(VISV.test?"checked ":"")+'onchange="visOpt(\'test\',this.checked)">테스트 계정 포함</label>'+
+    '<div class="toolbar"><label class="cap" style="display:flex;align-items:center;gap:8px"><input type="checkbox" '+(VISV.test?"checked ":"")+'onchange="visOpt(\'test\',this.checked)">테스트 계정 포함</label>'+
     '<span class="cap">테스트 기록 '+(d.test||0)+'건'+(VISV.test?' · 지금 포함해서 셉니다':' · 빼고 셉니다')+'</span><span class="sp"></span>'+
     (d.test?'<a class="cap" href="#" onclick="go(\'s_danger\');return false">지우기는 시스템 › 위험 구역</a>':'')+   /* v5.14 */
     '<span class="cnt">'+esc(d.day||"")+' · '+esc(short(d.t))+' 기준</span></div>';
@@ -3032,7 +3053,7 @@ function viewVisit(){
       return barRow('<b>'+esc(x.n)+'</b>', x.cnt, nV||1, '<b class="n">'+x.cnt+'</b>명 · '+x.rate+'%'); }).join("")+'</table>';
   h+=card("경로별 비율","접속자 "+nV+"명 기준 · 두 경로를 쓴 사람 "+(d.multi||0)+"명", visStack(routes)+routeT);
   h+='<div class="grid g2">'+card("시간대별 흐름",(d.bucket||30)+"분 단위 · 그 시간에 앱을 연 사람", flowT)+
-    card("기기","안드로이드 · 아이폰 · PC", devT+'<p class="cap" style="margin-top:10px">열기 '+(wy.open||0)+'회 · 30분 뒤 복귀 '+(wy.back||0)+'회 · 로그인 '+(wy.login||0)+'회 · 이 기기 첫 방문 '+(d.first||0)+'대'+(d.drop?' · 서버가 바빠 못 쓴 기록 '+d.drop+'건':'')+'</p>')+'</div>';
+    card("기기","안드로이드 · 아이폰 · PC", devT+'<p class="cap" style="margin-top:12px">열기 '+(wy.open||0)+'회 · 30분 뒤 복귀 '+(wy.back||0)+'회 · 로그인 '+(wy.login||0)+'회 · 이 기기 첫 방문 '+(d.first||0)+'대'+(d.drop?' · 서버가 바빠 못 쓴 기록 '+d.drop+'건':'')+'</p>')+'</div>';
   h+=memo('<p><b>무엇을 세나</b> · 앱을 열 때, 30분 넘게 다른 앱을 보다 돌아올 때, 로그인 직후에 한 줄씩 남습니다. 같은 기기 · 같은 경로 · 같은 로그인 상태는 '+(d.dedup||5)+'분 안에 한 번만 남깁니다.</p>'+
     '<p><b>경로</b> · 홈 화면 앱 = 홈 화면 아이콘으로 연 설치형 화면(주소창 없음) · 브라우저 = 크롬 · 사파리 · 삼성 인터넷 · 웨일 등 · 카카오톡 · 네이버 = 그 앱 안의 브라우저 · 인앱 기타 = 인스타그램 · 라인 · 팀즈 등 앱 속 브라우저. 삼성 인터넷이나 크롬에서 「홈 화면에 바로가기」로 만든 아이콘이 브라우저 탭으로 열리면 브라우저로 셉니다.</p>'+
     '<p><b>아이폰 홈 화면 앱</b> · 사파리와 저장소가 따로라 홈 화면 앱을 처음 열면 로그인 화면부터 나옵니다. 홈 화면 앱 줄의 이탈이 크면 현장 안내가 필요하다는 뜻입니다.</p>'+
@@ -3048,9 +3069,9 @@ function viewArt(){
   h+='<div class="kpis">'+kpi("공개",rows.filter(function(r){return r.status==="공개";}).length,"점")+kpi("대기",rows.filter(function(r){return r.status==="대기";}).length,"점")+kpi("숨김",rows.filter(function(r){return r.status==="숨김";}).length,"점")+kpi("좋아요",rows.reduce(function(a,r){return a+(r.likes||0);},0),"개")+'</div>';
   h+=card("설정","형식 2026-10-26 16:30",'<div class="row" style="gap:12px;align-items:flex-end">'+
     '<label class="fld">접수 폼 주소<input class="in" id="artForm" style="min-width:280px" value="'+esc(d.form||"")+'"></label>'+
-    '<label class="fld">접수 마감<input class="in" id="artSub" style="min-width:0;width:170px" value="'+esc(d.subEnd||"")+'"></label>'+
-    '<label class="fld">좋아요 마감<input class="in" id="artVote" style="min-width:0;width:170px" value="'+esc(d.voteEnd||"")+'"></label>'+
-    '<label class="fld">순위 상위 N<input class="in" id="artTop" style="min-width:0;width:90px" inputmode="numeric" value="'+(d.top||10)+'"></label>'+
+    '<label class="fld">접수 마감<input class="in w-m" id="artSub" value="'+esc(d.subEnd||"")+'"></label>'+
+    '<label class="fld">좋아요 마감<input class="in w-m" id="artVote" value="'+esc(d.voteEnd||"")+'"></label>'+
+    '<label class="fld">순위 상위 N<input class="in w-s" id="artTop" inputmode="numeric" value="'+(d.top||10)+'"></label>'+
     '<button class="btn pri" onclick="artSave()">저장</button></div>'+
     memo('<p>접수 마감 전에는 앱 홈 배너가 폼으로, 그 뒤 좋아요 마감까지는 갤러리로 갑니다. 좋아요 마감이 지나면 배너가 사라지고 좋아요가 잠깁니다.</p>'+
       '<p><b>이미지 올리는 순서 (정적 호스팅)</b></p><ol><li>폼 응답에서 본선 작품 원본을 내려받는다.</li><li>작품마다 번호를 정한다(01~10). 이 번호가 작품ID이자 앱에 보이는 번호다.</li>'+
@@ -3116,9 +3137,10 @@ function viewTypeNick(){
   var tr=ST.data.tres||{top:[],win:[]}, tries=tr.tries||3;
   /* v4.32 1F 현장 셀프 모드 · 참가자가 노트북에서 스스로 · 도전 횟수(type_self_cfg · 설정 타자셀프_횟수) · 도전 시간(type_cfg · 설정 타자_결선) · 노트북 주소 · 토너먼트(타자왕전 판)와 별개 */
   var h=card("1F 현장 셀프 모드","참가자가 노트북에서 스스로 · 1인 "+tries+"회 · 순위는 사람마다 최고 기록 하나",
-    '<div class="row"><span class="cap" style="width:72px">도전 횟수</span><input class="in" id="selfTries" style="min-width:0;width:80px" inputmode="numeric" value="'+tries+'"><button class="btn" onclick="selfTriesSave()">저장</button><span class="cap">1~9회</span></div>'+
-    '<div class="row mt8"><span class="cap" style="width:72px">타자왕 마감</span><input class="in" id="selfWin" style="min-width:0;width:240px" value="'+esc((tr.win||[]).join(",").replace(/~/g,"-"))+'"><button class="btn" onclick="selfWinSave()">저장</button><span class="cap">운영 시간 · 끝 = 마감 · 예 09:00-17:00</span></div>'+   /* v5.03 결선 없음 · 17:00 마감(서버 키 타자_결선 그대로) */
-    '<div class="row mt8"><span class="cap" style="width:72px">노트북 주소</span><input class="in" readonly style="min-width:0;flex:1" value="'+esc(selfLink())+'"><button class="btn sm" onclick="selfLinkCopy()">주소 복사</button></div>'+
+    /* 261003 UI 정돈 6단계 · 입력 배치 = 위 라벨 + 칸 + 그 칸의 저장 · 아래 도움말 한 줄(값마다 서버 저장이 따로라 저장은 칸마다 그대로) */
+    '<div class="fgrid"><div class="fld"><label for="selfTries">도전 횟수</label><div class="row nw"><input class="in w-s" id="selfTries" inputmode="numeric" value="'+tries+'"><button class="btn" onclick="selfTriesSave()">저장</button></div><span class="cap">1~9회</span></div>'+
+    '<div class="fld"><label for="selfWin">타자왕 마감</label><div class="row nw"><input class="in w-m" id="selfWin" value="'+esc((tr.win||[]).join(",").replace(/~/g,"-"))+'"><button class="btn" onclick="selfWinSave()">저장</button></div><span class="cap">운영 시간 · 끝 = 마감 · 예 09:00-17:00</span></div>'+   /* v5.03 결선 없음 · 17:00 마감(서버 키 타자_결선 그대로) */
+    '<div class="fld fw"><label>노트북 주소</label><div class="row nw"><input class="in" readonly style="min-width:0;flex:1" value="'+esc(selfLink())+'"><button class="btn" onclick="selfLinkCopy()">주소 복사</button></div></div></div>'+
     memo('<p>켜는 법 · ① 노트북 크롬에서 위 주소를 엽니다 ② 관리코드를 넣고 효과음(기본 켜짐)을 고른 뒤 「셀프 모드 켜기」 ③ 이후 화면은 참가자 전용입니다(새로 고침·재부팅해도 유지) ④ 끄기·효과음 = 화면 왼쪽 아래 「관리」 → 관리코드.</p>'+
       '<p>참가자는 앱의 내 QR 을 노트북 카메라에 비추고(게임 닉네임이 없으면 정한 뒤) SPACE 로 시작합니다(v5.12 · 사번 입력 없음 · 켤 때 카메라 권한 허용). 시작하는 순간 1회로 셉니다(중간에 그만둬도 돌려주지 않음). 테스트 사번(310555)은 기록을 남기지 않습니다. 「타자왕 마감」은 운영 시간이고 끝 시각이 마감입니다(기본 09:00-17:00 · 결선 없음 · 1~3위는 Outro 시상).</p>'+
       ''));   /* v5.14 토너먼트(타자왕전 판) 안내는 지웠다 · 대전 · 결선 없음(261002) */
@@ -3134,14 +3156,14 @@ function viewTypeNick(){
         '<td><div class="acts">'+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="nickReset(\''+k+'\')">초기화</button>')+'<button class="btn sm" onclick="nickHide(\''+k+'\','+(r.hidden?0:1)+')">'+(r.hidden?"숨김 해제":"숨기기")+'</button></div></td></tr>'; }).join(""):emptyRow(6,"닉네임이 없습니다."))+'</table></div>'+
     memo('<p>초기화하면 닉네임이 지워지고 순위판에 「익명 참가자」로 나옵니다. 참가자는 앱에서 새 닉네임을 다시 정할 수 있습니다. 기록 점수는 지우지 않습니다.</p>'));
   h+=card("리허설 기록 지우기","테스트 사번(310555)만 · 실제 참가자 사번은 서버가 거부",
-    '<div class="row"><input class="in" id="gwEmp" style="min-width:0;width:160px" placeholder="테스트 사번" value="310555"><button class="btn danger" onclick="gameWipe()">기록 삭제</button></div>'+
+    '<div class="row"><input class="in w-m" id="gwEmp" placeholder="테스트 사번" value="310555"><button class="btn danger" onclick="gameWipe()">기록 삭제</button></div>'+
     '<p class="cap mt8">앱 게임기록과 1F 타자왕 기록을 함께 지웁니다.</p>');
   return h;
 }
 function gstCard(g){
   var d=ST.data.gstats||{}, G=(d.games||{})[g], R=d.rule;
   if(!G) return card(GST_NAME[g],"",'<p class="cap">불러오는 중</p>');
-  var sum=G.players?'<div class="row" style="gap:6px;margin-bottom:12px">'+tag("참여 "+G.players+"명","off")+tag("플레이 "+G.plays+"회","off")+tag("최고 "+n0(G.best)+"점","off")+
+  var sum=G.players?'<div class="row" style="gap:8px;margin-bottom:12px">'+tag("참여 "+G.players+"명","off")+tag("플레이 "+G.plays+"회","off")+tag("최고 "+n0(G.best)+"점","off")+
     tag("최고 점수 중앙 "+n0(G.median)+"점","off")+tag("만점 도달 "+(G.full||0)+"명",G.full?"warn":"off")+tag(olyKeyMed(g,G.keyMedian),"off")+'</div>':'<p class="cap" style="margin-bottom:12px">아직 기록이 없습니다</p>';
   return card(GST_NAME[g], R?esc(olyRuleLine(g,R)):"",
     sum+'<div class="toolbar"><input class="in" placeholder="닉네임 · 이름 · 사번 검색" value="'+esc(GQ[g]||"")+'" oninput="gstSearch(\''+g+'\',this.value)">'+
@@ -3161,7 +3183,7 @@ function olyAllHtml(){
       '<td class="n tdr"><b>'+n0(r.total)+'점</b></td><td class="n tdr">'+r.done+' / '+ev.length+'</td></tr>';
   }).join(""):emptyRow(6+ev.length, O.rows.length?"검색 결과가 없습니다.":"아직 기록이 없습니다.");
   return card(nm+" · 전원 명단", '참여 '+O.players+'명 · '+ev.length+'종목 완료 '+O.finishers+'명 · 만점 '+n0(max)+'점 (종목 상한 '+n0(d.cap||3000)+' × '+ev.length+')'+(d.qstat?' · AX 퀴즈(순위 없음) 참여 '+d.qstat.players+'명 · '+((d.qev||[]).length>1?d.qev.length+'종 ':'')+'완주 '+d.qstat.finishers+'명':''),
-    '<div class="row" style="gap:6px;margin-bottom:12px"><span class="cap">총점 분포 · '+n0(step)+'점 구간</span> '+bars+'</div>'+
+    '<div class="row" style="gap:8px;margin-bottom:12px"><span class="cap">총점 분포 · '+n0(step)+'점 구간</span> '+bars+'</div>'+
     '<div class="toolbar"><input class="in" placeholder="닉네임 · 이름 · 사번 검색" value="'+esc(GQ.oly||"")+'" oninput="GQ.oly=this.value; render()">'+
     '<span class="cnt"><b>'+rows.length+'</b> / '+O.rows.length+'명</span></div>'+
     '<div class="wrap scrolly"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th>'+
@@ -3184,10 +3206,10 @@ function viewOly(){
       '<input class="in'+(e?" bad":"")+'" id="olyF_'+i+'" inputmode="decimal" value="'+esc(olyRaw(i,S))+'"'+(lk?" disabled":"")+' oninput="olyIn('+i+',this.value)">'+
       (e?'<span class="e">'+esc(e)+'</span>':'<span class="h">'+esc(f.h)+'</span>')+'</label>'; };
   var idx=function(g){ var a=[]; OLY_F.forEach(function(f,i){ if(f.g===g&&(OX_PASS_ON||f.k!=="pass")) a.push(i); }); return a; };   /* v5.14 판자 허용 칸(R9 · 260924 v4.28 판자 삭제)은 숨긴다 · 값은 서버 그대로 둔다 */
-  var head='<div class="row" style="gap:8px">'+(lk?tag("잠김","pri"):tag("편집 가능","off"))+(dirty.length?tag("저장 안 한 변경 "+dirty.length+"칸","warn"):"")+
-    '<button class="btn sm'+(lk?"":" danger")+'" onclick="olyLock('+(lk?0:1)+')">'+(lk?"잠금 해제":"당일 잠금 켜기")+'</button></div>';
-  var body=(lk?'<div class="err-banner" style="color:var(--navy);background:var(--navy05);border-color:var(--navy1)">잠겨 있어 계수를 바꿀 수 없습니다. 고치려면 먼저 <b>잠금 해제</b>를 누릅니다.</div>':'')+
-    (stale?'<div class="err-banner">고치는 사이에 다른 곳에서 규칙이 저장되었습니다(rev '+S.rev+'). <b>변경 취소</b>를 누른 뒤 다시 고쳐 주세요.</div>':'')+
+  /* 261003 UI 정돈 6단계 · 「당일 잠금 켜기」(위험)는 카드 머리 상태 배지 옆이 아니라 아래 저장 줄 오른쪽 끝으로(16 띄움 · 확인 절차 그대로) */
+  var head='<div class="row">'+(lk?tag("잠김","pri"):tag("편집 가능","off"))+(dirty.length?tag("저장 안 한 변경 "+dirty.length+"칸","warn"):"")+'</div>';
+  var body=(lk||stale?'<div class="bands">':'')+(lk?band("","잠겨 있어 계수를 바꿀 수 없습니다. 고치려면 먼저 <b>잠금 해제</b>를 누릅니다."):'')+
+    (stale?band("bad","고치는 사이에 다른 곳에서 규칙이 저장되었습니다(rev "+S.rev+"). <b>변경 취소</b>를 누른 뒤 다시 고쳐 주세요."):'')+(lk||stale?'</div>':'')+
     '<div class="olyev"><div class="olyh"><b>공통</b><span class="cap">종합 만점 = '+oev.length+' × 상한 = '+(D.err[0]?"-":n0(oev.length*R.cap))+'점</span></div><div class="olyf">'+idx("").map(fld).join("")+'</div></div>'+
     ev.filter(function(g){ return WORD_ON||g!=="word"; }).filter(function(g){ return OX_GLASS_ON||g!=="ox"; }).map(function(g){
       return '<div class="olyev"><div class="olyh"><b>'+esc(GST_NAME[g])+'</b><span class="cap">'+esc(olyRuleLine(g,R))+'</span></div>'+
@@ -3195,9 +3217,9 @@ function viewOly(){
     }).join("");
   var errs=[]; OLY_F.forEach(function(f,i){ if(D.err[i]) errs.push((f.g?GST_NAME[f.g]+" · ":"")+f.n+" · "+D.err[i]); });
   (D.rerr||[]).forEach(function(x){ errs.push(x); });
-  body+=(errs.length?'<div class="err-banner mt12">저장 전에 고칠 곳 '+errs.length+'개<br>'+errs.map(esc).join("<br>")+'</div>':'')+
+  body+=(errs.length?'<div class="mt12">'+band("bad","저장 전에 고칠 곳 "+errs.length+"개<br>"+errs.map(esc).join("<br>"))+'</div>':'')+
     '<div class="row mt12"><button class="btn pri" onclick="olySave()"'+(lk||errs.length||!dirty.length||stale?" disabled":"")+'>저장 (rev '+S.rev+' → '+(S.rev+1)+')</button>'+
-    '<button class="btn ghost" onclick="olyReset()"'+(OLYD?"":" disabled")+'>변경 취소</button></div>'+
+    '<button class="btn ghost" onclick="olyReset()"'+(OLYD?"":" disabled")+'>변경 취소</button><span class="dz-r" style="margin-left:auto"><button class="btn'+(lk?"":" danger")+'" onclick="olyLock('+(lk?0:1)+')">'+(lk?"잠금 해제":"당일 잠금 켜기")+'</button></span></div>'+
     memo('<p>점수 = 게임 화면에 보이는 행동 점수 그대로입니다. 종목 점수는 그 종목 최고 한 판, 종합은 '+onm+' 최고의 합이고 종합 순위는 '+onm+' 모두 한 판 이상 한 사람만 듭니다.'+(d.oev?' AX 퀴즈'+(WORD_ON?'(O/X 퀴즈 · 기억력 퀴즈)':'')+'는 순위 · 시상에 들지 않고 계수는 완주 판정 · 내 기록에만 씁니다.':'')+'</p>'+
       '<p>저장하면 이미 낸 기록도 <b>저장된 구성 요소를 새 계수로 다시 계산</b>해 전원이 같은 규칙으로 다시 줄 섭니다. 규칙판(rev)은 저장할 때마다 1씩 오르고 기록 행에 남습니다.</p>'+
       '<p>미리보기 예시는 봇 보정의 보통 · 잘함 · 최상 참고치입니다(설계 문서 §4). 멈춤 허용 횟수, 팡 완주 칸은 점수가 아니라 서버 개연성 검사에 쓰는 값입니다.</p>'+
@@ -3237,7 +3259,7 @@ function viewOxItems(){
     return !q||it.id.toLowerCase().indexOf(q)>=0||String(it.q).toLowerCase().indexOf(q)>=0||String(it.grp||"").toLowerCase().indexOf(q)>=0;
   });
   var sel=selKeys("ox:"), selOn=sel.filter(function(id){ return !(all.filter(function(x){ return x.id===id; })[0]||{}).off; }), selOff=sel.filter(function(id){ return (all.filter(function(x){ return x.id===id; })[0]||{}).off; });
-  var sum='<div class="row" style="gap:6px;margin-bottom:12px">'+tag("분석한 판 "+n0(d.plays)+"판","off")+tag("문항 "+all.length+"개","off")+tag("꺼진 문항 "+(d.off||[]).length+"개",(d.off||[]).length?"warn":"off")+
+  var sum='<div class="row" style="gap:8px;margin-bottom:12px">'+tag("분석한 판 "+n0(d.plays)+"판","off")+tag("문항 "+all.length+"개","off")+tag("꺼진 문항 "+(d.off||[]).length+"개",(d.off||[]).length?"warn":"off")+
     [0,1,2].map(function(i){ return tag((i+1)+"단계 켜짐 "+room[i]+" / 출제 "+per[i], room[i]<per[i]+3?"warn":"off"); }).join("")+'</div>';
   var tb='<div class="toolbar">'+searchBox("id · 문장 · 짝 그룹 검색")+
     chips([{v:"",n:"전체",c:all.length},{v:"rev",n:"미검수만",c:all.filter(function(x){ return !x.reviewed; }).length},{v:"off",n:"꺼진 것만",c:all.filter(function(x){ return x.off; }).length}], OXF, "oxFilt")+
@@ -3520,14 +3542,14 @@ function viewNotice(){
   var goSel='<select class="in" style="min-width:0;max-width:260px" onchange="PF.go=this.value;nsPaintPrev()"'+(rt==="push"?'':' disabled')+'>'+Object.keys(PUSH_GO_N).filter(function(k){ return PHOTO_Q_ON||k!=="photoq"; }).map(function(k){ return '<option value="'+k+'"'+((rt==="push"?PF.go:"notices")===k?" selected":"")+'>'+esc(PUSH_GO_N[k])+'</option>'; }).join("")+'</select>';
   var nm=pwBy();
   var mo='<div class="ns-mf">'+
-    nsField("보낸 사람",'<div class="row"><input class="in" id="nsFrom" style="min-width:0;width:240px" maxlength="30" value="'+esc(nsFrom())+'" onchange="nsFromSet(this.value)"><button class="btn sm ghost" onclick="nsFromSet(\''+esc(NS_FROM0)+'\');render()">'+esc(NS_FROM0)+'</button>'+(nm&&nm.length>=2?'<button class="btn sm ghost" onclick="nsFromSet(\''+esc(NS_FROM0+" · "+nm)+'\');render()">'+esc(NS_FROM0+" · "+nm)+'</button>':'')+'</div>'+
+    nsField("보낸 사람",'<div class="row"><input class="in w-m" id="nsFrom" maxlength="30" value="'+esc(nsFrom())+'" onchange="nsFromSet(this.value)"><button class="btn sm ghost" onclick="nsFromSet(\''+esc(NS_FROM0)+'\');render()">'+esc(NS_FROM0)+'</button>'+(nm&&nm.length>=2?'<button class="btn sm ghost" onclick="nsFromSet(\''+esc(NS_FROM0+" · "+nm)+'\');render()">'+esc(NS_FROM0+" · "+nm)+'</button>':'')+'</div>'+
       '<p class="cap mt8">'+(nsFmt()?'푸시 제목 줄 = 보낸 사람 · 본문 = 제목과 내용':'이 서버는 푸시 제목 줄에 제목을 그대로 씁니다(서버 갱신 뒤 보낸 사람)')+' · 안드로이드는 브라우저 구독이면 「Chrome · 도메인」, 설치한 앱이면 「AX Festival」이 알림 위에 붙습니다.</p>')+
     nsField("눌렀을 때",goSel)+
     (pOk?nsField("문구",pzPreHtml("pf",1).replace(/<div class="pz-lab">[^<]*<\/div>/,"")):'')+nsField("앱 공지 문구",'<div class="pz-pre">'+NOTICE_TPL.map(function(t,i){ return '<button class="btn sm ghost" onclick="nsTpl('+i+')">'+esc(t[0])+'</button>'; }).join("")+'</div>')+
     (pOk?nsField("다른 받는 사람",'<div class="chips" style="margin:0">'+NS_WHO.filter(function(w){ return w[0]!=="all"&&w[0]!=="emps"; }).map(function(w){ return '<button class="fchip'+(ty===w[0]?" on":"")+'" onclick="nsWho(\''+w[0]+'\')">'+esc(w[1])+'</button>'; }).join("")+'</div>'+(ty==="emps"||ty==="all"?tgtHtml("pf",{ bare:1 }):'')):'')+
     (pOk?nsField("경로",nsRtHtml()+(PF.route?'<button class="btn sm ghost mt8" onclick="nsRt(\'\')">자동으로 되돌리기</button>':'')):'')+
     (push?nsField("알림",pzOptHtml("pf")):'')+
-    (pOk?nsField("테스트 받을 사번",'<input class="in" style="min-width:0;width:150px" inputmode="numeric" placeholder="사번" value="'+esc(pushMe()||me)+'" oninput="pushMe(this.value.trim())">'):'')+
+    (pOk?nsField("테스트 받을 사번",'<input class="in w-m" inputmode="numeric" placeholder="사번" value="'+esc(pushMe()||me)+'" oninput="pushMe(this.value.trim())">'):'')+
     (push?nsField("처리자 이름",pzByBox()+'<span class="cap"> 비우면 로그인 사번이 이력에 남습니다</span>'):'')+
     (push?nsField("대상 상세",'<div class="pv" id="pv_pf" style="margin-top:0">'+pvHtml("pf")+'</div>'):'')+
     (push?'<p class="cap">'+esc(PUSH_SAFE)+'</p>':'')+'</div>';
@@ -3564,7 +3586,7 @@ function nsNoteHist(){
 }
 function nsHistHtml(){
   var nh=nsNoteHist();
-  if(nh) return '<p class="cap" style="margin-bottom:6px">앱 공지</p>'+nh+'<p class="cap" style="margin-bottom:6px">푸시</p>'+nsHistHtml0();
+  if(nh) return '<p class="cap" style="margin-bottom:8px">앱 공지</p>'+nh+'<p class="cap" style="margin-bottom:8px">푸시</p>'+nsHistHtml0();
   return nsHistHtml0();
 }
 function nsHistHtml0(){
@@ -3758,10 +3780,10 @@ function olyRejHtml(){
   if(!d.ok) return "";
   if(!J||!J.rows){ var kn=((ST.data.stats||{}).kinds||{}).game_reject;
     return card("개연성 거부 로그",kn!=null?"누적 "+n0(kn)+"건 · 서버가 받지 않은 게임 제출":"",
-      '<div class="row" style="gap:6px;margin-bottom:12px">'+tag("누적 거부 "+(kn!=null?n0(kn)+"건":"확인 중"),kn?"warn":"off")+'</div>'+
+      '<div class="row" style="gap:8px;margin-bottom:12px">'+tag("누적 거부 "+(kn!=null?n0(kn)+"건":"확인 중"),kn?"warn":"off")+'</div>'+
       '<p class="cap">사유별 건수와 최근 목록은 서버 game_stats 가 거부 행(rejects)을 실어 보내면 여기에 나옵니다. 그 전에는 시트 「로그」에서 종류 game_reject 행을 봅니다(값 칸 = 사유 · 종목 · 걸린 조건).</p>'); }
   var by=J.by||{}, rows=J.rows.filter(function(r){ return WORD_ON||r.game!=="word"; });
-  var head='<div class="row" style="gap:6px;margin-bottom:12px">'+["range","mismatch","ver"].map(function(k){ return tag(REJ_N[k]+" "+(by[k]||0)+"건", by[k]?(k==="mismatch"?"bad":"warn"):"off"); }).join("")+'</div>';
+  var head='<div class="row" style="gap:8px;margin-bottom:12px">'+["range","mismatch","ver"].map(function(k){ return tag(REJ_N[k]+" "+(by[k]||0)+"건", by[k]?(k==="mismatch"?"bad":"warn"):"off"); }).join("")+'</div>';
   var body=rows.length?rows.slice(0,100).map(function(r){
     var dt=rejDetail(r);
     return '<tr><td class="n src">'+esc(short(r.ts))+'</td><td><b>'+esc(r.nick||"-")+'</b> <span class="n cap">'+esc(r.emp)+'</span></td><td>'+esc(GST_NAME[r.game]||r.game||"-")+'</td>'+
@@ -3972,7 +3994,7 @@ function olyPrevHtml(g,S,R,D){
   var extra="";
   if(g==="pang"){
     var sec=OLYTRY, v=Number(sec), ok=v>=3&&v<=120, fin=Math.round(v*100);
-    extra='<tr class="olytry"><td><b>직접</b></td><td><span class="row" style="gap:6px;flex-wrap:nowrap"><span class="cap">완주</span><input class="in sm" id="olyTry" style="width:72px" inputmode="decimal" value="'+esc(sec)+'" oninput="olyTry(this.value)"><span class="cap">초면</span></span></td>'+
+    extra='<tr class="olytry"><td><b>직접</b></td><td><span class="row" style="gap:8px;flex-wrap:nowrap"><span class="cap">완주</span><input class="in sm w-s" id="olyTry" inputmode="decimal" value="'+esc(sec)+'" oninput="olyTry(this.value)"><span class="cap">초면</span></span></td>'+
       '<td class="n tdr">'+(ok?n0(olyScoreC("pang",{fin:fin},S))+'점':'<span class="cap">3~120초</span>')+'</td><td class="n tdr">'+(ok?'<b>'+n0(olyScoreC("pang",{fin:fin},R))+'점</b>':'')+'</td></tr>'+
       '<tr><td></td><td class="cap">상한 '+n0(R.cap)+'점에 닿는 완주 시간</td><td class="n tdr cap">'+olyPangCapSec(S.pang,S.cap).toFixed(1)+'초 이하</td><td class="n tdr cap">'+olyPangCapSec(R.pang,R.cap).toFixed(1)+'초 이하</td></tr>';
   }
@@ -4113,13 +4135,13 @@ function viewSched(){
   var pOk=!!pushSt(), pOn=pOk&&SC.push;
   var mk='<div class="row" style="gap:8px;flex-wrap:wrap;align-items:flex-end">'+
     '<label class="fld">종류<select class="in" id="scK" onchange="SC.k=this.value"><option value="outro"'+(SC.k==="outro"?" selected":"")+'>Outro</option><option value="notice"'+(SC.k==="notice"?" selected":"")+'>공지</option></select></label>'+
-    '<label class="fld">날짜<input class="in" id="scD" style="min-width:0;width:130px" value="'+esc(scDay())+'" placeholder="2026-10-26" oninput="SC.d=this.value"></label>'+
-    '<label class="fld">시각<input class="in" id="scT" style="min-width:0;width:90px" placeholder="17:00" inputmode="numeric" value="'+esc(SC.hm)+'" oninput="SC.hm=this.value"></label></div>'+
+    '<label class="fld">날짜<input class="in w-s" id="scD" value="'+esc(scDay())+'" placeholder="2026-10-26" oninput="SC.d=this.value"></label>'+
+    '<label class="fld">시각<input class="in w-s" id="scT" placeholder="17:00" inputmode="numeric" value="'+esc(SC.hm)+'" oninput="SC.hm=this.value"></label></div>'+
     '<label class="fld mt12"><span>제목'+(pOn?' '+ccHtml("scti",SC.ti.length,"t"):'')+'</span><input class="in" id="scTi" maxlength="40" placeholder="예: 경품 추첨 시작" style="width:100%" value="'+esc(SC.ti)+'" oninput="pxIn(\'sc\',\'ti\',this.value)"></label>'+
     '<label class="fld mt12"><span>내용'+(pOn?' '+ccHtml("scb",SC.b.length,"b"):'')+'</span><input class="in" id="scB" maxlength="120" placeholder="예: 17F 대강당" style="width:100%" value="'+esc(SC.b)+'" oninput="pxIn(\'sc\',\'b\',this.value)"></label>'+
     (pOk?'<label class="row mt12" style="gap:8px;font-weight:700"><input type="checkbox" class="ck" '+(SC.push?"checked ":"")+'onchange="scPush(this.checked)">푸시도 보내기</label>':'');
   if(pOn){
-    mk+='<div class="row mt8" style="gap:14px;flex-wrap:wrap">'+[["all","전체 구독자"],["tickets","응모권 보유자"],["pick","대상 선택"]].map(function(x){ return '<label class="row" style="gap:6px"><input type="radio" name="scTg" class="ck" '+(SC.tgt===x[0]?"checked ":"")+'onchange="scTgt(\''+x[0]+'\')">'+x[1]+'</label>'; }).join("")+'</div>';
+    mk+='<div class="row mt8" style="gap:16px;flex-wrap:wrap">'+[["all","전체 구독자"],["tickets","응모권 보유자"],["pick","대상 선택"]].map(function(x){ return '<label class="row" style="gap:8px"><input type="radio" name="scTg" class="ck" '+(SC.tgt===x[0]?"checked ":"")+'onchange="scTgt(\''+x[0]+'\')">'+x[1]+'</label>'; }).join("")+'</div>';
     if(SC.tgt==="pick") mk+='<div class="mt12">'+tgtHtml("sc",{ noEmps:1 })+'</div>';
     mk+=pzOptHtml("sc")+'<div class="pv" id="pv_sc">'+pvHtml("sc")+'</div>'+pzManNote()+'<p class="cap mt8">실행할 때 대상을 다시 세고 인원 확인 · 보류 없이 나갑니다. 보낼 수 있는 시간('+esc((pushSt()||{}).time||"")+') · 발송 허용 날짜 밖이면 푸시는 나가지 않습니다.</p>';
   }
@@ -4138,11 +4160,11 @@ function viewVslot(v){
   while(rows.length<Math.max(6,n0+2)) rows.push({s:"",e:"",f:""});
   var t='<div class="wrap"><table class="tb"><tr><th>시작</th><th>끝</th><th>근무 층(쉼표)</th></tr>'+rows.map(function(r,i){
     var ph=i===n0;   /* 빈 줄은 첫 줄에만 예시를 흐리게(데이터로 읽히지 않게 · 나머지는 비움) */
-    return '<tr><td><input class="in" id="vsS'+i+'" style="min-width:0;width:80px" value="'+esc(r.s)+'" placeholder="'+(ph?"추가":"")+'"></td><td><input class="in" id="vsE'+i+'" style="min-width:0;width:80px" value="'+esc(r.e)+'"></td><td><input class="in" id="vsF'+i+'" style="min-width:0;width:100%" value="'+esc(r.f)+'" placeholder="'+(ph?"예: 3,4,5":"")+'"></td></tr>'; }).join("")+'</table></div>';
+    return '<tr><td><input class="in w-s" id="vsS'+i+'" value="'+esc(r.s)+'" placeholder="'+(ph?"추가":"")+'"></td><td><input class="in w-s" id="vsE'+i+'" value="'+esc(r.e)+'"></td><td><input class="in" id="vsF'+i+'" style="min-width:0;width:100%" value="'+esc(r.f)+'" placeholder="'+(ph?"예: 3,4,5":"")+'"></td></tr>'; }).join("")+'</table></div>';
   var sw='<div class="row mt12" style="gap:8px;align-items:center"><b>발송</b>'+(v.on?tag("켜짐","warn"):tag("꺼짐","off"))+'<button class="btn sm '+(v.on?"":"danger")+'" onclick="vslotOn('+(v.on?0:1)+')">'+(v.on?"끄기":"켜기")+'</button>'+
     '<span class="cap">켜면 슬롯마다 시작 '+(v.pre||10)+'분 전 예약이 생기고, 관람 시간 알림을 켜고 그 근무 층을 고른 사람에게 푸시가 갑니다.</span></div>';
-  var f='<div class="row" style="gap:8px;align-items:flex-end;flex-wrap:wrap"><label class="fld">날짜<input class="in" id="vsDay" style="min-width:0;width:130px" value="'+esc(v.day||"")+'"></label>'+
-    '<label class="row cap" style="gap:6px"><input type="checkbox" id="vsVirt"'+(v.virt?" checked":"")+'> 가상 데이터로 표시</label><span style="flex:1"></span><button class="btn pri" onclick="vslotSave()">저장</button></div>';
+  var f='<div class="row" style="gap:8px;align-items:flex-end;flex-wrap:wrap"><label class="fld">날짜<input class="in w-s" id="vsDay" value="'+esc(v.day||"")+'"></label>'+
+    '<label class="row cap" style="gap:8px"><input type="checkbox" id="vsVirt"'+(v.virt?" checked":"")+'> 가상 데이터로 표시</label><span style="flex:1"></span><button class="btn pri" onclick="vslotSave()">저장</button></div>';
   return card("관람 시간표", (v.virt?tag("가상 데이터","warn")+" ":"")+"슬롯 "+(v.rows||[]).length+"개", (v.virt?'<div class="note warn">확정된 표가 아닙니다. 1층 기획 v16 과 중간워크숍 표가 서로 달라, 확정 전까지 가상 데이터로 둡니다.</div>':'')+'<div class="mt12">'+f+'</div><div class="mt12">'+t+'</div>'+sw);
 }
 function scDay(){ return SC.d||(((ST.data.sched||{}).vslot||{}).day)||"2026-10-26"; }
@@ -4278,7 +4300,7 @@ function pushLim(){ return ((pushSt()||{}).limits)||{ day:5, all:3, gap:10, conf
 /* v4.78 발송자 이름(서버와 같은 규칙 · 2글자 이상 · 자동 이름 안 됨) · ○○ 칸 · 강연 시간 · 소리 없이 · 60분 */
 function nsBy(){ return pwBy()||((ST.me&&ST.me.emp)||aemp()?"콘솔 "+((ST.me&&ST.me.emp)||aemp()):""); }   /* v5.14 처리자 이름을 안 넣었으면 로그인 사번 */
 function pzByOk(){ var b=String(nsBy()||"").replace(/\s+/g,""); return b.length>=2&&["콘솔","예약","자동"].indexOf(b)<0; }
-function pzByBox(){ return '<input class="in" style="min-width:0;width:150px" placeholder="이름 2글자 이상" value="'+esc(pwBy())+'" oninput="pwBySet(this.value)">'; }
+function pzByBox(){ return '<input class="in w-m" placeholder="이름 2글자 이상" value="'+esc(pwBy())+'" oninput="pwBySet(this.value)">'; }
 function pzHole(t,b){ return /○/.test(String(t||"")+String(b||"")); }
 function pzHm(){ var d=new Date(); return ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2); }
 function lectAt(hm){ return /^\d\d:\d\d$/.test(hm||"")&&PUSH_LECT.some(function(w){ return hm>=w[0]&&hm<w[1]; }); }
@@ -4439,7 +4461,7 @@ function tgtHtml(sc, o){
   var sel=function(k, list){ return '<select class="in" style="min-width:0" onchange="'+on(k)+')">'+opt(k,list)+'</select>'; };
   var h=o.bare?'':'<label class="fld">대상<select class="in" style="min-width:0" onchange="'+on("type")+',1)">'+opt("type",PUSH_TYPES.filter(function(t){ return !(o.noEmps&&t[0]==="emps"); }))+'</select></label>';   /* v5.13 bare = 공지·푸시 화면(종류는 칩 · 사람은 검색 칩) */
   if(f.type==="cchat") h+='<label class="fld">상태'+sel("cst",[["","대기 · 매칭"],["대기","대기"],["매칭","매칭"]])+'</label>';
-  if(f.type==="photo") h+='<label class="fld">앞 몇 팀까지<input class="in" style="min-width:0;width:130px" inputmode="numeric" placeholder="비우면 전원" value="'+esc(f.ahead)+'" oninput="'+on("ahead")+')"></label>';
+  if(f.type==="photo") h+='<label class="fld">앞 몇 팀까지<input class="in w-s" inputmode="numeric" placeholder="비우면 전원" value="'+esc(f.ahead)+'" oninput="'+on("ahead")+')"></label>';
   if(f.type==="group") h+=G.length?'<label class="fld">그룹'+sel("grp",[["","고르세요"]].concat(G.map(function(g){ return [g.name, g.name+" · "+g.n+"명"]; })))+'</label>':o.bare?'':'<span class="cap">올린 그룹이 없습니다. 알림 메뉴 › 그룹 올리기에서 올립니다.</span>';
   h=h?'<div class="row" style="gap:8px;align-items:flex-end;flex-wrap:wrap">'+h+'</div>':'';
   if(f.type==="emps"&&!o.bare){ var a=empsList(f.emps); h+='<label class="fld mt12"><span>사번(쉼표 · 공백 · 줄바꿈) <span class="cc'+(a.length>L.emps?" max":"")+'" id="ec_'+sc+'">'+a.length+' / '+L.emps+'</span></span><textarea class="in" rows="3" placeholder="예: 990901, 990902" oninput="'+on("emps")+')">'+esc(f.emps)+'</textarea></label>'; }
@@ -4454,8 +4476,8 @@ function tgtHtml(sc, o){
     '<label class="fld">룰렛'+sel("roul",[["","-"],["1","씀"],["0","안 씀"]])+'</label>'+
     '<label class="fld">기기'+sel("dev",[["","-"],["android","안드로이드"],["ios","아이폰"],["pc","PC"]])+'</label></div>'+
     '<div class="row" style="gap:8px;align-items:flex-end;flex-wrap:wrap">'+
-    '<label class="fld">근무 층(쉼표)<input class="in" style="min-width:0;width:130px" placeholder="예: 3,4,5" value="'+esc(f.floors)+'" oninput="'+on("floors")+')"></label>'+
-    '<label class="fld">부문(대상 조건만 · 문구에 넣지 않음)<input class="in" style="min-width:0;width:200px" placeholder="계정의 부문 이름 그대로" value="'+esc(f.dept)+'" oninput="'+on("dept")+')"></label></div>'+
+    '<label class="fld">근무 층(쉼표)<input class="in w-s" placeholder="예: 3,4,5" value="'+esc(f.floors)+'" oninput="'+on("floors")+')"></label>'+
+    '<label class="fld">부문(대상 조건만 · 문구에 넣지 않음)<input class="in w-m" placeholder="계정의 부문 이름 그대로" value="'+esc(f.dept)+'" oninput="'+on("dept")+')"></label></div>'+
     (fl?'<p class="cap" style="padding-bottom:10px">근무 층을 고른 구독 기기 · '+esc(fl)+'</p>':'')+'</details>';
   return h;
 }
@@ -4537,19 +4559,21 @@ function pushCfgHtml(){
   var tk=st.tok==="OFF"?"토큰 없이도 받음(되돌림)":"토큰 필요(기본)";
   var o=[["ON","토큰 필요(기본)"],["OFF","토큰 없이도 받음"]].map(function(x){ return '<option value="'+x[0]+'"'+((st.tok==="OFF"?"OFF":"ON")===x[0]?" selected":"")+'>'+x[1]+'</option>'; }).join("");
   var L=pushLim(), man=st.manual!==0, v78=st.manual!=null;   /* v4.78 옛 서버(manual 없음)는 새 줄을 숨긴다 */
+  /* 261003 UI 정돈 6단계 · 잠그기 · 전체 정지(위험)는 일반 설정 줄 사이가 아니라 카드 맨 아래 「멈추기 · 잠그기」 구역으로(버튼 · 확인 절차 그대로) */
+  var stop=(v78?'<div class="pk"><b>1단계 수동 발송 잠금</b>'+(man?tag("풀림","ok"):tag("잠김","bad"))+'<button class="btn sm '+(man?"danger":"pri")+'" onclick="pushManAsk('+(man?0:1)+')">'+(man?"잠그기":"풀기")+'</button><span class="cap">공지 · 대상 지정 · 예약 알림만 막습니다. 포토부스 · 커피챗 · DAP 알림은 계속 나갑니다. 먼저 이것부터.</span></div>':'')+
+    '<div class="pk"><b>'+(v78?"2단계 전체 정지":"발송")+'</b>'+(st.on?tag("켜짐","ok"):tag("전체 정지","bad"))+'<button class="btn sm '+(st.on?"danger":"pri")+'" onclick="pushOnAsk('+(st.on?0:1)+')">'+(st.on?"전체 정지":"다시 켜기")+'</button><span class="cap">자동 알림까지 모두 멈추고 대기 작업을 취소합니다.</span></div>';
   return card("발송 설정","",
-    (v78?'<div class="pk"><b>1단계 수동 발송 잠금</b>'+(man?tag("풀림","ok"):tag("잠김","bad"))+'<button class="btn sm '+(man?"danger":"pri")+'" onclick="pushManAsk('+(man?0:1)+')">'+(man?"잠그기":"풀기")+'</button><span class="cap">공지 · 대상 지정 · 예약 알림만 막습니다. 포토부스 · 커피챗 · DAP 알림은 계속 나갑니다. 먼저 이것부터.</span></div>':'')+
-    '<div class="pk"><b>'+(v78?"2단계 전체 정지":"발송")+'</b>'+(st.on?tag("켜짐","ok"):tag("전체 정지","bad"))+'<button class="btn sm '+(st.on?"danger":"pri")+'" onclick="pushOnAsk('+(st.on?0:1)+')">'+(st.on?"전체 정지":"다시 켜기")+'</button><span class="cap">자동 알림까지 모두 멈추고 대기 작업을 취소합니다.</span></div>'+
-    '<div class="pk"><b>보낼 수 있는 시간</b><input class="in" id="pxTime" style="min-width:0;width:140px" value="'+esc(st.time)+'" placeholder="08:30-18:30"><button class="btn sm" onclick="pushTimeSave()">저장</button>'+(st.win?tag("지금 안","ok"):tag("지금 밖 · 시험만","warn"))+'</div>'+
-    (v78?'<div class="pk"><b>발송 허용 날짜</b><input class="in" id="pxDates" style="min-width:0;width:240px" value="'+esc((st.dates||[]).join(", "))+'" placeholder="비우면 제한 없음 · 예: 2026-10-26"><button class="btn sm" onclick="pushDatesSave()">저장</button>'+(st.dateOk?tag((st.dates||[]).length?"오늘 허용":"제한 없음","ok"):tag("오늘은 발송 날짜 아님 · 시험만","warn"))+
+    '<div class="pk"><b>보낼 수 있는 시간</b><input class="in w-m" id="pxTime" value="'+esc(st.time)+'" placeholder="08:30-18:30"><button class="btn sm" onclick="pushTimeSave()">저장</button>'+(st.win?tag("지금 안","ok"):tag("지금 밖 · 시험만","warn"))+'</div>'+
+    (v78?'<div class="pk"><b>발송 허용 날짜</b><input class="in w-m" id="pxDates" value="'+esc((st.dates||[]).join(", "))+'" placeholder="비우면 제한 없음 · 예: 2026-10-26"><button class="btn sm" onclick="pushDatesSave()">저장</button>'+(st.dateOk?tag((st.dates||[]).length?"오늘 허용":"제한 없음","ok"):tag("오늘은 발송 날짜 아님 · 시험만","warn"))+
       '<p class="cap" style="width:100%">목록 밖 날짜에는 나에게 시험만 나갑니다(자동 알림 포함). 마지막 날짜가 지나면 참가자 폰이 알림 구독을 스스로 지웁니다. 10/22 동결 때 2026-10-26 을 넣고, 리허설 · 실폰 확인 날은 그날을 더합니다.</p></div>'+
       '<div class="pk"><b>상한 · 보류 · 유효</b><span class="pz-nums"><label class="fld">사람당 하루<input class="in" id="pxDay" inputmode="numeric" value="'+esc(String(L.day))+'"></label><label class="fld">전체급 하루<input class="in" id="pxAll" inputmode="numeric" value="'+esc(String(L.all))+'"></label><label class="fld">보류(초)<input class="in" id="pxHold" inputmode="numeric" value="'+esc(String(L.hold))+'"></label><label class="fld">공지 유효(분)<input class="in" id="pxTtl" inputmode="numeric" value="'+esc(String(L.ttl))+'"></label><button class="btn sm" onclick="pushNumSave()">저장</button></span>'+
       '<p class="cap" style="width:100%">사람당 하루 = 공지 · 추첨 · 대상 지정처럼 요청하지 않은 알림(포토부스 · 커피챗 · DAP · 혼잡 해소는 세지 않음). 전체급 = 전체 또는 '+esc(String(L.confirm))+'명 이상. 보류 = 전체급을 누른 뒤 취소할 수 있는 시간(0 = 끔). 긴급 상황에서 모자라면 여기서 올립니다.</p></div>':'')+
     '<div class="pk"><b>토큰 기준</b><span>'+esc(tk)+'</span>'+tag(st.tokReq?"지금 토큰 필요":"지금 토큰 없이","off")+
-      '<span class="row" style="gap:6px;flex-wrap:nowrap"><select class="in sm" id="pxTok" style="min-width:0">'+o+'</select><button class="btn sm" onclick="pushTokAsk()">바꾸기</button></span>'+
+      '<span class="row" style="gap:8px;flex-wrap:nowrap"><select class="in sm" id="pxTok" style="min-width:0">'+o+'</select><button class="btn sm" onclick="pushTokAsk()">바꾸기</button></span>'+
       '<p class="cap" style="width:100%">알림 구독 · 알림 설정 · 실시간 연결이 같은 기준을 씁니다. 기본은 토큰 필요(사용자 결정 260930) · 토큰 없는 폰은 소켓 대신 폴링 · 알림을 켤 수 없습니다.</p></div>'+
-    (st.ccDay?'<div class="pk"><b>커피챗 10분 전</b><input class="in" id="pxCcDay" style="min-width:0;width:140px" value="'+esc(st.ccDay)+'" placeholder="2026-10-26"><button class="btn sm" onclick="pushCcDaySave()">저장</button>'+
-      '<p class="cap" style="width:100%">매칭된 회차 · 승인된 DAP 상담 시작 '+esc(String(st.ccPre||10))+'분 전에 그 사람에게 알림이 갑니다(예약 메뉴에 시간마다 한 줄 · 커피챗 · DAP 둘 다 이 날짜). 날짜를 비우면 행사일 2026-10-26 · 시험 때만 오늘로 두고 끝나면 비웁니다.</p></div>':''));   /* v4.77 옛 서버(ccDay 없음)는 줄을 숨긴다 */
+    (st.ccDay?'<div class="pk"><b>커피챗 10분 전</b><input class="in w-m" id="pxCcDay" value="'+esc(st.ccDay)+'" placeholder="2026-10-26"><button class="btn sm" onclick="pushCcDaySave()">저장</button>'+
+      '<p class="cap" style="width:100%">매칭된 회차 · 승인된 DAP 상담 시작 '+esc(String(st.ccPre||10))+'분 전에 그 사람에게 알림이 갑니다(예약 메뉴에 시간마다 한 줄 · 커피챗 · DAP 둘 다 이 날짜). 날짜를 비우면 행사일 2026-10-26 · 시험 때만 오늘로 두고 끝나면 비웁니다.</p></div>':'')+   /* v4.77 옛 서버(ccDay 없음)는 줄을 숨긴다 */
+    '<div class="dz-h">멈추기 · 잠그기</div>'+stop);
 }
 function pushCcDaySave(){
   var st=pushSt()||{}, v=(el("pxCcDay").value||"").replace(/\s+/g,"");
@@ -4611,7 +4635,7 @@ function pushTestPoll(){
 /* 그룹 · 10F 세션 신청자처럼 앱이 모르는 명단 · 명부 · 계정에 없는 사번은 빼고 저장(빨갛게) */
 function pushGrpCard(){
   var G=((ST.data.pgrp||{}).groups)||[], n=empsList(GF.emps).length, R=GF.res;
-  var b='<div class="row" style="gap:8px;align-items:flex-end;flex-wrap:wrap"><label class="fld">이름(30자)<input class="in" maxlength="30" style="min-width:0;width:170px" placeholder="예: 10F 세션 B" value="'+esc(GF.name)+'" oninput="GF.name=this.value"></label>'+
+  var b='<div class="row" style="gap:8px;align-items:flex-end;flex-wrap:wrap"><label class="fld">이름(30자)<input class="in w-m" maxlength="30" placeholder="예: 10F 세션 B" value="'+esc(GF.name)+'" oninput="GF.name=this.value"></label>'+
     '<label class="fld" style="flex:1;min-width:150px">메모<input class="in" maxlength="60" style="min-width:0;width:100%" value="'+esc(GF.memo)+'" oninput="GF.memo=this.value"></label></div>'+
     '<label class="fld mt12"><span>사번(쉼표 · 공백 · 줄바꿈) <span class="cc" id="gfN">'+n+'명</span></span><textarea class="in" rows="4" oninput="GF.emps=this.value;el(\'gfN\').textContent=empsList(this.value).length+\'명\'">'+esc(GF.emps)+'</textarea></label>'+
     '<div class="row mt12"><span style="flex:1"></span><button class="btn pri" onclick="pushGrpSave()">올리기</button></div>'+
@@ -4839,7 +4863,7 @@ function raceLiveHtml(){
     var by={}; (m.rows||[]).forEach(function(r){ by[r.s]=r; });
     var hby={}; ((hm&&hm.rows)||[]).forEach(function(r){ hby[r.s]=r; });
     var seats=[]; if(st==="open"){ for(var i=1;i<=m.n;i++) seats.push(i); } else seats=(m.rows||[]).map(function(r){ return r.s; }).sort();
-    body='<div class="row" style="gap:28px;margin-bottom:14px;align-items:flex-end">'+
+    body='<div class="row" style="gap:28px;margin-bottom:16px;align-items:flex-end">'+
       '<div><div class="cap">판 코드 · 좌석 링크 없이 참가할 때</div><div class="rcode">'+esc(hm?hm.code:"····")+'</div></div>'+
       (hm&&hm.codeLocked?tag("판 코드 잠김 · 오답 30회","bad"):"")+
       (m.seed?'<div><div class="cap">이번 판 시드 · 기기마다 같은 단어 순서</div><div class="n muted">'+esc(String(m.seed))+' · 목숨 '+(m.lives||5)+' · 안전 상한 '+(m.cap||180)+'초</div></div>':'')+'</div>'+
@@ -5086,8 +5110,8 @@ function viewIdea(){
   h+=chips([{v:"list",n:"최신순 목록",c:shown.length},{v:"group",n:"분야별 묶음",c:tags.length}], s, "setSub");
   var tb='<div class="toolbar">'+searchBox("아이디어 · 이름 · 사번 · 부문 검색")+
     '<select class="in" onchange="ideaSet(\'tag\',this.value)"><option value="">분야 전체 ('+base.length+')</option>'+tags.map(function(x){ return '<option value="'+esc(x.t)+'"'+(f.tag===x.t?" selected":"")+'>'+esc(x.t)+' ('+x.n+')</option>'; }).join("")+'</select>'+
-    '<label class="row cap" style="gap:6px"><input type="checkbox" class="ck"'+(f.cc?" checked":"")+' onchange="ideaSet(\'cc\',this.checked)">커피챗 신청자만</label>'+
-    '<label class="row cap" style="gap:6px"><input type="checkbox" class="ck"'+(f.test?" checked":"")+' onchange="ideaSet(\'test\',this.checked)">테스트 계정 포함 ('+testN+')</label>'+
+    '<label class="row cap" style="gap:8px"><input type="checkbox" class="ck"'+(f.cc?" checked":"")+' onchange="ideaSet(\'cc\',this.checked)">커피챗 신청자만</label>'+
+    '<label class="row cap" style="gap:8px"><input type="checkbox" class="ck"'+(f.test?" checked":"")+' onchange="ideaSet(\'test\',this.checked)">테스트 계정 포함 ('+testN+')</label>'+
     '<span class="sp"></span><span class="cnt"><b>'+shown.length+'</b> / '+(f.test?all.length:real.length)+'건</span></div>';
   var body;
   if(s==="group"){
@@ -5520,14 +5544,14 @@ function viewWq(){
   body+='<div id="wqErr">'+wqErrHtml(E)+'</div>';
   body+='<div class="wqset"><label class="fld">세트 이름 <span class="cap">벽 앞 카드 제목 · 30자까지</span><input class="in" id="wq_name" value="'+esc(s.name)+'" oninput="wqIn(\'name\',this.value)"'+dis+'>'+wqCnt("name",s.name,WQ_LIM.name)+'</label>'+
     '<label class="fld">주제 <span class="cap">40자까지 · 비워도 됩니다</span><input class="in" id="wq_theme" value="'+esc(s.theme||"")+'" oninput="wqIn(\'theme\',this.value)"'+dis+'>'+wqCnt("theme",s.theme,WQ_LIM.theme,true)+'</label>'+
-    '<label class="row cap" style="gap:6px;align-self:end;padding-bottom:10px"><input type="checkbox" class="ck"'+(d.off.indexOf(s.id)>=0?" checked":"")+' onchange="wqOff(this.checked)"'+dis+'>이 세트 멈춤 (앱에 「점검 중」)</label></div>';
+    '<label class="row cap" style="gap:8px;align-self:end;padding-bottom:10px"><input type="checkbox" class="ck"'+(d.off.indexOf(s.id)>=0?" checked":"")+' onchange="wqOff(this.checked)"'+dis+'>이 세트 멈춤 (앱에 「점검 중」)</label></div>';
   body+=s.qs.map(function(q,i){
     return '<div class="wqq"><div class="wqh"><b class="n">'+(i+1)+'번</b><span class="sp"></span>'+
       '<button class="btn sm ghost" onclick="wqMove('+i+',-1)"'+(lk||!i?" disabled":"")+'>위로</button><button class="btn sm ghost" onclick="wqMove('+i+',1)"'+(lk||i===s.qs.length-1?" disabled":"")+'>아래로</button>'+
       ''+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="wqDelQ('+i+')"'+(lk||s.qs.length<=1?" disabled":"")+'>문항 빼기</button>')+'</div>'+
       '<textarea class="in" rows="2" id="wq_q_'+i+'" oninput="wqIn(\'q:'+i+'\',this.value)"'+dis+'>'+esc(q.q)+'</textarea>'+wqCnt("q:"+i,q.q,WQ_LIM.q)+
       '<div class="wqos">'+q.o.map(function(o,j){
-        return '<div class="wqo'+(q.a===j?" on":"")+'"><label class="row cap" style="gap:6px;white-space:nowrap"><input type="radio" class="ck" name="wqa'+i+'"'+(q.a===j?" checked":"")+' onchange="wqAns('+i+','+j+')"'+dis+'>정답</label>'+
+        return '<div class="wqo'+(q.a===j?" on":"")+'"><label class="row cap" style="gap:8px;white-space:nowrap"><input type="radio" class="ck" name="wqa'+i+'"'+(q.a===j?" checked":"")+' onchange="wqAns('+i+','+j+')"'+dis+'>정답</label>'+
           '<input class="in" id="wq_o_'+i+'_'+j+'" value="'+esc(o)+'" placeholder="보기 '+(j+1)+'" oninput="wqIn(\'o:'+i+':'+j+'\',this.value)"'+dis+'>'+wqCnt("o:"+i+":"+j,o,WQ_LIM.o)+
           '<button class="btn sm ghost" onclick="wqDelO('+i+','+j+')"'+(lk||q.o.length<=WQ_LIM.oMin?" disabled":"")+'>빼기</button></div>'; }).join("")+
       (q.o.length<WQ_LIM.oMax?'<button class="btn sm ghost" onclick="wqAddO('+i+')"'+dis+'>보기 추가</button>':'')+'</div></div>';
@@ -6344,7 +6368,7 @@ function viewTest(){
     return '<tr><td class="n"><b>'+esc(r.emp)+'</b></td><td>'+esc(r.name||"-")+'</td><td class="cap">'+esc(r.dept||"")+'</td><td>'+(r.fixed?tag("서버 고정","off"):tag("콘솔 지정",""))+'</td>'+
       '<td><div class="acts">'+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="hvTestReset(\''+jq(r.emp)+'\')"'+(HVT.busy?' disabled':'')+'>처음 상태로</button>')+''+(r.fixed?'':'<button class="btn sm" onclick="hvTestSet(\'del\',\''+jq(r.emp)+'\')">빼기</button>')+'</div></td></tr>'; }).join("")+
     (!rows.length?emptyRow(5,"테스트 사번이 없습니다."):"")+'</table></div>';
-  var add='<div class="toolbar mt12"><input class="in" style="min-width:0;width:160px" inputmode="numeric" placeholder="사번" value="'+esc(HVT.add)+'" oninput="HVT.add=this.value.trim()" onkeydown="if(event.key===\'Enter\')hvTestSet(\'add\')"><button class="btn pri" onclick="hvTestSet(\'add\')">테스트 사번으로 지정</button><span class="cap">지정하면 집계 · 추첨 · 참여상 · 순위에서 빠집니다</span></div>';
+  var add='<div class="toolbar mt12"><input class="in w-m" inputmode="numeric" placeholder="사번" value="'+esc(HVT.add)+'" oninput="HVT.add=this.value.trim()" onkeydown="if(event.key===\'Enter\')hvTestSet(\'add\')"><button class="btn pri" onclick="hvTestSet(\'add\')">테스트 사번으로 지정</button><span class="cap">지정하면 집계 · 추첨 · 참여상 · 순위에서 빠집니다</span></div>';
   return card("테스트 사번", rows.length+"개 · 슈퍼관리자 · 본인 확인 "+supLeftMin()+"분 남음", tb+add)+
     memo('<p><b>무엇이 달라지나</b> · 테스트 사번의 기록은 콘솔 집계(출석 · 접속 · QR 스캔 · 계단) · 럭키드로우 · 참여상 · 순위판에서 빠지고, 「테스트 기록 지우기」 대상이 됩니다. 실제 참가자 사번을 넣으면 그 사람이 집계와 추첨에서 사라지니 넣기 전에 사번을 다시 봅니다.</p>'+
       '<p><b>처음 상태로</b> · 그 사번의 게임 · 닉네임 · 최초 로그인 · PIN · 스탬프 · 룰렛 · 응모권 · 출석 · 접속 기록을 한 번에 지웁니다. 미리 세기 → 확인 문구 순서이고, 테스트 사번이 아니면 서버가 거부합니다. 운영로그에 남습니다.</p>'+
