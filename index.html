@@ -2240,6 +2240,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pz-c > .axs-pz-ph { margin-top: auto; }   /* v5.33 2열에서 이름이 두 줄이어도 사진 아래 끝이 맞는다 */
   .axs-pz-c .rk { flex: none; font: var(--ax-type-t3); color: var(--ax-color-brand); }
   .axs-pz-c b { flex: 1 1 auto; min-width: 0; font: var(--ax-type-t4); font-weight: 700; color: var(--ax-color-ink); word-break: keep-all; }
+  .axs-pz-c b small { display: block; margin-top: 2px; font: var(--ax-type-t7); font-weight: 600; color: var(--ax-color-muted); }   /* v5.35 제품명 = 경품명 아래 작은 회색 줄(타자왕) */
   .axs-pz-c .q { flex: none; font: var(--ax-type-t6-strong); color: var(--ax-color-muted); }
   .axs-pz-gr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ax-space-12); }
   .axs-pz-c.gr { border-radius: var(--ax-radius-20); }
@@ -3693,7 +3694,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.34";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.35";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -7470,9 +7471,9 @@ var PRIZES = {
     { rk: "", nm: "무선 무드등 가습기", q: 210, img: "fin_humidifier" }] },
   /* v5.05 1F 타자왕 1~3위(17:00 Outro 시상) · v5.09 (261003 사용자 확정) 새 상품 · 사진 = 제조사 공식 컷 */
   type: { unit: "명", list: [
-    { rk: "1등", nm: "체리 G80-3872 기계식 키보드", q: 1, img: "ty1_cherry", flat: 1 },   /* v5.18 flat = 사진 2:1(위아래 여백 자르기) */
-    { rk: "2등", nm: "로지텍 MX Master 4 마우스", q: 1, img: "ty2_mxmaster4" },
-    { rk: "3등", nm: "AULA F108 Pro 기계식 키보드", q: 1, img: "ty3_aula" }] }
+    { rk: "1등", nm: "기계식 키보드", sub: "체리 G80-3872", q: 1, img: "ty1_cherry", flat: 1 },   /* v5.18 flat = 사진 2:1(위아래 여백 자르기) */
+    { rk: "2등", nm: "마우스", sub: "로지텍 MX Master 4", q: 1, img: "ty2_mxmaster4" },
+    { rk: "3등", nm: "기계식 키보드", sub: "AULA F108 Pro", q: 1, img: "ty3_aula" }] }
 };
 /* 커피 · 간식(18F 커피챗 · 1F DAP 과제상담) · 커피 = 페트병(우리 스티커 목업) · 간식 = 달곰 베이크샵 휘낭시에 · 스콘(블로그 사진 합성 · 임시) · 바꿀 때는 파일만 */
 var TREATS = [
@@ -7542,7 +7543,7 @@ function pzCard(p, unit, cls) {
   var ph = '<span class="axs-pz-ph' + (p.img2 ? " two" : "") + '">' + (p.img ? im(p.img) + (p.img2 ? im(p.img2) : "") +
     (PRIZE_SAMPLE && p.s !== 0 ? '<span class="smp">샘플</span>' : "") : "") + "</span>";
   return '<article class="axs-pz-c' + cls + (p.flat ? " flat" : "") + (p.tall ? " tall" : "") + '"><div class="tx">' + (p.rk ? '<span class="rk">' + p.rk + "</span>" : "") +
-    "<b>" + esc(p.nm) + '</b><span class="q">' + p.q.toLocaleString() + unit + "</span></div>" + ph + "</article>";   /* v5.33 글 줄 먼저 · 사진 아래 */
+    "<b>" + esc(p.nm) + (p.sub ? "<small>" + esc(p.sub) + "</small>" : "") + '</b><span class="q">' + p.q.toLocaleString() + unit + "</span></div>" + ph + "</article>";   /* v5.33 글 줄 먼저 · 사진 아래 */
 }
 function prizeSecHtml(s) {
   var g = PRIZES[s.k]; if (!g) return "";
@@ -11373,7 +11374,7 @@ window.addEventListener("message", typPromoTap);
    실명 없음(서버가 닉네임만 준다) · 부문 통계 없음 */
 var TYB = { iv: 0, keys: null, subT: 0, at: 0 };
 var TYB_REST = { on: false, nm: "" };   /* 4~10위 상품 줄 · 사용자 미정 · 기본 꺼짐 · on 이고 nm 이 있을 때만 줄마다 선물 표시 + 이름 한 줄 */
-var TYB_PZ_SHORT = ["체리 키보드", "MX Master 4", "AULA 키보드"];
+var TYB_PZ_SHORT = ["기계식 키보드", "마우스", "기계식 키보드"];   /* v5.35 경품명만(제품명은 좁은 칸 3열에 안 들어가 경품 화면 카드에만) */
 function tybVal(r, v) { return r && r.unit === "pts" ? Math.round(Number(v || 0)).toLocaleString() : typeSec(v); }
 function tybKeys(top) { var c = {}; return top.map(function (x) { var n = String(x.name || ""); c[n] = (c[n] || 0) + 1; return n + "#" + c[n]; }); }
 function tybCls(x, i) { return "tyb-r" + (i < 3 ? " r" + (i + 1) : "") + (i % 2 ? " e" : "") + (x && x.me ? " me" : "") + (x ? "" : " x"); }
@@ -12105,7 +12106,7 @@ function hsHtml() {
     '<div class="hs-list">' + rows + "</div>" +
     '<div class="hs-foot">' + (u ? '<img class="hs-bot" src="' + u + '" alt="">' : '<span class="hs-bot">' + BOT_SVG + "</span>") +
     "<p>1인 " + tries + "회 · 최고 점수 1개로 순위<br>17:00 마감 · 1~3위 Outro 시상</p></div>" +
-    '<p class="hs-prz">1등 체리 키보드 · 2등 MX Master 4 · 3등 AULA 키보드</p></div></div>';   /* v5.09 (261003 사용자 확정) 새 경품 짧은 이름 · v5.06 바닥 경품 한 줄 · 가격 없음 · v5.05 결선 없음 · 1~3위 */
+    '<p class="hs-prz">1등 기계식 키보드 · 2등 마우스 · 3등 기계식 키보드</p></div></div>';   /* v5.09 (261003 사용자 확정) 새 경품 짧은 이름 · v5.06 바닥 경품 한 줄 · 가격 없음 · v5.05 결선 없음 · 1~3위 */
 }
 
 /* v3.50 시상 · AX 올림픽 탭 · 종합 1~3위 호명(닉네임 + 실명) · 관리코드 oly_result */
