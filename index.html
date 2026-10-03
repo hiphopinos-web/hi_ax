@@ -2087,26 +2087,49 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pz-cv { position: relative; margin: calc(var(--ax-space-24) * -1) calc(var(--ax-page-inset) * -1) 0; padding: var(--ax-space-32) var(--ax-page-inset) var(--ax-space-24); overflow: hidden;
     background-color: var(--ax-color-ink); color: var(--ax-color-inverse);
     background-image: radial-gradient(circle, rgba(255, 255, 255, 0.13) 1px, transparent 1.4px); background-size: 12px 12px; background-position: 6px 6px; }
-  .axs-pz-cv .lit { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: var(--ax-color-brand); }
-  .axs-pz-cv .ring { position: absolute; top: var(--ax-space-24); right: var(--ax-space-20); width: 64px; height: 64px; color: var(--ax-color-brand); }
-  .axs-pz-cv .ey { position: relative; margin: 0; font: var(--ax-type-t7); font-weight: 600; color: rgba(255, 255, 255, 0.72); }
-  .axs-pz-cv .ttl { position: relative; margin: var(--ax-space-12) 0 var(--ax-space-12); line-height: 0; color: var(--ax-color-brand); }   /* v5.10 점 글자 PRIZES 34px(먹색 면 위 주황 점) */
-  .axs-pz-cv .sub { position: relative; margin: var(--ax-space-4) 0 0; font: var(--ax-type-t4); color: var(--ax-color-inverse); }
-  .axs-pz-cv .ways { position: relative; display: flex; flex-direction: column; margin-top: var(--ax-space-24); border-top: 1px solid rgba(255, 255, 255, 0.14); }
-  .axs-pz-cv .ways button { display: flex; align-items: center; gap: var(--ax-space-12); width: 100%; min-height: var(--ax-touch-size); padding: var(--ax-space-8) 2px; border: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.14); background: none; color: inherit; font-family: inherit; text-align: left; cursor: pointer; }
-  .axs-pz-cv .ways b { flex: 1 1 auto; min-width: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-inverse); }
-  .axs-pz-cv .ways span:not(.axs-pz-mt) { flex: none; font: var(--ax-type-t7); color: rgba(255, 255, 255, 0.66); }
-  .axs-pz-cv .ways .axs-chev { flex: none; width: 16px; height: 16px; color: rgba(255, 255, 255, 0.5); }
-  .axs-pz-cv .me { position: relative; margin: var(--ax-space-16) 0 0; font: var(--ax-type-t7); color: rgba(255, 255, 255, 0.72); }
-  .axs-pz-cv .me b { color: var(--ax-color-brand); font-weight: 700; }
+  /* v5.16 표지(사용자 시안 261003) · 작은 행사명 · 큰 제목 · 「지금 내 스탬프」 카드 · 1~6 점 선 · 3~6 세로 카드 4장 · 칸 = 첫 칸 56px(1 · 2) + 4칸(3 ~ 6) · 칸 사이 6px */
+  .axs-pz-cv .ey { position: relative; margin: 0; font: var(--ax-type-t6); font-weight: 600; color: rgba(255, 255, 255, 0.6); }
+  .axs-pz-cv .ttl { position: relative; margin: var(--ax-space-8) 0 0; font: var(--ax-type-t1); color: var(--ax-color-inverse); word-break: keep-all; }
+  .axs-pz-cv .now { position: relative; display: flex; align-items: center; gap: var(--ax-space-12); margin-top: var(--ax-space-24); padding: var(--ax-space-16) var(--ax-space-20); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--ax-radius-20); background: rgba(255, 255, 255, 0.05); }
+  .axs-pz-cv .now .tx { flex: 1 1 auto; min-width: 0; }
+  .axs-pz-cv .now .k { margin: 0; font: var(--ax-type-t7); color: rgba(255, 255, 255, 0.6); }
+  .axs-pz-cv .now .nx { margin: var(--ax-space-4) 0 0; font: var(--ax-type-t5-strong); color: var(--ax-color-inverse); word-break: keep-all; }
+  .axs-pz-cv .now .nx b, .axs-pz-cv .now .n { color: var(--ax-color-brand); }
+  .axs-pz-cv .now .n { flex: none; margin: 0; font: 700 calc(17px * var(--fs)) / 1 var(--ax-font); white-space: nowrap; }
+  .axs-pz-cv .now .n b { font-size: calc(44px * var(--fs)); font-weight: 800; letter-spacing: -0.02em; margin-right: 2px; }
+  .axs-pz-cv .stp, .axs-pz-cv .cds { position: relative; display: grid; grid-template-columns: 56px repeat(4, minmax(0, 1fr)); column-gap: 6px; }
+  .axs-pz-cv .stp { align-items: center; height: 40px; margin-top: var(--ax-space-24); }
+  .axs-pz-cv .stp > .g12, .axs-pz-cv .stp > .c1 { position: relative; z-index: 1; display: flex; justify-content: center; }
+  .axs-pz-cv .stp > .g12 { justify-content: space-between; }   /* 1 · 2 = 첫 칸 양 끝(가운데 11px · 45px) */
+  .axs-pz-cv .stp .ln, .axs-pz-cv .stp .fl { position: absolute; left: 11px; top: 50%; height: 2px; margin-top: -1px; }
+  .axs-pz-cv .stp .ln { right: calc((100% - 80px) / 8); background: rgba(255, 255, 255, 0.16); }
+  .axs-pz-cv .stp .fl { background: var(--ax-color-brand); }
+  .axs-pz-cv .stp i { display: grid; place-items: center; box-sizing: border-box; width: 34px; height: 34px; border: 2px solid rgba(255, 255, 255, 0.24); border-radius: 50%; background: var(--ax-color-ink); color: rgba(255, 255, 255, 0.66); font: 700 15px / 1 var(--ax-font); font-style: normal; }
+  .axs-pz-cv .stp i.sm { width: 22px; height: 22px; font-size: 11px; }
+  .axs-pz-cv .stp i.on { border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
+  .axs-pz-cv .stp i.nx { border-color: var(--ax-color-brand); color: var(--ax-color-inverse); }
+  .axs-pz-cv .cds { margin-top: var(--ax-space-12); }
+  .axs-pz-cv .cds button { grid-column: auto; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; min-height: 148px; padding: var(--ax-space-12) 2px var(--ax-space-12); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--ax-radius-16); background: rgba(255, 255, 255, 0.04); color: rgba(255, 255, 255, 0.6); font-family: inherit; text-align: center; cursor: pointer; }
+  .axs-pz-cv .cds button:first-child { grid-column: 2; }
+  .axs-pz-cv .cds .i { display: block; width: 24px; height: 24px; margin-bottom: var(--ax-space-4); color: rgba(255, 255, 255, 0.72); }
+  .axs-pz-cv .cds .i svg { display: block; width: 100%; height: 100%; }
+  .axs-pz-cv .cds .t { font: var(--ax-type-t7); word-break: keep-all; }
+  .axs-pz-cv .cds b { font: 800 calc(19px * var(--fs)) / 1.25 var(--ax-font); color: rgba(255, 255, 255, 0.82); white-space: nowrap; }
+  .axs-pz-cv .cds .pl { font: 700 14px / 1 var(--ax-font); margin: 2px 0; }
+  .axs-pz-cv .cds .tag { display: inline-flex; align-items: center; gap: 2px; margin-top: auto; padding: 3px 9px; border: 1px solid rgba(255, 255, 255, 0.5); border-radius: var(--ax-radius-999); color: var(--ax-color-inverse); font: var(--ax-type-t7); font-weight: 700; white-space: nowrap; }
+  .axs-pz-cv .cds .tag svg { width: 12px; height: 12px; }
+  .axs-pz-cv .cds button.nx { border-color: rgba(255, 255, 255, 0.42); background: rgba(255, 255, 255, 0.07); color: var(--ax-color-inverse); }
+  .axs-pz-cv .cds button.nx b, .axs-pz-cv .cds button.on b { color: var(--ax-color-inverse); }
+  .axs-pz-cv .cds button.nx .i { color: var(--ax-color-inverse); }
+  .axs-pz-cv .cds button.on { border-color: var(--ax-color-brand); color: var(--ax-color-inverse); }
+  .axs-pz-cv .cds button.on .i { color: var(--ax-color-brand); }
+  .axs-pz-cv .cds .tag.on { border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
+  .fs-big .axs-pz-cv .cds .t, .fs-big .axs-pz-cv .cds .tag { font-size: 12px; }
   /* 스탬프 개수 점 6개 · 켜진 점 = 조건 · 옅은 점 = 4 · 5 · 6개처럼 늘어나는 구간 */
   .axs-pz-mt { display: inline-flex; flex: none; gap: 4px; }
   .axs-pz-mt i { width: 8px; height: 8px; border-radius: 50%; background: var(--ax-color-divider); }
   .axs-pz-mt i.on { background: var(--ax-color-brand); }
   .axs-pz-mt i.pt { background: transparent; box-shadow: inset 0 0 0 1.5px var(--ax-color-brand); }
-  .axs-pz-cv .axs-pz-mt i { width: 9px; height: 9px; background: rgba(255, 255, 255, 0.18); }
-  .axs-pz-cv .axs-pz-mt i.on { background: var(--ax-color-brand); }
-  .axs-pz-cv .axs-pz-mt i.pt { background: transparent; box-shadow: inset 0 0 0 1.5px var(--ax-color-brand); }
   .axs-pz-sec { display: flex; flex-direction: column; gap: var(--ax-space-12); margin-top: var(--ax-space-40); }
   .axs-pz-sh { display: flex; flex-direction: column; gap: var(--ax-space-4); margin-bottom: var(--ax-space-4); scroll-margin-top: calc(var(--stick, 0px) + var(--ax-space-16)); }
   .axs-pz-sh .en { margin: 0; font: var(--ax-type-caption); font-weight: 700; letter-spacing: 0.12em; color: var(--ax-color-brandText); }
@@ -2137,7 +2160,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   @keyframes axsPzIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
   @keyframes axsPzZoom { from { transform: scale(1.04); } to { transform: none; } }
   .axs-pz.in .axs-pz-cv > *, .axs-pz.in .axs-pz-sec:first-of-type > * { animation: axsPzIn 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-  .axs-pz.in .axs-pz-cv > .ttl { animation-delay: 0.06s; } .axs-pz.in .axs-pz-cv > .sub { animation-delay: 0.12s; } .axs-pz.in .axs-pz-cv > .ways { animation-delay: 0.18s; } .axs-pz.in .axs-pz-cv > .me { animation-delay: 0.24s; }
+  .axs-pz.in .axs-pz-cv > .ttl { animation-delay: 0.06s; } .axs-pz.in .axs-pz-cv > .now { animation-delay: 0.12s; } .axs-pz.in .axs-pz-cv > .stp { animation-delay: 0.18s; } .axs-pz.in .axs-pz-cv > .cds { animation-delay: 0.24s; }
   .axs-pz.in .axs-pz-sec:first-of-type > :nth-child(2) { animation-delay: 0.3s; }
   .axs-pz.in .axs-pz-sec:first-of-type > :nth-child(2) img { animation: axsPzZoom 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both; }
   @media (prefers-reduced-motion: reduce) { .axs-pz.in *, .axs-pz.in .axs-pz-cv > *, .axs-pz.in .axs-pz-sec:first-of-type > * { animation: none !important; } }
@@ -3553,7 +3576,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.15";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.16";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -7340,15 +7363,37 @@ function prizeSecHtml(s) {
     (rest.length ? '<div class="axs-pz-gr">' + rest.map(function (p, i) { return pzCard(p, g.unit, " gr" + (rest.length % 2 && i === rest.length - 1 ? " wide" : "")); }).join("") + "</div>" : "");
   return '<section class="axs-pz-sec">' + head + body + (s.note ? '<p class="axs-pz-nt">' + s.note + "</p>" : "") + "</section>";
 }
+/* v5.16 (사용자 시안 261003) 표지 = 작은 「AX Festival 2026」 · 큰 제목 「스탬프 개수별 경품」(옛 PRIZES 점 글자 · 조건 3줄은 걷었다)
+   「지금 내 스탬프」 카드 = 다음 목표(주황 숫자) + 오른쪽 큰 주황 N개 · 6개면 「모두 모았어요」
+   1~6 점 선 = 받은 칸 주황 채움 · 다음 칸 주황 테두리 · 나머지 회색 테두리 · 1 · 2는 작게 붙여서 · 3~6 아래 세로 카드 4장(룰렛 1회 · 행운권 1 · 2 · 3장 + 참여상)
+   다음 목표 카드에 「다음」 알약 · 달성한 카드는 주황 테두리 + 「달성」 · 카드를 누르면 아래 그 구역(옛 조건 줄과 같은 prizeJump · 6개 카드 = 참여상 구역) */
+var PZ_GIFT = SICO + '<path d="M4.5 11h15v9h-15z"/><path d="M3.5 7.5h17V11h-17zM12 7.5V20"/><path d="M12 7.5C11 5 8.4 3.9 7.4 5.2c-1 1.4.8 2.3 4.6 2.3zM12 7.5c1-2.5 3.6-3.6 4.6-2.3 1 1.4-.8 2.3-4.6 2.3z"/></svg>';
+var PZ_STEP = [
+  { m: 3, k: "roulette", ico: "wheel", t: "룰렛", a: "1회" },
+  { m: 4, k: "draw", ico: "ticket", t: "행운권", a: "1장" },
+  { m: 5, k: "draw", ico: "ticket", t: "행운권", a: "2장" },
+  { m: 6, k: "fin", ico: "ticket", t: "행운권", a: "3장", fin: 1 }
+];
+function pzNextTxt(n) {
+  var s = PZ_STEP.filter(function (x) { return x.m > n; })[0];
+  return s ? "<b>" + (s.m - n) + "개</b> 더 모으면 " + s.t + " " + s.a + (s.fin ? " · 참여상" : "") : "모두 모았어요";
+}
 function prizeCoverHtml() {
-  var n = Math.min(STAMP_DENOM, stampCount());
-  var row = function (k, a, b, t, c) { return '<button type="button" onclick="prizeJump(\'' + k + '\')">' + pzMeter(a, b) + "<b>" + t + "</b><span>" + c + "</span>" + CHEV_SVG + "</button>"; };
-  var lit = [[3, 1], [23, 10], [13, 19], [27, 26], [6, 30]].map(function (d) { return '<span class="lit" style="left:' + (d[0] * 12 + 5) + "px;top:" + (d[1] * 12 + 5) + 'px"></span>'; }).join("");
-  return '<section class="axs-pz-cv">' + lit +
-    '<svg class="ring" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="none" stroke="currentColor" stroke-opacity=".35" stroke-width="2"/><circle cx="32" cy="32" r="20" fill="none" stroke="currentColor" stroke-opacity=".7" stroke-width="2"/><circle cx="32" cy="32" r="10" fill="currentColor"/></svg>' +
-    '<p class="ey">AX Festival 2026</p><h1 class="ttl">' + DotGlyph.svg("PRIZES", { h: 34, label: "Prizes" }) + '</h1><p class="sub">스탬프로 받는 경품</p>' +
-    '<div class="ways">' + row("draw", 4, 6, "행운권 추첨", "4 · 5 · 6개") + row("fin", 6, 6, "참여상", "6개") + row("roulette", 3, 3, "룰렛", "3개") + "</div>" +
-    '<p class="me">지금 내 스탬프 <b>' + n + "개</b></p></section>";
+  var n = Math.min(STAMP_DENOM, stampCount()), nx = PZ_STEP.filter(function (x) { return x.m > n; })[0], nm = nx ? nx.m : 0;
+  var dot = function (i) { return '<i class="' + (i <= n ? "on" : i === n + 1 ? "nx" : "") + (i < 3 ? " sm" : "") + '">' + i + "</i>"; };
+  var dots = '<span class="g12">' + dot(1) + dot(2) + "</span>" + [3, 4, 5, 6].map(function (i) { return '<span class="c1">' + dot(i) + "</span>"; }).join("");   /* 1 · 2 = 첫 칸 하나 · 3 ~ 6 = 칸마다 하나 */
+  var fill = n >= 3 ? "calc(51px + " + (n - 3) + " * ((100% - 80px) / 4 + 6px) + (100% - 80px) / 8)" : n === 2 ? "34px" : "0px";   /* 1번 점 가운데(11px)부터 받은 마지막 점 가운데까지 */
+  var cards = PZ_STEP.map(function (s) {
+    var st = s.m <= n ? "on" : s.m === nm ? "nx" : "", lbl = "스탬프 " + s.m + "개 · " + s.t + " " + s.a + (s.fin ? " · 참여상" : "") + (st === "on" ? " · 달성" : st === "nx" ? " · 다음" : "");
+    return '<button type="button" class="' + st + '" onclick="prizeJump(\'' + s.k + '\')" aria-label="' + lbl + '"><span class="i" aria-hidden="true">' + RAIL_ICO[s.ico] + "</span>" +
+      '<span class="t" aria-hidden="true">' + s.t + '</span><b aria-hidden="true">' + s.a + "</b>" +
+      (s.fin ? '<span class="pl" aria-hidden="true">+</span><span class="i" aria-hidden="true">' + PZ_GIFT + '</span><span class="t" aria-hidden="true">참여상</span>' : "") +
+      (st === "nx" ? '<span class="tag" aria-hidden="true">다음</span>' : st === "on" ? '<span class="tag on" aria-hidden="true">' + CHECK_SVG + "달성</span>" : "") + "</button>";
+  }).join("");
+  return '<section class="axs-pz-cv"><p class="ey">AX Festival 2026</p><h1 class="ttl">스탬프 개수별 경품</h1>' +
+    '<div class="now"><div class="tx"><p class="k">지금 내 스탬프</p><p class="nx">' + pzNextTxt(n) + '</p></div><p class="n"><b>' + n + "</b>개</p></div>" +
+    '<div class="stp" role="img" aria-label="스탬프 ' + n + " / " + STAMP_DENOM + '"><span class="ln" aria-hidden="true"></span><span class="fl" aria-hidden="true" style="width:' + fill + '"></span>' + dots + "</div>" +
+    '<div class="cds">' + cards + "</div></section>";
 }
 function prizePosterHtml() {
   return '<div class="axs-pz' + (Date.now() - PZ.t < 900 ? " in" : "") + '">' + prizeCoverHtml() + PZ_SEC.map(prizeSecHtml).join("") + "</div>";
@@ -7434,6 +7479,7 @@ function stpLineHtml(mode, meta) {
 /* 행 한 줄 설명 · 화면에 없는 장소 · 시간 · 조건만(문구 다이어트) · v4.95 375px 한 줄(종목 이름은 아래 타일 · 장소는 행동 화면에) */
 function stpMeta(s, got) {
   if (s.id === "lg") return "";
+  if (got && (s.id === "qz" || s.id === "p4")) return "스탬프 받음";   /* v5.16 받은 뒤 = 상태 한 마디 + 오른쪽 「다시 하기」 */
   if (s.id === "qz") return QZ_NEED <= 1 ? qzLenTxt() : QZ_NEED + "종 완주 · " + Math.min(QZ_NEED, qzDone()) + " / " + QZ_NEED;
   if (s.id === "p4") return (stampV2() ? "3종 완주 · " : "서로 다른 3종목 · ") + Math.min(MG_NEED, mgDone()) + " / " + MG_NEED;
   if (s.id === "p2") return "1F · 체험 2종";   /* 「스태프 인증」 칩 옆 104px · 이름(HiDI-Q · Hi-Helper)은 구역 줄 · 체험 안내 화면에 */
@@ -7445,7 +7491,8 @@ function stpMeta(s, got) {
 }
 /* 오른쪽 행동 [글, onclick] · onclick 이 없으면 글만(완료 · 열리는 시각) */
 function stpAct(s, got) {
-  if (got) return s.id === "p5" ? ["더 쓰기", "App.go('ideas')"] : s.id === "sv" ? ["결과", "App.go('survey')"] : ["완료", ""];
+  if (got) return s.id === "p5" ? ["더 쓰기", "App.go('ideas')"] : s.id === "sv" ? ["결과", "App.go('survey')"] :
+    s.id === "qz" ? ["다시 하기", "App.go('quiz')"] : s.id === "p4" ? ["다시 하기", "App.go('games')"] : ["완료", ""];   /* v5.16 (사용자 261003 「스탬프가 완료되면 더 안 된다」) 스탬프는 한 번 · 게임은 몇 번이든 · 받은 줄도 목록으로 */
   if (s.id === "lg") return ["자동", ""];
   if (s.id === "qz" && QZ_NEED <= 1) return ["시작", "App.go('game_ox')"];   /* v4.95 (사용자 261002 「AX 퀴즈 박스 표시는 이제 없어도 된다」) 한 판뿐 · 타일 없이 줄을 누르면 시작 화면 */
   if (s.id === "qz" || s.id === "p4") return ["", ""];   /* 종목 타일이 행동이다 */
@@ -12186,7 +12233,8 @@ function olyResultBody(o) {
 function olyHubHtml() {
   olyPull();
   var me = olyMe(), op = me.left ? "종합 순위까지 " + me.left + "종목" : olyOverallPos(me), nm = olyOvName();   /* v4.95 남은 종목 이름은 바로 아래 세 행이 보여 준다(375px 한 줄) */
-  return stampLineHtml("p4", '<p class="ax-meta">' + (stampV2() ? "팡 · 점프 · 테트리스 · 종목마다 한 판" : "서로 다른 " + MG_NEED + "종목 · 종목마다 한 판") + "</p>") +   /* v4.70 스탬프 조건 + 도장(n/3) */
+  var p4got = S.get("stamps", []).indexOf("p4") >= 0;   /* v5.16 받은 뒤 = 「스탬프 받음 · 순위는 종목 최고 기록」(다시 해도 스탬프는 그대로) */
+  return stampLineHtml("p4", '<p class="ax-meta">' + (p4got ? "스탬프 받음 · 순위는 종목 최고 기록" : stampV2() ? "팡 · 점프 · 테트리스 · 종목마다 한 판" : "서로 다른 " + MG_NEED + "종목 · 종목마다 한 판") + "</p>") +   /* v4.70 스탬프 조건 + 도장(n/3) */
     '<section class="ax-card oly-sum"><div><p class="ax-meta">내 ' + nm + " 총점</p><p class=\"oly-sum-n\">" + olyFmt(me.total) + "<small> / " + olyFmt(olyMax()) + "</small></p></div>" +
     '<p class="ax-meta oly-sum-r">종목 ' + me.done + "/" + olyOvKeys().length + (op ? "<br>" + esc(op) : "") + "</p></section>" +
     olyKeysEvents(OLY_MINI_KEYS).map(function (e) {
