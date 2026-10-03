@@ -1162,7 +1162,7 @@ var NEED={
   /* v5.14 위계 개편 · 새 화면(옛 탭이 없는 것) */
   app:[{k:"sy",a:"sync",p:{emp:""}},{k:"pst",a:"push_stats"}],
   sign:[{k:"stats",a:"stats"}],
-  crowd:[{k:"crowd",a:"crowd_log"}],
+  crowd:[{k:"crowd",a:"crowd_log"},{k:"cam",a:"crowd_cam_list"}],   /* 261003 카메라 계수(혼잡도 계수기 · 옛 서버는 「서버 미배포」 한 줄) */
   test:[],
   sys:[{k:"sy",a:"sync",p:{emp:""}},{k:"stats",a:"stats"}],
   cfg:[],
@@ -5864,7 +5864,7 @@ var HV_ELNEED={
 function hvNeedX(t){
   var it=navCur(), out=[];
   if(it.el&&HV_ELNEED[it.el]&&t===navPart().tab) out=HV_ELNEED[it.el].slice();
-  if(t==="dash"&&it.id==="hq") out=out.concat([{k:"crowd",a:"crowd_log"},{k:"tres",a:"type_result"}]);
+  if(t==="dash"&&it.id==="hq") out=out.concat([{k:"crowd",a:"crowd_log"},{k:"tres",a:"type_result"},{k:"cam",a:"crowd_cam_list"}]);   /* 261003 카메라 계수 요약 칩 */
   if(t==="danger") out=out.concat([{k:"slist",a:"stamp_list"},{k:"stair",a:"stair_list"},{k:"alist",a:"att_list"}]);
   if(t==="sys") out=out.concat([{k:"acct",a:"acct_list"}]);
   if(t==="cfg") out=out.concat(HVS.cfg?[{k:"cfgl",a:"cfg_list"}]:[]);
@@ -5922,7 +5922,7 @@ var CTL_ACT={
   adm_code_set:["pp",function(p){ return (p.which==="grade"?"등급코드":"관리코드")+" 바꿈"; }], adm_roster_set:["pp","권한 명단 바꿈"], test_set:["pp","테스트 사번 바꿈"], test_reset:["pp","테스트 사번 처음 상태로"], cfg_set:["sy",function(p){ return "운영 설정 · "+(p.k||""); }],
   usr_reset_all:["sy","전체 초기화"], att_wipe:["sy","테스트 출석 기록 지움"], visit_wipe:["sy","테스트 접속 기록 지움"], game_wipe:["sy","테스트 게임 기록 지움"],
   stamp_grant:["fd",function(p){ return "스탬프 부여 · "+(p.emp||""); }], stamp_revoke:["fd",function(p){ return "스탬프 취소 · "+(p.emp||""); }], resv_set:["fd",function(p){ return "상담 "+(p.status||"처리"); }], cchat_set:["fd","커피챗 매칭"], cchat_status:["fd",function(p){ return "커피챗 "+(p.status||"처리"); }],
-  crowd_set:["fd","혼잡 제보 처리"], crowd_cfg:["fd","혼잡 설정 저장"], acct_pwreset:["fd","PIN 초기화"], pw_req_done:["fd","PIN 분실 요청 처리"]
+  crowd_set:["fd","혼잡 제보 처리"], crowd_cfg:["fd","혼잡 설정 저장"], crowd_cam_del:["fd",function(p){ return "카메라 계수 목록에서 빼기 · "+(p.cam||""); }], acct_pwreset:["fd","PIN 초기화"], pw_req_done:["fd","PIN 분실 요청 처리"]
 };
 var CTL_EL_OF={ ns:"공지·푸시", roul:"룰렛", type:"타자왕", game:"AX 퀴즈·게임", draw:"럭키드로우·참여상", qr:"QR", app:"앱", pp:"사람·권한", sy:"시스템", fd:"현장 처리" };
 function ctlNote(action, params, res){
@@ -5933,7 +5933,7 @@ function ctlNote(action, params, res){
   try{ sessionStorage.setItem("axf_hv_ctl", JSON.stringify(CTL)); }catch(e){}
 }
 /* 서버 운영로그 종류 → 요소 · 2단계 서버(oplog_list) 응답 rows[{ t, k, x }] */
-var OPK_EL={ ro:"app", notice:"ns", push_send:"ns", push_cancel:"ns", push_cfg:"ns", sched_add:"ns", sched_cancel:"ns", sched_bump:"ns", sched_now:"ns", draw_cfg:"draw", draw_cmd:"draw", draw_reset:"draw", fin:"draw", att_rotate:"qr", stamp_rotate:"qr", stair_rotate:"qr", notice_clear:"ns", code_set:"pp", adm_roster:"pp", adm_pin:"pp", test_set:"pp", test_reset:"pp", cfg_set:"sy", usr_reset_all:"sy", att_wipe:"sy", visit_wipe:"sy", game_wipe:"sy", stamp_revoke:"fd", pw_reset:"fd", pw_req_done:"fd", pw_req_cancel:"fd", crowd_cfg:"fd", roulette_out:"roul", race:"type", oly_rule:"game", ox_off:"game" };
+var OPK_EL={ ro:"app", notice:"ns", push_send:"ns", push_cancel:"ns", push_cfg:"ns", sched_add:"ns", sched_cancel:"ns", sched_bump:"ns", sched_now:"ns", draw_cfg:"draw", draw_cmd:"draw", draw_reset:"draw", fin:"draw", att_rotate:"qr", stamp_rotate:"qr", stair_rotate:"qr", notice_clear:"ns", code_set:"pp", adm_roster:"pp", adm_pin:"pp", test_set:"pp", test_reset:"pp", cfg_set:"sy", usr_reset_all:"sy", att_wipe:"sy", visit_wipe:"sy", game_wipe:"sy", stamp_revoke:"fd", pw_reset:"fd", pw_req_done:"fd", pw_req_cancel:"fd", crowd_cfg:"fd", roulette_out:"roul", race:"type", oly_rule:"game", ox_off:"game", crowd_cam_del:"fd" };
 function ctlRows(el, n){
   var srv=(ST.data.oplog&&ST.data.oplog.ok)?(ST.data.oplog.rows||[]).map(function(r){ return { t:short(r.t), el:OPK_EL[r.k]||"", x:r.x||r.k, srv:1 }; }):[];
   var rows=srv.length?srv:CTL;
@@ -6077,7 +6077,7 @@ function viewHq(){
   var h='<div class="hv-strip"><span class="cap">모드</span><span class="hv-seg">'+["pre","day","post"].map(function(m){ return '<button class="'+(mode===m?"on":"")+'" onclick="hvModeSet(\''+m+'\')">'+HV_MODE_N[m]+'</button>'; }).join("")+'</span>'+
     (mode!==hvModeAuto()?'<span class="cap">손으로 바꿈 · 날짜 기준은 '+HV_MODE_N[hvModeAuto()]+'</span>':'')+
     tag(cn[0], cn[1])+tag(hvRo()?"읽기 전용 켜짐":"읽기 전용 꺼짐", hvRo()?"warn":"off")+tag(env[0], env[1])+
-    (hot.length?'<a href="#" onclick="go(\'f_crowd\');return false">'+tag("혼잡 제보 "+hot.length+"곳","bad")+'</a>':'')+
+    (hot.length?'<a href="#" onclick="go(\'f_crowd\');return false">'+tag("혼잡 제보 "+hot.length+"곳","bad")+'</a>':'')+camChip()+
     '<span class="sp"></span>'+(st.t?'<span class="cap">서버 시각 <b class="n">'+esc(st.t)+'</b></span>':'')+'</div>';
   var r0=ST._right, todo=viewDash("todo"); ST._right=r0; var on=todo.filter(function(x){ return x.v; }), zero=todo.filter(function(x){ return !x.v; });
   var todoH=(on.length?'<div class="todo">'+on.map(function(x){ return '<div class="it"><div class="v">'+x.v+'</div><div><div class="t">'+esc(x.t)+'</div><div class="d">'+esc(x.d)+'</div></div><button class="btn sm pri" onclick="'+x.go+'">처리하기</button></div>'; }).join("")+'</div>':'<div class="empty">지금 처리할 일이 없습니다.</div>')+
@@ -6092,8 +6092,54 @@ function viewHq(){
   h+='<div class="grid g57" style="margin-top:0"><div>'+left+'</div><div>'+els+kp+log+'</div></div>';
   return h;
 }
+/* 261003 카메라 계수 요약 칩(모아 보기 띠) · 카메라가 없거나 옛 서버면 아무것도 없다 · 혼잡 구역 = 빨강(혼잡 제보 칩과 같은 말) · 신호 없음 = 회색 */
+function camChip(){
+  var d=ST.data.cam; if(!d||!d.ok||!(d.cams||[]).length) return "";
+  var lost=0, hot=0; d.cams.forEach(function(c){ var a=camAge(c,d), on=a>=0&&a<(Number(d.stale)||60); if(!on) lost++; else (c.z||[]).forEach(function(x){ if(x.s==="bad") hot++; }); });
+  return (hot?'<a href="#" onclick="go(\'f_crowd\');return false">'+tag("카메라 혼잡 "+hot+"구역","bad")+'</a>':'')+(lost?'<a href="#" onclick="go(\'f_crowd\');return false">'+tag("카메라 신호 없음 "+lost+"대","off")+'</a>':'');
+}
 /* 현장 처리 › 혼잡 제보 · 옛 대시보드 카드 그대로 */
-function viewCrowdTab(){ return viewCrowd()||'<div class="card"><p class="muted"><span class="spin"></span>불러오는 중입니다.</p></div>'; }
+function viewCrowdTab(){ return (viewCrowd()||'<div class="card"><p class="muted"><span class="spin"></span>불러오는 중입니다.</p></div>')+'<div id="camCard">'+viewCam()+'</div>'; }
+/* ── 261003 카메라 계수 · 혼잡도 계수기(노트북 카메라)가 10초마다 보낸 숫자 · 서버 crowd_cam_list(관리코드) · 영상 없음 ──
+ * 카메라 › 구역 › 인원 · 상태 · 마지막 갱신 · 60초 넘게 안 오면 「신호 없음」(회색) · 참가자 앱에는 나가지 않는다(사용자 결정 대기)
+ * 이 화면이 열려 있으면 15초마다 이 카드만 다시 받는다(다른 칸 · 입력 중인 설정은 그대로) · 옛 서버(crowd_cam_list 없음) = 「서버 미배포」 */
+var CAM_W={ ok:["여유","ok"], mid:["보통","warn"], bad:["혼잡","bad"] }, CAMR={ at:0, busy:false };
+function camAge(c, d){ return c.age<0?-1:c.age+Math.max(0,Math.round((Date.now()-(d._got||Date.now()))/1000)); }
+function camAgo(s){ return s<0?"":s<60?s+"초 전":Math.floor(s/60)+"분 "+(s%60)+"초 전"; }
+function viewCam(){
+  var d=ST.data.cam;
+  if(!d) return card("카메라 계수","",'<p class="muted"><span class="spin"></span>불러오는 중입니다.</p>');
+  if(!d.ok) return card("카메라 계수","서버 미배포",'<div class="empty">이 서버에는 아직 카메라 계수가 없습니다. 서버를 새로 올린 뒤 보입니다.</div>');
+  if(!d._got) d._got=Date.now();
+  var cams=d.cams||[], stale=Number(d.stale)||60, live=0, hot=0;
+  var rows=cams.map(function(c){
+    var age=camAge(c,d), on=age>=0&&age<stale, z=c.z||[];
+    if(on){ live++; z.forEach(function(x){ if(x.s==="bad") hot++; }); }
+    var sk=Math.abs(Number(c.skew)||0)>120?' <span class="cap">기기 시계 '+Math.abs(c.skew)+'초 어긋남</span>':'';
+    var head='<tr'+(on?'':' class="dim"')+'><td rowspan="'+(z.length+1)+'" style="vertical-align:top"><b>'+esc(c.cam)+'</b><div class="mt8">'+(on?tag("신호","ok"):tag("신호 없음","off"))+'</div>'+
+      (on?'':'<div class="mt8"><button class="btn sm danger" onclick="camDel(\''+esc(String(c.cam).replace(/['\\]/g,""))+'\')">목록에서 빼기</button></div>')+'</td>'+
+      '<td class="cap">화면 전체</td><td class="n tdr"><b>'+(c.tot|0)+'</b>명</td><td></td><td class="n cap" rowspan="'+(z.length+1)+'" style="vertical-align:top">'+esc(short(c.t))+'<br>'+esc(camAgo(age))+sk+'</td></tr>';
+    return head+z.map(function(x){ var w=CAM_W[x.s]||[x.s||"",""]; return '<tr'+(on?'':' class="dim"')+'><td>'+esc(x.n)+'</td><td class="n tdr"><b>'+(x.c|0)+'</b>명</td><td>'+(on?tag(w[0],w[1]):tag(w[0],"off"))+'</td></tr>'; }).join("");
+  }).join("");
+  var tb='<div class="wrap"><table class="tb"><tr><th>카메라</th><th>구역</th><th class="tdr">인원</th><th>상태</th><th>마지막 갱신</th></tr>'+rows+(!cams.length?emptyRow(5,"아직 들어온 카메라가 없습니다. 계수기 화면 「서버 전송」에서 보낼 곳과 등급코드를 넣으면 10초 안에 보입니다."):"")+'</table></div>';
+  var m='<p>노트북 카메라 계수기가 10초마다 숫자만 보냅니다(카메라 이름 · 구역 · 인원 · 상태). 영상과 이미지는 서버에 오지 않습니다.</p>'+
+    '<p class="mt8">인원은 그 순간의 값이라 한두 명씩 오르내립니다. 구역 「혼잡」 기준은 계수기 화면에서 구역마다 정합니다.</p>'+
+    '<p class="mt8">스태프 혼잡 제보와 따로 움직이며 참가자 앱에는 나가지 않습니다. 카메라마다 1분에 한 번 시트 「카메라계수」에 남습니다(지금 '+(d.hist|0)+'줄).</p>'+
+    '<p class="mt8">「목록에서 빼기」는 신호 없는 카메라만 지웁니다. 1분 기록은 남고, 그 카메라가 다시 보내면 목록에 다시 생깁니다.</p>';
+  var sub=cams.length?"신호 "+live+"대"+(cams.length>live?" · 신호 없음 "+(cams.length-live)+"대":"")+(hot?" · 혼잡 구역 "+hot+"곳":"")+" · 60초 넘게 안 오면 신호 없음":"노트북 카메라 숫자 · 60초 넘게 안 오면 신호 없음";
+  return card("카메라 계수",sub,tb+memo(m),'<button class="btn sm" onclick="camPull(1)">새로고침</button>');
+}
+function camPaint(){ var c=el("camCard"); if(c) c.innerHTML=viewCam(); }
+function camPull(manual){
+  if(CAMR.busy||!authed()) return;
+  CAMR.busy=true;
+  call("crowd_cam_list",{},function(r){ CAMR.busy=false; CAMR.at=Date.now(); if(r){ r._got=Date.now(); ST.data.cam=r; _cache[sig_("crowd_cam_list",{})]={ data:r, at:Date.now() }; } camPaint(); if(manual) toast("갱신했습니다"); },function(){ CAMR.busy=false; CAMR.at=Date.now(); if(manual) toast("서버 응답 없음"); });
+}
+setInterval(function(){ if(document.hidden||!el("camCard")) return; if(Date.now()-CAMR.at>=15000) camPull(); else camPaint(); },5000);
+function camDel(name){
+  dialog({ t:"「"+name+"」을 목록에서 뺄까요?", s:"신호 없는 카메라를 목록에서만 뺍니다. 1분 기록은 남고, 그 카메라가 다시 보내면 목록에 다시 생깁니다.", ok:"빼기",
+    onOk:function(){ call("crowd_cam_del",{cam:name},function(r){ dlgForce(); if(r&&r.ok){ toast(name+" · 목록에서 뺐습니다"); var d=ST.data.cam; if(d&&d.cams) d.cams=d.cams.filter(function(c){ return c.cam!==name; }); camPaint(); } else toast("실패: "+(r&&r.reason==="none"?"이미 목록에 없습니다":why(r))); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
+}
 
 /* ══ 위험 가드 공통 ══ */
 var HVW="";
