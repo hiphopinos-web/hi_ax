@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>AX 매지션</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
+<style>
+  html,body{margin:0;height:100%;background:#000;overflow:hidden;cursor:none}
+  #stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;display:block;background:#000}
+  #cam{position:absolute;width:2px;height:2px;opacity:0;pointer-events:none}
+  #err{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.88);color:#fff;font-family:"Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;text-align:center;cursor:default;z-index:5}
+  #err h1{font-size:64px;line-height:1.3;margin:0 0 20px;font-weight:700}
+  #err p{font-size:34px;line-height:1.5;margin:0 0 48px;color:#D9D9D9;max-width:1400px}
+  #err button{font:700 40px "Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;background:#FF7E31;color:#fff;border:0;border-radius:16px;padding:26px 64px;cursor:pointer}
+  /* 설정 패널 (C 키, 숨김) */
+  #cp{position:absolute;top:0;right:0;bottom:0;width:380px;background:rgba(18,20,24,.96);color:#fff;font:14px/1.5 "Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;padding:16px 18px;overflow:auto;display:none;cursor:default;z-index:4;box-sizing:border-box}
+  #cp h2{font-size:17px;margin:0 0 10px}#cp h3{font-size:14px;margin:16px 0 6px;color:#FF963E}
+  #cp label{display:block;margin:6px 0 2px;color:#D9D9D9}
+  #cp input[type=text],#cp input[type=password],#cp input[type=number],#cp select{width:100%;box-sizing:border-box;background:#2A2D33;border:1px solid #555;color:#fff;border-radius:6px;padding:6px 8px;font:inherit}
+  #cp input[type=number]{width:70px}
+  #cp button{background:#FF7E31;color:#fff;border:0;border-radius:6px;padding:6px 12px;font:600 14px "Malgun Gothic",sans-serif;cursor:pointer;margin:6px 6px 0 0}
+  #cp button.g{background:#444}
+  #cp .st{margin-top:6px;color:#D9D9D9;word-break:break-all;white-space:pre-line}
+  #cp .z{border:1px solid #444;border-radius:8px;padding:8px;margin-top:8px}
+  #dot{position:fixed;right:0;bottom:66px;width:44px;height:44px;z-index:30;display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none}
+  #dot i{display:block;width:11px;height:11px;border-radius:50%;background:rgba(217,217,217,.2)}
+</style>
+</head>
+<body>
+<canvas id="stage" width="1920" height="1080"></canvas>
+<video id="cam" playsinline muted></video>
+<div id="err"><h1 id="errT"></h1><p id="errP"></p><button id="errB">마우스로 해 보기</button></div>
+
+<div id="dot"><i></i></div>
+<div id="cp">
+  <h2>혼잡도 계수 설정 <span style="color:#888;font-weight:400">(C 닫기)</span></h2>
+  <label><input type="checkbox" id="cpOn"> 계수 켜기 (사람 수만 셈, 영상 저장·전송 없음)</label>
+  <label>카메라 이름 (여러 대면 서로 달라야 함)</label><input type="text" id="cpName" maxlength="20">
+  <label>계수용 카메라</label><select id="cpDev"><option value="">메인 카메라 (게임과 같은 1대)</option></select>
+  <label>주기</label><select id="cpInt"><option value="1000">1초</option><option value="2000">2초</option><option value="5000">5초</option></select>
+  <label>타일 분할</label><select id="cpTiles"><option value="1">끔</option><option value="2">2x2 (느림)</option></select>
+  <label>연산 (다음 실행부터)</label><select id="cpGpu"><option value="1">GPU 우선</option><option value="0">CPU만 (느림, GPU 충돌 시)</option></select>
+  <label>사람 위치</label><select id="cpAnchor"><option value="center">상자 가운데</option><option value="foot">발(상자 아래)</option></select>
+  <h3>서버 전송 (기본 꺼짐)</h3>
+  <label>보낼 곳</label><select id="cpSrv"><option value="off">끔</option></select>
+  <div id="cpCodeRow" hidden><label>등급코드</label><input type="password" id="cpCode" autocomplete="off"><button id="cpCodeSave">저장</button></div>
+  <div id="cpSavedRow" hidden>등급코드 저장됨 <button class="g" id="cpCodeForget">지우기</button></div>
+  <div class="st" id="cpSrvStat"></div>
+  <h3>구역</h3>
+  <button id="cpAdd">구역 그리기</button><button class="g" id="cpClose">닫기</button><button class="g" id="cpCancel">취소</button>
+  <div class="st">화면을 클릭해 꼭짓점을 찍고 첫 점을 다시 누르거나 닫기(Enter). Esc 취소. 구역이 없으면 화면 전체 인원만 센다.</div>
+  <div id="cpZones"></div>
+  <h3>상태</h3><div class="st" id="cpStat"></div>
+</div>
+<script type="module">
+const W = 1920, H = 1080;
+const qs = new URLSearchParams(location.search);
+let mouseMode = qs.get('mouse') === '1';
+let debug = qs.get('debug') === '1';
+let radiusScale = 1, swingBias = 0;   // swingBias: , . 키로 현장 튜닝 (초)
+const FONT = '"Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif';
+const ORANGE = '#FF7E31', ORANGE_L = '#FF963E', ORANGE_D = '#E5651A';
+const PLAY_SEC = 30, INTRO_SEC = 2.2, RESULT_SEC = 5, ABSENT_SEC = 6;
+
+const cv = document.getElementById('stage');
+const ctx = cv.getContext('2d');
+const video = document.getElementById('cam');
+const errBox = document.getElementById('err');
+
+function fit() {
+  const s = Math.min(innerWidth / W, innerHeight / H);
+  cv.style.transform = `translate(${(innerWidth - W * s) / 2}px,${(innerHeight - H * s) / 2}px) scale(${s})`;
+  cv._s = s; cv._ox = (innerWidth - W * s) / 2; cv._oy = (innerHeight - H * s) / 2;
+}
+addEventListener('resize', fit); fit();
+
+const rnd = (a, b) => a + Math.random() * (b - a);
+const lerp = (a, b, t) => a + (b - a) * t;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+const pick = arr => arr[(Math.random() * arr.length) | 0];
+let now = performance.now() / 1000;
+
+/* ---------------- 효과음 (WebAudio 합성) ---------------- */
+let ac = null;
+function audio() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { } } if (ac && ac.state === 'suspended') ac.resume().catch(() => { }); return ac; }
+function tone(f, d, type = 'sine', vol = .16, slide = 0, delay = 0) {
+  const a = audio(); if (!a) return; const t = a.currentTime + delay;
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t + d);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t + d + .02);
+}
+function noise(d, vol = .2, f0 = 1500, f1 = 1500, q = .8, type = 'bandpass', delay = 0) {
+  const a = audio(); if (!a) return; const t = a.currentTime + delay;
+  const buf = a.createBuffer(1, Math.max(1, (a.sampleRate * d) | 0), a.sampleRate), ch = buf.getChannelData(0);
+  for (let i = 0; i < ch.length; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / ch.length);
+  const n = a.createBufferSource(); n.buffer = buf;
+  const bp = a.createBiquadFilter(); bp.type = type; bp.Q.value = q; bp.frequency.setValueAtTime(f0, t); bp.frequency.exponentialRampToValueAtTime(f1, t + d);
+  const g = a.createGain(); g.gain.value = vol; n.connect(bp).connect(g).connect(a.destination); n.start(t);
+}
+const sfx = {
+  tap() { tone(520, .09, 'square', .1); tone(880, .14, 'square', .1, 0, .07); },
+  start() { tone(392, .12, 'triangle', .16); tone(523, .12, 'triangle', .16, 0, .1); tone(784, .22, 'triangle', .18, 0, .2); },
+  tick(p) { tone(300 + p * 700, .08, 'triangle', .06); },
+  orb() { tone(440, .3, 'triangle', .16); tone(660, .3, 'triangle', .14, 0, .08); tone(880, .5, 'triangle', .16, 0, .18); noise(.5, .1, 800, 4000, .6); },
+  push() { noise(.6, .22, 400, 5000, .7); tone(200, .5, 'sawtooth', .08, 600); },
+  fire() { noise(.5, .28, 2500, 500, .6); tone(140, .35, 'square', .1, -60); },
+  heart() { [660, 880, 1100, 1320].forEach((f, i) => tone(f, .28, 'sine', .14, 0, i * .07)); },
+  tele() { noise(.45, .2, 6000, 600, .5, 'bandpass'); tone(1000, .3, 'sine', .1, -700); },
+  no() { tone(240, .28, 'sawtooth', .08, -120); },
+  boom() { noise(.9, .35, 1200, 100, .4, 'lowpass'); tone(90, .6, 'sine', .3, -50); [523, 659, 784, 1047].forEach((f, i) => tone(f, .5, 'triangle', .16, 0, .25 + i * .12)); },
+  end() { tone(523, .16, 'triangle', .2); tone(659, .16, 'triangle', .2, 0, .14); tone(784, .16, 'triangle', .2, 0, .28); tone(1047, .5, 'triangle', .22, 0, .42); },
+};
+addEventListener('pointerdown', audio); addEventListener('keydown', audio);
+
+/* ---------------- 가상 손 모델 (21점, 손목=원점, 손바닥 길이 1) ---------------- */
+const BONES = [[0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8], [5, 9], [9, 10], [10, 11], [11, 12], [9, 13], [13, 14], [14, 15], [15, 16], [13, 17], [17, 18], [18, 19], [19, 20], [0, 17]];
+const FING = [
+  { b: [-.36, -.92], a: -1.70, l: [.46, .28, .22] }, { b: [0, -1], a: -1.5708, l: [.52, .31, .24] },
+  { b: [.34, -.93], a: -1.45, l: [.47, .29, .22] }, { b: [.66, -.78], a: -1.30, l: [.36, .22, .19] }];
+// cs: 손가락 4개 접힘 0(편)~1(주먹) 숫자 또는 배열, pinch: 엄지 끝을 검지 끝에 붙이는 정도
+function handPose(cs, pinch = 0) {
+  if (!Array.isArray(cs)) cs = [cs, cs, cs, cs];
+  const P = new Array(21); P[0] = { x: 0, y: 0 };
+  FING.forEach((f, i) => {
+    const c = cs[i], dx = Math.cos(f.a), dy = Math.sin(f.a), base = 5 + i * 4; let cum = 0;
+    P[base] = { x: f.b[0], y: f.b[1] };
+    for (let j = 0; j < 3; j++) { cum += f.l[j]; const d = lerp(cum, [.28, .2, -.22][j] * (f.l[0] + f.l[1] + f.l[2]), c); P[base + 1 + j] = { x: f.b[0] + dx * d, y: f.b[1] + dy * d }; }
+  });
+  const tc = (cs[0] + cs[1] + cs[2] + cs[3]) / 4, b = { x: -.26, y: -.26 };
+  const op = { x: b.x + Math.cos(-2.4) * .98, y: b.y + Math.sin(-2.4) * .98 }, cu = { x: -.1, y: -.6 };
+  const T0 = { x: lerp(op.x, cu.x, tc), y: lerp(op.y, cu.y, tc) };
+  const T = { x: lerp(T0.x, P[8].x, pinch), y: lerp(T0.y, P[8].y, pinch) };
+  P[1] = b; P[2] = { x: lerp(b.x, T.x, .4), y: lerp(b.y, T.y, .4) }; P[3] = { x: lerp(b.x, T.x, .72), y: lerp(b.y, T.y, .72) }; P[4] = T;
+  return P;
+}
+const PALM = (() => { const p = handPose(0); return { x: (p[0].x + p[5].x + p[9].x + p[13].x + p[17].x) / 5, y: (p[0].y + p[5].y + p[9].y + p[13].y + p[17].y) / 5 }; })();
+const place = (pose, cx, cy, s) => pose.map(p => ({ x: cx + (p.x - PALM.x) * s, y: cy + (p.y - PALM.y) * s }));
+
+/* ---------------- 손 입력: 카메라 / 마우스 시험 ---------------- */
+const mouse = { x: 960, y: 640, last: -1e9, shift: false, pose: 0 };   // pose 0 편 손 / 1 주먹 / 2 하트
+addEventListener('mousemove', e => { mouse.x = (e.clientX - cv._ox) / cv._s; mouse.y = (e.clientY - cv._oy) / cv._s; mouse.last = clk(); });
+const mh = { L: 100, Lt: 100, cs: [0, 0, 0, 0], pin: 0 };
+addEventListener('wheel', e => { if (!mouseMode) return; mh.Lt = clamp(mh.Lt * (e.deltaY < 0 ? 1.13 : 1 / 1.13), 60, 280); mouse.last = clk(); }, { passive: true });
+const POSES = [{ cs: [0, 0, 0, 0], pin: 0 }, { cs: [1, 1, 1, 1], pin: 0 }, { cs: [.45, 1, 1, 1], pin: 1 }];
+
+let hands = [], nextHid = 1;        // 추적 중인 손
+let rawHands = null;                // 카메라 모드: {t, list:[pts]}
+const cam = { ready: false, vw: 0, vh: 0 };
+let hl = null, lastVT = -1, lastTs = 0;
+const HAND_MIN = 70, HAND_NEAR = 45;   // 이 크기(손목~중지뿌리 px)보다 작으면 멀다
+
+function metrics(lm) {
+  const d = (a, b) => Math.hypot(lm[a].x - lm[b].x, lm[a].y - lm[b].y), L = Math.max(15, d(0, 9));
+  const ext = [d(8, 0) / Math.max(1, d(5, 0)), d(12, 0) / Math.max(1, d(9, 0)), d(16, 0) / Math.max(1, d(13, 0)), d(20, 0) / Math.max(1, d(17, 0))];
+  const mean = (ext[0] + ext[1] + ext[2] + ext[3]) / 4;
+  return { L, ext, open: clamp((mean - 1.05) / .55, 0, 1), pinch: d(4, 8) / L, curled: ext[1] < 1.4 && ext[2] < 1.4 && ext[3] < 1.4,
+    cx: (lm[0].x + lm[5].x + lm[9].x + lm[13].x + lm[17].x) / 5, cy: (lm[0].y + lm[5].y + lm[9].y + lm[13].y + lm[17].y) / 5 };
+}
+function applyHand(tr, pts) {
+  const a = mouseMode ? 1 : .6;
+  tr.lm = tr.lm ? tr.lm.map((p, i) => ({ x: lerp(p.x, pts[i].x, a), y: lerp(p.y, pts[i].y, a) })) : pts.map(p => ({ ...p }));
+  const m = metrics(tr.lm); tr.m = m;
+  tr.c = { x: m.cx, y: m.cy }; tr.L = tr.L ? lerp(tr.L, m.L, a) : m.L; tr.open = tr.open === undefined ? m.open : lerp(tr.open, m.open, mouseMode ? 1 : .6);
+  tr.pinch = m.pinch; tr.curled = m.curled; tr.seen = now;
+  tr.hist.push({ t: now, x: tr.c.x, y: tr.c.y, L: tr.L, open: tr.open }); while (tr.hist.length && now - tr.hist[0].t > 1.3) tr.hist.shift();
+}
+function updateInput(dt) {
+  let list = [];
+  if (mouseMode) {
+    if (now - mouse.last < ABSENT_SEC) {
+      const pz = POSES[mouse.pose], k = 1 - Math.exp(-dt * 14);
+      mh.L = lerp(mh.L, mh.Lt, k); mh.Lt += (100 - mh.Lt) * dt * .25;
+      for (let i = 0; i < 4; i++) mh.cs[i] = lerp(mh.cs[i], pz.cs[i], mouse.pose === 1 || mh.cs[0] > pz.cs[0] ? 1 - Math.exp(-dt * 22) : 1 - Math.exp(-dt * 22));
+      mh.pin = lerp(mh.pin, pz.pin, 1 - Math.exp(-dt * 22));
+      const pose = handPose(mh.cs, mh.pin);
+      list.push(place(pose, mouse.x, mouse.y, mh.L));
+      if (mouse.shift) list.push(place(pose, W - mouse.x, H - mouse.y, mh.L));
+    }
+  } else if (rawHands && now - rawHands.t < .35) list = rawHands.list.map(h => h.pts);
+  for (const t of hands) t.matched = false;
+  for (const pts of list) {
+    const m = metrics(pts), c = { x: m.cx, y: m.cy }; let best = null, bd = 1e9;
+    for (const t of hands) { if (t.matched) continue; const d = dist(t.c, c); if (d < bd) { bd = d; best = t; } }
+    if (best && bd < Math.max(450, best.L * 5)) { best.matched = true; applyHand(best, pts); }
+    else { const t = { id: nextHid++, hist: [], matched: true, lm: null, seen: now, fire: { fd: 0, lastFist: -9 }, heart: 0 }; applyHand(t, pts); hands.push(t); }
+  }
+  hands = hands.filter(t => now - t.seen < .6);
+}
+const liveHands = () => hands.filter(h => now - h.seen < .25).sort((a, b) => a.id - b.id);
+
+/* ---------------- 카메라 / 손 모델 ---------------- */
+function showErr(title, msg) {
+  document.getElementById('errT').textContent = title;
+  document.getElementById('errP').textContent = msg;
+  errBox.style.display = 'flex';
+}
+document.getElementById('errB').onclick = () => { mouseMode = true; errBox.style.display = 'none'; audio(); };
+async function exists(url) { try { const r = await fetch(url, { method: 'HEAD' }); return r.ok; } catch (e) { return false; } }
+
+/* V 키: 게임 카메라를 다음 장치로 바꾼다(선택은 이 브라우저에 기억) */
+const CAMK = 'axf_magician_cam';
+function camToast(t) {
+  let el = document.getElementById('camToast');
+  if (!el) { el = document.createElement('div'); el.id = 'camToast'; el.style.cssText = 'position:fixed;left:50%;top:40px;transform:translateX(-50%);z-index:50;padding:14px 28px;border-radius:999px;background:rgba(0,0,0,.72);color:#fff;font:600 28px Pretendard,sans-serif;pointer-events:none;transition:opacity .3s'; document.body.appendChild(el); }
+  el.textContent = t; el.style.opacity = '1'; clearTimeout(camToast.t); camToast.t = setTimeout(() => { el.style.opacity = '0'; }, 2500);
+}
+async function cycleCamera() {
+  if (!navigator.mediaDevices) return;
+  const ds = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+  if (ds.length < 2) { camToast('연결된 카메라가 1대뿐입니다'); return; }
+  const old = video.srcObject, cur = old && old.getVideoTracks()[0] && old.getVideoTracks()[0].getSettings().deviceId;
+  const i = ds.findIndex(d => d.deviceId === cur), next = ds[(i + 1) % ds.length];
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: next.deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+    if (old) old.getTracks().forEach(t => t.stop());
+    video.srcObject = s; await video.play(); cam.vw = video.videoWidth; cam.vh = video.videoHeight;
+    try { localStorage.setItem(CAMK, next.deviceId); } catch (e) { }
+    camToast('카메라: ' + (next.label || '카메라 ' + ((i + 1) % ds.length + 1)));
+  } catch (e) { camToast('그 카메라를 열지 못했습니다'); }
+}
+
+{ // 화면 오른쪽 아래 작은 버튼: 키보드가 안 먹을 때 클릭으로 카메라 전환
+  const b = document.createElement('button'); b.textContent = '카메라 바꾸기 (V)';
+  b.style.cssText = 'position:fixed;right:20px;bottom:20px;z-index:50;padding:10px 18px;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:rgba(0,0,0,.45);color:#fff;font:600 18px Pretendard,sans-serif;cursor:pointer;opacity:.55';
+  b.onmouseenter = () => b.style.opacity = '1'; b.onmouseleave = () => b.style.opacity = '.55';
+  b.onclick = e => { e.stopPropagation(); cycleCamera(); };
+  document.body.appendChild(b);
+}
+
+async function initCamera() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showErr('카메라를 쓸 수 없습니다', '주소가 https:// 로 시작하는지 확인해 주세요.'); return;
+  }
+  let stream;
+  try {
+    let saved = ''; try { saved = localStorage.getItem(CAMK) || ''; } catch (e) { }
+    const base = { width: { ideal: 1280 }, height: { ideal: 720 } };
+    try { stream = await navigator.mediaDevices.getUserMedia({ video: saved ? Object.assign({ deviceId: { exact: saved } }, base) : Object.assign({ facingMode: 'user' }, base), audio: false }); }
+    catch (e) { if (!saved) throw e; stream = await navigator.mediaDevices.getUserMedia({ video: Object.assign({ facingMode: 'user' }, base), audio: false }); }
+  } catch (e) {
+    const n = e && e.name;
+    if (n === 'NotAllowedError' || n === 'SecurityError') showErr('카메라 권한이 거부되었습니다', '주소창 왼쪽 자물쇠 아이콘에서 카메라를 허용한 뒤 새로고침해 주세요.');
+    else if (n === 'NotFoundError' || n === 'OverconstrainedError') showErr('카메라를 찾을 수 없습니다', '웹캠이 연결되어 있는지 확인해 주세요.');
+    else if (n === 'NotReadableError' || n === 'AbortError') showErr('카메라를 쓸 수 없습니다', '다른 프로그램(화상회의 등)이 카메라를 쓰고 있을 수 있습니다. 닫고 새로고침해 주세요.');
+    else showErr('카메라를 시작하지 못했습니다', String(e && e.message || e));
+    return;
+  }
+  video.srcObject = stream; await video.play();
+  stream.getVideoTracks().forEach(t => t.addEventListener('ended', () => crCamLost()));   // 이중거울: 카메라가 끊기면 스스로 다시 연결
+  cam.vw = video.videoWidth; cam.vh = video.videoHeight;
+  const CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1';   // 정적 호스팅본(magic/): 라이브러리·wasm은 CDN, 모델은 Google 공식 저장소
+  try {
+    let lib, wasmBase;
+    lib = await import(CDN + '/vision_bundle.mjs'); wasmBase = CDN + '/wasm';
+    const fileset = await lib.FilesetResolver.forVisionTasks(wasmBase);
+    const GS = 'https://storage.googleapis.com/mediapipe-models';
+    const url = GS + '/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+    // 여러 사람 손이 잡혀도 화면에서 가장 크게 잡힌 두 손만 쓴다(그래서 모델은 최대 4손까지 받는다)
+    const make = d => lib.HandLandmarker.createFromOptions(fileset, { baseOptions: { modelAssetPath: url, delegate: d }, runningMode: 'VIDEO', numHands: 4, minHandDetectionConfidence: .5, minHandPresenceConfidence: .5, minTrackingConfidence: .5 });
+    try { hl = await make('GPU'); } catch (e) { hl = await make('CPU'); }
+  } catch (e) {
+    console.warn('모델 로드 실패', e);
+    showErr('인식 모델을 불러오지 못했습니다', '인터넷 연결을 확인해 주세요. (처음 한 번은 모델을 내려받습니다)');
+    return;
+  }
+  cam.ready = true;
+}
+// 카메라 영상(cover) → 캔버스 좌표, 좌우 반전(거울)
+function mapPt(nx, ny) {
+  const sc = Math.max(W / cam.vw, H / cam.vh), dw = cam.vw * sc, dh = cam.vh * sc, ox = (W - dw) / 2, oy = (H - dh) / 2;
+  return { x: W - (nx * dw + ox), y: ny * dh + oy };
+}
+function detect() {
+  if (mouseMode || !cam.ready || video.readyState < 2 || video.currentTime === lastVT) return;
+  lastVT = video.currentTime;
+  let ts = performance.now(); if (ts <= lastTs) ts = lastTs + 1; lastTs = ts;
+  try {
+    const r = hl.detectForVideo(video, ts), list = [];
+    for (const lm of (r.landmarks || [])) { const pts = lm.map(p => mapPt(p.x, p.y)); list.push({ pts, L: Math.hypot(pts[0].x - pts[9].x, pts[0].y - pts[9].y) }); }
+    list.sort((a, b) => b.L - a.L); rawHands = { t: now, list: list.slice(0, 2) };
+  } catch (e) { console.warn('hand', e); }
+}
+
+function txt(s, x, y, size, col = '#fff', align = 'center', weight = 800, alpha = 1) {
+  ctx.save(); ctx.globalAlpha *= alpha; ctx.font = `${weight} ${size}px ${FONT}`; ctx.textAlign = align; ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = size * .2; ctx.shadowOffsetY = size * .04; ctx.fillStyle = col; ctx.fillText(s, x, y); ctx.restore();
+}
+function pill(x, y, w, h, col = 'rgba(10,12,16,.62)') { ctx.save(); ctx.fillStyle = col; ctx.beginPath(); ctx.roundRect(x - w / 2, y - h / 2, w, h, h / 2); ctx.fill(); ctx.restore(); }
+
+let pops = [], fx = [], flash = 0, shake = 0;
+function pop(text, x, y, o = {}) { pops.push({ text, x, y, t: 0, dur: o.dur || 1.1, size: o.size || 84, col: o.col || '#fff', rise: o.rise === undefined ? 70 : o.rise }); }
+function burst(x, y, n = 18, col = ORANGE, spd = 520, life = .7) { for (let i = 0; i < n; i++) { const a = Math.random() * 7, s = rnd(.3, 1) * spd; fx.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, t: 0, life: rnd(.5, 1) * life, r: rnd(5, 11), col: Math.random() < .35 ? '#fff' : col }); } }
+function updateFx(dt) {
+  pops.forEach(p => p.t += dt); pops = pops.filter(p => p.t < p.dur);
+  fx.forEach(p => { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 900 * dt; p.vx *= .98; }); fx = fx.filter(p => p.t < p.life);
+  flash = Math.max(0, flash - dt * 3.5); shake = Math.max(0, shake - dt * 4);
+}
+function drawFx() {
+  fx.forEach(p => { ctx.globalAlpha = 1 - p.t / p.life; ctx.fillStyle = p.col; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill(); }); ctx.globalAlpha = 1;
+  pops.forEach(p => {
+    const k = p.t / p.dur, e = 1 - Math.pow(1 - Math.min(1, p.t / .25), 3);
+    ctx.save(); ctx.globalAlpha = k > .7 ? 1 - (k - .7) / .3 : 1;
+    const sc = lerp(.6, 1, e); ctx.translate(p.x, p.y - p.rise * e); ctx.scale(sc, sc);
+    txt(p.text, 0, 0, p.size, p.col); ctx.restore();
+  });
+  if (flash > 0) { ctx.fillStyle = `rgba(255,255,255,${flash * .55})`; ctx.fillRect(0, 0, W, H); }
+}
+
+/* ---------------- 보조 ---------------- */
+const easeOut = k => 1 - Math.pow(1 - clamp(k, 0, 1), 3);
+const easeIO = k => { k = clamp(k, 0, 1); return k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; };
+const wrapA = a => { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; };
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0;[a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+/* ---------------- 주문 정의 ---------------- */
+const SP = {
+  orb: { name: '에너지 구', how: '두 손을 마주 보게 벌리고 빙글빙글 돌리세요', card: '두 손으로 빙글빙글', need: 2, T: 3.4 },
+  push: { name: '발사', how: '손바닥을 펴서 앞으로 쭉 미세요', card: '손바닥 앞으로 쭉', need: 1, T: 2.6 },
+  fire: { name: '불꽃', how: '주먹을 쥐었다가 확 펴세요', card: '주먹 쥐었다 확 펴기', need: 1, T: 2.4 },
+  heart: { name: '하트', how: '엄지와 검지 끝을 맞대세요', card: '엄지 검지 끝 맞대기', need: 1, T: 2.6 },
+  tele: { name: '순간 이동', how: '편 손을 옆으로 쓸어 넘기세요', card: '편 손 옆으로 쓸기', need: 1, T: 2.6 },
+};
+const PRACTICE = ['orb', 'push', 'fire'];
+
+/* ---------------- 판정 (주문마다 방식이 다르다) ---------------- */
+const J = { orb: { p: 0, hit: false, sum: 0, last: null, block: 0, mid: null, L: 100, d: 0 }, push: { p: 0, hit: false, ratio: 1, block: 0 }, fire: { p: 0, hit: false, block: 0 },
+  heart: { p: 0, hit: false, hold: 0, block: 0 }, tele: { p: 0, hit: false, dx: 0, block: 0 } };
+let lenient = false, coolUntil = 0;
+function resetDet(k) {
+  const j = J[k]; j.p = 0; j.hit = false; j.block = now + .7;
+  if (k === 'orb') { j.sum = 0; j.last = null; }
+  if (k === 'heart') { j.hold = 0; hands.forEach(h => h.heart = 0); }
+  if (k === 'fire') hands.forEach(h => { h.fire.fd = 0; h.fire.lastFist = -9; });
+}
+function consume(k) { coolUntil = now + .8; resetDet(k); }
+function runDetectors(dt) {
+  for (const k in J) J[k].hit = false;
+  const hs = liveHands(), ok = now >= coolUntil;
+  { // 에너지 구: 두 손 사이 벡터의 누적 회전각(서로 반대 위상으로 돌아야 벡터가 돈다)
+    const j = J.orb, need = lenient ? 1.5 * Math.PI : 2.5 * Math.PI;
+    if (hs.length >= 2) {
+      const a = hs[0], b = hs[1], dd = dist(a.c, b.c);
+      j.mid = { x: (a.c.x + b.c.x) / 2, y: (a.c.y + b.c.y) / 2 }; j.L = (a.L + b.L) / 2; j.d = dd;
+      if (dd > j.L * 1.2) { const th = Math.atan2(b.c.y - a.c.y, b.c.x - a.c.x); if (j.last !== null) { const d = wrapA(th - j.last); if (Math.abs(d) < 2.0) j.sum += d; } j.last = th; } else j.last = null;
+    } else j.last = null;
+    j.p = clamp(Math.abs(j.sum) / need, 0, 1);
+    if (j.p >= 1 && ok && now >= j.block && j.mid) { j.hit = true; j.at = { x: j.mid.x, y: j.mid.y, L: j.L }; }
+  }
+  { // 발사: 편 손의 크기(손목~중지뿌리)가 0.7초 안에 커짐
+    const j = J.push, thr = lenient ? 1.22 : 1.3; let best = 1, bh = null;
+    for (const h of hs) {
+      if (h.hist.length < 4 || now - h.hist[0].t < .2) continue;
+      let mn = 1e9; for (const s of h.hist) if (now - s.t <= .7) mn = Math.min(mn, s.L);
+      const r = h.L / mn; if (h.open >= .45 && r > best) { best = r; bh = h; }
+    }
+    j.ratio = best; j.p = clamp((best - 1) / (thr - 1), 0, 1);
+    if (j.p >= 1 && ok && now >= j.block && bh) { j.hit = true; j.at = { x: bh.c.x, y: bh.c.y, L: bh.L, h: bh }; }
+  }
+  { // 불꽃: 주먹 상태가 잠깐 유지된 뒤 편 손 상태로 전환
+    const j = J.fire; let bp = 0, bh = null, hit = null;
+    for (const h of hs) {
+      const f = h.fire;
+      if (h.open < .3) { f.fd += dt; f.lastFist = now; bp = Math.max(bp, Math.min(f.fd / .12, 1) * .5); }
+      else {
+        if (now - f.lastFist > .8) f.fd = 0;
+        if (f.fd >= .12 && now - f.lastFist < .8) { bp = Math.max(bp, .5 + .5 * clamp((h.open - .3) / .4, 0, 1)); if (h.open > .7) hit = h; }
+        else if (h.open > .7) f.fd = 0;
+      }
+    }
+    j.p = bp; if (hit && ok && now >= j.block) { j.hit = true; j.at = { x: hit.c.x, y: hit.c.y, L: hit.L, h: hit }; hit.fire.fd = 0; }
+  }
+  { // 하트: 엄지·검지 끝 근접 + 나머지 손가락 접힘이 잠깐 유지
+    const j = J.heart; let bp = 0, bh = null;
+    for (const h of hs) {
+      const good = h.pinch < .45 && h.curled && h.m.ext[0] > 1.1;
+      h.heart = good ? h.heart + dt : Math.max(0, h.heart - dt * 2);
+      const p = clamp(h.heart / (lenient ? .25 : .35), 0, 1); if (p > bp) { bp = p; bh = h; }
+    }
+    j.p = bp; if (bp >= 1 && ok && now >= j.block) { j.hit = true; j.at = { x: (bh.lm[4].x + bh.lm[8].x) / 2, y: (bh.lm[4].y + bh.lm[8].y) / 2, L: bh.L, h: bh }; }
+  }
+  { // 순간 이동: 편 손이 0.5초 안에 가로로 빠르게 이동
+    const j = J.tele, thr = lenient ? 400 : 520; let bp = 0, bh = null, bdx = 0;
+    for (const h of hs) {
+      if (h.open < .5) continue; let bx = 0;
+      for (const s of h.hist) { const age = now - s.t; if (age > .5 || age < .12) continue; const dx = h.c.x - s.x, dy = h.c.y - s.y; if (Math.abs(dy) < .7 * Math.abs(dx) && Math.abs(dx) > Math.abs(bx)) bx = dx; }
+      const p = Math.abs(bx) / thr; if (p > bp) { bp = p; bh = h; bdx = bx; }
+    }
+    j.dx = bdx; j.p = clamp(bp, 0, 1);
+    if (j.p >= 1 && ok && now >= j.block && bh) { j.hit = true; j.at = { x: bh.c.x, y: bh.c.y, L: bh.L, dir: Math.sign(bdx), h: bh }; }
+  }
+}
+
+/* ---------------- 입자 · 효과 ---------------- */
+let P2 = [], EFX = [], tele = null;
+const snap = document.createElement('canvas'); snap.width = 960; snap.height = 540; const snapC = snap.getContext('2d');
+function spark(x, y, o) { P2.push(Object.assign({ x, y, vx: 0, vy: 0, g: 0, drag: 1, t: 0, life: 1, r: 8, r1: 0, col: '#fff', shape: 'dot', rot: 0, add: true }, o)); }
+function updateP2(dt) {
+  for (const p of P2) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += p.g * dt; const d = Math.pow(p.drag, dt * 60); p.vx *= d; p.vy *= d; }
+  P2 = P2.filter(p => p.t < p.life); if (P2.length > 1600) P2.splice(0, P2.length - 1600);
+  for (const e of EFX) { e.t += dt; if (e.upd) e.upd(dt, e.t / e.dur); } EFX = EFX.filter(e => e.t < e.dur);
+  if (tele) { tele.t += dt; if (tele.t > .6) tele = null; }
+}
+function heartPath(c, r) { c.beginPath(); c.moveTo(0, r * .9); c.bezierCurveTo(-r * 1.6, -r * .1, -r * .8, -r * 1.2, 0, -r * .5); c.bezierCurveTo(r * .8, -r * 1.2, r * 1.6, -r * .1, 0, r * .9); c.closePath(); }
+function glowCircle(x, y, r, a, col = '255,150,70') {
+  if (r < 1 || a <= 0) return; const c = ctx; c.save(); c.globalCompositeOperation = 'lighter';
+  const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(255,255,255,${a})`); g.addColorStop(.25, `rgba(${col},${a * .75})`); g.addColorStop(1, `rgba(${col},0)`);
+  c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); c.restore();
+}
+function ring(x, y, r, a, w, col) { if (r < 1 || a <= 0) return; const c = ctx; c.save(); c.globalAlpha = clamp(a, 0, 1); c.strokeStyle = col; c.lineWidth = w; c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke(); c.restore(); }
+function drawP2() {
+  const c = ctx; let op = '';
+  for (const p of P2) {
+    const k = p.t / p.life, r = lerp(p.r, p.r1, k), want = p.add ? 'lighter' : 'source-over';
+    if (want !== op) { c.globalCompositeOperation = want; op = want; }
+    c.globalAlpha = clamp(1 - k, 0, 1);
+    if (p.shape === 'heart') { c.save(); c.translate(p.x, p.y); c.rotate(p.rot + k * .6); c.fillStyle = p.col; c.shadowColor = 'rgba(255,126,49,.7)'; c.shadowBlur = 18; heartPath(c, r); c.fill(); c.restore(); }
+    else if (p.shape === 'streak') { c.strokeStyle = p.col; c.lineWidth = r; c.lineCap = 'round'; c.beginPath(); c.moveTo(p.x, p.y); c.lineTo(p.x - p.vx * .05, p.y - p.vy * .05); c.stroke(); }
+    else { c.fillStyle = p.col; c.beginPath(); c.arc(p.x, p.y, r, 0, 7); c.fill(); c.globalAlpha *= .22; c.beginPath(); c.arc(p.x, p.y, r * 2.4, 0, 7); c.fill(); }
+  }
+  c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
+  for (const e of EFX) { ctx.save(); e.draw(e.t / e.dur, e.t); ctx.restore(); }
+}
+function cast(key, at) {
+  const x = at.x, y = at.y, L = at.L || 100, c1 = () => pick([ORANGE, '#fff', ORANGE_L, '#FFD0A8']);
+  sfx[key](); audio();
+  if (key === 'orb') {
+    flash = Math.max(flash, .4);
+    EFX.push({ t: 0, dur: 1.1, draw: k => { glowCircle(x, y, lerp(80, 420, easeOut(k)), (1 - k) * .9); ring(x, y, lerp(30, 460, easeOut(k)), 1 - k, 12, '#fff'); ring(x, y, lerp(30, 320, easeOut(k)), 1 - k, 8, ORANGE); } });
+    for (let i = 0; i < 80; i++) { const a = Math.random() * 7, s = rnd(200, 900); spark(x, y, { vx: Math.cos(a) * s, vy: Math.sin(a) * s, drag: .95, life: rnd(.6, 1.2), r: rnd(5, 11), col: c1() }); }
+  } else if (key === 'push') {
+    const vp = { x: 960, y: 260 }; flash = Math.max(flash, .25);
+    EFX.push({ t: 0, dur: 1.1, draw: k => {
+      const c = ctx; c.save(); c.globalCompositeOperation = 'lighter';
+      const g = c.createLinearGradient(x, y, vp.x, vp.y); g.addColorStop(0, `rgba(255,255,255,${.85 * (1 - k)})`); g.addColorStop(1, 'rgba(255,126,49,0)');
+      c.strokeStyle = g; c.lineWidth = L * 1.3 * (1 - k * .5); c.lineCap = 'round'; c.beginPath(); c.moveTo(x, y); c.lineTo(vp.x, vp.y); c.stroke(); c.restore();
+      for (let i = 0; i < 7; i++) { const e = Math.pow((k * 1.3 + i / 7) % 1, 1.5); ring(lerp(x, vp.x, e), lerp(y, vp.y, e), lerp(L * 1.5, 6, e), (1 - e) * (1 - k * .6), 7, i % 2 ? ORANGE : '#fff'); }
+      glowCircle(vp.x, vp.y, 60 + 300 * easeOut(k), (1 - k) * .8);
+    } });
+  } else if (key === 'fire') {
+    flash = Math.max(flash, .5);
+    for (let i = 0; i < 40; i++) { const a = Math.random() * 7, s = rnd(150, 800); spark(x, y, { vx: Math.cos(a) * s, vy: Math.sin(a) * s - 150, g: -150, drag: .95, life: rnd(.5, 1.1), r: rnd(5, 12), col: pick([ORANGE, ORANGE_L, '#FFD08A', '#fff']) }); }
+    EFX.push({ t: 0, dur: .9, upd: () => { const h = at.h && now - at.h.seen < .3 ? at.h.c : { x, y };
+      for (let i = 0; i < 3; i++) spark(h.x + rnd(-L * .5, L * .5), h.y + rnd(-L * .4, L * .2), { vx: rnd(-90, 90), vy: rnd(-560, -200), g: -200, drag: .97, life: rnd(.4, .9), r: rnd(6, 14), col: pick([ORANGE, ORANGE_L, '#FFD08A', '#fff']) }); },
+      draw: k => glowCircle(x, y, L * 2.2 * (1 - k * .5), .35 * (1 - k)) });
+  } else if (key === 'heart') {
+    for (let i = 0; i < 18; i++) spark(x + rnd(-L * .8, L * .8), y - L * .3, { vx: rnd(-240, 240), vy: rnd(-460, -180), g: 80, drag: .985, life: rnd(1.3, 2.1), r: rnd(30, 62), r1: rnd(14, 30), col: pick([ORANGE, '#FFD2B5', '#fff', ORANGE_L]), shape: 'heart', add: false, rot: rnd(-.5, .5) });
+    EFX.push({ t: 0, dur: .9, draw: k => { glowCircle(x, y, L * 3 * easeOut(k), (1 - k) * .6); ring(x, y, L * 2.6 * easeOut(k), 1 - k, 8, '#fff'); } });
+  } else if (key === 'tele') {
+    snapC.drawImage(cv, 0, 0, 960, 540); tele = { t: 0, dir: at.dir >= 0 ? 1 : -1 };
+    for (let i = 0; i < 30; i++) spark(tele.dir > 0 ? -50 : W + 50, rnd(80, 1000), { vx: tele.dir * rnd(2400, 4200), shape: 'streak', r: rnd(3, 8), life: rnd(.25, .5), col: pick(['#fff', ORANGE, ORANGE_L]) });
+  }
+}
+function drawTele() {
+  if (!tele) return; const c = ctx, p = clamp(tele.t / .5, 0, 1), off = tele.dir * W * p * p * p, x0 = off;
+  c.save(); c.globalAlpha = 1 - clamp((tele.t - .45) / .15, 0, 1); c.drawImage(snap, x0, 0, W, H);
+  const ex = tele.dir > 0 ? x0 : x0 + W, g = c.createLinearGradient(ex - tele.dir * 160, 0, ex + tele.dir * 20, 0);
+  g.addColorStop(0, 'rgba(255,126,49,0)'); g.addColorStop(.8, 'rgba(255,255,255,.85)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  c.globalCompositeOperation = 'lighter'; c.fillStyle = g; c.fillRect(Math.min(ex - tele.dir * 160, ex + tele.dir * 20), 0, 180, H); c.restore();
+}
+
+/* ---------------- 손 그리기 ---------------- */
+function drawHand(pts, a = 1) {
+  const c = ctx, L = Math.hypot(pts[0].x - pts[9].x, pts[0].y - pts[9].y);
+  c.save(); c.globalAlpha = a; c.lineCap = 'round'; c.lineJoin = 'round';
+  c.fillStyle = 'rgba(255,126,49,.16)'; c.beginPath(); [0, 1, 5, 9, 13, 17].forEach((i, n) => n ? c.lineTo(pts[i].x, pts[i].y) : c.moveTo(pts[i].x, pts[i].y)); c.closePath(); c.fill();
+  c.globalCompositeOperation = 'lighter'; c.strokeStyle = 'rgba(255,126,49,.42)'; c.lineWidth = Math.max(6, L * .17); c.beginPath(); for (const [i, j] of BONES) { c.moveTo(pts[i].x, pts[i].y); c.lineTo(pts[j].x, pts[j].y); } c.stroke();
+  c.globalCompositeOperation = 'source-over'; c.strokeStyle = 'rgba(255,255,255,.95)'; c.lineWidth = Math.max(2.5, L * .045); c.beginPath(); for (const [i, j] of BONES) { c.moveTo(pts[i].x, pts[i].y); c.lineTo(pts[j].x, pts[j].y); } c.stroke();
+  pts.forEach((p, i) => { c.fillStyle = [4, 8, 12, 16, 20].includes(i) ? ORANGE_L : '#fff'; c.beginPath(); c.arc(p.x, p.y, Math.max(3, L * ([4, 8, 12, 16, 20].includes(i) ? .075 : .045)), 0, 7); c.fill(); });
+  c.restore();
+}
+// 가상 손이 주문을 시연한다. (cx,cy)=중심, s=손바닥 길이(px). 반환 없음, 직접 그린다
+function drawDemo(key, t, cx, cy, s, a = 1) {
+  const c = ctx, T = SP[key].T, u = (t % T) / T, op = (u > .88 ? 1 - (u - .88) / .12 : 1) * a;
+  if (key === 'orb') {
+    const th = -Math.PI / 2 + easeIO(u / .85) * Math.PI * 3, r = s * 1.35, ox = Math.cos(th) * r, oy = Math.sin(th) * r, pz = handPose(.1);
+    drawHand(place(pz, cx + ox, cy + oy, s), op); drawHand(place(pz, cx - ox, cy - oy, s), op);
+    glowCircle(cx, cy, s * (.25 + .85 * Math.min(1, u / .85)), op * .9);
+  } else if (key === 'push') {
+    const k = easeIO((u - .15) / .45), Ls = s * (1 + .9 * k);
+    drawHand(place(handPose(0), cx, cy, Ls), op);
+    if (u > .55 && u < .9) { const q = (u - .55) / .35; ring(cx, cy - s * .2, Ls * (1 + q * 1.2), (1 - q) * op, Math.max(3, s * .06), ORANGE); ring(cx, cy - s * .2, Ls * (.7 + q * 1.5), (1 - q) * op, Math.max(3, s * .04), '#fff'); }
+  } else if (key === 'fire') {
+    const cu = u < .4 ? 1 : u < .5 ? 1 - (u - .4) / .1 : 0; drawHand(place(handPose(cu), cx, cy, s), op);
+    if (u > .5) { const q = (u - .5) / .5; c.save(); c.globalAlpha = (1 - q) * op; c.strokeStyle = ORANGE_L; c.lineWidth = Math.max(3, s * .06); c.lineCap = 'round';
+      for (let i = 0; i < 12; i++) { const an = i * Math.PI / 6, r0 = s * (.9 + q * .5), r1 = s * (1.3 + q * 1.2); c.beginPath(); c.moveTo(cx + Math.cos(an) * r0, cy + Math.sin(an) * r0); c.lineTo(cx + Math.cos(an) * r1, cy + Math.sin(an) * r1); c.stroke(); } c.restore(); glowCircle(cx, cy, s * 1.6 * q, (1 - q) * .6 * op); }
+  } else if (key === 'heart') {
+    const pin = easeIO((u - .1) / .25), hp = place(handPose([.45, 1, 1, 1], pin), cx, cy + s * .3, s); drawHand(hp, op); if (pin > .6) ring(hp[8].x, hp[8].y, s * .3, op, Math.max(3, s * .05), '#fff');
+    if (u > .4) { const q = (u - .4) / .5; c.save(); c.globalAlpha = (1 - q * q) * op; c.translate(cx, cy - s * 1.7 - q * s * .6); c.scale(.4 + q * .6, .4 + q * .6); c.fillStyle = ORANGE; c.shadowColor = 'rgba(255,126,49,.8)'; c.shadowBlur = 24; heartPath(c, s * .55); c.fill(); c.restore(); }
+  } else if (key === 'tele') {
+    const k = easeIO((u - .1) / .5), off = lerp(-2.2, 2.2, k) * s;
+    for (let i = 3; i >= 1; i--) { const kk = easeIO((u - .1 - i * .03) / .5), o2 = lerp(-2.2, 2.2, kk) * s; if (u > .1 && u < .7) drawHand(place(handPose(0), cx + o2, cy, s), op * .18); }
+    drawHand(place(handPose(0), cx + off, cy, s), op);
+  }
+}
+function drawLiveHands() { for (const h of liveHands()) drawHand(h.lm, .95); }
+
+/* ---------------- 흐름 ---------------- */
+const S = { mode: 'idle' };
+let F = null, idleT = 0, engT = 0, lostT = 0, absentT = 0, gauge = 0, lastMid = { x: 960, y: 540 };
+function toIdle() { S.mode = 'idle'; F = null; idleT = 0; engT = 0; lostT = 0; absentT = 0; gauge = 0; pops = []; fx = []; P2 = []; EFX = []; tele = null; flash = 0; lenient = false; }
+function startFlow() {
+  audio(); sfx.start(); S.mode = 'flow'; lostT = 0; absentT = 0; gauge = 0; lenient = false;
+  F = { ph: 'p-demo', t: 0, pi: 0, qi: 0, q: shuffle(Object.keys(SP)), score: 0, key: PRACTICE[0], rt: 0, ok: false };
+  for (const k in J) resetDet(k);
+}
+function setPh(ph) { F.ph = ph; F.t = 0; lenient = ph[0] === 'x' || ph[0] === 'f'; }
+function gotoExam() { setPh('x-intro'); F.qi = 0; F.score = 0; F.key = null; }
+function gradeOf(n) { return n >= 5 ? '대마법사' : n === 4 ? '마법사' : n === 3 ? '견습 마법사' : '마법 입문자'; }
+
+function stepFlow(dt) {
+  F.t += dt;
+  const lh = liveHands(), big = lh.filter(h => h.L >= HAND_MIN).length, ph = F.ph;
+  const watching = ph === 'p-try' || ph === 'x-run' || ph === 'f-build' || ph === 'f-push';
+  const want = !watching ? 0 : ph === 'f-push' ? 1 : (F.key ? SP[F.key].need : 1);
+  if (watching && big < want) lostT += dt; else lostT = 0;
+  F.guide = lostT > .7 ? (lh.length > big ? '조금 더 가까이' : (want === 2 && big === 1 ? '두 손을 보여 주세요' : '손을 화면에 보여 주세요')) : null;
+  if (lh.length === 0) absentT += dt; else absentT = 0;
+  if (absentT > 10) { toIdle(); return; }
+  const key = F.key, paused = !!F.guide;
+  const target = (ph === 'p-try' || ph === 'x-run') ? J[key].p : ph === 'f-build' ? J.orb.p : 0;
+  gauge = lerp(gauge, target, 1 - Math.exp(-dt * 12));
+  if (J.orb.mid && lh.length >= 2) lastMid = J.orb.mid;
+  if (ph === 'p-demo') { if (F.t > 2.8) { setPh('p-try'); resetDet(key); } }
+  else if (ph === 'p-try') {
+    if (J[key].hit) { cast(key, J[key].at); consume(key); setPh('p-win'); pop('성공', 960, 330, { size: 110, col: ORANGE, dur: 1.2 }); }
+    else if (F.t > 35 && !paused) { sfx.no(); setPh('p-win'); F.skipped = true; }
+    else if (key === 'orb' && F.t % .3 < dt && J.orb.p > .05 && J.orb.p < 1) sfx.tick(J.orb.p);
+  } else if (ph === 'p-win') {
+    if (F.t > 1.8) { F.skipped = false; F.pi++; if (F.pi < PRACTICE.length) { F.key = PRACTICE[F.pi]; setPh('p-demo'); } else gotoExam(); }
+  } else if (ph === 'x-intro') { if (F.t > 2.2) { F.key = F.q[0]; setPh('x-ready'); } }
+  else if (ph === 'x-ready') { if (F.t > .9) { setPh('x-run'); F.rt = 0; resetDet(key); } }
+  else if (ph === 'x-run') {
+    if (!paused) F.rt += dt;
+    if (J[key].hit) { cast(key, J[key].at); consume(key); F.score++; F.ok = true; setPh('x-res'); pop('성공', 960, 330, { size: 110, col: ORANGE, dur: 1 }); }
+    else if (F.rt >= 3) { F.ok = false; sfx.no(); setPh('x-res'); pop('다음 문제', 960, 330, { size: 80, col: '#D9D9D9', dur: .9 }); }
+  } else if (ph === 'x-res') {
+    if (F.t > (F.ok ? 1.3 : .9)) { F.qi++; if (F.qi < F.q.length) { F.key = F.q[F.qi]; setPh('x-ready'); } else { F.key = 'orb'; setPh('f-build'); resetDet('orb'); } }
+  } else if (ph === 'f-build') {
+    if (J.orb.hit) { consume('orb'); resetDet('push'); setPh('f-push'); sfx.orb(); }
+    else if (F.t > 25) toIdle();
+  } else if (ph === 'f-push') {
+    if (J.push.hit || F.t > 7) { consume('push'); setPh('f-boom'); F.boomed = false; F.grade = gradeOf(F.score); sfx.push(); }
+  } else if (ph === 'f-boom') {
+    if (!F.boomed && F.t >= .8) {
+      F.boomed = true; sfx.boom(); flash = 1;
+      EFX.push({ t: 0, dur: 1.6, draw: k => { glowCircle(960, 470, lerp(100, 1100, easeOut(k)), (1 - k) * .9); ring(960, 470, lerp(60, 1000, easeOut(k)), 1 - k, 16, '#fff'); ring(960, 470, lerp(40, 760, easeOut(k)), 1 - k, 10, ORANGE); } });
+      for (let i = 0; i < 220; i++) { const a = Math.random() * 7, s = rnd(200, 1500); spark(960, 470, { vx: Math.cos(a) * s, vy: Math.sin(a) * s, drag: .955, life: rnd(.8, 1.8), r: rnd(5, 13), col: pick([ORANGE, '#fff', ORANGE_L, '#FFD0A8']) }); }
+    }
+    if (F.t > 8.4) toIdle();
+  }
+}
+function stepIdle(dt) {
+  idleT += dt;
+  const lh = liveHands(), big = lh.filter(h => h.L >= HAND_MIN).length;
+  engT = big ? engT + dt : 0; if (engT > .5) { startFlow(); return; }
+  if (Math.random() < dt * 5) spark(rnd(0, W), H + 20, { vy: -rnd(40, 120), vx: rnd(-20, 20), r: rnd(3, 7), life: 5, col: ORANGE_L });
+}
+
+/* ---------------- 그리기: 안내·가이드 ---------------- */
+function bigHand() { return liveHands().sort((a, b) => b.L - a.L)[0]; }
+function drawGuide(key) {
+  const c = ctx, h = bigHand(), t = now;
+  if (key === 'orb') {
+    const hs = liveHands(); if (hs.length < 2 || !J.orb.mid) return; const m = J.orb.mid, r = Math.max(60, J.orb.d / 2);
+    c.save(); c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = 6; c.setLineDash([22, 18]); c.lineDashOffset = -t * 60; c.beginPath(); c.arc(m.x, m.y, r, 0, 7); c.stroke(); c.setLineDash([]);
+    const an = t * 3.2; c.translate(m.x + Math.cos(an) * r, m.y + Math.sin(an) * r); c.rotate(an + Math.PI / 2); c.fillStyle = ORANGE; c.beginPath(); c.moveTo(0, -22); c.lineTo(17, 12); c.lineTo(-17, 12); c.closePath(); c.fill(); c.restore();
+  } else if (!h) return;
+  else if (key === 'push') { for (let i = 0; i < 3; i++) { const q = (t * .9 + i / 3) % 1; ring(h.c.x, h.c.y, h.L * (.8 + .9 * q), (1 - q) * .9, 7, ORANGE); } }
+  else if (key === 'fire') {
+    const q = (t % 1.6) / 1.6, r = h.L * (q < .5 ? lerp(1.3, .5, q * 2) : lerp(.5, 2, (q - .5) * 2)); ring(h.c.x, h.c.y, r, .9, 8, q < .5 ? '#fff' : ORANGE);
+    if (q >= .5) { c.save(); c.strokeStyle = ORANGE_L; c.lineWidth = 6; c.lineCap = 'round'; for (let i = 0; i < 10; i++) { const an = i * Math.PI / 5, a0 = h.L * .8, a1 = a0 + (q - .5) * h.L * 2; c.beginPath(); c.moveTo(h.c.x + Math.cos(an) * a0, h.c.y + Math.sin(an) * a0); c.lineTo(h.c.x + Math.cos(an) * a1, h.c.y + Math.sin(an) * a1); c.stroke(); } c.restore(); }
+  } else if (key === 'heart') {
+    const mx = (h.lm[4].x + h.lm[8].x) / 2, my = (h.lm[4].y + h.lm[8].y) / 2, q = .5 + .5 * Math.sin(t * 6); c.save(); c.setLineDash([10, 10]); ring(mx, my, h.L * (.35 + .2 * q), .95, 6, '#fff'); c.restore();
+  } else if (key === 'tele') {
+    const q = (t % 1.8) / 1.8, dir = (Math.floor(t / 1.8) % 2) ? -1 : 1, y = h.c.y - h.L * 1.7, len = h.L * 2.6;
+    c.save(); c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = 7; c.lineCap = 'round'; c.setLineDash([24, 18]); c.lineDashOffset = -t * 90;
+    c.beginPath(); c.moveTo(h.c.x - dir * len, y); c.lineTo(h.c.x + dir * len, y); c.stroke(); c.setLineDash([]);
+    const ax = h.c.x + dir * len; c.fillStyle = ORANGE; c.beginPath(); c.moveTo(ax + dir * 34, y); c.lineTo(ax - dir * 6, y - 26); c.lineTo(ax - dir * 6, y + 26); c.closePath(); c.fill();
+    ring(h.c.x + dir * lerp(-len, len, easeIO(q)), y, 14, 1, 8, ORANGE); c.restore();
+  }
+}
+function drawLiveOrb(p) {
+  const hs = liveHands(); if (hs.length < 2 || !J.orb.mid) return; const m = J.orb.mid, r = 30 + 200 * p;
+  glowCircle(m.x, m.y, r * 1.6, .7 + .3 * Math.sin(now * 12)); glowCircle(m.x, m.y, r * .7, .9);
+  ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 3; ctx.globalCompositeOperation = 'lighter';
+  for (const h of hs) for (let i = 0; i < 2; i++) { ctx.beginPath(); let x = h.c.x, y = h.c.y; ctx.moveTo(x, y); for (let k = 1; k <= 5; k++) { const q = k / 5; x = lerp(h.c.x, m.x, q) + (k < 5 ? rnd(-18, 18) : 0); y = lerp(h.c.y, m.y, q) + (k < 5 ? rnd(-18, 18) : 0); ctx.lineTo(x, y); } ctx.stroke(); }
+  ctx.restore();
+  if (p > .02) { const a = now * (3 + p * 12); for (let i = 0; i < 3; i++) { const an = a + i * 2.1; spark(m.x + Math.cos(an) * r * 1.1, m.y + Math.sin(an) * r * 1.1, { r: 6, life: .35, col: i ? '#fff' : ORANGE_L }); } }
+}
+function drawGauge(p, label) {
+  const c = ctx, w = 880, x = 960 - w / 2, y = 1000;
+  c.save(); c.fillStyle = 'rgba(10,12,16,.6)'; c.beginPath(); c.roundRect(x - 14, y - 26, w + 28, 52, 26); c.fill();
+  c.fillStyle = 'rgba(255,255,255,.18)'; c.beginPath(); c.roundRect(x, y - 14, w, 28, 14); c.fill();
+  if (p > .01) { const g = c.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, ORANGE_D); g.addColorStop(1, ORANGE_L); c.fillStyle = g; c.shadowColor = ORANGE; c.shadowBlur = 24; c.beginPath(); c.roundRect(x, y - 14, Math.max(28, w * p), 28, 14); c.fill(); }
+  c.restore();
+}
+function head(title, how, y = 110) { pill(960, y + 6, Math.max(560, how.length * 50 + 120), 190, 'rgba(10,12,16,.55)'); txt(title, 960, y - 24, 88, '#fff'); txt(how, 960, y + 62, 46, '#FFD0A8', 'center', 700); }
+function drawGuideHand(msg) {
+  const k = .55 + .25 * Math.sin(now * 4); drawHand(place(handPose(0), 960, 520, 230), k);
+  pill(960, 880, msg.length * 78 + 160, 130, 'rgba(10,12,16,.62)'); txt(msg, 960, 880, 78, '#fff');
+}
+
+function drawIdle() {
+  const c = ctx; c.fillStyle = 'rgba(8,10,14,.28)'; c.fillRect(0, 0, W, H);
+  const keys = Object.keys(SP), tot = keys.reduce((a, k) => a + SP[k].T, 0); let tt = idleT % tot, key = keys[0];
+  for (const k of keys) { if (tt < SP[k].T) { key = k; break; } tt -= SP[k].T; }
+  drawDemo(key, tt, 960, 470, 190, .9);
+  const lh = liveHands(), small = lh.length && !lh.some(h => h.L >= HAND_MIN) && lh.some(h => h.L >= HAND_NEAR);
+  const msg = small ? '조금 더 가까이' : '손을 들어 보세요'; pill(960, 930, msg.length * 84 + 160, 140, 'rgba(10,12,16,.6)'); txt(msg, 960, 930, 88, '#fff');
+}
+function drawCard() {
+  const c = ctx, key = F.key, q = F.qi, e = F.ph === 'x-ready' ? easeOut(F.t / .4) : 1, x = 70 - 700 * (1 - e), y = 220, w = 560, h = 720;
+  c.save(); c.translate(x, 0); c.fillStyle = 'rgba(10,12,16,.68)'; c.strokeStyle = ORANGE; c.lineWidth = 5; c.beginPath(); c.roundRect(0, y, w, h, 44); c.fill(); c.stroke();
+  txt(`시험 ${q + 1}/${F.q.length}`, w / 2, y + 52, 38, '#D9D9D9', 'center', 700);
+  if (key === 'heart' || key === 'tele') { pill(w / 2, y + 112, 230, 56, ORANGE); txt('깜짝 주문', w / 2, y + 113, 34, '#fff'); }
+  c.save(); c.beginPath(); c.roundRect(10, y + 150, w - 20, 380, 30); c.clip(); drawDemo(key, F.ph === 'x-ready' ? F.t * .5 : F.t, w / 2, y + 345, { orb: 78, push: 88, fire: 140, heart: 150, tele: 92 }[key], 1); c.restore();
+  txt(SP[key].name, w / 2, y + 578, 84, '#fff'); txt(SP[key].card, w / 2, y + 642, 40, '#FFD0A8', 'center', 700);
+  const k = F.ph === 'x-run' ? 1 - F.rt / 3 : F.ph === 'x-ready' ? 1 : F.ok ? 1 - F.rt / 3 : 0;
+  c.fillStyle = 'rgba(255,255,255,.2)'; c.beginPath(); c.roundRect(50, y + h - 28, w - 100, 14, 7); c.fill();
+  if (k > 0) { c.fillStyle = k < .34 ? '#fff' : ORANGE; c.beginPath(); c.roundRect(50, y + h - 28, (w - 100) * clamp(k, 0, 1), 14, 7); c.fill(); }
+  c.restore();
+}
+function drawMeToWe(k) {
+  const c = ctx, parts = [['ME', 330, '#fff'], ['to', 210, ORANGE], ['WE', 330, '#fff']], gap = 46; c.save(); c.textBaseline = 'middle';
+  const ws = parts.map(([s, z]) => { c.font = `900 ${z}px ${FONT}`; return c.measureText(s).width; }), tw = ws.reduce((a, b) => a + b, 0) + gap * 2; let x = 960 - tw / 2;
+  parts.forEach(([s, z, col], i) => {
+    const kk = clamp((k - i * .13) / .5, 0, 1), sc = kk < 1 ? 1 + .35 * Math.sin(kk * Math.PI) * (1 - kk) + (kk - 1) : 1, ee = easeOut(kk), cx = x + ws[i] / 2;
+    c.save(); c.globalAlpha = ee; c.translate(cx, 470); c.scale(lerp(2.4, 1, ee) * (kk > .8 ? 1 + .05 * Math.sin((kk - .8) * 15) : 1), lerp(2.4, 1, ee)); c.font = `900 ${z}px ${FONT}`; c.textAlign = 'center';
+    c.shadowColor = 'rgba(255,126,49,.9)'; c.shadowBlur = 50; c.fillStyle = col; c.fillText(s, 0, 0); c.shadowBlur = 0; c.restore(); x += ws[i] + gap;
+  }); c.restore();
+}
+function drawFlow() {
+  const c = ctx, ph = F.ph, key = F.key;
+  if (ph === 'p-demo') { c.fillStyle = 'rgba(8,10,14,.45)'; c.fillRect(0, 0, W, H); txt(`연습 ${F.pi + 1}/3`, 960, 80, 44, '#D9D9D9', 'center', 700); drawDemo(key, F.t, 960, 560, 200, 1); head(SP[key].name, SP[key].how, 180); }
+  else if (ph === 'p-try' || ph === 'p-win') {
+    txt(`연습 ${F.pi + 1}/3`, 130, 70, 38, '#D9D9D9', 'left', 700); if (ph === 'p-try') { head(SP[key].name, SP[key].how); drawGuide(key); } else { pill(960, 116, 560, 130, 'rgba(10,12,16,.55)'); txt(F.skipped ? '다음 주문으로' : SP[key].name, 960, 116, 84, '#fff'); }
+    if (ph === 'p-try') { c.save(); c.beginPath(); c.roundRect(60, 600, 440, 440, 40); c.fillStyle = 'rgba(10,12,16,.55)'; c.fill(); c.clip(); drawDemo(key, now, 280, 830, 78, 1); c.restore(); drawGauge(gauge); }
+  } else if (ph === 'x-intro') { c.fillStyle = 'rgba(8,10,14,.5)'; c.fillRect(0, 0, W, H); txt('마법 시험', 960, 440, 170, '#fff'); pill(960, 620, 1100, 120, 'rgba(255,126,49,.95)'); txt('카드의 손동작을 따라 하세요', 960, 620, 64, '#fff'); }
+  else if (ph === 'x-ready' || ph === 'x-run' || ph === 'x-res') { drawCard(); if (ph === 'x-run') { drawGuide(key); drawGauge(gauge); } }
+  else if (ph === 'f-build') { head('에너지 구를 만드세요', '두 손으로 빙글빙글'); drawGauge(gauge); }
+  else if (ph === 'f-push') { head('앞으로 미세요', '손바닥을 펴서 쭉'); }
+  else if (ph === 'f-boom') {
+    const t = F.t; c.fillStyle = `rgba(8,10,14,${.5 * clamp(t / .6, 0, 1)})`; c.fillRect(0, 0, W, H);
+    if (t < .8) { const k = easeIO(t / .8), x = lerp(lastMid.x, 960, k), y = lerp(lastMid.y, 470, k), r = lerp(230, 70, k * k); glowCircle(x, y, r * 1.7, 1); glowCircle(x, y, r * .8, 1); }
+    else {
+      drawMeToWe((t - .8) / 1.1);
+      if (t > 2.4) { const k = easeOut((t - 2.4) / .5); c.save(); c.globalAlpha = k; txt('마법사 등급', 960, 700, 54, '#D9D9D9', 'center', 700); txt(F.grade, 960, 810, 150, ORANGE, 'center', 900); txt(`5문제 중 ${F.score}개 성공`, 960, 920, 56, '#fff', 'center', 700); c.restore(); }
+    }
+  }
+}
+
+function drawDebug() {
+  const c = ctx; c.save(); c.font = `600 24px ${FONT}`; c.fillStyle = '#fff'; c.textAlign = 'left'; c.textBaseline = 'top'; c.shadowColor = 'rgba(0,0,0,.9)'; c.shadowBlur = 6;
+  const L = [`mode ${S.mode} ${F ? F.ph + ' key ' + F.key : ''} ${mouseMode ? 'mouse' : 'cam'} lenient ${lenient} fps ${fps | 0} 손 ${liveHands().length}`,
+    `orb ${J.orb.p.toFixed(2)} (회전 ${(J.orb.sum / Math.PI).toFixed(2)}π 거리 ${J.orb.d | 0})  push ${J.push.p.toFixed(2)} (배율 ${J.push.ratio.toFixed(2)})  fire ${J.fire.p.toFixed(2)}  heart ${J.heart.p.toFixed(2)}  tele ${J.tele.p.toFixed(2)} (dx ${J.tele.dx | 0})`];
+  for (const h of liveHands()) L.push(`손#${h.id} L ${h.L | 0}  open ${h.open.toFixed(2)}  pinch ${h.pinch.toFixed(2)}  curled ${h.curled}  ext ${h.m.ext.map(v => v.toFixed(2)).join('/')}  fd ${h.fire.fd.toFixed(2)} heart ${h.heart.toFixed(2)}`);
+  L.forEach((s, i) => c.fillText(s, 20, 140 + i * 32)); c.restore();
+  for (const h of liveHands()) { c.save(); c.strokeStyle = '#fff'; c.setLineDash([8, 8]); c.lineWidth = 2; c.beginPath(); c.arc(h.c.x, h.c.y, h.L, 0, 7); c.stroke(); c.restore(); }
+}
+
+function drawBackdrop() {
+  const c = ctx;
+  if (!mouseMode && cam.ready && video.readyState >= 2) {
+    const sc = Math.max(W / cam.vw, H / cam.vh), dw = cam.vw * sc, dh = cam.vh * sc;
+    c.save(); c.translate(W, 0); c.scale(-1, 1); c.drawImage(video, (W - dw) / 2, (H - dh) / 2, dw, dh); c.restore();
+  } else {
+    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#2A2F37'); g.addColorStop(1, '#14171C'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+    c.strokeStyle = 'rgba(255,255,255,.04)'; c.lineWidth = 2; for (let x = 0; x < W; x += 80) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, H); c.stroke(); }
+    for (let y = 0; y < H; y += 80) { c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }
+  }
+  const v = c.createRadialGradient(960, 540, 560, 960, 540, 1250); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.32)'); c.fillStyle = v; c.fillRect(0, 0, W, H);
+}
+
+/* ================= 혼잡도 계수 (2단계) =================
+   게임 카메라 프레임을 같이 쓰되 1~5초 간격으로만 돌린다. 영상·이미지는 저장도 전송도 하지 않고, 서버로는 구역별 숫자만 간다.
+   인식기·전송 계층은 혼잡도 계수기/js 사본(magic/cc/)을 쓴다. detector.js만 라이브러리·모델 주소를 CDN·Google 공식 저장소로 바꿨다. */
+const CK = 'axf-magician-crowd-v1';
+const crowd = Object.assign({ on: false, camName: 'AX 매지션 1', interval: 2000, tiles: 1, anchor: 'center', gpu: true, deviceId: '', camId: '', zones: [] }, (() => { try { return JSON.parse(localStorage.getItem(CK) || '{}'); } catch (e) { return {}; } })());
+const cr = { det: null, tr: null, srv: null, loading: false, busy: false, dets: [], total: 0, zc: {}, ms: 0, at: 0, err: '', draw: null, testSrc: null, sub: null, camId: '', fails: 0, since: Date.now(), noSrc: 0, recAt: 0, retry: null, sendOkAt: 0 };
+// 이중거울: 카메라 ID는 저장해 둔다(새로고침해도 같은 ID로 보내야 서버가 같은 카메라로 본다)
+cr.camId = crowd.camId || (crowd.camId = Math.random().toString(36).slice(2, 10));
+const crSave = () => { try { localStorage.setItem(CK, JSON.stringify({ on: crowd.on, camName: crowd.camName, interval: crowd.interval, tiles: crowd.tiles, anchor: crowd.anchor, gpu: crowd.gpu, deviceId: crowd.deviceId, camId: crowd.camId, zones: crowd.zones })); } catch (e) { } };
+const $ = id => document.getElementById(id);
+crSave();
+const crWorker = (() => { try { const w = new Worker(URL.createObjectURL(new Blob(['let t=null;onmessage=(e)=>{clearTimeout(t);t=setTimeout(()=>postMessage(0),e.data)}'], { type: 'text/javascript' }))); w.onmessage = () => crowdTick(); return w; } catch (e) { return null; } })();
+let crTimer = null;
+function crSchedule(ms) { if (crWorker) crWorker.postMessage(ms); else { clearTimeout(crTimer); crTimer = setTimeout(crowdTick, ms); } }
+
+async function crowdInit() {
+  if (cr.det || cr.loading) return; cr.loading = true; cr.err = '';
+  try {
+    const m = await import('./cc/detector.js'); const d = new m.PersonDetector(); await d.load('lite2', .35, crowd.gpu !== false); cr.det = d;
+    const t = await import('./cc/transport.js'); cr.tr = t.createTransport({ server: true }); cr.srv = cr.tr.server;
+    const sel = $('cpSrv'); sel.innerHTML = '<option value="off">끔</option>' + Object.entries(t.SERVERS).map(([k, v]) => `<option value="${k}">${v.name}</option>`).join('');
+    cr.srv.onStatus(crRenderSrv); crRenderSrv();
+  } catch (e) { console.warn('계수 모듈 로드 실패', e); cr.err = '계수 모듈을 불러오지 못했습니다(인터넷 연결 확인)'; }
+  cr.loading = false;
+  if (!cr.det) { cr.fails++; crRetryInit(); }
+}
+function crRetryInit() { clearTimeout(cr.retry); cr.retry = setTimeout(() => { if (crowd.on && !cr.det) { cr.err = ''; crowdInit().then(() => crSchedule(500)); } }, 15000); }
+function crSource() {
+  if (cr.testSrc) return cr.testSrc;
+  const v = cr.sub ? cr.sub.v : video;
+  if (v && v.readyState >= 2 && v.videoWidth) return { el: v, w: v.videoWidth, h: v.videoHeight };
+  return null;
+}
+// 영상 좌표(정규화) → 거울 화면 좌표. 구역은 거울 화면 기준으로 그린다
+function crDisp(nx, ny, sw, sh) { const sc = Math.max(W / sw, H / sh), dw = sw * sc, dh = sh * sc; return { x: W - (nx * dw + (W - dw) / 2), y: ny * dh + (H - dh) / 2 }; }
+function inPoly(p, pts) { let inside = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, yi] = pts[i], [xj, yj] = pts[j]; if (yi > p[1] !== yj > p[1] && p[0] < ((xj - xi) * (p[1] - yi)) / (yj - yi) + xi) inside = !inside; } return inside; }
+const crState = (z, n) => n >= z.crowd ? 'bad' : n >= z.warn ? 'mid' : 'ok';
+function crowdRows() { return crowd.zones.map(z => { const n = cr.zc[z.id] || 0; return { id: z.id, name: z.name, count: n, state: crState(z, n), warn: z.warn, crowd: z.crowd }; }); }
+
+async function crowdTick() {
+  if (!crowd.on) return;
+  if (!cr.det || cr.busy) { crSchedule(500); return; }
+  const src = crSource();
+  if (!src) { if (!cr.noSrc) cr.noSrc = Date.now(); if (Date.now() - cr.noSrc > 8000) { cr.err = '카메라 영상이 없습니다'; if (Date.now() - cr.noSrc > 20000) crCamRecover(); } crSchedule(500); return; }
+  if (cr.noSrc) { cr.noSrc = 0; if (cr.err === '카메라 영상이 없습니다') cr.err = ''; }
+  cr.busy = true; const t0 = performance.now();
+  try {
+    const dets = cr.det.detect(src.el, src.w, src.h, +crowd.tiles);
+    const zc = {}; crowd.zones.forEach(z => zc[z.id] = 0);
+    for (const d of dets) {
+      const a = crDisp((d.x + d.w / 2) / src.w, (crowd.anchor === 'foot' ? d.y + d.h : d.y + d.h / 2) / src.h, src.w, src.h);
+      d.zone = null;
+      d.box = [crDisp(d.x / src.w, d.y / src.h, src.w, src.h), crDisp((d.x + d.w) / src.w, (d.y + d.h) / src.h, src.w, src.h)];
+      for (const z of crowd.zones) if (inPoly([a.x / W, a.y / H], z.pts)) { zc[z.id]++; d.zone = z.id; }
+    }
+    cr.dets = dets; cr.total = dets.length; cr.zc = zc; cr.ms = performance.now() - t0; cr.at = Date.now(); cr.fails = 0; if (cr.err === '인식 오류') cr.err = '';
+    if (cr.tr) cr.tr.send({ type: 'count', camId: cr.camId, camName: crowd.camName, ts: cr.at, intervalMs: crowd.interval, model: 'lite2', res: src.w + 'x' + src.h, total: cr.total, zones: crowdRows() });
+  } catch (e) { console.error(e); cr.err = '인식 오류'; cr.fails++; if (cr.fails >= 3 && cr.det) { try { cr.det.close && cr.det.close(); } catch (e2) { } cr.det = null; cr.loading = false; crRetryInit(); } }
+  cr.busy = false; crRenderStat();
+  crSchedule(Math.max(200, crowd.interval - (performance.now() - t0)));
+}
+// ---- 이중거울(자동 복구) ----
+function crCamRecover() {
+  if (mouseMode || Date.now() - cr.recAt < 30000) return; cr.recAt = Date.now(); cr.noSrc = 0;
+  try { const o = video.srcObject; if (o) o.getTracks().forEach(t => t.stop()); } catch (e) { }
+  try { if (hl && hl.close) hl.close(); } catch (e) { } hl = null; cam.ready = false; initCamera();
+}
+function crCamLost() { cam.ready = false; setTimeout(crCamRecover, 5000); }
+setInterval(() => {   // 워치독: 켜져 있는데 한참 계수가 없으면 스스로 다시 시작
+  if (!crowd.on) return; const ref = cr.at || cr.since;
+  if (Date.now() - ref > Math.max(30000, crowd.interval * 10)) {
+    cr.since = Date.now(); cr.busy = false; cr.fails++; cr.err = cr.err || '계수가 멈춰 다시 시작합니다';
+    if (!cr.det) crRetryInit(); else crSchedule(300);
+  }
+  if ($('cp').style.display === 'block') crRenderStat();
+}, 5000);
+function dotInfo() {   // 스태프용 점. off 점 없음 / ok 빨강 천천히 깜빡임(정상) / weak 주황(약함·문제) / stop 회색(멈춤·복구 대기)
+  if (!crowd.on) return { k: 'off', col: 'transparent' };
+  const sv = cr.srv && cr.srv.target !== 'off' ? cr.srv.status() : null, ref = cr.at || cr.since, age = Date.now() - ref;
+  if (cr.err || cr.fails >= 3 || (!cr.det && age > 20000)) return { k: 'stop', col: 'rgba(150,150,150,.75)' };
+  if (sv && sv.k === 'ok' && cr.fails === 0 && age < Math.max(10000, crowd.interval * 5)) return { k: 'ok', col: '#E5484D' };
+  return { k: 'weak', col: 'rgba(255,126,49,.8)' };
+}
+function drawDot() {
+  const el = $('dot').firstElementChild, d = dotInfo(); el.style.background = d.col;
+  el.style.opacity = d.k === 'ok' ? String(.3 + .55 * (.5 + .5 * Math.sin(now * 2.6))) : '1';
+}
+{ let pt = null; const dot = $('dot'); const stop = () => { clearTimeout(pt); pt = null; };
+  dot.addEventListener('pointerdown', e => { e.stopPropagation(); stop(); pt = setTimeout(() => { crPanel(true); }, 2000); });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(n => dot.addEventListener(n, stop)); }
+function crStatText() {
+  const sv = cr.srv ? cr.srv.status() : null, tm = ms => ms ? new Date(ms).toLocaleTimeString('ko-KR') : '없음';
+  const l1 = !crowd.on ? '계수 꺼짐' : cr.err ? cr.err : !cr.det ? '인식기 불러오는 중' : '정상';
+  return l1 + '\n현재 인원 ' + (crowd.on ? cr.total + '명' : '-') + ' · 1회 ' + (cr.ms | 0) + 'ms\n마지막 계수 ' + tm(cr.at) + '\n마지막 전송 성공 ' + tm(cr.srv ? cr.srv.lastOk : 0) + '\n연속 실패 ' + cr.fails + '회' + (sv ? '\n' + sv.text : '');
+}
+function crowdSet(on) { crowd.on = on; cr.since = Date.now(); cr.fails = 0; cr.err = ''; crSave(); $('cpOn').checked = on; if (on) { crowdInit().then(() => crSchedule(300)); } crRenderStat(); }
+
+/* ----- 설정 패널 ----- */
+function crRenderStat() {
+  $('cpStat').textContent = crStatText();
+}
+function crRenderSrv(st) {
+  if (!cr.srv) return; st = st || cr.srv.status(); const on = cr.srv.target !== 'off', has = cr.srv.hasCode();
+  $('cpSrv').value = cr.srv.target; $('cpCodeRow').hidden = !on || has; $('cpSavedRow').hidden = !on || !has; $('cpSrvStat').textContent = st.text;
+}
+function crRenderZones() {
+  $('cpZones').innerHTML = crowd.zones.map((z, i) => '<div class="z" data-i="' + i + '"><input type="text" data-f="name" value="' + z.name.replace(/"/g, '') + '" maxlength="20"><div style="margin-top:6px">보통 <input type="number" data-f="warn" min="1" value="' + z.warn + '"> 혼잡 <input type="number" data-f="crowd" min="1" value="' + z.crowd + '"> 명 이상 <button class="g" data-del="1">삭제</button></div></div>').join('');
+}
+async function crDevices() {
+  try {
+    const ds = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput'), sel = $('cpDev');
+    sel.innerHTML = '<option value="">메인 카메라 (게임과 같은 1대)</option>' + ds.map((d, i) => '<option value="' + d.deviceId + '">' + (d.label || '카메라 ' + (i + 1)).replace(/</g, '') + '</option>').join(''); sel.value = crowd.deviceId;
+  } catch (e) { }
+}
+async function crSubCamera() {
+  if (cr.sub) { cr.sub.s.getTracks().forEach(t => t.stop()); cr.sub = null; }
+  if (!crowd.deviceId) return;
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: crowd.deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+    const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.srcObject = s; await v.play(); cr.sub = { v, s }; cr.err = '';
+  } catch (e) { cr.err = '계수용 카메라를 열지 못했습니다'; crowd.deviceId = ''; crSave(); $('cpDev').value = ''; }
+}
+function crPanel(open) {
+  const p = $('cp'); p.style.display = open ? 'block' : 'none'; document.body.style.cursor = open ? 'default' : 'none';
+  if (open) { $('cpOn').checked = crowd.on; $('cpName').value = crowd.camName; $('cpInt').value = crowd.interval; $('cpTiles').value = crowd.tiles; $('cpAnchor').value = crowd.anchor; $('cpGpu').value = crowd.gpu === false ? '0' : '1'; crRenderZones(); crRenderStat(); crDevices(); crowdInit(); }
+  else if (cr.draw) cr.draw = null;
+}
+$('cpOn').onchange = e => crowdSet(e.target.checked);
+$('cpName').onchange = e => { crowd.camName = e.target.value.trim().slice(0, 20) || 'AX 매지션 1'; e.target.value = crowd.camName; crSave(); };
+$('cpInt').onchange = e => { crowd.interval = +e.target.value; crSave(); };
+$('cpTiles').onchange = e => { crowd.tiles = +e.target.value; crSave(); };
+$('cpGpu').onchange = e => { crowd.gpu = e.target.value === '1'; crSave(); };
+$('cpAnchor').onchange = e => { crowd.anchor = e.target.value; crSave(); };
+$('cpDev').onchange = async e => { crowd.deviceId = e.target.value; crSave(); await crSubCamera(); crRenderStat(); };
+$('cpSrv').onchange = e => { if (cr.srv) { cr.srv.setTarget(e.target.value); crRenderSrv(); } };
+const crSaveCode = () => { const i = $('cpCode'), v = i.value.trim(); i.value = ''; if (v && cr.srv) { cr.srv.setCode(v); crRenderSrv(); } };
+$('cpCodeSave').onclick = crSaveCode; $('cpCode').onkeydown = e => { if (e.key === 'Enter') crSaveCode(); };
+$('cpCodeForget').onclick = () => { if (cr.srv) { cr.srv.setCode(''); crRenderSrv(); } };
+$('cpAdd').onclick = () => { cr.draw = { pts: [] }; };
+$('cpClose').onclick = () => crDrawEnd(true); $('cpCancel').onclick = () => { cr.draw = null; };
+$('cpZones').addEventListener('input', e => { const z = crowd.zones[+e.target.closest('.z').dataset.i], f = e.target.dataset.f; if (!z || !f) return; z[f] = f === 'name' ? e.target.value.slice(0, 20) : Math.max(1, +e.target.value || 1); if (z.crowd <= z.warn) z.crowd = z.warn + 1; crSave(); });
+$('cpZones').addEventListener('click', e => { if (!e.target.dataset.del) return; crowd.zones.splice(+e.target.closest('.z').dataset.i, 1); crSave(); crRenderZones(); });
+function crDrawEnd(close) {
+  const d = cr.draw; cr.draw = null; if (!close || !d || d.pts.length < 3) return;
+  crowd.zones.push({ id: 'z' + Date.now().toString(36), name: '구역 ' + (crowd.zones.length + 1), pts: d.pts, warn: 3, crowd: 6 }); crSave(); crRenderZones();
+}
+cv.addEventListener('click', e => {
+  if (!cr.draw) return; const x = (e.clientX - cv._ox) / cv._s / W, y = (e.clientY - cv._oy) / cv._s / H, d = cr.draw;
+  if (d.pts.length >= 3 && Math.hypot((x - d.pts[0][0]) * W, (y - d.pts[0][1]) * H) < 30) { crDrawEnd(true); return; }
+  d.pts.push([x, y]);
+});
+function drawCrowd() {   // 디버그(D)나 설정 패널이 열려 있을 때만 보인다
+  const c = ctx, panel = $('cp').style.display === 'block';
+  if (!debug && !panel) return;
+  c.save(); c.lineWidth = 4;
+  crowd.zones.forEach(z => {
+    const r = crowdRows().find(q => q.id === z.id);
+    c.strokeStyle = r && r.state === 'bad' ? '#E5484D' : ORANGE; c.fillStyle = 'rgba(255,126,49,.12)';
+    c.beginPath(); z.pts.forEach(([x, y], i) => i ? c.lineTo(x * W, y * H) : c.moveTo(x * W, y * H)); c.closePath(); c.fill(); c.stroke();
+    if (r) txt(z.name + ' ' + r.count + '명', z.pts[0][0] * W + 10, z.pts[0][1] * H + 24, 26, '#fff', 'left', 700);
+  });
+  if (cr.draw) { c.strokeStyle = '#fff'; c.beginPath(); cr.draw.pts.forEach(([x, y], i) => i ? c.lineTo(x * W, y * H) : c.moveTo(x * W, y * H)); c.stroke(); cr.draw.pts.forEach(([x, y]) => { c.fillStyle = '#fff'; c.beginPath(); c.arc(x * W, y * H, 7, 0, 7); c.fill(); }); }
+  if (crowd.on) { c.strokeStyle = '#fff'; c.lineWidth = 3; for (const d of cr.dets) { if (!d.box) continue; const [a, b] = d.box; c.strokeRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y)); } }
+  c.restore();
+  const st = cr.srv ? cr.srv.status().text : '서버 전송 꺼짐';
+  c.save(); c.font = '600 26px ' + FONT; c.fillStyle = '#fff'; c.textAlign = 'left'; c.textBaseline = 'top'; c.shadowColor = 'rgba(0,0,0,.8)'; c.shadowBlur = 6;
+  c.fillText(crowd.on ? '계수 ' + cr.total + '명 · ' + (cr.ms | 0) + 'ms · 실패 ' + cr.fails + ' · 마지막 계수 ' + (cr.at ? new Date(cr.at).toLocaleTimeString('ko-KR') : '없음') + ' · 마지막 전송 ' + (cr.srv && cr.srv.lastOk ? new Date(cr.srv.lastOk).toLocaleTimeString('ko-KR') : '없음') + (crowd.zones.length ? ' · ' + crowdRows().map(r => r.name + ' ' + r.count).join(' / ') : '') + ' · ' + st : '계수 꺼짐', 20, 180); c.restore();
+}
+if (crowd.on) { cr.since = Date.now(); $('cpOn').checked = true; crowdInit().then(() => crSchedule(1500)); }   // 이중거울: 저장된 설정이 켜져 있으면 사람이 안 눌러도 자동 시작
+
+/* ---------------- 입력 키 ---------------- */
+let fps = 60;
+addEventListener('keyup', e => { if (e.key === 'Shift') mouse.shift = false; });
+addEventListener('blur', () => { mouse.shift = false; });
+addEventListener('keydown', e => {
+  if (e.key === 'Shift') mouse.shift = true;
+  // 한글 입력 상태에서도 동작하도록 글자·숫자 키는 물리 키(e.code)로 읽는다
+  const k = /^Key[A-Z]$/.test(e.code) ? e.code.slice(3) : /^Digit\d$/.test(e.code) ? e.code.slice(5) : e.key;
+  const tg = e.target && e.target.tagName; if (tg === 'INPUT' || tg === 'SELECT' || tg === 'TEXTAREA') return;
+  if (cr.draw && k === 'Escape') { cr.draw = null; return; }
+  if (cr.draw && k === 'Enter') { crDrawEnd(true); return; }
+  if (k === 'c' || k === 'C') { crPanel($('cp').style.display !== 'block'); return; }
+  if (k === 'v' || k === 'V') { cycleCamera(); return; }
+  if (k === 'd' || k === 'D') debug = !debug;
+  else if (k === 'f' || k === 'F') { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => { }); }
+  else if (k === 'p' || k === 'P') { if (S.mode === 'idle') startFlow(); if (F && F.ph[0] === 'p') gotoExam(); }
+  else if (k === '1' || k === '2' || k === '3') { if (mouseMode) { mouse.pose = +k - 1; mouse.last = clk(); } }
+  else if (k === 'Escape') toIdle();
+});
+
+/* ---------------- 메인 루프 ---------------- */
+let prev = performance.now() / 1000;
+let simT = null;   // 시험용 가상 시계(?sim=1 또는 __ax.sim): 탭이 숨겨져도 한 프레임씩 직접 돌릴 수 있다
+const clk = () => simT === null ? performance.now() / 1000 : simT;
+function frame() { requestAnimationFrame(frame); if (simT === null) run(performance.now() / 1000); }
+function run(t) {
+  now = t; const dt = Math.min(.05, now - prev); prev = now; fps = lerp(fps, 1 / Math.max(dt, .001), .05);
+  detect(); updateInput(dt); runDetectors(dt);
+  if (S.mode === 'idle') stepIdle(dt); else if (F) stepFlow(dt);
+  updateP2(dt); updateFx(dt);
+  ctx.save();
+  if (shake > 0) ctx.translate(rnd(-1, 1) * shake * 12, rnd(-1, 1) * shake * 12);
+  drawBackdrop();
+  if (S.mode === 'idle') drawIdle(); else if (F) drawFlow();
+  if (F) { const ph = F.ph; if (F.key === 'orb' && (ph === 'p-try' || ph === 'x-run' || ph === 'f-build')) drawLiveOrb(J.orb.p); else if (ph === 'f-push') drawLiveOrb(1); }
+  drawLiveHands(); drawP2(); drawFx();
+  if (F && F.guide) drawGuideHand(F.guide);
+  drawTele();
+  ctx.restore();
+  drawCrowd();
+  if (debug) drawDebug();
+  drawDot();
+}
+requestAnimationFrame(frame);
+if (!mouseMode) initCamera();
+
+// 시험용 훅 (캡처·자동 시험)
+window.__ax = {
+  sim(on = true) { simT = on ? performance.now() / 1000 : null; prev = clk(); },
+  step(n = 1, dt = 1 / 30) { for (let i = 0; i < n; i++) { simT += dt; run(simT); } },
+  async runFor(secs, fn, dt = 1 / 30) { const n = Math.round(secs / dt); for (let i = 0; i < n; i++) { if (fn) fn(i * dt, i); simT += dt; run(simT); } },
+  setMouse(x, y) { mouse.x = x; mouse.y = y; mouse.last = clk(); },
+  hide() { mouse.last = -1e9; },
+  pose(n) { mouse.pose = n; mouse.last = clk(); }, shift(v) { mouse.shift = !!v; },
+  wheel(n) { mh.Lt = clamp(mh.Lt * Math.pow(1.13, n), 60, 280); mouse.last = clk(); },
+  state: () => ({ mode: S.mode, ph: F && F.ph, key: F && F.key, score: F && F.score, q: F && F.q, pi: F && F.pi, qi: F && F.qi, guide: F && F.guide, J: JSON.parse(JSON.stringify(J, (k, v) => k === 'at' ? undefined : v)), hands: liveHands().map(h => ({ id: h.id, L: h.L | 0, open: +h.open.toFixed(2), pinch: +h.pinch.toFixed(2) })) }),
+  start: startFlow, idle: toIdle, skip() { gotoExam(); }, crowd, cr, crowdSet, crowdTick, dotState: () => dotInfo(),
+  async crowdImage(url) { const im = new Image(); await new Promise((r, j) => { im.onload = r; im.onerror = j; im.src = url; }); cr.testSrc = { el: im, w: im.naturalWidth, h: im.naturalHeight }; },
+  async snap(name) { if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return 0;   // 시험 저장은 로컬 serve.py 전용
+    const b = await new Promise(r => cv.toBlob(r, 'image/png')); await fetch('/save/' + encodeURIComponent(name), { method: 'POST', body: b }); return b.size; },
+};
+</script>
+</body>
+</html>
