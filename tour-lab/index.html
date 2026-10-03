@@ -20,11 +20,11 @@
   <main class="stage" id="stage">
     <canvas id="cv" aria-label="1층 로비 3D 모형"></canvas>
     <div class="pins" id="pins"></div>
+    <button type="button" class="mini" id="mini" aria-label="작은 지도 · 누르면 구역 목록과 큰 지도"></button>
     <div class="cap" id="cap" hidden></div>
     <div class="load" id="load">모형 불러오는 중</div>
-    <div class="joy" id="joy" hidden><span class="knob" id="knob"></span></div>
+    <div class="pad" id="pad" role="application" aria-label="움직이기 패드 · 밀면 그쪽으로 걸어요"><span class="knob" id="knob"></span></div>
     <div class="dest" id="dest" hidden></div>
-    <p class="drag" id="drag">화면을 끌면 직접 걸어요</p>
     <div class="bubble" id="bubble" hidden>아이디어 한 줄을 내면 커피챗을 신청할 수 있어요</div>
     <div class="fps" id="fps" hidden></div>
     <div class="map" id="map" hidden></div>
@@ -66,7 +66,7 @@
 <!-- 처음 안내 · 한 문장 -->
 <section class="help" id="help" role="dialog" aria-modal="true" aria-label="처음 안내" hidden>
   <div class="hcard">
-    <p class="h1t">아래 「다음 구역」을 누르면 캐릭터가 알아서 걸어가요.</p>
+    <p class="h1t">아래 「다음 구역」을 누르거나 왼쪽 아래 동그라미를 밀어 움직여요.</p>
     <div class="hdemo" aria-hidden="true"><span class="hbtn">다음 구역 ▶</span><span class="finger"></span></div>
     <button type="button" class="nb pri wide" id="hOk">시작하기</button>
   </div>
