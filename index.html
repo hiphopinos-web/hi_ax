@@ -3657,7 +3657,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.28";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.29";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -7657,8 +7657,8 @@ function stpRowHtml(s, i, st, full) {
     (a[0] ? (a[1] ? '<button type="button" class="axs-stpa" onclick="' + a[1] + '">' + esc(a[0]) + "</button>" : '<span class="axs-stpa ' + (got ? "ok" : "off") + '">' + esc(a[0]) + "</span>") : "") +
     "</div>";
 }
-/* 구경하고 겨루기 · 1F 타자왕 현장 순위(type_rank 의 현장 탭) · 실시간 화면은 4묶음(type_live) */
-function typeSiteRankGo() { S.set("type_rank_tab", "site"); App.go("type_rank"); }
+/* 구경하고 겨루기 · 1F 타자왕 현장 순위(type_rank · v5.29 현장 순위판 하나) · 실시간 화면은 4묶음(type_live) */
+function typeSiteRankGo() { App.go("type_rank"); }   /* v5.29 탭 없음(현장 순위판 하나) */
 
 var Views = {
   /* ═══ 홈 = 「내 것」만 (260830 사용자 지시: 첫 화면이 복잡하면 안 된다)
@@ -8243,16 +8243,9 @@ var Views = {
   /* ═══ v3.50 AX 올림픽 순위판 · 종합(전 종목 완주자) · 종목별(금은동) ═══
      v3.50d 부문 정보 전면 삭제 (사용자 확정 260917·260918 · 부문 메달표·부문 라벨·부문 평균 금지) */
   oly_rank: function () { return olyRankHtml(); },   /* v4.02 점수 체계 v2 · 포디움 2-1-3 · 월계수 · 내 위치 줄 (olyRankHtml) */
-  type_rank: function () {
-    var mode = S.get("type_rank_tab", "app");
-    var cached = S.get("type_rank_" + mode, null);   /* v4.16 관리자·테스트 계정도 실서버 캐시(가짜 닉네임 목업 삭제) */
-    var seg = '<div class="qseg" style="margin-bottom:10px"><button class="' + (mode === "app" ? "on" : "") + '" onclick="S.set(\'type_rank_tab\', \'app\'); App.render()">앱 순위 상위 10</button>' +
-      '<button class="' + (mode === "site" ? "on" : "") + '" onclick="S.set(\'type_rank_tab\', \'site\'); App.render()">1F 현장 TOP 10</button></div>';
-    if (mode === "site") { tybStart(); return seg + '<div id="tyRankBody">' + tybHtml(cached) + "</div>"; }   /* v5.15 1F 타자왕 순위판(tybHtml · 오락실 HIGH SCORE) */
-    typeRankPull(mode, function (r) { if (App.current === "type_rank") { var b = el("tyRankBody"); if (b) b.innerHTML = typeRankHtml(r, mode); } });
-    return seg +
-      '<div class="card" id="tyRankBody">' + typeRankHtml(cached, mode) + "</div>" +
-      '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">오래 버틴 시간 순 · 최고 기록만 · 경품 없음</p>';   /* v5.15 현장 탭은 위 tybHtml(1F 타자왕 시상 카드 → 판 아래 상품 썸네일) */
+  type_rank: function () {   /* v5.29 (사용자 261003 「1층 점수만」) 앱(폰) 순위 탭 · 내 앱 순위 삭제 · 1F 타자왕 순위판(v5.15 tybHtml · 현장)만 · 탭 없음 */
+    tybStart();
+    return '<div id="tyRankBody">' + tybHtml(S.get("type_rank_site", null)) + "</div>";
   },
 
   /* ═══ v4.15 폰 관리자 모드 (사용자 확정 260922 · `앱 관리자 모드 축소 기획.md`) ═══
@@ -10974,18 +10967,18 @@ function rgPlayOpen() {
     pause: rgPause, resume: rgResume, quit: rgQuit });
   rgSideTopPull();
 }
-/* v4.29 넓은 화면 옆판 · 서버 순위판(type_rank) 읽기만 · 앱 솔로 = 앱 순위 · 1F 현장 = 현장 순위
+/* v4.29 넓은 화면 옆판 · 서버 순위판(type_rank) 읽기만 · v5.29 (사용자 261003) 앱 솔로도 1F 현장 순위 · 앱(폰) 순위(mode app)는 받지도 보이지도 않는다
    v4.32 오른쪽 판 TOP 10(제목 RG.topT) · 내 기록(me)은 서버가 짚는다 · 1F 현장은 셀프 모드가 받아 둔 순위(TSF.top)를 먼저 보이고 도전자 사번으로 다시 받는다 · 왼쪽 판 도전자 닉네임(RG.who)
    판 도중에 App.render 가 불리면 게임이 멈추므로 S.set(axf-store) 을 쓰지 않고 엔진 값(RG.top)만 바꾼다 · 서버가 없으면(데모) 빈 목록 */
 function rgSideTopPull() {
   if (!rgSideOn()) return;
-  var site = RG.mode === "site", mode = site ? "site" : "app", c = site ? TSF.top : S.get("type_rank_" + mode, null);
-  var conv = function (r) { return ((r && r.top) || []).slice(0, 10).map(function (x) { return { no: x.rank, name: x.name, val: site ? typePts(x.score) : typeSec(x.score), me: !!x.me }; }); };   /* v5.12 1F 현장 = 점수 */
-  RG.topT = site ? "현장 TOP 10" : "앱 TOP 10"; RG.who = site ? TSF.nick : "";   /* v5.12 1F 현장은 오른쪽 판이 추월 레이스(RG.race) · 이 TOP 10 은 레이스 목록을 못 받았을 때만 보인다 */
+  var site = RG.mode === "site", c = site ? TSF.top : S.get("type_rank_site", null);
+  var conv = function (r) { return ((r && r.top) || []).slice(0, 10).map(function (x) { return { no: x.rank, name: x.name, val: typePts(x.score), me: !!x.me }; }); };   /* v5.12 1F 현장 = 점수 */
+  RG.topT = "현장 TOP 10"; RG.who = site ? TSF.nick : "";   /* v5.12 1F 현장은 오른쪽 판이 추월 레이스(RG.race) · 이 TOP 10 은 레이스 목록을 못 받았을 때만 보인다 */
   if (c) RG.top = conv(c);   /* 받아 둔 목록을 먼저 보인다 · 도전자 줄 표시(me)는 새로 받은 목록부터 */
   if (!BE.on) { if (!c) RG.top = []; return; }
   var u = S.get("user", {}) || {};
-  beCall({ action: "type_rank", mode: mode, emp: site ? TSF.emp : u.empId || "", n: 10 }, function (r) { if (r && r.ok && RG.on) RG.top = conv(r); }, function () { if (RG.on && !RG.top) RG.top = []; });
+  beCall({ action: "type_rank", mode: "site", emp: site ? TSF.emp : u.empId || "", n: 10 }, function (r) { if (r && r.ok && RG.on) RG.top = conv(r); }, function () { if (RG.on && !RG.top) RG.top = []; });
 }
 function rgPlayClose() { RGP.on = false; gsOverlayClose("type"); }
 /* v4.51(260925 사용자) 넓은 화면 3단 · 입력칸 = 가운데 판 폭(틀 포함) · 판 바로 아래 · 엔진 배치(RG.L)를 따른다(판 틀 L.fr 과 같은 세 겹) · 옆판이 없으면(휴대폰 · 좁은 창) 옛 모양 그대로 */
@@ -11051,13 +11044,10 @@ function rgEndFinal(why) {
 }
 function rgResultPaint() {
   var root = el("tgRoot"), r = RG.res; if (!root || !r) return;
-  var rank = r.me ? r.me.rank : null;   /* v4.16 테스트 계정은 서버에 제출하지 않으므로(dry) 가짜 순위를 계산하지 않는다 */
   root.innerHTML = gsResultHtml("type", { why: "done", label: "생존 기록", title: r.why === "cap" ? "여기까지" : "GAME OVER", line: r.why === "cap" ? "최대 시간에 닿았어요" : "단어 " + (RG.lives0 || RAIN_LIVES) + "개를 놓쳤어요",
-    score: (r.score / 100).toFixed(1) + "초 생존",   /* v4.02 소나기는 올림픽 종목이 아니다 · v4.28 세 줄 = 기록 · 내 최고 비교 · 순위 */
+    score: (r.score / 100).toFixed(1) + "초 생존",   /* v4.02 소나기는 올림픽 종목이 아니다 · v5.29 (사용자 261003 「1층 점수만」) 앱(폰) 순위 줄 · 「앱 상위 10」 배너 삭제 · 기록 · 내 최고 비교 두 줄 */
     l2: r.score > (r.prev || 0) ? "신기록!" : "내 최고 " + typeSec(Math.max(r.prev || 0, r.score)),
-    l3: r.send === "sending" ? "순위 반영 중" : rank ? "앱 순위 " + rank + "위" : testEmp() ? "테스트 계정 · 순위 제외" : r.send === "range" ? "순위 미반영 · 기록 범위 초과" : "",
-    fold: "기록 자세히 보기", ref: [["터뜨린 단어", r.hits + "개"], ["점수", Number(r.pts || 0).toLocaleString()], ["최고 콤보", r.combo], ["정확도", r.acc + "%"]],
-    banner: rank && rank <= 10 ? '<div class="tipbanner mb12">앱 상위 10 · 1F 타자왕 순위는 현장 기록만</div>' : "" });   /* v5.05 1F 타자왕 = 현장 최고 기록 · 1~3위 Outro 시상 */
+    fold: "기록 자세히 보기", ref: [["터뜨린 단어", r.hits + "개"], ["점수", Number(r.pts || 0).toLocaleString()], ["최고 콤보", r.combo], ["정확도", r.acc + "%"]] });
   var again = root.querySelector(".gs-res-go .rt-btn");
   if (again && !rgTouch()) again.textContent = "다시 하기 · SPACE";   /* v4.29 키보드 기기 */
 }
@@ -11107,14 +11097,6 @@ function typeRankPull(mode, cb) {
 }
 /* v3.80 기록 = 버틴 시간(1/100초) · 화면에는 「n초」 로 보여 준다 */
 function typeSec(v) { return (Number(v || 0) / 100).toFixed(1) + "초"; }
-function typeRankHtml(r, mode, big) {
-  if (!r) return botHtml("순위를 불러오는 중이에요", { wait: 1 });
-  var top = r.top || [];
-  return (top.length ? top.map(function (x) {
-      return '<div class="ty-rank' + (x.me ? " me" : "") + '"><span class="no">' + x.rank + '</span><span class="nm">' + esc(x.name) + '</span><span class="sc">' + (mode === "site" ? typePts(x.score) : typeSec(x.score)) + "</span></div>";
-    }).join("") : '<p class="muted">아직 기록이 없어요</p>') +
-    (r.me ? '<p class="muted" style="margin-top:10px">내 순위 ' + r.me.rank + "위 · " + (mode === "site" ? typePts(r.me.score) : typeSec(r.me.score) + " 생존") + "</p>" : "");   /* v5.12 1F 현장 = 점수 */
-}
 /* ── v5.15 1F 타자왕 순위판 · 앱 「타자 순위」 현장 탭(261003 · 시안 「디자인 시안/타자왕 순위판/타자왕_순위판_휴대폰.html」) ──
    HIGH SCORE TOP 10(1~3위 O100 · O60 · O30 면 · 내 줄 강조) · 아래 바 「내 순위 · 내 최고 점수 · 남은 기회」 · 1~3위 상품 썸네일(누르면 경품 포스터 1F 타자왕)
    20초마다 다시 받아(화면이 보일 때 · 이 탭일 때만) 바뀐 줄만 옮긴다: 새로 든 줄 = 아래에서 올라오며 NEW · 오른 줄 = 미끄러져 오르고 깜빡 · 점수는 세며 오른다 · 동작 줄이기 = 그 자리에 바로
@@ -11194,7 +11176,7 @@ function tybCount(node, a, b, r) {
   var t0 = Date.now(), d = 1200;
   (function step() { var k = Math.min(1, (Date.now() - t0) / d); if (!node.isConnected) return; node.textContent = tybVal(r, a + (b - a) * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(step); })();
 }
-function tybOn() { return App.current === "type_rank" && S.get("type_rank_tab", "app") === "site"; }
+function tybOn() { return App.current === "type_rank"; }   /* v5.29 탭 없음 */
 function tybGot(r) { if (tybOn()) tybApply(r); }
 function tybStart() {
   if (Date.now() - (TYB.at || 0) > 8000) typeRankPull("site", tybGot);   /* 다른 저장으로 화면이 다시 그려질 때마다 받지 않는다 */
