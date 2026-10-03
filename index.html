@@ -2056,7 +2056,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-treat figcaption span { font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
   .fs-big .axs-prz .axs-ph { width: 64px; height: 64px; }
   /* ═══════ v5.08 경품 포스터(prizes) · 입구 (261003 사용자 「경품 사진이 작다 · 포스터처럼 · 싼티 없이 · 스탬프 누적표에서 바로」 · 「제품 사진을 더 크게 부각」)
-     구성 = 표지(먹색 면 + 도트 격자 + 주황 3중 원 점 · 「Prizes」) → 행운권 → 참여상 → 룰렛 → 1F 타자왕(사진 없음 · 글 목록)
+     구성 = 표지(먹색 면 + 도트 격자 + 주황 3중 원 점 · 「Prizes」) → 행운권 → 참여상 → 룰렛 → 1F 타자왕(v5.09 사진 카드 · 1등 대표 + 2 · 3등 2열)
      표지 먹색 면 = 이 화면 맨 위 한 구역 한정(design.md §1 스테이지 「블랙 = 포스터 블랙판」 · 앱 셸 블랙 금지의 예외 · 판 퀴즈 1F 판 문법과 같은 「구역 한정」) · 손이 닿는 줄은 앱 문법
      사진 = 대표(행운권 1~3등 · 참여상 · 룰렛 1등) 폭 가득 정사각 · 나머지 2열 정사각 · 홀수로 남는 마지막 칸은 2칸 폭 넓은 카드(2:1)
      글자 = 무채색 · 브랜드 주황 글자는 20px 이상 600 이상(제목 Prizes · 대표 등수)만 · 그보다 작은 주황 글자는 brandText · 파랑 · 이모지 · 그라데이션 없음
@@ -2109,12 +2109,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pz-c.wide { grid-column: 1 / -1; }
   .axs-pz-c.wide .axs-pz-ph { aspect-ratio: 2 / 1; }
   .axs-pz-nt { margin: 0 var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
-  .axs-pz-ls { margin: 0; padding: var(--ax-space-4) var(--ax-space-20); list-style: none; border-radius: var(--ax-radius-20); background: var(--ax-color-surface); }
-  .axs-pz-ls li { display: flex; align-items: baseline; gap: var(--ax-space-12); padding: var(--ax-space-16) 0; border-top: 1px solid var(--ax-color-divider); }
-  .axs-pz-ls li:first-child { border-top: 0; }
-  .axs-pz-ls .rk { flex: none; font: var(--ax-type-t5-strong); font-weight: 700; color: var(--ax-color-brandText); }
-  .axs-pz-ls b { flex: 1 1 auto; min-width: 0; font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
-  .axs-pz-ls .q { flex: none; font: var(--ax-type-t6); color: var(--ax-color-muted); }
   .fs-big .axs-pz-c:not(.gr) .tx { flex-wrap: wrap; }
   .fs-big .axs-pz-gr { grid-template-columns: minmax(0, 1fr); }
   .fs-big .axs-pz-c.wide .axs-pz-ph { aspect-ratio: 1 / 1; }
@@ -3425,7 +3419,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.08";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.09";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -7061,11 +7055,11 @@ var PRIZES = {
     { rk: "6등", nm: "현대백화점 상품권 10만원", q: 3, img: "ld6_hyundai" }] },
   fin: { unit: "개", list: [
     { rk: "", nm: "무선 무드등 가습기", q: 210, img: "fin_humidifier" }] },
-  /* v5.05 1F 타자왕 1~3위(17:00 Outro 시상) · 사진은 아직 없다(img 비움 = 빈 자리 · 파일이 오면 이름만 적는다) */
+  /* v5.05 1F 타자왕 1~3위(17:00 Outro 시상) · v5.09 (261003 사용자 확정) 새 상품 · 사진 = 제조사 공식 컷 */
   type: { unit: "명", list: [
-    { rk: "1등", nm: "기계식 키보드", q: 1, img: "" },
-    { rk: "2등", nm: "기계식 키보드", q: 1, img: "" },
-    { rk: "3등", nm: "로지텍 마우스", q: 1, img: "" }] }
+    { rk: "1등", nm: "체리 G80-3872 기계식 키보드", q: 1, img: "ty1_cherry" },
+    { rk: "2등", nm: "로지텍 MX Master 4 마우스", q: 1, img: "ty2_mxmaster4" },
+    { rk: "3등", nm: "AULA F108 Pro 기계식 키보드", q: 1, img: "ty3_aula" }] }
 };
 /* 커피 · 간식(18F 커피챗 · 1F DAP 과제상담) · 커피 = 페트병(우리 스티커 목업) · 간식 = 달곰 베이크샵 휘낭시에 · 스콘(블로그 사진 합성 · 임시) · 바꿀 때는 파일만 */
 var TREATS = [
@@ -7105,7 +7099,7 @@ function prizeGuideHtml() {
    데이터는 위 PRIZES 한 곳 · 대표(PZ_HERO 개수만큼 앞에서부터) = 폭 가득 사진 · 나머지 2열 · 홀수로 남는 마지막 칸은 넓은 카드
    참여상 설명은 두 줄만(FIN_NOTE · 사용자 261003 「이 두 가지 정보만 남겨 두고 나머지는 없애 줘」) */
 var FIN_NOTE = "Outro 때 남은 룰렛 경품도 함께 추첨 · 상품은 무작위<br>추첨 행사 이후 소속 부서로 배송";
-var PZ_HERO = { draw: 3, fin: 1, roulette: 1 };
+var PZ_HERO = { draw: 3, fin: 1, roulette: 1, type: 1 };   /* v5.09 타자왕도 사진 카드(1등 대표 · 2 · 3등 2열) */
 var PZ_SEC = [
   { k: "draw", en: "LUCKY DRAW", t: "행운권 추첨", m: [4, 6], cd: "스탬프 4 · 5 · 6개 = 행운권 1 · 2 · 3장<br>17:00 Outro 현장 추첨 · 6등부터<br>17F 입구 QR 체크인" },
   { k: "fin", en: "PARTICIPATION", t: "참여상", m: [6, 6], cd: "스탬프 6개", note: FIN_NOTE },
@@ -7138,14 +7132,9 @@ function pzCard(p, unit, cls) {
 function prizeSecHtml(s) {
   var g = PRIZES[s.k]; if (!g) return "";
   var head = '<header class="axs-pz-sh" id="pz-' + s.k + '"><p class="en">' + s.en + "</p><h2>" + s.t + '</h2><p class="cd">' + (s.m ? pzMeter(s.m[0], s.m[1]) : "") + "<span>" + s.cd + "</span></p></header>";
-  var body;
-  if (s.k === "type") {
-    body = '<ul class="axs-pz-ls">' + g.list.map(function (p) { return '<li><span class="rk">' + p.rk + "</span><b>" + esc(p.nm) + '</b><span class="q">' + p.q + g.unit + "</span></li>"; }).join("") + "</ul>";
-  } else {
-    var hn = PZ_HERO[s.k] || 0, rest = g.list.slice(hn);
-    body = g.list.slice(0, hn).map(function (p) { return pzCard(p, g.unit, " hero"); }).join("") +
-      (rest.length ? '<div class="axs-pz-gr">' + rest.map(function (p, i) { return pzCard(p, g.unit, " gr" + (rest.length % 2 && i === rest.length - 1 ? " wide" : "")); }).join("") + "</div>" : "");
-  }
+  var hn = PZ_HERO[s.k] || 0, rest = g.list.slice(hn);
+  var body = g.list.slice(0, hn).map(function (p) { return pzCard(p, g.unit, " hero"); }).join("") +
+    (rest.length ? '<div class="axs-pz-gr">' + rest.map(function (p, i) { return pzCard(p, g.unit, " gr" + (rest.length % 2 && i === rest.length - 1 ? " wide" : "")); }).join("") + "</div>" : "");
   return '<section class="axs-pz-sec">' + head + body + (s.note ? '<p class="axs-pz-nt">' + s.note + "</p>" : "") + "</section>";
 }
 function prizeCoverHtml() {
@@ -7868,7 +7857,7 @@ var Views = {
       '<button class="' + (mode === "site" ? "on" : "") + '" onclick="S.set(\'type_rank_tab\', \'site\'); App.render()">1F 현장 상위 5</button></div>' +
       '<div class="card" id="tyRankBody">' + typeRankHtml(cached, mode) + "</div>" +
       '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">' + (mode === "app" ? "오래 버틴 시간 순 · 최고 기록만 · 경품 없음" : "1F 셀프 도전 · 1인 " + ((cached && cached.tries) || 3) + "회 · 최고 기록 · 동점은 정확도 · 17:00 마감") + "</p>" +
-      (mode === "site" ? '<section class="ax-card axs-przc" data-prz="type" style="margin-top:12px"><div class="ax-stack-tight"><h3 class="ax-card-title">1F 타자왕 시상</h3><p class="ax-meta">17:00 Outro 시상 · 현장 최고 기록 1~3위</p></div>' + prizeListHtml("type") + "</section>" : "");   /* v5.05 (261002 사용자 확정) 1F 타자왕 경품 이름 · 사진 자리(아직 없음) · 앱 순위는 명예 순위 그대로 */
+      (mode === "site" ? '<section class="ax-card axs-przc" data-prz="type" style="margin-top:12px"><div class="ax-stack-tight"><h3 class="ax-card-title">1F 타자왕 시상</h3><p class="ax-meta">17:00 Outro 시상 · 현장 최고 기록 1~3위</p></div>' + prizeListHtml("type") + "</section>" : "");   /* v5.05 (261002 사용자 확정) 1F 타자왕 경품 이름 · v5.09 사진(제조사 공식 컷) · 앱 순위는 명예 순위 그대로 */
   },
 
   /* ═══ v4.15 폰 관리자 모드 (사용자 확정 260922 · `앱 관리자 모드 축소 기획.md`) ═══
@@ -11124,7 +11113,7 @@ function tyTvRows(r, n) {
    받기 = 기존 공개 액션 type_rank(mode site · n 10) · 서버 수정 없음 · 테스트 사번 표시 규칙(10/25까지 보이고 10/26부터 뺌)은 서버가 한다.
    폴링 = 30초 · 화면이 가려지면 멈추고 보이면 곧바로 · 실패 30 → 60 → 120초 + 지터(v4.57 앱 폴링과 같은 규칙).
    새 기록(이전 응답에 없던 닉네임·기록 줄)은 4초 동안 살짝 강조 · 첫 응답은 강조하지 않는다 · 동작 줄이기면 깜빡임 없이 테두리만.
-   경품은 바닥 한 줄만(v5.06 사용자 확정 · 1·2등 키보드 · 3등 마우스 · 가격 없음) · 도전 시간은 결정 대기라 적지 않는다. */
+   경품은 바닥 한 줄만(v5.06 사용자 확정 · 가격 없음 · v5.09 1등 체리 키보드 · 2등 MX Master 4 · 3등 AULA 키보드) · 도전 시간은 결정 대기라 적지 않는다. */
 var TYHS = { data: null, t: null, ms: BE_POLL_MS, busy: false, keys: null, hot: {}, hotT: 0 };
 function tyTvFix(h) { var m = String(h || "").match(/[&?]fix=([a-z]+)/i); return m && m[1].toLowerCase() === "site" ? "site" : ""; }
 function hsOn() { return App.current === "wall_type" && TYTV.fix === "site"; }
@@ -11174,7 +11163,7 @@ function hsHtml() {
     '<div class="hs-list">' + rows + "</div>" +
     '<div class="hs-foot">' + (u ? '<img class="hs-bot" src="' + u + '" alt="">' : '<span class="hs-bot">' + BOT_SVG + "</span>") +
     "<p>1인 " + tries + "회 · 최고 기록 1개로 순위<br>17:00 마감 · 1~3위 Outro 시상</p></div>" +
-    '<p class="hs-prz">1·2등 기계식 키보드 · 3등 로지텍 마우스</p></div></div>';   /* v5.06 (261002 사용자 확정) 바닥 경품 한 줄 · 가격 없음 · v5.05 결선 없음 · 1~3위 */
+    '<p class="hs-prz">1등 체리 키보드 · 2등 MX Master 4 · 3등 AULA 키보드</p></div></div>';   /* v5.09 (261003 사용자 확정) 새 경품 짧은 이름 · v5.06 바닥 경품 한 줄 · 가격 없음 · v5.05 결선 없음 · 1~3위 */
 }
 
 /* v3.50 시상 · AX 올림픽 탭 · 종합 1~3위 호명(닉네임 + 실명) · 관리코드 oly_result */
