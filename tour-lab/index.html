@@ -8,7 +8,7 @@
 <title>1층 둘러보기 시험판</title>
 <!-- 가상 1층 둘러보기 v3 시제품(261003) · 앱 본문(index.html)과 따로 · 모형 · 판 그림은 ../assets/tour/ 를 그대로 읽는다 -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="lab.css?v=v532a">
+<link rel="stylesheet" href="lab.css?v=lab3">
 </head>
 <body>
 <div id="app">
@@ -25,6 +25,11 @@
     <div class="load" id="load">모형 불러오는 중</div>
     <div class="pad" id="pad" role="application" aria-label="움직이기 패드 · 밀면 그쪽으로 걸어요"><span class="knob" id="knob"></span></div>
     <div class="dest" id="dest" hidden></div>
+    <div class="rot" id="rot">
+      <button type="button" id="rotL" aria-label="시점 왼쪽으로 90도 돌리기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 3v4h4"/></svg><span>왼쪽으로</span></button>
+      <button type="button" id="rotR" aria-label="시점 오른쪽으로 90도 돌리기"><span>오른쪽으로</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.5-5.8"/><path d="M20 3v4h-4"/></svg></button>
+    </div>
+    <button type="button" class="gbub" id="gbub" hidden><span id="gbubT"></span><span class="go">판 보기 ▶</span></button>
     <div class="bubble" id="bubble" hidden>아이디어 한 줄을 내면 커피챗을 신청할 수 있어요</div>
     <div class="fps" id="fps" hidden></div>
     <div class="map" id="map" hidden></div>
@@ -68,10 +73,12 @@
   <div class="hcard">
     <p class="h1t">아래 「다음 구역」을 누르거나 왼쪽 아래 동그라미를 밀어 움직여요.</p>
     <div class="hdemo" aria-hidden="true"><span class="hbtn">다음 구역 ▶</span><span class="finger"></span></div>
+    <label class="rmrow"><span class="t"><b>움직임 줄이기</b><span>어지러우면 켜세요</span></span><input type="checkbox" id="rmChk" role="switch"><span class="sw" aria-hidden="true"></span></label>
     <button type="button" class="nb pri wide" id="hOk">시작하기</button>
   </div>
 </section>
 
+<div class="fade" id="fade" aria-hidden="true"></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="../assets/tour/three.min.js"></script>
@@ -79,6 +86,6 @@
 <script src="../assets/tour/GLTFLoader.js"></script>
 <script src="../assets/tour/tour-data.js?v=v532a"></script>
 <script src="../assets/tour/tour-scene.js?v=v532a"></script>
-<script src="lab.js?v=v532a"></script>
+<script src="lab.js?v=lab3"></script>
 </body>
 </html>

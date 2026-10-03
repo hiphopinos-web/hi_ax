@@ -47,6 +47,29 @@ button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .mini .mz.next { fill: #FFD8C1; stroke: #FF7F32; stroke-width: 1.5; }
 .mini .mz.here { fill: #FF7F32; stroke: #A63D00; stroke-width: 1.5; }
 .mini:active { filter: brightness(.95); }
+/* 시점 돌리기 · 왼쪽 위 · 글자 병기 */
+.rot { position: absolute; left: 10px; top: 10px; display: flex; flex-direction: column; gap: 6px; z-index: 4; }
+.rot button { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px; border-radius: 12px; background: rgba(255, 255, 255, .94); color: var(--ink); font-size: 15px; font-weight: 700; box-shadow: 0 2px 10px rgba(25, 31, 40, .14); white-space: nowrap; }
+.rot button:active { background: var(--canvas); }
+/* 안내 챗봇 말풍선 · 머리 위 · 누르면 판 보기 */
+.gbub { position: absolute; left: 0; top: 0; max-width: 220px; padding: 10px 14px 9px; border-radius: 16px; background: var(--surface); color: var(--ink); font-size: 15px; line-height: 21px; font-weight: 700; text-align: left; box-shadow: 0 4px 16px rgba(25, 31, 40, .16); z-index: 3; word-break: keep-all; }
+.gbub::after { content: ""; position: absolute; left: 50%; bottom: -7px; margin-left: -7px; border: 7px solid transparent; border-bottom: 0; border-top-color: var(--surface); }
+.gbub .go { display: block; margin-top: 4px; font-size: 13px; color: var(--brandText); }
+/* 판 보기 들어가기 · 나오기 · 순간이동 흰 화면 */
+.fade { position: fixed; inset: 0; background: #FFFFFF; opacity: 0; pointer-events: none; z-index: 45; }
+/* 움직임 줄이기 스위치(처음 안내 · 도움말) */
+.rmrow { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 14px; margin-bottom: 14px; border-radius: 16px; background: var(--canvas); cursor: pointer; }
+.rmrow .t { flex: 1; min-width: 0; }
+.rmrow .t b { display: block; font-size: 17px; line-height: 24px; }
+.rmrow .t span { display: block; font-size: 14px; line-height: 20px; color: var(--muted); }
+.rmrow input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.rmrow .sw { flex: none; position: relative; width: 52px; height: 32px; border-radius: 999px; background: var(--disabled); transition: background .2s; }
+.rmrow .sw::after { content: ""; position: absolute; left: 3px; top: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(25, 31, 40, .25); transition: transform .2s; }
+.rmrow input:checked + .sw { background: var(--ink); }
+.rmrow input:checked + .sw::after { transform: translateX(20px); }
+.rmrow input:focus-visible + .sw { outline: 2px solid var(--ink); outline-offset: 2px; }
+html.rm .finger, html.rm .dest, html.rm .sheet, html.rm .list, html.rm .hcard, html.rm .cta { animation: none !important; }
+html.rm .rmrow .sw, html.rm .rmrow .sw::after { transition: none; }
 /* 고정 패드 · 왼쪽 아래 엄지 자리 · 늘 보임(사용자 261003 「가상 버튼이 아예 화면에 있는 게 낫다」) */
 .pad { position: absolute; left: 16px; bottom: 16px; width: 128px; height: 128px; border-radius: 50%; background: rgba(255, 255, 255, .55); box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .18), 0 2px 12px rgba(25, 31, 40, .14); touch-action: none; z-index: 4; -webkit-user-select: none; user-select: none; }
 .pad::before { content: ""; position: absolute; inset: 22px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(25, 31, 40, .10); pointer-events: none; }
