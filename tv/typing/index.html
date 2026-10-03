@@ -9,8 +9,15 @@
      47.5초 루프 = 후킹 5 · 게임 9 · 하는 법 7.5 · 상품 8 · 순위 12.5 · 마감 5.5 · 17:00 뒤 = 순위 · 상품 · 마감 26초
      데이터 = 공개 순위 type_rank(mode site · n 10 · 관리코드 없음) · 30초 폴링 · 실패 60 → 120초 · 화면이 가려지면 멈춤
      순위 변동(NEW RECORD · RANK UP)은 화면이 직전에 보여 준 판과 비교 · 서버 변경 없음 · 마감 시계 = 응답 now(있으면) 아니면 기기 시계(한국 시간)
-     가로 TV = 가운데 세로 판 + 양옆 도트 · 무음 · 주소 뒤 값은 assets/typing.js 맨 위 -->
+     가로 TV = 가운데 세로 판 + 양옆 도트 · 무음 · 주소 뒤 값은 assets/typing.js 맨 위
+     ?promo=1 = 참가자 앱에 넣는 홍보 칸(261003) · 순위 장면 없음 · 서버 호출 0 · 조작 · 전체 화면 · 꺼짐 방지 끔 · 작은 칸 글자 키움 · 본문 서체 = 앱과 같은 CDN 부분 글꼴 -->
 <link rel="icon" href="../../icons/icon-192.png">
+<script>
+  if (/[?&]promo=1(&|$)/.test(location.search)) {   /* 홍보 칸 · 1.7MB 자체 글꼴 대신 앱이 이미 받은 CDN 부분 글꼴 */
+    document.documentElement.className += " promo";
+    var axfL = document.createElement("link"); axfL.rel = "stylesheet"; axfL.href = "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"; document.head.appendChild(axfL);
+  }
+</script>
 <style>
   @font-face { font-family: "NeoDunggeunmo"; src: url("../../assets/neodgm.woff2") format("woff2"); font-display: block; }
   @font-face { font-family: "AXP"; src: url("../../draw/assets/PretendardVariable.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
@@ -187,6 +194,22 @@
   body.ctl #ctl { display: block; }
   #ctl button { font: inherit; margin: 2px; padding: 3px 7px; background: #333; color: #fff; border: 1px solid #666; cursor: pointer; }
   #ctl button.on { background: #FF7E31; color: #000; border-color: #FF7E31; }
+
+  /* 홍보 칸(?promo=1) · 폰 폭 340~390 칸 = 배율 약 0.32 · 판 위 48px 아래 글자를 키워 화면에서 15px 이상 */
+  html.promo { --neo: "NeoDunggeunmo", "Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif; --pre: "Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif; }
+  html.promo body { cursor: auto; }
+  html.promo #brand, html.promo #brand2 { font-size: 48px; line-height: 56px; }
+  html.promo #loc1 { font-size: 56px; line-height: 64px; top: 1580px; }
+  html.promo #g-hud .t, html.promo #g-lv { font-size: 52px; line-height: 60px; }
+  html.promo #g-leftt { font-size: 52px; line-height: 60px; }
+  html.promo #g-in em { font-size: 48px; }
+  html.promo #g-res small, html.promo #g-bonus small { font-size: 56px; line-height: 68px; }
+  html.promo .lt .tx { font-size: 52px; }
+  html.promo .ph .scr { font-size: 48px; }
+  html.promo #pz-s { font-size: 56px; line-height: 64px; }
+  html.promo .pz .tx small { font-size: 50px; line-height: 60px; }
+  html.promo #cl-cdk { top: 680px; font-size: 56px; line-height: 64px; }
+  html.promo #demoMark, html.promo #net, html.promo #ctl, html.promo #s-rank { display: none !important; }
 </style>
 </head>
 <body>

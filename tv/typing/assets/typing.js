@@ -9,22 +9,26 @@
  * 마감 시계 = 응답에 now(ms)가 있으면 서버 시계 · 없으면 기기 시계 · 둘 다 한국 시간(UTC+9)으로 센다
  * 주소 뒤 값: ?demo=1 서버 없이 가짜 순위(20초마다 바뀜) · ?srv=주소 · ?now=13:20 시계 흉내(한국 시간) · ?close=17:00 마감 시각 · ?after=1 마감 뒤 루프
  *   ?scene=hook|game|how|prize|rank|close 한 장면만 · ?t=초 루프 시작 위치 · ?prz4=문구 4~10위 상품 줄 켜기(기본 꺼짐 · 상품 미정) · ?ctl=1 조작판
+ *   ?promo=1 참가자 앱 홍보 칸(261003) · 후킹 → 게임 → 하는 법 → 상품 → 마감(35초) · 17:00 뒤 = 상품 → 마감(13.5초 · 마감 장면 「기록 마감」)
+ *     순위 장면 없음 · 서버 호출 0(type_rank 안 부름 · 기기 저장도 안 읽고 안 씀) · 키 · 조작판 · 전체 화면 · 꺼짐 방지 끔 · 무음
+ *     칸이 화면 밖이거나(IntersectionObserver) 탭이 가려지면 그리기를 멈추고 보이면 이어서 · 누르면 부모 창에 postMessage({ axfTy: "tap" })
  * 키: 1~6 장면 · 0 전체 루프 · F 전체 화면 · C 조작판 */
 (function () {
   "use strict";
   var Q = {}; location.search.replace(/^\?/, "").split("&").forEach(function (kv) { if (!kv) return; var i = kv.indexOf("="); var k = decodeURIComponent(i < 0 ? kv : kv.slice(0, i)); Q[k] = i < 0 ? "1" : decodeURIComponent(kv.slice(i + 1).replace(/\+/g, " ")); });
-  var DEMO = Q.demo === "1", PRZ4 = Q.prz4 ? String(Q.prz4).slice(0, 40) : "";
+  var PROMO = Q.promo === "1", DEMO = Q.demo === "1" && !PROMO, PRZ4 = Q.prz4 ? String(Q.prz4).slice(0, 40) : "";
   var body = document.body;
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function fmt(n) { return Math.round(n).toLocaleString("en-US"); }
   function ease(x) { x = Math.max(0, Math.min(1, x)); return 1 - Math.pow(1 - x, 3); }
   function load(k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
-  function save(k, v) { if (DEMO) return; try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function save(k, v) { if (DEMO || PROMO) return; try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 
   /* ── 실제 게임 데이터 · 엔진 그대로 ── */
   var WORDS = typeof RAIN_WORDS !== "undefined" && RAIN_WORDS.length ? RAIN_WORDS : ["공감", "참여", "확산", "체화", "혁신", "연결", "요약", "번역", "보상", "영업", "질문", "설계"];
-  var LINES = typeof RAIN_BONUS_LINES !== "undefined" && RAIN_BONUS_LINES.length ? RAIN_BONUS_LINES : ["나의 경험을 우리의 가능성으로", "아이디어 한 줄이 우리의 시작"];
+  var LINES = (typeof RAIN_BONUS_LINES !== "undefined" ? RAIN_BONUS_LINES : []).map(function (x) { return typeof x === "string" ? x : x && x.s; }).filter(Boolean);   /* 엔진 v5.24 부터 { s: 문장, w: 구름 단어 } · 문장만 쓴다(구름 없음) */
+  if (!LINES.length) LINES = ["나의 경험을 우리의 가능성으로", "아이디어 한 줄이 우리의 시작"];
   var SHORT = WORDS.filter(function (w) { return w.length <= 3; });   /* 1단계 = 세 글자 이하(엔진 rgPool) */
   function bonusLim(n) { return typeof rgBonusLim === "function" ? rgBonusLim(n) : Math.ceil(n * 0.8) + 6; }
   function bonusPts(text, left) { return typeof rgBonusScore === "function" ? rgBonusScore(text, text, "enter", left).pts : text.length * 20 + 300 + Math.floor(left) * 30; }
@@ -62,7 +66,7 @@
   ["bot1", "bot2", "cl-bot"].forEach(function (id) { $(id).innerHTML = BOT; });
 
   /* ════════ 데이터 ════════ */
-  var RK = { data: DEMO ? null : load("axfTy.last", null), fails: 0, timer: null, busy: false, polls: 0, srv: "" };
+  var RK = { data: DEMO || PROMO ? null : load("axfTy.last", null), fails: 0, timer: null, busy: false, polls: 0, srv: "" };
   function srvOk(u) { return typeof u === "string" && (/^https:\/\/[a-z0-9.-]+\.workers\.dev\/exec$/.test(u) || /^https:\/\/script\.google\.com\/macros\/s\/[\w-]{20,}\/exec$/.test(u) || /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//.test(u)); }
   RK.srv = srvOk(Q.srv) ? Q.srv : (typeof AXF_SERVER === "string" && srvOk(AXF_SERVER) ? AXF_SERVER : "");
   function jsonp(params, done) {
@@ -91,6 +95,7 @@
   function next(ms) { clearTimeout(RK.timer); RK.timer = null; if (!document.hidden) RK.timer = setTimeout(poll, ms); }
   function poll() {
     clearTimeout(RK.timer); RK.timer = null;
+    if (PROMO) return;   /* 홍보 칸 = 서버를 부르지 않는다(폰 수백 대) */
     if (document.hidden || RK.busy) return;
     if (DEMO) { demoStep(); RK.polls++; next(20000); return; }
     RK.busy = true;
@@ -118,8 +123,8 @@
 
   /* ════════ 장면 ════════ */
   var DUR = { hook: 5, game: 9, how: 7.5, prize: 8, rank: 12.5, close: 5.5 };
-  var PL_OPEN = ["hook", "game", "how", "prize", "rank", "close"], PL_DONE = ["rank", "prize", "close"];
-  var SOLO = DUR[Q.scene] ? Q.scene : "";
+  var PL_OPEN = PROMO ? ["hook", "game", "how", "prize", "close"] : ["hook", "game", "how", "prize", "rank", "close"], PL_DONE = PROMO ? ["prize", "close"] : ["rank", "prize", "close"];
+  var SOLO = DUR[Q.scene] && !(PROMO && Q.scene === "rank") ? Q.scene : "";
   var PLAY = { list: PL_OPEN, i: 0, id: "", t0: 0, loops: 0, frozen: false };
   function el(id) { return $("s-" + id); }
   function revealAt(sc, lt) { var a = sc.querySelectorAll("[data-at]"); for (var i = 0; i < a.length; i++) { var on = lt >= +a[i].getAttribute("data-at"); if (a[i].classList.contains("in") !== on) a[i].classList.toggle("in", on); } }
@@ -235,7 +240,7 @@
   if (PRZ4) { body.classList.add("prz"); $("pz-x").textContent = "4~10위 · " + PRZ4; $("hs-prz2").innerHTML = "<br>4~10위 · " + esc(PRZ4); }
 
   /* 5 순위 · 줄 20개를 처음에 만들어 돌려 쓴다(하루 종일 켜 두어도 DOM 이 늘지 않게) */
-  var POOL = [], NIL = [], RS = { shown: DEMO ? null : load("axfTy.shown", null), cur: [], prev: null, ev: [], map: {}, unit: "", hotOn: false };
+  var POOL = [], NIL = [], RS = { shown: DEMO || PROMO ? null : load("axfTy.shown", null), cur: [], prev: null, ev: [], map: {}, unit: "", hotOn: false };
   (function rankInit() {
     var host = $("hs-in"), i, e;
     for (i = 0; i < 10; i++) { e = document.createElement("div"); e.className = "hr nil" + (i % 2 ? " e" : ""); e.style.top = i * 108 + "px"; e.innerHTML = '<span class="no">' + (i + 1) + "</span>"; host.appendChild(e); NIL.push(e); }
@@ -347,9 +352,10 @@
     while (r >= DUR[PLAY.list[i]]) { r -= DUR[PLAY.list[i]]; i++; }
     PLAY.i = i; enter(PLAY.list[i], now - r);
   }
-  var last = 0, START = 0;
+  var last = 0, START = 0, RAF = 0, PAUSED = false, PAUSE_AT = 0, IO_VIS = true;
   function frame(ms) {
-    requestAnimationFrame(frame);
+    RAF = 0; if (PAUSED) return;
+    RAF = requestAnimationFrame(frame);
     var now = ms / 1000;
     if (!last) PLAY.t0 += now - START;   /* 첫 프레임 = 루프 시작 위치를 그때에 맞춘다(글꼴 · 그림 받느라 늦어도) */
     fit();
@@ -363,13 +369,29 @@
   }
   var TY = window.__ty = { loops: 0, scene: "", rk: RK, rs: RS, play: PLAY, demoStep: demoStep, poll: function () { poll(); }, go: function (id) { SOLO = DUR[id] ? id : ""; enter(SOLO || PLAY.list[0], performance.now() / 1000); } };
 
-  /* ── 조작 · 전체 화면 · 꺼짐 방지 ── */
+  /* 홍보 칸 · 화면 밖이거나 탭이 가려지면 그리기를 멈추고 보이면 그 자리에서 잇는다 */
+  function pauseSet(p) {
+    if (p === PAUSED) return;
+    var now = performance.now() / 1000; PAUSED = p;
+    if (p) { PAUSE_AT = now; if (RAF) cancelAnimationFrame(RAF); RAF = 0; return; }
+    if (!last) START += now - PAUSE_AT; else PLAY.t0 += now - PAUSE_AT;
+    if (!RAF) RAF = requestAnimationFrame(frame);
+  }
+  TY.paused = function () { return PAUSED; };
+  if (PROMO) {
+    body.classList.add("promo");
+    document.addEventListener("visibilitychange", function () { pauseSet(document.hidden || !IO_VIS); });
+    if ("IntersectionObserver" in window) new IntersectionObserver(function (es) { IO_VIS = es[es.length - 1].isIntersecting; pauseSet(document.hidden || !IO_VIS); }, { threshold: 0 }).observe(document.documentElement);
+    document.addEventListener("click", function () { try { if (window.parent && window.parent !== window) window.parent.postMessage({ axfTy: "tap" }, location.origin); } catch (e) {} });
+  }
+
+  /* ── 조작 · 전체 화면 · 꺼짐 방지(홍보 칸에서는 모두 끔) ── */
   function fs() { var d = document.documentElement; try { if (!document.fullscreenElement && d.requestFullscreen) d.requestFullscreen(); } catch (e) {} }
-  document.addEventListener("click", function (ev) { if (!ev.target.closest || !ev.target.closest("#ctl")) fs(); });
+  if (!PROMO) document.addEventListener("click", function (ev) { if (!ev.target.closest || !ev.target.closest("#ctl")) fs(); });
   var ptrT = null;
-  document.addEventListener("mousemove", function () { body.classList.add("ptr"); clearTimeout(ptrT); ptrT = setTimeout(function () { body.classList.remove("ptr"); }, 3000); });
+  if (!PROMO) document.addEventListener("mousemove", function () { body.classList.add("ptr"); clearTimeout(ptrT); ptrT = setTimeout(function () { body.classList.remove("ptr"); }, 3000); });
   var SCN = ["hook", "game", "how", "prize", "rank", "close"];
-  document.addEventListener("keydown", function (ev) {
+  if (!PROMO) document.addEventListener("keydown", function (ev) {
     var k = ev.key;
     if (k >= "1" && k <= "6") TY.go(SCN[+k - 1]);
     else if (k === "0") { SOLO = ""; startAt(0, performance.now() / 1000); }
@@ -378,11 +400,11 @@
   });
   var WL = null;
   function wake() { try { if (navigator.wakeLock && !WL && !document.hidden) navigator.wakeLock.request("screen").then(function (l) { WL = l; l.addEventListener("release", function () { WL = null; }); }, function () {}); } catch (e) {} }
-  document.addEventListener("visibilitychange", wake); wake();
-  if (Q.ctl === "1") body.classList.add("ctl");
+  if (!PROMO) { document.addEventListener("visibilitychange", wake); wake(); }
+  if (Q.ctl === "1" && !PROMO) body.classList.add("ctl");
   if (Q.freeze === "1") PLAY.frozen = true;
   if (Q.cap === "1") body.classList.add("cap");   /* 캡처용 · ?t= 위치에서 멈춤 */
-  (function ctl() {
+  if (!PROMO) (function ctl() {
     var c = $("ctl"), h = "<b>타자왕 순위판</b><div>장면: ";
     [["hook", "후킹"], ["game", "게임"], ["how", "하는 법"], ["prize", "상품"], ["rank", "순위"], ["close", "마감"]].forEach(function (a) { h += '<button data-go="' + a[0] + '">' + a[1] + "</button>"; });
     h += '</div><div><button data-go="">전체 루프</button> <button id="bFz">일시정지</button> <button id="bPoll">지금 받기</button></div><div id="ctlS"></div>';
@@ -398,6 +420,6 @@
 
   if (DEMO) { body.classList.add("demo"); DM.n = 0; demoStep(); RS.shown = keyed(RK.data.top).map(function (r) { return { key: r.key, name: r.name, score: r.score, rank: r.rank }; }); demoStep(); }   /* 데모 첫 순위 장면부터 NEW RECORD 가 보이게 */
   START = performance.now() / 1000; startAt(Q.t ? parseFloat(Q.t) : 0, START);
-  requestAnimationFrame(frame);
-  setTimeout(poll, DEMO ? 20000 : Math.floor(Math.random() * 3000));
+  RAF = requestAnimationFrame(frame);
+  if (!PROMO) setTimeout(poll, DEMO ? 20000 : Math.floor(Math.random() * 3000));
 })();
