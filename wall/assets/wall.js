@@ -1,5 +1,5 @@
 /* AX Festival 2026 · 1F 스탠바이미 「ME to WE 스탬프 월」 v5 「모션 그래픽」 (261003 · 사용자 승인)
- * 화면 · 워드마크(위 왼쪽) · 로고(가운데 · 점 2,026개) · 오늘 모인 스탬프 숫자와 다음 목표(아래 왼쪽) · Lv(아래 오른쪽) · 「빛 하나 = 스탬프 하나」
+ * 화면 · 워드마크(위 왼쪽) · 로고(가운데 · 점 2,026개) · 오늘 모인 스탬프 숫자와 다음 목표까지 진행 링(아래 왼쪽 · 가로는 숫자 위, 세로는 오른쪽 아래) · Lv(아래 오른쪽) · 「빛 하나 = 스탬프 하나」
  *  0  불씨 · 로고 2,026점이 어두운 오렌지 불씨로 놓여 있고, 은은한 빛 한 줄기가 아래에서 위로 천천히 지나간다(1차 완성 전 움직임은 이것 하나)
  *  1막 모으기 · 1차 완성 목표 CFG.g1(250) · 스탬프 1개 = 혜성 1개 · 닿으면 하얀 점이 팡 · 닿은 덩어리(점 약 8개)가 번쩍인다
  *     온기 = 로고 전체가 진행도만큼 고르게 달아오른다(얼룩 없음) · 앉은 자리 = 씨앗 점 하나만 O100 · 씨앗 순서 = 먼 곳부터라 밝은 점이 고르게 흩어진다
@@ -172,6 +172,7 @@
     var L = !port ? {
       box: { x: 560, y: 46, w: 940, h: 988 },
       wm: { x: 72, y: 64, w: 210 },
+      ring: { x: 207, y: 584, d: 270 },
       lab: { x: 72, y: 856, s: 28 }, num: { x: 66, y: 990, s: 140 }, sub: { x: 72, y: 1042, s: 28 },
       tag: { x: 1848, y: 990, s: 34 }, rule: { x: 1848, y: 1042, s: 24 },
       ttl: { x: 1710, y: 470, s1: 36, s2: 92, w: 380 }, tl: { x: 1848, y: 100, s: 30 }, st: { x: 72, y: 178, s: 20 }
@@ -179,7 +180,8 @@
       box: { x: 50, y: 250, w: 980, h: 1240 },
       wm: { x: 64, y: 72, w: 190 },
       lab: { x: 64, y: 1676, s: 28 }, num: { x: 64, y: 1822, s: 156 }, sub: { x: 64, y: 1872, s: 28 },
-      tag: { x: 1016, y: 1822, s: 34 }, rule: { x: 1016, y: 1872, s: 24 },
+      ring: { x: 890, y: 1712, d: 250, cap: "left" },
+      tag: { x: 64, y: 1872, s: 34, al: "left" }, rule: { x: 1016, y: 1872, s: 24 },
       ttl: { x: 540, y: 1560, s1: 34, s2: 84, w: 900 }, tl: { x: 1016, y: 110, s: 30 }, st: { x: 64, y: 172, s: 20 }
     };
     G = L; G.w = w; G.h = h; G.dpr = dpr; G.port = port; G.FW = FW; G.FH = FH; G.k = k; G.ox = ox; G.oy = oy;
@@ -768,10 +770,44 @@
     var w = cx.measureText(txt).width; if (maxW && w > maxW) { size = Math.max(12, Math.floor(size * maxW / w)); cx.font = wgt + " " + size + "px " + FONT; w = cx.measureText(txt).width; }
     cx.textAlign = align || "left"; cx.textBaseline = "alphabetic"; cx.fillText(txt, x, y); cx.globalAlpha = 1; return w;
   }
-  function subLine(n, lv) {
-    if (lv === 0) return "1차 완성까지 " + comma(CFG.g1 - n);
-    if (lv < 5) return "Lv " + (lv + 1) + "까지 " + comma(CFG.lv[lv] - n);
-    var nx = ST.mileNext || (CFG.lv[4] + CFG.mile); return comma(nx) + "까지 " + comma(nx - n);
+  /* ════════ 진행 링 · 다음 목표까지(도넛) · 트랙 어두운 회색 + O100 호 + 둥근 끝 ════════ */
+  var RING = { seg: null, v: 0, from: 0, to: 0, t0: -1e4, tl: false, fill: null };
+  function segOf(n) {
+    var lv = levelOf(n), lo, hi, name;
+    if (lv < 5) { lo = lv === 0 ? 0 : CFG.lv[lv - 1]; hi = CFG.lv[lv]; name = lv === 0 ? "1차 완성" : "Lv " + (lv + 1) + " · " + CFG.names[lv + 1]; }
+    else { var m = Math.floor((n - CFG.lv[4]) / CFG.mile) + 1; hi = CFG.lv[4] + CFG.mile * m; lo = hi - CFG.mile; name = "ME to WE " + comma(hi); }
+    return { lo: lo, hi: hi, name: name };
+  }
+  function ringStep(n, isTL) {
+    var s = segOf(n), p = cl((n - s.lo) / (s.hi - s.lo));
+    if (isTL !== RING.tl) { RING.tl = isTL; RING.seg = null; RING.fill = null; }
+    if (isTL) { RING.seg = s; RING.v = p; return p; }                                /* 다시 보기 · 숫자와 함께 바로 따라간다 */
+    if (!RING.seg) { RING.seg = s; RING.v = RING.from = RING.to = p; RING.t0 = -1e4; RING.fill = null; return RING.v; }   /* 첫 로드 · 점프 · 현재 값으로 바로 */
+    var F = RING.fill;
+    if (F) {                                                                         /* 목표를 채운 순간 · 100% 로 차고 잠깐 머문 뒤 다음 목표로 0 부터 */
+      var u = T - F.t0; RING.v = F.v0 + (1 - F.v0) * EO(u / 0.5);
+      if (!F.popped && u >= 0.4) { F.popped = true; var R = G.ring, r = R.d / 2 - R.d * 0.095; pop(R.x, R.y - r, 0.5); }
+      if (u >= 1.7) { RING.fill = null; RING.seg = s; RING.from = RING.to = 0; RING.v = 0; RING.t0 = T; RING.to = p; }
+      return RING.v;
+    }
+    if (s.lo !== RING.seg.lo) {
+      if (s.lo > RING.seg.lo) { RING.fill = { t0: T, v0: RING.v, popped: false }; return RING.v; }
+      RING.seg = s; RING.v = RING.from = RING.to = p; return p;
+    }
+    RING.seg = s;
+    if (p !== RING.to) { RING.from = RING.v; RING.to = p; RING.t0 = T; }
+    RING.v = RING.from + (RING.to - RING.from) * EO((T - RING.t0) / 0.55);
+    return RING.v;
+  }
+  function drawRing(n, isTL, org) {
+    var v = ringStep(n, isTL), R = G.ring, d = R.d, lw = d * 0.19, r = (d - lw) / 2, S = RING.seg;
+    cx.lineWidth = lw; cx.strokeStyle = org ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.16)";
+    cx.beginPath(); cx.arc(R.x, R.y, r, 0, 6.2832); cx.stroke();
+    if (v > 0.004) { cx.lineCap = "round"; cx.strokeStyle = org ? "#FFFFFF" : COL.o; cx.beginPath(); cx.arc(R.x, R.y, r, -1.5708, -1.5708 + 6.2832 * v); cx.stroke(); cx.lineCap = "butt"; }
+    text(Math.floor(v * 100 + 0.0001) + "%", 700, Math.round(d * 0.27), "#FFFFFF", R.x, R.y + d * 0.095, "center", d - lw * 2 - 8);
+    var dim = org ? "rgba(255,255,255,0.85)" : COL.sub, hot = org ? "#FFFFFF" : COL.o;
+    if (R.cap === "left") { text("다음 목표", 500, 26, dim, R.x - d / 2 - 22, R.y - 8, "right"); text(S.name, 600, 32, hot, R.x - d / 2 - 22, R.y + 32, "right", 230); }
+    else { var w = text("다음 목표", 500, 28, dim, R.x - d / 2, R.y + d / 2 + 46); text(S.name, 600, 32, hot, R.x - d / 2 + w + 16, R.y + d / 2 + 46, "left", 330 - w); }
   }
   function drawText() {
     var org = ORANGE(), S = SHOW, isTL = S && S.kind === "tl", t = S ? T - S.t0 : 0;
@@ -781,8 +817,8 @@
     var hit = isTL ? 0 : cl(1 - (T - ST.hitAt) / 0.5);
     text(comma(n), 700, G.num.s, COL.txt, G.num.x, G.num.y);
     if (hit > 0 && !org) text(comma(n), 700, G.num.s, COL.hi, G.num.x, G.num.y, "left", null, hit * 0.8);
-    if (!isTL) text(subLine(n, lv), 500, G.sub.s, org ? "rgba(255,255,255,0.85)" : COL.sub, G.sub.x, G.sub.y);
-    if (lv >= 1) text("Lv " + lv + " · " + CFG.names[lv], 600, G.tag.s, org ? "#FFFFFF" : COL.o, G.tag.x, G.tag.y, "right");
+    drawRing(n, isTL, org);
+    if (lv >= 1) text("Lv " + lv + " · " + CFG.names[lv], 600, G.tag.s, org ? "#FFFFFF" : COL.o, G.tag.x, G.tag.y, G.tag.al || "right");
     /* 규칙 한 줄 · 작은 혜성 그림 */
     var R = G.rule, w = text("빛 하나 = 스탬프 하나", 500, R.s, org ? "rgba(255,255,255,0.8)" : COL.faint, R.x, R.y, "right");
     var ix = R.x - w - 22, iy = R.y - R.s * 0.36, sp = sprites();
@@ -817,10 +853,10 @@
     else { var per = Math.ceil(n / CFG.swarmAt); for (var b = 0; b < n; b++) SCH.push({ t: t0 + (Math.floor(b / per) + 0.5) * W / CFG.swarmAt + (b % per) * CFG.swarmGap }); }
   }
   function burstIn(n, win) { ST.target += n; for (var a = 0; a < n; a++) SCH.push({ t: T + 0.3 + a * win / Math.max(1, n) }); }
-  function jumpBy(m) { var n = ST.n + m; ST.n = n; setLit(n); ST.lvl = levelOf(n); ORB.on = ST.lvl >= 3; ORB.a = ORB.on ? 1 : 0; mileInit(); }
+  function jumpBy(m) { RING.seg = null; var n = ST.n + m; ST.n = n; setLit(n); ST.lvl = levelOf(n); ORB.on = ST.lvl >= 3; ORB.a = ORB.on ? 1 : 0; mileInit(); }
   function mileInit() { ST.mileNext = CFG.lv[4] + CFG.mile * Math.max(1, Math.floor((ST.n - CFG.lv[4]) / CFG.mile) + 1); }
   function setNow(n) {
-    n = Math.max(0, n);
+    n = Math.max(0, n); RING.seg = null; RING.fill = null;
     FLY = []; SCH = []; WAVES = []; IGN = []; FL = []; GLOWS = []; pn = 0; SHOW = null; STG.base = "black"; STG.to = null;
     ST.n = ST.target = n; ST.lvl = levelOf(n); ST.hitAt = -1e4; mileInit();
     ORB.on = ST.lvl >= 3; ORB.a = ORB.on ? 1 : 0; ORB.form = -1e4;
