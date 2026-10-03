@@ -6,11 +6,12 @@
  *  1차 완성 · 마지막 혜성이 닿으면 로고 전체가 차례로 점화 → 하얀 점 폭죽 → 무대가 오렌지로 한 번 뒤집히고 로고가 하얗게 숨쉰다(약 10초)
  *  2막 · 누적이 CFG.lv 경계를 넘을 때마다 움직임이 하나씩 열린다 · 500 물결 · 1,000 하나로(흩어졌다 모이기에 「한 점으로」가 열림) · 2,026 목표 달성(무대 오렌지 뒤집기)
  *     목표 = 2,026 하나 · 링은 0 → 2,026 · 넘으면 링은 꽉 찬 채 체크 · 「목표 2,026 초과 달성」 · 그 뒤는 숫자만 오른다(장면 없음)
- *  흩어졌다 모이기 · CFG.actEvery(60~90초)마다 6~7초 · 로고 점이 풀렸다 다시 모여 글자가 된다 · 변주 5가지(단계가 오를수록 늘고 커진다)
+ *  흩어졌다 모이기 · CFG.actEvery(단계마다 90~120초 → 40~55초)마다 5~7초 · 로고 점이 풀렸다 다시 모여 글자가 된다 · 변주 5가지(단계가 오를수록 늘고 · 커지고 · 잦아진다) · 도는 동안에도 혜성이 날아와 함께 앉는다
+ *  단계마다 혜성이 없을 때도 보이는 차이(정지) · 250 로고 전부 점화 · 500 빛 번짐 짙게 + 끝나면 물결 · 1,000 씨앗 자리 하얀 별 + 끝나면 잔광 · 2,026 가장자리 흰 빛
  *  다시 보기 · CFG.tlEvery(240초)마다 로고가 흩어졌다가 오늘 모인 스탬프가 사방에서 날아들어 다시 로고가 되고 숫자가 0에서 n까지 오른다
  * 데이터 · 공개 집계 stats(관리코드 없음) 15초 폴링 · kinds 의 stamp:<8종> − unstamp:<8종> = 스탬프 수 · 실패하면 15 → 30 → 60초로 늦추고 마지막 값 유지 + 「연결 다시 시도 중」
  *        늘어난 수를 다음 15초(92%)에 고르게 나눠 혜성으로 · 몰리면 떼로 · 처음 열 때 · 새로고침 · 서버 수가 줄었을 때 = 지금 수로 바로(1차 완성 · 레벨 장면 다시 틀지 않음)
- * 주소 · ?o=land|port 방향 고정(없으면 화면 비율) · ?base=숫자 빼고 셈(비상용) · ?demo=1 서버 없이 0개부터 방향키로 하나씩(→ +1 · ← −1 · 숫자 + Enter) · 조작표 H(데모) · ?rec=1 녹화용 고정 시계 */
+ * 주소 · ?o=land|port 방향 고정(없으면 화면 비율) · ?base=숫자 빼고 셈(비상용) · ?demo=1 서버 없이 0개부터(↑ +10 혜성 하나씩 · → +10 빨리 감기 · ↓ ← −10 · 숫자 + Enter · S 사이클 ×6 · 위 가운데 상태 줄) · 조작표 H(데모) · ?rec=1 녹화용 고정 시계 */
 (function () {
   "use strict";
   var Q = {}; location.search.replace(/^\?/, "").split("&").forEach(function (kv) { if (!kv) return; var p = kv.split("="); Q[decodeURIComponent(p[0])] = decodeURIComponent(p[1] || ""); });
@@ -23,13 +24,16 @@
     pollSec: 15, spread: 0.92, swarmAt: 24, swarmGap: 0.12,   /* 서버 집계 주기(초 · 서버는 20초 캐시) · 바꾸지 않는다 */
     maxFly: 28, maxQueue: 300,
     tlEvery: 240, tlMin: 5,                      /* 「오늘 하루 다시 보기」 주기(초) · 스탬프가 이만큼은 있어야 */
-    actEvery: [60, 90], actQuiet: 30,            /* 흩어졌다 모이기 · 간격(초 · Lv3 전은 아래 끝 +10) · 다시 보기 앞뒤 쉼(초) */
+    actEvery: [[90, 120], [75, 100], [60, 80], [50, 70], [40, 55]], actQuiet: 30,   /* 흩어졌다 모이기 · 간격(초 · 단계 0 모으기 ~ 4 목표 달성마다 짧아진다) · 다시 보기 앞뒤 쉼(초) */
+    actAmp: [0.32, 0.6, 0.8, 0.95, 1.08],       /* 흩어지는 폭 · 1차 완성 전에는 살짝 풀렸다 묶이는 정도 · 단계가 오를수록 크게 */
     dotRatio: 1.16,                              /* 점 지름 ÷ 점 간격 · 모든 점 같은 크기 */
     warm: [0.18, 0.7, 0.45],                     /* 로고 전체 온기(밝기 사다리) · 0개 → 1차 완성 직전 · 진행도^0.45 로 고르게(초반에 빨리) 오른다 */
     lift: [0.08, 0],                             /* 스탬프가 앉은 덩어리 · 씨앗 바로 옆 · 그 바깥이 온기보다 이만큼 더 밝다(씨앗 점 하나만 O100) */
     ignStep: 0.085                               /* 덩어리 안에서 한 걸음 번지는 시간(초) */
   };
   CFG.lv = [CFG.g1, 500, 1000, CFG.goal];          /* 단계 경계 · 1차 완성 · 물결 · 하나로 · 목표 달성(이후 단계 없음) */
+  var CYC = 1;                                     /* 사이클 빠르기 · 데모 S 키로 ×6(흩어졌다 모이기 · 다시 보기 주기만 · 혜성 박자는 그대로) · 운영은 늘 1 */
+  function cy(s) { return s / CYC; }
 
   function cl(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
   function EO(x) { x = cl(x); return 1 - Math.pow(1 - x, 3); }
@@ -117,6 +121,7 @@
       }
     }
     LOGO.n8 = n8;
+    LOGO.rim = new Uint8Array(n); for (i = 0; i < n; i++) LOGO.rim[i] = n8[i].length < 7 ? 1 : 0;   /* 가장자리 점(이웃 7 미만) · 목표 달성 뒤 흰 테두리 빛 */
     /* ME · to · WE 묶음(위에서부터 M e t o W e) */
     var y0 = 1e9, y1 = -1e9; P.forEach(function (p) { y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); });
     LOGO.part = new Int8Array(n);
@@ -177,13 +182,13 @@
       wm: { x: 72, y: 64, w: 210 },
       ring: { x: 207, y: 861, d: 270 },
       num: { x: 1848, by: 1042, h: 100, maxW: 420, al: "right", ls: 28, ts: 32 },
-      ttl: { x: 1700, y: 470, s1: 36, s2: 92, w: 400 }, tl: { x: 1848, y: 100, s: 30 }, st: { x: 72, y: 178, s: 20 }
+      ttl: { x: 1700, y: 470, s1: 36, s2: 92, w: 400 }, tl: { x: 1848, y: 100, s: 30 }, st: { x: 72, y: 178, s: 20 }, dm: { y: [44, 236, 278, 28], w: 1240 }
     } : {
       box: { x: 50, y: 250, w: 980, h: 1240 },
       wm: { x: 64, y: 72, w: 190 },
       num: { x: 64, by: 1838, h: 110, maxW: 430, al: "left", ls: 28, ts: 32 },
       ring: { x: 890, y: 1712, d: 250, cap: "left" },
-      ttl: { x: 540, y: 1560, s1: 34, s2: 84, w: 900 }, tl: { x: 1016, y: 110, s: 30 }, st: { x: 64, y: 172, s: 20 }
+      ttl: { x: 540, y: 1560, s1: 34, s2: 84, w: 900 }, tl: { x: 1016, y: 110, s: 30 }, st: { x: 64, y: 172, s: 20 }, dm: { y: [38, 66, 200, 27], w: 1000 }
     };
     G = L; G.w = w; G.h = h; G.dpr = dpr; G.port = port; G.FW = FW; G.FH = FH; G.k = k; G.ox = ox; G.oy = oy;
     G.xL = -ox / k; G.xR = (w - ox) / k; G.yT = -oy / k; G.yB = (h - oy) / k;
@@ -244,6 +249,8 @@
     })(l / (NL - 1));
     SPR.lit = SPR.ramp[NL - 1];
     SPR.white = mk(function (x) { circ(x, "#FFF3EA", Z / 2); circ(x, "#FFFFFF", Z * 0.3); });
+    SPR.star = mk(function (x) { circ(x, "#FFCFAE", Z / 2); circ(x, "#FFF3EA", Z * 0.3); });   /* 하나로 뒤 · 스탬프 씨앗 자리 = 하얀 별(정지) */
+    SPR.rim = mk(function (x) { circ(x, "#FFC6A2", Z / 2); circ(x, "#FFE6D6", Z * 0.3); });    /* 목표 달성 뒤 · 가장자리 점 = 흰 테두리(정지) */
     var bl = function (c0, c1, c2) { var B = document.createElement("canvas"); B.width = B.height = 128; var bx = B.getContext("2d"), gr = bx.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, c0); gr.addColorStop(0.3, c1); gr.addColorStop(1, c2); bx.fillStyle = gr; bx.fillRect(0, 0, 128, 128); return B; };
     SPR.bloom = bl("rgba(255,200,150,1)", "rgba(255,150,62,0.5)", "rgba(255,126,49,0)");
     SPR.wbloom = bl("rgba(255,255,255,1)", "rgba(255,235,220,0.55)", "rgba(255,178,132,0)");
@@ -263,6 +270,8 @@
   function emberB() { return warmB(litC); }
   function liftB(i, w) { var d = clDepth[i]; return d === 0 ? 1 : Math.min(0.9, w + (d === 1 ? CFG.lift[0] : CFG.lift[1])); }
   function bOf(i) { if (litC >= CFG.g1) return 1; var w = warmB(litC); return lit[i] ? liftB(i, w) : w; }
+  /* 단계마다 혜성이 없을 때도 보이는 차이(정지 · 상시 움직임 아님) · 하나로(Lv3)부터 씨앗 자리 = 하얀 별 */
+  function sprOf(i) { return ST.lvl >= 3 && clDepth[i] === 0 ? sprites().star : ST.lvl >= 4 && LOGO.rim[i] ? sprites().rim : sprB(bOf(i)); }
   function setLit(m) {
     lit.fill(0); litC = Math.min(m, CFG.g1);
     for (var k = 0; k < litC; k++) CL[k].dots.forEach(function (i) { lit[i] = 1; });
@@ -270,14 +279,15 @@
   }
   function renderLogo() {
     var c = LAY.logo.getContext("2d"); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, LAY.logo.width, LAY.logo.height); devT(c);
-    var full = litC >= CFG.g1, d = G.D, sp = sprites(), bd = d * 3.4;
-    /* 빛 번짐(캐시) · 1차 완성 전 = 씨앗 점 아래만 · 뒤 = 모든 점 */
+    var full = litC >= CFG.g1, d = G.D, sp = sprites(), bd = d * 3.4, lv = ST.lvl, fb = lv >= 2 ? 0.17 : 0.11, rb = d * 3.2;
+    /* 빛 번짐(캐시) · 1차 완성 전 = 씨앗 점 아래만 · 뒤 = 모든 점(물결부터 더 짙게) · 목표 달성 뒤 = 가장자리에 흰 빛 */
     c.globalCompositeOperation = "lighter";
-    for (var j = 0; j < LOGO.n; j++) { var hb = full ? 0.11 : lit[j] && !clDepth[j] ? 0.16 : 0; if (!hb) continue; c.globalAlpha = hb; c.drawImage(sp.bloom, G.pos[j][0] - bd / 2, G.pos[j][1] - bd / 2, bd, bd); }
+    for (var j = 0; j < LOGO.n; j++) { var hb = full ? fb : lit[j] && !clDepth[j] ? 0.16 : 0; if (!hb) continue; c.globalAlpha = hb; c.drawImage(sp.bloom, G.pos[j][0] - bd / 2, G.pos[j][1] - bd / 2, bd, bd); }
+    if (lv >= 4) for (j = 0; j < LOGO.n; j++) { if (!LOGO.rim[j]) continue; c.globalAlpha = 0.12; c.drawImage(sp.wbloom, G.pos[j][0] - rb / 2, G.pos[j][1] - rb / 2, rb, rb); }
     c.globalCompositeOperation = "source-over"; c.globalAlpha = 1;
     for (var i = 0; i < LOGO.n; i++) {
-      var b = bOf(i), p = G.pos[i];
-      c.drawImage(sprB(b), p[0] - d / 2, p[1] - d / 2, d, d);
+      var p = G.pos[i];
+      c.drawImage(sprOf(i), p[0] - d / 2, p[1] - d / 2, d, d);
     }
     LAY.dirty = false;
   }
@@ -389,12 +399,26 @@
     }
     cx.globalAlpha = 1;
   }
+  /* 잔광 · 하나로(Lv3)부터 흩어졌다 모이기가 끝나면 하얀 빛 한 줄이 로고 위를 왼쪽 위에서 오른쪽 아래로 천천히 한 번 훑는다(약 3초 · 그때만) */
+  var GLINT = { t0: -1e4, dur: 3.2 };
+  function drawGlint() {
+    var t = T - GLINT.t0; if (t < 0 || t > GLINT.dur) return;
+    var u = t / GLINT.dur, dx = 0.8, dy = 0.6, S0 = G.hw * dx + G.hh * dy, w = 150, f = -S0 - w + (2 * S0 + 2 * w) * ESIO(u), env = Math.min(1, u / 0.15, (1 - u) / 0.15);
+    var o = dsp(sprites().white), K = G.k * G.dpr, ox = G.ox * G.dpr, oy = G.oy * G.dpr;
+    ident();
+    for (var i = 0; i < LOGO.n; i++) {
+      var p = G.pos[i], v = 1 - Math.abs((p[0] - G.cx) * dx + (p[1] - G.cy) * dy - f) / w; if (v <= 0.05) continue;
+      cx.globalAlpha = 0.62 * v * v * env; cx.drawImage(o.c, (p[0] * K + ox - o.h + 0.5) | 0, (p[1] * K + oy - o.h + 0.5) | 0);
+    }
+    cx.globalAlpha = 1; logical();
+  }
 
   /* ════════ 흩어졌다 모이기 · 「점이 모여 하나(WE)가 된다」를 되풀이하는 숨 · CFG.actEvery(60~90초)마다 6~7초 ════════
      지금 켜진 상태(점마다 밝기) 그대로 모양만 풀렸다 모인다 · 점 크기는 그대로 · 다 모인 순간 하얀 반짝임 한 번
      변주 · 터졌다 되감기 · 흩날렸다 내려앉기 · ME가 WE로(처음부터) · 물결(500 부터) · 한 점으로(1,000 「하나로」 부터)
-     단계가 오를수록 흩어지는 폭과 반짝임이 커지고 · 목표 달성 뒤에는 한 점으로 · 터졌다 되감기 위주
-     도는 동안 혜성은 기다렸다가 끝나면 이어서 날아온다 · 다시 보기 앞뒤 CFG.actQuiet(30초) · 1차 완성 · 단계 장면 중에는 하지 않는다 */
+     단계가 오를수록 흩어지는 폭(CFG.actAmp · 1차 완성 전은 살짝)과 반짝임이 커지고 간격(CFG.actEvery)이 짧아진다 · 목표 달성 뒤에는 한 점으로 · 터졌다 되감기 위주
+     도는 동안에도 혜성은 날아온다 · 제 점이 제자리 가까이 있으면 바로 앉고 · 흩어져 있으면 글자 자리에서 기다렸다가 점이 돌아올 때 함께 앉는다
+     경계 혜성(250 · 500 · 1,000 · 2,026)만 끝난 뒤에 날아온다(장면이 겹치지 않게) · 다시 보기 앞뒤 CFG.actQuiet(30초) · 1차 완성 · 단계 장면 중에는 하지 않는다 */
   var ACTN = { burst: "터졌다 되감기", dust: "흩날렸다 내려앉기", mewe: "ME가 WE로", wave: "물결", one: "한 점으로" };
   var ACTALL = ["burst", "dust", "mewe", "wave", "one"];
   var ACT = { next: 0, due: false, force: "", seen: {}, bag: [], last: "", log: [], ak: -1 };
@@ -402,7 +426,7 @@
     if (lv >= 4) return ["one", "burst", "one", "burst", "mewe", "wave", "dust"];
     var a = ["burst", "dust", "mewe"]; if (lv >= 2) a.push("wave"); if (lv >= 3) a.push("one"); return a;
   }
-  function actGap() { var e = CFG.actEvery, lo = ST.lvl >= 3 ? e[0] : e[0] + 10; return lo + RND() * (e[1] - lo); }
+  function actGap() { var e = CFG.actEvery[Math.min(4, ST.lvl)]; return cy(e[0] + RND() * (e[1] - e[0])); }
   function actPick() {
     var pool = actPool(ST.lvl), i;
     for (i = 0; i < pool.length; i++) if (!ACT.seen[pool[i]]) return pool[i];   /* 새로 열린 변주 먼저 */
@@ -417,21 +441,26 @@
   function stepAct() {
     if (!ACT.next) ACT.next = T + actGap();
     if (SHOW) { ACT.due = false; return; }
-    if (!ACT.force && !ACT.due) {   /* 한 번 정해지면(due) 혜성이 다 앉을 때까지 기다렸다 바로 시작 */
+    if (!ACT.force && !ACT.due) {   /* 한 번 정해지면(due) 경계 혜성이 날고 있지 않을 때 바로 시작 */
       if (T < ACT.next) return;
-      if (TLS.due || TLS.next - T < CFG.actQuiet + 8) { ACT.due = false; ACT.next = Math.max(ACT.next, TLS.next + CFG.actQuiet + 18); return; }
+      if (TLS.due || TLS.next - T < cy(CFG.actQuiet + 8)) { ACT.due = false; ACT.next = Math.max(ACT.next, TLS.next + 18 + cy(CFG.actQuiet)); return; }
     }
-    ACT.due = true;   /* 나는 혜성이 다 앉고 마지막 번쩍임이 끝나면 시작 · 그동안 새 혜성은 기다린다 */
-    if (!FLY.length && T - ST.hitAt > 1.2) { var v = ACT.force || actPick(); ACT.due = false; ACT.force = ""; startShow("act", v); }
+    ACT.due = true;   /* 보통 혜성은 기다리지 않는다(도는 동안 함께 날아와 앉는다) · 경계 혜성만 끝나기를 기다린다 */
+    if (!FLY.some(function (f) { return f.big; })) { var v = ACT.force || actPick(); ACT.due = false; ACT.force = ""; startShow("act", v); }
   }
   function actAfter(S) {
-    if (S.kind === "act") ACT.next = actFit(T + actGap());
-    else ACT.next = Math.max(ACT.next, T + (S.kind === "tl" ? CFG.actQuiet + RND() * 15 : 20));
+    if (S.kind === "act") { ACT.next = actFit(T + actGap()); actLook(); }
+    else { ACT.next = Math.max(ACT.next, T + (S.kind === "tl" ? cy(CFG.actQuiet + RND() * 15) : cy(20))); if (S.kind === "lv3" || S.kind === "lv4") actLook(); }
+  }
+  /* 다 모인 뒤 · 단계마다 하나 더(혜성이 없을 때도 보이는 차이) · 물결(Lv2) = 가운데서 물결 한 번 · 하나로(Lv3)부터 = 하얀 잔광이 천천히 훑는다 */
+  function actLook() {
+    if (ST.lvl >= 3) GLINT.t0 = T + 0.3;
+    else if (ST.lvl >= 2) wave(G.cx, G.cy, { sp: 800, w: 120, a: 0.5, R: 1600 });
   }
   /* 다시 보기 앞뒤 쉼에 걸리면 · 앞당겨 들어갈 자리(지난 것이 끝나고 40초 이상)가 있으면 앞으로 · 없으면 다시 보기 뒤로 */
   function actFit(t) {
-    var a = TLS.next - CFG.actQuiet - 12, b = TLS.next + 17 + CFG.actQuiet;
-    if (t > a && t < b) return a >= T + 40 ? a : b + RND() * 10;
+    var a = TLS.next - cy(CFG.actQuiet + 12), b = TLS.next + 17 + cy(CFG.actQuiet);
+    if (t > a && t < b) return a >= T + cy(40) ? a : b + cy(RND() * 10);
     return t;
   }
   function aFl(z) { return z < 0 || z > 0.42 ? 0 : 0.95 * Math.pow(1 - z / 0.42, 1.5); }   /* 제자리에 닿은 점의 하얀 반짝임 */
@@ -444,14 +473,22 @@
     var n = LOGO.n, lv = ST.lvl, i;
     seed = seed || 1 + Math.floor(RND() * 1e9);
     var r = mulberry(seed), F32 = function () { return new Float32Array(n); };
-    var A = { v: v, big: !!big, seed: seed, n: n, X: F32(), Y: F32(), F: F32(), ta: F32(), r1: F32(), r2: F32(), r3: F32(), spr: [],
-      a: big ? 1.2 : [0.8, 0.85, 0.92, 1, 1.12][Math.min(4, lv)], sp: big ? 2 : lv >= 4 ? 1.8 : lv >= 2 ? 1.3 : 1, ghost: 0.07 };
-    for (i = 0; i < n; i++) { A.spr.push(sprB(bOf(i))); A.r1[i] = r(); A.r2[i] = r(); A.r3[i] = r(); }
-    A.dsp = A.spr.map(dsp);
+    var A = { v: v, big: !!big, seed: seed, n: n, X: F32(), Y: F32(), F: F32(), ta: F32(), r1: F32(), r2: F32(), r3: F32(), spr: [], hits: [],
+      a: big ? 1.2 : [0.8, 0.85, 0.92, 1, 1.12][Math.min(4, lv)], m: big ? 1.2 : CFG.actAmp[Math.min(4, lv)], sp: big ? 2 : lv >= 4 ? 1.8 : lv >= 2 ? 1.3 : 1, ghost: 0.07 };
+    for (i = 0; i < n; i++) { A.r1[i] = r(); A.r2[i] = r(); A.r3[i] = r(); }
+    actSpr(A);
+    for (i = 0; i < n; i++) A.X[i] = -1e5;   /* 첫 그림 전 · 아직 자리 모름(혜성은 기다린다) */
     ACTV[v].setup(A, F32);
     var mx = 0; for (i = 0; i < n; i++) if (A.ta[i] > mx) mx = A.ta[i];
     A.tHome = mx; A.dur = mx + 0.75;
     return A;
+  }
+  function actSpr(A) { A.spr = []; for (var i = 0; i < A.n; i++) A.spr.push(sprOf(i)); A.dsp = A.spr.map(dsp); }   /* 점마다 지금 밝기 그림(혜성이 앉으면 다시) */
+  /* 도는 동안 혜성이 앉으면 · 밝기 그림을 다시 맞추고 · 앉은 점과 이웃이 움직이는 자리에서 하얗게 번쩍인다 */
+  function actHit(A, ti) {
+    actSpr(A);
+    A.hits.push([ti, T]); LOGO.n8[ti].forEach(function (j) { A.hits.push([j, T + 0.06]); });
+    if (A.hits.length > 600) A.hits.splice(0, A.hits.length - 600);
   }
   /* 그리기 · 로고 캐시는 처음 0.35초에 흐릿한 자국(ghost)으로 식고 다 모이면 다시 켜진다 · 점 2,026개는 매 프레임 자리만 바꿔 같은 그림(밝기 사다리)으로 */
   function actDraw(A, t) {
@@ -464,6 +501,11 @@
     ident();
     for (i = 0; i < n; i++) if (X[i] > -9e3) { o = ds[i]; cx.drawImage(o.c, (X[i] * K + ox - o.h + 0.5) | 0, (Y[i] * K + oy - o.h + 0.5) | 0); }
     for (i = 0; i < n; i++) if (F[i] > 0.02) { cx.globalAlpha = F[i]; cx.drawImage(w.c, (X[i] * K + ox - w.h + 0.5) | 0, (Y[i] * K + oy - w.h + 0.5) | 0); }
+    for (var h = 0; h < A.hits.length; h++) {   /* 도는 중에 앉은 혜성 자리 */
+      var hz = (T - A.hits[h][1]) / 0.7, hi = A.hits[h][0]; if (hz >= 1) { A.hits.splice(h--, 1); continue; }
+      if (hz < 0 || X[hi] < -9e3) continue;
+      cx.globalAlpha = Math.pow(1 - hz, 1.3); cx.drawImage(w.c, (X[hi] * K + ox - w.h + 0.5) | 0, (Y[hi] * K + oy - w.h + 0.5) | 0);
+    }
     cx.globalAlpha = 1; logical();
     if (V.over) V.over(A, t);
   }
@@ -480,12 +522,12 @@
     /* ① 터졌다 되감기 · 잠깐 숨을 들이쉬듯 모였다가 가운데서 바깥으로 팡 · 퍼진 채 잠깐 떠 있다가 같은 길을 되감아 한꺼번에 제자리로(작은 스프링) */
     burst: {
       setup: function (A, F32) {
-        var P = G.pos, M = Math.max(G.hw, G.hh); A.th = F32(); A.R = F32(); A.sw = F32();
+        var P = G.pos, M = Math.max(G.hw, G.hh), k2 = Math.min(1, A.m); A.th = F32(); A.R = F32(); A.sw = F32();   /* k2 · 폭이 작을 때는 흩어짐(제각각)도 줄여 글자 모양이 남는다 */
         for (var i = 0; i < A.n; i++) {
           var dx = P[i][0] - G.cx, dy = P[i][1] - G.cy;
-          A.th[i] = Math.atan2(dy, dx) + (A.r1[i] - 0.5) * 0.4;
-          A.R[i] = A.a * (30 + 190 * Math.hypot(dx, dy) / M + 90 * A.r2[i]);   /* 로고가 두 배 남짓 부풀어 터진 모양 · 화면 밖으로 흩지 않는다 */
-          A.sw[i] = (A.r3[i] - 0.5) * 0.5;
+          A.th[i] = Math.atan2(dy, dx) + (A.r1[i] - 0.5) * 0.4 * k2;
+          A.R[i] = A.m * (30 + 190 * Math.hypot(dx, dy) / M + 90 * A.r2[i] * k2);   /* 로고가 두 배 남짓 부풀어 터진 모양 · 화면 밖으로 흩지 않는다 */
+          A.sw[i] = (A.r3[i] - 0.5) * 0.5 * k2;
           A.ta[i] = 4.2 + 0.12 * A.r1[i];
         }
       },
@@ -496,25 +538,25 @@
           var ta = A.ta[i], tin = ta - 1.05, R = A.R[i], m;
           if (t < tin) m = mo + pre;
           else if (t < ta) m = out(tin) * (1 - Math.pow((t - tin) / 1.05, 2.2));
-          else { var z = (t - ta) / 0.42; m = z < 1 ? -(9 * A.a / R) * Math.sin(Math.PI * z) * (1 - z) : 0; }
+          else { var z = (t - ta) / 0.42; m = z < 1 ? -(9 * A.m / R) * Math.sin(Math.PI * z) * (1 - z) : 0; }
           var ang = A.th[i] + A.sw[i] * (m > 0 ? m : 0), d = R * m;
           X[i] = P[i][0] + Math.cos(ang) * d * kx; Y[i] = P[i][1] + Math.sin(ang) * d * ky; F[i] = aFl(t - ta);   /* 긴 쪽으로는 덜 퍼진다(글자 묶음 · 화면 밖) */
         }
       },
       ev: function (A, S) {
-        once(S, "pop", 0.45, function () { pop(G.cx, G.cy, 1.1 * A.a); });
+        once(S, "pop", 0.45, function () { pop(G.cx, G.cy, 1.1 * A.a * (0.45 + 0.55 * Math.min(1, A.m))); });
         once(S, "home", A.tHome - 0.1, function () { actHome(A, G.cx, G.cy); });
       }
     },
     /* ② 흩날렸다 내려앉기 · 위쪽 점부터 먼지처럼 위로 흩날려 떠오르고 · 비처럼 곧게 떨어져 아래부터 글자가 다시 생긴다 */
     dust: {
       setup: function (A, F32) {
-        var P = G.pos; A.rd = F32(); A.H = F32(); A.wx = F32(); A.fs = F32(); A.xf = F32(); A.yf = F32();
+        var P = G.pos, k2 = Math.min(1, A.m); A.rd = F32(); A.H = F32(); A.wx = F32(); A.fs = F32(); A.xf = F32(); A.yf = F32();
         for (var i = 0; i < A.n; i++) {
           var q = cl((P[i][1] - (G.cy - G.hh)) / (2 * G.hh));   /* 0 = 위 · 1 = 아래 */
           A.rd[i] = 0.2 + q * 0.9 + 0.15 * A.r1[i];
-          A.H[i] = A.a * (360 + 320 * A.r2[i]);
-          A.wx[i] = A.a * (-60 + 200 * A.r3[i]);
+          A.H[i] = A.m * (360 + 320 * A.r2[i] * k2);
+          A.wx[i] = A.m * k2 * (-60 + 200 * A.r3[i]);
           A.fs[i] = 3.3 + (1 - q) * 1.5 + 0.12 * A.r2[i];
           A.ta[i] = A.fs[i] + 0.62;
           var e = this.e(A, i, A.fs[i]); A.xf[i] = P[i][0] + e[0]; A.yf[i] = P[i][1] + e[1];
@@ -524,7 +566,7 @@
       e: function (A, i, t) {
         var s = t - A.rd[i]; if (s <= 0) return [0, 0];
         var u = s / 1.5, e = u < 1 ? Math.pow(u, 1.7) : 1 + 0.2 * EO((s - 1.5) / 2.6);
-        return [A.wx[i] * e + 14 * A.a * Math.sin(A.r1[i] * 6.2832 + e * 2.4) * e, -A.H[i] * e];
+        return [A.wx[i] * e + 14 * A.m * Math.sin(A.r1[i] * 6.2832 + e * 2.4) * e, -A.H[i] * e];
       },
       pos: function (A, t) {
         var P = G.pos, X = A.X, Y = A.Y, F = A.F;
@@ -600,7 +642,7 @@
         var P = G.pos, x0 = G.cx - G.hw, w = 2 * G.hw; A.dl = F32(); A.vx = F32(); A.vy = F32(); A.lr = F32();
         for (var i = 0; i < A.n; i++) {
           A.dl[i] = 0.15 + (P[i][0] - x0) / w * 2.8 + 0.1 * A.r1[i];
-          A.vx[i] = A.a * (20 + 70 * A.r2[i]); A.vy[i] = -A.a * (80 + 170 * A.r3[i]); A.lr[i] = A.a * (22 + 26 * A.r1[i]);
+          A.vx[i] = A.m * (20 + 70 * A.r2[i]); A.vy[i] = -A.m * (80 + 170 * A.r3[i]); A.lr[i] = A.m * (22 + 26 * A.r1[i]);
           A.ta[i] = A.dl[i] + 2.05;
         }
       },
@@ -611,7 +653,7 @@
           if (s > 0 && s < 2.05) {
             var m = s < 0.5 ? EO(s / 0.5) : s < 1.45 ? 1 + 0.1 * (s - 0.5) / 0.95 : 1.1 * (1 - Math.pow((s - 1.45) / 0.6, 2.2)), ph = 6.2832 * ESIO(s / 2.05);
             x += m * A.vx[i] + A.lr[i] * Math.sin(ph); y += m * A.vy[i] - A.lr[i] * (1 - Math.cos(ph)) * 0.5;
-          } else if (s >= 2.05) { var z = (s - 2.05) / 0.4; if (z < 1) y += 7 * A.a * Math.sin(Math.PI * z) * (1 - z); }
+          } else if (s >= 2.05) { var z = (s - 2.05) / 0.4; if (z < 1) y += 7 * A.m * Math.sin(Math.PI * z) * (1 - z); }
           X[i] = x; Y[i] = y; F[i] = aFl(t - A.ta[i]);
         }
       },
@@ -672,31 +714,39 @@
     var sp = sprites(), D = G.D;
     for (var i = 0; i < FLY.length; i++) {
       var f = FLY[i], u = cl((T - f.t0) / f.dur), born = EO(u / 0.12), TL = f.big ? 30 : 22, gap = f.big ? 0.012 : 0.016, k = f.big ? 1.35 : 1;
+      var hv = T - f.t0 - f.dur, tf = hv > 0 ? 1 - cl(hv / 0.35) : 1;   /* 글자 자리에 닿아 점이 돌아오기를 기다리는 중 · 꼬리는 걷히고 머리만 조용히 */
       /* 꼬리 · 빛 번짐 줄기 + 점 줄(머리 쪽은 하양 · 뒤로 갈수록 주황 · 작게) */
-      for (var j = TL; j >= 1; j--) {
+      for (var j = TL; j >= 1 && tf > 0; j--) {
         var uj = u - j * gap; if (uj <= 0) continue;
-        var q = bez(f, fe(uj)), a = 1 - j / (TL + 1);
+        var q = bez(f, fe(uj)), a = (1 - j / (TL + 1)) * tf;
         if (j % 3 === 0) { cx.globalAlpha = 0.22 * a * born; var gs = D * 3.2 * k * (0.5 + 0.5 * a); cx.drawImage(sp.bloom, q[0] - gs / 2, q[1] - gs / 2, gs, gs); }
         cx.globalAlpha = a * born; dot(j < 4 ? sp.white : sprB(0.55 + 0.45 * a), q[0], q[1], (0.35 + 0.95 * a) * k);
       }
-      var p = bez(f, fe(u));
-      cx.globalAlpha = 0.75 * born; var bs = D * 9 * k; cx.drawImage(sp.wbloom, p[0] - bs / 2, p[1] - bs / 2, bs, bs);
-      cx.globalAlpha = born; dot(sp.white, p[0], p[1], 2.0 * k);
+      var p = bez(f, fe(u)), hk = 0.55 + 0.45 * tf;
+      cx.globalAlpha = 0.75 * born * hk; var bs = D * 9 * k * hk; cx.drawImage(sp.wbloom, p[0] - bs / 2, p[1] - bs / 2, bs, bs);
+      cx.globalAlpha = born; dot(sp.white, p[0], p[1], 2.0 * k * (0.6 + 0.4 * tf));
     }
     cx.globalAlpha = 1;
   }
+  /* 흩어졌다 모이기는 혜성을 막지 않는다(blocks 없음) · 경계 혜성만 장면이 끝난 뒤에 */
   function stepFlights(dt) {
-    var hold = SHOW && SHOW.blocks || TLS.due || ACT.due;
+    var hold = SHOW && SHOW.blocks || TLS.due || (SHOW && SCH.length && isBig(ST.n + FLY.length));
     if (hold) SCH.forEach(function (s) { s.t += dt; });
     else while (SCH.length && SCH[0].t <= T && FLY.length < CFG.maxFly) { SCH.shift(); launch(); }
-    while (FLY.length && T - FLY[0].t0 >= FLY[0].dur) impact(FLY.shift());
+    while (FLY.length && T - FLY[0].t0 >= FLY[0].dur && canLand(FLY[0]) && (T - FLY[0].t0 - FLY[0].dur < 0.05 || T - ST.hitAt > 0.14)) impact(FLY.shift());   /* 기다리던 혜성은 한꺼번에 말고 0.14초씩 차례로 */
+  }
+  /* 흩어졌다 모이기 중 · 제 점이 제자리 가까이(점 1.5개 안) 있으면 앉고 · 아니면 글자 자리에서 기다린다(숫자는 닿는 순서대로) */
+  function canLand(f) {
+    var A = SHOW && SHOW.act; if (!A || SHOW.kind !== "act") return true;
+    var i = f.ti; if (A.X[i] < -9e3) return false;
+    return Math.abs(A.X[i] - G.pos[i][0]) + Math.abs(A.Y[i] - G.pos[i][1]) < G.D * 1.5;
   }
   /* 닿음 · 숫자 +1 · 하얀 팡 · 1막 = 덩어리가 번져 켜진다 · 2막 = 단계별 빛 */
   function impact(f) {
     ST.n++; ST.hitAt = T;
-    var x = f.d[0], y = f.d[1], lv = ST.lvl, quiet = SHOW && SHOW.own;
-    pop(x, y, f.big ? 2.6 : lv >= 4 ? 2.1 : 1.7);
-    sphere(x, y, f.big ? 200 : lv >= 4 ? 150 : 90, f.big ? 700 : lv >= 4 ? 560 : 440, lv >= 4 ? 1.3 : 1.0);
+    var x = f.d[0], y = f.d[1], lv = ST.lvl, quiet = SHOW && SHOW.own, A = SHOW && SHOW.kind === "act" ? SHOW.act : null, ka = A ? 0.7 : 1;   /* 도는 중에 앉으면 팡을 조금 작게(어수선하지 않게) */
+    pop(x, y, (f.big ? 2.6 : lv >= 4 ? 2.1 : 1.7) * ka);
+    sphere(x, y, Math.round((f.big ? 200 : lv >= 4 ? 150 : 90) * ka), f.big ? 700 : lv >= 4 ? 560 : 440, lv >= 4 ? 1.3 : 1.0);
     if (f.k < CFG.g1) {
       var C = CL[f.k];
       C.dots.forEach(function (i) { lit[i] = 1; ign[i] = T + clDepth[i] * CFG.ignStep; IGN.push(i); });
@@ -706,8 +756,10 @@
       if (lv >= 2) wave(x, y, { sp: 1100, w: 80, a: 0.75, R: 1500 });
       else wave(x, y, { sp: 650, w: 64, a: 0.9, R: G.D * 15 });
     }
+    if (A) actHit(A, f.ti);
     var nl = levelOf(ST.n);
-    if (nl > ST.lvl) { ST.lvl = nl; startShow(nl === 1 ? "complete" : "lv" + nl); }
+    if (nl > ST.lvl) { ST.lvl = nl; LAY.dirty = true; startShow(nl === 1 ? "complete" : "lv" + nl); }
+    if (FF.at && ST.n >= FF.at) { FF.at = 0; if (ST.target > ST.n) ffRun(); }   /* 데모 빨리 감기 · 경계 혜성이 앉은 뒤 남은 몫은 바로 */
   }
   /* 켜지는 중인 점 · 아직 차례가 아니면 불씨로 덮고 · 차례가 되면 하얗게 번쩍였다 주황으로 */
   function drawIgnite() {
@@ -749,7 +801,7 @@
   var SHOW = null, DIG = null;
   function startShow(kind, arg) {
     if (REC_NOSHOW) return;
-    var S = { kind: kind, t0: T, arg: arg, blocks: true, own: false, fired: {} };
+    var S = { kind: kind, t0: T, arg: arg, blocks: kind !== "act", own: false, fired: {} };   /* 흩어졌다 모이기만 혜성을 막지 않는다 */
     S.dur = { complete: 10.5, lv2: 5.5, lv4: 12, tl: 15 }[kind] || 6;
     if (kind === "tl") tlSetup(S);
     if (kind === "lv4") digits();
@@ -950,10 +1002,10 @@
     });
     cx.globalAlpha = 1;
   }
-  function tlEnd() { TLS.next = T + CFG.tlEvery; }
+  function tlEnd() { TLS.next = T + cy(CFG.tlEvery); }
   function stepTL() {
-    if (!TLS.next) TLS.next = T + CFG.tlEvery;
-    if (SHOW || ST.n < CFG.tlMin) { if (!SHOW && T >= TLS.next) TLS.next = T + CFG.tlEvery; TLS.due = false; return; }
+    if (!TLS.next) TLS.next = T + cy(CFG.tlEvery);
+    if (SHOW || ST.n < CFG.tlMin) { if (!SHOW && T >= TLS.next) TLS.next = T + cy(CFG.tlEvery); TLS.due = false; return; }
     if (T >= TLS.next) { TLS.due = true; if (!FLY.length) { TLS.due = false; startShow("tl"); } }
   }
 
@@ -1071,10 +1123,13 @@
     /* 상태 줄 · 평소에는 없다 · 데모 표시 · 연결이 끊겼을 때만 */
     var sy = G.st.y; if (DEMO) { text("DEMO · 자동 적립 " + (DM.paused ? "꺼짐" : "켜짐"), 600, G.st.s, org ? "rgba(255,255,255,0.7)" : COL.faint, G.st.x, sy); sy += 32; }
     if (ST.off) text("연결 다시 시도 중 · 마지막 값 표시", 500, G.st.s, org ? "rgba(255,255,255,0.7)" : COL.faint, G.st.x, sy);
-    if (DEMO) {   /* 데모만 · 위 가운데 작게 = 지금 수 · 다음 경계(또는 입력 중인 수) · 아래 줄 = 장면 이름 2초 */
+    if (DEMO) {   /* 데모만 · 위 가운데 작게 = 지금 수 · 다음 경계(또는 입력 중인 수) · 장면 이름 2초 · 사이클 상태 줄(가로 = 왼쪽 · 세로 = 위 가운데) · 운영 화면에는 없다 */
       var dc = org ? "rgba(255,255,255,0.85)" : COL.sub;
-      text(ENT.s ? "입력 " + comma(+ENT.s) + " · Enter 이동 · Esc 취소" : demoLine(), 600, 24, ENT.s ? "#FFFFFF" : dc, G.FW / 2, 44, "center", G.FW - 640);
-      if (T < SC.until) text(SC.label, 600, 24, dc, G.FW / 2, 80, "center", G.FW - 640, cl((SC.until - T) / 0.5));
+      var Y = G.dm.y, ds = demoStatus(), fc = org ? "rgba(255,255,255,0.7)" : COL.faint;
+      text(ENT.s ? "입력 " + comma(+ENT.s) + " · Enter 이동 · Esc 취소" : demoLine(), 600, 24, ENT.s ? "#FFFFFF" : dc, G.FW / 2, Y[0], "center", G.dm.w);
+      if (T < SC.until) text(SC.label, 600, 22, ENT.s ? dc : "#FFFFFF", G.port ? G.FW / 2 : G.st.x, Y[1], G.port ? "center" : "left", G.port ? G.dm.w : 470, cl((SC.until - T) / 0.5));
+      if (G.port) [ds.slice(0, 3), ds.slice(3, 5), ds.slice(5)].forEach(function (g, k) { text(g.join(" · "), 500, 19, fc, G.FW / 2, Y[2] + k * Y[3], "center", G.dm.w); });   /* 세로 = 워드마크 아래 가운데 세 줄 */
+      else for (var di = 0; di < ds.length; di++) text(ds[di], di ? 500 : 600, 19, di ? fc : dc, G.st.x, Y[2] + di * Y[3], "left", 470);   /* 가로 = 왼쪽 워드마크 아래 세로 줄 */
     }
     drawTitle();
   }
@@ -1104,12 +1159,25 @@
     for (var a = 0; a < n; a++) SCH.push({ t: b + a * win / Math.max(1, n) });
   }
   function jumpBy(m) { RING.init = false; var n = ST.n + m; ST.n = n; setLit(n); ST.lvl = levelOf(n); }
+  /* 데모 빨리 감기 · 혜성 없이 그 수로 바로(숫자 · 링은 평소처럼 오르고 · 1막이면 새로 앉은 씨앗만 하얗게 번쩍) · 흩어졌다 모이기 중이면 그 그림도 맞춘다 */
+  function jumpTo(n) {
+    var o = litC; ST.n = n; setLit(n); ST.lvl = levelOf(n);
+    for (var k = o; k < litC; k++) { var s = CL[k].seed; flashT[s] = T + 0.25 * (k - o) / Math.max(1, litC - o); FL.push(s); }
+    if (SHOW && SHOW.kind === "act") actSpr(SHOW.act);
+  }
+  var FF = { at: 0 };
+  function ffRun() {   /* 날던 혜성 · 대기 줄은 바로 켜고 · 다음 경계 바로 앞까지 바로 · 경계는 혜성 하나로(그 장면이 실제처럼) */
+    FLY = []; SCH = [];
+    var b = 0; for (var i = 0; i < CFG.lv.length; i++) if (CFG.lv[i] > ST.n) { b = CFG.lv[i]; break; }
+    if (b && b <= ST.target) { jumpTo(b - 1); FF.at = b; SCH.push({ t: T }); }
+    else jumpTo(ST.target);
+  }
   function setNow(n) {
-    n = Math.max(0, n); RING.init = false; NUM.reset = true;
+    n = Math.max(0, n); RING.init = false; NUM.reset = true; FF.at = 0;
     FLY = []; SCH = []; WAVES = []; IGN = []; FL = []; GLOWS = []; pn = 0; SHOW = null; STG.base = "black"; STG.to = null;
     ST.n = ST.target = n; ST.lvl = levelOf(n); ST.hitAt = -1e4;
     ACT.due = false; ACT.force = ""; ACT.next = T + actGap();   /* 다시 보기는 240초 뒤라 겹치지 않는다 */
-    setLit(n); ign.fill(-1e9); TLS.next = T + CFG.tlEvery; TLS.due = false;
+    setLit(n); ign.fill(-1e9); TLS.next = T + cy(CFG.tlEvery); TLS.due = false;
   }
   /* 운영 서버 읽기 · 공개 집계 stats(관리코드 없음) · v4c 와 같은 방식 */
   var IDS = ["lg", "qz", "p4", "p2", "p5", "p3", "st", "sv"];
@@ -1166,27 +1234,45 @@
   ["mousemove", "pointerdown", "touchstart"].forEach(function (ev) { window.addEventListener(ev, function () { body.classList.add("ptr"); clearTimeout(ptrT); ptrT = setTimeout(function () { body.classList.remove("ptr"); }, 6000); keepAwake(); }, { passive: true }); });
   function moment(at) { setNow(at - 3); DM.next = T + CFG.pollSec; burstIn(3, 3.2); }
   var KEYS = { "f": fsToggle, "g": function () { body.classList.toggle("hud-on"); } };
-  /* 데모 조작(?demo=1 에서만) · 실제와 같은 길로 하나씩 · 경계를 넘으면 그 장면이 실제처럼 · 내려가면 그 단계 상태로 바로(축하 없음)
-     → +1(혜성 1개) · ← −1(바로) · ↑ +10(혜성 10개를 짧게 나눠) · ↓ −10 · PageUp +100(떼로) · PageDown −100 · 누르고 있으면 반복
-     숫자 + Enter = 그 수로 바로 · [ ] 장면 목록 · A 흩어졌다 모이기 지금(누를 때마다 다음 변주) · T 다시 보기 · Space 자동 적립 */
+  /* 데모 조작(?demo=1 에서만) · 경계를 넘으면 그 장면이 실제처럼 · 내려가면 그 단계 상태로 바로(축하 없음)
+     ↑ +10(혜성 10개가 0.4초 간격으로 하나씩 날아와 박힌다) · ↓ −10(바로) · → +10 빨리 감기(혜성 없이 바로 · 경계는 그 혜성 하나와 장면만 실제처럼) · ← −10(바로)
+     PageUp +100 빨리 감기 · PageDown −100(바로) · 누르고 있으면 반복(↑ 는 4초마다 10개씩)
+     숫자 + Enter = 그 수로 바로 · [ ] 장면 목록 · A 흩어졌다 모이기 지금(누를 때마다 다음 변주) · T 다시 보기 · S 사이클 ×6 · Space 자동 적립 */
   var DMAX = 99999, ENT = { s: "" }, SC = { i: -1, until: -1e4, label: "" };
   function note(s) { SC.label = s; SC.until = T + 2.2; }
   function goTo(n) { setNow(Math.max(0, Math.min(DMAX, Math.round(n)))); DM.next = T + CFG.pollSec; }
-  function plus(m) { m = Math.min(m, DMAX - ST.target); if (m <= 0) return; if (m >= 100) took(ST.target + m); else burstIn(m, m === 1 ? 0 : 0.2 * m); }
+  function plus(m) { m = Math.min(m, DMAX - ST.target); if (m <= 0) return; burstIn(m, m === 1 ? 0 : 0.4 * m); }
+  function ffwd(m) { m = Math.min(m, DMAX - ST.target); if (m <= 0) return; ST.target += m; if (!FF.at || (!FLY.length && !SCH.length)) ffRun(); }
   function minus(m) { goTo(ST.target - m); }
   function demoLine() {
     var n = ST.n, s = comma(n) + (ST.target > n ? " (+" + comma(ST.target - n) + " 날아오는 중)" : "");
     for (var i = 0; i < CFG.lv.length; i++) if (n < CFG.lv[i]) return s + " · 다음 " + comma(CFG.lv[i]) + " " + CFG.names[i + 1];
     return s + " · 목표 " + comma(CFG.goal) + " 넘음(숫자만 오른다)";
   }
+  /* 데모 상태 줄 · 단계 · 열린 움직임 · 다음 흩어졌다 모이기 · 다음 다시 보기 · 지금 장면 · 사이클 빠르기(운영 화면에는 없다) */
+  var LOOK = [["불씨 · 빛줄기 7.5초마다", "흩어졌다 모이기 3종(작게)"], ["로고 전부 점화", "흩어졌다 모이기 3종"], ["빛 번짐 짙게 · 끝나면 물결", "흩어졌다 모이기 4종(+물결)"],
+    ["하얀 씨앗 별 · 끝나면 잔광", "흩어졌다 모이기 5종(+한 점으로)"], ["흰 테두리 빛 · 끝나면 잔광", "흩어졌다 모이기 5종(가장 크게)"]];
+  var SHOWN = { complete: "1차 완성 장면", lv2: "물결 장면", lv3: "하나로 장면", lv4: "목표 달성 장면", tl: "오늘 하루 다시 보기" };
+  function sec(s) { s = Math.max(0, Math.round(s)); return s >= 60 ? Math.floor(s / 60) + "분 " + (s % 60) + "초" : s + "초"; }
+  function demoStatus() {   /* 7줄 · 단계 · 보이는 차이 · 열린 흩어졌다 모이기와 간격 · 지금 · 다음 흩어졌다 모이기 · 다음 다시 보기 · 사이클 */
+    var lv = Math.min(4, ST.lvl), e = CFG.actEvery[lv], S = SHOW, now = !S ? (FLY.length ? "혜성" : "쉼") : S.kind === "act" ? "흩어졌다 모이기 · " + ACTN[S.act.v] : SHOWN[S.kind] || S.kind;
+    var a = S && S.kind === "act" ? "지금" : ACT.due ? "곧" : sec(ACT.next - T), b = ST.n < CFG.tlMin ? "없음(" + CFG.tlMin + "개부터)" : S && S.kind === "tl" ? "지금" : TLS.due ? "곧" : sec(TLS.next - T);
+    return ["단계 " + lv + " · " + CFG.names[lv], "혜성 · " + LOOK[lv][0], LOOK[lv][1] + " · " + Math.round(cy(e[0])) + "~" + Math.round(cy(e[1])) + "초마다",
+      "지금 · " + now, "다음 흩어졌다 모이기 · " + a, "다음 다시 보기 · " + b, "사이클 · " + (CYC > 1 ? "×" + CYC + " 빠르게(S)" : "실제 속도(S)")];
+  }
+  function cycKey() {
+    var k = CYC === 1 ? 6 : 1, r = CYC / k; CYC = k;
+    ACT.next = T + Math.max(0, ACT.next - T) * r; TLS.next = T + Math.max(0, TLS.next - T) * r;
+    note("S · 사이클 " + (k > 1 ? "×" + k + " 빠르게(흩어졌다 모이기 · 다시 보기 주기만)" : "실제 속도"));
+  }
   function actKey() { if (SHOW) return; ACT.ak = (ACT.ak + 1) % ACTALL.length; var v = ACTALL[ACT.ak]; ACT.force = v; note("A · 흩어졌다 모이기 · " + ACTN[v]); }
   var DKEYS = {
-    "ArrowRight": function () { plus(1); }, "ArrowLeft": function () { minus(1); },
     "ArrowUp": function () { plus(10); }, "ArrowDown": function () { minus(10); },
-    "PageUp": function () { plus(100); }, "PageDown": function () { minus(100); },
+    "ArrowRight": function () { ffwd(10); }, "ArrowLeft": function () { minus(10); },
+    "PageUp": function () { ffwd(100); }, "PageDown": function () { minus(100); },
     "Enter": function () { if (ENT.s) goTo(+ENT.s); ENT.s = ""; }, "Escape": function () { ENT.s = ""; }, "Backspace": function () { ENT.s = ENT.s.slice(0, -1); },
     "[": function () { sceneGo(-1); }, "]": function () { sceneGo(1); },
-    "a": actKey, "t": function () { if (!SHOW) startShow("tl"); },
+    "a": actKey, "t": function () { if (!SHOW) startShow("tl"); }, "s": cycKey,
     " ": function () { DM.paused = !DM.paused; DM.next = T + 1; }, "h": function () { body.classList.toggle("help-on"); }
   };
   "0123456789".split("").forEach(function (d) { DKEYS[d] = function () { ENT.s = (ENT.s + d).replace(/^0+(?=\d)/, "").slice(0, 5); }; });
@@ -1217,13 +1303,14 @@
     var i = SC.i + d; if (i < 0 || i >= SCENES.length) return;
     SC.i = i; note((i + 1) + " / " + SCENES.length + " · " + SCENES[i][0]); SCENES[i][1]();
   }
-  /* 누르고 있으면 반복 · 처음 0.4초 뒤 초당 8번 · 3초 넘게 누르면 초당 16번 */
-  var HOLDK = { ArrowRight: 1, ArrowLeft: 1, ArrowUp: 1, ArrowDown: 1, PageUp: 1, PageDown: 1 }, REP = { k: null, t: 0, t0: 0, fastMs: 3e3 };
+  /* 누르고 있으면 반복 · 처음 0.4초 뒤 초당 8번 · 3초 넘게 누르면 초당 16번 · ↑ 만 4초마다(앞 10개가 다 박힐 즈음 다음 10개) */
+  var HOLDK = { ArrowRight: 1, ArrowLeft: 1, ArrowUp: 4000, ArrowDown: 1, PageUp: 1, PageDown: 1 }, REP = { k: null, t: 0, t0: 0, fastMs: 3e3 };
   function repStop() { clearTimeout(REP.t); REP.k = null; }
   function repRun(k, f) {
     repStop(); f(); REP.k = k; REP.t0 = Date.now();
-    var tick = function () { if (REP.k !== k) return; f(); REP.t = setTimeout(tick, Date.now() - REP.t0 > REP.fastMs ? 62 : 125); };
-    REP.t = setTimeout(tick, 400);
+    var slow = HOLDK[k] > 1 ? HOLDK[k] : 0;
+    var tick = function () { if (REP.k !== k) return; f(); REP.t = setTimeout(tick, slow || (Date.now() - REP.t0 > REP.fastMs ? 62 : 125)); };
+    REP.t = setTimeout(tick, slow || 400);
   }
   window.addEventListener("keydown", function (e) {
     var k = e.key.length === 1 ? e.key.toLowerCase() : e.key, f = KEYS[k] || (DEMO && DKEYS[k]); if (!f) return;
@@ -1232,10 +1319,10 @@
   });
   window.addEventListener("keyup", function (e) { if (REP.k === e.key) repStop(); });
   window.addEventListener("blur", repStop);
-  /* 화면 왼쪽 · 오른쪽 가장자리 클릭(리모컨 포인터) = ← · →(±1) · 데모에서만 */
+  /* 화면 왼쪽 · 오른쪽 가장자리 클릭(리모컨 포인터) = ← · →(−10 · +10 빨리 감기) · 데모에서만 */
   window.addEventListener("click", function (e) {
     if (!DEMO || body.classList.contains("help-on") || (e.target && e.target.id === "fsBtn")) return;
-    var x = e.clientX / window.innerWidth; if (x < 0.12) minus(1); else if (x > 0.88) plus(1);
+    var x = e.clientX / window.innerWidth; if (x < 0.12) minus(10); else if (x > 0.88) ffwd(10);
   });
 
   /* ════════ 프레임 ════════ */
@@ -1247,7 +1334,7 @@
     drawStage();
     logical();
     var own = SHOW && SHOW.own;
-    if (!own) { ident(); cx.drawImage(LAY.logo, 0, 0); logical(); safe(drawEmberFlow); safe(drawIgnite); safe(drawWaves); }
+    if (!own) { ident(); cx.drawImage(LAY.logo, 0, 0); logical(); safe(drawEmberFlow); safe(drawIgnite); safe(drawWaves); safe(drawGlint); }
     safe(drawShow);
     if (own && SHOW.kind !== "tl") safe(drawWaves);
     safe(drawFlights); drawParticles(); drawGlows(); safe(drawText);
