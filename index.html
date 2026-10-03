@@ -1882,6 +1882,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   html.kb-on .axs-fix.ax-bottom { padding-bottom: var(--ax-space-12); }
   .axs-form { gap: var(--ax-space-24); padding-top: var(--ax-space-8); }
   .axs-ta { width: 100%; min-height: 120px; padding: var(--ax-space-16); resize: none; font: var(--ax-type-t5); line-height: 1.5; }
+  .axs-ta.axs-grow { min-height: 132px; max-height: min(40vh, 360px); overflow-y: auto; }   /* v5.39 아이디어 3,000자(사용자 261003) · 쓰면 높이가 늘고(ideaFit) 최대 높이 안에서 스크롤 · 설문 칸(.axs-ta)은 그대로 */
+  .axs-imtx { white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere; }   /* v5.39 내가 낸 아이디어 · 줄바꿈 그대로 · 긴 글은 접기(ideaMineTxt) */
+  .axs-imtx .ax-link { display: flex; align-items: center; min-height: var(--ax-touch-size); white-space: nowrap; }   /* 펼치기 · 접기 = 글 아래 한 줄 */
   .axs-cnt { display: flex; justify-content: space-between; gap: var(--ax-space-8); }
   .axs-cnt .ax-meta { margin: 0; }
   #ideaLeft { color: var(--ax-color-body); }
@@ -3697,7 +3700,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.38";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.39";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -7942,19 +7945,15 @@ var Views = {
     }
     /* v4.08 입력·제출 화면 = 전체 화면 · 하단 메뉴 숨김 · 아래 고정 주 버튼(5글자 이상이면 켜짐) + 약한 버튼
        쓴 내용은 어떤 경우에도 지우지 않는다(IDEA.draft · 기기 저장 idea_draft · 다시 그려도 그대로) · 공백은 글자 수에서 뺀다 */
-    var dr = ideaDraft(), n = ideaLen(dr), tag = IDEA.tag || pickedTag;
+    /* v5.39 (사용자 261003 「2,000자 이상 · 아래 예시 및 분류는 없애자」) 최대 IDEA_MAX(3,000)자 · 칸은 쓰면 늘고 최대 높이 안에서 스크롤 · 예시 칩 · 분야 칩은 그리지 않는다(코드 IDEA_EX · ideaEx · pickTag 는 보존) · 분야는 빈 값으로 보낸다 */
+    var dr = ideaDraft(), n = ideaLen(dr);
+    setTimeout(ideaFit, 0);
     return '<div class="ax-stack axs-form">' +
       '<div class="ax-stack-tight axs-gap12 axs-sthost">' + stampTagHtml("p5") + '<h1 class="ax-type-t2">문득 떠오른<br>&ldquo;이거 AI로 되겠는데?&rdquo;</h1>' +
       '<p class="ax-body" id="ideaAward">' + IDEA_AWARD_TXT + "</p></div>" +
       '<div class="ax-stack-tight"><label class="ax-sr-only" for="ideaText">아이디어 한 줄</label>' +
-      '<textarea id="ideaText" class="ax-field axs-ta" rows="3" maxlength="200" placeholder="떠오른 생각을 한 줄로 적어 주세요" oninput="ideaInput(this.value)" onfocus="kbFocus(this)" aria-describedby="ideaLeft">' + esc(dr) + "</textarea>" +
-      '<div class="axs-cnt"><p class="ax-meta" id="ideaLeft" aria-live="polite">' + ideaLeftTxt(n, dr) + '</p><p class="ax-meta"><span id="ideaCnt">' + dr.length + "</span>/200</p></div></div>" +
-      '<div class="ax-stack-tight"><p class="ax-type-t6-strong">예시 · 눌러서 고쳐 쓰기</p><div class="axs-ideax" role="group" aria-label="예시">' + IDEA_EX.map(function (e, i) {
-        return '<button type="button" onclick="ideaEx(' + i + ')"><span class="ax-meta">' + esc(e[0]) + "</span>" + esc(e[1]) + "</button>";
-      }).join("") + "</div></div>" +
-      '<div class="ax-stack-tight"><p class="ax-type-t6-strong">분야</p><div class="axs-chiprow" role="group" aria-label="분야">' + IDEA_TAGS.map(function (t) {
-        return '<button type="button" class="axs-chip" data-tag="' + t + '" aria-pressed="' + (t === tag) + '" onclick="pickTag(this)">' + t + "</button>";
-      }).join("") + "</div></div>" +
+      '<textarea id="ideaText" class="ax-field axs-ta axs-grow" rows="4" maxlength="' + IDEA_MAX + '" placeholder="떠오른 생각을 자유롭게 적어 주세요" oninput="ideaInput(this.value)" onfocus="kbFocus(this)" aria-describedby="ideaLeft">' + esc(dr) + "</textarea>" +
+      '<div class="axs-cnt"><p class="ax-meta" id="ideaLeft" aria-live="polite">' + ideaLeftTxt(n, dr) + '</p><p class="ax-meta"><span id="ideaCnt">' + dr.length.toLocaleString() + "</span>/" + IDEA_MAX.toLocaleString() + "</p></div></div>" +
       '<label class="axs-check"><input type="checkbox" id="ideaAnon"' + (IDEA.anon ? " checked" : "") + ' onchange="IDEA.anon=this.checked">익명으로 표시 (시상 시에만 본인 확인)</label>' +
       (IDEA.err ? '<div class="axs-err" role="alert"><b>' + esc(IDEA.err) + "</b><span>쓴 내용은 그대로 있어요</span></div>" : "") +
       (mine.length ? '<button type="button" class="ax-link axs-plain axs-self" onclick="App.go(\'ideas_mine\')">내가 낸 아이디어 ' + mine.length + "건</button>" : "") +
@@ -8030,7 +8029,7 @@ var Views = {
     var mine = S.get("ideas", []).filter(function (i) { return i.empId === (S.get("user", {}).empId); });
     if (!mine.length) return botHtml("아직 제출한 아이디어가 없어요");
     return mine.slice().reverse().map(function (i) {
-      return '<div class="card soft mb8"><p style="font-size:calc(15.5px * var(--fs));line-height:1.55">' + esc(i.text) + '</p><p style="margin-top:6px;font-size:calc(12.5px * var(--fs));color:var(--faint)">#' + esc(i.tag) + " · " + (i.anon ? "익명" : esc(i.name)) + " · " + fmtTime(i.ts) + "</p></div>";
+      return '<div class="card soft mb8"><p class="axs-imtx" style="font-size:calc(15.5px * var(--fs));line-height:1.55">' + ideaMineTxt(i) + '</p><p style="margin-top:6px;font-size:calc(12.5px * var(--fs));color:var(--faint)">' + (i.tag ? "#" + esc(i.tag) + " · " : "") + (i.anon ? "익명" : esc(i.name)) + " · " + fmtTime(i.ts) + "</p></div>";
     }).join("");
   },
 
@@ -8246,7 +8245,7 @@ var Views = {
       '<p style="font-size:calc(13.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:var(--mint-deep);margin-top:4px">지금 올라온 아이디어 · 운영자 승인분</p>' +
       feed.map(function (f) {
         return '<div style="margin-top:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:11px 14px">' +
-          '<p style="font-size:calc(15.5px * var(--fs));line-height:1.5">&ldquo;' + esc(f.text) + '&rdquo;</p><p style="margin-top:4px;font-size:calc(12.5px * var(--fs));opacity:0.55;font-weight:700">#' + esc(f.tag) + "</p></div>";
+          '<p style="font-size:calc(15.5px * var(--fs));line-height:1.5">&ldquo;' + esc(ideaCut(f.text, 60)) + '&rdquo;</p>' + (f.tag ? '<p style="margin-top:4px;font-size:calc(12.5px * var(--fs));opacity:0.55;font-weight:700">#' + esc(f.tag) + "</p>" : "") + "</div>";   /* v5.39 긴 글은 앞 60자 · 분야 없으면 # 줄 없음 */
       }).join("") +
       '<p style="text-align:center;font-size:calc(12.5px * var(--fs));opacity:0.5;margin-top:14px">오전·오후 캡처본이 부서장께 공유됩니다 · 30~60초 지연 집계 · 무음 운영</p></div>';
   },
@@ -11122,23 +11121,39 @@ function pickTag(btn) {
 }
 /* v4.08 글자 수 = 공백을 뺀 글자 · 5글자 이상이면 제출 버튼이 켜진다 · 입력은 지우지 않는다 */
 var IDEA_MIN = 5;
+/* v5.39 (사용자 261003 「2,000자 이상」) 최대 3,000자 · 서버 IDEA_MAX 와 같다(서버는 넘으면 long 으로 거절) · 칸 maxlength 가 먼저 막는다 */
+var IDEA_MAX = 3000;
+/* 칸 높이 = 쓴 만큼(최대 높이는 CSS .axs-grow · 넘으면 칸 안에서 스크롤) · 키 입력마다 · 그린 직후 한 번 */
+function ideaFit() { var t = el("ideaText"); if (!t) return; t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px"; }
 /* v5.20 (사용자 261003 후킹 권장 3) 예시 칩 3개(보상 · 영업 · 본사) · 누르면 입력창과 분야를 채운다 · 예시 그대로면 제출이 꺼지고 한 글자라도 고치면 켜진다(공백은 비교에서 뺀다) */
 var IDEA_EX = [["보상", "접수 메일을 요약해 시스템에 자동 입력"], ["영업", "상품별 설명 화법을 바로 보여 주는 도우미"], ["본사·통계", "월말 실적 보고서 초안을 자동으로 작성"]];
 function ideaIsEx(v) { var k = String(v || "").replace(/\s/g, ""); return IDEA_EX.some(function (e) { return e[1].replace(/\s/g, "") === k; }); }
-function ideaOk(v) { return ideaLen(v) >= IDEA_MIN && !ideaIsEx(v); }
+function ideaOk(v) { return ideaLen(v) >= IDEA_MIN && String(v || "").length <= IDEA_MAX; }   /* v5.39 예시 칩을 그리지 않으므로 예시 판정(ideaIsEx)은 뺀다 */
 function ideaEx(i) {
   var e = IDEA_EX[i]; if (!e) return;
   pickedTag = IDEA.tag = e[0]; IDEA.draft = e[1]; S.put("idea_draft", e[1]);
   App.render();
   var t = el("ideaText"); if (t) { try { t.focus({ preventScroll: true }); t.setSelectionRange(t.value.length, t.value.length); } catch (x) {} }
 }
+/* v5.39 내가 낸 아이디어 · 긴 글(160자 넘음 또는 4줄 넘음)은 앞부분 + 「펼치기 · n자」 · 누르면 전문 · 「접기」 */
+var IDEA_CLIP = 160, IDEA_OPEN = {};
+function ideaMineTxt(i) {
+  var t = String(i.text || ""), a = Array.from(t), ls = t.split("\n");
+  if (a.length <= IDEA_CLIP && ls.length <= 4) return esc(t);
+  var op = !!IDEA_OPEN[i.id], cut = ls.slice(0, 4).join("\n"), ca = Array.from(cut);
+  cut = (ca.length > IDEA_CLIP ? ca.slice(0, IDEA_CLIP).join("") : cut).replace(/\s+$/, "") + "…";
+  return esc(op ? t : cut) + ' <button type="button" class="ax-link axs-plain" aria-expanded="' + op + '" onclick="ideaMineOpen(\'' + esc(i.id) + '\')">' + (op ? "접기" : "펼치기 · " + a.length.toLocaleString() + "자") + "</button>";
+}
+function ideaCut(v, n) { var a = Array.from(String(v || "").replace(/\s+/g, " ").trim()); return a.length > n ? a.slice(0, n).join("") + "…" : a.join(""); }   /* v5.39 사이니지용 한 줄 자르기(이모지 안 쪼갬) */
+function ideaMineOpen(id) { IDEA_OPEN[id] = !IDEA_OPEN[id]; App.render(); }
 function ideaLen(v) { return String(v || "").replace(/\s/g, "").length; }
 function ideaDraft() { if (IDEA.draft == null) IDEA.draft = String(S.get("idea_draft", "") || ""); return IDEA.draft; }
-function ideaLeftTxt(n, v) { return ideaIsEx(v) ? "예시를 고쳐 쓰면 제출할 수 있어요" : n >= IDEA_MIN ? "제출할 수 있어요" : n === 0 ? IDEA_MIN + "글자 이상 쓰면 제출할 수 있어요" : (IDEA_MIN - n) + "글자 더 쓰면 제출할 수 있어요"; }
+function ideaLeftTxt(n, v) { return n >= IDEA_MIN ? "제출할 수 있어요" : n === 0 ? IDEA_MIN + "글자 이상 쓰면 제출할 수 있어요" : (IDEA_MIN - n) + "글자 더 쓰면 제출할 수 있어요"; }
 function ideaInput(v) {
   IDEA.draft = v; S.put("idea_draft", v);   /* v4.25 조용한 저장 · 다시 그리지 않는다(한글 조합 보호) */
   var n = ideaLen(v), c = el("ideaCnt"), l = el("ideaLeft"), b = el("ideaGo");
-  if (c) c.textContent = v.length;
+  if (c) c.textContent = v.length.toLocaleString();
+  ideaFit();
   if (l) l.textContent = ideaLeftTxt(n, v);
   if (b) b.disabled = !ideaOk(v);
 }
@@ -11146,7 +11161,7 @@ function submitIdea() {
   var text = ideaDraft().trim();
   if (!ideaOk(text)) { ideaInput(ideaDraft()); return; }   /* 버튼이 꺼져 있어 보통 오지 않는다 · 입력은 그대로 */
   var nth = counters().ideas;
-  try { ideaPush(text, pickedTag, !!IDEA.anon, "app"); }
+  try { ideaPush(text, "", !!IDEA.anon, "app"); }   /* v5.39 분야 칩 없음 · 빈 값(콘솔 「분야 없음」) */
   catch (e) { IDEA.err = "제출하지 못했어요. 다시 눌러 주세요."; App.render(); return; }   /* 실패해도 쓴 내용은 남는다 */
   IDEA.draft = ""; S.set("idea_draft", ""); IDEA.err = "";
   App.render(); window.scrollTo(0, 0);   /* v4.07 커피챗 참석 질문(또는 제출 완료)으로 */
