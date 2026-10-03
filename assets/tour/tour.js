@@ -22,7 +22,7 @@
   var ZTXT = { vision: '회사가 가는 방향을 보는 곳', lab: 'DAP 과제를 보는 곳', action: 'AI 업무 사례를 보는 곳', play: 'AI를 직접 써 보는 곳', event: '사진 · 룰렛 · 타자왕이 있는 곳', lounge: '업무 고민을 상담하는 곳', cafe: '아이디어를 놓고 이야기하는 곳' };
 
   var R = null;   /* 열려 있는 동안의 상태 한 묶음 · 닫으면 버린다 */
-  var VER = 'v519b';   /* 모형 파일 캐시 깨기 · 모형을 바꾸면 올린다 */
+  var VER = 'v519c';   /* 모형 파일 캐시 깨기 · 모형을 바꾸면 올린다 */
   var ATLAS_IMG = {};   /* 아틀라스 그림은 닫아도 들고 있다(작다 · 약 180KB) */
   function $(k) { return R && R.el[k]; }
 
