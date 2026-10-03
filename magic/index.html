@@ -149,6 +149,8 @@ Object.assign(sfx, {
     const g = a.createGain(); g.gain.setValueAtTime(.004, t); g.gain.exponentialRampToValueAtTime(big ? .5 : .38, t + d); g.gain.exponentialRampToValueAtTime(.0001, t + d + .15);
     src.connect(bp).connect(g).connect(a.destination); src.start(t); src.stop(t + d + .16);
   },
+  spawn() { tone(380, .12, 'triangle', .07, 300); noise(.12, .08, 1200, 3000, .8); },
+  airPunch() { noise(.28, .22, 1800, 600, .7); tone(220, .16, 'triangle', .07, -80); },
   whoosh() { noise(.38, .4, 4200, 450, .7); tone(1200, .22, 'sine', .07, -800); tone(784, .12, 'triangle', .1, 0, .12); tone(1175, .2, 'triangle', .1, 0, .2); },
   thud() { tone(85, .3, 'sine', .45, -45); noise(.16, .5, 900, 140, .8, 'lowpass'); },
 });
@@ -190,7 +192,7 @@ addEventListener('pointerup', e => { if (e.button === 2) mouse.rdrag = false; })
 addEventListener('contextmenu', e => { if (mouseMode) e.preventDefault(); });
 const mh = { L: 100, Lt: 100, cs: [0, 0, 0, 0], pin: 0 };
 addEventListener('wheel', e => { if (!mouseMode) return; mh.Lt = clamp(mh.Lt * (e.deltaY < 0 ? 1.13 : 1 / 1.13), 60, 280); mouse.last = clk(); }, { passive: true });
-const POSES = [{ cs: [0, 0, 0, 0], pin: 0 }, { cs: [1, 1, 1, 1], pin: 0 }, { cs: [.45, 1, 1, 1], pin: 1 }];
+const POSES = [{ cs: [0, 0, 0, 0], pin: 0 }, { cs: [1, 1, 1, 1], pin: 0 }, { cs: [.45, 1, 1, 1], pin: 1 }, { cs: [.56, .56, .56, .56], pin: 0 }];   // 3 = 느슨한 주먹(시험 전용)
 
 let hands = [], nextHid = 1;        // 추적 중인 손
 let rawHands = null;                // 카메라 모드: {t, list:[pts]}
@@ -441,32 +443,45 @@ const SK = {
   dodge: { name: '피하기', how: '날아오는 공을 고개를 옆으로 움직여 피하기', cost: 0, cd: 0, dmg: 0, need: 0, T: 2.6 },
 };
 const PRACTICE = ['fist', 'wave', 'mtw', 'dodge'];
-// 피드백3: 기력 회복을 크게 늦춤(25 → 2/초, 0에서 다 차는 데 50초). 손바닥·두 손바닥은 기력이 모자라면 안 나간다(탈진 없음)
-const EN_MAX = 100, EN_REGEN = 2, EN_REGEN_DELAY = 1, EXHAUST_SEC = 2, LIFE_MAX = 5;
+// 피드백3: 기력 회복을 크게 늦춤(25 → 2/초). 손바닥·두 손바닥은 기력이 모자라면 안 나간다(탈진 없음)
+// 피드백4(261003 「기력이 너무 안 찬다」): 2 → 8/초, 쉬는 지연 1 → 0.4초. 손바닥(20)은 약 2.5초에 한 번, 두 손바닥(50)은 약 6초에 한 번
+const EN_MAX = 100, EN_REGEN = 8, EN_REGEN_DELAY = .4, EXHAUST_SEC = 2, LIFE_MAX = 5;
 // 범위 피해(피드백3): 작은 파동 = 대상 + 이 거리(px) 안의 가장 가까운 1마리에게 절반 피해 · ME to WE 파 = 대상 둘레 이 거리 안 전부(화면 전체 아님)
 const WAVE_SPLASH = 170, WAVE_SPLASH_N = 1, WAVE_SPLASH_DMG = 4, MTW_SPLASH = 380, MTW_SPLASH_DMG = 8, MTW_BOSS_DMG = 20;
 // 보스: 이 시간(초)이 지나면 지쳐서 받는 피해 2배 · 2인 합체 조건도 풀린다(시간 초과 실패 없음)
-const BOSS_TIRED = 18, HURT_GRACE = 2.5;   // HURT_GRACE: 공격에 맞은 뒤 이 시간(초) 동안은 무적(그사이 날아온 공격은 막힌다)
+const BOSS_TIRED = 10, HURT_GRACE = 2.5;   // 피드백4: 지치는 시점 18 → 10초(서툰 사람이 보스전에서 오래 끌지 않게) · HURT_GRACE: 공격에 맞은 뒤 이 시간(초) 동안은 무적(그사이 날아온 공격은 막힌다)
 /* 적 공격(피드백2 261003): 적은 중간 거리 자리에 멈춘 뒤 공격을 예고하고(둘레 고리가 차오름 → 마지막 ATK_WARN초 「!」·붉은 반짝임·경고음)
    그때까지 못 잡으면 서류·메일을 던진다. 맞으면 생명 -1. 생명은 이 공격으로만 줄어든다 */
-const ATK_TELE = { mini: 1.6, golem: 2, boss: 2.8 };   // 예고 고리가 다 차는 시간(초, 「!」 구간 포함) · 피드백3: 수비가 피하기로 바뀌어 예고를 줄였다(이전 5.5·6·7). 예고 + 날아오는 시간 = 2.7~4.2초
-const ATK_WARN = 1.0;                                  // 마지막 이 시간(초)은 「!」 + 붉은 반짝임 + 경고음
+const ATK_TELE = { mini: 1.1, golem: 1.3, boss: 2.2 };   // 예고 고리가 다 차는 시간(초, 「!」 구간 포함) · 피드백3: 5.5·6·7 → 1.6·2·2.8 · 피드백4: 예고 중인 적도 맞게 되어 더 줄였다(무리째 쓸려 공격이 거의 안 왔다)
+const ATK_WARN = .8;                                   // 마지막 이 시간(초)은 「!」 + 붉은 반짝임 + 경고음
 /* 피드백3: 꼬마·골렘의 공격은 사람(쪽)마다 하나의 순번표로 낸다. 화면에 적이 있으면 일정한 간격으로, 지금 주먹에 맞을 차례가 가장 늦은 적이 예고를 시작한다
    (적마다 따로 세면 주먹으로 다 잡혀 던질 일이 거의 없었다: 보통 봇 한 판 1.2번) */
-const ATK_FIRST = 1.5, ATK_GAP = [4.5, 7];             // 웨이브 시작 뒤 첫 예고까지 · 다음 예고까지(초, 그쪽이 한가할 때만 줄어든다)
-const ATK_GAP2_K = 1.5;                                // 2인: 생명을 함께 쓰니 사람마다 간격을 1.5배로
-const ATK_MIN_Z = .12;                                 // 이만큼 나온(보이는) 적만 예고를 시작한다
-const ATK_BOSS_FIRST = 4, ATK_BOSS_GAP = 8;            // 보스: 등장 뒤 첫 예고까지 · 다음 예고까지(초)
+/* 피드백4: 던지기 순번표(판당 던지기 약 5~8회). 시간 간격으로 내면 빨리 잡는 사람은 던지기를 거의 못 보고(판당 3.8번), 느린 사람은 판이 길어져 계속 맞았다(9번 이상).
+   이제 웨이브마다 사람(쪽)별로 정해진 시각(웨이브 시작 뒤 초)에 하나씩 낸다. 그 시각에 던질 적이 없으면 생길 때까지 미룬다(웨이브가 끝나면 없어짐)
+   2인은 생명을 함께 쓰니 한 사람 쪽 횟수를 줄였다 */
+const WAVE_THROWS = [
+  [[[1.6, 5.6, 9.8]], [[1.8, 6.4, 11]]],                // 1인: 웨이브마다 세 번(무리가 나온 직후)
+  [[[1.6], [4.8]], [[1.8, 9.6], [5.6]]],                // 2인: [웨이브][쪽] 웨이브 1 각 한 번 · 웨이브 2 왼쪽 두 번 오른쪽 한 번
+];
+const BOSS_THROWS = [3, 3];                            // 보스 던지기 최대 횟수(1인 · 2인). 다 던지면 더 던지지 않는다(서툰 사람도 끝까지 가도록)
+const MERCY_SKIP = [.85, .5];                          // 생명이 1 · 2일 때 차례가 온 던지기를 이 확률로 건너뛴다(처음 하는 사람도 대부분 끝까지 가도록)
+const mercySkip = () => G.life <= 2 && Math.random() < MERCY_SKIP[Math.max(1, G.life) - 1];
+const ATK_MIN_T = .3;                                  // 등장한 뒤 이 시간(초)이 지난 적만 예고를 시작한다(피드백4: 원근 z 대신)
+const ATK_BOSS_FIRST = 2.5, ATK_BOSS_GAP = 5.5;           // 보스: 등장 뒤 첫 예고까지 · 다음 예고까지(초)
 const ATK_MAX = 1;                                     // 한 사람 쪽에서 동시에 예고할 수 있는 적 수(보스 포함): 한 번에 하나만 「!」
-/* 피하기(피드백3 261003): 던지는 순간의 내 얼굴 위치로 날아온다(작게 시작해 도착 직전에 급격히 커짐). 도착 순간 얼굴 중심이 착탄 원 안이면 맞음, 밖이면 회피 */
+/* 피하기(피드백3 261003): 던지는 순간의 내 얼굴 위치로 날아온다. 도착 순간 얼굴 중심이 착탄 원 안이면 맞음, 밖이면 회피
+   피드백4(261003): 원근 없음. 크기가 변하지 않고 적 손에서 포물선으로 날아온다(물건 크기는 던진 적 크기에 맞춤) */
 const ATK_FLY = { mini: 1.1, golem: 1.2, boss: 1.4, wide: 1.4, practice: 1.3 };   // 날아오는 시간(초)
-const ATK_REST = 2;                                    // 한 사람 쪽에 날아온 것이 끝난 뒤 다음 예고까지 최소 쉬는 시간(초): 한 번에 하나씩
-const ATK_DOUBLE = .3, ATK_DOUBLE_GAP = .55;           // 웨이브 2·보스: 이 확률로 같은 적이 한 번 더 연속으로 던진다(이 간격 뒤, 그때의 얼굴 위치로)
+const ATK_REST = 1.5;                                   // 한 사람 쪽에 날아온 것이 끝난 뒤 다음 예고까지 최소 쉬는 시간(초): 한 번에 하나씩
+const ATK_DOUBLE = .3, ATK_DOUBLE_GAP = .55;           // 보스 큰 물건: 이 확률로 한 번 더 연속으로 던진다(이 간격 뒤, 그때의 얼굴 위치로 · 생명 3 이상일 때만 · 피드백4: 웨이브에서는 연속 없음)
 const HIT_K = .75, HIT_K_BOSS = 1, HIT_MIN = 70;       // 착탄 원 반경 = 던질 때 얼굴 폭 x 이 배수(최소 px)
 const WIDE_HALF = [300, 240];                          // 보스 넓은 공격: 착탄 띠 반폭(px, 1인 · 2인). 얼굴 중심이 띠 밖이어야 회피
 const FACE_HOLD = 1;                                   // 얼굴이 안 보여도 이 시간(초) 동안은 마지막 위치로 판정(손으로 가려도 그 자리). 더 오래 안 보이면 맞지 않고 지나간다
 const FACE_W0 = 190;                                   // 얼굴 폭을 모를 때 쓰는 값(px)
-const PERSP_D0 = 6;                                    // 원근: 출발 거리 / 도착 거리 비율(출발 크기 = 도착 크기 / 6)
+// 던지는 물건의 폭(px, 크기 고정): 꼬마 = 작은 물건 · 골렘 = 중간 · 보스 = 큰 물건 · 서류 벽은 착탄 띠 폭에 맞춘다
+const SHOT_W = { mail: 120, clip: 110, postit: 115, doc: 150, binder: 160, paperball: 250, stack: 260, bigbinder: 270, ball: 130 };
+const SHOT_KINDS = { mini: ['mail', 'clip', 'postit'], golem: ['doc', 'binder'], boss: ['paperball', 'stack', 'bigbinder'] };
+const ARC_H = 60, ARC_K = .1;                          // 포물선 높이 = ARC_H + 거리 x ARC_K(px)
 // 준비 화면(피드백2): 두 팔을 머리 위로 올려 손끝을 맞댄 동그라미 1초 · 15초 지나면 자동 시작
 // 판정: 두 손이 화면 위 30% 안 + 서로 가까움(손바닥 중심 거리 < 손 크기 x 3.2 또는 손끝끼리 < 손 크기 x 1.0)
 //       한 손이 화면 위로 잘려 사라져도 남은 손이 위쪽에 있고 직전(0.8초 안)에 두 손이 가까웠으면 인정
@@ -474,8 +489,9 @@ const READY_AUTO = 15, TOPZ = H * .3, CIRCLE_SEC = 1, CIRCLE_NEAR = 3.2, CIRCLE_
 const CIRCLE_MUTE = .5;                         // 실전 중 머리 위 동그라미 자세(와 그 뒤 0.5초)에서는 내지르기를 버린다(팔을 내리며 손 크기가 변하는 것을 공격으로 오인하지 않게)
 const THR_WIN = .2, THR_RATIO = 1.22;          // 내지르기: 0.2초 안에 손 크기(카메라 쪽 접근)가 1.22배 이상
 const DUAL_WAIT = .2, DUAL_WIN = .25;          // 두 손바닥: 첫 손바닥 뒤 0.2초 기다려 짝을 찾는다(0.25초 안이면 ME to WE 파)
-const FIST_OPEN = .35, PALM_OPEN = .6;         // 내지르는 순간 손 상태: 이보다 접히면 주먹, 이보다 펴지면 손바닥
-const BOSS_HP = [36, 50], MERGE_AT = .4;  // 2인: 보스 체력이 40% 이하가 되면 합체기로 마무리 · 피드백2: 박수(보스 30 피해)가 빠진 만큼 체력을 줄였다(이전 50·70) · 피드백3: 주먹이 주력(기력 0)이 되어 보스전에 공격(큰 공 · 넓은 공격)이 몇 번 오도록 다시 늘림(36·50 → 60·84) · 피드백3 2차: 판 길이 목표(실전 45~50초)에 맞춰 36·50
+const FIST_OPEN = .42, FIST_OFF = .55, PALM_OPEN = .6;   // 손 상태: 이보다 접히면 주먹(불꽃이 붙음) · 한 번 주먹이면 FIST_OFF를 넘게 펴야 풀린다 · PALM_OPEN보다 펴지면 손바닥
+// 피드백4: 예전에는 불꽃은 open < .45에서 붙는데 내지르기 판정은 open < .35만 주먹이라, 불꽃이 붙은 채 내질러도 「애매」로 소리 없이 버려졌다. 이제 불꽃이 붙은 상태(h.fistOn) = 주먹 판정
+const BOSS_HP = [56, 70], MERGE_AT = .4;  // 피드백4: 기력이 빨리 차 두 손바닥이 잦아져 60·84 · 2인: 보스 체력이 40% 이하가 되면 합체기로 마무리 · 피드백2: 박수(보스 30 피해)가 빠진 만큼 체력을 줄였다(이전 50·70) · 피드백3: 주먹이 주력(기력 0)이 되어 보스전에 공격(큰 공 · 넓은 공격)이 몇 번 오도록 다시 늘림(36·50 → 60·84) · 피드백3 2차: 판 길이 목표(실전 45~50초)에 맞춰 36·50
 
 /* ---------------- 손 → 플레이어 ---------------- */
 let G = null;                    // 한 판 상태
@@ -488,8 +504,15 @@ function handFeat(h, dt) {
   let mn = 1e9; for (const s of h.hist) if (now - s.t <= THR_WIN) mn = Math.min(mn, s.L);
   h.thrR = h.hist.length >= 4 && h.age > .3 && mn < 1e9 ? h.L / mn : 1;
   { let o = null; for (const s of h.hist) if (now - s.t >= .12) o = s; h.vy = o ? (h.c.y - o.y) / Math.max(.05, now - o.t) : 0; }   // 세로 속도(px/초, 아래로 +)
-  h.thrust = h.thrR >= THR_RATIO && now >= (h.thrLock || 0) ? (h.open < FIST_OPEN ? 'fist' : h.open > PALM_OPEN ? 'palm' : 'mid') : null;
+  h.fistOn = h.fistOn ? h.open < FIST_OFF : h.open < FIST_OPEN;   // 화면의 불꽃과 같은 기준
+  h.thrust = h.thrR >= THR_RATIO && now >= (h.thrLock || 0) ? (h.fistOn ? 'fist' : h.open > PALM_OPEN ? 'palm' : 'mid') : null;
+  // 디버그(D): 손이 커지다 말았을 때(1.1배 이상 · 문턱 미만) 「크기 증가 부족」으로 남긴다
+  if (h.thrR > 1.04) h.pkR = Math.max(h.pkR || 1, h.thrR);
+  else if ((h.pkR || 1) > 1) { if (h.pkR >= 1.1 && h.pkR < THR_RATIO && !h.thrust) thrNote(h, `크기 증가 부족 x${h.pkR.toFixed(2)} (필요 x${THR_RATIO})`); h.pkR = 1; }
 }
+// 마지막 내지르기 판정 사유(디버그 D): 주먹 · 손바닥 · 애매해서 버림 · 크기 증가 부족 · 동그라미 내리기라 버림
+let thrLast = [];
+function thrNote(h, why) { thrLast.unshift({ t: now, side: h.side, why: why + ` · open ${h.open.toFixed(2)}` }); if (thrLast.length > 3) thrLast.length = 3; }
 function newPlayer(i) { return { i, hands: [], en: EN_MAX, exUntil: 0, lastCast: -9, cool: { fist: 0, wave: 0, mtw: 0 }, pend: null, done: false, absent: 0, evs: [], combo: 0, comboT: -9, comboPop: 0, g: 0, warnT: -9, mtwT: -9, mtwAt: null, ready: false, circT: 0, circAt: -9, circ: 0 }; }
 
 // 머리 위 동그라미 자세: 2 = 두 손이 위쪽에서 가까움 · 1 = 한 손이 위로 잘렸지만 남은 손이 위쪽(직전에 가까웠음) · 0 = 아님
@@ -519,7 +542,8 @@ function detectPlayer(pl, dt) {
     if (!h.thrust) continue;
     const kind = h.thrust; h.hist = h.hist.slice(-1); h.thrLock = now + (kind === 'fist' ? SK.fist.cd : .3);
     const mute = muteWin && h.vy > h.L * 2;
-    if (mute || kind === 'mid') { if (mute) { pl.pend = null; pl.muted = (pl.muted || 0) + 1; } continue; }   // 동그라미를 풀며 내려오는 손이거나 손 모양이 애매하면 버린다
+    thrNote(h, mute ? '동그라미 내리기라 버림' : kind === 'fist' ? `주먹 x${h.thrR.toFixed(2)}` : kind === 'palm' ? `손바닥 x${h.thrR.toFixed(2)}` : `애매해서 버림 x${h.thrR.toFixed(2)}`);
+    if (mute || kind === 'mid') { if (mute) { pl.pend = null; pl.muted = (pl.muted || 0) + 1; } else pl.midN = (pl.midN || 0) + 1; continue; }   // 동그라미를 풀며 내려오는 손이거나 손 모양이 애매하면 버린다
     const at = { x: h.c.x, y: h.c.y, L: h.L, h };
     if (kind === 'fist') pl.evs.push({ k: 'fist', at });
     else if (pl.pend && pl.pend.h !== h && now - pl.pend.t <= DUAL_WIN) { const p = pl.pend; pl.pend = null; pl.evs.push({ k: 'mtw', at: { x: (p.at.x + at.x) / 2, y: (p.at.y + at.y) / 2, L: (p.at.L + at.L) / 2, a: p.at, b: at } }); }
@@ -696,15 +720,16 @@ function drawDemo(key, t, cx, cy, s, a = 1) {
     const Ls = s * (1 + .7 * thr), gap = s * 1.25 * (1 + .4 * thr);
     drawHand(place(handPose(0), cx + gap, cy, Ls), op); drawHand(mirrorX(place(handPose(0), cx + gap, cy, Ls), cx), op);
     if (hit >= 0) logoDraw(cx, cy - s * (.9 + hit * 2), s * 1.8 * (1 - hit * .5), op * (1 - hit * .6), .5);
-  } else if (key === 'dodge') {   // 피하기: 공이 머리 쪽으로 커지며 날아온다 → 고개를 옆으로 → 공이 옆을 스쳐 지나간다
+  } else if (key === 'dodge') {   // 피하기: 공이 포물선으로 머리 쪽에 날아온다 → 고개를 옆으로 → 공이 옆을 지나쳐 간다(크기 그대로)
     const ARR = .6, off = s * 1.5 * (u < .3 ? 0 : u < .46 ? easeOut((u - .3) / .16) : u < .86 ? 1 : 1 - easeIO((u - .86) / .14));
+    const bp = k => ({ x: lerp(cx - s * 2.6, cx, k), y: lerp(cy + s * 1.2, cy, k) - 4 * s * 1.6 * k * (1 - k) });
     drawHeadPicto(cx + off, cy, s, op);
     if (u < ARR) {
-      const k = u / ARR, d = lerp(PERSP_D0, 1, k), uu = (1 / d - 1 / PERSP_D0) / (1 - 1 / PERSP_D0);
+      const k = u / ARR, p = bp(k);
       aimRing(cx, cy, s * .62 * lerp(2.4, 1, easeOut(k)), k, op);
-      drawBaseball(cx, lerp(cy - s * 2.4, cy, uu), s * .7 / d, u * 9, op);
+      drawBaseball(p.x, p.y, s * .45, u * 9, op);
     } else if (u < .82) {
-      const q = (u - ARR) / (.82 - ARR); drawBaseball(cx - s * 3.2 * q * q, cy - s * .4 * q, s * .7 * (1 + 2.2 * q), u * 9, op * (1 - q * q));
+      const q = (u - ARR) / (.82 - ARR), p = bp(1 + q * .7); drawBaseball(p.x, p.y, s * .45, u * 9, op * (1 - q * q));
       if (q < .8) { ctx.save(); ctx.globalAlpha = op * (1 - q); txt('회피!', cx + off, cy - s * 1.35, s * .62, ORANGE_L, 'center', 900); ctx.restore(); }
     }
   }
@@ -751,18 +776,31 @@ function drawCirclePicto(cx, cy, s, p = 0, done = false) {
   }
   c.restore();
 }
-// 실전: 손가락 선 없이 손바닥 중심 글로우만(주먹이면 작고 단단하게)
+// 실전: 손 상태를 늘 보이게(피드백4 「내가 뭘 하고 있는지 모르겠다」)
+// 주먹 = 불꽃(drawFire) · 손바닥 = 흰 빛 원반 + 테(기력이 모자라면 회색) · 애매 = 회색 점선 테만 · 손 아래 작은 이름표
 function drawPalm(h, pl) {
-  const ex = pl && now < pl.exUntil, f = h.open < FIST_OPEN;
-  if (ex) { glowCircle(h.c.x, h.c.y, h.L * 1.1, .3, '170,170,170'); return; }
-  glowCircle(h.c.x, h.c.y, h.L * (f ? .95 : 1.35), f ? .6 : .45);
+  const x = h.c.x, y = h.c.y, L = h.L, c = ctx;
+  if (h.fistOn) { glowCircle(x, y, L * .9, .45); handTag(x, y + L * 1.55, '주먹', ORANGE); return; }
+  if (h.open > PALM_OPEN) {
+    const ok = !pl || (pl.en >= SK.wave.cost && now >= pl.exUntil), col = ok ? '255,244,225' : '170,170,170', pulse = .5 + .5 * Math.sin(now * 5 + h.id);
+    glowCircle(x, y, L * 1.7, ok ? .6 : .3, col);
+    ring(x, y, L * (1.12 + .06 * pulse), ok ? .95 : .5, 7, ok ? '#fff' : '#9A9A9A');
+    ring(x, y, L * .7, ok ? .55 : .3, 4, ok ? ORANGE_L : '#9A9A9A');
+    handTag(x, y + L * 1.55, '손바닥', ok ? 'rgba(255,255,255,.92)' : 'rgba(150,150,150,.9)', ok ? INK : '#fff');
+    return;
+  }
+  c.save(); c.setLineDash([10, 10]); ring(x, y, L * 1.05, .7, 4, '#B0B0B0'); c.restore();
+}
+function handTag(x, y, t, bg, fg = '#fff') {
+  const c = ctx; c.save(); c.font = `800 30px ${FONT}`; const w = c.measureText(t).width + 34; c.fillStyle = bg; c.beginPath(); c.roundRect(x - w / 2, y - 22, w, 44, 22); c.fill();
+  c.fillStyle = fg; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(t, x, y + 1); c.restore();
 }
 
 /* ---------------- 불꽃 주먹 (사용자 261003) ----------------
    주먹을 쥐면 둘레에 불꽃이 늘 타오른다(O100 오렌지 중심 + 흰 심지 + 노랑 끝). 움직이면 불똥이 그 자리에 남아 꼬리가 되고,
    위쪽 공기가 일렁인다(아지랑이). 내지르는 순간 앞으로 확 뿜어지며 커지고, 명중하면 불똥이 튄다. 편 손이면 잦아든다.
    파티클은 미리 구운 그림(3단계 색)을 겹쳐 그리고 전체 FIRE_MAX개로 묶는다 */
-const FIRE_MAX = 420, FIRE_RATE = 110;
+const FIRE_MAX = 560, FIRE_RATE = 170;   // 피드백4: 더 크고 진하게(110 → 170개/초, 불똥 1.3배)
 let FIRE = [];
 const fireSpr = [['255,236,170', '255,200,90', '255,126,49'], ['255,236,150', '255,150,62', '229,101,26'], ['255,150,62', '229,101,26', '160,60,20']].map(([a, b, c]) => {
   const s = document.createElement('canvas'); s.width = s.height = 64; const g = s.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
@@ -773,13 +811,13 @@ function fireOn() { return S.mode === 'game' && G && (G.ph === 'p-try' || G.ph =
 function updateFire(dt) {
   const on = fireOn();
   for (const h of liveHands()) {
-    const fist = on && h.open < FIST_OPEN + .1;
+    const fist = on && h.fistOn;
     h.fire = clamp((h.fire || 0) + (fist ? dt * 5 : -dt * 2.5), 0, 1); h.fireBoost = Math.max(0, (h.fireBoost || 0) - dt * 2.6);
     if (h.fire <= .02) continue;
     const n = FIRE_RATE * dt * h.fire * (1 + h.fireBoost * 2); let k = Math.floor(n) + (Math.random() < n % 1 ? 1 : 0);
     while (k-- > 0 && FIRE.length < FIRE_MAX) {
       const a = Math.random() * Math.PI * 2, r = h.L * rnd(.15, .5);
-      FIRE.push({ x: h.c.x + Math.cos(a) * r, y: h.c.y + Math.sin(a) * r * .8, vx: rnd(-40, 40), vy: -rnd(160, 360) * (1 + h.fireBoost), t: 0, life: rnd(.3, .6), r: h.L * rnd(.26, .44) * (1 + h.fireBoost * .8) });
+      FIRE.push({ x: h.c.x + Math.cos(a) * r, y: h.c.y + Math.sin(a) * r * .8, vx: rnd(-40, 40), vy: -rnd(180, 400) * (1 + h.fireBoost), t: 0, life: rnd(.32, .65), r: h.L * rnd(.34, .58) * (1 + h.fireBoost * .8) });
     }
   }
   for (const p of FIRE) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .96; p.vy *= .98; }
@@ -791,6 +829,30 @@ function fireThrust(h, tx, ty) {
   for (let i = 0; i < 26 && FIRE.length < FIRE_MAX + 60; i++) { const a = Math.random() * 7, v = rnd(200, 620); FIRE.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 120, t: 0, life: rnd(.25, .45), r: h.L * rnd(.45, .8) }); }
   if (tx !== undefined) { const dx = tx - x, dy = ty - y, d = Math.hypot(dx, dy) || 1; for (let i = 0; i < 18 && FIRE.length < FIRE_MAX + 80; i++) { const v = rnd(900, 1900), j = rnd(-.12, .12); FIRE.push({ x, y, vx: (dx / d + j) * v, vy: (dy / d - j) * v, t: 0, life: rnd(.18, .32), r: h.L * rnd(.35, .6) }); } }
 }
+/* 불꽃 줄기(피드백4): 주먹 자리에서 대상까지 직선 불길이 순간적으로 뻗는다(0.04초 만에 닿고 0.3초에 사라짐). 끝이 넓은 물방울꼴 3겹 + 줄기를 따라 날아가는 불똥 */
+function fistBeam(x0, y0, x1, y1, L, wide = 105) {
+  const dx = x1 - x0, dy = y1 - y0, d = Math.hypot(dx, dy) || 1, nx = -dy / d, ny = dx / d;
+  for (let i = 0; i < 28 && FIRE.length < FIRE_MAX + 140; i++) { const u = Math.random(), j = rnd(-1, 1) * L * .25, v = rnd(200, 600); FIRE.push({ x: x0 + dx * u + nx * j, y: y0 + dy * u + ny * j, vx: dx / d * v, vy: dy / d * v - 60, t: 0, life: rnd(.18, .34), r: L * rnd(.35, .6) * (.7 + u * .6) }); }
+  EFX.push({ t: 0, dur: .34, draw: k => {
+    const c = ctx, g = clamp(k / .12, 0, 1), a = k < .45 ? 1 : 1 - (k - .45) / .55, w0 = L * .35, w1 = wide * (1 + .3 * (1 - a)), N = 12;
+    for (const [wk, col, al] of [[1, '229,101,26', .85], [.62, '255,150,62', .95], [.28, '255,240,200', 1]]) {
+      const gr = c.createLinearGradient(x0, y0, x0 + dx * g + 1, y0 + dy * g + 1); gr.addColorStop(0, `rgba(${col},${al * a * .55})`); gr.addColorStop(1, `rgba(${col},${al * a})`);
+      c.fillStyle = gr; c.beginPath();
+      for (let i = 0; i <= N; i++) { const u = i / N, w = lerp(w0, w1, u) * wk / 2 * (1 + .2 * Math.sin(now * 40 + u * 9)), px = x0 + dx * g * u, py = y0 + dy * g * u; i ? c.lineTo(px + nx * w, py + ny * w) : c.moveTo(px + nx * w, py + ny * w); }
+      for (let i = N; i >= 0; i--) { const u = i / N, w = lerp(w0, w1, u) * wk / 2 * (1 + .2 * Math.sin(now * 37 + u * 7 + 2)), px = x0 + dx * g * u, py = y0 + dy * g * u; c.lineTo(px - nx * w, py - ny * w); }
+      c.closePath(); c.fill();
+    }
+    if (g >= 1) glowCircle(x1, y1, w1 * 1.5, a * .85);
+  } });
+}
+// 헛손질(대상 없음): 주먹 앞으로 짧은 불길이 솟았다 흩어진다 + 불꽃 고리
+function airPunch(x, y, L) {
+  fistBeam(x, y, x + rnd(-40, 40), y - 330, L, 140);
+  EFX.push({ t: 0, dur: .4, draw: k => { ring(x, y - 330, lerp(30, 150, easeOut(k)), 1 - k, 12, ORANGE); ring(x, y - 330, lerp(20, 110, easeOut(k)), 1 - k, 6, '#FFE27A'); } });
+  for (let i = 0; i < 24 && FIRE.length < FIRE_MAX + 160; i++) { const a = rnd(-Math.PI, 0), v = rnd(250, 700); FIRE.push({ x, y: y - 330, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: 0, life: rnd(.25, .45), r: L * rnd(.35, .6) }); }
+}
+// 맞은 적이 크게 움찔하며 튕긴다(주먹에서 적 쪽 방향으로 밀림)
+function knock(e, fx, fy, k = 1) { if (e.type === 'boss') k *= .35; const dx = e.px - fx, dy = e.py - fy, d = Math.hypot(dx, dy) || 1; e.kdx = dx / d; e.kdy = dy / d; e.kb = Math.max(e.kb || 0, k); }
 // 명중: 불똥이 튄다
 function embers(x, y, s = 1) { for (let i = 0; i < 22 * s; i++) { const a = Math.random() * 7, v = rnd(250, 900); spark(x, y, { vx: Math.cos(a) * v, vy: Math.sin(a) * v - 300, g: 1500, drag: .985, life: rnd(.45, .9), r: rnd(3, 7), r1: 1, col: pick(['#FFE27A', ORANGE_L, ORANGE, '#fff']) }); } }
 function drawFire() {
@@ -809,10 +871,10 @@ function drawFire() {
   }
   // 밝은 로비 실사 위에서도 하얗게 날아가지 않게: 불꽃은 보통 합성(오렌지가 그대로 보임), 빛 번짐만 조금 더한다
   c.save();
-  for (const h of hs) glowCircle(h.c.x, h.c.y, h.L * 1.05 * (1 + h.fireBoost * .5), .3 * h.fire, '255,126,49');
-  for (const h of hs) {   // 주먹 둘레 불꽃 혀(위로 일렁이는 물방울꼴): 바깥 진한 오렌지 → 안쪽 노랑
+  for (const h of hs) glowCircle(h.c.x, h.c.y, h.L * 1.3 * (1 + h.fireBoost * .5), .45 * h.fire, '255,126,49');
+  for (const h of hs) {   // 주먹 둘레 불꽃 혀(위로 일렁이는 물방울꼴): 바깥 진한 오렌지 → 안쪽 노랑 · 피드백4: 1.3배 크고 진하게
     const L = h.L * (1 + h.fireBoost * .6), a = h.fire;
-    for (const [lk, wk, c0, c1, al] of [[1.35, .2, '229,101,26', '255,126,49', .9], [.85, .12, '255,150,62', '255,214,90', .95]]) {
+    for (const [lk, wk, c0, c1, al] of [[1.8, .26, '229,101,26', '255,126,49', 1], [1.15, .16, '255,150,62', '255,214,90', 1]]) {
       for (let i = 0; i < 6; i++) {
         const bx = h.c.x + (i - 2.5) * L * .15, len = L * lk * (.62 + .28 * Math.sin(now * 11 + i * 1.7 + h.id)) * a, sway = Math.sin(now * 9 + i * 2.3 + lk) * L * .12, w = L * wk, by = h.c.y + L * .12;
         const g = c.createLinearGradient(0, by, 0, by - len); g.addColorStop(0, `rgba(${c0},${al * a})`); g.addColorStop(.7, `rgba(${c1},${al * .8 * a})`); g.addColorStop(1, `rgba(${c1},0)`);
@@ -820,7 +882,7 @@ function drawFire() {
       }
     }
   }
-  for (const p of FIRE) { const k = p.t / p.life, spr = fireSpr[k < .25 ? 0 : k < .6 ? 1 : 2], r = p.r * (1 - k * .6); c.globalAlpha = clamp(1 - k * k, 0, 1) * .8; c.drawImage(spr, p.x - r, p.y - r, r * 2, r * 2); }
+  for (const p of FIRE) { const k = p.t / p.life, spr = fireSpr[k < .25 ? 0 : k < .6 ? 1 : 2], r = p.r * (1 - k * .6); c.globalAlpha = clamp(1 - k * k, 0, 1) * .92; c.drawImage(spr, p.x - r, p.y - r, r * 2, r * 2); }
   c.globalAlpha = 1;
   for (const h of hs) glowCircle(h.c.x, h.c.y, h.L * .26 * (1 + h.fireBoost * .5), .55 * h.fire, '255,240,200');   // 흰 심지(작게)
   c.restore();
@@ -884,56 +946,62 @@ function nameTag(x, y, name, a = 1, size = 30) {
 /* ---------------- 소탕전: 적 (원근 레일 · 소실점에서 나와 중간 거리 자리에 멈춘다) ---------------- */
 const ENAME = { mini: '반복 업무', golem: '서류 더미 골렘', boss: '레거시 보스', dummy: '연습용 샌드백' };
 // 피드백1(261003): 꼬마 주먹 1방 · 골렘 주먹 3방/파동 1방 · 등장 수 절반쯤
-const EHP = { mini: 2, golem: 8, dummy: 1e9 };   // 피드백3: 골렘 = 주먹 4방 · 손바닥 1방 · 연습용 샌드백은 쓰러지지 않는다(맞으면 출렁)
-// 자리(z)까지 나오는 속도(초당 z). 자리에 서면 더 다가오지 않는다 · 피드백3 2차: 판을 줄이려고 조금 빠르게(.24·.17 → .3·.22)
-const ESPD = { mini: .3, golem: .22, dummy: 0 };
-const BOSS_MINI_EVERY = 8, BOSS_MINI_N = 1;
+const EHP = { mini: 4, golem: 10, dummy: 1e9 };   // 피드백4: 꼬마 = 주먹 2방 · 골렘 = 주먹 5방 또는 손바닥 + 주먹 1방(이전 2·8: 나오자마자 한 방에 사라져 던질 틈이 없었다) · 연습용 샌드백은 쓰러지지 않는다(맞으면 출렁)
+const BOSS_MINI_EVERY = 8, BOSS_MINI_N = 1, BOSS_MINI_MAX = 2;   // 피드백4: 보스가 부르는 꼬마는 판에 2번까지(서툰 사람의 보스전이 꼬마 때문에 길어지지 않게)
 const VPY = 380;
-/* 자리(피드백3 2차 261003: 「몬스터가 잘 안 보인다」): 한 줄로, 화면 가운데 띠에 넓게 퍼뜨린다. 1인 5칸 · 2인은 한 사람 쪽 3칸. 칸마다 높이를 조금 엇갈림
-   크기: 꼬마 약 180px · 골렘 약 240px(이전의 2배 이상) · 동시에 나와 있는 적은 1인 4 · 2인 한 사람 쪽 2(EN_CAP), 넘치면 나올 차례를 미룬다 */
-const SLOT_Z = [.7], SLOTS = [[[-1.5, -.75, 0, .75, 1.5]], [[-1.15, 0, 1.15]]], SLOT_LY = [[.35, -.45, .15, -.45, .35], [.3, -.45, .3]];
+/* 자리(피드백4 261003 「원근감 제거」): 적은 앞뒤로 다가오지 않는다. 화면 위쪽~가운데의 정해진 자리에 고정 크기로 「팡」 하고 나타나 제자리에서 흔들·통통.
+   1인 5칸(한 줄, 칸마다 높이를 엇갈림) · 2인은 한 사람 쪽 3칸. 칸 = [그 사람 쪽 가운데로부터 x, y]. 골렘은 몸이 커서 60px 아래에 선다
+   크기 고정: 꼬마 약 180px · 골렘 약 240px · 보스 약 570px. 동시에 나와 있는 적은 1인 4 · 2인 한 사람 쪽 2(EN_CAP), 넘치면 나올 차례를 미룬다
+   e.z 는 이제 거리가 아니라 「나타난 정도」(0 → 1, 0.35초. 음수면 그만큼 늦게 나타남) */
+const SLOTS = [[[-630, 500], [-315, 410], [0, 460], [315, 410], [630, 500]], [[-300, 480], [0, 410], [300, 480]]];
 const EN_CAP = [4, 2];
-const ESCALE = { mini: 4.2, golem: 3, dummy: 2.6 };
+const ESIZE = { mini: 2.9, golem: 2, dummy: 1.3, boss: 1.15 }, POP_T = .35, BOSS_Y = 440, DUMMY_Y = 470;
+const backOut = k => { k = clamp(k, 0, 1); const s = 1.9; return 1 + (s + 1) * Math.pow(k - 1, 3) + s * Math.pow(k - 1, 2); };
 // 피드백3 2차: 실전 목표 1인 약 45초 · 2인 약 50초(웨이브 1 꼬마 6 · 웨이브 2 골렘 2 + 꼬마 4 · 보스)
 const WAVES = [
-  { name: '웨이브 1', ev: [[.3, 'mini'], [.8, 'mini'], [3, 'mini'], [3.5, 'mini'], [6, 'mini'], [6.5, 'mini']] },
-  { name: '웨이브 2', ev: [[.3, 'golem'], [1, 'mini'], [3.5, 'mini'], [5, 'golem'], [7.5, 'mini'], [8, 'mini']] },
+  { name: '웨이브 1', ev: [[.3, 'mini'], [.6, 'mini'], [.9, 'mini'], [4.5, 'mini'], [4.8, 'mini'], [8.5, 'mini'], [8.8, 'mini'], [9.1, 'mini']] },   // 피드백4: 2~3마리씩 무리로(한 마리가 공격하는 동안 다른 적을 친다)
+  { name: '웨이브 2', ev: [[.3, 'golem'], [.6, 'mini'], [.9, 'mini'], [5, 'mini'], [5.3, 'golem'], [9.5, 'mini'], [9.8, 'mini'], [10.1, 'golem']] },
 ];
-const WAVE_OVER = 9;   // 마지막 등장 뒤 이 시간(초)이 지나면 남은 적은 물러나고 다음으로
+const WAVE_OVER = 7;   // 마지막 등장 뒤 이 시간(초)이 지나면 남은 적은 물러나고 다음으로
+// 화면 위치·크기: 자리 + 제자리 움직임(꼬마 통통 · 골렘 좌우 흔들) + 맞았을 때 튕김(kb). 크기는 나타날 때만 팡(0 → 1.1 → 1)
 function proj(e) {
-  if (e.type === 'boss') { const z = e.z; return { x: 960, y: 330 + 260 * z + Math.sin(e.t * 1.6) * 6, s: .5 + 1.5 * z }; }   // 피드백3 2차: 보스도 크게(.35+1.0z → .5+1.5z)
-  const r = region(e.side), z = Math.max(0, e.z), zz = Math.pow(z, 1.35), walk = e.type === 'mini' && !e.posted;   // 꼬마는 걸어 나올 때만 깡충거린다
-  return { x: r.cx + e.lx * r.w * .4 * zz, y: VPY + (e.ly * 90 + 300) * zz + (walk ? -Math.abs(Math.sin(e.t * 9 + e.ph)) * 30 * zz : 0), s: .3 * Math.min(1, z * 4) + (ESCALE[e.type] || 4.2) * zz };
+  const kb = e.kb || 0, kx = (e.kdx || 0) * 90 * kb, ky = (e.kdy || 0) * 90 * kb;
+  if (e.type === 'boss') { const k = clamp(e.t / .9, 0, 1), drop = (1 - backOut(k)) * -650; return { x: 960 + kx, y: BOSS_Y + drop + Math.sin(e.t * 1.6) * 6 + ky, s: ESIZE.boss * (1 - .05 * kb) }; }   // 보스: 위에서 쿵 내려앉는다
+  const r = region(e.side), ap = e.flee ? clamp(e.z, 0, 1) : backOut(e.z), tele = e.atk === 'tele';
+  let bx = 0, by = 0;
+  if (e.type === 'mini') { bx = Math.sin(e.t * 1.1 + e.ph) * 14; by = -Math.abs(Math.sin(e.t * (tele ? 7 : 3.2) + e.ph)) * (tele ? 10 : 18); }
+  else if (e.type === 'golem') { bx = Math.sin(e.t * 1.4 + e.ph) * 12; by = -Math.abs(Math.sin(e.t * 2.8 + e.ph)) * 8; }
+  const th = e.thr || 0;   // 던지는 순간 앞으로(아래로) 살짝 내밀었다 돌아온다
+  return { x: r.cx + (e.sx || 0) + bx + kx, y: (e.sy || DUMMY_Y) + by + ky + th * 24, s: (ESIZE[e.type] || 2.9) * ap * (1 - .1 * kb) * (1 + .08 * th) };
 }
 function placeE(e) { const p = proj(e); e.px = p.x; e.py = p.y; e.ps = p.s; }
+// 빈 자리 하나. 보스가 있으면 보스 몸에 가리는 가운데 자리는 쓰지 않는다
 function freeSlot(side) {
-  const used = G.en.filter(e => e.alive && e.side === side && e.slot !== undefined).map(e => e.slot), S2 = SLOTS[NP() - 1][0];
-  const free = S2.map((_, i) => i).filter(i => !used.includes(i));
-  return free.length ? pick(free) : pick(S2.map((_, i) => i));
+  const S2 = SLOTS[NP() - 1], r = region(side), boss = G.en.some(e => e.type === 'boss' && e.alive);
+  const ok = S2.map((_, i) => i).filter(i => !boss || Math.abs(r.cx + S2[i][0] - 960) > 400);
+  const used = G.en.filter(e => e.alive && e.side === side && e.slot !== undefined).map(e => e.slot), free = ok.filter(i => !used.includes(i));
+  return free.length ? pick(free) : pick(ok.length ? ok : S2.map((_, i) => i));
 }
 const aliveOn = side => G.en.filter(e => e.alive && !e.flee && e.type !== 'boss' && e.type !== 'dummy' && e.side === side).length;
 function spawn(type, side, o = {}) {
-  const e = Object.assign({ type, side, t: 0, id: ++G.eid, alive: true, z: 0, lx: rnd(-.85, .85), ly: rnd(-1, 1), ph: rnd(0, 7), hp: EHP[type] || 1, hitT: 0, spd: ESPD[type] || 0, rot: rnd(-.12, .12), atk: '', ak: 0, posted: false, wob: 0, wv: 0, face: 0 }, o);
+  const e = Object.assign({ type, side, t: 0, id: ++G.eid, alive: true, z: 0, ph: rnd(0, 7), hp: EHP[type] || 1, hitT: 0, rot: rnd(-.12, .12), atk: '', ak: 0, posted: false, wob: 0, wv: 0, face: 0, kb: 0, thr: 0 }, o);
   e.max = e.hp;
-  if (type === 'mini' || type === 'golem') { e.slot = freeSlot(side); e.lx = SLOTS[NP() - 1][0][e.slot] + rnd(-.04, .04); e.zs = SLOT_Z[0] + (type === 'golem' ? -.04 : 0); e.ly = SLOT_LY[NP() - 1][e.slot] + rnd(-.08, .08); }
-  if (type === 'boss') { e.side = -1; e.hp = e.max = BOSS_HP[NP() - 1]; e.nextMini = 3.5; e.n = 0; e.z = 0; e.zs = .42; e.ak = ATK_BOSS_FIRST; e.atk = 'wait'; }
+  if (type === 'mini' || type === 'golem') { e.slot = freeSlot(side); const q = SLOTS[NP() - 1][e.slot]; e.sx = q[0] + rnd(-12, 12); e.sy = q[1] + (type === 'golem' ? 60 : 0) + rnd(-10, 10); }
+  if (type === 'boss') { e.side = -1; e.hp = e.max = BOSS_HP[NP() - 1]; e.nextMini = 3.5; e.n = 0; e.z = 1; e.ak = ATK_BOSS_FIRST; e.atk = 'wait'; }
+  if (e.z >= 0 && type !== 'boss') sfx.spawn();
   placeE(e); G.en.push(e); return e;
 }
 function spawnGroup(side, n) {   // 보스가 부르는 꼬마(상한 안에서만)
-  for (let k = 0; k < n && aliveOn(side) < EN_CAP[NP() - 1]; k++) spawn('mini', side, { z: -k * .07, lead: false });   // 보스 앞이라 이름표 없음
+  for (let k = 0; k < n && aliveOn(side) < EN_CAP[NP() - 1]; k++) spawn('mini', side, { z: -k * .5, lead: false });   // 보스 앞이라 이름표 없음
 }
-// 조준 우선순위: 공격이 가장 임박한 적(예고 고리가 많이 찬 적) → 자리 잡은 적 → 다가오는 적(가까운 순)
-// 피드백3: 수비는 피하기가 맡는다. 공격을 예고 중인 적은 자동 조준이 맨 나중에 고른다(다른 적이 남아 있으면 그 공격은 날아온다 → 고개로 피한다)
+// 조준 우선순위: 먼저 나온 적부터(조준이 이리저리 옮겨 다니지 않게) · 공격을 예고 중인 적은 다른 적이 남아 있으면 맨 나중(그 공격은 날아온다 → 고개로 피한다)
 const threat = e => {
-  if (e.atk === 'tele' && e.type !== 'boss') return .5;
   if (e.type === 'boss') return .9;
-  return e.posted ? 1 + e.z * .1 : e.z;
+  return (e.atk === 'tele' ? .5 : 1) - e.id * 1e-4;
 };
-// 피드백3: 사거리. 적은 이만큼 걸어 나와야(z) 조준·명중된다(멀리 점처럼 보일 때 바로 잡혀 버려 공격을 볼 일이 없었다). 공격 예고는 그 전부터 할 수 있다
-const ENGAGE_Z = .3;
-// 공격 예고 중인 꼬마·골렘은 맞지 않는다(TELE_IMMUNE): 공격은 주먹으로 끊는 것이 아니라 고개로 피한다(공격 = 손, 수비 = 머리). 보스는 늘 맞는다
-const TELE_IMMUNE = true;
-const targetable = e => e.alive && (e.type === 'boss' ? e.t > 1.6 : e.z > (e.type === 'dummy' ? .04 : ENGAGE_Z) && !(TELE_IMMUNE && e.atk === 'tele'));
+// 피드백4(261003 「주먹이 뭘 하는지 모르겠다」): 사거리 규칙(z 0.3)과 예고 중 면역을 없앴다. 화면에 보이는 적은 언제든 맞는다
+// 예고 중인 적을 처치하면 그 공격은 취소된다. 피하기 기회는 던지기 순번표(WAVE_THROWS)로 보장한다
+const targetable = e => e.alive && !e.flee && (e.type === 'boss' ? e.t > 1.6 : e.z > .3);
 // 자동 조준: 항상 가장 가까운(위험한) 적 하나. 손 위치·내지른 방향은 보지 않는다(피드백1 261003)
 // (이전: 손을 화면 좌우로 치우쳐 지르면 그쪽 적으로 조준이 옮겨 가서, 표시된 조준과 실제로 맞는 적이 달라졌다)
 const mine = (pl, e) => e.type === 'boss' || NP() !== 2 || e.side === pl.i;
@@ -951,7 +1019,7 @@ function splash(pl, x, y, R, dmg, skip, bossDmg, maxN = 99) {
     if (d < rr) c.push([d, en]);
   }
   c.sort((a, b) => a[0] - b[0]); let n = 0;
-  for (const [, en] of c.slice(0, maxN)) if (hitEnemy(pl, en, en.type === 'boss' ? (bossDmg || dmg) : dmg)) n++;
+  for (const [, en] of c.slice(0, maxN)) { knock(en, x, y, .7); if (hitEnemy(pl, en, en.type === 'boss' ? (bossDmg || dmg) : dmg)) n++; }
   return n;
 }
 // 생명 감소는 여기 한 곳뿐: 날아온 것이 내 얼굴(착탄 원 안)에 맞았을 때. 맞은 뒤 HURT_GRACE초 무적
@@ -1018,6 +1086,8 @@ function stepAttack(e, wdt) {
     if (e.ak <= 0) {
       let side = e.side;
       if (e.type === 'boss') { side = NP() === 2 ? 1 - (e.lastSide === undefined ? 1 : e.lastSide) : 0; if (NP() === 2 && !sideFree(side)) side = 1 - side; }
+      if ((e.bn || 0) >= BOSS_THROWS[NP() - 1]) { e.atk = 'done'; return; }   // 정해진 횟수를 다 던졌다
+      if (mercySkip()) { e.ak = ATK_BOSS_GAP; e.bn = (e.bn || 0) + 1; return; }
       if (sideFree(side)) {
         e.atk = 'tele'; e.tside = side; e.ak = 0; e.warned = false; e.teleAt = now;
         if (e.type === 'boss') { e.lastSide = side; e.bn = (e.bn || 0) + 1; e.patt = e.bn % 2 ? 'ball' : 'wide'; }   // 보스: 큰 공 ↔ 넓은 공격 번갈아
@@ -1028,45 +1098,49 @@ function stepAttack(e, wdt) {
     if (!e.warned && e.ak >= T - ATK_WARN) { e.warned = true; sfx.warn(e.type === 'boss'); }
     if (e.ak >= T) {
       throwAt(e); e.atk = 'wait'; e.ak = e.type === 'boss' ? ATK_BOSS_GAP : 0;
-      if ((G.ph === 'b-boss' || G.wave >= 1) && e.patt !== 'wide' && Math.random() < ATK_DOUBLE) e.dbl = ATK_DOUBLE_GAP;
+      if (e.type === 'boss' && e.patt !== 'wide' && G.life >= 3 && Math.random() < ATK_DOUBLE) e.dbl = ATK_DOUBLE_GAP;
     }
   }
 }
-// 사람(쪽)별 순번표: 그쪽이 한가하면(예고 중·날아오는 중 아님, 쉬는 시간 끝) 시계가 줄고, 0이 되면 보이는 적 중 주먹 차례가 가장 늦은 적이 예고를 시작한다
+// 사람(쪽)별 던지기 순번표(G.tq): 차례 시각이 지났고 그쪽이 한가하면(예고 중·날아오는 중 아님, 쉬는 시간 끝) 보이는 적 중 조준이 가장 늦게 갈 적이 예고를 시작한다
 function stepSideAttack(wdt) {
-  if (G.merge || (G.ph !== 'b-wave' && G.ph !== 'b-boss')) return;
+  if (G.merge || G.ph !== 'b-wave') return;
   for (let side = 0; side < NP(); side++) {
-    if (!sideFree(side)) continue;
-    G.atkT[side] -= wdt; if (G.atkT[side] > 0) continue;
-    const cand = G.en.filter(e => e.alive && !e.flee && e.type !== 'boss' && e.type !== 'dummy' && e.side === side && e.z >= ATK_MIN_Z && e.atk === 'wait' && !(e.dbl > 0));
-    if (!cand.length) { G.atkT[side] = .3; continue; }
+    const q = G.tq[side]; if (!q || !q.length || G.wt < q[0] || !sideFree(side)) continue;
+    const cand = G.en.filter(e => e.alive && !e.flee && e.type !== 'boss' && e.type !== 'dummy' && e.side === side && e.posted && e.t >= ATK_MIN_T && e.atk === 'wait');
+    if (!cand.length) continue;   // 던질 적이 생길 때까지 미룬다
+    q.shift();
+    if (mercySkip()) continue;   // 생명이 적으면 가끔 건너뛴다
     const e = cand.reduce((a, b) => threat(b) < threat(a) ? b : a);
-    e.atk = 'tele'; e.tside = side; e.ak = 0; e.warned = false; e.teleAt = now; G.atkT[side] = rnd(ATK_GAP[0], ATK_GAP[1]) * (NP() === 2 ? ATK_GAP2_K : 1);
+    e.atk = 'tele'; e.tside = side; e.ak = 0; e.warned = false; e.teleAt = now;
   }
 }
 // 날아올 것 하나: 던지는 순간의 얼굴 위치(o.f)로. 얼굴이 없으면 그 사람 쪽 화면 가운데 위로
+const BIG_SHOT = new Set(['paperball', 'stack', 'bigbinder', 'wall']);
 function mkShot(o) {
-  const f = o.f, r = region(o.side), fw = f ? f.w : FACE_W0, wide = o.kind === 'wall', big = o.kind === 'paperball' || wide;
-  const s = Object.assign({ t: 0, rot: rnd(-.4, .4), spin: rnd(-6, 6) * (wide ? .1 : 1), trail: [], tx: f ? f.x : r.cx, ty: f ? f.y : 330, fw, noFace: !f,
+  const f = o.f, r = region(o.side), fw = f ? f.w : FACE_W0, wide = o.kind === 'wall', big = BIG_SHOT.has(o.kind);
+  const s = Object.assign({ t: 0, rot: wide ? 0 : rnd(-.4, .4), spin: wide ? rnd(-.8, .8) : rnd(-6, 6), trail: [], tx: f ? f.x : r.cx, ty: f ? f.y : 330, fw, noFace: !f,
     R: Math.max(HIT_MIN, fw * (big ? HIT_K_BOSS : HIT_K)), half: WIDE_HALF[NP() - 1] }, o);
-  s.endW = wide ? (s.half * 2 + 60) * 1.4 : o.kind === 'paperball' ? Math.max(340, fw * 2.2) : Math.max(220, fw * 1.5);
+  s.w = wide ? s.half * 2 + 60 : SHOT_W[s.kind] || 110;   // 피드백4: 크기 고정(원근 없음)
+  s.arc = ARC_H + Math.hypot(s.tx - s.x0, s.ty - s.y0) * ARC_K;
   delete s.f; return s;
 }
-// 던짐: 적 자리에서 내 얼굴 쪽으로(원근: 작게 출발 → 도착 직전에 급격히 커짐)
+// 던짐: 적 손에서 던지는 순간의 내 얼굴 위치로 포물선. 물건은 적 크기에 맞춤(꼬마 작은 것 · 골렘 중간 · 보스 큰 것 / 서류 벽)
 function throwAt(e) {
-  const side = e.type === 'boss' ? (e.tside || 0) : e.side, big = e.type === 'boss', wide = big && e.patt === 'wide';
-  const s = mkShot({ type: e.type, side, kind: e.type === 'mini' ? 'mail' : e.type === 'golem' ? 'doc' : wide ? 'wall' : 'paperball', x0: e.px, y0: e.py - (big ? 60 * e.ps : 0),
-    f: faceFor(side), dur: ATK_FLY[wide ? 'wide' : e.type], tele: +(now - (e.teleAt || now)).toFixed(2) });
-  G.eshots.push(s); sfx.toss(big); sfx.wind(s.dur, big); if (big) shake = Math.max(shake, .6);
+  const side = e.type === 'boss' ? (e.tside || 0) : e.side, big = e.type === 'boss', wide = big && e.patt === 'wide', f = faceFor(side);
+  const fx = f ? f.x : region(side).cx, d = fx >= e.px ? 1 : -1;
+  const x0 = e.type === 'golem' ? e.px + d * 66 * e.ps : e.type === 'mini' ? e.px + d * 20 * e.ps : e.px, y0 = e.type === 'golem' ? e.py + 10 * e.ps : e.type === 'mini' ? e.py - 20 * e.ps : e.py - 60 * e.ps;
+  const s = mkShot({ type: e.type, side, kind: wide ? 'wall' : pick(SHOT_KINDS[e.type] || SHOT_KINDS.mini), x0, y0,
+    f, dur: ATK_FLY[wide ? 'wide' : e.type], tele: +(now - (e.teleAt || now)).toFixed(2) });
+  e.thr = 1; G.eshots.push(s); sfx.toss(big); sfx.wind(s.dur, big); if (big) shake = Math.max(shake, .6);
 }
 function throwPractice(pl) {
-  const r = region(pl.i), s = mkShot({ type: 'practice', side: pl.i, kind: 'ball', x0: r.cx, y0: 420, f: faceFor(pl.i), dur: ATK_FLY.practice, practice: true, tele: 0 });
+  const r = region(pl.i), s = mkShot({ type: 'practice', side: pl.i, kind: 'ball', x0: r.cx + (NP() === 2 ? 0 : 260), y0: 560, f: faceFor(pl.i), dur: ATK_FLY.practice, practice: true, tele: 0 });
   G.eshots.push(s); sfx.toss(false); sfx.wind(s.dur, false); pl.balls = (pl.balls || 0) + 1;
 }
-// 원근 위치: 거리 d가 일정하게 줄면(출발 PERSP_D0 → 도착 1) 화면 위 진행 u와 크기 1/d는 도착 직전에 급격히 커진다
+// 포물선 위치(k = 비행 진행 0 → 1, 1을 넘기면 지나쳐 계속 날아간다). 크기는 그대로(sc 1)
 function eshotPos(s, k) {
-  const d = lerp(PERSP_D0, 1, k), u = (1 / d - 1 / PERSP_D0) / (1 - 1 / PERSP_D0);
-  return { x: lerp(s.x0, s.tx, u), y: lerp(s.y0, s.ty, u) - Math.sin(u * Math.PI) * 90, sc: 1 / d, u };
+  return { x: lerp(s.x0, s.tx, k), y: lerp(s.y0, s.ty, k) - 4 * s.arc * k * (1 - k), sc: 1, u: k };
 }
 // 도착 판정: 지금 얼굴 중심이 착탄 원(넓은 공격은 띠) 안이면 맞음 · 밖이면 회피 · 얼굴을 1초 넘게 못 보면 맞지 않고 지나감
 function landShot(s) {
@@ -1098,7 +1172,7 @@ function updateEShots(wdt) {
     if (!s.res) {
       const k = clamp(s.t / s.dur, 0, 1), p = eshotPos(s, k);
       s.trail.push({ x: p.x, y: p.y, sc: p.sc }); if (s.trail.length > 7) s.trail.shift();
-      if (k < 1 && Math.random() < .7) spark(p.x + rnd(-20, 20) * p.sc, p.y + rnd(-20, 20) * p.sc, { vx: rnd(-60, 60), vy: rnd(-60, 60), r: rnd(4, 9) * (.6 + p.sc * 2.4), life: .25, col: pick(['#fff', '#FFD0A8']) });
+      if (k < 1 && Math.random() < .7) { const q = Math.min(s.w, 300); spark(p.x + rnd(-.2, .2) * q, p.y + rnd(-.2, .2) * q, { vx: rnd(-60, 60), vy: rnd(-60, 60), r: rnd(.04, .08) * q, life: .25, col: pick(['#fff', '#FFD0A8']) }); }
       if (k >= 1) landShot(s);
     } else {
       s.pt += wdt;
@@ -1109,25 +1183,25 @@ function updateEShots(wdt) {
 }
 function updateEnemies(wdt) {
   for (const e of G.en) {
-    if (!e.alive) continue; e.t += wdt; e.hitT = Math.max(0, e.hitT - wdt * 4);
-    if (e.flee) { e.fleeT = (e.fleeT || 0) + wdt; e.z -= wdt * .5; if (e.fleeT > .6) e.alive = false; placeE(e); continue; }
+    if (!e.alive) continue; e.t += wdt; e.hitT = Math.max(0, e.hitT - wdt * 4); e.kb = Math.max(0, (e.kb || 0) - wdt * 4.5); e.thr = Math.max(0, (e.thr || 0) - wdt * 4);
+    if (e.flee) { e.fleeT = (e.fleeT || 0) + wdt; e.z = Math.min(1, e.z) - wdt / .4; if (e.fleeT > .4) e.alive = false; placeE(e); continue; }   // 물러남: 제자리에서 작아지며 사라진다
+    if (e.type !== 'boss' && e.z < 1) { const z0 = e.z; e.z = Math.min(1, e.z + wdt / POP_T); if (z0 < 0 && e.z >= 0) sfx.spawn(); if (e.z >= 1) e.posted = true; }   // 팡 하고 나타남
     if (e.type === 'boss') {
-      if (e.t < 1.6) e.z = lerp(0, e.zs, easeOut(e.t / 1.6));
+      if (e.t < 1.6) { if (e.t >= .5 && !e.landed) { e.landed = true; shake = Math.max(shake, 1); sfx.thud(); } }   // 위에서 쿵
       else if (!(G.merge) && G.ph === 'b-boss') {
         e.posted = true; e.nextMini -= wdt;
-        if (e.nextMini <= 0) { e.nextMini = BOSS_MINI_EVERY; spawnGroup(NP() === 2 ? (e.n++ % 2) : 0, BOSS_MINI_N); sfx.boss(); }
+        if (e.nextMini <= 0 && e.n < BOSS_MINI_MAX) { e.nextMini = BOSS_MINI_EVERY; spawnGroup(NP() === 2 ? e.n % 2 : 0, BOSS_MINI_N); e.n++; sfx.boss(); }
         stepAttack(e, wdt);
       }
     } else if (e.type === 'dummy') {   // 샌드백 출렁임(용수철)
       e.wv += (-70 * e.wob - 7 * e.wv) * wdt; e.wob += e.wv * wdt; e.face = Math.max(0, (e.face || 0) - wdt);
     } else {
-      if (e.z < e.zs) { e.z = Math.min(e.zs, e.z + wdt * e.spd); if (e.z >= e.zs && !e.posted) e.posted = true; }
       if (!e.atk) e.atk = 'wait';
       stepAttack(e, wdt);
     }
     placeE(e);
   }
-  G.en = G.en.filter(e => e.alive);
+  G.en = G.en.filter(e => e.alive); updateDead(wdt);
 }
 
 /* ---------------- 소탕전: 기술 → 결과 ---------------- */
@@ -1139,9 +1213,9 @@ function hitEnemy(pl, e, dmg) {
   if (e.type === 'boss' && G.bossTired) dmg *= 2;   // 보스가 지치면 피해 2배
   if (e.type === 'boss' && NP() === 2 && !G.mergeKill && !G.bossTired) dmg = Math.max(0, Math.min(dmg, e.hp - Math.ceil(e.max * .1)));   // 2인 보스 마무리는 합체기(보스가 지치면 이 조건은 풀린다)
   if (e.type === 'dummy') { e.wv = (e.wv || 0) + (Math.random() < .5 ? -1 : 1) * rnd(4, 6); e.face = .5; }
-  e.hp -= dmg; e.hitT = 1; if (e.type !== 'boss' && e.type !== 'dummy') e.z = Math.max(.05, e.z - .02);
+  e.hp -= dmg; e.hitT = 1;
   const kill = e.hp <= 0;
-  marker(e.px, e.py, kill); if (dmg > 0 && dmg < 999) pops.push({ text: `-${dmg}`, x: e.px + rnd(-30, 30) + (e.type === 'boss' ? 200 * e.ps : 40), y: e.py - 60 * e.ps - 20, t: 0, dur: .8, size: e.type === 'boss' ? 90 : 64, col: ORANGE_L, rise: 70 });
+  marker(e.px, e.py, kill); if (dmg > 0 && dmg < 999) pops.push({ text: `-${dmg}`, x: e.px + rnd(-30, 30) + (e.type === 'boss' ? 200 * e.ps : 110), y: e.py - 60 * e.ps - 20, t: 0, dur: .9, size: e.type === 'boss' ? 100 : 84, col: ORANGE_L, rise: 80 });
   if (pl) { pl.combo++; pl.comboT = now; pl.comboPop = 1; G.maxCombo = Math.max(G.maxCombo, pl.combo); }
   G.slow = Math.max(G.slow, kill ? .1 : .05);
   if (kill) killE(e); else sfx.tick();
@@ -1151,7 +1225,18 @@ function killE(e) {
   e.alive = false;
   if (e.type === 'boss') { bossDie(e); return; }
   if (e.type === 'dummy') { G.dummyAt = now + .6; boom(e.px, e.py, .6, true); sfx.kill(); return; }
-  G.kills++; boom(e.px, e.py, e.type === 'golem' ? 1.3 : .65, true); sfx.kill(); killFeed(ENAME[e.type] + ' 처치!');
+  G.kills++; boom(e.px, e.py, e.type === 'golem' ? .9 : .5, true); sfx.kill(); killFeed(ENAME[e.type] + ' 처치!');
+  // 피드백4: 맞은 방향으로 튕겨 날아가며 돌다가 사라진다(2D)
+  const dx = e.kdx || 0, dy = e.kdy || -1;
+  G.dead.push({ type: e.type, x: e.px, y: e.py, s: e.ps, ph: e.ph, et: e.t, rot0: e.rot, vx: dx * 900 + rnd(-200, 200), vy: Math.min(-500, dy * 900) - rnd(200, 400), vr: rnd(7, 12) * (dx >= 0 ? 1 : -1), rot: 0, t: 0 });
+}
+const DEAD_T = .7;
+function updateDead(dt) { for (const d of G.dead) { d.t += dt; d.x += d.vx * dt; d.y += d.vy * dt; d.vy += 2600 * dt; d.rot += d.vr * dt; } G.dead = G.dead.filter(d => d.t < DEAD_T); }
+function drawDead() {
+  for (const d of G.dead) {
+    const c = ctx, k = d.t / DEAD_T; c.save(); c.globalAlpha = clamp(1 - k * k, 0, 1); c.translate(d.x, d.y); c.rotate(d.rot); const s = d.s * (1 - .25 * k);
+    if (d.type === 'mini') drawMini(0, 0, s, d.ph); else if (d.type === 'golem') drawGolem(0, 0, s, d.et, d.rot0); c.restore();
+  }
 }
 function canCast(pl, k, practice) {
   if (now < pl.cool[k]) return 'cool';
@@ -1173,9 +1258,14 @@ function cast(pl, ev, practice) {
   if (!practice && SK[k].cost > 0) { pl.en = Math.max(0, pl.en - SK[k].cost); pl.lastCast = now; }
   const tg = pickTarget(pl);   // 손이 어디 있든 지금 조준된 적
   if (k === 'fist') {
-    crack(at.x, at.y, at.L); sfx.punch(); fireThrust(at.h, tg ? tg.px : undefined, tg ? tg.py : undefined); if (tg) embers(tg.px, tg.py, tg.type === 'boss' ? 1.6 : 1);
+    // 피드백4: 주먹이 인식되면 반드시 보이는 결과. 대상이 있으면 불꽃 줄기 → 크게 움찔·튕김 + 피해 숫자 + 「퍽」 · 없으면 허공에 불꽃 펀치
+    crack(at.x, at.y, at.L * .8); sfx.punch(); fireThrust(at.h, tg ? tg.px : undefined, tg ? tg.py : undefined);
+    if (tg) {
+      fistBeam(at.x, at.y, tg.px, tg.py, at.L, tg.type === 'boss' ? 170 : tg.type === 'golem' ? 130 : 105); embers(tg.px, tg.py, tg.type === 'boss' ? 1.6 : 1.2); knock(tg, at.x, at.y);
+      pop('퍽', tg.px - (tg.type === 'boss' ? 160 : 70), tg.py - 30, { size: tg.type === 'boss' ? 130 : 110, col: '#fff', dur: .6, rise: 30 });
+    } else { airPunch(at.x, at.y, at.L); sfx.airPunch(); }
     { const k0 = G.kills; const h = tg ? hitEnemy(pl, tg, SK.fist.dmg) : false; if (!practice) stat('fist', G.kills - k0, h ? 1 : 0); }
-    if (tg) { EFX.push({ t: 0, dur: .18, draw: q => { const c = ctx; c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = `rgba(255,220,190,${.8 * (1 - q)})`; c.lineWidth = 18 * (1 - q); c.lineCap = 'round'; c.beginPath(); c.moveTo(at.x, at.y); c.lineTo(tg.px, tg.py); c.stroke(); c.restore(); } }); }
+    G.fistLog.push({ t: +now.toFixed(2), hit: !!tg, tele: !!(tg && tg.atk === 'tele'), type: tg ? tg.type : '' });
   } else if (k === 'wave') {
     sfx.wave(); G.dim = Math.max(G.dim, .25);
     G.shots.push({ k: 'wave', i: pl.i, x0: at.x, y0: at.y, tg, tx: tg ? tg.px : r.cx, ty: tg ? tg.py : VPY, t: 0, dur: .24 });
@@ -1207,6 +1297,7 @@ function updateShots(wdt) {
       if (s.k === 'wave') {
         boom(s.tx, s.ty, .8, true); sfx.pop();
         EFX.push({ t: 0, dur: .4, draw: q => { ring(s.tx, s.ty, lerp(30, WAVE_SPLASH, easeOut(q)), 1 - q, 8, '#fff'); } });
+        if (tg) knock(tg, s.x0, s.y0, .8);
         const k0 = G.kills; let n = tg && hitEnemy(pl, tg, SK.wave.dmg) ? 1 : 0;
         n += splash(pl, s.tx, s.ty, WAVE_SPLASH, WAVE_SPLASH_DMG, tg, WAVE_SPLASH_DMG, WAVE_SPLASH_N);   // 바로 옆 1마리만 절반 피해
         stat('wave', G.kills - k0, n);
@@ -1214,6 +1305,7 @@ function updateShots(wdt) {
         boom(s.tx, s.ty, 1.8, true); flash = Math.max(flash, .2); shake = Math.max(shake, 1.3); G.dim = Math.max(G.dim, .5);
         logoHit(s.tx, s.ty, 300 * .6, .75);   // 날아온 마크(도착 크기 300 x 0.6)가 그대로 커지며 사라지고 뒤로 점이 터진다
         EFX.push({ t: 0, dur: .9, draw: q => { ring(s.tx, s.ty, lerp(80, MTW_SPLASH + 60, easeOut(q)), 1 - q, 22, '#fff'); ring(s.tx, s.ty, lerp(40, MTW_SPLASH, easeOut(q)), 1 - q, 14, ORANGE); } });
+        if (tg) knock(tg, s.x0, s.y0, 1);
         const k0 = G.kills; let n = tg && hitEnemy(pl, tg, tg.type === 'boss' ? MTW_BOSS_DMG : SK.mtw.dmg) ? 1 : 0;
         n += splash(pl, s.tx, s.ty, MTW_SPLASH, MTW_SPLASH_DMG, tg, MTW_BOSS_DMG);   // 대상 둘레 MTW_SPLASH 안
         stat('mtw', G.kills - k0, n);
@@ -1254,24 +1346,24 @@ function startGame(np, skip = false) {
   audio(); sfx.start(); S.mode = 'game'; clearFx(); SEL = null;
   G = { np, ph: 'p-demo', t: 0, pi: 0, pl: [newPlayer(0)], life: LIFE_MAX, kills: 0, bossTired: false, en: [], eid: 0, wave: 0, wt: 0, sched: [], shots: [], eshots: [], hurtLog: [], merge: null, mergeKill: false, calls: [], banner: null,
     marks: [], feed: [], maxCombo: 0, dummyAt: 0, dim: 0, slow: 0, dslow: 0, white: 0, hurt: 0, absent: 0, paused: false, cleared: false, grade: '', gapT: 0,
-    dodges: 0, dodgeLog: [], rest: [0, 0], atkT: [ATK_FIRST, ATK_FIRST], st: { fist: { n: 0, kills: 0, hits: 0 }, wave: { n: 0, kills: 0, hits: 0 }, mtw: { n: 0, kills: 0, hits: 0 } } };
+    dodges: 0, dodgeLog: [], rest: [0, 0], dead: [], fistLog: [], tq: [[], []], st: { fist: { n: 0, kills: 0, hits: 0 }, wave: { n: 0, kills: 0, hits: 0 }, mtw: { n: 0, kills: 0, hits: 0 } } };
   if (np === 2) G.pl.push(newPlayer(1));
   tuneFor(np);
   for (const h of hands) h.side = h.c.x < 960 ? 0 : 1;
   if (skip) setPh('b-intro');
 }
 function setPh(ph) {
-  G.ph = ph; G.t = 0; for (const pl of G.pl) { pl.done = false; }
+  G.ph = ph; G.t = 0; for (const pl of G.pl) { pl.done = false; } if (ph === 'p-try' || ph === 'ready' || ph === 'b-intro') G.dead = [];
   if (ph === 'p-try') { G.en = []; G.shots = []; G.eshots = []; G.dummyAt = now; for (const pl of G.pl) pl.nextBall = 0; }
   if (ph === 'ready') { pops = []; P2 = []; EFX = []; CRACKS = []; DOTB = []; G.calls = []; G.en = []; G.shots = []; G.eshots = []; G.readyAt = 0; G.readyBy = ''; for (const pl of G.pl) { pl.ready = false; pl.circT = 0; pl.cut = false; pl.pend = null; } }
   if (ph === 'b-intro') { G.en = []; G.shots = []; G.eshots = []; G.cd = 0; G.hurtAt = -9; for (const pl of G.pl) { pl.en = EN_MAX; pl.exUntil = 0; pl.combo = 0; } }
 }
 function startWave(i) {
-  const w = WAVES[i]; G.wave = i; G.wt = 0; G.sched = []; G.atkT = [ATK_FIRST, ATK_FIRST + .8];
+  const w = WAVES[i]; G.wave = i; G.wt = 0; G.sched = []; G.tq = WAVE_THROWS[NP() - 1][i].map(a => a.slice()); if (G.tq.length < 2) G.tq.push([]);
   for (let s = 0; s < NP(); s++) w.ev.forEach(([t, type], k) => G.sched.push({ t: t + s * .6, type, side: s, lead: k === 0 }));
   G.sched.sort((a, b) => a.t - b.t); G.banner = { text: w.name, t: 0 }; setPh('b-wave');
 }
-function startBoss() { G.atkT = [ATK_BOSS_FIRST + 3, ATK_BOSS_FIRST + 5]; G.banner = { text: '레거시 보스', t: 0 }; spawn('boss', 0); setPh('b-boss'); sfx.boss(); }
+function startBoss() { G.tq = [[], []]; G.banner = { text: '레거시 보스', t: 0 }; spawn('boss', 0); setPh('b-boss'); sfx.boss(); }
 function gradeOf() { return G.cleared ? (G.life >= 4 ? '대마법사' : '마법사') : G.kills >= 20 ? '견습 마법사' : '마법 입문자'; }function practiceGauge(pl, key) {
   let m = 0; for (const h of pl.hands) m = Math.max(m, clamp((h.thrR - 1) / (THR_RATIO - 1), 0, 1)); return m;
 }
@@ -1300,7 +1392,7 @@ function stepGame(dt) {
   }
   if (ph === 'p-try') {
     const key = PRACTICE[G.pi], waiting = G.pl.some(pl => !pl.done && pl.hands.length < SK[key].need);
-    if (now >= G.dummyAt) for (let s = 0; s < NP(); s++) if (!G.en.some(e => e.type === 'dummy' && e.side === s)) spawn('dummy', s, { z: .5, lx: 0, ly: -.5 });
+    if (now >= G.dummyAt) for (let s = 0; s < NP(); s++) if (!G.en.some(e => e.type === 'dummy' && e.side === s)) spawn('dummy', s);
     for (const pl of G.pl) for (const ev of pl.evs) {
       if (!cast(pl, ev, true)) continue;
       if (!pl.done && ev.k === key) { pl.done = true; if (key !== 'mtw') callout(SK[key].name, region(pl.i).cx, 250, two ? 140 : 190); }
@@ -1455,7 +1547,7 @@ function drawPractice() {
   const dodge = key === 'dodge';
   drawEnemies(); if (!dodge) G.pl.forEach(drawSpirit); drawShots();
   for (const h of liveHands()) drawHand(h.lm, dodge ? .45 : .95);
-  if (!dodge) drawFire();
+  if (!dodge) { for (const pl of G.pl) for (const h of pl.hands) drawPalm(h, null); drawFire(); }
   if (dodge) { drawFaceGhost(); drawEShots(); }
   if (ph === 'p-try') {
     head(SK[key].name, SK[key].how);
@@ -1511,7 +1603,7 @@ function stepSpirit(pl, dt) {
   const r = region(pl.i), ph = G.ph, on = (ph === 'p-try' && PRACTICE[G.pi] !== 'dodge') || ph === 'b-wave' || ph === 'b-boss';
   const tg = on && !G.merge ? pickTarget(pl) : null, sp = pl.sp || (pl.sp = { x: r.cx, y: 200, tid: null, fx: r.cx, fy: 200, ft: 1, on: false });
   let tx = r.cx + Math.sin(now * .8 + pl.i * 2) * 120, ty = 210;
-  if (tg) { const bx = EBOX[tg.type] || EBOX.mini; if (tg.type === 'boss') { tx = tg.px + 210 * tg.ps; ty = tg.py - 150 * tg.ps; } else { tx = tg.px; ty = tg.py - bx.top * tg.ps - 108; } }   // 이름표 위   // 보스는 모니터 오른쪽 위 모서리에
+  if (tg) { const bx = EBOX[tg.type] || EBOX.mini; if (tg.type === 'boss') { tx = tg.px + 210 * tg.ps; ty = tg.py - 150 * tg.ps; } else { tx = tg.px; ty = tg.py - bx.top * tg.ps - (tg.type === 'golem' ? 150 : 108); } }   // 이름표 위   // 보스는 모니터 오른쪽 위 모서리에
   const id = tg ? tg.id : null;
   if (id !== sp.tid) { sp.tid = id; sp.fx = sp.x; sp.fy = sp.y; sp.ft = 0; }
   if (sp.ft < 1) {
@@ -1569,9 +1661,10 @@ function drawSandbag(x, y, s, e) {
   c.restore();
 }
 function drawEnemies() {
-  const list = G.en.filter(e => e.z > 0).sort((a, b) => a.z - b.z || a.py - b.py);
+  drawDead();
+  const list = G.en.filter(e => e.z > 0 && e.ps > .02).sort((a, b) => (a.type === 'boss' ? -1 : 0) - (b.type === 'boss' ? -1 : 0) || a.py - b.py);
   for (const e of list) {
-    const fa = e.flee ? 1 - (e.fleeT || 0) / .6 : clamp(e.z * 8, 0, 1), bx = EBOX[e.type] || EBOX.mini, s = e.ps;
+    const fa = 1, bx = EBOX[e.type] || EBOX.mini, s = e.ps;
     const tele = e.atk === 'tele' && !e.flee, T = ATK_TELE[e.type] || 1, warn = tele && e.ak >= T - ATK_WARN, blink = .5 + .5 * Math.sin(now * 22);
     ctx.save(); ctx.globalAlpha = clamp(fa, 0, 1);
     footShadow(e.px, e.py + bx.foot * s, bx.sh * s);
@@ -1615,18 +1708,38 @@ function docShape(c, shadowOff) {
   c.fillStyle = ORANGE; c.beginPath(); c.moveTo(18, -44); c.lineTo(18, -28); c.lineTo(34, -28); c.closePath(); c.fill();
   c.strokeStyle = '#BDBDBD'; c.lineWidth = 5; c.lineCap = 'round'; for (let j = 0; j < 4; j++) { c.beginPath(); c.moveTo(-22, -20 + j * 15); c.lineTo(j === 3 ? 4 : 22, -20 + j * 15); c.stroke(); }
 }
-// 날아오는 것 하나를 그린다. sc = 1 이면 도착 크기(s.endW 폭)
+// 바인더(골렘 · 보스): 진한 표지 + 주황 책등 + 흰 이름표 + 고리 3개
+function binderShape(c) {
+  c.fillStyle = INK; c.strokeStyle = '#fff'; c.lineWidth = 4; c.beginPath(); c.roundRect(-32, -42, 64, 84, 7); c.fill(); c.shadowColor = 'transparent'; c.stroke();
+  c.fillStyle = ORANGE; c.beginPath(); c.roundRect(-32, -42, 16, 84, [7, 0, 0, 7]); c.fill();
+  c.fillStyle = PAPER; c.beginPath(); c.roundRect(-6, -18, 30, 22, 3); c.fill();
+  c.strokeStyle = '#BDBDBD'; c.lineWidth = 3; c.beginPath(); c.moveTo(-1, -11); c.lineTo(19, -11); c.moveTo(-1, -4); c.lineTo(13, -4); c.stroke();
+  c.fillStyle = '#D9D9D9'; for (const yy of [-26, 0, 26]) { c.beginPath(); c.arc(-24, yy, 4.5, 0, 7); c.fill(); }
+}
+// 날아오는 것 하나를 그린다. 크기 고정(s.w 폭) · sc는 맞는 순간 찌그러짐 등에만 쓴다
 function drawShotBody(s, x, y, sc, rot, a) {
   if (a <= 0) return;
-  if (s.kind === 'ball') { drawBaseball(x, y, s.endW / 2 * sc, rot, a); return; }
-  const c = ctx, base = s.kind === 'wall' ? 420 : 80, k = s.endW / base * sc;
-  c.save(); c.globalAlpha *= clamp(a, 0, 1); c.translate(x, y); c.rotate(s.kind === 'wall' ? Math.sin(rot) * .06 : rot); c.scale(k, k); c.lineJoin = 'round';
+  if (s.kind === 'ball') { drawBaseball(x, y, s.w / 2 * sc, rot, a); return; }
+  const c = ctx, base = s.kind === 'wall' ? 420 : 80, k = s.w / base * sc;
+  c.save(); c.globalAlpha *= clamp(a, 0, 1); c.translate(x, y); c.rotate(s.kind === 'wall' ? Math.sin(rot) * .06 : rot); c.scale(k, k); c.lineJoin = 'round'; c.lineCap = 'round';
   c.shadowColor = 'rgba(0,0,0,.5)'; c.shadowBlur = 10; c.shadowOffsetY = 4;
   if (s.kind === 'mail') {   // 메일 봉투 + 주황 봉인
     c.fillStyle = PAPER; c.strokeStyle = INK; c.lineWidth = 4; c.beginPath(); c.roundRect(-40, -27, 80, 54, 6); c.fill(); c.shadowColor = 'transparent'; c.stroke();
     c.beginPath(); c.moveTo(-38, -24); c.lineTo(0, 6); c.lineTo(38, -24); c.stroke();
     c.fillStyle = ORANGE; c.beginPath(); c.arc(0, 6, 8, 0, 7); c.fill();
+  } else if (s.kind === 'clip') {   // 클립: 흰 테 + 주황 철사
+    const path = () => { c.beginPath(); c.moveTo(-12, 34); c.lineTo(-12, -22); c.arc(4, -22, 16, Math.PI, 0); c.lineTo(20, 26); c.arc(8, 26, 12, 0, Math.PI); c.lineTo(-4, -12); c.arc(4, -12, 8, Math.PI, 0); c.lineTo(12, 20); };
+    c.rotate(.5); path(); c.strokeStyle = INK; c.lineWidth = 15; c.stroke(); c.shadowColor = 'transparent'; path(); c.strokeStyle = '#fff'; c.lineWidth = 10; c.stroke(); path(); c.strokeStyle = ORANGE; c.lineWidth = 5; c.stroke();
+  } else if (s.kind === 'postit') {   // 포스트잇: 연주황 종이 + 접힌 귀퉁이 + 손글씨 줄
+    c.fillStyle = '#FFD0A8'; c.strokeStyle = INK; c.lineWidth = 4; c.beginPath(); c.moveTo(-36, -36); c.lineTo(36, -36); c.lineTo(36, 22); c.lineTo(22, 36); c.lineTo(-36, 36); c.closePath(); c.fill(); c.shadowColor = 'transparent'; c.stroke();
+    c.fillStyle = ORANGE_L; c.beginPath(); c.moveTo(36, 22); c.lineTo(22, 22); c.lineTo(22, 36); c.closePath(); c.fill(); c.stroke();
+    c.strokeStyle = INK; c.lineWidth = 4; for (let j = 0; j < 3; j++) { c.beginPath(); c.moveTo(-24, -18 + j * 15); c.lineTo(j === 2 ? 2 : 22, -18 + j * 15); c.stroke(); }
   } else if (s.kind === 'doc') { c.scale(1.05, 1.05); docShape(c, true); }
+  else if (s.kind === 'binder' || s.kind === 'bigbinder') binderShape(c);
+  else if (s.kind === 'stack') {   // 서류 뭉치: 서류 세 장 + 검정 집게
+    for (let i = 2; i >= 0; i--) { c.save(); c.translate(i * 8 - 8, -i * 7 + 7); c.rotate((i - 1) * .08); docShape(c, i === 0); c.restore(); }
+    c.fillStyle = INK; c.beginPath(); c.roundRect(-16, -54, 32, 18, 4); c.fill(); c.strokeStyle = INK; c.lineWidth = 4; c.beginPath(); c.moveTo(-10, -54); c.lineTo(-14, -66); c.moveTo(10, -54); c.lineTo(14, -66); c.stroke();
+  }
   else if (s.kind === 'paperball') {   // 보스 큰 공: 구겨 뭉친 서류 공
     c.fillStyle = PAPER; c.strokeStyle = INK; c.lineWidth = 4; c.beginPath(); c.arc(0, 0, 40, 0, 7); c.fill(); c.shadowColor = 'transparent'; c.stroke();
     c.strokeStyle = '#BDBDBD'; c.lineWidth = 3; c.lineCap = 'round';
@@ -1652,7 +1765,7 @@ function aimBand(s, k) {
   }
   c.restore();
 }
-// 적이 던진 것: 메일(꼬마) · 서류(골렘) · 구긴 서류 공 / 서류 벽(보스) · 야구공(연습). 내 얼굴 쪽으로 원근 확대 + 회전 + 잔상
+// 적이 던진 것: 작은 물건(꼬마) · 중간(골렘) · 큰 물건 / 서류 벽(보스) · 야구공(연습). 포물선 + 회전 + 잔상, 크기는 그대로(피드백4)
 function drawEShots() {
   for (const s of G.eshots) {
     const rot = s.rot + s.t * s.spin;
@@ -1660,14 +1773,14 @@ function drawEShots() {
       const k = clamp(s.t / s.dur, 0, 1), p = eshotPos(s, k), f = FS[s.side];
       if (s.kind === 'wall') aimBand(s, k); else aimRing(s.tx, s.ty, s.R * lerp(1.9, 1, easeOut(k)), k);
       if (faceVis(s.side)) ring(f.x, f.y, f.w * .5, .85, 4, '#fff');   // 지금 내 얼굴 자리(얇은 원)
-      const n = s.trail.length; s.trail.forEach((q, i) => { if (i < n - 1) drawShotBody(s, q.x, q.y, q.sc, rot - (n - 1 - i) * s.spin / 30, (i + 1) / n * .28); });
-      drawShotBody(s, p.x, p.y, p.sc, rot, 1);
-    } else if (s.res === 'hit') {
-      const q = clamp(s.pt / .22, 0, 1); drawShotBody(s, s.lx, s.ly, 1 + .35 * q, rot, 1 - q);
-    } else {   // 회피 · 막힘 · 얼굴 없음: 내 옆을 스쳐 화면 밖으로 크게 지나간다
-      const q = clamp(s.pt / .5, 0, 1), m = q * q;
-      for (let i = 1; i <= 3; i++) { const qq = Math.max(0, q - i * .05), mm = qq * qq; drawShotBody(s, s.lx + s.ax * 1600 * mm, s.ly + s.ay * 1600 * mm, 1 + 2.6 * qq, rot, (1 - qq) * .22); }
-      drawShotBody(s, s.lx + s.ax * 1600 * m, s.ly + s.ay * 1600 * m, 1 + 2.6 * q, rot, 1 - m);
+      const n = s.trail.length; s.trail.forEach((q, i) => { if (i < n - 1) drawShotBody(s, q.x, q.y, 1, rot - (n - 1 - i) * s.spin / 30, (i + 1) / n * .28); });
+      drawShotBody(s, p.x, p.y, 1, rot, 1);
+    } else if (s.res === 'hit') {   // 얼굴에 맞음: 그 자리에서 납작해지며 사라진다
+      const q = clamp(s.pt / .22, 0, 1); drawShotBody(s, s.lx, s.ly, 1 + .25 * q, rot, 1 - q);
+    } else {   // 회피 · 막힘 · 얼굴 없음: 그대로 포물선을 따라 내 옆을 지나쳐 날아간다
+      const q = clamp(s.pt / .5, 0, 1), k = 1 + s.pt / s.dur;
+      for (let i = 1; i <= 3; i++) { const p = eshotPos(s, k - i * .04); drawShotBody(s, p.x, p.y, 1, rot - i * s.spin / 30, (1 - q) * .22); }
+      const p = eshotPos(s, k); drawShotBody(s, p.x, p.y, 1, rot, 1 - q * q);
     }
   }
 }
@@ -1833,7 +1946,9 @@ function drawDebug() {
   const L = [`mode ${S.mode} ${G ? G.ph + ' np ' + G.np + ' pi ' + G.pi + ' life ' + G.life + ' kills ' + G.kills + ' en ' + G.en.length + ' 예고 ' + G.en.filter(e => e.atk === 'tele').length : ''} ${mouseMode ? 'mouse' + (mouse.dual ? ' dual' : '') : 'cam'} fps ${fps | 0} 손 ${liveHands().length}`];
   if (G) for (const pl of G.pl) L.push(`P${pl.i} 손 ${pl.hands.length} 기력 ${pl.en | 0} 동그라미 ${pl.circ} ${pl.circT.toFixed(1)} 콤보 ${pl.combo}${pl.pend ? ' 손바닥대기' : ''} 얼굴 ${faceVis(pl.i) ? `${FS[pl.i].x | 0},${FS[pl.i].y | 0} 폭 ${FS[pl.i].w | 0}` : '없음'}`);
   L.push(`인식 손 ${perf.hand.toFixed(1)}ms · 얼굴 ${faceOK ? perf.face.toFixed(1) + 'ms (2프레임마다)' : mouseMode ? '시험 입력' : '모델 없음'}${G ? ' · 회피 ' + G.dodges : ''}`);
-  for (const h of liveHands()) L.push(`손#${h.id} side ${h.side} L ${h.L | 0} open ${h.open.toFixed(2)} thrR ${(h.thrR || 1).toFixed(2)} ${h.open < FIST_OPEN ? '주먹' : h.open > PALM_OPEN ? '손바닥' : '애매'}`);
+  for (const h of liveHands()) L.push(`손#${h.id} side ${h.side} L ${h.L | 0} open ${h.open.toFixed(2)} thrR ${(h.thrR || 1).toFixed(2)} ${h.fistOn ? '주먹' : h.open > PALM_OPEN ? '손바닥' : '애매'}`);
+  for (const q of thrLast) L.push(`내지르기 ${(now - q.t).toFixed(1)}초 전${NP() === 2 ? ' P' + q.side : ''}: ${q.why}`);   // 피드백4: 마지막 판정 사유
+  if (G && G.fistLog.length) { const f = G.fistLog; L.push(`주먹 ${f.length}번 · 명중 ${f.filter(x => x.hit).length} · 헛손질 ${f.filter(x => !x.hit).length} · 애매 버림 ${G.pl.reduce((a, p) => a + (p.midN || 0), 0)}`); }
   L.forEach((s, i) => c.fillText(s, 20, 140 + i * 32)); c.restore();
   for (const h of liveHands()) { c.save(); c.strokeStyle = '#fff'; c.setLineDash([8, 8]); c.lineWidth = 2; c.beginPath(); c.arc(h.c.x, h.c.y, h.L, 0, 7); c.stroke(); c.restore(); }
 }
@@ -2110,8 +2225,8 @@ window.__ax = {
     en: G ? G.en.map(e => ({ type: e.type, side: e.side, z: +e.z.toFixed(2), hp: e.hp, x: e.px | 0, y: e.py | 0, atk: e.atk || '', ak: +(e.ak || 0).toFixed(2) })) : [],
     hurtLog: G ? G.hurtLog.slice() : [], eshots: G ? G.eshots.length : 0, dodges: G && G.dodges, dodgeLog: G ? G.dodgeLog.slice() : [], st: G && JSON.parse(JSON.stringify(G.st)),
     hands: liveHands().map(h => ({ id: h.id, side: h.side, L: h.L | 0, open: +h.open.toFixed(2), thrR: +(h.thrR || 1).toFixed(2) })) }),
-  G: () => G, now: () => now, casts: castLog, target: (i = 0) => { const t = G && G.pl[i] ? pickTarget(G.pl[i]) : null; return t ? t.id : null; }, LOGO,
-  fx: () => ({ fire: FIRE.length, fireLv: liveHands().map(h => +(h.fire || 0).toFixed(2)), dotb: DOTB.map(c => +c.t.toFixed(2)), eshots: G ? G.eshots.filter(s => !s.res).map(s => +(s.t / s.dur).toFixed(2)) : [], eres: G ? G.eshots.filter(s => s.res).map(s => s.res + ':' + s.kind + ':' + (+s.pt.toFixed(2))) : [], ekind: G ? G.eshots.filter(s => !s.res).map(s => s.kind) : [], tele: G ? G.en.filter(e => e.atk === 'tele').map(e => +(e.ak / ATK_TELE[e.type]).toFixed(2)) : [], cracks: CRACKS.length, marks: G ? G.marks.length : 0, merge: G && G.merge ? +G.merge.t.toFixed(2) : -1, shots: G ? G.shots.map(s => ({ k: s.k, p: +(s.t / s.dur).toFixed(2) })) : [] }),
+  G: () => G, now: () => now, casts: castLog, spawn: (type, side, o) => spawn(type, side, o), thr: () => thrLast.slice(), target: (i = 0) => { const t = G && G.pl[i] ? pickTarget(G.pl[i]) : null; return t ? t.id : null; }, LOGO,
+  fx: () => ({ fire: FIRE.length, efx: EFX.length, fireLv: liveHands().map(h => +(h.fire || 0).toFixed(2)), dotb: DOTB.map(c => +c.t.toFixed(2)), eshots: G ? G.eshots.filter(s => !s.res).map(s => +(s.t / s.dur).toFixed(2)) : [], eres: G ? G.eshots.filter(s => s.res).map(s => s.res + ':' + s.kind + ':' + (+s.pt.toFixed(2))) : [], ekind: G ? G.eshots.filter(s => !s.res).map(s => s.kind) : [], tele: G ? G.en.filter(e => e.atk === 'tele').map(e => +(e.ak / ATK_TELE[e.type]).toFixed(2)) : [], cracks: CRACKS.length, marks: G ? G.marks.length : 0, merge: G && G.merge ? +G.merge.t.toFixed(2) : -1, shots: G ? G.shots.map(s => ({ k: s.k, p: +(s.t / s.dur).toFixed(2) })) : [] }),
   async backdrop(url) { if (!url) { testBg = null; return; } const im = new Image(); await new Promise((r, j) => { im.onload = r; im.onerror = j; im.src = url; }); testBg = im; },
   start: startGame, idle: toIdle, select: toSelect, skip() { if (G) setPh('b-intro'); }, setPh: ph => setPh(ph),
   crowd, cr, crowdSet, crowdTick, dotState: () => dotInfo(),
