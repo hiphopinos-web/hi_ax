@@ -3474,7 +3474,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.10";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.10b";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -3679,7 +3679,7 @@ var STORE_DEVICE = ["vid", "a2hs", "fs", "t",
   "site_sound", "game_sound", "rain_sound", "jp_tut",
   "self_on", "self_key", "self_tok", "scan_spot", "adm_tab", "zone_sent", "roster_prog", "tyaw_tab", "tyaw_hide", "tyaw_oly_pg",
   "type_rank_*", "oly_tab", "oly_ev",
-  "notices", "entry_pref", "entry_ask_day", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "wq_srv", "wq_v", "survey_agg", "photo_pub", "resv_conf", "crowd", "stv",
+  "notices", "notices_wipe1", "entry_pref", "entry_ask_day", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "wq_srv", "wq_v", "survey_agg", "photo_pub", "resv_conf", "crowd", "stv",
   "ax_line_i", "art_demo_n", "ev_phase", "toff",
   "push_ask", "push_first", "push_ask_ios"];   /* v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) · v4.78 아이폰 탭 · 앱 속 브라우저 안내는 하루 한 번 */
 var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_role", "adm_tok", "adm_emp", "dept",
@@ -3823,6 +3823,9 @@ if (LS_OK) window.addEventListener("storage", function (e) {
     window.dispatchEvent(new CustomEvent("axf-store", { detail: k }));
   }
 });
+/* v5.10b (사용자 261003 「공지사항에 쌓여 있는 쓸데 없는 공지문들을 없애 달라」) 개발 중 콘솔 시험 공지가 기기마다 쌓였다(beNoticeIn · 이 기기 저장)
+   한 번만 비운다(notices_wipe1 · 기기 키) · 첫 그리기 전이라 헤더 공지 수 · 홈 공지 카드가 곧바로 0 · 그 뒤 새 공지는 그대로 쌓인다 · 환영 공지(DEFAULT_NOTICES) · 공지 버튼 · 목록 화면은 그대로 */
+if (!S.get("notices_wipe1", false)) { S.put("notices", []); S.put("notices_wipe1", true); }
 function uid() { return Math.random().toString(36).slice(2, 10); }
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
 function fmtTime(ts) { return new Date(ts).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }); }
