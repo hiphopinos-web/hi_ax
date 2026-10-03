@@ -357,17 +357,13 @@
   }
 
   /* ═══════════ 안내 챗봇(구역마다 1명 · 사용자 261003) ═══════════
-   * 내 캐릭터와 다른 색(흰 머리 + 먹색 띠) · 목걸이형 사원증(주황 끈이 목 뒤로 걸리고 가슴 가운데 세로 카드 · 카드 위 주황 띠 「STAFF」) · 돌아설 때 카드가 살짝 흔들림
+   * 내 캐릭터와 다른 색(흰 머리 + 먹색 띠) · 가슴 가운데 작은 가로 명찰(주황 바탕 흰 「STAFF」 · 사용자 261003 「목걸이 말고 가슴 명찰만」 · 흔들림 없음)
    * 서는 자리 = 그 구역 멈춤 자리에서 판 쪽으로 0.7m · 오른쪽으로 1.1m(통로를 막지 않게) · 내가 가까이 오면 나를 향해 돌아서고 말풍선 한 줄(앱 1F 구역 한 줄 소개 + 「이에요」) */
   var guides = [];
-  function staffTex() {
-    var c = document.createElement('canvas'); c.width = 96; c.height = 136; var g = c.getContext('2d');
-    g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, 96, 136);
-    g.fillStyle = '#FF7F32'; g.fillRect(0, 0, 96, 40);
-    g.fillStyle = '#FFFFFF'; g.font = '800 26px "Pretendard Variable", Pretendard, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('STAFF', 48, 21);
-    g.fillStyle = '#D9DDE2'; g.beginPath(); g.arc(48, 74, 16, 0, Math.PI * 2); g.fill();
-    g.fillStyle = '#B0B8C1'; g.fillRect(22, 100, 52, 7); g.fillRect(30, 113, 36, 6);
-    g.strokeStyle = '#CBD0D6'; g.lineWidth = 3; g.strokeRect(1.5, 1.5, 93, 133);
+  function staffTex() {   /* 가로 명찰 · 주황 바탕 + 흰 「STAFF」 */
+    var c = document.createElement('canvas'); c.width = 192; c.height = 72; var g = c.getContext('2d');
+    g.fillStyle = '#FF7F32'; g.fillRect(0, 0, 192, 72);
+    g.fillStyle = '#FFFFFF'; g.font = '800 44px "Pretendard Variable", Pretendard, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('STAFF', 96, 38);
     var t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; return t;
   }
   var ARC = null;
@@ -379,7 +375,7 @@
   }
   var GUIDE_MAT = null;
   function makeGuide() {
-    if (!GUIDE_MAT) GUIDE_MAT = { head: new T.MeshLambertMaterial({ color: 0xF4F5F7, side: T.DoubleSide }), band: new T.MeshLambertMaterial({ color: 0x2B3038 }), ink: new T.MeshBasicMaterial({ color: 0x191F28 }), cord: new T.MeshLambertMaterial({ color: 0xFF7F32 }), card: new T.MeshBasicMaterial({ map: staffTex() }), clip: new T.MeshLambertMaterial({ color: 0xB0B8C1 }) };
+    if (!GUIDE_MAT) GUIDE_MAT = { head: new T.MeshLambertMaterial({ color: 0xF4F5F7, side: T.DoubleSide }), band: new T.MeshLambertMaterial({ color: 0x2B3038 }), ink: new T.MeshBasicMaterial({ color: 0x191F28 }), card: new T.MeshBasicMaterial({ map: staffTex(), toneMapped: false }), edge: new T.MeshBasicMaterial({ color: 0xE5671E, toneMapped: false }) };
     var M = GUIDE_MAT, g = new T.Group(), body = new T.Group(); g.add(body);
     var pts = [new T.Vector2(0.335, 0.24)];
     for (var i = 0; i <= 12; i++) { var a = i / 12 * Math.PI / 2; pts.push(new T.Vector2(Math.max(0.0001, Math.cos(a) * 0.335), 0.43 + Math.sin(a) * 0.36)); }
@@ -388,16 +384,11 @@
     var st = new T.Mesh(new T.CylinderGeometry(0.02, 0.02, 0.13, 8), M.head); st.position.y = 0.85; body.add(st);
     var ball = new T.Mesh(new T.SphereGeometry(0.075, 14, 10), M.band); ball.position.y = 0.94; body.add(ball);
     [-1, 1].forEach(function (s) { var e = new T.Mesh(new T.SphereGeometry(0.046, 10, 8), M.ink); e.scale.set(1, 1.15, 0.45); e.position.set(s * 0.12, 0.6, 0.29); body.add(e); });
-    /* 목줄 · 목 뒤로 걸린 고리 + 앞으로 내려와 카드 위 고리에서 만난다 */
-    var cord = new T.CatmullRomCurve3([[-0.035, 0.47, 0.345], [-0.2, 0.55, 0.27], [-0.285, 0.62, 0.06], [-0.2, 0.67, -0.19], [0, 0.69, -0.27], [0.2, 0.67, -0.19], [0.285, 0.62, 0.06], [0.2, 0.55, 0.27], [0.035, 0.47, 0.345]].map(function (q) { return new T.Vector3(q[0], q[1], q[2]); }));
-    body.add(new T.Mesh(new T.TubeGeometry(cord, 40, 0.011, 6, false), M.cord));
-    /* 카드 · 위 끝(고리)이 축 · 세로형 0.12 x 0.17 */
-    var cardG = new T.Group(); cardG.position.set(0, 0.47, 0.352); body.add(cardG);
-    var clip = new T.Mesh(new T.BoxGeometry(0.035, 0.03, 0.012), M.clip); clip.position.y = -0.012; cardG.add(clip);
-    var card = new T.Mesh(new T.PlaneGeometry(0.14, 0.2), M.card); card.position.set(0, -0.125, 0.008); card.rotation.x = -0.12; cardG.add(card);
+    /* 가슴 명찰 · 눈 아래 가운데 · 0.2 x 0.075m 얇은 판(앞면만 글자) */
+    var badge = new T.Mesh(new T.BoxGeometry(0.2, 0.075, 0.012), [M.edge, M.edge, M.edge, M.edge, M.card, M.edge]); badge.position.set(0, 0.4, 0.336); body.add(badge);
     /* 머리 위 전파 · 「띠로 띠로」 · 위로 열린 원호 3겹이 차례로 퍼졌다 사라진다(스프라이트 · 늘 카메라를 봄) */
     var waves = [0, 1, 2].map(function () { var sp = new T.Sprite(new T.SpriteMaterial({ map: arcTex(), transparent: true, depthWrite: false, opacity: 0 })); sp.position.y = 1.1; sp.scale.set(0.3, 0.3, 1); body.add(sp); return sp; });
-    g.userData = { body: body, card: cardG, swing: 0, swingV: 0, waves: waves, ph: Math.random() };
+    g.userData = { body: body, waves: waves, ph: Math.random() };
     g.scale.setScalar(0.95);
     return g;
   }
@@ -422,10 +413,9 @@
       var d = Math.hypot(p[0] - gd.at[0], p[1] - gd.at[1]), near = G.mode !== 'auto' && d < 3.6 && G.near && G.near.id === gd.zone;
       var hT = near ? Math.atan2(p[0] - gd.at[0], -(p[1] - gd.at[1])) : gd.h0;
       var dh = Math.atan2(Math.sin(hT - gd.h), Math.cos(hT - gd.h));
-      if (Math.abs(dh) > 0.003) { gd.h += dh * (1 - Math.exp(-dt * 6)); busy = true; gd.m.userData.swingV += -dh * dt * 6; }
+      if (Math.abs(dh) > 0.003) { gd.h += dh * (1 - Math.exp(-dt * 6)); busy = true; }
       gd.m.rotation.y = gd.h;
-      var u = gd.m.userData; u.swingV += -u.swing * dt * 60 - u.swingV * dt * 5; u.swing += u.swingV * dt;   /* 카드 흔들림(용수철) */
-      if (Math.abs(u.swing) > 0.001 || Math.abs(u.swingV) > 0.001) { u.card.rotation.z = clamp(u.swing, -0.35, 0.35); u.card.rotation.x = clamp(Math.abs(u.swing) * 0.5, 0, 0.3); busy = true; }
+      var u = gd.m.userData;
       gd.m.visible = d < 22;
       if (gd.m.visible) {   /* 전파 · 평소 1.7초에 한 번 「띠로 띠로」(세 겹) · 가까이 오면 1.0초 · 더 진하게 · 동작 줄이기 = 가운데 한 겹 정지 */
         var per = near ? 1.0 : 1.7, tt = ((G.clock || 0) / per + u.ph) % 1;
