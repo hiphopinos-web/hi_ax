@@ -300,6 +300,23 @@ details.memo .mb ol{padding-left:16px}
 .bulk{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 16px;margin-bottom:12px;background:var(--navy05);border:1px solid var(--navy1);border-radius:var(--r-s)}
 .bulk .c{font-size:var(--fs-s);color:var(--tx2);margin-right:auto}
 .bulk .c b{color:var(--navy)}
+/* 261003 UI 정돈 5단계 · 줄 끝 더 보기(⋯) · 위험 항목은 메뉴 안 적갈 글자 · 같은 줄에 남은 위험 버튼은 오른쪽 끝 16 띄움 */
+.rm{display:inline-flex;order:9}
+.more{width:28px;height:28px;border-radius:var(--r-xs);display:inline-flex;align-items:center;justify-content:center;color:var(--tx2);border:1px solid transparent}
+.more:hover,.more[aria-expanded="true"]{background:var(--bg);border-color:var(--line)}
+.more i,.more i::before,.more i::after{display:block;width:3px;height:3px;border-radius:50%;background:currentColor;position:relative}
+.more i::before,.more i::after{content:"";position:absolute;top:0}
+.more i::before{left:-6px}.more i::after{left:6px}
+.rm-m{position:fixed;z-index:45;min-width:160px;background:var(--sf);border:1px solid var(--line);border-radius:var(--r-s);box-shadow:var(--sh-lg);padding:4px;display:flex;flex-direction:column}
+.rm-m[hidden]{display:none}
+.rm-i{display:block;width:100%;text-align:left;padding:8px 12px;border-radius:var(--r-xs);font-size:var(--fs-b);font-weight:600;color:var(--tx);white-space:nowrap}
+.rm-i:hover:not(:disabled){background:var(--soft)}
+.rm-i.bad{color:var(--bad)}
+.rm-i.bad:hover:not(:disabled){background:var(--bad-bg)}
+.rm-i:disabled{color:var(--tx3);cursor:default}
+.bulk .btn.danger,.dz-r,.acts>.btn.danger{margin-left:16px}
+.acts>.btn.danger{order:9}
+.dz-r{display:inline-flex;gap:8px}
 
 /* 잠금 화면 */
 #lock{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:80}
@@ -538,7 +555,11 @@ table.brk tr.tot td{border-bottom:0;border-top:1px solid var(--line3)}
 .ns-grid2>.card,.ns-grid2 .ns-side>.card{margin-top:0}
 .ns-f{margin-bottom:16px}
 .ns-fl{font-size:var(--fs-s);font-weight:700;color:var(--tx2);margin-bottom:8px}
-.ns-act2{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.ns-act2{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:auto}
+.ns-bar{display:flex;gap:12px 16px;align-items:center;flex-wrap:wrap;padding-top:16px;border-top:1px solid var(--line2)}
+.ns-cnt{font-variant-numeric:tabular-nums}
+.ns-cnt b{color:var(--navy)}
+@media(max-width:720px){.ns-bar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--sf);border-top:1px solid var(--line);padding:12px 16px;gap:8px}.ns-bar .ns-act2{width:100%;margin-left:0}.ns-bar .btn{flex:1}}
 .ns-more .mb{padding-left:16px}
 .ns-mf .ns-f{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--line2)}
 .ns-mf .ns-f:first-child{margin-top:0;padding-top:0;border-top:0}
@@ -1035,6 +1056,22 @@ function emptyRow(n, msg){ return '<tr><td colspan="'+n+'"><div class="empty">'+
 function band(kind, html, right){ return '<div class="band'+(kind?" "+kind:"")+'"><span>'+html+'</span>'+(right?'<span class="r">'+right+'</span>':'')+'</div>'; }
 function emptyLine(msg, link){ return '<div class="empty">'+esc(msg)+(link?' '+link:'')+'</div>'; }
 function skel(){ return '<div class="skel" aria-label="불러오는 중"><i></i><i></i><i></i></div>'; }
+/* 261003 UI 정돈 5단계 · 줄 끝 「더 보기(⋯)」 · 위험 처리(초기화 · 삭제 · 취소 · 노쇼 · PIN 초기화)는 줄 옆이 아니라 이 메뉴 안에 둔다
+   메뉴 항목은 원래 버튼 그대로(onclick · data-* · disabled) · 확인 창 · PIN · 확인 문구 절차는 바뀌지 않는다 · 메뉴는 화면 기준 위치(표 가로 스크롤에 잘리지 않게) */
+function rowMore(h){ return h?'<span class="rm"><button type="button" class="more" aria-haspopup="menu" aria-expanded="false" aria-label="더 보기" title="더 보기" onclick="rmOpen(this,event)"><i></i></button><span class="rm-m" role="menu" hidden onclick="event.stopPropagation();rmClose()">'+h+'</span></span>':''; }
+function rmClose(){ [].forEach.call(document.querySelectorAll(".rm-m:not([hidden])"),function(m){ m.hidden=true; var b=m.previousElementSibling; if(b) b.setAttribute("aria-expanded","false"); }); }
+function rmOpen(b, e){
+  if(e) e.stopPropagation();
+  var m=b.nextElementSibling, was=m&&!m.hidden; rmClose(); if(!m||was) return;
+  m.hidden=false; b.setAttribute("aria-expanded","true");
+  var r=b.getBoundingClientRect(), w=m.offsetWidth, h=m.offsetHeight;
+  m.style.left=Math.max(8, Math.min(window.innerWidth-w-8, r.right-w))+"px";
+  m.style.top=(r.bottom+4+h>window.innerHeight&&r.top-4-h>0?r.top-4-h:r.bottom+4)+"px";
+  var f=m.querySelector("button:not([disabled])"); if(f) f.focus();
+}
+document.addEventListener("click",function(e){ if(!e.target.closest||!e.target.closest(".rm")) rmClose(); });
+document.addEventListener("keydown",function(e){ if(e.key==="Escape") rmClose(); });
+window.addEventListener("scroll",function(){ rmClose(); },true);
 
 /* JSONP · 백엔드가 callback 파라미터를 지원한다. GitHub Pages 에서 GAS 로 fetch 는 CORS 리다이렉트에 걸린다. */
 var _cbN=0;
@@ -1473,7 +1510,7 @@ function viewAcctList(){   /* v5.01 계정 › 계정 목록(예전 계정 화�
     shown.slice(0,500).map(function(r){ var wait=r.pw===false;
       return '<tr class="hv"><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td><td>'+esc(r.dept)+'</td><td class="n cap">'+esc(short(r.joined))+'</td><td class="n">'+esc(short(r.last))+'</td>'+
         '<td>'+(wait?tag("초기화 대기","warn"):tag("사용 중","off"))+'</td>'+
-        '<td class="tdr"><div class="acts">'+(wait?'<span class="cap">새 비밀번호 입력 대기</span>':'<button class="btn sm" data-emp="'+esc(r.emp)+'" data-name="'+esc(r.name)+'" onclick="pwReset(this)">비밀번호 초기화</button>')+'<button class="btn sm" onclick="usOpen(\''+jq(r.emp)+'\')">관리</button></div></td></tr>'; }).join("")+
+        '<td class="tdr"><div class="acts">'+(wait?'<span class="cap">새 비밀번호 입력 대기</span>':''+rowMore('<button type="button" role="menuitem" class="rm-i"'+esc(r.emp)+'" data-name="'+esc(r.name)+'" onclick="pwReset(this)">비밀번호 초기화</button>')+'')+'<button class="btn sm" onclick="usOpen(\''+jq(r.emp)+'\')">관리</button></div></td></tr>'; }).join("")+
     (shown.length>500?'<tr><td colspan="7" class="cap">500명까지만 표시합니다. 검색으로 좁혀 주세요.</td></tr>':'')+(!shown.length?emptyRow(7,"해당하는 계정이 없습니다."):'')+'</table></div>';
   body+=memo('<p>최근 접속 = 앱을 마지막으로 연 시각입니다(v3.83부터 앱 사용 중에도 갱신 · 약 10분 간격). 그 전 기록은 마지막 비밀번호 입력 시각입니다.</p><p>비밀번호 초기화는 지금 비밀번호를 지우고, 본인이 앱에서 다음에 입력하는 4자리를 새 비밀번호로 등록합니다. 스탬프·신청 기록은 그대로입니다. 운영 로그에 남습니다.</p>');
   h+=card("가입 계정","최근 접속 순",body);
@@ -1576,15 +1613,15 @@ function usPanel(emp){
   var n='<div class="us-row"><span class="cap">지금</span>'+(nk?'<b style="font-size:var(--fs-h2)">'+esc(nk.nick)+'</b>'+(nk.hidden?tag("숨김 · 순위판에 「이름 숨김」","warn"):tag("공개","ok")):'<span class="muted">없음 · 순위판에 「익명 참가자」</span>')+'</div>';
   n+='<div class="us-row mt12"><input id="usNick" class="in" style="min-width:200px" maxlength="8" placeholder="새 닉네임 (한글 · 영문 · 숫자 2~8자)"'+(old?' disabled':'')+' onkeydown="if(event.key===\'Enter\')usNickSet(\''+jq(emp)+'\')">'+
     (old?usNew():'<button class="btn sm" onclick="usNickSet(\''+jq(emp)+'\')">바꾸기</button>')+'<span class="sp" style="flex:1"></span>'+
-    (nk?'<button class="btn sm" onclick="usNickOp(\''+jq(emp)+'\',\''+(nk.hidden?"show":"hide")+'\')">'+(nk.hidden?"숨김 해제":"숨기기")+'</button><button class="btn sm danger" onclick="usNickOp(\''+jq(emp)+'\',\'clear\')">닉네임 지우기</button>':'')+'</div>';
+    (nk?'<button class="btn sm" onclick="usNickOp(\''+jq(emp)+'\',\''+(nk.hidden?"show":"hide")+'\')">'+(nk.hidden?"숨김 해제":"숨기기")+'</button>'+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="usNickOp(\''+jq(emp)+'\',\'clear\')">닉네임 지우기</button>')+'':'')+'</div>';
   n+='<p class="cap mt8">바꾸기는 앱과 같은 규칙으로 서버가 다시 봅니다(금칙어 · 실명 · 남과 같은 닉네임 거절). 숨기기는 되돌릴 수 있고, 지우기는 본인이 앱에서 다시 정합니다.</p>';
   h+=card("닉네임","게임 순위 · 타자 순위 · 1F TV 공통",n);
   /* 3. 접속 정보 */
   var pinT=p.pw===null||!p.acct?tag("가입 전","off"):p.pw?tag("사용 중","off"):tag("초기화 대기","warn");
   var lgT=old?'<span class="cap">-</span>':d.lg?tag("받음","pri"):tag("안 받음","off");
   var c='<div class="wrap"><table class="tb"><tr><th>항목</th><th>지금</th><th class="tdr">처리</th></tr>'+
-    '<tr><td><b>PIN</b><div class="cap">앱 로그인 4자리 · 값은 보이지 않습니다</div></td><td>'+pinT+'</td><td class="tdr">'+(p.acct&&p.pw?'<button class="btn sm danger" onclick="usPw(\''+jq(emp)+'\')">PIN 초기화</button>':'<span class="cap">'+(p.acct?"새 PIN 입력 대기":"계정 없음")+'</span>')+'</td></tr>'+
-    '<tr><td><b>최초 로그인</b><div class="cap">스탬프 01 · 받은 뒤에는 장면이 다시 나오지 않습니다</div></td><td>'+lgT+'</td><td class="tdr">'+(old?usNew():d.lg?'<button class="btn sm danger" onclick="usLg(\''+jq(emp)+'\')">최초 로그인 되돌리기</button>':'<span class="cap">되돌릴 것 없음</span>')+'</td></tr></table></div>';
+    '<tr><td><b>PIN</b><div class="cap">앱 로그인 4자리 · 값은 보이지 않습니다</div></td><td>'+pinT+'</td><td class="tdr">'+(p.acct&&p.pw?''+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="usPw(\''+jq(emp)+'\')">PIN 초기화</button>')+'':'<span class="cap">'+(p.acct?"새 PIN 입력 대기":"계정 없음")+'</span>')+'</td></tr>'+
+    '<tr><td><b>최초 로그인</b><div class="cap">스탬프 01 · 받은 뒤에는 장면이 다시 나오지 않습니다</div></td><td>'+lgT+'</td><td class="tdr">'+(old?usNew():d.lg?''+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="usLg(\''+jq(emp)+'\')">최초 로그인 되돌리기</button>')+'':'<span class="cap">되돌릴 것 없음</span>')+'</td></tr></table></div>';
   if(p.sup) c+='<p class="cap mt8">슈퍼관리자 계정의 PIN 초기화는 「슈퍼관리자 · 권한」에서 본인 확인(PIN)을 한 뒤에만 됩니다.</p>';
   h+=card("접속 정보","PIN · 최초 로그인 상태",c);
   return h;
@@ -1845,7 +1882,7 @@ function viewPwReq(){
       return '<tr class="hv"><td class="n cap">'+esc(short(r.ts))+'</td><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td>'+
         '<td>'+(r.joined?(r.pwSet?tag("사용 중","ok"):tag("이미 초기화됨","warn")):tag("가입 전","off"))+'</td>'+
         '<td><div class="acts"><button class="btn sm pri" data-row="'+r.row+'" data-emp="'+esc(r.emp)+'" data-name="'+esc(r.name)+'" onclick="pwReqDone(this)">본인 확인 후 초기화</button>'+
-        '<button class="btn sm danger" data-row="'+r.row+'" data-name="'+esc(r.name)+'" onclick="pwReqCancel(this)">요청 취소</button></div></td></tr>';
+        ''+rowMore('<button type="button" role="menuitem" class="rm-i bad" data-row="'+r.row+'" data-name="'+esc(r.name)+'" onclick="pwReqCancel(this)">요청 취소</button>')+'</div></td></tr>';
     }).join(""):emptyRow(5,"대기 중인 요청이 없습니다."))+'</table></div>';
   if(done.length){
     body+=memo('<div class="wrap"><table class="tb"><tr><th>요청</th><th>사번</th><th>이름</th><th>상태</th><th>처리 시각</th><th>처리자</th></tr>'+
@@ -1957,7 +1994,7 @@ function spPanel(r){
     '<div><div class="l">응모권</div><div class="v">'+rw.tickets+'<em>장 자격</em></div><div class="x">번호 발급 '+tk+'장'+(tk<rw.tickets?' · 앱이 다음 동기화에 발급':'')+'</div></div></div>';
   h+='<div class="slots">'+STAMP_ORDER.map(function(id){
     var m=STAMP_META[id], got=(r.stamps||[]).indexOf(id)>=0, canG=GRANT_IDS.indexOf(id)>=0, canR=revokeIds().indexOf(id)>=0;
-    var act=got?(canR?'<button class="btn sm danger" onclick="stRevoke(\''+jq(r.emp)+'\',\''+id+'\')">취소</button>':'<span class="cap">취소 범위 밖 (현장)</span>')
+    var act=got?(canR?''+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="stRevoke(\''+jq(r.emp)+'\',\''+id+'\')">취소</button>')+'':'<span class="cap">취소 범위 밖 (현장)</span>')
       :(canG?'<button class="btn sm pri" onclick="stGrant(\''+jq(r.emp)+'\',\''+id+'\')">부여</button>':'<span class="cap">앱에서 자동 적립</span>');
     return '<div class="slot'+(got?" got":"")+'"><div class="no">'+m.no+'</div><div class="nm">'+esc(m.n)+'</div><div class="via">'+esc(spVia(r,id))+'</div>'+
       '<div class="ft">'+(got?tag("획득","pri"):tag("미획득","off"))+act+'</div></div>'; }).join("")+'</div>';
@@ -2148,7 +2185,7 @@ function viewResv(){
       return '<tr class="hv click'+(ST.sel[k]?" sel":"")+'" onclick="drwOpen(\'resv\',\''+jq(r.id)+'\')"><td class="ckc">'+ck1(k)+'</td>'+
         '<td class="n"><b>'+esc(hhmm(r.slot))+'</b></td><td><div class="who2">'+esc(r.name)+'<small class="n">'+esc(r.emp)+'</small></div></td><td>'+esc(r.dept)+'</td><td class="n cap">'+esc(short(r.ts))+'</td>'+
         '<td>'+tag(s,RESV_TAG[s])+'</td><td class="cap" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.memo||"")+'</td>'+
-        '<td><div class="acts">'+sd.map(function(a){ return '<button class="btn sm danger" onclick="event.stopPropagation();resvDo([\''+jq(r.id)+'\'],\''+a+'\')">'+a+'</button>'; }).join("")+
+        '<td><div class="acts">'+rowMore(sd.map(function(a){ return '<button type="button" role="menuitem" class="rm-i bad" onclick="event.stopPropagation();resvDo([\''+jq(r.id)+'\'],\''+a+'\')">'+a+'</button>'; }).join(""))+
         (nx?'<button class="btn sm pri" style="min-width:72px" onclick="event.stopPropagation();resvDo([\''+jq(r.id)+'\'],\''+nx+'\')">'+nx+'</button>':'<span class="cap">끝</span>')+'</div></td></tr>'; }).join("")+
     (!shown.length?emptyRow(8,f==="todo"?"처리할 신청이 없습니다.":"해당하는 신청이 없습니다."):'')+'</table></div>';
   body+=memo('<p>신청 → 승인 → 체크인 → 완료 순서입니다. 체크인이나 완료를 누르는 순간 스탬프 03 「프로그램 참여」가 적립됩니다(1인 1회). 상태는 참가자 앱에 10초 안에 반영됩니다.</p><p>노쇼·취소는 확인 창을 거칩니다. 승인·노쇼·취소는 처리 뒤 7초 동안 알림의 「되돌리기」로 이전 상태로 돌릴 수 있습니다. 취소한 슬롯은 그 사이 다른 사람이 앱에서 신청할 수 있으니 되돌리기는 바로 누르세요.</p>');
@@ -2212,7 +2249,7 @@ function drwResv(id){
   var h=drwHead(r.name, '사번 '+esc(r.emp)+(r.dept?' · '+esc(r.dept):''))+'<div class="db">';
   h+='<h3>상담 · 1F DAP존</h3><div class="row" style="justify-content:space-between"><b class="n" style="font-size:var(--fs-h2)">슬롯 '+esc(hhmm(r.slot))+'</b>'+tag(s,RESV_TAG[s])+'</div><p class="cap mt8">신청 '+esc(short(r.ts))+'</p>';
   h+='<div class="mt12">'+stepsHtml(["신청","승인","체크인","완료"], s, ["노쇼","취소"])+'</div>';
-  h+='<div class="row mt16">'+(nx?'<button class="btn pri" onclick="resvDo([\''+jq(r.id)+'\'],\''+nx+'\')">'+nx+'</button>':'')+sd.map(function(a){ return '<button class="btn danger" onclick="resvDo([\''+jq(r.id)+'\'],\''+a+'\')">'+a+'</button>'; }).join("")+(!nx&&!sd.length?'<span class="cap">더 처리할 것이 없습니다.</span>':'')+'</div>';
+  h+='<div class="row mt16">'+(nx?'<button class="btn pri" onclick="resvDo([\''+jq(r.id)+'\'],\''+nx+'\')">'+nx+'</button>':'')+(sd.length?'<span class="dz-r">'+sd.map(function(a){ return '<button class="btn danger" onclick="resvDo([\''+jq(r.id)+'\'],\''+a+'\')">'+a+'</button>'; }).join("")+'</span>':'')+(!nx&&!sd.length?'<span class="cap">더 처리할 것이 없습니다.</span>':'')+'</div>';
   if(nx==="체크인"||nx==="완료") h+='<p class="cap mt8">'+nx+'을 누르면 스탬프 03 「프로그램 참여」가 적립됩니다.</p>';
   h+='<h3>메모 · 운영 담당만 봅니다</h3><textarea class="in" id="drwMemo" placeholder="예: 보상 자동화 과제 · 자료 지참">'+esc(r.memo||"")+'</textarea><div class="row mt8"><button class="btn sm" onclick="resvMemoSave(\''+jq(r.id)+'\')">메모 저장</button></div>';
   return h+personHist(r.emp)+'</div>';
@@ -2249,8 +2286,8 @@ function viewCchat(){
     shown.map(function(r){ var s=r.status, k="c:"+normE(r.emp), e=jq(r.emp), act='';
       if(s==="대기") act='<input class="in sm" type="time" style="width:104px" value="'+esc(ccVal(r,"round"))+'" onclick="event.stopPropagation()" oninput="ccDraft(\''+e+'\',\'round\',this.value)">'+
         '<input class="in sm" style="width:76px" placeholder="테이블" value="'+esc(ccVal(r,"table"))+'" onclick="event.stopPropagation()" oninput="ccDraft(\''+e+'\',\'table\',this.value)">'+
-        '<button class="btn sm danger" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'취소\')">취소</button><button class="btn sm pri" style="min-width:72px" onclick="event.stopPropagation();ccMatch([\''+e+'\'])">매칭</button>';
-      else if(s==="매칭") act='<button class="btn sm danger" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'취소\')">취소</button><button class="btn sm" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'완료\')">완료</button><button class="btn sm pri" style="min-width:72px" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'참석\')">참석</button>';
+        ''+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'취소\')">취소</button>')+'<button class="btn sm pri" style="min-width:72px" onclick="event.stopPropagation();ccMatch([\''+e+'\'])">매칭</button>';
+      else if(s==="매칭") act=''+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'취소\')">취소</button>')+'<button class="btn sm" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'완료\')">완료</button><button class="btn sm pri" style="min-width:72px" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'참석\')">참석</button>';
       else if(s==="참석") act='<button class="btn sm pri" style="min-width:72px" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'완료\')">완료</button>';
       else act='<span class="cap">끝</span>';
       return '<tr class="hv click'+(ST.sel[k]?" sel":"")+'" onclick="drwOpen(\'cc\',\''+e+'\')"><td class="ckc">'+ck1(k)+'</td><td><div class="who2">'+esc(r.name)+'<small class="n">'+esc(r.emp)+'</small></div></td><td>'+esc(r.dept)+'</td><td>'+(r.tag?tag(r.tag,"off"):'<span class="cap">-</span>')+'</td><td>'+(r.pref?esc(r.pref):'<span class="cap">-</span>')+'</td><td class="n cap">'+esc(short(r.ts))+'</td>'+
@@ -2362,7 +2399,7 @@ function drwCchat(emp){
       '<button class="btn pri" style="align-self:flex-end" onclick="ccMatch([\''+e+'\'])">'+(s==="대기"?"매칭":"변경")+'</button></div>';
   }
   h+='<div class="row mt16">'+(CC_NEXT[s]?'<button class="btn pri" onclick="ccDo([\''+e+'\'],\''+CC_NEXT[s]+'\')">'+CC_NEXT[s]+'</button>':'')+(s==="매칭"?'<button class="btn" onclick="ccDo([\''+e+'\'],\'완료\')">완료</button>':'')+
-    (s==="대기"||s==="매칭"?'<button class="btn danger" onclick="ccDo([\''+e+'\'],\'취소\')">취소</button>':'')+'</div>';
+    (s==="대기"||s==="매칭"?'<span class="dz-r"><button class="btn danger" onclick="ccDo([\''+e+'\'],\'취소\')">취소</button></span>':'')+'</div>';
   if(s==="매칭"||s==="참석") h+='<p class="cap mt8">참석·완료를 누르면 스탬프 03 「프로그램 참여」가 적립됩니다.</p>';
   return h+personHist(r.emp)+'</div>';
 }
@@ -3027,7 +3064,7 @@ function viewArt(){
         '<td>'+esc(r.name||"-")+'<div class="cap">'+esc(r.emp||"")+(r.nick?" · "+esc(r.nick):"")+'</div></td>'+
         '<td class="n cap">'+esc(r.file||"")+'</td><td class="n tdr">'+(r.likes||0)+'</td>'+
         '<td>'+tag(r.status, r.status==="공개"?"ok":r.status==="숨김"?"off":r.status==="대기"?"warn":"")+'</td>'+
-        '<td><div class="acts">'+(r.status!=="숨김"?'<button class="btn sm danger" onclick="artSet(\''+k+'\',\'숨김\')">숨김</button>':'')+
+        '<td><div class="acts">'+(r.status!=="숨김"?''+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="artSet(\''+k+'\',\'숨김\')">숨김</button>')+'':'')+
         (r.status!=="샘플"?'<button class="btn sm" onclick="artSet(\''+k+'\',\'샘플\')">샘플</button>':'')+
         (r.status!=="공개"?'<button class="btn sm pri" onclick="artSet(\''+k+'\',\'공개\')">공개</button>':'')+'</div></td></tr>'; }).join(""):emptyRow(7,"작품이 없습니다. 시트 「사생대회」에 행을 넣고 새로고침하세요."))+
     '</table></div>');
@@ -3094,7 +3131,7 @@ function viewTypeNick(){
     '<div class="wrap scrolly"><table class="tb"><tr><th>닉네임</th><th>상태</th><th>사번</th><th>이름</th><th class="tdr">현장 점수</th><th class="tdr">처리</th></tr>'+
     (rows.length?rows.map(function(r){ var k=jq(r.emp);
       return '<tr class="hv"><td><b>'+esc(r.nick||"(초기화됨)")+'</b></td><td>'+(r.hidden?tag("숨김","off"):tag("공개","ok"))+'</td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.name)+'</td><td class="n tdr">'+(r.site?Number(r.site).toLocaleString()+'점':'-')+'</td>'+
-        '<td><div class="acts"><button class="btn sm danger" onclick="nickReset(\''+k+'\')">초기화</button><button class="btn sm" onclick="nickHide(\''+k+'\','+(r.hidden?0:1)+')">'+(r.hidden?"숨김 해제":"숨기기")+'</button></div></td></tr>'; }).join(""):emptyRow(6,"닉네임이 없습니다."))+'</table></div>'+
+        '<td><div class="acts">'+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="nickReset(\''+k+'\')">초기화</button>')+'<button class="btn sm" onclick="nickHide(\''+k+'\','+(r.hidden?0:1)+')">'+(r.hidden?"숨김 해제":"숨기기")+'</button></div></td></tr>'; }).join(""):emptyRow(6,"닉네임이 없습니다."))+'</table></div>'+
     memo('<p>초기화하면 닉네임이 지워지고 순위판에 「익명 참가자」로 나옵니다. 참가자는 앱에서 새 닉네임을 다시 정할 수 있습니다. 기록 점수는 지우지 않습니다.</p>'));
   h+=card("리허설 기록 지우기","테스트 사번(310555)만 · 실제 참가자 사번은 서버가 거부",
     '<div class="row"><input class="in" id="gwEmp" style="min-width:0;width:160px" placeholder="테스트 사번" value="310555"><button class="btn danger" onclick="gameWipe()">기록 삭제</button></div>'+
@@ -3444,7 +3481,13 @@ function nsNoteHtml(){
   if(rt!=="notice"&&PF.t.trim()&&nsPush().b.length>PUSH_MAX.b) out.push("제목과 내용을 합쳐 "+PUSH_MAX.b+"자까지입니다.");
   return out.map(function(x){ return '<div class="pbad">'+esc(x)+'</div>'; }).join("");
 }
-function nsPaintSend(){ var g=el("nsGo"); if(g) g.textContent=nsGoLbl(); var n=el("nsNote"); if(n) n.innerHTML=nsNoteHtml(); }
+function nsPaintSend(){ var g=el("nsGo"); if(g) g.textContent=nsGoLbl(); var n=el("nsNote"); if(n) n.innerHTML=nsNoteHtml(); var c=el("nsCnt"); if(c) c.innerHTML=nsCntHtml(); }
+/* 261003 UI 정돈 · 보내는 인원을 버튼 괄호 밖에 따로 적는다 */
+function nsCntHtml(){
+  var rt=nsRoute(), v=PF.pv, all=nsPlainAll(), pc=v&&v.ok?v.reach:null;
+  var n=all?null:PF.f.type==="emps"?nsChips().length:(v&&v.ok?v.n:null);
+  return '<span class="cap">받는 사람</span> <b>'+(all?"전체":n!=null?n+"명":"-")+'</b>'+(rt!=="notice"?' <span class="cap">· 푸시 도달</span> <b class="n">'+(pc!=null?pc+"명":"-")+'</b>':' <span class="cap">· 앱 공지</span>');
+}
 function nsPrevHtml(){
   var rt=nsRoute(), push=rt!=="notice", c=push?nsPush():{ t:PF.t.trim(), b:PF.b.trim() }, t=c.t||"제목", b=c.b;
   if(!push) return '<div class="ns-ph ns-app ns-one"><div class="ns-sbar">9:41</div><div class="ns-hd">AX PASSPORT</div><div class="ns-card"><div class="ns-cx"><span class="ns-tag">공지</span><div class="ns-ct">'+esc(PF.t.trim()||"제목")+'</div>'+(PF.b.trim()||nsCustom()?'<div class="ns-cb">'+esc(nsNtBody(PF.b.trim()))+'</div>':'')+'</div></div><div class="ns-ghost"></div></div>';
@@ -3471,7 +3514,8 @@ function viewNotice(){
   if(ext) s1+=tgtHtml("pf",{ bare:1 });
   var s2='<input class="in" id="nsT" maxlength="'+PUSH_MAX.t+'" style="width:100%" value="'+esc(PF.t)+'" oninput="nsIn(\'t\',this.value)">';
   var s3='<textarea class="in" id="nsB" rows="3" maxlength="'+PUSH_MAX.b+'" style="min-height:72px" oninput="nsIn(\'b\',this.value)">'+esc(PF.b)+'</textarea>';
-  var s4='<div class="ns-act2"><button class="btn pri ns-go" id="nsGo" onclick="nsSend()">'+esc(nsGoLbl())+'</button>'+(pOk?'<button class="btn sm ghost" onclick="pushTest()">나에게 테스트</button>':'')+'</div><div id="nsNote" class="cap mt8">'+nsNoteHtml()+'</div><div id="ptRes" class="mt8">'+pushTestHtml()+'</div>';
+  /* 261003 UI 정돈 6단계 · 보내기 줄 = 왼쪽 받는 인원 · 오른쪽 끝 [나에게 테스트(보조)] [보내기(주)] · 390 폭은 아래 고정 */
+  var s4='<div class="ns-bar"><div class="ns-cnt" id="nsCnt">'+nsCntHtml()+'</div><div class="ns-act2">'+(pOk?'<button class="btn ns-tb" onclick="pushTest()">나에게 테스트</button>':'')+'<button class="btn pri ns-go" id="nsGo" onclick="nsSend()">'+esc(nsGoLbl())+'</button></div></div><div id="nsNote" class="cap mt8">'+nsNoteHtml()+'</div><div id="ptRes" class="mt8">'+pushTestHtml()+'</div>';
   /* 더 보기 · 보낸 사람 · 열 화면 · 문구 · 다른 받는 사람 · 경로 · 소리 · 테스트 사번 · 처리자 · 대상 상세 */
   var goSel='<select class="in" style="min-width:0;max-width:260px" onchange="PF.go=this.value;nsPaintPrev()"'+(rt==="push"?'':' disabled')+'>'+Object.keys(PUSH_GO_N).filter(function(k){ return PHOTO_Q_ON||k!=="photoq"; }).map(function(k){ return '<option value="'+k+'"'+((rt==="push"?PF.go:"notices")===k?" selected":"")+'>'+esc(PUSH_GO_N[k])+'</option>'; }).join("")+'</select>';
   var nm=pwBy();
@@ -3546,7 +3590,7 @@ function viewPhoto(){
       return '<tr class="hv"><td class="n"><b>'+r.no+'</b></td><td><div class="who2">'+esc(r.name||"")+'<small class="n">'+esc(r.emp)+'</small></div></td>'+
         '<td>'+(r.status==="call"?tag("호출 중","pri"):tag("대기","warn"))+'</td>'+
         '<td class="n tdr">'+r.ahead+'</td><td class="n">'+esc(r.eta||"")+'</td>'+
-        '<td>'+(r.status==="call"?'<div class="acts"><button class="btn sm danger" onclick="photoAct(\'skip\',\''+k+'\','+r.no+')">건너뛰기</button><button class="btn sm pri" onclick="photoAct(\'done\',\''+k+'\','+r.no+')">완료</button></div>':'<div class="acts"><span class="cap">-</span></div>')+'</td></tr>'; }).join("")+
+        '<td>'+(r.status==="call"?'<div class="acts">'+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="photoAct(\'skip\',\''+k+'\','+r.no+')">건너뛰기</button>')+'<button class="btn sm pri" onclick="photoAct(\'done\',\''+k+'\','+r.no+')">완료</button></div>':'<div class="acts"><span class="cap">-</span></div>')+'</td></tr>'; }).join("")+
     (!rows.length?emptyRow(6,"대기 중인 번호가 없습니다."):'')+'</table></div>'+
     memo('<p>참가자는 앱에서 번호를 받고 자리에서 기다립니다. 앞 2팀이 되면 앱에 「곧 차례예요」가 뜨고, 호출하면 「지금 입장하세요」가 뜹니다. 번호표 발급은 시간 제한이 없습니다.</p>'+
       '<p>v4.15부터 담당자 폰이 참가자 QR을 찍으면 그 번호가 <b>완료</b>로 빠지고 다음 대기 번호가 <b>자동으로 호출</b>됩니다(호출 전에 먼저 온 사람도 받습니다). 이 표에서는 찍힌 번호가 사라지고 다음 번호가 「호출 중」으로 바뀝니다. 건너뛰기(노쇼)는 이 화면에서만 합니다.</p>'));
@@ -4062,7 +4106,7 @@ function viewSched(){
       var what=r.kind==="notice"||r.kind==="outro"?'<b>'+esc(r.title)+'</b>'+(r.body?'<div class="cap">'+esc(r.body)+'</div>':'')+(r.push?'<div class="mt8">'+tag("푸시","pri")+' <span class="cap">'+esc(r.pdesc||"")+'</span></div>':''):r.kind==="visit_slot"?esc(r.slot)+(r.f?'<div class="cap">'+esc(r.f)+'층</div>':''):r.kind==="cchat_remind"?'18F 커피챗 '+esc(r.slot)+'<div class="cap">매칭된 사람에게 푸시</div>':r.kind==="dap_remind"?'1F DAP 상담 '+esc(r.slot)+'<div class="cap">승인된 사람에게 푸시</div>':r.kind==="crowd_notify"?esc(r.tgt==="elev"?"엘리베이터":r.tgt==="lobby"?"1F 로비":r.tgt):"";
       return '<tr class="hv'+(soon?" soon":"")+'"><td class="n"><b>'+esc(String(r.at).slice(5).replace("-","/"))+'</b>'+(wait&&r.ms>now?'<div class="cap">'+schLeft(r.ms)+' 뒤</div>':'')+'</td><td>'+esc(SCHK[r.kind]||r.kname||r.kind)+'<div class="cap">'+esc(r.by||"")+'</div></td><td>'+what+'</td>'+
         '<td>'+tag(r.st, SCH_TAG[r.st]||"off")+'</td><td class="cap">'+esc(r.res||"")+'</td>'+
-        '<td>'+(wait?'<div class="acts"><button class="btn sm" onclick="schEdit(\''+jq(r.id)+'\',\'run\')">지금 실행</button><button class="btn sm" onclick="schEdit(\''+jq(r.id)+'\',\'delay\')">+5분</button><button class="btn sm danger" onclick="schEdit(\''+jq(r.id)+'\',\'cancel\')">취소</button></div>':'<div class="acts"><span class="cap">-</span></div>')+'</td></tr>'; }).join("")+
+        '<td>'+(wait?'<div class="acts"><button class="btn sm" onclick="schEdit(\''+jq(r.id)+'\',\'run\')">지금 실행</button><button class="btn sm" onclick="schEdit(\''+jq(r.id)+'\',\'delay\')">+5분</button>'+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="schEdit(\''+jq(r.id)+'\',\'cancel\')">취소</button>')+'</div>':'<div class="acts"><span class="cap">-</span></div>')+'</td></tr>'; }).join("")+
     (!rows.length?emptyRow(6,"예약이 없습니다."):'')+'</table></div>';
   h+=card("예약 목록","대기 "+open.length+"건 · 서버 시각 "+esc(short(d.t)),tb);
   /* v4.76 입력은 SC 에 둔다 · 목록을 60초마다 새로 받아 다시 그려도 치던 글자가 남는다(예전에는 지워졌다) */
@@ -4165,7 +4209,7 @@ function schBanner(){
   if(!list.length){ if(!b.hidden){ b.hidden=true; b.innerHTML=""; } return; }
   b.hidden=false;
   b.innerHTML=list.map(function(r){ var past=r.ms<=now;
-    return '<div class="sbi"><b>'+esc(schHm(r.ms)+" "+(r.title||SCHK[r.kind]))+'</b><span>'+(past?"실행 중":schLeft(r.ms)+" 뒤 자동 발송")+'</span>'+(past?'':'<button class="btn sm" onclick="schEdit(\''+jq(r.id)+'\',\'delay\')">+5분</button><button class="btn sm danger" onclick="schEdit(\''+jq(r.id)+'\',\'cancel\')">취소</button>')+'</div>'; }).join("");
+    return '<div class="sbi"><b>'+esc(schHm(r.ms)+" "+(r.title||SCHK[r.kind]))+'</b><span>'+(past?"실행 중":schLeft(r.ms)+" 뒤 자동 발송")+'</span>'+(past?'':'<button class="btn sm" onclick="schEdit(\''+jq(r.id)+'\',\'delay\')">+5분</button>'+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="schEdit(\''+jq(r.id)+'\',\'cancel\')">취소</button>')+'')+'</div>'; }).join("");
 }
 setInterval(function(){ schBanner(); var nb=schRows().filter(function(r){ return r.st==="대기"&&r.ms<=Date.now()-5000; }).length; if(nb&&Date.now()-SCHP.at>20000) schPull(true); },1000);   /* 기한이 지났는데 대기로 남아 있으면 20초에 한 번 다시 받는다(실행 결과 확인) */
 
@@ -4573,7 +4617,7 @@ function pushGrpCard(){
     '<div class="row mt12"><span style="flex:1"></span><button class="btn pri" onclick="pushGrpSave()">올리기</button></div>'+
     (R?'<div class="note mt12"><b>'+esc(R.name)+'</b> · '+R.n+'명 저장'+(R.badN?'<div class="pbad">명부에 없는 사번 '+R.badN+'개 · 빼고 저장했습니다 · '+(R.bad||[]).slice(0,30).map(esc).join(", ")+(R.badN>30?' 외':'')+'</div>':'')+'</div>':'')+
     '<div class="wrap mt12"><table class="tb"><tr><th>이름</th><th class="tdr">인원</th><th>올린 시각</th><th>메모</th><th class="tdr">처리</th></tr>'+
-      G.map(function(g){ return '<tr class="hv"><td><b>'+esc(g.name)+'</b></td><td class="n tdr">'+g.n+'</td><td class="n cap">'+esc(short(g.at))+'</td><td class="cap">'+esc(g.memo)+'</td><td><div class="acts"><button class="btn sm danger" onclick="pushGrpDel(\''+jq(g.name)+'\')">삭제</button></div></td></tr>'; }).join("")+
+      G.map(function(g){ return '<tr class="hv"><td><b>'+esc(g.name)+'</b></td><td class="n tdr">'+g.n+'</td><td class="n cap">'+esc(short(g.at))+'</td><td class="cap">'+esc(g.memo)+'</td><td><div class="acts">'+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="pushGrpDel(\''+jq(g.name)+'\')">삭제</button>')+'</div></td></tr>'; }).join("")+
       (!G.length?emptyRow(5,"올린 그룹이 없습니다."):"")+'</table></div>';
   return card("그룹 올리기","같은 이름은 덮어씁니다",b);
 }
@@ -4807,7 +4851,7 @@ function raceLiveHtml(){
           '<td class="n tdr"><b>'+(st==="open"?"-":Number(r.score||0).toLocaleString())+'</b></td>'+
           '<td class="n tdr">'+(st==="open"?"-":(r.hits||0)+"개 · 콤보 "+(r.combo||0))+'</td><td class="n tdr">'+(st==="open"?"-":r.acc+"%")+'</td>'+
           '<td>'+(st==="open"?'<span class="cap">-</span>':raceHearts(r,m))+'</td>'+
-          '<td><div class="acts">'+(st==="open"?'<button class="btn sm danger" onclick="raceKick('+s+')">비우기</button>':'')+'</div></td></tr>';
+          '<td><div class="acts">'+(st==="open"?''+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="raceKick('+s+')">비우기</button>')+'':'')+'</div></td></tr>';
       }).join("")+'</table></div>';
   }
   h+=card("지금 판", head+(m&&m.st==="run"?' <span class="cap n" id="raceLeft"></span>':''), body);
@@ -5110,7 +5154,7 @@ function rosActs(p, r, rows){
   if(rosPick(rows,r.emp)!==r) return '<span class="cap">같은 사람의 다른 줄에서 처리</span>';
   var bin='<button class="btn sm pri" onclick="rosMark(\''+k+'\',\'in\')">입장 처리</button>';
   return r.st==="노쇼"?bin+'<button class="btn sm" onclick="rosMark(\''+k+'\',\'clear\')">노쇼 해제</button>'
-    :bin+'<button class="btn sm danger" onclick="rosMark(\''+k+'\',\'noshow\')">노쇼 표시</button>';
+    :bin+'<button class="btn sm danger" onclick="rosMark(\''+k+'\',\'noshow\')">노쇼 표시</button>';   /* 261003 UI 정돈 · 노쇼 표시는 7초 되돌리기(L1) · 현장 속도 때문에 줄에 두되 오른쪽 끝 16 띄움(.acts .btn.danger) */
 }
 function viewRoster(){
   var d=rosData(), p=ROS.prog;
@@ -5396,7 +5440,7 @@ function admListCard(sc, d){
   var add='<div class="row" style="margin-bottom:12px;flex-wrap:nowrap"><input class="in" id="admIn_'+sc+'" style="flex:1;min-width:0" inputmode="numeric" autocomplete="off" placeholder="사번 · 여러 명은 쉼표로" value="'+esc(ADMF[sc])+'" oninput="ADMF.'+sc+'=this.value" onkeydown="if(event.key===\'Enter\')admAdd(\''+sc+'\')"><button class="btn pri" onclick="admAdd(\''+sc+'\')">추가</button></div>';
   var tb='<div class="wrap scrolly" style="max-height:480px"><table class="tb"><tr><th>사번</th><th>이름</th><th>부문</th><th class="tdr"></th></tr>'+rows.map(function(r){
     return '<tr class="hv"><td class="n">'+esc(r.emp)+'</td><td>'+(r.name?'<b>'+esc(r.name)+'</b>':'<span class="cap">이름 없음</span>')+'</td><td class="muted">'+esc(r.dept||"")+'</td>'+
-      '<td><div class="acts">'+(r.sup?tag("슈퍼관리자","pri"):'<button class="btn sm danger" onclick="admDel(\''+sc+'\',\''+jq(r.emp)+'\')">빼기</button>')+'</div></td></tr>';
+      '<td><div class="acts">'+(r.sup?tag("슈퍼관리자","pri"):''+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="admDel(\''+sc+'\',\''+jq(r.emp)+'\')">빼기</button>')+'')+'</div></td></tr>';
   }).join("")+'</table></div>';
   return card(m.n, esc(m.d), note+add+tb, right);
 }
@@ -5480,7 +5524,7 @@ function viewWq(){
   body+=s.qs.map(function(q,i){
     return '<div class="wqq"><div class="wqh"><b class="n">'+(i+1)+'번</b><span class="sp"></span>'+
       '<button class="btn sm ghost" onclick="wqMove('+i+',-1)"'+(lk||!i?" disabled":"")+'>위로</button><button class="btn sm ghost" onclick="wqMove('+i+',1)"'+(lk||i===s.qs.length-1?" disabled":"")+'>아래로</button>'+
-      '<button class="btn sm danger" onclick="wqDelQ('+i+')"'+(lk||s.qs.length<=1?" disabled":"")+'>문항 빼기</button></div>'+
+      ''+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="wqDelQ('+i+')"'+(lk||s.qs.length<=1?" disabled":"")+'>문항 빼기</button>')+'</div>'+
       '<textarea class="in" rows="2" id="wq_q_'+i+'" oninput="wqIn(\'q:'+i+'\',this.value)"'+dis+'>'+esc(q.q)+'</textarea>'+wqCnt("q:"+i,q.q,WQ_LIM.q)+
       '<div class="wqos">'+q.o.map(function(o,j){
         return '<div class="wqo'+(q.a===j?" on":"")+'"><label class="row cap" style="gap:6px;white-space:nowrap"><input type="radio" class="ck" name="wqa'+i+'"'+(q.a===j?" checked":"")+' onchange="wqAns('+i+','+j+')"'+dis+'>정답</label>'+
@@ -6298,7 +6342,7 @@ function viewTest(){
   var rows=d.rows||[];
   var tb='<div class="wrap"><table class="tb"><tr><th>사번</th><th>이름</th><th>부서</th><th>구분</th><th class="tdr">처리</th></tr>'+rows.map(function(r){
     return '<tr><td class="n"><b>'+esc(r.emp)+'</b></td><td>'+esc(r.name||"-")+'</td><td class="cap">'+esc(r.dept||"")+'</td><td>'+(r.fixed?tag("서버 고정","off"):tag("콘솔 지정",""))+'</td>'+
-      '<td><div class="acts"><button class="btn sm danger" onclick="hvTestReset(\''+jq(r.emp)+'\')"'+(HVT.busy?' disabled':'')+'>처음 상태로</button>'+(r.fixed?'':'<button class="btn sm" onclick="hvTestSet(\'del\',\''+jq(r.emp)+'\')">빼기</button>')+'</div></td></tr>'; }).join("")+
+      '<td><div class="acts">'+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="hvTestReset(\''+jq(r.emp)+'\')"'+(HVT.busy?' disabled':'')+'>처음 상태로</button>')+''+(r.fixed?'':'<button class="btn sm" onclick="hvTestSet(\'del\',\''+jq(r.emp)+'\')">빼기</button>')+'</div></td></tr>'; }).join("")+
     (!rows.length?emptyRow(5,"테스트 사번이 없습니다."):"")+'</table></div>';
   var add='<div class="toolbar mt12"><input class="in" style="min-width:0;width:160px" inputmode="numeric" placeholder="사번" value="'+esc(HVT.add)+'" oninput="HVT.add=this.value.trim()" onkeydown="if(event.key===\'Enter\')hvTestSet(\'add\')"><button class="btn pri" onclick="hvTestSet(\'add\')">테스트 사번으로 지정</button><span class="cap">지정하면 집계 · 추첨 · 참여상 · 순위에서 빠집니다</span></div>';
   return card("테스트 사번", rows.length+"개 · 슈퍼관리자 · 본인 확인 "+supLeftMin()+"분 남음", tb+add)+
