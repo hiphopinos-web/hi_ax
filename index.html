@@ -720,8 +720,8 @@
   .ty-rank .nm { flex: 1; min-width: 0; font-weight: 800; color: var(--hi); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ty-rank .dp { font-size: calc(12.5px * var(--fs)); color: var(--faint); font-weight: 700; }
   .ty-rank .sc { font-family: var(--disp); color: var(--hi); }
-  .tyb-pz .c i { position: absolute; right: 4px; bottom: 2px; font-style: normal; font-family: "Pretendard Variable", Pretendard, sans-serif; font-size: 10px; line-height: 14px; color: var(--rt-dim); }   /* v5.14 순위판 상품 썸네일 「샘플」 딱지(도트 글꼴 아님 · 레트로 절 밖) */
-  @keyframes tybHot { 0%, 100% { box-shadow: inset 0 0 0 0 transparent; } 30% { box-shadow: inset 0 0 0 3px var(--rt-cream); } }   /* v5.14 1F 타자왕 순위판 줄 깜빡임(레트로 절은 .rt 규칙만) */
+  .tyb-pz .c i { position: absolute; right: 4px; bottom: 2px; font-style: normal; font-family: "Pretendard Variable", Pretendard, sans-serif; font-size: 10px; line-height: 14px; color: var(--rt-dim); }   /* v5.15 순위판 상품 썸네일 「샘플」 딱지(도트 글꼴 아님 · 레트로 절 밖) */
+  @keyframes tybHot { 0%, 100% { box-shadow: inset 0 0 0 0 transparent; } 30% { box-shadow: inset 0 0 0 3px var(--rt-cream); } }   /* v5.15 1F 타자왕 순위판 줄 깜빡임(레트로 절은 .rt 규칙만) */
   .cho-box { background: var(--ink); border: 0; color: #fff; border-radius: 20px; padding: 22px 18px; text-align: center; margin-bottom: 12px; }
   .cho-box .hint { margin-top: 10px; font-size: calc(15.5px * var(--fs)); line-height: 1.65; opacity: 0.92; }
   /* v3.98 점프 시작 화면 big 규칙(검정 무대 전제)은 v4.08 AX-TDS 4단계 틀(.gs-card · .gs-how)로 바뀌었다 */
@@ -2487,7 +2487,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   @media (max-height: 800px) { .rt .tsf-band { padding: 8px 14px; font-size: var(--rt-f24); line-height: var(--rt-l24); } .rt .tsf-r .tsf-row { padding: 6px 14px; } .rt .tsf-row { font-size: var(--rt-f16); line-height: var(--rt-l16); padding: 5px 8px; } .rt .tsf-p { padding: 18px 18px; gap: 6px; } .rt .tsf-in { height: 52px; } .rt .tsf-go { margin-top: 6px; padding: 8px 10px; } }
   @media (min-height: 1000px) { .rt .tsf-p { font-size: var(--rt-f24); line-height: var(--rt-l24); } .rt .tsf-big .tsf-s { font-size: var(--rt-f24); } }
   @media (max-width: 959px) { .rt .tsf { height: auto; min-height: 100dvh; overflow: visible; } .rt .tsf-grid { grid-template-columns: minmax(0, 1fr); } .rt .tsf-c { display: none; } }
-  /* v5.14 1F 타자왕 순위판(앱 「타자 순위」 현장 탭 · tybHtml) · 시안 「디자인 시안/타자왕 순위판/타자왕_순위판_휴대폰.html」
+  /* v5.15 1F 타자왕 순위판(앱 「타자 순위」 현장 탭 · tybHtml) · 시안 「디자인 시안/타자왕 순위판/타자왕_순위판_휴대폰.html」
      HIGH SCORE = Neo둥근모 큰 글자(점 글자 아님 · design.md 5-20 7번 · 261003 사용자 A안) · 1~3위 O100 · O60 · O30 면 · 내 줄 크림 테두리
      순위가 바뀌면 줄이 미끄러진다(top 전환) · 동작 줄이기 = 그 자리에 바로 */
   .rt .tyb { --tyb-h: calc(40px * var(--fs)); margin: 3px 3px 0; padding: 18px 14px 16px; color: var(--rt-cream); font-family: var(--rt-font); font-weight: 400; letter-spacing: 0;
@@ -3553,7 +3553,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.14";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.15";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -8058,11 +8058,11 @@ var Views = {
     var cached = S.get("type_rank_" + mode, null);   /* v4.16 관리자·테스트 계정도 실서버 캐시(가짜 닉네임 목업 삭제) */
     var seg = '<div class="qseg" style="margin-bottom:10px"><button class="' + (mode === "app" ? "on" : "") + '" onclick="S.set(\'type_rank_tab\', \'app\'); App.render()">앱 순위 상위 10</button>' +
       '<button class="' + (mode === "site" ? "on" : "") + '" onclick="S.set(\'type_rank_tab\', \'site\'); App.render()">1F 현장 TOP 10</button></div>';
-    if (mode === "site") { tybStart(); return seg + '<div id="tyRankBody">' + tybHtml(cached) + "</div>"; }   /* v5.14 1F 타자왕 순위판(tybHtml · 오락실 HIGH SCORE) */
+    if (mode === "site") { tybStart(); return seg + '<div id="tyRankBody">' + tybHtml(cached) + "</div>"; }   /* v5.15 1F 타자왕 순위판(tybHtml · 오락실 HIGH SCORE) */
     typeRankPull(mode, function (r) { if (App.current === "type_rank") { var b = el("tyRankBody"); if (b) b.innerHTML = typeRankHtml(r, mode); } });
     return seg +
       '<div class="card" id="tyRankBody">' + typeRankHtml(cached, mode) + "</div>" +
-      '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">오래 버틴 시간 순 · 최고 기록만 · 경품 없음</p>';   /* v5.14 현장 탭은 위 tybHtml(1F 타자왕 시상 카드 → 판 아래 상품 썸네일) */
+      '<p class="muted" style="margin-top:10px;font-size:calc(12.5px * var(--fs))">오래 버틴 시간 순 · 최고 기록만 · 경품 없음</p>';   /* v5.15 현장 탭은 위 tybHtml(1F 타자왕 시상 카드 → 판 아래 상품 썸네일) */
   },
 
   /* ═══ v4.15 폰 관리자 모드 (사용자 확정 260922 · `앱 관리자 모드 축소 기획.md`) ═══
@@ -10850,7 +10850,7 @@ function typeNickSave() {
 function typeRankPull(mode, cb) {
   var u = S.get("user", {}) || {};
   if (mode === "site") TYB.at = Date.now();
-  beCall({ action: "type_rank", mode: mode, emp: u.empId || "", n: 10 }, function (r) { if (r && r.ok) { S.put("type_rank_" + mode, r); cb(r); } }, function () {});   /* v5.14 현장도 TOP 10 · 조용한 저장(S.put) · S.set 은 화면 전체를 다시 그려 그 그리기가 또 받기를 불러 끝없이 돌았다(261003 실측 초당 약 2회) */
+  beCall({ action: "type_rank", mode: mode, emp: u.empId || "", n: 10 }, function (r) { if (r && r.ok) { S.put("type_rank_" + mode, r); cb(r); } }, function () {});   /* v5.15 현장도 TOP 10 · 조용한 저장(S.put) · S.set 은 화면 전체를 다시 그려 그 그리기가 또 받기를 불러 끝없이 돌았다(261003 실측 초당 약 2회) */
 }
 /* v3.80 기록 = 버틴 시간(1/100초) · 화면에는 「n초」 로 보여 준다 */
 function typeSec(v) { return (Number(v || 0) / 100).toFixed(1) + "초"; }
@@ -10862,10 +10862,10 @@ function typeRankHtml(r, mode, big) {
     }).join("") : '<p class="muted">아직 기록이 없어요</p>') +
     (r.me ? '<p class="muted" style="margin-top:10px">내 순위 ' + r.me.rank + "위 · " + (mode === "site" ? typePts(r.me.score) : typeSec(r.me.score) + " 생존") + "</p>" : "");   /* v5.12 1F 현장 = 점수 */
 }
-/* ── v5.14 1F 타자왕 순위판 · 앱 「타자 순위」 현장 탭(261003 · 시안 「디자인 시안/타자왕 순위판/타자왕_순위판_휴대폰.html」) ──
+/* ── v5.15 1F 타자왕 순위판 · 앱 「타자 순위」 현장 탭(261003 · 시안 「디자인 시안/타자왕 순위판/타자왕_순위판_휴대폰.html」) ──
    HIGH SCORE TOP 10(1~3위 O100 · O60 · O30 면 · 내 줄 강조) · 아래 바 「내 순위 · 내 최고 점수 · 남은 기회」 · 1~3위 상품 썸네일(누르면 경품 포스터 1F 타자왕)
    20초마다 다시 받아(화면이 보일 때 · 이 탭일 때만) 바뀐 줄만 옮긴다: 새로 든 줄 = 아래에서 올라오며 NEW · 오른 줄 = 미끄러져 오르고 깜빡 · 점수는 세며 오른다 · 동작 줄이기 = 그 자리에 바로
-   받기 = type_rank(site · n 10 · emp) · 새 서버 = unit pts · left(남은 기회 · v5.14 서버) · 옛 서버(unit 없음 = 버틴 시간 · left 없음) = 시간으로 쓰고 남은 기회 칸을 뺀다
+   받기 = type_rank(site · n 10 · emp) · 새 서버 = unit pts · left(남은 기회 · v5.15 서버) · 옛 서버(unit 없음 = 버틴 시간 · left 없음) = 시간으로 쓰고 남은 기회 칸을 뺀다
    실명 없음(서버가 닉네임만 준다) · 부문 통계 없음 */
 var TYB = { iv: 0, keys: null, subT: 0, at: 0 };
 var TYB_REST = { on: false, nm: "" };   /* 4~10위 상품 줄 · 사용자 미정 · 기본 꺼짐 · on 이고 nm 이 있을 때만 줄마다 선물 표시 + 이름 한 줄 */
