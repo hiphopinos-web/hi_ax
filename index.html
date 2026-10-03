@@ -1184,23 +1184,29 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #topbar .axs-hrow { display: flex; align-items: center; gap: 0; min-height: var(--ax-header-height); }
   #topbar .axs-fs { margin-left: var(--ax-space-4); }
   /* v5.10 앱 이름 = 점 이름 AX PASSPORT(화면에만 · 설치 이름 · 제목 · 알림은 「AX Festival」 그대로 · 사용자 261003) · 폭 사다리(점 px 고정 · 큰글씨 배율 없음)
-     390 이상 12px · 375 ~ 389 10.8px · 346 ~ 374 9.6px · 345 이하 = 글자 「AX Passport」 · v4.71 320 대에도 토글을 헤더에 남긴다(토글 글자 고정 · 아이콘 칸 44) · 더 좁으면(270 이하) 이름을 뺀다(홈은 아래 탭) */
+     v5.11 (사용자 261003 「ax passport 가 조금 더 강조 · 일반 큰글씨 간격을 줄여서」) 점 이름 약 +20% · 토글을 작은 알약(안쪽 2 · 버튼 사이 2 · 글자 13px 고정)으로 · 이 줄 종 · 설정 칸 44
+     390 이상 14.2px · 375 ~ 389 12.9px · 360 ~ 374 11.6px · 346 ~ 359 10.4px · 336 ~ 345 9.6px · 335 이하 = 글자 「AX Passport」 · 더 좁으면(270 이하) 이름을 뺀다(홈은 아래 탭) */
   #topbar { container-type: inline-size; container-name: axh; }   /* 헤더 내용이 화면 폭을 밀지 않게 · 폭 판정은 컨테이너 기준(내용 폭 = 화면 - 48) */
-  @container axh (max-width: 341px) { #topbar .axs-hrow .axs-wm .dg { width: 125.81px; height: 10.8px; } }   /* 아래 기본 규칙보다 앞에 있어 .axs-hrow 로 한 단계 더 좁혀 쓴다 */
-  @container axh (max-width: 326px) { #topbar .axs-hrow .axs-wm .dg { width: 111.83px; height: 9.6px; } }
-  @container axh (max-width: 297px) { #topbar .axs-hrow .axs-wm .dg { display: none; } #topbar .axs-hrow .axs-wm .axs-wm-t { display: inline; } }
-  @container axh (max-width: 384px) { .fs-big #topbar .axs-hrow .axs-wm { font-size: 17px; } .fs-big #topbar .axs-hrow .axs-fs button { padding: 0 6px; font-size: 13px; } }   /* v4.71 큰글씨 · 좁은 폭 · 글자 이름 · 토글 글자만 고정 크기 */
-  @container axh (max-width: 311px) { #topbar .axs-hrow .axs-wm { font-size: 16px; } #topbar .axs-hrow .axs-fs { margin-left: 2px; } #topbar .axs-hrow .axs-fs button { padding: 0 6px; font-size: 13px; } #topbar .axs-hrow .axs-ib { width: 44px; } }   /* 아래 기본 규칙보다 앞에 있어 한 단계 더 좁혀 쓴다 */
+  @container axh (max-width: 341px) { #topbar .axs-hrow .axs-wm .dg { width: 150.27px; height: 12.9px; } }   /* 아래 기본 규칙보다 앞에 있어 .axs-hrow 로 한 단계 더 좁혀 쓴다 · 넓은 폭부터 차례로(같은 세기라 뒤가 이긴다) */
+  @container axh (max-width: 326px) { #topbar .axs-hrow .axs-wm .dg { width: 135.13px; height: 11.6px; } }
+  @container axh (max-width: 311px) { #topbar .axs-hrow .axs-wm .dg { width: 121.15px; height: 10.4px; } }
+  @container axh (max-width: 297px) { #topbar .axs-hrow .axs-wm .dg { width: 111.83px; height: 9.6px; } }
+  @container axh (max-width: 287px) { #topbar .axs-hrow .axs-wm .dg { display: none; } #topbar .axs-hrow .axs-wm .axs-wm-t { display: inline; } }
+  @container axh (max-width: 384px) { .fs-big #topbar .axs-hrow .axs-wm { font-size: 17px; } }   /* v4.71 큰글씨 · 좁은 폭 · 글자 이름 고정 크기(토글은 v5.11 부터 늘 고정) */
+  @container axh (max-width: 311px) { #topbar .axs-hrow .axs-wm { font-size: 16px; } }   /* 아래 기본 규칙보다 앞에 있어 한 단계 더 좁혀 쓴다 */
   @container axh (max-width: 270px) { #topbar .axs-hrow .axs-wm { display: none; } }
   #topbar .axs-sp { flex: 1; }
   #topbar .axs-wm { flex: 0 1 auto; min-width: 0; display: flex; align-items: center; gap: var(--ax-space-4); min-height: var(--ax-touch-size); padding: 0; border: 0; background: transparent; cursor: pointer; font: var(--ax-type-t5-strong); white-space: nowrap; color: var(--ax-color-ink); }
-  #topbar .axs-wm .dg { width: 139.79px; height: 12px; }
+  #topbar .axs-wm .dg { width: 165.41px; height: 14.2px; }
   #topbar .axs-wm .axs-wm-t { display: none; font: inherit; }
   #topbar .axs-wm .axs-wm-t i { font-style: normal; color: var(--ax-color-brandText); }
-  /* v4.06 (사용자 요청 260922) 글자 크기 토글 · 보이는 칩 32(안쪽 4 + 버튼 24) · 글자 T7 · 누르는 자리는 버튼 위아래 12씩 투명하게 넓혀 48 · 종·설정과 세로 가운데 */
-  #topbar .axs-fs { flex: none; display: flex; align-items: center; gap: var(--ax-space-4); padding: var(--ax-space-4); border-radius: var(--ax-radius-12); background: var(--ax-color-divider); }
-  #topbar .axs-fs button { position: relative; min-height: 24px; padding: 0 var(--ax-space-8); border: 0; border-radius: var(--ax-radius-8); background: transparent; color: var(--ax-color-body); font: var(--ax-type-t7); line-height: 24px; cursor: pointer; }
+  /* v4.06 (사용자 요청 260922) 글자 크기 토글 · 누르는 자리는 버튼 위아래 12씩 투명하게 넓혀 48 · 종·설정과 세로 가운데
+     v5.11 작은 알약 · 보이는 칩 28(안쪽 2 + 버튼 24) · 버튼 사이 2 · 글자 13px 고정(T7 과 같은 크기 · 큰글씨 배율 없음 · 사다리 폭이 흔들리지 않게) · 「일반」은 폭 34 + 왼쪽 10 투명 = 44 · 「큰글씨」는 폭 44 */
+  #topbar .axs-fs { flex: none; display: flex; align-items: center; gap: 2px; padding: 2px; border-radius: 10px; background: var(--ax-color-divider); }
+  #topbar .axs-fs button { position: relative; min-height: 24px; min-width: 34px; padding: 0 5px; border: 0; border-radius: var(--ax-radius-8); background: transparent; color: var(--ax-color-body); font: 500 13px/24px var(--ax-font); cursor: pointer; }
   #topbar .axs-fs button::before { content: ""; position: absolute; left: 0; right: 0; top: calc(var(--ax-space-12) * -1); bottom: calc(var(--ax-space-12) * -1); }
+  #topbar .axs-fs button:first-child::before { left: -10px; }
+  #topbar .axs-hrow .axs-fs ~ .axs-ib { width: 44px; }   /* v5.11 탭 첫 화면 줄의 종 · 설정 = 44(최소 터치 · 점 이름 자리) */
   #topbar .axs-fs button[aria-pressed="true"] { background: var(--ax-color-surface); color: var(--ax-color-ink); }
   #topbar .axs-ib { position: relative; flex: none; width: var(--ax-touch-size); height: var(--ax-touch-size); padding: 0; border: 0; border-radius: var(--ax-radius-12); background: transparent; color: var(--ax-color-body); display: grid; place-items: center; cursor: pointer; }
   #topbar .axs-ib svg { width: 24px; height: 24px; display: block; }
@@ -3481,7 +3487,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.11";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.13";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -3686,7 +3692,7 @@ var STORE_DEVICE = ["vid", "a2hs", "fs", "t",
   "site_sound", "game_sound", "rain_sound", "jp_tut",
   "self_on", "self_key", "self_tok", "scan_spot", "adm_tab", "zone_sent", "roster_prog", "tyaw_tab", "tyaw_hide", "tyaw_oly_pg",
   "type_rank_*", "oly_tab", "oly_ev",
-  "notices", "entry_pref", "entry_ask_day", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "wq_srv", "wq_v", "survey_agg", "photo_pub", "resv_conf", "crowd", "stv",
+  "notices", "notices_wipe1", "entry_pref", "entry_ask_day", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "wq_srv", "wq_v", "survey_agg", "photo_pub", "resv_conf", "crowd", "stv",
   "ax_line_i", "art_demo_n", "ev_phase", "toff",
   "push_ask", "push_first", "push_ask_ios"];   /* v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) · v4.78 아이폰 탭 · 앱 속 브라우저 안내는 하루 한 번 */
 var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_role", "adm_tok", "adm_emp", "dept",
@@ -3830,6 +3836,9 @@ if (LS_OK) window.addEventListener("storage", function (e) {
     window.dispatchEvent(new CustomEvent("axf-store", { detail: k }));
   }
 });
+/* v5.10b (사용자 261003 「공지사항에 쌓여 있는 쓸데 없는 공지문들을 없애 달라」) 개발 중 콘솔 시험 공지가 기기마다 쌓였다(beNoticeIn · 이 기기 저장)
+   한 번만 비운다(notices_wipe1 · 기기 키) · 첫 그리기 전이라 헤더 공지 수 · 홈 공지 카드가 곧바로 0 · 그 뒤 새 공지는 그대로 쌓인다 · 환영 공지(DEFAULT_NOTICES) · 공지 버튼 · 목록 화면은 그대로 */
+if (!S.get("notices_wipe1", false)) { S.put("notices", []); S.put("notices_wipe1", true); }
 function uid() { return Math.random().toString(36).slice(2, 10); }
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
 function fmtTime(ts) { return new Date(ts).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }); }
@@ -5174,6 +5183,7 @@ try { history.replaceState({ axf: 0 }, ""); navRepush(); } catch (e) {}
 window.addEventListener("popstate", function () {
   var app = el("app");
   if (!app || app.hidden) { navRepush(); return; }                       /* 입장 전 화면은 그대로 유지 */
+  if (window.AXTour && AXTour.isOpen()) { AXTour.back(); navRepush(); return; }   /* v5.11 1층 둘러보기 · 뒤로 = 한 층씩(판 보기 → 시트 → 둘러보기) */
   /* v4.18 바텀 시트가 열려 있으면 뒤로 = 시트 닫기 (통신 중에는 닫지 않고 그대로 둔다) */
   if (el("axsSheet")) { if (!SHEET.busy) sheetClose(); navRepush(); return; }
   if (el("modal")) { if (typeof qrScanClose === "function" && el("qrVideo")) qrScanClose(); else modalClose(); navRepush(); return; }
@@ -5541,7 +5551,7 @@ function progAlwaysHtml() {
   var c = S.get("cchat", null), att = S.get("cchat_att", false);
   var ccSub = att ? "참석 완료" : c ? (c.status === "matched" ? "매칭 완료" + (c.round ? " · " + c.round : "") + (c.table ? " · TABLE " + c.table : "") : "매칭 대기") : cchatClosed() ? "마감" : ideaMineN() ? "아이디어 제출 완료 · 신청 가능" : "아이디어 제출 후 신청";
   var ccChip = att ? ["완료", "ok"] : c ? ["내 신청", ""] : cchatClosed() ? ["마감", "off"] : null, ccSt = progStampId(progById("cchat"));   /* v4.99 커피챗 = 프로그램 참여(p3) 도장 · 상세 오른쪽 위와 같은 것 */
-  return '<section class="axs-zsec" id="zone1f"><div class="axs-bar"><b>1F 로비</b><span>행사 시간 중 자유 관람</span></div>' + grp("see", "둘러보기") + grp("do", "참여하기") + "</section>" +
+  return '<section class="axs-zsec" id="zone1f"><div class="axs-bar"><b>1F 로비</b><span>행사 시간 중 자유 관람</span></div>' + tourRowHtml() + grp("see", "둘러보기") + grp("do", "참여하기") + "</section>" +
     '<section class="axs-zsec" id="zone18f"><div class="axs-bar"><b>18F</b><span>소규모 아이디어 논의</span></div>' +
     '<button type="button" class="axs-zfl" onclick="progOpen(\'cchat\')"><span class="tx"><span class="nm"><b>AX 커피챗</b>' + zoneChip(ccChip) + '</span><span class="k">아이디어를 놓고 이야기하는 곳</span><span class="f">' + esc(ccSub) + "</span></span>" +
     '<span class="zrt">' + (ccSt ? stampTagHtml(ccSt) : "") + CHEV_SVG + "</span></button></section>";
@@ -5555,7 +5565,8 @@ function zoneDetailHtml() {
     '<p class="axs-bar stm">' + esc(z.stm) + "</p>" + (cr ? '<div class="cr">' + cr + "</div>" : "") +
     '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + z.todo.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" +
     (L.kv ? '<hr class="axs-rule"><dl class="axs-kv">' + L.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl>" : "") +
-    "</div>" + (L.btn ? '<button type="button" class="ax-button" onclick="' + L.btn[1] + '">' + esc(L.btn[0]) + "</button>" : "") + "</div>";
+    "</div>" + (L.btn ? '<button type="button" class="ax-button" onclick="' + L.btn[1] + '">' + esc(L.btn[0]) + "</button>" : "") +
+    (TOUR_ON ? '<button type="button" class="ax-button ax-button-weak" onclick="tourOpen({ zone: \'' + z.id + '\' })">모형에서 보기</button>' : "") + "</div>";   /* v5.11 1층 둘러보기 · 이 구역으로 바로(TOUR_ON 일 때만) */
 }
 function progOpen(id) { PROG.sid = id; App.go("sess_d"); }
 var RESV_ST = { requested: "승인 대기", booked: "승인 대기", approved: "승인 완료", checked: "상담 중", done: "상담 완료" };
@@ -6174,6 +6185,59 @@ function crowdStripHtml() {
       return go ? '<button type="button" class="cc' + x.cls + '" onclick="stairOpen()" aria-label="엘리베이터 혼잡 · 계단 이용">' + inner + "</button>" : '<div class="cc' + x.cls + '">' + inner + "</div>";
     }).join("") + "</div>" + (typeof crowdWatchHtml === "function" ? crowdWatchHtml() : "");   /* v4.76 혼잡일 때만 「풀리면 알림」 */
 }
+
+/* ═══ v5.11 (261003 사용자 승인 · 「디자인 시안/가상 1층/계획.md」) 1층 둘러보기 · 본체(3D 모형 · 평면 지도 · 목록 · 판 보기)는 assets/tour/ 에 있고 처음 열 때만 받는다(안 여는 사람은 0바이트)
+   여기 있는 것 = 불러오기(tourOpen) · 연결(TOUR_HOST · 구역 글은 FLOOR1 · 상태는 zoneLive · 혼잡은 crowdCell) · 입구 3곳(홈 나의 일정 아래 · 상시 운영 1F 맨 위 · 구역 상세) + 판 퀴즈 힌트 · 뒤로 가기 한 줄(popstate)
+   위치(벽 · 방향 · 판 순서)는 둘러보기 화면 안에서만 보인다(261001 「앱은 동선 · 위치를 다루지 않는다」의 예외 · 사용자 261003 · design.md 5-21) · 이 파일의 다른 화면은 그대로 위치를 말하지 않는다 */
+var TOUR = { ver: "v511", busy: false, files: ["tour.css", "three.min.js", "tour-data.js", "tour-scene.js", "tour.js"] };
+/* 켜기 스위치 · false = 입구 3곳 · 판 퀴즈 힌트 링크 · 열기가 모두 숨는다(사용자 261003 「모델하우스 수준」 3D 모양 결정 전 · 연결만 먼저 올림) · 켤 때 = 이 한 줄 + tour-scene.js 교체 */
+var TOUR_ON = false;
+function tourOpen(o) {
+  if (!TOUR_ON) return;
+  o = o || {};
+  if (window.AXTour) { AXTour.open(o); return; }
+  if (TOUR.busy) return;
+  TOUR.busy = true;
+  var left = TOUR.files.length, bad = false, q = "?v=" + TOUR.ver;
+  toast("1층 둘러보기를 여는 중");
+  TOUR.files.forEach(function (f) {
+    var n = /\.css$/.test(f) ? document.createElement("link") : document.createElement("script");
+    if (n.tagName === "LINK") { n.rel = "stylesheet"; n.href = "assets/tour/" + f + q; } else { n.src = "assets/tour/" + f + q; n.async = false; }   /* 스크립트는 붙인 순서대로 실행 */
+    n.onload = function () { if (--left === 0 && !bad) { TOUR.busy = false; if (window.AXTour) AXTour.open(o); } };
+    n.onerror = function () { if (bad) return; bad = true; TOUR.busy = false; toast("둘러보기를 열지 못했어요 · 연결을 확인해 주세요"); };
+    document.head.appendChild(n);
+  });
+}
+/* 입구 · 상시 운영 1F 맨 위 한 줄(18F 커피챗 줄과 같은 모양) · 구역 상세 「모형에서 보기」 · 홈 나의 일정 아래 카드(tourHomeHtml) */
+function tourRowHtml() {
+  if (!TOUR_ON) return "";
+  return '<button type="button" class="axs-zfl axs-tourgo" onclick="tourOpen()"><span class="tx"><span class="nm"><b>1층 둘러보기</b></span><span class="k">3D 모형으로 부스와 판 미리 보기</span></span><span class="zrt">' + CHEV_SVG + "</span></button>";
+}
+function tourHomeHtml() {
+  if (!TOUR_ON) return "";
+  return '<section class="axs-sec">' + rcHtml({ cls: " axs-tourgo", onclick: "tourOpen()", link: true, left: rcIcon(TOUR_SVG), title: "1층 둘러보기", sub: "자리에서 부스 미리 보기" }) + "</section>";
+}
+var TOUR_SVG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M12 3l9 4.5-9 4.5-9-4.5z"/><path d="M3 12l9 4.5 9-4.5"/><path d="M3 16.5l9 4.5 9-4.5"/></svg>';
+var TOUR_HOST = {
+  sign: function (nm, big) { return zoneSign(nm, big ? "lg" : ""); },
+  zone: function (id) {
+    if (id === "cafe") { var st = progState(progById("cchat")); return { kor: "아이디어를 놓고 이야기하는 곳", fact: "18F · " + st[0], todo: ["아이디어 한 줄을 내면 신청할 수 있어요"] }; }
+    var z = zoneById(id); if (!z) return null;
+    return { kor: z.kor, fact: zoneLive(z).fact, todo: z.todo };
+  },
+  acts: function (id) {
+    var go = function (v) { return function () { App.go(v); }; };
+    if (id === "vision" || id === "action") return [{ lbl: "AX 퀴즈 풀기", run: go("quiz") }];
+    if (id === "lab") return [{ lbl: "아이디어 한 줄 쓰기", run: go("ideas") }];
+    if (id === "play") return [{ lbl: "체험 안내 보기", run: go("booth") }];
+    if (id === "lounge") { var L = zoneLive(zoneById("lounge")); return [{ lbl: L.btn ? L.btn[0] : "상담 신청", run: function () { progOpen("dap"); } }]; }
+    if (id === "event") return [{ lbl: "룰렛 경품 보기", run: function () { prizeGo("roulette"); } }, { lbl: "1F 타자왕 순위", run: typeSiteRankGo }];
+    if (id === "cafe") return [{ lbl: S.get("cchat", null) ? "내 커피챗 보기" : "커피챗 신청", run: function () { progOpen("cchat"); } }, { lbl: "아이디어 한 줄 쓰기", run: go("ideas") }];
+    return [];
+  },
+  crowd: function (id) { var k = id === "cafe" ? "e" : "l", x = crowdCell(k); return { nm: k === "e" ? "엘리베이터" : "1F 로비", st: x.st, sub: x.sub, cls: x.cls }; },
+  crowdGo: function () { App.tab("home"); setTimeout(function () { var c = document.querySelector(".cstrip2"); if (c) c.scrollIntoView({ block: "center" }); }, 120); }
+};
 
 /* ════════════════ 일정 탭 행 (v3.5) · 좌측 시간 레일 + 우측 제목 · 부가 설명은 공용 아코디언 접힘 ════════════════ */
 /* v3.21 일정 탭 = 세 탭: all 전체 일정(시간표만) / always 상시 프로그램 / mine 내 일정 */
@@ -7370,6 +7434,7 @@ var Views = {
       nextStampHtml() +   /* v4.84 (앱 개편 2묶음 · 기획안 5-2) 다음 스탬프 카드 한 장 */
       artBannerHtml() +
       '<section class="axs-sec">' + myScheduleHtml() + "</section>" +
+      tourHomeHtml() +   /* v5.11 1층 둘러보기 입구 · 나의 일정 아래 · 혼잡 위(광고판보다 위로 올리지 않는다 · design.md A-5) */
       '<section class="axs-sec">' + crowdStripHtml() + "</section>" +   /* v4.62 층별 혼잡도 복원(260929) · v4.71 혼잡 제보 2칸 · v4.73 엘리베이터 혼잡은 홈 맨 위 카드 없이 이 2칸에서만 */
       "</div>";
   },
@@ -12259,6 +12324,7 @@ function qzHint(id) {
   var zz = qzZone(it.z), st = zz && zz.st ? STAMPS.filter(function (s) { return s.id === zz.st; })[0] : null;
   var map = '<div class="qz-map" role="list" aria-label="1F 부스 5구역">' + FLOOR1.map(function (z) { return '<span role="listitem" class="' + (z.id === zoneKey(it.z) ? "on" : "") + '"' + (z.id === zoneKey(it.z) ? ' aria-current="true"' : "") + ">" + esc(z.sign) + "</span>"; }).join("") + "</div>";
   var body = '<div class="axs-pan qz qz-hs">' + (zz ? zoneSign(zz.sign, "lg chip") : "") + '<p class="qz-lp">' + esc(qzLinePan(it.h)) + "</p>" +
+    (TOUR_ON ? '<button type="button" class="qz-hint" onclick="sheetClose(true); tourOpen({ hint: \'' + it.h + '\' })">모형에서 보기' + CHEV_SVG + "</button>" : "") +   /* v5.11 (사용자 261003 결정 4) 1층 둘러보기가 이 판으로 바로 열린다(TOUR_ON 일 때만) */
     (QZ_NOSIGN[it.z] ? '<p class="ax-meta">' + esc(QZ_NOSIGN[it.z]) + "</p>" : "") +
     '<p class="axs-dot">1F 부스 5구역</p>' + map +
     (st ? '<p class="qz-zin"><b>이 구역에서</b><span>' + esc(zz.stl || st.title) + " 스탬프</span></p>" : "") +
