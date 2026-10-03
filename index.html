@@ -3657,7 +3657,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.27";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.28";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -6407,15 +6407,16 @@ function crowdStripHtml() {
    여기 있는 것 = 불러오기(tourOpen) · 연결(TOUR_HOST · 구역 글은 FLOOR1 · 상태는 zoneLive · 혼잡은 crowdCell) · 입구 3곳(홈 나의 일정 아래 · 상시 운영 1F 맨 위 · 구역 상세) + 판 퀴즈 힌트 · 뒤로 가기 한 줄(popstate)
    위치(벽 · 방향 · 판 순서)는 둘러보기 화면 안에서만 보인다(261001 「앱은 동선 · 위치를 다루지 않는다」의 예외 · 사용자 261003 · design.md 5-21) · 이 파일의 다른 화면은 그대로 위치를 말하지 않는다 */
 var TOUR = { ver: "v519", busy: false, files: ["tour.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
-/* 켜기 스위치 · false = 입구 3곳 · 판 퀴즈 힌트 링크 · 열기가 모두 숨는다(사용자 261003 「모델하우스 수준」 3D 모양 결정 전 · 연결만 먼저 올림) · 켤 때 = 이 한 줄 + tour-scene.js 교체 */
-var TOUR_ON = false;
+/* 켜기 스위치 · v5.28 true = 전체 공개(사용자 261003 「1층 3D 전체 공개」) · false 로 두면 입구 3곳 · 판 퀴즈 힌트 링크 · 열기가 모두 숨는다 */
+var TOUR_ON = true;
 /* v5.19 (사용자 261003) 숨김 주소 · 앱 주소에 ?tour=1 이 붙어 들어오면 그 기기에서만 입구 3곳 · 판 퀴즈 힌트 링크가 보인다(기기에 기억 · ?tour=0 이면 끔 · 키는 axf_ 접두가 아니라 사람 바꾸기에도 남는다)
-   그 밖의 사람은 TOUR_ON 이 false 인 동안 아무것도 안 보인다 · 전체 공개는 TOUR_ON = true(사용자 승인 뒤 별도) */
+   v5.28 전체 공개 뒤에는 모두에게 보인다 · 숨김 장치는 남김 = 주소 뒤 ?tour=0 으로 들어오면 그 방문만 끈다(기기 기억 해제 포함) */
 var TOUR_PEEK = (function () {
   var m = /[?&]tour=([01])(?:&|$)/.exec(location.search);
   try { if (m) localStorage.setItem("axfTourPeek", m[1]); return localStorage.getItem("axfTourPeek") === "1"; } catch (e) { return !!m && m[1] === "1"; }
 })();
-function tourOn() { return TOUR_ON || TOUR_PEEK; }
+var TOUR_OFF = /[?&]tour=0(?:&|$)/.test(location.search);   /* v5.28 ?tour=0 = 이번 방문만 끔(저장 안 함) */
+function tourOn() { return (TOUR_ON && !TOUR_OFF) || TOUR_PEEK; }
 function tourOpen(o) {
   if (!tourOn()) return;
   o = o || {};
