@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>타자왕 순위판 · AX Festival 2026</title>
+<meta name="robots" content="noindex">
+<!-- 1F 타자왕 부스 오른쪽 스탠바이미(세로 1080×1920) 순위판 루프 (261003 · 시안 디자인 시안/타자왕 순위판/타자왕_순위판_루프.html)
+     47.5초 루프 = 후킹 5 · 게임 9 · 하는 법 7.5 · 상품 8 · 순위 12.5 · 마감 5.5 · 17:00 뒤 = 순위 · 상품 · 마감 26초
+     데이터 = 공개 순위 type_rank(mode site · n 10 · 관리코드 없음) · 30초 폴링 · 실패 60 → 120초 · 화면이 가려지면 멈춤
+     순위 변동(NEW RECORD · RANK UP)은 화면이 직전에 보여 준 판과 비교 · 서버 변경 없음 · 마감 시계 = 응답 now(있으면) 아니면 기기 시계(한국 시간)
+     가로 TV = 가운데 세로 판 + 양옆 도트 · 무음 · 주소 뒤 값은 assets/typing.js 맨 위 -->
+<link rel="icon" href="../../icons/icon-192.png">
+<style>
+  @font-face { font-family: "NeoDunggeunmo"; src: url("../../assets/neodgm.woff2") format("woff2"); font-display: block; }
+  @font-face { font-family: "AXP"; src: url("../../draw/assets/PretendardVariable.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+  :root {
+    --night: #1B1712; --bark: #2A2118; --wood: #5E3218; --wood2: #7A3E1C; --tan: #D9A066; --tan2: #E3B884; --cream: #F3E7D8;
+    --o100: #FF7E31; --o60: #FFA46E; --o30: #FFCFB0; --deep: #D64524; --btn: #351A0C; --dim: #8A817B; --ink: #000;
+    --neo: "NeoDunggeunmo", "AXP", "Malgun Gothic", sans-serif; --pre: "AXP", "Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif;
+    --dot: 36px; --line4: 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: var(--night); }
+  body { background: radial-gradient(circle, var(--wood) 0 calc(var(--dot) * .056), transparent calc(var(--dot) * .07)) 50% 50% / var(--dot) var(--dot), var(--night);
+    font-family: var(--neo); color: var(--cream); cursor: none; word-break: keep-all; -webkit-font-smoothing: antialiased; }
+  body.ptr { cursor: auto; }
+  #stage { position: absolute; left: 50%; top: 50%; width: 1080px; height: 1920px; margin: -960px 0 0 -540px; overflow: hidden; transform-origin: 50% 50%;
+    background: radial-gradient(circle, var(--wood) 0 2px, transparent 2.5px) 0 0 / 36px 36px, var(--night); }
+  .sc { position: absolute; inset: 0; display: none; }
+  .sc.on { display: block; }
+  .abs { position: absolute; }
+  #brand { position: absolute; left: 64px; top: 60px; font-size: 36px; line-height: 44px; color: var(--o100); z-index: 20; }
+  #brand2 { position: absolute; right: 64px; top: 60px; font-size: 36px; line-height: 44px; color: var(--tan); z-index: 20; }
+  #net { position: absolute; right: 64px; top: 1850px; font-family: var(--pre); font-size: 26px; line-height: 32px; color: var(--dim); z-index: 20; display: none; }
+  body.off #net { display: block; }
+  #demoMark { position: absolute; left: 64px; top: 1850px; font-family: var(--pre); font-size: 26px; line-height: 32px; color: var(--dim); z-index: 20; display: none; }
+  body.demo #demoMark { display: block; }
+
+  .up { opacity: 0; transform: translateY(34px); transition: opacity .45s cubic-bezier(.2,.7,.2,1), transform .45s cubic-bezier(.2,.7,.2,1); }
+  .up.in { opacity: 1; transform: translateY(0); }
+  .pop { opacity: 0; transform: scale(.6); transition: opacity .3s cubic-bezier(.2,.7,.2,1), transform .34s cubic-bezier(.2,.9,.3,1.25); }
+  .pop.in { opacity: 1; transform: scale(1); }
+  .sl { opacity: 0; transform: translateX(120px); transition: opacity .4s cubic-bezier(.2,.7,.2,1), transform .5s cubic-bezier(.2,.7,.2,1); }
+  .sl.in { opacity: 1; transform: translateX(0); }
+  .dg { display: block; }
+  .dgd { opacity: 0; transform-box: fill-box; transform-origin: center; animation: dgOn .24s ease-out forwards; }
+  @keyframes dgOn { 0% { opacity: 0; transform: scale(.3); } 70% { opacity: 1; transform: scale(1.14); } 100% { opacity: 1; transform: scale(1); } }
+  .botsvg svg { width: 100%; height: 100%; display: block; }
+
+  /* 1 후킹 */
+  #q { left: 64px; top: 190px; font-family: var(--pre); font-weight: 700; font-size: 112px; line-height: 152px; color: #fff; letter-spacing: -1px; white-space: nowrap; }
+  #q b { color: var(--o100); font-weight: 700; }
+  #q span { display: inline-block; }
+  #hs1 { left: 64px; top: 640px; color: var(--o100); }
+  #big { left: 64px; top: 762px; font-size: 300px; line-height: 300px; color: var(--o100); text-shadow: 12px 12px 0 #7a2e0a; white-space: nowrap; }
+  #sub1 { left: 64px; top: 1094px; font-family: var(--pre); font-weight: 600; font-size: 60px; line-height: 68px; color: #EAEAEA; }
+  #press { left: 64px; top: 1220px; width: 952px; height: 240px; border: 12px solid var(--o100); background: #0d0d0d; display: flex; align-items: center; justify-content: center; font-size: 124px; color: #fff; letter-spacing: 6px; }
+  #press.inv { background: var(--o100); color: var(--btn); }
+  #bot1 { left: 64px; top: 1500px; width: 228px; height: 228px; }
+  #loc1 { right: 64px; top: 1590px; font-family: var(--pre); font-weight: 600; font-size: 48px; line-height: 56px; color: var(--tan2); text-align: right; }
+
+  /* 2 게임 */
+  #g-hud { left: 64px; top: 170px; width: 952px; display: flex; justify-content: space-between; align-items: flex-end; }
+  #g-hud .t { font-size: 44px; line-height: 52px; color: var(--tan2); }
+  #g-score { font-size: 84px; line-height: 84px; color: var(--o100); text-shadow: 5px 5px 0 var(--deep); }
+  #g-right { text-align: right; }
+  #g-lv { font-size: 44px; line-height: 52px; color: var(--tan2); }
+  #g-combo { font-size: 64px; line-height: 64px; height: 64px; color: var(--cream); }
+  #g-combo b { font-weight: 400; color: var(--o100); }
+  #g-field { left: 64px; top: 320px; width: 952px; height: 1180px; background: var(--bark); overflow: hidden;
+    box-shadow: var(--line4), inset 0 0 0 4px var(--wood), inset 0 0 0 8px var(--tan); }
+  #g-field.bonus { box-shadow: var(--line4), inset 0 0 0 4px var(--deep), inset 0 0 0 8px var(--o100); }
+  .gw { position: absolute; padding: 6px 26px 8px; font-size: 72px; line-height: 84px; color: var(--cream); background: var(--night); box-shadow: 0 0 0 4px var(--wood); white-space: nowrap; display: none; }
+  .gw i { font-style: normal; color: var(--o100); }
+  .gp { position: absolute; font-size: 72px; line-height: 72px; color: var(--o100); text-shadow: 4px 4px 0 var(--deep); display: none; white-space: nowrap; }
+  #g-bonus { left: 0; right: 0; top: 230px; text-align: center; font-size: 120px; line-height: 140px; color: var(--o100); text-shadow: 8px 8px 0 var(--deep); display: none; }
+  #g-bonus small { display: block; margin-top: 10px; font-family: var(--pre); font-weight: 600; font-size: 48px; line-height: 60px; color: var(--cream); text-shadow: none; }
+  #g-sent { left: 60px; right: 60px; top: 470px; padding: 40px 36px; background: var(--night); box-shadow: 0 0 0 6px var(--o100); text-align: center; font-size: 64px; line-height: 92px; color: var(--dim); display: none; }
+  #g-sent i { font-style: normal; color: var(--cream); }
+  #g-left { left: 60px; right: 60px; top: 760px; height: 24px; background: var(--wood); display: none; }
+  #g-left b { display: block; height: 100%; background: var(--o100); }
+  #g-leftt { left: 60px; right: 60px; top: 800px; text-align: right; font-size: 40px; line-height: 48px; color: var(--tan2); display: none; }
+  #g-res { left: 0; right: 0; top: 880px; text-align: center; font-size: 110px; line-height: 120px; color: var(--o100); text-shadow: 7px 7px 0 var(--deep); display: none; }
+  #g-res small { display: block; font-size: 48px; line-height: 64px; color: var(--cream); text-shadow: none; }
+  #g-lvup { left: 0; right: 0; top: 520px; text-align: center; font-size: 120px; line-height: 130px; color: var(--cream); text-shadow: 7px 7px 0 var(--wood2); display: none; }
+  #g-in { white-space: nowrap; overflow: hidden; left: 64px; top: 1544px; width: 952px; height: 150px; border: 10px solid var(--o100); background: #0d0d0d; padding: 0 30px; display: flex; align-items: center; font-size: 80px; color: var(--cream); }
+  #g-in.long { font-size: 60px; }
+  #g-in i { font-style: normal; color: var(--o100); }
+  #g-in u { text-decoration: none; display: inline-block; flex: none; width: 36px; height: 8px; background: var(--o100); margin-left: 6px; animation: blk .6s steps(1) infinite; }
+  #g-in em { margin-left: auto; padding-left: 20px; font-style: normal; font-size: 40px; color: var(--tan); }
+  @keyframes blk { 0% { opacity: 1; } 50% { opacity: .2; } }
+
+  /* 3 하는 법 (1층 판 46번 3단계) */
+  .st { left: 64px; width: 952px; height: 112px; display: flex; align-items: center; gap: 30px; font-family: var(--pre); font-weight: 600; font-size: 60px; color: var(--dim); white-space: nowrap; }
+  .st i { font-style: normal; font-family: var(--neo); flex: none; width: 104px; height: 104px; background: var(--wood); color: var(--bark); display: flex; align-items: center; justify-content: center; font-size: 68px; }
+  .st.act { color: #fff; }
+  .st.act i { background: var(--o100); color: var(--btn); }
+  .st.done { color: var(--tan2); }
+  .st.done i { background: var(--tan); color: var(--bark); }
+  #ill { left: 64px; top: 690px; width: 952px; height: 940px; background: var(--bark); overflow: hidden; box-shadow: var(--line4), inset 0 0 0 4px var(--wood), inset 0 0 0 8px var(--tan); }
+  #ill > div { position: absolute; inset: 0; display: none; }
+  #ill > div.on { display: block; }
+  .ph { position: absolute; width: 300px; height: 540px; background: var(--night); box-shadow: 0 0 0 8px var(--tan2); }
+  .ph .scr { position: absolute; left: 18px; top: 18px; right: 18px; bottom: 18px; background: var(--cream); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: var(--btn); font-size: 34px; }
+  .ph svg { width: 210px; height: 210px; display: block; }
+  .lt { position: absolute; left: 176px; top: 70px; width: 600px; height: 380px; background: var(--night); box-shadow: 0 0 0 8px var(--tan2); }
+  .lt:after { content: ""; position: absolute; left: -60px; right: -60px; bottom: -60px; height: 40px; background: var(--tan2); }
+  .lt .cam { position: absolute; left: 50%; top: 14px; width: 20px; height: 20px; margin-left: -10px; background: var(--dim); }
+  .lt .cam.on { background: var(--o100); box-shadow: 0 0 0 8px rgba(255,126,49,.35); }
+  .lt .tx { position: absolute; left: 0; right: 0; bottom: 36px; text-align: center; font-size: 44px; color: var(--tan); }
+  .lt .ps { position: absolute; left: 0; right: 0; top: 120px; text-align: center; font-size: 76px; line-height: 90px; color: #fff; letter-spacing: 4px; }
+  .lt .ps.inv { color: var(--o100); }
+  #beam { position: absolute; left: 10px; right: 10px; height: 8px; background: var(--o100); box-shadow: 0 0 0 4px rgba(255,126,49,.4); display: none; }
+  #ok { position: absolute; left: 176px; width: 600px; top: 790px; height: 100px; display: none; align-items: center; justify-content: center; background: var(--o100); color: var(--btn); font-size: 56px; box-shadow: 0 0 0 6px var(--ink); }
+  #key { position: absolute; left: 156px; top: 600px; width: 640px; height: 170px; background: var(--cream); color: var(--btn); display: flex; align-items: center; justify-content: center; font-size: 72px; letter-spacing: 8px;
+    box-shadow: 0 0 0 6px var(--ink), 0 18px 0 6px var(--wood2); transition: transform .08s, box-shadow .08s, background .08s; }
+  #key.dn { transform: translateY(14px); box-shadow: 0 0 0 6px var(--ink), 0 4px 0 6px var(--wood2); background: var(--o100); }
+  #i3w { position: absolute; left: 0; right: 0; text-align: center; }
+  #i3w span { display: inline-block; padding: 6px 26px 8px; font-size: 64px; line-height: 76px; color: var(--cream); background: var(--night); box-shadow: 0 0 0 4px var(--wood); white-space: nowrap; }
+  #i3w i { font-style: normal; color: var(--o100); }
+  .tr { position: absolute; left: 90px; right: 90px; height: 130px; display: flex; align-items: center; padding: 0 36px; font-size: 60px; background: var(--night); color: var(--tan2); box-shadow: inset 0 0 0 4px var(--wood); opacity: 0; transition: opacity .3s; }
+  .tr b { font-weight: 400; flex: none; width: 200px; color: var(--dim); }
+  .tr span { margin-left: auto; }
+  .tr.best { background: var(--o100); color: var(--btn); }
+  .tr.best b { color: var(--btn); }
+  #rule { position: absolute; left: 0; right: 0; top: 830px; text-align: center; font-family: var(--pre); font-weight: 700; font-size: 56px; color: #fff; opacity: 0; transition: opacity .3s; }
+  #rule em { font-style: normal; color: var(--o100); }
+
+  /* 4 상품 */
+  #pz-h { left: 64px; top: 170px; color: var(--o100); }
+  #pz-s { left: 64px; top: 300px; font-family: var(--pre); font-weight: 600; font-size: 48px; line-height: 56px; color: var(--tan2); }
+  .pz { left: 64px; width: 952px; height: 380px; display: flex; align-items: center; padding: 0 36px 0 28px; gap: 34px; box-shadow: var(--line4); }
+  .pz .no { flex: none; width: 96px; font-size: 150px; line-height: 150px; color: var(--btn); }
+  .pz .im { flex: none; width: 300px; height: 300px; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 0 4px var(--btn); }
+  .pz .im img { width: 260px; height: 260px; object-fit: contain; display: block; }
+  .pz .tx { flex: 1; min-width: 0; font-family: var(--pre); font-weight: 700; font-size: 56px; line-height: 70px; color: var(--btn); letter-spacing: -1px; }
+  .pz .tx small { display: block; font-weight: 600; font-size: 44px; line-height: 56px; }
+  .pz.p1 { background: var(--o100); } .pz.p2 { background: var(--o60); } .pz.p3 { background: var(--o30); }
+  #pz-x { left: 64px; top: 1670px; width: 952px; font-family: var(--pre); font-weight: 600; font-size: 44px; line-height: 54px; color: var(--o60); display: none; }
+
+  /* 5 순위 (앱 hsHtml 판 그대로 · 스캔 막대 · 머리 깜빡임 없음 · 261003 사용자 승인) */
+  #hs-h { left: 64px; top: 128px; font-size: 150px; line-height: 160px; letter-spacing: 4px; white-space: nowrap; color: var(--o100); text-shadow: 6px 6px 0 var(--deep); }
+  #hs-sub { left: 64px; top: 310px; font-size: 44px; line-height: 56px; color: var(--cream); white-space: nowrap; }
+  #hs-sub.nr { color: var(--o100); }
+  #hs-sub.em { color: var(--o60); }
+  #hs-list { left: 64px; top: 410px; width: 952px; height: 1096px; background: var(--wood); box-shadow: var(--line4); }
+  #hs-in { position: absolute; left: 8px; top: 8px; right: 8px; bottom: 8px; overflow: hidden; }
+  .hr { position: absolute; left: 0; top: 0; width: 100%; height: 108px; display: flex; align-items: center; padding: 0 34px; background: var(--bark); font-size: 56px; line-height: 64px;
+    transition: top .8s cubic-bezier(.2,.7,.2,1), left .5s cubic-bezier(.2,.7,.2,1), opacity .5s, background .4s; }
+  .hr.e { background: var(--night); }
+  .hr.nil .no { color: var(--dim); }
+  .hr .no { flex: none; width: 116px; color: var(--tan); }
+  .hr .nm { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--cream); }
+  .hr .nm.long { font-size: 44px; }
+  .hr .gf { flex: none; width: 40px; height: 40px; margin-right: 24px; background: var(--o100); position: relative; display: none; box-shadow: inset -4px -4px 0 var(--deep); }
+  .hr .gf:before { content: ""; position: absolute; left: 16px; top: 0; width: 8px; height: 40px; background: var(--cream); }
+  .hr .gf:after { content: ""; position: absolute; left: 0; top: 16px; width: 40px; height: 8px; background: var(--cream); }
+  body.prz .hr.g .gf { display: block; }
+  .hr .sc2 { flex: none; margin-left: 24px; text-align: right; white-space: nowrap; color: var(--tan2); }
+  .hr.r1 { background: var(--o100); } .hr.r2 { background: var(--o60); } .hr.r3 { background: var(--o30); }
+  .hr.r1 .no, .hr.r1 .nm, .hr.r1 .sc2, .hr.r2 .no, .hr.r2 .nm, .hr.r2 .sc2, .hr.r3 .no, .hr.r3 .nm, .hr.r3 .sc2 { color: var(--btn); }
+  .hr.hot { animation: hsNew 1.6s ease-out 2; }
+  @keyframes hsNew { 0%, 100% { box-shadow: inset 0 0 0 0 transparent; } 30% { box-shadow: inset 0 0 0 6px var(--cream); } }
+  .hr .tag { flex: none; margin-right: 18px; padding: 0 12px; background: var(--cream); color: var(--btn); font-size: 32px; line-height: 44px; display: none; }
+  #hs-prz { left: 64px; top: 1536px; width: 952px; font-size: 36px; line-height: 50px; color: var(--o60); white-space: nowrap; margin: 0; }
+  #hs-prz2 { display: none; }
+  body.prz #hs-prz2 { display: inline; }
+  #hs-foot { left: 64px; top: 1700px; display: flex; align-items: center; gap: 28px; }
+  #hs-foot .botsvg { width: 88px; height: 104px; flex: none; }
+  #hs-foot p { margin: 0; font-size: 36px; line-height: 50px; color: var(--tan2); }
+
+  /* 6 마감 */
+  #cl-k { left: 64px; top: 230px; font-size: 76px; line-height: 84px; color: var(--tan2); }
+  #cl-t { left: 64px; top: 380px; color: var(--o100); }
+  #cl-cdk { left: 64px; top: 700px; font-size: 44px; line-height: 52px; color: var(--tan); }
+  #cl-cd { left: 64px; top: 760px; font-size: 150px; line-height: 150px; color: var(--cream); text-shadow: 7px 7px 0 var(--wood2); white-space: nowrap; }
+  #cl-o { left: 64px; top: 1010px; font-family: var(--pre); font-weight: 700; font-size: 64px; line-height: 88px; color: #fff; letter-spacing: -1px; }
+  #cl-o b { color: var(--o100); font-weight: 700; }
+  #cl-bot { left: 64px; top: 1400px; width: 260px; height: 260px; }
+  #cl-fin { left: 0; right: 0; top: 0; bottom: 0; background: var(--night); opacity: 0; pointer-events: none; z-index: 15; }
+
+  /* 캡처용(?cap=1) · 전환 없이 끝 상태 */
+  body.cap *, body.cap .dgd { transition: none !important; animation: none !important; }
+  body.cap .dgd { opacity: 1; }
+  #ctl { position: fixed; left: 12px; top: 12px; z-index: 99; font: 13px/1.4 system-ui, "Malgun Gothic", sans-serif; color: #eee; background: rgba(0,0,0,.78); padding: 10px; border-radius: 6px; max-width: 260px; display: none; cursor: auto; }
+  body.ctl #ctl { display: block; }
+  #ctl button { font: inherit; margin: 2px; padding: 3px 7px; background: #333; color: #fff; border: 1px solid #666; cursor: pointer; }
+  #ctl button.on { background: #FF7E31; color: #000; border-color: #FF7E31; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="brand">AX Festival 2026</div><div id="brand2">1F 타자왕</div>
+  <div id="demoMark">DEMO · 가짜 순위</div>
+  <div id="net">연결 다시 시도 중 · 마지막 순위 표시</div>
+
+  <div class="sc" id="s-hook">
+    <div id="q" class="abs"><span class="up" data-at=".1">당신의</span> <span class="up" data-at=".3">프롬프트</span><br><span class="up" data-at=".55"><b>입력 실력</b>은?</span></div>
+    <div id="hs1" class="abs" style="display:none"></div>
+    <div id="big" class="abs pop" data-at="1.7">타자왕</div>
+    <div id="sub1" class="abs up" data-at="2.4">AX 단어 소나기</div>
+    <div id="press" class="abs up" data-at="3.0">PRESS SPACE</div>
+    <div id="bot1" class="abs botsvg up" data-at="3.3"></div>
+    <div id="loc1" class="abs up" data-at="3.5">1F 로비 부스<br>노트북 2대</div>
+  </div>
+
+  <div class="sc" id="s-game">
+    <div id="g-hud" class="abs"><div><div class="t">SCORE</div><div id="g-score">0</div></div><div id="g-right"><div id="g-lv">LEVEL 1</div><div id="g-combo"></div></div></div>
+    <div id="g-field" class="abs">
+      <div id="g-words"></div>
+      <div id="g-bonus" class="abs">BONUS STAGE<small>문장을 그대로 치면 PERFECT</small></div>
+      <div id="g-sent" class="abs"></div>
+      <div id="g-left" class="abs"><b></b></div>
+      <div id="g-leftt" class="abs"></div>
+      <div id="g-res" class="abs"></div>
+      <div id="g-lvup" class="abs">LEVEL 2</div>
+    </div>
+    <div id="g-in" class="abs"><span id="g-typed"></span><u></u><em>ENTER</em></div>
+  </div>
+
+  <div class="sc" id="s-how">
+    <div class="abs st" id="st1" style="top:170px"><i>1</i>QR을 노트북에 비추기</div>
+    <div class="abs st" id="st2" style="top:300px"><i>2</i>SPACE로 시작</div>
+    <div class="abs st" id="st3" style="top:430px"><i>3</i>떨어지는 단어 입력</div>
+    <div id="ill" class="abs"><div id="i1"></div><div id="i2"></div><div id="i3"></div></div>
+  </div>
+
+  <div class="sc" id="s-prize">
+    <div id="pz-h" class="abs" style="display:none"></div>
+    <div id="pz-s" class="abs up" data-at=".3">17:00 마감 · Outro 시상</div>
+    <div class="abs pz p1 sl" data-at=".7" style="top:400px"><span class="no">1</span><span class="im"><img src="../../assets/prize/ty1_cherry.webp" alt=""></span><span class="tx">체리 G80-3872<small>기계식 키보드</small></span></div>
+    <div class="abs pz p2 sl" data-at="2.3" style="top:830px"><span class="no">2</span><span class="im"><img src="../../assets/prize/ty2_mxmaster4.webp" alt=""></span><span class="tx">로지텍 MX Master 4<small>무선 마우스</small></span></div>
+    <div class="abs pz p3 sl" data-at="4.0" style="top:1260px"><span class="no">3</span><span class="im"><img src="../../assets/prize/ty3_aula.webp" alt=""></span><span class="tx">AULA F108 Pro<small>기계식 키보드</small></span></div>
+    <div id="pz-x" class="abs"></div>
+  </div>
+
+  <div class="sc" id="s-rank">
+    <div id="hs-h" class="abs">HIGH SCORE</div>
+    <div id="hs-sub" class="abs">1F 타자왕 · 현장 TOP 10</div>
+    <div id="hs-list" class="abs"><div id="hs-in"></div></div>
+    <p id="hs-prz" class="abs">1등 체리 키보드 · 2등 MX Master 4 · 3등 AULA 키보드<span id="hs-prz2"></span></p>
+    <div id="hs-foot" class="abs"><div class="botsvg" id="bot2"></div><p id="hs-rule">1인 3회 · 최고 점수 1개로 순위<br>17:00 마감 · 1~3위 Outro 시상</p></div>
+  </div>
+
+  <div class="sc" id="s-close">
+    <div id="cl-k" class="abs up" data-at=".1">기록 마감</div>
+    <div id="cl-t" class="abs" style="display:none"></div>
+    <div id="cl-cdk" class="abs up" data-at="1.3">마감까지</div>
+    <div id="cl-cd" class="abs up" data-at="1.3">00:00:00</div>
+    <div id="cl-o" class="abs up" data-at="2.2">1~3위는 <b>Outro</b>에서 시상<br>17F 대강당</div>
+    <div id="cl-bot" class="abs botsvg up" data-at="2.8"></div>
+    <div id="cl-fin" class="abs"></div>
+  </div>
+</div>
+<div id="ctl"></div>
+<script src="../../assets/server.js"></script>
+<script src="../../assets/bot.js"></script>
+<script src="../../assets/rain-engine.js"></script>
+<script src="assets/dotglyph.js"></script>
+<script src="assets/typing.js"></script>
+</body>
+</html>
