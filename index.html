@@ -2339,6 +2339,33 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .rt .gs-ctl { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16); color: var(--rt-bark); }
   .rt .gs-best { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16); color: var(--rt-deep); }
   .rt .ax-bottom .rt-btn { width: calc(100% - 8px); }
+  /* v5.41 미니 게임 설명(gsh) · 시작 화면 나무 틀 카드 안 · 일시정지 화면 안(dk) · 목표 · 조작(움직이는 시범 · 테트리스는 버튼 그림) · 끝 · 완주 · 이름표 = 진한 나무 면 + 크림 도트 글자 */
+  .rt .gsh { display: flex; flex-direction: column; gap: 12px; }
+  .rt .gsh[hidden] { display: none; }
+  .rt .gsh-r { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 8px 10px; }
+  .rt .gsh-k { padding: 0 6px; background: var(--rt-wood); color: var(--rt-cream); font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16); white-space: nowrap; }
+  .rt .gsh-v { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16); color: var(--rt-bark); word-break: keep-all; overflow-wrap: anywhere; }
+  .rt .gsh-cells { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 8px; }
+  .rt .gsh-c { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; text-align: center; }
+  .rt .gsh-c canvas { display: block; width: 100%; max-width: 112px; height: auto; aspect-ratio: 184 / 216; border: 2px solid var(--rt-ink); background: var(--rt-white); }
+  .rt .gsh-l { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16); color: var(--rt-bark); word-break: keep-all; }
+  .rt .gsh-l b { display: block; font-weight: 400; color: var(--rt-deep); }
+  .rt .gsh-cells.ic { grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 4px; }   /* 테트리스 · 옮기기 칸은 버튼 두 개 */
+  .rt .gsh-ic { display: flex; justify-content: center; gap: 4px; }
+  .rt .gsh-ic i { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: var(--rt-white); color: var(--rt-bark); box-shadow: var(--rt-line); margin: 3px; }
+  .rt .gsh-ic i.k-ROT { border-radius: 50%; background: var(--rt-o100); color: var(--rt-white); }
+  .rt .gsh-ic i.k-HARD { background: var(--rt-o10); color: var(--rt-deep); }   /* 게임 아래 버튼과 같은 색 */
+  .rt .gsh-ic svg { width: 22px; height: 22px; }
+  .rt .gsh-tg { align-self: flex-start; min-height: 44px; padding: 0; border: 0; background: none; color: var(--rt-deep); font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16); text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+  .rt .gsh-tg:focus-visible { outline: 3px solid var(--rt-o100); outline-offset: 2px; }
+  .rt .gsh:not([hidden]) ~ .gs-ctl { display: none; }   /* 펼친 설명과 조작 한 줄을 같이 두지 않는다 */
+  /* 일시정지 화면 · 펼치면 위에서부터 쌓고 넘치면 판 안에서 스크롤 · 어두운 판이라 글자는 크림 · 이름표는 밝은 나무 */
+  #rgPlay.rt .rgp-pause.how { justify-content: flex-start; overflow-y: auto; padding-top: 16px; padding-bottom: 16px; }
+  #rgPlay.rt .rgp-pause .gsh { width: 100%; max-width: 360px; flex: none; }
+  #rgPlay.rt .rgp-mid canvas.gsh-cv, #rgPlay.rt .rgp-mid.fill canvas.gsh-cv { position: static; width: 100%; max-width: 112px; height: auto; border: 2px solid var(--rt-ink); border-radius: 0; box-shadow: none; background: var(--rt-white); image-rendering: auto; }   /* 게임판 캔버스 규칙(굵은 테 · 꽉 채움)을 받지 않게 */
+  .rt .gsh.dk .gsh-k { background: var(--rt-tan2); color: var(--rt-bark); }
+  .rt .gsh.dk .gsh-v, .rt .gsh.dk .gsh-l { color: var(--rt-cream); }
+  .rt .gsh.dk .gsh-l b { color: var(--rt-o60); }
   /* ── 게임 오버레이 · 어두운 오락실 몸통 + 갈색 상태창(HUD) ── */
   #rgPlay.rt { background: var(--rt-bark); }
   #rgPlay.rt .rgp-top { background: var(--rt-wood); border-bottom: 3px solid var(--rt-ink); box-shadow: inset 0 -3px 0 0 var(--rt-wood2); color: var(--rt-cream); }
@@ -3700,7 +3727,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.40";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.41";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -3934,7 +3961,7 @@ var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_ro
   "raffle_seen", "raffle_opened", "raffle_nums", "roulette_used", "roulette_open", "draw_winner", "fin",
   "wave_extra", "wq_attempts", "test_mine", "type_nick", "type_nick_edit", "type_best", "mem_seen", "ox_seen",
   "pang_best", "jump_best", "gw_best", "gw_time_best", "tt_best", "pang_cleared", "jump_cleared", "gw_cleared", "type_cleared", "tetris_cleared", "ox_cleared",
-  "oly2_best_*", "oly2_done_*", "oly_pend", "draw_in", "qz_run", "qz_last", "qz_best", "qz_kseen", "qz_pend",
+  "oly2_best_*", "oly2_done_*", "oly_pend", "draw_in", "qz_run", "qz_last", "qz_best", "qz_kseen", "qz_pend", "gs_how",
   "push_me", "push_ep", "crowd_watch"];   /* v4.76 내 알림 설정 · 보낸 구독 주소 · 혼잡 풀리면 알림 */
 function storeIsDevice(k) {
   k = String(k || "");
@@ -6802,7 +6829,7 @@ function testStampReset() {
    이 기기 기록만 지운다 · 순위판에 올라간 서버 기록은 관리 콘솔에서 지운다(참여자 앱에 삭제 기능을 두지 않는다). */
 var GAME_KEYS = ["pang_best", "jump_best", "gw_best", "gw_time_best", "tt_best", "type_best", "pang_cleared", "jump_cleared", "gw_cleared", "type_cleared",
   "oly2_best_pang", "oly2_best_jump", "oly2_best_tetris", "oly2_best_word", "oly2_best_ox", "oly2_done_pang", "oly2_done_jump", "oly2_done_tetris", "oly2_done_word", "oly2_done_ox", "ox_cleared", "ox_seen",
-  "oly_tab", "oly_ev", "mem_seen", "qz_run", "qz_last", "qz_best", "qz_kseen", "qz_pend", "type_rank_app", "type_rank_site", "game_sound", "type_nick_edit", "art_demo_n"];
+  "oly_tab", "oly_ev", "mem_seen", "qz_run", "qz_last", "qz_best", "qz_kseen", "qz_pend", "type_rank_app", "type_rank_site", "game_sound", "type_nick_edit", "art_demo_n", "gs_how"];
 function testGameReset(withNick) {
   if (!testMode()) return;
   modalOpen('<p class="muted">이 기기의 미니게임 최고 기록·올림픽 점수·미니게임 스탬프를 지웁니다' + (withNick ? " (닉네임도 지웁니다)" : "") +
@@ -12346,6 +12373,7 @@ function sndToggle(site) {
 var SND_START = { pang: "pgStart()", jump: "jpStart()", tetris: "ttStart()", type: "rgStart('app')", word: "gwStart()", ox: "oxStart()" };
 function gsBegin(key) {
   SFX.site = false;
+  if (GS_HOW[key]) { GS.first = !gsHowSeen(key) || GS.first === key ? key : ""; gsHowMark(key); gshStop(); }   /* v5.41 이 사람의 이 게임 첫 판 · 소리 선택 카드를 닫고 다시 눌러도 첫 판 */
   if (sndChosen()) { gspStop(); if (sndOn()) sfxUnlock(); new Function(SND_START[key])(); return; }   /* v4.11 시작하면 미리보기를 멈춘다 */
   modalOpen('<div class="ax-stack-tight axs-gap12">' +
     '<p class="ax-description">주변에 소리가 날 수 있어요. 아이폰은 무음 모드에서 소리가 나지 않을 수 있어요.</p>' +
@@ -13916,6 +13944,164 @@ function onEnter(e, fn) {
   fn();
   return true;
 }
+/* v5.41 (사용자 261003 「미니 게임이 시작될 때 설명을 충분히 보고 출발할 수 있게 · 특히 점프 게임」) 미니 게임 3종 시작 전 설명 = 목표 · 조작(움직이는 시범) · 끝 · 완주
+   처음(이 사람이 이 게임의 START 를 누른 적 없음) = 시작 화면 카드에 펼쳐 둔다 · 두 번째부터 = 조작 한 줄 + 「설명 보기」 · 일시정지 화면에도 「설명 보기」
+   본 기록 = gs_how(사람별 · STORE_PERSON · S 저장이 try/catch 라 저장이 막힌 기기는 메모리만 · 다시 열면 또 펼쳐 보인다)
+   게임은 START 를 눌러야 시작한다(3 · 2 · 1 카운트다운 그대로) · 게임 규칙 · 점수 · 완주(gameClear) 판정 · 서버 호출은 바꾸지 않는다 */
+var GS_HOW = {
+  jump: { goal: "장애물을 넘고 코인 · 글자 블록을 모아요", end: "하트 3개를 다 잃으면 끝 · 최대 5분",
+    cells: [["tap", "탭", "점프"], ["dbl", "두 번 탭", "2단 점프"], ["hold", "꾸욱", "엎드리기"]] },
+  pang: { goal: "같은 그림 3개를 한 줄로 맞춰 80칸을 터뜨려요 · 빨리 끝낼수록 높은 점수", end: "80칸을 다 터뜨리면 끝 · 최대 2분",
+    cells: [["swipe", "밀기", "옆 칸과 바꾸기"], ["tap2", "탭 · 탭", "옆 칸과 바꾸기"]] },
+  tetris: { goal: "블록을 쌓아 가로줄을 채우면 줄이 지워져요", end: "블록이 맨 위까지 쌓이면 끝 · 최대 5분",
+    cells: [["L R", "", "옮기기"], ["ROT", "", "회전"], ["SOFT", "", "내리기"], ["HARD", "", "바닥까지"]] }
+};
+var GS_HOW_DONE = "결과 화면까지 가면 완주 · 세 게임 모두 완주하면 스탬프";
+function gsHowSeen(key) { var m = S.get("gs_how", {}) || {}; return !!m[key]; }
+function gsHowMark(key) { if (!GS_HOW[key] || gsHowSeen(key)) return; var m = S.get("gs_how", {}) || {}; m[key] = 1; S.put("gs_how", m); }   /* put = 다시 그리기(axf-store) 없이 */
+/* 테트리스 조작 그림 = 게임 아래 버튼(ttPadHtml)의 그 글리프를 그대로 꺼내 쓴다(그림이 두 벌이 되지 않게) */
+function gshTtIcon(k) { var m = ttPadHtml().match(new RegExp('data-k="' + k + '"[^>]*>(<svg[\\s\\S]*?</svg>)')); return m ? m[1] : ""; }
+/* key 의 설명 · dk = 일시정지(어두운 판) · id · hide = 접어 둔 채로 */
+function gsHowHtml(key, dk, id, hide) {
+  var h = GS_HOW[key]; if (!h) return "";
+  var row = function (k, v) { return '<div class="gsh-r"><span class="gsh-k">' + k + '</span><div class="gsh-v">' + v + "</div></div>"; };
+  var cells = h.cells.map(function (c) {
+    var pic = key === "tetris" ? '<span class="gsh-ic" aria-hidden="true">' + c[0].split(" ").map(function (k) { return '<i class="k-' + k + '">' + gshTtIcon(k) + "</i>"; }).join("") + "</span>" :
+      '<canvas class="gsh-cv" data-k="' + key + '" data-a="' + c[0] + '" width="184" height="216" aria-hidden="true"></canvas>';
+    return '<div class="gsh-c">' + pic + '<span class="gsh-l">' + (c[1] ? "<b>" + esc(c[1]) + "</b>" : "") + esc(c[2]) + "</span></div>";
+  }).join("");
+  return '<div class="gsh' + (dk ? " dk" : "") + '"' + (id ? ' id="' + id + '"' : "") + (hide ? " hidden" : "") + ">" +
+    row("목표", esc(h.goal)) +
+    '<div class="gsh-r"><span class="gsh-k">조작</span><div class="gsh-cells' + (key === "tetris" ? " ic" : "") + '" style="--n:' + h.cells.length + '">' + cells + "</div></div>" +
+    row("끝", esc(h.end)) + row("완주", esc(GS_HOW_DONE)) + "</div>";
+}
+/* 시작 화면 · 두 번째부터 「설명 보기」 · 펼치면 조작 한 줄(gs-ctl)은 CSS 가 숨긴다(같은 정보 한 번) */
+function gsHowToggle() {
+  var b = el("gsHow"), tg = el("gsHowTg"); if (!b || !tg) return;
+  var on = b.hidden;
+  b.hidden = !on;
+  tg.textContent = on ? "설명 접기 ▲" : "설명 보기 ▼"; tg.setAttribute("aria-expanded", on ? "true" : "false");
+  if (on) gshMount(b); else gshStop();
+  if (el("gsPrev")) gspFit();
+}
+/* 일시정지 화면 · 「설명 보기」 · 계속하기를 누르면 접힌다(gsPauseUi) */
+function gsPauseHow(off) {
+  var p = el("rgPause"), b = el("rgPauseHow"), tg = el("rgPauseHowTg"); if (!p || !b || !tg) return;
+  var on = off ? false : b.hidden;
+  b.hidden = !on; p.classList.toggle("how", on);
+  tg.textContent = on ? "설명 접기" : "설명 보기"; tg.setAttribute("aria-expanded", on ? "true" : "false");
+  if (on) { p.scrollTop = 0; gshMount(b); } else gshStop();
+}
+/* ── 조작 시범 그림 · 게임의 실제 그리기 함수(jpWorld · jpObsDraw · jpBotDraw · 코인 · pgPxTile · pgIconDraw)로 짧게 반복 ──
+   캔버스 184×216 · 게임 1칸 = 3px(점프) · 보일 때만 돈다(접히거나 화면이 바뀌면 멈춤) · 30fps 상한 · 동작 줄이기 = 대표 장면 한 장 · 게임을 시작하면(gsBegin) 멈춘다 */
+var GSH = { raf: 0, t: 0, last: 0, root: null };
+function gshStop() { if (GSH.raf) cancelAnimationFrame(GSH.raf); GSH.raf = 0; GSH.root = null; }
+function gshMount(root) {
+  gshStop(); if (!root) return;
+  GSH.root = root; GSH.t = 0;
+  jpBotLoad();
+  gshDraw(-1);
+  if (rgReduced()) { setTimeout(function () { if (!GSH.raf) gshDraw(-1); }, 400); return; }   /* 챗봇 그림이 늦게 읽혀도 한 번 더 */
+  GSH.last = performance.now(); GSH.raf = requestAnimationFrame(gshTick);
+}
+function gshTick(now) {
+  GSH.raf = 0;
+  var r = GSH.root;
+  if (!r || !r.isConnected || r.hidden) { gshStop(); return; }
+  if (document.hidden) { GSH.last = now; GSH.raf = requestAnimationFrame(gshTick); return; }
+  var dt = (now - GSH.last) / 1000;
+  if (dt >= 0.032) { GSH.t += Math.min(0.1, dt); GSH.last = now; gshDraw(GSH.t); }
+  GSH.raf = requestAnimationFrame(gshTick);
+}
+function gshDraw(t) {
+  var r = GSH.root; if (!r) return;
+  Array.prototype.forEach.call(r.querySelectorAll("canvas.gsh-cv"), function (cv) {
+    var ctx = cv.getContext("2d");
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = false; ctx.clearRect(0, 0, cv.width, cv.height);
+    if (cv.getAttribute("data-k") === "jump") gshJump(ctx, cv.getAttribute("data-a"), t); else gshPang(ctx, cv.getAttribute("data-a"), t);
+  });
+}
+/* 손가락 · 검정 테 + 흰 면 사각 두 개(검지 + 손등 · 도트 배열 캐릭터가 아니라 도형) · (x, y) = 손끝 · press = 눌림(한 칸 위로) · rip = 0~1 물결 · hold = 누르고 있음 */
+function gshHand(ctx, x, y, press, rip, hold) {
+  x = Math.round(x); y = Math.round(y);
+  if (hold) { ctx.globalAlpha = 0.55; ctx.fillStyle = RAIN_PAL.o100; ctx.beginPath(); ctx.arc(x, y, 4, 0, 6.2832); ctx.fill(); ctx.globalAlpha = 1; }
+  if (rip > 0 && rip < 1) { ctx.globalAlpha = 1 - rip; ctx.strokeStyle = RAIN_PAL.o100; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(x, y, 2 + 9 * rip, 0, 6.2832); ctx.stroke(); ctx.globalAlpha = 1; }
+  var top = y - (press ? 1 : 0), fx = x - 2;
+  rgBox(ctx, x - 4, top + 6, 11, 10, RAIN_PAL.w);   /* 손등 */
+  rgBox(ctx, fx, top, 4, 8, RAIN_PAL.w);            /* 검지 */
+  ctx.fillStyle = RAIN_PAL.w; ctx.fillRect(fx + 1, top + 6, 2, 2);   /* 검지와 손등 이음 */
+  ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(x + 2, top + 7, 1, 2); ctx.fillRect(x + 4, top + 7, 1, 2);   /* 접은 손가락 마디 */
+}
+/* 점프 시범 · 2.4초 반복 · 탭 = 상자를 한 번 뛰어넘는다 · 두 번 탭 = 공중에서 한 번 더 뛰어 높은 코인 · 꾸욱 = 낮은 간판 밑을 엎드려 지나간다
+   보이는 판 = 게임 좌표 61 × 72 칸 · 땅 = 위에서 60칸 · 챗봇 x = 4 · 장애물은 초당 80칸으로 다가온다(한 번에 알아보게 게임 첫 속도 55보다 빠르게 · 시범 그림만) */
+function gshJump(ctx, a, t) {
+  var P = 2.4, u = t < 0 ? (a === "tap" ? 0.8 : a === "dbl" ? 0.97 : 1.1) : t % P, GY = 60, sp = 80, g = 313, v1 = 130, v2 = 90;
+  ctx.save(); ctx.scale(3, 3); ctx.translate(0, GY - JP_GY);
+  jpWorld(ctx, (t < 0 ? 1 : t) * sp);
+  var lift = 0, duck = false, press = false, rip = 0, hold = false, tip = 0;
+  if (a === "tap") {
+    jpObsDraw(ctx, { k: "box", x: 72 - sp * u });
+    tip = 0.44;
+    var q = u - tip; if (q > 0 && q < 2 * v1 / g) lift = v1 * q - g * q * q / 2;
+  } else if (a === "dbl") {
+    var s1 = 0.4, s2 = 0.58, q1 = u - s1, q2 = u - s2, l0 = v1 * (s2 - s1) - g * (s2 - s1) * (s2 - s1) / 2, hit = s2 + v2 / g;
+    if (q1 > 0 && q2 <= 0) lift = v1 * q1 - g * q1 * q1 / 2;
+    else if (q2 > 0) lift = Math.max(0, l0 + v2 * q2 - g * q2 * q2 / 2);
+    if (u < hit) [0, 12].forEach(function (d) { var x = 8 + sp * (hit - u) + d; if (x < 70) ctx.drawImage(jpCoinCv(), Math.round(x), JP_GY - 52); });
+    else if (u < hit + 0.25) { var e = 1 + (u - hit) * 5; ctx.fillStyle = RAIN_PAL.o100; [[-4, -3], [5, -5], [9, 2], [-2, 4]].forEach(function (p) { ctx.fillRect(Math.round(14 + p[0] * e), Math.round(JP_GY - 48 + p[1] * e), 2, 2); }); }
+    tip = s1;
+    if (u >= s2 && u < s2 + 0.12) press = true;
+    if (u > s2 && u < s2 + 0.4) rip = (u - s2) / 0.4;
+  } else {
+    jpObsDraw(ctx, { k: "sign", x: 72 - sp * (u - 0.2) });
+    tip = 0.55; hold = u > tip && u < 1.55; duck = hold; press = hold;
+  }
+  if (u >= tip && u < tip + 0.12) press = true;
+  if (!rip && u > tip && u < tip + 0.4) rip = (u - tip) / 0.4;
+  jpBotDraw(ctx, 4, JP_GY, 1, duck, Math.round(lift));
+  gshHand(ctx, 50, JP_GY - 3, press, rip, hold);   /* 오른쪽 아래 · 손끝이 땅 위 */
+  ctx.restore();
+}
+/* AX 팡 시범 · 2.6초 반복 · 3×3 판 · 가운데 줄 오른쪽 칸을 아래 칸과 바꾸면 가운데 줄 차트 3개가 맞아 터진다
+   밀기 = 손가락이 눌러서 아래로 끈다 · 탭 · 탭 = 한 칸을 눌러 고르고(주황 테) 아래 칸을 누른다 */
+var GSH_PG = [[1, 3, 0], [2, 2, 0], [0, 1, 2]];
+function gshPang(ctx, a, t) {
+  var P = 2.6, u = t < 0 ? 0.85 : t % P, f = 52 / 24, x0 = 14, y0 = 30, p = 52;
+  var sw = a === "swipe" ? [0.6, 0.9] : [1.0, 1.3], pop = sw[1], q = Math.max(0, Math.min(1, (u - sw[0]) / (sw[1] - sw[0])));
+  q = q < 0.5 ? 2 * q * q : 1 - 2 * (1 - q) * (1 - q);
+  ctx.fillStyle = RAIN_PAL.o10; ctx.fillRect(0, 0, 184, 216);
+  var swapped = u >= sw[1];
+  for (var r = 0; r < 3; r++) for (var c = 0; c < 3; c++) {
+    var k = GSH_PG[r][c], dy = 0, sc = 1, al = 1;
+    if (swapped && r === 1 && c === 2) k = 2;
+    if (swapped && r === 2 && c === 2) k = 0;
+    if (!swapped && c === 2 && (r === 1 || r === 2)) dy = (r === 1 ? 1 : -1) * p * q;
+    if (swapped && r === 1) {
+      if (u < pop + 0.3) { var z = (u - pop) / 0.3; sc = 1 - 0.4 * z; al = 1 - z; }
+      else if (u < pop + 0.6) { k = [3, 4, 1][c]; sc = 1 + 0.25 * (1 - (u - pop - 0.3) / 0.3); }
+      else k = [3, 4, 1][c];
+    }
+    if (al <= 0) continue;
+    var st = PG_TILE[k];
+    ctx.save(); ctx.globalAlpha = al; ctx.translate(x0 + c * p + p / 2, y0 + r * p + p / 2 + dy); ctx.scale(f * sc, f * sc);
+    pgPxTile(ctx, 10.8, st.fill); pgIconDraw(ctx, k, 0, 0, 13.5, st.ic);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+  var cx = x0 + 2 * p + p / 2, ya = y0 + p + p / 2, yb = y0 + 2 * p + p / 2;
+  if (a === "tap2" && u >= 0.45 && u < 1.0) { pgRR(ctx, cx - 26, ya - 26, 52, 52, 3); ctx.lineWidth = 3; ctx.strokeStyle = PG_C.o100; ctx.stroke(); }   /* 고른 칸 = 게임의 주황 테 */
+  ctx.save(); ctx.scale(3, 3);
+  var hx = cx / 3 + 2, hy;
+  if (a === "swipe") {
+    if (u < 0.6) hy = ya / 3; else if (u < 0.9) hy = (ya + (yb - ya) * q) / 3; else hy = yb / 3;
+    if (u > 0.3 && u < 1.2) gshHand(ctx, hx, hy, u >= 0.5 && u < 0.92, u > 0.5 && u < 0.9 ? (u - 0.5) / 0.4 : 0, u >= 0.5 && u < 0.92);
+  } else {
+    hy = (u < 0.8 ? ya : yb) / 3;
+    var tp = u < 0.8 ? 0.4 : 0.95;
+    if (u > 0.2 && u < 1.25) gshHand(ctx, hx, hy, u >= tp && u < tp + 0.12, u > tp && u < tp + 0.4 ? (u - tp) / 0.4 : 0, false);
+  }
+  ctx.restore();
+}
 var GS = { cur: null, vvh: null, onVis: null, onKey: null };
 /* v4.08 게임 안내 팝업 = 챗봇 말풍선 (design.md A-5 결정 5) · 문구는 그대로 · 원본 BOT_SVG 합성만
    v4.23 바람의 나라식 대화창 · 초상 칸 = 원본 도트(rtBotImg) · 아직 안 읽혔으면 원본 BOT_SVG 그대로 */
@@ -13935,7 +14121,8 @@ function gsOverlayOpen(o) {
   d.innerHTML = '<div class="rgp-top">' + (o.top || '<span class="rgp-t">' + esc(o.title) + '</span><span class="row" style="gap:6px;align-items:center">' + sndBtnHtml(false) + '<button class="rgp-x" type="button" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">일시정지</button></span>') + "</div>" +
     '<div class="rgp-mid' + (o.noGesture ? " nogest" : "") + (o.fill ? " fill" : "") + '" id="gsMid"><canvas id="' + o.canvasId + '" width="' + o.cw + '" height="' + o.ch + '"></canvas>' +
     (o.tip ? '<div class="gs-tip" id="gsTip">' + gsSayHtml(esc(o.tip)) + "</div>" : "") +
-    '<div class="rgp-pause" id="rgPause" hidden><p>일시정지</p><small id="rgPauseLeft"></small><button class="ax-button rt-btn" type="button" onclick="gsResume()">계속하기</button><button class="ax-button ax-button-weak rt-btn weak" type="button" onclick="gsQuit()">그만하기</button></div></div>' +
+    '<div class="rgp-pause" id="rgPause" hidden><p>일시정지</p><small id="rgPauseLeft"></small>' + gsHowHtml(o.key, true, "rgPauseHow", true) + '<button class="ax-button rt-btn" type="button" onclick="gsResume()">계속하기</button><button class="ax-button ax-button-weak rt-btn weak" type="button" onclick="gsQuit()">그만하기</button>' +
+    (GS_HOW[o.key] ? '<button class="ax-button ax-button-weak rt-btn weak" type="button" id="rgPauseHowTg" aria-expanded="false" aria-controls="rgPauseHow" onclick="gsPauseHow()">설명 보기</button>' : "") + "</div></div>" +   /* v5.41 일시정지에서 설명 다시 보기 · 펼친 설명은 제목 바로 아래 */
     (o.bottom || "");
   document.body.appendChild(d);
   document.documentElement.classList.add("rg-lock");
@@ -13988,6 +14175,7 @@ function gsOverlayClose(key) {
 }
 function gsPauseUi(on) {
   var p = el("rgPause"); if (p) p.hidden = !on;
+  if (!on && el("rgPauseHow")) gsPauseHow(true);   /* v5.41 계속하면 설명은 접는다 */
   var x = document.querySelector("#rgPlay .rgp-x"); if (x) x.textContent = on ? (x.getAttribute("data-on") || "계속하기") : (x.getAttribute("data-off") || "일시정지");
 }
 function gsPauseToggle() {
@@ -14099,13 +14287,16 @@ function gsNeedNick() { return !typeNick() || S.get("type_nick_edit", false); }
 var GS_DEMO_TAG = '<span class="gs-demo">DEMO · 예시 화면</span>';
 function gsStartHtml(key, o) {
   var g = GS_GAMES[key], nick = typeNick(), best = S.get(g.best, 0), D = GSP_DEMO[key];
+  var H = GS_HOW[key], hOpen = !!H && !gsHowSeen(key);   /* v5.41 설명 · 처음이면 펼쳐 둔다 */
+  if (hOpen) setTimeout(function () { var b = el("gsHow"); if (b) gshMount(b); }, 0);
   if (D) setTimeout(function () { gspMount(key); }, 0);
   if (olyEv(key)) olyPull();   /* v4.28 서버 최고를 미리 받아 둔다(결과 「신기록!」 판정 · 20초 간격 · 읽기 전용) */
   return '<div id="' + o.rootId + '" class="ax-stack gs-root gs-start">' +
     '<section class="ax-card gs-card rt-frame"><h1 class="ax-sr-only">' + esc(g.name) + "</h1>" +   /* 게임 이름은 헤더가 알린다(5-4) */
     (D ? '<div class="gs-prev" id="gsPrev" aria-hidden="true">' + D.html() + GS_DEMO_TAG + "</div>" :
       o.previewId ? '<div class="rg-wrap gs-demo-host' + (o.flat ? " flat" : "") + '" aria-hidden="true"><canvas id="' + o.previewId + '" width="' + o.pw + '" height="' + o.ph + '"></canvas>' + GS_DEMO_TAG + "</div>" : "") +
-    '<div class="gs-info">' + (o.sub ? '<p class="gs-sub">' + esc(o.sub) + "</p>" : "") + '<p class="gs-ctl">' + esc(g.line) + "</p>" +   /* v4.12 부제(AI O/X · 유리다리 건너기) */   /* 조작 한 줄 · 첫 안내 말풍선과 같은 문구 · 3판 제한 없이 항상 보인다 */
+    '<div class="gs-info">' + (o.sub ? '<p class="gs-sub">' + esc(o.sub) + "</p>" : "") + (H ? gsHowHtml(key, false, "gsHow", !hOpen) : "") + '<p class="gs-ctl">' + esc(g.line) + "</p>" +   /* v5.41 설명이 펼쳐지면 조작 한 줄은 CSS 가 숨긴다(.gsh ~ .gs-ctl) */
+    (H && !hOpen ? '<button type="button" class="gsh-tg" id="gsHowTg" aria-expanded="false" aria-controls="gsHow" onclick="gsHowToggle()">설명 보기 ▼</button>' : "") +   /* v4.12 부제(AI O/X · 유리다리 건너기) */   /* 조작 한 줄 · 첫 안내 말풍선과 같은 문구 · 3판 제한 없이 항상 보인다 */
     (best > 0 ? '<p class="gs-best">내 최고 ' + (key === "type" ? typeSec(best) + " 생존" : olyFmt(best) + "점") + "</p>" : "") + "</div></section>" +
     (olyIsQuiz(key) ? '<div class="gs-links">' + sndBtnHtml(false) + "</div>" :   /* v4.83 AX 퀴즈 = 닉네임 · 순위판 링크 없음 */
     '<div class="gs-links"><span>닉네임 <b>' + esc(nick) + '</b></span><button type="button" class="gs-edit" onclick="S.set(\'type_nick_edit\', true); App.render()">변경</button>' +
@@ -15024,6 +15215,7 @@ function jpStart() {
     obs: [], coins: [], items: [], parts: [], pops: [], banner: null, shake: 0, dist: 0, nextObs: 70, coinN: 0, dodged: 0, hits: 0, jumpsN: 0, score: 0, speedUp: 0,
     item: null, itemT: 0, nextItem: JP_ITEM_EVERY, surv: 0, nextK: null, seen: {}, tx: {},
     bg: jpBgLines(), bgI: 0, bgNext: JP_BG_FIRST, fact: null, facts: [], duck: false, press: null, bag: null, lastSp: "", tip: jpTipHtml(gsTutTake("jump")), say: null, tutSeen: {}, pz: 0 };
+  JP.warm = GS.first === "jump" ? JP_WARM_SEC : 0; GS.first = "";   /* v5.41 첫 판만 연습 구간 · 표시는 한 번 쓰고 지운다(다시 하기 = 연습 없음) */
   /* v4.22 첫 안내(카운트다운 동안) · 다른 네 게임과 같은 gsTutTake · v4.00 에 시작 직후 조작 안내 상자를 걷고 장애물 직전 안내만 남긴 뒤,
      v4.08 에 첫 안내 훅을 팡·테트리스·기억력에만 달아서 점프는 첫 장애물이 올 때까지(카운트다운 뒤 약 2초) 아무 안내가 없었다(사용자 신고 260923)
      v4.28 (사용자 260924 「첫 안내가 상단에 나와서 잘 이해가 안 된다 · 장애물 안내와 같은 형태 · 같은 위치로」) 점프만 첫 안내를 장애물 안내 칸(jtHint · jpHintNow)에 띄운다 ·
@@ -15130,10 +15322,14 @@ function jpEl(now) { return JP.t0 ? (now - JP.t0) / 1000 : 0; }
 var JP_TUT_MAX = 3, JP_TUT_TEXT = { tap: "탭하면 점프", dbl: "빠르게 두 번 탭하면<br>2단 점프", duck: "화면을 꾸욱 누르면<br>엎드릴 수 있어요" };
 /* v4.28 첫 안내 = 장애물 안내와 같은 칸(jtHint) · 세 동작을 한 줄씩(「 · 」 자리에서 줄바꿈) · 카운트다운 동안 + 시작 뒤 첫 점프 전까지 JP_TIP_AFTER 초 · 매 판 */
 var JP_TIP_AFTER = 2.0, JP_SAY_SEC = 2.6;
+/* v5.41 (사용자 261003 「설명을 안 본 상태에서 하면 정신이 없다」) 이 사람의 첫 판만 카운트다운 뒤 연습 구간 · 챗봇이 달리고 점프만 해 볼 수 있다
+   게임 시계(t0)는 연습이 끝나야 간다 · 점수 · 속도 · 장애물 등장표 · 완주 판정은 그대로 · 두 번째 판부터는 없다 */
+var JP_WARM_SEC = 4, JP_WARM_HINT = "연습 · 장애물 없음<br>탭하면 점프<br>두 번 탭하면 2단 점프";
 function jpTipHtml(line) { return String(line || "").split(" · ").map(esc).join("<br>"); }
 function jpHintNow() {
   if (JP.ending) return "";
   if (JP.cd > 0) return JP.tip || "";
+  if (JP.warm > 0) return JP_WARM_HINT;   /* v5.41 연습 구간 */
   var h = jpHintObs();
   return h || (JP.tip && (JP.surv || 0) < JP_TIP_AFTER && !JP.jumpsN ? JP.tip : "");
 }
@@ -15247,7 +15443,16 @@ function jpUpdate(dt, now) {
   if (JP.cd > 0) {
     var before = Math.ceil(JP.cd); JP.cd -= dt;
     if (Math.ceil(JP.cd) !== before && JP.cd > 0) sfx("tick");
-    if (JP.cd <= 0) { JP.t0 = now; sfx("go"); }
+    if (JP.cd <= 0) { if (!(JP.warm > 0)) JP.t0 = now; sfx("go"); }
+    return;
+  }
+  if (JP.warm > 0) {   /* v5.41 연습 구간 · 달리기 · 점프만 · 끝나면 시계 시작 */
+    JP.warm -= dt;
+    jpPressTick(); gsFx(JP, dt);
+    JP.dist += jpSpeed(0) * dt;
+    JP.vy += JP_G * dt; JP.py += JP.vy * dt;
+    if (JP.py >= JP_GY) { JP.py = JP_GY; JP.vy = 0; JP.jumps = 0; }
+    if (JP.warm <= 0) { JP.warm = 0; JP.t0 = now; jpBan("연습 끝", 1.2); sfx("level"); }
     return;
   }
   var t = jpEl(now);
