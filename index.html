@@ -1583,6 +1583,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* v5.23 QR 화면 [내 QR | QR 스캔] (사용자 261003) · 기본 내 QR(흰 카드 · 밝은 면) · 스캔 탭만 카메라 화면(짙은 면) */
   .axs-qrcard { padding: var(--ax-space-8) var(--ax-space-16) var(--ax-space-20); background: var(--ax-color-surface); }
   .axs-qrcard .myqr { margin-top: var(--ax-space-12); }
+  /* v5.25 (사용자 261003) 내 QR 크게 · 흰 상자 = 카드 안쪽 폭 가득 · 태블릿 · PC 는 400px 에서 멈춤 · 375 × 667 에서도 이름 · 사번 줄까지 첫 화면(높이 상한 52vh · 지원하면 52svh)
+     조용한 칸 = SVG 안 4칸(viewBox · myQrPaint) 이라 크기에 비례 · 바깥 패딩 0 · 테두리 1.5px · 모서리는 그대로 · 「확인됨」 배지 = .myqr 가운데 = QR 가운데 */
+  .axs-qrcard .myqr svg { box-sizing: border-box; width: min(100%, 400px, 52vh); width: min(100%, 400px, 52svh); height: auto; padding: 0; }
   body[data-pg="d"] .axs-qrseg { background: var(--ax-color-body); }
   body[data-pg="d"] .axs-qrseg button { color: var(--ax-color-disabled); }
   body[data-pg="d"] .axs-qrseg button[aria-selected="true"] { background: var(--ax-color-surface); color: var(--ax-color-ink); }
@@ -2138,7 +2141,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pz-cv { position: relative; margin: calc(var(--ax-space-24) * -1) calc(var(--ax-page-inset) * -1) 0; padding: var(--ax-space-32) var(--ax-page-inset) var(--ax-space-24); overflow: hidden;
     background-color: var(--ax-color-ink); color: var(--ax-color-inverse);
     background-image: radial-gradient(circle, rgba(255, 255, 255, 0.13) 1px, transparent 1.4px); background-size: 12px 12px; background-position: 6px 6px; }
-  /* v5.16 표지(사용자 시안 261003) · 작은 행사명 · 큰 제목 · 「지금 내 스탬프」 카드 · 1~6 점 선 · 3~6 세로 카드 4장 · 칸 = 첫 칸 56px(1 · 2) + 4칸(3 ~ 6) · 칸 사이 6px */
+  /* v5.16 표지(사용자 시안 261003) · 작은 행사명 · 큰 제목 · 「지금 내 스탬프」 카드 · 1~6 점 선 · v5.25 3~6 보상 = 눌러서 가는 네 줄 */
   .axs-pz-cv .ey { position: relative; margin: 0; font: var(--ax-type-t6); font-weight: 600; color: rgba(255, 255, 255, 0.6); }
   .axs-pz-cv .ttl { position: relative; margin: var(--ax-space-8) 0 0; font: var(--ax-type-t1); color: var(--ax-color-inverse); word-break: keep-all; }
   .axs-pz-cv .now { position: relative; display: flex; align-items: center; gap: var(--ax-space-12); margin-top: var(--ax-space-24); padding: var(--ax-space-16) var(--ax-space-20); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--ax-radius-20); background: rgba(255, 255, 255, 0.05); }
@@ -2148,36 +2151,42 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pz-cv .now .nx b, .axs-pz-cv .now .n { color: var(--ax-color-brand); }
   .axs-pz-cv .now .n { flex: none; margin: 0; font: 700 calc(17px * var(--fs)) / 1 var(--ax-font); white-space: nowrap; }
   .axs-pz-cv .now .n b { font-size: calc(44px * var(--fs)); font-weight: 800; letter-spacing: -0.02em; margin-right: 2px; }
-  /* v5.18 (사용자 261003 「너비가 안 맞는다」) 점 줄과 카드 줄 = 같은 4칸(칸 사이 6px) · 카드 4장이 「지금 내 스탬프」 카드와 같은 폭을 채우고 점 3 ~ 6 가운데 = 카드 가운데
-     1 · 2 = 3번 점 왼쪽 빈자리에 작은 점 두 개를 위아래로(16px · 사이 2px · 3번 점과 3px) · 360px 에서도 칸 안에 들어간다(칸 폭 / 2 − 16 − 3 − 16 ≥ 0)
-     선 = 1 · 2 묶음 가운데(칸 가운데 − 27px)부터 6번 점 가운데까지 · 받은 만큼 주황(fl 폭은 스크립트 prizeCoverHtml) */
-  .axs-pz-cv .stp, .axs-pz-cv .cds { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: 6px; }
-  .axs-pz-cv .stp { align-items: center; height: 40px; margin-top: var(--ax-space-24); }
-  .axs-pz-cv .stp > .c1 { position: relative; z-index: 1; display: flex; justify-content: center; }
-  .axs-pz-cv .stp > .g12 { position: absolute; z-index: 1; left: calc((100% - 18px) / 8 - 35px); top: 50%; display: flex; flex-direction: column; gap: 2px; transform: translateY(-50%); }
-  .axs-pz-cv .stp .ln, .axs-pz-cv .stp .fl { position: absolute; left: calc((100% - 18px) / 8 - 27px); top: 50%; height: 2px; margin-top: -1px; }
-  .axs-pz-cv .stp .ln { right: calc((100% - 18px) / 8); background: rgba(255, 255, 255, 0.16); }
+  /* v5.25 (사용자 261003 「1 ~ 6 점 너비가 같지 않다 · 1 · 2 를 짜부시켜 놨다」 · 「카드가 이동을 암시한다는 느낌이 없다」)
+     점 줄 = 1 ~ 6 같은 크기(32px) · 표지 안쪽 폭에 같은 간격(양끝 맞춤) · 점과 보상 줄은 세로로 맞추지 않는다
+     선 = 1번 점 가운데부터 6번 점 가운데까지 · 받은 만큼 주황(fl 폭 = (100% − 32px) × (n − 1) / 5 · 스크립트 prizeCoverHtml)
+     보상 줄 = 3 · 4 · 5 · 6 네 줄 한 묶음 · 줄마다 왼쪽 개수 점(점 줄과 같은 상태 문법) · 아이콘 · 보상 · 알약(달성 · 다음) · 오른쪽 셰브론
+     누르면 아래 그 구역(prizeJump) · 눌림 = 면이 밝아지고 셰브론이 오른쪽으로 2px */
+  .axs-pz-cv .stp { position: relative; display: flex; align-items: center; justify-content: space-between; height: 32px; margin-top: var(--ax-space-24); }
+  .axs-pz-cv .stp .ln, .axs-pz-cv .stp .fl { position: absolute; left: 16px; top: 50%; height: 2px; margin-top: -1px; }
+  .axs-pz-cv .stp .ln { right: 16px; background: rgba(255, 255, 255, 0.16); }
   .axs-pz-cv .stp .fl { background: var(--ax-color-brand); }
-  .axs-pz-cv .stp i { display: grid; place-items: center; box-sizing: border-box; width: 32px; height: 32px; border: 2px solid rgba(255, 255, 255, 0.24); border-radius: 50%; background: var(--ax-color-ink); color: rgba(255, 255, 255, 0.66); font: 700 15px / 1 var(--ax-font); font-style: normal; }
-  .axs-pz-cv .stp i.sm { width: 16px; height: 16px; border-width: 1.5px; font-size: 10px; }
-  .axs-pz-cv .stp i.on { border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
-  .axs-pz-cv .stp i.nx { border-color: var(--ax-color-brand); color: var(--ax-color-inverse); }
-  .axs-pz-cv .cds { margin-top: var(--ax-space-12); }
-  .axs-pz-cv .cds button { grid-column: auto; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; min-height: 148px; padding: var(--ax-space-12) 2px var(--ax-space-12); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--ax-radius-16); background: rgba(255, 255, 255, 0.04); color: rgba(255, 255, 255, 0.6); font-family: inherit; text-align: center; cursor: pointer; }
-  .axs-pz-cv .cds .i { display: block; width: 24px; height: 24px; margin-bottom: var(--ax-space-4); color: rgba(255, 255, 255, 0.72); }
-  .axs-pz-cv .cds .i svg { display: block; width: 100%; height: 100%; }
-  .axs-pz-cv .cds .t { font: var(--ax-type-t7); word-break: keep-all; }
-  .axs-pz-cv .cds b { font: 800 calc(19px * var(--fs)) / 1.25 var(--ax-font); color: rgba(255, 255, 255, 0.82); white-space: nowrap; }
-  .axs-pz-cv .cds .pl { font: 700 14px / 1 var(--ax-font); margin: 2px 0; }
-  .axs-pz-cv .cds .tag { display: inline-flex; align-items: center; gap: 2px; margin-top: auto; padding: 3px 9px; border: 1px solid rgba(255, 255, 255, 0.5); border-radius: var(--ax-radius-999); color: var(--ax-color-inverse); font: var(--ax-type-t7); font-weight: 700; white-space: nowrap; }
+  .axs-pz-cv .stp i, .axs-pz-cv .cds .d { position: relative; z-index: 1; display: grid; flex: none; place-items: center; box-sizing: border-box; width: 32px; height: 32px; border: 2px solid rgba(255, 255, 255, 0.24); border-radius: 50%; background: var(--ax-color-ink); color: rgba(255, 255, 255, 0.66); font: 700 15px / 1 var(--ax-font); font-style: normal; }
+  .axs-pz-cv .stp i.on, .axs-pz-cv .cds .on .d { border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
+  .axs-pz-cv .stp i.nx, .axs-pz-cv .cds .nx .d { border-color: var(--ax-color-brand); color: var(--ax-color-inverse); }
+  .axs-pz-cv .cds { position: relative; display: flex; flex-direction: column; margin-top: var(--ax-space-16); overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: var(--ax-radius-16); background: rgba(255, 255, 255, 0.04); }
+  .axs-pz-cv .cds button { display: flex; align-items: center; gap: var(--ax-space-8); width: 100%; min-width: 0; min-height: 52px; margin: 0; padding: var(--ax-space-8) var(--ax-space-8) var(--ax-space-8) var(--ax-space-12); border: 0; border-top: 1px solid rgba(255, 255, 255, 0.1); background: transparent; color: rgba(255, 255, 255, 0.6); font-family: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background-color 0.12s ease; }
+  .axs-pz-cv .cds button:first-child { border-top: 0; }
+  .axs-pz-cv .cds .d { width: 28px; height: 28px; font-size: 14px; }
+  .axs-pz-cv .cds .i { display: block; flex: none; width: 20px; height: 20px; margin-left: var(--ax-space-4); color: rgba(255, 255, 255, 0.6); }
+  .axs-pz-cv .cds .i svg, .axs-pz-cv .cds .g svg { display: block; width: 100%; height: 100%; }
+  .axs-pz-cv .cds .tx { display: flex; flex: 1 1 auto; flex-direction: column; gap: 2px; min-width: 0; }
+  .axs-pz-cv .cds b { font: var(--ax-type-t6-strong); font-weight: 700; color: inherit; word-break: keep-all; }
+  .axs-pz-cv .cds .fn { display: inline-flex; align-items: center; gap: 4px; font: var(--ax-type-t7); font-weight: 600; word-break: keep-all; }
+  .axs-pz-cv .cds .g { display: block; flex: none; width: 14px; height: 14px; }
+  .axs-pz-cv .cds .tag { display: inline-flex; flex: none; align-items: center; gap: 2px; padding: 3px 9px; border: 1px solid rgba(255, 255, 255, 0.5); border-radius: var(--ax-radius-999); color: var(--ax-color-inverse); font: var(--ax-type-t7); font-weight: 700; white-space: nowrap; }
   .axs-pz-cv .cds .tag svg { width: 12px; height: 12px; }
-  .axs-pz-cv .cds button.nx { border-color: rgba(255, 255, 255, 0.42); background: rgba(255, 255, 255, 0.07); color: var(--ax-color-inverse); }
-  .axs-pz-cv .cds button.nx b, .axs-pz-cv .cds button.on b { color: var(--ax-color-inverse); }
-  .axs-pz-cv .cds button.nx .i { color: var(--ax-color-inverse); }
-  .axs-pz-cv .cds button.on { border-color: var(--ax-color-brand); color: var(--ax-color-inverse); }
-  .axs-pz-cv .cds button.on .i { color: var(--ax-color-brand); }
   .axs-pz-cv .cds .tag.on { border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
-  .fs-big .axs-pz-cv .cds .t, .fs-big .axs-pz-cv .cds .tag { font-size: 12px; }
+  .axs-pz-cv .cds .axs-chev { display: block; flex: none; width: 20px; height: 20px; color: rgba(255, 255, 255, 0.72); transition: transform 0.12s ease; }
+  .axs-pz-cv .cds button.on, .axs-pz-cv .cds button.nx { color: var(--ax-color-inverse); }
+  .axs-pz-cv .cds button.nx { background: rgba(255, 255, 255, 0.06); }
+  .axs-pz-cv .cds button.on .i { color: var(--ax-color-brand); }
+  .axs-pz-cv .cds button.nx .i { color: var(--ax-color-inverse); }
+  .axs-pz-cv .cds button:active { background: rgba(255, 255, 255, 0.14); }
+  .axs-pz-cv .cds button:active .axs-chev { transform: translateX(2px); color: var(--ax-color-inverse); }
+  .axs-pz-cv .cds button:focus-visible { outline: 2px solid var(--ax-color-brand); outline-offset: -2px; }
+  @media (hover: hover) { .axs-pz-cv .cds button:hover { background: rgba(255, 255, 255, 0.09); } }
+  @media (prefers-reduced-motion: reduce) { .axs-pz-cv .cds button, .axs-pz-cv .cds .axs-chev { transition: none; } }
+  .fs-big .axs-pz-cv .cds .tag { font-size: 12px; }
   /* 스탬프 개수 점 6개 · 켜진 점 = 조건 · 옅은 점 = 4 · 5 · 6개처럼 늘어나는 구간 */
   .axs-pz-mt { display: inline-flex; flex: none; gap: 4px; }
   .axs-pz-mt i { width: 8px; height: 8px; border-radius: 50%; background: var(--ax-color-divider); }
@@ -3645,7 +3654,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.24";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.25";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -5140,7 +5149,7 @@ var App = {
     if (typeof sheetClose === "function" && el("axsSheet")) sheetClose(true);
     if (v === "ideas" && this.current !== "ideas") IDEA.step = null;   /* v4.07 다시 들어오면 입력 폼부터 */
     if (this.current === "guide" && v !== "guide") PROG.scroll = window.scrollY;   /* 목록 스크롤 보존 (뒤로 오면 되돌린다) */   /* v4.01 AI 사생대회 폐기 · 배너·해시(#demo=art 등)·뒤로가기를 포함한 모든 진입을 홈으로 돌린다 */
-    if (this.current === "scan_q" && v !== "scan_q") { qrCamStop(); qrMineOff(); SCQ.paused = false; }   /* v4.06 Q02 를 떠나면 카메라를 끈다 · v5.23 내 QR 동기화도 */
+    if (this.current === "scan_q" && v !== "scan_q") { qrCamStop(); qrMineOff(); qrWakeOff(true); SCQ.paused = false; }   /* v4.06 Q02 를 떠나면 카메라를 끈다 · v5.23 내 QR 동기화도 */
     if (this.current === "game_word" && v !== "game_word") gwStop();
     if (this.current === "game_type" && v !== "game_type") rgStop();
       if (this.current === "game_tetris" && v !== "game_tetris") ttStop();
@@ -7492,8 +7501,9 @@ function prizeSecHtml(s) {
 }
 /* v5.16 (사용자 시안 261003) 표지 = 작은 「AX Festival 2026」 · 큰 제목 「스탬프 개수별 경품」(옛 PRIZES 점 글자 · 조건 3줄은 걷었다)
    「지금 내 스탬프」 카드 = 다음 목표(주황 숫자) + 오른쪽 큰 주황 N개 · 6개면 「모두 모았어요」
-   1~6 점 선 = 받은 칸 주황 채움 · 다음 칸 주황 테두리 · 나머지 회색 테두리 · 1 · 2는 작게 붙여서 · 3~6 아래 세로 카드 4장(룰렛 1회 · 행운권 1 · 2 · 3장 + 참여상)
-   다음 목표 카드에 「다음」 알약 · 달성한 카드는 주황 테두리 + 「달성」 · 카드를 누르면 아래 그 구역(옛 조건 줄과 같은 prizeJump · 6개 카드 = 참여상 구역) */
+   1~6 점 선 = 받은 칸 주황 채움 · 다음 칸 주황 테두리 · 나머지 회색 테두리 · v5.25 여섯 점 같은 크기 · 같은 간격
+   v5.25 보상 = 눌러서 가는 네 줄(룰렛 1회 · 행운권 1 · 2 · 3장 + 참여상) · 줄 왼쪽 개수 점 · 오른쪽 셰브론 · 다음 줄에 「다음」 알약 · 달성한 줄은 「달성」
+   줄을 누르면 아래 그 구역(옛 조건 줄과 같은 prizeJump · 6개 줄 = 참여상 구역) */
 var PZ_GIFT = SICO + '<path d="M4.5 11h15v9h-15z"/><path d="M3.5 7.5h17V11h-17zM12 7.5V20"/><path d="M12 7.5C11 5 8.4 3.9 7.4 5.2c-1 1.4.8 2.3 4.6 2.3zM12 7.5c1-2.5 3.6-3.6 4.6-2.3 1 1.4-.8 2.3-4.6 2.3z"/></svg>';
 var PZ_STEP = [
   { m: 3, k: "roulette", ico: "wheel", t: "룰렛", a: "1회" },
@@ -7506,21 +7516,20 @@ function pzNextTxt(n) {
   return s ? "<b>" + (s.m - n) + "개</b> 더 모으면 " + s.t + " " + s.a + (s.fin ? " · 참여상" : "") : "모두 모았어요";
 }
 function prizeCoverHtml() {
-  var n = Math.min(STAMP_DENOM, stampCount()), nx = PZ_STEP.filter(function (x) { return x.m > n; })[0], nm = nx ? nx.m : 0;
-  var dot = function (i) { return '<i class="' + (i <= n ? "on" : i === n + 1 ? "nx" : "") + (i < 3 ? " sm" : "") + '">' + i + "</i>"; };
-  var dots = '<span class="g12">' + dot(1) + dot(2) + "</span>" + [3, 4, 5, 6].map(function (i) { return '<span class="c1">' + dot(i) + "</span>"; }).join("");   /* v5.18 1 · 2 = 3번 점 왼쪽에 위아래로 · 3 ~ 6 = 카드 칸마다 하나(카드 가운데) */
-  var fill = n >= 3 ? "calc(27px + " + (n - 3) + " * ((100% - 18px) / 4 + 6px))" : "0px";   /* 1 · 2 묶음 가운데부터 받은 마지막 점 가운데까지 · 1 · 2 는 점 채움만 */
-  var cards = PZ_STEP.map(function (s) {
+  var n = Math.min(STAMP_DENOM, stampCount()), nx = PZ_STEP.filter(function (x) { return x.m > n; })[0], nm = nx ? nx.m : 0, dots = "";
+  for (var i = 1; i <= STAMP_DENOM; i++) dots += '<i class="' + (i <= n ? "on" : i === n + 1 ? "nx" : "") + '">' + i + "</i>";   /* v5.25 1 ~ 6 같은 크기 · 같은 간격(양끝 맞춤) */
+  var fill = n >= 2 ? "calc((100% - 32px) * " + (n - 1) + " / " + (STAMP_DENOM - 1) + ")" : "0px";   /* 1번 점 가운데부터 받은 마지막 점 가운데까지 */
+  var rows = PZ_STEP.map(function (s) {
     var st = s.m <= n ? "on" : s.m === nm ? "nx" : "", lbl = "스탬프 " + s.m + "개 · " + s.t + " " + s.a + (s.fin ? " · 참여상" : "") + (st === "on" ? " · 달성" : st === "nx" ? " · 다음" : "");
-    return '<button type="button" class="' + st + '" onclick="prizeJump(\'' + s.k + '\')" aria-label="' + lbl + '"><span class="i" aria-hidden="true">' + RAIL_ICO[s.ico] + "</span>" +
-      '<span class="t" aria-hidden="true">' + s.t + '</span><b aria-hidden="true">' + s.a + "</b>" +
-      (s.fin ? '<span class="pl" aria-hidden="true">+</span><span class="i" aria-hidden="true">' + PZ_GIFT + '</span><span class="t" aria-hidden="true">참여상</span>' : "") +
-      (st === "nx" ? '<span class="tag" aria-hidden="true">다음</span>' : st === "on" ? '<span class="tag on" aria-hidden="true">' + CHECK_SVG + "달성</span>" : "") + "</button>";
+    return '<button type="button" class="' + st + '" onclick="prizeJump(\'' + s.k + '\')" aria-label="' + lbl + '"><span class="d" aria-hidden="true">' + s.m + "</span>" +
+      '<span class="i" aria-hidden="true">' + RAIL_ICO[s.ico] + '</span><span class="tx" aria-hidden="true"><b>' + s.t + " " + s.a + "</b>" +
+      (s.fin ? '<span class="fn">+ <span class="g">' + PZ_GIFT + "</span>참여상</span>" : "") + "</span>" +
+      (st === "nx" ? '<span class="tag" aria-hidden="true">다음</span>' : st === "on" ? '<span class="tag on" aria-hidden="true">' + CHECK_SVG + "달성</span>" : "") + CHEV_SVG + "</button>";
   }).join("");
   return '<section class="axs-pz-cv"><p class="ey">AX Festival 2026</p><h1 class="ttl">스탬프 개수별 경품</h1>' +
     '<div class="now"><div class="tx"><p class="k">지금 내 스탬프</p><p class="nx">' + pzNextTxt(n) + '</p></div><p class="n"><b>' + n + "</b>개</p></div>" +
     '<div class="stp" role="img" aria-label="스탬프 ' + n + " / " + STAMP_DENOM + '"><span class="ln" aria-hidden="true"></span><span class="fl" aria-hidden="true" style="width:' + fill + '"></span>' + dots + "</div>" +
-    '<div class="cds">' + cards + "</div></section>";
+    '<div class="cds">' + rows + "</div></section>";
 }
 function prizePosterHtml() {
   return '<div class="axs-pz' + (Date.now() - PZ.t < 900 ? " in" : "") + '">' + prizeCoverHtml() + PZ_SEC.map(prizeSecHtml).join("") + "</div>";
@@ -10222,19 +10231,21 @@ function expGuideHtml() {
 var SCQ = { ctx: "", err: "", paused: false, tab: "mine" };   /* v5.23 tab = mine(기본) | scan */
 var SCQ_TT = { p1: "전시 QR을", p2: "체험 QR을", p7: "벽 QR을", st: "계단 QR을", p3: "출석 QR을", a17: "출석 QR을" };
 function scanOpen(ctx) { if (sndOn()) sfxUnlock();   /* v4.13 인식음은 누른 순간에 소리 길을 연다(소리 설정을 따른다) */
-  SCQ.ctx = SCQ_TT[ctx] ? ctx : ""; SCQ.tab = "scan"; SCQ.err = ""; SCQ.paused = false; qrMineOff(); if (App.current === "scan_q") App.render(); else App.go("scan_q"); }
+  SCQ.ctx = SCQ_TT[ctx] ? ctx : ""; SCQ.tab = "scan"; SCQ.err = ""; SCQ.paused = false; qrMineOff(); qrWakeOff(); if (App.current === "scan_q") App.render(); else App.go("scan_q"); }
 /* v5.23 (사용자 261003) 가운데 QR 버튼 · 모든 「내 QR」 입구 = 같은 QR 화면의 [내 QR] 탭 · 카메라는 켜지 않는다 */
 function qrOpen() {
   SCQ.ctx = ""; SCQ.tab = "mine"; SCQ.err = ""; SCQ.paused = false; QRM.msg = ""; qrCamStop();
   if (App.current === "scan_q") App.render(); else App.go("scan_q");
+  qrWakeArm();   /* v5.25 누른 순간(사용자 동작) 화면 꺼짐 막기 */
 }
 function qrTab(t) {
   if (t !== "scan") t = "mine";
   if (t === SCQ.tab) return;
   if (t === "scan" && sndOn()) sfxUnlock();
   SCQ.tab = t; SCQ.ctx = ""; SCQ.err = ""; SCQ.paused = false; QRM.msg = "";
-  qrCamStop(); qrMineOff();
+  qrCamStop(); qrMineOff(); qrWakeOff();
   App.render();
+  if (t === "mine") qrWakeArm();   /* v5.25 내 QR 탭을 다시 누르면 다시 건다(5분 새로) */
 }
 function qrSegHtml() {
   if (SCQ.ctx) return "";
@@ -10285,6 +10296,37 @@ function qrMineTick() {
   beSync(function () { QRM.busy = false; });
 }
 function qrMineOff() { if (QRM.timer) { clearInterval(QRM.timer); QRM.timer = null; } }
+/* v5.25 (사용자 261003) 내 QR 이 보이는 동안 화면이 어두워지거나 꺼지지 않게(Screen Wake Lock)
+ * 처음 = QR 버튼을 누른 순간(qrOpen) · 내 QR 탭을 다시 누를 때(qrTab) · 그때부터 5분(QRWL_MAX_MS) 넘으면 풀고 다시 누를 때까지 걸지 않는다(배터리)
+ * 풀기 = 스캔 탭 · 문맥 스캔 · 화면 떠남(App.go) · 5분 · 가려지면 브라우저가 스스로 푼다 → 다시 보이면 5분 안 · 내 QR 탭일 때만 다시 요청
+ * 미지원(옛 iOS · 인앱 브라우저) · 거절 = 조용히 넘어간다(문구 없음) */
+var QRWL_MAX_MS = 300000;
+var QRWL = { lock: null, until: 0, t: null, req: false };
+function qrWakeArm() { QRWL.until = Date.now() + QRWL_MAX_MS; qrWakeOn(); }
+function qrWakeWant() { return App.current === "scan_q" && SCQ.tab === "mine" && !SCQ.ctx && !document.hidden && Date.now() < QRWL.until; }
+function qrWakeOn() {
+  if (!qrWakeWant()) return;
+  if (QRWL.t) clearTimeout(QRWL.t);
+  QRWL.t = setTimeout(function () { QRWL.t = null; qrWakeOff(); }, QRWL.until - Date.now());
+  if (QRWL.lock || QRWL.req) return;
+  try {
+    if (!navigator.wakeLock || typeof navigator.wakeLock.request !== "function") return;
+    QRWL.req = true;
+    navigator.wakeLock.request("screen").then(function (l) {
+      QRWL.req = false;
+      if (!qrWakeWant()) { try { var p = l.release(); if (p && p.catch) p.catch(function () {}); } catch (e) {} return; }
+      QRWL.lock = l;
+      try { l.addEventListener("release", function () { if (QRWL.lock === l) QRWL.lock = null; }); } catch (e) {}
+    }, function () { QRWL.req = false; });
+  } catch (e) { QRWL.req = false; }
+}
+function qrWakeOff(leave) {
+  if (QRWL.t) { clearTimeout(QRWL.t); QRWL.t = null; }
+  if (leave) QRWL.until = 0;
+  var l = QRWL.lock; QRWL.lock = null;
+  if (l) { try { var p = l.release(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
+}
+document.addEventListener("visibilitychange", function () { if (!document.hidden) qrWakeOn(); });
 /* sync 뒤 · 열려 있는 내 QR 과 비교해 방금 바뀐 것 한 줄 */
 function qrMineCheck() {
   if (!QRM.timer || !QRM.snap || !el("qrPanel")) return;
@@ -10333,8 +10375,10 @@ var QRLIVE = { t: null, txt: "" };
 function myQrSvg(px) {
   var t = myQrText(); QRLIVE.txt = t;
   if (!QRLIVE.t) QRLIVE.t = setInterval(qrLiveTick, 4000);
-  return qrTextSvg(t, px).replace("<svg ", '<svg data-myqr="' + px + '" ');
+  return myQrPaint(t, px);
 }
+/* v5.25 내 QR 한 그림 · 조용한 칸 4칸(SVG 안) · data-myqr = 다시 그릴 때 같은 크기 · 크기는 CSS(.axs-qrcard .myqr svg) */
+function myQrPaint(t, px) { return qrTextSvg(t, px, 4).replace("<svg ", '<svg data-myqr="' + px + '" '); }
 function qrLiveTick() {
   var n = document.querySelectorAll("svg[data-myqr]");
   if (!n.length) { clearInterval(QRLIVE.t); QRLIVE.t = null; return; }
@@ -10343,13 +10387,13 @@ function qrLiveTick() {
   QRLIVE.txt = t;
   Array.prototype.forEach.call(n, function (sv) {
     var px = sv.getAttribute("data-myqr"), box = document.createElement("div");
-    box.innerHTML = qrTextSvg(t, Number(px)).replace("<svg ", '<svg data-myqr="' + px + '" ');
+    box.innerHTML = myQrPaint(t, Number(px));
     if (box.firstChild && sv.parentNode) sv.parentNode.replaceChild(box.firstChild, sv);
   });
 }
 /* 모듈 매트릭스 → 인쇄·화면 공용 SVG. 행 단위 런렝스로 묶어 도형 수를 줄인다 */
-function qrPaint(isDark, n, px) {
-  var d = "", r, c, run;
+function qrPaint(isDark, n, px, qz) {
+  var d = "", r, c, run; qz = qz || 2;   /* v5.25 qz = 조용한 칸(모듈 수) · 기본 2 · 내 QR 은 4(myQrPaint) */
   for (r = 0; r < n; r++) {
     c = 0;
     while (c < n) {
@@ -10362,17 +10406,17 @@ function qrPaint(isDark, n, px) {
     }
   }
   /* xmlns를 넣어야 이미지로 저장·인쇄했을 때도 열린다(인라인만 쓰면 없어도 그려지지만, QR은 캡처해 쓰는 일이 잦다) */
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 ' + (n + 4) + " " + (n + 4) + '" width="' + px + '" height="' + px +
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-' + qz + " -" + qz + " " + (n + qz * 2) + " " + (n + qz * 2) + '" width="' + px + '" height="' + px +
     '" shape-rendering="crispEdges" style="display:block;background:#fff;border-radius:8px">' +
     '<path d="' + d + '" fill="#1E2124"/></svg>';
 }
 /* 런타임 인코딩 · 개인 QR은 사번마다 달라 미리 만들어 둘 수 없다 */
-function qrTextSvg(text, px) {
+function qrTextSvg(text, px, qz) {
   if (typeof qrcode !== "function" || !text) return "";
   var q = qrcode(0, "M");
   q.addData(text); q.make();
   var n = q.getModuleCount();
-  return qrPaint(function (r, c) { return q.isDark(r, c); }, n, px);
+  return qrPaint(function (r, c) { return q.isDark(r, c); }, n, px, qz);
 }
 
 /* ── 참가자 패널 · 스캔과 내 QR을 한 자리에 (QR을 주고받는 순간은 하나다) ── */
