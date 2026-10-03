@@ -1,5 +1,5 @@
 /* AX Festival 2026 · 1F 스탠바이미 「ME to WE 스탬프 월」 v5 「모션 그래픽」 (261003 · 사용자 승인)
- * 화면 · 워드마크(위 왼쪽) · 로고(가운데 · 점 2,026개) · 오늘 모인 스탬프 숫자와 다음 목표까지 진행 링(아래 왼쪽 · 가로는 숫자 위, 세로는 오른쪽 아래) · Lv(아래 오른쪽) · 「빛 하나 = 스탬프 하나」
+ * 화면 · 워드마크(위 왼쪽) · 로고(가운데 · 점 2,026개) · 다음 목표 진행 링 + 목표 이름(가로 왼쪽 아래 · 세로 오른쪽 아래) · Lv · 점 숫자 · 「오늘 모인 스탬프」 묶음(가로 오른쪽 아래 · 세로 왼쪽 아래)
  *  0  불씨 · 로고 2,026점이 어두운 오렌지 불씨로 놓여 있고, 은은한 빛 한 줄기가 아래에서 위로 천천히 지나간다(1차 완성 전 움직임은 이것 하나)
  *  1막 모으기 · 1차 완성 목표 CFG.g1(250) · 스탬프 1개 = 혜성 1개 · 닿으면 하얀 점이 팡 · 닿은 덩어리(점 약 8개)가 번쩍인다
  *     온기 = 로고 전체가 진행도만큼 고르게 달아오른다(얼룩 없음) · 앉은 자리 = 씨앗 점 하나만 O100 · 씨앗 순서 = 먼 곳부터라 밝은 점이 고르게 흩어진다
@@ -170,18 +170,16 @@
     var FW = port ? 1080 : 1920, FH = port ? 1920 : 1080, k = Math.min(w / FW, h / FH), ox = (w - FW * k) / 2, oy = (h - FH * k) / 2;
     cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); cv.style.width = w + "px"; cv.style.height = h + "px";
     var L = !port ? {
-      box: { x: 560, y: 46, w: 940, h: 988 },
+      box: { x: 490, y: 46, w: 940, h: 988 },
       wm: { x: 72, y: 64, w: 210 },
-      ring: { x: 207, y: 584, d: 270 },
-      lab: { x: 72, y: 856, s: 28 }, num: { x: 66, y: 990, s: 140 }, sub: { x: 72, y: 1042, s: 28 },
-      tag: { x: 1848, y: 990, s: 34 }, rule: { x: 1848, y: 1042, s: 24 },
-      ttl: { x: 1710, y: 470, s1: 36, s2: 92, w: 380 }, tl: { x: 1848, y: 100, s: 30 }, st: { x: 72, y: 178, s: 20 }
+      ring: { x: 207, y: 861, d: 270 },
+      num: { x: 1848, by: 1042, h: 100, maxW: 420, al: "right", ls: 28, ts: 32 },
+      ttl: { x: 1700, y: 470, s1: 36, s2: 92, w: 400 }, tl: { x: 1848, y: 100, s: 30 }, st: { x: 72, y: 178, s: 20 }
     } : {
       box: { x: 50, y: 250, w: 980, h: 1240 },
       wm: { x: 64, y: 72, w: 190 },
-      lab: { x: 64, y: 1676, s: 28 }, num: { x: 64, y: 1822, s: 156 }, sub: { x: 64, y: 1872, s: 28 },
+      num: { x: 64, by: 1838, h: 110, maxW: 430, al: "left", ls: 28, ts: 32 },
       ring: { x: 890, y: 1712, d: 250, cap: "left" },
-      tag: { x: 64, y: 1872, s: 34, al: "left" }, rule: { x: 1016, y: 1872, s: 24 },
       ttl: { x: 540, y: 1560, s1: 34, s2: 84, w: 900 }, tl: { x: 1016, y: 110, s: 30 }, st: { x: 64, y: 172, s: 20 }
     };
     G = L; G.w = w; G.h = h; G.dpr = dpr; G.port = port; G.FW = FW; G.FH = FH; G.k = k; G.ox = ox; G.oy = oy;
@@ -199,7 +197,7 @@
     var acc = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
     for (i = 0; i < LOGO.n; i++) { var a = acc[LOGO.part[i]]; a[0] += G.pos[i][0]; a[1] += G.pos[i][1]; a[2]++; }
     G.partC = acc.map(function (a) { return [a[0] / Math.max(1, a[2]), a[1] / Math.max(1, a[2])]; });
-    buildGrids(); LAY.logo = mkCanvas(); LAY.dirty = true; DIG = null;
+    buildGrids(); LAY.logo = mkCanvas(); LAY.dirty = true; DIG = null; NUMC = {};
     if (SHOW) SHOW.cache = null;
   }
   function devT(c) { c.setTransform(G.k * G.dpr, 0, 0, G.k * G.dpr, G.ox * G.dpr, G.oy * G.dpr); }
@@ -770,6 +768,56 @@
     var w = cx.measureText(txt).width; if (maxW && w > maxW) { size = Math.max(12, Math.floor(size * maxW / w)); cx.font = wgt + " " + size + "px " + FONT; w = cx.measureText(txt).width; }
     cx.textAlign = align || "left"; cx.textBaseline = "alphabetic"; cx.fillText(txt, x, y); cx.globalAlpha = 1; return w;
   }
+  /* ════════ 점 숫자 · 디자인 시안/도트 글자/글자표.json 의 숫자(5×5 점 · 이웃 25% 겹침) · 쉼표는 이 화면용(바닥 점 + 아래 꼬리 점) ════════
+     자리(오른쪽부터 셈)마다 글자를 기억해 바뀐 자리만 바뀐다 · 글자 그림은 자리 글자 × 색 × 크기별 오프스크린 캐시 */
+  var DGT = { "0": [".XXX.", "X..XX", "X.X.X", "XX..X", ".XXX."], "1": ["..X..", ".XX..", "..X..", "..X..", ".XXX."], "2": [".XXX.", "X...X", "...X.", "..X..", "XXXXX"], "3": ["XXXX.", "....X", ".XXX.", "....X", "XXXX."], "4": ["X...X", "X...X", "XXXXX", "....X", "....X"], "5": ["XXXXX", "X....", "XXXX.", "....X", "XXXX."], "6": [".XXX.", "X....", "XXXX.", "X...X", ".XXX."], "7": ["XXXXX", "....X", "...X.", "..X..", "..X.."], "8": [".XXX.", "X...X", ".XXX.", "X...X", ".XXX."], "9": [".XXX.", "X...X", ".XXXX", "....X", ".XXX."] };
+  var DGP = { PY: 0.9715, D: 1.3081, LG: 0.571 }; DGP.H = 4 * DGP.PY + DGP.D;
+  var NUMC = {}, NUM = { s: "", slot: [], reset: true };
+  function dgW(ch) { return ch === "," ? DGP.D : 4 + DGP.D; }
+  function dgLayout(s) { var x = 0, xs = []; for (var i = 0; i < s.length; i++) { if (i) x += DGP.LG; xs.push(x); x += dgW(s.charAt(i)); } return { xs: xs, w: x }; }
+  function dgDots(ch) {
+    if (ch === ",") return [[0, 4 * DGP.PY, 1], [-0.2, 4 * DGP.PY + 0.82, 0.74]];
+    var rows = DGT[ch], out = []; if (!rows) return out;
+    for (var r = 0; r < 5; r++) for (var k = 0; k < 5; k++) if (rows[r].charAt(k) === "X") out.push([k, r * DGP.PY, 1]);
+    return out;
+  }
+  function dgSprite(ch, col, u) {
+    var sc = G.k * G.dpr, key = ch + "|" + col + "|" + u.toFixed(3); if (NUMC[key]) return NUMC[key];
+    var m = 0.6, w = (dgW(ch) + 2 * m) * u, h = (DGP.H + 2 * m) * u, c = document.createElement("canvas");
+    c.width = Math.ceil(w * sc); c.height = Math.ceil(h * sc);
+    var g = c.getContext("2d"); g.scale(sc, sc); g.fillStyle = col; g.beginPath();
+    dgDots(ch).forEach(function (q) { var r = DGP.D / 2 * q[2] * u, x = (m + q[0] + DGP.D / 2) * u, y = (m + q[1] + DGP.D / 2) * u; g.moveTo(x + r, y); g.arc(x, y, r, 0, 6.2832); });
+    g.fill();
+    return (NUMC[key] = { c: c, m: m * u, w: c.width / sc, h: c.height / sc });
+  }
+  function dgBlit(ch, col, u, x, y, a, s) {
+    if (a <= 0.01) return; var sp = dgSprite(ch, col, u), k = s || 1, gw = dgW(ch) * u, gh = DGP.H * u;
+    var cxp = x + gw / 2, cyp = y + gh / 2;
+    cx.globalAlpha = Math.min(1, a); cx.drawImage(sp.c, cxp - (gw / 2 + sp.m) * k, cyp - (gh / 2 + sp.m) * k, sp.w * k, sp.h * k); cx.globalAlpha = 1;
+  }
+  /* n 을 그리고 숫자 윗변 y 를 돌려준다 · 다시 보기 · 시점 점프 = 바로 바꿈(깜박임 없음) · 평소 = 바뀐 자리만 새 글자가 주황에서 하양으로 들어앉는다 */
+  function drawNum(n, instant, org) {
+    var N = G.num, s = comma(n), u = Math.min(N.h / DGP.H, N.maxW / dgLayout("8,888").w), gh = DGP.H * u;
+    var y = N.by - N.ls - 22 - gh, i;
+    if (NUM.reset) { instant = true; NUM.reset = false; }
+    if (s !== NUM.s) {
+      for (i = 0; i < s.length; i++) {
+        var a = s.charAt(s.length - 1 - i), sl = NUM.slot[i] || (NUM.slot[i] = { ch: "", prev: "", t0: -1e4 });
+        if (a !== sl.ch) { sl.prev = instant ? "" : sl.ch; sl.ch = a; sl.t0 = instant ? -1e4 : T; }
+      }
+      NUM.slot.length = s.length; NUM.s = s;
+    }
+    var L = dgLayout(s), x0 = N.al === "right" ? N.x - L.w * u : N.x;
+    for (i = 0; i < s.length; i++) {
+      var sl2 = NUM.slot[s.length - 1 - i], x = x0 + L.xs[i] * u, e = (T - sl2.t0) / 0.6;
+      if (e >= 1) { dgBlit(sl2.ch, "#FFFFFF", u, x, y, 1); continue; }
+      if (sl2.prev) dgBlit(sl2.prev, "#FFFFFF", u, x, y, 1 - cl(e / 0.3), 1 - 0.12 * EO(e / 0.3));
+      var inA = EO(e / 0.3), sz = 1 + 0.14 * (1 - EOB(e / 0.55));
+      dgBlit(sl2.ch, "#FFFFFF", u, x, y, inA, sz);
+      if (!org) dgBlit(sl2.ch, COL.hi, u, x, y, inA * Math.pow(1 - cl(e), 1.4), sz);
+    }
+    return y;
+  }
   /* ════════ 진행 링 · 다음 목표까지(도넛) · 트랙 어두운 회색 + O100 호 + 둥근 끝 ════════ */
   var RING = { seg: null, v: 0, from: 0, to: 0, t0: -1e4, tl: false, fill: null };
   function segOf(n) {
@@ -804,7 +852,13 @@
     cx.lineWidth = lw; cx.strokeStyle = org ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.16)";
     cx.beginPath(); cx.arc(R.x, R.y, r, 0, 6.2832); cx.stroke();
     if (v > 0.004) { cx.lineCap = "round"; cx.strokeStyle = org ? "#FFFFFF" : COL.o; cx.beginPath(); cx.arc(R.x, R.y, r, -1.5708, -1.5708 + 6.2832 * v); cx.stroke(); cx.lineCap = "butt"; }
-    text(Math.floor(v * 100 + 0.0001) + "%", 700, Math.round(d * 0.27), "#FFFFFF", R.x, R.y + d * 0.095, "center", d - lw * 2 - 8);
+    /* 가운데 n% · 숫자 폭 기준 = 「88%」가 안쪽 지름의 62% · 「%」는 숫자의 0.6배 · 100% 처럼 길면 안쪽 지름의 78% 안으로 줄인다 */
+    var inner = d - lw * 2, pct = String(Math.floor(v * 100 + 0.0001)), ps = 100;
+    var pw = function (str, s) { cx.font = "700 " + s + "px " + FONT; var a = cx.measureText(str).width; cx.font = "700 " + (s * 0.6) + "px " + FONT; return [a, cx.measureText("%").width, s * 0.04]; };
+    var m0 = pw("88", ps); ps = ps * inner * 0.62 / (m0[0] + m0[1] + m0[2]);
+    var m1 = pw(pct, ps), tw = m1[0] + m1[1] + m1[2]; if (tw > inner * 0.78) { ps *= inner * 0.78 / tw; m1 = pw(pct, ps); tw = m1[0] + m1[1] + m1[2]; }
+    var px0 = R.x - tw / 2, pby = R.y + ps * 0.36;
+    text(pct, 700, ps, "#FFFFFF", px0, pby, "left"); text("%", 700, ps * 0.6, "#FFFFFF", px0 + m1[0] + m1[2], pby, "left");
     var dim = org ? "rgba(255,255,255,0.85)" : COL.sub, hot = org ? "#FFFFFF" : COL.o;
     if (R.cap === "left") { text("다음 목표", 500, 26, dim, R.x - d / 2 - 22, R.y - 8, "right"); text(S.name, 600, 32, hot, R.x - d / 2 - 22, R.y + 32, "right", 230); }
     else { var w = text("다음 목표", 500, 28, dim, R.x - d / 2, R.y + d / 2 + 46); text(S.name, 600, 32, hot, R.x - d / 2 + w + 16, R.y + d / 2 + 46, "left", 330 - w); }
@@ -813,17 +867,11 @@
     var org = ORANGE(), S = SHOW, isTL = S && S.kind === "tl", t = S ? T - S.t0 : 0;
     if (WMREADY) { var wm = G.wm; cx.drawImage(org ? WM.w : WM.o, wm.x, wm.y, wm.w, wm.w * 179 / 497.6); }
     var n = isTL ? tlCount(S, t) : ST.n, lv = levelOf(n);
-    text("오늘 모인 스탬프", 500, G.lab.s, org ? "rgba(255,255,255,0.85)" : COL.sub, G.lab.x, G.lab.y);
-    var hit = isTL ? 0 : cl(1 - (T - ST.hitAt) / 0.5);
-    text(comma(n), 700, G.num.s, COL.txt, G.num.x, G.num.y);
-    if (hit > 0 && !org) text(comma(n), 700, G.num.s, COL.hi, G.num.x, G.num.y, "left", null, hit * 0.8);
+    /* 숫자 묶음 · 위 = Lv · 가운데 = 점 숫자 · 아래 = 「오늘 모인 스탬프」(가로 오른쪽 아래 · 세로 왼쪽 아래) */
+    var N = G.num, top = drawNum(n, isTL, org);
+    text("오늘 모인 스탬프", 500, N.ls, org ? "rgba(255,255,255,0.85)" : COL.sub, N.x, N.by, N.al);
+    if (lv >= 1) text("Lv " + lv + " · " + CFG.names[lv], 600, N.ts, org ? "#FFFFFF" : COL.o, N.x, top - 24, N.al);
     drawRing(n, isTL, org);
-    if (lv >= 1) text("Lv " + lv + " · " + CFG.names[lv], 600, G.tag.s, org ? "#FFFFFF" : COL.o, G.tag.x, G.tag.y, G.tag.al || "right");
-    /* 규칙 한 줄 · 작은 혜성 그림 */
-    var R = G.rule, w = text("빛 하나 = 스탬프 하나", 500, R.s, org ? "rgba(255,255,255,0.8)" : COL.faint, R.x, R.y, "right");
-    var ix = R.x - w - 22, iy = R.y - R.s * 0.36, sp = sprites();
-    for (var j = 5; j >= 1; j--) { cx.globalAlpha = 0.7 * (1 - j / 6); cx.drawImage(sp.lit, ix - j * 7 - 4, iy + j * 5 - 4, 8, 8); }
-    cx.globalAlpha = 1; cx.drawImage(sp.white, ix - 6, iy - 6, 12, 12);
     if (isTL) text("오늘 하루 다시 보기", 600, G.tl.s, COL.o, G.tl.x, G.tl.y, "right", null, cl(t / 0.5) * cl((S.dur - t) / 0.6));
     /* 상태 줄 · 평소에는 없다 · 데모 표시 · 연결이 끊겼을 때만 */
     var sy = G.st.y; if (DEMO) { text("DEMO · 가짜 적립", 600, G.st.s, org ? "rgba(255,255,255,0.7)" : COL.faint, G.st.x, sy); sy += 32; }
@@ -857,7 +905,7 @@
   function jumpBy(m) { RING.seg = null; var n = ST.n + m; ST.n = n; setLit(n); ST.lvl = levelOf(n); ORB.on = ST.lvl >= 3; ORB.a = ORB.on ? 1 : 0; mileInit(); }
   function mileInit() { ST.mileNext = CFG.lv[4] + CFG.mile * Math.max(1, Math.floor((ST.n - CFG.lv[4]) / CFG.mile) + 1); }
   function setNow(n) {
-    n = Math.max(0, n); RING.seg = null; RING.fill = null;
+    n = Math.max(0, n); RING.seg = null; RING.fill = null; NUM.reset = true;
     FLY = []; SCH = []; WAVES = []; IGN = []; FL = []; GLOWS = []; pn = 0; SHOW = null; STG.base = "black"; STG.to = null;
     ST.n = ST.target = n; ST.lvl = levelOf(n); ST.hitAt = -1e4; mileInit();
     ORB.on = ST.lvl >= 3; ORB.a = ORB.on ? 1 : 0; ORB.form = -1e4;
