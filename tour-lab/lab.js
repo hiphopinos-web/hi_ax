@@ -27,7 +27,7 @@
   /* ─────────── 멈춤 자리 · 동선 순서(부스 발주 설명 PDF 2쪽 동선 2 → 6 + 게이트) ───────────
    * x · z = 도면 미터(서쪽 벽 0 → 동쪽 · 남쪽 유리 0 → 북쪽) · 캐릭터가 서는 자리 = 판 줄 앞 2.5~3m(데스크 · 기둥 피함) */
   var STOPS = [
-    { id: 'start', name: '동쪽 문', x: 27.3, z: 8.9, look: [20, 7.8], where: '동쪽 문 안' },   /* 어느 구역 판 줄에서도 4.2m 밖(입장하자마자 판 보기가 뜨던 버그 · 사용자 261003) */
+    { id: 'start', name: '로비', x: 27.3, z: 8.9, look: [20, 7.8], where: '로비' },   /* 어느 구역 판 줄에서도 4.2m 밖(입장하자마자 판 보기가 뜨던 버그 · 사용자 261003) */
     { id: 'vision', zone: 'vision', x: 29.0, z: 3.6 },
     { id: 'lab', zone: 'lab', x: 27.9, z: 3.25 },
     { id: 'action', zone: 'action', x: 22.3, z: 3.25 },
@@ -511,7 +511,17 @@
     var P2 = new T.Vector3(c.x + n.x * Math.max(fit, fitW), c.y, c.z + n.z * Math.max(fit, fitW)), L2 = c.clone();
     return { P1: P1, L1: L1, P2: P2, L2: L2 };
   }
+  /* 말풍선 「판 보기」로 열면 늘 그 지점 첫 판부터(사용자 261003) · 간판은 건너뛴 첫 내용 판 · 두 줄 구역(PLAY)은 지금 서 있는 줄의 첫 판 · 판을 직접 누르면 그 판부터 */
+  function firstPg(z) {
+    var p = G.pos, best = null, bd = 1e9;
+    z.rows.forEach(function (r) {
+      var n = r.pages.length, mx = r.a[0] + r.r[0] * n / 2, mz = r.a[1] + r.r[1] * n / 2, q = toThree(mx, mz), d = Math.hypot(q.x - p.x, q.z - p.z);
+      if (d < bd) { bd = d; best = r.pages[0]; }
+    });
+    return best;
+  }
   function enterPanel(z, pg) {
+    if (!pg) pg = firstPg(z);
     var ps = D.zonePages(z), pk = pickFace(z, pg);
     var idx = pg ? ps.indexOf(pg) : (pk ? ps.indexOf(pk.pg) : null);
     if (RM || !pk || G.anim || !G.loaded) { if (RM) flash(); openSheet(z, idx); return; }
@@ -627,7 +637,7 @@
   function openPromo() {
     var v = $('vid'), b = $('vbody'); v.hidden = false; G.sheetOpen = true;
     var W = b.clientWidth - 24, H = b.clientHeight - 24, w = Math.min(W, H * 9 / 16), h = w * 16 / 9;
-    b.innerHTML = '<iframe title="1F 타자왕 순위판" src="../tv/typing/" style="width:' + w.toFixed(0) + 'px;height:' + h.toFixed(0) + 'px" allow="autoplay" loading="eager"></iframe>';
+    b.innerHTML = '<iframe title="1F 타자왕 순위판" src="../tv/typing/?open=1" style="width:' + w.toFixed(0) + 'px;height:' + h.toFixed(0) + 'px" allow="autoplay" loading="eager"></iframe>';
   }
   function closePromo() { $('vid').hidden = true; $('vbody').innerHTML = ''; G.sheetOpen = false; G.need = true; G.last = 0; }
 
@@ -965,6 +975,8 @@
   /* ═══════════ 시작 ═══════════ */
   function start() {
     $('bNext').onclick = onNext; $('bPrev').onclick = onPrev; $('bBack1F').onclick = function () { backTo1F(); placeAt(STOPS.length - 1, false); };
+    $('cta').hidden = true;   /* 칸 자체를 쓰지 않는다(lab.css .slot) */
+    if (Q.get('lbl') === 'a') $('ctl').classList.add('la');
     $('cta').onclick = function () { if (performance.now() - (G.guardT || 0) < 500) return; if (G.spot && G.spot.spot === 'typing') { openPromo(); return; } var z = G.near; if (!z) return; if (z.id === 'cafe') { toCafe(); return; } enterPanel(z); };
     $('vClose').onclick = closePromo;
     [['rotL', 'rot', 1], ['rotR', 'rot', -1], ['zIn', 'zoom', -1], ['zOut', 'zoom', 1]].forEach(function (q) {

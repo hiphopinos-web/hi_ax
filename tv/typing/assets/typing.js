@@ -9,6 +9,7 @@
  * 마감 시계 = 응답에 now(ms)가 있으면 서버 시계 · 없으면 기기 시계 · 둘 다 한국 시간(UTC+9)으로 센다
  * 주소 뒤 값: ?demo=1 서버 없이 가짜 순위(20초마다 바뀜) · ?srv=주소 · ?now=13:20 시계 흉내(한국 시간) · ?close=17:00 마감 시각 · ?after=1 마감 뒤 루프
  *   ?scene=hook|game|how|prize|rank|close 한 장면만 · ?t=초 루프 시작 위치 · ?prz4=문구 4~10위 상품 줄 켜기(기본 꺼짐 · 상품 미정) · ?ctl=1 조작판
+ *   ?open=1 시각과 관계없이 늘 평소 순서(17:00 뒤에도 후킹부터 · tour-lab 타자왕 시트 · 261003) · promo 와 함께면 promo 평소 목록(순위 없음)
  *   ?promo=1 참가자 앱 홍보 칸(261003) · 후킹 → 게임 → 하는 법 → 상품 → 마감(35초) · 17:00 뒤 = 상품 → 마감(13.5초 · 마감 장면 「기록 마감」)
  *     순위 장면 없음 · 서버 호출 0(type_rank 안 부름 · 기기 저장도 안 읽고 안 씀) · 키 · 조작판 · 전체 화면 · 꺼짐 방지 끔 · 무음
  *     칸이 화면 밖이거나(IntersectionObserver) 탭이 가려지면 그리기를 멈추고 보이면 이어서 · 누르면 부모 창에 postMessage({ axfTy: "tap" })
@@ -16,6 +17,7 @@
 (function () {
   "use strict";
   var Q = {}; location.search.replace(/^\?/, "").split("&").forEach(function (kv) { if (!kv) return; var i = kv.indexOf("="); var k = decodeURIComponent(i < 0 ? kv : kv.slice(0, i)); Q[k] = i < 0 ? "1" : decodeURIComponent(kv.slice(i + 1).replace(/\+/g, " ")); });
+  var OPEN = Q.open === "1";   /* ?open=1 (261003 · 1층 둘러보기 시험판 tour-lab 타자왕 시트용) = 시각과 관계없이 늘 평소 순서(후킹부터 · 순위는 뒤) · 마감 장면 시계 · 「기록 마감」은 실제 시각 그대로 */
   var PROMO = Q.promo === "1", DEMO = Q.demo === "1" && !PROMO, PRZ4 = Q.prz4 ? String(Q.prz4).slice(0, 40) : "";
   var body = document.body;
   function $(id) { return document.getElementById(id); }
@@ -342,11 +344,11 @@
   function nextScene(now) {
     if (SOLO) { PLAY.loops++; enter(SOLO, now); return; }
     PLAY.i++;
-    if (PLAY.i >= PLAY.list.length) { PLAY.i = 0; PLAY.loops++; PLAY.list = closed() ? PL_DONE : PL_OPEN; }
+    if (PLAY.i >= PLAY.list.length) { PLAY.i = 0; PLAY.loops++; PLAY.list = closed() && !OPEN ? PL_DONE : PL_OPEN; }
     enter(PLAY.list[PLAY.i], now);
   }
   function startAt(t, now) {   /* t = 루프 안 위치(초) */
-    PLAY.list = closed() ? PL_DONE : PL_OPEN;
+    PLAY.list = closed() && !OPEN ? PL_DONE : PL_OPEN;
     if (SOLO) { enter(SOLO, now - (t || 0)); return; }
     var tot = PLAY.list.reduce(function (a, id) { return a + DUR[id]; }, 0), r = ((t || 0) % tot + tot) % tot, i = 0;
     while (r >= DUR[PLAY.list[i]]) { r -= DUR[PLAY.list[i]]; i++; }

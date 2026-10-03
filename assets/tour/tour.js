@@ -474,7 +474,7 @@
     B.cols.forEach(function (x) { o += '<rect x="' + (X(x) - 4.5) + '" y="' + (Y(B.colZ) - 4.5) + '" width="9" height="9" fill="#C9CED4"/>'; });
     o += '<line x1="0" y1="' + Y(0) + '" x2="' + X(LW) + '" y2="' + Y(0) + '" stroke="#B0B8C1" stroke-width="3"/>';
     o += '<path d="M' + (X(B.revolve) - 13) + ',' + Y(0) + ' A13,13 0 0 1 ' + (X(B.revolve) + 13) + ',' + Y(0) + '" fill="none" stroke="#8B95A1" stroke-width="1.5"/><text class="lab" x="' + X(B.revolve) + '" y="' + (Y(0) + 11) + '" text-anchor="middle" style="font-weight:700;fill:#4E5968">정문</text>';
-    o += '<text class="lab" x="' + (X(LW) + 2) + '" y="' + (Y((B.doorE[0] + B.doorE[1]) / 2) + 2) + '">동쪽 출입문</text>';
+    o += '<text class="lab" x="' + (X(LW) + 2) + '" y="' + (Y((B.doorE[0] + B.doorE[1]) / 2) + 2) + '">출입문</text>';
     var ci = D.PROPS.checkin.at; o += '<rect x="' + (X(ci[0]) - 15) + '" y="' + (Y(ci[1]) - 15) + '" width="30" height="30" rx="3" fill="#FFFFFF" stroke="#CBD0D6"/><text class="lab" x="' + X(ci[0]) + '" y="' + (Y(ci[1]) + 2.5) + '" text-anchor="middle">체크인</text>';
     var sel = R.sel;
     D.ZONES.forEach(function (z) {
@@ -512,7 +512,7 @@
         '<button type="button" class="btn weak" style="margin-top:12px" data-act="' + z.id + '">' + esc(acts(z)[0].lbl) + '</button></section>';
     }).join('') +
       '<section class="card" aria-label="모형 밖 안내물"><h2>모형 밖 안내물</h2><ol>' +
-      [40, 47].map(function (p) { return '<li><button type="button" data-p="' + p + '">' + thumbHtml(p, D.pgSize(p)[0] > D.pgSize(p)[1] ? 56 : 28) + '<span>' + esc(D.PG[p]) + ' · 동쪽 출입문 밖 체크인</span></button></li>'; }).join('') +
+      [40, 47].map(function (p) { return '<li><button type="button" data-p="' + p + '">' + thumbHtml(p, D.pgSize(p)[0] > D.pgSize(p)[1] ? 56 : 28) + '<span>' + esc(D.PG[p]) + ' · 출입문 밖 체크인</span></button></li>'; }).join('') +
       '<li><button type="button" data-p="46">' + thumbHtml(46, 40) + '<span>' + esc(D.PG[46]) + ' · 기둥 4개 · 면마다</span></button></li>' +
       D.UNPLACED.map(function (p) { return '<li><button type="button" data-p="' + p + '">' + thumbHtml(p, 28) + '<span>' + esc(D.PG[p]) + '</span></button></li>'; }).join('') + '</ol></section>';
     Array.prototype.forEach.call(l.querySelectorAll('button[data-i]'), function (b) { b.onclick = function () { var z = D.Z(b.getAttribute('data-z')); openViewer(D.zonePages(z), +b.getAttribute('data-i'), null, z); }; });
