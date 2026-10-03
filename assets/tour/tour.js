@@ -22,7 +22,7 @@
   var ZTXT = { vision: '회사가 가는 방향을 보는 곳', lab: 'DAP 과제를 보는 곳', action: 'AI 업무 사례를 보는 곳', play: 'AI를 직접 써 보는 곳', event: '사진 · 룰렛 · 타자왕이 있는 곳', lounge: '업무 고민을 상담하는 곳', cafe: '아이디어를 놓고 이야기하는 곳' };
 
   var R = null;   /* 열려 있는 동안의 상태 한 묶음 · 닫으면 버린다 */
-  var VER = 'v532a';   /* 모형 파일 캐시 깨기 · 모형을 바꾸면 올린다 */
+  var VER = 'v534a';   /* 모형 파일 캐시 깨기 · 모형을 바꾸면 올린다 */
   var ATLAS_IMG = {};   /* 아틀라스 그림은 닫아도 들고 있다(작다 · 약 180KB) */
   function $(k) { return R && R.el[k]; }
 
@@ -79,7 +79,7 @@
       '<section class="tr-sheet" data-k="sheet" aria-hidden="true"><div class="grab"><i></i></div><div class="sc" data-k="sheetBody"></div></section>' +
       '<div class="tr-viewer" data-k="viewer" role="dialog" aria-modal="true" aria-label="판 보기" aria-hidden="true"><div class="bg"></div>' +
       '<div class="vh"><button class="x" type="button" data-k="vClose" aria-label="판 보기 닫기">' + XSVG + '</button><div class="t" data-k="vTitle"></div><span class="c" data-k="vCount"></span></div>' +
-      '<div class="tr-vs" data-k="vs"><div class="tr-vimg" data-k="vimg" style="opacity:0"><img alt="" data-k="vpic" style="display:block;width:100%;height:100%;opacity:0;transition:opacity .2s"></div><span class="tr-vzoom" data-k="vzoom">두 손가락으로 확대</span></div>' +
+      '<div class="tr-vs" data-k="vs"><div class="tr-vimg" data-k="vimg" style="opacity:0"><div data-k="vbg"><img alt="" data-k="vpic" style="display:block;width:100%;height:100%;opacity:0;transition:opacity .2s"></div></div><span class="tr-vzoom" data-k="vzoom">두 손가락으로 확대</span></div>' +
       '<div class="vf"><button class="nav" type="button" data-k="vPrev" aria-label="이전 판">' + BACKSVG + '</button><button class="btn pri" type="button" data-k="vAct">1층에서 해 보기</button><button class="nav" type="button" data-k="vNext" aria-label="다음 판">' + NEXTSVG + '</button></div></div>' +
       '<div class="tr-toast" data-k="toast" role="status"></div></div>';
     var el = {};
@@ -469,7 +469,8 @@
     B.cores.forEach(function (c) { o += '<rect x="' + X(c[0]) + '" y="' + Y(CN) + '" width="' + (c[1] - c[0]) * s + '" height="' + (CN - LN) * s + '" fill="#E5E8EB"/><text class="lab" x="' + X((c[0] + c[1]) / 2) + '" y="' + Y(lz) + '" text-anchor="middle">엘리베이터 · 계단</text>'; });
     o += '<text class="lab" x="' + X(B.hall) + '" y="' + Y(lz) + '" text-anchor="middle">EV홀</text>';
     var hx = B.cores[1][1]; o += '<rect x="' + X(hx) + '" y="' + Y(CN) + '" width="' + (LW - hx) * s + '" height="' + (CN - LN) * s + '" fill="url(#trHz)"/><text class="lab" x="' + X((hx + LW) / 2) + '" y="' + Y(lz) + '" text-anchor="middle">행사 구역 아님</text>';
-    B.rooms.forEach(function (r) { o += '<rect x="' + X(0) + '" y="' + Y(r[1]) + '" width="' + (3.6 * s) + '" height="' + ((r[1] - r[0]) * s) + '" fill="#F9FAFB" stroke="#D9DDE2"/><text class="lab" x="' + X(1.9) + '" y="' + (Y((r[0] + r[1]) / 2) + 2.5) + '" text-anchor="middle">' + r[2] + '</text>'; });
+    B.rooms.forEach(function (r) { o += '<rect x="' + X(0) + '" y="' + Y(r[1]) + '" width="' + (3.6 * s) + '" height="' + ((r[1] - r[0]) * s) + '" fill="#F9FAFB" stroke="#D9DDE2"/>' + (r[2] ? '<text class="lab" x="' + X(1.9) + '" y="' + (Y((r[0] + r[1]) / 2) + 2.5) + '" text-anchor="middle">' + r[2] + '</text>' : ''); });
+    if (B.room3) o += '<polygon points="' + B.room3.pts.map(function (q) { return X(q[0]) + ',' + Y(q[1]); }).join(' ') + '" fill="#F9FAFB" stroke="#D9DDE2"/><text class="lab" x="' + X(B.room3.at[0]) + '" y="' + (Y(B.room3.at[1]) + 2.5) + '" text-anchor="middle">' + B.room3.label + '</text>';   /* v5.34 미팅룸 3 = 날개 북쪽 삼각형 */
     B.cols.forEach(function (x) { o += '<rect x="' + (X(x) - 4.5) + '" y="' + (Y(B.colZ) - 4.5) + '" width="9" height="9" fill="#C9CED4"/>'; });
     o += '<line x1="0" y1="' + Y(0) + '" x2="' + X(LW) + '" y2="' + Y(0) + '" stroke="#B0B8C1" stroke-width="3"/>';
     o += '<path d="M' + (X(B.revolve) - 13) + ',' + Y(0) + ' A13,13 0 0 1 ' + (X(B.revolve) + 13) + ',' + Y(0) + '" fill="none" stroke="#8B95A1" stroke-width="1.5"/><text class="lab" x="' + X(B.revolve) + '" y="' + (Y(0) + 11) + '" text-anchor="middle" style="font-weight:700;fill:#4E5968">정문</text>';
@@ -603,10 +604,13 @@
     if (R.sel && R.mode === '3d' && R.g) flyTo(zoneView(R.g, R.sel), 800);
   }
   function layoutViewer() {
-    /* v5.32: 잘라 낸 그림을 화면 폭에 꽉 채운다(양옆 12px) · 화면보다 짧으면 위에 붙이고 · 길면 세로로 끌어 본다(사용자 261003 「꽉 차게」) */
+    /* v5.32: 잘라 낸 그림을 화면 폭에 꽉 채운다(양옆 12px) · 길면 세로로 끌어 본다(사용자 261003 「꽉 차게」)
+     * v5.34: 흰 판 카드 = 모든 판 같은 크기(보기 영역을 채움 · 둘레 12px · 모서리 8px · 사용자 261003 「흰 바탕은 늘 고정값」) · 그림은 카드 안 위부터 · 가로 간판 · 현수막은 가운데 · 긴 판만 카드가 늘어나 세로로 끌어 봄 */
     var V = R.V, p = V.list[V.i], s = D.cropSize(p), r = $('vs').getBoundingClientRect(), vi = $('vimg');
     V.bw = r.width; V.bh = r.height;
-    V.iw = V.bw - 24; V.ih = V.iw * s[1] / s[0];
+    V.iw = V.bw - 24; V.imgH = V.iw * s[1] / s[0];
+    var cardH = Math.max(1, V.bh - 24); V.ih = Math.max(cardH, V.imgH);
+    var ps0 = D.pgSize(p); V.off = ps0[0] > ps0[1] && V.imgH < cardH ? (cardH - V.imgH) / 2 : 0;   /* 가로 간판 · 현수막만 가운데(자른 그림 비율이 아니라 판 자체 비율로 가림) */
     vi.style.width = V.iw + 'px'; vi.style.height = V.ih + 'px';
     V.s = 1; V.tx = (V.bw - V.iw) / 2; V.ty = 12;
     return r;
@@ -620,7 +624,8 @@
     var a = z ? acts(z)[0] : null; $('vAct').textContent = a ? a.lbl : ''; $('vAct').style.visibility = a ? '' : 'hidden';
     pic.alt = D.PG[p];
     var r = layoutViewer();
-    vi.setAttribute('style', 'width:' + V.iw + 'px;height:' + V.ih + 'px;' + cropBg(p, V.iw) + ';opacity:0');
+    vi.setAttribute('style', 'width:' + V.iw + 'px;height:' + V.ih + 'px;border-radius:8px;overflow:hidden;opacity:0');
+    $('vbg').setAttribute('style', 'position:absolute;left:0;top:' + V.off.toFixed(1) + 'px;width:100%;height:' + V.imgH.toFixed(1) + 'px;' + cropBg(p, V.iw));
     pic.style.opacity = 0; pic.removeAttribute('src');
     var hi = new Image(); hi.onload = function () { if (R && R.V === V && V.list[V.i] === p) { pic.src = hi.src; pic.style.opacity = 1; } }; hi.src = cropSrc(p);
     [V.list[V.i - 1], V.list[V.i + 1]].forEach(function (q) { if (q) { var im = new Image(); im.src = cropSrc(q); } });

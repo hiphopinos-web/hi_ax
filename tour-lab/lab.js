@@ -32,10 +32,15 @@
     { id: 'lab', zone: 'lab', x: 27.9, z: 3.25 },
     { id: 'action', zone: 'action', x: 22.3, z: 3.25 },
     { id: 'play', zone: 'play', x: 9.6, z: 3.0, look: [8.6, 0.55] },
-    { id: 'event', zone: 'event', x: 3.5, z: 6.6 },
-    { id: 'lounge', zone: 'lounge', x: 8.7, z: 8.3 },
-    { id: 'cafe', zone: 'cafe', x: 18.4, z: 9.5, look: [18.4, 13], where: '게이트 · 엘리베이터 앞' }
+    /* EVENT = 세 자리(사용자 261003) · 타자왕(홍보 영상) · 포토부스(판 보기 · 챗봇 없음) · 룰렛(호객만 · 판 보기 없음) */
+    { id: 'typing', zone: 'event', spot: 'typing', name: 'AX 타자왕', x: 3.3, z: 2.5, look: [0.55, 2.47], say: 'AX 타자왕 · 1~3위 경품 · 17:00 마감', go: '영상 보기 ▶' },
+    { id: 'event', zone: 'event', name: '포토부스', x: 3.5, z: 6.9, look: [0.55, 7.35], noGuide: true },
+    { id: 'roulette', zone: 'event', spot: 'roulette', name: '룰렛 이벤트', x: 3.4, z: 10.1, look: [0.55, 10.15], say: '스탬프 3개 모으면 룰렛을 돌릴 수 있어요', go: '', hand: true },
+    { id: 'lounge', zone: 'lounge', x: 8.7, z: 8.3 }
   ];
+  /* 18F 커피챗 · 체크인 존은 시험판에서 뺀다(사용자 261003) · 코드는 SHOW_CAFE 로 보존 */
+  var SHOW_CAFE = false;
+  if (SHOW_CAFE) STOPS.push({ id: 'cafe', zone: 'cafe', x: 18.4, z: 9.5, look: [18.4, 13], where: '게이트 · 엘리베이터 앞' });
   function zoneCenter(z) {
     if (!z || !z.rows.length) return null;
     var sx = 0, sz = 0, n = 0;
@@ -45,7 +50,7 @@
   STOPS.forEach(function (s) {
     var z = s.zone ? D.Z(s.zone) : null; s.z0 = z;
     if (!s.look) s.look = zoneCenter(z);
-    if (z) s.name = z.id === 'cafe' ? '18F 커피챗' : z.name;
+    if (z && !s.name) s.name = z.id === 'cafe' ? '18F 커피챗' : z.name;
   });
 
   /* ─────────── 상태 ─────────── */
@@ -77,7 +82,7 @@
     S = window.TourScene.build({ T: T, D: D, P: P, N3: N3, renderer: renderer, scene: scene, labelFont: '"Pretendard Variable", Pretendard, sans-serif' });
     scene.add(S.lobby); scene.add(S.cafe);
     buildBot(); scene.add(bot);
-    cv.addEventListener('webglcontextlost', function (e) { e.preventDefault(); toMap('3D 화면이 끊겨 평면 지도로 바꿨어요'); });
+    cv.addEventListener('webglcontextlost', function (e) { e.preventDefault(); noGl('3D 화면이 끊겼어요 · 새로 고침해 주세요'); });
     G.ok = true;
     return true;
   }
@@ -101,6 +106,7 @@
     var stx = new T.CanvasTexture(sc);
     shadow = new T.Mesh(new T.PlaneGeometry(1.1, 1.1), new T.MeshBasicMaterial({ map: stx, transparent: true, depthWrite: false }));
     shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.02; shadow.renderOrder = 3; bot.add(shadow);
+    botParts.waves = [0, 1, 2].map(function () { var sp = new T.Sprite(new T.SpriteMaterial({ map: arcTex(), transparent: true, depthWrite: false, opacity: 0 })); sp.position.y = 1.0; sp.scale.set(0.3, 0.3, 1); body.add(sp); return sp; });
     bot.scale.setScalar(0.95);
   }
 
@@ -215,18 +221,18 @@
   /* ═══════════ 받기 ═══════════ */
   function load() {
     $('load').hidden = false;
-    S.load(BASE + 'lobby.glb?v=' + LABVER, function (k) { $('load').textContent = '모형 불러오는 중 ' + Math.round(k * 100) + '%'; }, function () {
+    S.load(BASE + 'lobby.glb?v=' + LABVER, function (k) { $('load').textContent = '모형 불러오는 중 ' + Math.round(k * 100) + '%'; var bt = $('blackT'); if (!bt.classList.contains('on')) bt.textContent = '불러오는 중 ' + Math.round(k * 100) + '%'; }, function () {
       buildGrid(S.lobby); patchPillars(S.lobby);
       var st = STOPS[0], f = nearestFree(st.x, st.z); flood(f[0], f[1]);
       STOPS.forEach(function (s) { var q = nearestFree(s.x, s.z); if (q) { s.x = q[0]; s.z = q[1]; } });
-      buildGuides();
+      buildGuides(); hideCheckin(); buildTypingTv();
       G.loaded = true; $('load').hidden = true;
       placeAt(0, true);
-      buildPins(); buildMini();
+      buildPins(); buildMini(); buildMags();
       try { renderer.compile(scene, camera); } catch (e) {}
       G.need = true; G.loadMs = Math.round(performance.now() - G.t0);
-      maybeHelp();
-    }, function () { toMap('모형을 받지 못해 평면 지도로 보여요'); });
+      entrance();
+    }, function () { noGl('모형을 받지 못했어요 · 새로 고침해 주세요'); });
   }
 
   /* ═══════════ 이동 ═══════════ */
@@ -234,6 +240,7 @@
   function planOf(v) { return [v.x + 16, 6 - v.z]; }
   function faceTo(look, x, z) { var a = toThree(look[0], look[1]), b = toThree(x, z); return Math.atan2(a.x - b.x, a.z - b.z); }
   function faceAz(s) { var fx = s.look[0] - s.x, fz = s.look[1] - s.z, a = Math.atan2(fx, -fz); return Math.round(a / (Math.PI / 2)) * (Math.PI / 2); }
+  function setZoom3(d) { var z = clamp((G.zoom || 0) + d, 0, ZOOMS.length - 1); if (z !== G.zoom) { G.zoom = z; G.need = true; } $('zIn').disabled = G.zoom === 0; $('zOut').disabled = G.zoom === ZOOMS.length - 1; }
   function rotView(d) { if (G.anim) return; G.azTo += d * Math.PI / 2; G.need = true; }
   function placeAt(k, snap) {
     var s = STOPS[k]; G.pos.copy(toThree(s.x, s.z)); G.h = s.look ? faceTo(s.look, s.x, s.z) : G.h; G.stop = k; G.mode = 'stop'; G.path = null;
@@ -304,11 +311,12 @@
    * 방위 고정 = 북쪽(코어 쪽) 위에서 남쪽(정문 · 유리벽 판 앞면)을 본다 · 회전 없음 · 캐릭터를 부드럽게 따라 옮겨 갈 뿐이다
    * 거리 2단계(멀리 11.5m · 가까이 8m · 두 손가락 벌리기 / 오므리기) · 카메라 높이는 늘 천장(5m) 위라 벽 속 · 회색 화면이 생기지 않는다
    *   (모형은 카메라 쪽 벽 · 천장을 스스로 숨긴다 · tour-scene cutaway) · 시선을 가리는 기둥(5m)만 점점이 비운다 */
-  var PITCH = 40 * Math.PI / 180, ZOOMS = [11.5, 8.0];
+  /* 거리 2단계 · 0 = 기본 6.5m(사용자 261003 「너무 멀다 · 확대한 것보다 조금 더」 · 카메라 높이 = 6.5 x sin40 + 0.9 = 5.08m 로 천장 5m 위) · 1 = 조금 멀리 9m */
+  var PITCH = 40 * Math.PI / 180, ZOOMS = [6.5, 9.0, 12.0], AHEAD = [1.3, 1.8, 2.2];   /* 2 = 멀리 12m · 오른쪽 「확대 · 축소」 버튼과 두 손가락이 이 세 단계를 오간다 */
   function camWant() {
     /* 바라보는 점 = 캐릭터보다 남쪽(화면 위쪽)으로 조금 · 캐릭터는 화면 가운데 아래에 서고 앞의 판 줄이 더 넓게 보인다 */
     /* 방위 G.az · 0 = 북쪽 위에서 남쪽(정문)을 봄 · 「시점 돌리기」로 90도씩 · 화면 위 = (sin az, cos az) */
-    var c = G.pos, d = ZOOMS[G.zoom || 0], hd = d * Math.cos(PITCH), y = d * Math.sin(PITCH), ahead = G.zoom ? 1.4 : 2.2, fx = Math.sin(G.az), fz = Math.cos(G.az);
+    var c = G.pos, d = ZOOMS[G.zoom || 0], hd = d * Math.cos(PITCH), y = d * Math.sin(PITCH), ahead = AHEAD[G.zoom || 0], fx = Math.sin(G.az), fz = Math.cos(G.az);
     return { pos: new T.Vector3(c.x + fx * (ahead - hd), y + 0.9, c.z + fz * (ahead - hd)), look: new T.Vector3(c.x + fx * ahead, 0.9, c.z + fz * ahead) };
   }
   function stepCam(dt) {
@@ -340,6 +348,7 @@
       box.appendChild(b); pinEls.push({ el: b, at: S.anchors[z.id], max: 40 });
     });
     (S.landmarks || []).forEach(function (l) {
+      if (l.id === 'lm_check') return;   /* 체크인 존은 시험판에서 뺌 */
       var d = document.createElement('div'); d.className = 'pin lm'; d.innerHTML = '<span class="s">' + esc(l.label) + '</span>';
       box.appendChild(d); pinEls.push({ el: d, at: S.anchors[l.id], max: 20, lm: true });
     });
@@ -357,7 +366,7 @@
   }
 
   /* ═══════════ 안내 챗봇(구역마다 1명 · 사용자 261003) ═══════════
-   * 내 캐릭터와 다른 색(흰 머리 + 먹색 띠) · 가슴 가운데 작은 가로 명찰(주황 바탕 흰 「STAFF」 · 사용자 261003 「목걸이 말고 가슴 명찰만」 · 흔들림 없음)
+   * 몸 = 파랑(현대해상 공식 HI Navy #001F5B · 사용자 261003 「안내 챗봇 몸은 파란색」 · design.md 예외는 메인이 기록) · 띠 · 안테나 공 · 눈 = 흰색 · 왼쪽 가슴 작은 가로 명찰(주황 바탕 흰 「STAFF」 · 흔들림 없음) · 전파는 주황(파랑 몸 위 대비 · 내 캐릭터와 같은 행사 색)
    * 서는 자리 = 그 구역 멈춤 자리에서 판 쪽으로 0.7m · 오른쪽으로 1.1m(통로를 막지 않게) · 내가 가까이 오면 나를 향해 돌아서고 말풍선 한 줄(앱 1F 구역 한 줄 소개 + 「이에요」) */
   var guides = [];
   function staffTex() {   /* 가로 명찰 · 주황 바탕 + 흰 「STAFF」 */
@@ -374,8 +383,9 @@
     ARC = new T.CanvasTexture(c); ARC.colorSpace = T.SRGBColorSpace; return ARC;
   }
   var GUIDE_MAT = null;
-  function makeGuide() {
-    if (!GUIDE_MAT) GUIDE_MAT = { head: new T.MeshLambertMaterial({ color: 0xF4F5F7, side: T.DoubleSide }), band: new T.MeshLambertMaterial({ color: 0x2B3038 }), ink: new T.MeshBasicMaterial({ color: 0x191F28 }), card: new T.MeshBasicMaterial({ map: staffTex(), toneMapped: false }), edge: new T.MeshBasicMaterial({ color: 0xE5671E, toneMapped: false }) };
+  function makeGuide(hand) {
+    var GC = 0x001F5B;   /* 현대해상 공식 HI Navy */
+    if (!GUIDE_MAT) GUIDE_MAT = { head: new T.MeshLambertMaterial({ color: GC, side: T.DoubleSide }), band: new T.MeshLambertMaterial({ color: 0xFFFFFF }), ink: new T.MeshBasicMaterial({ color: 0xFFFFFF }), card: new T.MeshBasicMaterial({ map: staffTex(), toneMapped: false }), edge: new T.MeshBasicMaterial({ color: 0xE5671E, toneMapped: false }) };
     var M = GUIDE_MAT, g = new T.Group(), body = new T.Group(); g.add(body);
     var pts = [new T.Vector2(0.335, 0.24)];
     for (var i = 0; i <= 12; i++) { var a = i / 12 * Math.PI / 2; pts.push(new T.Vector2(Math.max(0.0001, Math.cos(a) * 0.335), 0.43 + Math.sin(a) * 0.36)); }
@@ -384,33 +394,38 @@
     var st = new T.Mesh(new T.CylinderGeometry(0.02, 0.02, 0.13, 8), M.head); st.position.y = 0.85; body.add(st);
     var ball = new T.Mesh(new T.SphereGeometry(0.075, 14, 10), M.band); ball.position.y = 0.94; body.add(ball);
     [-1, 1].forEach(function (s) { var e = new T.Mesh(new T.SphereGeometry(0.046, 10, 8), M.ink); e.scale.set(1, 1.15, 0.45); e.position.set(s * 0.12, 0.6, 0.29); body.add(e); });
-    /* 가슴 명찰 · 눈 아래 가운데 · 0.2 x 0.075m 얇은 판(앞면만 글자) */
-    var badge = new T.Mesh(new T.BoxGeometry(0.2, 0.075, 0.012), [M.edge, M.edge, M.edge, M.edge, M.card, M.edge]); badge.position.set(0, 0.4, 0.336); body.add(badge);
+    /* 가슴 명찰 · 호텔리어처럼 왼쪽 가슴(착용자 기준 왼쪽 = 앞에서 보면 챗봇의 오른쪽 · 로컬 +x) · 0.15 x 0.055m 얇은 판 · 몸 곡면에 맞춰 살짝 돌림 */
+    var badge = new T.Mesh(new T.BoxGeometry(0.15, 0.055, 0.012), [M.edge, M.edge, M.edge, M.edge, M.card, M.edge]); badge.position.set(0.14, 0.43, 0.31); badge.rotation.y = Math.atan2(0.14, 0.31); body.add(badge);
     /* 머리 위 전파 · 「띠로 띠로」 · 위로 열린 원호 3겹이 차례로 퍼졌다 사라진다(스프라이트 · 늘 카메라를 봄) */
     var waves = [0, 1, 2].map(function () { var sp = new T.Sprite(new T.SpriteMaterial({ map: arcTex(), transparent: true, depthWrite: false, opacity: 0 })); sp.position.y = 1.1; sp.scale.set(0.3, 0.3, 1); body.add(sp); return sp; });
-    g.userData = { body: body, waves: waves, ph: Math.random() };
+    /* 룰렛 자리 챗봇만 · 손(작은 공)을 들어 흔든다(호객) */
+    var arm = null;
+    if (hand) { arm = new T.Group(); arm.position.set(-0.3, 0.42, 0.05); var hd = new T.Mesh(new T.SphereGeometry(0.075, 12, 10), M.band); hd.position.set(-0.12, 0.2, 0); var lim = new T.Mesh(new T.CylinderGeometry(0.03, 0.03, 0.22, 8), M.head); lim.position.set(-0.06, 0.1, 0); lim.rotation.z = 0.5; arm.add(lim); arm.add(hd); body.add(arm); }
+    g.userData = { body: body, waves: waves, ph: Math.random(), arm: arm };
     g.scale.setScalar(0.95);
     return g;
   }
   function buildGuides() {
     STOPS.forEach(function (s, k) {
-      if (!s.zone || s.zone === 'cafe' || !s.look) return;
+      if (!s.zone || s.zone === 'cafe' || !s.look || s.noGuide) return;
       var fx = s.look[0] - s.x, fz = s.look[1] - s.z, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
       var rx = fz, rz = -fx;   /* 판을 보는 사람의 오른쪽(도면 좌표 · z 북쪽) */
       var gx = s.x + rx * 1.1 + fx * 0.7, gz = s.z + rz * 1.1 + fz * 0.7, q = nearestFree(gx, gz) || [gx, gz];
-      var m = makeGuide(); m.position.copy(toThree(q[0], q[1]));
+      var m = makeGuide(!!s.hand); m.position.copy(toThree(q[0], q[1]));
       var h0 = Math.atan2(-fx, fz);   /* 평소 = 통로(판 반대쪽)를 본다 · three 방향 = (sin h, cos h), 도면 z 북쪽 = three -z */
       m.rotation.y = h0; S.lobby.add(m);
       /* 걸음 막기 · 반지름 0.62m(캐릭터 여유 포함) */
       for (var dz = -7; dz <= 7; dz++) for (var dx = -7; dx <= 7; dx++) if (dx * dx + dz * dz <= 40) { var c = gi(q[0] + dx * GS, q[1] + dz * GS); if (c >= 0) wd[c] = 1; }
-      guides.push({ m: m, stop: k, zone: s.zone, at: [q[0], q[1]], h: h0, h0: h0, text: (ZT[s.zone] || '') });
+      guides.push({ m: m, stop: k, id: s.id, zone: s.zone, spot: s.spot || '', at: [q[0], q[1]], h: h0, h0: h0, text: s.say || ZT[s.zone] || '', go: s.go == null ? '판 보기 ▶' : s.go });
     });
   }
   var ZT = { vision: '회사가 가는 방향을 보는 곳이에요', lab: 'DAP 과제를 보는 곳이에요', action: 'AI 업무 사례를 보는 곳이에요', play: 'AI를 직접 써 보는 곳이에요', event: '사진 · 룰렛 · 타자왕이 있는 곳이에요', lounge: '업무 고민을 상담하는 곳이에요' };   /* 앱 FLOOR1 kor 한 줄 + 「이에요」 */
   function stepGuides(dt) {
-    var p = planOf(G.pos), busy = false, talk = null;
+    var p = planOf(G.pos), busy = false, talk = null, bestD = 1e9, nearestG = guides.reduce(function (m, g) { return Math.min(m, Math.hypot(p[0] - g.at[0], p[1] - g.at[1])); }, 1e9);
     guides.forEach(function (gd) {
-      var d = Math.hypot(p[0] - gd.at[0], p[1] - gd.at[1]), near = G.mode !== 'auto' && d < 3.6 && G.near && G.near.id === gd.zone;
+      var d = Math.hypot(p[0] - gd.at[0], p[1] - gd.at[1]), near = G.mode !== 'auto' && d < 3.0 && d <= nearestG + 0.01;   /* 가장 가까운 챗봇 하나만 · 3m 안 */
+      var f = clamp((6 - d) / 3.0, 0, 1);   /* 신호 세기 · 6m 밖 0 → 말풍선 거리(3m) 안 1 · 내 캐릭터 전파와 같은 곡선 */
+      if (d < bestD) bestD = d;
       var hT = near ? Math.atan2(p[0] - gd.at[0], -(p[1] - gd.at[1])) : gd.h0;
       var dh = Math.atan2(Math.sin(hT - gd.h), Math.cos(hT - gd.h));
       if (Math.abs(dh) > 0.003) { gd.h += dh * (1 - Math.exp(-dt * 6)); busy = true; }
@@ -418,25 +433,33 @@
       var u = gd.m.userData;
       gd.m.visible = d < 22;
       if (gd.m.visible) {   /* 전파 · 평소 1.7초에 한 번 「띠로 띠로」(세 겹) · 가까이 오면 1.0초 · 더 진하게 · 동작 줄이기 = 가운데 한 겹 정지 */
-        var per = near ? 1.0 : 1.7, tt = ((G.clock || 0) / per + u.ph) % 1;
-        u.waves.forEach(function (sp, i) {
-          if (RM) { sp.material.opacity = i === 1 ? 0.85 : 0; sp.scale.set(0.5, 0.5, 1); return; }
-          var t = (tt * per - i * 0.16) / 0.62; var on = t >= 0 && t <= 1;
-          sp.material.opacity = on ? (1 - t) * (near ? 1 : 0.75) : 0; var sc = 0.24 + (on ? t : 0) * 0.6; sp.scale.set(sc, sc, 1); sp.position.y = 1.08 + (on ? t : 0) * 0.12;
-        });
+        waveStep(u.waves, f, 0.35, u.ph, 1.08);
+        if (u.arm) { var wv = near && !RM ? Math.sin((G.clock || 0) * 9) * 0.6 : 0; u.arm.rotation.z = -0.4 + wv - (near ? 0.6 : 0); }
         busy = true;
       }
       if (near) talk = gd;
     });
     G.talk = talk;
+    /* 내 캐릭터 전파 · 평소 거의 안 보임 → 가장 가까운 챗봇에 다가갈수록 진하고 빠르게(서로 신호가 통하는 느낌) */
+    G.sig = clamp((6 - bestD) / 3.0, 0, 1);
+    if (botParts.waves) { waveStep(botParts.waves, G.sig, 0.0, 0.37, 1.0); if (G.sig > 0) busy = true; }
     return busy;
+  }
+  /* 전파 한 묶음 · f = 신호 세기 0~1 · base = 평소 진하기 · 주기 1.7초 → 1.0초 · 움직임 줄이기 = 가운데 한 겹 정지(진하기만 바뀜) */
+  function waveStep(waves, f, base, ph, y0) {
+    var a = base + (1 - base) * f, per = 1.7 - 0.7 * f, tt = ((G.clock || 0) / per + ph) % 1;
+    waves.forEach(function (sp, i) {
+      if (RM) { sp.material.opacity = i === 1 ? a * 0.9 : 0; sp.scale.set(0.5, 0.5, 1); sp.position.y = y0 + 0.06; return; }
+      var t = (tt * per - i * 0.16) / 0.62, on = t >= 0 && t <= 1;
+      sp.material.opacity = on ? (1 - t) * a : 0; var sc = 0.24 + (on ? t : 0) * 0.6; sp.scale.set(sc, sc, 1); sp.position.y = y0 + (on ? t : 0) * 0.12;
+    });
   }
   function placeBubble() {
     var b = $('gbub');
     if (!G.talk || G.anim || G.scn !== 'lobby') { if (!b.hidden) b.hidden = true; return; }
     var gd = G.talk; _p.copy(gd.m.position); _p.y = 1.72; _p.project(camera);   /* 전파(머리 위 1.0~1.5m)가 보이게 그 위에 */
     if (_p.z > 1) { b.hidden = true; return; }
-    if (b.getAttribute('data-z') !== gd.zone) { b.setAttribute('data-z', gd.zone); $('gbubT').textContent = gd.text; }
+    if (b.getAttribute('data-z') !== gd.id) { b.setAttribute('data-z', gd.id); $('gbubT').textContent = gd.text; var go = b.querySelector('.go'); go.textContent = gd.go; go.hidden = !gd.go; }
     b.hidden = false;
     var W = $('stage').clientWidth, H = $('stage').clientHeight, x = clamp((_p.x + 1) / 2 * W, 110, W - 110), y = (1 - _p.y) / 2 * H;
     b.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) translate(-50%,-100%)';
@@ -475,7 +498,10 @@
   }
   function stepAnim(now) {
     var A = G.anim, k = clamp((now - A.t0) / A.dur, 0, 1), sh = A.sh, pos = new T.Vector3(), look = new T.Vector3();
-    if (A.kind === 'in') {
+    if (A.kind === 'intro') {
+      var wi = camWant(), ei = easeIO(k), eL = 1 - Math.pow(1 - k, 3);
+      pos.lerpVectors(A.P0, wi.pos, ei); look.lerpVectors(A.L0, wi.look, eL);
+    } else if (A.kind === 'in') {
       if (k < 0.5) { var e = easeIO(k / 0.5); pos.lerpVectors(A.P0, sh.P1, e); look.lerpVectors(A.L0, sh.L1, e); }
       else { var e2 = easeIO((k - 0.5) / 0.5); pos.lerpVectors(sh.P1, sh.P2, e2); look.lerpVectors(sh.L1, sh.L2, e2); }
       $('fade').style.opacity = k > 0.72 ? ((k - 0.72) / 0.28).toFixed(3) : 0;
@@ -488,9 +514,19 @@
     camera.position.copy(pos); camera.lookAt(look);
     if (k >= 1) {
       G.anim = null;
-      if (A.kind === 'in') { openSheet(A.z, A.idx); setTimeout(function () { $('fade').style.opacity = 0; }, 260); }
+      if (A.kind === 'intro') { G.camPos.copy(camera.position); G.look.copy(look); if (A.done) setTimeout(A.done, 0); }
+      else if (A.kind === 'in') { openSheet(A.z, A.idx); setTimeout(function () { $('fade').style.opacity = 0; }, 260); }
       else { G.camPos.copy(camera.position); G.look.copy(look); $('fade').style.opacity = 0; }
     }
+  }
+  /* 시작 연출 · 1층 전체가 보이는 높은 스카이뷰에서 캐릭터 쪽으로 1.4초 줌인 → 기본 거리(처음 안내를 닫은 뒤 · 18F 에서 돌아올 때) · 움직임 줄이기 = 짧은 흰 화면 뒤 바로 */
+  function intro(done) {
+    if (!G.loaded || G.scn !== 'lobby') { if (done) done(); return; }
+    var w = camWant();
+    if (RM) { G.camPos.copy(w.pos); G.look.copy(w.look); G.need = true; if (done) done(); return; }
+    var fx = Math.sin(G.az), fz = Math.cos(G.az), L0 = new T.Vector3(0, 0, -2.5), P0 = new T.Vector3(-fx * 16, 46, -2.5 - fz * 16);   /* 로비 가운데(도면 16, 8.5) 위 46m · 지금 방위 그대로 */
+    G.anim = { kind: 'intro', t0: performance.now(), dur: 1300, P0: P0, L0: L0, done: done };
+    camera.position.copy(P0); camera.lookAt(L0); G.need = true;
   }
   function exitPanel() {
     if (RM || !G.lastFace || !G.loaded || G.scn !== 'lobby') { G.lastFace = null; return; }
@@ -499,9 +535,81 @@
     G.anim = { kind: 'out', t0: performance.now(), dur: 750, sh: sh };
   }
 
+
+  /* ═══════════ 체크인 존 숨김 · 타자왕 TV · 돋보기 표식(사용자 261003) ═══════════ */
+  var HIDE_PG = [40, 41, 47];   /* 체크인 천막 현수막 40 · 엑스배너 47 · 출입구 안내 41(천막 묶음과 같이 문 밖 · 체크인이 없으면 홀로 남아 뺌) */
+  function hideCheckin() {
+    S.lobby.traverse(function (o) { if (o.name === 'checkin' || o.name === 'panel_41') o.visible = false; });
+  }
+  var tvMat = null;
+  function buildTypingTv() {
+    var c = document.createElement('canvas'); c.width = 180; c.height = 320; var g = c.getContext('2d');
+    var gr = g.createLinearGradient(0, 0, 0, 320); gr.addColorStop(0, '#2A1A10'); gr.addColorStop(1, '#191F28'); g.fillStyle = gr; g.fillRect(0, 0, 180, 320);
+    g.fillStyle = 'rgba(255,127,50,.35)'; for (var y = 8; y < 320; y += 12) for (var x = 8; x < 180; x += 12) if ((x * 7 + y * 3) % 5 === 0) g.fillRect(x, y, 3, 3);
+    g.fillStyle = '#FF7F32'; g.font = '800 30px "Pretendard Variable", Pretendard, sans-serif'; g.textAlign = 'center'; g.fillText('AX 타자왕', 90, 120);
+    g.fillStyle = '#FFFFFF'; g.font = '700 18px "Pretendard Variable", Pretendard, sans-serif'; g.fillText('1~3위 경품', 90, 156);
+    g.beginPath(); g.moveTo(76, 196); g.lineTo(76, 240); g.lineTo(112, 218); g.closePath(); g.fillStyle = '#FF7F32'; g.fill();
+    g.fillStyle = 'rgba(255,255,255,.8)'; g.font = '600 15px "Pretendard Variable", Pretendard, sans-serif'; g.fillText('재생 중', 90, 272);
+    var t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace;
+    tvMat = new T.MeshBasicMaterial({ map: t, toneMapped: false });
+    var gp = new T.Group(), dark = new T.MeshLambertMaterial({ color: 0x1D2127 });
+    var frame = new T.Mesh(new T.BoxGeometry(0.06, 1.18, 0.68), dark); frame.position.set(0, 1.3, 0); gp.add(frame);
+    var scr = new T.Mesh(new T.PlaneGeometry(0.6, 1.08), tvMat); scr.rotation.y = Math.PI / 2; scr.position.set(0.032, 1.3, 0); gp.add(scr);
+    var pole = new T.Mesh(new T.CylinderGeometry(0.03, 0.03, 0.72, 8), dark); pole.position.set(-0.05, 0.36, 0); gp.add(pole);
+    var base = new T.Mesh(new T.CylinderGeometry(0.28, 0.28, 0.02, 20), dark); base.position.set(-0.05, 0.01, 0); gp.add(base);
+    var at = [0.95, 1.25]; gp.position.copy(toThree(at[0], at[1])); S.lobby.add(gp);   /* 타자왕 판(39) 왼쪽(남쪽) · 동쪽(통로)을 봄 */
+    gp.userData = { promo: true }; gp.traverse(function (o) { o.userData = { promo: true }; });
+    for (var dz = -5; dz <= 5; dz++) for (var dx = -5; dx <= 5; dx++) if (dx * dx + dz * dz <= 26) { var ci = gi(at[0] + dx * GS, at[1] + dz * GS); if (ci >= 0) wd[ci] = 1; }
+  }
+  /* 돋보기 · 그림이 있는 요소마다(판 · 간판 · 엑스배너 · 기둥 포스터) · 캐릭터 4.5m 안 · 카메라 쪽을 보는 것만 · 누르면 크게 */
+  var mags = [];
+  function buildMags() {
+    var box = $('mags'); box.innerHTML = ''; mags = [];
+    var ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg>';
+    function add(pg, at, n, extra) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'mag'; b.innerHTML = ICON; b.setAttribute('aria-label', (D.PG[pg] || '') + ' 크게 보기');
+      b.onclick = function () { openMag(pg); };
+      box.appendChild(b); mags.push(Object.assign({ el: b, pg: pg, at: at, n: n }, extra || {}));
+    }
+    Object.keys(S.faces).forEach(function (k) {
+      var pg = +k, f = S.faces[pg]; if (HIDE_PG.indexOf(pg) >= 0 || pg === 46 || !f) return;
+      var u = f.userData, n = new T.Vector3(u.n.x, 0, u.n.z).normalize(), y = Math.max(0.28, u.c.y - u.size[1] / 2 + 0.16);
+      add(pg, new T.Vector3(u.c.x + n.x * 0.3, y, u.c.z + n.z * 0.3), n);
+    });
+    D.BLD.cols.forEach(function (x) { add(46, null, null, { pillar: toThree(x, D.BLD.colZ) }); });   /* 기둥 포스터 · 기둥마다 하나 · 카메라 쪽 면 앞에 */
+  }
+  var _m = new T.Vector3(), _c = new T.Vector3();
+  function placeMags() {
+    var W = $('stage').clientWidth, H = $('stage').clientHeight, on = G.loaded && G.scn === 'lobby' && !G.anim;
+    mags.forEach(function (m) {
+      if (!on) { m.el.style.display = 'none'; return; }
+      if (m.pillar) {
+        _c.set(camera.position.x - m.pillar.x, 0, camera.position.z - m.pillar.z).normalize();
+        m.at = _m.set(m.pillar.x + _c.x * 0.72, 0.5, m.pillar.z + _c.z * 0.72).clone();
+      } else if (m.n.x * (camera.position.x - m.at.x) + m.n.z * (camera.position.z - m.at.z) < 0) { m.el.style.display = 'none'; return; }
+      var d = Math.hypot(m.at.x - G.pos.x, m.at.z - G.pos.z);
+      if (d > 4.5) { m.el.style.display = 'none'; return; }
+      _m.copy(m.at).project(camera);
+      if (_m.z > 1 || Math.abs(_m.x) > 0.98 || Math.abs(_m.y) > 0.98) { m.el.style.display = 'none'; return; }
+      m.el.style.display = ''; m.el.style.transform = 'translate(' + ((_m.x + 1) / 2 * W).toFixed(1) + 'px,' + ((1 - _m.y) / 2 * H).toFixed(1) + 'px) translate(-50%,-50%)';
+    });
+  }
+  function openMag(pg) {
+    var z = D.zoneOfPg(pg);
+    if (z && z.id !== 'cafe') { enterPanel(z, pg); return; }
+    openSheet(null, 0, [pg]);   /* 구역 밖 안내물(엑스배너 · 기둥 포스터) · 한 장 */
+  }
+  /* 타자왕 홍보 영상 · TV 순위판 홍보 전용 모드(../tv/typing/?promo=1 · 순위 호출 0) · 전체 화면 시트 안 9:16 */
+  function openPromo() {
+    var v = $('vid'), b = $('vbody'); v.hidden = false; G.sheetOpen = true;
+    var W = b.clientWidth - 24, H = b.clientHeight - 24, w = Math.min(W, H * 9 / 16), h = w * 16 / 9;
+    b.innerHTML = '<iframe title="AX 타자왕 홍보 영상" src="../tv/typing/?promo=1" style="width:' + w.toFixed(0) + 'px;height:' + h.toFixed(0) + 'px" allow="autoplay" loading="eager"></iframe>';
+  }
+  function closePromo() { $('vid').hidden = true; $('vbody').innerHTML = ''; G.sheetOpen = false; G.need = true; G.last = 0; }
+
   /* ═══════════ 작은 지도(오른쪽 위 · 사용자 261003 「지금 어디쯤 있는지」) ═══════════
    * 방위 = 3D 시점과 같다(지도 위 = 화면 위 = 남쪽 정문 · 오른쪽 = 서쪽) · 구역 칸 · 출입문 · 체크인 · 내 자리(주황 점 + 바라보는 쪽) · 다음 구역 강조 · 누르면 「구역 목록」 큰 지도 */
-  var MM = { x0: -1, x1: 46.5, z0: -1.5, z1: 27.5, k: 2.6 };
+  var MM = { x0: -1, x1: 34, z0: -1.5, z1: 27.5, k: 3.4 };   /* 체크인 존을 뺀 뒤 = 건물만 */
   MM.W = (MM.x1 - MM.x0) * MM.k; MM.H = (MM.z1 - MM.z0) * MM.k; MM.S = Math.max(MM.W, MM.H);
   /* 지도 좌표 = 북쪽 위(평면 지도와 같음) · 통째로 돌려 「지도 위 = 화면 위」를 맞춘다 · N 표시가 북쪽을 알려 준다 */
   function mmX(x) { return ((x - MM.x0) * MM.k).toFixed(1); }
@@ -510,8 +618,7 @@
     var B = D.BLD, S2 = MM.S, o = '<svg viewBox="0 0 ' + S2.toFixed(1) + ' ' + S2.toFixed(1) + '" aria-hidden="true"><g id="mmRot">';
     o += '<polygon points="' + B.outline.map(function (q) { return mmX(q[0]) + ',' + mmY(q[1]); }).join(' ') + '" fill="#FFFFFF" stroke="#B0B8C1" stroke-width="1"/>';
     B.cores.forEach(function (c) { o += '<rect x="' + mmX(c[0]) + '" y="' + mmY(B.coreN) + '" width="' + ((c[1] - c[0]) * MM.k).toFixed(1) + '" height="' + ((B.coreN - B.lobbyN) * MM.k).toFixed(1) + '" fill="#E5E8EB"/>'; });
-    var O = B.outside; o += '<rect x="' + mmX(O.x0) + '" y="' + mmY(O.z1) + '" width="' + ((O.x1 - O.x0) * MM.k).toFixed(1) + '" height="' + ((O.z1 - O.z0) * MM.k).toFixed(1) + '" rx="2" fill="#EEF0F2"/>';
-    var ci = D.PROPS.checkin.at; o += '<rect x="' + mmX(ci[0] - 1.5) + '" y="' + mmY(ci[1] + 1.5) + '" width="' + (3 * MM.k).toFixed(1) + '" height="' + (3 * MM.k).toFixed(1) + '" fill="#FFFFFF" stroke="#8B95A1" stroke-width="1"/>';
+    if (B.room3) o += '<polygon points="' + B.room3.pts.map(function (q) { return mmX(q[0]) + ',' + mmY(q[1]); }).join(' ') + '" fill="#F2F4F6" stroke="#B0B8C1" stroke-width="0.8"/>';
     D.ZONES.forEach(function (z) {
       if (!z.rows.length) return;
       var b = zoneRect(z);
@@ -542,10 +649,11 @@
   }
 
   /* ═══════════ 가까운 구역 · 떠오르는 버튼 · 아래 줄 ═══════════ */
+  function nearSpot() { var p = planOf(G.pos), best = null, bd = 3.0; STOPS.forEach(function (s) { if (!s.spot) return; var d = Math.hypot(s.x - p[0], s.z - p[1]); if (d < bd) { bd = d; best = s; } }); return best; }
   function nearZone() {
     var p = planOf(G.pos), best = null, bd = 1e9;
     D.ZONES.forEach(function (z) {
-      if (z.id === 'cafe') { var dg = Math.hypot(p[0] - 18.4, p[1] - 10.4); if (dg < 2.6 && dg < bd) { bd = dg; best = z; } return; }
+      if (z.id === 'cafe') { if (!SHOW_CAFE) return; var dg = Math.hypot(p[0] - 18.4, p[1] - 10.4); if (dg < 2.6 && dg < bd) { bd = dg; best = z; } return; }
       z.rows.forEach(function (r) {
         var n = r.pages.length, ax = r.a[0], az = r.a[1], bx = ax + r.r[0] * n, bz = az + r.r[1] * n, vx = bx - ax, vz = bz - az, t = clamp(((p[0] - ax) * vx + (p[1] - az) * vz) / (vx * vx + vz * vz), 0, 1);
         var qx = ax + vx * t, qz = az + vz * t, d = Math.hypot(p[0] - qx, p[1] - qz), front = (p[0] - qx) * r.n[0] + (p[1] - qz) * r.n[1];
@@ -555,10 +663,12 @@
     return best;
   }
   function updateUi(force) {
-    var z = G.mode === 'auto' ? null : nearZone(), key = (z ? z.id : '') + '|' + G.mode + '|' + G.stop + '|' + G.scn;
-    if (!force && key === G.ctaKey) return; G.ctaKey = key; G.near = z;
+    var z = G.mode === 'auto' ? null : nearZone(), sp = z ? nearSpot() : null; if (sp) z = D.Z(sp.zone); var key = (z ? z.id : '') + '|' + (sp ? sp.id : '') + '|' + G.mode + '|' + G.stop + '|' + G.scn;
+    if (!force && key === G.ctaKey) return; G.ctaKey = key; G.near = z; G.spot = sp;
     var cta = $('cta');
-    if (z && G.scn === 'lobby') {
+    if (sp && sp.spot === 'typing') { cta.innerHTML = 'AX 타자왕 영상 보기'; cta.hidden = false; }
+    else if (sp && sp.spot === 'roulette') cta.hidden = true;   /* 룰렛 자리는 판 보기 없음 · 챗봇이 호객만 */
+    else if (z && G.scn === 'lobby') {
       var n = D.zonePages(z).length;
       cta.innerHTML = z.id === 'cafe' ? '18F 커피챗 보기' : esc(z.name) + ' 판 크게 보기 <span class="n">' + n + '장</span>';
       cta.hidden = false;
@@ -567,7 +677,7 @@
     if (G.scn === 'cafe') cta.hidden = true;
     if (G.scn === 'cafe') w.textContent = '18F AX 커피챗';
     else if (G.mode === 'auto' && G.goal != null) w.textContent = STOPS[G.goal].name + '(으)로 가는 중';
-    else if (z) w.textContent = '지금: ' + (z.id === 'cafe' ? '게이트 · 엘리베이터 앞' : z.name + ' 앞') + ' · ' + (G.stop + 1) + ' / ' + STOPS.length;
+    else if (z) w.textContent = '지금: ' + (sp ? sp.name : z.id === 'cafe' ? '게이트 · 엘리베이터' : z.name) + ' 앞 · ' + (G.stop + 1) + ' / ' + STOPS.length;
     else w.textContent = '지금: ' + (G.mode === 'stop' && s.where ? s.where : '로비');
     $('bPrev').disabled = G.stop <= 0 && G.mode !== 'free';
     $('bNext').disabled = G.stop >= STOPS.length - 1 && G.mode === 'stop';
@@ -577,16 +687,16 @@
     $('navRow').hidden = G.scn === 'cafe'; $('cafeRow').hidden = G.scn !== 'cafe';
     $('cap').hidden = true;
   }
-  function onNext() { hideDrag(); var k = G.mode === 'auto' && G.goal != null ? G.goal + 1 : G.stop + 1; if (G.mode === 'free') { var z = nearZone(); var idx = z ? STOPS.findIndex(function (s) { return s.zone === z.id; }) : -1; k = idx >= 0 ? idx + 1 : G.stop + 1; } goStop(Math.min(STOPS.length - 1, k)); }
-  function onPrev() { hideDrag(); var k = G.mode === 'auto' && G.goal != null ? G.goal - 1 : G.stop - 1; if (G.mode === 'free') { var z = nearZone(); var idx = z ? STOPS.findIndex(function (s) { return s.zone === z.id; }) : -1; k = idx >= 0 ? idx - 1 : G.stop; } goStop(Math.max(0, k)); }
+  function onNext() { hideDrag(); if (G.mode === 'free') nearestStop(); var k = G.mode === 'auto' && G.goal != null ? G.goal + 1 : G.stop + 1; goStop(Math.min(STOPS.length - 1, k)); }
+  function onPrev() { hideDrag(); if (G.mode === 'free') nearestStop(); var k = G.mode === 'auto' && G.goal != null ? G.goal - 1 : G.stop - 1; goStop(Math.max(0, k)); }
 
   /* ═══════════ 18F 장면 ═══════════ */
   function toCafe() {
-    G.scn = 'cafe'; S.lobby.visible = false; bot.visible = false; S.cafe.visible = true; $('bubble').hidden = false; $('pad').hidden = true; $('mini').hidden = true;
+    G.scn = 'cafe'; S.lobby.visible = false; bot.visible = false; S.cafe.visible = true; $('bubble').hidden = false; $('pad').hidden = true; $('mini').hidden = true; $('ctl').hidden = true;
     G.cafe = { th: S.CAFE_DEF.th, ph: S.CAFE_DEF.ph, r: S.CAFE_DEF.r }; G.need = true; updateUi(true);
   }
   function backTo1F() {
-    G.scn = 'lobby'; S.lobby.visible = true; bot.visible = true; S.cafe.visible = false; $('bubble').hidden = true; $('pad').hidden = false; $('mini').hidden = false; G.need = true; updateUi(true);
+    G.scn = 'lobby'; S.lobby.visible = true; bot.visible = true; S.cafe.visible = false; $('bubble').hidden = true; $('pad').hidden = false; $('mini').hidden = false; $('ctl').hidden = false; G.need = true; updateUi(true); setTimeout(intro, 0);
   }
   function cafeCam() {
     var c = G.cafe, t = S.CAFE_DEF.t, s = Math.sin(c.ph);
@@ -609,7 +719,7 @@
       var q = pads.get(e.pointerId); if (q) { q.x = e.clientX; q.y = e.clientY; }
       if (pinch && pads.size >= 2 && !pinch.done) {
         var a = Array.from(pads.values()), d = Math.hypot(a[1].x - a[0].x, a[1].y - a[0].y), k = d / pinch.d0;
-        if (k > 1.25 && G.zoom !== 1) { G.zoom = 1; pinch.done = true; G.need = true; } else if (k < 0.8 && G.zoom !== 0) { G.zoom = 0; pinch.done = true; G.need = true; }
+        if (k > 1.25) { setZoom3(-1); pinch.done = true; } else if (k < 0.8) { setZoom3(1); pinch.done = true; }   /* 벌리기 = 한 단계 가까이 · 오므리기 = 한 단계 멀리 */
       }
       if (ptr && e.pointerId === ptr.id && Math.hypot(e.clientX - ptr.x0, e.clientY - ptr.y0) > 12) ptr.moved = true;
     });
@@ -621,7 +731,7 @@
     }
     cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
     cv.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-    cv.addEventListener('wheel', function (e) { e.preventDefault(); var z = e.deltaY < 0 ? 1 : 0; if (z !== G.zoom) { G.zoom = z; G.need = true; } }, { passive: false });
+    cv.addEventListener('wheel', function (e) { e.preventDefault(); setZoom3(e.deltaY < 0 ? -1 : 1); }, { passive: false });
     /* 고정 패드 · 바깥 원 안에서 손잡이를 민다 · 반지름 48px 이 최고 속도 */
     var pad = $('pad'), knob = $('knob'), pp = null;
     function padMove(e) {
@@ -661,6 +771,7 @@
       var pi = PIL.findIndex(function (q) { return Math.abs(q[0] - pn[0]) < 0.8 && Math.abs(q[1] - pn[1]) < 0.8; });
       if (pi >= 0 && G.fade[pi] < 0.5) continue;
       var u = o.userData || {};
+      if (u.promo) { openPromo(); return; }
       if (u.pg || u.zone) {
         var z = D.Z(u.zone) || D.zoneOfPg(u.pg);
         if (z && z.id !== 'cafe') { enterPanel(z, u.pg || null); return; }
@@ -700,7 +811,8 @@
     if (G.bench) { G.pos.x += Math.sin(now * 0.001) * dt * 1.5; busy = true; }
     if (!busy && !G.need && !G.showFps) return;
     G.need = false;
-    S.frame(camera, G.scn); renderer.render(scene, camera); placePins(); mini(); placeBubble();
+    if (tvMat) tvMat.color.setScalar(RM ? 1 : 0.86 + 0.14 * Math.sin((G.clock || 0) * 3));
+    S.frame(camera, G.scn); renderer.render(scene, camera); placePins(); mini(); placeBubble(); placeMags();
     var wm = performance.now() - w0; G.workMs = G.workMs == null ? wm : G.workMs * 0.95 + wm * 0.05; G.workMax = Math.max(G.workMax || 0, wm);
     if (!$('dest').hidden && G.destAt) { _p.copy(G.destAt).project(camera); $('dest').style.left = ((_p.x + 1) / 2 * $('stage').clientWidth).toFixed(1) + 'px'; $('dest').style.top = ((1 - _p.y) / 2 * $('stage').clientHeight).toFixed(1) + 'px'; }
     G.frames.push(now); while (G.frames.length && now - G.frames[0] > 1000) G.frames.shift();
@@ -719,18 +831,18 @@
     var Sz = D.ATLAS.size[a[0]], c = D.cropOf(p), cw = a[3] - 4, ch = a[4] - 4, k = w / (cw * (c[2] - c[0]));
     return 'background-image:url(' + BASE + D.ATLAS.files[a[0]] + ');background-size:' + (Sz * k).toFixed(1) + 'px ' + (Sz * k).toFixed(1) + 'px;background-position:' + (-(a[1] + 2 + c[0] * cw) * k).toFixed(1) + 'px ' + (-(a[2] + 2 + c[1] * ch) * k).toFixed(1) + 'px;background-repeat:no-repeat';
   }
-  function openSheet(z, i) {
-    var ps = D.zonePages(z); if (!ps.length) return;
+  function openSheet(z, i, list) {
+    var ps = list || D.zonePages(z); if (!ps.length) return;
     if (i == null) i = ps.length > 1 && D.SIGNS.indexOf(ps[0]) >= 0 ? 1 : 0;   /* 큰 버튼으로 열면 간판 다음 판부터(간판은 왼쪽으로 넘기면 있다) */
     SH = { z: z, ps: ps, i: clamp(i, 0, ps.length - 1), zoom: false };
-    $('shSign').textContent = z.name; $('shSign').className = 'sg';
+    $('shSign').textContent = z ? z.name : '자세히 보기'; $('shSign').className = z ? 'sg' : 'sg ghost';
     $('shTitle').textContent = '';
     var sheet = $('sheet'); sheet.hidden = false; G.sheetOpen = true;
     var W = $('trackWrap').clientWidth || window.innerWidth, iw = W - 24;
     $('track').innerHTML = ps.map(function (p, k) {
       var s = D.cropSize(p), h = iw * s[1] / s[0];
       return '<article class="card" data-i="' + k + '" aria-label="' + esc(D.PG[p]) + '"><h2>' + esc(D.PG[p]) + '</h2>' +
-        '<div class="pic" style="height:' + h.toFixed(1) + 'px;' + cropBgPx(p, iw) + '"><img alt="' + esc(D.PG[p]) + '" data-src="' + cropSrc(p) + '"></div></article>';
+        '<div class="pic' + (D.pgSize(p)[0] > D.pgSize(p)[1] ? ' wide' : '') + '"><div class="im" style="height:' + h.toFixed(1) + 'px;' + cropBgPx(p, iw) + '"><img alt="' + esc(D.PG[p]) + '" data-src="' + cropSrc(p) + '"></div></div></article>';   /* 흰 카드 = 늘 같은 크기(남은 높이를 채움) · 그림은 위부터 · 가로 간판은 가운데 */
     }).join('');
     Array.prototype.forEach.call($('track').querySelectorAll('.card'), wireCard);
     setPage(SH.i, true);
@@ -753,8 +865,8 @@
     if (!SH) return; var c = $('track').children[SH.i]; if (!c) return;
     var pic = c.querySelector('.pic'), W = c.clientWidth - 24, s = D.cropSize(SH.ps[SH.i]);
     SH.zoom = on; c.classList.toggle('zoom', on); $('pZoom').textContent = on ? '원래대로' : '크게';
-    var w = on ? W * 2.2 : W; pic.style.height = (w * s[1] / s[0]).toFixed(1) + 'px';
-    pic.style.cssText = pic.style.cssText.replace(/background-[a-z-]+:[^;]*;?/g, '') ; pic.setAttribute('style', 'height:' + (w * s[1] / s[0]).toFixed(1) + 'px;' + cropBgPx(SH.ps[SH.i], w));
+    var w = on ? W * 2.2 : W; pic.removeAttribute('style');
+    pic.querySelector('.im').setAttribute('style', 'height:' + (w * s[1] / s[0]).toFixed(1) + 'px;' + cropBgPx(SH.ps[SH.i], w));
     if (on) { c.scrollLeft = (w - W) / 2; }
   }
   function wireCard(c) {
@@ -767,7 +879,7 @@
       if (!pin || e.touches.length !== 2) return; e.preventDefault();
       var a = e.touches[0], b = e.touches[1], d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), W = c.clientWidth - 24, w = clamp(pin.w0 * d / pin.d0, W, W * 4), p = SH.ps[SH.i], s = D.cropSize(p);
       c.classList.toggle('zoom', w > W + 4); SH.zoom = w > W + 4; $('pZoom').textContent = SH.zoom ? '원래대로' : '크게';
-      var pic = c.querySelector('.pic'); pic.style.width = w + 'px'; pic.setAttribute('style', 'width:' + w.toFixed(1) + 'px;height:' + (w * s[1] / s[0]).toFixed(1) + 'px;' + cropBgPx(p, w));
+      var pic = c.querySelector('.pic'); pic.setAttribute('style', 'width:' + w.toFixed(1) + 'px'); pic.querySelector('.im').setAttribute('style', 'height:' + (w * s[1] / s[0]).toFixed(1) + 'px;' + cropBgPx(p, w));
     }, { passive: false });
     c.addEventListener('touchend', function (e) { if (e.touches.length < 2) pin = null; });
     c.addEventListener('dblclick', function () { setZoom(!SH.zoom); });
@@ -793,77 +905,47 @@
     }
     wrap.addEventListener('pointerup', swEnd); wrap.addEventListener('pointercancel', swEnd);
     window.addEventListener('keydown', function (e) {
-      if (!G.sheetOpen) { if (e.key === 'Escape') { if (!$('list').hidden) $('list').hidden = true; } return; }
+      if (!$('vid').hidden) { if (e.key === 'Escape') closePromo(); return; }
+      if (!G.sheetOpen) return;
       if (e.key === 'ArrowRight') setPage(SH.i + 1); else if (e.key === 'ArrowLeft') setPage(SH.i - 1); else if (e.key === 'Escape') closeSheet();
     });
   }
 
-  /* ═══════════ 구역 목록 · 평면 지도 ═══════════ */
+  /* ═══════════ 구역 칸(작은 지도) ═══════════ */
   function zoneRect(z) {
     var xs = [], zs = [];
     z.rows.forEach(function (r) { var n = r.pages.length; [0, n].forEach(function (k) { var x = r.a[0] + r.r[0] * k, zz = r.a[1] + r.r[1] * k; xs.push(x, x + r.n[0] * 1.8); zs.push(zz, zz + r.n[1] * 1.8); }); });
     return [Math.min.apply(0, xs), Math.max.apply(0, xs), Math.min.apply(0, zs), Math.max.apply(0, zs)];
   }
-  function mapSvg(me) {
-    var B = D.BLD, s = 10, O = B.outside, xMax = Math.max(B.outline[1][0], O.x1) + 1.5, top = Math.max(B.top, O.z1 + 1), Y = function (z) { return (top - z) * s; }, X = function (x) { return x * s; }, LW = B.outline[1][0], CN = B.coreN, LN = B.lobbyN;
-    var o = '<svg class="plan" viewBox="-8 -8 ' + Math.round(xMax * s + 16) + ' ' + Math.round((top + 2.3) * s) + '" role="group" aria-label="1층 평면 지도. 위가 북쪽, 아래가 정문">';
-    o += '<polygon points="' + B.outline.map(function (q) { return X(q[0]) + ',' + Y(q[1]); }).join(' ') + '" fill="#FFFFFF" stroke="#CBD0D6" stroke-width="1.5"/>';
-    o += '<rect x="' + X(O.x0) + '" y="' + Y(O.z1) + '" width="' + (O.x1 - O.x0) * s + '" height="' + (O.z1 - O.z0) * s + '" rx="3" fill="#EEF0F2"/><text class="lab" x="' + X((O.x0 + O.x1) / 2) + '" y="' + (Y(O.z1) - 3) + '" text-anchor="middle">건물 밖</text>';
-    B.cores.forEach(function (c) { o += '<rect x="' + X(c[0]) + '" y="' + Y(CN) + '" width="' + (c[1] - c[0]) * s + '" height="' + (CN - LN) * s + '" fill="#E5E8EB"/>'; });
-    B.cols.forEach(function (x) { o += '<rect x="' + (X(x) - 4.5) + '" y="' + (Y(B.colZ) - 4.5) + '" width="9" height="9" fill="#C9CED4"/>'; });
-    o += '<text class="lab" x="' + X(B.revolve) + '" y="' + (Y(0) + 11) + '" text-anchor="middle" style="font-weight:700;fill:#4E5968">정문</text>';
-    o += '<text class="lab" x="' + (X(LW) + 2) + '" y="' + (Y((B.doorE[0] + B.doorE[1]) / 2) + 2) + '">동쪽 문</text>';
-    var ci = D.PROPS.checkin.at; o += '<rect x="' + (X(ci[0]) - 15) + '" y="' + (Y(ci[1]) - 15) + '" width="30" height="30" rx="3" fill="#FFFFFF" stroke="#CBD0D6"/><text class="lab" x="' + X(ci[0]) + '" y="' + (Y(ci[1]) + 2.5) + '" text-anchor="middle">체크인</text>';
-    D.ZONES.forEach(function (z) {
-      if (!z.rows.length) return;
-      var b = zoneRect(z), lw = z.name.length * 6.2 + 10, tx = X((b[0] + b[1]) / 2), ty = Y((b[2] + b[3]) / 2), vert = (b[3] - b[2]) > (b[1] - b[0]) * 1.6;
-      var lx = vert ? (b[0] > 16 ? X(b[0]) - lw / 2 - 3 : X(b[1]) + lw / 2 + 2) : tx;
-      o += '<g class="zone" data-z="' + z.id + '" role="button" tabindex="0" aria-label="' + esc(z.name) + '">';
-      o += '<rect class="f" x="' + X(b[0]) + '" y="' + Y(b[3]) + '" width="' + (b[1] - b[0]) * s + '" height="' + (b[3] - b[2]) * s + '" rx="3"/>';
-      z.rows.forEach(function (r) { var n = r.pages.length; o += '<line x1="' + X(r.a[0]) + '" y1="' + Y(r.a[1]) + '" x2="' + X(r.a[0] + r.r[0] * n) + '" y2="' + Y(r.a[1] + r.r[1] * n) + '" stroke="#FF7F32" stroke-width="3"/>'; });
-      o += '<rect x="' + (lx - lw / 2) + '" y="' + (ty - 7) + '" width="' + lw + '" height="14" rx="2" fill="#FF7F32"/><text x="' + lx + '" y="' + (ty + 3) + '" text-anchor="middle">' + esc(z.name) + '</text></g>';
-    });
-    if (me) o += '<circle class="me" cx="' + X(me[0]) + '" cy="' + Y(me[1]) + '" r="6"/><circle cx="' + X(me[0]) + '" cy="' + Y(me[1]) + '" r="3" fill="#FF7F32"/>';
-    return o + '</svg>';
-  }
-  function listHtml(withMap) {
-    var me = G.loaded ? planOf(G.pos) : null;
-    return (withMap ? '<div class="mapcard">' + mapSvg(me) + '<p>' + (me ? '까만 점이 지금 캐릭터 자리예요' : '구역을 누르면 판을 볼 수 있어요') + '</p></div>' : '') +
-      STOPS.filter(function (s) { return s.zone; }).map(function (s) {
-        var z = s.z0, n = z ? D.zonePages(z).length : 0;
-        return '<button type="button" class="zi" data-s="' + s.id + '"><span class="sg' + (z && z.ghost ? ' ghost' : '') + '">' + esc(z.id === 'cafe' ? '18F' : z.name) + '</span><span class="t"><b>' + esc(s.name) + '</b><span>' + esc(z.id === 'cafe' ? '게이트 · 엘리베이터로 올라가요' : (z.where || '') ) + '</span></span><span class="go">' + (G.ok && !G.mapMode ? '가기' : (n ? '판 ' + n + '장' : '보기')) + '</span></button>';
-      }).join('');
-  }
-  function openList() {
-    var b = $('lbody'); b.innerHTML = listHtml(true); $('list').hidden = false;
-    Array.prototype.forEach.call(b.querySelectorAll('.zi'), function (el) { el.onclick = function () { $('list').hidden = true; pickStop(el.getAttribute('data-s')); }; });
-    Array.prototype.forEach.call(b.querySelectorAll('[data-z]'), function (el) { el.onclick = function () { $('list').hidden = true; pickStop(el.getAttribute('data-z')); }; });
-  }
-  function pickStop(id) {
-    var k = STOPS.findIndex(function (s) { return s.id === id || s.zone === id; }); if (k < 0) return;
-    var s = STOPS[k];
-    if (G.mapMode || !G.ok) { if (s.zone === 'cafe') { toast('18F 커피챗은 아이디어 한 줄을 낸 뒤 신청해요'); return; } openSheet(s.z0); return; }
-    goStop(k);
-  }
-  function toMap(msg) {
-    G.mapMode = true; var m = $('map'); m.hidden = false; $('cv').style.visibility = 'hidden'; $('load').hidden = true; $('bar').hidden = true; $('pad').hidden = true; $('mini').hidden = true; $('cta').hidden = true; $('pins').innerHTML = '';
-    m.innerHTML = listHtml(true);
-    Array.prototype.forEach.call(m.querySelectorAll('.zi, [data-z]'), function (el) { el.onclick = function () { pickStop(el.getAttribute('data-s') || el.getAttribute('data-z')); }; });
-    if (msg) toast(msg);
+  /* 3D 를 못 그리는 기기 · 평면 지도 · 목록 대신 짧은 안내 한 줄(사용자 261003 「평면 지도 · 목록은 없애고 3D 만」) */
+  function noGl(msg) {
+    G.mapMode = true; $('cv').style.visibility = 'hidden'; $('load').hidden = true; $('bar').hidden = true; $('pad').hidden = true; $('mini').hidden = true; $('ctl').hidden = true; $('pins').innerHTML = ''; $('mags').innerHTML = '';
+    var m = $('nogl'); m.hidden = false; m.textContent = msg || '이 기기에서는 3D 둘러보기를 볼 수 없어요'; $('black').style.opacity = 0;
   }
 
   /* ═══════════ 처음 안내(한 문장 · 한 번) ═══════════ */
-  function maybeHelp() { if (Q.get('nohelp') === '1') return; if (!store.get('axTourLabHelp1')) showHelp(); }
+  function maybeHelp() { if (Q.get('nohelp') !== '1' && !store.get('axTourLabHelp1')) showHelp(); }
+  /* 입장 연출 · 던전 이동처럼 암전(처음부터 검은 화면 · 받는 동안 「불러오는 중」) → 가운데 「1F · AX Festival 2026」 0.8초 → 밝아지며 높은 스카이뷰 → 캐릭터로 줌인(1.3초) → 처음 안내 · 합 2.5초 안 · 움직임 줄이기 = 짧은 페이드만 */
+  function entrance() {
+    var bk = $('black'), t = $('blackT');
+    t.textContent = '1F · AX Festival 2026'; t.classList.add('on');
+    if (RM) { setTimeout(function () { t.classList.remove('on'); bk.style.opacity = 0; intro(maybeHelp); }, 250); return; }
+    setTimeout(function () {
+      t.classList.remove('on');
+      intro(maybeHelp);   /* 스카이뷰에서 시작 */
+      bk.style.transition = 'opacity .35s'; bk.style.opacity = 0;
+    }, 800);
+  }
   function showHelp() { $('help').hidden = false; }
   function hideHelp() { $('help').hidden = true; store.set('axTourLabHelp1', '1'); }
 
   /* ═══════════ 시작 ═══════════ */
   function start() {
     $('bNext').onclick = onNext; $('bPrev').onclick = onPrev; $('bBack1F').onclick = function () { backTo1F(); placeAt(STOPS.length - 1, false); };
-    $('cta').onclick = function () { var z = G.near; if (!z) return; if (z.id === 'cafe') { toCafe(); return; } enterPanel(z); };
-    $('bList').onclick = openList; $('mini').onclick = openList;
-    $('rotL').onclick = function () { rotView(1); }; $('rotR').onclick = function () { rotView(-1); };
-    $('gbub').onclick = function () { var z = G.talk && D.Z(G.talk.zone); if (z) enterPanel(z); }; $('lClose').onclick = function () { $('list').hidden = true; };
+    $('cta').onclick = function () { if (G.spot && G.spot.spot === 'typing') { openPromo(); return; } var z = G.near; if (!z) return; if (z.id === 'cafe') { toCafe(); return; } enterPanel(z); };
+    $('vClose').onclick = closePromo;
+    $('rotL').onclick = function () { rotView(1); }; $('rotR').onclick = function () { rotView(-1); }; $('zIn').onclick = function () { setZoom3(-1); }; $('zOut').onclick = function () { setZoom3(1); }; $('zIn').disabled = true;
+    $('gbub').onclick = function () { var gd = G.talk; if (!gd || !gd.go) return; if (gd.spot === 'typing') { openPromo(); return; } var z = D.Z(gd.zone); if (z) enterPanel(z); };
     var rs = store.get('axTourLabRM'); if (rs === '1' || rs === '0') RM = rs === '1';
     document.documentElement.classList.toggle('rm', RM); $('rmChk').checked = RM;
     $('rmChk').onchange = function () { RM = $('rmChk').checked; store.set('axTourLabRM', RM ? '1' : '0'); document.documentElement.classList.toggle('rm', RM); G.need = true; };
@@ -871,14 +953,12 @@
     wireSheet();
     G.showFps = Q.get('fps') === '1';
     G.t0 = performance.now();
-    var noGL = Q.get('map') === '1' || !window.TourScene || !T;
-    if (noGL || !init3D()) { toMap(noGL ? '' : '이 기기는 3D를 그릴 수 없어 평면 지도로 보여요'); maybeHelpMap(); return; }
+    if (!window.TourScene || !T || !init3D()) { noGl(); return; }
     wireStage(); resize(); window.addEventListener('resize', resize);
     updateUi(true);
     load();
     requestAnimationFrame(loop);
   }
-  function maybeHelpMap() {}
   /* 시험 · 녹화용 손잡이(앱에는 없음) */
   G.api = { shotCam: function (x, y, z, lx, ly, lz) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); var bv = bot.visible; bot.visible = false; S.frame(camera, 'lobby'); renderer.render(scene, camera); bot.visible = bv; G.hold = true; }, guides: function () { return guides.map(function (g) { return [g.zone, g.at, +g.h.toFixed(2)]; }); }, enter: function (zid, pg) { enterPanel(D.Z(zid), pg || null); }, pose: function (x, z, yaw, h) { G.pos.copy(toThree(x, z)); G.mode = 'free'; G.path = null; G.yaw = yaw; G.h = h == null ? yaw + Math.PI : h; G.yo = 0; G.need = true; }, goStop: goStop, openSheet: function (zid, i) { openSheet(D.Z(zid), i || 0); }, closeSheet: closeSheet, setPage: function (k) { setPage(k); }, tap: tap, walkTo: walkTo, plan: function () { return planOf(G.pos); }, cam: function () { return planOf(camera.position).concat([camera.position.y]); }, toCafe: toCafe, back: backTo1F, free: free, hw: function (x, z) { var c = gi(x, z); return c < 0 ? -1 : hw[c] * 0.05; } };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();

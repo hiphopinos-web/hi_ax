@@ -79,7 +79,6 @@
       var LANDMARKS = [
         { id: 'lm_a', label: '정문', at: [LAY.DOORS.A.x, LAY.DOORS.A.z - 0.6, 2.9] },
         { id: 'lm_d', label: '동쪽 문', at: [LAY.DOORS.D.x - 0.4, LAY.DOORS.D.z, 2.9] },
-        { id: 'lm_bust', label: '흉상', at: [LAY.BUST[0], LAY.BUST[1], 2.3] },
         { id: 'lm_gate', label: '게이트 · 엘리베이터', at: [(LAY.PASSAGE.x0 + LAY.PASSAGE.x1) / 2, LAY.PASSAGE.z0 + 0.6, 2.2] },
         { id: 'lm_desk', label: '안내데스크', at: [(LAY.RECEPTION.x0 + LAY.RECEPTION.x1) / 2, LAY.RECEPTION.z0, 1.8] },
         { id: 'lm_check', label: '체크인(문 밖)', at: [LAY.CHECKIN.tent[0], LAY.CHECKIN.tent[1], 4.4] }
@@ -290,7 +289,7 @@
             { t: 19.8, pos: [8.6, 3.7, 2.0], look: [3.8, 0.9, 1.3], zone: 'play' },
             { t: 22.0, pos: [3.4, 3.9, 2.0], look: [0.7, 8.4, 1.4], zone: 'event' },
             { t: 24.2, pos: [4.2, 7.6, 2.0], look: [8.6, 10.9, 1.4], zone: 'lounge' },
-            { t: 26.4, pos: [11.6, 7.0, 2.3], look: [17.6, 11.2, 1.5], cap: '흉상 · 게이트 · 엘리베이터' },
+            { t: 26.4, pos: [11.6, 7.0, 2.3], look: [17.6, 11.2, 1.5], cap: '게이트 · 엘리베이터' },   /* v5.34 「흉상」 표시 없앰(사용자 261003) */
             { t: 29.0, def: true }
           ]
         }
