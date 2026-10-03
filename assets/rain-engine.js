@@ -28,6 +28,8 @@
      효과음 채움 · 오타(rgmiss) · 콤보 5·10·15…(rgcombo) · 마지막 목숨(rglast) · 소리는 화면 쪽 sfx 가 있을 때만(선수 화면에는 없다).
    v4.51(260925 사용자) 3단 모양 · 가운데 게임판만 전체 높이 + 강한 틀(rgFrameDraw) · 왼쪽 = 위쪽 작은 상자 두 개(도전자·점수·목숨·단계 / NEXT) · 오른쪽 = 순위표(머리띠 · 줄무늬 · 행 수만큼)
      입력칸은 화면 쪽이 가운데 판 폭에 맞춰 판 바로 아래에 둔다(L.ox · L.W · L.fr) · 낙하 · 판정 · 시드는 그대로 · 대전(옆판 없음)은 모양도 그대로.
+   v5.12(261003 사용자 결정) 1F 타자왕 아케이드 · 셀프 모드(site + bonus)만 · 보너스 스테이지(단계가 바뀔 때마다 행사 문장) · 오른쪽 판 = 추월 레이스(RG.race) ·
+     목숨 보너스(안전 상한) · 대기 데모(rgAttractDraw) · 점 글자(rtDots) · 아래 「v5.12」 절 · 앱 솔로 · 대전 · 단어 판정 · 낙하 · 시드는 그대로.
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ═══ 단어 풀 · 여기 한 곳 ═══
@@ -80,7 +82,8 @@ var RT_PAL = { night: "#1B1712", bark: "#2A2118", wood: "#5E3218", tan: "#D9A066
    크기는 도트 칸 수로 고정한다(서기 22×26 = 점프 러너와 같은 칸 수 · 친구 17×20) · 도트 한 칸 = L.D / 2 CSS px · 그리는 상자는 옛 마스코트 자리(L.masW × L.masH) 안이다. */
 var RG_BOT = { w: 22, h: 26, bw: 17, bh: 20 };
 
-var RG = { on: false, mode: "app", big: false, raf: 0, last: 0, t0: 0, cd: 0, words: [], ghost: [], seq: 0, parts: [], pops: [], lives: RAIN_LIVES, score: 0, hits: 0, tries: 0, combo: 0, maxCombo: 0, stage: 1, spawnT: 0, shake: 0, banner: null, shot: null, mas: { x: 90, tx: 90, hop: 0 }, res: null, L: null, dpr: 1, seed: 0, rs: 0, lives0: RAIN_LIVES, cap: RAIN_CAP_SEC, wait: false, next: null, top: null, topT: "", who: "", hk: false };   /* v4.32 topT = 오른쪽 판 제목 · who = 왼쪽 판 도전자 닉네임(현장 셀프) · 화면 쪽이 넣는다 */
+var RG = { on: false, mode: "app", big: false, raf: 0, last: 0, t0: 0, cd: 0, words: [], ghost: [], seq: 0, parts: [], pops: [], lives: RAIN_LIVES, score: 0, hits: 0, tries: 0, combo: 0, maxCombo: 0, stage: 1, spawnT: 0, shake: 0, banner: null, shot: null, mas: { x: 90, tx: 90, hop: 0 }, res: null, L: null, dpr: 1, seed: 0, rs: 0, lives0: RAIN_LIVES, cap: RAIN_CAP_SEC, wait: false, next: null, top: null, topT: "", who: "", hk: false,
+  bonusOn: false, bonus: null, bns: 0, bnsN: 0, bnsBag: null, capBns: 0, inMax: 12, race: null, raceRank: 0, racePops: [], raceSlide: 0 };   /* v4.32 topT = 오른쪽 판 제목 · who = 왼쪽 판 도전자 닉네임(현장 셀프) · 화면 쪽이 넣는다 · v5.12 bonusOn ~ raceSlide = 1F 타자왕(아래 v5.12 절) */
 var RGP = { on: false, touch: false, go: false };
 
 /* ── 화면에 기대지 않는 작은 도구 ── */
@@ -236,8 +239,9 @@ function rgLive(e) {
   var inp = rgEl("rgIn"); if (!inp) return;
   var raw = inp.value, lat = /[A-Za-z]/.test(raw);
   if (e && !lat) RG.hk = false;                   /* v4.29 다른 입력(한글 자판 조합 · 지우기)이 들어왔다 → 로마자 조합은 닫는다 */
-  if (lat && !RG.composing && !(e && e.isComposing)) { raw = rgHangulize(raw, RG.hk).slice(0, 12); inp.value = raw; RG.hk = true; lat = false; }   /* 조합 없이 들어온 로마자는 그 자리에서 한글로 */
+  if (lat && !RG.composing && !(e && e.isComposing)) { raw = rgHangulize(raw, RG.hk).slice(0, RG.inMax || 12); inp.value = raw; RG.hk = true; lat = false; }   /* 조합 없이 들어온 로마자는 그 자리에서 한글로 */
   if (!RGP.on || !RG.on || RG.cd > 0 || RG.ending || RG.paused) return;
+  if (RG.bonus) { if (RG.bonus.ph === "type") RG.bonus.typed = lat ? rgHangulize(raw, RG.hk) : raw; return; }   /* v5.12 보너스 스테이지 · 단어 판정 · 자동 비우기 없이 친 글자만 */
   var v = (lat ? rgHangulize(raw, RG.hk) : raw).trim();   /* 조합 중 로마자(휴대폰 영문 자판)는 값을 두고 판정만 한글로 본다 */
   RG.typed = v;                                   /* 조합 중 글자도 화면에서 짚어 준다 */
   RG.latT = rgLatinOnly(raw.trim()) ? (RG.latT || performance.now()) : 0;   /* 안내 한 줄은 보조 · 로마자가 한글로 안 바뀐 채 2초 남아 있을 때만 */
@@ -343,13 +347,14 @@ function rgHgBefore(e, inp) {
 function rgHgPut(inp, j) {
   if (!j) return;
   var s = rgHgAdd(inp.value, j, RG.hk);
-  if (s.length > 12) return;   /* 입력창 maxlength 12 · 값을 코드로 넣으면 maxlength 가 걸리지 않는다 */
+  if (s.length > (RG.inMax || 12)) return;   /* 입력창 maxlength 12(v5.12 보너스 스테이지 40) · 값을 코드로 넣으면 maxlength 가 걸리지 않는다 */
   inp.value = s; RG.hk = true;
   rgLive(null);
 }
 function rgHgDel(inp) { var b = rgHgBack(inp.value); inp.value = b.s; RG.hk = b.on; rgLive(null); }
 function rgAutoClear() {
   var inp = rgEl("rgIn"); if (!inp || !inp.value) return;
+  if (RG.bonus) { rgClearInput(); RG.bonus.typed = ""; rgSfx("tik"); return; }   /* v5.12 보너스 스테이지 · Esc = 문장 처음부터 */
   var v = rgInVal(), keep = "";
   for (var n = v.length - 1; n > 0; n--) { if (rgPrefixAlive(v.slice(0, n))) { keep = v.slice(0, n); break; } }
   if (keep && !RG.composing) { inp.value = keep; RG.typed = keep; if (document.activeElement !== inp) inp.focus(); }
@@ -358,7 +363,7 @@ function rgAutoClear() {
   rgSfx("tik");
 }
 function rgCheckInput(v) {
-  if (!RG.on || RG.cd > 0 || RG.ending || RG.paused) return;
+  if (!RG.on || RG.cd > 0 || RG.ending || RG.paused || RG.bonus) return;
   var inp = rgEl("rgIn"); if (!inp) return;
   if (v == null) v = rgInVal();
   RG.typed = v;   /* 지금 치고 있는 글자 · 그리기에서 맞는 단어를 짚어 준다 */
@@ -451,6 +456,8 @@ function rgStart(mode, opt) {
   RG.mas = { x: 90, tx: 90, hop: 0, set: false };
   RG.cd = opt.cd != null ? opt.cd : 3.2; RG.t0 = 0; RG.on = true; RG.last = performance.now(); RG.L = null; RG.hud = "";
   RG.paused = false; RG.composing = false; RG.pendingEnter = false; RG.typed = ""; RG.lastHit = null; RG.latT = 0; RG.tip = false;
+  RG.bonusOn = !!opt.bonus && RG.mode === "site"; RG.bonus = null; RG.bns = 0; RG.bnsN = 0; RG.bnsBag = null; RG.capBns = 0; RG.inMax = 12;   /* v5.12 1F 타자왕 */
+  RG.race = RG.bonusOn ? (opt.race || null) : null; RG.raceRank = 0; RG.racePops = []; RG.raceSlide = 0;
   RG.big = RG.mode !== "app" || (!rgTouch() && window.innerWidth >= 700);
   RG.wait = opt.wait != null ? !!opt.wait : (RG.mode !== "race" && !rgTouch() && !RGP.go);
   RGP.go = false;
@@ -458,7 +465,7 @@ function rgStart(mode, opt) {
   if (!RG.seed) rgNextFill();   /* 대기 화면부터 옆판 NEXT 가 보인다 */
   try { if (typeof SFX !== "undefined") SFX.site = RG.mode !== "app"; } catch (e) {}
   if (typeof rgPlayOpen === "function") rgPlayOpen();
-  var inp = rgEl("rgIn"); rgBindInput(inp); if (inp) inp.focus();
+  var inp = rgEl("rgIn"); rgBindInput(inp); if (inp) { inp.maxLength = 12; inp.focus(); }
   RG.raf = requestAnimationFrame(rgFrame);
 }
 /* 대기 → 카운트다운 · 스페이스(키보드) · 판을 누르기(마우스) */
@@ -533,12 +540,22 @@ function rgUpdate(dt, now) {
     return;
   }
   var L = RG.L; if (!L) return;
+  if (RG.bonus) {   /* v5.12 보너스 스테이지 · 소나기 멈춤 · 게임 시계는 끝날 때 민다 */
+    rgBonusTick(dt, now); rgFx(dt); rgRaceTick(dt);
+    if (RG.shake > 0) RG.shake -= dt;
+    if (RG.mas.hop > 0) RG.mas.hop -= dt;
+    return;
+  }
   var sec = rgElapsed(now);
   RG.surv = sec;
   rgTipTick(now);
   if (sec >= RG.cap) { rgEnd("cap"); return; }   /* 안전 상한 · 현장에서 서버 값으로 조절한다 */
   var st = Math.min(L.stages, 1 + Math.floor(sec / RAIN_STAGE_SEC));
-  if (st > RG.stage) { RG.stage = st; RG.banner = { text: "LEVEL " + st, t: 1.3 }; rgSfx("level"); }
+  if (st > RG.stage) {
+    RG.stage = st;
+    if (RG.bonusOn) { rgBonusStart(now); return; }   /* v5.12 단계가 바뀔 때마다 보너스 스테이지 · 끝나면 LEVEL 배너 */
+    RG.banner = { text: "LEVEL " + st, t: 1.3 }; rgSfx("level");
+  }
   /* 유령 목록 · 아무도 안 친 셈 친 가상 위치 · 바닥을 지나면 버린다 */
   if (RG.seed) for (var gi = RG.ghost.length - 1; gi >= 0; gi--) { RG.ghost[gi].p += dt / RG.ghost[gi].fall; if (RG.ghost[gi].p >= 1) RG.ghost.splice(gi, 1); }
   RG.spawnT -= dt;
@@ -560,7 +577,7 @@ function rgUpdate(dt, now) {
       if (RG.lives <= 0) { rgEnd("lives"); return; }
     }
   }
-  rgFx(dt);
+  rgFx(dt); rgRaceTick(dt);
   if (RG.banner) { RG.banner.t -= dt; if (RG.banner.t <= 0) RG.banner = null; }
   if (RG.shot) { RG.shot.t -= dt; if (RG.shot.t <= 0) RG.shot = null; }
   if (RG.shake > 0) RG.shake -= dt;
@@ -579,6 +596,7 @@ function rgBurst(x, y, n, cols) {
 }
 function rgSubmit() {
   var inp = rgEl("rgIn"); if (!inp || !RG.on || RG.cd > 0 || RG.ending || RG.paused) return;
+  if (RG.bonus) { if (RG.bonus.ph === "type") { RG.bonus.typed = rgInVal(); rgBonusEnd("enter"); } else rgClearInput(); return; }   /* v5.12 보너스 스테이지 · Enter = 채점 */
   var v = rgInVal();
   if (!v) { if (inp.value) { rgClearInput(); rgFlash("auto"); }  /* 빈 판정(공백만)도 즉시 비움 · 오타 아님 */
     return; }
@@ -612,6 +630,7 @@ function rgSubmit() {
 }
 function rgEnd(why) {
   if (!RG.on || RG.ending) return;
+  if (why === "cap" && RG.bonusOn) { RG.capBns = Math.max(0, RG.lives) * RAIN_LIFE_BONUS; RG.score += RG.capBns; }   /* v5.12 목숨 보너스 · 안전 상한까지 버텼다 */
   RG.ending = { t: 1.2, why: why };
   RG.words = []; RG.banner = null;
   rgSfx(why === "cap" ? "fanfare" : "over");
@@ -619,7 +638,8 @@ function rgEnd(why) {
 }
 /* 지금 성적 · 결과 보고와 진행 보고가 같은 값을 쓴다 */
 function rgStat() {
-  return { score: RG.score, hits: RG.hits, combo: RG.maxCombo, acc: RG.tries ? Math.round(RG.hits / RG.tries * 100) : 0, lives: Math.max(0, RG.lives), el: Math.round((RG.surv || 0) * 1000) };
+  return { score: RG.score, hits: RG.hits, combo: RG.maxCombo, acc: RG.tries ? Math.round(RG.hits / RG.tries * 100) : 0, lives: Math.max(0, RG.lives), el: Math.round((RG.surv || 0) * 1000),
+    bns: RG.bns || 0, bnsN: RG.bnsN || 0, capBns: RG.capBns || 0 };   /* v5.12 보너스 스테이지 점수 · 횟수 · 목숨 보너스(점수에 이미 들어 있다) */
 }
 
 /* ── 그리기 ── */
@@ -768,6 +788,7 @@ function rgDraw(ctx, now) {
   RG.words.forEach(function (w, wi) {
     rgWordDraw(ctx, L, w.x, rgWordY(w), w.bw, w.text, wi === tIdx, w.p > 0.78, tv);
   });
+  if (RG.bonus) rgBonusDraw(ctx, L, now);   /* v5.12 보너스 스테이지 문장 판 */
   if (RG.shot) {
     var k = 1 - RG.shot.t / 0.12, sx = RG.shot.x0 + (RG.shot.x1 - RG.shot.x0) * k, sy = RG.shot.y0 + (RG.shot.y1 - RG.shot.y0) * k, q = 2 * L.D;
     ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(Math.round(sx - q / 2), Math.round(sy - q / 2), q, q);
@@ -791,14 +812,15 @@ function rgDraw(ctx, now) {
     rtTag(ctx, L.W / 2 - bw / 2, by, bw, bh, RT_PAL.night, RT_PAL.bark, RAIN_PAL.ink);
     rtText(ctx, RG.banner.text, L.W / 2, by + bh / 2, bs, RAIN_PAL.o100, null);
   }
-  if (RG.ending) {   /* v4.23 공용 끝 화면(rtEnd) · 게임 고유 한 줄은 판 안에 그대로 */
-    rtEnd(ctx, L.W, 0, L.floor, RG.ending.why === "cap" ? "여기까지" : "GAME OVER", RG.ending.why === "cap" ? "최대 시간에 닿았어요" : "단어 " + RG.lives0 + "개를 놓쳤어요",
+  if (RG.ending) {   /* v4.23 공용 끝 화면(rtEnd) · 게임 고유 한 줄은 판 안에 그대로 · v5.12 1F 타자왕 안전 상한 = TIME UP · 목숨 보너스 */
+    var capB = RG.ending.why === "cap" && RG.bonusOn;
+    rtEnd(ctx, L.W, 0, L.floor, capB ? "TIME UP" : RG.ending.why === "cap" ? "여기까지" : "GAME OVER", capB ? "목숨 보너스 +" + RG.capBns.toLocaleString() : RG.ending.why === "cap" ? "최대 시간에 닿았어요" : "단어 " + RG.lives0 + "개를 놓쳤어요",
       { s: L.D, tp: L.big ? 48 : 32, sp: L.big ? 32 : 16, maxW: L.big ? 640 : 320 });
   }
   if (RG.wait) rgWaitDraw(ctx, L, now);
   else if (RG.cd > 0) rtCount(ctx, RG.cd, L.W, 0, L.floor, L.big ? 96 : 64);
   ctx.restore();
-  if (L.pan) { rgLeftDraw(ctx, L); rgSideDraw(ctx, L); }   /* v4.32 3단 · 흔들림 밖 */
+  if (L.pan) { rgLeftDraw(ctx, L); if (RG.race) rgRaceDraw(ctx, L, now); else rgSideDraw(ctx, L); }   /* v4.32 3단 · 흔들림 밖 · v5.12 1F 타자왕 = 오른쪽 판이 추월 레이스 */
 }
 /* v4.29 대기 화면 · 어두운 이름표 + 도트 글자 밝기 깜빡임(0.53초마다 O100 ↔ 어두운 오렌지 · 글자는 늘 보인다) · 동작 줄이기 = 주황 고정 */
 function rgWaitDraw(ctx, L, now) {
@@ -839,7 +861,7 @@ function rgLeftDraw(ctx, L) {
   ctx.save();
   ctx.textBaseline = "middle"; ctx.textAlign = "left";
   /* ① 도전자 + 점수 · 목숨 · 단계 */
-  var nh = cmp ? 24 : 36, ns = cmp ? 12 : 16, ah = 2 * bp + (RG.who ? nh + ns : 0) + 3 * rh;
+  var nh = cmp ? 24 : 36, ns = cmp ? 12 : 16, ah = 2 * bp + (RG.who ? nh + ns : 0) + (RG.bonusOn ? 4 : 3) * rh;   /* v5.12 1F 타자왕 = 보너스 줄 하나 더 */
   rtPanel(ctx, P.x, y, P.w, ah, s, RT_PAL.night);
   cy = y + bp;
   if (RG.who) {
@@ -851,7 +873,7 @@ function rgLeftDraw(ctx, L) {
     ctx.fillStyle = RT_PAL.wood; ctx.fillRect(ix, Math.round(cy + nh + ns / 2 - 1), iw, 2);
     cy += nh + ns;
   }
-  [["점수", RG.score.toLocaleString()], ["목숨", null], ["단계", String(RG.stage)]].forEach(function (r, k) {
+  [["점수", RG.score.toLocaleString()], ["목숨", null], ["단계", String(RG.stage)]].concat(RG.bonusOn ? [["보너스", "+" + (RG.bns || 0).toLocaleString()]] : []).forEach(function (r, k) {
     var yy = cy + k * rh + rh / 2;
     ctx.textAlign = "left"; rtText(ctx, r[0], ix, yy, hp, RT_PAL.tan, null);
     if (r[1] != null) { ctx.textAlign = "right"; rtText(ctx, r[1], right, yy, 32, RAIN_PAL.o100, RAIN_PAL.ink); }
@@ -939,6 +961,288 @@ function rgSideHearts(ctx, right, cy, k) {
   }
 }
 
+/* ═══ v5.12 (261003 사용자 결정) 1F 타자왕 아케이드 · 보너스 스테이지 · 추월 레이스 · 대기 데모 · 점 글자 ═══
+   쓰는 곳 = 1F 현장 셀프 모드뿐(화면 쪽이 rgStart("site", { bonus: true }) 로 켠다) · 앱 솔로(app)와 대전(race · admin/typing.html)은 그대로다.
+   점수(1F 순위 기준) = 단어 점수(글자 수 × 10 × 콤보 배수 · 옛 그대로) + 보너스 스테이지 점수 + 목숨 보너스(안전 상한까지 버텼을 때만).
+   보너스 스테이지 = 단계가 바뀔 때마다(2 · 3 · 4 · 5단계에 들어갈 때 · 한 판 최대 4번) 소나기를 멈추고 행사 문장 하나를 친다 · 목숨은 줄지 않는다.
+     제한 시간 = 글자 수(띄어쓰기 포함) × 0.8 + 6초(올림) · 먼저 2.2초 동안 문장을 보여 주고(READY) 그다음부터 친다 · Enter = 그 자리에서 채점 · 시간이 다 되면 친 데까지 채점.
+     점수 = 맞은 글자 × 20 + 문장을 그대로 맞히면(PERFECT) 300 + 남은 초 × 30 · 맞은 글자는 편집 거리로 센다(한 글자 빠지거나 더 쳐도 뒤가 다 틀리지 않게 · 시간이 다 되면 친 길이만큼의 앞부분과 견준다).
+     문장을 치는 동안 게임 시계는 멈춘다(단계 · 램프 · 안전 상한이 문장 시간만큼 밀린다 · 버틴 시간에 넣지 않는다) · 영문 자판 → 두벌식 · 한글 조합 보호는 단어와 같은 입력칸이라 그대로 돈다(길이 상한만 12 → 40).
+   목숨 보너스 = 안전 상한(RAIN_CAP_SEC · 180초)에 닿으면 남은 목숨 × 500 · 상한에 닿은 사람끼리 버틴 시간이 같아도 점수로 갈린다.
+   추월 레이스(오른쪽 판 · rgRaceDraw) = 화면 쪽이 RG.race = { list: [{ name, score }] }(현장 최고 기록 · 도전자 본인 줄은 뺀다 · 점수 내림차순)를 넣는다 ·
+     지금 점수로 몇 위인지 = 나보다 같거나 높은 사람 수 + 1(같은 점수는 먼저 기록한 사람이 앞) · 한 명 넘을 때마다 「11위 → 10위」 튀어오름 + 효과음(rgpass) · 아래 등수부터 위로 한 줄씩 올라간다.
+   대기 데모(rgAttractDraw) = 셀프 대기 화면 가운데 판에서 봇이 혼자 단어를 쳐서 터뜨린다(그림만 · 판정 · 기록과 무관) · 동전 넣기 문구 · TOP 3 는 화면 쪽이 위에 그린다.
+   점 글자(rtDots) = 부스 사인 점 글자(index.html DotGlyph.layout)를 캔버스에 그린다 · 영문 대문자 · 숫자 · 기호만 · DotGlyph 가 없으면(선수 화면) 도트 글꼴 글자. */
+var RAIN_BONUS_LINES = [
+  "나의 경험을 우리의 가능성으로",
+  "로드맵 2026 공감과 참여",
+  "로드맵 2027 확산과 체화",
+  "로드맵 2028 혁신과 연결",
+  "공감과 참여에서 확산과 체화로",
+  "체감하고 상상하고 발굴하고 연결하자",
+  "아이디어 한 줄이 우리의 시작",
+  "내 업무에 적용할 마음을 먹는 날",
+  "작은 시도가 모여 큰 변화로",
+  "17층 대강당에서 만나는 기조연설",
+  "10층 실습 세션에서 직접 해 보기",
+  "18층 커피챗에서 아이디어 나누기",
+  "스탬프를 모아 룰렛을 돌려요"
+];
+var RAIN_BONUS = { ch: 20, perfect: 300, sec: 30, intro: 2.2, show: 2.4, inMax: 40 };
+var RAIN_LIFE_BONUS = 500;
+function rgBonusLim(n) { return Math.ceil(n * 0.8) + 6; }
+/* 편집 거리(글자 단위) */
+function rgLev(a, b) {
+  a = String(a); b = String(b);
+  var m = a.length, n = b.length, prev = [], cur, i, j;
+  for (j = 0; j <= n; j++) prev.push(j);
+  for (i = 1; i <= m; i++) {
+    cur = [i];
+    for (j = 1; j <= n; j++) cur.push(Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1)));
+    prev = cur;
+  }
+  return prev[n];
+}
+/* 채점 · why = "enter"(문장 전체와) · "time"(친 길이만큼의 앞부분과) · left = 남은 초 */
+function rgBonusScore(typed, text, why, left) {
+  var t = String(typed || "").replace(/\s+/g, " ").trim(), ref = why === "enter" ? text : text.slice(0, t.length);
+  var ok = t ? Math.max(0, ref.length - rgLev(t, ref)) : 0, perfect = t === text, sec = perfect ? Math.max(0, Math.floor(left || 0)) : 0;
+  return { ok: ok, n: text.length, perfect: perfect, sec: sec, pts: ok * RAIN_BONUS.ch + (perfect ? RAIN_BONUS.perfect + sec * RAIN_BONUS.sec : 0) };
+}
+function rgBonusStart(now) {
+  var L = RG.L;
+  if (!RG.bnsBag || !RG.bnsBag.length) RG.bnsBag = rgShuf(RAIN_BONUS_LINES.slice());
+  var text = RG.bnsBag.pop(), lim = rgBonusLim(text.length);
+  RG.words.forEach(function (w) { rgBurst(w.x + w.bw / 2, rgWordY(w) + L.boxH / 2, 6, [RAIN_PAL.o50, RT_PAL.tan2]); });   /* 떨어지던 단어는 벌칙 없이 흩어진다 */
+  RG.words = []; RG.banner = null;
+  RG.bonus = { text: text, lim: lim, left: lim, ph: "intro", t: RAIN_BONUS.intro, at: now, typed: "", res: null, no: RG.bnsN + 1 };
+  RG.inMax = RAIN_BONUS.inMax;
+  var inp = rgEl("rgIn"); if (inp) { inp.maxLength = RAIN_BONUS.inMax; RG.bonusPh = inp.placeholder; inp.placeholder = "문장을 그대로 치고 Enter"; }
+  rgClearInput(); rgTipShow(false);
+  rgSfx("rgbonus");
+}
+function rgBonusTick(dt, now) {
+  var b = RG.bonus;
+  b.t -= dt;
+  if (b.ph === "intro") { if (b.t <= 0) { b.ph = "type"; rgClearInput(); b.typed = ""; rgSfx("go"); } return; }
+  if (b.ph === "type") { b.left = Math.max(0, b.left - dt); if (b.left <= 0) rgBonusEnd("time"); return; }
+  if (b.ph === "res" && b.t <= 0) {   /* 판으로 돌아간다 · 문장에 쓴 시간만큼 게임 시계를 민다 */
+    RG.t0 += now - b.at; RG.bonus = null; RG.inMax = 12;
+    var inp = rgEl("rgIn"); if (inp) { inp.maxLength = 12; if (RG.bonusPh != null) inp.placeholder = RG.bonusPh; }
+    rgClearInput(); RG.spawnT = 0.4;
+    RG.banner = { text: "LEVEL " + RG.stage, t: 1.3 }; rgSfx("level");
+  }
+}
+function rgBonusEnd(why) {
+  var b = RG.bonus; if (!b || b.ph !== "type") return;
+  var r = rgBonusScore(b.typed, b.text, why, b.left);
+  b.res = r; b.ph = "res"; b.t = RAIN_BONUS.show;
+  RG.score += r.pts; RG.bns += r.pts; RG.bnsN++;
+  rgClearInput();
+  rgSfx(r.perfect ? "best" : r.ok ? "rgcombo" : "rgmiss", 2);
+}
+/* 문장 판 · 판 가운데 나무 판 · 머리 = 점 글자 BONUS STAGE · 문장(친 글자 = 밝게 · 틀린 글자 = 주황 바탕 · 아직 = 흐리게) · 시간 막대 · 결과 */
+function rgBonusDraw(ctx, L, now) {
+  var b = RG.bonus; if (!b) return;
+  var big = L.big, s = big ? 3 : 2, fp = big ? 32 : 16, pw = Math.min(L.W - 2 * s, big ? 700 : 340), px = Math.round(L.W / 2 - pw / 2);
+  ctx.save();
+  ctx.fillStyle = "rgba(27,23,18,0.62)"; ctx.fillRect(0, 0, L.W, L.H);
+  ctx.font = rtFont(fp);
+  var lines = rgWrap(ctx, b.text, pw - 16 * s - 8), lh = Math.round(fp * 1.6), th = big ? 40 : 26;
+  var ph = 8 * s + th + 12 + lines.length * lh + 18 + (big ? 18 : 12) + 12 + (big ? 32 : 18) + 8 * s, py = Math.max(8, Math.round(L.floor * 0.46 - ph / 2));
+  rtPanel(ctx, px, py, pw, ph, s, RT_PAL.night);
+  var cy = py + 5 * s + th / 2, on = rgReduced() || Math.floor(now / 260) % 2 === 0;
+  rtDots(ctx, "BONUS STAGE", L.W / 2, cy, th * 0.62, on ? RAIN_PAL.o100 : RAIN_PAL.o60, { align: "center", line: RAIN_PAL.ink });
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  rtText(ctx, b.no + "/4", px + pw - 6 * s, cy, 16, RT_PAL.tan, null);
+  cy += th / 2 + 12;
+  /* 문장 · 글자마다 · 마지막 글자는 조합 중이면 맞는 앞부분으로 본다 */
+  var typed = b.ph === "intro" ? "" : String(b.typed || ""), k = 0;
+  ctx.textAlign = "left";
+  lines.forEach(function (ln, li) {
+    ctx.font = rtFont(fp);
+    var x = Math.round(L.W / 2 - ctx.measureText(ln).width / 2), y = cy + lh / 2;
+    for (var i = 0; i < ln.length; i++, k++) {
+      var ch = ln.charAt(i), w = ctx.measureText(ch).width, tc = typed.charAt(k), col = RT_PAL.dim;   /* 아직 안 친 글자 = 흐린 회색 · 맞은 글자 = 크림 */
+      if (k < typed.length) {
+        var last = k === typed.length - 1, good = tc === ch || (last && rgJm(ch).indexOf(rgJm(tc)) === 0);
+        if (good) col = RT_PAL.cream; else { ctx.fillStyle = RAIN_PAL.deep; ctx.fillRect(Math.round(x), Math.round(y - fp * 0.62), Math.ceil(w), Math.round(fp * 1.24)); col = RAIN_PAL.w; }
+      } else if (b.ph === "intro") col = RT_PAL.cream;
+      else if (b.ph === "type" && k === typed.length) { ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(Math.round(x), Math.round(y + fp * 0.62), Math.max(4, Math.ceil(w)), 3); col = RAIN_PAL.o60; }
+      if (ch !== " ") rtText(ctx, ch, x, y, fp, col, null);
+      x += w;
+    }
+    cy += lh;
+    if (li < lines.length - 1) k++;   /* 줄을 나눈 자리의 띄어쓰기 한 칸 */
+  });
+  /* 시간 막대 · 남은 시간 · 결과 */
+  cy += 6;
+  var bx = px + 6 * s, bw = pw - 12 * s, bh = big ? 18 : 12, fr = b.ph === "intro" ? 1 : b.left / b.lim;
+  ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(bx, cy, bw, bh);
+  ctx.fillStyle = RT_PAL.bark; ctx.fillRect(bx + 2, cy + 2, bw - 4, bh - 4);
+  ctx.fillStyle = fr < 0.25 ? RAIN_PAL.deep : RAIN_PAL.o100; ctx.fillRect(bx + 2, cy + 2, Math.max(0, Math.round((bw - 4) * fr)), bh - 4);
+  cy += bh + 12;
+  var lp = big ? 32 : 16;
+  ctx.textAlign = "center";
+  if (b.ph === "intro") rtText(ctx, "READY · " + Math.ceil(b.t) + " · 문장을 그대로 치고 Enter", L.W / 2, cy + lp / 2, 16, RAIN_PAL.o60, null);
+  else if (b.ph === "type") rtText(ctx, b.left.toFixed(1) + "초 · 목숨은 줄지 않아요", L.W / 2, cy + lp / 2, 16, RT_PAL.cream, null);
+  else if (b.res) {
+    var r = b.res;
+    rtText(ctx, (r.perfect ? "PERFECT  " : "") + "+" + r.pts.toLocaleString(), L.W / 2, cy + lp / 2 - (big ? 4 : 2), lp, RAIN_PAL.o100, RAIN_PAL.ink);
+    rtText(ctx, "맞은 글자 " + r.ok + "/" + r.n + (r.perfect ? " · 남은 " + r.sec + "초" : ""), L.W / 2, cy + lp + (big ? 12 : 8), 16, RT_PAL.cream, null);
+  }
+  ctx.restore();
+}
+/* ── 추월 레이스 ── */
+function rgRaceRank(sc) { var l = (RG.race && RG.race.list) || [], n = 0; for (var i = 0; i < l.length; i++) if (l[i].score >= sc) n++; return n + 1; }
+function rgRaceTick(dt) {
+  if (!RG.race) return;
+  var r = rgRaceRank(RG.score), p = RG.raceRank || r;
+  if (r < p) {
+    RG.racePops.push({ from: p, to: r, t: 1.6 });
+    if (RG.racePops.length > 2) RG.racePops.shift();
+    RG.raceSlide = Math.min(3, (RG.raceSlide || 0) + (p - r));
+    rgSfx("rgpass", Math.max(1, Math.min(8, p - r)));
+  }
+  RG.raceRank = r;
+  RG.racePops = RG.racePops.filter(function (x) { x.t -= dt; return x.t > 0; });
+  if (RG.raceSlide > 0) RG.raceSlide = Math.max(0, RG.raceSlide - dt * 5);
+}
+/* 오른쪽 판 · 머리띠 「추월 레이스」 · 지금 순위 크게 · 다음 목표까지 남은 점수 · 세로 줄(위 = 앞사람 · 가운데 = 나 · 아래 = 넘은 사람) + 왼쪽 길(미니맵) · 넘을 때 튀어오름 */
+function rgRaceDraw(ctx, L, now) {
+  var P = L.pan; if (!P) return;
+  var list = (RG.race && RG.race.list) || [], cmp = P.h < 720, b = 3, bh = cmp ? 40 : 60, hp = cmp ? 16 : 32, rf = P.w >= 360 && !cmp ? 32 : 16, rh = rf === 32 ? 46 : 32;
+  var rank = rgRaceRank(RG.score), ahead = rank - 1, total = list.length + 1;
+  var ix = P.x + b + 14, right = P.x + P.w - b - 14;
+  ctx.save();
+  ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  /* 머리띠 + 지금 순위 */
+  var headH = bh + (cmp ? 76 : 112);
+  var K = Math.max(3, Math.min(9, Math.floor((P.h - headH - 3 * b - 8) / rh))), down = Math.min(2, list.length - ahead), up = Math.min(ahead, K - 1 - down), rows = up + 1 + down;
+  var H = 3 * b + headH + rows * rh + 8;
+  rtStep(ctx, P.x, P.y, P.w, H, 2, RAIN_PAL.ink);
+  ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(P.x + b, P.y + b, P.w - 2 * b, bh);
+  ctx.fillStyle = RAIN_PAL.o60; ctx.fillRect(P.x + b, P.y + b, P.w - 2 * b, 2);
+  ctx.fillStyle = RAIN_PAL.deep; ctx.fillRect(P.x + b, P.y + b + bh - 2, P.w - 2 * b, 2);
+  rtText(ctx, "추월 레이스", ix, P.y + b + bh / 2, hp, RT_PAL.night, null);
+  ctx.fillStyle = RT_PAL.night; ctx.fillRect(P.x + b, P.y + b + bh, P.w - 2 * b, H - 2 * b - bh);
+  var y = P.y + b + bh + (cmp ? 10 : 16), big = cmp ? 32 : 48;
+  ctx.font = rtFont(big); var rw = ctx.measureText(rank + "위").width;
+  rtText(ctx, rank + "위", ix, y + big / 2, big, RAIN_PAL.o100, RAIN_PAL.ink);
+  rtText(ctx, "/ " + total + "명", ix + rw + 10, y + big / 2 + (cmp ? 2 : 6), 16, RT_PAL.tan, null);
+  y += big + (cmp ? 8 : 14);
+  var goal = ahead ? list[ahead - 1] : null;
+  rtText(ctx, goal ? "다음 " + ahead + "위까지 " + Math.max(1, goal.score - RG.score + 1).toLocaleString() + "점" : list.length ? "1위 질주 중" : "첫 기록에 도전 중", ix, y + 8, 16, goal ? RT_PAL.cream : RAIN_PAL.o60, null);
+  /* 줄 · 위(앞사람) → 나 → 아래(넘은 사람) */
+  var ry = P.y + b + headH + 4, slide = (RG.raceSlide || 0) * rh, tx = ix + 6, nx = ix + 30;
+  ctx.fillStyle = RT_PAL.wood; ctx.fillRect(tx - 1, ry + rh / 2, 3, Math.max(0, (rows - 1) * rh));   /* 세로 길 */
+  ctx.beginPath(); ctx.rect(P.x + b, ry - 2, P.w - 2 * b, rows * rh + 4); ctx.clip();
+  var drawRow = function (k, no, name, sc, me) {
+    var yy = ry + k * rh + (me ? slide : 0), cy2 = yy + rh / 2;
+    if (me) { ctx.fillStyle = RT_PAL.wood; ctx.fillRect(P.x + b, yy, P.w - 2 * b, rh); }
+    ctx.fillStyle = me ? RAIN_PAL.o100 : k < up ? RT_PAL.tan : RT_PAL.dim;
+    var dz = me ? 12 : 8; ctx.fillRect(Math.round(tx + 0.5 - dz / 2), Math.round(cy2 - dz / 2), dz, dz);
+    ctx.font = rtFont(rf); var nw = ctx.measureText("100").width;
+    ctx.textAlign = "left"; rtText(ctx, String(no), nx, cy2, rf, me ? RAIN_PAL.o100 : k < up ? RT_PAL.tan2 : RT_PAL.dim, null);
+    var val = Number(sc || 0).toLocaleString();
+    ctx.textAlign = "right"; rtText(ctx, val, right, cy2, rf, me ? RAIN_PAL.o100 : k < up ? RT_PAL.cream : RT_PAL.dim, null);
+    ctx.font = rtFont(rf); var mw = right - ctx.measureText(val).width - 12 - (nx + nw + 10), nm = String(name || "");
+    while (nm.length > 1 && ctx.measureText(nm).width > mw) nm = nm.slice(0, -1);
+    ctx.textAlign = "left"; rtText(ctx, nm, nx + nw + 10, cy2, rf, me ? RAIN_PAL.o100 : k < up ? RT_PAL.cream : RT_PAL.dim, null);
+  };
+  for (var j = 0; j < up; j++) { var a = list[ahead - up + j]; drawRow(j, ahead - up + j + 1, a.name, a.score, false); }
+  for (var d = 0; d < down; d++) { var c = list[ahead + d]; drawRow(up + 1 + d, ahead + d + 2, c.name, c.score, false); }
+  drawRow(up, rank, RG.who || "나", RG.score, true);
+  ctx.restore();
+  /* 튀어오름 · 「11위 → 10위」 · 내 줄 위로 떠오르며 사라진다 */
+  RG.racePops.forEach(function (x, i) {
+    var k = 1 - x.t / 1.6, t = x.from + "위 → " + x.to + "위", fp = cmp ? 16 : 32, yy = ry + up * rh + rh / 2 + (fp + 16) / 2 - Math.round(k * (cmp ? 18 : 30)) - i * (cmp ? 30 : 44);   /* 내 줄 위에서 떠오른다 */
+    ctx.save(); ctx.globalAlpha = x.t < 0.4 ? x.t / 0.4 : 1;
+    ctx.font = rtFont(fp); var w = Math.ceil(ctx.measureText(t).width) + 24, h = fp + 16, xx = Math.round(P.x + P.w / 2 - w / 2);
+    rtTag(ctx, xx, yy - h, w, h, RAIN_PAL.o100, RAIN_PAL.o60, RAIN_PAL.deep);
+    ctx.textAlign = "center"; ctx.textBaseline = "middle"; rtText(ctx, t, xx + w / 2, yy - h / 2, fp, RT_PAL.night, null);
+    ctx.restore();
+  });
+}
+/* ── 점 글자 · 부스 사인체(DotGlyph.layout) 를 캔버스에 · 원 점 · 이웃 점 25% 겹침 · line = 바깥 테두리 색(점마다 조금 큰 점을 먼저) · lit = 켤 점 수(켜지는 움직임) ── */
+function rtDots(ctx, text, x, cy, h, color, o) {
+  o = o || {};
+  if (typeof DotGlyph === "undefined" || !DotGlyph.layout) {   /* 선수 화면 등 · 도트 글꼴로 */
+    var fp = h >= 40 ? 48 : h >= 24 ? 32 : 16;
+    ctx.save(); ctx.textAlign = o.align || "left"; ctx.textBaseline = "middle"; rtText(ctx, text, x, cy, fp, color, o.line || null); ctx.restore();
+    return 0;
+  }
+  var Lg = DotGlyph.layout(text), u = h / Lg.h, w = Lg.w * u, x0 = o.align === "center" ? x - w / 2 : o.align === "right" ? x - w : x, y0 = cy - h / 2, r = DotGlyph.D / 2 * u;
+  var dots = Lg.dots, n = o.lit == null ? dots.length : Math.max(0, Math.min(dots.length, o.lit));
+  ctx.save();
+  if (o.line) {
+    ctx.fillStyle = o.line; ctx.beginPath();
+    for (var i = 0; i < n; i++) { var d = dots[i], cx = x0 + (d[0] + DotGlyph.D / 2) * u, yy = y0 + (d[1] + DotGlyph.D / 2) * u; ctx.moveTo(cx + r + 2, yy); ctx.arc(cx, yy, r + 2, 0, Math.PI * 2); }
+    ctx.fill();
+  }
+  ctx.fillStyle = color; ctx.beginPath();
+  for (var j = 0; j < n; j++) { var e = dots[j], ex = x0 + (e[0] + DotGlyph.D / 2) * u, ey = y0 + (e[1] + DotGlyph.D / 2) * u; ctx.moveTo(ex + r, ey); ctx.arc(ex, ey, r, 0, Math.PI * 2); }
+  ctx.fill();
+  ctx.restore();
+  return w;
+}
+function rtDotsN(text) { return typeof DotGlyph !== "undefined" && DotGlyph.layout ? DotGlyph.layout(text).dots.length : 0; }
+/* ── 대기 데모 · 봇이 혼자 친다 · 그림만(판정 · 기록 · 효과음 없음) · RGA 는 RG 와 따로다 ── */
+var RGA = { w: [], parts: [], pops: [], spawn: 0.4, k: 0, kt: 0, gap: 0, mas: { x: 0, hop: 0, set: false }, last: 0 };
+function rgAttractDraw(ctx, L, now) {
+  var dt = Math.min(0.05, ((now - (RGA.last || now)) || 0) / 1000), rm = rgReduced();
+  RGA.last = now;
+  if (!RGA.mas.set) { RGA.mas.x = L.W / 2; RGA.mas.set = true; }
+  ctx.font = rtFont(L.tf);
+  /* 새 단어 · 화면에 없는 단어 · 레인 무작위 */
+  RGA.spawn -= dt;
+  if (RGA.spawn <= 0 && RGA.w.length < Math.min(4, L.maxWords)) {
+    var tx = "", g = 0;
+    while (g++ < 20) { tx = RAIN_WORDS[Math.floor(Math.random() * RAIN_WORDS.length)]; if (!RGA.w.some(function (q) { return q.text === tx; })) break; }
+    var bw = Math.ceil(ctx.measureText(tx).width) + L.padX * 2;
+    RGA.w.push({ text: tx, bw: bw, x: Math.round(8 + Math.random() * Math.max(0, L.W - 16 - bw)), p: 0, fall: 6 + Math.random() * 1.5 });
+    RGA.spawn = 1.1 + Math.random() * 0.6;
+  }
+  RGA.w.forEach(function (q) { q.bw = Math.ceil(ctx.measureText(q.text).width) + L.padX * 2; q.p += dt / q.fall; });
+  /* 봇 · 가장 아래 단어를 한 글자씩 · 다 치면 터진다 · 단어 사이 잠깐 쉰다 */
+  var ti = -1;
+  RGA.w.forEach(function (q, i) { if (q.p > 0.12 && (ti < 0 || q.p > RGA.w[ti].p)) ti = i; });
+  if (RGA.gap > 0) RGA.gap -= dt;
+  else if (ti >= 0) {
+    var t = RGA.w[ti];
+    if (RGA.tgt !== t) { RGA.tgt = t; RGA.k = 0; RGA.kt = 0.2; }
+    RGA.kt -= dt;
+    if (RGA.kt <= 0) {
+      RGA.k++; RGA.kt = 0.14 + Math.random() * 0.1;
+      if (RGA.k > t.text.length) {
+        var cx = t.x + t.bw / 2, cy = L.top + Math.min(1, t.p) * L.fallPx + L.boxH / 2, n = rm ? 4 : 14;
+        for (var pi = 0; pi < n; pi++) { var an = Math.PI * 2 * pi / n, sp = 90 + Math.random() * 100; RGA.parts.push({ x: cx, y: cy, vx: Math.cos(an) * sp, vy: Math.sin(an) * sp - 60, t: 0.5, c: [RAIN_PAL.o100, RAIN_PAL.ink, RAIN_PAL.w][pi % 3], s: 6 }); }
+        RGA.pops.push({ x: cx, y: cy, text: "+" + t.text.length * 10, t: 0.8 });
+        RGA.w.splice(ti, 1); RGA.tgt = null; RGA.k = 0; RGA.gap = 0.25 + Math.random() * 0.3;
+        if (!rm) { RGA.mas.x = Math.max(L.masW / 2, Math.min(L.W - L.masW / 2, cx)); RGA.mas.hop = 0.25; }
+      }
+    }
+  }
+  for (var wi = RGA.w.length - 1; wi >= 0; wi--) if (RGA.w[wi].p >= 1) { if (RGA.tgt === RGA.w[wi]) RGA.tgt = null; RGA.w.splice(wi, 1); }
+  RGA.parts = RGA.parts.filter(function (p) { p.t -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 420 * dt; return p.t > 0; });
+  RGA.pops = RGA.pops.filter(function (p) { p.t -= dt; p.y -= 30 * dt; return p.t > 0; });
+  if (RGA.mas.hop > 0) RGA.mas.hop -= dt;
+  /* 그리기 · 게임과 같은 그림 */
+  rgWorldD(ctx, L);
+  ctx.fillStyle = RAIN_PAL.deep;
+  for (var lx = 0; lx < L.W; lx += 3 * L.D) ctx.fillRect(lx, L.floor, 2 * L.D, 2);
+  RGA.w.forEach(function (q) {
+    var on = q === RGA.tgt;
+    rgWordDraw(ctx, L, q.x, L.top + Math.min(1, q.p) * L.fallPx, q.bw, q.text, on, q.p > 0.78, on ? q.text.slice(0, RGA.k) : "");
+  });
+  var u = L.D / 2, bob = rm ? 0 : Math.floor(now / 300) % 2 * Math.round(L.D / 3), hop = rm || !(RGA.mas.hop > 0) ? 0 : Math.round(Math.sin(Math.PI * (1 - RGA.mas.hop / 0.25)) * 2 * L.D);
+  rgBotDraw(ctx, RGA.mas.x, L.ground + bob - hop, RG_BOT.w, RG_BOT.h, u);
+  RGA.parts.forEach(function (p) { ctx.fillStyle = p.c; ctx.fillRect(Math.round(p.x), Math.round(p.y), p.s, p.s); });
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  RGA.pops.forEach(function (p) { rtText(ctx, p.text, p.x, p.y, L.big ? 32 : 16, RAIN_PAL.w, RAIN_PAL.ink); });
+}
 /* Node 에서 규칙만 따로 돌려 보기 위한 통로(판 길이 시뮬레이션) · 브라우저에서는 쓰지 않는다 */
 if (typeof module !== "undefined" && module.exports) module.exports = { RG: RG, RAIN_WORDS: RAIN_WORDS, rgSeed: rgSeed, rgRnd: rgRnd, rgShuf: rgShuf, rgPickWord: rgPickWord, rgLayout: rgLayout, rgUpdate: rgUpdate, rgSpawn: rgSpawn, rgStat: rgStat, rgRamp: rgRamp,
-  rgNextFill: rgNextFill, rgNextWord: rgNextWord, rgWrap: rgWrap, rgHgMap: rgHgMap, rgHgAdd: rgHgAdd, rgHgBack: rgHgBack, rgHangulize: rgHangulize, RGP: RGP };
+  rgNextFill: rgNextFill, rgNextWord: rgNextWord, rgWrap: rgWrap, rgHgMap: rgHgMap, rgHgAdd: rgHgAdd, rgHgBack: rgHgBack, rgHangulize: rgHangulize, RGP: RGP,
+  RAIN_BONUS_LINES: RAIN_BONUS_LINES, RAIN_BONUS: RAIN_BONUS, RAIN_LIFE_BONUS: RAIN_LIFE_BONUS, rgBonusLim: rgBonusLim, rgLev: rgLev, rgBonusScore: rgBonusScore, rgRaceRank: rgRaceRank,
+  rgRaceTick: rgRaceTick, rgSubmit: rgSubmit, rgEnd: rgEnd, rgBonusStart: rgBonusStart };
