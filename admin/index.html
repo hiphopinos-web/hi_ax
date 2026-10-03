@@ -758,6 +758,8 @@ div.err-banner:not(.bands){background:var(--bad-bg);color:var(--bad);border:1px 
 #rtv .ctl .k{font-size:11px;color:rgba(255,255,255,.45);margin-left:4px}
 /* ── v4.16 아이디어 · Wall QR 퀴즈 문항 편집 ── */
 td.itx{min-width:280px;max-width:520px;white-space:normal;line-height:1.55}
+.ixt{white-space:pre-wrap;word-break:break-word}   /* 아이디어 3,000자(261003) · 줄바꿈 그대로 · 긴 글은 앞 180자 + 펼치기(ideaTxt) */
+button.lnk{background:none;border:0;padding:0;font-family:inherit;white-space:nowrap}
 .ilist{list-style:none;display:flex;flex-direction:column}
 .ilist li{padding:12px 0;border-top:1px solid var(--line2)}
 .ilist li:first-child{border-top:0;padding-top:0}
@@ -5104,8 +5106,18 @@ function rtvAwardHtml(){
 /* ── 9-1. 아이디어 · 최신 먼저 · 테스트 계정 제외가 기본 · 분야별 묶음은 18F 커피챗 매칭용 ── */
 var IDEA_TAG_ORDER=["영업","보상","마케팅","본사·통계","기타"];   /* 앱 IDEA_TAGS 와 같은 순서 */
 var IDEA_CH={ app:"앱", booth:"부스", board:"보드" };
-ST.idea={ tag:"", test:false, cc:false };
+ST.idea={ tag:"", test:false, cc:false, open:{} };
 function ideaTagOf(r){ return r.tag||"분야 없음"; }
+/* 아이디어 3,000자 (사용자 261003) 최대 3,000자 · 표 · 묶음에는 앞 IDEA_CLIP 자(또는 4줄)까지만 · 「펼치기」로 전문 · 펼친 줄은 다시 그려도 펼친 채(ST.idea.open) · CSV 는 전문 그대로 */
+var IDEA_CLIP=180;
+function ideaTxt(r){
+  var t=String(r.text||""), a=Array.from(t), ls=t.split("\n"), long=a.length>IDEA_CLIP||ls.length>4;
+  if(!long) return '<span class="ixt">'+esc(t)+'</span>';
+  var op=!!ST.idea.open[r.id], cut=ls.slice(0,4).join("\n"), ca=Array.from(cut);
+  cut=(ca.length>IDEA_CLIP?ca.slice(0,IDEA_CLIP).join(""):cut).replace(/\s+$/,"")+"…";
+  return '<span class="ixt">'+esc(op?t:cut)+'</span> <button type="button" class="lnk" onclick="ideaMore(\''+esc(r.id)+'\')">'+(op?"접기":"펼치기 · "+a.length.toLocaleString()+"자")+'</button>';
+}
+function ideaMore(id){ ST.idea.open[id]=!ST.idea.open[id]; render(); }
 function ideaRows(){ return ((ST.data.idea||{}).rows||[]); }
 function ideaCc(){ var m={}; ((ST.data.cchat||{}).rows||[]).forEach(function(r){ if(r.status!=="취소") m[normE(r.emp)]=r; }); return m; }
 function ideaSet(k,v){ ST.idea[k]=v; render(); }
@@ -5141,17 +5153,17 @@ function viewIdea(){
       rs.sort(function(a,b){ return (cc[normE(b.emp)]?1:0)-(cc[normE(a.emp)]?1:0); });
       var ccN=rs.filter(function(r){ return cc[normE(r.emp)]; }).length;
       return card(g.t, g.n+"건"+(ccN?" · 커피챗 신청 "+ccN+"명":""),
-        '<ul class="ilist">'+rs.map(function(r){ return '<li><p class="it">'+esc(r.text)+'</p><p class="im">'+ideaWho(r)+' · '+esc(r.dept||"-")+' · <span class="n">'+esc(short(r.ts))+'</span> '+(cc[normE(r.emp)]?ideaCcTag(r,cc):"")+'</p></li>'; }).join("")+'</ul>');
+        '<ul class="ilist">'+rs.map(function(r){ return '<li><p class="it">'+ideaTxt(r)+'</p><p class="im">'+ideaWho(r)+' · '+esc(r.dept||"-")+' · <span class="n">'+esc(short(r.ts))+'</span> '+(cc[normE(r.emp)]?ideaCcTag(r,cc):"")+'</p></li>'; }).join("")+'</ul>');
     }).join("")+'</div>':'<div class="empty">'+(all.length?"조건에 맞는 아이디어가 없습니다.":"아직 들어온 아이디어가 없습니다.")+'</div>');
   } else {
     body=card("","",tb+'<div class="wrap"><table class="tb"><tr><th>시각</th><th>분야</th><th>아이디어</th><th>이름</th><th>부문</th><th>18F 커피챗</th><th>경로</th></tr>'+
       shown.map(function(r){ return '<tr class="hv'+(r.test||r.hidden?" dim":"")+'"><td class="n cap">'+esc(short(r.ts))+'</td><td>'+tag(ideaTagOf(r))+'</td>'+
-        '<td class="itx">'+esc(r.text)+'</td><td><div class="who2">'+ideaWho(r)+'<small class="n">'+esc(r.emp)+'</small></div></td><td>'+esc(r.dept||"")+'</td>'+
+        '<td class="itx">'+ideaTxt(r)+'</td><td><div class="who2">'+ideaWho(r)+'<small class="n">'+esc(r.emp)+'</small></div></td><td>'+esc(r.dept||"")+'</td>'+
         '<td>'+ideaCcTag(r,cc)+'</td><td class="cap">'+esc(IDEA_CH[r.ch]||r.ch||"")+'</td></tr>'; }).join("")+
       (!shown.length?emptyRow(7, all.length?"조건에 맞는 아이디어가 없습니다.":"아직 들어온 아이디어가 없습니다."):"")+'</table></div>');
   }
   h+=body;
-  h+=memo('<p>참가자가 앱에서 낸 아이디어 한 줄(최대 300자)이 서버에 쌓인 것입니다. 같은 기기에서 다시 보내도 한 번만 저장됩니다.</p>'+
+  h+=memo('<p>참가자가 앱에서 낸 아이디어 한 줄(최대 3,000자)이 서버에 쌓인 것입니다. 긴 글은 앞부분만 보이고 「펼치기」로 전문을 봅니다. CSV 에는 전문이 들어갑니다. 분야를 고르지 않은 글은 「분야 없음」으로 묶입니다. 같은 기기에서 다시 보내도 한 번만 저장됩니다.</p>'+
     '<p><b>분야별 묶음</b>은 18F 커피챗 매칭용입니다. 같은 분야에서 커피챗을 신청한 사람이 위에 오니, 비슷한 주제끼리 같은 회차 · 테이블로 묶을 때 봅니다. 매칭은 <a href="javascript:goTo(\'apply\',\'cchat\')" style="color:var(--navy);font-weight:700">신청 › 커피챗 매칭</a>에서 합니다.</p>'+
     '<p>「익명 공개」는 참가자가 공개 화면(월 · 사이니지)에 이름 없이 나가길 고른 것입니다. 콘솔에는 매칭을 위해 이름이 보입니다. 밖으로 공유하는 자료에는 이름을 빼세요.</p>'+
     '<p>테스트 계정(310555 등)의 아이디어는 집계에서 빠지고, 「테스트 계정 포함」을 켜야 보입니다. 숨김 처리는 콘솔에 없습니다. 부적절한 글은 시트 「아이디어」의 숨김 칸에 Y를 적습니다.</p>');
