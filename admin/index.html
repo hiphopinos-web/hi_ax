@@ -3421,6 +3421,7 @@ function nsSend(){
   var rt=nsRoute();
   if(!PF.t.trim()){ toast("제목을 넣으세요"); var x=el("nsT"); if(x) x.focus(); return; }
   if(rt!=="notice"&&nsPush().b.length>PUSH_MAX.b){ toast("제목과 내용을 합쳐 "+PUSH_MAX.b+"자까지입니다"); return; }
+  if(!nsPlainAll()&&!nsTgt()&&rt!=="push"){ toast("이 서버는 고른 사람에게 앱 공지를 보내지 못합니다(전체만)"); return; }   /* 옛 서버는 nto 를 모르고 전체로 낸다 · 막는다 */
   if(rt==="push") return pushSendAsk();
   NT.t=PF.t; NT.b=PF.b; NT.push=rt==="both"; NT.f=JSON.parse(JSON.stringify(PF.f)); NT.sil=PF.sil; NT.long=PF.long; NT.pv=null; NT.nto=!nsPlainAll(); NT.cp=nsFmt()?nsPush():null;
   noticeSend();
@@ -5907,7 +5908,7 @@ function ctlNote(action, params, res){
   try{ sessionStorage.setItem("axf_hv_ctl", JSON.stringify(CTL)); }catch(e){}
 }
 /* 서버 운영로그 종류 → 요소 · 2단계 서버(oplog_list) 응답 rows[{ t, k, x }] */
-var OPK_EL={ ro:"app", notice:"ns", push_send:"ns", push_cancel:"ns", push_cfg:"ns", sched_add:"ns", sched_cancel:"ns", sched_bump:"ns", sched_now:"ns", draw_cfg:"draw", draw_cmd:"draw", draw_reset:"draw", fin:"draw", att_rotate:"qr", stamp_rotate:"qr", stair_rotate:"qr", code_set:"pp", adm_roster:"pp", adm_pin:"pp", test_set:"pp", test_reset:"pp", cfg_set:"sy", usr_reset_all:"sy", att_wipe:"sy", visit_wipe:"sy", game_wipe:"sy", stamp_revoke:"fd", pw_reset:"fd", pw_req_done:"fd", pw_req_cancel:"fd", crowd_cfg:"fd", roulette_out:"roul", race:"type", oly_rule:"game", ox_off:"game" };
+var OPK_EL={ ro:"app", notice:"ns", push_send:"ns", push_cancel:"ns", push_cfg:"ns", sched_add:"ns", sched_cancel:"ns", sched_bump:"ns", sched_now:"ns", draw_cfg:"draw", draw_cmd:"draw", draw_reset:"draw", fin:"draw", att_rotate:"qr", stamp_rotate:"qr", stair_rotate:"qr", notice_clear:"ns", code_set:"pp", adm_roster:"pp", adm_pin:"pp", test_set:"pp", test_reset:"pp", cfg_set:"sy", usr_reset_all:"sy", att_wipe:"sy", visit_wipe:"sy", game_wipe:"sy", stamp_revoke:"fd", pw_reset:"fd", pw_req_done:"fd", pw_req_cancel:"fd", crowd_cfg:"fd", roulette_out:"roul", race:"type", oly_rule:"game", ox_off:"game" };
 function ctlRows(el, n){
   var srv=(ST.data.oplog&&ST.data.oplog.ok)?(ST.data.oplog.rows||[]).map(function(r){ return { t:short(r.t), el:OPK_EL[r.k]||"", x:r.x||r.k, srv:1 }; }):[];
   var rows=srv.length?srv:CTL;
@@ -6165,7 +6166,7 @@ function hvTestSet(op, emp){
   if(op==="del") return run();
   dialog({ t:"테스트 사번으로 지정할까요?", who:esc(emp), x:imp([["집계 · 추첨 · 참여상 · 순위","빠짐","loss"],["테스트 기록 지우기","대상이 됨","loss"]]), s:"실제 참가자 사번이면 그 사람이 집계와 추첨에서 사라집니다.", ok:"지정", danger:true, onOk:function(){ run(); } });
 }
-var HVT_N={ game:"게임 기록", type:"타자 기록", race:"타자 대전", nick:"닉네임", lg:"최초 로그인", pin:"PIN", log:"참여(스탬프 · 룰렛)", raffle:"응모권", att:"17F 출석", visit:"접속", drawin:"추첨 체크인" };
+var HVT_N={ game:"게임 기록", type:"타자 기록", race:"타자 대전", nick:"닉네임", lg:"최초 로그인", pin:"PIN", log:"참여(스탬프 · 룰렛)", raffle:"응모권", att:"17F 출석", visit:"접속", drawin:"추첨 체크인", ideas:"아이디어", stairlog:"계단 기록", stairleg:"계단 진행", resv:"상담", cchat:"커피챗", pwreq:"PIN 분실 요청", mark:"담당 표시" };
 function hvTestReset(emp){
   HVT.busy="dry"; render();
   callPost("test_reset",{ emp:emp, dry:1 },function(r){
@@ -6193,7 +6194,7 @@ function viewCfg(){
 function hvCfgEdit(k){
   var r=(((ST.data.cfgl||{}).rows)||[]).filter(function(x){ return x.k===k; })[0]; if(!r) return;
   if(r.lv>=3&&!supOk()){ toast("슈퍼관리자 본인 확인 뒤에 바꿉니다"); return; }
-  var inp=r.t==="onoff"?'<select class="in" id="hvCfgV" style="width:100%" onchange="dlgGate()"><option'+(r.v==="ON"?" selected":"")+'>ON</option><option'+(r.v==="OFF"?" selected":"")+'>OFF</option></select>':'<input class="in" id="hvCfgV" style="width:100%;min-width:0" value="'+esc(r.v)+'" oninput="dlgGate()"'+(r.t==="num"?' inputmode="numeric"':'')+'>';
+  var inp=r.t==="enum"&&r.opts?'<select class="in" id="hvCfgV" style="width:100%" onchange="dlgGate()">'+r.opts.map(function(o){ return '<option'+(r.v===o?" selected":"")+'>'+esc(o)+'</option>'; }).join("")+'</select>':r.t==="onoff"?'<select class="in" id="hvCfgV" style="width:100%" onchange="dlgGate()"><option'+(r.v==="ON"?" selected":"")+'>ON</option><option'+(r.v==="OFF"?" selected":"")+'>OFF</option></select>':'<input class="in" id="hvCfgV" style="width:100%;min-width:0" value="'+esc(r.v)+'" oninput="dlgGate()"'+(r.t==="num"?' inputmode="numeric"':'')+'>';
   var o={ t:(r.n||r.k)+" 바꾸기", who:esc(r.k)+"<span>지금 "+esc(r.v===""?"(비어 있음)":r.v)+" · 기본 "+esc(r.def)+"</span>", s:esc(r.d||""), x:'<label class="fld mt12">새 값'+inp+'</label>'+(r.t==="num"?'<p class="cap mt8">'+esc(r.lo)+' ~ '+esc(r.hi)+'</p>':''), ok:"저장", danger:r.lv>=2,
     gate:function(){ var v=el("hvCfgV"); return !!v&&String(v.value).trim()!==String(r.v); },
     onOk:function(){ var v=String(el("hvCfgV").value).trim(); call("cfg_set",{ k:k, v:v },function(x){ dlgForce(); if(x&&x.ok){ delete _cache[sig_("cfg_list",{})]; reload(["cfgl"]); toast("저장했습니다 · "+(r.n||k)+" = "+x.v); } else toast("실패: "+({ range:"범위를 벗어났습니다", key:"바꿀 수 없는 키입니다", ro:"전용 화면에서 바꿉니다" }[x&&x.reason]||why(x))); },function(e){ dlgForce(); toast("실패: "+why(e)); }); } };
