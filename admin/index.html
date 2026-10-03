@@ -28,10 +28,13 @@
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px;   /* 간격 8px 격자 */
   --h-ctl:36px; --h-sm:28px;   /* 버튼 · 입력 높이 2가지 */
   --r:12px; --r-s:8px; --r-xs:6px;
+  --w-page:1280px; --w-form:720px; --w-aside:320px; --w-text:720px;   /* 261003 너비 · 콘텐츠 최대 1280 · 폼 열 720 · 보조 열 320 · 글 줄 최대 720 */
+  --w-in-s:96px; --w-in-m:200px; --w-in-l:320px;   /* 입력 폭 · 기본은 그 열 전체 · 짧은 값만 96(숫자 · 시각 · 수량) · 200(사번 · 날짜 · 고르기) · 320(찾기 · 한 줄 주소) */
   --sh-lg:0 12px 28px rgba(8,24,74,.14),0 4px 8px rgba(8,24,74,.06);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
+html{scrollbar-gutter:stable}   /* 261003 너비 · 스크롤 막대 유무로 왼쪽 선이 7px 흔들리지 않게 */
 body{background:var(--bg);color:var(--tx);
   font-family:"Pretendard Variable",Pretendard,-apple-system,"Segoe UI","Malgun Gothic",sans-serif;
   font-size:var(--fs-b);line-height:1.55;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;word-break:keep-all}
@@ -89,7 +92,12 @@ nav.tabs button.on{color:var(--navy)}
 .btn:disabled{opacity:.45;cursor:default}
 
 /* ── 페이지 뼈대 · 제목줄(제목 20 + 한 줄 설명 14 | 오른쪽 주 행동) → 2단 탭(밑줄) → 3단(분할 선택) → 본문 ── */
-main{padding:24px 24px 80px;max-width:1480px;margin:0 auto}
+main{padding:24px 24px 80px;max-width:calc(var(--w-page) + 48px);margin:0 auto}
+@media(min-width:721px){header.top{padding:0 max(24px,calc((100% - var(--w-page))/2))}}   /* 261003 너비 · 상단바 안쪽도 본문과 같은 왼쪽 · 오른쪽 선(1280 ~ 1920 실측 · 메뉴 가려짐 0) */
+/* 261003 너비 · 페이지 유형 3가지(#view data-pt) · form = 입력 · 발송형(본문 열 720 · 보조 열 320 고정) · list = 표 · 목록형(1280) · dash = 대시보드(12열) */
+#view[data-pt="form"]>:not(.ph):not(.hv-l2):not(.hv-l3){max-width:var(--w-form)}
+#view[data-pt="form"]:has(>.lay-fa,>.sp)>:not(.ph):not(.hv-l2):not(.hv-l3){max-width:calc(var(--w-form) + var(--w-aside) + 24px)}
+.ph p,details.memo .mb>p,details.memo .mb>ol,.card>p.cap,.card>.cap,.card>p,.empty{max-width:var(--w-text)}
 .ph{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:16px}
 .ph h1{font-size:var(--fs-h1);font-weight:700;color:var(--navy);letter-spacing:-.02em;line-height:1.3}
 .ph p{font-size:var(--fs-b);color:var(--tx2);margin-top:4px}
@@ -109,17 +117,20 @@ main{padding:24px 24px 80px;max-width:1480px;margin:0 auto}
 .toolbar .cnt{font-size:var(--fs-s);color:var(--tx2)}
 .toolbar .cnt b{color:var(--tx)}
 .toolbar .sp{flex:1}
-.in{height:var(--h-ctl);padding:0 12px;border-radius:var(--r-s);border:1px solid var(--line3);background:var(--sf);min-width:220px;color:var(--tx)}
+.in{height:var(--h-ctl);padding:0 12px;border-radius:var(--r-s);border:1px solid var(--line3);background:var(--sf);width:var(--w-in-l);max-width:100%;min-width:0;color:var(--tx)}
 .in::placeholder{color:var(--tx3)}
 .in:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px var(--navy05)}
-select.in{min-width:130px;padding-right:8px}
+select.in{width:var(--w-in-m);padding-right:8px}
 textarea.in{height:auto;min-height:72px;padding:8px 12px;resize:vertical;width:100%}
-.in.sm{height:var(--h-sm);min-width:0;padding:0 8px;font-size:var(--fs-s)}
-.in.w-s{min-width:0;width:96px}.in.w-m{min-width:0;width:200px}
+.in.sm{height:var(--h-sm);padding:0 8px;font-size:var(--fs-s)}
+:where(.fld.fw,.fgrid) .in,:where(.fld.fw,.fgrid) select.in,:where(.ns-f)>.in,:where(.ns-f)>select.in{width:100%}   /* 폼 열 안 = 열 전체(기본) · 아래 짧은 폭 클래스가 이긴다 */
+.in.w-s{width:var(--w-in-s)}.in.w-m{width:var(--w-in-m)}.in.w-l{width:var(--w-in-l)}.in.w-f{width:100%}
+.grow{flex:1 1 0;min-width:0}.in.grow{width:auto}
 .fld{display:flex;flex-direction:column;gap:6px;font-size:var(--fs-c);font-weight:600;color:var(--tx2)}
 .fld>.cap{font-weight:400}
 .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
 .fgrid .fw{grid-column:1/-1}
+.fgrid{max-width:var(--w-form)}   /* 261003 너비 · 표 · 목록형 화면 안의 입력 묶음도 폼 열(720) 안에서 끝난다 */
 .row.nw{flex-wrap:nowrap}
 .dz-h{margin:24px 0 4px;padding-top:16px;border-top:1px solid var(--line);font-size:var(--fs-s);font-weight:700;color:var(--bad)}
 
@@ -130,14 +141,16 @@ textarea.in{height:auto;min-height:72px;padding:8px 12px;resize:vertical;width:1
 .ch h2{font-size:var(--fs-h2);font-weight:700;color:var(--tx)}
 .ch .sub{font-size:var(--fs-s);color:var(--tx2)}
 .ch .r{margin-left:auto;display:flex;gap:8px;align-items:center}
-.grid{display:grid;gap:16px;margin-top:16px}
+.grid{display:grid;gap:16px;margin-top:16px;grid-template-columns:repeat(12,minmax(0,1fr))}
+.grid>*{grid-column:span 12}
 .grid>.card{margin-top:0}
-.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
-.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
-.g57{grid-template-columns:minmax(0,5fr) minmax(0,7fr)}
-.kpis{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
-@media(min-width:721px){.kpis:has(>.kpi:nth-child(7):last-child),.kpis:has(>.kpi:nth-child(8):last-child){grid-template-columns:repeat(4,minmax(0,1fr))}}   /* 261003 UI 정돈 · 7 · 8칸이 6 + 1 로 혼자 남지 않게 4열 */
-@media(max-width:1100px){.g2,.g3,.g57{grid-template-columns:minmax(0,1fr)}}
+.grid.g2>*{grid-column:span 6}
+.grid.g3>*{grid-column:span 4}
+.grid.g57>:nth-child(odd){grid-column:span 5}.grid.g57>:nth-child(even){grid-column:span 7}
+.kpis{display:grid;gap:16px;grid-template-columns:repeat(4,minmax(0,1fr))}
+.kpis:has(>.kpi:nth-child(3):last-child),.kpis:has(>.kpi:nth-child(5):last-child),.kpis:has(>.kpi:nth-child(6):last-child){grid-template-columns:repeat(3,minmax(0,1fr))}
+.kpis:has(>.kpi:nth-child(2):last-child){grid-template-columns:repeat(2,minmax(0,1fr))}
+.kpis:has(>.kpi:only-child){grid-template-columns:repeat(4,minmax(0,1fr))}   /* 261003 너비 · KPI 는 12열 격자의 3 · 4 · 6칸 · 혼자 남는 줄이 없게 3열(3 · 5 · 6개) */
 @media(max-width:720px){header.top{height:auto;flex-wrap:wrap;padding:0;gap:0}.brand{padding:12px 16px}.brand span{display:none}.hr{padding-right:16px;gap:8px}.live .tx,.acct .ae{display:none}
   nav.tabs{order:3;width:100%;height:44px;border-top:1px solid var(--line2);padding:0 4px;-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent);mask-image:linear-gradient(90deg,#000 85%,transparent)}
   main{padding:16px 16px 96px}.card{padding:16px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{padding:12px}.kpi .v{font-size:var(--fs-h1)}.ph .r{margin-left:0}.card .pp-sum{grid-template-columns:minmax(0,1fr)}.card .slots{grid-template-columns:minmax(0,1fr)}}
@@ -253,7 +266,7 @@ details.memo .mb ol{padding-left:16px}
 .todo .it.zero .t{color:var(--tx2);font-weight:400}
 
 /* 개인 스탬프 패널 · 왼쪽 목록 · 오른쪽 8칸 */
-.sp{display:grid;grid-template-columns:320px minmax(0,1fr);gap:16px;align-items:start}
+.sp{display:grid;grid-template-columns:var(--w-aside) minmax(0,var(--w-form));gap:24px;align-items:start;justify-content:start}
 @media(max-width:1000px){.sp{grid-template-columns:minmax(0,1fr)}.sp .lnb{position:static}.sp .lnb ul{max-height:260px}}
 .lnb{background:var(--sf);border:1px solid var(--line);border-radius:var(--r);padding:12px;position:sticky;top:76px}
 .lnb .in{width:100%;min-width:0}
@@ -345,7 +358,7 @@ details.memo .mb ol{padding-left:16px}
 .admh.ok{color:var(--ok)}
 .admh.bad{color:var(--bad)}
 /* v4.86 슈퍼관리자 본인 확인(PIN) */
-.supg{max-width:440px;margin:0 auto;padding:8px 0 4px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.supg{max-width:440px;margin:0;padding:8px 0 4px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
 .supg .row{flex-wrap:nowrap}
 .supg .in.pin{flex:1 1 0;width:0;min-width:0;height:44px;font-size:var(--fs-h1);letter-spacing:.6em;text-align:center;font-variant-numeric:tabular-nums}
 .supg .btn{padding:0 24px}
@@ -415,7 +428,7 @@ details.memo .mb ol{padding-left:16px}
 .olyf{display:flex;flex-wrap:wrap;gap:12px 16px}
 .olysub{font-size:var(--fs-c);font-weight:700;color:var(--tx2);margin:16px 0 8px}
 .olysub:first-child{margin-top:0}
-.olyfl{width:156px}
+.olyfl{width:var(--w-in-m)}
 .tb tr.dim td{color:var(--tx3)}
 .tb td.oxq{min-width:260px;max-width:420px;white-space:normal}
 .olyfl .in{min-width:0;width:100%}
@@ -559,7 +572,7 @@ table.brk tr.tot td{border-bottom:0;border-top:1px solid var(--line3)}
 .ns-ghost.ns-gs{height:30px}
 @media(max-width:1100px){.ns-grid{grid-template-columns:minmax(0,1fr)}.ns-side{position:static}}
 /* v5.14 공지·푸시 단순화 · 기본 4칸 + 더 보기 · 폰 미리보기 하나 */
-.ns-grid2{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:16px;align-items:start}
+.ns-grid2{display:grid;grid-template-columns:minmax(0,var(--w-form)) var(--w-aside);gap:24px;align-items:start;justify-content:start}
 .ns-grid2>.card,.ns-grid2 .ns-side>.card{margin-top:0}
 .ns-f{margin-bottom:16px}
 .ns-fl{font-size:var(--fs-s);font-weight:700;color:var(--tx2);margin-bottom:8px}
@@ -592,11 +605,11 @@ table.brk tr.tot td{border-bottom:0;border-top:1px solid var(--line3)}
 .pz-opt{display:flex;gap:8px 16px;flex-wrap:wrap;align-items:center;margin-top:12px;font-size:var(--fs-s)}
 .pz-opt label{display:flex;gap:8px;align-items:center;font-weight:700}
 .pz-nums{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
-.pz-nums .in{min-width:0;width:84px}
+.pz-nums .in{width:var(--w-in-s)}
 @media(max-width:720px){.pz-hold{gap:12px}.pz-acts .btn{flex:1}}
 /* v4.79 Outro 럭키드로우 추첨 메뉴 · 이름은 dw- 로 시작(다른 규칙과 겹치지 않게 · 120-콘솔 겹침 검사) */
 .dw-set{display:flex;gap:8px 12px;flex-wrap:wrap;align-items:flex-end}
-.dw-code{width:150px;font-variant-numeric:tabular-nums;letter-spacing:.04em;text-transform:uppercase}
+.dw-code{width:var(--w-in-m);font-variant-numeric:tabular-nums;letter-spacing:.04em;text-transform:uppercase}
 .dw-note{margin-top:12px;font-size:var(--fs-b);color:var(--tx2);padding:12px 16px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--sf)}
 .dw-no{font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.02em}
 /* v4.81 QR 메뉴 「QR 그림」 · 이름은 qv- 로 시작(다른 규칙과 겹치지 않게 · 121-콘솔 겹침 검사) */
@@ -639,9 +652,10 @@ table.brk tr.tot td{border-bottom:0;border-top:1px solid var(--line3)}
 .dc-nm{font-size:var(--fs-h1);font-weight:700}
 .dc-mc{font-size:var(--fs-h2);line-height:1.7}
 @media(max-width:720px){.dc-pad{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.g75{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
+.grid.g75>:nth-child(odd){grid-column:span 7}.grid.g75>:nth-child(even){grid-column:span 5}
+#rtv .grid>*{grid-column:auto}
 .g75>div>.card:first-child{margin-top:0}
-@media(max-width:1100px){.g75{grid-template-columns:minmax(0,1fr)}}
+
 /* ── v5.03 참여상 추첨 · 추첨 › 참여상 · fn- ── */
 .fn-step{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:4px 0 12px}
 .fn-step span{font-size:var(--fs-c);font-weight:700;border-radius:99px;padding:4px 12px;border:1px solid var(--line);color:var(--tx2);background:var(--sf);white-space:nowrap}
@@ -649,7 +663,7 @@ table.brk tr.tot td{border-bottom:0;border-top:1px solid var(--line3)}
 .fn-step span.done{color:var(--navy);background:var(--navy05);border-color:var(--navy1)}
 .fn-rem{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
 .fn-rem label{display:flex;flex-direction:column;gap:4px;font-size:var(--fs-c);color:var(--tx2);font-weight:600;min-width:0}
-.fn-rem .in{min-width:0;width:100%;text-align:right;font-variant-numeric:tabular-nums}
+.fn-rem .in{width:var(--w-in-s);text-align:right;font-variant-numeric:tabular-nums}
 .fn-rem em{font-style:normal;color:var(--tx2);font-weight:400;font-variant-numeric:tabular-nums}
 .fn-sum{display:flex;gap:8px 16px;flex-wrap:wrap;align-items:baseline;margin-top:12px;font-size:var(--fs-s);color:var(--tx2)}
 .fn-sum b{font-size:var(--fs-h2);color:var(--tx);font-variant-numeric:tabular-nums}
@@ -841,10 +855,11 @@ details.hv-dz.off>summary b{color:var(--tx3)}
 .iv-warn{display:flex;flex-direction:column;gap:8px}
 .iv-warn .it{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-variant-numeric:tabular-nums}
 .iv-form{display:flex;gap:8px 12px;flex-wrap:wrap;align-items:flex-end}
-.iv-form .in{min-width:0;width:96px}
-.iv-form .in.w{width:160px}
+.iv-form .in{width:var(--w-in-s)}
+.iv-form .in.w{width:var(--w-in-m)}
 .note.iv-nb{color:var(--bad);background:var(--bad-bg);border-color:var(--bad-bd)}
 @media(max-width:720px){.iv-form .in,.iv-form .in.w{width:100%}.iv-form .fld{flex:1 1 140px}}
+@media(max-width:1100px){.grid.grid>:nth-child(n){grid-column:span 12}}   /* 261003 너비 · 1100 아래는 격자 칸을 한 줄로(칸 규칙보다 뒤 · 더 구체적) */
 </style>
 </head>
 <body>
@@ -1371,6 +1386,7 @@ function render(){
   }
   if(ST.err&&ST.err.reason==="locked") h='<div class="bands err-banner">'+band("bad",'<b>서버가 이 연결을 잠갔습니다.</b> '+esc(lockedMsg())+' 잠금이 풀리면 이 탭을 새로 고칩니다. 한 번 들어온 탭은 그 뒤로 잠금을 받지 않습니다.')+'</div>'+h;
   else if(ST.err) h='<div class="bands err-banner">'+band("bad",'일부 데이터를 못 받았습니다('+esc(why(ST.err))+'). 표시된 값은 마지막으로 받은 것입니다.','<button class="btn sm" onclick="refresh()">다시 시도</button>')+'</div>'+h;
+  v.setAttribute("data-pt", hvPt());
   v.innerHTML=hvHead()+h;
   moreRows(v);
   if(fIdx>=0){ var f2=v.querySelectorAll("input,select,textarea"); if(f2[fIdx]){ try{f2[fIdx].focus({preventScroll:true});}catch(e){f2[fIdx].focus();} try{ if(selS!=null) f2[fIdx].setSelectionRange(selS,selE); }catch(e){} } }
@@ -1389,6 +1405,9 @@ function moreRows(v){
     w.insertAdjacentElement("afterend", b);
   });
 }
+/* 261003 너비 · 화면 유형 · form = 입력 · 발송형 · dash = 대시보드 · 나머지 = 표 · 목록형 */
+var PT_FORM={ n_send:1, p_one:1, f_stamp:1, p_test:1, p_code:1, s_danger:1 }, PT_DASH={ hq:1, r_sum:1 };
+function hvPt(){ return PT_FORM[ST.nav]?"form":PT_DASH[ST.nav]?"dash":"list"; }
 function setQ(v){ ST.q=v; render(); }
 function setFilt(v){ ST.filt=v; ST.sel={}; render(); }
 function setSub(v){ ST.subs[ST.tab]=v; ST.q=""; ST.filt=""; ST.sel={}; drwClose(true); load(); render(); }
@@ -1632,7 +1651,7 @@ function usPanel(emp){
   /* 2. 닉네임 */
   var nk=old?(function(){ var r=usNickRow(emp); return r&&r.nick?{nick:r.nick,hidden:!!r.hidden}:null; })():d.nick;
   var n='<div class="us-row"><span class="cap">지금</span>'+(nk?'<b style="font-size:var(--fs-h2)">'+esc(nk.nick)+'</b>'+(nk.hidden?tag("숨김 · 순위판에 「이름 숨김」","warn"):tag("공개","ok")):'<span class="muted">없음 · 순위판에 「익명 참가자」</span>')+'</div>';
-  n+='<div class="us-row mt12"><input id="usNick" class="in" style="min-width:200px" maxlength="8" placeholder="새 닉네임 (한글 · 영문 · 숫자 2~8자)"'+(old?' disabled':'')+' onkeydown="if(event.key===\'Enter\')usNickSet(\''+jq(emp)+'\')">'+
+  n+='<div class="us-row mt12"><input id="usNick" class="in w-l" maxlength="8" placeholder="새 닉네임 (한글 · 영문 · 숫자 2~8자)"'+(old?' disabled':'')+' onkeydown="if(event.key===\'Enter\')usNickSet(\''+jq(emp)+'\')">'+
     (old?usNew():'<button class="btn sm" onclick="usNickSet(\''+jq(emp)+'\')">바꾸기</button>')+'<span class="sp" style="flex:1"></span>'+
     (nk?'<button class="btn sm" onclick="usNickOp(\''+jq(emp)+'\',\''+(nk.hidden?"show":"hide")+'\')">'+(nk.hidden?"숨김 해제":"숨기기")+'</button>'+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="usNickOp(\''+jq(emp)+'\',\'clear\')">닉네임 지우기</button>')+'':'')+'</div>';
   n+='<p class="cap mt8">바꾸기는 앱과 같은 규칙으로 서버가 다시 봅니다(금칙어 · 실명 · 남과 같은 닉네임 거절). 숨기기는 되돌릴 수 있고, 지우기는 본인이 앱에서 다시 정합니다.</p>';
@@ -1862,7 +1881,7 @@ function viewCrowd(){
     '<button class="btn sm '+(cf.stair?"":"danger")+'" onclick="crowdStair('+(cf.stair?0:1)+')">'+(cf.stair?"끄기":"켜기")+'</button>'+
     '<span class="cap">켜면 엘리베이터 혼잡 카드에 「계단 이용」(계단 스탬프 화면)이 붙습니다. 총무 피난계단 승인 뒤에 켭니다.</span></div>'+
     '<div class="row mt12" style="gap:8px;flex-wrap:wrap;align-items:flex-end">'+
-    '<label class="cap">예상 창(쉼표로 여러 개 · 비우면 끔)<br><input id="crWin" class="in" style="min-width:320px" value="'+esc(cf.win||"")+'" placeholder="11:00-11:20,13:20-13:40"></label>'+
+    '<label class="cap">예상 창(쉼표로 여러 개 · 비우면 끔)<br><input id="crWin" class="in w-l" value="'+esc(cf.win||"")+'" placeholder="11:00-11:20,13:20-13:40"></label>'+
     '<label class="cap">예상 날짜(비우면 매일)<br><input id="crDay" class="in w-s" value="'+esc(cf.day||"")+'" placeholder="2026-10-26"></label>'+
     '<label class="cap">제보 유효(분)<br><input id="crMin" class="in w-s" inputmode="numeric" value="'+esc(cf.min||15)+'"></label>'+
     '<button class="btn pri" onclick="crowdCfgSave()">저장</button></div>'+
@@ -2415,8 +2434,8 @@ function drwCchat(emp){
   h+='<h3>커피챗 · 18F</h3><div class="row" style="justify-content:space-between"><span>'+(r.tag?tag(r.tag,"off"):'<span class="cap">관심 태그 없음</span>')+'</span>'+tag(s,CC_TAG[s])+'</div><p class="cap mt8">신청 '+esc(short(r.ts))+'</p>';
   h+='<div class="mt12">'+stepsHtml(["대기","매칭","참석","완료"], s, ["취소"])+'</div>';
   if(s==="대기"||s==="매칭"){
-    h+='<h3>'+(s==="대기"?"회차 · 테이블 배정":"회차 · 테이블 변경")+'</h3><div class="row"><label class="fld">회차<input class="in sm" type="time" style="width:120px;height:36px" value="'+esc(ccVal(r,"round"))+'" oninput="ccDraft(\''+e+'\',\'round\',this.value)"></label>'+
-      '<label class="fld">테이블<input class="in sm" style="width:110px;height:36px" placeholder="예: T3" value="'+esc(ccVal(r,"table"))+'" oninput="ccDraft(\''+e+'\',\'table\',this.value)"></label>'+
+    h+='<h3>'+(s==="대기"?"회차 · 테이블 배정":"회차 · 테이블 변경")+'</h3><div class="row"><label class="fld">회차<input class="in w-m" type="time" value="'+esc(ccVal(r,"round"))+'" oninput="ccDraft(\''+e+'\',\'round\',this.value)"></label>'+
+      '<label class="fld">테이블<input class="in w-s" placeholder="예: T3" value="'+esc(ccVal(r,"table"))+'" oninput="ccDraft(\''+e+'\',\'table\',this.value)"></label>'+
       '<button class="btn pri" style="align-self:flex-end" onclick="ccMatch([\''+e+'\'])">'+(s==="대기"?"매칭":"변경")+'</button></div>';
   }
   h+='<div class="row mt16">'+(CC_NEXT[s]?'<button class="btn pri" onclick="ccDo([\''+e+'\'],\''+CC_NEXT[s]+'\')">'+CC_NEXT[s]+'</button>':'')+(s==="매칭"?'<button class="btn" onclick="ccDo([\''+e+'\'],\'완료\')">완료</button>':'')+
@@ -2647,7 +2666,7 @@ function finPoolCard(d){
     ex.map(function(x){ return '<tr><td>'+(x.k==="ex"?tag("제외","warn"):tag("포함"))+'</td><td class="n">'+esc(x.e)+'</td><td>'+esc(x.name||"-")+'</td><td>'+esc(x.why)+'<div class="cap">'+esc(short(x.at))+(x.by?" · "+esc(x.by):"")+'</div></td><td class="tdr">'+(off?"":'<button class="btn sm" onclick="finExDel(\''+jq(x.e)+'\')">빼기</button>')+'</td></tr>'; }).join("")+
     (!ex.length?emptyRow(5,"수동 제외 · 포함이 없습니다."):"")+'</table></div>';
   var form=off?"":'<div class="fn-form mt12"><label>사번<input class="in w-s" inputmode="numeric" value="'+esc(FINV.ex.emp)+'" oninput="finExIn(\'emp\',this.value)"></label>'+
-    '<label style="flex:1 1 180px">사유<input class="in" style="width:100%" maxlength="60" value="'+esc(FINV.ex.why)+'" oninput="finExIn(\'why\',this.value)" placeholder="예: 부정 적립 확인 · 17:00 경계 이의"></label>'+
+    '<label class="grow">사유<input class="in w-f" maxlength="60" value="'+esc(FINV.ex.why)+'" oninput="finExIn(\'why\',this.value)" placeholder="예: 부정 적립 확인 · 17:00 경계 이의"></label>'+
     '<button class="btn" onclick="finExAdd(\'ex\')"'+(FINV.busy?" disabled":"")+'>수동 제외</button><button class="btn" onclick="finExAdd(\'in\')"'+(FINV.busy?" disabled":"")+'>수동 포함</button></div>';
   var pv=d.pool||{}, lk=d.lock;
   var head=imp([["17:00 기준 스탬프 6개", finNum(pv.n)+"명"+(locked||off?" (지금 기록 기준 미리 보기)":"")],["마감 뒤 6개 (대상 아님)", finNum(pv.late)+"명"],["테스트 사번 (늘 제외)", finNum(pv.test)+"명"],["수동 제외 · 포함", (pv.exM||0)+" · "+(pv.inM||0)+"명"]]);
@@ -2728,7 +2747,7 @@ function finPush(){
 function finVoIn(k, v){ FINV.vo[k]=v; }
 function finVoidCard(d){
   var body='<div class="fn-form"><label>사번<input class="in w-s" inputmode="numeric" value="'+esc(FINV.vo.emp)+'" oninput="finVoIn(\'emp\',this.value)"></label>'+
-    '<label style="flex:1 1 160px">사유<input class="in" style="width:100%" maxlength="60" value="'+esc(FINV.vo.why)+'" oninput="finVoIn(\'why\',this.value)" placeholder="예: 퇴사 · 배송 불가"></label>'+
+    '<label class="grow">사유<input class="in w-f" maxlength="60" value="'+esc(FINV.vo.why)+'" oninput="finVoIn(\'why\',this.value)" placeholder="예: 퇴사 · 배송 불가"></label>'+
     '<button class="btn" onclick="finVoidAsk()"'+(FINV.busy?" disabled":"")+'>미리 보기</button></div>'+
     '<p class="cap mt8">당첨을 취소하면 그 상품을 예비 1순위가 이어받습니다. 예비가 없으면 상품은 보관으로 갑니다. 교체 마감은 10/27 09:00 입니다.</p>';
   return card("당첨 취소 · 승계","배송 불가 · 자격 취소",body);
@@ -2782,7 +2801,7 @@ function finCfgVals(d){ var c=d.cfg||{}, o=FINV.cfg; if(o) return o; o={ cut:c.c
 function finCfgIn(k, v){ var d=ST.data.fin||{}; if(!FINV.cfg) FINV.cfg=finCfgVals(d); FINV.cfg[k]=v; }
 function finCfgCard(d){
   var v=finCfgVals(d), off=d.ph==="drawn", c=d.cfg||{}, dis=off?" disabled":"";
-  var f=function(k,l,w,ph){ return '<label>'+l+'<input class="in" style="width:'+w+'px" value="'+esc(v[k])+'" oninput="finCfgIn(\''+k+'\',this.value)"'+(ph?' placeholder="'+esc(ph)+'"':'')+dis+'></label>'; };
+  var f=function(k,l,w,ph){ return '<label>'+l+'<input class="in '+(w<=120?"w-s":w<=200?"w-m":"w-l")+'" value="'+esc(v[k])+'" oninput="finCfgIn(\''+k+'\',this.value)"'+(ph?' placeholder="'+esc(ph)+'"':'')+dis+'></label>'; };
   var body='<div class="fn-form">'+f("cut","마감(서버 시각)",160,"2026-10-26 17:00")+f("hum","가습기",90)+f("lucky","행운권 당첨 수",110)+
     '<label>행운권 당첨자<select class="in w-s" onchange="finCfgIn(\'dedupe\',this.value)"'+dis+'><option value="ON"'+(v.dedupe==="ON"?" selected":"")+'>제외</option><option value="OFF"'+(v.dedupe==="OFF"?" selected":"")+'>제외 안 함</option></select></label>'+
     f("warn","대조 경고 %",100)+f("ship","배송",90)+'</div>'+
@@ -3068,7 +3087,7 @@ function viewArt(){
   var h=tabHead();
   h+='<div class="kpis">'+kpi("공개",rows.filter(function(r){return r.status==="공개";}).length,"점")+kpi("대기",rows.filter(function(r){return r.status==="대기";}).length,"점")+kpi("숨김",rows.filter(function(r){return r.status==="숨김";}).length,"점")+kpi("좋아요",rows.reduce(function(a,r){return a+(r.likes||0);},0),"개")+'</div>';
   h+=card("설정","형식 2026-10-26 16:30",'<div class="row" style="gap:12px;align-items:flex-end">'+
-    '<label class="fld">접수 폼 주소<input class="in" id="artForm" style="min-width:280px" value="'+esc(d.form||"")+'"></label>'+
+    '<label class="fld">접수 폼 주소<input class="in w-l" id="artForm" value="'+esc(d.form||"")+'"></label>'+
     '<label class="fld">접수 마감<input class="in w-m" id="artSub" value="'+esc(d.subEnd||"")+'"></label>'+
     '<label class="fld">좋아요 마감<input class="in w-m" id="artVote" value="'+esc(d.voteEnd||"")+'"></label>'+
     '<label class="fld">순위 상위 N<input class="in w-s" id="artTop" inputmode="numeric" value="'+(d.top||10)+'"></label>'+
@@ -3140,7 +3159,7 @@ function viewTypeNick(){
     /* 261003 UI 정돈 6단계 · 입력 배치 = 위 라벨 + 칸 + 그 칸의 저장 · 아래 도움말 한 줄(값마다 서버 저장이 따로라 저장은 칸마다 그대로) */
     '<div class="fgrid"><div class="fld"><label for="selfTries">도전 횟수</label><div class="row nw"><input class="in w-s" id="selfTries" inputmode="numeric" value="'+tries+'"><button class="btn" onclick="selfTriesSave()">저장</button></div><span class="cap">1~9회</span></div>'+
     '<div class="fld"><label for="selfWin">타자왕 마감</label><div class="row nw"><input class="in w-m" id="selfWin" value="'+esc((tr.win||[]).join(",").replace(/~/g,"-"))+'"><button class="btn" onclick="selfWinSave()">저장</button></div><span class="cap">운영 시간 · 끝 = 마감 · 예 09:00-17:00</span></div>'+   /* v5.03 결선 없음 · 17:00 마감(서버 키 타자_결선 그대로) */
-    '<div class="fld fw"><label>노트북 주소</label><div class="row nw"><input class="in" readonly style="min-width:0;flex:1" value="'+esc(selfLink())+'"><button class="btn" onclick="selfLinkCopy()">주소 복사</button></div></div></div>'+
+    '<div class="fld fw"><label>노트북 주소</label><div class="row nw"><input class="in grow" readonly value="'+esc(selfLink())+'"><button class="btn" onclick="selfLinkCopy()">주소 복사</button></div></div></div>'+
     memo('<p>켜는 법 · ① 노트북 크롬에서 위 주소를 엽니다 ② 관리코드를 넣고 효과음(기본 켜짐)을 고른 뒤 「셀프 모드 켜기」 ③ 이후 화면은 참가자 전용입니다(새로 고침·재부팅해도 유지) ④ 끄기·효과음 = 화면 왼쪽 아래 「관리」 → 관리코드.</p>'+
       '<p>참가자는 앱의 내 QR 을 노트북 카메라에 비추고(게임 닉네임이 없으면 정한 뒤) SPACE 로 시작합니다(v5.12 · 사번 입력 없음 · 켤 때 카메라 권한 허용). 시작하는 순간 1회로 셉니다(중간에 그만둬도 돌려주지 않음). 테스트 사번(310555)은 기록을 남기지 않습니다. 「타자왕 마감」은 운영 시간이고 끝 시각이 마감입니다(기본 09:00-17:00 · 결선 없음 · 1~3위는 Outro 시상).</p>'+
       ''));   /* v5.14 토너먼트(타자왕전 판) 안내는 지웠다 · 대전 · 결선 없음(261002) */
@@ -3534,12 +3553,12 @@ function viewNotice(){
   if(ty==="emps") s1+='<div class="ns-pick"><div class="ns-chips" id="nsChips">'+nsChips().map(nsChipHtml).join("")+'</div>'+
       '<div class="ns-qw"><input class="in" id="nsQ" autocomplete="off" spellcheck="false" placeholder="이름 · 부서 · 사번" value="'+esc(NSQ.q)+'" oninput="nsType(this)" onkeydown="nsKey(event)" onblur="setTimeout(nsBlur,150)"><div id="nsDrop"></div></div></div>';
   if(ext) s1+=tgtHtml("pf",{ bare:1 });
-  var s2='<input class="in" id="nsT" maxlength="'+PUSH_MAX.t+'" style="width:100%" value="'+esc(PF.t)+'" oninput="nsIn(\'t\',this.value)">';
-  var s3='<textarea class="in" id="nsB" rows="3" maxlength="'+PUSH_MAX.b+'" style="min-height:72px" oninput="nsIn(\'b\',this.value)">'+esc(PF.b)+'</textarea>';
+  var s2='<input class="in w-f" id="nsT" maxlength="'+PUSH_MAX.t+'" value="'+esc(PF.t)+'" oninput="nsIn(\'t\',this.value)">';
+  var s3='<textarea class="in" id="nsB" rows="3" maxlength="'+PUSH_MAX.b+'" oninput="nsIn(\'b\',this.value)">'+esc(PF.b)+'</textarea>';
   /* 261003 UI 정돈 6단계 · 보내기 줄 = 왼쪽 받는 인원 · 오른쪽 끝 [나에게 테스트(보조)] [보내기(주)] · 390 폭은 아래 고정 */
   var s4='<div class="ns-bar"><div class="ns-cnt" id="nsCnt">'+nsCntHtml()+'</div><div class="ns-act2">'+(pOk?'<button class="btn ns-tb" onclick="pushTest()">나에게 테스트</button>':'')+'<button class="btn pri ns-go" id="nsGo" onclick="nsSend()">'+esc(nsGoLbl())+'</button></div></div><div id="nsNote" class="cap mt8">'+nsNoteHtml()+'</div><div id="ptRes" class="mt8">'+pushTestHtml()+'</div>';
   /* 더 보기 · 보낸 사람 · 열 화면 · 문구 · 다른 받는 사람 · 경로 · 소리 · 테스트 사번 · 처리자 · 대상 상세 */
-  var goSel='<select class="in" style="min-width:0;max-width:260px" onchange="PF.go=this.value;nsPaintPrev()"'+(rt==="push"?'':' disabled')+'>'+Object.keys(PUSH_GO_N).filter(function(k){ return PHOTO_Q_ON||k!=="photoq"; }).map(function(k){ return '<option value="'+k+'"'+((rt==="push"?PF.go:"notices")===k?" selected":"")+'>'+esc(PUSH_GO_N[k])+'</option>'; }).join("")+'</select>';
+  var goSel='<select class="in w-m" onchange="PF.go=this.value;nsPaintPrev()"'+(rt==="push"?'':' disabled')+'>'+Object.keys(PUSH_GO_N).filter(function(k){ return PHOTO_Q_ON||k!=="photoq"; }).map(function(k){ return '<option value="'+k+'"'+((rt==="push"?PF.go:"notices")===k?" selected":"")+'>'+esc(PUSH_GO_N[k])+'</option>'; }).join("")+'</select>';
   var nm=pwBy();
   var mo='<div class="ns-mf">'+
     nsField("보낸 사람",'<div class="row"><input class="in w-m" id="nsFrom" maxlength="30" value="'+esc(nsFrom())+'" onchange="nsFromSet(this.value)"><button class="btn sm ghost" onclick="nsFromSet(\''+esc(NS_FROM0)+'\');render()">'+esc(NS_FROM0)+'</button>'+(nm&&nm.length>=2?'<button class="btn sm ghost" onclick="nsFromSet(\''+esc(NS_FROM0+" · "+nm)+'\');render()">'+esc(NS_FROM0+" · "+nm)+'</button>':'')+'</div>'+
@@ -3555,7 +3574,7 @@ function viewNotice(){
     (push?'<p class="cap">'+esc(PUSH_SAFE)+'</p>':'')+'</div>';
   var form='<div class="card">'+nsField("받는 사람",s1)+nsField("제목",s2)+nsField("내용",s3)+s4+
     '<details class="memo ns-more"'+(NSM.more?" open":"")+' ontoggle="NSM.more=this.open"><summary>더 보기</summary><div class="mb">'+mo+'</div></details></div>';
-  h+='<div class="ns-grid2">'+form+'<div class="ns-side"><div class="card"><div id="nsPrev">'+nsPrevHtml()+'</div></div></div></div>';
+  h+='<div class="ns-grid2 lay-fa">'+form+'<div class="ns-side"><div class="card"><div id="nsPrev">'+nsPrevHtml()+'</div></div></div></div>';
   var hn=((ST.data.phist||{}).rows||[]).length+((ST.data.nhist&&ST.data.nhist.ok)?(ST.data.nhist.rows||[]).length:0);
   h+='<details class="memo"'+(NSM.hist?" open":"")+' ontoggle="NSM.hist=this.open"><summary>보낸 기록 ('+hn+')</summary><div class="mb" style="padding-left:14px"><div id="nsHist">'+nsHistHtml()+'</div></div></details>';
   return h;
@@ -4137,8 +4156,8 @@ function viewSched(){
     '<label class="fld">종류<select class="in" id="scK" onchange="SC.k=this.value"><option value="outro"'+(SC.k==="outro"?" selected":"")+'>Outro</option><option value="notice"'+(SC.k==="notice"?" selected":"")+'>공지</option></select></label>'+
     '<label class="fld">날짜<input class="in w-s" id="scD" value="'+esc(scDay())+'" placeholder="2026-10-26" oninput="SC.d=this.value"></label>'+
     '<label class="fld">시각<input class="in w-s" id="scT" placeholder="17:00" inputmode="numeric" value="'+esc(SC.hm)+'" oninput="SC.hm=this.value"></label></div>'+
-    '<label class="fld mt12"><span>제목'+(pOn?' '+ccHtml("scti",SC.ti.length,"t"):'')+'</span><input class="in" id="scTi" maxlength="40" placeholder="예: 경품 추첨 시작" style="width:100%" value="'+esc(SC.ti)+'" oninput="pxIn(\'sc\',\'ti\',this.value)"></label>'+
-    '<label class="fld mt12"><span>내용'+(pOn?' '+ccHtml("scb",SC.b.length,"b"):'')+'</span><input class="in" id="scB" maxlength="120" placeholder="예: 17F 대강당" style="width:100%" value="'+esc(SC.b)+'" oninput="pxIn(\'sc\',\'b\',this.value)"></label>'+
+    '<label class="fld mt12"><span>제목'+(pOn?' '+ccHtml("scti",SC.ti.length,"t"):'')+'</span><input class="in w-f" id="scTi" maxlength="40" placeholder="예: 경품 추첨 시작" value="'+esc(SC.ti)+'" oninput="pxIn(\'sc\',\'ti\',this.value)"></label>'+
+    '<label class="fld mt12"><span>내용'+(pOn?' '+ccHtml("scb",SC.b.length,"b"):'')+'</span><input class="in w-f" id="scB" maxlength="120" placeholder="예: 17F 대강당" value="'+esc(SC.b)+'" oninput="pxIn(\'sc\',\'b\',this.value)"></label>'+
     (pOk?'<label class="row mt12" style="gap:8px;font-weight:700"><input type="checkbox" class="ck" '+(SC.push?"checked ":"")+'onchange="scPush(this.checked)">푸시도 보내기</label>':'');
   if(pOn){
     mk+='<div class="row mt8" style="gap:16px;flex-wrap:wrap">'+[["all","전체 구독자"],["tickets","응모권 보유자"],["pick","대상 선택"]].map(function(x){ return '<label class="row" style="gap:8px"><input type="radio" name="scTg" class="ck" '+(SC.tgt===x[0]?"checked ":"")+'onchange="scTgt(\''+x[0]+'\')">'+x[1]+'</label>'; }).join("")+'</div>';
@@ -4160,7 +4179,7 @@ function viewVslot(v){
   while(rows.length<Math.max(6,n0+2)) rows.push({s:"",e:"",f:""});
   var t='<div class="wrap"><table class="tb"><tr><th>시작</th><th>끝</th><th>근무 층(쉼표)</th></tr>'+rows.map(function(r,i){
     var ph=i===n0;   /* 빈 줄은 첫 줄에만 예시를 흐리게(데이터로 읽히지 않게 · 나머지는 비움) */
-    return '<tr><td><input class="in w-s" id="vsS'+i+'" value="'+esc(r.s)+'" placeholder="'+(ph?"추가":"")+'"></td><td><input class="in w-s" id="vsE'+i+'" value="'+esc(r.e)+'"></td><td><input class="in" id="vsF'+i+'" style="min-width:0;width:100%" value="'+esc(r.f)+'" placeholder="'+(ph?"예: 3,4,5":"")+'"></td></tr>'; }).join("")+'</table></div>';
+    return '<tr><td><input class="in w-s" id="vsS'+i+'" value="'+esc(r.s)+'" placeholder="'+(ph?"추가":"")+'"></td><td><input class="in w-s" id="vsE'+i+'" value="'+esc(r.e)+'"></td><td><input class="in w-f" id="vsF'+i+'" value="'+esc(r.f)+'" placeholder="'+(ph?"예: 3,4,5":"")+'"></td></tr>'; }).join("")+'</table></div>';
   var sw='<div class="row mt12" style="gap:8px;align-items:center"><b>발송</b>'+(v.on?tag("켜짐","warn"):tag("꺼짐","off"))+'<button class="btn sm '+(v.on?"":"danger")+'" onclick="vslotOn('+(v.on?0:1)+')">'+(v.on?"끄기":"켜기")+'</button>'+
     '<span class="cap">켜면 슬롯마다 시작 '+(v.pre||10)+'분 전 예약이 생기고, 관람 시간 알림을 켜고 그 근무 층을 고른 사람에게 푸시가 갑니다.</span></div>';
   var f='<div class="row" style="gap:8px;align-items:flex-end;flex-wrap:wrap"><label class="fld">날짜<input class="in w-s" id="vsDay" value="'+esc(v.day||"")+'"></label>'+
@@ -4458,8 +4477,8 @@ function tgtHtml(sc, o){
   o=o||{}; var S=PSC[sc], f=S.f, st=pushSt()||{}, G=((ST.data.pgrp||{}).groups)||[], L=pushLim();
   var on=function(k){ return 'tgSet(\''+sc+'\',\''+k+'\',this.value'; };
   var opt=function(k, list){ return list.map(function(x){ return '<option value="'+esc(x[0])+'"'+(String(f[k])===String(x[0])?' selected':'')+'>'+esc(x[1])+'</option>'; }).join(""); };
-  var sel=function(k, list){ return '<select class="in" style="min-width:0" onchange="'+on(k)+')">'+opt(k,list)+'</select>'; };
-  var h=o.bare?'':'<label class="fld">대상<select class="in" style="min-width:0" onchange="'+on("type")+',1)">'+opt("type",PUSH_TYPES.filter(function(t){ return !(o.noEmps&&t[0]==="emps"); }))+'</select></label>';   /* v5.13 bare = 공지·푸시 화면(종류는 칩 · 사람은 검색 칩) */
+  var sel=function(k, list){ return '<select class="in w-m" onchange="'+on(k)+')">'+opt(k,list)+'</select>'; };
+  var h=o.bare?'':'<label class="fld">대상<select class="in w-m" onchange="'+on("type")+',1)">'+opt("type",PUSH_TYPES.filter(function(t){ return !(o.noEmps&&t[0]==="emps"); }))+'</select></label>';   /* v5.13 bare = 공지·푸시 화면(종류는 칩 · 사람은 검색 칩) */
   if(f.type==="cchat") h+='<label class="fld">상태'+sel("cst",[["","대기 · 매칭"],["대기","대기"],["매칭","매칭"]])+'</label>';
   if(f.type==="photo") h+='<label class="fld">앞 몇 팀까지<input class="in w-s" inputmode="numeric" placeholder="비우면 전원" value="'+esc(f.ahead)+'" oninput="'+on("ahead")+')"></label>';
   if(f.type==="group") h+=G.length?'<label class="fld">그룹'+sel("grp",[["","고르세요"]].concat(G.map(function(g){ return [g.name, g.name+" · "+g.n+"명"]; })))+'</label>':o.bare?'':'<span class="cap">올린 그룹이 없습니다. 알림 메뉴 › 그룹 올리기에서 올립니다.</span>';
@@ -4569,7 +4588,7 @@ function pushCfgHtml(){
       '<div class="pk"><b>상한 · 보류 · 유효</b><span class="pz-nums"><label class="fld">사람당 하루<input class="in" id="pxDay" inputmode="numeric" value="'+esc(String(L.day))+'"></label><label class="fld">전체급 하루<input class="in" id="pxAll" inputmode="numeric" value="'+esc(String(L.all))+'"></label><label class="fld">보류(초)<input class="in" id="pxHold" inputmode="numeric" value="'+esc(String(L.hold))+'"></label><label class="fld">공지 유효(분)<input class="in" id="pxTtl" inputmode="numeric" value="'+esc(String(L.ttl))+'"></label><button class="btn sm" onclick="pushNumSave()">저장</button></span>'+
       '<p class="cap" style="width:100%">사람당 하루 = 공지 · 추첨 · 대상 지정처럼 요청하지 않은 알림(포토부스 · 커피챗 · DAP · 혼잡 해소는 세지 않음). 전체급 = 전체 또는 '+esc(String(L.confirm))+'명 이상. 보류 = 전체급을 누른 뒤 취소할 수 있는 시간(0 = 끔). 긴급 상황에서 모자라면 여기서 올립니다.</p></div>':'')+
     '<div class="pk"><b>토큰 기준</b><span>'+esc(tk)+'</span>'+tag(st.tokReq?"지금 토큰 필요":"지금 토큰 없이","off")+
-      '<span class="row" style="gap:8px;flex-wrap:nowrap"><select class="in sm" id="pxTok" style="min-width:0">'+o+'</select><button class="btn sm" onclick="pushTokAsk()">바꾸기</button></span>'+
+      '<span class="row" style="gap:8px;flex-wrap:nowrap"><select class="in sm w-m" id="pxTok">'+o+'</select><button class="btn sm" onclick="pushTokAsk()">바꾸기</button></span>'+
       '<p class="cap" style="width:100%">알림 구독 · 알림 설정 · 실시간 연결이 같은 기준을 씁니다. 기본은 토큰 필요(사용자 결정 260930) · 토큰 없는 폰은 소켓 대신 폴링 · 알림을 켤 수 없습니다.</p></div>'+
     (st.ccDay?'<div class="pk"><b>커피챗 10분 전</b><input class="in w-m" id="pxCcDay" value="'+esc(st.ccDay)+'" placeholder="2026-10-26"><button class="btn sm" onclick="pushCcDaySave()">저장</button>'+
       '<p class="cap" style="width:100%">매칭된 회차 · 승인된 DAP 상담 시작 '+esc(String(st.ccPre||10))+'분 전에 그 사람에게 알림이 갑니다(예약 메뉴에 시간마다 한 줄 · 커피챗 · DAP 둘 다 이 날짜). 날짜를 비우면 행사일 2026-10-26 · 시험 때만 오늘로 두고 끝나면 비웁니다.</p></div>':'')+   /* v4.77 옛 서버(ccDay 없음)는 줄을 숨긴다 */
@@ -4636,7 +4655,7 @@ function pushTestPoll(){
 function pushGrpCard(){
   var G=((ST.data.pgrp||{}).groups)||[], n=empsList(GF.emps).length, R=GF.res;
   var b='<div class="row" style="gap:8px;align-items:flex-end;flex-wrap:wrap"><label class="fld">이름(30자)<input class="in w-m" maxlength="30" placeholder="예: 10F 세션 B" value="'+esc(GF.name)+'" oninput="GF.name=this.value"></label>'+
-    '<label class="fld" style="flex:1;min-width:150px">메모<input class="in" maxlength="60" style="min-width:0;width:100%" value="'+esc(GF.memo)+'" oninput="GF.memo=this.value"></label></div>'+
+    '<label class="fld grow">메모<input class="in w-f" maxlength="60" value="'+esc(GF.memo)+'" oninput="GF.memo=this.value"></label></div>'+
     '<label class="fld mt12"><span>사번(쉼표 · 공백 · 줄바꿈) <span class="cc" id="gfN">'+n+'명</span></span><textarea class="in" rows="4" oninput="GF.emps=this.value;el(\'gfN\').textContent=empsList(this.value).length+\'명\'">'+esc(GF.emps)+'</textarea></label>'+
     '<div class="row mt12"><span style="flex:1"></span><button class="btn pri" onclick="pushGrpSave()">올리기</button></div>'+
     (R?'<div class="note mt12"><b>'+esc(R.name)+'</b> · '+R.n+'명 저장'+(R.badN?'<div class="pbad">명부에 없는 사번 '+R.badN+'개 · 빼고 저장했습니다 · '+(R.bad||[]).slice(0,30).map(esc).join(", ")+(R.badN>30?' 외':'')+'</div>':'')+'</div>':'')+
@@ -5461,7 +5480,7 @@ function admListCard(sc, d){
   var right=L.set?tag("적용 중 · "+rows.length+"명","ok"):tag(sc==="c"?"저장 전 · 슈퍼관리자만":"저장 전 · 코드만 맞으면","warn");
   var note=(!L.set?'<p class="note" style="margin-bottom:12px">'+(sc==="c"?"아직 저장하지 않아 슈퍼관리자만 들어옵니다. 사번을 추가하면 그때부터 명단대로 들어옵니다.":"아직 저장하지 않아 코드만 맞으면 스태프 화면이 열립니다. 사번을 추가하면 그때부터 명단에 있는 사람만 엽니다.")+'</p>':'')+
     (sc==="a"&&!ADM_APP_LIVE?'<p class="note warnl" style="margin:0 0 12px">지금 앱은 스태프 화면을 열 때 사번을 보내지 않아 이 명단이 아직 걸리지 않습니다. 앱 업데이트 뒤부터 적용됩니다.</p>':'');
-  var add='<div class="row" style="margin-bottom:12px;flex-wrap:nowrap"><input class="in" id="admIn_'+sc+'" style="flex:1;min-width:0" inputmode="numeric" autocomplete="off" placeholder="사번 · 여러 명은 쉼표로" value="'+esc(ADMF[sc])+'" oninput="ADMF.'+sc+'=this.value" onkeydown="if(event.key===\'Enter\')admAdd(\''+sc+'\')"><button class="btn pri" onclick="admAdd(\''+sc+'\')">추가</button></div>';
+  var add='<div class="row" style="margin-bottom:12px;flex-wrap:nowrap"><input class="in grow" id="admIn_'+sc+'" inputmode="numeric" autocomplete="off" placeholder="사번 · 여러 명은 쉼표로" value="'+esc(ADMF[sc])+'" oninput="ADMF.'+sc+'=this.value" onkeydown="if(event.key===\'Enter\')admAdd(\''+sc+'\')"><button class="btn pri" onclick="admAdd(\''+sc+'\')">추가</button></div>';
   var tb='<div class="wrap scrolly" style="max-height:480px"><table class="tb"><tr><th>사번</th><th>이름</th><th>부문</th><th class="tdr"></th></tr>'+rows.map(function(r){
     return '<tr class="hv"><td class="n">'+esc(r.emp)+'</td><td>'+(r.name?'<b>'+esc(r.name)+'</b>':'<span class="cap">이름 없음</span>')+'</td><td class="muted">'+esc(r.dept||"")+'</td>'+
       '<td><div class="acts">'+(r.sup?tag("슈퍼관리자","pri"):''+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="admDel(\''+sc+'\',\''+jq(r.emp)+'\')">빼기</button>')+'')+'</div></td></tr>';
@@ -6287,7 +6306,7 @@ function camDel(name){
 
 /* ══ 위험 가드 공통 ══ */
 var HVW="";
-function hvWordBox(w){ HVW=w; return '<div class="mt12"><label class="fld">확인 문구 「'+esc(w)+'」를 그대로 입력<input class="in" id="hvWord" autocomplete="off" spellcheck="false" placeholder="'+esc(w)+'" oninput="dlgGate()" style="width:100%;min-width:0"></label></div>'; }
+function hvWordBox(w){ HVW=w; return '<div class="mt12"><label class="fld">확인 문구 「'+esc(w)+'」를 그대로 입력<input class="in w-f" id="hvWord" autocomplete="off" spellcheck="false" placeholder="'+esc(w)+'" oninput="dlgGate()"></label></div>'; }
 function hvWordOk(){ var i=el("hvWord"); return !!(i&&i.value.trim()===HVW); }
 /* L3 · 슈퍼관리자 본인 확인이 살아 있어야 연다 · o = { t, who, rows(미리 센 영향 표), s, ok, word, run(done) } */
 function hvL3Go(o){
@@ -6409,7 +6428,7 @@ function viewCfg(){
 function hvCfgEdit(k){
   var r=(((ST.data.cfgl||{}).rows)||[]).filter(function(x){ return x.k===k; })[0]; if(!r) return;
   if(r.lv>=3&&!supOk()){ toast("슈퍼관리자 본인 확인 뒤에 바꿉니다"); return; }
-  var inp=r.t==="enum"&&r.opts?'<select class="in" id="hvCfgV" style="width:100%" onchange="dlgGate()">'+r.opts.map(function(o){ return '<option'+(r.v===o?" selected":"")+'>'+esc(o)+'</option>'; }).join("")+'</select>':r.t==="onoff"?'<select class="in" id="hvCfgV" style="width:100%" onchange="dlgGate()"><option'+(r.v==="ON"?" selected":"")+'>ON</option><option'+(r.v==="OFF"?" selected":"")+'>OFF</option></select>':'<input class="in" id="hvCfgV" style="width:100%;min-width:0" value="'+esc(r.v)+'" oninput="dlgGate()"'+(r.t==="num"?' inputmode="numeric"':'')+'>';
+  var inp=r.t==="enum"&&r.opts?'<select class="in w-f" id="hvCfgV" onchange="dlgGate()">'+r.opts.map(function(o){ return '<option'+(r.v===o?" selected":"")+'>'+esc(o)+'</option>'; }).join("")+'</select>':r.t==="onoff"?'<select class="in w-f" id="hvCfgV" onchange="dlgGate()"><option'+(r.v==="ON"?" selected":"")+'>ON</option><option'+(r.v==="OFF"?" selected":"")+'>OFF</option></select>':'<input class="in w-f" id="hvCfgV" value="'+esc(r.v)+'" oninput="dlgGate()"'+(r.t==="num"?' inputmode="numeric"':'')+'>';
   var o={ t:(r.n||r.k)+" 바꾸기", who:esc(r.k)+"<span>지금 "+esc(r.v===""?"(비어 있음)":r.v)+" · 기본 "+esc(r.def)+"</span>", s:esc(r.d||""), x:'<label class="fld mt12">새 값'+inp+'</label>'+(r.t==="num"?'<p class="cap mt8">'+esc(r.lo)+' ~ '+esc(r.hi)+'</p>':''), ok:"저장", danger:r.lv>=2,
     gate:function(){ var v=el("hvCfgV"); return !!v&&String(v.value).trim()!==String(r.v); },
     onOk:function(){ var v=String(el("hvCfgV").value).trim(); call("cfg_set",{ k:k, v:v },function(x){ dlgForce(); if(x&&x.ok){ delete _cache[sig_("cfg_list",{})]; reload(["cfgl"]); toast("저장했습니다 · "+(r.n||k)+" = "+x.v); } else toast("실패: "+({ range:"범위를 벗어났습니다", key:"바꿀 수 없는 키입니다", ro:"전용 화면에서 바꿉니다" }[x&&x.reason]||why(x))); },function(e){ dlgForce(); toast("실패: "+why(e)); }); } };
@@ -6609,7 +6628,7 @@ function invAdjAsk(id){
   window.ivAdjDiff=function(){ var v=el("ivAc"), o=el("ivAd"); if(!v||!o) return; var c=String(v.value).trim(), n=Number(c); if(c===""||!(n>=0)||Math.round(n)!==n){ o.textContent="실물 센 값을 넣으세요"; return; } var df=n-it.left; o.textContent="시스템 "+invN(it.left)+" → 실물 "+invN(n)+" · 차이 "+(df>0?"+":"")+invN(df)+(it.q>0&&Math.abs(df)>=it.q*0.05?" · 총수량의 5% 이상입니다. 다시 세어 보세요":""); };
   dialog({ t:"남은 수 맞추기", who:esc(it.n)+"<span>시스템 남은 수 "+invN(it.left)+" · 총수량 "+invN(it.q)+"</span>", wide:true, danger:true, ok:"맞추기", word:"수량맞추기",
     s:"실물을 센 값을 넣으세요. 차이는 조정 기록으로 남습니다."+(it.src==="roul"?" 17:00 실물 잔여는 참여상 화면에서 넣습니다(참여상 추첨이 그 값을 씁니다).":""),
-    x:'<div class="iv-form mt12"><label class="fld">실물 남은 수<input class="in" id="ivAc" inputmode="numeric" oninput="ivAdjDiff();dlgGate()"></label><label class="fld">사유<select class="in w" id="ivAw">'+whyO+'</select></label></div><label class="fld mt8">메모(필수 · 2~60자)<input class="in" id="ivAm" maxlength="60" style="width:100%;min-width:0" oninput="dlgGate()"></label><p class="cap mt8 n" id="ivAd">실물 센 값을 넣으세요</p>',
+    x:'<div class="iv-form mt12"><label class="fld">실물 남은 수<input class="in" id="ivAc" inputmode="numeric" oninput="ivAdjDiff();dlgGate()"></label><label class="fld">사유<select class="in w" id="ivAw">'+whyO+'</select></label></div><label class="fld mt8">메모(필수 · 2~60자)<input class="in w-f" id="ivAm" maxlength="60" oninput="dlgGate()"></label><p class="cap mt8 n" id="ivAd">실물 센 값을 넣으세요</p>',
     gate:function(){ var c=String((el("ivAc")||{}).value||"").trim(), n=Number(c), m=String((el("ivAm")||{}).value||"").trim(); return c!==""&&n>=0&&Math.round(n)===n&&m.length>=2; }, focus:"ivAc",
     onOk:function(){ call("inv_adjust",{ id:id, cnt:String(el("ivAc").value).trim(), why:el("ivAw").value, memo:String(el("ivAm").value).trim() },function(r){ dlgForce(); if(r&&r.ok){ invAfter(id); dialog({ t:"남은 수를 맞췄습니다", s:esc(r.n)+" · "+invN(r.before)+" → "+invN(r.after)+" · 조정 기록에 남았습니다.", ok:"확인했습니다" }); } else toast("실패: "+invWhy(r)); },function(e){ dlgForce(); toast("실패: "+invWhy(e)); }); } });
 }
@@ -6626,8 +6645,8 @@ function invCfgAsk(id){
     f("경고율 %",'<input class="in" id="ivCw" inputmode="numeric" value="'+esc(it.w||15)+'">')+
     (it.src==="lucky"?f("경품 글자 열쇠말",'<input class="in w" id="ivCk" maxlength="20" value="'+esc(it.m||"")+'">'):'')+
     f("사용",'<select class="in" id="ivCo"><option value="1"'+(it.on?" selected":"")+'>사용</option><option value="0"'+(it.on?"":" selected")+'>쓰지 않음</option></select>')+
-    '</div>'+f('<span class="mt8">메모(표에 작게 · 선택)</span>','<input class="in" id="ivCt" maxlength="60" style="width:100%;min-width:0" value="'+esc(it.note||"")+'">')+
-    f('<span class="mt8">사유(필수 · 2~60자)</span>','<input class="in" id="ivCm" maxlength="60" style="width:100%;min-width:0" oninput="dlgGate()">')+
+    '</div>'+f('<span class="mt8">메모(표에 작게 · 선택)</span>','<input class="in w-f" id="ivCt" maxlength="60" value="'+esc(it.note||"")+'">')+
+    f('<span class="mt8">사유(필수 · 2~60자)</span>','<input class="in w-f" id="ivCm" maxlength="60" oninput="dlgGate()">')+
     (fix?'<p class="cap mt8">'+(hum?"가습기 수량은 참여상 설정과 같은 값입니다.":"룰렛 이름 · 총수량은 참여상 입고표와 같은 값입니다(한 곳에 저장).")+' 참여상 추첨 뒤에는 바꾸지 않습니다.</p>':'')+
     '<p class="cap mt8">가격은 넣지 않습니다.</p>';
   dialog({ t:nw?"품목 추가":"총수량 · 품목 편집", who:esc(nw?"새 품목":it.n)+"<span>"+esc(nw?"x1 ~ x9":it.id)+"</span>", wide:true, danger:true, ok:"저장", word:"품목편집", x:x, focus:nw?"ivCn":"ivCq",
