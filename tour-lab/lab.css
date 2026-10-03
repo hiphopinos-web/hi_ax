@@ -41,32 +41,37 @@ button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .drag { display: none; position: absolute; left: 50%; top: 12px; transform: translateX(-50%); margin: 0; font-size: 15px; line-height: 22px; font-weight: 600; color: #fff; background: rgba(25, 31, 40, .78); border-radius: 999px; padding: 7px 14px; white-space: nowrap; pointer-events: none; transition: opacity .4s; z-index: 2; }
 .drag.off { opacity: 0; }
 /* 작은 지도 · 오른쪽 위 · 지도 위 = 화면 위(남쪽 정문) */
-.mini { position: absolute; right: 10px; top: 10px; width: 132px; padding: 5px; border-radius: 12px; background: rgba(255, 255, 255, .92); box-shadow: 0 2px 10px rgba(25, 31, 40, .16); z-index: 4; line-height: 0; }
+.mini { position: absolute; right: 10px; top: 10px; width: 132px; padding: 5px; border-radius: 12px; background: rgba(255, 255, 255, .45); box-shadow: 0 2px 10px rgba(25, 31, 40, .16); z-index: 4; line-height: 0; }
 .mini svg { display: block; width: 100%; height: auto; }
-.mini .mz { fill: #FFF1E8; stroke: #FFD8C1; stroke-width: 1; }
+.mini .mz { fill: rgba(255, 241, 232, .7); stroke: #FF7F32; stroke-width: 1; }   /* 판 위 반투명(사용자 261003) · 윤곽은 주황으로 읽히게 */
 .mini .mz.next { fill: #FFD8C1; stroke: #FF7F32; stroke-width: 1.5; }
 .mini .mz.here { fill: #FF7F32; stroke: #A63D00; stroke-width: 1.5; }
 .mini:active { filter: brightness(.95); }
 /* 돋보기 표식 · 주황 원 + 흰 돋보기 · 화면에서 늘 같은 크기 · 누르면 그 요소를 크게 */
 .mags { position: absolute; inset: 0; pointer-events: none; }
-.mag { position: absolute; left: 0; top: 0; width: 34px; height: 34px; border-radius: 50%; background: var(--brand); display: grid; place-items: center; box-shadow: 0 0 0 2px #FFFFFF, 0 2px 8px rgba(25, 31, 40, .25); pointer-events: auto; z-index: 2; }
+.mag { position: absolute; left: 0; top: 0; height: 34px; padding: 0 12px 0 9px; border-radius: 999px; background: var(--brand); color: #FFFFFF; display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; white-space: nowrap; box-shadow: 0 0 0 2px #FFFFFF, 0 2px 8px rgba(25, 31, 40, .25); pointer-events: auto; z-index: 2; }
 .mag::before { content: ""; position: absolute; inset: -8px; }
 .mag:active { filter: brightness(.92); }
 /* 타자왕 영상 시트 */
 .vid { position: fixed; inset: 0; z-index: 55; max-width: 520px; margin: 0 auto; background: #191F28; display: flex; flex-direction: column; }
 .vid .vbody { flex: 1; min-height: 0; display: grid; place-items: center; padding: 12px; }
 .vid iframe { border: 0; border-radius: 12px; background: #000; display: block; }
-/* 오른손 시점 버튼 4개 · 오른쪽 아래 2 x 2(닌텐도 DS 처럼 양손 · 사용자 261003) · 왼손 = 걷기 패드 */
-.ctl { position: absolute; right: 10px; bottom: 10px; display: grid; grid-template-columns: 64px 64px; gap: 4px 6px; z-index: 4; }
-.ctl button { width: 64px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.ctl .c { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .94); color: var(--ink); box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .18), 0 2px 10px rgba(25, 31, 40, .16); }
-.ctl .l { font-size: 12px; line-height: 17px; font-weight: 700; color: var(--ink); background: rgba(255, 255, 255, .9); border-radius: 999px; padding: 0 6px; white-space: nowrap; }
+/* 오른손 시점 버튼 · 십자(12시 확대 · 6시 축소 · 9시 좌로 돌기 · 3시 우로 돌기 · 가운데 작은 점 · 사용자 261003) */
+.ctl { position: absolute; right: 8px; bottom: 8px; display: grid; grid-template-columns: 58px 58px 58px; grid-template-rows: auto auto auto; gap: 0 2px; z-index: 4; }
+.ctl button { width: 58px; display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.ctl .n { grid-column: 2; grid-row: 1; } .ctl .w { grid-column: 1; grid-row: 2; } .ctl .e { grid-column: 3; grid-row: 2; } .ctl .s { grid-column: 2; grid-row: 3; }
+.ctl .dot { grid-column: 2; grid-row: 2; align-self: center; justify-self: center; width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, .85); box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .2); margin-bottom: 14px; }
+.ctl .c { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .94); color: var(--ink); box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .18), 0 2px 10px rgba(25, 31, 40, .16); }
+.ctl .c svg { width: 24px; height: 24px; }
+.ctl .l { font-size: 11px; line-height: 15px; font-weight: 700; color: var(--ink); background: rgba(255, 255, 255, .9); border-radius: 999px; padding: 0 5px; white-space: nowrap; }
 .ctl button:active .c { background: var(--canvas); }
 .ctl button:disabled { opacity: .4; }
 /* 안내 챗봇 말풍선 · 머리 위 · 누르면 판 보기 */
-.gbub { position: absolute; left: 0; top: 0; max-width: 220px; padding: 10px 14px 9px; border-radius: 16px; background: var(--surface); color: var(--ink); font-size: 15px; line-height: 21px; font-weight: 700; text-align: left; box-shadow: 0 4px 16px rgba(25, 31, 40, .16); z-index: 3; word-break: keep-all; }
+.gbub { position: absolute; left: 0; top: 0; max-width: calc(100vw - 16px); padding: 10px 10px 10px; border-radius: 18px; background: var(--surface); color: var(--ink); font-size: 16px; line-height: 22px; white-space: nowrap; font-weight: 700; text-align: left; box-shadow: 0 4px 16px rgba(25, 31, 40, .16); z-index: 3; word-break: keep-all; }
 .gbub::after { content: ""; position: absolute; left: 50%; bottom: -7px; margin-left: -7px; border: 7px solid transparent; border-bottom: 0; border-top-color: var(--surface); }
-.gbub .go { display: block; margin-top: 4px; font-size: 13px; color: var(--brandText); }
+.gbub #gbubT { display: block; padding: 0 4px; }
+.gbub .go { display: flex; align-items: center; justify-content: center; height: 48px; margin-top: 8px; border-radius: 12px; background: var(--brand); color: var(--onBrand); font-size: 17px; font-weight: 700; }   /* 엄지로 누르기 편한 큰 버튼 · 말풍선과 한 덩어리(사용자 261003) */
+.gbub .go[hidden] { display: none; }
 /* 판 보기 들어가기 · 나오기 · 순간이동 흰 화면 */
 .fade { position: fixed; inset: 0; background: #FFFFFF; opacity: 0; pointer-events: none; z-index: 45; }
 /* 움직임 줄이기 스위치(처음 안내 · 도움말) */
@@ -162,6 +167,15 @@ svg.plan .me { fill: var(--ink); }
 @keyframes tap { 0%, 100% { transform: translate(14px, 18px); } 45%, 60% { transform: translate(0, 0) scale(.86); } }
 @media (prefers-reduced-motion: reduce) { .finger, .dest { animation: none; } .sheet, .list, .hcard, .cta { animation: none; } }
 
+/* 룰렛 상품 카드 · 사진 · 「샘플」 딱지(오른쪽 위 흰 바탕 · 앱 규칙) · 가격 없음 */
+.card.prize h2 { display: flex; align-items: baseline; gap: 6px; }
+.card.prize h2 .q { margin-left: auto; font-size: 15px; font-weight: 600; color: var(--muted); }
+.card.prize .pic { display: flex; align-items: flex-start; justify-content: center; padding: 16px; }
+.pz { display: flex; gap: 10px; width: 100%; max-width: 360px; }
+.pz .ph { position: relative; flex: 1; min-width: 0; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: #F9FAFB; }
+.pz .ph img { width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity .2s; }
+.pz .ph img.on { opacity: 1; }
+.pz .ph i { position: absolute; right: 6px; top: 6px; font-style: normal; font-size: 11px; line-height: 16px; font-weight: 700; color: var(--body); background: #FFFFFF; border-radius: 6px; padding: 0 6px; box-shadow: 0 0 0 1px var(--divider); }
 /* 3D 를 못 그리는 기기 · 안내 한 줄 */
 .nogl { position: absolute; inset: 0; margin: 0; display: grid; place-items: center; padding: 24px; text-align: center; font-size: 17px; line-height: 26px; font-weight: 600; color: var(--body); background: var(--canvas); z-index: 6; }
 /* 입장 암전 · 「1F · AX Festival 2026」 */
