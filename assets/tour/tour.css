@@ -36,6 +36,14 @@ html.tour-lock, html.tour-lock body { overflow: hidden; overscroll-behavior: non
 #axTour .tr-fade { position: absolute; inset: 0; background: var(--t-canvas); opacity: 0; pointer-events: none; transition: opacity .18s; }
 #axTour .tr-fade.on { opacity: 1; }
 #axTour .tr-load { position: absolute; inset: 0; display: grid; place-items: center; font-size: 14px; font-weight: 600; color: var(--t-muted); pointer-events: none; }
+/* v5.19 GLB 모형 · 받는 중 알림 · 길잡이 이름표(누르지 않음) · 자동 둘러보기 버튼 · 지나는 곳 이름(시안 v2 와 같은 모양) */
+#axTour .tr-load[hidden], #axTour .tr-cap[hidden], #axTour .tr-go[hidden] { display: none; }
+#axTour .tr-pin.lm { pointer-events: none; }
+#axTour .tr-pin.lm::before { content: none; }
+#axTour .tr-pin.lm .s { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; background: rgba(25, 31, 40, .72); color: #fff; font-size: 11px; font-weight: 600; white-space: nowrap; line-height: 1; }
+#axTour .tr-go { position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%); height: 48px; padding: 0 20px; border-radius: 999px; background: var(--t-brand); color: var(--t-onBrand); font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; box-shadow: 0 6px 20px rgba(25, 31, 40, .18); z-index: 3; white-space: nowrap; }
+#axTour .tr-cap { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); max-width: calc(100% - 32px); display: flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, .94); border-radius: 999px; padding: 6px 14px 6px 8px; font-size: 14px; line-height: 20px; font-weight: 600; color: var(--t-ink); box-shadow: inset 0 0 0 1px var(--t-divider); white-space: nowrap; overflow: hidden; pointer-events: none; z-index: 3; }
+#axTour .tr-cap > span:last-child { overflow: hidden; text-overflow: ellipsis; }
 #axTour .tr-bubble { position: absolute; left: 0; top: 0; transform: translate(-50%, -100%); max-width: 210px; background: var(--t-surface); border-radius: 16px; padding: 10px 12px; font-size: 13px; line-height: 19px; font-weight: 600; color: var(--t-ink); box-shadow: 0 4px 16px rgba(25, 31, 40, .12); pointer-events: none; display: none; }
 #axTour .tr-bubble::after { content: ""; position: absolute; left: 50%; bottom: -6px; margin-left: -6px; border: 6px solid transparent; border-bottom: 0; border-top-color: var(--t-surface); }
 /* 간판 칩 · 앱 zoneSign 이 있으면 그것(점 글자) · 없으면 글자 칩 · 18F 는 간판이 없어 흰 테두리 칩 */

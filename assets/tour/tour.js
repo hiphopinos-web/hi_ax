@@ -4,6 +4,7 @@
  * 뒤로 가기: 이 화면은 history 를 쌓지 않는다. 앱의 popstate(뒤로 트랩)가 열려 있으면 AXTour.back() 을 부른다(안드로이드 뒤로 = 한 층씩).
  * 보기: 3D 모형 / 평면 지도 / 목록. 저사양(WebGL 없음 · 동작 줄이기 · 메모리 2GB 이하 · 입장 비행 느림 · 컨텍스트 끊김)은 평면 지도로.
  * 렌더러 교체 지점 = tour-scene.js(TourScene.build 약속). 여기는 카메라 · 조작 · 핀 · 시트 · 판 보기 · 지도 · 목록 · 뒤로만.
+ * v5.19(261003): 장면 = 구운 빛 GLB 모형(lobby.glb · 열 때만 받음 · 받는 동안 「모형 불러오는 중 n%」) · 첫 장면 = 남동쪽 높은 전경 → 기본 시점 · 「둘러보기 시작」 = 동쪽 문(D)부터 반시계 동선(시안 v2 와 같음 · 화면을 누르면 멈춤) · 길잡이 이름표(정문 · 동쪽 문 · 흉상 · 게이트 · 안내데스크 · 체크인).
  * 위치 예외: 앱은 동선 · 위치를 다루지 않는다(261001)의 예외는 이 화면 안에서만(사용자 261003 · design.md 5-21). */
 (function () {
   'use strict';
@@ -14,12 +15,14 @@
   var CHEV = '<svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
   var XSVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   var BACKSVG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
-  var NEXTSVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
+  var PLAYSVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+  var NEXTSVG ='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
   var BOTSVG = '<svg class="bot" viewBox="0 0 200 200" aria-hidden="true"><path d="M104.68 56.49V43.07C103.23 43.65 101.66 43.97 100 43.97C98.34 43.97 96.76 43.64 95.31 43.06V56.48C64.74 58.87 40.67 84.42 40.67 115.6H40.62V128.09H159.32V115.6C159.32 84.41 135.25 58.87 104.68 56.48Z" fill="#FFC56E"/><path d="M149.96 156.2H50.04C44.87 156.2 40.67 152 40.67 146.83V131.22H159.32V146.83C159.32 152 155.12 156.2 149.95 156.2" fill="#FF7F32"/><circle cx="100" cy="31.31" r="12.66" fill="#FF7F32"/><circle cx="81.26" cy="100" r="5.33" fill="#282320"/><circle cx="118.73" cy="100" r="5.33" fill="#282320"/></svg>';
   /* 구역 글 · 앱 FLOOR1 이 원천(TOUR_HOST.zone) · 앱 밖(시험)에서만 이 짧은 글 */
   var ZTXT = { vision: '회사가 가는 방향을 보는 곳', lab: 'DAP 과제를 보는 곳', action: 'AI 업무 사례를 보는 곳', play: 'AI를 직접 써 보는 곳', event: '사진 · 룰렛 · 타자왕이 있는 곳', lounge: '업무 고민을 상담하는 곳', cafe: '아이디어를 놓고 이야기하는 곳' };
 
   var R = null;   /* 열려 있는 동안의 상태 한 묶음 · 닫으면 버린다 */
+  var VER = 'v519';   /* 모형 파일 캐시 깨기 · 모형을 바꾸면 올린다 */
   var ATLAS_IMG = {};   /* 아틀라스 그림은 닫아도 들고 있다(작다 · 약 180KB) */
   function $(k) { return R && R.el[k]; }
 
@@ -63,6 +66,7 @@
       '<canvas class="tr-cv" data-k="cv" role="img" aria-label="1층 로비 3D 모형. 구역은 아래 간판 버튼이나 목록 보기로도 고를 수 있어요."></canvas>' +
       '<div class="tr-pins" data-k="pins"></div><div class="tr-bubble" data-k="bubble"></div>' +
       '<div class="tr-hint" data-k="hint">한 손가락 돌리기 · 두 손가락 확대·이동 · 눌러서 보기</div><div class="tr-fps" data-k="fps"></div><div class="tr-fade" data-k="fade"></div><div class="tr-load" data-k="load"></div>' +
+      '<div class="tr-cap" data-k="tcap" hidden></div><button type="button" class="tr-go" data-k="tgo" hidden>' + PLAYSVG + '둘러보기 시작</button>' +
       '<section class="tr-pane tr-map" data-k="map" hidden aria-label="1층 평면 지도"></section><section class="tr-pane tr-list" data-k="list" hidden aria-label="1층 구역과 판 목록"></section></main>' +
       '<nav class="tr-rail" data-k="rail" aria-label="구역 바로 가기"></nav>' +
       '<section class="tr-sheet" data-k="sheet" aria-hidden="true"><div class="grab"><i></i></div><div class="sc" data-k="sheetBody"></div></section>' +
@@ -131,6 +135,9 @@
     Array.prototype.forEach.call(R.el.root.querySelectorAll('.tr-seg button'), function (b) { b.onclick = function () { setMode(b.getAttribute('data-mode')); }; });
     $('vPrev').onclick = function () { stepPanel(-1); }; $('vNext').onclick = function () { stepPanel(1); };
     $('vClose').onclick = function () { closeViewer(); };
+    $('tgo').onclick = function () { startTour(); };
+    /* 자동 둘러보기 중 화면을 누르면 그 자리에서 멈추고 손으로 넘긴다(그 누름은 고르기로 쓰지 않는다) */
+    $('stage').addEventListener('pointerdown', function () { if (R && R.g && R.g.TR) { stopTour(false); R.g.tourStopAt = performance.now(); } }, true);
     $('vAct').onclick = function () { if (R.V && R.V.z) runAct(acts(R.V.z)[0]); };
     R.onResize = function () { resize(); if ($('viewer').classList.contains('open')) layoutViewer(); };
     window.addEventListener('resize', R.onResize);
@@ -150,17 +157,22 @@
   function N3(n) { return new THREE.Vector3(n[0], 0, -n[1]).normalize(); }
   function init3D() {
     if (R.g || !R.glOK) return;
-    var T = window.THREE, G = R.g = { need: true, cam: { t: new T.Vector3(), r: 34, th: 2.2, ph: 0.92 }, sheetOff: 0, sheetOffTo: 0, anim: null, vel: { th: 0, ph: 0 }, ptrs: new Map(), gest: null, lastMove: 0, W: 1, H: 1, frames: [], probe: null, raf: 0 };
+    var T = window.THREE, G = R.g = { need: true, cam: { t: new T.Vector3(), r: 34, th: 2.2, ph: 0.92 }, sheetOff: 0, sheetOffTo: 0, anim: null, vel: { th: 0, ph: 0 }, ptrs: new Map(), gest: null, lastMove: 0, W: 1, H: 1, frames: [], probe: null, raf: 0, TR: null, tourStopAt: 0 };
     var cv = $('cv');
     try {
       G.renderer = new T.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' });
     } catch (e) { R.glOK = false; R.g = null; R.why = 'WebGL 없음'; setMode('map'); return; }
-    G.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); G.renderer.setClearColor(0xF2F4F6, 1);
+    G.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); G.renderer.setClearColor(0xE9ECEF, 1);
+    G.renderer.toneMapping = T.AgXToneMapping; G.renderer.toneMappingExposure = 1.0;   /* 구운 라이트맵은 시안 v2 와 같은 톤(AgX)에서 맞춰졌다 */
     G.scene = new T.Scene();
-    G.camera = new T.PerspectiveCamera(F0, 1, 0.2, 400);
+    /* 배경 · 유리 너머가 회색 빈칸으로 보이지 않게 밝은 낮 하늘색(무채색) 그라데이션 */
+    var bc = document.createElement('canvas'); bc.width = 4; bc.height = 256; var bg = bc.getContext('2d'), gr = bg.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, '#FAFBFC'); gr.addColorStop(0.55, '#EEF0F2'); gr.addColorStop(1, '#DADDE1'); bg.fillStyle = gr; bg.fillRect(0, 0, 4, 256);
+    G.scene.background = new T.CanvasTexture(bc); G.scene.background.colorSpace = T.SRGBColorSpace;
+    G.camera = new T.PerspectiveCamera(F0, 1, 0.1, 400);
+    /* 18F 장면(Lambert)용 빛 · 로비(MeshBasic + 구운 빛)에는 영향 없음 */
     G.scene.add(new T.HemisphereLight(0xFFFFFF, 0xC9CED4, 2.0));
     var dl = new T.DirectionalLight(0xFFFFFF, 1.3); dl.position.set(-8, 20, 12); G.scene.add(dl);
-    G.S = window.TourScene.build({ T: T, D: D, P: P, N3: N3, labelFont: '"Pretendard Variable", Pretendard, sans-serif' });
+    G.S = window.TourScene.build({ T: T, D: D, P: P, N3: N3, renderer: G.renderer, scene: G.scene, labelFont: '"Pretendard Variable", Pretendard, sans-serif' });
     G.scene.add(G.S.lobby); G.scene.add(G.S.cafe);
     G.ray = new T.Raycaster(); G.gPlane = new T.Plane(new T.Vector3(0, 1, 0), 0);
     /* 아틀라스 2장 · 받는 대로 붙인다 · 받은 그림은 이 탭이 열려 있는 동안 들고 있다(다시 열 때 연결이 끊겨도 그대로 · 서비스워커는 캐시하지 않는 원칙) */
@@ -178,14 +190,81 @@
     wireInput(G, cv);
     buildPins(G);
     resize();
-    var DEF = G.S.DEF, c = G.cam;
-    if (R.deep) { c.t.copy(DEF.t); c.r = DEF.r; c.th = DEF.th; c.ph = DEF.ph; G.probe = { ts: [] }; }
-    else { c.t.copy(DEF.t); c.r = DEF.r * 1.5; c.th = DEF.th + 0.9; c.ph = 0.3; flyTo(DEF, RM() ? 0 : 1600); G.probe = { ts: [] }; }
+    /* 첫 장면 = 남동쪽 높은 전경(정문과 동쪽 문이 함께 보이는 자리) · 모형을 받는 동안 이 자리에서 기다린다 */
+    var DEF = G.S.DEF, c = G.cam, E = G.S.TOUR.establish;
+    if (R.deep) { c.t.copy(DEF.t); c.r = DEF.r; c.th = DEF.th; c.ph = DEF.ph; }
+    else { c.t.copy(P(E.look[0], E.look[1], E.look[2])); setCamFromPos(G, P(E.pos[0], E.pos[1], E.pos[2])); }
+    var ld = $('load'); ld.textContent = '모형 불러오는 중'; ld.hidden = false;
+    G.t0 = performance.now();
+    G.S.load(BASE + 'lobby.glb?v=' + VER, function (k) { if (R && R.g === G) ld.textContent = '모형 불러오는 중 ' + Math.round(k * 100) + '%'; }, function () {
+      if (!R || R.g !== G) return;
+      G.loadMs = Math.round(performance.now() - G.t0);
+      ld.hidden = true; ld.textContent = '';
+      buildPins(G); resize();
+      try { G.renderer.compile(G.scene, G.camera); } catch (e) {}
+      /* 구역을 고르지 않았으면 전경에서 기본 시점으로 내려온다(시안 v2 입장과 같음) */
+      if (!R.sel && !G.anim) flyTo(DEF, RM() ? 0 : 1800);
+      G.probe = { ts: [] }; G.need = true; tourBtn();
+    }, function (e) {
+      if (!R || R.g !== G) return;
+      ld.hidden = true; R.why = '모형 파일을 받지 못함'; setMode('map'); toast('모형을 불러오지 못해 평면 지도로 보여요');
+    });
     G.raf = requestAnimationFrame(loop);
+  }
+  function setCamFromPos(G, p) {
+    var c = G.cam, d = p.clone().sub(c.t); c.r = d.length(); c.ph = Math.acos(Math.max(-1, Math.min(1, d.y / c.r))); c.th = Math.atan2(d.x, d.z);
+  }
+
+  /* ═══ 자동 둘러보기 · 「둘러보기 시작」 · 동선은 장면(S.TOUR.route)이 가진다 ═══ */
+  function tourBtn() {
+    var G = R && R.g, b = $('tgo'); if (!b) return;
+    b.hidden = !(G && G.S.loaded && R.mode === '3d' && R.scn === 'lobby' && !R.sel && !G.TR && !$('viewer').classList.contains('open'));
+  }
+  function defPos(G) { var D0 = G.S.DEF, s = Math.sin(D0.ph); return new THREE.Vector3(D0.t.x + D0.r * s * Math.sin(D0.th), D0.t.y + D0.r * Math.cos(D0.ph), D0.t.z + D0.r * s * Math.cos(D0.th)); }
+  function startTour() {
+    var G = R && R.g; if (!G || !G.S.loaded || R.mode !== '3d') return;
+    if (R.sel) closeSheet();
+    if (R.scn !== 'lobby') return;
+    var T = window.THREE, keys = G.S.TOUR.route, ps = [], ls = [], ts = [];
+    keys.forEach(function (k) {
+      if (k.def) { ps.push(defPos(G)); ls.push(G.S.DEF.t.clone()); }
+      else { ps.push(P(k.pos[0], k.pos[1], k.pos[2])); ls.push(P(k.look[0], k.look[1], k.look[2])); }
+      ts.push(k.t);
+    });
+    G.TR = { keys: keys, pc: new T.CatmullRomCurve3(ps, false, 'centripetal', 0.5), lc: new T.CatmullRomCurve3(ls, false, 'centripetal', 0.5), ts: ts, t0: performance.now(), dur: ts[ts.length - 1] * 1000, cap: '' };
+    G.anim = null; G.vel.th = G.vel.ph = 0; hideHint();
+    $('tcap').hidden = false; $('rail').style.visibility = 'hidden'; tourBtn();
+    G.camera.clearViewOffset(); G.camera.aspect = G.W / G.H; G.camera.fov = G.S.TOUR.fov; G.camera.updateProjectionMatrix();
+    G.need = true;
+  }
+  function stopTour(atEnd) {
+    var G = R && R.g; if (!G || !G.TR) return;
+    var p = G.camera.position.clone(), l = G.TR.lastLook ? G.TR.lastLook.clone() : G.S.DEF.t.clone(), D0 = G.S.DEF, c = G.cam;
+    G.TR = null;
+    G.camera.fov = F0; G.camera.updateProjectionMatrix();
+    if (atEnd) { c.t.copy(D0.t); c.r = D0.r; c.th = D0.th; c.ph = D0.ph; }
+    else { c.t.copy(l); c.t.y = Math.max(0, Math.min(2.5, c.t.y)); setCamFromPos(G, p); clampCam(G); }
+    $('tcap').hidden = true; if (!$('sheet').classList.contains('open')) $('rail').style.visibility = '';
+    tourBtn(); G.need = true;
+  }
+  function stepTour(G, now) {
+    var TR = G.TR; if (!TR) return false;
+    var el = Math.min(TR.dur, now - TR.t0) / 1000, ts = TR.ts, i = 0;
+    while (i < ts.length - 2 && el > ts[i + 1]) i++;
+    var s = (el - ts[i]) / Math.max(0.001, ts[i + 1] - ts[i]);
+    var e = s * 0.35 + (s * s * (3 - 2 * s)) * 0.65;   /* 구간마다 살짝 머무르며 지나간다 */
+    var u = (i + e) / (ts.length - 1);
+    G.camera.position.copy(TR.pc.getPoint(u)); var l = TR.lc.getPoint(u); G.camera.lookAt(l); TR.lastLook = l;
+    var k = TR.keys[i + (s > 0.5 ? 1 : 0)] || {}, z = k.zone ? D.Z(k.zone) : null;
+    var cap = z ? z.id : (k.cap || TR.cap);
+    if (cap !== TR.cap) { TR.cap = cap; $('tcap').innerHTML = z ? signHtml(z) + '<span>' + esc(ztext(z).kor) + '</span>' : '<span>' + esc(cap) + '</span>'; }
+    if (el >= TR.dur / 1000) stopTour(true);
+    return true;
   }
   function disposeGL(G) {
     cancelAnimationFrame(G.raf);
     try {
+      if (G.S && G.S.dispose) G.S.dispose();
       G.scene.traverse(function (o) { if (o.geometry) o.geometry.dispose(); if (o.material) [].concat(o.material).forEach(function (m) { if (m.map) m.map.dispose(); m.dispose(); }); });
       G.tex.forEach(function (t) { t.dispose(); });
       G.renderer.dispose(); G.renderer.forceContextLoss();
@@ -229,12 +308,12 @@
   }
   function zoneView(G, z) {
     if (z.id === 'cafe') return G.S.CAFE_DEF;
-    var b = G.S.zoneBox(z.id); if (!b) return G.S.DEF;
-    return { t: b.t, r: fitR(G, b.w, b.h), th: b.th, ph: 1.12 };
+    return G.S.zoneView(z.id, function (w, h) { return fitR(G, w, h); }) || G.S.DEF;
   }
+  /* 판 앞면 · GLB 메시는 노드 변환이 판 자리가 아니라서 장면이 적어 둔 가운데(c) · 앞 방향(n) · 크기(size)를 쓴다 */
   function panelView(G, f) {
-    var nv = new THREE.Vector3(0, 0, 1).applyEuler(f.rotation), s = f.userData.size, t = f.position.clone();
-    var big = s[1] > 1.4; if (big) t.y = f.position.y + s[1] * 0.22;
+    var u = f.userData, nv = u.n, s = u.size, t = u.c.clone();
+    var big = s[1] > 1.4; if (big) t.y += s[1] * 0.22;
     return { t: t, r: fitR(G, s[0] * 1.15, big ? s[1] * 0.62 : s[1] * 1.6), th: Math.atan2(nv.x, nv.z), ph: Math.PI / 2 - 0.05 };
   }
   function wireInput(G, cv) {
@@ -269,7 +348,7 @@
       G.ptrs.delete(e.pointerId);
       var tap = G.gest && G.gest.kind === 'rot' && G.gest.moved < 10 && performance.now() - p.t0 < 400;
       if (G.ptrs.size === 1) { var q = Array.from(G.ptrs.values())[0]; q.x0 = q.x; q.y0 = q.y; G.gest = { kind: 'rot', moved: 99 }; }
-      else if (G.ptrs.size === 0) { if (tap) pick(G, e.clientX, e.clientY); G.gest = null; if (performance.now() - G.lastMove > 60) G.vel.th = G.vel.ph = 0; G.need = true; }
+      else if (G.ptrs.size === 0) { if (tap && performance.now() - G.tourStopAt > 700) pick(G, e.clientX, e.clientY); G.gest = null; if (performance.now() - G.lastMove > 60) G.vel.th = G.vel.ph = 0; G.need = true; }
     }
     cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', endPtr);
     cv.addEventListener('contextmenu', function (e) { e.preventDefault(); });
@@ -288,7 +367,7 @@
     var hit = G.ray.intersectObjects(G.S.picks.filter(isShown), false)[0];
     if (!hit) { if (R.sel && R.scn === 'lobby') closeSheet(); return; }
     var u = hit.object.userData;
-    if (u.zone && u.pg && R.sel && R.sel.id === u.zone && hit.object.geometry.type === 'PlaneGeometry') { openPanelFrom3D(hit.object); return; }
+    if (u.zone && u.pg && R.sel && R.sel.id === u.zone && u.face) { openPanelFrom3D(hit.object); return; }
     if (u.zone) selectZone(u.zone);
     else if (u.pg === 40 || u.pg === 47) openViewer([40, 47], u.pg === 40 ? 0 : 1, null, null);
     else if (u.pg) openViewer([u.pg], 0, null, null);
@@ -303,12 +382,18 @@
       b.onclick = function () { hideHint(); selectZone(z.id); };
       box.appendChild(b); G.pinEls[z.id] = b;
     });
+    /* 길잡이 이름표 · 누르지 않는다 · 구역을 고르지 않았을 때만 */
+    (G.S.landmarks || []).forEach(function (l) {
+      var d = document.createElement('div'); d.className = 'tr-pin lm'; d.setAttribute('aria-hidden', 'true');
+      d.innerHTML = '<span class="s">' + esc(l.label) + '</span>'; box.appendChild(d); G.pinEls[l.id] = d;
+    });
   }
   function placePins(G) {
     var v = new THREE.Vector3();
     for (var id in G.pinEls) {
       var el = G.pinEls[id], a = G.S.anchors[id];
-      var show = a && R.mode === '3d' && ((R.scn === 'lobby' && id !== 'cafe') || (R.scn === 'cafe' && id === 'cafe'));
+      var show = a && R.mode === '3d' && !G.TR && ((R.scn === 'lobby' && id !== 'cafe') || (R.scn === 'cafe' && id === 'cafe'));
+      if (show && /^lm_/.test(id)) show = !R.sel && G.cam.r < 60;
       if (show) { v.copy(a).project(G.camera); show = v.z < 1 && Math.abs(v.x) < 1.15 && Math.abs(v.y) < 1.15; }
       if (!show) { el.style.display = 'none'; continue; }
       el.style.display = ''; el.style.transform = 'translate(' + ((v.x + 1) / 2 * G.W).toFixed(1) + 'px,' + ((1 - v.y) / 2 * G.H).toFixed(1) + 'px) translate(-50%,-100%)';
@@ -326,12 +411,12 @@
     if (!R || !R.g) return;
     var G = R.g; G.raf = requestAnimationFrame(loop);
     if (R.mode !== '3d') return;
-    var busy = stepAnim(G, now), c = G.cam;
+    var busy = stepTour(G, now) || stepAnim(G, now), c = G.cam;
     if (!G.gest && !G.anim && (Math.abs(G.vel.th) > 1e-4 || Math.abs(G.vel.ph) > 1e-4)) { c.th += G.vel.th; c.ph += G.vel.ph; G.vel.th *= 0.92; G.vel.ph *= 0.92; clampCam(G); busy = true; }
     if (Math.abs(G.sheetOff - G.sheetOffTo) > 0.5) { G.sheetOff += (G.sheetOffTo - G.sheetOff) * (RM() ? 1 : 0.2); busy = true; } else G.sheetOff = G.sheetOffTo;
     if (G.bench) { c.th = G.bench.th0 + (now - G.bench.t0) * 0.0006; busy = true; }
     if (!busy && !G.need && !G.showFps) return;
-    G.need = false; applyCam(G); G.camera.updateProjectionMatrix(); G.renderer.render(G.scene, G.camera); placePins(G);
+    G.need = false; if (!G.TR) { applyCam(G); G.camera.updateProjectionMatrix(); } G.S.frame(G.camera, R.scn); G.renderer.render(G.scene, G.camera); placePins(G);
     G.frames.push(now); while (G.frames.length && now - G.frames[0] > 1000) G.frames.shift();
     if (G.showFps) $('fps').textContent = 'fps ' + G.frames.length + ' · ' + G.renderer.info.render.calls + ' draw';
     if (G.bench) { G.bench.ts.push(now); if (now - G.bench.t0 > G.bench.ms) { var b = G.bench; G.bench = null; b.done(summ(G, b.ts)); } }
@@ -344,11 +429,12 @@
     if (R.opts.mode) return;
     if (s.p50 > 60) { R.why = '느린 화면'; setMode('map'); toast('이 기기에서는 평면 지도로 보여요 · 3D는 위 탭에서'); }
     else if (s.p50 > 34 && G.renderer.getPixelRatio() > 1) { G.renderer.setPixelRatio(1); resize(); }
+    if (s.p50 > 34) G.S.lowPower();   /* 바닥 반사(그리기 두 번)도 끈다 */
   }
   function resize() {
     if (!R || !R.g) return;
     var G = R.g, r = $('stage').getBoundingClientRect(); G.W = Math.max(1, Math.round(r.width)); G.H = Math.max(1, Math.round(r.height));
-    G.renderer.setSize(G.W, G.H, false); G.camera.aspect = G.W / G.H; G.camera.fov = F0; G.camera.clearViewOffset(); G.camera.updateProjectionMatrix(); G.need = true;
+    G.renderer.setSize(G.W, G.H, false); G.camera.aspect = G.W / G.H; G.camera.fov = F0; G.camera.clearViewOffset(); if (G.TR) G.camera.fov = G.S.TOUR.fov; G.camera.updateProjectionMatrix(); G.S.resize(); G.need = true;
   }
   function switchScene(to, then) {
     var G = R.g, f = $('fade'); f.classList.add('on');
@@ -356,7 +442,7 @@
       if (!R || R.g !== G) return;
       R.scn = to; G.S.lobby.visible = to === 'lobby'; G.S.cafe.visible = to === 'cafe';
       var d = to === 'cafe' ? G.S.CAFE_DEF : G.S.DEF; G.anim = null; G.cam.t.copy(d.t); G.cam.r = d.r * 1.25; G.cam.th = d.th + 0.3; G.cam.ph = d.ph - 0.15; G.need = true;
-      f.classList.remove('on'); if (then) then();
+      f.classList.remove('on'); tourBtn(); if (then) then();
     }, RM() ? 0 : 200);
   }
 
@@ -432,6 +518,7 @@
   }
   function selectZone(id, deep) {
     var z = D.Z(id); if (!z) return;
+    stopTour(false);
     var was = R.sel; R.sel = z;
     var toCafe = id === 'cafe';
     if (R.mode === '3d' && R.g) {
@@ -439,7 +526,7 @@
       else openSheet(z, was, deep);
     } else openSheet(z, was, deep);
     if (R.g) { R.g.S.mark(id); R.g.need = true; }
-    renderRail(); if (R.mode === 'map') renderMap();
+    renderRail(); if (R.mode === 'map') renderMap(); tourBtn();
   }
   function openSheet(z, was, deep) {
     var b = $('sheetBody'), ps = D.zonePages(z), t = ztext(z), h = HOST(), A = acts(z), cr = h && h.crowd ? h.crowd(z.id) : null;
@@ -475,7 +562,7 @@
     var sh = $('sheet'); if (!sh.classList.contains('open')) return;
     sh.classList.remove('open'); sh.setAttribute('aria-hidden', 'true'); $('rail').style.visibility = '';
     var wasCafe = R.sel && R.sel.id === 'cafe';
-    R.sel = null; renderRail(); if (R.mode === 'map') renderMap();
+    R.sel = null; renderRail(); if (R.mode === 'map') renderMap(); tourBtn();
     if (R.g) { R.g.S.mark(null); R.g.sheetOffTo = 0; R.g.need = true; }
     if (R.mode === '3d' && R.g) { if (wasCafe) switchScene('lobby', function () { flyTo(R.g.S.DEF, 0); }); else flyTo(R.g.S.DEF, 900); }
   }
@@ -486,8 +573,8 @@
     flyTo(panelView(G, f), 750, function () {
       if (!R || R.g !== G) return;
       /* 판이 화면에 있던 자리에서 2D 로 넓어진다 */
-      var s = f.userData.size, c = f.position, ry = f.rotation.y, hx = s[0] / 2, hy = s[1] / 2;
-      var rv = new THREE.Vector3(Math.cos(ry), 0, -Math.sin(ry));
+      var u = f.userData, s = u.size, c = u.c, hx = s[0] / 2, hy = s[1] / 2;
+      var rv = new THREE.Vector3(u.n.z, 0, -u.n.x).normalize();
       applyCam(G); G.camera.updateProjectionMatrix(); G.camera.updateMatrixWorld();
       var pts = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(function (q) { return c.clone().addScaledVector(rv, q[0] * hx).add(new THREE.Vector3(0, q[1] * hy, 0)).project(G.camera); });
       var rc = $('cv').getBoundingClientRect(), xs = pts.map(function (v) { return rc.left + (v.x + 1) / 2 * rc.width; }), ys = pts.map(function (v) { return rc.top + (1 - v.y) / 2 * rc.height; });
@@ -498,13 +585,13 @@
     R.V = { list: list, i: i, z: z || D.zoneOfPg(list[i]), s: 1, tx: 0, ty: 0, bw: 1, bh: 1, iw: 1, ih: 1 };
     var v = $('viewer'); v.setAttribute('aria-hidden', 'false');
     loadPanel(from);
-    requestAnimationFrame(function () { if (R) v.classList.add('open'); });
+    requestAnimationFrame(function () { if (R) { v.classList.add('open'); tourBtn(); } });
     $('vzoom').style.opacity = 1; setTimeout(function () { if (R) $('vzoom').style.opacity = 0; }, 2400);
   }
   function closeViewer() {
     var v = $('viewer'); if (!v.classList.contains('open')) return;
     v.classList.remove('open'); v.setAttribute('aria-hidden', 'true');
-    var vi = $('vimg'); vi.style.transition = 'opacity .2s'; vi.style.opacity = 0;
+    var vi = $('vimg'); vi.style.transition = 'opacity .2s'; vi.style.opacity = 0; tourBtn();
     if (R.sel && R.mode === '3d' && R.g) flyTo(zoneView(R.g, R.sel), 800);
   }
   function layoutViewer() {
@@ -593,6 +680,7 @@
 
   /* ═══════════ 보기 전환 ═══════════ */
   function setMode(m, first) {
+    if (m !== '3d') stopTour(false);
     if (m === '3d' && !R.glOK) { if (!first) toast('이 기기는 3D를 지원하지 않아요'); m = 'map'; }
     R.mode = m;
     Array.prototype.forEach.call(R.el.root.querySelectorAll('.tr-seg button'), function (b) { b.setAttribute('aria-selected', b.getAttribute('data-mode') === m ? 'true' : 'false'); });
@@ -603,6 +691,8 @@
     if (m === 'map') renderMap(); if (m === 'list') renderList();
     if (is3) { init3D(); if (R.g) { resize(); if (!$('sheet').classList.contains('open')) R.g.sheetOffTo = 0; R.g.need = true; } }
     else if (R.g) R.g.sheetOffTo = 0;
+    if (!is3) { $('tcap').hidden = true; $('load').hidden = true; } else if (R.g && !R.g.S.loaded) $('load').hidden = false;
+    tourBtn();
   }
 
   /* 검사 · 녹화용(앱 밖에서는 쓰지 않는다) */
@@ -615,8 +705,11 @@
     fps: function (on) { if (R && R.g) { R.g.showFps = !!on; $('fps').style.display = on ? 'block' : 'none'; } },
     info: function () { var G = R && R.g; return G ? { calls: G.renderer.info.render.calls, tris: G.renderer.info.render.triangles, tex: G.renderer.info.memory.textures, geo: G.renderer.info.memory.geometries, dpr: G.renderer.getPixelRatio() } : null; },
     pinXY: function (id) { var G = R && R.g, el = G && G.pinEls[id]; if (!el || el.style.display === 'none') return null; var r = el.firstElementChild.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; },
-    faceXY: function (p) { var G = R && R.g, f = G && G.S.faces[p]; if (!f) return null; var v = f.position.clone(); v.y += f.userData.size[1] * 0.15; v.project(G.camera); var rc = $('cv').getBoundingClientRect(); return [rc.left + (v.x + 1) / 2 * rc.width, rc.top + (1 - v.y) / 2 * rc.height]; },
-    busy: function () { var G = R && R.g; return !!(G && G.anim); }
+    faceXY: function (p) { var G = R && R.g, f = G && G.S.faces[p]; if (!f) return null; var v = f.userData.c.clone(); v.y += f.userData.size[1] * 0.15; v.project(G.camera); var rc = $('cv').getBoundingClientRect(); return [rc.left + (v.x + 1) / 2 * rc.width, rc.top + (1 - v.y) / 2 * rc.height]; },
+    busy: function () { var G = R && R.g; return !!(G && (G.anim || G.TR)); },
+    loaded: function () { var G = R && R.g; return G && G.S.loaded ? { ms: G.loadMs } : null; },
+    tour: function (on) { if (on === false) stopTour(false); else if (on) startTour(); var G = R && R.g; return !!(G && G.TR); },
+    cam: function () { var G = R && R.g; if (!G) return null; var p = G.camera.position; return { x: +(p.x + 16).toFixed(2), z: +(6 - p.z).toFixed(2), y: +p.y.toFixed(2), r: +G.cam.r.toFixed(2) }; }
   };
-  window.AXTour = { open: open, close: close, back: back, isOpen: isOpen, probe: probe, ver: 'v5.11' };
+  window.AXTour = { open: open, close: close, back: back, isOpen: isOpen, probe: probe, ver: 'v5.19' };
 })();

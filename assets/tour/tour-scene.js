@@ -1,25 +1,37 @@
-/* 1층 둘러보기 · 장면(렌더러 교체 지점 · v5.11 · 261003)
- * 지금 = 상자 · 판 · 글자로 짓는 절차 모형(데모 그대로 · 모양 다듬기는 보류 · 사용자 261003 「모델하우스 수준」 검토 중).
- * 구운 조명 GLB 모형으로 바꿀 때는 이 파일만 바꾼다. tour.js(조작 · 시트 · 판 보기 · 지도 · 목록 · 뒤로)는 아래 약속만 쓴다.
+/* 1층 둘러보기 · 장면 v2 = 구운 빛 GLB 모형(v5.19 · 261003 · 시안 「디자인 시안/가상 1층/v2」를 앱 약속에 맞춰 옮김)
+ * 모형: lobby.glb(Blender + Cycles 라이트맵 · meshopt · webp 텍스처 · 약 0.7MB) · 둘러보기를 열 때만 받는다(앱 첫 화면 0바이트).
+ *   화면은 빛을 계산하지 않고 구운 빛을 그린다(MeshBasic + lightMap). 판 그림은 GLB 안 썸네일(panel_<쪽>).
+ * 배치: 아래 LAY = 시안 v2 layout.js(build/layout.py 결과 · 10/02 부스 발주 설명 PDF 2쪽 + 「1층 구조 이해.md」) · GLB 와 같은 숫자. 직접 고치지 말 것.
+ *   좌표는 tour-data 와 같다(도면 미터 x · z → three X = x - 16, Z = 6 - z).
+ * tour.js(조작 · 시트 · 판 보기 · 지도 · 목록 · 뒤로 · 자동 둘러보기)는 아래 약속만 쓴다.
  *
  * 약속: window.TourScene.build(ctx) → S
- *   ctx = { T: THREE, D: TOUR_DATA, P(x, z, y) → Vector3(도면 미터 → three), N3([nx, nz]) → Vector3, labelFont }
+ *   ctx = { T: THREE, D: TOUR_DATA, P(x, z, y) → Vector3, N3([nx, nz]) → Vector3, renderer, scene, labelFont }
+ *   S.load(url, onProg(0~1), onDone, onFail)   GLB 받기 · 받기 전에도 구역 시점 · 핀 자리 · 18F 장면은 쓸 수 있다 · S.loaded
  *   S.lobby · S.cafe        THREE.Group 두 개(cafe 는 처음에 숨김 · 1층과 다른 x 자리)
- *   S.picks                 누를 수 있는 메시 · userData { zone?: 구역 id, pg?: 판 번호 } · 판 앞면은 PlaneGeometry
- *   S.faces[pg]             판 앞면 메시 · 판 보기 비행(panelView)과 「판 자리에서 넓어지기」에 쓴다
- *   S.anchors[zone]         구역 간판 칩(DOM)을 붙일 3D 점
- *   S.zoneBox(zone)         { t: Vector3 가운데, w: 폭(m), h: 높이(m), th: 카메라 방위 } · 구역 시점
- *   S.mark(zone | null)     고른 구역 바닥 강조
- *   S.setAtlas(i, texture)  판 아틀라스 i 가 받아지면 판 재질에 붙인다
+ *   S.picks                 누를 수 있는 메시 · userData { zone?, pg?, face? } · 판 앞면 = face true + c(가운데) · n(앞 방향) · size([폭, 높이] m)
+ *   S.faces[pg]             판 앞면 메시(구역 판 우선) · 판 보기 비행과 「판 자리에서 넓어지기」에 쓴다
+ *   S.anchors[id]           구역 간판 칩 · 길잡이(lm_*) 이름표를 붙일 3D 점 · S.landmarks = [{ id, label }](누르지 않는 이름표)
+ *   S.zoneView(zid, fitR)   구역 시점 { t, r, th, ph } · 기둥(높이 5m)에 가리지 않는 쪽을 고른다 · fitR(폭, 높이) = 화면에 들어오는 거리
+ *   S.mark(zid | null)      고른 구역 바닥 강조
+ *   S.setAtlas(i, tex)      쓰지 않는다(판 그림은 GLB 안) · 옛 약속 자리만
  *   S.DEF · S.CAFE_DEF      기본 시점 { t, r, th, ph } · S.cafeX · S.bubbleAt(말풍선 3D 점)
- *   S.limits(scn)           카메라 목표점 범위 { x: [a, b], z: [a, b] } */
+ *   S.limits(scn)           카메라 목표점 범위 { x: [a, b], z: [a, b] }
+ *   S.frame(camera, scn)    그리기 바로 전 · 카메라 쪽 벽 · 천장 숨김(모형 단면) + 바닥 대리석 반사
+ *   S.resize() · S.lowPower()(반사 끔) · S.dispose()
+ *   S.TOUR                  자동 둘러보기 · establish = 첫 장면(남동쪽 높은 전경) · route = 동쪽 문(D)부터 반시계 동선 · pos · look = [x, z, 높이] · t = 도착 초 */
 (function () {
   'use strict';
+  var LAY = {"LOBBY": {"w": 32.57, "d": 11.46, "ceil": 5.0}, "WING": [[0.0, 11.46], [6.83, 11.46], [6.83, 27.0], [0.0, 23.8]], "PASSAGE": {"x0": 17.0, "x1": 19.8, "z0": 11.46, "z1": 19.7}, "CORE_Z1": 20.2, "PILLARS": [[1.0, 5.1], [7.45, 5.1], [13.9, 5.1], [20.4, 5.1], [26.9, 5.1]], "POSTER_PILLARS": [1, 2, 3, 4], "PILLAR_SIZE": 1.1, "EAST_COLS": [[32.6, 4.9]], "EXT_COLS": [1.3, 7.6, 14.0, 20.4, 26.9, 33.3], "DOORS": {"A": {"x": 17.3, "z": 1.5, "r": 1.85}, "B": [10.9, 12.8], "C": [22.3, 24.2], "D": {"x": 32.6, "z": 8.4, "r": 1.25}, "E": [9.7, 10.6]}, "BUST": [15.25, 9.9], "RECEPTION": {"x0": 22.4, "x1": 26.7, "z0": 9.9, "z1": 10.75}, "ZONES": [{"id": "play", "part": "hidiq", "sign": 22, "rows": [{"a": [14.74, 0.55], "r": [-1, 0], "n": [0, 1], "pages": [23, 24, 25, 26, 27], "tv": [0], "desks": 4}]}, {"id": "play", "part": "hihelper", "sign": 0, "rows": [{"a": [7.51, 0.55], "r": [-1, 0], "n": [0, 1], "pages": [28, 29, 30, 31, 32], "tv": [0], "desks": 4}]}, {"id": "action", "part": "action", "sign": 0, "rows": [{"a": [24.77, 0.55], "r": [-1, 0], "n": [0, 1], "pages": [14, 15, 16, 17, 18], "tv": [1], "desks": 0}]}, {"id": "lab", "part": "lab", "sign": 8, "rows": [{"a": [30.4, 0.55], "r": [-1, 0], "n": [0, 1], "pages": [9, 10, 11, 12, 13], "tv": [], "desks": 0}]}, {"id": "vision", "part": "vision", "sign": 1, "rows": [{"a": [31.95, 6.6], "r": [0, -1], "n": [-1, 0], "pages": [2, 3, 4, 5, 6, 7], "tv": [0], "desks": 0}]}, {"id": "event", "part": "event", "sign": 33, "rows": [{"a": [0.55, 5.85], "r": [0, 1], "n": [1, 0], "pages": [34, 35, 36], "tv": [], "desks": 0, "kiosk": [2]}, {"a": [0.55, 9.15], "r": [0, 1], "n": [1, 0], "pages": [37, 38], "tv": [], "desks": 0, "wheel": [1]}]}, {"id": "event", "part": "typing", "sign": 0, "rows": [{"a": [0.55, 1.97], "r": [0, 1], "n": [1, 0], "pages": [39], "tv": [], "desks": 0}], "banners": [{"pg": 48, "at": [0.75, 3.55], "n": [1, 0]}]}, {"id": "lounge", "part": "lounge", "sign": 19, "rows": [{"a": [7.67, 10.95], "r": [1, 0], "n": [0, -1], "pages": [20, 21], "tv": [], "desks": 1}]}], "POSTER_PG": 46, "LOOSE": [{"pg": 41, "at": [31.2, 10.2], "n": [-1, 0], "est": 1}, {"pg": 42, "at": [16.4, 10.6], "n": [0, -1], "est": 1}, {"pg": 43, "at": [16.4, 9.4], "n": [0, -1], "est": 1}, {"pg": 44, "at": [20.4, 9.4], "n": [0, -1], "est": 1}, {"pg": 45, "at": [20.4, 10.6], "n": [0, -1], "est": 1}], "CHECKIN": {"tent": [36.4, 3.0], "size": 3.0, "front": [-1, 0], "banner": 40, "xbanner": 47}};
   window.TourScene = {
     build: function (ctx) {
-      var T = ctx.T, D = ctx.D, P = ctx.P, N3 = ctx.N3, BLD = D.BLD;
-      var picks = [], faces = {}, anchors = {}, pads = {}, padLines = {}, atlasMats = [[], []], zones = {};
-      var matCache = {};
+      var T = ctx.T, P = ctx.P, N3 = ctx.N3, renderer = ctx.renderer, scene = ctx.scene;
+      var picks = [], faces = {}, anchors = {}, pads = {}, padLines = {}, zones = {}, matCache = {}, lightMaps = [];
+      var CEIL = LAY.LOBBY.ceil, LW = LAY.LOBBY.w, LD = LAY.LOBBY.d;
+      var lobby = new T.Group(); lobby.name = 'lobby';
+      var sideGroups = {}, ceilingG = null, coreStub = null, floorMesh = null, hideInRefl = [], loaded = false;
+      var REFL = { on: true, rt: null, cam: null, k: 0.5 };
+
       function lam(c) { return matCache[c] || (matCache[c] = new T.MeshLambertMaterial({ color: c })); }
       function box(g, w, h, d, c, x, y, z, ry) { var m = new T.Mesh(new T.BoxGeometry(w, h, d), typeof c === 'string' || typeof c === 'number' ? lam(c) : c); m.position.set(x, y, z); if (ry) m.rotation.y = ry; g.add(m); return m; }
       function canvasTex(w, h, draw) { var c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); var t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; return t; }
@@ -30,14 +42,7 @@
         var t = canvasTex(tw, Math.ceil(fs * 1.5), function (g, w, h) { if (opt.bg) { g.fillStyle = opt.bg; roundRect(g, 0, 0, w, h, opt.rad || 8); g.fill(); } g.font = font; g.fillStyle = opt.color || '#6B7684'; g.textBaseline = 'middle'; g.textAlign = 'center'; g.fillText(text, w / 2, h / 2 + fs * 0.04); });
         t.userData = { aspect: tw / Math.ceil(fs * 1.5) }; return t;
       }
-      /* 바닥 글자는 기본 시점에서 바로 읽히게 돌린다 */
-      var DEF = { t: P(16.0, 6.6, 0), r: 52, th: -1.95, ph: 0.58 };
-      function floorLabel(g, text, x, z, hm, opt) {
-        var t = textTex(text, opt), w = hm * t.userData.aspect;
-        var m = new T.Mesh(new T.PlaneGeometry(w, hm), new T.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false }));
-        m.rotation.x = -Math.PI / 2; m.rotation.z = DEF.th; m.position.copy(P(x, z, 0.012)); g.add(m); return m;
-      }
-      /* 바닥 도트 격자 · 0.5m 간격 · 1.5%는 주황(design.md §2 「켜질 수 있는 자리」) */
+      /* 바닥 도트 격자 · 0.5m 간격 · 1.5%는 주황(design.md §2 「켜질 수 있는 자리」) · 18F 장면 */
       function dotFloorTex(wm, dm, ppm, seed) {
         return canvasTex(Math.round(wm * ppm), Math.round(dm * ppm), function (g, w, h) {
           g.fillStyle = '#EFEFEF'; g.fillRect(0, 0, w, h);
@@ -46,153 +51,152 @@
           for (var y = st / 2; y < h; y += st) for (var x = st / 2; x < w; x += st) { g.fillStyle = rnd() < 0.015 ? '#FF7F32' : '#D9D9D9'; g.fillRect(Math.round(x - d / 2), Math.round(y - d / 2), d, d); }
         });
       }
-      /* 판 앞면 · 아틀라스 칸을 UV 로 잘라 쓴다(여백 2px 안쪽) */
-      function atlasMat(p) {
-        var a = D.ATLAS.at[p], m = new T.MeshBasicMaterial({ color: 0xffffff });
-        if (a) atlasMats[a[0]].push(m);
-        return m;
+
+      /* ═══ 구역 · 판 줄 기하(GLB 없이도 쓴다) ═══ */
+      function rowGeom(row) {
+        var a = P(row.a[0], row.a[1]), rv = N3(row.r), nv = N3(row.n), n = row.pages.length;
+        return { a: a, rv: rv, nv: nv, n: n, mid: a.clone().addScaledVector(rv, n / 2) };
       }
-      function atlasUV(geo, p) {
-        var a = D.ATLAS.at[p]; if (!a) return geo;
-        var S = D.ATLAS.size[a[0]], u0 = (a[1] + 2) / S, u1 = (a[1] + a[3] - 2) / S, v1 = 1 - (a[2] + 2) / S, v0 = 1 - (a[2] + a[4] - 2) / S;
-        var uv = geo.attributes.uv;
-        for (var i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) ? u1 : u0, uv.getY(i) ? v1 : v0);
-        uv.needsUpdate = true; return geo;
-      }
-      function panelFace(g, p, w, h, zid) {
-        var f = new T.Mesh(atlasUV(new T.PlaneGeometry(w, h), p), atlasMat(p));
-        f.userData = { pg: p, zone: zid || null, size: D.pgSize(p) }; g.add(f); picks.push(f);
-        if (!faces[p] || zid) faces[p] = f;
-        return f;
-      }
-      function addPanel(g, p, c, nv, y0, zid) {
-        var s = D.pgSize(p), ry = Math.atan2(nv.x, nv.z);
-        var back = box(g, s[0], s[1], 0.04, '#FFFFFF', c.x, y0 + s[1] / 2, c.z, ry);
-        back.userData = { zone: zid || null, pg: p }; picks.push(back);
-        var f = panelFace(g, p, s[0] * 0.985, s[1] * 0.985, zid);
-        f.position.copy(c).addScaledVector(nv, 0.022); f.position.y = y0 + s[1] / 2; f.rotation.y = ry;
-        return f;
-      }
-      function shadowPad(g, cx, cz, w, d, ry) { var m = new T.Mesh(new T.PlaneGeometry(w, d), new T.MeshBasicMaterial({ color: 0x191F28, transparent: true, opacity: 0.07, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.rotation.z = ry || 0; m.position.set(cx, 0.006, cz); g.add(m); }
-      function tv(g, c, ry) {
-        box(g, 0.05, 1.1, 0.05, '#DADDE1', c.x, 0.55, c.z, ry); box(g, 0.5, 0.03, 0.5, '#DADDE1', c.x, 0.015, c.z, ry);
-        box(g, 1.23, 0.71, 0.05, '#2B2F33', c.x, 1.45, c.z, ry);
-      }
-      function buildRow(g, z, row) {
-        var a = P(row.a[0], row.a[1]), rv = N3(row.r), nv = N3(row.n), n = row.pages.length, ry = Math.atan2(nv.x, nv.z);
-        row.pages.forEach(function (p, i) { addPanel(g, p, a.clone().addScaledVector(rv, i + 0.5), nv, 0.06, z.id); });
-        for (var i = 0; i <= n; i++) { var c = a.clone().addScaledVector(rv, i); box(g, 0.04, 2.66, 0.06, '#C3C9D0', c.x, 1.33, c.z, ry); }
-        var mid = a.clone().addScaledVector(rv, n / 2);
-        box(g, n + 0.04, 0.05, 0.06, '#C3C9D0', mid.x, 2.62, mid.z, ry);
-        box(g, n + 0.04, 0.06, 0.08, '#C3C9D0', mid.x, 0.03, mid.z, ry);
-        /* 측면 판(PDF 「+ 2ea(측면)」) · 줄 양 끝에서 뒤로 */
-        [0, n].forEach(function (k) { var c = a.clone().addScaledVector(rv, k).addScaledVector(nv, -0.25); box(g, 0.04, 2.5, 0.5, '#FFFFFF', c.x, 1.31, c.z, ry); });
-        shadowPad(g, mid.x - nv.x * 0.05, mid.z - nv.z * 0.05, n + 0.4, 0.5, ry);
-        (row.tv || []).forEach(function (i) { tv(g, a.clone().addScaledVector(rv, i + 0.5).addScaledVector(nv, 0.75), ry); });
-        if (row.desk) {
-          var k = row.desk, dw = Math.min(1.2, (n - 0.2) / k);
-          for (var j = 0; j < k; j++) {
-            var off = k === 1 ? n / 2 : (n - (row.tv && row.tv.indexOf(0) >= 0 ? 1.2 : 0)) * (j + 0.5) / k + (row.tv && row.tv.indexOf(0) >= 0 ? 1.2 : 0);
-            var dc = a.clone().addScaledVector(rv, off).addScaledVector(nv, 0.95);
-            box(g, dw - 0.1, 0.05, 0.6, '#E9DCC8', dc.x, 0.9, dc.z, ry); box(g, dw - 0.16, 0.86, 0.04, '#E2D3BD', dc.x - nv.x * 0.26, 0.45, dc.z - nv.z * 0.26, ry);
-            if (z.id === 'play') { box(g, 0.34, 0.02, 0.24, '#3A3F45', dc.x, 0.935, dc.z, ry); box(g, 0.34, 0.22, 0.015, '#3A3F45', dc.x - nv.x * 0.11, 1.05, dc.z - nv.z * 0.11, ry); }
-          }
-        }
-        if (row.sign != null && z.signPg) {
-          var sc = a.clone().addScaledVector(rv, row.sign + 0.65);
-          box(g, 1.34, 0.44, 0.05, '#FF7F32', sc.x, 2.87, sc.z, ry);
-          var sf = panelFace(g, z.signPg, 1.3, 0.4, z.id); sf.position.copy(sc).addScaledVector(nv, 0.03); sf.position.y = 2.87; sf.rotation.y = ry;
-        }
-        return { a: a, rv: rv, nv: nv, n: n, mid: mid };
-      }
-      function buildPad(g, zid, cx, cz, w, d, ry) {
-        var m = new T.Mesh(new T.PlaneGeometry(w, d), new T.MeshBasicMaterial({ color: 0xFFF1E8 })); m.rotation.x = -Math.PI / 2; m.rotation.z = ry; m.position.set(cx, 0.008, cz); g.add(m);
-        m.userData = { zone: zid }; picks.push(m); (pads[zid] = pads[zid] || []).push(m);
+      function buildPad(zid, cx, cz, w, d, ry) {
+        var m = new T.Mesh(new T.PlaneGeometry(w, d), new T.MeshBasicMaterial({ color: 0xFF7E31, transparent: true, opacity: 0, depthWrite: false }));
+        m.rotation.x = -Math.PI / 2; m.rotation.z = ry; m.position.set(cx, 0.03, cz); m.renderOrder = 2; lobby.add(m);
+        m.userData = { zone: zid, pad: true }; m.visible = false; (pads[zid] = pads[zid] || []).push(m);
         var hw = w / 2, hd = d / 2, pts = [[-hw, -hd], [hw, -hd], [hw, hd], [-hw, hd]].map(function (q) { return new T.Vector3(q[0], q[1], 0); });
-        var ln = new T.LineLoop(new T.BufferGeometry().setFromPoints(pts), new T.LineBasicMaterial({ color: 0xFF7F32, transparent: true, opacity: 0 }));
-        ln.rotation.copy(m.rotation); ln.position.copy(m.position); ln.position.y = 0.012; g.add(ln); (padLines[zid] = padLines[zid] || []).push(ln);
+        var ln = new T.LineLoop(new T.BufferGeometry().setFromPoints(pts), new T.LineBasicMaterial({ color: 0xFF7E31, transparent: true, opacity: 0 }));
+        ln.rotation.copy(m.rotation); ln.position.copy(m.position); ln.position.y = 0.035; ln.visible = false; lobby.add(ln); (padLines[zid] = padLines[zid] || []).push(ln);
+        hideInRefl.push(m, ln);
       }
+      LAY.ZONES.forEach(function (p) { zones[p.id] = (zones[p.id] || []).concat(p.rows.map(rowGeom)); });
+      Object.keys(zones).forEach(function (id) {
+        var rs = zones[id], bb = new T.Box3();
+        rs.forEach(function (r) { bb.expandByPoint(r.a); bb.expandByPoint(r.a.clone().addScaledVector(r.rv, r.n)); bb.expandByPoint(r.mid.clone().addScaledVector(r.nv, 2.0)); });
+        rs.bb = bb;
+        var m = id === 'play' && rs[1] ? rs[0].mid.clone().lerp(rs[1].mid, 0.5) : rs[0].mid;
+        anchors[id] = new T.Vector3(m.x, 3.45, m.z);
+        rs.forEach(function (r) { var pc = r.mid.clone().addScaledVector(r.nv, 1.1); buildPad(id, pc.x, pc.z, r.n + 1.8, 2.0, Math.atan2(r.nv.x, r.nv.z)); });
+      });
+      /* 길잡이 이름표(누르지 않음 · 위치 표시는 둘러보기 안에서만 · design.md 5-21) */
+      var LANDMARKS = [
+        { id: 'lm_a', label: '정문', at: [LAY.DOORS.A.x, LAY.DOORS.A.z - 0.6, 2.9] },
+        { id: 'lm_d', label: '동쪽 문', at: [LAY.DOORS.D.x - 0.4, LAY.DOORS.D.z, 2.9] },
+        { id: 'lm_bust', label: '흉상', at: [LAY.BUST[0], LAY.BUST[1], 2.3] },
+        { id: 'lm_gate', label: '게이트 · 엘리베이터', at: [(LAY.PASSAGE.x0 + LAY.PASSAGE.x1) / 2, LAY.PASSAGE.z0 + 0.6, 2.2] },
+        { id: 'lm_desk', label: '안내데스크', at: [(LAY.RECEPTION.x0 + LAY.RECEPTION.x1) / 2, LAY.RECEPTION.z0, 1.8] },
+        { id: 'lm_check', label: '체크인(문 밖)', at: [LAY.CHECKIN.tent[0], LAY.CHECKIN.tent[1], 4.4] }
+      ];
+      LANDMARKS.forEach(function (l) { anchors[l.id] = P(l.at[0], l.at[1], l.at[2]); });
 
-      function buildLobby() {
-        var g = new T.Group();
-        var sh = new T.Shape();
-        BLD.outline.forEach(function (q, i) { var x = q[0] - 16, y = q[1] - 6; if (i) sh.lineTo(x, y); else sh.moveTo(x, y); });
-        var ft = dotFloorTex(32.5, 24.5, 48, 11); ft.wrapS = ft.wrapT = T.ClampToEdgeWrapping; ft.repeat.set(1 / 32.5, 1 / 24.5); ft.offset.set(16 / 32.5, 6 / 24.5);
-        var base = new T.Mesh(new T.ExtrudeGeometry(sh, { depth: 0.45, bevelEnabled: false }), [new T.MeshBasicMaterial({ map: ft }), lam('#D3D7DC')]);
-        base.rotation.x = -Math.PI / 2; base.position.y = -0.45; g.add(base);
-        /* 동쪽 출입문 밖 · 체크인 마당 */
-        var O = BLD.outside, oc = P((O.x0 + O.x1) / 2, (O.z0 + O.z1) / 2);
-        box(g, O.x1 - O.x0, 0.3, O.z1 - O.z0, '#E1E4E8', oc.x, -0.15, oc.z);
-        floorLabel(g, '건물 밖', (O.x0 + O.x1) / 2, O.z1 - 0.5, 0.42, { color: '#8B95A1' });
-        /* 행사 구역 아님(고객 동선) */
-        var hz = canvasTex(256, 256, function (c, w, h) { c.fillStyle = '#E6E8EB'; c.fillRect(0, 0, w, h); c.strokeStyle = '#D3D7DC'; c.lineWidth = 10; for (var i = -h; i < w; i += 40) { c.beginPath(); c.moveTo(i, h); c.lineTo(i + h, 0); c.stroke(); } });
-        hz.wrapS = hz.wrapT = T.RepeatWrapping; hz.repeat.set(3, 4);
-        var hm = new T.Mesh(new T.PlaneGeometry(BLD.hatch.w, BLD.hatch.d), new T.MeshBasicMaterial({ map: hz })); hm.rotation.x = -Math.PI / 2; hm.position.copy(P(BLD.hatch.at[0], BLD.hatch.at[1], 0.004)); g.add(hm);
-        floorLabel(g, '행사 구역 아님 · 고객 동선', BLD.hatch.at[0], BLD.hatch.at[1], 0.55, { color: '#8B95A1' });
-        /* 코어 */
-        BLD.cores.forEach(function (xx) { var w = xx[1] - xx[0], c = P((xx[0] + xx[1]) / 2, 15.65); box(g, w, 0.5, 7.7, '#E1E4E8', c.x, 0.25, c.z); var m = floorLabel(g, '엘리베이터 · 계단', (xx[0] + xx[1]) / 2, 15.6, 0.5, { color: '#8B95A1' }); m.position.y = 0.52; });
-        floorLabel(g, '엘리베이터 홀', BLD.hall, 14.5, 0.5);
-        /* 남쪽 유리벽 · 회전문 · 옆문 */
-        var gl = new T.MeshLambertMaterial({ color: 0xF4F6F8, transparent: true, opacity: 0.28, depthWrite: false });
-        var glass = new T.Mesh(new T.PlaneGeometry(32.5, 3.4), gl); glass.position.copy(P(16.25, 0.02, 1.7)); g.add(glass);
-        for (var x = 0; x <= 32.5; x += 1.625) box(g, 0.05, 3.4, 0.08, '#C3C9D0', x - 16, 1.7, 6);
-        box(g, 32.6, 0.08, 0.1, '#C3C9D0', 0.25, 3.4, 6);
-        var rd = new T.Mesh(new T.CylinderGeometry(1.3, 1.3, 2.4, 32, 1, true, 0, Math.PI), new T.MeshLambertMaterial({ color: 0xE9ECEF, transparent: true, opacity: 0.55, side: T.DoubleSide, depthWrite: false }));
-        rd.position.copy(P(BLD.revolve, 0.0, 1.2)); g.add(rd);
-        floorLabel(g, '정문 · 회전문', BLD.revolve, 2.4, 0.5, { color: '#4E5968', w: 700 });
-        floorLabel(g, '동쪽 출입문', 31.4, (BLD.doorE[0] + BLD.doorE[1]) / 2, 0.4);
-        /* 낮은 외벽 */
-        var wallC = '#D9DDE2';
-        box(g, 0.2, 0.9, 24.5, wallC, -16.1, 0.45, 6 - 12.25);
-        var eA = P(32.6, BLD.doorE[0] / 2), eB = P(32.6, (BLD.doorE[1] + 19.5) / 2);
-        box(g, 0.2, 0.9, BLD.doorE[0], wallC, eA.x, 0.45, eA.z); box(g, 0.2, 0.9, 19.5 - BLD.doorE[1], wallC, eB.x, 0.45, eB.z);
-        box(g, 6.8, 0.9, 0.2, wallC, P(3.4, 24.5).x, 0.45, P(3.4, 24.5).z);
-        box(g, 0.2, 0.9, 5.0, wallC, P(6.8, 22).x, 0.45, P(6.8, 22).z);
-        /* 미팅룸 3칸(서쪽 날개) + 롱테이블 */
-        BLD.rooms.forEach(function (r) {
-          var cz = (r[0] + r[1]) / 2, d = r[1] - r[0], c = P(1.9, cz);
-          box(g, 3.4, 1.0, 0.12, wallC, c.x, 0.5, P(1.9, r[0]).z); box(g, 3.4, 1.0, 0.12, wallC, c.x, 0.5, P(1.9, r[1]).z);
-          box(g, 0.12, 1.0, d, wallC, P(3.6, cz).x, 0.5, c.z);
-          box(g, 1.6, 0.74, 0.9, '#E9DCC8', c.x, 0.37, c.z);
-          floorLabel(g, r[2], 1.9, cz - 1.2, 0.42);
-        });
-        var lt = P(5.55, 17.5); box(g, 0.9, 0.74, 3.9, '#E9DCC8', lt.x, 0.37, lt.z);
-        /* 기둥 4개 · 면마다 ME to WE 포스터 · 서쪽 벽 기둥 · 흉상 · 건물 안내데스크 */
-        BLD.cols.forEach(function (x) {
-          var c = P(x, BLD.colZ); box(g, 0.9, 3.0, 0.9, '#E8EBEE', c.x, 1.5, c.z);
-          [[0, 1], [1, 0], [0, -1], [-1, 0]].forEach(function (n) { var nv = N3(n), f = panelFace(g, 46, 0.62, 0.88, null); f.position.set(c.x + nv.x * 0.456, 1.55, c.z + nv.z * 0.456); f.rotation.y = Math.atan2(nv.x, nv.z); });
-        });
-        var pc = P(BLD.pier[0], BLD.pier[1]); box(g, 1.0, 3.0, 1.0, '#E8EBEE', pc.x, 1.5, pc.z);
-        var bc = P(BLD.bust[0], BLD.bust[1]); var bs = new T.Mesh(new T.CylinderGeometry(0.45, 0.45, 1.1, 24), lam('#D9DDE2')); bs.position.set(bc.x, 0.55, bc.z); g.add(bs);
-        floorLabel(g, '흉상', BLD.bust[0], BLD.bust[1] - 0.9, 0.32);
-        var dc = P(BLD.desk[0], BLD.desk[1]); box(g, 4.4, 1.05, 0.8, '#E1E4E8', dc.x, 0.525, dc.z); floorLabel(g, '안내데스크(건물)', BLD.desk[0], BLD.desk[1] - 1.0, 0.34);
+      /* ═══ GLB 재질 ═══
+       * 약속(build/assemble.mjs): 굽기 재질 = map(UV0) × occlusionTexture(UV1, sRGB 라이트맵, 값 × extras.lmScale) → MeshBasic + lightMap
+       * glass = 반투명 · led = 발광 · 그 밖 단색 */
+      function convMat(m) {
+        var u = m.userData || {}, nm = m.name || '';
+        if (u.baked) {
+          var lm = m.aoMap; if (lm) { lm.colorSpace = T.SRGBColorSpace; lm.minFilter = T.LinearFilter; lm.generateMipmaps = false; lm.needsUpdate = true; lightMaps.push(lm); }
+          var b = new T.MeshBasicMaterial({ map: m.map || null, vertexColors: !!m.vertexColors, lightMap: lm || null, lightMapIntensity: (u.lmScale || 1) * Math.PI });
+          b.name = nm; b.userData = u;
+          if (m.map) m.map.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+          return b;
+        }
+        if (u.glass) { var g = new T.MeshBasicMaterial({ color: 0xDCE6EA, transparent: true, opacity: 0.13, depthWrite: false, side: T.DoubleSide, forceSinglePass: true }); g.name = nm; return g; }
+        if (u.led) { var c = m.emissive ? m.emissive.clone().multiplyScalar(nm === 'led_cool' ? 2.2 : 3.0) : new T.Color(3, 2.4, 1.6); var l = new T.MeshBasicMaterial({ color: c }); l.name = nm; return l; }
+        var col = m.color ? m.color.clone() : new T.Color(0x888888);
+        if (nm === 'mullion') col.setRGB(0.42, 0.44, 0.47);
+        var f = new T.MeshBasicMaterial({ color: col, side: nm === 'base_side' ? T.DoubleSide : T.FrontSide }); f.name = nm; return f;
+      }
+      /* 바닥 = 구운 빛 + 평면 반사(물광 대리석) · 반사는 반 해상도 렌더 타깃 한 장 · 느린 기기는 끈다(lowPower) */
+      function floorMaterial(base) {
+        base.onBeforeCompile = function (sh) {
+          sh.uniforms.tRefl = { value: REFL.rt ? REFL.rt.texture : null };
+          sh.uniforms.reflMatrix = { value: new T.Matrix4() };
+          sh.uniforms.reflOn = { value: 0 };
+          base.userData.sh = sh;
+          sh.vertexShader = 'uniform mat4 reflMatrix;\nvarying vec4 vReflUv;\nvarying vec3 vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n  vec4 wp_ = modelMatrix * vec4(transformed, 1.0);\n  vWp = wp_.xyz;\n  vReflUv = reflMatrix * wp_;');
+          sh.fragmentShader = 'uniform sampler2D tRefl;\nuniform float reflOn;\nvarying vec4 vReflUv;\nvarying vec3 vWp;\n' + sh.fragmentShader.replace('#include <opaque_fragment>', '#include <opaque_fragment>\n  if (reflOn > 0.5) {\n    vec3 vd = normalize(cameraPosition - vWp);\n    float fr = 0.20 + 0.50 * pow(1.0 - clamp(vd.y, 0.0, 1.0), 3.0);\n    vec3 rc = texture2DProj(tRefl, vReflUv).rgb;\n    gl_FragColor.rgb = gl_FragColor.rgb * (1.0 - fr * 0.6) + rc * fr;\n  }');
+        };
+        base.customProgramCacheKey = function () { return 'floorRefl'; };
+        return base;
+      }
+      var _sz = new T.Vector2();
+      function setupRefl() {
+        if (REFL.rt) REFL.rt.dispose();
+        renderer.getDrawingBufferSize(_sz);
+        REFL.rt = new T.WebGLRenderTarget(Math.max(2, Math.round(_sz.x * REFL.k)), Math.max(2, Math.round(_sz.y * REFL.k)), { colorSpace: T.SRGBColorSpace });
+        REFL.cam = REFL.cam || new T.PerspectiveCamera();
+        if (floorMesh && floorMesh.material.userData.sh) floorMesh.material.userData.sh.uniforms.tRefl.value = REFL.rt.texture;
+      }
+      var _rv = new T.Vector3(), _rt = new T.Vector3(), _rm = new T.Matrix4(), _ru = new T.Vector3(), RBIAS = new T.Matrix4().set(0.5, 0, 0, 0.5, 0, 0.5, 0, 0.5, 0, 0, 0.5, 0.5, 0, 0, 0, 1);
+      function renderRefl(camera, scn) {
+        var sh = floorMesh && floorMesh.material.userData.sh; if (!sh) return;
+        var on = REFL.on && scn === 'lobby' && camera.position.y > 0.05 && floorMesh.visible;
+        sh.uniforms.reflOn.value = on ? 1 : 0; if (!on) return;
+        if (!REFL.rt) setupRefl();
+        /* 바닥(y = 0)에 대해 카메라를 뒤집는다(three.js Reflector 와 같은 계산) */
+        var rc = REFL.cam; camera.updateMatrixWorld();
+        _rv.copy(camera.position); _rv.y = -_rv.y;
+        _rm.extractRotation(camera.matrixWorld); _rt.set(0, 0, -1).applyMatrix4(_rm).add(camera.position); _rt.y = -_rt.y;
+        _ru.set(0, 1, 0).applyMatrix4(_rm); _ru.y = -_ru.y;
+        rc.position.copy(_rv); rc.up.copy(_ru); rc.lookAt(_rt); rc.updateMatrixWorld();
+        rc.projectionMatrix.copy(camera.projectionMatrix); rc.projectionMatrixInverse.copy(camera.projectionMatrixInverse);
+        sh.uniforms.reflMatrix.value.copy(RBIAS).multiply(rc.projectionMatrix).multiply(rc.matrixWorldInverse);
+        hideInRefl.forEach(function (o) { o.userData._v = o.visible; o.visible = false; });
+        var cv = cafe.visible; cafe.visible = false;
+        renderer.setRenderTarget(REFL.rt); renderer.clear(); renderer.render(scene, rc); renderer.setRenderTarget(null);
+        hideInRefl.forEach(function (o) { o.visible = o.userData._v; });
+        cafe.visible = cv;
+      }
+      /* 카메라 쪽 벽 · 천장을 숨겨 모형 안이 보이게(분양 모형의 단면) */
+      function cutaway(camera) {
+        var x = camera.position.x + 16, z = 6 - camera.position.z, y = camera.position.y;
+        var vis = { side_s: z > -0.3, side_e: x < LW + 0.3, side_w: !(x < -0.3 && z < LD + 1), side_n: !(z > LD + 0.2) };
+        for (var k in sideGroups) sideGroups[k].visible = vis[k] !== false;
+        if (coreStub) coreStub.visible = !vis.side_n;
+        if (ceilingG) ceilingG.visible = y < CEIL - 0.05;
+      }
+      function nameUp(o, re) { while (o) { if (o.name && re.test(o.name)) return o.name; o = o.parent; } return null; }
 
-        /* 구역 */
-        D.ZONES.forEach(function (z) {
-          if (!z.rows.length) return;
-          var rs = z.rows.map(function (row) { return buildRow(g, z, row); });
-          rs.forEach(function (r) { var pcn = r.mid.clone().addScaledVector(r.nv, 1.2); buildPad(g, z.id, pcn.x, pcn.z, r.n + 0.6, 1.9, Math.atan2(r.nv.x, r.nv.z)); });
-          if (z.area) { var ac = P((z.area[0] + z.area[1]) / 2, (z.area[2] + z.area[3]) / 2); buildPad(g, z.id, ac.x, ac.z, z.area[1] - z.area[0], z.area[3] - z.area[2], 0); }
-          zones[z.id] = rs;
-          var zb = new T.Box3(); rs.forEach(function (r) { zb.expandByPoint(r.a); zb.expandByPoint(r.a.clone().addScaledVector(r.rv, r.n)); });
-          var zc = zb.getCenter(new T.Vector3()); anchors[z.id] = new T.Vector3(zc.x, z.signPg ? 3.45 : 3.0, zc.z);   /* 칩 = 구역 판 줄 가운데 위(간판 자리 위에 두면 이웃 구역 칩과 겹친다) */
-        });
-        /* EVENT 소품 · 포토부스 기 제작품 · 룰렛 휠 · 타자왕 배너 */
-        var pb = P(D.PROPS.photobooth[0], D.PROPS.photobooth[1]); box(g, 1.8, 2.3, 2.2, '#FFFFFF', pb.x, 1.15, pb.z); box(g, 1.82, 0.18, 2.22, '#FF7F32', pb.x, 2.2, pb.z);
-        var wt = canvasTex(256, 256, function (c) { var cols = ['#FF7F32', '#FFB284', '#FFD8C1', '#FFEBE0', '#FFFFFF']; for (var i = 0; i < 10; i++) { c.beginPath(); c.moveTo(128, 128); c.arc(128, 128, 124, i * Math.PI / 5, (i + 1) * Math.PI / 5); c.closePath(); c.fillStyle = cols[i % 5]; c.fill(); } c.lineWidth = 6; c.strokeStyle = '#FF7F32'; c.beginPath(); c.arc(128, 128, 124, 0, Math.PI * 2); c.stroke(); c.fillStyle = '#FFFFFF'; c.beginPath(); c.arc(128, 128, 18, 0, Math.PI * 2); c.fill(); });
-        var wc = P(D.PROPS.wheel[0], D.PROPS.wheel[1]), wh = new T.Mesh(new T.CircleGeometry(0.55, 40), new T.MeshBasicMaterial({ map: wt })); wh.position.set(wc.x, 1.25, wc.z); wh.rotation.y = Math.PI / 2; g.add(wh);
-        box(g, 0.05, 0.7, 0.05, '#DADDE1', wc.x - 0.03, 0.35, wc.z); wh.userData = { zone: 'event' }; picks.push(wh);
-        [D.PROPS.typingBanner].forEach(function (o) { var nv = N3(o.n), c = P(o.at[0], o.at[1]); box(g, 0.4, 0.04, 0.04, '#C3C9D0', c.x, 0.02, c.z, Math.atan2(nv.x, nv.z)); addPanel(g, o.pg, c, nv, 0.08, 'event'); });
-        /* 체크인 몽골텐트(건물 밖 · 앞만 열림) · 현수막 40 · 배너 47 */
-        var ci = D.PROPS.checkin, tc = P(ci.at[0], ci.at[1]), tn = N3(ci.n), tr = Math.atan2(tn.x, tn.z);
-        box(g, 3.0, 2.3, 0.05, '#FFFFFF', tc.x - tn.x * 1.5, 1.15, tc.z - tn.z * 1.5, tr);
-        box(g, 0.05, 2.3, 3.0, '#FFFFFF', tc.x, 1.15, tc.z - 1.5); box(g, 0.05, 2.3, 3.0, '#FFFFFF', tc.x, 1.15, tc.z + 1.5);
-        var roof = new T.Mesh(new T.ConeGeometry(2.15, 1.3, 4, 1), lam('#FFFFFF')); roof.position.set(tc.x, 2.95, tc.z); roof.rotation.y = Math.PI / 4; g.add(roof);
-        box(g, 1.8, 0.74, 0.7, '#F2F4F6', tc.x + tn.x * 0.3, 0.37, tc.z + tn.z * 0.3, tr);
-        var cf = panelFace(g, ci.cloth, 2.8, 0.6, null); cf.position.set(tc.x + tn.x * 1.52, 2.0, tc.z + tn.z * 1.52); cf.rotation.y = tr;
-        var bo = ci.banner, bn = N3(bo.n), bpos = P(bo.at[0], bo.at[1]); addPanel(g, bo.pg, bpos, bn, 0.08, null);
-        anchors.checkin = new T.Vector3(tc.x, 3.7, tc.z);
-        return g;
+      function load(url, onProg, onDone, onFail) {
+        if (!T.GLTFLoader) { if (onFail) onFail(new Error('GLTFLoader 없음')); return; }
+        var ld = new T.GLTFLoader(); if (window.MeshoptDecoder) ld.setMeshoptDecoder(window.MeshoptDecoder);
+        ld.load(url, function (gl) {
+          var root = gl.scene, colsNode = null; lobby.add(root); root.updateMatrixWorld(true);
+          var cache = new Map();
+          root.traverse(function (o) {
+            if (/^(side_[nswe]|ceiling)$/.test(o.name)) { if (o.name === 'ceiling') ceilingG = o; else sideGroups[o.name] = o; }
+            if (o.name === 'side_s_cols') colsNode = o;   /* 바깥 열주는 숨기지 않는다(바닥에 구운 발자국이 드러나므로) */
+            if (!o.isMesh) return;
+            var old = o.material, k = old.uuid + (old.vertexColors ? 'v' : '');
+            if (!cache.has(k)) cache.set(k, old.name === 'floor' ? floorMaterial(convMat(old)) : convMat(old));
+            o.material = cache.get(k); if (old.dispose) old.dispose();
+            o.matrixAutoUpdate = false; o.updateMatrix();
+            var pn = nameUp(o, /^panel_\d+$/), zn = nameUp(o, /^zone_[a-z]+$/);
+            var pg = pn ? +pn.slice(6) : 0, zid = zn ? zn.slice(5) : (pg === 48 ? 'event' : null);
+            if (o.material.name === 'floor') floorMesh = o;
+            if (/^(floor|paving|base)$/.test(o.name)) hideInRefl.push(o);
+            if (pg || zid) {
+              o.userData = { pg: pg || 0, zone: zid };
+              picks.push(o);
+              if (pg && o.material.name === 'panel_' + pg) {
+                /* 판 면의 가운데 · 앞 방향 · 크기(정점에서 · 양자화로 노드에 변환이 붙으므로 월드로 옮긴다) */
+                var geo = o.geometry; geo.computeBoundingBox(); var c = new T.Vector3(); geo.boundingBox.getCenter(c);
+                var nrm = geo.attributes.normal ? new T.Vector3().fromBufferAttribute(geo.attributes.normal, 0) : new T.Vector3(0, 0, 1);
+                c.applyMatrix4(o.matrixWorld); nrm.transformDirection(o.matrixWorld);
+                o.userData.c = c; o.userData.n = nrm; o.userData.size = ctx.D.pgSize(pg); o.userData.face = true;
+                if (!faces[pg] || (zid && !faces[pg].userData.zone)) faces[pg] = o;
+              }
+            }
+          });
+          if (colsNode) root.attach(colsNode);
+          /* 코어(엘리베이터 · 계단)를 숨겼을 때 남기는 낮은 단면 덩어리 · 모형 받침처럼 어둡게 */
+          coreStub = new T.Group(); var pa = LAY.PASSAGE, cz = LAY.CORE_Z1, cm = new T.MeshBasicMaterial({ color: 0x3A3E44 }), ct = new T.MeshBasicMaterial({ color: 0x2A2D31 });
+          [[6.83, pa.x0], [pa.x1, LW]].forEach(function (xx) {
+            var w = xx[1] - xx[0], d = cz - LD, c = P((xx[0] + xx[1]) / 2, (LD + cz) / 2, 0.45);
+            var m = new T.Mesh(new T.BoxGeometry(w, 0.9, d), [cm, cm, ct, cm, cm, cm]); m.position.copy(c); coreStub.add(m);
+          });
+          coreStub.visible = false; lobby.add(coreStub); hideInRefl.push(coreStub);
+          loaded = true; S.loaded = true;
+          if (onDone) onDone();
+        }, function (ev) { if (onProg && ev && ev.total) onProg(ev.loaded / ev.total); }, function (e) { if (onFail) onFail(e); });
       }
 
       /* 18F 커피챗 장면 · 탁자 1컷 + 멘토 캐릭터(챗봇 원본 path 합성 · design.md A-4 「합성만」) */
@@ -228,31 +232,70 @@
         g.traverse(function (o) { if (o.isMesh || o.isSprite) { o.userData = o.userData || {}; o.userData.zone = 'cafe'; picks.push(o); } });
         g.visible = false; return g;
       }
-
-      var lobby = buildLobby(), cafe = buildCafe();
+      var cafe = buildCafe();
       anchors.cafe = new T.Vector3(CAFE_X - 0.55, 1.9, -0.5);
-      return {
-        lobby: lobby, cafe: cafe, picks: picks, faces: faces, anchors: anchors,
+
+      /* 기본 시점 = 북서쪽 위에서 로비를 대각선으로 · 유리벽 판(PLAY · LAB · in Action) 앞면이 보인다 */
+      var DEF = { t: P(16.3, 4.6, 1.4), r: 60, th: -2.2, ph: 0.7 };
+      var S = {
+        lobby: lobby, cafe: cafe, picks: picks, faces: faces, anchors: anchors, loaded: false,
+        landmarks: LANDMARKS.map(function (l) { return { id: l.id, label: l.label }; }),
         DEF: DEF, CAFE_DEF: { t: new T.Vector3(CAFE_X - 0.3, 1.0, -0.2), r: 11.5, th: 0.55, ph: 1.12 }, cafeX: CAFE_X,
         bubbleAt: new T.Vector3(CAFE_X - 0.55, 1.85, -0.5),
-        limits: function (scn) { return scn === 'cafe' ? { x: [CAFE_X - 5, CAFE_X + 5], z: [-3.5, 3.5] } : { x: [-17, 23], z: [-19, 7] }; },
-        zoneBox: function (zid) {
+        load: load,
+        limits: function (scn) { return scn === 'cafe' ? { x: [CAFE_X - 5, CAFE_X + 5], z: [-3.5, 3.5] } : { x: [-17, 21], z: [-17, 9] }; },
+        zoneView: function (zid, fitR) {
           var rs = zones[zid]; if (!rs) return null;
-          var bb = new T.Box3();
-          rs.forEach(function (r) { bb.expandByPoint(r.a); bb.expandByPoint(r.a.clone().addScaledVector(r.rv, r.n)); bb.expandByPoint(r.mid.clone().addScaledVector(r.nv, 1.6)); });
-          var c = bb.getCenter(new T.Vector3()), sz = bb.getSize(new T.Vector3()), nv = rs[0].nv;
-          var along = Math.abs(rs[0].rv.x) > 0.5 ? sz.x : sz.z;
-          c.y = 1.35; return { t: c, w: along + 1.2, h: 3.6, th: Math.atan2(nv.x, nv.z) + 0.32 };
+          var c = new T.Vector3(); rs.bb.getCenter(c); c.y = 1.3;
+          var nv = new T.Vector3(); rs.forEach(function (r) { nv.addScaledVector(r.nv, r.n); }); nv.normalize();
+          var sz = new T.Vector3(); rs.bb.getSize(sz); var w = Math.max(sz.x, sz.z);
+          /* 기둥(높이 5m)이 판 줄 앞을 가리지 않게 위에서 비스듬히(ph 0.8) 보고, 좌우 치우침은 기둥에서 먼 쪽을 고른다 */
+          var r = fitR(w + 1.4, 4.8), ph = 0.8, base = Math.atan2(nv.x, nv.z), best = null;
+          [0.35, -0.35, 0.18, -0.18, 0].forEach(function (off) {
+            var th = base + off, cx = c.x + r * Math.sin(ph) * Math.sin(th), cz = c.z + r * Math.sin(ph) * Math.cos(th), md = 1e9;
+            LAY.PILLARS.forEach(function (q) {
+              var px = q[0] - 16, pz = 6 - q[1], dx = c.x - cx, dz = c.z - cz, L2 = dx * dx + dz * dz, k = Math.max(0, Math.min(1, ((px - cx) * dx + (pz - cz) * dz) / L2));
+              md = Math.min(md, Math.hypot(cx + dx * k - px, cz + dz * k - pz));
+            });
+            if (!best || md > best.md + 0.05) best = { md: md, th: th };
+          });
+          return { t: c, r: r, th: best.th, ph: ph };
         },
         mark: function (zid) {
           for (var id in pads) {
             var on = id === zid;
-            pads[id].forEach(function (m) { m.material.color.set(on ? 0xFFD8C1 : 0xFFF1E8); });
-            (padLines[id] || []).forEach(function (l) { l.material.opacity = on ? 1 : 0; });
+            pads[id].forEach(function (m) { m.material.opacity = on ? 0.16 : 0; m.visible = on; });   /* 안 보일 때는 그리지 않는다(그리기 호출 절약) */
+            (padLines[id] || []).forEach(function (l) { l.material.opacity = on ? 1 : 0; l.visible = on; });
           }
         },
-        setAtlas: function (i, tex) { atlasMats[i].forEach(function (m) { m.map = tex; m.needsUpdate = true; }); }
+        setAtlas: function () {},
+        frame: function (camera, scn) { if (!loaded) return; cutaway(camera); renderRefl(camera, scn); },
+        resize: function () { if (REFL.rt) setupRefl(); },
+        lowPower: function () { REFL.on = false; if (REFL.rt) { REFL.rt.dispose(); REFL.rt = null; } },
+        dispose: function () { if (REFL.rt) REFL.rt.dispose(); lightMaps.forEach(function (t) { t.dispose(); }); },
+        /* 자동 둘러보기 · 남동쪽 위에서 시작해(정문 · 동쪽 문이 함께 보임) 동쪽 문 밖 체크인 → 동쪽 문 → 행사 동선(반시계)대로 돈 뒤 기본 시점으로 올라가 자유 조작으로 넘긴다
+         * 기둥 줄(z 5.1)과 유리벽 판 사이(z 3.6)를 따라 동쪽에서 서쪽으로 미끄러지며 판 줄을 비스듬히 본다(세로 화면에서 줄 전체가 보이게) */
+        TOUR: {
+          fov: 50,
+          establish: { pos: [44, -14, 24], look: [17, 5.5, 0] },
+          route: [
+            { t: 0, pos: [44, -14, 24], look: [17, 5.5, 0], cap: '1층 로비 · 정문과 동쪽 문' },
+            { t: 3.6, pos: [33.1, 0.4, 2.2], look: [36.2, 3.4, 1.7], cap: '동쪽 문 밖 · 사전등록 체크인' },
+            { t: 6.4, pos: [34.4, 8.4, 2.0], look: [28.0, 8.0, 1.5], cap: '동쪽 문' },
+            { t: 9.0, pos: [28.8, 7.4, 2.0], look: [31.9, 2.6, 1.4], zone: 'vision' },
+            { t: 11.6, pos: [31.2, 3.7, 2.0], look: [26.4, 0.9, 1.3], zone: 'lab' },
+            { t: 13.8, pos: [25.4, 3.7, 2.0], look: [20.8, 0.9, 1.3], zone: 'action' },
+            { t: 15.8, pos: [20.4, 3.75, 2.0], look: [17.3, 1.6, 1.5], cap: '정문 · 회전문' },
+            { t: 17.8, pos: [15.0, 3.7, 2.0], look: [10.6, 0.9, 1.3], zone: 'play' },
+            { t: 19.8, pos: [8.6, 3.7, 2.0], look: [3.8, 0.9, 1.3], zone: 'play' },
+            { t: 22.0, pos: [3.4, 3.9, 2.0], look: [0.7, 8.4, 1.4], zone: 'event' },
+            { t: 24.2, pos: [4.2, 7.6, 2.0], look: [8.6, 10.9, 1.4], zone: 'lounge' },
+            { t: 26.4, pos: [11.6, 7.0, 2.3], look: [17.6, 11.2, 1.5], cap: '흉상 · 게이트 · 엘리베이터' },
+            { t: 29.0, def: true }
+          ]
+        }
       };
+      return S;
     }
   };
 })();

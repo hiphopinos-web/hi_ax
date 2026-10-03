@@ -3587,7 +3587,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.18";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.19";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -5666,7 +5666,7 @@ function zoneDetailHtml() {
     '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + z.todo.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" +
     (L.kv ? '<hr class="axs-rule"><dl class="axs-kv">' + L.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl>" : "") +
     "</div>" + (L.btn ? '<button type="button" class="ax-button" onclick="' + L.btn[1] + '">' + esc(L.btn[0]) + "</button>" : "") +
-    (TOUR_ON ? '<button type="button" class="ax-button ax-button-weak" onclick="tourOpen({ zone: \'' + z.id + '\' })">모형에서 보기</button>' : "") + "</div>";   /* v5.11 1층 둘러보기 · 이 구역으로 바로(TOUR_ON 일 때만) */
+    (tourOn() ? '<button type="button" class="ax-button ax-button-weak" onclick="tourOpen({ zone: \'' + z.id + '\' })">모형에서 보기</button>' : "") + "</div>";   /* v5.11 1층 둘러보기 · 이 구역으로 바로(TOUR_ON 일 때만) */
 }
 function progOpen(id) { PROG.sid = id; App.go("sess_d"); }
 var RESV_ST = { requested: "승인 대기", booked: "승인 대기", approved: "승인 완료", checked: "상담 중", done: "상담 완료" };
@@ -6289,11 +6289,18 @@ function crowdStripHtml() {
 /* ═══ v5.11 (261003 사용자 승인 · 「디자인 시안/가상 1층/계획.md」) 1층 둘러보기 · 본체(3D 모형 · 평면 지도 · 목록 · 판 보기)는 assets/tour/ 에 있고 처음 열 때만 받는다(안 여는 사람은 0바이트)
    여기 있는 것 = 불러오기(tourOpen) · 연결(TOUR_HOST · 구역 글은 FLOOR1 · 상태는 zoneLive · 혼잡은 crowdCell) · 입구 3곳(홈 나의 일정 아래 · 상시 운영 1F 맨 위 · 구역 상세) + 판 퀴즈 힌트 · 뒤로 가기 한 줄(popstate)
    위치(벽 · 방향 · 판 순서)는 둘러보기 화면 안에서만 보인다(261001 「앱은 동선 · 위치를 다루지 않는다」의 예외 · 사용자 261003 · design.md 5-21) · 이 파일의 다른 화면은 그대로 위치를 말하지 않는다 */
-var TOUR = { ver: "v511", busy: false, files: ["tour.css", "three.min.js", "tour-data.js", "tour-scene.js", "tour.js"] };
+var TOUR = { ver: "v519", busy: false, files: ["tour.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
 /* 켜기 스위치 · false = 입구 3곳 · 판 퀴즈 힌트 링크 · 열기가 모두 숨는다(사용자 261003 「모델하우스 수준」 3D 모양 결정 전 · 연결만 먼저 올림) · 켤 때 = 이 한 줄 + tour-scene.js 교체 */
 var TOUR_ON = false;
+/* v5.19 (사용자 261003) 숨김 주소 · 앱 주소에 ?tour=1 이 붙어 들어오면 그 기기에서만 입구 3곳 · 판 퀴즈 힌트 링크가 보인다(기기에 기억 · ?tour=0 이면 끔 · 키는 axf_ 접두가 아니라 사람 바꾸기에도 남는다)
+   그 밖의 사람은 TOUR_ON 이 false 인 동안 아무것도 안 보인다 · 전체 공개는 TOUR_ON = true(사용자 승인 뒤 별도) */
+var TOUR_PEEK = (function () {
+  var m = /[?&]tour=([01])(?:&|$)/.exec(location.search);
+  try { if (m) localStorage.setItem("axfTourPeek", m[1]); return localStorage.getItem("axfTourPeek") === "1"; } catch (e) { return !!m && m[1] === "1"; }
+})();
+function tourOn() { return TOUR_ON || TOUR_PEEK; }
 function tourOpen(o) {
-  if (!TOUR_ON) return;
+  if (!tourOn()) return;
   o = o || {};
   if (window.AXTour) { AXTour.open(o); return; }
   if (TOUR.busy) return;
@@ -6310,11 +6317,11 @@ function tourOpen(o) {
 }
 /* 입구 · 상시 운영 1F 맨 위 한 줄(18F 커피챗 줄과 같은 모양) · 구역 상세 「모형에서 보기」 · 홈 나의 일정 아래 카드(tourHomeHtml) */
 function tourRowHtml() {
-  if (!TOUR_ON) return "";
+  if (!tourOn()) return "";
   return '<button type="button" class="axs-zfl axs-tourgo" onclick="tourOpen()"><span class="tx"><span class="nm"><b>1층 둘러보기</b></span><span class="k">3D 모형으로 부스와 판 미리 보기</span></span><span class="zrt">' + CHEV_SVG + "</span></button>";
 }
 function tourHomeHtml() {
-  if (!TOUR_ON) return "";
+  if (!tourOn()) return "";
   return '<section class="axs-sec">' + rcHtml({ cls: " axs-tourgo", onclick: "tourOpen()", link: true, left: rcIcon(TOUR_SVG), title: "1층 둘러보기", sub: "자리에서 부스 미리 보기" }) + "</section>";
 }
 var TOUR_SVG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M12 3l9 4.5-9 4.5-9-4.5z"/><path d="M3 12l9 4.5 9-4.5"/><path d="M3 16.5l9 4.5 9-4.5"/></svg>';
@@ -12615,7 +12622,7 @@ function qzHint(id) {
   var zz = qzZone(it.z), st = zz && zz.st ? STAMPS.filter(function (s) { return s.id === zz.st; })[0] : null;
   var map = '<div class="qz-map" role="list" aria-label="1F 부스 6구역">' + FLOOR1.map(function (z) { return '<span role="listitem" class="' + (z.id === it.z ? "on" : "") + '"' + (z.id === it.z ? ' aria-current="true"' : "") + ">" + esc(z.sign) + "</span>"; }).join("") + "</div>";
   var body = '<div class="axs-pan qz qz-hs">' + (zz ? zoneSign(zz.sign, "lg chip") : "") + '<p class="qz-lp">' + esc(qzLinePan(it.h)) + "</p>" +
-    (TOUR_ON ? '<button type="button" class="qz-hint" onclick="sheetClose(true); tourOpen({ hint: \'' + it.h + '\' })">모형에서 보기' + CHEV_SVG + "</button>" : "") +   /* v5.11 (사용자 261003 결정 4) 1층 둘러보기가 이 판으로 바로 열린다(TOUR_ON 일 때만) */
+    (tourOn() ? '<button type="button" class="qz-hint" onclick="sheetClose(true); tourOpen({ hint: \'' + it.h + '\' })">모형에서 보기' + CHEV_SVG + "</button>" : "") +   /* v5.11 (사용자 261003 결정 4) 1층 둘러보기가 이 판으로 바로 열린다(TOUR_ON 일 때만) */
     (QZ_NOSIGN[it.z] ? '<p class="ax-meta">' + esc(QZ_NOSIGN[it.z]) + "</p>" : "") +
     '<p class="axs-dot">1F 부스 6구역</p>' + map +
     (st ? '<p class="qz-zin"><b>이 구역에서</b><span>' + esc(zz.stl || st.title) + " 스탬프</span></p>" : "") +
