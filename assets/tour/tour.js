@@ -22,7 +22,7 @@
   var ZTXT = { vision: '회사가 가는 방향을 보는 곳', lab: 'DAP 과제를 보는 곳', action: 'AI 업무 사례를 보는 곳', play: 'AI를 직접 써 보는 곳', event: '사진 · 룰렛 · 타자왕이 있는 곳', lounge: '업무 고민을 상담하는 곳', cafe: '아이디어를 놓고 이야기하는 곳' };
 
   var R = null;   /* 열려 있는 동안의 상태 한 묶음 · 닫으면 버린다 */
-  var VER = 'v519';   /* 모형 파일 캐시 깨기 · 모형을 바꾸면 올린다 */
+  var VER = 'v519b';   /* 모형 파일 캐시 깨기 · 모형을 바꾸면 올린다 */
   var ATLAS_IMG = {};   /* 아틀라스 그림은 닫아도 들고 있다(작다 · 약 180KB) */
   function $(k) { return R && R.el[k]; }
 
@@ -453,19 +453,20 @@
     return [Math.min.apply(0, xs), Math.max.apply(0, xs), Math.min.apply(0, zs), Math.max.apply(0, zs)];
   }
   function mapSvg() {
-    var B = D.BLD, s = 10, Y = function (z) { return (24.5 - z) * s; }, X = function (x) { return x * s; };
-    var o = '<svg class="plan" viewBox="-8 -8 404 268" role="group" aria-label="1층 평면 지도. 위가 북쪽, 아래가 정문">';
+    var B = D.BLD, s = 10, Y = function (z) { return (B.top - z) * s; }, X = function (x) { return x * s; }, LW = B.outline[1][0], CN = B.coreN, LN = B.lobbyN;   /* 숫자는 tour-data(= 3D 배치)에서만 */
+    var o = '<svg class="plan" viewBox="-8 -8 404 ' + Math.round((B.top + 2.3) * s) + '" role="group" aria-label="1층 평면 지도. 위가 북쪽, 아래가 정문">';
     o += '<defs><pattern id="trHz" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#EEF0F2"/><line x1="0" y1="0" x2="0" y2="6" stroke="#D9DDE2" stroke-width="2"/></pattern></defs>';
     o += '<polygon points="' + B.outline.map(function (q) { return X(q[0]) + ',' + Y(q[1]); }).join(' ') + '" fill="#FFFFFF" stroke="#CBD0D6" stroke-width="1.5"/>';
     var O = B.outside; o += '<rect x="' + X(O.x0) + '" y="' + Y(O.z1) + '" width="' + (O.x1 - O.x0) * s + '" height="' + (O.z1 - O.z0) * s + '" rx="3" fill="#EEF0F2"/><text class="lab" x="' + X((O.x0 + O.x1) / 2) + '" y="' + (Y(O.z1) - 3) + '" text-anchor="middle">건물 밖</text>';
-    B.cores.forEach(function (c) { o += '<rect x="' + X(c[0]) + '" y="' + Y(19.5) + '" width="' + (c[1] - c[0]) * s + '" height="' + (8 * s) + '" fill="#E5E8EB"/><text class="lab" x="' + X((c[0] + c[1]) / 2) + '" y="' + Y(15.4) + '" text-anchor="middle">엘리베이터 · 계단</text>'; });
-    o += '<text class="lab" x="' + X(B.hall) + '" y="' + Y(15.4) + '" text-anchor="middle">EV홀</text>';
-    o += '<rect x="' + X(26.1) + '" y="' + Y(19.5) + '" width="' + (6.4 * s) + '" height="' + (8 * s) + '" fill="url(#trHz)"/><text class="lab" x="' + X(29.3) + '" y="' + Y(15.2) + '" text-anchor="middle">행사 구역 아님</text>';
-    B.rooms.forEach(function (r) { o += '<rect x="' + X(0.2) + '" y="' + Y(r[1]) + '" width="' + (3.4 * s) + '" height="' + ((r[1] - r[0]) * s) + '" fill="#F9FAFB" stroke="#D9DDE2"/><text class="lab" x="' + X(1.9) + '" y="' + (Y((r[0] + r[1]) / 2) + 2.5) + '" text-anchor="middle">' + r[2] + '</text>'; });
+    var lz = (LN + CN) / 2 - 0.2;
+    B.cores.forEach(function (c) { o += '<rect x="' + X(c[0]) + '" y="' + Y(CN) + '" width="' + (c[1] - c[0]) * s + '" height="' + (CN - LN) * s + '" fill="#E5E8EB"/><text class="lab" x="' + X((c[0] + c[1]) / 2) + '" y="' + Y(lz) + '" text-anchor="middle">엘리베이터 · 계단</text>'; });
+    o += '<text class="lab" x="' + X(B.hall) + '" y="' + Y(lz) + '" text-anchor="middle">EV홀</text>';
+    var hx = B.cores[1][1]; o += '<rect x="' + X(hx) + '" y="' + Y(CN) + '" width="' + (LW - hx) * s + '" height="' + (CN - LN) * s + '" fill="url(#trHz)"/><text class="lab" x="' + X((hx + LW) / 2) + '" y="' + Y(lz) + '" text-anchor="middle">행사 구역 아님</text>';
+    B.rooms.forEach(function (r) { o += '<rect x="' + X(0) + '" y="' + Y(r[1]) + '" width="' + (3.6 * s) + '" height="' + ((r[1] - r[0]) * s) + '" fill="#F9FAFB" stroke="#D9DDE2"/><text class="lab" x="' + X(1.9) + '" y="' + (Y((r[0] + r[1]) / 2) + 2.5) + '" text-anchor="middle">' + r[2] + '</text>'; });
     B.cols.forEach(function (x) { o += '<rect x="' + (X(x) - 4.5) + '" y="' + (Y(B.colZ) - 4.5) + '" width="9" height="9" fill="#C9CED4"/>'; });
-    o += '<line x1="0" y1="' + Y(0) + '" x2="' + X(32.5) + '" y2="' + Y(0) + '" stroke="#B0B8C1" stroke-width="3"/>';
+    o += '<line x1="0" y1="' + Y(0) + '" x2="' + X(LW) + '" y2="' + Y(0) + '" stroke="#B0B8C1" stroke-width="3"/>';
     o += '<path d="M' + (X(B.revolve) - 13) + ',' + Y(0) + ' A13,13 0 0 1 ' + (X(B.revolve) + 13) + ',' + Y(0) + '" fill="none" stroke="#8B95A1" stroke-width="1.5"/><text class="lab" x="' + X(B.revolve) + '" y="' + (Y(0) + 11) + '" text-anchor="middle" style="font-weight:700;fill:#4E5968">정문</text>';
-    o += '<text class="lab" x="' + (X(32.5) + 2) + '" y="' + (Y((B.doorE[0] + B.doorE[1]) / 2) + 2) + '">동쪽 출입문</text>';
+    o += '<text class="lab" x="' + (X(LW) + 2) + '" y="' + (Y((B.doorE[0] + B.doorE[1]) / 2) + 2) + '">동쪽 출입문</text>';
     var ci = D.PROPS.checkin.at; o += '<rect x="' + (X(ci[0]) - 15) + '" y="' + (Y(ci[1]) - 15) + '" width="30" height="30" rx="3" fill="#FFFFFF" stroke="#CBD0D6"/><text class="lab" x="' + X(ci[0]) + '" y="' + (Y(ci[1]) + 2.5) + '" text-anchor="middle">체크인</text>';
     var sel = R.sel;
     D.ZONES.forEach(function (z) {
@@ -709,6 +710,7 @@
     busy: function () { var G = R && R.g; return !!(G && (G.anim || G.TR)); },
     loaded: function () { var G = R && R.g; return G && G.S.loaded ? { ms: G.loadMs } : null; },
     tour: function (on) { if (on === false) stopTour(false); else if (on) startTour(); var G = R && R.g; return !!(G && G.TR); },
+    look: function (x, z, y, lx, lz, ly) { var G = R && R.g; if (!G) return null; stopTour(false); G.anim = null; G.cam.t.copy(P(lx, lz, ly)); setCamFromPos(G, P(x, z, y)); G.need = true; return 1; },
     cam: function () { var G = R && R.g; if (!G) return null; var p = G.camera.position; return { x: +(p.x + 16).toFixed(2), z: +(6 - p.z).toFixed(2), y: +p.y.toFixed(2), r: +G.cam.r.toFixed(2) }; }
   };
   window.AXTour = { open: open, close: close, back: back, isOpen: isOpen, probe: probe, ver: 'v5.19' };
