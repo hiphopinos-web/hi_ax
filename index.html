@@ -2096,20 +2096,22 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pz-cv .now .nx b, .axs-pz-cv .now .n { color: var(--ax-color-brand); }
   .axs-pz-cv .now .n { flex: none; margin: 0; font: 700 calc(17px * var(--fs)) / 1 var(--ax-font); white-space: nowrap; }
   .axs-pz-cv .now .n b { font-size: calc(44px * var(--fs)); font-weight: 800; letter-spacing: -0.02em; margin-right: 2px; }
-  .axs-pz-cv .stp, .axs-pz-cv .cds { position: relative; display: grid; grid-template-columns: 56px repeat(4, minmax(0, 1fr)); column-gap: 6px; }
+  /* v5.18 (사용자 261003 「너비가 안 맞는다」) 점 줄과 카드 줄 = 같은 4칸(칸 사이 6px) · 카드 4장이 「지금 내 스탬프」 카드와 같은 폭을 채우고 점 3 ~ 6 가운데 = 카드 가운데
+     1 · 2 = 3번 점 왼쪽 빈자리에 작은 점 두 개를 위아래로(16px · 사이 2px · 3번 점과 3px) · 360px 에서도 칸 안에 들어간다(칸 폭 / 2 − 16 − 3 − 16 ≥ 0)
+     선 = 1 · 2 묶음 가운데(칸 가운데 − 27px)부터 6번 점 가운데까지 · 받은 만큼 주황(fl 폭은 스크립트 prizeCoverHtml) */
+  .axs-pz-cv .stp, .axs-pz-cv .cds { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: 6px; }
   .axs-pz-cv .stp { align-items: center; height: 40px; margin-top: var(--ax-space-24); }
-  .axs-pz-cv .stp > .g12, .axs-pz-cv .stp > .c1 { position: relative; z-index: 1; display: flex; justify-content: center; }
-  .axs-pz-cv .stp > .g12 { justify-content: space-between; }   /* 1 · 2 = 첫 칸 양 끝(가운데 11px · 45px) */
-  .axs-pz-cv .stp .ln, .axs-pz-cv .stp .fl { position: absolute; left: 11px; top: 50%; height: 2px; margin-top: -1px; }
-  .axs-pz-cv .stp .ln { right: calc((100% - 80px) / 8); background: rgba(255, 255, 255, 0.16); }
+  .axs-pz-cv .stp > .c1 { position: relative; z-index: 1; display: flex; justify-content: center; }
+  .axs-pz-cv .stp > .g12 { position: absolute; z-index: 1; left: calc((100% - 18px) / 8 - 35px); top: 50%; display: flex; flex-direction: column; gap: 2px; transform: translateY(-50%); }
+  .axs-pz-cv .stp .ln, .axs-pz-cv .stp .fl { position: absolute; left: calc((100% - 18px) / 8 - 27px); top: 50%; height: 2px; margin-top: -1px; }
+  .axs-pz-cv .stp .ln { right: calc((100% - 18px) / 8); background: rgba(255, 255, 255, 0.16); }
   .axs-pz-cv .stp .fl { background: var(--ax-color-brand); }
-  .axs-pz-cv .stp i { display: grid; place-items: center; box-sizing: border-box; width: 34px; height: 34px; border: 2px solid rgba(255, 255, 255, 0.24); border-radius: 50%; background: var(--ax-color-ink); color: rgba(255, 255, 255, 0.66); font: 700 15px / 1 var(--ax-font); font-style: normal; }
-  .axs-pz-cv .stp i.sm { width: 22px; height: 22px; font-size: 11px; }
+  .axs-pz-cv .stp i { display: grid; place-items: center; box-sizing: border-box; width: 32px; height: 32px; border: 2px solid rgba(255, 255, 255, 0.24); border-radius: 50%; background: var(--ax-color-ink); color: rgba(255, 255, 255, 0.66); font: 700 15px / 1 var(--ax-font); font-style: normal; }
+  .axs-pz-cv .stp i.sm { width: 16px; height: 16px; border-width: 1.5px; font-size: 10px; }
   .axs-pz-cv .stp i.on { border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
   .axs-pz-cv .stp i.nx { border-color: var(--ax-color-brand); color: var(--ax-color-inverse); }
   .axs-pz-cv .cds { margin-top: var(--ax-space-12); }
   .axs-pz-cv .cds button { grid-column: auto; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; min-height: 148px; padding: var(--ax-space-12) 2px var(--ax-space-12); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--ax-radius-16); background: rgba(255, 255, 255, 0.04); color: rgba(255, 255, 255, 0.6); font-family: inherit; text-align: center; cursor: pointer; }
-  .axs-pz-cv .cds button:first-child { grid-column: 2; }
   .axs-pz-cv .cds .i { display: block; width: 24px; height: 24px; margin-bottom: var(--ax-space-4); color: rgba(255, 255, 255, 0.72); }
   .axs-pz-cv .cds .i svg { display: block; width: 100%; height: 100%; }
   .axs-pz-cv .cds .t { font: var(--ax-type-t7); word-break: keep-all; }
@@ -2152,6 +2154,16 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pz-c.gr .q { font: var(--ax-type-t7); }
   .axs-pz-c.wide { grid-column: 1 / -1; }
   .axs-pz-c.wide .axs-pz-ph { aspect-ratio: 2 / 1; }
+  /* v5.18 사진 두 장(룰렛 2등 커피 · 키캡 키링 · 합성 대신 나란히 두 칸 · 사용자 261003) · 넓은 카드 2:1 = 정사각 두 칸 · 사이 2px */
+  .axs-pz-ph.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; aspect-ratio: 2 / 1; }
+  .axs-pz-ph.two img { aspect-ratio: 1 / 1; height: auto; }
+  .axs-ph.two { display: flex; gap: 1px; }
+  .axs-ph.two img { width: 50%; }
+  /* v5.18 납작한 상품(타자왕 1등 키보드) = 사진 2:1 로 위아래 흰 여백을 잘라 칸을 채운다(object-fit cover · 가운데) */
+  .axs-pz-c.flat .axs-pz-ph { aspect-ratio: 2 / 1; }
+  /* v5.18 스탬프와 별개 구역(1F 타자왕) · 위 구역들과 얇은 선으로 나눈다 · 조건 줄 앞 회색 알약 · 순위 보기 버튼 */
+  .axs-pz-sec.sep { margin-top: var(--ax-space-48); padding-top: var(--ax-space-32); border-top: 1px solid var(--ax-color-divider); }
+  .axs-pz-sh .sp { display: inline-flex; align-items: center; min-height: 24px; padding: 0 10px; border-radius: var(--ax-radius-999); background: var(--ax-color-inset); color: var(--ax-color-ink); font: var(--ax-type-t7); font-weight: 700; white-space: nowrap; }
   .axs-pz-nt { margin: 0 var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
   .fs-big .axs-pz-c:not(.gr) .tx { flex-wrap: wrap; }
   .fs-big .axs-pz-gr { grid-template-columns: minmax(0, 1fr); }
@@ -3575,7 +3587,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.17";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.18";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -5641,7 +5653,7 @@ function progAlwaysHtml() {
   var ccChip = att ? ["완료", "ok"] : c ? ["내 신청", ""] : cchatClosed() ? ["마감", "off"] : null, ccSt = progStampId(progById("cchat"));   /* v4.99 커피챗 = 프로그램 참여(p3) 도장 · 상세 오른쪽 위와 같은 것 */
   return '<section class="axs-zsec" id="zone1f"><div class="axs-bar"><b>1F 로비</b><span>행사 시간 중 자유 관람</span></div>' + tourRowHtml() + grp("see", "둘러보기") + grp("do", "참여하기") + "</section>" +
     '<section class="axs-zsec" id="zone18f"><div class="axs-bar"><b>18F</b><span>소규모 아이디어 논의</span></div>' +
-    '<button type="button" class="axs-zfl" onclick="progOpen(\'cchat\')"><span class="tx"><span class="nm"><b>AX 커피챗</b>' + zoneChip(ccChip) + '</span><span class="k">아이디어를 놓고 이야기하는 곳</span><span class="f">' + esc(ccSub) + "</span></span>" +
+    '<button type="button" class="axs-zfl" onclick="progOpen(\'cchat\')"><span class="tx"><span class="nm">' + zoneSign("AX COFFEE CHAT") + zoneChip(ccChip) + '</span><span class="k">아이디어를 놓고 이야기하는 곳</span><span class="f">' + esc(ccSub) + "</span></span>" +
     '<span class="zrt">' + (ccSt ? stampTagHtml(ccSt) : "") + CHEV_SVG + "</span></button></section>";
 }
 /* 구역 상세 · 간판 칩(v4.94 포인트 크기) → 부제 한 줄 → 보조 줄(운영 시간 · 룰렛 · 스탬프 없음) → 얇은 ink 줄 → 하는 일(주황 점) → (사실 표) → 행동 버튼 하나(있을 때만) · 뒤로 = 프로그램
@@ -7267,7 +7279,7 @@ var PRIZE_DIR = "assets/prize/", PRIZE_SAMPLE = true;
 var PRIZES = {
   roulette: { unit: "개", list: [
     { rk: "1등", nm: "텀블러", q: 60, img: "rl1_tumbler" },
-    { rk: "2등", nm: "커피 + 키캡 키링", q: 100, img: "rl2_coffee_keyring" },
+    { rk: "2등", nm: "커피 + 키캡 키링", q: 100, img: "rl2_coffee", img2: "rl2_keyring" },   /* v5.18 합성 사진 대신 두 장 나란히(사용자 261003) */
     { rk: "3등", nm: "컵받침", q: 150, img: "rl3_coaster" },
     { rk: "4등", nm: "판스티커", q: 250, img: "rl4_sticker" },
     { rk: "5등", nm: "볼펜", q: 400, img: "rl5_pen" }] },
@@ -7282,7 +7294,7 @@ var PRIZES = {
     { rk: "", nm: "무선 무드등 가습기", q: 210, img: "fin_humidifier" }] },
   /* v5.05 1F 타자왕 1~3위(17:00 Outro 시상) · v5.09 (261003 사용자 확정) 새 상품 · 사진 = 제조사 공식 컷 */
   type: { unit: "명", list: [
-    { rk: "1등", nm: "체리 G80-3872 기계식 키보드", q: 1, img: "ty1_cherry" },
+    { rk: "1등", nm: "체리 G80-3872 기계식 키보드", q: 1, img: "ty1_cherry", flat: 1 },   /* v5.18 flat = 사진 2:1(위아래 여백 자르기) */
     { rk: "2등", nm: "로지텍 MX Master 4 마우스", q: 1, img: "ty2_mxmaster4" },
     { rk: "3등", nm: "AULA F108 Pro 기계식 키보드", q: 1, img: "ty3_aula" }] }
 };
@@ -7293,7 +7305,8 @@ var TREATS = [
 ];
 function prizePhHtml(p, w) {
   if (!p || !p.img) return '<span class="axs-ph" aria-hidden="true"></span>';
-  return '<span class="axs-ph" aria-hidden="true"><img src="' + PRIZE_DIR + p.img + '.webp" alt="" width="' + (w || 240) + '" height="' + (w || 240) + '" loading="lazy" decoding="async" onerror="this.remove()">' +
+  var im = function (n) { return '<img src="' + PRIZE_DIR + n + '.webp" alt="" width="' + (w || 240) + '" height="' + (w || 240) + '" loading="lazy" decoding="async" onerror="this.remove()">'; };
+  return '<span class="axs-ph' + (p.img2 ? " two" : "") + '" aria-hidden="true">' + im(p.img) + (p.img2 ? im(p.img2) : "") +   /* v5.18 img2 = 사진 두 장 나란히 */
     (PRIZE_SAMPLE && p.s !== 0 ? '<span class="smp">샘플</span>' : "") + "</span>";
 }
 function prizeListHtml(kind, sm) {
@@ -7329,7 +7342,7 @@ var PZ_SEC = [
   { k: "draw", en: "LUCKY DRAW", t: "행운권 추첨", m: [4, 6], cd: "스탬프 4 · 5 · 6개 = 행운권 1 · 2 · 3장<br>17:00 Outro 현장 추첨 · 6등부터<br>17F 입구 QR 체크인" },
   { k: "fin", en: "PARTICIPATION", t: "참여상", m: [6, 6], cd: "스탬프 6개", note: FIN_NOTE },
   { k: "roulette", en: "ROULETTE", t: "룰렛", m: [3, 3], cd: "스탬프 3개 · 1F EVENT 룰렛 · 1인 1회" },
-  { k: "type", en: "TYPING KING", t: "1F 타자왕", cd: "17:00 Outro 시상 · 1F 현장 최고 기록 1~3위" }
+  { k: "type", en: "TYPING KING", t: "1F 타자왕 1~3위", sp: "스탬프와 별개", cd: "1F 현장 최고 기록 · 17:00 마감<br>Outro 시상", go: ["실시간 순위 보기", "typeSiteRankGo()"] }   /* v5.18 맨 아래 · 스탬프와 별개(선으로 나눔) · 순위판 입구(사용자 261003) */
 ];
 var PZ = { t: 0 };
 var PZ_THUMB = ["ld1_ipad", "fin_humidifier", "rl1_tumbler"];   /* 입구 사진 3장 = assets/prize/t_<img>.webp(96px) */
@@ -7349,18 +7362,23 @@ function pzMeter(a, b) {
   return '<span class="axs-pz-mt" aria-hidden="true">' + o + "</span>";
 }
 function pzCard(p, unit, cls) {
-  var ph = '<span class="axs-pz-ph">' + (p.img ? '<img src="' + PRIZE_DIR + p.img + '.webp" alt="" width="600" height="600" loading="lazy" decoding="async" onerror="this.remove()">' +
+  var im = function (n) { return '<img src="' + PRIZE_DIR + n + '.webp" alt="" width="600" height="600" loading="lazy" decoding="async" onerror="this.remove()">'; };
+  var ph = '<span class="axs-pz-ph' + (p.img2 ? " two" : "") + '">' + (p.img ? im(p.img) + (p.img2 ? im(p.img2) : "") +
     (PRIZE_SAMPLE && p.s !== 0 ? '<span class="smp">샘플</span>' : "") : "") + "</span>";
-  return '<article class="axs-pz-c' + cls + '">' + ph + '<div class="tx">' + (p.rk ? '<span class="rk">' + p.rk + "</span>" : "") +
+  return '<article class="axs-pz-c' + cls + (p.flat ? " flat" : "") + '">' + ph + '<div class="tx">' + (p.rk ? '<span class="rk">' + p.rk + "</span>" : "") +
     "<b>" + esc(p.nm) + '</b><span class="q">' + p.q.toLocaleString() + unit + "</span></div></article>";
 }
 function prizeSecHtml(s) {
   var g = PRIZES[s.k]; if (!g) return "";
-  var head = '<header class="axs-pz-sh" id="pz-' + s.k + '"><p class="en">' + s.en + "</p><h2>" + s.t + '</h2><p class="cd">' + (s.m ? pzMeter(s.m[0], s.m[1]) : "") + "<span>" + s.cd + "</span></p></header>";
-  var hn = PZ_HERO[s.k] || 0, rest = g.list.slice(hn);
+  var head = '<header class="axs-pz-sh" id="pz-' + s.k + '"><p class="en">' + s.en + "</p><h2>" + s.t + '</h2><p class="cd">' + (s.m ? pzMeter(s.m[0], s.m[1]) : "") + (s.sp ? '<span class="sp">' + s.sp + "</span>" : "") + "<span>" + s.cd + "</span></p></header>" +
+    (s.go ? '<button type="button" class="ax-button ax-button-weak" onclick="' + s.go[1] + '">' + s.go[0] + "</button>" : "");   /* v5.18 sp = 스탬프와 별개 알약 · go = 구역 버튼(타자왕 순위판) */
+  var hn = PZ_HERO[s.k] || 0, rest = g.list.slice(hn), solo = rest.filter(function (p) { return !p.img2; }).length, k = 0;
   var body = g.list.slice(0, hn).map(function (p) { return pzCard(p, g.unit, " hero"); }).join("") +
-    (rest.length ? '<div class="axs-pz-gr">' + rest.map(function (p, i) { return pzCard(p, g.unit, " gr" + (rest.length % 2 && i === rest.length - 1 ? " wide" : "")); }).join("") + "</div>" : "");
-  return '<section class="axs-pz-sec">' + head + body + (s.note ? '<p class="axs-pz-nt">' + s.note + "</p>" : "") + "</section>";
+    (rest.length ? '<div class="axs-pz-gr">' + rest.map(function (p) {   /* v5.18 사진 두 장 카드(img2) = 늘 넓은 카드 · 나머지에서 홀수로 남는 마지막 칸 = 넓은 카드 */
+      if (p.img2) return pzCard(p, g.unit, " gr wide");
+      k++; return pzCard(p, g.unit, " gr" + (solo % 2 && k === solo ? " wide" : ""));
+    }).join("") + "</div>" : "");
+  return '<section class="axs-pz-sec' + (s.sp ? " sep" : "") + '">' + head + body + (s.note ? '<p class="axs-pz-nt">' + s.note + "</p>" : "") + "</section>";
 }
 /* v5.16 (사용자 시안 261003) 표지 = 작은 「AX Festival 2026」 · 큰 제목 「스탬프 개수별 경품」(옛 PRIZES 점 글자 · 조건 3줄은 걷었다)
    「지금 내 스탬프」 카드 = 다음 목표(주황 숫자) + 오른쪽 큰 주황 N개 · 6개면 「모두 모았어요」
@@ -7380,8 +7398,8 @@ function pzNextTxt(n) {
 function prizeCoverHtml() {
   var n = Math.min(STAMP_DENOM, stampCount()), nx = PZ_STEP.filter(function (x) { return x.m > n; })[0], nm = nx ? nx.m : 0;
   var dot = function (i) { return '<i class="' + (i <= n ? "on" : i === n + 1 ? "nx" : "") + (i < 3 ? " sm" : "") + '">' + i + "</i>"; };
-  var dots = '<span class="g12">' + dot(1) + dot(2) + "</span>" + [3, 4, 5, 6].map(function (i) { return '<span class="c1">' + dot(i) + "</span>"; }).join("");   /* 1 · 2 = 첫 칸 하나 · 3 ~ 6 = 칸마다 하나 */
-  var fill = n >= 3 ? "calc(51px + " + (n - 3) + " * ((100% - 80px) / 4 + 6px) + (100% - 80px) / 8)" : n === 2 ? "34px" : "0px";   /* 1번 점 가운데(11px)부터 받은 마지막 점 가운데까지 */
+  var dots = '<span class="g12">' + dot(1) + dot(2) + "</span>" + [3, 4, 5, 6].map(function (i) { return '<span class="c1">' + dot(i) + "</span>"; }).join("");   /* v5.18 1 · 2 = 3번 점 왼쪽에 위아래로 · 3 ~ 6 = 카드 칸마다 하나(카드 가운데) */
+  var fill = n >= 3 ? "calc(27px + " + (n - 3) + " * ((100% - 18px) / 4 + 6px))" : "0px";   /* 1 · 2 묶음 가운데부터 받은 마지막 점 가운데까지 · 1 · 2 는 점 채움만 */
   var cards = PZ_STEP.map(function (s) {
     var st = s.m <= n ? "on" : s.m === nm ? "nx" : "", lbl = "스탬프 " + s.m + "개 · " + s.t + " " + s.a + (s.fin ? " · 참여상" : "") + (st === "on" ? " · 달성" : st === "nx" ? " · 다음" : "");
     return '<button type="button" class="' + st + '" onclick="prizeJump(\'' + s.k + '\')" aria-label="' + lbl + '"><span class="i" aria-hidden="true">' + RAIL_ICO[s.ico] + "</span>" +
