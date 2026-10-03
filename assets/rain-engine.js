@@ -34,6 +34,10 @@
      구름 HUD(남은 단어 칸) · CLOUD CLEAR → BONUS STAGE + 문장 → 3 · 2 · 1 → 입력 · 전환 · 카운트다운 · 결과 동안 입력칸을 비우고 막는다(readOnly · 조합 정리) · 아래 「v5.24」 절.
    v5.30(261003 사용자 피드백) 비는 구름에서 내린다 · 구름 단어는 구름 폭 안에서 생겨 구름 아래 가장자리에서 나온다(구름이 좌우로 천천히 움직이고 · 생길 때 출렁 · 빗줄기 꼬리) · 내릴수록 구름이 작고 옅어진다 ·
      보너스 들어갈 때 · 나올 때 전체 화면 도트 전환 + 제목 카드(BONUS STAGE · STAGE n) · 보너스 무대 = 밤 무대 · 문장 바로 밑 한 줄에 내가 친 글자(아래 입력칸은 숨김 · rgFormBns) · 점수 · 판정은 그대로.
+   261003 셀프 손질(사용자가 직접 쳐 본 피드백 세 가지) · 난이도는 1F 셀프(site)만 · 자동 클리어는 1F 셀프 + 앱 솔로(PC) · 대전은 그대로:
+     ① 자동 클리어(RAIN_AUTO) · 단어와 정확히 같아지면 Enter 없이 터진다(터치 기기와 같은 규칙) · 판 위 다른 단어가 입력을 자모 앞부분으로 품으면(가 · 감) Enter · 끝 띄어쓰기로 확정 · 문장이 그대로 맞으면 바로 채점.
+     ② 보너스 입력 고침(rgBlk) · 막힌 키마다 막기를 늘리던 연쇄 때문에 빨리 치면 글자가 사라지거나 반쪽만 들어갔다 · GO 와 함께 입력을 열고 RAIN_BNS_GUARD 초 한 번만 막는다 · 따라 쓰기 표시 = 채점 규칙(rgBnsNorm).
+     ③ 난이도(RAIN_SITE) · 단계 18초 · 낙하 · 등장 완만 · 단계별 동시 단어 · 목숨을 잃으면 1.2초 숨 돌리기 · 바닥 도착 간격 0.8초 · 붐비면 등장을 늦춘다.
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ═══ 단어 풀 · 여기 한 곳 ═══
@@ -67,6 +71,13 @@ var RAIN_RAMP_FROM = 48;                      /* 마지막 단계(5단계 = 48�
 var RAIN_RAMP_SPAN = 60;                      /* 이 초에 걸쳐 RAIN_RAMP_MIN 까지 */
 var RAIN_RAMP_MIN = 0.45;                     /* 낙하 시간·등장 간격의 하한 배율 */
 var RAIN_EXTRA_EVERY = 30;                    /* 램프 시작 뒤 이 초마다 동시 단어 +1 (최대 +2) */
+/* 261003 1F 셀프 손질(사용자 「1·2단계 차이가 너무 크다 · 오타 한 번에 목숨을 한꺼번에 잃는다」) · 1F 셀프(site)만 이 값을 쓴다 · 앱 솔로 · 대전은 위 값 그대로
+   목표 = 분당 200~300타 · 오타 5~8% 인 사람이 약 1분 동안 3단계까지 · 빠른 사람은 계속 어려워진다(순위 경쟁)
+   stage = 단계 길이 초 · fall · spawn = 단계별 낙하 · 등장 간격 초 · max = 단계별 동시 단어 · len = 단계별 최대 글자 수(없는 단계 = 전부) ·
+   ramp* = 마지막 단계 뒤 조이기 · hurt = 목숨을 잃은 뒤 숨 돌리는 초(다른 단어는 hurtSlow 배속 · 새 단어 없음) · gap = 바닥 도착 간격 하한 초 · crowd = 판 단어가 이만큼이면 다음 등장 간격 × crowdMul */
+var RAIN_SITE = { stage: 18, fall: [7.2, 6.3, 5.3, 4.3, 3.4], spawn: [2.1, 1.8, 1.5, 1.25, 1.05], max: [3, 4, 5, 5, 6], len: [3, 4], rampFrom: 90, rampSpan: 60, rampMin: 0.5, hurt: 1.2, hurtSlow: 0.3, gap: 0.8, crowd: 4, crowdMul: 1.35 };   /* 봇 시뮬(분당 타수 · 오타 6% · 40판) 버틴 시간 중앙 = 200타 52초 · 250타 65초 · 300타 80초 · 400타 102초 · 550타 127초 · 3초 안에 목숨 3개 이상 잃는 판 0% */
+/* 261003 자동 클리어 · 단어와 정확히 같아지면 Enter 없이 터진다 · 터치 기기는 원래부터(RGP.touch) · 여기는 키보드 기기 · site = 1F 셀프 · app = 앱 솔로(PC · 사용자 결정 261003 「PC 앱 솔로에도 적용」) · race = 대전(그대로 Enter) */
+var RAIN_AUTO = { site: true, app: true, race: false };
 var RAIN_BANDS = [[330, 2, 3], [420, 3, 4], [520, 4, 5], [1e9, 5, 5]];   /* [판 높이 미만, 동시 단어 최대, 단계 수] · 휴대폰 */
 var RAIN_SIDE_MIN = 960;                      /* v4.29 옆판을 붙이는 캔버스 최소 폭 · v4.32 3단(왼쪽 판 + 게임판 + 오른쪽 판) · 이보다 좁으면 옛 배치 그대로 */
 var RAIN_SIDE_GAP = 28;                       /* v4.51 3단 · 게임판과 양옆 판 사이 틈(틀 10 + 빈 18) */
@@ -181,6 +192,29 @@ function rtFont(px) { return Math.round(px) + "px " + RT_FONT; }
 function rgWordY(w) { var L = RG.L; if (w.y0 == null) return L.top + Math.min(1, w.p) * L.fallPx; return w.y0 + Math.min(1, w.p) * Math.max(10, L.floor - L.boxH - w.y0); }   /* v5.30 구름 단어 = 구름 아래 가장자리(y0)에서 출발 · 바닥선까지 걸리는 시간은 그대로 */
 function rgRamp(sec) { return Math.max(RAIN_RAMP_MIN, 1 - Math.max(0, sec - RAIN_RAMP_FROM) / RAIN_RAMP_SPAN * (1 - RAIN_RAMP_MIN)); }
 function rgElapsed(now) { return RG.t0 ? (now - RG.t0) / 1000 : 0; }
+/* 261003 1F 셀프 난이도(RAIN_SITE) · site 가 아니면 옛 값 그대로 */
+function rgSiteOn() { return RG.mode === "site"; }
+function rgAutoOn() { return !!RGP.touch || !!RAIN_AUTO[RG.mode]; }
+function rgSiteAt(a, st) { return a[Math.max(0, Math.min(a.length, st) - 1)]; }
+function rgRampSite(sec) { var S = RAIN_SITE; return Math.max(S.rampMin, 1 - Math.max(0, sec - S.rampFrom) / S.rampSpan * (1 - S.rampMin)); }
+function rgStageSec() { return rgSiteOn() ? RAIN_SITE.stage : RAIN_STAGE_SEC; }
+function rgFallSec(st, sec) { return rgSiteOn() ? rgSiteAt(RAIN_SITE.fall, st) * rgRampSite(sec) : RAIN_FALL[st - 1] * rgRamp(sec); }
+function rgSpawnSec(st, sec) {
+  if (!rgSiteOn()) return RAIN_SPAWN[st - 1] * rgRamp(sec);
+  return rgSiteAt(RAIN_SITE.spawn, st) * rgRampSite(sec) * (RG.words.length >= RAIN_SITE.crowd ? RAIN_SITE.crowdMul : 1);   /* 판이 붐비면 다음 단어를 늦춘다 */
+}
+/* 바닥 도착 간격 · 새 단어가 판 위 단어와 RAIN_SITE.gap 초 안에 바닥에 닿으면 그만큼 늦게 닿게(조금 천천히) 내린다 · 두 단어가 한꺼번에 목숨을 가져가지 않게 */
+function rgGapFall(f) {
+  var g = RAIN_SITE.gap, a = RG.words.map(function (w) { return (1 - Math.min(1, w.p)) * w.fall; }).sort(function (x, y) { return x - y; });
+  for (var i = 0; i < a.length; i++) if (Math.abs(f - a[i]) < g) f = a[i] + g;
+  return f;
+}
+/* 판 단어끼리 자모 앞부분이 겹치면(가 · 감) 자동 클리어가 짧은 쪽을 먼저 터뜨린다 · 뽑을 때 건너뛴다 */
+function rgClash(w, list) {
+  var j = rgJm(w);
+  return list.some(function (t) { if (!t || t === w) return false; var k = rgJm(t); return k.indexOf(j) === 0 || j.indexOf(k) === 0; });
+}
+function rgSiteReset() { RG.hurt = 0; RG.blkUntil = 0; }
 
 /* 캔버스 = 보이는 크기 × dpr(상한 2) · 배치 규칙을 다시 계산하고 바로 한 번 그린다 */
 function rgFit(cv, w, h) {
@@ -203,7 +237,7 @@ function rgFit(cv, w, h) {
    한글 조합(iOS 대응): 입력창 노드는 한 판 내내 절대 바꾸지 않는다(교체하면 사파리에서 포커스·IME 가 끊겨 글자가 먹힌다).
    판정은 input 이벤트에서 조합 중 글자까지 포함해 본다(iOS 는 compositionend 가 늦게 와서 기다리면 단어가 안 터진다) · 같은 단어 중복 판정은 400ms 안에서 막는다.
    비우기는 value = "" 한 줄 · 조합이 열려 있을 때만 같은 노드를 한 번 blur→focus 해서 조합 버퍼를 끊는다.
-   실시간 판정(터치 기기만): 입력이 떨어지는 단어와 정확히 같아지는 순간 Enter 없이 터진다 · PC 는 Enter 판정 유지.
+   실시간 판정(터치 기기 · 261003 부터 1F 셀프 · 앱 솔로 PC 도 · RAIN_AUTO): 입력이 떨어지는 단어와 정확히 같아지는 순간 Enter 없이 터진다 · 대전(선수 화면)은 Enter 판정 유지.
    ※ 이 두 가지(아이폰 핫픽스 · 입력창 자동 비우기)는 260923 에도 유지 결정. 재미와 무관한 순수 개선이다.
    v4.29 영문 자판 = 로마자 키를 두벌식 한글로 바꿔 넣는다 · 노트북은 keydown(e.code = 누른 자리 · Shift = 쌍자음 · CapsLock 무시) · 휴대폰은 beforeinput(한 글자씩 들어올 때) ·
      조합으로 들어오는 로마자(휴대폰 영문 자판 단어 조합)는 값을 건드리지 않고 판정만 한글로 본다(조합 중에 값을 바꾸면 자판이 글자를 되풀이한다) · 조합이 끝나면 바꿔 넣는다.
@@ -215,14 +249,19 @@ function rgBindInput(inp) {
   inp.addEventListener("keydown", function (e) { if (e.key === "Escape" && inp === rgEl("rgIn")) { e.preventDefault(); rgAutoClear(); return; } if (rgBlk(e, inp)) return; rgHgKey(e, inp); });   /* Esc = 즉시 비우기 · v5.24 비구름 전환 연타 막기(rgBlk) · 그 밖 = 로마자 → 한글 */
   inp.addEventListener("beforeinput", function (e) { rgHgBefore(e, inp); });
 }
-/* v5.24 비구름 · 막힌 동안 누른 글자 키를 기억하고 · 입력이 열린 뒤에도 그 연타가 0.25초 안에 이어지면 버린다(카운트다운 중 치던 손이 문장 앞에 반쪽 글자를 남기지 않게) · 손을 떼었다 다시 치면 그대로 */
+/* v5.24 비구름 · 막힌 동안(읽기 전용) 누른 글자 키는 버린다 ·
+   261003 고침 · 옛 방식은 막힌 키마다 0.25초 막기를 다시 늘려서 키 간격이 0.25초보다 짧으면(분당 250타 ≈ 0.24초) 입력이 열린 뒤에도 글자가 줄줄이 사라지거나 반쪽만 들어갔다 ·
+   이제는 입력이 열린 순간부터 RAIN_BNS_GUARD 초 한 번만 막는다(늘리지 않는다) · 한글 자판 조합(229)은 keydown 을 막아도 글자가 들어오므로 rgLive 가 같은 시간 안의 글자를 비운다 */
+var RAIN_BNS_GUARD = 0.12;
 function rgBlk(e, inp) {
   if (!RG.bonus) return false;
-  var k = e.key || "", now = performance.now();
+  var k = e.key || "";
   if (k.length !== 1 && k !== "Process" && e.keyCode !== 229) return false;
-  if (inp.readOnly || (RG.bonus.ph === "type" && now - (RG.blkT || 0) < 250)) { RG.blkT = now; e.preventDefault(); return true; }
+  if (inp.readOnly || (RG.bonus.ph === "type" && performance.now() < (RG.blkUntil || 0))) { e.preventDefault(); return true; }
   return false;
 }
+/* 따라 쓰기 표시와 채점(rgBonusScore)을 같은 규칙으로 · 겹 공백 = 한 칸 · 앞 공백 없음 · 끝 공백 한 칸은 치는 중이라 남긴다(채점은 trim) */
+function rgBnsNorm(s) { return String(s || "").replace(/\s+/g, " ").replace(/^ /, ""); }
 function rgFocus() { var i = rgEl("rgIn"); if (i && document.activeElement !== i) i.focus(); }
 function rgCompEnd() {
   RG.composing = false;
@@ -253,12 +292,22 @@ function rgLive(e) {
   if (e && !lat) RG.hk = false;                   /* v4.29 다른 입력(한글 자판 조합 · 지우기)이 들어왔다 → 로마자 조합은 닫는다 */
   if (lat && !RG.composing && !(e && e.isComposing)) { raw = rgHangulize(raw, RG.hk).slice(0, RG.inMax || 12); inp.value = raw; RG.hk = true; lat = false; }   /* 조합 없이 들어온 로마자는 그 자리에서 한글로 */
   if (!RGP.on || !RG.on || RG.cd > 0 || RG.ending || RG.paused) return;
-  if (RG.bonus) { if (RG.bonus.ph === "type") RG.bonus.typed = lat ? rgHangulize(raw, RG.hk) : raw; else if (raw) rgClearInput(); return; }   /* v5.12 보너스 스테이지 · 단어 판정 · 자동 비우기 없이 친 글자만 · v5.24 전환 · 카운트다운 · 결과 동안 들어온 글자는 버린다 */
+  if (RG.bonus) {   /* v5.12 보너스 스테이지 · 단어 판정 · 자동 비우기 없이 친 글자만 · v5.24 전환 · 카운트다운 · 결과 동안 들어온 글자는 버린다 */
+    if (RG.bonus.ph !== "type") { if (raw) rgClearInput(); return; }
+    if (performance.now() < (RG.blkUntil || 0)) { if (raw) rgClearInput(); RG.bonus.typed = ""; return; }   /* 261003 입력이 열린 직후 RAIN_BNS_GUARD 초 · 한글 자판 조합으로 들어온 글자도 영문 자판과 똑같이 버린다 */
+    RG.bonus.typed = rgBnsNorm(lat ? rgHangulize(raw, RG.hk) : raw);
+    if (rgAutoOn() && RG.bonus.typed.trim() === RG.bonus.text) rgBonusEnd("enter");   /* 261003 문장 그대로 = Enter 없이 바로 채점(PERFECT) */
+    return;
+  }
   var v = (lat ? rgHangulize(raw, RG.hk) : raw).trim();   /* 조합 중 로마자(휴대폰 영문 자판)는 값을 두고 판정만 한글로 본다 */
   RG.typed = v;                                   /* 조합 중 글자도 화면에서 짚어 준다 */
   RG.latT = rgLatinOnly(raw.trim()) ? (RG.latT || performance.now()) : 0;   /* 안내 한 줄은 보조 · 로마자가 한글로 안 바뀐 채 2초 남아 있을 때만 */
   if (!RG.latT) rgTipShow(false);
-  if (RGP.touch && v && RG.words.some(function (w) { return w.text === v; })) { rgSubmit(); return; }
+  if (rgAutoOn() && v) {   /* 261003 자동 클리어(터치 기기 · 1F 셀프) · 단어와 정확히 같아지면 Enter 없이 터진다 */
+    if (RG.words.some(function (w) { return w.text === v; }) && !RG.words.some(function (w) { return w.text !== v && rgPre(w, v); })) { rgSubmit(); return; }   /* 다른 단어가 이 입력을 앞부분으로 품으면(가 · 감) 기다린다 · Enter · 띄어쓰기로 확정 */
+    if (RAIN_AUTO[RG.mode] && /\s$/.test(raw)) { rgSubmit(); return; }   /* 끝 띄어쓰기 = Enter */
+  }
+  if (rgAutoOn() && !v && raw) { rgClearInput(); return; }   /* 터진 뒤 습관처럼 친 띄어쓰기는 남기지 않는다 */
   rgCheckInput(v);
 }
 /* 치던 단어가 사라지면 입력창을 바로 비운다 · 「아직 맞는 앞부분」까지만 남긴다(오타 한 글자 때문에 단어를 통째로 잃지 않게).
@@ -418,13 +467,14 @@ function rgOnScreen() {
   return o;
 }
 function rgPool() {
+  if (rgSiteOn()) { var n = RAIN_SITE.len[RG.stage - 1]; return n ? RAIN_WORDS.filter(function (w) { return w.length <= n; }) : RAIN_WORDS; }   /* 261003 1F 셀프 · 1단계 3자 · 2단계 4자 이하 · 그 뒤 전부 */
   if (RG.stage <= 1) return RAIN_WORDS.filter(function (w) { return w.length <= 3; });
   return RAIN_WORDS;
 }
 function rgPickWord() {
   var pool = rgPool();
   if (!pool.length) pool = RAIN_WORDS;
-  var onScreen = rgOnScreen();
+  var onScreen = rgOnScreen(), near = rgAutoOn() && !RG.seed ? onScreen.concat(RG.next || []) : null;   /* 261003 자동 클리어 · 판 위 · NEXT 단어와 자모 앞부분이 겹치면 건너뛴다 */
   var recent = RG.recent || (RG.recent = []);
   for (var pass = 0; pass < 2; pass++) {
     for (var k = 0; k < pool.length + 2; k++) {
@@ -432,6 +482,7 @@ function rgPickWord() {
       var w = RG.bag.pop();
       if (!w) break;
       if (onScreen.indexOf(w) >= 0) continue;
+      if (near && rgClash(w, near)) continue;
       if (pass === 0 && recent.indexOf(w) >= 0) continue;
       recent.push(w); if (recent.length > 6) recent.shift();
       return w;
@@ -472,6 +523,7 @@ function rgStart(mode, opt) {
   RG.bonusOn = !!opt.bonus && RG.mode === "site"; RG.bonus = null; RG.bns = 0; RG.bnsN = 0; RG.bnsBag = null; RG.capBns = 0; RG.inMax = 12;   /* v5.12 1F 타자왕 */
   RG.race = RG.bonusOn ? (opt.race || null) : null; RG.raceRank = 0; RG.racePops = []; RG.raceSlide = 0;
   RG.cloud = null; RG.cloudN = 0; RG.cloudAt = 0;   /* v5.24 비구름 */
+  rgSiteReset();   /* 261003 숨 돌리기 · 보너스 입력 막기 */
   RG.big = RG.mode !== "app" || (!rgTouch() && window.innerWidth >= 700);
   RG.wait = opt.wait != null ? !!opt.wait : (RG.mode !== "race" && !rgTouch() && !RGP.go);
   RGP.go = false;
@@ -531,7 +583,8 @@ function rgSpawn(sec) {
       cx = Math.round(lo + rgRnd() * (hi - lo));
       if (!near.some(function (w) { return rgWordY(w) < y0 + L.boxH * 2.5 && cx < w.x + w.bw + 8 && cx + bw + 8 > w.x; })) break;
     }
-    var wc = { text: text, bw: bw, x: cx, y0: y0, p: 0, fall: RAIN_FALL[RG.stage - 1] * rgRamp(sec) * (0.94 + rgRnd() * 0.12), cl: true };
+    var wc = { text: text, bw: bw, x: cx, y0: y0, p: 0, fall: rgFallSec(RG.stage, sec) * (0.94 + rgRnd() * 0.12), cl: true };
+    if (rgSiteOn()) wc.fall = rgGapFall(wc.fall);   /* 261003 바닥 도착 간격 */
     RG.words.push(wc); RG.seq++; RG.cloud.puff = RAIN_CLOUD_FX.puff;
     return true;
   }
@@ -542,7 +595,8 @@ function rgSpawn(sec) {
     var x = Math.round(Math.min(maxX, Math.max(8, 8 + lanes[k] * lw + jit * Math.max(0, lw - bw))));
     var clash = near.some(function (w) { return rgWordY(w) < upper && x < w.x + w.bw + 8 && x + bw + 8 > w.x; });
     if (!clash || k === lanes.length - 1) {
-      var wd = { text: text, bw: bw, x: x, p: 0, fall: RAIN_FALL[RG.stage - 1] * rgRamp(sec) * (0.94 + fj * 0.12) };
+      var wd = { text: text, bw: bw, x: x, p: 0, fall: rgFallSec(RG.stage, sec) * (0.94 + fj * 0.12) };
+      if (rgSiteOn()) wd.fall = rgGapFall(wd.fall);   /* 261003 바닥 도착 간격 */
       if (cl) wd.cl = true;
       RG.words.push(wd);
       if (RG.seed) RG.ghost.push({ text: text, bw: bw, x: x, p: 0, fall: wd.fall });
@@ -580,25 +634,29 @@ function rgUpdate(dt, now) {
   rgTipTick(now);
   if (sec >= RG.cap) { rgEnd("cap"); return; }   /* 안전 상한 · 현장에서 서버 값으로 조절한다 */
   if (RG.bonusOn && !RG.cloud && RG.cloudN < RAIN_CLOUD.max && sec >= RG.cloudAt) rgCloudStart();   /* v5.24 맑은 틈이 끝나면 다음 구름 */
-  var st = Math.min(L.stages, 1 + Math.floor(sec / RAIN_STAGE_SEC));
+  var st = Math.min(L.stages, 1 + Math.floor(sec / rgStageSec()));   /* 261003 1F 셀프 = RAIN_SITE.stage */
   if (st > RG.stage) {
     RG.stage = st;
     RG.banner = { text: "LEVEL " + st, t: 1.3 }; rgSfx("level");
   }
   /* 유령 목록 · 아무도 안 친 셈 친 가상 위치 · 바닥을 지나면 버린다 */
   if (RG.seed) for (var gi = RG.ghost.length - 1; gi >= 0; gi--) { RG.ghost[gi].p += dt / RG.ghost[gi].fall; if (RG.ghost[gi].p >= 1) RG.ghost.splice(gi, 1); }
-  RG.spawnT -= dt;
-  var extra = Math.min(2, Math.floor(Math.max(0, sec - RAIN_RAMP_FROM) / RAIN_EXTRA_EVERY));
+  var slow = 1;   /* 261003 1F 셀프 · 목숨을 잃은 직후 RAIN_SITE.hurt 초 · 다른 단어는 천천히 · 새 단어 없음(오타 하나로 목숨이 줄줄이 빠지지 않게) */
+  if (RG.hurt > 0) { RG.hurt = Math.max(0, RG.hurt - dt); slow = RAIN_SITE.hurtSlow; }
+  else RG.spawnT -= dt;
+  var site = rgSiteOn(), extra = Math.min(2, Math.floor(Math.max(0, sec - (site ? RAIN_SITE.rampFrom : RAIN_RAMP_FROM)) / RAIN_EXTRA_EVERY));
+  var cap = site ? Math.min(L.maxWords, rgSiteAt(RAIN_SITE.max, RG.stage)) : L.maxWords;   /* 261003 1F 셀프 = 단계별 동시 단어 */
   /* 대전은 화면에 몇 개 남았는지로 등장을 막지 않는다(막으면 사람마다 단어 순서가 갈라진다) · 솔로는 원래대로 상한을 둔다 */
-  var room = RG.seed ? RG.ghost.length <= L.maxWords + extra : RG.words.length < L.maxWords + extra;
+  var room = RG.seed ? RG.ghost.length <= L.maxWords + extra : RG.words.length < cap + extra;
   if (RG.cloud && !RG.cloud.seq.length) room = false;   /* v5.24 구름이 다 내렸다 · 남은 단어가 다 사라지면 걷힌다 */
-  if (RG.spawnT <= 0 && room) RG.spawnT = rgSpawn(sec) ? RAIN_SPAWN[RG.stage - 1] * rgRamp(sec) : 0.25;
+  if (RG.spawnT <= 0 && room && !(RG.hurt > 0)) RG.spawnT = rgSpawn(sec) ? rgSpawnSec(RG.stage, sec) : 0.25;
   if (RG.cloud && RG.cloud.puff > 0) RG.cloud.puff -= dt;   /* v5.30 출렁임 */
   for (var i = RG.words.length - 1; i >= 0; i--) {
     var wd = RG.words[i];
-    wd.p += dt / wd.fall;
+    wd.p += dt * slow / wd.fall;
     if (wd.p >= 1) {
       RG.words.splice(i, 1);
+      if (site) RG.hurt = RAIN_SITE.hurt;
       RG.lives--; RG.combo = 0; RG.shake = rgReduced() ? 0 : 0.22; RG.heartHit = 0.5;
       rgBurst(wd.x + wd.bw / 2, L.floor, 6, [RAIN_PAL.dim, RAIN_PAL.ink]);
       RG.pops.push({ x: wd.x + wd.bw / 2, y: L.floor - 10, text: "놓침 · 하트 -1", t: 0.9, c: RAIN_PAL.deep, s: 14 });
@@ -628,7 +686,11 @@ function rgBurst(x, y, n, cols) {
 }
 function rgSubmit() {
   var inp = rgEl("rgIn"); if (!inp || !RG.on || RG.cd > 0 || RG.ending || RG.paused) return;
-  if (RG.bonus) { if (RG.bonus.ph === "type") { RG.bonus.typed = rgInVal(); rgBonusEnd("enter"); } else rgClearInput(); return; }   /* v5.12 보너스 스테이지 · Enter = 채점 */
+  if (RG.bonus) {   /* v5.12 보너스 스테이지 · Enter = 채점 */
+    var bv = rgInVal();
+    if (RG.bonus.ph !== "type" || !bv || performance.now() < (RG.blkUntil || 0)) { rgClearInput(); return; }   /* 261003 빈 칸 Enter(열리자마자 친 Enter 포함)는 0점으로 채점하지 않는다 */
+    RG.bonus.typed = rgBnsNorm(bv); rgBonusEnd("enter"); return;
+  }
   var v = rgInVal();
   if (!v) { if (inp.value) { rgClearInput(); rgFlash("auto"); }  /* 빈 판정(공백만)도 즉시 비움 · 오타 아님 */
     return; }
@@ -925,7 +987,7 @@ function rgLeftDraw(ctx, L) {
   if (RG.wait) {
     var lh = cmp ? 22 : 26, lines = [];
     ctx.font = rtFont(16);
-    ["SPACE를 누르면 시작", "떨어지는 단어를 치고 Enter", "단어가 바닥에 닿으면 목숨 하나", "목숨 " + (RG.lives0 || RAIN_LIVES) + "개를 다 잃으면 끝"].forEach(function (t, k) {
+    ["SPACE를 누르면 시작", rgAutoOn() ? "단어를 치면 바로 터져요" : "떨어지는 단어를 치고 Enter", "단어가 바닥에 닿으면 목숨 하나", "목숨 " + (RG.lives0 || RAIN_LIVES) + "개를 다 잃으면 끝"].forEach(function (t, k) {
       rgWrap(ctx, t, iw).forEach(function (ln) { lines.push([ln, k]); });
     });
     rtPanel(ctx, P.x, y, P.w, 2 * bp + th + tg + lines.length * lh, s, RT_PAL.night);
@@ -1078,7 +1140,7 @@ function rgCloudStart() {
 }
 function rgCloudPick() {
   var c = RG.cloud, on = rgOnScreen(), i = 0;
-  while (i < c.seq.length && on.indexOf(c.seq[i]) >= 0) i++;
+  while (i < c.seq.length && (on.indexOf(c.seq[i]) >= 0 || (rgAutoOn() && rgClash(c.seq[i], on)))) i++;   /* 261003 자모 앞부분이 겹치는 단어도 판 위에서 사라질 때까지 기다린다 */
   if (i >= c.seq.length) return "";   /* 남은 구름 단어가 다 판 위에 있다 · 같은 단어 둘이 동시에 떠 있지 않게 잠깐 기다린다(rgSpawn 이 0.25초 뒤 다시) */
   var w = c.seq.splice(i, 1)[0];
   RG.next = c.seq.slice(0, 3);
@@ -1127,12 +1189,12 @@ function rgBonusTick(dt, now) {
   if (b.ph === "wout") { if (b.t <= 0) { b.ph = "intro"; b.t = RAIN_BONUS.intro; if (inp) inp.placeholder = "문장을 읽어 두세요"; } return; }
   if (b.ph === "intro") { if (b.t <= 0) { b.ph = "count"; b.t = RAIN_CLOUD.count; rgSfx("tick"); } return; }
   if (b.ph === "count") {
-    if (b.t <= 0) { b.ph = "type"; b.typed = ""; b.go = RAIN_CLOUD.go; rgLock(true); rgSfx("go"); }   /* GO 0.3초 동안도 막아 둔다 · 카운트다운 중 누르던 키가 문장 앞에 섞이지 않게 */
+    if (b.t <= 0) { b.ph = "type"; b.typed = ""; b.go = RAIN_CLOUD.go; rgLock(false); RG.blkUntil = now + RAIN_BNS_GUARD * 1000; if (inp) inp.placeholder = "문장을 그대로 치고 Enter"; rgSfx("go"); }   /* 261003 GO 가 보이는 순간 입력을 열고 시간을 잰다 · 카운트다운 중 누르던 키는 열린 뒤 RAIN_BNS_GUARD 초만 한 번 버린다(옛 GO 0.3초 막기 · 연타마다 늘던 막기 폐기) */
     else if (Math.ceil(b.t) !== Math.ceil(was)) rgSfx("tick");
     return;
   }
   if (b.ph === "type") {
-    if (b.go > 0) { b.go -= dt; if (b.go <= 0) { b.typed = ""; rgLock(false); if (inp) inp.placeholder = "문장을 그대로 치고 Enter"; } return; }
+    if (b.go > 0) b.go -= dt;   /* GO 는 보이기만 한다 */
     b.left = Math.max(0, b.left - dt); if (b.left <= 0) rgBonusEnd("time"); return;
   }
   if (b.ph === "res") { if (b.t <= 0) { b.ph = "bin"; b.t = T.wipe; } return; }
@@ -1143,7 +1205,7 @@ function rgBonusTick(dt, now) {
     RG.cloudAt = RG.cloudN >= RAIN_CLOUD.max ? Infinity : rgElapsed(now) + RAIN_CLOUD.gap;
     if (inp) { inp.maxLength = 12; if (RG.bonusPh != null) inp.placeholder = RG.bonusPh; }
     RG.bonusPh = null;
-    rgLock(false); rgFormBns(false); RG.spawnT = 0.4; RG.next = null; if (!RG.seed) rgNextFill();
+    rgLock(false); rgFormBns(false); RG.spawnT = 0.4; RG.hurt = 0; RG.next = null; if (!RG.seed) rgNextFill();   /* 261003 숨 돌리기는 보너스를 건너 이어지지 않는다 */
   }
 }
 function rgBonusEnd(why) {
@@ -1289,7 +1351,7 @@ function rgBonusDraw(ctx, L, now) {
   ctx.textAlign = "right"; ctx.textBaseline = "middle";
   rtText(ctx, b.no + "/" + RAIN_CLOUD.max, px + pw - 6 * s, cy, 16, RT_PAL.tan, null);
   cy += th / 2 + 14;
-  var pre = b.ph === "wout" || b.ph === "intro" || b.ph === "count", typed = pre ? "" : String(b.typed || ""), k = 0, cur = b.ph === "type" && !(b.go > 0), blink = rgReduced() || Math.floor(now / 400) % 2 === 0;
+  var pre = b.ph === "wout" || b.ph === "intro" || b.ph === "count", typed = pre ? "" : String(b.typed || ""), k = 0, cur = b.ph === "type", blink = rgReduced() || Math.floor(now / 400) % 2 === 0;
   var mark = function (x, y, w) { ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(Math.round(x), Math.round(y + fp * 0.56), Math.max(6, Math.ceil(w)), 4); };   /* 커서 */
   var bad = function (x, y, w, tc) { ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(Math.round(x), Math.round(y - fp * 0.62), Math.max(8, Math.ceil(w)), Math.round(fp * 1.24)); if (tc && tc !== " ") rtText(ctx, tc, x + Math.max(0, (w - ctx.measureText(tc).width) / 2), y, fp, RT_PAL.night, null); };
   var ex = 0, ey = 0;
@@ -1544,4 +1606,5 @@ if (typeof module !== "undefined" && module.exports) module.exports = { RG: RG, 
   rgNextFill: rgNextFill, rgNextWord: rgNextWord, rgWrap: rgWrap, rgHgMap: rgHgMap, rgHgAdd: rgHgAdd, rgHgBack: rgHgBack, rgHangulize: rgHangulize, RGP: RGP,
   RAIN_BONUS_LINES: RAIN_BONUS_LINES, RAIN_BONUS: RAIN_BONUS, RAIN_LIFE_BONUS: RAIN_LIFE_BONUS, rgBonusLim: rgBonusLim, rgLev: rgLev, rgBonusScore: rgBonusScore, rgRaceRank: rgRaceRank,
   rgRaceTick: rgRaceTick, rgSubmit: rgSubmit, rgEnd: rgEnd, rgBonusStart: rgBonusStart, RAIN_CLOUD: RAIN_CLOUD, rgCloudStart: rgCloudStart, rgCloudRem: rgCloudRem, rgLive: rgLive, rgHgKey: rgHgKey,
-  rgCloudGeo: rgCloudGeo, RAIN_CLOUD_FX: RAIN_CLOUD_FX, RAIN_TRANS: RAIN_TRANS, rgWordY: rgWordY };
+  rgCloudGeo: rgCloudGeo, RAIN_CLOUD_FX: RAIN_CLOUD_FX, RAIN_TRANS: RAIN_TRANS, rgWordY: rgWordY,
+  RAIN_SITE: RAIN_SITE, RAIN_AUTO: RAIN_AUTO, RAIN_BNS_GUARD: RAIN_BNS_GUARD, rgSiteReset: rgSiteReset, rgAutoOn: rgAutoOn, rgFallSec: rgFallSec, rgSpawnSec: rgSpawnSec, rgStageSec: rgStageSec, rgRampSite: rgRampSite, rgGapFall: rgGapFall, rgClash: rgClash, rgPool: rgPool, rgBnsNorm: rgBnsNorm, rgBlk: rgBlk, rgCloudPick: rgCloudPick };
