@@ -1357,6 +1357,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-chip.cat { background: var(--ax-color-purpleSoft); color: var(--ax-color-purpleText); }
   .axs-cat { font: var(--ax-type-t7); color: var(--ax-color-purpleText); }
   .axs-who { display: flex; align-items: center; gap: var(--ax-space-16); }
+  .axs-av.spk { position: relative; overflow: hidden; width: 72px; height: 72px; }   /* v5.20 17F 연사 · 사진이 오면 이니셜 위에 덮는다 */
+  .axs-av.spk img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .axs-av { flex: none; width: 56px; height: 56px; border-radius: var(--ax-radius-16); background: var(--ax-color-ink); color: var(--ax-color-inverse); display: grid; place-items: center; font: var(--ax-type-t7); }
   .axs-kv { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: var(--ax-space-16); margin: 0; }
   .axs-kv dt { font: var(--ax-type-t6); color: var(--ax-color-muted); }
@@ -1983,6 +1985,14 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pan .axs-zdt { display: flex; flex-direction: column; gap: var(--ax-space-16); padding: var(--ax-space-20); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); }
   .axs-pan .axs-zdt > .axs-sign + .axs-bar.stm { margin-top: calc(var(--ax-space-8) * -1); }   /* 칩과 부제는 한 묶음 */
   .axs-pan .axs-zdt .axs-kv { grid-template-columns: 56px minmax(0, 1fr); row-gap: var(--ax-space-8); }
+  .axs-pan .axs-zpic { display: flex; flex-direction: column; gap: var(--ax-space-20); }   /* v5.20 구역 상세 판 한 컷 · 폭 가득 · 둥근 사각 프레임 */
+  .axs-pan .axs-zpic figure { display: flex; flex-direction: column; gap: var(--ax-space-8); min-width: 0; margin: 0; }
+  .axs-pan .axs-zpic img { display: block; width: 100%; height: auto; border-radius: var(--ax-radius-16); background: #fff; }
+  .axs-pan .axs-zpic figcaption { display: flex; flex-wrap: wrap; gap: 2px var(--ax-space-8); align-items: baseline; padding: 0 var(--ax-space-4); }
+  .axs-pan .axs-zpic figcaption b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-pan .axs-zpic figcaption span { font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
+  .axs-pan .axs-zex { display: flex; flex-direction: column; gap: 10px; }
+  .axs-pan .axs-zex h3 { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }
   .fs-big .axs-pan .axs-zin { flex-wrap: wrap; }
   .fs-big .axs-pan .axs-zin .tx { flex: 1 1 100%; }
   /* ── v4.96 AX 퀴즈 판 퀴즈 화면 조각(같은 경계 .axs-pan · 컨테이너 .axs-pan.qz · 힌트 시트 본문도 .axs-pan.qz) · 공통 부품 K 를 그대로 쓴다 ──
@@ -2069,6 +2079,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-mprz > p { margin: 0 0 10px; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .axs-mprz .axs-pzm .axs-ph { width: 56px; height: 56px; }
   /* 커피 · 간식 사진 2장(18F 커피챗 · DAP 과제상담) · 사진 아래 한 줄 */
+  .axs-ideax { display: flex; flex-direction: column; gap: var(--ax-space-8); }   /* v5.20 아이디어 예시 칩 · 한 줄씩 · 분야 칩보다 옅은 면 */
+  .axs-ideax button { display: flex; flex-direction: column; gap: 2px; width: 100%; min-height: 48px; padding: 10px var(--ax-space-12); border: 0; border-radius: var(--ax-radius-12); background: var(--ax-color-inset); color: var(--ax-color-ink); font: var(--ax-type-t6); font-family: inherit; text-align: left; word-break: keep-all; cursor: pointer; }
+  .axs-ideax button .ax-meta { color: var(--ax-color-brandText); }
   .axs-treat { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ax-space-12); margin: 0; }
   .axs-treat figure { display: flex; flex-direction: column; gap: var(--ax-space-8); min-width: 0; margin: 0; }
   .axs-treat .axs-ph { width: 100%; height: auto; aspect-ratio: 1 / 1; border-radius: var(--ax-radius-16); }
@@ -3587,7 +3600,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.19";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.20";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
@@ -5572,16 +5585,35 @@ var FLOOR1 = [
   { id: "vision", grp: "see", sign: "AX VISION", kor: "회사가 가는 방향을 보는 곳", fact: "AX 로드맵 · 영상", st: "",
     stm: "회사가 어디로 가는지 보는 곳", todo: ["AX 로드맵 2026~2028을 봐요", "키비주얼 영상을 봐요"] },
   { id: "lab", grp: "see", sign: "AX LAB", kor: "DAP 과제를 보는 곳", fact: "우수 과제 · 아이디어 한 줄 QR", st: "p5",
-    stm: "DAP 과제 보고 아이디어 남기는 곳", todo: ["우수 과제와 2026 프로젝트를 봐요", "끝 판 QR로 아이디어 한 줄을 써요"], btn: ["아이디어 쓰기", "App.go('ideas')"] },
+    stm: "DAP 과제 보고 아이디어 남기는 곳", todo: ["우수 과제와 2026 프로젝트를 봐요", "끝 판 QR로 아이디어 한 줄을 써요"], btn: ["아이디어 쓰기", "App.go('ideas')"],
+    ex: { h: "코딩과 데이터를 몰라도 누구나 지원할 수 있어요", c: ["매일 반복하는 업무", "필요한 자료 찾기", "앞으로의 변화 예측"] } },
   { id: "action", grp: "see", sign: "AX in Action", kor: "AI 업무 사례를 보는 곳", fact: "동료가 만든 앱 3개", st: "",
-    stm: "동료가 AI로 만든 현장 앱을 보는 곳", todo: ["영업 2개, 보상 1개 현장 앱 사례를 봐요", "현장 인터뷰 영상을 봐요"] },
+    stm: "동료가 AI로 만든 현장 앱을 보는 곳", todo: ["현장 인터뷰 영상을 봐요"],
+    pic: [["act1", "영업 사례", "", 671], ["act2", "영업 사례", "", 723], ["act3", "보상 사례", "", 662]] },   /* v5.20 판 16 ~ 18 앱 화면 컷이 「영업 2개, 보상 1개」를 대신한다 */
   { id: "lounge", grp: "do", sign: "AX LOUNGE", kor: "업무 고민을 상담하는 곳", fact: "", st: "p3",
-    stm: "데이터사이언스파트와 업무 고민 상담", todo: ["고민을 이야기하고 방향을 함께 찾아요", "앱에서 30분 상담을 신청해요", "상담이 끝나면 스탬프를 받아요"] },
+    stm: "데이터사이언스파트와 업무 고민 상담", todo: ["고민을 이야기하고 방향을 함께 찾아요", "앱에서 30분 상담을 신청해요", "상담이 끝나면 스탬프를 받아요"],
+    treat: 1, ex: { h: "상담 주제 예시", c: ["반복되는 불편", "바꾸고 싶은 업무", "데이터로 풀 방법"] } },
   { id: "play", grp: "do", sign: "AX PLAY", kor: "AI를 직접 써 보는 곳", fact: "HiDI-Q · Hi-Helper", st: "p2",
-    stm: "HiDI-Q와 Hi-Helper를 직접 써 보는 곳", todo: ["노트북에서 HiDI-Q, Hi-Helper를 써 봐요", "스태프에게 내 QR을 보여 주면 적립"], btn: ["체험 안내", "App.go('booth')"] },
+    stm: "HiDI-Q와 Hi-Helper를 직접 써 보는 곳", todo: ["노트북에서 HiDI-Q, Hi-Helper를 써 봐요", "스태프에게 내 QR을 보여 주면 적립"], btn: ["체험 안내", "App.go('booth')"],
+    pic: [["play1", "HiDI-Q", "문서를 올리고 질문해요", 1142], ["play2", "Hi-Helper", "종합보험 설계를 1분 안에", 800]] },
   { id: "event", grp: "do", sign: "EVENT", kor: "사진 · 룰렛 · 타자왕이 있는 곳", fact: "", st: "",
     stm: "사진 · 룰렛 · 타자 겨루기", todo: ["AI 포토부스에서 ME to WE 프레임 사진을 찍어요", "스탬프 3개를 모으면 룰렛 1회예요", "1F 타자왕 순위를 봐요"] }   /* v5.05 옛 「AI 포토부스에서 번호표를 받아요」(대기 폐지 · PHOTO_Q) */
 ];
+/* v5.20 (사용자 261003 후킹 권장 1) 구역 상세 「판 한 컷」 · 사진 = assets/zone/<img>.webp(1층 판 p16 ~ 18 · p24 · p28 ~ 29 에서 잘라 폭 860 · 장당 60KB 이하)
+   pic = [파일, 이름, 쓰임, 높이] · 지연 로딩 · 못 읽으면 칸째 지운다 · AX in Action 컷에는 판에 인쇄된 직함 · 이름이 그대로 있다(사용자 261003 「실명 넣자」)
+   ex = 한 줄 + 예시 칩(누르지 않는 칩) · treat = 커피 · 간식 사진 2장(treatHtml) */
+var ZONE_DIR = "assets/zone/";
+function zonePicHtml(z) {
+  var o = z.pic ? '<div class="axs-zpic">' + z.pic.map(function (p) {
+    return "<figure><figcaption><b>" + esc(p[1]) + "</b>" + (p[2] ? "<span>" + esc(p[2]) + "</span>" : "") + "</figcaption>" +
+      '<img src="' + ZONE_DIR + p[0] + '.webp" alt="' + esc(p[1] + (p[2] ? " · " + p[2] : "") + " · 1층 판") + '" width="860" height="' + p[3] + '" loading="lazy" decoding="async" onerror="this.parentNode.remove()"></figure>';
+  }).join("") + "</div>" : "";
+  if (z.treat) o += treatHtml();
+  return o;
+}
+function zoneExHtml(z) {
+  return z.ex ? '<hr class="axs-rule"><div class="axs-zex"><h3>' + esc(z.ex.h) + '</h3><div class="axs-chiprow">' + z.ex.c.map(function (c) { return '<span class="axs-chip">' + esc(c) + "</span>"; }).join("") + "</div></div>" : "";
+}
 function zoneById(id) { return FLOOR1.filter(function (z) { return z.id === id; })[0] || null; }
 function zoneOpen(id) { PROG.zone = id; App.go("zone_d"); }
 /* ── 구역 간판 칩 · v5.10 부스 원본 사인 글자(점 글자 DotGlyph · design.md A-5 5-20) · 줄 24 · 점 12px · 상세(lg) 26 · 점 14px
@@ -5663,9 +5695,9 @@ function zoneDetailHtml() {
   var cr = ev ? pill : seal ? (L.tm ? '<span class="axs-pt">' + esc(L.tm) + "</span>" : "") : '<span class="axs-pt">자유 관람 · 스탬프 없음</span>';
   return '<div class="ax-stack axs-pan"><div class="axs-zdt' + (seal ? " axs-sthost" : "") + '">' + (seal ? pill : "") + zoneSign(z.sign, "lg") +
     '<p class="axs-bar stm">' + esc(z.stm) + "</p>" + (cr ? '<div class="cr">' + cr + "</div>" : "") +
-    '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + z.todo.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" +
+    '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + z.todo.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" + zoneExHtml(z) +
     (L.kv ? '<hr class="axs-rule"><dl class="axs-kv">' + L.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl>" : "") +
-    "</div>" + (L.btn ? '<button type="button" class="ax-button" onclick="' + L.btn[1] + '">' + esc(L.btn[0]) + "</button>" : "") +
+    "</div>" + zonePicHtml(z) + (L.btn ? '<button type="button" class="ax-button" onclick="' + L.btn[1] + '">' + esc(L.btn[0]) + "</button>" : "") +
     (tourOn() ? '<button type="button" class="ax-button ax-button-weak" onclick="tourOpen({ zone: \'' + z.id + '\' })">모형에서 보기</button>' : "") + "</div>";   /* v5.11 1층 둘러보기 · 이 구역으로 바로(TOUR_ON 일 때만) */
 }
 function progOpen(id) { PROG.sid = id; App.go("sess_d"); }
@@ -5723,6 +5755,14 @@ function progRowHtml(s) {
 function progBtn(lbl, on, cls, id, dis) {
   return '<button type="button" class="ax-button' + (cls ? " " + cls : "") + '"' + (id ? ' id="' + id + '"' : "") + (dis ? " disabled" : ' onclick="' + on + '"') + ">" + lbl + "</button>";
 }
+/* v5.20 (사용자 261003 후킹 권장 4) 17F 연사 사진 · assets/speaker/<세션 id>.webp(정사각 · 240px 이상) 파일만 넣으면 이니셜 자리에 사진이 덮인다
+   id = intro(CEO) · key(CTO) · road(디지털전략본부장) · l1(AWS) · l2(MS) · outro(CSO) · 파일이 없으면 img 를 지우고 이니셜 그대로(이 세션 동안 다시 묻지 않는다) */
+var SPK_DIR = "assets/speaker/", SPK_IDS = ["intro", "key", "road", "l1", "l2", "outro"], SPK_NA = {};
+function spkAvHtml(id, av) {
+  var sp = SPK_IDS.indexOf(id) >= 0, on = sp && !SPK_NA[id];
+  return '<span class="axs-av' + (sp ? " spk" : "") + '" aria-hidden="true">' + esc(av) +
+    (on ? '<img src="' + SPK_DIR + id + '.webp" alt="" width="240" height="240" loading="lazy" decoding="async" onerror="SPK_NA[\'' + id + '\']=1;this.remove()">' : "") + "</span>";
+}
 /* 상세 한 장의 내용 · 화면(sess_d)과 확인(sess_cf)이 같은 값을 쓴다 */
 function progDetail(s) {
   var D = { cat: "", org: "", title: s.ttl, who: "", whoSub: "", av: "", st: "", stc: "", kv: [], cfKv: [], extra: "", secT: "참여 전 확인해 주세요", secB: "", link: "", help: "", btn: "" };
@@ -5753,6 +5793,7 @@ function progDetail(s) {
     D.secB = "16:40부터 대강당 입구 추첨 QR로 체크인해요.<br>체크인한 사람의 행운권 번호 중에서 뽑아요.<br>행운권은 스탬프 4개부터 생겨요.";
     D.help = din ? "" : dwin ? "현장에서만 체크인할 수 있어요" : "16:40부터 체크인할 수 있어요";
     D.btn = !din && dwin ? progBtn("추첨 QR 스캔", "qrScanOpen()") : timeBtn;
+    D.pics = prizeGoHtml("draw");   /* v5.20 (사용자 261003 후킹 권장 2) 경품 입구 한 줄 · 행운권 구역으로 */
     return D;
   }
   if (s.kind === "open") {
@@ -5771,6 +5812,7 @@ function progDetail(s) {
     if (s.id === "expo") D.link = '<button type="button" class="ax-link axs-plain axs-self" onclick="App.go(\'floor1\')">1F 부스 6구역 보기</button>';
     D.help = ap && !at ? "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요" : s.id === "expo" ? "신청 없이 자유롭게 둘러볼 수 있어요" : "신청 없이 참여 가능한 강연이에요";   /* v4.38 (사용자 260925) 17F 는 사전 신청제 → 신청을 받지 않음 · 「사전 신청」이라는 말을 쓰지 않는다 */
     D.btn = ap && !at ? progBtn("출석 QR 스캔", "scanOpen(\'a17\')") : timeBtn;
+    if (par) D.pics = prizeGoHtml();   /* v5.20 오후 파트너 강연 · 경품 입구 한 줄 */
     return D;
   }
   if (s.kind === "info") {
@@ -7766,8 +7808,11 @@ var Views = {
       '<div class="ax-stack-tight axs-gap12 axs-sthost">' + stampTagHtml("p5") + '<h1 class="ax-type-t2">문득 떠오른<br>&ldquo;이거 AI로 되겠는데?&rdquo;</h1>' +
       '<p class="ax-body" id="ideaAward">' + IDEA_AWARD_TXT + "</p></div>" +
       '<div class="ax-stack-tight"><label class="ax-sr-only" for="ideaText">아이디어 한 줄</label>' +
-      '<textarea id="ideaText" class="ax-field axs-ta" rows="3" maxlength="200" placeholder="예: 보상 접수 메일, 요약해서 시스템에 자동 입력되면 좋겠다" oninput="ideaInput(this.value)" onfocus="kbFocus(this)" aria-describedby="ideaLeft">' + esc(dr) + "</textarea>" +
-      '<div class="axs-cnt"><p class="ax-meta" id="ideaLeft" aria-live="polite">' + ideaLeftTxt(n) + '</p><p class="ax-meta"><span id="ideaCnt">' + dr.length + "</span>/200</p></div></div>" +
+      '<textarea id="ideaText" class="ax-field axs-ta" rows="3" maxlength="200" placeholder="떠오른 생각을 한 줄로 적어 주세요" oninput="ideaInput(this.value)" onfocus="kbFocus(this)" aria-describedby="ideaLeft">' + esc(dr) + "</textarea>" +
+      '<div class="axs-cnt"><p class="ax-meta" id="ideaLeft" aria-live="polite">' + ideaLeftTxt(n, dr) + '</p><p class="ax-meta"><span id="ideaCnt">' + dr.length + "</span>/200</p></div></div>" +
+      '<div class="ax-stack-tight"><p class="ax-type-t6-strong">예시 · 눌러서 고쳐 쓰기</p><div class="axs-ideax" role="group" aria-label="예시">' + IDEA_EX.map(function (e, i) {
+        return '<button type="button" onclick="ideaEx(' + i + ')"><span class="ax-meta">' + esc(e[0]) + "</span>" + esc(e[1]) + "</button>";
+      }).join("") + "</div></div>" +
       '<div class="ax-stack-tight"><p class="ax-type-t6-strong">분야</p><div class="axs-chiprow" role="group" aria-label="분야">' + IDEA_TAGS.map(function (t) {
         return '<button type="button" class="axs-chip" data-tag="' + t + '" aria-pressed="' + (t === tag) + '" onclick="pickTag(this)">' + t + "</button>";
       }).join("") + "</div></div>" +
@@ -7775,7 +7820,7 @@ var Views = {
       (IDEA.err ? '<div class="axs-err" role="alert"><b>' + esc(IDEA.err) + "</b><span>쓴 내용은 그대로 있어요</span></div>" : "") +
       (mine.length ? '<button type="button" class="ax-link axs-plain axs-self" onclick="App.go(\'ideas_mine\')">내가 낸 아이디어 ' + mine.length + "건</button>" : "") +
       "</div>" +
-      '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" id="ideaGo" onclick="submitIdea()"' + (n >= IDEA_MIN ? "" : " disabled") + ">제출하기</button></div>";   /* v4.09 버튼 하나 · 나가기는 헤더 뒤로 */
+      '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" id="ideaGo" onclick="submitIdea()"' + (ideaOk(dr) ? "" : " disabled") + ">제출하기</button></div>";   /* v4.09 버튼 하나 · 나가기는 헤더 뒤로 */
   },
 
   /* ═══ v3.58 AI 사생대회 갤러리 · 카드 목록(섬네일 · 제목 · 설명 · 작가 닉네임 · 좋아요) · 탭하면 원본 ═══ */
@@ -7882,7 +7927,7 @@ var Views = {
       '<section class="ax-card axs-pd' + (stp ? " axs-sthost" : "") + '">' + (stp ? stampTagHtml(stp) : "") +   /* v4.70 p3 에 들어가는 프로그램만 오른쪽 위 도장 */   /* v4.06 색 통일 · 흰 페이지 → canvas 위 흰 카드 */
       '<div class="axs-chiprow"><span class="axs-chip cat">' + esc(d.cat) + "</span>" + (d.st ? '<span class="axs-chip ' + d.stc + '">' + esc(d.st) + "</span>" : "") + "</div>" +
       '<h1 class="ax-title">' + esc(d.title) + "</h1>" +
-      (d.who ? '<div class="axs-who"><span class="axs-av" aria-hidden="true">' + esc(d.av) + '</span><span class="axs-tx"><span class="ax-card-title">' + esc(d.who) + '</span><span class="ax-description">' + esc(d.whoSub) + "</span></span></div>" : "") +
+      (d.who ? '<div class="axs-who">' + spkAvHtml(s.id, d.av) + '<span class="axs-tx"><span class="ax-card-title">' + esc(d.who) + '</span><span class="ax-description">' + esc(d.whoSub) + "</span></span></div>" : "") +
       '<dl class="ax-inset axs-kv">' + d.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl></section>" +
       (d.extra || "") +
       '<section class="ax-stack-tight axs-gap12"><h2 class="ax-section-title">' + esc(d.secT) + '</h2><p class="ax-body">' + d.secB + "</p>" + (d.pics || "") + (d.link || "") + "</section>" +
@@ -10700,19 +10745,29 @@ function pickTag(btn) {
 }
 /* v4.08 글자 수 = 공백을 뺀 글자 · 5글자 이상이면 제출 버튼이 켜진다 · 입력은 지우지 않는다 */
 var IDEA_MIN = 5;
+/* v5.20 (사용자 261003 후킹 권장 3) 예시 칩 3개(보상 · 영업 · 본사) · 누르면 입력창과 분야를 채운다 · 예시 그대로면 제출이 꺼지고 한 글자라도 고치면 켜진다(공백은 비교에서 뺀다) */
+var IDEA_EX = [["보상", "접수 메일을 요약해 시스템에 자동 입력"], ["영업", "상품별 설명 화법을 바로 보여 주는 도우미"], ["본사·통계", "월말 실적 보고서 초안을 자동으로 작성"]];
+function ideaIsEx(v) { var k = String(v || "").replace(/\s/g, ""); return IDEA_EX.some(function (e) { return e[1].replace(/\s/g, "") === k; }); }
+function ideaOk(v) { return ideaLen(v) >= IDEA_MIN && !ideaIsEx(v); }
+function ideaEx(i) {
+  var e = IDEA_EX[i]; if (!e) return;
+  pickedTag = IDEA.tag = e[0]; IDEA.draft = e[1]; S.put("idea_draft", e[1]);
+  App.render();
+  var t = el("ideaText"); if (t) { try { t.focus({ preventScroll: true }); t.setSelectionRange(t.value.length, t.value.length); } catch (x) {} }
+}
 function ideaLen(v) { return String(v || "").replace(/\s/g, "").length; }
 function ideaDraft() { if (IDEA.draft == null) IDEA.draft = String(S.get("idea_draft", "") || ""); return IDEA.draft; }
-function ideaLeftTxt(n) { return n >= IDEA_MIN ? "제출할 수 있어요" : n === 0 ? IDEA_MIN + "글자 이상 쓰면 제출할 수 있어요" : (IDEA_MIN - n) + "글자 더 쓰면 제출할 수 있어요"; }
+function ideaLeftTxt(n, v) { return ideaIsEx(v) ? "예시를 고쳐 쓰면 제출할 수 있어요" : n >= IDEA_MIN ? "제출할 수 있어요" : n === 0 ? IDEA_MIN + "글자 이상 쓰면 제출할 수 있어요" : (IDEA_MIN - n) + "글자 더 쓰면 제출할 수 있어요"; }
 function ideaInput(v) {
   IDEA.draft = v; S.put("idea_draft", v);   /* v4.25 조용한 저장 · 다시 그리지 않는다(한글 조합 보호) */
   var n = ideaLen(v), c = el("ideaCnt"), l = el("ideaLeft"), b = el("ideaGo");
   if (c) c.textContent = v.length;
-  if (l) l.textContent = ideaLeftTxt(n);
-  if (b) b.disabled = n < IDEA_MIN;
+  if (l) l.textContent = ideaLeftTxt(n, v);
+  if (b) b.disabled = !ideaOk(v);
 }
 function submitIdea() {
   var text = ideaDraft().trim();
-  if (ideaLen(text) < IDEA_MIN) { ideaInput(ideaDraft()); return; }   /* 버튼이 꺼져 있어 보통 오지 않는다 · 입력은 그대로 */
+  if (!ideaOk(text)) { ideaInput(ideaDraft()); return; }   /* 버튼이 꺼져 있어 보통 오지 않는다 · 입력은 그대로 */
   var nth = counters().ideas;
   try { ideaPush(text, pickedTag, !!IDEA.anon, "app"); }
   catch (e) { IDEA.err = "제출하지 못했어요. 다시 눌러 주세요."; App.render(); return; }   /* 실패해도 쓴 내용은 남는다 */
