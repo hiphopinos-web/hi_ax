@@ -629,18 +629,25 @@
   /* 경품 장면 · 사진 = ../assets/prize/(앱과 같은 파일 · 가격 없음) · 이름은 앱 PRIZES 와 똑같이(상품권의 10만원은 액면가라 상품 이름의 일부) */
   var PZ_DIR = "../assets/prize/";
   var PZ_DRAW = [["1등", "아이패드", "ld1_ipad"], ["2등", "신라호텔 파크뷰 뷔페 식사권 2매", "ld2_shilla"], ["3등", "미닉스 음식물 처리기", "ld3_minix"], ["4등", "에어팟 4", "ld4_airpods"], ["5등", "풀리오 종아리 마사지기", "ld5_pulio"], ["6등", "현대백화점 상품권 10만원", "ld6_hyundai"]];
-  var PZ_RL = [["1등", "텀블러", "rl1_tumbler"], ["2등", "커피 + 키캡 키링", "rl2_coffee_keyring"], ["3등", "컵받침", "rl3_coaster"], ["4등", "판스티커", "rl4_sticker"], ["5등", "볼펜", "rl5_pen"]];
+  var PZ_RL = [["1등", "텀블러", "rl1_tumbler"], ["2등", "커피 + 키캡 키링", "rl2_coffee", "rl2_keyring"], ["3등", "컵받침", "rl3_coaster"], ["4등", "판스티커", "rl4_sticker"], ["5등", "볼펜", "rl5_pen"]];
   var PZ_IMG = {}, PZ_PAGE = 7.4;
   function pzLoad() {
-    PZ_DRAW.concat(PZ_RL).forEach(function (p) { var im = new Image(); im.decoding = "async"; im.onload = function () { im.ok = true; }; im.src = PZ_DIR + p[2] + ".webp"; PZ_IMG[p[2]] = im; });
+    PZ_DRAW.concat(PZ_RL).forEach(function (p) { [p[2], p[3]].forEach(function (nm) { if (!nm) return; var im = new Image(); im.decoding = "async"; im.onload = function () { im.ok = true; }; im.src = PZ_DIR + nm + ".webp"; PZ_IMG[nm] = im; }); });   /* p[3] = 두 번째 사진(룰렛 2등 커피 · 키링 나란히 · 앱 v5.18과 같은 방식) */
   }
   function rrect(c, x, y, w, h, r) { c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h); }
   function drawTile(p, x, y, sz, a, nameS, rankS, colW) {
     if (a <= 0.01) return;
     var im = PZ_IMG[p[2]], e = EO(a), s = sz * (0.94 + 0.06 * e), ox = x - s / 2, oy = y + (sz - s) / 2;
     cx.save(); cx.globalAlpha = e;
-    rrect(cx, ox, oy, s, s, s * 0.08); cx.fillStyle = "#141414"; cx.fill();
-    if (im && im.ok) { cx.clip(); cx.drawImage(im, ox, oy, s, s); }
+    if (p[3]) {   /* 두 장 나란히 · 같은 칸 안에서 가로로 넓은 카드(정사각 두 칸 · 2:1) · 세로 가운데 */
+      var ww = (G.port ? colW - 20 : colW + 20) * (0.94 + 0.06 * e), hh = ww / 2, wx = x - ww / 2, wy = y + (sz - hh) / 2, im2 = PZ_IMG[p[3]];
+      rrect(cx, wx, wy, ww, hh, s * 0.08); cx.fillStyle = "#141414"; cx.fill(); cx.clip();
+      if (im && im.ok) cx.drawImage(im, wx, wy, hh, hh);
+      if (im2 && im2.ok) cx.drawImage(im2, wx + hh, wy, hh, hh);
+    } else {
+      rrect(cx, ox, oy, s, s, s * 0.08); cx.fillStyle = "#141414"; cx.fill();
+      if (im && im.ok) { cx.clip(); cx.drawImage(im, ox, oy, s, s); }
+    }
     cx.restore();
     cx.save(); cx.globalAlpha = cl(a * 1.4 - 0.2); cx.textAlign = "center"; cx.textBaseline = "alphabetic";
     cx.fillStyle = COL.hi; cx.font = "600 " + rankS + "px " + FONT; cx.fillText(p[0], x, y + sz + rankS + 18);
