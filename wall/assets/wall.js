@@ -1015,8 +1015,9 @@
     var src = typeof AXF_WORDMARK === "string" ? AXF_WORDMARK : "", n = 0;
     [["o", COL.o], ["w", "#FFFFFF"]].forEach(function (c) { var im = new Image(); im.onload = function () { if (++n === 2) WMREADY = true; }; im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(src.replace(/currentColor/g, c[1])); WM[c[0]] = im; });
   }
+  var AM = 1;   /* 묶음 투명도 · 큰 장면 동안 링 묶음 · 숫자 묶음을 숨길 때만 1 이 아니다(글자 · 점 글자 · 링 모두 곱한다) */
   function text(txt, wgt, size, col, x, y, align, maxW, a) {
-    cx.globalAlpha = a == null ? 1 : a; cx.fillStyle = col; cx.font = wgt + " " + size + "px " + FONT;
+    cx.globalAlpha = (a == null ? 1 : a) * AM; cx.fillStyle = col; cx.font = wgt + " " + size + "px " + FONT;
     var w = cx.measureText(txt).width; if (maxW && w > maxW) { size = Math.max(12, Math.floor(size * maxW / w)); cx.font = wgt + " " + size + "px " + FONT; w = cx.measureText(txt).width; }
     cx.textAlign = align || "left"; cx.textBaseline = "alphabetic"; cx.fillText(txt, x, y); cx.globalAlpha = 1; return w;
   }
@@ -1044,7 +1045,7 @@
     return (NUMC[key] = { c: c, m: m * u, w: c.width / sc, h: c.height / sc });
   }
   function dgBlit(ch, col, u, x, y, a, s) {
-    if (a <= 0.01) return; var sp = dgSprite(ch, col, u), k = s || 1, gw = dgW(ch) * u, gh = DGP.H * u;
+    a *= AM; if (a <= 0.01) return; var sp = dgSprite(ch, col, u), k = s || 1, gw = dgW(ch) * u, gh = DGP.H * u;
     var cxp = x + gw / 2, cyp = y + gh / 2;
     cx.globalAlpha = Math.min(1, a); cx.drawImage(sp.c, cxp - (gw / 2 + sp.m) * k, cyp - (gh / 2 + sp.m) * k, sp.w * k, sp.h * k); cx.globalAlpha = 1;
   }
@@ -1084,20 +1085,21 @@
     if (RING.v >= 0.9999 && RING.doneAt > T) { RING.doneAt = T; var R = G.ring, r = R.d / 2 - R.d * 0.095; pop(R.x, R.y - r, 0.6); }
     return RING.v;
   }
-  function drawRing(n, isTL, org) {
-    var v = ringStep(n, isTL), R = G.ring, d = R.d, lw = d * 0.19, r = (d - lw) / 2, done = v >= 0.9999;
-    cx.lineWidth = lw; cx.strokeStyle = org ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.16)";
+  function drawRing(n, isTL, org, frozen) {
+    var v = frozen ? RING.v : ringStep(n, isTL), R = G.ring, d = R.d, lw = d * 0.19, r = (d - lw) / 2, done = v >= 0.9999;
+    cx.globalAlpha = AM; cx.lineWidth = lw; cx.strokeStyle = org ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.16)";
     cx.beginPath(); cx.arc(R.x, R.y, r, 0, 6.2832); cx.stroke();
     if (v > 0.004) { cx.lineCap = "round"; cx.strokeStyle = org ? "#FFFFFF" : COL.o; cx.beginPath(); cx.arc(R.x, R.y, r, -1.5708, -1.5708 + 6.2832 * v); cx.stroke(); cx.lineCap = "butt"; }
     var inner = d - lw * 2;
     if (done) {   /* 가운데 체크 · 채운 순간 0.5초에 그려진다 */
       var u = isTL ? 1 : EO((T - RING.doneAt) / 0.5), k = inner / 2, a = [R.x - 0.36 * k, R.y + 0.02 * k], b = [R.x - 0.1 * k, R.y + 0.3 * k], c = [R.x + 0.4 * k, R.y - 0.26 * k];
       var l1 = Math.hypot(b[0] - a[0], b[1] - a[1]), l2 = Math.hypot(c[0] - b[0], c[1] - b[1]), L = (l1 + l2) * u;
-      cx.lineWidth = k * 0.17; cx.lineCap = "round"; cx.lineJoin = "round"; cx.strokeStyle = "#FFFFFF"; cx.beginPath(); cx.moveTo(a[0], a[1]);
+      cx.globalAlpha = AM; cx.lineWidth = k * 0.17; cx.lineCap = "round"; cx.lineJoin = "round"; cx.strokeStyle = "#FFFFFF"; cx.beginPath(); cx.moveTo(a[0], a[1]);
       if (L <= l1) cx.lineTo(a[0] + (b[0] - a[0]) * L / l1, a[1] + (b[1] - a[1]) * L / l1);
       else { cx.lineTo(b[0], b[1]); cx.lineTo(b[0] + (c[0] - b[0]) * (L - l1) / l2, b[1] + (c[1] - b[1]) * (L - l1) / l2); }
-      cx.stroke(); cx.lineCap = "butt"; cx.lineJoin = "miter";
+      cx.stroke(); cx.lineCap = "butt"; cx.lineJoin = "miter"; cx.globalAlpha = 1;
     } else {
+      cx.globalAlpha = 1;
       /* 가운데 n% · 숫자 폭 기준 = 「88%」가 안쪽 지름의 62% · 「%」는 숫자의 0.6배 · 길면 안쪽 지름의 78% 안으로 줄인다 */
       var pct = String(Math.floor(v * 100 + 0.0001)), ps = 100;
       var pw = function (str, s) { cx.font = "700 " + s + "px " + FONT; var q = cx.measureText(str).width; cx.font = "700 " + (s * 0.6) + "px " + FONT; return [q, cx.measureText("%").width, s * 0.04]; };
@@ -1111,14 +1113,26 @@
     if (R.cap === "left") { text("목표", 500, 26, dim, R.x - d / 2 - 22, R.y - 8, "right"); text(nm, 600, 32, hot, R.x - d / 2 - 22, R.y + 32, "right", 230); }
     else { var w = text("목표", 500, 28, dim, R.x - d / 2, R.y + d / 2 + 46); text(nm, 600, 32, hot, R.x - d / 2 + w + 12, R.y + d / 2 + 46, "left", 330 - w); }
   }
+  /* 큰 장면(1차 완성 · 500 · 하나로 · 목표 달성 · 다시 보기) 동안 진행 링 묶음(링 + 「목표 2,026」)을 0.4초에 지우고 장면이 끝나면 0.6초에 되살린다 · 얼려 둔 링은 돌아올 때 새 값으로 차오른다
+     점 숫자 묶음 = 오렌지 뒤집기(1차 완성 0.9~6.3초) · 2026 점 숫자 장면(0~8.3초)에서만 같이 숨는다 · 다시 보기는 숫자가 0부터 치솟으니 남긴다 · 흩어졌다 모이기 · 혜성 중에는 그대로 */
+  var HIDE = { t: 0, rp: 1, np: 1, ring: 1, num: 1, frozen: false };
+  function hideStep(S, t) {
+    var dt = Math.max(0, Math.min(0.25, T - HIDE.t)); HIDE.t = T;
+    var big = !!S && S.kind !== "act", hn = !!S && (S.kind === "complete" ? t >= 0.9 && t < 6.3 : S.kind === "lv4" ? t < 8.3 : false);
+    HIDE.rp = cl(HIDE.rp + (big ? -dt / 0.4 : dt / 0.6)); HIDE.np = cl(HIDE.np + (hn ? -dt / 0.4 : dt / 0.6));
+    HIDE.ring = ESIO(HIDE.rp); HIDE.num = ESIO(HIDE.np); HIDE.frozen = big;
+  }
   function drawText() {
+    AM = 1;
     var org = ORANGE(), S = SHOW, isTL = S && S.kind === "tl", t = S ? T - S.t0 : 0;
+    hideStep(S, t);
     if (WMREADY) { var wm = G.wm; cx.drawImage(org ? WM.w : WM.o, wm.x, wm.y, wm.w, wm.w * 179 / 497.6); }
     var n = isTL ? tlCount(S, t) : ST.n;
     /* 숫자 묶음 · 점 숫자 + 아래 「오늘 모인 스탬프」(가로 오른쪽 아래 · 세로 왼쪽 아래) · 단계 이름은 장면 제목으로만 */
-    var N = G.num; drawNum(n, isTL, org);
+    var N = G.num; AM = HIDE.num; drawNum(n, isTL, org);
     text("오늘 모인 스탬프", 500, N.ls, org ? "rgba(255,255,255,0.85)" : COL.sub, N.x, N.by, N.al);
-    drawRing(n, isTL, org);
+    AM = HIDE.ring; if (AM > 0.004) drawRing(ST.n, false, org, HIDE.frozen);
+    AM = 1; cx.globalAlpha = 1;
     if (isTL) text("오늘 하루 다시 보기", 600, G.tl.s, COL.o, G.tl.x, G.tl.y, "right", null, cl(t / 0.5) * cl((S.dur - t) / 0.6));
     /* 상태 줄 · 평소에는 없다 · 데모 표시 · 연결이 끊겼을 때만 */
     var sy = G.st.y; if (DEMO) { text("DEMO · 자동 적립 " + (DM.paused ? "꺼짐" : "켜짐"), 600, G.st.s, org ? "rgba(255,255,255,0.7)" : COL.faint, G.st.x, sy); sy += 32; }
