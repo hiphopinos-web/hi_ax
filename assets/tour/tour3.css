@@ -273,10 +273,8 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 /* 판 보기 다이브 · FLIP 동안 들어오는 애니메이션(sheetIn)을 끈다 */
 #axTour3 .sheet.flip { animation: none; will-change: transform, clip-path; }
 /* 설정 톱니 · 옛 확대 · 축소 +/- 자리(작은 지도 아래) */
-#axTour3 .cfgb { position: absolute; right: 10px; top: 148px; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .94); color: var(--ink); box-shadow: inset 0 0 0 1.5px rgba(25, 31, 40, .18), 0 2px 8px rgba(25, 31, 40, .14); z-index: 4; }
-#axTour3 .cfgb::before { content: ""; position: absolute; inset: -4px; }
-#axTour3 .cfgb:active { background: var(--canvas); }
-#axTour3 .mini[hidden] ~ .cfgb { display: none; }
+/* v5.53 설정 = 머리 줄 글자 단추(.hb.cfgh · .cfg 는 설정 창) · 옛 작은 지도 아래 둥근 톱니(.cfgb)는 없앰 */
+#axTour3 .hd .hb { padding: 0 10px; }
 /* 설정 창 · 앱 바텀 시트 문법(스탬프 카드와 같은 틀) */
 #axTour3 .cfg { position: fixed; inset: 0; z-index: 52; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; justify-content: flex-end; background: rgba(25, 31, 40, .35); }
 #axTour3 .cfg[hidden] { display: none; }
@@ -319,3 +317,9 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .gbub { flex-direction: column; align-items: center; gap: 8px; max-width: min(232px, calc(100vw - 16px)); min-height: 0; padding: 12px 12px 10px; border-radius: 18px; white-space: normal; text-align: center; }
 #axTour3 .gbub:has(.go[hidden]) { padding: 12px 16px; }
 #axTour3 .gbub .go { height: 40px; padding: 0 14px 0 18px; }
+
+/* v5.53 TV · 가벽 모션 영상 자리(화면 안 2px · 투명도 0.01 · display:none 이면 아이폰이 멈춘다) · 판 6 · 7 판 보기 움직임(영상 검정 + screen = 판 패널 · 점 격자가 비친다 · 재생 전에는 자리 차지 없음) */
+#axTour3 .mbox { position: fixed; left: 0; bottom: 0; width: 2px; height: 2px; overflow: hidden; opacity: .01; pointer-events: none; z-index: 0; }
+#axTour3 .mbox video { display: block; width: 2px; height: 2px; }
+#axTour3 video.bd-mv { display: block; mix-blend-mode: screen; }
+#axTour3 video.bd-mv:not(.on) { position: absolute; opacity: .01; pointer-events: none; }

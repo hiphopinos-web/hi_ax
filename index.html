@@ -2022,24 +2022,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   @keyframes tinvR { from { transform: none; } to { transform: translateX(101%); } }
   @keyframes tinvB { from { transform: none; } to { transform: translateY(101%); } }
   @media (prefers-reduced-motion: reduce) { .axs-inv.run .pc, .axs-inv.run .seal { animation: none; display: none; } }
-  /* v5.46 행사 전 홈 큰 카드(광고판 바로 아래 · 스탬프 위 · 시안 B) · 사진 4장이 3초씩 천천히 다가가며 바뀐다(12초 한 바퀴 · 위상은 --d 음수 지연이라 4초마다 다시 그려도 이어진다) */
-  .axs-thero { padding: 0; gap: 0; overflow: hidden; }
-  .axs-thero .tm { position: relative; display: block; width: 100%; aspect-ratio: 342 / 188; background: color-mix(in srgb, var(--ax-color-brand) 15%, var(--ax-color-surface)); overflow: hidden; cursor: pointer; }
-  .axs-thero .tm img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; animation: tinvScene 12s var(--d, 0ms) infinite; }
-  .axs-thero .tm.still img { animation: none; opacity: 1; }
-  @keyframes tinvScene { 0% { opacity: 0; transform: scale(1); } 4% { opacity: 1; } 25% { opacity: 1; transform: scale(1.07); } 29% { opacity: 0; transform: scale(1.08); } 100% { opacity: 0; } }
-  .axs-thero .tm .tg { position: absolute; left: var(--ax-space-12); top: var(--ax-space-12); display: inline-flex; align-items: center; gap: var(--ax-space-4); min-height: 28px; padding: 0 var(--ax-space-8) 0 6px; border-radius: 999px; background: var(--ax-color-surface); color: var(--ax-color-brandText); font: var(--ax-type-t7); font-weight: 700; z-index: 2; }
-  .axs-thero .tm .tg svg { width: 18px; height: 18px; }
-  .axs-thero .tm .orb { position: absolute; right: var(--ax-space-12); bottom: 22px; width: 76px; height: 40px; z-index: 2; color: var(--ax-color-inverse); filter: drop-shadow(0 1px 2px color-mix(in srgb, var(--ax-color-ink) 35%, transparent)); }
-  .axs-thero .tm .bars { position: absolute; left: var(--ax-space-12); right: var(--ax-space-12); bottom: var(--ax-space-8); display: flex; gap: var(--ax-space-4); z-index: 2; }
-  .axs-thero .tm .bars i { position: relative; flex: 1; height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--ax-color-inverse) 50%, transparent); overflow: hidden; }
-  .axs-thero .tm .bars i::after { content: ""; position: absolute; inset: 0; background: var(--ax-color-inverse); transform-origin: 0 50%; transform: scaleX(0); animation: tinvBar 12s linear var(--d, 0ms) infinite; }
-  @keyframes tinvBar { 0% { transform: scaleX(0); } 25% { transform: scaleX(1); } 25.1%, 100% { transform: scaleX(0); } }
-  .axs-thero .tb { display: flex; flex-direction: column; gap: var(--ax-space-4); padding: var(--ax-space-20) var(--ax-space-24) var(--ax-space-24); }
-  .axs-thero .tb h2 { margin: 0; font: var(--ax-type-t3); color: var(--ax-color-ink); }
-  .axs-thero .tb p { margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); }
-  .axs-thero .tb .ax-button { margin-top: var(--ax-space-16); }
-  @media (prefers-reduced-motion: reduce) { .axs-thero .tm img { animation: none; opacity: 0; } .axs-thero .tm img:first-of-type { opacity: 1; } .axs-thero .tm .bars, .axs-thero .tm .orb { display: none; } }
+  /* v5.53 행사 전 큰 카드(사진 4장 순환 · 칩 · 버튼 · 진행 막대) 걷음 · 홈 입구 = 한 줄 「행사장 둘러보기」(아래 .ico.th 줄) */
   /* v5.46 행사 당일 · 종료 뒤 줄 · 왼쪽 원 안에 3D 로비 사진 */
   #view[data-v="home"] .rc .ls .ico.th, .rc .ls .ico.th { border: 0; overflow: hidden; background: var(--ax-color-brandSoft); }
   .rc .ls .ico.th img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -3775,7 +3758,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.52";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.53";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -5232,7 +5215,7 @@ var App = {
     if (v === "zone_d") { var zn = zoneById(PROG.zone); return zn ? zn.sign : this.TITLES[v]; }   /* v4.93 헤더 = 현장 간판 글자 그대로 */
     return this.TITLES[v] || "";
   },
-  tab: function (t) { this.from = {}; this.go(t); },
+  tab: function (t) { this.from = {}; TOUR_RET = null; this.go(t); },   /* v5.53 아래 탭 = 둘러보기로 돌아가기 지움 */
   /* v4.09 경로 줄 · 실제로 들어온 길 = 뒤로 버튼과 같은 사슬(parentOf · from) · [탭 첫 화면(또는 홈), …, 지금] */
   crumbs: function (v) {
     var out = [v], cur = v, hop = 0;
@@ -5265,6 +5248,7 @@ var App = {
     }).join("") + "</ol></nav>";
   },
   back: function () {
+    if (TOUR_RET && this.current === TOUR_RET.v && tourRetBack()) return;   /* v5.53 둘러보기 바로 가기로 온 화면 = 뒤로 가면 둘러보기 */
     if (QRS.hold) { QRS.gate = 0; QRS.gateQ = []; }   /* v4.13 인식 중 뒤로 = 미뤄 둔 전환을 버리고 바로 나간다 */
     var v = this.current, p = this.parentOf(v) || "home";
     delete this.from[v];
@@ -5308,6 +5292,7 @@ var App = {
       if (this.PARENT[v] === prev) delete this.from[v]; else this.from[v] = prev;
     }
     this.current = v;
+    if (TOUR_RET && v !== TOUR_RET.v && !this.isAnc(TOUR_RET.v, v)) TOUR_RET = null;   /* v5.53 도착한 화면 밖으로 가면 둘러보기 돌아가기 지움 */
     if (typeof wsRoleCheck === "function") wsRoleCheck();   /* v4.76 관리자 모드 = ops 방 */
     /* v3.15 새로 고침 복귀 · 현재 화면의 소속 탭을 sessionStorage 에 기억(같은 브라우저 탭에서만, 다음 방문은 홈).
        관리자·사이니지·게임 전체화면은 저장하지 않는다 · Lv2 는 소속 탭으로 저장된다 */
@@ -6551,7 +6536,7 @@ function crowdStripHtml() {
 /* v5.37 (사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) 둘러보기 v3 = 시험 페이지와 같은 공용 모듈(tour3.js · tour3.css · 캐릭터 걷기 · 40도 시점 · 왼손 패드 · 오른손 십자 · 작은 지도 · 스태프 챗봇 · 판 보기 · 돋보기 2개 · 움직임 줄이기 · 입장 암전)
    같은 약속 AXTour.open/close/back/isOpen · 옛 v2(tour.js · tour.css · 자동 둘러보기 · 평면 지도 · 구역 시트)로 되돌리려면 아래 목록의 tour3 두 개를 tour.css · tour.js 로 바꾸면 된다(파일은 그대로 둠) */
 /* v5.38 (사용자 261003) 둘러보기 손질 · 캐릭터 겹침(스태프 원 충돌) · 늘 카메라 쪽을 봄 · 조그 패드 · 안내데스크 깜빡임(겹친 면) · 정문 회전문 또렷하게 · 로비 음악(Web Audio 합성 · 「음악 없이」 · 위쪽 스피커 버튼) · 파일 이름 그대로 · 캐시 깨기 ver v538 */
-var TOUR = { ver: "v552", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
+var TOUR = { ver: "v553", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
 try { localStorage.removeItem('axfT3Diag'); } catch (e) {} window.AXT3_DIAG = /[?&]t3diag=1(?:&|$)/.test(location.search);   /* v5.47 진단은 주소에 ?t3diag=1 이 있는 그 페이지에서만 · 기억하지 않는다 · 옛 기기 기억은 지운다(사용자 261004) */   /* v5.44 둘러보기 실기기 진단(주소 ?t3diag=1 · 이 기기에 기억 · ?t3diag=0 이면 끔) · 화면 왼쪽 위에 GPU · 깊이 비트 · highp · DPR · fps */
 /* 켜기 스위치 · v5.28 true = 전체 공개(사용자 261003 「1층 3D 전체 공개」) · false 로 두면 입구 3곳 · 판 퀴즈 힌트 링크 · 열기가 모두 숨는다 */
 var TOUR_ON = true;
@@ -6566,6 +6551,7 @@ function tourOn() { return (TOUR_ON && !TOUR_OFF) || TOUR_PEEK; }
 function tourOpen(o) {
   if (!tourOn()) return;
   o = o || {};
+  if (!o.restore) TOUR_RET = null;   /* v5.53 그냥 열면 돌아가기 기억 지움 */
   if (window.AXTour) { AXTour.open(o); return; }
   if (TOUR.busy) return;
   TOUR.busy = true;
@@ -6584,29 +6570,19 @@ function tourRowHtml() {
   if (!tourOn()) return "";
   return '<button type="button" class="axs-zfl axs-tourgo" onclick="tourOpen()"><span class="tx"><span class="nm"><b>1층 둘러보기</b></span><span class="k">3D 모형으로 부스와 판 미리 보기</span></span><span class="zrt">' + CHEV_SVG + "</span></button>";
 }
-/* v5.46 (사용자 261004 · 시안 「디자인 시안/둘러보기 초대/」) 홈 입구는 시기별 · 행사 전 = 광고판 바로 아래 큰 카드(tourHeroHtml) · 당일 · 종료 뒤 = 이 자리(나의 일정 아래) 줄 · 왼쪽 원 = 3D 로비 사진
-   문구는 대상을 특정하지 않는다 · 사진은 처음 한 번만 lazy(받은 뒤에는 4초마다 다시 그려도 깜빡이지 않게 바로) */
-function tourHomeHtml() {
-  if (!tourOn()) return "";
-  var ph = evPhase();
-  if (ph === "before") return "";
+/* v5.53 (사용자 261004 「홈 화면에 1층 미리보기가 지금은 요소가 너무 과한 것 같아 · 행사장 둘러보기 한 문장 정도면 충분할 것 같아」) 홈 입구 = 한 줄 「행사장 둘러보기」
+   왼쪽 원 = 3D 로비 사진(thumb · 홈의 다른 줄과 같은 rc 문법) · 오른쪽 이동 표시 · 부제 · 3D 칩 · 버튼 · 사진 4장 순환 · 진행 막대 없음(옛 v5.46 큰 카드 · 시기별 부제 걷음)
+   자리는 시기별 그대로 · 행사 전 = 광고판 바로 아래(아직 일정 · 스탬프가 비어 있어 위에 둔다) · 당일 · 종료 뒤 = 나의 일정 아래(당일은 지금 · 다음 일정과 스탬프가 먼저 · design.md A-5)
+   사진은 처음 한 번만 lazy(받은 뒤에는 4초마다 다시 그려도 깜빡이지 않게 바로) */
+function tourLineHtml() {
   var th = '<span class="ico th"><img src="' + TINV_IMG + 'thumb.jpg" alt=""' + (TINV.th ? "" : ' loading="lazy" onload="TINV.th = true"') + ' decoding="async"></span>';
-  return '<section class="axs-sec">' + rcHtml({ cls: " axs-tourgo", onclick: "tourOpen()", link: true, left: th, title: "1층 둘러보기", sub: ph === "after" ? "3D 모형으로 1층 다시 보기" : "3D로 전시장 보기" }) + "</section>";
+  return '<section class="axs-sec">' + rcHtml({ cls: " axs-tourgo", onclick: "tourOpen()", link: true, left: th, title: "행사장 둘러보기" }) + "</section>";
 }
-/* 행사 전 큰 카드 · 사진 4장 12초 한 바퀴(한 시계 TINV.t0 · 음수 지연) · 진행 막대 4칸 · 돌려 보기 점선 화살표 · 동작 줄이기 = 정지 한 장(막대 · 화살표 없음) · 사진 면은 누르기만(버튼이 같은 일 · 읽기 순서에서 뺀다) */
-var TINV_ROT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg>';
-var TINV_ORB = '<svg class="orb" viewBox="0 0 76 40" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 26c8 8 24 12 40 8 12-3 20-10 24-18" stroke-dasharray="1 6"/><path d="M62 12l8 4-3 9"/></svg>';
-function tourHeroHtml() {
-  if (!tourOn() || evPhase() !== "before") return "";
-  var rm = lgxRM(), now = performance.now();
-  if (!TINV.t0) TINV.t0 = now;
-  var p = (now - TINV.t0) % 12000, dl = function (i) { return "--d:" + Math.round(-(((p - i * 3000) % 12000 + 12000) % 12000)) + "ms"; };
-  var im = function (i) { return '<img src="' + TINV_IMG + "hero_" + (i + 1) + '.jpg" alt=""' + (TINV.ok ? "" : ' loading="lazy"') + (i === 0 && !TINV.ok ? ' onload="TINV.ok = true"' : "") + ' decoding="async" style="' + dl(i) + '">'; };
-  var imgs = rm ? im(0) : im(0) + im(1) + im(2) + im(3);
-  var bars = rm ? "" : '<span class="bars" aria-hidden="true">' + [0, 1, 2, 3].map(function (i) { return '<i style="' + dl(i) + '"></i>'; }).join("") + "</span>";
-  return '<section class="axs-sec"><div class="ax-card axs-thero">' +
-    '<div class="tm' + (rm ? " still" : "") + '" onclick="tourOpen()" aria-hidden="true">' + imgs + '<span class="tg">' + TINV_ROT + "3D</span>" + (rm ? "" : TINV_ORB) + bars + "</div>" +
-    '<div class="tb"><h2>행사장 미리 둘러보기</h2><p>1층 전시장을 3D로 보기</p><button type="button" class="ax-button ax-button-weak" onclick="tourOpen()">둘러보기</button></div></div></section>';
+function tourHomeHtml() {   /* 당일 · 종료 뒤 · 나의 일정 아래 */
+  return tourOn() && evPhase() !== "before" ? tourLineHtml() : "";
+}
+function tourHeroHtml() {   /* 행사 전 · 광고판 바로 아래 */
+  return tourOn() && evPhase() === "before" ? tourLineHtml() : "";
 }
 /* v5.46 (사용자 261004 「시작하기 로그인을 하고 나서 > 푸쉬창 처럼 팝업창이 초대장이 뜨는 게 낫지 않겠어?」 · 「대놓고 대상자를 특정하거나 그 사람들을 위한 문구로 가져가지는 말자」) 1층 둘러보기 초대
    홈에 들어간 뒤 바텀 시트(M03) 한 장 · 봉투가 열리며 3D 로비 사진 · 주 버튼 「1층 둘러보기」 · 약한 버튼 「나중에 하기」 · 스탬프 말 없음
@@ -6671,10 +6647,24 @@ var TOUR_HOST = {
   stampGo: function (id) {
     var GO = { qz: function () { App.go("quiz"); }, p4: function () { App.go("games"); }, p2: function () { qrPanelOpen("mine"); }, p5: function () { App.go("ideas"); }, p3: function () { progGoFl(17); }, st: function () { stairOpen(); } };
     if (!GO[id]) return;
+    var pose = window.AXTour && AXTour.pose ? AXTour.pose() : null, under = App.current;   /* v5.53 뒤로 오면 이 자리로(tourRetBack) */
     if (window.AXTour) AXTour.close();
-    setTimeout(GO[id], 280);   /* 둘러보기 암전(0.24초)이 끝난 뒤 */
+    setTimeout(function () { GO[id](); TOUR_RET = { v: App.current, under: under, pose: pose }; }, 280);   /* 둘러보기 암전(0.24초)이 끝난 뒤 · 도착한 화면을 기억 */
   }
 };
+/* v5.53 (사용자 261004 「3d에서 앱으로 갔다가 뒤로가기를 하면 3d로 돌아와야 하는데, 앱 메인 화면으로 돌아가」) 둘러보기 → 앱 화면 → 뒤로 = 둘러보기
+   TOUR_RET = 바로 가기로 도착한 화면(v) · 그 밑에 있던 앱 화면(under) · 나가기 전 자리(pose)
+   뒤로(헤더 ‹ · 휴대폰 뒤로 = 둘 다 App.back) 가 도착한 화면에서 나갈 때만 = 밑 화면으로 돌리고 둘러보기를 그 자리로 다시 연다 · 더 깊이 들어갔다면 원래 뒤로 단계를 다 거친 뒤 마지막에
+   지움 = 아래 탭(App.tab) · 도착한 화면과 그 아래가 아닌 곳으로 이동 · 둘러보기를 그냥 열 때 · 둘러보기를 정상으로 닫고 홈에 온 경우에는 생기지 않는다 */
+var TOUR_RET = null;
+function tourRetBack() {
+  var r = TOUR_RET; TOUR_RET = null;
+  if (!r || !tourOn()) return false;
+  delete App.from[App.current];
+  if (r.under && r.under !== App.current) App.go(r.under, true);
+  tourOpen({ restore: r.pose });
+  return true;
+}
 
 /* ════════════════ 일정 탭 행 (v3.5) · 좌측 시간 레일 + 우측 제목 · 부가 설명은 공용 아코디언 접힘 ════════════════ */
 /* v3.21 일정 탭 = 세 탭: all 전체 일정(시간표만) / always 상시 프로그램 / mine 내 일정 */
@@ -11526,7 +11516,7 @@ function typeSec(v) { return (Number(v || 0) / 100).toFixed(1) + "초"; }
 var TYP_SRC = "tv/typing/?promo=1", TYP_IO = null;
 /* v5.45 타자 순위 화면 = TV 순위판 루프 그대로(tv/typing/ · 주소 값 없음 · 후킹 → 게임 → 하는 법 → 상품 → 순위 → 마감 · 17:00 뒤 = 순위 → 상품 → 마감)
    순위 장면 = 1F 현장 TOP 10(공개 type_rank mode site · 30초마다 · 앱 순위판이 하던 20초 받기는 멈춤) · 칸 안 누름 없음(TV 의 「누르면 전체 화면」이 안 돌게) · 화면 꺼짐 방지 · 전체 화면 권한 끔 */
-var TYP_SRC_RANK = "tv/typing/", TYB_SHOW = false;   /* TYB_SHOW = 옛 HIGH SCORE 순위판(tybHtml) · 코드는 그대로 두고 숨김 */
+var TYP_SRC_RANK = "tv/typing/?promo=1&rank=1&t=23", TYB_SHOW = false;   /* v5.53 앱 칸 = 가벼운 판(promo · rank=1 · 33초 판 · TV 7c208cf) · t=23 = 순위 장면부터(사용자 261004 권장안 승인 · 1.7MB 자체 글꼴 · 30초 폴링 대신 앱 글꼴 · 60초) · TYB_SHOW = 옛 HIGH SCORE 순위판(tybHtml) · 코드는 그대로 두고 숨김 */
 function typPromoHtml(go) {
   if (go === "rank" && !TYB_SHOW) return '<div class="typ-pv rt full"><iframe data-src="' + TYP_SRC_RANK + '" loading="lazy" title="1F 타자왕 순위판" tabindex="-1" allow="fullscreen \'none\'; screen-wake-lock \'none\'" data-go="rank"></iframe></div>';
   return '<div class="typ-pv rt"><iframe data-src="' + TYP_SRC + '" loading="lazy" title="1F 타자왕 홍보 영상" tabindex="-1" aria-hidden="true" data-go="' + go + '"></iframe></div>';
