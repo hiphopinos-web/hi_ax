@@ -963,12 +963,8 @@ var TABS = [
   { id:"sched", n:"예약", d:"정해진 시각에 서버가 공지 · Outro 안내를 스스로 냅니다. 관람 시간표(가상 데이터)와 혼잡 만료 알림 자리도 여기서 봅니다." },
   { id:"push", n:"알림", d:"웹 푸시 구독 현황 · 발송 설정(잠금 · 정지 · 시간) · 그룹 명단 · 자동 알림까지 모든 발송 이력입니다. 보내기는 「공지·푸시」 메뉴에서 합니다. 부문 통계는 두지 않습니다." },
   { id:"photo", n:"포토부스", d:"AI 포토부스 원격 대기열을 호출하고 완료 처리합니다." },
-  { id:"art", n:"사생대회", d:"본선 공개 작품을 관리합니다. 좋아요 1인 3표이고 앱에는 작가가 나오지 않습니다." },
   { id:"adm", n:"권한", d:"콘솔과 앱 스태프 화면에 들어올 사번 명단, 공용 코드를 관리합니다. 슈퍼관리자에게만 보이고 머리의 「슈퍼관리자 · 권한」으로 엽니다." }   /* v4.85 (261001) */
 ];
-/* v4.02 (사용자 확정 260919) AI 사생대회 폐기 · 메뉴에서 숨긴다, 코드는 그대로 둔다 · 다시 켜려면 true (앱 ART_ON 과 같은 이름) */
-var ART_ON = false;
-if(!ART_ON) TABS = TABS.filter(function(t){ return t.id!=="art"; });
 /* v5.03 (261002 사용자 결정) 1F AI 포토부스 현장 대기열 폐지(대기 번호 · 호출 없음) · 메뉴 · 대시보드 대기 수 · 알림 대상 「포토부스 대기」를 숨긴다 · 코드는 그대로 · 다시 켜려면 true */
 var PHOTO_Q_ON = false;
 if(!PHOTO_Q_ON) TABS = TABS.filter(function(t){ return t.id!=="photo"; });
@@ -1264,7 +1260,7 @@ var ST={ tab:"dash", me:null, subs:{ apply:"resv", stamp:"one", qr:"img", typing
    안 그러면 응답이 올 때까지(1~3초) 이전 탭 내용이 새 탭 이름 아래 그대로 보인다. */
 /* load() 를 먼저 불러 busy 를 세운 뒤 그린다. 반대로 하면 첫 진입에 「가입 계정 0명」처럼 0 으로 그려진다. */
 /* v5.14 go(t) · t = 새 메뉴 항목 id(NAV) 또는 옛 탭 id · 옛 탭이면 그 탭 · 지금 서브탭을 담은 항목으로 간다(navFind) · 화면 전환은 navSel 한 곳 */
-function go(t){ if(NAVBY[t]){ navSel(t, 0); return; } if(!ART_ON&&t==="art") t="dash"; if(!PHOTO_Q_ON&&t==="photo") t="dash"; if(t==="adm"&&!supOn()) t="dash"; var f=navFind(t, ST.subs[t]); navSel(f.id, f.i); }
+function go(t){ if(NAVBY[t]){ navSel(t, 0); return; } if(!PHOTO_Q_ON&&t==="photo") t="dash"; if(t==="adm"&&!supOn()) t="dash"; var f=navFind(t, ST.subs[t]); navSel(f.id, f.i); }
 /* 대시보드 바로가기 · 탭 + 서브탭 + 필터까지 한 번에 */
 function goTo(t, sub, filt){ if(sub) ST.subs[t]=sub; go(t); if(filt){ ST.filt=filt; render(); } }
 function sub(){ return ST.subs[ST.tab]; }
@@ -1321,7 +1317,6 @@ var NEED={
   cfg:[],
   danger:[{k:"att",a:"att_stats"},{k:"visit",a:"visit_stats"},{k:"stats",a:"stats"},{k:"sy",a:"sync",p:{emp:""}}],
   arch:[],
-  art:[{k:"art",a:"art_all"}],
   adm:function(){ return supOk()?[{k:"adm",a:"adm_roster",p:SUPV.sp?{sp:SUPV.sp}:{}}]:[]; }   /* v4.85 권한 · 슈퍼관리자 · v4.86 본인 확인(PIN) 뒤에만 받는다 */
 };
 /* v4.16 서브탭에서만 쓰는 액션 · 그 서브탭을 열 때만 부른다(함수면 지금 고른 값으로 만든다 · 담당 명단은 프로그램마다 다른 요청) */
@@ -2481,11 +2476,6 @@ function drwCchat(emp){
  * 문항 문구는 앱 SURVEY 상수와 같게 둔다(기획 확정 시 두 곳을 함께 바꾼다). */
 var SURVEY_PLACE_NAME = { p1:"1F 부스", p2:"AX PLAY", p7:"전시 QR 퀴즈", p3:"17F 강연", dap:"AX LOUNGE 상담", cchat:"18F AX 커피챗" };
 /* v3.52b 설문 = 범용 틀 · 문항은 앱 SURVEY_Q 한 곳 · 서버가 문항 id 별로 형식별 기본 집계만 준다(선택 비율 · 점수 분포 · 한 줄) */
-/* v3.58 AI 사생대회 · 1차 심사는 앱 밖에서 · 여기에는 본선 공개할 작품만 올린다.
-   앱에는 상태가 '공개'·'샘플' 인 것만, 작가 없이(번호·제목·설명) 나간다 · '샘플' 은 좋아요·순위에서 빠지고 화면에 「샘플」 워터마크가 얹힌다 · 좋아요 1인 3표 · 시상 확인용 실명은 이 화면에만 있다.
-   이미지는 GAS 릴레이가 아니라 정적 호스팅이다: 원본을 내려받아 긴 변 1080px + 섬네일 320px 로 줄이고
-   웹배포용/assets/art/ 에 <작품ID>.jpg · <작품ID>_t.jpg 로 넣은 뒤 시트 「파일」 칸에 <작품ID>.jpg 만 적는다. */
-
 /* ══════════════════ 7-6. 17F 출석 (v4.26 · 260924 사용자 확정) ══════════════════
  * 17F 강연은 전부 자유 참석 · 참가자가 대강당 입구 QR 을 찍고 프로그램을 골라 출석한다(서버 att_claim).
  * 여기는 집계만 본다: 프로그램별 출석 인원 · 출석률 · 시간대별 입장 흐름 · 여러 프로그램 출석 분포. 부문 통계는 두지 않는다(260917 결정).
@@ -3164,40 +3154,6 @@ function viewVisit(){
   return h;
 }
 
-/* ══════════════════ 7-5. AI 사생대회 ══════════════════ */
-function viewArt(){
-  var d=ST.data.art||{}, rows=(d.rows||[]).filter(function(r){ return match(r,["id","title","desc","name","nick","emp"]); });
-  var byLikes=rows.slice().filter(function(r){ return r.status==="공개"; }).sort(function(a,b){ return b.likes-a.likes || (a.ts<b.ts?-1:1); });
-  var h=tabHead();
-  h+='<div class="kpis">'+kpi("공개",rows.filter(function(r){return r.status==="공개";}).length,"점")+kpi("대기",rows.filter(function(r){return r.status==="대기";}).length,"점")+kpi("숨김",rows.filter(function(r){return r.status==="숨김";}).length,"점")+kpi("좋아요",rows.reduce(function(a,r){return a+(r.likes||0);},0),"개")+'</div>';
-  h+=card("설정","형식 2026-10-26 16:30",'<div class="row" style="gap:12px;align-items:flex-end">'+
-    '<label class="fld">접수 폼 주소<input class="in w-l" id="artForm" value="'+esc(d.form||"")+'"></label>'+
-    '<label class="fld">접수 마감<input class="in w-m" id="artSub" value="'+esc(d.subEnd||"")+'"></label>'+
-    '<label class="fld">좋아요 마감<input class="in w-m" id="artVote" value="'+esc(d.voteEnd||"")+'"></label>'+
-    '<label class="fld">순위 상위 N<input class="in w-s" id="artTop" inputmode="numeric" value="'+(d.top||10)+'"></label>'+
-    '<button class="btn pri" onclick="artSave()">저장</button></div>'+
-    memo('<p>접수 마감 전에는 앱 홈 배너가 폼으로, 그 뒤 좋아요 마감까지는 갤러리로 갑니다. 좋아요 마감이 지나면 배너가 사라지고 좋아요가 잠깁니다.</p>'+
-      '<p><b>이미지 올리는 순서 (정적 호스팅)</b></p><ol><li>폼 응답에서 본선 작품 원본을 내려받는다.</li><li>작품마다 번호를 정한다(01~10). 이 번호가 작품ID이자 앱에 보이는 번호다.</li>'+
-      '<li>변환 스크립트를 돌린다: <b>python 사생대회_이미지_변환.py &lt;원본 폴더&gt;</b> → 긴 변 1080px <b>01.jpg</b> 와 섬네일 320px <b>01_t.jpg</b> 가 나온다.</li>'+
-      '<li>나온 파일을 <b>웹배포용/assets/art/</b> 에 넣고 push 한다.</li><li>시트 「사생대회」에 작품ID·접수시각·사번·제목·설명·파일(01.jpg)·상태(대기)를 적고, 여기서 「공개」로 바꾼다.</li></ol>'+
-      '<p>공개 주소를 아는 사람은 누구나 이미지를 볼 수 있습니다. 접수 폼에 「사내·대외비 자료 금지」를 적어 두세요.</p>'));
-  h+=card("작품","앱에는 작가 없이 번호 · 제목 · 설명만 나갑니다",'<div class="toolbar">'+searchBox("번호 · 제목 · 이름 검색")+'<span class="cnt"><b>'+rows.length+'</b>점</span></div>'+
-    '<div class="wrap"><table class="tb"><tr><th>번호</th><th>제목</th><th>작가(시상용)</th><th>파일</th><th class="tdr">좋아요</th><th>상태</th><th class="tdr">처리</th></tr>'+
-    (rows.length?rows.map(function(r){ var k=jq(r.id);
-      return '<tr class="hv"><td class="n"><b>'+esc(r.id)+'</b></td><td>'+esc(r.title)+'<div class="cap">'+esc(r.desc||"")+'</div></td>'+
-        '<td>'+esc(r.name||"-")+'<div class="cap">'+esc(r.emp||"")+(r.nick?" · "+esc(r.nick):"")+'</div></td>'+
-        '<td class="n cap">'+esc(r.file||"")+'</td><td class="n tdr">'+(r.likes||0)+'</td>'+
-        '<td>'+tag(r.status, r.status==="공개"?"ok":r.status==="숨김"?"off":r.status==="대기"?"warn":"")+'</td>'+
-        '<td><div class="acts">'+(r.status!=="숨김"?''+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="artSet(\''+k+'\',\'숨김\')">숨김</button>')+'':'')+
-        (r.status!=="샘플"?'<button class="btn sm" onclick="artSet(\''+k+'\',\'샘플\')">샘플</button>':'')+
-        (r.status!=="공개"?'<button class="btn sm pri" onclick="artSet(\''+k+'\',\'공개\')">공개</button>':'')+'</div></td></tr>'; }).join(""):emptyRow(7,"작품이 없습니다. 시트 「사생대회」에 행을 넣고 새로고침하세요."))+
-    '</table></div>');
-  h+=card("좋아요 순위 · 시상용","동점은 먼저 낸 쪽이 위 · 좋아요 수로만 정합니다",'<div class="wrap"><table class="tb"><tr><th>순위</th><th>번호</th><th>제목</th><th>작가</th><th>사번</th><th class="tdr">좋아요</th></tr>'+
-    (byLikes.length?byLikes.slice(0,20).map(function(r,i){ return '<tr><td class="n"><b>'+(i+1)+'</b></td><td class="n">'+esc(r.id)+'</td><td>'+esc(r.title)+'</td><td>'+esc(r.name||"-")+'</td><td class="n">'+esc(r.emp||"")+'</td><td class="n tdr">'+(r.likes||0)+'</td></tr>'; }).join(""):emptyRow(6,"공개된 작품이 없습니다."))+
-    '</table></div>','<button class="btn sm" onclick="artCsv()">시상 결과 CSV</button>');
-  return h;
-}
-
 /* ══════════════════ 7-5. 설문 (v3.35) ══════════════════ */
 function viewSurvey(){
   var d=ST.data.survey||{n:0,qs:[]}, qs=d.qs||[];
@@ -3720,21 +3676,6 @@ function viewPhoto(){
     memo('<p>참가자는 앱에서 번호를 받고 자리에서 기다립니다. 앞 2팀이 되면 앱에 「곧 차례예요」가 뜨고, 호출하면 「지금 입장하세요」가 뜹니다. 번호표 발급은 시간 제한이 없습니다.</p>'+
       '<p>v4.15부터 담당자 폰이 참가자 QR을 찍으면 그 번호가 <b>완료</b>로 빠지고 다음 대기 번호가 <b>자동으로 호출</b>됩니다(호출 전에 먼저 온 사람도 받습니다). 이 표에서는 찍힌 번호가 사라지고 다음 번호가 「호출 중」으로 바뀝니다. 건너뛰기(노쇼)는 이 화면에서만 합니다.</p>'));
   return h;
-}
-function artSet(id,status){
-  call("art_set",{id:id,status:status},function(r){ if(r&&r.ok){ toast("작품 "+id+" · "+status); reload(["art"]); } else toast("처리 실패"+((r&&r.reason)?" ("+r.reason+")":"")); },function(){ toast("서버 연결 실패"); });
-}
-function artSave(){
-  call("art_cfg",{form:(el("artForm").value||"").trim(),subEnd:(el("artSub").value||"").trim(),voteEnd:(el("artVote").value||"").trim(),top:(el("artTop").value||"10").trim()},
-    function(r){ if(r&&r.ok){ toast("저장했습니다"); reload(["art"]); } else toast("저장 실패"); },function(){ toast("서버 연결 실패"); });
-}
-function artCsv(){
-  var rows=((ST.data.art||{}).rows||[]).filter(function(r){ return r.status==="공개"; }).sort(function(a,b){ return b.likes-a.likes || (a.ts<b.ts?-1:1); });
-  var out=["순위,번호,제목,작가,사번,닉네임,좋아요,접수시각"].concat(rows.map(function(r,i){
-    return [i+1,r.id,'"'+String(r.title||"").replace(/"/g,'""')+'"',r.name||"",r.emp||"",r.nick||"",r.likes||0,r.ts||""].join(",");
-  }));
-  var blob=new Blob(["\ufeff"+out.join("\n")],{type:"text/csv;charset=utf-8"});
-  var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="사생대회_시상.csv"; a.click(); URL.revokeObjectURL(a.href);
 }
 /* v3.80 타자 기록은 「버틴 시간」(1/100초) · 표에는 초로 보여 준다 */
 function tySec(v){ return v ? (Number(v)/100).toFixed(1)+"초" : "-"; }
@@ -6015,7 +5956,7 @@ function viewQrBeta(items){
  * 행사 요소 7개는 같은 틀(hvFrame) · ① 상태 ② 통제 ③ 화면 ④ 기록 · 그 아래 세부 작업 칩(옛 화면).
  * 위험 가드 3등급: L1 되돌리기 알림(toast undo) · L2 확인 창(대상 · 인원 · 결과, 적갈 버튼) · L3 슈퍼관리자 PIN → 미리 세기 → 확인 문구(dialog word) → 결과 창.
  * 슈퍼 전용 항목(sup)은 숨기지 않고 자물쇠 칩으로 보인다 · 일반 운영자가 열면 「슈퍼관리자에게 요청」 한 장.
- * 폐기 잔재(사생대회 · 포토부스 대기열 · QR 퀴즈 문항 · 클로즈 베타 QR)는 시스템 › 보관으로 · 코드는 그대로 둔다(결정 6). */
+ * 폐기 잔재(포토부스 대기열 · QR 퀴즈 문항 · 클로즈 베타 QR)는 시스템 › 보관으로 · 코드는 그대로 둔다(결정 6). */
 var QR_OLD_ON=false;   /* R5 · R6 · R7 · DAP Wall 퀴즈 QR · 룰렛 데스크 · 포토부스 안내판 · 스탬프 01(1F 전시) 행을 숨긴다 · 다시 보이려면 true */
 var OX_PASS_ON=false;
 var RACE_ON=false;    /* 1F 타자왕 = 셀프 노트북만 · 소나기 대전(판 열기 · 좌석 링크 · 큰 화면 4분할) · 오늘 대전 기록은 끈다(261002 결선 · 대전 없음 · 사용자 261003 「없어진 기획은 콘솔에서 없앤다」) · 코드는 그대로 */  /* R9 · 올림픽 O/X 「판자 허용」 칸을 숨긴다 · 값은 서버 그대로 */
@@ -6067,7 +6008,7 @@ var NAV=[
   { id:"s_state", m:"sy", n:"서버 상태 · 백업", parts:[P("sys","","","viewSys")] },
   { id:"s_cfg", m:"sy", n:"운영 설정", parts:[P("cfg","","","viewCfg")] },
   { id:"s_danger", m:"sy", n:"위험 구역", parts:[P("danger","","위험 구역","viewDanger"),P("acct","all","전체 초기화",null,{ sup:1, pre:1 })] },
-  { id:"s_arch", m:"sy", n:"보관", parts:[P("arch","","목록","viewArch"),P("stamp","wq","QR 퀴즈 문항"),P("qr","beta","클로즈 베타 QR"),P("photo","","포토부스 대기열"),P("art","","사생대회")] }
+  { id:"s_arch", m:"sy", n:"보관", parts:[P("arch","","목록","viewArch"),P("stamp","wq","QR 퀴즈 문항"),P("qr","beta","클로즈 베타 QR"),P("photo","","포토부스 대기열")] }
 ];
 NAV.splice(NAV.findIndex(function(it){ return it.id==="e_qr"; })+1, 0, { id:"e_inv", m:"el", n:"경품·재고", el:"inv", parts:[P("inv","","","viewInv")] });   /* v5.21 경품·재고 · 행사 요소 8번째(사용자 결정 261003) */
 NAV=NAV.filter(function(it){ return RACE_ON||it.id!=="r_race"; });
@@ -6123,7 +6064,7 @@ function hvNeedX(t){
 /* 서버가 새 액션(2단계)을 아는가 · 처음엔 안다고 보고 부른다 · unknown action 이면 그 화면만 「서버 갱신 뒤」로 떨어진다 */
 var HVS={ cfg:1, test:1, oplog:1 };
 function hvUnknown(d){ return !!(d&&d.ok===false&&/unknown action/.test(String(d.err||""))); }
-function viewLegacy(){ return ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="qr"?viewQr():ST.tab==="notice"?viewNotice():ST.tab==="sched"?viewSched():ST.tab==="push"?viewPush():ST.tab==="survey"?viewSurvey():ST.tab==="typing"?viewTyping():ST.tab==="photo"?viewPhoto():ST.tab==="art"?viewArt():ST.tab==="race"?viewRace():ST.tab==="idea"?viewIdea():ST.tab==="att"?viewAtt():ST.tab==="draw"?viewDraw():ST.tab==="visit"?viewVisit():ST.tab==="adm"?viewAdm():viewApply(); }
+function viewLegacy(){ return ST.tab==="dash"?viewDash():ST.tab==="acct"?viewAcct():ST.tab==="stamp"?viewStamp():ST.tab==="qr"?viewQr():ST.tab==="notice"?viewNotice():ST.tab==="sched"?viewSched():ST.tab==="push"?viewPush():ST.tab==="survey"?viewSurvey():ST.tab==="typing"?viewTyping():ST.tab==="photo"?viewPhoto():ST.tab==="race"?viewRace():ST.tab==="idea"?viewIdea():ST.tab==="att"?viewAtt():ST.tab==="draw"?viewDraw():ST.tab==="visit"?viewVisit():ST.tab==="adm"?viewAdm():viewApply(); }
 var HV_VIEW={ viewHq:function(){ return viewHq(); }, viewDash:function(){ return viewDash(); }, viewElEmpty:function(){ return viewElEmpty(); }, viewCrowdTab:function(){ return viewCrowdTab(); }, viewTest:function(){ return viewTest(); }, viewSys:function(){ return viewSys(); }, viewCfg:function(){ return viewCfg(); }, viewDanger:function(){ return viewDanger(); }, viewArch:function(){ return viewArch(); } };
 var LOCK_SVG='<svg class="hv-lk" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="2.2" y="5.2" width="7.6" height="5.6" rx="1.2"/><path d="M3.9 5.2V3.8a2.1 2.1 0 0 1 4.2 0v1.4"/></svg>';
 function hvLockCard(){ return card("슈퍼관리자 전용", "", '<div class="empty">'+LOCK_SVG+' 이 항목은 슈퍼관리자만 엽니다. 필요하면 슈퍼관리자에게 요청하세요.</div>'); }
@@ -6444,7 +6385,7 @@ function viewSys(){
   return '<div class="grid g2" style="margin-top:0">'+srv+ros+'</div><div class="grid g2">'+bk+dev+'</div>';
 }
 function viewArch(){
-  var rows=[["QR 퀴즈 문항","스탬프 8종에서 제외 · 1F 현장 QR 은 아이디어 한 줄뿐","261001 · 261002",1],["클로즈 베타 QR","10/25 베타 종료","행사 후",2],["포토부스 대기열","현장 대기(대기 번호) 폐지","261002",3],["사생대회","레드팀 검토로 폐기","260919",4]];
+  var rows=[["QR 퀴즈 문항","스탬프 8종에서 제외 · 1F 현장 QR 은 아이디어 한 줄뿐","261001 · 261002",1],["클로즈 베타 QR","10/25 베타 종료","행사 후",2],["포토부스 대기열","현장 대기(대기 번호) 폐지","261002",3]];
   return card("지난 기능","코드는 그대로 두고 화면에서만 뺐습니다(결정 6) · 열면 옛 화면이 그대로 뜹니다",
     '<details class="memo" style="margin-top:0"><summary>보관 목록 '+rows.length+'가지 · 펼치기</summary><div class="mb"><div class="wrap"><table class="tb"><tr><th>항목</th><th>보관 사유</th><th>근거</th><th></th></tr>'+
     rows.map(function(r){ return '<tr><td><b>'+esc(r[0])+'</b></td><td class="cap">'+esc(r[1])+'</td><td class="cap n">'+esc(r[2])+'</td><td><button class="btn sm" onclick="navSel(\'s_arch\','+r[3]+')">열기</button></td></tr>'; }).join("")+'</table></div>'+
