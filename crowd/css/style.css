@@ -105,6 +105,16 @@ button, select, input { font-family: inherit; font-size: 14px; }
 .s-bad { color: var(--bad); }
 .s-none { color: var(--faint); }
 .zone.bad { border-color: var(--bad); box-shadow: inset 0 0 0 1px var(--bad); }
+/* 혼잡 판단(261005) · 평소 = 회색 한 줄 · 확인 요청 = 빨간 띠 */
+.zone .judge { grid-column: 1 / -1; margin-top: 8px; padding: 7px 10px; border-radius: 8px; background: var(--dim); color: var(--sub); font-size: 13px; line-height: 1.45; }
+.zone .judge b { color: var(--ink); font-weight: 700; }
+.zone .judge.j-check { background: var(--bad); color: #fff; }
+.zone .judge.j-check b { color: #fff; }
+.zone.check { border-color: var(--bad); box-shadow: inset 0 0 0 2px var(--bad); }
+.jsum { margin-top: 10px; padding: 9px 12px; border-radius: 10px; background: var(--dim); color: var(--sub); font-weight: 600; font-size: 14px; }
+.jsum.on { background: var(--bad); color: #fff; font-size: 16.5px; font-weight: 700; }
+.exrow { justify-content: space-between; border: 1px dashed var(--faint); border-radius: 8px; padding: 6px 10px; margin: 6px 0; }
+.exname { color: var(--body); font-weight: 600; font-size: 13.5px; }
 .empty { color: var(--sub); font-size: 13.5px; padding: 10px 2px; }
 
 /* 설정 묶음 */
@@ -181,5 +191,9 @@ details[open] summary::after { content: "\2212"; }
 .cam.lost { background: var(--dim); }
 .cam.lost .cn, .cam.lost .ct, .cam.lost td.zn, .cam.lost td.zc { color: var(--faint); }
 .lost-tag { background: var(--line); color: var(--sub); font-weight: 700; font-size: 13px; padding: 4px 10px; border-radius: 999px; }
+.jtag { display: inline-block; margin-top: 4px; font-size: 12.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: var(--dim); color: var(--sub); }
+.jtag.j-check { background: var(--bad); color: #fff; }
+.cam.check { border-color: var(--bad); box-shadow: inset 0 0 0 2px var(--bad); }
+.cam-h .ck { background: var(--bad); color: #fff; font-weight: 700; font-size: 14px; padding: 6px 12px; border-radius: 999px; white-space: nowrap; }
 .age { color: var(--faint); font-size: 12.5px; }
 .dash-empty { padding: 60px 20px; text-align: center; color: var(--sub); font-size: 15.5px; line-height: 1.7; }

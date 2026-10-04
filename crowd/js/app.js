@@ -5,8 +5,9 @@ import { PersonDetector, MODELS } from "../../engine/detector.js";
 import { createTransport } from "../../engine/transport.js";
 import { cameraError, hasCamera, listCameras, openStream, trackDevice } from "../../engine/camera.js";
 import { FrameScheduler } from "../../engine/scheduler.js";
-import { inPoly, zoneState } from "../../engine/tracking.js";
-import { getLoc, setLoc, cleanLoc, camName, loadZones, saveZones as saveZonesShared, onShared, LOC_MAX } from "../../engine/settings.js";
+import { inPoly, zoneState, splitExcluded } from "../../engine/tracking.js";
+import { getLoc, setLoc, cleanLoc, camName, loadZones, saveZones as saveZonesShared, loadExcl, saveExcl, onShared, LOC_MAX } from "../../engine/settings.js";
+import { JUDGE, JUDGE_WORD, scaleOpt, judgeZones, judgeView } from "../../engine/judge.js";   // 261005 혼잡 판단(1분 중앙값 · 2분 유지 · 80% 해제)
 import { initExhibit } from "./exhibit.js";   // 261003 전시 모드(점만 그린다)
 
 const $ = (id) => document.getElementById(id);
@@ -64,7 +65,13 @@ const detector = new PersonDetector();
 let src = null; // { kind, el, w, h }
 let stream = null;
 let zones = loadZones(loc);
-let dets = [];
+let excl = loadExcl(loc);   // 261005 제외 구역(흉상 등) · 공용 키 axf-cc-excl:<위치>
+let rawDets = [];           // 인식기가 낸 그대로
+let dets = [];              // 제외 구역을 뺀 사람(세는 것)
+let exDets = [];            // 제외 구역에 걸려 뺀 것(화면에 점선으로만)
+// 혼잡 판단 · 구역 id 마다 · 시험 모드 ?jfast=10 이면 시간 길이만 1/10(1분 → 6초 · 2분 → 12초)
+const JOPT = (() => { try { const f = Number(new URLSearchParams(location.search).get("jfast")); return f > 1 ? scaleOpt(f) : JUDGE; } catch (e) { return JUDGE; } })();
+let judges = new Map();
 let counts = { total: 0, zones: {} };
 let lastMs = 0;
 let lastAt = 0;
@@ -157,7 +164,9 @@ function stopSource() {
     still.removeAttribute("src");
   }
   src = null;
+  rawDets = [];
   dets = [];
+  exDets = [];
 }
 
 async function startCamera() {
@@ -255,13 +264,15 @@ async function tick() {
   busy = true;
   const t0 = performance.now();
   try {
-    if (src.kind !== "image" || !dets.length || detector.dirty) {
-      dets = detector.detect(src.el, src.w, src.h, settings.tiles);
+    if (src.kind !== "image" || !rawDets.length || detector.dirty) {
+      rawDets = detector.detect(src.el, src.w, src.h, settings.tiles);
       detector.dirty = false;
       lastMs = performance.now() - t0;
     }
     countZones();
     lastAt = Date.now();
+    judges = judgeZones(judges, lastAt, zoneRows(), JOPT);   // 계수할 때만 판단을 한 걸음 옮긴다(구역 편집은 판단에 넣지 않는다)
+    renderCounts();
     publish();
     record();
   } catch (e) {
@@ -281,6 +292,9 @@ function anchorOf(d) {
 const stateOf = zoneState;   // 공용(engine/tracking.js) · 보통 warn 명 이상 · 혼잡 crowd 명 이상
 
 function countZones() {
+  const sp = src ? splitExcluded(rawDets, src.w, src.h, excl) : { keep: [], drop: [] };
+  dets = sp.keep;
+  exDets = sp.drop;
   const zc = {};
   for (const z of zones) zc[z.id] = 0;
   for (const d of dets) {
@@ -298,9 +312,10 @@ function countZones() {
 }
 
 function zoneRows() {
+  const now = Date.now();
   return zones.map((z) => {
-    const n = counts.zones[z.id] || 0;
-    return { id: z.id, name: z.name, count: n, state: stateOf(z, n), warn: z.warn, crowd: z.crowd };
+    const n = counts.zones[z.id] || 0, j = judges.get(z.id), v = j ? judgeView(j, now, JOPT) : { k: "lost", med: null, left: -1 };
+    return { id: z.id, name: z.name, count: n, state: stateOf(z, n), warn: z.warn, crowd: z.crowd, judge: v.k, med: v.med, left: v.left };
   });
 }
 
@@ -326,8 +341,8 @@ function stamp(d) {
 function record() {
   const t = stamp(new Date());
   const cn = fullName();
-  log.push([t, cn, "화면 전체", counts.total, ""]);
-  for (const r of zoneRows()) log.push([t, cn, r.name, r.count, WORD[r.state]]);
+  log.push([t, cn, "화면 전체", counts.total, "", ""]);
+  for (const r of zoneRows()) log.push([t, cn, r.name, r.count, WORD[r.state], JUDGE_WORD[r.judge] || ""]);
   if (log.length > MAX_LOG) log = log.slice(log.length - MAX_LOG);
   $("logCount").textContent = log.length.toLocaleString() + "줄";
 }
@@ -336,19 +351,43 @@ function record() {
 function renderCounts() {
   $("total").innerHTML = counts.total + "<small>명</small>";
   const box = $("zones");
+  const rows = zoneRows();
+  renderJudgeSum(rows);
   if (!zones.length) {
     box.innerHTML = '<div class="empty">구역이 없습니다 · 「구역 그리기」로 화면 위에 다각형을 그리세요</div>';
     return;
   }
-  box.innerHTML = zoneRows()
+  box.innerHTML = rows
     .map(
-      (r) => `<div class="zone ${r.state === "bad" ? "bad" : ""}">
+      (r) => `<div class="zone ${r.state === "bad" ? "bad" : ""} ${r.judge === "check" ? "check" : ""}">
         <span class="zn">${esc(r.name)}</span>
         <span class="zc num">${r.count}<small>명</small></span>
         <span class="state s-${r.state}">${WORD[r.state]}</span>
+        <div class="judge j-${r.judge} num">${judgeLine(r)}</div>
       </div>`
     )
     .join("");
+}
+
+// 판단 한 줄 · 상태 · 1분 중앙값 / 기준 · 바뀌기까지 남은 시간(리허설 때 기준을 맞추기 쉽게)
+function mmss(ms) {
+  const s = Math.ceil(ms / 1000);
+  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+}
+function judgeLine(r) {
+  const head = `<b>${JUDGE_WORD[r.judge]}</b>`;
+  if (r.judge === "lost" || r.judge === "na") return head;
+  const med = r.med === null ? "-" : Math.round(r.med * 10) / 10;
+  let tail = "";
+  if (r.left >= 0) tail = r.judge === "calm" ? ` · ${mmss(r.left)} 더 이어지면 확인 요청` : ` · ${mmss(r.left)} 더 낮으면 평소`;
+  return `${head} · 1분 중앙값 ${med}명 / 기준 ${r.crowd}명${tail}`;
+}
+function renderJudgeSum(rows) {
+  const el = $("jsum");
+  if (!el) return;
+  const n = rows.filter((r) => r.judge === "check").length;
+  el.className = "jsum" + (n ? " on" : "");
+  el.textContent = !zones.length ? "혼잡 판단 · 구역을 그리면 시작" : n ? "현장 확인 요청 · " + n + "곳" : "혼잡 판단 · 평소";
 }
 
 function esc(s) {
@@ -367,11 +406,27 @@ function renderZoneEdit() {
       (z) => `<div class="zedit" data-id="${z.id}">
       <div class="row"><label>이름</label><input type="text" data-f="name" value="${esc(z.name)}"></div>
       <div class="row"><label>보통</label><input type="number" min="1" data-f="warn" value="${z.warn}"><label style="min-width:0">명 이상 · 혼잡</label><input type="number" min="1" data-f="crowd" value="${z.crowd}"><label style="min-width:0">명 이상</label></div>
+      <p class="note">혼잡 값이 이 구역의 확인 요청 기준입니다.</p>
       <div class="row"><button class="btn sm" data-del="1">구역 지우기</button></div>
     </div>`
     )
     .join("");
+  renderExclEdit();
 }
+
+function renderExclEdit() {
+  $("exEdit").innerHTML = excl.length
+    ? excl.map((x, i) => `<div class="row exrow" data-id="${esc(x.id)}"><span class="exname">${esc(x.name || "제외 " + (i + 1))}</span><button class="btn sm" data-exdel="1">지우기</button></div>`).join("")
+    : '<p class="note">제외 구역 없음</p>';
+}
+$("exEdit").addEventListener("click", (e) => {
+  if (!e.target.dataset.exdel) return;
+  const id = e.target.closest(".exrow").dataset.id;
+  excl = excl.filter((x) => x.id !== id);
+  saveExcl(loc, excl);
+  renderExclEdit();
+  if (src) { countZones(); publish(); }
+});
 
 $("zoneEdit").addEventListener("input", (e) => {
   const card = e.target.closest(".zedit");
@@ -399,22 +454,27 @@ $("zoneEdit").addEventListener("click", (e) => {
   publish();
 });
 
-function startDraw() {
+function startDraw(kind) {
   if (!src) {
     msg("먼저 카메라를 켜거나 시험 영상을 고르세요");
     setTimeout(() => !src && msg("카메라 또는 시험 영상을 고르세요"), 1800);
     return;
   }
-  drawing = { pts: [], hover: null, lastT: 0 };
+  drawing = { pts: [], hover: null, lastT: 0, kind: kind === "ex" ? "ex" : "zone" };
   view.classList.add("drawing");
   $("drawHint").classList.add("on");
   $("zoneAdd").hidden = true;
+  $("exAdd").hidden = true;
   $("zoneClose").hidden = false;
   $("zoneCancel").hidden = false;
 }
 
 function endDraw(commit) {
-  if (commit && drawing && drawing.pts.length >= 3) {
+  if (commit && drawing && drawing.pts.length >= 3 && drawing.kind === "ex") {
+    excl.push({ id: "x" + Date.now().toString(36), name: "제외 " + (excl.length + 1), pts: drawing.pts });
+    saveExcl(loc, excl);
+    renderExclEdit();
+  } else if (commit && drawing && drawing.pts.length >= 3) {
     const n = zones.length + 1;
     zones.push({ id: "z" + Date.now().toString(36), name: "구역 " + n, pts: drawing.pts, warn: 3, crowd: 6 });
     saveZones();
@@ -424,6 +484,7 @@ function endDraw(commit) {
   view.classList.remove("drawing");
   $("drawHint").classList.remove("on");
   $("zoneAdd").hidden = false;
+  $("exAdd").hidden = false;
   $("zoneClose").hidden = true;
   $("zoneCancel").hidden = true;
   if (src) {
@@ -501,6 +562,7 @@ function frame() {
     } else {
       drawGrid(W, H);
     }
+    drawExcl(W, H);
     drawZones(W, H);
     drawDets(W, H);
   }
@@ -538,6 +600,32 @@ function drawDets(W, H) {
   }
 }
 
+// 제외 구역 · 회색 점선 + 「제외」 · 거기서 뺀 상자도 회색 점선(세지 않았다는 표시)
+function drawExcl(W, H) {
+  if (!excl.length && !exDets.length) return;
+  const fs = Math.max(16, Math.round(W / 56));
+  ctx.save();
+  ctx.setLineDash([lw(W) * 3, lw(W) * 3]);
+  ctx.lineWidth = lw(W) * 1.2;
+  for (const x of excl) {
+    ctx.beginPath();
+    x.pts.forEach((p, k) => (k ? ctx.lineTo(p[0] * W, p[1] * H) : ctx.moveTo(p[0] * W, p[1] * H)));
+    ctx.closePath();
+    ctx.fillStyle = "rgba(152,162,172,.18)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(217,217,217,.9)";
+    ctx.stroke();
+    const top = x.pts.reduce((a, b) => (b[1] < a[1] ? b : a));
+    ctx.font = `700 ${fs}px ${getComputedStyle(document.body).fontFamily}`;
+    ctx.fillStyle = "rgba(255,255,255,.92)";
+    ctx.fillText(x.name || "제외", top[0] * W + 6, Math.max(fs, top[1] * H - 6));
+  }
+  const sx = W / src.w, sy = H / src.h;
+  ctx.strokeStyle = "rgba(255,255,255,.55)";
+  for (const d of exDets) ctx.strokeRect(d.x * sx, d.y * sy, d.w * sx, d.h * sy);
+  ctx.restore();
+}
+
 function drawZones(W, H) {
   const rows = zoneRows();
   zones.forEach((z, i) => {
@@ -554,7 +642,7 @@ function drawZones(W, H) {
     // 라벨: 가장 위 꼭짓점 근처
     const top = z.pts.reduce((a, b) => (b[1] < a[1] ? b : a));
     const fs = Math.max(18, Math.round(W / 42));
-    const text = `${z.name}  ${r.count}명 · ${WORD[r.state]}`;
+    const text = `${z.name}  ${r.count}명 · ${WORD[r.state]}` + (r.judge === "check" ? " · 확인 요청" : "");
     ctx.font = `700 ${fs}px ${getComputedStyle(document.body).fontFamily}`;
     const tw = ctx.measureText(text).width;
     let lx = Math.min(W - tw - fs, Math.max(4, top[0] * W - tw / 2));
@@ -571,8 +659,9 @@ function drawDrawing(W, H) {
   if (!drawing) return;
   const pts = drawing.pts.slice();
   if (drawing.hover) pts.push(drawing.hover);
+  const dcol = drawing.kind === "ex" ? "#D9D9D9" : "#FF7E31";
   ctx.lineWidth = lw(W) * 1.5;
-  ctx.strokeStyle = "#FF7E31";
+  ctx.strokeStyle = dcol;
   ctx.setLineDash([lw(W) * 4, lw(W) * 3]);
   ctx.beginPath();
   pts.forEach((p, k) => (k ? ctx.lineTo(p[0] * W, p[1] * H) : ctx.moveTo(p[0] * W, p[1] * H)));
@@ -581,9 +670,9 @@ function drawDrawing(W, H) {
   drawing.pts.forEach((p, k) => {
     ctx.beginPath();
     ctx.arc(p[0] * W, p[1] * H, k === 0 ? lw(W) * 5 : lw(W) * 3.5, 0, Math.PI * 2);
-    ctx.fillStyle = k === 0 ? "#FFFFFF" : "#FF7E31";
+    ctx.fillStyle = k === 0 ? "#FFFFFF" : dcol;
     ctx.fill();
-    ctx.strokeStyle = "#FF7E31";
+    ctx.strokeStyle = dcol;
     ctx.stroke();
   });
 }
@@ -609,7 +698,7 @@ function downloadCsv() {
     const s = String(v);
     return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   };
-  const lines = ["시각,카메라,구역,인원,상태"].concat(log.map((r) => r.map(q).join(",")));
+  const lines = ["시각,카메라,구역,인원,상태,판단"].concat(log.map((r) => r.map(q).join(",")));
   const blob = new Blob(["﻿" + lines.join("\r\n") + "\r\n"], { type: "text/csv;charset=utf-8" });
   const a = document.createElement("a");
   const d = new Date();
@@ -697,6 +786,8 @@ function useLoc(l) {
   loc = l;
   $("camName").value = loc;
   zones = loadZones(loc);
+  excl = loadExcl(loc);
+  judges = new Map();   // 위치가 바뀌면 판단도 처음부터
   renderZoneEdit();
   renderName();
   if (src) {
@@ -719,6 +810,10 @@ onShared((c) => {
     zones = loadZones(loc);
     renderZoneEdit();
     if (src) countZones(); else renderCounts();
+  } else if (c.what === "excl" && c.loc === loc && !drawing) {
+    excl = loadExcl(loc);
+    renderExclEdit();
+    if (src) countZones();
   }
 });
 // ---------- 서버 전송 (261003) · 등급코드는 이 브라우저 localStorage 에만 · 화면에 값을 다시 보이지 않는다 ----------
@@ -751,7 +846,8 @@ $("srvSave").addEventListener("click", saveSrvCode);
 $("srvCode").addEventListener("keydown", (e) => { if (e.key === "Enter") saveSrvCode(); });
 $("srvForget").addEventListener("click", () => { srv.setCode(""); renderSrv(); });
 
-$("zoneAdd").addEventListener("click", startDraw);
+$("zoneAdd").addEventListener("click", () => startDraw("zone"));
+$("exAdd").addEventListener("click", () => startDraw("ex"));
 $("zoneClose").addEventListener("click", () => endDraw(true));
 $("zoneCancel").addEventListener("click", () => endDraw(false));
 $("csvBtn").addEventListener("click", downloadCsv);
@@ -767,7 +863,7 @@ window.addEventListener("pagehide", () => transport.send({ type: "bye", camId, t
 if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) navigator.mediaDevices.addEventListener("devicechange", listCams);
 
 // 시험·점검용(콘솔에서 상태 확인)
-window.__crowd = { get dets() { return dets; }, get counts() { return counts; }, get zones() { return zones; }, detector, openFile, srvStatus: () => srv.status() };   // 등급코드는 내보내지 않는다
+window.__crowd = { get dets() { return dets; }, get rawDets() { return rawDets; }, get exDets() { return exDets; }, get counts() { return counts; }, get zones() { return zones; }, get excl() { return excl; }, rows: () => zoneRows(), jopt: JOPT, detector, openFile, srvStatus: () => srv.status(), lastSent: () => srv.latest };   // 등급코드는 내보내지 않는다
 
 // ---------- 전시 모드 (261003) · 그리기만 따로 · 계수 · 구역 · 서버 전송은 이 엔진 그대로 ----------
 const exhibit = initExhibit({ src: () => src, dets: () => dets, counts: () => counts, zones: () => zones, ready: () => modelReady, start: () => listCams().then(startCamera) });
@@ -776,6 +872,7 @@ $("exOpen").addEventListener("click", () => exhibit.open());
 renderZoneEdit();
 renderCounts();
 renderName();
+setInterval(renderCounts, 1000);   // 판단 남은 시간 · 신호 없음을 계수 없이도 갱신
 listCams();
 loadModel();
 requestAnimationFrame(frame);

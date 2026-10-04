@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
 <title>혼잡도 계수기</title>
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/exhibit.css">
@@ -36,6 +37,7 @@
       <span class="val num" id="total">0<small>명</small></span>
     </div>
     <div class="meta num" id="meta">모델 불러오는 중</div>
+    <div class="jsum" id="jsum">혼잡 판단 · 구역을 그리면 시작</div>
 
     <div class="zones" id="zones"></div>
 
@@ -78,6 +80,12 @@
         <button class="btn" id="zoneCancel" hidden>취소</button>
       </div>
       <div id="zoneEdit"></div>
+      <p class="note">현장 확인 요청 = 최근 1분 인원의 중앙값이 혼잡 값 이상인 채로 2분 이어질 때. 혼잡 값의 80% 아래로 2분 이어지면 평소로 돌아갑니다. 참가자 앱에는 나가지 않습니다.</p>
+      <div class="row">
+        <button class="btn" id="exAdd">제외 구역 그리기</button>
+      </div>
+      <div id="exEdit"></div>
+      <p class="note">제외 구역 = 흉상 · 마네킹 · 포스터처럼 늘 그 자리에 있는 사람 모양 물체를 감싸 그립니다. 상자 가운데가 이 안이면 세지 않습니다. AX magic과 함께 씁니다.</p>
       <div class="row">
         <label for="anchorSel">사람 위치</label>
         <select id="anchorSel">

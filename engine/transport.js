@@ -15,7 +15,9 @@
 //
 // 메시지 형식 (v1 · BroadcastChannel)
 //   { v:1, type:"count", camId, camName, ts, intervalMs, model, res,
-//     total, zones:[{ id, name, count, state, warn, crowd }] }
+//     total, zones:[{ id, name, count, state, warn, crowd, judge?, med? }] }
+//   judge(261005 · 혼잡도 계수기만): "calm" 평소 · "check" 현장 확인 요청 · 없으면 판단 제외(AX magic)
+//   서버로는 구역 묶음의 넷째 칸으로 싣는다 [이름, 인원, 상태, judge] · 지금 서버(crowd_cam)는 셋째 칸까지만 저장하고 넷째 칸은 버린다
 //   { v:1, type:"bye", camId, ts }
 
 const CHANNEL = "axf-crowd-v1";
@@ -134,7 +136,7 @@ class ServerSender {
       cam: String(m.camName || "").slice(0, NAME_MAX),
       cid: String(m.camId || ""),
       tot: String(Math.max(0, Math.min(999, m.total | 0))),
-      z: JSON.stringify((m.zones || []).slice(0, ZONE_MAX).map((z) => [String(z.name || "구역").slice(0, NAME_MAX), Math.max(0, Math.min(999, z.count | 0)), z.state])),
+      z: JSON.stringify((m.zones || []).slice(0, ZONE_MAX).map((z) => { const a = [String(z.name || "구역").slice(0, NAME_MAX), Math.max(0, Math.min(999, z.count | 0)), z.state]; if (z.judge === "calm" || z.judge === "check") a.push(z.judge); return a; })),
       dt: String(m.ts),
     });
     this.inflight = true;

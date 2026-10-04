@@ -37,3 +37,17 @@ export function inPoly(p, pts) {
 
 // 구역 상태 · 보통 warn 명 이상, 혼잡 crowd 명 이상
 export const zoneState = (z, n) => (n >= z.crowd ? "bad" : n >= z.warn ? "mid" : "ok");
+
+// 제외 구역(261005) · 흉상 · 마네킹 · 포스터처럼 늘 그 자리에 있는 사람 모양 물체를 세지 않는다
+//   excl = [{ id, pts }] (카메라 영상 기준 0~1 · 구역과 같은 좌표) · 상자 가운데가 제외 구역 안이면 뺀다
+//   (발 위치가 아니라 가운데를 보는 이유: 흉상은 발이 없고 받침대 위에 있어 상자 아래가 바닥과 어긋난다)
+//   반환 { keep: [사람], drop: [뺀 것] } · dets 는 픽셀 상자 { x, y, w, h } · sw, sh = 영상 크기
+export function splitExcluded(dets, sw, sh, excl) {
+  if (!excl || !excl.length || !sw || !sh) return { keep: dets.slice(), drop: [] };
+  const keep = [], drop = [];
+  for (const d of dets) {
+    const c = [(d.x + d.w / 2) / sw, (d.y + d.h / 2) / sh];
+    (excl.some((e) => inPoly(c, e.pts)) ? drop : keep).push(d);
+  }
+  return { keep, drop };
+}

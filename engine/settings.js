@@ -2,6 +2,8 @@
 // 혼잡도 계수기(crowd/)와 AX 매지션(magic/)은 같은 주소(origin)라 이 브라우저 localStorage 를 함께 쓴다.
 //   axf-cc-loc            위치 이름(예: 1F 로비) · 두 프로그램 공용
 //   axf-cc-zones:<위치>   그 위치의 구역 · 카메라 영상 기준 0~1 좌표(좌우를 뒤집지 않은 원본 영상) · 사람 위치가 이 다각형 안이면 그 구역
+//   axf-cc-excl:<위치>    그 위치의 제외 구역(261005) · 같은 좌표 · 상자 가운데가 이 안이면 세지 않는다(흉상 등)
+//                         구역 키와 따로 둔다(옛 화면이 제외 구역을 보통 구역으로 세지 않게 · 구역 저장 형식은 그대로)
 //   axf-crowd-srv-target  보낼 곳(끔 · qa · prod) · transport.js 가 읽고 쓴다
 //   axf-crowd-srv-code:<곳> 등급코드 · transport.js 가 읽고 쓴다(화면 · 로그에 내지 않는다)
 // 보내는 카메라 이름 = 「위치 이름 · 계수기」 / 「위치 이름 · magic」(프로그램이 접미사를 붙인다 · 게임 이름 AX magic, 사용자 261004)
@@ -13,6 +15,7 @@
 
 const K_LOC = "axf-cc-loc";
 const K_ZONES = "axf-cc-zones:";
+const K_EXCL = "axf-cc-excl:";
 const K_ZONES_OLD = "axf-crowd-zones:";   // 로컬 시제품 계수기의 카메라 이름별 구역(같은 주소에 남아 있으면 옮겨 온다)
 export const NAME_MAX = 20;                // 서버 카메라 이름 한도(CAM_NAME_MAX)
 export const SUFFIX = { crowd: "계수기", magic: "magic" };
@@ -48,13 +51,17 @@ export function loadZones(loc) {
   return [];
 }
 export function saveZones(loc, zones) { lsSet(K_ZONES + cleanLoc(loc), JSON.stringify(validZones(zones))); }
+// 제외 구역 · [{ id, name, pts }] · 비면 키를 지운다
+export const loadExcl = (loc) => validZones(parse(lsGet(K_EXCL + cleanLoc(loc)), []));
+export function saveExcl(loc, list) { const v = validZones(list); lsSet(K_EXCL + cleanLoc(loc), v.length ? JSON.stringify(v) : ""); }
 
-// 다른 탭에서 바뀐 공용 설정 · fn({ what: "loc" | "zones", loc })
+// 다른 탭에서 바뀐 공용 설정 · fn({ what: "loc" | "zones" | "excl", loc })
 export function onShared(fn) {
   try {
     window.addEventListener("storage", (e) => {
       if (e.key === K_LOC) fn({ what: "loc", loc: cleanLoc(e.newValue || "") });
       else if (e.key && e.key.indexOf(K_ZONES) === 0) fn({ what: "zones", loc: e.key.slice(K_ZONES.length) });
+      else if (e.key && e.key.indexOf(K_EXCL) === 0) fn({ what: "excl", loc: e.key.slice(K_EXCL.length) });
     });
   } catch (e) { /* storage 이벤트 없는 환경 */ }
 }

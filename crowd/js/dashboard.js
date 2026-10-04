@@ -3,6 +3,7 @@
 import { createTransport } from "../../engine/transport.js";   // AX magic 공용 엔진
 
 const WORD = { ok: "여유", mid: "보통", bad: "혼잡" };
+const JWORD = { calm: "평소", check: "현장 확인 요청" };   // 261005 혼잡 판단(계수기만 · AX magic 은 판단 제외)
 const cams = new Map(); // camId -> { msg, at }
 const transport = createTransport();
 const $dash = document.getElementById("dash");
@@ -45,24 +46,27 @@ function render() {
     .map((c) => {
       const m = c.msg;
       const off = lost(c);
+      const judged = m.zones.some((z) => JWORD[z.judge]);
+      const nCheck = off ? 0 : m.zones.filter((z) => z.judge === "check").length;
       const rows = m.zones.length
         ? m.zones
             .map(
               (z) => `<tr>
-          <td class="zn">${esc(z.name)}</td>
+          <td class="zn">${esc(z.name)}${!off && JWORD[z.judge] ? `<br><span class="jtag j-${z.judge}">${JWORD[z.judge]}</span>` : ""}</td>
           <td class="zs">${off ? '<span class="lost-tag">신호 없음</span>' : `<span class="state s-${z.state}">${WORD[z.state]}</span>`}</td>
           <td class="zc num">${z.count}<small>명</small></td>
         </tr>`
             )
             .join("")
         : '<tr><td class="zn" colspan="3" style="color:var(--sub);font-weight:400;font-size:13.5px">구역 없음 · 화면 전체 인원만 보냅니다</td></tr>';
-      return `<section class="cam ${off ? "lost" : ""}">
+      return `<section class="cam ${off ? "lost" : ""} ${nCheck ? "check" : ""}">
         <div class="cam-h">
           <div>
             <div class="cn">${esc(m.camName)}</div>
-            <div class="cm num">${off ? "신호 없음 · " : ""}마지막 갱신 ${ago(now - c.at)} · ${esc(m.res)} · ${m.intervalMs / 1000}초 주기</div>
+            <div class="cm num">${off ? "신호 없음 · " : ""}마지막 갱신 ${ago(now - c.at)} · ${esc(m.res)} · ${m.intervalMs / 1000}초 주기${m.zones.length && !judged ? " · 혼잡 판단 제외" : ""}</div>
           </div>
           <span class="grow"></span>
+          ${nCheck ? `<span class="ck">현장 확인 요청 ${nCheck}곳</span>` : ""}
           <span class="ct num">${m.total}<small>명</small></span>
         </div>
         <table>${rows}</table>
