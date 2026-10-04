@@ -59,7 +59,7 @@
     ok: false, loaded: false, scn: 'lobby', need: true, last: 0, frames: [], probe: [], probed: false,
     pos: new T.Vector3(), h: 0, yaw: 0, Lcur: 4.6, H: 2.7, look: new T.Vector3(), camPos: new T.Vector3(),
     mode: 'stop', stop: 0, dist: 4.8, az: 0, azTo: 0, clock: 0, path: null, pathI: 0, speed: 0, walkT: 0, moveV: 0,
-    stick: null, near: null, ctaKey: '', fade: [1, 1, 1, 1, 1], fadeTo: [1, 1, 1, 1, 1], fwdT: 0, run: 0, realV: 0, lean: 0, fov0: 58, fovK: 0,
+    stick: null, near: null, ctaKey: '', fade: [1, 1, 1, 1, 1], fadeTo: [1, 1, 1, 1, 1], fwdT: 0, run: 0, realV: 0, fov0: 58,
     cafe: { th: 0.55, ph: 1.12, r: 11.5 }, sheetOpen: false
   };
   window.__lab = window.__tour3 = G;
@@ -82,15 +82,46 @@
     return '둘러보기 진단 ' + (window.AXTour ? AXTour.ver : '') + '\n' + g.ren + '\n' +
       'WebGL' + (g.gl2 ? '2' : '1') + ' · 깊이 ' + G.depthBits + '비트 · highp ' + (g.highp ? '예 ' + g.hpBits : '아니오') + ' · MSAA ' + g.msaa + '\n' +
       'DPR ' + g.dpr + ' → ' + renderer.getPixelRatio() + ' · fps ' + G.frames.length + (pr ? ' · 처음 ' + pr.p50 + 'ms' + (pr.p50 > 34 ? ' 절전' : '') : '') + '\n' +
-      '겹침 ' + (z.pairs || 0) + ' · 자름 ' + (z.cut || 0) + ' · 지움 ' + (z.gone || 0) + ' · 빛 옮김 ' + (z.relit || 0) + ' · 라이트맵 ' + (l.tex || 0) + '장 ' + (l.ms || 0) + 'ms' + (G.lmErr ? ' 오류' : '') + '\n' + posText();
+      '겹침 ' + (z.pairs || 0) + ' · 자름 ' + (z.cut || 0) + ' · 지움 ' + (z.gone || 0) + ' · 빛 옮김 ' + (z.relit || 0) + ' · 라이트맵 ' + (l.tex || 0) + '장 ' + (l.ms || 0) + 'ms' + (G.lmErr ? ' 오류' : '') + '\n' + posText() + diagWhere();
+  }
+  /* v5.50 진단 한 줄 더(e3ff835 에서 옮김 · 사용자 261003 갤럭시 Xclipse 940 「여기에서 움직이면 깜빡임」) · 거리 · 카메라 자리와 높이 · 카메라 벽 속 · 숨긴 벽 · 멈칫(이어 그리는 중 50ms 넘은 프레임 수) · 반사 · AA · 해상도 */
+  function diagWhere() {
+    if (!G.loaded || G.scn !== 'lobby') return '';
+    var c = planOf(camera.position), cut = S.cut ? S.cut() : null, off = [];
+    if (cut) [['side_s', '남'], ['side_e', '동'], ['side_w', '서'], ['side_n', '북']].forEach(function (q) { if (cut[q[0]] === false) off.push(q[1]); });
+    var ci = gi(c[0], c[1]), wallH = ci < 0 ? 0 : hw[ci] * 0.05;
+    return '\n거리 ' + G.dist.toFixed(1) + ' · 카메라 ' + c[0].toFixed(1) + ', ' + c[1].toFixed(1) + ', 높이 ' + camera.position.y.toFixed(1) + (wallH > camera.position.y - 0.5 ? ' · 카메라 벽 속' : '') +
+      '\n숨긴 벽 ' + (off.length ? off.join('') : '없음') + ' · 멈칫 ' + (G.hitch || 0) + ' · 반사 ' + (S.reflOn && S.reflOn() ? '켬' : '끔') + ' · AA ' + (G.ab.aa ? '켬' : '끔') + ' · 해상도 ' + renderer.getPixelRatio();
+  }
+  /* v5.50 진단 모드 A/B 단추(진단 상자 아래 · e3ff835 에서 옮김) · 실기기에서 하나씩 끄고 같은 자리를 걸어 깜빡임이 사라지는 쪽을 찾는다
+   *   반사 = 바닥 대리석 반사(그릴 때마다 렌더 타깃 한 번 더) · 바로 바뀜 · AA = 안티에일리어싱(MSAA) · 3D 화면을 새로 만들어야 해서 새로 고침 뒤 · 해상도 = 1.75 ↔ 1 · 바로 바뀜
+   *   고른 값은 이 기기에 기억하지만 진단 주소(?t3diag=1)로 열었을 때만 쓴다(G.ab) · 일반 주소 = 단추도 없고 늘 기본값(v5.47 원칙) */
+  function diagAB() {
+    var box = $('fps'); if (!G.diag || $('fpsT')) return;
+    box.innerHTML = '<span id="t3-fpsT"></span><span class="ab"><button type="button" data-k="refl"></button><button type="button" data-k="aa"></button><button type="button" data-k="dpr"></button></span>';
+    function label() {
+      box.querySelector('[data-k=refl]').textContent = '반사 ' + (S.reflOn() ? '끄기' : '켜기');
+      box.querySelector('[data-k=aa]').textContent = 'AA ' + (store.get('axfT3AA') === '0' ? '켜기' : '끄기') + (G.ab.aa !== (store.get('axfT3AA') !== '0') ? '(새로 고침)' : '');
+      box.querySelector('[data-k=dpr]').textContent = '해상도 ' + (G.ab.dpr1 ? '높이기' : '1로');
+    }
+    ['pointerdown', 'touchstart', 'mousedown'].forEach(function (ev) { box.addEventListener(ev, function (e) { e.stopPropagation(); }, { passive: true }); });   /* 단추를 눌러도 아래 3D 화면 톡(걷기)이 되지 않게 */
+    box.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var k = e.target && e.target.getAttribute && e.target.getAttribute('data-k'); if (!k) return;
+      if (k === 'refl') { var on = !S.reflOn(); S.refl(on); store.set('axfT3Refl', on ? '1' : '0'); }
+      else if (k === 'aa') { store.set('axfT3AA', store.get('axfT3AA') === '0' ? '1' : '0'); toast('새로 고침하면 바뀌어요'); }
+      else if (k === 'dpr') { G.ab.dpr1 = !G.ab.dpr1; store.set('axfT3Dpr1', G.ab.dpr1 ? '1' : '0'); renderer.setPixelRatio(G.ab.dpr1 ? 1 : Math.min(window.devicePixelRatio || 1, 1.75)); resize(); }
+      label(); G.hitch = 0; G.need = true;
+    });
+    label();
   }
   function init3D() {
     var cv = $('cv');
-    try { renderer = new T.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' }); }
+    try { renderer = new T.WebGLRenderer({ canvas: cv, antialias: G.ab.aa, powerPreference: 'high-performance' }); }   /* v5.50 진단 모드에서만 끌 수 있다(G.ab) */
     catch (e) { return false; }
     if (!renderer.getContext()) return false;
     try { var gl0 = renderer.getContext(); G.depthBits = gl0.getParameter(gl0.DEPTH_BITS); if (G.diag) G.gpu = gpuInfo(gl0); } catch (e) {}   /* v5.40 진단 · 깊이 비트(fps 표시에 함께) · v5.44 진단 모드(?t3diag=1)면 GPU 이름 · highp · MSAA */
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75)); renderer.setClearColor(0xE9ECEF, 1);
+    renderer.setPixelRatio(G.ab.dpr1 ? 1 : Math.min(window.devicePixelRatio || 1, 1.75)); renderer.setClearColor(0xE9ECEF, 1);
     renderer.toneMapping = T.AgXToneMapping; renderer.toneMappingExposure = 1.0;
     scene = new T.Scene();
     var bc = document.createElement('canvas'); bc.width = 4; bc.height = 256; var bg = bc.getContext('2d'), gr = bg.createLinearGradient(0, 0, 0, 256);
@@ -100,8 +131,9 @@
     scene.add(new T.HemisphereLight(0xFFFFFF, 0xC9CED4, 2.0));
     var dl = new T.DirectionalLight(0xFFFFFF, 1.3); dl.position.set(-8, 20, 12); scene.add(dl);
     S = window.TourScene.build({ T: T, D: D, P: P, N3: N3, renderer: renderer, scene: scene, labelFont: '"Pretendard Variable", Pretendard, sans-serif' });
+    if (!G.ab.refl) S.refl(false);   /* v5.50 진단 모드 A/B */
     scene.add(S.lobby); scene.add(S.cafe);
-    buildBot(); scene.add(bot); buildDust();
+    buildBot(); scene.add(bot);
     cv.addEventListener('webglcontextlost', function (e) { e.preventDefault(); noGl('3D 화면이 끊겼어요 · 새로 고침해 주세요'); });
     G.ok = true;
     return true;
@@ -1099,17 +1131,15 @@
     G.moveV += ((moving ? 1 : 0) - G.moveV) * (1 - Math.exp(-dt * 10));
     if (moving) G.walkT += dt * (7 + 5 * moving) * (1 + 0.6 * (G.run || 0));
     var w = RM || G.air ? 0 : G.moveV, s = Math.sin(G.walkT);
-    G.lean += ((RM ? 0 : 0.22 * (G.run || 0)) - G.lean) * (1 - Math.exp(-dt * 12));   /* 달리기 = 몸이 앞으로 살짝 기운다 */
     bot.position.copy(G.pos); bot.position.y = G.jy || 0; bot.rotation.y = G.h;
     var sq = bodyScale(now), BP = botParts.body;
     if (G.pushK > 0 && !G.squeeze) { bot.position.x += Math.sin(G.pushDir || 0) * 0.14 * G.pushK; bot.position.z += Math.cos(G.pushDir || 0) * 0.14 * G.pushK; }   /* 게이트에 몸이 눌려 들어간다 */
     BP.scale.set(sq[0], sq[1], sq[2]);
-    BP.position.y = Math.abs(s) * 0.045 * w; BP.rotation.z = s * 0.07 * w + (G.pushK > 0 && !RM ? Math.sin(G.clock * 19) * 0.05 * G.pushK : 0); BP.rotation.x = 0.06 * w + G.lean;
+    BP.position.y = Math.abs(s) * 0.045 * w; BP.rotation.z = s * 0.07 * w + (G.pushK > 0 && !RM ? Math.sin(G.clock * 19) * 0.05 * G.pushK : 0); BP.rotation.x = 0.06 * w;   /* v5.50 달리기 기울임 없앰(사용자 261004 권장안) */
     botParts.feet[0].position.z = 0.04 + s * 0.09 * w; botParts.feet[1].position.z = 0.04 - s * 0.09 * w;
     var fy = G.air ? 0.06 : 0.035; botParts.feet[0].position.y = botParts.feet[1].position.y = fy;   /* 공중 = 발을 살짝 접는다 */
     shadow.position.y = (0.02 - (G.jy || 0)) / bot.scale.y; var ss = 1 - Math.min(0.5, (G.jy || 0) * 0.7); shadow.scale.set(ss, ss, 1);
-    var dusty = stepDust(dt);
-    return moving > 0.01 || w > 0.01 || dusty || G.lean > 0.002 || jumping || G.pushK > 0 || !!G.squeeze;
+    return moving > 0.01 || w > 0.01 || jumping || G.pushK > 0 || !!G.squeeze;
   }
   /* ═══════════ 점프(v5.49 · 사용자 261004 「캐릭터가 통통 튀면 귀엽고 재미있을 것」) ═══════════
    * 오른쪽 아래 「점프」 · 키보드 Space · 높이 약 0.6m · 체공 0.45초 · 공중에서도 조그로 움직인다 · 카메라는 따라 뛰지 않는다(어지럽지 않게)
@@ -1144,7 +1174,7 @@
   /* ═══════════ 달리기(v5.49 · 사용자 261004 「확대 축소 자리에 달리기와 점프 버튼」) ═══════════
    * 오른쪽 위 「달리기」 = 누르면 켜짐(주황) · 조그를 밀고 있는 동안 2배 속도까지 0.3초에 걸쳐 오른다 · 조그에서 손을 떼면 저절로 꺼진다(다음에 걷다가 갑자기 뛰지 않게)
    * 키보드 = Shift 를 누르는 동안 · 자동 걷기(구역 버튼 · 바닥 톡)는 달리지 않는다
-   * 달리는 동안: 발밑 먼지 · 몸 앞으로 기울임 · 시야각 +7도 · 움직임 줄이기 = 먼지 · 시야각 · 기울임 없이 속도만
+   * v5.50 (사용자 261004 권장안 확정) 달리는 동안 효과 없음 · 빨라지는 것뿐(옛 v5.49 발밑 먼지 · 몸 앞으로 기울임 · 시야각 +7도는 뺐다)
    * 옛 v5.40 「앞으로 3초 밀면 저절로 달리기」는 v5.47 에서 끔(사용자 「이상하다」) · 그 코드는 이것으로 바꿨다 */
   var WALK_V = 3.2, RUN_RAMP = 0.3;
   function setRun(on) {
@@ -1155,42 +1185,6 @@
     var st = G.stick, want = (G.runOn || G.runKey) && st && Math.hypot(st.x, st.y) > 0.3;
     if (want) { if (!G.run) G.runAt = performance.now(); G.run = Math.min(1, G.run + dt / RUN_RAMP); }
     else G.run = Math.max(0, G.run - dt / 0.15);
-  }
-  /* 먼지 · 가벼운 스프라이트 18개를 돌려 쓴다(새로 만들지 않음) · 발 뒤에서 생겨 뒤로 · 옆으로 퍼지며 커지고 옅어진다(0.5~0.7초) */
-  var dust = [], dustAcc = 0, DUST_N = 18;
-  function buildDust() {
-    var c = document.createElement('canvas'); c.width = c.height = 32; var g = c.getContext('2d'), rg = g.createRadialGradient(16, 16, 1, 16, 16, 16);
-    rg.addColorStop(0, 'rgba(255,255,255,1)'); rg.addColorStop(0.55, 'rgba(255,255,255,.55)'); rg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = rg; g.fillRect(0, 0, 32, 32);
-    var tx = new T.CanvasTexture(c);
-    for (var i = 0; i < DUST_N; i++) {
-      var sp = new T.Sprite(new T.SpriteMaterial({ map: tx, color: 0x9C9389, transparent: true, depthWrite: false, opacity: 0 }));
-      sp.visible = false; sp.renderOrder = 4; scene.add(sp); dust.push({ s: sp, life: 0, t: 0, vx: 0, vy: 0, vz: 0, s0: 0.1, s1: 0.4 });
-    }
-  }
-  function stepDust(dt) {
-    var alive = false, on = !RM && G.run > 0.5 && (G.realV || 0) > 2.2 && G.scn === 'lobby';
-    if (on) {
-      dustAcc += dt * 30;
-      var bx = -Math.sin(G.h), bz = -Math.cos(G.h);   /* 몸 뒤쪽(three) */
-      while (dustAcc >= 1) {
-        dustAcc -= 1;
-        var d = null; for (var i = 0; i < dust.length; i++) if (dust[i].t >= dust[i].life) { d = dust[i]; break; }
-        if (!d) break;
-        var side = Math.random() < 0.5 ? -1 : 1, lx = -bz * side * 0.14, lz = bx * side * 0.14;
-        d.s.position.set(G.pos.x + bx * 0.22 + lx, 0.06, G.pos.z + bz * 0.22 + lz);
-        var spd = 0.7 + Math.random() * 0.6, lat = (Math.random() - 0.5) * 1.1;
-        d.vx = bx * spd - bz * lat; d.vz = bz * spd + bx * lat; d.vy = 0.25 + Math.random() * 0.35;
-        d.t = 0; d.life = 0.5 + Math.random() * 0.2; d.s0 = 0.12 + Math.random() * 0.06; d.s1 = 0.42 + Math.random() * 0.2; d.s.visible = true;
-      }
-    } else dustAcc = 0;
-    for (var k = 0; k < dust.length; k++) {
-      var q = dust[k]; if (q.t >= q.life) { if (q.s.visible) q.s.visible = false; continue; }
-      q.t += dt; var f = Math.min(1, q.t / q.life), e = 1 - Math.pow(1 - f, 2);
-      q.s.position.x += q.vx * dt * (1 - f * 0.7); q.s.position.z += q.vz * dt * (1 - f * 0.7); q.s.position.y += q.vy * dt * (1 - f);
-      var sc = q.s0 + (q.s1 - q.s0) * e; q.s.scale.set(sc, sc * 0.8, 1); q.s.material.opacity = 0.62 * Math.pow(1 - f, 1.2);
-      if (q.t >= q.life) q.s.visible = false; else alive = true;
-    }
-    return alive;
   }
 
   /* ═══════════ 카메라 · 위에서 40도 내려다보는 고정 시점(사용자 261003 실폰 「시선이 계속 바뀌는 것보다 스카이뷰 40도가 편하다」) ═══════════
@@ -1212,9 +1206,6 @@
     var moved = G.camPos.distanceToSquared(w.pos) > 1e-6 || G.look.distanceToSquared(w.look) > 1e-6;
     G.camPos.lerp(w.pos, k); G.look.lerp(w.look, k);
     camera.position.copy(G.camPos); camera.lookAt(G.look);
-    /* v5.40 달리기 = 시야각이 조금 넓어진다(+7도 · 움직임 줄이기 = 그대로) */
-    var fk = RM ? 0 : (G.run || 0), f0 = G.fovK; G.fovK += (fk - G.fovK) * (dt ? 1 - Math.exp(-dt * (fk > G.fovK ? 6 : 9)) : 1); if (Math.abs(G.fovK - fk) < 0.002) G.fovK = fk;
-    if (G.fovK !== f0) { camera.fov = G.fov0 + 7 * G.fovK; camera.updateProjectionMatrix(); moved = true; }
     /* 기둥 비우기 · 카메라 → 머리 선분이 기둥(높이 5m) 안을 지나면 */
     var hx = G.pos.x, hz = G.pos.z, cx = G.camPos.x, cz = G.camPos.z, cy = G.camPos.y, sx = hx - cx, sz = hz - cz, L2 = sx * sx + sz * sz || 1, any = false;
     for (var i = 0; i < PIL.length; i++) {
@@ -1979,8 +1970,9 @@
       cta.hidden = false;
     } else cta.hidden = true;
     var s = STOPS[G.stop], w = $('where');
-    if (G.scn === 'cafe') cta.hidden = true;
+    if (G.scn === 'cafe' || G.scn === 'elev') cta.hidden = true;
     if (G.scn === 'cafe') w.textContent = '18F AX 커피챗';
+    else if (G.scn === 'elev') w.textContent = '엘리베이터 안 · 몇 층으로 갈까요?';   /* v5.50 엘리베이터 안에서 다시 그려도 로비 글이 돌아오지 않게 */
     else if (G.mode === 'auto' && G.goal != null) w.textContent = STOPS[G.goal].name + '(으)로 가는 중';
     else if (z) w.textContent = '지금: ' + (sp ? sp.name : z.id === 'cafe' ? '게이트 · 엘리베이터' : z.name) + ' 앞 · ' + (G.stop + 1) + ' / ' + STOPS.length;
     else w.textContent = '지금: ' + (G.mode === 'stop' && s.where ? s.where : '로비');
@@ -1989,7 +1981,7 @@
     var nx = Math.min(STOPS.length - 1, G.stop + (G.mode === 'stop' || G.mode === 'auto' ? 1 : 1));
     $('bNext').textContent = '다음 구역 ▶';
     $('bNext').setAttribute('aria-label', '다음 구역: ' + STOPS[nx].name);
-    $('navRow').hidden = G.scn === 'cafe'; $('cafeRow').hidden = G.scn !== 'cafe';
+    $('navRow').hidden = G.scn === 'cafe' || G.scn === 'elev'; $('cafeRow').hidden = G.scn !== 'cafe';   /* v5.50 엘리베이터 안 = 이전 · 다음 구역 숨김(「1층에서 내리기」만 · v5.49 는 다시 그릴 때 되살아났다) */
     $('cap').hidden = true;
   }
   function onNext() { hideDrag(); if (G.mode === 'free') nearestStop(); var k = G.mode === 'auto' && G.goal != null ? G.goal + 1 : G.stop + 1; goStop(Math.min(STOPS.length - 1, k)); }
@@ -2266,7 +2258,7 @@
   function resize() {
     var r = $('stage').getBoundingClientRect(), W = Math.max(1, Math.round(r.width)), H = Math.max(1, Math.round(r.height));
     renderer.setSize(W, H, false); camera.aspect = W / H;
-    G.fov0 = W / H < 0.75 ? 62 : 52; camera.fov = G.fov0 + 7 * G.fovK; camera.updateProjectionMatrix(); S.resize(); G.need = true;
+    G.fov0 = W / H < 0.75 ? 62 : 52; camera.fov = G.fov0; camera.updateProjectionMatrix(); S.resize();   /* v5.50 달리기 시야각 넓힘 없앰 */ G.need = true;
   }
   function loop(now) {
     requestAnimationFrame(loop);
@@ -2292,8 +2284,9 @@
     S.frame(camera, G.scn); if (G.ceil) G.ceil.visible = false; renderer.render(scene, camera); placePins(); mini(); placeBubble(); placeMags(); placeBlocks(); placeCheer();
     var wm = performance.now() - w0; G.workMs = G.workMs == null ? wm : G.workMs * 0.95 + wm * 0.05; G.workMax = Math.max(G.workMax || 0, wm);
     if (!$('dest').hidden && G.destAt) { _p.copy(G.destAt).project(camera); $('dest').style.left = ((_p.x + 1) / 2 * $('stage').clientWidth).toFixed(1) + 'px'; $('dest').style.top = ((1 - _p.y) / 2 * $('stage').clientHeight).toFixed(1) + 'px'; }
+    if (G.diag) { if (G.lastDraw && now - G.lastDraw > 50 && now - G.lastDraw < 400 && G.drewLast) G.hitch = (G.hitch || 0) + 1; G.drewLast = now - (G.lastDraw || 0) < 400; G.lastDraw = now; }   /* v5.50 진단 · 이어 그리는 중 멈칫(쉬던 틈은 빼려고 바로 전 프레임도 그렸을 때만) */
     G.frames.push(now); while (G.frames.length && now - G.frames[0] > 1000) G.frames.shift();
-    if (G.showFps) { $('fps').hidden = false; $('fps').textContent = G.diag ? diagText() : 'fps ' + G.frames.length + ' · ' + renderer.info.render.calls + ' draw · dpr ' + renderer.getPixelRatio() + ' · z' + G.depthBits; }
+    if (G.showFps) { $('fps').hidden = false; ($('fpsT') || $('fps')).textContent = G.diag ? diagText() : 'fps ' + G.frames.length + ' · ' + renderer.info.render.calls + ' draw · dpr ' + renderer.getPixelRatio() + ' · z' + G.depthBits; }
     if (G.bench) { G.bench.ts.push(now); if (now - G.bench.t0 > G.bench.ms) { var b = G.bench; G.bench = null; b.done(summ(b.ts)); } }
     if (G.loaded && !G.probed) { G.probe.push(now); if (G.probe.length >= 50) { G.probed = true; var s = summ(G.probe); G.probeResult = s; if (s.p50 > 34) { renderer.setPixelRatio(1); S.lowPower(); resize(); TV_FPS = 6; MUS.lite = true; } } }
   }
@@ -2679,8 +2672,10 @@
     try { localStorage.removeItem('axfT3Diag'); } catch (e) {}   /* v5.47 (사용자 261004 「배포 버전에서도 좌상단에 좌표나 테스트 내용이 뜨는데 없애줘」) 옛 기기 기억(v5.44)은 무시하고 지운다 */
     G.diag = dq === '1' || window.AXT3_DIAG === true; $('fps').classList.toggle('diag', G.diag);
     G.showFps = Q.get('fps') === '1' || G.diag;
+    G.ab = { aa: !(G.diag && store.get('axfT3AA') === '0'), dpr1: G.diag && store.get('axfT3Dpr1') === '1', refl: !(G.diag && store.get('axfT3Refl') === '0') };   /* v5.50 진단 모드 A/B · 이 기기 기억은 진단 주소일 때만 읽는다 · 일반 주소 = 늘 기본값(AA 켬 · 해상도 1.75 · 반사 켬) */
     G.t0 = performance.now();
     if (!window.TourScene || !T || !init3D()) { noGl(); return; }
+    diagAB();
     wireStage(); resize(); window.addEventListener('resize', resize);
     updateUi(true);
     load();
@@ -2845,5 +2840,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, ver: 'v5.49', v3: true };
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, ver: 'v5.50', v3: true };
 })();

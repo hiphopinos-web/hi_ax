@@ -19,6 +19,7 @@
  *   S.limits(scn)           카메라 목표점 범위 { x: [a, b], z: [a, b] }
  *   S.frame(camera, scn)    그리기 바로 전 · 카메라 쪽 벽 · 천장 숨김(모형 단면) + 바닥 대리석 반사
  *   S.resize() · S.lowPower()(반사 끔) · S.dispose()
+ *   S.refl(on) · S.reflOn() · S.cut()   v5.50 진단 모드(?t3diag=1) · 바닥 반사 켜고 끄기 · 지금 숨긴 벽 { side_s, side_e, side_w, side_n }
  *   S.TOUR                  자동 둘러보기 · establish = 첫 장면(남동쪽 높은 전경) · route = 동쪽 문(D)부터 반시계 동선 · pos · look = [x, z, 높이] · t = 도착 초 */
 (function () {
   'use strict';
@@ -145,10 +146,12 @@
         cafe.visible = cv;
       }
       /* 카메라 쪽 벽 · 천장을 숨겨 모형 안이 보이게(분양 모형의 단면) */
+      var lastVis = null;
       function cutaway(camera) {
         var x = camera.position.x + 16, z = 6 - camera.position.z, y = camera.position.y;
         var vis = { side_s: z > -0.3, side_e: x < LW + 0.3, side_w: !(x < -0.3 && z < LD + 1), side_n: !(z > LD + 0.2) };
         for (var k in sideGroups) sideGroups[k].visible = vis[k] !== false;
+        lastVis = vis;   /* v5.50 진단 표시(숨긴 벽) */
         if (coreStub) coreStub.visible = !vis.side_n;
         if (ceilingG) ceilingG.visible = y < CEIL - 0.05;
       }
@@ -271,6 +274,10 @@
         frame: function (camera, scn) { if (!loaded) return; cutaway(camera); renderRefl(camera, scn); },
         resize: function () { if (REFL.rt) setupRefl(); },
         lowPower: function () { REFL.on = false; if (REFL.rt) { REFL.rt.dispose(); REFL.rt = null; } },
+        /* v5.50 진단 모드 A/B · 바닥 반사 켜고 끄기(실기기에서 깜빡임 원인 가르기) */
+        refl: function (on) { if (on) REFL.on = true; else { REFL.on = false; if (REFL.rt) { REFL.rt.dispose(); REFL.rt = null; } } },
+        reflOn: function () { return REFL.on; },
+        cut: function () { return lastVis; },
         dispose: function () { if (REFL.rt) REFL.rt.dispose(); lightMaps.forEach(function (t) { t.dispose(); }); },
         /* 자동 둘러보기 · 남동쪽 위에서 시작해(정문 · 동쪽 문이 함께 보임) 동쪽 문 밖 체크인 → 동쪽 문 → 행사 동선(반시계)대로 돈 뒤 기본 시점으로 올라가 자유 조작으로 넘긴다
          * 기둥 줄(z 5.1)과 유리벽 판 사이(z 3.6)를 따라 동쪽에서 서쪽으로 미끄러지며 판 줄을 비스듬히 본다(세로 화면에서 줄 전체가 보이게) */
