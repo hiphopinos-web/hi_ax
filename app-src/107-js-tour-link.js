@@ -1,0 +1,203 @@
+/* ═══ v5.11 (261003 사용자 승인 · 「디자인 시안/가상 1층/계획.md」) 1층 둘러보기 · 본체(3D 모형 · 평면 지도 · 목록 · 판 보기)는 assets/tour/ 에 있고 처음 열 때만 받는다(안 여는 사람은 0바이트)
+   여기 있는 것 = 불러오기(tourOpen) · 연결(TOUR_HOST · 구역 글은 FLOOR1 · 상태는 zoneLive · 혼잡은 crowdCell) · 입구 3곳(홈 나의 일정 아래 · 상시 운영 1F 맨 위 · 구역 상세) + 판 퀴즈 힌트 · 뒤로 가기 한 줄(popstate)
+   위치(벽 · 방향 · 판 순서)는 둘러보기 화면 안에서만 보인다(261001 「앱은 동선 · 위치를 다루지 않는다」의 예외 · 사용자 261003 · design.md 5-21) · 이 파일의 다른 화면은 그대로 위치를 말하지 않는다 */
+/* v5.37 (사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) 둘러보기 v3 = 시험 페이지와 같은 공용 모듈(tour3.js · tour3.css · 캐릭터 걷기 · 40도 시점 · 왼손 패드 · 오른손 십자 · 작은 지도 · 스태프 챗봇 · 판 보기 · 돋보기 2개 · 움직임 줄이기 · 입장 암전)
+   같은 약속 AXTour.open/close/back/isOpen · 옛 v2(tour.js · tour.css · 자동 둘러보기 · 평면 지도 · 구역 시트)로 되돌리려면 아래 목록의 tour3 두 개를 tour.css · tour.js 로 바꾸면 된다(파일은 그대로 둠) */
+/* v5.38 (사용자 261003) 둘러보기 손질 · 캐릭터 겹침(스태프 원 충돌) · 늘 카메라 쪽을 봄 · 조그 패드 · 안내데스크 깜빡임(겹친 면) · 정문 회전문 또렷하게 · 로비 음악(Web Audio 합성 · 「음악 없이」 · 위쪽 스피커 버튼) · 파일 이름 그대로 · 캐시 깨기 ver v538 */
+var TOUR = { ver: "v558", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
+try { localStorage.removeItem('axfT3Diag'); } catch (e) {} window.AXT3_DIAG = /[?&]t3diag=1(?:&|$)/.test(location.search);   /* v5.47 진단은 주소에 ?t3diag=1 이 있는 그 페이지에서만 · 기억하지 않는다 · 옛 기기 기억은 지운다(사용자 261004) */   /* v5.44 둘러보기 실기기 진단(주소 ?t3diag=1 · 이 기기에 기억 · ?t3diag=0 이면 끔) · 화면 왼쪽 위에 GPU · 깊이 비트 · highp · DPR · fps */
+/* 켜기 스위치 · v5.28 true = 전체 공개(사용자 261003 「1층 3D 전체 공개」) · false 로 두면 입구 3곳 · 판 퀴즈 힌트 링크 · 열기가 모두 숨는다 */
+var TOUR_ON = true;
+/* v5.19 (사용자 261003) 숨김 주소 · 앱 주소에 ?tour=1 이 붙어 들어오면 그 기기에서만 입구 3곳 · 판 퀴즈 힌트 링크가 보인다(기기에 기억 · ?tour=0 이면 끔 · 키는 axf_ 접두가 아니라 사람 바꾸기에도 남는다)
+   v5.28 전체 공개 뒤에는 모두에게 보인다 · 숨김 장치는 남김 = 주소 뒤 ?tour=0 으로 들어오면 그 방문만 끈다(기기 기억 해제 포함) */
+var TOUR_PEEK = (function () {
+  var m = /[?&]tour=([01])(?:&|$)/.exec(location.search);
+  try { if (m) localStorage.setItem("axfTourPeek", m[1]); return localStorage.getItem("axfTourPeek") === "1"; } catch (e) { return !!m && m[1] === "1"; }
+})();
+var TOUR_OFF = /[?&]tour=0(?:&|$)/.test(location.search);   /* v5.28 ?tour=0 = 이번 방문만 끔(저장 안 함) */
+function tourOn() { return (TOUR_ON && !TOUR_OFF) || TOUR_PEEK; }
+function tourOpen(o) {
+  if (!tourOn()) return;
+  o = o || {};
+  var keep = o.hint && tourRetLive() ? TOUR_RET : null;   /* v5.57 둘러보기에서 출발한 AX 퀴즈의 힌트 「모형에서 보기」는 출처를 지우지 않는다(퀴즈를 마치면 그대로 1층으로) */
+  if (!o.restore) TOUR_RET = null;   /* v5.53 그냥 열면 돌아가기 기억 지움 */
+  if (keep) TOUR_RET = keep;
+  if (window.AXTour) { AXTour.open(o); return; }
+  if (TOUR.busy) return;
+  TOUR.busy = true;
+  var left = TOUR.files.length, bad = false, q = "?v=" + TOUR.ver;
+  toast("1층 둘러보기를 여는 중");
+  TOUR.files.forEach(function (f) {
+    var n = /\.css$/.test(f) ? document.createElement("link") : document.createElement("script");
+    if (n.tagName === "LINK") { n.rel = "stylesheet"; n.href = "assets/tour/" + f + q; } else { n.src = "assets/tour/" + f + q; n.async = false; }   /* 스크립트는 붙인 순서대로 실행 */
+    n.onload = function () { if (--left === 0 && !bad) { TOUR.busy = false; if (window.AXTour) AXTour.open(o); } };
+    n.onerror = function () { if (bad) return; bad = true; TOUR.busy = false; toast("둘러보기를 열지 못했어요 · 연결을 확인해 주세요"); };
+    document.head.appendChild(n);
+  });
+}
+/* 입구 · 상시 운영 1F 맨 위 한 줄(18F 커피챗 줄과 같은 모양) · 구역 상세 「모형에서 보기」 · 홈 나의 일정 아래 카드(tourHomeHtml) */
+function tourRowHtml() {
+  if (!tourOn()) return "";
+  return '<button type="button" class="axs-zfl axs-tourgo" onclick="tourOpen()"><span class="tx"><span class="nm"><b>1층 둘러보기</b></span><span class="k">3D 모형으로 부스와 판 미리 보기</span></span><span class="zrt">' + CHEV_SVG + "</span></button>";
+}
+/* v5.53 (사용자 261004 「홈 화면에 1층 미리보기가 지금은 요소가 너무 과한 것 같아 · 행사장 둘러보기 한 문장 정도면 충분할 것 같아」) 홈 입구 = 한 줄 「행사장 둘러보기」
+   왼쪽 원 = 행사 캐릭터 챗봇(v5.56 · tourBotHtml · 옛 3D 로비 사진 thumb 은 지움) · 오른쪽 이동 표시 · 부제 · 3D 칩 · 버튼 · 사진 4장 순환 · 진행 막대 없음(옛 v5.46 큰 카드 · 시기별 부제 걷음)
+   자리는 시기별 그대로 · 행사 전 = 광고판 바로 아래(아직 일정 · 스탬프가 비어 있어 위에 둔다) · 당일 · 종료 뒤 = 나의 일정 아래(당일은 지금 · 다음 일정과 스탬프가 먼저 · design.md A-5) */
+function tourLineHtml() {
+  return '<section class="axs-sec">' + rcHtml({ cls: " axs-tourgo", onclick: "tourOpen()", link: true, left: tourBotHtml(), title: "행사장 둘러보기" }) + "</section>";
+}
+/* v5.56 줄 왼쪽 챗봇 · 원본 BOT_SVG(path 그대로 · viewBox 200 그대로) + 안테나 전파 호(BOT_WAVE) + 반달 눈웃음 호 2개(새 요소 · 눈 자리 위 · 평소 숨김)
+   --td = 9초 주기 안에서 지금의 위치(홈이 4초마다 다시 그려져도 움직임이 이어진다) · 사진 파일 없음(첫 로딩 바이트 0) */
+var TOUR_BOT_SM = '<g class="sm"><path d="M75.4 102.6 A6.2 6.2 0 0 1 87.1 102.6"/><path d="M112.9 102.6 A6.2 6.2 0 0 1 124.6 102.6"/></g>';
+function tourBotHtml() {
+  return '<span class="ico tbot" style="--td:-' + (Date.now() % 9000) + 'ms">' + BOT_SVG.replace("</svg>", BOT_WAVE + TOUR_BOT_SM + "</svg>") + "</span>";
+}
+function tourHomeHtml() {   /* 당일 · 종료 뒤 · 나의 일정 아래 */
+  return tourOn() && evPhase() !== "before" ? tourLineHtml() : "";
+}
+function tourHeroHtml() {   /* 행사 전 · 광고판 바로 아래 */
+  return tourOn() && evPhase() === "before" ? tourLineHtml() : "";
+}
+/* v5.46 (사용자 261004 「시작하기 로그인을 하고 나서 > 푸쉬창 처럼 팝업창이 초대장이 뜨는 게 낫지 않겠어?」 · 「대놓고 대상자를 특정하거나 그 사람들을 위한 문구로 가져가지는 말자」) 1층 둘러보기 초대
+   홈에 들어간 뒤 바텀 시트(M03) 한 장 · 봉투가 열리며 3D 로비 사진 · 주 버튼 「1층 둘러보기」 · 약한 버튼 「나중에 하기」 · 스탬프 말 없음
+   한 번 닫으면(두 버튼 · 뒷배경 · Esc · 뒤로) 이 기기에서 다시 뜨지 않는다(tour_inv · 기기 키) · TOUR_ON 이 꺼져 있으면 없음
+   순서: 최초 로그인 장면 · 다른 시트 · 팝업 · 스탬프 연출 · 설치 안내 · 설정 · 둘러보기가 모두 닫힌 홈에서 · 알림 첫 질문은 이 초대와 둘러보기가 닫힌 뒤(pushSheetWait · tourInvHold)
+   찍은 QR 을 이어 가는 방문(scanLinkRun · 장면의 scan 닫힘)은 건너뛰고 다음 방문의 홈에서 · 기존 가입자도 다음 홈에서 한 번 · 시연(#demo)은 &inv 일 때만 */
+var TINV = { skip: false, t: 0, t0: 0, ok: false };
+var TINV_IMG = "assets/tour/inv/";
+function tourInvOk() {
+  if (!TOUR_ON || TOUR_OFF || TINV.skip || S.get("tour_inv", false)) return false;
+  if (!(S.get("user", {}) || {}).empId || /^#(self|tv=)/i.test(VISIT.hash0) || (/^#demo/i.test(VISIT.hash0) && !/[&#]inv\b/.test(VISIT.hash0))) return false;
+  return !(typeof tsfOn === "function" && tsfOn());
+}
+function tourInvBusy() {
+  return !!(LGX.cur || el("lgx") || el("modal") || el("axsSheet") || el("spop") || SPOP.cur || SPOP.q.length || NOTICE.cur || NOTICE.q.length || el("rgPlay") || el("app").hidden ||
+    (typeof qrGated === "function" && qrGated()) || a2hsShown() || (el("fsSheet") && !el("fsSheet").hidden) || TOUR.busy || (window.AXTour && AXTour.isOpen()));
+}
+/* 홈을 그릴 때마다(App.render) · 홈에 1.2초 머문 뒤 · 바쁘면 0.4초마다 다시 본다 · 홈을 떠나면 멈추고 다음 홈에서 다시 */
+function tourInvMaybe() {
+  if (TINV.t || !tourInvOk()) return;
+  TINV.t = setTimeout(tourInvTry, 1200);
+}
+function tourInvTry() {
+  TINV.t = 0;
+  if (!tourInvOk() || App.current !== "home") return;
+  if (tourInvBusy()) { TINV.t = setTimeout(tourInvTry, 400); return; }
+  sheetOpen({ id: "tourinv", title: "AX Festival 2026에 오신 것을 환영합니다", lead: "지금 1층 로비를 3D로 둘러볼 수 있습니다.",
+    top: '<div class="axs-inv ' + (lgxRM() ? "st-open" : "run") + '" aria-hidden="true"><div class="ph"><img src="' + TINV_IMG + 'invite.jpg" alt=""></div>' +
+      '<i class="pc l"></i><i class="pc r"></i><i class="pc b"></i><i class="pc t"></i><span class="seal">AX</span></div>',
+    go: "tourInvGo()", goLbl: "1층 둘러보기", keep: "나중에 하기", keepWeak: true, keepLast: true, onClose: tourInvDone });
+}
+function tourInvDone() { S.put("tour_inv", true); }
+function tourInvGo() { tourInvDone(); sheetClose(true); tourOpen(); }
+/* 다른 질문(알림 첫 질문 등)은 초대를 기다리는 홈 · 둘러보기를 여는 중 · 열려 있는 동안 미룬다 */
+function tourInvHold() { return (tourInvOk() && App.current === "home") || TOUR.busy || !!(window.AXTour && AXTour.isOpen()); }
+var TOUR_HOST = {
+  sign: function (nm, big) { return zoneSign(nm, big ? "lg" : ""); },
+  zone: function (id) {
+    if (id === "cafe") { var st = progState(progById("cchat")); return { kor: "아이디어를 놓고 이야기하는 곳", fact: "18F · " + st[0], todo: ["아이디어 한 줄을 내면 신청할 수 있어요"] }; }
+    var z = zoneById(id); if (!z) return null;
+    return { kor: z.kor, fact: zoneLive(z).fact, todo: z.todo };
+  },
+  acts: function (id) {
+    var go = function (v) { return function () { App.go(v); }; };
+    if (id === "vision" || id === "action") return [{ lbl: "AX 퀴즈 풀기", run: go("quiz") }];
+    if (id === "lab") return [{ lbl: "아이디어 한 줄 쓰기", run: go("ideas") }];
+    if (id === "play") return [{ lbl: "체험 안내 보기", run: go("booth") }];
+    if (id === "lounge") { var L = zoneLive(zoneById("lounge")); return [{ lbl: L.btn ? L.btn[0] : "상담 신청", run: function () { progOpen("dap"); } }]; }
+    if (id === "event") return [{ lbl: "룰렛 경품 보기", run: function () { prizeGo("roulette"); } }, { lbl: "1F 타자왕 순위", run: typeSiteRankGo }];
+    if (id === "cafe") return [{ lbl: S.get("cchat", null) ? "내 커피챗 보기" : "커피챗 신청", run: function () { progOpen("cchat"); } }, { lbl: "아이디어 한 줄 쓰기", run: go("ideas") }];
+    return [];
+  },
+  crowd: function (id) { var k = id === "cafe" ? "e" : "l", x = crowdCell(k); return { nm: k === "e" ? "엘리베이터" : "1F 로비", st: x.st, sub: x.sub, cls: x.cls }; },
+  crowdGo: function () { App.tab("home"); setTimeout(function () { var c = document.querySelector(".cstrip2"); if (c) c.scrollIntoView({ block: "center" }); }, 120); },
+  /* v5.49 (사용자 261004) 1층 둘러보기 스탬프 블록 · 이름 · 받는 법 · 버튼 문구 = 스탬프 표(STAMPS) 그대로 · got = 이미 받음 · stampGo = 둘러보기를 닫고 그 활동 화면으로 */
+  stamp: function (id) {
+    var s = STAMPS.filter(function (x) { return x.id === id; })[0] || (id === "qz" || id === "p4" ? STAMPS_V2.filter(function (x) { return x.id === id; })[0] : null);
+    if (!s) return null;
+    return { title: s.title, desc: s.desc, cta: id === "p3" ? "DAP 과제상담 신청" : s.cta || "바로 가기", got: S.get("stamps", []).indexOf(id) >= 0 };   /* v5.57 (사용자 261004 「이 스탬프에서 연결은 dap 과제 상담 신청 하기로 가야지」) LOUNGE 블록 = 상담 신청 · 설명 줄은 그대로 */
+  },
+  stampGo: function (id) {
+    var GO = { qz: function () { App.go("quiz"); }, p4: function () { App.go("games"); }, p2: function () { qrPanelOpen("mine"); }, p5: function () { App.go("ideas"); }, p3: function () { progOpen("dap"); }, st: function () { stairOpen(); } };
+    if (!GO[id]) return;
+    var pose = window.AXTour && AXTour.pose ? AXTour.pose() : null, under = App.current;   /* v5.53 뒤로 오면 이 자리로(tourRetBack) */
+    if (window.AXTour) AXTour.close();
+    setTimeout(function () { GO[id](); TOUR_RET = { v: App.current, under: under, pose: pose }; TOUR_RET.id = id; }, 280);   /* 둘러보기 암전(0.24초)이 끝난 뒤 · 도착한 화면을 기억 · v5.57 어느 스탬프 블록에서 왔는지(id · 마침 판정) */
+  }
+};
+/* v5.53 (사용자 261004 「3d에서 앱으로 갔다가 뒤로가기를 하면 3d로 돌아와야 하는데, 앱 메인 화면으로 돌아가」) 둘러보기 → 앱 화면 → 뒤로 = 둘러보기
+   TOUR_RET = 바로 가기로 도착한 화면(v) · 그 밑에 있던 앱 화면(under) · 나가기 전 자리(pose)
+   뒤로(헤더 ‹ · 휴대폰 뒤로 = 둘 다 App.back) 가 도착한 화면에서 나갈 때만 = 밑 화면으로 돌리고 둘러보기를 그 자리로 다시 연다 · 더 깊이 들어갔다면 원래 뒤로 단계를 다 거친 뒤 마지막에
+   지움 = 아래 탭(App.tab) · 도착한 화면과 그 아래가 아닌 곳으로 이동 · 둘러보기를 그냥 열 때 · 둘러보기를 정상으로 닫고 홈에 온 경우에는 생기지 않는다 */
+var TOUR_RET = null;
+function tourRetBack() {
+  trdHide();   /* v5.57 자동 복귀 띠 */
+  var r = TOUR_RET; TOUR_RET = null;
+  if (!r || !tourOn()) return false;
+  delete App.from[App.current];
+  if (r.under && r.under !== App.current) App.go(r.under, true);
+  tourOpen({ restore: r.pose });
+  return true;
+}
+/* v5.57 (사용자 261004 「1층 > 스탬프 > 1층 이런식으로 와야 될 것 같아 · 다른 활동들도 그렇게 설정해줘」) 둘러보기에서 출발한 활동은 마치면 둘러보기로 · 앱에서 시작한 활동은 지금처럼 앱에 머문다(출처 = TOUR_RET)
+   마침(tourRetDone) = AX 퀴즈 판 완주(qzFinish) · 미니 게임 한 판 결과 화면(gsResultHtml) · 아이디어 한 줄 제출 뒤 커피챗 질문에 답함(ideaCchat · 묻지 않는 경우는 제출 순간 ideaPush)
+     · AX PLAY = 내 QR 화면에 스태프 인증 스탬프가 들어온 순간(stampSync · awardStamp → tourRetStamp) · 17F 강연 · 계단 안내 = 안내 화면이라 마침 없음(뒤로 = 둘러보기 · v5.53 그대로)
+   마친 뒤(done) = 그 활동의 어느 화면에서 뒤로 가도 둘러보기(App.back) · 결과 화면 버튼 「1층으로 돌아가기」(퀴즈 결과 주 버튼 · 게임 결과 · 아이디어 완료)
+   그 활동의 스탬프를 이번에 새로 받았으면(got) = 스탬프 연출 · 보상 안내 팝업이 모두 닫힌 뒤 아래 띠(#trd) 「1층으로 돌아가기」 3초 채움 → 자동 · 「여기 머물기」
+     · 띠 밖을 누르거나 화면을 옮기면 자동 취소(버튼 · 뒤로는 그대로) · 시트 · 팝업이 뜨면 그동안 멈춤 · 움직임 줄이기 = 채움 없이 숫자만
+   이미 받은 스탬프(다시 푼 퀴즈 · 3종을 다 채우지 않은 게임 · 두 번째 아이디어) = 자동 없음 · 결과 화면 버튼 · 뒤로 */
+var TRD = { t: 0, tick: 0, end: 0, el: null };
+var TRD_MS = 3000;
+function tourRetLive() { var r = TOUR_RET; return !!(r && tourOn() && (App.current === r.v || App.isAnc(r.v, App.current))); }
+function tourRetDone(got) {
+  if (!tourRetLive()) return;
+  TOUR_RET.done = true;
+  if (got) { TOUR_RET.got = true; trdWait(); }
+}
+function tourRetStamp(id) { if (TOUR_RET && TOUR_RET.id === id && id !== "p5") tourRetDone(true); }   /* 아이디어는 커피챗 질문에 답한 뒤(ideaCchat) */
+function tourRetGo() { trdHide(); if (!tourRetBack()) App.render(); }
+function trdBusy() {
+  return !!(SPOP.cur || SPOP.q.length || el("spop") || el("lgx") || el("modal") || el("axsSheet") || NOTICE.cur || NOTICE.q.length || el("app").hidden || TOUR.busy || (window.AXTour && AXTour.isOpen()) || document.hidden);
+}
+function trdWait() {
+  clearTimeout(TRD.t);
+  TRD.t = setTimeout(function () {
+    TRD.t = 0;
+    if (!tourRetLive() || !TOUR_RET.got) return;
+    if (trdBusy()) { trdWait(); return; }
+    trdShow();
+  }, 350);
+}
+function trdShow() {
+  trdHide();
+  var d = document.createElement("div");
+  d.id = "trd"; if (rgReduced()) d.className = "rm";
+  d.innerHTML = '<span class="ax-sr-only" role="status">' + TRD_MS / 1000 + "초 뒤 1층으로 돌아가요</span>" +
+    '<button type="button" class="ax-button ax-button-weak trd-stay" onclick="trdStay()">여기 머물기</button>' +
+    '<button type="button" class="ax-button trd-go" onclick="tourRetGo()"><i class="trd-bar" aria-hidden="true"></i><span>1층으로 돌아가기</span><b class="trd-n" aria-hidden="true">' + TRD_MS / 1000 + "</b></button>";
+  document.body.appendChild(d); document.body.classList.add("trd-on");
+  TRD.el = d; TRD.end = Date.now() + TRD_MS;
+  document.addEventListener("pointerdown", trdPtr, true); document.addEventListener("keydown", trdKey, true);
+  var last = Date.now(), step = function () {
+    if (TRD.el !== d) return;
+    var now = Date.now(), hold = !!(SPOP.cur || el("spop") || el("modal") || el("axsSheet") || document.hidden);
+    if (hold) TRD.end += now - last;   /* 시트 · 팝업이 떠 있는 동안 멈춤 */
+    last = now; d.classList.toggle("hold", hold);
+    var left = TRD.end - now;
+    if (left <= 0) { tourRetGo(); return; }
+    var n = d.querySelector(".trd-n"); if (n) n.textContent = String(Math.ceil(left / 1000));
+    TRD.tick = setTimeout(step, Math.min(200, left));
+  };
+  step();
+}
+function trdPtr(e) { if (TRD.el && !TRD.el.contains(e.target)) trdStay(); }
+function trdKey(e) { if (TRD.el && !TRD.el.contains(e.target) && e.key !== "Tab" && e.key !== "Shift") trdStay(); }
+function trdStay() { if (TOUR_RET) TOUR_RET.got = false; trdHide(); }
+function trdHide() {
+  if (!TRD) return;   /* 불러오는 중(App.go 가 먼저 불릴 때) */
+  clearTimeout(TRD.t); clearTimeout(TRD.tick); TRD.t = TRD.tick = 0;
+  document.removeEventListener("pointerdown", trdPtr, true); document.removeEventListener("keydown", trdKey, true);
+  if (TRD.el && TRD.el.parentNode) TRD.el.parentNode.removeChild(TRD.el);
+  TRD.el = null; document.body.classList.remove("trd-on");
+}
+

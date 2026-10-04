@@ -1,0 +1,153 @@
+  /* ═══════ v5.04 경품 안내 · 사진 (261002 사용자 확정 · CLAUDE.md 「경품 앱 공개」 · 설계안 「디자인 시안/완주 경품 추첨/설계안.md」 6장)
+     쓰는 곳: 내 보상(경품 카드 3장 · 참여상 카드) · 룰렛 1회권 모달 · 행운권 모달 · 참여상 안내 모달 · 18F 커피챗 상세 · DAP 과제상담 상세(커피 · 간식 사진 2장)
+     사진 = 정사각 webp(assets/prize) · 지연 로딩 · 못 읽으면 img 를 지우고 inset 면만 남긴다(단일파일 · 오프라인)
+     「샘플」 딱지 = 실물 사진 전까지(스크립트 PRIZE_SAMPLE 한 곳) · 가격은 어디에도 없다 · 파랑 · 이모지 없음 ═══════ */
+  .axs-ph { position: relative; display: block; flex: none; width: 56px; height: 56px; overflow: hidden; border-radius: var(--ax-radius-12); background: var(--ax-color-inset); }
+  .axs-ph img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .axs-ph .smp { position: absolute; left: 3px; bottom: 3px; padding: 1px 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.92); color: var(--ax-color-body); font-size: 10px; font-weight: 600; line-height: 14px; letter-spacing: 0; }
+  .axs-przc { gap: var(--ax-space-16); }   /* 내 보상 · 경품 카드 */
+  .axs-przc .ax-meta { word-break: keep-all; }
+  .axs-przn { margin: 0; font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }   /* 참여상 카드 아래 조건 줄 */
+  .axs-rwhd { display: flex; align-items: center; gap: var(--ax-space-12); }   /* 참여상 당첨 카드 · 사진 + 이름 */
+  .axs-rwhd .axs-ph { width: 64px; height: 64px; }
+  .axs-mprz { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--ax-color-divider); }   /* 모달 안 경품 목록 */
+  .axs-mprz > p { margin: 0 0 10px; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-mprz .axs-pzm .axs-ph { width: 56px; height: 56px; }
+  /* 커피 · 간식 사진 2장(18F 커피챗 · DAP 과제상담) · 사진 아래 한 줄 */
+  .axs-ideax { display: flex; flex-direction: column; gap: var(--ax-space-8); }   /* v5.20 아이디어 예시 칩 · 한 줄씩 · 분야 칩보다 옅은 면 */
+  .axs-ideax button { display: flex; flex-direction: column; gap: 2px; width: 100%; min-height: 48px; padding: 10px var(--ax-space-12); border: 0; border-radius: var(--ax-radius-12); background: var(--ax-color-inset); color: var(--ax-color-ink); font: var(--ax-type-t6); font-family: inherit; text-align: left; word-break: keep-all; cursor: pointer; }
+  .axs-ideax button .ax-meta { color: var(--ax-color-brandText); }
+  .axs-treat { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ax-space-12); margin: 0; }
+  .axs-treat figure { display: flex; flex-direction: column; gap: var(--ax-space-8); min-width: 0; margin: 0; }
+  .axs-treat .axs-ph { width: 100%; height: auto; aspect-ratio: 1 / 1; border-radius: var(--ax-radius-16); }
+  .axs-treat figcaption { display: flex; flex-direction: column; gap: 2px; }
+  .axs-treat figcaption b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-treat figcaption span { font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
+  /* ═══════ v5.08 경품 포스터(prizes) · 입구 (261003 사용자 「경품 사진이 작다 · 포스터처럼 · 싼티 없이 · 스탬프 누적표에서 바로」 · 「제품 사진을 더 크게 부각」)
+     구성 = 표지(먹색 면 + 도트 격자 + 주황 3중 원 점 · 「Prizes」) → 행운권 → 참여상 → 룰렛 → 1F 타자왕(v5.09 사진 카드 · 1등 대표 + 2 · 3등 2열)
+     표지 먹색 면 = 이 화면 맨 위 한 구역 한정(design.md §1 스테이지 「블랙 = 포스터 블랙판」 · 앱 셸 블랙 금지의 예외 · 판 퀴즈 1F 판 문법과 같은 「구역 한정」) · 손이 닿는 줄은 앱 문법
+     사진 = 대표(행운권 1~3등 · 참여상 · 룰렛 1등) 폭 가득 정사각 · 나머지 2열 정사각 · 홀수로 남는 마지막 칸은 2칸 폭 넓은 카드(2:1)
+     글자 = 무채색 · 브랜드 주황 글자는 20px 이상 600 이상(제목 Prizes · 대표 등수)만 · 그보다 작은 주황 글자는 brandText · 파랑 · 이모지 · 그라데이션 없음
+     움직임 = 들어온 순간 한 번만(.in · 다시 그려도 반복하지 않는다) 표지 · 첫 카드가 차례로 떠오르고 첫 사진이 1.04 → 1 · 동작 줄이기에서는 없음 ═══════ */
+  .axs-pz { display: flex; flex-direction: column; }
+  .axs-pz-cv { position: relative; margin: calc(var(--ax-space-24) * -1) calc(var(--ax-page-inset) * -1) 0; padding: var(--ax-space-32) var(--ax-page-inset) var(--ax-space-24); overflow: hidden;
+    background-color: var(--ax-color-ink); color: var(--ax-color-inverse);
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.13) 1px, transparent 1.4px); background-size: 12px 12px; background-position: 6px 6px; }
+  /* v5.16 표지(사용자 시안 261003) · 작은 행사명 · 큰 제목 · 「지금 내 스탬프」 카드 · 1~6 점 선 · v5.33 3~6 점 바로 아래 세로 카드 */
+  .axs-pz-cv .ey { position: relative; margin: 0; font: var(--ax-type-t6); font-weight: 600; color: rgba(255, 255, 255, 0.6); }
+  .axs-pz-cv .ttl { position: relative; margin: var(--ax-space-8) 0 0; font: var(--ax-type-t1); color: var(--ax-color-inverse); word-break: keep-all; }
+  .axs-pz-cv .now { position: relative; display: flex; align-items: center; gap: var(--ax-space-12); margin-top: var(--ax-space-24); padding: var(--ax-space-16) var(--ax-space-20); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--ax-radius-20); background: rgba(255, 255, 255, 0.05); }
+  .axs-pz-cv .now .tx { flex: 1 1 auto; min-width: 0; }
+  .axs-pz-cv .now .k { margin: 0; font: var(--ax-type-t7); color: rgba(255, 255, 255, 0.6); }
+  .axs-pz-cv .now .nx { margin: var(--ax-space-4) 0 0; font: var(--ax-type-t5-strong); color: var(--ax-color-inverse); word-break: keep-all; }
+  .axs-pz-cv .now .nx b, .axs-pz-cv .now .n { color: var(--ax-color-brand); }
+  .axs-pz-cv .now .n { flex: none; margin: 0; font: 700 calc(17px * var(--fs)) / 1 var(--ax-font); white-space: nowrap; }
+  .axs-pz-cv .now .n b { font-size: calc(44px * var(--fs)); font-weight: 800; letter-spacing: -0.02em; margin-right: 2px; }
+  /* v5.33 (사용자 261003 「3 밑에 룰렛 · 4 밑에 행운권 있던 구조가 더 좋다」 · 「안 들어가면 글자 크기를 조정」 · 앞선 지적 「점 너비 같게」 · 「이동한다는 느낌」 · 「카드가 폭을 채우고 점 가운데 = 카드 가운데」 유지)
+     점 줄 · 카드 줄 = 같은 6칸 균등 격자(칸 사이 4px) · 점 1 ~ 6 = 같은 크기 32px · 칸 가운데 · 선 = 1번 칸 가운데부터 6번 칸 가운데까지(받은 만큼 주황 · fl 폭 = 스크립트)
+     1 · 2 아래 = 두 칸 합친 안내 칸(「보상은 3개부터」 · 누를 수 없음 · 3개 전 점선 · 3개부터 옅은 주황 실선) · 3 ~ 6 아래 = 좁은 세로 카드(점 가운데 = 카드 가운데)
+     카드 = 아이콘 · 이름 · 횟수(6 = + 참여상) · 알약(달성 · 다음) · 맨 아래 아래쪽 셰브론(아래 구역으로 간다) · 눌림 = 면 밝게 + 0.97 + 셰브론 아래로 2px
+     글자 = 좁은 칸에 맞춰 줄임(이름 12px · 횟수 17px · 큰글씨도 13px · 19px 에서 멈춤 · 360px 칸 49px 에서도 12px 이상 · 넘치면 두 줄) */
+  .axs-pz-cv .stp, .axs-pz-cv .cds { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); column-gap: 4px; }
+  .axs-pz-cv .stp { align-items: center; height: 32px; margin-top: var(--ax-space-24); }
+  .axs-pz-cv .stp > .c { position: relative; z-index: 1; display: flex; justify-content: center; }
+  .axs-pz-cv .stp .ln, .axs-pz-cv .stp .fl { position: absolute; left: calc((100% - 20px) / 12); top: 50%; height: 2px; margin-top: -1px; }
+  .axs-pz-cv .stp .ln { right: calc((100% - 20px) / 12); background: rgba(255, 255, 255, 0.16); }
+  .axs-pz-cv .stp .fl { background: var(--ax-color-brand); }
+  .axs-pz-cv .stp i { display: grid; flex: none; place-items: center; box-sizing: border-box; width: 32px; height: 32px; border: 2px solid rgba(255, 255, 255, 0.24); border-radius: 50%; background: var(--ax-color-ink); color: rgba(255, 255, 255, 0.66); font: 700 15px / 1 var(--ax-font); font-style: normal; }
+  .axs-pz-cv .stp i.on { border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
+  .axs-pz-cv .stp i.nx { border-color: var(--ax-color-brand); color: var(--ax-color-inverse); }
+  .axs-pz-cv .cds { align-items: stretch; margin-top: var(--ax-space-12); }
+  .axs-pz-cv .cds > * { display: flex; flex-direction: column; align-items: center; min-width: 0; margin: 0; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 14px; background: rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.62); text-align: center; }
+  .axs-pz-cv .cds .pre { grid-column: span 2; justify-content: center; gap: var(--ax-space-4); padding: 10px 6px; border-style: dashed; border-color: rgba(255, 255, 255, 0.18); background: transparent; }
+  .axs-pz-cv .cds .pre.done { border-style: solid; border-color: rgba(255, 127, 50, 0.5); }
+  .axs-pz-cv .cds .pre b { font: 800 min(calc(15px * var(--fs)), 17px) / 1.2 var(--ax-font); color: rgba(255, 255, 255, 0.85); }
+  .axs-pz-cv .cds button { gap: 3px; padding: 10px 1px 8px; font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background-color 0.12s ease, transform 0.12s ease; }
+  .axs-pz-cv .cds button.nx { border-color: rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.08); color: var(--ax-color-inverse); }
+  .axs-pz-cv .cds button.on { border-color: var(--ax-color-brand); color: var(--ax-color-inverse); }
+  .axs-pz-cv .cds button:active { background: rgba(255, 255, 255, 0.14); transform: scale(0.97); }
+  .axs-pz-cv .cds button:focus-visible { outline: 2px solid var(--ax-color-brand); outline-offset: 2px; }
+  @media (hover: hover) { .axs-pz-cv .cds button:hover { background: rgba(255, 255, 255, 0.1); } }
+  .axs-pz-cv .cds .i { display: block; flex: none; width: 22px; height: 22px; color: rgba(255, 255, 255, 0.66); }
+  .axs-pz-cv .cds button.on .i { color: var(--ax-color-brand); }
+  .axs-pz-cv .cds button.nx .i { color: var(--ax-color-inverse); }
+  .axs-pz-cv .cds .i svg, .axs-pz-cv .cds .g svg, .axs-pz-cv .cds .dn svg { display: block; width: 100%; height: 100%; }
+  .axs-pz-cv .cds .t { font: 600 min(calc(12px * var(--fs)), 13px) / 1.25 var(--ax-font); word-break: keep-all; }
+  .axs-pz-cv .cds b { font: 800 min(calc(17px * var(--fs)), 19px) / 1.15 var(--ax-font); color: inherit; white-space: nowrap; }
+  .axs-pz-cv .cds .fn { display: flex; flex-direction: column; align-items: center; gap: 1px; font: 600 12px / 1.2 var(--ax-font); }
+  .axs-pz-cv .cds .g { display: block; width: 14px; height: 14px; }
+  .axs-pz-cv .cds .bt { display: flex; flex-direction: column; align-items: center; gap: var(--ax-space-4); margin-top: auto; padding-top: var(--ax-space-4); }
+  .axs-pz-cv .cds .tag { display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 1px; height: 20px; padding: 0 5px; border: 1px solid rgba(255, 255, 255, 0.55); border-radius: var(--ax-radius-999); color: var(--ax-color-inverse); font: 700 12px / 1 var(--ax-font); white-space: nowrap; }
+  .axs-pz-cv .cds .tag svg { width: 10px; height: 10px; flex: none; }
+  .axs-pz-cv .cds .tag.on { border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
+  .axs-pz-cv .cds .dn { display: block; flex: none; width: 16px; height: 16px; color: rgba(255, 255, 255, 0.72); transition: transform 0.12s ease; }
+  .axs-pz-cv .cds button:active .dn { transform: translateY(2px); color: var(--ax-color-inverse); }
+  @media (prefers-reduced-motion: reduce) { .axs-pz-cv .cds button, .axs-pz-cv .cds .dn { transition: none; } .axs-pz-cv .cds button:active { transform: none; } }
+  /* 스탬프 개수 점 6개 · 켜진 점 = 조건 · 옅은 점 = 4 · 5 · 6개처럼 늘어나는 구간 */
+  .axs-pz-mt { display: inline-flex; flex: none; gap: 4px; }
+  .axs-pz-mt i { width: 8px; height: 8px; border-radius: 50%; background: var(--ax-color-divider); }
+  .axs-pz-mt i.on { background: var(--ax-color-brand); }
+  .axs-pz-mt i.pt { background: transparent; box-shadow: inset 0 0 0 1.5px var(--ax-color-brand); }
+  .axs-pz-sec { display: flex; flex-direction: column; gap: var(--ax-space-12); margin-top: var(--ax-space-40); }
+  .axs-pz-sh { display: flex; flex-direction: column; gap: var(--ax-space-4); margin-bottom: var(--ax-space-4); scroll-margin-top: calc(var(--stick, 0px) + var(--ax-space-16)); }
+  .axs-pz-sh .en { margin: 0; font: var(--ax-type-caption); font-weight: 700; letter-spacing: 0.12em; color: var(--ax-color-brandText); }
+  .axs-pz-sh h2 { margin: 0; font: var(--ax-type-t2); color: var(--ax-color-ink); }
+  .axs-pz-sh .cd { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ax-space-8); margin: var(--ax-space-8) 0 0; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
+  /* 경품 카드 · 사진이 주인공 · 흰 카드 위 흰 바탕 사진이 이어지게(사진 바탕은 빌드에서 흰색으로 맞췄다) */
+  .axs-pz-c { display: flex; flex-direction: column; min-width: 0; margin: 0; overflow: hidden; border-radius: var(--ax-radius-24); background: var(--ax-color-surface); }
+  .axs-pz-ph { position: relative; display: block; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; background: var(--ax-color-surface); }
+  .axs-pz-ph img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .axs-pz-ph .smp { position: absolute; right: var(--ax-space-12); top: var(--ax-space-12); padding: 2px 8px; border-radius: var(--ax-radius-999); background: rgba(255, 255, 255, 0.92); box-shadow: 0 0 0 1px rgba(25, 31, 40, 0.08); color: var(--ax-color-body); font-size: 11px; font-weight: 600; line-height: 16px; }   /* v5.33 오른쪽 위 · 어두운 사진 위에서도 읽히게 흰 바탕 */
+  .axs-pz-c .tx { display: flex; align-items: baseline; gap: var(--ax-space-12); padding: var(--ax-space-16) var(--ax-space-20) var(--ax-space-4); }   /* v5.33 등수 · 이름 · 수량 = 카드 맨 위(사진 위 · 사용자 261003 「스크롤하면 1등이 좌상단이어야」) */
+  .axs-pz-c > .axs-pz-ph { margin-top: auto; }   /* v5.33 2열에서 이름이 두 줄이어도 사진 아래 끝이 맞는다 */
+  .axs-pz-c .rk { flex: none; font: var(--ax-type-t3); color: var(--ax-color-brand); }
+  .axs-pz-c b { flex: 1 1 auto; min-width: 0; font: var(--ax-type-t4); font-weight: 700; color: var(--ax-color-ink); word-break: keep-all; }
+  .axs-pz-c b small { display: block; margin-top: 2px; font: var(--ax-type-t7); font-weight: 600; color: var(--ax-color-muted); }   /* v5.35 제품명 = 경품명 아래 작은 회색 줄(타자왕) */
+  .axs-pz-c .q { flex: none; font: var(--ax-type-t6-strong); color: var(--ax-color-muted); }
+  .axs-pz-gr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ax-space-12); }
+  .axs-pz-c.gr { border-radius: var(--ax-radius-20); }
+  .axs-pz-c.gr .smp { right: var(--ax-space-8); top: var(--ax-space-8); }
+  .axs-pz-c.gr .tx { flex-direction: column; align-items: flex-start; gap: 2px; padding: var(--ax-space-12) var(--ax-space-16) var(--ax-space-4); }
+  .axs-pz-c.gr .rk { font: var(--ax-type-t7); font-weight: 700; color: var(--ax-color-brandText); }
+  .axs-pz-c.gr b { font: var(--ax-type-t6-strong); }
+  .axs-pz-c.gr .q { font: var(--ax-type-t7); }
+  .axs-pz-c.wide { grid-column: 1 / -1; }
+  .axs-pz-c.wide .axs-pz-ph { aspect-ratio: 2 / 1; }
+  /* v5.18 사진 두 장(룰렛 2등 커피 · 키캡 키링 · 합성 대신 나란히 두 칸 · 사용자 261003) · 넓은 카드 2:1 = 정사각 두 칸 · 사이 2px */
+  .axs-pz-ph.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; aspect-ratio: 2 / 1; }
+  .axs-pz-ph.two img { aspect-ratio: 1 / 1; height: auto; }
+  .axs-ph.two { display: flex; gap: 1px; }
+  .axs-ph.two img { width: 50%; }
+  /* v5.18 납작한 상품(타자왕 1등 키보드) = 사진 2:1 로 위아래 흰 여백을 잘라 칸을 채운다(object-fit cover · 가운데) */
+  .axs-pz-c.flat .axs-pz-ph { aspect-ratio: 2 / 1; }
+  /* v5.33 (사용자 261003 「볼펜 그림이 잘렸다」) tall = 세로로 긴 사진 · 넓은 칸(2:1)에서 자르지 않고 전체(contain · 칸 높이 = 2열 사진과 같은 크기) */
+  .axs-pz-c.tall .axs-pz-ph img { object-fit: contain; }
+  /* v5.18 스탬프와 별개 구역(1F 타자왕) · 위 구역들과 얇은 선으로 나눈다 · 조건 줄 앞 회색 알약 · 순위 보기 버튼 */
+  .axs-pz-sec.sep { margin-top: var(--ax-space-48); padding-top: var(--ax-space-32); border-top: 1px solid var(--ax-color-divider); }
+  .axs-pz-sh .sp { display: inline-flex; align-items: center; min-height: 24px; padding: 0 10px; border-radius: var(--ax-radius-999); background: var(--ax-color-inset); color: var(--ax-color-ink); font: var(--ax-type-t7); font-weight: 700; white-space: nowrap; }
+  .axs-pz-nt { margin: 0 var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
+  .fs-big .axs-pz-c:not(.gr) .tx { flex-wrap: wrap; }
+  .fs-big .axs-pz-gr { grid-template-columns: minmax(0, 1fr); }
+  .fs-big .axs-pz-c.wide .axs-pz-ph { aspect-ratio: 1 / 1; }
+  @keyframes axsPzIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes axsPzZoom { from { transform: scale(1.04); } to { transform: none; } }
+  .axs-pz.in .axs-pz-cv > *, .axs-pz.in .axs-pz-sec:first-of-type > * { animation: axsPzIn 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .axs-pz.in .axs-pz-cv > .ttl { animation-delay: 0.06s; } .axs-pz.in .axs-pz-cv > .now { animation-delay: 0.12s; } .axs-pz.in .axs-pz-cv > .stp { animation-delay: 0.18s; } .axs-pz.in .axs-pz-cv > .cds { animation-delay: 0.24s; }
+  .axs-pz.in .axs-pz-sec:first-of-type > :nth-child(2) { animation-delay: 0.3s; }
+  .axs-pz.in .axs-pz-sec:first-of-type > :nth-child(2) img { animation: axsPzZoom 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both; }
+  @media (prefers-reduced-motion: reduce) { .axs-pz.in *, .axs-pz.in .axs-pz-cv > *, .axs-pz.in .axs-pz-sec:first-of-type > * { animation: none !important; } }
+  /* 입구 · 스탬프 보상 레일(홈 · 스탬프 탭) 아래 · 내 보상 · 사진 3장 + 「경품 보기」 · brandSoft 면(Weak 버튼 문법) */
+  .axs-pzgo { display: flex; align-items: center; gap: var(--ax-space-12); width: 100%; min-height: 56px; margin-top: var(--ax-space-16); padding: var(--ax-space-8) var(--ax-space-16) var(--ax-space-8) var(--ax-space-8); border: 0; border-radius: var(--ax-radius-16); background: var(--ax-color-brandSoft); color: var(--ax-color-ink); font-family: inherit; text-align: left; cursor: pointer; }
+  .axs-pzgo .th { display: inline-flex; flex: none; }
+  .axs-pzgo .th img { display: block; width: 40px; height: 40px; margin-left: -10px; border-radius: 50%; background: var(--ax-color-surface); box-shadow: 0 0 0 2px var(--ax-color-brandSoft); object-fit: cover; }
+  .axs-pzgo .th img:first-child { margin-left: 0; }
+  .axs-pzgo .tx { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; }
+  .axs-pzgo .tx b { font: var(--ax-type-t6-strong); color: var(--ax-color-brandText); }
+  .axs-pzgo .tx span { font: var(--ax-type-caption); color: var(--ax-color-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .axs-pzgo .axs-chev { flex: none; width: 20px; height: 20px; color: var(--ax-color-brandText); }
+  /* 모달 안 경품 한 줄 · 대표 사진 + 요약 + 「경품 보기」 (옛 목록 대신) */
+  .axs-pzm { display: flex; align-items: center; gap: var(--ax-space-12); width: 100%; padding: 0; border: 0; background: none; color: inherit; font-family: inherit; text-align: left; cursor: pointer; }
+  .axs-pzm .tx { display: flex; flex: 1 1 auto; flex-direction: column; gap: 2px; min-width: 0; }
+  .axs-pzm .tx b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }
+  .axs-pzm .tx span { font: var(--ax-type-t7); font-weight: 600; color: var(--ax-color-brandText); }
+  .axs-pzm .axs-chev { flex: none; width: 20px; height: 20px; color: var(--ax-color-brandText); }

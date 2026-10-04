@@ -1,0 +1,16 @@
+  /* v5.57 판 퀴즈 순서형 「팡」 키프레임(규칙은 판 문법 절 panCss 의 .axs-pan.qz 아래) · 둘러보기 자동 복귀 띠(#trd) */
+  @keyframes qzSlFlash { 0% { transform: scale(1); } 40% { transform: scale(1.05); border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: #FFFFFF; } 100% { transform: scale(1); } }
+  @keyframes qzPangPill { 0% { transform: scale(0.4); opacity: 0; } 22% { transform: scale(1.12); opacity: 1; } 36% { transform: scale(1); opacity: 1; } 80% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.96); opacity: 0; } }
+  @keyframes qzChipPop { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+  /* v5.57 둘러보기에서 출발한 활동을 마치고 스탬프를 새로 받은 뒤 · 아래 띠(#trd) 「여기 머물기」 + 「1층으로 돌아가기」(3초 채움 → 자동) · 앱 폭 · 아래 메뉴 · 고정 버튼 위(그동안 숨김) · 시트 · 팝업 아래 · 움직임 줄이기 = 숫자만 */
+  #trd { position: fixed; left: 50%; bottom: 0; transform: translateX(-50%); width: 100%; max-width: var(--ax-app-max); z-index: 60; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--ax-space-8); padding: var(--ax-space-12) var(--ax-page-inset) max(var(--ax-space-16), env(safe-area-inset-bottom)); background: var(--ax-color-canvas); border-top: 1px solid var(--ax-color-divider); animation: trdIn 0.22s ease-out both; }
+  #trd .ax-button { width: 100%; min-width: 0; }
+  #trd .trd-go { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: var(--ax-space-8); }
+  #trd .trd-go > span, #trd .trd-go > b { position: relative; }
+  #trd .trd-bar { position: absolute; inset: 0; background: rgba(0,0,0,0.14); transform-origin: 0 50%; transform: scaleX(0); animation: trdFill 3s linear both; }
+  #trd.hold .trd-bar { animation-play-state: paused; }
+  #trd .trd-n { display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 999px; background: rgba(255,255,255,0.28); font-variant-numeric: tabular-nums; }
+  #trd.rm, #trd.rm .trd-bar { animation: none; }
+  @keyframes trdIn { 0% { transform: translate(-50%, 100%); } 100% { transform: translate(-50%, 0); } }
+  @keyframes trdFill { 0% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
+  body.trd-on .axs-fix.ax-bottom, body.trd-on #tabbar { visibility: hidden; }

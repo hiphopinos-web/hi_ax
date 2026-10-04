@@ -1,0 +1,142 @@
+</style>
+</head>
+<body>
+<div id="frame" class="splash-mode">
+
+  <!-- ═══════ 스플래시 · v5.02 로그인 화면 v2 「전체 오렌지」 · 흰 행사명 + 입력 3줄 + 검정 주 버튼 · 줄 자리는 lfLayout(유동 배치 · data-r) ═══════ -->
+  <section id="splash" class="axs-lf" data-phase="ready">
+    <canvas id="kvCv" class="lf-bg" aria-hidden="true"></canvas>
+    <canvas class="lf-fx" aria-hidden="true"></canvas>
+    <div class="lf-head">
+      <p class="lf-name"></p>
+      <h1 class="lf-title"><span>AX Festival</span> <span>2026</span></h1>
+    </div>
+    <form id="entryForm" class="lf-form" novalidate>
+      <div id="saCard" class="lf-clp" data-r="card" hidden><div class="axs-sacard"><b>홈 화면 앱으로 열렸어요</b><span>사번 · 이름 · 비밀번호 4자리로 한 번 더 입장해 주세요</span></div></div>
+      <label class="lf-f" data-r="field"><input id="empId" inputmode="numeric" pattern="[0-9]*" placeholder=" " autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" oninput="numOnly(this, event)" data-imeend="num" aria-describedby="err"><span>사번</span></label>
+      <label class="lf-f" data-r="field"><input id="userName" placeholder=" " autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="next" aria-describedby="err"><span>이름</span></label>
+      <label class="lf-f" data-r="field"><input id="userPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" enterkeyhint="go" oninput="numOnly(this, event)" placeholder=" " autocomplete="off" aria-describedby="pinNote err"><span>비밀번호 숫자 4자리</span></label>
+      <div class="lf-clp" data-r="note"><p class="lf-note" id="pinNote">처음 입력한 4자리가 비밀번호&nbsp;· 사내 비밀번호 금지</p></div>
+      <p id="err" role="alert" data-r="err"></p>
+      <div class="lf-btn" data-r="btn"><button type="submit" class="ax-button ax-button-dark">페스티벌 입장</button></div>
+      <div class="lf-clp" data-r="links"><div class="lf-links"><button type="button" class="ax-link" onclick="pwLostOpen()">비밀번호를 잊었어요</button></div></div>
+    </form>
+  </section>
+
+  <!-- ═══════ 재방문 · 비밀번호만 입력 (스플래시 건너뜀) · v5.02 첫 화면과 같은 틀(전체 오렌지 · 유동 배치) ═══════ -->
+  <section id="quick" class="axs-lf" hidden>
+    <canvas id="qCv" class="lf-bg" aria-hidden="true"></canvas>
+    <canvas class="lf-fx" aria-hidden="true"></canvas>
+    <div class="lf-head">
+      <p class="lf-name"></p>
+      <h1 class="lf-title"><span>AX Festival</span> <span>2026</span></h1>
+    </div>
+    <div id="quickForm" class="lf-form">
+      <p class="lf-who" data-r="who"><b id="qName"></b><span id="qEmp"></span></p>
+      <label class="lf-f" data-r="field"><input id="quickPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" enterkeyhint="go" placeholder=" " autocomplete="off" oninput="numOnly(this, event)" aria-describedby="qErr"><span>비밀번호 숫자 4자리</span></label>
+      <p id="qErr" role="alert" data-r="err"></p>
+      <div class="lf-btn" data-r="btn"><button type="button" id="qBtn" class="ax-button ax-button-dark">입장</button></div>
+      <div class="lf-clp" data-r="links"><div class="lf-links"><button type="button" id="qOther" class="ax-link">다른 사번으로 입장</button><button type="button" class="ax-link" onclick="pwLostOpen()">비밀번호를 잊었어요</button></div></div>
+    </div>
+  </section>
+  <div id="lfSafe" aria-hidden="true"></div>
+
+  <!-- ═══════ v3.88 비밀번호 분실 · 운영 데스크 요청 (메일·문자 발송 없음) ═══════ -->
+  <section id="pwlost" hidden>
+    <!-- v4.08 입력·제출 화면 형식 · 위 = 제목·안내·입력 · 아래 고정 = 주 버튼(요청 보내기) · v4.09 로그인 전이라 헤더가 없어 뒤로 버튼을 맨 위에 둔다 -->
+    <div class="axs-pw">
+      <div class="axs-pw-top"><button type="button" class="axs-pw-back" id="pwBack" onclick="pwLostBack()" aria-label="뒤로"></button></div>
+      <div class="ax-stack axs-pw-main">
+        <div class="ax-stack-tight axs-gap12"><p class="ax-meta">AX Festival 2026</p><h1 class="ax-type-t2">비밀번호 찾기</h1></div>
+        <div id="pwForm" class="ax-stack">
+          <p class="ax-body pw-msg">운영 데스크에 초기화 요청만 전달돼요<br>문자 · 메일 없이 데스크에서 본인 확인</p>
+          <div class="ax-fields">
+            <label class="ax-sr-only" for="pwEmp">사번</label><input id="pwEmp" class="ax-field" inputmode="numeric" pattern="[0-9]*" enterkeyhint="next" placeholder="사번" autocomplete="off" oninput="numOnly(this, event)" data-imeend="num" onfocus="kbFocus(this)">
+            <label class="ax-sr-only" for="pwName">이름</label><input id="pwName" class="ax-field" placeholder="이름 (예: 홍길동)" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="send" onfocus="kbFocus(this)">
+          </div>
+          <p class="pw-err" id="pwErr" role="alert"></p>
+        </div>
+        <div id="pwDone" class="ax-stack-tight axs-gap12" hidden>
+          <p class="pw-ok">운영 데스크에 요청이 전달됐어요<br>1F 체크인 데스크에서 확인해 주세요</p>
+          <p class="ax-body pw-msg">데스크에서 본인 확인을 하고 비밀번호를 지워 드립니다<br>그다음 앱에서 새 비밀번호 4자리를 넣으면 다시 들어올 수 있어요</p>
+        </div>
+      </div>
+      <div class="ax-bottom axs-pw-bot">
+        <button type="button" id="pwSend" class="ax-button" onclick="pwLostSend()">요청 보내기</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════ 앱 셸 ═══════ -->
+  <div id="app" hidden>
+    <header id="topbar" class="ax-header"></header>
+    <div id="view"></div>
+    <nav id="tabbar" class="ax-nav" aria-label="주 메뉴"></nav>
+    <!-- AX-TDS 제공 아이콘 스프라이트(design-handoff/assets/icons.svg 원본 경로 · currentColor) · 단일파일 데모에서도 보이게 본문에 둔다 -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="nav-experience" viewBox="0 0 24 24" fill="none">
+<g>
+<path d="M17.5 3.5H6.5C5.39543 3.5 4.5 4.39543 4.5 5.5V18.5C4.5 19.6046 5.39543 20.5 6.5 20.5H17.5C18.6046 20.5 19.5 19.6046 19.5 18.5V5.5C19.5 4.39543 18.6046 3.5 17.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M4.5 9.2H19.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M4.5 14.9H19.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9.5 20V14.9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</symbol><symbol id="nav-home" viewBox="0 0 24 24" fill="none">
+<g>
+<path d="M3.5 11.2L12 4L20.5 11.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M6 9.8V20H18V9.8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M10 20V14.6H14V20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</symbol><symbol id="nav-my" viewBox="0 0 24 24" fill="none">
+<g>
+<path d="M17 3.5H7C5.89543 3.5 5 4.39543 5 5.5V18.5C5 19.6046 5.89543 20.5 7 20.5H17C18.1046 20.5 19 19.6046 19 18.5V5.5C19 4.39543 18.1046 3.5 17 3.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9 16.5H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</symbol><symbol id="nav-program" viewBox="0 0 24 24" fill="none">
+<g>
+<path d="M7.5 4.5L18.5 10.9L13.7 12.2L12.4 17L7.5 4.5Z" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M4 4L5.6 5.6M4 9.5H6.2M9.5 4V6.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</symbol><symbol id="qr-corners" viewBox="0 0 32 32" fill="none">
+<g>
+<path d="M11 4H9C7.67392 4 6.40215 4.52678 5.46447 5.46447C4.52678 6.40215 4 7.67392 4 9V11M21 4H23C24.3261 4 25.5979 4.52678 26.5355 5.46447C27.4732 6.40215 28 7.67392 28 9V11M28 21V23C28 24.3261 27.4732 25.5979 26.5355 26.5355C25.5979 27.4732 24.3261 28 23 28H21M11 28H9C7.67392 28 6.40215 27.4732 5.46447 26.5355C4.52678 25.5979 4 24.3261 4 23V21" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</symbol></svg>
+    <button id="topbtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="맨 위로">TOP</button>
+  </div>
+
+  <!-- 홈 화면에 추가 · 로그인 직후 전용 단계 화면 (기기별 방법이 달라 내용은 스크립트가 채움) -->
+  <div id="a2hs" hidden>
+    <div class="a-wrap">
+      <span class="a-ico"><img src="icons/icon-192.png" alt=""></span>
+      <p class="a-t" id="a2hsT">바로가기 설치</p>
+      <p class="a-s">다음부터 아이콘 한 번으로 열려요</p>
+      <div id="a2hsBody"></div>
+      <button class="a-later" onclick="a2hsSheet(false)"><span class="axs-lk">닫기<svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
+    </div>
+  </div>
+
+  <!-- 설정 시트 · 앱 · 운영 (v4.71 글자 크기는 헤더 토글로만) -->
+  <div id="fsSheet" hidden onclick="if(event.target===this)fsSheet(false)">
+    <div class="fs-box" role="dialog" aria-modal="true" aria-labelledby="fsT">
+      <div class="axs-mhead"><h2 class="axs-mtitle fs-t" id="fsT">설정</h2><button type="button" class="axs-x" onclick="fsSheet(false)" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></div>
+      <!-- v4.71 (260930 사용자 요청) 글자 크기는 헤더 「일반 · 큰글씨」 한 곳 · 설정 시트에서 뺐다(좁은 폰도 헤더에 남긴다) -->
+      <p class="fs-lb" id="fsLbApp">앱</p>
+      <button class="fs-admin" id="fsPush" hidden onclick="fsSheet(false); pushSetOpen()">알림<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
+      <button class="fs-admin" id="fsA2hs" onclick="fsSheet(false); a2hsOpen()"><span id="fsA2hsT" class="fs-lbl">바로가기 설치</span><span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
+      <p class="fs-lb">운영</p>
+      <button class="fs-admin" onclick="fsSheet(false); App.go('admin')">관리자 모드<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
+      <button class="fs-admin" onclick="axfLogout()">로그아웃 · 다른 사번으로 입장<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
+      <button type="button" class="fs-close ax-button ax-button-weak" onclick="fsSheet(false)">닫기</button>
+      <p class="fs-ver" id="fsVer"></p>
+    </div>
+  </div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<!-- qrcode-generator 1.4.4 · QR 인코더 (MIT, Kazuhiko Arase · http://www.d-project.com/)
+     참가자마다 다른 개인 QR을 화면에서 만들어야 하므로 런타임 인코더가 필요하다
+     부스 QR도 260830부터 여기서 그린다(코드가 서버에 있어 미리 만들어 둘 수 없다).
+     원본을 고치지 않고 esbuild로 압축만 했다. 라이선스 전문: 웹배포용/LICENSE-qrcode-generator.txt -->

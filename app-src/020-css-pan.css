@@ -1,0 +1,149 @@
+  /* ═══════ v4.93 1F 판 문법 · 공통 부품 K (261001 사용자 확정 · design.md A-5 5-19 · 정본 「디자인 시안/프로그램 탭 개편/IA 검토.md」 7-5 · 8-1)
+     경계: 이 절의 규칙은 전부 .axs-pan 아래에만 건다. .axs-pan 은 판 계열 화면의 컨테이너에만 붙는다
+       = 프로그램 › 상시 운영(Views.guide · seg always) · 구역 상세(zone_d) · (다음 판) AX 퀴즈 판 퀴즈.
+       다음 작업은 자기 화면 컨테이너에 axs-pan 을 붙이고 아래 K1~K5 를 그대로 쓴다(새로 만들지 않는다 · 검사 132절이 정의 한 번 · 경계를 본다).
+     ── 공통 부품 K 시작 ──
+     K1 axs-sign  구역 간판 = 포인트 칩(현장 부스 사인 · 주황 면 + 흰 점 글자 · 높이 24 · 점 글자 12px) · .lg 구역 상세(높이 26 · 14px) · 퀴즈 구역 칩도 같은 칩(변형 없음 · 흰 점 · 크기 그대로, 사용자 확정 261002)
+                  v4.94 (261002 사용자 「너무 크고 튄다 · 포인트 요소로 쓰이는 정도」) 옛 줄 간판 188x54 · 상세 카드 폭 간판을 칩으로 줄였다 · 한 화면에 큰 주황 면 없음
+                  v5.10 글자 = 부스 원본 사인 글자(점 글자 DotGlyph · design.md A-5 5-20) · Neo둥근모 근사와 그림 교체 지점(ZONE_SIGN_IMG)은 폐기 · px 고정(큰글씨에서도 한 줄) · zoneSign 한 곳
+     K2 axs-bar   판 제목 막대(왼쪽 3px ink 막대 + 제목 b + 작은 부제 span) · .stm 부제 한 줄(막대 없음 · 회색 t6 · v4.94 「한글 부제는 회색 톤 · 작게」)
+     K3 axs-pill  검정 알약(ink 면 + 흰 글자 · 높이 24 · 문항 번호(Q4) 등) · .ok 완료(초록) · 옆 이름은 axs-pt
+                  v4.95 (사용자 261002 「스탬프 5 · 스탬프 6 딱지가 이상하다」) 스탬프 표시에는 쓰지 않는다 → K6 axs-smk
+     K4 axs-rule  얇은 ink 줄(1px) · 옛 .axs-hr(옅은 구분선)과 이름이 겹쳐 axs-rule 로 지었다(v4.76 클래스 겹침 사고)
+     K5 axs-dot   주황 점 라벨 · axs-todo 「하는 일」 주황 점 목록
+     K6 axs-smk   스탬프 표시 = 작은 도장(24px · 스탬프 탭 · 활동 화면 도장 stampSealSvg 와 같은 모양 · 번호 없음)
+                  받기 전 = 무채색 옅은 선(muted 50%) · .on 받은 뒤 = 주황(brand · 스탬프 탭 완료 원과 같은 토큰) · 옆 이름은 한 단어 axs-pt(.on = brandText)
+                  v4.99 구역 줄 · 구역 상세 · 18F 커피챗 줄은 K6 대신 활동 화면 도장(stampTagHtml · 줄 44px 셰브론 왼쪽 · 상세 52px 오른쪽 위) · K6 은 판 퀴즈가 쓴다
+                  쓰는 법: 스크립트 stampMkHtml(스탬프 id, "한 단어") 한 줄 · 받은 판정은 S stamps(스탬프 탭 stpRowHtml · 도장 stampTagHtml 과 같은 원천) · 룰렛은 스탬프가 아니라 쓰지 않는다 ═══════ */
+  .axs-pan .axs-sign { display: inline-flex; align-items: center; justify-content: center; flex: none; align-self: flex-start; box-sizing: border-box; width: auto; height: 24px; margin: 0; padding: 0 8px; overflow: hidden;
+    border-radius: 4px; background: var(--ax-color-brand); color: #FFFFFF; line-height: 0; white-space: nowrap; }   /* v5.10 글자 = 점 글자 그림 12px(흰 점 · DotGlyph) */
+  .axs-pan .axs-sign.lg { height: 26px; padding: 0 10px; }   /* 구역 상세 · 점 글자 14px */
+  .axs-pan .axs-bar { display: flex; flex-direction: column; gap: 2px; margin: var(--ax-space-4) 0 var(--ax-space-4) 2px; padding: 1px 0 1px 10px; border-left: 3px solid var(--ax-color-ink); }
+  .axs-pan .axs-bar b { font: var(--ax-type-t4); color: var(--ax-color-ink); }
+  .axs-pan .axs-bar span { font: var(--ax-type-caption); color: var(--ax-color-muted); }
+  .axs-pan .axs-bar.stm { display: block; margin: 0; padding: 0; border: 0; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }   /* 부제 · 막대 없음 · 회색 15px 일반 굵기 */
+  .axs-pan .axs-pill { display: inline-flex; align-items: center; min-height: 24px; padding: 0 10px; border-radius: 999px; background: var(--ax-color-ink); color: #FFFFFF; font: var(--ax-type-t7); font-weight: 700; white-space: nowrap; }
+  .axs-pan .axs-pill.ok { background: var(--ax-color-successSoft); color: var(--ax-color-success); }
+  .axs-pan .axs-pt { font: var(--ax-type-caption); color: var(--ax-color-body); }
+  .axs-pan .axs-pt.on { color: var(--ax-color-brandText); font-weight: 600; }
+  .axs-pan .axs-smk { display: inline-flex; flex: none; width: 24px; height: 24px; color: var(--ax-color-muted); opacity: 0.5; }   /* 받기 전 = 무채색 옅은 선(muted 반투명 · disabled 는 흰 면에서 거의 안 보였다) */
+  .axs-pan .axs-smk svg { display: block; width: 100%; height: 100%; }
+  .axs-pan .axs-smk.on { color: var(--ax-color-brand); opacity: 1; }
+  .axs-pan .axs-rule { height: 0; margin: 0; border: 0; border-top: 1px solid var(--ax-color-ink); }
+  .axs-pan .axs-dot { display: flex; align-items: center; gap: 8px; margin: var(--ax-space-12) 4px 0; font: var(--ax-type-t7); color: var(--ax-color-body); }
+  .axs-pan .axs-dot::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--ax-color-brand); }
+  .axs-pan .axs-todo { display: flex; flex-direction: column; gap: 10px; }
+  .axs-pan .axs-todo h3 { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-pan .axs-todo p { display: flex; gap: 10px; margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); }
+  .axs-pan .axs-todo p::before { content: ""; flex: none; width: 8px; height: 8px; margin-top: 0.55em; border-radius: 50%; background: var(--ax-color-brand); }
+  /* ── 공통 부품 K 끝 · 아래는 상시 운영 · 구역 상세 화면 조각(같은 경계 .axs-pan) ── */
+  .axs-pan .axs-zsec { display: flex; flex-direction: column; gap: var(--ax-space-8); }
+  .axs-pan .axs-zr { display: flex; align-items: center; gap: var(--ax-space-12); width: 100%; padding: var(--ax-space-16); border: 0; border-radius: var(--ax-radius-20); background: var(--ax-color-surface); color: var(--ax-color-ink); font-family: inherit; text-align: left; cursor: pointer; }
+  .axs-pan .axs-zr .zl { display: flex; flex: 1 1 auto; flex-direction: column; gap: 10px; min-width: 0; }   /* v4.99 왼쪽 글 묶음 · 오른쪽 = 도장 + 셰브론(zrt · 세로 가운데) */
+  .axs-pan .axs-zr .hd, .axs-pan .axs-zfl .nm { display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--ax-space-8); }   /* 간판(이름) + 상태 칩 */
+  .axs-pan .axs-zfl { display: flex; align-items: center; justify-content: space-between; }
+  .axs-pan .axs-zr .axs-stag, .axs-pan .axs-zfl .axs-stag { width: 44px; height: 44px; }   /* v4.99 줄 도장 = 상세 52px 도장과 같은 모양 · 줄 높이를 늘리지 않는 크기 */
+  .axs-pan .axs-zr .axs-stag svg, .axs-pan .axs-zfl .axs-stag svg { width: 100%; height: 100%; }
+  .axs-pan .axs-zdt.axs-sthost > .axs-stag { top: calc(var(--ax-space-20) - 6px); right: var(--ax-space-20); }   /* v4.99 구역 상세 오른쪽 위 도장(강연 상세와 같은 자리) */
+  .axs-pan .axs-zdt.axs-sthost > .stm { padding-right: 64px; }
+  .axs-pan .axs-zr .zrt, .axs-pan .axs-zfl .zrt { display: flex; align-items: center; gap: var(--ax-space-8); flex: none; }
+  .axs-pan .axs-zr .axs-chev, .axs-pan .axs-zfl .axs-chev { flex: none; width: 20px; height: 20px; color: var(--ax-color-muted); }
+  .axs-pan .axs-zr .tx, .axs-pan .axs-zfl .tx, .axs-pan .axs-zin .tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .axs-pan .axs-zr .k { font: var(--ax-type-t6); color: var(--ax-color-body); }   /* v4.94 한국어 한 줄 = 부제(간판 칩 아래 · 회색 일반 굵기) */
+  .axs-pan .axs-zr .f, .axs-pan .axs-zfl .f, .axs-pan .axs-zin .tx span { font: var(--ax-type-caption); color: var(--ax-color-muted); }
+  .axs-pan .cr { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+  .axs-pan .axs-zc { display: flex; flex-direction: column; padding: var(--ax-space-16) var(--ax-space-16) var(--ax-space-4); border-radius: var(--ax-radius-20); background: var(--ax-color-surface); }
+  .axs-pan .axs-zc > .axs-zr { padding: 0 0 var(--ax-space-12); border-radius: 0; background: transparent; }
+  .axs-pan .axs-zin { display: flex; align-items: center; justify-content: space-between; gap: var(--ax-space-12); width: 100%; min-height: 60px; padding: 10px 0; border: 0; border-top: 1px solid var(--ax-color-ink); background: transparent; color: var(--ax-color-ink); font-family: inherit; text-align: left; cursor: pointer; }
+  .axs-pan .axs-zin .tx b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-pan .axs-zin .act { flex: 0 0 auto; font: var(--ax-type-t6-strong); color: var(--ax-color-brandText); }
+  .axs-pan .axs-zfl { width: 100%; gap: var(--ax-space-12); padding: var(--ax-space-16); border: 0; border-radius: var(--ax-radius-20); background: var(--ax-color-surface); color: var(--ax-color-ink); font-family: inherit; text-align: left; cursor: pointer; }
+  .axs-pan .axs-zfl .tx { flex: 1 1 auto; gap: 3px; }
+  .axs-pan .axs-zfl .tx b { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
+  .axs-pan .axs-zfl .tx .k { font: var(--ax-type-t7); color: var(--ax-color-body); }
+  .axs-pan .axs-zdt { display: flex; flex-direction: column; gap: var(--ax-space-16); padding: var(--ax-space-20); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); }
+  .axs-pan .axs-zdt > .axs-sign + .axs-bar.stm { margin-top: calc(var(--ax-space-8) * -1); }   /* 칩과 부제는 한 묶음 */
+  .axs-pan .axs-zdt .axs-kv { grid-template-columns: 56px minmax(0, 1fr); row-gap: var(--ax-space-8); }
+  .axs-pan .axs-zpic { display: flex; flex-direction: column; gap: var(--ax-space-20); }   /* v5.20 구역 상세 판 한 컷 · 폭 가득 · 둥근 사각 프레임 */
+  .axs-pan .axs-zpic figure { display: flex; flex-direction: column; gap: var(--ax-space-8); min-width: 0; margin: 0; }
+  .axs-pan .axs-zpic img { display: block; width: 100%; height: auto; border-radius: var(--ax-radius-16); background: #fff; }
+  .axs-pan .axs-zpic figcaption { display: flex; flex-wrap: wrap; gap: 2px var(--ax-space-8); align-items: baseline; padding: 0 var(--ax-space-4); }
+  .axs-pan .axs-zpic figcaption b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-pan .axs-zpic figcaption span { font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
+  .axs-pan .axs-zex { display: flex; flex-direction: column; gap: 10px; }
+  .axs-pan .axs-zex h3 { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }
+  .fs-big .axs-pan .axs-zin { flex-wrap: wrap; }
+  .fs-big .axs-pan .axs-zin .tx { flex: 1 1 100%; }
+  /* ── v4.96 AX 퀴즈 판 퀴즈 화면 조각(같은 경계 .axs-pan · 컨테이너 .axs-pan.qz · 힌트 시트 본문도 .axs-pan.qz) · 공통 부품 K 를 그대로 쓴다 ──
+     구역 칩 = K1 axs-sign(오렌지 면 + 흰 굵은 글자 · 프로그램 탭 구역 칩과 같다 · 사용자 확정 261002) · 문제 문장 = K2 axs-bar(막대 + 굵은 제목 b) · 문항 번호 = K3 axs-pill · 해설 위 = K4 axs-rule · 해설 = K5 axs-todo
+     파랑 없음 · 시계 · 목숨 · 점수 화면 없음 · 버튼 48px 이상 · 큰글씨(fs-big)는 O/X 버튼을 세로로 쌓는다 · 틀린 타일은 색만 바꾼다(움직임 없음 · 동작 줄이기와 같다) */
+  .axs-pan.qz .qz-prog { display: flex; flex-direction: column; gap: var(--ax-space-8); }
+  .axs-pan.qz .qz-prog p { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-body); }
+  .axs-pan.qz .qz-prog b { color: var(--ax-color-ink); }
+  .axs-pan.qz .qz-seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; }
+  .axs-pan.qz .qz-seg i { height: 6px; border-radius: 3px; background: var(--ax-color-divider); }
+  .axs-pan.qz .qz-seg i.on { background: var(--ax-color-brand); }
+  .axs-pan.qz .qz-seg i.cur { background: var(--ax-color-ink); }
+  .axs-pan.qz .qz-card { display: flex; flex-direction: column; gap: var(--ax-space-16); padding: var(--ax-space-20); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); }
+  .axs-pan.qz .qz-top { display: flex; align-items: center; justify-content: space-between; gap: var(--ax-space-8); }
+    .axs-pan.qz .qz-stm { margin: 0; }
+  .axs-pan.qz .qz-stm b { word-break: keep-all; }
+  .axs-pan.qz .qz-gen { display: inline-flex; align-items: center; min-height: 28px; padding: 0 10px; border-radius: 4px; background: var(--ax-color-canvas); color: var(--ax-color-body); font: var(--ax-type-t7); font-weight: 600; }
+  .axs-pan.qz .qz-ans { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ax-space-12); }
+  .axs-pan.qz .qz-ab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 80px; padding: 8px; border: 2px solid var(--ax-color-ink); border-radius: var(--ax-radius-16); background: var(--ax-color-surface); color: var(--ax-color-ink); font: var(--ax-type-t6-strong); font-family: inherit; cursor: pointer; }
+  .axs-pan.qz .qz-ab svg { width: 32px; height: 32px; }
+  .axs-pan.qz .qz-ab:disabled { cursor: default; }
+  .axs-pan.qz .qz-ab.ok { border-color: var(--ax-color-success); background: var(--ax-color-successSoft); color: var(--ax-color-success); }
+  .axs-pan.qz .qz-ab.no { border-color: var(--ax-color-error); background: var(--ax-color-errorSoft); color: var(--ax-color-error); }
+  .axs-pan.qz .qz-ab.dim { border-color: var(--ax-color-divider); color: var(--ax-color-muted); }
+  .fs-big .axs-pan.qz .qz-ans { grid-template-columns: 1fr; }
+  .fs-big .axs-pan.qz .qz-ab { flex-direction: row; gap: 12px; min-height: 72px; }
+  .axs-pan.qz .qz-hint { display: flex; align-items: center; justify-content: space-between; gap: var(--ax-space-8); width: 100%; min-height: 48px; padding: 0 4px; border: 0; border-top: 1px solid var(--ax-color-divider); background: transparent; color: var(--ax-color-brandText); font: var(--ax-type-t6-strong); font-family: inherit; text-align: left; cursor: pointer; }
+  .axs-pan.qz .qz-hint .axs-chev { flex: none; width: 20px; height: 20px; }
+  .axs-pan.qz .qz-fb { display: flex; flex-direction: column; gap: var(--ax-space-12); outline: none; }
+  .axs-pan.qz .qz-fh { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ax-space-8); margin: 0; font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
+  .axs-pan.qz .qz-fb .axs-todo p { font: var(--ax-type-t5); }
+  .axs-pan.qz .qz-src { margin: 0; font: var(--ax-type-t7); color: var(--ax-color-body); }
+  .axs-pan.qz .qz-slots { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ax-space-8); }
+  .axs-pan.qz .qz-slots.ord { flex-direction: column; align-items: stretch; }
+  .axs-pan.qz .qz-lead { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
+  .axs-pan.qz .qz-sl { display: flex; align-items: center; gap: var(--ax-space-8); min-width: 64px; min-height: 48px; padding: 0 12px; border: 1.5px dashed var(--ax-color-muted); border-radius: var(--ax-radius-12); background: var(--ax-color-inset); color: var(--ax-color-ink); font: var(--ax-type-t5-strong); }
+  .axs-pan.qz .qz-sl.f { border: 1.5px solid var(--ax-color-ink); background: var(--ax-color-surface); }
+  .axs-pan.qz .qz-sl.c { border: 2px solid var(--ax-color-brand); background: var(--ax-color-brandSoft); }
+  .axs-pan.qz .qz-tiles { display: flex; flex-wrap: wrap; gap: var(--ax-space-8); }
+  .axs-pan.qz .qz-tl { min-height: 48px; padding: 0 16px; border: 1.5px solid var(--ax-color-divider); border-radius: var(--ax-radius-12); background: var(--ax-color-surface); color: var(--ax-color-ink); font: var(--ax-type-t5-strong); font-family: inherit; cursor: pointer; }
+  .axs-pan.qz .qz-tl.u { background: var(--ax-color-inset); color: var(--ax-color-muted); cursor: default; }
+  .axs-pan.qz .qz-tl.w { border-color: var(--ax-color-error); background: var(--ax-color-errorSoft); color: var(--ax-color-error); }
+  .axs-pan.qz .qz-miss { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-error); }
+  .axs-pan.qz .qz-res { gap: var(--ax-space-8); align-items: flex-start; }
+  .axs-pan.qz .qz-big { margin: 0; font: var(--ax-type-t4); color: var(--ax-color-body); }
+  .axs-pan.qz .qz-big b { font-size: 1.875rem; line-height: 2.5rem; color: var(--ax-color-ink); }
+  .axs-pan.qz .qz-wr { gap: var(--ax-space-12); padding: 18px var(--ax-space-20); }
+  .axs-pan.qz .qz-wq { margin: 0; font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
+  .axs-pan.qz .qz-we { margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); }
+  .axs-pan.qz .qz-we b { color: var(--ax-color-ink); }
+  .axs-pan.qz .qz-hub { gap: var(--ax-space-12); }
+  /* v5.57 순서형 다 채운 순간(사용자 261004 「팡」) · 정답 = 칸 차례 반짝(--i × 90ms) → 가운데 링 2겹 + 잉크 튐(스탬프 도장 inkRing · inkSplash 문법 · O100~O30) + 「정답」 알약 → 해설 · 다음 버튼이 팡 뒤 페이드
+     오답 = 칸 묶음 한 번 짧게 흔들림(cardShake 5px · 0.32초 · 링은 팡 전에는 보이지 않게 forwards) · --t = 팡 시각 · --qe = 지난 시간(다시 그려도 이어짐) · 움직임 줄이기 = 색만(정답 칸 = 주황 테 · 연주황 면) */
+  .axs-pan.qz .qz-slots.qz-ok .qz-sl.f { border-color: var(--ax-color-brand); background: var(--ax-color-brandSoft); }
+  .axs-pan.qz .qz-slots.qz-win { position: relative; }
+  .axs-pan.qz .qz-win .qz-sl.f { animation: qzSlFlash 0.36s ease-out calc(var(--i, 0) * 90ms + var(--qe, 0ms)) both; }
+  .axs-pan.qz .qz-pang { position: absolute; left: 50%; top: 50%; width: 112px; height: 112px; margin: -56px 0 0 -56px; display: grid; place-items: center; pointer-events: none; z-index: 1; }
+  .axs-pan.qz .qz-pang .r { position: absolute; inset: 0; border: 3px solid var(--ax-color-brand); border-radius: 50%; opacity: 0; animation: inkRing 0.55s ease-out calc(var(--t, 400ms) + var(--qe, 0ms)) forwards; }
+  .axs-pan.qz .qz-pang .r2 { border-width: 2px; border-color: #FFA46E; animation: inkRing2 0.62s ease-out calc(var(--t, 400ms) + 80ms + var(--qe, 0ms)) forwards; }
+  .axs-pan.qz .qz-pang b { position: relative; padding: 8px 20px; border-radius: 999px; background: var(--ax-color-brand); color: #FFFFFF; font: var(--ax-type-t4); font-weight: 800; white-space: nowrap; box-shadow: 0 6px 16px rgba(255,126,49,0.35); opacity: 0; animation: qzPangPill 1.05s cubic-bezier(0.3, 0.9, 0.4, 1) calc(var(--t, 400ms) + var(--qe, 0ms)) both; }
+  .axs-pan.qz .qz-pang .spl { position: absolute; left: 50%; top: 50%; width: var(--sz); height: var(--sz); margin: calc(var(--sz) / -2) 0 0 calc(var(--sz) / -2); border-radius: 50%; background: var(--c); opacity: 0; animation: inkSplash 0.45s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
+  .axs-pan.qz.qz-late .qz-fb, .axs-pan.qz.qz-late > .ax-button { animation: fadeUp 0.25s ease-out calc(var(--t, 400ms) + 260ms + var(--qe, 0ms)) both; }
+  .axs-pan.qz.qz-late .qz-fh .axs-chip.ok { animation: qzChipPop 0.32s cubic-bezier(0.3, 0.9, 0.4, 1) calc(var(--t, 400ms) + 300ms + var(--qe, 0ms)) both; }
+  .axs-pan.qz .qz-slots.qz-lose { animation: cardShake 0.32s linear var(--qe, 0ms) 1 both; }
+  @media (prefers-reduced-motion: reduce) { .axs-pan.qz .qz-win .qz-sl.f, .axs-pan.qz.qz-late .qz-fb, .axs-pan.qz.qz-late > .ax-button, .axs-pan.qz.qz-late .qz-fh .axs-chip.ok, .axs-pan.qz .qz-slots.qz-lose { animation: none; } .axs-pan.qz .qz-pang { display: none; } }
+  .axs-pan.qz .qz-smkr { display: inline-flex; flex: none; align-items: center; gap: 6px; }
+  .axs-pan.qz .qz-stl { margin: 0; }
+  .axs-pan.qz .qz-lp { margin: 0; font: var(--ax-type-t4); color: var(--ax-color-ink); }
+  .axs-pan.qz .qz-map { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .axs-pan.qz .qz-map span { display: grid; place-items: center; min-height: 40px; padding: 2px 4px; border: 1.5px solid var(--ax-color-divider); border-radius: 10px; background: var(--ax-color-surface); color: var(--ax-color-muted); font: var(--ax-type-t7); font-weight: 600; text-align: center; }
+  .axs-pan.qz .qz-map span.on { border-color: var(--ax-color-brand); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); }
+  .axs-pan.qz .qz-zin { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 12px 16px; border-radius: var(--ax-radius-16); background: var(--ax-color-inset); }
+  .axs-pan.qz .qz-zin b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-pan.qz .qz-zin span { font: var(--ax-type-t7); color: var(--ax-color-body); }
+  .axs-pan.qz.qz-hs { gap: var(--ax-space-12); }

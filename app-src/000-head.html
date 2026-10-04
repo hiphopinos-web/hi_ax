@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>AX Festival 2026 · ME to WE</title>
+<!-- 홈 화면에 추가 = 아이콘 한 번으로 실행 (설치·스토어 없음) -->
+<link rel="manifest" href="manifest.json">
+<!-- AX-TDS v1 (260922 · design.md §A) · 홍보부 앱 디자인 가이드 패키지의 잠긴 토큰·컴포넌트 · 이 두 파일은 고치지 않는다 -->
+<link rel="stylesheet" href="design-handoff/design-system/tokens.css">
+<link rel="stylesheet" href="design-handoff/design-system/components.css">
+<script defer src="assets/axf_run.js"></script>
+<!-- AX 단어 소나기 공용 엔진 · 참가자 앱과 선수 화면(admin/typing.html)이 같이 쓴다 · defer 가 아니다(맨 위 상수를 파싱 중 코드가 바로 쓴다) -->
+<!-- 행사 캐릭터 챗봇 원본(BOT_SVG · 도트 래스터) · 앱과 선수 화면이 같이 쓴다 · 엔진보다 먼저 -->
+<script src="assets/bot.js"></script>
+<script src="assets/rain-engine.js"></script>
+<!-- v4.61 서버 주소 한 곳(assets/server.js · 앱 · 콘솔이 같이 읽는다 · 전환은 이 파일 한 줄) -->
+<script src="assets/server.js"></script>
+<!-- 본문 서체 · 로컬 미설치 기기에서도 Pretendard로 렌더 (오프라인이면 시스템 고딕으로 자동 폴백) -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="AX Festival">
+<style>
