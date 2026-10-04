@@ -861,7 +861,7 @@ function tsfPrevDraw() {
   var veil = function (a) { ctx.fillStyle = "rgba(24,22,20," + a + ")"; ctx.fillRect(0, 0, w, h); };
   var line = function (t, yy, px, col) { ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = rtFont(px); if (ctx.measureText(t).width > w - 32 && px > 16) px = px === 48 ? 32 : 16; rtText(ctx, t, cx, yy, px, col, RAIN_PAL.ink); };
   ctx.save();
-  if (ph === "attract") veil(TSF.sc.on ? 0.94 : 0.86);   /* v5.61 결정 ⑧ B · 봇 데모는 배경으로 약하게 · 안내는 tsfGuideHtml */
+  if (ph === "attract") { veil(TSF.sc.on ? 1 : 0.86); tsfGuideMask(ctx, cv, w); }   /* v5.61 결정 ⑧ B · 봇 데모는 배경으로 약하게 · 안내는 tsfGuideHtml · 261005 최종 QA · 카메라 화면(scan-on) = 데모 가림 · 안내 제목 뒤 = 데모 가림(tsfGuideMask) */
   else if (ph === "check") {
     veil(0.6);
     rtDots(ctx, "QR OK", cx, y, dh, RAIN_PAL.o100, { align: "center", line: RAIN_PAL.ink });
@@ -881,6 +881,17 @@ function tsfPrevDraw() {
     tsfReadyDraw(ctx, w, h, blink);
   } else if (ph === "nick" || ph === "result") veil(0.7);
   ctx.restore();
+}
+/* 261005 최종 QA(타자왕 세션 지적 · final_B_near) · 대기 안내 제목(「카메라」 · 「앱의 내 QR을 · 위 카메라에 비추세요」) 위로 봇 데모 단어 · 점수(+20)가 비쳐 50대가 읽기 어려웠다
+   안내 제목 아래 끝까지는 데모를 완전히 가리고 그 아래 48px 동안 원래 옅은 막(0.86)으로 이어 준다 · 제목 위치는 DOM(.tsf-h)에서 읽는다(화면 크기 · 마감 안내가 바뀌어도 맞는다) */
+function tsfGuideMask(ctx, cv, w) {
+  var hd = document.querySelector(".tsf .tsf-gd .tsf-h"); if (!hd || !cv) return;
+  var cb = cv.getBoundingClientRect(), hb = hd.getBoundingClientRect(); if (!hb.height) return;
+  var y1 = Math.round(hb.bottom - cb.top + 20), fade = 48, bg = "rgba(24,22,20,";
+  if (y1 <= 0) return;
+  ctx.fillStyle = bg + "1)"; ctx.fillRect(0, 0, w, y1);
+  var g = ctx.createLinearGradient(0, y1, 0, y1 + fade); g.addColorStop(0, bg + "1)"); g.addColorStop(1, bg + "0)");
+  ctx.fillStyle = g; ctx.fillRect(0, y1, w, fade);
 }
 /* v5.30(261003 사용자 피드백) 준비 화면 · 도전자 · 규칙 세 줄(그림 + 제목 + 조건) · v5.61 큰 SPACE 키 그림 + 「누르면 시작」 · 20초 방치면 처음으로(마지막 5초 숫자)
    ① 구름에서 내리는 단어를 쳐서 없앤다 · 바닥에 닿으면 목숨 -1 ② 구름이 다 비면 보너스 스테이지 · 문장을 따라 친다 ③ 점수 = 단어 + 콤보 + 보너스 · 1인 n회 · 최고 점수로 순위

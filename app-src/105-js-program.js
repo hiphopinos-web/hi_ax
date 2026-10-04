@@ -285,7 +285,7 @@ function zoneLive(z) {
   var o = { fact: z.fact, chip: null, kv: null, btn: z.btn || null };
   if (z.id === "lounge") {
     var r = myResv(), rl = r && RESV_LIVE.indexOf(r.status) >= 0, dn = r && r.status === "done", n = resvRemain();
-    var now = rl ? (RESV_ST[r.status] || "신청 완료") + " " + r.slot : dn ? "상담 완료" : n > 0 ? "남은 시간 " + n + "개" : "오늘 상담 시간이 모두 찼어요";
+    var now = rl ? (RESV_ST[r.status] || "신청 완료") + " " + r.slot : dn ? "상담 완료" : n > 0 ? "남은 시간 " + n + "개" : resvSlots().every(resvPast) ? "오늘 상담 접수 마감" : "오늘 상담 시간이 모두 찼어요";   /* 261005 지난 시간뿐이면 「모두 찼어요」가 아니라 마감 */
     o.tm = RESV_CONF.start + "~" + RESV_CONF.end;
     o.fact = o.tm + " · " + now;
     o.chip = rl ? ["내 신청", ""] : dn ? ["완료", "ok"] : n > 0 ? null : ["마감", "off"];
@@ -392,9 +392,9 @@ function progDetail(s) {
       D.who = s.who; D.av = s.who; D.whoSub = "개회 인사";
       D.st = kat ? "출석 완료" : "자유 참석"; D.stc = "ok";
       D.kv.push(["출석", kat ? kat + " 출석 완료" : "기조연설과 함께 · " + attWinLbl(ko)]);
-      D.secB = "별도 신청 없이 참여할 수 있어요.<br>출석 QR은 기조연설 때 한 번만 찍어요.";
-      D.help = kat ? "신청 없이 참여 가능한 강연이에요" : "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요";
-      D.btn = kat ? timeBtn : progBtn("출석 QR 스캔", "scanOpen(\'a17\')");
+      D.secB = "출석 QR은 기조연설 때 한 번만 찍어요.";   /* 261005 최종 QA · 「별도 신청 없이 참여할 수 있어요」 = 칩 「자유 참석」 · 표 「신청 없이 자유 참석」과 같은 말이라 뺐다 */
+      D.help = kat ? "" : attShut(ko) ? "출석 시간이 지났어요" : "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요";
+      D.btn = kat || attShut(ko) ? timeBtn : progBtn("출석 QR 스캔", "scanOpen(\'a17\')");
       return D;
     }
     var din = !!S.get("draw_in", false), hmD = hmNow(), dwin = evPhase() === "live" && hmD >= t2m("16:40") && hmD < t2m("17:25");   /* 창 = drawCardHtml 과 같은 서버 기본 창 */
@@ -404,7 +404,7 @@ function progDetail(s) {
     D.extra = '<section class="ax-stack-tight axs-gap12"><h2 class="ax-section-title">진행</h2><p class="ax-body">CSO 마무리 연설 · 일하는 방식<br>DAP 우수 성과자 시상<br>현장 추첨</p></section>';
     D.secT = "현장 추첨";
     D.secB = "16:40부터 대강당 입구 추첨 QR로 체크인해요.<br>체크인한 사람의 행운권 번호 중에서 뽑아요.<br>행운권은 스탬프 4개부터 생겨요.";
-    D.help = din ? "" : dwin ? "현장에서만 체크인할 수 있어요" : "16:40부터 체크인할 수 있어요";
+    D.help = din ? "" : dwin ? "현장에서만 체크인할 수 있어요" : evPhase() === "after" || (evPhase() === "live" && hmD >= t2m("17:25")) ? "추첨 체크인 마감" : "16:40부터 체크인할 수 있어요";   /* 261005 최종 QA · 행사가 끝난 뒤에도 「16:40부터」가 남던 것 */
     D.btn = !din && dwin ? progBtn("추첨 QR 스캔", "qrScanOpen()") : timeBtn;
     D.pics = prizeGoHtml("draw");   /* v5.20 (사용자 261003 후킹 권장 2) 경품 입구 한 줄 · 행운권 구역으로 */
     return D;
@@ -420,11 +420,12 @@ function progDetail(s) {
     D.kv = [["일시", s.id === "expo" ? "10월 26일 · 행사 시간 중" : day + progTm(s.tm)], ["장소", pl], ["참여 방법", s.id === "expo" ? "신청 없이 자유 관람" : "신청 없이 자유 참석"]];
     if (ap) D.kv.push(["출석", at ? at + " 출석 완료" : "입구 QR 스캔 · " + attWinLbl(ap)]);
     D.secB = s.id === "expo" ? "1F 로비 6구역 · AX VISION · AX LAB · AX in Action · AX PLAY · AX LOUNGE · EVENT" :
-      ap ? "별도 신청 없이 참여할 수 있어요.<br>대강당 입구 QR을 찍으면 출석이 기록돼요." + (s.desc ? "<br>" + esc(s.desc) : "") :
+      ap ? "대강당 입구 QR을 찍으면 출석이 기록돼요." + (s.desc ? "<br>" + esc(s.desc) : "") :   /* 261005 최종 QA · 「별도 신청 없이」 = 칩 · 표와 같은 말 */
       "별도 신청 없이 참여할 수 있어요. 시작 시간에 맞춰<br>" + esc(pl) + "으로 와 주세요.";
     if (s.id === "expo") D.link = '<button type="button" class="ax-link axs-plain axs-self" onclick="App.go(\'floor1\')">1F 부스 6구역 보기</button>';
-    D.help = ap && !at ? "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요" : s.id === "expo" ? "신청 없이 자유롭게 둘러볼 수 있어요" : "신청 없이 참여 가능한 강연이에요";   /* v4.38 (사용자 260925) 17F 는 사전 신청제 → 신청을 받지 않음 · 「사전 신청」이라는 말을 쓰지 않는다 */
-    D.btn = ap && !at ? progBtn("출석 QR 스캔", "scanOpen(\'a17\')") : timeBtn;
+    var shut = ap && !at && attShut(ap);   /* 261005 최종 QA · 출석 창이 끝났으면(행사 뒤 포함) 스캔 버튼 대신 시간표 · 자유 참석 안내 줄(칩 · 표와 같은 말)은 뺐다 */
+    D.help = ap && !at ? (shut ? "출석 시간이 지났어요" : "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요") : "";   /* v4.38 (사용자 260925) 17F 는 사전 신청제 → 신청을 받지 않음 · 「사전 신청」이라는 말을 쓰지 않는다 */
+    D.btn = ap && !at && !shut ? progBtn("출석 QR 스캔", "scanOpen(\'a17\')") : timeBtn;
     if (par) D.pics = prizeGoHtml();   /* v5.20 오후 파트너 강연 · 경품 입구 한 줄 */
     return D;
   }

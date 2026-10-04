@@ -295,6 +295,8 @@ function attMine() { return S.get("att_mine", {}) || {}; }
 function attMineAt(id) { return attMine()[id] || ""; }
 function attFrom(x) { return t2m(x.s) - ATT_17F.lead; }
 function attWinLbl(x) { return hm2(attFrom(x)) + "–" + x.e; }
+/* 261005 최종 QA · 그 강연의 출석 창이 끝났는가(행사 뒤 = 늘 끝) · 상세 화면이 끝난 뒤에도 「출석 QR 스캔」을 내밀던 것 */
+function attShut(x) { var ph = evPhase(); return !!x && (ph === "after" || (ph === "live" && attNow() >= t2m(x.e))); }
 function attTm() { var v = testMode() ? String(S.get("att_tm", "") || "") : ""; return /^\d{1,2}:\d{2}$/.test(v) ? v : ""; }
 function attNow() { var tm = attTm(); if (tm) return t2m(tm); var d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
 /* 지금 창 · open = 고를 수 있는 id · sel = 미리 고를 것(아직 출석 안 한 것 중 진행 중 우선, 없으면 곧 시작할 것) · next = 다음에 열리는 것 */
@@ -654,7 +656,7 @@ var EXP_GUIDE = {
   p7: { chip: "1F · 약 10분", h: "벽 QR 퀴즈를<br>풀어 보세요", d: "DAP Wall 벽의 QR을 스캔하면 그 벽의 5문항이 열려요. 한 세트를 끝내면 스탬프를 받아요.",
     steps: [["벽 QR 스캔", "WALL 1~3 중 한 곳"], ["5문항 풀기", "보기를 골라 제출해요"], ["적립 확인", "처음 끝낸 세트에서 스탬프"]],
     meta: "", cta: "벽 QR 스캔하기" },
-  st: { chip: "1F~18F · 비상계단 1·2", h: "계단으로<br>이동해 보세요", d: "출발 층과 도착 층 방화문 앞 QR을 찍어요. 한 개 층만 이동해도 스탬프를 받아요.",
+  st: { chip: "1F~18F · 비상계단 1·2", h: "계단으로<br>이동해 보세요", d: "한 개 층만 이동해도 스탬프를 받아요.",   /* 261005 최종 QA · 「출발 층과 도착 층 방화문 앞 QR을 찍어요」 = 아래 단계 01 · 03 과 같은 말 */
     steps: [["출발 층 QR 스캔", "방화문 앞 QR"], ["계단으로 이동", STAIR_SAFE], ["도착 층 QR 스캔", "오르기·내려가기 모두 인정"]],
     meta: "", cta: "계단 QR 스캔하기" }
 };
@@ -665,7 +667,7 @@ function expGuideHtml() {
     return '<li><span class="axs-no">0' + (i + 1) + '</span><span class="axs-tx"><b class="ax-type-t5-strong">' + x[0] + '</b><span class="ax-meta">' + esc(x[1]) + "</span></span></li>";
   }).join("");
   var prog = "";
-  if (id === "st") {
+  if (id === "st" && ((s.goal || 1) > 1 || (s.total || 0) >= 1 || s.leg)) {   /* 261005 최종 QA · 아직 안 한 사람(목표 1 · 0개 층)에게는 「한 개 층만 이동해도 적립」만 든 카드가 설명 줄을 한 번 더 말했다 · 이동 기록이 있을 때만 */
     prog = '<section class="ax-card axs-gap12">' + stairGauge(s.total || 0, s.goal || 1) +
       (s.leg ? '<p class="ax-description">진행 중 · ' + s.leg.fl + "F " + esc(s.leg.route || stairRoute(s.leg.r)) + " 시작 · " + esc(s.leg.at || "") + "</p>" +
         '<button type="button" class="ax-button ax-button-weak" onclick="stairOpen()">진행 화면 보기</button>' : "") + "</section>";
@@ -889,7 +891,7 @@ function qrPanelHtml(inner) {
     '<p class="myqr-nm">' + esc(u.name || "") + "<span>" + esc(u.empId || "") + "</span></p>" +
     (QRM.msg ? '<p class="axs-okline" role="status"><b>확인됨</b> · ' + esc(QRM.msg) + "</p>" : "") +
     '<p class="muted" style="margin-top:8px;text-align:center;font-size:calc(13.5px * var(--fs));line-height:1.65">' +
-    '이 QR을 <b style="color:var(--hi)">운영 데스크 스캐너</b>에 대 주세요<br>화면 밝기를 올리면 더 빨리 읽혀요</p>' + qrMineStateHtml();
+    '이 QR을 <b style="color:var(--hi)">스태프</b>에게 보여 주세요<br>화면 밝기를 올리면 더 빨리 읽혀요</p>' + qrMineStateHtml();   /* 261005 최종 QA · 「운영 데스크 스캐너」 → 「스태프」(AX PLAY · 스탬프 탭 · 부스 안내가 모두 「스태프에게 내 QR」이다 · 내 QR 을 찍는 곳은 데스크만이 아니다) */
   var h = body;   /* v5.23 화면 안 카드 · 닫기는 헤더 뒤로 */
   return inner ? h : '<div id="qrPanel">' + h + "</div>";
 }

@@ -3267,7 +3267,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.61";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.62";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -3844,7 +3844,10 @@ var RESV_HOLD = ["requested", "booked", "approved", "checked", "done"];
 /* v4.64 (QA 1단계 260930) 남이 잡은 시간 · 예전에는 이 기기 기록만 봐서 서버에 잡힌 시간도 「신청 가능」 · 「남은 시간 12개」로 보였고 신청해야 알았다.
    taken = 서버 sync 의 resvTaken(시간 글자만 · 이름 없음 · 옛 서버는 보내지 않아 null = 예전과 같다) · miss = 방금 「다른 분이 신청」으로 돌아온 시간(다음 sync 까지) */
 var RESV_SRV = { taken: null, miss: {} };
+/* 261005 최종 QA · 행사 당일 이미 시작한 상담 시간 · 행사가 끝난 뒤 = 고를 수 없는 칸(마감) · 전에는 오후 3시에도 09:30 칸을 신청할 수 있었고 「남은 시간」이 지난 칸까지 셌다(서버 resv_book 도 지난 시간을 받는다 · 서버 보완은 보고) */
+function resvPast(slot) { var ph = evPhase(); return ph === "after" || (ph === "live" && t2m(slot) <= hmNow()); }
 function resvTaken(slot) {
+  if (resvPast(slot)) return true;
   if (resvAll().some(function (r) { return r.room === 2 && r.slot === slot && RESV_HOLD.indexOf(r.status) >= 0; })) return true;
   return !!RESV_SRV.miss[slot] || (RESV_SRV.taken || []).indexOf(slot) >= 0;
 }
@@ -4675,7 +4678,7 @@ function zoneLive(z) {
   var o = { fact: z.fact, chip: null, kv: null, btn: z.btn || null };
   if (z.id === "lounge") {
     var r = myResv(), rl = r && RESV_LIVE.indexOf(r.status) >= 0, dn = r && r.status === "done", n = resvRemain();
-    var now = rl ? (RESV_ST[r.status] || "신청 완료") + " " + r.slot : dn ? "상담 완료" : n > 0 ? "남은 시간 " + n + "개" : "오늘 상담 시간이 모두 찼어요";
+    var now = rl ? (RESV_ST[r.status] || "신청 완료") + " " + r.slot : dn ? "상담 완료" : n > 0 ? "남은 시간 " + n + "개" : resvSlots().every(resvPast) ? "오늘 상담 접수 마감" : "오늘 상담 시간이 모두 찼어요";   /* 261005 지난 시간뿐이면 「모두 찼어요」가 아니라 마감 */
     o.tm = RESV_CONF.start + "~" + RESV_CONF.end;
     o.fact = o.tm + " · " + now;
     o.chip = rl ? ["내 신청", ""] : dn ? ["완료", "ok"] : n > 0 ? null : ["마감", "off"];
@@ -4782,9 +4785,9 @@ function progDetail(s) {
       D.who = s.who; D.av = s.who; D.whoSub = "개회 인사";
       D.st = kat ? "출석 완료" : "자유 참석"; D.stc = "ok";
       D.kv.push(["출석", kat ? kat + " 출석 완료" : "기조연설과 함께 · " + attWinLbl(ko)]);
-      D.secB = "별도 신청 없이 참여할 수 있어요.<br>출석 QR은 기조연설 때 한 번만 찍어요.";
-      D.help = kat ? "신청 없이 참여 가능한 강연이에요" : "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요";
-      D.btn = kat ? timeBtn : progBtn("출석 QR 스캔", "scanOpen(\'a17\')");
+      D.secB = "출석 QR은 기조연설 때 한 번만 찍어요.";   /* 261005 최종 QA · 「별도 신청 없이 참여할 수 있어요」 = 칩 「자유 참석」 · 표 「신청 없이 자유 참석」과 같은 말이라 뺐다 */
+      D.help = kat ? "" : attShut(ko) ? "출석 시간이 지났어요" : "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요";
+      D.btn = kat || attShut(ko) ? timeBtn : progBtn("출석 QR 스캔", "scanOpen(\'a17\')");
       return D;
     }
     var din = !!S.get("draw_in", false), hmD = hmNow(), dwin = evPhase() === "live" && hmD >= t2m("16:40") && hmD < t2m("17:25");   /* 창 = drawCardHtml 과 같은 서버 기본 창 */
@@ -4794,7 +4797,7 @@ function progDetail(s) {
     D.extra = '<section class="ax-stack-tight axs-gap12"><h2 class="ax-section-title">진행</h2><p class="ax-body">CSO 마무리 연설 · 일하는 방식<br>DAP 우수 성과자 시상<br>현장 추첨</p></section>';
     D.secT = "현장 추첨";
     D.secB = "16:40부터 대강당 입구 추첨 QR로 체크인해요.<br>체크인한 사람의 행운권 번호 중에서 뽑아요.<br>행운권은 스탬프 4개부터 생겨요.";
-    D.help = din ? "" : dwin ? "현장에서만 체크인할 수 있어요" : "16:40부터 체크인할 수 있어요";
+    D.help = din ? "" : dwin ? "현장에서만 체크인할 수 있어요" : evPhase() === "after" || (evPhase() === "live" && hmD >= t2m("17:25")) ? "추첨 체크인 마감" : "16:40부터 체크인할 수 있어요";   /* 261005 최종 QA · 행사가 끝난 뒤에도 「16:40부터」가 남던 것 */
     D.btn = !din && dwin ? progBtn("추첨 QR 스캔", "qrScanOpen()") : timeBtn;
     D.pics = prizeGoHtml("draw");   /* v5.20 (사용자 261003 후킹 권장 2) 경품 입구 한 줄 · 행운권 구역으로 */
     return D;
@@ -4810,11 +4813,12 @@ function progDetail(s) {
     D.kv = [["일시", s.id === "expo" ? "10월 26일 · 행사 시간 중" : day + progTm(s.tm)], ["장소", pl], ["참여 방법", s.id === "expo" ? "신청 없이 자유 관람" : "신청 없이 자유 참석"]];
     if (ap) D.kv.push(["출석", at ? at + " 출석 완료" : "입구 QR 스캔 · " + attWinLbl(ap)]);
     D.secB = s.id === "expo" ? "1F 로비 6구역 · AX VISION · AX LAB · AX in Action · AX PLAY · AX LOUNGE · EVENT" :
-      ap ? "별도 신청 없이 참여할 수 있어요.<br>대강당 입구 QR을 찍으면 출석이 기록돼요." + (s.desc ? "<br>" + esc(s.desc) : "") :
+      ap ? "대강당 입구 QR을 찍으면 출석이 기록돼요." + (s.desc ? "<br>" + esc(s.desc) : "") :   /* 261005 최종 QA · 「별도 신청 없이」 = 칩 · 표와 같은 말 */
       "별도 신청 없이 참여할 수 있어요. 시작 시간에 맞춰<br>" + esc(pl) + "으로 와 주세요.";
     if (s.id === "expo") D.link = '<button type="button" class="ax-link axs-plain axs-self" onclick="App.go(\'floor1\')">1F 부스 6구역 보기</button>';
-    D.help = ap && !at ? "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요" : s.id === "expo" ? "신청 없이 자유롭게 둘러볼 수 있어요" : "신청 없이 참여 가능한 강연이에요";   /* v4.38 (사용자 260925) 17F 는 사전 신청제 → 신청을 받지 않음 · 「사전 신청」이라는 말을 쓰지 않는다 */
-    D.btn = ap && !at ? progBtn("출석 QR 스캔", "scanOpen(\'a17\')") : timeBtn;
+    var shut = ap && !at && attShut(ap);   /* 261005 최종 QA · 출석 창이 끝났으면(행사 뒤 포함) 스캔 버튼 대신 시간표 · 자유 참석 안내 줄(칩 · 표와 같은 말)은 뺐다 */
+    D.help = ap && !at ? (shut ? "출석 시간이 지났어요" : "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요") : "";   /* v4.38 (사용자 260925) 17F 는 사전 신청제 → 신청을 받지 않음 · 「사전 신청」이라는 말을 쓰지 않는다 */
+    D.btn = ap && !at && !shut ? progBtn("출석 QR 스캔", "scanOpen(\'a17\')") : timeBtn;
     if (par) D.pics = prizeGoHtml();   /* v5.20 오후 파트너 강연 · 경품 입구 한 줄 */
     return D;
   }
@@ -8041,6 +8045,8 @@ function attMine() { return S.get("att_mine", {}) || {}; }
 function attMineAt(id) { return attMine()[id] || ""; }
 function attFrom(x) { return t2m(x.s) - ATT_17F.lead; }
 function attWinLbl(x) { return hm2(attFrom(x)) + "–" + x.e; }
+/* 261005 최종 QA · 그 강연의 출석 창이 끝났는가(행사 뒤 = 늘 끝) · 상세 화면이 끝난 뒤에도 「출석 QR 스캔」을 내밀던 것 */
+function attShut(x) { var ph = evPhase(); return !!x && (ph === "after" || (ph === "live" && attNow() >= t2m(x.e))); }
 function attTm() { var v = testMode() ? String(S.get("att_tm", "") || "") : ""; return /^\d{1,2}:\d{2}$/.test(v) ? v : ""; }
 function attNow() { var tm = attTm(); if (tm) return t2m(tm); var d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
 /* 지금 창 · open = 고를 수 있는 id · sel = 미리 고를 것(아직 출석 안 한 것 중 진행 중 우선, 없으면 곧 시작할 것) · next = 다음에 열리는 것 */
@@ -8400,7 +8406,7 @@ var EXP_GUIDE = {
   p7: { chip: "1F · 약 10분", h: "벽 QR 퀴즈를<br>풀어 보세요", d: "DAP Wall 벽의 QR을 스캔하면 그 벽의 5문항이 열려요. 한 세트를 끝내면 스탬프를 받아요.",
     steps: [["벽 QR 스캔", "WALL 1~3 중 한 곳"], ["5문항 풀기", "보기를 골라 제출해요"], ["적립 확인", "처음 끝낸 세트에서 스탬프"]],
     meta: "", cta: "벽 QR 스캔하기" },
-  st: { chip: "1F~18F · 비상계단 1·2", h: "계단으로<br>이동해 보세요", d: "출발 층과 도착 층 방화문 앞 QR을 찍어요. 한 개 층만 이동해도 스탬프를 받아요.",
+  st: { chip: "1F~18F · 비상계단 1·2", h: "계단으로<br>이동해 보세요", d: "한 개 층만 이동해도 스탬프를 받아요.",   /* 261005 최종 QA · 「출발 층과 도착 층 방화문 앞 QR을 찍어요」 = 아래 단계 01 · 03 과 같은 말 */
     steps: [["출발 층 QR 스캔", "방화문 앞 QR"], ["계단으로 이동", STAIR_SAFE], ["도착 층 QR 스캔", "오르기·내려가기 모두 인정"]],
     meta: "", cta: "계단 QR 스캔하기" }
 };
@@ -8411,7 +8417,7 @@ function expGuideHtml() {
     return '<li><span class="axs-no">0' + (i + 1) + '</span><span class="axs-tx"><b class="ax-type-t5-strong">' + x[0] + '</b><span class="ax-meta">' + esc(x[1]) + "</span></span></li>";
   }).join("");
   var prog = "";
-  if (id === "st") {
+  if (id === "st" && ((s.goal || 1) > 1 || (s.total || 0) >= 1 || s.leg)) {   /* 261005 최종 QA · 아직 안 한 사람(목표 1 · 0개 층)에게는 「한 개 층만 이동해도 적립」만 든 카드가 설명 줄을 한 번 더 말했다 · 이동 기록이 있을 때만 */
     prog = '<section class="ax-card axs-gap12">' + stairGauge(s.total || 0, s.goal || 1) +
       (s.leg ? '<p class="ax-description">진행 중 · ' + s.leg.fl + "F " + esc(s.leg.route || stairRoute(s.leg.r)) + " 시작 · " + esc(s.leg.at || "") + "</p>" +
         '<button type="button" class="ax-button ax-button-weak" onclick="stairOpen()">진행 화면 보기</button>' : "") + "</section>";
@@ -8635,7 +8641,7 @@ function qrPanelHtml(inner) {
     '<p class="myqr-nm">' + esc(u.name || "") + "<span>" + esc(u.empId || "") + "</span></p>" +
     (QRM.msg ? '<p class="axs-okline" role="status"><b>확인됨</b> · ' + esc(QRM.msg) + "</p>" : "") +
     '<p class="muted" style="margin-top:8px;text-align:center;font-size:calc(13.5px * var(--fs));line-height:1.65">' +
-    '이 QR을 <b style="color:var(--hi)">운영 데스크 스캐너</b>에 대 주세요<br>화면 밝기를 올리면 더 빨리 읽혀요</p>' + qrMineStateHtml();
+    '이 QR을 <b style="color:var(--hi)">스태프</b>에게 보여 주세요<br>화면 밝기를 올리면 더 빨리 읽혀요</p>' + qrMineStateHtml();   /* 261005 최종 QA · 「운영 데스크 스캐너」 → 「스태프」(AX PLAY · 스탬프 탭 · 부스 안내가 모두 「스태프에게 내 QR」이다 · 내 QR 을 찍는 곳은 데스크만이 아니다) */
   var h = body;   /* v5.23 화면 안 카드 · 닫기는 헤더 뒤로 */
   return inner ? h : '<div id="qrPanel">' + h + "</div>";
 }
@@ -10118,7 +10124,7 @@ function tsfPrevDraw() {
   var veil = function (a) { ctx.fillStyle = "rgba(24,22,20," + a + ")"; ctx.fillRect(0, 0, w, h); };
   var line = function (t, yy, px, col) { ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = rtFont(px); if (ctx.measureText(t).width > w - 32 && px > 16) px = px === 48 ? 32 : 16; rtText(ctx, t, cx, yy, px, col, RAIN_PAL.ink); };
   ctx.save();
-  if (ph === "attract") veil(TSF.sc.on ? 0.94 : 0.86);   /* v5.61 결정 ⑧ B · 봇 데모는 배경으로 약하게 · 안내는 tsfGuideHtml */
+  if (ph === "attract") { veil(TSF.sc.on ? 1 : 0.86); tsfGuideMask(ctx, cv, w); }   /* v5.61 결정 ⑧ B · 봇 데모는 배경으로 약하게 · 안내는 tsfGuideHtml · 261005 최종 QA · 카메라 화면(scan-on) = 데모 가림 · 안내 제목 뒤 = 데모 가림(tsfGuideMask) */
   else if (ph === "check") {
     veil(0.6);
     rtDots(ctx, "QR OK", cx, y, dh, RAIN_PAL.o100, { align: "center", line: RAIN_PAL.ink });
@@ -10138,6 +10144,17 @@ function tsfPrevDraw() {
     tsfReadyDraw(ctx, w, h, blink);
   } else if (ph === "nick" || ph === "result") veil(0.7);
   ctx.restore();
+}
+/* 261005 최종 QA(타자왕 세션 지적 · final_B_near) · 대기 안내 제목(「카메라」 · 「앱의 내 QR을 · 위 카메라에 비추세요」) 위로 봇 데모 단어 · 점수(+20)가 비쳐 50대가 읽기 어려웠다
+   안내 제목 아래 끝까지는 데모를 완전히 가리고 그 아래 48px 동안 원래 옅은 막(0.86)으로 이어 준다 · 제목 위치는 DOM(.tsf-h)에서 읽는다(화면 크기 · 마감 안내가 바뀌어도 맞는다) */
+function tsfGuideMask(ctx, cv, w) {
+  var hd = document.querySelector(".tsf .tsf-gd .tsf-h"); if (!hd || !cv) return;
+  var cb = cv.getBoundingClientRect(), hb = hd.getBoundingClientRect(); if (!hb.height) return;
+  var y1 = Math.round(hb.bottom - cb.top + 20), fade = 48, bg = "rgba(24,22,20,";
+  if (y1 <= 0) return;
+  ctx.fillStyle = bg + "1)"; ctx.fillRect(0, 0, w, y1);
+  var g = ctx.createLinearGradient(0, y1, 0, y1 + fade); g.addColorStop(0, bg + "1)"); g.addColorStop(1, bg + "0)");
+  ctx.fillStyle = g; ctx.fillRect(0, y1, w, fade);
 }
 /* v5.30(261003 사용자 피드백) 준비 화면 · 도전자 · 규칙 세 줄(그림 + 제목 + 조건) · v5.61 큰 SPACE 키 그림 + 「누르면 시작」 · 20초 방치면 처음으로(마지막 5초 숫자)
    ① 구름에서 내리는 단어를 쳐서 없앤다 · 바닥에 닿으면 목숨 -1 ② 구름이 다 비면 보너스 스테이지 · 문장을 따라 친다 ③ 점수 = 단어 + 콤보 + 보너스 · 1인 n회 · 최고 점수로 순위
