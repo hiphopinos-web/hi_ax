@@ -110,6 +110,11 @@
   #rPrize { font-size: 54px; line-height: 1.3; font-weight: 600; color: #fff; margin-top: 24px; opacity: 0; }
   #rAbs { position: absolute; left: 0; right: 0; top: 700px; font-size: 96px; font-weight: 700; color: #fff; opacity: 0; }
 
+  /* 261004 등수 카드 · 통 중심(600, 590) 안쪽 원에 상품 사진 · 고리(지름 824) 안쪽 지름 600 · 사진 = ../assets/prize/ (앱 경품 사진 파일 그대로 참조) */
+  #kPic { position: absolute; left: -804px; top: 290px; width: 600px; height: 600px; border-radius: 50%; overflow: hidden; background: #fff; opacity: 0; box-shadow: 0 0 0 10px rgba(255,255,255,.28); }
+  #kPic img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  #kPic.in { animation: kpIn .7s cubic-bezier(.2,.7,.2,1) .2s both; }
+  @keyframes kpIn { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: scale(1); } }
   #pCard .eye { color: #fff; }
   #pCard .title { font-size: 150px; color: #fff; margin-top: 12px; }
   #pCard .meta { color: #fff; font-size: 48px; font-weight: 600; margin-top: 30px; }
@@ -215,7 +220,7 @@
     <p id="rAbs">부재 · 다시 추첨합니다</p>
   </section>
 
-  <section id="pCard" class="panel"><div class="mid">
+  <section id="pCard" class="panel"><div id="kPic"><img id="kImg" alt="" decoding="async"></div><div class="mid">
     <p class="eye fit" id="kEye"></p>
     <h2 class="title fit" id="kTitle"></h2>
     <p class="meta" id="kMeta"></p>

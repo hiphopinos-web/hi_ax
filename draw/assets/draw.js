@@ -1650,7 +1650,18 @@
     set("fMeta", (all ? "" : "대상 " + nf(f.n) + "명 · ") + esc(f.cut) + " 기준 스탬프 6개");
     set("fNote", "결과는 앱 내 보상에서 확인" + (f.ship ? " · " + esc(f.ship) + " 배송" : ""));
   }
-  function uiCard() { var r = curRound(); set("kEye", esc(r.name)); fitText($("kEye"), 42, 30, 1); set("kTitle", esc(r.prize)); fitText($("kTitle"), 150, 96, 2); set("kMeta", r.count + "명 추첨"); }
+  /* 261004 등수 카드 사진 · 등수 이름(6등 … 1등)으로 앱 경품 사진 파일을 참조 · 처음에 미리 불러온다 · 못 불러오면 빈 원(사진 칸 숨김) */
+  var PIC_DIR = "../assets/prize/", PIC = { "1등": "ld1_ipad", "2등": "ld2_shilla", "3등": "ld3_minix", "4등": "ld4_airpods", "5등": "ld5_pulio", "6등": "ld6_hyundai" }, PIC_OK = {};
+  (function () { Object.keys(PIC).forEach(function (k) { var im = new Image(); im.onload = function () { PIC_OK[k] = 1; }; im.onerror = function () { PIC_OK[k] = 0; }; im.src = PIC_DIR + PIC[k] + ".webp"; }); })();
+  function uiCardPic(r) {
+    var box = $("kPic"), img = $("kImg"), f = PIC[String(r.name).replace(/\s/g, "")];
+    box.classList.remove("in"); box.style.opacity = 0;
+    if (!f || PIC_OK[String(r.name).replace(/\s/g, "")] === 0) { img.removeAttribute("src"); return; }
+    img.onerror = function () { box.classList.remove("in"); box.style.opacity = 0; };
+    img.src = PIC_DIR + f + ".webp";
+    void box.offsetWidth; box.classList.add("in");
+  }
+  function uiCard() { var r = curRound(); uiCardPic(r); set("kEye", esc(r.name)); fitText($("kEye"), 42, 30, 1); set("kTitle", esc(r.prize)); fitText($("kTitle"), 150, 96, 2); set("kMeta", r.count + "명 추첨"); }
   function uiBoard() {
     var all = ST.results.filter(function (r) { return r.st === "win" && r.id !== ST.pending; }), n = all.length, L = $("bList");
     set("bList", all.map(function (w) { return '<div class="brow"><span class="no">' + w.no + "</span>" + whoHtml(w) + '<span class="pz fit">' + esc(w.prize) + "</span></div>"; }).join(""));
