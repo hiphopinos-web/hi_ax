@@ -62,9 +62,11 @@
     beat: true,
     intro: true,             /* 첫 Space 에 실사 인트로 1회(261001 확정) · 건너뛰기 = Space */
     pal: 1,                  /* 색 대비 · 1 = 통 무채색 + 오렌지 공(261001 사용자 확정) · 2 = 통 오렌지 + 크림 공(비교안 보관 · ?pal=2) */
-    server: ""
+    server: "",
+    roundsV: "261002"        /* 경품 단계 판 · 저장값의 판이 이와 다르면(옛 ROUND 01 표 등) 버리고 위 표를 쓴다(261004) · 조작 창에서 고치면 이 판으로 저장된다 */
   };
   var CFG = load(LS_CFG, null);
+  if (CFG && CFG.rounds && CFG.roundsV !== DEF.roundsV) { delete CFG.rounds; delete CFG.roundsV; }
   CFG = Object.assign(JSON.parse(JSON.stringify(DEF)), CFG || {});
   if (REC || BENCH) CFG = JSON.parse(JSON.stringify(DEF));
   if (REC) { CFG.rounds = [{ name: "ROUND 01", prize: "경품 A", count: 2 }, { name: "FINAL", prize: "경품 C", count: 1 }]; CFG.demoRate = 20; }   /* 쇼릴 대본 전용 */
@@ -844,27 +846,40 @@
   function keepAwake() {                               /* 발표 중 화면 꺼짐 방지(지원 브라우저) */
     try { if (!wake && navigator.wakeLock) navigator.wakeLock.request("screen").then(function (w) { wake = w; w.addEventListener("release", function () { wake = null; }); }).catch(function () {}); } catch (e) {}
   }
+  /* 키보드 · 조작 창 · 원격 콘솔이 같은 명령(runCmd)을 쓴다(261004 · 원격 화면에서도 키보드가 주 조작)
+   *   예전(261001~)에는 원격(?remote=1 · 서버 모드 기본)이면 F · M 말고 모든 키를 막아, 무대에서 Space · P 가 안 됐다.
+   *   지금은 키도 같은 runCmd 를 부른다 · 콘솔 명령과 겹치면 늦게 온 쪽은 장면 검사(cmdWhy)에서 거절된다(두 번 확정 · 두 번 뽑기 없음) */
+  var KEYSRC = false;
   function act(cmd, arg) {
     keepAwake();
-    if (cmd === "skipmix") { if (canSkipMix() && !(T < busyUntil)) { SFX.ensure(); skipMix(); } return; }   /* 스페이스바 · 첫 추첨 최소 섞기 건너뛰기(원격에서도 받는다 · 추첨은 시작하지 않는다) */
-    if (remote() && cmd !== "mute" && cmd !== "fs") return;   /* 원격 · 무해한 키만(전체 화면 · 소리) · 진행은 관리 콘솔 */
-    if (T < busyUntil && cmd !== "mute" && cmd !== "fs" && cmd !== "help" && cmd !== "hud") return;
+    switch (cmd) {   /* 무해한 키 · 언제나 */
+      case "mute": SFX.mute(SFX.on); toast(SFX.on ? "소리 켬" : "소리 끔"); pushCtl(); return;
+      case "fs": if (!document.fullscreenElement) document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); else document.exitFullscreen && document.exitFullscreen(); return;
+      case "help": document.body.classList.toggle("help-on"); uiHelp(); return;
+      case "hud": document.body.classList.toggle("hud-on"); return;
+      case "ctl": openControl(); return;
+    }
     SFX.ensure();
+    KEYSRC = true;
+    try { actRun(cmd, arg); } finally { KEYSRC = false; }
+    uiHelp(); scrPush(true);
+  }
+  function actRun(cmd, arg) {
     switch (cmd) {
-      case "next": return next();
-      case "close": return twice("close", "한 번 더 누르면 체크인을 마감합니다", closeCheckin);
-      case "redraw": return twice("redraw", "한 번 더 누르면 부재 처리 후 다시 뽑습니다", redraw);
-      case "undo": return twice("undo", "한 번 더 누르면 마지막 당첨을 취소합니다", undoLast);
-      case "end": return twice("end", "한 번 더 누르면 끝 화면으로 갑니다", function () { goEnd(); });
-      case "idle": return twice("idle", "한 번 더 누르면 대기 화면으로 갑니다", function () { goIdle(); });
+      case "next": return runNext();
+      case "skipmix": if (canSkipMix() && !(T < busyUntil)) skipMix(); return;   /* 스페이스바 · 첫 추첨 최소 섞기 건너뛰기(추첨은 시작하지 않는다) */
+      case "close": return twice("close", "한 번 더 누르면 체크인을 마감합니다", function () { keyRun("close"); });
+      case "redraw": return twice("redraw", "한 번 더 누르면 부재 처리 후 다시 뽑습니다", function () { keyRun("absent", WIN.r && WIN.r.id); });
+      case "undo": return twice("undo", "한 번 더 누르면 마지막 당첨을 취소합니다", function () { keyRun("undo"); });
+      case "end": return twice("end", "한 번 더 누르면 끝 화면으로 갑니다", function () { keyRun("end"); });
+      case "idle": return twice("idle", "한 번 더 누르면 대기 화면으로 갑니다", function () { keyRun("idle"); });
+    }
+    if (remote()) return;   /* 아래는 로컬 · 데모 시험용(라운드 바로 가기 · 데모 체크인 · 인트로 다시 보기 · 초기화) */
+    if (T < busyUntil && cmd !== "reset" && cmd !== "reload") return;
+    switch (cmd) {
       case "round": if (SC === "mix" || SC === "card") { var ri = +arg; if (ri >= 0 && ri < rounds().length) { ST.round = ri; goCard(); } } return;
       case "add": if (SC === "checkin" && ST.pool) { var c = 0; ST.pool.order.forEach(function (pk) { if (c < (arg || 10) && ST.arrived.indexOf(pk) < 0 && ARR.q.indexOf(pk) < 0) { ARR.q.push(pk); c++; } }); } return;
       case "auto": ARR.auto = !ARR.auto; toast(ARR.auto ? "자동 체크인 켬(데모)" : "자동 체크인 끔(데모)"); return;
-      case "mute": SFX.mute(SFX.on); toast(SFX.on ? "소리 켬" : "소리 끔"); pushCtl(); return;
-      case "fs": if (!document.fullscreenElement) document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); else document.exitFullscreen && document.exitFullscreen(); return;
-      case "help": document.body.classList.toggle("help-on"); return;
-      case "hud": document.body.classList.toggle("hud-on"); return;
-      case "ctl": openControl(); return;
       case "intro":
         if (SC !== "idle") return;
         if (ST.introDone) return twice("intro", "인트로는 이미 재생했습니다 · 한 번 더 누르면 다시 재생합니다", function () { playIntro(false); });
@@ -872,6 +887,60 @@
       case "reset": resetAll(); return;
       case "reload": if (CFG.mode === "server") serverLoad(function () { pushCtl(); }); return;
     }
+  }
+  /* 다음 동작 하나 · Space(→ · PageDown · Enter)와 콘솔 「추첨 › 진행」 큰 버튼이 같은 순서다(콘솔 dcNext 와 같은 표)
+   *   대기 → 체크인 시작 → 체크인 마감(두 번) → N등 추첨 시작(카드) → 섞기 시작 → 뽑기 → 확정 → (같은 등수 남으면 뽑기 · 다 차면 다음 등수 카드)
+   *   … 1등 확정 → 결과판 → 참여상 발표(서버 숫자) → 끝 화면 · 행운권 순서 = CFG.rounds(6등부터 1등 · 261002 사용자 결정) */
+  function nextCmd() {
+    if (SC === "end") return { c: "", n: "끝 · 모든 순서를 마쳤습니다" };
+    if (T < busyUntil || NEXTCARD) return { c: "", n: "잠시만" };
+    switch (SC) {
+      case "intro": return { c: "skip", n: "인트로 건너뛰기" };
+      case "idle": return { c: cmdWhy("intro", "") ? "checkin" : "intro", n: "체크인 시작" };
+      case "checkin": return { c: "close", n: "체크인 마감", two: 1 };
+      case "closed": return { c: "round", n: curRound().name + " 추첨 시작" };
+      case "card": return { c: "mix", n: "섞기 시작" };
+      case "mix":
+        if (canSkipMix()) return { c: "skip", n: "섞기 건너뛰기 · " + Math.ceil(MINMIX - MIXT) + "초 남음" };
+        return { c: "draw", n: curRound().name + " 뽑기" };
+      case "tension": case "exit": return { c: "", n: "뽑는 중" };
+      case "reveal": return { c: "confirm", n: "확정", arg: WIN.r && WIN.r.id };
+      case "board": return CFG.mode === "server" ? { c: "fin", n: "참여상 발표" } : { c: "end", n: "끝 화면" };
+      case "fin": return { c: "end", n: "끝 화면" };
+    }
+    return { c: "", n: "끝" };
+  }
+  function runNext() {
+    var nx = nextCmd();
+    if (!nx.c) { if (nx.n !== "잠시만") toast(nx.n, true); return; }
+    if (nx.c === "skip") { if (SC === "intro") { vidCut("intro"); lock(0.5); } else if (canSkipMix()) skipMix(); return; }
+    if (nx.c === "close") return twice("close", "한 번 더 누르면 체크인을 마감합니다", function () { keyRun("close"); });
+    if (nx.c === "fin") return finFromServer();
+    keyRun(nx.c, nx.arg);
+  }
+  var WHY_TXT = { busy: "", scene: "지금 장면에서는 할 수 없습니다", drawing: "뽑는 중입니다", same: "", done: "", notclosed: "체크인을 먼저 마감합니다", round: "없는 등수입니다",
+    loading: "", full: "", empty: "", none: "", id: "다른 당첨입니다", arg: "참여상 숫자가 없습니다", unknown: "모르는 명령입니다", error: "오류" };
+  function keyRun(c, arg) {
+    var why = runCmd(c, arg == null ? "" : String(arg));
+    if (!why) return;
+    var w = String(why).split(":"), t = w[0] === "mixing" ? "섞는 중 · " + w[1] + "초 뒤 뽑기" : WHY_TXT[w[0]];
+    if (t) toast(t, true);
+  }
+  /* 참여상 발표 · 숫자는 서버만 안다 · 화면이 관리코드로 draw_cmd fin 을 보내고(콘솔 버튼과 같은 명령 · seq) 응답의 명령을 바로 실행한다(소켓으로 같은 seq 가 와도 한 번만) */
+  var FINREQ = false;
+  function finFromServer() {
+    if (CFG.mode !== "server" || !sessionKey()) { toast("참여상 발표는 서버에 연결된 화면에서만", true); return; }
+    if (FINREQ) return;
+    FINREQ = true; toast("참여상 결과를 받는 중", true);
+    jsonp("draw_cmd", { cmd: "fin", arg: "", rid: "k" + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36) }, function (res) {
+      FINREQ = false;
+      KEYSRC = true;
+      try {
+        if (res && res.ok && res.cmd === "fin") remoteCmd(res.cmd, res.arg, res.seq, "srv");
+        else toast(res && res.reason === "fin" ? "참여상 추첨 전입니다 · 콘솔 「참여상」에서 먼저 추첨" : "보내지 못했습니다 · " + (res && (res.reason || res.err) || "응답 없음"), true);
+      } finally { KEYSRC = false; }
+      uiHelp();
+    });
   }
   /* 스페이스바 = 최소 섞기 시간 건너뛰기(261002) · 추첨을 시작하지는 않는다 · 로컬에서는 건너뛴 뒤 한 번 더 누르면 추첨 */
   function canSkipMix() { return SC === "mix" && !!ST.closed && !ST.results.length && MIXT < MINMIX && sT() > 1.2; }
@@ -897,22 +966,6 @@
     confirmKey = k; confirmT = T; toast(msg);
   }
   function lock(sec) { busyUntil = T + sec; }
-  function next() {
-    switch (SC) {
-      case "intro": vidCut("intro"); lock(0.5); return;   /* 인트로 건너뛰기 */
-      case "idle": if (CFG.intro && !ST.introDone) return playIntro(true); return startCheckin();
-      case "checkin": return twice("close", "한 번 더 누르면 체크인을 마감합니다", closeCheckin);
-      case "closed": return goCard();
-      case "card": if (sT() > 0.8) return goMix(); return;
-      case "mix":
-        if (sT() <= 1.2) return;
-        if (!ST.results.length && MIXT < MINMIX) { toast("섞는 중 · " + Math.ceil(MINMIX - MIXT) + "초 뒤 추첨", true); return; }   /* 마감 뒤 첫 추첨은 충분히 섞은 다음(공정성 시험으로 정한 값) */
-        return draw();
-      case "reveal": if (sT() > 1.4) return confirmWin(); return;
-      case "board": return goEnd();
-      case "end": return;
-    }
-  }
   function startCheckin() {
     if (CFG.mode === "demo" && (!ST.pool || ST.pool.kind !== "demo")) ST.pool = demoPool(CFG.demoN, ST.seed);
     if (CFG.mode === "server" && !ST.pool) serverLoad(function () { pushCtl(); });
@@ -1611,14 +1664,29 @@
   function uiTick() {
     if ((tickN++ % 6) !== 0) return;
     if (SC === "idle") uiIdleCount();
+    uiHelp();
     set("mCount", '<span class="lab">통 안의 공</span><b>' + nInside.toLocaleString("en-US") + "</b><em>개</em>");
     if (document.body.classList.contains("hud-on")) set("hud", Math.round(FPS.v) + " fps · 공 " + nAlive + " · r " + R.toFixed(1) + " · 품질 " + QA.tier + (GL ? " · 입체" : " · 2D 대체") + " · 물리 " + PH.ms.toFixed(1) + "ms · 그리기 " + RD.ms.toFixed(1) + "ms");
     if (SC === "mix") { var r = curRound(), n = roundWins(ST.round, true).length; set("mMeta", n >= r.count ? "추첨 완료" : r.count + "명 중 " + Math.min(r.count, n + 1) + "번째 추첨"); }
   }
-  var toastUntil = 0;
+  var toastUntil = 0, kTipT = null;
+  /* 원격 화면 · 키를 누른 순간의 안내(두 번 누르기 · 거절 사유)만 오른쪽 아래 작은 글자로 2.6초 · 객석에서는 거의 안 보인다 */
+  function keyTip(msg) {
+    var el = $("kTip"); if (!el) return;
+    el.textContent = msg || ""; el.style.opacity = msg ? "1" : "0";
+    clearTimeout(kTipT); if (msg) kTipT = setTimeout(function () { el.style.opacity = "0"; }, 2600);
+  }
+  /* 진행자 키 안내(H) · 지금 Space 가 하는 일 한 줄 */
+  function uiHelp() {
+    if (!document.body.classList.contains("help-on")) return;
+    var nx = nextCmd(), r = curRound(), done = ST.results.filter(function (x) { return x.st === "win"; }).length;
+    set("hNext", esc(nx.n) + (nx.two ? " · 두 번" : ""));
+    set("hNow", esc((SCN_KO[SC] || SC) + " · " + r.name + " " + roundWins(ST.round, true).length + "/" + r.count + " · 당첨 " + done + "명"));
+  }
+  var SCN_KO = { idle: "대기", intro: "인트로", checkin: "체크인 중", closed: "체크인 마감", card: "등수 카드", mix: "섞는 중", tension: "뽑는 중", exit: "뽑는 중", reveal: "당첨 공개", board: "결과판", fin: "참여상 발표", end: "끝 화면" };
   function toast(msg, soft) {
     if (REC && !soft) return;
-    if (remote()) { CMD.msg = msg || ""; pushCtl(msg); return; }   /* 원격 · 대형 화면에 운영 안내를 띄우지 않는다(상태 보고로) */
+    if (remote()) { CMD.msg = msg || ""; pushCtl(msg); if (KEYSRC) keyTip(msg); return; }   /* 원격 · 대형 화면에 운영 안내를 띄우지 않는다(상태 보고로) · 키를 누른 진행자에게만 구석 작은 글자(261004) */
     var el = $("toast"); el.textContent = msg; el.classList.toggle("soft", !!soft);
     fade(el, msg ? 1 : 0, 0.2); toastUntil = msg ? T + 2.6 : 0;
     pushCtl(msg);
@@ -1633,7 +1701,7 @@
     if (!m || !m.axd) return;
     if (m.type === "cmd") act(m.cmd, m.arg);
     if (m.type === "cfg") {
-      CFG = Object.assign(CFG, m.cfg); save(LS_CFG, CFG);
+      CFG = Object.assign(CFG, m.cfg); if (m.cfg.rounds) CFG.roundsV = DEF.roundsV; save(LS_CFG, CFG);
       if (m.cfg.mode && m.cfg.mode !== ST.src && SC === "idle") { ST.pool = null; ST.src = m.cfg.mode; }
       if (m.cfg.key != null) { try { sessionStorage.setItem("axfDraw.key", m.cfg.key); } catch (e) {} delete CFG.key; }
       if (m.cfg.mode || m.cfg.key != null || m.cfg.server != null || m.cfg.appBase != null) { qrCode(); remoteBoot(); }   /* 체크인 QR 코드를 다시 받는다 · 원격 연결 */
@@ -1697,10 +1765,11 @@
   /* 명령이 지금 가능한지 · "" = 가능 · 아니면 사유(콘솔에 rej 로 보고) */
   function cmdWhy(c, arg) {
     if (c === "reset_screen") return "";
-    if (T < busyUntil) return "busy";
+    if (T < busyUntil || NEXTCARD) return "busy";   /* 261004 · 다음 등수 카드가 곧 뜰 때(1.6초) 콘솔 뽑기가 카드를 건너뛰지 않게 */
     switch (c) {
       case "idle": return SC === "tension" || SC === "exit" ? "drawing" : SC === "idle" ? "same" : "";
-      case "intro": case "checkin": return SC !== "idle" ? "scene" : "";
+      case "intro": return SC !== "idle" ? "scene" : !CFG.intro || ST.introDone ? "done" : "";   /* 261004 · 인트로는 한 번(체크인 시작 = 첫 번에만 인트로 → 체크인) */
+      case "checkin": return SC !== "idle" ? "scene" : "";
       case "close": return SC !== "checkin" ? "scene" : "";
       case "round":
         if (!ST.closed) return "notclosed";
@@ -1715,7 +1784,7 @@
         if (DRM.mode !== "spin" || DROPS.length || nFalling) return "loading";
         if (roundWins(ST.round).length >= curRound().count) return "full";
         return eligible().length ? "" : "empty";
-      case "confirm": return SC !== "reveal" ? "scene" : sT() <= 1.4 ? "busy" : "";
+      case "confirm": return SC !== "reveal" ? "scene" : sT() <= 1.4 ? "busy" : arg && WIN.r && String(arg) !== String(WIN.r.id) ? "id" : "";   /* 261004 · 콘솔은 방금 당첨 id 를 붙여 보낸다(다른 당첨을 확정하지 않게) */
       case "absent": return SC !== "reveal" ? "scene" : arg && WIN.r && String(arg) !== String(WIN.r.id) ? "id" : "";
       case "undo":
         var lw = null; for (var k = ST.results.length - 1; k >= 0 && !lw; k--) if (ST.results[k].st === "win") lw = ST.results[k];
@@ -1752,8 +1821,10 @@
   }
   function scrState() {
     var last = null;
-    for (var k = ST.results.length - 1; k >= 0 && !last; k--) { var r = ST.results[k]; last = { id: r.id, no: r.no, nm: r.nm ? mask(r.nm) : "", st: r.st, round: r.round, slot: r.slot, prize: r.prize, at: r.at }; }
-    return { scene: SC, pool: nInside, checked: ST.arrived.length + ARR.q.length, round: ST.round, slot: roundWins(ST.round, true).length + 1, mixing_s: +MIXT.toFixed(1), need_s: !ST.results.length && ST.closed ? Math.max(0, Math.ceil(MINMIX - MIXT)) : 0, mix_skip: !!MIXSKIP, mix_skip_at: MIXSKIP ? MIXSKIPAT : 0,
+    var rn = function (i) { var x = rounds()[i]; return x ? x.name : String(i); }, cr = curRound();
+    for (var k = ST.results.length - 1; k >= 0 && !last; k--) { var r = ST.results[k], rr = rounds()[r.round]; last = { id: r.id, no: r.no, nm: r.nm ? mask(r.nm) : "", st: r.st, round: rn(r.round), slot: r.slot + (rr ? "/" + rr.count : ""), prize: r.prize, at: r.at }; }
+    /* 261004 · round = 등수 이름(6등) · slot = 이번 칸/인원(2/3) · 콘솔 진행판이 그대로 쓴다(예전에는 숫자 색인이라 「0」이 보였다) */
+    return { scene: SC, pool: nInside, checked: ST.arrived.length + ARR.q.length, round: cr.name, slot: Math.min(cr.count, roundWins(ST.round, true).length + 1) + "/" + cr.count, mixing_s: +MIXT.toFixed(1), need_s: !ST.results.length && ST.closed ? Math.max(0, Math.ceil(MINMIX - MIXT)) : 0, mix_skip: !!MIXSKIP, mix_skip_at: MIXSKIP ? MIXSKIPAT : 0,
       ready: CMDS.filter(function (c) { return c !== "reset_screen" && !cmdWhy(c, ""); }), closed: !!ST.closed, last: last, rej: CMD.rej, seq: cmdSeqOf("srv"), msg: CMD.msg, ver: "v3", remote: remote() };
   }
   /* 상태 보고 · 2초마다(서버가 draw_scr 를 모르면 15초마다 다시 시도) · 명령을 받으면 바로 */
@@ -1833,7 +1904,7 @@
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     var k = e.key;
     if (e.repeat) return;                             /* 길게 눌러도 한 번 */
-    if (k === " " && canSkipMix()) { e.preventDefault(); act("skipmix"); return; }   /* 섞는 중 Space = 최소 섞기 건너뛰기(원격 포함) */
+
     var map = { " ": "next", Enter: "next", PageDown: "next", ArrowRight: "next", c: "close", C: "close", r: "redraw", R: "redraw", u: "undo", U: "undo",
       e: "end", E: "end", i: "idle", I: "idle", m: "mute", M: "mute", f: "fs", F: "fs", h: "help", H: "help", "?": "help", g: "hud", G: "hud", p: "ctl", P: "ctl",
       d: "add", D: "add", a: "auto", A: "auto", v: "intro", V: "intro" };

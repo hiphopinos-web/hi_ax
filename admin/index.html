@@ -652,6 +652,32 @@ table.brk tr.tot td{border-bottom:0;border-top:1px solid var(--line3)}
 .dc-nm{font-size:var(--fs-h1);font-weight:700}
 .dc-mc{font-size:var(--fs-h2);line-height:1.7}
 @media(max-width:720px){.dc-pad{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* v5.56 진행판 · 무대 순서 띠 + 큰 버튼 하나(= 추첨 화면 Space) */
+.dc-steps{display:flex;gap:4px;list-style:none;margin:0 0 16px;padding:0;flex-wrap:wrap}
+.dc-steps li{flex:1 1 0;min-width:96px;padding:8px 12px;border-radius:var(--r-s);background:var(--soft);border:1px solid var(--line2);color:var(--tx3);font-size:var(--fs-s);font-weight:600;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dc-steps li.done{color:var(--tx2)}
+.dc-steps li.on{background:var(--navy05);border-color:var(--navy1);color:var(--navy);font-weight:700}
+.dc-steps li:nth-child(2){flex:2 1 0}
+.dc-now{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.dc-now span{font-size:var(--fs-c);color:var(--tx2);font-weight:600}
+.dc-now b{font-size:var(--fs-h1);font-weight:700}
+.dc-now .dc-r{font-size:var(--fs-h2);color:var(--navy);font-weight:700;font-variant-numeric:tabular-nums}
+.dc-gorow{display:flex;gap:12px;align-items:stretch;flex-wrap:wrap}
+.dc-go,.dc-abs{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:96px;padding:12px 24px;border-radius:var(--r);text-align:center;line-height:1.25}
+.dc-go{flex:1 1 320px;background:var(--navy);border:1px solid var(--navy);color:#fff}
+.dc-go b{font-size:var(--fs-kpi);font-weight:700}
+.dc-go em,.dc-abs em{font-style:normal;font-size:var(--fs-c);font-weight:600}
+.dc-go em{color:var(--navy1)}
+.dc-go:hover:not(:disabled){background:var(--navy8)}
+.dc-go:disabled{background:var(--soft);border-color:var(--line);color:var(--tx2);cursor:default}
+.dc-go:disabled em{color:var(--tx3)}
+.dc-abs{flex:0 1 220px;background:var(--sf);border:1px solid var(--bad-bd);color:var(--bad)}
+.dc-abs b{font-size:var(--fs-h2);font-weight:700}
+.dc-abs em{color:var(--tx2)}
+.dc-go.arm,.dc-abs.arm,.dc-go.arm:hover,.dc-abs.arm:hover{background:var(--bad);border-color:var(--bad);color:#fff}
+.dc-go.arm em,.dc-abs.arm em{color:#fff}
+.dc-abs:disabled{opacity:.35;cursor:default}
+.dc-keys td{height:36px}
 .grid.g75>:nth-child(odd){grid-column:span 7}.grid.g75>:nth-child(even){grid-column:span 5}
 #rtv .grid>*{grid-column:auto}
 .g75>div>.card:first-child{margin-top:0}
@@ -2986,34 +3012,90 @@ function viewDrawRun(d){
 /* 받은 지 몇 초는 매초 바뀌므로 비교(DC.sig)에서 빼고 그릴 때만 넣는다 */
 function dcFill(h){ var c=dcConn(); return h.replace("@@DCCONN@@",'<span id="dcAge" class="dc-conn '+c[0]+'">'+esc(c[1])+'</span>');
 }
+/* v5.56 (261004 사용자 「admin 페이지의 작동 방식이 전혀 이해가 안 된다」) 진행판 = 무대 순서 한 줄 + 큰 버튼 하나
+ *   큰 버튼 = 추첨 화면의 Space 와 같은 동작(화면 draw.js nextCmd 와 같은 표) · 키보드와 콘솔을 섞어 눌러도 늦게 온 쪽은 화면이 거절한다
+ *   순서: 체크인 시작 → 체크인 마감(두 번) → 6등 추첨 시작 → 섞기 시작 → 6등 뽑기 → 확정 … 1등 → 결과판 → 참여상 발표 → 끝 화면
+ *   부재는 당첨 공개 중에만 큰 버튼 옆에 「부재 · 다시 뽑기」(두 번) · 나머지 명령 · 화면 상태는 「세부 명령 · 화면 상태」에 접는다 */
+function dcNext(s){
+  if(!s) return { c:"", n:"화면 보고 없음", sub:"추첨 화면을 먼저 엽니다(위 「추첨 화면 열기」)" };
+  var R=s.round&&!/^\d+$/.test(String(s.round))?s.round:"다음 등수";
+  switch(s.scene){
+    case "idle": return { c:dcReady("intro")?"intro":"checkin", n:"체크인 시작", sub:"화면에 QR 이 나오고 체크인을 받습니다" };
+    case "intro": return { c:"", n:"인트로 재생 중", sub:"끝나면 체크인이 시작됩니다 · 화면 Space = 건너뛰기" };
+    case "checkin": return { c:"close", n:"체크인 마감", two:1, sub:"마감하면 더 받지 않습니다" };
+    case "closed": return { c:"round", n:R+" 추첨 시작", sub:"등수 · 경품 카드가 나옵니다" };
+    case "card": return { c:"mix", n:"섞기 시작", sub:"공을 섞습니다 · 첫 추첨은 최소 섞기 뒤" };
+    case "mix":
+      if(s.need_s!=null&&Number(s.need_s)>0) return { c:"", n:"섞는 중 · "+Math.ceil(Number(s.need_s))+"초 뒤 뽑기", sub:"화면 Space = 섞기 건너뛰기" };
+      if(Array.isArray(s.ready)&&s.ready.indexOf("draw")<0) return { c:"", n:"공을 넣는 중", sub:"잠시 뒤 뽑기가 켜집니다" };
+      return { c:"draw", n:R+" 뽑기", sub:"통이 서고 공 하나가 나옵니다" };
+    case "tension": case "exit": return { c:"", n:"뽑는 중", sub:"공이 나오면 당첨 공개" };
+    case "reveal": return { c:"confirm", n:"확정", arg:(s.last&&s.last.id)||"", sub:"당첨자가 나오면 확정 · 안 계시면 오른쪽 「부재 · 다시 뽑기」" };
+    case "board": return { c:"fin", n:"참여상 발표", sub:"스탬프 6개 완주자 중 행운권 당첨자를 뺀 참여상 결과(숫자)" };
+    case "fin": return { c:"end", n:"끝 화면", sub:"ME to WE 마무리 화면" };
+    case "end": return { c:"", n:"끝", sub:"모든 순서를 마쳤습니다" };
+  }
+  return { c:"", n:DC_SCN[s.scene]||s.scene||"-", sub:"" };
+}
+/* 무대 순서 띠 · 지금 단계에 네이비 */
+var DC_STEPS=[["체크인",["idle","intro","checkin"]],["행운권 6등 → 1등",["closed","card","mix","tension","exit","reveal"]],["결과판",["board"]],["참여상",["fin"]],["끝",["end"]]];
+function dcSteps(s){
+  var at=-1; if(s) DC_STEPS.forEach(function(x,i){ if(x[1].indexOf(s.scene)>=0) at=i; });
+  return '<ol class="dc-steps">'+DC_STEPS.map(function(x,i){ var t=x[0];
+    if(i===1&&at===1&&s.round&&!/^\d+$/.test(String(s.round))) t="행운권 · 지금 "+s.round+(s.slot?" "+s.slot:"");
+    return '<li class="'+(i<at?"done":i===at?"on":"")+'">'+esc(t)+'</li>'; }).join("")+'</ol>';
+}
+function dcGo(){
+  var nx=dcNext(DC.scr); if(!nx.c||DC.busy) return;
+  if(!dcReady(nx.c)){ toast("화면이 아직 받지 않습니다 · 잠시 뒤"); return; }
+  var k="go:"+nx.c;
+  if(nx.two&&!(DC.arm&&DC.arm.c===k&&Date.now()-DC.arm.at<3000)){ DC.arm={ c:k, at:Date.now() }; dcPaint(true); setTimeout(function(){ if(DC.arm&&DC.arm.c===k&&Date.now()-DC.arm.at>=3000){ DC.arm=null; dcPaint(true); } },3100); return; }
+  DC.arm=null;
+  var arg=nx.arg||""; if(arg&&!/^[0-9A-Za-z_.:-]{1,40}$/.test(arg)) arg="";
+  dcSend(nx.c, arg, dcRid(), 0);
+}
+var DC_WHY={ busy:"연출 중이었습니다", scene:"지금 장면에서는 받지 않습니다", drawing:"뽑는 중이었습니다", same:"이미 그 화면입니다", done:"인트로는 이미 틀었습니다", notclosed:"체크인 마감 전입니다",
+  round:"없는 등수입니다", loading:"공을 넣는 중이었습니다", full:"이 등수 인원이 다 찼습니다", empty:"통에 공이 없습니다", none:"취소할 당첨이 없습니다", id:"다른 당첨이었습니다(화면이 먼저 넘어감)", arg:"참여상 숫자가 없습니다", stale:"30초 넘게 늦게 도착해 실행하지 않았습니다", unknown:"화면이 모르는 명령입니다", error:"화면 오류" };
+function dcWhy(w){ w=String(w||""); var m=/^mixing:(\d+)/.exec(w); return m?"섞는 중이었습니다 · "+m[1]+"초 남음":DC_WHY[w]||w||"이유 없음"; }
+var DC_KEYS=[["Space · → · PageDown","다음 · 큰 버튼과 같다"],["R 두 번","부재 · 다시 뽑기"],["U 두 번","마지막 당첨 취소"],["C 두 번","체크인 마감"],["E 두 번","끝 화면"],["F · M · H","전체 화면 · 소리 · 키 안내"]];
 function dcBody(d){
-  if(!("cmd" in d)) return '<div class="err-banner">지금 서버는 원격 진행(v4.82) 이전입니다. 운영 서버 배포 뒤에 이 패널을 씁니다. 그 전에는 추첨 화면의 조작 창으로 진행합니다.</div>';
-  var s=DC.scr, sc=s?s.scene:"", nx=s?DC_NEXT[sc]:"";
+  if(!("cmd" in d)) return '<div class="err-banner">지금 서버는 원격 진행(v4.82) 이전입니다. 운영 서버 배포 뒤에 이 패널을 씁니다. 그 전에는 추첨 화면의 키보드로 진행합니다.</div>';
+  var s=DC.scr, sc=s?s.scene:"", nx=dcNext(s);
   var head='<div class="dc-top">@@DCCONN@@'+
-    '<span class="cap">'+(DC.st==="ok"?"실시간 연결":"실시간 연결 없음 · 2초마다 확인")+(d.scrs&&d.scrs.length>1?" · 화면 "+d.scrs.length+"대가 보고 중":"")+(s&&s.ver?" · 화면 "+esc(s.ver):"")+'</span>'+
+    '<span class="cap">'+(DC.st==="ok"?"실시간 연결":"실시간 연결 없음 · 2초마다 확인")+(d.scrs&&d.scrs.length>1?" · 화면 "+d.scrs.length+"대가 보고 중":"")+'</span>'+
     '<span class="dc-acts"><button class="btn sm" onclick="dcOpenScreen()">추첨 화면 열기</button><button class="btn sm" onclick="dcCopy()">주소 복사</button></span></div>';
-  /* 지금 화면 한 줄 · 노트북(1366 × 768)에서 버튼이 접히지 않게 KPI 카드 대신 낮은 칸 다섯 개 */
-  var stat='<div class="dc-stat">'+[["지금 화면", s?(DC_SCN[sc]||sc||"-"):"보고 없음"],["체크인", (s?s.checked:(d.in||0))+"명"+(d.closed?" · 마감":"")],["통 안의 공", (s?s.pool:(d.balls||0))+"개"],
-    ["라운드 · 칸", s&&(s.round||s.slot)?(s.round||"-")+(s.slot?" · "+s.slot:""):"-"],["섞기 남은", dcMixLeft(s)]].map(function(x){ return '<div><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>'; }).join("")+'</div>';
   var rej=s&&s.rej&&s.rej.seq&&s.rej.seq>DC.rejOff&&(!DC.cmd||s.rej.seq>=DC.cmd.seq-3)?
-    '<div class="dc-rej"><b>화면이 「'+esc(DC_NAME[s.rej.cmd]||s.rej.cmd)+'」(#'+s.rej.seq+')를 받지 않았습니다.</b> '+esc(s.rej.why||"이유 없음")+' <button class="btn sm" onclick="dcRejOff('+Number(s.rej.seq)+')">확인</button></div>':"";
+    '<div class="dc-rej"><b>화면이 「'+esc(DC_NAME[s.rej.cmd]||s.rej.cmd)+'」(#'+s.rej.seq+')를 받지 않았습니다.</b> '+esc(dcWhy(s.rej.why))+' <button class="btn sm" onclick="dcRejOff('+Number(s.rej.seq)+')">확인</button></div>':"";
+  /* 큰 버튼 하나 + (당첨 공개 중) 부재 */
+  var k="go:"+nx.c, arm=DC.arm&&DC.arm.c===k, ok=!!nx.c&&dcReady(nx.c)&&!DC.busy, busy=DC.busy&&DC.busy===nx.c;
+  var go='<button class="dc-go'+(arm?" arm":"")+'"'+(ok?'':' disabled')+' onclick="dcGo()"><b>'+(busy?'<span class="spin"></span>보내는 중':arm?'한 번 더 누르면 '+esc(nx.n):esc(nx.n))+'</b>'+
+    '<em>'+(nx.c?(arm?"3초 안에 한 번 더":nx.two?"두 번 눌러요 · 키보드 Space 두 번":"키보드 Space"):"기다리는 중")+'</em></button>';
+  var absB=DC_BTN.filter(function(b){ return b.c==="absent"; })[0];
+  var abs=sc==="reveal"?(function(){ var a=DC.arm&&DC.arm.c==="absent";
+    return '<button class="dc-abs'+(a?" arm":"")+'"'+(dcReady("absent")&&!DC.busy?'':' disabled')+' onclick="dcPress(\'absent\')"><b>'+(a?"한 번 더 누르면 부재":esc(absB.n.replace("추첨","뽑기")))+'</b><em>'+(a?"3초 안에":"두 번 · 키보드 R 두 번")+'</em></button>'; })():"";
+  var now='<div class="dc-now"><span>지금</span><b>'+esc(s?(DC_SCN[sc]||sc||"-"):"화면 보고 없음")+'</b>'+(s&&s.round&&!/^\d+$/.test(String(s.round))&&DC_STEPS[1][1].indexOf(sc)>=0?'<span class="dc-r">'+esc(s.round+(s.slot?" · "+s.slot:""))+'</span>':'')+'</div>';
+  var main=card("진행", "큰 버튼 = 추첨 화면의 Space · 어느 쪽으로 눌러도 같은 순서", dcSteps(s)+now+'<div class="dc-gorow">'+go+abs+'</div><p class="cap mt8">'+esc(nx.sub||"")+'</p>');
+  /* 접힘 · 세부 명령 · 화면 상태 · 키 안내 */
+  var stat='<div class="dc-stat">'+[["지금 화면", s?(DC_SCN[sc]||sc||"-"):"보고 없음"],["체크인", (s?s.checked:(d.in||0))+"명"+(d.closed?" · 마감":"")],["통 안의 공", (s?s.pool:(d.balls||0))+"개"],
+    ["등수 · 칸", s&&s.round?s.round+(s.slot?" · "+s.slot:""):"-"],["섞기 남은", dcMixLeft(s)]].map(function(x){ return '<div><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>'; }).join("")+'</div>';
   var btn=function(b, cls){ var ok=dcReady(b.c), arm=DC.arm&&DC.arm.c===b.c, busy=DC.busy===b.c;
-    return '<button class="dc-b'+(cls||"")+(b.c===nx&&ok?" go":"")+(arm?" arm":"")+(b.two?" two":"")+'"'+(ok&&!DC.busy?'':' disabled')+' onclick="dcPress(\''+b.c+'\')">'+
+    return '<button class="dc-b'+(cls||"")+(arm?" arm":"")+(b.two?" two":"")+'"'+(ok&&!DC.busy?'':' disabled')+' onclick="dcPress(\''+b.c+'\')">'+
       '<span>'+(busy?'<span class="spin"></span>보내는 중':arm?'한 번 더 누르면 '+esc(b.n):esc(b.n))+'</span>'+(b.two?'<em>'+(arm?"3초 안에":"두 번 눌러요")+'</em>':'')+'</button>'; };
-  var pad='<div class="dc-pad">'+DC_BTN.map(function(b){ return btn(b); }).join("")+'</div>'+
-    '<div class="dc-sub">'+DC_SUB.map(function(b){ return btn(b," sm"); }).join("")+
-    '<span class="cap">'+(DC.cmd?"마지막 명령 #"+DC.cmd.seq+" "+esc(DC_NAME[DC.cmd.cmd]||DC.cmd.cmd)+(DC.sent&&DC.sent.seq===DC.cmd.seq?" · 서버 "+DC.sent.ms+"ms"+(DC.sent.again?" · 재전송(한 번만 처리)":""):""):"보낸 명령 없음")+'</span></div>';
-  var left=card("진행", s?(Object.prototype.toString.call(s.ready)==="[object Array]"?"화면이 지금 받는 명령만 켜집니다":"지금 장면에서 보낼 수 있는 버튼만 켜집니다"):"화면 보고가 없어 모든 버튼이 켜져 있습니다", stat+pad);
+  var more='<details class="memo"'+(DC.more?" open":"")+' ontoggle="DC.more=this.open"><summary>세부 명령 · 화면 상태 · 키 안내</summary><div class="mb">'+stat+
+    '<div class="dc-pad">'+DC_BTN.map(function(b){ return btn(b," sm"); }).join("")+DC_SUB.map(function(b){ return btn(b," sm"); }).join("")+'</div>'+
+    '<div class="dc-sub"><span class="cap">'+(DC.cmd?"마지막 명령 #"+DC.cmd.seq+" "+esc(DC_NAME[DC.cmd.cmd]||DC.cmd.cmd)+(DC.sent&&DC.sent.seq===DC.cmd.seq?" · 서버 "+DC.sent.ms+"ms"+(DC.sent.again?" · 재전송(한 번만 처리)":""):""):"보낸 명령 없음")+(s&&s.ver?" · 화면 "+esc(s.ver):"")+' · 화면이 지금 받는 명령만 켜집니다</span></div>'+
+    '<h3 class="mt12">추첨 화면 키보드</h3><table class="tb dc-keys">'+DC_KEYS.map(function(x){ return '<tr><td><b>'+esc(x[0])+'</b></td><td>'+esc(x[1])+'</td></tr>'; }).join("")+'</table>'+
+    '<p class="cap mt8">추첨 화면에서 H 를 누르면 오른쪽 아래에 같은 안내와 「지금 Space 가 하는 일」이 나옵니다(다시 H 로 숨김). 키는 추첨 화면 창이 앞에 있을 때 받습니다.</p></div></details>';
   /* 방금 당첨 · 번호 · 가린 이름은 화면과 같게 · 실명 · 부서는 이 콘솔만 */
   var last=s&&s.last&&s.last.no?s.last:null, rec=null;
   if(last&&last.id) rec=((d.recs||[]).filter(function(r){ return r.id===last.id; })[0])||null;
   var won=last?'<div class="dc-win"><div class="dc-no">'+esc(last.no)+'</div><div><div class="dc-nm">'+esc(last.nm||"")+'</div><div class="cap">'+esc((last.round||"")+(last.slot?" · "+last.slot:""))+'</div></div>'+
-      (last.st&&last.st!=="win"?tag(last.st==="absent"?"부재":last.st==="undo"?"취소":last.st,"off"):tag("당첨","ok"))+'</div>'+
+      (last.st&&last.st!=="win"?tag(last.st==="absent"?"부재":last.st==="undo"||last.st==="undone"?"취소":last.st,"off"):tag("당첨","ok"))+'</div>'+
     imp([["경품", esc(last.prize||(rec&&rec.prize)||"-")],["실명", rec?esc(rec.name||"-"):'<span class="cap">기록 확인 중</span>'],["부서", rec?esc(rec.dept||"-"):'<span class="cap">-</span>']])
     :'<div class="empty">아직 당첨 공개가 없습니다.</div>';
   var right=card("방금 당첨", "실명 · 부서는 상품 전달용 · 이 화면만", won)+
     card("사회자 멘트", s?esc(DC_SCN[sc]||sc):"장면 모름", '<p class="dc-mc">'+esc(s?dcMc(s):DC_MC.idle)+'</p>');
-  return head+rej+'<div class="grid g75"><div>'+left+'</div><div>'+right+'</div></div>';
+  return head+rej+'<div class="grid g75"><div>'+main+more+'</div><div>'+right+'</div></div>';
 }
 
 /* ══════════════════ 7-4b. 접속 기록 (v4.27 · 260924 사용자 질문) ══════════════════
