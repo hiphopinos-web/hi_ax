@@ -72,12 +72,17 @@
     var ex = null, hp = null; try { ex = gl.getExtension('WEBGL_debug_renderer_info'); hp = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT); } catch (e) {}
     return { ren: String((ex && gl.getParameter(ex.UNMASKED_RENDERER_WEBGL)) || gl.getParameter(gl.RENDERER) || '?'), gl2: !!renderer.capabilities.isWebGL2, highp: !!(hp && hp.precision > 0), hpBits: hp ? hp.precision : 0, msaa: gl.getParameter(gl.SAMPLES), dpr: +(window.devicePixelRatio || 1).toFixed(2) };
   }
+  /* v5.45 진단 한 줄 · 캐릭터 자리(도면 x · z 미터 · 서쪽 벽 0 · 남쪽 유리 0)와 바라보는 각도(동 0 · 북 90 · 서 180 · 남 270) · 사용자가 자리를 짚을 때 이 값을 받는다 */
+  function posText() {
+    var p = planOf(G.pos), deg = (Math.atan2(-Math.cos(G.h), Math.sin(G.h)) * 180 / Math.PI + 360) % 360, az = (Math.atan2(-Math.cos(G.az), Math.sin(G.az)) * 180 / Math.PI + 360) % 360;
+    return '위치 x ' + p[0].toFixed(1) + ' · z ' + p[1].toFixed(1) + ' · 보는 쪽 ' + Math.round(deg) + '° · 화면 위 ' + Math.round(az) + '°';
+  }
   function diagText() {
     var g = G.gpu || {}, z = G.zfix || {}, l = G.lmfix || {}, pr = G.probeResult;
     return '둘러보기 진단 ' + (window.AXTour ? AXTour.ver : '') + '\n' + g.ren + '\n' +
       'WebGL' + (g.gl2 ? '2' : '1') + ' · 깊이 ' + G.depthBits + '비트 · highp ' + (g.highp ? '예 ' + g.hpBits : '아니오') + ' · MSAA ' + g.msaa + '\n' +
       'DPR ' + g.dpr + ' → ' + renderer.getPixelRatio() + ' · fps ' + G.frames.length + (pr ? ' · 처음 ' + pr.p50 + 'ms' + (pr.p50 > 34 ? ' 절전' : '') : '') + '\n' +
-      '겹침 ' + (z.pairs || 0) + ' · 자름 ' + (z.cut || 0) + ' · 지움 ' + (z.gone || 0) + ' · 빛 옮김 ' + (z.relit || 0) + ' · 라이트맵 ' + (l.tex || 0) + '장 ' + (l.ms || 0) + 'ms' + (G.lmErr ? ' 오류' : '');
+      '겹침 ' + (z.pairs || 0) + ' · 자름 ' + (z.cut || 0) + ' · 지움 ' + (z.gone || 0) + ' · 빛 옮김 ' + (z.relit || 0) + ' · 라이트맵 ' + (l.tex || 0) + '장 ' + (l.ms || 0) + 'ms' + (G.lmErr ? ' 오류' : '') + '\n' + posText();
   }
   function init3D() {
     var cv = $('cv');
@@ -639,14 +644,311 @@
     gd.traverse(function (o) { o.userData = { door: true }; }); S.lobby.add(gd); if (hd !== S.lobby) { S.lobby.updateMatrixWorld(true); hd.attach(gd); }
   }
 
+  /* ═══════════ v5.45 1층 공간 손질(사용자 261004) ═══════════
+   * ① 동쪽 코어 옆 빈 공간(EH) · 사용자 「동문 쪽 오른쪽은 뚫려 있고 계단실과 엘리베이터실이 있다 · 엘리베이터와 나란히 앞으로 이어진다」
+   *   도면 1/200(2024.12) 「4244 × 8075」 칸 = 동쪽 코어(계단 · 엘리베이터) 동쪽 벽 x 28.2 ~ 동쪽 유리벽 x 32.57 · z 11.46 ~ 19.4 · 북쪽 끝 = 고객 대기석 쪽 양개문
+   *   모형(lobby.glb)은 이 칸을 코어 덩어리로 막아 두었다 · 받은 뒤 그 칸의 코어 면(side_n)을 잘라 내고 벽 · 문 · 유리를 덧붙인다(모형 그대로 · 겹친 면 없음)
+   *   걸어 들어가지는 않는다(입구 차단봉 · 들어가면 카메라가 코어 덩어리 속으로 들어간다) · 바닥은 구운 빛이 까만 코어 밑이라 로비 바닥 밝기 한 점으로 다시 칠한다
+   * ② 가벽 + 전체 화면(사용자 「도면에는 없는데 가벽이 있고 전체로 화면이 나오는 영상 화면」) · 날개(AX LOUNGE) 들어가는 곳 · 코어 서쪽 면에 붙어 서쪽으로
+   *   화면 = 로비 쪽(남쪽) 면 전체 · TV 와 같은 픽셀 광고 루프 · 시선을 가리면 기둥처럼 점점이 비운다
+   * ③ 미팅룸 1 · 2 = 유리벽(사용자 「키 높이까지 반투명 · 위는 투명」) · 미팅룸 3 자리 = 같은 유리벽의 「고객센터」(유리문 · 탁자 대신 안내 카운터)
+   * 모두 걷기 지도(buildGrid) 앞에 붙여 막힘이 저절로 따라온다 · 면은 서로 겹치지 않게(문은 벽 구멍 안으로 들이고 · 띠 · 표지는 상자) */
+  var EH = { x0: 28.2, x1: 32.57, z0: 11.46, z1: 19.4, top: 4.6, H: 5.0 };
+  var WW = { x1: 6.825, w: 1.8, z: 12.5, t: 0.12, h: 2.4 };   /* 가벽 · 폭 = 사용자 표시(약 2.4m)보다 좁힘 · 2.4m 면 미팅룸 앞 복도(폭 3.2m)가 막혀 날개로 못 들어간다 */
+  var GL = { cut: 1.75, h: 2.7 };   /* 유리벽 · 1.75m 까지 반투명 · 위 2.7m(미팅룸 벽 높이)까지 투명 */
+  function attrRec(geo, keys, A, i, m, v) {
+    var a = []; keys.forEach(function (k) { var s = geo.attributes[k].itemSize; for (var j = 0; j < s; j++) a.push(A[k][i * s + j]); });
+    v.set(A.position[i * 3], A.position[i * 3 + 1], A.position[i * 3 + 2]).applyMatrix4(m);
+    return { p: [v.x + 16, 6 - v.z, v.y], a: a };
+  }
+  function lerpRec(P, Q, t) { return { p: [P.p[0] + (Q.p[0] - P.p[0]) * t, P.p[1] + (Q.p[1] - P.p[1]) * t, P.p[2] + (Q.p[2] - P.p[2]) * t], a: P.a.map(function (x, i) { return x + (Q.a[i] - x) * t; }) }; }
+  function clipRec(poly, f) {
+    var out = [];
+    for (var i = 0; i < poly.length; i++) { var c = poly[i], n = poly[(i + 1) % poly.length], sc = f(c), sn = f(n); if (sc >= 0) out.push(c); if ((sc >= 0) !== (sn >= 0)) out.push(lerpRec(c, n, sc / (sc - sn))); }
+    return out.length > 2 ? out : [];
+  }
+  /* 메시를 평면 상자 R(도면 x0~x1 · z0~z1 · 높이 무관) 안팎으로 나눈다 · 안 = 지움(drop) 또는 라이트맵 한 점으로 다시 칠함(uv1 = relight) · keep(tri) 가 참인 삼각형은 통째로 지움 */
+  function regionCut(o, R, relight, dropTri) {
+    var geo = o.geometry, keys = Object.keys(geo.attributes), A = {}, idx = geo.index, n = idx ? idx.count : geo.attributes.position.count, m = o.matrixWorld, v = new T.Vector3();
+    keys.forEach(function (k) { A[k] = f32Arr(geo.attributes[k]); });
+    var out = {}, ind = [], cnt = 0, hit = 0, u1 = keys.indexOf('uv1') >= 0 ? (function () { var off = 0; for (var q = 0; q < keys.indexOf('uv1'); q++) off += geo.attributes[keys[q]].itemSize; return off; })() : -1;
+    keys.forEach(function (k) { out[k] = []; });
+    function emit(poly, inside) {
+      var base = cnt;
+      poly.forEach(function (V) { var off = 0; keys.forEach(function (k) { var s = geo.attributes[k].itemSize; for (var j = 0; j < s; j++) out[k].push(inside && relight && off + j >= u1 && off + j < u1 + 2 ? relight[off + j - u1] : V.a[off + j]); off += s; }); cnt++; });
+      for (var k = 1; k + 1 < poly.length; k++) ind.push(base, base + k, base + k + 1);
+    }
+    var G4 = R ? [function (V) { return V.p[0] - R.x0; }, function (V) { return R.x1 - V.p[0]; }, function (V) { return V.p[1] - R.z0; }, function (V) { return R.z1 - V.p[1]; }] : [];
+    for (var t = 0; t < n; t += 3) {
+      var tri = [0, 1, 2].map(function (q) { return attrRec(geo, keys, A, idx ? idx.getX(t + q) : t + q, m, v); });
+      if (dropTri && dropTri(tri)) { hit++; continue; }
+      if (!R) { emit(tri, false); continue; }
+      var rest = tri, inside = true;
+      for (var g = 0; g < 4 && rest.length; g++) {
+        var f = G4[g], outer = clipRec(rest, function (V) { return -f(V); });
+        if (outer.length && outer.some(function (V) { return f(V) < -1e-6; })) emit(outer, false);
+        rest = clipRec(rest, f); if (rest.length && !rest.some(function (V) { return f(V) > 1e-6; })) rest = [];
+      }
+      if (rest.length) { hit++; if (relight) emit(rest, true); }
+    }
+    if (!hit) return 0;   /* 손댈 것 없음 = 원래 모양 그대로 */
+    var g2 = new T.BufferGeometry(); keys.forEach(function (k) { g2.setAttribute(k, new T.BufferAttribute(new Float32Array(out[k]), geo.attributes[k].itemSize)); });
+    g2.setIndex(ind); g2.computeBoundingSphere(); g2.computeBoundingBox(); o.geometry = g2;
+    var shared = false; S.lobby.traverse(function (x) { if (x.isMesh && x.geometry === geo) shared = true; }); if (!shared) geo.dispose();
+    return hit;
+  }
+  /* 메시 면 위 한 점(도면 x · z · 높이 y)의 속성값(uv · uv1) · 삼각형 무게중심 보간 · 없으면 null */
+  function attrAt(o, key, x, z, y) {
+    var geo = o.geometry, pos = geo.attributes.position, at = geo.attributes[key], idx = geo.index, n = idx ? idx.count : pos.count, m = o.matrixWorld;
+    if (!at) return null;
+    var a = new T.Vector3(), b = new T.Vector3(), c = new T.Vector3(), p = new T.Vector3(x - 16, y, 6 - z), nn = new T.Vector3(), e1 = new T.Vector3(), e2 = new T.Vector3(), w = new T.Vector3();
+    for (var t = 0; t < n; t += 3) {
+      var ia = idx ? idx.getX(t) : t, ib = idx ? idx.getX(t + 1) : t + 1, ic = idx ? idx.getX(t + 2) : t + 2;
+      a.fromBufferAttribute(pos, ia).applyMatrix4(m); b.fromBufferAttribute(pos, ib).applyMatrix4(m); c.fromBufferAttribute(pos, ic).applyMatrix4(m);
+      e1.subVectors(b, a); e2.subVectors(c, a); nn.crossVectors(e1, e2); var L = nn.length(); if (L < 1e-9) continue; nn.divideScalar(L);
+      if (Math.abs(w.subVectors(p, a).dot(nn)) > 0.01) continue;
+      T.Triangle.getBarycoord(p, a, b, c, w); if (w.x < -1e-4 || w.y < -1e-4 || w.z < -1e-4) continue;
+      var r = []; for (var j = 0; j < at.itemSize; j++) { var g = j === 0 ? 'getX' : j === 1 ? 'getY' : 'getZ'; r.push(at[g](ia) * w.x + at[g](ib) * w.y + at[g](ic) * w.z); }
+      return r;
+    }
+    return null;
+  }
+  /* 사각형 면 하나(세 점 a · b · d 로 정한 평행사변형 · 바깥 법선 nrm 쪽으로 감김) → 배열에 넣기 */
+  function quadInto(Q, a, b, d, nrm, uv) {
+    var c = [b[0] + d[0] - a[0], b[1] + d[1] - a[1], b[2] + d[2] - a[2]], P = [a, b, c, d], base = Q.pos.length / 3;
+    P.forEach(function (p, i) { Q.pos.push(p[0] - 16, p[2], 6 - p[1]); if (Q.uv) Q.uv.push(uv ? uv(p)[0] : 0, uv ? uv(p)[1] : 0); });
+    var e1 = new T.Vector3(b[0] - a[0], b[2] - a[2], -(b[1] - a[1])), e2 = new T.Vector3(d[0] - a[0], d[2] - a[2], -(d[1] - a[1])), cr = new T.Vector3().crossVectors(e1, e2);
+    var flip = cr.dot(new T.Vector3(nrm[0], nrm[2], -nrm[1])) < 0;
+    if (flip) Q.idx.push(base, base + 3, base + 2, base, base + 2, base + 1); else Q.idx.push(base, base + 1, base + 2, base, base + 2, base + 3);
+  }
+  function quadMesh(Q, mat, uv1c) {
+    var g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(Q.pos, 3));
+    if (Q.uv) g.setAttribute('uv', new T.Float32BufferAttribute(Q.uv, 2));
+    if (uv1c) { var u1 = []; for (var i = 0; i < Q.pos.length / 3; i++) u1.push(uv1c[0], uv1c[1]); g.setAttribute('uv1', new T.Float32BufferAttribute(u1, 2)); }
+    if (mat.vertexColors) { var cc = []; for (var j = 0; j < Q.pos.length / 3; j++) cc.push(1, 1, 1); g.setAttribute('color', new T.Float32BufferAttribute(cc, 3)); }
+    g.setIndex(Q.idx); g.computeVertexNormals(); g.computeBoundingSphere(); return new T.Mesh(g, mat);
+  }
+  /* 세로 벽(구멍 있음) · ax = 'x'(x = c 인 벽 · s = z) 또는 'z'(z = c 인 벽 · s = x) · nrm = 바깥 법선(도면 [nx, nz, ny]) · holes = [{ s0, s1, h }] · 구멍은 안쪽으로 dep 들어간 문틀(옆 · 위)과 함께 */
+  function wallQuads(Q, J, ax, c, s0, s1, y0, y1, nrm, holes, dep) {
+    function pt(s, y, o) { var cc = c + (o || 0) * (ax === 'x' ? -nrm[0] : -nrm[1]); return ax === 'x' ? [cc, s, y] : [s, cc, y]; }
+    var hs = (holes || []).slice().sort(function (a, b) { return a.s0 - b.s0; }), s = s0;
+    hs.forEach(function (h) {
+      if (h.s0 > s + 1e-6) quadInto(Q, pt(s, y0), pt(h.s0, y0), pt(s, y1), nrm);
+      quadInto(Q, pt(h.s0, h.h), pt(h.s1, h.h), pt(h.s0, y1), nrm);
+      if (J) {   /* 문틀 · 옆 두 면(구멍 안쪽을 봄) + 위 한 면(아래를 봄) */
+        var ns = ax === 'x' ? [0, 1, 0] : [1, 0, 0];
+        quadInto(J, pt(h.s0, y0, 0), pt(h.s0, y0, dep), pt(h.s0, h.h, 0), ns);
+        quadInto(J, pt(h.s1, y0, 0), pt(h.s1, y0, dep), pt(h.s1, h.h, 0), [-ns[0], -ns[1], 0]);
+        quadInto(J, pt(h.s0, h.h, 0), pt(h.s1, h.h, 0), pt(h.s0, h.h, dep), [0, 0, -1]);
+      }
+      s = h.s1;
+    });
+    if (s1 > s + 1e-6) quadInto(Q, pt(s, y0), pt(s1, y0), pt(s, y1), nrm);
+  }
+  var LAMC = {};
+  function lam(c) { return LAMC[c] || (LAMC[c] = new T.MeshLambertMaterial({ color: c })); }   /* 같은 색 = 같은 재질(아래 mergeStatic 이 한 번에 그린다) · 점점이 비우는 유리방 · 가벽은 따로 만든 재질 */
+  /* 덧붙인 작은 상자 · 판을 재질마다 한 메시로 합친다(그리기 호출 절약 · 유리방 · 빈 공간에 상자가 80개 남짓) · 재질이 배열인 것(글자 표지 · 카운터)은 그대로 */
+  function mergeStatic(g) {
+    var buckets = new Map(), n0 = g.children.length;
+    g.children.slice().forEach(function (o) {
+      if (!o.isMesh || Array.isArray(o.material) || o.children.length) return;
+      var k = o.material.uuid + '|' + Object.keys(o.geometry.attributes).sort().join(',') + '|' + o.renderOrder;
+      if (!buckets.has(k)) buckets.set(k, []); buckets.get(k).push(o);
+    });
+    buckets.forEach(function (L) {
+      if (L.length < 2) return;
+      var keys = Object.keys(L[0].geometry.attributes), A = {}, ind = [], base = 0;
+      keys.forEach(function (k) { A[k] = []; });
+      L.forEach(function (o) {
+        o.updateMatrix(); var geo = o.geometry.clone(); geo.applyMatrix4(o.matrix);
+        keys.forEach(function (k) { var a = geo.attributes[k]; for (var i = 0; i < a.count; i++) for (var j = 0; j < a.itemSize; j++) A[k].push(j === 0 ? a.getX(i) : j === 1 ? a.getY(i) : j === 2 ? a.getZ(i) : a.getW(i)); });
+        var nv = geo.attributes.position.count;
+        if (geo.index) for (var q = 0; q < geo.index.count; q++) ind.push(geo.index.getX(q) + base); else for (var r = 0; r < nv; r++) ind.push(r + base);
+        base += nv; g.remove(o); o.geometry.dispose(); geo.dispose();
+      });
+      var mg = new T.BufferGeometry(); keys.forEach(function (k) { mg.setAttribute(k, new T.Float32BufferAttribute(A[k], L[0].geometry.attributes[k].itemSize)); });
+      mg.setIndex(ind); mg.computeBoundingSphere(); mg.computeBoundingBox();
+      var mm = new T.Mesh(mg, L[0].material); mm.name = (L[0].name || 'merged') + '_m'; mm.renderOrder = L[0].renderOrder; g.add(mm);
+    });
+    return n0 - g.children.length;
+  }
+  function signTex(txt, w, h, opt) {
+    opt = opt || {}; var cv = document.createElement('canvas'), k = 256 / h; cv.width = Math.round(w * k); cv.height = 256; var g = cv.getContext('2d');
+    g.fillStyle = opt.bg || '#FFFFFF'; g.fillRect(0, 0, cv.width, cv.height);
+    if (opt.bar) { g.fillStyle = opt.bar; g.fillRect(0, 0, Math.round(cv.width * 0.035), cv.height); }
+    g.fillStyle = opt.ink || '#191F28'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '700 ' + Math.round(cv.height * 0.5) + 'px "Pretendard Variable", Pretendard, sans-serif';
+    var mw = cv.width * 0.86, fs = Math.round(cv.height * 0.5); while (g.measureText(txt).width > mw && fs > 20) { fs -= 4; g.font = '700 ' + fs + 'px "Pretendard Variable", Pretendard, sans-serif'; }
+    g.fillText(txt, cv.width / 2 + (opt.bar ? cv.width * 0.018 : 0), cv.height * 0.54);
+    var t = new T.CanvasTexture(cv); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; return t;
+  }
+  function boxAt(w, h, d, mat, x, z, y) { var m = new T.Mesh(new T.BoxGeometry(w, h, d), mat); m.position.set(x - 16, y, 6 - z); return m; }
+  /* 표지(돌출 · 두 면에 글자) · 벽에서 x 쪽으로 튀어나온 판 · 남 · 북에서 읽힌다 */
+  function bladeSign(txt, x0, z, y, len) {
+    var tx = signTex(txt, len, 0.22, { bar: '#FF7E31' }), side = lam(0xD9DDE2), face = new T.MeshBasicMaterial({ map: tx });
+    return boxAt(len, 0.22, 0.035, [side, side, side, side, face, face], x0 + len / 2, z, y);
+  }
+
+  function remodel() {
+    var t0 = performance.now(), R = { eh: 0, floor: 0, wing: 0 }, sideN = S.lobby.getObjectByName('side_n'), sideE = S.lobby.getObjectByName('side_e') || S.lobby;
+    S.lobby.updateMatrixWorld(true);
+    /* ── ① 동쪽 빈 공간 ── 자르기 전에 대리석 결 · 빛을 옆 벽에서 읽어 둔다 */
+    var marble = S.lobby.getObjectByName('side_n_wall_1'), floor = S.lobby.getObjectByName('floor'), led = S.lobby.getObjectByName('side_n_led');
+    if (sideN && marble && floor) {
+      var uA = attrAt(marble, 'uv', 20.5, EH.z0, 1.0), uB = attrAt(marble, 'uv', 21.5, EH.z0, 1.0), uC = attrAt(marble, 'uv', 20.5, EH.z0, 2.0), l1 = attrAt(marble, 'uv1', 30.4, EH.z0, 2.2), f1 = attrAt(floor, 'uv1', 30.4, 9.9, 0);
+      var dux = uA && uB ? [uB[0] - uA[0], uB[1] - uA[1]] : [0.38, 0], duy = uA && uC ? [uC[0] - uA[0], uC[1] - uA[1]] : [0, 0.77];
+      sideN.traverse(function (o) { if (o.isMesh) R.eh += regionCut(o, { x0: EH.x0, x1: EH.x1 + 0.2, z0: EH.z0 - 0.08, z1: EH.z1 }, null); });
+      R.uv1 = [f1, l1];
+      var eh = new T.Group(); eh.name = 'eastHall'; eh.userData = { eastHall: true };
+      /* 바닥 · 모형 바닥은 코어 밑에 없다(바깥 포장만) · 로비 바닥과 같은 재질 · 결(uv)은 로비 바닥에서 이어 · 빛은 로비 바닥 한 점(문 E 앞) */
+      var fA = attrAt(floor, 'uv', 30.4, 9.9, 0), fB = attrAt(floor, 'uv', 31.4, 9.9, 0), fC = attrAt(floor, 'uv', 30.4, 10.9, 0);
+      if (fA && fB && fC) {
+        var FQ = { pos: [], uv: [], idx: [] };
+        quadInto(FQ, [EH.x0, EH.z0, 0], [EH.x1, EH.z0, 0], [EH.x0, EH.z1, 0], [0, 0, 1], function (p) { var dx = p[0] - 30.4, dz = p[1] - 9.9; return [fA[0] + (fB[0] - fA[0]) * dx + (fC[0] - fA[0]) * dz, fA[1] + (fB[1] - fA[1]) * dx + (fC[1] - fA[1]) * dz]; });
+        var fm = quadMesh(FQ, floor.material, f1 || [0, 0]); fm.name = 'eh_floor'; S.lobby.add(fm); R.floor = 1;
+      }
+      /* 서쪽 벽(대리석 · 동쪽을 봄) · 계단 문 · 엘리베이터 문 구멍 */
+      var Wm = { pos: [], uv: [], idx: [] }, Jm = { pos: [], idx: [] }, dep = 0.1, DOOR = { st: { s0: 14.5, s1: 15.5, h: 2.1 }, ev: { s0: 16.9, s1: 18.1, h: 2.3 } };
+      wallQuads(Wm, Jm, 'x', EH.x0, EH.z0, EH.z1, 0, EH.top, [1, 0, 0], [DOOR.st, DOOR.ev], dep);
+      var Wuv = function (p) { var s = p[1] - EH.z0, y = p[2] - 1.0; return [(uA ? uA[0] : 0) + dux[0] * s + duy[0] * y, (uA ? uA[1] : 0) + dux[1] * s + duy[1] * y]; };
+      Wm.uv = []; for (var q = 0; q < Wm.pos.length / 3; q++) { var px = Wm.pos[q * 3] + 16, pz = 6 - Wm.pos[q * 3 + 2], py = Wm.pos[q * 3 + 1]; Wm.uv.push.apply(Wm.uv, Wuv([px, pz, py])); }
+      var wm = quadMesh(Wm, marble.material, l1 || [0, 0]); wm.name = 'eh_wall'; eh.add(wm);
+      var band = { pos: [], idx: [] }; quadInto(band, [EH.x0, EH.z0, EH.top], [EH.x0, EH.z1, EH.top], [EH.x0, EH.z0, EH.H], [1, 0, 0]);
+      var bandM = quadMesh(band, lam(0xE7E4DF)); bandM.name = 'eh_band'; eh.add(bandM);
+      var jm = quadMesh(Jm, lam(0x8B9096)); jm.name = 'eh_jamb'; eh.add(jm);
+      /* 벽 밑 · 위 간접등 띠(코어 앞면과 같은 재질 · 벽에서 3cm 튀어나온 상자) */
+      if (led) { eh.add(boxAt(0.03, 0.02, EH.z1 - EH.z0, led.material, EH.x0 + 0.015, (EH.z0 + EH.z1) / 2, 0.02)); eh.add(boxAt(0.03, 0.02, EH.z1 - EH.z0, led.material, EH.x0 + 0.015, (EH.z0 + EH.z1) / 2, 4.58)); }
+      /* 계단 문(짙은 회색 방화문 · 손잡이 막대) · 엘리베이터 문(은색 두 짝 · 가운데 줄 · 호출 버튼) · 구멍 안쪽 dep 에 선다 */
+      var dx = EH.x0 - dep, sd = DOOR.st, ev = DOOR.ev;
+      var stD = new T.Mesh(new T.PlaneGeometry(sd.s1 - sd.s0, sd.h), lam(0x5B6168)); stD.rotation.y = Math.PI / 2; stD.position.set(dx - 16, sd.h / 2, 6 - (sd.s0 + sd.s1) / 2); eh.add(stD);
+      eh.add(boxAt(0.04, 0.04, 0.55, lam(0xC9CED4), dx + 0.03, (sd.s0 + sd.s1) / 2, 1.0));
+      var evD = new T.Mesh(new T.PlaneGeometry(ev.s1 - ev.s0, ev.h), lam(0xC4C9CF)); evD.rotation.y = Math.PI / 2; evD.position.set(dx - 16, ev.h / 2, 6 - (ev.s0 + ev.s1) / 2); eh.add(evD);
+      eh.add(boxAt(0.012, ev.h, 0.012, lam(0x6B7077), dx + 0.006, (ev.s0 + ev.s1) / 2, ev.h / 2));
+      eh.add(boxAt(0.03, 0.26, 0.1, lam(0x3A3F45), EH.x0 + 0.015, ev.s0 - 0.3, 1.15));
+      eh.add(bladeSign('계단', EH.x0 + 0.01, (sd.s0 + sd.s1) / 2, 2.55, 0.62));
+      eh.add(bladeSign('엘리베이터', EH.x0 + 0.01, (ev.s0 + ev.s1) / 2, 2.62, 0.9));
+      /* 북쪽 벽(밝은 벽 · 남쪽을 봄) · 고객 대기석 쪽 양개 유리문(불투명 서리 유리 · 틀 · 손잡이) */
+      var Nm = { pos: [], idx: [] }, Nj = { pos: [], idx: [] }, nd = { s0: 29.6, s1: 31.0, h: 2.4 };
+      wallQuads(Nm, Nj, 'z', EH.z1, EH.x0, EH.x1, 0, EH.H, [0, -1, 0], [nd], dep);
+      var nm = quadMesh(Nm, lam(0xE7E4DF)); nm.name = 'eh_north'; eh.add(nm);
+      var nj = quadMesh(Nj, lam(0x8B9096)); eh.add(nj);
+      var nz = EH.z1 + dep, ndw = nd.s1 - nd.s0, frost = lam(0xDCE5E8), frame = lam(0x3A3F45);
+      var nD = new T.Mesh(new T.PlaneGeometry(ndw, nd.h), frost); nD.position.set((nd.s0 + nd.s1) / 2 - 16, nd.h / 2, 6 - nz); eh.add(nD);
+      eh.add(boxAt(0.03, nd.h, 0.03, frame, (nd.s0 + nd.s1) / 2, nz - 0.015, nd.h / 2));
+      [-1, 1].forEach(function (sg) { eh.add(boxAt(0.03, 0.42, 0.04, frame, (nd.s0 + nd.s1) / 2 + sg * 0.12, nz - 0.03, 1.05)); });
+      eh.add(boxAt(ndw, 0.05, 0.03, frame, (nd.s0 + nd.s1) / 2, nz - 0.015, nd.h - 0.025));
+      /* 동쪽 유리벽(로비 유리벽이 이어짐) · 유리 + 세로 멀리언 */
+      var ge = S.lobby.getObjectByName('side_e_glass'), mu = S.lobby.getObjectByName('side_e_mull');
+      if (ge) {
+        var gq = { pos: [], idx: [] }; quadInto(gq, [EH.x1, EH.z0, 0], [EH.x1, EH.z1, 0], [EH.x1, EH.z0, EH.H], [-1, 0, 0]);
+        var ge2 = new T.Group(); ge2.name = 'eastHallGlass';
+        var gm = quadMesh(gq, ge.material); gm.name = 'eh_glass'; ge2.add(gm);
+        [13.45, 15.43, 17.42, 19.32].forEach(function (z) { ge2.add(boxAt(0.08, EH.H, 0.08, mu ? mu.material : frame, EH.x1, z, EH.H / 2)); });
+        mergeStatic(ge2); sideE.add(ge2);
+      }
+      R.merged = mergeStatic(eh); sideN.add(eh);
+      /* 입구 차단봉(로비에서 들어가지 않게 · 늘 보임) */
+      var bar = new T.Group(); bar.name = 'ehBarrier'; var pm = lam(0x3A3F45), bm = lam(0x2B3036), PX = [28.55, 29.5, 30.45, 31.4, 32.25], BZ = 11.8;
+      PX.forEach(function (x, i) {
+        var p = new T.Mesh(new T.CylinderGeometry(0.028, 0.028, 0.9, 10), pm); p.position.set(x - 16, 0.47, 6 - BZ); bar.add(p);
+        var b0 = new T.Mesh(new T.CylinderGeometry(0.16, 0.16, 0.025, 20), pm); b0.position.set(x - 16, 0.0125, 6 - BZ); bar.add(b0);
+        var tp = new T.Mesh(new T.SphereGeometry(0.045, 12, 8), pm); tp.position.set(x - 16, 0.94, 6 - BZ); bar.add(tp);
+        if (i) bar.add(boxAt(x - PX[i - 1] - 0.06, 0.05, 0.008, bm, (x + PX[i - 1]) / 2, BZ, 0.86));
+      });
+      mergeStatic(bar); S.lobby.add(bar);
+      /* 코어를 숨겼을 때 남는 낮은 덩어리(tour-scene coreStub)도 빈 공간을 비운다 */
+      var cs = S.lobby.getObjectByName('coreStub');
+      if (cs && cs.children[1]) {
+        var old = cs.children[1], cz = (D.LAYOUT && D.LAYOUT.CORE_Z1) || 20.2, mats = old.material, x0 = 19.8;
+        cs.remove(old); old.geometry.dispose();
+        cs.add(boxAt(EH.x0 - x0, 0.9, cz - EH.z0, mats, (x0 + EH.x0) / 2, (EH.z0 + cz) / 2, 0.45));
+        cs.add(boxAt(EH.x1 - EH.x0, 0.9, cz - EH.z1, mats, (EH.x0 + EH.x1) / 2, (EH.z1 + cz) / 2, 0.45));
+      }
+    }
+    /* ── ③ 미팅룸 유리벽 · 고객센터 ── 미팅룸 2 남쪽 막힌 벽 · 미팅룸 3 탁자 · 의자를 지운다 */
+    var wb = S.lobby.getObjectByName('wing_body');
+    if (wb) R.wing = regionCut(wb, null, null, function (tri) {
+      var all = function (f) { return tri.every(function (V) { return f(V.p); }); };
+      return all(function (p) { return p[1] > 12.14 && p[1] < 12.26 && p[0] < 3.62; }) || all(function (p) { return p[1] > 23.3; });
+    });
+    var frostM = new T.MeshBasicMaterial({ color: 0xF2F4F5, transparent: true, opacity: 0.8, depthWrite: false, side: T.DoubleSide, forceSinglePass: true });
+    var clearM = new T.MeshBasicMaterial({ color: 0xDCE6EA, transparent: true, opacity: 0.1, depthWrite: false, side: T.DoubleSide, forceSinglePass: true });
+    var LG = {}, lg = function (c) { return LG[c] || (LG[c] = new T.MeshLambertMaterial({ color: c })); }, fr = lg(0x9AA0A6), gw = new T.Group(); gw.name = 'glassRooms';
+    function glassWall(ax, c, s0, s1, doors, noEnd) {   /* noEnd = [앞 끝 · 뒤 끝] 세로 틀 빼기(벽 끝 · 다른 유리벽 모서리와 겹치지 않게) */
+      function P3(s, y) { return ax === 'x' ? [c, s, y] : [s, c, y]; }
+      [[0, GL.cut, frostM], [GL.cut, GL.h, clearM]].forEach(function (b) {
+        var Q = { pos: [], idx: [] }; quadInto(Q, P3(s0, b[0]), P3(s1, b[0]), P3(s0, b[1]), ax === 'x' ? [1, 0, 0] : [0, -1, 0]);
+        var m = quadMesh(Q, b[2]); m.renderOrder = 2; m.name = 'glass_room'; gw.add(m);
+      });
+      function bar(sa, sb, y, hh) { var L = Math.abs(sb - sa), mid = (sa + sb) / 2; gw.add(ax === 'x' ? boxAt(0.04, hh, L, fr, c, mid, y) : boxAt(L, hh, 0.04, fr, mid, c, y)); }
+      var ne = noEnd || [false, false], b0 = ne[0] ? s0 + 0.002 : s0 + 0.0225, b1 = ne[1] ? s1 - 0.002 : s1 - 0.0225;   /* 가로 띠 끝 = 세로 틀 속(틀이 있으면) */
+      bar(b0, b1, GL.cut, 0.035); bar(b0, b1, GL.h - 0.02, 0.04); bar(b0, b1, 0.03, 0.06);
+      var cuts = []; if (!ne[0]) cuts.push(s0); if (!ne[1]) cuts.push(s1); (doors || []).forEach(function (d) { cuts.push(d[0], d[1]); });
+      for (var s = s0 + 1.4; s < s1 - 0.5; s += 1.4) if (!(doors || []).some(function (d) { return s > d[0] - 0.3 && s < d[1] + 0.3; })) cuts.push(s);
+      cuts.forEach(function (s) { gw.add(ax === 'x' ? boxAt(0.045, GL.h, 0.045, fr, c, s, GL.h / 2) : boxAt(0.045, GL.h, 0.045, fr, s, c, GL.h / 2)); });
+      (doors || []).forEach(function (d) {
+        bar(d[0] + 0.0225, d[1] - 0.0225, 2.2, 0.045);
+        var hs = d[2] ? [(d[0] + d[1]) / 2 - 0.1, (d[0] + d[1]) / 2 + 0.1] : [d[1] - 0.12];
+        if (d[2]) { gw.add(ax === 'x' ? boxAt(0.03, 2.2, 0.03, fr, c, (d[0] + d[1]) / 2, 1.1) : boxAt(0.03, 2.2, 0.03, fr, (d[0] + d[1]) / 2, c, 1.1)); }
+        hs.forEach(function (s) { gw.add(ax === 'x' ? boxAt(0.09, 0.5, 0.025, lg(0x4E5359), c, s, 1.05) : boxAt(0.025, 0.5, 0.09, lg(0x4E5359), s, c, 1.05)); });
+      });
+    }
+    glassWall('z', 12.2, 0.08, 3.6, [], [true, false]);                    /* 미팅룸 2 남쪽(로비 쪽) · 서쪽 끝 = 바깥 유리벽 틀 */
+    glassWall('x', 3.6, 12.2, 17.76, [[12.55, 13.45]], [true, true]);       /* 미팅룸 2 동쪽(복도) · 문 · 앞 끝 = 위 모서리 틀 · 뒤 끝 = 칸막이 벽 */
+    glassWall('x', 3.6, 17.84, 23.16, [[18.2, 19.1]], [true, true]);        /* 미팅룸 1 동쪽 · 문 */
+    glassWall('z', 23.2, 3.6, 6.82, [[4.65, 5.85, 2]], [true, true]);       /* 고객센터(미팅룸 3 자리) 앞 · 양개 유리문 */
+    /* 고객센터 표지(유리 위 투명 칸 · 복도 쪽) · 안내 카운터 */
+    gw.add(boxAt(1.1, 0.28, 0.02, [lg(0xD9DDE2), lg(0xD9DDE2), lg(0xD9DDE2), lg(0xD9DDE2), new T.MeshBasicMaterial({ map: signTex('고객센터', 1.1, 0.28, { bar: '#FF7E31' }) }), lg(0xD9DDE2)], 5.25, 23.2 - 0.04, 2.42));
+    gw.add(boxAt(1.6, 0.95, 0.55, [lg(0xD0D4D9), lg(0xD0D4D9), lg(0xFAFAFA), lg(0xD0D4D9), lg(0xE5E8EB), lg(0xD0D4D9)], 5.55, 25.15, 0.475));
+    R.merged = mergeStatic(gw); S.lobby.add(gw);
+    /* ── ② 가벽 + 전체 화면 ── */
+    var wx0 = WW.x1 - WW.w, side = new T.MeshLambertMaterial({ color: 0x2B3036 }), back = new T.MeshLambertMaterial({ color: 0xEDEBE7 }), hide = new T.MeshBasicMaterial({ visible: false });
+    var wb2 = new T.Mesh(new T.BoxGeometry(WW.w, WW.h, WW.t), [side, side, side, side, hide, back]); wb2.position.set((wx0 + WW.x1) / 2 - 16, WW.h / 2, 6 - WW.z); wb2.name = 'partition';
+    var scr = new T.Mesh(new T.PlaneGeometry(WW.w, WW.h), new T.MeshBasicMaterial({ color: 0x14171C, toneMapped: false })); scr.position.set((wx0 + WW.x1) / 2 - 16, WW.h / 2, 6 - (WW.z - WW.t / 2)); scr.name = 'partitionScreen';
+    S.lobby.add(wb2); S.lobby.add(scr);
+    G.wallScr = scr;
+    patchFade([side, back, scr.material], WFADE, 'w');
+    var gm2 = []; gw.traverse(function (o) { if (o.isMesh) [].concat(o.material).forEach(function (m) { if (gm2.indexOf(m) < 0) gm2.push(m); }); });
+    patchFade(gm2, GFADE, 'g');
+    G.remodel = { eh: R.eh, floor: R.floor, wing: R.wing, uv1: R.uv1, ms: Math.round(performance.now() - t0) };
+  }
+  /* 가벽 · 유리벽이 시선을 가리면 점점이 비운다(기둥과 같은 디더링) · 카메라 → 머리 선분이 벽 선분을 지나고 그 자리 높이가 벽보다 낮을 때 · 카메라가 미팅룸 안이면 유리벽 전부 */
+  var WFADE = { value: 1 }, GFADE = { value: 1 };
+  var GSEG = [[0.08, 12.2, 3.6, 12.2], [3.6, 12.2, 3.6, 23.16], [3.6, 23.2, 6.83, 23.2]];
+  function patchFade(mats, U, key) {
+    mats.forEach(function (m) {
+      if (!m || m.visible === false) return;
+      m.onBeforeCompile = function (sh) {
+        sh.uniforms.uLabA = U;
+        sh.fragmentShader = 'uniform float uLabA;\n#define LB2(a) fract(dot(floor(a), vec2(.5, floor(a).y * .75)))\n#define LB4(a) (LB2(.5 * (a)) * .25 + LB2(a))\n' +
+          sh.fragmentShader.replace('void main() {', 'void main() {\n  if (uLabA < 0.995 && uLabA < LB4(gl_FragCoord.xy) + 0.001) discard;');
+      };
+      m.customProgramCacheKey = function () { return 'labFade' + key + (m.map ? 'm' : '') + (m.transparent ? 't' : ''); };
+    });
+  }
+  function segHit(ax, az, bx, bz, cx, cz, dx, dz) {   /* 선분 a→b 와 c→d 가 만나는 a→b 위 비율 · 없으면 -1 */
+    var rx = bx - ax, rz = bz - az, sx = dx - cx, sz = dz - cz, den = rx * sz - rz * sx; if (Math.abs(den) < 1e-9) return -1;
+    var t = ((cx - ax) * sz - (cz - az) * sx) / den, u = ((cx - ax) * rz - (cz - az) * rx) / den;
+    return t > 0 && t < 1.05 && u > -0.06 && u < 1.06 ? t : -1;
+  }
+  function fadeTo(U, to, dt) { var f0 = U.value; U.value += (to - U.value) * (dt ? 1 - Math.exp(-dt * 9) : 1); if (Math.abs(U.value - to) < 0.01) U.value = to; return U.value !== f0; }
+  function stepWallFade(dt) {
+    var cx = G.camPos.x + 16, cz = 6 - G.camPos.z, cy = G.camPos.y, hx = G.pos.x + 16, hz = 6 - G.pos.z;
+    function under(t, h) { return t >= 0 && cy + (1.25 - cy) * Math.min(1, t) < h + 0.4; }
+    var tw = segHit(cx, cz, hx, hz, WW.x1 - WW.w - 0.3, WW.z, WW.x1 + 0.3, WW.z), gHit = cx < 3.6 && cx > -0.5 && cz > 12.2 && cz < 23.2;
+    GSEG.forEach(function (g) { if (under(segHit(cx, cz, hx, hz, g[0], g[1], g[2], g[3]), GL.h)) gHit = true; });
+    var a = fadeTo(WFADE, under(tw, WW.h) ? 0.16 : 1, dt), b = fadeTo(GFADE, gHit ? 0.16 : 1, dt);
+    return a || b;
+  }
+
   /* ═══════════ 받기 ═══════════ */
   function load() {
     $('load').hidden = false;
     S.load(BASE + 'lobby.glb?v=' + LABVER, function (k) { $('load').textContent = '모형 불러오는 중 ' + Math.round(k * 100) + '%'; var bt = $('blackT'); if (!bt.classList.contains('on')) bt.textContent = '불러오는 중 ' + Math.round(k * 100) + '%'; }, function () {
-      fixCoplanar(S.lobby); fixLightmaps(S.lobby); buildGrid(S.lobby); patchPillars(S.lobby); buildDoor();
+      fixCoplanar(S.lobby); fixLightmaps(S.lobby); remodel(); buildGrid(S.lobby); patchPillars(S.lobby); buildDoor();
       var st = STOPS[0], f = nearestFree(st.x, st.z); flood(f[0], f[1]);
       STOPS.forEach(function (s) { var q = nearestFree(s.x, s.z); if (q) { s.x = q[0]; s.z = q[1]; } });
       buildGuides(); hideCheckin(); buildTypingTv(); buildTvs();
+      if (G.wallScr) { var wv = tvAdd(G.wallScr, 64, Math.round(64 * WW.h / WW.w), 'wall'); wv.sphere.radius = Math.hypot(WW.w, WW.h) / 2 + 0.1; G.tvN = TVS.length; }   /* v5.45 가벽 전체 화면 · 같은 픽셀 광고 루프(행사명 → ME to WE → 물결) · 화면 비율대로 64 × 96 */
       STOPS.forEach(function (s) { if (!free(s.x, s.z)) { var q = nearestFree(s.x, s.z); if (q) { s.x = q[0]; s.z = q[1]; } } });   /* v5.38 멈춤 자리가 스태프 · TV 원 안이면 밖으로 */
       G.ceil = S.lobby.getObjectByName('ceiling');
       G.loaded = true; $('load').hidden = true;
@@ -840,7 +1142,8 @@
       var f0 = G.fade[i]; G.fade[i] += (G.fadeTo[i] - G.fade[i]) * (1 - Math.exp(-dt * 9)); if (Math.abs(G.fade[i] - G.fadeTo[i]) < 0.01) G.fade[i] = G.fadeTo[i];
       if (G.fade[i] !== f0) any = true;
     }
-    return moved || any;
+    var wf = stepWallFade(dt);   /* v5.45 가벽도 시선을 가리면 점점이 비운다 */
+    return moved || any || wf;
   }
 
   /* ═══════════ 핀(구역 간판 · 길잡이 이름표) ═══════════ */
@@ -858,6 +1161,10 @@
       if (l.id === 'lm_check') return;   /* 체크인 존은 시험판에서 뺌 */
       var d = document.createElement('div'); d.className = 'pin lm'; d.innerHTML = '<span class="s">' + esc(l.label) + '</span>';
       box.appendChild(d); pinEls.push({ el: d, at: S.anchors[l.id], max: 20, lm: true });
+    });
+    [{ label: '고객센터', at: P(5.25, 23.2, 3.0) }].forEach(function (l) {   /* v5.45 미팅룸 3 자리 = 고객센터(사용자 261004) */
+      var d = document.createElement('div'); d.className = 'pin lm'; d.innerHTML = '<span class="s">' + esc(l.label) + '</span>';
+      box.appendChild(d); pinEls.push({ el: d, at: l.at, max: 20, lm: true });
     });
   }
   var _p = new T.Vector3();
@@ -1294,7 +1601,7 @@
   function mmX(x) { return ((x - MM.x0) * MM.k).toFixed(1); }
   function mmY(z) { return ((MM.z1 - z) * MM.k + (MM.S - MM.H) / 2).toFixed(1); }
   function buildMini() {
-    var B = D.BLD, S2 = MM.S, o = '<svg viewBox="0 0 ' + S2.toFixed(1) + ' ' + S2.toFixed(1) + '" aria-hidden="true"><g id="mmRot">';
+    var B = D.BLD, S2 = MM.S, o = '<svg viewBox="0 0 ' + S2.toFixed(1) + ' ' + S2.toFixed(1) + '" aria-hidden="true"><g id="t3-mmRot">';
     o += '<polygon points="' + B.outline.map(function (q) { return mmX(q[0]) + ',' + mmY(q[1]); }).join(' ') + '" fill="#FFFFFF" stroke="#B0B8C1" stroke-width="1"/>';
     B.cores.forEach(function (c) { o += '<rect x="' + mmX(c[0]) + '" y="' + mmY(B.coreN) + '" width="' + ((c[1] - c[0]) * MM.k).toFixed(1) + '" height="' + ((B.coreN - B.lobbyN) * MM.k).toFixed(1) + '" fill="#E5E8EB"/>'; });
     if (B.room3) o += '<polygon points="' + B.room3.pts.map(function (q) { return mmX(q[0]) + ',' + mmY(q[1]); }).join(' ') + '" fill="#F2F4F6" stroke="#B0B8C1" stroke-width="0.8"/>';
@@ -1305,7 +1612,8 @@
       z.rows.forEach(function (r) { var n = r.pages.length; o += '<line x1="' + mmX(r.a[0]) + '" y1="' + mmY(r.a[1]) + '" x2="' + mmX(r.a[0] + r.r[0] * n) + '" y2="' + mmY(r.a[1] + r.r[1] * n) + '" stroke="#FF7F32" stroke-width="2"/>'; });
     });
     o += '<circle cx="' + mmX(B.revolve) + '" cy="' + mmY(0) + '" r="3" fill="#4E5968"/><circle cx="' + mmX(32.57) + '" cy="' + mmY(8.4) + '" r="3" fill="#4E5968"/><rect x="' + mmX(17.0) + '" y="' + mmY(11.7) + '" width="' + (2.8 * MM.k).toFixed(1) + '" height="3" fill="#4E5968"/>';
-    o += '<g id="mmMe"><path d="M0,-8 L5,3 L0,1 L-5,3 Z" fill="#191F28"/><circle r="4.2" fill="#FF7F32" stroke="#FFFFFF" stroke-width="1.5"/></g></g></svg>';
+    o += '<rect x="' + mmX(WW.x1 - WW.w) + '" y="' + mmY(WW.z + 0.15) + '" width="' + (WW.w * MM.k).toFixed(1) + '" height="2" fill="#191F28"/>';   /* v5.45 가벽 */
+    o += '<g id="t3-mmMe"><path d="M0,-8 L5,3 L0,1 L-5,3 Z" fill="#191F28"/><circle r="4.2" fill="#FF7F32" stroke="#FFFFFF" stroke-width="1.5"/></g></g></svg>';
     $('mini').innerHTML = o; G.mmAz = null;
   }
   function mini() {
@@ -1891,7 +2199,7 @@
     requestAnimationFrame(loop);
   }
   /* 시험 · 녹화용 손잡이(앱에는 없음) */
-  G.api = { scene: function () { return S; }, shotCamKeep: function (x, y, z, lx, ly, lz, face) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); if (face) { guides.forEach(function (g) { g.m.rotation.y = Math.atan2(camera.position.x - g.m.position.x, camera.position.z - g.m.position.z); }); bot.rotation.y = Math.atan2(camera.position.x - bot.position.x, camera.position.z - bot.position.z); } S.frame(camera, 'lobby'); if (G.ceil) G.ceil.visible = false; renderer.render(scene, camera); G.hold = true; }, shotCam: function (x, y, z, lx, ly, lz) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); var bv = bot.visible; bot.visible = false; S.frame(camera, 'lobby'); renderer.render(scene, camera); bot.visible = bv; G.hold = true; }, guides: function () { return guides.map(function (g) { return [g.zone, g.at, +g.h.toFixed(2)]; }); }, enter: function (zid, pg) { enterPanel(D.Z(zid), pg || null); }, pose: function (x, z, yaw, h) { G.pos.copy(toThree(x, z)); G.mode = 'free'; G.path = null; G.yaw = yaw; G.h = h == null ? yaw + Math.PI : h; G.yo = 0; G.need = true; }, goStop: goStop, openSheet: function (zid, i) { openSheet(D.Z(zid), i || 0); }, closeSheet: closeSheet, setPage: function (k) { setPage(k); }, tap: tap, walkTo: walkTo, plan: function () { return planOf(G.pos); }, cam: function () { return planOf(camera.position).concat([camera.position.y]); }, toCafe: toCafe, back: backTo1F, free: free, hw: function (x, z) { var c = gi(x, z); return c < 0 ? -1 : hw[c] * 0.05; }, move: moveStep, round: function () { return ROUND.slice(); }, tvs: function () { return TVS.map(function (v) { return { kind: v.kind, w: v.w, h: v.h, at: planOf(v.c).map(function (q) { return +q.toFixed(2); }), on: v.on, n: v.n }; }); } };
+  G.api = { scene: function () { return S; }, shotCamKeep: function (x, y, z, lx, ly, lz, face) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); if (face) { guides.forEach(function (g) { g.m.rotation.y = Math.atan2(camera.position.x - g.m.position.x, camera.position.z - g.m.position.z); }); bot.rotation.y = Math.atan2(camera.position.x - bot.position.x, camera.position.z - bot.position.z); } S.frame(camera, 'lobby'); if (G.ceil) G.ceil.visible = false; renderer.render(scene, camera); G.hold = true; }, shotCam: function (x, y, z, lx, ly, lz) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); var bv = bot.visible; bot.visible = false; S.frame(camera, 'lobby'); renderer.render(scene, camera); bot.visible = bv; G.hold = true; }, guides: function () { return guides.map(function (g) { return [g.zone, g.at, +g.h.toFixed(2)]; }); }, enter: function (zid, pg) { enterPanel(D.Z(zid), pg || null); }, pose: function (x, z, yaw, h) { G.pos.copy(toThree(x, z)); G.mode = 'free'; G.path = null; G.yaw = yaw; G.h = h == null ? yaw + Math.PI : h; G.yo = 0; G.need = true; }, goStop: goStop, openSheet: function (zid, i) { openSheet(D.Z(zid), i || 0); }, closeSheet: closeSheet, setPage: function (k) { setPage(k); }, tap: tap, walkTo: walkTo, plan: function () { return planOf(G.pos); }, cam: function () { return planOf(camera.position).concat([camera.position.y]); }, toCafe: toCafe, back: backTo1F, free: free, hw: function (x, z) { var c = gi(x, z); return c < 0 ? -1 : hw[c] * 0.05; }, move: moveStep, attrAt: attrAt, round: function () { return ROUND.slice(); }, tvs: function () { return TVS.map(function (v) { return { kind: v.kind, w: v.w, h: v.h, at: planOf(v.c).map(function (q) { return +q.toFixed(2); }), on: v.on, n: v.n }; }); } };
 
   /* ═══════════ 앱 안 열기 · 닫기 · 뒤로(v5.37 정식 앱 이식 · 사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) ═══════════
    * window.AXTour = { open(o), close(), back(), isOpen() } · 옛 tour.js 와 같은 약속(앱 tourOpen · 뒤로 가기 popstate 가 그대로 부른다)
@@ -2027,5 +2335,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, ver: 'v5.44', v3: true };
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, ver: 'v5.45', v3: true };
 })();

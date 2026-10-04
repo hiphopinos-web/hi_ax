@@ -187,7 +187,7 @@
           });
           if (colsNode) root.attach(colsNode);
           /* 코어(엘리베이터 · 계단)를 숨겼을 때 남기는 낮은 단면 덩어리 · 모형 받침처럼 어둡게 */
-          coreStub = new T.Group(); var pa = LAY.PASSAGE, cz = LAY.CORE_Z1, cm = new T.MeshBasicMaterial({ color: 0x3A3E44 }), ct = new T.MeshBasicMaterial({ color: 0x2A2D31 });
+          coreStub = new T.Group(); coreStub.name = 'coreStub'; var pa = LAY.PASSAGE, cz = LAY.CORE_Z1, cm = new T.MeshBasicMaterial({ color: 0x3A3E44 }), ct = new T.MeshBasicMaterial({ color: 0x2A2D31 });
           [[6.83, pa.x0], [pa.x1, LW]].forEach(function (xx) {
             var w = xx[1] - xx[0], d = cz - LD, c = P((xx[0] + xx[1]) / 2, (LD + cz) / 2, 0.45);
             var m = new T.Mesh(new T.BoxGeometry(w, 0.9, d), [cm, cm, ct, cm, cm, cm]); m.position.copy(c); coreStub.add(m);
