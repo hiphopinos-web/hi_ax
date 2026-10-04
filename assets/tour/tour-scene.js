@@ -152,7 +152,7 @@
         var vis = { side_s: z > -0.3, side_e: x < LW + 0.3, side_w: !(x < -0.3 && z < LD + 1), side_n: !(z > LD + 0.2) };
         for (var k in sideGroups) sideGroups[k].visible = vis[k] !== false;
         lastVis = vis;   /* v5.50 진단 표시(숨긴 벽) */
-        if (coreStub) coreStub.visible = !vis.side_n;
+        if (coreStub) coreStub.visible = !vis.side_n && y >= 3.25;   /* v5.64.1 받침은 내려다보기 카메라(3.34m 이상)에서만 · 눈높이 카메라(3.18m 이하)가 북쪽 벽 너머로 가면 그 윗면이 화면을 덮는 회색 판이 됐다(운영 v5.64 캡처) */
         if (ceilingG) ceilingG.visible = y < CEIL - 0.05;
       }
       function nameUp(o, re) { while (o) { if (o.name && re.test(o.name)) return o.name; o = o.parent; } return null; }

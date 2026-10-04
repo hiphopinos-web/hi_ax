@@ -59,12 +59,12 @@ var App = {
     games: "exp", quiz: "exp", ideas: "exp", survey: "exp", ideas_mine: "ideas",
     game_tetris: "games", game_pang: "games", game_jump: "games", quiz_play: "quiz", oly_rank: "games", type_rank: "guide", floor1: "guide",   /* v4.83 퀴즈 두 종목의 뒤로가기 = AX 퀴즈 */
     /* 프로그램 · 신청 (2단계에서 재디자인) */
-    dap: "guide", ev_cchat: "guide", sess_d: "guide", sess_cf: "sess_d", sess_ok: "guide", zone_d: "guide",   /* v4.93 구역 상세 · 뒤로 = 프로그램(상시 운영) */
+    dap: "guide", ev_cchat: "guide", sess_d: "guide", sess_cf: "sess_d", sess_ok: "guide", zone_d: "guide", floor_d: "guide",   /* v4.93 구역 상세 · 뒤로 = 프로그램(상시 운영) */
     admin: "my", type_site: "admin", wall_type: "admin", type_award: "admin"
   },
   TITLES: {
     home: "AX Festival", guide: "프로그램", exp: "스탬프", my: "나의 참여",
-    passport: "스탬프", rewards: "내 보상", prizes: "경품", games: "미니 게임", quiz: "AX 퀴즈",
+    passport: "스탬프", rewards: "나의 보상", prizes: "경품", games: "미니 게임", quiz: "AX 퀴즈",
     notices: "공지", dap: "AX LOUNGE 상담 신청",
     booth: "AX PLAY",
     ideas: "아이디어 한 줄", ideas_mine: "내가 낸 아이디어", survey: "오늘 한 판 설문",
@@ -94,7 +94,8 @@ var App = {
     if (v === "scan_q") return SCQ.ctx ? stampTitle(SCQ.ctx) + " 안내" : "QR";   /* v5.23 [내 QR | QR 스캔] 두 탭 · 문맥 스캔(출석 · 계단 등)은 탭 없이 그 안내 */
     if (v === "scan_res") return SR.st === "link" ? "1F 타자왕" : SR.st === "ok" ? "적립 완료" : SR.st === "saved" ? "스캔 저장됨" : SR.st === "draw" || SR.draw ? "추첨 체크인" : "적립 결과";   /* v4.79 추첨 체크인 */
     if (v === "stair") return "계단 이용";
-    if (v === "zone_d") { var zn = zoneById(PROG.zone); return zn ? zn.sign : this.TITLES[v]; }   /* v4.93 헤더 = 현장 간판 글자 그대로 */
+    if (v === "zone_d") { var zn = zoneById(PROG.zone); return zn ? zn.hdr || zn.sign : this.TITLES[v]; }   /* v4.93 헤더 = 현장 간판 글자 그대로 · v5.65 커피챗 = 「AX 커피챗」(간판은 AX COFFEE CHAT) */
+    if (v === "floor_d") return FLOOR_GD[PROG.floor] ? FLOOR_GD[PROG.floor].hdr : "층별 안내";   /* v5.65 둘러보기 엘리베이터 층 안내 */
     return this.TITLES[v] || "";
   },
   tab: function (t) { this.from = {}; TOUR_RET = null; this.go(t); },   /* v5.53 아래 탭 = 둘러보기로 돌아가기 지움 */
@@ -142,6 +143,9 @@ var App = {
     if (v !== "type_site" && typeof tsfOn === "function" && tsfOn() && !(v === "wall_type" && /^#tv=type/i.test(location.hash))) v = "type_site";   /* v4.32 셀프 모드 노트북은 참가자 화면 밖으로 나가지 않는다(끄기 = 관리코드) · v4.65 주소가 #tv=type 인 창(같은 노트북의 TV 창)만 순위판 */
     /* v4.05 옛 과제상담 · 커피챗 화면 = 프로그램 상세(P02 · M03) 하나로 (알림 · 딥링크 · 옛 onclick 호환) */
     if (v === "dap" || v === "ev_cchat") { PROG.sid = v === "dap" ? "dap" : "cchat"; v = "sess_d"; }
+    /* v5.65 커피챗 신청 전 = 구역 상세(zone_d cchat · AX LOUNGE 와 같은 틀) · 신청 · 참석이 있으면 프로그램 상세(매칭 · 취소) */
+    if (v === "sess_d" && PROG.sid === "cchat" && !S.get("cchat", null) && !S.get("cchat_att", false)) { if (this.current !== "zone_d" || PROG.zone !== "cchat") PROG.zchk = false; PROG.zone = "cchat"; v = "zone_d"; }
+    if (v === "rewards") { MY.seg = "rw"; v = "my"; }   /* v5.65 옛 내 보상 화면 = 나의 참여 › 나의 보상 갈래(알림 · 옛 링크 · 튕길 자리 그대로) */
     /* v4.84 (261001 앱 개편 2묶음) 옛 스탬프 화면 = 스탬프 탭 · 전시 QR 퀴즈(DAP Wall)는 새 8종에서 숨김(옛 서버 stv 없음일 때만 연다) */
     if (v === "passport") { v = "exp"; this.from = {}; }
     if (v === "photoq") { PROG.zone = "event"; v = "zone_d"; }   /* v5.05 포토부스 대기 폐지 · 옛 알림 · 해시 · onclick · 서버 푸시 목적지는 EVENT 구역 상세로 · 정리 #7(261005) 대기 코드는 지웠다 */
@@ -154,7 +158,7 @@ var App = {
     if (v === "game_type") v = "games";   /* 정리 #4(261005) 앱(폰) 단어 소나기를 지웠다 · 옛 링크는 미니 게임으로 */
     if (v === "wq_list" || v === "wq_play") v = "exp";   /* 정리 #5(261005) 전시 QR 퀴즈를 지웠다 · 옛 링크는 스탬프 탭으로 */
     if (v === "floor1") { PROG.seg = "always"; PROG.scroll = 0; PROG.anchor = "zone1f"; v = "guide"; }
-    if (v === "guide_time") { if (SCHED.tab === "mine") { SCHED.tab = "all"; PROG.anchor = "mysched"; v = "my"; } else { PROG.mode = "time"; PROG.tt = "all"; PROG.seg = "time"; v = "guide"; } }
+    if (v === "guide_time") { if (SCHED.tab === "mine") { SCHED.tab = "all"; MY.seg = "sched"; PROG.anchor = "mysched"; v = "my"; } else { PROG.mode = "time"; PROG.tt = "all"; PROG.seg = "time"; v = "guide"; } }
     if (!Views[v]) v = "home";   /* 정리(261005) 지운 화면 키 · 모르는 키는 홈으로(예외 대신) */
     if (typeof sheetClose === "function" && el("axsSheet")) sheetClose(true);
     if (v === "ideas" && this.current !== "ideas") IDEA.step = null;   /* v4.07 다시 들어오면 입력 폼부터 */

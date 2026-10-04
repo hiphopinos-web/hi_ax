@@ -520,9 +520,9 @@ function rfxLand(nums, late) {   /* nums = 번호 배열(없으면 null) · late
   var w = el("rfx"); if (!w) return;
   var nm = el("rfxNum"); nm.classList.remove("roll"); nm.innerHTML = nums ? nums.map(function (x) { return "<b>" + rfxDot(x, nums.length > 1, true) + "</b>"; }).join("") : "발급 중"; nm.classList.toggle("wait", !nums);
   if (late) { nm.classList.remove("land"); void nm.offsetWidth; nm.classList.add("land"); }
-  el("rfxSay").innerHTML = nums ? (nums.length > 1 ? "번호 " + nums.length + "개가 나왔어요! 행운을 빌어요" : "행운을 빌어요!") + "<br>Outro 현장 추첨은 17F 입구 QR 체크인" + rfxFinLine() : "번호가 아직 발급 중이에요<br>곧 내 보상에 나타나요";   /* v4.79 무대 추첨 = 추첨 QR 체크인한 사람만 · v5.04 6개째는 참여상 한 줄(별도 팝업 없음) */
+  el("rfxSay").innerHTML = nums ? (nums.length > 1 ? "번호 " + nums.length + "개가 나왔어요! 행운을 빌어요" : "행운을 빌어요!") + "<br>Outro 현장 추첨은 17F 입구 QR 체크인" + rfxFinLine() : "번호가 아직 발급 중이에요<br>곧 나의 보상에 나타나요";   /* v4.79 무대 추첨 = 추첨 QR 체크인한 사람만 · v5.04 6개째는 참여상 한 줄(별도 팝업 없음) */
   el("rfxCap").textContent = nums ? "내 행운권 번호 · 17:00 Outro 추첨" : "행운권은 이미 발급됐어요 · 17:00 Outro 추첨";   /* v5.04 옛 「결과는 행사 후 개별 안내」(260909 사후 추첨 안) 폐기 */
-  el("rfxBtns").innerHTML = '<button class="btn mint" style="margin-top:14px" onclick="modalClose()">확인</button><button class="btn line" style="margin-top:8px" onclick="noticeGo(\'rewards\',\'raffle\')">내 보상에서 보기</button>';
+  el("rfxBtns").innerHTML = '<button class="btn mint" style="margin-top:14px" onclick="modalClose()">확인</button><button class="btn line" style="margin-top:8px" onclick="noticeGo(\'rewards\',\'raffle\')">나의 보상에서 보기</button>';
   if (nums && typeof stampBuzz === "function") stampBuzz(30);
   App.render();   /* 레일의 「새 번호 확인」 칩을 번호로 바꾼다 */
 }

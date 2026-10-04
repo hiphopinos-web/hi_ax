@@ -217,7 +217,7 @@ var SESSIONS = [
   { id: "dap", fl: 1, zone: "dap", kind: "link", go: "dap", ttl: "AX LOUNGE 상담", sub: "데이터사이언스파트 · 1:1 30분", who: "", tm: "09:30~16:30",
     /* v3.54 사은품 문구는 사용자 확정으로 유지 (CLAUDE.md 「참여자 앱에 사은품 안내 없음」의 예외 · 260918) */
     desc: "데이터사이언스파트 1:1 상담 30분 · 상담 완료 시 사은품" },
-  { id: "cchat", fl: 18, zone: "lounge", kind: "link", go: "ev_cchat", ttl: "AX 커피챗", sub: "멘토와 가벼운 시간", who: "", tm: "",   /* v4.13 ⓛ 시작 시각 미정(사용자 260922) · 시각을 앱에 두지 않는다 */
+  { id: "cchat", fl: 18, zone: "lounge", kind: "link", go: "ev_cchat", ttl: "AX 커피챗", sub: "비슷한 고민을 나누고 다음 한 걸음 찾기", who: "", tm: "",   /* v4.13 ⓛ 시작 시각 미정(사용자 260922) · 시각을 앱에 두지 않는다 */
     desc: "아이디어 제출 후 참석 신청" }
 ];
 /* v47: 층별 안내(PROG_FL 존 목록·동선 영상) 전면 삭제 · 안내는 타임라인과 현장 사이니지가 맡는다.
@@ -233,7 +233,8 @@ var ZONE_NM = { hall: "대강당", heart18: "Heart 1 · 7~8", heart56: "Heart 5 
 /* 층별 상시 활동 표(FL_OPEN)와 층 머리 표기(FLTAG)는 260923 삭제 · 그것만 그리던 flListHtml 이 v4.15 시간표 재설계로 없어졌다.
    상시 활동은 스탬프 탭 카드가, 프로그램 목록은 progRowHtml 이 맡는다. */
 /* v4.93 seg = 프로그램 탭 [시간표 | 상시 운영](같은 세션 안에서 마지막 본 쪽) · zone = 구역 상세(zone_d) 구역 · anchor = 옛 진입 별칭이 그린 뒤 스크롤할 자리 */
-var PROG = { fl: 1, sid: null, cat: "all", mode: "list", tt: "all", seg: "time", zone: "", anchor: "", ttOpen: {}, scroll: 0, cf: null, ok: null };   /* v4.15 tt = 시간표 [전체 | 나의 일정] · ttOpen = 펼친 행 */   /* v4.13 mode = 프로그램 탭 보기 [목록 | 시간표](design.md A-5 5-10) */   /* v4.05 cat = P01 필터 · scroll = 목록 스크롤 · cf = 신청 확인 · ok = 신청 결과 */   /* fl = 선택 층 (v3.7 · 기본 1F · 탭 왕복에도 유지) */
+var PROG = { fl: 1, sid: null, cat: "all", mode: "list", tt: "all", seg: "time", zone: "", zchk: false, floor: 0, anchor: "", ttOpen: {}, scroll: 0, cf: null, ok: null };   /* v5.65 zchk = 구역 상세 「참여 전 확인」 펼침 · floor = 층 안내(floor_d) 층 */
+var MY = { seg: "" };   /* v5.65 나의 참여 갈래 · "sched" 나의 일정 / "rw" 나의 보상 / "" = 처음(일정이 있으면 나의 일정 · 없으면 나의 보상) */   /* v4.15 tt = 시간표 [전체 | 나의 일정] · ttOpen = 펼친 행 */   /* v4.13 mode = 프로그램 탭 보기 [목록 | 시간표](design.md A-5 5-10) */   /* v4.05 cat = P01 필터 · scroll = 목록 스크롤 · cf = 신청 확인 · ok = 신청 결과 */   /* fl = 선택 층 (v3.7 · 기본 1F · 탭 왕복에도 유지) */
 
 /* ═══ v3.52b 오늘 한 판 설문 = 틀만 (사용자 지시 260917 · 「문항이 아직 안 정해졌다 · 집만 지어 둬라」) ═══
    ※ 문항 미확정 · 아래 SURVEY_Q 는 기본 3문항일 뿐이다(참여자 화면에는 이 사실을 쓰지 않는다 · 콘솔 설문 탭에만 표시).

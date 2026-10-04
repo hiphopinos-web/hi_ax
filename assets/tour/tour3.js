@@ -1486,22 +1486,38 @@
    *   (모형은 카메라 쪽 벽 · 천장을 스스로 숨긴다 · tour-scene cutaway) · 시선을 가리는 기둥(5m)만 점점이 비운다 */
   /* 거리 2단계 · 0 = 기본 6.5m(사용자 261003 「너무 멀다 · 확대한 것보다 조금 더」 · 카메라 높이 = 6.5 x sin40 + 0.9 = 5.08m 로 천장 5m 위) · 1 = 조금 멀리 9m */
   /* v3.4(사용자 261003 「두 단계 더 줌인」): 가장 가까이 3.8m · 기본 4.8m · 멀리 8m · 카메라가 천장(5m) 아래로 내려오므로 천장은 늘 숨긴다(아래 render 앞) · 기둥 속 시점은 기둥 비움으로 */
-  var PITCH = 40 * Math.PI / 180;
   /* v5.51 시점 두 가지(사용자 261004) · top = 내려다보기(40도 · 지금까지) · eye = 눈높이(14도 · 정면보다 조금 내려다봄) · 기본값은 이 상수 하나 · 고른 값은 이 기기에 기억(axfTour3View) */
-  var VIEW_DEF = 'top', EYE_PITCH = 14 * Math.PI / 180;   /* 거리 G.dist = 3.8~8m(기본 4.8) · 확대 · 축소 버튼(누르는 동안) · 두 손가락이 연속으로 바꾼다 */
+  var EYE_PITCH = 14 * Math.PI / 180;   /* 거리 G.dist = 3.8~8m(기본 4.8) · 확대 · 축소 버튼(누르는 동안) · 두 손가락이 연속으로 바꾼다 */
+  /* v5.65 (사용자 261005 「설정의 내려다보기 시점은 없애고」) 시점 = 눈높이 하나 · 옛 내려다보기(PITCH 40도 · 바라보는 높이 0.9)는 쓰지 않는다 · 기기에 남은 axfTour3View 값은 읽지 않는다
+   * v5.65 (사용자 261005 「권장대로」) 위아래 시선 · G.tilt = 정면 눈높이에서 위(+) · 아래(-)로 기운 각 · 위 TILT_UP · 아래 TILT_DN 까지 · 카메라 자리는 그대로 바라보는 점만 오르내린다 */
+  var TILT_UP = 20 * Math.PI / 180, TILT_DN = 10 * Math.PI / 180;
   function camWant() {
     /* 바라보는 점 = 캐릭터보다 남쪽(화면 위쪽)으로 조금 · 캐릭터는 화면 가운데 아래에 서고 앞의 판 줄이 더 넓게 보인다 */
     /* 방위 G.az · 0 = 북쪽 위에서 남쪽(정문)을 봄 · 「시점 돌리기」로 90도씩 · 화면 위 = (sin az, cos az) */
-    var eye = G.view === 'eye', pt = eye ? EYE_PITCH : PITCH, ly = eye ? 1.25 : 0.9;
-    var c = G.pos, d = G.dist, hd = d * Math.cos(pt), y = d * Math.sin(pt), ahead = (eye ? 1.4 : 0.8) + (d - DMIN) / (DMAX - DMIN) * 0.7, fx = Math.sin(G.az), fz = Math.cos(G.az);
-    return { pos: new T.Vector3(c.x + fx * (ahead - hd), y + ly, c.z + fz * (ahead - hd)), look: new T.Vector3(c.x + fx * ahead, ly, c.z + fz * ahead) };
+    var pt = EYE_PITCH, ly = 1.25;
+    var c = G.pos, d = G.dist, hd = d * Math.cos(pt), y = d * Math.sin(pt), ahead = 1.4 + (d - DMIN) / (DMAX - DMIN) * 0.7, fx = Math.sin(G.az), fz = Math.cos(G.az);
+    /* v5.65 (운영 v5.64 캡처 3건 · 미팅룸 앞 · 고객센터 앞 · 가벽 옆) 카메라 받침대 줄이기 · 캐릭터가 로비(도면 z ≤ 11.46)에 있는데 카메라가 북쪽 벽선(z 11.46) 너머로 가면
+     *   모형 단면 규칙(tour-scene cutaway)이 북쪽 벽 · 코어를 숨기고 코어 자리에 낮은 어두운 받침(coreStub · 0.9m)을 세운다 → 눈높이(2.4~3.2m)에서는 그 받침 윗면이 화면을 덮는 회색 판
+     *   · 벽 너머 카메라 → 머리 선이 루버 띠 · 미팅룸 유리를 지나 점점이 비우기(LFADE · GFADE · 망점)가 켜졌다 · 이제 카메라 = 벽선에서 0.3m 안쪽까지만(높이 그대로 · 수평 거리만 줄여 조금 더 내려다봄)
+     *   통로 · 고객센터 쪽 들어간 칸(캐릭터가 벽선 북쪽)에서는 그대로 */
+    var cz0 = 6 - c.z, k = 1, LIM = 11.46 - 0.3;
+    if (cz0 <= 11.51 && !G.boomOff) { var dz = fz * (hd - ahead); if (dz > 1e-6 && cz0 + dz > LIM) k = Math.max(0.04, Math.min(1, (LIM - cz0) / dz)); }   /* 높이도 같은 배율(내려다보는 각 그대로) · 벽에 바짝 붙으면 머리 높이 1인칭에 가까워지고 0.3 아래면 내 캐릭터를 숨긴다(stepCam) */   /* 카메라 = 캐릭터 뒤 k x (hd - ahead) · 바라보는 점도 k 배로 당겨 캐릭터가 화면 안에 남는다 */
+    y *= k; var hk = hd * k, pe = Math.atan2(y, hk); ahead *= k;
+    var lyT = ly + (G.tilt ? hk * (Math.tan(pe) - Math.tan(pe - G.tilt)) : 0);   /* 카메라 → 바라보는 점 수평 거리 = hk · 내려다보는 각 pe 를 tilt 만큼 줄인다(위로 보기) */
+    G.boomK = k;   /* 확인용 */
+    return { pos: new T.Vector3(c.x + fx * (ahead - hk), y + ly, c.z + fz * (ahead - hk)), look: new T.Vector3(c.x + fx * ahead, lyT, c.z + fz * ahead) };
   }
+  /* 손을 떼고 1초 뒤 · 걷기 시작 · 판 보기 · 장면 바꿈 = 정면(0)으로 약 0.4초 · 움직임 줄이기 = 바로 */
+  function tiltHome(now) { G.tiltTo = 0; if (now || RM) G.tilt = 0; G.need = true; }
   function stepCam(dt) {
     var a0 = G.az; G.az = angLerp(G.az, G.azTo, dt && !RM ? 1 - Math.exp(-dt * (HOLD && HOLD.kind === 'rot' ? 14 : 7)) : 1); if (Math.abs(Math.atan2(Math.sin(G.azTo - G.az), Math.cos(G.azTo - G.az))) < 0.002) G.az = G.azTo;
-    var w = camWant(), k = dt && !RM ? (G.az !== a0 ? 1 : 1 - Math.exp(-dt * (5 + 3 * (G.run || 0)))) : 1;
+    if (G.tiltTo && !G.tiltDrag && ((G.stick && (G.stick.x || G.stick.y)) || G.path)) G.tiltTo = 0;   /* v5.65 걷기 시작 = 정면으로 */
+    var t0 = G.tilt || 0; G.tilt = t0 + ((G.tiltTo || 0) - t0) * (dt && !RM && !G.tiltDrag ? 1 - Math.exp(-dt * 8) : 1); if (Math.abs(G.tilt - (G.tiltTo || 0)) < 0.0015) G.tilt = G.tiltTo || 0;
+    var w = camWant(), k = dt && !RM ? (G.az !== a0 || G.tilt !== t0 ? 1 : 1 - Math.exp(-dt * (5 + 3 * (G.run || 0)))) : 1;
     var moved = G.camPos.distanceToSquared(w.pos) > 1e-6 || G.look.distanceToSquared(w.look) > 1e-6;
     G.camPos.lerp(w.pos, k); G.look.lerp(w.look, k);
     camera.position.copy(G.camPos); camera.lookAt(G.look);
+    if (G.scn === 'lobby') bot.visible = !(G.boomK < 0.3);   /* v5.64.1 벽에 바짝 붙어 카메라가 머리 높이까지 당겨지면 1인칭(내 캐릭터 숨김) */
     /* 기둥 비우기 · 카메라 → 머리 선분이 기둥(높이 5m) 안을 지나면 */
     var hx = G.pos.x, hz = G.pos.z, cx = G.camPos.x, cz = G.camPos.z, cy = G.camPos.y, sx = hx - cx, sz = hz - cz, L2 = sx * sx + sz * sz || 1, any = false;
     for (var i = 0; i < PIL.length; i++) {
@@ -2047,18 +2063,21 @@
 
   /* ═══════════ 설정 창(v5.51 · 사용자 261004 · 옛 +/- 자리의 톱니) · 앱 바텀 시트 문법 · 시점 · 음악 · 움직임 줄이기 · 처음 안내의 같은 선택과 서로 맞춘다 · 떠 있는 동안 3D 는 계속 그린다 ═══════════
    * 위쪽 줄 소리 단추는 그대로 둔다(빨리 끄는 용도 · 설정 창의 음악과 같은 값) */
-  function setView(v, keep) {
-    G.view = v === 'eye' ? 'eye' : 'top'; if (!keep) store.set('axfTour3View', G.view);
-    ['vTop', 'vEye'].forEach(function (id) { var b = $(id); if (b) { var on = b.getAttribute('data-v') === G.view; b.classList.toggle('on', on); b.setAttribute('aria-checked', on ? 'true' : 'false'); } });
-    G.need = true;
+  /* v5.65 (사용자 261005 「설정의 내려다보기 시점은 없애고 시점을 바꾸지 않는 설정을 넣자」) 옛 시점 줄(내려다보기 · 눈높이 · setView) 삭제 · 「화면 밀어 시점 바꾸기」 켬(기본) · 끔 · 기기에 기억(axfTour3Swipe)
+   *   끄면 화면 밀기로 좌우 돌기 · 위아래 시선이 모두 꺼진다 · 돌기 단추 · 조그 · PC 키는 그대로 · 처음 안내 한 줄도 이 값에 맞춘다 */
+  function setSwipe(on, keep) {
+    G.swipeOn = !!on; if (!keep) store.set('axfTour3Swipe', on ? '1' : '0');
+    var c = $('cfSw'); if (c) c.checked = G.swipeOn;
+    var h = $('hSw'); if (h) h.textContent = G.swipeOn ? '떠 있는 동전을 점프로 치면 그 활동으로 가요. 화면을 밀면 둘러봐요.' : '떠 있는 동전을 점프로 치면 그 활동으로 가요. 돌기 단추로 둘러봐요.';
+    if (!G.swipeOn) tiltHome(true);
   }
-  function cfgSync() { var m = $('cfMu'), r = $('cfRm'); if (m) m.checked = MUS.want; if (r) r.checked = RM; var row = $('cfMuRow'); if (row) row.hidden = !musOn(); setView(G.view, true); }
+  function cfgSync() { var m = $('cfMu'), r = $('cfRm'); if (m) m.checked = MUS.want; if (r) r.checked = RM; var row = $('cfMuRow'); if (row) row.hidden = !musOn(); setSwipe(G.swipeOn !== false, true); }
   function openCfg() { if (G.sheetOpen || G.anim) return; cfgSync(); $('cfg').hidden = false; G.sheetOpen = true; G.stick = null; G.path = null; setRun(false); try { $('cfg').focus(); } catch (e) {} }
   function closeCfg() { var c = $('cfg'); if (!c || c.hidden) return; c.hidden = true; G.sheetOpen = false; G.need = true; G.last = 0; }
   function wireCfg() {
-    var v = store.get('axfTour3View'); setView(v === 'eye' || v === 'top' ? v : VIEW_DEF, true);
+    setSwipe(store.get('axfTour3Swipe') !== '0', true);
     $('bCfg').onclick = openCfg; $('cfX').onclick = closeCfg; $('cfg').addEventListener('click', function (e) { if (e.target === $('cfg')) closeCfg(); });
-    $('vTop').onclick = function () { setView('top'); }; $('vEye').onclick = function () { setView('eye'); };
+    $('cfSw').onchange = function () { setSwipe($('cfSw').checked); };
     $('cfMu').onchange = function () { musSet($('cfMu').checked); };
     $('cfRm').onchange = function () { RM = $('cfRm').checked; store.set('axfTour3RM', RM ? '1' : '0'); ROOTEL.classList.toggle('rm', RM); $('rmChk').checked = RM; G.need = true; };
     $('rmChk').addEventListener('change', cfgSync); $('muChk').addEventListener('change', cfgSync); $('bSnd').addEventListener('click', cfgSync);
@@ -2122,6 +2141,7 @@
     return best;
   }
   function enterPanel(z, pg) {
+    if (G.tilt || G.tiltTo) { tiltHome(true); var cw = camWant(); G.camPos.copy(cw.pos); G.look.copy(cw.look); camera.position.copy(G.camPos); camera.lookAt(G.look); }   /* v5.65 판 보기 진입 = 정면 눈높이에서 */
     if (pg && D.NOVIEW.indexOf(pg) >= 0) pg = null;   /* v5.58 판 보기에 없는 판(15 등)을 누르면 그 구역 첫 판 */
     if (!pg) pg = firstPg(z);
     var ps = D.viewPages(z), pk = pickFace(z, pg);
@@ -2609,7 +2629,7 @@
   };
   /* 자리 · stop = 그 구역 멈춤 자리에서 판을 보는 사람의 왼쪽 1.2m(스태프는 오른쪽) · at = 도면 자리(p4 = v5.51 타자왕 부스 앞 통로 쪽 · 노트북 탁자 동쪽 1.5m · 판 39 · 배너 48 을 가리지 않음 · st = 서쪽 코어 계단실 대리석 벽 앞)
    * v5.54 p5 = AX LAB 「아이디어 QR」 판(13 · 도면 25.9, 0.55) 바로 앞 1.4m(사용자 261004 「아이디어 한줄 QR 제출하기 판쪽 앞쪽에」) */
-  var BLK_AT = [{ id: 'qz', stop: 'vision' }, { id: 'p5', at: [25.9, 1.95] }, { id: 'p2', stop: 'play' }, { id: 'p3', stop: 'lounge' }, { id: 'p4', at: [3.3, 2.5] }, { id: 'st', at: [12.4, 10.5] }, { id: 'st', at: [29.6, 10.4] }];   /* v5.64 (사용자 261005 「이쪽 계단실 앞에도 스탬프 띄워줘」) 고객센터 쪽 계단 앞(로비 쪽 · 동쪽 빈 공간 입구) 하나 더 · 같은 스탬프(둘 중 하나만 받아도 둘 다 완료) */
+  var BLK_AT = [{ id: 'qz', stop: 'vision' }, { id: 'p5', at: [25.9, 1.95] }, { id: 'p2', stop: 'play' }, { id: 'p3', stop: 'lounge' }, { id: 'p4', at: [3.3, 2.5] }, { id: 'st', at: [12.4, 10.5] }, { id: 'st', at: [27.8, 15.0] }];   /* v5.65 (사용자 261005 「이 근처 계단 스탬프는 계단실 입구로 이동해줘」) 동쪽 블록 = 로비 빈 칸(29.6, 10.4) → 1m 들어간 벽(x 27.2)의 계단 문(z 14.5 ~ 15.5) 바로 앞 0.6m */   /* v5.64 (사용자 261005 「이쪽 계단실 앞에도 스탬프 띄워줘」) 고객센터 쪽 계단 앞(로비 쪽 · 동쪽 빈 공간 입구) 하나 더 · 같은 스탬프(둘 중 하나만 받아도 둘 다 완료) */
   var BLOCKS = [], BLK_Y = 1.42, BLK_S = 0.46, BLK_M = null;
   function stampInfo(id) {
     var h = HOST(), o = null; try { o = h && h.stamp ? h.stamp(id) : null; } catch (e) { o = null; }
@@ -2665,23 +2685,27 @@
     function face(used) {
       var c = document.createElement('canvas'); c.width = c.height = 512; var g = c.getContext('2d'); g.translate(512, 0); g.scale(-2, 2);   /* 앞 뚜껑(FrontSide)에서 바로 읽히게 좌우를 미리 뒤집어 그린다(옛 그림은 뒷면 뚜껑이 겹쳐 그려져서 바로 보였다) */
       g.fillStyle = used ? 'rgba(255,127,50,.94)' : 'rgba(250,251,252,.95)'; g.beginPath(); g.arc(128, 128, 124, 0, Math.PI * 2); g.fill();   /* v5.64 (사용자 261005 「완료가 주황」) 받은 것 = 주황 · 아직 = 흰 · 은회색 */
-      sealDraw(g, 128, 128, 104, used ? '#FFFFFF' : '#8B95A1', used ? '완료' : '스탬프', used ? 19 : 17);
+      sealDraw(g, 128, 128, 104, used ? '#FFFFFF' : '#6B7684', used ? '완료' : '스탬프', used ? 19 : 17);   /* v5.65 (v5.64 보고 후속 · 흰 판 앞에서 멀리 안 보임) 아직 = 도장 글자 · 테 한 단계 진하게(8B95A1 → 6B7684) */
       var t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; t.center.set(0.5, 0.5); t.rotation = -Math.PI / 2; t.repeat.set(1, -1); return t;   /* 원판 뚜껑 UV 가 90도 돌고 뒤집혀 있다 · 바로 서게 */
     }
     function disc(used) {
       var f = new T.MeshBasicMaterial({ map: face(used), transparent: true, opacity: 1, depthWrite: false, side: T.FrontSide, toneMapped: false });
-      var back = new T.MeshBasicMaterial({ color: used ? 0xE5671E : 0x9AA3AD, transparent: true, opacity: used ? 0.9 : 0.85, depthWrite: false, side: T.FrontSide, toneMapped: false });
-      var rim = new T.MeshBasicMaterial({ color: used ? 0xFF7F32 : 0x8B95A1, transparent: true, opacity: used ? 0.9 : 0.9, depthWrite: false, toneMapped: false });   /* v5.64 색 뒤집기 · 받은 것 = 주황 테 · 아직 = 은회색 테 */
+      var back = new T.MeshBasicMaterial({ color: used ? 0xE5671E : 0x7D8794, transparent: true, opacity: used ? 0.9 : 0.85, depthWrite: false, side: T.FrontSide, toneMapped: false });
+      var rim = new T.MeshBasicMaterial({ color: used ? 0xFF7F32 : 0x6B7684, transparent: true, opacity: used ? 0.9 : 0.95, depthWrite: false, toneMapped: false });   /* v5.64 색 뒤집기 · 받은 것 = 주황 테 · 아직 = 은회색 테 */
       return [rim, f, back];
     }
     var gc = document.createElement('canvas'); gc.width = gc.height = 128; var gx = gc.getContext('2d'), gr0 = gx.createRadialGradient(64, 64, 18, 64, 64, 64);
     gr0.addColorStop(0, 'rgba(255,255,255,.95)'); gr0.addColorStop(0.45, 'rgba(176,184,193,.42)'); gr0.addColorStop(1, 'rgba(176,184,193,0)'); gx.fillStyle = gr0; gx.fillRect(0, 0, 128, 128);   /* v5.64 아직 받지 않은 동전 뒤 빛 = 흰 · 은회색(맥박 그대로) · 받은 것 = 빛 없음 */
     var glt = new T.CanvasTexture(gc); glt.colorSpace = T.SRGBColorSpace;
+    /* v5.65 받침 그림자 · 동전 아래쪽으로 살짝 내린 어두운 번짐(보는 쪽을 향한 판 · 동전보다 먼저 그림) · 흰 판 앞에서도 동전 테두리가 떠 보이게 · 받은 것 · 아직 모두 */
+    var shc = document.createElement('canvas'); shc.width = shc.height = 128; var shx = shc.getContext('2d'), shg = shx.createRadialGradient(64, 64, 30, 64, 64, 64);
+    shg.addColorStop(0, 'rgba(25,31,40,.42)'); shg.addColorStop(0.62, 'rgba(25,31,40,.26)'); shg.addColorStop(1, 'rgba(25,31,40,0)'); shx.fillStyle = shg; shx.fillRect(0, 0, 128, 128);
+    var sht = new T.CanvasTexture(shc); sht.colorSpace = T.SRGBColorSpace;
     var sc = document.createElement('canvas'); sc.width = sc.height = 128; var sg = sc.getContext('2d'), gr = sg.createRadialGradient(64, 64, 4, 64, 64, 62);
     gr.addColorStop(0, 'rgba(53,26,12,.30)'); gr.addColorStop(0.7, 'rgba(53,26,12,.12)'); gr.addColorStop(1, 'rgba(53,26,12,0)'); sg.fillStyle = gr; sg.fillRect(0, 0, 128, 128);
     sg.strokeStyle = 'rgba(255,127,50,.55)'; sg.lineWidth = 3; sg.setLineDash([7, 6]); sg.beginPath(); sg.arc(64, 64, 44, 0, Math.PI * 2); sg.stroke();
     var st = new T.CanvasTexture(sc); st.colorSpace = T.SRGBColorSpace;
-    BLK_M = { on: set(false), used: set(true), pop: pt, dOn: disc(false), dUsed: disc(true), floor: st, glow: glt };
+    BLK_M = { on: set(false), used: set(true), pop: pt, dOn: disc(false), dUsed: disc(true), floor: st, glow: glt, shade: sht };
     return BLK_M;
   }
   var HITM = null, DISC = null;
@@ -2700,6 +2724,7 @@
       m.userData = { stamp: d.id }; m.name = 'stampBlock';
       var dk = new T.Mesh(DISC, M.dOn); dk.rotation.x = Math.PI / 2; dk.renderOrder = 4; dk.userData = { stamp: d.id }; m.add(dk); m.userData.disc = dk;   /* 원판(세워서 보는 쪽을 향함 · v5.54 상자보다 넓어 원판을 톡 해도 블록) */
       var gl = new T.Sprite(new T.SpriteMaterial({ map: M.glow, transparent: true, depthWrite: false, opacity: 0.5, toneMapped: false })); gl.scale.set(0.95, 0.95, 1); gl.renderOrder = 3; gl.raycast = function () {}; m.add(gl); m.userData.glow = gl;   /* v5.54 뒤 빛 */
+      var sh = new T.Sprite(new T.SpriteMaterial({ map: M.shade, transparent: true, depthWrite: false, opacity: 1, toneMapped: false })); sh.scale.set(0.66, 0.66, 1); sh.position.y = -0.035; sh.renderOrder = 3.5; sh.raycast = function () {}; m.add(sh); m.userData.shade = sh;   /* v5.65 받침 그림자(빛 다음 · 동전 앞) */
       var fl = new T.Mesh(new T.CircleGeometry(0.36, 32), new T.MeshBasicMaterial({ map: M.floor, transparent: true, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 }));
       fl.rotation.x = -Math.PI / 2; fl.position.copy(toThree(q[0], q[1])); fl.position.y = 0.012; fl.renderOrder = 2; fl.name = 'stampFloor'; S.lobby.add(fl);
       var pop = new T.Sprite(new T.SpriteMaterial({ map: M.pop, transparent: true, depthWrite: false, opacity: 0 })); pop.visible = false; pop.scale.set(0.42, 0.42, 1); pop.renderOrder = 5;
@@ -2925,7 +2950,7 @@
     if (t >= A + B + C && !q.done) { q.done = true; G.sqS = [1, 1, 1]; G.jy = 0; toElev(); }
   }
   /* ── 엘리베이터 장면 · 로비에서 멀리(three x +300) 따로 세운다 · 처음 탈 때 만든다 ── */
-  var EV = { g: null, O: new T.Vector3(300, 0, 0), W: 2.1, D: 1.6, H: 2.45, bots: [], hopT: -9, lookT: 0, look: null };
+  var EV = { g: null, O: new T.Vector3(300, 0, 0), W: 2.3, D: 2.0, H: 2.45, bots: [], hopT: -9, lookT: 0, look: null };   /* v5.65 (사용자 261005 「엘리베이터가 비좁아서 엉덩이가 튀어 나오니 거기까지 확장」) 폭 2.1 → 2.3 · 깊이 1.6 → 2.0 · 몸 반지름 0.337 + 발밑 고리 0.42 가 벽 · 바닥 끝 안 */
   function steelTex(w, h, seed) {
     var c = document.createElement('canvas'); c.width = w; c.height = h; var g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, w * 0.3, h);
     gr.addColorStop(0, '#D7DADD'); gr.addColorStop(0.45, '#B9BEC3'); gr.addColorStop(0.7, '#CDD0D4'); gr.addColorStop(1, '#AEB3B8'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
@@ -3006,8 +3031,8 @@
     if (EV.tv.mot) EV.tv.mot.ord = EV_ORD;   /* 짧은 영상부터(달리기 2초 · AX 3초 · 꽃 6초) · 들어서자마자 움직임 */
     /* 계란판 · 3 × 3 · 나는 맨 뒤 가운데 */
     var COLS = [[0x8DBBEB, 0x001F5B, 0x00184A], [0xB8E0C8, 0x2E7D5B, 0x245F46], [0xF6C1CF, 0xB4466A, 0x8E3653], [0xD7C8F2, 0x5B3FA0, 0x47317D], [0xFFE08A, 0xC98A00, 0xA06E00], [0xC9D2DC, 0x4E5968, 0x3C4552], [0xA8DDE0, 0x1F7A80, 0x175F63], [0xFFD0B0, 0xD9622B, 0xB24E20]], ci = 0;
-    [-0.4, 0.08, 0.56].forEach(function (z, ri) {
-      [-0.62, 0, 0.62].forEach(function (x, cj) {
+    [-0.58, -0.06, 0.46].forEach(function (z, ri) {   /* v5.65 앞줄 = 문에서 0.42m(옛 0.4) · 뒷줄 몸 뒤끝 0.80 · 고리 0.88 < 바닥 끝 1.0 */
+      [-0.66, 0, 0.66].forEach(function (x, cj) {   /* 옆 몸 끝 0.66 + 0.337 + 흔들림 0.03 = 1.03 < 손잡이 1.08 */
         if (ri === 2 && cj === 1) { EV.me = [x, z]; return; }
         var c = COLS[ci++ % COLS.length], m = makeCritter(c[0], c[1], c[2]); m.position.set(x + (Math.random() - 0.5) * 0.06, 0, z + (Math.random() - 0.5) * 0.05); m.rotation.y = Math.PI; g.add(m);
         EV.bots.push({ m: m, ph: Math.random() * 6, h0: Math.PI, h: Math.PI, i: EV.bots.length });
@@ -3026,7 +3051,7 @@
   function elevCam() {
     var dy = 0, dx = 0, r = EV.rise;
     if (r && !RM) { var k = clamp((performance.now() - r.t0) / r.d, 0, 1); dy = -0.035 * Math.sin(Math.PI * k) * (k < 0.5 ? 1 : 0.6); dx = 0.004 * Math.sin(performance.now() * 0.06) * Math.sin(Math.PI * k); }   /* v5.58 출발 · 살짝 눌렸다가 떠오름 + 잔떨림 */
-    camera.position.set(EV.O.x + dx, 3.15 + dy, EV.O.z + 2.9); camera.lookAt(EV.O.x + dx, 0.7 + dy, EV.O.z - 0.3);
+    camera.position.set(EV.O.x + dx, 3.3 + dy, EV.O.z + 3.15); camera.lookAt(EV.O.x + dx, 0.7 + dy, EV.O.z - 0.42);   /* v5.65 칸이 넓어진 만큼 뒤 · 위로(옛 3.15 · 2.9 · -0.3) */
   }
   function stepElev(dt, now) {
     var t = G.clock;
@@ -3047,7 +3072,7 @@
     return true;
   }
   function elevUi(on) {
-    $('pad').hidden = on; $('ctl').hidden = on; $('mini').hidden = on; $('evp').hidden = !on; $('navRow').hidden = on; $('elevRow').hidden = !on;
+    $('pad').hidden = on; $('ctl').hidden = on; $('mini').hidden = on; $('evp').hidden = !on; $('navRow').hidden = on;   /* v5.65 「1층에서 내리기」 줄 없앰 = 층 단추 1(뒤로 가기도 1층) */
     $('gbub').hidden = true; $('look').hidden = true; lookFrame(null); $('cheer').hidden = true; $('cta').hidden = true;
     $('where').textContent = on ? '엘리베이터 안 · 몇 층으로 갈까요?' : $('where').textContent;
   }
@@ -3068,16 +3093,27 @@
     var c = camWant(); G.camPos.copy(c.pos); G.look.copy(c.look); camera.position.copy(c.pos); camera.lookAt(c.look); nearestStop();
     elevUi(false); G.need = true; G.ctaKey = ''; updateUi(true);
   }
-  function leaveElev(now) {   /* now = 연출 없이(둘러보기를 닫을 때) · 아니면 v5.55 아이리스(문구 없이) */
-    if (now) { irAbort(); elevSwap(); smileSet(botParts.eyes, botParts.smiles, false); return; }
+  function leaveElev(now) {   /* now = 연출 없이(둘러보기를 닫을 때 · v5.65 층 안내에서 돌아오지 않고 새로 열 때) · 아니면 v5.55 아이리스(문구 없이) */
+    if (now) { irAbort(); irEnd(); elevSwap(); smileSet(botParts.eyes, botParts.smiles, false); return; }
     elevGo(false);
   }
+  /* v5.65 (사용자 261005 「각 엘리베이터 이동시에도 각 안내장표로 갈 수 있을 것 같아 · 연결」 · 「1층도 층에 넣자」)
+   *   18 · 17 · 10 = 올라가는 표시(▲ + 숫자) → 돌아보기 → 아이리스로 닫힘 → 띵 → 앱이 그 층 안내를 연다(TOUR_HOST.floorGo · 둘러보기는 엘리베이터 안 그대로 닫힘 · 뒤로 = 엘리베이터 안)
+   *   1 = 「1층에서 내리기」와 같다(올라가는 표시 없이 돌아보기 → 아이리스 → 1층 게이트 앞) · 앱 밖(시험판 · 연결 없음)에서는 옛 「데모 버전입니다」 문구 */
   function pressFloor(btn) {
     if (EV.seq) return;
-    btn.classList.add('lit'); EV.hopT = performance.now(); G.need = true;
+    btn.classList.add('lit'); G.need = true;
     var fl = +btn.getAttribute('data-f'); EV.goF = fl; if (EV.btn && EV.btn[fl]) EV.btn[fl].material = EV.ringOn;   /* v5.58 조작반 그 층 버튼 주황 테 */
-    elevGo(true);   /* v5.55 돌아보기 · 눈웃음 → 아이리스 아웃 → 「데모 버전입니다.」 「1층으로 이동합니다.」 → 1층 */
+    if (fl === 1) elevGo('exit');
+    else { EV.hopT = performance.now(); var h = HOST(); elevGo(h && h.floorGo ? 'floor' : 'demo'); }
     setTimeout(function () { btn.classList.remove('lit'); }, 1400);
+  }
+  function irFloorDone() {   /* 검은 화면 그대로 · 엘리베이터 장면 그대로 · 앱으로 */
+    EV.seq = null; IR.cur = null; G.keepElev = true;
+    var h = HOST(); try { h.floorGo(EV.goF); } catch (e) { G.keepElev = false; irEnd(); }
+  }
+  function elevBack() {   /* 층 안내에서 뒤로 · 엘리베이터 안(문 쪽을 보고 · 모니터 1 · 단추 불 끔) */
+    irEnd(); EV.turn = null; EV.rise = null; bot.rotation.y = Math.PI; elevUi(true); elevCam(); G.need = true;
   }
   /* ═══════════ v5.55 엘리베이터 아이리스(사용자 261004 「동물의 숲에서 다음 장면으로 넘어가는 것처럼 · 나를 중심으로 까만 화면이 동그랗게 작아지고 내 얼굴이 마지막으로 까맣게 덮이게」) ═══════════
    * 층 단추 = 돌아보기 · 눈웃음 1.2초 → 아이리스 아웃 1.35초(0.8초 동안 천천히 줄어 얼굴 크기 · 0.35초 멈칫 · 0.2초 톡 닫힘) → 검은 화면 두 줄 「데모 버전입니다.」 「1층으로 이동합니다.」 1.8초
@@ -3090,6 +3126,7 @@
   /* v5.58 (사용자 261004 「층을 누르면 엘리베이터가 위로 올라가는 표시가 나면서 화면 전환」) 맨 앞 rise 1.3초 = 모니터 띠 ▲ + 숫자 1 → 누른 층(천천히 출발해 빨라졌다 멈춤) · 카메라 살짝 눌렸다 떠오름 · 그 뒤 돌아보기 0.8초(옛 1.2) · 문구 1.5초(옛 1.8) · 합 6.05초(옛 5.45)
    *   움직임 줄이기 = 숫자만(0.9초 · 카메라 그대로) */
   var IR_PH = { demo: [['rise', 1300], ['turn', 800], ['out', 1350], ['text', 1500], ['in', 1100]], demoRm: [['rise', 900], ['turn', 400], ['fo', 200], ['text', 1700], ['fi', 300]],
+    floor: [['rise', 1300], ['turn', 800], ['out', 1350], ['hold', 250]], floorRm: [['rise', 900], ['turn', 400], ['fo', 200], ['hold', 150]],   /* v5.65 층 안내 · 닫힌 뒤 검정 0.25초(띵) → 앱 */
     exit: [['turn', 500], ['out', 1350], ['gap', 300], ['in', 1100]], exitRm: [['turn', 300], ['fo', 200], ['gap', 150], ['fi', 300]] };
   var _ia = new T.Vector3(), _ib = new T.Vector3(), _ic = new T.Vector3();
   function irFace() {   /* 내 캐릭터 얼굴(머리 가운데 · 바닥에서 0.52 x 크기)의 화면 좌표(창 기준) · 반지름 = 머리 반지름의 화면 크기 */
@@ -3114,10 +3151,10 @@
     if (on) { e.innerHTML = '<span>데모 버전입니다.</span><span>1층으로 이동합니다.</span>'; e.getBoundingClientRect(); e.classList.add('on'); }
     else e.classList.remove('on');
   }
-  function elevGo(demo) {
+  function elevGo(kind) {   /* kind = 'floor' | 'demo' | 'exit' (옛 true = demo · false = exit) */
     if (EV.seq || G.scn !== 'elev') return;
-    var now = performance.now(), ph = IR_PH[(demo ? 'demo' : 'exit') + (RM ? 'Rm' : '')];
-    EV.seq = { demo: demo, ph: ph, i: 0, t0: now, s0: now, f: null };
+    var k = kind === true ? 'demo' : kind === false ? 'exit' : kind, now = performance.now(), ph = IR_PH[k + (RM ? 'Rm' : '')];
+    EV.seq = { demo: k === 'demo', kind: k, ph: ph, i: 0, t0: now, s0: now, f: null };
     if (ph[0][0] === 'rise') { EV.rise = { t0: now, d: ph[0][1], to: EV.goF || 18 }; EV.turn = null; } else EV.turn = { t0: now, end: Infinity };   /* 돌아본 채로 머문다(얼굴이 마지막에 덮이게) · v5.58 올라가는 표시 뒤에 돌아본다 */
     IR.log = []; IR.dings = []; IR.cur = null;
     var el = $('iris'); el.hidden = false; irText(false); $('irisT').textContent = ''; irDraw(0, 0, 0, 0);
@@ -3126,6 +3163,7 @@
   function irEnter(q, k) {
     if (k === 'turn' && !EV.turn) { EV.rise = null; EV.turn = { t0: performance.now(), end: Infinity }; }   /* v5.58 */
     if (k === 'text') { if (q.demo) irText(true); ding(0); }
+    else if (k === 'hold') ding(0);   /* v5.65 층에 닿음 */
     else if (k === 'in' || k === 'fi') { irText(false); elevSwap(); smileSet(botParts.eyes, botParts.smiles, true); ding(k === 'in' ? 0.12 : 0); }
   }
   function irTick() {
@@ -3133,7 +3171,7 @@
     IR.raf = requestAnimationFrame(function (now) {
       IR.raf = 0; var q = EV.seq; if (!q) return;
       var p = q.ph[q.i], t = now - q.s0;
-      while (t >= p[1]) { q.s0 += p[1]; q.i++; p = q.ph[q.i]; if (!p) { irEnd(); return; } irEnter(q, p[0]); t = now - q.s0; }
+      while (t >= p[1]) { q.s0 += p[1]; q.i++; p = q.ph[q.i]; if (!p) { if (q.kind === 'floor') irFloorDone(); else irEnd(); return; } irEnter(q, p[0]); t = now - q.s0; }
       var k = p[0], d = p[1], r = 0, a = 1, f = null, R0 = 0, Rf = 0;
       if (k === 'out' || k === 'in') {
         f = irFace(); var W = window.innerWidth || 390, H = window.innerHeight || 800;
@@ -3204,7 +3242,7 @@
 
   /* ═══════════ 입력 · 왼쪽 아래 고정 패드 = 걷기(위 = 화면 위쪽) · 화면 톡 = 걷기 / 판 열기 · 두 손가락 = 거리 2단계 · 그 밖의 끌기는 아무 일 없음 ═══════════ */
   var ray = new T.Raycaster(), ptr = null, pinch = null, pads = new Map();
-  var SWIPE_DEG = 180, SWIPE_MIN = 8;   /* v5.58 화면 밀어 돌기 · 화면 폭 한 번 = 180도(실기기 감으로 이 값 하나만 바꾼다) · 8px 아래 = 톡 · 손 떼면 바로 멈춤(관성 없음 · 캡처 비교 · 멈추는 자리가 예측됨) */
+  var SWIPE_DEG = 180, SWIPE_MIN = 8, TILT_DEG = 60;   /* v5.65 위아래 = 화면 높이 한 번 60도(범위는 TILT_UP · TILT_DN 이 막는다) */   /* v5.58 화면 밀어 돌기 · 화면 폭 한 번 = 180도(실기기 감으로 이 값 하나만 바꾼다) · 8px 아래 = 톡 · 손 떼면 바로 멈춤(관성 없음 · 캡처 비교 · 멈추는 자리가 예측됨) */
   function hideDrag() {}
   function wireStage() {
     var cv = $('cv');
@@ -3223,16 +3261,21 @@
       }
       if (ptr && e.pointerId === ptr.id && Math.hypot(e.clientX - ptr.x0, e.clientY - ptr.y0) > 12) ptr.moved = true;
       /* v5.58 (사용자 261004 「화면을 미는 행위로도 화면을 왼쪽 오른쪽 회전」) 가로로 8px 넘게 밀면 돌기(오른쪽으로 밀기 = 우로 돌기 · 화면 폭 한 번 = SWIPE_DEG) · 그 뒤로는 톡이 아님 · 위아래는 무시 */
-      if (ptr && e.pointerId === ptr.id && !pinch && G.loaded && G.scn === 'lobby' && !G.anim && !G.sheetOpen && !EV.seq) {
+      /* v5.65 (사용자 261005 「권장대로」) 거의 수직(세로가 가로의 2배 이상 · 8px 넘게)으로 밀면 위아래 시선(위로 밀기 = 위를 봄 · 위 20도 · 아래 10도) · 대각선 · 가로 = 좌우 돌기만 · 한 번 정해지면 그 손가락이 뗄 때까지 그 한 가지
+       *   「화면 밀어 시점 바꾸기」를 끄면(G.swipeOn false) 둘 다 없음(돌기 단추 · 조그 · PC 키는 그대로) */
+      if (ptr && e.pointerId === ptr.id && !pinch && G.loaded && G.scn === 'lobby' && !G.anim && !G.sheetOpen && !EV.seq && G.swipeOn !== false) {
         var dx0 = e.clientX - ptr.x0, dy0 = e.clientY - ptr.y0;
-        if (!ptr.rot && Math.abs(dx0) > SWIPE_MIN && Math.abs(dx0) > Math.abs(dy0) * 1.2) { ptr.rot = true; ptr.moved = true; ptr.px = ptr.x0 + (dx0 > 0 ? SWIPE_MIN : -SWIPE_MIN); }
+        if (!ptr.rot && !ptr.tilt && Math.abs(dy0) > SWIPE_MIN && Math.abs(dy0) >= Math.abs(dx0) * 2) { ptr.tilt = true; ptr.moved = true; ptr.py = ptr.y0 + (dy0 > 0 ? SWIPE_MIN : -SWIPE_MIN); G.tiltDrag = true; clearTimeout(G.tiltT); }
+        else if (!ptr.rot && !ptr.tilt && Math.abs(dx0) > SWIPE_MIN) { ptr.rot = true; ptr.moved = true; ptr.px = ptr.x0 + (dx0 > 0 ? SWIPE_MIN : -SWIPE_MIN); }
         if (ptr.rot) { var da = (e.clientX - ptr.px) / (cv.clientWidth || 390) * SWIPE_DEG * Math.PI / 180; ptr.px = e.clientX; G.az -= da; G.azTo = G.az; G.need = true; G.swipeN = (G.swipeN || 0) + 1; }
+        if (ptr.tilt) { var dtl = (ptr.py - e.clientY) / (cv.clientHeight || 700) * TILT_DEG * Math.PI / 180; ptr.py = e.clientY; G.tiltTo = G.tilt = clamp((G.tiltTo || 0) + dtl, -TILT_DN, TILT_UP); G.need = true; G.tiltN = (G.tiltN || 0) + 1; }
       }
     });
     function end(e) {
       pads.delete(e.pointerId); if (pads.size < 2) pinch = pads.size ? pinch : null; if (!pads.size) G.pinchOn = false;
       if (!ptr || e.pointerId !== ptr.id) return;
       var p = ptr; ptr = null;
+      if (p.tilt) { G.tiltDrag = false; clearTimeout(G.tiltT); G.tiltT = setTimeout(function () { if (!G.tiltDrag) tiltHome(false); }, 1000); }   /* v5.65 손을 떼고 1초 뒤 정면으로 */
       if (!p.moved && e.type === 'pointerup' && performance.now() - p.t0 < 500) tap(p.lx, p.ly);
     }
     cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
@@ -3791,7 +3834,6 @@
     jb.addEventListener('contextmenu', function (e) { e.preventDefault(); });
     /* v5.49 스탬프 카드 · 엘리베이터 버튼 */
     $('scGo').onclick = goStamp; $('scX').onclick = closeStampCard; $('scard').addEventListener('click', function (e) { if (e.target === $('scard')) closeStampCard(); });
-    $('bExit').onclick = function () { leaveElev(false); };
     Array.prototype.forEach.call($('evp').querySelectorAll('.evb'), function (b) { b.onclick = function () { pressFloor(b); }; });
     $('gbub').onclick = function () { if (performance.now() - (G.guardT || 0) < 500) return; var gd = G.talk; if (!gd) return; if (gd.stamp) { openStampCard(gd.stamp); return; } if (gd.spot === 'typing') { openPromo(); return; } if (!gd.go) return; doLook(); };   /* v5.54 말풍선 = 자세히 보기 단추와 같은 일 */
     $('look').onclick = doLook;
@@ -3850,7 +3892,7 @@
     '    <button type="button" class="gbub" id="t3-gbub" hidden><span id="t3-gbubT"></span><span class="go">스탬프 받기</span></button>\n' +
     '    <button type="button" class="look" id="t3-look" hidden aria-label="자세히 보기"><span class="lk" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.2"/><path d="M15.2 15.2l5 5"/></svg></span><span class="lt">자세히 보기</span><kbd class="kh" aria-hidden="true">Enter</kbd></button>\n' +   /* v5.54 자세히 보기 하나 */
     '    <div class="cheer" id="t3-cheer" role="status" aria-live="polite" hidden>더 힘내세요!</div>\n' +
-    '    <div class="evp" id="t3-evp" role="group" aria-label="엘리베이터 층 버튼" hidden><span class="evh">층 선택</span><button type="button" class="evb" data-f="18" aria-label="18층"><b>18</b></button><button type="button" class="evb" data-f="17" aria-label="17층"><b>17</b></button><button type="button" class="evb" data-f="10" aria-label="10층"><b>10</b></button></div>\n' +
+    '    <div class="evp" id="t3-evp" role="group" aria-label="엘리베이터 층 버튼" hidden><span class="evh">층 선택</span><button type="button" class="evb" data-f="18" aria-label="18층"><b>18</b></button><button type="button" class="evb" data-f="17" aria-label="17층"><b>17</b></button><button type="button" class="evb" data-f="10" aria-label="10층"><b>10</b></button><button type="button" class="evb" data-f="1" aria-label="1층 · 내리기"><b>1</b></button></div>\n' +
     '    <div class="bubble" id="t3-bubble" hidden>아이디어 한 줄을 내면 커피챗을 신청할 수 있어요</div>\n' +
     '    <div class="fps" id="t3-fps" hidden></div>\n' +
     '    <p class="nogl" id="t3-nogl" hidden></p>\n' +
@@ -3860,9 +3902,6 @@
     '    <div class="row" id="t3-navRow">\n' +
     '      <button type="button" class="nb" id="t3-bPrev">◀ 이전 구역</button>\n' +
     '      <button type="button" class="nb pri" id="t3-bNext">다음 구역 ▶</button>\n' +
-    '    </div>\n' +
-    '    <div class="row" id="t3-elevRow" hidden>\n' +
-    '      <button type="button" class="nb pri wide" id="t3-bExit">1층에서 내리기</button>\n' +
     '    </div>\n' +
     '    <div class="row" id="t3-cafeRow" hidden>\n' +
     '      <button type="button" class="nb pri wide" id="t3-bBack1F">1층으로 돌아가기</button>\n' +
@@ -3887,7 +3926,7 @@
     '  <div class="hcard">\n' +
     '    <p class="h1t">왼쪽 동그라미로 걷고, 오른쪽 버튼으로 점프 · 달리기 · 돌기를 해요. 「다음 구역」을 누르면 알아서 걸어가요.</p>\n' +
     '    <p class="h2t">두 손가락으로 벌리면 크게, 오므리면 작게 봐요. 빈 바닥을 두 번 누르면 원래 크기예요.</p>\n' +
-    '    <p class="h2t">떠 있는 동전을 점프로 치면 그 활동으로 가요. 화면을 옆으로 밀면 돌아봐요.</p>\n' +   /* v5.58 */
+    '    <p class="h2t" id="t3-hSw">떠 있는 동전을 점프로 치면 그 활동으로 가요. 화면을 밀면 둘러봐요.</p>\n' +   /* v5.58 · v5.65 설정 「화면 밀어 시점 바꾸기」에 맞춰 setSwipe 가 바꾼다 */
     '    <p class="h2t pconly">PC에서는 W A S D로 걷고, ↑ 달리기 · ↓ 점프 · ← → 돌기예요.</p>\n' +
     '    <div class="hdemo" aria-hidden="true"><span class="hbtn">다음 구역 ▶</span><span class="finger"></span></div>\n' +
     '    <label class="rmrow"><span class="t"><b>움직임 줄이기</b><span>어지러우면 켜세요</span></span><input type="checkbox" id="t3-rmChk" role="switch"><span class="sw" aria-hidden="true"></span></label>\n' +
@@ -3915,7 +3954,7 @@
     '<section class="cfg" id="t3-cfg" role="dialog" aria-modal="true" aria-labelledby="t3-cfgT" tabindex="-1" hidden>\n' +
     '  <div class="cfcard">\n' +
     '    <h2 class="cft" id="t3-cfgT">설정</h2>\n' +
-    '    <div class="cfrow"><span class="t"><b>시점</b></span><span class="seg" role="radiogroup" aria-label="시점"><button type="button" role="radio" id="t3-vTop" data-v="top">내려다보기</button><button type="button" role="radio" id="t3-vEye" data-v="eye">눈높이</button></span></div>\n' +
+    '    <label class="rmrow"><span class="t"><b>화면 밀어 시점 바꾸기</b><span>끄면 돌기 단추로만 돌아요</span></span><input type="checkbox" id="t3-cfSw" role="switch"><span class="sw" aria-hidden="true"></span></label>\n' +
     '    <label class="rmrow" id="t3-cfMuRow"><span class="t"><b>음악</b><span>잔잔한 로비 음악</span></span><input type="checkbox" id="t3-cfMu" role="switch"><span class="sw" aria-hidden="true"></span></label>\n' +
     '    <label class="rmrow"><span class="t"><b>움직임 줄이기</b><span>어지러우면 켜세요</span></span><input type="checkbox" id="t3-cfRm" role="switch"><span class="sw" aria-hidden="true"></span></label>\n' +
     '    <button type="button" class="nb wide" id="t3-cfX">닫기</button>\n' +
@@ -3962,17 +4001,21 @@
     show(); musOpen();
     if (!G.loaded) return;   /* 아직 받는 중 · 받으면 load 가 자리를 잡는다 */
     G.moved = false; HOLD = null; G.stick = null; G.path = null; G.anim = null; G.air = false; G.jy = 0; G.landT = 0; refreshBlocks();   /* v5.49 앱에서 받은 스탬프가 바뀌었을 수 있다 */
-    if (OPTS.restore && G.scn === 'lobby') { poseSet(OPTS.restore); updateUi(true); entranceBack(); return; }   /* v5.53 앱 화면에서 뒤로 = 나가기 전 자리 */
+    var evR = !!(OPTS.restore && OPTS.restore.elev);
+    if (G.scn === 'elev' && !evR) leaveElev(true);   /* v5.65 층 안내에서 돌아오지 않고(탭 이동 등) 새로 열면 로비에서 */
+    G.keepElev = false;
+    if (evR && G.scn === 'elev') { elevBack(); entranceBack(); return; }   /* v5.65 층 안내에서 뒤로 = 엘리베이터 안 */
+    if (OPTS.restore && G.scn === 'lobby' && !evR) { poseSet(OPTS.restore); updateUi(true); entranceBack(); return; }   /* v5.53 앱 화면에서 뒤로 = 나가기 전 자리 */
     placeAt(0, true); applyTarget(); updateUi(true);
     entrance();
   }
   /* v5.53 (사용자 261004 「3d에서 앱으로 갔다가 뒤로가기를 하면 3d로 돌아와야 하는데, 앱 메인 화면으로 돌아가」) 자리 기억 · 되돌리기
    *   앱(TOUR_HOST.stampGo)이 닫기 전에 AXTour.pose() 로 캐릭터 자리 · 몸 방향 · 시점 방위 · 시점(내려다보기 · 눈높이) · 확대 거리를 받아 두고
    *   그 화면에서 뒤로 오면 AXTour.open({ restore }) · 모형 · 화면은 닫을 때 그대로 남아 있어 다시 받지 않는다 · 들어올 때 점 격자 전환(스카이뷰 비행 없이 그 자리) */
-  function poseGet() { return { x: +G.pos.x.toFixed(3), z: +G.pos.z.toFixed(3), h: +G.h.toFixed(4), az: +G.azTo.toFixed(4), view: G.view, dist: +(G.dist || DDEF).toFixed(3) }; }
+  function poseGet() { return { x: +G.pos.x.toFixed(3), z: +G.pos.z.toFixed(3), h: +G.h.toFixed(4), az: +G.azTo.toFixed(4), dist: +(G.dist || DDEF).toFixed(3) }; }   /* v5.65 시점은 눈높이 하나라 기억하지 않는다 */
   function poseSet(p) {
     G.pos.set(p.x, 0, p.z); G.h = G.face = p.h; G.az = G.azTo = p.az; G.mode = 'free'; G.path = null; G.yo = 0;
-    if (p.view) setView(p.view, true); if (p.dist) setDist(p.dist);
+    tiltHome(true); if (p.dist) setDist(p.dist);
     var c = camWant(); G.camPos.copy(c.pos); G.look.copy(c.look); G.need = true;
   }
   function entranceBack() {
@@ -3985,7 +4028,7 @@
     if (!$('vid').hidden) closePromo();
     if (SCARD) closeStampCard();
     irAbort();   /* v5.55 아이리스 흐름 중이면 멈추고 */
-    if (G.scn === 'elev') leaveElev(true);   /* v5.49 다음에 열 때 로비에서 */
+    if (G.scn === 'elev' && !G.keepElev) leaveElev(true);   /* v5.49 다음에 열 때 로비에서 · v5.65 층 안내로 갈 때는 엘리베이터 안 그대로(돌아오면 그 자리) */
     if (G.squeeze) { G.pos.copy(toThree(GATE.at[0], GATE.at[1] - 0.3)); G.sqS = [1, 1, 1]; G.jy = 0; }   /* v5.56 연출 중 닫으면 게이트 앞으로(걷는 곳 밖에 남지 않게) */
     G.squeeze = null; G.push = 0; G.pushK = 0; $('cheer').hidden = true; setRun(false); G.runKey = false; G.cover = false;
     if (SH) { closeSheet(true); G.lastFace = null; }
@@ -4010,5 +4053,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : null; }, ver: 'v5.58', v3: true };
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.65', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();

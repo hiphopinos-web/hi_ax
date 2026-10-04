@@ -53,7 +53,7 @@ function testMineHidden(id) {
   }
   return TMH.ids.indexOf(id) >= 0;
 }
-function testMineShuffle() { if (!testMode()) return; S.set("test_mine", testMineGen()); toast("테스트 · 내 일정을 다시 섞었어요 · " + testMine().length + "개"); App.render(); }
+function testMineShuffle() { if (!testMode()) return; S.set("test_mine", testMineGen()); toast("테스트 · 나의 일정을 다시 섞었어요 · " + testMine().length + "개"); App.render(); }
 /* ═══ v3.43 hotfix · 내 항목 병합 함수 하나 (홈 「나의 일정」 · 일정 탭 「내 일정」 공용) ═══
    종류별 1건 규칙: 커피챗·상담·포토부스는 사람당 1건 · 실제 상태에 같은 종류가 있으면 테스트 오버레이 항목은 표시하지 않는다.
    오버레이 세션은 같은 id 가 실제로 있거나 실제 항목과 시간이 겹치면 표시하지 않는다(저장된 test_mine 은 그대로 둔다).
@@ -157,7 +157,7 @@ var FL_DAP_OK = ["approved", "checked", "done"];   /* 상담은 승인된 예약
 function progTimeHtml() { return '<div class="axs-fl" id="progFlow">' + progFlowHtml() + "</div>"; }
 /* 층 표시 = 점 글자(design.md A-5 5-20 · 12px · 읽는 이름 「17층」) */
 function flFloor(n) { return DotGlyph.svg(n + "F", { h: 12, label: n + "층" }); }
-function progFlowItems() {
+function progFlowItems(onlyFl) {
   var pub = [], mine = [];
   TIMELINE.forEach(function (t) {
     if (t.always || t.off || !t.time) return;
@@ -165,6 +165,7 @@ function progFlowItems() {
     pub.push({ k: pid || t.title, pid: pid, a: t2m(t.time), b: t2m(t.end), t0: t.time, t1: t.end, ttl: t.title, sub: FL_SUB[pid] || "", fl: +pm[1] || 0, pl: pm[2],
       go: pid === "#1F" ? "progAlwaysGo()" : pid && pid.charAt(0) !== "#" ? "progOpen('" + pid + "')" : "", chip: attProg(pid) && attMineAt(pid) ? "출석" : "", lec: !!attProg(pid) });
   });
+  if (onlyFl) return pub.filter(function (p) { return p.fl === onlyFl; });   /* v5.65 층 안내(floor_d · 둘러보기 엘리베이터 17F) = 그 층 공용 일정만(개인 일정 · 대신하기 없음) */
   var tm = tenMine();
   if (tm) { var tp = tm.tm.split("~"); mine.push({ k: "ten", pid: tm.id, a: t2m(tp[0]), b: t2m(tp[1]), t0: tp[0], t1: tp[1], ttl: tm.ttl, sub: tm.sub, fl: 10, pl: sessPlace(tm).replace(/^\d+F\s*·?\s*/, ""), go: "progOpen('" + tm.id + "')", chip: "내 세션", mine: true, rep: true }); }
   var r = myResv();
@@ -175,13 +176,13 @@ function progFlowItems() {
   pub = pub.filter(function (p) { return !mine.some(function (m) { return m.rep && m.a < p.b && p.a < m.b; }); });
   return pub.concat(mine).sort(function (x, y) { return x.a - y.a || (y.mine ? 1 : 0) - (x.mine ? 1 : 0); });
 }
-function progFlowHtml() {
-  var ph = evPhase(), hmN = ph === "before" ? -1 : ph === "after" ? 99999 : hmNow(), its = progFlowItems(), g = [], by = {};
+function progFlowHtml(onlyFl) {
+  var ph = evPhase(), hmN = ph === "before" ? -1 : ph === "after" ? 99999 : hmNow(), its = progFlowItems(onlyFl), g = [], by = {};
   its.forEach(function (o) { if (!by[o.t0]) { by[o.t0] = { t0: o.t0, a: o.a, its: [] }; g.push(by[o.t0]); } by[o.t0].its.push(o); });
   var act = its.filter(function (o) { return hmN >= o.a && hmN < o.b; });
   act.sort(function (x, y) { return (y.mine ? 1 : 0) - (x.mine ? 1 : 0) || x.a - y.a; });
   var focus = act[0] || null;
-  PROG.flKey = ph + hmN;
+  if (!onlyFl) PROG.flKey = ph + hmN;
   return g.map(function (r, i) {
     var nx = g[i + 1], b = Math.max.apply(null, r.its.map(function (o) { return o.b; }));
     var st = focus && r.its.indexOf(focus) >= 0 ? "now" : r.its.some(function (o) { return hmN >= o.a && hmN < o.b; }) ? "on" : hmN >= b ? "past" : "next";
@@ -228,8 +229,11 @@ var FLOOR1 = [
   { id: "action", grp: "see", sign: "AX in Action", kor: "AI 업무 사례를 보는 곳", fact: "동료가 만든 앱 3개", st: "",
     stm: "동료가 AI로 만든 현장 앱을 보는 곳", todo: ["현장 인터뷰 영상을 봐요"],
     cases: [["강북이 - 개인 맞춤형 시상 어플리케이션", "영업 사례 · 강북조직파트 김동건 전임"], ["AI컨설팅 도우미 - 판매 화법 어플리케이션", "영업 사례 · 안양AM지점 이은정 지점장"], ["하이핑거 - 보상 업무 지원 어플리케이션", "보상 사례 · 울산대인보상센터 이승철 대리"]] },   /* v5.60 판 16 ~ 18 한 컷(말풍선 · 인용 · 기능 칩) 대신 앱 이름 + 만든 사람(소속 · 이름 · 직급은 판 글자 그대로 · 사용자 「실명 남긴다」) */
-  { id: "lounge", grp: "do", sign: "AX LOUNGE", kor: "업무 고민을 상담하는 곳", fact: "", st: "p3",
-    stm: "데이터사이언스파트와 업무 고민 상담", todo: ["고민을 이야기하고 방향을 함께 찾아요", "앱에서 30분 상담을 신청해요", "상담이 끝나면 스탬프를 받아요"] },   /* v5.60 상담 주제 예시 칩 · 커피 · 간식 사진은 상담 신청 화면(DAP 상세)에만 */
+  { id: "lounge", grp: "do", sign: "AX LOUNGE", hdr: "AX LOUNGE", kor: "내년 DAP 과제를 1:1로 상담하는 곳", fact: "", st: "p3",
+    stm: "내년 DAP(데이터 분석 프로젝트) 과제로 해 볼 업무가 있다면 1:1로 상담해요",
+    todo: ["데이터사이언스파트와 업무 고민을 나누고 방향을 함께 찾아요", "앱에서 30분 상담을 신청해요", "상담이 끝나면 스탬프를 받아요"],
+    gd: ["아직 구체적이지 않다면 18F AX 커피챗에서 비슷한 고민을 가진 사람들과 가볍게 이야기할 수 있어요", "18F AX 커피챗 보기", "cchat"],
+    chk: [["진행", "업무 설명 → 병목 → 개선방안 · 30분"], ["신청", "신청 후 승인되면 앱에서 알려 드려요"], ["기록", "상담 내용은 기록되어 행사 후 정리해 공유돼요"], ["사은품", "상담을 완료하면 드려요"]] },   /* v5.65 (사용자 261005 「커피챗과 라운지는 권장대로」 · 정본 디자인 시안/라운지 커피챗 통일/설계안.md) 커피챗과 같은 틀 · 서로 안내(gd) · 참여 전 확인(chk) 패널 · 커피 · 간식 사진은 패널 안에만 */
   { id: "play", grp: "do", sign: "AX PLAY", kor: "AI를 직접 써 보는 곳", fact: "HiDI-Q · Hi-Helper", st: "p2",
     stm: "HiDI-Q와 Hi-Helper를 직접 써 보는 곳", todo: ["노트북에서 HiDI-Q, Hi-Helper를 써 봐요", "스태프에게 내 QR을 보여 주면 적립"], btn: ["체험 안내", "App.go('booth')"] },   /* v5.60 기능 목록 판 한 컷 2장 삭제(판 · 모형에 있다) */
   { id: "event", grp: "do", sign: "EVENT", kor: "사진 · 룰렛 · 타자왕이 있는 곳", fact: "", st: "",
@@ -255,8 +259,25 @@ function zoneCaseHtml(z) {
 function zoneExHtml(z) {
   return z.ex ? '<hr class="axs-rule"><div class="axs-zex"><h3>' + esc(z.ex.h) + '</h3><div class="axs-chiprow">' + z.ex.c.map(function (c) { return '<span class="axs-chip">' + esc(c) + "</span>"; }).join("") + "</div></div>" : "";
 }
-function zoneById(id) { return FLOOR1.filter(function (z) { return z.id === id; })[0] || null; }
-function zoneOpen(id) { PROG.zone = id; App.go("zone_d"); }
+/* v5.65 18F = AX 커피챗 하나(「라운지」 표기 없음) · 1F AX LOUNGE 와 같은 구역 상세(zone_d) 틀 · 한 줄 = 질문 3줄(q) · 시간은 매칭 후 앱에서 안내(운영 시간 확정 문서 없음)
+   상태 · 주 버튼 = zoneLive cchat(옛 프로그램 탭 18F 줄 ccSub · 옛 상세 progDetail 신청 전 분기를 옮겼다) · 신청한 뒤 「내 신청」 = 프로그램 상세(sess_d · 매칭 · 취소) */
+var FLOOR18 = [
+  { id: "cchat", grp: "", sign: "AX COFFEE CHAT", hdr: "AX 커피챗", kor: "비슷한 고민을 가진 사람들과 이야기하는 곳", fact: "", st: "p3",
+    q: ["내 업무에 AI를 쓸 수 있을까?", "나와 비슷한 고민을 하는 사람이 있을까?", "어떻게 시작하지?"],
+    todo: ["비슷한 고민을 가진 사람들과 멘토가 한 테이블에서 다음 한 걸음을 찾아요", "아이디어 한 줄을 남기고 시간대를 골라 신청해요", "참석하면 스탬프를 받아요"],
+    gd: ["과제로 키우고 싶은 업무가 있다면 1F AX LOUNGE에서 1:1로 상담할 수 있어요", "1F AX LOUNGE 보기", "lounge"],
+    chk: [["진행", "주제 소개 → 고민 나누기 → 다음 한 걸음"], ["매칭", "고른 시간대에 맞춰 매칭해요"], ["정원", "선착순 " + CCHAT_CAP + "명"], ["알림", "매칭되면 하이웍스로 알려 드려요. 앱 나의 참여에서도 볼 수 있어요"]] }
+];
+function zoneById(id) { return FLOOR1.concat(FLOOR18).filter(function (z) { return z.id === id; })[0] || null; }
+function zoneOpen(id) { PROG.zone = id; PROG.zchk = false; App.go("zone_d"); }
+/* v5.65 커피챗 입구 하나 · 신청(또는 참석)이 있으면 프로그램 상세 · 없으면 구역 상세 */
+function cchatOpen() { if (S.get("cchat", null) || S.get("cchat_att", false)) progOpen("cchat"); else zoneOpen("cchat"); }
+/* v5.65 「참여 전 확인」 펼침 = 같은 화면 패널(시트 아님 · 설계안 결정 1) · 다시 그리지 않고 패널만 연다 · 닫는다 */
+function zoneChkToggle(b) {
+  var p = el("zChk"); if (!p) return;
+  var on = p.hidden; p.hidden = !on; PROG.zchk = on; b.setAttribute("aria-expanded", String(on));
+  if (on) { var r = p.getBoundingClientRect(), tb = el("tabbar"), lim = window.innerHeight - (tb && tb.style.display !== "none" ? tb.offsetHeight : 0); if (r.top > lim - 120) p.scrollIntoView({ block: "nearest" }); }
+}
 /* ── 구역 간판 칩 · v5.10 부스 원본 사인 글자(점 글자 DotGlyph · design.md A-5 5-20) · 줄 24 · 점 12px · 상세(lg) 26 · 점 14px
    옛 Neo둥근모 근사와 그림 교체 지점 ZONE_SIGN_IMG 는 폐기(이 .ai 가 그 원본이다) · 읽는 이름은 칩(role img)이 준다 · 「AX in Action」은 대문자로 그린다 ── */
 function zoneSign(nm, cls) {
@@ -291,6 +312,15 @@ function zoneLive(z) {
     o.chip = rl ? ["내 신청", ""] : dn ? ["완료", "ok"] : n > 0 ? null : ["마감", "off"];
     o.kv = [["지금", now], ["장소", "1F AX LOUNGE"]];
     o.btn = [rl || dn ? "내 신청" : n > 0 ? "상담 신청" : "상담 안내", "progOpen('dap')"];
+  } else if (z.id === "cchat") {
+    /* v5.65 옛 프로그램 탭 18F 줄 상태(ccSub) · 옛 상세 신청 전 주 버튼(아이디어 남기기 · 커피챗 신청하기 · 신청 마감)을 여기 한 곳으로 */
+    var c = S.get("cchat", null), att = S.get("cchat_att", false), mt = !!(c && c.status === "matched"), cl = !c && !att && cchatClosed();
+    var cnow = att ? "참석 완료" : c ? (mt ? "매칭 완료" + (c.table ? " · TABLE " + c.table : "") : "매칭 대기") : cl ? "마감" : ideaMineN() ? "아이디어 제출 완료 · 신청 가능" : "아이디어 제출 후 신청";
+    o.tm = mt && c.round ? "10월 26일 " + c.round : "시간은 매칭 후 앱에서 안내";
+    o.fact = mt && c.round ? cnow.replace("매칭 완료", "매칭 완료 · " + c.round) : cnow;
+    o.chip = att ? ["완료", "ok"] : c ? ["내 신청", ""] : cl ? ["마감", "off"] : null;
+    o.kv = [["지금", cnow], ["장소", "18F"]];
+    o.btn = att || c ? ["내 신청", "progOpen('cchat')"] : cl ? ["신청 마감", "", "", true] : ideaMineN() ? ["커피챗 신청하기", "cchatApplyOpen()", "cchatApplyBtn"] : ["아이디어 남기기", "App.go('ideas')"];
   } else if (z.id === "event") {
     o.kv = [["포토부스", "10:00~17:00"], ["장소", "1F EVENT"]];   /* v5.05 포토부스 대기 없음 · 운영 시간만 */
   }
@@ -313,18 +343,32 @@ function zoneRowHtml(z) {
 }
 function progAlwaysHtml() {
   var grp = function (g, nm) { return '<p class="axs-dot">' + nm + "</p>" + FLOOR1.filter(function (z) { return z.grp === g; }).map(zoneRowHtml).join(""); };
-  var c = S.get("cchat", null), att = S.get("cchat_att", false);
-  var ccSub = att ? "참석 완료" : c ? (c.status === "matched" ? "매칭 완료" + (c.round ? " · " + c.round : "") + (c.table ? " · TABLE " + c.table : "") : "매칭 대기") : cchatClosed() ? "마감" : ideaMineN() ? "아이디어 제출 완료 · 신청 가능" : "아이디어 제출 후 신청";
-  var ccChip = att ? ["완료", "ok"] : c ? ["내 신청", ""] : cchatClosed() ? ["마감", "off"] : null, ccSt = progStampId(progById("cchat"));   /* v4.99 커피챗 = 프로그램 참여(p3) 도장 · 상세 오른쪽 위와 같은 것 */
+  var cz = FLOOR18[0], cL = zoneLive(cz);   /* v5.65 18F 줄 = 구역 표(FLOOR18) · 상태 = zoneLive · 누르면 구역 상세(zone_d · 1F AX LOUNGE 와 같은 틀) */
   return '<section class="axs-zsec" id="zone1f"><div class="axs-bar"><b>1F 로비</b><span>행사 시간 중 자유 관람</span></div>' + tourRowHtml() + grp("see", "둘러보기") + grp("do", "참여하기") + "</section>" +
     '<section class="axs-zsec" id="zone18f"><div class="axs-bar"><b>18F</b><span>소규모 아이디어 논의</span></div>' +
-    '<button type="button" class="axs-zfl" onclick="progOpen(\'cchat\')"><span class="tx"><span class="nm">' + zoneSign("AX COFFEE CHAT") + zoneChip(ccChip) + '</span><span class="k">아이디어를 놓고 이야기하는 곳</span><span class="f">' + esc(ccSub) + "</span></span>" +
-    '<span class="zrt">' + (ccSt ? stampTagHtml(ccSt) : "") + CHEV_SVG + "</span></button></section>";
+    '<button type="button" class="axs-zfl" data-zone="cchat" onclick="zoneOpen(\'cchat\')"><span class="tx"><span class="nm">' + zoneSign(cz.sign) + zoneChip(cL.chip) + '</span><span class="k">' + esc(cz.kor) + '</span><span class="f">' + esc(cL.fact) + "</span></span>" +
+    '<span class="zrt">' + zoneStampHtml(cz) + CHEV_SVG + "</span></button></section>";
 }
 /* 구역 상세 · 간판 칩(v4.94 포인트 크기) → 부제 한 줄 → 보조 줄(운영 시간 · 룰렛 · 스탬프 없음) → 얇은 ink 줄 → 하는 일(주황 점) → (사실 표) → 행동 버튼 하나(있을 때만) · 뒤로 = 프로그램
    v4.99 스탬프 도장 = 카드 오른쪽 위(강연 상세 sess_d 와 같은 axs-sthost · stampTagHtml) */
+/* v5.65 AX LOUNGE · AX 커피챗 = 같은 부품(설계안 2절) · 간판 → 한 줄(커피챗 = 질문 3줄) → 시간 → 하는 일 → 지금 · 장소 → 서로 안내(카드 맨 아래 · 약한 링크) → 주 버튼 → 「참여 전 확인」 약한 버튼 → (펼침) 확인 표 + 커피 · 간식 사진 2장
+   펼침 상태 PROG.zchk(구역에 새로 들어오면 접힘) · 사은품 줄은 LOUNGE 에만(260918 예외) · 둘러보기 엘리베이터에서 왔으면 맨 아래 「둘러보기로 돌아가기」(v5.65) */
+function zonePairHtml(z, L) {
+  var head = z.q ? '<p class="axs-xq">' + z.q.map(function (t) { return "<span>" + esc(t) + "</span>"; }).join("") + "</p>" : '<p class="axs-bar stm">' + esc(z.stm) + "</p>";
+  var b = L.btn || ["", ""], open = !!PROG.zchk;
+  var chk = '<section class="axs-zdt axs-xchk" id="zChk" aria-label="참여 전 확인"' + (open ? "" : " hidden") + '><dl class="axs-kv">' + z.chk.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl>" + treatHtml() + "</section>";
+  return '<div class="ax-stack axs-pan"><div class="axs-zdt axs-sthost">' + zoneStampHtml(z) + zoneSign(z.sign, "lg") + head +
+    '<div class="cr"><span class="axs-pt">' + esc(L.tm || "") + "</span></div>" +
+    '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + z.todo.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" +
+    '<hr class="axs-rule"><dl class="axs-kv">' + L.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl>" +
+    '<hr class="axs-rule"><div class="axs-xgd"><p class="axs-bar stm">' + esc(z.gd[0]) + '</p><button type="button" class="ax-link axs-plain axs-self" onclick="zoneOpen(\'' + z.gd[2] + '\')">' + esc(z.gd[1]) + "</button></div></div>" +
+    '<div class="axs-xbtns">' + progBtn(esc(b[0]), b[1], "", b[2] || "", !!b[3]) +
+    '<button type="button" class="ax-button ax-button-weak axs-xtog" aria-expanded="' + open + '" aria-controls="zChk" onclick="zoneChkToggle(this)">참여 전 확인' + CHEV_SVG + "</button>" +
+    "</div>" + chk + tourFloorBackHtml() + "</div>";
+}
 function zoneDetailHtml() {
   var z = zoneById(PROG.zone) || FLOOR1[0], L = zoneLive(z), pill = zoneStampHtml(z), ev = z.id === "event", seal = pill && !ev;
+  if (z.gd) return zonePairHtml(z, L);
   var cr = ev ? pill : seal ? (L.tm ? '<span class="axs-pt">' + esc(L.tm) + "</span>" : "") : '<span class="axs-pt">자유 관람 · 스탬프 없음</span>';
   return '<div class="ax-stack axs-pan"><div class="axs-zdt' + (seal ? " axs-sthost" : "") + '">' + (seal ? pill : "") + zoneSign(z.sign, "lg") +
     '<p class="axs-bar stm">' + esc(z.stm) + "</p>" + (cr ? '<div class="cr">' + cr + "</div>" : "") +
@@ -440,8 +484,8 @@ function progDetail(s) {
   }
   if (s.id === "dap") {
     var r = myResv(), live = r && RESV_HOLD.indexOf(r.status) >= 0;
-    D.pics = treatHtml();   /* v5.04 (261002 회의) 상담존에도 커피 · 간식 · 사진 2장 */
-    D.cat = "AX LOUNGE 상담"; D.title = "내 업무에 AI를 어떻게 적용할지, 1:1 상담"; D.who = "데이터사이언스파트"; D.av = "DAP"; D.whoSub = "1:1 · 30분";
+    /* v5.65 커피 · 간식 사진 · 「참여 전 확인」 글은 구역 상세(zone_d lounge) 펼침 패널로 옮겼다(설계안 결정 6 · 7) · 제목 = 「내년 DAP 과제 상담」(옛 「내 업무에 AI를 어떻게 적용할지, 1:1 상담」은 커피챗 질문과 겹쳤다) · 원 안 글자 DS = 데이터사이언스파트 */
+    D.cat = "AX LOUNGE 상담"; D.title = "내년 DAP 과제 상담"; D.who = "데이터사이언스파트"; D.av = "DS"; D.whoSub = "1:1 · 30분";
     /* v5.60 G (사용자 261004 「진행 방식 보기 정보와 줄글이 중복」) 「진행 방식 보기」 모달(dapModal) 삭제 · 모달에만 있던 기록 · 공유 문장을 본문으로 */
     D.cfKv = [["일시", "10월 26일 " + (PROG.cf && PROG.cf.slot || DAPSEL || "") + " (30분)"], ["장소", pl], ["상담", "데이터사이언스파트 1:1"]];
     if (live) {
@@ -465,15 +509,15 @@ function progDetail(s) {
       '<section class="ax-stack-tight axs-gap12"><div class="ax-row"><h2 class="ax-section-title">상담 시간 선택</h2><span class="ax-meta">남은 시간 ' + resvRemain() + "개</span></div>" +
       '<div class="axs-slots" role="group" aria-label="상담 시간">' + slots.filter(function (t) { return t2m(t) < lunchM; }).map(cell).join("") +
       '<p class="ax-meta axs-lunch">점심시간 ' + conf.lunch + "–" + conf.lunchEnd + "</p>" + slots.filter(function (t) { return t2m(t) >= lunchM; }).map(cell).join("") + "</div></section>";
-    D.secB = "업무 설명 → 병목 → 개선방안 · 30분<br>상담 내용은 기록되어 행사 후 정리해 공유돼요.<br>상담을 완료하면 사은품을 드려요.";   /* v4.95 375px 줄마다 한 줄 · v5.60 「커피와 간식이 준비돼 있어요」는 아래 사진 카드와 겹쳐 뺐다 · 기록 문장 = W5 말투 */
+    D.sg = "";   /* v5.65 신청 화면 확인 블록 · 사진 삭제(같은 글이 구역 상세 「참여 전 확인」에 있다 · 설계안 결정 6) */
     D.help = DAPSEL ? "선택한 시간 " + DAPSEL + " · 1F AX LOUNGE" : "상담 시간을 먼저 골라 주세요";
     D.btn = DAPSEL ? progBtn("이 시간으로 신청하기", "progApply(\'dap\')") : progBtn("이 시간으로 신청하기", "", "", "", true);
     return D;
   }
   if (s.id === "cchat") {
     var c = S.get("cchat", null), mt = c && c.status === "matched";
-    D.pics = treatHtml();   /* v5.04 커피 · 간식 사진 2장(261002 사용자 확정) */
-    D.cat = "커피챗"; D.title = "멘토와 가벼운 시간"; D.who = "AX 멘토와 함께"; D.av = "AX";   /* v4.13 인원 · 부서 · 소요 시간 표기 삭제(사용자 260922) · 매칭 뒤 실제 자리 · 시각은 그대로 */
+    /* v5.65 신청 전 안내는 구역 상세(zone_d cchat)로 옮겼다 · 여기는 신청 후 · 참석 화면(설계안 결정 7 · 사진만 제거) · 옛 「멘토와 가벼운 시간」 · 「AX 멘토와 함께」 삭제(정리 기록) */
+    D.cat = "AX 커피챗"; D.title = "비슷한 고민을 나누고 다음 한 걸음 찾기";   /* v4.13 인원 · 부서 · 소요 시간 표기 삭제(사용자 260922) · 매칭 뒤 실제 자리 · 시각은 그대로 */
     D.kv = [["일시", mt ? day + c.round : "시간은 매칭 후 앱에서 안내"], ["장소", mt ? "18F · TABLE " + c.table : "18F"], ["참여 방법", "아이디어 제출 후 참석 신청"]];
     /* v5.60 G 같은 패턴 · 「진행 방식 보기」 모달(cchatModal) 삭제 · 세 단계는 본문 한 줄로 · 커피 · 간식은 사진 카드가 보여 준다 */
     if (S.get("cchat_att", false)) {
@@ -484,11 +528,8 @@ function progDetail(s) {
       return D;
     }
     if (!c) {
-      /* v4.07 자동 요청 폐기 · 아이디어가 있으면 바로 신청, 없으면 아이디어부터 */
-      D.secB = CCHAT_TXT.split(" · ")[1] + "<br>주제 소개 → 고민 나누기 → 다음 한 걸음<br>고른 시간대에 맞춰 매칭해요<br>" + CCHAT_NOTE.replace(" · ", "<br>") + "<br>선착순 " + CCHAT_CAP + "명";   /* v4.47 · v4.95 줄마다 한 줄(신청 시트와 같은 말) */
-      if (cchatClosed()) { D.st = "마감"; D.stc = "off"; D.help = "선착순 " + CCHAT_CAP + "명이 모두 찼어요"; D.btn = progBtn("신청 마감", "", "", "", true); }
-      else if (ideaMineN()) { D.help = "제출한 아이디어로 신청해요"; D.btn = progBtn("커피챗 신청하기", "cchatApplyOpen()", "", "cchatApplyBtn"); }
-      else { D.help = "아이디어를 한 줄 남기면 신청할 수 있어요"; D.btn = progBtn("아이디어 남기기", "App.go(\'ideas\')"); }
+      /* v5.65 신청 전은 구역 상세(App.go 가 zone_d cchat 으로 돌린다) · 여기 닿으면(신청이 막 지워진 화면을 다시 그릴 때) 안내로 */
+      D.sg = ""; D.st = ""; D.help = ""; D.btn = progBtn("AX 커피챗 안내 보기", "zoneOpen('cchat')");
     } else {
       D.secT = "신청한 커피챗이에요";
       if (!mt && c.pref) D.kv.push(["희망 시간", c.pref]);
@@ -699,15 +740,19 @@ function myAgendaRow(x, j) {
     cls: past ? " past" : " my" + (now ? " now" : ""), tok: past ? "dim" : x.call && isBlack("call") ? "act" : "mine"
   }).replace('<div class="rc', '<div data-my="' + esc(x.kind) + '" class="rc');   /* 알림 · 신청 결과 「내 일정 확인하기」가 그 줄을 튕긴다(focusTarget my:조각) */
 }
-function myAgendaHtml() {
+function myAgendaItems() {
   var items = myItems(true).filter(function (x) { return !x.ten; }), ts = tenMine();
   /* v5.64 (사용자 261005 「세션A가 펼쳐져 있는 게 이상 · 프로그램 탭 시간표처럼 · 상세는 눌러서」) 내 10F 세션 = 다른 일정과 같은 시간표 줄 · 시간 순서 · 누르면 세션 상세 · 옛 펼친 카드(tenMineCard · 「세션 상세」 단추) 삭제 */
   if (ts) { var tsp = ts.tm.split("~"), tsm = sessMine(ts.id) || {}; items.push({ kind: "sess:" + ts.id, min: t2m(tsp[0]), go: "sessOpen('" + ts.id + "')", gTitle: ts.ttl, gSub: "내 세션 · " + sessPlace(ts) + (tsm.test ? " · 테스트" : ""), iv: [t2m(tsp[0]), t2m(tsp[1])] }); }
   var r = myResv();
   if (r && r.status === "done" && r.slot) items.push({ kind: "resv_done", done: true, min: sessStartMin(r.slot), go: "App.go('dap')", gTitle: "AX LOUNGE 상담", sub: "1F AX LOUNGE", iv: [sessStartMin(r.slot), sessStartMin(r.slot) + (RESV_CONF.step || 30)] });   /* 끝난 상담도 지난 줄로 남긴다 */
   items.sort(function (a, b) { return (a.done ? 1 : 0) - (b.done ? 1 : 0) || (myAgendaNow(a) ? -1 : a.min) - (myAgendaNow(b) ? -1 : b.min); });
-  var n = items.length;
-  var head = '<div class="ax-row"><h2 class="ax-section-title">나의 일정</h2>' + (n ? '<span class="ax-meta">10월 26일 · ' + n + "개</span>" : "") + "</div>";
+  return items;
+}
+/* v5.65 나의 참여 › 나의 일정 갈래 · 이름은 위 세그먼트가 말한다(옛 제목 줄 「나의 일정」 삭제 · 날짜 · 개수 한 줄만) */
+function myAgendaHtml() {
+  var items = myAgendaItems(), n = items.length;
+  var head = n ? '<p class="ax-meta">10월 26일 · ' + n + "개</p>" : "";
   if (!n) return '<section class="axs-msec" id="mysched">' + head + '<p class="ax-description">신청한 프로그램이 아직 없어요 · 17F 강연과 1F 전시는 신청 없이 갈 수 있어요</p>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="progAlwaysGo()">상시 운영 보기</button></section>';
   var cx = items.some(function (x) { return x.kind === "resv" || x.kind === "cchat"; });

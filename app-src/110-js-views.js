@@ -32,16 +32,15 @@ var Views = {
   /* v4.13 재구성(사용자 확정 260922) · 맨 위 스탬프 현황 카드(홈과 같은 railHtml + 다음 보상까지 + 주 버튼 「스탬프 보기」 · 카드 전체 탭)
      → 목적지 행 내 일정 → 내 보상 → 신청·대기 현황(17F 강연 · DAP 상담 · 커피챗 신청 + 포토부스 대기 번호) · 「내 QR 보여주기」 삭제 */
   my: function () {
-    var n = stampCount(), rw = rewItems().filter(function (x) { return !x.used; }).length;
-    var chev = function (t) { return lnkChev(esc(t)); };
-    /* v4.84 (261001 앱 개편 2묶음 · 기획안 5-5) 스탬프 카드는 스탬프 탭으로 옮겼다 · 여기는 한 줄 연결만(스탬프를 볼 곳 하나)
-       v4.93 (261001 사용자 확정 · IA 검토 7-4 · 8장 A5) 스탬프 → 나의 일정(펼침 · 옛 「내 일정」 화면과 프로그램 [나의 일정]을 여기 한 곳으로) → 내 보상
-       「신청·대기 현황」 행 삭제(내 일정과 같은 화면으로 가던 중복 · 대기 번호는 나의 일정 「지금」 줄) */
+    /* v5.65 (사용자 261005 「프로그램 탭처럼 나의 시간표 나의 보상 이렇게 두 탭을 나누고」 · 이름은 「나의 일정」) 맨 위 = 프로그램 탭과 같은 세그먼트 [나의 일정 | 나의 보상]
+       나의 일정 = 옛 나의 일정 줄 그대로(myAgendaHtml) · 나의 보상 = 옛 스탬프 한 줄 · 경품 한 줄 · 내 보상 화면(rewards)을 한 흐름으로(myRewardHtml)
+       처음 = 일정이 있으면 나의 일정 · 없으면 나의 보상(MY.seg 가 비었을 때) · 알림 · 딥링크 = 라우터가 갈래를 정한다(my_sched · guide_time mine = 일정 · rewards = 보상) */
+    var g = myTabSeg();
     return '<div class="ax-stack">' +   /* v4.06 탭 첫 화면 큰 제목 삭제(사용자 결정 260922 · 화면 이름은 헤더) */
-      '<div class="axs-list">' + axDest("스탬프", esc(stampGoalText(n)), chev(n + " / " + STAMP_DENOM), "App.tab('exp')") +
-        axDest("경품", "행운권 · 참여상 · 룰렛", chev("보기"), "prizeGo()") + "</div>" +   /* v5.08 경품 포스터 입구 · 스탬프 줄 바로 아래 */
-      myAgendaHtml() +
-      '<div class="axs-list">' + axDest("내 보상", "룰렛 1회권과 행운권", chev(rw + "개"), "App.go('rewards')") + "</div></div>";
+      '<div class="axs-seg" role="tablist" aria-label="나의 참여 보기">' +
+      '<button type="button" role="tab" aria-selected="' + (g === "sched") + '" onclick="mySeg(\'sched\')">나의 일정</button>' +
+      '<button type="button" role="tab" aria-selected="' + (g === "rw") + '" onclick="mySeg(\'rw\')">나의 보상</button></div>' +
+      (g === "sched" ? myAgendaHtml() : myRewardHtml()) + "</div>";
   },
 
   /* ═══ 체험 (E01) · 현장에서 / 앱에서 ═══
@@ -60,7 +59,7 @@ var Views = {
     else if (newly.length > 1) setTimeout(function () { S.set("pp_seen", seen.concat(newly)); }, 0);
     if (glow) ppAfterRender(n, n, glow);
     var testBar = !testMode() ? "" :
-      '<p class="scap" style="margin:0 2px 8px">테스트 ' + (BE.on ? "계정" : "모드") + ' · 스탬프는 이 기기에만 기록됩니다 · <span style="cursor:pointer;text-decoration:underline" onclick="testStampReset()">스탬프 초기화</span> · <span style="cursor:pointer;text-decoration:underline" onclick="testMineShuffle()">테스트 · 내 일정 다시 섞기</span></p>';
+      '<p class="scap" style="margin:0 2px 8px">테스트 ' + (BE.on ? "계정" : "모드") + ' · 스탬프는 이 기기에만 기록됩니다 · <span style="cursor:pointer;text-decoration:underline" onclick="testStampReset()">스탬프 초기화</span> · <span style="cursor:pointer;text-decoration:underline" onclick="testMineShuffle()">테스트 · 나의 일정 다시 섞기</span></p>';
     var full = n >= STAMP_DENOM;
     return '<div class="ax-stack axs-stpv">' + testBar +
       '<section class="axs-sec">' + railHtml(n, glow, null, false) + "</section>" +
@@ -87,22 +86,8 @@ var Views = {
   quiz_play: function () { return quizPlayHtml(); },   /* v4.96 판 퀴즈 · 문항 · 해설 · 결과(헤더 · 하단 메뉴 그대로) */
 
   /* ═══ 내 보상 (M05 모양 · 1단계) · 사용 가능 / 사용 완료 · 사용 방법은 기존 모달(룰렛 QR · 응모 번호) ═══ */
-  rewards: function () {
-    var items = rewItems(), av = items.filter(function (x) { return !x.used; }), us = items.filter(function (x) { return x.used; });
-    var f = REW.f === "used" ? "used" : "avail", list = f === "used" ? us : av;
-    var tabs = '<div class="axs-chiprow" role="group" aria-label="보상 구분">' +
-      '<button type="button" class="axs-chip" aria-pressed="' + (f === "avail") + '" onclick="rewPick(\'avail\')">사용 가능 ' + av.length + "</button>" +
-      '<button type="button" class="axs-chip" aria-pressed="' + (f === "used") + '" onclick="rewPick(\'used\')">사용 완료 ' + us.length + "</button></div>";
-    var cards = list.map(function (x) {
-      var tt = '<div class="ax-stack-tight"><h2 class="ax-section-title">' + x.nm + "</h2>" + (x.big ? '<p class="axs-big">' + x.big + "</p>" : "") + "</div>";
-      return '<section class="ax-card" data-rw="' + x.k + '"><span class="axs-chip axs-self' + (x.off ? " off" : x.cc != null ? x.cc : " ok") + '">' + x.chip + "</span>" +
-        (x.pic ? '<div class="axs-rwhd">' + prizePhHtml(x.pic) + tt + "</div>" : tt) +   /* v5.04 참여상 당첨 = 상품 사진 */
-        '<div class="axs-hr"></div><p class="ax-description">' + x.why + "</p>" +
-        (x.go ? '<button type="button" class="ax-button ax-button-weak" onclick="' + x.go + '">' + (x.btn || "사용 방법 보기") + "</button>" : "") + "</section>";
-    }).join("") || botHtml(f === "used" ? "사용한 보상이 없어요" : "아직 받은 보상이 없어요");
-    /* v5.04 경품 카드 3장(룰렛 · 행운권 · 참여상)은 사용 가능 보기에만 · 조건은 카드마다 한 줄이라 옛 하단 안내(「스탬프 3개면 룰렛, 4개부터 행운권」)는 뺐다 */
-    return '<div class="ax-stack">' + tabs + cards + (f === "used" ? "" : prizeGuideHtml()) + "</div>";
-  },
+  /* v5.65 옛 내 보상 화면(사용 가능 · 사용 완료 칩 + 카드 + 경품 입구)은 나의 참여 › 나의 보상 갈래로 합쳤다 · 라우터가 rewards 를 my 로 돌린다 · 여기는 닿지 않는 안전망 */
+  rewards: function () { MY.seg = "rw"; return Views.my(); },
 
   /* ═══ v5.08 경품 포스터 · 화면 조각은 prizePosterHtml(경품 안내 절) ═══ */
   prizes: function () { return prizePosterHtml(); },
@@ -341,6 +326,7 @@ var Views = {
   },
   /* v4.93 구역 상세(6구역 한 템플릿) · 옛 1F 부스 화면(floor1)은 App.go 별칭으로 상시 운영 */
   zone_d: function () { return zoneDetailHtml(); },
+  floor_d: function () { return floorGuideHtml(); },   /* v5.65 둘러보기 엘리베이터 층 안내(17F · 10F) */
 
 
 

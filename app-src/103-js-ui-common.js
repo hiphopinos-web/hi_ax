@@ -175,7 +175,7 @@ function checkRewards() {
   var n = stampCount();
   if (n >= 3 && !S.get("roulette_open", false)) {
     S.set("roulette_open", true);
-    notice({ key: "rw:roulette", title: "룰렛 1회 열림", body: "1F EVENT 룰렛 부스에서 내 QR 제시", go: "rewards", focus: "roulette", goLbl: "내 보상에서 보기" });
+    notice({ key: "rw:roulette", title: "룰렛 1회 열림", body: "1F EVENT 룰렛 부스에서 내 QR 제시", go: "rewards", focus: "roulette", goLbl: "나의 보상에서 보기" });
   }
   var t = raffleTickets(n);
   if (t < S.get("raffle_seen", 0)) S.set("raffle_seen", t);
@@ -184,7 +184,7 @@ function checkRewards() {
     if (S.get("raffle_opened", null) === null) S.set("raffle_opened", S.get("raffle_seen", 0));   /* v4.44 이 버전 전에 이미 안내한 응모권은 연 것으로 친다 */
     S.set("raffle_seen", t);
     if (BE.on && !testEmp() && raffleNums().length < t) beSync();   /* v4.43 새 번호를 미리 받아 둔다 · 스탬프 연출이 도는 동안 도착해 상자를 열면 바로 보인다 */
-    notice({ key: "rw:raffle", raffle: t, title: rfxTitle(t), body: "행운권 발급 · 17:00 Outro 추첨", go: "rewards", focus: "raffle", goLbl: "내 보상에서 보기" });   /* v4.42 raffle = 보물상자 팝업(rfxHtml) */
+    notice({ key: "rw:raffle", raffle: t, title: rfxTitle(t), body: "행운권 발급 · 17:00 Outro 추첨", go: "rewards", focus: "raffle", goLbl: "나의 보상에서 보기" });   /* v4.42 raffle = 보물상자 팝업(rfxHtml) */
   }
 }
 /* 앱 안 행동으로 붙는 3종(미니게임·아이디어·전시 QR 퀴즈) 전용.

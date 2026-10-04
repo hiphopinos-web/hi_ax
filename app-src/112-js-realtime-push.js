@@ -36,7 +36,7 @@ function checkMyState() {
   var fin = S.get("fin", null);
   if (finState() === "win" && seen.fin !== "w:" + (fin.pz || "")) {
     seen.fin = "w:" + (fin.pz || ""); changed = true;
-    notice({ key: "fin:win", title: "참여상 당첨", body: (fin.pz ? fin.pz + " · " : "") + "추첨 행사 이후 소속 부서로 배송", go: "rewards", focus: "fin", goLbl: "내 보상에서 보기" });
+    notice({ key: "fin:win", title: "참여상 당첨", body: (fin.pz ? fin.pz + " · " : "") + "추첨 행사 이후 소속 부서로 배송", go: "rewards", focus: "fin", goLbl: "나의 보상에서 보기" });
   }
   if (changed) S.set("noti_seen", seen);
 }

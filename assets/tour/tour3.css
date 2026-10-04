@@ -71,21 +71,23 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .ctl button { width: 58px; display: flex; flex-direction: column; align-items: center; gap: 1px; }
 #axTour3 .ctl .n { grid-column: 2; grid-row: 1; } #axTour3 .ctl .w { grid-column: 1; grid-row: 2; } #axTour3 .ctl .e { grid-column: 3; grid-row: 2; } #axTour3 .ctl .s { grid-column: 2; grid-row: 3; }
 #axTour3 .ctl .dot { grid-column: 2; grid-row: 2; align-self: center; justify-self: center; width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, .85); box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .2); margin-bottom: 14px; }
-#axTour3 .ctl .c { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .94); color: var(--ink); box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .18), 0 2px 10px rgba(25, 31, 40, .16); }
-#axTour3 .ctl .c svg { width: 24px; height: 24px; }
+/* v5.65 (사용자 261005 「조작 버튼의 흰색 배경의 투명도를 조정하자 좀 더 투명하게 / 가독성에 방해되지 않게」) 흰 면 알파 = --t3cA(단추 · 옛 .94) · --t3pA(조그 원 · 옛 .55) · 면은 옅게, 아이콘에만 흰 번짐 · 테는 조금 진하게 */
+#axTour3 { --t3cA: .45; --t3pA: .24; }   /* 비교 4안(.94 · .6 · .45 · .3) 중 .45 = 옛 값의 약 절반 · 밝은 바닥 · 어두운 매트 · 판 앞에서 아이콘 · 글자 또렷 */
+#axTour3 .ctl .c { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, var(--t3cA)); color: var(--ink); box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .24), 0 2px 10px rgba(25, 31, 40, .14); }
+#axTour3 .ctl .c svg { width: 24px; height: 24px; filter: drop-shadow(0 0 1px rgba(255, 255, 255, .95)) drop-shadow(0 0 2px rgba(255, 255, 255, .7)); }
 #axTour3 .ctl .l { font-size: 12px; line-height: 15px; font-weight: 700; white-space: nowrap; color: #FFFFFF; text-shadow: 0 0 3px rgba(0, 0, 0, .75), 0 1px 2px rgba(0, 0, 0, .6); }   /* 흰 바탕 없앰(사용자 261003) · 흰 글자 + 어두운 그림자 */
 #axTour3 .ctl.la .l { color: var(--ink); text-shadow: 0 0 3px #FFFFFF, 0 0 2px #FFFFFF, 0 0 1px #FFFFFF; }   /* 비교안 ?lbl=a = 먹색 글자 + 흰 번짐 */
-#axTour3 .ctl button:active .c { background: var(--canvas); }
+#axTour3 .ctl button:active .c { background: rgba(242, 244, 246, .95); }   /* v5.65 눌림 = 거의 불투명 회백(옅은 면과 구분) */
 #axTour3 .ctl button:disabled { opacity: .4; }
 /* v5.49 달리기(위 · 누르면 켜짐 = 주황) · 점프(아래 · 늘 주황 · 엄지에 가장 가까운 자리) · 사용자 261004 「확대 축소 자리에 달리기와 점프」 */
 #axTour3 .ctl .run.on .c { background: var(--brand); color: #FFFFFF; box-shadow: inset 0 0 0 2px #E5671E, 0 0 0 4px rgba(255, 127, 50, .3), 0 2px 10px rgba(25, 31, 40, .16); }
-#axTour3 .ctl .jump .c { width: 54px; height: 54px; margin-top: -3px; background: var(--brand); color: #FFFFFF; box-shadow: inset 0 0 0 2px #E5671E, 0 3px 10px rgba(229, 103, 30, .35); }
-#axTour3 .ctl .jump:active .c { background: #E5671E; transform: scale(.94); }
+/* v5.65 (사용자 261005 「점프 버튼의 주황색 강조는 없애자」) 점프 = 달리기 · 돌기와 같은 흰 원 · 먹색 아이콘(옛 주황 채움 54px 삭제) */
+#axTour3 .ctl .jump:active .c { transform: scale(.94); }
 #axTour3.rm .ctl .jump:active .c { transform: none; }
 /* v5.49 작은 지도 아래 확대 · 축소(사용자 261004 「지도에 플러스 마이너스 버튼을 작게」) · 누르는 동안 이어서 · 지도가 숨으면 같이 숨는다 */
 #axTour3 .mmz { position: absolute; right: 10px; top: 148px; display: flex; gap: 6px; z-index: 4; }
 #axTour3 .mini[hidden] + .mmz { display: none; }
-#axTour3 .mmz button { position: relative; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .94); color: var(--ink); box-shadow: inset 0 0 0 1.5px rgba(25, 31, 40, .18), 0 2px 8px rgba(25, 31, 40, .14); }
+#axTour3 .mmz button { position: relative; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, var(--t3cA)); color: var(--ink); box-shadow: inset 0 0 0 1.5px rgba(25, 31, 40, .18), 0 2px 8px rgba(25, 31, 40, .14); }
 #axTour3 .mmz button::before { content: ""; position: absolute; inset: -4px; }
 #axTour3 .mmz button:active { background: var(--canvas); }
 #axTour3 .mmz button:disabled { opacity: .4; }
@@ -115,10 +117,10 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3.rm .finger, #axTour3.rm .dest, #axTour3.rm .sheet, #axTour3.rm .list, #axTour3.rm .hcard, #axTour3.rm .cta { animation: none !important; }
 #axTour3.rm .rmrow .sw, #axTour3.rm .rmrow .sw::after { transition: none; }
 /* 고정 패드 · 왼쪽 아래 엄지 자리 · 늘 보임(사용자 261003 「가상 버튼이 아예 화면에 있는 게 낫다」) */
-#axTour3 .pad { position: absolute; left: 16px; bottom: 16px; width: 128px; height: 128px; border-radius: 50%; background: rgba(255, 255, 255, .55); box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .18), 0 2px 12px rgba(25, 31, 40, .14); touch-action: none; z-index: 4; -webkit-user-select: none; user-select: none; }
+#axTour3 .pad { position: absolute; left: 16px; bottom: 16px; width: 128px; height: 128px; border-radius: 50%; background: rgba(255, 255, 255, var(--t3pA)); box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .24), 0 2px 12px rgba(25, 31, 40, .12); touch-action: none; z-index: 4; -webkit-user-select: none; user-select: none; }
 #axTour3 .pad::before { content: ""; position: absolute; inset: 22px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(25, 31, 40, .10); pointer-events: none; }
 #axTour3 .pad .knob { position: absolute; left: 50%; top: 50%; width: 58px; height: 58px; margin: -29px 0 0 -29px; border-radius: 50%; background: var(--brand); box-shadow: 0 2px 8px rgba(25, 31, 40, .25); pointer-events: none; }
-#axTour3 .pad.on { background: rgba(255, 255, 255, .72); }
+#axTour3 .pad.on { background: rgba(255, 255, 255, calc(var(--t3pA) + .17)); }
 /* v5.38 조그 · 누르는 동안 = 손가락을 그대로 따라감(지연 없음) · 살짝 작게 + 그림자 줄임 · 떼면 0.18초 탄성으로 가운데(.back) · 밀린 쪽 링 가장자리 = 주황 은은하게(--kx · --ky · --ka) · 움직임 줄이기 = 바로 */
 #axTour3 .pad::after { content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none; opacity: var(--ka, 0); background: radial-gradient(circle at var(--kx, 50%) var(--ky, 50%), rgba(255, 127, 50, .55), rgba(255, 127, 50, 0) 46%); -webkit-mask: radial-gradient(circle, transparent 52px, #000 54px); mask: radial-gradient(circle, transparent 52px, #000 54px); transition: opacity .18s; }
 #axTour3 .pad.on .knob { transition: none; box-shadow: 0 1px 3px rgba(25, 31, 40, .22); }
@@ -235,9 +237,10 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 /* ═══ v5.49 (사용자 261004) 스탬프 블록 이름표 · 게이트 「더 힘내세요!」 · 스탬프 카드 · 엘리베이터 버튼판 ═══ */
 /* v5.58 블록 이름표 없앰(.blab 은 만들지 않음) · 점프 강조 · 스태프 방향 점 · 말풍선 나타남 페이드 · 자세히 보기 판 위 자리 */
 #axTour3 .ctl .jump.hint .c { animation: jumpHint 1.4s ease-out infinite; }
-#axTour3 .ctl .jump.hint.soft .c, #axTour3.rm .ctl .jump.hint .c { animation: none; box-shadow: inset 0 0 0 2px #E5671E, 0 0 0 4px rgba(255, 127, 50, .45), 0 3px 10px rgba(229, 103, 30, .35); }
-@keyframes jumpHint { 0% { box-shadow: inset 0 0 0 2px #E5671E, 0 0 0 0 rgba(255, 127, 50, .7), 0 3px 10px rgba(229, 103, 30, .35); } 70% { box-shadow: inset 0 0 0 2px #E5671E, 0 0 0 14px rgba(255, 127, 50, 0), 0 3px 10px rgba(229, 103, 30, .35); } 100% { box-shadow: inset 0 0 0 2px #E5671E, 0 0 0 0 rgba(255, 127, 50, 0), 0 3px 10px rgba(229, 103, 30, .35); } }
-@media (prefers-reduced-motion: reduce) { #axTour3 .ctl .jump.hint .c { animation: none; box-shadow: inset 0 0 0 2px #E5671E, 0 0 0 4px rgba(255, 127, 50, .45); } }
+/* v5.65 블록 근처 힌트 = 주황 없이 무채색 테 맥박(약하게) · 처음 친 뒤(soft) · 움직임 줄이기 = 멈춘 테 하나 */
+#axTour3 .ctl .jump.hint.soft .c, #axTour3.rm .ctl .jump.hint .c { animation: none; box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .42), 0 0 0 4px rgba(25, 31, 40, .14), 0 2px 10px rgba(25, 31, 40, .16); }
+@keyframes jumpHint { 0% { box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .42), 0 0 0 0 rgba(25, 31, 40, .32), 0 2px 10px rgba(25, 31, 40, .16); } 70% { box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .42), 0 0 0 12px rgba(25, 31, 40, 0), 0 2px 10px rgba(25, 31, 40, .16); } 100% { box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .42), 0 0 0 0 rgba(25, 31, 40, 0), 0 2px 10px rgba(25, 31, 40, .16); } }
+@media (prefers-reduced-motion: reduce) { #axTour3 .ctl .jump.hint .c { animation: none; box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .42), 0 0 0 4px rgba(25, 31, 40, .14); } }
 #axTour3 .gdir { position: absolute; left: 0; top: 0; width: 22px; height: 22px; z-index: 5; pointer-events: none; opacity: .8; }
 #axTour3 .gdir::before { content: ""; position: absolute; left: 3px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 0 3px rgba(255, 255, 255, .85); }
 #axTour3 .gdir::after { content: ""; position: absolute; left: 15px; top: 7px; border: 4px solid transparent; border-left: 6px solid var(--brand); border-right: 0; }

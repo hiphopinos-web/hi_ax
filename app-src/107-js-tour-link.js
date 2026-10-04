@@ -4,7 +4,7 @@
 /* v5.37 (사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) 둘러보기 v3 = 시험 페이지와 같은 공용 모듈(tour3.js · tour3.css · 캐릭터 걷기 · 40도 시점 · 왼손 패드 · 오른손 십자 · 작은 지도 · 스태프 챗봇 · 판 보기 · 돋보기 2개 · 움직임 줄이기 · 입장 암전)
    같은 약속 AXTour.open/close/back/isOpen · 옛 v2(tour.js · tour.css · 자동 둘러보기 · 평면 지도 · 구역 시트)로 되돌리려면 아래 목록의 tour3 두 개를 tour.css · tour.js 로 바꾸면 된다(파일은 그대로 둠) */
 /* v5.38 (사용자 261003) 둘러보기 손질 · 캐릭터 겹침(스태프 원 충돌) · 늘 카메라 쪽을 봄 · 조그 패드 · 안내데스크 깜빡임(겹친 면) · 정문 회전문 또렷하게 · 로비 음악(Web Audio 합성 · 「음악 없이」 · 위쪽 스피커 버튼) · 파일 이름 그대로 · 캐시 깨기 ver v538 */
-var TOUR = { ver: "v564", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
+var TOUR = { ver: "v565", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
 try { localStorage.removeItem('axfT3Diag'); } catch (e) {} window.AXT3_DIAG = /[?&]t3diag=1(?:&|$)/.test(location.search);   /* v5.47 진단은 주소에 ?t3diag=1 이 있는 그 페이지에서만 · 기억하지 않는다 · 옛 기기 기억은 지운다(사용자 261004) */   /* v5.44 둘러보기 실기기 진단(주소 ?t3diag=1 · 이 기기에 기억 · ?t3diag=0 이면 끔) · 화면 왼쪽 위에 GPU · 깊이 비트 · highp · DPR · fps */
 /* 켜기 스위치 · v5.28 true = 전체 공개(사용자 261003 「1층 3D 전체 공개」) · false 로 두면 입구 3곳 · 판 퀴즈 힌트 링크 · 열기가 모두 숨는다 */
 var TOUR_ON = true;
@@ -39,7 +39,7 @@ function tourOpen(o) {
    v5.60 (사용자 261004 안2 「연주황 카드로 크게」 · 시안 디자인 시안/시간표 층 색/시안.html ?b=2 · design.md A-4 승인된 예외) 상시 운영 입구 = 홈 줄과 같은 행(rcHtml) + 연주황 면 · O25 테두리 · 캐릭터 52 · 제목 17 · 설명 한 줄
    옛 흰 줄(axs-zfl 「1층 둘러보기」 · 구역 카드와 높이가 같아 입구로 안 보였다)과 구역 상세 「모형에서 보기」는 지웠다 */
 var TOUR_ST_DESC = "엘리베이터가 혼잡하면 오늘 하루는 계단을 이용해 보세요";   /* v5.64 둘러보기 계단 블록 카드 */
-var TOUR_SUB = "1층 부스 3D로 미리 보기";   /* v5.64 (사용자 261005 「문구 이렇게 수정」) 옛 「1층 부스와 판을 3D로 미리 보기」 */
+var TOUR_SUB = "1층 3D · 층별 안내까지";   /* v5.65 (사용자 261005 · 엘리베이터 층 단추가 17F · 10F · 18F 안내로 이어짐) 옛 v5.64 「1층 부스 3D로 미리 보기」 · 그 전 「1층 부스와 판을 3D로 미리 보기」 */
 /* v5.64 (사용자 261005 「홈화면도 이것과 통일해줘」) 입구 카드 하나(tourCardHtml) = 상시 운영 1F 맨 위 · 홈(나의 일정 아래 · 행사 전 = 광고판 아래) 두 곳이 같이 쓴다 */
 function tourCardHtml() {
   return rcHtml({ cls: " axs-tourgo axs-tourbig", onclick: "tourOpen()", link: true, left: tourBotHtml(), title: "행사장 둘러보기", sub: TOUR_SUB });
@@ -104,7 +104,7 @@ function tourInvHold() { return (tourInvOk() && App.current === "home") || TOUR.
 var TOUR_HOST = {
   sign: function (nm, big) { return zoneSign(nm, big ? "lg" : ""); },
   zone: function (id) {
-    if (id === "cafe") { var st = progState(progById("cchat")); return { kor: "아이디어를 놓고 이야기하는 곳", fact: "18F · " + st[0], todo: ["아이디어 한 줄을 내면 신청할 수 있어요"] }; }
+    if (id === "cafe") { var cz = FLOOR18[0]; return { kor: cz.kor, fact: "18F · " + zoneLive(cz).fact, todo: ["아이디어 한 줄을 내면 신청할 수 있어요"] }; }   /* v5.65 18F 구역 표(FLOOR18) 한 줄 · 상태 */
     var z = zoneById(id); if (!z) return null;
     return { kor: z.kor, fact: zoneLive(z).fact, todo: z.todo };
   },
@@ -115,7 +115,7 @@ var TOUR_HOST = {
     if (id === "play") return [{ lbl: "체험 안내 보기", run: go("booth") }];
     if (id === "lounge") { var L = zoneLive(zoneById("lounge")); return [{ lbl: L.btn ? L.btn[0] : "상담 신청", run: function () { progOpen("dap"); } }]; }
     if (id === "event") return [{ lbl: "룰렛 경품 보기", run: function () { prizeGo("roulette"); } }, { lbl: "1F 타자왕 순위", run: typeSiteRankGo }];
-    if (id === "cafe") return [{ lbl: S.get("cchat", null) ? "내 커피챗 보기" : "커피챗 신청", run: function () { progOpen("cchat"); } }, { lbl: "아이디어 한 줄 쓰기", run: go("ideas") }];
+    if (id === "cafe") return [{ lbl: S.get("cchat", null) ? "내 커피챗 보기" : "커피챗 신청", run: cchatOpen }, { lbl: "아이디어 한 줄 쓰기", run: go("ideas") }];   /* v5.65 신청 전 = 구역 상세(zone_d cchat) */
     return [];
   },
   crowd: function (id) { var k = id === "cafe" ? "e" : "l", x = crowdCell(k); return { nm: k === "e" ? "엘리베이터" : "1F 로비", st: x.st, sub: x.sub, cls: x.cls }; },
@@ -127,6 +127,14 @@ var TOUR_HOST = {
     if (!s) return null;
     return { title: s.title, desc: id === "st" ? TOUR_ST_DESC : s.desc, cta: id === "p3" ? "AX LOUNGE 상담 신청" : s.cta || "바로 가기", got: S.get("stamps", []).indexOf(id) >= 0 };   /* v5.57 (사용자 261004 「이 스탬프에서 연결은 dap 과제 상담 신청 하기로 가야지」) LOUNGE 블록 = 상담 신청 · 설명 줄은 그대로 */
   },
+  /* v5.65 (사용자 261005 「각 엘리베이터 이동시에도 각 안내장표로 갈 수 있을 것 같아 · 연결을 시켜보자」) 엘리베이터 층 단추 → 아이리스로 닫힌 뒤 그 층 앱 안내
+   17 = 층 안내(floor_d · 17F 대강당 강연 흐름) · 10 = 층 안내(floor_d · 실습형 세션 A~E) · 18 = AX 커피챗 구역 상세(zone_d cchat)
+   돌아오기 = 뒤로(헤더 · 휴대폰) · 「둘러보기로 돌아가기」 = 엘리베이터 안(pose = { elev }) · 안내 화면이라 마침 · 자동 복귀 띠 없음(TOUR_RET.id 없음) */
+  floorGo: function (fl) {
+    var pose = window.AXTour && AXTour.pose ? AXTour.pose() : null, under = App.current;
+    if (window.AXTour) AXTour.close();
+    setTimeout(function () { TOUR_RET = { v: fl === 18 ? "zone_d" : "floor_d", under: under, pose: pose, fl: fl }; if (fl === 18) zoneOpen("cchat"); else { PROG.floor = fl; App.go("floor_d"); } }, 280);   /* 그리기 전에 기억(「둘러보기로 돌아가기」 단추가 첫 그림에 나온다) */
+  },
   stampGo: function (id) {
     var GO = { qz: function () { App.go("quiz"); }, p4: function () { App.go("games"); }, p2: function () { qrPanelOpen("mine"); }, p5: function () { App.go("ideas"); }, p3: function () { progOpen("dap"); }, st: function () { stairOpen(); } };
     if (!GO[id]) return;
@@ -135,6 +143,26 @@ var TOUR_HOST = {
     setTimeout(function () { GO[id](); TOUR_RET = { v: App.current, under: under, pose: pose }; TOUR_RET.id = id; }, 280);   /* 둘러보기 암전(0.24초)이 끝난 뒤 · 도착한 화면을 기억 · v5.57 어느 스탬프 블록에서 왔는지(id · 마침 판정) */
   }
 };
+/* v5.65 층 안내(floor_d) · 엘리베이터 층 단추에서 온다(App.go 로도 열림 · 뒤로 = 프로그램) · 17F = 시간표 흐름 카드 중 17F 것만 · 10F = 세션 A~E 줄(누르면 세션 상세) */
+var FLOOR_GD = {
+  17: { hdr: "17F 대강당", sub: "신청 없이 자유 참석 · 입구 QR 출석" },
+  10: { hdr: "10F 실습형 세션", sub: "사전 신청자 참여 · 5개 세션" }
+};
+function floorGuideHtml() {
+  var f = PROG.floor, g = FLOOR_GD[f];
+  if (!g) return '<div class="ax-stack">' + botHtml("층 안내를 찾을 수 없어요") + '<button type="button" class="ax-button ax-button-weak" onclick="App.tab(\'guide\')">프로그램 보기</button></div>';
+  var body;
+  if (f === 17) body = '<div class="axs-fl">' + progFlowHtml(17) + "</div>";
+  else body = '<div class="axs-tt">' + SESSIONS.filter(function (s) { return s.fl === 10; }).map(function (s, i) {
+    var tp = s.tm.split("~"), mi = !!sessMine(s.id);
+    return progTTRow("f" + i, { t0: tp[0], t1: tp[1], tok: mi ? "mine" : "", cls: mi ? " my" : "", title: s.ttl + " · " + sessPlace(s).replace(/^10F\s*·?\s*/, ""), badge: mi ? '<span class="axs-chip ok">내 세션</span>' : "", sub: s.sub, go: "sessOpen('" + s.id + "')" });
+  }).join("") + "</div>";
+  return '<div class="ax-stack axs-flg"><p class="ax-description">' + esc(g.sub) + "</p>" + body + tourFloorBackHtml() + "</div>";   /* 층 이름은 헤더(FLOOR_GD hdr) · 판 문법(axs-bar)은 쓰지 않는다 */
+}
+/* 둘러보기 엘리베이터에서 온 층 안내 · 커피챗 상세 맨 아래 약한 버튼(그 밖에서 열면 없음) */
+function tourFloorBackHtml() {
+  return TOUR_RET && TOUR_RET.fl && tourRetLive() ? '<button type="button" class="ax-button ax-button-weak" onclick="tourRetGo()">둘러보기로 돌아가기</button>' : "";
+}
 /* v5.53 (사용자 261004 「3d에서 앱으로 갔다가 뒤로가기를 하면 3d로 돌아와야 하는데, 앱 메인 화면으로 돌아가」) 둘러보기 → 앱 화면 → 뒤로 = 둘러보기
    TOUR_RET = 바로 가기로 도착한 화면(v) · 그 밑에 있던 앱 화면(under) · 나가기 전 자리(pose)
    뒤로(헤더 ‹ · 휴대폰 뒤로 = 둘 다 App.back) 가 도착한 화면에서 나갈 때만 = 밑 화면으로 돌리고 둘러보기를 그 자리로 다시 연다 · 더 깊이 들어갔다면 원래 뒤로 단계를 다 거친 뒤 마지막에

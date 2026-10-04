@@ -157,3 +157,17 @@
   .axs-pan.qz .qz-zin b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .axs-pan.qz .qz-zin span { font: var(--ax-type-t7); color: var(--ax-color-body); }
   .axs-pan.qz.qz-hs { gap: var(--ax-space-12); }
+/* v5.65 AX LOUNGE · AX 커피챗 통일(설계안 · 목업 mock.js 그대로) · 주 버튼 + 「참여 전 확인」 약한 버튼(쉐브론 아래 · 펼치면 위) · 질문 3줄 · 서로 안내 · 펼침 패널 */
+.axs-pan .axs-xbtns { display: flex; flex-direction: column; gap: var(--ax-space-8); }
+.axs-pan .axs-xtog { gap: var(--ax-space-4); }
+.axs-pan .axs-xtog svg { width: 20px; height: 20px; flex: none; transition: transform .18s ease; transform: rotate(90deg); }
+.axs-pan .axs-xtog[aria-expanded="true"] svg { transform: rotate(-90deg); }
+.axs-pan .axs-xchk[hidden] { display: none; }
+.axs-pan .axs-xchk .axs-kv { grid-template-columns: 56px minmax(0, 1fr); row-gap: var(--ax-space-12); }
+.axs-pan .axs-xchk .axs-treat { margin-top: var(--ax-space-4); }
+.axs-pan .axs-xgd { display: flex; flex-direction: column; gap: var(--ax-space-4); }
+.axs-pan .axs-xgd .ax-link { min-height: 36px; }
+.axs-pan .axs-xq { display: flex; flex-direction: column; gap: 2px; margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
+.axs-pan .axs-zdt.axs-sthost > .axs-xq { padding-right: 64px; }
+.axs-pan .axs-zdt > .axs-sign + .axs-xq { margin-top: calc(var(--ax-space-8) * -1); }
+@media (prefers-reduced-motion: reduce) { .axs-pan .axs-xtog svg { transition: none; } }
