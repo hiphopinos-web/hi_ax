@@ -1699,12 +1699,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-msec { display: flex; flex-direction: column; gap: var(--ax-space-8); }
   .axs-msec > .ax-row { margin-bottom: var(--ax-space-4); }
   .axs-msec .axs-mtt { gap: var(--ax-space-8); }
-  .axs-mses { display: flex; flex-direction: column; gap: var(--ax-space-12); padding: var(--ax-space-16); border-radius: var(--ax-radius-20); background: var(--ax-color-brandSoft); }
-  .axs-mses .axs-chip { background: var(--ax-color-surface); }
-  .axs-mses .t { margin: 0; font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
-  .axs-mses .s { margin: 2px 0 0; font: var(--ax-type-t7); color: var(--ax-color-body); }
-  .axs-mses .m { margin: var(--ax-space-4) 0 0; font: var(--ax-type-caption); color: var(--ax-color-muted); }
-  .axs-mses .ax-button-weak { background: var(--ax-color-surface); }
+  /* v5.64 펼친 내 세션 카드 규칙 삭제 · 나의 일정 시간표 줄로 */
   #zone1f, #zone18f, #mysched { scroll-margin-top: calc(var(--stick, 0px) + var(--ax-space-12)); }
   /* v5.46 1층 둘러보기 초대(시안 「디자인 시안/둘러보기 초대/inv.css」) · 봉투 = O50 · O25 · O10 면(brand 와 surface 를 섞은 토큰 · hex 없음 · 주황 O100 채움은 주 버튼 하나) · 파랑 · 이모지 없음
      봉투 앞면 4조각이 사진 자리를 덮고 있다가 도장이 사라지고 윗덮개가 넘어간 뒤 세 조각이 바깥으로 빠진다(약 1.6초 · 한 번) · 동작 줄이기 = 처음부터 열린 컷(st-open) */
@@ -2825,14 +2820,7 @@ var TIMELINE = [
 /* 3묶음 훅 · 사전신청자로 확인된 사람의 「나의 일정」(나의 참여 맨 위) 맨 위 내 세션 카드 한 장(장소 · 시간)
    v4.93 채움 · 원천 = sessMine(서버 sync my.sess · 3묶음 명단이 들어오기 전에는 테스트 오버레이에서만) · 내 세션이 없으면 빈 값 */
 function tenMine() { return SESSIONS.filter(function (s) { return s.fl === 10 && !!sessMine(s.id); })[0] || null; }
-function tenMineCard() {
-  var s = tenMine(); if (!s) return "";
-  var m = sessMine(s.id) || {}, tp = s.tm.split("~"), a = t2m(tp[0]), b = t2m(tp[1]), ph = evPhase(), hmN = hmNow();
-  var when = ph === "after" || (ph === "live" && hmN >= b) ? "종료" : ph === "live" && hmN >= a ? "진행 중 · " + tp[1] + " 종료" : ph === "live" && a - hmN <= 180 ? tp[0] + " 시작 · " + (a - hmN) + "분 뒤" : tp[0] + " 시작";
-  return '<div class="axs-mses" data-my="sess:' + s.id + '"><div class="axs-chiprow"><span class="axs-chip">내 세션</span><span class="ax-meta">' + esc(when + (m.test ? " · 테스트" : "")) + "</span></div>" +
-    '<div><p class="t">' + esc(s.ttl) + '</p><p class="s">' + esc(s.sub) + '</p><p class="m">' + esc(sessPlace(s) + " · " + s.tm) + "</p></div>" +
-    '<button type="button" class="ax-button ax-button-weak" onclick="sessOpen(\'' + s.id + '\')">세션 상세</button></div>';
-}
+/* v5.64 tenMineCard(펼친 내 세션 카드) 삭제 · 나의 일정에서 시간표 줄 하나(myAgendaHtml) */
 /* v4.84 지금 줄 = 기기 시각 · 옛 NOW_INDEX(데모 고정 1 = 기조연설)는 행사 당일에도 기조연설에 머물렀다(시안 2 와 달랐다)
    시간 칸 안이면 그 줄 · 사이 시간이면 다음 줄 · 마지막이 끝난 뒤면 마지막 줄 · 시간 미정(always) · 숨김(off) 줄은 건너뛴다 */
 /* v5.21 시험 시각 훅 · 시험 모드(testMode · 데모 #demo · 테스트 사번)에서만 S "att_tm"(출석 시험 시각과 같은 값)을 지금 시각으로 쓴다 · 데모 주소 &now=14:20 · 운영 참가자는 늘 기기 시각 */
@@ -5096,16 +5084,18 @@ function myAgendaRow(x, j) {
   }).replace('<div class="rc', '<div data-my="' + esc(x.kind) + '" class="rc');   /* 알림 · 신청 결과 「내 일정 확인하기」가 그 줄을 튕긴다(focusTarget my:조각) */
 }
 function myAgendaHtml() {
-  var card = tenMineCard(), items = myItems(true).filter(function (x) { return !x.ten; });
+  var items = myItems(true).filter(function (x) { return !x.ten; }), ts = tenMine();
+  /* v5.64 (사용자 261005 「세션A가 펼쳐져 있는 게 이상 · 프로그램 탭 시간표처럼 · 상세는 눌러서」) 내 10F 세션 = 다른 일정과 같은 시간표 줄 · 시간 순서 · 누르면 세션 상세 · 옛 펼친 카드(tenMineCard · 「세션 상세」 단추) 삭제 */
+  if (ts) { var tsp = ts.tm.split("~"), tsm = sessMine(ts.id) || {}; items.push({ kind: "sess:" + ts.id, min: t2m(tsp[0]), go: "sessOpen('" + ts.id + "')", gTitle: ts.ttl, gSub: "내 세션 · " + sessPlace(ts) + (tsm.test ? " · 테스트" : ""), iv: [t2m(tsp[0]), t2m(tsp[1])] }); }
   var r = myResv();
   if (r && r.status === "done" && r.slot) items.push({ kind: "resv_done", done: true, min: sessStartMin(r.slot), go: "App.go('dap')", gTitle: "AX LOUNGE 상담", sub: "1F AX LOUNGE", iv: [sessStartMin(r.slot), sessStartMin(r.slot) + (RESV_CONF.step || 30)] });   /* 끝난 상담도 지난 줄로 남긴다 */
   items.sort(function (a, b) { return (a.done ? 1 : 0) - (b.done ? 1 : 0) || (myAgendaNow(a) ? -1 : a.min) - (myAgendaNow(b) ? -1 : b.min); });
-  var n = items.length + (card ? 1 : 0);
+  var n = items.length;
   var head = '<div class="ax-row"><h2 class="ax-section-title">나의 일정</h2>' + (n ? '<span class="ax-meta">10월 26일 · ' + n + "개</span>" : "") + "</div>";
   if (!n) return '<section class="axs-msec" id="mysched">' + head + '<p class="ax-description">신청한 프로그램이 아직 없어요 · 17F 강연과 1F 전시는 신청 없이 갈 수 있어요</p>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="progAlwaysGo()">상시 운영 보기</button></section>';
   var cx = items.some(function (x) { return x.kind === "resv" || x.kind === "cchat"; });
-  return '<section class="axs-msec" id="mysched">' + head + card +
+  return '<section class="axs-msec" id="mysched">' + head +
     (items.length ? '<div class="axs-tt axs-mtt">' + items.map(myAgendaRow).join("") + "</div>" : "") +
     (cx ? '<p class="ax-meta">신청 취소는 신청 상세에서 할 수 있어요</p>' : "") + "</section>";
 }

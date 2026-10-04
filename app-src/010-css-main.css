@@ -1671,12 +1671,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-msec { display: flex; flex-direction: column; gap: var(--ax-space-8); }
   .axs-msec > .ax-row { margin-bottom: var(--ax-space-4); }
   .axs-msec .axs-mtt { gap: var(--ax-space-8); }
-  .axs-mses { display: flex; flex-direction: column; gap: var(--ax-space-12); padding: var(--ax-space-16); border-radius: var(--ax-radius-20); background: var(--ax-color-brandSoft); }
-  .axs-mses .axs-chip { background: var(--ax-color-surface); }
-  .axs-mses .t { margin: 0; font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
-  .axs-mses .s { margin: 2px 0 0; font: var(--ax-type-t7); color: var(--ax-color-body); }
-  .axs-mses .m { margin: var(--ax-space-4) 0 0; font: var(--ax-type-caption); color: var(--ax-color-muted); }
-  .axs-mses .ax-button-weak { background: var(--ax-color-surface); }
+  /* v5.64 펼친 내 세션 카드 규칙 삭제 · 나의 일정 시간표 줄로 */
   #zone1f, #zone18f, #mysched { scroll-margin-top: calc(var(--stick, 0px) + var(--ax-space-12)); }
   /* v5.46 1층 둘러보기 초대(시안 「디자인 시안/둘러보기 초대/inv.css」) · 봉투 = O50 · O25 · O10 면(brand 와 surface 를 섞은 토큰 · hex 없음 · 주황 O100 채움은 주 버튼 하나) · 파랑 · 이모지 없음
      봉투 앞면 4조각이 사진 자리를 덮고 있다가 도장이 사라지고 윗덮개가 넘어간 뒤 세 조각이 바깥으로 빠진다(약 1.6초 · 한 번) · 동작 줄이기 = 처음부터 열린 컷(st-open) */

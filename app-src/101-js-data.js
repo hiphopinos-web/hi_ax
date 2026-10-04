@@ -150,14 +150,7 @@ var TIMELINE = [
 /* 3묶음 훅 · 사전신청자로 확인된 사람의 「나의 일정」(나의 참여 맨 위) 맨 위 내 세션 카드 한 장(장소 · 시간)
    v4.93 채움 · 원천 = sessMine(서버 sync my.sess · 3묶음 명단이 들어오기 전에는 테스트 오버레이에서만) · 내 세션이 없으면 빈 값 */
 function tenMine() { return SESSIONS.filter(function (s) { return s.fl === 10 && !!sessMine(s.id); })[0] || null; }
-function tenMineCard() {
-  var s = tenMine(); if (!s) return "";
-  var m = sessMine(s.id) || {}, tp = s.tm.split("~"), a = t2m(tp[0]), b = t2m(tp[1]), ph = evPhase(), hmN = hmNow();
-  var when = ph === "after" || (ph === "live" && hmN >= b) ? "종료" : ph === "live" && hmN >= a ? "진행 중 · " + tp[1] + " 종료" : ph === "live" && a - hmN <= 180 ? tp[0] + " 시작 · " + (a - hmN) + "분 뒤" : tp[0] + " 시작";
-  return '<div class="axs-mses" data-my="sess:' + s.id + '"><div class="axs-chiprow"><span class="axs-chip">내 세션</span><span class="ax-meta">' + esc(when + (m.test ? " · 테스트" : "")) + "</span></div>" +
-    '<div><p class="t">' + esc(s.ttl) + '</p><p class="s">' + esc(s.sub) + '</p><p class="m">' + esc(sessPlace(s) + " · " + s.tm) + "</p></div>" +
-    '<button type="button" class="ax-button ax-button-weak" onclick="sessOpen(\'' + s.id + '\')">세션 상세</button></div>';
-}
+/* v5.64 tenMineCard(펼친 내 세션 카드) 삭제 · 나의 일정에서 시간표 줄 하나(myAgendaHtml) */
 /* v4.84 지금 줄 = 기기 시각 · 옛 NOW_INDEX(데모 고정 1 = 기조연설)는 행사 당일에도 기조연설에 머물렀다(시안 2 와 달랐다)
    시간 칸 안이면 그 줄 · 사이 시간이면 다음 줄 · 마지막이 끝난 뒤면 마지막 줄 · 시간 미정(always) · 숨김(off) 줄은 건너뛴다 */
 /* v5.21 시험 시각 훅 · 시험 모드(testMode · 데모 #demo · 테스트 사번)에서만 S "att_tm"(출석 시험 시각과 같은 값)을 지금 시각으로 쓴다 · 데모 주소 &now=14:20 · 운영 참가자는 늘 기기 시각 */

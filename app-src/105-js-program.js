@@ -700,16 +700,18 @@ function myAgendaRow(x, j) {
   }).replace('<div class="rc', '<div data-my="' + esc(x.kind) + '" class="rc');   /* 알림 · 신청 결과 「내 일정 확인하기」가 그 줄을 튕긴다(focusTarget my:조각) */
 }
 function myAgendaHtml() {
-  var card = tenMineCard(), items = myItems(true).filter(function (x) { return !x.ten; });
+  var items = myItems(true).filter(function (x) { return !x.ten; }), ts = tenMine();
+  /* v5.64 (사용자 261005 「세션A가 펼쳐져 있는 게 이상 · 프로그램 탭 시간표처럼 · 상세는 눌러서」) 내 10F 세션 = 다른 일정과 같은 시간표 줄 · 시간 순서 · 누르면 세션 상세 · 옛 펼친 카드(tenMineCard · 「세션 상세」 단추) 삭제 */
+  if (ts) { var tsp = ts.tm.split("~"), tsm = sessMine(ts.id) || {}; items.push({ kind: "sess:" + ts.id, min: t2m(tsp[0]), go: "sessOpen('" + ts.id + "')", gTitle: ts.ttl, gSub: "내 세션 · " + sessPlace(ts) + (tsm.test ? " · 테스트" : ""), iv: [t2m(tsp[0]), t2m(tsp[1])] }); }
   var r = myResv();
   if (r && r.status === "done" && r.slot) items.push({ kind: "resv_done", done: true, min: sessStartMin(r.slot), go: "App.go('dap')", gTitle: "AX LOUNGE 상담", sub: "1F AX LOUNGE", iv: [sessStartMin(r.slot), sessStartMin(r.slot) + (RESV_CONF.step || 30)] });   /* 끝난 상담도 지난 줄로 남긴다 */
   items.sort(function (a, b) { return (a.done ? 1 : 0) - (b.done ? 1 : 0) || (myAgendaNow(a) ? -1 : a.min) - (myAgendaNow(b) ? -1 : b.min); });
-  var n = items.length + (card ? 1 : 0);
+  var n = items.length;
   var head = '<div class="ax-row"><h2 class="ax-section-title">나의 일정</h2>' + (n ? '<span class="ax-meta">10월 26일 · ' + n + "개</span>" : "") + "</div>";
   if (!n) return '<section class="axs-msec" id="mysched">' + head + '<p class="ax-description">신청한 프로그램이 아직 없어요 · 17F 강연과 1F 전시는 신청 없이 갈 수 있어요</p>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="progAlwaysGo()">상시 운영 보기</button></section>';
   var cx = items.some(function (x) { return x.kind === "resv" || x.kind === "cchat"; });
-  return '<section class="axs-msec" id="mysched">' + head + card +
+  return '<section class="axs-msec" id="mysched">' + head +
     (items.length ? '<div class="axs-tt axs-mtt">' + items.map(myAgendaRow).join("") + "</div>" : "") +
     (cx ? '<p class="ax-meta">신청 취소는 신청 상세에서 할 수 있어요</p>' : "") + "</section>";
 }
