@@ -1237,7 +1237,7 @@
       m.rotation.y = h0; S.lobby.add(m);
       /* 걸음 막기 · v5.38 칸 번호로 꽉 찬 원(옛 코드는 소수 좌표를 0.1m 씩 더해 칸을 구해 반올림 오차로 원 안에 빈칸이 줄줄이 생겼고, 캐릭터가 그 틈으로 스태프를 뚫고 지나갔다 · 사용자 261003 「캐릭터가 겹치는 버그」) */
       blockDisc(q[0], q[1], GUIDE_R);
-      guides.push({ m: m, stop: k, id: s.id, zone: s.zone, spot: s.spot || '', at: [q[0], q[1]], h: h0, h0: h0, text: s.say || ZT[s.zone] || '', go: s.go == null ? '판 보기 ▶' : s.go });
+      guides.push({ m: m, stop: k, id: s.id, zone: s.zone, spot: s.spot || '', at: [q[0], q[1]], h: h0, h0: h0, text: s.say || ZT[s.zone] || '', go: s.go == null ? '자세히 보기 ▶' : s.go });
     });
   }
   var ZT = { vision: '회사가 가는 방향을 보는 곳이에요', lab: 'DAP 과제를 보는 곳이에요', action: 'AI 업무 사례를 보는 곳이에요', play: 'AI를 직접 써 보는 곳이에요', event: '사진 · 룰렛 · 타자왕이 있는 곳이에요', lounge: '업무 고민을 상담하는 곳이에요' };   /* 말풍선은 한 줄(360px 에서도) · 16자 안팎 */   /* 앱 FLOOR1 kor 한 줄 + 「이에요」 */
@@ -2231,7 +2231,7 @@
     '      <button class="e" type="button" id="t3-rotR" aria-label="시점 오른쪽으로 90도 돌리기"><span class="c"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.5-5.8"/><path d="M20 3v4h-4"/></svg></span><span class="l">우로 돌기</span></button>\n' +
     '      <button class="s" type="button" id="t3-zOut" aria-label="멀리 보기"><span class="c"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/></svg></span><span class="l">축소</span></button>\n' +
     '    </div>\n' +
-    '    <button type="button" class="gbub" id="t3-gbub" hidden><span id="t3-gbubT"></span><span class="go">판 보기 ▶</span></button>\n' +
+    '    <button type="button" class="gbub" id="t3-gbub" hidden><span id="t3-gbubT"></span><span class="go">자세히 보기 ▶</span></button>\n' +
     '    <div class="bubble" id="t3-bubble" hidden>아이디어 한 줄을 내면 커피챗을 신청할 수 있어요</div>\n' +
     '    <div class="fps" id="t3-fps" hidden></div>\n' +
     '    <p class="nogl" id="t3-nogl" hidden></p>\n' +
