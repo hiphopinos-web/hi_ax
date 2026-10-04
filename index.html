@@ -498,8 +498,6 @@
   @keyframes tileShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-3px); } }
   @keyframes hintPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,126,49,0); } 50% { box-shadow: 0 0 0 4px rgba(255,126,49,0.35); } }
   /* v3.36b 타자 게임 · 저해상도 캔버스를 도트로 확대 */
-  .rg-wrap { border-radius: 14px; overflow: hidden; background: #FFEBE0; line-height: 0; border: 2px solid #000; }
-  .rg-wrap canvas { width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
   .rg-form { display: flex; gap: 8px; margin-top: 10px; }
   /* v3.36c 휴대폰 전체화면 플레이 */
   html.rg-lock, html.rg-lock body { overflow: hidden; overscroll-behavior: none; }
@@ -588,8 +586,6 @@
   #rgPlay.flat .rgp-mid canvas { image-rendering: auto; border: 0; border-radius: 0; background: #fff; }
   #rgPlay.flat .gs-foot { border-top: 1px solid var(--dimln); font-weight: 600; color: var(--muted); }
   #rgPlay.flat .rgp-pause { background: #FFFFFF; }
-  .rg-wrap.flat { background: #fff; border: 1px solid var(--dimln); }
-  .rg-wrap.flat canvas { image-rendering: auto; }
   #rgPlay .gs-foot { flex: none; padding: 12px 10px calc(12px + env(safe-area-inset-bottom, 0px)); background: #fff; border-top: 2px solid #000; text-align: center; font-weight: 800; font-size: 13.5px; color: #000; touch-action: none; user-select: none; -webkit-user-select: none; }
   /* v3.86 테트리스 조작판 · 화면 아래 고정 · 늘 보인다 · 버튼은 최소 56px 이고 사이를 띄워 두 개가 같이 눌리지 않게 한다 */
   /* v3.87b (사용자 레퍼런스 260918) 둥근 조작 버튼이 판 아래 빈 띠에 떠 있다 · 상자형 패널 없음 ·
@@ -1541,7 +1537,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .card, .menu { border-radius: var(--ax-radius-24); }
   /* ═══ v4.08 AX-TDS 4단계 · 게임 화면 틀(시작 · 결과 · 일시정지 · 순위판 · 허브) + 안내 말풍선(챗봇) · 게임판 내부(캔버스·도트)는 기존 디자인 ═══ */
   .gs-card { display: flex; flex-direction: column; gap: var(--ax-space-16); }
-  .gs-card .rg-wrap, .gs-card .rg-wrap.flat { border: 1px solid var(--ax-color-divider); border-radius: var(--ax-radius-16); background: var(--ax-color-surface); }
   .gs-how { display: grid; gap: var(--ax-space-8); }
   .gs-how p { display: flex; align-items: center; gap: var(--ax-space-12); margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .gs-how p b { flex: none; min-width: 96px; min-height: 32px; display: inline-flex; align-items: center; justify-content: center; padding: 0 var(--ax-space-8); border-radius: var(--ax-radius-8); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t7); font-weight: 700; }
@@ -2403,8 +2398,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .rt .rt-fold .oly-brk.ref td.n { font-family: var(--rt-font); font-size: var(--rt-f16); color: var(--rt-cream); white-space: normal; }
   .rt .rt-fold .ox-titles { justify-content: flex-start; margin-top: 4px; }
   /* v4.28 시작 화면 미리보기 = 오락실 대기 화면 · 「DEMO · 예시 화면」 깜빡임 + 채도·밝기를 낮춰 진짜 판과 구별 · 동작 줄이기면 고정 표시 */
-  .rt .gs-prev canvas, .rt .gs-prev .gsp-dom, .rt .gs-demo-host canvas { filter: saturate(0.6) brightness(0.9); }
-  .rt .gs-demo-host { position: relative; }
+  .rt .gs-prev canvas, .rt .gs-prev .gsp-dom { filter: saturate(0.6) brightness(0.9); }
   /* v4.95 (사용자 261002 「demo 예시 화면 표기가 게임의 가운데에 · 크기도 키워」) 미리보기 가로 · 세로 가운데 · 글자 24px(큰글씨 26px · 미리보기 폭 안) · 반투명 밤색 알약(미리보기를 가리지 않게) · 모든 게임 같은 규칙(GS_DEMO_TAG 하나) */
   .rt .gs-demo { position: absolute; left: 50%; top: 50%; z-index: 3; transform: translate(-50%, -50%); padding: 8px 20px; border-radius: 999px; background: rgba(27, 23, 18, 0.86); color: var(--rt-o100); white-space: nowrap; pointer-events: none;
     font-family: var(--rt-font); font-size: var(--rt-f24); font-weight: 400; line-height: var(--rt-l24); animation: rtDemo 1.2s steps(1, end) infinite; }
@@ -4784,7 +4778,7 @@ var App = {
     /* v4.06 3단계 · 현장 안내 E02 · 스캔 Q02 · 결과 Q03 · 계단 화면 */
     exp_g: "exp", scan_q: "exp", scan_res: "exp", stair: "exp",
     games: "exp", quiz: "exp", ideas: "exp", survey: "exp", ideas_mine: "ideas",
-    game_type: "games", game_tetris: "games", game_pang: "games", game_jump: "games", game_ox: "quiz", quiz_play: "quiz", oly_rank: "games", type_rank: "guide", floor1: "guide",   /* v4.83 퀴즈 두 종목의 뒤로가기 = AX 퀴즈 */
+    game_tetris: "games", game_pang: "games", game_jump: "games", game_ox: "quiz", quiz_play: "quiz", oly_rank: "games", type_rank: "guide", floor1: "guide",   /* v4.83 퀴즈 두 종목의 뒤로가기 = AX 퀴즈 */
     /* 프로그램 · 신청 (2단계에서 재디자인) */
     dap: "guide", ev_cchat: "guide", sess_d: "guide", sess_cf: "sess_d", sess_ok: "guide", zone_d: "guide",   /* v4.93 구역 상세 · 뒤로 = 프로그램(상시 운영) */
     admin: "my", screen: "admin", screen_survey: "admin", screen_words: "admin", type_site: "admin", wall_type: "admin", type_award: "admin",
@@ -4799,7 +4793,7 @@ var App = {
     sess_d: "프로그램", sess_cf: "신청 확인", sess_ok: "신청 완료",
     ev_cchat: "내 커피챗",
     wq_list: "전시 QR 퀴즈", wq_play: "문제 풀이", floor1: "1F 부스", zone_d: "1F 구역",
-    admin: "관리자 모드", screen: "송출용 화면", screen_survey: "", screen_words: "", game_type: "타자 게임", game_tetris: "테트리스", type_site: "1F 현장 셀프 모드", wall_type: "", type_award: "", type_rank: "타자 순위",
+    admin: "관리자 모드", screen: "송출용 화면", screen_survey: "", screen_words: "", game_tetris: "테트리스", type_site: "1F 현장 셀프 모드", wall_type: "", type_award: "", type_rank: "타자 순위",
     game_pang: "AX 팡", game_jump: "ME to WE 점프", game_ox: "AX 퀴즈", quiz_play: "퀴즈 풀기", oly_rank: "미니 게임 순위",
     wall_quiz: "", wall_wave: "", wall_live: "", wall_metowe: "", wall_tv: ""
   },
@@ -4881,6 +4875,7 @@ var App = {
     if (v === "game_ox" && qzLive()) v = "quiz";   /* v4.96 유리다리는 휴면 · 옛 링크 · 타일 · 다음 스탬프는 판 퀴즈 목록으로 */
     if (v === "quiz_play" && !qzLive()) v = "quiz";   /* 옛 서버(판 퀴즈를 모름)면 유리다리 목록 */
     if (v === "game_word") v = "quiz";   /* 정리 #1(261005) 기억력 퀴즈를 지웠다 · 옛 링크는 AX 퀴즈로 */
+    if (v === "game_type") v = "games";   /* 정리 #4(261005) 앱(폰) 단어 소나기를 지웠다 · 옛 링크는 미니 게임으로 */
     if (v === "floor1") { PROG.seg = "always"; PROG.scroll = 0; PROG.anchor = "zone1f"; v = "guide"; }
     if (v === "guide_time") { if (SCHED.tab === "mine") { SCHED.tab = "all"; PROG.anchor = "mysched"; v = "my"; } else { PROG.mode = "time"; PROG.tt = "all"; PROG.seg = "time"; v = "guide"; } }
     if (!Views[v]) v = "home";   /* 정리(261005) 지운 화면 키 · 모르는 키는 홈으로(예외 대신) */
@@ -4888,7 +4883,6 @@ var App = {
     if (v === "ideas" && this.current !== "ideas") IDEA.step = null;   /* v4.07 다시 들어오면 입력 폼부터 */
     if (this.current === "guide" && v !== "guide") PROG.scroll = window.scrollY;   /* 목록 스크롤 보존 (뒤로 오면 되돌린다) */   /* v4.01 AI 사생대회 폐기 · 배너·해시(#demo=art 등)·뒤로가기를 포함한 모든 진입을 홈으로 돌린다 */
     if (this.current === "scan_q" && v !== "scan_q") { qrCamStop(); qrMineOff(); qrWakeOff(true); SCQ.paused = false; }   /* v4.06 Q02 를 떠나면 카메라를 끈다 · v5.23 내 QR 동기화도 */
-    if (this.current === "game_type" && v !== "game_type") rgStop();
       if (this.current === "game_tetris" && v !== "game_tetris") ttStop();
     if (this.current === "game_pang" && v !== "game_pang") pgStop();
     if (this.current === "type_site" && v !== "type_site") { tsfStop(); if (RG.on && RG.mode === "site") rgStop(); }
@@ -4910,7 +4904,7 @@ var App = {
     /* v3.15 새로 고침 복귀 · 현재 화면의 소속 탭을 sessionStorage 에 기억(같은 브라우저 탭에서만, 다음 방문은 홈).
        관리자·사이니지·게임 전체화면은 저장하지 않는다 · Lv2 는 소속 탭으로 저장된다 */
     try {
-      if (SIGNAGE.indexOf(v) < 0 && ["admin", "screen", "game_type", "game_tetris", "game_pang", "game_jump", "game_ox", "type_site"].indexOf(v) < 0) {
+      if (SIGNAGE.indexOf(v) < 0 && ["admin", "screen", "game_tetris", "game_pang", "game_jump", "game_ox", "type_site"].indexOf(v) < 0) {
         var lt = this.tabOf(v);
         if (this.ROOTS.indexOf(lt) >= 0) {
           sessionStorage.setItem("axf_last_tab", lt);
@@ -4966,7 +4960,7 @@ var App = {
     el("frame").style.setProperty("--stick", tb.offsetHeight + "px");
     var nav = el("tabbar");
     document.body.dataset.pg = v === "scan_q" && SCQ.tab === "scan" ? "d" : "";   /* v5.23 내 QR 탭은 밝은 면 */   /* v4.06 · 프로그램 탭 흰 페이지(v4.05) 폐지 · 다른 탭과 같은 canvas + 흰 카드 · Q02 스캔만 카메라 화면(짙은 면) */
-    nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "sess_d" || v === "sess_cf" || v === "sess_ok" || (v === "ideas" && IDEA.step) || ["exp_g", "scan_q", "scan_res", "stair"].indexOf(v) >= 0 || v === "game_type" || v === "game_tetris" || v === "game_pang" || v === "game_jump" || v === "game_ox" || v === "type_site") ? "none" : "";
+    nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "sess_d" || v === "sess_cf" || v === "sess_ok" || (v === "ideas" && IDEA.step) || ["exp_g", "scan_q", "scan_res", "stair"].indexOf(v) >= 0 || v === "game_tetris" || v === "game_pang" || v === "game_jump" || v === "game_ox" || v === "type_site") ? "none" : "";
     var activeTab = this.tabOf(v), ico = this.NAV_ICO;
     var btn = function (t) {
       return '<button class="ax-nav-link"' + (activeTab === t[0] ? ' aria-current="page"' : "") + ' onclick="App.tab(\'' + t[0] + '\')">' +
@@ -5032,13 +5026,13 @@ window.addEventListener("scroll", function () {
   var b = el("topbtn");
   if (!b) return;
   var ok = window.scrollY > 400 && !el("app").hidden &&
-    SIGNAGE.indexOf(App.current) < 0 && App.current !== "game_type" && App.current !== "game_tetris" && App.current !== "game_pang" && App.current !== "game_jump" && App.current !== "game_ox" && App.current !== "type_site";
+    SIGNAGE.indexOf(App.current) < 0 && App.current !== "game_tetris" && App.current !== "game_pang" && App.current !== "game_jump" && App.current !== "game_ox" && App.current !== "type_site";
   b.classList.toggle("on", ok);
 }, { passive: true });
 window.addEventListener("axf-store", function () {
   checkMyState();
   updateLed();
-  if (["game_type", "game_tetris", "game_pang", "game_jump", "game_ox", "type_site", "wall_wave", "wall_metowe", "scan_q"].indexOf(App.current) >= 0) return;   /* v4.06 Q02 는 저장소가 바뀔 때마다 카메라를 다시 붙이지 않는다 */
+  if (["game_tetris", "game_pang", "game_jump", "game_ox", "type_site", "wall_wave", "wall_metowe", "scan_q"].indexOf(App.current) >= 0) return;   /* v4.06 Q02 는 저장소가 바뀔 때마다 카메라를 다시 붙이지 않는다 */
   if (typingNow()) { RENDER_HELD = true; return; }   /* v4.25 글을 치는 중에는 화면을 새로 그리지 않는다(폴링·공지 도착 포함) · 칸을 벗어날 때 한 번 */
   App.render();
 });
@@ -7687,13 +7681,6 @@ var Views = {
       '<button data-p="live" onclick="mtSet(null)">실시간</button></div></div>';
   },
 
-  /* ═══ v3.36b 타자 게임 · 닉네임(최초 1회) → 시작 화면 → 게임 → 결과 ═══ */
-  game_type: function () {
-    rgStop();
-    if (gsNeedNick()) return gsNickHtml("type");
-    setTimeout(rgPreview, 0);
-    return gsStartHtml("type", { rootId: "tgRoot", previewId: "rgPrev", pw: 180, ph: 110 });   /* v4.28 규칙 줄은 결과 접힘 안(gsRuleText) */
-  },
   /* v3.86 테트리스 · 휴대폰 종목 (단어 소나기 자리) · 조작은 화면 아래 버튼이 기본 */
   game_tetris: function () {
     ttStop();
@@ -10297,7 +10284,7 @@ function tryAdmin() {
 /* ═══ v4.23 게임 화면 16비트 레트로 · 경계와 글꼴 (260923 사용자 확정 · design.md A-5 5-16) ═══
    .rt 가 붙는 곳 = 아래 화면(#view) + 게임 오버레이(#rgPlay) 뿐이다. 홈 · 프로그램 · 신청 · 나의 참여에는 붙지 않는다.
    글꼴(Neo둥근모 44KB)은 부팅 3초 뒤 한 번, 그리고 게임 화면에 들어설 때 미리 읽는다 · 읽기 전에는 Pretendard 로 그린다(swap) · 실패해도 게임은 그대로 돈다. */
-function rtView(v) { return ["game_tetris", "game_type", "game_pang", "game_jump", "game_ox", "type_site", "type_rank", "oly_rank", "wall_type"].indexOf(v) >= 0; }
+function rtView(v) { return ["game_tetris", "game_pang", "game_jump", "game_ox", "type_site", "type_rank", "oly_rank", "wall_type"].indexOf(v) >= 0; }
 var RT_FONT_WARM = 0, RT_BOT_URL = "";
 function rtFontWarm() {
   if (RT_FONT_WARM || !document.fonts || !document.fonts.load) return;
@@ -10320,7 +10307,7 @@ function rtBotImg() {
    260923 사용자 확정: 단어 풀은 260917 원본 61개(뜻 없음) · 게임 중 뜻 표시와 되새김 화면은 만들지 않는다 ·
    시간 제한 없음(목숨이 떨어지면 끝) · 안전 상한은 엔진 RAIN_CAP_SEC.
    v4.29(260924 사용자 확정) 영어 단어 0개 · 영문 자판 로마자 → 한글 · 넓은 화면 솔로 옆판(NEXT · TOP 5 · 점수·목숨·단계) · 키보드 기기는 스페이스로 시작(엔진).
-     이 앱이 맡는 것 = 옆판 TOP 5 읽기(rgSideTopPull) · 시작 화면 · 결과 화면 스페이스(rgSpaceKey).
+     정리 #4(261005) 앱(폰) 솔로(mode app · 시작 화면 · 결과 · 스페이스 · type_submit)는 지웠다 · 이 껍데기는 1F 셀프(site)만 쓴다.
    v4.32(260924 사용자 확정) 넓은 화면 3단(왼쪽 NEXT·점수 / 가운데 판 / 오른쪽 TOP 10) · 1F 현장은 셀프 모드(tsf*) · 현장 판 위 줄에는 소리·멈춤 단추가 없다(스태프가 켤 때 정한다 · 중간에 그만두기 없음). */
 var RG_HEART = '<svg viewBox="0 0 7 6" width="17" height="15" shape-rendering="crispEdges" aria-hidden="true"><path d="M0 0h3v2H0zM4 0h3v2H4zM0 2h7v2H0zM1 4h5v1H1zM2 5h3v1H2z"/></svg>';
 /* v4.52(260928 사용자 확정) 옆판(왼쪽 상자 rgLeftDraw)이 이미 점수·목숨을 보여주므로(v4.51) 위 줄은 중복 ·
@@ -10350,13 +10337,12 @@ function rgPlayOpen() {
    판 도중에 App.render 가 불리면 게임이 멈추므로 S.set(axf-store) 을 쓰지 않고 엔진 값(RG.top)만 바꾼다 · 서버가 없으면(데모) 빈 목록 */
 function rgSideTopPull() {
   if (!rgSideOn()) return;
-  var site = RG.mode === "site", c = site ? TSF.top : S.get("type_rank_site", null);
+  var c = TSF.top;   /* 정리 #4 앱(폰) 솔로 없음 · 1F 셀프만 */
   var conv = function (r) { return ((r && r.top) || []).slice(0, 10).map(function (x) { return { no: x.rank, name: x.name, val: typePts(x.score), me: !!x.me }; }); };   /* v5.12 1F 현장 = 점수 */
-  RG.topT = "현장 TOP 10"; RG.who = site ? TSF.nick : "";   /* v5.12 1F 현장은 오른쪽 판이 추월 레이스(RG.race) · 이 TOP 10 은 레이스 목록을 못 받았을 때만 보인다 */
+  RG.topT = "현장 TOP 10"; RG.who = TSF.nick;   /* v5.12 1F 현장은 오른쪽 판이 추월 레이스(RG.race) · 이 TOP 10 은 레이스 목록을 못 받았을 때만 보인다 */
   if (c) RG.top = conv(c);   /* 받아 둔 목록을 먼저 보인다 · 도전자 줄 표시(me)는 새로 받은 목록부터 */
   if (!BE.on) { if (!c) RG.top = []; return; }
-  var u = S.get("user", {}) || {};
-  beCall({ action: "type_rank", mode: "site", emp: site ? TSF.emp : u.empId || "", n: 10 }, function (r) { if (r && r.ok && RG.on) RG.top = conv(r); }, function () { if (RG.on && !RG.top) RG.top = []; });
+  beCall({ action: "type_rank", mode: "site", emp: TSF.emp, n: 10 }, function (r) { if (r && r.ok && RG.on) RG.top = conv(r); }, function () { if (RG.on && !RG.top) RG.top = []; });
 }
 function rgPlayClose() { RGP.on = false; gsOverlayClose("type"); }
 /* v4.51(260925 사용자) 넓은 화면 3단 · 입력칸 = 가운데 판 폭(틀 포함) · 판 바로 아래 · 엔진 배치(RG.L)를 따른다(판 틀 L.fr 과 같은 세 겹) · 옆판이 없으면(휴대폰 · 좁은 창) 옛 모양 그대로 */
@@ -10393,10 +10379,8 @@ function rgResume() {
   RG.raf = requestAnimationFrame(rgFrame);
 }
 function rgQuit() {
-  var site = RG.mode === "site";
   rgStop();
-  if (site) { tsfQuit(); return; }   /* v4.32 현장 셀프 · 중간에 그만두면 기록 없이 처음 화면(시작한 순간 1회는 이미 썼다) */
-  App.render();
+  tsfQuit();   /* v4.32 현장 셀프 · 중간에 그만두면 기록 없이 처음 화면(시작한 순간 1회는 이미 썼다) */
 }
 /* 엔진이 1.2초 마무리 화면을 보여 준 뒤 부른다 · 기록 = 버틴 시간(1/100초) · 점수는 보조 지표 */
 function rgEndFinal(why) {
@@ -10404,47 +10388,9 @@ function rgEndFinal(why) {
   rgStop();
   var s = rgStat(), surv = Math.round((RG.surv || 0) * 100), site = RG.mode === "site";
   RG.resAt = performance.now();   /* v4.29 결과 직후 1초는 스페이스 「다시 하기」를 받지 않는다(치던 손이 눌러 버린다) */
-  RG.res = { why: why, score: site ? s.score : surv, pts: s.score, surv: surv, bns: s.bns, bnsN: s.bnsN, capBns: s.capBns, hits: s.hits, combo: s.combo, acc: s.acc, me: null, send: "", prev: Number(S.get("type_best", 0)) || 0 };   /* v4.28 prev = 이번 판 전 내 최고(결과 「신기록!」) · v5.12 1F 현장(site) 기록 = 점수 · 앱은 버틴 시간 */
-  if (RG.mode === "app") {
-    if (surv > S.get("type_best", 0)) setTimeout(function () { sfx("best"); }, 250);
-    S.set("type_best", Math.max(S.get("type_best", 0), surv));
-    OLY.t = 0;
-    gameClear("type_cleared");   /* 끝까지 하면 04 미니게임 (점수 무관 · 이미 있으면 조용히) */
-    var u = S.get("user", {}) || {};
-    if (BE.on && !testEmp() && u.empId) {
-      RG.res.send = "sending";
-      beCall({ action: "type_submit", emp: u.empId, name: u.name || "", score: RG.res.score, hits: RG.res.hits, combo: RG.res.combo, acc: RG.res.acc, consent: "1" },
-        function (r) { if (RG.res) { RG.res.send = r && r.ok ? "ok" : (r && r.reason) || "fail"; RG.res.me = r && r.me; } if (App.current === "game_type") rgResultPaint(); },
-        function () { if (RG.res) RG.res.send = "fail"; if (App.current === "game_type") rgResultPaint(); });
-    }
-    rgResultPaint();
-  } else if (typeof tsfDone === "function") tsfDone(RG.res);   /* v4.32 1F 현장 셀프 모드 */
+  RG.res = { why: why, score: site ? s.score : surv, pts: s.score, surv: surv, bns: s.bns, bnsN: s.bnsN, capBns: s.capBns, hits: s.hits, combo: s.combo, acc: s.acc, me: null, send: "", prev: 0 };   /* v4.28 prev = 이번 판 전 내 최고(결과 「신기록!」) · v5.12 1F 현장(site) 기록 = 점수 · 앱은 버틴 시간 */
+  if (typeof tsfDone === "function") tsfDone(RG.res);   /* v4.32 1F 현장 셀프 모드 · 정리 #4(261005) 앱(폰) 솔로 갈래는 지웠다 */
 }
-function rgResultPaint() {
-  var root = el("tgRoot"), r = RG.res; if (!root || !r) return;
-  root.innerHTML = gsResultHtml("type", { why: "done", label: "생존 기록", title: r.why === "cap" ? "여기까지" : "GAME OVER", line: r.why === "cap" ? "최대 시간에 닿았어요" : "단어 " + (RG.lives0 || RAIN_LIVES) + "개를 놓쳤어요",
-    score: (r.score / 100).toFixed(1) + "초 생존",   /* v4.02 소나기는 올림픽 종목이 아니다 · v5.29 (사용자 261003 「1층 점수만」) 앱(폰) 순위 줄 · 「앱 상위 10」 배너 삭제 · 기록 · 내 최고 비교 두 줄 */
-    l2: r.score > (r.prev || 0) ? "신기록!" : "내 최고 " + typeSec(Math.max(r.prev || 0, r.score)),
-    fold: "기록 자세히 보기", ref: [["터뜨린 단어", r.hits + "개"], ["점수", Number(r.pts || 0).toLocaleString()], ["최고 콤보", r.combo], ["정확도", r.acc + "%"]] });
-  var again = root.querySelector(".gs-res-go .rt-btn");
-  if (again && !rgTouch()) again.textContent = "다시 하기 · SPACE";   /* v4.29 키보드 기기 */
-}
-/* v4.29 스페이스 · 앱 솔로 시작 화면(▶ START 와 같다 · 대기 화면을 건너뛰고 바로 카운트다운) · 결과 화면(다시 하기 · 1초 뒤부터)
-   입력칸 · 모달 · 게임 오버레이 위에서는 받지 않는다 · 판 안(대기 화면)의 스페이스는 엔진(rgKeyDoc)이 받는다 */
-function rgSpaceKey(e) {
-  if (App.current !== "game_type" || GS.cur || RG.on) return;
-  if (e.code !== "Space" && e.key !== " ") return;
-  if (e.repeat || e.isComposing || e.keyCode === 229 || e.ctrlKey || e.metaKey || e.altKey || el("modal")) return;
-  var t = e.target || {};
-  if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable) return;
-  if (el("gsGo")) { e.preventDefault(); RGP.go = sndChosen(); gsBegin("type"); return; }   /* 소리 선택 카드가 뜨면 고른 뒤 대기 화면부터 */
-  if (document.querySelector("#tgRoot .gs-res-go")) {
-    e.preventDefault();
-    if (performance.now() - (RG.resAt || 0) < 1000) return;
-    RGP.go = true; rgStart("app");
-  }
-}
-document.addEventListener("keydown", rgSpaceKey);
 /* ── 닉네임 · 순위판 ── */
 function typeNick() { return S.get("type_nick", ""); }
 function typeNickValid(v) {
@@ -10591,26 +10537,6 @@ function tybStart() {
     if (!tybOn()) { clearInterval(TYB.iv); TYB.iv = 0; return; }
     if (!document.hidden) typeRankPull("site", tybGot);
   }, 20000);
-}
-/* 시작 화면 미리보기 캔버스 · 챗봇 둘(콤보 연출 모습)과 떨어지는 단어 몇 개 (정지 화면) · 챗봇 도트가 늦게 읽히면 읽힌 뒤 한 번 더 그린다 */
-function rgPreview() {
-  var cv = el("rgPrev"); if (!cv) return;
-  var w = cv.clientWidth || 300, h = 130, dpr = Math.min(2, window.devicePixelRatio || 1);
-  cv.style.height = h + "px"; cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
-  var ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.imageSmoothingEnabled = false;
-  var L = rgLayout(w, h, false);
-  rgWorldD(ctx, L);
-  ctx.font = rtFont(L.tf);
-  [["에이전트", 0.08, 10], ["공감", 0.66, 30], ["데이터", 0.36, 50]].forEach(function (x) {   /* v4.23 게임과 같은 나무 이름표(rgWordDraw) */
-    ctx.font = rtFont(L.tf);
-    var bw = Math.ceil(ctx.measureText(x[0]).width) + L.padX * 2, bx = Math.min(w - 8 - bw, Math.max(8, Math.round(w * x[1])));
-    rgWordDraw(ctx, L, bx, x[2], bw, x[0], false, false, "");
-  });
-  if (document.fonts && RT_FONT_WARM !== 2 && !rgPreview.fw) { rgPreview.fw = 1; rtFontWarm(); document.fonts.ready.then(function () { rgPreview.fw = 0; if (RT_FONT_WARM === 2) rgPreview(); }); }   /* 도트 글꼴이 늦게 오면 한 번 더 그린다 */
-  var u = L.D / 2, mx = Math.round(w * 0.46);
-  rgBotDraw(ctx, mx, L.ground, RG_BOT.w, RG_BOT.h, u);
-  rgBotDraw(ctx, mx + L.masW / 2 + RG_BOT.bw * u / 2, L.ground, RG_BOT.bw, RG_BOT.bh, u);
-  if (typeof BOT_DOT !== "undefined" && !BOT_DOT.ok) botDotLoad(rgPreview);
 }
 function gameClear(flagKey) {
   if (!S.get(flagKey, false)) {
@@ -11445,7 +11371,7 @@ function sndToggle(site) {
   if (typeof rgFocus === "function" && el("rgIn")) rgFocus();
 }
 /* START · 아직 안 골랐으면 선택 카드 한 번 */
-var SND_START = { pang: "pgStart()", jump: "jpStart()", tetris: "ttStart()", type: "rgStart('app')", ox: "oxStart()" };
+var SND_START = { pang: "pgStart()", jump: "jpStart()", tetris: "ttStart()", ox: "oxStart()" };
 function gsBegin(key) {
   SFX.site = false;
   if (GS_HOW[key]) { GS.first = !gsHowSeen(key) || GS.first === key ? key : ""; gsHowMark(key); gshStop(); }   /* v5.41 이 사람의 이 게임 첫 판 · 소리 선택 카드를 닫고 다시 눌러도 첫 판 */
@@ -12950,9 +12876,7 @@ function ttPreview(t) {
    AX 팡·점프 순위판은 지금은 로컬 테스트용(가짜 닉네임 + 내 최고 기록) · 서버 순위는 게임이 정해진 뒤 연결한다.
    비주얼: 오렌지 사다리 · 검정 · 흰색 · 16비트 도트 · 캐릭터 = 행사 챗봇 원본(assets/bot.js) · 이모지 없음. */
 var GS_GAMES = {
-  /* v3.86 휴대폰 종목은 테트리스 · 소나기(type)는 1F 현장 타자왕전 전용으로만 남는다(앱 진입점 없음) */
   tetris: { name: "테트리스", view: "game_tetris", start: "ttStart()", best: "oly2_best_tetris", line: "블록을 옮기고 돌려서 줄을 채워요 · 아래 버튼으로" },
-  type: { name: "AX 단어 소나기", view: "game_type", start: "rgStart('app')", best: "type_best", line: "떨어지는 단어를 쳐서 터뜨려요 · 키보드로 입력" },
   pang: { name: "AX 팡", view: "game_pang", start: "pgStart()", best: "oly2_best_pang", line: "같은 그림 3개를 한 줄로 맞춰 터뜨려요 · 밀어서 바꾸기" },
   jump: { name: "ME to WE 점프", view: "game_jump", start: "jpStart()", best: "oly2_best_jump", line: "화면을 탭하면 점프 · 두 번 탭하면 2단 점프 · 꾹 누르면 엎드리기" },
   ox: { name: "AX 퀴즈", view: "game_ox", start: "oxStart()", best: "oly2_best_ox", line: "맞으면 화면 왼쪽 O, 틀리면 오른쪽 X · 발판이 아래 끝에 닿기 전에" }
@@ -13331,7 +13255,7 @@ function gsNickHtml(key) {
     '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" onclick="typeNickSave()">닉네임 저장하기</button></div>';   /* v4.09 버튼 하나 · 나가기는 헤더 뒤로(바꾸던 중이면 게임을 떠날 때 원래대로) */
 }
 function gsNeedNick() { return !typeNick() || S.get("type_nick_edit", false); }
-/* o = { rootId, sub(부제 · v4.12), previewId·pw·ph·flat(옛 소나기 전용) }
+/* o = { rootId, sub(부제 · v4.12) }
    v4.11 한 틀(사용자 요청 260922) · 흰 카드(미리보기 · 조작 한 줄 · 내 최고) + 작은 링크 줄(닉네임 · 순위판 · 소리) + 아래 고정 주 버튼 하나(design.md A-5 5-7)
    v4.28 (사용자 260924 「읽히지도 않고 가독성도 떨어지고 불필요」) 점수 공식 줄을 뺐다 · 시작 화면 = 이름 · 조작 한 줄 · 내 최고 · ▶ START · 공식은 결과 「점수 계산 보기」(gsRuleText)
    미리보기는 오락실 대기 화면 문법 = 「DEMO · 예시 화면」 깜빡임 + 흐리게(「이거 시작된 거야?」 혼란 · 동작 줄이기면 고정 표시) */
@@ -13345,13 +13269,13 @@ function gsStartHtml(key, o) {
   return '<div id="' + o.rootId + '" class="ax-stack gs-root gs-start">' +
     '<section class="ax-card gs-card rt-frame"><h1 class="ax-sr-only">' + esc(g.name) + "</h1>" +   /* 게임 이름은 헤더가 알린다(5-4) */
     (D ? '<div class="gs-prev" id="gsPrev" aria-hidden="true">' + D.html() + GS_DEMO_TAG + "</div>" :
-      o.previewId ? '<div class="rg-wrap gs-demo-host' + (o.flat ? " flat" : "") + '" aria-hidden="true"><canvas id="' + o.previewId + '" width="' + o.pw + '" height="' + o.ph + '"></canvas>' + GS_DEMO_TAG + "</div>" : "") +
+      "") +
     '<div class="gs-info">' + (o.sub ? '<p class="gs-sub">' + esc(o.sub) + "</p>" : "") + (H ? gsHowHtml(key, false, "gsHow", !hOpen) : "") + '<p class="gs-ctl">' + esc(g.line) + "</p>" +   /* v5.41 설명이 펼쳐지면 조작 한 줄은 CSS 가 숨긴다(.gsh ~ .gs-ctl) */
     (H && !hOpen ? '<button type="button" class="gsh-tg" id="gsHowTg" aria-expanded="false" aria-controls="gsHow" onclick="gsHowToggle()">설명 보기 ▼</button>' : "") +   /* v4.12 부제(AI O/X · 유리다리 건너기) */   /* 조작 한 줄 · 첫 안내 말풍선과 같은 문구 · 3판 제한 없이 항상 보인다 */
-    (best > 0 ? '<p class="gs-best">내 최고 ' + (key === "type" ? typeSec(best) + " 생존" : olyFmt(best) + "점") + "</p>" : "") + "</div></section>" +
+    (best > 0 ? '<p class="gs-best">내 최고 ' + olyFmt(best) + "점" + "</p>" : "") + "</div></section>" +
     (olyIsQuiz(key) ? '<div class="gs-links">' + sndBtnHtml(false) + "</div>" :   /* v4.83 AX 퀴즈 = 닉네임 · 순위판 링크 없음 */
     '<div class="gs-links"><span>닉네임 <b>' + esc(nick) + '</b></span><button type="button" class="gs-edit" onclick="S.set(\'type_nick_edit\', true); App.render()">변경</button>' +
-    '<span aria-hidden="true">·</span><button type="button" class="gs-edit" onclick="' + gsRankGo(key) + '">' + (key === "type" ? "1F 타자왕 순위" : "순위판") + "</button>" + sndBtnHtml(false) + "</div>") +
+    '<span aria-hidden="true">·</span><button type="button" class="gs-edit" onclick="' + gsRankGo(key) + '">' + "순위판" + "</button>" + sndBtnHtml(false) + "</div>") +
     '<div class="ax-bottom axs-fix"><button type="button" class="ax-button rt-btn" id="gsGo" aria-label="게임 시작하기" onclick="gsBegin(\'' + key + '\')">▶ START</button></div></div>';   /* v4.23 오락실 버튼 · 읽기 프로그램에는 「게임 시작하기」 */
 }
 /* ── v4.11 시작 화면 미리보기 · 게임의 실제 그리기 함수(판·장애물·블록·타일·문제 카드)로 짧은 데모를 반복한다 ──
@@ -13470,7 +13394,7 @@ function oxPreview(t) {
   while (OXP.t < t && guard++ < 2000) { var d = Math.min(1 / 30, t - OXP.t); OXP.t += d; oxpStep(OXP, d); }
   var ctx = cv.getContext("2d"); ctx.setTransform(k, 0, 0, k, 0, 0); oxbDraw(ctx, OXP.G);
 }
-function gsRankGo(key) { return key === "type" ? "App.go('type_rank')" : "S.set('oly_tab', 'event'); S.set('oly_ev', '" + key + "'); App.go('oly_rank')"; }
+function gsRankGo(key) { return "S.set('oly_tab', 'event'); S.set('oly_ev', '" + key + "'); App.go('oly_rank')"; }
 /* v4.23 공용 GAME OVER 패널 · 다섯 게임 + 단어 소나기(앱 솔로 · 1F 현장 타자왕전) 결과가 모두 이 한 틀을 쓴다(사용자 확정 260923 · design.md A-5 5-16 · 검사 82절)
    어두운 판 · 나무 이중 테두리 · 계단 모서리 · 도트 글꼴 · 각진 오락실 버튼(부른 쪽이 rt-btn 으로 둔다) · 시안 §3
    o = { title 큰 도트 제목(GAME OVER · TIME UP · CLEAR · 만점 …), sub 게임 이름 · 닉네임, line 게임 고유 한 줄(O/X 「풍덩」 · 소나기 「단어 5개를 놓쳤어요」), body 점수 · 구성 표 HTML } */
@@ -13492,7 +13416,7 @@ function gsResultHtml(key, r) {
     (r.banner ? '<div class="rt-extra">' + r.banner + "</div>" : "") +
     '<div class="ax-stack-tight gs-res-go"><button type="button" class="ax-button rt-btn" onclick="' + g.start + '">다시 하기</button>' +
     (qzR ? '<button type="button" class="ax-button ax-button-weak rt-btn weak" onclick="App.go(\'quiz\')">AX 퀴즈 보기</button>' :
-      '<button type="button" class="ax-button ax-button-weak rt-btn weak" onclick="' + gsRankGo(key) + '">' + (key === "type" ? "1F 타자왕 순위 보기" : "순위판 보기") + "</button>") +   /* v5.30 타자 = 1F 현장 순위판만 있다(사용자 261003) */
+      '<button type="button" class="ax-button ax-button-weak rt-btn weak" onclick="' + gsRankGo(key) + '">' + "순위판 보기" + "</button>") +   /* v5.30 타자 = 1F 현장 순위판만 있다(사용자 261003) */
     '<button type="button" class="ax-button ax-button-weak rt-btn weak" onclick="' + (tr ? "tourRetGo()" : "App.go(\'passport\')") + '">' + (tr ? "1층으로 돌아가기" : "스탬프 보기") + "</button></div>";   /* v5.57 둘러보기에서 출발 = 1층으로 */
 }
 /* v4.28 결과 접힘 조각 · 여섯 곳(다섯 게임 + 단어 소나기 앱 솔로 · 1F 현장)이 같이 쓴다 · 「점수에는 들어가지 않아요」 같은 설명 문장 대신 제목 줄(점수 구성 · 참고 기록 · 점수 규칙 · 내 위치)로 나눈다 */
@@ -13509,7 +13433,6 @@ function rtRefTable(rows) {
 function gsRuleText(key) {
   if (key === "jump") return "하트 " + JP_HEARTS + "개 · " + olyRuleLine("jump");
   if (key === "ox") { var R = olyRule().ox; return R.sec / 100 + "초 · " + (R.per[0] + R.per[1] + R.per[2]) + "줄 · 목숨 " + R.lives + " · " + olyRuleLine("ox"); }
-  if (key === "type") return "단어를 치고 Enter · 바닥에 닿으면 하트 -1 · 하트 " + RAIN_LIVES + "개를 다 잃을 때까지 버티기";
   return olyRuleLine(key);
 }
 /* 올림픽 밖 결과(팡 미완주 · 단어 소나기) · r = { score, l2, l3, ref, fold } · 같은 세 줄 + 접힘 */
