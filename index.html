@@ -3267,7 +3267,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.62";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.63";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -9541,13 +9541,13 @@ function qzStampCheck(srv) {
      ② 읽기 = 1080p 요청 · 가운데 70% × 80% 원본 해상도에서 파인더 → 그 자리만 한 칸 4.5px 로 늘려 jsQR · 못 찾으면 1.5초마다 가운데를 줄여 한 번(옛 = 전체를 800px 로 줄여 40cm 밖에서 못 읽었다)
      ③ 방법 2 = 노트북 화면 왼쪽 접속 QR(앱 주소 #q=type&lt=일회용 토큰) 을 폰 기본 카메라로 · 로그인하면 이 노트북에 붙는다(서버 type_link_* · 판정은 방법 1 과 같은 typeSelfCheck_)
      ④ 대기 화면 = ▲ 카메라 · 「방법 1 · 앱의 내 QR을 위 카메라에」 · 왼쪽 「방법 2」 · 아래 세 단계 · 15초마다 덮던 TOP 3 없앰 · 봇 데모는 배경으로 약하게
-     ⑤ 확인 → 0.8초 → READY(큰 SPACE 키 · 20초 · 마지막 5초 카운트) · 닉네임 45초 · 결과 10초(8초 뒤 다음 사람 QR) · READY · 닉네임에서 10초 넘게 손을 안 대면 다른 사람 QR 로 바뀐다
+     ⑤ 확인 → 0.8초 → READY(큰 SPACE 키 · 60초 · 마지막 5초 카운트) · 닉네임 60초 · 결과 10초(8초 뒤 다음 사람 QR) · READY · 닉네임에서 60초(v5.63 · 261005 사용자 결정) 넘게 손을 안 대면 다른 사람 QR 로 바뀐다
      ⑥ 서버 응답이 없으면 1.2초 뒤 세 번까지 다시 · 문의처 = 「1층 안내 데스크」 · 도전 시간 밖이면 스캔을 끄고 안내만 · 한/영은 엔진이 로마자를 두벌식으로 바꿔 넣어 안내하지 않는다 */
 var TSF = { ph: "attract", msg: "", emp: "", nick: "", info: null, busy: false, ticket: "", res: null, sub: null, send: "", why: "", top: null, topT: 0, resAt: 0, phAt: 0, idle: 0, t: null, raf: 0, unl: false, snd: true, cfg: null, cfgT: 0,
   cam: { stream: null, timer: null, err: "", last: "", lastT: 0, busy: false, cv: null, g: null, res: "" }, race: null, err: null, nm: "", nmBad: false, retry: 0, via: "", closedK: "",
   sc: { on: false, hits: [], last: 0, box: null, tgt: null, rect: null, di: 2, n3: false, since: 0, okAt: 0, lum: 128, tick: 0, cands: 0, ms: 0, msg: "", hint: "", staff: 0 },
   lk: { tok: "", at: 0, busy: false, pollAt: 0, retryAt: 0, fail: 0, url: "" }, dbg: /[?&]tsfdbg=1\b/.test(location.search) };
-var TSF_READY_MS = 20000, TSF_NICK_MS = 45000, TSF_RES_MS = 10000, TSF_RES_SCAN_MS = 8000, TSF_SWAP_MS = 10000, TSF_JOIN_S = 0.8, TSF_LINK_ROT = 40000, TSF_LINK_POLL = 1500;
+var TSF_READY_MS = 60000, TSF_NICK_MS = 60000, TSF_RES_MS = 10000, TSF_RES_SCAN_MS = 8000, TSF_SWAP_MS = 60000, TSF_JOIN_S = 0.8, TSF_LINK_ROT = 40000, TSF_LINK_POLL = 1500;
 var TSF_DESK = "1층 안내 데스크로 알려 주세요";
 var TSF_WHY = { param: "QR을 읽지 못했어요 · 다시 비춰 주세요", unknown: "명부에서 찾을 수 없어요 · " + TSF_DESK, window: "지금은 도전 시간이 아니에요", auth: "관리코드가 바뀌었어요 · " + TSF_DESK, range: "기록이 범위를 넘어 저장하지 않았어요", net: "연결이 불안정해요 · 잠시 뒤 다시 해 주세요",
   locked: "관리 연결이 잠시 막혔어요 · " + TSF_DESK,   /* v4.65 서버 잠금(같은 와이파이에서 코드를 30번 틀림) */
@@ -9850,7 +9850,7 @@ function tsfPlan(b, W, H, ox, oy) {
 }
 /* TSF_DETECT_END */
 function tsfJs(d, w, h) { var r = jsQR(d, w, h, { inversionAttempts: "dontInvert" }); return r && r.data ? r.data : null; }
-/* 읽기가 열린 단계 · 대기 · 안내 · 결과(8초 뒤 · 저장 끝난 뒤) · READY · 닉네임(10초 넘게 손을 안 댔을 때만 · 다른 사람 QR 로 바꾼다) · 판 도중 · 확인 중 · 시간 밖에는 읽지 않는다 */
+/* 읽기가 열린 단계 · 대기 · 안내 · 결과(8초 뒤 · 저장 끝난 뒤) · READY · 닉네임(60초 넘게 손을 안 댔을 때만 · 다른 사람 QR 로 바꾼다) · 판 도중 · 확인 중 · 시간 밖에는 읽지 않는다 */
 function tsfScanOpen() {
   if (RG.on || TSF.busy || el("modal") || tsfClosed()) return false;
   var ph = TSF.ph;
@@ -10156,7 +10156,7 @@ function tsfGuideMask(ctx, cv, w) {
   var g = ctx.createLinearGradient(0, y1, 0, y1 + fade); g.addColorStop(0, bg + "1)"); g.addColorStop(1, bg + "0)");
   ctx.fillStyle = g; ctx.fillRect(0, y1, w, fade);
 }
-/* v5.30(261003 사용자 피드백) 준비 화면 · 도전자 · 규칙 세 줄(그림 + 제목 + 조건) · v5.61 큰 SPACE 키 그림 + 「누르면 시작」 · 20초 방치면 처음으로(마지막 5초 숫자)
+/* v5.30(261003 사용자 피드백) 준비 화면 · 도전자 · 규칙 세 줄(그림 + 제목 + 조건) · v5.61 큰 SPACE 키 그림 + 「누르면 시작」 · 60초 방치면 처음으로(마지막 5초 숫자)
    ① 구름에서 내리는 단어를 쳐서 없앤다 · 바닥에 닿으면 목숨 -1 ② 구름이 다 비면 보너스 스테이지 · 문장을 따라 친다 ③ 점수 = 단어 + 콤보 + 보너스 · 1인 n회 · 최고 점수로 순위
    그림 = 16 × 14 칸 도트(구름과 비 · 문장 판과 커서 · 별) · 글자는 16 · 32 만 · 판 높이가 낮으면(720 미만) 간격만 줄인다 */
 var TSF_ICON = {
