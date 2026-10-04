@@ -163,6 +163,7 @@ Object.assign(sfx, {
     src.connect(bp).connect(g).connect(a.destination); src.start(t); src.stop(t + d + .16);
   },
   spawn() { tone(380, .12, 'triangle', .07, 300); noise(.12, .08, 1200, 3000, .8); },
+  notice() { tone(988, .09, 'sine', .16); tone(740, .16, 'sine', .16, 0, .11); },   // 기력 부족 안내(짧은 두 음)
   airPunch() { noise(.28, .22, 1800, 600, .7); tone(220, .16, 'triangle', .07, -80); },
   whoosh() { noise(.38, .4, 4200, 450, .7); tone(1200, .22, 'sine', .07, -800); tone(784, .12, 'triangle', .1, 0, .12); tone(1175, .2, 'triangle', .1, 0, .2); },
   thud() { tone(85, .3, 'sine', .45, -45); noise(.16, .5, 900, 140, .8, 'lowpass'); },
@@ -284,7 +285,7 @@ function updateInput(dt) {
     if (used[i]) continue; const pts = list[i];
     { const t = { id: nextHid++, hist: [], matched: true, lm: null, seen: now, swapT: 0, age: 0, thrLock: 0, thrR: 1, thrust: null }; applyHand(t, pts, st); t.side = newSide(t); hands.push(t); }
   }
-  for (const t of hands) if (now - t.seen >= .6) lostHands.push({ x: t.c.x, y: t.c.y, side: t.side, t: now });
+  for (const t of hands) if (now - t.seen >= .6) { lostHands.push({ x: t.c.x, y: t.c.y, side: t.side, t: now }); if (t.c.y < H * TOP_EXIT) topExitAt = Math.max(topExitAt, t.seen); }   // 위쪽으로 나간 손(handsUpOut)
   lostHands = lostHands.filter(q => now - q.t < LOST_MEM);
   hands = hands.filter(t => now - t.seen < .6);
   for (const t of hands) {   // 2인: 손을 x 위치로 왼쪽/오른쪽 사람에 배정(가운데를 잠깐 넘어도 유지)
@@ -292,6 +293,7 @@ function updateInput(dt) {
     t.swapT = other ? t.swapT + dt : 0; if (t.swapT > .6) { t.side = 1 - t.side; t.swapT = 0; }
   }
 }
+let topExitAt = -99;
 function newSide(t) {
   let best = null, bd = LOST_R; for (const q of lostHands) { const d = Math.hypot(q.x - t.c.x, q.y - t.c.y); if (d < bd) { bd = d; best = q; } }
   if (best) { lostHands = lostHands.filter(q => q !== best); return best.side; }
@@ -432,7 +434,7 @@ const EN_MAX = 100, EN_REGEN = 8, EN_REGEN_DELAY = .4, EXHAUST_SEC = 2, LIFE_MAX
 // 범위 피해(피드백3): 작은 파동 = 대상 + 이 거리(px) 안의 가장 가까운 1마리에게 절반 피해 · ME to WE 파 = 대상 둘레 이 거리 안 전부(화면 전체 아님)
 const WAVE_SPLASH = 170, WAVE_SPLASH_N = 1, WAVE_SPLASH_DMG = 4, MTW_SPLASH = 380, MTW_SPLASH_DMG = 8, MTW_BOSS_DMG = 20;
 // 보스: 이 시간(초)이 지나면 지쳐서 받는 피해 2배 · 2인 합체 조건도 풀린다(시간 초과 실패 없음)
-const BOSS_TIRED = 10, HURT_GRACE = 2.5;   // 피드백4: 지치는 시점 18 → 10초(서툰 사람이 보스전에서 오래 끌지 않게) · HURT_GRACE: 공격에 맞은 뒤 이 시간(초) 동안은 무적(그사이 날아온 공격은 막힌다)
+const BOSS_TIRED = 8, HURT_GRACE = 2.5;   // 사용자 261004: 10 → 8초(TIRED_AT.boss) · 피드백4: 지치는 시점 18 → 10초(서툰 사람이 보스전에서 오래 끌지 않게) · HURT_GRACE: 공격에 맞은 뒤 이 시간(초) 동안은 무적(그사이 날아온 공격은 막힌다)
 /* 적 공격(피드백2 261003): 적은 중간 거리 자리에 멈춘 뒤 공격을 예고하고(둘레 고리가 차오름 → 마지막 ATK_WARN초 「!」·붉은 반짝임·경고음)
    그때까지 못 잡으면 서류·메일을 던진다. 맞으면 생명 -1. 생명은 이 공격으로만 줄어든다 */
 const ATK_TELE = { mini: 1.1, golem: 1.3, boss: 2.2 };   // 예고 고리가 다 차는 시간(초, 「!」 구간 포함) · 피드백3: 5.5·6·7 → 1.6·2·2.8 · 피드백4: 예고 중인 적도 맞게 되어 더 줄였다(무리째 쓸려 공격이 거의 안 왔다)
@@ -442,15 +444,14 @@ const ATK_WARN = .8;                                   // 마지막 이 시간(�
 /* 피드백4: 던지기 순번표(판당 던지기 약 5~8회). 시간 간격으로 내면 빨리 잡는 사람은 던지기를 거의 못 보고(판당 3.8번), 느린 사람은 판이 길어져 계속 맞았다(9번 이상).
    이제 웨이브마다 사람(쪽)별로 정해진 시각(웨이브 시작 뒤 초)에 하나씩 낸다. 그 시각에 던질 적이 없으면 생길 때까지 미룬다(웨이브가 끝나면 없어짐)
    2인은 생명을 함께 쓰니 한 사람 쪽 횟수를 줄였다 */
-const WAVE_THROWS = [
-  [[[1.6, 5.6, 9.8]], [[1.8, 6.4, 11]]],                // 1인: 웨이브마다 세 번(무리가 나온 직후)
-  [[[1.6], [4.8]], [[1.8, 9.6], [5.6]]],                // 2인: [웨이브][쪽] 웨이브 1 각 한 번 · 웨이브 2 왼쪽 두 번 오른쪽 한 번
-];
-const BOSS_THROWS = [3, 3];                            // 보스 던지기 최대 횟수(1인 · 2인). 다 던지면 더 던지지 않는다(서툰 사람도 끝까지 가도록)
+/* 사용자 261004(게임을 해 봄): 몬스터는 세 마리를 한 번에 한 마리씩. 웨이브 순번표 대신 몬스터마다 등장 뒤 첫 예고 시각 · 다음 예고까지 간격 · 최대 던지기 횟수(1인 · 2인)
+   2인은 가운데 한 마리를 함께 치고, 몬스터는 왼쪽 · 오른쪽 사람을 번갈아 노린다 */
+const ATK_FIRST = { mini: .7, golem: .9, boss: 2.5 };
+const ATK_GAP = { mini: 2.4, golem: 2.6, boss: 5.5 };
+const THROWS_MAX = { mini: [1, 2], golem: [2, 2], boss: [3, 3] };   // 다 던지면 더 던지지 않는다(서툰 사람도 끝까지 가도록)
 const MERCY_SKIP = [.85, .5];                          // 생명이 1 · 2일 때 차례가 온 던지기를 이 확률로 건너뛴다(처음 하는 사람도 대부분 끝까지 가도록)
 const mercySkip = () => G.life <= 2 && Math.random() < MERCY_SKIP[Math.max(1, G.life) - 1];
 const ATK_MIN_T = .3;                                  // 등장한 뒤 이 시간(초)이 지난 적만 예고를 시작한다(피드백4: 원근 z 대신)
-const ATK_BOSS_FIRST = 2.5, ATK_BOSS_GAP = 5.5;           // 보스: 등장 뒤 첫 예고까지 · 다음 예고까지(초)
 const ATK_MAX = 1;                                     // 한 사람 쪽에서 동시에 예고할 수 있는 적 수(보스 포함): 한 번에 하나만 「!」
 /* 피하기(피드백3 261003): 던지는 순간의 내 얼굴 위치로 날아온다. 도착 순간 얼굴 중심이 착탄 원 안이면 맞음, 밖이면 회피
    피드백4(261003): 원근 없음. 크기가 변하지 않고 적 손에서 포물선으로 날아온다(물건 크기는 던진 적 크기에 맞춤) */
@@ -474,7 +475,10 @@ const THR_WIN = .2, THR_RATIO = 1.22;          // 내지르기: 0.2초 안에 �
 const DUAL_WAIT = .2, DUAL_WIN = .25;          // 두 손바닥: 첫 손바닥 뒤 0.2초 기다려 짝을 찾는다(0.25초 안이면 ME to WE 파)
 const FIST_OPEN = .42, FIST_OFF = .55, PALM_OPEN = .6;   // 손 상태: 이보다 접히면 주먹(불꽃이 붙음) · 한 번 주먹이면 FIST_OFF를 넘게 펴야 풀린다 · PALM_OPEN보다 펴지면 손바닥
 // 피드백4: 예전에는 불꽃은 open < .45에서 붙는데 내지르기 판정은 open < .35만 주먹이라, 불꽃이 붙은 채 내질러도 「애매」로 소리 없이 버려졌다. 이제 불꽃이 붙은 상태(h.fistOn) = 주먹 판정
-const BOSS_HP = [56, 70], MERGE_AT = .4;  // 피드백4: 기력이 빨리 차 두 손바닥이 잦아져 60·84 · 2인: 보스 체력이 40% 이하가 되면 합체기로 마무리 · 피드백2: 박수(보스 30 피해)가 빠진 만큼 체력을 줄였다(이전 50·70) · 피드백3: 주먹이 주력(기력 0)이 되어 보스전에 공격(큰 공 · 넓은 공격)이 몇 번 오도록 다시 늘림(36·50 → 60·84) · 피드백3 2차: 판 길이 목표(실전 45~50초)에 맞춰 36·50
+const BOSS_HP = [96, 200], MERGE_AT = .4;   // 사용자 261004(세 마리): 보스 하나에 실전 시간 대부분이 걸리게 · 2인은 한 마리를 둘이 친다 · 이전: 피드백4: 기력이 빨리 차 두 손바닥이 잦아져 60·84 · 2인: 보스 체력이 40% 이하가 되면 합체기로 마무리 · 피드백2: 박수(보스 30 피해)가 빠진 만큼 체력을 줄였다(이전 50·70) · 피드백3: 주먹이 주력(기력 0)이 되어 보스전에 공격(큰 공 · 넓은 공격)이 몇 번 오도록 다시 늘림(36·50 → 60·84) · 피드백3 2차: 판 길이 목표(실전 45~50초)에 맞춰 36·50
+// 1인 보스 마무리(사용자 261004 「두 손바닥이 결정타」): 주먹 · 손바닥으로는 체력 FINISH_AT까지만 깎이고, 마지막은 두 손바닥. 그 선에서 FINISH_WAIT초가 지나도 못 하면 주먹으로도 끝낼 수 있다(끝없이 길어지지 않게)
+const FINISH_AT = .2, FINISH_WAIT = 5;
+const finFloor = e => Math.ceil(e.max * FINISH_AT);
 
 /* ---------------- 손 → 플레이어 ---------------- */
 let G = null;                    // 한 판 상태
@@ -928,35 +932,36 @@ function nameTag(x, y, name, a = 1, size = 30) {
 }
 
 /* ---------------- 소탕전: 적 (원근 레일 · 소실점에서 나와 중간 거리 자리에 멈춘다) ---------------- */
-const ENAME = { mini: '반복 업무', golem: '서류 더미 골렘', boss: '레거시 보스', dummy: '연습용 샌드백' };
-// 피드백1(261003): 꼬마 주먹 1방 · 골렘 주먹 3방/파동 1방 · 등장 수 절반쯤
-const EHP = { mini: 4, golem: 10, dummy: 1e9 };   // 피드백4: 꼬마 = 주먹 2방 · 골렘 = 주먹 5방 또는 손바닥 + 주먹 1방(이전 2·8: 나오자마자 한 방에 사라져 던질 틈이 없었다) · 연습용 샌드백은 쓰러지지 않는다(맞으면 출렁)
-const BOSS_MINI_EVERY = 8, BOSS_MINI_N = 1, BOSS_MINI_MAX = 2;   // 피드백4: 보스가 부르는 꼬마는 판에 2번까지(서툰 사람의 보스전이 꼬마 때문에 길어지지 않게)
+const ENAME = { mini: '반복 업무 꼬마', golem: '서류 더미 골렘', boss: '레거시 보스', dummy: '연습용 샌드백' };
+/* 체력 [1인, 2인](사용자 261004 「세 마리로 정리」): 꼬마 = 주먹 몇 방 · 골렘 = 주먹 여러 방 또는 손바닥 두 방 + 주먹 · 보스 = BOSS_HP(마무리는 두 손바닥)
+   2인은 한 마리를 둘이 함께 치므로 크게. 연습용 샌드백은 쓰러지지 않는다(맞으면 출렁) */
+const EHP = { mini: [18, 28], golem: [34, 56], dummy: [1e9, 1e9] };
+// 지침(사용자 261004 판 길이 조정): 차례 몬스터는 나온 뒤 [첫 시각, 둘째 시각](초)이 지나면 받는 피해 2배 · 3배. 서툰 사람의 판이 지나치게 길어지지 않게
+// 꼬마 · 골렘은 따로 표시하지 않고, 보스는 첫 시각(BOSS_TIRED)에 「보스 약해짐」
+const TIRED_AT = { mini: [4, 10], golem: [5, 12], boss: [BOSS_TIRED, 18] };
+const tiredMul = e => { const T = TIRED_AT[e.type], t = e.type === 'boss' ? (G.ph === 'b-boss' ? G.t : 0) : e.t; return e.side !== -1 || !T ? 1 : t > T[1] ? 3 : t > T[0] ? 2 : 1; };
+// 몬스터 차례(사용자 261004): 약한 꼬마 1 → 중간 골렘 1 → 큰 보스 1. 한 번에 한 마리 · 앞 몬스터를 처치하면 STAGE_GAP초 뒤 다음이 「팡」 하고 나온다
+const STAGES = ['mini', 'golem', 'boss'], STAGE_GAP = 1.1;
+const STAGE_Y = { mini: 470, golem: 530 }, STAGE_SCALE = { mini: 1.5, golem: 1.05 };   // 한 마리씩이라 가운데에 크게(꼬마 < 골렘 < 보스)
+const STAGE_ON = .7;   // 나타난 뒤 이 시간(초)이 지나야 맞는다(「팡」 등장과 이름표를 먼저 보여 준다)
 const VPY = 380;
 /* 자리(피드백4 261003 「원근감 제거」): 적은 앞뒤로 다가오지 않는다. 화면 위쪽~가운데의 정해진 자리에 고정 크기로 「팡」 하고 나타나 제자리에서 흔들·통통.
    1인 5칸(한 줄, 칸마다 높이를 엇갈림) · 2인은 한 사람 쪽 3칸. 칸 = [그 사람 쪽 가운데로부터 x, y]. 골렘은 몸이 커서 60px 아래에 선다
    크기 고정: 꼬마 약 180px · 골렘 약 240px · 보스 약 570px. 동시에 나와 있는 적은 1인 4 · 2인 한 사람 쪽 2(EN_CAP), 넘치면 나올 차례를 미룬다
    e.z 는 이제 거리가 아니라 「나타난 정도」(0 → 1, 0.35초. 음수면 그만큼 늦게 나타남) */
 const SLOTS = [[[-630, 500], [-315, 410], [0, 460], [315, 410], [630, 500]], [[-300, 480], [0, 410], [300, 480]]];
-const EN_CAP = [4, 2];
 const ESIZE = { mini: 2.9, golem: 2, dummy: 1.3, boss: 1.15 }, POP_T = .35, BOSS_Y = 440, DUMMY_Y = 470;
 const backOut = k => { k = clamp(k, 0, 1); const s = 1.9; return 1 + (s + 1) * Math.pow(k - 1, 3) + s * Math.pow(k - 1, 2); };
-// 피드백3 2차: 실전 목표 1인 약 45초 · 2인 약 50초(웨이브 1 꼬마 6 · 웨이브 2 골렘 2 + 꼬마 4 · 보스)
-const WAVES = [
-  { name: '웨이브 1', ev: [[.3, 'mini'], [.6, 'mini'], [.9, 'mini'], [4.5, 'mini'], [4.8, 'mini'], [8.5, 'mini'], [8.8, 'mini'], [9.1, 'mini']] },   // 피드백4: 2~3마리씩 무리로(한 마리가 공격하는 동안 다른 적을 친다)
-  { name: '웨이브 2', ev: [[.3, 'golem'], [.6, 'mini'], [.9, 'mini'], [5, 'mini'], [5.3, 'golem'], [9.5, 'mini'], [9.8, 'mini'], [10.1, 'golem']] },
-];
-const WAVE_OVER = 7;   // 마지막 등장 뒤 이 시간(초)이 지나면 남은 적은 물러나고 다음으로
 // 화면 위치·크기: 자리 + 제자리 움직임(꼬마 통통 · 골렘 좌우 흔들) + 맞았을 때 튕김(kb). 크기는 나타날 때만 팡(0 → 1.1 → 1)
 function proj(e) {
   const kb = e.kb || 0, kx = (e.kdx || 0) * 90 * kb, ky = (e.kdy || 0) * 90 * kb;
   if (e.type === 'boss') { const k = clamp(e.t / .9, 0, 1), drop = (1 - backOut(k)) * -650; return { x: 960 + kx, y: BOSS_Y + drop + Math.sin(e.t * 1.6) * 6 + ky, s: ESIZE.boss * (1 - .05 * kb) }; }   // 보스: 위에서 쿵 내려앉는다
-  const r = region(e.side), ap = e.flee ? clamp(e.z, 0, 1) : backOut(e.z), tele = e.atk === 'tele';
+  const r = e.side === -1 ? { cx: 960 } : region(e.side), ap = e.flee ? clamp(e.z, 0, 1) : backOut(e.z), tele = e.atk === 'tele';
   let bx = 0, by = 0;
   if (e.type === 'mini') { bx = Math.sin(e.t * 1.1 + e.ph) * 14; by = -Math.abs(Math.sin(e.t * (tele ? 7 : 3.2) + e.ph)) * (tele ? 10 : 18); }
   else if (e.type === 'golem') { bx = Math.sin(e.t * 1.4 + e.ph) * 12; by = -Math.abs(Math.sin(e.t * 2.8 + e.ph)) * 8; }
   const th = e.thr || 0;   // 던지는 순간 앞으로(아래로) 살짝 내밀었다 돌아온다
-  return { x: r.cx + (e.sx || 0) + bx + kx, y: (e.sy || DUMMY_Y) + by + ky + th * 24, s: (ESIZE[e.type] || 2.9) * ap * (1 - .1 * kb) * (1 + .08 * th) };
+  return { x: r.cx + (e.sx || 0) + bx + kx, y: (e.sy || DUMMY_Y) + by + ky + th * 24, s: (ESIZE[e.type] || 2.9) * (e.side === -1 ? STAGE_SCALE[e.type] || 1 : 1) * ap * (1 - .1 * kb) * (1 + .08 * th) };
 }
 function placeE(e) { const p = proj(e); e.px = p.x; e.py = p.y; e.ps = p.s; }
 // 빈 자리 하나. 보스가 있으면 보스 몸에 가리는 가운데 자리는 쓰지 않는다
@@ -966,17 +971,14 @@ function freeSlot(side) {
   const used = G.en.filter(e => e.alive && e.side === side && e.slot !== undefined).map(e => e.slot), free = ok.filter(i => !used.includes(i));
   return free.length ? pick(free) : pick(ok.length ? ok : S2.map((_, i) => i));
 }
-const aliveOn = side => G.en.filter(e => e.alive && !e.flee && e.type !== 'boss' && e.type !== 'dummy' && e.side === side).length;
 function spawn(type, side, o = {}) {
-  const e = Object.assign({ type, side, t: 0, id: ++G.eid, alive: true, z: 0, ph: rnd(0, 7), hp: EHP[type] || 1, hitT: 0, rot: rnd(-.12, .12), atk: '', ak: 0, posted: false, wob: 0, wv: 0, face: 0, kb: 0, thr: 0 }, o);
+  const e = Object.assign({ type, side, t: 0, id: ++G.eid, alive: true, z: 0, ph: rnd(0, 7), hp: (EHP[type] || [1, 1])[NP() - 1], hitT: 0, rot: rnd(-.12, .12), atk: '', ak: 0, posted: false, wob: 0, wv: 0, face: 0, kb: 0, thr: 0 }, o);
   e.max = e.hp;
-  if (type === 'mini' || type === 'golem') { e.slot = freeSlot(side); const q = SLOTS[NP() - 1][e.slot]; e.sx = q[0] + rnd(-12, 12); e.sy = q[1] + (type === 'golem' ? 60 : 0) + rnd(-10, 10); }
-  if (type === 'boss') { e.side = -1; e.hp = e.max = BOSS_HP[NP() - 1]; e.nextMini = 3.5; e.n = 0; e.z = 1; e.ak = ATK_BOSS_FIRST; e.atk = 'wait'; }
+  if ((type === 'mini' || type === 'golem') && side === -1) { e.sx = 0; e.sy = STAGE_Y[type]; e.atk = 'wait'; e.ak = ATK_FIRST[type]; e.lead = true; }   // 차례 몬스터: 가운데 한 마리(2인은 함께 친다)
+  else if (type === 'mini' || type === 'golem') { e.slot = freeSlot(side); const q = SLOTS[NP() - 1][e.slot]; e.sx = q[0] + rnd(-12, 12); e.sy = q[1] + (type === 'golem' ? 60 : 0) + rnd(-10, 10); }   // 시험용(쪽 자리)
+  if (type === 'boss') { e.side = -1; e.hp = e.max = BOSS_HP[NP() - 1]; e.z = 1; e.ak = ATK_FIRST.boss; e.atk = 'wait'; }
   if (e.z >= 0 && type !== 'boss') sfx.spawn();
   placeE(e); G.en.push(e); return e;
-}
-function spawnGroup(side, n) {   // 보스가 부르는 꼬마(상한 안에서만)
-  for (let k = 0; k < n && aliveOn(side) < EN_CAP[NP() - 1]; k++) spawn('mini', side, { z: -k * .5, lead: false });   // 보스 앞이라 이름표 없음
 }
 // 조준 우선순위: 먼저 나온 적부터(조준이 이리저리 옮겨 다니지 않게) · 공격을 예고 중인 적은 다른 적이 남아 있으면 맨 나중(그 공격은 날아온다 → 고개로 피한다)
 const threat = e => {
@@ -984,18 +986,18 @@ const threat = e => {
   return (e.atk === 'tele' ? .5 : 1) - e.id * 1e-4;
 };
 // 피드백4(261003 「주먹이 뭘 하는지 모르겠다」): 사거리 규칙(z 0.3)과 예고 중 면역을 없앴다. 화면에 보이는 적은 언제든 맞는다
-// 예고 중인 적을 처치하면 그 공격은 취소된다. 피하기 기회는 던지기 순번표(WAVE_THROWS)로 보장한다
-const targetable = e => e.alive && !e.flee && (e.type === 'boss' ? e.t > 1.6 : e.z > .3);
+// 예고 중인 적을 처치하면 그 공격은 취소된다
+const targetable = e => e.alive && !e.flee && (e.type === 'boss' ? e.t > 1.6 : e.side === -1 ? e.t > STAGE_ON : e.z > .3);
 // 자동 조준: 항상 가장 가까운(위험한) 적 하나. 손 위치·내지른 방향은 보지 않는다(피드백1 261003)
 // (이전: 손을 화면 좌우로 치우쳐 지르면 그쪽 적으로 조준이 옮겨 가서, 표시된 조준과 실제로 맞는 적이 달라졌다)
-const mine = (pl, e) => e.type === 'boss' || NP() !== 2 || e.side === pl.i;
+const mine = (pl, e) => e.side === -1 || NP() !== 2 || e.side === pl.i;   // side -1 = 가운데 차례 몬스터(2인은 함께)
 function pickTarget(pl) {
   const cand = G.en.filter(e => targetable(e) && mine(pl, e));
   return cand.length ? cand.reduce((a, b) => threat(b) > threat(a) ? b : a) : null;
 }
 // 범위 피해: (x,y)에서 반경 R 안의 내 쪽 적 전부(이미 맞은 대상 skip 제외)
 // maxN: 가까운 순으로 이 수만큼만(작은 파동은 1마리)
-function splash(pl, x, y, R, dmg, skip, bossDmg, maxN = 99) {
+function splash(pl, x, y, R, dmg, skip, bossDmg, maxN = 99, k) {
   const c = [];
   for (const en of G.en) {
     if (en === skip || !targetable(en) || !mine(pl, en)) continue;
@@ -1003,7 +1005,7 @@ function splash(pl, x, y, R, dmg, skip, bossDmg, maxN = 99) {
     if (d < rr) c.push([d, en]);
   }
   c.sort((a, b) => a[0] - b[0]); let n = 0;
-  for (const [, en] of c.slice(0, maxN)) { knock(en, x, y, .7); if (hitEnemy(pl, en, en.type === 'boss' ? (bossDmg || dmg) : dmg)) n++; }
+  for (const [, en] of c.slice(0, maxN)) { knock(en, x, y, .7); if (hitEnemy(pl, en, en.type === 'boss' ? (bossDmg || dmg) : dmg, k)) n++; }
   return n;
 }
 // 생명 감소는 여기 한 곳뿐: 날아온 것이 내 얼굴(착탄 원 안)에 맞았을 때. 맞은 뒤 HURT_GRACE초 무적
@@ -1065,38 +1067,24 @@ function stepAttack(e, wdt) {
   const T = ATK_TELE[e.type];
   if (e.atk === 'wait') {
     if (e.dbl > 0) { e.dbl -= wdt; if (e.dbl <= 0) throwAt(e); return; }   // 연속 두 번째
-    if (e.type !== 'boss') return;   // 꼬마·골렘은 순번표(stepSideAttack)가 고른다
+    if (e.side !== -1 || !e.posted) return;   // 차례 몬스터만 스스로 예고한다(시험용 쪽 자리 적은 시험이 직접 정한다)
     e.ak -= wdt;
     if (e.ak <= 0) {
-      let side = e.side;
-      if (e.type === 'boss') { side = NP() === 2 ? 1 - (e.lastSide === undefined ? 1 : e.lastSide) : 0; if (NP() === 2 && !sideFree(side)) side = 1 - side; }
-      if ((e.bn || 0) >= BOSS_THROWS[NP() - 1]) { e.atk = 'done'; return; }   // 정해진 횟수를 다 던졌다
-      if (mercySkip()) { e.ak = ATK_BOSS_GAP; e.bn = (e.bn || 0) + 1; return; }
+      let side = NP() === 2 ? 1 - (e.lastSide === undefined ? 1 : e.lastSide) : 0; if (NP() === 2 && !sideFree(side)) side = 1 - side;   // 2인: 왼쪽 · 오른쪽 번갈아
+      if ((e.bn || 0) >= THROWS_MAX[e.type][NP() - 1]) { e.atk = 'done'; return; }   // 정해진 횟수를 다 던졌다
+      if (mercySkip()) { e.ak = ATK_GAP[e.type]; e.bn = (e.bn || 0) + 1; return; }
       if (sideFree(side)) {
-        e.atk = 'tele'; e.tside = side; e.ak = 0; e.warned = false; e.teleAt = now;
-        if (e.type === 'boss') { e.lastSide = side; e.bn = (e.bn || 0) + 1; e.patt = e.bn % 2 ? 'ball' : 'wide'; }   // 보스: 큰 공 ↔ 넓은 공격 번갈아
+        e.atk = 'tele'; e.tside = side; e.ak = 0; e.warned = false; e.teleAt = now; e.lastSide = side; e.bn = (e.bn || 0) + 1;
+        if (e.type === 'boss') e.patt = e.bn % 2 ? 'ball' : 'wide';   // 보스: 큰 공 ↔ 넓은 공격 번갈아
       } else e.ak = .4;   // 그쪽이 바쁘다(예고 중 · 날아오는 중 · 방금 끝남): 잠깐 뒤 다시
     }
   } else if (e.atk === 'tele') {
     e.ak += wdt;
     if (!e.warned && e.ak >= T - ATK_WARN) { e.warned = true; sfx.warn(e.type === 'boss'); }
     if (e.ak >= T) {
-      throwAt(e); e.atk = 'wait'; e.ak = e.type === 'boss' ? ATK_BOSS_GAP : 0;
+      throwAt(e); e.atk = 'wait'; e.ak = ATK_GAP[e.type] || 0;
       if (e.type === 'boss' && e.patt !== 'wide' && G.life >= 3 && Math.random() < ATK_DOUBLE) e.dbl = ATK_DOUBLE_GAP;
     }
-  }
-}
-// 사람(쪽)별 던지기 순번표(G.tq): 차례 시각이 지났고 그쪽이 한가하면(예고 중·날아오는 중 아님, 쉬는 시간 끝) 보이는 적 중 조준이 가장 늦게 갈 적이 예고를 시작한다
-function stepSideAttack(wdt) {
-  if (G.merge || G.ph !== 'b-wave') return;
-  for (let side = 0; side < NP(); side++) {
-    const q = G.tq[side]; if (!q || !q.length || G.wt < q[0] || !sideFree(side)) continue;
-    const cand = G.en.filter(e => e.alive && !e.flee && e.type !== 'boss' && e.type !== 'dummy' && e.side === side && e.posted && e.t >= ATK_MIN_T && e.atk === 'wait');
-    if (!cand.length) continue;   // 던질 적이 생길 때까지 미룬다
-    q.shift();
-    if (mercySkip()) continue;   // 생명이 적으면 가끔 건너뛴다
-    const e = cand.reduce((a, b) => threat(b) < threat(a) ? b : a);
-    e.atk = 'tele'; e.tside = side; e.ak = 0; e.warned = false; e.teleAt = now;
   }
 }
 // 날아올 것 하나: 던지는 순간의 얼굴 위치(o.f)로. 얼굴이 없으면 그 사람 쪽 화면 가운데 위로
@@ -1111,7 +1099,7 @@ function mkShot(o) {
 }
 // 던짐: 적 손에서 던지는 순간의 내 얼굴 위치로 포물선. 물건은 적 크기에 맞춤(꼬마 작은 것 · 골렘 중간 · 보스 큰 것 / 서류 벽)
 function throwAt(e) {
-  const side = e.type === 'boss' ? (e.tside || 0) : e.side, big = e.type === 'boss', wide = big && e.patt === 'wide', f = faceFor(side);
+  const side = e.side === -1 ? (e.tside || 0) : e.side, big = e.type === 'boss', wide = big && e.patt === 'wide', f = faceFor(side);
   const fx = f ? f.x : region(side).cx, d = fx >= e.px ? 1 : -1;
   const x0 = e.type === 'golem' ? e.px + d * 66 * e.ps : e.type === 'mini' ? e.px + d * 20 * e.ps : e.px, y0 = e.type === 'golem' ? e.py + 10 * e.ps : e.type === 'mini' ? e.py - 20 * e.ps : e.py - 60 * e.ps;
   const s = mkShot({ type: e.type, side, kind: wide ? 'wall' : pick(SHOT_KINDS[e.type] || SHOT_KINDS.mini), x0, y0,
@@ -1173,8 +1161,7 @@ function updateEnemies(wdt) {
     if (e.type === 'boss') {
       if (e.t < 1.6) { if (e.t >= .5 && !e.landed) { e.landed = true; shake = Math.max(shake, 1); sfx.thud(); } }   // 위에서 쿵
       else if (!(G.merge) && G.ph === 'b-boss') {
-        e.posted = true; e.nextMini -= wdt;
-        if (e.nextMini <= 0 && e.n < BOSS_MINI_MAX) { e.nextMini = BOSS_MINI_EVERY; spawnGroup(NP() === 2 ? e.n % 2 : 0, BOSS_MINI_N); e.n++; sfx.boss(); }
+        e.posted = true;   // 사용자 261004: 보스가 꼬마를 부르지 않는다
         stepAttack(e, wdt);
       }
     } else if (e.type === 'dummy') {   // 샌드백 출렁임(용수철)
@@ -1192,17 +1179,18 @@ function updateEnemies(wdt) {
 function callout(text, x, y, size, col = '#fff') { if (G) { G.calls = G.calls.filter(c => c.x !== x); G.calls.push({ text, x, y, size, col, t: 0 }); } }
 function marker(x, y, kill) { G.marks.push({ x, y, t: 0, kill }); }
 function killFeed(text) { G.feed.push({ text, t: 0 }); if (G.feed.length > 3) G.feed.shift(); }
-function hitEnemy(pl, e, dmg) {
+function hitEnemy(pl, e, dmg, k) {
   if (!e || !e.alive) return false;
-  if (e.type === 'boss' && G.bossTired) dmg *= 2;   // 보스가 지치면 피해 2배
+  dmg *= tiredMul(e);   // 지치면 피해 2배 · 3배(보스는 「보스 약해짐」 뒤 2배)
   if (e.type === 'boss' && NP() === 2 && !G.mergeKill && !G.bossTired) dmg = Math.max(0, Math.min(dmg, e.hp - Math.ceil(e.max * .1)));   // 2인 보스 마무리는 합체기(보스가 지치면 이 조건은 풀린다)
+  if (e.type === 'boss' && NP() === 1 && k !== 'mtw' && !G.finOpen) dmg = Math.max(0, Math.min(dmg, e.hp - finFloor(e)));   // 사용자 261004: 1인 보스 결정타는 두 손바닥(ME to WE 파). 주먹 · 손바닥은 마무리 선까지만
   if (e.type === 'dummy') { e.wv = (e.wv || 0) + (Math.random() < .5 ? -1 : 1) * rnd(4, 6); e.face = .5; }
   e.hp -= dmg; e.hitT = 1;
   const kill = e.hp <= 0;
   marker(e.px, e.py, kill); if (dmg > 0 && dmg < 999) pops.push({ text: `-${dmg}`, x: e.px + rnd(-30, 30) + (e.type === 'boss' ? 200 * e.ps : 110), y: e.py - 60 * e.ps - 20, t: 0, dur: .9, size: e.type === 'boss' ? 100 : 84, col: ORANGE_L, rise: 80 });
   if (pl) { pl.combo++; pl.comboT = now; pl.comboPop = 1; G.maxCombo = Math.max(G.maxCombo, pl.combo); }
   G.slow = Math.max(G.slow, kill ? .1 : .05);
-  if (kill) killE(e); else sfx.tick();
+  if (kill) { if (e.type !== 'dummy') G.killBy.push(e.type + ':' + (k || '')); killE(e); } else sfx.tick();   // 시험 기록: 무엇으로 처치했나
   return true;
 }
 function killE(e) {
@@ -1230,11 +1218,17 @@ function canCast(pl, k, practice) {
   return '';
 }
 const stat = (k, kills, hits) => { if (G && G.st && G.ph[0] === 'b') { const r = G.st[k]; r.n++; r.kills += kills; r.hits += hits; } };
+const EN_NOTE_GAP = 4, EN_NOTE_T = 1.5;   // 기력 부족 큰 안내: 최소 간격 · 보이는 시간(초)
 function exhaust(pl) { pl.en = 0; pl.exUntil = now + EXHAUST_SEC; sfx.tired(); }
 function cast(pl, ev, practice) {
   const k = ev.k, at = ev.at, r = region(pl.i), two = NP() === 2, why = canCast(pl, k, practice);
   if (why) {
-    if (why !== 'cool' && now - pl.warnT > .8) { pl.warnT = now; sfx.no(); pops.push({ text: '기력 부족', x: at.x, y: at.y - 90, t: 0, dur: .8, size: 54, col: '#D9D9D9', rise: 50 }); }
+    // 사용자 261004: 기력이 모자란데 손바닥 · 두 손바닥을 하면 화면 가운데 위쪽에 큰 안내(1.5초) + 알림음. 같은 사람에게 EN_NOTE_GAP초에 한 번만
+    // 그 사이에 또 하면 손 옆에 작은 「기력 부족」만(소리 없음)
+    if (why !== 'cool') {
+      if (now - (pl.noteAt === undefined ? -99 : pl.noteAt) >= EN_NOTE_GAP) { pl.noteAt = now; pl.warnT = now; G.enNoteN++; sfx.notice(); }
+      else if (now - pl.warnT > .8) { pl.warnT = now; pops.push({ text: '기력 부족', x: at.x, y: at.y - 90, t: 0, dur: .8, size: 54, col: '#D9D9D9', rise: 50 }); }
+    }
     return false;
   }
   castLog.push({ k, t: now, i: pl.i }); if (castLog.length > 500) castLog.shift();
@@ -1248,7 +1242,7 @@ function cast(pl, ev, practice) {
       fistBeam(at.x, at.y, tg.px, tg.py, at.L, tg.type === 'boss' ? 170 : tg.type === 'golem' ? 130 : 105); embers(tg.px, tg.py, tg.type === 'boss' ? 1.6 : 1.2); knock(tg, at.x, at.y);
       pop('퍽', tg.px - (tg.type === 'boss' ? 160 : 70), tg.py - 30, { size: tg.type === 'boss' ? 130 : 110, col: '#fff', dur: .6, rise: 30 });
     } else { airPunch(at.x, at.y, at.L); sfx.airPunch(); }
-    { const k0 = G.kills; const h = tg ? hitEnemy(pl, tg, SK.fist.dmg) : false; if (!practice) stat('fist', G.kills - k0, h ? 1 : 0); }
+    { const k0 = G.kills; const h = tg ? hitEnemy(pl, tg, SK.fist.dmg, 'fist') : false; if (!practice) stat('fist', G.kills - k0, h ? 1 : 0); }
     G.fistLog.push({ t: +now.toFixed(2), hit: !!tg, tele: !!(tg && tg.atk === 'tele'), type: tg ? tg.type : '' });
   } else if (k === 'wave') {
     sfx.wave(); G.dim = Math.max(G.dim, .25);
@@ -1282,16 +1276,16 @@ function updateShots(wdt) {
         boom(s.tx, s.ty, .8, true); sfx.pop();
         EFX.push({ t: 0, dur: .4, draw: q => { ring(s.tx, s.ty, lerp(30, WAVE_SPLASH, easeOut(q)), 1 - q, 8, '#fff'); } });
         if (tg) knock(tg, s.x0, s.y0, .8);
-        const k0 = G.kills; let n = tg && hitEnemy(pl, tg, SK.wave.dmg) ? 1 : 0;
-        n += splash(pl, s.tx, s.ty, WAVE_SPLASH, WAVE_SPLASH_DMG, tg, WAVE_SPLASH_DMG, WAVE_SPLASH_N);   // 바로 옆 1마리만 절반 피해
+        const k0 = G.kills; let n = tg && hitEnemy(pl, tg, SK.wave.dmg, 'wave') ? 1 : 0;
+        n += splash(pl, s.tx, s.ty, WAVE_SPLASH, WAVE_SPLASH_DMG, tg, WAVE_SPLASH_DMG, WAVE_SPLASH_N, 'wave');   // 바로 옆 1마리만 절반 피해
         stat('wave', G.kills - k0, n);
       } else {
         boom(s.tx, s.ty, 1.8, true); flash = Math.max(flash, .2); shake = Math.max(shake, 1.3); G.dim = Math.max(G.dim, .5);
         logoHit(s.tx, s.ty, 300 * .6, .75);   // 날아온 마크(도착 크기 300 x 0.6)가 그대로 커지며 사라지고 뒤로 점이 터진다
         EFX.push({ t: 0, dur: .9, draw: q => { ring(s.tx, s.ty, lerp(80, MTW_SPLASH + 60, easeOut(q)), 1 - q, 22, '#fff'); ring(s.tx, s.ty, lerp(40, MTW_SPLASH, easeOut(q)), 1 - q, 14, ORANGE); } });
         if (tg) knock(tg, s.x0, s.y0, 1);
-        const k0 = G.kills; let n = tg && hitEnemy(pl, tg, tg.type === 'boss' ? MTW_BOSS_DMG : SK.mtw.dmg) ? 1 : 0;
-        n += splash(pl, s.tx, s.ty, MTW_SPLASH, MTW_SPLASH_DMG, tg, MTW_BOSS_DMG);   // 대상 둘레 MTW_SPLASH 안
+        const k0 = G.kills; let n = tg && hitEnemy(pl, tg, tg.type === 'boss' ? MTW_BOSS_DMG : SK.mtw.dmg, 'mtw') ? 1 : 0;
+        n += splash(pl, s.tx, s.ty, MTW_SPLASH, MTW_SPLASH_DMG, tg, MTW_BOSS_DMG, 99, 'mtw');   // 대상 둘레 MTW_SPLASH 안
         stat('mtw', G.kills - k0, n);
       }
     }
@@ -1305,7 +1299,7 @@ function stepMerge(dt) {
   if (M.t >= MG_MEET && !M.fired) { M.fired = true; sfx.mtw(); sfx.merge(); G.dim = .7; flash = Math.max(flash, .2); ringWave(MG_X, MG_Y, 48, 900, 9, ORANGE_L, .9); }
   if (M.t >= MG_MEET + MG_HOLD + MG_FLY && !M.hit) {
     M.hit = true; const b = M.boss; G.mergeKill = true;
-    if (b && b.alive) { logoHit(b.px, b.py, MG_H * .7, 1); boom(b.px, b.py, 2.4, true); b.hp = 0; marker(b.px, b.py, true); killE(b); }
+    if (b && b.alive) { logoHit(b.px, b.py, MG_H * .7, 1); boom(b.px, b.py, 2.4, true); b.hp = 0; marker(b.px, b.py, true); G.killBy.push('boss:merge'); killE(b); }
   }
 }
 function bossDie(b) {
@@ -1331,7 +1325,7 @@ function startGame(np, skip = false) {
   audio(); sfx.start(); S.mode = 'game'; clearFx(); SEL = null;
   G = { np, ph: 'p-demo', t: 0, pi: 0, pl: [newPlayer(0)], life: LIFE_MAX, kills: 0, bossTired: false, en: [], eid: 0, wave: 0, wt: 0, sched: [], shots: [], eshots: [], hurtLog: [], merge: null, mergeKill: false, calls: [], banner: null,
     marks: [], feed: [], maxCombo: 0, dummyAt: 0, dim: 0, slow: 0, dslow: 0, white: 0, hurt: 0, absent: 0, paused: false, cleared: false, grade: '', gapT: 0,
-    dodges: 0, dodgeLog: [], rest: [0, 0], dead: [], fistLog: [], tq: [[], []], st: { fist: { n: 0, kills: 0, hits: 0 }, wave: { n: 0, kills: 0, hits: 0 }, mtw: { n: 0, kills: 0, hits: 0 } } };
+    dodges: 0, dodgeLog: [], rest: [0, 0], dead: [], fistLog: [], stageE: null, finT: 0, finOpen: false, finGift: false, enNoteN: 0, killBy: [], st: { fist: { n: 0, kills: 0, hits: 0 }, wave: { n: 0, kills: 0, hits: 0 }, mtw: { n: 0, kills: 0, hits: 0 } } };
   if (np === 2) G.pl.push(newPlayer(1));
   tuneFor(np);
   for (const h of hands) h.side = h.c.x < 960 ? 0 : 1;
@@ -1343,13 +1337,16 @@ function setPh(ph) {
   if (ph === 'ready') { pops = []; P2 = []; EFX = []; CRACKS = []; DOTB = []; G.calls = []; G.en = []; G.shots = []; G.eshots = []; G.readyAt = 0; G.readyBy = ''; for (const pl of G.pl) { pl.ready = false; pl.circT = 0; pl.cut = false; pl.pend = null; } }
   if (ph === 'b-intro') { G.en = []; G.shots = []; G.eshots = []; G.cd = 0; G.hurtAt = -9; for (const pl of G.pl) { pl.en = EN_MAX; pl.exUntil = 0; pl.combo = 0; } }
 }
-function startWave(i) {
-  const w = WAVES[i]; G.wave = i; G.wt = 0; G.sched = []; G.tq = WAVE_THROWS[NP() - 1][i].map(a => a.slice()); if (G.tq.length < 2) G.tq.push([]);
-  for (let s = 0; s < NP(); s++) w.ev.forEach(([t, type], k) => G.sched.push({ t: t + s * .6, type, side: s, lead: k === 0 }));
-  G.sched.sort((a, b) => a.t - b.t); G.banner = { text: w.name, t: 0 }; setPh('b-wave');
+// 몬스터 차례 i(0 꼬마 · 1 골렘 · 2 보스): 가운데에 한 마리가 「팡」 하고 나온다(빛 터짐 + 이름표 + 아래쪽 「n / 3 이름」)
+function startStage(i) {
+  const type = STAGES[i]; G.wave = i; G.wt = 0; G.gapT = 0; G.finT = 0; G.finOpen = false; G.feed = [];   // 앞 몬스터 「처치!」 띠가 새 몬스터 이름표와 겹치지 않게
+  if (type === 'boss') { startBoss(); return; }
+  const e = spawn(type, -1); G.stageE = e; G.banner = { text: `${i + 1} / ${STAGES.length}  ${ENAME[type]}`, t: 0, low: true };
+  burst(960, STAGE_Y[type], 34, '#fff', 900, .5); ringWave(960, STAGE_Y[type], 40, type === 'golem' ? 520 : 440, 9, ORANGE_L, .55); sfx.pop();
+  setPh('b-wave');
 }
-function startBoss() { G.tq = [[], []]; G.banner = { text: '레거시 보스', t: 0 }; spawn('boss', 0); setPh('b-boss'); sfx.boss(); }
-function gradeOf() { return G.cleared ? (G.life >= 4 ? '대마법사' : '마법사') : G.kills >= 20 ? '견습 마법사' : '마법 입문자'; }function practiceGauge(pl, key) {
+function startBoss() { G.wave = 2; G.banner = { text: `${STAGES.length} / ${STAGES.length}  ${ENAME.boss}`, t: 0, low: true }; G.stageE = spawn('boss', 0); setPh('b-boss'); sfx.boss(); }
+function gradeOf() { return G.cleared ? (G.life >= 4 ? '대마법사' : '마법사') : G.kills >= 2 ? '견습 마법사' : '마법 입문자'; }function practiceGauge(pl, key) {
   let m = 0; for (const h of pl.hands) m = Math.max(m, clamp((h.thrR - 1) / (THR_RATIO - 1), 0, 1)); return m;
 }
 
@@ -1358,8 +1355,13 @@ function stepGame(dt) {
   const two = NP() === 2;
   for (const pl of G.pl) { pl.hands = playerHands(pl.i); pl.absent = pl.hands.length ? 0 : pl.absent + dt; pl.gone = pl.hands.length || faceVis(pl.i) ? 0 : (pl.gone || 0) + dt; pl.noFace = faceVis(pl.i) ? 0 : (pl.noFace || 0) + dt; }
   G.dslow = Math.max(0, G.dslow - dt);
-  const any = liveHands().length > 0; G.absent = any ? 0 : G.absent + dt;
-  if (G.absent > 10 && G.ph !== 'result') { toIdle(); return; }
+  /* 손 없음 복귀(사용자 261004 리셋 버그): 예전에는 어느 단계든 손이 10초 안 보이면 체험으로 돌아갔다. 준비 화면에서 손을 머리 위로 올려 화면 위로 잘리거나
+     손을 내리고 기다리면(피하기 연습에서 이미 쌓인 시간 포함) 15초 자동 시작보다 먼저 리셋됐다.
+     이제: 손이 화면 위쪽 가장자리로 나간 직후 TOP_GRACE초는 무손으로 세지 않는다 · 연습 · 준비 화면에서는 얼굴이 보이면 사람이 있는 것으로 본다 · 준비 화면 한도는 ABSENT_READY초 */
+  const ph0 = G.ph, calm = ph0 === 'ready' || ph0[0] === 'p';
+  const here = liveHands().length > 0 || handsUpOut() || (calm && G.pl.some(pl => faceVis(pl.i)));
+  G.absent = here ? 0 : G.absent + dt;
+  if (G.absent > (ph0 === 'ready' ? ABSENT_READY : ABSENT_GAME) && G.ph !== 'result') { G.lastExit = { ph: ph0, t: +G.t.toFixed(1) }; toIdle(); return; }
   for (const pl of G.pl) { stepSpirit(pl, dt); detectPlayer(pl, dt); pl.g = lerp(pl.g, G.ph === 'p-try' ? practiceGauge(pl, PRACTICE[G.pi]) : 0, 1 - Math.exp(-dt * 12)); pl.comboPop = Math.max(0, pl.comboPop - dt * 4); if (now - pl.comboT > 3) pl.combo = 0; }
   G.calls.forEach(c => c.t += dt); G.calls = G.calls.filter(c => c.t < .8);
   G.marks.forEach(m => m.t += dt); G.marks = G.marks.filter(m => m.t < (m.kill ? .45 : .28));
@@ -1407,29 +1409,31 @@ function stepGame(dt) {
     G.paused = G.pl.every(pl => pl.gone > .8);   // 손도 얼굴도 안 보이면 멈춘다(피하다 손이 잠깐 빠져도 멈추지 않게)
     const wdt = G.paused ? 0 : dt * (G.slow > 0 ? .15 : G.dslow > 0 ? .3 : 1); G.slow = Math.max(0, G.slow - dt);   // dslow: 회피 순간 짧은 슬로모션
     for (const pl of G.pl) {
+      const e0 = pl.en;
       if (now >= pl.exUntil && now - pl.lastCast > EN_REGEN_DELAY) pl.en = Math.min(EN_MAX, pl.en + EN_REGEN * dt);
+      if ((e0 < SK.wave.cost && pl.en >= SK.wave.cost) || (e0 < SK.mtw.cost && pl.en >= SK.mtw.cost)) { pl.enFlash = 1; pl.flashN = (pl.flashN || 0) + 1; }   // 사용자 261004: 손바닥(20) · 두 손바닥(50)을 다시 쓸 수 있게 되면 기력 바가 반짝인다
+      pl.enFlash = Math.max(0, (pl.enFlash || 0) - dt / .9);
       if (ph !== 'b-intro' && !G.merge) for (const ev of pl.evs) cast(pl, ev, false);
     }
-    if (ph === 'b-intro') {   // 3 · 2 · 1 카운트다운(각 1초) → 「실전 시작」 카드(1.4초) → 웨이브 1
+    if (ph === 'b-intro') {   // 3 · 2 · 1 카운트다운(각 1초) → 「실전 시작」 카드(1.4초) → 첫 몬스터(꼬마)
       const n = Math.floor(G.t) + 1;
       if (n > G.cd && n <= 4) { G.cd = n; if (n <= 3) sfx.count(n); else sfx.go(); }
-      if (G.t > INTRO_T) startWave(0);
+      if (G.t > INTRO_T) startStage(0);
     }
     else if (ph === 'b-wave') {
       G.wt += wdt;
-      for (let k = 0; k < G.sched.length; k++) { const q = G.sched[k]; if (q.t > G.wt) break; if (aliveOn(q.side) < EN_CAP[NP() - 1]) { G.sched.splice(k--, 1); spawn(q.type, q.side, { lead: q.lead }); } }   // 상한이 차 있으면 그 차례는 미룬다
-      const last = WAVES[G.wave].ev[WAVES[G.wave].ev.length - 1][0] + WAVE_OVER;
-      if ((!G.sched.length && !G.en.length && !G.shots.length && !G.eshots.length) || G.wt > last) {
-        G.gapT += dt;
-        if (G.wt > last) for (const e of G.en) e.flee = true;
-        if (G.gapT > .6) { G.gapT = 0; if (G.wave + 1 < WAVES.length) startWave(G.wave + 1); else startBoss(); }
-      }
+      // 차례 몬스터를 처치했고 날아오는 것이 끝났으면 STAGE_GAP초 뒤 다음 몬스터(마지막은 보스)
+      if (G.stageE && !G.stageE.alive && !G.eshots.some(q => !q.res)) { G.gapT += dt; if (G.gapT > STAGE_GAP) { G.gapT = 0; startStage(G.wave + 1); } }
     } else if (ph === 'b-boss') {
+      const b = G.en.find(e => e.type === 'boss' && e.alive);
+      // 마무리 선(1인 = FINISH_AT · 2인 = 합체 MERGE_AT)에 처음 닿으면 기력을 두 손바닥 한 번만큼(50)은 채워 준다(바가 반짝임): 바로 마무리할 수 있게
+      if (b && !G.finGift && b.hp <= (two ? b.max * MERGE_AT : finFloor(b))) { G.finGift = true; for (const pl of G.pl) if (pl.en < SK.mtw.cost) { pl.en = SK.mtw.cost; pl.enFlash = 1; pl.flashN = (pl.flashN || 0) + 1; } }
       if (two) stepMerge(dt);
+      else if (b && b.hp <= finFloor(b) && !G.finOpen) { G.finT = (G.finT || 0) + wdt; if (G.finT > FINISH_WAIT) G.finOpen = true; }   // 1인: FINISH_WAIT초가 지나도 못 하면 주먹으로도 끝낼 수 있다
       // 시간 초과 실패 없음: BOSS_TIRED(피드백3 2차: 40 → 18초)가 지나면 보스가 지쳐 받는 피해 2배(2인은 합체 없이도 마무리 가능)
       if (G.t > BOSS_TIRED && !G.bossTired && G.ph === 'b-boss') { G.bossTired = true; G.banner = { text: '보스 약해짐', t: 0 }; sfx.tired(); }
     }
-    if (G.ph[0] === 'b') { updateEnemies(wdt); stepSideAttack(wdt); updateShots(wdt); updateEShots(wdt); }
+    if (G.ph[0] === 'b') { updateEnemies(wdt); updateShots(wdt); updateEShots(wdt); }
     return;
   }
   if (ph === 'fin') {
@@ -1439,6 +1443,9 @@ function stepGame(dt) {
   if (ph === 'over') { updateEnemies(dt); if (G.t > 2.6) { G.grade = gradeOf(); setPh('result'); } return; }
   if (ph === 'result') { if (G.t > 7) toIdle(); }
 }
+// 손이 화면 위쪽 가장자리 밖으로 나갔는지: 방금 놓친 손(0.25~0.6초)의 마지막 자리가 위쪽이거나, 위쪽에서 사라진 지 TOP_GRACE초 안
+const ABSENT_GAME = 10, ABSENT_READY = 20, TOP_EXIT = .25, TOP_GRACE = 6;
+const handsUpOut = () => now - topExitAt < TOP_GRACE || hands.some(h => now - h.seen >= .25 && h.c.y < H * TOP_EXIT);
 // 대기: 손을 들면 ME/WE 선택으로
 function stepIdle(dt) {
   idleT += dt;
@@ -1588,7 +1595,7 @@ function stepSpirit(pl, dt) {
   const r = region(pl.i), ph = G.ph, on = (ph === 'p-try' && PRACTICE[G.pi] !== 'dodge') || ph === 'b-wave' || ph === 'b-boss';
   const tg = on && !G.merge ? pickTarget(pl) : null, sp = pl.sp || (pl.sp = { x: r.cx, y: 200, tid: null, fx: r.cx, fy: 200, ft: 1, on: false });
   let tx = r.cx + Math.sin(now * .8 + pl.i * 2) * 120, ty = 210;
-  if (tg) { const bx = EBOX[tg.type] || EBOX.mini; if (tg.type === 'boss') { tx = tg.px + 210 * tg.ps; ty = tg.py - 150 * tg.ps; } else { tx = tg.px; ty = tg.py - bx.top * tg.ps - (tg.type === 'golem' ? 150 : 108); } }   // 이름표 위   // 보스는 모니터 오른쪽 위 모서리에
+  if (tg) { const bx = EBOX[tg.type] || EBOX.mini; if (tg.type === 'boss') { tx = tg.px + 210 * tg.ps; ty = tg.py - 150 * tg.ps; } else if (tg.side === -1) { tx = tg.px + (NP() === 2 && pl.i === 0 ? -220 : 220); ty = tg.py - bx.top * tg.ps - 84; } else { tx = tg.px; ty = tg.py - bx.top * tg.ps - (tg.type === 'golem' ? 150 : 108); } }   // 이름표 위   // 보스는 모니터 오른쪽 위 모서리에   // 차례 몬스터: 이름표 옆(2인은 왼쪽 사람 = 왼쪽)
   const id = tg ? tg.id : null;
   if (id !== sp.tid) { sp.tid = id; sp.fx = sp.x; sp.fy = sp.y; sp.ft = 0; }
   if (sp.ft < 1) {
@@ -1656,10 +1663,15 @@ function drawEnemies() {
     const draw = e.type === 'dummy' ? () => drawSandbag(e.px, e.py, s, e) : e.type === 'mini' ? () => drawMini(e.px, e.py, s, e.t * 6 + e.ph) : e.type === 'golem' ? () => drawGolem(e.px, e.py, s, e.t, e.rot) : () => drawBoss(e.px, e.py, s, e.hitT, false, e.t);
     const big = e.type === 'boss' ? 1.6 : 1;
     outlined(e.px, e.py, bx.R * s, draw, tele ? { outer: warn && blink > .5 ? '#fff' : RED, glow: RED, glowB: warn ? 50 : 30, wo: 13 * big, wi: 6 * big } : { wo: 11 * big, wi: 6 * big });
-    if (e.type === 'mini' && e.lead && e.z > .3 && !tele) nameTag(e.px, e.py - bx.top * s - 30, ENAME.mini, 1, 30);
+    if (e.side === -1 && e.type !== 'boss' && e.z > .25) {   // 차례 몬스터(꼬마 · 골렘): 이름표 + 체력 막대(크게)
+      const y = e.py - bx.top * s - 34, w = e.type === 'golem' ? 300 : 260, x = e.px - w / 2, a = clamp((e.z - .25) / .5, 0, 1);
+      ctx.save(); ctx.globalAlpha *= a; nameTag(e.px, y - 50, ENAME[e.type], 1, 38);
+      ctx.fillStyle = 'rgba(10,12,16,.7)'; ctx.beginPath(); ctx.roundRect(x - 8, y - 14, w + 16, 28, 14); ctx.fill(); ctx.fillStyle = ORANGE; ctx.beginPath(); ctx.roundRect(x, y - 8, w * clamp(e.hp / e.max, 0, 1), 16, 8); ctx.fill(); ctx.restore();
+    }
+    else if (e.type === 'mini' && e.lead && e.z > .3 && !tele) nameTag(e.px, e.py - bx.top * s - 30, ENAME.mini, 1, 30);
     if (e.type === 'dummy') nameTag(e.px, e.py - bx.top * s - 34, ENAME.dummy, 1, 30);
-    if (e.type === 'golem' && e.z > .25) { const y = e.py - bx.top * s - 30; nameTag(e.px, y - 38, ENAME.golem, 1, 30); const w = 180, x = e.px - w / 2; ctx.fillStyle = 'rgba(10,12,16,.7)'; ctx.beginPath(); ctx.roundRect(x - 6, y - 10, w + 12, 20, 10); ctx.fill(); ctx.fillStyle = ORANGE; ctx.beginPath(); ctx.roundRect(x, y - 6, w * clamp(e.hp / e.max, 0, 1), 12, 6); ctx.fill(); }
-    if (e.type === 'boss' && e.t > 1.2) { const w = 560, x = 960 - w / 2, y = e.py - bx.top * s - 34; ctx.fillStyle = 'rgba(10,12,16,.7)'; ctx.beginPath(); ctx.roundRect(x - 10, y - 18, w + 20, 36, 18); ctx.fill(); ctx.fillStyle = ORANGE; ctx.beginPath(); ctx.roundRect(x, y - 9, w * clamp(e.hp / e.max, 0, 1), 18, 9); ctx.fill(); if (NP() === 2) { ctx.fillStyle = '#fff'; ctx.fillRect(x + w * MERGE_AT - 3, y - 16, 6, 32); } nameTag(x - 130, y, ENAME.boss, 1, 32); }
+    if (e.type === 'golem' && e.z > .25 && e.side !== -1) { const y = e.py - bx.top * s - 30; nameTag(e.px, y - 38, ENAME.golem, 1, 30); const w = 180, x = e.px - w / 2; ctx.fillStyle = 'rgba(10,12,16,.7)'; ctx.beginPath(); ctx.roundRect(x - 6, y - 10, w + 12, 20, 10); ctx.fill(); ctx.fillStyle = ORANGE; ctx.beginPath(); ctx.roundRect(x, y - 6, w * clamp(e.hp / e.max, 0, 1), 12, 6); ctx.fill(); }
+    if (e.type === 'boss' && e.t > 1.2) { const w = 560, x = 960 - w / 2, y = e.py - bx.top * s - 34; ctx.fillStyle = 'rgba(10,12,16,.7)'; ctx.beginPath(); ctx.roundRect(x - 10, y - 18, w + 20, 36, 18); ctx.fill(); ctx.fillStyle = ORANGE; ctx.beginPath(); ctx.roundRect(x, y - 9, w * clamp(e.hp / e.max, 0, 1), 18, 9); ctx.fill(); if (NP() === 2) { ctx.fillStyle = '#fff'; ctx.fillRect(x + w * MERGE_AT - 3, y - 16, 6, 32); } else if (!G.finOpen) { ctx.fillStyle = '#fff'; ctx.fillRect(x + w * FINISH_AT - 3, y - 16, 6, 32); } nameTag(x - 130, y, ENAME.boss, 1, 32); }   // 흰 눈금 = 두 손바닥으로 마무리하는 선
     if (e.hitT > 0 && e.type !== 'boss') glowCircle(e.px, e.py, bx.R * .9 * s, e.hitT * .9, '255,255,255');
     if (warn) drawTele(e, 'badge');
     ctx.restore();
@@ -1824,9 +1836,34 @@ function drawEnergy(pl) {
   const p = clamp(pl.en / EN_MAX, 0, 1);
   if (p > .01) { c.fillStyle = ex ? '#8A8A8A' : ORANGE; if (!ex) { c.shadowColor = ORANGE; c.shadowBlur = 18; } c.beginPath(); c.roundRect(x, y - 15, Math.max(30, w * p), 30, 15); c.fill(); }
   c.shadowBlur = 0; c.strokeStyle = 'rgba(10,12,16,.8)'; c.lineWidth = 3; for (const cost of [SK.wave.cost, SK.mtw.cost]) { const xx = x + w * cost / EN_MAX; c.beginPath(); c.moveTo(xx, y - 15); c.lineTo(xx, y + 15); c.stroke(); }
+  const fl = pl.enFlash || 0;   // 사용자 261004: 손바닥 · 두 손바닥이 다시 가능해지면 바가 하얗게 두 번 반짝이고 둘레가 빛난다
+  if (fl > 0) { const b = Math.pow(Math.abs(Math.sin((1 - fl) * Math.PI * 2)), .7) * fl; c.globalAlpha = b; c.fillStyle = '#fff'; c.shadowColor = ORANGE_L; c.shadowBlur = 40; c.beginPath(); c.roundRect(x, y - 15, Math.max(30, w * p), 30, 15); c.fill(); c.lineWidth = 6; c.strokeStyle = '#fff'; c.beginPath(); c.roundRect(x - 120, y - 32, w + 140, 64, 32); c.stroke(); c.globalAlpha = 1; }
   c.restore(); txt('기력', x - 58, y + 1, 36, ex ? '#8A8A8A' : '#fff', 'center', 800);
   if (ex) { const left = Math.max(0, pl.exUntil - now).toFixed(1), size = two ? 110 : 150; pill(r.cx, 760, size * 3.4, size * 1.35, 'rgba(10,12,16,.78)'); txt('탈진', r.cx, 742, size, '#D9D9D9', 'center', 900); txt(`${left}초 · 주먹만 가능`, r.cx, 760 + size * .5, size * .28, '#fff', 'center', 700); }
   if (pl.combo >= 2) { const s = 1 + .35 * pl.comboPop, left = two && pl.i === 0; ctx.save(); ctx.translate(left ? 70 : W - 70, 190); ctx.scale(s, s); txt(`${pl.combo} 콤보`, 0, 0, 64, pl.combo >= 10 ? ORANGE_L : '#fff', left ? 'left' : 'right', 900); ctx.restore(); }
+}
+// 사용자 261004: 「웨이브 n/2」 대신 「n / 3」 + 몬스터 아이콘 3개(지금 = 오렌지 테두리 · 처치 = 흐림 + 체크 · 아직 = 흐린 윤곽)
+function drawStages() {
+  const c = ctx, x0 = 40, y = 74, cur = G.wave, iw = 92, w = 150 + iw * STAGES.length, n = Math.min(STAGES.length, cur + 1);
+  pill(x0 + w / 2, y, w, 104, 'rgba(10,12,16,.72)'); txt(`${n} / ${STAGES.length}`, x0 + 74, y + 2, 50, '#fff', 'center', 900);
+  STAGES.forEach((t, i) => {
+    const cx = x0 + 150 + iw * i + iw / 2 - 6, done = i < cur || (i === cur && G.stageE && !G.stageE.alive), on = i === cur && !done;
+    c.save();
+    if (on) { c.fillStyle = 'rgba(255,126,49,.28)'; c.strokeStyle = ORANGE; c.lineWidth = 5; c.beginPath(); c.arc(cx, y, 40, 0, 7); c.fill(); c.stroke(); }
+    c.globalAlpha = on ? 1 : done ? .35 : .22;
+    if (t === 'mini') drawMini(cx, y + 4, .5, on ? now * 6 : 0); else if (t === 'golem') drawGolem(cx, y + 6, .2, on ? now : 0, 0); else drawBoss(cx, y + 6, .1, 0, false, on ? now : 0);
+    c.restore();
+    if (done) { c.save(); c.strokeStyle = ORANGE_L; c.lineWidth = 8; c.lineCap = 'round'; c.lineJoin = 'round'; c.beginPath(); c.moveTo(cx - 18, y + 2); c.lineTo(cx - 4, y + 16); c.lineTo(cx + 20, y - 14); c.stroke(); c.restore(); }
+  });
+}
+// 기력 부족 큰 안내(사용자 261004): 화면 가운데 위쪽(2인은 그 사람 쪽) 1.5초
+function drawEnNote(pl) {
+  const k = now - (pl.noteAt === undefined ? -99 : pl.noteAt); if (k < 0 || k > EN_NOTE_T) return;
+  const two = NP() === 2, x = two ? region(pl.i).cx : 960, y = 250, a = clamp(k / .12, 0, 1) * clamp((EN_NOTE_T - k) / .3, 0, 1), sc = k < .15 ? lerp(1.25, 1, easeOut(k / .15)) : 1;
+  const c = ctx; c.save(); c.globalAlpha = a; c.translate(x, y); c.scale(sc, sc);
+  pill(0, 0, two ? 820 : 1060, 190, 'rgba(10,12,16,.82)'); c.save(); c.strokeStyle = ORANGE; c.lineWidth = 6; c.beginPath(); c.roundRect(-(two ? 410 : 530), -95, two ? 820 : 1060, 190, 95); c.stroke(); c.restore();
+  txt('기력이 부족합니다', 0, -36, two ? 68 : 80, '#fff', 'center', 900); txt('주먹을 사용하세요', 0, 50, two ? 50 : 58, '#FFD0A8', 'center', 800);
+  c.restore();
 }
 function drawLives() {
   for (let i = 0; i < LIFE_MAX; i++) {
@@ -1885,16 +1922,17 @@ function drawGameTop() {
     // 공격 직전(「!」)인 적이 있으면: 화면 가장자리 붉은 맥박
     const warnN = G.en.filter(e => e.alive && !e.flee && e.atk === 'tele' && e.ak >= ATK_TELE[e.type] - ATK_WARN).length;
     if (warnN) { const a = .3 * (.5 + .5 * Math.sin(now * 12)); c.save(); const g = c.createRadialGradient(960, 540, 520, 960, 540, 1150); g.addColorStop(0, 'rgba(229,72,77,0)'); g.addColorStop(1, `rgba(229,72,77,${a})`); c.fillStyle = g; c.fillRect(0, 0, W, H); c.restore(); }
-    drawLives(); txt(`처치 ${G.kills}`, W - 60, 66, 56, '#fff', 'right', 800);
-    if (ph !== 'b-intro') {   // 실전 표시: 왼쪽 위 웨이브
-      const wl = ph === 'b-boss' ? '보스' : `웨이브 ${G.wave + 1} / ${WAVES.length}`;
-      c.save(); c.font = `900 48px ${FONT}`; const ww = c.measureText(wl).width + 70; c.restore();
-      pill(40 + ww / 2, 70, ww, 84, ph === 'b-boss' ? 'rgba(229,101,26,.92)' : 'rgba(10,12,16,.72)'); txt(wl, 40 + ww / 2, 71, 48, '#fff', 'center', 900);
-    }
+    drawLives();
+    if (ph !== 'b-intro') drawStages();   // 실전 표시: 왼쪽 위 「n / 3」 + 몬스터 아이콘 3개
     for (const pl of G.pl) drawEnergy(pl);
     G.feed.forEach((f, i) => { const a = clamp(f.t / .1, 0, 1) * clamp((1.6 - f.t) / .3, 0, 1), y = 150 + (G.feed.length - 1 - i) * 66, s = f.t < .12 ? lerp(1.4, 1, f.t / .12) : 1; c.save(); c.globalAlpha = a; c.translate(960, y); c.scale(s, s); c.font = `900 50px ${FONT}`; const w = c.measureText(f.text).width + 70; c.restore(); c.save(); c.globalAlpha = a; pill(960, y, w * s, 62, 'rgba(229,101,26,.88)'); txt(f.text, 960, y, 50 * s, '#fff', 'center', 900); c.restore(); });
     if (ph === 'b-intro') drawCountdown();
-    if (G.banner) { const b = G.banner, a = clamp(b.t / .2, 0, 1) * clamp((1.6 - b.t) / .4, 0, 1); c.save(); c.globalAlpha = a; txt(b.text, 960, 470, 170, '#fff', 'center', 900); c.restore(); }
+    if (G.banner) { const b = G.banner, a = clamp(b.t / .2, 0, 1) * clamp((1.6 - b.t) / .4, 0, 1); c.save(); c.globalAlpha = a; if (b.low) { const sc = b.t < .2 ? lerp(1.3, 1, easeOut(b.t / .2)) : 1; c.translate(960, 868); c.scale(sc, sc); c.font = `900 84px ${FONT}`; const bw = c.measureText(b.text).width + 120; pill(0, 0, bw, 130, 'rgba(229,101,26,.92)'); txt(b.text, 0, 2, 84, '#fff', 'center', 900); } else txt(b.text, 960, 470, 170, '#fff', 'center', 900); c.restore(); }   // 차례 몬스터 등장: 아래쪽 「n / 3 이름」(몬스터를 가리지 않게)
+    G.pl.forEach(drawEnNote);
+    if (ph === 'b-boss' && !two) {   // 1인 마무리 안내
+      const boss = G.en.find(e => e.type === 'boss');
+      if (boss && boss.t > 1.6 && !G.banner && !G.finOpen && boss.hp <= finFloor(boss)) { pill(960, 880, 900, 84, 'rgba(10,12,16,.72)'); txt('마무리: 두 손바닥', 960, 880, 52, '#fff', 'center', 800); }
+    }
     if (ph === 'b-boss' && two) {
       const boss = G.en.find(e => e.type === 'boss');
       if (boss && boss.t > 1.6 && !G.banner && !G.merge && boss.hp <= boss.max * MERGE_AT) {
@@ -2410,7 +2448,7 @@ window.__ax = {
   G: () => G, now: () => now, casts: castLog, spawn: (type, side, o) => spawn(type, side, o), thr: () => thrLast.slice(), target: (i = 0) => { const t = G && G.pl[i] ? pickTarget(G.pl[i]) : null; return t ? t.id : null; }, LOGO,
   fx: () => ({ fire: FIRE.length, efx: EFX.length, fireLv: liveHands().map(h => +(h.fire || 0).toFixed(2)), dotb: DOTB.map(c => +c.t.toFixed(2)), eshots: G ? G.eshots.filter(s => !s.res).map(s => +(s.t / s.dur).toFixed(2)) : [], eres: G ? G.eshots.filter(s => s.res).map(s => s.res + ':' + s.kind + ':' + (+s.pt.toFixed(2))) : [], ekind: G ? G.eshots.filter(s => !s.res).map(s => s.kind) : [], tele: G ? G.en.filter(e => e.atk === 'tele').map(e => +(e.ak / ATK_TELE[e.type]).toFixed(2)) : [], cracks: CRACKS.length, marks: G ? G.marks.length : 0, merge: G && G.merge ? +G.merge.t.toFixed(2) : -1, shots: G ? G.shots.map(s => ({ k: s.k, p: +(s.t / s.dur).toFixed(2) })) : [] }),
   async backdrop(url) { if (!url) { testBg = null; return; } const im = new Image(); await new Promise((r, j) => { im.onload = r; im.onerror = j; im.src = url; }); testBg = im; },
-  start: startGame, idle: toIdle, select: toSelect, toExp,
+  start: startGame, idle: toIdle, select: toSelect, toExp, sfx,
   exp: () => ({ mode: S.mode, climax: X.climaxN, stage2: X.stage2N, burst: X.burstN, hint: X.hintN, gauge: +X.gauge.toFixed(2), dwell: +X.dwell.toFixed(2), cool: +Math.max(0, X.cool - now).toFixed(2), armed: X.armed, msg: +X.msg.toFixed(2), small: X.small,
     bloom: X.bloom ? { stage: X.bloom.stage, t: +X.bloom.t.toFixed(2), h: bloomSize(X.bloom) | 0 } : null, log: X.log.slice(), faceN: perf.faceN, fire: FIRE.length,
     hands: liveHands().map(h => ({ id: h.id, L: h.L | 0, x: h.c.x | 0, y: h.c.y | 0, elig: xpElig(h), xa: +(h.xa || 0).toFixed(2), xs: +(h.xs || 0).toFixed(2), open: +h.open.toFixed(2), fist: !!h.fistOn, fire: +(h.fire || 0).toFixed(2), hintA: +(h.xhA || 0).toFixed(2) })) }),
