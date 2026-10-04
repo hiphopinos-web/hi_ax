@@ -1,6 +1,11 @@
 /* 1F 타자왕 TV 광고 루프 · 스탠바이미 세로 TV (261004 재구성 · 사용자 「타자왕 광고 여기서 진행해」 · 같은 날 「너무 정신 없다 · 적정한 속도」 · 순위 게임처럼 공개)
  * 운영 안내 = 디자인 시안/사이니지/운영 안내.md
- * 장면(초) = 광고 18 · 상품 5 · 순위 16 = 39 · 행사일(2026-10-26) 17:00(한국 시간) 뒤 = 최종 순위 16 · 상품 5 = 21 · 화면 위 「AX 타자왕 · 1F」는 늘 그 자리
+ * 장면(초) = 광고 18 · 상품 5 · 순위 17 = 40 · 행사일(2026-10-26) 17:00(한국 시간) 뒤 = 최종 순위 17 · 상품 5 = 22 · 화면 위 「AX 타자왕 · 1F」는 늘 그 자리
+ *   루프 끝 무너짐(261004 사용자 「광고가 끝나고 새 광고로 넘어가는 시점에서 무너지면서」) = 루프 마지막 장면(순위 · 마감 뒤 상품 · promo 상품)의 마지막 1.4초 ·
+ *     글자 · 줄이 도트 조각(72×36)으로 부서져 산성비처럼 위에서부터 쏟아진다 · 빈 바탕은 그대로 · 잠깐 비었다가 다음 루프 · 상품 → 순위는 그냥 바뀐다
+ *   가상 이름 채우기(261004 사용자 「10위까지 일단은 가상의 이름으로」) = 실제 기록이 10명보다 적으면 빈 자리를 가상 닉네임으로 · 화면에서만(서버 · 시트에 안 씀) ·
+ *     가상 점수는 늘 실제 최저 기록보다 낮다(실제가 위) · NEW 없음 · 행사일(10/26) 한국 날짜부터 자동으로 꺼짐 · FILL_ON = false 또는 &fill=0 = 끄기 ·
+ *     기본 TV · ?open=1 에만 · ?promo=1&rank=1(앱 칸)은 &fill=1 일 때만
  *   광고 = 후킹 0~2.6(「당신의 프롬프트 입력 실력은?」이 쳐진다) · 실제 게임 몽타주 2.6~14.2 · 행동 14.2~18(「1F 로비 노트북에서 도전」이 쳐지고 앱 QR → 노트북 카메라 → SPACE)
  *   와르르 전환(261004 사용자 「벽돌이 와르르 무너지듯」) = 후킹 → 게임 · 게임(PERFECT) → 행동 · 행동 → 상품 · 나가는 장면을 캔버스 한 장(#fx)에 그린 뒤 도트 3×2칸 벽돌(약 290개)로 나눠 위 줄부터 중력으로 떨어뜨린다(0.95초) ·
  *     게임 안 연출(CLOUD CLEAR → BONUS 도트 전환)은 그대로 · 상품 → 순위 · 순위 → 광고는 그냥 바뀐다(전환 종류를 하나로)
@@ -9,18 +14,18 @@
  *     문장 · 핵심 단어 = RAIN_BONUS_LINES({ s, w }) 그대로 · 단어 점수 = 엔진 식 · 문장 점수 = rgBonusScore · 엔진을 못 읽으면 몽타주 없이 후킹 · 행동만
  *   상품 = 세 상품을 한 번에(같은 어두운 판 + 얇은 오렌지 선 · 순위 숫자만 오렌지 · 1위만 밝게) · 「1~3위 시상 · 17:00 마감」
  *   순위 = 등수 · 점수가 위에서부터 펼쳐진다(1.2초) → 10위부터 위로 한 줄씩 이름이 게임처럼 쳐지고(커서) 다 쳐지면 이름표가 팡 터지며 이름이 남는다(엔진 rgBurst · rgFx) ·
- *     4~10위 0.75초씩 · 3위 1.2 · 2위 1.3 · 1위 1.9(가장 크게 · 판 흔들림) · 끝난 표는 그대로 남아 읽힌다 · 마지막 2.5초 「다음 이름은 당신」(마감 뒤 = 최종 순위 · 「1~3위 Outro 시상」)
+ *     4~10위 0.75초씩 · 3위 1.2 · 2위 1.3 · 1위 1.9(가장 크게 · 판 흔들림) · 끝난 표는 그대로 남아 읽힌다 · 끝나기 3초 전 「다음 이름은 당신」(마감 뒤 = 최종 순위 · 「1~3위 Outro 시상」) · 마지막 1.4초 = 무너짐
  * 데이터 = 공개 액션 type_rank(mode site · n 10 · 읽기 전용) · JSONP · 주소 = ../../assets/server.js 의 AXF_SERVER(?srv= 로 바꿈) · 응답 moved 가 오면 새 주소로
  *   TV 30초마다 · 실패하면 60 → 120초(+0~5초 지터) · 화면이 가려지면 멈추고 보이면 곧바로 · 마지막 응답은 기기에 저장(새로 고쳐도 바로 보인다)
  *   unit = pts → 「n점」 · cs → 「n.n초」 · 없음 → 숫자만
  * 순위 변동 = 직전 순위 장면에서 보여 준 판과 비교(서버 변경 없음) · 새 이름 · 오른 점수 = 그 줄이 쳐진 뒤 반짝 + NEW
  * 마감 = 행사일(EVENT_DAY 2026-10-26) 17:00 한국 시간 뒤만(261004 · 그 전 날짜에는 17:00 이 지나도 마감 아님) · 시계 = 응답 now(ms)가 있으면 서버 시계 · 없으면 기기 시계
  * 주소 뒤 값: ?demo=1 서버 없이 가짜 순위(20초마다 바뀜) · ?srv=주소 · ?now=13:20(오늘) · ?now=10-26T17:01 · ?now=2026-10-25T18:00 시계 흉내(한국 시간) · ?day=2026-10-26 행사일 · ?close=17:00 마감 시각 · ?after=1 마감 뒤 루프
- *   ?scene=ad|prize|rank 한 장면만 · ?t=초 루프 시작 위치 · ?freeze=1 그 자리에서 멈춤 · ?cap=1 전환 없이 · ?prz4=문구 4~10위 상품 줄 · ?ctl=1 조작판
+ *   ?fill=0 가상 이름 끄기 · ?fill=1 앱 칸(promo&rank=1)에서도 켜기 · ?scene=ad|prize|rank 한 장면만 · ?t=초 루프 시작 위치 · ?freeze=1 그 자리에서 멈춤 · ?cap=1 전환 없이 · ?prz4=문구 4~10위 상품 줄 · ?ctl=1 조작판
  *   ?open=1 시각과 관계없이 늘 마감 전 순서(1층 둘러보기 타자왕 판 · 사용자 261003 「등수도」 → 순위 포함) · &rank=0 이면 순위 없이 광고 + 상품
  *   ?promo=1 참가자 앱 홍보 칸 · 광고 + 상품 23초 · 마감 뒤 = 상품만 · 서버 호출 0 · 기기 저장 안 씀 · 키 · 조작판 · 전체 화면 · 꺼짐 방지 끔 · 무음
  *     칸이 화면 밖이거나(IntersectionObserver) 탭이 가려지면 그리기를 멈추고 보이면 이어서 · 누르면 부모 창에 postMessage({ axfTy: "tap" })
- *   ?promo=1&rank=1 앱 「타자 순위」 칸용 가벼운 판 · 광고 + 상품 + 순위 10초(33초) · 순위부터 = &t=23 · 마감 뒤 = 최종 순위 + 상품 · type_rank 60초마다(실패 120 → 240초) · 홍보 칸 규칙 그대로
+ *   ?promo=1&rank=1 앱 「타자 순위」 칸용 가벼운 판 · 광고 + 상품 + 순위 11초(34초) · 순위부터 = &t=23 · 마감 뒤 = 최종 순위 + 상품 · type_rank 60초마다(실패 120 → 240초) · 홍보 칸 규칙 그대로
  * 키: 1 광고 · 2 상품 · 3 순위 · 0 전체 루프 · F 전체 화면 · C 조작판 */
 (function () {
   "use strict";
@@ -130,7 +135,7 @@
   function scoreTxt(v, unit) { return unit === "pts" ? fmt(v) + "점" : unit === "cs" ? (Number(v || 0) / 100).toFixed(1) + "초" : fmt(v); }
 
   /* ════════ 장면 ════════ */
-  var DUR = { ad: 18, prize: 5, rank: PRANK ? 10 : 16 };
+  var DUR = { ad: 18, prize: 5, rank: PRANK ? 11 : 17 };   /* 순위 = 공개 · 읽기 · 「다음 이름은 당신」 1.6초 · 무너짐 1.4초 */
   var PL_OPEN, PL_DONE;
   if (PRANK) { PL_OPEN = ["ad", "prize", "rank"]; PL_DONE = ["rank", "prize"]; }
   else if (PROMO || NORANK) { PL_OPEN = ["ad", "prize"]; PL_DONE = ["prize"]; }
@@ -381,7 +386,27 @@
       host.appendChild(e); POOL.push(e);
     }
   })();
-  function keyed(top) { var seen = {}; return top.map(function (x, i) { var c = seen[x.name] = (seen[x.name] || 0) + 1; return { key: x.name + "#" + c, name: x.name, score: x.score, rank: i + 1 }; }); }
+  /* 가상 이름 채우기(261004 사용자 「10위까지 일단은 가상의 이름으로」) · 화면에서만 · 실제 기록이 늘 위(가상 점수 < 실제 최저) · 행사일 한국 날짜부터 자동으로 꺼짐 */
+  var FILL_ON = true;   /* false = 끄기(주소 값 &fill=0 과 같다) */
+  var FAKE = ["키보드요정", "엔터장인", "오타없음", "손가락번개", "구름청소부", "소나기러너", "백스페이스", "새벽타자", "자판도사", "한글타법"];   /* 닉네임 규칙 2~8자 · 실명처럼 보이지 않는 게임 닉네임 */
+  function fillOn() {
+    if (!FILL_ON || Q.fill === "0") return false;
+    if (PROMO && Q.fill !== "1") return false;   /* 앱 칸은 기본 끔(가상 기록이 실제 순위처럼 보이지 않게) */
+    return kstDay(kstMs()) < EVENT_DAY;
+  }
+  function fillTop(top) {
+    var out = (top || []).slice(0, 10);
+    if (out.length >= 10 || !fillOn()) return out;
+    var real = out.map(function (r) { return r.name; }), min = out.length ? Math.min.apply(null, out.map(function (r) { return r.score; })) : 0;
+    var names = FAKE.filter(function (n) { return real.indexOf(n) < 0; }), n0 = out.length, need = 10 - n0;
+    for (var k = 0; k < need && k < names.length; k++) {
+      var sc = n0 ? Math.max(0, Math.floor(min * (0.9 - 0.075 * k) / 10) * 10) : 9800 - k * 700;   /* 실제 기록이 없으면 9,800부터 700씩 */
+      out.push({ name: names[k], score: sc, fake: true });
+    }
+    return out;
+  }
+
+  function keyed(top) { var seen = {}; return top.map(function (x, i) { var c = seen[x.name] = (seen[x.name] || 0) + 1; return { key: (x.fake ? "~" : "") + x.name + "#" + c, name: x.name, score: x.score, rank: i + 1, fake: !!x.fake }; }); }
   function hsLong(s) { var u = 0; s = String(s || ""); for (var i = 0; i < s.length; i++) u += s.charCodeAt(i) < 0x1100 ? 0.5 : 1; return u > 9; }
   function rvDur(i) { return i >= 3 ? (PRANK ? 0.45 : 0.75) : i === 2 ? (PRANK ? 0.8 : 1.2) : i === 1 ? (PRANK ? 0.8 : 1.3) : (PRANK ? 1.2 : 1.9); }
   function rankPlan() {   /* 10위 → 1위 · a = 치기 시작 · b = 팡 · e = 다음 줄로 */
@@ -390,10 +415,10 @@
     RV.sch = sch; RV.end = t;
   }
   function rankBegin() {
-    var d = RK.data, cur = keyed(d ? d.top : []), prev = RS.shown, pm = {}, ev = [], evm = {};
-    RS.unit = d ? d.unit : ""; RS.at = d ? d.at : 0;
+    var d = RK.data, cur = keyed(fillTop(d ? d.top : [])), prev = RS.shown, pm = {}, ev = [], evm = {};
+    RS.unit = d && d.unit ? d.unit : "pts"; RS.at = d ? d.at : 0;
     if (prev) prev.forEach(function (r) { pm[r.key] = r; });
-    if (prev) cur.forEach(function (r) { var o = pm[r.key]; if (!o || r.score > o.score) { var x = { k: o ? (r.rank < o.rank ? "up" : "best") : "new", r: r }; ev.push(x); evm[r.key] = x; } });
+    if (prev) cur.forEach(function (r) { if (r.fake) return; var o = pm[r.key]; if (!o || r.score > o.score) { var x = { k: o ? (r.rank < o.rank ? "up" : "best") : "new", r: r }; ev.push(x); evm[r.key] = x; } });
     RS.cur = cur; RS.ev = ev; RS.evm = evm;
     rankPlan();
     POOL.forEach(function (e, i) {   /* 처음 자리 = 왼쪽 밖 · 한 줄씩 들어온다 · 이름은 비운 자리 */
@@ -416,7 +441,7 @@
     $("hs-you").classList.remove("in");
     RV.fm = -1; if (ENG) { RG.parts = []; RG.pops = []; RG.big = true; }
   }
-  function rankEnd() { if (!RS.at) return; RS.shown = RS.cur.map(function (r) { return { key: r.key, name: r.name, score: r.score, rank: r.rank }; }); save("axfTy.shown", RS.shown); }
+  function rankEnd() { if (!RS.at) return; RS.shown = RS.cur.filter(function (r) { return !r.fake; }).map(function (r) { return { key: r.key, name: r.name, score: r.score, rank: r.rank }; }); save("axfTy.shown", RS.shown); }   /* 가상 줄은 비교 대상이 아니다(NEW 없음) */
   var FXS = 2.4;   /* 순위 팡 = 게임 터짐을 2.4배로(먼 데서도 보이게) */
   function rvXY(i) {   /* 이름표 가운데 · 논리 좌표 */
     var ty = POOL[i].children[2].lastChild, w = ty.offsetWidth || 240;
@@ -449,7 +474,7 @@
     RG.pops.forEach(function (p) { rtText(c, p.text, p.x, p.y, 32, p.c, RAIN_PAL.ink); });
   }
   function rankDraw(lt) {
-    if (!RS.cur.length && RK.data && RK.data.top.length && RS.at !== RK.data.at) rankBegin();   /* 빈 판으로 시작했는데 장면 도중 첫 응답이 왔다(켠 직후) */
+    if (!RS.at && RK.data && RK.data.at && lt < RV.R0) rankBegin();   /* 자료 없이 시작했는데 공개 전에 첫 응답이 왔다(켠 직후) */
     POOL.forEach(function (e, i) {
       var r = RS.cur[i]; if (!r) return;
       var shown = lt >= 0.1 + i * RV.CAS, s = RV.sch[i] || { a: 0, b: 0, e: 0 };
@@ -463,18 +488,18 @@
     rankFx(lt);
     var sub = $("hs-sub"), txt, sc = "abs", done = closed() && !OPEN;
     if (!RS.cur.length) { txt = RK.data || !NET ? "첫 기록을 기다리고 있어요" : "순위를 불러오는 중"; sc += " em"; }
-    else if (RS.ev.length && lt >= RV.end + 0.3 && lt < DUR.rank - 2.5) { var x2 = RS.ev[0]; txt = (x2.k === "up" ? "RANK UP · " : "NEW RECORD · ") + x2.r.name + " " + x2.r.rank + "위"; sc += " nr"; }
+    else if (RS.ev.length && lt >= RV.end + 0.3 && lt < DUR.rank - 3) { var x2 = RS.ev[0]; txt = (x2.k === "up" ? "RANK UP · " : "NEW RECORD · ") + x2.r.name + " " + x2.r.rank + "위"; sc += " nr"; }
     else txt = done ? "최종 순위 · 1F 현장" : "1F 현장 TOP 10";
     if (sub.textContent !== txt) sub.textContent = txt;
     if (sub.className !== sc) sub.className = sc;
-    cls($("hs-you"), "in", lt >= DUR.rank - 2.5);
+    cls($("hs-you"), "in", lt >= DUR.rank - 3);
   }
 
   /* ════════ 와르르 전환(261004 사용자 「위에서부터 벽돌이 와르르 무너지듯」) ════════
    * 나가는 장면을 캔버스 SN 에 그대로 그린다(DOM 글자 · 상자는 실제 자리를 읽어 같은 글꼴로 · 게임은 그 캔버스를 복사) → 도트 3×2칸(108×72) 벽돌 약 290개 ·
    * 위 줄부터 0.024초씩 늦게 · 살짝 튀었다가(위로 40~180px/s) 중력(5,600px/s²)으로 떨어지며 옆으로 흩어지고 조금 돈다 · 0.95초 · 뒤에서 다음 장면이 이미 돌고 있다 */
   var FXC = $("fx"), FXX = FXC.getContext("2d"), SN = document.createElement("canvas"), SNX = SN.getContext("2d");
-  var FW = { key: "", b: [], on: false, pend: false, dbg: false, Y0: 108, BW: 108, BH: 72, D: 0.95, G: 5600 };
+  var FW = { key: "", b: [], on: false, pend: false, dbg: false, Y0: 108, BW: 108, BH: 72, D: 0.95, G: 5600, dur: 0.95, pr: null };
   function fxSize() { monSize(); if (FXC.width !== CV.width || FXC.height !== CV.height) { FXC.width = SN.width = CV.width; FXC.height = SN.height = CV.height; } }
   function sxy(e) { var r = e.getBoundingClientRect(), S = stage.getBoundingClientRect(); return { x: (r.left - S.left) / K, y: (r.top - S.top) / K, w: r.width / K, h: r.height / K }; }
   function fnt(c, e) { var cs = getComputedStyle(e); c.font = cs.fontWeight + " " + cs.fontSize + " " + cs.fontFamily; return cs; }
@@ -486,7 +511,7 @@
   }
   function txBox(c, e, t, mid, sh) {   /* 상자 글자 · mid = 가로 가운데("v" = 세로도 상자 가운데) · 세로는 줄 높이 가운데 · sh = 그림자 색(6px) */
     var cs = fnt(c, e), r = sxy(e), px = parseFloat(cs.fontSize), m = asc(c, t, px), lh = parseFloat(cs.lineHeight) || (m.a + m.d), tw = c.measureText(t).width;
-    var x = mid ? r.x + (r.w - tw) / 2 : r.x, y = mid === "v" ? r.y + (r.h - (m.a + m.d)) / 2 + m.a : r.y + (lh - (m.a + m.d)) / 2 + m.a;
+    var x = mid === "r" ? r.x + r.w - tw : mid ? r.x + (r.w - tw) / 2 : r.x, y = mid === "v" ? r.y + (r.h - (m.a + m.d)) / 2 + m.a : r.y + (lh - (m.a + m.d)) / 2 + m.a;
     c.textAlign = "left"; c.textBaseline = "alphabetic";
     if (sh) { c.fillStyle = sh; c.fillText(t, x + 6, y + 6); }
     c.fillStyle = cs.color; c.fillText(t, x, y);
@@ -542,7 +567,7 @@
   function fxStart(key, paint) {
     fxSize();
     SNX.setTransform(1, 0, 0, 1, 0, 0); SNX.clearRect(0, 0, SN.width, SN.height);
-    snapBg(SNX); paint(SNX); SNX.setTransform(1, 0, 0, 1, 0, 0);
+    snapBg(SNX); paint(SNX); SNX.setTransform(1, 0, 0, 1, 0, 0); FW.dur = FW.D;
     var b = [], r = 0, sd = 20261026;
     function rnd() { sd = (sd * 1103515245 + 12345) & 0x7fffffff; return sd / 0x7fffffff; }
     for (var y = FW.Y0; y < 1920; y += FW.BH, r++) for (var x = r % 2 ? -36 : 0; x < 1080; x += FW.BW) {
@@ -554,7 +579,7 @@
   function fxDraw(t) {
     var c = FXX, q = MQ;
     c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, FXC.width, FXC.height);
-    if (!(t >= 0 && t < FW.D)) { cls(FXC, "on", false); return; }
+    if (!(t >= 0 && t < FW.dur)) { cls(FXC, "on", false); return; }
     cls(FXC, "on", true);
     var mv = [];
     FW.b.forEach(function (b) {   /* 아직 안 떨어진 벽돌 = 제자리 · 떨어지는 벽돌은 그 위에 */
@@ -562,21 +587,79 @@
       if (s <= 0) c.drawImage(SN, b.x * q, b.y * q, b.w * q, b.h * q, b.x * q, b.y * q, b.w * q, b.h * q); else mv.push([b, s]);
     });
     mv.forEach(function (m) {
-      var b = m[0], s = m[1], dy = b.vy * s + 0.5 * FW.G * s * s;
+      var b = m[0], s = m[1], g = b.g || FW.G, dy = b.vy * s + 0.5 * g * s * s;
       if (b.y + dy > 1990) return;
       c.setTransform(q, 0, 0, q, 0, 0); c.translate(b.x + b.w / 2 + b.vx * s, b.y + b.h / 2 + dy); c.rotate(b.va * s);
+      if (b.z) { var sp = b.vy + g * s, ln = Math.min(150, sp * 0.05); c.globalAlpha = 0.45; c.fillStyle = "#8A817B"; c.fillRect(-2, -b.h / 2 - ln, 4, ln); c.globalAlpha = 1; }   /* 산성비 줄기 */
       c.drawImage(SN, b.x * q, b.y * q, b.w * q, b.h * q, -b.w / 2, -b.h / 2, b.w, b.h);
-      c.globalAlpha = Math.min(1, s * 10); c.strokeStyle = "#000"; c.lineWidth = 3; c.strokeRect(-b.w / 2, -b.h / 2, b.w, b.h); c.globalAlpha = 1;
+      c.globalAlpha = Math.min(1, s * 10); c.strokeStyle = b.z && s < 0.12 ? "#FF7E31" : "#000"; c.lineWidth = 3; c.strokeRect(-b.w / 2, -b.h / 2, b.w, b.h); c.globalAlpha = 1;
     });
   }
+  /* 루프 끝 무너짐(261004 사용자 「모든 광고가 끝나고 새 광고로 넘어가는 시점에서 무너지면서」) · 와르르와 같은 계열 · 조금 크고 길게(1.4초)
+   * 나가는 장면 글자 · 줄만 그린다(바탕 없음) → 글자 · 줄이 있는 칸만 도트 조각(72×36 · 도트 2×1칸)으로 나눈다 · 위에서부터 늦게 · 깨질 때 주황 테두리 ·
+   * 중력 3,800 · 산성비 줄기를 끌며 쏟아진다 · 장면은 숨겨(빈 무대) 조각이 다 떨어지면 잠깐 빈 화면 → 다음 루프 */
+  var ZD = 1.4;
+  function zStart(key, paint) {
+    fxSize();
+    FW.pr = [];
+    SNX.setTransform(1, 0, 0, 1, 0, 0); SNX.clearRect(0, 0, SN.width, SN.height);
+    SNX.setTransform(MQ, 0, 0, MQ, 0, 0); paint(SNX); SNX.setTransform(1, 0, 0, 1, 0, 0);
+    var b = [], sd = 1026, W = 72, H = 36, pr = FW.pr;
+    function rnd() { sd = (sd * 1103515245 + 12345) & 0x7fffffff; return sd / 0x7fffffff; }
+    for (var y = FW.Y0; y < 1920; y += H) for (var x = 0; x < 1080; x += W) {
+      var hit = false;
+      for (var i = 0; i < pr.length && !hit; i++) { var r = pr[i]; hit = x < r.x + r.w + 4 && x + W > r.x - 4 && y < r.y + r.h + 4 && y + H > r.y - 4; }
+      if (!hit) continue;
+      b.push({ x: x, y: y, w: W, h: Math.min(H, 1920 - y), d: 0.04 + (y - FW.Y0) / 1812 * 0.55 + rnd() * 0.12, vx: (rnd() - 0.5) * 90, vy: rnd() * 60, va: (rnd() - 0.5) * 3, g: 3800, z: true });
+    }
+    FW.b = b; FW.key = key; FW.dbg = false; FW.dur = ZD;
+  }
+  function pr(e) { var r = sxy(e); if (r.w && r.h) FW.pr.push(r); return r; }
+  function paintRank(c) {
+    var h = $("hs-h"), sb = $("hs-sub"), ls = $("hs-list"), L = pr(ls);
+    pr(h); txBox(c, h, h.textContent, false, "#D64524");
+    pr(sb); txBox(c, sb, sb.textContent);
+    rect(c, L.x, L.y - 4, L.w, 4, "#000"); rect(c, L.x, L.y + L.h, L.w, 4, "#000"); rect(c, L.x - 4, L.y, 4, L.h, "#000"); rect(c, L.x + L.w, L.y, 4, L.h, "#000"); rect(c, L.x, L.y, L.w, L.h, "#5E3218");
+    NIL.concat(POOL).forEach(function (e) {
+      if (e.style.display === "none" || +e.style.opacity === 0 && e.parentNode && POOL.indexOf(e) >= 0) return;
+      var r = sxy(e), cs = getComputedStyle(e); rect(c, r.x, r.y, r.w, r.h, cs.backgroundColor);
+      Array.prototype.forEach.call(e.children, function (k) {
+        if (getComputedStyle(k).display === "none") return;
+        if (k.classList.contains("tag")) { var t = sxy(k); rect(c, t.x, t.y, t.w, t.h, "#F3E7D8"); txBox(c, k, k.textContent, true); return; }
+        if (k.classList.contains("nm")) { txBox(c, k, k.firstChild.textContent); return; }
+        txBox(c, k, k.textContent, k.classList.contains("sc2") ? "r" : false);
+      });
+    });
+    var yu = $("hs-you"), en = $("hs-end");
+    if (yu.classList.contains("in")) { pr(yu); txBox(c, yu, yu.textContent); }
+    pr(en); txBox(c, en, en.textContent);
+  }
+  function paintPrize(c) {
+    var hh = $("pz-h"), H = pr(hh);
+    if (typeof rtDots === "function" && H.h) rtDots(c, "PRIZE", H.x, H.y + H.h / 2, H.h, "#FF7E31", { align: "left" });
+    Array.prototype.forEach.call(document.querySelectorAll("#pzs .pz"), function (e) {
+      var r = pr(e); rect(c, r.x, r.y, r.w, r.h, "#FF7E31"); rect(c, r.x + 4, r.y + 4, r.w - 8, r.h - 8, "#2A2118");
+      var no = e.querySelector(".no"), im = e.querySelector(".im"), ig = im.querySelector("img"), tx = e.querySelector(".tx"), sm = tx.querySelector("small");
+      txBox(c, no, no.textContent, false, e.classList.contains("p1") ? "#000" : null);
+      var m = sxy(im); rect(c, m.x, m.y, m.w, m.h, "#FFFFFF");
+      if (ig.complete && ig.naturalWidth) { var g = sxy(ig), k = Math.min(g.w / ig.naturalWidth, g.h / ig.naturalHeight), iw = ig.naturalWidth * k, ih = ig.naturalHeight * k; c.drawImage(ig, g.x + (g.w - iw) / 2, g.y + (g.h - ih) / 2, iw, ih); }
+      txBox(c, tx, tx.firstChild.textContent); txBox(c, sm, sm.textContent);
+    });
+    var f = $("pz-f"), fb = f.querySelector("b");
+    pr(f); txBox(c, f, f.firstChild.textContent); txIn(c, fb, fb.textContent);
+    var x = $("pz-x"); if (x.style.display === "block") { pr(x); txBox(c, x, x.textContent); }
+  }
+
   function fxTick(id, lt) {   /* 지금 장면의 와르르 · 광고 안 둘(후킹 → 게임 · 게임 → 행동) + 상품 첫 0.95초(행동 → 상품) */
     if (FW.dbg) return;
     var tr = null;
     if (id === "ad" && ENG && MON) { if (lt >= T_HOOK && lt < T_HOOK + FW.D) tr = { k: "h", at: T_HOOK }; else if (lt >= T_ACT && lt < T_ACT + FW.D) tr = { k: "m", at: T_ACT }; }
     else if (id === "prize" && FW.pend && lt < FW.D) tr = { k: "a", at: 0 };
+    if (!tr && !SOLO && PLAY.list[PLAY.list.length - 1] === id && lt >= DUR[id] - ZD) tr = { k: "z", at: DUR[id] - ZD };   /* 루프 끝 무너짐 */
     if (!tr) { if (FW.on) { FW.on = false; fxDraw(-1); } return; }
     var key = id + PLAY.loops + tr.k + PLAY.t0.toFixed(2);
-    if (tr.k !== "a" && FW.key !== key) fxStart(key, tr.k === "h" ? paintHook : paintMon);
+    if (tr.k === "z" && FW.key !== key) { zStart(key, id === "rank" ? paintRank : paintPrize); cls(el(id), "gone", true); }
+    else if (tr.k !== "a" && tr.k !== "z" && FW.key !== key) fxStart(key, tr.k === "h" ? paintHook : paintMon);
     FW.on = true; fxDraw(lt - tr.at);
   }
 
@@ -601,6 +684,7 @@
     if (id === "ad" || id === "rank") { cvOn(false); CX.setTransform(1, 0, 0, 1, 0, 0); CX.clearRect(0, 0, CV.width, CV.height); }
     if (id === "ad") HK.n = AH.n = -1;
     if (id === "rank") { rankEnd(); $("hs-list").classList.remove("shk"); }
+    s.classList.remove("gone");
   }
   function listNow() { return closed() && !OPEN ? PL_DONE : PL_OPEN; }
   function nextScene(now) {
@@ -631,7 +715,7 @@
     try { revealAt(el(PLAY.id), lt); DRAW[PLAY.id](lt); fxTick(PLAY.id, lt); } catch (e) { if (window.console) console.error(e); }
     TY.loops = PLAY.loops; TY.scene = PLAY.id; TY.lt = lt;
   }
-  var TY = window.__ty = { loops: 0, scene: "", lt: 0, eng: ENG, dur: DUR, rv: RV, fw: FW, snap: function (k) { fxStart("dbg" + Math.random(), k === "a" ? paintAct : k === "m" ? paintMon : paintHook); FW.dbg = true; fxDraw(0); }, closed: closed, list: function () { return PLAY.list.slice(); }, rk: RK, rs: RS, play: PLAY, demoStep: demoStep, poll: function () { poll(); },
+  var TY = window.__ty = { loops: 0, scene: "", lt: 0, eng: ENG, dur: DUR, rv: RV, fw: FW, fillOn: function () { return fillOn(); }, fillTop: function (t) { return fillTop(t); }, snap: function (k) { fxStart("dbg" + Math.random(), k === "a" ? paintAct : k === "m" ? paintMon : paintHook); FW.dbg = true; fxDraw(0); }, closed: closed, list: function () { return PLAY.list.slice(); }, rk: RK, rs: RS, play: PLAY, demoStep: demoStep, poll: function () { poll(); },
     go: function (id) { SOLO = DUR[id] ? id : ""; enter(SOLO || PLAY.list[0], performance.now() / 1000); } };
 
   /* 홍보 칸 · 화면 밖이거나 탭이 가려지면 그리기를 멈추고 보이면 그 자리에서 잇는다 */

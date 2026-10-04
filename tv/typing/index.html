@@ -6,10 +6,10 @@
 <title>타자왕 순위판 · AX Festival 2026</title>
 <meta name="robots" content="noindex">
 <!-- 1F 타자왕 부스 오른쪽 스탠바이미(세로 1080×1920) 광고 루프 (261004 재구성 · 사용자 「타자왕 광고 여기서 진행해」)
-     39초 루프 = 광고 18(후킹 2.6 · 실제 게임 몽타주 11.6 · 행동 3.8 · 장면 사이 = 위에서부터 벽돌이 와르르 무너지는 전환) · 상품 5 · 순위 16 · 행사일(10/26) 17:00 뒤 = 최종 순위 16 · 상품 5 (261004 「정신 없다」 피드백 뒤 속도 조정)
+     40초 루프 = 광고 18(후킹 2.6 · 실제 게임 몽타주 11.6 · 행동 3.8 · 장면 사이 = 위에서부터 벽돌이 와르르 무너지는 전환) · 상품 5 · 순위 17(끝 1.4초 무너짐) · 행사일(10/26) 17:00 뒤 = 최종 순위 17 · 상품 5 (261004 「정신 없다」 피드백 뒤 속도 조정)
      게임 몽타주 = 실제 게임 엔진(../../assets/rain-engine.js)의 그리기 함수로 그린다(구름 비 · 자동 터짐 · CLOUD CLEAR · 도트 전환 · BONUS STAGE · 문장 PERFECT)
      데이터 = 공개 순위 type_rank(mode site · n 10 · 읽기 전용 · 관리코드 없음) · 30초 폴링 · 실패 60 → 120초 · 화면이 가려지면 멈춤
-     ?promo=1 = 참가자 앱 홍보 칸 · 광고 + 상품 23초 · 서버 호출 0 · ?promo=1&rank=1 = 앱 「타자 순위」 칸용 가벼운 판(광고 + 상품 + 순위 10초 · 60초 폴링 · 순위부터 = &t=23)
+     ?promo=1 = 참가자 앱 홍보 칸 · 광고 + 상품 23초 · 서버 호출 0 · ?promo=1&rank=1 = 앱 「타자 순위」 칸용 가벼운 판(광고 + 상품 + 순위 11초 · 60초 폴링 · 순위부터 = &t=23 · 가상 이름은 &fill=1 일 때만)
      promo 본문 서체 = 앱과 같은 CDN 부분 글꼴(1.7MB 자체 글꼴을 받지 않는다) · 주소 뒤 값은 assets/typing.js 맨 위 -->
 <link rel="icon" href="../../icons/icon-192.png">
 <script>
@@ -36,6 +36,7 @@
     background: radial-gradient(circle, var(--wood) 0 2px, transparent 2.5px) 0 0 / 36px 36px, var(--night); }
   .sc { position: absolute; inset: 0; display: none; }
   .sc.on { display: block; }
+  .sc.gone { visibility: hidden; }   /* 루프 끝 무너짐 · 조각이 덮고 뒤는 빈 무대 */
   .abs { position: absolute; }
   #cv { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; z-index: 5; visibility: hidden; pointer-events: none; }
   #cv.on { visibility: visible; }
