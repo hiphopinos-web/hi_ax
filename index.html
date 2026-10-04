@@ -322,17 +322,6 @@
   /* v3.62 동시 진행 블록 · 한 카드 안에 두 트랙 (큰글씨는 .stack 으로 위아래) */
   .rc.par { display: block; padding-bottom: 10px; }
   .rc.par .rh { cursor: default; }
-  .par-g { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 0 2px; }
-  .par-g.stack { grid-template-columns: 1fr; }
-  .par-t { display: block; width: 100%; text-align: left; padding: 10px; border: 1px solid var(--dimln); border-radius: 14px; background: var(--white); }
-  .par-t .hd { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
-  .par-t .hd b { font-size: calc(14.5px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.35; }
-  .par-t .it { display: block; margin-top: 6px; font-size: calc(13px * var(--fs)); color: var(--muted); font-weight: 700; line-height: 1.4; }
-  .par-t .it small { display: block; margin-top: 1px; font-size: calc(11.5px * var(--fs)); color: var(--faint); font-weight: 700; }
-  .par-t .nt { display: block; margin-top: 8px; font-size: calc(11.5px * var(--fs)); color: var(--acc2); font-weight: 700; }
-  .par-t.my { border-color: var(--acc2); background: var(--tint); }
-  .rc.par.past .par-t { background: var(--dim); border-color: var(--dimln); }
-  .rc.par.past .par-t .hd b, .rc.par.past .par-t .nt { color: var(--faint); }
   .rc .rt .st { max-width: 64px; font-size: calc(12.5px * var(--fs)); font-weight: 800; color: var(--acc2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rc .chev { flex: none; color: var(--faint); font-weight: 800; font-size: 11px; }
   .rc .chev.arw { font-size: 15px; }
@@ -1009,11 +998,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* v4.13 홈 나의 일정 · 안쪽 스크롤(myscroll) 폐지 · 3개 + 목록 바로 아래 전폭 「일정 더보기 +N」(48 터치 · Weak 면) */
   .axs-more { display: flex; margin-top: var(--ax-space-8); min-height: var(--ax-touch-size); padding: var(--ax-space-12) var(--ax-space-16); font: var(--ax-type-t6-strong); }
   .oly-hub { margin-top: 10px; }
-  .p3-go { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
   /* v3.50C AX 한 줄 · 검정 무대 위 한 줄 */
-  .ax-line { margin-top: 10px; font-size: calc(13.5px * var(--fs)); line-height: 1.5; color: var(--muted); word-break: keep-all; }
-  .ax-line b { display: inline-block; margin-right: 6px; padding: 1px 7px; border-radius: 999px; background: var(--mint); color: var(--ax-color-onBrand); font-size: calc(11.5px * var(--fs)); font-weight: 800; vertical-align: 1px; }
-  .ax-line.dk { color: rgba(255,255,255,0.88); }
   /* v3.51 스피커 버튼 · 44px 터치 · 켬 = 오렌지 · 끔 = 회색 */
   .snd-btn { flex: none; width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid var(--dimln); border-radius: 12px; background: var(--white); color: var(--faint); cursor: pointer; padding: 0; }
   .snd-btn svg { width: 22px; height: 22px; display: block; }
@@ -1290,12 +1275,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-gap12 { gap: var(--ax-space-12); }
   .axs-lst { display: flex; flex-direction: column; }
   #view[data-v="exp"] .axs-lst { gap: var(--ax-space-12); }   /* v4.48 체험 › 신청이 필요한 프로그램 · 흰 카드 두 장이 붙어 보였다(프로그램 탭 목록과 같은 12 간격) */
-  .axs-prow { width: 100%; border-top: 0; border-left: 0; border-right: 0; background: transparent; text-align: left; cursor: pointer; font-family: inherit; }
-  .axs-prow .axs-tx, .axs-tl .axs-tx, .axs-who .axs-tx { display: flex; flex-direction: column; gap: var(--ax-space-4); min-width: 0; }
-  .axs-prow:last-child { border-bottom: 0; }
-  .axs-st { font: var(--ax-type-t7); color: var(--ax-color-brandText); }
-  .axs-st.ok { color: var(--ax-color-success); }
-  .axs-st.off { color: var(--ax-color-muted); }
+  .axs-who .axs-tx { display: flex; flex-direction: column; gap: var(--ax-space-4); min-width: 0; }
   .axs-chip.cat { background: var(--ax-color-purpleSoft); color: var(--ax-color-purpleText); }
   .axs-cat { font: var(--ax-type-t7); color: var(--ax-color-purpleText); }
   .axs-who { display: flex; align-items: center; gap: var(--ax-space-16); }
@@ -1342,9 +1322,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-ttc .axs-chev { width: 20px; height: 20px; display: block; transform: rotate(90deg); transition: transform 0.18s ease; }
   .axs-ttc.up .axs-chev { transform: rotate(-90deg); }
   .axs-tt .rc .rb { padding: 0 0 var(--ax-space-16); }
-  .axs-ttb { display: flex; flex-direction: column; gap: var(--ax-space-12); padding-top: var(--ax-space-12); border-top: 1px solid var(--ax-color-divider); }
-  .axs-ttb .axs-kv { row-gap: var(--ax-space-8); grid-template-columns: 56px minmax(0, 1fr); }
-  .axs-ttb .ax-button { min-height: var(--ax-touch-size); padding: var(--ax-space-12); }
   /* v5.21 시간표 = 점 노드 흐름 한 줄(사용자 261003 · 설계 「시간표 흐름/설계.md」 안 A · design.md A-5 5-10) · 시각 | 노드 + 레일 | 카드
      노드 3상태(지남 O50 작은 점 · 지금 O100 큰 점 + O25 고리 하나 · 앞 = 속 빈 점) · 같이 진행 중인 다른 줄(on) = O100 작은 점
      O25 · O50 = brand 를 흰색과 섞은 값(30% · 60% = design.md 오렌지 사다리 O25 · O50 과 같은 색 · 토큰에 없는 단이라 섞어 만든다)
@@ -1387,12 +1364,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-seg.axs-seg-sub button[aria-selected="true"] { background: var(--ax-color-surface); color: var(--ax-color-ink); }
   @media (prefers-reduced-motion: reduce) { .axs-ttc .axs-chev { transition: none; } }
   /* v4.15 폰 관리자 모드 3화면(스캔 · 혼잡도 · 담당 명단) · 사용자 확정 260922 · 토큰만 */
-  .axs-seg.axs-seg3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .axs-seg.axs-seg4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .axs-seg button[aria-pressed="true"] { background: var(--ax-color-surface); color: var(--ax-color-ink); }
   .axs-seg button small { display: block; font: var(--ax-type-caption); color: var(--ax-color-muted); }
   .axs-seg button small.need { color: var(--ax-color-error); }
-  .axs-seg.axs-grade button[aria-pressed="true"] { background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
   .axs-scam { position: relative; border-radius: var(--ax-radius-16); overflow: hidden; background: var(--ax-color-ink); }
   .axs-scam video { display: block; width: 100%; max-height: 40vh; object-fit: cover; }
   .axs-slog { display: flex; flex-direction: column; padding: var(--ax-space-4) var(--ax-space-16); }
@@ -1402,7 +1376,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-lg span { text-align: right; }
   .axs-lg.ok span { color: var(--ax-color-success); }
   .axs-lg.bad span { color: var(--ax-color-error); }
-  .axs-zone.stale { box-shadow: inset 0 0 0 1px var(--ax-color-error); }
   /* v4.71 (260930 사용자 결정) 폰 관리자 모드 두 개(QR 스캔 · 혼잡 제보) · 크고 쉽게 · 색은 토큰만(성공 success · 실패 error · 이미 brand · 파랑 없음) */
   .axs-seg.axs-admseg button { min-height: 56px; font: var(--ax-type-t5-strong); }
   .axs-srow { display: flex; align-items: center; justify-content: space-between; gap: var(--ax-space-12); }
@@ -1459,15 +1432,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-crgo { min-height: 56px; }
   .axs-crbtn { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ax-space-8); }
   .axs-crbtn .ax-button { min-height: 56px; }
-  .axs-zmeta { font: var(--ax-type-t7); color: var(--ax-color-muted); }
-  .axs-zmeta.bad { color: var(--ax-color-error); }
-  .axs-filter2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ax-space-8); }
-  .axs-filter2 .ax-filter-button { min-height: var(--ax-touch-size); padding: var(--ax-space-8); }
-  .axs-rrow { display: flex; flex-direction: column; gap: var(--ax-space-12); padding: var(--ax-space-16); border-radius: var(--ax-radius-20); background: var(--ax-color-surface); }
-  .axs-rrow .axs-rhead { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ax-space-12); }
-  .axs-rrow .axs-tx { display: flex; flex-direction: column; gap: var(--ax-space-4); min-width: 0; }
-  .axs-rbtn { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ax-space-8); }
-  .axs-rbtn .ax-button { min-height: var(--ax-touch-size); padding: var(--ax-space-8); font: var(--ax-type-t6-strong); }
   .axs-chip.bad { background: var(--ax-color-errorSoft); color: var(--ax-color-error); }
   .axs-chip.flat { background: var(--ax-color-canvas); color: var(--ax-color-body); }
   /* 내 일정 M02 */
@@ -1562,13 +1526,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
      목록 행 = 흰 카드(반경 20, 나의 참여·체험 목적지 행과 같은 면) · 층 배지 = brandSoft(홈 일정 시간 배지와 같은 강조) · 필터 선택 = brandSoft(내 보상 필터와 같다)
      분류 칩 = 중립 canvas · 연사 칸 = canvas 바탕 + ink 글자 · 시간표 행 · 내 일정 카드 = 흰 면 · 하단 고정 바 = canvas */
   #view[data-v="guide"] .axs-rows { display: flex; flex-direction: column; gap: var(--ax-space-12); }
-  .axs-prow.ax-program-row { padding: var(--ax-space-20); border: 0; border-radius: var(--ax-radius-20); background: var(--ax-color-surface); }
-  #app .ax-floor { background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); }
-  #app .ax-filter-button { background: var(--ax-color-surface); color: var(--ax-color-body); cursor: pointer; font-family: inherit; }
-  #app .ax-filter-button[aria-pressed="true"] { background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); }
   /* v4.13 ⓚ 분류 칩 4개 + 켜고 끄는 「신청 가능」 칩 · 좁으면 「신청 가능」이 다음 줄로 */
   #app .axs-filter5 { display: flex; flex-wrap: wrap; gap: var(--ax-space-8); }
-  #app .axs-filter5 .ax-filter-button { flex: 1 1 0; min-width: 0; padding: var(--ax-space-12) var(--ax-space-8); white-space: nowrap; }
   #app .axs-filter5 .axs-opf { flex: 0 0 auto; padding: var(--ax-space-12); box-shadow: inset 0 0 0 1px var(--ax-color-divider); }
   #app .axs-filter5 .axs-opf[aria-pressed="true"] { box-shadow: inset 0 0 0 1px var(--ax-color-brand); }
   .axs-chip.cat { background: var(--ax-color-canvas); color: var(--ax-color-body); }
@@ -1576,7 +1535,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-av { background: var(--ax-color-canvas); color: var(--ax-color-ink); }
   .axs-my { background: var(--ax-color-surface); }
   .axs-pd .ax-inset { padding: var(--ax-space-16); }
-  .axs-tl + .axs-tl { margin-top: var(--ax-space-8); }
   #view[data-v="sess_d"] .axs-slot:not(:disabled):not([aria-pressed="true"]) { background: var(--ax-color-surface); }   /* canvas 페이지 위 상담 시간 칩 */
   .axs-pd .axs-kv { grid-template-columns: 72px minmax(0, 1fr); }
   /* 옛 공용 카드 반경만 새 규격(24)으로 · 안쪽 여백·타이포는 2~4단계에서 */
@@ -1588,8 +1546,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .gs-how p { display: flex; align-items: center; gap: var(--ax-space-12); margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .gs-how p b { flex: none; min-width: 96px; min-height: 32px; display: inline-flex; align-items: center; justify-content: center; padding: 0 var(--ax-space-8); border-radius: var(--ax-radius-8); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t7); font-weight: 700; }
   .gs-rule { margin: 0; }
-  .gs-card .ax-line { margin: 0; font: var(--ax-type-t7); color: var(--ax-color-body); }
-  .gs-card .ax-line b { margin-right: var(--ax-space-8); padding: 0 var(--ax-space-8); border-radius: var(--ax-radius-999); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-caption); font-weight: 700; }
   .gs-meta { display: flex; justify-content: space-between; align-items: center; gap: var(--ax-space-8); min-height: var(--ax-touch-size); padding: 0 var(--ax-space-16); border-radius: var(--ax-radius-16); background: var(--ax-color-surface); font: var(--ax-type-t7); color: var(--ax-color-muted); }
   .gs-meta b { color: var(--ax-color-ink); font-weight: 600; }
   .gs-edit { min-height: var(--ax-touch-size); padding: 0 var(--ax-space-4); border: 0; background: none; font: inherit; color: var(--ax-color-body); text-decoration: underline; cursor: pointer; }
@@ -2134,13 +2090,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-ph { position: relative; display: block; flex: none; width: 56px; height: 56px; overflow: hidden; border-radius: var(--ax-radius-12); background: var(--ax-color-inset); }
   .axs-ph img { display: block; width: 100%; height: 100%; object-fit: cover; }
   .axs-ph .smp { position: absolute; left: 3px; bottom: 3px; padding: 1px 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.92); color: var(--ax-color-body); font-size: 10px; font-weight: 600; line-height: 14px; letter-spacing: 0; }
-  .axs-prz { display: flex; flex-direction: column; gap: var(--ax-space-8); margin: 0; padding: 0; list-style: none; }
-  .axs-prz li { display: flex; align-items: center; gap: var(--ax-space-12); min-width: 0; }
-  .axs-prz .tx { display: flex; flex: 1 1 auto; flex-direction: column; gap: 2px; min-width: 0; }
-  .axs-prz .rk { font: var(--ax-type-caption); color: var(--ax-color-muted); }
-  .axs-prz .tx b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }
-  .axs-prz .q { flex: none; font: var(--ax-type-t6-strong); color: var(--ax-color-body); }
-  .axs-prz.sm .axs-ph { width: 48px; height: 48px; }
   .axs-przc { gap: var(--ax-space-16); }   /* 내 보상 · 경품 카드 */
   .axs-przc .ax-meta { word-break: keep-all; }
   .axs-przn { margin: 0; font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }   /* 참여상 카드 아래 조건 줄 */
@@ -2159,7 +2108,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-treat figcaption { display: flex; flex-direction: column; gap: 2px; }
   .axs-treat figcaption b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .axs-treat figcaption span { font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
-  .fs-big .axs-prz .axs-ph { width: 64px; height: 64px; }
   /* ═══════ v5.08 경품 포스터(prizes) · 입구 (261003 사용자 「경품 사진이 작다 · 포스터처럼 · 싼티 없이 · 스탬프 누적표에서 바로」 · 「제품 사진을 더 크게 부각」)
      구성 = 표지(먹색 면 + 도트 격자 + 주황 3중 원 점 · 「Prizes」) → 행운권 → 참여상 → 룰렛 → 1F 타자왕(v5.09 사진 카드 · 1등 대표 + 2 · 3등 2열)
      표지 먹색 면 = 이 화면 맨 위 한 구역 한정(design.md §1 스테이지 「블랙 = 포스터 블랙판」 · 앱 셸 블랙 금지의 예외 · 판 퀴즈 1F 판 문법과 같은 「구역 한정」) · 손이 닿는 줄은 앱 문법
@@ -2944,16 +2892,9 @@ var STAMP_ICONS = {
    3개 = 1F 이벤트존 실물 룰렛 1회 (1인 1회 · 내 QR 제시 → 운영자 스캔 차감)
    4·5·6개 = 행운권 1·2·3장 (260929 사용자 확정 · 최대 3장 · 자동 계산 · 별도 행동 불필요 · 17:00 Outro 현장 추첨)
    6개 = 참여상 추첨 대상 추가 (v5.04 · 261002 사용자 확정 · 17:00 서버 시각 기준 · 서버가 한 번에 추첨 · 상태는 sync my.fin) */
-var REWARD_LADDER = [
-  { n: 3, nm: "룰렛 1회", d: "1F EVENT 룰렛 · 1인 1회 · 내 QR 제시" },
-  { n: 4, nm: "행운권 1장", d: "자동 발급 · 17:00 Outro 추첨" },   /* v4.83 사용자 표시 용어 「행운권」(서버 내부 용어 응모권 · raffle 은 그대로) */
-  { n: 5, nm: "행운권 2장", d: "자동 발급" },
-  { n: 6, nm: "행운권 3장", d: "자동 발급" }
-];
 /* v3.33 · 칸은 8개 · v4.58 (사용자 확정 260929) 스탬프는 8종 중 아무거나 6개가 한도 · 6개를 모으면 끝.
    7·8번째를 받아도 기록(stamps)은 남기되 개수·보상은 6에서 멈춘다 · 3개 = 룰렛 1회 · 4·5·6개 = 응모권 1·2·3장(최대 3장).
    화면 분모·보상 계산·서버 발급이 전부 이 상수들에서 나온다 (앱 STAMP_DENOM = 서버 STAMP_DENOM). */
-var STAMP_TOTAL = 8;            /* 카드 수 */
 var STAMP_DENOM = 6;            /* 개수 상한 · 화면 분모 · 레일 헤더 · 완료 팝 */
 var RAFFLE_MAX = 3;             /* 응모권 최대 */
 var REWARD_CAP = STAMP_DENOM;   /* 보상 계산 상한 = 개수 상한 */
@@ -3106,7 +3047,6 @@ var SURVEY_PLACES = [
   ["p1", "1F 부스"], ["p2", "1F AX PLAY"], ["p7", "전시 QR 퀴즈"],
   ["p3", "17F 강연"], ["dap", "1F AX LOUNGE 상담"], ["cchat", "18F AX 커피챗"]
 ];
-var IDEA_TAGS = ["영업", "보상", "마케팅", "본사·통계", "기타"];
 var DEFAULT_NOTICES = [
   { id: "n1", title: "AX Festival 2026에 오신 것을 환영합니다", body: "행사 당일 운영 안내와 바뀐 내용이 이곳에 올라와요.", ts: 0, pinned: true }
 ];
@@ -3503,9 +3443,6 @@ window.addEventListener("beforeinstallprompt", function (e) {
 function isStandalone() { return visitStandalone(); }   /* v5.34 standalone · fullscreen · minimal-ui 까지(visitRoute 와 같은 기준) */
 function isIOS() { return visitDev(navigator.userAgent, navigator.maxTouchPoints || 0) === "ios" && !window.MSStream; }   /* v5.01 아이패드 데스크톱 UA(맥 + 터치)도 · visitDev 와 같은 기준 */
 function isInApp() { var r = visitRoute(navigator.userAgent, visitStandalone()); return r === "kakao" || r === "naver" || r === "inapp"; }   /* v4.76 판별 한 곳(visitRoute · 안드로이드 웹뷰 · 아이폰 웹뷰 포함) */
-function a2hsDismissed() {
-  try { return window.localStorage.getItem("axf_a2hs") === "1"; } catch (e) { return false; }
-}
 function a2hsMarkDismissed() {
   try { window.localStorage.setItem("axf_a2hs", "1"); } catch (e) {}
 }
@@ -3710,15 +3647,15 @@ function ownIs(x) { var e = ownEmp(); return !!e && !!x && typeof x === "object"
    같은 사람이 로그아웃 뒤 다시 들어와도 쓰던 설문 · 아이디어 초안은 지워진다(사용자 감수). */
 var STORE_DEVICE = ["vid", "a2hs", "fs", "t",
   "site_sound", "game_sound", "rain_sound", "jp_tut",
-  "self_on", "self_key", "self_tok", "scan_spot", "adm_tab", "zone_sent", "roster_prog", "tyaw_tab", "tyaw_hide", "tyaw_oly_pg",
+  "self_on", "self_key", "self_tok", "scan_spot", "adm_tab", "tyaw_tab", "tyaw_hide", "tyaw_oly_pg",
   "type_rank_*", "oly_tab", "oly_ev",
   "notices", "notices_wipe1", "entry_pref", "entry_ask_day", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "wq_srv", "wq_v", "survey_agg", "photo_pub", "resv_conf", "crowd", "stv",
-  "ax_line_i", "art_demo_n", "ev_phase", "toff", "tour_inv",
+  "art_demo_n", "ev_phase", "toff", "tour_inv",
   "push_ask", "push_first", "push_ask_ios"];   /* v5.46 tour_inv = 1층 둘러보기 초대 한 번(기기 기준) · v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) · v4.78 아이폰 탭 · 앱 속 브라우저 안내는 하루 한 번 */
 var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_role", "adm_tok", "adm_emp", "dept",
   "stamps", "pp_seen", "pp_base", "pp_glow3", "stamp_pend", "lg_try", "lgx_seen", "scan_q", "stair", "checkin", "queue", "photoq", "resv", "sess_my", "att_mine", "att_tm",
   "cchat", "cchat_pref", "cchat_att", "ideas", "idea_draft", "survey_draft", "survey_done", "survey_mine", "survey_force", "noti_seen",
-  "raffle_seen", "raffle_opened", "raffle_nums", "roulette_used", "roulette_open", "draw_winner", "fin",
+  "raffle_seen", "raffle_opened", "raffle_nums", "roulette_used", "roulette_open", "fin",
   "wave_extra", "wq_attempts", "test_mine", "type_nick", "type_nick_edit", "type_best", "mem_seen", "ox_seen",
   "pang_best", "jump_best", "gw_best", "gw_time_best", "tt_best", "pang_cleared", "jump_cleared", "gw_cleared", "type_cleared", "tetris_cleared", "ox_cleared",
   "oly2_best_*", "oly2_done_*", "oly_pend", "draw_in", "qz_run", "qz_last", "qz_best", "qz_kseen", "qz_pend", "gs_how",
@@ -3761,15 +3698,6 @@ function axfLogout() {
   if (typeof pushLogout === "function") pushLogout(fin); else fin();   /* v4.76 이 기기 알림 구독을 먼저 지운다(공용 폰 · 다음 사람에게 앞 사람 알림이 가지 않게 · 1.5초 안) */
 }
 
-function beStats() {
-  if (!BE.on) return;
-  beCall({ action: "stats" }, function (res) {
-    if (!res || !res.ok) return;
-    BE.stats = res;
-    if (App.current === "home") App.render();
-    else if (el("mtCv")) mtSync();
-  });
-}
 
 /* ════════════════ 글자 크기 · 30~50대까지 각자 편한 크기로 ════════════════
    CSS의 모든 본문 폰트가 calc(Npx * var(--fs)) 라서 --fs 하나로 앱 전체가 함께 커진다.
@@ -4092,37 +4020,6 @@ function myResv() {
 }
 var DAPSEL = null;
 function dapPick(t) { if (resvTaken(t)) return; DAPSEL = DAPSEL === t ? null : t; App.render(); }
-function bookResv() {
-  if (!DAPSEL) { toast("상담 시간을 먼저 선택해주세요."); return; }
-  var my = myResv();
-  if (my && RESV_LIVE.indexOf(my.status) >= 0) { toast("이미 신청한 상담이 있어요. 취소 후 다시 신청할 수 있습니다."); return; }
-  if (resvTaken(DAPSEL)) { toast("방금 마감된 시간이에요. 다른 시간을 선택해주세요."); DAPSEL = null; App.render(); return; }
-  var u = S.get("user", {});
-  var all = resvAll();
-  var rid = uid();
-  all.push({ id: rid, room: 2, slot: DAPSEL, name: u.name || "", dept: S.get("dept", null) || "미지정", status: "requested", mine: true, ts: Date.now() });
-  var slot = DAPSEL; DAPSEL = null;
-  S.set("resv", all);
-  waveBump();
-  if (BE.on && u.empId) {
-    beCall({ action: "resv_book", emp: u.empId, name: u.name || "", dept: S.get("dept", null) || "", slot: slot }, function (res) {
-      if (res && res.ok) {
-        var a2 = resvAll(), r2 = a2.find(function (x) { return x.id === rid; });
-        if (r2) { r2.beId = res.id; S.set("resv", a2); }
-      } else if (res && (res.reason === "taken" || res.reason === "dup")) {
-        S.set("resv", resvAll().filter(function (x) { return x.id !== rid; }));
-        toast(res.reason === "taken" ? "방금 다른 분이 먼저 신청한 시간입니다. 다른 시간을 선택해주세요." : "이미 진행 중인 신청이 서버에 있습니다.");
-      }
-    });
-  }
-  notice({ title: "상담 신청 완료", body: slot + " · 1F AX LOUNGE · 승인되면 알림" });
-}
-function cancelResv() {
-  var u = S.get("user", {});
-  if (BE.on && u.empId) beCall({ action: "resv_cancel", emp: u.empId });
-  S.set("resv", resvAll().filter(function (r) { return !(r.mine && RESV_LIVE.indexOf(r.status) >= 0); }));
-  notice({ title: "상담 신청 취소됨" });
-}
 function dapModal() {
   modalOpen('<div class="tlstep"><span class="pill">00–10분</span><span class="tx2">개선하고 싶은 업무 설명</span></div>' +
     '<div class="tlstep"><span class="pill">10–20분</span><span class="tx2">병목 알아보기</span></div>' +
@@ -4142,22 +4039,6 @@ function cchatModal() {
    서버에 `cchat_cancel` 이 아직 없으면 로컬만 정리하고 그 사실을 그대로 알린다.
    조용히 로컬만 지우면 매칭 담당자는 그 자리를 계속 비워 두게 된다. */
 var CCHAT_CX_TS = 0;
-function cchatCancel() { if (S.get("cchat", null)) progCancelOpen("cchat"); }   /* v4.05 확인 시트(M03-cancel) · 서버 성공일 때만 지운다 */
-function cchatCancelGo() {
-  var u = S.get("user", {}) || {};
-  S.set("cchat", null); CCHAT_CX_TS = Date.now();
-  if (!BE.on || !u.empId) { notice({ title: "커피챗 신청 취소됨" }); App.render(); return; }
-  beCall({ action: "cchat_cancel", emp: u.empId },
-    function (res) {
-      if (res && res.ok) notice({ title: "커피챗 신청 취소됨" });
-      else notice({ key: "cchatX:fail", title: "서버에 반영되지 않았어요", body: "18F 커피챗 담당자에게 취소 요청" });
-      App.render();
-    },
-    function () {
-      notice({ key: "cchatX:fail", title: "서버에 반영되지 않았어요", body: "18F 커피챗 담당자에게 취소 요청" });
-      App.render();
-    });
-}
 
 /* ── v10: DAP Wall QR 퀴즈 ── */
 var WQ = { set: null };
@@ -4371,7 +4252,6 @@ function wvTick() {
 
 /* ── ME to WE 라이브 월 (wall_metowe) · 유효 참여 1건 = 점 1개, 2,026점 = WE 완성 ── */
 var MT_TOTAL = 2026;
-var MT_STEPS = [[50, "오후 깜짝 간식"], [80, "추첨 수량 2배"], [100, "대형경품 업그레이드"]];
 /* 모션 파라미터 · 산출 근거는 `ME to WE 월/260823_월_모션디자인_설계서.md`
    ① 평시(change blind): 브리딩·성운 표류·시차 잔별·배경 유성·빛 스윕 · 전부 12초보다 느리게
    ② 이벤트(make aware): 안착 순간 급격한 온셋 + 파문. 개별 연출은 분당 10회 상한, 초과분은 군집
@@ -4876,7 +4756,6 @@ var PIN_SVG = '<svg class="axs-pin" viewBox="0 0 16 16" fill="none" stroke="curr
 function lnkChev(t) { return '<span class="axs-lk">' + t + CHEV_SVG + '</span>'; }
 var BACK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>';
 var BELL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10a6 6 0 0 0-12 0c0 4.4-1.7 5.9-2.4 6.6h16.8c-.7-.7-2.4-2.2-2.4-6.6z"/><path d="M10.2 20a2 2 0 0 0 3.6 0"/></svg>';
-var QR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><path d="M13.5 13.5h3.2v3.2h-3.2z"/><path d="M20.5 13.5v3.2"/><path d="M13.5 20.5h3.2"/><path d="M18.6 17.4v3.1h1.9"/></svg>';
 var App = {
   current: "home",
   /* ═══ AX-TDS v1 (260922 · design.md §A) · 하단 = 홈 / 프로그램 / [QR 스캔] / 체험 / 나의 참여 ═══
@@ -5366,66 +5245,21 @@ var STAGE = {
 };
 function progById(id) { return id === "expo" ? EXPO : id === "intro" || id === "outro" ? STAGE[id] : sessById(id); }
 function progTm(tm) { return String(tm || "").replace("~", "–"); }
-function progPlaceShort(s) { return s.id === "dap" ? "AX LOUNGE" : s.id === "expo" ? "로비" : sessPlace(s).replace(/^\d+F\s*·?\s*/, ""); }
-function progList() {
-  return SESSIONS.filter(function (s) { return PROG_CAT[s.id]; }).concat([EXPO]).sort(function (a, b) {
-    var ka = a.id === "expo" ? 9998 : sessStartMin(a.tm), kb = b.id === "expo" ? 9998 : sessStartMin(b.tm);
-    return ka - kb || (a.ttl < b.ttl ? -1 : a.ttl > b.ttl ? 1 : 0);
-  });
-}
-function progCat(c) { PROG.cat = c; App.render(); }
-function progCatGo(c) {   /* v4.84 목록 보기 폐지 · 옛 분류 진입(「실습」 등)은 시간표의 그 행을 펼친다 */
-  PROG.tt = "all"; PROG.seg = "time"; PROG.scroll = 0;
-  if (c === "실습") TIMELINE.forEach(function (t, i) { if (TL_PROG[t.title] === "#실습") PROG.ttOpen["t" + i] = true; });
-  App.tab("guide");
-}
 /* v4.13 프로그램 탭 두 층(사용자 결정 260922 · design.md A-5 5-10) · 1층 = 보기 [목록 | 시간표] · 2층 = 분류 칩(두 보기 공통) */
-function progMode(m) { PROG.mode = m === "time" ? "time" : "list"; App.render(); window.scrollTo(0, 0); }
 /* ═══ v4.15 시간표 보기 재설계 (사용자 결정 260922 · design.md A-5 5-10) ═══
    목록과 모양이 달라야 한다: 어제(v4.03 이전 · v3.5 일정 탭 계열) 구조를 되살리고 AX-TDS 토큰만 맞춘다.
    위 [목록 | 시간표] 아래 = [전체 | 나의 일정] 세그먼트(분류 칩 · 「신청 가능」 칩은 목록에만).
    행 = 공용 행 카드(rcHtml) · 왼쪽 시간 칸(시작 + ~끝) · 제목 한 줄만 닫힌 행 · 누르면 설명 · 시간 · 장소 · 참여 방식 · 상세 버튼 펼침.
    내 항목 = 연주황(brandSoft) 틴트 · 진행 중 = 주황 테두리 + 「진행 중」 · 지난 행 = inset 면 · 커피챗은 맨 아래 「시간 미정」. */
 /* 상담 두 가지는 시각이 아니라 운영 시간 안에 신청하는 것 · 시간표에는 운영 시간 한 줄로 · 포토부스(대기 번호)는 목록 「신청 가능」 몫 */
-var TL_SPAN = [
-  { time: "09:30", end: "16:30", title: "AX LOUNGE 상담", place: "1F AX LOUNGE", pid: "dap", short: "운영 시간 안에 30분 1:1 상담", tag: "신청제" },
-  { time: "", end: "", title: "AX 커피챗", place: "18F", pid: "cchat", short: "시간은 매칭 후 앱에서 안내", tag: "아이디어 제출 후 신청" }   /* v4.13 ⓛ 시각 미정 · 시간표 맨 아래 「시간 미정」 */
-];
 /* v4.93 (261001 사용자 확정 · IA 검토 A1) 탭 맨 위 = [시간표 | 상시 운영] · 옛 [전체 | 나의 일정](progTT)은 걷었다(나의 일정 = 나의 참여 맨 위 한 곳) */
 function progSeg(g) { PROG.seg = g === "always" ? "always" : "time"; PROG.scroll = 0; App.render(); window.scrollTo(0, 0); if (PROG.seg === "time") progFlowScroll(); }
 function progAlwaysGo() { PROG.seg = "always"; PROG.scroll = 0; PROG.anchor = "zone1f"; App.tab("guide"); }   /* 점심 줄 · 나의 일정 빈 상태 · 옛 「신청할 수 있는 프로그램 보기」 */
-function progTTOpen(k) { PROG.ttOpen[k] = !PROG.ttOpen[k]; App.render(); }
-/* 전체 시간표의 행이 내 것인가 · 17F 강연(출석) · 10F 실습형(사전 신청) · 과제상담 · 커피챗 */
-function progTTMine(pid) {
-  if (!pid || pid === "photo") return false;
-  if (attProg(pid)) return !!attMineAt(pid);   /* v4.26 17F 는 출석한 것만 */
-  if (pid === "#실습") return SESSIONS.some(function (s) { return s.fl === 10 && !!sessMine(s.id); });
-  return progMine(pid);
-}
-function progTTMineLbl(pid) {
-  if (attProg(pid)) return "출석 완료 · " + attMineAt(pid);
-  if (pid === "#실습") return "사전 신청 완료";
-  if (pid === "dap") { var r = myResv(); return (r && RESV_ST[r.status]) || "신청 완료"; }
-  if (pid === "cchat") { var c = S.get("cchat", null); return c && c.status === "matched" ? "매칭 완료" : "매칭 대기"; }
-  var m = sessMine(pid); return m && m.pre ? "사전 신청 완료" : "신청 완료";
-}
-/* v4.16 (사용자 지적 260922) 내 항목은 틴트만으로 뜻이 전해지지 않는다 · 닫힌 행에 짧은 글자 칩을 더한다(상태는 글로도 알린다) */
-function progTTMineChip(pid) {
-  if (attProg(pid)) return "출석";
-  if (pid === "cchat") { var c = S.get("cchat", null); return c && c.status === "matched" ? "매칭됨" : "매칭 대기"; }
-  if (pid === "dap") { var r = myResv(); return (r && RESV_ST[r.status]) || "신청함"; }
-  return "신청함";
-}
 /* v4.91 (사용자 261001 「아코디언을 펼치고 가는 것보다 자세히 보기로 한 번에」) 줄을 누르면 바로 그 상세로 · 이동 표시 = 오른쪽 셰브론(CHEV_SVG)
    갈 곳이 없는 줄은 누를 수 없고, 펼침에만 있던 한 줄(누가 · 무엇)을 제목 아래에 둔다 · v4.99 Intro · Outro 도 상세 한 장으로 간다(TL_PROG intro · outro) */
 function progTTRow(k, o) {
   return rcHtml({ cls: o.cls + (o.go ? "" : " na"), onclick: o.go || "", link: !!o.go, chev: o.go ? undefined : false, left: tokBadge(o.t0, o.tok, o.t1 ? "~" + o.t1 : null),
     title: esc(o.title) + (o.mine ? '<span class="ax-sr-only"> · 나의 일정</span>' : ""), badges: o.badge || "", sub: o.sub ? esc(o.sub) : "" });
-}
-function progTTBody(desc, kv, go, lbl) {
-  return '<div class="axs-ttb">' + (desc ? '<p class="ax-description">' + esc(desc) + "</p>" : "") +
-    '<dl class="axs-kv">' + kv.filter(function (r) { return r[1]; }).map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl>" +
-    (go ? '<button type="button" class="ax-button ax-button-weak" onclick="' + go + '">' + lbl + "</button>" : "") + "</div>";
 }
 function progSegHtml() {
   var g = PROG.seg === "always" ? "always" : "time";
@@ -5656,34 +5490,6 @@ function progState(s) {
     return !c ? (ideaMineN() ? ["신청 가능", ""] : ["아이디어 제출 후 신청", ""]) : c.status === "matched" ? ["매칭 완료", "ok"] : ["매칭 대기", "ok"];
   }
   return ["", ""];
-}
-var PROG_ROW = {
-  key: ["기조연설", "AI 환경 · 전략"], road: ["내부 강연", "현대해상 AX 로드맵"],
-  dap: ["AX LOUNGE 상담", "DAP 과제상담 · 1:1 30분"], cchat: ["AX 커피챗", "멘토와 가벼운 시간 · 아이디어 제출 후 신청"], expo: ["1F 부스", "AX VISION · AX LAB · AX in Action · AX PLAY · AX LOUNGE · EVENT"],
-  photo: ["AI 포토부스", "현장 대기 번호 받기"]
-};
-/* v4.13 ⓚ (사용자 260922) 앱에서 신청·대기를 받는 것 · 「신청 가능」 칩을 켜면 이것만 · 목록 · 시간표 공통 · 포토부스는 칩을 켰을 때만 목록에
-   v4.26 (사용자 확정 260924) 17F 오후 강연(l1 · l2)은 자유 참석 · 신청·대기는 1F DAP 과제상담 · 1F 포토부스 · 18F 커피챗뿐 */
-var PROG_APPLY = ["dap", "cchat", "photo"];
-function progPass(s) { var cat = PROG.cat || "all"; return (cat === "all" || PROG_CAT[s.id] === cat) && (!PROG.open || PROG_APPLY.indexOf(s.id) >= 0); }
-function progOpenOnly() { PROG.open = !PROG.open; App.render(); }
-/* 내 일정의 두 버튼 · 프로그램 [목록] + 「신청 가능」 켠 상태 */
-function progAppGo() { progAlwaysGo(); }   /* v4.93 신청할 수 있는 곳 = 프로그램 › 상시 운영(옛 시간표 아래 메뉴 pmenu 폐지) */
-function progPhotoState() {   /* 프로그램 행 상태 칩(옛 photoState 는 일정 행 문구 · 이름 겹침 주의) */
-  var pq = photoQ();
-  if (pq && pq.status === "call") return ["입장 차례 · " + pq.no + "번", "ok"];
-  if (pq && pq.status === "wait") return ["대기 중 · " + pq.no + "번", "ok"];
-  return ["대기 접수 가능 · 지금 " + (photoPub().waiting || 0) + "팀", ""];
-}
-function progRowHtml(s) {
-  var st = s.id === "photo" ? progPhotoState() : progState(s), rw = PROG_ROW[s.id] || [s.ttl, s.sub];
-  var meta = s.id === "expo" ? "자유 관람 · 1F 로비" : s.tm ? progTm(s.tm) + " · " + progPlaceShort(s) : progPlaceShort(s) + " · 시간은 매칭 후 앱에서 안내";
-  var app = PROG_APPLY.indexOf(s.id) >= 0;   /* 신청형 = 늘 상태 칩(신청 가능 / 마감 / 신청 완료) · 자유 입장 · 안내 전용은 글 한 줄 그대로 */
-  return '<button type="button" class="ax-program-row axs-prow" onclick="' + (s.id === "photo" ? "App.go(\'photoq\')" : "progOpen(\'" + s.id + "\')") + '">' +
-    '<span class="ax-floor">' + s.fl + "F</span>" +
-    '<span class="axs-tx"><span class="ax-card-title">' + esc(rw[0]) + '</span><span class="ax-description">' + esc(rw[1]) + "</span>" +
-    '<span class="ax-meta">' + esc(meta) + "</span>" +
-    (app ? '<span class="axs-chip axs-self' + (st[1] ? " " + st[1] : "") + '">' + esc(st[0]) + "</span>" : '<span class="axs-st ' + st[1] + '">' + esc(st[0]) + "</span>") + "</span></button>";
 }
 function progBtn(lbl, on, cls, id, dis) {
   return '<button type="button" class="ax-button' + (cls ? " " + cls : "") + '"' + (id ? ' id="' + id + '"' : "") + (dis ? " disabled" : ' onclick="' + on + '"') + ">" + lbl + "</button>";
@@ -6039,11 +5845,6 @@ function myAgendaHtml() {
    층별 안내(progOpenFl · 존 스크롤)는 그 전 v47에서 이미 폐기됐다. */
 function progGoFl(n) { PROG.fl = n; PROG.cat = "all"; PROG.tt = "all"; PROG.seg = "time"; App.go("guide"); }   /* v4.84 목록 보기 폐지 · 층 진입도 시간표(전체) */   /* v4.05 층 → P01 필터 */   /* 다른 화면에서 특정 층으로 진입 (스탬프 03 등) */
 
-function menuItem(target, no, title, desc, badge) {
-  return '<div class="mi" onclick="App.go(\'' + target + '\')"><span class="no">' + no + '</span>' +
-    '<span class="tt"><b>' + title + "</b>" + (desc ? "<p>" + desc + "</p>" : "") + "</span>" +
-    (badge || "") + '<span class="arw">' + CHEV_SVG + "</span></div>";
-}
 
 
 /* ════════════════ 홈 조각 · 상시 블록 6개, 나머지는 해당될 때만 ════════════════ */
@@ -6299,7 +6100,6 @@ function tourInvDone() { S.put("tour_inv", true); }
 function tourInvGo() { tourInvDone(); sheetClose(true); tourOpen(); }
 /* 다른 질문(알림 첫 질문 등)은 초대를 기다리는 홈 · 둘러보기를 여는 중 · 열려 있는 동안 미룬다 */
 function tourInvHold() { return (tourInvOk() && App.current === "home") || TOUR.busy || !!(window.AXTour && AXTour.isOpen()); }
-var TOUR_SVG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M12 3l9 4.5-9 4.5-9-4.5z"/><path d="M3 12l9 4.5 9-4.5"/><path d="M3 16.5l9 4.5 9-4.5"/></svg>';
 var TOUR_HOST = {
   sign: function (nm, big) { return zoneSign(nm, big ? "lg" : ""); },
   zone: function (id) {
@@ -6412,29 +6212,6 @@ function trdHide() {
 /* ════════════════ 일정 탭 행 (v3.5) · 좌측 시간 레일 + 우측 제목 · 부가 설명은 공용 아코디언 접힘 ════════════════ */
 /* v3.21 일정 탭 = 세 탭: all 전체 일정(시간표만) / always 상시 프로그램 / mine 내 일정 */
 var SCHED = { open: {}, tab: "all" };
-function schedToggle(k) { SCHED.open[k] = !SCHED.open[k]; App.render(); }
-function schedTab(t) { SCHED.tab = t; App.render(); }
-/* 상시 프로그램 = 운영 시간 안에 아무 때나 들르는 것 · 다이어트 원칙: 이 3개 외 추가 금지 */
-var SCHED_ALWAYS = [
-  { id: "cchat", time: "", end: "", title: "AX 커피챗", tag: "매칭 후 안내", place: "18F" },
-  { id: "dap", time: "09:30", end: "16:30", title: "AX LOUNGE 상담", tag: "신청제", place: "1F AX LOUNGE" },
-  { id: "photo", time: "10:00", end: "17:00", title: "AI 포토부스", tag: "대기열", place: "1F EVENT" }
-];
-/* 상시 행 · 현재 상태 한 줄 + 펼침 본문 */
-function alwaysState(id) {
-  if (id === "cchat") {
-    var cc = S.get("cchat", null);
-    if (cc && cc.status === "matched") return ["매칭 완료 · " + cc.round + " TABLE " + cc.table, "", "App.go('ev_cchat')", "내 커피챗 보기"];
-    if (cc) return ["매칭 대기 중", "", "App.go('ev_cchat')", "내 커피챗 보기"];
-    return ideaMineN() ? ["신청 가능 · 아이디어 제출 완료", "", "App.go('ev_cchat')", "커피챗 신청하기"] : ["아이디어 제출 후 신청", "", "App.go('ideas')", "아이디어 쓰기"];
-  }
-  if (id === "dap") {
-    var mr = myResv();
-    if (mr && RESV_LIVE.indexOf(mr.status) >= 0) return ["내 상담 " + mr.slot, "시작 5분 전 AX LOUNGE 체크인", "App.go('dap')", "내 상담 보기"];
-    return ["잔여 슬롯 " + resvRemain(), "1:1 30분", "App.go('dap')", "상담 신청"];
-  }
-  return photoState();
-}
 /* ══ v3.21 B · AI 포토부스 원격 대기열 (앱) ══
    서버(photo_take·photo_cancel·q_call·q_skip·q_done)가 정본 · sync 가 my.photoQ(번호·상태·앞 팀·예상 시각)와 공개 요약(photo)을 내려준다.
    푸시가 없으므로 번호표에 「예상 입장 시각」과 「앞 팀 수」를 가장 크게 · 앞 2팀 이하면 앱 안 알림 1회(checkMyState).
@@ -6536,14 +6313,6 @@ function photoQueueHtml() {
   }
   return '<div class="pq dim"><p class="k">지금 대기</p><p class="big">' + wait + '팀</p><p class="s">약 ' + wait * PHOTO.MIN + "분 · 촬영 2~3분 · 현장 출력</p></div>";
 }
-function photoState() {
-  var q = photoQ(), pub = photoPub();
-  var line = q && q.status === "call" ? "지금 입장하세요 · " + q.no + "번" :
-    q && q.status === "wait" ? "내 번호 " + q.no + "번 · 예상 입장 " + q.eta :
-      q && q.status === "skip" ? "건너뛴 번호 · 다시 줄 서기 가능" :
-          "지금 대기 " + (pub.waiting || 0) + "팀 · 약 " + (pub.waiting || 0) * PHOTO.MIN + "분";
-  return [line, "촬영 2~3분 · 현장 출력", null, null];
-}
 /* 시간·층 라벨 뱃지 (v3.9 공용) · state: "" 기본(옅은 주황+짙은 주황) / dim 지나감 / act 진행 중(검정) / mine 틴트 행 대비용 O25.
    v3.17: sub 를 주면 두 줄 변형(시작 크게 + 종료 작게, 같은 뱃지 배경·상태 색 안) · 한 줄 사용처는 그대로 */
 function tokBadge(text, state, sub) {
@@ -6570,11 +6339,6 @@ function isBlack(kind) { return blackPick(App.current) === kind; }
          open, body(펼침), link(true = 펼침 대신 이동 · 화살표 ›), chev(false = 화살표 없음) }
    컴포넌트를 바꾸면 이 함수를 쓰는 모든 화면이 함께 바뀐다 (design.md 컴포넌트 일관성) */
 /* v3.44 장소 칩 폭 추정 · 제목 줄 오른쪽 여백으로 쓴다(칩이 제목을 덮지 않게) */
-function rcPlaceW(t) {
-  var w = 22; t = String(t || "");
-  for (var i = 0; i < t.length; i++) w += /[\u1100-\uFFFF]/.test(t.charAt(i)) ? 11.5 : 6.6;
-  return Math.round(Math.min(w, 88));   /* v3.63 칩 상한을 낮춰 제목 자리를 먼저 지킨다 · 넘치면 칩이 말줄임 */
-}
 function rcHtml(o) {
   var chev = o.chev === false ? "" : o.chev === "svg" ? '<span class="chev axs-ttc' + (o.open ? " up" : "") + '" aria-hidden="true">' + CHEV_SVG + "</span>" :   /* v4.15 시간표 펼침 = 아래 셰브론(펼치면 위) */
     o.link ? '<span class="chev arw">' + CHEV_SVG + "</span>" : '<span class="chev">' + (o.open ? "▲" : "▼") + "</span>";
@@ -6596,44 +6360,9 @@ function rcIcon(svg) { return '<span class="ico">' + svg + "</span>"; }
    일정 탭은 시간순이 기본이고, 이 카드 하나만 예외로 「같은 시간대 묶음」이다 (design.md).
    왼쪽 = 17F 오후 파트너사 강연(자유 참석 · QR 출석 · v4.26) · 오른쪽 = 10F 실습형 세션(사전 신청자) · 커피챗·상담·포토부스는 상시 탭 몫이라 넣지 않는다.
    큰글씨 모드에서는 두 칸이 깨지므로 위아래로 쌓고 「동시 진행」 묶음 표시를 유지한다. */
-var PAR_PM = {
-  time: "13:30", end: "16:40",
-  tracks: [
-    { fl: 17, place: "17F 대강당", nm: "17F 파트너사 강연", note: "자유 참석 · QR 출석", ids: ["l1", "l2"],
-      items: [["파트너사 강연 · AWS", "13:30~15:00"], ["파트너사 강연 · MS", "15:10~16:40"]] },
-    { fl: 10, place: "10F", nm: "10F 실습형 세션", note: "사전 신청자", ids: [],
-      items: [["세션 A~E 중 1개", "13:30~16:30"]] }
-  ]
-};
-function parCardHtml(ph) {
-  var m0 = t2m(PAR_PM.time), m1 = t2m(PAR_PM.end), hm = new Date().getHours() * 60 + new Date().getMinutes();
-  var nowRow = TIMELINE[nowIdx()] || null;
-  var now = ph === "live" && !!nowRow && nowRow.par;
-  var past = ph === "after" || (ph === "live" && t2m(nowRow ? nowRow.time : "00:00") > m1);
-  var nowBlack = now && isBlack("now");
-  var stack = fsGet() > 1;   /* 큰글씨 = 위아래로 */
-  var tracks = PAR_PM.tracks.map(function (tr) {
-    var mine = tr.ids.some(function (id) { return attProg(id) ? !!attMineAt(id) : !!sessMine(id); });
-    return '<button class="par-t' + (mine ? " my" : "") + '" type="button" onclick="progGoFl(' + tr.fl + ')">' +
-      '<span class="hd"><b>' + esc(tr.nm) + "</b>" + (mine ? '<span class="badge mint">나의 일정</span>' : "") + "</span>" +
-      tr.items.map(function (it) { return '<span class="it">' + esc(it[0]) + "<small>" + esc(it[1]) + "</small></span>"; }).join("") +
-      '<span class="nt">' + esc(tr.note) + "</span></button>";
-  }).join("");
-  return '<div class="rc par' + (nowBlack ? " now" : past ? " past" : "") + '">' +
-    '<div class="rh"><span class="ls">' + tokBadge(PAR_PM.time, nowBlack ? "act" : past ? "dim" : "", "~" + PAR_PM.end) + "</span>" +
-    '<span class="bd"><span class="tr"><b class="tt">동시 진행</b><span class="bgs">' +
-    (now ? '<span class="badge ' + (nowBlack ? "ink" : "mint") + '">진행 중</span>' : "") + "</span></span></span></div>" +
-    '<div class="par-g' + (stack ? " stack" : "") + '">' + tracks + "</div></div>";
-}
-function schedRow(key, cls, tok, t0, t1, titleHtml, bodyHtml, subHtml, place, badges) {
-  var open = !!SCHED.open[key];
-  return rcHtml({ cls: cls, onclick: "schedToggle('" + key + "')", left: tokBadge(t0, tok, t1 ? "~" + t1 : null),
-    title: titleHtml, badges: badges, sub: subHtml, open: open, body: bodyHtml, place: place });
-}
 
 /* ════════════════ 스탬프 카드 아코디언 (v3.2 · 경로 메타포 폐기) · 전폭 카드 · 각자 독립 개폐 ════════════════ */
 var PP = { open: {}, animOn: false, just: {} };   /* v4.06 just = 방금 적립한 시각(이 화면 세션) */
-function ppToggle(id) { PP.open[id] = !PP.open[id]; App.render(); }
 /* ── 테스트 모드 (v3.19) · 노출 = 데모(#demo, BE off) 또는 테스트 사번 로그인.
    관리자 인증만으로는 노출하지 않는다: 실서버 stamp_grant 완료 버튼은 사후 추첨 원장 오염 위험이 있어 제외(310555 로 충족).
    310555 = 하이브리드 테스트 계정: 서버 로그인·공지·신청은 실제로 동작하되 스탬프·보상만 이 기기 로컬. */
@@ -6968,120 +6697,6 @@ function stampVerSet(v) {
   return chg;
 }
 stampVerSet(S.get("stv", 2) === 1 ? 1 : 2);
-function ppNextHtml(id) {
-  var st = S.get("stamps", []), c = PP_NEXT[id] || [];
-  for (var i = 0; i < c.length; i++) {
-    var n = c[i];
-    if (st.indexOf(n) >= 0) continue;
-    if (n === "sv" && surveyLock()) continue;
-    var lb = { p1: "1F 전시 · QR 스캔", p2: "AX PLAY · 안내", p7: "전시 QR 퀴즈 · QR 스캔", sv: "오늘 한 판 설문", p5: "아이디어 쓰기" }[n];
-    var go = { p1: "expGuide('p1')", p2: "expGuide('p2')", p7: "expGuide('p7')", sv: "App.go('survey')", p5: "App.go('ideas')" }[n];
-    return '<button class="btn line" style="margin-top:8px" onclick="' + go + '">' + lb + "</button>";
-  }
-  return "";
-}
-function stampInnerHtml(s) {
-  /* v3.54 문구 규칙 · 본문은 desc 만 (where 는 부제) */
-  var inner = '<p class="d">' + s.desc + "</p>" +
-    (s.note ? '<p class="nt">' + s.note + "</p>" : "");
-  if (PP.just[s.id] && S.get("stamps", []).indexOf(s.id) >= 0 && s.id !== "st") return '<p class="d">방금 적립 · ' + PP.just[s.id] + "</p>" + ppNextHtml(s.id);
-  if (s.id === "sv") {
-    var dn = surveyDone(), lk = surveyLock(), dr = S.get("survey_draft", null);
-    inner = '<p class="d">' + s.desc + "</p>" +
-      (dn ? '<p class="d">제출 완료</p><button class="btn line" style="margin-top:10px" onclick="App.go(\'survey\')">내가 고른 것 · 전체 비율 보기</button>' :
-        lk === "time" ? '<button class="btn" style="margin-top:10px" disabled>' + SURVEY.open + "에 열려요</button>" :
-        lk === "nostamp" ? '<button class="btn" style="margin-top:10px" disabled>스탬프를 하나 모으면 열려요</button>' :
-          '<button class="btn mint" style="margin-top:10px" onclick="App.go(\'survey\')">' + (dr ? "이어 하기 · " + Math.max(1, Math.min(dr.step || 1, SURVEY_Q.length)) + " / " + SURVEY_Q.length : "설문 시작") + "</button>");
-    if (testMode()) {
-      inner += S.get("stamps", []).indexOf(s.id) < 0
-        ? '<button class="btn test" onclick="testStamp(\'' + s.id + '\')">테스트 · 완료 처리</button>' +
-          (lk === "time" ? '<button class="btn test" onclick="S.set(\'survey_force\', true); App.render()">테스트 · 잠금 풀기</button>' : "")
-        : '<button class="btn test" onclick="testStampUndo(\'' + s.id + '\'); S.set(\'survey_done\', false); S.set(\'survey_mine\', null)">테스트 · 완료 취소</button>';
-    }
-    return inner;
-  }
-  if (s.id === "st") {
-    /* v4.06 계단 B안 · 누적 게이지 · 진행 중 한 줄 · 안전 문구 · 계단 화면 / 안내로 */
-    var sst = stairState();
-    inner = '<p class="d">' + s.desc + "</p>" + stairGauge(sst.total || 0, sst.goal || 1) +
-      (sst.leg ? '<p class="nt">진행 중 · ' + sst.leg.fl + "F 시작 · " + esc(sst.leg.at || "") + "</p>" : "") +
-      '<p class="nt">' + STAIR_SAFE + "</p>" + scanQNote() +
-      '<button class="btn mint" style="margin-top:10px" onclick="stairOpen()">' + (sst.leg ? "진행 화면 보기" : "계단 안내") + "</button>" +
-      '<p class="lnk sub" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</p>";
-  } else if (s.id === "p3") {
-    /* v3.52 · 세 가지 중 하나 · 바로가기 3개 · 17F 출석 QR(v4.26 · 옛 좌석 QR 폐지) · 담당자 적립 */
-    inner += '<div class="p3-go">' +
-      '<button class="btn mint" onclick="progGoFl(17)">17F 강연</button>' +
-      '<button class="btn mint" onclick="App.go(\'dap\')">AX LOUNGE 상담</button>' +
-      '<button class="btn mint" onclick="App.go(\'ev_cchat\')">AX 커피챗</button></div>' + scanQNote() +
-      '<button class="btn line" style="margin-top:8px" onclick="scanOpen(\'a17\')">17F 출석 QR 스캔</button>' +
-      '<p class="lnk sub" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</p>";
-  } else if (s.id === "p4") {
-    /* v3.50 · AX 올림픽 허브 · 종목 행 카드 · 내 환산 점수·메달 · 총점 · v4.63 3종목 진행 한 줄 · v4.83 미니 게임 3종만(퀴즈는 qz 카드) */
-    inner += (S.get("stamps", []).indexOf("p4") >= 0 ? "" : '<p class="d">종목 ' + Math.min(MG_NEED, mgDone()) + " / " + MG_NEED + "</p>") +
-      '<div class="oly-hub">' + olyHubHtml(true) + "</div>";
-  } else if (s.id === "qz") {
-    /* v4.83 AX 퀴즈 · O/X · 기억력 두 행(순위 없음 · 내 최고만) */
-    inner += (S.get("stamps", []).indexOf("qz") >= 0 || QZ_NEED <= 1 ? "" : '<p class="d">종목 ' + Math.min(QZ_NEED, qzDone()) + " / " + QZ_NEED + "</p>") +
-      '<div class="oly-hub">' + quizHubHtml(true) + "</div>";
-  } else if (s.auto) {
-    /* v4.83 최초 로그인 · 버튼 없음(로그인 뒤 앱이 서버에 한 번 알리고 서버가 계정을 확인해 적립) */
-  } else {
-    /* v3.12: 적립방식(how) 뱃지 삭제 · 참여자에게 필요한 건 desc 와 바로가기뿐 */
-    inner += '<button class="btn mint" style="margin-top:10px" onclick="' + s.tap + '">' + s.cta + "</button>";
-    if (s.site) {
-      inner += scanQNote();   /* v3.34b 저장된 스캔이 있으면 한 줄 */
-      /* v3.1: 현장 적립형(01·02·03)은 QR 스캔·담당자 적립을 카드 안에서 바로 (보조 카드 폐지) · v4.83 스태프 인증(AX PLAY)은 참가자가 찍을 QR 이 없다 */
-      if (s.tap !== "qrScanOpen()" && !s.staff) inner += '<button class="btn line" style="margin-top:8px" onclick="qrScanOpen()">QR 스캔</button>';
-      /* v3.12: 예외 경로는 최하위 회색 텍스트 링크 (design.md 보조 대안 행동 규정) */
-      inner += '<p class="lnk sub" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</p>";
-    }
-    if (s.id === "p5") {
-      var mine5 = S.get("ideas", []).filter(function (x) { return x.empId === (S.get("user", {}) || {}).empId; }).length;
-      if (mine5) inner += '<p class="lnk" onclick="App.go(\'ideas_mine\')">' + lnkChev("내가 낸 아이디어 " + mine5 + "건") + "</p>";
-    }
-  }
-  /* v3.19 테스트 · 완료 처리 (미완료 카드) · v3.28 테스트 · 완료 취소 (완료 카드) · 데모·테스트 사번에서만 */
-  if (testMode()) {
-    inner += S.get("stamps", []).indexOf(s.id) < 0
-      ? '<button class="btn test" onclick="testStamp(\'' + s.id + '\')">테스트 · 완료 처리</button>'
-      : '<button class="btn test" onclick="testStampUndo(\'' + s.id + '\')">테스트 · 완료 취소</button>';
-  }
-  return inner;
-}
-/* 스탬프 카드 = 공용 행 카드(.rc) · 미완료 = 회색(dim) · 완료 = 틴트(done) + 우측 도장 56px · 다음 추천 = next */
-function scardHtml(s, got, isNext, newly) {
-  var isNew = newly.indexOf(s.id) >= 0;
-  /* v3.8: 번호 표시 삭제(순서 개념 없음) · 완료 = 우측 「완료」 고무도장 (체크 대체 · 펀치 애니는 도장에서 재생) */
-  return rcHtml({
-    cls: (got ? " done" : isNext ? " next" : " dim"),
-    onclick: "ppToggle('" + s.id + "')",
-    left: rcIcon(STAMP_ICONS[s.id]),
-    title: s.title, sub: got && PP.just[s.id] ? "방금 적립 · " + PP.just[s.id] : s.id === "sv" && !got && surveyLock() === "time" ? SURVEY.open + "에 열려요" : s.id === "sv" && !got && surveyLock() === "nostamp" ? "스탬프를 하나 모으면 열려요" : (isNext ? '<b class="nxt">다음 추천</b>' + (s.where ? " · " : "") : "") + s.where,
-    right: got ? stampMarkHtml(false) : "",
-    open: !!PP.open[s.id], body: stampInnerHtml(s)
-  });
-}
-function stampCardsHtml(st, newly) {
-  var by = {};
-  STAMPS.forEach(function (s) { by[s.id] = s; });
-  var done = [], todo = [];
-  PP_ORDER.forEach(function (e) {
-    var s = by[e[0]];
-    if (!s) return;
-    (st.indexOf(s.id) >= 0 ? done : todo).push([s, e[1]]);
-  });
-  var full = stampCount() >= STAMP_DENOM;   /* v4.58 6개 한도 도달 · 남은 카드는 흐린 채로 · 다음 추천 없음 */
-  var next = todo.length && !full ? todo[0][0].id : null;   /* 다음 추천 = 미완료 그룹 첫 카드 */
-  var out = '<div class="sect" style="margin-top:14px"><b>스탬프 ' + STAMPS.length + '종</b><span>' + (full ? STAMP_DENOM + "개 모두 모았어요" : "아무거나 " + STAMP_DENOM + "개") + "</span></div>";
-  done.forEach(function (e) { out += scardHtml(e[0], true, false, newly); });
-  var cap = null;
-  todo.forEach(function (e) {
-    if (e[1] && e[1] !== cap) { cap = e[1]; out += '<p class="scap">' + cap + "</p>"; }   /* v4.83 새 8종은 묶음 제목 없음 */
-    out += scardHtml(e[0], false, e[0].id === next, newly);
-  });
-  return out;
-}
 /* 보상 레일 (v3.1) · 사다리 카드+룰렛 쿠폰 카드를 한 줄로. 마커 3=룰렛(탭=쿠폰 모달) · 4~6=응모(탭=추첨 안내 모달).
    v3.2: 레일은 6단이다(v4.58 다시 6단 · 6개가 한도 · 칸 끝 = 6). 1·2 지점에도 보상 없는 회색 틱을 둬서 1~2개인 사용자도 진행이 레일 위에 찍혀 보이게 한다.
    홈·스탬프 탭 공용 컴포넌트 (design.md 컴포넌트 일관성) · home=true 는 컴팩트 변형(캡션 축약 + 하단 CTA)일 뿐 시각 문법은 동일. */
@@ -7299,26 +6914,6 @@ function betaFormOpen() {
 }
 /* v4.13 홈 「전체 시간표」 = 프로그램 탭 시간표 보기(design.md A-5 5-10) · 분류는 전체로 · 진행 중이면 그 줄이 보이게 */
 function homeSched() { PROG.mode = "time"; PROG.cat = "all"; PROG.tt = "all"; PROG.seg = "time"; PROG.open = false; PROG.scroll = 0; App.tab("guide"); }
-function homeNowGo() { homeSched(); var n = document.querySelector(".axs-tl.now"); if (n) n.scrollIntoView({ block: "center" }); }
-function homeNowHtml() {
-  var ph = evPhase(), t, chip, chipCls = "", meta, title, desc, time, label, go;
-  if (ph === "after") {
-    chip = "종료"; chipCls = " off"; meta = ""; title = "행사가 끝났습니다"; desc = finState() ? "참여상 결과 · 내 보상" : ""; time = "";   /* v5.04 옛 사후 추첨 안내 폐기 */
-    label = "내 보상 보기"; go = "App.go('rewards')";
-  } else {
-    if (ph === "live") { t = TIMELINE[nowIdx()]; chip = "진행 중"; label = "진행 중인 프로그램 보기"; go = "homeNowGo()"; }
-    else {
-      for (var i = 0; i < TIMELINE.length; i++) if (!TIMELINE[i].off && !TIMELINE[i].always) { t = TIMELINE[i]; break; }
-      chip = "첫 순서"; label = "전체 시간표 보기"; go = "homeSched()";
-    }
-    meta = t.place; title = t.title; desc = t.short || t.desc; time = (ph === "live" ? "" : "10월 26일 ") + t.time + " – " + t.end;
-  }
-  return '<section class="ax-card ax-card-elevated">' +
-    '<div class="axs-chiprow"><span class="axs-chip' + chipCls + '">' + chip + "</span>" + (meta ? '<span class="ax-meta">' + esc(meta) + "</span>" : "") + "</div>" +
-    '<div class="ax-stack-tight"><h2 class="ax-type-t2">' + esc(title) + "</h2>" +
-    (desc ? '<p class="ax-description">' + esc(desc) + "</p>" : "") + (time ? '<p class="ax-type-t6-strong">' + time + "</p>" : "") + "</div>" +
-    '<button type="button" class="ax-button" onclick="' + go + '">' + label + "</button></section>";
-}
 
 /* ── 나의 참여 (M01) · 내 일정 / 스탬프 / 내 보상 / 포토부스 대기 + 내 QR 보여주기(보조 버튼 · 유일한 내 QR 입구) ── */
 function mySched() { SCHED.tab = "mine"; App.go("guide_time"); }
@@ -7376,13 +6971,6 @@ function prizePhHtml(p, w) {
   var im = function (n) { return '<img src="' + PRIZE_DIR + n + '.webp" alt="" width="' + (w || 240) + '" height="' + (w || 240) + '" loading="lazy" decoding="async" onerror="this.remove()">'; };
   return '<span class="axs-ph' + (p.img2 ? " two" : "") + '" aria-hidden="true">' + im(p.img) + (p.img2 ? im(p.img2) : "") +   /* v5.18 img2 = 사진 두 장 나란히 */
     (PRIZE_SAMPLE && p.s !== 0 ? '<span class="smp">샘플</span>' : "") + "</span>";
-}
-function prizeListHtml(kind, sm) {
-  var g = PRIZES[kind]; if (!g) return "";
-  return '<ul class="axs-prz' + (sm ? " sm" : "") + '">' + g.list.map(function (p) {
-    return "<li>" + prizePhHtml(p) + '<span class="tx">' + (p.rk ? '<span class="rk">' + p.rk + "</span>" : "") + "<b>" + esc(p.nm) + "</b></span>" +
-      '<span class="q">' + p.q.toLocaleString() + g.unit + "</span></li>";
-  }).join("") + "</ul>";
 }
 /* 모달 아래 경품 한 줄(룰렛 1회권 · 행운권 · 참여상 안내) · v5.08 옛 목록 대신 대표 사진 + 요약 + 「경품 보기」(포스터 그 구역으로) */
 function prizeModalHtml(kind) {
@@ -7529,14 +7117,6 @@ function stampGoalText(n) {
   if (n < 3) return (3 - n) + "개 더 모으면 룰렛 1회";
   if (n < STAMP_DENOM) return "1개 더 모으면 행운권 " + raffleTickets(n + 1) + "장" + (n === STAMP_DENOM - 1 && !finLate() ? " · 참여상 추첨" : "");   /* v5.06 6번째 = 참여상 추첨 대상도 되는 칸 · 17:00 뒤(finLate)에는 대상이 아니라 붙이지 않는다 */
   return STAMP_DENOM + "개 모두 모았어요 · 행운권 " + RAFFLE_MAX + "장";
-}
-function stampHeroHtml(n, glow) {
-  /* v4.10 (사용자 결정 260922) 홈과 같은 railHtml 재사용 · M04 숫자 칸 폐기 · 한쪽을 고치면 양쪽이 같이 바뀐다 */
-  var rw = rewItems().filter(function (x) { return !x.used; }).length;
-  return railHtml(n, glow, null, false) +
-    '<button type="button" class="ax-button ax-button-weak" onclick="App.tab(\'exp\')">스탬프 모으러 가기</button>' +
-    axDest("내 보상", "사용 가능한 보상만 따로 확인", rw + "개", "App.go('rewards')") +
-    '<p class="ax-description">완료한 활동은 한 번만 적립돼요.<br>8종 중 ' + STAMP_DENOM + "개를 모으면 끝이에요.</p>";
 }
 
 /* ── v4.84 스탬프 탭(exp) 행 · 번호 · 이름 · 수단 칩 + 한 줄 · 오른쪽 행동 하나 · AX 퀴즈 · 미니 게임은 종목 타일 ── */
@@ -8343,90 +7923,7 @@ function crowdSend(t, a) {
   }, function () { CRW.busy = ""; toast("전송 실패 · 다시 눌러주세요"); App.render(); });
 }
 
-/* ── ② 존 혼잡도 · 층을 고르고 존마다 여유 · 보통 · 혼잡 · 20분 넘은 존은 빨간 테두리 ──
- * v4.71 폰에서 진입을 뺐다(코드 보존 · zone_grade · ZONE_IDS 는 그대로) */
-function admZoneHtml() {
-  var sent = S.get("zone_sent", {});
-  var stale = function (z) { return !sent[z.id] || Date.now() - sent[z.id].ts > ZG_STALE; };
-  var fl = '<div class="axs-seg axs-seg4" role="tablist" aria-label="층">' + [1, 10, 17, 18].map(function (n) {
-    var miss = ZONE_GRADE.filter(function (z) { return z.fl === n && stale(z); }).length;
-    return '<button type="button" role="tab" aria-selected="' + (ZG.fl === n) + '" onclick="zgPickFl(' + n + ')">' + n + "F" +
-      '<small class="' + (miss ? "need" : "") + '">' + (miss ? miss + "곳 필요" : "최신") + "</small></button>";
-  }).join("") + "</div>";
-  var rows = ZONE_GRADE.filter(function (z) { return z.fl === ZG.fl; }).map(function (z) {
-    var r = sent[z.id], st = stale(z);
-    return '<section class="ax-card ax-stack-tight axs-gap12 axs-zone' + (st ? " stale" : "") + '">' +
-      '<div class="ax-row"><h2 class="ax-card-title">' + esc(z.nm) + "</h2>" +
-      '<span class="axs-zmeta' + (st ? " bad" : "") + '">' + (!r ? "아직 입력 없음" : esc(r.g) + " · " + zgAgo(r.ts) + (st ? " · 갱신 필요" : "")) + "</span></div>" +
-      '<div class="axs-seg axs-seg3 axs-grade" role="group" aria-label="' + esc(z.nm) + ' 혼잡도">' + GRADE3.map(function (g) {
-        return '<button type="button" aria-pressed="' + !!(r && r.g === g && !st) + '"' + (ZG.busy === z.id ? " disabled" : "") + ' onclick="zgSend(\'' + z.id + '\', \'' + g + '\')">' + g + "</button>";
-      }).join("") + "</div></section>";
-  }).join("");
-  return '<p class="ax-description">담당 존을 15분마다 한 번 눌러 주세요</p>' + fl + rows;
-}
 
-/* ── ③ 내 담당 명단 · 보기 · 입장 처리 · 노쇼 표시(해제)만 · 취소 · 수정 · 승인 · 매칭은 콘솔 ──
- * 서버 staff_roster · staff_mark (관리코드) · 노쇼는 원장을 바꾸지 않는 표시다(좌석 · 슬롯 반환은 콘솔 몫). */
-/* v4.26 17F 오후 강연(l1 · l2)은 자유 참석이라 명단이 없다 · 서버 ROSTER_PROGS 와 같이 뺐다 */
-var ROSTER_PROG = [["dap", "AX LOUNGE 상담"], ["cchat", "AX 커피챗"]];
-var ROSTER = { data: {}, busy: "", loading: "" };
-function rosterProg() { var p = S.get("roster_prog", "dap"); return ROSTER_PROG.some(function (x) { return x[0] === p; }) ? p : "dap"; }
-function rosterPick(p) { S.set("roster_prog", p); App.render(); if (!ROSTER.data[p]) rosterLoad(); }
-function rosterLoad() {
-  var p = rosterProg();
-  if (!BE.on || ROSTER.loading === p) return;
-  ROSTER.loading = p;
-  beCall(admA({ action: "staff_roster", prog: p }), function (res) {
-    ROSTER.loading = "";
-    if (res && res.reason === "auth") { ROSTER.data = {}; admAuthLost(); return; }   /* v4.65 */
-    if (res && res.ok) ROSTER.data[p] = res;
-    else ROSTER.data[p] = { rows: [], n: { all: 0, in: 0, noshow: 0 }, err: res && res.reason === "locked" ? admLockedMsg(res) : "서버가 명단을 주지 않았어요" + (res && res.reason ? " (" + res.reason + ")" : "") };
-    if (App.current === "admin") App.render();
-  }, function () {
-    /* v4.65 (QA 2단계) 실패를 기록해 둔다 · 전에는 비워 둔 채 다시 그려 그리기가 곧바로 다시 불렀다(0.03초마다 요청 · 실측 3초에 100건) */
-    ROSTER.loading = ""; ROSTER.data[p] = { rows: [], n: { all: 0, in: 0, noshow: 0 }, err: "서버 응답이 없어요" };
-    if (App.current === "admin") App.render();
-  });
-}
-function rosterRetry() { ROSTER.data[rosterProg()] = null; rosterLoad(); App.render(); }
-function rosterMark(emp, mark) {
-  var p = rosterProg();
-  if (!BE.on || ROSTER.busy) return;
-  ROSTER.busy = emp; App.render();
-  beCall(admA({ action: "staff_mark", prog: p, emp: emp, mark: mark }), function (res) {
-    ROSTER.busy = "";
-    if (res && res.reason === "auth") { ROSTER.data = {}; admAuthLost(); return; }   /* v4.65 */
-    if (res && res.ok) toast((res.name || emp) + " · " + (mark === "in" ? (res.dup ? "이미 입장 처리됐어요" : "입장 처리했어요") : mark === "noshow" ? "노쇼로 표시했어요" : "노쇼 표시를 풀었어요"));
-    /* v4.16 GAS @87 · DAP 상담 원장 자체가 노쇼면 이 화면에서 풀 수 없다(상담 승인 화면 = 콘솔 몫) */
-    else toast(res && res.reason === "locked" ? admLockedMsg(res) : res && res.reason === "ledger_noshow" ? "상담 승인 화면(CONTROL)에서 처리된 노쇼예요" : res && res.reason === "window" ? "지금은 입장 처리 시간이 아니에요 (" + (res.open || "") + ")" : res && res.reason === "in" ? "이미 입장한 사람이에요" : res && res.reason === "notfound" ? "명단에 없는 사람이에요" : "처리하지 못했어요 · 다시 눌러 주세요");
-    ROSTER.data[p] = null; rosterLoad();
-  }, function () { ROSTER.busy = ""; toast("서버 응답이 없어요 · 다시 눌러 주세요"); App.render(); });
-}
-function rosterRowHtml(r, p) {
-  var sub = [r.dept, p === "dap" ? r.slot : p === "cchat" ? (r.round ? r.round + (r.table ? " · TABLE " + r.table : "") : "매칭 전") : r.src].filter(function (x) { return x; }).join(" · ");
-  var chip = r.st === "입장" ? '<span class="axs-chip ok">입장</span>' : r.st === "노쇼" ? '<span class="axs-chip bad">노쇼</span>' : '<span class="axs-chip flat">' + esc(p === "dap" ? r.raw || "신청" : "신청") + "</span>";
-  var dis = ROSTER.busy ? " disabled" : "", e = esc(r.emp);
-  var ledgerNoshow = p === "dap" && r.raw === "노쇼";   /* v4.16 GAS @87 · 상담 원장 자체가 노쇼면 여기서는 풀 수 없다 */
-  var btn = r.st === "입장" ? "" : '<div class="axs-rbtn"><button type="button" class="ax-button"' + dis + ' onclick="rosterMark(\'' + e + '\', \'in\')">입장 처리</button>' +
-    (r.st !== "노쇼" ? '<button type="button" class="ax-button axs-btn-danger"' + dis + ' onclick="rosterMark(\'' + e + '\', \'noshow\')">노쇼</button>'
-      : ledgerNoshow ? '<p class="ax-meta">상담 승인 화면(CONTROL)에서 처리된 노쇼예요</p>'
-      : '<button type="button" class="ax-button ax-button-weak"' + dis + ' onclick="rosterMark(\'' + e + '\', \'clear\')">노쇼 표시 풀기</button>') + "</div>";
-  return '<article class="axs-rrow"><div class="axs-rhead"><div class="axs-tx"><span class="ax-card-title">' + esc(r.name || r.emp) + '</span><span class="ax-meta">' + esc(sub) + "</span></div>" + chip + "</div>" + btn + "</article>";
-}
-function admListHtml() {
-  var p = rosterProg(), d = ROSTER.data[p];
-  if (!d && BE.on && ROSTER.loading !== p) setTimeout(rosterLoad, 30);
-  var chips = '<div class="ax-filter axs-filter2" role="group" aria-label="담당 프로그램">' + ROSTER_PROG.map(function (x) {
-    return '<button type="button" class="ax-filter-button" aria-pressed="' + (p === x[0]) + '" onclick="rosterPick(\'' + x[0] + '\')">' + x[1] + "</button>";
-  }).join("") + "</div>";
-  var body = !BE.on ? '<p class="ax-description">서버에 연결되면 명단이 보여요</p>' :
-    !d ? botHtml("명단을 불러오는 중이에요", { wait: 1 }) :
-      d.err ? '<div class="axs-err" role="alert"><b>명단을 불러오지 못했어요</b><span>' + esc(d.err) + "</span></div>" +   /* v4.65 빈 명단(「아직 명단이 없어요」)과 구별 */
-        '<button type="button" class="ax-button ax-button-weak" onclick="rosterRetry()">다시 불러오기</button>' :
-      '<div class="ax-row"><p class="ax-meta">신청 ' + d.n.all + " · 입장 " + d.n.in + " · 노쇼 " + d.n.noshow + '</p><button type="button" class="ax-link axs-plain" onclick="ROSTER.data[\'' + p + '\'] = null; rosterLoad(); App.render()">새로고침</button></div>' +
-      (!d.rows.length ? '<p class="ax-description">아직 명단이 없어요</p>' : '<div class="axs-rows ax-stack-tight axs-gap12">' + d.rows.map(function (r) { return rosterRowHtml(r, p); }).join("") + "</div>");
-  return chips + body + '<p class="ax-meta">취소 · 시간 변경 · 매칭은 AXF CONTROL에서 해요</p>';
-}
 
 /* ════════════════ v17 · 알림·승인·매칭·발사 (폴링 기반) ════════════════
  * 진짜 OS 푸시(앱을 닫은 상태)는 GAS 스택으론 불가 · 앱이 열려 있는 기기에
@@ -8437,21 +7934,6 @@ function hhmm(v) {
   return m ? m[1] + ":" + m[2] : String(v == null ? "" : v);
 }
 function notifOK() { return ("Notification" in window) && Notification.permission === "granted"; }
-/* v3.43 · 브라우저 알림은 앱 화면이 열려 있을 때 페이지가 띄우는 알림뿐이다(푸시 없음).
-   안드로이드 크롬은 페이지 알림을 막고 아이폰 무설치 사파리는 API 가 없어, 휴대폰에서는 버튼을 숨기고 PC 에서만 보인다 */
-function notifDesktop() {
-  var u = navigator.userAgent || "";
-  if (!("Notification" in window)) return false;
-  if (/Android|iPhone|iPad|iPod|Mobile|SamsungBrowser/i.test(u) || isIOS()) return false;
-  if (navigator.maxTouchPoints > 1 && /Macintosh/i.test(u)) return false;   /* iPadOS 데스크톱 UA */
-  return true;
-}
-function notifAsk() {
-  if (!("Notification" in window)) { toast("이 브라우저는 알림을 지원하지 않습니다."); return; }
-  Notification.requestPermission().then(function (r) {
-    toast(r === "granted" ? "브라우저 알림이 켜졌습니다." : "알림이 허용되지 않았습니다.");
-  });
-}
 function notifyUser(title, body, target, focus) {
   try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate([80, 40, 80]); } catch (e) {}   /* 상호작용 전 차단 경고 방지 */
   if (notifOK()) { try { new Notification(title, { body: body }); } catch (e) {} }
@@ -9331,8 +8813,6 @@ function mtWordsHtml() {   /* 휴면 · SURVEY_FEATURES.words (끄면 1F 월에 
   return '<p class="lb">오늘을 한 단어로 · ' + (a.min || 5) + "명 이상 고른 단어</p>" +
     a.words.slice(0, 8).map(function (w, i) { return '<span class="w' + (i < 3 ? " top" : "") + '">' + esc(w.w) + "</span>"; }).join("");
 }
-/* v4.06 옛 이름 호환 · 결과 처리는 boothDone (3단계 절) */
-function stampClaimDone(res, late) { boothDone(res, late, ""); }
 /* 서버가 준 목록으로 로컬을 맞춘다 (sync 응답에서도 같은 함수를 쓴다).
    정의 밖 id(구 p6·p8, 계단 p9 등)는 버린다 · 표시·보상 계산과 어긋나지 않게 (260909) */
 function stampSync(list) {
@@ -10203,7 +9683,6 @@ function qrPanelOpen(tab) {
   QRS.tab = "mine";
   qrOpen();
 }
-function qrPanelTab(t) { if (t === "scan") { modalClose(); scanOpen(""); } }
 var OK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 function qrPanelHtml(inner) {
   var u = S.get("user", {}) || {}, txt = myQrText();
@@ -10264,58 +9743,7 @@ function qrCamStop() {
   if (QRS.stream) { try { QRS.stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {} QRS.stream = null; }
 }
 
-/* ═══ 스태프 존 등급 (260830) ═══
- * 1F·18F 존에는 세션이 없다. 체크인 실측이 닿지 않는 구역이라, 스태프가 눌러 주지 않으면
- * 통제센터 화면의 그 절반은 하루 종일 신청 데이터 추정치만 그린다.
- * 신호가 전부 끊겼을 때의 폴백(플레이북 P7)도 이 입력 하나에 걸려 있다.
- * 존 id·등급 문자열은 백엔드 ZONE_IDS·GRADES와 정확히 일치해야 한다(다르면 zone/grade로 거부). */
-var ZONE_GRADE = [
-  { fl: 1, id: "f1_check", nm: "체크인 · 정문 입구" },
-  { fl: 1, id: "f1_wall", nm: "AX VISION · AX LAB · AX in Action" },
-  { fl: 1, id: "f1_booth", nm: "AX PLAY" },
-  { fl: 1, id: "f1_dap", nm: "AX LOUNGE" },
-  { fl: 1, id: "f1_promo", nm: "EVENT" },
-  { fl: 10, id: "f10_h18", nm: "세션 B·C (Heart 1 · 7~8)" },
-  { fl: 10, id: "f10_h56", nm: "세션 D·E (Heart 5·6)" },
-  { fl: 10, id: "f10_conf", nm: "세션 A (컨퍼런스룸)" },
-  { fl: 10, id: "f10_stf", nm: "운영 사무실 · 휴게" },
-  { fl: 17, id: "f17_hall", nm: "대강당" },
-  { fl: 17, id: "f17_lob", nm: "로비 · 강의 연계 부스" },
-  { fl: 18, id: "f18_lng", nm: "18F 커피챗" },
-  { fl: 18, id: "f18_out", nm: "옥상 정원" }
-];
-var GRADE3 = ["여유", "보통", "혼잡"];
-var ZG = { fl: 1, busy: "" };
-var ZG_STALE = 20 * 60000;      /* 15분마다 한 번이 목표 · 20분 넘으면 「오래됨」으로 세운다 */
 
-function zgPickFl(fl) { ZG.fl = fl; App.render(); }
-function zgAgo(ts) {
-  if (!ts) return "";
-  var m = Math.floor((Date.now() - ts) / 60000);
-  return m < 1 ? "방금" : m + "분 전";
-}
-function zgSend(zone, grade) {
-  if (!BE.on) { toast("서버가 연결되지 않아 기록되지 않습니다"); return; }
-  if (ZG.busy) return;
-  ZG.busy = zone; App.render();
-  beCall(admA({ action: "zone_grade", zone: zone, grade: grade }), function (res) {
-    ZG.busy = "";
-    if (res && res.reason === "auth") { admAuthLost(); return; }   /* v4.65 */
-    if (!res || !res.ok) {
-      toast(res && res.reason === "locked" ? admLockedMsg(res) :
-        res && res.reason === "zone" ? "존 코드가 백엔드와 다릅니다" :
-          res && res.reason === "grade" ? "등급 값이 올바르지 않습니다" : "전송 실패 · 다시 눌러주세요");
-      App.render();
-      return;
-    }
-    /* 서버는 존별 최신 값만 쓴다. 「언제 눌렀는지」는 이 기기에만 남는다(다음 입력 시점을 알려주려는 것) */
-    var st = S.get("zone_sent", {});
-    st[zone] = { g: grade, ts: Date.now() };
-    S.set("zone_sent", st);
-    toast(zgName(zone) + " · " + grade);
-  }, function () { ZG.busy = ""; toast("서버 연결 실패 · 다시 눌러주세요"); App.render(); });
-}
-function zgName(id) { var z = ZONE_GRADE.filter(function (x) { return x.id === id; })[0]; return z ? z.nm : id; }
 
 /* ═══ 운영자 · 현장 스캔 ═══
  * v4.15 (사용자 확정 260922) 스탬프 · 입장 · 포토부스 체크를 한 화면에서 · 담당 위치를 고르면 찍는 순간 그 위치의 처리를 한다(동작 고르기 폐지).
@@ -10822,27 +10250,13 @@ function qrScanClose() {
   if (el("qrVideo")) modalClose();
 }
 /* v4.06 qrHandle → qrRoute (3단계 절 · 링크와 스캐너가 같은 분기) */
-var pickedTag = IDEA_TAGS[IDEA_TAGS.length - 1];
-function pickTag(btn) {
-  pickedTag = btn.dataset.tag; IDEA.tag = pickedTag;
-  document.querySelectorAll("[data-tag]").forEach(function (b) { b.classList.toggle("on", b === btn); b.setAttribute("aria-pressed", String(b === btn)); });
-}
 /* v4.08 글자 수 = 공백을 뺀 글자 · 5글자 이상이면 제출 버튼이 켜진다 · 입력은 지우지 않는다 */
 var IDEA_MIN = 5;
 /* v5.39 (사용자 261003 「2,000자 이상」) 최대 3,000자 · 서버 IDEA_MAX 와 같다(서버는 넘으면 long 으로 거절) · 칸 maxlength 가 먼저 막는다 */
 var IDEA_MAX = 3000;
 /* 칸 높이 = 쓴 만큼(최대 높이는 CSS .axs-grow · 넘으면 칸 안에서 스크롤) · 키 입력마다 · 그린 직후 한 번 */
 function ideaFit() { var t = el("ideaText"); if (!t) return; t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px"; }
-/* v5.20 (사용자 261003 후킹 권장 3) 예시 칩 3개(보상 · 영업 · 본사) · 누르면 입력창과 분야를 채운다 · 예시 그대로면 제출이 꺼지고 한 글자라도 고치면 켜진다(공백은 비교에서 뺀다) */
-var IDEA_EX = [["보상", "접수 메일을 요약해 시스템에 자동 입력"], ["영업", "상품별 설명 화법을 바로 보여 주는 도우미"], ["본사·통계", "월말 실적 보고서 초안을 자동으로 작성"]];
-function ideaIsEx(v) { var k = String(v || "").replace(/\s/g, ""); return IDEA_EX.some(function (e) { return e[1].replace(/\s/g, "") === k; }); }
 function ideaOk(v) { return ideaLen(v) >= IDEA_MIN && String(v || "").length <= IDEA_MAX; }   /* v5.39 예시 칩을 그리지 않으므로 예시 판정(ideaIsEx)은 뺀다 */
-function ideaEx(i) {
-  var e = IDEA_EX[i]; if (!e) return;
-  pickedTag = IDEA.tag = e[0]; IDEA.draft = e[1]; S.put("idea_draft", e[1]);
-  App.render();
-  var t = el("ideaText"); if (t) { try { t.focus({ preventScroll: true }); t.setSelectionRange(t.value.length, t.value.length); } catch (x) {} }
-}
 /* v5.39 내가 낸 아이디어 · 긴 글(160자 넘음 또는 4줄 넘음)은 앞부분 + 「펼치기 · n자」 · 누르면 전문 · 「접기」 */
 var IDEA_CLIP = 160, IDEA_OPEN = {};
 function ideaMineTxt(i) {
@@ -10878,17 +10292,6 @@ function submitIdea() {
 function tryAdmin() {
   admVerify(el("adminCode").value, function () { S.set("admin_authed", true); App.render(); });
 }
-/* ⚠ 실제 추첨이 아니다. 예시 이름 중에서 뽑을 뿐이라 당일 사용하면 실재하지 않는
-   당첨자를 발표하게 된다. 260830에 호출을 막았다(관리자 화면의 버튼도 비활성).
-   서버에 추첨이 붙으면 이 함수를 그 결과를 받아오는 것으로 바꾼다. */
-function drawWinner() {
-  toast("추첨 기능이 아직 준비되지 않았습니다. 당일 사용하지 마세요.");
-  if (true) return;
-  var pool = ["김○희 (디지털전략)", "박○영 (장기보험)", "이○준 (자동차보상)"];
-  var u = S.get("user", {});
-  if (raffleTickets(stampCount()) > 0) pool.push(u.name + " (이 기기 참여자)");
-  S.set("draw_winner", pool[Math.floor(Math.random() * pool.length)]);
-}
 
 /* ════════════════ 게임 공통 ════════════════ */
 /* ═══ v4.23 게임 화면 16비트 레트로 · 경계와 글꼴 (260923 사용자 확정 · design.md A-5 5-16) ═══
@@ -10919,11 +10322,6 @@ function rtBotImg() {
    v4.29(260924 사용자 확정) 영어 단어 0개 · 영문 자판 로마자 → 한글 · 넓은 화면 솔로 옆판(NEXT · TOP 5 · 점수·목숨·단계) · 키보드 기기는 스페이스로 시작(엔진).
      이 앱이 맡는 것 = 옆판 TOP 5 읽기(rgSideTopPull) · 시작 화면 · 결과 화면 스페이스(rgSpaceKey).
    v4.32(260924 사용자 확정) 넓은 화면 3단(왼쪽 NEXT·점수 / 가운데 판 / 오른쪽 TOP 10) · 1F 현장은 셀프 모드(tsf*) · 현장 판 위 줄에는 소리·멈춤 단추가 없다(스태프가 켤 때 정한다 · 중간에 그만두기 없음). */
-function rgBeep(freq, dur, type, vol) {   /* v3.51 · 공용 효과음 엔진 경유 (sfx) */
-  if (!sndOn()) return;
-  var c = sfxCtx(); if (!c) return;
-  try { if (c.state !== "running") c.resume(); sfxTone(freq, dur, { type: type || "square", vol: Math.min(0.5, (vol || 0.06) * 6) }); } catch (e) {}
-}
 var RG_HEART = '<svg viewBox="0 0 7 6" width="17" height="15" shape-rendering="crispEdges" aria-hidden="true"><path d="M0 0h3v2H0zM4 0h3v2H4zM0 2h7v2H0zM1 4h5v1H1zM2 5h3v1H2z"/></svg>';
 /* v4.52(260928 사용자 확정) 옆판(왼쪽 상자 rgLeftDraw)이 이미 점수·목숨을 보여주므로(v4.51) 위 줄은 중복 ·
    옆판이 있을 때(rgSideOn, 넓은 화면 솔로 · 1F 셀프)는 시간만 남긴다 · 좁은 화면(옆판 없음)과 대전은 그대로 셋 다 보인다 */
@@ -12029,16 +11427,6 @@ function sfx(name, p) {
   setTimeout(function () { SFX.voices = Math.max(0, SFX.voices - 1); }, ((SFX_LEN[name] || 0.2) + 0.05) * 1000);
   try { sfxPlay(name, p); } catch (e) {}
 }
-/* 점검용 · 오프라인 렌더로 소리별 최고 레벨(클리핑 확인) */
-function sfxPeak(name, p) {
-  var OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-  var len = (SFX_LEN[name] || 0.4) + 0.3, off = new OAC(1, Math.ceil(44100 * len), 44100);
-  var keep = { ctx: SFX.ctx, master: SFX.master, comp: SFX.comp, noise: SFX.noise };
-  SFX.ctx = off; sfxChain(off);
-  try { sfxPlay(name, p); } catch (e) {}
-  SFX.ctx = keep.ctx; SFX.master = keep.master; SFX.comp = keep.comp; SFX.noise = keep.noise;
-  return off.startRendering().then(function (buf) { var d = buf.getChannelData(0), pk = 0; for (var i = 0; i < d.length; i++) pk = Math.max(pk, Math.abs(d[i])); return Math.round(pk * 1000) / 1000; });
-}
 /* 스피커 선 아이콘 · 켬(음파) · 끔(X) */
 function sndIcon(on) {
   return SICO + '<path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/>' + (on ? '<path d="M15.5 9.2a4 4 0 0 1 0 5.6M18.2 6.6a7.6 7.6 0 0 1 0 10.8"/>' : '<path d="M16 9.5l5 5M21 9.5l-5 5"/>') + "</svg>";
@@ -12075,35 +11463,6 @@ function sndChoose(on, key) {
   new Function(SND_START[key])();
 }
 
-/* ═══ v3.50C AX 한 줄 · 여기 한 곳 (검토 대상 · 검토자 미정) ═══
-   출처는 확정 문서만: 슬로건 「ME to WE」(「AX : 」 접두 없음) · 3개년 로드맵 · 공식 공지 붙임1·2 프로그램 제목 · DAP.
-   게임 흐름을 끊지 않게 한 줄(3초 이내) · 시작 화면 = 규칙 옆 한 줄 · 결과 카드 = 「오늘의 AX 한 줄」(돌아가며). */
-var AX_PRE = {
-  pang: "ME to WE · 나의 경험을 우리의 가능성으로",
-  jump: "AX 로드맵 2026의 키워드는 「공감과 참여」예요"
-};
-var AX_TODAY = [
-  "ME to WE · 나의 경험을 우리의 가능성으로",
-  "AX 로드맵 · 2026 공감과 참여 → 2027 확산과 체화 → 2028 혁신과 연결",
-  "17F 09:40 기조연설 · AI 환경과 전략 (CTO)",
-  "17F 10:30 내부 강연 · 현대해상 AX 로드맵 (디지털전략본부장)",
-  "파트너사 강연 · (AWS) Agentic AI 시대의 일하는 방식 변화",
-  "파트너사 강연 · (MS) AI와 친해지기",
-  "1F AX VISION · 회사가 가는 방향과 AX 로드맵",
-  "1F AX PLAY · HiDI-Q · Hi-Helper 체험",
-  "18F AX 커피챗 · 소규모 아이디어 논의",
-  "10F 세션 A · 영업 및 보상 현장 우수 사례 강연 및 실습",
-  "10F 세션 B · “내 데이터”로 만드는 통계 현황 리포팅 실습",
-  "10F 세션 C · “내가 보는 자료”로 만드는 외부자료 리서치 자동화 실습",
-  "10F 세션 D · Claude Code를 활용한 바이브 코딩 실습 (AWS)",
-  "10F 세션 E · MS Copilot을 활용한 문서 작성 실습 (MS)",
-  "17:00 Outro · DAP 우수 성과자 시상"
-];
-/* v3.55 휴면 · 「오늘의 AX 한 줄」은 게임 결과 카드에서 삭제 (사용자 확정 260918 · 결과와 무관하고 일정 탭과 중복)
-   문장 풀 AX_TODAY 와 axToday()·axTodayHtml() 은 되살릴 수 있게 남겨 두고, 부르는 곳은 없다. */
-function axToday() { var i = S.get("ax_line_i", 0) || 0; S.set("ax_line_i", (i + 1) % AX_TODAY.length); return AX_TODAY[i % AX_TODAY.length]; }
-function axPreHtml(key, dark) { return AX_PRE[key] ? '<p class="ax-line' + (dark ? " dk" : "") + '"><b>AX 한 줄</b>' + esc(AX_PRE[key]) + "</p>" : ""; }
-function axTodayHtml(dark) { return '<p class="ax-line' + (dark ? " dk" : "") + '"><b>오늘의 AX 한 줄</b>' + esc(axToday()) + "</p>"; }
 
 /* ════════════════ v4.02 AX 올림픽 점수 체계 v2 (사용자 확정 260919 · 설계 정본 「AX 올림픽 점수 체계 v2.md」) ════════════════
    종목 점수 = 게임 화면에 보이는 행동 점수 그대로 · 종목 최고 한 판 · 종목 상한 3,000 · 종합 = 다섯 종목 최고 점수의 합(만점 15,000 · v4.09 AI O/X 편입).
@@ -12281,16 +11640,6 @@ function oxParts(ql, tk, R, tl, pz) {
   ["n", "c1", "c2", "c3", "wr", "hs", "fl", "pa", "sp", "cb", "fb", "gb", "gc", "pn", "hp", "mx", "used", "life", "arr"].forEach(function (k) { f[k] = X[k]; });
   f.tl = X.end ? 0 : Math.max(0, Math.round(tl || 0)); f.pz = pz || 0; f.ql = ql; f.tk = tk || "";
   return f;
-}
-/* 대표 카운터 한 줄 · 서버 olyKey_ 와 같은 문구 */
-function olyKey(game, p) {
-  if (!p) return "";
-  if (game === "pang") return "완주 " + (Number(p.fin) / 100).toFixed(1) + "초";
-  if (game === "jump") return "장애물 " + (Number(p.obs) || 0);
-  if (game === "tetris") return (Number(p.lines) || 0) + "줄";
-  if (game === "word") return "오답 " + (Number(p.wr) || 0);
-  if (game === "ox") return "정답 " + ((Number(p.c1) || 0) + (Number(p.c2) || 0) + (Number(p.c3) || 0));
-  return "";
 }
 /* 규칙 한 줄 · 시작 화면·순위판 종목 탭 */
 function olyRuleLine(key) {
@@ -12703,7 +12052,6 @@ function qzTally(ql) {
 }
 function qzQl(r) { return r.q.map(function (id, i) { return id + "." + r.a[i]; }).join(","); }
 function qzParts(ql) { var X = qzTally(ql); return { n: X.n, c1: X.c1, c2: X.c2, c3: X.c3, wr: X.wr, ql: ql }; }
-function qzRight(r) { var n = 0; r.q.forEach(function (id, i) { if (r.a[i] != null && qzIsRight(id, r.a[i])) n++; }); return n; }
 function qzIsRight(id, a) { var it = qzItem(id); if (!it) return false; return it.key ? qzTapMiss(String(a), qzPieces(it.key).length) === 0 : a === it.a; }
 /* 내 최고 · 서버 판 퀴즈 기록(ev.ox card · right)과 이 기기 qz_best 중 큰 쪽 · 유리다리 옛 기록은 세지 않는다
    v5.00 [정답, 문항 수] · 판 크기가 다를 수 있어(5 · 옛 10) 맞힌 비율로 고른다 · 서버 of 가 없으면(옛 서버) 10 · 이 기기 옛 값(숫자)도 10문항 판 · 기록이 없으면 null */
@@ -13028,7 +12376,6 @@ var TT_PIECES = {
 var TT_KEYS = ["I", "O", "T", "S", "Z", "J", "L"];
 /* v3.95 블록 채움 7색 · 오렌지 사다리 4단 + 무채색 3단(숯·회·웜화이트) · 가장자리는 채움을 한 단 어둡게 1px · 글자는 채움 밝기로 흰/먹 */
 var TT_FILL = { I: "#FF7E31", O: "#2A2522", T: "#FFA46E", S: "#D64524", Z: "#FFCFB0", J: "#F6F1ED", L: "#B8AEA6" };
-var TT_EDGE = { I: "#D9621F", O: "#000000", T: "#E0844D", S: "#A93318", Z: "#E3AE8C", J: "#CFC6BF", L: "#948980" };
 var TT_INK = { I: "#FFFFFF", O: "#FFFFFF", T: "#1F1B18", S: "#FFFFFF", Z: "#1F1B18", J: "#1F1B18", L: "#1F1B18" };
 function ttFill(k) { return TT_FILL[k] || RAIN_PAL.gray; }
 function ttInk(k) { return TT_INK[k] || RAIN_PAL.ink; }
@@ -13923,11 +13270,6 @@ function gsResumeState(G, frame) {
   gsPauseUi(false);
   gsPauseBtnSync(G);
   G.raf = requestAnimationFrame(frame);
-}
-/* 캔버스 좌표 · CSS 크기로 늘어난 캔버스에서 원래 픽셀 좌표로 */
-function gsXY(e, cv) {
-  var r = cv.getBoundingClientRect();
-  return { x: (e.clientX - r.left) * cv.width / r.width, y: (e.clientY - r.top) * cv.height / r.height };
 }
 function gsBurst(G, x, y, n, cols) {
   if (rgReduced()) n = Math.min(n, 4);
@@ -15541,13 +14883,6 @@ function oxbP(G, x, y, z) {
   var s = pr.F / dz, sx = G.shake > 0 ? G.shake * Math.sin(G.gt * 70) * 7 : 0, sy = G.shake > 0 ? G.shake * Math.cos(G.gt * 53) * 5 : 0;
   return { x: pr.W / 2 + (x - c.x) * s + sx, y: pr.HY + (pr.CAMY - y) * s + sy, s: s };
 }
-function oxbQuad(ctx, G, pts, fill, stroke, lw) {
-  var zmin = G.cam.z + 0.32, ps = pts.map(function (p) { return oxbP(G, p[0], p[1], Math.max(zmin, p[2])); });
-  if (ps.some(function (p) { return !p; })) return null;
-  ctx.beginPath(); ctx.moveTo(ps[0].x, ps[0].y); for (var i = 1; i < ps.length; i++) ctx.lineTo(ps[i].x, ps[i].y); ctx.closePath();
-  if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 1; ctx.stroke(); }
-  return ps;
-}
 /* v4.14 16비트 도트 게임판 (사용자 확정 260922 · design.md A-1 게임판 내부는 게임 고유 디자인)
    장면은 낮은 해상도 캔버스에 그린다(도트 한 칸 = 약 OXB_PX.css CSS px · 기기 픽셀의 정수배) → 제한 팔레트 OXB_PAL 로 줄인다 → 번지지 않게 확대.
    v4.28 은 발판을 원근 없는 크림 타일 · 나무 난간 · 갈색 물로 바꿨다 → v4.34 (사용자 260925 「너무 정신이 없어 유리 계단인지 알아보지도 못한다 · 기존 버전 위에 새 디자인 문법만 얹어라」)
@@ -15719,15 +15054,6 @@ function oxbTile(ctx, G, x, y, w, h, th, col, line, e) {
     }
   }
   if (th - e > 0) { ctx.fillStyle = col[3]; ctx.fillRect(x + e, y + h, fw, th - e); }
-}
-/* O · X 도트 글자 · 발판 윗면(mw × mh) 안에 들어가는 가장 큰 정수배 · 너무 작으면 5칸 글자 · 그보다 작으면 그리지 않는다 */
-function oxbGlyph(ctx, G, s, cx, cy, mw, mh, col) {
-  var p = G.px || 1, wd = mw / p, hd = mh / p, m = Math.floor(Math.min(wd * 0.36, hd) / 7), n = m >= 1 ? 7 : Math.min(wd * 0.5, hd) >= 5 ? 5 : 0;
-  if (!n) return;
-  m = Math.max(1, m);
-  var rows = OXB_GLYPH[n][s], cs = m * p, x0 = oxbSnap(G, cx - n * cs / 2), y0 = oxbSnap(G, cy - n * cs / 2);
-  ctx.fillStyle = col;
-  for (var j = 0; j < n; j++) for (var i = 0; i < n; i++) if ((rows[j] >> (n - 1 - i)) & 1) ctx.fillRect(x0 + i * cs, y0 + j * cs, cs, cs);
 }
 /* v4.39 다음 줄 표지 · 9칸 O · X(7칸 O 는 구멍이 3칸이라 동전처럼 보였다) · m = 한 칸 배수 · (cx, cy) = 가운데 */
 function oxbMark(ctx, G, s, cx, cy, m, col) {
@@ -16712,7 +16038,6 @@ function lgxCl(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 function lgxEO(x) { x = lgxCl(x); return 1 - Math.pow(1 - x, 3); }
 function lgxEI(x) { x = lgxCl(x); return x * x * x; }
 function lgxEIO(x) { x = lgxCl(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
-function lgxBack(x, c) { x = lgxCl(x); c = c == null ? 1.9 : c; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); }
 /* v4.90 스프링(감쇠 진동) · u = 0~1(정해진 시간 안) · z = 감쇠(작을수록 더 출렁) · f = 그 시간 동안 진동 수 · 1을 넘었다 돌아온다(오버슈트) · u ≥ 1 이면 정확히 1 */
 function lgxSpring(u, z, f) {
   if (u <= 0) return 0; if (u >= 1) return 1;
@@ -17335,7 +16660,6 @@ function lgxSkip() { var cur = LGX.cur; if (!cur) return; var t = lgxNow(cur); i
 function lgxNow(cur) { return cur.o.fixedT != null ? cur.o.fixedT : (performance.now() - cur.t0) / 1000 + cur.skip - cur.pre; }   /* 앞 구간(pre)은 음수 시각 */
 /* 서버 결과 · ok = 적립 확인 · fail = 못 보냄(다음 동기화에서 조용히) · none = 이 서버에는 최초 로그인 도장이 없다(줄을 감춘다) */
 function lgxSrv(state) { var cur = LGX.cur; if (!cur || cur.srv === "ok") return; cur.srv = state; }
-function lgxBusy() { return !!LGX.cur; }
 function lgxFadeOut(d) { try { d.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, fill: "forwards" }); } catch (e) {} setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); }, 240); }
 /* v5.05 (사용자 261002 「시작하기를 누르면 밋밋하게 넘어간다 · 기존 로그인한 사람 접속 때처럼 전환 장면」) 착지 전환
    장면의 마지막 그림(원본 심볼 · 점 위치 그대로)이 0.55초에 홈 광고판의 심볼 자리로 날아가며 흰 무대가 걷힌다 · 주황 광고판이면 도착 직전 흰 점으로(xitionRun 과 같다)
