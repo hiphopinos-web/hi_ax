@@ -120,6 +120,7 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 @keyframes rise { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
 #axTour3 .bubble { position: absolute; left: 50%; top: 18%; transform: translateX(-50%); max-width: 280px; background: var(--surface); border-radius: 16px; padding: 12px 14px; font-size: 16px; line-height: 23px; font-weight: 600; color: var(--ink); box-shadow: 0 4px 16px rgba(25, 31, 40, .14); text-align: center; pointer-events: none; }
 #axTour3 .fps { position: absolute; right: 8px; top: 8px; font: 600 12px/16px ui-monospace, Consolas, monospace; color: var(--body); background: rgba(255, 255, 255, .92); border-radius: 6px; padding: 2px 6px; z-index: 9; }
+#axTour3 .fps.diag { right: auto; left: 8px; max-width: calc(100% - 165px); white-space: pre-line; font-size: 10px; line-height: 13px; overflow-wrap: anywhere; }   /* v5.44 진단 모드(?t3diag=1) · 왼쪽 위 · 작은 지도와 겹치지 않게 */
 
 /* 아래 막대 · 이전 · 다음 구역(큰 글자 버튼) */
 #axTour3 .bar { flex: none; background: var(--surface); border-top: 1px solid var(--divider2); padding: 8px 16px calc(12px + var(--safeB)); z-index: 5; }

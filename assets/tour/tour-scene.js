@@ -94,6 +94,7 @@
           var b = new T.MeshBasicMaterial({ map: m.map || null, vertexColors: !!m.vertexColors, lightMap: lm || null, lightMapIntensity: (u.lmScale || 1) * Math.PI });
           b.name = nm; b.userData = u;
           if (m.map) m.map.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+          if (m.map && /^(panel_\d+|artwork|plaque)$/.test(nm)) { m.map.wrapS = m.map.wrapT = T.ClampToEdgeWrapping; m.map.needsUpdate = true; }   /* v5.44 판 그림 = 가장자리 고정(되풀이면 판 아래 끝에 판 위쪽 줄이 섞여 번졌다) */
           return b;
         }
         if (u.glass) { var g = new T.MeshBasicMaterial({ color: 0xDCE6EA, transparent: true, opacity: 0.13, depthWrite: false, side: T.DoubleSide, forceSinglePass: true }); g.name = nm; return g; }

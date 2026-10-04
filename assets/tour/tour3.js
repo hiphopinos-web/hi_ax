@@ -67,12 +67,24 @@
 
   /* ═══════════ 3D 준비 ═══════════ */
   var renderer, scene, camera, S, bot, botParts = {}, shadow, pillarMats = [];
+  /* v5.44 실기기 진단(주소 ?t3diag=1 · 이 기기에 기억 · ?t3diag=0 이면 끔) · 개인정보 없음(GPU 이름 · 깊이 비트 · highp · MSAA · DPR · fps · 모형 손질 수) */
+  function gpuInfo(gl) {
+    var ex = null, hp = null; try { ex = gl.getExtension('WEBGL_debug_renderer_info'); hp = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT); } catch (e) {}
+    return { ren: String((ex && gl.getParameter(ex.UNMASKED_RENDERER_WEBGL)) || gl.getParameter(gl.RENDERER) || '?'), gl2: !!renderer.capabilities.isWebGL2, highp: !!(hp && hp.precision > 0), hpBits: hp ? hp.precision : 0, msaa: gl.getParameter(gl.SAMPLES), dpr: +(window.devicePixelRatio || 1).toFixed(2) };
+  }
+  function diagText() {
+    var g = G.gpu || {}, z = G.zfix || {}, l = G.lmfix || {}, pr = G.probeResult;
+    return '둘러보기 진단 ' + (window.AXTour ? AXTour.ver : '') + '\n' + g.ren + '\n' +
+      'WebGL' + (g.gl2 ? '2' : '1') + ' · 깊이 ' + G.depthBits + '비트 · highp ' + (g.highp ? '예 ' + g.hpBits : '아니오') + ' · MSAA ' + g.msaa + '\n' +
+      'DPR ' + g.dpr + ' → ' + renderer.getPixelRatio() + ' · fps ' + G.frames.length + (pr ? ' · 처음 ' + pr.p50 + 'ms' + (pr.p50 > 34 ? ' 절전' : '') : '') + '\n' +
+      '겹침 ' + (z.pairs || 0) + ' · 자름 ' + (z.cut || 0) + ' · 지움 ' + (z.gone || 0) + ' · 빛 옮김 ' + (z.relit || 0) + ' · 라이트맵 ' + (l.tex || 0) + '장 ' + (l.ms || 0) + 'ms' + (G.lmErr ? ' 오류' : '');
+  }
   function init3D() {
     var cv = $('cv');
     try { renderer = new T.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' }); }
     catch (e) { return false; }
     if (!renderer.getContext()) return false;
-    try { var gl0 = renderer.getContext(); G.depthBits = gl0.getParameter(gl0.DEPTH_BITS); } catch (e) {}   /* v5.40 진단 · 깊이 비트(fps 표시에 함께) */
+    try { var gl0 = renderer.getContext(); G.depthBits = gl0.getParameter(gl0.DEPTH_BITS); if (G.diag) G.gpu = gpuInfo(gl0); } catch (e) {}   /* v5.40 진단 · 깊이 비트(fps 표시에 함께) · v5.44 진단 모드(?t3diag=1)면 GPU 이름 · highp · MSAA */
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75)); renderer.setClearColor(0xE9ECEF, 1);
     renderer.toneMapping = T.AgXToneMapping; renderer.toneMappingExposure = 1.0;
     scene = new T.Scene();
@@ -312,27 +324,51 @@
   }
   function isCw(p) { return ((p[1][0] - p[0][0]) * (p[2][1] - p[0][1]) - (p[1][1] - p[0][1]) * (p[2][0] - p[0][0])) < 0; }
   function nameOf(o, re) { while (o) { if (o.name && re.test(o.name)) return o.name; o = o.parent; } return null; }
-  /* v5.40 실기기 깜빡임 보강(사용자 261003 갤럭시 「여기에서도 팔라릭라라락 까만색이 나와」 · v5.38 은 데스크톱 GPU 기준이었다)
-   *   모바일 GPU 는 깊이 정밀도가 낮다(16비트면 6m 거리에서 약 3mm 단위) · polygonOffset 만으로는 모자라 앞 층을 실제로 띄운다
-   *   1) 겹침 판정 = 4mm → 1.5cm · 축에 나란하지 않은 면(법선을 2도 단위로 묶음)도 · 일부만 겹친 면도(겹친 넓이 0.4cm² 이상)
-   *   2) 이긴 면(앞 층)은 법선 쪽으로 진 면보다 층마다 5mm 앞에 오도록 정점을 옮긴다(이미 그만큼 앞이면 그대로) · polygonOffset 은 그대로 덧쓴다
-   *   3) 바닥에 깔린 얇은 판(매트 · 문턱 · 띠 · 바닥 위 3cm 안의 위를 보는 면)은 1.5cm 띄운다(옆면 윗모서리도 같이) */
-  var ZTOL = 0.01, ZGAP = 0.005, ZLIFT = 0.015;
-  /* v5.42 정점 위치를 고치기 전에 소수(Float32) 사본으로 · 모형은 압축(양자화 Int16 · normalized)이라 범위 끝 정점을 바깥으로 밀면 값이 넘쳐 반대쪽 끝으로 뒤집혔다
-   * (v5.40 사용자 261003 「여기 포스터 없어」 · 기둥 7.45 서쪽 면 포스터가 기둥 26.9 동쪽 면 안으로 넘어가 두 면 다 화강암의 구운 그림자만 까맣게 남음) */
+  /* v5.44 겹친 면 = 가려지는 부분을 잘라 낸다(사용자 261003 갤럭시 v5.43 「깜빡이는 여전해 · 하단에 까만 줄이 있어」)
+   *   원인(실측 · 깊이 정밀도가 아니었다): 판 · 덧붙인 면 뒤에 겹쳐 남은 면은 굽는 동안 덮여 라이트맵이 까맣다(0)
+   *     v5.40 이 앞 층을 5mm(기둥 포스터 8mm) 띄우자 위에서 내려다보는 시점마다 판 아래 · 판 사이로 그 까만 띠가 드러났다(판 아래 검은 줄)
+   *     + 라이트맵 아틀라스 섬 둘레의 검은 여백이 쌍선형 보간으로 판 가장자리에 1~3px 검은 줄로 번졌다 · 가는 줄이라 걸을 때마다 화소가 켜졌다 꺼졌다(깜빡임)
+   *   고침: 1) 띄우지 않는다 · 진 면에서 이긴 면이 덮는 부분을 잘라 낸다(다 덮이면 면을 지운다) · 이긴 면 둘레 0.3mm 만 겹쳐 두고 이긴 면은 polygonOffset 으로 앞
+   *         순환(A > B > C > A)도 「이긴 면의 지금 남은 조각」만 빼므로 어느 자리도 비지 않는다 · 기둥 포스터도 같은 방식(기둥 화강암을 잘라 냄)
+   *      2) 둘 다 까만 겹침(안내데스크 끝 윗면처럼 서로 덮여 둘 다 까맣게 구워진 면)은 이긴 면의 라이트맵 자리를 진 면의 밝은 자리로 옮긴다
+   *      3) fixLightmaps · 그려지는 삼각형이 덮는 화소만 「쓸 수 있음」 · 섬 밖 검은 여백 · 잘려 나간 자리 · 2px 보다 가는 잘린 조각은 가까운 쓸 수 있는 화소 색으로 24px 까지 채움 · 밉맵 켬 */
+  var ZTOL = 0.01, ZLIFT = 0.015, CUT_EPS = 0.0003, LM_PATCH = [];
+  /* v5.42 정점 위치를 고치기 전에 소수(Float32) 사본으로 · 모형은 압축(양자화 Int16 · normalized)이라 범위 끝 정점을 바깥으로 밀면 값이 넘쳐 반대쪽 끝으로 뒤집혔다 */
   function f32Pos(a) {
     if (a.array instanceof Float32Array && !a.isInterleavedBufferAttribute && !a.normalized) return a.clone();
     var n = a.count, arr = new Float32Array(n * 3); for (var i = 0; i < n; i++) { arr[i * 3] = a.getX(i); arr[i * 3 + 1] = a.getY(i); arr[i * 3 + 2] = a.getZ(i); }
     G.f32n = (G.f32n || 0) + 1; return new T.BufferAttribute(arr, 3);
   }
+  function f32Arr(a) { var n = a.count, k = a.itemSize, arr = new Array(n * k); for (var i = 0; i < n; i++) { arr[i * k] = a.getX(i); if (k > 1) arr[i * k + 1] = a.getY(i); if (k > 2) arr[i * k + 2] = a.getZ(i); if (k > 3) arr[i * k + 3] = a.getW(i); } return arr; }
+  function sArea(P) { var s2 = 0; for (var i = 0; i < P.length; i++) { var a = P[i], b = P[(i + 1) % P.length]; s2 += a[0] * b[1] - b[0] * a[1]; } return s2 / 2; }
+  function halfClip(P, a, b, inside) {   /* 볼록 다각형 P 를 a → b 직선의 왼쪽(inside) 또는 오른쪽만 남긴다 */
+    var out = [];
+    for (var i = 0; i < P.length; i++) {
+      var c = P[i], n = P[(i + 1) % P.length], sc = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]), sn = (b[0] - a[0]) * (n[1] - a[1]) - (b[1] - a[1]) * (n[0] - a[0]);
+      if (!inside) { sc = -sc; sn = -sn; }
+      if (sc >= 0) out.push(c);
+      if ((sc >= 0) !== (sn >= 0)) { var t = sc / (sc - sn); out.push([c[0] + (n[0] - c[0]) * t, c[1] + (n[1] - c[1]) * t]); }
+    }
+    return out.length > 2 ? out : [];
+  }
+  /* 볼록 P 빼기 볼록 Q(둘 다 반시계) = Q 의 변마다 바깥쪽 조각 · 안쪽은 다음 변으로 넘긴다 · 끝까지 남은 안쪽 = Q 안 = 버림 */
+  function polyDiff(P, Q) { var out = [], rest = P; for (var e = 0; e < Q.length && rest.length; e++) { var a = Q[e], b = Q[(e + 1) % Q.length], o = halfClip(rest, a, b, false); if (o.length && polyArea(o) > 1e-10) out.push(o); rest = halfClip(rest, a, b, true); } return out; }
+  /* 반시계 볼록 다각형을 안쪽으로 d 만큼 줄인다(진 면이 이긴 면 밑으로 d 만큼 남아 틈이 생기지 않게) · 뒤집히면 null */
+  function shrinkPoly(Q, d) {
+    var n = Q.length, L = [], out = [];
+    for (var i = 0; i < n; i++) { var a = Q[i], b = Q[(i + 1) % n], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy); if (l < 1e-7) return null; L.push([a[0] - dy / l * d, a[1] + dx / l * d, dx, dy]); }
+    for (var j = 0; j < n; j++) { var p = L[(j + n - 1) % n], q = L[j], den = p[2] * q[3] - p[3] * q[2]; if (Math.abs(den) < 1e-14) return null; var s = ((q[0] - p[0]) * q[3] - (q[1] - p[1]) * q[2]) / den; out.push([p[0] + p[2] * s, p[1] + p[3] * s]); }
+    return sArea(out) > 1e-9 ? out : null;
+  }
   function fixCoplanar(root) {
-    var t0 = performance.now(), meshes = [], buckets = new Map(), va = new T.Vector3(), vb = new T.Vector3(), vc = new T.Vector3(), e1 = new T.Vector3(), e2 = new T.Vector3(), nn = new T.Vector3(), nTri = 0, bu = new T.Vector3(), bv = new T.Vector3();
+    var t0 = performance.now(), meshes = [], buckets = new Map(), recs = [], geoUse = new Map(), va = new T.Vector3(), vb = new T.Vector3(), vc = new T.Vector3(), e1 = new T.Vector3(), e2 = new T.Vector3(), nn = new T.Vector3(), nTri = 0, bu = new T.Vector3(), bv = new T.Vector3();
     root.updateMatrixWorld(true);
-    var lifted = liftFloorPlates(root), posters = liftPillarPosters(root);
+    var lifted = liftFloorPlates(root);
     root.updateMatrixWorld(true);
+    root.traverse(function (o) { if (o.isMesh && o.geometry) geoUse.set(o.geometry, (geoUse.get(o.geometry) || 0) + 1); });
     root.traverse(function (o) {
       if (!o.isMesh || !o.geometry || !o.geometry.attributes.position || !o.material || Array.isArray(o.material) || o.material.transparent) return;
-      if (/^(floor|paving)$/.test(o.name) || underName(o, /^pillars$/)) return;
+      if (/^(floor|paving)$/.test(o.name) || geoUse.get(o.geometry) > 1) return;   /* 바닥 = 큰 판 하나(위에 깔린 판은 liftFloorPlates) · 같은 모양을 여럿이 쓰는 메시는 자르지 않는다 · v5.44 기둥 · 기둥 포스터도 넣는다 */
       var geo = o.geometry, pos = geo.attributes.position, idx = geo.index, n = idx ? idx.count : pos.count, m = o.matrixWorld, mi = meshes.length; meshes.push(o);
       for (var t = 0; t < n; t += 3) {
         va.fromBufferAttribute(pos, idx ? idx.getX(t) : t).applyMatrix4(m); vb.fromBufferAttribute(pos, idx ? idx.getX(t + 1) : t + 1).applyMatrix4(m); vc.fromBufferAttribute(pos, idx ? idx.getX(t + 2) : t + 2).applyMatrix4(m);
@@ -349,103 +385,184 @@
           off = (va.dot(bu) + vb.dot(bu) + vc.dot(bu)) / 3; key = 'g' + qx + ',' + qy + ',' + qz; sg = 1;
         }
         var flip = isCw(P); if (flip) P = [P[0], P[2], P[1]];
-        var r = { mi: mi, t: t, off: off, ar: ar, P: P, flip: flip, lv: 0, nw: nw, need: 0,
+        var r = { mi: mi, t: t, off: off, ar: ar, P: P, flip: flip, lv: 0, nw: nw, pieces: null, cut: false, relm: null,
           u0: Math.min(P[0][0], P[1][0], P[2][0]), u1: Math.max(P[0][0], P[1][0], P[2][0]), v0: Math.min(P[0][1], P[1][1], P[2][1]), v1: Math.max(P[0][1], P[1][1], P[2][1]) };
         key += ',' + Math.round(off / ZTOL);
-        if (!buckets.has(key)) buckets.set(key, []); buckets.get(key).push(r); nTri++;
+        if (!buckets.has(key)) buckets.set(key, []); buckets.get(key).push(r); recs.push(r); nTri++;
       }
     });
-    /* 이기는 쪽 = 구운 빛(라이트맵)이 밝은 면 · 굽는 동안 다른 면에 덮여 있던 면은 라이트맵이 까맣다(안내데스크 끝 윗면의 검은 네모가 바로 이것) · 밝기가 비슷하면 작은 면(덧붙인 판) */
+    /* 이기는 쪽 = 구운 빛(라이트맵)이 밝은 면 · 굽는 동안 다른 면에 덮여 있던 면은 라이트맵이 까맣다 · 밝기가 비슷하면 작은 면(덧붙인 판) */
     var cvs = document.createElement('canvas'), cx2 = cvs.getContext('2d', { willReadFrequently: true }), imgs = new Map();
-    function lmAt(r, pts) {   /* 겹친 자리(pts · 평면 좌표)의 라이트맵 밝기 평균 · 삼각형 무게중심 좌표로 UV1 을 보간 */
+    function lmPt(r, q) {   /* 평면 좌표 q 자리의 라이트맵 [밝기, u, v] · 삼각형 무게중심 좌표로 UV1 을 보간 · 없으면 null */
       var o = meshes[r.mi], tex = o.material.lightMap, uv = o.geometry.attributes.uv1, idx = o.geometry.index;
-      if (!tex || !tex.image || !uv || !tex.image.width) return -1;
+      if (!tex || !tex.image || !uv || !tex.image.width) return null;
       try {
         var im = tex.image, d = imgs.get(im);
         if (!d) { cvs.width = im.width; cvs.height = im.height; cx2.drawImage(im, 0, 0); d = cx2.getImageData(0, 0, im.width, im.height); imgs.set(im, d); }
         var vi = [idx ? idx.getX(r.t) : r.t, idx ? idx.getX(r.t + 1) : r.t + 1, idx ? idx.getX(r.t + 2) : r.t + 2];
         if (r.flip) vi = [vi[0], vi[2], vi[1]];   /* 위(isCw)에서 뒤집은 순서와 맞춘다 */
-        var A = r.P[0], B = r.P[1], C = r.P[2], den = (B[1] - C[1]) * (A[0] - C[0]) + (C[0] - B[0]) * (A[1] - C[1]), sum = 0;
-        pts.forEach(function (q) {
-          var w0 = ((B[1] - C[1]) * (q[0] - C[0]) + (C[0] - B[0]) * (q[1] - C[1])) / den, w1 = ((C[1] - A[1]) * (q[0] - C[0]) + (A[0] - C[0]) * (q[1] - C[1])) / den, w2 = 1 - w0 - w1;
-          var u = w0 * uv.getX(vi[0]) + w1 * uv.getX(vi[1]) + w2 * uv.getX(vi[2]), v = w0 * uv.getY(vi[0]) + w1 * uv.getY(vi[1]) + w2 * uv.getY(vi[2]); if (tex.flipY) v = 1 - v;
-          var x = clamp(Math.floor(u * d.width), 0, d.width - 1), y = clamp(Math.floor(v * d.height), 0, d.height - 1), i = (y * d.width + x) * 4; sum += (d.data[i] + d.data[i + 1] + d.data[i + 2]) / 3;
-        });
-        return sum / pts.length;
-      } catch (e) { return -1; }
+        var A = r.P[0], B = r.P[1], C = r.P[2], den = (B[1] - C[1]) * (A[0] - C[0]) + (C[0] - B[0]) * (A[1] - C[1]);
+        var w0 = ((B[1] - C[1]) * (q[0] - C[0]) + (C[0] - B[0]) * (q[1] - C[1])) / den, w1 = ((C[1] - A[1]) * (q[0] - C[0]) + (A[0] - C[0]) * (q[1] - C[1])) / den, w2 = 1 - w0 - w1;
+        var u = w0 * uv.getX(vi[0]) + w1 * uv.getX(vi[1]) + w2 * uv.getX(vi[2]), v = w0 * uv.getY(vi[0]) + w1 * uv.getY(vi[1]) + w2 * uv.getY(vi[2]), vv = tex.flipY ? 1 - v : v;
+        var x = clamp(Math.floor(u * d.width), 0, d.width - 1), y = clamp(Math.floor(vv * d.height), 0, d.height - 1), i = (y * d.width + x) * 4;
+        return [(d.data[i] + d.data[i + 1] + d.data[i + 2]) / 3, u, v];
+      } catch (e) { return null; }
     }
-    var pairs = 0, plist = [];   /* plist = [이긴 면, 진 면] */
+    function lmAt(r, pts) { var s = 0; for (var k = 0; k < pts.length; k++) { var q = lmPt(r, pts[k]); if (!q) return -1; s += q[0]; } return s / pts.length; }
+    function inner(P) { var cu = 0, cv = 0; P.forEach(function (q) { cu += q[0] / P.length; cv += q[1] / P.length; }); return [[cu, cv]].concat(P.map(function (q) { return [(q[0] + cu) / 2, (q[1] + cv) / 2]; })); }
+    var pairs = 0, plist = [];   /* plist = [이긴 면, 진 면, 이긴 쪽 밝기, 진 쪽 밝기] */
     function test(a, b) {
-      if (Math.abs(a.off - b.off) > ZTOL || Math.min(a.u1, b.u1) - Math.max(a.u0, b.u0) <= 0.002 || Math.min(a.v1, b.v1) - Math.max(a.v0, b.v0) <= 0.002) return;
-      var O = clipTri(a.P, b.P); if (O.length < 3 || polyArea(O) <= 4e-5) return;
+      if (Math.abs(a.off - b.off) > ZTOL || Math.min(a.u1, b.u1) - Math.max(a.u0, b.u0) <= 0.001 || Math.min(a.v1, b.v1) - Math.max(a.v0, b.v0) <= 0.001) return;
+      var O = clipTri(a.P, b.P); if (O.length < 3 || polyArea(O) <= 2e-6) return;
       pairs++;
-      var cu = 0, cv = 0; O.forEach(function (q) { cu += q[0] / O.length; cv += q[1] / O.length; });
-      var pts = [[cu, cv]].concat(O.map(function (q) { return [(q[0] + cu) / 2, (q[1] + cv) / 2]; }));
-      var la = lmAt(a, pts), lb = lmAt(b, pts), w = null;
+      var pts = inner(O), la = lmAt(a, pts), lb = lmAt(b, pts), w = null;
+      var pa = !!nameOf(meshes[a.mi], /^panel_\d+$/), pb = !!nameOf(meshes[b.mi], /^panel_\d+$/);
       if (la >= 0 && lb >= 0 && Math.abs(la - lb) > 16) w = la > lb ? a : b;
+      else if (pa !== pb) w = pa ? a : b;   /* v5.44 둘 다 비슷하게 까마면 판 그림이 앞(옛 순서는 작은 면이 먼저라 판 가장자리에 까만 몸체 띠가 섰다) */
       else if (Math.abs(a.ar - b.ar) > 1e-6) w = a.ar < b.ar ? a : b;
-      else if (a.mi !== b.mi) { var pa = !!nameOf(meshes[a.mi], /^panel_\d+$/), pb = !!nameOf(meshes[b.mi], /^panel_\d+$/); if (pa !== pb) w = pa ? a : b; }
       else w = a.off >= b.off ? a : b;   /* 같은 메시 · 같은 넓이 = 이미 앞에 있는 쪽 */
-      if (w) plist.push([w, w === a ? b : a]);
-      if (window.__zdbg) window.__zdbg.push([meshes[a.mi].name, meshes[b.mi].name, +a.off.toFixed(3), Math.round(la), Math.round(lb), +a.ar.toFixed(3), +b.ar.toFixed(3), w === a ? 'a' : w === b ? 'b' : '-', [+cu.toFixed(2), +cv.toFixed(2)]]);   /* 시험용 · window.__zdbg 가 있을 때만 */
+      if (w) plist.push([w, w === a ? b : a, w === a ? la : lb, w === a ? lb : la, O]);
+      if (window.__zdbg) window.__zdbg.push([meshes[a.mi].name, meshes[b.mi].name, +a.off.toFixed(3), Math.round(la), Math.round(lb), +a.ar.toFixed(3), +b.ar.toFixed(3), w === a ? 'a' : w === b ? 'b' : '-', O[0].map(function (v) { return +v.toFixed(2); })]);   /* 시험용 · window.__zdbg 가 있을 때만 */
     }
     buckets.forEach(function (L, key) {
       var k = key.split(','), last = +k.pop(), up = buckets.get(k.join(',') + ',' + (last + 1)) || [];
       for (var i = 0; i < L.length; i++) { for (var j = i + 1; j < L.length; j++) test(L[i], L[j]); for (var q = 0; q < up.length; q++) test(L[i], up[q]); }
     });
-    /* 층 매기기 · 이긴 면은 진 면보다 한 층 위(겹이 사슬처럼 이어져도 · 최대 3층) · 앞 층은 진 면보다 층마다 ZGAP 앞으로(정점 이동) + polygonOffset */
+    /* 자르기 · 쌍마다 진 면의 지금 조각들에서 이긴 면의 지금 조각(둘레를 0.3mm 줄인 것)을 뺀다 · 이긴 면의 「지금」 조각만 빼므로 겹친 자리는 늘 누군가 덮는다 */
+    var gone = 0, cut = 0;
+    plist.forEach(function (q) {
+      var w = q[0], l = q[1], wp = w.pieces || [w.P], lp = l.pieces || [l.P], ch = false;
+      wp.forEach(function (Q) {
+        var Qs = shrinkPoly(Q, CUT_EPS); if (!Qs || !lp.length) return;
+        var nx = [];
+        lp.forEach(function (p) { var d = polyDiff(p, Qs), a1 = 0; d.forEach(function (x) { a1 += polyArea(x); }); if (a1 < polyArea(p) - 1e-9) { ch = true; nx.push.apply(nx, d); } else nx.push(p); });
+        lp = nx;
+      });
+      if (ch) { l.pieces = lp; l.cut = true; }
+    });
+    recs.forEach(function (r) { if (r.cut) { cut++; if (!r.pieces.length) gone++; } });
+    /* 둘 다 까만 겹침(< 24) · 이긴 면 일부만 까마면 그 겹친 자리를 라이트맵 「다시 칠할 곳」으로 적어 둔다(fixLightmaps 가 둘레 밝은 화소로 채움)
+     * 이긴 면 삼각형 전체가 까말 때(< 20)는 진 면의 남은 조각 중 밝은(> 60) 자리 가운데 이긴 면에 가장 가까운 자리로 라이트맵 UV 를 옮긴다(한 색) */
+    var relit = 0, patched = 0;
+    plist.forEach(function (q) {
+      var w = q[0], l = q[1]; if (w.relm || q[2] < 0 || q[3] < 0 || Math.max(q[2], q[3]) >= 24) return;
+      var lw = meshes[w.mi].material.lightMap, ll = meshes[l.mi].material.lightMap; if (!lw) return;
+      if (lmAt(w, inner(w.P)) >= 20) {
+        var tri = q[4].map(function (s) { var x = lmPt(w, s); return x ? [x[1] * lw.image.width, (lw.flipY ? 1 - x[2] : x[2]) * lw.image.height] : null; });
+        if (tri.every(Boolean)) { LM_PATCH.push({ im: lw.image, poly: tri }); patched++; }
+        return;
+      }
+      if (!ll || lw.image !== ll.image) return;
+      var c = inner(w.P)[0], best = null, bd = 1e9;
+      (l.pieces || [l.P]).forEach(function (p) { inner(p).forEach(function (s) { var x = lmPt(l, s); if (!x || x[0] <= 60) return; var dd = Math.hypot(s[0] - c[0], s[1] - c[1]); if (dd < bd) { bd = dd; best = x; } }); });
+      if (best) { w.relm = [best[1], best[2]]; relit++; }
+    });
+    /* 층 매기기 · 이긴 면은 진 면보다 한 층 위(사슬도 · 최대 3층) · 앞 층 = polygonOffset(남은 0.3mm 겹침만 가린다 · 정점은 옮기지 않는다) */
     for (var it = 0; it < 4; it++) plist.forEach(function (q) { var lw = q[0].lv || 0, ll = q[1].lv || 0; if (lw <= ll && ll < 3) q[0].lv = ll + 1; });
     var tie = plist.filter(function (q) { return (q[0].lv || 0) <= (q[1].lv || 0); }).length;
-    for (var rl = 0; rl < 8; rl++) plist.forEach(function (q) { var w = q[0], l = q[1]; if (!w.lv) return; var nd = l.off + l.need + ZGAP - w.off; if (nd > w.need) w.need = Math.min(0.03, nd); });   /* 앞 층 자리 = 진 면(옮긴 뒤) + 5mm · 사슬이면 여러 번 */
-    var front = new Map(); buckets.forEach(function (L) { L.forEach(function (r) { if (r.lv) { var k = r.mi + ':' + r.lv; if (!front.has(k)) front.set(k, []); front.get(k).push(r); } }); });
-    var moved = 0, pushed = 0, maxPush = 0, matC = new Map(), names = [];
-    var byMesh = new Map(); front.forEach(function (rs, k) { var mi = +k.split(':')[0]; if (!byMesh.has(mi)) byMesh.set(mi, []); byMesh.get(mi).push([+k.split(':')[1], rs]); });
-    /* 한 메시의 모든 층을 원래 번호로 한 번에 나눈다(v5.38 은 층마다 나눈 뒤 바뀐 번호로 다음 층을 나눠 엉뚱한 면이 옮겨질 수 있었다) */
-    byMesh.forEach(function (lvs, mi) {
-      var o = meshes[mi], geo = o.geometry, idx = geo.index, n = idx ? idx.count : geo.attributes.position.count, own = new Map(), keep = [], frs = {};
-      lvs.forEach(function (q) { q[1].forEach(function (r) { own.set(r.t, q[0]); }); frs[q[0]] = []; });
-      for (var t = 0; t < n; t += 3) { var lv = own.get(t), arr = lv ? frs[lv] : keep; arr.push(idx ? idx.getX(t) : t, idx ? idx.getX(t + 1) : t + 1, idx ? idx.getX(t + 2) : t + 2); }
-      geo.setIndex(keep);
-      lvs.forEach(function (q) { splitFront(o, geo, idx, q[0], q[1], frs[q[0]]); });
-    });
-    function splitFront(o, geo, idx, lv, rs, fr) {
-      var g2 = new T.BufferGeometry(); for (var nm in geo.attributes) g2.setAttribute(nm, nm === 'position' ? f32Pos(geo.attributes[nm]) : geo.attributes[nm]); g2.setIndex(fr);
-      /* 정점 옮기기 · 세계 법선 x 필요 거리 → 메시 좌표 · 한 정점을 여러 앞 면이 쓰면 가장 큰 값 */
-      var inv = new T.Matrix3().setFromMatrix4(o.matrixWorld).invert(), p2 = g2.attributes.position, mv = new Map(), dv = new T.Vector3();
-      rs.forEach(function (r) {
-        if (r.need <= 0) return;
-        for (var k = 0; k < 3; k++) { var vi = idx ? idx.getX(r.t + k) : r.t + k, old = mv.get(vi); if (!old || old.d < r.need) mv.set(vi, { d: r.need, n: r.nw }); }
-      });
-      mv.forEach(function (q, vi) { dv.set(q.n[0], q.n[1], q.n[2]).multiplyScalar(q.d).applyMatrix3(inv); p2.setXYZ(vi, p2.getX(vi) + dv.x, p2.getY(vi) + dv.y, p2.getZ(vi) + dv.z); pushed++; if (q.d > maxPush) maxPush = q.d; });
-      p2.needsUpdate = true; g2.computeBoundingSphere(); g2.computeBoundingBox();
-      var m0 = o.material, mk = m0.uuid + ':' + lv, m2 = matC.get(mk);
-      if (!m2) { m2 = m0.clone(); m2.polygonOffset = true; m2.polygonOffsetFactor = -1; m2.polygonOffsetUnits = -1; matC.set(mk, m2); }   /* v5.40 앞뒤는 실제 거리(5mm)가 정한다 · 층마다 더 당기던 polygonOffset(-lv · -4lv)은 16비트 깊이에서 몇 cm 를 당겨 뒤 면(까만 라이트맵)이 판을 덮었다 · 모든 앞 층이 같은 작은 값 */
-      var f = new T.Mesh(g2, m2); f.name = o.name + '_front' + lv; f.userData = o.userData; f.matrixAutoUpdate = false; f.matrix.copy(o.matrix); o.parent.add(f); f.updateMatrixWorld(true);
-      moved += fr.length / 3; if (names.indexOf(o.name) < 0) names.push(o.name);
-    }
-    G.zfix = { tris: nTri, pairs: pairs, same: pairs - plist.length, tie: tie, moved: moved, pushed: pushed, maxPush: +maxPush.toFixed(4), lifted: lifted, posters: posters, meshes: names, ms: Math.round(performance.now() - t0) };
-  }
-  /* 기둥 포스터(ME to WE 판 · 기둥 비우기 셰이더라 위 겹침 판정에서 빠진다) · 16비트 깊이에서 기둥 화강암과 겹쳐 까맣게 깜빡였다(사용자 캡처 오른쪽 위 판들) · 면마다 기둥 바깥으로 8mm */
-  function liftPillarPosters(root) {
-    var va = new T.Vector3(), vb = new T.Vector3(), vc = new T.Vector3(), nn = new T.Vector3(), cnt = 0;
-    root.traverse(function (o) {
-      if (!o.isMesh || !/^panel_/.test(o.name) || !underName(o, /^pillars$/)) return;
-      var geo = o.geometry, idx = geo.index, m = o.matrixWorld, inv = new T.Matrix3().setFromMatrix4(m).invert(), mv = new Map();
-      geo.setAttribute('position', f32Pos(geo.attributes.position)); var pos = geo.attributes.position, n = idx ? idx.count : pos.count;
+    var byMesh = new Map(); recs.forEach(function (r) { if (!byMesh.has(r.mi)) byMesh.set(r.mi, new Map()); byMesh.get(r.mi).set(r.t, r); });
+    var moved = 0, added = 0, matC = new Map(), names = [], picks = S.picks;
+    byMesh.forEach(function (rm, mi) {
+      var o = meshes[mi], geo = o.geometry, idx = geo.index, n = idx ? idx.count : geo.attributes.position.count, re = false, lvs = false;
+      rm.forEach(function (r) { if (r.cut || r.relm) re = true; if (r.lv) lvs = true; });
+      if (!re && !lvs) return;
+      var lists = {}, flags = {}, A = null, cnt = geo.attributes.position.count, keys = Object.keys(geo.attributes);
+      if (re) { A = {}; keys.forEach(function (nm) { A[nm] = f32Arr(geo.attributes[nm]); }); }
       for (var t = 0; t < n; t += 3) {
-        var ia = idx ? idx.getX(t) : t, ib = idx ? idx.getX(t + 1) : t + 1, ic = idx ? idx.getX(t + 2) : t + 2;
-        va.fromBufferAttribute(pos, ia).applyMatrix4(m); vb.fromBufferAttribute(pos, ib).applyMatrix4(m); vc.fromBufferAttribute(pos, ic).applyMatrix4(m);
-        nn.subVectors(vb, va).cross(vc.clone().sub(va)).normalize(); if (Math.abs(nn.y) > 0.3) continue;
-        /* v5.42 바깥 = 가장 가까운 기둥 가운데에서 먼 쪽(삼각형 감는 방향은 면마다 달라 v5.40 은 일부 면을 안으로 넣었다 · 사용자 261003 「여기 포스터 없어」 · 화강암의 구운 그림자만 까맣게 남음) */
-        var cx = (va.x + vb.x + vc.x) / 3, cz = (va.z + vb.z + vc.z) / 3, bp = null, bd = 1e9;
-        PIL.forEach(function (q) { var d = Math.hypot(cx - (q[0] - 16), cz - (6 - q[1])); if (d < bd) { bd = d; bp = q; } });
-        if (bp && nn.x * (cx - (bp[0] - 16)) + nn.z * (cz - (6 - bp[1])) < 0) nn.negate();
-        [ia, ib, ic].forEach(function (vi) { if (!mv.has(vi)) mv.set(vi, nn.clone()); });
+        var r = rm.get(t), lv = r && r.lv ? r.lv : 0, L = lists[lv] || (lists[lv] = []), F = flags[lv] || (flags[lv] = []), vi = [idx ? idx.getX(t) : t, idx ? idx.getX(t + 1) : t + 1, idx ? idx.getX(t + 2) : t + 2];
+        if (!re || !r || (!r.cut && !r.relm)) { L.push(vi[0], vi[1], vi[2]); F.push(0); continue; }
+        var vo = r.flip ? [vi[0], vi[2], vi[1]] : vi, Pa = r.P[0], Pb = r.P[1], Pc = r.P[2], den = (Pb[1] - Pc[1]) * (Pa[0] - Pc[0]) + (Pc[0] - Pb[0]) * (Pa[1] - Pc[1]);
+        (r.cut ? r.pieces : [r.P]).forEach(function (pc) {
+          var ids = pc.map(function (q) {
+            var w0 = ((Pb[1] - Pc[1]) * (q[0] - Pc[0]) + (Pc[0] - Pb[0]) * (q[1] - Pc[1])) / den, w1 = ((Pc[1] - Pa[1]) * (q[0] - Pc[0]) + (Pa[0] - Pc[0]) * (q[1] - Pc[1])) / den, w2 = 1 - w0 - w1;
+            keys.forEach(function (nm) {
+              var k = geo.attributes[nm].itemSize, ar = A[nm];
+              for (var j = 0; j < k; j++) ar.push(nm === 'uv1' && r.relm ? r.relm[j] : w0 * ar[vo[0] * k + j] + w1 * ar[vo[1] * k + j] + w2 * ar[vo[2] * k + j]);
+            });
+            added++; return cnt++;
+          });
+          for (var k = 1; k + 1 < ids.length; k++) { if (r.flip) L.push(ids[0], ids[k + 1], ids[k]); else L.push(ids[0], ids[k], ids[k + 1]); F.push(r.cut ? 1 : 0); }
+        });
       }
-      mv.forEach(function (d, vi) { d.multiplyScalar(0.008).applyMatrix3(inv); pos.setXYZ(vi, pos.getX(vi) + d.x, pos.getY(vi) + d.y, pos.getZ(vi) + d.z); cnt++; });
-      pos.needsUpdate = true; geo.computeBoundingSphere(); geo.computeBoundingBox();
+      var g2 = geo;
+      if (re) {
+        g2 = new T.BufferGeometry(); keys.forEach(function (nm) { g2.setAttribute(nm, new T.BufferAttribute(new Float32Array(A[nm]), geo.attributes[nm].itemSize)); });
+        g2.setIndex(lists[0] || []); g2.userData.cutF = flags[0] || []; g2.computeBoundingSphere(); g2.computeBoundingBox(); o.geometry = g2; geo.dispose();
+      } else { geo.setIndex(lists[0] || []); }
+      Object.keys(lists).forEach(function (k) {
+        var lv = +k; if (!lv) return;
+        var g3 = new T.BufferGeometry(); keys.forEach(function (nm) { g3.setAttribute(nm, g2.attributes[nm]); }); g3.setIndex(lists[k]); g3.userData.cutF = flags[k]; g3.computeBoundingSphere(); g3.computeBoundingBox();
+        var m0 = o.material, mk = m0.uuid + ':' + lv, m2 = matC.get(mk);
+        if (!m2) { m2 = m0.clone(); m2.polygonOffset = true; m2.polygonOffsetFactor = -1; m2.polygonOffsetUnits = -1; matC.set(mk, m2); }   /* 앞뒤는 잘라 낸 모양이 정한다 · polygonOffset 은 둘레 0.3mm 겹침만 */
+        var f = new T.Mesh(g3, m2); f.name = o.name + '_front' + lv; f.userData = o.userData; f.matrixAutoUpdate = false; f.matrix.copy(o.matrix); o.parent.add(f); f.updateMatrixWorld(true);
+        if (picks && picks.indexOf(o) >= 0) picks.push(f);   /* 판을 누르면 앞 층도 판 */
+        moved += lists[k].length / 3;
+      });
+      if (names.indexOf(o.name) < 0) names.push(o.name);
     });
-    return cnt;
+    G.zfix = { tris: nTri, pairs: pairs, same: pairs - plist.length, tie: tie, cut: cut, gone: gone, relit: relit, patched: patched, added: added, moved: moved, lifted: lifted, meshes: names, ms: Math.round(performance.now() - t0) };
+  }
+  /* v5.44 라이트맵 고치기 · 아틀라스마다 그려지는 삼각형이 덮는 화소(가운데 점 기준)만 「쓸 수 있음」 · 나머지는 가까운 쓸 수 있는 화소 색으로 24px 까지 채운다(8방향 너비 우선)
+   *   섬 밖 검은 여백(판 가장자리 검은 줄) · 잘려 나간 자리(가려졌던 까만 면) · 2px 보다 가는 잘린 조각(판 사이 틈)이 모두 둘레 색이 된다 · 그다음 밉맵(멀리서 가는 줄이 깜빡이지 않게) */
+  function fixLightmaps(root) {
+    var t0 = performance.now(), groups = new Map(), filled = 0, nTex = 0, eroded = 0;
+    root.traverse(function (o) {
+      if (!o.isMesh || !o.material || Array.isArray(o.material) || !o.material.lightMap || !o.geometry || !o.geometry.attributes.uv1) return;
+      var tx = o.material.lightMap, im = tx.image; if (!im || !im.width) return;
+      if (!groups.has(im)) groups.set(im, { tex: [], ms: [] }); var g = groups.get(im); if (g.tex.indexOf(tx) < 0) g.tex.push(tx); g.ms.push(o);
+    });
+    groups.forEach(function (g, im) {
+      try {
+        var W = im.width, H = im.height, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+        var cx = cv.getContext('2d', { willReadFrequently: true }); cx.drawImage(im, 0, 0);
+        var d = cx.getImageData(0, 0, W, H), px = d.data, ok = new Uint8Array(W * H), fy = g.tex[0].flipY, pan = g.ms.every(function (o) { return /^panel_\d+/.test(o.name); }), lab = pan ? new Uint16Array(W * H) : null;
+        g.ms.forEach(function (o) {
+          var LB = pan ? +o.name.match(/^panel_(\d+)/)[1] + 1 : 0;
+          var geo = o.geometry, uv = geo.attributes.uv1, idx = geo.index, n = idx ? idx.count : uv.count, cf = geo.userData.cutF;
+          for (var t = 0, k = 0; t < n; t += 3, k++) {
+            var ia = idx ? idx.getX(t) : t, ib = idx ? idx.getX(t + 1) : t + 1, ic = idx ? idx.getX(t + 2) : t + 2;
+            var ax = uv.getX(ia) * W, ay = (fy ? 1 - uv.getY(ia) : uv.getY(ia)) * H, bx = uv.getX(ib) * W, by = (fy ? 1 - uv.getY(ib) : uv.getY(ib)) * H, cx_ = uv.getX(ic) * W, cy = (fy ? 1 - uv.getY(ic) : uv.getY(ic)) * H;
+            var ar2 = (bx - ax) * (cy - ay) - (by - ay) * (cx_ - ax); if (Math.abs(ar2) < 1e-9) continue;
+            if (cf && cf[k] && Math.abs(ar2) / Math.max(Math.hypot(bx - ax, by - ay), Math.hypot(cx_ - bx, cy - by), Math.hypot(ax - cx_, ay - cy)) < 2) { var mi = (clamp(Math.floor((ay + by + cy) / 3), 0, H - 1) * W + clamp(Math.floor((ax + bx + cx_) / 3), 0, W - 1)) * 4; if (px[mi] + px[mi + 1] + px[mi + 2] < 120) continue; }   /* 2px 보다 가늘고 까만 잘린 조각(판 사이 틈 등)은 둘레 색으로 · 밝은 조각(가는 기둥 앞면)은 그대로 */
+            var s = ar2 > 0 ? 1 : -1, x0 = Math.max(0, Math.floor(Math.min(ax, bx, cx_))), x1 = Math.min(W - 1, Math.ceil(Math.max(ax, bx, cx_))), y0 = Math.max(0, Math.floor(Math.min(ay, by, cy))), y1 = Math.min(H - 1, Math.ceil(Math.max(ay, by, cy)));
+            for (var y = y0; y <= y1; y++) for (var x = x0; x <= x1; x++) {
+              var qx = x + 0.5, qy = y + 0.5;
+              if (s * ((bx - ax) * (qy - ay) - (by - ay) * (qx - ax)) >= 0 && s * ((cx_ - bx) * (qy - by) - (cy - by) * (qx - bx)) >= 0 && s * ((ax - cx_) * (qy - cy) - (ay - cy) * (qx - cx_)) >= 0) { ok[y * W + x] = 1; if (lab) lab[y * W + x] = LB; }
+            }
+          }
+        });
+        LM_PATCH.forEach(function (pt) {   /* 둘 다 까맣게 구워진 겹침 자리 = 다시 칠할 곳 */
+          if (pt.im !== im) return; var P2 = pt.poly, x0 = Math.max(0, Math.floor(Math.min.apply(null, P2.map(function (q) { return q[0]; })))), x1 = Math.min(W - 1, Math.ceil(Math.max.apply(null, P2.map(function (q) { return q[0]; })))), y0 = Math.max(0, Math.floor(Math.min.apply(null, P2.map(function (q) { return q[1]; })))), y1 = Math.min(H - 1, Math.ceil(Math.max.apply(null, P2.map(function (q) { return q[1]; })))), sg = sArea(P2) > 0 ? 1 : -1;
+          for (var y = y0; y <= y1; y++) for (var x = x0; x <= x1; x++) { var inside = true; for (var e = 0; e < P2.length && inside; e++) { var a = P2[e], b = P2[(e + 1) % P2.length]; if (sg * ((b[0] - a[0]) * (y + 0.5 - a[1]) - (b[1] - a[1]) * (x + 0.5 - a[0])) < 0) inside = false; } if (inside && ok[y * W + x] === 1) ok[y * W + x] = 0; }
+        });
+        /* v5.44 판 아틀라스만(모든 사용자가 panel_*) · 판 섬 가장자리 한 줄이 굽기에서 까맣게 남았다(판 위 · 아래 끝 검은 줄) · 같은 판의 2칸 안 안쪽 화소 색으로 바꾼다 */
+        if (lab) {
+          var edge = new Uint8Array(W * H);
+          for (var y3 = 0; y3 < H; y3++) for (var x3 = 0; x3 < W; x3++) { var c3 = y3 * W + x3; if (ok[c3] !== 1) continue; for (var dy3 = -1; dy3 <= 1 && !edge[c3]; dy3++) for (var dx3 = -1; dx3 <= 1; dx3++) { var xx3 = x3 + dx3, yy3 = y3 + dy3; if (xx3 < 0 || yy3 < 0 || xx3 >= W || yy3 >= H || ok[yy3 * W + xx3] !== 1 || lab[yy3 * W + xx3] !== lab[c3]) { edge[c3] = 1; break; } } }
+          for (var y4 = 0; y4 < H; y4++) for (var x4 = 0; x4 < W; x4++) {
+            var c4 = y4 * W + x4; if (!edge[c4]) continue;
+            for (var rr = 1, fd = -1; rr <= 2 && fd < 0; rr++) for (var dy4 = -rr; dy4 <= rr && fd < 0; dy4++) for (var dx4 = -rr; dx4 <= rr; dx4++) { var xx4 = x4 + dx4, yy4 = y4 + dy4, n4 = yy4 * W + xx4; if (xx4 >= 0 && yy4 >= 0 && xx4 < W && yy4 < H && ok[n4] === 1 && !edge[n4] && lab[n4] === lab[c4]) { fd = n4; break; } }
+            if (fd >= 0) { px[c4 * 4] = px[fd * 4]; px[c4 * 4 + 1] = px[fd * 4 + 1]; px[c4 * 4 + 2] = px[fd * 4 + 2]; eroded++; }
+          }
+        }
+        var qu = new Int32Array(W * H), dist = new Uint8Array(W * H), h = 0, tl = 0;
+        for (var i = 0; i < W * H; i++) if (ok[i]) qu[tl++] = i;
+        if (!tl) return;
+        while (h < tl) {
+          var c = qu[h++], dc = dist[c]; if (dc >= 24) continue;
+          var x2 = c % W, y2 = (c / W) | 0;
+          for (var dy = -1; dy <= 1; dy++) for (var dx = -1; dx <= 1; dx++) {
+            var xx = x2 + dx, yy = y2 + dy; if ((!dx && !dy) || xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
+            var nb = yy * W + xx; if (ok[nb]) continue;
+            ok[nb] = 2; dist[nb] = dc + 1; px[nb * 4] = px[c * 4]; px[nb * 4 + 1] = px[c * 4 + 1]; px[nb * 4 + 2] = px[c * 4 + 2]; px[nb * 4 + 3] = 255; qu[tl++] = nb; filled++;
+          }
+        }
+        cx.putImageData(d, 0, 0);
+        g.tex.forEach(function (tx) { tx.image = cv; tx.minFilter = T.LinearMipmapLinearFilter; tx.generateMipmaps = true; tx.needsUpdate = true; });
+        nTex++;
+      } catch (e) { G.lmErr = String(e && e.message || e); }
+    });
+    G.lmfix = { tex: nTex, filled: filled, eroded: eroded, patch: LM_PATCH.length, ms: Math.round(performance.now() - t0) };
   }
   /* 바닥에 깔린 얇은 판 띄우기 · 바닥(floor · paving · base)이 아닌 메시에서 위를 보는 면 중 세 꼭짓점이 바닥 위 -0.5~3cm 인 것 + 같은 자리의 옆면 꼭짓점 → ZLIFT 만큼 위로 */
   function liftFloorPlates(root) {
@@ -526,7 +643,7 @@
   function load() {
     $('load').hidden = false;
     S.load(BASE + 'lobby.glb?v=' + LABVER, function (k) { $('load').textContent = '모형 불러오는 중 ' + Math.round(k * 100) + '%'; var bt = $('blackT'); if (!bt.classList.contains('on')) bt.textContent = '불러오는 중 ' + Math.round(k * 100) + '%'; }, function () {
-      fixCoplanar(S.lobby); buildGrid(S.lobby); patchPillars(S.lobby); buildDoor();
+      fixCoplanar(S.lobby); fixLightmaps(S.lobby); buildGrid(S.lobby); patchPillars(S.lobby); buildDoor();
       var st = STOPS[0], f = nearestFree(st.x, st.z); flood(f[0], f[1]);
       STOPS.forEach(function (s) { var q = nearestFree(s.x, s.z); if (q) { s.x = q[0]; s.z = q[1]; } });
       buildGuides(); hideCheckin(); buildTypingTv(); buildTvs();
@@ -1390,7 +1507,7 @@
     var wm = performance.now() - w0; G.workMs = G.workMs == null ? wm : G.workMs * 0.95 + wm * 0.05; G.workMax = Math.max(G.workMax || 0, wm);
     if (!$('dest').hidden && G.destAt) { _p.copy(G.destAt).project(camera); $('dest').style.left = ((_p.x + 1) / 2 * $('stage').clientWidth).toFixed(1) + 'px'; $('dest').style.top = ((1 - _p.y) / 2 * $('stage').clientHeight).toFixed(1) + 'px'; }
     G.frames.push(now); while (G.frames.length && now - G.frames[0] > 1000) G.frames.shift();
-    if (G.showFps) { $('fps').hidden = false; $('fps').textContent = 'fps ' + G.frames.length + ' · ' + renderer.info.render.calls + ' draw · dpr ' + renderer.getPixelRatio() + ' · z' + G.depthBits; }
+    if (G.showFps) { $('fps').hidden = false; $('fps').textContent = G.diag ? diagText() : 'fps ' + G.frames.length + ' · ' + renderer.info.render.calls + ' draw · dpr ' + renderer.getPixelRatio() + ' · z' + G.depthBits; }
     if (G.bench) { G.bench.ts.push(now); if (now - G.bench.t0 > G.bench.ms) { var b = G.bench; G.bench = null; b.done(summ(b.ts)); } }
     if (G.loaded && !G.probed) { G.probe.push(now); if (G.probe.length >= 50) { G.probed = true; var s = summ(G.probe); G.probeResult = s; if (s.p50 > 34) { renderer.setPixelRatio(1); S.lowPower(); resize(); TV_FPS = 6; MUS.lite = true; } } }
   }
@@ -1762,7 +1879,10 @@
     musWire();
     $('bHelp').onclick = showHelp; $('hOk').onclick = hideHelp; $('help').addEventListener('click', function (e) { if (e.target === $('help')) hideHelp(); });
     wireSheet();
-    G.showFps = Q.get('fps') === '1';
+    var dq = Q.get('t3diag');   /* 시험판 주소 값 · 앱은 index.html 이 주소의 ?t3diag=1 을 이 기기 저장(axfT3Diag)으로 옮긴다 */
+    if (dq === '1') store.set('axfT3Diag', '1'); else if (dq === '0') { try { localStorage.removeItem('axfT3Diag'); } catch (e) {} }
+    G.diag = store.get('axfT3Diag') === '1'; $('fps').classList.toggle('diag', G.diag);
+    G.showFps = Q.get('fps') === '1' || G.diag;
     G.t0 = performance.now();
     if (!window.TourScene || !T || !init3D()) { noGl(); return; }
     wireStage(); resize(); window.addEventListener('resize', resize);
@@ -1907,5 +2027,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, ver: 'v5.43', v3: true };
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, ver: 'v5.44', v3: true };
 })();
