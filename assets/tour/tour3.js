@@ -67,7 +67,7 @@
 
   /* ═══════════ 3D 준비 ═══════════ */
   var renderer, scene, camera, S, bot, botParts = {}, shadow, pillarMats = [];
-  /* v5.44 실기기 진단(주소 ?t3diag=1 · 이 기기에 기억 · ?t3diag=0 이면 끔) · 개인정보 없음(GPU 이름 · 깊이 비트 · highp · MSAA · DPR · fps · 모형 손질 수) */
+  /* v5.44 실기기 진단(v5.47 주소 ?t3diag=1 인 그 페이지에서만 · 기기에 기억하지 않는다) · 개인정보 없음(GPU 이름 · 깊이 비트 · highp · MSAA · DPR · fps · 모형 손질 수) */
   function gpuInfo(gl) {
     var ex = null, hp = null; try { ex = gl.getExtension('WEBGL_debug_renderer_info'); hp = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT); } catch (e) {}
     return { ren: String((ex && gl.getParameter(ex.UNMASKED_RENDERER_WEBGL)) || gl.getParameter(gl.RENDERER) || '?'), gl2: !!renderer.capabilities.isWebGL2, highp: !!(hp && hp.precision > 0), hpBits: hp ? hp.precision : 0, msaa: gl.getParameter(gl.SAMPLES), dpr: +(window.devicePixelRatio || 1).toFixed(2) };
@@ -1069,7 +1069,9 @@
    * 앞 몫이 0.7 아래로 꺾이거나 손을 떼면 바로 걷기 속도 · 좌로 · 우로 돌기만으로는 풀리지 않는다 · 자동 걷기(구역 버튼 · 바닥 톡)는 달리지 않는다
    * 달리는 동안: 발밑 먼지(점 입자 18개 · 뒤로 퍼짐) · 몸 앞으로 기울임 · 시야각 +7도 · 움직임 줄이기 = 먼지 · 시야각 · 기울임 없이 속도만 */
   var WALK_V = 3.2, RUN_AFTER = 3.0, RUN_RAMP = 0.3, RUN_IN = 0.85, RUN_KEEP = 0.7;
+  var RUN_ON = false;   /* v5.47 (사용자 261004 「앞을 계속 누르면 캐릭터가 빨리 달리는 거 없애자 이상하자」) 달리기 끔 · 걷기 3.2m/s 만 · G.run 이 늘 0 이라 먼지 · 시야각 · 기울임도 없다 · 코드는 보존 */
   function stepRun(dt) {
+    if (!RUN_ON) { G.fwdT = 0; G.run = 0; return; }
     var st = G.stick, mg = Math.hypot(st.x, st.y), fwd = -st.y;   /* 패드 위 = y 음수 */
     if (fwd >= (G.run > 0 ? RUN_KEEP : RUN_IN) && mg >= (G.run > 0 ? 0.75 : 0.9)) G.fwdT += dt; else { G.fwdT = 0; G.run = 0; return; }
     if (G.fwdT >= RUN_AFTER) { if (!G.run) G.runAt = performance.now(); G.run = Math.min(1, G.run + dt / RUN_RAMP); }
@@ -2187,9 +2189,9 @@
     musWire();
     $('bHelp').onclick = showHelp; $('hOk').onclick = hideHelp; $('help').addEventListener('click', function (e) { if (e.target === $('help')) hideHelp(); });
     wireSheet();
-    var dq = Q.get('t3diag');   /* 시험판 주소 값 · 앱은 index.html 이 주소의 ?t3diag=1 을 이 기기 저장(axfT3Diag)으로 옮긴다 */
-    if (dq === '1') store.set('axfT3Diag', '1'); else if (dq === '0') { try { localStorage.removeItem('axfT3Diag'); } catch (e) {} }
-    G.diag = store.get('axfT3Diag') === '1'; $('fps').classList.toggle('diag', G.diag);
+    var dq = Q.get('t3diag');   /* 시험판 주소 값 · 앱은 index.html 이 주소에 ?t3diag=1 이 있을 때만 window.AXT3_DIAG = true */
+    try { localStorage.removeItem('axfT3Diag'); } catch (e) {}   /* v5.47 (사용자 261004 「배포 버전에서도 좌상단에 좌표나 테스트 내용이 뜨는데 없애줘」) 옛 기기 기억(v5.44)은 무시하고 지운다 */
+    G.diag = dq === '1' || window.AXT3_DIAG === true; $('fps').classList.toggle('diag', G.diag);
     G.showFps = Q.get('fps') === '1' || G.diag;
     G.t0 = performance.now();
     if (!window.TourScene || !T || !init3D()) { noGl(); return; }
@@ -2335,5 +2337,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, ver: 'v5.45', v3: true };
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, ver: 'v5.47', v3: true };
 })();
