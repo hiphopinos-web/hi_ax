@@ -339,3 +339,9 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3.rm .look, #axTour3.rm .look .lt { transition: none; }
 #axTour3.rm .look.pop .lk { animation: none; }
 @media (prefers-reduced-motion: reduce) { #axTour3 .look, #axTour3 .look .lt { transition: none; } #axTour3 .look.pop .lk { animation: none; } }
+/* v5.55 엘리베이터 아이리스 · 검정 덮개(캔버스) + 가운데 흰 글자 두 줄 · 흐름 동안 누름을 받는다(입력 막음) */
+#axTour3 .iris { position: fixed; inset: 0; z-index: 72; pointer-events: auto; touch-action: none; }
+#axTour3 .iris .icv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#axTour3 .iris .it { position: absolute; left: 16px; right: 16px; top: 50%; transform: translateY(-50%); margin: 0; text-align: center; color: #FFFFFF; font-size: 20px; font-weight: 700; line-height: 1.6; letter-spacing: 0; opacity: 0; transition: opacity .25s; }
+#axTour3 .iris .it span { display: block; }
+#axTour3 .iris .it.on { opacity: 1; }
