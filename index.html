@@ -2022,10 +2022,25 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   @keyframes tinvR { from { transform: none; } to { transform: translateX(101%); } }
   @keyframes tinvB { from { transform: none; } to { transform: translateY(101%); } }
   @media (prefers-reduced-motion: reduce) { .axs-inv.run .pc, .axs-inv.run .seal { animation: none; display: none; } }
-  /* v5.53 행사 전 큰 카드(사진 4장 순환 · 칩 · 버튼 · 진행 막대) 걷음 · 홈 입구 = 한 줄 「행사장 둘러보기」(아래 .ico.th 줄) */
-  /* v5.46 행사 당일 · 종료 뒤 줄 · 왼쪽 원 안에 3D 로비 사진 */
-  #view[data-v="home"] .rc .ls .ico.th, .rc .ls .ico.th { border: 0; overflow: hidden; background: var(--ax-color-brandSoft); }
-  .rc .ls .ico.th img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* v5.53 행사 전 큰 카드(사진 4장 순환 · 칩 · 버튼 · 진행 막대) 걷음 · 홈 입구 = 한 줄 「행사장 둘러보기」(아래 .ico.tbot 줄) */
+  /* v5.56 (사용자 261004 「행사장 둘러보기의 아이콘이 너무 허접해 · 챗봇을 배치」) 왼쪽 원 = 옛 3D 로비 사진(thumb.jpg · 지움) 대신 행사 캐릭터 챗봇(원본 BOT_SVG 합성 · design.md A-4)
+     둘러보기 안 「내 캐릭터」와 같은 주황 · 연주황 몸 · 원 = 연주황(brandSoft · O10) 테 없음 · 캐릭터 46px(viewBox 200 그대로 · 원 42 안에 다 들어감)
+     움직임 = 3초에 한 번 천천히 통통(위로 3px · 모양 그대로) · 머리 위 전파 호 3개 은은하게(최대 0.7) · 9초마다 눈 깜빡임 2번 · 반달 눈웃음 1번
+     홈은 4초마다 다시 그려지므로 모든 주기를 9초의 약수로 두고 --td(= -(지금 % 9000)ms)로 위상을 이어 간다(다시 그려도 처음부터 튀지 않는다)
+     동작 줄이기 = 모두 정지(전파 호 옅게 0.35 · 평소 눈) */
+  #view[data-v="home"] .rc .ls .ico.tbot, .rc .ls .ico.tbot { border: 0; background: var(--ax-color-brandSoft); overflow: visible; }
+  .rc .ls .ico.tbot svg { position: absolute; left: -2px; top: 1.5px; width: 46px; height: 46px; overflow: visible; animation: tbHop 3s infinite; animation-delay: var(--td, 0s); }
+  .rc .ls .ico.tbot .eye { transform-box: fill-box; transform-origin: center; animation: tbEye 9s linear infinite; animation-delay: var(--td, 0s); }
+  .rc .ls .ico.tbot .sm path { fill: none; stroke: var(--ax-color-ink); stroke-width: 4.4; stroke-linecap: round; }
+  .rc .ls .ico.tbot .sm { opacity: 0; animation: tbSmile 9s linear infinite; animation-delay: var(--td, 0s); }
+  .rc .ls .ico.tbot .ant path { fill: none; stroke: var(--ax-color-brand); stroke-width: 5.5; stroke-linecap: round; opacity: 0; animation: tbWave 3s ease-out infinite; animation-delay: var(--td, 0s); }
+  .rc .ls .ico.tbot .ant path:nth-child(2) { animation-delay: calc(var(--td, 0s) - 2.8s); }
+  .rc .ls .ico.tbot .ant path:nth-child(3) { animation-delay: calc(var(--td, 0s) - 2.6s); }
+  @keyframes tbHop { 0%, 100% { transform: translateY(0); animation-timing-function: cubic-bezier(.3, .7, .5, 1); } 42% { transform: translateY(-3px); animation-timing-function: cubic-bezier(.5, 0, .75, .45); } 84% { transform: translateY(0); } }
+  @keyframes tbEye { 0%, 20%, 23.5%, 54.9%, 70.1%, 86%, 89.5%, 100% { transform: scaleY(1); opacity: 1; } 21.7%, 87.7% { transform: scaleY(.12); opacity: 1; } 55%, 70% { transform: scaleY(1); opacity: 0; } }
+  @keyframes tbSmile { 0%, 54.9%, 70.1%, 100% { opacity: 0; } 55%, 70% { opacity: 1; } }
+  @keyframes tbWave { 0% { opacity: 0; } 18% { opacity: .7; } 62%, 100% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .rc .ls .ico.tbot svg, .rc .ls .ico.tbot .eye, .rc .ls .ico.tbot .sm, .rc .ls .ico.tbot .ant path { animation: none; } .rc .ls .ico.tbot .sm { opacity: 0; } .rc .ls .ico.tbot .ant path { opacity: .35; } }
 </style>
 <style id="panCss">
   /* ═══════ v4.93 1F 판 문법 · 공통 부품 K (261001 사용자 확정 · design.md A-5 5-19 · 정본 「디자인 시안/프로그램 탭 개편/IA 검토.md」 7-5 · 8-1)
@@ -3758,7 +3773,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.55";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.56";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -6536,7 +6551,7 @@ function crowdStripHtml() {
 /* v5.37 (사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) 둘러보기 v3 = 시험 페이지와 같은 공용 모듈(tour3.js · tour3.css · 캐릭터 걷기 · 40도 시점 · 왼손 패드 · 오른손 십자 · 작은 지도 · 스태프 챗봇 · 판 보기 · 돋보기 2개 · 움직임 줄이기 · 입장 암전)
    같은 약속 AXTour.open/close/back/isOpen · 옛 v2(tour.js · tour.css · 자동 둘러보기 · 평면 지도 · 구역 시트)로 되돌리려면 아래 목록의 tour3 두 개를 tour.css · tour.js 로 바꾸면 된다(파일은 그대로 둠) */
 /* v5.38 (사용자 261003) 둘러보기 손질 · 캐릭터 겹침(스태프 원 충돌) · 늘 카메라 쪽을 봄 · 조그 패드 · 안내데스크 깜빡임(겹친 면) · 정문 회전문 또렷하게 · 로비 음악(Web Audio 합성 · 「음악 없이」 · 위쪽 스피커 버튼) · 파일 이름 그대로 · 캐시 깨기 ver v538 */
-var TOUR = { ver: "v555", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
+var TOUR = { ver: "v556", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
 try { localStorage.removeItem('axfT3Diag'); } catch (e) {} window.AXT3_DIAG = /[?&]t3diag=1(?:&|$)/.test(location.search);   /* v5.47 진단은 주소에 ?t3diag=1 이 있는 그 페이지에서만 · 기억하지 않는다 · 옛 기기 기억은 지운다(사용자 261004) */   /* v5.44 둘러보기 실기기 진단(주소 ?t3diag=1 · 이 기기에 기억 · ?t3diag=0 이면 끔) · 화면 왼쪽 위에 GPU · 깊이 비트 · highp · DPR · fps */
 /* 켜기 스위치 · v5.28 true = 전체 공개(사용자 261003 「1층 3D 전체 공개」) · false 로 두면 입구 3곳 · 판 퀴즈 힌트 링크 · 열기가 모두 숨는다 */
 var TOUR_ON = true;
@@ -6571,12 +6586,16 @@ function tourRowHtml() {
   return '<button type="button" class="axs-zfl axs-tourgo" onclick="tourOpen()"><span class="tx"><span class="nm"><b>1층 둘러보기</b></span><span class="k">3D 모형으로 부스와 판 미리 보기</span></span><span class="zrt">' + CHEV_SVG + "</span></button>";
 }
 /* v5.53 (사용자 261004 「홈 화면에 1층 미리보기가 지금은 요소가 너무 과한 것 같아 · 행사장 둘러보기 한 문장 정도면 충분할 것 같아」) 홈 입구 = 한 줄 「행사장 둘러보기」
-   왼쪽 원 = 3D 로비 사진(thumb · 홈의 다른 줄과 같은 rc 문법) · 오른쪽 이동 표시 · 부제 · 3D 칩 · 버튼 · 사진 4장 순환 · 진행 막대 없음(옛 v5.46 큰 카드 · 시기별 부제 걷음)
-   자리는 시기별 그대로 · 행사 전 = 광고판 바로 아래(아직 일정 · 스탬프가 비어 있어 위에 둔다) · 당일 · 종료 뒤 = 나의 일정 아래(당일은 지금 · 다음 일정과 스탬프가 먼저 · design.md A-5)
-   사진은 처음 한 번만 lazy(받은 뒤에는 4초마다 다시 그려도 깜빡이지 않게 바로) */
+   왼쪽 원 = 행사 캐릭터 챗봇(v5.56 · tourBotHtml · 옛 3D 로비 사진 thumb 은 지움) · 오른쪽 이동 표시 · 부제 · 3D 칩 · 버튼 · 사진 4장 순환 · 진행 막대 없음(옛 v5.46 큰 카드 · 시기별 부제 걷음)
+   자리는 시기별 그대로 · 행사 전 = 광고판 바로 아래(아직 일정 · 스탬프가 비어 있어 위에 둔다) · 당일 · 종료 뒤 = 나의 일정 아래(당일은 지금 · 다음 일정과 스탬프가 먼저 · design.md A-5) */
 function tourLineHtml() {
-  var th = '<span class="ico th"><img src="' + TINV_IMG + 'thumb.jpg" alt=""' + (TINV.th ? "" : ' loading="lazy" onload="TINV.th = true"') + ' decoding="async"></span>';
-  return '<section class="axs-sec">' + rcHtml({ cls: " axs-tourgo", onclick: "tourOpen()", link: true, left: th, title: "행사장 둘러보기" }) + "</section>";
+  return '<section class="axs-sec">' + rcHtml({ cls: " axs-tourgo", onclick: "tourOpen()", link: true, left: tourBotHtml(), title: "행사장 둘러보기" }) + "</section>";
+}
+/* v5.56 줄 왼쪽 챗봇 · 원본 BOT_SVG(path 그대로 · viewBox 200 그대로) + 안테나 전파 호(BOT_WAVE) + 반달 눈웃음 호 2개(새 요소 · 눈 자리 위 · 평소 숨김)
+   --td = 9초 주기 안에서 지금의 위치(홈이 4초마다 다시 그려져도 움직임이 이어진다) · 사진 파일 없음(첫 로딩 바이트 0) */
+var TOUR_BOT_SM = '<g class="sm"><path d="M75.4 102.6 A6.2 6.2 0 0 1 87.1 102.6"/><path d="M112.9 102.6 A6.2 6.2 0 0 1 124.6 102.6"/></g>';
+function tourBotHtml() {
+  return '<span class="ico tbot" style="--td:-' + (Date.now() % 9000) + 'ms">' + BOT_SVG.replace("</svg>", BOT_WAVE + TOUR_BOT_SM + "</svg>") + "</span>";
 }
 function tourHomeHtml() {   /* 당일 · 종료 뒤 · 나의 일정 아래 */
   return tourOn() && evPhase() !== "before" ? tourLineHtml() : "";
@@ -6589,7 +6608,7 @@ function tourHeroHtml() {   /* 행사 전 · 광고판 바로 아래 */
    한 번 닫으면(두 버튼 · 뒷배경 · Esc · 뒤로) 이 기기에서 다시 뜨지 않는다(tour_inv · 기기 키) · TOUR_ON 이 꺼져 있으면 없음
    순서: 최초 로그인 장면 · 다른 시트 · 팝업 · 스탬프 연출 · 설치 안내 · 설정 · 둘러보기가 모두 닫힌 홈에서 · 알림 첫 질문은 이 초대와 둘러보기가 닫힌 뒤(pushSheetWait · tourInvHold)
    찍은 QR 을 이어 가는 방문(scanLinkRun · 장면의 scan 닫힘)은 건너뛰고 다음 방문의 홈에서 · 기존 가입자도 다음 홈에서 한 번 · 시연(#demo)은 &inv 일 때만 */
-var TINV = { skip: false, t: 0, t0: 0, ok: false, th: false };
+var TINV = { skip: false, t: 0, t0: 0, ok: false };
 var TINV_IMG = "assets/tour/inv/";
 function tourInvOk() {
   if (!TOUR_ON || TOUR_OFF || TINV.skip || S.get("tour_inv", false)) return false;

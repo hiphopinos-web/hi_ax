@@ -272,6 +272,12 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .black .bn { position: absolute; left: 0; right: 0; bottom: calc(28px + var(--safeB, 0px)); margin: 0; text-align: center; color: var(--onBrand); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
 /* 판 보기 다이브 · FLIP 동안 들어오는 애니메이션(sheetIn)을 끈다 */
 #axTour3 .sheet.flip { animation: none; will-change: transform, clip-path; }
+/* v5.56 자세히 보기 교차(.xf) · 시트 바탕은 투명 · 바탕(::before) · 머리 줄 · 카드 제목 · 넘김 단추는 --xfb · --xfu 로 서서히 · 변환 기준 = 왼쪽 위 */
+#axTour3 .sheet.xf, #axTour3 .sheet.na { animation: none; }   /* .na = 교차로 연 시트(닫을 때까지 · 들어오는 애니메이션을 다시 틀지 않는다) */
+#axTour3 .sheet.xf { background: transparent; transform-origin: 0 0; will-change: transform, opacity, clip-path; }
+#axTour3 .sheet.xf::before { content: ""; position: absolute; inset: 0; background: var(--canvas); opacity: var(--xfb, 0); pointer-events: none; }
+#axTour3 .sheet.xf > .sh, #axTour3 .sheet.xf > .sf { position: relative; opacity: var(--xfu, 0); }
+#axTour3 .sheet.xf .card h2 { opacity: var(--xfu, 0); }
 /* 설정 톱니 · 옛 확대 · 축소 +/- 자리(작은 지도 아래) */
 /* v5.53 설정 = 머리 줄 글자 단추(.hb.cfgh · .cfg 는 설정 창) · 옛 작은 지도 아래 둥근 톱니(.cfgb)는 없앰 */
 #axTour3 .hd .hb { padding: 0 10px; }
