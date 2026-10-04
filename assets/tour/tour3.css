@@ -233,6 +233,19 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 h1, #axTour3 h2, #axTour3 p { letter-spacing: 0; }
 
 /* ═══ v5.49 (사용자 261004) 스탬프 블록 이름표 · 게이트 「더 힘내세요!」 · 스탬프 카드 · 엘리베이터 버튼판 ═══ */
+/* v5.58 블록 이름표 없앰(.blab 은 만들지 않음) · 점프 강조 · 스태프 방향 점 · 말풍선 나타남 페이드 · 자세히 보기 판 위 자리 */
+#axTour3 .ctl .jump.hint .c { animation: jumpHint 1.4s ease-out infinite; }
+#axTour3 .ctl .jump.hint.soft .c, #axTour3.rm .ctl .jump.hint .c { animation: none; box-shadow: inset 0 0 0 2px #E5671E, 0 0 0 4px rgba(255, 127, 50, .45), 0 3px 10px rgba(229, 103, 30, .35); }
+@keyframes jumpHint { 0% { box-shadow: inset 0 0 0 2px #E5671E, 0 0 0 0 rgba(255, 127, 50, .7), 0 3px 10px rgba(229, 103, 30, .35); } 70% { box-shadow: inset 0 0 0 2px #E5671E, 0 0 0 14px rgba(255, 127, 50, 0), 0 3px 10px rgba(229, 103, 30, .35); } 100% { box-shadow: inset 0 0 0 2px #E5671E, 0 0 0 0 rgba(255, 127, 50, 0), 0 3px 10px rgba(229, 103, 30, .35); } }
+@media (prefers-reduced-motion: reduce) { #axTour3 .ctl .jump.hint .c { animation: none; box-shadow: inset 0 0 0 2px #E5671E, 0 0 0 4px rgba(255, 127, 50, .45); } }
+#axTour3 .gdir { position: absolute; left: 0; top: 0; width: 22px; height: 22px; z-index: 5; pointer-events: none; opacity: .8; }
+#axTour3 .gdir::before { content: ""; position: absolute; left: 3px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 0 3px rgba(255, 255, 255, .85); }
+#axTour3 .gdir::after { content: ""; position: absolute; left: 15px; top: 7px; border: 4px solid transparent; border-left: 6px solid var(--brand); border-right: 0; }
+#axTour3 .gbub:not([hidden]) { animation: gbIn .18s ease-out; }
+@keyframes gbIn { from { opacity: 0; } to { opacity: 1; } }
+#axTour3.rm .gbub:not([hidden]) { animation: none; }
+#axTour3 .look.on3d { transition: opacity .2s, padding .2s; }
+#axTour3 .look.lb { right: auto; left: 50%; transform: translateX(-50%); }
 #axTour3 .blab { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; align-items: center; padding: 4px 10px 5px; border-radius: 10px; background: rgba(25, 31, 40, .82); color: #FFFFFF; white-space: nowrap; pointer-events: none; z-index: 2; }
 #axTour3 .blab b { font-size: 13px; line-height: 17px; font-weight: 700; }
 #axTour3 .blab i { font-style: normal; font-size: 11px; line-height: 14px; font-weight: 700; color: #FFB284; }
@@ -254,9 +267,10 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .sccard .nb { display: block; width: 100%; margin-top: 10px; }
 #axTour3 .sccard .nb.pri { margin-top: 16px; background: var(--brand); color: var(--onBrand); }
 /* 엘리베이터 버튼판 · 은색 헤어라인 판 · 둥근 버튼 · 누르면 주황 고리(불) */
-#axTour3 .evp { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 14px 12px 16px; border-radius: 16px; z-index: 4;
+#axTour3 .evp { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 14px 12px 16px; border-radius: 16px; z-index: 4;
   background: repeating-linear-gradient(0deg, rgba(255, 255, 255, .16) 0 1px, rgba(0, 0, 0, .03) 1px 3px), linear-gradient(160deg, #E3E6E9, #B9BEC3 55%, #D2D5D8); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .6), 0 4px 16px rgba(25, 31, 40, .28); }
 #axTour3 .evh { font-size: 12px; line-height: 16px; font-weight: 700; color: #4E5968; }
+#axTour3 .evh.up { color: var(--brand); font-size: 15px; }   /* v5.58 올라가는 동안 = ▲ + 층 숫자(조작반 모니터 띠와 같은 숫자) · 층 단추는 왼쪽(오른쪽 = 3D 조작반 기둥이 보이게) */
 #axTour3 .evb { width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 35% 30%, #FFFFFF, #CDD1D5 60%, #A9AEB3); box-shadow: inset 0 0 0 2px #8E949A, 0 2px 4px rgba(25, 31, 40, .25); color: #191F28; transition: box-shadow .15s; }
 #axTour3 .evb b { font-size: 21px; font-weight: 800; }
 #axTour3 .evb:active { transform: scale(.95); }
@@ -305,6 +319,11 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .bmc .mz { fill: rgba(255, 241, 232, .7); stroke: #FF7F32; stroke-width: 1; }
 #axTour3 .bmc .mz.next { fill: #FFD8C1; stroke-width: 1.5; }
 #axTour3 .bmc .mz.here { fill: #FF7F32; stroke: #A63D00; stroke-width: 1.5; }
+/* v5.58 판 보기 검은 패널(판 4 ~ 7 · 사용자 261004 「뒷판이 연한 까만색이어서 이상한데 · 찐한 까만색 홍보부가 의도한 그대로」) = 바탕 #010101(원본 .ai) 그대로 · 점 격자를 원본 비례로(옛 7px · 0.6px + 번짐 = 원본보다 점이 크고 밝아 회색빛)
+ *   원본 판 = 판 폭 93분의 1 간격 · 점 지름 약 0.15% · 카드 폭 약 350px 이면 간격 약 4px · 점 1px 아래 · 영상(모션) 바탕 검정과 이음매 없이 */
+#axTour3 .view .bd-panel { --gp: 4.5px; --gd: 0.12px; --pdot: #6E6F73; }
+#axTour3 video.bd-mv { background: #010101; }
+#axTour3 .bmc .bml.rm { font-size: 3.6px; font-weight: 600; fill: #6B7684; stroke-width: 1.4px; }   /* v5.58 큰 지도 방 이름(미팅룸 1 · 2 · 3 · 고객센터) */
 #axTour3 .bmc .bml { font-size: 5.2px; font-weight: 700; fill: var(--ink); text-anchor: middle; dominant-baseline: middle; paint-order: stroke; stroke: #FFFFFF; stroke-width: 2px; stroke-linejoin: round; }
 #axTour3 .bmh { margin: 0; padding: 6px 12px; border-radius: 999px; background: rgba(255, 255, 255, .9); font-size: 13px; font-weight: 600; color: var(--body); }
 /* 처음 안내 · 두 손가락 한 줄 · PC 키 한 줄 */

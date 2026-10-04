@@ -49,7 +49,8 @@
     revolve: 17.3, doorsS: [[10.9, 12.8], [22.3, 24.2]], doorE: [7.15, 10.6],   /* 동쪽 = 회전문 D(z 7.15~9.65) + 여닫이 E(9.7~10.6) */
     cores: [[6.83, 17.0], [19.8, 28.2]], coreN: 20.2, hall: 18.4,
     rooms: [[12.2, 17.6, '미팅룸 2'], [17.8, 23.2, '미팅룸 1']],   /* v5.35(사용자 261003 「미팅룸 1, 2, 3 이 맞다 · 너무 짧게 배치」): 미팅룸 줄 = 두 칸이 줄 끝까지 · 경계 균등(PDF 2쪽 두 방 길이 약 3.0 · 3.3m) · 모형 벽도 같은 자리(lobby.glb v535a) */
-    room3: { pts: [[0, 23.8], [6.83, 23.8], [6.83, 27.0]], label: '고객센터', at: [4.6, 25.0] },   /* v5.45 미팅룸 3 자리 = 유리문 고객센터(사용자 261004) */   /* 날개 북쪽 사선 외벽 아래 삼각형 공간(부스 발주 설명 PDF 2쪽 초록 면 위 삼각형) */
+    room3: { pts: [[0, 23.8], [6.83, 23.8], [6.83, 27.0]], label: '미팅룸 3', at: [4.6, 25.0] },   /* v5.58 미팅룸 3 되돌림(사용자 261004 「지금 고객센터로 표시된 곳은 고객센터가 아니라 미팅룸3이야」 · v5.45 고객센터 자리 취소) */
+    desk3: { label: '고객센터', at: [30.3, 18.7] },   /* v5.58 고객센터 = 동쪽 코어 옆 빈 공간 북쪽 끝 양개 유리문(광화문 고객지원팀 · 고객 대기석 · 도면) */   /* 날개 북쪽 사선 외벽 아래 삼각형 공간(부스 발주 설명 PDF 2쪽 초록 면 위 삼각형) */
     bust: [15.25, 9.9], desk: [24.55, 10.33],
     hatch: { at: [30.39, 15.43], w: 4.37, d: 7.94 },   /* v5.45 동쪽 코어 옆 빈 공간(도면 4244 × 8075 · 계단 · 엘리베이터 문) · 코어 동쪽 끝 26.1 → 28.2 */
     outside: { x0: 32.9, x1: 46.0, z0: -0.6, z1: 14.0 }      /* 동쪽 출입문 밖 앞마당 · 체크인 몽골텐트(PDF 3쪽 · v5.32 자리 = 문에서 약 10m 앞 오른쪽) */
@@ -86,6 +87,9 @@
   };
   /* 엑스배너 5개 · PDF 13쪽 「5개 출력」 · 자리는 사용자 답(261003): 41 동쪽 문 밖 체크인 옆 · 42 · 45 게이트 양옆 · 43 · 44 게이트 동쪽 · 목록의 「모형 밖 안내물」 칸에도 둔다 */
   var UNPLACED = [41, 42, 43, 44, 45];
+  /* v5.58 판 보기에 넣지 않는 판(사용자 261004 「현장 인터뷰 영상 TV 자리 판은 없애줘」 · 「권장대로」 W14 · 판 보기는 읽을 거리가 있는 콘텐츠 판만 · design.md §7)
+   *   15 = AX in Action 그림 전용(TV 자리 · 앞 TV = 인터뷰 화면) · 34 · 35 = 포토부스 배경 「AX Festival 2026」 · 40 ~ 48 = 현수막 · 엑스배너(46 포스터 제외) · 3D 모형 속 실물은 그대로 · 판 목록 · 넘김 · 자세히 보기에서만 뺀다 */
+  var NOVIEW = [15, 34, 35, 40, 41, 42, 43, 44, 45, 47, 48];
   /* 판 퀴즈 힌트 코드 → 판 · 앱 QZ_PANEL 키와 같은 이름(검사 절이 대조) */
   var HINT_PG = {
     'vision.cover': 2, 'vision.metowe': 3, 'vision.dbc': 4, 'vision.2026': 5, 'vision.2027': 6, 'vision.2028': 7,
@@ -103,6 +107,7 @@
     z.rows.forEach(function (r) { o = o.concat(r.pages); });
     return o.concat(z.extra || []);
   }
+  function viewPages(z) { return zonePages(z).filter(function (p) { return NOVIEW.indexOf(p) < 0; }); }
   function zoneOfPg(p) { for (var i = 0; i < ZONES.length; i++) if (zonePages(ZONES[i]).indexOf(p) >= 0) return ZONES[i]; return null; }
-  window.TOUR_DATA = { PG: PG, SIGNS: SIGNS, pgSize: pgSize, ATLAS: ATLAS, CROP: CROP, cropOf: cropOf, cropSize: cropSize, BLD: BLD, ZONES: ZONES, PROPS: PROPS, UNPLACED: UNPLACED, HINT_PG: HINT_PG, Z: Z, zonePages: zonePages, zoneOfPg: zoneOfPg };
+  window.TOUR_DATA = { PG: PG, SIGNS: SIGNS, pgSize: pgSize, ATLAS: ATLAS, CROP: CROP, cropOf: cropOf, cropSize: cropSize, BLD: BLD, ZONES: ZONES, PROPS: PROPS, UNPLACED: UNPLACED, HINT_PG: HINT_PG, Z: Z, zonePages: zonePages, zoneOfPg: zoneOfPg, NOVIEW: NOVIEW, viewPages: viewPages };
 })();
