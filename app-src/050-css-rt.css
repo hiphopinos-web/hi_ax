@@ -274,7 +274,7 @@
   .rt .tsf-go { margin-top: 12px; padding: 12px 14px; font-size: var(--rt-f32); line-height: var(--rt-l32); color: var(--rt-o100); background: var(--rt-bark); box-shadow: var(--rt-line); text-align: center; animation: tsfBlink 1.06s steps(1) infinite; }
   .rt .tsf-rule { gap: 4px; color: var(--rt-tan2); }
   /* v4.51(260925 사용자) 가운데 판만 전체 높이 · 틀 한 단계 강하게(판 안쪽부터 먹 3 · O100 4 · 먹 3 = 게임 중 캔버스 틀과 같다) · 왼쪽 = 위쪽 상자만 · 오른쪽 = 순위표(행 수만큼) */
-  .rt .tsf-l { min-width: 0; min-height: 0; align-self: start; display: flex; flex-direction: column; gap: 12px; }
+  .rt .tsf-l { min-width: 0; min-height: 0; align-self: center; display: flex; flex-direction: column; gap: 12px; }
   .rt .tsf-c { position: relative; min-width: 0; min-height: 0; margin: 10px; background: var(--rt-o10); box-shadow: 0 0 0 3px var(--rt-ink), 0 0 0 7px var(--rt-o100), 0 0 0 10px var(--rt-ink); }
   .rt .tsf-r { box-sizing: border-box; min-width: 0; align-self: start; margin: 3px; overflow: hidden; background: var(--rt-night); box-shadow: var(--rt-line); }
   .rt .tsf-band { margin: 0; padding: 12px 16px; font-size: var(--rt-f32); line-height: var(--rt-l32); color: var(--rt-night); background: var(--rt-o100); box-shadow: inset 0 2px 0 0 var(--rt-o60), inset 0 -2px 0 0 var(--rt-deep); border-bottom: 3px solid var(--rt-ink); }
@@ -294,27 +294,66 @@
   .rt .tsf-row.me .no, .rt .tsf-row.me .sc { color: var(--rt-o100); }
   .rt .tsf-row i { font-style: normal; color: var(--rt-dim); }
   .rt .tsf-adm { position: absolute; left: 12px; bottom: 2px; z-index: 5; padding: 2px 8px; border: 0; background: transparent; color: var(--rt-dim); font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; opacity: 0.5; cursor: pointer; }
-  /* v5.12 (261003 사용자 결정) 1F 타자왕 아케이드 · 왼쪽 카메라 상자(거울 그림 · 네 귀퉁이 조준선) · 참가 방법 번호 · 가운데 DOM(닉네임 · 결과) · 오른쪽 점수 규칙 */
-  .rt .tsf-cam { gap: 6px; }
-  .rt .tsf-vid { position: relative; margin-top: 6px; aspect-ratio: 4 / 3; background: var(--rt-bark); box-shadow: var(--rt-line); overflow: hidden; }
-  .rt .tsf-vid video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); opacity: 0; }   /* v5.24(261003 사용자) 영상은 보이지 않게(인식은 뒤에서 계속) · 얼굴을 비추지 않는다 */
-  .rt .tsf-vid .tsf-gd { position: absolute; left: 50%; top: 40%; width: 26%; height: auto; transform: translate(-50%, -50%); animation: tsfGd 1.6s steps(2) infinite; }
-  .rt .tsf-vid canvas { position: absolute; left: 50%; top: 40%; width: 52%; aspect-ratio: 1; transform: translate(-50%, -50%); display: none; image-rendering: pixelated; box-shadow: 0 0 0 3px var(--rt-ink), 0 0 0 7px var(--rt-o100); background: var(--rt-cream); }
-  .rt .tsf-vid.snap canvas { display: block; }
-  .rt .tsf-vid.snap .tsf-gd, .rt .tsf-vid.mos .tsf-gd { display: none; }
-  .rt .tsf-vid.mos canvas { display: block; left: 0; top: 0; width: 100%; height: 100%; aspect-ratio: auto; transform: none; box-shadow: none; }
-  .rt .tsf-vid.snap.mos canvas { left: 50%; top: 40%; width: 52%; height: auto; aspect-ratio: 1; transform: translate(-50%, -50%); box-shadow: 0 0 0 3px var(--rt-ink), 0 0 0 7px var(--rt-o100); }
-  @media (prefers-reduced-motion: reduce) { .rt .tsf-vid .tsf-gd { animation: none; } }
-  .rt .tsf-vid i { position: absolute; width: 20%; height: 20%; border: 0 solid var(--rt-o100); }
-  .rt .tsf-vid .c1 { left: 18%; top: 8%; border-left-width: 6px; border-top-width: 6px; }
-  .rt .tsf-vid .c2 { right: 18%; top: 8%; border-right-width: 6px; border-top-width: 6px; }
-  .rt .tsf-vid .c3 { left: 18%; bottom: 22%; border-left-width: 6px; border-bottom-width: 6px; }
-  .rt .tsf-vid .c4 { right: 18%; bottom: 22%; border-right-width: 6px; border-bottom-width: 6px; }
-  .rt .tsf-vid p { position: absolute; left: 0; right: 0; bottom: 0; margin: 0; padding: 6px 10px; background: rgba(27,23,18,0.8); color: var(--rt-cream); text-align: center; }
-  .rt .tsf.ph-attract .tsf-vid p, .rt .tsf.ph-result .tsf-vid p { color: var(--rt-o100); animation: tsfBlink 1.06s steps(1) infinite; }
-  .rt .tsf-how p { display: flex; gap: 10px; align-items: baseline; }
-  .rt .tsf-how .tsf-sub { margin: -4px 0 2px 2.2em; color: var(--rt-tan); }
-  .rt .tsf-how b { flex: none; min-width: 1.5em; padding: 0 4px; text-align: center; background: var(--rt-o100); color: var(--rt-night); font-weight: 400; }
+  /* v5.61 (261004 사용자 결정) 1F 타자왕 무인 진입 · 영상 원본은 보이지 않게(읽기 전용 · v5.24 얼굴을 비추지 않는다) · 가운데 = ▲ 카메라 + 방법 1 안내 · 폰이 오면 폰 둘레만 창 · 왼쪽 = 방법 2 접속 QR */
+  .rt .tsf-vsrc { position: fixed; left: 0; top: 0; width: 160px; height: 90px; opacity: 0; pointer-events: none; z-index: -1; }
+  .rt .tsf-c { container-type: size; }
+  .rt .tsf-chip { align-self: flex-start; margin: 0; padding: 2px 12px; background: var(--rt-o100); color: var(--rt-night); box-shadow: var(--rt-line); }
+  .rt .tsf-m2 { align-items: center; text-align: center; gap: 12px; }
+  .rt .tsf-m2 .tsf-chip { align-self: center; }
+  .rt .tsf-m2t { font-size: var(--rt-f32); line-height: var(--rt-l32); color: var(--rt-white); text-shadow: var(--rt-out2); }
+  .rt .tsf-lqr { box-sizing: border-box; width: 100%; max-width: 300px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: var(--rt-white); box-shadow: var(--rt-line); }
+  .rt .tsf-lqr svg { display: block; width: 100%; height: auto; }
+  .rt .tsf-lw { margin: 0; padding: 0 12px; color: var(--rt-dim); }
+  .rt .tsf-m2s { color: var(--rt-cream); }
+  .rt .tsf-m2s.s { margin-top: -8px; color: var(--rt-tan2); }
+  .rt .tsf-camtag { position: absolute; left: 50%; top: 10px; z-index: 3; display: none; flex-direction: column; align-items: center; gap: 2px; transform: translateX(-50%); pointer-events: none; }
+  .rt .tsf.ph-attract .tsf-camtag, .rt .tsf.ph-err .tsf-camtag, .rt .tsf.scan-on .tsf-camtag { display: flex; }
+  .rt .tsf.closed .tsf-camtag { display: none; }
+  .rt .tsf-camtag i { width: 60px; height: 34px; background: var(--rt-o100); clip-path: polygon(50% 0, 100% 100%, 0 100%); animation: tsfTri 1.06s steps(1) infinite; }
+  .rt .tsf-camtag b { font-weight: 400; font-size: var(--rt-f32); line-height: var(--rt-l32); color: var(--rt-cream); text-shadow: var(--rt-out2); }
+  .rt .tsf-gd { position: absolute; left: 0; right: 0; top: 100px; bottom: 0; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 0 18px 16px; text-align: center; }
+  .rt .tsf.closed .tsf-gd { top: 22%; gap: 22px; }
+  .rt .tsf.scan-on .tsf-gd { visibility: hidden; }
+  .rt .tsf-gd .tsf-chip { align-self: center; }
+  .rt .tsf-h { margin: 0; display: flex; flex-direction: column; font-size: var(--rt-f48); line-height: var(--rt-l48); color: var(--rt-white); text-shadow: var(--rt-out2); word-break: keep-all; }
+  .rt .tsf-h em, .rt .tsf-gs em, .rt .tsf-qrb em { font-style: normal; color: var(--rt-o100); }
+  .rt .tsf-gs { margin: 0; font-size: var(--rt-f24); line-height: var(--rt-l24); color: var(--rt-cream); }
+  .rt .tsf-gs.s { font-size: var(--rt-f16); line-height: var(--rt-l16); color: var(--rt-tan2); }
+  .rt .tsf-ill { flex: 1 1 auto; min-height: 0; width: 100%; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 22px; }
+  .rt .tsf-arm { margin: 0; justify-self: end; text-align: right; color: var(--rt-tan2); }
+  .rt .tsf-ph { height: 100%; max-height: 330px; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+  .rt .tsf-up { flex: 0 1 64px; min-height: 16px; width: 8px; background: repeating-linear-gradient(to top, var(--rt-o100) 0 8px, transparent 8px 16px); animation: tsfUp 0.9s steps(2) infinite; }
+  .rt .tsf-phs { flex: 0 1 auto; width: auto; height: min(280px, 30cqh); min-height: 90px; animation: tsfLift 1.8s steps(6) infinite; }
+  .rt .tsf-qrb { justify-self: start; display: flex; flex-direction: column; align-items: flex-start; gap: 14px; text-align: left; color: var(--rt-cream); }
+  .rt .tsf-qrb p { margin: 0; }
+  .rt .tsf-nav { margin-top: 22px; width: 150px; height: 40px; display: flex; justify-content: center; background: var(--rt-cream); box-shadow: var(--rt-line); }
+  .rt .tsf-nav b { margin-top: -24px; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--rt-o100); color: var(--rt-night); font-weight: 400; font-size: var(--rt-f24); line-height: 1; box-shadow: 0 0 0 3px var(--rt-ink); }
+  .rt .tsf-steps { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .rt .tsf-steps p { margin: 3px; padding: 10px 6px; display: flex; flex-direction: column; align-items: center; gap: 8px; background: var(--rt-bark); box-shadow: var(--rt-line); color: var(--rt-cream); word-break: keep-all; }
+  .rt .tsf-steps b { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: var(--rt-o100); color: var(--rt-night); font-weight: 400; box-shadow: 0 0 0 2px var(--rt-ink); }
+  .rt .tsf-key { display: inline-block; margin: 0 4px 4px 0; padding: 0 10px; background: var(--rt-cream); color: var(--rt-night); font-family: var(--rt-font); font-size: var(--rt-f16); box-shadow: 0 0 0 2px var(--rt-ink), 0 4px 0 2px var(--rt-tan); }
+  .rt .tsf-foot { margin: 0; color: var(--rt-tan2); }
+  /* 폰 창 · 폰 둘레만 확대 · 네 귀퉁이 조준선 · 한 줄 + 힌트 · 거리 다섯 칸(가운데 두 칸 = 좋아요 자리) */
+  .rt .tsf-scan { position: absolute; left: 0; right: 0; top: 100px; bottom: 12px; z-index: 2; display: none; flex-direction: column; align-items: center; gap: 10px; }
+  .rt .tsf.scan-on .tsf-scan { display: flex; }
+  .rt .tsf-sw { position: relative; flex: none; width: min(480px, 84cqw, calc(100cqh - 330px)); aspect-ratio: 1; background: var(--rt-night); box-shadow: 0 0 0 3px var(--rt-ink), 0 0 0 7px var(--rt-wood), 0 0 0 10px var(--rt-ink); }
+  .rt .tsf-sw canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
+  .rt .tsf-sw i { position: absolute; width: 18%; height: 18%; border: 0 solid var(--rt-o100); }
+  .rt .tsf-sw .c1 { left: 4%; top: 4%; border-left-width: 8px; border-top-width: 8px; }
+  .rt .tsf-sw .c2 { right: 4%; top: 4%; border-right-width: 8px; border-top-width: 8px; }
+  .rt .tsf-sw .c3 { left: 4%; bottom: 4%; border-left-width: 8px; border-bottom-width: 8px; }
+  .rt .tsf-sw .c4 { right: 4%; bottom: 4%; border-right-width: 8px; border-bottom-width: 8px; }
+  .rt .tsf-sm { margin: 6px 0 0; font-size: var(--rt-f48); line-height: var(--rt-l48); color: var(--rt-cream); text-shadow: var(--rt-out2); }
+  .rt .tsf-sm.o { color: var(--rt-o100); }
+  .rt .tsf-sh { margin: 0; min-height: var(--rt-l24); font-size: var(--rt-f24); line-height: var(--rt-l24); color: var(--rt-o60); }
+  .rt .tsf-bar { width: min(480px, 84cqw); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+  .rt .tsf-bar i { height: 20px; margin: 2px; background: var(--rt-bark); box-shadow: 0 0 0 2px var(--rt-ink); }
+  .rt .tsf-bar i:nth-child(3), .rt .tsf-bar i:nth-child(4) { background: var(--rt-wood); }
+  .rt .tsf-bar i.on { background: var(--rt-o100); }
+  .rt .tsf-bl { width: min(480px, 84cqw); margin: 0; display: flex; justify-content: space-between; color: var(--rt-tan2); }
+  @media (prefers-reduced-motion: reduce) { .rt .tsf-camtag i, .rt .tsf-phs, .rt .tsf-up { animation: none; } }
+  @container (max-width: 600px) { .rt .tsf-h, .rt .tsf-sm { font-size: var(--rt-f32); line-height: var(--rt-l32); } .rt .tsf-nav { width: 120px; } .rt .tsf-ill { gap: 12px; } }
+  @container (max-height: 760px) { .rt .tsf-h, .rt .tsf-sm { font-size: var(--rt-f32); line-height: var(--rt-l32); } .rt .tsf-gd, .rt .tsf-scan { top: 94px; } .rt .tsf-gd { gap: 10px; } .rt .tsf-steps p { padding: 6px 4px; gap: 4px; } .rt .tsf-sw { width: min(480px, 84cqw, calc(100cqh - 280px)); } }
   .rt .tsf-who .tsf-big { margin: 2px 0 4px; }
   .rt .tsf-ov { position: absolute; left: 0; top: 0; right: 0; bottom: 0; pointer-events: none; }
   .rt .tsf-ov > * { pointer-events: auto; }

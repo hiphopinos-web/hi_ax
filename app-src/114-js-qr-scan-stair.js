@@ -27,7 +27,7 @@ function scanLinkRun() {
 function scanLinkNote() {
   var p = scanLinkPeek();
   if (!p) return;
-  var msg = /^#q=idea\b/i.test(p.raw) ? "로그인하면 아이디어 한 줄로 이어져요" : /^#q=/i.test(p.raw) ? "로그인하면 퀴즈로 이어져요" : "로그인하면 이어서 적립";   /* v4.80 아이디어 한 줄 QR */
+  var msg = /^#q=idea\b/i.test(p.raw) ? "로그인하면 아이디어 한 줄로 이어져요" : /^#q=type\b/i.test(p.raw) ? "로그인하면 노트북에 연결돼요" : /^#q=/i.test(p.raw) ? "로그인하면 퀴즈로 이어져요" : "로그인하면 이어서 적립";   /* v4.80 아이디어 한 줄 QR */
   ["entryForm", "quick"].forEach(function (id) {
     var box = el(id);
     if (!box || box.querySelector(".axs-pend")) return;
@@ -49,6 +49,7 @@ window.addEventListener("hashchange", function () {
 function qrRoute(raw, t) {
   raw = String(raw || "").trim();
   if (qrParseUser(raw)) { notice({ key: "claim:user", title: "참가자 QR이에요", body: "아이디어 · 계단 · 출석 QR 스캔", go: "scan_q", goLbl: "다시 스캔" }); return; }
+  if (/#q=type\b/i.test(raw)) { typeLinkGo(raw); return; }   /* v5.61 1F 타자왕 노트북 접속 QR(방법 2) · 로그인 뒤 그 노트북에 붙는다 */
   if (/#q=idea\b/i.test(raw)) { App.go("ideas"); return; }   /* v4.80 (사용자 승인 261001) 1층 부서 출력용 아이디어 한 줄 QR · 서버 판정 없음 · 적립은 제출 때(p5) · #go= 는 알림 진입 집계라 쓰지 않는다 */
   var mq = raw.match(/#q=(wall[0-9]+)/i);
   if (mq) {
@@ -64,6 +65,53 @@ function qrRoute(raw, t) {
   if (/^AXW/i.test(code) || fl) stairByCode(code, fl, r, t); else stampByCode(code, t);
 }
 function qrHandle(raw) { qrRoute(raw, Date.now()); }
+/* ═══ v5.61 (261004 사용자 결정) 1F 타자왕 노트북 접속 QR · 방법 2 ═══
+   노트북 화면 왼쪽 QR = 앱 주소#q=type&lt=일회용 토큰(노트북마다 · 40초 교체 · 60초 만료 · 한 번 쓰면 끝)
+   폰 기본 카메라로 찍으면 앱이 열리고(로그인 전이면 로그인 뒤 · scanLinkRun) · 앱 안 스캐너로 찍어도 같다 → type_link_join(본인 세션) → 「노트북 화면을 보세요 · SPACE로 시작」
+   판정(명부 · 남은 도전 · 시간 창 · 테스트 사번)은 노트북 카메라로 내 QR 을 읽은 것(방법 1)과 같은 서버 판정(typeSelfCheck_) · 토큰이 없으면(#q=type 만) 내 QR 화면을 연다 */
+var TLK_WHY = {
+  link: ["노트북 화면의 QR을<br>다시 찍어 주세요", "QR은 1분마다 바뀌어요", "scan"],
+  used: ["노트북 화면의 QR을<br>다시 찍어 주세요", "이미 연결에 쓴 QR이에요", "scan"],
+  limit: ["오늘 도전을<br>모두 쓰셨어요", "순위는 1층 타자왕 TV에서", "home"],
+  window: ["지금은 도전<br>시간이 아니에요", "", "home"],
+  unknown: ["명부에서<br>찾을 수 없어요", "1층 안내 데스크로 알려 주세요", "home"],
+  ses: ["비밀번호를 입력한 뒤<br>QR을 다시 찍어 주세요", "보안을 위해 한 번 더 확인해요", "scan"],
+  net: ["연결이<br>불안정해요", "잠시 뒤 다시 시도해 주세요", "retry"],
+  param: ["사번으로 입장한 뒤<br>QR을 찍어 주세요", "", "home"],
+  other: ["노트북 화면의 QR을<br>다시 찍어 주세요", "", "scan"]
+};
+function typeLinkGo(raw) {
+  var m = String(raw || "").match(/[#&]lt=([A-Za-z0-9]{8,16})/), u = S.get("user", {}) || {};
+  if (!m) { qrPanelOpen("mine"); toast("노트북 위 카메라에 내 QR을 비추세요"); return; }
+  var lt = m[1].toLowerCase(), base = { st: "link", lt: lt, raw: String(raw) };
+  if (!u.empId) { srShow(Object.assign(base, { lk: "param" })); return; }
+  if (!BE.on) { srShow(Object.assign(base, { lk: "net" })); return; }
+  srShow(Object.assign({}, base, { lk: "wait" }));
+  beCall({ action: "type_link_join", emp: u.empId, lt: lt }, function (r) {
+    if (!(SR.st === "link" && SR.lt === lt)) return;
+    if (r && r.ok && r.inWin && r.left > 0) { srShow(Object.assign({}, base, { lk: "ok", nick: r.nick || "", left: r.left, limit: r.limit, test: !!r.test })); return; }
+    var why = !r ? "other" : r.ok ? (!r.inWin ? "window" : "limit") : r.reason === "busy" ? "net" : TLK_WHY[r.reason] ? r.reason : "other";
+    srShow(Object.assign({}, base, { lk: why, win: (r && r.win) || [], limit: r && r.limit }));
+  }, function () { if (SR.st === "link" && SR.lt === lt) srShow(Object.assign({}, base, { lk: "net" })); });
+}
+function typeLinkHtml(o) {
+  var bot = '<div class="axs-res-bot">' + BOT_SVG + "</div>", h;
+  if (o.lk === "wait") {
+    h = bot + '<span class="axs-chip off axs-self">1F 타자왕</span><h1 class="ax-title">노트북에<br>연결하는 중</h1>';
+    return { body: h, btn: ax2Btn("홈으로", "App.tab('home')") };
+  }
+  if (o.lk === "ok") {
+    h = bot + '<span class="axs-chip ok axs-self">1F 타자왕 · 노트북 연결됨</span><h1 class="ax-title">노트북 화면을<br>보세요</h1>' +
+      '<section class="axs-res-card"><p class="ax-type-t7 axs-bt">SPACE로 시작</p><p class="axs-res-n">' + (o.nick ? esc(o.nick) : "새 도전자") + "</p>" +
+      '<p class="ax-description">' + (o.nick ? "" : "닉네임은 노트북에서 정해요 · ") + "남은 도전 " + o.left + "회 / " + o.limit + "회</p></section>" +
+      (o.test ? '<p class="ax-meta">테스트 사번 · 순위 외</p>' : "");
+    return { body: h, btn: ax2Btn("확인", "App.tab('home')") };
+  }
+  var w = TLK_WHY[o.lk] || TLK_WHY.other, sub = o.lk === "window" ? (o.win || []).join(" · ") : o.lk === "limit" && o.limit ? "1인 " + o.limit + "회 · " + w[1] : w[1];
+  h = '<span class="axs-chip err axs-self">1F 타자왕 · 연결되지 않음</span><h1 class="ax-title">' + w[0] + "</h1>" + (sub ? '<p class="ax-description">' + esc(sub) + "</p>" : "");
+  var btn = w[2] === "scan" ? ax2Btn("QR 다시 찍기", "scanOpen('')", "내 QR 열기", "qrPanelOpen('mine')") : w[2] === "retry" ? ax2Btn("다시 시도", "typeLinkGo(SR.raw)", "홈으로", "App.tab('home')") : ax2Btn("확인", "App.tab('home')");
+  return { body: h, btn: btn };
+}
 
 /* ═══ Q03 · 서버 적립 결과 (네 상태: 적립됨 · 이미 받음 · 오프라인 저장 · 실패) ═══
    이미 받음은 팝업(받은 시각) · 나머지는 결과 화면 scan_res. 적립됨만 보상 수를 그린다(서버 응답 뒤). */
@@ -98,6 +146,7 @@ function srAct(k) {
 }
 function scanResHtml() {
   var o = SR, h = "", bot = BOT_SVG;
+  if (o.st === "link") return typeLinkHtml(o);   /* v5.61 1F 타자왕 노트북 접속 */
   if (o.st === "ok") {
     var n = Math.min(STAMP_DENOM, stampCount());
     h = '<div class="axs-res-bot">' + bot + "</div>" +
@@ -816,9 +865,9 @@ function qrPaint(isDark, n, px, qz) {
     '<path d="' + d + '" fill="#1E2124"/></svg>';
 }
 /* 런타임 인코딩 · 개인 QR은 사번마다 달라 미리 만들어 둘 수 없다 */
-function qrTextSvg(text, px, qz) {
+function qrTextSvg(text, px, qz, ecc) {   /* v5.61 ecc = 오류 정정(기본 M · 노트북 접속 QR = Q · 행사 QR 규칙 261001) */
   if (typeof qrcode !== "function" || !text) return "";
-  var q = qrcode(0, "M");
+  var q = qrcode(0, ecc || "M");
   q.addData(text); q.make();
   var n = q.getModuleCount();
   return qrPaint(function (r, c) { return q.isDark(r, c); }, n, px, qz);

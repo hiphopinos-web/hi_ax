@@ -92,7 +92,7 @@ var App = {
     if (v === "sess_d") return progMine(PROG.sid) ? "신청 관리" : "프로그램";
     if (v === "exp_g") return stampTitle(EXPG.id);
     if (v === "scan_q") return SCQ.ctx ? stampTitle(SCQ.ctx) + " 안내" : "QR";   /* v5.23 [내 QR | QR 스캔] 두 탭 · 문맥 스캔(출석 · 계단 등)은 탭 없이 그 안내 */
-    if (v === "scan_res") return SR.st === "ok" ? "적립 완료" : SR.st === "saved" ? "스캔 저장됨" : SR.st === "draw" || SR.draw ? "추첨 체크인" : "적립 결과";   /* v4.79 추첨 체크인 */
+    if (v === "scan_res") return SR.st === "link" ? "1F 타자왕" : SR.st === "ok" ? "적립 완료" : SR.st === "saved" ? "스캔 저장됨" : SR.st === "draw" || SR.draw ? "추첨 체크인" : "적립 결과";   /* v4.79 추첨 체크인 */
     if (v === "stair") return "계단 이용";
     if (v === "zone_d") { var zn = zoneById(PROG.zone); return zn ? zn.sign : this.TITLES[v]; }   /* v4.93 헤더 = 현장 간판 글자 그대로 */
     return this.TITLES[v] || "";

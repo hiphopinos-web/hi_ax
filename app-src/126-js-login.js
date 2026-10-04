@@ -955,6 +955,7 @@ function lgxSheetHtml() {
   if (!p) return { html: "", scan: false };
   var raw = String(p.raw || ""), code = (raw.match(/#s=([A-Za-z0-9]+)/i) || [])[1] || "", t, lbl = "이어서 적립";
   if (/#q=idea\b/i.test(raw)) { t = "아이디어 한 줄"; lbl = "아이디어 쓰기"; }
+  else if (/#q=type\b/i.test(raw)) { t = "1F 타자왕"; lbl = "노트북에 연결"; }   /* v5.61 노트북 접속 QR */
   else if (/#q=/i.test(raw)) { t = "퀴즈"; lbl = "이어서 하기"; }
   else if (/^AXW/i.test(code) || /[#&?]fl=\d/i.test(raw)) t = "계단 이용";
   else if (/^AXA/i.test(code)) t = "강연 출석";
