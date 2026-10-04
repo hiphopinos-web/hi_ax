@@ -8,49 +8,51 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
 <style>
   html,body{margin:0;height:100%;background:#000;overflow:hidden;cursor:none}
+  /* 디자인 감사 D2(261005): 바탕 = 순수 검정 + 스탬프 월 점 격자(30px · 흰 4.5%) · 주황 = 앱 토큰 O100 · 주 버튼 글자 = onBrand · 회색은 무채색 */
+  :root{--o100:#FF7F32;--o50:#FFB284;--o25:#FFD8C1;--hi:#FF963E;--onbrand:#351A0C;--grey:#D9D9D9;--sub:rgba(255,255,255,.6);--line:rgba(255,255,255,.22);--fill:rgba(255,255,255,.08);--btn2:#333;--grid:radial-gradient(circle,rgba(255,255,255,.045) 1.1px,transparent 1.4px) 0 0/30px 30px}
   #stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;display:block;background:#000}
   #cam{position:absolute;width:2px;height:2px;opacity:0;pointer-events:none}
-  #err{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.88);color:#fff;font-family:"Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;text-align:center;cursor:default;z-index:5}
+  #err{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:#000 var(--grid);color:#fff;font-family:"Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;text-align:center;cursor:default;z-index:5}
   #err h1{font-size:64px;line-height:1.3;margin:0 0 20px;font-weight:700}
-  #err p{font-size:34px;line-height:1.5;margin:0 0 48px;color:#D9D9D9;max-width:1400px}
-  #err button{font:700 40px "Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;background:#FF7E31;color:#fff;border:0;border-radius:16px;padding:26px 64px;cursor:pointer}
+  #err p{font-size:34px;line-height:1.5;margin:0 0 48px;color:var(--grey);max-width:1400px}
+  #err button{font:700 40px "Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;background:var(--o100);color:var(--onbrand);border:0;border-radius:16px;padding:26px 64px;cursor:pointer}
   /* 설정 패널 (C 키, 숨김) */
-  #cp{position:absolute;top:0;right:0;bottom:0;width:380px;background:rgba(18,20,24,.96);color:#fff;font:14px/1.5 "Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;padding:16px 18px;overflow:auto;display:none;cursor:default;z-index:4;box-sizing:border-box}
-  #cp h2{font-size:17px;margin:0 0 10px}#cp h3{font-size:14px;margin:16px 0 6px;color:#FF963E}
-  #cp label{display:block;margin:6px 0 2px;color:#D9D9D9}
-  #cp input[type=text],#cp input[type=password],#cp input[type=number],#cp select{width:100%;box-sizing:border-box;background:#2A2D33;border:1px solid #555;color:#fff;border-radius:6px;padding:6px 8px;font:inherit}
+  #cp{position:absolute;top:0;right:0;bottom:0;width:380px;background:var(--grid),rgba(0,0,0,.94);border-left:1px solid var(--line);color:#fff;font:14px/1.5 "Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;padding:16px 18px;overflow:auto;display:none;cursor:default;z-index:4;box-sizing:border-box}
+  #cp h2{font-size:17px;margin:0 0 10px}#cp h3{font-size:14px;margin:16px 0 6px;color:var(--hi)}
+  #cp label{display:block;margin:6px 0 2px;color:var(--grey)}
+  #cp input[type=text],#cp input[type=password],#cp input[type=number],#cp select{width:100%;box-sizing:border-box;background:#111;border:1px solid var(--line);color:#fff;border-radius:6px;padding:6px 8px;font:inherit}
   #cp input[type=number]{width:70px}
-  #cp button{background:#FF7E31;color:#fff;border:0;border-radius:6px;padding:6px 12px;font:600 14px "Malgun Gothic",sans-serif;cursor:pointer;margin:6px 6px 0 0}
-  #cp button.g{background:#444}
-  #cp .st{margin-top:6px;color:#D9D9D9;word-break:break-all;white-space:pre-line}
-  #cp .z{border:1px solid #444;border-radius:8px;padding:8px;margin-top:8px}
+  #cp button{background:var(--o100);color:var(--onbrand);border:0;border-radius:6px;padding:6px 12px;font:600 14px "Malgun Gothic",sans-serif;cursor:pointer;margin:6px 6px 0 0}
+  #cp button.g{background:var(--btn2);color:#fff}
+  #cp .st{margin-top:6px;color:var(--grey);word-break:break-all;white-space:pre-line}
+  #cp .z{border:1px solid var(--line);border-radius:8px;padding:8px;margin-top:8px}
   /* 상태 점(261004): 점 자체는 캔버스 왼쪽 위(「AX magic」 앞)에 그린다. #dot 은 그 자리를 덮는 투명 누름 칸(2초 길게 누르면 설정 패널) · 자리는 fit() 이 맞춘다 */
   #dot{position:fixed;left:0;top:0;width:56px;height:56px;z-index:30;touch-action:none;user-select:none;-webkit-tap-highlight-color:transparent}
   /* 관리자 모드(261005): P 키 → 사번 · 관리코드 → 계수 화면. 창 · 패널은 화면(px) 기준 */
   #adm{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:50;cursor:default;font-family:"Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif}
-  #adm .box{width:min(440px,calc(100vw - 32px));box-sizing:border-box;background:#16181D;color:#fff;border:1px solid #3A3D44;border-radius:16px;padding:28px 28px 22px}
+  #adm .box{width:min(440px,calc(100vw - 32px));box-sizing:border-box;background:var(--grid),#000;color:#fff;border:1px solid var(--line);border-radius:16px;padding:28px 28px 22px}
   #adm h2{margin:0 0 4px;font-size:24px;font-weight:800}
-  #adm .sv{margin:0 0 18px;font-size:14px;color:#A8ABB2}
-  #adm label{display:block;margin:12px 0 6px;font-size:15px;color:#D9D9D9}
-  #adm input{width:100%;box-sizing:border-box;background:#2A2D33;border:1px solid #555;color:#fff;border-radius:10px;padding:12px 14px;font:600 20px "Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;letter-spacing:.12em}
-  #adm input:focus{outline:2px solid #FF7E31;outline-offset:0;border-color:#FF7E31}
-  #adm .msg{min-height:22px;margin:14px 0 4px;font-size:15px;color:#FFB27A}
+  #adm .sv{margin:0 0 18px;font-size:14px;color:var(--sub)}
+  #adm label{display:block;margin:12px 0 6px;font-size:15px;color:var(--grey)}
+  #adm input{width:100%;box-sizing:border-box;background:#111;border:1px solid var(--line);color:#fff;border-radius:10px;padding:12px 14px;font:600 20px "Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;letter-spacing:.12em}
+  #adm input:focus{outline:2px solid var(--o100);outline-offset:0;border-color:var(--o100)}
+  #adm .msg{min-height:22px;margin:14px 0 4px;font-size:15px;color:var(--o50)}
   #adm .row{display:flex;gap:10px;margin-top:10px}
-  #adm button{flex:1;font:700 17px "Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;border:0;border-radius:10px;padding:12px 0;cursor:pointer;background:#FF7E31;color:#fff}
-  #adm button.g{background:#3A3D44}
+  #adm button{flex:1;font:700 17px "Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;border:0;border-radius:10px;padding:12px 0;cursor:pointer;background:var(--o100);color:var(--onbrand)}
+  #adm button.g{background:var(--btn2);color:#fff}
   #adm button:disabled{opacity:.45;cursor:default}
-  #admv{position:fixed;left:16px;bottom:16px;width:min(470px,calc(100vw - 32px));box-sizing:border-box;display:none;background:rgba(14,16,20,.86);color:#fff;border:1px solid #3A3D44;border-radius:14px;padding:16px 18px;z-index:3;cursor:default;font:15px/1.55 "Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif}
+  #admv{position:fixed;left:16px;bottom:16px;width:min(470px,calc(100vw - 32px));box-sizing:border-box;display:none;background:var(--grid),rgba(0,0,0,.86);color:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;z-index:3;cursor:default;font:15px/1.55 "Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif}
   #admv .kv{display:grid;grid-template-columns:96px 1fr;gap:3px 10px}
-  #admv .kv b{font-weight:600;color:#A8ABB2}
+  #admv .kv b{font-weight:600;color:var(--sub)}
   #admv .kv span{word-break:keep-all}
-  #admv .lg{margin-top:10px;padding-top:10px;border-top:1px solid #3A3D44;font-size:14px;color:#D9D9D9}
+  #admv .lg{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:14px;color:var(--grey)}
   #admv .lg div{display:flex;align-items:center;gap:8px;opacity:.55}
   #admv .lg div.on{opacity:1;font-weight:700;color:#fff}
   #admv .lg i{display:inline-block;width:12px;height:12px;border-radius:50%;flex:none}
   #admv .bt{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-  #admv button{font:700 15px "Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;border:0;border-radius:8px;padding:9px 14px;cursor:pointer;background:#FF7E31;color:#fff}
-  #admv button.g{background:#3A3D44}
-  #admv .ft{margin-top:10px;font-size:13px;color:#8A8D94}
+  #admv button{font:700 15px "Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;border:0;border-radius:8px;padding:9px 14px;cursor:pointer;background:var(--o100);color:var(--onbrand)}
+  #admv button.g{background:var(--btn2);color:#fff}
+  #admv .ft{margin-top:10px;font-size:13px;color:var(--sub)}
 </style>
 </head>
 <body>
@@ -82,7 +84,7 @@
   <div class="ft">10분 동안 조작이 없으면 마술 화면으로 돌아가고 다시 잠깁니다. 새로고침해도 잠깁니다.</div>
 </div>
 <div id="cp">
-  <h2>혼잡도 계수 설정 <span style="color:#888;font-weight:400">(C 닫기)</span></h2>
+  <h2>혼잡도 계수 설정 <span style="color:rgba(255,255,255,.6);font-weight:400">(C 닫기)</span></h2>
   <label><input type="checkbox" id="cpOn"> 계수 켜기 (게임 뒤에서 사람 수만 셈, 영상 저장·전송 없음 · 이 PC 브라우저에 저장되어 새로고침 · 다시 실행해도 저절로 다시 시작)</label>
   <label>위치 이름 (기기마다 다르게 · 예: 1F 로비)</label><input type="text" id="cpName" maxlength="12" placeholder="비우면 AX magic 1">
   <div class="st" id="cpFull"></div>
@@ -126,7 +128,7 @@ let mouseMode = qs.get('mouse') === '1';
 let debug = qs.get('debug') === '1';
 let radiusScale = 1, swingBias = 0;   // swingBias: , . 키로 현장 튜닝 (초)
 const FONT = '"Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif';
-const ORANGE = '#FF7E31', ORANGE_L = '#FF963E', ORANGE_D = '#E5651A';
+const ORANGE = '#FF7F32', ORANGE_L = '#FF963E', ORANGE_D = '#E5651A';   // O100(앱 토큰 brand) · Hi Orange · ORANGE_D 는 불꽃 그림의 어두운 단에만(디자인 감사 D2 예외)
 const ABSENT_SEC = 6;
 
 const cv = document.getElementById('stage');
@@ -364,6 +366,7 @@ const liveHands = () => hands.filter(h => now - h.seen < .25).sort((a, b) => a.i
 function showErr(title, msg) {
   document.getElementById('errT').textContent = title;
   document.getElementById('errP').textContent = msg;
+  try { if (!errBox.dataset.grid) { errBox.style.background = '#000 url(' + dotGrid().toDataURL('image/png') + ') center / contain no-repeat'; errBox.dataset.grid = '1'; } } catch (e) { }
   errBox.style.display = 'flex';
 }
 document.getElementById('errB').onclick = () => { mouseMode = true; errBox.style.display = 'none'; audio(); };
@@ -471,7 +474,7 @@ function txt(s, x, y, size, col = '#fff', align = 'center', weight = 800, alpha 
   ctx.save(); ctx.globalAlpha *= alpha; ctx.font = `${weight} ${size}px ${FONT}`; ctx.textAlign = align; ctx.textBaseline = 'middle';
   ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = size * .2; ctx.shadowOffsetY = size * .04; ctx.fillStyle = col; ctx.fillText(s, x, y); ctx.restore();
 }
-function pill(x, y, w, h, col = 'rgba(10,12,16,.62)') { ctx.save(); ctx.fillStyle = col; ctx.beginPath(); ctx.roundRect(x - w / 2, y - h / 2, w, h, h / 2); ctx.fill(); ctx.restore(); }
+function pill(x, y, w, h, col = 'rgba(0,0,0,.62)') { ctx.save(); ctx.fillStyle = col; ctx.beginPath(); ctx.roundRect(x - w / 2, y - h / 2, w, h, h / 2); ctx.fill(); ctx.restore(); }
 
 let pops = [], fx = [], flash = 0, shake = 0;
 function pop(text, x, y, o = {}) { pops.push({ text, x, y, t: 0, dur: o.dur || 1.1, size: o.size || 84, col: o.col || '#fff', rise: o.rise === undefined ? 70 : o.rise }); }
@@ -638,7 +641,7 @@ function updateP2(dt) {
   for (const c of CRACKS) c.t += dt; CRACKS = CRACKS.filter(c => c.t < c.dur);
 }
 function heartPath(c, r) { c.beginPath(); c.moveTo(0, r * .9); c.bezierCurveTo(-r * 1.6, -r * .1, -r * .8, -r * 1.2, 0, -r * .5); c.bezierCurveTo(r * .8, -r * 1.2, r * 1.6, -r * .1, 0, r * .9); c.closePath(); }
-function glowCircle(x, y, r, a, col = '255,150,70') {
+function glowCircle(x, y, r, a, col = '255,150,62') {
   if (r < 1 || a <= 0) return; const c = ctx; c.save(); c.globalCompositeOperation = 'lighter';
   const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(255,255,255,${a})`); g.addColorStop(.25, `rgba(${col},${a * .75})`); g.addColorStop(1, `rgba(${col},0)`);
   c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); c.restore();
@@ -653,7 +656,7 @@ function drawP2() {
     if (p.shape === 'streak') { c.strokeStyle = p.col; c.lineWidth = r; c.lineCap = 'round'; c.beginPath(); c.moveTo(p.x, p.y); c.lineTo(p.x - p.vx * .05, p.y - p.vy * .05); c.stroke(); }
     else if (p.shape === 'chip') { c.save(); c.translate(p.x, p.y); c.rotate(p.rot + p.t * 9); c.fillStyle = p.col; c.fillRect(-r, -r * .7, r * 2, r * 1.4); c.restore(); }
     else if (p.shape === 'shard') {   // 유리 파편(삼각형)
-      c.save(); c.translate(p.x, p.y); c.rotate(p.rot + p.t * p.spin); c.fillStyle = 'rgba(235,245,255,.85)'; c.strokeStyle = 'rgba(255,255,255,1)'; c.lineWidth = 2;
+      c.save(); c.translate(p.x, p.y); c.rotate(p.rot + p.t * p.spin); c.fillStyle = 'rgba(255,255,255,.85)'; c.strokeStyle = 'rgba(255,255,255,1)'; c.lineWidth = 2;
       c.beginPath(); c.moveTo(-r, -r * .5); c.lineTo(r * 1.1, -r * .2); c.lineTo(-r * .2, r); c.closePath(); c.fill(); c.stroke(); c.restore();
     }
     else { c.fillStyle = p.col; c.beginPath(); c.arc(p.x, p.y, r, 0, 7); c.fill(); c.globalAlpha *= .22; c.beginPath(); c.arc(p.x, p.y, r * 2.4, 0, 7); c.fill(); }
@@ -661,7 +664,7 @@ function drawP2() {
   c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
   for (const e of EFX) { ctx.save(); e.draw(e.t / e.dur, e.t); ctx.restore(); }
 }
-const c1 = () => pick([ORANGE, '#fff', ORANGE_L, '#FFD0A8']);
+const c1 = () => pick([ORANGE, '#fff', ORANGE_L, '#FFD8C1']);
 // 적이 터지는 폭발(크기 s)
 function boom(x, y, s = 1, quiet = false) {
   if (!quiet) sfx.hit();
@@ -690,7 +693,7 @@ function drawCracks() {
     const grow = clamp(k.t / .07, 0, 1), a = k.t > k.dur * .55 ? 1 - (k.t - k.dur * .55) / (k.dur * .45) : 1;
     c.save(); c.translate(k.x, k.y); c.globalAlpha = clamp(a, 0, 1); c.lineCap = 'round'; c.lineJoin = 'round';
     for (const pass of [0, 1]) {
-      c.strokeStyle = pass ? 'rgba(255,255,255,.95)' : 'rgba(10,12,16,.55)'; c.lineWidth = pass ? 2.6 : 6.5;
+      c.strokeStyle = pass ? 'rgba(255,255,255,.95)' : 'rgba(0,0,0,.55)'; c.lineWidth = pass ? 2.6 : 6.5;
       c.beginPath();
       for (const r of k.rays) { const m = Math.max(1, Math.round(5 * grow)); c.moveTo(0, 0); for (let j = 1; j <= m; j++) c.lineTo(r[j][0], r[j][1]); }
       if (grow >= 1) for (const w of k.webs) { c.moveTo(w[0][0], w[0][1]); for (let j = 1; j <= w.length; j++) { const q = w[j % w.length]; c.lineTo(q[0], q[1]); } }
@@ -714,7 +717,7 @@ function updateDotB(dt) {
       c.hit = true; if (c.fn) c.fn();
       const m = c.m;
       ringWave(c.x, c.y, 72, 1500 * m, 7, '#fff', 1.0); ringWave(c.x, c.y, 48, 1050 * m, 9, ORANGE, 1.2); ringWave(c.x, c.y, 36, 700 * m, 12, ORANGE_L, 1.4);
-      for (let k = 0; k < Math.round(420 * m * m); k++) { const a = Math.random() * 6.2832, s = (300 + Math.random() * 1500) * m; spark(c.x, c.y, { vx: Math.cos(a) * s, vy: Math.sin(a) * s - 400 * m, g: 900, drag: .985, life: rnd(1.2, 2.4) * (m < .6 ? .6 : 1), r: 3 + Math.random() * 9, col: pick([ORANGE, ORANGE, '#fff', ORANGE_L, '#FFD0A8']) }); }
+      for (let k = 0; k < Math.round(420 * m * m); k++) { const a = Math.random() * 6.2832, s = (300 + Math.random() * 1500) * m; spark(c.x, c.y, { vx: Math.cos(a) * s, vy: Math.sin(a) * s - 400 * m, g: 900, drag: .985, life: rnd(1.2, 2.4) * (m < .6 ? .6 : 1), r: 3 + Math.random() * 9, col: pick([ORANGE, ORANGE, '#fff', ORANGE_L, '#FFD8C1']) }); }
     }
   }
   DOTB = DOTB.filter(c => c.t < DB_DUR);
@@ -774,8 +777,8 @@ function logoHit(x, y, h, m = .75) {
 function drawHand(pts, a = 1) {
   const c = ctx, L = Math.hypot(pts[0].x - pts[9].x, pts[0].y - pts[9].y);
   c.save(); c.globalAlpha = a; c.lineCap = 'round'; c.lineJoin = 'round';
-  c.fillStyle = 'rgba(255,126,49,.16)'; c.beginPath(); [0, 1, 5, 9, 13, 17].forEach((i, n) => n ? c.lineTo(pts[i].x, pts[i].y) : c.moveTo(pts[i].x, pts[i].y)); c.closePath(); c.fill();
-  c.globalCompositeOperation = 'lighter'; c.strokeStyle = 'rgba(255,126,49,.42)'; c.lineWidth = Math.max(6, L * .17); c.beginPath(); for (const [i, j] of BONES) { c.moveTo(pts[i].x, pts[i].y); c.lineTo(pts[j].x, pts[j].y); } c.stroke();
+  c.fillStyle = 'rgba(255,127,50,.16)'; c.beginPath(); [0, 1, 5, 9, 13, 17].forEach((i, n) => n ? c.lineTo(pts[i].x, pts[i].y) : c.moveTo(pts[i].x, pts[i].y)); c.closePath(); c.fill();
+  c.globalCompositeOperation = 'lighter'; c.strokeStyle = 'rgba(255,127,50,.42)'; c.lineWidth = Math.max(6, L * .17); c.beginPath(); for (const [i, j] of BONES) { c.moveTo(pts[i].x, pts[i].y); c.lineTo(pts[j].x, pts[j].y); } c.stroke();
   c.globalCompositeOperation = 'source-over'; c.strokeStyle = 'rgba(255,255,255,.95)'; c.lineWidth = Math.max(2.5, L * .045); c.beginPath(); for (const [i, j] of BONES) { c.moveTo(pts[i].x, pts[i].y); c.lineTo(pts[j].x, pts[j].y); } c.stroke();
   pts.forEach((p, i) => { c.fillStyle = [4, 8, 12, 16, 20].includes(i) ? ORANGE_L : '#fff'; c.beginPath(); c.arc(p.x, p.y, Math.max(3, L * ([4, 8, 12, 16, 20].includes(i) ? .075 : .045)), 0, 7); c.fill(); });
   c.restore();
@@ -829,7 +832,7 @@ function drawBaseball(x, y, r, rot = 0, a = 1) {
 function aimRing(x, y, r, k, a = 1) {
   const c = ctx, red = k > .55, col = red ? RED : '#fff', blink = red ? .6 + .4 * Math.sin(now * 30) : 1;
   c.save(); c.globalAlpha = a * (.55 + .45 * k) * blink; c.lineCap = 'round';
-  c.strokeStyle = 'rgba(10,12,16,.6)'; c.lineWidth = 14; c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke();
+  c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = 14; c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke();
   c.strokeStyle = col; c.lineWidth = 7; c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke();
   for (let i = 0; i < 4; i++) { const an = i * Math.PI / 2 + Math.PI / 4; c.beginPath(); c.moveTo(x + Math.cos(an) * r * .72, y + Math.sin(an) * r * .72); c.lineTo(x + Math.cos(an) * r * 1.18, y + Math.sin(an) * r * 1.18); c.stroke(); }
   c.fillStyle = col; c.beginPath(); c.arc(x, y, Math.max(5, r * .06), 0, 7); c.fill(); c.restore();
@@ -857,7 +860,7 @@ function drawPalm(h, pl) {
   const x = h.c.x, y = h.c.y, L = h.L, c = ctx;
   if (h.fistOn) { glowCircle(x, y, L * .9, .45); handTag(x, y + L * 1.55, '주먹', ORANGE); return; }
   if (h.open > PALM_OPEN) {
-    const ok = !pl || (pl.en >= SK.wave.cost && now >= pl.exUntil), col = ok ? '255,244,225' : '170,170,170', pulse = .5 + .5 * Math.sin(now * 5 + h.id);
+    const ok = !pl || (pl.en >= SK.wave.cost && now >= pl.exUntil), col = ok ? '255,246,240' : '170,170,170', pulse = .5 + .5 * Math.sin(now * 5 + h.id);
     glowCircle(x, y, L * 1.7, ok ? .6 : .3, col);
     ring(x, y, L * (1.12 + .06 * pulse), ok ? .95 : .5, 7, ok ? '#fff' : '#9A9A9A');
     ring(x, y, L * .7, ok ? .55 : .3, 4, ok ? ORANGE_L : '#9A9A9A');
@@ -877,7 +880,7 @@ function handTag(x, y, t, bg, fg = '#fff') {
    파티클은 미리 구운 그림(3단계 색)을 겹쳐 그리고 전체 FIRE_MAX개로 묶는다 */
 const FIRE_MAX = 560, FIRE_RATE = 170;   // 피드백4: 더 크고 진하게(110 → 170개/초, 불똥 1.3배)
 let FIRE = [];
-const fireSpr = [['255,236,170', '255,200,90', '255,126,49'], ['255,236,150', '255,150,62', '229,101,26'], ['255,150,62', '229,101,26', '160,60,20']].map(([a, b, c]) => {
+const fireSpr = [['255,236,170', '255,200,90', '255,127,50'], ['255,236,150', '255,150,62', '229,101,26'], ['255,150,62', '229,101,26', '160,60,20']].map(([a, b, c]) => {
   const s = document.createElement('canvas'); s.width = s.height = 64; const g = s.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
   gr.addColorStop(0, `rgba(${a},.95)`); gr.addColorStop(.3, `rgba(${b},.85)`); gr.addColorStop(.7, `rgba(${c},.35)`); gr.addColorStop(1, `rgba(${c},0)`); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return s;
 });
@@ -924,13 +927,13 @@ function fistBeam(x0, y0, x1, y1, L, wide = 105) {
 // 헛손질(대상 없음): 주먹 앞으로 짧은 불길이 솟았다 흩어진다 + 불꽃 고리
 function airPunch(x, y, L) {
   fistBeam(x, y, x + rnd(-40, 40), y - 330, L, 140);
-  EFX.push({ t: 0, dur: .4, draw: k => { ring(x, y - 330, lerp(30, 150, easeOut(k)), 1 - k, 12, ORANGE); ring(x, y - 330, lerp(20, 110, easeOut(k)), 1 - k, 6, '#FFE27A'); } });
+  EFX.push({ t: 0, dur: .4, draw: k => { ring(x, y - 330, lerp(30, 150, easeOut(k)), 1 - k, 12, ORANGE); ring(x, y - 330, lerp(20, 110, easeOut(k)), 1 - k, 6, '#FFD8C1'); } });
   for (let i = 0; i < 24 && FIRE.length < FIRE_MAX + 160; i++) { const a = rnd(-Math.PI, 0), v = rnd(250, 700); FIRE.push({ x, y: y - 330, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: 0, life: rnd(.25, .45), r: L * rnd(.35, .6) }); }
 }
 // 맞은 적이 크게 움찔하며 튕긴다(주먹에서 적 쪽 방향으로 밀림)
 function knock(e, fx, fy, k = 1) { if (e.type === 'boss') k *= .35; const dx = e.px - fx, dy = e.py - fy, d = Math.hypot(dx, dy) || 1; e.kdx = dx / d; e.kdy = dy / d; e.kb = Math.max(e.kb || 0, k); }
 // 명중: 불똥이 튄다
-function embers(x, y, s = 1) { for (let i = 0; i < 22 * s; i++) { const a = Math.random() * 7, v = rnd(250, 900); spark(x, y, { vx: Math.cos(a) * v, vy: Math.sin(a) * v - 300, g: 1500, drag: .985, life: rnd(.45, .9), r: rnd(3, 7), r1: 1, col: pick(['#FFE27A', ORANGE_L, ORANGE, '#fff']) }); } }
+function embers(x, y, s = 1) { for (let i = 0; i < 22 * s; i++) { const a = Math.random() * 7, v = rnd(250, 900); spark(x, y, { vx: Math.cos(a) * v, vy: Math.sin(a) * v - 300, g: 1500, drag: .985, life: rnd(.45, .9), r: rnd(3, 7), r1: 1, col: pick(['#FFD8C1', ORANGE_L, ORANGE, '#fff']) }); } }
 function drawFire() {
   const c = ctx, hs = liveHands().filter(h => (h.fire || 0) > .02);
   // 아지랑이: 주먹 위쪽 배경을 가로 띠로 잘라 조금씩 일렁이게 다시 그린다
@@ -947,10 +950,10 @@ function drawFire() {
   }
   // 밝은 로비 실사 위에서도 하얗게 날아가지 않게: 불꽃은 보통 합성(오렌지가 그대로 보임), 빛 번짐만 조금 더한다
   c.save();
-  for (const h of hs) glowCircle(h.c.x, h.c.y, h.L * 1.3 * (1 + h.fireBoost * .5), .45 * h.fire, '255,126,49');
+  for (const h of hs) glowCircle(h.c.x, h.c.y, h.L * 1.3 * (1 + h.fireBoost * .5), .45 * h.fire, '255,127,50');
   for (const h of hs) {   // 주먹 둘레 불꽃 혀(위로 일렁이는 물방울꼴): 바깥 진한 오렌지 → 안쪽 노랑 · 피드백4: 1.3배 크고 진하게
     const L = h.L * (1 + h.fireBoost * .6), a = h.fire;
-    for (const [lk, wk, c0, c1, al] of [[1.8, .26, '229,101,26', '255,126,49', 1], [1.15, .16, '255,150,62', '255,214,90', 1]]) {
+    for (const [lk, wk, c0, c1, al] of [[1.8, .26, '229,101,26', '255,127,50', 1], [1.15, .16, '255,150,62', '255,214,90', 1]]) {
       for (let i = 0; i < 6; i++) {
         const bx = h.c.x + (i - 2.5) * L * .15, len = L * lk * (.62 + .28 * Math.sin(now * 11 + i * 1.7 + h.id)) * a, sway = Math.sin(now * 9 + i * 2.3 + lk) * L * .12, w = L * wk, by = h.c.y + L * .12;
         const g = c.createLinearGradient(0, by, 0, by - len); g.addColorStop(0, `rgba(${c0},${al * a})`); g.addColorStop(.7, `rgba(${c1},${al * .8 * a})`); g.addColorStop(1, `rgba(${c1},0)`);
@@ -965,7 +968,7 @@ function drawFire() {
 }
 
 /* ---------------- 적 그리기 (캔버스 도형) ---------------- */
-const INK = '#1C1F26', PAPER = '#F7F7F5';
+const INK = '#1A1A1A', PAPER = '#F7F7F5';
 function eyes(x, y, s, gap, angry) {
   const c = ctx; c.fillStyle = INK;
   for (const d of [-1, 1]) { c.beginPath(); c.ellipse(x + d * gap * s, y, 5 * s, 6.5 * s, 0, 0, 7); c.fill(); }
@@ -1002,9 +1005,9 @@ function drawBoss(x, y, s, hit, stun, t) {   // 레거시 보스: 표 화면이 
   c.fillStyle = '#B9B9B4'; c.beginPath(); c.moveTo(-70, 140); c.lineTo(70, 140); c.lineTo(110, 185); c.lineTo(-110, 185); c.closePath(); c.fill();
   c.fillStyle = '#D6D6D1'; c.strokeStyle = INK; c.lineWidth = 8; c.beginPath(); c.roundRect(-250, -190, 500, 340, 36); c.fill(); c.shadowColor = 'transparent'; c.stroke();
   c.fillStyle = INK; c.beginPath(); c.roundRect(-205, -150, 410, 250, 22); c.fill();
-  c.save(); c.beginPath(); c.roundRect(-205, -150, 410, 250, 22); c.clip(); c.strokeStyle = 'rgba(255,126,49,.45)'; c.lineWidth = 3;
+  c.save(); c.beginPath(); c.roundRect(-205, -150, 410, 250, 22); c.clip(); c.strokeStyle = 'rgba(255,127,50,.45)'; c.lineWidth = 3;
   for (let gx = -205; gx <= 205; gx += 58) { c.beginPath(); c.moveTo(gx, -150); c.lineTo(gx, 100); c.stroke(); } for (let gy = -150; gy <= 100; gy += 36) { c.beginPath(); c.moveTo(-205, gy); c.lineTo(205, gy); c.stroke(); }
-  c.fillStyle = 'rgba(255,126,49,.35)'; c.fillRect(-205, -150, 410, 36); c.restore();
+  c.fillStyle = 'rgba(255,127,50,.35)'; c.fillRect(-205, -150, 410, 36); c.restore();
   if (stun) { c.strokeStyle = '#fff'; c.lineWidth = 9; c.lineCap = 'round'; for (const d of [-1, 1]) { c.save(); c.translate(d * 78, -40); c.beginPath(); c.moveTo(-22, -16); c.lineTo(22, 16); c.moveTo(22, -16); c.lineTo(-22, 16); c.stroke(); c.restore(); } }
   else { c.fillStyle = '#fff'; for (const d of [-1, 1]) { c.save(); c.translate(d * 78, -40); c.rotate(d * .25); c.fillRect(-36, -16, 72, 32); c.fillStyle = INK; c.fillRect(-8 + d * 10, -10, 18, 20); c.restore(); } }
   c.strokeStyle = '#fff'; c.lineWidth = 9; c.lineJoin = 'round'; c.beginPath(); c.moveTo(-80, 50); for (let i = 1; i <= 6; i++) c.lineTo(-80 + i * 160 / 6, 50 + (i % 2 ? -18 : 0)); c.stroke();
@@ -1015,7 +1018,7 @@ function drawBoss(x, y, s, hit, stun, t) {   // 레거시 보스: 표 화면이 
 }
 function nameTag(x, y, name, a = 1, size = 30) {
   const c = ctx; c.save(); c.globalAlpha *= a; c.font = `800 ${size}px ${FONT}`; const w = c.measureText(name).width + size * 1.3;
-  c.fillStyle = 'rgba(10,12,16,.72)'; c.beginPath(); c.roundRect(x - w / 2, y - size * .85, w, size * 1.7, size * .85); c.fill();
+  c.fillStyle = 'rgba(0,0,0,.72)'; c.beginPath(); c.roundRect(x - w / 2, y - size * .85, w, size * 1.7, size * .85); c.fill();
   c.textBaseline = 'middle'; c.textAlign = 'center'; c.fillStyle = '#fff'; c.fillText(name, x, y + 1); c.restore();
 }
 
@@ -1232,7 +1235,7 @@ function updateEShots(wdt) {
     if (!s.res) {
       const k = clamp(s.t / s.dur, 0, 1), p = eshotPos(s, k);
       s.trail.push({ x: p.x, y: p.y, sc: p.sc }); if (s.trail.length > 7) s.trail.shift();
-      if (k < 1 && Math.random() < .7) { const q = Math.min(s.w, 300); spark(p.x + rnd(-.2, .2) * q, p.y + rnd(-.2, .2) * q, { vx: rnd(-60, 60), vy: rnd(-60, 60), r: rnd(.04, .08) * q, life: .25, col: pick(['#fff', '#FFD0A8']) }); }
+      if (k < 1 && Math.random() < .7) { const q = Math.min(s.w, 300); spark(p.x + rnd(-.2, .2) * q, p.y + rnd(-.2, .2) * q, { vx: rnd(-60, 60), vy: rnd(-60, 60), r: rnd(.04, .08) * q, life: .25, col: pick(['#fff', '#FFD8C1']) }); }
       if (k >= 1) landShot(s);
     } else {
       s.pt += wdt;
@@ -1560,17 +1563,17 @@ function drawGuide(key, pl) {
 }
 function drawGauge(p, cx = 960, w = 880, y = 1000) {
   const c = ctx, x = cx - w / 2;
-  c.save(); c.fillStyle = 'rgba(10,12,16,.6)'; c.beginPath(); c.roundRect(x - 14, y - 26, w + 28, 52, 26); c.fill();
+  c.save(); c.fillStyle = 'rgba(0,0,0,.6)'; c.beginPath(); c.roundRect(x - 14, y - 26, w + 28, 52, 26); c.fill();
   c.fillStyle = 'rgba(255,255,255,.18)'; c.beginPath(); c.roundRect(x, y - 14, w, 28, 14); c.fill();
-  if (p > .01) { const g = c.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, ORANGE_D); g.addColorStop(1, ORANGE_L); c.fillStyle = g; c.shadowColor = ORANGE; c.shadowBlur = 24; c.beginPath(); c.roundRect(x, y - 14, Math.max(28, w * p), 28, 14); c.fill(); }
+  if (p > .01) { const g = c.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, ORANGE); g.addColorStop(1, ORANGE_L); c.fillStyle = g; c.shadowColor = ORANGE; c.shadowBlur = 24; c.beginPath(); c.roundRect(x, y - 14, Math.max(28, w * p), 28, 14); c.fill(); }
   c.restore();
 }
-function head(title, how, y = 110) { ctx.save(); ctx.font = `700 46px ${FONT}`; const w = Math.max(ctx.measureText(how).width, title.length * 88) + 140; ctx.restore(); pill(960, y + 6, Math.max(560, w), 190, 'rgba(10,12,16,.58)'); txt(title, 960, y - 24, 88, '#fff'); txt(how, 960, y + 62, 46, '#FFD0A8', 'center', 700); }
+function head(title, how, y = 110) { ctx.save(); ctx.font = `700 46px ${FONT}`; const w = Math.max(ctx.measureText(how).width, title.length * 88) + 140; ctx.restore(); pill(960, y + 6, Math.max(560, w), 190, 'rgba(0,0,0,.58)'); txt(title, 960, y - 24, 88, '#fff'); txt(how, 960, y + 62, 46, '#FFD8C1', 'center', 700); }
 function drawGuideHand(msg) {
   const k = .55 + .25 * Math.sin(now * 4); drawHand(place(handPose(0), 960, 520, 230), k);
-  pill(960, 880, msg.length * 78 + 160, 130, 'rgba(10,12,16,.62)'); txt(msg, 960, 880, 78, '#fff');
+  pill(960, 880, msg.length * 78 + 160, 130, 'rgba(0,0,0,.62)'); txt(msg, 960, 880, 78, '#fff');
 }
-function sideMsg(i, msg) { const r = region(i); ctx.save(); ctx.font = `800 54px ${FONT}`; const w = ctx.measureText(msg).width + 90; ctx.restore(); pill(r.cx, 560, w, 100, 'rgba(10,12,16,.72)'); txt(msg, r.cx, 560, 54, '#fff'); }
+function sideMsg(i, msg) { const r = region(i); ctx.save(); ctx.font = `800 54px ${FONT}`; const w = ctx.measureText(msg).width + 90; ctx.restore(); pill(r.cx, 560, w, 100, 'rgba(0,0,0,.72)'); txt(msg, r.cx, 560, 54, '#fff'); }
 const SIDE = ['왼쪽', '오른쪽'];
 /* 서 있을 자리(피드백3 2차): 발자국 한 쌍. 대기(좌우)·선택(ME 하나 · WE 둘)·준비(2인 좌우) 화면 아래에 */
 function drawFeet(x, y, s = 1, a = 1, col = '255,255,255') {
@@ -1590,39 +1593,39 @@ function drawSeen() {
   const two = NP() === 2;
   G.pl.forEach(pl => {
     const n = pl.hands.length, fv = faceVis(pl.i), w = two ? 300 : 230, x = !two || pl.i ? W - 30 - w / 2 : 30 + w / 2, y = 930;   // 1인은 오른쪽 아래(왼쪽 아래는 연습 시연 칸)
-    pill(x, y, w, 70, 'rgba(10,12,16,.6)');
+    pill(x, y, w, 70, 'rgba(0,0,0,.6)');
     const x0 = x - w / 2 + 40; drawHandIcon(x0, y + 2, 1.1, n >= 1); drawHandIcon(x0 + 46, y + 2, 1.1, n >= 2);
-    const fx = x0 + 96, c = ctx; c.save(); c.fillStyle = fv ? ORANGE : 'rgba(255,255,255,.22)'; if (fv) { c.shadowColor = ORANGE; c.shadowBlur = 12; } c.beginPath(); c.arc(fx, y, 17, 0, 7); c.fill(); c.shadowBlur = 0; c.fillStyle = fv ? '#fff' : 'rgba(10,12,16,.5)'; for (const d of [-1, 1]) { c.beginPath(); c.arc(fx + d * 6, y - 3, 2.6, 0, 7); c.fill(); } c.restore();
+    const fx = x0 + 96, c = ctx; c.save(); c.fillStyle = fv ? ORANGE : 'rgba(255,255,255,.22)'; if (fv) { c.shadowColor = ORANGE; c.shadowBlur = 12; } c.beginPath(); c.arc(fx, y, 17, 0, 7); c.fill(); c.shadowBlur = 0; c.fillStyle = fv ? '#fff' : 'rgba(0,0,0,.5)'; for (const d of [-1, 1]) { c.beginPath(); c.arc(fx + d * 6, y - 3, 2.6, 0, 7); c.fill(); } c.restore();
     if (two) txt(SIDE[pl.i], x + w / 2 - 62, y, 30, n || fv ? '#fff' : '#8A8A8A', 'center', 800);
   });
 }
 
 function drawIdle() {
-  const c = ctx; c.fillStyle = 'rgba(8,10,14,.28)'; c.fillRect(0, 0, W, H);
+  const c = ctx; c.fillStyle = 'rgba(0,0,0,.28)'; c.fillRect(0, 0, W, H);
   const keys = PRACTICE, tot = keys.reduce((a, k) => a + SK[k].T, 0); let tt = idleT % tot, key = keys[0];
   for (const k of keys) { if (tt < SK[k].T) { key = k; break; } tt -= SK[k].T; }
   drawDemo(key, tt, 960, 470, 170, .9); txt(SK[key].name, 960, 150, 72, '#fff', 'center', 900);
   const lh = liveHands(), small = lh.length && !lh.some(h => h.L >= HAND_MIN) && lh.some(h => h.L >= HAND_NEAR);
-  const msg = small ? '조금 더 가까이' : '손을 들어 보세요'; pill(960, 900, msg.length * 84 + 160, 140, 'rgba(10,12,16,.6)'); txt(msg, 960, 900, 88, '#fff');
-  txt('업무 비효율 몬스터 소탕전', 960, 1010, 44, '#FFD0A8', 'center', 700);
+  const msg = small ? '조금 더 가까이' : '손을 들어 보세요'; pill(960, 900, msg.length * 84 + 160, 140, 'rgba(0,0,0,.6)'); txt(msg, 960, 900, 88, '#fff');
+  txt('업무 비효율 몬스터 소탕전', 960, 1010, 44, '#FFD8C1', 'center', 700);
   drawFeet(250, 990, 1, .3); drawFeet(1670, 990, 1, .3);   // 둘이서 설 자리(좌우)
 }
 function drawSelect() {
-  const c = ctx; c.fillStyle = 'rgba(8,10,14,.5)'; c.fillRect(0, 0, W, H);
+  const c = ctx; c.fillStyle = 'rgba(0,0,0,.5)'; c.fillRect(0, 0, W, H);
   txt('손을 칸 안에 두세요', 960, 160, 76, '#fff');
   BOX.forEach((b, i) => {
     const g = clamp(SEL.g[i] / .6, 0, 1);
-    c.save(); c.fillStyle = 'rgba(10,12,16,.62)'; c.beginPath(); c.roundRect(b.x, b.y, b.w, b.h, 48); c.fill();
-    if (g > 0) { c.save(); c.beginPath(); c.roundRect(b.x, b.y, b.w, b.h, 48); c.clip(); c.fillStyle = 'rgba(255,126,49,.85)'; c.fillRect(b.x, b.y + b.h * (1 - g), b.w, b.h * g); c.restore(); }
+    c.save(); c.fillStyle = 'rgba(0,0,0,.62)'; c.beginPath(); c.roundRect(b.x, b.y, b.w, b.h, 48); c.fill();
+    if (g > 0) { c.save(); c.beginPath(); c.roundRect(b.x, b.y, b.w, b.h, 48); c.clip(); c.fillStyle = 'rgba(255,127,50,.85)'; c.fillRect(b.x, b.y + b.h * (1 - g), b.w, b.h * g); c.restore(); }
     c.strokeStyle = g > 0 ? ORANGE_L : 'rgba(255,255,255,.75)'; c.lineWidth = 8; c.beginPath(); c.roundRect(b.x, b.y, b.w, b.h, 48); c.stroke(); c.restore();
-    txt(b.big, b.x + b.w / 2, b.y + b.h / 2 - 40, 230, '#fff', 'center', 900); txt(b.sub, b.x + b.w / 2, b.y + b.h / 2 + 140, 72, g > 0 ? '#fff' : '#FFD0A8', 'center', 800);
+    txt(b.big, b.x + b.w / 2, b.y + b.h / 2 - 40, 230, '#fff', 'center', 900); txt(b.sub, b.x + b.w / 2, b.y + b.h / 2 + 140, 72, g > 0 ? '#fff' : '#FFD8C1', 'center', 800);
   });
   drawFeet(BOX[0].x + BOX[0].w / 2, 925, 1, .55); drawFeet(BOX[1].x + BOX[1].w / 2 - 150, 925, 1, .55); drawFeet(BOX[1].x + BOX[1].w / 2 + 150, 925, 1, .55);   // ME = 가운데 한 사람 · WE = 좌우 두 사람
   for (const h of liveHands()) drawHand(h.lm, .9);
 }
 function drawPractice() {
   const c = ctx, key = PRACTICE[G.pi], two = NP() === 2, ph = G.ph;
-  if (ph === 'p-demo') { c.fillStyle = 'rgba(8,10,14,.45)'; c.fillRect(0, 0, W, H); drawDemo(key, G.t + SK[key].T * .1, 960, 600, 190, 1); head(SK[key].name, key === 'dodge' ? STEPS[key][1] : `${STEPS[key][1]} → ${STEPS[key][2]}`, 190); return; }
+  if (ph === 'p-demo') { c.fillStyle = 'rgba(0,0,0,.45)'; c.fillRect(0, 0, W, H); drawDemo(key, G.t + SK[key].T * .1, 960, 600, 190, 1); head(SK[key].name, key === 'dodge' ? STEPS[key][1] : `${STEPS[key][1]} → ${STEPS[key][2]}`, 190); return; }
   if (two) { c.save(); const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(.5, 'rgba(255,255,255,.35)'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(958, 0, 4, H); c.restore(); }
   const dodge = key === 'dodge';
   drawEnemies(); if (!dodge) G.pl.forEach(drawSpirit); drawShots();
@@ -1632,7 +1635,7 @@ function drawPractice() {
   if (ph === 'p-try') {
     // 사용자 261004: 위쪽 기술 이름 · 설명 띠와 아래쪽 「성공」 · 피하기 문구는 위쪽 단계 안내(drawTopGuide)로 옮겼다
     if (!dodge) for (const pl of G.pl) if (!pl.done) drawGuide(key, pl);
-    c.save(); const bx = two ? 960 : 280, by = two ? 800 : 830, bs = two ? 300 : 440; c.beginPath(); c.roundRect(bx - bs / 2, by - bs / 2, bs, bs, 36); c.fillStyle = 'rgba(10,12,16,.55)'; c.fill(); c.clip(); drawDemo(key, now, bx, by, bs * (dodge ? .2 : .16), 1); c.restore();
+    c.save(); const bx = two ? 960 : 280, by = two ? 800 : 830, bs = two ? 300 : 440; c.beginPath(); c.roundRect(bx - bs / 2, by - bs / 2, bs, bs, 36); c.fillStyle = 'rgba(0,0,0,.55)'; c.fill(); c.clip(); drawDemo(key, now, bx, by, bs * (dodge ? .2 : .16), 1); c.restore();
     if (!dodge) for (const pl of G.pl) if (!pl.done) drawGauge(pl.g, two ? (pl.i ? 1440 + 90 : 480 - 90) : 960, two ? 560 : 880);
   }
 }
@@ -1670,7 +1673,7 @@ function stepGuide(dt) {
 }
 function guideBand(a, h) {
   const c = ctx, g = c.createLinearGradient(0, 0, 0, h);
-  g.addColorStop(0, `rgba(10,12,16,${.6 * a})`); g.addColorStop(.55, `rgba(10,12,16,${.38 * a})`); g.addColorStop(1, 'rgba(10,12,16,0)');
+  g.addColorStop(0, `rgba(0,0,0,${.6 * a})`); g.addColorStop(.55, `rgba(0,0,0,${.38 * a})`); g.addColorStop(1, 'rgba(0,0,0,0)');
   c.fillStyle = g; c.fillRect(0, 0, W, h);
 }
 // 체험 모드(261004): 한 줄에 다 들어가지 않으면 띄어쓰기에서 두 줄로 나눈다(두 줄 중 긴 줄이 가장 짧아지는 자리)
@@ -1693,9 +1696,9 @@ function drawGuideSlot(f, x, y, size, maxW) {
   const tw = c.measureText(f.cur).width; if (tw > maxW) { size *= maxW / tw; c.font = `900 ${size}px ${FONT}`; }
   const sc = 1 + .07 * easeOut(f.pop); c.globalAlpha = easeOut(f.a); c.translate(x, y); c.scale(sc, sc);
   c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
-  c.lineWidth = size * .1; c.strokeStyle = 'rgba(10,12,16,.6)'; c.strokeText(f.cur, 0, 0);
-  if (f.ok || f.hook) { c.shadowColor = 'rgba(255,126,49,.95)'; c.shadowBlur = size * .45; } else { c.shadowColor = 'rgba(0,0,0,.6)'; c.shadowBlur = size * .2; }
-  c.fillStyle = f.ok ? '#FFE6C7' : '#fff'; c.fillText(f.cur, 0, 0); c.restore();
+  c.lineWidth = size * .1; c.strokeStyle = 'rgba(0,0,0,.6)'; c.strokeText(f.cur, 0, 0);
+  if (f.ok || f.hook) { c.shadowColor = 'rgba(255,127,50,.95)'; c.shadowBlur = size * .45; } else { c.shadowColor = 'rgba(0,0,0,.6)'; c.shadowBlur = size * .2; }
+  c.fillStyle = f.ok ? '#FFEBE0' : '#fff'; c.fillText(f.cur, 0, 0); c.restore();
 }
 function drawGuideLines(f, x, y, gl) {
   const c = ctx, size = gl.size, y0 = y + GD.TWO_DY, sc = 1 + .07 * easeOut(f.pop);
@@ -1703,9 +1706,9 @@ function drawGuideLines(f, x, y, gl) {
   c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
   gl.lines.forEach((s, i) => {
     const ly = (i - .5) * size * 1.12;
-    c.shadowBlur = 0; c.lineWidth = size * .1; c.strokeStyle = 'rgba(10,12,16,.6)'; c.strokeText(s, 0, ly);
-    if (f.ok || f.hook) { c.shadowColor = 'rgba(255,126,49,.95)'; c.shadowBlur = size * .45; } else { c.shadowColor = 'rgba(0,0,0,.6)'; c.shadowBlur = size * .2; }
-    c.fillStyle = f.ok ? '#FFE6C7' : '#fff'; c.fillText(s, 0, ly);
+    c.shadowBlur = 0; c.lineWidth = size * .1; c.strokeStyle = 'rgba(0,0,0,.6)'; c.strokeText(s, 0, ly);
+    if (f.ok || f.hook) { c.shadowColor = 'rgba(255,127,50,.95)'; c.shadowBlur = size * .45; } else { c.shadowColor = 'rgba(0,0,0,.6)'; c.shadowBlur = size * .2; }
+    c.fillStyle = f.ok ? '#FFEBE0' : '#fff'; c.fillText(s, 0, ly);
   });
   c.restore();
 }
@@ -1726,9 +1729,9 @@ function drawPracticeBadge() {
 // 준비 화면(피드백2): 큰 글자 「준비되면 머리 위로 동그라미!」 + 따라 할 픽토그램(팔 고리가 유지 시간만큼 주황으로 차오름) · 2인은 사람마다 픽토그램
 const READY_LINE = '주먹 · 손바닥 · 두 손바닥 · 고개로 피하기';
 function drawReady() {
-  const c = ctx, two = NP() === 2; c.fillStyle = 'rgba(8,10,14,.62)'; c.fillRect(0, 0, W, H);
+  const c = ctx, two = NP() === 2; c.fillStyle = 'rgba(0,0,0,.62)'; c.fillRect(0, 0, W, H);
   // 판정 영역(화면 위 30%): 손이 들어오면 옅게 밝아진다
-  const inTop = G.pl.some(pl => pl.circ); c.save(); const g = c.createLinearGradient(0, 0, 0, TOPZ); g.addColorStop(0, `rgba(255,126,49,${inTop ? .3 : .14})`); g.addColorStop(1, 'rgba(255,126,49,0)'); c.fillStyle = g; c.fillRect(0, 0, W, TOPZ); c.restore();
+  const inTop = G.pl.some(pl => pl.circ); c.save(); const g = c.createLinearGradient(0, 0, 0, TOPZ); g.addColorStop(0, `rgba(255,127,50,${inTop ? .3 : .14})`); g.addColorStop(1, 'rgba(255,127,50,0)'); c.fillStyle = g; c.fillRect(0, 0, W, TOPZ); c.restore();
   for (const h of liveHands()) drawHand(h.lm, .6);
   txt('준비되면 머리 위로 동그라미!', 960, 110, two ? 100 : 108, '#fff', 'center', 900);
   G.pl.forEach(pl => {
@@ -1736,22 +1739,22 @@ function drawReady() {
     drawCirclePicto(x, 520, two ? 1.25 : 1.5, p, !!pl.ready);
     const y = 850;
     if (pl.ready) { pill(x, y, 320, 96, ORANGE); txt(two ? SIDE[pl.i] + ' 준비' : '준비 완료', x, y, 50, '#fff', 'center', 900); }
-    else if (two) { pill(x, y, 320, 96, 'rgba(10,12,16,.6)'); txt(SIDE[pl.i], x, y, 46, '#D9D9D9', 'center', 800); }
+    else if (two) { pill(x, y, 320, 96, 'rgba(0,0,0,.6)'); txt(SIDE[pl.i], x, y, 46, '#D9D9D9', 'center', 800); }
   });
   if (two) { drawFeet(480, 1000, 1, .6); drawFeet(1440, 1000, 1, .6); }
-  txt(READY_LINE, 960, 945, 44, '#FFD0A8', 'center', 800);
+  txt(READY_LINE, 960, 945, 44, '#FFD8C1', 'center', 800);
   if (!G.readyAt) txt(`${Math.max(1, Math.ceil(READY_AUTO - G.t))}초 뒤 자동 시작`, 960, 1020, 36, '#D9D9D9', 'center', 700);
 }
 // 실전 시작: 3 · 2 · 1 → 「실전 시작」
 function drawCountdown() {
-  const c = ctx, t = G.t; c.fillStyle = `rgba(8,10,14,${t < 3 ? .5 : .5 * clamp((INTRO_T - t) / .4, 0, 1)})`; c.fillRect(0, 0, W, H);
+  const c = ctx, t = G.t; c.fillStyle = `rgba(0,0,0,${t < 3 ? .5 : .5 * clamp((INTRO_T - t) / .4, 0, 1)})`; c.fillRect(0, 0, W, H);
   if (t < 3) {
     const n = 3 - Math.floor(t), f = t % 1, s = lerp(1.7, 1, easeOut(f / .25)), a = f > .8 ? 1 - (f - .8) / .2 : 1;
     ring(960, 520, 230 + 120 * easeOut(f), (1 - f) * .9, 12, ORANGE);
     c.save(); c.globalAlpha = a; c.translate(960, 520); c.scale(s, s); txt(String(n), 0, 0, 380, '#fff', 'center', 900); c.restore();
   } else {
     const k = t - 3, s = k < .2 ? lerp(1.5, 1, easeOut(k / .2)) : 1, a = clamp((INTRO_T - t) / .3, 0, 1);
-    c.save(); c.globalAlpha = a; c.translate(960, 500); c.scale(s, s); pill(0, 0, 1240, 340, 'rgba(229,101,26,.94)'); txt('실전 시작', 0, -36, 190, '#fff', 'center', 900); txt('조준은 자동 · 날아오면 고개로 피하기', 0, 110, 56, '#fff', 'center', 800); c.restore();
+    c.save(); c.globalAlpha = a; c.translate(960, 500); c.scale(s, s); pill(0, 0, 1240, 340, 'rgba(255,127,50,.94)'); txt('실전 시작', 0, -36, 190, '#fff', 'center', 900); txt('조준은 자동 · 날아오면 고개로 피하기', 0, 110, 56, '#fff', 'center', 800); c.restore();
   }
 }
 /* 마법 정령(피드백3 2차 261003: 락온 십자선 대신): 빛나는 작은 정령이 조준된 적 머리 위에 날아가 앉아 아래를 가리킨다. 대상이 바뀌면 휙 날아간다(빛 꼬리) */
@@ -1764,13 +1767,13 @@ function stepSpirit(pl, dt) {
   if (id !== sp.tid) { sp.tid = id; sp.fx = sp.x; sp.fy = sp.y; sp.ft = 0; }
   if (sp.ft < 1) {
     sp.ft = Math.min(1, sp.ft + dt / .28); const k = easeOut(sp.ft); sp.x = lerp(sp.fx, tx, k); sp.y = lerp(sp.fy, ty, k) - Math.sin(k * Math.PI) * 90;
-    if (tg) for (let i = 0; i < 2; i++) spark(sp.x + rnd(-8, 8), sp.y + rnd(-8, 8), { vx: rnd(-40, 40), vy: rnd(-40, 40), r: rnd(5, 9), r1: 1, life: .35, col: pick(['#fff', pl.i ? '#FFD0A8' : ORANGE_L]) });
+    if (tg) for (let i = 0; i < 2; i++) spark(sp.x + rnd(-8, 8), sp.y + rnd(-8, 8), { vx: rnd(-40, 40), vy: rnd(-40, 40), r: rnd(5, 9), r1: 1, life: .35, col: pick(['#fff', pl.i ? '#FFD8C1' : ORANGE_L]) });
   } else { const k = 1 - Math.exp(-dt * 14); sp.x = lerp(sp.x, tx, k); sp.y = lerp(sp.y, ty, k); }
   sp.on = !!tg; sp.vis = on;
 }
 function drawSpirit(pl) {
   const sp = pl.sp; if (!sp || !sp.vis) return;
-  const c = ctx, col = pl.i ? '255,208,168' : '255,150,62', x = sp.x, y = sp.y + Math.sin(now * 5 + pl.i * 2) * 7, a = sp.on ? 1 : .5, f = Math.sin(now * 18 + pl.i) * .45;
+  const c = ctx, col = pl.i ? '255,216,193' : '255,150,62', x = sp.x, y = sp.y + Math.sin(now * 5 + pl.i * 2) * 7, a = sp.on ? 1 : .5, f = Math.sin(now * 18 + pl.i) * .45;
   glowCircle(x, y, 70, .85 * a, col);
   c.save(); c.globalAlpha *= a;
   if (sp.on && sp.ft >= 1) { const p = 6 * Math.sin(now * 6); c.fillStyle = `rgba(${col},.95)`; c.beginPath(); c.moveTo(x - 15, y + 30 + p); c.lineTo(x + 15, y + 30 + p); c.lineTo(x, y + 52 + p); c.closePath(); c.fill(); }
@@ -1800,7 +1803,7 @@ function outlined(cx, cy, R, drawFn, o = {}) {
   for (const [dx, dy] of OL_DIRS) c.drawImage(OL.b, 0, 0, S, S, x0 + dx * wi, y0 + dy * wi, S, S);
   c.drawImage(OL.a, 0, 0, S, S, x0, y0, S, S);
 }
-function footShadow(x, y, rx, a = 1) { const c = ctx; c.save(); c.globalAlpha *= a; c.fillStyle = 'rgba(10,12,16,.5)'; c.beginPath(); c.ellipse(x, y, rx, rx * .28, 0, 0, 7); c.fill(); c.fillStyle = 'rgba(10,12,16,.35)'; c.beginPath(); c.ellipse(x, y, rx * 1.35, rx * .4, 0, 0, 7); c.fill(); c.restore(); }
+function footShadow(x, y, rx, a = 1) { const c = ctx; c.save(); c.globalAlpha *= a; c.fillStyle = 'rgba(0,0,0,.5)'; c.beginPath(); c.ellipse(x, y, rx, rx * .28, 0, 0, 7); c.fill(); c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.ellipse(x, y, rx * 1.35, rx * .4, 0, 0, 7); c.fill(); c.restore(); }
 // 적 몸의 대략 반지름 · 발밑 · 머리 위(정령이 앉는 곳) (ps 배수)
 const EBOX = { mini: { R: 62, foot: 34, top: 50, sh: 46 }, golem: { R: 150, foot: 116, top: 112, sh: 95 }, boss: { R: 300, foot: 222, top: 225, sh: 210 }, dummy: { R: 140, foot: 110, top: 112, sh: 70 } };
 // 연습용 샌드백 캐릭터: 둥근 받침 위 샌드백 · 오렌지 띠 · 웃는 얼굴. 맞으면 출렁(wob)하고 눈이 「> <」로 바뀐다
@@ -1830,28 +1833,28 @@ function drawEnemies() {
     if (e.side === -1 && e.type !== 'boss' && e.z > .25) {   // 차례 몬스터(꼬마 · 골렘): 이름표 + 체력 막대(크게)
       const y = e.py - bx.top * s - 34, w = e.type === 'golem' ? 300 : 260, x = e.px - w / 2, a = clamp((e.z - .25) / .5, 0, 1);
       ctx.save(); ctx.globalAlpha *= a; nameTag(e.px, y - 50, ENAME[e.type], 1, 38);
-      ctx.fillStyle = 'rgba(10,12,16,.7)'; ctx.beginPath(); ctx.roundRect(x - 8, y - 14, w + 16, 28, 14); ctx.fill(); ctx.fillStyle = ORANGE; ctx.beginPath(); ctx.roundRect(x, y - 8, w * clamp(e.hp / e.max, 0, 1), 16, 8); ctx.fill(); ctx.restore();
+      ctx.fillStyle = 'rgba(0,0,0,.7)'; ctx.beginPath(); ctx.roundRect(x - 8, y - 14, w + 16, 28, 14); ctx.fill(); ctx.fillStyle = ORANGE; ctx.beginPath(); ctx.roundRect(x, y - 8, w * clamp(e.hp / e.max, 0, 1), 16, 8); ctx.fill(); ctx.restore();
     }
     else if (e.type === 'mini' && e.lead && e.z > .3 && !tele) nameTag(e.px, e.py - bx.top * s - 30, ENAME.mini, 1, 30);
     if (e.type === 'dummy') nameTag(e.px, e.py - bx.top * s - 34, ENAME.dummy, 1, 30);
-    if (e.type === 'golem' && e.z > .25 && e.side !== -1) { const y = e.py - bx.top * s - 30; nameTag(e.px, y - 38, ENAME.golem, 1, 30); const w = 180, x = e.px - w / 2; ctx.fillStyle = 'rgba(10,12,16,.7)'; ctx.beginPath(); ctx.roundRect(x - 6, y - 10, w + 12, 20, 10); ctx.fill(); ctx.fillStyle = ORANGE; ctx.beginPath(); ctx.roundRect(x, y - 6, w * clamp(e.hp / e.max, 0, 1), 12, 6); ctx.fill(); }
-    if (e.type === 'boss' && e.t > 1.2) { const w = 560, x = 960 - w / 2, y = e.py - bx.top * s - 34; ctx.fillStyle = 'rgba(10,12,16,.7)'; ctx.beginPath(); ctx.roundRect(x - 10, y - 18, w + 20, 36, 18); ctx.fill(); ctx.fillStyle = ORANGE; ctx.beginPath(); ctx.roundRect(x, y - 9, w * clamp(e.hp / e.max, 0, 1), 18, 9); ctx.fill(); if (NP() === 2) { ctx.fillStyle = '#fff'; ctx.fillRect(x + w * MERGE_AT - 3, y - 16, 6, 32); } else if (!G.finOpen) { ctx.fillStyle = '#fff'; ctx.fillRect(x + w * FINISH_AT - 3, y - 16, 6, 32); } nameTag(x - 130, y, ENAME.boss, 1, 32); }   // 흰 눈금 = 두 손바닥으로 마무리하는 선
+    if (e.type === 'golem' && e.z > .25 && e.side !== -1) { const y = e.py - bx.top * s - 30; nameTag(e.px, y - 38, ENAME.golem, 1, 30); const w = 180, x = e.px - w / 2; ctx.fillStyle = 'rgba(0,0,0,.7)'; ctx.beginPath(); ctx.roundRect(x - 6, y - 10, w + 12, 20, 10); ctx.fill(); ctx.fillStyle = ORANGE; ctx.beginPath(); ctx.roundRect(x, y - 6, w * clamp(e.hp / e.max, 0, 1), 12, 6); ctx.fill(); }
+    if (e.type === 'boss' && e.t > 1.2) { const w = 560, x = 960 - w / 2, y = e.py - bx.top * s - 34; ctx.fillStyle = 'rgba(0,0,0,.7)'; ctx.beginPath(); ctx.roundRect(x - 10, y - 18, w + 20, 36, 18); ctx.fill(); ctx.fillStyle = ORANGE; ctx.beginPath(); ctx.roundRect(x, y - 9, w * clamp(e.hp / e.max, 0, 1), 18, 9); ctx.fill(); if (NP() === 2) { ctx.fillStyle = '#fff'; ctx.fillRect(x + w * MERGE_AT - 3, y - 16, 6, 32); } else if (!G.finOpen) { ctx.fillStyle = '#fff'; ctx.fillRect(x + w * FINISH_AT - 3, y - 16, 6, 32); } nameTag(x - 130, y, ENAME.boss, 1, 32); }   // 흰 눈금 = 두 손바닥으로 마무리하는 선
     if (e.hitT > 0 && e.type !== 'boss') glowCircle(e.px, e.py, bx.R * .9 * s, e.hitT * .9, '255,255,255');
     if (warn) drawTele(e, 'badge');
     ctx.restore();
   }
 }
 // 공격 예고: 적 둘레 고리가 시계 방향으로 차오른다 → 마지막 ATK_WARN초는 붉은 고리 깜빡임 + 「!」 + 붉은 반짝임
-const RED = '#E5484D';
+const RED = '#D22030';   // design.md error(앱 토큰 --ax-color-error) · 위험 표시 · 혼잡 · 상태 점(녹화 표시)
 // part: 'ring'(고리) · 'badge'(「!」) · 생략하면 둘 다. 보스는 고리를 몸 뒤에, 「!」는 체력 막대 위에 그린다
 function drawTele(e, part) {
   const c = ctx, T = ATK_TELE[e.type], k = clamp(e.ak / T, 0, 1), warn = e.ak >= T - ATK_WARN, boss = e.type === 'boss';
   const R = (boss ? 270 : e.type === 'golem' ? 88 : 46) * e.ps + (boss ? 30 : 16), lw = boss ? 18 : 11, blink = .5 + .5 * Math.sin(now * 22);
   const cy = boss ? e.py - 20 * e.ps : e.py;
   if (part !== 'badge') {
-    if (warn) glowCircle(e.px, cy, R * 1.25, .55 + .35 * blink, '229,72,77');
+    if (warn) glowCircle(e.px, cy, R * 1.25, .55 + .35 * blink, '210,32,48');
     c.save(); c.lineCap = 'round';
-    c.strokeStyle = 'rgba(10,12,16,.6)'; c.lineWidth = lw + 8; c.beginPath(); c.arc(e.px, cy, R, 0, 7); c.stroke();
+    c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = lw + 8; c.beginPath(); c.arc(e.px, cy, R, 0, 7); c.stroke();
     c.strokeStyle = 'rgba(255,255,255,.25)'; c.lineWidth = lw; c.beginPath(); c.arc(e.px, cy, R, 0, 7); c.stroke();
     c.strokeStyle = warn ? (blink > .5 ? RED : '#fff') : ORANGE_L; c.shadowColor = warn ? RED : ORANGE; c.shadowBlur = 16;
     c.beginPath(); c.arc(e.px, cy, R, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2); c.stroke(); c.restore();
@@ -1892,7 +1895,7 @@ function drawShotBody(s, x, y, sc, rot, a) {
     const path = () => { c.beginPath(); c.moveTo(-12, 34); c.lineTo(-12, -22); c.arc(4, -22, 16, Math.PI, 0); c.lineTo(20, 26); c.arc(8, 26, 12, 0, Math.PI); c.lineTo(-4, -12); c.arc(4, -12, 8, Math.PI, 0); c.lineTo(12, 20); };
     c.rotate(.5); path(); c.strokeStyle = INK; c.lineWidth = 15; c.stroke(); c.shadowColor = 'transparent'; path(); c.strokeStyle = '#fff'; c.lineWidth = 10; c.stroke(); path(); c.strokeStyle = ORANGE; c.lineWidth = 5; c.stroke();
   } else if (s.kind === 'postit') {   // 포스트잇: 연주황 종이 + 접힌 귀퉁이 + 손글씨 줄
-    c.fillStyle = '#FFD0A8'; c.strokeStyle = INK; c.lineWidth = 4; c.beginPath(); c.moveTo(-36, -36); c.lineTo(36, -36); c.lineTo(36, 22); c.lineTo(22, 36); c.lineTo(-36, 36); c.closePath(); c.fill(); c.shadowColor = 'transparent'; c.stroke();
+    c.fillStyle = '#FFD8C1'; c.strokeStyle = INK; c.lineWidth = 4; c.beginPath(); c.moveTo(-36, -36); c.lineTo(36, -36); c.lineTo(36, 22); c.lineTo(22, 36); c.lineTo(-36, 36); c.closePath(); c.fill(); c.shadowColor = 'transparent'; c.stroke();
     c.fillStyle = ORANGE_L; c.beginPath(); c.moveTo(36, 22); c.lineTo(22, 22); c.lineTo(22, 36); c.closePath(); c.fill(); c.stroke();
     c.strokeStyle = INK; c.lineWidth = 4; for (let j = 0; j < 3; j++) { c.beginPath(); c.moveTo(-24, -18 + j * 15); c.lineTo(j === 2 ? 2 : 22, -18 + j * 15); c.stroke(); }
   } else if (s.kind === 'doc') { c.scale(1.05, 1.05); docShape(c, true); }
@@ -1915,12 +1918,12 @@ function drawShotBody(s, x, y, sc, rot, a) {
 function aimBand(s, k) {
   const c = ctx, red = k > .55, h = s.half * lerp(1.7, 1, easeOut(k)), y0 = s.ty - 300, y1 = s.ty + 300, blink = red ? .6 + .4 * Math.sin(now * 30) : 1;
   c.save(); c.globalAlpha = (.75 + .25 * k) * blink;
-  const g = c.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, 'rgba(229,72,77,0)'); g.addColorStop(.5, `rgba(229,72,77,${.22 + .22 * k})`); g.addColorStop(1, 'rgba(229,72,77,0)');
+  const g = c.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, 'rgba(210,32,48,0)'); g.addColorStop(.5, `rgba(210,32,48,${.22 + .22 * k})`); g.addColorStop(1, 'rgba(210,32,48,0)');
   c.fillStyle = g; c.fillRect(s.tx - h, y0, h * 2, y1 - y0);
   c.lineCap = 'round';
   for (const d of [-1, 1]) {
     const x = s.tx + d * h;
-    c.strokeStyle = 'rgba(10,12,16,.6)'; c.lineWidth = 16; c.beginPath(); c.moveTo(x, y0 + 60); c.lineTo(x, y1 - 60); c.stroke();
+    c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = 16; c.beginPath(); c.moveTo(x, y0 + 60); c.lineTo(x, y1 - 60); c.stroke();
     c.strokeStyle = red ? RED : '#fff'; c.lineWidth = 9; c.beginPath(); c.moveTo(x, y0 + 60); c.lineTo(x, y1 - 60); c.stroke();
     c.beginPath(); c.moveTo(x - d * 34, s.ty - 30); c.lineTo(x, s.ty); c.lineTo(x - d * 34, s.ty + 30); c.stroke();   // 안쪽을 가리키는 꺾쇠
   }
@@ -1964,7 +1967,7 @@ function drawShots() {
       M.from.forEach(f => {
         const x = lerp(f.x, cx, k), y = lerp(f.y, cy, k);
         ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
-        for (const [w, col] of [[54, 'rgba(255,126,49,.35)'], [26, 'rgba(255,150,62,.8)'], [9, 'rgba(255,255,255,.95)']]) { ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.lineTo(x, y); ctx.stroke(); }
+        for (const [w, col] of [[54, 'rgba(255,127,50,.35)'], [26, 'rgba(255,150,62,.8)'], [9, 'rgba(255,255,255,.95)']]) { ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.lineTo(x, y); ctx.stroke(); }
         ctx.restore(); glowCircle(x, y, 150, .9); glowCircle(f.x, f.y, 110, .7);
       });
     } else if (M.t < MG_MEET + MG_HOLD) {
@@ -1976,12 +1979,12 @@ function drawShots() {
     }
   }
 }
-function glowText(s, x, y, size, col = '#fff') { const c = ctx; c.save(); c.font = `900 ${size}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.shadowColor = 'rgba(255,126,49,.95)'; c.shadowBlur = size * .4; c.lineWidth = size * .07; c.strokeStyle = 'rgba(10,12,16,.55)'; c.strokeText(s, x, y); c.fillStyle = col; c.fillText(s, x, y); c.restore(); }
+function glowText(s, x, y, size, col = '#fff') { const c = ctx; c.save(); c.font = `900 ${size}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.shadowColor = 'rgba(255,127,50,.95)'; c.shadowBlur = size * .4; c.lineWidth = size * .07; c.strokeStyle = 'rgba(0,0,0,.55)'; c.strokeText(s, x, y); c.fillStyle = col; c.fillText(s, x, y); c.restore(); }
 function meToWeText(x, y, size, a = 1) {   // 「ME to WE」 발사체 글자(ME·WE 대문자, to 소문자)
   const c = ctx, parts = [['ME', size, '#fff'], ['to', size * .64, ORANGE_L], ['WE', size, '#fff']], gap = size * .14;
   c.save(); c.globalAlpha *= a; c.textBaseline = 'middle'; c.textAlign = 'center';
   const ws = parts.map(([s, z]) => { c.font = `900 ${z}px ${FONT}`; return c.measureText(s).width; }), tw = ws.reduce((p, q) => p + q, 0) + gap * 2; let xx = x - tw / 2;
-  parts.forEach(([s, z, col], i) => { c.font = `900 ${z}px ${FONT}`; c.shadowColor = 'rgba(255,126,49,.95)'; c.shadowBlur = size * .45; c.lineWidth = z * .07; c.strokeStyle = 'rgba(10,12,16,.5)'; c.strokeText(s, xx + ws[i] / 2, y); c.fillStyle = col; c.fillText(s, xx + ws[i] / 2, y); xx += ws[i] + gap; });
+  parts.forEach(([s, z, col], i) => { c.font = `900 ${z}px ${FONT}`; c.shadowColor = 'rgba(255,127,50,.95)'; c.shadowBlur = size * .45; c.lineWidth = z * .07; c.strokeStyle = 'rgba(0,0,0,.5)'; c.strokeText(s, xx + ws[i] / 2, y); c.fillStyle = col; c.fillText(s, xx + ws[i] / 2, y); xx += ws[i] + gap; });
   c.restore();
 }
 function drawMarks() {
@@ -1989,31 +1992,31 @@ function drawMarks() {
   for (const m of G.marks) {
     const d = m.kill ? .45 : .28, k = m.t / d, sz = (m.kill ? 52 : 34) * (1 + .3 * easeOut(k)), g = sz * .4;
     c.save(); c.translate(m.x, m.y); c.globalAlpha = 1 - k * k; c.lineCap = 'round';
-    for (const pass of [0, 1]) { c.strokeStyle = pass ? (m.kill ? ORANGE_L : '#fff') : 'rgba(10,12,16,.7)'; c.lineWidth = pass ? (m.kill ? 9 : 6) : (m.kill ? 15 : 11); c.beginPath(); for (const [sx, sy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) { c.moveTo(sx * g, sy * g); c.lineTo(sx * sz, sy * sz); } c.stroke(); }
+    for (const pass of [0, 1]) { c.strokeStyle = pass ? (m.kill ? ORANGE_L : '#fff') : 'rgba(0,0,0,.7)'; c.lineWidth = pass ? (m.kill ? 9 : 6) : (m.kill ? 15 : 11); c.beginPath(); for (const [sx, sy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) { c.moveTo(sx * g, sy * g); c.lineTo(sx * sz, sy * sz); } c.stroke(); }
     c.restore();
   }
 }
 function drawEnergy(pl) {
   const c = ctx, two = NP() === 2, r = region(pl.i), w = two ? 520 : 760, cx = r.cx + 50, x = cx - w / 2, y = 1012, ex = now < pl.exUntil;
-  c.save(); c.fillStyle = 'rgba(10,12,16,.66)'; c.beginPath(); c.roundRect(x - 120, y - 32, w + 140, 64, 32); c.fill();
+  c.save(); c.fillStyle = 'rgba(0,0,0,.66)'; c.beginPath(); c.roundRect(x - 120, y - 32, w + 140, 64, 32); c.fill();
   c.fillStyle = 'rgba(255,255,255,.18)'; c.beginPath(); c.roundRect(x, y - 15, w, 30, 15); c.fill();
   const p = clamp(pl.en / EN_MAX, 0, 1);
   if (p > .01) { c.fillStyle = ex ? '#8A8A8A' : ORANGE; if (!ex) { c.shadowColor = ORANGE; c.shadowBlur = 18; } c.beginPath(); c.roundRect(x, y - 15, Math.max(30, w * p), 30, 15); c.fill(); }
-  c.shadowBlur = 0; c.strokeStyle = 'rgba(10,12,16,.8)'; c.lineWidth = 3; for (const cost of [SK.wave.cost, SK.mtw.cost]) { const xx = x + w * cost / EN_MAX; c.beginPath(); c.moveTo(xx, y - 15); c.lineTo(xx, y + 15); c.stroke(); }
+  c.shadowBlur = 0; c.strokeStyle = 'rgba(0,0,0,.8)'; c.lineWidth = 3; for (const cost of [SK.wave.cost, SK.mtw.cost]) { const xx = x + w * cost / EN_MAX; c.beginPath(); c.moveTo(xx, y - 15); c.lineTo(xx, y + 15); c.stroke(); }
   const fl = pl.enFlash || 0;   // 사용자 261004: 손바닥 · 두 손바닥이 다시 가능해지면 바가 하얗게 두 번 반짝이고 둘레가 빛난다
   if (fl > 0) { const b = Math.pow(Math.abs(Math.sin((1 - fl) * Math.PI * 2)), .7) * fl; c.globalAlpha = b; c.fillStyle = '#fff'; c.shadowColor = ORANGE_L; c.shadowBlur = 40; c.beginPath(); c.roundRect(x, y - 15, Math.max(30, w * p), 30, 15); c.fill(); c.lineWidth = 6; c.strokeStyle = '#fff'; c.beginPath(); c.roundRect(x - 120, y - 32, w + 140, 64, 32); c.stroke(); c.globalAlpha = 1; }
   c.restore(); txt('기력', x - 58, y + 1, 36, ex ? '#8A8A8A' : '#fff', 'center', 800);
-  if (ex) { const left = Math.max(0, pl.exUntil - now).toFixed(1), size = two ? 110 : 150; pill(r.cx, 760, size * 3.4, size * 1.35, 'rgba(10,12,16,.78)'); txt('탈진', r.cx, 742, size, '#D9D9D9', 'center', 900); txt(`${left}초 · 주먹만 가능`, r.cx, 760 + size * .5, size * .28, '#fff', 'center', 700); }
+  if (ex) { const left = Math.max(0, pl.exUntil - now).toFixed(1), size = two ? 110 : 150; pill(r.cx, 760, size * 3.4, size * 1.35, 'rgba(0,0,0,.78)'); txt('탈진', r.cx, 742, size, '#D9D9D9', 'center', 900); txt(`${left}초 · 주먹만 가능`, r.cx, 760 + size * .5, size * .28, '#fff', 'center', 700); }
   if (pl.combo >= 2) { const s = 1 + .35 * pl.comboPop, left = two && pl.i === 0; ctx.save(); ctx.translate(left ? 70 : W - 70, 190); ctx.scale(s, s); txt(`${pl.combo} 콤보`, 0, 0, 64, pl.combo >= 10 ? ORANGE_L : '#fff', left ? 'left' : 'right', 900); ctx.restore(); }
 }
 // 사용자 261004: 「웨이브 n/2」 대신 「n / 3」 + 몬스터 아이콘 3개(지금 = 오렌지 테두리 · 처치 = 흐림 + 체크 · 아직 = 흐린 윤곽)
 function drawStages() {
   const c = ctx, x0 = 40, y = 74, cur = G.wave, iw = 92, w = 150 + iw * STAGES.length, n = Math.min(STAGES.length, cur + 1);
-  pill(x0 + w / 2, y, w, 104, 'rgba(10,12,16,.72)'); txt(`${n} / ${STAGES.length}`, x0 + 74, y + 2, 50, '#fff', 'center', 900);
+  pill(x0 + w / 2, y, w, 104, 'rgba(0,0,0,.72)'); txt(`${n} / ${STAGES.length}`, x0 + 74, y + 2, 50, '#fff', 'center', 900);
   STAGES.forEach((t, i) => {
     const cx = x0 + 150 + iw * i + iw / 2 - 6, done = i < cur || (i === cur && G.stageE && !G.stageE.alive), on = i === cur && !done;
     c.save();
-    if (on) { c.fillStyle = 'rgba(255,126,49,.28)'; c.strokeStyle = ORANGE; c.lineWidth = 5; c.beginPath(); c.arc(cx, y, 40, 0, 7); c.fill(); c.stroke(); }
+    if (on) { c.fillStyle = 'rgba(255,127,50,.28)'; c.strokeStyle = ORANGE; c.lineWidth = 5; c.beginPath(); c.arc(cx, y, 40, 0, 7); c.fill(); c.stroke(); }
     c.globalAlpha = on ? 1 : done ? .35 : .22;
     if (t === 'mini') drawMini(cx, y + 4, .5, on ? now * 6 : 0); else if (t === 'golem') drawGolem(cx, y + 6, .2, on ? now : 0, 0); else drawBoss(cx, y + 6, .1, 0, false, on ? now : 0);
     c.restore();
@@ -2025,8 +2028,8 @@ function drawEnNote(pl) {
   const k = now - (pl.noteAt === undefined ? -99 : pl.noteAt); if (k < 0 || k > EN_NOTE_T) return;
   const two = NP() === 2, x = two ? region(pl.i).cx : 960, y = 250, a = clamp(k / .12, 0, 1) * clamp((EN_NOTE_T - k) / .3, 0, 1), sc = k < .15 ? lerp(1.25, 1, easeOut(k / .15)) : 1;
   const c = ctx; c.save(); c.globalAlpha = a; c.translate(x, y); c.scale(sc, sc);
-  pill(0, 0, two ? 820 : 1060, 190, 'rgba(10,12,16,.82)'); c.save(); c.strokeStyle = ORANGE; c.lineWidth = 6; c.beginPath(); c.roundRect(-(two ? 410 : 530), -95, two ? 820 : 1060, 190, 95); c.stroke(); c.restore();
-  txt('기력이 부족합니다', 0, -36, two ? 68 : 80, '#fff', 'center', 900); txt('주먹을 사용하세요', 0, 50, two ? 50 : 58, '#FFD0A8', 'center', 800);
+  pill(0, 0, two ? 820 : 1060, 190, 'rgba(0,0,0,.82)'); c.save(); c.strokeStyle = ORANGE; c.lineWidth = 6; c.beginPath(); c.roundRect(-(two ? 410 : 530), -95, two ? 820 : 1060, 190, 95); c.stroke(); c.restore();
+  txt('기력이 부족합니다', 0, -36, two ? 68 : 80, '#fff', 'center', 900); txt('주먹을 사용하세요', 0, 50, two ? 50 : 58, '#FFD8C1', 'center', 800);
   c.restore();
 }
 function drawLives() {
@@ -2041,7 +2044,7 @@ function drawGame() {
   const c = ctx, ph = G.ph, two = NP() === 2;
   if (ph[0] === 'p') { drawPractice(); return; }
   if (ph === 'ready') { drawReady(); return; }
-  c.fillStyle = `rgba(8,10,14,${.22 + G.dim * .5})`; c.fillRect(0, 0, W, H);
+  c.fillStyle = `rgba(0,0,0,${.22 + G.dim * .5})`; c.fillRect(0, 0, W, H);
   if (two && ph !== 'result' && ph !== 'fin') { c.save(); const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(.5, 'rgba(255,255,255,.3)'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(958, 0, 4, H); c.restore(); }
   if (ph === 'b-wave' || ph === 'b-boss' || ph === 'b-intro' || ph === 'over') {
     drawEnemies();
@@ -2066,7 +2069,7 @@ function drawMeToWe(k, y = 470) {
   parts.forEach(([s, z, col], i) => {
     const kk = clamp((k - i * .13) / .5, 0, 1), ee = easeOut(kk), cx = x + ws[i] / 2;
     c.save(); c.globalAlpha = ee; c.translate(cx, y); c.scale(lerp(2.4, 1, ee), lerp(2.4, 1, ee)); c.font = `900 ${z}px ${FONT}`; c.textAlign = 'center';
-    c.shadowColor = 'rgba(255,126,49,.9)'; c.shadowBlur = 50; c.fillStyle = col; c.fillText(s, 0, 0); c.shadowBlur = 0; c.restore(); x += ws[i] + gap;
+    c.shadowColor = 'rgba(255,127,50,.9)'; c.shadowBlur = 50; c.fillStyle = col; c.fillText(s, 0, 0); c.shadowBlur = 0; c.restore(); x += ws[i] + gap;
   }); c.restore();
 }
 function drawGameTop() {
@@ -2077,7 +2080,7 @@ function drawGameTop() {
     const e = k.t < .12 ? lerp(1.8, 1, easeOut(k.t / .12)) : 1, a = k.t > .4 ? 1 - (k.t - .4) / .4 : 1;
     c.save(); c.globalAlpha = clamp(a, 0, 1); c.translate(k.x, k.y); c.scale(e, e);
     if (k.text === 'ME to WE') meToWeText(0, 0, k.size, 1);
-    else { c.font = `900 ${k.size}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.shadowColor = 'rgba(255,126,49,.95)'; c.shadowBlur = 60; c.lineWidth = k.size * .08; c.strokeStyle = 'rgba(10,12,16,.6)'; c.strokeText(k.text, 0, 0); c.fillStyle = k.col; c.fillText(k.text, 0, 0); }
+    else { c.font = `900 ${k.size}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.shadowColor = 'rgba(255,127,50,.95)'; c.shadowBlur = 60; c.lineWidth = k.size * .08; c.strokeStyle = 'rgba(0,0,0,.6)'; c.strokeText(k.text, 0, 0); c.fillStyle = k.col; c.fillText(k.text, 0, 0); }
     c.restore();
   }
   if (ph[0] === 'p') { drawPracticeBadge(); return; }
@@ -2085,22 +2088,22 @@ function drawGameTop() {
   if (ph === 'b-intro' || ph === 'b-wave' || ph === 'b-boss') {
     // 공격 직전(「!」)인 적이 있으면: 화면 가장자리 붉은 맥박
     const warnN = G.en.filter(e => e.alive && !e.flee && e.atk === 'tele' && e.ak >= ATK_TELE[e.type] - ATK_WARN).length;
-    if (warnN) { const a = .3 * (.5 + .5 * Math.sin(now * 12)); c.save(); const g = c.createRadialGradient(960, 540, 520, 960, 540, 1150); g.addColorStop(0, 'rgba(229,72,77,0)'); g.addColorStop(1, `rgba(229,72,77,${a})`); c.fillStyle = g; c.fillRect(0, 0, W, H); c.restore(); }
+    if (warnN) { const a = .3 * (.5 + .5 * Math.sin(now * 12)); c.save(); const g = c.createRadialGradient(960, 540, 520, 960, 540, 1150); g.addColorStop(0, 'rgba(210,32,48,0)'); g.addColorStop(1, `rgba(210,32,48,${a})`); c.fillStyle = g; c.fillRect(0, 0, W, H); c.restore(); }
     drawLives();
     if (ph !== 'b-intro') drawStages();   // 실전 표시: 왼쪽 위 「n / 3」 + 몬스터 아이콘 3개
     for (const pl of G.pl) drawEnergy(pl);
-    G.feed.forEach((f, i) => { const a = clamp(f.t / .1, 0, 1) * clamp((1.6 - f.t) / .3, 0, 1), y = 150 + (G.feed.length - 1 - i) * 66, s = f.t < .12 ? lerp(1.4, 1, f.t / .12) : 1; c.save(); c.globalAlpha = a; c.translate(960, y); c.scale(s, s); c.font = `900 50px ${FONT}`; const w = c.measureText(f.text).width + 70; c.restore(); c.save(); c.globalAlpha = a; pill(960, y, w * s, 62, 'rgba(229,101,26,.88)'); txt(f.text, 960, y, 50 * s, '#fff', 'center', 900); c.restore(); });
+    G.feed.forEach((f, i) => { const a = clamp(f.t / .1, 0, 1) * clamp((1.6 - f.t) / .3, 0, 1), y = 150 + (G.feed.length - 1 - i) * 66, s = f.t < .12 ? lerp(1.4, 1, f.t / .12) : 1; c.save(); c.globalAlpha = a; c.translate(960, y); c.scale(s, s); c.font = `900 50px ${FONT}`; const w = c.measureText(f.text).width + 70; c.restore(); c.save(); c.globalAlpha = a; pill(960, y, w * s, 62, 'rgba(255,127,50,.88)'); txt(f.text, 960, y, 50 * s, '#fff', 'center', 900); c.restore(); });
     if (ph === 'b-intro') drawCountdown();
-    if (G.banner) { const b = G.banner, a = clamp(b.t / .2, 0, 1) * clamp((1.6 - b.t) / .4, 0, 1); c.save(); c.globalAlpha = a; if (b.low) { const sc = b.t < .2 ? lerp(1.3, 1, easeOut(b.t / .2)) : 1; c.translate(960, 868); c.scale(sc, sc); c.font = `900 84px ${FONT}`; const bw = c.measureText(b.text).width + 120; pill(0, 0, bw, 130, 'rgba(229,101,26,.92)'); txt(b.text, 0, 2, 84, '#fff', 'center', 900); } else txt(b.text, 960, 470, 170, '#fff', 'center', 900); c.restore(); }   // 차례 몬스터 등장: 아래쪽 「n / 3 이름」(몬스터를 가리지 않게)
+    if (G.banner) { const b = G.banner, a = clamp(b.t / .2, 0, 1) * clamp((1.6 - b.t) / .4, 0, 1); c.save(); c.globalAlpha = a; if (b.low) { const sc = b.t < .2 ? lerp(1.3, 1, easeOut(b.t / .2)) : 1; c.translate(960, 868); c.scale(sc, sc); c.font = `900 84px ${FONT}`; const bw = c.measureText(b.text).width + 120; pill(0, 0, bw, 130, 'rgba(255,127,50,.92)'); txt(b.text, 0, 2, 84, '#fff', 'center', 900); } else txt(b.text, 960, 470, 170, '#fff', 'center', 900); c.restore(); }   // 차례 몬스터 등장: 아래쪽 「n / 3 이름」(몬스터를 가리지 않게)
     G.pl.forEach(drawEnNote);
     if (ph === 'b-boss' && !two) {   // 1인 마무리 안내
       const boss = G.en.find(e => e.type === 'boss');
-      if (boss && boss.t > 1.6 && !G.banner && !G.finOpen && boss.hp <= finFloor(boss)) { pill(960, 880, 900, 84, 'rgba(10,12,16,.72)'); txt('마무리: 두 손바닥', 960, 880, 52, '#fff', 'center', 800); }
+      if (boss && boss.t > 1.6 && !G.banner && !G.finOpen && boss.hp <= finFloor(boss)) { pill(960, 880, 900, 84, 'rgba(0,0,0,.72)'); txt('마무리: 두 손바닥', 960, 880, 52, '#fff', 'center', 800); }
     }
     if (ph === 'b-boss' && two) {
       const boss = G.en.find(e => e.type === 'boss');
       if (boss && boss.t > 1.6 && !G.banner && !G.merge && boss.hp <= boss.max * MERGE_AT) {
-        pill(960, 880, 1100, 84, 'rgba(10,12,16,.72)'); txt('보스 마무리: 둘이 함께 두 손바닥', 960, 880, 48, '#fff', 'center', 800);
+        pill(960, 880, 1100, 84, 'rgba(0,0,0,.72)'); txt('보스 마무리: 둘이 함께 두 손바닥', 960, 880, 48, '#fff', 'center', 800);
         G.pl.forEach((pl, i) => { const on = now - pl.mtwT < 2; if (on) { pill(i ? 1440 : 480, 800, 240, 70, ORANGE); txt(i ? 'WE' : 'ME', i ? 1440 : 480, 800, 50, '#fff', 'center', 900); } });
       }
     }
@@ -2108,21 +2111,21 @@ function drawGameTop() {
       if (two) G.pl.forEach(pl => { if (pl.absent > .8) sideMsg(pl.i, `${SIDE[pl.i]}: 손을 보여 주세요`); });
       else if (G.pl[0].absent > .8) drawGuideHand('손을 보여 주세요');
       // 얼굴이 1.5초 넘게 안 보이면(손은 보임): 피하기 판정을 못 하니 알려 준다
-      if (faceJudge()) G.pl.forEach(pl => { if (pl.absent === 0 && pl.noFace > 1.5) { const r = region(pl.i), m = two ? `${SIDE[pl.i]}: 얼굴이 안 보입니다` : '얼굴이 안 보입니다'; c.save(); c.font = `800 44px ${FONT}`; const w = c.measureText(m).width + 70; c.restore(); pill(r.cx, 860, w, 76, 'rgba(10,12,16,.7)'); txt(m, r.cx, 860, 44, '#fff', 'center', 800); } });
+      if (faceJudge()) G.pl.forEach(pl => { if (pl.absent === 0 && pl.noFace > 1.5) { const r = region(pl.i), m = two ? `${SIDE[pl.i]}: 얼굴이 안 보입니다` : '얼굴이 안 보입니다'; c.save(); c.font = `800 44px ${FONT}`; const w = c.measureText(m).width + 70; c.restore(); pill(r.cx, 860, w, 76, 'rgba(0,0,0,.7)'); txt(m, r.cx, 860, 44, '#fff', 'center', 800); } });
     }
-    if (G.hurt > 0) { c.save(); const g = c.createRadialGradient(960, 540, 420, 960, 540, 1150); g.addColorStop(0, 'rgba(229,101,26,0)'); g.addColorStop(1, `rgba(229,72,77,${.8 * G.hurt})`); c.fillStyle = g; c.fillRect(0, 0, W, H); c.restore(); }
+    if (G.hurt > 0) { c.save(); const g = c.createRadialGradient(960, 540, 420, 960, 540, 1150); g.addColorStop(0, 'rgba(210,32,48,0)'); g.addColorStop(1, `rgba(210,32,48,${.8 * G.hurt})`); c.fillStyle = g; c.fillRect(0, 0, W, H); c.restore(); }
   } else if (ph === 'over') {
-    c.fillStyle = `rgba(8,10,14,${.6 * clamp(G.t / .5, 0, 1)})`; c.fillRect(0, 0, W, H);
+    c.fillStyle = `rgba(0,0,0,${.6 * clamp(G.t / .5, 0, 1)})`; c.fillRect(0, 0, W, H);
     txt('소탕 실패', 960, 480, 190, '#fff', 'center', 900); txt(G.timeout ? '시간 종료' : '생명이 모두 사라졌습니다', 960, 640, 56, '#D9D9D9', 'center', 700);
   } else if (ph === 'fin') {
-    const t = G.t; c.fillStyle = `rgba(8,10,14,${.55 * clamp(t / .8, 0, 1)})`; c.fillRect(0, 0, W, H);
+    const t = G.t; c.fillStyle = `rgba(0,0,0,${.55 * clamp(t / .8, 0, 1)})`; c.fillRect(0, 0, W, H);
     if (t > .7) drawFinLogo(t - .7);
-    if (t > 2.4) { c.save(); c.globalAlpha = easeOut((t - 2.4) / .5); txt('레거시 보스 소탕', 960, 800, 72, '#FFD0A8', 'center', 800); c.restore(); }
+    if (t > 2.4) { c.save(); c.globalAlpha = easeOut((t - 2.4) / .5); txt('레거시 보스 소탕', 960, 800, 72, '#FFD8C1', 'center', 800); c.restore(); }
   } else if (ph === 'result') {
-    c.fillStyle = 'rgba(8,10,14,.72)'; c.fillRect(0, 0, W, H); const e = easeOut(G.t / .5);
+    c.fillStyle = 'rgba(0,0,0,.72)'; c.fillRect(0, 0, W, H); const e = easeOut(G.t / .5);
     c.save(); c.globalAlpha = e; txt(G.cleared ? '소탕 완료' : '소탕 실패', 960, 330, 150, '#fff', 'center', 900);
     txt(`처치 ${G.kills} · 회피 ${G.dodges}`, 960, 510, 100, ORANGE_L, 'center', 900);
-    txt(`최대 콤보 ${G.maxCombo}`, 960, 625, 60, '#FFD0A8', 'center', 800);
+    txt(`최대 콤보 ${G.maxCombo}`, 960, 625, 60, '#FFD8C1', 'center', 800);
     txt(G.grade, 960, 760, 90, '#fff', 'center', 900); c.restore();
   }
   if (G.white > 0) { c.fillStyle = `rgba(255,255,255,${G.white * .9})`; c.fillRect(0, 0, W, H); }
@@ -2146,6 +2149,20 @@ function drawDebug() {
 }
 
 let testBg = null;
+/* 점 격자(디자인 감사 D2 · 사용자 261005): 스탬프 월(wall/assets/wall.js buildGrids 「black」)과 같은 값.
+   바탕 #000 · 간격 30 · 점 2.2px 정사각 흰 4.5% · 해시로 고른 1.5% 자리만 3.2px 주황(O100) 30% · 움직이지 않는다. 한 번 구워 둔다 */
+const GRID = { pitch: 30, dot: 1.1, lit: 1.6, dotCol: 'rgba(255,255,255,0.045)', litCol: 'rgba(255,127,50,0.30)' };
+let gridCv = null;
+function dotGrid() {
+  if (gridCv) return gridCv;
+  const g = document.createElement('canvas'); g.width = W; g.height = H; const x = g.getContext('2d'), P = GRID.pitch;
+  x.fillStyle = '#000'; x.fillRect(0, 0, W, H);
+  for (let j = -1; j <= Math.ceil(H / P) + 1; j++) for (let i = -1; i <= Math.ceil(W / P) + 1; i++) {
+    const on = (((i * 7919 + j * 104729) * 2654435761) >>> 0) % 1000 < 15, r = on ? GRID.lit : GRID.dot;
+    x.fillStyle = on ? GRID.litCol : GRID.dotCol; x.fillRect(i * P - r, j * P - r, r * 2, r * 2);
+  }
+  return (gridCv = g);
+}
 function drawBackdrop() {
   const c = ctx;
   if (testBg) {   // 시험 캡처 전용: 실사 사진을 카메라 대신 거울로 깐다(__ax.backdrop)
@@ -2155,9 +2172,7 @@ function drawBackdrop() {
     const sc = Math.max(W / cam.vw, H / cam.vh), dw = cam.vw * sc, dh = cam.vh * sc;
     c.save(); c.translate(W, 0); c.scale(-1, 1); c.drawImage(video, (W - dw) / 2, (H - dh) / 2, dw, dh); c.restore();
   } else {
-    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#2A2F37'); g.addColorStop(1, '#14171C'); c.fillStyle = g; c.fillRect(0, 0, W, H);
-    c.strokeStyle = 'rgba(255,255,255,.04)'; c.lineWidth = 2; for (let x = 0; x < W; x += 80) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, H); c.stroke(); }
-    for (let y = 0; y < H; y += 80) { c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }
+    c.drawImage(dotGrid(), 0, 0);   // 카메라 영상이 없을 때만: 순수 검정 + 스탬프 월 점 격자(디자인 감사 D2 · 261005). 카메라 화면 위에는 깔지 않는다
   }
   const v = c.createRadialGradient(960, 540, 560, 960, 540, 1250); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.32)'); c.fillStyle = v; c.fillRect(0, 0, W, H);
 }
@@ -2295,11 +2310,12 @@ setInterval(() => {   // 워치독: 켜져 있는데 한참 계수가 없으면 
   }
   if ($('cp').style.display === 'block') crRenderStat();
 }, 5000);
+const DOT_C = { off: 'transparent', ok: RED, weak: 'rgba(255,127,50,.8)', stop: DOT_COL.stop };   // AX magic 상태 점 색(디자인 감사 D2): 빨강 = error · 주황 = O100
 function dotInfo() {   // 스태프용 점(공용 엔진 health.js). off 점 없음 / ok 빨강 천천히 깜빡임(정상) / weak 주황(약함·문제) / stop 회색(멈춤·복구 대기)
   const d = healthOf({ on: crowd.on, err: cr.err, fails: cr.fails, ready: !!cr.det, lastAt: cr.at, since: cr.since, interval: crowd.interval, srv: cr.srv });
   // AX magic: 마지막 전송 성공이 35초보다 오래되면(10초마다 보내므로 세 번 넘게 못 보냄) 정상이 아니라 지연(주황)
-  if (d.k === 'ok' && cr.srv && cr.srv.lastOk && Date.now() - cr.srv.lastOk > 35000) return { k: 'weak', col: DOT_COL.weak };
-  return d;
+  if (d.k === 'ok' && cr.srv && cr.srv.lastOk && Date.now() - cr.srv.lastOk > 35000) return { k: 'weak', col: DOT_C.weak };
+  return { k: d.k, col: DOT_C[d.k] || d.col };
 }
 /* 상태 점(사용자 261004): 왼쪽 위 「AX magic」 앞 · 녹화 표시처럼 작은 점(글자 없음) · 체험 · 게임 모든 화면에 같은 자리
    빨강 천천히 깜빡임 = 정상 · 주황 = 전송 꺼짐 · 실패 · 지연 · 회색 = 인식기 오류 · 카메라 끊김(복구 대기) · 없음 = 계수 꺼짐
@@ -2307,8 +2323,8 @@ function dotInfo() {   // 스태프용 점(공용 엔진 health.js). off 점 없
 function drawDot() {
   const d = dotInfo(); if (d.k === 'off') return;
   const c = ctx, a = d.k === 'ok' ? .25 + .75 * (.5 + .5 * Math.cos(now * Math.PI)) : 1;   // 빨강: 2초 주기로 천천히 깜빡
-  c.save(); c.globalAlpha = .35; c.fillStyle = '#0A0C10'; c.beginPath(); c.arc(DOT.x, DOT.y, DOT.r + 2, 0, 7); c.fill();   // 밝은 로비에서도 보이게 얇은 그늘
-  c.globalAlpha = a; c.fillStyle = d.col; if (d.k === 'ok') { c.shadowColor = 'rgba(229,72,77,.8)'; c.shadowBlur = 8; }
+  c.save(); c.globalAlpha = .35; c.fillStyle = '#000'; c.beginPath(); c.arc(DOT.x, DOT.y, DOT.r + 2, 0, 7); c.fill();   // 밝은 로비에서도 보이게 얇은 그늘
+  c.globalAlpha = a; c.fillStyle = d.col; if (d.k === 'ok') { c.shadowColor = 'rgba(210,32,48,.8)'; c.shadowBlur = 8; }
   c.beginPath(); c.arc(DOT.x, DOT.y, DOT.r, 0, 7); c.fill(); c.restore();
 }
 { let pt = null; const dot = $('dot'); const stop = () => { clearTimeout(pt); pt = null; };
@@ -2394,7 +2410,7 @@ function drawCrowd() {   // 설정 패널이 열려 있거나, 관리자로 풀�
   c.save(); c.lineWidth = 4;
   crowd.zones.forEach(z => {
     const r = crowdRows().find(q => q.id === z.id);
-    c.strokeStyle = r && r.state === 'bad' ? '#E5484D' : ORANGE; c.fillStyle = 'rgba(255,126,49,.12)';
+    c.strokeStyle = r && r.state === 'bad' ? RED : ORANGE; c.fillStyle = 'rgba(255,127,50,.12)';
     c.beginPath(); z.pts.forEach((p, i) => { const q = zDisp(p); i ? c.lineTo(q.x, q.y) : c.moveTo(q.x, q.y); }); c.closePath(); c.fill(); c.stroke();
     if (r) { const q = zDisp(z.pts[0]); txt(z.name + ' ' + r.count + '명', q.x + 10, q.y + 24, 26, '#fff', 'left', 700); }
   });
@@ -2495,7 +2511,7 @@ function admExit(why) {
 }
 function admKey() { if (admIsOpen()) admClose(); else if (ADM.view) admExit('key'); else admOpen(); }
 const AV_SRV = { off: '꺼짐 · 이 PC 안에서만 셈', qa: '시험 · QA 서버(hi-qa)', prod: '운영 · 운영 서버(hi)' };
-const AV_LG = [['ok', DOT_COL.ok, '빨강 깜빡임 · 정상(세고 서버로 보냄)'], ['weak', DOT_COL.weak, '주황 · 세지만 전송 꺼짐 · 실패 · 지연'], ['stop', DOT_COL.stop, '회색 · 인식기 오류 · 카메라 끊김(스스로 복구 중)'], ['off', 'transparent', '점 없음 · 계수 꺼짐']];
+const AV_LG = [['ok', DOT_C.ok, '빨강 깜빡임 · 정상(세고 서버로 보냄)'], ['weak', DOT_C.weak, '주황 · 세지만 전송 꺼짐 · 실패 · 지연'], ['stop', DOT_COL.stop, '회색 · 인식기 오류 · 카메라 끊김(스스로 복구 중)'], ['off', 'transparent', '점 없음 · 계수 꺼짐']];
 function admPaint() {
   if (!ADM.view) return;
   const tm = ms => ms ? new Date(ms).toLocaleTimeString('ko-KR', { hour12: false }) : '없음', sv = cr.srv ? cr.srv.status() : null, d = dotInfo();
@@ -2513,7 +2529,7 @@ function crDrawExcl(c) {
   c.save(); c.setLineDash([12, 10]); c.lineWidth = 3; c.strokeStyle = 'rgba(217,217,217,.9)';
   crowd.excl.forEach(x => {
     c.beginPath(); x.pts.forEach((p, i) => { const q = zDisp(p); i ? c.lineTo(q.x, q.y) : c.moveTo(q.x, q.y); }); c.closePath();
-    c.fillStyle = 'rgba(152,162,172,.2)'; c.fill(); c.stroke();
+    c.fillStyle = 'rgba(217,217,217,.2)'; c.fill(); c.stroke();
     const top = x.pts.map(zDisp).reduce((a, b) => b.y < a.y ? b : a); c.font = '700 24px ' + FONT; c.fillStyle = '#fff'; c.textAlign = 'left'; c.textBaseline = 'alphabetic'; c.fillText(x.name || '제외', top.x + 8, Math.max(30, top.y - 8));
   });
   if (crowd.on) { c.strokeStyle = 'rgba(255,255,255,.6)'; for (const d of cr.exDets) { if (!d.box) continue; const [a, b] = d.box; c.strokeRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y)); } }
@@ -2526,9 +2542,9 @@ function drawCountView() {
   const rows = crowdRows();
   c.save(); c.lineJoin = 'round';
   crowd.zones.forEach(z => {
-    const r = rows.find(q => q.id === z.id), bad = r && r.state === 'bad', col = bad ? '#E5484D' : ORANGE;
+    const r = rows.find(q => q.id === z.id), bad = r && r.state === 'bad', col = bad ? RED : ORANGE;
     c.beginPath(); z.pts.forEach((p, i) => { const q = zDisp(p); i ? c.lineTo(q.x, q.y) : c.moveTo(q.x, q.y); }); c.closePath();
-    c.fillStyle = bad ? 'rgba(229,72,77,.16)' : 'rgba(255,126,49,.12)'; c.fill(); c.lineWidth = 5; c.strokeStyle = col; c.stroke();
+    c.fillStyle = bad ? 'rgba(210,32,48,.16)' : 'rgba(255,127,50,.12)'; c.fill(); c.lineWidth = 5; c.strokeStyle = col; c.stroke();
     const top = z.pts.map(zDisp).reduce((a, b) => b.y < a.y ? b : a), s = z.name + '  ' + (r ? r.count : 0) + '명';
     c.font = '700 30px ' + FONT; const tw = c.measureText(s).width, lx = clamp(top.x - tw / 2, 12, W - tw - 24), ly = Math.max(150, top.y - 14);
     c.fillStyle = col; c.beginPath(); c.roundRect(lx - 12, ly - 34, tw + 24, 46, 10); c.fill(); c.fillStyle = '#fff'; c.textAlign = 'left'; c.textBaseline = 'alphabetic'; c.fillText(s, lx, ly);
@@ -2536,19 +2552,19 @@ function drawCountView() {
   if (crowd.on) for (const d of cr.dets) {
     if (!d.box) continue; const [a, b] = d.box, x0 = Math.min(a.x, b.x), x1 = Math.max(a.x, b.x), y0 = Math.min(a.y, b.y), y1 = Math.max(a.y, b.y), w = x1 - x0, h = y1 - y0;
     const inZ = !crowd.zones.length || !!d.zone, col = inZ ? ORANGE : 'rgba(255,255,255,.85)', k = Math.min(36, w * .3, h * .3);
-    c.lineWidth = 3; c.strokeStyle = inZ ? 'rgba(255,126,49,.55)' : 'rgba(255,255,255,.4)'; c.strokeRect(x0, y0, w, h);
+    c.lineWidth = 3; c.strokeStyle = inZ ? 'rgba(255,127,50,.55)' : 'rgba(255,255,255,.4)'; c.strokeRect(x0, y0, w, h);
     c.lineWidth = 7; c.strokeStyle = col; c.beginPath();   // 네 모서리 꺾쇠
     c.moveTo(x0, y0 + k); c.lineTo(x0, y0); c.lineTo(x0 + k, y0); c.moveTo(x1 - k, y0); c.lineTo(x1, y0); c.lineTo(x1, y0 + k);
     c.moveTo(x1, y1 - k); c.lineTo(x1, y1); c.lineTo(x1 - k, y1); c.moveTo(x0 + k, y1); c.lineTo(x0, y1); c.lineTo(x0, y1 - k); c.stroke();
     const px = (x0 + x1) / 2, py = crowd.anchor === 'foot' ? y1 : (y0 + y1) / 2;
-    c.fillStyle = 'rgba(10,12,16,.55)'; c.beginPath(); c.arc(px, py, 20, 0, 7); c.fill();
+    c.fillStyle = 'rgba(0,0,0,.55)'; c.beginPath(); c.arc(px, py, 20, 0, 7); c.fill();
     c.fillStyle = col; c.beginPath(); c.arc(px, py, 15, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(px, py, 6, 0, 7); c.fill();
   }
   if (cr.draw) { c.lineWidth = 4; c.strokeStyle = '#fff'; c.beginPath(); cr.draw.pts.forEach((p, i) => { const q = zDisp(p); i ? c.lineTo(q.x, q.y) : c.moveTo(q.x, q.y); }); c.stroke(); cr.draw.pts.forEach(p => { const q = zDisp(p); c.fillStyle = '#fff'; c.beginPath(); c.arc(q.x, q.y, 7, 0, 7); c.fill(); }); }
   c.restore();
   crDrawExcl(c);
   // 머리: 「AX magic · 계수 화면」 · 큰 숫자 = 지금 잡힌 사람 수
-  c.save(); c.globalAlpha = .9; c.fillStyle = '#0A0C10'; c.beginPath(); c.roundRect(14, 22, 420, 76, 14); c.fill(); c.restore();
+  c.save(); c.globalAlpha = .9; c.fillStyle = '#000'; c.beginPath(); c.roundRect(14, 22, 420, 76, 14); c.fill(); c.restore();
   txt('AX magic · 계수 화면', 52, 60, 34, '#fff', 'left', 800);
   const big = !crowd.on ? '계수 꺼짐' : !cr.det ? (cr.err || '인식기 불러오는 중') : cr.total + '명';
   c.save(); c.font = '800 ' + (crowd.on && cr.det ? 150 : 72) + 'px ' + FONT; c.textAlign = 'right'; c.textBaseline = 'alphabetic';
@@ -2876,7 +2892,7 @@ let auraSprite = null;
 function auraDot() {
   if (auraSprite) return auraSprite;
   const s = document.createElement('canvas'); s.width = s.height = 64; const c = s.getContext('2d'), g = c.createRadialGradient(32, 32, 0, 32, 32, 32);
-  g.addColorStop(0, 'rgba(255,246,216,1)'); g.addColorStop(.25, 'rgba(255,226,122,.95)'); g.addColorStop(.55, 'rgba(255,150,62,.55)'); g.addColorStop(1, 'rgba(255,126,49,0)');
+  g.addColorStop(0, 'rgba(255,246,216,1)'); g.addColorStop(.25, 'rgba(255,226,122,.95)'); g.addColorStop(.55, 'rgba(255,150,62,.55)'); g.addColorStop(1, 'rgba(255,127,50,0)');
   c.fillStyle = g; c.fillRect(0, 0, 64, 64); return (auraSprite = s);
 }
 function drawAura(f) {
@@ -2897,7 +2913,7 @@ function drawAura(f) {
 }
 // 시험 입력(?mouse=1) 전용: 가상 얼굴 자리에 회색 머리 · 어깨 실루엣과 얼굴 상자(BlazeFace 상자 크기)를 그려 오라 위치를 눈으로 본다
 function drawTestHead(f) {
-  const c = ctx, hd = headOf(f); c.save(); c.globalAlpha = .55 * f.a; c.fillStyle = '#5A5F66';
+  const c = ctx, hd = headOf(f); c.save(); c.globalAlpha = .55 * f.a; c.fillStyle = '#5A5A5A';
   c.beginPath(); c.roundRect(f.x - f.w * 1.25, f.y + f.w * .95, f.w * 2.5, f.w * 2, [f.w * .7, f.w * .7, 0, 0]); c.fill();
   c.beginPath(); c.ellipse(hd.x, hd.y, hd.rx, hd.ry, 0, 0, 7); c.fill();
   c.globalAlpha = .8 * f.a; c.strokeStyle = '#fff'; c.lineWidth = 2; c.setLineDash([8, 6]); c.strokeRect(f.x - f.w / 2, f.y - f.w / 2, f.w, f.w); c.restore();
@@ -2915,11 +2931,11 @@ function bonePath(c, pts) { c.beginPath(); for (const [i, j] of BONES) { c.moveT
 function drawEye(h, a) {   // AI의 눈: 관절 21점(오렌지 점) + 뼈대(가는 선). 밝은 배경에서도 보이게 얇은 그늘을 깐다
   const pts = h.flm || h.lm, L = h.L, c = ctx; if (a <= .01 || !pts) return;
   c.save(); c.lineCap = 'round'; c.lineJoin = 'round';
-  c.globalAlpha = a * .45; c.strokeStyle = 'rgba(10,12,16,.7)'; c.lineWidth = Math.max(3.5, L * .05); bonePath(c, pts); c.stroke();
+  c.globalAlpha = a * .45; c.strokeStyle = 'rgba(0,0,0,.7)'; c.lineWidth = Math.max(3.5, L * .05); bonePath(c, pts); c.stroke();
   c.globalAlpha = a * .95; c.strokeStyle = ORANGE; c.lineWidth = Math.max(1.8, L * .024); bonePath(c, pts); c.stroke();
   for (let i = 0; i < 21; i++) {
     const p = pts[i], tip = TIPS.includes(i), r = Math.max(tip ? 4.5 : 3.2, L * (tip ? .062 : .044));
-    c.globalAlpha = a * .5; c.fillStyle = 'rgba(10,12,16,.8)'; c.beginPath(); c.arc(p.x, p.y, r + 1.8, 0, 7); c.fill();
+    c.globalAlpha = a * .5; c.fillStyle = 'rgba(0,0,0,.8)'; c.beginPath(); c.arc(p.x, p.y, r + 1.8, 0, 7); c.fill();
     c.globalAlpha = a; c.fillStyle = ORANGE; c.beginPath(); c.arc(p.x, p.y, r, 0, 7); c.fill();
     if (tip) { c.fillStyle = '#fff'; c.beginPath(); c.arc(p.x, p.y, r * .38, 0, 7); c.fill(); }
   }
@@ -2927,15 +2943,15 @@ function drawEye(h, a) {   // AI의 눈: 관절 21점(오렌지 점) + 뼈대(�
 }
 function drawPalmGlow(h) {   // 편 손 = 손바닥 빛(손바닥 불꽃이 타는 동안은 빼고)
   if (xFist(h) || (h.pf || 0) > .15) return; const k = clamp((h.open - .45) / .3, 0, 1) * h.xs; if (k <= .01) return;
-  glowCircle(h.c.x, h.c.y, h.L * 1.7, .55 * k, '255,236,205'); ring(h.c.x, h.c.y, h.L * 1.1, .5 * k, 3, '#fff');
+  glowCircle(h.c.x, h.c.y, h.L * 1.7, .55 * k, '255,235,224'); ring(h.c.x, h.c.y, h.L * 1.1, .5 * k, 3, '#fff');
 }
 function drawPalmFire(h) {   // 3 손바닥 위 불꽃: 켜질 때 크게 솟았다가(pfBoost) 일렁이며 계속 탄다 · 불똥 입자(FIRE)는 drawFire 가 그린다
   const a = (h.pf || 0) * Math.max(.4, h.xs || 0); if (a <= .02) return;
   const c = ctx, S = xpLr(h) * (1 + .45 * (h.pfBoost || 0)), bx0 = h.c.x, by = h.c.y - S * .1;
   c.save();
-  glowCircle(bx0, by - S * .8, S * 1.9, .45 * a, '255,126,49');
+  glowCircle(bx0, by - S * .8, S * 1.9, .45 * a, '255,127,50');
   // 혀 모양 불길 3겹(바깥 진한 오렌지 → 안쪽 노랑 · 흰빛): 밑은 둥글고 흐리게(손바닥에서 피어오르게) · 높이는 가운데가 높고 제각각 일렁인다
-  for (const [lk, wk, c0, c1, al, sp, N] of [[2.9, .2, '229,101,26', '255,126,49', .9, .19, 7], [2.1, .15, '255,150,62', '255,214,90', .95, .14, 5], [1.3, .09, '255,240,200', '255,246,216', 1, .1, 3]]) {
+  for (const [lk, wk, c0, c1, al, sp, N] of [[2.9, .2, '229,101,26', '255,127,50', .9, .19, 7], [2.1, .15, '255,150,62', '255,214,90', .95, .14, 5], [1.3, .09, '255,240,200', '255,246,216', 1, .1, 3]]) {
     for (let i = 0; i < N; i++) {
       const u = i - (N - 1) / 2, bx = bx0 + u * S * sp, hk = 1 - .13 * Math.abs(u), ph = i * 1.9 + h.id + lk * 3;
       const len = S * lk * hk * (.74 + .26 * Math.sin(now * 8.5 + ph) + .08 * Math.sin(now * 19 + ph * 2)) * a, sway = Math.sin(now * 6.5 + ph) * S * .14 + u * S * .05, w = S * wk;
@@ -2955,9 +2971,9 @@ const SW = { DUR: .85, SWEEP: .42, PITCH: 34, BAND: 300, LAG: 160 };
 function drawSweep(s) {
   const c = ctx, k = clamp(s.t / SW.SWEEP, 0, 1), front = lerp(s.x0, W + SW.BAND + SW.LAG, easeOut(k)), fade = s.t < SW.SWEEP ? 1 : clamp(1 - (s.t - SW.SWEEP) / (SW.DUR - SW.SWEEP), 0, 1), P = SW.PITCH;
   c.save();
-  { const g = c.createLinearGradient(s.x0, 0, Math.max(s.x0 + 1, front), 0); g.addColorStop(0, 'rgba(255,126,49,0)'); g.addColorStop(.8, `rgba(255,126,49,${.14 * fade})`); g.addColorStop(1, `rgba(255,150,62,${.3 * fade})`);
+  { const g = c.createLinearGradient(s.x0, 0, Math.max(s.x0 + 1, front), 0); g.addColorStop(0, 'rgba(255,127,50,0)'); g.addColorStop(.8, `rgba(255,127,50,${.14 * fade})`); g.addColorStop(1, `rgba(255,150,62,${.3 * fade})`);
     c.fillStyle = g; c.fillRect(s.x0, 0, Math.max(0, Math.min(W, front) - s.x0), H); }
-  for (const [col, lo, rk] of [[ORANGE, 0, .38], ['#FFE6C7', .72, .3]]) {   // 오렌지 점 + 앞머리 가까이 밝은 점
+  for (const [col, lo, rk] of [[ORANGE, 0, .38], ['#FFEBE0', .72, .3]]) {   // 오렌지 점 + 앞머리 가까이 밝은 점
     c.fillStyle = col; c.globalAlpha = fade; c.beginPath();
     for (let y = P / 2; y < H; y += P) {
       const fr = front - Math.abs(y - s.y) / H * SW.LAG * 2, xa = Math.max(s.x0, fr - SW.BAND), x0 = Math.floor(xa / P) * P + P / 2;
@@ -2981,13 +2997,13 @@ function drawBloom(b) {
 function drawFlameIcon(x, y, s) {   // 「게임 하기」 아이콘: 작은 불꽃(도형 · 불꽃 주먹을 닮게)
   const c = ctx, drop = (k, dy) => { c.beginPath(); c.moveTo(x, y - s * .95 * k + dy); c.bezierCurveTo(x + s * .62 * k, y - s * .3 * k + dy, x + s * .62 * k, y + s * .35 * k + dy, x, y + s * .62 * k + dy); c.bezierCurveTo(x - s * .62 * k, y + s * .35 * k + dy, x - s * .62 * k, y - s * .3 * k + dy, x, y - s * .95 * k + dy); c.closePath(); };
   c.save(); const g = c.createLinearGradient(0, y + s * .6, 0, y - s); g.addColorStop(0, ORANGE_D); g.addColorStop(1, ORANGE_L);
-  c.fillStyle = g; drop(1, 0); c.fill(); c.fillStyle = '#FFE6C7'; drop(.45, s * .22); c.fill(); c.restore();
+  c.fillStyle = g; drop(1, 0); c.fill(); c.fillStyle = '#FFEBE0'; drop(.45, s * .22); c.fill(); c.restore();
 }
 function drawGameBtn() {
   const B = XP.BTN, c = ctx, g = clamp(X.gauge, 0, 1), hot = X.dwell > 0, R = B.h / 2 - 18, ix = B.x - B.w / 2 + B.h / 2, iy = B.y;
   c.save();
-  c.fillStyle = hot ? 'rgba(10,12,16,.72)' : 'rgba(10,12,16,.55)'; c.beginPath(); c.roundRect(B.x - B.w / 2, B.y - B.h / 2, B.w, B.h, B.h / 2); c.fill();
-  if (g > 0) { c.save(); c.clip(); c.fillStyle = 'rgba(255,126,49,.78)'; c.fillRect(B.x - B.w / 2, B.y - B.h / 2, B.w * g, B.h); c.restore(); c.beginPath(); c.roundRect(B.x - B.w / 2, B.y - B.h / 2, B.w, B.h, B.h / 2); }   // 게이지: 버튼이 왼쪽부터 오렌지로 찬다
+  c.fillStyle = hot ? 'rgba(0,0,0,.72)' : 'rgba(0,0,0,.55)'; c.beginPath(); c.roundRect(B.x - B.w / 2, B.y - B.h / 2, B.w, B.h, B.h / 2); c.fill();
+  if (g > 0) { c.save(); c.clip(); c.fillStyle = 'rgba(255,127,50,.78)'; c.fillRect(B.x - B.w / 2, B.y - B.h / 2, B.w * g, B.h); c.restore(); c.beginPath(); c.roundRect(B.x - B.w / 2, B.y - B.h / 2, B.w, B.h, B.h / 2); }   // 게이지: 버튼이 왼쪽부터 오렌지로 찬다
   c.lineWidth = 3; c.strokeStyle = hot ? ORANGE_L : 'rgba(255,255,255,.45)'; c.stroke();
   drawFlameIcon(ix, iy + 4, R * .78);
   c.lineCap = 'round'; c.lineWidth = 7; c.strokeStyle = 'rgba(255,255,255,.22)'; c.beginPath(); c.arc(ix, iy, R, 0, 7); c.stroke();
@@ -3000,8 +3016,8 @@ function drawExp() {
   drawAuraAll();   // 얼굴 오라는 맨 아래(불씨 · 손 그림이 그 위)
   for (const e of X.emb) {
     const x = e.x + Math.sin(X.t * .7 + e.ph) * e.sw, y = e.y, a = e.a * ea * clamp((H + 30 - y) / 160, 0, 1) * clamp((y + 40) / 220, 0, 1);
-    glowCircle(x, y, e.r * 6, a * .45, '255,126,49'); ctx.save(); ctx.globalAlpha = a * .35; ctx.fillStyle = '#0A0C10'; ctx.beginPath(); ctx.arc(x, y, e.r + 2, 0, 7); ctx.fill();   // 밝은 로비에서도 보이게 얇은 그늘
-    ctx.globalAlpha = a; ctx.fillStyle = ORANGE; ctx.beginPath(); ctx.arc(x, y, e.r, 0, 7); ctx.fill(); ctx.fillStyle = '#FFD0A8'; ctx.beginPath(); ctx.arc(x, y, e.r * .45, 0, 7); ctx.fill(); ctx.restore();
+    glowCircle(x, y, e.r * 6, a * .45, '255,127,50'); ctx.save(); ctx.globalAlpha = a * .35; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(x, y, e.r + 2, 0, 7); ctx.fill();   // 밝은 로비에서도 보이게 얇은 그늘
+    ctx.globalAlpha = a; ctx.fillStyle = ORANGE; ctx.beginPath(); ctx.arc(x, y, e.r, 0, 7); ctx.fill(); ctx.fillStyle = '#FFD8C1'; ctx.beginPath(); ctx.arc(x, y, e.r * .45, 0, 7); ctx.fill(); ctx.restore();
   }
   drawGameBtn();   // 버튼은 불씨 위 · 손 그림 아래(손을 대면 관절 점이 버튼 위에 보인다)
   for (const s of X.sw) drawSweep(s);   // 4 쓸기 커튼(손 그림 아래)
