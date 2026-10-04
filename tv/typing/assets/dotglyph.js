@@ -45,5 +45,6 @@ var DotGlyph = (function () {
     return '<svg class="dg' + (o.cls ? " " + o.cls : "") + '" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + f(L.w) + " " + f(L.h) + '" width="' + w + '" height="' + h + '" fill="' + (o.color || "currentColor") + '" role="img" aria-label="' + String(label).replace(/"/g, "&quot;") + '"' + (o.style ? ' style="' + o.style + '"' : "") + ">" + body + "</svg>";
   }
   function size(text, h) { var L = layout(text), u = (h || 16) / L.h; return { w: L.w * u, h: h || 16, dots: L.dots.length }; }
-  return { svg: svg, size: size, layout: layout, table: T, orig: ORIG, D: D, PY: PY, LG: LG, WG: WG };
+  function width(text, h) { var L = layout(text); return L.w * (h || 16) / L.h; }   /* 앱 DotGlyph.width 와 같은 값 · 게임 엔진 제목 카드(rgCardDraw)가 쓴다 */
+  return { svg: svg, size: size, width: width, layout: layout, table: T, orig: ORIG, D: D, PY: PY, LG: LG, WG: WG };
 })();
