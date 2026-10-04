@@ -6,7 +6,7 @@
 <title>타자왕 순위판 · AX Festival 2026</title>
 <meta name="robots" content="noindex">
 <!-- 1F 타자왕 부스 오른쪽 스탠바이미(세로 1080×1920) 광고 루프 (261004 재구성 · 사용자 「타자왕 광고 여기서 진행해」)
-     39초 루프 = 광고 18(후킹 2.6 · 실제 게임 몽타주 12.2 · 행동 3.2) · 상품 5 · 순위 16 · 행사일(10/26) 17:00 뒤 = 최종 순위 16 · 상품 5 (261004 「정신 없다」 피드백 뒤 속도 조정)
+     39초 루프 = 광고 18(후킹 2.6 · 실제 게임 몽타주 11.6 · 행동 3.8 · 장면 사이 = 위에서부터 벽돌이 와르르 무너지는 전환) · 상품 5 · 순위 16 · 행사일(10/26) 17:00 뒤 = 최종 순위 16 · 상품 5 (261004 「정신 없다」 피드백 뒤 속도 조정)
      게임 몽타주 = 실제 게임 엔진(../../assets/rain-engine.js)의 그리기 함수로 그린다(구름 비 · 자동 터짐 · CLOUD CLEAR · 도트 전환 · BONUS STAGE · 문장 PERFECT)
      데이터 = 공개 순위 type_rank(mode site · n 10 · 읽기 전용 · 관리코드 없음) · 30초 폴링 · 실패 60 → 120초 · 화면이 가려지면 멈춤
      ?promo=1 = 참가자 앱 홍보 칸 · 광고 + 상품 23초 · 서버 호출 0 · ?promo=1&rank=1 = 앱 「타자 순위」 칸용 가벼운 판(광고 + 상품 + 순위 10초 · 60초 폴링 · 순위부터 = &t=23)
@@ -37,8 +37,10 @@
   .sc { position: absolute; inset: 0; display: none; }
   .sc.on { display: block; }
   .abs { position: absolute; }
-  #cv { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; z-index: 5; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .4s ease, visibility 0s linear .4s; }
-  #cv.on { opacity: 1; visibility: visible; transition: opacity .4s ease; }   /* 장면이 바뀔 때 부드럽게 겹친다 */
+  #cv { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; z-index: 5; visibility: hidden; pointer-events: none; }
+  #cv.on { visibility: visible; }
+  #fx { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; z-index: 15; visibility: hidden; pointer-events: none; }   /* 와르르 전환 · 캔버스 한 장 · 머리(z 20) 아래 */
+  #fx.on { visibility: visible; }
   /* 고정 머리 · 어느 3초를 봐도 무엇인지 */
   #top { position: absolute; left: 64px; right: 64px; top: 48px; height: 64px; display: flex; align-items: center; justify-content: space-between; z-index: 20; pointer-events: none; }
   #top b { font-weight: 400; font-size: 52px; line-height: 64px; color: var(--o100); text-shadow: 4px 4px 0 var(--ink); white-space: nowrap; }
@@ -60,21 +62,22 @@
   /* 1 광고 · 후킹(0~2.6초) · 프롬프트 창에 질문이 쳐진다 */
   #hook { left: 64px; top: 720px; width: 952px; font-family: var(--pre); font-weight: 800; font-size: 132px; line-height: 176px; letter-spacing: -3px; color: #fff; display: none; }
   #hook.on { display: block; }
-  #hook p { margin: 0; white-space: nowrap; }
-  #hook i { font-style: normal; visibility: hidden; }
-  #hook i.on { visibility: visible; }
-  #hook i.o { color: var(--o100); }
-  #hook i.cur:after { content: ""; display: inline-block; width: 56px; height: 112px; margin-left: 10px; vertical-align: -12px; background: var(--o100); visibility: visible; }
-  #hook.idle i.cur:after { animation: blk .5s steps(1) infinite; }
-  #hook p.c0:before { content: ""; display: inline-block; width: 56px; height: 112px; vertical-align: -12px; background: var(--o100); }
+  /* 쳐지는 글자(후킹 질문 · 행동 한 줄) · 커서 = 글자 크기 비례(와르르 전환이 같은 비율로 다시 그린다) */
+  .tp p { margin: 0; white-space: nowrap; }
+  .tp i { font-style: normal; visibility: hidden; }
+  .tp i.on { visibility: visible; }
+  .tp i.o { color: var(--o100); }
+  .tp i.cur:after { content: ""; display: inline-block; width: .42em; height: .85em; margin-left: .08em; vertical-align: -.09em; background: var(--o100); visibility: visible; }
+  .tp.idle i.cur:after { animation: blk .5s steps(1) infinite; }
+  .tp p.c0:before { content: ""; display: inline-block; width: .42em; height: .85em; vertical-align: -.09em; background: var(--o100); }
   #hook-k { left: 64px; top: 590px; font-size: 44px; line-height: 52px; color: var(--tan2); display: none; }
   #hook-k.on { display: block; }
 
-  /* 1 광고 · 행동(14.8~18초) · 앱 QR → 노트북 카메라 → SPACE */
+  /* 1 광고 · 행동(14.2~18초) · 한 줄이 쳐진 뒤 앱 QR → 노트북 카메라 → SPACE */
   #act { position: absolute; inset: 0; display: none; }
   #act.on { display: block; }
   #act-h { left: 64px; top: 440px; width: 952px; font-family: var(--pre); font-weight: 800; font-size: 84px; line-height: 108px; letter-spacing: -2px; color: #fff; white-space: nowrap; }
-  #act-h b { color: var(--o100); font-weight: 800; }
+  #act-h i.o { color: var(--o100); }
   .ic { top: 740px; width: 272px; height: 560px; }
   .ic .bx { position: absolute; left: 0; top: 0; width: 272px; height: 400px; display: flex; align-items: center; justify-content: center; background: var(--bark); box-shadow: var(--line4), inset 0 0 0 4px var(--wood), inset 0 0 0 8px var(--tan); }
   .ic .lb { position: absolute; left: -20px; right: -20px; top: 430px; text-align: center; font-family: var(--pre); font-weight: 700; font-size: 48px; line-height: 60px; color: var(--cream); white-space: nowrap; }
@@ -170,21 +173,22 @@
 <body>
 <div id="stage">
   <canvas id="cv" aria-hidden="true"></canvas>
+  <canvas id="fx" aria-hidden="true"></canvas>
   <div id="top"><b>AX 타자왕 · 1F</b><span>AX Festival 2026</span></div>
   <div id="demoMark">DEMO · 가짜 순위</div>
   <div id="net">연결 다시 시도 중 · 마지막 순위 표시</div>
 
   <div class="sc" id="s-ad">
     <div id="hook-k" class="abs">PROMPT &gt;</div>
-    <div id="hook" class="abs"></div>
+    <div id="hook" class="abs tp"></div>
     <div id="act">
-      <div id="act-h" class="abs up" data-off=".15"><b>1F 로비</b> 노트북에서 도전</div>
-      <div id="ic1" class="abs ic pop" data-off=".55"><div class="bx"><div class="phn"><div class="scr" id="qr"></div></div></div><div class="lb">앱 QR</div></div>
-      <div id="ar1" class="abs ar pop" data-off=".85"></div>
-      <div id="ic2" class="abs ic pop" data-off=".95"><div class="bx"><div class="ntb"><div class="cam"></div><div class="ok">OK</div></div></div><div class="lb">노트북 카메라</div></div>
-      <div id="ar2" class="abs ar pop" data-off="1.25"></div>
-      <div id="ic3" class="abs ic pop" data-off="1.35"><div class="bx"><div class="key">SPACE</div></div><div class="lb">SPACE</div></div>
-      <div id="act-s" class="abs pop" data-off="2.45">START</div>
+      <div id="act-h" class="abs tp"></div>
+      <div id="ic1" class="abs ic pop" data-off="1.05"><div class="bx"><div class="phn"><div class="scr" id="qr"></div></div></div><div class="lb">앱 QR</div></div>
+      <div id="ar1" class="abs ar pop" data-off="1.3"></div>
+      <div id="ic2" class="abs ic pop" data-off="1.4"><div class="bx"><div class="ntb"><div class="cam"></div><div class="ok">OK</div></div></div><div class="lb">노트북 카메라</div></div>
+      <div id="ar2" class="abs ar pop" data-off="1.65"></div>
+      <div id="ic3" class="abs ic pop" data-off="1.75"><div class="bx"><div class="key">SPACE</div></div><div class="lb">SPACE</div></div>
+      <div id="act-s" class="abs pop" data-off="2.85">START</div>
     </div>
   </div>
 

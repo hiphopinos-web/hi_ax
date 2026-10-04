@@ -1,9 +1,11 @@
 /* 1F 타자왕 TV 광고 루프 · 스탠바이미 세로 TV (261004 재구성 · 사용자 「타자왕 광고 여기서 진행해」 · 같은 날 「너무 정신 없다 · 적정한 속도」 · 순위 게임처럼 공개)
  * 운영 안내 = 디자인 시안/사이니지/운영 안내.md
  * 장면(초) = 광고 18 · 상품 5 · 순위 16 = 39 · 행사일(2026-10-26) 17:00(한국 시간) 뒤 = 최종 순위 16 · 상품 5 = 21 · 화면 위 「AX 타자왕 · 1F」는 늘 그 자리
- *   광고 = 후킹 0~2.6(「당신의 프롬프트 입력 실력은?」이 쳐진다) · 실제 게임 몽타주 2.6~14.8 · 행동 14.8~18(앱 QR → 노트북 카메라 → SPACE)
+ *   광고 = 후킹 0~2.6(「당신의 프롬프트 입력 실력은?」이 쳐진다) · 실제 게임 몽타주 2.6~14.2 · 행동 14.2~18(「1F 로비 노트북에서 도전」이 쳐지고 앱 QR → 노트북 카메라 → SPACE)
+ *   와르르 전환(261004 사용자 「벽돌이 와르르 무너지듯」) = 후킹 → 게임 · 게임(PERFECT) → 행동 · 행동 → 상품 · 나가는 장면을 캔버스 한 장(#fx)에 그린 뒤 도트 3×2칸 벽돌(약 290개)로 나눠 위 줄부터 중력으로 떨어뜨린다(0.95초) ·
+ *     게임 안 연출(CLOUD CLEAR → BONUS 도트 전환)은 그대로 · 상품 → 순위 · 순위 → 광고는 그냥 바뀐다(전환 종류를 하나로)
  *   몽타주 = 실제 게임 엔진(../../assets/rain-engine.js)의 그리기 함수(rgDraw · rgTransDraw · rtPanel …)로 지금 게임(v5.42)과 같은 그림 · 실제 게임에 가까운 속도 · 컷 세 개 ·
- *     ① 구름에서 비 · Enter 없이 터지는 단어 다섯 개(4.2초) ② CLOUD CLEAR → 도트 전체 전환 → 주황 띠 BONUS STAGE(3초) ③ 밤 무대 문장 + 밑줄 따라 쓰기 → PERFECT(4.4초) → 도트 전환으로 행동 장면
+ *     ① 구름에서 비 · Enter 없이 터지는 단어 다섯 개(4.2초) ② CLOUD CLEAR → 도트 전체 전환 → 주황 띠 BONUS STAGE(3초) ③ 밤 무대 문장 + 밑줄 따라 쓰기 → PERFECT(4.4초) → 와르르로 행동 장면
  *     문장 · 핵심 단어 = RAIN_BONUS_LINES({ s, w }) 그대로 · 단어 점수 = 엔진 식 · 문장 점수 = rgBonusScore · 엔진을 못 읽으면 몽타주 없이 후킹 · 행동만
  *   상품 = 세 상품을 한 번에(같은 어두운 판 + 얇은 오렌지 선 · 순위 숫자만 오렌지 · 1위만 밝게) · 「1~3위 시상 · 17:00 마감」
  *   순위 = 등수 · 점수가 위에서부터 펼쳐진다(1.2초) → 10위부터 위로 한 줄씩 이름이 게임처럼 쳐지고(커서) 다 쳐지면 이름표가 팡 터지며 이름이 남는다(엔진 rgBurst · rgFx) ·
@@ -146,34 +148,36 @@
     typeof RG === "object" && !!RG && typeof RAIN_TRANS === "object" && typeof RAIN_CLOUD === "object" && typeof RAIN_PAL === "object" && typeof RT_PAL === "object" &&
     typeof RAIN_BONUS_LINES !== "undefined" && RAIN_BONUS_LINES.some(function (x) { return x && x.s && x.w && x.w.length; });
   /* 몽타주 시각표(몽타주 시작 기준 초) · 실제 게임 전환 길이(RAIN_TRANS wipe 0.6 · title 1.6 · RAIN_CLOUD clear 1.4)에 가깝게 · 컷 세 개 */
-  var MT = { clear: 4.2, win: 5.2, title: 5.7, wout: 7.2, type: 7.7, typed: 7.85, typeEnd: 10.0, res: 10.3, bin: 11.6, end: 12.2 };
+  var MT = { clear: 4.2, win: 5.2, title: 5.7, wout: 7.2, type: 7.7, typed: 7.85, typeEnd: 10.0, res: 10.3, bin: 11.6, end: 11.6 };   /* 261004 PERFECT 뒤 = 와르르(옛 bin 도트 전환 0.6초 대신) */
   var T_HOOK = 2.6, T_ACT = ENG ? T_HOOK + MT.end : 6;   /* 엔진이 없으면 몽타주 없이 후킹 · 행동 */
   (function actAt() { var a = document.querySelectorAll("#act [data-off]"); for (var i = 0; i < a.length; i++) a[i].setAttribute("data-at", (T_ACT + +a[i].getAttribute("data-off")).toFixed(2)); })();
 
-  /* 후킹 · 프롬프트 창에 질문이 한 글자씩 쳐진다 · 다 쳐진 뒤 1초 남짓 머문다 */
-  var HK = { lines: ["당신의", "프롬프트", "입력 실력은?"], o: [[], [], [0, 1, 3, 4]], n: -1 };
-  (function hookInit() {
-    var h = "", gi = 0;
-    HK.lines.forEach(function (ln, li) {
-      h += "<p>";
-      for (var i = 0; i < ln.length; i++, gi++) h += '<i id="hk' + gi + '"' + (HK.o[li].indexOf(i) >= 0 ? ' class="o"' : "") + ">" + (ln.charAt(i) === " " ? "&nbsp;" : esc(ln.charAt(i))) + "</i>";
-      h += "</p>";
-    });
-    $("hook").innerHTML = h; HK.total = gi;
-  })();
+  function tpInit(host, lines, o) {   /* 글자 하나 = <i> · 줄 = <p> · o = 줄마다 주황 글자 번호 */
+    var h = "", ch = [];
+    lines.forEach(function (ln, li) { h += "<p>"; for (var i = 0; i < ln.length; i++) h += "<i" + ((o[li] || []).indexOf(i) >= 0 ? ' class="o"' : "") + ">" + (ln.charAt(i) === " " ? "&nbsp;" : esc(ln.charAt(i))) + "</i>"; h += "</p>"; });
+    host.innerHTML = h;
+    var a = host.querySelectorAll("i"); for (var j = 0; j < a.length; j++) ch.push(a[j]);
+    return { host: host, ch: ch, total: ch.length, n: -1 };
+  }
+  function tpSet(T, n) {
+    n = Math.max(0, Math.min(T.total, n));
+    cls(T.host, "idle", n >= T.total);
+    if (n === T.n) return;
+    T.n = n;
+    T.ch.forEach(function (c, i) { cls(c, "on", i < n); cls(c, "cur", i === n - 1); });
+    var ps = T.host.children; for (var j = 0; j < ps.length; j++) cls(ps[j], "c0", n === 0 && j === 0);
+  }
+  /* 후킹 · 프롬프트 창에 질문이 한 글자씩 쳐진다 · 다 쳐진 뒤 1초 남짓 머물고 와르르 */
+  var HK = tpInit($("hook"), ["당신의", "프롬프트", "입력 실력은?"], [[], [], [0, 1, 3, 4]]);
+  var AH = tpInit($("act-h"), ["1F 로비 노트북에서 도전"], [[0, 1, 3, 4]]);
   function hookDraw(lt) {
-    var on = lt < T_HOOK + 0.45, hk = $("hook");   /* 몽타주가 그 위로 0.4초 겹쳐 들어온다 */
+    var on = lt < (ENG ? T_HOOK : T_ACT), hk = $("hook");   /* 그다음은 와르르가 덮는다 */
     cls(hk, "on", on); cls($("hook-k"), "on", on);
-    if (!on) return;
-    var n = Math.max(0, Math.min(HK.total, Math.floor((lt - 0.2) / 0.085)));
-    cls(hk, "idle", n >= HK.total);
-    if (n === HK.n) return;
-    HK.n = n;
-    for (var i = 0; i < HK.total; i++) { var c = $("hk" + i); cls(c, "on", i < n); cls(c, "cur", i === n - 1); }
-    var ps = hk.children; for (var j = 0; j < ps.length; j++) cls(ps[j], "c0", n === 0 && j === 0);
+    if (on) tpSet(HK, Math.floor((lt - 0.2) / 0.085));
   }
 
   /* 행동 · 앱 QR → 노트북 카메라 → SPACE(눌림) → START */
+  var QRM = [];   /* 와르르 전환이 같은 QR 을 다시 그린다 */
   function qrSvg(seed) {
     var n = 21, h = "", r = seed;
     function rnd() { r = (r * 1103515245 + 12345) & 0x7fffffff; return r / 0x7fffffff; }
@@ -182,7 +186,7 @@
       var on;
       if (fnd(x, y)) { var lx = x > 13 ? x - 14 : x, ly = y > 13 ? y - 14 : y; on = lx === 0 || lx === 6 || ly === 0 || ly === 6 || (lx >= 2 && lx <= 4 && ly >= 2 && ly <= 4); }
       else on = rnd() > .52;
-      if (on) h += '<rect x="' + x + '" y="' + y + '" width="1.02" height="1.02"/>';
+      if (on) { h += '<rect x="' + x + '" y="' + y + '" width="1.02" height="1.02"/>'; QRM.push([x, y]); }
     }
     return '<svg viewBox="0 0 21 21" fill="#000" shape-rendering="crispEdges" aria-hidden="true">' + h + "</svg>";
   }
@@ -192,8 +196,9 @@
     cls(a, "on", on);
     if (!on) return;
     var s = lt - T_ACT;
-    cls(a, "seen", s >= 1.85);
-    cls(a, "dn", s >= 2.3 && s < 2.6);
+    tpSet(AH, Math.floor((s - 0.15) / 0.065));
+    cls(a, "seen", s >= 2.25);
+    cls(a, "dn", s >= 2.7 && s < 2.95);
   }
 
   /* 몽타주 · 실제 게임 엔진 그리기 함수로 · 논리 좌표 = 실제 노트북 게임판(폭 560) · 1.7배로 그린다 */
@@ -465,14 +470,126 @@
     cls($("hs-you"), "in", lt >= DUR.rank - 2.5);
   }
 
+  /* ════════ 와르르 전환(261004 사용자 「위에서부터 벽돌이 와르르 무너지듯」) ════════
+   * 나가는 장면을 캔버스 SN 에 그대로 그린다(DOM 글자 · 상자는 실제 자리를 읽어 같은 글꼴로 · 게임은 그 캔버스를 복사) → 도트 3×2칸(108×72) 벽돌 약 290개 ·
+   * 위 줄부터 0.024초씩 늦게 · 살짝 튀었다가(위로 40~180px/s) 중력(5,600px/s²)으로 떨어지며 옆으로 흩어지고 조금 돈다 · 0.95초 · 뒤에서 다음 장면이 이미 돌고 있다 */
+  var FXC = $("fx"), FXX = FXC.getContext("2d"), SN = document.createElement("canvas"), SNX = SN.getContext("2d");
+  var FW = { key: "", b: [], on: false, pend: false, dbg: false, Y0: 108, BW: 108, BH: 72, D: 0.95, G: 5600 };
+  function fxSize() { monSize(); if (FXC.width !== CV.width || FXC.height !== CV.height) { FXC.width = SN.width = CV.width; FXC.height = SN.height = CV.height; } }
+  function sxy(e) { var r = e.getBoundingClientRect(), S = stage.getBoundingClientRect(); return { x: (r.left - S.left) / K, y: (r.top - S.top) / K, w: r.width / K, h: r.height / K }; }
+  function fnt(c, e) { var cs = getComputedStyle(e); c.font = cs.fontWeight + " " + cs.fontSize + " " + cs.fontFamily; return cs; }
+  function asc(c, t, px) { var m = c.measureText(t || "가"); return { a: m.fontBoundingBoxAscent || px * 0.93, d: m.fontBoundingBoxDescent || px * 0.24 }; }
+  function txIn(c, e, t) {   /* 줄 안 글자(<i>) · 글자 상자 위 = 글꼴 윗선 */
+    var cs = fnt(c, e), r = sxy(e), px = parseFloat(cs.fontSize), m = asc(c, t, px);
+    c.fillStyle = cs.color; c.textAlign = "left"; c.textBaseline = "alphabetic"; c.fillText(t, r.x, r.y + m.a);
+    return { r: r, px: px, base: r.y + m.a, w: c.measureText(t).width };
+  }
+  function txBox(c, e, t, mid, sh) {   /* 상자 글자 · mid = 가로 가운데("v" = 세로도 상자 가운데) · 세로는 줄 높이 가운데 · sh = 그림자 색(6px) */
+    var cs = fnt(c, e), r = sxy(e), px = parseFloat(cs.fontSize), m = asc(c, t, px), lh = parseFloat(cs.lineHeight) || (m.a + m.d), tw = c.measureText(t).width;
+    var x = mid ? r.x + (r.w - tw) / 2 : r.x, y = mid === "v" ? r.y + (r.h - (m.a + m.d)) / 2 + m.a : r.y + (lh - (m.a + m.d)) / 2 + m.a;
+    c.textAlign = "left"; c.textBaseline = "alphabetic";
+    if (sh) { c.fillStyle = sh; c.fillText(t, x + 6, y + 6); }
+    c.fillStyle = cs.color; c.fillText(t, x, y);
+  }
+  function cur(c, g) { c.fillStyle = "#FF7E31"; c.fillRect(g.r.x + g.w + 0.08 * g.px, g.base + 0.09 * g.px - 0.85 * g.px, 0.42 * g.px, 0.85 * g.px); }
+  function paintTp(c, T) { var g = null; T.ch.forEach(function (e, i) { var r = txIn(c, e, e.textContent.replace(/ /g, " ")); if (i === T.total - 1) g = r; }); if (g) cur(c, g); }
+  function snapBg(c) {
+    c.setTransform(MQ, 0, 0, MQ, 0, 0);
+    c.fillStyle = "#1B1712"; c.fillRect(0, 0, 1080, 1920);
+    c.fillStyle = "#5E3218"; c.beginPath();
+    for (var y = 18; y < 1920; y += 36) for (var x = 18; x < 1080; x += 36) { c.moveTo(x + 2.25, y); c.arc(x, y, 2.25, 0, 6.2832); }
+    c.fill();
+  }
+  function paintHook(c) {
+    var hk = $("hook"), kk = $("hook-k"), was = [hk.classList.contains("on"), kk.classList.contains("on")];
+    cls(hk, "on", true); cls(kk, "on", true); tpSet(HK, HK.total);
+    txBox(c, kk, kk.textContent);
+    paintTp(c, HK);
+    cls(hk, "on", was[0]); cls(kk, "on", was[1]); HK.n = -1;
+  }
+  function paintMon(c) {
+    if (!MON) return;
+    monDraw(MT.end - 0.001);
+    c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(CV, 0, 0);
+  }
+  function rect(c, x, y, w, h, col) { c.fillStyle = col; c.fillRect(x, y, w, h); }
+  function paintAct(c) {
+    var a = $("act"), fz = a.querySelectorAll("[data-at]"), was = a.classList.contains("on"), i;
+    for (i = 0; i < fz.length; i++) { fz[i].style.transition = "none"; fz[i].classList.add("in"); }
+    cls(a, "on", true); cls(a, "seen", true); cls(a, "dn", false); tpSet(AH, AH.total);
+    paintTp(c, AH);
+    ["ic1", "ic2", "ic3"].forEach(function (id) {
+      var ic = $(id), b = sxy(ic.querySelector(".bx")), lb = ic.querySelector(".lb");
+      rect(c, b.x, b.y - 4, b.w, 4, "#000"); rect(c, b.x, b.y + b.h, b.w, 4, "#000"); rect(c, b.x - 4, b.y, 4, b.h, "#000"); rect(c, b.x + b.w, b.y, 4, b.h, "#000");
+      rect(c, b.x, b.y, b.w, b.h, "#5E3218"); rect(c, b.x + 4, b.y + 4, b.w - 8, b.h - 8, "#D9A066"); rect(c, b.x + 8, b.y + 8, b.w - 16, b.h - 16, "#2A2118");
+      txBox(c, lb, lb.textContent, true);
+    });
+    var ph = sxy(a.querySelector(".phn")), sc = sxy(a.querySelector(".phn .scr")), qv = sxy(a.querySelector(".phn svg")), u = qv.w / 21;
+    rect(c, ph.x - 8, ph.y - 8, ph.w + 16, ph.h + 16, "#E3B884"); rect(c, ph.x, ph.y, ph.w, ph.h, "#1B1712"); rect(c, sc.x, sc.y, sc.w, sc.h, "#F3E7D8");
+    c.fillStyle = "#000"; QRM.forEach(function (q) { c.fillRect(qv.x + q[0] * u, qv.y + q[1] * u, u * 1.02, u * 1.02); });
+    var nb = sxy(a.querySelector(".ntb")), cm = sxy(a.querySelector(".ntb .cam")), ok = a.querySelector(".ntb .ok");
+    rect(c, nb.x - 30, nb.y + nb.h + 20, nb.w + 60, 24, "#E3B884"); rect(c, nb.x - 8, nb.y - 8, nb.w + 16, nb.h + 16, "#E3B884"); rect(c, nb.x, nb.y, nb.w, nb.h, "#1B1712");
+    rect(c, cm.x - 8, cm.y - 8, cm.w + 16, cm.h + 16, "rgba(255,126,49,.35)"); rect(c, cm.x, cm.y, cm.w, cm.h, "#FF7E31");
+    txBox(c, ok, ok.textContent, true);
+    var ky = a.querySelector(".key"), k = sxy(ky);
+    rect(c, k.x - 6, k.y + 10, k.w + 12, k.h + 12, "#7A3E1C"); rect(c, k.x - 6, k.y - 6, k.w + 12, k.h + 12, "#000"); rect(c, k.x, k.y, k.w, k.h, "#F3E7D8");
+    txBox(c, ky, ky.textContent, "v");
+    Array.prototype.forEach.call(a.querySelectorAll(".ar"), function (e) { var r = sxy(e); rect(c, r.x + 14, r.y + 28, 24, 24, "#FF7E31"); c.beginPath(); c.moveTo(r.x + 38, r.y + 16); c.lineTo(r.x + 38, r.y + 64); c.lineTo(r.x + 62, r.y + 40); c.closePath(); c.fill(); });
+    var st = $("act-s"); txBox(c, st, st.textContent, true, "#D64524");
+    for (i = 0; i < fz.length; i++) fz[i].style.transition = "";
+    cls(a, "on", was); AH.n = -1;
+  }
+  function fxStart(key, paint) {
+    fxSize();
+    SNX.setTransform(1, 0, 0, 1, 0, 0); SNX.clearRect(0, 0, SN.width, SN.height);
+    snapBg(SNX); paint(SNX); SNX.setTransform(1, 0, 0, 1, 0, 0);
+    var b = [], r = 0, sd = 20261026;
+    function rnd() { sd = (sd * 1103515245 + 12345) & 0x7fffffff; return sd / 0x7fffffff; }
+    for (var y = FW.Y0; y < 1920; y += FW.BH, r++) for (var x = r % 2 ? -36 : 0; x < 1080; x += FW.BW) {
+      var x0 = Math.max(0, x), w = Math.min(1080, x + FW.BW) - x0, h = Math.min(FW.BH, 1920 - y);
+      b.push({ x: x0, y: y, w: w, h: h, d: r * 0.024 + rnd() * 0.04, vx: (rnd() - 0.5) * 260, vy: -(40 + rnd() * 140), va: (rnd() - 0.5) * 2.4 });
+    }
+    FW.b = b; FW.key = key; FW.dbg = false;
+  }
+  function fxDraw(t) {
+    var c = FXX, q = MQ;
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, FXC.width, FXC.height);
+    if (!(t >= 0 && t < FW.D)) { cls(FXC, "on", false); return; }
+    cls(FXC, "on", true);
+    var mv = [];
+    FW.b.forEach(function (b) {   /* 아직 안 떨어진 벽돌 = 제자리 · 떨어지는 벽돌은 그 위에 */
+      var s = t - b.d;
+      if (s <= 0) c.drawImage(SN, b.x * q, b.y * q, b.w * q, b.h * q, b.x * q, b.y * q, b.w * q, b.h * q); else mv.push([b, s]);
+    });
+    mv.forEach(function (m) {
+      var b = m[0], s = m[1], dy = b.vy * s + 0.5 * FW.G * s * s;
+      if (b.y + dy > 1990) return;
+      c.setTransform(q, 0, 0, q, 0, 0); c.translate(b.x + b.w / 2 + b.vx * s, b.y + b.h / 2 + dy); c.rotate(b.va * s);
+      c.drawImage(SN, b.x * q, b.y * q, b.w * q, b.h * q, -b.w / 2, -b.h / 2, b.w, b.h);
+      c.globalAlpha = Math.min(1, s * 10); c.strokeStyle = "#000"; c.lineWidth = 3; c.strokeRect(-b.w / 2, -b.h / 2, b.w, b.h); c.globalAlpha = 1;
+    });
+  }
+  function fxTick(id, lt) {   /* 지금 장면의 와르르 · 광고 안 둘(후킹 → 게임 · 게임 → 행동) + 상품 첫 0.95초(행동 → 상품) */
+    if (FW.dbg) return;
+    var tr = null;
+    if (id === "ad" && ENG && MON) { if (lt >= T_HOOK && lt < T_HOOK + FW.D) tr = { k: "h", at: T_HOOK }; else if (lt >= T_ACT && lt < T_ACT + FW.D) tr = { k: "m", at: T_ACT }; }
+    else if (id === "prize" && FW.pend && lt < FW.D) tr = { k: "a", at: 0 };
+    if (!tr) { if (FW.on) { FW.on = false; fxDraw(-1); } return; }
+    var key = id + PLAY.loops + tr.k + PLAY.t0.toFixed(2);
+    if (tr.k !== "a" && FW.key !== key) fxStart(key, tr.k === "h" ? paintHook : paintMon);
+    FW.on = true; fxDraw(lt - tr.at);
+  }
+
   /* ── 진행 ── */
   var DRAW = { ad: adDraw, prize: prizeDraw, rank: rankDraw };
   var HOSTS = { prize: ["pz-h"] };
   function enter(id, now) {
+    FW.pend = id === "prize" && PLAY.id === "ad" && T_ACT < DUR.ad;   /* 행동 → 상품 = 와르르 · 행동 장면이 아직 보일 때 그린다 */
+    if (FW.pend) fxStart("prize" + PLAY.loops + "a" + now.toFixed(2), paintAct);
     if (PLAY.id) exit(PLAY.id);
     PLAY.id = id; PLAY.t0 = now;
     var s = el(id); s.classList.add("on");
-    if (id === "ad") { HK.n = -1; monBegin(PLAY.loops); }
+    if (id === "ad") monBegin(PLAY.loops);
     if (id === "rank") { rankBegin(); cvOn(ENG); }
     if (id === "prize") $("pz-cl").textContent = closed() && !OPEN ? "기록 마감" : CLOSE_TXT + " 마감";
   }
@@ -482,6 +599,7 @@
     (HOSTS[id] || []).forEach(function (h) { dotOn(h, "", 0, {}, false); });
     if (id === "ad") cls($("act"), "on", false);
     if (id === "ad" || id === "rank") { cvOn(false); CX.setTransform(1, 0, 0, 1, 0, 0); CX.clearRect(0, 0, CV.width, CV.height); }
+    if (id === "ad") HK.n = AH.n = -1;
     if (id === "rank") { rankEnd(); $("hs-list").classList.remove("shk"); }
   }
   function listNow() { return closed() && !OPEN ? PL_DONE : PL_OPEN; }
@@ -510,10 +628,10 @@
     if (now - PLAY.t0 > 30) PLAY.t0 = now;   /* 화면이 오래 가려졌다 돌아오면 그 장면 처음부터 */
     var lt = now - PLAY.t0;
     if (lt >= DUR[PLAY.id]) { nextScene(now); lt = 0; }
-    try { revealAt(el(PLAY.id), lt); DRAW[PLAY.id](lt); } catch (e) { if (window.console) console.error(e); }
+    try { revealAt(el(PLAY.id), lt); DRAW[PLAY.id](lt); fxTick(PLAY.id, lt); } catch (e) { if (window.console) console.error(e); }
     TY.loops = PLAY.loops; TY.scene = PLAY.id; TY.lt = lt;
   }
-  var TY = window.__ty = { loops: 0, scene: "", lt: 0, eng: ENG, dur: DUR, rv: RV, closed: closed, list: function () { return PLAY.list.slice(); }, rk: RK, rs: RS, play: PLAY, demoStep: demoStep, poll: function () { poll(); },
+  var TY = window.__ty = { loops: 0, scene: "", lt: 0, eng: ENG, dur: DUR, rv: RV, fw: FW, snap: function (k) { fxStart("dbg" + Math.random(), k === "a" ? paintAct : k === "m" ? paintMon : paintHook); FW.dbg = true; fxDraw(0); }, closed: closed, list: function () { return PLAY.list.slice(); }, rk: RK, rs: RS, play: PLAY, demoStep: demoStep, poll: function () { poll(); },
     go: function (id) { SOLO = DUR[id] ? id : ""; enter(SOLO || PLAY.list[0], performance.now() / 1000); } };
 
   /* 홍보 칸 · 화면 밖이거나 탭이 가려지면 그리기를 멈추고 보이면 그 자리에서 잇는다 */
