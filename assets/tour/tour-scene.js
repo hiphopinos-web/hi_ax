@@ -198,7 +198,7 @@
           coreStub.visible = false; lobby.add(coreStub); hideInRefl.push(coreStub);
           loaded = true; S.loaded = true;
           if (onDone) onDone();
-        }, function (ev) { if (onProg && ev && ev.total) onProg(ev.loaded / ev.total); }, function (e) { if (onFail) onFail(e); });
+        }, function (ev) { if (onProg && ev) onProg(ev.total && ev.lengthComputable !== false ? ev.loaded / ev.total : -1); }, function (e) { if (onFail) onFail(e); });   /* v5.51 전체 크기를 모르면 -1(숫자 없이) · 압축 전송이면 1 을 넘을 수 있어 받는 쪽(tour3 loadProg)이 0~1 · 줄지 않게 거른다 */
       }
 
       /* 18F 커피챗 장면 · 탁자 1컷 + 멘토 캐릭터(챗봇 원본 path 합성 · design.md A-4 「합성만」) */

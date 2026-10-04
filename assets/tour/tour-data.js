@@ -12,7 +12,7 @@
     1: 'AX VISION 간판', 2: 'AX Festival 2026', 3: 'ME to WE : 나의 경험을 우리의 가능성으로', 4: 'Data Business Company',
     5: 'AX Roadmap · 2026 공감과 참여', 6: '2027 확산과 체화', 7: '2028 혁신과 연결',
     8: 'AX LAB 간판', 9: 'DAP · 데이터 분석 프로젝트', 10: 'History · 2024~2025 우수 과제', 11: 'Project · 2026 DAP 프로젝트 1', 12: 'Project · 2026 DAP 프로젝트 2', 13: '내 업무 고민도 DAP가 될 수 있어요 · 아이디어 QR',
-    14: 'AX in Action · 현장의 AX', 15: '현장 인터뷰 영상 TV 자리', 16: 'Sales AX · 강북이', 17: 'AI컨설팅 도우미', 18: 'Claims AX · 하이핑거',
+    14: 'AX in Action · 현장의 AX', 15: '현장 인터뷰 영상 TV 자리', 16: 'Sales AX · 강북이', 17: 'AI 컨설팅 도우미', 18: 'Claims AX · 하이핑거',
     19: 'AX LOUNGE 간판', 20: 'AX Lounge · 그 업무 고민, AI와 함께', 21: '상담 3단계',
     22: 'AX PLAY 간판', 23: 'HiDI', 24: 'HiDI-Q · Introduce', 25: 'HiDI-Q · Tips', 26: 'HiDI-Q · Tips 이어서', 27: 'HiDI-Q · Feedback',
     28: 'Hi-Helper', 29: 'Hi-Helper · Introduce', 30: 'Hi-Helper · Tips', 31: 'Hi-Helper · Check Point', 32: 'Hi-Helper · Feedback',
