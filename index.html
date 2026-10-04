@@ -1751,11 +1751,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .fs-big .axs-tile { flex: 1 1 100%; }   /* 큰글씨 · 타일은 한 줄에 하나 */
   .axs-stpx { align-self: flex-start; margin-top: var(--ax-space-4); padding: var(--ax-space-4) var(--ax-space-8); border: 1px dashed var(--ax-color-disabled); border-radius: var(--ax-radius-8); background: transparent; color: var(--ax-color-muted); font: var(--ax-type-caption); cursor: pointer; }
   .axs-tt .rc .tr .bgs { flex-shrink: 0; }   /* 딱지 · 진행 중 칩은 잘리지 않고 제목이 말줄임 */
-  .axs-ten { display: flex; flex-direction: column; gap: var(--ax-space-8); margin-top: var(--ax-space-12); }
-  .axs-tenr { display: flex; align-items: center; gap: var(--ax-space-8); width: 100%; min-height: var(--ax-touch-size); padding: var(--ax-space-12); border: 0; border-radius: var(--ax-radius-12); background: var(--ax-color-inset); color: var(--ax-color-ink); text-align: left; cursor: pointer; }
-  .axs-tenr .axs-tx { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-  .axs-tenr .axs-chip { min-height: 22px; padding: 0 var(--ax-space-8); vertical-align: middle; }
-  .axs-tenr > .axs-chev { flex: 0 0 auto; width: 20px; height: 20px; color: var(--ax-color-muted); }
   /* v4.93 나의 참여 › 나의 일정(myAgendaHtml) · 내 세션 카드(tenMineCard) · 옛 진입 별칭 스크롤 자리(헤더 높이만큼 띄운다) */
   .axs-msec { display: flex; flex-direction: column; gap: var(--ax-space-8); }
   .axs-msec > .ax-row { margin-bottom: var(--ax-space-4); }
@@ -2815,7 +2810,7 @@ var TIMELINE = [
      10F 오후 세션(내내 참석)·점심(시간대 구분 역할)은 시간표 유지 */
   { time: "", end: "", title: "AX 커피챗", short: "시간은 매칭 후 앱에서 안내", place: "18F", desc: "시간은 매칭 후 앱에서 안내", tag: "매칭 후 안내", always: 1 },
   { time: "13:30", end: "15:00", title: "파트너사 강연 · AWS", short: "Agentic AI 시대의 일하는 방식 변화 · 구태훈 박사(AWS)", place: "17F 대강당", desc: "대강당 입구 QR로 출석", tag: "자유 참석", par: 1 },
-  { time: "13:30", end: "16:30", title: "10F 실습형 세션 A~E", short: "사전 신청자 · 5개 세션 중 1개", place: "10F", desc: "사전 신청자 대상 · 세션별 장소는 프로그램 탭", tag: "사전 신청", par: 1 },
+  { off: 1, time: "13:30", end: "16:30", title: "10F 실습형 세션 A~E", short: "사전 신청자 · 5개 세션 중 1개", place: "10F", desc: "사전 신청자 대상 · 세션별 장소는 프로그램 탭", tag: "사전 신청", par: 1 },
   { time: "15:10", end: "16:40", title: "파트너사 강연 · MS", short: "AI와 친해지기 · MS", place: "17F 대강당", desc: "대강당 입구 QR로 출석", tag: "자유 참석", par: 1 },
   /* v3.50 사회자 순서 (사용자 확정 260917) · Outro 문항 기능 폐지 · 설문 참여 안내 → 17:00 Outro */
   /* v3.63 (사용자 확정 260918) 「일단 빼자」 · 항목은 남기고 off 로 일정 탭에서만 감춘다 (설문 기능·송출 화면·홈/스탬프 입구는 그대로) */
@@ -2824,9 +2819,7 @@ var TIMELINE = [
 ];
 /* v4.91 (사용자 261001 「A~E 사전 신청 세션이 여기에 있을 이유가 있을까」 · main 결정) 10F 실습형 세션 A~E 줄은 「전체」 시간표 · 홈 「진행 중」 · 다음 일정에서 숨긴다
    현장참여자는 신청도 입장도 못 해 「나도 갈 수 있나」 혼동만 준다 · 사전신청자에게 필요한 것은 내 세션 하나(3묶음: 명단 업로드 → 나의 일정에 내 세션 카드 · tenMineCard)
-   코드(TIMELINE 항목 · tenListHtml · 세션 상세)는 남긴다 · TEN_ALL = true 면 예전처럼 보인다 */
-var TEN_ALL = false;
-TIMELINE.forEach(function (t) { if (t.title === "10F 실습형 세션 A~E" && !TEN_ALL) t.off = 1; });
+   정리 #9(261005) 숨김 스위치와 10F 펼침 목록 함수는 지우고 그 줄에 off: 1 을 바로 적었다(동작 같음 · 되살리려면 off 를 뺀다) · 세션 상세는 그대로 */
 /* 3묶음 훅 · 사전신청자로 확인된 사람의 「나의 일정」(나의 참여 맨 위) 맨 위 내 세션 카드 한 장(장소 · 시간)
    v4.93 채움 · 원천 = sessMine(서버 sync my.sess · 3묶음 명단이 들어오기 전에는 테스트 오버레이에서만) · 내 세션이 없으면 빈 값 */
 function tenMine() { return SESSIONS.filter(function (s) { return s.fl === 10 && !!sessMine(s.id); })[0] || null; }
@@ -4623,14 +4616,6 @@ function progFlowScroll() {
   if (q.top < 120 || q.bottom > lim) c.scrollIntoView({ block: "center" });
 }
 /* ═══ v4.84 (261001 앱 개편 2묶음 · 기획안 5-3) 프로그램 탭 아래 메뉴 · 10F 행 펼침 · 1F 부스 6구역 ═══ */
-/* 10F 행 펼침 · 세션 A~E 다섯 줄(세션 E 는 회차 두 줄) · 읽기 전용 · 누르면 세션 상세(안내 전용 · 앱 신청 없음) · 사전 신청한 세션만 「내 세션」 */
-function tenListHtml() {
-  return '<div class="axs-ten">' + SESSIONS.filter(function (s) { return s.fl === 10; }).map(function (s) {
-    var mi = !!sessMine(s.id);
-    return '<button type="button" class="axs-tenr" onclick="progOpen(\'' + s.id + '\')"><span class="axs-tx"><span class="ax-type-t6-strong">' + esc(s.ttl) + (mi ? ' <span class="axs-chip ok">내 세션</span>' : "") + "</span>" +
-      '<span class="ax-meta">' + esc(s.sub) + "</span><span class=\"ax-meta\">" + esc(progTm(s.tm) + " · " + sessPlace(s) + (s.capNote ? " · " + s.capNote : "")) + "</span></span>" + CHEV_SVG + "</button>";
-  }).join("") + "</div>";
-}
 /* ═══ v4.93 (261001 사용자 확정 · 「디자인 시안/프로그램 탭 개편/IA 검토.md」 7-1~7-3 · 8장 A2 · A3) 프로그램 › 상시 운영 · 구역 상세(zone_d) ═══
    1F 6구역 = 표 하나(FLOOR1)를 상시 운영 줄과 구역 상세가 같이 쓴다 · 옛 「상시 운영」 메뉴(progMenuHtml) · 1F 부스 화면(floor1Html)을 흡수했다
    sign = 현장 부스 사인 글자 그대로(영문 제목 · EVENT 는 AX 접두 없음) · kor = 한국어 한 줄 · fact = 보조 한 줄 · st = 걸린 스탬프 id(v4.99 줄 · 상세 모두 오른쪽 도장 · 옛 한 단어 stw 없앰)
