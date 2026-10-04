@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<title>AX 매지션</title>
+<title>AX magic</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
 <style>
@@ -36,7 +36,8 @@
 <div id="cp">
   <h2>혼잡도 계수 설정 <span style="color:#888;font-weight:400">(C 닫기)</span></h2>
   <label><input type="checkbox" id="cpOn"> 계수 켜기 (사람 수만 셈, 영상 저장·전송 없음)</label>
-  <label>카메라 이름 (여러 대면 서로 달라야 함)</label><input type="text" id="cpName" maxlength="20">
+  <label>위치 이름 (기기마다 다르게 · 예: 1F 로비)</label><input type="text" id="cpName" maxlength="12" placeholder="비우면 AX magic 1">
+  <div class="st" id="cpFull"></div>
   <label>계수용 카메라</label><select id="cpDev"><option value="">메인 카메라 (게임과 같은 1대)</option></select>
   <label>주기</label><select id="cpInt"><option value="1000">1초</option><option value="2000">2초</option><option value="5000">5초</option></select>
   <label>타일 분할</label><select id="cpTiles"><option value="1">끔</option><option value="2">2x2 (느림)</option></select>
@@ -47,6 +48,7 @@
   <div id="cpCodeRow" hidden><label>등급코드</label><input type="password" id="cpCode" autocomplete="off"><button id="cpCodeSave">저장</button></div>
   <div id="cpSavedRow" hidden>등급코드 저장됨 <button class="g" id="cpCodeForget">지우기</button></div>
   <div class="st" id="cpSrvStat"></div>
+  <div class="st">보낼 곳 · 등급코드 · 위치 이름 · 구역은 같은 브라우저의 혼잡도 계수기(주소 끝 /crowd/)와 함께 씁니다.</div>
   <h3>구역</h3>
   <button id="cpAdd">구역 그리기</button><button class="g" id="cpClose">닫기</button><button class="g" id="cpCancel">취소</button>
   <div class="st">화면을 클릭해 꼭짓점을 찍고 첫 점을 다시 누르거나 닫기(Enter). Esc 취소. 구역이 없으면 화면 전체 인원만 센다.</div>
@@ -54,6 +56,16 @@
   <h3>상태</h3><div class="st" id="cpStat"></div>
 </div>
 <script type="module">
+/* AX magic 공용 엔진(../engine/ · 261004): 카메라 · 실행 주기 · 모델 로더 · 짝짓기 · 계수 · 전송 · 공용 설정 · 상태 점.
+   혼잡도 계수기(../crowd/)와 같은 엔진이다. 게임 규칙 · 판정 · 연출은 이 파일에 그대로 둔다. */
+import { openCamera, cycleCamera as engCycleCamera } from '../engine/camera.js';
+import { FrameScheduler } from '../engine/scheduler.js';
+import { createHandLandmarker, createFaceDetector } from '../engine/models.js';
+import { greedyMatch, inPoly, zoneState } from '../engine/tracking.js';
+import { PersonDetector } from '../engine/detector.js';
+import { createTransport, SERVERS } from '../engine/transport.js';
+import { getLoc, setLoc, camName as camFullName, loadZones, saveZones, onShared, migrateMagician } from '../engine/settings.js';
+import { healthOf } from '../engine/health.js';
 const W = 1920, H = 1080;
 const qs = new URLSearchParams(location.search);
 let mouseMode = qs.get('mouse') === '1';
@@ -197,7 +209,7 @@ const POSES = [{ cs: [0, 0, 0, 0], pin: 0 }, { cs: [1, 1, 1, 1], pin: 0 }, { cs:
 let hands = [], nextHid = 1;        // 추적 중인 손
 let rawHands = null;                // 카메라 모드: {t, list:[pts]}
 const cam = { ready: false, vw: 0, vh: 0 };
-let hl = null, lastVT = -1, lastTs = 0;
+let hl = null;
 const HAND_MIN = 56, HAND_NEAR = 36;   // 이 크기(손목~중지뿌리 px)보다 작으면 멀다 · 피드백3 2차: 2인은 둘이 나란히 서느라 카메라에서 멀어 손이 작다(70·45 → 56·36)
 /* 2인 인식(피드백3 2차): 손이 잠깐 끊겼다 다시 잡히면 새 손으로 시작해 왼쪽·오른쪽 배정이 위치만으로 다시 정해졌다. 사라진 손의 자리·배정을 LOST_MEM초 기억해
    그 근처(LOST_R px)에서 다시 잡힌 손은 이전 배정을 이어받는다. 가운데 띠(840~1080)에서 처음 잡힌 손은 손이 적은 쪽으로 */
@@ -256,11 +268,10 @@ function updateInput(dt) {
   } else if (rawHands && now - rawHands.t < .35) list = rawHands.list.map(h => h.pts);
   for (const t of hands) t.matched = false;
   // 짝짓기: 모든 (새 손, 기존 손) 쌍을 거리순으로 묶는다(두 사람 손이 가운데서 가까워도 뒤바뀌지 않게, 직전 속도로 위치 예측)
-  const cs = list.map(pts => { const m = metrics(pts); return { x: m.cx, y: m.cy }; }), pairs = [], used = new Array(list.length).fill(false);
-  for (const t of hands) { const n = t.hist.length, pv = n >= 2 ? { x: t.c.x + (t.hist[n - 1].x - t.hist[n - 2].x), y: t.c.y + (t.hist[n - 1].y - t.hist[n - 2].y) } : t.c;
-    cs.forEach((c, i) => { const d = dist(pv, c); if (d < Math.max(450, t.L * 5)) pairs.push([d, i, t]); }); }
-  pairs.sort((a, b) => a[0] - b[0]);
-  for (const [, i, t] of pairs) { if (used[i] || t.matched) continue; used[i] = true; t.matched = true; applyHand(t, list[i]); }
+  const cs = list.map(pts => { const m = metrics(pts); return { x: m.cx, y: m.cy }; }), used = new Array(list.length).fill(false);
+  const pv = hands.map(t => { const n = t.hist.length; return n >= 2 ? { x: t.c.x + (t.hist[n - 1].x - t.hist[n - 2].x), y: t.c.y + (t.hist[n - 1].y - t.hist[n - 2].y) } : t.c; });
+  const mt = greedyMatch(hands, cs, (t, c, ti) => { const d = dist(pv[ti], c); return d < Math.max(450, t.L * 5) ? d : Infinity; });   // 공용 엔진: 거리순 짝짓기
+  for (const [ti, i] of mt.pairs) { const t = hands[ti]; used[i] = true; t.matched = true; applyHand(t, list[i]); }
   for (let i = 0; i < list.length; i++) {
     if (used[i]) continue; const pts = list[i];
     { const t = { id: nextHid++, hist: [], matched: true, lm: null, seen: now, swapT: 0, age: 0, thrLock: 0, thrR: 1, thrust: null }; applyHand(t, pts); t.side = newSide(t); hands.push(t); }
@@ -297,19 +308,10 @@ function camToast(t) {
   if (!el) { el = document.createElement('div'); el.id = 'camToast'; el.style.cssText = 'position:fixed;left:50%;top:40px;transform:translateX(-50%);z-index:50;padding:14px 28px;border-radius:999px;background:rgba(0,0,0,.72);color:#fff;font:600 28px Pretendard,sans-serif;pointer-events:none;transition:opacity .3s'; document.body.appendChild(el); }
   el.textContent = t; el.style.opacity = '1'; clearTimeout(camToast.t); camToast.t = setTimeout(() => { el.style.opacity = '0'; }, 2500);
 }
-async function cycleCamera() {
-  if (!navigator.mediaDevices) return;
-  const ds = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
-  if (ds.length < 2) { camToast('연결된 카메라가 1대뿐입니다'); return; }
-  const old = video.srcObject, cur = old && old.getVideoTracks()[0] && old.getVideoTracks()[0].getSettings().deviceId;
-  const i = ds.findIndex(d => d.deviceId === cur), next = ds[(i + 1) % ds.length];
-  try {
-    const s = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: next.deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
-    if (old) old.getTracks().forEach(t => t.stop());
-    video.srcObject = s; await video.play(); cam.vw = video.videoWidth; cam.vh = video.videoHeight;
-    try { localStorage.setItem(CAMK, next.deviceId); } catch (e) { }
-    camToast('카메라: ' + (next.label || '카메라 ' + ((i + 1) % ds.length + 1)));
-  } catch (e) { camToast('그 카메라를 열지 못했습니다'); }
+async function cycleCamera() {   // 공용 엔진(camera.js): 다음 장치 · 선택 기억
+  const r = await engCycleCamera(video, { storageKey: CAMK });
+  if (r.ok) { cam.vw = r.vw; cam.vh = r.vh; }
+  if (r.text) camToast(r.text);
 }
 
 { // 화면 오른쪽 아래 작은 버튼: 키보드가 안 먹을 때 클릭으로 카메라 전환
@@ -321,42 +323,18 @@ async function cycleCamera() {
 }
 
 async function initCamera() {
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    showErr('카메라를 쓸 수 없습니다', '주소가 https:// 로 시작하는지 확인해 주세요.'); return;
-  }
-  let stream;
+  // 공용 엔진(camera.js): 기억한 장치로 열기 · 오류 문구 · 끊기면 알림(AX magic: 스스로 다시 연결)
+  const oc = await openCamera(video, { storageKey: CAMK, onEnded: () => crCamLost() });
+  if (oc.error) { showErr(oc.error.title, oc.error.msg); return; }
+  cam.vw = oc.vw; cam.vh = oc.vh;
+  // 공용 엔진(models.js): 라이브러리 · wasm 은 jsDelivr 고정판, 모델은 Google 공식 저장소 · GPU 실패 시 CPU
   try {
-    let saved = ''; try { saved = localStorage.getItem(CAMK) || ''; } catch (e) { }
-    const base = { width: { ideal: 1280 }, height: { ideal: 720 } };
-    try { stream = await navigator.mediaDevices.getUserMedia({ video: saved ? Object.assign({ deviceId: { exact: saved } }, base) : Object.assign({ facingMode: 'user' }, base), audio: false }); }
-    catch (e) { if (!saved) throw e; stream = await navigator.mediaDevices.getUserMedia({ video: Object.assign({ facingMode: 'user' }, base), audio: false }); }
-  } catch (e) {
-    const n = e && e.name;
-    if (n === 'NotAllowedError' || n === 'SecurityError') showErr('카메라 권한이 거부되었습니다', '주소창 왼쪽 자물쇠 아이콘에서 카메라를 허용한 뒤 새로고침해 주세요.');
-    else if (n === 'NotFoundError' || n === 'OverconstrainedError') showErr('카메라를 찾을 수 없습니다', '웹캠이 연결되어 있는지 확인해 주세요.');
-    else if (n === 'NotReadableError' || n === 'AbortError') showErr('카메라를 쓸 수 없습니다', '다른 프로그램(화상회의 등)이 카메라를 쓰고 있을 수 있습니다. 닫고 새로고침해 주세요.');
-    else showErr('카메라를 시작하지 못했습니다', String(e && e.message || e));
-    return;
-  }
-  video.srcObject = stream; await video.play();
-  stream.getVideoTracks().forEach(t => t.addEventListener('ended', () => crCamLost()));   // 이중거울: 카메라가 끊기면 스스로 다시 연결
-  cam.vw = video.videoWidth; cam.vh = video.videoHeight;
-  const CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1';   // 정적 호스팅본(magic/): 라이브러리·wasm은 CDN, 모델은 Google 공식 저장소
-  try {
-    let lib, wasmBase;
-    lib = await import(CDN + '/vision_bundle.mjs'); wasmBase = CDN + '/wasm';
-    const fileset = await lib.FilesetResolver.forVisionTasks(wasmBase);
-    const GS = 'https://storage.googleapis.com/mediapipe-models';
-    const url = GS + '/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
     // 여러 사람 손이 잡혀도 화면에서 가장 크게 잡힌 두 손만 쓴다(그래서 모델은 최대 4손까지 받는다)
-    const make = d => lib.HandLandmarker.createFromOptions(fileset, { baseOptions: { modelAssetPath: url, delegate: d }, runningMode: 'VIDEO', numHands: 4, minHandDetectionConfidence: .5, minHandPresenceConfidence: .5, minTrackingConfidence: .5 });
-    try { hl = await make('GPU'); } catch (e) { hl = await make('CPU'); }
+    hl = (await createHandLandmarker({ numHands: 4, minHandDetectionConfidence: .5, minHandPresenceConfidence: .5, minTrackingConfidence: .5 })).task;
     tuneFor(G ? G.np : 1);
     // 피드백3: 얼굴 감지(피하기 판정). 못 불러오면 게임은 그대로 되고, 날아온 것은 예전처럼 늘 맞는다
     try {
-      const fu = GS + '/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite';
-      const mk = d => lib.FaceDetector.createFromOptions(fileset, { baseOptions: { modelAssetPath: fu, delegate: d }, runningMode: 'VIDEO', minDetectionConfidence: .5 });
-      try { fdet = await mk('GPU'); } catch (e) { fdet = await mk('CPU'); }
+      fdet = (await createFaceDetector({ minDetectionConfidence: .5 })).task;
       faceOK = true;
     } catch (e) { console.warn('얼굴 모델 로드 실패(피하기 판정 없이 진행)', e); fdet = null; faceOK = false; }
   } catch (e) {
@@ -379,29 +357,26 @@ function mapPt(nx, ny) {
   const sc = Math.max(W / cam.vw, H / cam.vh), dw = cam.vw * sc, dh = cam.vh * sc, ox = (W - dw) / 2, oy = (H - dh) / 2;
   return { x: W - (nx * dw + ox), y: ny * dh + oy };
 }
-function detect() {
-  if (mouseMode || !cam.ready || video.readyState < 2 || video.currentTime === lastVT) return;
-  lastVT = video.currentTime;
-  let ts = performance.now(); if (ts <= lastTs) ts = lastTs + 1; lastTs = ts;
-  try {
-    const t0 = performance.now(), r = hl.detectForVideo(video, ts), list = [];
-    perf.hand = lerp(perf.hand, performance.now() - t0, .1);
-    for (const lm of (r.landmarks || [])) { const pts = lm.map(p => mapPt(p.x, p.y)); list.push({ pts, L: Math.hypot(pts[0].x - pts[9].x, pts[0].y - pts[9].y) }); }
-    list.sort((a, b) => b.L - a.L); rawHands = { t: now, list: list.slice(0, 4) };   // 2인을 위해 4손까지(사람별로는 가장 큰 두 손만 쓴다)
-  } catch (e) { console.warn('hand', e); }
-  // 얼굴: 카메라 프레임 2장에 한 번(30fps 카메라면 초당 15번). 그 사이는 trackFaces가 부드럽게 따라간다
-  if (fdet && ++vframe % 2 === 0) {
-    try {
-      const t0 = performance.now(), r = fdet.detectForVideo(video, ts), sc = Math.max(W / cam.vw, H / cam.vh), list = [];
-      perf.face = lerp(perf.face, performance.now() - t0, .1); perf.faceN++;
-      for (const d of (r.detections || [])) {
-        const b = d.boundingBox; if (!b) continue; const nrm = b.width <= 1.5 && b.height <= 1.5, vw = nrm ? 1 : cam.vw, vh = nrm ? 1 : cam.vh;
-        const p = mapPt((b.originX + b.width / 2) / vw, (b.originY + b.height / 2) / vh); list.push({ x: p.x, y: p.y, w: b.width / vw * cam.vw * sc });
-      }
-      rawFaces = { t: now, list };
-    } catch (e) { console.warn('face', e); }
+// 공용 엔진(scheduler.js): 새 카메라 프레임마다 구독을 돌린다(같은 프레임 두 번 없음 · 시각 ts 는 늘 앞으로)
+const frames = new FrameScheduler(() => (mouseMode || !cam.ready) ? null : video);
+frames.every('hand', 1, (v, ts) => {   // 손: 매 프레임
+  const t0 = performance.now(), r = hl.detectForVideo(v, ts), list = [];
+  perf.hand = lerp(perf.hand, performance.now() - t0, .1);
+  for (const lm of (r.landmarks || [])) { const pts = lm.map(p => mapPt(p.x, p.y)); list.push({ pts, L: Math.hypot(pts[0].x - pts[9].x, pts[0].y - pts[9].y) }); }
+  list.sort((a, b) => b.L - a.L); rawHands = { t: now, list: list.slice(0, 4) };   // 2인을 위해 4손까지(사람별로는 가장 큰 두 손만 쓴다)
+});
+// 얼굴: 카메라 프레임 2장에 한 번(30fps 카메라면 초당 15번). 그 사이는 trackFaces가 부드럽게 따라간다
+frames.every('face', 2, (v, ts) => {
+  if (!fdet) return;
+  const t0 = performance.now(), r = fdet.detectForVideo(v, ts), sc = Math.max(W / cam.vw, H / cam.vh), list = [];
+  perf.face = lerp(perf.face, performance.now() - t0, .1); perf.faceN++;
+  for (const d of (r.detections || [])) {
+    const b = d.boundingBox; if (!b) continue; const nrm = b.width <= 1.5 && b.height <= 1.5, vw = nrm ? 1 : cam.vw, vh = nrm ? 1 : cam.vh;
+    const p = mapPt((b.originX + b.width / 2) / vw, (b.originY + b.height / 2) / vh); list.push({ x: p.x, y: p.y, w: b.width / vw * cam.vw * sc });
   }
-}
+  rawFaces = { t: now, list };
+});
+function detect() { frames.pump(); }
 
 function txt(s, x, y, size, col = '#fff', align = 'center', weight = 800, alpha = 1) {
   ctx.save(); ctx.globalAlpha *= alpha; ctx.font = `${weight} ${size}px ${FONT}`; ctx.textAlign = align; ctx.textBaseline = 'middle';
@@ -1970,27 +1945,39 @@ function drawBackdrop() {
   const v = c.createRadialGradient(960, 540, 560, 960, 540, 1250); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.32)'); c.fillStyle = v; c.fillRect(0, 0, W, H);
 }
 
-/* ================= 혼잡도 계수 (2단계) =================
+/* ================= 혼잡도 계수 (AX magic) =================
    게임 카메라 프레임을 같이 쓰되 1~5초 간격으로만 돌린다. 영상·이미지는 저장도 전송도 하지 않고, 서버로는 구역별 숫자만 간다.
-   인식기·전송 계층은 혼잡도 계수기/js 사본(magic/cc/)을 쓴다. detector.js만 라이브러리·모델 주소를 CDN·Google 공식 저장소로 바꿨다. */
+   인식기 · 전송 · 공용 설정 · 상태 점은 공용 엔진(../engine/)을 쓴다. 혼잡도 계수기(../crowd/)와 같은 엔진 · 같은 설정 키다.
+   공용 설정(engine/settings.js): 위치 이름 · 구역 · 보낼 곳 · 등급코드. 보내는 이름 = 「위치 이름 · magic」(비우면 AX magic 1).
+   구역은 카메라 영상 기준 0~1 좌표(좌우를 뒤집지 않은 원본)로 저장하고, 화면(거울)에는 옮겨 그린다. 계수기에서 그린 구역을 그대로 쓴다. */
 const CK = 'axf-magician-crowd-v1';
-const crowd = Object.assign({ on: false, camName: 'AX 매지션 1', interval: 2000, tiles: 1, anchor: 'center', gpu: true, deviceId: '', camId: '', zones: [] }, (() => { try { return JSON.parse(localStorage.getItem(CK) || '{}'); } catch (e) { return {}; } })());
+migrateMagician(CK);   // 옛 키의 카메라 이름 · 구역(거울 화면 좌표)을 공용 키로 옮긴다(한 번만)
+const crowd = Object.assign({ on: false, interval: 2000, tiles: 1, anchor: 'center', gpu: true, deviceId: '', camId: '' }, (() => { try { return JSON.parse(localStorage.getItem(CK) || '{}'); } catch (e) { return {}; } })());
+let crLoc = getLoc();
+crowd.zones = loadZones(crLoc);
+const crName = () => camFullName(crLoc, 'magic');
 const cr = { det: null, tr: null, srv: null, loading: false, busy: false, dets: [], total: 0, zc: {}, ms: 0, at: 0, err: '', draw: null, testSrc: null, sub: null, camId: '', fails: 0, since: Date.now(), noSrc: 0, recAt: 0, retry: null, sendOkAt: 0 };
-// 이중거울: 카메라 ID는 저장해 둔다(새로고침해도 같은 ID로 보내야 서버가 같은 카메라로 본다)
+// AX magic: 카메라 ID는 저장해 둔다(새로고침해도 같은 ID로 보내야 서버가 같은 카메라로 본다)
 cr.camId = crowd.camId || (crowd.camId = Math.random().toString(36).slice(2, 10));
-const crSave = () => { try { localStorage.setItem(CK, JSON.stringify({ on: crowd.on, camName: crowd.camName, interval: crowd.interval, tiles: crowd.tiles, anchor: crowd.anchor, gpu: crowd.gpu, deviceId: crowd.deviceId, camId: crowd.camId, zones: crowd.zones })); } catch (e) { } };
+const crSave = () => { try { localStorage.setItem(CK, JSON.stringify({ on: crowd.on, interval: crowd.interval, tiles: crowd.tiles, anchor: crowd.anchor, gpu: crowd.gpu, deviceId: crowd.deviceId, camId: crowd.camId, mig2: 1 })); } catch (e) { } };
+const crSaveZones = () => saveZones(crLoc, crowd.zones);   // 공용 키(위치 이름별)
 const $ = id => document.getElementById(id);
 crSave();
-const crWorker = (() => { try { const w = new Worker(URL.createObjectURL(new Blob(['let t=null;onmessage=(e)=>{clearTimeout(t);t=setTimeout(()=>postMessage(0),e.data)}'], { type: 'text/javascript' }))); w.onmessage = () => crowdTick(); return w; } catch (e) { return null; } })();
-let crTimer = null;
-function crSchedule(ms) { if (crWorker) crWorker.postMessage(ms); else { clearTimeout(crTimer); crTimer = setTimeout(crowdTick, ms); } }
+// 사람 감지 = 공용 스케줄러의 시간 구독(워커 타이머 · 창이 가려져도 늦춰지지 않는다)
+const crJob = frames.interval('person', () => crowdTick(), -1);
+function crSchedule(ms) { crJob.kick(ms); }
+// 다른 탭(혼잡도 계수기)에서 바꾼 위치 이름 · 구역을 따라간다
+onShared(c => {
+  if (c.what === 'loc' && c.loc !== crLoc) { crLoc = c.loc; if (!cr.draw) crowd.zones = loadZones(crLoc); crRenderName(); crRenderZones(); }
+  else if (c.what === 'zones' && c.loc === crLoc && !cr.draw) { crowd.zones = loadZones(crLoc); crRenderZones(); }
+});
 
 async function crowdInit() {
   if (cr.det || cr.loading) return; cr.loading = true; cr.err = '';
   try {
-    const m = await import('./cc/detector.js'); const d = new m.PersonDetector(); await d.load('lite2', .35, crowd.gpu !== false); cr.det = d;
-    const t = await import('./cc/transport.js'); cr.tr = t.createTransport({ server: true }); cr.srv = cr.tr.server;
-    const sel = $('cpSrv'); sel.innerHTML = '<option value="off">끔</option>' + Object.entries(t.SERVERS).map(([k, v]) => `<option value="${k}">${v.name}</option>`).join('');
+    const d = new PersonDetector(); await d.load('lite2', .35, crowd.gpu !== false); cr.det = d;
+    if (!cr.tr) { cr.tr = createTransport({ server: true }); cr.srv = cr.tr.server; }
+    const sel = $('cpSrv'); sel.innerHTML = '<option value="off">끔</option>' + Object.entries(SERVERS).map(([k, v]) => `<option value="${k}">${v.name}</option>`).join('');
     cr.srv.onStatus(crRenderSrv); crRenderSrv();
   } catch (e) { console.warn('계수 모듈 로드 실패', e); cr.err = '계수 모듈을 불러오지 못했습니다(인터넷 연결 확인)'; }
   cr.loading = false;
@@ -2005,8 +1992,11 @@ function crSource() {
 }
 // 영상 좌표(정규화) → 거울 화면 좌표. 구역은 거울 화면 기준으로 그린다
 function crDisp(nx, ny, sw, sh) { const sc = Math.max(W / sw, H / sh), dw = sw * sc, dh = sh * sc; return { x: W - (nx * dw + (W - dw) / 2), y: ny * dh + (H - dh) / 2 }; }
-function inPoly(p, pts) { let inside = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, yi] = pts[i], [xj, yj] = pts[j]; if (yi > p[1] !== yj > p[1] && p[0] < ((xj - xi) * (p[1] - yi)) / (yj - yi) + xi) inside = !inside; } return inside; }
-const crState = (z, n) => n >= z.crowd ? 'bad' : n >= z.warn ? 'mid' : 'ok';
+// 구역(카메라 영상 0~1) ↔ 거울 화면 좌표
+function crSrcSize() { const s = crSource(); return s ? [s.w, s.h] : [cam.vw || 1280, cam.vh || 720]; }
+function zDisp(p) { const [sw, sh] = crSrcSize(); return crDisp(p[0], p[1], sw, sh); }
+function zFromDisp(x, y) { const [sw, sh] = crSrcSize(), sc = Math.max(W / sw, H / sh), dw = sw * sc, dh = sh * sc; return [clamp((W - x - (W - dw) / 2) / dw, 0, 1), clamp((y - (H - dh) / 2) / dh, 0, 1)]; }
+const crState = zoneState;   // 공용(engine/tracking.js)
 function crowdRows() { return crowd.zones.map(z => { const n = cr.zc[z.id] || 0; return { id: z.id, name: z.name, count: n, state: crState(z, n), warn: z.warn, crowd: z.crowd }; }); }
 
 async function crowdTick() {
@@ -2020,18 +2010,18 @@ async function crowdTick() {
     const dets = cr.det.detect(src.el, src.w, src.h, +crowd.tiles);
     const zc = {}; crowd.zones.forEach(z => zc[z.id] = 0);
     for (const d of dets) {
-      const a = crDisp((d.x + d.w / 2) / src.w, (crowd.anchor === 'foot' ? d.y + d.h : d.y + d.h / 2) / src.h, src.w, src.h);
+      const a = [(d.x + d.w / 2) / src.w, (crowd.anchor === 'foot' ? d.y + d.h : d.y + d.h / 2) / src.h];   // 카메라 영상 0~1(구역과 같은 좌표)
       d.zone = null;
       d.box = [crDisp(d.x / src.w, d.y / src.h, src.w, src.h), crDisp((d.x + d.w) / src.w, (d.y + d.h) / src.h, src.w, src.h)];
-      for (const z of crowd.zones) if (inPoly([a.x / W, a.y / H], z.pts)) { zc[z.id]++; d.zone = z.id; }
+      for (const z of crowd.zones) if (inPoly(a, z.pts)) { zc[z.id]++; d.zone = z.id; }
     }
     cr.dets = dets; cr.total = dets.length; cr.zc = zc; cr.ms = performance.now() - t0; cr.at = Date.now(); cr.fails = 0; if (cr.err === '인식 오류') cr.err = '';
-    if (cr.tr) cr.tr.send({ type: 'count', camId: cr.camId, camName: crowd.camName, ts: cr.at, intervalMs: crowd.interval, model: 'lite2', res: src.w + 'x' + src.h, total: cr.total, zones: crowdRows() });
+    if (cr.tr) cr.tr.send({ type: 'count', camId: cr.camId, camName: crName(), ts: cr.at, intervalMs: crowd.interval, model: 'lite2', res: src.w + 'x' + src.h, total: cr.total, zones: crowdRows() });
   } catch (e) { console.error(e); cr.err = '인식 오류'; cr.fails++; if (cr.fails >= 3 && cr.det) { try { cr.det.close && cr.det.close(); } catch (e2) { } cr.det = null; cr.loading = false; crRetryInit(); } }
   cr.busy = false; crRenderStat();
   crSchedule(Math.max(200, crowd.interval - (performance.now() - t0)));
 }
-// ---- 이중거울(자동 복구) ----
+// ---- AX magic(자동 복구) ----
 function crCamRecover() {
   if (mouseMode || Date.now() - cr.recAt < 30000) return; cr.recAt = Date.now(); cr.noSrc = 0;
   try { const o = video.srcObject; if (o) o.getTracks().forEach(t => t.stop()); } catch (e) { }
@@ -2046,12 +2036,8 @@ setInterval(() => {   // 워치독: 켜져 있는데 한참 계수가 없으면 
   }
   if ($('cp').style.display === 'block') crRenderStat();
 }, 5000);
-function dotInfo() {   // 스태프용 점. off 점 없음 / ok 빨강 천천히 깜빡임(정상) / weak 주황(약함·문제) / stop 회색(멈춤·복구 대기)
-  if (!crowd.on) return { k: 'off', col: 'transparent' };
-  const sv = cr.srv && cr.srv.target !== 'off' ? cr.srv.status() : null, ref = cr.at || cr.since, age = Date.now() - ref;
-  if (cr.err || cr.fails >= 3 || (!cr.det && age > 20000)) return { k: 'stop', col: 'rgba(150,150,150,.75)' };
-  if (sv && sv.k === 'ok' && cr.fails === 0 && age < Math.max(10000, crowd.interval * 5)) return { k: 'ok', col: '#E5484D' };
-  return { k: 'weak', col: 'rgba(255,126,49,.8)' };
+function dotInfo() {   // 스태프용 점(공용 엔진 health.js). off 점 없음 / ok 빨강 천천히 깜빡임(정상) / weak 주황(약함·문제) / stop 회색(멈춤·복구 대기)
+  return healthOf({ on: crowd.on, err: cr.err, fails: cr.fails, ready: !!cr.det, lastAt: cr.at, since: cr.since, interval: crowd.interval, srv: cr.srv });
 }
 function drawDot() {
   const el = $('dot').firstElementChild, d = dotInfo(); el.style.background = d.col;
@@ -2075,6 +2061,10 @@ function crRenderSrv(st) {
   if (!cr.srv) return; st = st || cr.srv.status(); const on = cr.srv.target !== 'off', has = cr.srv.hasCode();
   $('cpSrv').value = cr.srv.target; $('cpCodeRow').hidden = !on || has; $('cpSavedRow').hidden = !on || !has; $('cpSrvStat').textContent = st.text;
 }
+function crRenderName() {
+  if ($('cp').style.display === 'block' && document.activeElement !== $('cpName')) $('cpName').value = crLoc;
+  $('cpFull').textContent = '보내는 이름: ' + crName();
+}
 function crRenderZones() {
   $('cpZones').innerHTML = crowd.zones.map((z, i) => '<div class="z" data-i="' + i + '"><input type="text" data-f="name" value="' + z.name.replace(/"/g, '') + '" maxlength="20"><div style="margin-top:6px">보통 <input type="number" data-f="warn" min="1" value="' + z.warn + '"> 혼잡 <input type="number" data-f="crowd" min="1" value="' + z.crowd + '"> 명 이상 <button class="g" data-del="1">삭제</button></div></div>').join('');
 }
@@ -2094,11 +2084,11 @@ async function crSubCamera() {
 }
 function crPanel(open) {
   const p = $('cp'); p.style.display = open ? 'block' : 'none'; document.body.style.cursor = open ? 'default' : 'none';
-  if (open) { $('cpOn').checked = crowd.on; $('cpName').value = crowd.camName; $('cpInt').value = crowd.interval; $('cpTiles').value = crowd.tiles; $('cpAnchor').value = crowd.anchor; $('cpGpu').value = crowd.gpu === false ? '0' : '1'; crRenderZones(); crRenderStat(); crDevices(); crowdInit(); }
+  if (open) { $('cpOn').checked = crowd.on; $('cpName').value = crLoc; crRenderName(); $('cpInt').value = crowd.interval; $('cpTiles').value = crowd.tiles; $('cpAnchor').value = crowd.anchor; $('cpGpu').value = crowd.gpu === false ? '0' : '1'; crRenderZones(); crRenderStat(); crDevices(); crowdInit(); }
   else if (cr.draw) cr.draw = null;
 }
 $('cpOn').onchange = e => crowdSet(e.target.checked);
-$('cpName').onchange = e => { crowd.camName = e.target.value.trim().slice(0, 20) || 'AX 매지션 1'; e.target.value = crowd.camName; crSave(); };
+$('cpName').onchange = e => { crLoc = setLoc(e.target.value); e.target.value = crLoc; crowd.zones = loadZones(crLoc); crRenderName(); crRenderZones(); };   // 공용 위치 이름(혼잡도 계수기와 같이 씀)
 $('cpInt').onchange = e => { crowd.interval = +e.target.value; crSave(); };
 $('cpTiles').onchange = e => { crowd.tiles = +e.target.value; crSave(); };
 $('cpGpu').onchange = e => { crowd.gpu = e.target.value === '1'; crSave(); };
@@ -2110,16 +2100,16 @@ $('cpCodeSave').onclick = crSaveCode; $('cpCode').onkeydown = e => { if (e.key =
 $('cpCodeForget').onclick = () => { if (cr.srv) { cr.srv.setCode(''); crRenderSrv(); } };
 $('cpAdd').onclick = () => { cr.draw = { pts: [] }; };
 $('cpClose').onclick = () => crDrawEnd(true); $('cpCancel').onclick = () => { cr.draw = null; };
-$('cpZones').addEventListener('input', e => { const z = crowd.zones[+e.target.closest('.z').dataset.i], f = e.target.dataset.f; if (!z || !f) return; z[f] = f === 'name' ? e.target.value.slice(0, 20) : Math.max(1, +e.target.value || 1); if (z.crowd <= z.warn) z.crowd = z.warn + 1; crSave(); });
-$('cpZones').addEventListener('click', e => { if (!e.target.dataset.del) return; crowd.zones.splice(+e.target.closest('.z').dataset.i, 1); crSave(); crRenderZones(); });
+$('cpZones').addEventListener('input', e => { const z = crowd.zones[+e.target.closest('.z').dataset.i], f = e.target.dataset.f; if (!z || !f) return; z[f] = f === 'name' ? e.target.value.slice(0, 20) : Math.max(1, +e.target.value || 1); if (z.crowd <= z.warn) z.crowd = z.warn + 1; crSaveZones(); });
+$('cpZones').addEventListener('click', e => { if (!e.target.dataset.del) return; crowd.zones.splice(+e.target.closest('.z').dataset.i, 1); crSaveZones(); crRenderZones(); });
 function crDrawEnd(close) {
   const d = cr.draw; cr.draw = null; if (!close || !d || d.pts.length < 3) return;
-  crowd.zones.push({ id: 'z' + Date.now().toString(36), name: '구역 ' + (crowd.zones.length + 1), pts: d.pts, warn: 3, crowd: 6 }); crSave(); crRenderZones();
+  crowd.zones.push({ id: 'z' + Date.now().toString(36), name: '구역 ' + (crowd.zones.length + 1), pts: d.pts, warn: 3, crowd: 6 }); crSaveZones(); crRenderZones();
 }
-cv.addEventListener('click', e => {
-  if (!cr.draw) return; const x = (e.clientX - cv._ox) / cv._s / W, y = (e.clientY - cv._oy) / cv._s / H, d = cr.draw;
-  if (d.pts.length >= 3 && Math.hypot((x - d.pts[0][0]) * W, (y - d.pts[0][1]) * H) < 30) { crDrawEnd(true); return; }
-  d.pts.push([x, y]);
+cv.addEventListener('click', e => {   // 화면(거울)을 눌러 찍고, 카메라 영상 좌표로 바꿔 둔다
+  if (!cr.draw) return; const x = (e.clientX - cv._ox) / cv._s, y = (e.clientY - cv._oy) / cv._s, d = cr.draw;
+  if (d.pts.length >= 3) { const f = zDisp(d.pts[0]); if (Math.hypot(x - f.x, y - f.y) < 30) { crDrawEnd(true); return; } }
+  d.pts.push(zFromDisp(x, y));
 });
 function drawCrowd() {   // 디버그(D)나 설정 패널이 열려 있을 때만 보인다
   const c = ctx, panel = $('cp').style.display === 'block';
@@ -2128,17 +2118,17 @@ function drawCrowd() {   // 디버그(D)나 설정 패널이 열려 있을 때�
   crowd.zones.forEach(z => {
     const r = crowdRows().find(q => q.id === z.id);
     c.strokeStyle = r && r.state === 'bad' ? '#E5484D' : ORANGE; c.fillStyle = 'rgba(255,126,49,.12)';
-    c.beginPath(); z.pts.forEach(([x, y], i) => i ? c.lineTo(x * W, y * H) : c.moveTo(x * W, y * H)); c.closePath(); c.fill(); c.stroke();
-    if (r) txt(z.name + ' ' + r.count + '명', z.pts[0][0] * W + 10, z.pts[0][1] * H + 24, 26, '#fff', 'left', 700);
+    c.beginPath(); z.pts.forEach((p, i) => { const q = zDisp(p); i ? c.lineTo(q.x, q.y) : c.moveTo(q.x, q.y); }); c.closePath(); c.fill(); c.stroke();
+    if (r) { const q = zDisp(z.pts[0]); txt(z.name + ' ' + r.count + '명', q.x + 10, q.y + 24, 26, '#fff', 'left', 700); }
   });
-  if (cr.draw) { c.strokeStyle = '#fff'; c.beginPath(); cr.draw.pts.forEach(([x, y], i) => i ? c.lineTo(x * W, y * H) : c.moveTo(x * W, y * H)); c.stroke(); cr.draw.pts.forEach(([x, y]) => { c.fillStyle = '#fff'; c.beginPath(); c.arc(x * W, y * H, 7, 0, 7); c.fill(); }); }
+  if (cr.draw) { c.strokeStyle = '#fff'; c.beginPath(); cr.draw.pts.forEach((p, i) => { const q = zDisp(p); i ? c.lineTo(q.x, q.y) : c.moveTo(q.x, q.y); }); c.stroke(); cr.draw.pts.forEach(p => { const q = zDisp(p); c.fillStyle = '#fff'; c.beginPath(); c.arc(q.x, q.y, 7, 0, 7); c.fill(); }); }
   if (crowd.on) { c.strokeStyle = '#fff'; c.lineWidth = 3; for (const d of cr.dets) { if (!d.box) continue; const [a, b] = d.box; c.strokeRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y)); } }
   c.restore();
   const st = cr.srv ? cr.srv.status().text : '서버 전송 꺼짐';
   c.save(); c.font = '600 26px ' + FONT; c.fillStyle = '#fff'; c.textAlign = 'left'; c.textBaseline = 'top'; c.shadowColor = 'rgba(0,0,0,.8)'; c.shadowBlur = 6;
   c.fillText(crowd.on ? '계수 ' + cr.total + '명 · ' + (cr.ms | 0) + 'ms · 실패 ' + cr.fails + ' · 마지막 계수 ' + (cr.at ? new Date(cr.at).toLocaleTimeString('ko-KR') : '없음') + ' · 마지막 전송 ' + (cr.srv && cr.srv.lastOk ? new Date(cr.srv.lastOk).toLocaleTimeString('ko-KR') : '없음') + (crowd.zones.length ? ' · ' + crowdRows().map(r => r.name + ' ' + r.count).join(' / ') : '') + ' · ' + st : '계수 꺼짐', 20, 180); c.restore();
 }
-if (crowd.on) { cr.since = Date.now(); $('cpOn').checked = true; crowdInit().then(() => crSchedule(1500)); }   // 이중거울: 저장된 설정이 켜져 있으면 사람이 안 눌러도 자동 시작
+if (crowd.on) { cr.since = Date.now(); $('cpOn').checked = true; crowdInit().then(() => crSchedule(1500)); }   // AX magic: 저장된 설정이 켜져 있으면 사람이 안 눌러도 자동 시작
 
 /* ---------------- 입력 키 ----------------
    P 건너뛰기(연습 중 → 준비 화면, 준비 화면 → 카운트다운, 대기·선택이면 ME로 바로 카운트다운) · M ME 시작 · W WE 시작 · Esc 대기

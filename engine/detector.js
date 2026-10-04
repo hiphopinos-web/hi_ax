@@ -1,18 +1,12 @@
-// 사람 인식 · MediaPipe Tasks Vision ObjectDetector (COCO person)
-// AX 매지션 정적 호스팅본(웹배포용/magic/cc/) · 원본은 혼잡도 계수기/js/detector.js
-// 라이브러리·wasm은 jsDelivr(npm @mediapipe/tasks-vision 1.0.1, 원본 vendor/와 같은 판), 모델은 Google 공식 저장소에서 읽는다.
-import { ObjectDetector, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/vision_bundle.mjs";
+// AX magic 공용 엔진 · 사람 인식 · MediaPipe Tasks Vision ObjectDetector (COCO person)
+// 혼잡도 계수기(crowd/)와 AX 매지션(magic/)이 함께 쓴다 · 로컬 시제품 원본은 혼잡도 계수기/js/detector.js
+// 라이브러리 · wasm · 모델 주소와 GPU→CPU 전환은 models.js 한 곳에 있다(저장소에 wasm · 모델 바이너리를 두지 않는다).
+import { MODEL_URL, createObjectDetector } from "./models.js";
 
 export const MODELS = {
-  lite2: { label: "정확도 우선 · EfficientDet-Lite2", path: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite2/float16/latest/efficientdet_lite2.tflite" },
-  lite0: { label: "속도 우선 · EfficientDet-Lite0", path: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/int8/latest/efficientdet_lite0.tflite", cpuOnly: true }, // int8은 GPU 위임에서 결과가 비어 CPU 고정
+  lite2: { label: "정확도 우선 · EfficientDet-Lite2", path: MODEL_URL.person_lite2 },
+  lite0: { label: "속도 우선 · EfficientDet-Lite0", path: MODEL_URL.person_lite0, cpuOnly: true }, // int8은 GPU 위임에서 결과가 비어 CPU 고정
 };
-
-// 공식 FilesetResolver가 SIMD 지원을 판별해 둘 중 하나(vision_wasm_internal / _nosimd_)를 고른다.
-function fileset() {
-  const base = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/wasm";
-  return FilesetResolver.forVisionTasks(base);
-}
 
 export class PersonDetector {
   constructor() {
@@ -31,23 +25,15 @@ export class PersonDetector {
       this.det = null;
     }
     this.score = score;
-    const opts = (delegate) => ({
-      baseOptions: { modelAssetPath: m.path, delegate },
-      runningMode: "IMAGE",
-      scoreThreshold: score,
-      categoryAllowlist: ["person"],
-      maxResults: -1,
-    });
-    try {
-      if (!wantGpu || m.cpuOnly) throw new Error("CPU 지정");
-      this.det = await ObjectDetector.createFromOptions(await fileset(), opts("GPU"));
-      this.delegate = "GPU";
-    } catch (e) {
-      if (wantGpu && !m.cpuOnly) console.warn("GPU 위임 실패, CPU로 전환", e);
-      this.det = await ObjectDetector.createFromOptions(await fileset(), opts("CPU"));
-      this.delegate = "CPU";
-    }
+    const r = await createObjectDetector(m.path, { runningMode: "IMAGE", scoreThreshold: score, categoryAllowlist: ["person"], maxResults: -1 }, wantGpu && !m.cpuOnly);
+    this.det = r.task;
+    this.delegate = r.delegate;
     this.modelKey = modelKey;
+  }
+
+  close() {
+    if (this.det) { try { this.det.close(); } catch (e) { /* 무시 */ } }
+    this.det = null;
   }
 
   async setScore(score) {

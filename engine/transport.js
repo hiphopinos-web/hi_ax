@@ -9,6 +9,10 @@
 //    실패해도 계수는 그대로 돈다(보내기는 따로 돈다 · 다음 10초에 그때의 최신 값을 다시 보낸다 · 쌓아 두지 않는다).
 //    코드가 틀리면(auth) 바로 멈춘다. 계속 틀린 코드로 보내면 서버가 이 연결(와이파이 주소) 전체를 잠근다.
 //
+// AX magic 공용 엔진(261004): 웹배포용/engine/ 한 벌을 혼잡도 계수기(crowd/)와 AX 매지션(magic/)이 함께 쓴다.
+//    같은 주소(origin)라 보낼 곳 · 등급코드 저장 키(axf-crowd-srv-target · axf-crowd-srv-code:<곳>)를 두 프로그램이 같이 읽는다.
+//    다른 탭에서 바꾸면(storage 이벤트) 이 탭도 바로 따라간다. 등급코드 값은 여전히 화면 · 로그에 내지 않는다.
+//
 // 메시지 형식 (v1 · BroadcastChannel)
 //   { v:1, type:"count", camId, camName, ts, intervalMs, model, res,
 //     total, zones:[{ id, name, count, state, warn, crowd }] }
@@ -66,6 +70,21 @@ class ServerSender {
     this.timer = null;
     this.retry = null;
     this.restart(0);
+    // 다른 탭(계수기 ↔ 매지션)에서 보낼 곳 · 등급코드를 바꾸면 따라간다
+    try {
+      window.addEventListener("storage", (e) => {
+        if (e.key === LS_T) {
+          const t = SERVERS[e.newValue] ? e.newValue : "off";
+          if (t === this.target) return;
+          this.target = t; this.stop = null; this.fail = ""; this.lastOk = 0;
+          this.emit(); this.restart(300);
+        } else if (e.key && e.key.indexOf(LS_C) === 0 && e.key === LS_C + this.target) {
+          if (this.stop && (this.stop.why === "auth" || this.stop.why === "locked") && e.newValue) this.stop = null;
+          this.fail = "";
+          this.emit(); this.restart(300);
+        }
+      });
+    } catch (e) { /* storage 이벤트 없는 환경 */ }
   }
   // 보내는 박자 · 지금(또는 delay 뒤) 한 번 보내고 거기서부터 10초마다(설정을 바꾼 직후 보낸 것과 다음 차례가 9초 안에 겹치지 않게)
   restart(delay) {
@@ -138,7 +157,7 @@ class ServerSender {
     else if (r.reason === "rate") this.restart((Math.max(1, Number(r.retry) || 1)) * 1000 + 300);   // 서버 기준 9초 안 두 번(네트워크 지연 차) · 남은 초 뒤로 박자를 옮긴다
     else if (r.reason === "auth") { lsSet(LS_C + this.target, ""); this.stop = { why: "auth", text: "등급코드가 맞지 않습니다. 코드를 다시 넣으세요" }; }   // 틀린 코드는 지워 입력칸을 다시 연다
     else if (r.reason === "locked") this.stop = { why: "locked", text: "코드를 여러 번 틀려 이 연결이 약 " + Math.max(1, Math.ceil((Number(r.retry) || 600) / 60)) + "분 잠겼습니다" };
-    else if (r.reason === "name") this.stop = { why: "name", cam: m.camName, text: "같은 이름의 카메라가 이미 보내고 있습니다. 카메라 이름을 바꾸세요" };
+    else if (r.reason === "name") this.stop = { why: "name", cam: m.camName, text: "같은 이름의 카메라가 이미 보내고 있습니다. 위치 이름을 기기마다 다르게 두세요" };
     else if (r.reason === "max") this.stop = { why: "max", text: "서버에 카메라가 " + (r.max || 20) + "대 있어 더 받지 않습니다. 콘솔에서 안 쓰는 카메라를 빼세요" };
     else if (r.reason === "busy") this.fail = "서버가 바쁩니다. 다음 차례에 다시 보냅니다";
     else if (r.reason === "moved" || r.reason === "post" || /unknown action/.test(String(r.err || ""))) this.fail = "이 서버는 아직 카메라 계수를 받지 않습니다(서버 미배포)";
