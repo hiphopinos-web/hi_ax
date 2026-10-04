@@ -77,11 +77,25 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .ctl.la .l { color: var(--ink); text-shadow: 0 0 3px #FFFFFF, 0 0 2px #FFFFFF, 0 0 1px #FFFFFF; }   /* 비교안 ?lbl=a = 먹색 글자 + 흰 번짐 */
 #axTour3 .ctl button:active .c { background: var(--canvas); }
 #axTour3 .ctl button:disabled { opacity: .4; }
+/* v5.49 달리기(위 · 누르면 켜짐 = 주황) · 점프(아래 · 늘 주황 · 엄지에 가장 가까운 자리) · 사용자 261004 「확대 축소 자리에 달리기와 점프」 */
+#axTour3 .ctl .run.on .c { background: var(--brand); color: #FFFFFF; box-shadow: inset 0 0 0 2px #E5671E, 0 0 0 4px rgba(255, 127, 50, .3), 0 2px 10px rgba(25, 31, 40, .16); }
+#axTour3 .ctl .jump .c { width: 54px; height: 54px; margin-top: -3px; background: var(--brand); color: #FFFFFF; box-shadow: inset 0 0 0 2px #E5671E, 0 3px 10px rgba(229, 103, 30, .35); }
+#axTour3 .ctl .jump:active .c { background: #E5671E; transform: scale(.94); }
+#axTour3.rm .ctl .jump:active .c { transform: none; }
+/* v5.49 작은 지도 아래 확대 · 축소(사용자 261004 「지도에 플러스 마이너스 버튼을 작게」) · 누르는 동안 이어서 · 지도가 숨으면 같이 숨는다 */
+#axTour3 .mmz { position: absolute; right: 10px; top: 148px; display: flex; gap: 6px; z-index: 4; }
+#axTour3 .mini[hidden] + .mmz { display: none; }
+#axTour3 .mmz button { position: relative; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .94); color: var(--ink); box-shadow: inset 0 0 0 1.5px rgba(25, 31, 40, .18), 0 2px 8px rgba(25, 31, 40, .14); }
+#axTour3 .mmz button::before { content: ""; position: absolute; inset: -4px; }
+#axTour3 .mmz button:active { background: var(--canvas); }
+#axTour3 .mmz button:disabled { opacity: .4; }
 /* 안내 챗봇 말풍선 · 머리 위 · 누르면 판 보기 */
-#axTour3 .gbub { position: absolute; left: 0; top: 0; max-width: calc(100vw - 16px); padding: 10px 10px 10px; border-radius: 18px; background: var(--surface); color: var(--ink); font-size: 16px; line-height: 22px; white-space: nowrap; font-weight: 700; text-align: left; box-shadow: 0 4px 16px rgba(25, 31, 40, .16); z-index: 3; word-break: keep-all; }
+#axTour3 .gbub { position: absolute; left: 0; top: 0; max-width: calc(100vw - 16px); min-height: 52px; padding: 7px 7px 7px 16px; border-radius: 999px; background: var(--surface); color: var(--ink); font-size: 16px; line-height: 22px; white-space: nowrap; font-weight: 700; text-align: left; box-shadow: 0 4px 16px rgba(25, 31, 40, .16); z-index: 5; word-break: keep-all; display: flex; align-items: center; gap: 10px; }
 #axTour3 .gbub::after { content: ""; position: absolute; left: 50%; bottom: -7px; margin-left: -7px; border: 7px solid transparent; border-bottom: 0; border-top-color: var(--surface); }
-#axTour3 .gbub #gbubT { display: block; padding: 0 4px; }
-#axTour3 .gbub .go { display: flex; align-items: center; justify-content: center; height: 48px; margin-top: 8px; border-radius: 12px; background: var(--brand); color: var(--onBrand); font-size: 17px; font-weight: 700; }   /* 엄지로 누르기 편한 큰 버튼 · 말풍선과 한 덩어리(사용자 261003) */
+#axTour3 .gbub:has(.go[hidden]) { padding-right: 16px; }
+/* v5.49 (사용자 261004 「회사의 방향이에요(자세히 보기)」) 한 줄 · 왼쪽 한마디 + 오른쪽 주황 알약 · 말풍선 전체가 누르는 자리(높이 52px)라 알약이 작아도 엄지로 누르기 쉽다 · 화면을 덜 가린다 */
+#axTour3 .gbub .go { display: inline-flex; align-items: center; gap: 2px; height: 38px; padding: 0 10px 0 14px; border-radius: 999px; background: var(--brand); color: var(--onBrand); font-size: 15px; font-weight: 700; }
+#axTour3 .gbub .go::after { content: ""; width: 7px; height: 7px; margin-left: 4px; border: solid currentColor; border-width: 2px 2px 0 0; transform: rotate(45deg); }
 #axTour3 .gbub .go[hidden] { display: none; }
 /* 판 보기 들어가기 · 나오기 · 순간이동 흰 화면 */
 #axTour3 .fade { position: fixed; inset: 0; background: #FFFFFF; opacity: 0; pointer-events: none; z-index: 45; }
@@ -215,3 +229,34 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .row { align-items: stretch; }
 #axTour3 .slot { border: 0; background: none; padding: 0; border-radius: 0; font-size: inherit; color: inherit; }
 #axTour3 h1, #axTour3 h2, #axTour3 p { letter-spacing: 0; }
+
+/* ═══ v5.49 (사용자 261004) 스탬프 블록 이름표 · 게이트 「더 힘내세요!」 · 스탬프 카드 · 엘리베이터 버튼판 ═══ */
+#axTour3 .blab { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; align-items: center; padding: 4px 10px 5px; border-radius: 10px; background: rgba(25, 31, 40, .82); color: #FFFFFF; white-space: nowrap; pointer-events: none; z-index: 2; }
+#axTour3 .blab b { font-size: 13px; line-height: 17px; font-weight: 700; }
+#axTour3 .blab i { font-style: normal; font-size: 11px; line-height: 14px; font-weight: 700; color: #FFB284; }
+#axTour3 .blab.got i { color: #CBD0D6; }
+#axTour3 .mag.up { background: var(--ink); }
+#axTour3 .cheer { position: absolute; left: 0; top: 0; padding: 8px 14px; border-radius: 999px; background: var(--brand); color: #FFFFFF; font-size: 18px; line-height: 24px; font-weight: 800; white-space: nowrap; pointer-events: none; z-index: 5; box-shadow: 0 0 0 3px #FFFFFF, 0 4px 14px rgba(229, 103, 30, .4); }
+#axTour3 .cheer.pop { animation: cheerIn .32s cubic-bezier(.34, 1.56, .64, 1), cheerBeat .5s ease-in-out .32s infinite alternate; }
+@keyframes cheerIn { from { opacity: 0; scale: .6; } to { opacity: 1; scale: 1; } }
+@keyframes cheerBeat { from { scale: 1; } to { scale: 1.08; } }
+#axTour3.rm .cheer.pop { animation: none; }
+#axTour3 .scard { position: fixed; inset: 0; z-index: 52; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; justify-content: flex-end; background: rgba(25, 31, 40, .55); }
+#axTour3 .sccard { background: var(--surface); border-radius: 24px 24px 0 0; padding: 24px 20px calc(20px + var(--safeB)); text-align: center; animation: sheetIn .26s cubic-bezier(.2, .8, .2, 1); }
+#axTour3.rm .sccard { animation: none; }
+#axTour3 .scic { width: 64px; height: 64px; margin: 0 auto 10px; border-radius: 50%; display: grid; place-items: center; background: var(--brandSoft); color: var(--brandText); box-shadow: inset 0 0 0 2px var(--o25); }
+#axTour3 .sck { margin: 0; font-size: 14px; line-height: 20px; font-weight: 700; color: var(--brandText); }
+#axTour3 .sct { margin: 2px 0 6px; font-size: 22px; line-height: 30px; font-weight: 800; }
+#axTour3 .scd { margin: 0 0 6px; font-size: 16px; line-height: 24px; color: var(--body); word-break: keep-all; }
+#axTour3 .scg { margin: 0 0 6px; font-size: 15px; line-height: 22px; font-weight: 700; color: var(--muted); }
+#axTour3 .sccard .nb { display: block; width: 100%; margin-top: 10px; }
+#axTour3 .sccard .nb.pri { margin-top: 16px; background: var(--brand); color: var(--onBrand); }
+/* 엘리베이터 버튼판 · 은색 헤어라인 판 · 둥근 버튼 · 누르면 주황 고리(불) */
+#axTour3 .evp { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 14px 12px 16px; border-radius: 16px; z-index: 4;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, .16) 0 1px, rgba(0, 0, 0, .03) 1px 3px), linear-gradient(160deg, #E3E6E9, #B9BEC3 55%, #D2D5D8); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .6), 0 4px 16px rgba(25, 31, 40, .28); }
+#axTour3 .evh { font-size: 12px; line-height: 16px; font-weight: 700; color: #4E5968; }
+#axTour3 .evb { width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 35% 30%, #FFFFFF, #CDD1D5 60%, #A9AEB3); box-shadow: inset 0 0 0 2px #8E949A, 0 2px 4px rgba(25, 31, 40, .25); color: #191F28; transition: box-shadow .15s; }
+#axTour3 .evb b { font-size: 21px; font-weight: 800; }
+#axTour3 .evb:active { transform: scale(.95); }
+#axTour3 .evb.lit { color: #A63D00; box-shadow: inset 0 0 0 3px var(--brand), 0 0 0 4px rgba(255, 127, 50, .45), 0 0 14px rgba(255, 127, 50, .7); }
+#axTour3 .scard:focus { outline: none; }
