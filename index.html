@@ -450,11 +450,6 @@
   .sess .tm { font-family: var(--disp); font-size: calc(14.5px * var(--fs)); color: var(--hi); letter-spacing: 0.02em; }
   .sess .ttl { margin-top: 7px; font-size: calc(16px * var(--fs)); font-weight: 800; color: var(--hi); line-height: 1.4; cursor: pointer; }
   .sess .who { margin-top: 3px; font-size: calc(13.5px * var(--fs)); font-weight: 700; color: var(--muted); }
-  .seatrow { display: flex; align-items: center; gap: 10px; margin-top: 11px; }
-  .seatrow .sb { flex: 1; height: 8px; border-radius: 5px; background: var(--dim); overflow: hidden; }   /* 흰 면 카드 위에서 트랙이 보이게 (v3.22) */
-  .seatrow .sb i { display: block; height: 100%; border-radius: 5px; background: var(--mint); }
-  .seatrow .sn { flex: none; font-size: calc(13px * var(--fs)); font-weight: 800; color: var(--hi); }
-  .seatrow.full .sb i { background: #E5484D; } .seatrow.full .sn { color: #E5484D; }
   .sess .btns { display: flex; gap: 8px; margin-top: 12px; }
   .sess .btns .btn { padding: 11px; }
   .sess .btns .btn.vid { background: var(--surface2); color: var(--hi); }
@@ -2936,13 +2931,6 @@ var SURVEY_Q = [
   { id: "best", type: "chips", q: "오늘 가장 좋았던 것 하나를 골라 주세요", opts: ["1F 전시·부스", "17F 강연", "10F 실습", "18F 커피챗", "미니게임"], other: "기타" },
   { id: "line", type: "text", q: "한 줄 남겨 주세요", optional: true, max: 200, ph: "비워도 제출됩니다" }
 ];
-/* 휴면 기능 스위치 · 특정 문항을 전제로 한 기능은 꺼 둔다(지우지 않음 · 켜면 SURVEY_LEGACY 문항과 함께 돌아온다)
-   words = 1F ME to WE 월 「오늘을 한 단어로」(5명 이상) · balance = 밸런스 비율 막대 */
-var SURVEY_FEATURES = { words: false, balance: false };
-var SURVEY_LEGACY = {
-  words: ["해볼 만하다", "막막하다", "벌써 쓰고 싶다", "아직 멀다", "생각보다 가깝다", "내 일에 써보고 싶다", "더 배우고 싶다", "어렵다", "재미있다", "기대된다", "동료와 해보고 싶다", "아직 모르겠다"],
-  balance: [["강연 더", "체험 더"], ["혼자 둘러보기", "팀이랑 같이"], ["하루 종일", "반나절 집중"]]
-};
 /* 다녀간 곳 카드 · 이 사람의 스탬프·신청 기록에서 다녀간 곳만 (안 간 곳은 묻지 않는다) */
 var SURVEY_PLACES = [
   ["p1", "1F 부스"], ["p2", "1F AX PLAY"], ["p7", "전시 QR 퀴즈"],
@@ -3508,7 +3496,7 @@ var STORE_DEVICE = ["vid", "a2hs", "fs", "t",
   "site_sound", "game_sound", "rain_sound", "jp_tut",
   "self_on", "self_key", "self_tok", "scan_spot", "adm_tab", "tyaw_tab", "tyaw_hide", "tyaw_oly_pg",
   "type_rank_*", "oly_tab", "oly_ev",
-  "notices", "notices_wipe1", "entry_pref", "entry_ask_day", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "survey_agg", "resv_conf", "crowd", "stv",
+  "notices", "notices_wipe1", "entry_pref", "entry_ask_day", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "resv_conf", "crowd", "stv",
   "art_demo_n", "ev_phase", "toff", "tour_inv",
   "push_ask", "push_first", "push_ask_ios"];   /* v5.46 tour_inv = 1층 둘러보기 초대 한 번(기기 기준) · v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) · v4.78 아이폰 탭 · 앱 속 브라우저 안내는 하루 한 번 */
 var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_role", "adm_tok", "adm_emp", "dept",
@@ -6592,13 +6580,9 @@ var Views = {
 
   /* ═══ v3.35 오늘 한 판 설문 · v3.52b SURVEY_Q 한 곳으로 그리는 범용 단계 ═══ */
   survey: function () {
-    surveyAggPull();
     var d = svDraft(), Q = SURVEY_Q, n = Q.length, priv = '<p class="scap" style="margin:0 2px 8px">답은 이름 없이 저장됩니다 · 제출하면 스탬프 1개</p>';
     if (surveyDone()) {
-      var m = S.get("survey_mine", null), a = svAgg();
-      return '<div class="card mb12">' + stampLineHtml("sv", '<b style="font-size:calc(17px * var(--fs));color:var(--hi)">제출 완료</b>') + "</div>" +
-        (SURVEY_FEATURES.balance ? '<div class="card soft mb12"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">다음엔 뭘 더? · 지금까지 ' + (a && a.n ? a.n.toLocaleString() + "명" : "") + "</b>" +
-          SURVEY_LEGACY.balance.map(function (q, i) { return '<p class="sq" style="margin-top:10px"><b>' + esc(q[0]) + " vs " + esc(q[1]) + "</b></p>" + svBalBars(i, m && m.bal ? m.bal[i] : null); }).join("") + "</div>" : "");
+      return '<div class="card mb12">' + stampLineHtml("sv", '<b style="font-size:calc(17px * var(--fs));color:var(--hi)">제출 완료</b>') + "</div>";   /* 정리 #8(261005) 휴면 밸런스 막대 지움 */
     }
     if (!surveyOpen()) return '<div class="ax-stack">' + stampLineHtml("sv") + botHtml(SURVEY.open + "에 열려요") + "</div>";
     if (surveyLock() === "nostamp") return '<div class="ax-stack">' + stampLineHtml("sv") + botHtml("스탬프를 하나 모으면 열려요") + '<button type="button" class="ax-button ax-button-weak" onclick="App.go(\'passport\')">스탬프 보기</button></div>';
@@ -7650,7 +7634,6 @@ function qrHtml() {
    5단계 · 60초 · 뒤로가기 · 중간 이탈 시 이어 하기(초안은 이 기기에만) · 1인 1회 · 14:30 부터.
    서버는 답을 사번 없이 저장하고 제출 사실만 사번과 남긴다. */
 var SV = { card: 0, busy: false, aggAt: 0 };
-var SURVEY_MOCK = { n: 128, bal: [[71, 57], [48, 80], [39, 89]], words: [{ w: "해볼 만하다", n: 31 }, { w: "생각보다 가깝다", n: 22 }, { w: "벌써 쓰고 싶다", n: 17 }, { w: "더 배우고 싶다", n: 12 }, { w: "막막하다", n: 6 }], min: 5 };
 /* v3.52 설문 잠금 · "time" = 14:30 전 · "nostamp" = 다른 스탬프 0개 · "" = 열림 (서버 survey_submit 와 같은 조건) */
 function surveyLock() {
   if (!surveyOpen()) return "time";
@@ -7717,17 +7700,6 @@ function svInputHtml(q, v) {
   return "";
 }
 function svPlace(id, place, val) { var d = svDraft(), o = d.a[id] || {}; o[place] = val; d.a[id] = o; svSave(d); App.render(); }
-function svAgg() { return BE.on ? S.get("survey_agg", null) : SURVEY_MOCK; }
-function surveyAggPull(force) {
-  if (!BE.on) return;
-  if (!force && Date.now() - SV.aggAt < 60000) return;
-  SV.aggAt = Date.now();
-  beCall({ action: "survey_agg" }, function (res) {
-    if (!res || !res.ok) return;
-    S.set("survey_agg", { n: res.n, bal: res.bal, words: res.words, min: res.min });
-    if (App.current === "survey") App.render();
-  }, function () {});
-}
 function svSubmit() {
   var d = svDraft();
   if (SV.busy) return;
@@ -7738,10 +7710,9 @@ function svSubmit() {
   var a = {};
   SURVEY_Q.forEach(function (qq) { var v = d.a[qq.id]; if (!svEmpty(qq, v)) a[qq.id] = { t: qq.type, q: qq.q, v: v }; });
   var ans = { a: a };
-  var done = function (agg) {
+  var done = function () {
     S.set("survey_mine", d.a);
     S.set("survey_done", true); S.set("survey_draft", null);
-    if (agg) S.set("survey_agg", agg);
     App.render(); window.scrollTo(0, 0);
   };
   if (testMode()) { done(null); awardStamp("sv"); return; }
@@ -7760,14 +7731,6 @@ function svSubmit() {
     if (res.stamp && !res.stamp.dup && !stampOverlay("sv")) toast("스탬프 적립 · 오늘 한 판 설문");
     checkRewards();
   }, function () { SV.busy = false; botWait(false); App.render(); toast("서버에 연결할 수 없어요. 다시 눌러 주세요."); });
-}
-function svBalBars(q, mine) {   /* 휴면 · SURVEY_FEATURES.balance */
-  if (!SURVEY_FEATURES.balance) return "";
-  var a = svAgg(), b = a && a.bal && a.bal[q] ? a.bal[q] : [0, 0], tot = b[0] + b[1];
-  return SURVEY_LEGACY.balance[q].map(function (lb, i) {
-    var pct = tot ? Math.round(b[i] / tot * 100) : 0;
-    return '<div class="seatrow"><div class="sb"><i style="width:' + pct + '%"></i></div><span class="sn">' + (mine === i ? "내 선택 · " : "") + esc(lb) + " " + pct + "%</span></div>";
-  }).join("");
 }
 /* 서버가 준 목록으로 로컬을 맞춘다 (sync 응답에서도 같은 함수를 쓴다).
    정의 밖 id(구 p6·p8, 계단 p9 등)는 버린다 · 표시·보상 계산과 어긋나지 않게 (260909) */
