@@ -77,15 +77,45 @@
     return '둘러보기 진단 ' + (window.AXTour ? AXTour.ver : '') + '\n' + g.ren + '\n' +
       'WebGL' + (g.gl2 ? '2' : '1') + ' · 깊이 ' + G.depthBits + '비트 · highp ' + (g.highp ? '예 ' + g.hpBits : '아니오') + ' · MSAA ' + g.msaa + '\n' +
       'DPR ' + g.dpr + ' → ' + renderer.getPixelRatio() + ' · fps ' + G.frames.length + (pr ? ' · 처음 ' + pr.p50 + 'ms' + (pr.p50 > 34 ? ' 절전' : '') : '') + '\n' +
-      '겹침 ' + (z.pairs || 0) + ' · 자름 ' + (z.cut || 0) + ' · 지움 ' + (z.gone || 0) + ' · 빛 옮김 ' + (z.relit || 0) + ' · 라이트맵 ' + (l.tex || 0) + '장 ' + (l.ms || 0) + 'ms' + (G.lmErr ? ' 오류' : '');
+      '겹침 ' + (z.pairs || 0) + ' · 자름 ' + (z.cut || 0) + ' · 지움 ' + (z.gone || 0) + ' · 빛 옮김 ' + (z.relit || 0) + ' · 라이트맵 ' + (l.tex || 0) + '장 ' + (l.ms || 0) + 'ms' + (G.lmErr ? ' 오류' : '') + '\n' + diagWhere();
+  }
+  /* v5.45 진단 · 지금 자리(사용자 261003 갤럭시 「여기에서 움직이면 깜빡임」 · 스크린숏 한 장으로 자리를 알 수 있게) · 멈칫 = 그리는 중 50ms 넘게 걸린 프레임 수 */
+  function diagWhere() {
+    if (!G.loaded || G.scn !== 'lobby') return '';
+    var p = planOf(G.pos), c = planOf(camera.position), sx = Math.sin(G.az), sz = -Math.cos(G.az), cut = S.cut ? S.cut() : null, off = [];
+    var dir = Math.abs(sx) > Math.abs(sz) ? (sx > 0 ? '동' : '서') : (sz > 0 ? '북' : '남');
+    if (cut) [['side_s', '남'], ['side_e', '동'], ['side_w', '서'], ['side_n', '북']].forEach(function (q) { if (cut[q[0]] === false) off.push(q[1]); });
+    var ci = gi(c[0], c[1]), wallH = ci < 0 ? 0 : hw[ci] * 0.05;
+    return '자리 ' + p[0].toFixed(1) + ', ' + p[1].toFixed(1) + ' · ' + dir + '쪽 봄 · 거리 ' + G.dist.toFixed(1) + ' · 카메라 ' + c[0].toFixed(1) + ', ' + c[1].toFixed(1) + ', 높이 ' + camera.position.y.toFixed(1) +
+      (wallH > camera.position.y - 0.5 ? ' · 카메라 벽 속' : '') + '\n숨긴 벽 ' + (off.length ? off.join('') : '없음') + ' · 멈칫 ' + (G.hitch || 0) + ' · 반사 ' + (S.reflOn && S.reflOn() ? '켬' : '끔') + ' · AA ' + (G.ab.aa ? '켬' : '끔');
+  }
+  /* v5.45 진단 모드 A/B 단추(진단 상자 아래) · 실기기에서 하나씩 끄고 같은 자리를 걸어 깜빡임이 사라지는 쪽을 찾는다 · 이 기기에 기억(진단 모드일 때만 쓴다)
+   *   반사 = 바닥 대리석 반사(그릴 때마다 렌더 타깃 한 번 더) · 바로 바뀜
+   *   AA = 안티에일리어싱(MSAA 4) · 3D 화면을 새로 만들어야 해서 새로 고침 뒤 · 해상도 = 1.75 ↔ 1 · 바로 바뀜 */
+  function diagAB() {
+    var box = $('fps'); if (!G.diag || $('fpsT')) return;
+    box.innerHTML = '<span id="t3-fpsT"></span><span class="ab"><button type="button" data-k="refl"></button><button type="button" data-k="aa"></button><button type="button" data-k="dpr"></button></span>';
+    function label() {
+      box.querySelector('[data-k=refl]').textContent = '반사 ' + (S.reflOn() ? '끄기' : '켜기');
+      box.querySelector('[data-k=aa]').textContent = 'AA ' + (store.get('axfT3AA') === '0' ? '켜기' : '끄기') + (G.ab.aa !== (store.get('axfT3AA') !== '0') ? '(새로 고침)' : '');
+      box.querySelector('[data-k=dpr]').textContent = '해상도 ' + (G.ab.dpr1 ? '높이기' : '1로');
+    }
+    box.addEventListener('click', function (e) {
+      var k = e.target && e.target.getAttribute && e.target.getAttribute('data-k'); if (!k) return;
+      if (k === 'refl') { var on = !S.reflOn(); S.refl(on); store.set('axfT3Refl', on ? '1' : '0'); }
+      else if (k === 'aa') { store.set('axfT3AA', store.get('axfT3AA') === '0' ? '1' : '0'); toast('새로 고침하면 바뀌어요'); }
+      else if (k === 'dpr') { G.ab.dpr1 = !G.ab.dpr1; store.set('axfT3Dpr1', G.ab.dpr1 ? '1' : '0'); renderer.setPixelRatio(G.ab.dpr1 ? 1 : Math.min(window.devicePixelRatio || 1, 1.75)); resize(); }
+      label(); G.hitch = 0; G.need = true;
+    });
+    label();
   }
   function init3D() {
     var cv = $('cv');
-    try { renderer = new T.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' }); }
+    try { renderer = new T.WebGLRenderer({ canvas: cv, antialias: G.ab.aa, powerPreference: 'high-performance' }); }   /* v5.45 진단 모드에서만 끌 수 있다(G.ab) */
     catch (e) { return false; }
     if (!renderer.getContext()) return false;
     try { var gl0 = renderer.getContext(); G.depthBits = gl0.getParameter(gl0.DEPTH_BITS); if (G.diag) G.gpu = gpuInfo(gl0); } catch (e) {}   /* v5.40 진단 · 깊이 비트(fps 표시에 함께) · v5.44 진단 모드(?t3diag=1)면 GPU 이름 · highp · MSAA */
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75)); renderer.setClearColor(0xE9ECEF, 1);
+    renderer.setPixelRatio(G.ab.dpr1 ? 1 : Math.min(window.devicePixelRatio || 1, 1.75)); renderer.setClearColor(0xE9ECEF, 1);
     renderer.toneMapping = T.AgXToneMapping; renderer.toneMappingExposure = 1.0;
     scene = new T.Scene();
     var bc = document.createElement('canvas'); bc.width = 4; bc.height = 256; var bg = bc.getContext('2d'), gr = bg.createLinearGradient(0, 0, 0, 256);
@@ -95,6 +125,7 @@
     scene.add(new T.HemisphereLight(0xFFFFFF, 0xC9CED4, 2.0));
     var dl = new T.DirectionalLight(0xFFFFFF, 1.3); dl.position.set(-8, 20, 12); scene.add(dl);
     S = window.TourScene.build({ T: T, D: D, P: P, N3: N3, renderer: renderer, scene: scene, labelFont: '"Pretendard Variable", Pretendard, sans-serif' });
+    if (!G.ab.refl) S.refl(false);
     scene.add(S.lobby); scene.add(S.cafe);
     buildBot(); scene.add(bot); buildDust();
     cv.addEventListener('webglcontextlost', function (e) { e.preventDefault(); noGl('3D 화면이 끊겼어요 · 새로 고침해 주세요'); });
@@ -1294,7 +1325,7 @@
   function mmX(x) { return ((x - MM.x0) * MM.k).toFixed(1); }
   function mmY(z) { return ((MM.z1 - z) * MM.k + (MM.S - MM.H) / 2).toFixed(1); }
   function buildMini() {
-    var B = D.BLD, S2 = MM.S, o = '<svg viewBox="0 0 ' + S2.toFixed(1) + ' ' + S2.toFixed(1) + '" aria-hidden="true"><g id="mmRot">';
+    var B = D.BLD, S2 = MM.S, o = '<svg viewBox="0 0 ' + S2.toFixed(1) + ' ' + S2.toFixed(1) + '" aria-hidden="true"><g id="t3-mmRot">';
     o += '<polygon points="' + B.outline.map(function (q) { return mmX(q[0]) + ',' + mmY(q[1]); }).join(' ') + '" fill="#FFFFFF" stroke="#B0B8C1" stroke-width="1"/>';
     B.cores.forEach(function (c) { o += '<rect x="' + mmX(c[0]) + '" y="' + mmY(B.coreN) + '" width="' + ((c[1] - c[0]) * MM.k).toFixed(1) + '" height="' + ((B.coreN - B.lobbyN) * MM.k).toFixed(1) + '" fill="#E5E8EB"/>'; });
     if (B.room3) o += '<polygon points="' + B.room3.pts.map(function (q) { return mmX(q[0]) + ',' + mmY(q[1]); }).join(' ') + '" fill="#F2F4F6" stroke="#B0B8C1" stroke-width="0.8"/>';
@@ -1305,7 +1336,7 @@
       z.rows.forEach(function (r) { var n = r.pages.length; o += '<line x1="' + mmX(r.a[0]) + '" y1="' + mmY(r.a[1]) + '" x2="' + mmX(r.a[0] + r.r[0] * n) + '" y2="' + mmY(r.a[1] + r.r[1] * n) + '" stroke="#FF7F32" stroke-width="2"/>'; });
     });
     o += '<circle cx="' + mmX(B.revolve) + '" cy="' + mmY(0) + '" r="3" fill="#4E5968"/><circle cx="' + mmX(32.57) + '" cy="' + mmY(8.4) + '" r="3" fill="#4E5968"/><rect x="' + mmX(17.0) + '" y="' + mmY(11.7) + '" width="' + (2.8 * MM.k).toFixed(1) + '" height="3" fill="#4E5968"/>';
-    o += '<g id="mmMe"><path d="M0,-8 L5,3 L0,1 L-5,3 Z" fill="#191F28"/><circle r="4.2" fill="#FF7F32" stroke="#FFFFFF" stroke-width="1.5"/></g></g></svg>';
+    o += '<g id="t3-mmMe"><path d="M0,-8 L5,3 L0,1 L-5,3 Z" fill="#191F28"/><circle r="4.2" fill="#FF7F32" stroke="#FFFFFF" stroke-width="1.5"/></g></g></svg>';
     $('mini').innerHTML = o; G.mmAz = null;
   }
   function mini() {
@@ -1506,8 +1537,10 @@
     S.frame(camera, G.scn); if (G.ceil) G.ceil.visible = false; renderer.render(scene, camera); placePins(); mini(); placeBubble(); placeMags();
     var wm = performance.now() - w0; G.workMs = G.workMs == null ? wm : G.workMs * 0.95 + wm * 0.05; G.workMax = Math.max(G.workMax || 0, wm);
     if (!$('dest').hidden && G.destAt) { _p.copy(G.destAt).project(camera); $('dest').style.left = ((_p.x + 1) / 2 * $('stage').clientWidth).toFixed(1) + 'px'; $('dest').style.top = ((1 - _p.y) / 2 * $('stage').clientHeight).toFixed(1) + 'px'; }
+    if (G.lastDraw && now - G.lastDraw > 50 && now - G.lastDraw < 400 && G.drewLast) G.hitch = (G.hitch || 0) + 1;   /* v5.45 진단 · 이어 그리는 중 멈칫(그리지 않고 쉬던 틈은 빼려고 바로 전 프레임도 그렸을 때만) */
+    G.drewLast = now - (G.lastDraw || 0) < 400; G.lastDraw = now;
     G.frames.push(now); while (G.frames.length && now - G.frames[0] > 1000) G.frames.shift();
-    if (G.showFps) { $('fps').hidden = false; $('fps').textContent = G.diag ? diagText() : 'fps ' + G.frames.length + ' · ' + renderer.info.render.calls + ' draw · dpr ' + renderer.getPixelRatio() + ' · z' + G.depthBits; }
+    if (G.showFps) { $('fps').hidden = false; ($('fpsT') || $('fps')).textContent = G.diag ? diagText() : 'fps ' + G.frames.length + ' · ' + renderer.info.render.calls + ' draw · dpr ' + renderer.getPixelRatio() + ' · z' + G.depthBits; }
     if (G.bench) { G.bench.ts.push(now); if (now - G.bench.t0 > G.bench.ms) { var b = G.bench; G.bench = null; b.done(summ(b.ts)); } }
     if (G.loaded && !G.probed) { G.probe.push(now); if (G.probe.length >= 50) { G.probed = true; var s = summ(G.probe); G.probeResult = s; if (s.p50 > 34) { renderer.setPixelRatio(1); S.lowPower(); resize(); TV_FPS = 6; MUS.lite = true; } } }
   }
@@ -1883,8 +1916,10 @@
     if (dq === '1') store.set('axfT3Diag', '1'); else if (dq === '0') { try { localStorage.removeItem('axfT3Diag'); } catch (e) {} }
     G.diag = store.get('axfT3Diag') === '1'; $('fps').classList.toggle('diag', G.diag);
     G.showFps = Q.get('fps') === '1' || G.diag;
+    G.ab = { aa: !(G.diag && store.get('axfT3AA') === '0'), dpr1: G.diag && store.get('axfT3Dpr1') === '1', refl: !(G.diag && store.get('axfT3Refl') === '0') };   /* v5.45 진단 모드 A/B(평소엔 늘 기본값) */
     G.t0 = performance.now();
     if (!window.TourScene || !T || !init3D()) { noGl(); return; }
+    diagAB();
     wireStage(); resize(); window.addEventListener('resize', resize);
     updateUi(true);
     load();
@@ -2027,5 +2062,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, ver: 'v5.44', v3: true };
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, ver: 'v5.45', v3: true };
 })();
