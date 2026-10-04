@@ -646,8 +646,6 @@
   .typ-pv.full iframe { pointer-events: none; }
   .tyb { scroll-margin-top: calc(var(--stick, 0px) + 8px); }
   @keyframes tybHot { 0%, 100% { box-shadow: inset 0 0 0 0 transparent; } 30% { box-shadow: inset 0 0 0 3px var(--rt-cream); } }   /* v5.15 1F 타자왕 순위판 줄 깜빡임(레트로 절은 .rt 규칙만) */
-  .cho-box { background: var(--ink); border: 0; color: #fff; border-radius: 20px; padding: 22px 18px; text-align: center; margin-bottom: 12px; }
-  .cho-box .hint { margin-top: 10px; font-size: calc(15.5px * var(--fs)); line-height: 1.65; opacity: 0.92; }
   /* v3.98 점프 시작 화면 big 규칙(검정 무대 전제)은 v4.08 AX-TDS 4단계 틀(.gs-card · .gs-how)로 바뀌었다 */
 
   /* ── 과제상담 (DAP ZONE) · 앱 공통 토큰만 사용 ── */
@@ -719,8 +717,6 @@
   .tlstep .tx2 { font-size: calc(15.5px * var(--fs)); font-weight: 700; color: var(--tx); line-height: 1.45; }
   .tipbanner { margin-top: 16px; background: var(--white); border: 1.5px solid var(--tint2); color: var(--hi); border-radius: 12px; padding: 11px 14px; font-size: calc(14.5px * var(--fs)); font-weight: 800; text-align: center; line-height: 1.5; }
   /* DAP Wall QR 퀴즈 */
-  .wopt { display: block; width: 100%; text-align: left; margin-top: 7px; border: 0; border-radius: 10px; background: var(--white); color: var(--tx); padding: 11px 13px; font-size: calc(15.5px * var(--fs)); font-weight: 600; cursor: pointer; }
-  .wopt.on { box-shadow: inset 0 0 0 1.5px var(--mint); background: var(--tint2); color: var(--hi); font-weight: 800; }
   /* 글자를 키우면 탭이 폭을 넘기므로 가로 스크롤로 (숨기면 마지막 탭을 누를 수 없다) */
   /* 사이니지 공통 · 블랙 스테이지 위 (screen-mode 프레임) */
   .sg { color: #fff; padding: 6px 0 24px; }
@@ -919,7 +915,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .dbar .nm b { font-size: calc(19px * var(--fs)); font-weight: 800; }
   .dbar .nm .pct { font-family: var(--disp); font-size: 27px; }
   .dbar .track { height: 13px; background: rgba(255,255,255,0.08); border-radius: 7px; margin-top: 8px; overflow: hidden; }
-  .dbar .fill2 { height: 100%; border-radius: 7px; background: rgba(255,255,255,0.32); }
   .dbar .rk { font-family: var(--disp); font-size: calc(16.5px * var(--fs)); margin-right: 8px; opacity: 0.8; }
   .dbar.t1 .pct, .dbar.t1 .rk { color: var(--mint-deep); } .dbar.t1 .fill2 { background: var(--mint-deep); }
   .dbar.t2 .pct { color: #FFC476; } .dbar.t2 .fill2 { background: #FFC476; }
@@ -2846,7 +2841,7 @@ var STAMPS_V1 = [
   { id: "p3", title: "프로그램 참여", short: "프로그램", desc: "17F 강연 QR 출석 · AX LOUNGE 상담 · AX 커피챗 중 1회" + (P3_INCLUDE_10F ? " · 10F 실습형 세션" : ""), where: "", site: 1, tap: "progGoFl(17)", cta: "17F 강연 보기" },
   { id: "p4", title: "미니게임", short: "미니게임", desc: "서로 다른 미니게임 3종목 · 종목마다 한 판", where: "3종목", inapp: 1 },   /* v4.63 (사용자 확정 260929) 1종 → 서로 다른 3종목 · 판정은 서버(game_submit) */
   { id: "p5", title: "아이디어 한 줄", short: "아이디어", desc: "아이디어 1건 제출", where: "1분", inapp: 1, tap: "App.go('ideas')", cta: "아이디어 쓰기" },
-  { id: "p7", title: "전시 QR 퀴즈", short: "QR 퀴즈", desc: "벽 QR 스캔 · 한 세트 완료", where: "약 10분", tap: "App.go('wq_list')", cta: "QR 퀴즈 풀기" },
+  { id: "p7", title: "전시 QR 퀴즈", short: "QR 퀴즈", desc: "벽 QR 스캔 · 한 세트 완료", where: "약 10분", tap: "App.go('exp')", cta: "QR 퀴즈 풀기" },   /* 정리 #5 퀴즈 화면 없음 · 옛 서버 표 항목만 남김 */
   /* v4.06 (260919 사용자 확정) 계단 B안 · 방화문 앞 QR 로 시작과 끝을 찍는다 · 당일 누적 10개 층이 되는 종료 스캔에서 적립 · 판정·적립은 서버(stair_scan)
      site: 담당자 적립 가능 (서버 stamp_grant 가 st 를 받는다) */
   { id: "st", title: "계단 이용", short: "계단", desc: "방화문 앞 QR · 시작과 끝에 찍기 · 한 개 층 이상", where: "", site: 1, tap: "stairOpen()", cta: "계단 안내" },
@@ -3049,32 +3044,6 @@ var DEFAULT_NOTICES = [
 /* A. 과제상담 예약 · 슬롯은 하드코딩 금지, 콘솔 설정값으로 생성 (v5 p23~25) */
 var RESV_CONF = { start: "09:30", end: "16:30", step: 30, lunch: "12:00", lunchEnd: "13:00" };
 /* v4.16 옛 상담 목업 8건(m1~m8) 삭제 · 기기에 저장된 상담 목록이 없으면 빈 배열이 기본값이다(서버 연결 시 resv 값으로 바뀐다) */
-/* B. DAP Wall QR 퀴즈 · 3세트 × 5문항, 정답은 전부 1F 벽 전시 안에 (v5 p19~20) */
-/* v3.69 부문 목록·부문 정답률 목업은 삭제 (참여자 화면·사이니지 어디에도 부문을 두지 않는다 · 서버 집계만 휴면으로 남는다) */
-
-var WALLQ_DEFAULT = [
-  { id: "wall1", name: "WALL 1", theme: "영업·보상 현장 AX 사례", qs: [
-    { q: "가입설계 비교 자동화 · 3시간 걸리던 일이 얼마나로 줄었을까요?", o: ["10분", "1시간", "30분", "그대로"], a: 0 },
-    { q: "전산심사 자동 판정 확대의 성과는?", o: ["심사 하루 → 즉시", "심사 일주일 → 하루", "심사 하루 → 반나절", "변화 없음"], a: 0 },
-    { q: "고객 성향 상담 대상 선별로 상담 성공률은 몇 배가 됐나요?", o: ["1.8배", "1.2배", "2.5배", "3배"], a: 0 },
-    { q: "지급 오류 사전 검증으로 오지급은 얼마나 줄었나요?", o: ["60% 감소", "20% 감소", "40% 감소", "90% 감소"], a: 0 },
-    { q: "영업 벽면의 슬로건 · \"○이 아니라, 데이터로 고객을 만납니다\"", o: ["감", "운", "말", "경험"], a: 0 }
-  ] },
-  { id: "wall2", name: "WALL 2", theme: "DAP ① · 장기보험 과제", qs: [
-    { q: "장기보험 관련 DAP 과제는 모두 몇 개일까요?", o: ["16개", "10개", "20개", "26개"], a: 0 },
-    { q: "그중 예측모델 과제는 몇 개?", o: ["12개", "5개", "8개", "16개"], a: 0 },
-    { q: "장기보험 DAP가 커버하는 구간은?", o: ["심사·계약·손사·계리 전 구간", "심사만", "계약·손사만", "계리만"], a: 0 },
-    { q: "DAP의 D는 무엇의 약자일까요?", o: ["Digital (디지털)", "Data (데이터)", "Deep (딥)", "Dream (드림)"], a: 0 },
-    { q: "다음 중 장기보험 DAP 과제가 아닌 것은?", o: ["보험사기 SNA 분석", "AI 심사 승인", "해지 예측", "재보험 자동화"], a: 0 }
-  ] },
-  { id: "wall3", name: "WALL 3", theme: "DAP ② + 회사 AX 로드맵", qs: [
-    { q: "장기보험 外 (자동차·CM·CCO·기업보험) DAP 과제는 몇 개?", o: ["10개", "16개", "5개", "20개"], a: 0 },
-    { q: "다음 중 장기보험 外 DAP 과제인 것은?", o: ["요율 시뮬레이션", "AI 심사 승인", "해지 예측", "재보험 자동화"], a: 0 },
-    { q: "회사 AX 로드맵 · 2026년에 열리는 것은?", o: ["사내 LLM·생성형 AI 오픈", "전사 1인 1 AI Agent", "AI 조직 신설", "전 시스템 교체"], a: 0 },
-    { q: "로드맵이 그리는 2028년의 모습은?", o: ["전사 1인 1 AI Agent", "사내 LLM 오픈", "종이 없는 사무실", "AI 자격증 의무화"], a: 0 },
-    { q: "AX Wave 별자리의 점 26개가 뜻하는 것은?", o: ["올해 DAP를 수행한 26명", "26개 부서", "창립 26주년", "26개 시스템"], a: 0 }
-  ] }
-];
 /* D. 사이니지 · AX Wave 26점 별자리 (실명 노출 동의 확정 전 마스킹) */
 var WAVE_NAMES = "김○석 이○지 박○현 정○원 최○민 한○별 서○영 문○정 장○우 박○주 김○학 서○웅 이○재 최○광 박○희 윤○호 신○아 강○준 조○연 임○빈 오○택 황○선 전○규 송○미 안○철 홍○란".split(" ");
 var WAVE_POS = [[50,10],[38,16],[62,15],[28,22],[72,21],[45,24],[57,28],[20,30],[80,29],[35,34],[65,36],[50,38],[12,38],[88,38],[25,43],[75,44],[42,46],[58,48],[30,50],[70,52],[18,54],[82,55],[48,55],[38,58],[62,59],[50,62]];
@@ -3643,14 +3612,14 @@ var STORE_DEVICE = ["vid", "a2hs", "fs", "t",
   "site_sound", "game_sound", "rain_sound", "jp_tut",
   "self_on", "self_key", "self_tok", "scan_spot", "adm_tab", "tyaw_tab", "tyaw_hide", "tyaw_oly_pg",
   "type_rank_*", "oly_tab", "oly_ev",
-  "notices", "notices_wipe1", "entry_pref", "entry_ask_day", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "wq_srv", "wq_v", "survey_agg", "photo_pub", "resv_conf", "crowd", "stv",
+  "notices", "notices_wipe1", "entry_pref", "entry_ask_day", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "survey_agg", "photo_pub", "resv_conf", "crowd", "stv",
   "art_demo_n", "ev_phase", "toff", "tour_inv",
   "push_ask", "push_first", "push_ask_ios"];   /* v5.46 tour_inv = 1층 둘러보기 초대 한 번(기기 기준) · v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) · v4.78 아이폰 탭 · 앱 속 브라우저 안내는 하루 한 번 */
 var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_role", "adm_tok", "adm_emp", "dept",
   "stamps", "pp_seen", "pp_base", "pp_glow3", "stamp_pend", "lg_try", "lgx_seen", "scan_q", "stair", "checkin", "queue", "photoq", "resv", "sess_my", "att_mine", "att_tm",
   "cchat", "cchat_pref", "cchat_att", "ideas", "idea_draft", "survey_draft", "survey_done", "survey_mine", "survey_force", "noti_seen",
   "raffle_seen", "raffle_opened", "raffle_nums", "roulette_used", "roulette_open", "fin",
-  "wave_extra", "wq_attempts", "test_mine", "type_nick", "type_nick_edit", "type_best", "mem_seen", "ox_seen",
+  "wave_extra", "test_mine", "type_nick", "type_nick_edit", "type_best", "mem_seen", "ox_seen",
   "pang_best", "jump_best", "gw_best", "gw_time_best", "tt_best", "pang_cleared", "jump_cleared", "gw_cleared", "type_cleared", "tetris_cleared", "ox_cleared",
   "oly2_best_*", "oly2_done_*", "oly_pend", "draw_in", "qz_run", "qz_last", "qz_best", "qz_kseen", "qz_pend", "gs_how",
   "push_me", "push_ep", "crowd_watch"];   /* v4.76 내 알림 설정 · 보낸 구독 주소 · 혼잡 풀리면 알림 */
@@ -4034,83 +4003,8 @@ function cchatModal() {
    조용히 로컬만 지우면 매칭 담당자는 그 자리를 계속 비워 두게 된다. */
 var CCHAT_CX_TS = 0;
 
-/* ── v10: DAP Wall QR 퀴즈 ── */
-var WQ = { set: null };
-/* v3.65 (사용자 확정 260918) 난이도 조정 · 벽 QR 을 찍어야 그 벽의 세트가 열리고, 한 세트만 끝내면 적립.
-   60점 커트라인·재응시·부문 경쟁은 폐기 · 점수 대신 맞힌 개수와 정답을 보여 준다.
-   QR 값: 앱 주소 뒤 #q=wall1 | wall2 | wall3 (인쇄용 QR 내용이 바뀐다 · 콘솔 인쇄 안내 참조) */
-/* v4.15 (사용자 확정 260922) 문항은 서버(설정 「벽퀴즈」 · 콘솔이 편집 · 당일 잠금) · sync 의 wqv(판 번호)가 바뀌면 wq_get 으로 받아 둔다.
-   서버 문항이 없거나 읽지 못하면 내장 문항(WALLQ_DEFAULT) · 서버에 없는 세트도 내장 문항으로 채운다 · 멈춘 세트(off)는 서버 값 */
-var WQ_PULL = { busy: false };
-function wqValid(sets) {   /* 서버 wqCheck_ 와 같은 규칙 */
-  if (!Array.isArray(sets) || !sets.length || sets.length > 3) return false;
-  return sets.every(function (s) {
-    return s && ["wall1", "wall2", "wall3"].indexOf(s.id) >= 0 && s.name && Array.isArray(s.qs) && s.qs.length >= 1 && s.qs.length <= 10 &&
-      s.qs.every(function (q) { return q && q.q && Array.isArray(q.o) && q.o.length >= 2 && q.o.length <= 5 && q.o.every(function (o) { return !!o; }) && q.a >= 0 && q.a < q.o.length && Math.floor(q.a) === q.a; });
-  });
-}
-function wqSrv() { var d = S.get("wq_srv", null); return d && wqValid(d.sets) ? d : null; }
-/* v4.84 (261001 사용자 확정 · 기획안 9장 · D-17) 전시 QR 퀴즈(옛 DAP Wall · p7)는 새 8종에 없다 · 화면 진입을 숨긴다(코드 보존) · 옛 서버(stv 없음)와 붙었을 때만 연다 */
-function wqOn() { return !stampV2(); }
-function wqSets() {
-  var d = wqSrv();
-  return WALLQ_DEFAULT.map(function (s) { var x = d ? d.sets.filter(function (y) { return y.id === s.id; })[0] : null; return x || s; });
-}
-function wqActive(id) { var d = wqSrv(); return !(d && (d.off || []).indexOf(id) >= 0); }
-function wqPull() {
-  if (!BE.on || WQ_PULL.busy) return;
-  WQ_PULL.busy = true;
-  beCall({ action: "wq_get" }, function (r) {
-    WQ_PULL.busy = false;
-    if (r && r.ok) { S.set("wq_srv", r.data && wqValid(r.data.sets) ? r.data : null); S.set("wq_v", r.v || 0); }
-  }, function () { WQ_PULL.busy = false; });
-}
-function wqAttempts(setId) { return S.get("wq_attempts", []).filter(function (a) { return !setId || a.set === setId; }); }
-function wqBest(setId) {
-  var best = null;
-  wqAttempts(setId).forEach(function (a) { if (!best || a.correct > best.correct) best = a; });
-  return best;
-}
+/* 공용 섞기(판 퀴즈 · O/X · 테트리스 가방) · 정리 #5(261005) 전시 QR 퀴즈(wq*)를 지우며 이 줄만 남겼다 */
 function shuf(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
-/* 목록에서 누르면 잠금 안내만 · 테스트·데모에서는 그냥 열린다 */
-function wqOpen(setId) {
-  if (!testMode()) { toast("벽의 QR을 스캔하면 열려요"); return; }
-  wqOpenQr(setId);
-}
-/* 벽 QR 이 부르는 입구 · 그 벽의 세트만 연다 */
-function wqOpenQr(setId) {
-  if (!wqStart(setId)) return;
-  App.go("wq_play");
-}
-function wqStart(setId) {
-  var def = wqSets().find(function (s) { return s.id === setId; });
-  if (!def) { toast("이 QR의 문제를 찾지 못했어요"); return false; }
-  if (!wqActive(setId)) { toast("이 세트는 지금 점검 중이에요."); return false; }
-  var qs = def.qs.map(function (q) {
-    var idx = q.o.map(function (_, i) { return i; });
-    shuf(idx);
-    return { q: q.q, o: idx.map(function (i) { return q.o[i]; }), a: idx.indexOf(q.a) };
-  });
-  shuf(qs);
-  WQ = { set: setId, name: def.name, theme: def.theme, qs: qs, picks: {}, submitted: false, result: null };
-  return true;
-}
-function wqPick(qi, oi) { if (WQ.submitted) return; WQ.picks[qi] = oi; App.render(); }
-function wqSubmit() {
-  if (!WQ.set || WQ.submitted) return;
-  var n = Object.keys(WQ.picks).length;
-  if (n < WQ.qs.length) { toast("아직 " + (WQ.qs.length - n) + "문항이 남았어요"); return; }
-  var correct = 0;
-  WQ.qs.forEach(function (q, i) { if (WQ.picks[i] === q.a) correct++; });
-  var at = S.get("wq_attempts", []);
-  at.push({ set: WQ.set, correct: correct, total: WQ.qs.length, ts: Date.now() });
-  S.set("wq_attempts", at);
-  WQ.submitted = true;
-  WQ.result = { correct: correct, total: WQ.qs.length };
-  if (!stampV2()) awardStamp("p7");   /* v4.83 새 8종에 전시 QR 퀴즈 없음(옛 서버일 때만) · v3.65 점수와 무관 · 한 세트를 끝내면 적립 (다른 세트는 추가 적립 없음 · awardStamp 가 중복을 거른다) · v3.97 첫 응시 여부가 아니라 스탬프 목록 기준 → 취소 뒤 다시 풀면 재적립 */
-  waveBump();
-  App.render();
-}
 
 /* ── v10: AX Now! 부스 연동 · 아이디어 채널 태그 · AX Wave ── */
 function waveBump() { S.set("wave_extra", S.get("wave_extra", 0) + 1); }
@@ -4721,7 +4615,7 @@ function mtDemoPaint() {
 
 /* ════════════════ 카운터 ════════════════ */
 var tick = 0;
-setInterval(function () { tick++; if (["home", "screen", "wall_quiz", "wall_live"].indexOf(App.current) >= 0) App.render(); }, 4000);
+setInterval(function () { tick++; if (["home", "screen", "wall_live"].indexOf(App.current) >= 0) App.render(); }, 4000);
 /* 백엔드 연결 · GAS_URL 이 채워져 있으면 서버 모드로 전환하고 월 집계를 주기적으로 받는다 */
 BE.on = !!GAS_URL;
 if (BE.on) pollNext(beJit());   /* v4.57 첫 sync 0~5초 뒤 · 이후 pollNext 가 30초씩(실패 시 늘림) · stats 60초 폴링은 없앴다(앱은 stats 에서 월 숫자만 쓰고 sync 가 같은 값을 준다 · 요청 3분의 1 절감) */
@@ -4738,7 +4632,7 @@ function counters() {
 }
 
 /* ════════════════ 라우터 (Lv1 탭 → Lv2 상세) ════════════════ */
-var SIGNAGE = ["screen", "screen_survey", "screen_words", "wall_quiz", "wall_wave", "wall_live", "wall_metowe", "wall_tv", "wall_type", "type_award"];
+var SIGNAGE = ["screen", "screen_survey", "screen_words", "wall_wave", "wall_live", "wall_metowe", "wall_tv", "wall_type", "type_award"];
 /* 설정 톱니 · 홈 화면 바로가기 · 관리자 모드 · 로그아웃(v4.71 글자 크기는 헤더 토글) */
 var GEAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
   '<circle cx="12" cy="12" r="3.1"/>' +
@@ -4774,7 +4668,7 @@ var App = {
     /* 나의 참여 · 내 일정 / 스탬프 / 내 보상 / 포토부스 대기 (M01) */
     passport: "my", guide_time: "my", rewards: "my", photoq: "my", prizes: "my",   /* v5.08 경품 포스터 · 뒤로 = 들어온 곳(홈 · 스탬프 탭 · 내 보상 · 모달) */
     /* 체험 · 현장(부스·QR 퀴즈) / 앱(미니게임·아이디어·설문) (E01) */
-    booth: "exp", wq_list: "exp", wq_play: "wq_list",
+    booth: "exp",
     /* v4.06 3단계 · 현장 안내 E02 · 스캔 Q02 · 결과 Q03 · 계단 화면 */
     exp_g: "exp", scan_q: "exp", scan_res: "exp", stair: "exp",
     games: "exp", quiz: "exp", ideas: "exp", survey: "exp", ideas_mine: "ideas",
@@ -4782,7 +4676,7 @@ var App = {
     /* 프로그램 · 신청 (2단계에서 재디자인) */
     dap: "guide", ev_cchat: "guide", sess_d: "guide", sess_cf: "sess_d", sess_ok: "guide", zone_d: "guide",   /* v4.93 구역 상세 · 뒤로 = 프로그램(상시 운영) */
     admin: "my", screen: "admin", screen_survey: "admin", screen_words: "admin", type_site: "admin", wall_type: "admin", type_award: "admin",
-    wall_quiz: "admin", wall_wave: "admin", wall_live: "admin", wall_metowe: "admin", wall_tv: "wall_metowe"
+    wall_wave: "admin", wall_live: "admin", wall_metowe: "admin", wall_tv: "wall_metowe"
   },
   TITLES: {
     home: "AX Festival", guide: "프로그램", exp: "스탬프", my: "나의 참여",
@@ -4792,10 +4686,10 @@ var App = {
     ideas: "아이디어 한 줄", ideas_mine: "내가 낸 아이디어", survey: "오늘 한 판 설문",
     sess_d: "프로그램", sess_cf: "신청 확인", sess_ok: "신청 완료",
     ev_cchat: "내 커피챗",
-    wq_list: "전시 QR 퀴즈", wq_play: "문제 풀이", floor1: "1F 부스", zone_d: "1F 구역",
+    floor1: "1F 부스", zone_d: "1F 구역",
     admin: "관리자 모드", screen: "송출용 화면", screen_survey: "", screen_words: "", game_tetris: "테트리스", type_site: "1F 현장 셀프 모드", wall_type: "", type_award: "", type_rank: "타자 순위",
     game_pang: "AX 팡", game_jump: "ME to WE 점프", game_ox: "AX 퀴즈", quiz_play: "퀴즈 풀기", oly_rank: "미니 게임 순위",
-    wall_quiz: "", wall_wave: "", wall_live: "", wall_metowe: "", wall_tv: ""
+    wall_wave: "", wall_live: "", wall_metowe: "", wall_tv: ""
   },
   /* 들어온 곳 기억 · 같은 화면을 여러 곳에서 연다(시간표 = 홈 · 나의 참여, 미니게임 = 체험 · 스탬프 카드) → 뒤로가기는 들어온 곳으로 */
   from: {},
@@ -4867,7 +4761,6 @@ var App = {
     if (v === "dap" || v === "ev_cchat") { PROG.sid = v === "dap" ? "dap" : "cchat"; v = "sess_d"; }
     /* v4.84 (261001 앱 개편 2묶음) 옛 스탬프 화면 = 스탬프 탭 · 전시 QR 퀴즈(DAP Wall)는 새 8종에서 숨김(옛 서버 stv 없음일 때만 연다) */
     if (v === "passport") { v = "exp"; this.from = {}; }
-    if ((v === "wq_list" || v === "wq_play") && !wqOn()) v = "exp";
     if (v === "photoq" && !PHOTO_Q) { PROG.zone = "event"; v = "zone_d"; }   /* v5.05 포토부스 대기 폐지 · 옛 알림 · 해시 · onclick 은 EVENT 구역 상세로 */
     /* v4.93 (261001 사용자 확정 · IA 검토 8장 A6) 옛 진입 별칭 · 라우트 id 는 그대로 받는다(해시 · 푸시 목적지 · 옛 onclick)
        floor1 = 프로그램 › 상시 운영 1F · my_sched · 내 일정(guide_time + SCHED.tab mine · mySched()) = 나의 참여 › 나의 일정 · 그 밖의 guide_time = 프로그램 › 시간표 */
@@ -4876,6 +4769,7 @@ var App = {
     if (v === "quiz_play" && !qzLive()) v = "quiz";   /* 옛 서버(판 퀴즈를 모름)면 유리다리 목록 */
     if (v === "game_word") v = "quiz";   /* 정리 #1(261005) 기억력 퀴즈를 지웠다 · 옛 링크는 AX 퀴즈로 */
     if (v === "game_type") v = "games";   /* 정리 #4(261005) 앱(폰) 단어 소나기를 지웠다 · 옛 링크는 미니 게임으로 */
+    if (v === "wq_list" || v === "wq_play") v = "exp";   /* 정리 #5(261005) 전시 QR 퀴즈를 지웠다 · 옛 링크는 스탬프 탭으로 */
     if (v === "floor1") { PROG.seg = "always"; PROG.scroll = 0; PROG.anchor = "zone1f"; v = "guide"; }
     if (v === "guide_time") { if (SCHED.tab === "mine") { SCHED.tab = "all"; PROG.anchor = "mysched"; v = "my"; } else { PROG.mode = "time"; PROG.tt = "all"; PROG.seg = "time"; v = "guide"; } }
     if (!Views[v]) v = "home";   /* 정리(261005) 지운 화면 키 · 모르는 키는 홈으로(예외 대신) */
@@ -7551,76 +7445,10 @@ var Views = {
   /* v4.93 구역 상세(6구역 한 템플릿) · 옛 1F 부스 화면(floor1)은 App.go 별칭으로 상시 운영 */
   zone_d: function () { return zoneDetailHtml(); },
 
-  /* ── v10 【신규 B】 DAP Wall QR 퀴즈 ── */
-  wq_list: function () {
-    var setCards = wqSets().map(function (s, i) {
-      var done = wqAttempts(s.id).length ? wqBest(s.id) : null;
-      var badge = !wqActive(s.id) ? '<span class="badge gray">점검 중</span>' :
-        done ? '<span class="badge mint">' + done.correct + " / " + done.total + " 정답</span>" : '<span class="badge gray">QR 필요</span>';
-      return '<div class="card mb8' + (done ? "" : " soft") + '" style="display:flex;align-items:center;gap:12px;cursor:pointer" onclick="wqOpen(\'' + s.id + '\')">' +
-        '<span class="disp" style="font-size:calc(15.5px * var(--fs));color:' + (done ? "var(--hi)" : "var(--faint)") + ';border:1px solid var(--line);border-radius:4px;padding:6px 8px">QR ' + (i + 1) + "</span>" +
-        '<div style="flex:1"><b style="font-size:calc(15.5px * var(--fs));color:' + (done ? "var(--hi)" : "var(--muted)") + '">' + esc(s.name) + '</b>' +
-        '<p class="muted" style="font-size:calc(13.5px * var(--fs));margin-top:2px">' + esc(s.theme) + "</p></div>" + badge + "</div>";
-    }).join("");
-    return (stampV2() ? "" : stampLineHtml("p7", '<p class="ax-meta">한 세트를 끝내면 스탬프</p>')) + setCards +   /* v4.70 오른쪽 위 도장 · v4.83 새 8종이면 도장 없음 */
-      '<div class="card soft mt16"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">참여 방법</b>' +
-      '<p class="muted" style="margin-top:6px;font-size:calc(14.5px * var(--fs));line-height:1.8">벽의 QR을 스캔하면 그 벽의 문제가 열려요 · 한 세트를 끝내면 적립</p>' +
-      '<p class="muted" style="margin-top:6px;font-size:calc(13.5px * var(--fs))">정답은 1F 벽 전시 안에 있어요</p>' +
-      '<button class="btn mint" style="margin-top:10px" onclick="qrScanOpen()">QR 스캔</button>' +
-      (testMode() ? '<p class="scap" style="margin-top:8px">테스트 · 위 세트를 눌러 QR 없이 열 수 있어요</p>' : "") + "</div>";
-  },
-
-  wq_play: function () {
-    if (!WQ.set) {
-      return '<div class="card soft" style="text-align:center"><p class="muted">벽의 QR을 스캔하면 문제가 열려요</p>' +
-        '<button class="btn mint" style="margin-top:12px" onclick="qrScanOpen()">QR 스캔</button></div>';
-    }
-    if (WQ.submitted) {
-      var r = WQ.result;
-      return '<div class="cho-box" style="padding:26px 18px"><p style="font-size:calc(12.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:rgba(255,255,255,0.55)">' + esc(WQ.name) + "</p>" +
-        '<p class="disp" style="font-size:44px;margin-top:6px;color:var(--mint)">' + r.correct + " / " + r.total + "</p>" +
-        '<p class="hint">맞힌 문항</p></div>' +
-        '<div class="card mb8" style="border-color:var(--mint-deep)"><p style="font-size:calc(14.5px * var(--fs));color:var(--tx)">「전시 QR 퀴즈」 스탬프 적립</p></div>' +
-        WQ.qs.map(function (q, qi) {
-          var ok = WQ.picks[qi] === q.a;
-          return '<div class="card mb8"><b style="font-size:calc(14.5px * var(--fs));color:var(--hi);line-height:1.5">Q' + (qi + 1) + ". " + esc(q.q) + "</b>" +
-            '<p class="muted" style="margin-top:6px;font-size:calc(13.5px * var(--fs))">정답 · ' + esc(q.o[q.a]) + "</p>" +
-            (ok ? "" : '<p class="muted" style="margin-top:2px;font-size:calc(13px * var(--fs));color:var(--faint)">내 답 · ' + esc(q.o[WQ.picks[qi]] || "-") + "</p>") + "</div>";
-        }).join("") +
-        '<button class="btn line" onclick="App.go(\'wq_list\')">세트 목록으로</button>';
-    }
-    var n = Object.keys(WQ.picks).length;
-    return '<div class="card soft mb12" style="padding:12px 14px"><div class="row" style="justify-content:space-between"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi)">' + esc(WQ.name) + " · " + WQ.qs.length + "문항</b></div>" +
-      '<p class="muted" style="font-size:calc(12.5px * var(--fs));margin-top:3px">정답은 1F 벽 전시 안에 있어요</p></div>' +
-      WQ.qs.map(function (q, qi) {
-        return '<div class="card mb8"><b style="font-size:calc(15.5px * var(--fs));color:var(--hi);line-height:1.5">Q' + (qi + 1) + ". " + esc(q.q) + "</b>" +
-          q.o.map(function (o, oi) {
-            return '<button class="wopt' + (WQ.picks[qi] === oi ? " on" : "") + '" onclick="wqPick(' + qi + "," + oi + ')">' + esc(o) + "</button>";
-          }).join("") + "</div>";
-      }).join("") +
-      '<button class="btn mint" style="padding:15px;margin-top:4px" onclick="wqSubmit()">제출 (' + n + "/" + WQ.qs.length + ")</button>";
-  },
-
   /* ── v10 【신규 D】 사이니지 3종 · 프로토타입 (정식판: 무인 10시간·오프라인 캐시·키오스크) ── */
   /* v3.69 (사용자 확정 260918) 1F Special Wall 에서 부문 순위·부문 이름 전면 삭제 · 경쟁 대신 참여 흐름을 보여 준다.
      숫자는 이미 도는 ME to WE 월 참여 카운트(mtPoints · wall_tv 와 같은 값)를 그대로 쓴다(새 집계 없음).
      서버 부문 집계(stats_ depts)는 남아 있지만 이 화면도, 앱도 쓰지 않는다(휴면). */
-  wall_quiz: function () {
-    var n = mtPoints(), pct = Math.min(100, Math.floor(n / MT_TOTAL * 100));
-    var recent = (S.get("ideas", []) || []).slice(-3).reverse();
-    return '<div class="sg"><div class="row" style="justify-content:space-between;padding-top:8px">' +
-      '<div><p class="sg-title">SPECIAL WALL <span style="color:var(--mint-deep)">LIVE</span></p><p class="sg-sub">오늘의 참여</p></div>' +
-      '<div class="row" style="gap:6px">' + tvBtns() + '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button></div></div>' +
-      '<div style="text-align:center;margin-top:26px"><p class="disp" style="font-size:78px;line-height:1;color:var(--mint)">' + n.toLocaleString() +
-      '<span style="font-size:26px;opacity:0.5"> / ' + MT_TOTAL.toLocaleString() + "</span></p>" +
-      '<p style="margin-top:8px;font-size:calc(16px * var(--fs));opacity:0.75">참여 한 건 = 별 하나</p></div>' +
-      '<div class="track" style="margin-top:18px"><div class="fill2" style="width:' + pct + '%"></div></div>' +
-      (recent.length ? '<div style="margin-top:22px">' + recent.map(function (x) {
-        return '<p style="margin-top:10px;font-size:calc(17px * var(--fs));line-height:1.5;opacity:0.9">' + esc(String(x.text || "").slice(0, 42)) + "</p>";
-      }).join("") + "</div>" : "") +
-      '<p style="text-align:center;font-size:calc(13.5px * var(--fs));opacity:0.55;margin-top:22px">벽의 QR을 스캔하면 그 벽의 문제가 열려요</p></div>';
-  },
-
   wall_wave: function () {
     var dots = WAVE_POS.map(function (p, i) {
       return '<span class="wdot" id="wd' + i + '" style="left:' + p[0] + "%;top:" + p[1] + '%"><span class="wnm">' + WAVE_NAMES[i] + "</span></span>";
@@ -8002,7 +7830,6 @@ function beSync(after) {
     setTimeout(ideaFlush, 400 + beJit());
     setTimeout(olyPendFlush, 600 + beJit());   /* v4.64 못 보낸 미니게임 기록 다시 보내기 */
     if (Array.isArray(res.resvTaken)) { RESV_SRV.taken = res.resvTaken.map(hhmm); RESV_SRV.miss = {}; }   /* v4.64 잡힌 상담 시간(새 서버만 보낸다) */   /* v4.15 서버에 아직 닿지 않은 내 아이디어 다시 보내기 */
-    if (res.wqv != null && res.wqv !== S.get("wq_v", 0)) { if (res.wqv) wqPull(); else { S.set("wq_srv", null); S.set("wq_v", 0); } }   /* v4.15 Wall QR 퀴즈 문항 판이 바뀌면 받아 온다 · 0 = 서버 문항 없음(내장 문항) */
     if (!BE.stats) BE.stats = {};
     BE.stats.wall = res.wall;
     BE.stats.sess = res.sess || null;
@@ -8892,8 +8719,7 @@ function qrRoute(raw, t) {
   if (mq) {
     var wid = mq[1].toLowerCase();
     if (!/^wall[1-3]$/.test(wid)) { srShow({ st: "fail", why: "nocode" }); return; }
-    if (stampV2()) { srShow({ st: "fail", why: "retired" }); return; }   /* v4.83 (261001) 전시 QR 퀴즈는 스탬프 8종에서 빠졌다 · 보관 QR 을 찍으면 안내만 */
-    wqOpenQr(wid); return;
+    srShow({ st: "fail", why: "retired" }); return;   /* v4.83 (261001) 전시 QR 퀴즈는 스탬프 8종에서 빠졌다 · 보관 QR 을 찍으면 안내만 · 정리 #5(261005) 퀴즈 화면을 지워 옛 서버에서도 안내만 */
   }
   var m = raw.match(/#s=([A-Za-z0-9]+)/i), code = m ? m[1] : (/^[A-Za-z0-9]{3,12}$/.test(raw) ? raw : "");
   if (!code) { srShow({ st: "fail", why: "nocode" }); return; }
@@ -9443,7 +9269,7 @@ var EXP_GUIDE = {
     meta: "09:30~16:30 · 1인 1회", cta: "내 QR 보여주기", act: "qrPanelOpen('mine')" },
   p7: { chip: "1F · 약 10분", h: "벽 QR 퀴즈를<br>풀어 보세요", d: "DAP Wall 벽의 QR을 스캔하면 그 벽의 5문항이 열려요. 한 세트를 끝내면 스탬프를 받아요.",
     steps: [["벽 QR 스캔", "WALL 1~3 중 한 곳"], ["5문항 풀기", "보기를 골라 제출해요"], ["적립 확인", "처음 끝낸 세트에서 스탬프"]],
-    meta: "", cta: "벽 QR 스캔하기", link: ["퀴즈 목록", "App.go('wq_list')"] },
+    meta: "", cta: "벽 QR 스캔하기" },
   st: { chip: "1F~18F · 비상계단 1·2", h: "계단으로<br>이동해 보세요", d: "출발 층과 도착 층 방화문 앞 QR을 찍어요. 한 개 층만 이동해도 스탬프를 받아요.",
     steps: [["출발 층 QR 스캔", "방화문 앞 QR"], ["계단으로 이동", STAIR_SAFE], ["도착 층 QR 스캔", "오르기·내려가기 모두 인정"]],
     meta: "", cta: "계단 QR 스캔하기" }
@@ -17094,12 +16920,11 @@ function lfBusy(btn, on, label) {
     S.set("ev_phase", "live");
     var nq = location.hash.match(/[&#]now=(\d{1,2}:\d{2})/);   /* v5.21 시험 시각 고정(hmNow · attNow) · 데모에서만 */
     if (nq) S.set("att_tm", nq[1]);
-    S.set("wq_attempts", [{ set: "wall1", correct: 4, total: 5, ts: Date.now() }]);
     /* v4.71 혼잡 제보 캡처 · &crowd=e(엘리베이터 혼잡) · l(로비 혼잡) · p(엘리베이터 예상) · s(계단 연결 ON) 글자를 섞어 쓴다 */
     var cq = location.hash.match(/crowd=([elps]+)/);
     if (cq) { var n0 = Date.now(), jm = { at: n0 - 180000, x: n0 + 720000 }; S.set("crowd", { l: /l/.test(cq[1]) ? jm : 0, e: /e/.test(cq[1]) ? jm : 0, p: /p/.test(cq[1]) ? "11:00-11:20" : "", w: /p/.test(cq[1]) ? "11:00-11:20" : "", st: /s/.test(cq[1]) ? 1 : 0 }); }
     var target = dm[1] || "home";
-    if (["admin", "screen", "screen_survey", "screen_words", "wall_quiz", "wall_wave", "wall_live", "wall_metowe", "wall_tv", "type_site", "type_award"].indexOf(target) >= 0) S.set("admin_authed", true);
+    if (["admin", "screen", "screen_survey", "screen_words", "wall_wave", "wall_live", "wall_metowe", "wall_tv", "type_site", "type_award"].indexOf(target) >= 0) S.set("admin_authed", true);
     splash.classList.add("gone");
     el("frame").classList.remove("splash-mode");
     el("app").hidden = false;
