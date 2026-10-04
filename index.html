@@ -63,7 +63,6 @@
      소리가 없으니 「탭하여 시작」 제스처 관문도 없다 · 첫 화면에서 바로 입장한다. */
   #splash { position: absolute; inset: 0; z-index: 100; background: var(--paper); display: flex; flex-direction: column; overflow: hidden; }
   #splash.gone { display: none; }
-  .kvfill { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   /* v5.10 점 글자(DotGlyph · design.md A-5 5-20) · 그림이라 큰글씨 배율을 받지 않는다(px) · 켜지는 움직임(.dgd)은 스탬프 팝 숫자 · 행운권 번호에만 · 동작 줄이기 = 켜진 모양 */
   .dg { display: block; flex: none; overflow: visible; }
   .dg .dgd { opacity: 0; transform-box: fill-box; transform-origin: center; animation: dgOn 0.24s ease-out forwards; }
@@ -390,10 +389,6 @@
   @keyframes sealGlow { 0% { opacity: 0; } 35% { opacity: 0.6; } 100% { opacity: 0; } }
   @keyframes inkSplash { 0% { transform: translate(var(--sx), var(--sy)) scale(1); opacity: 1; } 55% { opacity: 1; } 100% { transform: translate(var(--ex), var(--ey)) scale(0.45); opacity: 0; } }
   @keyframes cardShake { 0%, 100% { transform: translateX(0); } 12.5% { transform: translateX(5px); } 37.5% { transform: translateX(-5px); } 62.5% { transform: translateX(5px); } 87.5% { transform: translateX(-5px); } }
-  @keyframes cardShakeS { 0%, 100% { transform: translateX(0); } 12.5% { transform: translateX(2.5px); } 37.5% { transform: translateX(-2.5px); } 62.5% { transform: translateX(2.5px); } 87.5% { transform: translateX(-2.5px); } }
-  @keyframes dimPulse { 0% { opacity: 0; } 45% { opacity: 1; } 100% { opacity: 0; } }
-  @keyframes glowIn { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0.55; } }
-  @keyframes cntPop { 0% { transform: scale(1.3); opacity: 0; } 40% { opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
   @keyframes fadeUp { 0% { opacity: 0; transform: translateY(3px); } 100% { opacity: 1; transform: translateY(0); } }
   /* ── v3.49 완료 연출 = 화면 가운데 풀스크린 팝 → 제자리로 날아가 안착 (사용자 피드백 260917 · 카드 안에서만 터져서 안 찍힌다) ──
      팝 0.7초(딤 0.5 · 화면 폭 60% 도장 · v3.47 낙하·잉크 링·튐·진동 · 앱 흔들림) → 0.35초 멈춤 → 0.5초 곡선 비행(작아지며 제자리로) · 탭하면 바로 안착 */
@@ -424,8 +419,6 @@
   .scap { margin: 13px 2px 7px; font-size: calc(11.5px * var(--fs)); font-weight: 800; letter-spacing: 0.04em; color: var(--faint); }
   /* v3.19 테스트 버튼 · 회색 점선 = 운영(테스트) 요소임이 보이게, 위계 최하위 */
   .btn.test { margin-top: 8px; background: transparent; border: 1.5px dashed var(--dimln); color: var(--faint); font-size: calc(12.5px * var(--fs)); font-weight: 700; padding: 9px; }
-  @keyframes trailPunch { 0% { transform: scale(2.2) rotate(-9deg); opacity: 0; } 45% { opacity: 1; } 72% { transform: scale(0.94) rotate(1.5deg); } 100% { transform: scale(1) rotate(0deg); } }
-  @keyframes trailRing { 0% { transform: scale(0.55); opacity: 0.9; } 100% { transform: scale(2); opacity: 0; } }
   @keyframes trailPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,126,49,0.32); } 50% { box-shadow: 0 0 0 7px rgba(255,126,49,0); } }
   @keyframes coupGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,126,49,0); } 40% { box-shadow: 0 0 0 5px rgba(255,126,49,0.4); } }
   .coupon { border-radius: 20px; overflow: hidden; margin-bottom: 12px; border: 0; }
@@ -494,9 +487,7 @@
   /* 모달 등장 = 제자리에서 페이드 + 살짝 확대 (일반적인 다이얼로그). 위치를 옮기는 translate 는 쓰지 않는다 */
   @keyframes popIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
   @keyframes dimIn { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes blockPop { 0% { transform: scale(0.6); opacity: 0; } 70% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }
   @keyframes tileShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-3px); } }
-  @keyframes hintPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,126,49,0); } 50% { box-shadow: 0 0 0 4px rgba(255,126,49,0.35); } }
   /* v3.36b 타자 게임 · 저해상도 캔버스를 도트로 확대 */
   .rg-form { display: flex; gap: 8px; margin-top: 10px; }
   /* v3.36c 휴대폰 전체화면 플레이 */
@@ -720,30 +711,9 @@
   /* 글자를 키우면 탭이 폭을 넘기므로 가로 스크롤로 (숨기면 마지막 탭을 누를 수 없다) */
   /* 사이니지 공통 · 블랙 스테이지 위 (screen-mode 프레임) */
   .sg { color: #fff; padding: 6px 0 24px; }
-  .sg .sg-title { font-family: var(--disp); font-size: 22px; letter-spacing: 0.03em; }
-  .sg .sg-sub { font-size: calc(12.5px * var(--fs)); font-weight: 700; letter-spacing: 0.1em; opacity: 0.55; margin-top: 2px; }
 
   /* ME to WE 라이브 월 */
-  .mt-stage { position: relative; margin-top: 12px; border-radius: 20px; background: var(--ink); border: 0; overflow: hidden; height: 54vh; min-height: 330px; }
-  .mt-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .mt-flash { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,126,49,0.12); opacity: 0; transition: opacity 0.5s; pointer-events: none; font-family: var(--disp); font-size: 25px; color: var(--mint-deep); letter-spacing: 0.04em; text-align: center; line-height: 1.35; }
-  .mt-flash.on { opacity: 1; }
-  .mt-count { display: flex; align-items: baseline; gap: 8px; margin-top: 14px; }
-  .mt-count .disp { font-size: 34px; color: var(--mint-deep); }
-  .mt-count .tot { font-size: calc(16.5px * var(--fs)); opacity: 0.6; font-weight: 800; }
-  .mt-count .pct { margin-left: auto; font-size: 21px; font-weight: 900; color: #fff; }
   /* v3.35 월 · 설문 한 단어 (5명 이상) · 점 문법에 맞춘 얇은 오렌지 테두리 알약, 위 3개만 채움 */
-  .mt-words { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 10px; min-height: 0; }
-  .mt-words .lb { flex-basis: 100%; text-align: center; font-size: calc(11.5px * var(--fs)); font-weight: 800; letter-spacing: 0.08em; color: rgba(255,255,255,0.45); }
-  .mt-words .w { padding: 4px 11px; border-radius: 999px; border: 1px solid rgba(255,126,49,0.55); color: rgba(255,255,255,0.85); font-size: calc(13px * var(--fs)); font-weight: 700; animation: dimIn 0.6s ease-out; }
-  .mt-words .w.top { background: var(--mint); border-color: var(--mint); color: #fff; }
-  .mt-bar { position: relative; height: 10px; border-radius: 6px; background: rgba(255,255,255,0.08); margin-top: 8px; overflow: hidden; }
-  .mt-bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--mint-deep); border-radius: 6px; transition: width 0.8s; }
-  .mt-tick { margin-top: 12px; font-size: calc(14.5px * var(--fs)); font-weight: 700; opacity: 0.7; text-align: center; min-height: 18px; }
-  .mt-demo { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.14); }
-  .mt-demo .lb { flex-basis: 100%; text-align: center; font-size: calc(11.5px * var(--fs)); font-weight: 800; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); }
-  .mt-demo button { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.22); color: rgba(255,255,255,0.85); font-family: inherit; font-size: calc(14.5px * var(--fs)); font-weight: 800; padding: 8px 13px; border-radius: 999px; cursor: pointer; }
-  .mt-demo button.on { background: var(--mint-deep); border-color: var(--mint-deep); color: var(--ink); }
   /* 홈 LIVE 섹션 · 미니 월 · 이벤트 현황 · 랭킹 · 혼잡도 */
   /* ME to WE 월 카드 (이벤트 탭 전폭) */
   /* ME to WE 월 카드(.wallcard)는 v3.1 폐지 · 월은 1F 사이니지 전용 */
@@ -921,15 +891,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .dbar.t3 .pct { color: #FFE1BA; } .dbar.t3 .fill2 { background: rgba(255,158,27,0.5); }
   .dbar .meta { margin-top: 6px; font-size: calc(12.5px * var(--fs)); opacity: 0.6; font-weight: 700; }
   /* AX Wave (네이비 + 금색 별자리 · 기둥 실물 연출 재현) */
-  .wave-stage { position: relative; height: 445px; border-radius: 20px; overflow: hidden; background: var(--ink); border: 0; }
-  .wdot { position: absolute; width: 7px; height: 7px; margin: -3px 0 0 -3px; border-radius: 999px; background: rgba(255,150,62,0.18); transition: background 0.7s, box-shadow 0.7s; }
-  .wdot.lit { background: #FF963E; box-shadow: 0 0 14px 4px rgba(255,150,62,0.5); }
-  .wdot .wnm { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); font-size: calc(10px * var(--fs)); letter-spacing: 0.04em; color: rgba(255,150,62,0); white-space: nowrap; transition: color 0.7s; }
-  .wdot.lit .wnm { color: rgba(255,150,62,0.85); }
-  .wave-msg { position: absolute; left: 0; right: 0; top: 71%; transform: translateY(-50%); text-align: center; padding: 0 26px; font-size: calc(15.5px * var(--fs)); line-height: 1.75; color: #fff; font-weight: 700; }
-  .wave-count { position: absolute; left: 0; right: 0; bottom: 16px; text-align: center; }
-  .wave-count .n { font-family: var(--disp); font-weight: 800; font-size: 38px; color: var(--mint-deep); }
-  .wave-count .t { font-size: calc(12.5px * var(--fs)); opacity: 0.7; margin-top: 2px; color: #fff; }
 
   /* ── TV 전체화면 모드 (가로 대형 화면 · 프레임 448px 해제, 좌 월 / 우 정보) ── */
   #frame.tv-mode { max-width: none; width: 100vw; height: 100dvh; min-height: 0; overflow: hidden; box-shadow: none; background: var(--ink); }
@@ -940,28 +901,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #frame.tv-full.tv-h:not(.tv-mode) #view { max-width: 1500px; zoom: 1.3; }
   #frame.tv-full.tv-v:not(.tv-mode) #view { max-width: 700px; zoom: 1.12; }   /* 260924 이미 풀블리드(tv-mode)인 화면(1F TV 현황판 등)은 고정 배율 대신 뷰포트 비례 CSS를 그대로 쓴다 */
   .tv { position: relative; width: 100vw; height: 100dvh; display: grid; grid-template-columns: 1fr 27vw; gap: 0; background: var(--ink); color: #fff; }
-  .tv .tv-stage { position: relative; margin: 0; border: 0; border-radius: 0; height: 100dvh; min-height: 0; }
-  .tv .tv-side { display: flex; flex-direction: column; justify-content: center; gap: 2.2vh; padding: 4vh 3vw; background: rgba(0,0,0,0.82); border-left: 1px solid rgba(255,255,255,0.1); }
-  .tv .tv-head .t { font-family: var(--disp); font-size: 2.6vw; letter-spacing: 0.02em; line-height: 1.15; }
-  .tv .tv-head .s { margin-top: 0.9vh; font-size: 0.95vw; font-weight: 700; letter-spacing: 0.06em; color: rgba(255,255,255,0.6); }
-  .tv .tv-n { font-family: var(--disp); font-size: 6.4vw; line-height: 1; color: var(--mint-deep); }
-  .tv .tv-n small { font-size: 1.5vw; color: rgba(255,255,255,0.55); margin-left: 0.6vw; }
-  .tv .tv-pct { font-family: var(--disp); font-size: 2.4vw; color: #fff; }
-  .tv .tv-bar { height: 1.4vh; min-height: 8px; border-radius: 99px; background: rgba(255,255,255,0.1); overflow: hidden; }
-  .tv .tv-bar i { display: block; height: 100%; border-radius: 99px; background: var(--mint-deep); transition: width 0.8s; }
-  .tv .tv-tick { font-size: 1.05vw; font-weight: 700; color: rgba(255,255,255,0.75); min-height: 1.4vw; }
-  .tv .tv-flash { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,126,49,0.12); opacity: 0; transition: opacity 0.5s; pointer-events: none; font-family: var(--disp); font-size: 4vw; color: var(--mint-deep); letter-spacing: 0.03em; text-align: center; line-height: 1.3; }
-  .tv .tv-flash.on { opacity: 1; }
-  .tv .tv-exit { position: absolute; top: 2vh; left: 1.6vw; z-index: 5; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.28); color: #fff; font-family: inherit; font-size: 0.95vw; font-weight: 800; padding: 0.9vh 1.1vw; border-radius: 99px; cursor: pointer; opacity: 0.22; transition: opacity 0.25s; }
-  .tv .tv-exit:hover, .tv .tv-exit:focus-visible { opacity: 1; }
   /* 세로 화면에서 전체화면을 켠 경우 · 위 월 / 아래 정보로 자동 전환 */
   @media (max-aspect-ratio: 1/1) {
     .tv { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
-    .tv .tv-stage { height: auto; }
-    .tv .tv-side { border-left: 0; border-top: 1px solid rgba(255,255,255,0.1); padding: 3vh 6vw; gap: 1.6vh; }
-    .tv .tv-head .t { font-size: 6vw; } .tv .tv-head .s { font-size: 2.6vw; }
-    .tv .tv-n { font-size: 14vw; } .tv .tv-n small { font-size: 4vw; } .tv .tv-pct { font-size: 6vw; }
-    .tv .tv-tick { font-size: 2.6vw; text-align: center; } .tv .tv-exit { font-size: 2.6vw; padding: 1vh 3vw; }
   }
 
   /* 송출 화면 */
@@ -3044,21 +2986,6 @@ var DEFAULT_NOTICES = [
 /* A. 과제상담 예약 · 슬롯은 하드코딩 금지, 콘솔 설정값으로 생성 (v5 p23~25) */
 var RESV_CONF = { start: "09:30", end: "16:30", step: 30, lunch: "12:00", lunchEnd: "13:00" };
 /* v4.16 옛 상담 목업 8건(m1~m8) 삭제 · 기기에 저장된 상담 목록이 없으면 빈 배열이 기본값이다(서버 연결 시 resv 값으로 바뀐다) */
-/* D. 사이니지 · AX Wave 26점 별자리 (실명 노출 동의 확정 전 마스킹) */
-var WAVE_NAMES = "김○석 이○지 박○현 정○원 최○민 한○별 서○영 문○정 장○우 박○주 김○학 서○웅 이○재 최○광 박○희 윤○호 신○아 강○준 조○연 임○빈 오○택 황○선 전○규 송○미 안○철 홍○란".split(" ");
-var WAVE_POS = [[50,10],[38,16],[62,15],[28,22],[72,21],[45,24],[57,28],[20,30],[80,29],[35,34],[65,36],[50,38],[12,38],[88,38],[25,43],[75,44],[42,46],[58,48],[30,50],[70,52],[18,54],[82,55],[48,55],[38,58],[62,59],[50,62]];
-var WAVE_LINES = [[0,2],[2,6],[6,11],[11,17],[17,22],[22,25],[0,1],[1,5],[5,11],[3,9],[9,14],[4,10],[10,15]];
-var WAVE_MSGS = [
-  "여러분이 만든 26개의 작은 변화가\n오늘 우리 회사의 미래를 바꾸고 있습니다.\n고생하셨습니다",
-  "지나가는 발걸음 하나하나가\n26명의 도전에 보내는 박수입니다",
-  "ME to WE :\n나의 경험을 우리의 가능성으로"
-];
-var MOCK_FEED = [
-  { text: "보상 접수 메일, 요약해서 시스템에 자동 입력되면 좋겠어요", tag: "보상" },
-  { text: "지점 방문 일지, 음성으로 말하면 자동으로 정리됐으면", tag: "영업" },
-  { text: "캠페인 문구 A/B 초안을 AI가 먼저 만들어주면 좋겠다", tag: "마케팅" },
-  { text: "월마감 리포트 초안 자동 생성 · 숫자 검증만 사람이", tag: "본사·통계" }
-];
 
 /* ════════════════ 스토어 (메모리 · 비영속 테스트) ════════════════ */
 /* ════════════════ 백엔드 (Google Apps Script + Google Sheets) ════════════════
@@ -3267,7 +3194,6 @@ function bePush(kind, val, once, onOk) {
       if (res && res.ok && res.wall != null) {
         if (!BE.stats) BE.stats = {};
         BE.stats.wall = res.wall;
-        if (el("mtCv")) mtSync();
       }
     });
 }
@@ -4108,464 +4034,10 @@ function boothStamp() {
 /* v3.64 (사용자 확정 260918) AX Now! 부스 화면의 30초 피드백 · 내 질문 · 시연 신청 블록 삭제 · 관련 함수(fbPick·boothFeedback·boothQuestion·demoRequest)와 로컬 저장(booth_fb·demo_reqs)도 함께 제거.
    서버 액션·시트는 그대로 둔다(운영 데이터 삭제 금지). */
 
-/* ── AX Wave 사이니지 엔진 · 센서 미확정: 자동 순환 + 앱 이벤트 가산(기획서 v2 §5-2 대안) ── */
-var WV = { timer: null, lit: 0, msg: 0, base: 0 };
-function wvStop() { if (WV.timer) { clearInterval(WV.timer); WV.timer = null; } }
-function wvStart() {
-  wvStop();
-  WV.lit = 0; WV.msg = 0;
-  WV.base = FESTIVAL.mockWave + S.get("wave_extra", 0);
-  WV.timer = setInterval(wvTick, 650);
-  wvTick();
-}
-function wvTick() {
-  var stage = el("waveStage");
-  if (!stage) { wvStop(); return; }
-  if (WV.lit <= WAVE_NAMES.length) {
-    for (var i = 0; i < WAVE_NAMES.length; i++) {
-      var d = el("wd" + i);
-      if (d) d.classList.toggle("lit", i < WV.lit);
-    }
-    WV.lit++;
-  } else {
-    WV.lit = 0;
-    WV.msg = (WV.msg + 1) % WAVE_MSGS.length;
-    var m = el("waveMsg");
-    if (m) m.innerHTML = esc(WAVE_MSGS[WV.msg]).split("\n").join("<br>");
-  }
-  if (Math.random() < 0.4) WV.base++;
-  var c = el("waveN");
-  if (c) c.textContent = WV.base.toLocaleString();
-}
 
-/* ── ME to WE 라이브 월 (wall_metowe) · 유효 참여 1건 = 점 1개, 2,026점 = WE 완성 ── */
-var MT_TOTAL = 2026;
-/* 모션 파라미터 · 산출 근거는 `ME to WE 월/260823_월_모션디자인_설계서.md`
-   ① 평시(change blind): 브리딩·성운 표류·시차 잔별·배경 유성·빛 스윕 · 전부 12초보다 느리게
-   ② 이벤트(make aware): 안착 순간 급격한 온셋 + 파문. 개별 연출은 분당 10회 상한, 초과분은 군집
-   ③ 종일 점등: 캔버스 오빗 ±4px/8분 (제조사 Pixel Orbiting의 소프트웨어 구현) */
-var MT_CFG = { gapMs: 6000, batchAt: 8, breathe: 0.07, breatheSec: 5, orbitSec: 480, bands: 14 };
-var MT = {
-  raf: null, timer: null, pts: [], order: [], lit: null, birth: null, ptr: 0, litN: 0,
-  auto: 0, fly: [], shocks: [], amb: [], spr: null, nebP: null, nebL: null,
-  mil: -1, r: 2, tickI: 0, demo: null, q: 0, T: 0, lastTs: 0, lastSpawn: -99999, autoT: 0,
-  sweep: { t: -1, next: 9000, dir: 1 }, bgm: { t: -1, next: 7000 },
-  seed: 20261026, stack: false, g: 4, bw: 0, bh: 0, lastLand: -999
-};
-/* 결정적 난수 · 같은 화면을 다시 열어도 같은 흐름 (Math.random 금지) */
-function mtRnd() { MT.seed = (MT.seed * 1103515245 + 12345) & 0x7fffffff; return MT.seed / 0x7fffffff; }
-function mtHash(i) { return ((i * 2654435761) >>> 0); }
-function mtPoints() {
-  if (MT.demo != null) return Math.round(MT_TOTAL * MT.demo / 100);
-  /* 시연 빌드: 50% 시드(mockWe) 위에 서버 라이브 증가분을 얹는다 · 본행사 전 mockWe=0으로 (260828) */
-  if (BE.on && BE.stats && BE.stats.wall != null) return Math.min(MT_TOTAL, FESTIVAL.mockWe + BE.stats.wall);
-  return Math.min(MT_TOTAL, FESTIVAL.mockWe + S.get("wave_extra", 0) + MT.auto);
-}
-function mtBuild(cv) {
-  var w = cv.width, h = cv.height;
-  var off = document.createElement("canvas"); off.width = w; off.height = h;
-  var ox = off.getContext("2d", { willReadFrequently: true });
-  ox.fillStyle = "#fff"; ox.textAlign = "center"; ox.textBaseline = "middle";
-  var F = "px 'Arial Black',Arial,sans-serif";
-  try { ox.letterSpacing = Math.round(w * 0.012) + "px"; } catch (e) {}
-  function fit(txt, maxW, size) {
-    ox.font = "900 " + size + F;
-    while (ox.measureText(txt).width > maxW && size > 12) { size -= 4; ox.font = "900 " + size + F; }
-    return size;
-  }
-  /* 조판 분기 · 한 줄("ME to WE")은 폭에 갇혀 세로가 비므로 **가로가 충분히 길 때만** 쓰고,
-     그보다 정사각에 가까우면 3단 스택으로 화면을 채운다 (TV 전체화면 = 스테이지 ~1.3) */
-  var stack = h > w * 0.69;
-  if (stack) {
-    var s1 = Math.min(fit("WE", w * 0.8, Math.floor(h * 0.34)), Math.floor(h * 0.34));
-    ox.font = "900 " + s1 + F; ox.fillText("ME", w / 2, h * 0.2);
-    ox.font = "900 " + Math.floor(s1 * 0.42) + F; ox.fillText("to", w / 2, h * 0.47);
-    ox.font = "900 " + s1 + F; ox.fillText("WE", w / 2, h * 0.76);
-  } else {
-    var s0 = fit("ME to WE", w * 0.94, Math.floor(h * 0.72));
-    ox.font = "900 " + s0 + F; ox.fillText("ME to WE", w / 2, h * 0.52);
-  }
-  var img = ox.getImageData(0, 0, w, h).data;
-  function scan(g) {
-    var out = [];
-    for (var y = Math.floor(g / 2); y < h; y += g) for (var x = Math.floor(g / 2); x < w; x += g) {
-      if (img[(y * w + x) * 4 + 3] > 128) out.push([x, y]);
-    }
-    return out;
-  }
-  /* 셀 크기 이진 탐색 · 후보 수가 MT_TOTAL을 살짝 넘는 최대 셀 (글자 형태 보존) */
-  var lo = 2, hi = 48, g = 4;
-  while (lo <= hi) {
-    var mid = (lo + hi) >> 1;
-    if (scan(mid).length >= MT_TOTAL) { g = mid; lo = mid + 1; } else hi = mid - 1;
-  }
-  var cand = scan(g);
-  var pts;
-  if (cand.length <= MT_TOTAL) pts = cand;
-  else {
-    /* 초과분은 결정적 셔플로 균일하게 덜어냄 (씨닝 모레이 방지) */
-    var pick = []; for (var i = 0; i < cand.length; i++) pick.push(i);
-    pick.sort(function (a, b) { return ((a * 2654435761) % cand.length) - ((b * 2654435761) % cand.length); });
-    pts = pick.slice(0, MT_TOTAL).map(function (i2) { return cand[i2]; });
-  }
-  MT.pts = pts; MT.stack = stack; MT.g = g;
-  MT.r = Math.max(1.8, g * 0.4);
-  mtOrder();
-}
-/* 채움 순서 = 랜덤 산포 · 가로 밴드 14개를 위·아래로 크게 오가며 라운드로빈으로 하나씩,
-   밴드 안은 결정적 셔플. 연속 점등이 화면 위아래를 무작위로 오가면서도 워드 전체가 고르게 차오른다 */
-function mtOrder() {
-  var pts = MT.pts, n = pts.length, B = MT_CFG.bands, i, b;
-  var y0 = 1e9, y1 = -1e9;
-  for (i = 0; i < n; i++) { if (pts[i][1] < y0) y0 = pts[i][1]; if (pts[i][1] > y1) y1 = pts[i][1]; }
-  y1 += 1;
-  var band = []; for (b = 0; b < B; b++) band.push([]);
-  for (i = 0; i < n; i++) {
-    b = Math.min(B - 1, Math.floor((pts[i][1] - y0) / (y1 - y0) * B));
-    band[b].push(i);
-  }
-  for (b = 0; b < B; b++) band[b].sort(function (a, c) { return (mtHash(a) % 9973) - (mtHash(c) % 9973); });
-  /* 밴드 방문 순서를 위끝↔아래끝 교차로 배열하고, 라운드마다 회전시켜 규칙성을 지운다 */
-  var seq = [], lo = 0, hi = B - 1;
-  while (lo <= hi) { seq.push(lo++); if (lo <= hi) seq.push(hi--); }
-  var mid = Math.floor(B / 2), ord = [], rot = 0, guard = 0;
-  while (ord.length < n && guard++ < n * 3) {
-    for (var s = 0; s < seq.length; s++) {
-      var bi = seq[(s + rot) % seq.length];
-      if (band[bi].length) ord.push(band[bi].pop());
-      /* 중앙 밴드는 점 밀도가 높아 한 번 더 · "to" 줄만 끝까지 남는 것을 막는다 */
-      if (bi === mid && band[bi].length) ord.push(band[bi].pop());
-    }
-    rot += 3;
-  }
-  MT.order = ord;
-  MT.lit = new Uint8Array(n);
-  MT.birth = new Float32Array(n);
-  for (i = 0; i < n; i++) MT.birth[i] = -999;
-  MT.ptr = 0; MT.litN = 0; MT.q = 0; MT.fly = []; MT.shocks = [];
-}
-/* 진행 상태를 즉시 target으로 스냅 (하강·초기화용) */
-function mtSnap(target) {
-  var n = MT.pts.length;
-  target = Math.max(0, Math.min(n, target));
-  for (var i = 0; i < n; i++) { MT.lit[i] = i < target ? 1 : 0; MT.birth[i] = -999; }
-  MT.ptr = target; MT.litN = target; MT.q = 0; MT.fly = []; MT.shocks = [];
-}
-function mtMakeAssets(W, H) {
-  var amb = [];
-  for (var i = 0; i < 110; i++) {
-    amb.push({ x: (i * 7919) % W, y: (i * 104729) % H, ph: (i * 31) % 100,
-               lay: i % 3, sz: 0.9 + ((i * 17) % 10) / 9 });
-  }
-  MT.amb = amb;
-  var s = document.createElement("canvas"); s.width = 64; s.height = 64;
-  var g = s.getContext("2d");
-  var gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-  gr.addColorStop(0, "rgba(255,244,236,1)");
-  gr.addColorStop(0.22, "rgba(255,126,49,0.95)");
-  gr.addColorStop(0.55, "rgba(255,126,49,0.28)");
-  gr.addColorStop(1, "rgba(255,126,49,0)");
-  g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
-  MT.spr = s;
-}
-/* ── 이벤트: 새 별 = 유성 발사 ─────────────────────────────
-   개별 연출 상한 분당 10회. 2,026건÷8시간 = 평균 14초에 1건이라 전부 강조하면 오전 중에
-   둔감해진다. 대기열이 쌓이면 굵은 군집 유성 하나로 묶어 한 번에 터뜨린다. */
-function mtSpawn(now) {
-  if (MT.fly.length >= 3 || MT.q <= 0 || MT.ptr >= MT.pts.length) return;
-  var gap = MT.q >= MT_CFG.batchAt ? MT_CFG.gapMs * 0.45 : MT_CFG.gapMs;
-  if (now - MT.lastSpawn < gap) return;
-  var k = MT.q >= MT_CFG.batchAt ? Math.min(14, Math.ceil(MT.q / 3)) : 1;
-  k = Math.min(k, MT.pts.length - MT.ptr, MT.q);
-  var idxs = [], ois = [];
-  for (var i = 0; i < k; i++) { ois.push(MT.ptr + i); idxs.push(MT.order[MT.ptr + i]); }
-  MT.ptr += k; MT.q -= k;
-  var tp = MT.pts[idxs[0]];
-  var edge = Math.floor(mtRnd() * 4), x0, y0;
-  if (edge === 0) { x0 = -60; y0 = mtRnd() * MT.bh; }
-  else if (edge === 1) { x0 = MT.bw + 60; y0 = mtRnd() * MT.bh; }
-  else if (edge === 2) { x0 = mtRnd() * MT.bw; y0 = -60; }
-  else { x0 = mtRnd() * MT.bw; y0 = MT.bh + 60; }
-  MT.fly.push({ idxs: idxs, ois: ois, x0: x0, y0: y0, tx: tp[0], ty: tp[1], t: 0,
-                dur: 1.05 + mtRnd() * 0.35, k: k });
-  MT.lastSpawn = now;
-}
-function mtLand(f) {
-  for (var i = 0; i < f.ois.length; i++) { MT.lit[f.ois[i]] = 1; MT.birth[f.ois[i]] = MT.T; }
-  MT.litN += f.k;
-  MT.shocks.push({ x: f.tx, y: f.ty, t: 0, mag: Math.min(2.2, 0.9 + f.k * 0.16) });
-  if (f.k > 1) for (var j = 1; j < f.idxs.length; j++) {
-    var p = MT.pts[f.idxs[j]];
-    MT.shocks.push({ x: p[0], y: p[1], t: -0.12, mag: 0.55 });
-  }
-  MT.lastLand = MT.T;
-  mtTickMsg(f.k);
-  mtSync();
-}
-/* ── 상태 갱신 (고정 dt) ── */
-function mtStep(dt) {
-  MT.T += dt;
-  var now = MT.T * 1000;
-  /* 목표치 추종 · 상승은 대기열에 쌓아 유성으로, 하강(관리자 미리보기)은 즉시 스냅 */
-  var target = Math.round(mtPoints() / MT_TOTAL * MT.pts.length);
-  if (target < MT.ptr) mtSnap(target);
-  else MT.q = Math.max(0, target - MT.ptr);
-  mtSpawn(now);
-  /* 빛 스윕 · 25~40초마다 대각선 빛의 파도가 글자를 훑는다 (상시 "살아있음"의 핵심) */
-  if (MT.sweep.t < 0) {
-    MT.sweep.next -= dt * 1000;
-    if (MT.sweep.next <= 0) { MT.sweep.t = 0; MT.sweep.dir = mtRnd() < 0.5 ? 1 : -1; }
-  } else {
-    MT.sweep.t += dt * 0.27;
-    if (MT.sweep.t > 1.5) { MT.sweep.t = -1; MT.sweep.next = 25000 + mtRnd() * 15000; }
-  }
-  /* 배경 유성 · 참여와 무관한 자연 유성 (흰빛·가늘게) */
-  if (MT.bgm.t < 0) {
-    MT.bgm.next -= dt * 1000;
-    if (MT.bgm.next <= 0) {
-      MT.bgm.t = 0;
-      MT.bgm.x = mtRnd() * MT.bw; MT.bgm.y = mtRnd() * MT.bh * 0.5;
-      MT.bgm.vx = -0.09 * MT.bw - mtRnd() * 0.08 * MT.bw;
-      MT.bgm.vy = 0.06 * MT.bh + mtRnd() * 0.05 * MT.bh;
-    }
-  } else {
-    MT.bgm.t += dt * 0.7;
-    if (MT.bgm.t > 1) { MT.bgm.t = -1; MT.bgm.next = 12000 + mtRnd() * 10000; }
-  }
-  for (var f = MT.fly.length - 1; f >= 0; f--) {
-    var d = MT.fly[f];
-    d.t += dt / d.dur;
-    if (d.t >= 1 && !d.done) { d.done = 1; mtLand(d); }
-    if (d.t >= 1.12) MT.fly.splice(f, 1);
-  }
-  for (var s = MT.shocks.length - 1; s >= 0; s--) {
-    MT.shocks[s].t += dt;
-    if (MT.shocks[s].t > 1) MT.shocks.splice(s, 1);
-  }
-}
-/* ── 렌더 (상태를 바꾸지 않는다) ── */
-function mtDraw() {
-  var cv = el("mtCv");
-  if (!cv || !MT.pts.length) { mtStop(); return; }
-  var cx = cv.getContext("2d");
-  var T = MT.T, now = T * 1000;
-  cx.setTransform(1, 0, 0, 1, 0, 0);
-  cx.clearRect(0, 0, cv.width, cv.height);
-  /* (a) 번인 오빗 · 구도 전체를 8분 주기로 아주 느리게 표류. 12초보다 느린 변화는
-     지각되지 않으므로 시각적 대가 없이 얻는 패널 보험 */
-  var ORB = Math.max(1.5, Math.min(4, MT.bw * 0.004));
-  var sx = Math.sin(T / MT_CFG.orbitSec * 6.2832) * ORB;
-  var sy = Math.cos(T / (MT_CFG.orbitSec * 0.83) * 6.2832) * ORB;
-  cx.translate(sx, sy);
-  /* 전역 브리딩 · 0.20Hz(5초), ±7%. 안정 시 호흡수 12회/분 */
-  var breathe = 1 + MT_CFG.breathe * Math.sin(T / MT_CFG.breatheSec * 6.2832);
-  /* (b) 도트 격자 · 블랙 스테이지의 바탕 (design.md v29 §2). 격자는 움직이지 않는다 · 오빗만 함께 탄다 */
-  var GS = Math.max(18, Math.round(MT.bw / 40));
-  cx.fillStyle = "rgba(255,255,255,0.10)";
-  for (var gy = GS / 2; gy < MT.bh; gy += GS) for (var gx = GS / 2; gx < MT.bw; gx += GS) cx.fillRect(gx - 0.8, gy - 0.8, 1.6, 1.6);
-  /* (c) 배경 잔별 · 3레이어 시차 표류 + 개별 트윙클 */
-  for (var a = 0; a < MT.amb.length; a++) {
-    var s0 = MT.amb[a];
-    var ax = (s0.x + T * (2 + s0.lay * 2.4)) % (MT.bw + 40) - 20;
-    var ay = s0.y + Math.sin(T * 0.05 + s0.ph) * 4;
-    var tw0 = 0.09 + 0.11 * Math.sin(now * 0.00055 + s0.ph);
-    cx.globalAlpha = Math.max(0.03, tw0) * (0.6 + s0.lay * 0.2);
-    cx.fillStyle = "#fff";
-    cx.fillRect(ax, ay, s0.sz * 1.4, s0.sz * 1.4);
-  }
-  cx.globalAlpha = 1;
-  var swPos = MT.sweep.t >= 0
-    ? (MT.sweep.dir > 0 ? -0.25 + MT.sweep.t * 1.5 : 1.25 - MT.sweep.t * 1.5) : -9;
-  /* (d) 미점등 고스트 · 0%부터 워드 실루엣을 유지하되 휘도 8.5%.
-     더 밝으면 진행이 안 읽히고, 더 어두우면 오전 내내 글자가 안 읽힌다 */
-  cx.fillStyle = "rgba(255,255,255," + (0.085 + 0.02 * Math.sin(T * 0.22)).toFixed(3) + ")";
-  for (var i = 0; i < MT.order.length; i++) {
-    if (MT.lit[i]) continue;
-    var gp = MT.pts[MT.order[i]];
-    cx.fillRect(gp[0] - MT.r * 0.5, gp[1] - MT.r * 0.5, MT.r, MT.r);
-  }
-  /* (e) 점등된 별 */
-  var base = MT.r * 3.4;
-  var pct100 = MT.litN >= MT.pts.length;
-  var pulse = pct100 ? (0.92 + 0.08 * Math.sin(now * 0.0018)) : 1;
-  var inFly = {};
-  for (var q = 0; q < MT.fly.length; q++)
-    for (var qq = 0; qq < MT.fly[q].idxs.length; qq++) inFly[MT.fly[q].idxs[qq]] = 1;
-  for (var j = 0; j < MT.order.length; j++) {
-    if (!MT.lit[j]) continue;
-    var di = MT.order[j];
-    if (inFly[di]) continue;
-    var p = MT.pts[di], hs = mtHash(di);
-    var ph = (hs % 628) / 100, vr = 0.8 + ((hs >> 8) % 100) / 250;
-    /* 트윙클 진폭 ±15%, 주기 2.5~6초를 개체마다 흩어 전체 동기 깜빡임을 막는다 */
-    var per = 2.5 + ((hs >> 16) % 35) / 10;
-    var tw = (0.85 + 0.15 * Math.sin(T / per * 6.2832 + ph)) * breathe;
-    /* 미세 부유 ±0.9px · 별무리 질감을 만들되 글자 형태는 유지 */
-    var wx = p[0] + Math.sin(T * 0.42 + ph) * 0.9;
-    var wy = p[1] + Math.cos(T * 0.35 + ph * 1.7) * 0.9;
-    var boost = 0;
-    if (swPos > -1) {
-      var dd = ((wx / MT.bw) * 0.6 + (wy / MT.bh) * 0.4 - swPos) / 0.11;
-      boost = Math.exp(-dd * dd) * 0.75;
-    }
-    for (var sk = 0; sk < MT.shocks.length; sk++) {
-      var sh = MT.shocks[sk];
-      if (sh.t < 0 || sh.t > 1) continue;
-      var rr = sh.t * MT.r * 26 * sh.mag;
-      var dx = wx - sh.x, dy = wy - sh.y;
-      var bandd = Math.abs(Math.sqrt(dx * dx + dy * dy) - rr);
-      if (bandd < MT.r * 7) boost += (1 - bandd / (MT.r * 7)) * (1 - sh.t) * 0.9 * sh.mag;
-    }
-    /* 방금 켜진 별 · 0.15초에 120%로 튀었다가 0.8초에 걸쳐 정상 밝기로.
-       "없던 것이 갑자기 생김(abrupt onset)"만이 시선을 붙잡는다 */
-    var age = T - MT.birth[j];
-    if (age >= 0 && age < 1.1) boost += (age < 0.15 ? age / 0.15 : Math.exp(-(age - 0.15) * 3.4)) * 1.15;
-    var sz = base * vr * tw * pulse * (1 + boost * 0.42);
-    cx.globalAlpha = Math.min(1, (0.70 + 0.30 * tw + boost * 0.5) * (pct100 ? pulse : 1));
-    cx.drawImage(MT.spr, wx - sz / 2, wy - sz / 2, sz, sz);
-    if (hs % 37 === 0) {                     /* 밝은 별 · 크로스 플레어 */
-      cx.globalAlpha = Math.min(0.6, (0.20 + boost * 0.5) * tw);
-      cx.fillStyle = "#FFD8C1";
-      cx.fillRect(wx - sz * 0.95, wy - 0.6, sz * 1.9, 1.2);
-      cx.fillRect(wx - 0.6, wy - sz * 0.95, 1.2, sz * 1.9);
-    }
-  }
-  cx.globalAlpha = 1;
-  /* (f) 파문 링 · 안착 순간 퍼지는 얇은 고리 */
-  for (var s2 = 0; s2 < MT.shocks.length; s2++) {
-    var sc = MT.shocks[s2];
-    if (sc.t < 0 || sc.t > 1) continue;
-    cx.strokeStyle = "rgba(255,158,27," + (0.32 * (1 - sc.t) * sc.mag).toFixed(3) + ")";
-    cx.lineWidth = Math.max(1, MT.r * 0.55 * (1 - sc.t));
-    cx.beginPath(); cx.arc(sc.x, sc.y, sc.t * MT.r * 26 * sc.mag, 0, 6.2832); cx.stroke();
-  }
-  /* (g) 배경 유성 */
-  if (MT.bgm.t >= 0) {
-    var mt = MT.bgm.t, fade = Math.sin(mt * Math.PI);
-    var mx = MT.bgm.x + MT.bgm.vx * mt, my = MT.bgm.y + MT.bgm.vy * mt;
-    var tlx = mx - MT.bgm.vx * 0.14, tly = my - MT.bgm.vy * 0.14;
-    var gd = cx.createLinearGradient(tlx, tly, mx, my);
-    gd.addColorStop(0, "rgba(255,255,255,0)");
-    gd.addColorStop(1, "rgba(255,255,255," + (0.5 * fade).toFixed(3) + ")");
-    cx.strokeStyle = gd; cx.lineWidth = 1.6; cx.lineCap = "round";
-    cx.beginPath(); cx.moveTo(tlx, tly); cx.lineTo(mx, my); cx.stroke();
-  }
-  /* (h) 참여 유성 · 길고 밝은 민트 꼬리. 군집이면 굵어진다 */
-  for (var f2 = 0; f2 < MT.fly.length; f2++) {
-    var d2 = MT.fly[f2];
-    var e = d2.t < 1 ? 1 - Math.pow(1 - d2.t, 3) : 1;
-    var e2 = Math.max(0, d2.t - 0.13); e2 = e2 < 1 ? 1 - Math.pow(1 - e2, 3) : 1;
-    var x = d2.x0 + (d2.tx - d2.x0) * e, y = d2.y0 + (d2.ty - d2.y0) * e;
-    var px2 = d2.x0 + (d2.tx - d2.x0) * e2, py2 = d2.y0 + (d2.ty - d2.y0) * e2;
-    var tail = cx.createLinearGradient(px2, py2, x, y);
-    tail.addColorStop(0, "rgba(255,126,49,0)");
-    tail.addColorStop(1, "rgba(255,178,132,0.62)");
-    cx.strokeStyle = tail;
-    cx.lineWidth = Math.max(1.2, MT.r * 0.95 * (1 + (d2.k - 1) * 0.12));
-    cx.lineCap = "round";
-    cx.beginPath(); cx.moveTo(px2, py2); cx.lineTo(x, y); cx.stroke();
-    var hsz = MT.r * 7 * (1.5 - 0.5 * Math.min(1, e)) * (1 + (d2.k - 1) * 0.09);
-    cx.drawImage(MT.spr, x - hsz / 2, y - hsz / 2, hsz, hsz);
-  }
-}
-/* 티커 · 안내 문구를 돌리지 말고 "방금 참여한 사람의 흔적"만 남긴다 (참여 유인 실측 근거) */
-function mtTickMsg(k) {
-  MT.tickI++;
-  if (!el("mtTick") || MT.demo != null) return;
-  el("mtTick").textContent = "오늘 " + mtPoints().toLocaleString() + "개의 별이 켜졌습니다";
-}
-function mtSync() {
-  var n = mtPoints(), pct = Math.min(100, Math.floor(n / MT_TOTAL * 100));
-  if (el("mtN")) el("mtN").textContent = n.toLocaleString();
-  if (el("mtPct")) el("mtPct").textContent = pct + "%";
-  if (el("mtBar")) el("mtBar").style.width = Math.min(100, n / MT_TOTAL * 100) + "%";
-  /* 언락 단계·달성 플래시 제거(260828) · 차오르는 현황 그 자체에 집중 */
-  if (el("mtTick")) {
-    if (MT.demo != null) el("mtTick").textContent = "관리자 미리보기 · " + MT.demo + "% 상태 고정 · 실시간을 누르면 라이브 집계로 복귀";
-    else if (MT.T - MT.lastLand > 12) el("mtTick").textContent = "오늘 " + n.toLocaleString() + "개의 별이 켜졌습니다";
-  }
-}
-function mtStop() {
-  if (MT.raf) { cancelAnimationFrame(MT.raf); MT.raf = null; }
-  if (MT.timer) { clearInterval(MT.timer); MT.timer = null; }
-  MT.lastTs = 0;
-}
-function mtEnsure() {
-  var stage = el("mtStage"), cv = el("mtCv");
-  if (!stage || !cv) { mtStop(); return; }
-  var dpr = Math.min(2, window.devicePixelRatio || 1);
-  var W = Math.max(200, Math.floor(stage.clientWidth * dpr));
-  var H = Math.max(200, Math.floor(stage.clientHeight * dpr));
-  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
-  /* 성운은 캔버스가 그린다 · CSS 배경을 남겨두면 표류할 때 두 겹으로 어긋난다 */
-  stage.style.backgroundImage = "none";
-  if (!MT.pts.length || MT.bw !== W || MT.bh !== H) {
-    MT.bw = W; MT.bh = H;
-    mtBuild(cv);
-    mtMakeAssets(W, H);
-    /* 진입 직후 마지막 36개는 유성으로 날아 들어오게 남겨 둔다 */
-    var target = Math.round(mtPoints() / MT_TOTAL * MT.pts.length);
-    mtSnap(Math.max(0, target - 36));
-    MT.mil = -1;
-  }
-  /* 서버 연결 시엔 실집계만 반영 · 데모용 자동 증가는 끈다.
-     데모 증가율도 실제 리듬(평균 14초에 1건)에 가깝게 4.2초당 1건으로 낮춘다 */
-  if (!MT.timer) MT.timer = setInterval(function () {
-    if (!BE.on) { MT.autoT++; if (MT.autoT % 3 === 0) MT.auto += 1; }
-    mtSync();
-  }, 1400);
-  mtSync();
-  mtDemoPaint();
-  if (!MT.raf) {
-    var loop = function (ts) {
-      var dt = MT.lastTs ? Math.min(0.05, (ts - MT.lastTs) / 1000) : 1 / 60;
-      MT.lastTs = ts;
-      mtStep(dt); mtDraw();
-      if (MT.raf !== null) MT.raf = requestAnimationFrame(loop);
-    };
-    MT.raf = requestAnimationFrame(loop);
-  }
-}
-/* 관리자 미리보기 · 월 상태를 0~100% 임의 고정 (null = 실시간 복귀). 하강은 즉시 스냅, 상승은 마지막 36점 유성 */
-function mtSet(p) {
-  MT.demo = p;
-  var n = mtPoints();
-  MT.mil = -1;
-  if (MT.pts.length) {
-    var target = Math.round(n / MT_TOTAL * MT.pts.length);
-    if (target < MT.ptr) mtSnap(target);
-    else if (target - MT.ptr > 36) mtSnap(target - 36);
-  }
-  mtSync();
-  mtDemoPaint();
-}
-/* TV 전체화면 · 브라우저 전체화면 요청(실패해도 뷰 전환은 진행) + 복귀 지점 기억 */
-var TV_BACK = "wall_metowe";
-function tvOpen() {
-  if (!S.get("admin_authed", false)) { toast("운영자 전용 화면입니다."); return; }
-  TV_BACK = App.current === "wall_tv" ? TV_BACK : App.current;
-  var el0 = document.documentElement;
-  var req = el0.requestFullscreen || el0.webkitRequestFullscreen || el0.msRequestFullscreen;
-  if (req) { try { var fp = req.call(el0); if (fp && fp.catch) fp.catch(function () {}); } catch (e) {} }
-  App.go("wall_tv");
-}
-function tvClose() {
-  if (document.fullscreenElement || document.webkitFullscreenElement) {
-    var ex = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
-    if (ex) { try { ex.call(document); } catch (e) {} }
-  }
-  App.go(TV_BACK || "wall_metowe");
-}
-document.addEventListener("keydown", function (e) {
-  if (e.key === "Escape" && App.current === "wall_tv") tvClose();
-});
-/* 브라우저 전체화면만 해제된 경우(F11·Esc) 뷰도 함께 복귀 · 화면 크기 변화 재계산 포함 */
+/* 브라우저 전체화면만 해제된 경우(F11·Esc) 송출 전체 화면도 함께 끝낸다 · 정리 #6(261005) 옛 월 TV(wall_tv) 갈래는 지웠다 */
 document.addEventListener("fullscreenchange", function () {
-  if (!document.fullscreenElement && App.current === "wall_tv") App.go(TV_BACK || "wall_metowe");
   if (!document.fullscreenElement && TVF.on) tvFullExit();
-});
-window.addEventListener("resize", function () {
-  if ((App.current === "wall_tv" || TVF.on) && el("mtCv")) mtEnsure();
 });
 /* ── 범용 송출 전체 화면 (v19) · 모든 사이니지 뷰를 가로/세로로 확대 ── */
 var TVF = { on: false, orient: null };
@@ -4583,7 +4055,6 @@ function tvFull(orient) {
   if (req) { try { var fp = req.call(el0); if (fp && fp.catch) fp.catch(function () {}); } catch (e) {} }
   applyTvFull();
   App.render();
-  if (el("mtCv")) setTimeout(mtEnsure, 80);
 }
 function tvFullExit() {
   TVF.on = false; TVF.orient = null;
@@ -4593,7 +4064,6 @@ function tvFullExit() {
   }
   applyTvFull();
   App.render();
-  if (el("mtCv")) setTimeout(mtEnsure, 80);
 }
 function tvBtns(only) {
   var st = "background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap";
@@ -4603,19 +4073,10 @@ function tvBtns(only) {
   return only === "v" ? v : only === "h" ? h : h + v;
 }
 
-function mtDemoPaint() {
-  var row = el("mtDemoRow");
-  if (!row) return;
-  var bs = row.getElementsByTagName("button");
-  for (var i = 0; i < bs.length; i++) {
-    var v = bs[i].getAttribute("data-p");
-    bs[i].className = ((v === "live") ? MT.demo == null : MT.demo === +v) ? "on" : "";
-  }
-}
 
 /* ════════════════ 카운터 ════════════════ */
 var tick = 0;
-setInterval(function () { tick++; if (["home", "screen", "wall_live"].indexOf(App.current) >= 0) App.render(); }, 4000);
+setInterval(function () { tick++; if (App.current === "home") App.render(); }, 4000);
 /* 백엔드 연결 · GAS_URL 이 채워져 있으면 서버 모드로 전환하고 월 집계를 주기적으로 받는다 */
 BE.on = !!GAS_URL;
 if (BE.on) pollNext(beJit());   /* v4.57 첫 sync 0~5초 뒤 · 이후 pollNext 가 30초씩(실패 시 늘림) · stats 60초 폴링은 없앴다(앱은 stats 에서 월 숫자만 쓰고 sync 가 같은 값을 준다 · 요청 3분의 1 절감) */
@@ -4632,7 +4093,7 @@ function counters() {
 }
 
 /* ════════════════ 라우터 (Lv1 탭 → Lv2 상세) ════════════════ */
-var SIGNAGE = ["screen", "screen_survey", "screen_words", "wall_wave", "wall_live", "wall_metowe", "wall_tv", "wall_type", "type_award"];
+var SIGNAGE = ["wall_type", "type_award"];   /* 정리 #6(261005) 앱 안 옛 송출 화면 7개(screen · screen_survey · screen_words · wall_wave · wall_live · wall_metowe · wall_tv)는 지웠다 · 현행 사이니지 = wall/ · tv/typing/ */
 /* 설정 톱니 · 홈 화면 바로가기 · 관리자 모드 · 로그아웃(v4.71 글자 크기는 헤더 토글) */
 var GEAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
   '<circle cx="12" cy="12" r="3.1"/>' +
@@ -4675,8 +4136,7 @@ var App = {
     game_tetris: "games", game_pang: "games", game_jump: "games", game_ox: "quiz", quiz_play: "quiz", oly_rank: "games", type_rank: "guide", floor1: "guide",   /* v4.83 퀴즈 두 종목의 뒤로가기 = AX 퀴즈 */
     /* 프로그램 · 신청 (2단계에서 재디자인) */
     dap: "guide", ev_cchat: "guide", sess_d: "guide", sess_cf: "sess_d", sess_ok: "guide", zone_d: "guide",   /* v4.93 구역 상세 · 뒤로 = 프로그램(상시 운영) */
-    admin: "my", screen: "admin", screen_survey: "admin", screen_words: "admin", type_site: "admin", wall_type: "admin", type_award: "admin",
-    wall_wave: "admin", wall_live: "admin", wall_metowe: "admin", wall_tv: "wall_metowe"
+    admin: "my", type_site: "admin", wall_type: "admin", type_award: "admin"
   },
   TITLES: {
     home: "AX Festival", guide: "프로그램", exp: "스탬프", my: "나의 참여",
@@ -4687,9 +4147,8 @@ var App = {
     sess_d: "프로그램", sess_cf: "신청 확인", sess_ok: "신청 완료",
     ev_cchat: "내 커피챗",
     floor1: "1F 부스", zone_d: "1F 구역",
-    admin: "관리자 모드", screen: "송출용 화면", screen_survey: "", screen_words: "", game_tetris: "테트리스", type_site: "1F 현장 셀프 모드", wall_type: "", type_award: "", type_rank: "타자 순위",
-    game_pang: "AX 팡", game_jump: "ME to WE 점프", game_ox: "AX 퀴즈", quiz_play: "퀴즈 풀기", oly_rank: "미니 게임 순위",
-    wall_wave: "", wall_live: "", wall_metowe: "", wall_tv: ""
+    admin: "관리자 모드", game_tetris: "테트리스", type_site: "1F 현장 셀프 모드", wall_type: "", type_award: "", type_rank: "타자 순위",
+    game_pang: "AX 팡", game_jump: "ME to WE 점프", game_ox: "AX 퀴즈", quiz_play: "퀴즈 풀기", oly_rank: "미니 게임 순위"
   },
   /* 들어온 곳 기억 · 같은 화면을 여러 곳에서 연다(시간표 = 홈 · 나의 참여, 미니게임 = 체험 · 스탬프 카드) → 뒤로가기는 들어온 곳으로 */
   from: {},
@@ -4783,7 +4242,6 @@ var App = {
     if (this.current === "game_jump" && v !== "game_jump") jpStop();
     if (this.current === "game_ox" && v !== "game_ox") oxStop();   /* v4.09 판 중간에 나가면 기록하지 않는다 */
     if (/^game_/.test(this.current || "") && v !== this.current && S.get("type_nick_edit", false)) S.set("type_nick_edit", false);   /* v4.09 닉네임을 바꾸다 헤더 뒤로 = 바꾸지 않음 */
-    if (this.current === "wall_wave" && v !== "wall_wave") wvStop();
     modalClose();
     var prev = this.booted ? this.current : null;   /* 첫 진입(딥링크·새로 고침 복귀)은 들어온 곳이 없다 */
     this.booted = true;
@@ -4798,7 +4256,7 @@ var App = {
     /* v3.15 새로 고침 복귀 · 현재 화면의 소속 탭을 sessionStorage 에 기억(같은 브라우저 탭에서만, 다음 방문은 홈).
        관리자·사이니지·게임 전체화면은 저장하지 않는다 · Lv2 는 소속 탭으로 저장된다 */
     try {
-      if (SIGNAGE.indexOf(v) < 0 && ["admin", "screen", "game_tetris", "game_pang", "game_jump", "game_ox", "type_site"].indexOf(v) < 0) {
+      if (SIGNAGE.indexOf(v) < 0 && ["admin", "game_tetris", "game_pang", "game_jump", "game_ox", "type_site"].indexOf(v) < 0) {
         var lt = this.tabOf(v);
         if (this.ROOTS.indexOf(lt) >= 0) {
           sessionStorage.setItem("axf_last_tab", lt);
@@ -4807,7 +4265,7 @@ var App = {
       }
     } catch (e) {}
     el("frame").classList.toggle("screen-mode", SIGNAGE.indexOf(v) >= 0);
-    el("frame").classList.toggle("tv-mode", v === "wall_tv" || v === "wall_type");   /* TV 전체화면 = 앱 폭 프레임 해제 · 260924 1F TV 현황판(스탠바이미)도 로그인 없이 늘 풀블리드(admin 전체화면 버튼을 기다리지 않는다) */
+    el("frame").classList.toggle("tv-mode", v === "wall_type");   /* TV 전체화면 = 앱 폭 프레임 해제 · 260924 1F TV 현황판(스탠바이미)도 로그인 없이 늘 풀블리드(admin 전체화면 버튼을 기다리지 않는다) */
     if (v === "type_site" && tsfOn()) el("frame").classList.add("tv-mode");   /* v4.32 셀프 모드 노트북 = 앱 폭 프레임 해제 · 3단 */
     if (TVF.on && SIGNAGE.indexOf(v) < 0) { TVF.on = false; TVF.orient = null; applyTvFull(); }
     this.render();
@@ -4815,7 +4273,6 @@ var App = {
     window.scrollTo(0, v === "guide" && isBack ? PROG.scroll || 0 : 0);
     if (PROG.anchor) { var an = el(PROG.anchor); PROG.anchor = ""; if (an) an.scrollIntoView({ block: "start" }); }   /* v4.93 별칭 진입 · 그 자리로(scroll-margin-top = 헤더 높이) */
     else if (v === "guide" && !isBack && PROG.seg !== "always") progFlowScroll();   /* v5.21 시간표에 들어오면 진행 중 카드가 보이게 */
-    if (v === "wall_wave") wvStart();
     if (typeof checkMyState === "function") setTimeout(checkMyState, 80);
   },
   render: function () {
@@ -4884,7 +4341,6 @@ var App = {
     kvMountAll();
     typPromoMount();   /* v5.31 타자왕 홍보 칸 · 화면에 보일 때 src */
     updateLed();
-    if (el("mtCv")) setTimeout(mtEnsure, 30); else if (MT.raf) mtStop();
     if (v === "home") tourInvMaybe();   /* v5.46 1층 둘러보기 초대(한 번) */
   }
 };
@@ -4926,7 +4382,7 @@ window.addEventListener("scroll", function () {
 window.addEventListener("axf-store", function () {
   checkMyState();
   updateLed();
-  if (["game_tetris", "game_pang", "game_jump", "game_ox", "type_site", "wall_wave", "wall_metowe", "scan_q"].indexOf(App.current) >= 0) return;   /* v4.06 Q02 는 저장소가 바뀔 때마다 카메라를 다시 붙이지 않는다 */
+  if (["game_tetris", "game_pang", "game_jump", "game_ox", "type_site", "scan_q"].indexOf(App.current) >= 0) return;   /* v4.06 Q02 는 저장소가 바뀔 때마다 카메라를 다시 붙이지 않는다 */
   if (typingNow()) { RENDER_HELD = true; return; }   /* v4.25 글을 치는 중에는 화면을 새로 그리지 않는다(폴링·공지 도착 포함) · 칸을 벗어날 때 한 번 */
   App.render();
 });
@@ -4985,7 +4441,6 @@ window.addEventListener("popstate", function () {
   if (el("axsSheet")) { if (!SHEET.busy) sheetClose(); navRepush(); return; }
   if (el("modal")) { if (typeof qrScanClose === "function" && el("qrVideo")) qrScanClose(); else modalClose(); navRepush(); return; }
   var fss = el("fsSheet"); if (fss && !fss.hidden) { fsSheet(false); navRepush(); return; }
-  if (App.current === "wall_tv") { tvClose(); navRepush(); return; }
   if (TVF.on) { tvFullExit(); navRepush(); return; }
   var p = App.parentOf(App.current);
   if (!p && App.current !== "home") p = "home";
@@ -7250,19 +6705,6 @@ var Views = {
       }).join("") : '<p style="padding:24px 4px;opacity:0.7">' + (d ? "아직 현장 기록이 없습니다" : "불러오는 중") + "</p>") + "</div>" +
       '<p class="tytv-foot">동점은 정확도, 그다음 먼저 기록한 쪽 · 1~3위 시상 · 운영 ' + esc(((d && d.win) || []).join(" · ")) + "</p></div>";
   },
-  wall_tv: function () {
-    var n = mtPoints(), pct = Math.min(100, Math.floor(n / MT_TOTAL * 100));
-    return '<div class="tv">' +
-      '<div class="mt-stage tv-stage" id="mtStage"><canvas id="mtCv"></canvas>' +
-      '<div class="mt-flash tv-flash" id="mtFlash"></div>' +
-      '<button class="tv-exit" onclick="tvClose()">← 나가기 (Esc)</button></div>' +
-      '<div class="tv-side">' +
-      '<div class="tv-head"><p class="t">ME to <span style="color:var(--mint-deep)">WE</span></p><p class="s">유효 참여 1건 = 별 1개 · 2,026개 = WE 완성</p></div>' +
-      '<div><p class="tv-n" id="mtN">' + n.toLocaleString() + '<small>/ ' + MT_TOTAL.toLocaleString() + '</small></p>' +
-      '<p class="tv-pct" id="mtPct">' + pct + '%</p></div>' +
-      '<div class="tv-bar"><i id="mtBar" style="width:' + Math.min(100, n / MT_TOTAL * 100) + '%"></i></div>' +
-      '<p class="tv-tick" id="mtTick"></p></div></div>';
-  },
 
   /* v4.84 옛 스탬프 화면(passport · 아코디언 카드) = 스탬프 탭(exp) 별칭 · App.go 가 exp 로 돌린다(옛 해시 · 알림 · onclick 호환) · 직접 렌더 대비 */
   passport: function () { return Views.exp(); },
@@ -7445,69 +6887,8 @@ var Views = {
   /* v4.93 구역 상세(6구역 한 템플릿) · 옛 1F 부스 화면(floor1)은 App.go 별칭으로 상시 운영 */
   zone_d: function () { return zoneDetailHtml(); },
 
-  /* ── v10 【신규 D】 사이니지 3종 · 프로토타입 (정식판: 무인 10시간·오프라인 캐시·키오스크) ── */
-  /* v3.69 (사용자 확정 260918) 1F Special Wall 에서 부문 순위·부문 이름 전면 삭제 · 경쟁 대신 참여 흐름을 보여 준다.
-     숫자는 이미 도는 ME to WE 월 참여 카운트(mtPoints · wall_tv 와 같은 값)를 그대로 쓴다(새 집계 없음).
-     서버 부문 집계(stats_ depts)는 남아 있지만 이 화면도, 앱도 쓰지 않는다(휴면). */
-  wall_wave: function () {
-    var dots = WAVE_POS.map(function (p, i) {
-      return '<span class="wdot" id="wd' + i + '" style="left:' + p[0] + "%;top:" + p[1] + '%"><span class="wnm">' + WAVE_NAMES[i] + "</span></span>";
-    }).join("");
-    var lines = WAVE_LINES.map(function (l) {
-      return '<line x1="' + WAVE_POS[l[0]][0] + '" y1="' + WAVE_POS[l[0]][1] + '" x2="' + WAVE_POS[l[1]][0] + '" y2="' + WAVE_POS[l[1]][1] + '" stroke="rgba(245,201,123,0.13)" stroke-width="0.3"></line>';
-    }).join("");
-    return '<div class="sg"><div class="row" style="justify-content:space-between;padding-top:8px">' +
-      '<div><p class="sg-title">AX <span style="color:var(--mint-deep)">WAVE</span></p><p class="sg-sub">DAP 참여자들에게 보내는 무언의 박수 · 기둥 스크린</p></div>' +
-      '<div class="row" style="gap:6px">' + tvBtns() + '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button></div></div>' +
-      '<div class="wave-stage" id="waveStage" style="margin-top:12px">' +
-      '<svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 100 100" preserveAspectRatio="none">' + lines + "</svg>" + dots +
-      '<div class="wave-msg" id="waveMsg">' + esc(WAVE_MSGS[0]).split("\n").join("<br>") + "</div>" +
-      '<div class="wave-count"><p class="n" id="waveN">' + (FESTIVAL.mockWave + S.get("wave_extra", 0)).toLocaleString() + '</p><p class="t">번의 응원이 오늘 이 자리를 스쳐갔습니다</p></div></div>' +
-      '<p style="text-align:center;font-size:calc(12.5px * var(--fs));opacity:0.5;margin-top:12px">모션센서 미확정 · 자동 순환 + 앱 참여 이벤트 가산으로 시연 중 · 명단은 동의 확인 전 마스킹</p></div>';
-  },
 
-  wall_live: function () {
-    var c = counters();
-    var real = S.get("ideas", []).filter(function (i) { return !i.hidden; }).slice(-4).reverse()
-      .map(function (i) { return { text: i.text, tag: i.tag }; });
-    var feed = real.concat(MOCK_FEED).slice(0, 4);
-    var stamp3 = FESTIVAL.mockStamp3 + (stampCount() >= 3 ? 1 : 0) + Math.floor(tick / 9);
-    return '<div class="sg"><div class="row" style="justify-content:space-between;padding-top:8px">' +
-      '<div><p class="sg-title">AX Festival <span style="color:var(--mint-deep)">LIVE</span></p><p class="sg-sub">1F EVENT 라이브 보드 · 세로 55&quot; 2대</p></div>' +
-      '<div class="row" style="gap:6px">' + tvBtns() + '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button></div></div>' +
-      '<div style="margin-top:12px;height:150px;border-radius:16px;overflow:hidden;background:var(--ink);position:relative">' +
-      /* 블랙 스테이지 · 원본 오브젝트 루프(점 고리 → 구체 → 알파 서클)를 오른쪽에, 왼쪽은 슬로건. 공용 시계라 4초 재렌더에도 이어진다 */
-      kvMediaHtml("live", "kvLive").replace('data-axf="loop"', 'data-axf="loop" data-axf-seq="circle:5,sphere:7,alpha:7" data-axf-dark="1" data-axf-cx="0.72" data-axf-zoom="0.95"') +
-      '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-start;padding-left:22px"><b class="disp" style="font-size:24px;color:#fff;letter-spacing:-0.01em">ME to <span style="color:var(--mint-deep)">WE</span></b></div></div>' +
-      '<div class="screen-wrap" style="padding-bottom:0"><div class="counters" style="margin-bottom:10px">' +
-      [["함께하는 사람", c.online], ["모인 아이디어", c.ideas], ["미니게임 참여", c.games], ["스탬프 3개 이상", stamp3]].map(function (x) {
-        return '<div><div class="v">' + x[1].toLocaleString() + '</div><div class="l">' + x[0] + "</div></div>";
-      }).join("") + "</div></div>" +
-      '<p style="font-size:calc(13.5px * var(--fs));font-weight:800;letter-spacing:0.08em;color:var(--mint-deep);margin-top:4px">지금 올라온 아이디어 · 운영자 승인분</p>' +
-      feed.map(function (f) {
-        return '<div style="margin-top:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:11px 14px">' +
-          '<p style="font-size:calc(15.5px * var(--fs));line-height:1.5">&ldquo;' + esc(ideaCut(f.text, 60)) + '&rdquo;</p>' + (f.tag ? '<p style="margin-top:4px;font-size:calc(12.5px * var(--fs));opacity:0.55;font-weight:700">#' + esc(f.tag) + "</p>" : "") + "</div>";   /* v5.39 긴 글은 앞 60자 · 분야 없으면 # 줄 없음 */
-      }).join("") +
-      '<p style="text-align:center;font-size:calc(12.5px * var(--fs));opacity:0.5;margin-top:14px">오전·오후 캡처본이 부서장께 공유됩니다 · 30~60초 지연 집계 · 무음 운영</p></div>';
-  },
 
-  wall_metowe: function () {
-    var n = mtPoints();
-    return '<div class="sg"><div class="row" style="justify-content:space-between;padding-top:8px">' +
-      '<div><p class="sg-title">ME to <span style="color:var(--mint-deep)">WE</span> LIVE WALL</p><p class="sg-sub">유효 참여 1건 = 점 1개 · 2,026개 = WE 완성</p></div>' +
-      '<div class="row" style="gap:6px">' +
-      '<button class="chip" style="background:var(--mint);color:#fff;border-color:var(--mint);white-space:nowrap" onclick="tvOpen()">전체화면 가로</button>' + tvBtns("v") +
-      '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button></div></div>' +
-      '<div class="mt-stage" id="mtStage"><canvas id="mtCv"></canvas><div class="mt-flash" id="mtFlash"></div></div>' +
-      '<div class="mt-count"><span class="disp" id="mtN">' + n.toLocaleString() + '</span><span class="tot">/ ' + MT_TOTAL.toLocaleString() + '</span><span class="pct" id="mtPct"></span></div>' +
-      '<div class="mt-bar"><i id="mtBar"></i></div>' +
-      '<p class="mt-tick" id="mtTick"></p>' +
-      '<div class="mt-words" id="mtWords">' + mtWordsHtml() + "</div>" +
-      '<p style="text-align:center;font-size:calc(12.5px * var(--fs));opacity:0.5;margin-top:10px">사전 공모 제출분은 개막 전 미리 점등 · 100% 완성은 17:00 Outro에서 함께 봅니다 · 30~60초 지연 집계 · 세로 55&quot; / 대강당 겸용</p>' +
-      '<div class="mt-demo" id="mtDemoRow"><span class="lb">관리자 미리보기 · 상태 바로 확인</span>' +
-      [0, 25, 50, 80, 100].map(function (p) { return '<button data-p="' + p + '" onclick="mtSet(' + p + ')">' + p + "%</button>"; }).join("") +
-      '<button data-p="live" onclick="mtSet(null)">실시간</button></div></div>';
-  },
 
   /* v3.86 테트리스 · 휴대폰 종목 (단어 소나기 자리) · 조작은 화면 아래 버튼이 기본 */
   game_tetris: function () {
@@ -7556,51 +6937,8 @@ var Views = {
     return admHtml();
   },
 
-  /* v3.32 사회자 순서 ② 설문 참여 안내 · 17F 스크린 송출 */
-  screen_survey: function () {
-    return '<div class="screen-wrap"><div class="row" style="justify-content:space-between;padding-top:8px">' +
-      '<b class="disp" style="font-size:24px;letter-spacing:0.03em">AX Festival <span style="color:var(--mint-deep)">2026</span></b>' +
-      '<div class="row" style="gap:6px">' + tvBtns() + '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button></div></div>' +
-      '<div style="padding:48px 8px 24px">' +
-      '<p style="font-size:calc(14.5px * var(--fs));font-weight:800;letter-spacing:0.12em;color:var(--mint-deep)">17:00 OUTRO 전에 1분</p>' +
-      '<p style="margin-top:12px;font-size:34px;font-weight:900;line-height:1.3">오늘 한 판 설문</p>' +
-      '<p style="margin-top:14px;font-size:20px;font-weight:700;line-height:1.6;opacity:0.9">앱 홈 첫 줄 또는 스탬프 탭 → 「오늘 한 판 설문」<br>60초 · 답은 이름 없이 저장됩니다 · 제출하면 스탬프 1개</p>' +
-      "</div></div>";
-  },
 
-  /* v3.35 Outro · 오늘 가장 많이 나온 단어 (5명 이상 고른 단어만) */
-  screen_words: function () {   /* v3.52b 휴면 · SURVEY_FEATURES.words 가 꺼져 있으면 사이니지 목록에서도 뺀다 */
-    if (!SURVEY_FEATURES.words) return '<div class="screen-wrap"><p style="padding:40px 8px;opacity:0.7">오늘의 단어 송출은 지금 꺼져 있습니다</p><button class="btn" onclick="App.go(\'admin\')">콘솔로</button></div>';
-    surveyAggPull();
-    var a = svAgg() || { words: [], n: 0 }, w = a.words || [];
-    return '<div class="screen-wrap"><div class="row" style="justify-content:space-between;padding-top:8px">' +
-      '<b class="disp" style="font-size:24px;letter-spacing:0.03em">AX Festival <span style="color:var(--mint-deep)">2026</span></b>' +
-      '<div class="row" style="gap:6px">' + tvBtns() + '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button></div></div>' +
-      '<div style="padding:40px 8px 20px;text-align:center">' +
-      '<p style="font-size:calc(14.5px * var(--fs));font-weight:800;letter-spacing:0.12em;color:var(--mint-deep)">ME to WE · 오늘을 한 단어로</p>' +
-      (w.length ? '<p style="margin-top:18px;font-size:44px;font-weight:900;line-height:1.25">' + esc(w[0].w) + "</p>" +
-        '<p style="margin-top:8px;font-size:18px;opacity:0.7">' + w[0].n.toLocaleString() + "명이 고른 오늘의 단어</p>" +
-        '<div class="mt-words" style="margin-top:24px">' + w.slice(1, 8).map(function (x) { return '<span class="w">' + esc(x.w) + " · " + x.n + "</span>"; }).join("") + "</div>" :
-        '<p style="margin-top:24px;font-size:20px;opacity:0.7">아직 5명 이상 고른 단어가 없습니다</p>') +
-      '<p style="margin-top:22px;font-size:14px;opacity:0.5">응답 ' + (a.n || 0).toLocaleString() + "명 · 5명 이상 고른 단어만 · 답은 이름 없이 저장</p></div></div>";
-  },
 
-  screen: function () {
-    var c = counters();
-    var h = '<div class="screen-wrap"><div class="row" style="justify-content:space-between;padding-top:8px">' +
-      '<b class="disp" style="font-size:24px;letter-spacing:0.03em">AX Festival <span style="color:var(--mint-deep)">2026</span></b>' +
-      '<div class="row" style="gap:6px">' + tvBtns() + '<button class="chip" style="background:rgba(255,255,255,0.08);color:#fff;border-color:rgba(255,255,255,0.3);white-space:nowrap" onclick="App.go(\'admin\')">← 콘솔</button></div></div>' +
-      '<p style="font-size:calc(12.5px * var(--fs));font-weight:700;letter-spacing:0.12em;opacity:0.6;margin-top:2px">ME to WE · 나의 경험을 우리의 가능성으로</p>' +
-      '<div class="counters">' +
-      [["함께하는 사람", c.online], ["모인 아이디어", c.ideas], ["미니게임 참여", c.games], ["ME to WE 별", mtPoints()]].map(function (x) {
-        return '<div><div class="v">' + x[1].toLocaleString() + '</div><div class="l">' + x[0] + "</div></div>";
-      }).join("") + "</div>";
-      h += '<div class="mt-stage" id="mtStage" style="height:42vh;min-height:280px"><canvas id="mtCv"></canvas><div class="mt-flash" id="mtFlash"></div></div>' +
-      '<div class="mt-count"><span class="disp" id="mtN">' + mtPoints().toLocaleString() + '</span><span class="tot">/ 2,026</span><span class="pct" id="mtPct"></span></div>' +
-      '<div class="mt-bar"><i id="mtBar"></i></div>' +
-      '<p style="text-align:center;font-size:calc(14.5px * var(--fs));opacity:0.55;margin-top:12px">휴대폰 카메라로 QR을 스캔하거나 포털 배너로 접속하세요 · 30초면 함께할 수 있습니다</p>';
-    return h + "</div>";
-  }
 };
 
 /* ════════ v4.15 폰 관리자 모드 3화면 (사용자 확정 260922) ════════
@@ -7905,7 +7243,6 @@ function beSync(after) {
         S.set("queue", nowQ);
       }
     }
-    if (el("mtCv")) mtSync();
     checkMyState();
     qrMineCheck();   /* v4.06 내 QR 이 열려 있으면 방금 바뀐 것 한 줄(확인됨) */
     if (App.current === "home") App.render();
@@ -8575,8 +7912,7 @@ function surveyAggPull(force) {
   beCall({ action: "survey_agg" }, function (res) {
     if (!res || !res.ok) return;
     S.set("survey_agg", { n: res.n, bal: res.bal, words: res.words, min: res.min });
-    if (el("mtWords")) el("mtWords").innerHTML = mtWordsHtml();
-    if (["survey", "screen_words"].indexOf(App.current) >= 0) App.render();
+    if (App.current === "survey") App.render();
   }, function () {});
 }
 function svSubmit() {
@@ -8619,13 +7955,6 @@ function svBalBars(q, mine) {   /* 휴면 · SURVEY_FEATURES.balance */
     var pct = tot ? Math.round(b[i] / tot * 100) : 0;
     return '<div class="seatrow"><div class="sb"><i style="width:' + pct + '%"></i></div><span class="sn">' + (mine === i ? "내 선택 · " : "") + esc(lb) + " " + pct + "%</span></div>";
   }).join("");
-}
-function mtWordsHtml() {   /* 휴면 · SURVEY_FEATURES.words (끄면 1F 월에 아무것도 안 띄운다) */
-  if (!SURVEY_FEATURES.words) return "";
-  var a = svAgg();
-  if (!a || !a.words || !a.words.length) return "";
-  return '<p class="lb">오늘을 한 단어로 · ' + (a.min || 5) + "명 이상 고른 단어</p>" +
-    a.words.slice(0, 8).map(function (w, i) { return '<span class="w' + (i < 3 ? " top" : "") + '">' + esc(w.w) + "</span>"; }).join("");
 }
 /* 서버가 준 목록으로 로컬을 맞춘다 (sync 응답에서도 같은 함수를 쓴다).
    정의 밖 id(구 p6·p8, 계단 p9 등)는 버린다 · 표시·보상 계산과 어긋나지 않게 (260909) */
@@ -10079,7 +9408,6 @@ function ideaMineTxt(i) {
   cut = (ca.length > IDEA_CLIP ? ca.slice(0, IDEA_CLIP).join("") : cut).replace(/\s+$/, "") + "…";
   return esc(op ? t : cut) + ' <button type="button" class="ax-link axs-plain" aria-expanded="' + op + '" onclick="ideaMineOpen(\'' + esc(i.id) + '\')">' + (op ? "접기" : "펼치기 · " + a.length.toLocaleString() + "자") + "</button>";
 }
-function ideaCut(v, n) { var a = Array.from(String(v || "").replace(/\s+/g, " ").trim()); return a.length > n ? a.slice(0, n).join("") + "…" : a.join(""); }   /* v5.39 사이니지용 한 줄 자르기(이모지 안 쪼갬) */
 function ideaMineOpen(id) { IDEA_OPEN[id] = !IDEA_OPEN[id]; App.render(); }
 function ideaLen(v) { return String(v || "").replace(/\s/g, "").length; }
 function ideaDraft() { if (IDEA.draft == null) IDEA.draft = String(S.get("idea_draft", "") || ""); return IDEA.draft; }
@@ -15359,154 +14687,10 @@ function oxWrongHtml(X) {
   }).join("") + (bad.length > 3 ? '<p class="ax-meta">외 ' + (bad.length - 3) + "문제</p>" : "") + "</section>";
 }
 
-/* ════════════════ KV 오브젝트 엔진 · 도트 격자 + 점 → 점 고리 → 점선 구체 (design.md v29 §2·§4) ════════════════
-   글자는 움직이지 않는다. 오브젝트만 점으로 모였다 흩어진다. 스플래시·홈 히어로·라이브 보드가 같은 엔진을 쓴다.
-   홍보부의 모션 원본(mp4 · Lottie JSON · HTML/JS)이 오면 KV_MEDIA 에 경로를 넣는다.
-   그러면 그 자리에 원본이 재생되고 이 캔버스 엔진은 원본이 없는 자리의 폴백으로 남는다. */
-var KV_MEDIA = { splash: "", live: "axf:loop", hero: "axf:me" };   /* "axf:me|circle"(원본 엔진) | "assets/x.mp4" | "assets/x.json" | "assets/x.html" */
-/* hero = 홍보부 원본 심볼 「ME to WE」 (AXF Design Data 260916, 엔진 AXF_DATA). 구 포스터 mp4 크롭(kv_poster.mp4)은 폐기 */
-var KV = { N: 180, live: {} };
-function kvMediaHtml(key, id, cls) {
-  var src = KV_MEDIA[key] || "";
-  cls = cls || "kvfill";
-  if (/^axf:/.test(src)) return '<canvas class="' + cls + '" id="' + id + '" data-axf="' + src.slice(4) + '"></canvas>';   /* 홍보부 원본 엔진 */
-  if (/\.mp4$/i.test(src)) return '<video class="' + cls + '" autoplay muted loop playsinline src="' + src + '"></video>';
-  if (/\.html$/i.test(src)) return '<iframe class="' + cls + '" src="' + src + '" title="KV" scrolling="no" style="border:0;pointer-events:none"></iframe>';
-  if (/\.json$/i.test(src)) return '<div class="' + cls + '" data-lottie="' + src + '"></div>';   /* Lottie 플레이어는 원본이 오면 벤더링 */
-  return '<canvas class="' + cls + '" id="' + id + '" data-kv="1"></canvas>';
-}
-/* 결정적 난수 · 같은 화면을 다시 열어도 같은 흐름 */
+/* 결정적 난수 · 같은 화면을 다시 열어도 같은 흐름 · 입장 전환(xitionRun)이 쓴다 */
 function kvRnd(seed) { return function () { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }; }
-/* 장면 = 오브젝트 · 점 N개의 (x, y, 크기, 알파). 쓰지 않는 점은 알파 0으로 형태 안에 숨긴다 */
-function kvShape(name, t, cx0, cy0, R) {
-  var N = KV.N, out = new Array(N), i, a;
-  if (name === "dot") {                                   /* (01) Experience · 점 하나 */
-    for (i = 0; i < N; i++) out[i] = [cx0, cy0, 0, 0];
-    out[0] = [cx0, cy0, R * 0.16, 1];
-  } else if (name === "ring") {                           /* (02) Connection · 점 고리 (천천히 회전, 크고 작은 점) */
-    var M = 16, rot = t * 0.12;
-    for (i = 0; i < N; i++) {
-      a = rot + (i / M) * 6.2832;
-      var big = i < M, sz = big ? R * (i % 4 === 0 ? 0.085 : 0.058) : 0;
-      var rr = big ? R : R * (0.92 + ((i * 7919) % 100) / 900);
-      out[i] = [cx0 + Math.cos(a) * rr, cy0 + Math.sin(a) * rr, sz, big ? 1 : 0];
-    }
-  } else {                                                /* (04) Expand · 점선 와이어프레임 구체 (12 자오선 × 15 위도) */
-    var MER = 12, LAT = 15, ry = t * 0.35;
-    for (i = 0; i < N; i++) {
-      var m = i % MER, l = Math.floor(i / MER);
-      var lat = -1.35 + (l / (LAT - 1)) * 2.7, lon = (m / MER) * 6.2832 + ry;
-      var x3 = Math.cos(lat) * Math.cos(lon), y3 = Math.sin(lat), z3 = Math.cos(lat) * Math.sin(lon);
-      var depth = 0.55 + 0.45 * (z3 + 1) / 2;             /* 뒤쪽 점은 작고 옅게 */
-      out[i] = [cx0 + x3 * R * 1.02, cy0 + y3 * R * 1.02, R * 0.03 * depth, 0.35 + 0.65 * depth];
-    }
-  }
-  return out;
-}
-var KV_SEQ = [["dot", 3.2], ["ring", 5.0], ["sphere", 7.0], ["ring", 3.6]];   /* 루프 끝 = 시작 (dot 으로 돌아온다) */
-var KV_TRANS = 1.8;
-function kvMount(cv, opts) {
-  if (!cv || cv.dataset.kvOn) return;
-  cv.dataset.kvOn = "1";
-  opts = opts || {};
-  var color = opts.color || "#FF7E31", grid = opts.grid !== false, mode = opts.mode || "loop";
-  var dpr = Math.min(2, window.devicePixelRatio || 1);
-  var rnd = kvRnd(20261026), scat = [];
-  for (var i = 0; i < KV.N; i++) scat.push([rnd() * 2 - 1, rnd() * 2 - 1, rnd()]);
-  var rm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var st = { raf: null, T: 0, last: 0 };
-  function size() {
-    var w = cv.clientWidth, h = cv.clientHeight;
-    if (!w || !h) return false;
-    var W = Math.floor(w * dpr), H = Math.floor(h * dpr);
-    if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
-    return true;
-  }
-  function draw(now) {
-    if (!cv.isConnected) { kvStop(cv); return; }
-    if (!size()) { st.raf = requestAnimationFrame(draw); return; }
-    if (st.last) st.T += Math.min(0.05, Math.max(0, (now - st.last) / 1000));
-    st.last = now;
-    var T = st.T, W = cv.width, H = cv.height, cx = cv.getContext("2d");
-    cx.setTransform(1, 0, 0, 1, 0, 0);
-    cx.clearRect(0, 0, W, H);
-    /* 도트 격자 · 28px 간격, 1.5% 는 오렌지로 켜져 있다(켜질 수 있는 자리). 격자는 움직이지 않는다 */
-    if (grid) {
-      var GS = 28 * dpr, gi = 0;
-      for (var gy = GS / 2; gy < H; gy += GS) for (var gx = GS / 2; gx < W; gx += GS, gi++) {
-        var on = ((gi * 2654435761) >>> 0) % 1000 < 15;
-        cx.fillStyle = on ? "rgba(255,126,49,0.55)" : (opts.dark ? "rgba(255,255,255,0.12)" : "#E3E3E3");
-        cx.fillRect(gx - 0.9 * dpr, gy - 0.9 * dpr, 1.8 * dpr, 1.8 * dpr);
-      }
-    }
-    var cx0 = (opts.cx != null ? opts.cx : 0.5) * W, cy0 = (opts.cy != null ? opts.cy : 0.42) * H;
-    var R = (opts.r || 0.26) * Math.min(W, H);
-    var pts;
-    if (mode === "ring") pts = kvShape("ring", rm ? 0 : T, cx0, cy0, R);
-    else {
-      /* 시퀀스 위치 계산 · 장면 유지 → 전환(입자로 흩어졌다 다음 형태로) */
-      var total = 0, k;
-      for (k = 0; k < KV_SEQ.length; k++) total += KV_SEQ[k][1] + KV_TRANS;
-      var u = rm ? KV_SEQ[0][1] + KV_TRANS + 0.1 : T % total, cur = 0, p = 0, from = KV_SEQ[0][0], to = from;
-      for (k = 0; k < KV_SEQ.length; k++) {
-        var hold = KV_SEQ[k][1];
-        if (u < cur + hold) { from = to = KV_SEQ[k][0]; p = 0; break; }
-        if (u < cur + hold + KV_TRANS) { from = KV_SEQ[k][0]; to = KV_SEQ[(k + 1) % KV_SEQ.length][0]; p = (u - cur - hold) / KV_TRANS; break; }
-        cur += hold + KV_TRANS;
-      }
-      var A = kvShape(from, T, cx0, cy0, R);
-      if (p <= 0) pts = A;
-      else {
-        var B = kvShape(to, T, cx0, cy0, R), e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
-        var burst = Math.sin(p * 3.1416) * R * 0.9;      /* 중간에 입자로 흩어진다 */
-        pts = new Array(KV.N);
-        for (i = 0; i < KV.N; i++) {
-          var a0 = A[i], b0 = B[i], s = scat[i];
-          var al = Math.max(a0[3], b0[3]) * (0.55 + 0.45 * Math.abs(1 - 2 * p)) ;
-          if (a0[3] === 0 && b0[3] === 0) al = 0;
-          pts[i] = [a0[0] + (b0[0] - a0[0]) * e + s[0] * burst, a0[1] + (b0[1] - a0[1]) * e + s[1] * burst,
-                    Math.max(a0[2] + (b0[2] - a0[2]) * e, R * 0.028 * (a0[3] || b0[3] ? 1 : 0)), al];
-        }
-      }
-    }
-    for (i = 0; i < pts.length; i++) {
-      var q = pts[i];
-      if (q[3] <= 0 || q[2] <= 0) continue;
-      cx.globalAlpha = q[3];
-      cx.fillStyle = color;
-      cx.beginPath(); cx.arc(q[0], q[1], q[2], 0, 6.2832); cx.fill();
-    }
-    /* (01) 점 하나의 중심 = Light Purple 하이라이트 (KV 01 Experience) */
-    if (mode !== "ring" && pts[0][2] > R * 0.1 && pts[0][3] > 0.9) {
-      cx.globalAlpha = 1; cx.fillStyle = "#E6CCFF";
-      cx.beginPath(); cx.arc(pts[0][0], pts[0][1], pts[0][2] * 0.32, 0, 6.2832); cx.fill();
-    }
-    cx.globalAlpha = 1;
-    if (!rm) st.raf = requestAnimationFrame(draw);
-  }
-  KV.live[cv.id || ("kv" + Math.random())] = st;
-  cv._kv = st;
-  st.raf = requestAnimationFrame(draw);
-}
-function kvStop(cv) {
-  if (!cv || !cv._kv) return;
-  if (cv._kv.raf) cancelAnimationFrame(cv._kv.raf);
-  cv._kv.raf = null; delete cv.dataset.kvOn; cv._kv = null;
-}
-/* 화면 렌더 뒤 · data-kv 캔버스를 전부 켠다 (히어로 = 흰 점 고리, 라이브 보드 = 블랙 스테이지 루프) */
+/* 화면 렌더 뒤 · 움직이는 캔버스를 켠다 · 정리 #6(261005) 옛 KV 점 엔진(data-kv · 라이브 보드 전용)은 지웠다 · 이름은 부르는 곳(스플래시 · 렌더 · 크기 변화)이 많아 그대로 */
 function kvMountAll() {
-  var list = document.querySelectorAll("canvas[data-kv]");
-  for (var i = 0; i < list.length; i++) {
-    var c = list[i], o = {};
-    if (c.dataset.kvMode) o.mode = c.dataset.kvMode;
-    if (c.dataset.kvColor) o.color = c.dataset.kvColor;
-    if (c.dataset.kvGrid === "0") o.grid = false;
-    if (c.dataset.kvDark === "1") o.dark = true;
-    if (c.dataset.kvCx) o.cx = +c.dataset.kvCx;
-    if (c.dataset.kvCy) o.cy = +c.dataset.kvCy;
-    if (c.dataset.kvR) o.r = +c.dataset.kvR;
-    kvMount(c, o);
-  }
   axfMountAll();
   lfMountAll();   /* v5.02 로그인 두 화면(전체 오렌지 · 유동 배치) · 보이는 쪽만 */
 }
@@ -16924,7 +16108,7 @@ function lfBusy(btn, on, label) {
     var cq = location.hash.match(/crowd=([elps]+)/);
     if (cq) { var n0 = Date.now(), jm = { at: n0 - 180000, x: n0 + 720000 }; S.set("crowd", { l: /l/.test(cq[1]) ? jm : 0, e: /e/.test(cq[1]) ? jm : 0, p: /p/.test(cq[1]) ? "11:00-11:20" : "", w: /p/.test(cq[1]) ? "11:00-11:20" : "", st: /s/.test(cq[1]) ? 1 : 0 }); }
     var target = dm[1] || "home";
-    if (["admin", "screen", "screen_survey", "screen_words", "wall_wave", "wall_live", "wall_metowe", "wall_tv", "type_site", "type_award"].indexOf(target) >= 0) S.set("admin_authed", true);
+    if (["admin", "type_site", "type_award"].indexOf(target) >= 0) S.set("admin_authed", true);
     splash.classList.add("gone");
     el("frame").classList.remove("splash-mode");
     el("app").hidden = false;
