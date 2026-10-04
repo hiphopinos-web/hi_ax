@@ -2,7 +2,7 @@
  * 운영 안내 = 디자인 시안/사이니지/운영 안내.md
  * 장면(초) = 광고 18 · 상품 5 · 순위 17 = 40 · 행사일(2026-10-26) 17:00(한국 시간) 뒤 = 최종 순위 17 · 상품 5 = 22 · 화면 위 「AX 타자왕 · 1F」는 늘 그 자리
  *   루프 끝 무너짐(261004 사용자 「광고가 끝나고 새 광고로 넘어가는 시점에서 무너지면서」) = 루프 마지막 장면(순위 · 마감 뒤 상품 · promo 상품)의 마지막 1.4초 ·
- *     글자 · 줄이 도트 조각(72×36)으로 부서져 산성비처럼 위에서부터 쏟아진다 · 빈 바탕은 그대로 · 잠깐 비었다가 다음 루프 · 상품 → 순위는 그냥 바뀐다
+ *     글자 · 줄이 도트 조각(72×36)으로 부서져 산성비처럼 위에서부터 쏟아진다 · 빈 바탕은 그대로 · 잠깐 비었다가 다음 루프 · 상품 → 순위는 그냥 바뀐다 · promo 마감 뒤(상품만 반복)는 무너짐 없음
  *   가상 이름 채우기(261004 사용자 「10위까지 일단은 가상의 이름으로」) = 실제 기록이 10명보다 적으면 빈 자리를 가상 닉네임으로 · 화면에서만(서버 · 시트에 안 씀) ·
  *     가상 점수는 늘 실제 최저 기록보다 낮다(실제가 위) · NEW 없음 · 행사일(10/26) 한국 날짜부터 자동으로 꺼짐 · FILL_ON = false 또는 &fill=0 = 끄기 ·
  *     기본 TV · ?open=1 에만 · ?promo=1&rank=1(앱 칸)은 &fill=1 일 때만
@@ -655,7 +655,7 @@
     var tr = null;
     if (id === "ad" && ENG && MON) { if (lt >= T_HOOK && lt < T_HOOK + FW.D) tr = { k: "h", at: T_HOOK }; else if (lt >= T_ACT && lt < T_ACT + FW.D) tr = { k: "m", at: T_ACT }; }
     else if (id === "prize" && FW.pend && lt < FW.D) tr = { k: "a", at: 0 };
-    if (!tr && !SOLO && PLAY.list[PLAY.list.length - 1] === id && lt >= DUR[id] - ZD) tr = { k: "z", at: DUR[id] - ZD };   /* 루프 끝 무너짐 */
+    if (!tr && !SOLO && PLAY.list.length > 1 && PLAY.list[PLAY.list.length - 1] === id && lt >= DUR[id] - ZD) tr = { k: "z", at: DUR[id] - ZD };   /* 루프 끝 무너짐 · 장면 하나만 도는 루프(promo 마감 뒤 상품만)는 조용히 이어진다 */
     if (!tr) { if (FW.on) { FW.on = false; fxDraw(-1); } return; }
     var key = id + PLAY.loops + tr.k + PLAY.t0.toFixed(2);
     if (tr.k === "z" && FW.key !== key) { zStart(key, id === "rank" ? paintRank : paintPrize); cls(el(id), "gone", true); }
