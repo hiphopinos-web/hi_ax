@@ -1516,27 +1516,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #rgPlay .tt-cap { font: var(--ax-type-caption); color: var(--ax-color-muted); }
   /* 안내 말풍선 · 챗봇이 말하듯 · 원본 BOT_SVG 합성만 · 떠 있기 + 깜빡임 */
   /* ═══ v4.12 AI O/X · 유리다리 건너기 (게임판 캔버스는 시제품 그림 · 위 줄·문제 카드·조작 버튼은 AX-TDS 토큰 · 새 그라데이션·검은 바탕 없음) ═══ */
-  #rgPlay.oxb .rgp-top { flex-direction: column; align-items: stretch; gap: var(--ax-space-8); padding: var(--ax-space-4) var(--ax-space-16) var(--ax-space-12); }
-  #rgPlay.oxb .rgp-mid.fill canvas { background: var(--ax-color-canvas); }
-  #rgPlay.oxb .rgp-x { padding: 0 var(--ax-space-12); }
-  .oxb-top { display: flex; flex-direction: column; gap: var(--ax-space-4); }   /* v4.14 위 줄 = 목숨 · 남은 시간 · 점수만(작게) · 문제는 게임판 위 말풍선 */
-  .oxb-hud { display: flex; align-items: center; gap: var(--ax-space-8); min-height: var(--ax-touch-size); }
-  .oxb-lives { display: flex; gap: 2px; }
-  .oxb-lives.hit { animation: tileShake 0.35s; }
-  .oxb-life { display: block; width: 20px; height: 20px; line-height: 0; transition: opacity 0.3s, filter 0.3s; }
-  .oxb-life svg { display: block; width: 20px; height: 20px; }
-  .oxb-life.off { opacity: 0.22; filter: grayscale(1); }
-  .oxb-sp { flex: 1; }
-  .oxb-sec { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .oxb-sec.warn { color: var(--ax-color-error); }
-  .oxb-sc { display: inline-flex; align-items: baseline; gap: 2px; }
-  .oxb-sc b { display: inline-block; font: var(--ax-type-t5-strong); color: var(--ax-color-ink); font-variant-numeric: tabular-nums; }
-  .oxb-sc small { font: var(--ax-type-caption); color: var(--ax-color-muted); }
-  .oxb-sc b.pop { animation: oxbPop 0.32s ease-out; }
-  @keyframes oxbPop { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
-  .oxb-bar { position: relative; height: 4px; border-radius: var(--ax-radius-999); background: var(--ax-color-divider); overflow: hidden; }
-  .oxb-bar i { position: absolute; inset: 0; border-radius: inherit; background: var(--ax-color-brand); transform-origin: left center; }
-  .oxb-bar.warn i { background: var(--ax-color-error); }
   /* v4.14 문제 말풍선 · 도트 테두리(모서리 한 칸 비움) + 도트 꼬리 · 글자는 Pretendard
      v4.28 공용 조각 gs-qsay = O/X 문제 · 점프 AI 상식(두 게임 같은 문법) · 자리 = 판 위쪽 고정(O/X 약 30% · 점프 상태줄 바로 아래) · 크기 고정 · 꼬리 가로 자리만 캐릭터 쪽(--tx)
      (사용자 260924 「메시지가 말 머리에 집중해서 계단이 내려오면 계속 쪼그라드는 느낌」 · v4.14 「다음 발판 · 챗봇 머리 바로 위」 번복) */
@@ -1545,56 +1524,17 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .gs-qsay[hidden] { display: none; }
   .gs-qsay-t { margin: 0; font: var(--ax-type-t4); font-weight: 700; color: var(--ax-color-ink); word-break: keep-all; }
   .gs-qsay-tag { position: absolute; left: var(--ax-space-12); top: -14px; margin: 0; padding: 0 var(--ax-space-8); background: var(--ax-color-brand); color: var(--ax-color-onBrand); font: var(--ax-type-caption); font-weight: 700; white-space: nowrap; }
-  .oxb-say { top: 30%; transform: translateY(-50%); display: flex; align-items: center; min-height: calc(2 * 1.8125rem + var(--ax-space-8) + var(--ax-space-12)); }   /* 두 줄 자리 고정 · 한 줄 문제도 같은 크기 */
   .gs-qsay::after { content: ""; position: absolute; left: var(--tx, 50%); top: 100%; width: 3px; height: 3px; margin-left: -1.5px; background: var(--oxb-fill);
     box-shadow: -6px 0 0 var(--oxb-fill), -3px 0 0 var(--oxb-fill), 3px 0 0 var(--oxb-fill), 6px 0 0 var(--oxb-fill),
       -6px 3px 0 var(--oxb-line), -3px 3px 0 var(--oxb-fill), 0 3px 0 var(--oxb-fill), 3px 3px 0 var(--oxb-fill), 6px 3px 0 var(--oxb-line),
       -3px 6px 0 var(--oxb-line), 0 6px 0 var(--oxb-fill), 3px 6px 0 var(--oxb-line), 0 9px 0 var(--oxb-line); }
-  .oxb-say.gold { --oxb-fill: var(--ax-color-brandSoft); --oxb-line: var(--ax-color-brand); }
-  .oxb-say.fever { --oxb-line: var(--ax-color-brand); }
-  .oxb-say.in { animation: oxbIn 0.16s ease-out both; }
   @keyframes oxbIn { from { opacity: 0.15; } to { opacity: 1; } }
   @keyframes rtDemo { 0% { opacity: 1; } 62% { opacity: 0; } }   /* v4.28 시작 화면 「DEMO · 예시 화면」 깜빡임(레트로 절은 .rt 규칙만 담아서 여기 둔다) */
-  .oxb-tagrow { position: absolute; left: var(--ax-space-12); top: -14px; display: flex; gap: 6px; margin: 0; font: var(--ax-type-caption); font-weight: 700; white-space: nowrap; }   /* v4.28 테두리에 걸친 딱지 · 말풍선 크기를 바꾸지 않는다 */
-  .oxb-tagrow[hidden] { display: none; }
-  .oxb-tag { padding: 0 var(--ax-space-8); border-radius: var(--ax-radius-999); font-weight: 700; color: var(--ax-color-onBrand); }
-  .oxb-tag.gd { background: var(--ax-color-surface); color: var(--ax-color-brandText); box-shadow: inset 0 0 0 1px var(--ax-color-brand); }
-  .oxb-tag.fv { background: var(--ax-color-brand); }
-  .oxb-text { margin: 0; font: var(--ax-type-t4); font-weight: 700; color: var(--ax-color-ink); word-break: keep-all; }
   /* v4.28 카운트다운 동안 좌우 큰 O / X 힌트 · 흐리게 · 첫 문제가 뜨고 걷힌다 · 누름은 통과 */
-  .oxb-hint { position: absolute; inset: 46% 0 0; z-index: 11; display: grid; grid-template-columns: 1fr 1fr; pointer-events: none; opacity: 0.72; transition: opacity 0.4s; }
-  .oxb-hint.off { opacity: 0; }
-  .oxb-hint > div { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--ax-space-8); }
-  .oxb-hint > .x { box-shadow: inset 3px 0 0 rgba(0, 0, 0, 0.35); }
-  .oxb-hint .oxb-g { display: block; width: 112px; height: 112px; color: var(--ax-color-brand); }
-  .oxb-hint .x .oxb-g { color: var(--ax-color-surface); }
-  .oxb-hint span { font: var(--ax-type-t6-strong); color: var(--ax-color-surface); }
-  #rgPlay.oxb-hide .oxb-text { visibility: hidden; }   /* 멈춘 동안 문제를 가린다(멈추고 생각할 수 없게) */
   /* 조작 안내 · 첫 문제에서만 잠깐(게임판 아래쪽 · 문제 말풍선과 겹치지 않게) */
-  .oxb-tip { position: absolute; left: var(--ax-space-16); right: var(--ax-space-16); bottom: var(--ax-space-12); z-index: 12; display: flex; justify-content: center; pointer-events: none; transition: opacity 0.3s; }
-  .oxb-tip[hidden] { display: none; }
-  .oxb-tip.off { opacity: 0; }
-  .oxb-tip .gs-say-b { margin: 0; text-align: center; }
-  .oxb-tip .gs-say-b::before { display: none; }
   /* v4.28 아래 버튼 = O · X 두 개 반반 크게(판자 삭제) · 화면 왼쪽 반 = O · 오른쪽 반 = X 와 같은 배치 */
-  .oxb-ctl { flex: none; display: grid; grid-template-columns: 1fr 1fr; gap: var(--ax-space-12); padding: var(--ax-space-12) var(--ax-space-16) calc(var(--ax-space-12) + env(safe-area-inset-bottom, 0px)); background: var(--ax-color-surface); border-top: 1px solid var(--ax-color-divider); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
-  .oxb-b { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: var(--ax-space-12); height: 88px; padding: 0; border: 0; border-radius: var(--ax-radius-16); background: var(--ax-color-inset); box-shadow: inset 0 0 0 1px var(--ax-color-divider); color: var(--ax-color-ink); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-  .oxb-b .oxb-g { display: block; width: 48px; height: 48px; color: var(--ax-color-ink); }
-  .oxb-g .sh { fill: var(--oxb-sh, currentColor); opacity: var(--oxb-sho, 1); }
-  .oxb-b span { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
-  .oxb-b.o .oxb-g { color: var(--ax-color-surface); }
-  .oxb-b.hit { background: var(--ax-color-brandSoft); }
-  .oxb-b.ok { background: var(--ax-color-successSoft); box-shadow: inset 0 0 0 2px var(--ax-color-success); }
-  .oxb-b.bad { background: var(--ax-color-errorSoft); box-shadow: inset 0 0 0 2px var(--ax-color-error); }
   .gs-sub { margin: 0; font: var(--ax-type-t5-strong); color: var(--ax-color-brandText); }
-  .ox-ex { font: var(--ax-type-t7); color: var(--ax-color-muted); white-space: nowrap; }
-  .ox-titles { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--ax-space-8); margin: 0; }
-  .ox-titles span { padding: var(--ax-space-4) var(--ax-space-12); border-radius: var(--ax-radius-999); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t7); font-weight: 700; }
-  .ox-wrong .ox-w { padding-top: var(--ax-space-12); border-top: 1px solid var(--ax-color-divider); }
-  .ox-wrong .ox-w p { margin: 0; }
-  .ox-wrong .ox-w p + p { margin-top: var(--ax-space-4); }
-  .ox-wrong .ox-w b { color: var(--ax-color-ink); }
-  @media (prefers-reduced-motion: reduce) { .oxb-lives.hit, .oxb-sc b.pop, .oxb-say.in, #jpTx .jt-say.in { animation: none; } .oxb-tip, .oxb-hint, #jpTx .jt-say.out { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { #jpTx .jt-say.in { animation: none; } #jpTx .jt-say.out { transition: none; } }
   @media (min-width: 1200px) { .tve-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } .tve-grid.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }   /* v4.83 미니 게임 세 종목 */
   .gs-say { display: flex; align-items: flex-end; gap: var(--ax-space-8); text-align: left; }
   .gs-say > svg { flex: none; width: 48px; height: 48px; display: block; animation: axsFloat 3.2s ease-in-out infinite; }
@@ -2204,18 +2144,16 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #rgPlay.rt { background: var(--rt-bark); }
   #rgPlay.rt .rgp-top { background: var(--rt-wood); border-bottom: 3px solid var(--rt-ink); box-shadow: inset 0 -3px 0 0 var(--rt-wood2); color: var(--rt-cream); }
   #rgPlay.rt .rgp-t { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16); color: var(--rt-cream); }
-  #rgPlay.rt .rg-hud .rg-sc small, #rgPlay.rt .oxb-sc small { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; color: var(--rt-tan2); }
-  #rgPlay.rt .rg-hud .rg-sc b, #rgPlay.rt .rg-hud .rg-tm, #rgPlay.rt .oxb-sec, #rgPlay.rt .oxb-sc b { font-family: var(--rt-font); font-size: var(--rt-f24); font-weight: 400; line-height: var(--rt-l24); color: var(--rt-white); }
-  #rgPlay.rt .rg-hud .rg-tm.hot, #rgPlay.rt .oxb-sec.warn { color: var(--rt-o100); }
+  #rgPlay.rt .rg-hud .rg-sc small { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; color: var(--rt-tan2); }
+  #rgPlay.rt .rg-hud .rg-sc b, #rgPlay.rt .rg-hud .rg-tm { font-family: var(--rt-font); font-size: var(--rt-f24); font-weight: 400; line-height: var(--rt-l24); color: var(--rt-white); }
+  #rgPlay.rt .rg-hud .rg-tm.hot { color: var(--rt-o100); }
   #rgPlay.rt .rgp-top .rgp-x, #rgPlay.rt .rgp-top .snd-btn { height: 40px; min-height: 40px; margin: 3px; padding: 0 12px; border: 0; border-radius: 0; background: var(--rt-tan2); color: var(--rt-bark);
     font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; box-shadow: var(--rt-line), inset -3px -3px 0 0 var(--rt-tan); }
   #rgPlay.rt .rgp-top .snd-btn.on { background: var(--rt-o100); color: var(--rt-btn); box-shadow: var(--rt-line), inset -3px -3px 0 0 var(--rt-deep); }
   #rgPlay.rt .rgp-top .rgp-x.off, #rgPlay.rt .rgp-top .rgp-x:disabled { background: var(--rt-dim); color: var(--rt-night); box-shadow: var(--rt-line); }
-  #rgPlay.rt .oxb-bar { border-radius: 0; background: var(--rt-bark); }
-  #rgPlay.rt .oxb-bar i { border-radius: 0; }
   #rgPlay.rt .rgp-mid canvas { border: 3px solid var(--rt-ink); border-radius: 0; box-shadow: 0 0 0 3px var(--rt-wood); }
   #rgPlay.rt .rgp-mid.fill canvas { border: 0; box-shadow: none; }
-  #rgPlay.rt.tetris .rgp-mid, #rgPlay.rt .tt-pad, #rgPlay.rt .oxb-ctl { background: var(--rt-bark); border-top-color: var(--rt-ink); }
+  #rgPlay.rt.tetris .rgp-mid, #rgPlay.rt .tt-pad { background: var(--rt-bark); border-top-color: var(--rt-ink); }
   #rgPlay.rt .tt-dpad::before, #rgPlay.rt .tt-dpad::after { background: var(--rt-night); }
   #rgPlay.rt .tt-cap { color: var(--rt-tan2); }
   #rgPlay.rt .gs-foot { background: var(--rt-bark); border-top: 3px solid var(--rt-ink); color: var(--rt-tan2); }
@@ -2235,20 +2173,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #rgPlay.rt .rgp-pause small { color: var(--rt-tan2); }
   #rgPlay.rt .rgp-pause .rt-btn { max-width: 320px; }
   /* v4.28 O/X 아래 버튼 = 오락실 버튼 두 개(O 주황 면 · X 크림 면) · 좌우 큰 O / X 힌트 · 말풍선 머리 딱지 = 도트 글꼴 */
-  #rgPlay.rt .oxb-ctl { gap: 16px; padding: 14px 18px calc(40px + env(safe-area-inset-bottom, 0px)); }   /* v4.40 (사용자 260925) O · X 버튼을 26px 올린다 · 화면 맨 아래 끝(제스처 막대 근처)보다 엄지가 닿기 편한 높이 · 게임판이 그만큼 줄어든다 */
-  #rgPlay.rt .oxb-b { margin: 4px; border-radius: 0; background: var(--rt-cream); color: var(--rt-bark); box-shadow: var(--rt-line4), inset -4px -4px 0 0 var(--rt-tan), inset 4px 4px 0 0 var(--rt-white); }
-  #rgPlay.rt .oxb-b.o { background: var(--rt-o100); box-shadow: var(--rt-line4), inset -4px -4px 0 0 var(--rt-deep), inset 4px 4px 0 0 var(--rt-o60); }
-  #rgPlay.rt .oxb-b .oxb-g { --oxb-sh: var(--rt-tan); color: var(--rt-ink); }
-  #rgPlay.rt .oxb-b.o .oxb-g { --oxb-sh: var(--rt-deep); color: var(--rt-white); }
-  #rgPlay.rt .oxb-hint .oxb-g { --oxb-sh: var(--rt-ink); }
-  #rgPlay.rt .oxb-b span { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16); color: var(--rt-bark); }
-  #rgPlay.rt .oxb-b.o span { color: var(--rt-btn); }
-  #rgPlay.rt .oxb-b.hit { transform: translateY(2px); }
-  #rgPlay.rt .oxb-b.ok { box-shadow: var(--rt-line4), inset 0 0 0 6px var(--rt-white); }
-  #rgPlay.rt .oxb-b.bad { background: var(--rt-dim); box-shadow: var(--rt-line4); }
-  #rgPlay.rt .oxb-hint span { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16); color: var(--rt-cream); text-shadow: var(--rt-out2); }
-  #rgPlay.rt .gs-qsay-tag, #rgPlay.rt .oxb-tag { border-radius: 0; font-family: var(--rt-font); font-size: 16px; font-weight: 400; line-height: 24px; }
-  #rgPlay.rt .gs-qsay-tag, #rgPlay.rt .oxb-tagrow { top: -16px; }
+  #rgPlay.rt .gs-qsay-tag { border-radius: 0; font-family: var(--rt-font); font-size: 16px; font-weight: 400; line-height: 24px; }
+  #rgPlay.rt .gs-qsay-tag { top: -16px; }
   /* 점프 글자 레이어(캔버스 위 DOM) */
   #rgPlay.rt #jpTx .jt-l, #rgPlay.rt #jpTx .jt-s { font-family: var(--rt-font); font-size: 16px; font-weight: 400; }
   #rgPlay.rt #jpTx .jt-ban { font-family: var(--rt-font); font-size: 16px; font-weight: 400; }
@@ -2294,7 +2220,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .rt .rt-fold-p { margin: 0; font: var(--ax-type-t7); color: var(--rt-tan2); word-break: keep-all; }
   .rt .rt-fold .oly-brk { margin: 0; }
   .rt .rt-fold .oly-brk.ref td.n { font-family: var(--rt-font); font-size: var(--rt-f16); color: var(--rt-cream); white-space: normal; }
-  .rt .rt-fold .ox-titles { justify-content: flex-start; margin-top: 4px; }
   /* v4.28 시작 화면 미리보기 = 오락실 대기 화면 · 「DEMO · 예시 화면」 깜빡임 + 채도·밝기를 낮춰 진짜 판과 구별 · 동작 줄이기면 고정 표시 */
   .rt .gs-prev canvas, .rt .gs-prev .gsp-dom { filter: saturate(0.6) brightness(0.9); }
   /* v4.95 (사용자 261002 「demo 예시 화면 표기가 게임의 가운데에 · 크기도 키워」) 미리보기 가로 · 세로 가운데 · 글자 24px(큰글씨 26px · 미리보기 폭 안) · 반투명 밤색 알약(미리보기를 가리지 않게) · 모든 게임 같은 규칙(GS_DEMO_TAG 하나) */
@@ -2302,7 +2227,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
     font-family: var(--rt-font); font-size: var(--rt-f24); font-weight: 400; line-height: var(--rt-l24); animation: rtDemo 1.2s steps(1, end) infinite; }
   .fs-big .rt .gs-demo { padding: 8px 16px; font-size: 26px; line-height: 34px; }
   @media (prefers-reduced-motion: reduce) { .rt .gs-demo { animation: none; } }
-  .rt .rt-go .ox-titles span { border-radius: 0; background: var(--rt-bark); color: var(--rt-o60); box-shadow: inset 0 0 0 2px var(--rt-wood); }
   .rt .rt-go .rt-go-rank { margin: 0; font-family: var(--rt-font); font-size: var(--rt-f16); line-height: var(--rt-l16); color: var(--rt-o60); }
   .rt .gs-res-go { gap: 12px; padding: 4px 0; }
   .rt .rt-extra { display: flex; flex-direction: column; gap: 16px; }
@@ -4084,7 +4008,7 @@ var App = {
     /* v4.06 3단계 · 현장 안내 E02 · 스캔 Q02 · 결과 Q03 · 계단 화면 */
     exp_g: "exp", scan_q: "exp", scan_res: "exp", stair: "exp",
     games: "exp", quiz: "exp", ideas: "exp", survey: "exp", ideas_mine: "ideas",
-    game_tetris: "games", game_pang: "games", game_jump: "games", game_ox: "quiz", quiz_play: "quiz", oly_rank: "games", type_rank: "guide", floor1: "guide",   /* v4.83 퀴즈 두 종목의 뒤로가기 = AX 퀴즈 */
+    game_tetris: "games", game_pang: "games", game_jump: "games", quiz_play: "quiz", oly_rank: "games", type_rank: "guide", floor1: "guide",   /* v4.83 퀴즈 두 종목의 뒤로가기 = AX 퀴즈 */
     /* 프로그램 · 신청 (2단계에서 재디자인) */
     dap: "guide", ev_cchat: "guide", sess_d: "guide", sess_cf: "sess_d", sess_ok: "guide", zone_d: "guide",   /* v4.93 구역 상세 · 뒤로 = 프로그램(상시 운영) */
     admin: "my", type_site: "admin", wall_type: "admin", type_award: "admin"
@@ -4099,7 +4023,7 @@ var App = {
     ev_cchat: "내 커피챗",
     floor1: "1F 부스", zone_d: "1F 구역",
     admin: "관리자 모드", game_tetris: "테트리스", type_site: "1F 현장 셀프 모드", wall_type: "", type_award: "", type_rank: "타자 순위",
-    game_pang: "AX 팡", game_jump: "ME to WE 점프", game_ox: "AX 퀴즈", quiz_play: "퀴즈 풀기", oly_rank: "미니 게임 순위"
+    game_pang: "AX 팡", game_jump: "ME to WE 점프", quiz_play: "퀴즈 풀기", oly_rank: "미니 게임 순위"
   },
   /* 들어온 곳 기억 · 같은 화면을 여러 곳에서 연다(시간표 = 홈 · 나의 참여, 미니게임 = 체험 · 스탬프 카드) → 뒤로가기는 들어온 곳으로 */
   from: {},
@@ -4175,7 +4099,7 @@ var App = {
     /* v4.93 (261001 사용자 확정 · IA 검토 8장 A6) 옛 진입 별칭 · 라우트 id 는 그대로 받는다(해시 · 푸시 목적지 · 옛 onclick)
        floor1 = 프로그램 › 상시 운영 1F · my_sched · 내 일정(guide_time + SCHED.tab mine · mySched()) = 나의 참여 › 나의 일정 · 그 밖의 guide_time = 프로그램 › 시간표 */
     if (v === "my_sched") { SCHED.tab = "mine"; v = "guide_time"; }
-    if (v === "game_ox" && qzLive()) v = "quiz";   /* v4.96 유리다리는 휴면 · 옛 링크 · 타일 · 다음 스탬프는 판 퀴즈 목록으로 */
+    if (v === "game_ox") v = "quiz";   /* v4.96 유리다리 휴면 → 정리 #10(261005) 지움 · 옛 링크 · 타일 · 다음 스탬프는 판 퀴즈 목록으로 */
     if (v === "quiz_play" && !qzLive()) v = "quiz";   /* 옛 서버(판 퀴즈를 모름)면 유리다리 목록 */
     if (v === "game_word") v = "quiz";   /* 정리 #1(261005) 기억력 퀴즈를 지웠다 · 옛 링크는 AX 퀴즈로 */
     if (v === "game_type") v = "games";   /* 정리 #4(261005) 앱(폰) 단어 소나기를 지웠다 · 옛 링크는 미니 게임으로 */
@@ -4191,7 +4115,6 @@ var App = {
     if (this.current === "game_pang" && v !== "game_pang") pgStop();
     if (this.current === "type_site" && v !== "type_site") { tsfStop(); if (RG.on && RG.mode === "site") rgStop(); }
     if (this.current === "game_jump" && v !== "game_jump") jpStop();
-    if (this.current === "game_ox" && v !== "game_ox") oxStop();   /* v4.09 판 중간에 나가면 기록하지 않는다 */
     if (/^game_/.test(this.current || "") && v !== this.current && S.get("type_nick_edit", false)) S.set("type_nick_edit", false);   /* v4.09 닉네임을 바꾸다 헤더 뒤로 = 바꾸지 않음 */
     modalClose();
     var prev = this.booted ? this.current : null;   /* 첫 진입(딥링크·새로 고침 복귀)은 들어온 곳이 없다 */
@@ -4207,7 +4130,7 @@ var App = {
     /* v3.15 새로 고침 복귀 · 현재 화면의 소속 탭을 sessionStorage 에 기억(같은 브라우저 탭에서만, 다음 방문은 홈).
        관리자·사이니지·게임 전체화면은 저장하지 않는다 · Lv2 는 소속 탭으로 저장된다 */
     try {
-      if (SIGNAGE.indexOf(v) < 0 && ["admin", "game_tetris", "game_pang", "game_jump", "game_ox", "type_site"].indexOf(v) < 0) {
+      if (SIGNAGE.indexOf(v) < 0 && ["admin", "game_tetris", "game_pang", "game_jump", "type_site"].indexOf(v) < 0) {
         var lt = this.tabOf(v);
         if (this.ROOTS.indexOf(lt) >= 0) {
           sessionStorage.setItem("axf_last_tab", lt);
@@ -4327,13 +4250,13 @@ window.addEventListener("scroll", function () {
   var b = el("topbtn");
   if (!b) return;
   var ok = window.scrollY > 400 && !el("app").hidden &&
-    SIGNAGE.indexOf(App.current) < 0 && App.current !== "game_tetris" && App.current !== "game_pang" && App.current !== "game_jump" && App.current !== "game_ox" && App.current !== "type_site";
+    SIGNAGE.indexOf(App.current) < 0 && App.current !== "game_tetris" && App.current !== "game_pang" && App.current !== "game_jump" && App.current !== "type_site";
   b.classList.toggle("on", ok);
 }, { passive: true });
 window.addEventListener("axf-store", function () {
   checkMyState();
   updateLed();
-  if (["game_tetris", "game_pang", "game_jump", "game_ox", "type_site", "scan_q"].indexOf(App.current) >= 0) return;   /* v4.06 Q02 는 저장소가 바뀔 때마다 카메라를 다시 붙이지 않는다 */
+  if (["game_tetris", "game_pang", "game_jump", "type_site", "scan_q"].indexOf(App.current) >= 0) return;   /* v4.06 Q02 는 저장소가 바뀔 때마다 카메라를 다시 붙이지 않는다 */
   if (typingNow()) { RENDER_HELD = true; return; }   /* v4.25 글을 치는 중에는 화면을 새로 그리지 않는다(폴링·공지 도착 포함) · 칸을 벗어날 때 한 번 */
   App.render();
 });
@@ -6328,7 +6251,7 @@ function stpAct(s, got) {
   if (got) return s.id === "p5" ? ["더 쓰기", "App.go('ideas')"] : s.id === "sv" ? ["결과", "App.go('survey')"] :
     s.id === "qz" ? ["다시 하기", "App.go('quiz')"] : s.id === "p4" ? ["다시 하기", "App.go('games')"] : ["완료", ""];   /* v5.16 (사용자 261003 「스탬프가 완료되면 더 안 된다」) 스탬프는 한 번 · 게임은 몇 번이든 · 받은 줄도 목록으로 */
   if (s.id === "lg") return ["자동", ""];
-  if (s.id === "qz" && QZ_NEED <= 1) return ["시작", "App.go('game_ox')"];   /* v4.95 (사용자 261002 「AX 퀴즈 박스 표시는 이제 없어도 된다」) 한 판뿐 · 타일 없이 줄을 누르면 시작 화면 */
+  if (s.id === "qz" && QZ_NEED <= 1) return ["시작", "App.go('quiz')"];   /* v4.95 (사용자 261002 「AX 퀴즈 박스 표시는 이제 없어도 된다」) 한 판뿐 · 타일 없이 줄을 누르면 시작 화면 */
   if (s.id === "qz" || s.id === "p4") return ["", ""];   /* 종목 타일이 행동이다 */
   if (s.id === "p2") return ["내 QR", "qrPanelOpen('mine')"];
   if (s.id === "p5") return ["쓰기", "App.go('ideas')"];
@@ -6717,12 +6640,6 @@ var Views = {
     jpStop();
     if (gsNeedNick()) return gsNickHtml("jump");
     return gsStartHtml("jump", { rootId: "jpRoot" });   /* v4.11 세 동작은 조작 한 줄(GS_GAMES.jump.line · 항상 보임) */   /* v4.02 버틴 시간은 점수가 아니다 */
-  },
-  /* ═══ v4.12 AI O/X · 유리다리 건너기 · 시작 화면에서 판 토큰(황금 자리)·모두의 선택 비율을 미리 받는다 ═══ */
-  game_ox: function () {
-    oxStop();
-    oxPrefetch();   /* v4.83 AX 퀴즈는 닉네임을 묻지 않는다 */
-    return gsStartHtml("ox", { rootId: "oxRoot", sub: "유리다리 건너기" });   /* v4.28 시간·줄·목숨 줄은 결과 접힘 안(gsRuleText) · 판자 삭제 */
   },
   /* ═══ v3.50 AX 올림픽 순위판 · 종합(전 종목 완주자) · 종목별(금은동) ═══
      v3.50d 부문 정보 전면 삭제 (사용자 확정 260917·260918 · 부문 메달표·부문 라벨·부문 평균 금지) */
@@ -9199,7 +9116,7 @@ function tryAdmin() {
 /* ═══ v4.23 게임 화면 16비트 레트로 · 경계와 글꼴 (260923 사용자 확정 · design.md A-5 5-16) ═══
    .rt 가 붙는 곳 = 아래 화면(#view) + 게임 오버레이(#rgPlay) 뿐이다. 홈 · 프로그램 · 신청 · 나의 참여에는 붙지 않는다.
    글꼴(Neo둥근모 44KB)은 부팅 3초 뒤 한 번, 그리고 게임 화면에 들어설 때 미리 읽는다 · 읽기 전에는 Pretendard 로 그린다(swap) · 실패해도 게임은 그대로 돈다. */
-function rtView(v) { return ["game_tetris", "game_pang", "game_jump", "game_ox", "type_site", "type_rank", "oly_rank", "wall_type"].indexOf(v) >= 0; }
+function rtView(v) { return ["game_tetris", "game_pang", "game_jump", "type_site", "type_rank", "oly_rank", "wall_type"].indexOf(v) >= 0; }
 var RT_FONT_WARM = 0, RT_BOT_URL = "";
 function rtFontWarm() {
   if (RT_FONT_WARM || !document.fonts || !document.fonts.load) return;
@@ -10286,7 +10203,7 @@ function sndToggle(site) {
   if (typeof rgFocus === "function" && el("rgIn")) rgFocus();
 }
 /* START · 아직 안 골랐으면 선택 카드 한 번 */
-var SND_START = { pang: "pgStart()", jump: "jpStart()", tetris: "ttStart()", ox: "oxStart()" };
+var SND_START = { pang: "pgStart()", jump: "jpStart()", tetris: "ttStart()" };
 function gsBegin(key) {
   SFX.site = false;
   if (GS_HOW[key]) { GS.first = !gsHowSeen(key) || GS.first === key ? key : ""; gsHowMark(key); gshStop(); }   /* v5.41 이 사람의 이 게임 첫 판 · 소리 선택 카드를 닫고 다시 눌러도 첫 판 */
@@ -10312,7 +10229,7 @@ function sndChoose(on, key) {
    계수는 서버 설정 「올림픽_점수」가 정본 · oly_board 응답의 rule 을 받아 쓴다 · 받기 전에는 아래 OLY_RULE(서버 기본값과 같은 값 · 검사 60절이 대조).
    제출 = 구성 요소(parts) + 점수 · 서버가 같은 식으로 다시 계산해 다르면 거부(mismatch) · 옛 기록(g1·g2 · v4.12 전 O/X g3)은 집계 제외 · 제출 버전 g4(v4.12) · 로컬 최고는 oly2_best_<종목>.
    명예 순위만(경품 없음) · 부문 통계·부문 메달 없음 · 공개 순위는 닉네임 · 1~3위 표식 = 월계수(A안 · 48px 미만으로 쓰지 않는다). */
-/* v4.96 (261001 사용자 확정) AX 퀴즈 = 판 퀴즈(quiz · quiz_play) · false 면 유리다리 O/X(game_ox)로 되돌린다(코드 보존 · 휴면) */
+/* v4.96 (261001 사용자 확정) AX 퀴즈 = 판 퀴즈(quiz · quiz_play) · 정리 #10(261005) 유리다리 O/X(game_ox)는 지웠다 · false 는 옛 서버 갈래(B8 · 행사 뒤)만 남는다 */
 var QUIZ_CARD = true;
 var OLY_EVENTS = [
   { key: "pang", name: "AX 팡", short: "팡", view: "game_pang", best: "oly2_best_pang" },
@@ -10390,7 +10307,6 @@ var OX_BANK = [
   { id: "F84", c: 4, lv: 2, q: "AI컨설팅 도우미는 판매 화법을 알려 준다", a: "O", e: "상품의 강점을 판매 화법으로 제공하는 앱이다.", g: "ap", rv: 1, z: "action", h: "action.consult" },
   { id: "F85", c: 4, lv: 2, q: "Hi-Helper는 추천 설계안을 하나만 준다", a: "X", e: "추천 설계안 TOP1~3을 비교해 볼 수 있다.", g: "hhr", rv: 1, z: "play", h: "play.hh.tips" }
 ];
-var OX_ZONE = { vision: "AX VISION", lab: "AX LAB", action: "AX in Action", play: "AX PLAY", lounge: "AX LOUNGE", event: "EVENT" };   /* z → 구역 이름 · 1층 판 구역 */
 var OX_KEY = {};   /* id: [난이도, 정답, 짝, 검수, 문장] · 서버 OX_KEY 와 같은 모양(채점 식을 글자 그대로 같게 쓰려고) */
 OX_BANK.forEach(function (x) { OX_KEY[x.id] = [x.lv, x.a, x.g, x.rv, x.q]; });
 function oxKey(id) { return OX_KEY[id]; }   /* v4.92 채점 식이 부르는 정답 찾기 · 앱은 지금 은행만 · 서버 oxKey_ 는 옛 id 표(OX_KEY_OLD)도 본다 */
@@ -10474,13 +10390,6 @@ function oxTally(ql, R, gold) {
 function oxGold(tk) {
   var m = /^[0-9a-z]{1,12}\.(\d{1,2})\.(\d{1,2})\.[0-9a-z]{1,20}$/.exec(String(tk == null ? '' : tk));
   return m ? [Number(m[1]), Number(m[2])] : [];
-}
-/* 제출 구성 요소 · 집계 숫자는 ql 에서 다시 센 값 · tl = 문제가 떠 있는 동안 시간이 다 됐을 때 그 순간 남은 시간(끝났으면 0) · pz = 직접 멈춤 수 */
-function oxParts(ql, tk, R, tl, pz) {
-  var X = oxTally(ql, R, oxGold(tk)), f = {};
-  ["n", "c1", "c2", "c3", "wr", "hs", "fl", "pa", "sp", "cb", "fb", "gb", "gc", "pn", "hp", "mx", "used", "life", "arr"].forEach(function (k) { f[k] = X[k]; });
-  f.tl = X.end ? 0 : Math.max(0, Math.round(tl || 0)); f.pz = pz || 0; f.ql = ql; f.tk = tk || "";
-  return f;
 }
 /* 규칙 한 줄 · 시작 화면·순위판 종목 탭 */
 function olyRuleLine(key) {
@@ -11794,7 +11703,6 @@ var GS_GAMES = {
   tetris: { name: "테트리스", view: "game_tetris", start: "ttStart()", best: "oly2_best_tetris", line: "블록을 옮기고 돌려서 줄을 채워요 · 아래 버튼으로" },
   pang: { name: "AX 팡", view: "game_pang", start: "pgStart()", best: "oly2_best_pang", line: "같은 그림 3개를 한 줄로 맞춰 터뜨려요 · 밀어서 바꾸기" },
   jump: { name: "ME to WE 점프", view: "game_jump", start: "jpStart()", best: "oly2_best_jump", line: "화면을 탭하면 점프 · 두 번 탭하면 2단 점프 · 꾹 누르면 엎드리기" },
-  ox: { name: "AX 퀴즈", view: "game_ox", start: "oxStart()", best: "oly2_best_ox", line: "맞으면 화면 왼쪽 O, 틀리면 오른쪽 X · 발판이 아래 끝에 닿기 전에" }
 };
 /* v4.08 키보드가 올라와도 입력칸과 아래 고정 버튼이 가려지지 않게 · 가려진 높이를 --kb 로 넘긴다 · 포커스한 칸은 보이는 곳 가운데로 */
 function kbSync() {
@@ -12201,7 +12109,6 @@ var GSP_DEMO = {
   pang: { html: function () { return '<canvas id="pgPrev" width="180" height="174"></canvas>'; }, draw: function (t) { pgPreview(t); }, still: 0.5 },
   jump: { html: function () { return '<canvas id="jpPrev" class="px" width="180" height="120"></canvas>'; }, draw: function (t) { jpPreview(t); }, still: 1.77 },
   tetris: { html: function () { return '<canvas id="ttPrev" width="120" height="120"></canvas>'; }, draw: function (t) { ttPreview(t); }, still: 0.9 },
-  ox: { html: function () { OXP = null; return '<canvas id="oxPrev" width="300" height="230"></canvas>'; }, draw: function (t) { oxPreview(t); }, still: 4.2 }
 };
 function gspK() { return Math.min(3, window.devicePixelRatio || 1) * 2; }   /* 캔버스 해상도 배수 · 칸 그림을 선명하게(도트 점프 제외) */
 function gspStop() {
@@ -12252,63 +12159,6 @@ function gspFit() {
   d.style.top = 12 + Math.max(0, (H - d.offsetHeight * s) / 2) + "px";
 }
 window.addEventListener("resize", function () { if (el("gsPrev")) gspFit(); });
-/* O/X 미리보기 · 유리다리 데모 · 게임과 같은 그리기(oxbDraw · 발판 · 챗봇 · 반짝이 · 깨짐)로 저절로 건넌다 · 다리는 계속 흘러내리고 다섯 번째마다 한 번 틀려 물에 빠진다
-   게임 시간으로 1/30초씩 나아간다(정지 화면이면 그 시각까지 한 번에 돌려 그린다) · 28줄을 건너면 처음부터 */
-var OXP = null;
-function oxpInit(W, H) {
-  var qs = []; for (var i = 0; i < 32; i++) qs.push(OX_BANK[(i * 7) % OX_BANK.length]);
-  var G = oxbScene(qs, [4, 11, 19, 26]); oxbFit(G, W, H);
-  return { G: G, t: 0, n: 0, lead: 130, wait: 0, busy: false, tm: [], k: 0 };
-}
-function oxpStep(P, dt) {
-  var G = P.G; G.gt += dt;
-  for (var i = 0; i < P.tm.length; i++) if (G.gt >= P.tm[i].t) { var f = P.tm[i].fn; P.tm.splice(i--, 1); f(); }
-  if (!P.busy) {
-    P.wait += dt; P.lead -= dt * 100 / 2.6;
-    G.danger = Math.max(0, Math.min(1, (60 - P.lead) / 60));
-    var cur = G.rows[G.cur]; if (cur && !cur.deck && G.side != null) cur.sides[G.side].crack = Math.max(cur.sides[G.side].crack, G.danger);
-    if (P.wait >= 1.15) oxpGo(P);
-  }
-  G.flow = P.n - P.lead / 100;
-  oxbTick(G, dt);
-}
-function oxpGo(P) {
-  var G = P.G, k = P.k++, r = G.rows[P.n + 1], right = k % 5 !== 3, side = [0, 1, 1, 0, 1, 0, 0, 1][k % 8], a = right ? side : 1 - side;
-  var later = function (s, fn) { P.tm.push({ t: G.gt + s, fn: fn }); };
-  P.busy = true; P.wait = 0; P.n++; P.lead = Math.min(150, Math.max(100, P.lead + 100)); G.danger = 0; G.next = P.n + 1;
-  oxbAnim(G, { kind: "arc", x0: G.ch.x, y0: G.ch.y, z0: G.ch.z, x1: oxbSideX(a), y1: 0, z1: r.z, h: right ? 1.4 : 0.9, dur: right ? 0.34 : 0.28, done: function () {
-    G.cur = r.i; G.side = a;
-    if (right) {
-      var sd = r.sides[a], run = k % 5 + 1; sd.flex = 1; sd.glow = 1;
-      G.rings.push({ x: oxbSideX(a), y: 0.02, z: r.z, t0: G.gt, amt: 0.6, col: "rgba(2,118,72,A)" });
-      oxbSparkle(G, r, a, r.gold ? 26 : 20, r.gold ? ["#FFC56E", "#FFFFFF", "#FF7F32"] : ["#027648", "#FFFFFF", "#3FA876"]);
-      oxbFloat(G, "정답!", "#027648", 0, 1.35, 0.8); oxbFloat(G, "+" + (r.gold ? 3 : 1) * (60 + 6 * Math.min(run - 1, 5)), r.gold ? "#A63D00" : "#191F28", 1, 1.05, 0.95);
-      if (run >= 2) oxbFloat(G, run + " 콤보", "#5E3218", 2, 1, 0.9);
-      G.flash = { ok: true, t: 0.28, d: 0.28 };
-      oxbAnim(G, { kind: "arc", x0: G.ch.x, y0: 0, z0: G.ch.z, x1: G.ch.x, y1: 0, z1: G.ch.z, h: 0.3, dur: 0.16, done: function () { P.busy = false; } });
-    } else {
-      r.sides[a].st = "crack"; r.sides[a].crack = 0.6;
-      later(0.12, function () {
-        oxbShatter(G, r, a); G.flash = { ok: false, t: 0.4, d: 0.4 }; G.shake = 1; oxbFloat(G, "−80", "#D22030", 0, 1.2, 0.9);
-        oxbAnim(G, { kind: "fall", x0: G.ch.x, y0: 0, z0: r.z, x1: G.ch.x, y1: OXB.WATER - 1.2, z1: r.z, dur: 0.42 });
-        later(0.32, function () { oxbSplash(G, G.ch.x, r.z, 1); });
-        later(0.72, function () { r.reveal = side; oxbSplash(G, G.ch.x, r.z, 0.5);
-          oxbAnim(G, { kind: "arc", x0: G.ch.x, y0: OXB.WATER - 0.6, z0: r.z, x1: oxbSideX(side), y1: 0, z1: r.z, h: 2.1, dur: 0.5, done: function () { G.side = side; r.sides[side].flex = 1; P.busy = false; } }); });
-      });
-    }
-  } });
-}
-function oxPreview(t) {
-  var cv = el("oxPrev"); if (!cv) return;
-  oxbBotLoad();
-  var k = Math.min(2, window.devicePixelRatio || 1), W = 300, H = 230;
-  if (cv.width !== W * k) { cv.width = W * k; cv.height = H * k; }
-  if (!OXP || t < OXP.t) OXP = oxpInit(W, H);
-  else if (OXP.n >= 28) { OXP = oxpInit(W, H); OXP.t = t; }
-  var guard = 0;
-  while (OXP.t < t && guard++ < 2000) { var d = Math.min(1 / 30, t - OXP.t); OXP.t += d; oxpStep(OXP, d); }
-  var ctx = cv.getContext("2d"); ctx.setTransform(k, 0, 0, k, 0, 0); oxbDraw(ctx, OXP.G);
-}
 function gsRankGo(key) { return "S.set('oly_tab', 'event'); S.set('oly_ev', '" + key + "'); App.go('oly_rank')"; }
 /* v4.23 공용 GAME OVER 패널 · 다섯 게임 + 단어 소나기(앱 솔로 · 1F 현장 타자왕전) 결과가 모두 이 한 틀을 쓴다(사용자 확정 260923 · design.md A-5 5-16 · 검사 82절)
    어두운 판 · 나무 이중 테두리 · 계단 모서리 · 도트 글꼴 · 각진 오락실 버튼(부른 쪽이 rt-btn 으로 둔다) · 시안 §3
@@ -13620,18 +13470,10 @@ function jpPreview(t) {
   ctx.restore();
 }
 
-/* ════════════════ v4.12 AI O/X · 유리다리 건너기 · AX 올림픽 5번째 종목 (사용자 결정 260922 · 기획 「AI OX 게임 기획.md」 260922 유리다리 전환 절) ════════════════
-   60초 · 다리 12줄(v4.14 · 난이도 1 → 2 → 3 = 4·4·4 · 줄 시간 6.0 → 4.0초) · 목숨 3 · 왼쪽 발판 O · 오른쪽 발판 X · 탭하거나 밀어서 건넌다.
-   v4.14 게임판 = 16비트 도트(oxbDraw) · 문제 = 다음 발판과 챗봇 바로 위 말풍선(oxSayPlace) · 위 줄 = 목숨 · 남은 시간 · 점수만.
-   다리는 문제가 떠 있는 동안 아래로 흘러내린다(테트리스처럼) · 서 있는 발판이 화면 아래 끝에 닿기 전에 답해야 하고, 닿으면 떨어진다(목숨 −1).
-   아래 끝에 가까워질수록 발판에 금이 간다(옛 「오래 서 있으면 금」과 하나로) · 뒤로 갈수록 빨라지고 속도 상한이 있다(어느 문제든 읽을 시간 2초 이상).
-   점수 = oxTally(서버 oxTally_ 와 같은 식) · 판마다 서버 토큰(ox_start)이 황금 발판 자리를 정한다 · 토큰이 없으면 황금 없이.
-   시계와 다리 흐름은 게임 시간으로 잰다 · 앱을 벗어나면 멈춘다(판이 보이지 않게 문제도 가린다) · 직접 멈춤은 판당 pauseMax 번.
-   챗봇은 원본 BOT_SVG 래스터화만 · 이동과 튀기기만(형태 변형 없음). 해설은 결과 화면 「틀린 문제」 카드에만. */
-var OX_TITLE = { 4: "AX 1층 마스터" }, OX_TITLE_MIN = 4;   /* 한 판에 그 분야를 4문제 이상 풀고 모두 맞히면 · 점수와 무관 · v4.92 1층 부스 분야(c 4) 하나 · 옛 분야 2 · 3 은 은행에서 빠졌다 */
-var OX_SEEN_MAX = 60, OX_TK_AGE = 9000000;   /* 최근 본 문항 · 토큰은 2시간 30분까지 쓴다(서버 3시간) */
+/* ════════════════ O/X 은행 공용 · 판 퀴즈 출제(OXS · oxOffList · oxPrefetch · ox_start 토큰) ════════════════
+   정리 #10(261005) 유리다리 O/X 게임(game_ox · ox* · oxb* · oxp*)은 지웠다 · 판 퀴즈가 쓰는 O/X 자원만 남긴다 */
+var OX_SEEN_MAX = 60;   /* 최근 본 문항 */
 var OXS = { tk: "", at: 0, ratio: {}, min: 20, off: [], busy: false };
-var OX = { on: false };
 function oxOffList() { var r = OLY.board && OLY.board.rule && OLY.board.rule.ox; return ((r && r.off) || []).concat(OXS.off || [], oxNewOk() ? [] : QZ_NEW); }   /* v4.98 새 문항은 새 서버(bank 2)에서만 */
 /* 판 토큰 · 모두의 선택 비율 · 끈 문항 · 시작 화면에서 미리 · 판을 시작하면 쓰고 다음 판 것을 곧바로 받는다 */
 function oxPrefetch(force) {
@@ -13654,799 +13496,8 @@ function oxRatioText(id) {
   var n = c[0] + c[1], o = Math.round(c[0] * 100 / n);
   return o >= 50 ? "직원 " + o + "%가 O를 골랐어요" : "직원 " + (100 - o) + "%가 X를 골랐어요";
 }
-/* 한 판 뽑기 · 난이도마다 per 개 · 짝 그룹은 한 판에 하나(어려운 난이도가 먼저 차지) · 난이도 묶음마다 O·X 각 60%까지 · 최근 본 문항은 뒤로(모자라면 그 난이도만 비움) · 끈 문항 제외
-   은행 95문제(v4.92)를 판마다 12개씩 돌려 쓴다(최근 본 60개를 뒤로 미뤄 몇 판이면 전부 나온다) */
-function oxPick() {
-  var R = olyRule().ox, off = oxOffList(), seen = S.get("ox_seen", []) || [], used = {}, out = [[], [], []];
-  var free = function (x) { return off.indexOf(x.id) < 0 && !used[x.id] && !(x.g && used["g:" + x.g]); };
-  [3, 2, 1].forEach(function (lv) {
-    var d = lv - 1, need = R.per[d], cand = shuf(OX_BANK.filter(function (x) { return x.lv === lv && free(x); }));
-    var fresh = cand.filter(function (x) { return seen.indexOf(x.id) < 0; });
-    if (fresh.length < need) seen = seen.filter(function (id) { return !OX_KEY[id] || OX_KEY[id][0] !== lv; });
-    var order = fresh.length < need ? cand : fresh.concat(cand.filter(function (x) { return fresh.indexOf(x) < 0; }));
-    var cap = Math.ceil(need * 0.6), cnt = { O: 0, X: 0 };
-    [true, false].forEach(function (bal) {
-      order.forEach(function (x) {
-        if (out[d].length >= need || !free(x) || (bal && cnt[x.a] >= cap)) return;
-        out[d].push(x); used[x.id] = 1; if (x.g) used["g:" + x.g] = 1; cnt[x.a]++;
-      });
-    });
-  });
-  var list = out[0].concat(out[1], out[2]);
-  S.set("ox_seen", seen.concat(list.map(function (x) { return x.id; })).slice(-OX_SEEN_MAX));
-  return list;
-}
-/* 채점을 따라가며 지금 연속 정답 수 · 남은 피버 줄 수 (oxTally 와 같은 규칙) */
-function oxRunFever(T, R) {
-  var run = 0, fever = 0;
-  T.items.forEach(function (it) {
-    if (it.ans === "P") return;
-    if (!it.right) { run = 0; fever = 0; return; }
-    if (fever > 0) fever--;
-    run++;
-    if (run % R.feverAt === 0) fever = R.feverLen;
-  });
-  return { run: run, fever: fever };
-}
 
-/* ── 무대 · 3D 다리 (시제품 proto/ox-bridge.html 의 그리기를 옮겼다 · 게임과 시작 화면 미리보기가 같은 함수를 쓴다) ──
-   세계 좌표: x 오른쪽 · y 위 · z 앞(다리 방향) · 줄 간격 ROWD · 발판 중심 x = ∓PX · 물 높이 WATER
-   카메라는 다리 흐름 s(줄 단위)를 따라간다 · s 줄의 발판 중심이 화면 아래 끝(y = H)에 온다 · 서 있는 줄 = 흐름 + 여유(lead) */
-var OXB = { ROWD: 3.0, PX: 1.1, PW: 1.5, PD: 1.7, WATER: -1.1, CH: 1.0, RAIL: 2.02, D0: 4.6, UP: 0.30 };
-/* v4.22 챗봇 도트는 공용 파일(assets/bot.js · botDotLoad · botDotCv)로 옮겼다 · 단어 소나기 엔진과 같은 함수를 쓴다 · 읽히면 시작 화면 미리보기를 다시 그린다 */
-function oxbBotReady() { if (OXP && el("oxPrev")) oxPreview(OXP.t); }
-function oxbBotLoad() { botDotLoad(oxbBotReady); }
-function oxbSideX(side) { return side === 0 ? -OXB.PX : side === 1 ? OXB.PX : 0; }
-function oxbSide() { var rays = [], n = 5 + Math.floor(Math.random() * 3);
-  for (var k = 0; k < n; k++) { var a = (k / n) * Math.PI * 2 + Math.random() * 0.6, pts = [[0, 0]], r = 0;
-    for (var s = 0; s < 3; s++) { r += 0.12 + Math.random() * 0.12; a += (Math.random() - 0.5) * 0.7; pts.push([Math.cos(a) * r, Math.sin(a) * r * 0.9]); }
-    rays.push(pts); }
-  return { st: "whole", crack: 0, rays: rays, flex: 0, glow: 0 }; }
-/* 줄 목록 · 0 = 출발 데크 · 1..n = 유리 줄(문제 i−1) · n+1 = 도착 데크 */
-function oxbRows(qs, gold) {
-  var rows = [], n = qs.length;
-  for (var i = 0; i <= n + 1; i++) rows.push({ i: i, z: i * OXB.ROWD, deck: i === 0 || i === n + 1, q: i >= 1 && i <= n ? qs[i - 1] : null, gold: gold.indexOf(i - 1) >= 0,
-    sides: [oxbSide(), oxbSide()], reveal: -1 });
-  return rows;
-}
-/* 크기 · W×H(CSS px) · 흐름 줄의 발판이 아래 끝 · 그 위 한 줄이 높이의 (1 − UP) 에 온다 · 발판 두 개가 한 줄 위에서 폭 안에 들어간다 */
-function oxbFit(G, W, H) {
-  var B = OXB, F = (W / 2 - 6) * (B.D0 + B.ROWD) / (B.PX + B.PW / 2 + 0.05);
-  F = Math.min(F, H * 2.2);
-  var CAMY = B.UP * H / (F * (1 / B.D0 - 1 / (B.D0 + B.ROWD)));
-  G.pr = { W: W, H: H, F: F, CAMY: CAMY, HY: H - CAMY * F / B.D0 };
-}
-function oxbP(G, x, y, z) {
-  var c = G.cam, pr = G.pr, dz = z - c.z; if (dz < 0.3) return null;
-  var s = pr.F / dz, sx = G.shake > 0 ? G.shake * Math.sin(G.gt * 70) * 7 : 0, sy = G.shake > 0 ? G.shake * Math.cos(G.gt * 53) * 5 : 0;
-  return { x: pr.W / 2 + (x - c.x) * s + sx, y: pr.HY + (pr.CAMY - y) * s + sy, s: s };
-}
-/* v4.14 16비트 도트 게임판 (사용자 확정 260922 · design.md A-1 게임판 내부는 게임 고유 디자인)
-   장면은 낮은 해상도 캔버스에 그린다(도트 한 칸 = 약 OXB_PX.css CSS px · 기기 픽셀의 정수배) → 제한 팔레트 OXB_PAL 로 줄인다 → 번지지 않게 확대.
-   v4.28 은 발판을 원근 없는 크림 타일 · 나무 난간 · 갈색 물로 바꿨다 → v4.34 (사용자 260925 「너무 정신이 없어 유리 계단인지 알아보지도 못한다 · 기존 버전 위에 새 디자인 문법만 얹어라」)
-   구도 = v4.27 그대로(원근으로 멀어지는 유리판 두 줄 · 강철 보 세 줄 · 물 · 오렌지 데크 · 나무 · 밧줄 없음) ·
-   얹은 문법 = 평면 색 띠(디더 · 격자 점 없음) · 유리판 먹선 외곽(다음 줄 두 칸) + 위 · 왼쪽 밝은 한 칸 + 유리 반사 도트 선 · O · X = 도트 글자(OXB_GLYPH) · 금 = 도트 한 칸 선.
-   외곽선은 밟는 것(유리판 · 데크 · 도착 문)만 · 보 · 기둥 · 물은 선 없이 면만(주인공이 먼저 보이게).
-   v4.39 (사용자 260925 「픽셀이 깨져 오브젝트가 또렷하게 인식되지 않는다」 · 레퍼런스 = 의사 3D 도로 렌더러 jakesgordon/javascript-racer · urdwyrd/endless-outrun · Fehmilay/Carlane)
-   원근 면은 모두 가로줄 채우기(oxbTrap · 안티에일리어싱 없음) · 물결 · 사선 반사선 제거 · 보를 굵은 면으로 · 판은 역할 세 단계(다음 줄 · 앞 줄 · 먼 줄 안개)와 지나간 줄(옅게) ·
-   O · X 는 다음 줄에만 판 위에 세운 9칸 도트 표지(한 칸 테두리 · 챗봇 위) · 유리 조각 = 회전 없는 도트 블록 · 물 · 유리 = 파랑 팔레트.
-   물 · 유리의 회청은 그대로 둔다 · 「파랑 · 민트 없음」은 앱 셸(HUD · 버튼 · 패널) 규칙이고 게임판 안 사물(물 · 유리)에는 파랑을 써도 된다(사용자 260925).
-   글자(떠오르는 점수 · ×3 · 도착 · 준비/시작)는 기기 해상도에 도트 글꼴(rtText · 16 · 24 · 32)로 따로 그린다 · 문제는 게임판 위 말풍선(DOM)이 맡는다.
-   챗봇은 원본 BOT_SVG 를 그 크기 그대로 작은 캔버스에 그려 도트로 만든 것만(assets/bot.js botDotCv · 형태 불변) */
-var OXB_PX = { css: 3 };
-var OXB_PAL = [
-  "FFFFFF", "F2F4F6", "E5E8EB", "D1D6DB", "B0B8C1", "8B95A1", "6B7684", "4E5968", "333D4B", "191F28", "000000",   /* 무채 · 먹 */
-  "EEF8FC", "D6EDF6", "B8DDEC", "9CC9DD", "7FB3CC", "6A9FBB", "56889F", "3F6E84", "1E3A4C",                         /* v4.39 물 · 유리 · 윤곽(파랑 · 게임판 안 사물만) */
-  "FFF1E8", "FFEBE0", "FFE3CF", "FFCFB0", "FFB284", "FFA46E", "FF7E31", "FF7F32", "E0661C", "D64524", "A63D00", "351A0C",   /* 오렌지 사다리 */
-  "FFF4D9", "FFD88F", "FFC56E", "E0962E",                                                                           /* 황금 */
-  "E6F4EC", "9ED9BC", "3FA876", "027648",                                                                           /* 정답 초록 */
-  "FBE3E5", "EE8C96", "D22030",                                                                                     /* 오답 빨강 */
-  "F3E7D8", "E3B884", "D9A066", "A8743F", "8A5A2B", "5E3218",                                                       /* 크림 · 나무(떠오르는 글자 · 챗봇) */
-  "282320"                                                                                                          /* 챗봇 눈 */
-];
-/* O · X 도트 글자 · 한 줄 = 비트(왼쪽이 높은 자리) · 큰 발판 7칸 · 작은 발판 5칸 · [0] = O · [1] = X */
-var OXB_GLYPH = { 9: [[0x07C, 0x0FE, 0x1C7, 0x183, 0x183, 0x183, 0x1C7, 0x0FE, 0x07C], [0x183, 0x1C7, 0x0EE, 0x07C, 0x038, 0x07C, 0x0EE, 0x1C7, 0x183]], 7: [[0x1C, 0x3E, 0x63, 0x63, 0x63, 0x3E, 0x1C], [0x63, 0x77, 0x3E, 0x1C, 0x3E, 0x77, 0x63]], 5: [[0x0E, 0x11, 0x11, 0x11, 0x0E], [0x11, 0x0A, 0x04, 0x0A, 0x11]] };
-var OXB_LUT = null;
-/* 15비트 색 → 가장 가까운 팔레트 색(밝기 가중) · 처음 한 번만 만든다 */
-function oxbLutBuild() {
-  var P = OXB_PAL.map(function (h) { return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]; }), L = new Uint32Array(32768);
-  for (var i = 0; i < 32768; i++) {
-    var r = ((i >> 10) & 31) * 8 + 4, g = ((i >> 5) & 31) * 8 + 4, b = (i & 31) * 8 + 4, best = 0, bd = 1e9;
-    for (var k = 0; k < P.length; k++) { var dr = r - P[k][0], dg = g - P[k][1], db = b - P[k][2], d = dr * dr * 3 + dg * dg * 4 + db * db * 2; if (d < bd) { bd = d; best = k; } }
-    L[i] = (255 << 24) | (P[best][2] << 16) | (P[best][1] << 8) | P[best][0];
-  }
-  OXB_LUT = L;
-}
-/* 낮은 해상도 장면 → 팔레트 색 · v4.28 디더 없음(회색 · 흰 체크가 「해상도만 낮춘」 느낌을 만들었다) · 비스듬한 선 가장자리만 가장 가까운 색으로 정리된다 */
-function oxbQuant(c, w, h) {
-  if (!OXB_LUT) oxbLutBuild();
-  var im = c.getImageData(0, 0, w, h), d = new Uint32Array(im.data.buffer), L = OXB_LUT, n = w * h;
-  for (var i = 0; i < n; i++) { var p = d[i]; d[i] = L[(((p & 255) >> 3) << 10) | ((((p >> 8) & 255) >> 3) << 5) | (((p >>> 16) & 255) >> 3)]; }
-  c.putImageData(im, 0, 0);
-}
-function oxbLw(G, w) { return Math.max(w, G.px || 1); }   /* 선은 도트 한 칸보다 가늘지 않게(팔레트로 줄일 때 사라지지 않게) */
-function oxbSnap(G, v) { var p = G.px || 1; return Math.round(v / p) * p; }
-/* 한 장면 그리기 · ctx = 보이는 캔버스(기기 배율 변환이 걸려 있다) · G = { pr, cam, rows, ch, cur, next, fever, danger, parts, floats, rings, confetti, flash, gt, big } */
-function oxbDraw(ctx, G) {
-  var pr = G.pr, W = pr.W, H = pr.H, k = ctx.getTransform ? ctx.getTransform().a || 1 : 1;
-  var kd = Math.max(1, Math.round(OXB_PX.css * k)), lw = Math.max(1, Math.ceil(W * k / kd)), lh = Math.max(1, Math.ceil(H * k / kd));
-  G.px = kd / k;
-  if (!G.lc || G.lc.width !== lw || G.lc.height !== lh) { G.lc = document.createElement("canvas"); G.lc.width = lw; G.lc.height = lh; G.lx = G.lc.getContext("2d", { willReadFrequently: true }); }
-  var lx = G.lx;
-  lx.setTransform(1 / G.px, 0, 0, 1 / G.px, 0, 0); lx.imageSmoothingEnabled = false;
-  G.labels = [];
-  oxbDrawPx(lx, G);
-  oxbQuant(lx, lw, lh);
-  lx.setTransform(1, 0, 0, 1, 0, 0);
-  oxbFx(lx, G, lw, lh);
-  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = false; ctx.drawImage(G.lc, 0, 0, lw * kd, lh * kd); ctx.restore();
-  oxbDrawTx(ctx, G);
-}
-/* 도트 장면 · 하늘 → 먼 물가 → 물 → 난간 → 줄(멀리서 가까이 · 챗봇은 제 줄 앞에) → 파티클 → 색종이 */
-/* v4.39 원근 면 = 가로줄 채우기(레퍼런스 · 의사 3D 도로 렌더러 · jakesgordon/javascript-racer · urdwyrd/endless-outrun)
-   ps = [가까운 왼쪽, 가까운 오른쪽, 먼 오른쪽, 먼 왼쪽] (같은 z 의 두 점은 같은 높이 → 위 · 아래 변이 가로) · 도트 칸마다 왼쪽 · 오른쪽 끝만 구해 반듯하게 칠한다.
-   안티에일리어싱이 없어 팔레트로 줄일 때 가장자리에 엉뚱한 중간색이 생기지 않고, 비스듬한 변도 늘 같은 굵기의 계단이 된다.
-   line = 외곽선 색(없으면 면만) · lw = 외곽 두께(도트 칸) · 반환 = { t, b, rows:[[y, x0, x1]] } 도트 칸 좌표(CSS px) */
-function oxbTrap(ctx, G, ps, fill, line, lw) {
-  var p = G.px || 1, nl = ps[0], nr = ps[1], fr = ps[2], fl = ps[3];
-  var yt = Math.round(Math.min(fl.y, fr.y) / p), yb = Math.round(Math.max(nl.y, nr.y) / p), H = Math.max(1, yb - yt), rows = [];
-  if (yb <= yt) yb = yt + 1;
-  for (var j = yt; j < yb; j++) {
-    var t = H > 1 ? (j + 0.5 - yt) / H : 1, x0 = Math.round((fl.x + (nl.x - fl.x) * t) / p), x1 = Math.round((fr.x + (nr.x - fr.x) * t) / p);
-    if (x1 <= x0) x1 = x0 + 1;
-    rows.push([j, x0, x1]);
-  }
-  lw = line ? Math.max(1, lw || 1) : 0;
-  rows.forEach(function (r, k) {
-    var edge = k < lw || k >= rows.length - lw;
-    if (line && (edge || r[2] - r[1] <= 2 * lw)) { ctx.fillStyle = line; ctx.fillRect(r[1] * p, r[0] * p, (r[2] - r[1]) * p, p); return; }
-    if (line) { ctx.fillStyle = line; ctx.fillRect(r[1] * p, r[0] * p, lw * p, p); ctx.fillRect((r[2] - lw) * p, r[0] * p, lw * p, p); }
-    if (fill) { ctx.fillStyle = fill; ctx.fillRect((r[1] + lw) * p, r[0] * p, (r[2] - r[1] - 2 * lw) * p, p); }
-  });
-  return { t: yt, b: yb, rows: rows };
-}
-function oxbTrapW(ctx, G, pts, fill, line, lw) {
-  var zmin = G.cam.z + 0.32, ps = pts.map(function (q) { return oxbP(G, q[0], q[1], Math.max(zmin, q[2])); });
-  if (ps.some(function (q) { return !q; })) return null;
-  return oxbTrap(ctx, G, ps, fill, line, lw);
-}
-function oxbDrawPx(ctx, G) {
-  var pr = G.pr, W = pr.W, H = pr.H, B = OXB, px = G.px || 1, fv = G.fever > 0, hy = Math.max(0, oxbSnap(G, pr.HY));
-  G.marks = [];
-  /* 하늘 · 옅은 웜 네 단 띠 · 피버면 한 단 더 진하게 */
-  var sky = fv ? ["#FFE3CF", "#FFCFB0", "#FFB284", "#FFA46E"] : ["#FFFFFF", "#FFF1E8", "#FFEBE0", "#FFE3CF"];
-  for (var i = 0; i < 4; i++) { var ya = oxbSnap(G, hy * i / 4), yb = oxbSnap(G, hy * (i + 1) / 4); ctx.fillStyle = sky[i]; ctx.fillRect(0, ya, W, yb - ya); }
-  /* 물 · 파랑 네 단 띠(가까울수록 진하게) · 지평선 흰 한 줄 · v4.39 물결 선은 뺐다(흰 잔선이 유리판 반사 · 외곽과 섞여 판을 흐렸다 · 먼 잔무늬는 반짝이는 소음이 된다) */
-  var wh = Math.max(0, H - hy), wc = ["#B8DDEC", "#9CC9DD", "#7FB3CC", "#6A9FBB"], wb = [0, 0.14, 0.38, 0.72, 1];
-  for (var q = 0; q < 4; q++) { var qa = oxbSnap(G, hy + wh * wb[q]), qb = oxbSnap(G, hy + wh * wb[q + 1]); ctx.fillStyle = wc[q]; ctx.fillRect(0, qa, W, qb - qa); }
-  ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, hy, W, px);
-  G.rings = G.rings.filter(function (rg) { return G.gt - rg.t0 < 1.1; });
-  G.rings.forEach(function (rg) {
-    var age = G.gt - rg.t0; if (age < 0) return; var p = oxbP(G, rg.x, rg.y == null ? B.WATER : rg.y, rg.z); if (!p) return;
-    var r = (0.3 + age * 1.8 * rg.amt) * p.s; ctx.strokeStyle = rg.col ? rg.col.replace("A", String(0.9 * (1 - age / 1.1))) : "rgba(255,255,255," + (0.9 * (1 - age / 1.1)) + ")"; ctx.lineWidth = oxbLw(G, rg.col ? 3 : 2);
-    ctx.beginPath(); ctx.ellipse(p.x, p.y, r, r * 0.3, 0, 0, 7); ctx.stroke();
-  });
-  /* 강철 보 세 줄(가운데 · 양옆) · 가로줄 채우기 · 두께를 늘려 1도트 사선이 아니라 면으로 읽히게 */
-  var zn = G.cam.z + 0.35, zf = G.rows[G.rows.length - 1].z + 6;
-  [-B.RAIL, 0, B.RAIL].forEach(function (x) {
-    oxbTrapW(ctx, G, [[x - 0.11, -0.06, zn], [x + 0.11, -0.06, zn], [x + 0.11, -0.06, zf], [x - 0.11, -0.06, zf]], "#56889F");
-  });
-  var drawn = false;
-  for (var n = G.rows.length - 1; n >= 0; n--) {
-    var r = G.rows[n];
-    if (r.z < G.cam.z - 2) continue;
-    if (!drawn && G.ch.z > r.z + (r.deck && r.i > 0 ? 5 : B.PD / 2)) { oxbBot(ctx, G); drawn = true; }
-    oxbRow(ctx, G, r);
-  }
-  if (!drawn) oxbBot(ctx, G);
-  G.marks.forEach(function (k) {   /* v4.39 다음 줄 O · X 표지 · 챗봇 · 판보다 위 */
-    [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(function (o) { oxbMark(ctx, G, k.s, k.x + o[0] * px, k.y + o[1] * px, k.m, k.oc); });
-    oxbMark(ctx, G, k.s, k.x, k.y, k.m, k.col);
-  });
-  oxbParts(ctx, G);
-  G.confetti.forEach(function (c) { ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.rot); ctx.fillStyle = c.col;
-    ctx.fillRect(-c.w / 2, -c.h / 2, Math.max(px, c.w), Math.max(px, c.h)); ctx.restore(); });
-}
-/* 팔레트로 줄인 뒤 도트 칸 단위로 · 아래 끝 위험 띠(네 단 · 발판이 아래 끝에 가까울수록 진하게) · 정답·오답 번쩍임 = 세 겹 도트 테두리 */
-function oxbFx(c, G, w, h) {
-  var RMo = rgReduced();
-  if (G.danger > 0.02) {
-    var A = 0.7 * G.danger * (RMo ? 1 : 0.7 + 0.3 * Math.sin(G.gt * 18)), sh = Math.round(h * 0.4);   /* 챗봇을 물들이지 않게 가장자리만 */
-    for (var i = 0; i < 3; i++) { c.fillStyle = "rgba(210,32,48," + (A * (1 - i / 3)).toFixed(3) + ")"; c.fillRect(0, h - (i + 1) * 2, w, 2); c.fillRect(i * 2, h - sh, 2, sh - 6); c.fillRect(w - (i + 1) * 2, h - sh, 2, sh - 6); }
-  }
-  if (G.flash && G.flash.t > 0) {
-    var fa = Math.min(1, G.flash.t / G.flash.d), col = G.flash.ok ? "2,118,72" : "210,32,48";
-    for (var j = 0; j < 3; j++) {
-      var t = 2, o = j * t; c.fillStyle = "rgba(" + col + "," + (0.5 * fa * (1 - j / 3)).toFixed(3) + ")";
-      c.fillRect(o, o, w - 2 * o, t); c.fillRect(o, h - o - t, w - 2 * o, t); c.fillRect(o, o + t, t, h - 2 * o - 2 * t); c.fillRect(w - o - t, o + t, t, h - 2 * o - 2 * t);
-    }
-  }
-}
-/* 도트 글꼴 크기 · 16 · 24 · 32 만 쓴다(뭉개지지 않게 · 5-16 최소 16px) */
-function oxbFz(s) { return s < 21 ? 16 : s < 29 ? 24 : 32; }
-/* 글자 · 기기 해상도 · 도트 장면 위에 · 도트 글꼴(rtText) */
-function oxbDrawTx(ctx, G) {
-  ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  G.labels.forEach(function (l) { rtText(ctx, l.s, l.x, l.y, oxbFz(l.sz), l.col, l.stroke || null); });
-  oxbFloats(ctx, G);
-  if (G.big) { if (G.big.end) rtEnd(ctx, G.pr.W, 0, G.pr.H, G.big.end, G.big.line, { s: 3, tp: 32, sp: 16, maxW: 320 }); else oxbBig(ctx, G, G.big.s, G.big.c, G.big.sub); }   /* v4.23 끝 = 공용 나무 판 */
-}
-function oxbBig(ctx, G, s, col, sub) {
-  var W = G.pr.W, y = Math.max(40, Math.min(G.pr.HY * 0.5 + 18, G.pr.H * 0.2));
-  /* v4.23 도트 글자(rtText · 검정 한 칸 테두리) · 16의 배수로만 */
-  ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  rtText(ctx, s, W / 2, y, Math.max(32, Math.round(Math.min(W, 420) * 0.12 / 16) * 16), col, RAIN_PAL.ink);
-  if (sub) rtText(ctx, sub, W / 2, y + Math.min(W, 420) * 0.095, 16, "#191F28", RAIN_PAL.w);
-}
-/* v4.28 발판 한 장 · 팡 타일 · 테트리스 블록과 같은 문법 · 먹색 외곽선 e + 모서리 한 칸 비움 + 윗면(위 · 왼쪽 밝게 · 아래 · 오른쪽 어둡게) + 앞면 두께 th
-   col = [윗면, 밝게, 어둡게, 앞면] · 좌표는 도트 칸에 맞춘 CSS px */
-function oxbTile(ctx, G, x, y, w, h, th, col, line, e) {
-  var p = G.px || 1, HH = h + th, fw = w - 2 * e, fh = h - e - p;   /* 윗면 아래 한 칸 = 윗면과 앞면을 가르는 먹선 */
-  ctx.fillStyle = line; ctx.fillRect(x + e, y, w - 2 * e, HH); ctx.fillRect(x, y + e, w, HH - 2 * e);
-  if (fw <= 0) return;
-  if (fh > 0) {
-    ctx.fillStyle = col[0]; ctx.fillRect(x + e, y + e, fw, fh);
-    if (fw >= 4 * p && fh >= 3 * p) {
-      ctx.fillStyle = col[1]; ctx.fillRect(x + e, y + e, fw, p); ctx.fillRect(x + e, y + e, p, fh);
-      ctx.fillStyle = col[2]; ctx.fillRect(x + e, y + e + fh - p, fw, p); ctx.fillRect(x + e + fw - p, y + e + p, p, fh - p);
-    }
-  }
-  if (th - e > 0) { ctx.fillStyle = col[3]; ctx.fillRect(x + e, y + h, fw, th - e); }
-}
-/* v4.39 다음 줄 표지 · 9칸 O · X(7칸 O 는 구멍이 3칸이라 동전처럼 보였다) · m = 한 칸 배수 · (cx, cy) = 가운데 */
-function oxbMark(ctx, G, s, cx, cy, m, col) {
-  var p = G.px || 1, rows = OXB_GLYPH[9][s], cs = m * p, x0 = oxbSnap(G, cx - 9 * cs / 2), y0 = oxbSnap(G, cy - 9 * cs / 2);
-  ctx.fillStyle = col;
-  for (var j = 0; j < 9; j++) for (var i = 0; i < 9; i++) if ((rows[j] >> (8 - i)) & 1) ctx.fillRect(x0 + i * cs, y0 + j * cs, cs, cs);
-}
-/* 도트 한 칸 굵기 선(브레젠험 · 금이 간 자리) */
-function oxbDotLine(ctx, G, x0, y0, x1, y1) {
-  var p = G.px || 1, a = Math.round(x0 / p), b = Math.round(y0 / p), c = Math.round(x1 / p), d = Math.round(y1 / p);
-  var dx = Math.abs(c - a), dy = Math.abs(d - b), sx = a < c ? 1 : -1, sy = b < d ? 1 : -1, er = dx - dy;
-  for (var n = 0; n < 400; n++) { ctx.fillRect(a * p, b * p, p, p); if (a === c && b === d) break; var e2 = 2 * er; if (e2 > -dy) { er -= dy; a += sx; } if (e2 < dx) { er += dx; b += sy; } }
-}
-function oxbRow(ctx, G, r) {
-  var z = r.z, B = OXB, px = G.px || 1;
-  if (r.deck) {
-    /* 데크 · 오렌지 판 + 먹색 외곽선 + 앞면(가로줄 채우기) */
-    var zA = r.i === 0 ? z - 4 : z - B.PD / 2, zB = r.i === 0 ? z + B.PD / 2 : z + 5;
-    oxbTrapW(ctx, G, [[-B.RAIL - 0.1, 0, zA], [B.RAIL + 0.1, 0, zA], [B.RAIL + 0.1, 0, zB], [-B.RAIL - 0.1, 0, zB]], "#FFE3CF", "#191F28", 1);
-    var fa = oxbP(G, -B.RAIL - 0.1, 0, zA), fb = oxbP(G, B.RAIL + 0.1, -0.28, zA);
-    if (fa && fb) { var x0 = oxbSnap(G, fa.x), y0 = oxbSnap(G, fa.y), w = oxbSnap(G, fb.x) - x0, h = Math.max(2 * px, oxbSnap(G, fb.y) - y0); ctx.fillStyle = "#191F28"; ctx.fillRect(x0, y0, w, h); ctx.fillStyle = "#FFB284"; ctx.fillRect(x0 + px, y0, w - 2 * px, h - px); }
-    if (r.i !== 0) oxbGate(ctx, G, z + 2.6);
-    return;
-  }
-  /* 기둥(세 줄마다) · 가로 보 · 선 없이 면만 */
-  if (r.i % 3 === 0) [-B.RAIL, B.RAIL].forEach(function (x) { var a = oxbP(G, x - 0.1, -0.2, z), b = oxbP(G, x + 0.1, B.WATER, z); if (a && b) { ctx.fillStyle = "#56889F"; ctx.fillRect(oxbSnap(G, a.x), oxbSnap(G, a.y), Math.max(px, oxbSnap(G, b.x - a.x)), oxbSnap(G, b.y - a.y)); } });
-  oxbTrapW(ctx, G, [[-B.RAIL, -0.06, z - B.PD / 2 - 0.08], [B.RAIL, -0.06, z - B.PD / 2 - 0.08], [B.RAIL, -0.06, z - B.PD / 2 + 0.1], [-B.RAIL, -0.06, z - B.PD / 2 + 0.1]], "#56889F");
-  var up = r.i === G.next, fv = G.fever > 0 && r.i >= G.next;
-  for (var s = 0; s < 2; s++) oxbPlank(ctx, G, r, s, up, fv);
-}
-/* v4.39 유리판 한 장 · 원근 그대로 · 가로줄 채우기(oxbTrap) · 역할에 따라 세 단계로만 그린다(한 화면에 같은 무게의 판이 많으면 어디를 볼지 모른다)
-   다음 줄(up) = 먹선 두 칸 + 가장 밝은 유리 + 반사 + O · X(먹 테두리) · 앞의 두세 줄 = 먹선 한 칸 + O · X 옅게 · 그 뒤 = 안개처럼 면만(외곽 · 글자 없음) ·
-   지나간 줄(챗봇이 선 줄 포함) = 옅은 윤곽 한 칸 · 글자 없음(화면 아래 큰 판이 시선을 뺏지 않게) · 반사는 사선 대신 가로 도트 두 줄(계단이 생기지 않는다) */
-function oxbPlank(ctx, G, r, s, up, fv) {
-  var sd = r.sides[s], B = OXB, RMo = rgReduced(); if (sd.st === "broken") return;
-  var cx = oxbSideX(s), z = r.z, hw = B.PW / 2, hd = B.PD / 2, jit = sd.crack > 0.55 && !RMo ? (Math.random() - 0.5) * 0.04 * sd.crack : 0, dip = -0.1 * Math.sin(sd.flex * Math.PI) + 0.1 * Math.sin(sd.flex * Math.PI * 2) * sd.flex;
-  cx += jit;
-  var ps = [[cx - hw, dip, z - hd], [cx + hw, dip, z - hd], [cx + hw, dip, z + hd], [cx - hw, dip, z + hd]].map(function (p) { return oxbP(G, p[0], p[1], p[2]); });
-  if (ps.some(function (p) { return !p; })) return;
-  var px = G.px || 1, past = r.i < G.next, ahead = r.i - G.next, ok = r.reveal === s || sd.glow > 0.35;
-  var far = !past && ahead > 3, mid = !past && !up && !far;
-  var glass = r.gold ? "#FFD88F" : ok ? "#E6F4EC" : up ? "#EEF8FC" : far ? "#B8DDEC" : past ? "#B8DDEC" : "#D6EDF6";
-  var line = sd.glow > 0 || ok ? "#027648" : fv && !past ? "#FF7E31" : r.gold ? "#A63D00" : up || mid ? "#1E3A4C" : past ? "#56889F" : null;
-  /* 앞면 두께(유리 옆면) */
-  var e0 = ps[0], e1 = oxbP(G, cx + hw, dip - 0.12, z - hd);
-  if (e1) { var ex = oxbSnap(G, e0.x), ey = oxbSnap(G, e0.y), ew = oxbSnap(G, e1.x) - ex, eh = Math.max(px, oxbSnap(G, e1.y) - ey); ctx.fillStyle = r.gold ? "#E0962E" : ok ? "#3FA876" : far ? "#9CC9DD" : "#7FB3CC"; ctx.fillRect(ex, ey, ew, eh); }
-  var T = oxbTrap(ctx, G, ps, glass, line, up && !far ? 2 : 1);
-  if (sd.glow > 0 && T) { ctx.fillStyle = "rgba(2,118,72," + (0.4 * sd.glow).toFixed(2) + ")"; T.rows.forEach(function (w) { ctx.fillRect(w[1] * px, w[0] * px, (w[2] - w[1]) * px, px); }); }
-  /* 반사 · 판 안쪽 위 왼쪽에 가로 도트 두 줄(긴 줄 · 짧은 줄) · 황금은 옆으로 흐른다 */
-  var hgt = T ? T.b - T.t : 0;
-  if (T && (up || mid || past) && hgt >= 6) {
-    var lw0 = up ? 2 : 1, k = Math.min(T.rows.length - 1, lw0 + 1), rw = T.rows[k], span = rw[2] - rw[1] - 2 * lw0 - 2, sh = r.gold && !RMo ? ((G.gt * 0.6 + r.i * 0.37) % 1) * 0.6 : 0.08;
-    var a = Math.round(rw[1] + lw0 + 1 + span * sh), L1 = Math.max(2, Math.round(span * 0.28)), L2 = Math.max(1, Math.round(span * 0.14));
-    ctx.fillStyle = r.gold ? "#FFF4D9" : "#FFFFFF";
-    ctx.fillRect(a * px, rw[0] * px, L1 * px, px);
-    if (T.rows[k + 2]) ctx.fillRect((a + (T.rows[k + 2][1] - rw[1])) * px, T.rows[k + 2][0] * px, L2 * px, px);
-  }
-  /* 금 · 도트 한 칸 선(원근 그대로) */
-  if (sd.crack > 0) {
-    ctx.fillStyle = "#1E3A4C";
-    sd.rays.forEach(function (ray) {
-      var segs = (ray.length - 1) * Math.min(1, sd.crack * 1.15);
-      for (var kk = 1; kk <= Math.ceil(segs) && kk < ray.length; kk++) {
-        var f = kk <= segs ? 1 : segs - Math.floor(segs), u0 = ray[kk - 1][0], v0 = ray[kk - 1][1], u1 = u0 + (ray[kk][0] - u0) * f, v1 = v0 + (ray[kk][1] - v0) * f;
-        var p0 = oxbP(G, cx + u0 * B.PW, dip, z + v0 * B.PD), p1 = oxbP(G, cx + u1 * B.PW, dip, z + v1 * B.PD);
-        if (p0 && p1) oxbDotLine(ctx, G, p0.x, p0.y, p1.x, p1.y);
-      }
-    });
-  }
-  /* O · X · v4.39 판 위에 세운 도트 표지(원근으로 눕히지 않는다 · 납작한 판에 그리면 글자가 5칸으로 쪼그라들었다) · 다음 줄(과 정답 드러냄)에만 · 크기 = 판 폭의 절반을 9칸 정수배로(게임 화면 최소 2배 · 시작 화면 미리보기 1배)
-     한 칸 테두리 · 챗봇보다 위에 그린다(G.marks · 앞에 선 챗봇이 가리지 않게) · 앞의 줄들은 외곽만(글자가 겹겹이 쌓이면 어느 줄 것인지 흐려진다) */
-  var c = oxbP(G, cx, dip, z), rev = r.reveal === s || sd.glow > 0.2;
-  if (c && T && (up || rev)) {
-    var gw = (ps[1].x - ps[0].x + ps[2].x - ps[3].x) / 2, m = Math.max(G.pr.W > 320 ? 2 : 1, Math.floor(gw * 0.5 / px / 9)), gs = 9 * m * px;
-    G.marks.push({ s: s, x: c.x, y: oxbSnap(G, c.y - gs * 0.6), m: m, gs: gs, col: rev ? "#027648" : s === 0 ? "#FF7E31" : "#1E3A4C", oc: rev ? "#FFFFFF" : s === 0 ? "#A63D00" : "#FFFFFF" });
-    if (r.gold && up) G.labels.push({ s: "×3", x: c.x, y: ps[0].y + 14, sz: 16, col: "#A63D00", stroke: "#FFF4D9" });
-  }
-}
-function oxbGate(ctx, G, z) {
-  var B = OXB, px = G.px || 1, l = oxbP(G, -B.RAIL, 0, z), r = oxbP(G, B.RAIL, 0, z), lt = oxbP(G, -B.RAIL, 2.6, z), rt = oxbP(G, B.RAIL, 2.6, z);
-  if (!l || !r || !lt || !rt) return;
-  var w = Math.max(2 * px, oxbSnap(G, l.s * 0.16)), bh = Math.max(4 * px, oxbSnap(G, l.s * 0.62)), yt = oxbSnap(G, lt.y - bh * 0.1);
-  [[l, lt], [r, rt]].forEach(function (q) {
-    var x0 = oxbSnap(G, q[0].x - w / 2), y0 = oxbSnap(G, q[1].y), h = oxbSnap(G, q[0].y) - y0;
-    ctx.fillStyle = "#000000"; ctx.fillRect(x0 - px, y0 - px, w + 2 * px, h + 2 * px);
-    ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(x0, y0, w, h);
-  });
-  var bx = oxbSnap(G, lt.x - w / 2), bw = oxbSnap(G, rt.x - lt.x + w);
-  oxbTile(ctx, G, bx, yt, bw, bh, 0, ["#FF7E31", "#FFA46E", "#D64524", "#D64524"], "#000000", px);
-  G.labels.push({ s: "도착", x: (lt.x + rt.x) / 2, y: yt + bh / 2, sz: bh * 0.6, col: "#FFFFFF", stroke: "#351A0C" });
-}
-function oxbBot(ctx, G) {
-  var c = G.ch, p = oxbP(G, c.x, c.y, c.z); if (!p || !BOT_DOT.ok) return;
-  var px = G.px || 1, h = OXB.CH * p.s, w = h * 264 / 304;
-  if (c.y > -0.05) { var g = oxbP(G, c.x, 0, c.z); if (g) { var sc = Math.max(0.3, 1 - c.y * 0.35); ctx.fillStyle = "rgba(25,31,40," + (0.22 * sc) + ")"; ctx.beginPath(); ctx.ellipse(g.x, g.y, w * 0.42 * sc, w * 0.1 * sc, 0, 0, 7); ctx.fill(); } }
-  ctx.save();
-  if (c.y < 0) { var wl = oxbP(G, c.x, OXB.WATER, c.z); if (wl) { ctx.beginPath(); ctx.rect(0, 0, G.pr.W, oxbSnap(G, wl.y)); ctx.clip(); } }
-  var sw = Math.round(w / px), sh = Math.round(h / px);
-  ctx.drawImage(botDotCv(sw, sh), oxbSnap(G, p.x - sw * px / 2), oxbSnap(G, p.y - sh * px), sw * px, sh * px);
-  ctx.restore();
-}
-function oxbParts(ctx, G) {
-  var px = G.px || 1;
-  for (var i = 0; i < G.parts.length; i++) {
-    var q = G.parts[i], p = oxbP(G, q.x, q.y, q.z); if (!p) continue; var age = (G.gt - q.t0) / q.life;
-    if (q.k === "shard") {   /* 깨진 유리 조각 · v4.39 회전 삼각형(가장자리가 뭉개졌다) → 도트 블록 · 흰 면 + 한 칸 윤곽 · 돌면 가로세로가 바뀐다 */
-      if (q.y < OXB.WATER + 0.05) continue;
-      var sw = Math.max(1, Math.min(3, Math.round(q.sz * p.s * 0.35 / px))), shh = Math.max(1, Math.round(sw * (Math.cos(q.rot) > 0 ? 0.6 : 1.4))), bx = oxbSnap(G, p.x) - sw * px, by = oxbSnap(G, p.y) - shh * px;
-      ctx.fillStyle = "#1E3A4C"; ctx.fillRect(bx - px, by - px, (sw * 2 + 2) * px, (shh * 2 + 2) * px);
-      ctx.fillStyle = q.gold ? "#FFC56E" : "#EEF8FC"; ctx.fillRect(bx, by, sw * 2 * px, shh * 2 * px);
-      ctx.fillStyle = "#FFFFFF"; ctx.fillRect(bx, by, sw * px, px);
-    } else if (q.k === "drop") {   /* 물보라 · 네모 도트 · 흰 → 물빛 */
-      var ds = Math.max(px, oxbSnap(G, q.sz * p.s * 2));
-      ctx.globalAlpha = Math.max(0, 0.95 - age * 0.5); ctx.fillStyle = age < 0.35 ? "#FFFFFF" : "#D6EDF6"; ctx.fillRect(oxbSnap(G, p.x - ds / 2), oxbSnap(G, p.y - ds / 2), ds, ds); ctx.globalAlpha = 1;
-    } else if (q.k === "emb") {   /* 피버 불꽃 · 위로 떠오르며 작아지는 도트 */
-      var es = Math.max(px, oxbSnap(G, q.sz * p.s * (1 - age * 0.6)));
-      ctx.fillStyle = age < 0.3 ? "#FFF4D9" : age < 0.6 ? "#FFC56E" : "#FF7F32"; ctx.fillRect(oxbSnap(G, p.x - es / 2), oxbSnap(G, p.y - es / 2), es, es);
-    } else {   /* 반짝이 · 도트 십자 별 */
-      ctx.globalAlpha = Math.max(0, 1 - age); ctx.fillStyle = q.col; var arm = Math.max(px, oxbSnap(G, (q.sz || 0.06) * p.s * (1 - age * 0.4))), cx = oxbSnap(G, p.x), cy = oxbSnap(G, p.y);
-      ctx.fillRect(cx - arm, cy, arm * 2 + px, px); ctx.fillRect(cx, cy - arm, px, arm * 2 + px);
-      ctx.globalAlpha = 1;
-    }
-  }
-}
-/* 떠오르는 글자 · 도트 글꼴(흰 테두리) · 크기 sc 배를 16 · 24 · 32 로 맞춘다 · 처음 0.12초 한 단 크게(팝) */
-function oxbFloats(ctx, G) {
-  G.floats = G.floats.filter(function (f) { return G.gt - f.t0 < (f.life || 0.9); });
-  ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  G.floats.forEach(function (f) {
-    var life = f.life || 0.9, age = (G.gt - f.t0) / life, p = oxbP(G, f.x, 0.14 + f.dy * 0.25 + age * 0.1, f.z); if (!p) return;
-    var sz = oxbFz(Math.max(13, p.s * 0.2) * (f.sc || 1));
-    if (age < 0.12 && sz < 32) sz += 8;
-    ctx.globalAlpha = age < 0.7 ? 1 : Math.max(0, (1 - age) / 0.3); rtText(ctx, f.s, p.x, p.y, sz, f.col, "#FFFFFF"); ctx.globalAlpha = 1;   /* v4.39 70% 까지 또렷하게 · 반투명한 글자가 판 위에서 뭉개지지 않게 */
-  });
-}
-/* 효과 만들기 */
-/* v4.14 떠오르는 글자는 챗봇 옆 빈 쪽(왼쪽 발판이면 오른쪽) · 머리 높이 아래에서만 올라간다(문제 말풍선과 겹치지 않게) · dy = 줄 번호 0 · 1 · 2 · 3 */
-function oxbFloat(G, s, col, dy, sc, life) { var cx = G.ch.x; G.floats.push({ s: s, col: col, t0: G.gt, dy: dy || 0, x: cx < -0.2 ? cx + 1.75 : cx > 0.2 ? cx - 1.75 : 1.6, z: G.ch.z, sc: sc || 1, life: life || 0.9 }); }
-function oxbSparkle(G, r, side, n, cols) {
-  if (rgReduced() || G.lite) n = Math.ceil(n / 3);
-  for (var i = 0; i < n; i++) { var a = Math.random() * Math.PI * 2, sp = 1.2 + Math.random() * 2.6;
-    G.parts.push({ k: "spk", x: oxbSideX(side) + (Math.random() - 0.5) * OXB.PW * 0.8, y: 0.1, z: r.z + (Math.random() - 0.5) * OXB.PD * 0.6,
-      vx: Math.cos(a) * sp * 0.9, vy: 2 + Math.random() * 3.4, vz: Math.sin(a) * sp * 0.5, life: 0.55 + Math.random() * 0.45, t0: G.gt, sz: 0.07 + Math.random() * 0.1, col: cols[i % cols.length] }); }
-}
-function oxbShatter(G, r, side) {
-  var s = r.sides[side]; s.st = "broken";
-  for (var i = 0, n = rgReduced() || G.lite ? 6 : 18; i < n; i++) G.parts.push({ k: "shard", x: oxbSideX(side) + (Math.random() - 0.5) * OXB.PW, y: 0, z: r.z + (Math.random() - 0.5) * OXB.PD,
-    vx: (Math.random() - 0.5) * 2.4, vy: Math.random() * 1.8, vz: Math.random() * 1.4, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 10, sz: 0.07 + Math.random() * 0.13, life: 3, t0: G.gt, gold: r.gold });
-}
-function oxbSplash(G, x, z, amt) {
-  var n = Math.round((rgReduced() || G.lite ? 8 : 34) * amt);
-  for (var i = 0; i < n; i++) { var a = Math.random() * Math.PI * 2, sp = 0.6 + Math.random() * 1.6;
-    G.parts.push({ k: "drop", x: x + Math.cos(a) * 0.3, y: OXB.WATER, z: z + Math.sin(a) * 0.3, vx: Math.cos(a) * sp, vy: 3 + Math.random() * 4.5 * amt, vz: Math.sin(a) * sp, life: 1.4, t0: G.gt, sz: 0.05 + Math.random() * 0.08 }); }
-  G.rings.push({ x: x, z: z, t0: G.gt, amt: amt }); if (amt >= 1) G.rings.push({ x: x, z: z, t0: G.gt + 0.18, amt: amt * 0.7 });
-}
-function oxbConf(G) {
-  var cols = ["#FF7F32", "#FFB07A", "#FFC56E", "#FFE0C7", "#191F28"], W = G.pr.W, H = G.pr.H;
-  return { x: W / 2 + (Math.random() - 0.5) * 60, y: H * 0.45, vx: (Math.random() - 0.5) * 520, vy: -300 - Math.random() * 520, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 12,
-    col: cols[Math.floor(Math.random() * cols.length)], w: 5 + Math.random() * 6, h: 3 + Math.random() * 5, round: Math.random() < 0.3 };
-}
-/* 공용 갱신 · 캐릭터 동작 · 카메라 · 파티클 */
-function oxbAnim(G, o) { o.t0 = G.gt; G.ch.a = o; }
-function oxbTick(G, dt) {
-  var c = G.ch, a = c.a, B = OXB;
-  if (a) {
-    var p = Math.min(1, (G.gt - a.t0) / a.dur);
-    if (a.kind === "arc") { var e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2; c.x = a.x0 + (a.x1 - a.x0) * e; c.z = a.z0 + (a.z1 - a.z0) * e; c.y = a.y0 + (a.y1 - a.y0) * p + a.h * Math.sin(Math.PI * p); }
-    else if (a.kind === "fall") { c.y = a.y0 + (a.y1 - a.y0) * p * p; }
-    if (p >= 1) { c.a = null; if (a.done) a.done(); }
-  }
-  var tz = G.flow * B.ROWD - B.D0, tx = c.x * 0.45;
-  if (rgReduced() || G.snap) { G.cam.z = tz; G.cam.x = tx; G.snap = false; } else { var k = 1 - Math.exp(-dt * 6); G.cam.z += (tz - G.cam.z) * k; G.cam.x += (tx - G.cam.x) * k; }
-  G.shake = Math.max(0, G.shake - dt * 3);
-  if (G.flash) G.flash.t -= dt;
-  for (var j = 0; j < G.parts.length; j++) {
-    var q = G.parts[j], age = G.gt - q.t0;
-    q.vy -= (q.k === "spk" ? 5 : q.k === "emb" ? -1.5 : 12) * dt; q.x += q.vx * dt; q.y += q.vy * dt; q.z += q.vz * dt; if (q.rot != null) q.rot += q.vr * dt;
-    if (q.k === "shard" && q.y < B.WATER) { if (!rgReduced() && Math.random() < 0.5) oxbSplash(G, q.x, q.z, 0.12); q.life = 0; }
-    if (q.k === "drop" && q.y < B.WATER && q.vy < 0) q.life = 0;
-    if (age > q.life) G.parts.splice(j--, 1);
-  }
-  /* v4.14 피버 불꽃 · 다음 줄 두 발판에서 도트 불씨가 떠오른다(동작 줄이기·저사양이면 없음) */
-  if (G.fever > 0 && !rgReduced() && !G.lite) { G.emb = (G.emb || 0) + dt * 24;
-    while (G.emb >= 1) { G.emb--; var er = G.rows[G.next]; if (!er || er.deck) { G.emb = 0; break; } var es = Math.random() < 0.5 ? 0 : 1;
-      G.parts.push({ k: "emb", x: oxbSideX(es) + (Math.random() - 0.5) * OXB.PW, y: 0.04, z: er.z + (Math.random() - 0.5) * OXB.PD, vx: (Math.random() - 0.5) * 0.3, vy: 0.9 + Math.random() * 1.1, vz: 0, life: 0.55 + Math.random() * 0.4, t0: G.gt, sz: 0.05 + Math.random() * 0.05 }); } }
-  if (G.parts.length > 260) G.parts.splice(0, G.parts.length - 260);
-  for (var m = 0; m < G.confetti.length; m++) { var f = G.confetti[m]; f.vy += 900 * dt; f.vx *= 0.985; f.x += f.vx * dt; f.y += f.vy * dt; f.rot += f.vr * dt; if (f.y > G.pr.H + 20) G.confetti.splice(m--, 1); }
-  for (var n = 0; n < G.rows.length; n++) { var rr = G.rows[n]; for (var s2 = 0; s2 < 2; s2++) { rr.sides[s2].flex = Math.max(0, rr.sides[s2].flex - dt * 3.2); rr.sides[s2].glow = Math.max(0, rr.sides[s2].glow - dt * 1.6); } }
-}
-function oxbScene(qs, gold) {
-  return { pr: { W: 1, H: 1, F: 1, CAMY: 1, HY: 0 }, cam: { x: 0, z: -OXB.D0 }, rows: oxbRows(qs, gold), ch: { x: 0, y: 0, z: 0, a: null }, cur: 0, next: 1, flow: -OXB.D0 / OXB.ROWD,
-    fever: 0, danger: 0, parts: [], floats: [], rings: [], confetti: [], flash: null, shake: 0, gt: 0, big: null, snap: true };
-}
 
-/* ── 게임 ── */
-function oxStop() {
-  OX.on = false;
-  if (OX.raf) cancelAnimationFrame(OX.raf);
-  OX.raf = 0;
-  gsOverlayClose("ox");
-}
-function oxLater(sec, fn) { OX.tmr.push({ t: OX.G.gt + sec, fn: fn }); }
-function oxStart() {
-  oxStop();
-  oxbBotLoad();
-  SFX.site = false;
-  var R = olyRule().ox, tk = OXS.tk && Date.now() - OXS.at < OX_TK_AGE ? OXS.tk : "";
-  OXS.tk = ""; oxPrefetch(true);   /* 토큰은 한 판에 하나 · 다음 판 것을 미리 받는다 */
-  var list = oxPick(), gold = oxGold(tk), tip = gsTutTake("ox");
-  OX = { on: true, paused: false, ending: null, raf: 0, last: performance.now(), pz: 0, st: "count", goT: 1.3, el: 0, recs: [], list: list, tk: tk, gold: gold,
-    T: oxTally("", R, gold), G: oxbScene(list, gold), tmr: [], clk: R.sec, clkT: R.sec, wrongs: [], hud: "", tip: tip, pd: 0, sw: null, crackTick: -1, sayX: null, fr: { n: 0, s: 0 } };
-  /* v4.14 조작 안내는 게임판 아래 말풍선으로 첫 문제에서만 잠깐(oxTipShow) · 오버레이 공용 안내(위쪽)는 쓰지 않는다 */
-  gsOverlayOpen({ key: "ox", title: "AX 퀴즈", top: oxTopHtml(R), fill: true, cls: "oxb", cw: 360, ch: 400, canvasId: "oxCv", flat: true, noGesture: true,
-    bottom: oxCtlHtml(R),
-    resized: oxFit,
-    down: function (e) { e.preventDefault(); OX.sw = { x: e.clientX, y: e.clientY }; },
-    up: function (e, cancel) {
-      var s = OX.sw; OX.sw = null; if (!s || cancel) return;
-      var dx = e.clientX - s.x, dy = e.clientY - s.y;
-      if (Math.abs(dx) > 28 && Math.abs(dx) > Math.abs(dy)) { oxAnswer(dx < 0 ? 0 : 1); return; }   /* 밀기 · 왼쪽 O · 오른쪽 X */
-      oxAnswer(oxHalf(s.x));   /* v4.28 누른 자리 · 화면 왼쪽 반 = O · 오른쪽 반 = X (게임판 · 말풍선 위 포함 · 조금 흔들려도 누른 쪽) */
-    },
-    keydown: function (e) {
-      if (e.repeat) return;
-      var k = e.key, a = k === "ArrowLeft" || k === "o" || k === "O" ? 0 : k === "ArrowRight" || k === "x" || k === "X" ? 1 : -1;
-      if (a < 0) return; e.preventDefault(); oxAnswer(a);
-    },
-    running: function () { return OX.on && !OX.paused && !OX.ending; }, isPaused: function () { return !!OX.paused; },
-    pause: function () { gsPauseState(OX); var g = el("rgPlay"); if (g) g.classList.toggle("oxb-hide", !!OX.paused); },
-    resume: function () { var g = el("rgPlay"); if (g) g.classList.remove("oxb-hide"); gsResumeState(OX, oxFrame); },
-    quit: function () { oxStop(); App.render(); } });
-  var mid = el("gsMid"); if (mid) mid.insertAdjacentHTML("beforeend", oxSayHtml(R, tip) + oxHintHtml());
-  oxBindCtl();
-  oxHud(true);
-  oxSetQ("준비", "", "");
-  OX.raf = requestAnimationFrame(oxFrame);
-}
-function oxTopHtml(R) {
-  var lives = ""; for (var i = 0; i < R.lives; i++) lives += '<i class="oxb-life">' + BOT_SVG + "</i>";
-  return '<div class="oxb-top"><div class="oxb-hud"><span class="oxb-lives" id="oxLives" aria-label="목숨 ' + R.lives + '">' + lives + "</span>" +
-    '<b class="oxb-sec" id="oxSec">' + R.sec / 100 + '초</b><span class="oxb-sp"></span>' +
-    '<span class="oxb-sc"><b id="oxScore">0</b><small>점</small></span>' + sndBtnHtml(false) +
-    '<button class="rgp-x" type="button" data-on="계속" data-off="멈춤" aria-label="일시정지" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">멈춤</button></div>' +
-    '<div class="oxb-bar" id="oxBarW"><i id="oxBar"></i></div></div>';   /* v4.14 위 줄 = 목숨 · 남은 시간 · 점수 · 소리 · 멈춤(작게) · 문제·황금·피버는 게임판 위 말풍선 · 연속은 게임판 글자 */
-}
-/* v4.14 문제 말풍선 · 황금·피버 표시는 말풍선 머리(테두리 위에 걸친 딱지 · 말풍선 크기를 바꾸지 않는다) · 조작 안내 말풍선(첫 문제에서만)
-   v4.28 공용 조각 gs-qsay(점프 AI 상식과 같다) · 자리 = 게임판 위 약 30% 고정 · 크기 고정(두 줄 자리) */
-function oxSayHtml(R, tip) {
-  return '<div class="oxb-say gs-qsay" id="oxSay" aria-live="polite" hidden><p class="oxb-tagrow" id="oxTags" hidden><span class="oxb-tag gd" id="oxGold" hidden>황금 발판 ×' + R.goldMul + '</span>' +
-    '<span class="oxb-tag fv" id="oxFev" hidden></span></p><p class="oxb-text gs-qsay-t" id="oxQ"></p></div>' +
-    (tip ? '<div class="oxb-tip" id="oxTip" hidden><p class="gs-say-b">' + esc(tip) + "</p></div>" : "");
-}
-/* v4.28 (사용자 260924 「메시지가 말 머리에 집중해서 계단이 내려오면 계속 쪼그라드는 느낌」 · v4.14 「다음 발판·챗봇 머리 바로 위」 번복)
-   말풍선은 CSS 로 게임판 위 약 30% 에 고정한다 · 매 프레임 꼬리의 가로 자리(--tx)만 챗봇 쪽으로 옮긴다 */
-function oxSayPlace() {
-  var s = el("oxSay"); if (!s || s.hidden || !OX.G) return;
-  var G = OX.G, hd = oxbP(G, G.ch.x, G.ch.y + OXB.CH, G.ch.z); if (!hd) return;
-  var tx = Math.round(Math.max(20, Math.min(s.offsetWidth - 20, hd.x - s.offsetLeft)));
-  if (tx !== OX.sayX) { OX.sayX = tx; s.style.setProperty("--tx", tx + "px"); }
-}
-/* v4.28 화면 반쪽 · 게임판(gsMid) 가운데를 기준으로 왼쪽 = O(0) · 오른쪽 = X(1) */
-function oxHalf(x) { var m = el("gsMid"), r = m ? m.getBoundingClientRect() : { left: 0, width: window.innerWidth }; return x - r.left < r.width / 2 ? 0 : 1; }
-/* v4.28 카운트다운 동안 좌우 큰 O / X 힌트 · 흐리게 떴다가 첫 문제가 뜬 뒤 사라진다(매 판) · 누름은 통과 */
-function oxHintHtml() {
-  return '<div class="oxb-hint" id="oxHint" aria-hidden="true"><div class="o">' + OX_O + '<span>맞아요</span></div><div class="x">' + OX_X + "<span>아니에요</span></div></div>";
-}
-function oxHintHide() { var h = el("oxHint"); if (h) h.classList.add("off"); }
-function oxTipShow() {
-  var t = el("oxTip"); if (!t || OX.tipOn != null) return;
-  OX.tipOn = true; t.hidden = false;
-  oxLater(2.8, oxTipHide);
-}
-function oxTipHide() { var t = el("oxTip"); if (!t || !OX.tipOn) return; OX.tipOn = false; t.classList.add("off"); setTimeout(function () { t.hidden = true; }, 320); }
-/* v4.28 (사용자 260924 「하단 O/X가 작아서 계속 화면 좌우를 클릭했다」) 아래 버튼 = O · X 두 개만 반반 크게(왼쪽 O · 오른쪽 X) · 판자 버튼 삭제 */
-function oxCtlHtml(R) {
-  return '<div class="oxb-ctl" id="oxCtl"><button type="button" class="oxb-b o" data-a="0" aria-label="O 발판 · 맞아요">' + OX_O + '<span>맞아요</span></button>' +
-    '<button type="button" class="oxb-b x" data-a="1" aria-label="X 발판 · 아니에요">' + OX_X + "<span>아니에요</span></button></div>";
-}
-/* v4.28 O · X 도형 = 게임판 발판 글자(OXB_GLYPH 7칸)와 같은 도트 · 먹색 한 칸 테두리 · 색은 currentColor · 글꼴 O 는 숫자 0 과 헷갈려서 쓰지 않는다 */
-function oxGlyphSvg(s) {
-  var rows = OXB_GLYPH[7][s], ink = "", fg = "";
-  for (var j = 0; j < 7; j++) for (var i = 0; i < 7; i++) if ((rows[j] >> (6 - i)) & 1) { ink += '<rect x="' + (i + 1) + '" y="' + (j + 1) + '" width="1" height="1"/>'; fg += '<rect x="' + i + '" y="' + j + '" width="1" height="1"/>'; }
-  return '<svg class="oxb-g" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><g class="sh" fill="#000">' + ink + '</g><g fill="currentColor">' + fg + "</g></svg>";   /* 먹색 그림자 한 칸(오른쪽 아래) */
-}
-var OX_O = oxGlyphSvg(0), OX_X = oxGlyphSvg(1);
-/* 누름 한 번 = 답 한 번 · pointerdown 에서 받고 뒤따르는 click 은 버린다(키보드·보조기기 click 은 받는다) */
-function oxBindCtl() {
-  var box = el("oxCtl"); if (!box) return;
-  Array.prototype.forEach.call(box.querySelectorAll("[data-a]"), function (b) {
-    var a = Number(b.getAttribute("data-a"));
-    b.addEventListener("pointerdown", function (e) { e.preventDefault(); OX.pd = Date.now(); oxAnswer(a); b.classList.remove("hit"); void b.offsetWidth; b.classList.add("hit"); });
-    b.addEventListener("click", function () { if (OX.pd && Date.now() - OX.pd < 700) return; oxAnswer(a); });
-    b.addEventListener("contextmenu", function (e) { e.preventDefault(); });
-  });
-}
-function oxFit(cv, w, h) {
-  if (!w || !h) return;
-  var dpr = Math.min(2, window.devicePixelRatio || 1);
-  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
-  OX.dpr = cv.width / w;
-  oxbFit(OX.G, w, h);
-  OX.G.snap = true;
-  if (!OX.raf) oxDrawNow();
-}
-function oxDrawNow() { var cv = el("oxCv"); if (!cv || !OX.G) return; var ctx = cv.getContext("2d"); ctx.setTransform(OX.dpr || 1, 0, 0, OX.dpr || 1, 0, 0); oxbDraw(ctx, OX.G); }
-function oxFrame() {
-  if (!OX.on || OX.paused) return;
-  var now = performance.now(), dt = Math.min(0.05, (now - OX.last) / 1000);
-  OX.last = now;
-  oxUpdate(dt);
-  if (!OX.on) return;
-  var cv = el("oxCv"); if (!cv) { oxStop(); return; }
-  var ctx = cv.getContext("2d"); ctx.setTransform(OX.dpr || 1, 0, 0, OX.dpr || 1, 0, 0);
-  oxbDraw(ctx, OX.G);
-  oxSayPlace();
-  oxClock();
-  /* v4.14 저사양 · 처음 90프레임 평균이 24ms 를 넘으면 디더·불꽃을 끄고 파티클을 줄인다(판 끝까지) */
-  if (!OX.G.lite && OX.fr.n < 90 && dt > 0) { OX.fr.n++; OX.fr.s += dt; if (OX.fr.n === 90 && OX.fr.s / 90 > 0.024) OX.G.lite = true; }
-  if (OX.on && !OX.paused) OX.raf = requestAnimationFrame(oxFrame);
-}
-/* 지금 흐름 · 문제가 떠 있으면 여유가 줄 시간만큼 줄어든다 */
-function oxLeadNow() { var T = OX.T; return OX.st === "wait" ? T.lead - OX.el * 100 * 100 / T.rt : T.lead; }
-function oxUpdate(dt) {
-  var G = OX.G, R = olyRule().ox, T = OX.T;
-  G.gt += dt;
-  for (var i = 0; i < OX.tmr.length; i++) if (G.gt >= OX.tmr[i].t) { var f = OX.tmr[i].fn; OX.tmr.splice(i--, 1); f(); if (!OX.on) return; }
-  if (OX.ending) { OX.ending.t -= dt; oxbTick(G, dt); if (OX.ending.t <= 0) oxEndFinal(OX.ending.why); return; }
-  if (OX.st === "count") {
-    G.big = { s: G.gt < OX.goT - 0.45 ? "준비" : "시작", c: "#191F28" };
-    if (G.gt >= OX.goT) { G.big = null; oxShowQ(); }
-  } else if (OX.st === "wait") {
-    OX.el += dt;
-    var cs = OX.el * 100, rem = T.dl - T.used;
-    if (cs >= rem) { oxEnd("time", rem); return; }                  /* 시간이 먼저 · 떨어짐과 같은 순간이면 시간 끝 */
-    if (cs >= T.lim) { oxRecord(3, T.lim); return; }                /* 서 있던 발판이 아래 끝에 닿았다 */
-    var ld = oxLeadNow(), dg = Math.max(0, Math.min(1, (60 - ld) / 60)), cur = G.rows[G.cur];
-    G.danger = dg;
-    if (cur && !cur.deck) { var sd = cur.sides[OX.side]; if (sd) { if (dg > 0) sd.st = "crack"; sd.crack = Math.max(sd.crack || 0, dg);
-      var tick = Math.floor(dg * 4); if (dg > 0 && tick !== OX.crackTick) { OX.crackTick = tick; if (tick > 0) { sfx("oxcrk", tick); stampBuzz(8); } } } }
-  } else { G.danger = Math.max(0, G.danger - dt * 3); OX.clk = Math.max(OX.clkT, OX.clk - dt * 100); }   /* 연출 중 시계는 목표(서버와 같은 시계)까지 실제 시간으로 */
-  G.flow = OX.T.n - oxLeadNow() / 100;   /* 흐름 = 올라선(올라설) 줄 − 여유 · 답하는 순간에도 이어진다 */
-  oxbTick(G, dt);
-}
-function oxClock() {
-  var R = olyRule().ox, T = OX.T, left;
-  if (OX.st === "wait") { left = T.dl - T.used - OX.el * 100; OX.clk = left; } else left = OX.clk;
-  left = Math.max(0, left);
-  var b = el("oxBar"), s = el("oxSec"), w = el("oxBarW"), warn = left <= 1000;
-  if (b) b.style.transform = "scaleX(" + Math.min(1, left / R.sec).toFixed(4) + ")";
-  if (s) { var txt = Math.ceil(left / 100) + "초"; if (s.textContent !== txt) s.textContent = txt; s.classList.toggle("warn", warn); }
-  if (w) w.classList.toggle("warn", warn);
-}
-function oxShowQ() {
-  var T = OX.T, G = OX.G;
-  if (T.end === "life") { oxEnd("life"); return; }
-  if (T.end === "arrive") { oxArrive(); return; }
-  if (T.end === "time") { oxEnd("time", 0); return; }
-  var x = OX.list[T.n]; if (!x) { oxEnd("time", 0); return; }
-  OX.st = "wait"; OX.el = 0; OX.crackTick = -1; OX.clkT = T.dl - T.used; OX.clk = OX.clkT;
-  G.next = T.n + 1;
-  oxSetQ(esc(x.q) + (x.rv ? "" : ' <small class="ox-ex">(예시)</small>'), "", "q");
-  oxHud();
-  if (T.n === 0 && OX.tip) oxTipShow();
-  if (T.n === 0) oxLater(0.6, oxHintHide);   /* v4.28 좌우 큰 O / X 힌트 · 첫 문제가 뜨고 0.6초 뒤 걷힌다 */
-}
-/* v4.14 문제 말풍선 · kind "q" = 문제를 띄운다 · 그 밖(정답·오답·끝 문구)은 말풍선을 걷는다(결과는 게임판 글자가 맡는다) */
-function oxSetQ(html, cls, kind) {
-  var q = el("oxQ"), s = el("oxSay"); if (!q || !s) return;
-  if (kind !== "q") { s.hidden = true; return; }
-  q.className = "oxb-text" + (cls ? " " + cls : "");
-  q.innerHTML = html;
-  s.hidden = false; OX.sayX = null;
-  s.classList.remove("in"); void s.offsetWidth; s.classList.add("in");
-  oxSayPlace();
-}
-function oxHud(force) {
-  var R = olyRule().ox, T = OX.T, rf = oxRunFever(T, R);
-  var showing = OX.st === "wait", gold = showing && OX.gold.indexOf(T.n) >= 0, lives = Math.max(0, T.life);
-  var key = [T.pts, lives, rf.run, rf.fever, T.n, OX.st].join("|");
-  if (!force && key === OX.hud) return;
-  OX.hud = key;
-  var L = el("oxLives");
-  if (L) { Array.prototype.forEach.call(L.children, function (c, k) { c.classList.toggle("off", k >= lives); }); L.setAttribute("aria-label", "목숨 " + lives); }
-  var sc = el("oxScore"); if (sc) sc.textContent = olyFmt(Math.max(0, T.pts));
-  var fev = showing && !!rf.fever && !gold;
-  var gd = el("oxGold"); if (gd) gd.hidden = !gold;
-  var fv = el("oxFev"); if (fv) { fv.hidden = !fev; fv.textContent = "피버 ×" + R.feverMul + " · " + rf.fever; }
-  var tg = el("oxTags"); if (tg) tg.hidden = !(gold || fev);
-  var sy = el("oxSay"); if (sy) { sy.classList.toggle("gold", gold); sy.classList.toggle("fever", fev); }
-  OX.G.fever = OX.st === "end" ? 0 : rf.fever;
-}
-function oxPopHud(id, cls) { var e = el(id); if (!e) return; e.classList.remove(cls); void e.offsetWidth; e.classList.add(cls); }
-/* 답 · side 0 = O(왼쪽) · 1 = X(오른쪽) · v4.28 판자(2) 삭제(사용자 260924 「헷갈리니 빼 달라」 · 채점 식 oxTally 의 P 는 서버와 글자 그대로 같게 남긴다) */
-function oxAnswer(side) {
-  if (!OX.on || OX.paused || OX.ending || OX.st !== "wait") return;
-  if (side !== 0 && side !== 1) return;
-  var R = olyRule().ox, T = OX.T, cs = Math.round(OX.el * 100);
-  if (cs < R.lock) return;   /* 입력 잠금 0.3초 · 앞 줄에서 두 번 누른 손가락이 다음 줄을 누르지 않게 */
-  var t = Math.min(cs, T.lim - 1, T.dl - T.used - 1);
-  if (t < R.lock) return;
-  oxTipHide();
-  oxRecord(side, t);
-}
-/* 기록 한 줄 · side 3 = 떨어짐(T) · 채점을 다시 하고 연출을 고른다 */
-function oxRecord(side, t) {
-  var R = olyRule().ox, x = OX.list[OX.T.n], G = OX.G, r = G.rows[OX.T.n + 1];
-  var a = side === 0 ? "O" : side === 1 ? "X" : "T";
-  OX.recs.push(x.id + "." + a + "." + t);
-  var prev = OX.T;
-  OX.T = oxTally(OX.recs.join(","), R, OX.gold);
-  if (!OX.T.ok) { OX.recs.pop(); OX.T = prev; return; }   /* 한도 밖(있을 수 없는 경우) · 기록하지 않는다 */
-  var it = OX.T.items[OX.T.items.length - 1];
-  OX.st = "busy"; OX.clkT = OX.T.dl - OX.T.used;
-  G.danger = 0;
-  if (a === "T") { oxFallScroll(r, it); return; }
-  var btn = document.querySelector('#oxCtl [data-a="' + side + '"]');
-  if (btn) { var k = it.right ? "ok" : "bad"; btn.classList.remove("ok", "bad"); void btn.offsetWidth; btn.classList.add(k); setTimeout(function () { btn.classList.remove(k); }, 420); }
-  sfx("tik");
-  var rf = oxRunFever(OX.T, R), h = rgReduced() ? 0.4 : it.right ? 1.25 + 0.07 * Math.min(rf.run, 8) : 0.9;
-  oxbAnim(G, { kind: "arc", x0: G.ch.x, y0: G.ch.y, z0: G.ch.z, x1: oxbSideX(side), y1: 0, z1: r.z, h: h, dur: it.right ? 0.34 : 0.28, done: function () {
-    if (it.right) oxLandOk(r, side, it, rf); else oxLandBad(r, side, it);
-  } });
-  oxHud();
-}
-function oxStand(r, side) { OX.G.cur = r.i; OX.side = side; }
-/* 정답 · 초록으로 빛나며 튕기는 발판 · 반짝이 · 「정답!」과 점수 · 챗봇 한 번 더 튀기 · 짧은 진동 · 연속일수록 크게 */
-function oxLandOk(r, side, it, rf) {
-  var G = OX.G, R = olyRule().ox, run = rf.run, big = Math.min(run, 10);
-  oxStand(r, side);
-  var sd = r.sides[side]; sd.flex = 1; sd.glow = 1;
-  G.rings.push({ x: oxbSideX(side), y: 0.02, z: r.z, t0: G.gt, amt: 0.55 + big * 0.04, col: "rgba(2,118,72,A)" });
-  oxbSparkle(G, r, side, 22 + big * 4, it.gold ? ["#FFC56E", "#FFFFFF", "#FF7F32"] : rf.fever || it.mul > 1 ? ["#FF7F32", "#FFFFFF", "#027648"] : ["#027648", "#FFFFFF", "#3FA876"]);
-  oxbFloat(G, "정답!", "#027648", 0, 1.35 + big * 0.04, 0.8);
-  oxbFloat(G, "+" + it.pts, it.gold ? "#A63D00" : "#191F28", 1, 1.2 + big * 0.04, 0.95);
-  if (it.gold) oxbFloat(G, "황금 ×" + R.goldMul, "#A63D00", 2, 1.1, 1);
-  else if (it.mul > 1) oxbFloat(G, "피버 ×" + R.feverMul, "#A63D00", 2, 1, 0.9);
-  if (it.fever) oxbFloat(G, "피버!", "#FF7F32", 3, 1.2, 1);
-  else if (it.bonus) oxbFloat(G, "+" + R.bonusSec / 100 + "초", "#027648", 3, 1.1, 1);
-  else if (run >= 2) oxbFloat(G, run + " 콤보", "#5E3218", 3, 1 + big * 0.04, 0.9);
-  G.flash = { ok: true, t: 0.28, d: 0.28 };
-  stampBuzz(run >= 5 ? [10, 30, 10] : 12);
-  sfx("oxok", run); if (it.gold || it.fever) sfx("oxup");
-  oxSetQ("정답 " + it.a, "ok", "");
-  oxPopHud("oxScore", "pop");
-  oxHud();
-  /* 몸 전체로 한 번 더 튄다(형태 그대로) · 연속일수록 높이 */
-  oxbAnim(G, { kind: "arc", x0: G.ch.x, y0: 0, z0: G.ch.z, x1: G.ch.x, y1: 0, z1: G.ch.z, h: rgReduced() ? 0 : 0.28 + big * 0.03, dur: 0.16, done: function () { oxShowQ(); } });
-}
-/* 오답 · 금 → 깨짐 → 풍덩 → 정답 쪽으로 다시 올라온다 · 빨강 번쩍임 · 흔들림 · 긴 진동 */
-function oxLandBad(r, side, it) {
-  var G = OX.G, s = r.sides[side], RMo = rgReduced();
-  oxStand(r, side);
-  s.st = "crack"; s.crack = 0.6;
-  sfx("oxcrk", 4); stampBuzz(30);
-  oxSetQ("틀렸어요 · 정답 " + it.a, "no", "");
-  oxLives(); oxHud();
-  oxLater(RMo ? 0.06 : 0.12, function () {
-    s.crack = 1; oxbShatter(G, r, side);
-    oxbFloat(G, "−" + (-it.pts), "#D22030", 0, 1.2, 0.9);
-    oxbFloat(G, "정답 " + it.a, "#027648", 1, 1.25, 1.3);
-    G.shake = RMo ? 0 : 1; G.flash = { ok: false, t: 0.4, d: 0.4 };
-    oxbAnim(G, { kind: "fall", x0: G.ch.x, y0: 0, z0: r.z, x1: G.ch.x, y1: OXB.WATER - 1.2, z1: r.z, dur: RMo ? 0.25 : 0.42 });
-    oxLater(RMo ? 0.18 : 0.32, function () { oxbSplash(G, G.ch.x, r.z, 1); stampBuzz([40, 30, 90]); sfx("oxsplash"); });
-    oxLater(RMo ? 0.5 : 0.72, function () { oxClimb(r, it.a === "O" ? 0 : 1, r); });
-  });
-}
-function oxLives() { var L = el("oxLives"); if (!L) return; L.classList.remove("hit"); void L.offsetWidth; L.classList.add("hit"); }
-/* 물에서 정답 쪽 발판으로 올라온다 · to = 올라설 줄 */
-function oxClimb(from, cs, to) {
-  var G = OX.G;
-  if (OX.T.life <= 0) { G.ch.a = null; oxEnd("life"); return; }
-  to.reveal = cs;
-  oxbSplash(G, G.ch.x, from.z, 0.5);
-  oxbAnim(G, { kind: "arc", x0: G.ch.x, y0: OXB.WATER - 0.6, z0: from.z, x1: oxbSideX(cs), y1: 0, z1: to.z, h: rgReduced() ? 0.6 : 2.1, dur: rgReduced() ? 0.3 : 0.5, done: function () {
-    oxStand(to, cs); to.sides[cs].flex = 1; oxShowQ();
-  } });
-}
-/* 흘러내려 떨어짐 · 서 있던 발판이 아래 끝에 닿았다 · 다음 줄 정답 쪽으로 올라온다 */
-function oxFallScroll(nr, it) {
-  var G = OX.G, cur = G.rows[G.cur], RMo = rgReduced();
-  oxSetQ("늦었어요 · 정답 " + it.a, "no", "");
-  oxLives(); oxHud();
-  if (cur && !cur.deck) { cur.sides[OX.side].crack = 1; oxbShatter(G, cur, OX.side); }
-  oxbFloat(G, "늦었어요 −" + (-it.pts), "#D22030", 0, 1.2, 0.9);
-  oxbFloat(G, "정답 " + it.a, "#027648", 1, 1.25, 1.3);
-  G.shake = RMo ? 0 : 1; G.flash = { ok: false, t: 0.4, d: 0.4 };
-  stampBuzz([40, 30, 90]); sfx("oxcrk", 4);
-  var fz = G.ch.z;
-  oxbAnim(G, { kind: "fall", x0: G.ch.x, y0: 0, z0: fz, x1: G.ch.x, y1: OXB.WATER - 1.2, z1: fz, dur: RMo ? 0.25 : 0.42 });
-  oxLater(RMo ? 0.18 : 0.32, function () { oxbSplash(G, G.ch.x, fz, 1); sfx("oxsplash"); });
-  oxLater(RMo ? 0.5 : 0.95, function () { oxClimb({ z: fz }, it.a === "O" ? 0 : 1, nr); });
-}
-/* 다리 끝 · 도착 데크로 건너 도착 보너스 · 색종이 */
-function oxArrive() {
-  var G = OX.G, T = OX.T, d = G.rows[G.rows.length - 1];
-  OX.st = "arrive";
-  oxbAnim(G, { kind: "arc", x0: G.ch.x, y0: 0, z0: G.ch.z, x1: 0, y1: 0, z1: d.z + 0.6, h: 1.3, dur: rgReduced() ? 0.25 : 0.45, done: function () {
-    G.cur = d.i; OX.side = 0;
-    G.big = { s: "도착", c: "#FF7F32", sub: "보너스 +" + T.arr, end: "CLEAR", line: "도착 · 보너스 +" + T.arr };   /* v4.23 공용 나무 판 */
-    for (var i = 0; i < (rgReduced() ? 30 : 110); i++) G.confetti.push(oxbConf(G));
-    stampBuzz([20, 40, 20, 40, 60]); sfx("fanfare");
-    oxSetQ("도착 · 보너스 +" + T.arr, "ok", "");
-    oxHud();
-    var hop = function (k) { if (k >= 2 || rgReduced()) { oxEnd("arrive"); return; } oxbAnim(G, { kind: "arc", x0: 0, y0: 0, z0: G.ch.z, x1: 0, y1: 0, z1: G.ch.z, h: 0.55, dur: 0.34, done: function () { hop(k + 1); } }); };
-    hop(0);
-  } });
-}
-/* 끝 · why = arrive | life | time · tl = 문제가 떠 있는 동안 시간이 다 됐을 때 그 순간 남은 시간(1/100초) */
-function oxEnd(why, tl) {
-  if (!OX.on || OX.ending) return;
-  OX.st = "end"; OX.tl = why === "time" ? Math.max(0, Math.round(tl || 0)) : 0;
-  var G = OX.G;
-  /* v4.23 끝 = 공용 나무 판(end = 큰 제목 · line = 게임 고유 한 줄 · 「풍덩」은 판 안 한 줄로 남긴다) */
-  if (why === "time") { G.big = { s: "시간 끝", c: "#D22030", end: "TIME UP", line: "시간 끝" }; oxSetQ("시간이 다 됐어요", "no", ""); sfx("over"); }
-  if (why === "life") { G.big = { s: "풍덩", c: "#D22030", sub: "목숨을 모두 잃었어요", end: "GAME OVER", line: "풍덩 · 목숨을 모두 잃었어요" }; oxSetQ("목숨을 모두 잃었어요", "no", ""); sfx("over"); }
-  G.danger = 0;
-  oxHud(true);
-  OX.ending = { t: why === "arrive" ? 1.0 : 1.3, why: why };
-}
-function oxEndFinal(why) {
-  if (!OX.on) return;
-  var R = olyRule().ox, ql = OX.recs.join(","), tk = OX.tk, pz = OX.pz || 0, tl = OX.tl || 0;
-  oxStop();
-  var parts = oxParts(ql, tk, R, tl, pz), X = oxTally(ql, R, oxGold(tk)), prev = Number(S.get("oly2_best_ox", 0)) || 0;
-  gameClear("ox_cleared");   /* 결과 화면에 닿으면 끝까지 한 판 · 04 미니게임 */
-  var sc = X.n ? olySubmit("ox", parts) : 0;   /* 한 줄도 안 건넜으면 올리지 않는다 */
-  if (sc > prev) setTimeout(function () { sfx("best"); }, 400);
-  var root = el("oxRoot"); if (!root) return;
-  var ok = X.c1 + X.c2 + X.c3, N = R.per[0] + R.per[1] + R.per[2], ans = X.items.filter(function (it) { return it.ans === "O" || it.ans === "X"; }), avg = ans.length ? ans.reduce(function (a, it) { return a + it.t; }, 0) / ans.length / 100 : 0;
-  var titles = oxTitles(X), label = why === "arrive" ? "도착" : why === "life" ? "목숨 소진" : "시간 끝";
-  root.innerHTML = gsResultHtml("ox", { why: why === "arrive" ? "done" : why === "time" ? "time" : "over", label: label, reason: "",
-    line: why === "life" ? "풍덩 · 목숨을 모두 잃었어요" : why === "time" ? "시간 끝" : "도착",   /* v4.23 게임 고유 문구는 패널 안 한 줄 */
-    oly: { key: "ox", parts: parts, score: sc,
-      ref: [["정답", ok + "개"], ["건넌 줄", X.n + " / " + N + "줄"], ["한 문제 평균", avg.toFixed(1) + "초"], ["최대 연속", X.mx + "번"],
-        ["늦어서 떨어짐", X.fl ? X.fl + "번" : ""], ["보너스 시간", X.hp ? "+" + X.hp * R.bonusSec / 100 + "초" : ""]],
-      extra: titles.length ? '<p class="ox-titles">' + titles.map(function (t) { return "<span>" + esc(t) + "</span>"; }).join("") + "</p>" : "" },
-    banner: oxWrongHtml(X) });
-  window.scrollTo(0, 0);
-}
-/* 분야별 칭호 · 한 판에 그 분야를 OX_TITLE_MIN 문제 이상 풀고(판자·떨어짐 제외) 모두 맞혔을 때 · 점수와 무관 */
-function oxTitles(X) {
-  var by = {};
-  X.items.forEach(function (it) { if (it.ans !== "O" && it.ans !== "X") return; var c = (OX_BANK.filter(function (b) { return b.id === it.id; })[0] || {}).c; var o = by[c] || (by[c] = { n: 0, ok: 0 }); o.n++; if (it.right) o.ok++; });
-  return Object.keys(OX_TITLE).filter(function (c) { return by[c] && by[c].n >= OX_TITLE_MIN && by[c].ok === by[c].n; }).map(function (c) { return OX_TITLE[c]; });
-}
-/* 틀린 문제 카드 · 점수 카드와 따로(260918 교육 문구 금지의 승인된 예외 · 사용자 결정 260922) · 최대 3줄 · 늦어서 떨어진 문제도 넣는다 · 모두의 선택 비율은 여기서 보여 준다 */
-function oxWrongHtml(X) {
-  var bad = X.items.filter(function (it) { return it.ans !== "P" && !it.right; });
-  if (!bad.length) return "";
-  return '<section class="ax-card ax-stack-tight ox-wrong"><h2 class="ax-card-title">틀린 문제</h2>' + bad.slice(0, 3).map(function (it) {
-    var b = OX_BANK.filter(function (x) { return x.id === it.id; })[0], r = oxRatioText(it.id);
-    return '<div class="ox-w"><p class="ax-body">' + esc(b.q) + (b.rv ? "" : ' <small class="ox-ex">(예시)</small>') + "</p>" +
-      '<p class="ax-meta"><b>정답 ' + b.a + "</b>" + (it.ans === "T" ? " · 늦어서 떨어짐" : "") + " · " + esc(b.e) + (OX_ZONE[b.z] ? " 다시 볼 곳: " + OX_ZONE[b.z] : "") + "</p>" + (r ? '<p class="ax-meta">' + esc(r) + "</p>" : "") + "</div>";
-  }).join("") + (bad.length > 3 ? '<p class="ax-meta">외 ' + (bad.length - 3) + "문제</p>" : "") + "</section>";
-}
 
 /* 결정적 난수 · 같은 화면을 다시 열어도 같은 흐름 · 입장 전환(xitionRun)이 쓴다 */
 function kvRnd(seed) { return function () { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }; }
