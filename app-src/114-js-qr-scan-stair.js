@@ -644,23 +644,18 @@ function stairTickOn() {
 }
 
 /* ═══ E02 · 체험 방법과 적립 조건 (현장 활동 하나) ═══ */
-var EXPG = { id: "p1" };
+var EXPG = { id: "st" };
 var EXP_GUIDE = {
-  p1: { chip: "1F · 약 5분", h: "1층 전시를<br>둘러보세요", d: "전시를 보고, 끝에 있는 QR을 스캔하면 스탬프를 받을 수 있어요.",
-    steps: [["전시 관람", "1F 전시존을 자유롭게 둘러봐요"], ["QR 스캔", "전시존 끝 QR 입간판을 찾아요"], ["적립 확인", "결과 화면에서 스탬프를 확인해요"]],
-    meta: "09:00~17:30 적립 · 1인 1회", cta: "전시 QR 스캔하기" },
+  /* v5.64 옛 p1(전시 QR) · p7(벽 QR 퀴즈) 안내 삭제 · 지금 스탬프 8종에 없고 들어가는 길도 없다(정리 기록.md) */
   /* v4.83 (261001) AX PLAY · 스태프 인증 · 참가자가 찍는 부스 QR 은 보관 · 체험 뒤 스태프가 내 QR 을 찍는다(스태프 모드 목적 타일 「AX PLAY」) */
   p2: { chip: "1F · AX PLAY", h: "AX PLAY에서<br>체험해 보세요", d: "HiDI-Q 또는 Hi-Helper를 체험한 뒤 스태프에게 내 QR을 보여 주세요.",
     steps: [["부스 체험", "HiDI-Q · Hi-Helper 중 1곳"], ["내 QR 보여주기", "스태프가 내 QR을 스캔"], ["적립 확인", "스탬프 탭에서 확인"]],
     meta: "09:30~16:30 · 1인 1회", cta: "내 QR 보여주기", act: "qrPanelOpen('mine')" },
-  p7: { chip: "1F · 약 10분", h: "벽 QR 퀴즈를<br>풀어 보세요", d: "DAP Wall 벽의 QR을 스캔하면 그 벽의 5문항이 열려요. 한 세트를 끝내면 스탬프를 받아요.",
-    steps: [["벽 QR 스캔", "WALL 1~3 중 한 곳"], ["5문항 풀기", "보기를 골라 제출해요"], ["적립 확인", "처음 끝낸 세트에서 스탬프"]],
-    meta: "", cta: "벽 QR 스캔하기" },
   st: { chip: "1F~18F · 비상계단 1·2", h: "계단으로<br>이동해 보세요", d: "한 개 층만 이동해도 스탬프를 받아요.",   /* 261005 최종 QA · 「출발 층과 도착 층 방화문 앞 QR을 찍어요」 = 아래 단계 01 · 03 과 같은 말 */
     steps: [["출발 층 QR 스캔", "방화문 앞 QR"], ["계단으로 이동", STAIR_SAFE], ["도착 층 QR 스캔", "오르기·내려가기 모두 인정"]],
     meta: "", cta: "계단 QR 스캔하기" }
 };
-function expGuide(id) { EXPG.id = EXP_GUIDE[id] ? id : "p1"; App.go("exp_g"); }
+function expGuide(id) { EXPG.id = EXP_GUIDE[id] ? id : "st"; App.go("exp_g"); }
 function expGuideHtml() {
   var id = EXPG.id, g = EXP_GUIDE[id], s = stairState();
   var steps = g.steps.map(function (x, i) {
@@ -961,7 +956,7 @@ var SCAN_SPOTS = [
   { id: "aws", nm: "10F 세션 D", kind: "sess", lb: "세션 D", will: "10F 세션 D 입장 처리" },
   { id: "ms1", nm: "10F 세션 E 1회차", kind: "sess", lb: "세션 E 1회차", will: "10F 세션 E 1회차 입장 처리" },
   { id: "ms2", nm: "10F 세션 E 2회차", kind: "sess", lb: "세션 E 2회차", will: "10F 세션 E 2회차 입장 처리" },
-  { id: "dap", nm: "1F DAP 과제상담", kind: "roster", lb: "DAP 상담 입장", tsub: "신청 명단", will: "DAP 상담 입장 처리", cond: "신청 명단에 있는 사람만" },
+  { id: "dap", nm: "1F AX LOUNGE 상담", kind: "roster", lb: "AX LOUNGE 상담 입장", tsub: "신청 명단", will: "AX LOUNGE 상담 입장 처리", cond: "신청 명단에 있는 사람만" },
   { id: "cchat", nm: "18F AX 커피챗", kind: "roster", lb: "커피챗 입장", tsub: "신청 명단", will: "커피챗 입장 처리", cond: "신청 명단에 있는 사람만" },
   { id: "q_photo", nm: "1F AI 포토부스", kind: "photo", lb: "포토부스 입장", tsub: "다음 번호 호출", will: "포토부스 입장 · 다음 번호 호출", cond: "앱에서 받은 대기 번호" },   /* 번호는 참가자가 앱에서 받는다 · 찍으면 입장 + 다음 호출 */
   /* v4.83 (261001) 1F 전시(p1) 스탬프 폐지 · AX PLAY(p2) = 체험 뒤 스태프가 참가자 내 QR 을 찍어 적립(스탬프 4) */

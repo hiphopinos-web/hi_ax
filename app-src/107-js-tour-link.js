@@ -4,7 +4,7 @@
 /* v5.37 (사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) 둘러보기 v3 = 시험 페이지와 같은 공용 모듈(tour3.js · tour3.css · 캐릭터 걷기 · 40도 시점 · 왼손 패드 · 오른손 십자 · 작은 지도 · 스태프 챗봇 · 판 보기 · 돋보기 2개 · 움직임 줄이기 · 입장 암전)
    같은 약속 AXTour.open/close/back/isOpen · 옛 v2(tour.js · tour.css · 자동 둘러보기 · 평면 지도 · 구역 시트)로 되돌리려면 아래 목록의 tour3 두 개를 tour.css · tour.js 로 바꾸면 된다(파일은 그대로 둠) */
 /* v5.38 (사용자 261003) 둘러보기 손질 · 캐릭터 겹침(스태프 원 충돌) · 늘 카메라 쪽을 봄 · 조그 패드 · 안내데스크 깜빡임(겹친 면) · 정문 회전문 또렷하게 · 로비 음악(Web Audio 합성 · 「음악 없이」 · 위쪽 스피커 버튼) · 파일 이름 그대로 · 캐시 깨기 ver v538 */
-var TOUR = { ver: "v560", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
+var TOUR = { ver: "v564", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
 try { localStorage.removeItem('axfT3Diag'); } catch (e) {} window.AXT3_DIAG = /[?&]t3diag=1(?:&|$)/.test(location.search);   /* v5.47 진단은 주소에 ?t3diag=1 이 있는 그 페이지에서만 · 기억하지 않는다 · 옛 기기 기억은 지운다(사용자 261004) */   /* v5.44 둘러보기 실기기 진단(주소 ?t3diag=1 · 이 기기에 기억 · ?t3diag=0 이면 끔) · 화면 왼쪽 위에 GPU · 깊이 비트 · highp · DPR · fps */
 /* 켜기 스위치 · v5.28 true = 전체 공개(사용자 261003 「1층 3D 전체 공개」) · false 로 두면 입구 3곳 · 판 퀴즈 힌트 링크 · 열기가 모두 숨는다 */
 var TOUR_ON = true;
@@ -26,7 +26,7 @@ function tourOpen(o) {
   if (TOUR.busy) return;
   TOUR.busy = true;
   var left = TOUR.files.length, bad = false, q = "?v=" + TOUR.ver;
-  toast("행사장 둘러보기를 여는 중");
+  /* v5.64 (사용자 261005 「가운데랑 하단에 두 개 떠」) 앱 하단 「여는 중」 알림 삭제 · 안내는 둘러보기 자체 불러오기 화면 하나 */
   TOUR.files.forEach(function (f) {
     var n = /\.css$/.test(f) ? document.createElement("link") : document.createElement("script");
     if (n.tagName === "LINK") { n.rel = "stylesheet"; n.href = "assets/tour/" + f + q; } else { n.src = "assets/tour/" + f + q; n.async = false; }   /* 스크립트는 붙인 순서대로 실행 */
@@ -38,16 +38,22 @@ function tourOpen(o) {
 /* 입구 · 상시 운영 1F 맨 위 카드 · 홈 나의 일정 아래 한 줄(tourHomeHtml) · 최초 로그인 초대장 · 이름은 세 곳 모두 「행사장 둘러보기」(사용자 261004)
    v5.60 (사용자 261004 안2 「연주황 카드로 크게」 · 시안 디자인 시안/시간표 층 색/시안.html ?b=2 · design.md A-4 승인된 예외) 상시 운영 입구 = 홈 줄과 같은 행(rcHtml) + 연주황 면 · O25 테두리 · 캐릭터 52 · 제목 17 · 설명 한 줄
    옛 흰 줄(axs-zfl 「1층 둘러보기」 · 구역 카드와 높이가 같아 입구로 안 보였다)과 구역 상세 「모형에서 보기」는 지웠다 */
-var TOUR_SUB = "1층 부스와 판을 3D로 미리 보기";
+var TOUR_ST_DESC = "엘리베이터가 혼잡하면 오늘 하루는 계단을 이용해 보세요";   /* v5.64 둘러보기 계단 블록 카드 */
+var TOUR_SUB = "1층 부스 3D로 미리 보기";   /* v5.64 (사용자 261005 「문구 이렇게 수정」) 옛 「1층 부스와 판을 3D로 미리 보기」 */
+/* v5.64 (사용자 261005 「홈화면도 이것과 통일해줘」) 입구 카드 하나(tourCardHtml) = 상시 운영 1F 맨 위 · 홈(나의 일정 아래 · 행사 전 = 광고판 아래) 두 곳이 같이 쓴다 */
+function tourCardHtml() {
+  return rcHtml({ cls: " axs-tourgo axs-tourbig", onclick: "tourOpen()", link: true, left: tourBotHtml(), title: "행사장 둘러보기", sub: TOUR_SUB });
+}
 function tourRowHtml() {
   if (!tourOn()) return "";
-  return rcHtml({ cls: " axs-tourgo axs-tourbig", onclick: "tourOpen()", link: true, left: tourBotHtml(), title: "행사장 둘러보기", sub: TOUR_SUB });
+  return tourCardHtml();
 }
 /* v5.53 (사용자 261004 「홈 화면에 1층 미리보기가 지금은 요소가 너무 과한 것 같아 · 행사장 둘러보기 한 문장 정도면 충분할 것 같아」) 홈 입구 = 한 줄 「행사장 둘러보기」
    왼쪽 원 = 행사 캐릭터 챗봇(v5.56 · tourBotHtml · 옛 3D 로비 사진 thumb 은 지움) · 오른쪽 이동 표시 · 부제 · 3D 칩 · 버튼 · 사진 4장 순환 · 진행 막대 없음(옛 v5.46 큰 카드 · 시기별 부제 걷음)
    자리는 시기별 그대로 · 행사 전 = 광고판 바로 아래(아직 일정 · 스탬프가 비어 있어 위에 둔다) · 당일 · 종료 뒤 = 나의 일정 아래(당일은 지금 · 다음 일정과 스탬프가 먼저 · design.md A-5) */
+/* v5.64 옛 흰 한 줄 → 상시 운영 입구와 같은 연주황 카드(tourCardHtml) · 자리 그대로 */
 function tourLineHtml() {
-  return '<section class="axs-sec">' + rcHtml({ cls: " axs-tourgo", onclick: "tourOpen()", link: true, left: tourBotHtml(), title: "행사장 둘러보기" }) + "</section>";
+  return '<section class="axs-sec">' + tourCardHtml() + "</section>";
 }
 /* v5.56 줄 왼쪽 챗봇 · 원본 BOT_SVG(path 그대로 · viewBox 200 그대로) + 안테나 전파 호(BOT_WAVE) + 반달 눈웃음 호 2개(새 요소 · 눈 자리 위 · 평소 숨김)
    --td = 9초 주기 안에서 지금의 위치(홈이 4초마다 다시 그려져도 움직임이 이어진다) · 사진 파일 없음(첫 로딩 바이트 0) */
@@ -115,10 +121,11 @@ var TOUR_HOST = {
   crowd: function (id) { var k = id === "cafe" ? "e" : "l", x = crowdCell(k); return { nm: k === "e" ? "엘리베이터" : "1F 로비", st: x.st, sub: x.sub, cls: x.cls }; },
   crowdGo: function () { App.tab("home"); setTimeout(function () { var c = document.querySelector(".cstrip2"); if (c) c.scrollIntoView({ block: "center" }); }, 120); },
   /* v5.49 (사용자 261004) 1층 둘러보기 스탬프 블록 · 이름 · 받는 법 · 버튼 문구 = 스탬프 표(STAMPS) 그대로 · got = 이미 받음 · stampGo = 둘러보기를 닫고 그 활동 화면으로 */
+  /* v5.64 (사용자 261005 「계단이용 스탬프를 점프하면 · 권장 문구」) 계단 블록 카드 설명 줄 = 사용자 문구 그대로(스탬프 탭 설명은 그대로) */
   stamp: function (id) {
     var s = STAMPS.filter(function (x) { return x.id === id; })[0] || (id === "qz" || id === "p4" ? STAMPS_V2.filter(function (x) { return x.id === id; })[0] : null);
     if (!s) return null;
-    return { title: s.title, desc: s.desc, cta: id === "p3" ? "DAP 과제상담 신청" : s.cta || "바로 가기", got: S.get("stamps", []).indexOf(id) >= 0 };   /* v5.57 (사용자 261004 「이 스탬프에서 연결은 dap 과제 상담 신청 하기로 가야지」) LOUNGE 블록 = 상담 신청 · 설명 줄은 그대로 */
+    return { title: s.title, desc: id === "st" ? TOUR_ST_DESC : s.desc, cta: id === "p3" ? "AX LOUNGE 상담 신청" : s.cta || "바로 가기", got: S.get("stamps", []).indexOf(id) >= 0 };   /* v5.57 (사용자 261004 「이 스탬프에서 연결은 dap 과제 상담 신청 하기로 가야지」) LOUNGE 블록 = 상담 신청 · 설명 줄은 그대로 */
   },
   stampGo: function (id) {
     var GO = { qz: function () { App.go("quiz"); }, p4: function () { App.go("games"); }, p2: function () { qrPanelOpen("mine"); }, p5: function () { App.go("ideas"); }, p3: function () { progOpen("dap"); }, st: function () { stairOpen(); } };
@@ -145,8 +152,8 @@ function tourRetBack() {
 /* v5.57 (사용자 261004 「1층 > 스탬프 > 1층 이런식으로 와야 될 것 같아 · 다른 활동들도 그렇게 설정해줘」) 둘러보기에서 출발한 활동은 마치면 둘러보기로 · 앱에서 시작한 활동은 지금처럼 앱에 머문다(출처 = TOUR_RET)
    마침(tourRetDone) = AX 퀴즈 판 완주(qzFinish) · 미니 게임 한 판 결과 화면(gsResultHtml) · 아이디어 한 줄 제출 뒤 커피챗 질문에 답함(ideaCchat · 묻지 않는 경우는 제출 순간 ideaPush)
      · AX PLAY = 내 QR 화면에 스태프 인증 스탬프가 들어온 순간(stampSync · awardStamp → tourRetStamp) · 17F 강연 · 계단 안내 = 안내 화면이라 마침 없음(뒤로 = 둘러보기 · v5.53 그대로)
-   마친 뒤(done) = 그 활동의 어느 화면에서 뒤로 가도 둘러보기(App.back) · 결과 화면 버튼 「1층으로 돌아가기」(퀴즈 결과 주 버튼 · 게임 결과 · 아이디어 완료)
-   그 활동의 스탬프를 이번에 새로 받았으면(got) = 스탬프 연출 · 보상 안내 팝업이 모두 닫힌 뒤 아래 띠(#trd) 「1층으로 돌아가기」 3초 채움 → 자동 · 「여기 머물기」
+   마친 뒤(done) = 그 활동의 어느 화면에서 뒤로 가도 둘러보기(App.back) · 결과 화면 버튼 「둘러보기로 돌아가기」(퀴즈 결과 주 버튼 · 게임 결과 · 아이디어 완료)
+   그 활동의 스탬프를 이번에 새로 받았으면(got) = 스탬프 연출 · 보상 안내 팝업이 모두 닫힌 뒤 아래 띠(#trd) 「둘러보기로 돌아가기」 3초 채움 → 자동 · 「여기 머물기」
      · 띠 밖을 누르거나 화면을 옮기면 자동 취소(버튼 · 뒤로는 그대로) · 시트 · 팝업이 뜨면 그동안 멈춤 · 움직임 줄이기 = 채움 없이 숫자만
    이미 받은 스탬프(다시 푼 퀴즈 · 3종을 다 채우지 않은 게임 · 두 번째 아이디어) = 자동 없음 · 결과 화면 버튼 · 뒤로 */
 var TRD = { t: 0, tick: 0, end: 0, el: null };
@@ -175,9 +182,9 @@ function trdShow() {
   trdHide();
   var d = document.createElement("div");
   d.id = "trd"; if (rgReduced()) d.className = "rm";
-  d.innerHTML = '<span class="ax-sr-only" role="status">' + TRD_MS / 1000 + "초 뒤 1층으로 돌아가요</span>" +
+  d.innerHTML = '<span class="ax-sr-only" role="status">' + TRD_MS / 1000 + "초 뒤 둘러보기로 돌아가요</span>" +
     '<button type="button" class="ax-button ax-button-weak trd-stay" onclick="trdStay()">여기 머물기</button>' +
-    '<button type="button" class="ax-button trd-go" onclick="tourRetGo()"><i class="trd-bar" aria-hidden="true"></i><span>1층으로 돌아가기</span><b class="trd-n" aria-hidden="true">' + TRD_MS / 1000 + "</b></button>";
+    '<button type="button" class="ax-button trd-go" onclick="tourRetGo()"><i class="trd-bar" aria-hidden="true"></i><span>둘러보기로 돌아가기</span><b class="trd-n" aria-hidden="true">' + TRD_MS / 1000 + "</b></button>";
   document.body.appendChild(d); document.body.classList.add("trd-on");
   TRD.el = d; TRD.end = Date.now() + TRD_MS;
   document.addEventListener("pointerdown", trdPtr, true); document.addEventListener("keydown", trdKey, true);

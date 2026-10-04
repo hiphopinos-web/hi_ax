@@ -487,7 +487,7 @@ function gsResultHtml(key, r) {
     '<div class="ax-stack-tight gs-res-go"><button type="button" class="ax-button rt-btn" onclick="' + g.start + '">다시 하기</button>' +
     (qzR ? '<button type="button" class="ax-button ax-button-weak rt-btn weak" onclick="App.go(\'quiz\')">AX 퀴즈 보기</button>' :
       '<button type="button" class="ax-button ax-button-weak rt-btn weak" onclick="' + gsRankGo(key) + '">' + "순위판 보기" + "</button>") +   /* v5.30 타자 = 1F 현장 순위판만 있다(사용자 261003) */
-    '<button type="button" class="ax-button ax-button-weak rt-btn weak" onclick="' + (tr ? "tourRetGo()" : "App.go(\'passport\')") + '">' + (tr ? "1층으로 돌아가기" : "스탬프 보기") + "</button></div>";   /* v5.57 둘러보기에서 출발 = 1층으로 */
+    '<button type="button" class="ax-button ax-button-weak rt-btn weak" onclick="' + (tr ? "tourRetGo()" : "App.go(\'passport\')") + '">' + (tr ? "둘러보기로 돌아가기" : "스탬프 보기") + "</button></div>";   /* v5.57 둘러보기에서 출발 = 1층으로 */
 }
 /* v4.28 결과 접힘 조각 · 여섯 곳(다섯 게임 + 단어 소나기 앱 솔로 · 1F 현장)이 같이 쓴다 · 「점수에는 들어가지 않아요」 같은 설명 문장 대신 제목 줄(점수 구성 · 참고 기록 · 점수 규칙 · 내 위치)로 나눈다 */
 function rtFoldHtml(label, body) {

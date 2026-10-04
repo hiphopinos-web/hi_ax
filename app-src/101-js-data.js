@@ -220,12 +220,10 @@ var SESSIONS = [
   { id: "ms2", fl: 10, zone: "tbd", kind: "info", ttl: "세션 E · 2회차", sub: "MS Copilot을 활용한 문서 작성 실습 (MS)", who: "", tm: "15:00~16:20", cap: 20, seed: 9,
     capNote: "20명",
     todo: [], prep: [] },
-  /* v3.21 B: 시간대 슬롯 신청(kind slot) → 원격 대기열(kind queue) · 번호표를 받고 자리에서 기다린다 */
-  { id: "photo", fl: 1, zone: "promo", kind: "queue", ttl: "AI 포토부스", sub: "ME to WE 프레임", who: "", tm: "10:00~17:00",
-    desc: "촬영 2~3분 · 현장 출력" },
-  { id: "dap", fl: 1, zone: "dap", kind: "link", go: "dap", ttl: "AX LOUNGE 상담", sub: "DAP 과제상담 · 1:1 30분", who: "", tm: "09:30~16:30",
+  /* v5.64 AI 포토부스 프로그램 상세(photo · kind queue) 삭제 · v5.05 포토부스 대기 폐지 뒤 들어가는 길이 없는 빈 상세였다(정리 기록.md) */
+  { id: "dap", fl: 1, zone: "dap", kind: "link", go: "dap", ttl: "AX LOUNGE 상담", sub: "데이터사이언스파트 · 1:1 30분", who: "", tm: "09:30~16:30",
     /* v3.54 사은품 문구는 사용자 확정으로 유지 (CLAUDE.md 「참여자 앱에 사은품 안내 없음」의 예외 · 260918) */
-    desc: "데이터사이언스파트 1:1 과제상담 30분 · 상담 완료 시 사은품" },
+    desc: "데이터사이언스파트 1:1 상담 30분 · 상담 완료 시 사은품" },
   { id: "cchat", fl: 18, zone: "lounge", kind: "link", go: "ev_cchat", ttl: "AX 커피챗", sub: "멘토와 가벼운 시간", who: "", tm: "",   /* v4.13 ⓛ 시작 시각 미정(사용자 260922) · 시각을 앱에 두지 않는다 */
     desc: "아이디어 제출 후 참석 신청" }
 ];

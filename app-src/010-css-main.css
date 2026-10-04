@@ -1722,6 +1722,11 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .rc.axs-tourbig .ls .ico.tbot svg { width: 58px; height: 58px; left: -3px; top: 1px; }
   .rc.axs-tourbig .tt { font: var(--ax-type-t5-strong); font-weight: 800; }
   .rc.axs-tourbig .sb { color: var(--ax-color-body); }
+  /* v5.64 (사용자 261005 「홈화면도 이것과 통일」) 홈 줄 규칙(#view[data-v="home"] .rc · 흰 면 · 테 없음 · 회색 설명)이 카드를 덮지 않게 · 같은 카드 한 벌(tourCardHtml) */
+  #view[data-v="home"] .rc.axs-tourbig { background: var(--ax-color-brandSoft); border: 1px solid color-mix(in srgb, var(--ax-color-brand) 30%, var(--ax-color-surface)); --rc-px: 15px; }
+  #view[data-v="home"] .rc.axs-tourbig .ls .ico.tbot { background: var(--ax-color-surface); }
+  #view[data-v="home"] .rc.axs-tourbig .tt { font: var(--ax-type-t5-strong); font-weight: 800; }
+  #view[data-v="home"] .rc.axs-tourbig .sb { font: var(--ax-type-t7); color: var(--ax-color-body); }
   @keyframes tbHop { 0%, 100% { transform: translateY(0); animation-timing-function: cubic-bezier(.3, .7, .5, 1); } 42% { transform: translateY(-3px); animation-timing-function: cubic-bezier(.5, 0, .75, .45); } 84% { transform: translateY(0); } }
   @keyframes tbEye { 0%, 20%, 23.5%, 54.9%, 70.1%, 86%, 89.5%, 100% { transform: scaleY(1); opacity: 1; } 21.7%, 87.7% { transform: scaleY(.12); opacity: 1; } 55%, 70% { transform: scaleY(1); opacity: 0; } }
   @keyframes tbSmile { 0%, 54.9%, 70.1%, 100% { opacity: 0; } 55%, 70% { opacity: 1; } }

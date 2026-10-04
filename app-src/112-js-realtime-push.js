@@ -25,7 +25,7 @@ function checkMyState() {
   }
   if (my && my.status === "canceled" && seen.resvX !== my.id + ":canceled") {
     seen.resvX = my.id + ":canceled"; changed = true;
-    notifyUser("과제상담 신청 취소", "", "dap");
+    notifyUser("AX LOUNGE 상담 신청 취소", "", "dap");
   }
   var c = S.get("cchat", null);
   if (c && c.status === "matched" && seen.cchat !== "m:" + c.round + c.table) {

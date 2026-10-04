@@ -187,7 +187,7 @@ var Views = {
         '<div class="ax-stack-tight axs-gap12 axs-center-tx"><h1 class="ax-type-t2">아이디어를 제출했어요</h1>' +
         '<p class="ax-body">' + IDEA_AWARD_TXT + "</p></div>" +
         '<div class="ax-card ax-stack-tight axs-gap12"><p class="ax-card-title">AX 커피챗</p><p class="ax-description" id="ideaCcLine">' + cl + "</p></div></div>" +
-        '<div class="ax-bottom axs-fix">' + (tourRetLive() ? progBtn("1층으로 돌아가기", "tourRetGo()") : progBtn("내가 낸 아이디어 보기", "App.go(\'ideas_mine\')")) + progBtn("한 줄 더 남기기", "IDEA.step=null;App.render()", "ax-button-weak") + "</div>";
+        '<div class="ax-bottom axs-fix">' + (tourRetLive() ? progBtn("둘러보기로 돌아가기", "tourRetGo()") : progBtn("내가 낸 아이디어 보기", "App.go(\'ideas_mine\')")) + progBtn("한 줄 더 남기기", "IDEA.step=null;App.render()", "ax-button-weak") + "</div>";
     }
     /* v4.08 입력·제출 화면 = 전체 화면 · 하단 메뉴 숨김 · 아래 고정 주 버튼(5글자 이상이면 켜짐) + 약한 버튼
        쓴 내용은 어떤 경우에도 지우지 않는다(IDEA.draft · 기기 저장 idea_draft · 다시 그려도 그대로) · 공백은 글자 수에서 뺀다 */
@@ -269,7 +269,7 @@ var Views = {
       '<section class="ax-card axs-pd' + (stp ? " axs-sthost" : "") + '">' + (stp ? stampTagHtml(stp) : "") +   /* v4.70 p3 에 들어가는 프로그램만 오른쪽 위 도장 */   /* v4.06 색 통일 · 흰 페이지 → canvas 위 흰 카드 */
       '<div class="axs-chiprow"><span class="axs-chip cat">' + esc(d.cat) + "</span>" + (d.st ? '<span class="axs-chip ' + d.stc + '">' + esc(d.st) + "</span>" : "") + "</div>" +
       '<h1 class="ax-title">' + esc(d.title) + "</h1>" +
-      (d.who ? '<div class="axs-who">' + spkAvHtml(s.id, d.av) + '<span class="axs-tx"><span class="ax-card-title">' + esc(d.who) + '</span><span class="ax-description">' + esc(d.whoSub) + "</span></span></div>" : "") +
+      (d.who ? '<div class="axs-who">' + spkAvHtml(s.id, d.av) + '<span class="axs-tx"><span class="ax-card-title">' + esc(d.who) + '</span>' + (d.whoSub ? '<span class="ax-description">' + esc(d.whoSub) + "</span>" : "") + "</span></div>" : "") +
       '<dl class="ax-inset axs-kv">' + d.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl></section>" +
       (d.extra || "") +
       ('sg' in d ? d.sg : '<section class="ax-stack-tight axs-gap12"><h2 class="ax-section-title">' + esc(d.secT) + '</h2><p class="ax-body">' + d.secB + "</p>" + (d.pics || "") + (d.link || "") + "</section>") +   /* v5.60 10F 세션은 sessGuideHtml */
@@ -308,7 +308,7 @@ var Views = {
       '<p class="ax-body">' + (dap ? "승인되면 앱에서 알려 드려요." : "새로운 발견의 순간,<br>" + esc(pl) + "에서 만나요.") + "</p></div>" +
       '<div class="ax-card ax-stack-tight axs-gap12"><p class="ax-card-title">' + esc(s.ttl) + '</p><p class="ax-description">10월 26일 · ' + esc(dap ? o.slot + " · 30분" : progTm(s.tm)) + '</p><p class="ax-description">' + esc(pl) + "</p></div></div>" +
       '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" onclick="mySched()">나의 일정 확인하기</button>' +
-      (tourRetLive() ? '<button type="button" class="ax-button ax-button-weak" onclick="tourRetGo()">1층으로 돌아가기</button></div>' : '<button type="button" class="ax-button ax-button-weak" onclick="App.tab(\'guide\')">다른 프로그램 둘러보기</button></div>');   /* v5.57 둘러보기에서 출발 = 1층으로 */
+      (tourRetLive() ? '<button type="button" class="ax-button ax-button-weak" onclick="tourRetGo()">둘러보기로 돌아가기</button></div>' : '<button type="button" class="ax-button ax-button-weak" onclick="App.tab(\'guide\')">다른 프로그램 둘러보기</button></div>');   /* v5.57 둘러보기에서 출발 = 1층으로 */
   },
 
   /* 옛 라우트 dap · ev_cchat 은 App.go 가 프로그램 상세(sess_d)로 돌린다 (알림·딥링크 호환) · 여기 두 개는 직접 렌더 대비 */

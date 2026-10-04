@@ -65,13 +65,13 @@ var App = {
   TITLES: {
     home: "AX Festival", guide: "프로그램", exp: "스탬프", my: "나의 참여",
     passport: "스탬프", rewards: "내 보상", prizes: "경품", games: "미니 게임", quiz: "AX 퀴즈",
-    notices: "공지", dap: "과제상담 신청",
+    notices: "공지", dap: "AX LOUNGE 상담 신청",
     booth: "AX PLAY",
     ideas: "아이디어 한 줄", ideas_mine: "내가 낸 아이디어", survey: "오늘 한 판 설문",
     sess_d: "프로그램", sess_cf: "신청 확인", sess_ok: "신청 완료",
     ev_cchat: "내 커피챗",
     floor1: "1F 부스", zone_d: "1F 구역",
-    admin: "관리자 모드", game_tetris: "테트리스", type_site: "1F 현장 셀프 모드", wall_type: "", type_award: "", type_rank: "타자 순위",
+    admin: "관리자 모드", game_tetris: "테트리스", type_site: "1F 현장 셀프 모드", wall_type: "", type_award: "", type_rank: "1F 타자왕 순위",
     game_pang: "AX 팡", game_jump: "ME to WE 점프", quiz_play: "퀴즈 풀기", oly_rank: "미니 게임 순위"
   },
   /* 들어온 곳 기억 · 같은 화면을 여러 곳에서 연다(시간표 = 홈 · 나의 참여, 미니게임 = 체험 · 스탬프 카드) → 뒤로가기는 들어온 곳으로 */

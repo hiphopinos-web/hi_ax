@@ -303,7 +303,7 @@ var RESV_HOLD = ["requested", "booked", "approved", "checked", "done"];
 /* v4.64 (QA 1단계 260930) 남이 잡은 시간 · 예전에는 이 기기 기록만 봐서 서버에 잡힌 시간도 「신청 가능」 · 「남은 시간 12개」로 보였고 신청해야 알았다.
    taken = 서버 sync 의 resvTaken(시간 글자만 · 이름 없음 · 옛 서버는 보내지 않아 null = 예전과 같다) · miss = 방금 「다른 분이 신청」으로 돌아온 시간(다음 sync 까지) */
 var RESV_SRV = { taken: null, miss: {} };
-/* 261005 최종 QA · 행사 당일 이미 시작한 상담 시간 · 행사가 끝난 뒤 = 고를 수 없는 칸(마감) · 전에는 오후 3시에도 09:30 칸을 신청할 수 있었고 「남은 시간」이 지난 칸까지 셌다(서버 resv_book 도 지난 시간을 받는다 · 서버 보완은 보고) */
+/* 261005 최종 QA · 행사 당일 이미 시작한 상담 시간 · 행사가 끝난 뒤 = 고를 수 없는 칸(마감) · 전에는 오후 3시에도 09:30 칸을 신청할 수 있었고 「남은 시간」이 지난 칸까지 셌다(v5.64 서버 resv_book 도 행사일 서버 시각으로 지난 시간을 past 로 거절) */
 function resvPast(slot) { var ph = evPhase(); return ph === "after" || (ph === "live" && t2m(slot) <= hmNow()); }
 function resvTaken(slot) {
   if (resvPast(slot)) return true;

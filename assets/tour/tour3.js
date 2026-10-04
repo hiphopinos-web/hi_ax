@@ -34,7 +34,7 @@
     { id: 'action', zone: 'action', x: 22.3, z: 3.25 },
     { id: 'play', zone: 'play', x: 9.6, z: 3.0, look: [8.6, 0.55] },
     /* EVENT = 세 자리(사용자 261003) · 타자왕(홍보 영상) · 포토부스(판 보기 · 챗봇 없음) · 룰렛(호객만 · 판 보기 없음) */
-    { id: 'typing', zone: 'event', spot: 'typing', name: 'AX 타자왕', x: 3.3, z: 2.5, look: [0.55, 2.47], say: '타자왕 1~3위 경품 · 17:00 마감', go: '' },
+    { id: 'typing', zone: 'event', spot: 'typing', name: 'AX 타자왕', x: 3.3, z: 2.5, look: [0.55, 2.47], say: '당신의 프롬프트 속도를 보여주세요', go: '' },   /* v5.64 (사용자 261005 「프롬프트 실력보다는 속도」 · 원문 「보셔주세요」는 「보여주세요」로) 옛 「타자왕 1~3위 경품 · 17:00 마감」 */
     { id: 'event', zone: 'event', name: '포토부스', x: 5.3, z: 7.35, look: [0.55, 7.35], noGuide: true },   /* v5.58 촬영 기계(가운데 칸 앞 · 도면 3.6, 7.35) 뒤에서 벽 쪽 단체 사진을 봄 */
     { id: 'roulette', zone: 'event', spot: 'roulette', name: '룰렛 이벤트', x: 3.4, z: 10.1, look: [0.55, 10.15], say: '스탬프 3개면 룰렛을 돌려요', go: '', hand: true },
     { id: 'lounge', zone: 'lounge', x: 8.7, z: 8.3 }
@@ -935,6 +935,9 @@
    * ③ 미팅룸 1 · 2 = 유리벽(사용자 「키 높이까지 반투명 · 위는 투명」) · 미팅룸 3 자리 = 같은 유리벽의 「고객센터」(유리문 · 탁자 대신 안내 카운터)
    * 모두 걷기 지도(buildGrid) 앞에 붙여 막힘이 저절로 따라온다 · 면은 서로 겹치지 않게(문은 벽 구멍 안으로 들이고 · 띠 · 표지는 상자) */
   var EH = { x0: 28.2, x1: 32.57, z0: 11.46, z1: 19.4, top: 4.6, H: 5.0 };
+  /* v5.64 (사용자 261005 「로비에서 보면 살짝 튀어나온 부분이 있고(2미터) 그 뒤에 1미터 정도 고객센터를 바라봤을 때 왼쪽(건물 바깥과 반대)으로 들어가 있어」 · 사용자 확인 필요)
+   *   서쪽 벽(코어 동쪽 면) = 로비 쪽 2m(z 11.46 ~ 13.46)는 x 28.2 그대로 · 그 뒤(z 13.46 ~ 19.4 · 계단 · 엘리베이터 문)는 서쪽으로 1m 들어간 x 27.2 · 꺾이는 곳에 북쪽을 보는 짧은 벽 */
+  var EHR = { z: 13.46, x: 27.2 };
   var WW = { x1: 6.825, w: 1.8, z: 12.5, t: 0.12, h: 2.7 };   /* v5.58 높이 2.4 → 2.7(현장 사진 · 벽감 천장 띠 아래 = 가벽 높이 · 위는 루버 띠) */   /* 가벽 · 폭 = 사용자 표시(약 2.4m)보다 좁힘 · 2.4m 면 미팅룸 앞 복도(폭 3.2m)가 막혀 날개로 못 들어간다 */
   var GL = { cut: 1.75, h: 2.7 };   /* 유리벽 · 1.75m 까지 반투명 · 위 2.7m(미팅룸 벽 높이)까지 투명 */
   function attrRec(geo, keys, A, i, m, v) {
@@ -1079,42 +1082,53 @@
       var uA = attrAt(marble, 'uv', 20.5, EH.z0, 1.0), uB = attrAt(marble, 'uv', 21.5, EH.z0, 1.0), uC = attrAt(marble, 'uv', 20.5, EH.z0, 2.0), l1 = attrAt(marble, 'uv1', 30.4, EH.z0, 2.2), f1 = attrAt(floor, 'uv1', 30.4, 9.9, 0);
       var dux = uA && uB ? [uB[0] - uA[0], uB[1] - uA[1]] : [0.38, 0], duy = uA && uC ? [uC[0] - uA[0], uC[1] - uA[1]] : [0, 0.77];
       sideN.traverse(function (o) { if (o.isMesh) R.eh += regionCut(o, { x0: EH.x0, x1: EH.x1 + 0.2, z0: EH.z0 - 0.08, z1: EH.z1 }, null); });
+      sideN.traverse(function (o) { if (o.isMesh) R.eh += regionCut(o, { x0: EHR.x, x1: EH.x0 + 0.01, z0: EHR.z, z1: EH.z1 }, null); });   /* v5.64 들어간 칸 */
       R.uv1 = [f1, l1];
       var eh = new T.Group(); eh.name = 'eastHall'; eh.userData = { eastHall: true };
       /* 바닥 · 모형 바닥은 코어 밑에 없다(바깥 포장만) · 로비 바닥과 같은 재질 · 결(uv)은 로비 바닥에서 이어 · 빛은 로비 바닥 한 점(문 E 앞) */
       var fA = attrAt(floor, 'uv', 30.4, 9.9, 0), fB = attrAt(floor, 'uv', 31.4, 9.9, 0), fC = attrAt(floor, 'uv', 30.4, 10.9, 0);
       if (fA && fB && fC) {
         var FQ = { pos: [], uv: [], idx: [] };
-        quadInto(FQ, [EH.x0, EH.z0, 0], [EH.x1, EH.z0, 0], [EH.x0, EH.z1, 0], [0, 0, 1], function (p) { var dx = p[0] - 30.4, dz = p[1] - 9.9; return [fA[0] + (fB[0] - fA[0]) * dx + (fC[0] - fA[0]) * dz, fA[1] + (fB[1] - fA[1]) * dx + (fC[1] - fA[1]) * dz]; });
+        var fuv = function (p) { var dx = p[0] - 30.4, dz = p[1] - 9.9; return [fA[0] + (fB[0] - fA[0]) * dx + (fC[0] - fA[0]) * dz, fA[1] + (fB[1] - fA[1]) * dx + (fC[1] - fA[1]) * dz]; };
+        quadInto(FQ, [EH.x0, EH.z0, 0], [EH.x1, EH.z0, 0], [EH.x0, EH.z1, 0], [0, 0, 1], fuv);
+        quadInto(FQ, [EHR.x, EHR.z, 0], [EH.x0, EHR.z, 0], [EHR.x, EH.z1, 0], [0, 0, 1], fuv);   /* v5.64 들어간 칸 바닥 */
         var fm = quadMesh(FQ, floor.material, f1 || [0, 0]); fm.name = 'eh_floor'; S.lobby.add(fm); R.floor = 1;
       }
       /* 서쪽 벽(대리석 · 동쪽을 봄) · 계단 문 · 엘리베이터 문 구멍 */
       var Wm = { pos: [], uv: [], idx: [] }, Jm = { pos: [], idx: [] }, dep = 0.1, DOOR = { st: { s0: 14.5, s1: 15.5, h: 2.1 }, ev: { s0: 16.9, s1: 18.1, h: 2.3 } };
-      wallQuads(Wm, Jm, 'x', EH.x0, EH.z0, EH.z1, 0, EH.top, [1, 0, 0], [DOOR.st, DOOR.ev], dep);
-      var Wuv = function (p) { var s = p[1] - EH.z0, y = p[2] - 1.0; return [(uA ? uA[0] : 0) + dux[0] * s + duy[0] * y, (uA ? uA[1] : 0) + dux[1] * s + duy[1] * y]; };
+      wallQuads(Wm, Jm, 'x', EH.x0, EH.z0, EHR.z, 0, EH.top, [1, 0, 0], [], dep);                     /* v5.64 로비 쪽 2m(튀어나온 면) */
+      quadInto(Wm, [EHR.x, EHR.z, 0], [EH.x0, EHR.z, 0], [EHR.x, EHR.z, EH.top], [0, 1, 0]);          /* v5.64 꺾인 벽(북쪽을 봄 · 고객센터 쪽) */
+      wallQuads(Wm, Jm, 'x', EHR.x, EHR.z, EH.z1, 0, EH.top, [1, 0, 0], [DOOR.st, DOOR.ev], dep);       /* v5.64 1m 들어간 벽 · 계단 · 엘리베이터 문 */
+      var Wuv = function (p) { var s = Math.abs(p[0] - EH.x0) < 0.01 ? p[1] - EH.z0 : Math.abs(p[1] - EHR.z) < 0.01 && p[0] > EHR.x + 0.01 ? EHR.z - EH.z0 + (EH.x0 - p[0]) : p[1] - EH.z0 + (EH.x0 - EHR.x), y = p[2] - 1.0; return [(uA ? uA[0] : 0) + dux[0] * s + duy[0] * y, (uA ? uA[1] : 0) + dux[1] * s + duy[1] * y]; };   /* v5.64 결 = 벽을 따라 이어 붙임 */
       Wm.uv = []; for (var q = 0; q < Wm.pos.length / 3; q++) { var px = Wm.pos[q * 3] + 16, pz = 6 - Wm.pos[q * 3 + 2], py = Wm.pos[q * 3 + 1]; Wm.uv.push.apply(Wm.uv, Wuv([px, pz, py])); }
       var wm = quadMesh(Wm, marble.material, l1 || [0, 0]); wm.name = 'eh_wall'; eh.add(wm);
-      var band = { pos: [], idx: [] }; quadInto(band, [EH.x0, EH.z0, EH.top], [EH.x0, EH.z1, EH.top], [EH.x0, EH.z0, EH.H], [1, 0, 0]);
+      var band = { pos: [], idx: [] }; quadInto(band, [EH.x0, EH.z0, EH.top], [EH.x0, EHR.z, EH.top], [EH.x0, EH.z0, EH.H], [1, 0, 0]);
+      quadInto(band, [EHR.x, EHR.z, EH.top], [EH.x0, EHR.z, EH.top], [EHR.x, EHR.z, EH.H], [0, 1, 0]); quadInto(band, [EHR.x, EHR.z, EH.top], [EHR.x, EH.z1, EH.top], [EHR.x, EHR.z, EH.H], [1, 0, 0]);   /* v5.64 꺾인 벽 · 들어간 벽 위 띠 */
       var bandM = quadMesh(band, lam(0xE7E4DF)); bandM.name = 'eh_band'; eh.add(bandM);
       var jm = quadMesh(Jm, lam(0x8B9096)); jm.name = 'eh_jamb'; eh.add(jm);
       /* 벽 밑 · 위 간접등 띠(코어 앞면과 같은 재질 · 벽에서 3cm 튀어나온 상자) */
-      if (led) { eh.add(boxAt(0.03, 0.02, EH.z1 - EH.z0, led.material, EH.x0 + 0.015, (EH.z0 + EH.z1) / 2, 0.02)); eh.add(boxAt(0.03, 0.02, EH.z1 - EH.z0, led.material, EH.x0 + 0.015, (EH.z0 + EH.z1) / 2, 4.58)); }
+      if (led) [0.02, 4.58].forEach(function (ly) {   /* v5.64 꺾인 벽을 따라 세 토막 */
+        eh.add(boxAt(0.03, 0.02, EHR.z - EH.z0, led.material, EH.x0 + 0.015, (EH.z0 + EHR.z) / 2, ly));
+        eh.add(boxAt(EH.x0 - EHR.x, 0.02, 0.03, led.material, (EHR.x + EH.x0) / 2, EHR.z + 0.015, ly));
+        eh.add(boxAt(0.03, 0.02, EH.z1 - EHR.z, led.material, EHR.x + 0.015, (EHR.z + EH.z1) / 2, ly));
+      });
       /* 계단 문(짙은 회색 방화문 · 손잡이 막대) · 엘리베이터 문(은색 두 짝 · 가운데 줄 · 호출 버튼) · 구멍 안쪽 dep 에 선다 */
-      var dx = EH.x0 - dep, sd = DOOR.st, ev = DOOR.ev;
+      var dx = EHR.x - dep, sd = DOOR.st, ev = DOOR.ev;   /* v5.64 문 = 들어간 벽 */
       var stD = new T.Mesh(new T.PlaneGeometry(sd.s1 - sd.s0, sd.h), lam(0x5B6168)); stD.rotation.y = Math.PI / 2; stD.position.set(dx - 16, sd.h / 2, 6 - (sd.s0 + sd.s1) / 2); eh.add(stD);
       eh.add(boxAt(0.04, 0.04, 0.55, lam(0xC9CED4), dx + 0.03, (sd.s0 + sd.s1) / 2, 1.0));
       var evD = new T.Mesh(new T.PlaneGeometry(ev.s1 - ev.s0, ev.h), lam(0xC4C9CF)); evD.rotation.y = Math.PI / 2; evD.position.set(dx - 16, ev.h / 2, 6 - (ev.s0 + ev.s1) / 2); eh.add(evD);
       eh.add(boxAt(0.012, ev.h, 0.012, lam(0x6B7077), dx + 0.006, (ev.s0 + ev.s1) / 2, ev.h / 2));
-      eh.add(boxAt(0.03, 0.26, 0.1, lam(0x3A3F45), EH.x0 + 0.015, ev.s0 - 0.3, 1.15));
-      eh.add(bladeSign('계단', EH.x0 + 0.01, (sd.s0 + sd.s1) / 2, 2.55, 0.62));
-      eh.add(bladeSign('엘리베이터', EH.x0 + 0.01, (ev.s0 + ev.s1) / 2, 2.62, 0.9));
-      /* 북쪽 벽(밝은 벽 · 남쪽을 봄) · 고객 대기석 쪽 양개 유리문(불투명 서리 유리 · 틀 · 손잡이) */
+      eh.add(boxAt(0.03, 0.26, 0.1, lam(0x3A3F45), EHR.x + 0.015, ev.s0 - 0.3, 1.15));
+      eh.add(bladeSign('계단', EHR.x + 0.01, (sd.s0 + sd.s1) / 2, 2.55, 0.62));
+      eh.add(bladeSign('엘리베이터', EHR.x + 0.01, (ev.s0 + ev.s1) / 2, 2.62, 0.9));
+      /* 북쪽 벽(밝은 벽 · 남쪽을 봄) · 고객 대기석 쪽 양개 유리문(틀 · 손잡이) · v5.64 (사용자 261005 「고객센터 재질은 유리문이야」) 불투명 면 → 비치는 유리 · 문 뒤 = 밝은 안쪽 공간(안쪽 면만 보이는 상자) */
       var Nm = { pos: [], idx: [] }, Nj = { pos: [], idx: [] }, nd = { s0: 29.6, s1: 31.0, h: 2.4 };
-      wallQuads(Nm, Nj, 'z', EH.z1, EH.x0, EH.x1, 0, EH.H, [0, -1, 0], [nd], dep);
+      wallQuads(Nm, Nj, 'z', EH.z1, EHR.x, EH.x1, 0, EH.H, [0, -1, 0], [nd], dep);   /* v5.64 들어간 칸까지 */
       var nm = quadMesh(Nm, lam(0xE7E4DF)); nm.name = 'eh_north'; eh.add(nm);
       var nj = quadMesh(Nj, lam(0x8B9096)); eh.add(nj);
-      var nz = EH.z1 + dep, ndw = nd.s1 - nd.s0, frost = lam(0xDCE5E8), frame = lam(0x3A3F45);
-      var nD = new T.Mesh(new T.PlaneGeometry(ndw, nd.h), frost); nD.position.set((nd.s0 + nd.s1) / 2 - 16, nd.h / 2, 6 - nz); eh.add(nD);
+      var nz = EH.z1 + dep, ndw = nd.s1 - nd.s0, frost = new T.MeshBasicMaterial({ color: 0xDCE6EA, transparent: true, opacity: 0.32, depthWrite: false, side: T.DoubleSide }), frame = lam(0x3A3F45);
+      var ccIn = new T.Mesh(new T.BoxGeometry(ndw + 0.8, nd.h + 0.3, 0.6), new T.MeshBasicMaterial({ color: 0xF4F2EE, side: T.BackSide, toneMapped: false })); ccIn.position.set((nd.s0 + nd.s1) / 2 - 16, (nd.h + 0.3) / 2, 6 - (nz + 0.3)); ccIn.name = 'eh_ccIn';   /* 깊이 0.6 = 코어 북쪽 끝(z 20.2) 앞까지 */ eh.add(ccIn);   /* 문 뒤 안쪽(고객 대기석) */
+      var nD = new T.Mesh(new T.PlaneGeometry(ndw, nd.h), frost); nD.position.set((nd.s0 + nd.s1) / 2 - 16, nd.h / 2, 6 - nz); nD.renderOrder = 2; nD.name = 'eh_ccGlass'; eh.add(nD);
       eh.add(boxAt(0.03, nd.h, 0.03, frame, (nd.s0 + nd.s1) / 2, nz - 0.015, nd.h / 2));
       [-1, 1].forEach(function (sg) { eh.add(boxAt(0.03, 0.42, 0.04, frame, (nd.s0 + nd.s1) / 2 + sg * 0.12, nz - 0.03, 1.05)); });
       eh.add(boxAt(ndw, 0.05, 0.03, frame, (nd.s0 + nd.s1) / 2, nz - 0.015, nd.h - 0.025));
@@ -1130,22 +1144,15 @@
         mergeStatic(ge2); sideE.add(ge2);
       }
       R.merged = mergeStatic(eh); sideN.add(eh);
-      /* 입구 차단봉(로비에서 들어가지 않게 · 늘 보임) */
-      var bar = new T.Group(); bar.name = 'ehBarrier'; var pm = lam(0x3A3F45), bm = lam(0x2B3036), PX = [28.55, 29.5, 30.45, 31.4, 32.25], BZ = 11.8;
-      PX.forEach(function (x, i) {
-        var p = new T.Mesh(new T.CylinderGeometry(0.028, 0.028, 0.9, 10), pm); p.position.set(x - 16, 0.47, 6 - BZ); bar.add(p);
-        var b0 = new T.Mesh(new T.CylinderGeometry(0.16, 0.16, 0.025, 20), pm); b0.position.set(x - 16, 0.0125, 6 - BZ); bar.add(b0);
-        var tp = new T.Mesh(new T.SphereGeometry(0.045, 12, 8), pm); tp.position.set(x - 16, 0.94, 6 - BZ); bar.add(tp);
-        if (i) bar.add(boxAt(x - PX[i - 1] - 0.06, 0.05, 0.008, bm, (x + PX[i - 1]) / 2, BZ, 0.86));
-      });
-      mergeStatic(bar); S.lobby.add(bar);
+      /* v5.64 입구 차단봉 삭제(사용자 261005 「차단봉은 밤이라 있는 것」 · 낮 행사 모형에는 두지 않는다) · 걸어 들어가지 않는 막기는 그대로 */
       /* 코어를 숨겼을 때 남는 낮은 덩어리(tour-scene coreStub)도 빈 공간을 비운다 */
       var cs = S.lobby.getObjectByName('coreStub');
       if (cs && cs.children[1]) {
         var old = cs.children[1], cz = (D.LAYOUT && D.LAYOUT.CORE_Z1) || 20.2, mats = old.material, x0 = 19.8;
         cs.remove(old); old.geometry.dispose();
-        cs.add(boxAt(EH.x0 - x0, 0.9, cz - EH.z0, mats, (x0 + EH.x0) / 2, (EH.z0 + cz) / 2, 0.45));
-        cs.add(boxAt(EH.x1 - EH.x0, 0.9, cz - EH.z1, mats, (EH.x0 + EH.x1) / 2, (EH.z1 + cz) / 2, 0.45));
+        cs.add(boxAt(EHR.x - x0, 0.9, cz - EH.z0, mats, (x0 + EHR.x) / 2, (EH.z0 + cz) / 2, 0.45));
+        cs.add(boxAt(EH.x0 - EHR.x, 0.9, EHR.z - EH.z0, mats, (EHR.x + EH.x0) / 2, (EH.z0 + EHR.z) / 2, 0.45));   /* v5.64 튀어나온 2m */
+        cs.add(boxAt(EH.x1 - EHR.x, 0.9, cz - EH.z1, mats, (EHR.x + EH.x1) / 2, (EH.z1 + cz) / 2, 0.45));
       }
     }
     /* ── ③ 미팅룸 유리벽 ── 미팅룸 2 남쪽 막힌 벽을 지운다 · v5.58 미팅룸 3 탁자 · 의자는 되살림(v5.45 고객센터 자리 되돌림) */
@@ -1198,9 +1205,19 @@
     var lv = lam(0x1B1B1D), lvb = new T.MeshLambertMaterial({ color: 0x0E0E0F });
     ng.add(boxAt(WW.x1 - 3.6, 4.6 - WW.h - 0.05, 0.02, lvb, (3.6 + WW.x1) / 2, 11.46 + 0.06, (WW.h + 0.05 + 4.6) / 2));   /* 루버 뒤판 */
     for (var ly = WW.h + 0.12; ly < 4.58; ly += 0.145) ng.add(boxAt(WW.x1 - 3.6, 0.08, 0.05, lv, (3.6 + WW.x1) / 2, 11.46 + 0.025, ly));   /* 가로 루버 */
+    /* v5.64 (사용자 261005 「이곳도 상단은 옆에 가벽(스크린) 위와 마찬가지 재질로 막혀 있어」 · 「미팅룸 쪽은 다 같아 · 거기는 천장이 메인 홀보다 낮아」)
+     *   날개(미팅룸 1 · 2 · 3 · 복도) 천장 = 유리벽 높이(WW.h 2.7) · 로비에서 보이는 날개 앞면(z 11.46) 위 = 벽감과 같은 검은 가로 루버를 서쪽 끝까지(x 0.08 ~ 3.6)
+     *   그 아래 로비 쪽 띠(z 11.46 ~ 12.2 · 미팅룸 2 앞 유리벽까지) = 벽감 천장 띠와 같은 갈색 · 미팅룸 유리벽 위 = 날개 천장이 막는다(아래에서만 보이는 면 · 위에서 내려다보면 비친다) */
+    ng.add(boxAt(3.6 - 0.08, 4.6 - WW.h - 0.05, 0.02, lvb, (0.08 + 3.6) / 2, 11.46 + 0.06, (WW.h + 0.05 + 4.6) / 2));   /* 루버 뒤판 · 서쪽 */
+    for (var ly2 = WW.h + 0.12; ly2 < 4.58; ly2 += 0.145) ng.add(boxAt(3.6 - 0.08, 0.08, 0.05, lv, (0.08 + 3.6) / 2, 11.46 + 0.025, ly2));   /* 가로 루버 · 서쪽 */
+    ng.add(boxAt(3.6 - 0.08, 0.05, 12.2 - 11.46, side, (0.08 + 3.6) / 2, (11.46 + 12.2) / 2, WW.h + 0.025));   /* 천장 띠 · 미팅룸 2 앞 */
+    ng.add(boxAt(3.6 - 0.08, 0.03, 0.03, silver, (0.08 + 3.6) / 2, 11.46 + 0.015, WW.h + 0.015));   /* 은회색 모서리 띠 · 서쪽 */
     mergeStatic(ng); S.lobby.add(ng);
+    var wc = new T.Shape(); [[0, 12.2], [6.83, 12.2], [6.83, 27.0], [0, 23.8]].forEach(function (q, i) { if (i) wc.lineTo(q[0] - 16, 6 - q[1]); else wc.moveTo(q[0] - 16, 6 - q[1]); });
+    var wcm = new T.Mesh(new T.ShapeGeometry(wc), lam(0xEEEDEA)); wcm.rotation.x = Math.PI / 2; wcm.position.y = WW.h + 0.05; wcm.name = 'wingCeil';   /* 날개 천장 · 아래를 보는 면만(위에서는 비친다) */
+    S.lobby.add(wcm);
     G.wallScr = scr;
-    patchFade([side, back, face, scr.material], WFADE, 'w'); patchFade([silver], WFADE, 's'); patchFade([lv, lvb], LFADE, 'l');
+    patchFade([side, back, face, scr.material], WFADE, 'w'); patchFade([silver], WFADE, 's'); patchFade([lv, lvb], LFADE, 'l');   /* v5.64 서쪽으로 늘린 루버 · 띠도 같은 재질이라 같이 비워진다 */
     var gm2 = []; gw.traverse(function (o) { if (o.isMesh) [].concat(o.material).forEach(function (m) { if (gm2.indexOf(m) < 0) gm2.push(m); }); });
     patchFade(gm2, GFADE, 'g');
     G.remodel = { eh: R.eh, floor: R.floor, wing: R.wing, uv1: R.uv1, ms: Math.round(performance.now() - t0) };
@@ -1231,7 +1248,7 @@
     var tw = segHit(cx, cz, hx, hz, WW.x1 - WW.w - 0.3, WW.z, WW.x1 + 0.3, WW.z), gHit = cx < 3.6 && cx > -0.5 && cz > 12.2 && cz < 23.2;
     GSEG.forEach(function (g) { if (under(segHit(cx, cz, hx, hz, g[0], g[1], g[2], g[3]), GL.h)) gHit = true; });
     var a = fadeTo(WFADE, under(tw, WW.h) ? 0.16 : 1, dt), b = fadeTo(GFADE, gHit ? 0.16 : 1, dt);
-    var l = fadeTo(LFADE, under(segHit(cx, cz, hx, hz, 3.3, 11.46, WW.x1 + 0.3, 11.46), 4.6) ? 0.16 : 1, dt);   /* v5.58 루버 띠 */
+    var l = fadeTo(LFADE, under(segHit(cx, cz, hx, hz, 0.0, 11.46, WW.x1 + 0.3, 11.46), 4.6) ? 0.16 : 1, dt);   /* v5.58 루버 띠 */
     return a || b || l;
   }
 
@@ -2586,13 +2603,13 @@
     qz: { title: 'AX 퀴즈', desc: '5문제 · 모두 답하면 완주', cta: 'AX 퀴즈 풀기' },
     p5: { title: '아이디어 한 줄', desc: '아이디어 1건 제출', cta: '아이디어 쓰기' },
     p2: { title: 'AX PLAY', desc: '1F AX PLAY에서 HiDI-Q 또는 Hi-Helper 체험', cta: '내 QR 보여주기' },
-    p3: { title: '프로그램 참여', desc: '17F 강연 QR 출석 · AX LOUNGE 상담 · AX 커피챗 중 1회', cta: 'DAP 과제상담 신청' },   /* v5.58 앱(v5.57)과 같게 */
+    p3: { title: '프로그램 참여', desc: '17F 강연 QR 출석 · AX LOUNGE 상담 · AX 커피챗 중 1회', cta: 'AX LOUNGE 상담 신청' },   /* v5.58 앱(v5.57)과 같게 */
     p4: { title: '미니 게임', desc: 'AX 팡 · 점프 · 테트리스 3종 · 종목마다 한 판', cta: '미니 게임 하기' },
-    st: { title: '계단 이용', desc: '방화문 앞 QR · 시작과 끝에 찍기 · 한 개 층 이상', cta: '계단 안내' }
+    st: { title: '계단 이용', desc: '엘리베이터가 혼잡하면 오늘 하루는 계단을 이용해 보세요', cta: '계단 안내' }
   };
   /* 자리 · stop = 그 구역 멈춤 자리에서 판을 보는 사람의 왼쪽 1.2m(스태프는 오른쪽) · at = 도면 자리(p4 = v5.51 타자왕 부스 앞 통로 쪽 · 노트북 탁자 동쪽 1.5m · 판 39 · 배너 48 을 가리지 않음 · st = 서쪽 코어 계단실 대리석 벽 앞)
    * v5.54 p5 = AX LAB 「아이디어 QR」 판(13 · 도면 25.9, 0.55) 바로 앞 1.4m(사용자 261004 「아이디어 한줄 QR 제출하기 판쪽 앞쪽에」) */
-  var BLK_AT = [{ id: 'qz', stop: 'vision' }, { id: 'p5', at: [25.9, 1.95] }, { id: 'p2', stop: 'play' }, { id: 'p3', stop: 'lounge' }, { id: 'p4', at: [3.3, 2.5] }, { id: 'st', at: [12.4, 10.5] }];
+  var BLK_AT = [{ id: 'qz', stop: 'vision' }, { id: 'p5', at: [25.9, 1.95] }, { id: 'p2', stop: 'play' }, { id: 'p3', stop: 'lounge' }, { id: 'p4', at: [3.3, 2.5] }, { id: 'st', at: [12.4, 10.5] }, { id: 'st', at: [29.6, 10.4] }];   /* v5.64 (사용자 261005 「이쪽 계단실 앞에도 스탬프 띄워줘」) 고객센터 쪽 계단 앞(로비 쪽 · 동쪽 빈 공간 입구) 하나 더 · 같은 스탬프(둘 중 하나만 받아도 둘 다 완료) */
   var BLOCKS = [], BLK_Y = 1.42, BLK_S = 0.46, BLK_M = null;
   function stampInfo(id) {
     var h = HOST(), o = null; try { o = h && h.stamp ? h.stamp(id) : null; } catch (e) { o = null; }
@@ -2647,18 +2664,18 @@
      *   옛 동전 = 앞뒷면 같은 반투명 그림 + 양면(DoubleSide) + 깊이 쓰기 끔 → 뒷면 뚜껑이 앞면 위에 한 번 더 그려졌다 · 이제 앞면만 그리고(FrontSide) 뒷면 뚜껑 = 그림 없는 면(앞에서는 가려 안 보임) */
     function face(used) {
       var c = document.createElement('canvas'); c.width = c.height = 512; var g = c.getContext('2d'); g.translate(512, 0); g.scale(-2, 2);   /* 앞 뚜껑(FrontSide)에서 바로 읽히게 좌우를 미리 뒤집어 그린다(옛 그림은 뒷면 뚜껑이 겹쳐 그려져서 바로 보였다) */
-      g.fillStyle = used ? 'rgba(160,152,146,.78)' : 'rgba(255,127,50,.94)'; g.beginPath(); g.arc(128, 128, 124, 0, Math.PI * 2); g.fill();
-      sealDraw(g, 128, 128, 104, '#FFFFFF', used ? '완료' : '스탬프', used ? 19 : 17);
+      g.fillStyle = used ? 'rgba(255,127,50,.94)' : 'rgba(250,251,252,.95)'; g.beginPath(); g.arc(128, 128, 124, 0, Math.PI * 2); g.fill();   /* v5.64 (사용자 261005 「완료가 주황」) 받은 것 = 주황 · 아직 = 흰 · 은회색 */
+      sealDraw(g, 128, 128, 104, used ? '#FFFFFF' : '#8B95A1', used ? '완료' : '스탬프', used ? 19 : 17);
       var t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; t.center.set(0.5, 0.5); t.rotation = -Math.PI / 2; t.repeat.set(1, -1); return t;   /* 원판 뚜껑 UV 가 90도 돌고 뒤집혀 있다 · 바로 서게 */
     }
     function disc(used) {
-      var f = new T.MeshBasicMaterial({ map: face(used), transparent: true, opacity: used ? 0.75 : 1, depthWrite: false, side: T.FrontSide, toneMapped: false });
-      var back = new T.MeshBasicMaterial({ color: used ? 0xA49A93 : 0xE5671E, transparent: true, opacity: used ? 0.5 : 0.9, depthWrite: false, side: T.FrontSide, toneMapped: false });
-      var rim = new T.MeshBasicMaterial({ color: used ? 0xA49A93 : 0xFF7F32, transparent: true, opacity: used ? 0.5 : 0.9, depthWrite: false, toneMapped: false });
+      var f = new T.MeshBasicMaterial({ map: face(used), transparent: true, opacity: 1, depthWrite: false, side: T.FrontSide, toneMapped: false });
+      var back = new T.MeshBasicMaterial({ color: used ? 0xE5671E : 0x9AA3AD, transparent: true, opacity: used ? 0.9 : 0.85, depthWrite: false, side: T.FrontSide, toneMapped: false });
+      var rim = new T.MeshBasicMaterial({ color: used ? 0xFF7F32 : 0x8B95A1, transparent: true, opacity: used ? 0.9 : 0.9, depthWrite: false, toneMapped: false });   /* v5.64 색 뒤집기 · 받은 것 = 주황 테 · 아직 = 은회색 테 */
       return [rim, f, back];
     }
     var gc = document.createElement('canvas'); gc.width = gc.height = 128; var gx = gc.getContext('2d'), gr0 = gx.createRadialGradient(64, 64, 18, 64, 64, 64);
-    gr0.addColorStop(0, 'rgba(255,127,50,.8)'); gr0.addColorStop(0.45, 'rgba(255,148,80,.38)'); gr0.addColorStop(1, 'rgba(255,148,80,0)'); gx.fillStyle = gr0; gx.fillRect(0, 0, 128, 128);
+    gr0.addColorStop(0, 'rgba(255,255,255,.95)'); gr0.addColorStop(0.45, 'rgba(176,184,193,.42)'); gr0.addColorStop(1, 'rgba(176,184,193,0)'); gx.fillStyle = gr0; gx.fillRect(0, 0, 128, 128);   /* v5.64 아직 받지 않은 동전 뒤 빛 = 흰 · 은회색(맥박 그대로) · 받은 것 = 빛 없음 */
     var glt = new T.CanvasTexture(gc); glt.colorSpace = T.SRGBColorSpace;
     var sc = document.createElement('canvas'); sc.width = sc.height = 128; var sg = sc.getContext('2d'), gr = sg.createRadialGradient(64, 64, 4, 64, 64, 62);
     gr.addColorStop(0, 'rgba(53,26,12,.30)'); gr.addColorStop(0.7, 'rgba(53,26,12,.12)'); gr.addColorStop(1, 'rgba(53,26,12,0)'); sg.fillStyle = gr; sg.fillRect(0, 0, 128, 128);
@@ -2781,6 +2798,7 @@
     var B = D.BLD, S2 = MM.S, o = '<svg viewBox="0 0 ' + S2.toFixed(1) + ' ' + S2.toFixed(1) + '" aria-hidden="true"><g id="t3-mmRot">';
     o += '<polygon points="' + B.outline.map(function (q) { return mmX(q[0]) + ',' + mmY(q[1]); }).join(' ') + '" fill="#FFFFFF" stroke="#B0B8C1" stroke-width="1"/>';
     B.cores.forEach(function (c) { o += '<rect x="' + mmX(c[0]) + '" y="' + mmY(B.coreN) + '" width="' + ((c[1] - c[0]) * MM.k).toFixed(1) + '" height="' + ((B.coreN - B.lobbyN) * MM.k).toFixed(1) + '" fill="#E5E8EB"/>'; });
+    o += '<rect x="' + mmX(EHR.x) + '" y="' + mmY(EH.z1) + '" width="' + ((EH.x0 - EHR.x) * MM.k).toFixed(1) + '" height="' + ((EH.z1 - EHR.z) * MM.k).toFixed(1) + '" fill="#FFFFFF"/>';   /* v5.64 코어 동쪽 1m 들어간 칸 */
     if (B.room3) o += '<polygon points="' + B.room3.pts.map(function (q) { return mmX(q[0]) + ',' + mmY(q[1]); }).join(' ') + '" fill="#F2F4F6" stroke="#B0B8C1" stroke-width="0.8"/>';
     D.ZONES.forEach(function (z) {
       if (!z.rows.length) return;
@@ -2888,12 +2906,16 @@
   }
   function stepSqueeze(now) {
     var q = G.squeeze, A = RM ? 150 : SQ.a, B = RM ? 60 : SQ.b, C = RM ? 150 : SQ.c, t = now - q.t0, x = 1, y = 1, z = 1, c, hop = 0, ph, j = RM ? 0 : Math.sin(now * 0.075) * 0.035;
+    var SQ_FIT = 0.97;   /* v5.64 옆 홀쭉 0.58 → 0.97 · 몸 옆 반폭 0.337 x 0.97 = 0.327 · 틈 반폭 0.335 · 남는 틈 약 8mm(겹침 0) */
     var cA = GZ.zx + BR * 1.6, cB = cA + SQ.pop, px = q.lx;   /* 쭈압 끝 = 늘어난 몸 뒤끝이 반대편 면 · 푱 끝 = 0.6m 더 */
     if (t < A) {   /* 쭈압 · 틈 가운데로 줄 맞추며 옆은 홀쭉 · 앞뒤로 늘어 틈 속을 지난다 · 버티는 잔떨림 */
+      /* v5.64 (사용자 261005 「진짜 딱 맞게 비집고 들어가는 식」) 옆 = 틈 폭에 딱(SQ_FIT · 몸 옆 끝이 함 면에서 약 8mm · 겹침 0 · 잔떨림은 안쪽으로만) · 위로 살짝 눌려 솟음
+       *   나아감 = 들어가며 멈칫(0.32 ~ 0.56 동안 4cm) → 쭉 빠짐 · 앞뒤 늘림 1.6 그대로(쭈압 끝 = 늘어난 뒤끝이 반대편 면) */
       var u = t / A, ex = easeIO(clamp(u / 0.3, 0, 1)), ez = easeIO(clamp((u - 0.1) / 0.45, 0, 1));
-      x = 1 - 0.42 * ex + j * (1 - u); z = 1 + 0.6 * ez; y = 1 - 0.1 * ez - j * 0.4 * (1 - u); px = q.x0 + (q.lx - q.x0) * ex; c = q.z0 + (cA - q.z0) * u * u * (1.6 - 0.6 * u); ph = 'a';
+      var pr = u < 0.32 ? 0.3 * easeIO(u / 0.32) : u < 0.56 ? 0.3 + 0.04 * ((u - 0.32) / 0.24) : 0.34 + 0.66 * (1 - Math.pow(1 - (u - 0.56) / 0.44, 2.2));
+      x = 1 - (1 - SQ_FIT) * ex - Math.abs(j) * 0.5 * (1 - ex); z = 1 + 0.6 * ez; y = 1 + 0.07 * ez + (u > 0.32 && u < 0.56 ? j * 0.5 : 0); px = q.x0 + (q.lx - q.x0) * ex; c = q.z0 + (cA - q.z0) * pr; ph = 'a';
     } else if (t < A + B) {   /* 푱 · 뒤끝이 반대편 면을 빠져나간 순간부터 튕겨 나가며 한 번 부풀었다 */
-      var k = (t - A) / B, o = Math.sin(k * Math.PI); x = 0.58 + 0.42 * k + 0.24 * o; y = 0.9 + 0.1 * k + 0.24 * o; z = 1.6 - 0.6 * k + 0.12 * o; c = cA + SQ.pop * (1 - Math.pow(1 - k, 3)); hop = RM ? 0 : SQ.hop * o; ph = 'b';
+      var k = (t - A) / B, o = Math.sin(k * Math.PI); x = SQ_FIT + (1 - SQ_FIT) * k + 0.24 * o; y = 1.07 - 0.07 * k + 0.24 * o; z = 1.6 - 0.6 * k + 0.12 * o; c = cA + SQ.pop * (1 - Math.pow(1 - k, 3)); hop = RM ? 0 : SQ.hop * o; ph = 'b';
     } else {   /* 띠용용용 · 떨어진 자리에서 세로 · 가로가 번갈아 · 감쇠 스프링 */
       var s2 = (t - A - B) / 1000, d = Math.exp(-4.2 * s2) * (RM ? 0.3 : 1), w = Math.cos(2 * Math.PI * 3.6 * s2); y = 1 + 0.24 * d * w; x = z = 1 - 0.17 * d * w; c = cB; ph = 'c';
     }
@@ -3357,7 +3379,7 @@
   function summ(ts) { var d = []; for (var i = 1; i < ts.length; i++) d.push(ts[i] - ts[i - 1]); d.sort(function (a, b) { return a - b; }); var sum = d.reduce(function (a, b) { return a + b; }, 0); return { frames: d.length, fps: +(1000 * d.length / Math.max(1, sum)).toFixed(1), p50: +(d[Math.floor(d.length * 0.5)] || 0).toFixed(1), p95: +(d[Math.floor(d.length * 0.95)] || 0).toFixed(1), dpr: renderer.getPixelRatio() }; }
   G.benchRun = function (ms) { return new Promise(function (res) { G.bench = { t0: performance.now(), ms: ms || 4000, ts: [], done: res }; }); };
 
-  /* ═══════════ 구역 판 보기 시트 · 좌우로 넘기기 ═══════════ */
+  /* ═══════════ 구역 판 보기 시트 · 좌우로 넘기기 · v5.64 (사용자 261005 「다음 판 말고 그냥 다음으로」) 넘김 단추 「◀ 이전」 · 「다음 ▶」(판 보기 · 경품 보기 같은 시트) ═══════════ */
   var SH = null;
   function cropSrc(p) { return BASE + 'd/c/p' + (p < 10 ? '0' : '') + p + '.webp'; }
   function cropBgPx(p, w) {
@@ -3818,7 +3840,7 @@
     '    <div class="pad" id="t3-pad" role="application" aria-label="움직이기 패드 · 밀면 그쪽으로 걸어요"><span class="knob" id="t3-knob"></span><kbd class="kh kw" aria-hidden="true">WASD</kbd></div>\n' +
     '    <div class="dest" id="t3-dest" hidden></div>\n' +
     '    <div class="ctl" id="t3-ctl" aria-label="움직임 버튼">\n' +
-    '      <button class="n run" type="button" id="t3-bRun" aria-label="달리기 · 누르면 앞으로 달려 나가요"><span class="c"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l6-6 6 6"/><path d="M9 17l6-6 6 6"/><path d="M2 9h3.5M1.5 13h4.5M2 17h3.5" stroke-width="2"/></svg></span><span class="l">달리기</span><kbd class="kh" aria-hidden="true">↑</kbd></button>\n' +   /* v5.58 (사용자 261004 「달리기는 ^ 하나인데 겹치거나 달리는 느낌 · 점프 버튼도 점프인지 애매」) 후보 비교(shots/v558/icons_candidates.png) 뒤 = 달리기 R3(겹친 위 꺾쇠 + 왼쪽 속도 선 3) · 점프 J4(바닥 선 위로 떠오른 공 + 아래 튐 선 3) */
+    '      <button class="n run" type="button" id="t3-bRun" aria-label="달리기 · 누르면 앞으로 달려 나가요"><span class="c"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12l6-6 6 6"/><path d="M6 18l6-6 6 6"/></svg></span><span class="l">달리기</span><kbd class="kh" aria-hidden="true">↑</kbd></button>\n' +   /* v5.58 (사용자 261004 「달리기는 ^ 하나인데 겹치거나 달리는 느낌 · 점프 버튼도 점프인지 애매」) 후보 비교(shots/v558/icons_candidates.png) 뒤 = 달리기 R3(겹친 위 꺾쇠 + 왼쪽 속도 선 3) · 점프 J4(바닥 선 위로 떠오른 공 + 아래 튐 선 3) · v5.64 (사용자 261005 「3줄은 없어도 될 것 같아 · 이거 하나면 충분해」) 달리기 = 겹친 위 꺾쇠 둘만 · 단추 가운데 */
     '      <button class="w" type="button" id="t3-rotL" aria-label="시점 왼쪽으로 90도 돌리기"><span class="c"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 3v4h4"/></svg></span><span class="l">좌로 돌기</span><kbd class="kh" aria-hidden="true">←</kbd></button>\n' +
     '      <span class="dot" aria-hidden="true"></span>\n' +
     '      <button class="e" type="button" id="t3-rotR" aria-label="시점 오른쪽으로 90도 돌리기"><span class="c"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.5-5.8"/><path d="M20 3v4h-4"/></svg></span><span class="l">우로 돌기</span><kbd class="kh" aria-hidden="true">→</kbd></button>\n' +
@@ -3856,9 +3878,9 @@
     '  </header>\n' +
     '  <div class="track-wrap" id="t3-trackWrap"><div class="track" id="t3-track"></div></div>\n' +
     '  <footer class="sf">\n' +
-    '    <button type="button" class="nb" id="t3-pPrev">◀ 이전 판</button>\n' +
+    '    <button type="button" class="nb" id="t3-pPrev">◀ 이전</button>\n' +
     '    <button type="button" class="nb" id="t3-pZoom">크게</button>\n' +
-    '    <button type="button" class="nb" id="t3-pNext">다음 판 ▶</button>\n' +
+    '    <button type="button" class="nb" id="t3-pNext">다음 ▶</button>\n' +
     '  </footer>\n' +
     '</section>\n' +
     '<section class="help" id="t3-help" role="dialog" aria-modal="true" aria-label="처음 안내" hidden>\n' +
