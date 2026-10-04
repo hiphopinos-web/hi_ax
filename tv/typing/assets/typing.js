@@ -4,7 +4,7 @@
  *   루프 끝 무너짐(261004 사용자 「광고가 끝나고 새 광고로 넘어가는 시점에서 무너지면서」) = 루프 마지막 장면(순위 · 마감 뒤 상품 · promo 상품)의 마지막 1.4초 ·
  *     글자 · 줄이 도트 조각(72×36)으로 부서져 산성비처럼 위에서부터 쏟아진다 · 빈 바탕은 그대로 · 잠깐 비었다가 다음 루프 · 상품 → 순위는 그냥 바뀐다 · promo 마감 뒤(상품만 반복)는 무너짐 없음
  *   가상 이름 채우기(261004 사용자 「10위까지 일단은 가상의 이름으로」) = 실제 기록이 10명보다 적으면 빈 자리를 가상 닉네임으로 · 화면에서만(서버 · 시트에 안 씀) ·
- *     가상 점수는 늘 실제 최저 기록보다 낮다(실제가 위) · NEW 없음 · 행사일(10/26) 한국 날짜부터 자동으로 꺼짐 · FILL_ON = false 또는 &fill=0 = 끄기 ·
+ *     실제 최고 = 1위 · 실제 최저 = 10위 · 가상은 그 사이 점수(끝자리 들쭉날쭉 · 시드 고정 · 실제 1명이면 그 아래) · NEW 없음 · 행사일(10/26) 한국 날짜부터 자동으로 꺼짐 · FILL_ON = false 또는 &fill=0 = 끄기 ·
  *     기본 TV · ?open=1 에만 · ?promo=1&rank=1(앱 칸)은 &fill=1 일 때만
  *   광고 = 후킹 0~2.6(「당신의 프롬프트 입력 실력은?」이 쳐진다) · 실제 게임 몽타주 2.6~14.2 · 행동 14.2~18(「1F 로비 노트북에서 도전」이 쳐지고 앱 QR → 노트북 카메라 → SPACE)
  *   와르르 전환(261004 사용자 「벽돌이 와르르 무너지듯」) = 후킹 → 게임 · 게임(PERFECT) → 행동 · 행동 → 상품 · 나가는 장면을 캔버스 한 장(#fx)에 그린 뒤 도트 3×2칸 벽돌(약 290개)로 나눠 위 줄부터 중력으로 떨어뜨린다(0.95초) ·
@@ -386,7 +386,7 @@
       host.appendChild(e); POOL.push(e);
     }
   })();
-  /* 가상 이름 채우기(261004 사용자 「10위까지 일단은 가상의 이름으로」) · 화면에서만 · 실제 기록이 늘 위(가상 점수 < 실제 최저) · 행사일 한국 날짜부터 자동으로 꺼짐 */
+  /* 가상 이름 채우기(261004 사용자 「10위까지 일단은 가상의 이름으로」) · 화면에서만 · 실제 최고 1위 · 실제 최저 10위(같은 날 「채채는 10등으로」) · 행사일 한국 날짜부터 자동으로 꺼짐 */
   var FILL_ON = true;   /* false = 끄기(주소 값 &fill=0 과 같다) */
   var FAKE = ["키보드요정", "엔터장인", "오타없음", "손가락번개", "구름청소부", "소나기러너", "백스페이스", "새벽타자", "자판도사", "한글타법"];   /* 닉네임 규칙 2~8자 · 실명처럼 보이지 않는 게임 닉네임 */
   function fillOn() {
@@ -394,15 +394,24 @@
     if (PROMO && Q.fill !== "1") return false;   /* 앱 칸은 기본 끔(가상 기록이 실제 순위처럼 보이지 않게) */
     return kstDay(kstMs()) < EVENT_DAY;
   }
-  function fillTop(top) {
-    var out = (top || []).slice(0, 10);
-    if (out.length >= 10 || !fillOn()) return out;
-    var real = out.map(function (r) { return r.name; }), min = out.length ? Math.min.apply(null, out.map(function (r) { return r.score; })) : 0;
-    var names = FAKE.filter(function (n) { return real.indexOf(n) < 0; }), n0 = out.length, need = 10 - n0;
-    for (var k = 0; k < need && k < names.length; k++) {
-      var sc = n0 ? Math.max(0, Math.floor(min * (0.9 - 0.075 * k) / 10) * 10) : 9800 - k * 700;   /* 실제 기록이 없으면 9,800부터 700씩 */
-      out.push({ name: names[k], score: sc, fake: true });
+  function fillTop(top) {   /* 261004 사용자 「채채의 점수는 10등으로 · 나머지는 1등 이후에 적절하게」 · 실제 최고 = 1위 · 실제 최저 = 10위 · 가상은 그 사이(끝자리 들쭉날쭉 · 시드 고정) */
+    var real = (top || []).slice(0, 10), n = real.length;
+    if (n >= 10 || !fillOn()) return real;
+    var used = {}, names = FAKE.filter(function (x) { return !real.some(function (r) { return r.name === x; }); }), need = Math.min(10 - n, names.length), fk = [], sd = 261026, k;
+    function rnd() { sd = (sd * 1103515245 + 12345) & 0x7fffffff; return sd / 0x7fffffff; }
+    real.forEach(function (r) { used[r.score] = 1; });
+    var hi = n ? Math.max.apply(null, real.map(function (r) { return r.score; })) : 0, lo = n ? Math.min.apply(null, real.map(function (r) { return r.score; })) : 0;
+    if (!n) for (k = 0; k < need; k++) fk.push(9800 - k * 700);   /* 실제 기록이 없으면 9,800부터 700씩 */
+    else if (n >= 2 && hi - lo > need * 4) {   /* 실제 최고와 최저 사이에 흩어 넣는다 · 실제가 1위 · 10위를 지킨다 */
+      var f = []; for (k = 0; k < need; k++) f.push(0.05 + rnd() * 0.9);
+      f.sort(function (a, b) { return b - a; });
+      f.forEach(function (v) { var s = Math.floor(lo + v * (hi - lo)); while (used[s] && s > lo + 1) s--; used[s] = 1; fk.push(Math.max(lo + 1, Math.min(hi - 1, s))); });
+    } else {   /* 실제 1명(또는 최고 · 최저가 너무 가깝다) = 가상은 실제 최저 아래 */
+      for (k = 0; k < need; k++) { var s2 = Math.floor(lo * (0.93 - 0.085 * k) - rnd() * lo * 0.03); while (used[s2] && s2 > 0) s2--; used[s2] = 1; fk.push(Math.max(0, Math.min(lo - 1, s2))); }
     }
+    var out = real.map(function (r) { return r; });
+    fk.forEach(function (s, i) { out.push({ name: names[i], score: s, fake: true }); });
+    out.sort(function (a, b) { return b.score - a.score || (a.fake ? 1 : 0) - (b.fake ? 1 : 0); });   /* 같은 점수면 실제가 앞 */
     return out;
   }
 
