@@ -1494,7 +1494,14 @@
     /* 방위 G.az · 0 = 북쪽 위에서 남쪽(정문)을 봄 · 「시점 돌리기」로 90도씩 · 화면 위 = (sin az, cos az) */
     var eye = G.view === 'eye', pt = eye ? EYE_PITCH : PITCH, ly = eye ? 1.25 : 0.9;
     var c = G.pos, d = G.dist, hd = d * Math.cos(pt), y = d * Math.sin(pt), ahead = (eye ? 1.4 : 0.8) + (d - DMIN) / (DMAX - DMIN) * 0.7, fx = Math.sin(G.az), fz = Math.cos(G.az);
-    return { pos: new T.Vector3(c.x + fx * (ahead - hd), y + ly, c.z + fz * (ahead - hd)), look: new T.Vector3(c.x + fx * ahead, ly, c.z + fz * ahead) };
+    /* v5.64.1 (운영 v5.64 캡처 3건 · 미팅룸 앞 · 고객센터 앞 · 가벽 옆 · 눈높이 시점) 카메라 받침대 줄이기 · 캐릭터가 로비(도면 z ≤ 11.46)에 있는데 카메라가 북쪽 벽선(z 11.46) 너머로 가면
+     *   모형 단면 규칙(tour-scene cutaway)이 북쪽 벽 · 코어를 숨기고 코어 자리에 낮은 어두운 받침(coreStub · 0.9m)을 세운다 → 눈높이(2.4~3.2m)에서는 그 받침 윗면이 화면을 덮는 회색 판
+     *   · 벽 너머 카메라 → 머리 선이 루버 띠 · 미팅룸 유리를 지나 점점이 비우기(LFADE · GFADE · 망점)가 켜졌다 · 이제 눈높이 카메라 = 벽선에서 0.3m 안쪽까지만(캐릭터 쪽으로 당기고 바라보는 점도 같은 배율)
+     *   통로 · 고객센터 쪽 들어간 칸(캐릭터가 벽선 북쪽)에서는 그대로 */
+    var cz0 = 6 - c.z, k = 1, LIM = 11.46 - 0.3;
+    if (eye && cz0 <= 11.51 && !G.boomOff) { var dz = fz * (hd - ahead); if (dz > 1e-6 && cz0 + dz > LIM) k = Math.max(0.04, Math.min(1, (LIM - cz0) / dz)); }   /* 높이도 같은 배율(내려다보는 각 그대로) · 벽에 바짝 붙으면 머리 높이 1인칭에 가까워지고 0.3 아래면 내 캐릭터를 숨긴다(stepCam) */   /* 카메라 = 캐릭터 뒤 k x (hd - ahead) · 바라보는 점도 k 배로 당겨 캐릭터가 화면 안에 남는다 */
+    var hk = hd * k; ahead *= k; y *= k; G.boomK = k;   /* 확인용 */
+    return { pos: new T.Vector3(c.x + fx * (ahead - hk), y + ly, c.z + fz * (ahead - hk)), look: new T.Vector3(c.x + fx * ahead, ly, c.z + fz * ahead) };
   }
   function stepCam(dt) {
     var a0 = G.az; G.az = angLerp(G.az, G.azTo, dt && !RM ? 1 - Math.exp(-dt * (HOLD && HOLD.kind === 'rot' ? 14 : 7)) : 1); if (Math.abs(Math.atan2(Math.sin(G.azTo - G.az), Math.cos(G.azTo - G.az))) < 0.002) G.az = G.azTo;
@@ -1502,6 +1509,7 @@
     var moved = G.camPos.distanceToSquared(w.pos) > 1e-6 || G.look.distanceToSquared(w.look) > 1e-6;
     G.camPos.lerp(w.pos, k); G.look.lerp(w.look, k);
     camera.position.copy(G.camPos); camera.lookAt(G.look);
+    if (G.scn === 'lobby') bot.visible = !(G.boomK < 0.3);   /* v5.64.1 벽에 바짝 붙어 카메라가 머리 높이까지 당겨지면 1인칭(내 캐릭터 숨김) */
     /* 기둥 비우기 · 카메라 → 머리 선분이 기둥(높이 5m) 안을 지나면 */
     var hx = G.pos.x, hz = G.pos.z, cx = G.camPos.x, cz = G.camPos.z, cy = G.camPos.y, sx = hx - cx, sz = hz - cz, L2 = sx * sx + sz * sz || 1, any = false;
     for (var i = 0; i < PIL.length; i++) {
@@ -2609,7 +2617,7 @@
   };
   /* 자리 · stop = 그 구역 멈춤 자리에서 판을 보는 사람의 왼쪽 1.2m(스태프는 오른쪽) · at = 도면 자리(p4 = v5.51 타자왕 부스 앞 통로 쪽 · 노트북 탁자 동쪽 1.5m · 판 39 · 배너 48 을 가리지 않음 · st = 서쪽 코어 계단실 대리석 벽 앞)
    * v5.54 p5 = AX LAB 「아이디어 QR」 판(13 · 도면 25.9, 0.55) 바로 앞 1.4m(사용자 261004 「아이디어 한줄 QR 제출하기 판쪽 앞쪽에」) */
-  var BLK_AT = [{ id: 'qz', stop: 'vision' }, { id: 'p5', at: [25.9, 1.95] }, { id: 'p2', stop: 'play' }, { id: 'p3', stop: 'lounge' }, { id: 'p4', at: [3.3, 2.5] }, { id: 'st', at: [12.4, 10.5] }, { id: 'st', at: [29.6, 10.4] }];   /* v5.64 (사용자 261005 「이쪽 계단실 앞에도 스탬프 띄워줘」) 고객센터 쪽 계단 앞(로비 쪽 · 동쪽 빈 공간 입구) 하나 더 · 같은 스탬프(둘 중 하나만 받아도 둘 다 완료) */
+  var BLK_AT = [{ id: 'qz', stop: 'vision' }, { id: 'p5', at: [25.9, 1.95] }, { id: 'p2', stop: 'play' }, { id: 'p3', stop: 'lounge' }, { id: 'p4', at: [3.3, 2.5] }, { id: 'st', at: [12.4, 10.5] }, { id: 'st', at: [27.8, 15.0] }];   /* v5.64.1 (사용자 261005 「이 근처 계단 스탬프는 계단실 입구로 이동해줘」) 동쪽 블록 = 로비 빈 칸(29.6, 10.4) → 1m 들어간 벽(x 27.2)의 계단 문(z 14.5 ~ 15.5) 바로 앞 0.6m */   /* v5.64 (사용자 261005 「이쪽 계단실 앞에도 스탬프 띄워줘」) 고객센터 쪽 계단 앞(로비 쪽 · 동쪽 빈 공간 입구) 하나 더 · 같은 스탬프(둘 중 하나만 받아도 둘 다 완료) */
   var BLOCKS = [], BLK_Y = 1.42, BLK_S = 0.46, BLK_M = null;
   function stampInfo(id) {
     var h = HOST(), o = null; try { o = h && h.stamp ? h.stamp(id) : null; } catch (e) { o = null; }
