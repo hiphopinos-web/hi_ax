@@ -557,7 +557,7 @@ function stairHtml() {
       '<h1 class="ax-title">지난번 종료를<br>찍지 않았어요</h1>' +
       '<p class="ax-description">' + o.from.fl + "F 시작 · " + esc(o.from.at || "") + "</p>" +
       '<section class="ax-card axs-gap12">' + stairFloorPick("지난번 종료 층을 눌러 주세요") + "</section>" +
-      '<p class="ax-meta">직접 고른 층수는 자기 신고로 기록돼요</p>', btn: stairPickBtn() };
+      '<p class="ax-meta">고른 층수대로 적립돼요</p>', btn: stairPickBtn() };
   }
   if (m === "reclass") {
     var vf = o.from ? o.from.fl : "";
@@ -566,7 +566,7 @@ function stairHtml() {
       '<h1 class="ax-title">지난번 종료 층을<br>눌러 주세요</h1>' +
       '<p class="ax-description">' + vf + "F 시작 · 방금 스캔은 " + (o.to ? o.to.fl : "") + "F 새 시작으로 바꿔요</p>" +
       '<section class="ax-card axs-gap12">' + stairFloorPick("지난번 종료 층") + "</section>" +
-      '<p class="ax-meta">직접 고른 층수는 자기 신고로 기록돼요</p>', btn: stairPickBtn() };
+      '<p class="ax-meta">고른 층수대로 적립돼요</p>', btn: stairPickBtn() };
   }
   if (m === "ask") {
     var st2 = o.stamp && !o.stamp.dup && o.stamp.id === "st", sc = STR.sc || {};
@@ -1222,7 +1222,7 @@ function staffStampOpen() {
       "<span>" + s.title + "</span>" +
       '<span style="font-weight:800;color:' + (done ? "var(--faint)" : "var(--acc2)") + '">' + (done ? "적립 완료" : lnkChev("적립")) + "</span></button>";
   }).join("");
-  modalOpen('<p class="muted" style="font-size:calc(13.5px * var(--fs))">QR이 인식되지 않을 때 쓰는 우회 경로입니다. 참가자분은 담당자에게 화면을 보여주시고, <b style="color:var(--hi)">담당자가 확인 후 부여</b>합니다. 사번과 코드는 이 기기에 저장되지 않습니다.</p>' +
+  modalOpen('<p class="muted" style="font-size:calc(13.5px * var(--fs))"><b style="color:var(--hi)">담당자가 확인 후 적립해요.</b> 사번과 코드는 이 기기에 저장되지 않아요.</p>' +
     '<div id="staffBox" style="margin-top:12px">' +
     '<input id="staffEmp" class="input" inputmode="numeric" pattern="[0-9]*" enterkeyhint="next" autocomplete="off" placeholder="담당자 사번" style="text-align:center" oninput="numOnly(this, event)" data-imeend="num">' +
     '<input id="staffCode" class="input" inputmode="numeric" pattern="[0-9]*" enterkeyhint="go" autocomplete="off" placeholder="담당자 코드" style="margin-top:8px;text-align:center" onkeydown="onEnter(event, staffStampAuth)">' +

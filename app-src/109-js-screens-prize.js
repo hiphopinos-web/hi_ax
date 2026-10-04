@@ -70,7 +70,7 @@ function rewItems() {
   if (fs === "wait") items.push({ k: "fin", used: false, chip: "추첨 대기", cc: "", nm: "참여상 추첨", big: "1회", why: "스탬프 6개", go: "finInfoOpen()", btn: "안내 보기" });
   if (fs === "win") items.push({ k: "fin", used: false, chip: "참여상 당첨", nm: esc(f.pz || "참여상"), big: "1개", pic: prizeByName(f.pz), why: "추첨 행사 이후 소속 부서로 배송", go: "finInfoOpen()", btn: "안내 보기" });
   if (fs === "lose") items.push({ k: "fin", used: true, chip: "미당첨", off: true, nm: "참여상 추첨", big: "1회", why: finCountTxt(f) });
-  if (fs === "out") items.push({ k: "fin", used: true, chip: "대상 아님", off: true, nm: "참여상 추첨", big: "", why: "17:00 기준 스탬프 6개" });
+  if (fs === "out") items.push({ k: "fin", used: true, chip: "집계 종료", off: true, nm: "참여상 추첨", big: "", why: "17:00 기준 스탬프 6개" });
   return items;
 }
 function rewPick(f) { REW.f = f; App.render(); }
@@ -133,10 +133,10 @@ function prizeGuideHtml() {
    화면 id = prizes · 들어오는 곳 = 스탬프 보상 레일(홈 · 스탬프 탭) · 나의 참여 · 내 보상 · 룰렛 1회권 · 행운권 · 참여상 모달(그 구역으로 바로)
    데이터는 위 PRIZES 한 곳 · 대표(PZ_HERO 개수만큼 앞에서부터) = 폭 가득 사진 · 나머지 2열 · 홀수로 남는 마지막 칸은 넓은 카드
    참여상 설명은 두 줄만(FIN_NOTE · 사용자 261003 「이 두 가지 정보만 남겨 두고 나머지는 없애 줘」) */
-var FIN_NOTE = "Outro 때 남은 룰렛 경품도 함께 추첨 · 상품은 무작위<br>추첨 행사 이후 소속 부서로 배송";
+var FIN_NOTE = "Outro에서 추첨 · 상품은 무작위<br>추첨 행사 이후 소속 부서로 배송";   /* v5.60 W10 (사용자 「빼」 · 261003 「두 줄만」 번복) 「남은 룰렛 경품도 함께」 삭제 */
 var PZ_HERO = { draw: 3, fin: 1, roulette: 1, type: 1 };   /* v5.09 타자왕도 사진 카드(1등 대표 · 2 · 3등 2열) */
 var PZ_SEC = [
-  { k: "draw", en: "LUCKY DRAW", t: "행운권 추첨", m: [4, 6], cd: "스탬프 4 · 5 · 6개 = 행운권 1 · 2 · 3장<br>17:00 Outro 현장 추첨 · 6등부터<br>17F 입구 QR 체크인" },
+  { k: "draw", en: "LUCKY DRAW", t: "행운권 추첨", m: [4, 6], cd: "스탬프 4 · 5 · 6개 = 행운권 1 · 2 · 3장<br>17:00 Outro 현장 추첨<br>17F 입구 QR 체크인" },
   { k: "fin", en: "PARTICIPATION", t: "참여상", m: [6, 6], cd: "스탬프 6개", note: FIN_NOTE },
   { k: "roulette", en: "ROULETTE", t: "룰렛", m: [3, 3], cd: "스탬프 3개 · 1F EVENT 룰렛 · 1인 1회" },
   { k: "type", en: "TYPING KING", t: "1F 타자왕 1~3위", sp: "스탬프와 별개", cd: "1F 현장 최고 기록 · 17:00 마감<br>Outro 시상", go: ["실시간 순위 보기", "typeSiteRankGo()"] }   /* v5.18 맨 아래 · 스탬프와 별개(선으로 나눔) · 순위판 입구(사용자 261003) */
@@ -236,7 +236,7 @@ function finCountTxt(f) {
 /* 6번째 스탬프 상자 팝업에 붙는 한 줄(별도 팝업 없음 · 설계안 5.7) */
 function rfxFinLine() {
   if (raffleTickets(Math.min(REWARD_CAP, stampCount())) < RAFFLE_MAX) return "";
-  return finLate() ? "<br>17:00 이후라 참여상 대상이 아니에요" : "<br>참여상 추첨 대상 · 17:00 기준";
+  return finLate() ? "<br>참여상 추첨은 17:00 기준 6개까지 집계했어요" : "<br>참여상 추첨 대상 · 17:00 기준";
 }
 /* 참여상 안내 모달(설계안 6장 문구) */
 function finInfoOpen() {

@@ -197,6 +197,7 @@ function qzAns(v) {
   var i = qzCur(r);
   if (i < 0 || r.see >= 0 || qzKeyq(r.q[i])) return;
   r.a[i] = v === "O" ? "O" : "X"; r.see = i;
+  var it = qzItem(r.q[i]); QZ.oxfx = it && it.a === r.a[i] ? { id: it.id, at: Date.now() } : null;   /* v5.60 O/X 정답 작은 팡 */
   qzSave(r); sfx("tok");
   App.render(); qzFocusFb();
 }
@@ -291,12 +292,17 @@ function quizPlayHtml() {
     body + (see ? "" : hint) + (see ? qzFbHtml(it, r.a[i]) : "") + "</section>" +
     (see ? '<button type="button" class="ax-button" onclick="qzNext()">' + (last1 ? "결과 보기" : "다음 문제") + "</button>" : "") + "</div>";
 }
+/* v5.60 (권장안 · 아침 보고) O/X 정답에도 작은 팡 · 고른 답이 맞은 순간 한 번(0.6초 안 · 다시 그려도 --qe 로 이어짐) · 답 버튼이 살짝 튀고(1.06배) 링 하나가 퍼진다(약 0.4초)
+   순서형 팡(v5.57)과 같은 계열(링 + 튐) · 정답 버튼 색(초록) 그대로 링도 같은 색 · 움직임 줄이기 = 색만(지금처럼) · 오답은 지금처럼 색만 */
+var QZ_OXFX_MS = 600;
+function qzOxFxOn(id) { return !!(QZ.oxfx && QZ.oxfx.id === id && Date.now() - QZ.oxfx.at < QZ_OXFX_MS && !qzRm()); }
 function qzOxHtml(r, it, see) {
-  var a = r.a[r.q.indexOf(it.id)];
+  var a = r.a[r.q.indexOf(it.id)], pop = see && a === it.a && qzOxFxOn(it.id);
   var btn = function (v, lbl, svg) {
-    var cls = "qz-ab", dis = see ? " disabled" : "";
+    var cls = "qz-ab", dis = see ? " disabled" : "", fx = pop && v === it.a;
     if (see) cls += v === it.a ? " ok" : v === a ? " no" : " dim";
-    return '<button type="button" class="' + cls + '" onclick="qzAns(\'' + v + '\')"' + dis + ' aria-label="' + lbl + (see && v === a ? " · 고른 답" : "") + '">' + svg + "<span>" + lbl + "</span></button>";
+    if (fx) cls += " pop";
+    return '<button type="button" class="' + cls + '" onclick="qzAns(\'' + v + '\')"' + dis + (fx ? ' style="--qe:-' + (Date.now() - QZ.oxfx.at) + 'ms"' : "") + ' aria-label="' + lbl + (see && v === a ? " · 고른 답" : "") + '">' + svg + "<span>" + lbl + "</span>" + (fx ? '<i class="qz-oxr" aria-hidden="true"></i>' : "") + "</button>";
   };
   return '<div class="axs-bar qz-stm" id="qzStm"><b>' + esc(it.q) + "</b></div>" +
     '<div class="qz-ans" role="group" aria-label="답">' + btn("O", "맞아요", QZ_O_SVG) + btn("X", "아니에요", QZ_X_SVG) + "</div>";

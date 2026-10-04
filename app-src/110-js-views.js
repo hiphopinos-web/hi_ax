@@ -272,7 +272,7 @@ var Views = {
       (d.who ? '<div class="axs-who">' + spkAvHtml(s.id, d.av) + '<span class="axs-tx"><span class="ax-card-title">' + esc(d.who) + '</span><span class="ax-description">' + esc(d.whoSub) + "</span></span></div>" : "") +
       '<dl class="ax-inset axs-kv">' + d.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl></section>" +
       (d.extra || "") +
-      '<section class="ax-stack-tight axs-gap12"><h2 class="ax-section-title">' + esc(d.secT) + '</h2><p class="ax-body">' + d.secB + "</p>" + (d.pics || "") + (d.link || "") + "</section>" +
+      ('sg' in d ? d.sg : '<section class="ax-stack-tight axs-gap12"><h2 class="ax-section-title">' + esc(d.secT) + '</h2><p class="ax-body">' + d.secB + "</p>" + (d.pics || "") + (d.link || "") + "</section>") +   /* v5.60 10F 세션은 sessGuideHtml */
       "</div>" +
       '<div class="ax-bottom axs-fix">' + (d.help ? '<p class="ax-meta">' + esc(d.help) + "</p>" : "") + d.btn + "</div>";
   },
@@ -305,7 +305,7 @@ var Views = {
     return '<div class="ax-stack axs-okwrap">' +
       '<span class="axs-okmark">완료</span>' +
       '<div class="ax-stack-tight axs-gap12 axs-center-tx"><h1 class="ax-type-t2">' + (dap ? "상담 신청이 접수됐어요" : "참여 신청이 완료됐어요") + "</h1>" +
-      '<p class="ax-body">' + (dap ? "운영자가 승인하면 앱에서 알려 드려요." : "새로운 발견의 순간,<br>" + esc(pl) + "에서 만나요.") + "</p></div>" +
+      '<p class="ax-body">' + (dap ? "승인되면 앱에서 알려 드려요." : "새로운 발견의 순간,<br>" + esc(pl) + "에서 만나요.") + "</p></div>" +
       '<div class="ax-card ax-stack-tight axs-gap12"><p class="ax-card-title">' + esc(s.ttl) + '</p><p class="ax-description">10월 26일 · ' + esc(dap ? o.slot + " · 30분" : progTm(s.tm)) + '</p><p class="ax-description">' + esc(pl) + "</p></div></div>" +
       '<div class="ax-bottom axs-fix"><button type="button" class="ax-button" onclick="mySched()">나의 일정 확인하기</button>' +
       (tourRetLive() ? '<button type="button" class="ax-button ax-button-weak" onclick="tourRetGo()">1층으로 돌아가기</button></div>' : '<button type="button" class="ax-button ax-button-weak" onclick="App.tab(\'guide\')">다른 프로그램 둘러보기</button></div>');   /* v5.57 둘러보기에서 출발 = 1층으로 */

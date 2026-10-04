@@ -310,7 +310,10 @@ function jpTap() {
   }
 }
 /* v3.75 속도 램프 · 55에서 시작해 부드럽게 오르고 200에서 멈춘다 (평균 40~70초 · 잘하면 2분대) */
-function jpSpeed(t) { return Math.min(200, 55 + t * 1.55 * JP_RAMP); }
+/* v5.60 후반 난이도 안2(사용자 261004) · 상한 200 → 230(약 87초에 닿는다) · 그 뒤로 평탄 구간이 짧아진다 */
+function jpSpeed(t) { return Math.min(230, 55 + t * 1.55 * JP_RAMP); }
+/* v5.60 새 유형 앞뒤 착지 보장 · 60초까지 1.3초 → 100초에 1.0초로 점차 줄어든다 */
+function jpLandSec(t) { return t < 60 ? 1.3 : Math.max(1.0, 1.3 - (t - 60) * 0.0075); }
 /* v3.75 몸 크기 = 아이템 상태 그대로 (그린 크기와 판정이 같아야 한다) */
 function jpScale() { return JP.item === "big" ? 1.5 : JP.item === "small" ? 0.7 : 1; }
 function jpBody() {
@@ -378,7 +381,7 @@ function jpUpdate(dt, now) {
     var kind = Math.random() < 0.5 ? "big" : "small";
     JP.items.push({ k: kind, x: JP_W + 6, y: JP_GY - 34 - Math.random() * 18, got: false });
   }
-  var tr = t * JP_RAMP, su = tr >= 60 ? 4 : tr >= 40 ? 3 : tr >= 25 ? 2 : tr >= 10 ? 1 : 0;   /* v3.98 속도 UP 시점도 1.3배 앞당김 */
+  var tr = t * JP_RAMP, su = tr >= 100 ? 6 : tr >= 80 ? 5 : tr >= 60 ? 4 : tr >= 40 ? 3 : tr >= 25 ? 2 : tr >= 10 ? 1 : 0;   /* v3.98 속도 UP 시점도 1.3배 앞당김 · v5.60 5 · 6번째(약 62 · 77초) 추가 */
   if (su > JP.speedUp) { JP.speedUp = su; jpBan("속도 UP", 1.0); sfx("level"); }
   var dx = jpSpeed(t) * dt;
   JP.dist += dx;
@@ -401,10 +404,10 @@ function jpUpdate(dt, now) {
     var nx = first || (!isNew && Math.random() < pNew ? jpBagNext(open) : null);
     if (nx) {
       JP.nextK = nx.k;
-      JP.nextObs = Math.max(JP.nextObs, sp0 * (first ? (nx.k === "sign" ? 3.2 : 2.2) : 1.3));   /* v3.98 간판 첫 등장은 3.2초 앞에서 안내 */
+      JP.nextObs = Math.max(JP.nextObs, sp0 * (first ? (nx.k === "sign" ? 3.2 : 2.2) : jpLandSec(t)));   /* v3.98 간판 첫 등장은 3.2초 앞에서 안내 */
       if (first) { JP.seen[nx.k] = 1; JP.banner = { text: "새 장애물 · " + nx.tip, how: nx.how, t: nx.k === "sign" ? 3.4 : 2.6 }; sfx("level"); }
     }
-    if (isNew) JP.nextObs = Math.max(JP.nextObs, sp0 * 1.3);
+    if (isNew) JP.nextObs = Math.max(JP.nextObs, sp0 * jpLandSec(t));
     if (!isNew && Math.random() < 0.75) {
       var cx0 = JP_W + 4 + JP_OBS[k].w + 28 + Math.random() * 12;
       /* 2단 점프로만 닿는 높은 코인 아치(3~5개, 2배) 또는 낮은 코인 3개 */

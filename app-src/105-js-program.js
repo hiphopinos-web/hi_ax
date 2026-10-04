@@ -283,7 +283,7 @@ function zoneLive(z) {
   var o = { fact: z.fact, chip: null, kv: null, btn: z.btn || null };
   if (z.id === "lounge") {
     var r = myResv(), rl = r && RESV_LIVE.indexOf(r.status) >= 0, dn = r && r.status === "done", n = resvRemain();
-    var now = rl ? (RESV_ST[r.status] || "신청 완료") + " " + r.slot : dn ? "상담 완료" : n > 0 ? "남은 시간 " + n + "개" : "오늘 상담은 마감";
+    var now = rl ? (RESV_ST[r.status] || "신청 완료") + " " + r.slot : dn ? "상담 완료" : n > 0 ? "남은 시간 " + n + "개" : "오늘 상담 시간이 모두 찼어요";
     o.tm = RESV_CONF.start + "~" + RESV_CONF.end;
     o.fact = o.tm + " · " + now;
     o.chip = rl ? ["내 신청", ""] : dn ? ["완료", "ok"] : n > 0 ? null : ["마감", "off"];
@@ -337,12 +337,12 @@ var RESV_ST = { requested: "승인 대기", booked: "승인 대기", approved: "
 function progMine(id) {
   if (id === "dap") { var r = myResv(); return !!(r && RESV_HOLD.indexOf(r.status) >= 0); }
   if (id === "cchat") return !!S.get("cchat", null);
-  var s = progById(id); return !!(s && s.kind === "info" && sessMine(id));
+  return false;   /* v5.60 T10 10F 세션(info)은 신청을 앱에서 관리하지 않는다 · 헤더 = 「프로그램」 */
 }
 /* 목록 상태 한 줄 [글, 색] · ok = success · off = muted · "" = brandText */
 function progState(s) {
   if (s.kind === "open") return attMineAt(s.id) ? ["출석 완료", "ok"] : [s.id === "expo" ? "자유 입장" : "자유 참석", ""];   /* v4.26 17F 는 출석하면 「출석 완료」 · v4.38 강연 = 「자유 참석」(시간표 딱지와 같은 말) · 전시 = 「자유 입장」 */
-  if (s.kind === "info") return sessMine(s.id) ? ["사전 신청 완료", "ok"] : ["사전 신청자 대상", ""];
+  if (s.kind === "info") return sessMine(s.id) ? ["사전 신청 완료", "ok"] : ["사전 신청자 참여", ""];   /* v5.60 T3 */
   if (s.id === "dap") {
     var r = myResv();
     if (r && RESV_HOLD.indexOf(r.status) >= 0) return [RESV_ST[r.status] || "신청 완료", "ok"];
@@ -366,6 +366,15 @@ function spkAvHtml(id, av) {
   return '<span class="axs-av' + (sp ? " spk" : "") + '" aria-hidden="true">' + esc(av) +
     (on ? '<img src="' + SPK_DIR + id + '.webp" alt="" width="240" height="240" loading="lazy" decoding="async" onerror="SPK_NA[\'' + id + '\']=1;this.remove()">' : "") + "</span>";
 }
+/* v5.60 10F 세션 안내 · 소제목 「하는 일」(1F 구역 상세와 같은 ink 굵게 + 얇은 구분선) · 주황 점 글머리 · 이름이 있으면 굵게 + 설명 아래 줄
+   「준비할 것」은 사전 신청자(sessMine)에게만 · 한 줄 소개는 SESS_INTRO_ON 일 때만 · 다 비면 "" (블록 자체를 그리지 않는다) */
+function sessGuideHtml(s, mine) {
+  var li = function (it) { return '<li><span class="tx">' + (it.name ? "<b>" + esc(it.name) + "</b>" : "") + "<span>" + esc(it.desc) + "</span></span></li>"; };
+  var intro = SESS_INTRO_ON && s.intro ? '<p class="intro">' + esc(s.intro) + "</p>" : "";
+  var todo = (s.todo || []).length ? '<div class="sgg"><h3>하는 일</h3><ul>' + s.todo.map(li).join("") + "</ul></div>" : "";
+  var prep = mine && (s.prep || []).length ? '<div class="sgg sgp"><h3>준비할 것</h3><ul>' + s.prep.map(li).join("") + "</ul></div>" : "";
+  return intro || todo || prep ? '<section class="axs-sg"><h2 class="ax-section-title">세션 안내</h2>' + intro + todo + prep + "</section>" : "";
+}
 /* 상세 한 장의 내용 · 화면(sess_d)과 확인(sess_cf)이 같은 값을 쓴다 */
 function progDetail(s) {
   var D = { cat: "", org: "", title: s.ttl, who: "", whoSub: "", av: "", st: "", stc: "", kv: [], cfKv: [], extra: "", secT: "참여 전 확인해 주세요", secB: "", link: "", help: "", btn: "" };
@@ -382,7 +391,7 @@ function progDetail(s) {
       D.who = s.who; D.av = s.who; D.whoSub = "개회 인사";
       D.st = kat ? "출석 완료" : "자유 참석"; D.stc = "ok";
       D.kv.push(["출석", kat ? kat + " 출석 완료" : "기조연설과 함께 · " + attWinLbl(ko)]);
-      D.secB = "별도 신청 없이 참여할 수 있어요.<br>입구 QR 출석은 기조연설과 함께 기록돼요.";
+      D.secB = "별도 신청 없이 참여할 수 있어요.<br>출석 QR은 기조연설 때 한 번만 찍어요.";
       D.help = kat ? "신청 없이 참여 가능한 강연이에요" : "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요";
       D.btn = kat ? timeBtn : progBtn("출석 QR 스캔", "scanOpen(\'a17\')");
       return D;
@@ -421,27 +430,26 @@ function progDetail(s) {
   if (s.kind === "info") {
     var mi = sessMine(s.id);
     D.cat = "실습형 세션 · " + s.ttl; D.title = s.sub;
-    D.kv = [["일시", day + progTm(s.tm)], ["장소", pl], ["정원", s.capNote || ""], ["참여 방법", "사전 신청자만 참여 · 현장 신청 없음"]];
-    D.secT = "세션 안내";
-    D.secB = (s.desc ? esc(s.desc) + "<br>" : "") + (s.info || []).map(function (it) { return "<b>" + esc(it[0]) + "</b> " + esc(it[1]); }).join("<br>");
-    D.help = mi ? "사전 신청 내역은 나의 일정에서 확인할 수 있어요" : "앱에서는 신청을 받지 않아요";
-    D.btn = mi ? progBtn("나의 일정 보기", "mySched()", "ax-button-weak") : timeBtn;
+    D.kv = [["일시", day + progTm(s.tm)], ["장소", pl], ["정원", s.capNote || ""], ["참여 방법", "사전 신청자 참여"]];   /* v5.60 T1 (design.md §7 배제로 읽히는 말) */
+    D.sg = sessGuideHtml(s, !!mi);   /* v5.60 세션 안내 = (한 줄 소개) → 하는 일 → 준비할 것(신청자만) · 셋 다 없으면 블록 없음 */
+    D.help = mi ? "사전 신청 내역은 나의 일정에서 확인할 수 있어요" : "17F 강연 · 1F 전시 · 18F 커피챗은 누구나 참여해요";   /* v5.60 T2 */
+    D.btn = mi ? progBtn("나의 일정 보기", "mySched()", "ax-button-weak") : progBtn("전체 시간표 보기", "homeSched()", "ax-button-weak");   /* v5.60 시안 = 약한 버튼 */
     return D;
   }
   if (s.id === "dap") {
     var r = myResv(), live = r && RESV_HOLD.indexOf(r.status) >= 0;
     D.pics = treatHtml();   /* v5.04 (261002 회의) 상담존에도 커피 · 간식 · 사진 2장 */
     D.cat = "AX LOUNGE 상담"; D.org = "DAP 과제상담"; D.title = "내 업무에 AI를 어떻게 적용할지, 1:1 과제상담"; D.who = "데이터사이언스파트"; D.av = "DAP"; D.whoSub = "1:1 · 30분";
-    D.link = '<button type="button" class="ax-link axs-plain axs-self" onclick="dapModal()">진행 방식 보기</button>';
+    /* v5.60 G (사용자 261004 「진행 방식 보기 정보와 줄글이 중복」) 「진행 방식 보기」 모달(dapModal) 삭제 · 모달에만 있던 기록 · 공유 문장을 본문으로 */
     D.cfKv = [["일시", "10월 26일 " + (PROG.cf && PROG.cf.slot || DAPSEL || "") + " (30분)"], ["장소", pl], ["상담", "데이터사이언스파트 1:1"]];
     if (live) {
       D.st = RESV_ST[r.status] || "신청 완료"; D.stc = "ok";
-      D.kv = [["일시", day + r.slot + " · 30분"], ["장소", pl], ["진행", r.status === "requested" || r.status === "booked" ? "운영자 승인 후 확정" : r.status === "approved" ? "시작 5분 전 AX LOUNGE 체크인" : r.status === "checked" ? "상담 진행 중" : "상담 완료"]];
+      D.kv = [["일시", day + r.slot + " · 30분"], ["장소", pl], ["진행", r.status === "requested" || r.status === "booked" ? "승인 후 확정" : r.status === "approved" ? "시작 5분 전 AX LOUNGE 체크인" : r.status === "checked" ? "상담 진행 중" : "상담 완료"]];
       D.secT = "신청한 상담이에요";
-      D.secB = r.status === "requested" || r.status === "booked" ? "운영자가 승인하면 앱에서 알려 드려요." :
-        r.status === "approved" ? "시작 5분 전까지 1F AX LOUNGE에서 체크인해 주세요. 시작 10분이 지나면 노쇼로 처리돼요." :
+      D.secB = r.status === "requested" || r.status === "booked" ? "승인되면 앱에서 알려 드려요." :
+        r.status === "approved" ? "시작 5분 전까지 1F AX LOUNGE에서 체크인해 주세요. 시작 10분이 지나면 참석하지 않은 것으로 처리돼요." :
         r.status === "checked" ? "업무 설명 → 병목 → 개선방안 순서로 진행돼요." : "상담을 마쳤어요. 아래 코드를 AX LOUNGE 데스크에 보여 주고 사은품을 받으세요.";
-      if (r.status === "done") D.extra = '<div class="ax-inset ax-stack-tight axs-gift"><p class="ax-card-title">사은품 교환권 · 1회</p>' + qrHtml() + '<p class="ax-type-t5-strong axs-center-tx">GIFT-' + esc((S.get("user", {}) || {}).empId || "") + '</p><p class="ax-meta axs-center-tx">중복 수령 방지 코드예요</p></div>';
+      if (r.status === "done") D.extra = '<div class="ax-inset ax-stack-tight axs-gift"><p class="ax-card-title">사은품 교환권 · 1회</p>' + qrHtml() + '<p class="ax-type-t5-strong axs-center-tx">GIFT-' + esc((S.get("user", {}) || {}).empId || "") + '</p></div>';   /* v5.60 W4 「중복 수령 방지 코드예요」 줄 삭제 */
       if (RESV_LIVE.indexOf(r.status) >= 0 && r.status !== "checked") { D.help = "참여가 어려우면 신청을 취소할 수 있어요"; D.btn = cxBtn; }
       else { D.help = ""; D.btn = progBtn("나의 일정 보기", "mySched()", "ax-button-weak"); }
       return D;
@@ -449,13 +457,13 @@ function progDetail(s) {
     var conf = resvConf(), slots = resvSlots(), lunchM = t2m(conf.lunch);
     var cell = function (t) { var off = resvTaken(t); return '<button type="button" class="axs-slot" aria-pressed="' + (DAPSEL === t) + '"' + (off ? ' disabled aria-label="' + t + ' 마감"' : ' onclick="dapPick(\'' + t + '\')"') + ">" + t + "</button>"; };
     D.st = resvRemain() > 0 ? "신청 가능" : "마감"; D.stc = resvRemain() > 0 ? "ok" : "off";
-    D.kv = [["일시", conf.start + "–" + conf.end + " 중 30분"], ["장소", pl], ["참여 방법", "신청 후 운영자 승인"]];   /* v4.95 375px 한 줄(행사일은 하루뿐 · 시간 고르기는 아래 칸이 보여 준다) */
-    D.extra = (r && r.status === "noshow" ? '<div class="axs-err" role="status"><b>이전 예약이 노쇼 처리됐어요</b><span>아래에서 다시 신청할 수 있어요.</span></div>' :
+    D.kv = [["일시", conf.start + "–" + conf.end + " 중 30분"], ["장소", pl], ["참여 방법", "신청 후 승인"]];   /* v4.95 375px 한 줄(행사일은 하루뿐 · 시간 고르기는 아래 칸이 보여 준다) */
+    D.extra = (r && r.status === "noshow" ? '<div class="axs-err" role="status"><b>이전 신청은 참석 처리되지 않았어요</b><span>아래에서 다시 신청할 수 있어요.</span></div>' :
         r && r.status === "canceled" ? '<div class="axs-err" role="status"><b>이전 신청이 취소됐어요</b><span>아래에서 다시 신청할 수 있어요.</span></div>' : "") +
       '<section class="ax-stack-tight axs-gap12"><div class="ax-row"><h2 class="ax-section-title">상담 시간 선택</h2><span class="ax-meta">남은 시간 ' + resvRemain() + "개</span></div>" +
       '<div class="axs-slots" role="group" aria-label="상담 시간">' + slots.filter(function (t) { return t2m(t) < lunchM; }).map(cell).join("") +
       '<p class="ax-meta axs-lunch">점심시간 ' + conf.lunch + "–" + conf.lunchEnd + "</p>" + slots.filter(function (t) { return t2m(t) >= lunchM; }).map(cell).join("") + "</div></section>";
-    D.secB = "업무 설명 → 병목 → 개선방안 · 30분<br>커피와 간식이 준비돼 있어요.<br>상담을 완료하면 사은품을 드려요.";   /* v4.95 375px 줄마다 한 줄 */
+    D.secB = "업무 설명 → 병목 → 개선방안 · 30분<br>상담 내용은 기록되어 행사 후 정리해 공유돼요.<br>상담을 완료하면 사은품을 드려요.";   /* v4.95 375px 줄마다 한 줄 · v5.60 「커피와 간식이 준비돼 있어요」는 아래 사진 카드와 겹쳐 뺐다 · 기록 문장 = W5 말투 */
     D.help = DAPSEL ? "선택한 시간 " + DAPSEL + " · 1F AX LOUNGE" : "상담 시간을 먼저 골라 주세요";
     D.btn = DAPSEL ? progBtn("이 시간으로 신청하기", "progApply(\'dap\')") : progBtn("이 시간으로 신청하기", "", "", "", true);
     return D;
@@ -465,7 +473,7 @@ function progDetail(s) {
     D.pics = treatHtml();   /* v5.04 커피 · 간식 사진 2장(261002 사용자 확정) */
     D.cat = "커피챗"; D.title = "멘토와 가벼운 시간"; D.who = "AX 멘토와 함께"; D.av = "AX"; D.whoSub = "18F";   /* v4.13 인원 · 부서 · 소요 시간 표기 삭제(사용자 260922) · 매칭 뒤 실제 자리 · 시각은 그대로 */
     D.kv = [["일시", mt ? day + c.round : "시간은 매칭 후 앱에서 안내"], ["장소", mt ? "18F · TABLE " + c.table : "18F"], ["참여 방법", "아이디어 제출 후 참석 신청"]];
-    D.link = '<button type="button" class="ax-link axs-plain axs-self" onclick="cchatModal()">진행 방식 보기</button>';
+    /* v5.60 G 같은 패턴 · 「진행 방식 보기」 모달(cchatModal) 삭제 · 세 단계는 본문 한 줄로 · 커피 · 간식은 사진 카드가 보여 준다 */
     if (S.get("cchat_att", false)) {
       /* v4.47 참석이 서버에 찍힘 · 취소 버튼 대신 참석 완료 */
       D.st = "참석 완료"; D.stc = "ok"; D.secT = "참석한 커피챗이에요";
@@ -475,14 +483,14 @@ function progDetail(s) {
     }
     if (!c) {
       /* v4.07 자동 요청 폐기 · 아이디어가 있으면 바로 신청, 없으면 아이디어부터 */
-      D.secB = CCHAT_TXT.replace(" · ", "<br>") + "<br>고른 시간대에 맞춰 매칭해요<br>" + CCHAT_NOTE.replace(" · ", "<br>") + "<br>선착순 " + CCHAT_CAP + "명";   /* v4.47 · v4.95 줄마다 한 줄(신청 시트와 같은 말) */
+      D.secB = CCHAT_TXT.split(" · ")[1] + "<br>주제 소개 → 고민 나누기 → 다음 한 걸음<br>고른 시간대에 맞춰 매칭해요<br>" + CCHAT_NOTE.replace(" · ", "<br>") + "<br>선착순 " + CCHAT_CAP + "명";   /* v4.47 · v4.95 줄마다 한 줄(신청 시트와 같은 말) */
       if (cchatClosed()) { D.st = "마감"; D.stc = "off"; D.help = "선착순 " + CCHAT_CAP + "명이 모두 찼어요"; D.btn = progBtn("신청 마감", "", "", "", true); }
       else if (ideaMineN()) { D.help = "제출한 아이디어로 신청해요"; D.btn = progBtn("커피챗 신청하기", "cchatApplyOpen()", "", "cchatApplyBtn"); }
       else { D.help = "아이디어를 한 줄 남기면 신청할 수 있어요"; D.btn = progBtn("아이디어 남기기", "App.go(\'ideas\')"); }
     } else {
       D.secT = "신청한 커피챗이에요";
       if (!mt && c.pref) D.kv.push(["희망 시간", c.pref]);
-      D.secB = mt ? "시작 5분 전까지 18F 해당 테이블에 앉아 주세요. 커피는 스태프가 준비해 둬요." : "비슷한 고민끼리 자리를 정하는 중이에요.<br>" + CCHAT_NOTE.replace(" · ", "<br>");
+      D.secB = mt ? "시작 5분 전까지 18F 해당 테이블에 앉아 주세요. 커피는 준비돼 있어요." : "비슷한 고민끼리 자리를 정하는 중이에요.<br>" + CCHAT_NOTE.replace(" · ", "<br>");
       D.help = "참여가 어려우면 신청을 취소할 수 있어요"; D.btn = cxBtn;
     }
     return D;
@@ -694,7 +702,7 @@ function myAgendaHtml() {
   items.sort(function (a, b) { return (a.done ? 1 : 0) - (b.done ? 1 : 0) || (myAgendaNow(a) ? -1 : a.min) - (myAgendaNow(b) ? -1 : b.min); });
   var n = items.length + (card ? 1 : 0);
   var head = '<div class="ax-row"><h2 class="ax-section-title">나의 일정</h2>' + (n ? '<span class="ax-meta">10월 26일 · ' + n + "개</span>" : "") + "</div>";
-  if (!n) return '<section class="axs-msec" id="mysched">' + head + '<p class="ax-description">신청한 일정이 없어요</p>' +
+  if (!n) return '<section class="axs-msec" id="mysched">' + head + '<p class="ax-description">신청한 프로그램이 아직 없어요 · 17F 강연과 1F 전시는 신청 없이 갈 수 있어요</p>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="progAlwaysGo()">상시 운영 보기</button></section>';
   var cx = items.some(function (x) { return x.kind === "resv" || x.kind === "cchat"; });
   return '<section class="axs-msec" id="mysched">' + head + card +

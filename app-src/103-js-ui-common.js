@@ -319,21 +319,7 @@ function myResv() {
 }
 var DAPSEL = null;
 function dapPick(t) { if (resvTaken(t)) return; DAPSEL = DAPSEL === t ? null : t; App.render(); }
-function dapModal() {
-  modalOpen('<div class="tlstep"><span class="pill">00–10분</span><span class="tx2">개선하고 싶은 업무 설명</span></div>' +
-    '<div class="tlstep"><span class="pill">10–20분</span><span class="tx2">병목 알아보기</span></div>' +
-    '<div class="tlstep"><span class="pill">20–30분</span><span class="tx2">개선방안 도출하기</span></div>' +
-    '<p class="muted" style="margin-top:12px;font-size:calc(13.5px * var(--fs))">상담 내용은 함께 기록되어 행사 후 정리해 공유됩니다.</p>' +
-    '<div class="tipbanner">상담 신청 후 실제 상담을 완료하신 분께<br>사은품을 드립니다</div>', "과제상담은 어떻게 진행되나요?");
-}
-/* 커피챗 진행 안내 · 구판은 이 내용이 화면에 늘 펼쳐져 있어 자리가 컸다 */
-function cchatModal() {
-  modalOpen('<div class="tlstep"><span class="pill">1</span><span class="tx2">주제 소개</span></div>' +   /* v4.13 소요 시간 · 인원 · 부서 표기 삭제(사용자 260922) */
-    '<div class="tlstep"><span class="pill">2</span><span class="tx2">각자 고민 나누기</span></div>' +
-    '<div class="tlstep"><span class="pill">3</span><span class="tx2">멘토와 함께 다음 한 걸음 정하기</span></div>' +
-    '<p class="muted" style="margin-top:12px;font-size:calc(13.5px * var(--fs))">테이블 카드가 진행을 도와드려요. 커피는 스태프가 준비해 둡니다.</p>' +
-    '<button class="btn line" style="margin-top:14px" onclick="modalClose()">닫기</button>', "커피챗은 어떻게 진행되나요?");
-}
+/* v5.60 G 「진행 방식 보기」 모달 두 개(dapModal · cchatModal)를 지웠다 · 내용은 상세 본문 한 곳에(지운 문장 = 00–10분 업무 설명 · 10–20분 병목 · 20–30분 개선방안 · 사은품 띠 · 커피챗 주제 소개 → 각자 고민 → 멘토와 다음 한 걸음 · 테이블 카드 안내) */
 /* 커피챗 취소 · 과제상담(resv_cancel)과 같은 흐름 (260830 사용자 지적: 취소할 수가 없다).
    서버에 `cchat_cancel` 이 아직 없으면 로컬만 정리하고 그 사실을 그대로 알린다.
    조용히 로컬만 지우면 매칭 담당자는 그 자리를 계속 비워 두게 된다. */
