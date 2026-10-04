@@ -4,7 +4,7 @@
 /* v5.37 (사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) 둘러보기 v3 = 시험 페이지와 같은 공용 모듈(tour3.js · tour3.css · 캐릭터 걷기 · 40도 시점 · 왼손 패드 · 오른손 십자 · 작은 지도 · 스태프 챗봇 · 판 보기 · 돋보기 2개 · 움직임 줄이기 · 입장 암전)
    같은 약속 AXTour.open/close/back/isOpen · 옛 v2(tour.js · tour.css · 자동 둘러보기 · 평면 지도 · 구역 시트)로 되돌리려면 아래 목록의 tour3 두 개를 tour.css · tour.js 로 바꾸면 된다(파일은 그대로 둠) */
 /* v5.38 (사용자 261003) 둘러보기 손질 · 캐릭터 겹침(스태프 원 충돌) · 늘 카메라 쪽을 봄 · 조그 패드 · 안내데스크 깜빡임(겹친 면) · 정문 회전문 또렷하게 · 로비 음악(Web Audio 합성 · 「음악 없이」 · 위쪽 스피커 버튼) · 파일 이름 그대로 · 캐시 깨기 ver v538 */
-var TOUR = { ver: "v558", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
+var TOUR = { ver: "v560", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
 try { localStorage.removeItem('axfT3Diag'); } catch (e) {} window.AXT3_DIAG = /[?&]t3diag=1(?:&|$)/.test(location.search);   /* v5.47 진단은 주소에 ?t3diag=1 이 있는 그 페이지에서만 · 기억하지 않는다 · 옛 기기 기억은 지운다(사용자 261004) */   /* v5.44 둘러보기 실기기 진단(주소 ?t3diag=1 · 이 기기에 기억 · ?t3diag=0 이면 끔) · 화면 왼쪽 위에 GPU · 깊이 비트 · highp · DPR · fps */
 /* 켜기 스위치 · v5.28 true = 전체 공개(사용자 261003 「1층 3D 전체 공개」) · false 로 두면 입구 3곳 · 판 퀴즈 힌트 링크 · 열기가 모두 숨는다 */
 var TOUR_ON = true;
@@ -26,7 +26,7 @@ function tourOpen(o) {
   if (TOUR.busy) return;
   TOUR.busy = true;
   var left = TOUR.files.length, bad = false, q = "?v=" + TOUR.ver;
-  toast("1층 둘러보기를 여는 중");
+  toast("행사장 둘러보기를 여는 중");
   TOUR.files.forEach(function (f) {
     var n = /\.css$/.test(f) ? document.createElement("link") : document.createElement("script");
     if (n.tagName === "LINK") { n.rel = "stylesheet"; n.href = "assets/tour/" + f + q; } else { n.src = "assets/tour/" + f + q; n.async = false; }   /* 스크립트는 붙인 순서대로 실행 */
@@ -35,10 +35,13 @@ function tourOpen(o) {
     document.head.appendChild(n);
   });
 }
-/* 입구 · 상시 운영 1F 맨 위 한 줄(18F 커피챗 줄과 같은 모양) · 구역 상세 「모형에서 보기」 · 홈 나의 일정 아래 카드(tourHomeHtml) */
+/* 입구 · 상시 운영 1F 맨 위 카드 · 홈 나의 일정 아래 한 줄(tourHomeHtml) · 최초 로그인 초대장 · 이름은 세 곳 모두 「행사장 둘러보기」(사용자 261004)
+   v5.60 (사용자 261004 안2 「연주황 카드로 크게」 · 시안 디자인 시안/시간표 층 색/시안.html ?b=2 · design.md A-4 승인된 예외) 상시 운영 입구 = 홈 줄과 같은 행(rcHtml) + 연주황 면 · O25 테두리 · 캐릭터 52 · 제목 17 · 설명 한 줄
+   옛 흰 줄(axs-zfl 「1층 둘러보기」 · 구역 카드와 높이가 같아 입구로 안 보였다)과 구역 상세 「모형에서 보기」는 지웠다 */
+var TOUR_SUB = "1층 부스와 판을 3D로 미리 보기";
 function tourRowHtml() {
   if (!tourOn()) return "";
-  return '<button type="button" class="axs-zfl axs-tourgo" onclick="tourOpen()"><span class="tx"><span class="nm"><b>1층 둘러보기</b></span><span class="k">3D 모형으로 부스와 판 미리 보기</span></span><span class="zrt">' + CHEV_SVG + "</span></button>";
+  return rcHtml({ cls: " axs-tourgo axs-tourbig", onclick: "tourOpen()", link: true, left: tourBotHtml(), title: "행사장 둘러보기", sub: TOUR_SUB });
 }
 /* v5.53 (사용자 261004 「홈 화면에 1층 미리보기가 지금은 요소가 너무 과한 것 같아 · 행사장 둘러보기 한 문장 정도면 충분할 것 같아」) 홈 입구 = 한 줄 「행사장 둘러보기」
    왼쪽 원 = 행사 캐릭터 챗봇(v5.56 · tourBotHtml · 옛 3D 로비 사진 thumb 은 지움) · 오른쪽 이동 표시 · 부제 · 3D 칩 · 버튼 · 사진 4장 순환 · 진행 막대 없음(옛 v5.46 큰 카드 · 시기별 부제 걷음)
@@ -86,7 +89,7 @@ function tourInvTry() {
   sheetOpen({ id: "tourinv", title: "AX Festival 2026에 오신 것을 환영합니다", lead: "지금 1층 로비를 3D로 둘러볼 수 있습니다.",
     top: '<div class="axs-inv ' + (lgxRM() ? "st-open" : "run") + '" aria-hidden="true"><div class="ph"><img src="' + TINV_IMG + 'invite.jpg" alt=""></div>' +
       '<i class="pc l"></i><i class="pc r"></i><i class="pc b"></i><i class="pc t"></i><span class="seal">AX</span></div>',
-    go: "tourInvGo()", goLbl: "1층 둘러보기", keep: "나중에 하기", keepWeak: true, keepLast: true, onClose: tourInvDone });
+    go: "tourInvGo()", goLbl: "행사장 둘러보기", keep: "나중에 하기", keepWeak: true, keepLast: true, onClose: tourInvDone });
 }
 function tourInvDone() { S.put("tour_inv", true); }
 function tourInvGo() { tourInvDone(); sheetClose(true); tourOpen(); }

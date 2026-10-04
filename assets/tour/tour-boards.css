@@ -5,11 +5,12 @@
  * 색 = 원본 .ai 값(CMYK 를 sRGB 로 바꾼 값): 잉크 #231F20 · 주황 #F47920 · 파랑 #49B7E6 · 노랑 #FEC755 · 패널 검정 #010101 · 패널 점 #828387 · 배너 점 #414142 · 주황 면 점 #BFA389
  *   작은 색 글자(Yes/No · 등급 · Step)는 흰 바탕 대비를 위해 진하게: 파랑 #1A7BA8 · 오렌지 #D64524 (사용자 261004 결정 3)
  * 앱 안에서 앱 규칙이 새어 들지 않게 모든 이름은 bd- 로 시작하고, h1 · h2 를 쓰지 않는다(카드 제목이 h2) · 글자는 CSS content 로 만들지 않는다 */
-.bd { --ink: #231F20; --body: #464C53; --orange: #F47920; --blue: #49B7E6; --yes: #1A7BA8; --no: #D64524; --yellow: #FEC755; --panel: #010101; --pdot: #828387; --paper: #FFFFFF; --k: 1;
+/* v5.60 (사용자 261004 갤럭시 「Ax lounge 상담 저거 네모 왜 저래」) 뿌리 규칙 세 개는 .bd.view · .bd.wall 에만 · 앱도 .bd(rcHtml 행 몸통)를 써서 판 보기를 한 번 열면 앱 줄의 몸통이 흰 면 · 여백 0 이 됐다 · :where 라 세기는 옛 .bd 와 같다 */
+.bd:where(.view, .wall) { --ink: #231F20; --body: #464C53; --orange: #F47920; --blue: #49B7E6; --yes: #1A7BA8; --no: #D64524; --yellow: #FEC755; --panel: #010101; --pdot: #828387; --paper: #FFFFFF; --k: 1;
   position: relative; color: var(--ink); background: var(--paper); text-align: left; word-break: keep-all; overflow-wrap: break-word; font-synthesis: none; -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision;
   font-family: "PretendardV", "Pretendard Variable", Pretendard, -apple-system, system-ui, sans-serif; font-weight: 400; font-style: normal; letter-spacing: 0; line-height: 1.5; text-transform: none; }
-.bd *, .bd *::before, .bd *::after { box-sizing: border-box; margin: 0; padding: 0; font: inherit; color: inherit; letter-spacing: inherit; text-transform: none; }
-.bd img { display: block; max-width: none; border: 0; }
+.bd:where(.view, .wall) *, .bd:where(.view, .wall) *::before, .bd:where(.view, .wall) *::after { box-sizing: border-box; margin: 0; padding: 0; font: inherit; color: inherit; letter-spacing: inherit; text-transform: none; }
+.bd:where(.view, .wall) img { display: block; max-width: none; border: 0; }
 .bd .bd-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 .bd .bd-nw { white-space: nowrap; }
 .bd .bd-ln { display: inline-block; max-width: 100%; }

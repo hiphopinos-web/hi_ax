@@ -2021,7 +2021,7 @@
     var a = f.userData.c, b = lf.userData.c; return Math.hypot(a.x - b.x, a.z - b.z) < 6 ? f : lf;
   }
   /* 판 보기 데이터(새 조판 · tour-boards.js · .css) · 둘러보기를 처음 열 때 한 번 받는다(약 42KB) · 받기 전에 열면 옛 판 그림 */
-  var BDVER = 'v551';
+  var BDVER = 'v560';   /* v5.60 tour-boards.css 뿌리 규칙 범위 */
   function loadBoards() {
     if (window.TOUR_BOARDS || G.bdLoading) return; G.bdLoading = true;
     var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = BASE + 'tour-boards.css?v=' + BDVER; document.head.appendChild(l);

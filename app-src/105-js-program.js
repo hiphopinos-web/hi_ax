@@ -224,23 +224,22 @@ var FLOOR1 = [
   { id: "vision", grp: "see", sign: "AX VISION", kor: "회사가 가는 방향을 보는 곳", fact: "AX 로드맵 · 영상", st: "",
     stm: "회사가 어디로 가는지 보는 곳", todo: ["AX 로드맵 2026~2028을 봐요", "키비주얼 영상을 봐요"] },
   { id: "lab", grp: "see", sign: "AX LAB", kor: "DAP 과제를 보는 곳", fact: "우수 과제 · 아이디어 한 줄 QR", st: "p5",
-    stm: "DAP 과제 보고 아이디어 남기는 곳", todo: ["우수 과제와 2026 프로젝트를 봐요", "끝 판 QR로 아이디어 한 줄을 써요"], btn: ["아이디어 쓰기", "App.go('ideas')"],
-    ex: { h: "코딩과 데이터를 몰라도 누구나 지원할 수 있어요", c: ["매일 반복하는 업무", "필요한 자료 찾기", "앞으로의 변화 예측"] } },
+    stm: "DAP 과제 보고 아이디어 남기는 곳", todo: ["우수 과제와 2026 프로젝트를 봐요", "끝 판 QR로 아이디어 한 줄을 써요"], btn: ["아이디어 쓰기", "App.go('ideas')"] },
   { id: "action", grp: "see", sign: "AX in Action", kor: "AI 업무 사례를 보는 곳", fact: "동료가 만든 앱 3개", st: "",
     stm: "동료가 AI로 만든 현장 앱을 보는 곳", todo: ["현장 인터뷰 영상을 봐요"],
-    pic: [["act1", "영업 사례", "", 671], ["act2", "영업 사례", "", 723], ["act3", "보상 사례", "", 662]] },   /* v5.20 판 16 ~ 18 앱 화면 컷이 「영업 2개, 보상 1개」를 대신한다 */
+    cases: [["강북이 - 개인 맞춤형 시상 어플리케이션", "영업 사례 · 강북조직파트 김동건 전임"], ["AI컨설팅 도우미 - 판매 화법 어플리케이션", "영업 사례 · 안양AM지점 이은정 지점장"], ["하이핑거 - 보상 업무 지원 어플리케이션", "보상 사례 · 울산대인보상센터 이승철 대리"]] },   /* v5.60 판 16 ~ 18 한 컷(말풍선 · 인용 · 기능 칩) 대신 앱 이름 + 만든 사람(소속 · 이름 · 직급은 판 글자 그대로 · 사용자 「실명 남긴다」) */
   { id: "lounge", grp: "do", sign: "AX LOUNGE", kor: "업무 고민을 상담하는 곳", fact: "", st: "p3",
-    stm: "데이터사이언스파트와 업무 고민 상담", todo: ["고민을 이야기하고 방향을 함께 찾아요", "앱에서 30분 상담을 신청해요", "상담이 끝나면 스탬프를 받아요"],
-    treat: 1, ex: { h: "상담 주제 예시", c: ["반복되는 불편", "바꾸고 싶은 업무", "데이터로 풀 방법"] } },
+    stm: "데이터사이언스파트와 업무 고민 상담", todo: ["고민을 이야기하고 방향을 함께 찾아요", "앱에서 30분 상담을 신청해요", "상담이 끝나면 스탬프를 받아요"] },   /* v5.60 상담 주제 예시 칩 · 커피 · 간식 사진은 상담 신청 화면(DAP 상세)에만 */
   { id: "play", grp: "do", sign: "AX PLAY", kor: "AI를 직접 써 보는 곳", fact: "HiDI-Q · Hi-Helper", st: "p2",
-    stm: "HiDI-Q와 Hi-Helper를 직접 써 보는 곳", todo: ["노트북에서 HiDI-Q, Hi-Helper를 써 봐요", "스태프에게 내 QR을 보여 주면 적립"], btn: ["체험 안내", "App.go('booth')"],
-    pic: [["play1", "HiDI-Q", "문서를 올리고 질문해요", 1142], ["play2", "Hi-Helper", "종합보험 설계를 1분 안에", 800]] },
+    stm: "HiDI-Q와 Hi-Helper를 직접 써 보는 곳", todo: ["노트북에서 HiDI-Q, Hi-Helper를 써 봐요", "스태프에게 내 QR을 보여 주면 적립"], btn: ["체험 안내", "App.go('booth')"] },   /* v5.60 기능 목록 판 한 컷 2장 삭제(판 · 모형에 있다) */
   { id: "event", grp: "do", sign: "EVENT", kor: "사진 · 룰렛 · 타자왕이 있는 곳", fact: "", st: "",
     stm: "사진 · 룰렛 · 타자 겨루기", todo: ["AI 포토부스에서 ME to WE 프레임 사진을 찍어요", "스탬프 3개를 모으면 룰렛 1회예요", "1F 타자왕 순위를 봐요"] }   /* v5.05 옛 「AI 포토부스에서 번호표를 받아요」(대기 폐지 · PHOTO_Q) */
 ];
 /* v5.20 (사용자 261003 후킹 권장 1) 구역 상세 「판 한 컷」 · 사진 = assets/zone/<img>.webp(1층 판 p16 ~ 18 · p24 · p28 ~ 29 에서 잘라 폭 860 · 장당 60KB 이하)
    pic = [파일, 이름, 쓰임, 높이] · 지연 로딩 · 못 읽으면 칸째 지운다 · AX in Action 컷에는 판에 인쇄된 직함 · 이름이 그대로 있다(사용자 261003 「실명 넣자」)
-   ex = 한 줄 + 예시 칩(누르지 않는 칩) · treat = 커피 · 간식 사진 2장(treatHtml) */
+   ex = 한 줄 + 예시 칩(누르지 않는 칩) · treat = 커피 · 간식 사진 2장(treatHtml)
+   v5.60 (사용자 261004 「상시 운영 부스 소개를 간명하게 · 모형이 있으니 투머치인포메이션은 덜어내자」 · design.md §7 참여자 중심) 판 · 모형 복제를 뺐다
+   지금 쓰는 곳 없음(pic · ex · treat 를 다시 적으면 그대로 그린다) · cases = [앱 이름, 사례 · 소속 이름 직급] 글 목록(AX in Action) · 지운 데이터 = 루트 「정리 기록.md」 v5.60 절 */
 var ZONE_DIR = "assets/zone/";
 function zonePicHtml(z) {
   var o = z.pic ? '<div class="axs-zpic">' + z.pic.map(function (p) {
@@ -249,6 +248,9 @@ function zonePicHtml(z) {
   }).join("") + "</div>" : "";
   if (z.treat) o += treatHtml();
   return o;
+}
+function zoneCaseHtml(z) {
+  return z.cases ? '<hr class="axs-rule"><div class="axs-zcase"><h3>사례 ' + z.cases.length + "개</h3>" + z.cases.map(function (c) { return "<p><b>" + esc(c[0]) + "</b><span>" + esc(c[1]) + "</span></p>"; }).join("") + "</div>" : "";
 }
 function zoneExHtml(z) {
   return z.ex ? '<hr class="axs-rule"><div class="axs-zex"><h3>' + esc(z.ex.h) + '</h3><div class="axs-chiprow">' + z.ex.c.map(function (c) { return '<span class="axs-chip">' + esc(c) + "</span>"; }).join("") + "</div></div>" : "";
@@ -326,10 +328,9 @@ function zoneDetailHtml() {
   var cr = ev ? pill : seal ? (L.tm ? '<span class="axs-pt">' + esc(L.tm) + "</span>" : "") : '<span class="axs-pt">자유 관람 · 스탬프 없음</span>';
   return '<div class="ax-stack axs-pan"><div class="axs-zdt' + (seal ? " axs-sthost" : "") + '">' + (seal ? pill : "") + zoneSign(z.sign, "lg") +
     '<p class="axs-bar stm">' + esc(z.stm) + "</p>" + (cr ? '<div class="cr">' + cr + "</div>" : "") +
-    '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + z.todo.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" + zoneExHtml(z) +
+    '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + z.todo.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" + zoneCaseHtml(z) + zoneExHtml(z) +
     (L.kv ? '<hr class="axs-rule"><dl class="axs-kv">' + L.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl>" : "") +
-    "</div>" + (ev ? typPromoHtml("go") : "") + zonePicHtml(z) + (L.btn ? '<button type="button" class="ax-button" onclick="' + L.btn[1] + '">' + esc(L.btn[0]) + "</button>" : "") +
-    (tourOn() ? '<button type="button" class="ax-button ax-button-weak" onclick="tourOpen({ zone: \'' + z.id + '\' })">모형에서 보기</button>' : "") + "</div>";   /* v5.11 1층 둘러보기 · 이 구역으로 바로(TOUR_ON 일 때만) */
+    "</div>" + (ev ? typPromoHtml("go") : "") + zonePicHtml(z) + (L.btn ? '<button type="button" class="ax-button" onclick="' + L.btn[1] + '">' + esc(L.btn[0]) + "</button>" : "") + "</div>";   /* v5.60 E (사용자 261004 「모형에서 보기 굳이 없어도 될 버튼 · 여기서 길 잃는 수석님 많을 듯」) 구역 상세의 「모형에서 보기」 삭제 · 둘러보기 입구 = 상시 운영 맨 위 카드 · 홈 줄 */
 }
 function progOpen(id) { PROG.sid = id; App.go("sess_d"); }
 var RESV_ST = { requested: "승인 대기", booked: "승인 대기", approved: "승인 완료", checked: "상담 중", done: "상담 완료" };

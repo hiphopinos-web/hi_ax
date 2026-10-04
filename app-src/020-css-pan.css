@@ -71,6 +71,12 @@
   .axs-pan .axs-zpic figcaption b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .axs-pan .axs-zpic figcaption span { font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
   .axs-pan .axs-zex { display: flex; flex-direction: column; gap: 10px; }
+  /* v5.60 AX in Action 사례 글 목록(zoneCaseHtml · 판 한 컷 대신) · 앱 이름 굵게 + 사례 · 소속 이름 직급 한 줄 */
+  .axs-pan .axs-zcase { display: flex; flex-direction: column; gap: 12px; }
+  .axs-pan .axs-zcase h3 { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-pan .axs-zcase p { display: flex; flex-direction: column; gap: 2px; margin: 0; word-break: keep-all; }
+  .axs-pan .axs-zcase b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-pan .axs-zcase span { font: var(--ax-type-t7); color: var(--ax-color-body); }
   .axs-pan .axs-zex h3 { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }
   .fs-big .axs-pan .axs-zin { flex-wrap: wrap; }
   .fs-big .axs-pan .axs-zin .tx { flex: 1 1 100%; }

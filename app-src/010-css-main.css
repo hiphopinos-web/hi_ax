@@ -1231,7 +1231,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-fl .cs { display: flex; flex-direction: column; gap: var(--ax-space-8); min-width: 0; }
   .axs-fl .fc { position: relative; display: block; width: 100%; margin: 0; padding: 12px 36px 12px 14px; border: 0; border-radius: var(--ax-radius-16); background: var(--ax-color-surface); box-shadow: inset 0 0 0 2px transparent; color: var(--ax-color-ink); text-align: left; font: inherit; cursor: pointer; }
   .axs-fl .fc .mt { display: flex; align-items: center; gap: 6px; min-height: 14px; font: var(--ax-type-caption); color: var(--ax-color-muted); }
-  .axs-fl .fc .mt .dg { flex: none; color: var(--ax-color-body); }
+  .axs-fl .fc .mt .dg { flex: none; color: var(--ax-color-brand); }   /* v5.60 (사용자 261004 시안 A-1 「이거 마음에 들어」 · design.md 5-20 항목 5) 층 점 글자 = 브랜드 주황 O100 · 지난 카드 = muted(아래) · 장소 · 끝 시각 muted 그대로 */
+  .axs-fl .fc.past .mt .dg { color: var(--ax-color-muted); }
   .axs-fl .fc .mt .pl { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .axs-fl .fc .mt .e { margin-left: auto; flex: none; font-variant-numeric: tabular-nums; }
   .axs-fl .fc .t { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 8px; margin-top: 4px; font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
@@ -1712,6 +1713,12 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .rc .ls .ico.tbot .ant path { fill: none; stroke: var(--ax-color-brand); stroke-width: 5.5; stroke-linecap: round; opacity: 0; animation: tbWave 3s ease-out infinite; animation-delay: var(--td, 0s); }
   .rc .ls .ico.tbot .ant path:nth-child(2) { animation-delay: calc(var(--td, 0s) - 2.8s); }
   .rc .ls .ico.tbot .ant path:nth-child(3) { animation-delay: calc(var(--td, 0s) - 2.6s); }
+  /* v5.60 상시 운영 1F 맨 위 둘러보기 입구 카드(안2 · 시안 시간표 층 색/시안.html t-2) · 연주황 면 · O25 테두리(brand 30% + surface) · 행 80 · 캐릭터 원 52(흰 원 · 캐릭터 58) · 제목 17 · 설명 body · 아래 여백 없음(바로 「둘러보기」 머리) */
+  .rc.axs-tourbig { --rc-h: 80px; --rc-ls: 70px; margin-bottom: 0; background: var(--ax-color-brandSoft); border-color: color-mix(in srgb, var(--ax-color-brand) 30%, var(--ax-color-surface)); }
+  .rc.axs-tourbig .ls .ico.tbot { width: 52px; height: 52px; background: var(--ax-color-surface); }
+  .rc.axs-tourbig .ls .ico.tbot svg { width: 58px; height: 58px; left: -3px; top: 1px; }
+  .rc.axs-tourbig .tt { font: var(--ax-type-t5-strong); font-weight: 800; }
+  .rc.axs-tourbig .sb { color: var(--ax-color-body); }
   @keyframes tbHop { 0%, 100% { transform: translateY(0); animation-timing-function: cubic-bezier(.3, .7, .5, 1); } 42% { transform: translateY(-3px); animation-timing-function: cubic-bezier(.5, 0, .75, .45); } 84% { transform: translateY(0); } }
   @keyframes tbEye { 0%, 20%, 23.5%, 54.9%, 70.1%, 86%, 89.5%, 100% { transform: scaleY(1); opacity: 1; } 21.7%, 87.7% { transform: scaleY(.12); opacity: 1; } 55%, 70% { transform: scaleY(1); opacity: 0; } }
   @keyframes tbSmile { 0%, 54.9%, 70.1%, 100% { opacity: 0; } 55%, 70% { opacity: 1; } }
