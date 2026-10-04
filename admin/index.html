@@ -782,7 +782,7 @@ div.err-banner:not(.bands){background:var(--bad-bg);color:var(--bad);border:1px 
 #rtv .ctl button:hover{border-color:#FF7E31;color:#fff}
 #rtv .ctl button:disabled{opacity:.35;cursor:default}
 #rtv .ctl .k{font-size:11px;color:rgba(255,255,255,.45);margin-left:4px}
-/* ── v4.16 아이디어 · Wall QR 퀴즈 문항 편집 ── */
+/* ── v4.16 아이디어 ── */
 td.itx{min-width:280px;max-width:520px;white-space:normal;line-height:1.55}
 .ixt{white-space:pre-wrap;word-break:break-word}   /* 아이디어 3,000자(261003) · 줄바꿈 그대로 · 긴 글은 앞 180자 + 펼치기(ideaTxt) */
 button.lnk{background:none;border:0;padding:0;font-family:inherit;white-space:nowrap}
@@ -791,22 +791,6 @@ button.lnk{background:none;border:0;padding:0;font-family:inherit;white-space:no
 .ilist li:first-child{border-top:0;padding-top:0}
 .ilist .it{color:var(--tx);line-height:1.55}
 .ilist .im{font-size:var(--fs-c);color:var(--tx2);margin-top:4px}
-.wqset{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) auto;gap:12px;margin-bottom:4px}
-.wqset .in{min-width:0;width:100%}
-.wqq{border:1px solid var(--line);border-radius:var(--r-s);padding:16px;margin-top:12px;background:var(--sf)}
-.wqh{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.wqh .sp{flex:1}
-.wqq>textarea.in{min-height:56px}
-.wqq>.wqcnt{display:block;margin-top:2px}
-.wqos{display:flex;flex-direction:column;gap:4px;margin-top:12px}
-.wqos>.btn{align-self:flex-start;margin-top:4px}
-.wqo{display:grid;grid-template-columns:auto minmax(0,1fr) 64px auto;gap:8px;align-items:center;padding:4px 8px;border-radius:var(--r-s)}
-.wqo.on{background:var(--navy05)}
-.wqo .in{min-width:0;width:100%}
-.wqcnt{font-size:var(--fs-c);color:var(--tx2);font-weight:400;font-variant-numeric:tabular-nums;text-align:right}
-.wqcnt.over{color:var(--bad);font-weight:700}
-.wqbar{position:sticky;top:60px;z-index:5;background:var(--sf);padding:8px 0;border-bottom:1px solid var(--line2)}
-@media(max-width:900px){.wqset{grid-template-columns:minmax(0,1fr)}.wqo{grid-template-columns:auto minmax(0,1fr) auto}.wqo .wqcnt{display:none}}
 /* ── v5.14 위계 개편(261003 사용자 결정 · 디자인 시안/콘솔 위계 개편) · 1단 메뉴 7개 · 서브 칩 · 요소 공통 틀 · 이름은 hv- 로 시작 ── */
 /* 261003 UI 정돈 · 2단 = 밑줄 탭(가로 스크롤 · 대기 숫자 배지) · 3단 = 분할 선택(회색 바탕 안 흰 조각) · 칩 모양이 아니다 */
 .hv-l2{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 24px;overflow-x:auto;scrollbar-width:none}
@@ -1143,7 +1127,7 @@ function authGate(res, action){
   lock("관리코드가 바뀌었거나 명단에서 빠졌습니다. 다시 입력하세요."); return true;
 }
 function lockedGate(res, fail, action){
-  /* 연결 잠금은 retry(남은 초)가 함께 온다 · 올림픽 규칙 잠금(oly_rule) · Wall 문항 잠금(wq_set)의 locked 는 retry 가 없어 그 화면이 직접 본다 */
+  /* 연결 잠금은 retry(남은 초)가 함께 온다 · 올림픽 규칙 잠금(oly_rule) 의 locked 는 retry 가 없어 그 화면이 직접 본다 */
   if(action==="admin_check"||!(res&&res.ok===false&&res.reason==="locked"&&res.retry!=null)) return false;
   ST.locked={ until:Date.now()+(Number(res.retry)||600)*1000 };
   fail&&fail({ ok:false, reason:"locked", retry:res.retry });
@@ -1319,7 +1303,6 @@ var NEED={
 /* v4.16 서브탭에서만 쓰는 액션 · 그 서브탭을 열 때만 부른다(함수면 지금 고른 값으로 만든다 · 담당 명단은 프로그램마다 다른 요청) */
 var SUBNEED={
   /* v4.53 "stamp:ops" 가 부르던 stamp_list · att_list 는 QR 메뉴(NEED.qr)로 옮겼다 */
-  "stamp:wq":[{k:"wq",a:"wq_get"}],
   "apply:roster":function(){ return [{k:"ros_"+ROS.prog,a:"staff_roster",p:{prog:ROS.prog}}]; },
   "draw:fin":[{k:"fin",a:"fin_state"}]   /* v5.03 참여상 · 옛 서버는 unknown action → 한 줄 안내 */
 };
@@ -2001,9 +1984,8 @@ function pwReset(btn){
 function viewStamp(){
   var rows=((ST.data.stamp||{}).rows||[]), s=sub()||"one";
   var h=tabHead(byBox());
-  h+=chips([{v:"one",n:"개인 발급 · 취소"},{v:"all",n:"전체 현황",c:rows.length},{v:"stair",n:"계단"},{v:"wq",n:"QR 퀴즈 문항"},{v:"ops",n:"현장 운영"}], s, "setSub");
+  h+=chips([{v:"one",n:"개인 발급 · 취소"},{v:"all",n:"전체 현황",c:rows.length},{v:"stair",n:"계단"},{v:"ops",n:"현장 운영"}], s, "setSub");
   if(s==="all") h+=viewStampAll(rows);
-  else if(s==="wq") h+=viewWq();
   else if(s==="stair") h+=viewStairStats();
   else if(s==="ops") h+=viewStairOps();
   else h+=viewStampOne();
@@ -5086,7 +5068,7 @@ function rtvAwardHtml(){
 }
 
 /* ══════════════════ 9. v4.16 폰 관리자 모드 축소로 넘어온 화면 (앱 v4.15 · GAS @86) ══════════════════
- * ① 아이디어 열람(idea_list) · 메뉴 「아이디어」 ② Wall QR 퀴즈 문항 편집(wq_get · wq_set · wq_lock) · 스탬프 › QR 퀴즈 문항
+ * ① 아이디어 열람(idea_list) · 메뉴 「아이디어」 (② Wall QR 퀴즈 문항 편집은 261005 삭제 · 서버 wq_* 는 행사 뒤 정리)
  * ③ 담당 명단(staff_roster · staff_mark) · 신청 › 담당 명단 ④ 부스 QR 인쇄용 코드(stamp_list) · 스탬프 › 현장 운영 · 인쇄용 QR
  * 서브탭에서만 쓰는 액션은 SUBNEED 가 그 서브탭을 열 때만 부른다(캐시 규칙 같음). */
 
@@ -5310,78 +5292,6 @@ function rosMark(emp, mark, undo){
     ok:mark==="noshow"?"노쇼 표시":"해제", danger:mark==="noshow", onOk:go0 });
 }
 
-/* ── 9-3. DAP Wall QR 퀴즈 문항 · wq_get(읽기) · wq_set(저장 · reset=1 내장으로) · wq_lock(1 · 0 · auto) ──
- * 서버 문항이 없으면 앱은 내장 문항(WALLQ_DEFAULT)을 쓴다. 편집은 서버 문항, 없으면 내장 문항 사본에서 시작한다.
- * 세트 3개(wall1~3)를 늘 한꺼번에 보낸다. 앱은 보기와 문항 순서를 섞어서 보여 준다.
- * 저장은 POST(fetch) · 문항이 많으면 JSONP(GET) 주소 한계(운영 실측 약 11KB)를 넘기 때문이다. POST 는 GAS doPost → doGet 으로 같은 처리. */
-var WQ_IDS=["wall1","wall2","wall3"], WQ_LOCK_DAY="2026-10-26";
-var WQ_LIM={ name:30, theme:40, q:200, o:80, qs:10, oMin:2, oMax:5 };
-/* 앱 WALLQ_DEFAULT(v4.15 index.html) 사본 · 「내장 문항」 보기와 편집 시작점 · 앱 내장 문항을 바꾸면 여기도 */
-var WQ_BUILTIN = [
-  { id: "wall1", name: "WALL 1", theme: "영업·보상 현장 AX 사례", qs: [
-    { q: "가입설계 비교 자동화 · 3시간 걸리던 일이 얼마나로 줄었을까요?", o: ["10분", "1시간", "30분", "그대로"], a: 0 },
-    { q: "전산심사 자동 판정 확대의 성과는?", o: ["심사 하루 → 즉시", "심사 일주일 → 하루", "심사 하루 → 반나절", "변화 없음"], a: 0 },
-    { q: "고객 성향 상담 대상 선별로 상담 성공률은 몇 배가 됐나요?", o: ["1.8배", "1.2배", "2.5배", "3배"], a: 0 },
-    { q: "지급 오류 사전 검증으로 오지급은 얼마나 줄었나요?", o: ["60% 감소", "20% 감소", "40% 감소", "90% 감소"], a: 0 },
-    { q: "영업 벽면의 슬로건 · \"○이 아니라, 데이터로 고객을 만납니다\"", o: ["감", "운", "말", "경험"], a: 0 }
-  ] },
-  { id: "wall2", name: "WALL 2", theme: "DAP ① · 장기보험 과제", qs: [
-    { q: "장기보험 관련 DAP 과제는 모두 몇 개일까요?", o: ["16개", "10개", "20개", "26개"], a: 0 },
-    { q: "그중 예측모델 과제는 몇 개?", o: ["12개", "5개", "8개", "16개"], a: 0 },
-    { q: "장기보험 DAP가 커버하는 구간은?", o: ["심사·계약·손사·계리 전 구간", "심사만", "계약·손사만", "계리만"], a: 0 },
-    { q: "DAP의 D는 무엇의 약자일까요?", o: ["Digital (디지털)", "Data (데이터)", "Deep (딥)", "Dream (드림)"], a: 0 },
-    { q: "다음 중 장기보험 DAP 과제가 아닌 것은?", o: ["보험사기 SNA 분석", "AI 심사 승인", "해지 예측", "재보험 자동화"], a: 0 }
-  ] },
-  { id: "wall3", name: "WALL 3", theme: "DAP ② + 회사 AX 로드맵", qs: [
-    { q: "장기보험 外 (자동차·CM·CCO·기업보험) DAP 과제는 몇 개?", o: ["10개", "16개", "5개", "20개"], a: 0 },
-    { q: "다음 중 장기보험 外 DAP 과제인 것은?", o: ["요율 시뮬레이션", "AI 심사 승인", "해지 예측", "재보험 자동화"], a: 0 },
-    { q: "회사 AX 로드맵 · 2026년에 열리는 것은?", o: ["사내 LLM·생성형 AI 오픈", "전사 1인 1 AI Agent", "AI 조직 신설", "전 시스템 교체"], a: 0 },
-    { q: "로드맵이 그리는 2028년의 모습은?", o: ["전사 1인 1 AI Agent", "사내 LLM 오픈", "종이 없는 사무실", "AI 자격증 의무화"], a: 0 },
-    { q: "AX Wave 별자리의 점 26개가 뜻하는 것은?", o: ["올해 DAP를 수행한 26명", "26개 부서", "창립 26주년", "26개 시스템"], a: 0 }
-  ] }
-];
-var WQ={ draft:null, v:null, set:"wall1", dirty:false, err:"" };
-function wqClone(o){ return JSON.parse(JSON.stringify(o)); }
-function wqSrv(){ return ST.data.wq&&ST.data.wq.ok!==false?ST.data.wq:null; }
-function wqBase(){
-  var w=wqSrv(), d=w&&w.data;
-  return { sets:WQ_BUILTIN.map(function(s){ var x=d&&d.sets?d.sets.filter(function(y){ return y.id===s.id; })[0]:null; return wqClone(x||s); }), off:(d&&d.off||[]).slice() };
-}
-function wqDraft(){ var w=wqSrv(); if(!w) return null; if(!WQ.draft||(!WQ.dirty&&WQ.v!==w.v)){ WQ.draft=wqBase(); WQ.v=w.v; } return WQ.draft; }
-function wqCur(){ var d=WQ.draft; return d?d.sets.filter(function(s){ return s.id===WQ.set; })[0]:null; }
-function wqT(v){ return String(v==null?"":v).trim(); }
-function wqLabel(id){ return "WALL "+(WQ_IDS.indexOf(id)+1); }
-/* 잠금 모드 표시 · 서버 wq_get 의 mode 를 그대로 보여준다(auto·on·off, 설정 시트를 보라는 안내 없이) */
-function wqModeTag(mode){ return mode==="on"?tag("수동 잠금","bad"):mode==="off"?tag("잠금 풀림","ok"):tag("자동 잠금(10/26부터)","pri"); }
-/* 서버 wqCheck_ 와 같은 규칙 · 어디가 틀렸는지 문장으로 */
-function wqErrs(d){
-  var E=[]; if(!d) return E;
-  d.sets.forEach(function(s){
-    var L=wqLabel(s.id);
-    if(!wqT(s.name)) E.push(L+" · 세트 이름이 비었습니다");
-    else if(wqT(s.name).length>WQ_LIM.name) E.push(L+" · 세트 이름은 "+WQ_LIM.name+"자까지입니다");
-    if(wqT(s.theme).length>WQ_LIM.theme) E.push(L+" · 주제는 "+WQ_LIM.theme+"자까지입니다");
-    if(!s.qs.length) E.push(L+" · 문항이 하나도 없습니다");
-    if(s.qs.length>WQ_LIM.qs) E.push(L+" · 문항은 "+WQ_LIM.qs+"개까지입니다");
-    s.qs.forEach(function(q,i){
-      var Q=L+" · "+(i+1)+"번";
-      if(!wqT(q.q)) E.push(Q+" 문항 문장이 비었습니다");
-      else if(wqT(q.q).length>WQ_LIM.q) E.push(Q+" 문항은 "+WQ_LIM.q+"자까지입니다(지금 "+wqT(q.q).length+"자)");
-      if(q.o.length<WQ_LIM.oMin||q.o.length>WQ_LIM.oMax) E.push(Q+" 보기는 2~5개입니다");
-      q.o.forEach(function(o,j){ if(!wqT(o)) E.push(Q+" 보기 "+(j+1)+"이 비었습니다"); else if(wqT(o).length>WQ_LIM.o) E.push(Q+" 보기 "+(j+1)+"은 "+WQ_LIM.o+"자까지입니다"); });
-      if(!(q.a>=0&&q.a<q.o.length)) E.push(Q+" 정답을 고르세요");
-    });
-  });
-  return E;
-}
-var WQ_WHY={ sets:"세트 구성이 맞지 않습니다(1~3개)", id:"세트 id가 wall1~wall3가 아니거나 겹칩니다", name:"세트 이름(1~30자)이나 주제(40자 이하)가 맞지 않습니다",
-  qs:"세트마다 문항은 1~10개입니다", q:"문항 문장이 비었거나 200자를 넘습니다", o:"보기는 2~5개, 보기마다 1~80자입니다", a:"정답이 보기 범위 밖입니다", off:"멈춘 세트 목록이 맞지 않습니다" };
-function wqWhy(r){ r=r||{};
-  if(r.reason==="bad") return "서버가 거절했습니다 · "+(WQ_WHY[r.field]||r.field||"형식 오류");
-  if(r.reason==="locked"&&r.retry==null) return "잠겨 있어 저장할 수 없습니다. 잠금을 풀고 다시 저장하세요";
-  if(r.reason==="json") return "서버가 보낸 문항을 읽지 못했습니다";
-  return why(r);
-}
 /* POST · 응답은 JSON · 관리코드는 본문으로(주소에 남지 않는다) */
 function callPost(action, params, done, fail, again){
   var body=new URLSearchParams(); params=params||{}; params.action=action; if(!("aemp" in params)&&aemp()) params.aemp=aemp(); if(!("tok" in params)&&tok()) params.tok=tok(); supAttach(action, params);
@@ -5539,115 +5449,6 @@ function admCodeGo(w){
       if(r&&r.ok){ ADMF[k1]=""; ADMF[k2]=""; if(a&&r.tok) setTok(r.tok); if(r.sp) SUPV.sp=r.sp; render(); hvCodeDone(a, nm); }   /* v5.14 결정 4 · 바꾼 뒤 할 일 체크리스트(값은 보이지 않는다) */
       else toast(admWhy(r)); },function(e){ dlgForce(); toast(admWhy(e)); }); } });
 }
-function wqPut(res){ ST.data.wq=res; _cache[sig_("wq_get",{})]={ data:res, at:Date.now() }; }
-function viewWq(){
-  var w=wqSrv();
-  if(!w) return '<div class="card">'+skel()+'</div>';
-  var d=wqDraft(), s=wqCur(), lk=!!w.locked, E=wqErrs(d), dis=lk?" disabled":"";
-  var today=new Date(), ymd=today.getFullYear()+"-"+("0"+(today.getMonth()+1)).slice(-2)+"-"+("0"+today.getDate()).slice(-2);
-  var h='<div class="grid g2" style="margin-top:0">'+
-    card("지금 앱이 쓰는 문항", w.v?tag("서버 문항","pri"):tag("앱 내장 문항","off"),
-      '<p class="muted" style="font-size:var(--fs-s)">'+(w.v?"콘솔에서 저장한 문항입니다 · 판 번호 <b class=\"n\">"+esc(w.v)+"</b>"+(wqVerAt(w.v)?" ("+esc(wqVerAt(w.v))+" 저장)":""):"서버에 저장한 문항이 없어 앱에 들어 있는 기본 문항이 나갑니다. 아래에서 고쳐 저장하면 서버 문항으로 바뀝니다.")+'</p>'+
-      '<p class="cap mt8">참가자 앱은 10초 동기화 때 판 번호가 바뀐 것을 보고 새 문항을 받습니다. 서버 문항을 못 받으면 내장 문항으로 돕니다.</p>')+
-    card("당일 잠금", wqModeTag(w.mode),
-      '<p class="muted" style="font-size:var(--fs-s)">지금 <b>'+(lk?"잠김":"풀림")+'</b>입니다. 잠기면 저장 · 되돌리기를 서버가 거절합니다. 자동은 행사 당일('+WQ_LOCK_DAY.slice(5).replace("-","/")+')부터 잠깁니다'+(ymd>=WQ_LOCK_DAY?" (오늘 해당)":"")+'.</p>'+
-      '<div class="row mt12"><button class="btn sm'+(w.mode==="auto"?" pri":"")+'" onclick="wqLockSet(\'auto\')">자동 잠금(10/26부터)</button><button class="btn sm'+(w.mode==="on"?" danger":"")+'" onclick="wqLockSet(\'1\')">수동 잠금</button><button class="btn sm'+(w.mode==="off"?" pri":"")+'" onclick="wqLockSet(\'0\')">잠금 풀림</button></div>')+'</div>';
-  var body=chips(d.sets.map(function(x){ var n=wqErrs({sets:[x],off:[]}).length; return { v:x.id, n:wqLabel(x.id)+(d.off.indexOf(x.id)>=0?" · 멈춤":"")+(n?" · 고칠 곳 "+n:""), c:x.qs.length }; }), WQ.set, "wqSetSel");
-  body+='<div class="toolbar wqbar"><span class="cnt">'+esc(wqLabel(s.id))+' · 문항 <b>'+s.qs.length+'</b> / '+WQ_LIM.qs+'</span><span class="tag warn" id="wqDirty"'+(WQ.dirty?"":' style="display:none"')+'>저장 안 한 변경 있음</span><span class="sp"></span>'+
-    '<button class="btn sm ghost" onclick="wqDiscard()"'+(WQ.dirty?"":" disabled")+' id="wqDisc">변경 취소</button>'+
-    '<button class="btn sm danger" onclick="wqReset()"'+(lk||!w.v?" disabled":"")+'>내장 문항으로 되돌리기</button>'+
-    '<button class="btn pri" id="wqSave" onclick="wqSave()"'+(lk||E.length||!WQ.dirty?" disabled":"")+'>저장</button></div>';
-  if(lk) body+='<div class="note warn" style="margin-bottom:12px">잠겨 있어 고칠 수 없습니다. 고치려면 위 「당일 잠금」에서 <b>잠금 풀기</b>를 누릅니다.</div>';
-  if(WQ.err) body+='<div class="err-banner">'+esc(WQ.err)+'</div>';
-  body+='<div id="wqErr">'+wqErrHtml(E)+'</div>';
-  body+='<div class="wqset"><label class="fld">세트 이름 <span class="cap">벽 앞 카드 제목 · 30자까지</span><input class="in" id="wq_name" value="'+esc(s.name)+'" oninput="wqIn(\'name\',this.value)"'+dis+'>'+wqCnt("name",s.name,WQ_LIM.name)+'</label>'+
-    '<label class="fld">주제 <span class="cap">40자까지 · 비워도 됩니다</span><input class="in" id="wq_theme" value="'+esc(s.theme||"")+'" oninput="wqIn(\'theme\',this.value)"'+dis+'>'+wqCnt("theme",s.theme,WQ_LIM.theme,true)+'</label>'+
-    '<label class="row cap" style="gap:8px;align-self:end;padding-bottom:10px"><input type="checkbox" class="ck"'+(d.off.indexOf(s.id)>=0?" checked":"")+' onchange="wqOff(this.checked)"'+dis+'>이 세트 멈춤 (앱에 「점검 중」)</label></div>';
-  body+=s.qs.map(function(q,i){
-    return '<div class="wqq"><div class="wqh"><b class="n">'+(i+1)+'번</b><span class="sp"></span>'+
-      '<button class="btn sm ghost" onclick="wqMove('+i+',-1)"'+(lk||!i?" disabled":"")+'>위로</button><button class="btn sm ghost" onclick="wqMove('+i+',1)"'+(lk||i===s.qs.length-1?" disabled":"")+'>아래로</button>'+
-      ''+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="wqDelQ('+i+')"'+(lk||s.qs.length<=1?" disabled":"")+'>문항 빼기</button>')+'</div>'+
-      '<textarea class="in" rows="2" id="wq_q_'+i+'" oninput="wqIn(\'q:'+i+'\',this.value)"'+dis+'>'+esc(q.q)+'</textarea>'+wqCnt("q:"+i,q.q,WQ_LIM.q)+
-      '<div class="wqos">'+q.o.map(function(o,j){
-        return '<div class="wqo'+(q.a===j?" on":"")+'"><label class="row cap" style="gap:8px;white-space:nowrap"><input type="radio" class="ck" name="wqa'+i+'"'+(q.a===j?" checked":"")+' onchange="wqAns('+i+','+j+')"'+dis+'>정답</label>'+
-          '<input class="in" id="wq_o_'+i+'_'+j+'" value="'+esc(o)+'" placeholder="보기 '+(j+1)+'" oninput="wqIn(\'o:'+i+':'+j+'\',this.value)"'+dis+'>'+wqCnt("o:"+i+":"+j,o,WQ_LIM.o)+
-          '<button class="btn sm ghost" onclick="wqDelO('+i+','+j+')"'+(lk||q.o.length<=WQ_LIM.oMin?" disabled":"")+'>빼기</button></div>'; }).join("")+
-      (q.o.length<WQ_LIM.oMax?'<button class="btn sm ghost" onclick="wqAddO('+i+')"'+dis+'>보기 추가</button>':'')+'</div></div>';
-  }).join("");
-  if(s.qs.length<WQ_LIM.qs) body+='<button class="btn mt12" onclick="wqAddQ()"'+dis+'>문항 추가</button>';
-  body+=memo('<p>1F DAP Wall 벽마다 붙은 QR(WALL 1~3)을 찍으면 그 벽의 세트만 열립니다. 한 세트를 끝내면 스탬프 06 「QR 퀴즈」가 적립됩니다(점수 기준 없음).</p>'+
-    '<p>앱은 <b>문항 순서와 보기 순서를 섞어서</b> 보여 줍니다. 여기서는 정답 보기만 정확히 고르면 됩니다. 제한: 세트마다 문항 1~10개 · 문항 200자 · 보기 2~5개, 보기마다 80자 · 세트 이름 30자 · 주제 40자.</p>'+
-    '<p>세트 3개를 늘 한꺼번에 저장합니다. <b>멈춤</b>은 그 벽 QR을 찍으면 「점검 중」이 뜨고 퀴즈가 열리지 않습니다(문항을 고치는 동안 잠깐 쓸 때).</p>'+
-    '<p><b>내장 문항으로 되돌리기</b>는 서버 문항을 비웁니다. 앱은 다음 동기화부터 앱에 들어 있는 기본 문항을 씁니다. 처리 뒤 7초 동안 되돌리기가 뜹니다.</p>');
-  return h+card("문항 편집","",body);
-}
-function wqVerAt(v){ v=Number(v); if(!(v>1e12)) return ""; var t=new Date(v); return (t.getMonth()+1)+"/"+t.getDate()+" "+("0"+t.getHours()).slice(-2)+":"+("0"+t.getMinutes()).slice(-2); }
-function wqCnt(path,v,max,opt){ var n=wqT(v).length; return '<span class="wqcnt'+(n>max||(!n&&!opt)?" over":"")+'" data-wqc="'+path+'" data-max="'+max+'"'+(opt?' data-opt="1"':"")+'>'+n+' / '+max+'</span>'; }
-function wqErrHtml(E){ return E.length?'<div class="err-banner"><b>저장 전에 고칠 곳 '+E.length+'개</b><br>'+E.slice(0,8).map(esc).join("<br>")+(E.length>8?"<br>외 "+(E.length-8)+"개":"")+'</div>':""; }
-function wqVal(path){ var s=wqCur(), p=path.split(":"); return p[0]==="name"?s.name:p[0]==="theme"?s.theme:p[0]==="q"?s.qs[+p[1]].q:s.qs[+p[1]].o[+p[2]]; }
-/* 글자 입력은 화면을 다시 그리지 않는다(한글 조합이 끊기지 않게) · 글자 수 · 오류 · 저장 버튼만 고친다 */
-function wqRefresh(){
-  var E=wqErrs(WQ.draft), w=wqSrv()||{};
-  var b=el("wqErr"); if(b) b.innerHTML=wqErrHtml(E);
-  var sv=el("wqSave"); if(sv) sv.disabled=!!w.locked||!!E.length||!WQ.dirty;
-  var dt=el("wqDirty"); if(dt) dt.style.display=WQ.dirty?"":"none";
-  var dc=el("wqDisc"); if(dc) dc.disabled=!WQ.dirty;
-  [].forEach.call(document.querySelectorAll("[data-wqc]"),function(n){ var v=wqT(wqVal(n.getAttribute("data-wqc"))).length, mx=+n.getAttribute("data-max"), bad=v>mx||(!v&&!n.getAttribute("data-opt"));
-    n.textContent=v+" / "+mx; n.className="wqcnt"+(bad?" over":""); var inp=n.previousElementSibling; if(inp&&inp.classList) inp.classList.toggle("bad",bad); });
-}
-function wqTouch(){ WQ.dirty=true; WQ.err=""; }
-function wqIn(path,v){ var s=wqCur(), p=path.split(":"); if(!s) return;
-  if(p[0]==="name") s.name=v; else if(p[0]==="theme") s.theme=v; else if(p[0]==="q") s.qs[+p[1]].q=v; else s.qs[+p[1]].o[+p[2]]=v;
-  wqTouch(); wqRefresh(); }
-function wqAns(i,j){ wqCur().qs[i].a=j; wqTouch(); render(); }
-function wqOff(on){ var d=WQ.draft, id=WQ.set; d.off=d.off.filter(function(x){ return x!==id; }); if(on) d.off.push(id); wqTouch(); render(); }
-function wqSetSel(id){ WQ.set=id; render(); }
-function wqAddQ(){ var s=wqCur(); if(s.qs.length>=WQ_LIM.qs) return; s.qs.push({ q:"", o:["",""], a:0 }); wqTouch(); render(); setTimeout(function(){ var t=el("wq_q_"+(s.qs.length-1)); if(t){ t.focus(); t.scrollIntoView({block:"center"}); } },30); }
-function wqDelQ(i){ var s=wqCur(); if(s.qs.length<=1) return; s.qs.splice(i,1); wqTouch(); render(); toast((i+1)+"번 문항을 뺐습니다 · 저장 전이라 「변경 취소」로 되돌릴 수 있습니다"); }
-function wqMove(i,dir){ var s=wqCur(), j=i+dir; if(j<0||j>=s.qs.length) return; var t=s.qs[i]; s.qs[i]=s.qs[j]; s.qs[j]=t; wqTouch(); render(); }
-function wqAddO(i){ var q=wqCur().qs[i]; if(q.o.length>=WQ_LIM.oMax) return; q.o.push(""); wqTouch(); render(); setTimeout(function(){ var t=el("wq_o_"+i+"_"+(q.o.length-1)); if(t) t.focus(); },30); }
-function wqDelO(i,j){ var q=wqCur().qs[i]; if(q.o.length<=WQ_LIM.oMin) return; q.o.splice(j,1); if(q.a===j) q.a=-1; else if(q.a>j) q.a--; wqTouch(); render(); }
-function wqDiscard(){ if(!WQ.dirty) return; dialog({ t:"저장 안 한 변경을 버릴까요?", s:"서버에 저장된 문항으로 되돌립니다.", ok:"버리기", danger:true, onOk:function(){ dlgForce(); WQ.draft=null; WQ.dirty=false; WQ.err=""; render(); toast("변경을 버렸습니다"); } }); }
-function wqPayload(d){ return d.sets.map(function(s){ return { id:s.id, name:wqT(s.name), theme:wqT(s.theme), qs:s.qs.map(function(q){ return { q:wqT(q.q), o:q.o.map(wqT), a:q.a }; }) }; }); }
-function wqSend(params, okMsg, undo){
-  callPost("wq_set", params, function(r){
-    dlgForce();
-    if(r&&r.ok){ var w=wqSrv()||{}; wqPut({ ok:true, data:r.data, v:r.v, locked:w.locked, mode:w.mode }); WQ.draft=null; WQ.dirty=false; WQ.err=""; render(); if(okMsg) toast(okMsg(r), undo?{ undo:undo }:{}); }
-    else { WQ.err=wqWhy(r); render(); toast("저장하지 못했습니다 · "+wqWhy(r)); }
-  }, function(e){ dlgForce(); WQ.err=wqWhy(e); render(); toast("서버 응답 없음 · 문항은 이 화면에 그대로 있습니다"); });
-}
-function wqSave(){
-  var d=WQ.draft, w=wqSrv()||{}, E=wqErrs(d);
-  if(w.locked){ toast("잠겨 있어 저장할 수 없습니다"); return; }
-  if(E.length){ toast("고칠 곳이 "+E.length+"개 있습니다"); return; }
-  var prev=w.data?wqClone(w.data):null;
-  dialog({ t:"Wall QR 퀴즈 문항을 저장할까요?", s:"저장하면 참가자 앱이 다음 동기화(10초 안)에 새 문항을 받습니다. 이미 퀴즈를 끝내고 받은 스탬프는 그대로입니다.",
-    x:imp(d.sets.map(function(s){ return [wqLabel(s.id)+(wqT(s.name)!==wqLabel(s.id)?" · "+wqT(s.name):""), s.qs.length+"문항"+(d.off.indexOf(s.id)>=0?" · 멈춤":""), d.off.indexOf(s.id)>=0?"loss":"chg"]; })),
-    ok:"저장", onOk:function(){
-      wqSend({ sets:JSON.stringify(wqPayload(d)), off:JSON.stringify(d.off) }, function(r){ return "저장했습니다"+(wqVerAt(r.v)?" · "+wqVerAt(r.v)+" 판":""); },
-        function(){ wqRestore(prev); });
-    } });
-}
-/* 되돌리기 · 저장 전 서버 문항으로(없었으면 내장 문항으로) */
-function wqRestore(prev){
-  if(prev&&prev.sets) wqSend({ sets:JSON.stringify(prev.sets), off:JSON.stringify(prev.off||[]) }, function(){ return "저장 전 문항으로 되돌렸습니다"; });
-  else wqSend({ reset:"1" }, function(){ return "내장 문항으로 되돌렸습니다"; });
-}
-function wqReset(){
-  var w=wqSrv()||{}; if(w.locked){ toast("잠겨 있어 되돌릴 수 없습니다"); return; }
-  var prev=w.data?wqClone(w.data):null;
-  dialog({ t:"내장 문항으로 되돌릴까요?", s:"서버에 저장한 문항을 비웁니다. 참가자 앱은 다음 동기화부터 앱에 들어 있는 기본 문항(세트마다 5문항)을 씁니다. 처리 뒤 7초 동안 <b>되돌리기</b>가 뜹니다.",
-    x:WQ.dirty?'<div class="note warn mt12">저장 안 한 변경도 함께 사라집니다.</div>':"", ok:"되돌리기", danger:true,
-    onOk:function(){ wqSend({ reset:"1" }, function(){ return "내장 문항으로 되돌렸습니다"; }, prev?function(){ wqRestore(prev); }:null); } });
-}
-function wqLockSet(on){
-  var t={ "1":"지금 잠글까요?", "0":"잠금을 풀까요?", auto:"자동 잠금으로 둘까요?" }[on];
-  var s={ "1":"잠그면 행사 당일이 아니어도 문항 저장 · 되돌리기를 서버가 거절합니다.", "0":"풀면 행사 당일에도 문항을 고칠 수 있습니다. 행사 중 문항이 바뀌면 같은 벽에서 사람마다 다른 문제를 봅니다.", auto:"행사 당일("+WQ_LOCK_DAY+")부터 저절로 잠기고, 그 전에는 풀려 있습니다." }[on];
-  dialog({ t:t, s:s, ok:on==="1"?"잠그기":on==="0"?"풀기":"자동으로", danger:on==="0", onOk:function(){
-    call("wq_lock",{ on:on },function(r){ dlgForce(); if(r&&r.ok){ var w=wqSrv()||{ ok:true }; w.locked=!!r.locked; w.mode=on==="1"?"on":on==="0"?"off":"auto"; wqPut(w); render(); toast((on==="auto"?"자동 잠금으로 두었습니다 · ":"")+"지금 "+(r.locked?"잠김":"풀림")); } else toast("실패: "+why(r)); },
-      function(){ dlgForce(); toast("서버 응답 없음"); });
-  } });
-}
 
 /* ── 9-4. 부스 QR · 인쇄용 코드 · 인쇄 원본은 QR코드/qr_mother.py 가 만든다(브랜드 도안 + 인식 검증) ──
  * 콘솔은 서버 코드를 보여 주고 codes.json 을 내려준다. 그 파일을 QR코드/ 에 넣고 qr_mother.py 를 돌리면 분류 폴더(261001 · 1_앱 · 2_아이디어 한줄 · 3_계단실 · 4_강의장 출석 · _기타·보관)에 실제 코드판이 나온다. 같은 그림을 「QR 그림」 서브탭이 브라우저 안에서도 그린다.
@@ -5706,7 +5507,6 @@ function qrItems(){
   var base=appBase(), qs=ST.data.qrs||{}, bo=qs.booth||{}, al=ST.data.alist, byId={}, out=[];
   ((ST.data.sstat||{}).spots||[]).forEach(function(x){ byId[x.id]=x; });
   out.push({ id:"app", grp:"app", name:"AX Festival 2026 앱", place:"포스터 · 안내 데스크 · 시연", data:base, file:qrFile("app"), st:"fixed", today:null });
-  if(QR_OLD_ON) ["wall1","wall2","wall3"].forEach(function(w,i){ out.push({ id:w, grp:"wall", name:"DAP Wall 퀴즈 · WALL "+(i+1), place:"1F 전시 벽 "+(i+1), data:base+"#q="+w, file:qrFile(w), st:"fixed", today:qs.wall?qs.wall.today:null, note:"세 벽 합계", last:qs.wall?qs.wall.last:"" }); });
   boothRows().forEach(function(r){
     if(!QR_OLD_ON&&r.id==="p1") return;   /* v5.14 R7 · 1F 전시 스탬프 폐기(261001) */
     if(BOOTH_PRINT.indexOf(r.id)<0){ if(r.id==="p3") out.push({ id:"p3", grp:"booth", name:"프로그램 참여 · 17F 좌석 QR", place:"폐지 · 인쇄 안 함 · 17F 는 출석 QR(a17)", data:"", code:r.code, file:"", st:"retired", today:null }); return; }
@@ -5747,7 +5547,6 @@ function qvItems(){
   if(al&&al.ok&&al.code) out.push({ id:"a17", grp:"keep", label:"17F 강연 출석", sub:"QR을 찍고 강연을 고르세요", note:"강연마다 시작 15분 전부터 종료까지", acc:"17F", data:B+"#s="+al.code, why:"입구 고르기 방식 · 강연별 QR 로 대신" });
   boothRows().forEach(function(r){ if(QV_KEEP[r.id]) out.push({ id:r.id, grp:"keep", label:QV_KEEP[r.id][0], sub:QV_KEEP[r.id][1], data:B+"#s="+r.code, why:"부스 적립 QR · 쓰지 않음(보관)", off:!r.on }); });
   if(dq&&dq.ok&&dq.code) out.push({ id:"d17", grp:"keep", label:"Outro 경품 추첨", sub:"QR을 찍으면 추첨 체크인", note:"16:40부터 17:25까지 · 1인 1회", acc:"17F", data:B+"#s="+dq.code, why:"추첨 화면이 띄움 · 인쇄하지 않음", draw:true });
-  ["wall1","wall2","wall3"].forEach(function(w,i){ out.push({ id:w, grp:"keep", label:"DAP Wall 퀴즈 · WALL "+(i+1), sub:"5문항 · 한 세트 완료 시 스탬프", acc:"W"+(i+1), data:B+"#q="+w, why:"쓰지 않음(보관)" }); });
   out.push({ id:"roulette", grp:"keep", label:"룰렛", sub:"스탬프 3개 · 앱 룰렛 쿠폰의 QR 제시", data:B, why:"앱 링크 · 쓰지 않음(보관)" });
   out.push({ id:"photo", grp:"keep", label:"AI 포토부스", sub:"앱에서 대기 번호 받기", data:B, why:"앱 링크 · 쓰지 않음(보관)" });
   return out;
@@ -5851,13 +5650,6 @@ function viewQrList(items){
     (!rows.length?emptyRow(8,"찾는 QR 이 없습니다."):'')+'</table></div>';
   return h;
 }
-/* v3.65 DAP Wall QR 퀴즈 · 벽 QR 내용이 바뀐다(앱 주소 뒤 #q=wall1|wall2|wall3) · 스캔한 벽의 문제만 열린다 */
-function wallCard(){
-  return card("DAP Wall 퀴즈 QR","인쇄용 · 고정 주소 · 다시 만들 일 없음",
-    '<div class="wrap"><table class="tb"><tr><th>벽</th><th>QR 내용</th><th>인쇄 파일</th></tr>'+
-    ["wall1","wall2","wall3"].map(function(w,i){ return '<tr><td><b>WALL '+(i+1)+'</b></td><td class="n">'+esc(appBase())+'#q='+w+'</td><td class="n cap">'+esc(qrFile(w))+'</td></tr>'; }).join("")+'</table></div>'+
-    memo('<p>벽마다 다른 QR 을 붙입니다. 스캔하면 그 벽의 세트만 열리고, 한 세트를 끝내면 「QR 퀴즈」 스탬프가 적립됩니다(점수 기준 없음). 문항은 스탬프 › 「QR 퀴즈 문항」 서브탭에서 고칩니다.</p><p>서버 코드가 없는 고정 주소라 다시 만들 필요가 없습니다. 인쇄본은 index.html 을 뺀 짧은 주소이고, <code>index.html#q=wall1</code> 도 같은 퀴즈를 엽니다.</p>'));
-}
 function stairCard(){
   var rows=((ST.data.stair||{}).rows||[]);
   return card("계단 지점 QR","인쇄용 · 방화문 앞 · 36곳(1F~18F × 비상계단 1·2) · 지점마다 시작 · 종료 겸용 QR 1개",
@@ -5868,7 +5660,7 @@ function stairCard(){
       '<p>인쇄 파일은 <code>QR코드/3_계단실</code> 폴더의 <b>st01-1.png ~ st18-2.png</b>(층 두 자리 + 경로 1·2, 36장)입니다. 붙이기 전에 이 표의 코드와 파일이 같은 지점인지 확인하세요.</p>'+
       '<p>계단실 구간은 통신이 약해도 앱이 스캔을 저장했다가 연결되면 자동으로 보냅니다.</p>'));
 }
-function viewQrPrint(){ return boothCard()+(QR_OLD_ON?wallCard():"")+stairCard(); }   /* v5.14 DAP Wall 퀴즈 QR(R5)은 숨김 */
+function viewQrPrint(){ return boothCard()+stairCard(); }   /* 261005 DAP Wall 퀴즈 QR(전시 QR 퀴즈) 삭제 · 앱 v5.59 */
 /* 계단 36곳 설치 점검표 · 스탬프 › 계단에서 옮겨 옴(v4.53) · 스캔 없음 = 누적 0 · 불일치 = QR 주소의 층·경로가 등록 지점과 다름 */
 function stairCheckTable(spots){
   var byFR={}; spots.forEach(function(x){ byFR[x.fl+"-"+x.r]=x; });
@@ -5920,8 +5712,8 @@ function viewQrBeta(items){
  * 행사 요소 7개는 같은 틀(hvFrame) · ① 상태 ② 통제 ③ 화면 ④ 기록 · 그 아래 세부 작업 칩(옛 화면).
  * 위험 가드 3등급: L1 되돌리기 알림(toast undo) · L2 확인 창(대상 · 인원 · 결과, 적갈 버튼) · L3 슈퍼관리자 PIN → 미리 세기 → 확인 문구(dialog word) → 결과 창.
  * 슈퍼 전용 항목(sup)은 숨기지 않고 자물쇠 칩으로 보인다 · 일반 운영자가 열면 「슈퍼관리자에게 요청」 한 장.
- * 폐기 잔재(QR 퀴즈 문항 · 클로즈 베타 QR)는 시스템 › 보관으로 · 코드는 그대로 둔다(결정 6). */
-var QR_OLD_ON=false;   /* R5 · R6 · R7 · DAP Wall 퀴즈 QR · 룰렛 데스크 · 포토부스 안내판 · 스탬프 01(1F 전시) 행을 숨긴다 · 다시 보이려면 true */
+ * 폐기 잔재(클로즈 베타 QR)는 시스템 › 보관으로 · 코드는 그대로 둔다(결정 6). */
+var QR_OLD_ON=false;   /* R6 · R7 · 룰렛 데스크 · 포토부스 안내판 · 스탬프 01(1F 전시) 행을 숨긴다 · 다시 보이려면 true */
 var OX_PASS_ON=false;
 var RACE_ON=false;    /* 1F 타자왕 = 셀프 노트북만 · 소나기 대전(판 열기 · 좌석 링크 · 큰 화면 4분할) · 오늘 대전 기록은 끈다(261002 결선 · 대전 없음 · 사용자 261003 「없어진 기획은 콘솔에서 없앤다」) · 코드는 그대로 */  /* R9 · 올림픽 O/X 「판자 허용」 칸을 숨긴다 · 값은 서버 그대로 */
 var EVENT_DAY="2026-10-26";
@@ -5972,7 +5764,7 @@ var NAV=[
   { id:"s_state", m:"sy", n:"서버 상태 · 백업", parts:[P("sys","","","viewSys")] },
   { id:"s_cfg", m:"sy", n:"운영 설정", parts:[P("cfg","","","viewCfg")] },
   { id:"s_danger", m:"sy", n:"위험 구역", parts:[P("danger","","위험 구역","viewDanger"),P("acct","all","전체 초기화",null,{ sup:1, pre:1 })] },
-  { id:"s_arch", m:"sy", n:"보관", parts:[P("arch","","목록","viewArch"),P("stamp","wq","QR 퀴즈 문항"),P("qr","beta","클로즈 베타 QR")] }
+  { id:"s_arch", m:"sy", n:"보관", parts:[P("arch","","목록","viewArch"),P("qr","beta","클로즈 베타 QR")] }
 ];
 NAV.splice(NAV.findIndex(function(it){ return it.id==="e_qr"; })+1, 0, { id:"e_inv", m:"el", n:"경품·재고", el:"inv", parts:[P("inv","","","viewInv")] });   /* v5.21 경품·재고 · 행사 요소 8번째(사용자 결정 261003) */
 NAV=NAV.filter(function(it){ return RACE_ON||it.id!=="r_race"; });
@@ -6349,11 +6141,11 @@ function viewSys(){
   return '<div class="grid g2" style="margin-top:0">'+srv+ros+'</div><div class="grid g2">'+bk+dev+'</div>';
 }
 function viewArch(){
-  var rows=[["QR 퀴즈 문항","스탬프 8종에서 제외 · 1F 현장 QR 은 아이디어 한 줄뿐","261001 · 261002",1],["클로즈 베타 QR","10/25 베타 종료","행사 후",2]];
+  var rows=[["클로즈 베타 QR","10/25 베타 종료","행사 후",1]];
   return card("지난 기능","코드는 그대로 두고 화면에서만 뺐습니다(결정 6) · 열면 옛 화면이 그대로 뜹니다",
     '<details class="memo" style="margin-top:0"><summary>보관 목록 '+rows.length+'가지 · 펼치기</summary><div class="mb"><div class="wrap"><table class="tb"><tr><th>항목</th><th>보관 사유</th><th>근거</th><th></th></tr>'+
     rows.map(function(r){ return '<tr><td><b>'+esc(r[0])+'</b></td><td class="cap">'+esc(r[1])+'</td><td class="cap n">'+esc(r[2])+'</td><td><button class="btn sm" onclick="navSel(\'s_arch\','+r[3]+')">열기</button></td></tr>'; }).join("")+'</table></div>'+
-    '<p class="mt8">그 밖에 화면에서 숨긴 것: QR 표의 DAP Wall 퀴즈 1~3 · 룰렛 데스크 · AI 포토부스 안내판 · 스탬프 01(1F 전시) 행, 올림픽 O/X 「판자 허용」 칸, 「인쇄용 QR 은 QR 메뉴로 옮겼습니다」 안내, 대시보드 「부문별 참여 기록」 표(삭제).</p></div></details>');
+    '<p class="mt8">그 밖에 화면에서 숨긴 것: QR 표의 룰렛 데스크 · AI 포토부스 안내판 · 스탬프 01(1F 전시) 행, 올림픽 O/X 「판자 허용」 칸, 「인쇄용 QR 은 QR 메뉴로 옮겼습니다」 안내, 대시보드 「부문별 참여 기록」 표(삭제).</p></div></details>');
 }
 /* 위험 구역 · 줄마다 접혀 있다 · 슈퍼 전용은 자물쇠 · 행사 전 모드가 아니면 전체 초기화는 숨기고 이유 한 줄 */
 function viewDanger(){
