@@ -1,4 +1,12 @@
-/* AX Festival 2026 · 1F 스탠바이미 「ME to WE 스탬프 월」 v5 「모션 그래픽」 (261003 · 사용자 승인 · 같은 날 목표 2,026 하나 · 흩어졌다 모이기 · Lv3 하나로)
+/* AX Festival 2026 · 1F 스탠바이미 「ME to WE 스탬프 월」 v6 「KV 세계」 (261005 사용자 결정 · v6 데모 B안 · 공개본)
+ * 바탕 = v5(261003) 엔진 · 데이터(stats 15초) · 데모 키 · 혜성 · 하얀 팡 · 장면 그대로 · 그 위에 v6 B
+ *  경험의 점 · 스탬프 1개 = 로고 점 1개에 홍보부 3층 점(주황 + Hi Orange + Light Purple 핵)이 영구히 켜진다 · 2,026개면 로고 전체가 공식 심볼의 3층 점
+ *  쉬는 화면 = 처음부터 공식 주황(갈색 불씨 대신) · 머리 = 포스터 문법(워드마크 + 슬로건 두 줄 「ME to WE :」 / 「나의 경험을 우리의 가능성으로」)
+ *  흩어졌다 모이기 = 홍보부 KV 오브젝트 · (01) 경험의 점(한 점으로) · 250 (02) 점 고리 · 500 (03) 달리는 사람 · 1,000 (04) 점선 구체 · 2,026 = 2026 점 숫자 장면 · KV 이름은 오브젝트가 된 동안만
+ *  진행 링 · 250(1차 완성) 전에는 숨김(숫자만) · 1차 완성 장면이 끝나면 0 에서 차오르며 나타난다
+ *  방금 온 스탬프 종류 한 줄(「방금 · AX 퀴즈」) = 기본 끔 · 주소 ?just=1 일 때만(리허설 판단용)
+ * 아래 v5 머리 설명은 공통 뼈대의 설명으로 남긴다(변주 이름 · 단계 이름은 위 v6 가 우선) */
+/* (v5) AX Festival 2026 · 1F 스탠바이미 「ME to WE 스탬프 월」 v5 「모션 그래픽」 (261003 · 사용자 승인 · 같은 날 목표 2,026 하나 · 흩어졌다 모이기 · Lv3 하나로)
  * 화면 · 워드마크(위 왼쪽) · 로고(가운데 · 점 2,026개) · 오늘 목표 2,026 진행 링 + 「목표 2,026」(가로 왼쪽 아래 · 세로 오른쪽 아래) · 점 숫자 · 「오늘 모인 스탬프」 묶음(가로 오른쪽 아래 · 세로 왼쪽 아래)
  *  0  불씨 · 로고 2,026점이 어두운 오렌지 불씨로 놓여 있고, 은은한 빛 한 줄기가 아래에서 위로 천천히 지나간다(1차 완성 전 움직임은 이것 하나)
  *  1막 모으기 · 1차 완성 목표 CFG.g1(250) · 스탬프 1개 = 혜성 1개 · 닿으면 하얀 점이 팡 · 닿은 덩어리(점 약 8개)가 번쩍인다
@@ -15,23 +23,26 @@
 (function () {
   "use strict";
   var Q = {}; location.search.replace(/^\?/, "").split("&").forEach(function (kv) { if (!kv) return; var p = kv.split("="); Q[decodeURIComponent(p[0])] = decodeURIComponent(p[1] || ""); });
-  var DEMO = Q.demo === "1", REC = Q.rec === "1";
+  var DEMO = Q.demo === "1", REC = Q.rec === "1", CLEAN = Q.clean === "1";
+  var KIND = Q.just === "1";   /* v6 · 방금 온 스탬프 종류 한 줄 · 기본 끔 · ?just=1 일 때만(리허설 판단용) */
 
   var CFG = {
     g1: 250,                                     /* 1차 완성 목표(스탬프 수) · Lv1 경계 */
     goal: 2026,                                  /* 오늘 목표(스탬프 수) · 링 = 이것 하나에 대한 % · 넘으면 숫자만 오른다 */
-    names: ["모으기", "1차 완성", "물결", "하나로", "목표 달성"],
+    names: ["모으기", "1차 완성", "추진", "확장", "목표 달성"],
     pollSec: 15, spread: 0.92, swarmAt: 24, swarmGap: 0.12,   /* 서버 집계 주기(초 · 서버는 20초 캐시) · 바꾸지 않는다 */
     maxFly: 28, maxQueue: 300,
     tlEvery: 240, tlMin: 5,                      /* 「오늘 하루 다시 보기」 주기(초) · 스탬프가 이만큼은 있어야 */
     actEvery: [[90, 120], [75, 100], [60, 80], [50, 70], [40, 55]], actQuiet: 30,   /* 흩어졌다 모이기 · 간격(초 · 단계 0 모으기 ~ 4 목표 달성마다 짧아진다) · 다시 보기 앞뒤 쉼(초) */
     actAmp: [0.32, 0.6, 0.8, 0.95, 1.08],       /* 흩어지는 폭 · 1차 완성 전에는 살짝 풀렸다 묶이는 정도 · 단계가 오를수록 크게 */
     dotRatio: 1.16,                              /* 점 지름 ÷ 점 간격 · 모든 점 같은 크기 */
-    warm: [0.18, 0.7, 0.45],                     /* 로고 전체 온기(밝기 사다리) · 0개 → 1차 완성 직전 · 진행도^0.45 로 고르게(초반에 빨리) 오른다 */
+    warm: [0.56, 0.84, 0.5],                     /* 로고 전체 온기(밝기 사다리) · 0개 → 1차 완성 직전 · v6 = 처음부터 공식 심볼에 가까운 주황(갈색 불씨 대신) · 1차 완성에 O100 */
     lift: [0.08, 0],                             /* 스탬프가 앉은 덩어리 · 씨앗 바로 옆 · 그 바깥이 온기보다 이만큼 더 밝다(씨앗 점 하나만 O100) */
-    ignStep: 0.085                               /* 덩어리 안에서 한 걸음 번지는 시간(초) */
+    ignStep: 0.085,                              /* 덩어리 안에서 한 걸음 번지는 시간(초) */
+    core: [0.5, 0.26],                           /* v6 경험의 점 · middle · core 반지름 비(홍보부 원본 18/38 = 0.47 · 8/38 = 0.21 · 거리용으로 핵을 조금 키움) */
+    post: 0.84                                   /* v6 · 1차 완성 뒤 스탬프가 아직 안 앉은 점의 밝기(경험의 점 = 1) · 2,026에 가까울수록 로고 전체가 밝아진다 */
   };
-  CFG.lv = [CFG.g1, 500, 1000, CFG.goal];          /* 단계 경계 · 1차 완성 · 물결 · 하나로 · 목표 달성(이후 단계 없음) */
+  CFG.lv = [CFG.g1, 500, 1000, CFG.goal];
   var CYC = 1;                                     /* 사이클 빠르기 · 데모 S 키로 ×6(흩어졌다 모이기 · 다시 보기 주기만 · 혜성 박자는 그대로) · 운영은 늘 1 */
   function cy(s) { return s / CYC; }
 
@@ -131,16 +142,20 @@
     }
   }
   /* 덩어리 · 먼 곳부터 고르게(farthest point) 고른 g1 개의 씨앗 + 격자 이웃으로 동시에 번져 나눈 영역 · 씨앗 순서 = 켜지는 순서 */
-  var CL = [], clOf = null, clDepth = null;
+  var CL = [], clOf = null, clDepth = null, ORDER = null, RANK = null;
   function buildClusters(K) {
     var n = LOGO.n, P = LOGO.P, i, mx = 0, my = 0;
     P.forEach(function (p) { mx += p[0]; my += p[1]; }); mx /= n; my /= n;
-    var dmin = new Float64Array(n).fill(1e18), cur = 0, bd = 1e18, seeds = [];
+    var dmin = new Float64Array(n).fill(1e18), cur = 0, bd = 1e18, seeds = [], used = new Uint8Array(n);
     for (i = 0; i < n; i++) { var d0 = (P[i][0] - mx) * (P[i][0] - mx) + (P[i][1] - my) * (P[i][1] - my); if (d0 < bd) { bd = d0; cur = i; } }
     var jr = mulberry(7);
-    for (var k = 0; k < K; k++) {
-      seeds.push(cur); var best = -1, bv = -1;
+    /* v6 · 2,026점 전부를 먼 곳부터 고른 순서(ORDER) = 스탬프 k 번째가 앉는 점 · 앞 K 개가 v5 의 덩어리 씨앗과 같다 */
+    ORDER = []; RANK = new Int32Array(n);
+    for (var k = 0; k < n; k++) {
+      ORDER.push(cur); RANK[cur] = k; used[cur] = 1; if (k < K) seeds.push(cur);
+      var best = -1, bv = -1;
       for (i = 0; i < n; i++) {
+        if (used[i]) continue;
         var dx = P[i][0] - P[cur][0], dy = P[i][1] - P[cur][1], d = dx * dx + dy * dy;
         if (d < dmin[i]) dmin[i] = d;
         var v = dmin[i] * (0.85 + 0.3 * jr());   /* 조금 흔들어 격자처럼 딱딱한 순서를 피한다 */
@@ -178,17 +193,20 @@
     var FW = port ? 1080 : 1920, FH = port ? 1920 : 1080, k = Math.min(w / FW, h / FH), ox = (w - FW * k) / 2, oy = (h - FH * k) / 2;
     cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); cv.style.width = w + "px"; cv.style.height = h + "px";
     var L = !port ? {
-      box: { x: 490, y: 46, w: 940, h: 988 },
-      wm: { x: 72, y: 64, w: 210 },
-      ring: { x: 207, y: 861, d: 270 },
-      num: { x: 1848, by: 1042, h: 100, maxW: 420, al: "right", ls: 28, ts: 32 },
-      ttl: { x: 1700, y: 470, s1: 36, s2: 92, w: 400 }, tl: { x: 1848, y: 100, s: 30 }, st: { x: 72, y: 178, s: 20 }, dm: { y: [44, 236, 278, 28], w: 1240 }
+      /* v6 가로 · 포스터 머리 문법 · 왼쪽 열 = 워드마크 · 슬로건 두 줄 · 진행 링 · 점 숫자 / 오른쪽 = 로고 */
+      box: { x: 600, y: 46, w: 1000, h: 988 },
+      wm: { x: 72, y: 70, w: 330 }, tag: { x: 72, y: 236, we: 262, wk: 372, gap: 14, al: "left" },
+      ring: { x: 152, y: 660, d: 160, cap: "right" },
+      num: { x: 72, by: 1028, h: 118, maxW: 420, al: "left", ls: 28, ts: 32 },
+      kind: { x: 1848, y: 1028, al: "right", s: 30 },
+      ttl: { x: 1745, y: 470, s1: 36, s2: 88, w: 330 }, tl: { x: 1848, y: 100, s: 30 }, st: { x: 1500, y: 120, s: 18 }, dm: { y: [44, 160, 204, 26], w: 1240 }
     } : {
-      box: { x: 50, y: 250, w: 980, h: 1240 },
-      wm: { x: 64, y: 72, w: 190 },
-      num: { x: 64, by: 1838, h: 110, maxW: 430, al: "left", ls: 28, ts: 32 },
-      ring: { x: 890, y: 1712, d: 250, cap: "left" },
-      ttl: { x: 540, y: 1560, s1: 34, s2: 84, w: 900 }, tl: { x: 1016, y: 110, s: 30 }, st: { x: 64, y: 172, s: 20 }, dm: { y: [38, 66, 200, 27], w: 1000 }
+      box: { x: 40, y: 300, w: 1000, h: 1200 },
+      wm: { x: 64, y: 72, w: 300 }, tag: { x: 1016, y: 84, we: 232, wk: 372, gap: 14, al: "right" },
+      num: { x: 64, by: 1838, h: 118, maxW: 430, al: "left", ls: 28, ts: 32 },
+      ring: { x: 912, y: 1726, d: 200, cap: "left" },
+      kind: { x: 540, y: 1590, al: "center", s: 30 },
+      ttl: { x: 540, y: 1600, s1: 34, s2: 84, w: 900 }, tl: { x: 1016, y: 250, s: 30 }, st: { x: 64, y: 210, s: 19 }, dm: { y: [38, 66, 236, 27], w: 1000 }
     };
     G = L; G.w = w; G.h = h; G.dpr = dpr; G.port = port; G.FW = FW; G.FH = FH; G.k = k; G.ox = ox; G.oy = oy;
     G.xL = -ox / k; G.xR = (w - ox) / k; G.yT = -oy / k; G.yB = (h - oy) / k;
@@ -249,6 +267,8 @@
     })(l / (NL - 1));
     SPR.lit = SPR.ramp[NL - 1];
     SPR.white = mk(function (x) { circ(x, "#FFF3EA", Z / 2); circ(x, "#FFFFFF", Z * 0.3); });
+    /* v6 · 경험의 점 = 홍보부 3층 점(outer 주황 · middle Hi Orange 18/38 · core Light Purple 8/38 · axf_engine 의 tier 비율) · 핵은 사이니지 거리에서 보이게 조금 키운다(CFG.core) */
+    SPR.stamp = mk(function (x) { circ(x, "#FF7E31", Z / 2); circ(x, "#FF963E", Z / 2 * CFG.core[0]); circ(x, "#E6CCFF", Z / 2 * CFG.core[1]); });
     SPR.star = mk(function (x) { circ(x, "#FFCFAE", Z / 2); circ(x, "#FFF3EA", Z * 0.3); });   /* 하나로 뒤 · 스탬프 씨앗 자리 = 하얀 별(정지) */
     SPR.rim = mk(function (x) { circ(x, "#FFC6A2", Z / 2); circ(x, "#FFE6D6", Z * 0.3); });    /* 목표 달성 뒤 · 가장자리 점 = 흰 테두리(정지) */
     var bl = function (c0, c1, c2) { var B = document.createElement("canvas"); B.width = B.height = 128; var bx = B.getContext("2d"), gr = bx.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, c0); gr.addColorStop(0.3, c1); gr.addColorStop(1, c2); bx.fillStyle = gr; bx.fillRect(0, 0, 128, 128); return B; };
@@ -269,11 +289,14 @@
   function warmB(m) { return CFG.warm[0] + (CFG.warm[1] - CFG.warm[0]) * Math.pow(cl(m / CFG.g1), CFG.warm[2]); }
   function emberB() { return warmB(litC); }
   function liftB(i, w) { var d = clDepth[i]; return d === 0 ? 1 : Math.min(0.9, w + (d === 1 ? CFG.lift[0] : CFG.lift[1])); }
-  function bOf(i) { if (litC >= CFG.g1) return 1; var w = warmB(litC); return lit[i] ? liftB(i, w) : w; }
+  function bOf(i) { if (litC >= CFG.g1) return CFG.post; var w = warmB(litC); return lit[i] ? liftB(i, w) : w; }
   /* 단계마다 혜성이 없을 때도 보이는 차이(정지 · 상시 움직임 아님) · 하나로(Lv3)부터 씨앗 자리 = 하얀 별 */
-  function sprOf(i) { return ST.lvl >= 3 && clDepth[i] === 0 ? sprites().star : ST.lvl >= 4 && LOGO.rim[i] ? sprites().rim : sprB(bOf(i)); }
+  /* v6 · 스탬프가 앉은 점(RANK < STC) = 경험의 점(3층) · 영구 · 2,026개면 로고 전체가 공식 심볼의 3층 점 · 나머지 = v5 온기 */
+  var STC = 0;
+  function stamped(i) { return RANK[i] < STC; }
+  function sprOf(i) { return stamped(i) ? sprites().stamp : sprB(bOf(i)); }
   function setLit(m) {
-    lit.fill(0); litC = Math.min(m, CFG.g1);
+    lit.fill(0); litC = Math.min(m, CFG.g1); STC = Math.min(m, LOGO.n);
     for (var k = 0; k < litC; k++) CL[k].dots.forEach(function (i) { lit[i] = 1; });
     LAY.dirty = true;
   }
@@ -415,16 +438,17 @@
 
   /* ════════ 흩어졌다 모이기 · 「점이 모여 하나(WE)가 된다」를 되풀이하는 숨 · CFG.actEvery(60~90초)마다 6~7초 ════════
      지금 켜진 상태(점마다 밝기) 그대로 모양만 풀렸다 모인다 · 점 크기는 그대로 · 다 모인 순간 하얀 반짝임 한 번
-     변주 · 터졌다 되감기 · 흩날렸다 내려앉기 · ME가 WE로(처음부터) · 물결(500 부터) · 한 점으로(1,000 「하나로」 부터)
-     단계가 오를수록 흩어지는 폭(CFG.actAmp · 1차 완성 전은 살짝)과 반짝임이 커지고 간격(CFG.actEvery)이 짧아진다 · 목표 달성 뒤에는 한 점으로 · 터졌다 되감기 위주
+     v6 변주 · (01) 한 점으로 · ME가 WE로(처음부터) · (02) 점 고리(250 부터) · (03) 달리는 사람(500 부터) · (04) 점선 구체(1,000 부터) · 새로 열린 KV 오브젝트를 먼저
+     단계가 오를수록 흩어지는 폭(CFG.actAmp · 1차 완성 전은 살짝)과 반짝임이 커지고 간격(CFG.actEvery)이 짧아진다
      도는 동안에도 혜성은 날아온다 · 제 점이 제자리 가까이 있으면 바로 앉고 · 흩어져 있으면 글자 자리에서 기다렸다가 점이 돌아올 때 함께 앉는다
      경계 혜성(250 · 500 · 1,000 · 2,026)만 끝난 뒤에 날아온다(장면이 겹치지 않게) · 다시 보기 앞뒤 CFG.actQuiet(30초) · 1차 완성 · 단계 장면 중에는 하지 않는다 */
-  var ACTN = { burst: "터졌다 되감기", dust: "흩날렸다 내려앉기", mewe: "ME가 WE로", wave: "물결", one: "한 점으로" };
-  var ACTALL = ["burst", "dust", "mewe", "wave", "one"];
+  var ACTN = { mewe: "ME가 WE로", one: "(01) 한 점으로", ring: "(02) 점 고리", run: "(03) 달리는 사람", sphere: "(04) 점선 구체" };
+  var ACTALL = ["one", "mewe", "ring", "run", "sphere"];
   var ACT = { next: 0, due: false, force: "", seen: {}, bag: [], last: "", log: [], ak: -1 };
   function actPool(lv) {
-    if (lv >= 4) return ["one", "burst", "one", "burst", "mewe", "wave", "dust"];
-    var a = ["burst", "dust", "mewe"]; if (lv >= 2) a.push("wave"); if (lv >= 3) a.push("one"); return a;
+    /* KV 순서 · (01) 점 하나 → (02) 점 고리 → (03) 달리는 사람 → (04) 점선 구체 · 새로 열린 KV 오브젝트를 먼저 */
+    var b = ["one", "mewe"]; if (lv >= 1) b.unshift("ring"); if (lv >= 2) b.unshift("run"); if (lv >= 3) b.unshift("sphere");
+    return lv >= 4 ? ["sphere", "ring", "run", "one", "sphere", "mewe"] : b;
   }
   function actGap() { var e = CFG.actEvery[Math.min(4, ST.lvl)]; return cy(e[0] + RND() * (e[1] - e[0])); }
   function actPick() {
@@ -479,6 +503,7 @@
     actSpr(A);
     for (i = 0; i < n; i++) A.X[i] = -1e5;   /* 첫 그림 전 · 아직 자리 모름(혜성은 기다린다) */
     ACTV[v].setup(A, F32);
+    if (!A.Sc) { A.Sc = F32().fill(1); A.Al = F32().fill(1); }   /* v6 · 모든 변주를 원 경로 묶음으로 칠한다(fillDots) */
     var mx = 0; for (i = 0; i < n; i++) if (A.ta[i] > mx) mx = A.ta[i];
     A.tHome = mx; A.dur = mx + 0.75;
     return A;
@@ -498,7 +523,17 @@
     if (V.under) V.under(A, t);
     /* 점 2,026개 · 화면 픽셀 크기로 줄여 둔 그림을 확대 · 축소 없이 정수 자리에 찍는다(저하 CPU 에서도 45fps 이상) */
     var X = A.X, Y = A.Y, F = A.F, ds = A.dsp, n = A.n, i, K = G.k * G.dpr, ox = G.ox * G.dpr, oy = G.oy * G.dpr, w = dsp(sprites().white), o;
+    if (ORANGE()) { if (!A.dsW) { A.dsW = []; for (i = 0; i < n; i++) A.dsW.push(w); } ds = A.dsW; }   /* v6 · 무대가 오렌지인 동안 점은 하양(오렌지 위 오렌지 금지) */
     ident();
+    if (A.Sc) {   /* v6 · 점마다 크기 · 투명도(KV 오브젝트 · 깊이) · 크기는 1/8 칸으로 나눠 둔 그림 · 투명도는 0.1 칸 · 그리는 순서 = A.zo(뒤에서 앞으로) */
+      var Sc = A.Sc, Al = A.Al, zo = A.zo, ga = -1;
+      if (Q.prof === "nodraw") n = 0; if (Q.prof === "noz") zo = null;
+      if (Q.prof !== "img") { fillDots(A, X, Y, Sc, Al, zo, n, K, ox, oy); n = 0; }
+      for (var q = 0; q < n; q++) { i = zo ? zo[q] : q; var s = Sc[i], al = Al[i]; if (X[i] < -9e3 || s < 0.06 || al < 0.03) continue;
+        var so = dss(ds[i], s), aq = al >= 0.97 || Q.prof === "noalpha" ? 1 : Math.round(al * 10) / 10; if (aq !== ga) { cx.globalAlpha = aq; ga = aq; }
+        cx.drawImage(so.c, (X[i] * K + ox - so.h + 0.5) | 0, (Y[i] * K + oy - so.h + 0.5) | 0); }
+      cx.globalAlpha = 1;
+    } else
     for (i = 0; i < n; i++) if (X[i] > -9e3) { o = ds[i]; cx.drawImage(o.c, (X[i] * K + ox - o.h + 0.5) | 0, (Y[i] * K + oy - o.h + 0.5) | 0); }
     for (i = 0; i < n; i++) if (F[i] > 0.02) { cx.globalAlpha = F[i]; cx.drawImage(w.c, (X[i] * K + ox - w.h + 0.5) | 0, (Y[i] * K + oy - w.h + 0.5) | 0); }
     for (var h = 0; h < A.hits.length; h++) {   /* 도는 중에 앉은 혜성 자리 */
@@ -509,7 +544,48 @@
     cx.globalAlpha = 1; logical();
     if (V.over) V.over(A, t);
   }
+  /* v6 · 크기 · 투명도가 점마다 다른 그림(KV · 깊이)은 그림 붙이기 2,026번 대신 색 · 투명도 묶음마다 원 경로 하나로 칠한다(홍보부 엔진 axfDraw 와 같은 방식 · 저하 CPU 에서 빠르다)
+     묶음 = 점 그림(밝기 · 경험의 점) × 투명도 6칸 · 경험의 점은 middle · core 원을 한 번 더(3층) · 깊이 순서는 투명도 칸 순서(먼 것이 흐리다)로 대신한다 */
+  function sprColor(c) {
+    var sp = sprites(); if (sp.colOf && sp.colOf.has(c)) return sp.colOf.get(c);
+    if (!sp.colOf) { sp.colOf = new Map(); sp.ramp.forEach(function (s, l) { var r = ramp(l / (NL - 1)); sp.colOf.set(s, { c: "rgb(" + r[0] + "," + r[1] + "," + r[2] + ")" }); });
+      sp.colOf.set(sp.stamp, { c: COL.o, m: COL.hi, k: "#E6CCFF" }); sp.colOf.set(sp.white, { c: "#FFFFFF" }); }
+    return sp.colOf.get(c) || { c: COL.o };
+  }
+  function fillDots(A, X, Y, Sc, Al, zo, n, K, ox, oy) {
+    var grp = new Map(), i, R = G.D * K / 2, orange = ORANGE(), wcol = { c: "#FFFFFF" };
+    for (i = 0; i < n; i++) {
+      var s = Sc[i], al = Al[i]; if (X[i] < -9e3 || s < 0.06 || al < 0.03) continue;
+      var col = orange ? wcol : sprColor(A.spr[i]), ab = al >= 0.95 ? 5 : Math.max(0, Math.round(al * 5)), key = col.c + "|" + ab, g = grp.get(key);
+      if (!g) { g = { col: col, a: ab / 5, ids: [] }; grp.set(key, g); } g.ids.push(i);
+    }
+    var keys = Array.from(grp.values()).sort(function (a, b) { return a.a - b.a; });
+    keys.forEach(function (g) {
+      cx.globalAlpha = Math.max(0.12, g.a); var tiers = g.col.m ? [[g.col.c, 1], [g.col.m, CFG.core[0]], [g.col.k, CFG.core[1]]] : [[g.col.c, 1]];
+      tiers.forEach(function (tr) {
+        cx.fillStyle = tr[0]; cx.beginPath();
+        for (var q = 0; q < g.ids.length; q++) { var j = g.ids[q], r = R * Sc[j] * tr[1], x = X[j] * K + ox, y = Y[j] * K + oy; cx.moveTo(x + r, y); cx.arc(x, y, r, 0, 6.2832); }
+        cx.fill();
+      });
+    });
+    cx.globalAlpha = 1;
+  }
   var DSPR = { key: "", m: null };
+  function dss(o, s) {   /* v6 · 화면 크기 그림(o)을 s 배로 줄이거나 키운 그림 · 1/8 칸 */
+    var b = Math.max(1, Math.min(40, Math.round(s * 8))); if (b === 8) return o;
+    var m = o.sz || (o.sz = []); if (m[b]) return m[b];
+    var z = Math.max(2, Math.ceil(o.c.width * b / 8)), c2 = document.createElement("canvas"); c2.width = c2.height = z;
+    c2.getContext("2d").drawImage(o.c, 0, 0, z, z); return (m[b] = { c: c2, h: z / 2 });
+  }
+  /* 깊이 칸 나눔 순서 · z 큰 것(먼 것)부터 · 24칸 · 정렬 없이 O(n) */
+  var ZB = { cnt: new Int32Array(25), st: new Int32Array(25) };
+  function zOrder(Z, out, n, far) {
+    var lo = 1e9, hi = -1e9, i; for (i = 0; i < n; i++) { var z = Z[i]; if (z < lo) lo = z; if (z > hi) hi = z; }
+    var nb = 24, k = (hi - lo) > 1e-6 ? nb / (hi - lo) : 0, cnt = ZB.cnt, st = ZB.st; cnt.fill(0);
+    for (i = 0; i < n; i++) { var bi = Math.min(nb - 1, ((Z[i] - lo) * k) | 0); if (far) bi = nb - 1 - bi; cnt[bi]++; }
+    st[0] = 0; for (i = 1; i <= nb; i++) st[i] = st[i - 1] + cnt[i - 1];
+    for (i = 0; i < n; i++) { var b2 = Math.min(nb - 1, ((Z[i] - lo) * k) | 0); if (far) b2 = nb - 1 - b2; out[st[b2]++] = i; }
+  }
   function dsp(c) {   /* 점 그림 하나를 화면 픽셀 크기로 한 번 줄여 둔다(크기가 바뀌면 다시) */
     var s = G.D * G.k * G.dpr, key = s.toFixed(3);
     if (DSPR.key !== key || !DSPR.m) { DSPR.key = key; DSPR.m = new Map(); }
@@ -518,88 +594,146 @@
     c2.getContext("2d").drawImage(c, (z - s) / 2, (z - s) / 2, s, s);
     o = { c: c2, h: z / 2 }; DSPR.m.set(c, o); return o;
   }
-  var ACTV = {
-    /* ① 터졌다 되감기 · 잠깐 숨을 들이쉬듯 모였다가 가운데서 바깥으로 팡 · 퍼진 채 잠깐 떠 있다가 같은 길을 되감아 한꺼번에 제자리로(작은 스프링) */
-    burst: {
+  /* ════════ v6 B · KV 오브젝트로 모였다 돌아오기 · 위치 · 크기는 홍보부 Cavalry 엔진(axfSample · AXF_DATA)의 원본 좌표 · 다시 그리지 않는다 ════════
+     점마다 · 제자리 → (휘어진 길) → 오브젝트 자리(오브젝트는 원본 속도로 돈다 · 달린다) → 같은 길로 제자리 · 다 모이면 하얀 반짝임 */
+  function kvBase(A, F32, hold, fl, ordQ) {
+    var P = G.pos, i, y0 = G.cy - G.hh, h2 = 2 * G.hh;
+    A.TX = F32(); A.TY = F32(); A.TS = F32(); A.TA = F32(); A.Sc = F32(); A.Al = F32(); A.s0 = F32(); A.s1 = F32();
+    A.fl = fl || 0.95; A.tOut = 0.75 + A.fl + hold; A.bow = G.port ? 70 : 90; A.ghost = 0.035;
+    for (i = 0; i < A.n; i++) {
+      var q = ordQ ? ordQ(i) : cl((P[i][1] - y0) / h2);
+      A.s0[i] = 0.06 + 0.8 * q + 0.06 * A.r1[i]; A.s1[i] = 0.8 * (1 - q) + 0.06 * A.r2[i];
+      A.ta[i] = A.tOut + A.s1[i] + A.fl; A.Sc[i] = 1; A.Al[i] = 1;
+    }
+  }
+  function kvPos(A, t, tgt) {
+    var P = G.pos, X = A.X, Y = A.Y, F = A.F, Sc = A.Sc, Al = A.Al, fl = A.fl;
+    tgt(A, t);
+    for (var i = 0; i < A.n; i++) {
+      var a = t - A.s0[i], b = t - A.tOut - A.s1[i], hx = P[i][0], hy = P[i][1];
+      if (a <= 0 || b >= fl) { X[i] = hx; Y[i] = hy; Sc[i] = 1; Al[i] = 1; F[i] = b >= fl ? aFl(t - A.ta[i]) : 0; continue; }
+      var e, fx, fy, tx, ty, s0, s1, a0, a1;
+      if (b <= 0) { e = EIO(a / fl); fx = hx; fy = hy; tx = A.TX[i]; ty = A.TY[i]; s0 = 1; s1 = A.TS[i]; a0 = 1; a1 = A.TA[i]; }
+      else { e = EIO(b / fl); fx = A.TX[i]; fy = A.TY[i]; tx = hx; ty = hy; s0 = A.TS[i]; s1 = 1; a0 = A.TA[i]; a1 = 1; }
+      if (e >= 1) { X[i] = tx; Y[i] = ty; Sc[i] = s1; Al[i] = a1; F[i] = 0; continue; }
+      var mx = (fx + tx) / 2, my = (fy + ty) / 2, dx = mx - G.cx, dy = my - G.cy, dl = Math.hypot(dx, dy) || 1, bow = A.bow * Math.min(1, Math.hypot(tx - fx, ty - fy) / 420);
+      var qx = mx + dx / dl * bow, qy = my + dy / dl * bow, iu = 1 - e;
+      X[i] = iu * iu * fx + 2 * iu * e * qx + e * e * tx; Y[i] = iu * iu * fy + 2 * iu * e * qy + e * e * ty;
+      Sc[i] = s0 + (s1 - s0) * e; Al[i] = a0 + (a1 - a0) * e; F[i] = 0;
+    }
+  }
+  /* 점과 자리를 위에서 아래 순서로 짝짓는다(위 글자는 오브젝트 위쪽으로 · 길이 엉키지 않게) */
+  function kvPair(A, tx, ty) {
+    var P = G.pos, ids = [], tg = [], i;
+    for (i = 0; i < A.n; i++) { ids.push(i); tg.push(i); }
+    ids.sort(function (a, b) { return (P[a][1] - P[b][1]) || (P[a][0] - P[b][0]); });
+    tg.sort(function (a, b) { return (ty[a] - ty[b]) || (tx[a] - tx[b]); });
+    var out = new Int32Array(A.n); for (i = 0; i < A.n; i++) out[ids[i]] = tg[i];
+    return out;
+  }
+  function kvFrame(name, f) { var K = AXF_DATA[name]; return K; }
+  /* 오브젝트 판 · 1080 정방 좌표 → 로고 자리(가운데 · 로고 높이에 맞춘 배율) */
+  function kvMap(s, x, y) { return [G.cx + (x - 540) * s, G.cy + (y - 540) * s]; }
+  function kvDisc(x, y, d, core, a) {   /* 홍보부 3층 점(02 점 고리의 큰 점 · outer · middle 18/38 · core 8/38) */
+    cx.globalAlpha = a; cx.fillStyle = COL.o; cx.beginPath(); cx.arc(x, y, d / 2, 0, 6.2832); cx.fill();
+    if (core) { cx.fillStyle = COL.hi; cx.beginPath(); cx.arc(x, y, d / 2 * 18 / 38, 0, 6.2832); cx.fill(); cx.fillStyle = "#E6CCFF"; cx.beginPath(); cx.arc(x, y, d / 2 * 8 / 38, 0, 6.2832); cx.fill(); }
+    cx.globalAlpha = 1;
+  }
+  var KVX = {
+    /* (02) 점 고리 · 36점(큰 7 · 중 11 · 작은 18) · 원본처럼 17.13초에 한 바퀴 · 점들이 슬롯마다 모여 하나의 큰 점이 된다 */
+    ring: {
       setup: function (A, F32) {
-        var P = G.pos, M = Math.max(G.hw, G.hh), k2 = Math.min(1, A.m); A.th = F32(); A.R = F32(); A.sw = F32();   /* k2 · 폭이 작을 때는 흩어짐(제각각)도 줄여 글자 모양이 남는다 */
+        var R = Math.min(G.hw, G.hh) * (G.port ? 0.88 : 0.95), k = R / 340, sl = [], tot = 0, s, i, P = G.pos;
+        A.R = R; A.k = k; A.SZ = G.port ? 2.2 : 2.0; A.rot0 = -0.6 + A.r3[0] * 1.2;
+        for (s = 0; s < 36; s++) { var rank = s * 13 % 36, d = rank < 7 ? 38 : rank < 18 ? 18 : 8; sl.push({ d: d, core: rank < 7, c: 0 }); tot += d * d; }
+        var acc = 0; sl.forEach(function (o) { o.c = Math.max(1, Math.round(A.n * o.d * o.d / tot)); acc += o.c; }); sl[0].c += A.n - acc;
+        A.sl = sl; A.slot = new Int16Array(A.n); A.sj = new Int16Array(A.n);
+        var rotH = A.rot0 + 6.2832 * 1.7 / 17.13, ids = [], so = [];
+        for (i = 0; i < A.n; i++) ids.push(i);
+        var ang = function (x) { x = x % 6.2832; return x < -3.1416 ? x + 6.2832 : x > 3.1416 ? x - 6.2832 : x; };
+        ids.sort(function (a, b) { return Math.atan2(P[a][1] - G.cy, P[a][0] - G.cx) - Math.atan2(P[b][1] - G.cy, P[b][0] - G.cx); });
+        for (s = 0; s < 36; s++) so.push(s);
+        so.sort(function (a, b) { return ang(a * 6.2832 / 36 + rotH) - ang(b * 6.2832 / 36 + rotH); });
+        var p = 0, rk = new Int16Array(36); so.forEach(function (s2, r) { rk[s2] = r; for (var j = 0; j < sl[s2].c; j++) { var id = ids[p++]; A.slot[id] = s2; A.sj[id] = j; } });
+        kvBase(A, F32, A.big ? 5.5 : 4.0, 0.95, function (i) { return rk[A.slot[i]] / 35; });
+      },
+      tgt: function (A, t) {
+        var rot = A.rot0 + 6.2832 * t / 17.13, sl = A.sl, cf = this.cf(A, t), sq = G.port ? 1 : 1;
         for (var i = 0; i < A.n; i++) {
-          var dx = P[i][0] - G.cx, dy = P[i][1] - G.cy;
-          A.th[i] = Math.atan2(dy, dx) + (A.r1[i] - 0.5) * 0.4 * k2;
-          A.R[i] = A.m * (30 + 190 * Math.hypot(dx, dy) / M + 90 * A.r2[i] * k2);   /* 로고가 두 배 남짓 부풀어 터진 모양 · 화면 밖으로 흩지 않는다 */
-          A.sw[i] = (A.r3[i] - 0.5) * 0.5 * k2;
-          A.ta[i] = 4.2 + 0.12 * A.r1[i];
+          var s = A.slot[i], o = sl[s], a = s * 6.2832 / 36 + rot, cxs = G.cx + A.R * Math.cos(a), cys = G.cy + A.R * Math.sin(a) * sq;
+          var rs = o.d / 2 * A.k * A.SZ * 0.78, j = A.sj[i], r = rs * Math.sqrt((j + 0.5) / o.c), th = j * 2.39996 + rot * 1.5;
+          A.TX[i] = cxs + r * Math.cos(th); A.TY[i] = cys + r * Math.sin(th); A.TS[i] = o.d < 10 ? 0.8 : 1; A.TA[i] = 1 - cf;
         }
       },
-      out: function (s) { return EO((s - 0.45) / 1.2) * (1 + 0.1 * EO((s - 1.65) / 1.6)); },
-      pos: function (A, t) {
-        var P = G.pos, X = A.X, Y = A.Y, F = A.F, kx = G.port ? 0.6 : 1, ky = G.port ? 1 : 0.7, out = this.out, pre = t < 0.45 ? -0.035 * ESIO(t / 0.45) : -0.035 * (1 - cl((t - 0.45) / 0.3)), mo = out(t);
-        for (var i = 0; i < A.n; i++) {
-          var ta = A.ta[i], tin = ta - 1.05, R = A.R[i], m;
-          if (t < tin) m = mo + pre;
-          else if (t < ta) m = out(tin) * (1 - Math.pow((t - tin) / 1.05, 2.2));
-          else { var z = (t - ta) / 0.42; m = z < 1 ? -(9 * A.m / R) * Math.sin(Math.PI * z) * (1 - z) : 0; }
-          var ang = A.th[i] + A.sw[i] * (m > 0 ? m : 0), d = R * m;
-          X[i] = P[i][0] + Math.cos(ang) * d * kx; Y[i] = P[i][1] + Math.sin(ang) * d * ky; F[i] = aFl(t - ta);   /* 긴 쪽으로는 덜 퍼진다(글자 묶음 · 화면 밖) */
-        }
+      cf: function (A, t) { return cl((t - (0.06 + 0.8 + A.fl + 0.1)) / 0.45) * cl((A.tOut + 0.2 - t) / 0.3); },
+      pos: function (A, t) { kvPos(A, t, this.tgt.bind(this)); },
+      over: function (A, t) {
+        var cf = this.cf(A, t); if (cf <= 0.01) return;
+        var rot = A.rot0 + 6.2832 * t / 17.13;
+        for (var s = 0; s < 36; s++) { var o = A.sl[s], a = s * 6.2832 / 36 + rot; kvDisc(G.cx + A.R * Math.cos(a), G.cy + A.R * Math.sin(a), o.d * A.k * A.SZ, o.core, cf); }
       },
       ev: function (A, S) {
-        once(S, "pop", 0.45, function () { pop(G.cx, G.cy, 1.1 * A.a * (0.45 + 0.55 * Math.min(1, A.m))); });
+        once(S, "lock", 0.75 + A.fl + 0.7, function () { glow(G.cx, G.cy, 1200 * A.a, 0.9, 0.35, false); });
         once(S, "home", A.tHome - 0.1, function () { actHome(A, G.cx, G.cy); });
       }
     },
-    /* ② 흩날렸다 내려앉기 · 위쪽 점부터 먼지처럼 위로 흩날려 떠오르고 · 비처럼 곧게 떨어져 아래부터 글자가 다시 생긴다 */
-    dust: {
+    /* (03) 달리는 사람 · 마스크 18장 · 2초에 한 걸음 사이클(원본 속도) · 로고 점이 사람의 점이 되어 달린다 */
+    run: {
       setup: function (A, F32) {
-        var P = G.pos, k2 = Math.min(1, A.m); A.rd = F32(); A.H = F32(); A.wx = F32(); A.fs = F32(); A.xf = F32(); A.yf = F32();
+        var K = AXF_DATA.run, D = K.D, n = K.A.count, vis = new Float32Array(n), i, r, P = G.pos;
+        for (r = 0; r < 18; r++) { var m = D.masks[r]; for (i = 0; i < n; i++) if (m.charCodeAt(i) === 49) vis[i]++; }
+        var cells = []; for (i = 0; i < n; i++) cells.push(i);
+        cells.sort(function (a, b) { return vis[b] - vis[a]; });
+        cells = cells.slice(0, A.n);
+        A.f0 = Math.floor(A.r1[1] * 60);
+        kvBase(A, F32, A.big ? 5.0 : 3.6);
+        A.s = Math.min(2 * G.hh * (G.port ? 0.98 : 1.0) / 880, (G.port ? 1010 : 1250) / 900);   /* 세로 화면 · 사람이 화면 폭을 넘지 않게 */
+        var fH = A.f0 + (0.75 + A.fl) * 30, tx = new Float32Array(A.n), ty = new Float32Array(A.n);
+        for (i = 0; i < A.n; i++) { var q = axfSample(K.A, D, cells[i], fH, 0); tx[i] = q[0]; ty[i] = q[1]; }
+        var pr = kvPair(A, tx, ty); A.cell = new Int32Array(A.n); for (i = 0; i < A.n; i++) A.cell[i] = cells[pr[i]];
+        A.pitch = 8 * 1.62 * A.s * K.A.scale;
+      },
+      tgt: function (A, t) {
+        var K = AXF_DATA.run, f = A.f0 + t * 30, D = K.D, ds = A.pitch * 1.1 / G.D;
         for (var i = 0; i < A.n; i++) {
-          var q = cl((P[i][1] - (G.cy - G.hh)) / (2 * G.hh));   /* 0 = 위 · 1 = 아래 */
-          A.rd[i] = 0.2 + q * 0.9 + 0.15 * A.r1[i];
-          A.H[i] = A.m * (360 + 320 * A.r2[i] * k2);
-          A.wx[i] = A.m * k2 * (-60 + 200 * A.r3[i]);
-          A.fs[i] = 3.3 + (1 - q) * 1.5 + 0.12 * A.r2[i];
-          A.ta[i] = A.fs[i] + 0.62;
-          var e = this.e(A, i, A.fs[i]); A.xf[i] = P[i][0] + e[0]; A.yf[i] = P[i][1] + e[1];
-        }
-        A.ord = Array.prototype.slice.call(A.ta).map(function (x, i) { return i; }).sort(function (a, b) { return A.ta[a] - A.ta[b]; }); A.lk = 0;
-      },
-      e: function (A, i, t) {
-        var s = t - A.rd[i]; if (s <= 0) return [0, 0];
-        var u = s / 1.5, e = u < 1 ? Math.pow(u, 1.7) : 1 + 0.2 * EO((s - 1.5) / 2.6);
-        return [A.wx[i] * e + 14 * A.m * Math.sin(A.r1[i] * 6.2832 + e * 2.4) * e, -A.H[i] * e];
-      },
-      pos: function (A, t) {
-        var P = G.pos, X = A.X, Y = A.Y, F = A.F;
-        for (var i = 0; i < A.n; i++) {
-          if (t < A.fs[i]) { var e = this.e(A, i, t); X[i] = P[i][0] + e[0]; Y[i] = P[i][1] + e[1]; F[i] = 0; continue; }
-          var v = (t - A.fs[i]) / 0.62;
-          if (v < 1) { Y[i] = A.yf[i] + (P[i][1] - A.yf[i]) * v * v; X[i] = A.xf[i] + (P[i][0] - A.xf[i]) * EO(v * 1.6); }
-          else { X[i] = P[i][0]; Y[i] = P[i][1]; }
-          F[i] = aFl(t - A.ta[i]);
+          var q = axfSample(K.A, D, A.cell[i], f, 0), m = kvMap(A.s, q[0], q[1]), w = cl(q[2] / (7 * 1.62 * K.A.scale));
+          A.TX[i] = m[0]; A.TY[i] = m[1]; A.TS[i] = ds * (0.25 + 0.75 * w); A.TA[i] = w < 0.08 ? 0 : 1;
         }
       },
-      under: function (A, t) {   /* 떨어지는 점 · 위로 짧은 빗줄기 꼬리 */
-        var P = G.pos, D = G.D, h = D / 2;
-        for (var i = 0; i < A.n; i++) {
-          var v = (t - A.fs[i]) / 0.62; if (v <= 0.08 || v >= 1) continue;
-          for (var k = 1; k <= 2; k++) {
-            var vk = v - k * 0.07; cx.globalAlpha = k === 1 ? 0.38 : 0.16;
-            cx.drawImage(A.spr[i], A.xf[i] + (P[i][0] - A.xf[i]) * EO(vk * 1.6) - h, A.yf[i] + (P[i][1] - A.yf[i]) * vk * vk - h, D, D);
-          }
-        }
-        cx.globalAlpha = 1;
-      },
-      ev: function (A, S, t) {
-        var P = G.pos, step = A.sp >= 1.8 ? 9 : 18;
-        while (A.lk < A.n && A.ta[A.ord[A.lk]] <= t) {   /* 빗방울 튐(500 부터) */
-          var i = A.ord[A.lk];
-          if (A.sp >= 1.3 && A.lk % step === 0) for (var k = 0; k < 2; k++) spark(P[i][0], P[i][1], (RND() - 0.5) * 220, -110 - RND() * 170, 0.4 + RND() * 0.2, 1.4 + RND(), RND() < 0.7 ? 0 : 1, 700, 1.2);
-          A.lk++;
-        }
-        once(S, "home", A.tHome - 0.1, function () { actHome(A, G.cx, G.cy - G.hh * 0.4, 0.8); });
-      }
+      pos: function (A, t) { kvPos(A, t, this.tgt.bind(this)); },
+      ev: function (A, S) { once(S, "home", A.tHome - 0.1, function () { actHome(A, G.cx, G.cy); }); }
     },
-    /* ③ ME가 WE로 · ME 글자의 점이 아래부터 풀려 to 를 지나 WE 로 흘러가 WE 를 촘촘히 채우고 · 같은 길로 돌아와 위부터 다시 ME 가 된다 */
+    /* (04) 점선 구체 · 80행 × 125열 중 2,026점(점선 줄) · 원본처럼 17.13초에 한 바퀴 · 원근(앞 크게 · 뒤 작고 흐리게) */
+    sphere: {
+      setup: function (A, F32) {
+        var K = AXF_DATA.sphere, i, pts = [];
+        for (i = 0; i < K.A.count && pts.length < A.n; i++) if (i % 5 === 0) pts.push(i);
+        for (i = 1; pts.length < A.n; i += 5) pts.push(i);
+        kvBase(A, F32, A.big ? 5.5 : 4.2);
+        A.s = Math.min(G.hw, G.hh) * (G.port ? 1.0 : 0.98) / 442; A.f0 = Math.floor(A.r2[3] * 514);
+        var fH = A.f0 + (0.75 + A.fl) * 30, tx = new Float32Array(A.n), ty = new Float32Array(A.n);
+        for (i = 0; i < A.n; i++) { var q = axfSample(K.A, K.D, pts[i], fH, 0); tx[i] = q[0]; ty[i] = q[1]; }
+        var pr = kvPair(A, tx, ty); A.pt = new Int32Array(A.n); for (i = 0; i < A.n; i++) A.pt[i] = pts[pr[i]];
+        A.zo = new Int32Array(A.n); for (i = 0; i < A.n; i++) A.zo[i] = i; A.zz = new Float32Array(A.n);
+      },
+      tgt: function (A, t) {
+        var K = AXF_DATA.sphere, f = A.f0 + t * 30, ds = 9.5 * A.s * K.A.scale / G.D;
+        for (var i = 0; i < A.n; i++) {
+          var q = axfSample(K.A, K.D, A.pt[i], f, 0), m = kvMap(A.s, q[0], q[1]), z = cl((q[2] / K.A.scale - 3.3) / 2);   /* 0 = 뒤 · 1 = 앞 */
+          A.TX[i] = m[0]; A.TY[i] = m[1]; A.TS[i] = ds * (0.55 + 0.6 * z); A.TA[i] = 0.35 + 0.65 * z; A.zz[i] = z;
+        }
+        if (t > 0.75) zOrder(A.zz, A.zo, A.n, false);
+      },
+      pos: function (A, t) { kvPos(A, t, this.tgt.bind(this)); },
+      ev: function (A, S) {
+        once(S, "lock", 0.75 + A.fl + 0.6, function () { glow(G.cx, G.cy, 1500 * A.a, 1.2, 0.3, false); });
+        once(S, "home", A.tHome - 0.1, function () { actHome(A, G.cx, G.cy); });
+      }
+    }
+  };
+
+  var ACTV = {
+    /* ME가 WE로 · ME 글자의 점이 아래부터 풀려 to 를 지나 WE 로 흘러가 WE 를 촘촘히 채우고 · 같은 길로 돌아와 위부터 다시 ME 가 된다 */
     mewe: {
       setup: function (A, F32) {
         var P = G.pos, me = [], we = [], i;
@@ -636,30 +770,7 @@
         once(S, "home", A.tHome - 0.05, function () { var p = G.partC[0]; actHome(A, p[0], p[1], 0.8); });
       }
     },
-    /* ④ 물결 · 왼쪽에서 오른쪽으로 물결이 지나가며 점이 위로 흩어져 한 바퀴 구르고 · 뒤따르는 물결이 다시 묶는다 */
-    wave: {
-      setup: function (A, F32) {
-        var P = G.pos, x0 = G.cx - G.hw, w = 2 * G.hw; A.dl = F32(); A.vx = F32(); A.vy = F32(); A.lr = F32();
-        for (var i = 0; i < A.n; i++) {
-          A.dl[i] = 0.15 + (P[i][0] - x0) / w * 2.8 + 0.1 * A.r1[i];
-          A.vx[i] = A.m * (20 + 70 * A.r2[i]); A.vy[i] = -A.m * (80 + 170 * A.r3[i]); A.lr[i] = A.m * (22 + 26 * A.r1[i]);
-          A.ta[i] = A.dl[i] + 2.05;
-        }
-      },
-      pos: function (A, t) {
-        var P = G.pos, X = A.X, Y = A.Y, F = A.F;
-        for (var i = 0; i < A.n; i++) {
-          var s = t - A.dl[i], x = P[i][0], y = P[i][1];
-          if (s > 0 && s < 2.05) {
-            var m = s < 0.5 ? EO(s / 0.5) : s < 1.45 ? 1 + 0.1 * (s - 0.5) / 0.95 : 1.1 * (1 - Math.pow((s - 1.45) / 0.6, 2.2)), ph = 6.2832 * ESIO(s / 2.05);
-            x += m * A.vx[i] + A.lr[i] * Math.sin(ph); y += m * A.vy[i] - A.lr[i] * (1 - Math.cos(ph)) * 0.5;
-          } else if (s >= 2.05) { var z = (s - 2.05) / 0.4; if (z < 1) y += 7 * A.m * Math.sin(Math.PI * z) * (1 - z); }
-          X[i] = x; Y[i] = y; F[i] = aFl(t - A.ta[i]);
-        }
-      },
-      ev: function (A, S) { once(S, "home", A.tHome - 0.1, function () { actHome(A, G.cx + G.hw * 0.5, G.cy, 0.8); }); }
-    },
-    /* ⑤ 한 점으로(하나로) · 모든 점이 소용돌이로 빨려 들어가 가운데 하나의 빛이 되고 · 하얀 팡과 함께 다시 제자리로 퍼져 글자가 된다 */
+    /* (01) 한 점으로 · 모든 점이 소용돌이로 빨려 들어가 가운데 하나의 빛이 되고 · 하얀 팡과 함께 다시 제자리로 퍼져 글자가 된다 */
     one: {
       setup: function (A, F32) {
         var P = G.pos; A.tc = A.big ? 2.2 : 1.9; A.tb = A.tc + (A.big ? 1.0 : 0.65); A.r0 = F32(); A.th = F32(); A.ts = F32(); A.sw = F32(); A.od = F32();
@@ -683,8 +794,8 @@
       over: function (A, t) {   /* 가운데 하나의 빛 · 모이는 동안 커지고 터지면 사라진다(맥박 없음) */
         var t0 = A.tc - 0.5; if (t < t0 || t > A.tb + 0.3) return;
         var k = EO((t - t0) / (A.tb - t0)), f = 1 - cl((t - A.tb) / 0.3), s = G.D * (A.big ? 18 : 12) * (0.45 + 0.55 * k), sp = sprites();
-        cx.globalAlpha = 0.95 * f * cl((t - t0) / 0.3); cx.drawImage(sp.wbloom, G.cx - s / 2, G.cy - s / 2, s, s);
-        cx.globalAlpha = f; dot(sp.white, G.cx, G.cy); cx.globalAlpha = 1;
+        cx.globalAlpha = 0.4 * f * cl((t - t0) / 0.3); cx.drawImage(sp.bloom, G.cx - s / 2, G.cy - s / 2, s, s);
+        kvDisc(G.cx, G.cy, s * 0.6, true, f * cl((t - t0) / 0.4)); cx.globalAlpha = 1;   /* v6 · 모인 하나 = (01) 경험의 점(홍보부 3층 점) */
       },
       ev: function (A, S) {
         once(S, "burst", A.tb, function () { pop(G.cx, G.cy, 1.5 * A.a); sphere(G.cx, G.cy, Math.round(240 * A.sp), 900 * A.a, 1.3); });
@@ -692,21 +803,26 @@
       }
     }
   };
+  for (var kvk in KVX) ACTV[kvk] = KVX[kvk];
+
+  /* v6 · 단계 장면을 KV 오브젝트 하나로 크게 한 번 · 500 = (03) 달리는 사람 · 1,000 = (04) 점선 구체 · 2,026 = 2026 점 숫자(digits) */
+  var BIGV = { lv2: "run", lv3: "sphere" };
 
   /* ════════ 혜성 · 스탬프 1개 ════════ */
   var FLY = [], SCH = [];
   function targetFor(k) {
-    if (k < CFG.g1) return CL[k].seed;
+    if (k < LOGO.n) return ORDER[k];   /* v6 · k 번째 스탬프 = 먼 곳부터 고른 k 번째 점(앞 250개 = v5 덩어리 씨앗) · 2,026 뒤는 아무 점 */
     return Math.floor(RND() * LOGO.n);
   }
   function isBig(k) { return CFG.lv.indexOf(k + 1) >= 0; }
-  function launch() {
-    var k = ST.n + FLY.length, ti = targetFor(k), d = G.pos[ti], big = isBig(k);
-    var src = [Math.max(G.xL + 40, Math.min(G.xR - 40, d[0] + (RND() - 0.5) * (G.port ? 700 : 1100))), G.yB + 40];
+  function launch(s) {
+    var k = ST.n + FLY.length, ti = targetFor(k), d = G.pos[ti], big = isBig(k), kind = s && s.kind || "";
+    var top = KIND && KUP[kind];   /* 종류를 보일 때 · 위층에서 받는 스탬프(프로그램 참여 · 계단)는 화면 위에서 내려온다 */
+    var src = [Math.max(G.xL + 40, Math.min(G.xR - 40, d[0] + (RND() - 0.5) * (G.port ? 700 : 1100))), top ? G.yT - 40 : G.yB + 40];
     var c = [src[0] + (d[0] - src[0]) * 0.12, d[1] + (src[1] - d[1]) * 0.42];
     var dur = big ? 2.0 : 1.25 + RND() * 0.45, prev = FLY[FLY.length - 1];
     if (prev) dur = Math.max(dur, prev.t0 + prev.dur - T + 0.06);   /* 앞 혜성보다 먼저 닿지 않게(숫자는 닿는 순서대로) */
-    FLY.push({ k: k, ti: ti, s: src, c: c, d: d, t0: T, dur: dur, big: big });
+    FLY.push({ k: k, ti: ti, s: src, c: c, d: d, t0: T, dur: dur, big: big, kind: kind });
   }
   function bez(f, e) { var iu = 1 - e; return [iu * iu * f.s[0] + 2 * iu * e * f.c[0] + e * e * f.d[0], iu * iu * f.s[1] + 2 * iu * e * f.c[1] + e * e * f.d[1]]; }
   function fe(u) { return 0.3 * u + 0.7 * u * u; }   /* 점점 빨라지며 꽂힌다 */
@@ -732,7 +848,7 @@
   function stepFlights(dt) {
     var hold = SHOW && SHOW.blocks || TLS.due || (SHOW && SCH.length && isBig(ST.n + FLY.length));
     if (hold) SCH.forEach(function (s) { s.t += dt; });
-    else while (SCH.length && SCH[0].t <= T && FLY.length < CFG.maxFly) { SCH.shift(); launch(); }
+    else while (SCH.length && SCH[0].t <= T && FLY.length < CFG.maxFly) launch(SCH.shift());
     while (FLY.length && T - FLY[0].t0 >= FLY[0].dur && canLand(FLY[0]) && (T - FLY[0].t0 - FLY[0].dur < 0.05 || T - ST.hitAt > 0.14)) impact(FLY.shift());   /* 기다리던 혜성은 한꺼번에 말고 0.14초씩 차례로 */
   }
   /* 흩어졌다 모이기 중 · 제 점이 제자리 가까이(점 1.5개 안) 있으면 앉고 · 아니면 글자 자리에서 기다린다(숫자는 닿는 순서대로) */
@@ -747,6 +863,8 @@
     var x = f.d[0], y = f.d[1], lv = ST.lvl, quiet = SHOW && SHOW.own, A = SHOW && SHOW.kind === "act" ? SHOW.act : null, ka = A ? 0.7 : 1;   /* 도는 중에 앉으면 팡을 조금 작게(어수선하지 않게) */
     pop(x, y, (f.big ? 2.6 : lv >= 4 ? 2.1 : 1.7) * ka);
     sphere(x, y, Math.round((f.big ? 200 : lv >= 4 ? 150 : 90) * ka), f.big ? 700 : lv >= 4 ? 560 : 440, lv >= 4 ? 1.3 : 1.0);
+    if (f.k < LOGO.n) { STC = Math.max(STC, f.k + 1); LAY.dirty = true; if (A) actSpr(A); }   /* v6 · 그 점에 경험의 점이 켜진다(영구) */
+    if (KIND && f.kind) kindNote(f);
     if (f.k < CFG.g1) {
       var C = CL[f.k];
       C.dots.forEach(function (i) { lit[i] = 1; ign[i] = T + clDepth[i] * CFG.ignStep; IGN.push(i); });
@@ -804,9 +922,10 @@
     var S = { kind: kind, t0: T, arg: arg, blocks: kind !== "act", own: false, fired: {} };   /* 흩어졌다 모이기만 혜성을 막지 않는다 */
     S.dur = { complete: 10.5, lv2: 5.5, lv4: 12, tl: 15 }[kind] || 6;
     if (kind === "tl") tlSetup(S);
-    if (kind === "lv4") digits();
-    if (kind === "act" || kind === "lv3") {   /* 하나로(Lv3) = 「한 점으로」를 처음 크게 한 번 */
-      S.act = actSetup(kind === "act" ? arg : "one", kind === "lv3"); S.own = true; S.dur = S.act.dur + (kind === "lv3" ? 0.6 : 0);
+    var bv = BIGV[kind];
+    if (kind === "lv4" && !bv) digits();
+    if (kind === "act" || bv) {   /* 단계 장면 = 그 안의 변주를 처음 크게 한 번 */
+      S.act = actSetup(kind === "act" ? arg : bv, kind !== "act"); S.own = true; S.dur = S.act.dur + (kind !== "act" ? 0.6 : 0);
       ACT.seen[S.act.v] = 1; ACT.last = S.act.v;
       if (DEMO && kind === "act" && T > SC.until - 1.5) note("흩어졌다 모이기 · " + ACTN[S.act.v]);
     }
@@ -818,7 +937,9 @@
   function stepShow() {
     if (!SHOW) return;
     var S = SHOW, t = T - S.t0, c = [G.cx, G.cy];
-    if (S.kind === "complete") {
+    if (S.act) {
+      S.own = true; ACTV[S.act.v].ev(S.act, S, t);
+    } else if (S.kind === "complete") {
       S.own = t > 1.55 && t < 6.3;
       once(S, "sweep", 0, function () {
         var ip = G.pos[CL[CFG.g1 - 1].seed], mx = 1;
@@ -831,8 +952,6 @@
     } else if (S.kind === "lv2") {
       [0, 0.55, 1.1].forEach(function (d, k) { once(S, "w" + k, d, function () { wave(c[0], c[1], { sp: 950, w: 90, a: 0.9, R: 1600 }); if (!k) { sphere(c[0], c[1], 320, 700, 1.8); } }); });
       once(S, "w3", 2.6, function () { wave(c[0], c[1], { sp: 950, w: 140, a: 0.7, R: 1600 }); });
-    } else if (S.act) {
-      S.own = true; ACTV[S.act.v].ev(S.act, S, t);
     } else if (S.kind === "lv4") {
       S.own = t > 0.15 && t < 8.2;
       once(S, "p", 0, function () { pop(c[0], c[1], 2); });
@@ -863,13 +982,13 @@
     if (S.kind === "complete" && t >= 6.3 && t < 7.4) {   /* 하양 → 주황으로 식는다 */
       cx.globalAlpha = 1 - ESIO((t - 6.3) / 1.1); for (var j = 0; j < LOGO.n; j++) dot(sp.white, G.pos[j][0], G.pos[j][1]); cx.globalAlpha = 1;
     }
-    if (S.kind === "lv4" && S.own) drawDigits(t);
+    if (S.kind === "lv4" && S.own && !S.act) drawDigits(t);
     if (S.kind === "tl") tlDraw(S, t);
   }
   /* Lv4 · 2026 · 로고 점이 하얀 숫자가 되었다 돌아온다 */
   function digits() {
     if (DIG) return;
-    var w = G.port ? 980 : 1500, h = G.port ? 520 : 700, c = document.createElement("canvas"); c.width = w; c.height = h;
+    var w = G.port ? 980 : 1180, h = G.port ? 520 : 600, c = document.createElement("canvas"); c.width = w; c.height = h;   /* v6 = 왼쪽 글자 열을 덮지 않게 로고 상자 폭 안으로 */
     var g = c.getContext("2d"), fs = 600; g.font = "800 " + fs + "px " + FONT; var mw = g.measureText("2026").width; fs = Math.floor(fs * Math.min(1, (w * 0.96) / mw, (h * 0.95) / (fs * 0.75)));
     g.font = "800 " + fs + "px " + FONT; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = "#fff"; g.fillText("2026", w / 2, h / 2 + fs * 0.04);
     var d = g.getImageData(0, 0, w, h).data, best = null, bd = 1e9;
@@ -1010,7 +1129,11 @@
   }
 
   /* ════════ 글자 · 워드마크 · 숫자 · 다음 목표 · Lv · 규칙 한 줄 · 장면 제목 ════════ */
-  var WM = {}, WMREADY = false;
+  var WM = {}, WMREADY = false, TG = {}, TGREADY = false;
+  function tgLoad() {   /* v6 · 슬로건 두 줄 · 오렌지 · 흰색 */
+    if (typeof AXF_TAGLINE !== "object") return; var n = 0;
+    [["eo", "en", COL.o], ["ew", "en", "#FFFFFF"], ["ko", "ko", COL.o], ["kw", "ko", "#FFFFFF"]].forEach(function (c) { var im = new Image(); im.onload = function () { if (++n === 4) TGREADY = true; }; im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(AXF_TAGLINE[c[1]].replace(/currentColor/g, c[2])); TG[c[0]] = im; });
+  }
   function wmLoad() {
     var src = typeof AXF_WORDMARK === "string" ? AXF_WORDMARK : "", n = 0;
     [["o", COL.o], ["w", "#FFFFFF"]].forEach(function (c) { var im = new Image(); im.onload = function () { if (++n === 2) WMREADY = true; }; im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(src.replace(/currentColor/g, c[1])); WM[c[0]] = im; });
@@ -1074,11 +1197,12 @@
   }
   /* ════════ 진행 링 · 오늘 목표 CFG.goal(2,026) 하나에 대한 %(도넛) · 트랙 어두운 회색 + O100 호 + 둥근 끝 ════════
      목표를 채우면 작은 팡과 함께 가운데 「n%」가 체크(꺾인 흰 선 하나)로 바뀌고 · 그 뒤로는 꽉 찬 링 그대로(숫자만 오른다) */
-  var RING = { v: 0, from: 0, to: 0, t0: -1e4, tl: false, init: false, doneAt: 1e9 };
+  var RING = { v: 0, from: 0, to: 0, t0: -1e4, tl: false, init: false, doneAt: 1e9, pre: false };   /* pre = 1차 완성(250) 전이라 숨어 있었음 · 나타날 때 0 에서 차오른다 */
   function ringStep(n, isTL) {
     var p = cl(n / CFG.goal);
     if (isTL !== RING.tl) { RING.tl = isTL; RING.init = false; }
     if (isTL) { RING.v = p; return p; }                                              /* 다시 보기 · 숫자와 함께 바로 따라간다 */
+    if (!RING.init && RING.pre) { RING.init = true; RING.pre = false; RING.v = RING.from = 0; RING.to = p; RING.t0 = T; RING.doneAt = 1e9; return 0; }   /* v6 · 250 에서 처음 나타날 때 = 0 에서 차오름 */
     if (!RING.init) { RING.init = true; RING.v = RING.from = RING.to = p; RING.t0 = -1e4; RING.doneAt = p >= 1 ? -1e4 : 1e9; return p; }   /* 첫 로드 · 점프 */
     if (p !== RING.to) { RING.from = RING.v; RING.to = p; RING.t0 = T; }
     RING.v = RING.from + (RING.to - RING.from) * EO((T - RING.t0) / 0.55);
@@ -1111,22 +1235,35 @@
     /* 링 이름 · 「목표 2,026」 · 넘으면 「목표 2,026 달성」 · 「목표 2,026 초과 달성」 */
     var dim = org ? "rgba(255,255,255,0.85)" : COL.sub, hot = org ? "#FFFFFF" : COL.o, nm = comma(CFG.goal) + (n > CFG.goal ? " 초과 달성" : done ? " 달성" : "");
     if (R.cap === "left") { text("목표", 500, 26, dim, R.x - d / 2 - 22, R.y - 8, "right"); text(nm, 600, 32, hot, R.x - d / 2 - 22, R.y + 32, "right", 230); }
+    else if (R.cap === "right") { text("목표", 500, 26, dim, R.x + d / 2 + 24, R.y - 8, "left"); text(nm, 600, 32, hot, R.x + d / 2 + 24, R.y + 32, "left", 230); }
     else { var w = text("목표", 500, 28, dim, R.x - d / 2, R.y + d / 2 + 46); text(nm, 600, 32, hot, R.x - d / 2 + w + 12, R.y + d / 2 + 46, "left", 330 - w); }
   }
   /* 큰 장면(1차 완성 · 500 · 하나로 · 목표 달성 · 다시 보기) 동안 진행 링 묶음(링 + 「목표 2,026」)을 0.4초에 지우고 장면이 끝나면 0.6초에 되살린다 · 얼려 둔 링은 돌아올 때 새 값으로 차오른다
      점 숫자 묶음 = 오렌지 뒤집기(1차 완성 0.9~6.3초) · 2026 점 숫자 장면(0~8.3초)에서만 같이 숨는다 · 다시 보기는 숫자가 0부터 치솟으니 남긴다 · 흩어졌다 모이기 · 혜성 중에는 그대로 */
+  /* v6 · 1차 완성(CFG.g1 · 250) 전에는 링 묶음이 없다(숫자만) · 250 혜성이 앉으면 1차 완성 장면이 끝난 뒤 0.6초에 나타나며 0 에서 지금 값으로 차오른다 · setNow 는 바로 맞춘다 */
   var HIDE = { t: 0, rp: 1, np: 1, ring: 1, num: 1, frozen: false };
   function hideStep(S, t) {
     var dt = Math.max(0, Math.min(0.25, T - HIDE.t)); HIDE.t = T;
-    var big = !!S && S.kind !== "act", hn = !!S && (S.kind === "complete" ? t >= 0.9 && t < 6.3 : S.kind === "lv4" ? t < 8.3 : false);
-    HIDE.rp = cl(HIDE.rp + (big ? -dt / 0.4 : dt / 0.6)); HIDE.np = cl(HIDE.np + (hn ? -dt / 0.4 : dt / 0.6));
-    HIDE.ring = ESIO(HIDE.rp); HIDE.num = ESIO(HIDE.np); HIDE.frozen = big;
+    var big = !!S && S.kind !== "act", pre = ST.n < CFG.g1, hn = !!S && (S.kind === "complete" ? t >= 0.9 && t < 6.3 : S.kind === "lv4" ? t < 8.3 : false);
+    if (pre) RING.pre = true;
+    HIDE.rp = cl(HIDE.rp + (big || pre ? -dt / 0.4 : dt / 0.6)); HIDE.np = cl(HIDE.np + (hn ? -dt / 0.4 : dt / 0.6));
+    HIDE.ring = ESIO(HIDE.rp); HIDE.num = ESIO(HIDE.np); HIDE.frozen = big || pre;
   }
   function drawText() {
     AM = 1;
     var org = ORANGE(), S = SHOW, isTL = S && S.kind === "tl", t = S ? T - S.t0 : 0;
     hideStep(S, t);
     if (WMREADY) { var wm = G.wm; cx.drawImage(org ? WM.w : WM.o, wm.x, wm.y, wm.w, wm.w * 179 / 497.6); }
+    if (G.tag && TGREADY) {   /* v6 · 슬로건 두 줄(홍보부 아웃라인 원본) · 영문 줄이 국문 줄보다 크다 · 같은 색(무대 글자색) */
+      var tg = G.tag, he = tg.we * 41.6 / 234, hk = tg.wk * 41.2 / 408, xe = tg.al === "right" ? tg.x - tg.we : tg.x, xk = tg.al === "right" ? tg.x - tg.wk : tg.x;
+      cx.drawImage(org ? TG.ew : TG.eo, xe, tg.y, tg.we, he); cx.drawImage(org ? TG.kw : TG.ko, xk, tg.y + he + tg.gap, tg.wk, hk);
+    }
+    if (KIND && KLAST && G.kind && !(S && S.kind !== "act")) {   /* 큰 장면 · 다시 보기 동안은 숨김 */   /* v6 · 방금 온 스탬프 종류 · 닿을 때 바뀌고 4초 뒤 사라진다(움직이지 않고 투명도만) */
+      var ka = T - KLAST.t0, kk = G.kind, kv = cl(ka / 0.25) * cl((4.2 - ka) / 0.8);
+      if (kv > 0.01) { var kw = text("방금", 500, kk.s * 0.86, org ? "rgba(255,255,255,0.8)" : COL.sub, -9999, kk.y, "left", null, 0); var nw = text(KNAME[KLAST.k] || "", 600, kk.s, "#FFFFFF", -9999, kk.y, "left", null, 0);
+        var tw0 = kw + 14 + nw, x0 = kk.al === "right" ? kk.x - tw0 : kk.al === "center" ? kk.x - tw0 / 2 : kk.x;
+        text("방금", 500, kk.s * 0.86, org ? "rgba(255,255,255,0.8)" : COL.sub, x0, kk.y, "left", null, kv); text(KNAME[KLAST.k] || "", 600, kk.s, org ? "#FFFFFF" : COL.hi, x0 + kw + 14, kk.y, "left", null, kv); }
+    }
     var n = isTL ? tlCount(S, t) : ST.n;
     /* 숫자 묶음 · 점 숫자 + 아래 「오늘 모인 스탬프」(가로 오른쪽 아래 · 세로 왼쪽 아래) · 단계 이름은 장면 제목으로만 */
     var N = G.num; AM = HIDE.num; drawNum(n, isTL, org);
@@ -1135,9 +1272,9 @@
     AM = 1; cx.globalAlpha = 1;
     if (isTL) text("오늘 하루 다시 보기", 600, G.tl.s, COL.o, G.tl.x, G.tl.y, "right", null, cl(t / 0.5) * cl((S.dur - t) / 0.6));
     /* 상태 줄 · 평소에는 없다 · 데모 표시 · 연결이 끊겼을 때만 */
-    var sy = G.st.y; if (DEMO) { text("DEMO · 자동 적립 " + (DM.paused ? "꺼짐" : "켜짐"), 600, G.st.s, org ? "rgba(255,255,255,0.7)" : COL.faint, G.st.x, sy); sy += 32; }
+    var sy = G.st.y; if (DEMO && !CLEAN) { text("DEMO · 자동 적립 " + (DM.paused ? "꺼짐" : "켜짐"), 600, G.st.s, org ? "rgba(255,255,255,0.7)" : COL.faint, G.st.x, sy); sy += 32; }
     if (ST.off) text("연결 다시 시도 중 · 마지막 값 표시", 500, G.st.s, org ? "rgba(255,255,255,0.7)" : COL.faint, G.st.x, sy);
-    if (DEMO) {   /* 데모만 · 위 가운데 작게 = 지금 수 · 다음 경계(또는 입력 중인 수) · 장면 이름 2초 · 사이클 상태 줄(가로 = 왼쪽 · 세로 = 위 가운데) · 운영 화면에는 없다 */
+    if (DEMO && !CLEAN) {   /* 데모만 · 위 가운데 작게 = 지금 수 · 다음 경계(또는 입력 중인 수) · 장면 이름 2초 · 사이클 상태 줄(가로 = 왼쪽 · 세로 = 위 가운데) · 운영 화면에는 없다 */
       var dc = org ? "rgba(255,255,255,0.85)" : COL.sub;
       var Y = G.dm.y, ds = demoStatus(), fc = org ? "rgba(255,255,255,0.7)" : COL.faint;
       text(ENT.s ? "입력 " + comma(+ENT.s) + " · Enter 이동 · Esc 취소" : demoLine(), 600, 24, ENT.s ? "#FFFFFF" : dc, G.FW / 2, Y[0], "center", G.dm.w);
@@ -1147,16 +1284,36 @@
     }
     drawTitle();
   }
+  /* v6 · KV 오브젝트가 된 동안만 · 번호 · 영문 이름 · 국문 뜻(design.md §2 KV 4단계 표기) · 네 단계를 이으면 슬로건의 이야기가 된다 */
+  var KVT = { one: ["(01) Experience", "나의 경험"], ring: ["(02) Connection", "관계의 형성"], run: ["(03) Driven", "AX 과제 추진"], sphere: ["(04) Expand", "우리의 가능성으로 확장"] };
+  function drawKvTitle(S) {
+    var A = S.act, k = KVT[A.v]; if (!k) return;
+    var t = T - S.t0, a0 = A.v === "one" ? A.tc - 0.6 : 0.75 + A.fl + 0.3, a1 = A.v === "one" ? A.tb + 0.5 : A.tOut + 0.4;
+    var a = cl((t - a0) / 0.5) * cl((a1 - t) / 0.5); if (a <= 0) return;
+    var Tt = G.ttl, big = S.kind !== "act", y = Tt.y + (big ? Tt.s2 * 0.9 : 0);
+    text(k[0], 600, G.port ? 32 : 30, COL.o, Tt.x, y, "center", Tt.w, a);
+    text(k[1], 600, G.port ? 40 : 36, "#FFFFFF", Tt.x, y + (G.port ? 52 : 48), "center", Tt.w, a);
+  }
   function drawTitle() {
-    var S = SHOW; if (!S || S.kind === "tl" || S.kind === "act") return;
+    var S = SHOW; if (S && S.act) drawKvTitle(S);
+    if (!S || S.kind === "tl" || S.kind === "act") return;
     var t = T - S.t0, a1, lv = S.kind === "complete" ? 1 : +S.kind.slice(2), l1 = "스탬프 " + comma(CFG.lv[lv - 1]) + "개", l2 = CFG.names[lv];
     if (lv === 1) a1 = cl((t - 1.5) / 0.5) * cl((S.dur - 0.8 - t) / 0.8);
-    else a1 = cl((t - (lv === 4 ? 8.1 : 0.4)) / 0.5) * cl((S.dur - 0.6 - t) / 0.7);
+    else a1 = cl((t - (lv === 4 ? (S.act ? S.act.tEnd : 8.1) : 0.4)) / 0.5) * cl((S.dur - 0.6 - t) / 0.7);
     if (a1 <= 0) return;
     var Tt = G.ttl, org = ORANGE(), al = G.port ? "center" : "center";
     text(l1, 600, Tt.s1, org ? "#FFFFFF" : COL.o, Tt.x, Tt.y - Tt.s2 * 0.95, al, Tt.w, a1);
     text(l2, 700, Tt.s2, "#FFFFFF", Tt.x, Tt.y, al, Tt.w, a1);
   }
+
+  /* ════════ v6 · 방금 온 스탬프 종류(KIND) · 서버 변경 없음 · 공개 집계 kinds 의 종류별 증가분을 섞어 혜성에 붙인다(누가는 모른다 · 사람 정보 없음) ════════ */
+  var KNAME = { lg: "첫 로그인", qz: "AX 퀴즈", p4: "미니 게임", p2: "AX PLAY", p5: "아이디어 한 줄", p3: "프로그램 참여", st: "계단", sv: "설문" };
+  var KUP = { p3: 1, st: 1 };   /* 위층(10F · 17F · 18F · 계단)에서 받는 것 = 화면 위에서 내려온다 */
+  var KQ = [], KLAST = null, KPREV = null;
+  function kindsIn(list) { for (var i = list.length - 1; i > 0; i--) { var j = Math.floor(RND() * (i + 1)), x = list[i]; list[i] = list[j]; list[j] = x; } KQ = KQ.concat(list); if (KQ.length > 600) KQ.splice(0, KQ.length - 600); }
+  function kindNote(f) { KLAST = { k: f.kind, t0: T }; }
+  var DKW = [["lg", 25], ["qz", 15], ["p4", 10], ["p2", 10], ["p5", 12], ["p3", 12], ["st", 8], ["sv", 8]];
+  function demoKinds(n) { var out = []; for (var i = 0; i < n; i++) { var r = DM.rnd() * 100, a = 0; for (var j = 0; j < DKW.length; j++) { a += DKW[j][1]; if (r < a) { out.push(DKW[j][0]); break; } } } return out; }
 
   /* ════════ 데이터 · 15초 묶음을 고르게 나눠 혜성으로 ════════ */
   function took(total) {
@@ -1164,13 +1321,15 @@
     var add = total - ST.target; ST.target = total; if (add <= 0) return;
     var q = SCH.length + add;
     if (q > CFG.maxQueue) { var over = q - CFG.maxQueue; jumpBy(FLY.length + over); FLY = []; q = CFG.maxQueue; }
-    var W = CFG.pollSec * CFG.spread, n = q, t0 = T; SCH = [];
+    var W = CFG.pollSec * CFG.spread, n = q, t0 = T; KQ = SCH.map(function (e) { return e.kind; }).filter(Boolean).concat(KQ); SCH = [];
     if (n <= CFG.swarmAt) for (var a = 0; a < n; a++) SCH.push({ t: t0 + (a + 0.5) * W / n });
     else { var per = Math.ceil(n / CFG.swarmAt); for (var b = 0; b < n; b++) SCH.push({ t: t0 + (Math.floor(b / per) + 0.5) * W / CFG.swarmAt + (b % per) * CFG.swarmGap }); }
+    SCH.forEach(function (e) { if (!e.kind && KQ.length) e.kind = KQ.shift(); });
   }
   function burstIn(n, win) {   /* 줄 끝에 이어 붙인다(앞 혜성보다 먼저 닿지 않게) */
     ST.target += n; var b = Math.max(T + 0.3, SCH.length ? SCH[SCH.length - 1].t + 0.06 : 0);
-    for (var a = 0; a < n; a++) SCH.push({ t: b + a * win / Math.max(1, n) });
+    var ks = demoKinds(n);
+    for (var a = 0; a < n; a++) SCH.push({ t: b + a * win / Math.max(1, n), kind: ks[a] });
   }
   function jumpBy(m) { RING.init = false; var n = ST.n + m; ST.n = n; setLit(n); ST.lvl = levelOf(n); }
   /* 데모 빨리 감기 · 혜성 없이 그 수로 바로(숫자 · 링은 평소처럼 오르고 · 1막이면 새로 앉은 씨앗만 하얗게 번쩍) · 흩어졌다 모이기 중이면 그 그림도 맞춘다 */
@@ -1187,7 +1346,7 @@
     else jumpTo(ST.target);
   }
   function setNow(n) {
-    n = Math.max(0, n); RING.init = false; NUM.reset = true; FF.at = 0;
+    n = Math.max(0, n); RING.init = false; RING.pre = false; NUM.reset = true; FF.at = 0; HIDE.rp = HIDE.ring = n >= CFG.g1 ? 1 : 0;   /* v6 · 링 묶음은 250 전 숨김 · 바로 맞춤 */
     FLY = []; SCH = []; WAVES = []; IGN = []; FL = []; GLOWS = []; pn = 0; SHOW = null; STG.base = "black"; STG.to = null;
     ST.n = ST.target = n; ST.lvl = levelOf(n); ST.hitAt = -1e4;
     ACT.due = false; ACT.force = ""; ACT.next = T + actGap();   /* 다시 보기는 240초 뒤라 겹치지 않는다 */
@@ -1196,6 +1355,8 @@
   /* 운영 서버 읽기 · 공개 집계 stats(관리코드 없음) · v4c 와 같은 방식 */
   var IDS = ["lg", "qz", "p4", "p2", "p5", "p3", "st", "sv"];
   function stampsOf(k) { var n = 0; IDS.forEach(function (id) { n += (+k["stamp:" + id] || 0) - (+k["unstamp:" + id] || 0); }); return Math.max(0, n); }
+  var KPER = null;   /* v6 · 종류별 지난 값 · 늘어난 몫만 종류 줄에 넣는다 */
+  function kindsOf(k) { var cur = {}, out = []; IDS.forEach(function (id) { cur[id] = Math.max(0, (+k["stamp:" + id] || 0) - (+k["unstamp:" + id] || 0)); if (KPER) for (var a = KPER[id] || 0; a < cur[id]; a++) out.push(id); }); KPER = cur; if (out.length) kindsIn(out); }
   function jsonp(params, done) {
     var url = window.AXF_SERVER || "";
     if (!/^https:\/\//.test(url)) { done({ ok: false, reason: "noserver" }); return; }
@@ -1217,7 +1378,7 @@
   }
   function poll() {
     jsonp({ action: "stats" }, function (res) {
-      if (res && res.ok && res.kinds) { POLL.fails = 0; ST.off = false; ST.polls++; gotTotal(stampsOf(res.kinds)); }
+      if (res && res.ok && res.kinds) { POLL.fails = 0; ST.off = false; ST.polls++; kindsOf(res.kinds); gotTotal(stampsOf(res.kinds)); }
       else { POLL.fails++; if (POLL.fails >= 2) ST.off = true; }   /* 끊김 · 화면은 마지막 값 그대로 */
       var wait = POLL.fails ? Math.min(60, CFG.pollSec * Math.pow(2, Math.min(POLL.fails - 1, 2))) : CFG.pollSec;
       setTimeout(poll, wait * 1000);
@@ -1229,7 +1390,7 @@
     if (!DEMO || DM.paused || T < DM.next) return;
     DM.next = T + CFG.pollSec;
     var mean = DM.rate / 4, add = Math.max(0, Math.round(mean + (DM.rnd() - 0.5) * mean * 1.2));
-    if (add) took(ST.target + add);
+    if (add) { kindsIn(demoKinds(add)); took(ST.target + add); }
   }
 
   /* ════════ 입력 · 전체 화면 · 꺼짐 방지 · 시점 점프 · T · H · 가짜 적립은 ?demo=1 에서만 ════════ */
@@ -1264,14 +1425,14 @@
     return s + " · 목표 " + comma(CFG.goal) + " 넘음(숫자만 오른다)";
   }
   /* 데모 상태 줄 · 단계 · 열린 움직임 · 다음 흩어졌다 모이기 · 다음 다시 보기 · 지금 장면 · 사이클 빠르기(운영 화면에는 없다) */
-  var LOOK = [["불씨 · 빛줄기 7.5초마다", "흩어졌다 모이기 3종(작게)"], ["로고 전부 점화", "흩어졌다 모이기 3종"], ["빛 번짐 짙게 · 끝나면 물결", "흩어졌다 모이기 4종(+물결)"],
-    ["하얀 씨앗 별 · 끝나면 잔광", "흩어졌다 모이기 5종(+한 점으로)"], ["흰 테두리 빛 · 끝나면 잔광", "흩어졌다 모이기 5종(가장 크게)"]];
-  var SHOWN = { complete: "1차 완성 장면", lv2: "물결 장면", lv3: "하나로 장면", lv4: "목표 달성 장면", tl: "오늘 하루 다시 보기" };
+  var LOOK6 = ["주황 · 빛줄기 7.5초마다 · 링 없음(숫자만)", "로고 전부 점화 · 링 나타남", "끝나면 물결", "끝나면 잔광", "로고 전체가 3층 점 · 끝나면 잔광"];
+  var SHOWN = { complete: "1차 완성 장면", lv2: "추진 장면(달리는 사람)", lv3: "확장 장면(점선 구체)", lv4: "목표 달성 장면", tl: "오늘 하루 다시 보기" };
   function sec(s) { s = Math.max(0, Math.round(s)); return s >= 60 ? Math.floor(s / 60) + "분 " + (s % 60) + "초" : s + "초"; }
   function demoStatus() {   /* 7줄 · 단계 · 보이는 차이 · 열린 흩어졌다 모이기와 간격 · 지금 · 다음 흩어졌다 모이기 · 다음 다시 보기 · 사이클 */
     var lv = Math.min(4, ST.lvl), e = CFG.actEvery[lv], S = SHOW, now = !S ? (FLY.length ? "혜성" : "쉼") : S.kind === "act" ? "흩어졌다 모이기 · " + ACTN[S.act.v] : SHOWN[S.kind] || S.kind;
     var a = S && S.kind === "act" ? "지금" : ACT.due ? "곧" : sec(ACT.next - T), b = ST.n < CFG.tlMin ? "없음(" + CFG.tlMin + "개부터)" : S && S.kind === "tl" ? "지금" : TLS.due ? "곧" : sec(TLS.next - T);
-    return ["단계 " + lv + " · " + CFG.names[lv], "혜성 · " + LOOK[lv][0], LOOK[lv][1] + " · " + Math.round(cy(e[0])) + "~" + Math.round(cy(e[1])) + "초마다",
+    var pool = actPool(lv).filter(function (v, k, a) { return a.indexOf(v) === k; }).map(function (v) { return ACTN[v]; });
+    return ["단계 " + lv + " · " + CFG.names[lv], "혜성 · " + LOOK6[lv] + " · 경험의 점 " + comma(STC) + " / " + comma(LOGO.n), "흩어졌다 모이기 " + pool.length + "종(" + pool.join(" · ") + ") · " + Math.round(cy(e[0])) + "~" + Math.round(cy(e[1])) + "초마다",
       "지금 · " + now, "다음 흩어졌다 모이기 · " + a, "다음 다시 보기 · " + b, "사이클 · " + (CYC > 1 ? "×" + CYC + " 빠르게(S)" : "실제 속도(S)")];
   }
   function cycKey() {
@@ -1292,27 +1453,21 @@
   "0123456789".split("").forEach(function (d) { DKEYS[d] = function () { ENT.s = (ENT.s + d).replace(/^0+(?=\d)/, "").slice(0, 5); }; });
   /* 장면 목록 · [ ] 로 앞뒤(양 끝에서 멈춤) · 위 가운데 둘째 줄에 「3 / 20 · 이름」 2초 */
   var SCENES = [
-    ["불씨 0개", function () { goTo(0); }],
+    ["0개", function () { goTo(0); }],
     ["37개", function () { goTo(34); burstIn(3, 5); }],
-    ["37개 · 터졌다 되감기", function () { goTo(37); ACT.force = "burst"; }],
-    ["37개 · 흩날렸다 내려앉기", function () { goTo(37); ACT.force = "dust"; }],
+    ["37개 · " + ACTN.one, function () { goTo(37); ACT.force = "one"; }],
     ["37개 · ME가 WE로", function () { goTo(37); ACT.force = "mewe"; }],
-    ["120개", function () { goTo(120); }],
     ["1차 완성 순간(250)", function () { moment(CFG.g1); }],
-    ["물결 순간(500)", function () { moment(CFG.lv[1]); }],
-    ["600개", function () { goTo(600); }],
-    ["하나로 순간(1,000)", function () { moment(CFG.lv[2]); }],
-    ["1,200개", function () { goTo(1200); }],
-    ["1,200개 · 터졌다 되감기", function () { goTo(1200); ACT.force = "burst"; }],
-    ["1,200개 · 흩날렸다 내려앉기", function () { goTo(1200); ACT.force = "dust"; }],
-    ["1,200개 · ME가 WE로", function () { goTo(1200); ACT.force = "mewe"; }],
-    ["1,200개 · 물결", function () { goTo(1200); ACT.force = "wave"; }],
-    ["1,200개 · 한 점으로", function () { goTo(1200); ACT.force = "one"; }],
+    ["400개 · " + ACTN.ring, function () { goTo(400); ACT.force = "ring"; }],
+    [CFG.names[2] + " 순간(500)", function () { moment(CFG.lv[1]); }],
+    [CFG.names[3] + " 순간(1,000)", function () { moment(CFG.lv[2]); }],
+    ["1,200개", function () { goTo(1200); }]
+  ].concat(ACTALL.map(function (v) { return ["1,200개 · " + ACTN[v], function () { goTo(1200); ACT.force = v; }]; })).concat([
     ["목표 달성 순간(2,026)", function () { moment(CFG.goal); }],
     ["2,500개", function () { goTo(2500); }],
-    ["2,500개 · 한 점으로", function () { goTo(2500); ACT.force = "one"; }],
+    ["2,500개 · " + ACTN.sphere, function () { goTo(2500); ACT.force = "sphere"; }],
     ["다시 보기", function () { goTo(1500); startShow("tl"); }]
-  ];
+  ]);
   function sceneGo(d) {
     var i = SC.i + d; if (i < 0 || i >= SCENES.length) return;
     SC.i = i; note((i + 1) + " / " + SCENES.length + " · " + SCENES[i][0]); SCENES[i][1]();
@@ -1348,7 +1503,10 @@
     drawStage();
     logical();
     var own = SHOW && SHOW.own;
-    if (!own) { ident(); cx.drawImage(LAY.logo, 0, 0); logical(); safe(drawEmberFlow); safe(drawIgnite); safe(drawWaves); safe(drawGlint); }
+    if (!own) {
+      ident(); cx.drawImage(LAY.logo, 0, 0); logical();
+      safe(drawEmberFlow); safe(drawIgnite); safe(drawWaves); safe(drawGlint);
+    }
     safe(drawShow);
     if (own && SHOW.kind !== "tl") safe(drawWaves);
     safe(drawFlights); drawParticles(); drawGlows(); safe(drawText);
@@ -1361,7 +1519,7 @@
   /* ════════ 시작 ════════ */
   buildLogo(); buildClusters(CFG.g1);
   lit = new Uint8Array(LOGO.n); ign = new Float32Array(LOGO.n).fill(-1e9); flashT = new Float32Array(LOGO.n).fill(-1e9);
-  wmLoad(); resize();
+  wmLoad(); tgLoad(); resize();
   window.addEventListener("resize", function () { if (!REC) resize(); });
   if (!DEMO) { var last = load("axfWall.last", null); setNow(last && last.n >= 0 ? Math.max(0, +last.n || 0) : 0); }   /* 서버 응답 전 · 마지막 값으로 바로 */
   else setNow(0);
@@ -1377,7 +1535,7 @@
   window.__wall = {
     ready: fontP.then(function () { return new Promise(function (r) { var n = 0; (function w() { if (WMREADY || ++n > 300) r(); else setTimeout(w, 30); })(); }); }),
     step: function (dt) { frame(dt); },
-    st: function () { return { n: ST.n, target: ST.target, lvl: ST.lvl, litC: litC, fly: FLY.length, queued: SCH.length, show: SHOW ? SHOW.kind : null, act: SHOW && SHOW.act ? SHOW.act.v : null, actIn: +(ACT.next - T).toFixed(1), tlIn: +(TLS.next - T).toFixed(1), ring: +RING.v.toFixed(4), particles: pn, port: G.port, D: +G.D.toFixed(2), clusters: CL.length, groups: LOGO.groups, off: ST.off, polls: ST.polls, demo: DEMO, paused: DM.paused }; },
+    st: function () { return { n: ST.n, target: ST.target, lvl: ST.lvl, litC: litC, fly: FLY.length, queued: SCH.length, show: SHOW ? SHOW.kind : null, act: SHOW && SHOW.act ? SHOW.act.v : null, actIn: +(ACT.next - T).toFixed(1), tlIn: +(TLS.next - T).toFixed(1), ring: +RING.v.toFixed(4), ringA: +HIDE.ring.toFixed(3), particles: pn, port: G.port, D: +G.D.toFixed(2), clusters: CL.length, groups: LOGO.groups, off: ST.off, polls: ST.polls, demo: DEMO, paused: DM.paused }; },
     set: function (n) { setNow(n); }, moment: moment, burst: burstIn, batch: function (n) { took(ST.target + n); },
     tl: function () { startShow("tl"); }, hold: function () { DM.paused = true; }, tlNext: function (s) { TLS.next = T + s; },
     act: function (v) { ACT.force = v || actPick(); }, actNext: function (s) { ACT.next = T + s; }, log: function () { return ACT.log; }, go: function (n) { goTo(n); }, plus: function (m) { plus(m); },
