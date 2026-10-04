@@ -323,3 +323,19 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .mbox video { display: block; width: 2px; height: 2px; }
 #axTour3 video.bd-mv { display: block; mix-blend-mode: screen; }
 #axTour3 video.bd-mv:not(.on) { position: absolute; opacity: .01; pointer-events: none; }
+
+/* v5.54 자세히 보기 단추 하나(사용자 261004 「판 앞에 가까이 가면 투명한 돋보기 버튼 · 기존 자세히 보기와 싸우지 않게 · 돌아다니는 데 방해되지 않게」)
+ * 조작부(달리기 · 돌기 · 점프) 바로 위 오른쪽 고정 자리(--lookB = 조작부 위 10px · tour3.js resize) · 반투명 흰 알약 + 주황 동그라미 돋보기 · 스태프 말풍선은 한마디만
+ * 걷는 동안 = 돋보기 동그라미만 작고 흐리게 · 멈추면 「자세히 보기」 글자까지 또렷하게 · 처음 또렷해질 때 한 번 주황 테가 퍼짐 · 움직임 줄이기 = 바뀜 효과 없음 */
+#axTour3 .look { position: absolute; right: 8px; bottom: var(--lookB, 214px); z-index: 6; display: flex; align-items: center; height: 48px; padding: 0 16px 0 7px; border-radius: 999px; background: rgba(255, 255, 255, .74); -webkit-backdrop-filter: blur(10px) saturate(1.2); backdrop-filter: blur(10px) saturate(1.2); box-shadow: inset 0 0 0 1.5px rgba(255, 127, 50, .6), 0 4px 14px rgba(25, 31, 40, .14); color: var(--ink); font-size: 16px; line-height: 22px; font-weight: 700; white-space: nowrap; transform-origin: 100% 50%; transition: opacity .2s, transform .2s, padding .2s; -webkit-tap-highlight-color: transparent; }
+#axTour3 .look .lk { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--brand); color: #FFFFFF; }
+#axTour3 .look .lt { display: block; max-width: 7em; margin-left: 8px; overflow: hidden; transition: max-width .2s, opacity .2s, margin .2s; }
+#axTour3 .look.walk { opacity: .55; transform: scale(.86); padding-right: 7px; }
+#axTour3 .look.walk .lt { max-width: 0; margin-left: 0; opacity: 0; }
+#axTour3 .look:active { transform: scale(.96); }
+#axTour3 .look.pop .lk { animation: lookPop .6s cubic-bezier(.2, .8, .2, 1); }
+#axTour3 .look .kh { right: -4px; top: -9px; }
+@keyframes lookPop { 0% { box-shadow: 0 0 0 0 rgba(255, 127, 50, .6); } 100% { box-shadow: 0 0 0 12px rgba(255, 127, 50, 0); } }
+#axTour3.rm .look, #axTour3.rm .look .lt { transition: none; }
+#axTour3.rm .look.pop .lk { animation: none; }
+@media (prefers-reduced-motion: reduce) { #axTour3 .look, #axTour3 .look .lt { transition: none; } #axTour3 .look.pop .lk { animation: none; } }
