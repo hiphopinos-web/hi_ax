@@ -35,7 +35,7 @@
 <div id="dot"><i></i></div>
 <div id="cp">
   <h2>혼잡도 계수 설정 <span style="color:#888;font-weight:400">(C 닫기)</span></h2>
-  <label><input type="checkbox" id="cpOn"> 계수 켜기 (사람 수만 셈, 영상 저장·전송 없음)</label>
+  <label><input type="checkbox" id="cpOn"> 계수 켜기 (사람 수만 셈, 영상 저장·전송 없음 · 새로고침하면 꺼짐 · 혼잡도는 계수기에서 잡는다)</label>
   <label>위치 이름 (기기마다 다르게 · 예: 1F 로비)</label><input type="text" id="cpName" maxlength="12" placeholder="비우면 AX magic 1">
   <div class="st" id="cpFull"></div>
   <label>계수용 카메라</label><select id="cpDev"><option value="">메인 카메라 (게임과 같은 1대)</option></select>
@@ -2128,7 +2128,10 @@ function drawCrowd() {   // 디버그(D)나 설정 패널이 열려 있을 때�
   c.save(); c.font = '600 26px ' + FONT; c.fillStyle = '#fff'; c.textAlign = 'left'; c.textBaseline = 'top'; c.shadowColor = 'rgba(0,0,0,.8)'; c.shadowBlur = 6;
   c.fillText(crowd.on ? '계수 ' + cr.total + '명 · ' + (cr.ms | 0) + 'ms · 실패 ' + cr.fails + ' · 마지막 계수 ' + (cr.at ? new Date(cr.at).toLocaleTimeString('ko-KR') : '없음') + ' · 마지막 전송 ' + (cr.srv && cr.srv.lastOk ? new Date(cr.srv.lastOk).toLocaleTimeString('ko-KR') : '없음') + (crowd.zones.length ? ' · ' + crowdRows().map(r => r.name + ' ' + r.count).join(' / ') : '') + ' · ' + st : '계수 꺼짐', 20, 180); c.restore();
 }
-if (crowd.on) { cr.since = Date.now(); $('cpOn').checked = true; crowdInit().then(() => crSchedule(1500)); }   // AX magic: 저장된 설정이 켜져 있으면 사람이 안 눌러도 자동 시작
+/* 사용자 261004: 혼잡도 데이터는 계수기(crowd/)에서만 잡는다. AX magic 은 계수 · 전송을 기본으로 하지 않는다.
+   계수 코드와 C 패널은 보존하되, 열 때마다 꺼진 채로 시작한다(저장된 켜짐 · 공용 보낼 곳 · 등급코드를 이어받아 저절로 계수 · 전송을 시작하는 길이 없다).
+   켜려면 C 패널에서 사람이 직접 체크한다(새로고침하면 다시 꺼짐). */
+crowd.on = false; crSave();
 
 /* ---------------- 입력 키 ----------------
    P 건너뛰기(연습 중 → 준비 화면, 준비 화면 → 카운트다운, 대기·선택이면 ME로 바로 카운트다운) · M ME 시작 · W WE 시작 · Esc 대기
