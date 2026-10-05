@@ -54,6 +54,11 @@
   /* v7 · 누적 루프 박자(초) · 홍보부 광고판(앱 AXF_SEQ · 사이 1.5 · 구체 6 · 달리기 4)과 같은 단위 · logo = 로고로 쉬는 시간 · ign = 점등 · tr = 오브젝트 사이 · big = 새로 열린 동작 처음 한 번 더 */
   CFG.loop = { logo: 5, ign: 1.5, tr: 1.5, sphere: 6, run: 4, flower: 4.5, big: 2.5 };
   CFG.dim = 0.2;                                 /* 점등 직전 · 경험의 점이 아닌 점의 밝기(투명도) */
+  /* v7 수정(261005) · 경험의 점 순서 · edge = 윤곽 먼저 → 안으로(기본) · spine = 뼈대 먼저 · seed = 옛 흩어진 씨앗(비교용) · 펜 한 번에 이어 그리는 점 수
+     핵(Light Purple) · 경험의 점이 이 수 전에는 숨기고(바깥 주황 + Hi Orange 두 겹) · 이 수까지 서서히 드러낸다(점 크기는 그대로) */
+  CFG.exp = /^(edge|spine|seed)$/.test(Q.exp || "") ? Q.exp : "edge";
+  CFG.chunk = 4;
+  CFG.coreAt = CFG.exp === "seed" ? [0, 0] : [250, 600];
   CFG.pxCap = Q.px === "v6" ? 2560 * 1440 : 3840 * 2160;   /* 캔버스 픽셀 상한 · 4K 1:1(?px=v6 = 비교용 옛 상한) */
   var CYC = 1;                                     /* 사이클 빠르기 · 데모 S 키로 ×6(흩어졌다 모이기 · 다시 보기 주기만 · 혜성 박자는 그대로) · 운영은 늘 1 */
   function cy(s) { return s / CYC; }
@@ -155,27 +160,72 @@
   }
   /* 덩어리 · 먼 곳부터 고르게(farthest point) 고른 g1 개의 씨앗 + 격자 이웃으로 동시에 번져 나눈 영역 · 씨앗 순서 = 켜지는 순서 */
   var CL = [], clOf = null, clDepth = null, ORDER = null, RANK = null;
-  function buildClusters(K) {
-    var n = LOGO.n, P = LOGO.P, i, mx = 0, my = 0;
-    P.forEach(function (p) { mx += p[0]; my += p[1]; }); mx /= n; my /= n;
-    var dmin = new Float64Array(n).fill(1e18), cur = 0, bd = 1e18, seeds = [], used = new Uint8Array(n);
-    for (i = 0; i < n; i++) { var d0 = (P[i][0] - mx) * (P[i][0] - mx) + (P[i][1] - my) * (P[i][1] - my); if (d0 < bd) { bd = d0; cur = i; } }
-    var jr = mulberry(7);
-    /* v6 · 2,026점 전부를 먼 곳부터 고른 순서(ORDER) = 스탬프 k 번째가 앉는 점 · 앞 K 개가 v5 의 덩어리 씨앗과 같다 */
-    ORDER = []; RANK = new Int32Array(n);
-    for (var k = 0; k < n; k++) {
-      ORDER.push(cur); RANK[cur] = k; used[cur] = 1; if (k < K) seeds.push(cur);
-      var best = -1, bv = -1;
-      for (i = 0; i < n; i++) {
-        if (used[i]) continue;
-        var dx = P[i][0] - P[cur][0], dy = P[i][1] - P[cur][1], d = dx * dx + dy * dy;
-        if (d < dmin[i]) dmin[i] = d;
-        var v = dmin[i] * (0.85 + 0.3 * jr());   /* 조금 흔들어 격자처럼 딱딱한 순서를 피한다 */
-        if (v > bv) { bv = v; best = i; }
+  /* v7 수정(261005) · 경험의 점 순서 = 윤곽 먼저 → 안으로(v4b edge) · 외딴 밝은 점이 없게
+     겹 = 겉(상하좌우 이웃이 하나라도 빈 점)에서 몇 걸음 안쪽인지 · 겹 0(윤곽) 전부 → 겹 1 → …
+     겹 안에서는 글자(심볼 묶음 6개 · M e t o W e)마다 펜 하나가 이웃으로만 걸으며 이어 그린다 · 펜은 CFG.chunk 점씩 돌아가며 = 모든 글자에서 동시에 자란다(글자 하나씩 완성 아님)
+     37개 = 글자마다 짧은 선 · 600개쯤 = ME to WE 윤곽 전체 · 그 뒤 획이 안으로 굵어진다 · ?exp=spine = 획 한가운데 뼈대 먼저 · ?exp=seed = 옛 순서(먼 곳부터 흩어진 씨앗 · 비교용) */
+  function expOrder(mode) {
+    var n = LOGO.n, P = LOGO.P, n8 = LOGO.n8, R4 = LOGO.pitch * 1.2, n4 = [], i, srf = [];
+    for (i = 0; i < n; i++) n4.push(n8[i].filter(function (j) { var dx = P[i][0] - P[j][0], dy = P[i][1] - P[j][1]; return dx * dx + dy * dy <= R4 * R4; }));
+    var bfs = function (seeds) { var d = new Int32Array(n).fill(-1), q = seeds.slice(), h = 0; seeds.forEach(function (s) { d[s] = 0; }); while (h < q.length) { var a = q[h++]; n4[a].forEach(function (b) { if (d[b] < 0) { d[b] = d[a] + 1; q.push(b); } }); } for (var k = 0; k < n; k++) if (d[k] < 0) d[k] = 0; return d; };
+    for (i = 0; i < n; i++) if (n4[i].length < 4) srf.push(i);
+    var dep = bfs(srf);
+    if (mode === "spine") { var ridge = []; for (i = 0; i < n; i++) { var top = true; n8[i].forEach(function (b) { if (dep[b] > dep[i]) top = false; }); if (top) ridge.push(i); } dep = bfs(ridge); }
+    /* 한 글자 한 겹을 한 줄로 꿴다 · 왼쪽 위에서 시작 · 상하좌우 이웃 중 남은 이웃이 적은 쪽(윤곽을 따라감) · 막히면 가장 가까운 남은 점에서 다시 */
+    var trace = function (ids) {
+      var left = {}, cnt = ids.length, seq = [], cur = ids[0];
+      ids.forEach(function (k) { left[k] = 1; if (P[k][1] < P[cur][1] - 0.01 || (Math.abs(P[k][1] - P[cur][1]) <= 0.01 && P[k][0] < P[cur][0])) cur = k; });
+      var deg = function (b) { var c = 0; n8[b].forEach(function (x) { if (left[x]) c++; }); return c; };
+      for (;;) {
+        seq.push(cur); delete left[cur]; if (!--cnt) break;
+        var cand = n4[cur].filter(function (b) { return left[b]; });
+        if (!cand.length) cand = n8[cur].filter(function (b) { return left[b]; });
+        if (!cand.length) {
+          var best = -1, bd = 1e18;
+          Object.keys(left).forEach(function (s) { var k = +s, dx = P[k][0] - P[cur][0], dy = P[k][1] - P[cur][1], d = dx * dx + dy * dy; if (d < bd) { bd = d; best = k; } });
+          cur = best; continue;
+        }
+        cand.sort(function (a, b) { return deg(a) - deg(b) || a - b; }); cur = cand[0];
       }
-      cur = best;
+      return seq;
+    };
+    var mxD = 0, out = []; for (i = 0; i < n; i++) mxD = Math.max(mxD, dep[i]);
+    for (var L = 0; L <= mxD; L++) {
+      var seqs = [];
+      for (var g = 0; g < Math.max(1, LOGO.groups); g++) { var ids = []; for (i = 0; i < n; i++) if (dep[i] === L && (LOGO.g[i] === g || LOGO.groups < 1)) ids.push(i); if (ids.length) seqs.push(trace(ids)); }
+      var at = seqs.map(function () { return 0; }), more = true, C = CFG.chunk;
+      while (more) { more = false; seqs.forEach(function (q, k) { for (var c = 0; c < C && at[k] < q.length; c++) out.push(q[at[k]++]); if (at[k] < q.length) more = true; }); }
     }
-    clOf = new Int32Array(n).fill(-1); clDepth = new Int32Array(n);
+    LOGO.dep = dep; LOGO.ring0 = 0; for (i = 0; i < n; i++) if (dep[i] === 0) LOGO.ring0++;
+    return out;
+  }
+  function buildClusters(K) {
+    var n = LOGO.n, P = LOGO.P, i, mx = 0, my = 0, k;
+    P.forEach(function (p) { mx += p[0]; my += p[1]; }); mx /= n; my /= n;
+    var seeds = [], OLD = CFG.exp === "seed";
+    ORDER = []; RANK = new Int32Array(n);
+    if (!OLD) { ORDER = expOrder(CFG.exp); ORDER.forEach(function (id, q) { RANK[id] = q; }); seeds = ORDER.slice(0, K); }
+    else {
+      var dmin = new Float64Array(n).fill(1e18), cur = 0, bd = 1e18, used = new Uint8Array(n);
+      for (i = 0; i < n; i++) { var d0 = (P[i][0] - mx) * (P[i][0] - mx) + (P[i][1] - my) * (P[i][1] - my); if (d0 < bd) { bd = d0; cur = i; } }
+      var jr = mulberry(7);
+      /* (옛 v6) 2,026점 전부를 먼 곳부터 고른 순서 · 앞 K 개가 v5 의 덩어리 씨앗과 같다 */
+      for (k = 0; k < n; k++) {
+        ORDER.push(cur); RANK[cur] = k; used[cur] = 1; if (k < K) seeds.push(cur);
+        var best = -1, bv = -1;
+        for (i = 0; i < n; i++) {
+          if (used[i]) continue;
+          var dx = P[i][0] - P[cur][0], dy = P[i][1] - P[cur][1], d = dx * dx + dy * dy;
+          if (d < dmin[i]) dmin[i] = d;
+          var v = dmin[i] * (0.85 + 0.3 * jr());   /* 조금 흔들어 격자처럼 딱딱한 순서를 피한다 */
+          if (v > bv) { bv = v; best = i; }
+        }
+        cur = best;
+      }
+    }
+    /* 덩어리 · 윤곽 순서에서는 씨앗(= 경험의 점) 바로 둘레(점 1.5칸 안)만 · 이어진 선을 따라 은은한 띠가 된다 · 옛 순서는 로고 전체를 나눈 영역 */
+    var lim = OLD ? 1e18 : LOGO.pitch * 1.5;
+    clOf = new Int32Array(n).fill(-1); clDepth = new Int32Array(n).fill(9);
     /* 이웃으로만 번지되 씨앗에서 직선거리가 가까운 쪽이 먼저 차지한다(둥근 덩어리) */
     var key = new Float64Array(n).fill(1e18), hp = [], done = new Uint8Array(n);
     var push = function (d, i, k) { hp.push([d, i, k]); var c = hp.length - 1; while (c > 0) { var pa = (c - 1) >> 1; if (hp[pa][0] <= hp[c][0]) break; var t = hp[pa]; hp[pa] = hp[c]; hp[c] = t; c = pa; } };
@@ -184,15 +234,15 @@
     while (hp.length) {
       var e = popH(), a = e[1]; if (done[a]) continue; done[a] = 1; clOf[a] = e[2];
       var sd = P[seeds[e[2]]];
-      LOGO.n8[a].forEach(function (b) { if (done[b]) return; var dx = P[b][0] - sd[0], dy = P[b][1] - sd[1], d = Math.sqrt(dx * dx + dy * dy); if (d < key[b]) { key[b] = d; push(d, b, e[2]); } });
+      LOGO.n8[a].forEach(function (b) { if (done[b]) return; var dx = P[b][0] - sd[0], dy = P[b][1] - sd[1], d = Math.sqrt(dx * dx + dy * dy); if (d <= lim && d < key[b]) { key[b] = d; push(d, b, e[2]); } });
     }
     for (i = 0; i < n; i++) if (clOf[i] >= 0) { var sd2 = P[seeds[clOf[i]]]; clDepth[i] = Math.round(Math.hypot(P[i][0] - sd2[0], P[i][1] - sd2[1]) / LOGO.pitch); }
-    for (i = 0; i < n; i++) if (clOf[i] < 0) {   /* 씨앗 없는 조각 · 가장 가까운 씨앗 */
+    if (OLD) for (i = 0; i < n; i++) if (clOf[i] < 0) {   /* 씨앗 없는 조각 · 가장 가까운 씨앗 */
       var bb = 1e18, bk = 0; seeds.forEach(function (s, k) { var dx = P[i][0] - P[s][0], dy = P[i][1] - P[s][1], d = dx * dx + dy * dy; if (d < bb) { bb = d; bk = k; } });
       clOf[i] = bk; clDepth[i] = 3;
     }
     CL = seeds.map(function (s) { return { seed: s, dots: [] }; });
-    for (i = 0; i < n; i++) CL[clOf[i]].dots.push(i);
+    for (i = 0; i < n; i++) if (clOf[i] >= 0) CL[clOf[i]].dots.push(i);
   }
 
   /* ════════ 무대 배치 · 가로 1920×1080 / 세로 1080×1920 논리 좌표 ════════ */
@@ -283,7 +333,14 @@
     SPR.lit = SPR.ramp[NL - 1];
     SPR.white = mk(function (x) { circ(x, "#FFF3EA", Z / 2); circ(x, "#FFFFFF", Z * 0.3); });
     /* v6 · 경험의 점 = 홍보부 3층 점(outer 주황 · middle Hi Orange 18/38 · core Light Purple 8/38 · axf_engine 의 tier 비율) · 핵은 사이니지 거리에서 보이게 조금 키운다(CFG.core) */
-    SPR.stamp = mk(function (x) { circ(x, "#FF7E31", Z / 2); circ(x, "#FF963E", Z / 2 * CFG.core[0]); circ(x, "#E6CCFF", Z / 2 * CFG.core[1]); });
+    /* v7 수정 · 핵 색 = Hi Orange 와 Light Purple 사이 9칸(0 = 핵 없음 · 8 = 원본) · 경험의 점이 적을 때 보라 핵이 구멍처럼 보이지 않게 */
+    SPR.stampV = []; SPR.coreC = [];
+    for (var cq = 0; cq <= 8; cq++) (function (u) {
+      var cc = "rgb(" + Math.round(255 + (230 - 255) * u) + "," + Math.round(150 + (204 - 150) * u) + "," + Math.round(62 + (255 - 62) * u) + ")";
+      SPR.coreC.push(cc);
+      SPR.stampV.push(mk(function (x) { circ(x, "#FF7E31", Z / 2); circ(x, "#FF963E", Z / 2 * CFG.core[0]); if (u > 0) circ(x, cc, Z / 2 * CFG.core[1]); }));
+    })(cq / 8);
+    SPR.stamp = SPR.stampV[8];
     SPR.star = mk(function (x) { circ(x, "#FFCFAE", Z / 2); circ(x, "#FFF3EA", Z * 0.3); });   /* 하나로 뒤 · 스탬프 씨앗 자리 = 하얀 별(정지) */
     SPR.rim = mk(function (x) { circ(x, "#FFC6A2", Z / 2); circ(x, "#FFE6D6", Z * 0.3); });    /* 목표 달성 뒤 · 가장자리 점 = 흰 테두리(정지) */
     var BZ = SPRZ * 2, bh = BZ / 2;
@@ -310,7 +367,8 @@
   /* v6 · 스탬프가 앉은 점(RANK < STC) = 경험의 점(3층) · 영구 · 2,026개면 로고 전체가 공식 심볼의 3층 점 · 나머지 = v5 온기 */
   var STC = 0;
   function stamped(i) { return RANK[i] < STC; }
-  function sprOf(i) { return stamped(i) ? sprites().stamp : sprB(bOf(i)); }
+  function coreQ() { var a = CFG.coreAt; return a[1] <= a[0] ? 8 : Math.round(8 * ESIO((STC - a[0]) / (a[1] - a[0]))); }
+  function sprOf(i) { return stamped(i) ? sprites().stampV[coreQ()] : sprB(bOf(i)); }
   function setLit(m) {
     lit.fill(0); litC = Math.min(m, CFG.g1); STC = Math.min(m, LOGO.n);
     for (var k = 0; k < litC; k++) CL[k].dots.forEach(function (i) { lit[i] = 1; });
@@ -363,12 +421,12 @@
     }
   }
   var GLOWS = [];
-  function glow(x, y, size, dur, a, white) { GLOWS.push({ x: x, y: y, s: size, t0: T, dur: dur, a: a, w: !!white }); }
+  function glow(x, y, size, dur, a, white, att) { GLOWS.push({ x: x, y: y, s: size, t0: T, dur: dur, a: a, w: !!white, att: att || 0.06 }); }
   function drawGlows() {
     var sp = sprites();
     for (var i = 0; i < GLOWS.length; i++) {
       var g = GLOWS[i], u = (T - g.t0) / g.dur; if (u >= 1) { GLOWS.splice(i--, 1); continue; }
-      var s = g.s * (0.7 + 0.5 * EO(u)); cx.globalAlpha = g.a * (1 - u) * (1 - u);
+      var s = g.s * (0.7 + 0.5 * EO(u)); cx.globalAlpha = g.a * (1 - u) * (1 - u) * EO((T - g.t0) / g.att);   /* v7 수정 · 차오름(기본 0.06초 · 한 프레임에 최대 밝기로 툭 들어오지 않게) */
       cx.drawImage(g.w ? sp.wbloom : sp.bloom, g.x - s / 2, g.y - s / 2, s, s);
     }
     cx.globalAlpha = 1;
@@ -565,10 +623,12 @@
   function sprColor(c) {
     var sp = sprites(); if (sp.colOf && sp.colOf.has(c)) return sp.colOf.get(c);
     if (!sp.colOf) { sp.colOf = new Map(); sp.ramp.forEach(function (s, l) { var r = ramp(l / (NL - 1)); sp.colOf.set(s, { c: "rgb(" + r[0] + "," + r[1] + "," + r[2] + ")" }); });
-      sp.colOf.set(sp.stamp, { c: COL.o, m: COL.hi, k: "#E6CCFF" }); sp.colOf.set(sp.white, { c: "#FFFFFF" }); }
+      sp.stampV.forEach(function (s, q) { sp.colOf.set(s, q ? { c: COL.o, m: COL.hi, k: sp.coreC[q] } : { c: COL.o, m: COL.hi, k: COL.hi }); });
+      sp.colOf.set(sp.white, { c: "#FFFFFF" }); }
     return sp.colOf.get(c) || { c: COL.o };
   }
-  function fillDots(A, X, Y, Sc, Al, zo, n, K, ox, oy) {
+  function fillDots(A, X, Y, Sc, Al, zo, n, K, ox, oy, mul) {
+    if (mul == null) mul = 1;
     var grp = new Map(), i, R = G.D * K / 2, orange = ORANGE(), wcol = { c: "#FFFFFF" };
     for (i = 0; i < n; i++) {
       var s = Sc[i], al = Al[i]; if (X[i] < -9e3 || s < 0.06 || al < 0.03) continue;
@@ -579,7 +639,7 @@
     }
     var keys = Array.from(grp.values()).sort(function (a, b) { return a.a - b.a; });
     keys.forEach(function (g) {
-      cx.globalAlpha = Math.max(0.12, g.a); var tiers = g.col.m ? [[g.col.c, 1], [g.col.m, CFG.core[0]], [g.col.k, CFG.core[1]]] : [[g.col.c, 1]];
+      cx.globalAlpha = Math.max(0.12, g.a) * mul; var tiers = g.col.m ? [[g.col.c, 1], [g.col.m, CFG.core[0]], [g.col.k, CFG.core[1]]] : [[g.col.c, 1]];
       tiers.forEach(function (tr) {
         cx.fillStyle = tr[0]; cx.beginPath();
         for (var q = 0; q < g.ids.length; q++) { var j = g.ids[q], r = R * Sc[j] * tr[1], x = X[j] * K + ox, y = Y[j] * K + oy; cx.moveTo(x + r, y); cx.arc(x, y, r, 0, 6.2832); }
@@ -866,7 +926,7 @@
     for (i = 0; i < n; i++) { LP.ord[i] = cl(0.8 * (P[i][1] - y0) / (2 * G.hh) + 0.2 * (P[i][0] - x0) / (2 * G.hw)); LP.r[i] = rr(); }   /* 옮겨 가는 순서 = ME → to → WE */
     var ys = P.map(function (p) { return Math.round(p[1] * 100) / 100; }).sort(function (a, b) { return a - b; }), rows = [];
     ys.forEach(function (y) { if (!rows.length || y - rows[rows.length - 1] > LOGO.pitch * G.S * 0.5) rows.push(y); });
-    LP.rows = rows; LP.rowH = LOGO.pitch * G.S; LP.stampL = null;   /* 점등 = 로고 점의 줄(위 = ME → 아래 = WE)마다 차례로 */
+    LP.rows = rows; LP.rowH = LOGO.pitch * G.S; LP.stampL = null; LP.rowE = null;   /* 점등 = 로고 점의 줄(위 = ME → 아래 = WE)마다 차례로 */
     /* (04) 점선 구체 · 80행 × 125열 중 2,026점 · 17.13초에 한 바퀴(v6 B 와 같은 크기) */
     var K = AXF_DATA.sphere, pts = [], tx = F32(), ty = F32(), pr, q;
     for (i = 0; i < K.A.count && pts.length < n; i++) if (i % 5 === 0) pts.push(i);
@@ -916,13 +976,13 @@
     }
     if (name === "run") {
       var o2 = LP.kv.run, R = AXF_DATA.run, f2 = o2.f0 + T * 30, ds2 = o2.pitch * 1.1 / G.D, wn = 7 * 1.62 * R.A.scale;
-      for (i = 0; i < n; i++) { q = axfSample(R.A, R.D, o2.cell[i], f2, 0); var w = cl(q[2] / wn); X[i] = G.cx + (q[0] - 540) * o2.s; Y[i] = G.cy + (q[1] - 540) * o2.s; S[i] = ds2 * (0.25 + 0.75 * w); A[i] = w < 0.08 ? 0 : 1; }
+      for (i = 0; i < n; i++) { q = axfSample(R.A, R.D, o2.cell[i], f2, 0); var w = cl(q[2] / wn); X[i] = G.cx + (q[0] - 540) * o2.s; Y[i] = G.cy + (q[1] - 540) * o2.s; S[i] = ds2 * w; A[i] = w < 0.02 ? 0 : 1; }   /* v7 수정 · 마스크가 바뀌는 칸은 크기 0 에서 자란다(31% 크기로 툭 나타나던 것) */
       return;
     }
     if (name === "flower") {
       var o3 = LP.kv.flower; if (!o3) { lpFill("logo", X, Y, S, A); return; }
       var a = LP.fa, r0 = Math.floor(a), r1 = Math.min(63, r0 + 1), u = a - r0, W = LP.fw, b0 = r0 * n, b1 = r1 * n;
-      for (i = 0; i < n; i++) { var c = o3.c[i], w3 = (W[b0 + c] * (1 - u) + W[b1 + c] * u) / 35; X[i] = o3.x[i]; Y[i] = o3.y[i]; S[i] = o3.ds * Math.sqrt(w3); A[i] = w3 < 0.07 ? 0 : 1; }
+      for (i = 0; i < n; i++) { var c = o3.c[i], w3 = (W[b0 + c] * (1 - u) + W[b1 + c] * u) / 35; X[i] = o3.x[i]; Y[i] = o3.y[i]; S[i] = o3.ds * Math.sqrt(w3); A[i] = cl(w3 / 0.07); }   /* v7 수정 · 작은 점은 투명도로 들어온다 */
     }
   }
   /* 루프 한 걸음 · 자리 계산(혜성이 이 자리를 따라간다) */
@@ -960,40 +1020,66 @@
   /* 점등 · 0~0.45초 경험의 점만 남기고 어두워진다 · 그다음 ME → to → WE 로 다시 켜지며 하얗게 번쩍 · 단계가 오를수록 다 켜진 순간 빛이 크다 */
   function lpIgnEv(s, t) {
     var lv = ST.lvl; if (!lv) return;
-    once(s, "lit", 1.3, function () {
-      var k = lv >= 4 ? 1.25 : 1;
-      glow(G.cx, G.cy, 1100 * k, 0.7, 0.26 * k, true);
-      if (lv >= 2) ringWave(G.cx, G.cy, Math.round(34 * k), 820 * k, 2.4, 0, 0.7, 1.4);
-      if (lv >= 3) sphere(G.cx, G.cy, Math.round(200 * k), 700 * k, 1.2);
+    /* v7 수정(261005) · 다 켜진 순간 · 옛 = 하얀 빛 + 점 고리 + 구 폭죽(한 프레임에 튀어나와 루프마다 툭) → 하얀 빛 하나가 0.35초에 차올랐다 식는다 · 단계가 오를수록 크고 밝게 */
+    once(s, "lit", 1.05, function () {
+      var k = [1, 1, 1.12, 1.25, 1.4][Math.min(4, lv)];
+      glow(G.cx, G.cy, 1150 * k, 1.5, 0.2 * k, true, 0.35);
     });
   }
   /* 점등 그리기 · 4K 에서도 가볍게 = 점 2,026개를 하나씩 그리지 않고 겹 그림 몇 장으로(줄 단위 · 점이 잘리지 않게 줄 사이에서 자른다)
      어두운 로고(LAY.logo × dim) + 경험의 점 겹(LP.stampL · 경험의 점 수가 바뀐 뒤 첫 점등에만 다시) + 켜진 줄(LAY.logo 를 위에서부터 줄 경계로 잘라) + 하얀 번쩍임(흰 로고 겹을 줄 묶음 4개씩 · 0.5초에 사라짐) */
-  function lpRowAt(r) { return 0.45 + 0.8 * r / Math.max(1, LP.rows.length - 1); }   /* 줄 r 이 켜지는 때(위 = ME 부터) */
-  function lpIgnDraw(s, t) {
-    var from = s.from == null ? 1 : s.from, g = from + (CFG.dim - from) * ESIO(t / 0.45), fin = ESIO((t - 1.2) / 0.3);
-    ident();
-    if (fin >= 1) { cx.drawImage(LAY.logo, 0, 0); logical(); return; }
-    if (!LP.stampL || LP.stampK !== STC + "|" + cv.width) {   /* 경험의 점 겹 · 점등이 시작될 때 한 번(수가 바뀌었으면) */
-      var c = LP.stampL && LP.stampL.width === cv.width ? LP.stampL : mkCanvas(), gx = c.getContext("2d"), K = G.k * G.dpr, ox = G.ox * G.dpr, oy = G.oy * G.dpr;
+  /* v7 수정(261005) · 점등 끊김 고침 · 옛 방식 = 줄이 한 프레임에 어둠 → 다 켜짐 · 하얀 번쩍임이 줄 4개 묶음으로 한 번에 최대 밝기로 들어와 「툭툭」 계단이 졌다
+     지금 = 켜지는 앞머리가 줄 3개 폭으로 부드럽게(줄마다 투명도) · 하얀 띠는 앞머리 바로 뒤에서 차오르고 위로 갈수록 옅어진다(줄마다) · 띠까지 로고 아래로 다 빠져나간 뒤 로고 캐시와 같은 그림으로 끝난다
+     앞머리 = 줄 단위 실수(fr) · 0.35초에 로고 위에서 출발해 1.42초에 띠 끝까지 아래로 빠진다 · 줄마다 캔버스 띠(원본 자르기 drawImage)라 4K 에서도 가볍다 */
+  var IGN_SOFT = 3, IGN_BAND = 10;
+  function lpIgnFront(t, nr) { var u = cl((t - 0.35) / 1.07); return -1 + (nr + IGN_SOFT + IGN_BAND) * (0.4 * u + 0.6 * ESIO(u)); }
+  function lpIgnFlash(d) { return d <= 0 ? 0 : d < 1.5 ? EO(d / 1.5) : d < IGN_BAND ? Math.pow(1 - (d - 1.5) / (IGN_BAND - 1.5), 1.6) : 0; }
+  function lpStampL() {   /* 경험의 점 겹 · 수가 바뀌었으면 다시 */
+    if (!LP.stampL || LP.stampK !== STC + "|" + coreQ() + "|" + cv.width + "|" + cv.height) {
+      var c = LP.stampL && LP.stampL.width === cv.width && LP.stampL.height === cv.height ? LP.stampL : mkCanvas(), gx = c.getContext("2d"), K = G.k * G.dpr, ox = G.ox * G.dpr, oy = G.oy * G.dpr;
       gx.setTransform(1, 0, 0, 1, 0, 0); gx.clearRect(0, 0, c.width, c.height);
       for (var i = 0; i < LP.n; i++) if (stamped(i)) { var o = LP.dsp[i]; gx.drawImage(o.c, (G.pos[i][0] * K + ox - o.h + 0.5) | 0, (G.pos[i][1] * K + oy - o.h + 0.5) | 0); }
-      LP.stampL = c; LP.stampK = STC + "|" + cv.width;
+      LP.stampL = c; LP.stampK = STC + "|" + coreQ() + "|" + cv.width + "|" + cv.height;
     }
-    cx.globalAlpha = Math.max(g, fin); cx.drawImage(LAY.logo, 0, 0); cx.globalAlpha = 1;
-    if (STC) cx.drawImage(LP.stampL, 0, 0);
-    var R = LP.rows, nr = R.length, hp = LP.rowH / 2, rl = -1;
-    for (var r = 0; r < nr; r++) if (t >= lpRowAt(r)) rl = r; else break;
-    var y0 = G.yT, x0 = G.xL, ww = G.xR - G.xL;
-    if (rl >= 0) { logical(); cx.save(); cx.beginPath(); cx.rect(x0, y0, ww, R[rl] + hp - y0); cx.clip(); ident(); cx.drawImage(LAY.logo, 0, 0); cx.restore(); }
-    var wl = whiteCache(G.pos, "wl"), fa = ST.lvl >= 4 ? 1 : 0.85;
-    for (var r0 = 0; r0 <= rl; r0 += 4) {   /* 하얀 번쩍임 · 줄 4개씩 묶어 한 장 */
-      var r1 = Math.min(rl, r0 + 3), fz = (t - lpRowAt((r0 + r1) / 2)) / 0.5; if (fz >= 1 || fz < 0) continue;
-      logical(); cx.save(); cx.beginPath(); cx.rect(x0, R[r0] - hp, ww, R[r1] - R[r0] + 2 * hp); cx.clip(); ident();
-      cx.globalAlpha = fa * Math.pow(1 - fz, 1.3); cx.drawImage(wl, 0, 0); cx.restore(); cx.globalAlpha = 1;
+    return LP.stampL;
+  }
+  function lpIgnDraw(s, t) {
+    var from = s.from == null ? 1 : s.from, g = from + (CFG.dim - from) * ESIO(t / 0.45);
+    var R = LP.rows, nr = R.length, fr = lpIgnFront(t, nr);
+    ident();
+    if (fr - (nr - 1) >= IGN_BAND + IGN_SOFT) { cx.drawImage(LAY.logo, 0, 0); lpIgnHits(); logical(); return; }
+    lpStampL();
+    /* 줄 띠 경계(기기 픽셀) · 줄 사이 한가운데 · 첫 줄은 캔버스 위 끝부터 · 마지막 줄은 아래 끝까지 */
+    var Kd = G.k * G.dpr, oyd = G.oy * G.dpr, W = cv.width, H = cv.height;
+    if (!LP.rowE || LP.rowEK !== W + "|" + H) { LP.rowE = [0]; for (var r = 1; r < nr; r++) LP.rowE.push(Math.round((R[r - 1] + R[r]) / 2 * Kd + oyd)); LP.rowE.push(H); LP.rowEK = W + "|" + H; }
+    var E = LP.rowE, wl = whiteCache(G.pos, "wl"), fa = ST.lvl >= 4 ? 0.8 : 0.62;
+    var strip = function (img, r0, r1, a) { if (a <= 0.003) return; var y0 = E[r0], h = E[r1] - y0; if (h <= 0) return; cx.globalAlpha = Math.min(1, a); cx.drawImage(img, 0, y0, W, h, 0, y0, W, h); };
+    var r0 = 0;
+    while (r0 < nr) {   /* 같은 상태(다 켜짐 · 어두움)가 이어진 줄은 한 장으로 */
+      var a0 = cl((fr - r0) / IGN_SOFT), r1 = r0 + 1;
+      if (a0 >= 1 || a0 <= 0) { while (r1 < nr && cl((fr - r1) / IGN_SOFT) === a0) r1++; }
+      if (a0 >= 1) strip(LAY.logo, r0, r1, 1);
+      else {
+        strip(LAY.logo, r0, r1, g);
+        if (STC) strip(LP.stampL, r0, r1, 1);
+        strip(LAY.logo, r0, r1, a0);
+      }
+      r0 = r1;
     }
-    if (fin > 0) { cx.globalAlpha = fin; cx.drawImage(LAY.logo, 0, 0); cx.globalAlpha = 1; }
-    logical();
+    for (var q = Math.max(0, Math.floor(fr - IGN_BAND)); q < nr && q <= fr; q++) strip(wl, q, q + 1, fa * lpIgnFlash(fr - q));   /* 하얀 띠 */
+    cx.globalAlpha = 1;
+    lpIgnHits(); logical();
+  }
+  /* 점등 중에 앉은 혜성 · 그 점만 하얗게(덩어리 번짐 · 물결 대신 · 어두운 로고 위에 얼룩이 생기지 않게) */
+  function lpIgnHits() {
+    if (!LP.hit.length) return;
+    var K = G.k * G.dpr, ox = G.ox * G.dpr, oy = G.oy * G.dpr, w = dsp(sprites().white);
+    for (var h = 0; h < LP.hit.length; h++) {
+      var hz = (T - LP.hit[h][1]) / 0.7, hi = LP.hit[h][0]; if (hz >= 1) { LP.hit.splice(h--, 1); continue; }
+      if (hz < 0) continue;
+      cx.globalAlpha = Math.pow(1 - hz, 1.3); cx.drawImage(w.c, (G.pos[hi][0] * K + ox - w.h + 0.5) | 0, (G.pos[hi][1] * K + oy - w.h + 0.5) | 0);
+    }
+    cx.globalAlpha = 1;
   }
   /* 그리기 · 로고로 쉬는 동안 = 로고 캐시 · 점등 = 캐시 + 켜지는 점 · 옮겨 가기 · 오브젝트 = 점 2,026개를 색 · 투명도 묶음으로(v6 fillDots) */
   function lpDraw() {
@@ -1002,8 +1088,11 @@
     if (s.k === "ign") { lpIgnDraw(s, t); return; }
     ident();
     if (s.k === "mv" && s.a === "logo") { var la = 1 - cl(t / 0.4); if (la > 0) { cx.globalAlpha = la; cx.drawImage(LAY.logo, 0, 0); cx.globalAlpha = 1; } }
+    /* v7 수정(261005) · 로고로 돌아오는 끝 0.35초 = 점등 첫 프레임 그림(어두운 로고 캐시 · 빛 번짐 포함 + 경험의 점 겹)으로 교차 · 원 경로 그림과 캐시 그림의 차이(빛 번짐)가 점등 시작에 툭 바뀌지 않게 */
+    var lb = s.k === "mv" && s.b === "logo" ? ESIO((t - (s.d - 0.35)) / 0.35) : 0;
+    if (lb > 0) { cx.globalAlpha = lb * CFG.dim; cx.drawImage(LAY.logo, 0, 0); cx.globalAlpha = lb; if (STC) cx.drawImage(lpStampL(), 0, 0); cx.globalAlpha = 1; }
     var K = G.k * G.dpr, ox = G.ox * G.dpr, oy = G.oy * G.dpr, w = dsp(sprites().white);
-    fillDots(LP, LP.X, LP.Y, LP.Sc, LP.Al, null, LP.n, K, ox, oy);   /* 4K 실측(261005) · 원 경로 묶음이 점 그림(dss)보다 빠르다 */
+    if (lb < 1) fillDots(LP, LP.X, LP.Y, LP.Sc, LP.Al, null, LP.n, K, ox, oy, 1 - lb);   /* 4K 실측(261005) · 원 경로 묶음이 점 그림(dss)보다 빠르다 */
     for (var h = 0; h < LP.hit.length; h++) {   /* 오브젝트가 된 동안 앉은 혜성 · 그 점이 지금 있는 자리에서 하얗게 */
       var hz = (T - LP.hit[h][1]) / 0.7, hi = LP.hit[h][0]; if (hz >= 1) { LP.hit.splice(h--, 1); continue; }
       if (hz < 0) continue;
@@ -1075,7 +1164,7 @@
     var x = f.d[0], y = f.d[1], lv = ST.lvl, quiet = SHOW && SHOW.own, A = SHOW && SHOW.kind === "act" ? SHOW.act : null, ka = A ? 0.7 : 1;   /* 도는 중에 앉으면 팡을 조금 작게(어수선하지 않게) */
     pop(x, y, (f.big ? 2.6 : lv >= 4 ? 2.1 : 1.7) * ka);
     sphere(x, y, Math.round((f.big ? 200 : lv >= 4 ? 150 : 90) * ka), f.big ? 700 : lv >= 4 ? 560 : 440, lv >= 4 ? 1.3 : 1.0);
-    var home = lpHome();   /* v7 · 로고가 아니면(오브젝트 · 옮겨 가는 중) 로고 자리 물결 · 덩어리 번짐 대신 그 점만 하얗게 */
+    var home = !LP.seg || LP.seg.k === "logo";   /* v7 · 로고로 쉬는 중이 아니면(점등 · 오브젝트 · 옮겨 가는 중) 덩어리 번짐 · 물결 대신 그 점만 하얗게(점등 중 어두운 로고 위 얼룩 방지 · 261005 수정) */
     if (f.k < LOGO.n) { STC = Math.max(STC, f.k + 1); LAY.dirty = true; if (A) actSpr(A); }   /* v6 · 그 점에 경험의 점이 켜진다(영구) */
     if (KIND && f.kind) kindNote(f);
     if (f.k < CFG.g1) {
@@ -1766,6 +1855,7 @@
     set: function (n) { setNow(n); }, moment: moment, burst: burstIn, batch: function (n) { took(ST.target + n); },
     tl: function () { startShow("tl"); }, hold: function () { DM.paused = true; }, tlNext: function (s) { TLS.next = T + s; },
     act: function (v) { if (v) lpJump(v); else LP.seg = null; }, lp: function () { var s = LP.seg; return { k: s ? s.k : null, st: s ? (s.s || s.b || "") : "", t: s ? +(T - s.t0).toFixed(2) : 0, cyc: LP.cyc, len: lpLen(ST.lvl), desc: lpDesc(ST.lvl), parked: !!lpParked() }; }, lplog: function () { return LP.log; }, ign: function () { LP.q.unshift({ k: "ign", d: CFG.loop.ign }); LP.seg = null; }, dbg: function (i) { i = i || 0; return { x: LP.X[i], y: LP.Y[i], s: LP.Sc[i], a: LP.Al[i], ax: LP.aX[i], bx: LP.bX[i], bs: LP.bS[i], ba: LP.bA[i], spr: !!LP.spr[i], n: LP.n }; }, actNext: function (s) { ACT.next = T + s; }, log: function () { return ACT.log; }, go: function (n) { goTo(n); }, plus: function (m) { plus(m); },
-    key: function (k) { var f = KEYS[k] || (DEMO && DKEYS[k]); if (f) f(); }, took: function (n) { took(n); }, cfg: CFG
+    key: function (k) { var f = KEYS[k] || (DEMO && DKEYS[k]); if (f) f(); }, took: function (n) { took(n); }, cfg: CFG,
+    ord: function () { var seg = 0; for (var k = 1; k < Math.min(ORDER.length, 2026); k++) if (LOGO.n8[ORDER[k]].indexOf(ORDER[k - 1]) < 0) seg++; return { exp: CFG.exp, ring0: LOGO.ring0, groups: LOGO.groups, jumps: seg, chunk: CFG.chunk }; }
   };
 })();
