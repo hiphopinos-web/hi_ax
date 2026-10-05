@@ -72,31 +72,43 @@
     <header id="topbar" class="ax-header"></header>
     <div id="view"></div>
     <nav id="tabbar" class="ax-nav" aria-label="주 메뉴"></nav>
-    <!-- AX-TDS 제공 아이콘 스프라이트(design-handoff/assets/icons.svg 원본 경로 · currentColor) · 단일파일 데모에서도 보이게 본문에 둔다 -->
-    <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="nav-experience" viewBox="0 0 24 24" fill="none">
-<g>
-<path d="M17.5 3.5H6.5C5.39543 3.5 4.5 4.39543 4.5 5.5V18.5C4.5 19.6046 5.39543 20.5 6.5 20.5H17.5C18.6046 20.5 19.5 19.6046 19.5 18.5V5.5C19.5 4.39543 18.6046 3.5 17.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M4.5 9.2H19.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M4.5 14.9H19.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M9.5 20V14.9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-</symbol><symbol id="nav-home" viewBox="0 0 24 24" fill="none">
-<g>
-<path d="M3.5 11.2L12 4L20.5 11.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M6 9.8V20H18V9.8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M10 20V14.6H14V20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-</symbol><symbol id="nav-my" viewBox="0 0 24 24" fill="none">
-<g>
-<path d="M17 3.5H7C5.89543 3.5 5 4.39543 5 5.5V18.5C5 19.6046 5.89543 20.5 7 20.5H17C18.1046 20.5 19 19.6046 19 18.5V5.5C19 4.39543 18.1046 3.5 17 3.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M9 16.5H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-</symbol><symbol id="nav-program" viewBox="0 0 24 24" fill="none">
-<g>
-<path d="M7.5 4.5L18.5 10.9L13.7 12.2L12.4 17L7.5 4.5Z" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M4 4L5.6 5.6M4 9.5H6.2M9.5 4V6.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
+    <!-- 하단 메뉴 아이콘(v5.75 · 사용자 261006 「선택 표시 세 겹」) · 24 격자 · 실제 그림 20 · 선 2 · 둥근 끝 · 탭마다 선(nav-*) / 채움(nav-*-f) 짝 · id = 탭 뜻 · currentColor · 채움 안쪽 뚫림 = 메뉴 면색(--ax-color-surface) · 가운데 QR = 둥근 모서리 그림(qr-corners) · 단일파일 데모에서도 보이게 본문에 둔다 -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="nav-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M3 10.6L12 3L21 10.6"/>
+<path d="M5.5 8.5V21H18.5V8.5"/>
+<path d="M10 21V15H14V21"/>
+</symbol><symbol id="nav-home-f" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M3 10.6L12 3L21 10.6"/>
+<path d="M5.5 8.5L12 3L18.5 8.5V21H5.5Z" fill="currentColor"/>
+<path d="M10 22V15.5H14V22Z" style="fill:var(--ax-color-surface,#fff);stroke:none"/>
+</symbol><symbol id="nav-program" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<rect x="3" y="5" width="18" height="16" rx="2.5"/>
+<path d="M8 3V7M16 3V7"/>
+<path d="M3 10H21"/>
+<path d="M7.5 14H16.5M7.5 17.5H12.5"/>
+</symbol><symbol id="nav-program-f" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<rect x="3" y="5" width="18" height="16" rx="2.5" fill="currentColor"/>
+<path d="M8 3V7M16 3V7"/>
+<path d="M4 10H20" stroke-width="1.6" style="stroke:var(--ax-color-surface,#fff)"/>
+<path d="M7.5 14H16.5M7.5 17.5H12.5" style="stroke:var(--ax-color-surface,#fff)"/>
+</symbol><symbol id="nav-stamp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="12" cy="5.5" r="2.5"/>
+<path d="M12 8V12"/>
+<path d="M5 12H19C20.1 12 21 12.9 21 14V16C21 17.1 20.1 18 19 18H5C3.9 18 3 17.1 3 16V14C3 12.9 3.9 12 5 12Z"/>
+<path d="M5.5 21H18.5"/>
+</symbol><symbol id="nav-stamp-f" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="12" cy="5.5" r="2.5" fill="currentColor"/>
+<path d="M12 8V12"/>
+<path d="M5 12H19C20.1 12 21 12.9 21 14V16C21 17.1 20.1 18 19 18H5C3.9 18 3 17.1 3 16V14C3 12.9 3.9 12 5 12Z" fill="currentColor"/>
+<path d="M5.5 21H18.5"/>
+</symbol><symbol id="nav-my" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<rect x="4.5" y="3" width="15" height="18" rx="2.5"/>
+<circle cx="12" cy="10" r="3"/>
+<path d="M8.5 16.5H15.5"/>
+</symbol><symbol id="nav-my-f" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<rect x="4.5" y="3" width="15" height="18" rx="2.5" fill="currentColor"/>
+<circle cx="12" cy="10" r="3.4" style="fill:var(--ax-color-surface,#fff);stroke:none"/>
+<path d="M8.5 16.5H15.5" style="stroke:var(--ax-color-surface,#fff)"/>
 </symbol><symbol id="qr-corners" viewBox="0 0 32 32" fill="none">
 <g>
 <path d="M11 4H9C7.67392 4 6.40215 4.52678 5.46447 5.46447C4.52678 6.40215 4 7.67392 4 9V11M21 4H23C24.3261 4 25.5979 4.52678 26.5355 5.46447C27.4732 6.40215 28 7.67392 28 9V11M28 21V23C28 24.3261 27.4732 25.5979 26.5355 26.5355C25.5979 27.4732 24.3261 28 23 28H21M11 28H9C7.67392 28 6.40215 27.4732 5.46447 26.5355C4.52678 25.5979 4 24.3261 4 23V21" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>

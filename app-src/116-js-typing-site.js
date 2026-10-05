@@ -812,7 +812,7 @@ function tsfGuideHtml() {
     '<p class="tsf-gs">왼쪽 <em>방법 2</em> QR을 폰 카메라로 찍어 주세요</p><p class="tsf-gs s">' + TSF_DESK + "</p>" + tsfStepsHtml() + "</div>";
   return '<div class="tsf-gd"><p class="tsf-chip">방법 1</p><p class="tsf-h"><span>앱의 <em>내 QR</em>을</span><span>위 <em>카메라</em>에 비추세요</span></p>' +
     '<div class="tsf-ill"><p class="tsf-arm">팔을 쭉 펴고<br>폰 화면이<br>카메라를 보게</p><div class="tsf-ph"><i class="tsf-up"></i>' + TSF_PHONE + "</div>" +
-    '<div class="tsf-qrb"><span class="tsf-nav"><b>QR</b></span><p>앱 가운데<br><em>QR 버튼</em> → 내 QR</p></div></div>' + tsfStepsHtml() + "</div>";
+    '<div class="tsf-qrb"><span class="tsf-nav"><b><svg aria-hidden="true"><use href="#qr-corners"/></svg></b></span><p>앱 가운데<br><em>QR 버튼</em> → 내 QR</p></div></div>' + tsfStepsHtml() + "</div>";
 }
 function tsfStepsHtml() {
   return '<div class="tsf-steps"><p><b>1</b><span>QR을 노트북에</span></p><p><b>2</b><span><kbd class="tsf-key">SPACE</kbd>로 시작</span></p><p><b>3</b><span>떨어지는 단어 입력</span></p></div>' +

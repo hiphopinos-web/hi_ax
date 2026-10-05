@@ -1157,7 +1157,10 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* v4.48 (사용자 260925 「QR 버튼이 조금 더 위로 · 하얀 동그라미 배경」) 원 52 · 흰 테두리 6(메뉴 면과 같은 흰색)이 메뉴 위로 솟는다 · 원 + 여백 합은 옆 탭 아이콘 자리(24)와 같게 둬 라벨 줄 높이는 그대로 */
   #tabbar .axs-scan-c { width: 52px; height: 52px; margin-top: -28px; box-shadow: 0 0 0 6px var(--ax-color-surface), 0 -4px 12px 4px rgba(0, 0, 0, .06); }
   #tabbar .axs-scan-c svg { width: 32px; height: 32px; display: block; }   /* v4.48 28 → 32 (원 52) */
-  #tabbar .axs-scan-c b { position: absolute; font: 600 13px/16px var(--ax-font); }   /* 헤더 QR(.ax-qr-label)과 같은 글자 규격 */
+  /* v5.75 (사용자 261006) 선택 표시 세 겹 = 아이콘 채움(nav-*-f) + 아이콘 주황(O100) + 라벨 짙은 글(ink) 700 · 선택 안 됨 = 선 아이콘 + 회색(muted) 500 · 라벨 12 → 13(줄높이 18 · 큰 글씨 배율을 따르는 rem) · 한 줄 고정 · 가운데 원 안 「QR」 글자 없음 */
+  #tabbar .ax-nav-link, #tabbar .axs-scan { font: 500 0.8125rem/1.125rem var(--ax-font); white-space: nowrap; }
+  #tabbar .ax-nav-link[aria-current="page"] { color: var(--ax-color-ink); font-weight: 700; }
+  #tabbar .ax-nav-link[aria-current="page"] .ax-icon { color: var(--ax-color-brand); }
   /* 목적지 행 · 승인 클래스 .ax-destination 을 버튼에 입힐 때의 기본값 되돌리기 */
   #app .ax-type-t2, #app .ax-type-t3, #app .ax-type-t4, #app .ax-type-t6-strong, #splash .ax-header { color: var(--ax-color-ink); }
   .axs-dest { width: 100%; border: 0; text-align: left; cursor: pointer; font-family: inherit; }
@@ -2578,6 +2581,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .rt .tsf-qrb p { margin: 0; }
   .rt .tsf-nav { margin-top: 22px; width: 150px; height: 40px; display: flex; justify-content: center; background: var(--rt-cream); box-shadow: var(--rt-line); }
   .rt .tsf-nav b { margin-top: -24px; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--rt-o100); color: var(--rt-night); font-weight: 400; font-size: var(--rt-f24); line-height: 1; box-shadow: 0 0 0 3px var(--rt-ink); }
+  .rt .tsf-nav b svg { width: 36px; height: 36px; display: block; }   /* v5.75 앱 가운데 QR 버튼과 같은 그림(모서리 무늬 · 원 안 글자 없음) */
   .rt .tsf-steps { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
   .rt .tsf-steps p { margin: 3px; padding: 10px 6px; display: flex; flex-direction: column; align-items: center; gap: 8px; background: var(--rt-bark); box-shadow: var(--rt-line); color: var(--rt-cream); word-break: keep-all; }
   .rt .tsf-steps b { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: var(--rt-o100); color: var(--rt-night); font-weight: 400; box-shadow: 0 0 0 2px var(--rt-ink); }
@@ -2730,31 +2734,43 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
     <header id="topbar" class="ax-header"></header>
     <div id="view"></div>
     <nav id="tabbar" class="ax-nav" aria-label="주 메뉴"></nav>
-    <!-- AX-TDS 제공 아이콘 스프라이트(design-handoff/assets/icons.svg 원본 경로 · currentColor) · 단일파일 데모에서도 보이게 본문에 둔다 -->
-    <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="nav-experience" viewBox="0 0 24 24" fill="none">
-<g>
-<path d="M17.5 3.5H6.5C5.39543 3.5 4.5 4.39543 4.5 5.5V18.5C4.5 19.6046 5.39543 20.5 6.5 20.5H17.5C18.6046 20.5 19.5 19.6046 19.5 18.5V5.5C19.5 4.39543 18.6046 3.5 17.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M4.5 9.2H19.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M4.5 14.9H19.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M9.5 20V14.9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-</symbol><symbol id="nav-home" viewBox="0 0 24 24" fill="none">
-<g>
-<path d="M3.5 11.2L12 4L20.5 11.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M6 9.8V20H18V9.8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M10 20V14.6H14V20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-</symbol><symbol id="nav-my" viewBox="0 0 24 24" fill="none">
-<g>
-<path d="M17 3.5H7C5.89543 3.5 5 4.39543 5 5.5V18.5C5 19.6046 5.89543 20.5 7 20.5H17C18.1046 20.5 19 19.6046 19 18.5V5.5C19 4.39543 18.1046 3.5 17 3.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M9 16.5H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-</symbol><symbol id="nav-program" viewBox="0 0 24 24" fill="none">
-<g>
-<path d="M7.5 4.5L18.5 10.9L13.7 12.2L12.4 17L7.5 4.5Z" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M4 4L5.6 5.6M4 9.5H6.2M9.5 4V6.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
+    <!-- 하단 메뉴 아이콘(v5.75 · 사용자 261006 「선택 표시 세 겹」) · 24 격자 · 실제 그림 20 · 선 2 · 둥근 끝 · 탭마다 선(nav-*) / 채움(nav-*-f) 짝 · id = 탭 뜻 · currentColor · 채움 안쪽 뚫림 = 메뉴 면색(--ax-color-surface) · 가운데 QR = 둥근 모서리 그림(qr-corners) · 단일파일 데모에서도 보이게 본문에 둔다 -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="nav-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M3 10.6L12 3L21 10.6"/>
+<path d="M5.5 8.5V21H18.5V8.5"/>
+<path d="M10 21V15H14V21"/>
+</symbol><symbol id="nav-home-f" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M3 10.6L12 3L21 10.6"/>
+<path d="M5.5 8.5L12 3L18.5 8.5V21H5.5Z" fill="currentColor"/>
+<path d="M10 22V15.5H14V22Z" style="fill:var(--ax-color-surface,#fff);stroke:none"/>
+</symbol><symbol id="nav-program" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<rect x="3" y="5" width="18" height="16" rx="2.5"/>
+<path d="M8 3V7M16 3V7"/>
+<path d="M3 10H21"/>
+<path d="M7.5 14H16.5M7.5 17.5H12.5"/>
+</symbol><symbol id="nav-program-f" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<rect x="3" y="5" width="18" height="16" rx="2.5" fill="currentColor"/>
+<path d="M8 3V7M16 3V7"/>
+<path d="M4 10H20" stroke-width="1.6" style="stroke:var(--ax-color-surface,#fff)"/>
+<path d="M7.5 14H16.5M7.5 17.5H12.5" style="stroke:var(--ax-color-surface,#fff)"/>
+</symbol><symbol id="nav-stamp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="12" cy="5.5" r="2.5"/>
+<path d="M12 8V12"/>
+<path d="M5 12H19C20.1 12 21 12.9 21 14V16C21 17.1 20.1 18 19 18H5C3.9 18 3 17.1 3 16V14C3 12.9 3.9 12 5 12Z"/>
+<path d="M5.5 21H18.5"/>
+</symbol><symbol id="nav-stamp-f" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="12" cy="5.5" r="2.5" fill="currentColor"/>
+<path d="M12 8V12"/>
+<path d="M5 12H19C20.1 12 21 12.9 21 14V16C21 17.1 20.1 18 19 18H5C3.9 18 3 17.1 3 16V14C3 12.9 3.9 12 5 12Z" fill="currentColor"/>
+<path d="M5.5 21H18.5"/>
+</symbol><symbol id="nav-my" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<rect x="4.5" y="3" width="15" height="18" rx="2.5"/>
+<circle cx="12" cy="10" r="3"/>
+<path d="M8.5 16.5H15.5"/>
+</symbol><symbol id="nav-my-f" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<rect x="4.5" y="3" width="15" height="18" rx="2.5" fill="currentColor"/>
+<circle cx="12" cy="10" r="3.4" style="fill:var(--ax-color-surface,#fff);stroke:none"/>
+<path d="M8.5 16.5H15.5" style="stroke:var(--ax-color-surface,#fff)"/>
 </symbol><symbol id="qr-corners" viewBox="0 0 32 32" fill="none">
 <g>
 <path d="M11 4H9C7.67392 4 6.40215 4.52678 5.46447 5.46447C4.52678 6.40215 4 7.67392 4 9V11M21 4H23C24.3261 4 25.5979 4.52678 26.5355 5.46447C27.4732 6.40215 28 7.67392 28 9V11M28 21V23C28 24.3261 27.4732 25.5979 26.5355 26.5355C25.5979 27.4732 24.3261 28 23 28H21M11 28H9C7.67392 28 6.40215 27.4732 5.46447 26.5355C4.52678 25.5979 4 24.3261 4 23V21" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
@@ -3417,7 +3433,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.74";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.75";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -4203,9 +4219,8 @@ var App = {
      라우트 id 는 유지한다: passport(스탬프)·guide_time(시간표·내 일정)은 이제 나의 참여 아래 Lv2 다. 옛 해시·딥링크·App.go 호출이 그대로 산다. */
   TABS: [["home", "홈"], ["guide", "프로그램"], ["exp", "스탬프"], ["my", "나의 참여"]],
   ROOTS: ["home", "guide", "exp", "my"],
-  /* 제공 스프라이트 id · 패키지 원본 파일명이 화면과 뒤바뀌어 있다(nav-experience = 격자, nav-program = 화살표).
-     기준 화면 H01·E01 의 모양을 따른다: 프로그램 = 격자, 체험 = 화살표 */
-  NAV_ICO: { home: "nav-home", guide: "nav-experience", exp: "nav-program", my: "nav-my" },
+  /* v5.75 하단 메뉴 아이콘 id = 탭 뜻(홈 = 집 · 프로그램 = 달력 + 시간표 줄 · 스탬프 = 도장 · 나의 참여 = 사람 카드) · 선택된 탭은 같은 id + "-f"(채움) · 옛 nav-experience(격자) · 화살표 아이콘 없앰 */
+  NAV_ICO: { home: "nav-home", guide: "nav-program", exp: "nav-stamp", my: "nav-my" },
   /* 옛 행 카드 아이콘 (rcIcon 이 쓴다) */
   ICONS: {
     home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 11.2 12 4l8.5 7.2"/><path d="M6 9.8V20h12V9.8"/><path d="M10 20v-5.4h4V20"/></svg>',
@@ -4419,15 +4434,16 @@ var App = {
     document.body.dataset.pg = v === "scan_q" && SCQ.tab === "scan" ? "d" : "";   /* v5.23 내 QR 탭은 밝은 면 */   /* v4.06 · 프로그램 탭 흰 페이지(v4.05) 폐지 · 다른 탭과 같은 canvas + 흰 카드 · Q02 스캔만 카메라 화면(짙은 면) */
     nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "sess_d" || v === "sess_cf" || v === "sess_ok" || (v === "ideas" && IDEA.step) || ["exp_g", "scan_q", "scan_res", "stair"].indexOf(v) >= 0 || v === "game_tetris" || v === "game_pang" || v === "game_jump" || v === "game_ox" || v === "type_site") ? "none" : "";
     var activeTab = this.tabOf(v), ico = this.NAV_ICO;
-    var btn = function (t) {
-      return '<button class="ax-nav-link"' + (activeTab === t[0] ? ' aria-current="page"' : "") + ' onclick="App.tab(\'' + t[0] + '\')">' +
-        '<svg class="ax-icon" aria-hidden="true"><use href="#' + ico[t[0]] + '"/></svg><span>' + t[1] + "</span></button>";
+    var btn = function (t) {   /* v5.75 선택 표시 세 겹 = 채움 아이콘(-f) + 주황 아이콘 + 짙은 굵은 라벨(CSS) · 선택 안 됨 = 선 아이콘 + 회색 */
+      var on = activeTab === t[0];
+      return '<button class="ax-nav-link"' + (on ? ' aria-current="page"' : "") + ' onclick="App.tab(\'' + t[0] + '\')">' +
+        '<svg class="ax-icon" aria-hidden="true"><use href="#' + ico[t[0]] + (on ? "-f" : "") + '"/></svg><span>' + t[1] + "</span></button>";
     };
     var T = this.TABS;
-    /* 가운데 = QR 화면(v5.23 사용자 261003 · 기본 내 QR · 스캔은 탭) · 주황 원 + 짙은 글리프 · 가이드 헤더 QR 과 같은 둥근 모서리 그림(qr-corners) + QR 글자 */
+    /* 가운데 = QR 화면(v5.23 사용자 261003 · 기본 내 QR · 스캔은 탭) · 주황 원 + 짙은 글리프 · 둥근 모서리 그림(qr-corners)만(v5.75 원 안 「QR」 글자 없앰 · 아래 「내 QR」 라벨이 이름) */
     nav.innerHTML = btn(T[0]) + btn(T[1]) +
       '<button class="axs-scan" onclick="qrOpen()" aria-label="내 QR · QR 스캔"><span class="axs-scan-c" aria-hidden="true">' +
-      '<svg><use href="#qr-corners"/></svg><b>QR</b></span><span aria-hidden="true">내 QR</span></button>' +
+      '<svg><use href="#qr-corners"/></svg></span><span aria-hidden="true">내 QR</span></button>' +
       btn(T[2]) + btn(T[3]);
     el("view").dataset.v = v;
     if (v === "scan_q") el("view").dataset.qt = SCQ.tab; else delete el("view").dataset.qt;
@@ -5765,7 +5781,7 @@ function crowdStripHtml() {
 /* v5.37 (사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) 둘러보기 v3 = 시험 페이지와 같은 공용 모듈(tour3.js · tour3.css · 캐릭터 걷기 · 40도 시점 · 왼손 패드 · 오른손 십자 · 작은 지도 · 스태프 챗봇 · 판 보기 · 돋보기 2개 · 움직임 줄이기 · 입장 암전)
    같은 약속 AXTour.open/close/back/isOpen · 옛 v2(tour.js · tour.css · 자동 둘러보기 · 평면 지도 · 구역 시트)로 되돌리려면 아래 목록의 tour3 두 개를 tour.css · tour.js 로 바꾸면 된다(파일은 그대로 둠) */
 /* v5.38 (사용자 261003) 둘러보기 손질 · 캐릭터 겹침(스태프 원 충돌) · 늘 카메라 쪽을 봄 · 조그 패드 · 안내데스크 깜빡임(겹친 면) · 정문 회전문 또렷하게 · 로비 음악(Web Audio 합성 · 「음악 없이」 · 위쪽 스피커 버튼) · 파일 이름 그대로 · 캐시 깨기 ver v538 */
-var TOUR = { ver: "v573", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
+var TOUR = { ver: "v575", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
 try { localStorage.removeItem('axfT3Diag'); } catch (e) {} window.AXT3_DIAG = /[?&]t3diag=1(?:&|$)/.test(location.search);   /* v5.47 진단은 주소에 ?t3diag=1 이 있는 그 페이지에서만 · 기억하지 않는다 · 옛 기기 기억은 지운다(사용자 261004) */   /* v5.44 둘러보기 실기기 진단(주소 ?t3diag=1 · 이 기기에 기억 · ?t3diag=0 이면 끔) · 화면 왼쪽 위에 GPU · 깊이 비트 · highp · DPR · fps */
 /* 켜기 스위치 · v5.28 true = 전체 공개(사용자 261003 「1층 3D 전체 공개」) · false 로 두면 입구 3곳 · 판 퀴즈 힌트 링크 · 열기가 모두 숨는다 */
 var TOUR_ON = true;
@@ -10792,7 +10808,7 @@ function tsfGuideHtml() {
     '<p class="tsf-gs">왼쪽 <em>방법 2</em> QR을 폰 카메라로 찍어 주세요</p><p class="tsf-gs s">' + TSF_DESK + "</p>" + tsfStepsHtml() + "</div>";
   return '<div class="tsf-gd"><p class="tsf-chip">방법 1</p><p class="tsf-h"><span>앱의 <em>내 QR</em>을</span><span>위 <em>카메라</em>에 비추세요</span></p>' +
     '<div class="tsf-ill"><p class="tsf-arm">팔을 쭉 펴고<br>폰 화면이<br>카메라를 보게</p><div class="tsf-ph"><i class="tsf-up"></i>' + TSF_PHONE + "</div>" +
-    '<div class="tsf-qrb"><span class="tsf-nav"><b>QR</b></span><p>앱 가운데<br><em>QR 버튼</em> → 내 QR</p></div></div>' + tsfStepsHtml() + "</div>";
+    '<div class="tsf-qrb"><span class="tsf-nav"><b><svg aria-hidden="true"><use href="#qr-corners"/></svg></b></span><p>앱 가운데<br><em>QR 버튼</em> → 내 QR</p></div></div>' + tsfStepsHtml() + "</div>";
 }
 function tsfStepsHtml() {
   return '<div class="tsf-steps"><p><b>1</b><span>QR을 노트북에</span></p><p><b>2</b><span><kbd class="tsf-key">SPACE</kbd>로 시작</span></p><p><b>3</b><span>떨어지는 단어 입력</span></p></div>' +

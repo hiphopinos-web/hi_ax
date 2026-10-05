@@ -334,6 +334,7 @@
   .rt .tsf-qrb p { margin: 0; }
   .rt .tsf-nav { margin-top: 22px; width: 150px; height: 40px; display: flex; justify-content: center; background: var(--rt-cream); box-shadow: var(--rt-line); }
   .rt .tsf-nav b { margin-top: -24px; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--rt-o100); color: var(--rt-night); font-weight: 400; font-size: var(--rt-f24); line-height: 1; box-shadow: 0 0 0 3px var(--rt-ink); }
+  .rt .tsf-nav b svg { width: 36px; height: 36px; display: block; }   /* v5.75 앱 가운데 QR 버튼과 같은 그림(모서리 무늬 · 원 안 글자 없음) */
   .rt .tsf-steps { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
   .rt .tsf-steps p { margin: 3px; padding: 10px 6px; display: flex; flex-direction: column; align-items: center; gap: 8px; background: var(--rt-bark); box-shadow: var(--rt-line); color: var(--rt-cream); word-break: keep-all; }
   .rt .tsf-steps b { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: var(--rt-o100); color: var(--rt-night); font-weight: 400; box-shadow: 0 0 0 2px var(--rt-ink); }

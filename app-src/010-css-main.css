@@ -1129,7 +1129,10 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* v4.48 (사용자 260925 「QR 버튼이 조금 더 위로 · 하얀 동그라미 배경」) 원 52 · 흰 테두리 6(메뉴 면과 같은 흰색)이 메뉴 위로 솟는다 · 원 + 여백 합은 옆 탭 아이콘 자리(24)와 같게 둬 라벨 줄 높이는 그대로 */
   #tabbar .axs-scan-c { width: 52px; height: 52px; margin-top: -28px; box-shadow: 0 0 0 6px var(--ax-color-surface), 0 -4px 12px 4px rgba(0, 0, 0, .06); }
   #tabbar .axs-scan-c svg { width: 32px; height: 32px; display: block; }   /* v4.48 28 → 32 (원 52) */
-  #tabbar .axs-scan-c b { position: absolute; font: 600 13px/16px var(--ax-font); }   /* 헤더 QR(.ax-qr-label)과 같은 글자 규격 */
+  /* v5.75 (사용자 261006) 선택 표시 세 겹 = 아이콘 채움(nav-*-f) + 아이콘 주황(O100) + 라벨 짙은 글(ink) 700 · 선택 안 됨 = 선 아이콘 + 회색(muted) 500 · 라벨 12 → 13(줄높이 18 · 큰 글씨 배율을 따르는 rem) · 한 줄 고정 · 가운데 원 안 「QR」 글자 없음 */
+  #tabbar .ax-nav-link, #tabbar .axs-scan { font: 500 0.8125rem/1.125rem var(--ax-font); white-space: nowrap; }
+  #tabbar .ax-nav-link[aria-current="page"] { color: var(--ax-color-ink); font-weight: 700; }
+  #tabbar .ax-nav-link[aria-current="page"] .ax-icon { color: var(--ax-color-brand); }
   /* 목적지 행 · 승인 클래스 .ax-destination 을 버튼에 입힐 때의 기본값 되돌리기 */
   #app .ax-type-t2, #app .ax-type-t3, #app .ax-type-t4, #app .ax-type-t6-strong, #splash .ax-header { color: var(--ax-color-ink); }
   .axs-dest { width: 100%; border: 0; text-align: left; cursor: pointer; font-family: inherit; }

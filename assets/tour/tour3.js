@@ -1882,7 +1882,7 @@
   }
 
   /* ═══════════ 안내 챗봇(구역마다 1명 · 사용자 261003) ═══════════
-   * 몸 = 파랑(현대해상 공식 HI Navy #001F5B · 사용자 261003 「안내 챗봇 몸은 파란색」 · design.md 예외는 메인이 기록) · 띠 · 안테나 공 · 눈 = 흰색 · 왼쪽 가슴 작은 가로 명찰(주황 바탕 흰 「STAFF」 · 흔들림 없음) · 전파는 주황(파랑 몸 위 대비 · 내 캐릭터와 같은 행사 색)
+   * 몸 = 파랑(현대해상 공식 HI Navy #001F5B · 사용자 261003 「안내 챗봇 몸은 파란색」 · design.md 예외는 메인이 기록) · 띠 · 안테나 공 · 눈 = 흰색 · 왼쪽 가슴 작은 가로 명찰(주황 바탕 흰 「STAFF」 · 흔들림 없음) · 전파 = 공식 Blue #418FDE(v5.75 · 사용자 261006 · 파랑 몸과 한 식구 · 옛 주황)
    * 서는 자리 = 그 구역 멈춤 자리에서 판 쪽으로 0.7m · 오른쪽으로 1.1m(통로를 막지 않게) · 내가 가까이 오면 나를 향해 돌아서고 말풍선 한 줄(앱 1F 구역 한 줄 소개 + 「이에요」) */
   var guides = [];
   function staffTex() {   /* 가로 명찰 · 주황 바탕 + 흰 「STAFF」 */
@@ -1891,12 +1891,14 @@
     g.fillStyle = '#FFFFFF'; g.font = '800 44px "Pretendard Variable", Pretendard, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('STAFF', 96, 38);
     var t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; return t;
   }
-  var ARC = null;
-  function arcTex() {
-    if (ARC) return ARC;
+  /* 머리 위 전파 원호 · 주황(기본) = 내 캐릭터 · 인터뷰 TV 챗봇 · 파랑 = 스태프 챗봇(v5.75 사용자 261006 · 현대해상 공식 Blue #418FDE · 파랑 몸과 한 식구) · 색마다 텍스처 하나를 같이 쓴다 */
+  var ARC = {}, ARC_STAFF = '#418FDE';
+  function arcTex(col) {
+    col = col || '#FF7F32';
+    if (ARC[col]) return ARC[col];
     var c = document.createElement('canvas'); c.width = c.height = 128; var g = c.getContext('2d');
-    g.strokeStyle = '#FF7F32'; g.lineWidth = 13; g.lineCap = 'round'; g.beginPath(); g.arc(64, 84, 48, Math.PI * 1.22, Math.PI * 1.78); g.stroke();
-    ARC = new T.CanvasTexture(c); ARC.colorSpace = T.SRGBColorSpace; return ARC;
+    g.strokeStyle = col; g.lineWidth = 13; g.lineCap = 'round'; g.beginPath(); g.arc(64, 84, 48, Math.PI * 1.22, Math.PI * 1.78); g.stroke();
+    var t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; ARC[col] = t; return t;
   }
   var GUIDE_MAT = null;
   /* 스태프 챗봇 = 내 캐릭터와 같은 모양 · 같은 배색 규칙을 파랑 사다리로(사용자 261003 「바지는 짙은 파랑 · 몸통은 25% 파랑 · 내 캐릭터 색상 활용법과 같게」)
@@ -1919,7 +1921,7 @@
     [-1, 1].forEach(function (s) { var f = new T.Mesh(new T.SphereGeometry(0.085, 12, 8), M.foot); f.scale.set(1, 0.6, 1.35); f.position.set(s * 0.15, 0.035, 0.04); g.add(f); });
     if (SHOW_BADGE) { var badge = new T.Mesh(new T.BoxGeometry(0.15, 0.055, 0.012), [M.edge, M.edge, M.edge, M.edge, M.card, M.edge]); badge.position.set(0.14, 0.4, 0.315); badge.rotation.y = Math.atan2(0.14, 0.31); body.add(badge); }
     /* 머리 위 전파 · 「띠로 띠로」 · 위로 열린 원호 3겹이 차례로 퍼졌다 사라진다(스프라이트 · 늘 카메라를 봄) */
-    var waves = [0, 1, 2].map(function () { var sp = new T.Sprite(new T.SpriteMaterial({ map: arcTex(), transparent: true, depthWrite: false, opacity: 0 })); sp.position.y = 1.1; sp.scale.set(0.3, 0.3, 1); body.add(sp); return sp; });
+    var waves = [0, 1, 2].map(function () { var sp = new T.Sprite(new T.SpriteMaterial({ map: arcTex(ARC_STAFF), transparent: true, depthWrite: false, opacity: 0 })); sp.position.y = 1.1; sp.scale.set(0.3, 0.3, 1); body.add(sp); return sp; });
     /* 룰렛 자리 챗봇만 · 호객 · v5.49 옛 「손 흔들기」(가는 팔 + 남색 공)는 몸 뒤에서 꼬리 · 두 번째 안테나처럼 보여 뺐다(사용자 261004 「얘 왜 파란 꼬리 있냐」) · 대신 가까이 오면 제자리에서 통통 뛴다 */
     var arm = null;
     g.userData = { body: body, waves: waves, ph: Math.random(), arm: arm, hop: !!hand, eyes: eyes, smiles: smiles, joyT0: 0, joyEnd: 0, smileEnd: 0 };
@@ -4459,5 +4461,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.73', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.75', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();

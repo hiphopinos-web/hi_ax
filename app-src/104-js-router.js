@@ -36,9 +36,8 @@ var App = {
      라우트 id 는 유지한다: passport(스탬프)·guide_time(시간표·내 일정)은 이제 나의 참여 아래 Lv2 다. 옛 해시·딥링크·App.go 호출이 그대로 산다. */
   TABS: [["home", "홈"], ["guide", "프로그램"], ["exp", "스탬프"], ["my", "나의 참여"]],
   ROOTS: ["home", "guide", "exp", "my"],
-  /* 제공 스프라이트 id · 패키지 원본 파일명이 화면과 뒤바뀌어 있다(nav-experience = 격자, nav-program = 화살표).
-     기준 화면 H01·E01 의 모양을 따른다: 프로그램 = 격자, 체험 = 화살표 */
-  NAV_ICO: { home: "nav-home", guide: "nav-experience", exp: "nav-program", my: "nav-my" },
+  /* v5.75 하단 메뉴 아이콘 id = 탭 뜻(홈 = 집 · 프로그램 = 달력 + 시간표 줄 · 스탬프 = 도장 · 나의 참여 = 사람 카드) · 선택된 탭은 같은 id + "-f"(채움) · 옛 nav-experience(격자) · 화살표 아이콘 없앰 */
+  NAV_ICO: { home: "nav-home", guide: "nav-program", exp: "nav-stamp", my: "nav-my" },
   /* 옛 행 카드 아이콘 (rcIcon 이 쓴다) */
   ICONS: {
     home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 11.2 12 4l8.5 7.2"/><path d="M6 9.8V20h12V9.8"/><path d="M10 20v-5.4h4V20"/></svg>',
@@ -252,15 +251,16 @@ var App = {
     document.body.dataset.pg = v === "scan_q" && SCQ.tab === "scan" ? "d" : "";   /* v5.23 내 QR 탭은 밝은 면 */   /* v4.06 · 프로그램 탭 흰 페이지(v4.05) 폐지 · 다른 탭과 같은 canvas + 흰 카드 · Q02 스캔만 카메라 화면(짙은 면) */
     nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "sess_d" || v === "sess_cf" || v === "sess_ok" || (v === "ideas" && IDEA.step) || ["exp_g", "scan_q", "scan_res", "stair"].indexOf(v) >= 0 || v === "game_tetris" || v === "game_pang" || v === "game_jump" || v === "game_ox" || v === "type_site") ? "none" : "";
     var activeTab = this.tabOf(v), ico = this.NAV_ICO;
-    var btn = function (t) {
-      return '<button class="ax-nav-link"' + (activeTab === t[0] ? ' aria-current="page"' : "") + ' onclick="App.tab(\'' + t[0] + '\')">' +
-        '<svg class="ax-icon" aria-hidden="true"><use href="#' + ico[t[0]] + '"/></svg><span>' + t[1] + "</span></button>";
+    var btn = function (t) {   /* v5.75 선택 표시 세 겹 = 채움 아이콘(-f) + 주황 아이콘 + 짙은 굵은 라벨(CSS) · 선택 안 됨 = 선 아이콘 + 회색 */
+      var on = activeTab === t[0];
+      return '<button class="ax-nav-link"' + (on ? ' aria-current="page"' : "") + ' onclick="App.tab(\'' + t[0] + '\')">' +
+        '<svg class="ax-icon" aria-hidden="true"><use href="#' + ico[t[0]] + (on ? "-f" : "") + '"/></svg><span>' + t[1] + "</span></button>";
     };
     var T = this.TABS;
-    /* 가운데 = QR 화면(v5.23 사용자 261003 · 기본 내 QR · 스캔은 탭) · 주황 원 + 짙은 글리프 · 가이드 헤더 QR 과 같은 둥근 모서리 그림(qr-corners) + QR 글자 */
+    /* 가운데 = QR 화면(v5.23 사용자 261003 · 기본 내 QR · 스캔은 탭) · 주황 원 + 짙은 글리프 · 둥근 모서리 그림(qr-corners)만(v5.75 원 안 「QR」 글자 없앰 · 아래 「내 QR」 라벨이 이름) */
     nav.innerHTML = btn(T[0]) + btn(T[1]) +
       '<button class="axs-scan" onclick="qrOpen()" aria-label="내 QR · QR 스캔"><span class="axs-scan-c" aria-hidden="true">' +
-      '<svg><use href="#qr-corners"/></svg><b>QR</b></span><span aria-hidden="true">내 QR</span></button>' +
+      '<svg><use href="#qr-corners"/></svg></span><span aria-hidden="true">내 QR</span></button>' +
       btn(T[2]) + btn(T[3]);
     el("view").dataset.v = v;
     if (v === "scan_q") el("view").dataset.qt = SCQ.tab; else delete el("view").dataset.qt;
