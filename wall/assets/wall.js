@@ -1256,7 +1256,7 @@
     if (WMREADY) { var wm = G.wm; cx.drawImage(org ? WM.w : WM.o, wm.x, wm.y, wm.w, wm.w * 179 / 497.6); }
     if (G.tag && TGREADY) {   /* v6 · 슬로건 두 줄(홍보부 아웃라인 원본) · 영문 줄이 국문 줄보다 크다 · 같은 색(무대 글자색) */
       var tg = G.tag, he = tg.we * 41.6 / 234, hk = tg.wk * 41.2 / 408, xe = tg.al === "right" ? tg.x - tg.we : tg.x, xk = tg.al === "right" ? tg.x - tg.wk : tg.x;
-      cx.drawImage(org ? TG.ew : TG.eo, xe, tg.y, tg.we, he); cx.drawImage(org ? TG.kw : TG.ko, xk, tg.y + he + tg.gap, tg.wk, hk);
+      cx.drawImage(TG.ew, xe, tg.y, tg.we, he); cx.drawImage(TG.kw, xk, tg.y + he + tg.gap, tg.wk, hk);
     }
     if (KIND && KLAST && G.kind && !(S && S.kind !== "act")) {   /* 큰 장면 · 다시 보기 동안은 숨김 */   /* v6 · 방금 온 스탬프 종류 · 닿을 때 바뀌고 4초 뒤 사라진다(움직이지 않고 투명도만) */
       var ka = T - KLAST.t0, kk = G.kind, kv = cl(ka / 0.25) * cl((4.2 - ka) / 0.8);
