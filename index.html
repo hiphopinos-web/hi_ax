@@ -1038,6 +1038,10 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
      패키지에 없는 조각만 axs- 접두로 여기 둔다: 가운데 QR 버튼(사용자 결정 260922) · 뒤로 버튼 · 세그먼트 · 상태 칩 · 스탬프 칸 · 챗봇.
      .ax-app 을 #frame 에 걸지 않는 이유: 그 규칙이 본문 전체 줄 간격을 바꿔 옛 화면(2~4단계 대상)이 한꺼번에 흔들린다. */
   html { font-size: calc(100% * var(--fs)); }                /* rem 타이포가 글자 크기 설정(--fs)을 따른다 */
+  /* v5.74 (v5.73 보고 · 안드로이드 크롬에서 줄 · 카드를 누르면 브라우저 기본 파란 눌림 면이 잠깐 보였다 = 파랑 금지 위반) 브라우저 눌림 면을 앱 전체에서 끈다(상속 속성 · html 한 곳)
+     대신 앱 눌림 = 누르는 동안 면을 4% 어둡게(흰 카드 · 주황 버튼 · 연주황 면 어디서나 같은 문법 · 파랑 없음) · 게임 판(.rt 레트로 단추는 제 눌림)과 1층 둘러보기 3D(#axTour3 · 제 조작부)는 빼고 · 비활성 단추는 그대로 */
+  html { -webkit-tap-highlight-color: transparent; }
+  #frame :is(button, a[href], [onclick], [role="button"], summary):not(:disabled):not([aria-disabled="true"]):not(.rt *):not(#axTour3 *):active { filter: brightness(0.96); }
   body { background: var(--ax-color-canvas); }
   #app :focus-visible, #splash :focus-visible { outline: var(--ax-focus-width) solid var(--ax-color-ink); outline-offset: var(--ax-space-4); }
   /* v5.36 포커스 고리는 키보드(Tab)일 때만 · 탭 · 프로그램 포커스(시트가 열리며 주 버튼에 focus())에는 검정 테두리가 생기지 않게 · html[data-kbd] 는 아래 스크립트가 keydown 에 켜고 포인터에 끈다 · 시트는 #app 밖이라 같은 고리를 따로 준다 */
@@ -1309,6 +1313,14 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-fl .fc.past { background: transparent; box-shadow: inset 0 0 0 1px var(--ax-color-divider); }
   .axs-fl .fc.past .t { color: var(--ax-color-muted); font-weight: 500; }
   .axs-fl .fc.focus { box-shadow: inset 0 0 0 2px var(--ax-color-brand); }
+  /* v5.74 13:30 칸 맨 아래 10F 실습형 세션 입구(progTenRowHtml) · 카드보다 낮은 위계 = 흰 면 없이 옅은 inset 면 · 작은 글 · 층 점 글자 · 셰브론 */
+  .axs-fl .fx10 { display: flex; align-items: center; gap: var(--ax-space-8); width: 100%; min-height: 48px; margin: 0; padding: 8px 10px 8px 14px; border: 0; border-radius: var(--ax-radius-12); background: var(--ax-color-inset); box-shadow: inset 0 0 0 1px var(--ax-color-divider); color: var(--ax-color-ink); text-align: left; font: inherit; cursor: pointer; }
+  .axs-fl .fx10 .dg-w { display: flex; flex: none; color: var(--ax-color-brand); }
+  .axs-fl .fx10 .x { display: flex; flex: 1 1 auto; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; text-align: left; }   /* 두 줄(이름 · 조건) · 큰글씨 360 에서도 같은 모양 */
+  .axs-fl .fx10 b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-fl .fx10 .x > span { font: var(--ax-type-t7); color: var(--ax-color-muted); word-break: keep-all; }
+  .axs-fl .fx10 .chv { flex: none; width: 20px; height: 20px; color: var(--ax-color-disabled); }
+  .axs-fl .fx10 .chv .axs-chev { display: block; width: 20px; height: 20px; }
   /* [전체 | 나의 일정] = 목록의 분류 칩 자리 · 선택 상태는 위 [목록 | 시간표]와 같은 흰 면 + 진한 글자(v4.16 사용자 지적 260922: 주황 계열은 「내 항목」 의미로만 쓴다 · brandSoft 선택은 내 항목 틴트와 헷갈렸다) */
   .axs-seg.axs-seg-sub { padding: 0; gap: var(--ax-space-8); background: transparent; }
   .axs-seg.axs-seg-sub button { background: var(--ax-color-divider); color: var(--ax-color-body); }
@@ -1992,32 +2004,33 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   @keyframes qzOxRing { 0% { transform: scale(1); opacity: 0.85; } 100% { transform: scale(1.14, 1.3); opacity: 0; } }
   @keyframes qzPangPill { 0% { transform: scale(0.4); opacity: 0; } 22% { transform: scale(1.12); opacity: 1; } 36% { transform: scale(1); opacity: 1; } 80% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.96); opacity: 0; } }
   @keyframes qzChipPop { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
-  /* v5.67 둘러보기 복귀 = 떠 있는 단추 하나(#trf · 사용자 261005) · 주황 원(52px) + 짙은 뒤로 화살표(onBrand · 흰 글자 금지) · 밑에 작은 「3D로 돌아가기」(흰 알약 · 본문 위에서도 읽힘)
-     자리 = 앱 폭 오른쪽 끝 · 맨 위로(TOP)와 같은 세로줄 그 위(아래 값은 trfSync 가 하단 메뉴 · 고정 버튼 높이로 정한다) · 시트 · 팝업 아래(z 36)
-     자동 복귀 = 둘레 3초 원(.cd · 짙은 선이 한 바퀴) · 시트 · 팝업 동안 멈춤(.hold) · 움직임 줄이기 = 원 없음 · 처음 나타날 때 한 번 톡(.pop) · 옛 v5.57 아래 띠(#trd) 없앰 */
-  #trf { position: fixed; z-index: 36; right: max(10px, calc(50% - var(--ax-app-max) / 2 + 10px)); bottom: 136px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0; border: 0; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-  #trf .trf-c { position: relative; width: 52px; height: 52px; border-radius: var(--ax-radius-999); background: var(--ax-color-brand); color: var(--ax-color-onBrand); display: grid; place-items: center; box-shadow: 0 4px 14px rgba(25, 31, 40, 0.22), 0 1px 3px rgba(25, 31, 40, 0.18); }
-  #trf .trf-c > svg:not(.trf-r) { width: 26px; height: 26px; display: block; }
-  #trf .trf-l { padding: 2px 8px; border-radius: var(--ax-radius-999); background: rgba(255, 255, 255, 0.94); box-shadow: 0 1px 4px rgba(25, 31, 40, 0.16); color: var(--ax-color-ink); font: 600 0.75rem/1.35 var(--ax-font); white-space: nowrap; }
-  #trf:active .trf-c { transform: scale(0.94); }
-  #trf { transition: bottom 0.18s ease-out; }   /* 비키기(trfAvoid) · 움직임 줄이기 = 바로 */
-  @media (prefers-reduced-motion: reduce) { #trf { transition: none; } }
-  #trf .trf-r { position: absolute; left: -6px; top: -6px; width: 64px; height: 64px; transform: rotate(-90deg); pointer-events: none; overflow: visible; }
-  #trf .trf-r circle { fill: none; stroke: var(--ax-color-ink); stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 188.5; stroke-dashoffset: 188.5; opacity: 0; }
-  #trf.cd .trf-r circle { opacity: 1; animation: trfRing 3s linear both; }
-  #trf.cd.hold .trf-r circle { animation-play-state: paused; }
-  #trf.cd.rmcd .trf-r circle { animation: none; opacity: 0; }
-  #trf.pop .trf-c { animation: trfPop 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
-  #trf.pop .trf-l { animation: trfIn 0.3s 0.12s ease-out both; }
-  @keyframes trfRing { 0% { stroke-dashoffset: 188.5; } 100% { stroke-dashoffset: 0; } }
-  @keyframes trfPop { 0% { transform: translateY(14px) scale(0.6); opacity: 0; } 60% { transform: translateY(-5px) scale(1.06); opacity: 1; } 100% { transform: none; opacity: 1; } }
-  @keyframes trfIn { from { opacity: 0; } to { opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) { #trf.pop .trf-c, #trf.pop .trf-l, #trf.cd .trf-r circle { animation: none; } #trf.cd .trf-r circle { opacity: 0; } }
-  body.trf-on #view { padding-bottom: calc(136px + 76px + var(--ax-space-16) + env(safe-area-inset-bottom)); }   /* 본문 마지막 단추를 스크롤해 떠 있는 단추 위로 올릴 수 있게(단추 아래 136 + 높이 76) */
+  /* v5.74 둘러보기 복귀 = 하단 탭 바로 위 얇은 띠 하나(#trf.trf-band · 사용자 261006 「하단 탭 위 얇은 띠(권장)」 · 옛 v5.67 오른쪽 아래 주황 원 + 작은 글 단추 없앰)
+     면 = 연주황(brandSoft) + 진한 주황 글(brandText · Weak 버튼 문법 · 화면 주 버튼의 주황 면과 겨루지 않는다) · 반경 16 · 높이 48 · 좌우 page-inset · 앱 폭 480 안 · 그림자 = 본문 위에 떠 있는 것만 알 만큼 옅게
+     자리(bottom) = trfSync 가 하단 메뉴 · 아래 고정 버튼 높이 + 8px 로 정한다 · z 36(하단 메뉴 40 · 시트 60 아래 · 시트가 열리면 띠는 숨김)
+     자동 복귀 = 띠 안 왼쪽 → 오른쪽 3초 차오름(.trf-p · O25 면) · 확인 시트 · 팝업 동안 멈춤(.hold) · 움직임 줄이기 = 차오름 없음(글만 센다) · 처음 나타날 때 아래에서 한 번(.pop) */
+  #trf.trf-band { position: fixed; z-index: 36; left: max(var(--ax-page-inset), calc(50% - var(--ax-app-max) / 2 + var(--ax-page-inset))); right: max(var(--ax-page-inset), calc(50% - var(--ax-app-max) / 2 + var(--ax-page-inset))); bottom: 88px; display: flex; align-items: center; gap: var(--ax-space-8); min-height: 48px; margin: 0; padding: 4px var(--ax-space-12) 4px var(--ax-space-8); overflow: hidden; border: 0; border-radius: var(--ax-radius-16); background: var(--ax-color-brandSoft); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ax-color-brand) 22%, transparent), 0 4px 14px rgba(25, 31, 40, 0.12); color: var(--ax-color-brandText); font-family: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  #trf .trf-p { position: absolute; inset: 0; z-index: 0; background: color-mix(in srgb, var(--ax-color-brand) 26%, var(--ax-color-brandSoft)); transform: scaleX(0); transform-origin: left center; pointer-events: none; }
+  #trf .trf-i, #trf .trf-l, #trf .trf-v { position: relative; z-index: 1; }
+  #trf .trf-i { display: block; flex: none; width: 32px; height: 32px; }
+  #trf .trf-i svg { display: block; width: 100%; height: 100%; }
+  #trf .trf-l { flex: 1 1 auto; min-width: 0; overflow: hidden; font: var(--ax-type-t6-strong); white-space: nowrap; text-overflow: ellipsis; }
+  #trf .trf-v { display: block; flex: none; width: 20px; height: 20px; }
+  #trf .trf-v .axs-chev { display: block; width: 20px; height: 20px; }
+  #trf.cd .trf-p { animation: trfFill 3s linear both; }
+  #trf.cd.hold .trf-p { animation-play-state: paused; }
+  #trf.cd.rmcd .trf-p { animation: none; }
+  #trf:active { filter: brightness(0.96); }   /* 앱 눌림 문법(010 · v5.74) · #trf 는 #frame 밖(body) */
+  #trf.pop { animation: trfUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  @keyframes trfFill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @keyframes trfUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { #trf.pop, #trf.cd .trf-p { animation: none; } }
+  html.kb-on #trf { display: none; }   /* 키보드가 올라오면(입력 중) 띠는 잠시 숨김 */
+  body.trf-on #view::after { content: ""; display: block; height: 56px; flex: none; }   /* 본문 끝을 띠 위까지 올릴 수 있게(띠 48 + 8) · 내용 가림 0 */
+  body.trf-on #topbtn { bottom: calc(var(--trfb, 88px) + 56px); }   /* 맨 위로 단추 = 띠 위 */
   /* ═══ v5.69 읽기용 상세 = 바텀 시트(#axsDet · detPaint · 사용자 261005) · AX-TDS 시트 문법 그대로(.ax-sheet 반경 32 · 그림자 sheet-shadow · 뒷배경 ink 40% · 손잡이 axs-grab · 닫기 axs-x)
      구조 = 머리(손잡이 · 칩 · 제목 · 도장 · 닫기 · 끌기 손잡이 영역) → 본문(혼자 스크롤 · 끝에서 튕김 없음) → 아래 고정 칸(주 버튼 하나 · 본문이 더 있으면 위 구분선)
      높이 = 내용만큼 · 최대 화면 90% · 들어옴 0.28초(아래에서) · 나감 0.22초 · 움직임 줄이기 = 즉시 · 시트에서 시트로 = 본문만 0.22초 페이드
-     z = 60(하단 메뉴 40 · 떠 있는 「3D로 돌아가기」는 시트 위 61 · 짧은 확인 시트 70 · 팝업 96 아래) · 주황 면 = 주 버튼 하나(간판 칩 · 도장 · 칩은 기존 그대로) ═══ */
+     z = 60(하단 메뉴 40 · v5.74 둘러보기 복귀 띠는 시트 동안 숨김 · 짧은 확인 시트 70 · 팝업 96 아래) · 주황 면 = 주 버튼 하나(간판 칩 · 도장 · 칩은 기존 그대로) ═══ */
   #axsDet { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
   #axsDet::before { content: ""; position: absolute; inset: 0; background: color-mix(in srgb, var(--ax-color-ink) 40%, transparent); opacity: var(--dd, 1); pointer-events: none; }
   #axsDet.in::before { animation: detDim 0.28s ease-out; }
@@ -2025,7 +2038,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #axsDet.out { pointer-events: none; }
   #axsDet.out::before { opacity: 0; transition: opacity 0.22s ease-in; }
   #axsDet .axs-dsh { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 0; width: 100%; max-width: var(--ax-app-max); max-height: 90vh; max-height: 90dvh; padding: 0; overflow: hidden; outline: none; color: var(--ax-color-ink); will-change: transform; }
-  #axsDet .axs-dhd { flex: none; padding: var(--ax-space-12) var(--ax-space-24) var(--ax-space-16); touch-action: none; cursor: grab; }
+  #axsDet .axs-dhd { position: relative; z-index: 1; flex: none; padding: var(--ax-space-12) var(--ax-space-24) var(--ax-space-16); touch-action: none; cursor: grab; box-shadow: 0 1px 0 transparent; transition: box-shadow 0.15s; }
+  #axsDet .axs-dhd.ov { box-shadow: 0 1px 0 var(--ax-color-divider); }   /* v5.74 본문이 머리 밑으로 스크롤됐을 때만 구분선(detOv · 아래 고정 칸 .ov 와 같은 문법) */
   #axsDet .axs-dhd .axs-grab { display: block; margin: 0 auto var(--ax-space-4); }
   #axsDet .axs-dhx { display: flex; flex-direction: column; gap: var(--ax-space-8); }
   #axsDet .axs-dtop { display: flex; align-items: flex-start; gap: var(--ax-space-8); margin-right: calc(var(--ax-space-12) * -1); }
@@ -2042,8 +2056,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #axsDet .axs-dft[hidden] { display: none; }
   #axsDet .axs-dft .ax-meta { margin: 0; text-align: center; word-break: keep-all; }
   html.det-lock, html.det-lock body { overflow: hidden; }   /* 뒤 목록은 멈춘 채 보인다(닫으면 그 자리) */
-  html.det-lock #trf { z-index: 61; }   /* 3D 출발 = 시트 위에서도 「3D로 돌아가기」 */
-  html.trf-det #axsDet .axs-dbody { padding-bottom: calc(var(--ax-space-32) + 76px); }   /* 시트 본문 끝을 떠 있는 단추 위까지 */
   html[data-kbd] #axsDet :focus-visible { outline: var(--ax-focus-width) solid var(--ax-color-ink); outline-offset: var(--ax-space-4); }
   /* 시트 본문 조각 · 시트 면이 흰색이라 안쪽 묶음은 inset 면(카드 위 카드 없음) · 절 = 옅은 구분선 + 소제목(1F 구역은 판 문법 ink 줄) */
   #axsDet .axs-dsec { display: flex; flex-direction: column; gap: var(--ax-space-8); padding-top: var(--ax-space-20); border-top: 1px solid var(--ax-color-divider); }
@@ -2157,16 +2169,21 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pz-cv .cds .dn { display: block; flex: none; width: 16px; height: 16px; color: rgba(255, 255, 255, 0.72); transition: transform 0.12s ease; }
   .axs-pz-cv .cds button:active .dn { transform: translateY(2px); color: var(--ax-color-inverse); }
   @media (prefers-reduced-motion: reduce) { .axs-pz-cv .cds button, .axs-pz-cv .cds .dn { transition: none; } .axs-pz-cv .cds button:active { transform: none; } }
-  /* 스탬프 개수 점 6개 · 켜진 점 = 조건 · 옅은 점 = 4 · 5 · 6개처럼 늘어나는 구간 */
-  .axs-pz-mt { display: inline-flex; flex: none; gap: 4px; }
-  .axs-pz-mt i { width: 8px; height: 8px; border-radius: 50%; background: var(--ax-color-divider); }
-  .axs-pz-mt i.on { background: var(--ax-color-brand); }
-  .axs-pz-mt i.pt { background: transparent; box-shadow: inset 0 0 0 1.5px var(--ax-color-brand); }
   .axs-pz-sec { display: flex; flex-direction: column; gap: var(--ax-space-12); margin-top: var(--ax-space-40); }
   .axs-pz-sh { display: flex; flex-direction: column; gap: var(--ax-space-4); margin-bottom: var(--ax-space-4); scroll-margin-top: calc(var(--stick, 0px) + var(--ax-space-16)); }
   .axs-pz-sh .en { margin: 0; font: var(--ax-type-caption); font-weight: 700; letter-spacing: 0.12em; color: var(--ax-color-brandText); }
   .axs-pz-sh h2 { margin: 0; font: var(--ax-type-t2); color: var(--ax-color-ink); }
-  .axs-pz-sh .cd { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ax-space-8); margin: var(--ax-space-8) 0 0; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
+  /* v5.74 「받으려면」 박스(사용자 261006) · 연주황 면(brandSoft · Weak 버튼과 같은 면 · 경고색 아님) · 반경 16 · 줄마다 주황 아이콘 24 + 굵은 한 줄(할 일 · ink) + 옅은 한 줄(body)
+     위 작은 라벨 「받으려면」 = brandText · 글자는 큰글씨를 따라 커지고 넘치면 줄바꿈(keep-all) · 경품 사진 카드보다 먼저 */
+  .axs-pz-need { margin: var(--ax-space-4) 0 var(--ax-space-4); padding: var(--ax-space-16) var(--ax-space-16) var(--ax-space-16) var(--ax-space-16); border-radius: var(--ax-radius-16); background: var(--ax-color-brandSoft); }
+  .axs-pz-need .k { margin: 0 0 var(--ax-space-12); font: var(--ax-type-caption); font-weight: 700; color: var(--ax-color-brandText); }
+  .axs-pz-need ul { display: flex; flex-direction: column; gap: var(--ax-space-12); margin: 0; padding: 0; list-style: none; }
+  .axs-pz-need li { display: flex; align-items: flex-start; gap: var(--ax-space-12); }
+  .axs-pz-need .i { display: block; flex: none; width: 24px; height: 24px; color: var(--ax-color-brand); }
+  .axs-pz-need .i svg { display: block; width: 100%; height: 100%; }
+  .axs-pz-need .x { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .axs-pz-need b { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); word-break: keep-all; }
+  .axs-pz-need .x > span { font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
   /* 경품 카드 · 사진이 주인공 · 흰 카드 위 흰 바탕 사진이 이어지게(사진 바탕은 빌드에서 흰색으로 맞췄다) */
   .axs-pz-c { display: flex; flex-direction: column; min-width: 0; margin: 0; overflow: hidden; border-radius: var(--ax-radius-24); background: var(--ax-color-surface); }
   .axs-pz-ph { position: relative; display: block; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; background: var(--ax-color-surface); }
@@ -2196,10 +2213,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pz-c.flat .axs-pz-ph { aspect-ratio: 2 / 1; }
   /* v5.33 (사용자 261003 「볼펜 그림이 잘렸다」) tall = 세로로 긴 사진 · 넓은 칸(2:1)에서 자르지 않고 전체(contain · 칸 높이 = 2열 사진과 같은 크기) */
   .axs-pz-c.tall .axs-pz-ph img { object-fit: contain; }
-  /* v5.18 스탬프와 별개 구역(1F 타자왕) · 위 구역들과 얇은 선으로 나눈다 · 조건 줄 앞 회색 알약 · 순위 보기 버튼 */
+  /* v5.18 스탬프와 별개 구역(1F 타자왕) · 위 구역들과 얇은 선으로 나눈다 · 순위 보기 버튼(블록 맨 아래) · v5.74 알약 · 아래 설명 줄은 「받으려면」 박스로 옮겼다 */
   .axs-pz-sec.sep { margin-top: var(--ax-space-48); padding-top: var(--ax-space-32); border-top: 1px solid var(--ax-color-divider); }
-  .axs-pz-sh .sp { display: inline-flex; align-items: center; min-height: 24px; padding: 0 10px; border-radius: var(--ax-radius-999); background: var(--ax-color-inset); color: var(--ax-color-ink); font: var(--ax-type-t7); font-weight: 700; white-space: nowrap; }
-  .axs-pz-nt { margin: 0 var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
   .fs-big .axs-pz-c:not(.gr) .tx { flex-wrap: wrap; }
   .fs-big .axs-pz-gr { grid-template-columns: minmax(0, 1fr); }
   .fs-big .axs-pz-c.wide .axs-pz-ph { aspect-ratio: 1 / 1; }
@@ -2207,8 +2222,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   @keyframes axsPzZoom { from { transform: scale(1.04); } to { transform: none; } }
   .axs-pz.in .axs-pz-cv > *, .axs-pz.in .axs-pz-sec:first-of-type > * { animation: axsPzIn 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
   .axs-pz.in .axs-pz-cv > .ttl { animation-delay: 0.06s; } .axs-pz.in .axs-pz-cv > .now { animation-delay: 0.12s; } .axs-pz.in .axs-pz-cv > .stp { animation-delay: 0.18s; } .axs-pz.in .axs-pz-cv > .cds { animation-delay: 0.24s; }
-  .axs-pz.in .axs-pz-sec:first-of-type > :nth-child(2) { animation-delay: 0.3s; }
-  .axs-pz.in .axs-pz-sec:first-of-type > :nth-child(2) img { animation: axsPzZoom 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both; }
+  .axs-pz.in .axs-pz-sec:first-of-type > :nth-child(2) { animation-delay: 0.3s; } .axs-pz.in .axs-pz-sec:first-of-type > :nth-child(3) { animation-delay: 0.36s; }
+  .axs-pz.in .axs-pz-sec:first-of-type > :nth-child(3) img { animation: axsPzZoom 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.36s both; }
   @media (prefers-reduced-motion: reduce) { .axs-pz.in *, .axs-pz.in .axs-pz-cv > *, .axs-pz.in .axs-pz-sec:first-of-type > * { animation: none !important; } }
   /* 입구 · 스탬프 보상 레일(홈 · 스탬프 탭) 아래 · 내 보상 · 사진 3장 + 「경품 보기」 · brandSoft 면(Weak 버튼 문법) */
   .axs-pzgo { display: flex; align-items: center; gap: var(--ax-space-12); width: 100%; min-height: 56px; margin-top: var(--ax-space-16); padding: var(--ax-space-8) var(--ax-space-16) var(--ax-space-8) var(--ax-space-8); border: 0; border-radius: var(--ax-radius-16); background: var(--ax-color-brandSoft); color: var(--ax-color-ink); font-family: inherit; text-align: left; cursor: pointer; }
@@ -3402,7 +3417,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.73";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.74";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -4654,10 +4669,11 @@ function detMake() {
   if (!lgxRM()) w.classList.add("in");
   return w;
 }
-/* 아래 고정 칸 위 구분선 = 본문이 그 아래로 더 있을 때만 */
+/* 아래 고정 칸 위 구분선 = 본문이 그 아래로 더 있을 때만 · v5.74 머리 아래 구분선 = 본문이 머리 밑으로 스크롤됐을 때만(사용자 261006 캡처 「시트 머리 아래 깨진 그림 띠」 = 경품 사진 아래 끝이 선 없이 머리에 잘려 보였다) */
 function detOv() {
-  var bd = document.querySelector("#axsDet .axs-dbody"), ft = document.querySelector("#axsDet .axs-dft");
+  var bd = document.querySelector("#axsDet .axs-dbody"), ft = document.querySelector("#axsDet .axs-dft"), hd = document.querySelector("#axsDet .axs-dhd");
   if (bd && ft) ft.classList.toggle("ov", bd.scrollHeight - bd.clientHeight - bd.scrollTop > 2);
+  if (bd && hd) hd.classList.toggle("ov", bd.scrollTop > 2);
 }
 /* 사라지기 · 같은 목록으로 닫히면 아래로 0.22초 · 다른 화면으로 가면 바로(새 화면이 그 자리에 그려진다) · 끌어서 닫았으면 이미 내려가 있다 */
 function detGone(w, toBase) {
@@ -4911,14 +4927,14 @@ function progFlowItems(onlyFl) {
   });
   if (onlyFl) return pub.filter(function (p) { return p.fl === onlyFl; });   /* v5.65 층 안내(floor_d · 둘러보기 엘리베이터 17F) = 그 층 공용 일정만(개인 일정 · 대신하기 없음) */
   var tm = tenMine();
-  if (tm) { var tp = tm.tm.split("~"); mine.push({ k: "ten", pid: tm.id, a: t2m(tp[0]), b: t2m(tp[1]), t0: tp[0], t1: tp[1], ttl: tm.ttl, sub: tm.sub, fl: 10, pl: sessPlace(tm).replace(/^\d+F\s*·?\s*/, ""), go: "progOpen('" + tm.id + "')", chip: "내 세션", mine: true, rep: true }); if (attMineK(tm.id, "out")) mine[mine.length - 1].chip = "출석"; }   /* v5.71 끝 QR 출석 = 17F 와 같은 칩 「출석」 */
+  if (tm) { var tp = tm.tm.split("~"); mine.push({ k: "ten", pid: tm.id, a: t2m(tp[0]), b: t2m(tp[1]), t0: tp[0], t1: tp[1], ttl: tm.ttl, sub: tm.sub, fl: 10, pl: sessPlace(tm).replace(/^\d+F\s*·?\s*/, ""), go: "progOpen('" + tm.id + "')", chip: "내 세션", mine: true }); if (attMineK(tm.id, "out")) mine[mine.length - 1].chip = "출석"; }   /* v5.71 끝 QR 출석 = 17F 와 같은 칩 「출석」 */
   var r = myResv();
   if (r && r.slot && FL_DAP_OK.indexOf(r.status) >= 0) { var ra = t2m(r.slot); mine.push({ k: "dap", pid: "dap", a: ra, b: ra + (RESV_CONF.step || 30), t0: r.slot, t1: hm2(ra + (RESV_CONF.step || 30)), ttl: "AX LOUNGE 상담", sub: "", fl: 1, pl: "AX LOUNGE", go: "progOpen('dap')", chip: RESV_ST[r.status] || "승인 완료", mine: true }); }
   var c = S.get("cchat", null);
   if (c && c.status === "matched" && c.round) { var ca = t2m(c.round); mine.push({ k: "cchat", pid: "cchat", a: ca, b: ca + 20, t0: c.round, t1: hm2(ca + 20), ttl: "AX 커피챗", sub: "", fl: 18, pl: c.table ? "TABLE " + c.table : "", go: "progOpen('cchat')", chip: "매칭됨", mine: true }); }
-  /* 겹침 = 시간 구간이 조금이라도 겹치면(끝 = 다음 시작은 겹치지 않음) · 대신하는 개인 일정(rep = 10F 세션)만 그 공용 일정 줄(pub)을 뺀다 · 상담 · 커피챗(30분 · 20분)은 끼워 넣기(v5.22) */
-  pub = pub.filter(function (p) { return !mine.some(function (m) { return m.rep && m.a < p.b && p.a < m.b; }); });
-  return pub.concat(mine).sort(function (x, y) { return x.a - y.a || (y.mine ? 1 : 0) - (x.mine ? 1 : 0); });
+  /* v5.74 (사용자 261006 「13:30부터 여기에는 17층 강의가 있어야 사람들이 보고 참여할 수 있을 듯」) 개인 일정은 공용 일정 줄을 빼지 않는다(옛 v5.22 rep = 10F 세션이 겹치는 17F 오후 강연 줄을 지웠다 · 10F 명단에 든 사람 화면에서 17F 가 사라진 원인)
+     같은 시각 순서 = 17F 등 공용 줄 먼저 · 내 10F 세션은 그 아래(k ten) · 상담 · 커피챗(30분 · 20분)은 지금처럼 끼워 넣기(같은 시각이면 먼저) */
+  return pub.concat(mine).sort(function (x, y) { return x.a - y.a || (x.k === "ten" ? 1 : 0) - (y.k === "ten" ? 1 : 0) || (y.mine ? 1 : 0) - (x.mine ? 1 : 0); });
 }
 function progFlowHtml(onlyFl) {
   var ph = evPhase(), hmN = ph === "before" ? -1 : ph === "after" ? 99999 : hmNow(), its = progFlowItems(onlyFl), g = [], by = {};
@@ -4933,8 +4949,15 @@ function progFlowHtml(onlyFl) {
     var span = nx ? nx.a - r.a : 0, p = nx ? Math.max(0, Math.min(1, (hmN - r.a) / span)) : 0, ex = nx ? Math.min(52, Math.round(span * 0.35)) : 0;
     var rl = nx ? '<i class="rl' + (p >= 1 ? " done" : p > 0 ? " cur" : "") + '" style="--p:' + p.toFixed(3) + '"></i>' : "";
     return '<div class="fr ' + st + '" style="--ex:' + ex + 'px"><span class="tm">' + r.t0 + '</span><span class="ln" aria-hidden="true"><i class="nd"></i>' + rl + '</span><div class="cs">' +
-      r.its.map(function (o) { return progFlowCard(o, hmN, focus === o); }).join("") + "</div></div>";
+      r.its.map(function (o) { return progFlowCard(o, hmN, focus === o); }).join("") + (!onlyFl && r.t0 === TEN_ROW_AT && !tenMine() ? progTenRowHtml() : "") + "</div></div>";
   }).join("");
+}
+/* v5.74 (사용자 261006 「사전 신청자 대상 강의에 대한 입구가 없는 것 같은데 · 적절한 위치」) 10F 실습형 세션 입구 = 13:30 칸 맨 아래 작은 한 줄(카드보다 낮은 위계 · 시간표 노드 · 진행 중 판정에 들지 않는다)
+   누르면 10F 실습형 세션 목록(floor_d · 엘리베이터 10F 안내와 같은 2단계) → 세션 줄 → 시트 · 사전 신청자(tenMine)에게는 숨긴다(내 세션 카드가 같은 칸에 있다) · 배제 말투 없이 「사전 신청자 참여」(design.md §7) */
+var TEN_ROW_AT = "13:30";
+function progTenGo() { PROG.floor = 10; App.go("floor_d"); }
+function progTenRowHtml() {
+  return '<button type="button" class="fx10" onclick="progTenGo()" data-fl="ten10"><span class="dg-w">' + flFloor(10) + '</span><span class="x"><b>실습형 세션</b><span>사전 신청자 참여 · 5개 세션</span></span><span class="chv">' + CHEV_SVG + "</span></button>";
 }
 function progFlowCard(o, hmN, isF) {
   var past = hmN >= o.b, ac = isF && o.lec && !o.chip ? '<span class="ac">입장 · 끝 QR로 출석</span>' : "";   /* v5.68 */
@@ -5950,66 +5973,59 @@ function trdWait() {
    처음 나타날 때 한 번 톡 튀어 오름(움직임 줄이기 = 없음)
    자동 복귀(옛 v5.57 아래 띠 「여기 머물기 / 둘러보기로 돌아가기 3」 없앰) = 그 활동의 스탬프를 이번에 새로 받으면(got) 연출 · 팝업이 모두 닫힌 뒤 이 단추 둘레에 3초 원이 돈다 → 다 돌면 tourRetGo
      단추 밖을 누르거나 키를 누르거나 다른 화면으로 가면 취소(= 머물기 · 단추는 남는다) · 시트 · 팝업이 뜨면 그동안 멈춤 · 움직임 줄이기 = 원 없이 3초 뒤 같은 동작(읽어 주기 「3초 뒤 3D로 돌아가요」) */
-var TRF_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 6 4 12l6 6"/><path d="M4.5 12H20"/></svg>';
+/* v5.74 (사용자 261006 「저 위치 저 모양이 적절하고 일반적인 어플리케이션에서 활용하는 문법인지」 → 「하단 탭 위 얇은 띠(권장)」 · 캡처에서 오른쪽 아래 둥근 단추가 목록 셰브론을 가렸다)
+   통화 앱 「통화로 돌아가기」 · 음악 앱 「지금 재생 중」 · 지도 「길안내로 돌아가기」와 같은 문법 = 하단 탭 바로 위 화면 폭 얇은 띠 하나(#trf.trf-band) · 띠 전체가 누름 영역 · 누르면 tourRetGo(들어가기 전 자리)
+   띠 = 좌우 여백 page-inset · 높이 48 · 연주황 면(brandSoft) + 진한 주황 글(brandText · 화면 주 버튼 주황 면과 겨루지 않게) · 왼쪽 챗봇(A-4 원본 BOT_SVG 작게) · 「1층 둘러보기로 돌아가기」 · 오른쪽 셰브론
+   자리 = 하단 메뉴(또는 아래 고정 버튼 axs-fix)가 더 높으면 그 위 8px · 본문 끝 = 띠 높이만큼 여백(body.trf-on #view::after · 내용 가림 0 · 옛 비키기 trfAvoid 없앰) · 맨 위로(TOP) 단추는 띠 위로(--trfb)
+   안 보임 = 출처가 둘러보기가 아닐 때(v5.73 유지 범위 = 3D로 돌아가거나 둘러보기를 새로 열 때 · 새로고침에만 지워진다) · 둘러보기가 열려 있을 때 · 게임 판 · 퀴즈 푸는 중 · v5.74 읽기용 상세 시트(5-7b)가 열려 있는 동안(시트 닫기 = 목록 · 목록에서 띠로)
+   처음 나타날 때 아래에서 한 번 올라옴(움직임 줄이기 = 없음)
+   자동 복귀 = 그 활동의 스탬프를 이번에 새로 받으면(got) 연출 · 팝업이 모두 닫힌 뒤 띠 안이 왼쪽에서 오른쪽으로 3초 동안 차오르고 글이 「3초 뒤 둘러보기로」(초를 센다) → 다 차면 tourRetGo
+     띠 밖을 누르거나 키를 누르거나 다른 화면으로 가면 취소(= 머물기 · 띠는 남고 글이 돌아온다) · 확인 시트 · 팝업이 뜨면 그동안 멈춤 · 움직임 줄이기 = 차오름 없이 글만 세고 3초 뒤 같은 동작 */
+var TRF_LBL = "1층 둘러보기로 돌아가기";
 function trfWant() {
   if (!tourRetAny() || el("app").hidden || TOUR.busy || (window.AXTour && AXTour.isOpen())) return false;   /* v5.73 tourRetLive(출발 화면 아래만) → tourRetAny(앱 어디서나) */
   if (rtView(App.current) && !document.querySelector("#view .gs-res-go")) return false;   /* 게임 판 중 = 조작 단추를 가리지 않게 · 결과 화면에서 보임 */
-  if (App.current === "quiz_play" && typeof qzRun === "function" && qzRun()) return false;   /* 판 퀴즈 푸는 중 = 답 · 「다음 문제」 · 힌트 단추를 가리지 않게(실측 390 에서 걸침) · 결과 화면에서 보임 */
+  if (App.current === "quiz_play" && typeof qzRun === "function" && qzRun()) return false;   /* 판 퀴즈 푸는 중 = 답 · 「다음 문제」 · 힌트 단추를 가리지 않게 · 결과 화면에서 보임 */
+  if (typeof detShown === "function" && detShown()) return false;   /* v5.74 상세 시트 동안 숨김(시트 아래 고정 주 버튼과 겹치지 않게) */
   return true;
 }
 function trfSync() {
   var f = el("trf");
   if (!trfWant()) { if (f) { if (TRD.el === f) trdHide(); f.parentNode.removeChild(f); } document.body.classList.remove("trf-on"); return; }
   if (!f) {
-    f = document.createElement("button"); f.type = "button"; f.id = "trf"; f.className = rgReduced() ? "rm" : "pop";
-    f.setAttribute("aria-label", "3D로 돌아가기 · 1층 둘러보기에서 있던 자리로");
+    f = document.createElement("button"); f.type = "button"; f.id = "trf"; f.className = "trf-band " + (rgReduced() ? "rm" : "pop");
+    f.setAttribute("aria-label", TRF_LBL + " · 있던 자리로");
     f.onclick = tourRetGo;
-    f.innerHTML = '<span class="trf-c"><svg class="trf-r" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30"/></svg>' + TRF_SVG + '</span><span class="trf-l">3D로 돌아가기</span><span class="ax-sr-only trf-s" role="status"></span>';
+    f.innerHTML = '<span class="trf-p" aria-hidden="true"></span><span class="trf-i" aria-hidden="true">' + (typeof BOT_SVG === "string" ? BOT_SVG : "") + '</span><span class="trf-l" aria-hidden="true">' + TRF_LBL + '</span><span class="trf-v" aria-hidden="true">' + CHEV_SVG + '</span><span class="ax-sr-only trf-s" role="status"></span>';
     document.body.appendChild(f);
   }
-  var dt = typeof detShown === "function" && detShown(), nav = el("tabbar"), fx = dt ? null : document.querySelector("#view .axs-fix.ax-bottom"), base = 0;
-  if (dt) { var dft = document.querySelector("#axsDet .axs-dft"); base = dft && !dft.hidden ? dft.offsetHeight : 0; }   /* v5.69 상세 시트 위 = 시트 아래 고정 칸 바로 위(시트 본문 오른쪽 아래) */
-  else {
-    if (nav && nav.style.display !== "none") base = Math.max(base, nav.offsetHeight);
-    if (fx) base = Math.max(base, fx.offsetHeight);
-  }
-  f.style.bottom = trfAvoid(f, dt ? base + 12 : Math.max(base + 12, 136), dt ? "#axsDet .axs-dbody" : "#view") + "px";   /* 136 = 맨 위로(80 + 46) 위 10px · 본문 버튼이 밑에 오면 그 위로 */
-  document.body.classList.toggle("trf-on", !fx && !dt);   /* 고정 버튼이 없는 화면 = 본문 끝을 단추 위까지 올릴 수 있게 아래 여백(CSS) */
-  document.documentElement.classList.toggle("trf-det", !!dt);   /* 시트 본문 끝도 단추 위까지 올라오게(CSS) */
+  var nav = el("tabbar"), fx = document.querySelector("#view .axs-fix.ax-bottom"), base = 0;
+  if (nav && nav.style.display !== "none" && nav.offsetHeight) { var nt = nav.getBoundingClientRect().top; [].forEach.call(nav.querySelectorAll("*"), function (x) { var r = x.getBoundingClientRect(); if (r.height && r.top < nt) nt = r.top; }); base = Math.max(base, Math.round(window.innerHeight - nt)); }   /* 하단 메뉴 가운데 QR 단추가 메뉴 위로 솟은 만큼까지 */
+  if (fx && fx.offsetHeight) base = Math.max(base, fx.offsetHeight);
+  var bt = base ? base + 8 : 8;
+  if (f.style.bottom !== bt + "px") { f.style.bottom = bt + "px"; document.body.style.setProperty("--trfb", bt + "px"); }
+  document.body.classList.add("trf-on");   /* 본문 끝 여백 · 맨 위로 단추를 띠 위로(CSS) */
 }
-/* 비키기 · 본문의 큰 버튼(ax-button · 입력 칸 · 상담 시간 칸 · 접힘 머리 summary)이 단추 자리에 오면 그 버튼 위로 올린다(퀴즈 결과 「스탬프 보기」 · 게임 결과 「다시 하기」 실측 390 · 360) · 카드 줄은 왼쪽이 넓게 남아 그대로 · 화면 위쪽 절반까지만 · 더 못 올리면 기본 자리 */
-function trfAvoid(f, b0, rt) {
-  rt = rt || "#view";
-  var vh = window.innerHeight, h = f.offsetHeight || 76, fr = f.getBoundingClientRect(), L = fr.left - 4, R = fr.right + 4, b = b0, top = el("topbar") ? el("topbar").getBoundingClientRect().bottom : 0;
-  var rs = [].slice.call(document.querySelectorAll([".ax-button", "input", "textarea", "select", ".axs-slot", "summary"].map(function (s) { return rt + " " + s; }).join(", "))).filter(function (e) { return !e.closest(".axs-fix"); }).map(function (e) { return e.getBoundingClientRect(); }).filter(function (r) { return r.width && r.height && r.left < R && L < r.right; });
-  for (var k = 0; k < 8; k++) {
-    var t = vh - b - h, bt = vh - b, hit = null;
-    rs.forEach(function (r) { if (r.top < bt + 4 && t - 4 < r.bottom && (!hit || r.top < hit.top)) hit = r; });
-    if (!hit) return b;
-    b = Math.ceil(vh - hit.top + 8);
-    if (vh - b - h < Math.max(top + 8, vh * 0.42)) return b0;
-  }
-  return b0;
-}
-var TRF_RAF = 0;
-window.addEventListener("scroll", function () { if (TRF_RAF || !el("trf")) return; TRF_RAF = requestAnimationFrame(function () { TRF_RAF = 0; trfSync(); }); }, { passive: true });
 setInterval(function () { if (typeof App !== "undefined" && App.current) trfSync(); }, 600);   /* 게임 결과 · 둘러보기 닫힘처럼 다시 그리기 없이 바뀌는 때 */
 function trdShow() {
   trdHide(); trfSync();
   var d = el("trf"); if (!d) { trdWait(); return; }
   d.classList.add("cd"); d.classList.toggle("rmcd", rgReduced());
-  var r = d.querySelector(".trf-r"); if (r) { r.style.animation = "none"; void r.offsetWidth; r.style.animation = ""; }
-  var s = d.querySelector(".trf-s"); if (s) s.textContent = TRD_MS / 1000 + "초 뒤 3D로 돌아가요";
+  var pg = d.querySelector(".trf-p"); if (pg) { pg.style.animation = "none"; void pg.offsetWidth; pg.style.animation = ""; }
+  var s = d.querySelector(".trf-s"), lb = d.querySelector(".trf-l"), sec = -1;
+  if (s) s.textContent = TRD_MS / 1000 + "초 뒤 1층 둘러보기로 돌아가요";
   TRD.el = d; TRD.end = Date.now() + TRD_MS;
   document.addEventListener("pointerdown", trdPtr, true); document.addEventListener("keydown", trdKey, true);
   var last = Date.now(), step = function () {
     if (TRD.el !== d) return;
     if (!tourRetLive() || !d.parentNode) { trdHide(); return; }   /* 다른 화면으로 감 = 취소 */
     var now = Date.now(), hold = !!(SPOP.cur || el("spop") || el("modal") || el("axsSheet") || document.hidden);
-    if (hold) TRD.end += now - last;   /* 시트 · 팝업이 떠 있는 동안 멈춤 */
+    if (hold) TRD.end += now - last;   /* 확인 시트 · 팝업이 떠 있는 동안 멈춤 */
     last = now; d.classList.toggle("hold", hold);
     var left = TRD.end - now;
     if (left <= 0) { tourRetGo(); return; }
+    var n = Math.max(1, Math.ceil(left / 1000));
+    if (n !== sec && lb) { sec = n; lb.textContent = n + "초 뒤 둘러보기로"; }   /* 띠 글 = 남은 초(3 · 2 · 1) */
     TRD.tick = setTimeout(step, Math.min(200, left));
   };
   step();
@@ -6021,7 +6037,7 @@ function trdHide() {
   if (!TRD) return;   /* 불러오는 중(App.go 가 먼저 불릴 때) */
   clearTimeout(TRD.t); clearTimeout(TRD.tick); TRD.t = TRD.tick = 0;
   document.removeEventListener("pointerdown", trdPtr, true); document.removeEventListener("keydown", trdKey, true);
-  if (TRD.el) { TRD.el.classList.remove("cd", "hold", "rmcd"); var s = TRD.el.querySelector(".trf-s"); if (s) s.textContent = ""; }
+  if (TRD.el) { TRD.el.classList.remove("cd", "hold", "rmcd"); var s = TRD.el.querySelector(".trf-s"), lb = TRD.el.querySelector(".trf-l"); if (s) s.textContent = ""; if (lb) lb.textContent = TRF_LBL; }   /* v5.74 머물기 = 띠 글 원래대로 */
   TRD.el = null;
 }
 
@@ -6736,12 +6752,28 @@ function prizeGuideHtml() {
    참여상 설명은 두 줄만(FIN_NOTE · 사용자 261003 「이 두 가지 정보만 남겨 두고 나머지는 없애 줘」) */
 var FIN_NOTE = "Outro에서 추첨 · 상품은 무작위<br>추첨 행사 이후 소속 부서로 배송";   /* v5.60 W10 (사용자 「빼」 · 261003 「두 줄만」 번복) 「남은 룰렛 경품도 함께」 삭제 */
 var PZ_HERO = { draw: 3, fin: 1, roulette: 1, type: 1 };   /* v5.09 타자왕도 사진 카드(1등 대표 · 2 · 3등 2열) */
+/* v5.74 (사용자 261006 「텍스트 위주 · 불필요한 정보 · 아웃트로 참석해야 추첨 대상이 된다는 게 중요한데 별도 박스로 확 눈에 들어와야」) 블록마다 「받으려면」 조건 박스 하나
+   need = [아이콘, 굵은 한 줄(할 일), 옅은 한 줄(때 · 곳 · 덧붙임)] 두 줄 · 옛 조건 줄(cd) · 점 6개(pzMeter) · 「스탬프와 별개」 알약(sp) · 참여상 아래 설명(note)은 걷었다(4 · 5 · 6개 = 1 · 2 · 3장은 위 단계 카드가 말한다)
+   사실 근거 = CLAUDE.md 보상 · 경품 · 타자왕 줄 · 「디자인 시안/완주 경품 추첨/설계안.md」(17:00 기준 · 체크인 조건 없음 · 다음 날 소속 부서로 배송) · Outro 상세(16:40부터 입구 추첨 QR) · 타자왕 1~3위 시상 참석 · 못 오면 대리 수상(사용자 261006) */
+var PZ_ICO = {
+  stamp: SICO + '<circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.2l2.6 2.6 4.9-5.2"/></svg>',
+  qr: SICO + '<path d="M4 8.5V5.5A1.5 1.5 0 0 1 5.5 4h3M15.5 4h3A1.5 1.5 0 0 1 20 5.5v3M20 15.5v3a1.5 1.5 0 0 1-1.5 1.5h-3M8.5 20h-3A1.5 1.5 0 0 1 4 18.5v-3"/><path d="M8.5 8.5h2.5v2.5H8.5zM13 8.5h2.5v2.5H13zM8.5 13h2.5v2.5H8.5zM13.5 13.5h2v2h-2z"/></svg>',
+  box: SICO + '<path d="M3.5 7.5 12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5 12 11.5l8.5-4M12 11.5v9"/></svg>',
+  key: SICO + '<rect x="2.5" y="6.5" width="19" height="11" rx="2"/><path d="M6 10h.01M9 10h.01M12 10h.01M15 10h.01M18 10h.01M7.5 14h9"/></svg>',
+  cup: SICO + '<path d="M7.5 4h9v5a4.5 4.5 0 0 1-9 0z"/><path d="M7.5 6H4.5a3 3 0 0 0 3 4M16.5 6h3a3 3 0 0 1-3 4M12 13.5V17M8.5 20h7M9.5 17h5"/></svg>'
+};
 var PZ_SEC = [
-  { k: "draw", en: "LUCKY DRAW", t: "행운권 추첨", m: [4, 6], cd: "스탬프 4 · 5 · 6개 = 행운권 1 · 2 · 3장<br>17:00 Outro 현장 추첨<br>17F 입구 QR 체크인" },
-  { k: "fin", en: "COMPLETION DRAW", t: "완주 경품 추첨", m: [6, 6], cd: "스탬프 6개", note: FIN_NOTE },
-  { k: "roulette", en: "ROULETTE", t: "룰렛", m: [3, 3], cd: "스탬프 3개 · 1F EVENT 룰렛 · 1인 1회" },
-  { k: "type", en: "TYPING KING", t: "1F 타자왕 1~3위", sp: "스탬프와 별개", cd: "1F 현장 최고 기록 · 17:00 마감<br>Outro 시상", go: ["실시간 순위 보기", "typeSiteRankGo()"] }   /* v5.18 맨 아래 · 스탬프와 별개(선으로 나눔) · 순위판 입구(사용자 261003) */
+  { k: "draw", en: "LUCKY DRAW", t: "행운권 추첨", need: [["stamp", "스탬프 4개부터 행운권", "6개면 3장"], ["qr", "Outro 참석 · 17F 입구 QR 체크인", "16:40부터 · 17:00 현장 추첨"]] },
+  { k: "fin", en: "COMPLETION DRAW", t: "완주 경품 추첨", need: [["stamp", "17:00까지 스탬프 6개", "자동 응모 · 체크인 필요 없어요"], ["box", "다음 날 소속 부서로 배송", "Outro에서 추첨 · 상품은 무작위"]] },
+  { k: "roulette", en: "ROULETTE", t: "룰렛", need: [["stamp", "스탬프 3개면 룰렛 1회", "1인 1회"], ["qr", "1F EVENT 룰렛 부스에서 내 QR 제시"]] },
+  { k: "type", en: "TYPING KING", t: "1F 타자왕 1~3위", sep: 1, need: [["key", "1F 현장 기록 1~3위", "17:00 마감 · 스탬프와 별개"], ["cup", "Outro 시상 참석", "못 오면 대리 수상"]], go: ["실시간 순위 보기", "typeSiteRankGo()"] }   /* v5.18 맨 아래 · 선으로 나눔 · 순위판 입구 = 블록 맨 아래(v5.73) */
 ];
+/* 「받으려면」 박스 · 연주황 면(brandSoft) · 아이콘 주황 · 굵은 글 ink · 옅은 글 body · 읽어 주기 = 「받으려면」 + 줄마다 */
+function pzNeedHtml(s) {
+  return '<div class="axs-pz-need" role="group" aria-label="' + esc(s.t) + ' 받으려면"><p class="k" aria-hidden="true">받으려면</p><ul>' + s.need.map(function (r) {
+    return '<li><span class="i" aria-hidden="true">' + PZ_ICO[r[0]] + '</span><span class="x"><b>' + esc(r[1]) + "</b>" + (r[2] ? "<span>" + esc(r[2]) + "</span>" : "") + "</span></li>";
+  }).join("") + "</ul></div>";
+}
 var PZ = { t: 0 };
 var PZ_THUMB = ["ld1_ipad", "fin_humidifier", "rl1_tumbler"];   /* 입구 사진 3장 = assets/prize/t_<img>.webp(96px) */
 function prizeGo(k) { PROG.anchor = k ? "pz-" + k : ""; PZ.t = Date.now(); App.go("prizes"); }
@@ -6755,10 +6787,6 @@ function prizeGoHtml(k) {
   return '<button type="button" class="axs-pzgo" onclick="event.stopPropagation(); prizeGo(' + (k ? "'" + k + "'" : "") + ')"><span class="th" aria-hidden="true">' + th + "</span>" +
     '<span class="tx"><b>경품 보기</b><span>아이패드 · 가습기 · 텀블러</span></span>' + CHEV_SVG + "</button>";
 }
-function pzMeter(a, b) {
-  var o = ""; for (var i = 0; i < STAMP_DENOM; i++) o += "<i" + (i < a ? ' class="on"' : i < b ? ' class="pt"' : "") + "></i>";
-  return '<span class="axs-pz-mt" aria-hidden="true">' + o + "</span>";
-}
 function pzCard(p, unit, cls) {
   var im = function (n) { return '<img src="' + PRIZE_DIR + n + '.webp" alt="" width="600" height="600" loading="lazy" decoding="async" onerror="this.remove()">'; };
   var ph = '<span class="axs-pz-ph' + (p.img2 ? " two" : "") + '">' + (p.img ? im(p.img) + (p.img2 ? im(p.img2) : "") +
@@ -6768,7 +6796,7 @@ function pzCard(p, unit, cls) {
 }
 function prizeSecHtml(s) {
   var g = PRIZES[s.k]; if (!g) return "";
-  var head = '<header class="axs-pz-sh" id="pz-' + s.k + '"><p class="en">' + s.en + "</p><h2>" + s.t + '</h2><p class="cd">' + (s.m ? pzMeter(s.m[0], s.m[1]) : "") + (s.sp ? '<span class="sp">' + s.sp + "</span>" : "") + "<span>" + s.cd + "</span></p></header>";   /* v5.18 sp = 스탬프와 별개 알약 */
+  var head = '<header class="axs-pz-sh" id="pz-' + s.k + '"><p class="en" aria-hidden="true">' + s.en + "</p><h2>" + s.t + "</h2></header>" + pzNeedHtml(s);   /* v5.74 머리 = 영문 장식 · 제목 · 「받으려면」 박스 */
   var go = s.go ? '<button type="button" class="ax-button ax-button-weak" onclick="' + s.go[1] + '">' + s.go[0] + "</button>" : "";   /* v5.73 (사용자 261005 「실시간 순위는 가장 아래 위치에 있어야 할 것 같아」) 구역 버튼(타자왕 순위판) = 블록 맨 아래(경품 사진 · 이름 · 안내 다음) · 옛 v5.18 = 머리 바로 아래 */
   var hn = PZ_HERO[s.k] || 0, rest = g.list.slice(hn), solo = rest.filter(function (p) { return !p.img2; }).length, k = 0;
   var body = g.list.slice(0, hn).map(function (p) { return pzCard(p, g.unit, " hero"); }).join("") +
@@ -6776,7 +6804,7 @@ function prizeSecHtml(s) {
       if (p.img2) return pzCard(p, g.unit, " gr wide");
       k++; return pzCard(p, g.unit, " gr" + (solo % 2 && k === solo ? " wide" : ""));
     }).join("") + "</div>" : "");
-  return '<section class="axs-pz-sec' + (s.sp ? " sep" : "") + '">' + head + body + (s.note ? '<p class="axs-pz-nt">' + s.note + "</p>" : "") + go + "</section>";
+  return '<section class="axs-pz-sec' + (s.sep ? " sep" : "") + '">' + head + body + go + "</section>";
 }
 /* v5.16 (사용자 시안 261003) 표지 = 작은 「AX Festival 2026」 · 큰 제목 「스탬프 개수별 경품」(옛 PRIZES 점 글자 · 조건 3줄은 걷었다)
    「지금 내 스탬프」 카드 = 다음 목표(주황 숫자) + 오른쪽 큰 주황 N개 · 6개면 「모두 모았어요」

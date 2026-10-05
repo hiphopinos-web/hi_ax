@@ -155,12 +155,28 @@ function prizeGuideHtml() {
    참여상 설명은 두 줄만(FIN_NOTE · 사용자 261003 「이 두 가지 정보만 남겨 두고 나머지는 없애 줘」) */
 var FIN_NOTE = "Outro에서 추첨 · 상품은 무작위<br>추첨 행사 이후 소속 부서로 배송";   /* v5.60 W10 (사용자 「빼」 · 261003 「두 줄만」 번복) 「남은 룰렛 경품도 함께」 삭제 */
 var PZ_HERO = { draw: 3, fin: 1, roulette: 1, type: 1 };   /* v5.09 타자왕도 사진 카드(1등 대표 · 2 · 3등 2열) */
+/* v5.74 (사용자 261006 「텍스트 위주 · 불필요한 정보 · 아웃트로 참석해야 추첨 대상이 된다는 게 중요한데 별도 박스로 확 눈에 들어와야」) 블록마다 「받으려면」 조건 박스 하나
+   need = [아이콘, 굵은 한 줄(할 일), 옅은 한 줄(때 · 곳 · 덧붙임)] 두 줄 · 옛 조건 줄(cd) · 점 6개(pzMeter) · 「스탬프와 별개」 알약(sp) · 참여상 아래 설명(note)은 걷었다(4 · 5 · 6개 = 1 · 2 · 3장은 위 단계 카드가 말한다)
+   사실 근거 = CLAUDE.md 보상 · 경품 · 타자왕 줄 · 「디자인 시안/완주 경품 추첨/설계안.md」(17:00 기준 · 체크인 조건 없음 · 다음 날 소속 부서로 배송) · Outro 상세(16:40부터 입구 추첨 QR) · 타자왕 1~3위 시상 참석 · 못 오면 대리 수상(사용자 261006) */
+var PZ_ICO = {
+  stamp: SICO + '<circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.2l2.6 2.6 4.9-5.2"/></svg>',
+  qr: SICO + '<path d="M4 8.5V5.5A1.5 1.5 0 0 1 5.5 4h3M15.5 4h3A1.5 1.5 0 0 1 20 5.5v3M20 15.5v3a1.5 1.5 0 0 1-1.5 1.5h-3M8.5 20h-3A1.5 1.5 0 0 1 4 18.5v-3"/><path d="M8.5 8.5h2.5v2.5H8.5zM13 8.5h2.5v2.5H13zM8.5 13h2.5v2.5H8.5zM13.5 13.5h2v2h-2z"/></svg>',
+  box: SICO + '<path d="M3.5 7.5 12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5 12 11.5l8.5-4M12 11.5v9"/></svg>',
+  key: SICO + '<rect x="2.5" y="6.5" width="19" height="11" rx="2"/><path d="M6 10h.01M9 10h.01M12 10h.01M15 10h.01M18 10h.01M7.5 14h9"/></svg>',
+  cup: SICO + '<path d="M7.5 4h9v5a4.5 4.5 0 0 1-9 0z"/><path d="M7.5 6H4.5a3 3 0 0 0 3 4M16.5 6h3a3 3 0 0 1-3 4M12 13.5V17M8.5 20h7M9.5 17h5"/></svg>'
+};
 var PZ_SEC = [
-  { k: "draw", en: "LUCKY DRAW", t: "행운권 추첨", m: [4, 6], cd: "스탬프 4 · 5 · 6개 = 행운권 1 · 2 · 3장<br>17:00 Outro 현장 추첨<br>17F 입구 QR 체크인" },
-  { k: "fin", en: "COMPLETION DRAW", t: "완주 경품 추첨", m: [6, 6], cd: "스탬프 6개", note: FIN_NOTE },
-  { k: "roulette", en: "ROULETTE", t: "룰렛", m: [3, 3], cd: "스탬프 3개 · 1F EVENT 룰렛 · 1인 1회" },
-  { k: "type", en: "TYPING KING", t: "1F 타자왕 1~3위", sp: "스탬프와 별개", cd: "1F 현장 최고 기록 · 17:00 마감<br>Outro 시상", go: ["실시간 순위 보기", "typeSiteRankGo()"] }   /* v5.18 맨 아래 · 스탬프와 별개(선으로 나눔) · 순위판 입구(사용자 261003) */
+  { k: "draw", en: "LUCKY DRAW", t: "행운권 추첨", need: [["stamp", "스탬프 4개부터 행운권", "6개면 3장"], ["qr", "Outro 참석 · 17F 입구 QR 체크인", "16:40부터 · 17:00 현장 추첨"]] },
+  { k: "fin", en: "COMPLETION DRAW", t: "완주 경품 추첨", need: [["stamp", "17:00까지 스탬프 6개", "자동 응모 · 체크인 필요 없어요"], ["box", "다음 날 소속 부서로 배송", "Outro에서 추첨 · 상품은 무작위"]] },
+  { k: "roulette", en: "ROULETTE", t: "룰렛", need: [["stamp", "스탬프 3개면 룰렛 1회", "1인 1회"], ["qr", "1F EVENT 룰렛 부스에서 내 QR 제시"]] },
+  { k: "type", en: "TYPING KING", t: "1F 타자왕 1~3위", sep: 1, need: [["key", "1F 현장 기록 1~3위", "17:00 마감 · 스탬프와 별개"], ["cup", "Outro 시상 참석", "못 오면 대리 수상"]], go: ["실시간 순위 보기", "typeSiteRankGo()"] }   /* v5.18 맨 아래 · 선으로 나눔 · 순위판 입구 = 블록 맨 아래(v5.73) */
 ];
+/* 「받으려면」 박스 · 연주황 면(brandSoft) · 아이콘 주황 · 굵은 글 ink · 옅은 글 body · 읽어 주기 = 「받으려면」 + 줄마다 */
+function pzNeedHtml(s) {
+  return '<div class="axs-pz-need" role="group" aria-label="' + esc(s.t) + ' 받으려면"><p class="k" aria-hidden="true">받으려면</p><ul>' + s.need.map(function (r) {
+    return '<li><span class="i" aria-hidden="true">' + PZ_ICO[r[0]] + '</span><span class="x"><b>' + esc(r[1]) + "</b>" + (r[2] ? "<span>" + esc(r[2]) + "</span>" : "") + "</span></li>";
+  }).join("") + "</ul></div>";
+}
 var PZ = { t: 0 };
 var PZ_THUMB = ["ld1_ipad", "fin_humidifier", "rl1_tumbler"];   /* 입구 사진 3장 = assets/prize/t_<img>.webp(96px) */
 function prizeGo(k) { PROG.anchor = k ? "pz-" + k : ""; PZ.t = Date.now(); App.go("prizes"); }
@@ -174,10 +190,6 @@ function prizeGoHtml(k) {
   return '<button type="button" class="axs-pzgo" onclick="event.stopPropagation(); prizeGo(' + (k ? "'" + k + "'" : "") + ')"><span class="th" aria-hidden="true">' + th + "</span>" +
     '<span class="tx"><b>경품 보기</b><span>아이패드 · 가습기 · 텀블러</span></span>' + CHEV_SVG + "</button>";
 }
-function pzMeter(a, b) {
-  var o = ""; for (var i = 0; i < STAMP_DENOM; i++) o += "<i" + (i < a ? ' class="on"' : i < b ? ' class="pt"' : "") + "></i>";
-  return '<span class="axs-pz-mt" aria-hidden="true">' + o + "</span>";
-}
 function pzCard(p, unit, cls) {
   var im = function (n) { return '<img src="' + PRIZE_DIR + n + '.webp" alt="" width="600" height="600" loading="lazy" decoding="async" onerror="this.remove()">'; };
   var ph = '<span class="axs-pz-ph' + (p.img2 ? " two" : "") + '">' + (p.img ? im(p.img) + (p.img2 ? im(p.img2) : "") +
@@ -187,7 +199,7 @@ function pzCard(p, unit, cls) {
 }
 function prizeSecHtml(s) {
   var g = PRIZES[s.k]; if (!g) return "";
-  var head = '<header class="axs-pz-sh" id="pz-' + s.k + '"><p class="en">' + s.en + "</p><h2>" + s.t + '</h2><p class="cd">' + (s.m ? pzMeter(s.m[0], s.m[1]) : "") + (s.sp ? '<span class="sp">' + s.sp + "</span>" : "") + "<span>" + s.cd + "</span></p></header>";   /* v5.18 sp = 스탬프와 별개 알약 */
+  var head = '<header class="axs-pz-sh" id="pz-' + s.k + '"><p class="en" aria-hidden="true">' + s.en + "</p><h2>" + s.t + "</h2></header>" + pzNeedHtml(s);   /* v5.74 머리 = 영문 장식 · 제목 · 「받으려면」 박스 */
   var go = s.go ? '<button type="button" class="ax-button ax-button-weak" onclick="' + s.go[1] + '">' + s.go[0] + "</button>" : "";   /* v5.73 (사용자 261005 「실시간 순위는 가장 아래 위치에 있어야 할 것 같아」) 구역 버튼(타자왕 순위판) = 블록 맨 아래(경품 사진 · 이름 · 안내 다음) · 옛 v5.18 = 머리 바로 아래 */
   var hn = PZ_HERO[s.k] || 0, rest = g.list.slice(hn), solo = rest.filter(function (p) { return !p.img2; }).length, k = 0;
   var body = g.list.slice(0, hn).map(function (p) { return pzCard(p, g.unit, " hero"); }).join("") +
@@ -195,7 +207,7 @@ function prizeSecHtml(s) {
       if (p.img2) return pzCard(p, g.unit, " gr wide");
       k++; return pzCard(p, g.unit, " gr" + (solo % 2 && k === solo ? " wide" : ""));
     }).join("") + "</div>" : "");
-  return '<section class="axs-pz-sec' + (s.sp ? " sep" : "") + '">' + head + body + (s.note ? '<p class="axs-pz-nt">' + s.note + "</p>" : "") + go + "</section>";
+  return '<section class="axs-pz-sec' + (s.sep ? " sep" : "") + '">' + head + body + go + "</section>";
 }
 /* v5.16 (사용자 시안 261003) 표지 = 작은 「AX Festival 2026」 · 큰 제목 「스탬프 개수별 경품」(옛 PRIZES 점 글자 · 조건 3줄은 걷었다)
    「지금 내 스탬프」 카드 = 다음 목표(주황 숫자) + 오른쪽 큰 주황 N개 · 6개면 「모두 모았어요」

@@ -182,14 +182,14 @@ function progFlowItems(onlyFl) {
   });
   if (onlyFl) return pub.filter(function (p) { return p.fl === onlyFl; });   /* v5.65 층 안내(floor_d · 둘러보기 엘리베이터 17F) = 그 층 공용 일정만(개인 일정 · 대신하기 없음) */
   var tm = tenMine();
-  if (tm) { var tp = tm.tm.split("~"); mine.push({ k: "ten", pid: tm.id, a: t2m(tp[0]), b: t2m(tp[1]), t0: tp[0], t1: tp[1], ttl: tm.ttl, sub: tm.sub, fl: 10, pl: sessPlace(tm).replace(/^\d+F\s*·?\s*/, ""), go: "progOpen('" + tm.id + "')", chip: "내 세션", mine: true, rep: true }); if (attMineK(tm.id, "out")) mine[mine.length - 1].chip = "출석"; }   /* v5.71 끝 QR 출석 = 17F 와 같은 칩 「출석」 */
+  if (tm) { var tp = tm.tm.split("~"); mine.push({ k: "ten", pid: tm.id, a: t2m(tp[0]), b: t2m(tp[1]), t0: tp[0], t1: tp[1], ttl: tm.ttl, sub: tm.sub, fl: 10, pl: sessPlace(tm).replace(/^\d+F\s*·?\s*/, ""), go: "progOpen('" + tm.id + "')", chip: "내 세션", mine: true }); if (attMineK(tm.id, "out")) mine[mine.length - 1].chip = "출석"; }   /* v5.71 끝 QR 출석 = 17F 와 같은 칩 「출석」 */
   var r = myResv();
   if (r && r.slot && FL_DAP_OK.indexOf(r.status) >= 0) { var ra = t2m(r.slot); mine.push({ k: "dap", pid: "dap", a: ra, b: ra + (RESV_CONF.step || 30), t0: r.slot, t1: hm2(ra + (RESV_CONF.step || 30)), ttl: "AX LOUNGE 상담", sub: "", fl: 1, pl: "AX LOUNGE", go: "progOpen('dap')", chip: RESV_ST[r.status] || "승인 완료", mine: true }); }
   var c = S.get("cchat", null);
   if (c && c.status === "matched" && c.round) { var ca = t2m(c.round); mine.push({ k: "cchat", pid: "cchat", a: ca, b: ca + 20, t0: c.round, t1: hm2(ca + 20), ttl: "AX 커피챗", sub: "", fl: 18, pl: c.table ? "TABLE " + c.table : "", go: "progOpen('cchat')", chip: "매칭됨", mine: true }); }
-  /* 겹침 = 시간 구간이 조금이라도 겹치면(끝 = 다음 시작은 겹치지 않음) · 대신하는 개인 일정(rep = 10F 세션)만 그 공용 일정 줄(pub)을 뺀다 · 상담 · 커피챗(30분 · 20분)은 끼워 넣기(v5.22) */
-  pub = pub.filter(function (p) { return !mine.some(function (m) { return m.rep && m.a < p.b && p.a < m.b; }); });
-  return pub.concat(mine).sort(function (x, y) { return x.a - y.a || (y.mine ? 1 : 0) - (x.mine ? 1 : 0); });
+  /* v5.74 (사용자 261006 「13:30부터 여기에는 17층 강의가 있어야 사람들이 보고 참여할 수 있을 듯」) 개인 일정은 공용 일정 줄을 빼지 않는다(옛 v5.22 rep = 10F 세션이 겹치는 17F 오후 강연 줄을 지웠다 · 10F 명단에 든 사람 화면에서 17F 가 사라진 원인)
+     같은 시각 순서 = 17F 등 공용 줄 먼저 · 내 10F 세션은 그 아래(k ten) · 상담 · 커피챗(30분 · 20분)은 지금처럼 끼워 넣기(같은 시각이면 먼저) */
+  return pub.concat(mine).sort(function (x, y) { return x.a - y.a || (x.k === "ten" ? 1 : 0) - (y.k === "ten" ? 1 : 0) || (y.mine ? 1 : 0) - (x.mine ? 1 : 0); });
 }
 function progFlowHtml(onlyFl) {
   var ph = evPhase(), hmN = ph === "before" ? -1 : ph === "after" ? 99999 : hmNow(), its = progFlowItems(onlyFl), g = [], by = {};
@@ -204,8 +204,15 @@ function progFlowHtml(onlyFl) {
     var span = nx ? nx.a - r.a : 0, p = nx ? Math.max(0, Math.min(1, (hmN - r.a) / span)) : 0, ex = nx ? Math.min(52, Math.round(span * 0.35)) : 0;
     var rl = nx ? '<i class="rl' + (p >= 1 ? " done" : p > 0 ? " cur" : "") + '" style="--p:' + p.toFixed(3) + '"></i>' : "";
     return '<div class="fr ' + st + '" style="--ex:' + ex + 'px"><span class="tm">' + r.t0 + '</span><span class="ln" aria-hidden="true"><i class="nd"></i>' + rl + '</span><div class="cs">' +
-      r.its.map(function (o) { return progFlowCard(o, hmN, focus === o); }).join("") + "</div></div>";
+      r.its.map(function (o) { return progFlowCard(o, hmN, focus === o); }).join("") + (!onlyFl && r.t0 === TEN_ROW_AT && !tenMine() ? progTenRowHtml() : "") + "</div></div>";
   }).join("");
+}
+/* v5.74 (사용자 261006 「사전 신청자 대상 강의에 대한 입구가 없는 것 같은데 · 적절한 위치」) 10F 실습형 세션 입구 = 13:30 칸 맨 아래 작은 한 줄(카드보다 낮은 위계 · 시간표 노드 · 진행 중 판정에 들지 않는다)
+   누르면 10F 실습형 세션 목록(floor_d · 엘리베이터 10F 안내와 같은 2단계) → 세션 줄 → 시트 · 사전 신청자(tenMine)에게는 숨긴다(내 세션 카드가 같은 칸에 있다) · 배제 말투 없이 「사전 신청자 참여」(design.md §7) */
+var TEN_ROW_AT = "13:30";
+function progTenGo() { PROG.floor = 10; App.go("floor_d"); }
+function progTenRowHtml() {
+  return '<button type="button" class="fx10" onclick="progTenGo()" data-fl="ten10"><span class="dg-w">' + flFloor(10) + '</span><span class="x"><b>실습형 세션</b><span>사전 신청자 참여 · 5개 세션</span></span><span class="chv">' + CHEV_SVG + "</span></button>";
 }
 function progFlowCard(o, hmN, isF) {
   var past = hmN >= o.b, ac = isF && o.lec && !o.chip ? '<span class="ac">입장 · 끝 QR로 출석</span>' : "";   /* v5.68 */

@@ -83,16 +83,21 @@
   .axs-pz-cv .cds .dn { display: block; flex: none; width: 16px; height: 16px; color: rgba(255, 255, 255, 0.72); transition: transform 0.12s ease; }
   .axs-pz-cv .cds button:active .dn { transform: translateY(2px); color: var(--ax-color-inverse); }
   @media (prefers-reduced-motion: reduce) { .axs-pz-cv .cds button, .axs-pz-cv .cds .dn { transition: none; } .axs-pz-cv .cds button:active { transform: none; } }
-  /* 스탬프 개수 점 6개 · 켜진 점 = 조건 · 옅은 점 = 4 · 5 · 6개처럼 늘어나는 구간 */
-  .axs-pz-mt { display: inline-flex; flex: none; gap: 4px; }
-  .axs-pz-mt i { width: 8px; height: 8px; border-radius: 50%; background: var(--ax-color-divider); }
-  .axs-pz-mt i.on { background: var(--ax-color-brand); }
-  .axs-pz-mt i.pt { background: transparent; box-shadow: inset 0 0 0 1.5px var(--ax-color-brand); }
   .axs-pz-sec { display: flex; flex-direction: column; gap: var(--ax-space-12); margin-top: var(--ax-space-40); }
   .axs-pz-sh { display: flex; flex-direction: column; gap: var(--ax-space-4); margin-bottom: var(--ax-space-4); scroll-margin-top: calc(var(--stick, 0px) + var(--ax-space-16)); }
   .axs-pz-sh .en { margin: 0; font: var(--ax-type-caption); font-weight: 700; letter-spacing: 0.12em; color: var(--ax-color-brandText); }
   .axs-pz-sh h2 { margin: 0; font: var(--ax-type-t2); color: var(--ax-color-ink); }
-  .axs-pz-sh .cd { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ax-space-8); margin: var(--ax-space-8) 0 0; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
+  /* v5.74 「받으려면」 박스(사용자 261006) · 연주황 면(brandSoft · Weak 버튼과 같은 면 · 경고색 아님) · 반경 16 · 줄마다 주황 아이콘 24 + 굵은 한 줄(할 일 · ink) + 옅은 한 줄(body)
+     위 작은 라벨 「받으려면」 = brandText · 글자는 큰글씨를 따라 커지고 넘치면 줄바꿈(keep-all) · 경품 사진 카드보다 먼저 */
+  .axs-pz-need { margin: var(--ax-space-4) 0 var(--ax-space-4); padding: var(--ax-space-16) var(--ax-space-16) var(--ax-space-16) var(--ax-space-16); border-radius: var(--ax-radius-16); background: var(--ax-color-brandSoft); }
+  .axs-pz-need .k { margin: 0 0 var(--ax-space-12); font: var(--ax-type-caption); font-weight: 700; color: var(--ax-color-brandText); }
+  .axs-pz-need ul { display: flex; flex-direction: column; gap: var(--ax-space-12); margin: 0; padding: 0; list-style: none; }
+  .axs-pz-need li { display: flex; align-items: flex-start; gap: var(--ax-space-12); }
+  .axs-pz-need .i { display: block; flex: none; width: 24px; height: 24px; color: var(--ax-color-brand); }
+  .axs-pz-need .i svg { display: block; width: 100%; height: 100%; }
+  .axs-pz-need .x { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .axs-pz-need b { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); word-break: keep-all; }
+  .axs-pz-need .x > span { font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
   /* 경품 카드 · 사진이 주인공 · 흰 카드 위 흰 바탕 사진이 이어지게(사진 바탕은 빌드에서 흰색으로 맞췄다) */
   .axs-pz-c { display: flex; flex-direction: column; min-width: 0; margin: 0; overflow: hidden; border-radius: var(--ax-radius-24); background: var(--ax-color-surface); }
   .axs-pz-ph { position: relative; display: block; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; background: var(--ax-color-surface); }
@@ -122,10 +127,8 @@
   .axs-pz-c.flat .axs-pz-ph { aspect-ratio: 2 / 1; }
   /* v5.33 (사용자 261003 「볼펜 그림이 잘렸다」) tall = 세로로 긴 사진 · 넓은 칸(2:1)에서 자르지 않고 전체(contain · 칸 높이 = 2열 사진과 같은 크기) */
   .axs-pz-c.tall .axs-pz-ph img { object-fit: contain; }
-  /* v5.18 스탬프와 별개 구역(1F 타자왕) · 위 구역들과 얇은 선으로 나눈다 · 조건 줄 앞 회색 알약 · 순위 보기 버튼 */
+  /* v5.18 스탬프와 별개 구역(1F 타자왕) · 위 구역들과 얇은 선으로 나눈다 · 순위 보기 버튼(블록 맨 아래) · v5.74 알약 · 아래 설명 줄은 「받으려면」 박스로 옮겼다 */
   .axs-pz-sec.sep { margin-top: var(--ax-space-48); padding-top: var(--ax-space-32); border-top: 1px solid var(--ax-color-divider); }
-  .axs-pz-sh .sp { display: inline-flex; align-items: center; min-height: 24px; padding: 0 10px; border-radius: var(--ax-radius-999); background: var(--ax-color-inset); color: var(--ax-color-ink); font: var(--ax-type-t7); font-weight: 700; white-space: nowrap; }
-  .axs-pz-nt { margin: 0 var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
   .fs-big .axs-pz-c:not(.gr) .tx { flex-wrap: wrap; }
   .fs-big .axs-pz-gr { grid-template-columns: minmax(0, 1fr); }
   .fs-big .axs-pz-c.wide .axs-pz-ph { aspect-ratio: 1 / 1; }
@@ -133,8 +136,8 @@
   @keyframes axsPzZoom { from { transform: scale(1.04); } to { transform: none; } }
   .axs-pz.in .axs-pz-cv > *, .axs-pz.in .axs-pz-sec:first-of-type > * { animation: axsPzIn 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
   .axs-pz.in .axs-pz-cv > .ttl { animation-delay: 0.06s; } .axs-pz.in .axs-pz-cv > .now { animation-delay: 0.12s; } .axs-pz.in .axs-pz-cv > .stp { animation-delay: 0.18s; } .axs-pz.in .axs-pz-cv > .cds { animation-delay: 0.24s; }
-  .axs-pz.in .axs-pz-sec:first-of-type > :nth-child(2) { animation-delay: 0.3s; }
-  .axs-pz.in .axs-pz-sec:first-of-type > :nth-child(2) img { animation: axsPzZoom 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both; }
+  .axs-pz.in .axs-pz-sec:first-of-type > :nth-child(2) { animation-delay: 0.3s; } .axs-pz.in .axs-pz-sec:first-of-type > :nth-child(3) { animation-delay: 0.36s; }
+  .axs-pz.in .axs-pz-sec:first-of-type > :nth-child(3) img { animation: axsPzZoom 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.36s both; }
   @media (prefers-reduced-motion: reduce) { .axs-pz.in *, .axs-pz.in .axs-pz-cv > *, .axs-pz.in .axs-pz-sec:first-of-type > * { animation: none !important; } }
   /* 입구 · 스탬프 보상 레일(홈 · 스탬프 탭) 아래 · 내 보상 · 사진 3장 + 「경품 보기」 · brandSoft 면(Weak 버튼 문법) */
   .axs-pzgo { display: flex; align-items: center; gap: var(--ax-space-12); width: 100%; min-height: 56px; margin-top: var(--ax-space-16); padding: var(--ax-space-8) var(--ax-space-16) var(--ax-space-8) var(--ax-space-8); border: 0; border-radius: var(--ax-radius-16); background: var(--ax-color-brandSoft); color: var(--ax-color-ink); font-family: inherit; text-align: left; cursor: pointer; }

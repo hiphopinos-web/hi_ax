@@ -502,10 +502,11 @@ function detMake() {
   if (!lgxRM()) w.classList.add("in");
   return w;
 }
-/* 아래 고정 칸 위 구분선 = 본문이 그 아래로 더 있을 때만 */
+/* 아래 고정 칸 위 구분선 = 본문이 그 아래로 더 있을 때만 · v5.74 머리 아래 구분선 = 본문이 머리 밑으로 스크롤됐을 때만(사용자 261006 캡처 「시트 머리 아래 깨진 그림 띠」 = 경품 사진 아래 끝이 선 없이 머리에 잘려 보였다) */
 function detOv() {
-  var bd = document.querySelector("#axsDet .axs-dbody"), ft = document.querySelector("#axsDet .axs-dft");
+  var bd = document.querySelector("#axsDet .axs-dbody"), ft = document.querySelector("#axsDet .axs-dft"), hd = document.querySelector("#axsDet .axs-dhd");
   if (bd && ft) ft.classList.toggle("ov", bd.scrollHeight - bd.clientHeight - bd.scrollTop > 2);
+  if (bd && hd) hd.classList.toggle("ov", bd.scrollTop > 2);
 }
 /* 사라지기 · 같은 목록으로 닫히면 아래로 0.22초 · 다른 화면으로 가면 바로(새 화면이 그 자리에 그려진다) · 끌어서 닫았으면 이미 내려가 있다 */
 function detGone(w, toBase) {

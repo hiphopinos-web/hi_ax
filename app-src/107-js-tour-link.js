@@ -212,66 +212,59 @@ function trdWait() {
    처음 나타날 때 한 번 톡 튀어 오름(움직임 줄이기 = 없음)
    자동 복귀(옛 v5.57 아래 띠 「여기 머물기 / 둘러보기로 돌아가기 3」 없앰) = 그 활동의 스탬프를 이번에 새로 받으면(got) 연출 · 팝업이 모두 닫힌 뒤 이 단추 둘레에 3초 원이 돈다 → 다 돌면 tourRetGo
      단추 밖을 누르거나 키를 누르거나 다른 화면으로 가면 취소(= 머물기 · 단추는 남는다) · 시트 · 팝업이 뜨면 그동안 멈춤 · 움직임 줄이기 = 원 없이 3초 뒤 같은 동작(읽어 주기 「3초 뒤 3D로 돌아가요」) */
-var TRF_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 6 4 12l6 6"/><path d="M4.5 12H20"/></svg>';
+/* v5.74 (사용자 261006 「저 위치 저 모양이 적절하고 일반적인 어플리케이션에서 활용하는 문법인지」 → 「하단 탭 위 얇은 띠(권장)」 · 캡처에서 오른쪽 아래 둥근 단추가 목록 셰브론을 가렸다)
+   통화 앱 「통화로 돌아가기」 · 음악 앱 「지금 재생 중」 · 지도 「길안내로 돌아가기」와 같은 문법 = 하단 탭 바로 위 화면 폭 얇은 띠 하나(#trf.trf-band) · 띠 전체가 누름 영역 · 누르면 tourRetGo(들어가기 전 자리)
+   띠 = 좌우 여백 page-inset · 높이 48 · 연주황 면(brandSoft) + 진한 주황 글(brandText · 화면 주 버튼 주황 면과 겨루지 않게) · 왼쪽 챗봇(A-4 원본 BOT_SVG 작게) · 「1층 둘러보기로 돌아가기」 · 오른쪽 셰브론
+   자리 = 하단 메뉴(또는 아래 고정 버튼 axs-fix)가 더 높으면 그 위 8px · 본문 끝 = 띠 높이만큼 여백(body.trf-on #view::after · 내용 가림 0 · 옛 비키기 trfAvoid 없앰) · 맨 위로(TOP) 단추는 띠 위로(--trfb)
+   안 보임 = 출처가 둘러보기가 아닐 때(v5.73 유지 범위 = 3D로 돌아가거나 둘러보기를 새로 열 때 · 새로고침에만 지워진다) · 둘러보기가 열려 있을 때 · 게임 판 · 퀴즈 푸는 중 · v5.74 읽기용 상세 시트(5-7b)가 열려 있는 동안(시트 닫기 = 목록 · 목록에서 띠로)
+   처음 나타날 때 아래에서 한 번 올라옴(움직임 줄이기 = 없음)
+   자동 복귀 = 그 활동의 스탬프를 이번에 새로 받으면(got) 연출 · 팝업이 모두 닫힌 뒤 띠 안이 왼쪽에서 오른쪽으로 3초 동안 차오르고 글이 「3초 뒤 둘러보기로」(초를 센다) → 다 차면 tourRetGo
+     띠 밖을 누르거나 키를 누르거나 다른 화면으로 가면 취소(= 머물기 · 띠는 남고 글이 돌아온다) · 확인 시트 · 팝업이 뜨면 그동안 멈춤 · 움직임 줄이기 = 차오름 없이 글만 세고 3초 뒤 같은 동작 */
+var TRF_LBL = "1층 둘러보기로 돌아가기";
 function trfWant() {
   if (!tourRetAny() || el("app").hidden || TOUR.busy || (window.AXTour && AXTour.isOpen())) return false;   /* v5.73 tourRetLive(출발 화면 아래만) → tourRetAny(앱 어디서나) */
   if (rtView(App.current) && !document.querySelector("#view .gs-res-go")) return false;   /* 게임 판 중 = 조작 단추를 가리지 않게 · 결과 화면에서 보임 */
-  if (App.current === "quiz_play" && typeof qzRun === "function" && qzRun()) return false;   /* 판 퀴즈 푸는 중 = 답 · 「다음 문제」 · 힌트 단추를 가리지 않게(실측 390 에서 걸침) · 결과 화면에서 보임 */
+  if (App.current === "quiz_play" && typeof qzRun === "function" && qzRun()) return false;   /* 판 퀴즈 푸는 중 = 답 · 「다음 문제」 · 힌트 단추를 가리지 않게 · 결과 화면에서 보임 */
+  if (typeof detShown === "function" && detShown()) return false;   /* v5.74 상세 시트 동안 숨김(시트 아래 고정 주 버튼과 겹치지 않게) */
   return true;
 }
 function trfSync() {
   var f = el("trf");
   if (!trfWant()) { if (f) { if (TRD.el === f) trdHide(); f.parentNode.removeChild(f); } document.body.classList.remove("trf-on"); return; }
   if (!f) {
-    f = document.createElement("button"); f.type = "button"; f.id = "trf"; f.className = rgReduced() ? "rm" : "pop";
-    f.setAttribute("aria-label", "3D로 돌아가기 · 1층 둘러보기에서 있던 자리로");
+    f = document.createElement("button"); f.type = "button"; f.id = "trf"; f.className = "trf-band " + (rgReduced() ? "rm" : "pop");
+    f.setAttribute("aria-label", TRF_LBL + " · 있던 자리로");
     f.onclick = tourRetGo;
-    f.innerHTML = '<span class="trf-c"><svg class="trf-r" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30"/></svg>' + TRF_SVG + '</span><span class="trf-l">3D로 돌아가기</span><span class="ax-sr-only trf-s" role="status"></span>';
+    f.innerHTML = '<span class="trf-p" aria-hidden="true"></span><span class="trf-i" aria-hidden="true">' + (typeof BOT_SVG === "string" ? BOT_SVG : "") + '</span><span class="trf-l" aria-hidden="true">' + TRF_LBL + '</span><span class="trf-v" aria-hidden="true">' + CHEV_SVG + '</span><span class="ax-sr-only trf-s" role="status"></span>';
     document.body.appendChild(f);
   }
-  var dt = typeof detShown === "function" && detShown(), nav = el("tabbar"), fx = dt ? null : document.querySelector("#view .axs-fix.ax-bottom"), base = 0;
-  if (dt) { var dft = document.querySelector("#axsDet .axs-dft"); base = dft && !dft.hidden ? dft.offsetHeight : 0; }   /* v5.69 상세 시트 위 = 시트 아래 고정 칸 바로 위(시트 본문 오른쪽 아래) */
-  else {
-    if (nav && nav.style.display !== "none") base = Math.max(base, nav.offsetHeight);
-    if (fx) base = Math.max(base, fx.offsetHeight);
-  }
-  f.style.bottom = trfAvoid(f, dt ? base + 12 : Math.max(base + 12, 136), dt ? "#axsDet .axs-dbody" : "#view") + "px";   /* 136 = 맨 위로(80 + 46) 위 10px · 본문 버튼이 밑에 오면 그 위로 */
-  document.body.classList.toggle("trf-on", !fx && !dt);   /* 고정 버튼이 없는 화면 = 본문 끝을 단추 위까지 올릴 수 있게 아래 여백(CSS) */
-  document.documentElement.classList.toggle("trf-det", !!dt);   /* 시트 본문 끝도 단추 위까지 올라오게(CSS) */
+  var nav = el("tabbar"), fx = document.querySelector("#view .axs-fix.ax-bottom"), base = 0;
+  if (nav && nav.style.display !== "none" && nav.offsetHeight) { var nt = nav.getBoundingClientRect().top; [].forEach.call(nav.querySelectorAll("*"), function (x) { var r = x.getBoundingClientRect(); if (r.height && r.top < nt) nt = r.top; }); base = Math.max(base, Math.round(window.innerHeight - nt)); }   /* 하단 메뉴 가운데 QR 단추가 메뉴 위로 솟은 만큼까지 */
+  if (fx && fx.offsetHeight) base = Math.max(base, fx.offsetHeight);
+  var bt = base ? base + 8 : 8;
+  if (f.style.bottom !== bt + "px") { f.style.bottom = bt + "px"; document.body.style.setProperty("--trfb", bt + "px"); }
+  document.body.classList.add("trf-on");   /* 본문 끝 여백 · 맨 위로 단추를 띠 위로(CSS) */
 }
-/* 비키기 · 본문의 큰 버튼(ax-button · 입력 칸 · 상담 시간 칸 · 접힘 머리 summary)이 단추 자리에 오면 그 버튼 위로 올린다(퀴즈 결과 「스탬프 보기」 · 게임 결과 「다시 하기」 실측 390 · 360) · 카드 줄은 왼쪽이 넓게 남아 그대로 · 화면 위쪽 절반까지만 · 더 못 올리면 기본 자리 */
-function trfAvoid(f, b0, rt) {
-  rt = rt || "#view";
-  var vh = window.innerHeight, h = f.offsetHeight || 76, fr = f.getBoundingClientRect(), L = fr.left - 4, R = fr.right + 4, b = b0, top = el("topbar") ? el("topbar").getBoundingClientRect().bottom : 0;
-  var rs = [].slice.call(document.querySelectorAll([".ax-button", "input", "textarea", "select", ".axs-slot", "summary"].map(function (s) { return rt + " " + s; }).join(", "))).filter(function (e) { return !e.closest(".axs-fix"); }).map(function (e) { return e.getBoundingClientRect(); }).filter(function (r) { return r.width && r.height && r.left < R && L < r.right; });
-  for (var k = 0; k < 8; k++) {
-    var t = vh - b - h, bt = vh - b, hit = null;
-    rs.forEach(function (r) { if (r.top < bt + 4 && t - 4 < r.bottom && (!hit || r.top < hit.top)) hit = r; });
-    if (!hit) return b;
-    b = Math.ceil(vh - hit.top + 8);
-    if (vh - b - h < Math.max(top + 8, vh * 0.42)) return b0;
-  }
-  return b0;
-}
-var TRF_RAF = 0;
-window.addEventListener("scroll", function () { if (TRF_RAF || !el("trf")) return; TRF_RAF = requestAnimationFrame(function () { TRF_RAF = 0; trfSync(); }); }, { passive: true });
 setInterval(function () { if (typeof App !== "undefined" && App.current) trfSync(); }, 600);   /* 게임 결과 · 둘러보기 닫힘처럼 다시 그리기 없이 바뀌는 때 */
 function trdShow() {
   trdHide(); trfSync();
   var d = el("trf"); if (!d) { trdWait(); return; }
   d.classList.add("cd"); d.classList.toggle("rmcd", rgReduced());
-  var r = d.querySelector(".trf-r"); if (r) { r.style.animation = "none"; void r.offsetWidth; r.style.animation = ""; }
-  var s = d.querySelector(".trf-s"); if (s) s.textContent = TRD_MS / 1000 + "초 뒤 3D로 돌아가요";
+  var pg = d.querySelector(".trf-p"); if (pg) { pg.style.animation = "none"; void pg.offsetWidth; pg.style.animation = ""; }
+  var s = d.querySelector(".trf-s"), lb = d.querySelector(".trf-l"), sec = -1;
+  if (s) s.textContent = TRD_MS / 1000 + "초 뒤 1층 둘러보기로 돌아가요";
   TRD.el = d; TRD.end = Date.now() + TRD_MS;
   document.addEventListener("pointerdown", trdPtr, true); document.addEventListener("keydown", trdKey, true);
   var last = Date.now(), step = function () {
     if (TRD.el !== d) return;
     if (!tourRetLive() || !d.parentNode) { trdHide(); return; }   /* 다른 화면으로 감 = 취소 */
     var now = Date.now(), hold = !!(SPOP.cur || el("spop") || el("modal") || el("axsSheet") || document.hidden);
-    if (hold) TRD.end += now - last;   /* 시트 · 팝업이 떠 있는 동안 멈춤 */
+    if (hold) TRD.end += now - last;   /* 확인 시트 · 팝업이 떠 있는 동안 멈춤 */
     last = now; d.classList.toggle("hold", hold);
     var left = TRD.end - now;
     if (left <= 0) { tourRetGo(); return; }
+    var n = Math.max(1, Math.ceil(left / 1000));
+    if (n !== sec && lb) { sec = n; lb.textContent = n + "초 뒤 둘러보기로"; }   /* 띠 글 = 남은 초(3 · 2 · 1) */
     TRD.tick = setTimeout(step, Math.min(200, left));
   };
   step();
@@ -283,7 +276,7 @@ function trdHide() {
   if (!TRD) return;   /* 불러오는 중(App.go 가 먼저 불릴 때) */
   clearTimeout(TRD.t); clearTimeout(TRD.tick); TRD.t = TRD.tick = 0;
   document.removeEventListener("pointerdown", trdPtr, true); document.removeEventListener("keydown", trdKey, true);
-  if (TRD.el) { TRD.el.classList.remove("cd", "hold", "rmcd"); var s = TRD.el.querySelector(".trf-s"); if (s) s.textContent = ""; }
+  if (TRD.el) { TRD.el.classList.remove("cd", "hold", "rmcd"); var s = TRD.el.querySelector(".trf-s"), lb = TRD.el.querySelector(".trf-l"); if (s) s.textContent = ""; if (lb) lb.textContent = TRF_LBL; }   /* v5.74 머물기 = 띠 글 원래대로 */
   TRD.el = null;
 }
 
