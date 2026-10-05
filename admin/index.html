@@ -5973,7 +5973,7 @@ function viewCam(){
       '<td class="cap">화면 전체</td><td class="n tdr"><b>'+(c.tot|0)+'</b>명</td><td></td><td class="n cap" rowspan="'+(z.length+1)+'" style="vertical-align:top">'+esc(short(c.t))+'<br>'+esc(camAgo(age))+sk+'</td></tr>';
     return head+z.map(function(x){ var w=CAM_W[x.s]||[x.s||"",""]; return '<tr'+(on?'':' class="dim"')+'><td>'+esc(x.n)+'</td><td class="n tdr"><b>'+(x.c|0)+'</b>명</td><td>'+(on?tag(w[0],w[1]):tag(w[0],"off"))+camJChip(x,on)+'</td></tr>'; }).join("");
   }).join("");
-  var tb='<div class="wrap"><table class="tb"><tr><th>카메라</th><th>구역</th><th class="tdr">인원</th><th>상태 · 판단</th><th>마지막 갱신</th></tr>'+rows+(!cams.length?emptyRow(5,"아직 들어온 카메라가 없습니다. 계수기 화면 「서버 전송」에서 보낼 곳과 등급코드를 넣으면 10초 안에 보입니다."):"")+'</table></div>';
+  var tb='<div class="wrap"><table class="tb"><tr><th>카메라</th><th>구역</th><th class="tdr">인원</th><th>상태</th><th>마지막 갱신</th></tr>'+rows+(!cams.length?emptyRow(5,"아직 들어온 카메라가 없습니다. 계수기 화면 「서버 전송」에서 보낼 곳과 등급코드를 넣으면 10초 안에 보입니다."):"")+'</table></div>';
   var m='<p>노트북 카메라 계수기가 10초마다 숫자만 보냅니다(카메라 이름 · 구역 · 인원 · 상태). 영상과 이미지는 서버에 오지 않습니다.</p>'+
     '<p class="mt8">인원은 그 순간의 값이라 한두 명씩 오르내립니다. 구역 「혼잡」 기준은 계수기 화면에서 구역마다 정합니다.</p>'+
     '<p class="mt8"><b>판단 규칙</b> 1분 중앙값이 혼잡 기준 이상 2분 → 확인 요청, 기준 80% 아래 2분 → 평소. 「현장 확인 요청」은 스태프가 가서 보라는 신호일 뿐이고, 참가자 앱에는 자동으로 나가지 않습니다(필요하면 스태프가 [혼잡 제보]). 「· magic」 카메라는 체험 참여자 수라 판단에서 뺍니다.</p>'+
