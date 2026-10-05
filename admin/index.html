@@ -6269,11 +6269,18 @@ function hvTestReset(emp){
 }
 /* ══ 시스템 › 운영 설정 · 서버 cfg_list · cfg_set(허용 목록 키만 · 2단계) · lv3 키는 슈퍼관리자 ══ */
 /* v5.68 서버 설명 뒤에 붙이는 한 줄(바꾸면 어디가 달라지는지) · 설명 정본은 서버 CFG_ALLOW */
-var CFG_NOTE={ "대강당_좌석":"17F 출석 화면 · 앱 홈 혼잡 칸에 바로 반영", "대강당_기준":"앱 홈 혼잡 칸 · 17F 출석 상태 띠 색", "출석_입장창":"바꾸면 입장 QR 라벨 시각도 다시 인쇄", "출석_끝창":"바꾸면 끝 QR 라벨 시각도 다시 인쇄", "송출_켬":"꺼진 강의의 송출 QR 은 찍어도 거절" };
+var CFG_NOTE={ "대강당_좌석":"17F 출석 화면 · 앱 홈 혼잡 칸에 바로 반영", "대강당_기준":"앱 홈 혼잡 칸 · 17F 출석 상태 띠 색", "출석_입장창":"바꾸면 입장 QR 라벨 시각도 다시 인쇄", "출석_끝창":"바꾸면 끝 QR 라벨 시각도 다시 인쇄", "송출_켬":"꺼진 강의의 송출 QR 은 찍어도 거절", "10F명단_키트빠짐":"10F 명단 넣기 미리보기 · 적용에 바로 반영", "10F명단_E회차":"10F 명단 넣기 미리보기 · 적용에 바로 반영" };
 /* 261005 사용자 확정 · 출석 시간 창은 인쇄된 QR 라벨에 박혀 있어 읽기 전용 · 바꾸려면 슈퍼관리자 L3 */
 var CFG_LOCK={ "출석_입장창":1, "출석_끝창":1 };
 var CFG_LOCK_NOTE="인쇄된 QR과 연동 · 확정 261005";
 function cfgLv(r){ return CFG_LOCK[r.k]?3:(r.lv||1); }
+var CFG_P10=["10F명단_키트빠짐","10F명단_E회차"];
+function cfgHasP10(){ var d=ST.data.cfgl, rs=d&&d.ok&&d.rows; return !!rs&&CFG_P10.every(function(k){ return rs.some(function(x){ return x.k===k; }); }); }
+function cfgGoP10(){
+  navSel("s_cfg",0); var n=0;
+  (function t(){ var r=document.querySelectorAll('tr[data-cfgk="'+CFG_P10[0]+'"],tr[data-cfgk="'+CFG_P10[1]+'"]');
+    if(r.length){ r[0].scrollIntoView({block:"center"}); for(var i=0;i<r.length;i++){ r[i].classList.remove("flash"); void r[i].offsetWidth; r[i].classList.add("flash"); } } else if(n++<30) setTimeout(t,100); })();
+}
 function viewCfg(){
   var d=ST.data.cfgl;
   if(!d) return card("운영 설정","",skel());
@@ -6282,7 +6289,7 @@ function viewCfg(){
   var rows=d.rows||[], sup=supOn(), ok=supOk();
   var tb='<div class="wrap"><table class="tb"><tr><th>설정</th><th>지금 값</th><th>기본</th><th>등급</th><th>바꾼 사람 · 시각</th><th></th></tr>'+rows.map(function(r){
     var fx=!!CFG_LOCK[r.k], lk=cfgLv(r)>=3&&!ok, ro=!!r.ro;
-    return '<tr><td><b>'+esc(r.n||r.k)+'</b><div class="cap">'+esc(r.k)+(r.d?' · '+esc(r.d):'')+(fx?'':(CFG_NOTE[r.k]?' · '+esc(CFG_NOTE[r.k]):''))+(fx?'<div class="cap cfg-fx">'+LOCK_SVG+' '+CFG_LOCK_NOTE+'</div>':'')+'</div></td><td class="n"><b>'+esc(r.v===""?"(비어 있음)":r.v)+'</b></td><td class="n cap">'+esc(r.def)+'</td><td><span class="hv-lv">L'+cfgLv(r)+'</span></td><td class="cap">'+esc(r.by||"-")+(r.at?' · '+esc(short(r.at)):'')+'</td>'+
+    return '<tr data-cfgk="'+esc(r.k)+'"><td><b>'+esc(r.n||r.k)+'</b><div class="cap">'+esc(r.k)+(r.d?' · '+esc(r.d):'')+(fx?'':(CFG_NOTE[r.k]?' · '+esc(CFG_NOTE[r.k]):''))+(fx?'<div class="cap cfg-fx">'+LOCK_SVG+' '+CFG_LOCK_NOTE+'</div>':'')+'</div></td><td class="n"><b>'+esc(r.v===""?"(비어 있음)":r.v)+'</b></td><td class="n cap">'+esc(r.def)+'</td><td><span class="hv-lv">L'+cfgLv(r)+'</span></td><td class="cap">'+esc(r.by||"-")+(r.at?' · '+esc(short(r.at)):'')+'</td>'+
       '<td>'+(ro?'<span class="cap">전용 화면에서</span>':fx&&!sup?'<span class="cap">'+LOCK_SVG+' 잠김 · 슈퍼관리자만</span>':'<button class="btn sm" onclick="hvCfgEdit(\''+jq(r.k)+'\')"'+(lk?' disabled title="'+(sup?"슈퍼관리자 본인 확인 뒤":"슈퍼관리자 전용")+'"':'')+'>'+(lk?LOCK_SVG+' ':'')+'바꾸기</button>')+'</td></tr>'; }).join("")+'</table></div>';
   return (sup&&!ok?supGateView():"")+card("운영 설정", rows.length+"개 · 허용 목록 키만 · 비밀값은 없습니다", tb)+
     memo('<p><b>등급</b> · L1 · L2 는 확인 창(바뀌는 값 비교), L3 는 슈퍼관리자 본인 확인과 확인 문구 「설정변경」을 거칩니다. 모든 변경은 운영로그에 바꾼 사람 · 시각 · 키 · 새 값으로 남습니다.</p><p><b>전용 화면</b> · 푸시 · 혼잡 · 추첨 · 올림픽 · 타자 · 룰렛 소진처럼 전용 화면이 있는 키는 여기서 읽기만 합니다.</p>');
@@ -6295,7 +6302,7 @@ function hvCfgEdit(k){
   var inp=r.t==="enum"&&r.opts?'<select class="in w-f" id="hvCfgV" onchange="dlgGate()">'+r.opts.map(function(o){ return '<option'+(r.v===o?" selected":"")+'>'+esc(o)+'</option>'; }).join("")+'</select>':r.t==="onoff"?'<select class="in w-f" id="hvCfgV" onchange="dlgGate()"><option'+(r.v==="ON"?" selected":"")+'>ON</option><option'+(r.v==="OFF"?" selected":"")+'>OFF</option></select>':'<input class="in w-f" id="hvCfgV" value="'+esc(r.v)+'" oninput="dlgGate()"'+(r.t==="num"?' inputmode="numeric"':'')+'>';
   var o={ t:(r.n||r.k)+" 바꾸기", who:esc(r.k)+"<span>지금 "+esc(r.v===""?"(비어 있음)":r.v)+" · 기본 "+esc(r.def)+"</span>", s:esc(r.d||"")+(fx?'<br><b>QR 재인쇄 필요</b> · 이 값은 강의장에 붙인 입장 · 끝 QR 라벨의 시각과 같습니다. 바꾸면 16장을 다시 인쇄해 붙여야 하고, 그 전까지 라벨과 실제 출석 시간이 어긋납니다.':""), x:'<label class="fld mt12">새 값'+inp+'</label>'+(r.t==="num"?'<p class="cap mt8">'+esc(r.lo)+' ~ '+esc(r.hi)+'</p>':''), ok:"저장", danger:L>=2,
     gate:function(){ var v=el("hvCfgV"); return !!v&&String(v.value).trim()!==String(r.v); },
-    onOk:function(){ var v=String(el("hvCfgV").value).trim(); call("cfg_set",{ k:k, v:v },function(x){ dlgForce(); if(x&&x.ok){ delete _cache[sig_("cfg_list",{})]; reload(["cfgl"]); toast("저장했습니다 · "+(r.n||k)+" = "+x.v); } else toast("실패: "+({ range:"범위를 벗어났습니다", key:"바꿀 수 없는 키입니다", ro:"전용 화면에서 바꿉니다" }[x&&x.reason]||why(x))); },function(e){ dlgForce(); toast("실패: "+why(e)); }); } };
+    onOk:function(){ var v=String(el("hvCfgV").value).trim(); call("cfg_set",{ k:k, v:v },function(x){ dlgForce(); if(x&&x.ok){ delete _cache[sig_("cfg_list",{})]; if(/^10F명단/.test(k)){ delete _cache[sig_("pre10_state",{})]; if(ST.data.p10s) reload(["cfgl","p10s"]); else reload(["cfgl"]); } else reload(["cfgl"]); toast("저장했습니다 · "+(r.n||k)+" = "+x.v); } else toast("실패: "+({ range:"범위를 벗어났습니다", key:"바꿀 수 없는 키입니다", ro:"전용 화면에서 바꿉니다" }[x&&x.reason]||why(x))); },function(e){ dlgForce(); toast("실패: "+why(e)); }); } };
   if(L>=3) o.word="설정변경";
   dialog(o);
 }
@@ -6546,7 +6553,7 @@ var P10={ name:"", grid:null, hdr:true, cE:-1, cS:-1, eDef:"", mode:"replace", s
 SP_ACT.pre10_state=1; SP_ACT.pre10_preview=1; SP_ACT.pre10_apply=1; SP_ACT.pre10_undo=1;
 CTL_ACT.pre10_apply=["pp",function(p){ return "10F 명단 적용 · "+(p.mode==="add"?"추가":"교체")+" · "+(p.n||0)+"명"; }];
 CTL_ACT.pre10_undo=["pp","10F 명단 되돌림"];
-NEED.pre10=function(){ return supOk()?[{k:"p10s",a:"pre10_state"}]:[]; };
+NEED.pre10=function(){ return supOk()?[{k:"p10s",a:"pre10_state"}].concat(HVS.cfg?[{k:"cfgl",a:"cfg_list"}]:[]):[]; };
 HV_VIEW.viewPre10=function(){ return viewPre10(); };
 function p10Srv(){ var d=ST.data.p10s; return !d?"":hvUnknown(d)?"old":d.ok?"new":"err"; }
 function p10EDef(){ if(P10.eDef) return P10.eDef; var o=p10Opt0().e; return o==="ms2"||o==="2회차"?"ms2":o==="오류"||o==="bad"?"bad":"ms1"; }   /* 고르지 않았으면 서버 설정(10F명단_E회차)을 따른다 */
@@ -6726,7 +6733,7 @@ function viewPre10(){
   var srv=p10Srv(), h="";
   if(srv==="old") h+='<div class="bands">'+band("","이 서버는 아직 명단 넣기를 모릅니다. 미리보기는 콘솔 검사만 하고, <b>적용은 서버 갱신 뒤</b> 켜집니다.")+'</div>';
   else if(srv==="err") h+='<div class="bands">'+band("bad","서버 명단 상태를 받지 못했습니다("+esc(why(ST.data.p10s))+").",'<button class="btn sm" onclick="reload([\'p10s\'])">다시 시도</button>')+'</div>';
-  if(srv==="new"&&ST.data.p10s.opt){ var op=ST.data.p10s.opt; h+='<div class="bands">'+band("","서버 설정 · 키트 받은 사람이 명단에서 빠질 때 키트 명단에 <b>"+esc(op.kit||"남김")+"</b> · 회차 없는 E 는 <b>"+esc(op.e==="ms1"?"1회차":op.e==="ms2"?"2회차":op.e||"1회차")+"</b>(올릴 때 아래 「회차 없는 E」에서 이번만 바꿀 수 있습니다). 서버 설정을 바꾸려면 시트 「설정」의 「10F명단_키트빠짐」(남김 · 지움) · 「10F명단_E회차」(ms1 · ms2 · 오류) 칸을 고칩니다. 운영 설정 화면에는 아직 없습니다.")+'</div>'; }
+  if(srv==="new"&&ST.data.p10s.opt){ var op=ST.data.p10s.opt; h+='<div class="bands">'+band("","서버 설정 · 키트 받은 사람이 명단에서 빠질 때 키트 명단에 <b>"+esc(op.kit||"남김")+"</b> · 회차 없는 E 는 <b>"+esc(op.e==="ms1"?"1회차":op.e==="ms2"?"2회차":op.e||"1회차")+"</b>(올릴 때 아래 「회차 없는 E」에서 이번만 바꿀 수 있습니다). 서버 설정을 바꾸려면 "+(cfgHasP10()?'<a href="#" onclick="cfgGoP10();return false" style="color:var(--navy);font-weight:600">운영 설정에서 바꿉니다</a>.':"시트 「설정」의 「10F명단_키트빠짐」(남김 · 지움) · 「10F명단_E회차」(ms1 · ms2 · 오류) 칸을 고칩니다. 운영 설정 화면에는 아직 없습니다."))+'</div>'; }
   var main=p10CardUp()+(P10.grid?p10CardCols():"")+(P10.rows?p10CardPv()+p10CardGo():"")+(P10.res?p10CardRes():"");
   h+='<div class="ns-grid2 lay-fa"><div class="p10-main">'+main+'</div><div class="ns-side">'+p10CardNow()+'</div></div>';
   h+=memo('<p><b>무엇을 쓰나</b> · 적용하면 서버가 시트 「강의신청」(10F 끝 QR 자격)과 「키트명단」(체크인 존 키트 대조) 두 곳을 한 번에 바꿉니다. 키트 지급 기록 · 출석 · 스탬프는 건드리지 않습니다.</p>'+
