@@ -375,7 +375,7 @@
   if (PRZ4) { $("pz-x").textContent = "4~10위 · " + PRZ4; $("pz-x").style.display = "block"; }
 
   /* ════════ 3 순위 · 등수 · 점수 펼침 → 10위부터 위로 이름이 쳐지고 팡 · 줄 10개를 처음에 만들어 돌려 쓴다(하루 종일 켜 두어도 DOM 이 늘지 않게) ════════ */
-  var POOL = [], NIL = [], RS = { shown: load("axfTy.shown", null), cur: [], ev: [], evm: {}, unit: "", at: 0 };
+  var POOL = [], NIL = [], RS = { shown: load("axfTy.shown", null), cur: [], ev: [], evm: {}, unit: "", at: 0, sig: "" };
   var RV = { sch: [], end: 0, fm: 0, CAS: PRANK ? 0.07 : 0.12, R0: PRANK ? 1.0 : 1.9 };
   (function rankInit() {
     var host = $("hs-in"), i, e;
@@ -429,9 +429,10 @@
     for (var i = k - 1; i >= 0; i--) { var d = rvDur(i); sch[i] = { a: t, b: t + d * (i === 0 ? 0.55 : 0.68), e: t + d }; t += d; }
     RV.sch = sch; RV.end = t;
   }
+  function rkSig(d) { return d ? (d.unit || "") + "#" + d.top.map(function (x) { return x.name + "|" + x.score; }).join("/") : ""; }   /* 자료 내용 지문 */
   function rankBegin() {
     var d = RK.data, cur = keyed(fillTop(d ? d.top : [])), prev = RS.shown, pm = {}, ev = [], evm = {};
-    RS.unit = d && d.unit ? d.unit : "pts"; RS.at = d ? d.at : 0;
+    RS.unit = d && d.unit ? d.unit : "pts"; RS.at = d ? d.at : 0; RS.sig = rkSig(d);
     if (prev) prev.forEach(function (r) { pm[r.key] = r; });
     if (prev) cur.forEach(function (r) { if (r.fake) return; var o = pm[r.key]; if (!o || r.score > o.score) { var x = { k: o ? (r.rank < o.rank ? "up" : "best") : "new", r: r }; ev.push(x); evm[r.key] = x; } });
     RS.cur = cur; RS.ev = ev; RS.evm = evm;
@@ -489,7 +490,13 @@
     RG.pops.forEach(function (p) { rtText(c, p.text, p.x, p.y, 32, p.c, RAIN_PAL.ink); });
   }
   function rankDraw(lt) {
-    if (!RS.at && RK.data && RK.data.at && lt < RV.R0) rankBegin();   /* 자료 없이 시작했는데 공개 전에 첫 응답이 왔다(켠 직후) */
+    var dn = RK.data;
+    if (dn && dn.at && dn.at !== RS.at) {   /* 이 장면을 그릴 때 없던 자료가 도착(앱 칸 · 켠 직후 · 느린 응답) · 줄이 비어 있으면 그 즉시 다시 그린다 */
+      if (!RS.cur.length && rkSig(dn) !== RS.sig) {
+        rankBegin();
+        if (RS.cur.length && lt > 0.2) { PLAY.t0 += lt; lt = 0; }   /* 줄이 생겼다 = 장면 시계를 처음으로 돌려 공개를 처음부터 */
+      } else if (rkSig(dn) === RS.sig) RS.at = dn.at;   /* 내용이 같은 새 응답 = 다시 그리지 않는다 */
+    }
     POOL.forEach(function (e, i) {
       var r = RS.cur[i]; if (!r) return;
       var shown = lt >= 0.1 + i * RV.CAS, s = RV.sch[i] || { a: 0, b: 0, e: 0 };
@@ -502,7 +509,7 @@
     });
     rankFx(lt);
     var sub = $("hs-sub"), txt, sc = "abs", done = closed() && !OPEN;
-    if (!RS.cur.length) { txt = RK.data || !NET ? "첫 기록을 기다리고 있어요" : "순위를 불러오는 중"; sc += " em"; }
+    if (!RS.cur.length) { txt = (RK.data && !RK.data.top.length) || !NET ? "첫 기록을 기다리고 있어요" : "순위를 불러오는 중";   /* 빈 문구 = 서버가 0줄을 돌려줬을 때만 · 응답 전 · 실패 = 조용한 로딩 */ sc += " em"; }
     else if (RS.ev.length && lt >= RV.end + 0.3 && lt < DUR.rank - 3) { var x2 = RS.ev[0]; txt = (x2.k === "up" ? "RANK UP · " : "NEW RECORD · ") + x2.r.name + " " + x2.r.rank + "위"; sc += " nr"; }
     else txt = done ? "최종 순위 · 1F 현장" : "1F 현장 TOP 10";
     if (sub.textContent !== txt) sub.textContent = txt;
@@ -787,5 +794,5 @@
   START = performance.now() / 1000; startAt(Q.t ? parseFloat(Q.t) : 0, START);
   if (document.fonts && document.fonts.load) try { document.fonts.load("32px NeoDunggeunmo"); } catch (e) {}
   RAF = requestAnimationFrame(frame);
-  if (NET) setTimeout(poll, DEMO ? 20000 : Math.floor(Math.random() * 3000));
+  if (NET) setTimeout(poll, DEMO ? 20000 : PRANK ? 0 : Math.floor(Math.random() * 3000));   /* 앱 칸 = 첫 받기 즉시(순위 장면부터 시작하므로) · TV 본 화면은 여러 대 분산용 0~3초 유지 */
 })();
