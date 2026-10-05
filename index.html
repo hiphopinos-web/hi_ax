@@ -742,6 +742,11 @@
   .cstrip2 .nm { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .cstrip2 .st { margin: var(--ax-space-4) 0 0; font: var(--ax-type-t7); color: var(--ax-color-muted); }
   .cstrip2 .sb { margin: 2px 0 0; font: var(--ax-type-caption); color: var(--ax-color-muted); white-space: nowrap; }
+  /* v5.68 셋째 칸 17F 대강당 · 3칸이면 칸 안 여백을 줄이고 아래 줄은 줄바꿈 허용(360px 에서 넘치지 않게) */
+  .cstrip2.c3 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ax-space-6, 6px); }
+  .cstrip2.c3 .cc { padding: var(--ax-space-12) var(--ax-space-8) var(--ax-space-12) var(--ax-space-12); }
+  .cstrip2.c3 .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cstrip2.c3 .sb { white-space: normal; word-break: keep-all; }
   .cstrip2 .cc.jam { background: var(--ax-color-errorSoft); }
   .cstrip2 .cc.jam .st { font: var(--ax-type-t6-strong); color: var(--ax-color-error); }
   .cstrip2 .cc.pred { background: var(--ax-color-brandSoft); }
@@ -1698,6 +1703,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-stpn { flex: 0 0 auto; width: 40px; height: 40px; border-radius: var(--ax-radius-999); border: 1.5px solid var(--ax-color-divider); background: var(--ax-color-inset); color: var(--ax-color-muted); display: grid; place-items: center; font: var(--ax-type-t6-strong); }
   .axs-stp.done .axs-stpn { border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
   .axs-stpn svg { width: 20px; height: 20px; display: block; }
+  /* v5.68 프로그램 참여 = 스탬프 2개 · 제목 옆 「×2」 알약 · 17F 한쪽만(p3h) = 번호 칸 아래 절반 주황 「1/2」 */
+  .axs-x2 { display: inline-block; margin-left: var(--ax-space-8); padding: 0 var(--ax-space-8); border-radius: var(--ax-radius-999); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-caption); font-weight: 700; line-height: 20px; vertical-align: 2px; }
+  .axs-stp.half .axs-stpn { border-color: var(--ax-color-brand); background: linear-gradient(to top, var(--ax-color-brand) 50%, var(--ax-color-inset) 50%); color: var(--ax-color-ink); font: var(--ax-type-caption); font-weight: 700; }
   .axs-stpb { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--ax-space-4); }
   .axs-stpb .ax-card-title { margin: 0; }
   .axs-stpm { display: flex; flex-wrap: nowrap; align-items: baseline; gap: var(--ax-space-8); margin: 0; font: var(--ax-type-t7); color: var(--ax-color-muted); }   /* v4.95 칩 = 보조 줄 맨 앞 고정 · 글은 칩 옆 칸에서만 줄바꿈 */
@@ -2787,7 +2795,8 @@ var STAMPS_V1 = [
   STAMP_P2,
   /* v3.52 (사용자 확정 260917) p3 = 프로그램 참여 · DAP 과제상담 · AX 커피챗 중 1회 · 적립은 서버가 확인(상담 체크인/완료·커피챗 접수/완료)
      v4.26 (260924 A안) 17F 는 대강당 입구 QR 첫 출석(att_claim)으로 적립 · 옛 좌석 QR · 입장 스캔 · 신청 기록 경로는 걷어냈다 */
-  { id: "p3", title: "프로그램 참여", short: "프로그램", desc: "17F 강연 QR 출석 · AX LOUNGE 상담 · AX 커피챗 중 1회" + (P3_INCLUDE_10F ? " · 10F 실습형 세션" : ""), where: "", site: 1, tap: "progGoFl(17)", cta: "17F 강연 보기" },
+  /* v5.68 (사용자 확정 261005) 프로그램 참여 = 스탬프 2개(x2) · 17F 강의 = 입장 QR 1개 + 끝 QR 1개 · 10F · 커피챗 · 라운지 상담 = 마칠 때 2개 · 여러 개 참여해도 2개까지 */
+  { id: "p3", title: "프로그램 참여", short: "프로그램", desc: "강연 · 실습 · 커피챗 · 라운지 상담 중 하나를 마치면 스탬프 2개", where: "", site: 1, x2: 1, tap: "progGoFl(17)", cta: "17F 강연 보기" },
   { id: "p4", title: "미니게임", short: "미니게임", desc: "서로 다른 미니게임 3종목 · 종목마다 한 판", where: "3종목", inapp: 1 },   /* v4.63 (사용자 확정 260929) 1종 → 서로 다른 3종목 · 판정은 서버(game_submit) */
   { id: "p5", title: "아이디어 한 줄", short: "아이디어", desc: "아이디어 1건 제출", where: "1분", inapp: 1, tap: "App.go('ideas')", cta: "아이디어 쓰기" },
   { id: "p7", title: "전시 QR 퀴즈", short: "QR 퀴즈", desc: "벽 QR 스캔 · 한 세트 완료", where: "약 10분", tap: "App.go('exp')", cta: "QR 퀴즈 풀기" },   /* 정리 #5 퀴즈 화면 없음 · 옛 서버 표 항목만 남김 */
@@ -2838,11 +2847,25 @@ var RAFFLE_MAX = 3;             /* 응모권 최대 */
 var REWARD_CAP = STAMP_DENOM;   /* 보상 계산 상한 = 개수 상한 */
 /* 서버가 준 stamps 배열에는 정의 밖 id(구 p6·p8, 계단 p9 등)가 남아 있을 수 있다.
    stampGot = 받은 종류 수(기록 그대로 · 최대 8) · stampCount = 화면·보상의 개수(최대 6) · 표시·보상 계산은 전부 stampCount 로 센다. */
-function stampGot() {
-  return S.get("stamps", []).filter(function (id) {
-    return STAMPS.some(function (s) { return s.id === id; });
-  }).length;
+/* v5.68 (사용자 확정 261005) 프로그램 참여 = 2개 · 서버 stampCnt_ 와 같은 셈 · p3 = 2개 · p3h(17F 입장이나 끝 한쪽만) = 1개 · 둘 다면 2개
+   stampGot = 상한 전 개수(6을 넘긴 적립 판정용) · stampCount = 화면 · 보상 개수(최대 6) · 서버 sync stamps 에 p3h 가 실려 온다(stampSync 가 지우지 않는다) */
+var STAMP_HALF = "p3h";
+function stampUnitsOf(list) {
+  var n = 0, seen = {}, half = false;
+  (list || []).forEach(function (id) {
+    if (seen[id]) return;
+    seen[id] = 1;
+    if (id === STAMP_HALF) { half = true; return; }
+    var sd = STAMPS.filter(function (s) { return s.id === id; })[0];
+    if (sd) n += sd.x2 ? 2 : 1;
+  });
+  return n + (half && !seen.p3 ? 1 : 0);
 }
+function stampGot() { return stampUnitsOf(S.get("stamps", [])); }
+/* 프로그램 참여 칸 0 · 1 · 2 */
+function progUnits() { var st = S.get("stamps", []); return st.indexOf("p3") >= 0 ? 2 : st.indexOf(STAMP_HALF) >= 0 ? 1 : 0; }
+/* 정의 8종 + p3h(서버가 아는 스탬프 id) */
+function stampKnown(id) { return id === STAMP_HALF || STAMPS.some(function (s) { return s.id === id; }); }
 function stampCount() { return Math.min(STAMP_DENOM, stampGot()); }
 /* 3개 = 룰렛(응모권 0) · 4·5·6 = 1·2·3장 · 6개 넘게 받아도 3장 */
 function raffleTickets(n) { return Math.max(0, Math.min(RAFFLE_MAX, Math.min(REWARD_CAP, n) - 3)); }
@@ -2855,9 +2878,9 @@ var TIMELINE = [
   /* always=1 (v3.18): 기간이 길어서가 아니라 「그 시간 안에 아무 때나 들르는」 참여 방식이라 상시 묶음.
      10F 오후 세션(내내 참석)·점심(시간대 구분 역할)은 시간표 유지 */
   { time: "", end: "", title: "AX 커피챗", short: "시간은 매칭 후 앱에서 안내", place: "18F", desc: "시간은 매칭 후 앱에서 안내", tag: "매칭 후 안내", always: 1 },
-  { time: "13:30", end: "15:00", title: "파트너사 강연 · AWS", short: "Agentic AI 시대의 일하는 방식 변화 · 구태훈 박사(AWS)", place: "17F 대강당", desc: "대강당 입구 QR로 출석", tag: "자유 참석", par: 1 },
+  { time: "13:30", end: "15:00", title: "파트너사 강연 · AWS", short: "Agentic AI 시대의 일하는 방식 변화 · 구태훈 박사(AWS)", place: "17F 대강당", desc: "입장 · 끝 QR로 출석", tag: "자유 참석", par: 1 },
   { off: 1, time: "13:30", end: "16:30", title: "10F 실습형 세션 A~E", short: "사전 신청자 참여 · 5개 세션 중 1개", place: "10F", desc: "사전 신청자 참여 · 세션별 장소는 프로그램 탭", tag: "사전 신청자 참여", par: 1 },
-  { time: "15:10", end: "16:40", title: "파트너사 강연 · MS", short: "AI와 친해지기 · MS", place: "17F 대강당", desc: "대강당 입구 QR로 출석", tag: "자유 참석", par: 1 },
+  { time: "15:10", end: "16:40", title: "파트너사 강연 · MS", short: "AI와 친해지기 · MS", place: "17F 대강당", desc: "입장 · 끝 QR로 출석", tag: "자유 참석", par: 1 },
   /* v3.50 사회자 순서 (사용자 확정 260917) · Outro 문항 기능 폐지 · 설문 참여 안내 → 17:00 Outro */
   /* v3.63 (사용자 확정 260918) 「일단 빼자」 · 항목은 남기고 off 로 일정 탭에서만 감춘다 (설문 기능·송출 화면·홈/스탬프 입구는 그대로) */
   { off: 1, time: "16:45", end: "17:00", title: "설문 참여 안내", short: "오늘 한 판 설문 안내", place: "17F 대강당", desc: "60초 설문 · 스탬프 1개", tag: "자유 참석" },
@@ -3308,7 +3331,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.67";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.68";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -3530,7 +3553,7 @@ var STORE_DEVICE = ["vid", "a2hs", "fs", "t",
   "site_sound", "game_sound", "rain_sound", "jp_tut",
   "self_on", "self_key", "self_tok", "scan_spot", "adm_tab", "tyaw_tab", "tyaw_hide", "tyaw_oly_pg", "self_dev",
   "type_rank_*", "oly_tab", "oly_ev",
-  "notices", "notices_wipe1", "entry_pref", "entry_ask_day", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "resv_conf", "crowd", "stv",
+  "notices", "notices_wipe1", "entry_pref", "entry_ask_day", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "resv_conf", "crowd", "stv", "att_w",
   "art_demo_n", "ev_phase", "toff", "tour_inv",
   "push_ask", "push_first", "push_ask_ios"];   /* v5.46 tour_inv = 1층 둘러보기 초대 한 번(기기 기준) · v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) · v4.78 아이폰 탭 · 앱 속 브라우저 안내는 하루 한 번 */
 var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_role", "adm_tok", "adm_emp", "dept",
@@ -4632,7 +4655,7 @@ function progFlowHtml(onlyFl) {
   }).join("");
 }
 function progFlowCard(o, hmN, isF) {
-  var past = hmN >= o.b, ac = isF && o.lec && !o.chip ? '<span class="ac">대강당 입구 QR로 출석</span>' : "";
+  var past = hmN >= o.b, ac = isF && o.lec && !o.chip ? '<span class="ac">입장 · 끝 QR로 출석</span>' : "";   /* v5.68 */
   return '<button type="button" class="fc' + (past ? " past" : "") + (isF ? " focus" : "") + '"' + (o.go ? ' onclick="' + o.go + '"' : " disabled") + ' data-fl="' + esc(o.k) + '">' +
     '<span class="mt">' + (o.fl ? flFloor(o.fl) : "") + '<span class="pl">' + esc(o.pl) + '</span><span class="e">~' + o.t1 + "</span></span>" +
     '<span class="t">' + (isF ? '<span class="ax-sr-only">진행 중 </span>' : "") + '<span class="tt">' + esc(o.ttl) + "</span>" + (o.chip ? '<span class="axs-chip">' + esc(o.chip) + "</span>" : "") + "</span>" +
@@ -4825,7 +4848,7 @@ function progMine(id) {
 }
 /* 목록 상태 한 줄 [글, 색] · ok = success · off = muted · "" = brandText */
 function progState(s) {
-  if (s.kind === "open") return attMineAt(s.id) ? ["출석 완료", "ok"] : [s.id === "expo" ? "자유 입장" : "자유 참석", ""];   /* v4.26 17F 는 출석하면 「출석 완료」 · v4.38 강연 = 「자유 참석」(시간표 딱지와 같은 말) · 전시 = 「자유 입장」 */
+  if (s.kind === "open") return attStLbl(s.id) ? [attStLbl(s.id), "ok"] : [s.id === "expo" ? "자유 입장" : "자유 참석", ""];   /* v5.68 입장 · 끝 둘 다 = 출석 완료 · 하나만 = 입장 출석 | 끝 출석 */   /* v4.26 17F 는 출석하면 「출석 완료」 · v4.38 강연 = 「자유 참석」(시간표 딱지와 같은 말) · 전시 = 「자유 입장」 */
   if (s.kind === "info") return sessMine(s.id) ? ["사전 신청 완료", "ok"] : ["사전 신청자 참여", ""];   /* v5.60 T3 */
   if (s.id === "dap") {
     var r = myResv();
@@ -4859,6 +4882,19 @@ function sessGuideHtml(s, mine) {
   var prep = mine && (s.prep || []).length ? '<div class="sgg sgp"><h3>준비할 것</h3><ul>' + s.prep.map(li).join("") + "</ul></div>" : "";
   return intro || todo || prep ? '<section class="axs-sg"><h2 class="ax-section-title">세션 안내</h2>' + intro + todo + prep + "</section>" : "";
 }
+/* v5.68 (사용자 확정 261005) 17F 강의 출석 = 입장 QR 1개 + 끝 QR 1개 = 스탬프 2개 · 상세 표 두 줄(입장 QR · 끝 QR) + 지금 입장 수(서버 sync crowd.h · 그 강의일 때만)
+   상태 칩 = 둘 다 「출석 완료」 · 하나만 「입장 출석」 | 「끝 출석」 · 창이 모두 끝나면 버튼 대신 시간표 */
+function attStLbl(id) { var ai = attMineK(id, "in"), ao = attMineK(id, "out"); return ai && ao ? "출석 완료" : ai ? "입장 출석" : ao ? "끝 출석" : ""; }
+function hallLine(id) { var c = crowdGet(), h = c && c.h; if (!h || h.id !== id) return ""; var lv = HALL_LV[h.lv] || HALL_LV.ok; return (h.n ? "입장 약 " + h.n + "명" : "입장 0명") + " · 좌석 " + lv[0]; }
+function attDetailFill(D, ap, timeBtn) {
+  var ai = attMineK(ap.id, "in"), ao = attMineK(ap.id, "out"), shut = attShut(ap), hl = hallLine(ap.id);
+  D.st = attStLbl(ap.id) || "자유 참석"; D.stc = "ok";
+  D.kv.push(["입장 QR", ai ? ai + " 출석" : attWinLbl(ap, "in")]);
+  D.kv.push(["끝 QR", ao ? ao + " 출석" : attWinLbl(ap, "out")]);
+  if (hl) D.kv.push(["지금", hl]);
+  D.help = ai && ao ? "" : shut ? "출석 시간이 지났어요" : "";
+  D.btn = (ai && ao) || shut ? timeBtn : progBtn("출석 QR 스캔", "scanOpen(\'a17\')");
+}
 /* 상세 한 장의 내용 · 화면(sess_d)과 확인(sess_cf)이 같은 값을 쓴다 */
 function progDetail(s) {
   var D = { cat: "", org: "", title: s.ttl, who: "", whoSub: "", av: "", st: "", stc: "", kv: [], cfKv: [], extra: "", secT: "참여 전 확인해 주세요", secB: "", link: "", help: "", btn: "" };
@@ -4871,13 +4907,10 @@ function progDetail(s) {
     D.cat = s.ttl; D.title = s.sub;
     D.kv = [["일시", day + progTm(s.tm)], ["장소", pl], ["참여 방법", "신청 없이 자유 참석"]];
     if (s.id === "intro") {
-      var ko = attProg("key"), kat = attMineAt("key");
+      var ko = attProg("key");
       D.who = s.who; D.av = s.who; D.whoSub = "개회 인사";
-      D.st = kat ? "출석 완료" : "자유 참석"; D.stc = "ok";
-      D.kv.push(["출석", kat ? kat + " 출석 완료" : "기조연설과 함께 · " + attWinLbl(ko)]);
-      D.secB = "출석 QR은 기조연설 때 한 번만 찍어요.";   /* 261005 최종 QA · 「별도 신청 없이 참여할 수 있어요」 = 칩 「자유 참석」 · 표 「신청 없이 자유 참석」과 같은 말이라 뺐다 */
-      D.help = kat ? "" : attShut(ko) ? "출석 시간이 지났어요" : "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요";
-      D.btn = kat || attShut(ko) ? timeBtn : progBtn("출석 QR 스캔", "scanOpen(\'a17\')");
+      attDetailFill(D, ko, timeBtn);   /* v5.68 Intro 는 기조연설 출석과 한 묶음(입장 · 끝 QR 이 같다) */
+      D.secB = "Intro는 기조연설과 한 묶음이에요.<br>입장할 때 QR을 한 번, 기조연설이 끝날 때 화면의 QR을 한 번 찍어요.";
       return D;
     }
     var din = !!S.get("draw_in", false), hmD = hmNow(), dwin = evPhase() === "live" && hmD >= t2m("16:40") && hmD < t2m("17:25");   /* 창 = drawCardHtml 과 같은 서버 기본 창 */
@@ -4901,14 +4934,12 @@ function progDetail(s) {
     else if (s.who) { D.who = s.who; D.av = s.who.length <= 4 ? s.who : "AX"; D.whoSub = s.id === "road" ? "내부 강연" : s.sub; }
     D.st = at ? "출석 완료" : s.id === "expo" ? "자유 입장" : "자유 참석"; D.stc = "ok";
     D.kv = [["일시", s.id === "expo" ? "10월 26일 · 행사 시간 중" : day + progTm(s.tm)], ["장소", pl], ["참여 방법", s.id === "expo" ? "신청 없이 자유 관람" : "신청 없이 자유 참석"]];
-    if (ap) D.kv.push(["출석", at ? at + " 출석 완료" : "입구 QR 스캔 · " + attWinLbl(ap)]);
     D.secB = s.id === "expo" ? "1F 로비 6구역 · AX VISION · AX LAB · AX in Action · AX PLAY · AX LOUNGE · EVENT" :
-      ap ? "대강당 입구 QR을 찍으면 출석이 기록돼요." + (s.desc ? "<br>" + esc(s.desc) : "") :   /* 261005 최종 QA · 「별도 신청 없이」 = 칩 · 표와 같은 말 */
+      ap ? "입장할 때 QR을 한 번, 끝날 때 화면의 QR을 한 번 찍어요.<br>하나에 스탬프 1개씩 · 프로그램 참여는 2개까지" + (s.desc ? "<br>" + esc(s.desc) : "") :   /* v5.68 입장 1 + 끝 1 · 옛 입구 QR 한 번 문구 교체 */
       "별도 신청 없이 참여할 수 있어요. 시작 시간에 맞춰<br>" + esc(pl) + "으로 와 주세요.";
     if (s.id === "expo") D.link = '<button type="button" class="ax-link axs-plain axs-self" onclick="App.go(\'floor1\')">1F 부스 6구역 보기</button>';
-    var shut = ap && !at && attShut(ap);   /* 261005 최종 QA · 출석 창이 끝났으면(행사 뒤 포함) 스캔 버튼 대신 시간표 · 자유 참석 안내 줄(칩 · 표와 같은 말)은 뺐다 */
-    D.help = ap && !at ? (shut ? "출석 시간이 지났어요" : "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요") : "";   /* v4.38 (사용자 260925) 17F 는 사전 신청제 → 신청을 받지 않음 · 「사전 신청」이라는 말을 쓰지 않는다 */
-    D.btn = ap && !at && !shut ? progBtn("출석 QR 스캔", "scanOpen(\'a17\')") : timeBtn;
+    if (ap) attDetailFill(D, ap, timeBtn);   /* v5.68 입장 QR · 끝 QR 두 줄 · 지금 입장 수 · 창이 끝나면 시간표(261005 최종 QA 규칙 그대로) */
+    else { D.help = ""; D.btn = timeBtn; }
     if (par) D.pics = prizeGoHtml();   /* v5.20 오후 파트너 강연 · 경품 입구 한 줄 */
     return D;
   }
@@ -5358,11 +5389,20 @@ function crowdCell(k) {
 }
 /* v4.73 (260930 사용자 결정) 엘리베이터 혼잡을 홈 맨 위 카드로 올리지 않는다 · 혼잡 표시는 이 2칸에서만.
    「계단 이용」 + 셰브론 = 엘리베이터 칸이 혼잡(제보)이고 설정 혼잡_계단 ON(총무 피난계단 승인 뒤 · sync crowd.st)일 때만 · 칸을 누르면 계단 스탬프 화면(stairOpen) · OFF 면 누를 수 없는 표시 그대로 */
+/* v5.68 (사용자 결정 261005 · design.md 5-2 개정) 셋째 칸 「17F 대강당」 · 원천 = 제보가 아니라 지금 강의의 현장 입장 QR 수 ÷ 좌석(서버 sync crowd.h · 송출 제외)
+   강의 시간 창 안에서만 수가 있다 · 상태 = 여유(surface) · 보통(brandSoft) · 혼잡(errorSoft) · 아래 줄 「입장 약 120명」(10명 단위 · 서버가 반올림) · 창 밖 = 「강의 없음」 */
+var HALL_LV = { ok: ["여유", ""], mid: ["보통", " pred"], jam: ["혼잡", " jam"] };
+function crowdHallCell() {
+  var c = crowdGet() || {}, h = c.h;
+  if (!h || !h.id) return { cls: "", st: "강의 없음", sub: "" };
+  var lv = HALL_LV[h.lv] || HALL_LV.ok;
+  return { cls: lv[1], st: lv[0], sub: h.n ? "입장 약 " + h.n + "명" : "입장 0명" };
+}
 function crowdStripHtml() {
   var st = crowdGet() && crowdGet().st ? 1 : 0;
   return '<div class="sect"><b>혼잡 제보</b></div>' +
-    '<div class="cstrip2">' + [["l", "1F 로비"], ["e", "엘리베이터"]].map(function (t) {
-      var x = crowdCell(t[0]), go = t[0] === "e" && x.cls === " jam" && st;
+    '<div class="cstrip2 c3">' + [["l", "1F 로비"], ["e", "엘리베이터"], ["h", "17F 대강당"]].map(function (t) {
+      var x = t[0] === "h" ? crowdHallCell() : crowdCell(t[0]), go = t[0] === "e" && x.cls === " jam" && st;
       var inner = '<p class="nm">' + t[1] + '</p><p class="st">' + x.st + "</p>" + (x.sub ? '<p class="sb">' + esc(x.sub) + "</p>" : "") + (go ? '<p class="go">' + lnkChev("계단 이용") + "</p>" : "");
       return go ? '<button type="button" class="cc' + x.cls + '" onclick="stairOpen()" aria-label="엘리베이터 혼잡 · 계단 이용">' + inner + "</button>" : '<div class="cc' + x.cls + '">' + inner + "</div>";
     }).join("") + "</div>" + (typeof crowdWatchHtml === "function" ? crowdWatchHtml() : "");   /* v4.76 혼잡일 때만 「풀리면 알림」 */
@@ -5515,7 +5555,7 @@ var TOUR_HOST = {
 };
 /* v5.65 층 안내(floor_d) · 엘리베이터 층 단추에서 온다(App.go 로도 열림 · 뒤로 = 프로그램) · 17F = 시간표 흐름 카드 중 17F 것만 · 10F = 세션 A~E 줄(누르면 세션 상세) */
 var FLOOR_GD = {
-  17: { hdr: "17F 대강당", sub: "신청 없이 자유 참석 · 입구 QR 출석" },
+  17: { hdr: "17F 대강당", sub: "신청 없이 자유 참석 · 입장 · 끝 QR 출석" },
   10: { hdr: "10F 실습형 세션", sub: "사전 신청자 참여 · 5개 세션" }
 };
 function floorGuideHtml() {
@@ -5851,11 +5891,18 @@ function stampBuzz(pattern) {
    어느 순간에 탭해도 바로 안착 · 연속 적립은 순차 재생 · 연출한 스탬프는 pp_seen 에 즉시 기록 · 모션 줄이기 = 가운데 정지 0.8초 후 사라짐, 흔들림·비행 없음. */
 var SPOP = { q: [], cur: null, ids: {}, opt: {} };
 /* v5.07 op = { to(): 제자리 { el, kind }, shake: 흔들 화면, done(spCur): 안착 직후 } · 최초 로그인 장면(lgxPop)이 쓴다 · 장면이 떠 있어도 이 팝은 장면 위에서 바로 돈다 */
-function stampOverlay(id, op) {
+/* v5.68 프로그램 참여 = 2개 · 팝 제목 p3 = 「프로그램 참여 ×2」 · p3h(17F 한쪽 1개) = 「프로그램 참여 1 / 2」 · 제자리는 같은 p3 줄 */
+function stampPopDef(id) {
+  if (id === STAMP_HALF) return { id: STAMP_HALF, title: "프로그램 참여 1 / 2" };
   var sd = STAMPS.filter(function (s) { return s.id === id; })[0];
+  return sd && sd.x2 ? { id: sd.id, title: sd.title + " ×2" } : sd;
+}
+function stampOverlay(id, op) {
+  var sd = stampPopDef(id);
   if (!sd) return false;
   var seen = ppSeenGet();
   if (seen.indexOf(id) < 0) { seen.push(id); S.set("pp_seen", seen); }   /* 재생 중복 방지 · 스탬프 탭이 다시 그려져도 또 안 튄다 */
+  if (id === STAMP_HALF && S.get("stamps", []).indexOf("p3") >= 0) return true;   /* v5.68 같은 동기화에 2개가 함께 왔으면 「×2」 팝 하나만 */
   if (op) { if (!SPOP.opt) SPOP.opt = {}; SPOP.opt[id] = op; }
   if (SPOP.ids[id] || (SPOP.cur && SPOP.cur.sd.id === id)) return true;
   SPOP.ids[id] = 1; SPOP.q.push(sd);
@@ -5866,7 +5913,7 @@ function stampOverlay(id, op) {
 function spTarget(id) {
   var v = App.current, t = null, kind = "";
   if (v === "exp") {   /* v4.84 스탬프 탭 = 그 행의 번호 칸 */
-    t = document.querySelector('#view [data-stp="' + id + '"] .axs-stpn'); if (t) kind = "card";
+    t = document.querySelector('#view [data-stp="' + (id === STAMP_HALF ? "p3" : id) + '"] .axs-stpn'); if (t) kind = "card";   /* v5.68 p3h = 프로그램 참여 줄 */
   } else if (v === "home") {
     var rail = document.querySelector("#view .rail"), n = stampGot();
     if (rail) {
@@ -6011,7 +6058,7 @@ function ppAfterRender(n, oldN, glow) {
   /* 핸들을 남긴다 · 테스트 되돌리기·초기화가 이 2초 사이에 일어나면 취소해야 pp_glow3·pp_seen 이 되살아나지 않는다 (v3.28) */
   PP.seenT = setTimeout(function () {
     PP.animOn = false; PP.seenT = null;
-    var st = S.get("stamps", []).filter(function (id) { return STAMPS.some(function (s) { return s.id === id; }); });
+    var st = S.get("stamps", []).filter(stampKnown);   /* v5.68 p3h 포함 */
     S.set("pp_seen", st);
     if (glow && stampCount() >= 3) S.set("pp_glow3", true);
   }, 2000);
@@ -6511,7 +6558,7 @@ function stpMeta(s, got) {
   if (s.id === "p4") return (stampV2() ? "3종 완주 · " : "서로 다른 3종목 · ") + Math.min(MG_NEED, mgDone()) + " / " + MG_NEED;
   if (s.id === "p2") return "1F · 체험 2종";   /* 「스태프 인증」 칩 옆 104px · 이름(HiDI-Q · Hi-Helper)은 구역 줄 · 체험 안내 화면에 */
   if (s.id === "p5") return "1분 · AX LAB QR로도";
-  if (s.id === "p3") return "강연 · 상담 · 커피챗";
+  if (s.id === "p3") return progUnits() === 1 ? "2개 중 1개 · 하나 더" : "강연 · 상담 · 커피챗";   /* v5.68 17F 입장이나 끝 한쪽만 받은 상태 */
   if (s.id === "st") { var sst = stairState(); return sst.leg ? "진행 중 · " + sst.leg.fl + "F 시작" : stairLine(sst); }
   if (s.id === "sv") return SURVEY.open + "부터 · 60초";
   return s.where || "";
@@ -6536,9 +6583,11 @@ function stpRowHtml(s, i, st, full) {
   var test = !testMode() ? "" : got ? '<button type="button" class="axs-stpx" onclick="testStampUndo(\'' + s.id + '\')">테스트 · 완료 취소</button>' : '<button type="button" class="axs-stpx" onclick="testStamp(\'' + s.id + '\')">테스트 · 완료 처리</button>';
   /* v4.95 행동이 있는 줄은 줄 전체를 눌러도 같은 행동(안의 버튼 · 타일은 그 버튼만) · 키보드는 오른쪽 버튼 */
   var tap = a[1] ? ' onclick="if (!event.target.closest(\'button\')) { ' + a[1].replace(/"/g, "&quot;") + '; }"' : "";
-  return '<div class="axs-stp' + (got ? " done" : full ? " off" : "") + (tap ? " tap" : "") + '" data-stp="' + s.id + '"' + tap + ">" +
-    '<span class="axs-stpn" aria-hidden="true">' + (got ? CHECK_SVG : i + 1) + "</span>" +
-    '<div class="axs-stpb"><p class="ax-card-title">' + esc(s.title) + (got ? '<span class="ax-sr-only"> · 완료</span>' : "") + "</p>" +
+  /* v5.68 프로그램 참여 = 2개 · 제목 옆 「×2」 · 17F 한쪽만(p3h) = 번호 칸 반 채움 「1/2」 */
+  var half = !!s.x2 && !got && st.indexOf(STAMP_HALF) >= 0;
+  return '<div class="axs-stp' + (got ? " done" : half ? " half" : full ? " off" : "") + (tap ? " tap" : "") + '" data-stp="' + s.id + '"' + tap + ">" +
+    '<span class="axs-stpn" aria-hidden="true">' + (got ? CHECK_SVG : half ? "1/2" : i + 1) + "</span>" +
+    '<div class="axs-stpb"><p class="ax-card-title">' + esc(s.title) + (s.x2 ? '<span class="axs-x2" aria-label="스탬프 2개">×2</span>' : "") + (got ? '<span class="ax-sr-only"> · 완료</span>' : half ? '<span class="ax-sr-only"> · 2개 중 1개</span>' : "") + "</p>" +
     stpLineHtml(mode, esc(meta)) +
     tiles + test + "</div>" +
     (a[0] ? (a[1] ? '<button type="button" class="axs-stpa" onclick="' + a[1] + '">' + esc(a[0]) + "</button>" : '<span class="axs-stpa ' + (got ? "ok" : "off") + '">' + esc(a[0]) + "</span>") : "") +
@@ -6601,7 +6650,7 @@ var Views = {
      옛 「현장에서 / 앱에서」 두 칸 · 「신청이 필요한 프로그램」은 걷어냈다(상담 · 커피챗 · 포토부스 행은 프로그램 탭 아래 메뉴로) ═══ */
   exp: function () {
     var st = S.get("stamps", []), n = stampCount(), seen = S.get("pp_seen", []);
-    var newly = st.filter(function (id) { return seen.indexOf(id) < 0 && STAMPS.some(function (s) { return s.id === id; }); });
+    var newly = st.filter(function (id) { return seen.indexOf(id) < 0 && stampKnown(id); });
     var glow = n >= 3 && !S.get("roulette_used", false) && !S.get("pp_glow3", false);
     /* v3.49 서버 동기화 등으로 들어온 새 스탬프 1개는 같은 팝 · 여러 개면 조용히 본 것으로(옛 passport 규칙 그대로) */
     if (newly.length === 1) setTimeout(function () { var id1 = newly[0]; if (S.get("stamps", []).indexOf(id1) >= 0 && S.get("pp_seen", []).indexOf(id1) < 0) stampOverlay(id1); }, 0);
@@ -7020,7 +7069,8 @@ function crowdGet() { var c = S.get("crowd", null); return c && typeof c === "ob
 function crowdJam(k) { var c = crowdGet(), x = c && c[k]; return x && x.at > 0 && x.x > crowdNow() ? x : null; }
 function crowdStore(c) {
   if (!c || typeof c !== "object") return;
-  var v = { l: c.l || 0, e: c.e || 0, p: String(c.p || ""), w: String(c.w || ""), st: c.st ? 1 : 0 };
+  var h = c.h && typeof c.h === "object" && c.h.id ? { id: String(c.h.id), n: Number(c.h.n) || 0, lv: String(c.h.lv || ""), seats: Number(c.h.seats) || 0 } : 0;   /* v5.68 17F 대강당 = 현장 입장 수 ÷ 좌석(서버 hallNow_ · 강의 시간 창 안에서만 · 옛 서버는 없음) */
+  var v = { l: c.l || 0, e: c.e || 0, p: String(c.p || ""), w: String(c.w || ""), st: c.st ? 1 : 0, h: h };
   if (JSON.stringify(v) !== JSON.stringify(crowdGet())) S.set("crowd", v);
 }
 function crowdWin(s) { return String(s || "").replace("-", "~"); }
@@ -7147,6 +7197,7 @@ function beSync(after) {
     if ("cchatOut" in res && !!res.cchatOut !== S.get("cchat_out", false)) S.set("cchat_out", !!res.cchatOut);   /* v4.47 GAS 가 생기면 */
     if ("betaForm" in res && (res.betaForm || "") !== S.get("beta_form", "")) S.set("beta_form", res.betaForm || "");   /* v4.55 클로즈 베타 배너 링크(없으면 빈 문자열) */
     if (res.crowd) crowdStore(res.crowd);   /* v4.71 혼잡 제보(새 서버만 보낸다 · 없으면 「제보 없음」 그대로) */
+    if (res.aw && res.aw.i && res.aw.o && JSON.stringify(res.aw) !== JSON.stringify(S.get("att_w", null))) S.put("att_w", { i: res.aw.i, o: res.aw.o });   /* v5.68 17F 입장 · 끝 QR 창(서버 설정) · 조용히 저장 */
     beNoticeIn(res.notice, res.noticeOff || []);   /* v4.75 공지 · 중지는 소켓(WS.h.notice)과 같은 함수 */
     if (res.my) {
       var all = resvAll();
@@ -7795,7 +7846,7 @@ var SV = { card: 0, busy: false, aggAt: 0 };
 /* v3.52 설문 잠금 · "time" = 14:30 전 · "nostamp" = 다른 스탬프 0개 · "" = 열림 (서버 survey_submit 와 같은 조건) */
 function surveyLock() {
   if (!surveyOpen()) return "time";
-  var other = S.get("stamps", []).filter(function (id) { return id !== "sv" && STAMPS.some(function (x) { return x.id === id; }); });
+  var other = S.get("stamps", []).filter(function (id) { return id !== "sv" && stampKnown(id); });   /* v5.68 p3h(17F 한쪽 1개)도 다른 스탬프 */
   return other.length ? "" : "nostamp";
 }
 function surveyOpen() {
@@ -7896,7 +7947,7 @@ function stampSync(list) {
   if (testEmp()) return;   /* v3.19 테스트 사번: 서버 stamps 가 로컬 테스트 적립을 덮지 않는다 */
   /* v3.97 (버그 260919) 빈 목록도 정본이다 · 관리자가 취소해 0개가 되면 기기에서도 0개 · 목록 자체가 없는 응답만 건너뛴다 */
   if (!Array.isArray(list)) return;
-  list = list.filter(function (id) { return STAMPS.some(function (s) { return s.id === id; }); });
+  list = list.filter(function (id) { return id === "p3h" || STAMPS.some(function (s) { return s.id === id; }); });   /* v5.68 p3h(STAMP_HALF · 17F 입장이나 끝 한쪽만 · 1개)는 지우지 않는다 */
   var pend = stampPend(), now = Date.now(), pchg = false;
   Object.keys(pend).forEach(function (id) {
     var p = pend[id] || {};
@@ -7988,7 +8039,7 @@ function qrRoute(raw, t) {
   var m = raw.match(/#s=([A-Za-z0-9]+)/i), code = m ? m[1] : (/^[A-Za-z0-9]{3,12}$/.test(raw) ? raw : "");
   if (!code) { srShow({ st: "fail", why: "nocode" }); return; }
   var fl = (raw.match(/[#&?]fl=(\d{1,2})\b/i) || [])[1] || "", r = (raw.match(/[#&?]r=([12])\b/i) || [])[1] || "";
-  if (/^AXA/i.test(code) && !fl) { attByCode(code, (raw.match(/[#&?]p=([a-z0-9]{1,8})(?![a-z0-9])/i) || [])[1] || ""); return; }   /* v4.26 17F 출석 QR · 코드 판정은 서버(att_claim) · v4.81 &p=강연 id = 강연별 출석 QR(PPT) · 바로 출석 */
+  if (/^AXA/i.test(code) && !fl) { attByCode(code, (raw.match(/[#&?]p=([a-z0-9]{1,8})(?![a-z0-9])/i) || [])[1] || "", ((raw.match(/[#&?]k=(in|out)(?![a-z0-9])/i) || [])[1] || "").toLowerCase()); return; }   /* v5.68 &k=in | out = 입장 · 끝 QR(현장 · 송출 같은 모양 · 송출은 코드가 다르다)   /* v4.26 17F 출석 QR · 코드 판정은 서버(att_claim) · v4.81 &p=강연 id = 강연별 출석 QR(PPT) · 바로 출석 */
   if (/^AXD/i.test(code) && !fl) { drawByCode(code); return; }   /* v4.79 Outro 럭키드로우 추첨 체크인 QR · 코드 · 창 · 1인 1회는 서버(draw_in) */
   if (/^AXW/i.test(code) || fl) stairByCode(code, fl, r, t); else stampByCode(code, t);
 }
@@ -8051,7 +8102,7 @@ var SR_WHY = {
   param: ["사번으로 입장한 뒤 스캔해 주세요", "exp", "확인"],
   server: ["서버에 연결되지 않았어요", "scan", "다시 스캔"],
   stair: ["계단 QR은 계단 화면에서 처리돼요", "scan", "다시 스캔"],
-  att: ["17F 강연은 대강당 입구 출석 QR로 적립돼요", "scan", "다시 스캔"],   /* v4.26 옛 17F 좌석 QR(p3 코드) */
+  att: ["17F 강연은 입장 · 끝 QR로 적립돼요", "scan", "다시 스캔"],   /* v4.26 옛 17F 좌석 QR(p3 코드) */
   dwin: ["추첨 체크인 시간이 아니에요", "exp", "확인"],   /* v4.79 창 · 날짜 밖(서버 window · day) */
   dclosed: ["체크인이 마감됐어요", "exp", "확인"],   /* v4.81 사회자 마감 뒤(서버 closed · 사용자 결정 261001) */
   retired: ["지금은 쓰지 않는 QR이에요", "scan", "다시 스캔"],   /* v4.83 전시 QR 퀴즈 벽 QR */
@@ -8211,74 +8262,88 @@ function drawByCode(code) {
      찍으면 고르기 없이 그 강연으로 바로 att_claim · 시트는 결과(출석 · 이미 출석 · 시간 밖)만 · 서버는 바뀌지 않았다(옛 서버에서도 그대로 된다).
      모르는 p 는 무시하고 고르기 시트(a17 그대로) · p 를 모르는 옛 앱(열린 탭)도 고르기 시트로 간다.
    오프라인 저장은 하지 않는다(출석은 서버 시계로 판정 · 연결이 안 되면 다시 시도). */
-var ATT_17F = { lead: 15, progs: [
+/* v5.68 (사용자 확정 261005) 17F 강의 = 입장 QR 1개 + 끝 QR 1개 = 스탬프 2개 · 유튜브 송출 화면 QR = 원격 출석(코드가 따로 · 서버가 가른다)
+   QR 주소 = 출석 코드 + &p=<강의 id> + &k=in | out · 입장 창 = 시작 30분 전 ~ 시작 15분 뒤 · 끝 창 = 끝 10분 전 ~ 끝 10분 뒤(서버 설정 · sync aw 로 받는다)
+   스탬프 = 입장이 하나라도 있으면 1개 + 끝이 하나라도 있으면 1개(서버 p3h · p3) · 프로그램 참여 칸은 2개까지(10F · 커피챗 · 라운지와 같은 칸)
+   k 가 없는 QR(옛 입구 QR · 고르기 시트)은 서버가 그 시각에 열린 창으로 고른다 · 내 출석 기록 att_mine = { id: 입장 시각, "id.out": 끝 시각 } */
+var ATT_17F = { lead: 30, win: { i: [30, 15], o: [10, 10] }, progs: [
   { id: "key", nm: "기조연설", sub: "Intro 포함", s: "09:30", e: "10:20" },
   { id: "road", nm: "내부 강연", sub: "현대해상 AX 로드맵", s: "10:30", e: "11:00" },
   { id: "l1", nm: "파트너사 강연 · AWS", sub: "Agentic AI 시대의 일하는 방식 변화", s: "13:30", e: "15:00" },
   { id: "l2", nm: "파트너사 강연 · MS", sub: "AI와 친해지기", s: "15:10", e: "16:40" }
 ] };
-var ATT = { code: "", sel: "", res: null, fix: "" };
+var ATT = { code: "", sel: "", res: null, fix: "", k: "" };
 function attProg(id) { for (var i = 0; i < ATT_17F.progs.length; i++) if (ATT_17F.progs[i].id === id) return ATT_17F.progs[i]; return null; }
 function attMine() { return S.get("att_mine", {}) || {}; }
-function attMineAt(id) { return attMine()[id] || ""; }
-function attFrom(x) { return t2m(x.s) - ATT_17F.lead; }
-function attWinLbl(x) { return hm2(attFrom(x)) + "–" + x.e; }
-/* 261005 최종 QA · 그 강연의 출석 창이 끝났는가(행사 뒤 = 늘 끝) · 상세 화면이 끝난 뒤에도 「출석 QR 스캔」을 내밀던 것 */
-function attShut(x) { var ph = evPhase(); return !!x && (ph === "after" || (ph === "live" && attNow() >= t2m(x.e))); }
+/* 그 강의에 출석한 적이 있는가(입장이든 끝이든 · 칩 「출석」) · attMineK = 구분별 시각 */
+function attMineAt(id) { var m = attMine(); return m[id] || m[id + ".out"] || ""; }
+function attMineK(id, k) { return attMine()[k === "out" ? id + ".out" : id] || ""; }
+/* 창 · 서버 sync aw(설정 출석_입장창 · 출석_끝창)가 있으면 그것 · 없으면 기본 */
+function attW() { var w = S.get("att_w", null); return w && w.i && w.o && w.i.length === 2 && w.o.length === 2 ? w : ATT_17F.win; }
+function attKWin(x, k) { var w = attW(); return k === "out" ? { a: t2m(x.e) - w.o[0], b: t2m(x.e) + w.o[1] } : { a: t2m(x.s) - w.i[0], b: t2m(x.s) + w.i[1] }; }
+function attFrom(x) { return attKWin(x, "in").a; }
+function attWinLbl(x, k) { var w = attKWin(x, k || "in"); return hm2(w.a) + "–" + hm2(w.b); }
+/* 그 강의의 출석 창이 모두 끝났는가(행사 뒤 = 늘 끝) */
+function attShut(x) { var ph = evPhase(); return !!x && (ph === "after" || (ph === "live" && attNow() > attKWin(x, "out").b)); }
 function attTm() { var v = testMode() ? String(S.get("att_tm", "") || "") : ""; return /^\d{1,2}:\d{2}$/.test(v) ? v : ""; }
 function attNow() { var tm = attTm(); if (tm) return t2m(tm); var d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
-/* 지금 창 · open = 고를 수 있는 id · sel = 미리 고를 것(아직 출석 안 한 것 중 진행 중 우선, 없으면 곧 시작할 것) · next = 다음에 열리는 것 */
+/* 지금 창 · open = 입장이나 끝 창이 열린 id · sel = 미리 고를 것(그 창에서 아직 안 찍은 것 중 진행 중 우선, 없으면 곧 시작할 것) · next = 다음에 열리는 강의 */
 function attWin(t) {
-  var open = [], sel = "", selK = 99999, next = null, mine = attMine();
+  var open = [], sel = "", selK = 99999, next = null, nextA = 99999, mine = attMine();
   ATT_17F.progs.forEach(function (x) {
-    var a = attFrom(x), s0 = t2m(x.s), b = t2m(x.e);
-    if (t >= a && t <= b) {
+    var wi = attKWin(x, "in"), wo = attKWin(x, "out"), s0 = t2m(x.s);
+    var inO = t >= wi.a && t <= wi.b, outO = t >= wo.a && t <= wo.b;
+    if (inO || outO) {
       open.push(x.id);
       var k = (t >= s0 ? 0 : 10000) + s0;
-      if (!mine[x.id] && k < selK) { sel = x.id; selK = k; }
-    } else if (t < a && (!next || a < attFrom(next))) next = x;
+      if (((inO && !mine[x.id]) || (outO && !mine[x.id + ".out"])) && k < selK) { sel = x.id; selK = k; }
+    }
+    [wi.a, wo.a].forEach(function (a) { if (t < a && a < nextA) { next = x; nextA = a; } });
   });
-  return { open: open, sel: sel, next: next };
+  return { open: open, sel: sel, next: next, at: next ? nextA : 0 };
 }
-function attByCode(code, fixId) {
+function attByCode(code, fixId, k) {
   var u = S.get("user", {}) || {};
   if (!u.empId) { srShow({ st: "fail", why: "param" }); return; }
   var w = attWin(attNow()), fx = attProg(String(fixId || "").toLowerCase());
-  ATT.code = String(code || "").trim(); ATT.res = null; ATT.sel = fx ? fx.id : w.sel; ATT.fix = fx ? fx.id : "";
+  ATT.code = String(code || "").trim(); ATT.res = null; ATT.sel = fx ? fx.id : w.sel; ATT.fix = fx ? fx.id : ""; ATT.k = k === "in" || k === "out" ? k : "";
   var pid = fx ? fx.id : w.sel || (w.open[0]) || (w.next && w.next.id) || "l2";
-  var go = function () { PROG.sid = pid; App.go("sess_d"); sheetOpen(attSpec()); if (fx) attGo(); };   /* 뒤에는 그 강연 상세 · 시트를 닫으면 출석 상태가 보인다 · v4.81 강연별 QR 은 바로 출석 */
+  var go = function () { PROG.sid = pid; App.go("sess_d"); sheetOpen(attSpec()); if (fx) attGo(); };   /* 뒤에는 그 강연 상세 · 시트를 닫으면 출석 상태가 보인다 · 강연별 QR 은 바로 출석 */
   if (typeof qrGated === "function" && qrGated()) qrGateDefer(go); else go();
 }
 function attRowHtml(x, t, mine) {
-  var a = attFrom(x), s0 = t2m(x.s), b = t2m(x.e), at = mine[x.id], can = !at && t >= a && t <= b, on = can && ATT.sel === x.id;
-  var st = at ? "출석 " + at : t > b ? "종료" : t < a ? hm2(a) + "부터" : t >= s0 ? "진행 중" : x.s + " 시작";
+  var wi = attKWin(x, "in"), wo = attKWin(x, "out"), s0 = t2m(x.s), ai = mine[x.id], ao = mine[x.id + ".out"];
+  var can = (t >= wi.a && t <= wi.b && !ai) || (t >= wo.a && t <= wo.b && !ao), on = can && ATT.sel === x.id;
+  var st = ai && ao ? "입장 · 끝 출석" : can ? (t >= s0 ? "진행 중" : x.s + " 시작") : ai ? "입장 " + ai : ao ? "끝 " + ao : t > wo.b ? "종료" : t < wi.a ? hm2(wi.a) + "부터" : t > wi.b && t < wo.a ? "끝 QR " + hm2(wo.a) + "부터" : x.s + " 시작";
   return '<button type="button" class="axs-att" role="radio" aria-checked="' + on + '"' + (can ? ' onclick="attPick(\'' + x.id + '\')"' : " disabled") + ">" +
     '<span class="rd" aria-hidden="true"></span><span class="nm">' + esc(x.nm) + "</span>" +   /* 한 줄 · 큰글씨 360×640 에서도 시트 안 스크롤 없게(design.md A 5-7) · 시각은 상태 칸과 강연 상세 */
     '<span class="st">' + esc(st) + "</span></button>";
 }
+function attKLbl(k) { return k === "out" ? "끝 QR" : k === "in" ? "입장 QR" : "출석"; }
 /* 시트 내용 · 고르기 · 시간 밖 · 결과 세 모양 (M03 바텀 시트 · 자유 입력 없음) */
 function attSpec() {
   var r = ATT.res, tmRow = testMode() ? '<label class="axs-attt">테스트 · 시각<input type="time" value="' + esc(attTm()) + '" onchange="attTmSet(this.value)"></label>' : "";
   if (r) {
     var x = attProg(r.id) || { nm: r.id };
-    return { id: "att", title: r.dup ? "이미 출석했어요" : "출석했어요", lead: "<b>" + esc(x.nm) + "</b><br>10월 26일 " + esc(r.at) + " 출석",
-      body: (r.stamp ? '<div class="ax-inset axs-attok"><p class="ax-card-title">스탬프 「프로그램 참여」 적립</p><p class="ax-description">현재 스탬프 ' + r.stamp + " / " + STAMP_DENOM + "개</p></div>" : "") +
+    var more = !r.dup && r.pg === 1 && r.k === "in" && !attShut(x) ? '<p class="ax-meta">끝날 때 화면의 QR을 찍으면 1개 더</p>' : "";
+    return { id: "att", title: r.dup ? "이미 출석했어요" : "출석했어요", lead: "<b>" + esc(x.nm) + "</b><br>" + (r.k === "out" ? "끝 " : "입장 ") + esc(r.at) + (r.remote ? " · 유튜브 송출 출석" : ""),
+      body: (r.stamp ? '<div class="ax-inset axs-attok"><p class="ax-card-title">스탬프 「프로그램 참여」 ' + (r.add > 1 ? r.add + "개" : "1개") + ' 적립</p><p class="ax-description">현재 스탬프 ' + r.stamp + " / " + STAMP_DENOM + "개</p></div>" : "") + more +
         (r.test ? '<p class="ax-meta">테스트 계정 · 출석은 테스트 기록 · 스탬프는 이 기기에만</p>' : ""),
       go: "sheetClose()", goLbl: "확인" };
   }
-  if (ATT.fix) { var fx = attProg(ATT.fix);   /* v4.81 강연별 QR · 고르기 없음 · 실패하면 「다시 시도하기」 */
-    return { id: "att", title: "17F 강연 출석", lead: "<b>" + esc(fx.nm) + "</b>", body: tmRow, go: "attGo()", goLbl: "출석하기", goBusy: "출석하는 중" }; }
+  if (ATT.fix) { var fx = attProg(ATT.fix);   /* 강연별 QR · 고르기 없음 · 실패하면 「다시 시도하기」 */
+    return { id: "att", title: "17F 강연 출석", lead: "<b>" + esc(fx.nm) + "</b>" + (ATT.k ? "<br>" + attKLbl(ATT.k) : ""), body: tmRow, go: "attGo()", goLbl: "출석하기", goBusy: "출석하는 중" }; }
   var t = attNow(), w = attWin(t), mine = attMine();
   var list = '<div class="axs-attl" role="radiogroup" aria-label="출석할 강연">' + ATT_17F.progs.map(function (x) { return attRowHtml(x, t, mine); }).join("") + "</div>";
-  if (w.sel) return { id: "att", title: "17F 강연 출석", lead: "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요", body: list + tmRow,
+  if (w.sel) return { id: "att", title: "17F 강연 출석", lead: "입장할 때 한 번, 끝날 때 한 번", body: list + tmRow,
     go: "attGo()", goLbl: "출석하기", goBusy: "출석하는 중", goOff: !ATT.sel };
   var lead = w.open.length ? "지금 출석할 수 있는 강연은<br>모두 출석했어요" :
-    w.next ? "다음 출석 · <b>" + esc(w.next.nm) + "</b><br>" + hm2(attFrom(w.next)) + "부터 (" + w.next.s + " 시작)" : "오늘 17F 강연 출석이 끝났어요";
+    w.next ? "다음 출석 · <b>" + esc(w.next.nm) + "</b><br>" + hm2(w.at) + "부터" : "오늘 17F 강연 출석이 끝났어요";
   return { id: "att", title: w.open.length ? "17F 강연 출석" : "지금은 출석 시간이 아니에요", lead: lead, body: list + tmRow, go: "sheetClose()", goLbl: "확인" };
 }
 function attRepaint() { if (SHEET.busy) botWait(false); SHEET.busy = false; SHEET.spec = attSpec(); if (el("axsSheet")) sheetPaint(); }
 function attPick(id) { if (SHEET.busy || ATT.res) return; ATT.sel = id; SHEET.err = null; attRepaint(); }
-function attTmSet(v) { S.set("att_tm", /^\d{1,2}:\d{2}$/.test(v || "") ? v : ""); ATT.res = null; ATT.sel = attWin(attNow()).sel; SHEET.err = null; attRepaint(); }
+function attTmSet(v) { S.set("att_tm", /^\d{1,2}:\d{2}$/.test(v || "") ? v : ""); ATT.res = null; ATT.sel = ATT.fix || attWin(attNow()).sel; SHEET.err = null; attRepaint(); }
 function attGo() {
   if (SHEET.busy || ATT.res) return;
   var x = attProg(ATT.sel), u = S.get("user", {}) || {};
@@ -8286,42 +8351,50 @@ function attGo() {
   if (!BE.on) { attLocal(x); return; }   /* 데모(서버 없음) · 같은 규칙을 이 기기에서 */
   sheetBusy(true);
   var p = { action: "att_claim", emp: u.empId, code: ATT.code, prog: x.id }, tm = attTm();
+  if (ATT.k) p.k = ATT.k;   /* v5.68 입장 · 끝 QR · 없으면 서버가 시각으로 고른다 */
   if (tm && testEmp()) p.tm = tm;
   beCall(p, attDone, function () { sheetFail({ t: "연결이 불안정해 출석하지 못했어요", b: "출석은 아직 되지 않았어요. 다시 시도해 주세요." }); });
 }
+/* 데모(서버 없음) · 서버와 같은 규칙(입장 · 끝 창 · 같은 구분 1회 · 17F 몫 = 입장 1 + 끝 1) */
 function attLocal(x) {
-  var t = attNow(), at = attMineAt(x.id);
-  if (!at && (t < attFrom(x) || t > t2m(x.e))) return attDone({ ok: false, reason: "window", open: attWinLbl(x) });
-  var first = !Object.keys(attMine()).length;
-  attDone({ ok: true, prog: x.id, at: at || hm2(t), dup: !!at, mine: [], stamp: !at && first ? { id: "p3", dry: true } : null, test: true });
+  var t = attNow(), wo = attKWin(x, "out"), k = ATT.k || (t >= wo.a && t <= wo.b ? "out" : "in"), kw = attKWin(x, k), at = attMineK(x.id, k);
+  if (!at && (t < kw.a || t > kw.b)) return attDone({ ok: false, reason: "window", k: k, open: hm2(kw.a) + "~" + hm2(kw.b) });
+  var m = attMine(), hasI = Object.keys(m).some(function (q) { return !/\.out$/.test(q); }) || k === "in", hasO = Object.keys(m).some(function (q) { return /\.out$/.test(q); }) || k === "out";
+  var pg = (hasI ? 1 : 0) + (hasO ? 1 : 0);
+  attDone({ ok: true, prog: x.id, k: k, at: at || hm2(t), dup: !!at, mine: [], pg: pg, stamp: at ? null : { id: pg >= 2 ? "p3" : "p3h", dry: true, pg: pg }, test: true });
 }
 function attDone(res) {
   if (!res || !res.ok) {
-    var why = res && res.reason, x = attProg(ATT.sel);
+    var why = res && res.reason, x = attProg(ATT.sel), kk = (res && res.k) || ATT.k;
     if (why === "nocode") { sheetClose(true); srShow({ st: "fail", why: "nocode" }); return; }
-    if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: (x ? x.nm + " · " : "") + String(res.open || "").replace("~", "–") + " 출석" }); return; }
+    if (why === "roff") { sheetFail({ t: "이 강연은 송출 출석이 없어요", b: "대강당 현장에서 출석해 주세요." }); return; }   /* v5.68 송출 QR · 서버 설정 송출_켬 밖 */
+    if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: (x ? x.nm + " · " : "") + (kk ? attKLbl(kk) + " " : "") + String(res.open || "").replace("~", "–") }); return; }
     sheetFail({ t: "출석하지 못했어요", b: "다시 시도해 주세요." });
     return;
   }
-  var m = attMine();
-  (res.mine || []).forEach(function (y) { if (y && y.id) m[y.id] = y.at; });
-  if (!m[res.prog]) m[res.prog] = res.at;
+  var m = attMine(), k0 = res.k === "out" ? "out" : "in";
+  (res.mine || []).forEach(function (y) { if (y && y.id) m[y.k === "out" ? y.id + ".out" : y.id] = y.at; });
+  var key = k0 === "out" ? res.prog + ".out" : res.prog;
+  if (!m[key]) m[key] = res.at;
   S.set("att_mine", m);
-  ATT.res = { id: res.prog, at: m[res.prog], dup: !!res.dup, stamp: attStamp(res), test: !!res.test };
+  var sn = attStamp(res);
+  ATT.res = { id: res.prog, at: m[key], dup: !!res.dup, k: k0, remote: !!res.remote, stamp: sn, add: res.stamp && !res.stamp.dry ? res.stamp.add || 0 : sn ? 1 : 0, pg: res.pg || 0, test: !!res.test };
   attRepaint();
-  App.render();   /* 뒤의 강연 상세 · 시간표 행이 「출석 완료」로 바뀐다 */
+  App.render();   /* 뒤의 강연 상세 · 시간표 행이 출석 상태로 바뀐다 */
 }
-/* 첫 출석 스탬프 p3 · 서버 목록이 정본(boothDone 과 같은 순서) · 테스트(dry)는 이 기기에만 · 새로 받았으면 현재 개수 */
+/* 17F 스탬프 · 서버 목록이 정본(boothDone 과 같은 순서) · 테스트(dry)는 이 기기에만 · 새로 받았으면 현재 개수(없으면 0)
+   v5.68 id = p3h(17F 한쪽 · 1개) | p3(2개째 · 또는 이미 있음) · add = 이번에 더한 개수(0이면 기록만) */
 function attStamp(res) {
   var st = res.stamp;
   if (!st) return 0;
+  var id = st.id === "p3" ? "p3" : STAMP_HALF;
   if (st.dry) {
     var s0 = S.get("stamps", []);
-    if (s0.indexOf("p3") >= 0) return 0;
-    ppSeenAdd("p3"); s0.push("p3"); S.set("stamps", s0);
+    if (s0.indexOf("p3") >= 0 || s0.indexOf(id) >= 0) return 0;
+    ppSeenAdd(id); s0.push(id); S.set("stamps", s0);
   } else {
-    if (st.dup) { if (st.stamps) stampSync(st.stamps); return 0; }
-    ppSeenAdd("p3");
+    if (st.dup || !st.add) { if (st.stamps) stampSync(st.stamps); return 0; }
+    ppSeenAdd(id);
     if (st.stamps) stampSync(st.stamps);
   }
   PP.just.p3 = hm2(new Date().getHours() * 60 + new Date().getMinutes());
@@ -15541,8 +15614,8 @@ function lfBusy(btn, on, label) {
     var nq = location.hash.match(/[&#]now=(\d{1,2}:\d{2})/);   /* v5.21 시험 시각 고정(hmNow · attNow) · 데모에서만 */
     if (nq) S.set("att_tm", nq[1]);
     /* v4.71 혼잡 제보 캡처 · &crowd=e(엘리베이터 혼잡) · l(로비 혼잡) · p(엘리베이터 예상) · s(계단 연결 ON) 글자를 섞어 쓴다 */
-    var cq = location.hash.match(/crowd=([elps]+)/);
-    if (cq) { var n0 = Date.now(), jm = { at: n0 - 180000, x: n0 + 720000 }; S.set("crowd", { l: /l/.test(cq[1]) ? jm : 0, e: /e/.test(cq[1]) ? jm : 0, p: /p/.test(cq[1]) ? "11:00-11:20" : "", w: /p/.test(cq[1]) ? "11:00-11:20" : "", st: /s/.test(cq[1]) ? 1 : 0 }); }
+    var cq = location.hash.match(/crowd=([elpshmj]+)/);   /* v5.68 h · m · j = 17F 대강당 여유 · 보통 · 혼잡(기조연설 · 데모 수) */
+    if (cq) { var n0 = Date.now(), jm = { at: n0 - 180000, x: n0 + 720000 }, hl = /j/.test(cq[1]) ? ["jam", 210] : /m/.test(cq[1]) ? ["mid", 150] : /h/.test(cq[1]) ? ["ok", 120] : null; S.set("crowd", { l: /l/.test(cq[1]) ? jm : 0, e: /e/.test(cq[1]) ? jm : 0, p: /p/.test(cq[1]) ? "11:00-11:20" : "", w: /p/.test(cq[1]) ? "11:00-11:20" : "", st: /s/.test(cq[1]) ? 1 : 0, h: hl ? { id: "key", n: hl[1], lv: hl[0], seats: 230 } : 0 }); }
     var target = dm[1] || "home";
     if (["admin", "type_site", "type_award"].indexOf(target) >= 0) S.set("admin_authed", true);
     splash.classList.add("gone");

@@ -714,6 +714,11 @@
   .cstrip2 .nm { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .cstrip2 .st { margin: var(--ax-space-4) 0 0; font: var(--ax-type-t7); color: var(--ax-color-muted); }
   .cstrip2 .sb { margin: 2px 0 0; font: var(--ax-type-caption); color: var(--ax-color-muted); white-space: nowrap; }
+  /* v5.68 셋째 칸 17F 대강당 · 3칸이면 칸 안 여백을 줄이고 아래 줄은 줄바꿈 허용(360px 에서 넘치지 않게) */
+  .cstrip2.c3 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ax-space-6, 6px); }
+  .cstrip2.c3 .cc { padding: var(--ax-space-12) var(--ax-space-8) var(--ax-space-12) var(--ax-space-12); }
+  .cstrip2.c3 .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cstrip2.c3 .sb { white-space: normal; word-break: keep-all; }
   .cstrip2 .cc.jam { background: var(--ax-color-errorSoft); }
   .cstrip2 .cc.jam .st { font: var(--ax-type-t6-strong); color: var(--ax-color-error); }
   .cstrip2 .cc.pred { background: var(--ax-color-brandSoft); }
@@ -1670,6 +1675,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-stpn { flex: 0 0 auto; width: 40px; height: 40px; border-radius: var(--ax-radius-999); border: 1.5px solid var(--ax-color-divider); background: var(--ax-color-inset); color: var(--ax-color-muted); display: grid; place-items: center; font: var(--ax-type-t6-strong); }
   .axs-stp.done .axs-stpn { border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
   .axs-stpn svg { width: 20px; height: 20px; display: block; }
+  /* v5.68 프로그램 참여 = 스탬프 2개 · 제목 옆 「×2」 알약 · 17F 한쪽만(p3h) = 번호 칸 아래 절반 주황 「1/2」 */
+  .axs-x2 { display: inline-block; margin-left: var(--ax-space-8); padding: 0 var(--ax-space-8); border-radius: var(--ax-radius-999); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-caption); font-weight: 700; line-height: 20px; vertical-align: 2px; }
+  .axs-stp.half .axs-stpn { border-color: var(--ax-color-brand); background: linear-gradient(to top, var(--ax-color-brand) 50%, var(--ax-color-inset) 50%); color: var(--ax-color-ink); font: var(--ax-type-caption); font-weight: 700; }
   .axs-stpb { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--ax-space-4); }
   .axs-stpb .ax-card-title { margin: 0; }
   .axs-stpm { display: flex; flex-wrap: nowrap; align-items: baseline; gap: var(--ax-space-8); margin: 0; font: var(--ax-type-t7); color: var(--ax-color-muted); }   /* v4.95 칩 = 보조 줄 맨 앞 고정 · 글은 칩 옆 칸에서만 줄바꿈 */

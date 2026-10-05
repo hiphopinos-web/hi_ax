@@ -83,6 +83,7 @@ function beSync(after) {
     if ("cchatOut" in res && !!res.cchatOut !== S.get("cchat_out", false)) S.set("cchat_out", !!res.cchatOut);   /* v4.47 GAS 가 생기면 */
     if ("betaForm" in res && (res.betaForm || "") !== S.get("beta_form", "")) S.set("beta_form", res.betaForm || "");   /* v4.55 클로즈 베타 배너 링크(없으면 빈 문자열) */
     if (res.crowd) crowdStore(res.crowd);   /* v4.71 혼잡 제보(새 서버만 보낸다 · 없으면 「제보 없음」 그대로) */
+    if (res.aw && res.aw.i && res.aw.o && JSON.stringify(res.aw) !== JSON.stringify(S.get("att_w", null))) S.put("att_w", { i: res.aw.i, o: res.aw.o });   /* v5.68 17F 입장 · 끝 QR 창(서버 설정) · 조용히 저장 */
     beNoticeIn(res.notice, res.noticeOff || []);   /* v4.75 공지 · 중지는 소켓(WS.h.notice)과 같은 함수 */
     if (res.my) {
       var all = resvAll();

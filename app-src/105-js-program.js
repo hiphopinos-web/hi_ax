@@ -193,7 +193,7 @@ function progFlowHtml(onlyFl) {
   }).join("");
 }
 function progFlowCard(o, hmN, isF) {
-  var past = hmN >= o.b, ac = isF && o.lec && !o.chip ? '<span class="ac">대강당 입구 QR로 출석</span>' : "";
+  var past = hmN >= o.b, ac = isF && o.lec && !o.chip ? '<span class="ac">입장 · 끝 QR로 출석</span>' : "";   /* v5.68 */
   return '<button type="button" class="fc' + (past ? " past" : "") + (isF ? " focus" : "") + '"' + (o.go ? ' onclick="' + o.go + '"' : " disabled") + ' data-fl="' + esc(o.k) + '">' +
     '<span class="mt">' + (o.fl ? flFloor(o.fl) : "") + '<span class="pl">' + esc(o.pl) + '</span><span class="e">~' + o.t1 + "</span></span>" +
     '<span class="t">' + (isF ? '<span class="ax-sr-only">진행 중 </span>' : "") + '<span class="tt">' + esc(o.ttl) + "</span>" + (o.chip ? '<span class="axs-chip">' + esc(o.chip) + "</span>" : "") + "</span>" +
@@ -386,7 +386,7 @@ function progMine(id) {
 }
 /* 목록 상태 한 줄 [글, 색] · ok = success · off = muted · "" = brandText */
 function progState(s) {
-  if (s.kind === "open") return attMineAt(s.id) ? ["출석 완료", "ok"] : [s.id === "expo" ? "자유 입장" : "자유 참석", ""];   /* v4.26 17F 는 출석하면 「출석 완료」 · v4.38 강연 = 「자유 참석」(시간표 딱지와 같은 말) · 전시 = 「자유 입장」 */
+  if (s.kind === "open") return attStLbl(s.id) ? [attStLbl(s.id), "ok"] : [s.id === "expo" ? "자유 입장" : "자유 참석", ""];   /* v5.68 입장 · 끝 둘 다 = 출석 완료 · 하나만 = 입장 출석 | 끝 출석 */   /* v4.26 17F 는 출석하면 「출석 완료」 · v4.38 강연 = 「자유 참석」(시간표 딱지와 같은 말) · 전시 = 「자유 입장」 */
   if (s.kind === "info") return sessMine(s.id) ? ["사전 신청 완료", "ok"] : ["사전 신청자 참여", ""];   /* v5.60 T3 */
   if (s.id === "dap") {
     var r = myResv();
@@ -420,6 +420,19 @@ function sessGuideHtml(s, mine) {
   var prep = mine && (s.prep || []).length ? '<div class="sgg sgp"><h3>준비할 것</h3><ul>' + s.prep.map(li).join("") + "</ul></div>" : "";
   return intro || todo || prep ? '<section class="axs-sg"><h2 class="ax-section-title">세션 안내</h2>' + intro + todo + prep + "</section>" : "";
 }
+/* v5.68 (사용자 확정 261005) 17F 강의 출석 = 입장 QR 1개 + 끝 QR 1개 = 스탬프 2개 · 상세 표 두 줄(입장 QR · 끝 QR) + 지금 입장 수(서버 sync crowd.h · 그 강의일 때만)
+   상태 칩 = 둘 다 「출석 완료」 · 하나만 「입장 출석」 | 「끝 출석」 · 창이 모두 끝나면 버튼 대신 시간표 */
+function attStLbl(id) { var ai = attMineK(id, "in"), ao = attMineK(id, "out"); return ai && ao ? "출석 완료" : ai ? "입장 출석" : ao ? "끝 출석" : ""; }
+function hallLine(id) { var c = crowdGet(), h = c && c.h; if (!h || h.id !== id) return ""; var lv = HALL_LV[h.lv] || HALL_LV.ok; return (h.n ? "입장 약 " + h.n + "명" : "입장 0명") + " · 좌석 " + lv[0]; }
+function attDetailFill(D, ap, timeBtn) {
+  var ai = attMineK(ap.id, "in"), ao = attMineK(ap.id, "out"), shut = attShut(ap), hl = hallLine(ap.id);
+  D.st = attStLbl(ap.id) || "자유 참석"; D.stc = "ok";
+  D.kv.push(["입장 QR", ai ? ai + " 출석" : attWinLbl(ap, "in")]);
+  D.kv.push(["끝 QR", ao ? ao + " 출석" : attWinLbl(ap, "out")]);
+  if (hl) D.kv.push(["지금", hl]);
+  D.help = ai && ao ? "" : shut ? "출석 시간이 지났어요" : "";
+  D.btn = (ai && ao) || shut ? timeBtn : progBtn("출석 QR 스캔", "scanOpen(\'a17\')");
+}
 /* 상세 한 장의 내용 · 화면(sess_d)과 확인(sess_cf)이 같은 값을 쓴다 */
 function progDetail(s) {
   var D = { cat: "", org: "", title: s.ttl, who: "", whoSub: "", av: "", st: "", stc: "", kv: [], cfKv: [], extra: "", secT: "참여 전 확인해 주세요", secB: "", link: "", help: "", btn: "" };
@@ -432,13 +445,10 @@ function progDetail(s) {
     D.cat = s.ttl; D.title = s.sub;
     D.kv = [["일시", day + progTm(s.tm)], ["장소", pl], ["참여 방법", "신청 없이 자유 참석"]];
     if (s.id === "intro") {
-      var ko = attProg("key"), kat = attMineAt("key");
+      var ko = attProg("key");
       D.who = s.who; D.av = s.who; D.whoSub = "개회 인사";
-      D.st = kat ? "출석 완료" : "자유 참석"; D.stc = "ok";
-      D.kv.push(["출석", kat ? kat + " 출석 완료" : "기조연설과 함께 · " + attWinLbl(ko)]);
-      D.secB = "출석 QR은 기조연설 때 한 번만 찍어요.";   /* 261005 최종 QA · 「별도 신청 없이 참여할 수 있어요」 = 칩 「자유 참석」 · 표 「신청 없이 자유 참석」과 같은 말이라 뺐다 */
-      D.help = kat ? "" : attShut(ko) ? "출석 시간이 지났어요" : "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요";
-      D.btn = kat || attShut(ko) ? timeBtn : progBtn("출석 QR 스캔", "scanOpen(\'a17\')");
+      attDetailFill(D, ko, timeBtn);   /* v5.68 Intro 는 기조연설 출석과 한 묶음(입장 · 끝 QR 이 같다) */
+      D.secB = "Intro는 기조연설과 한 묶음이에요.<br>입장할 때 QR을 한 번, 기조연설이 끝날 때 화면의 QR을 한 번 찍어요.";
       return D;
     }
     var din = !!S.get("draw_in", false), hmD = hmNow(), dwin = evPhase() === "live" && hmD >= t2m("16:40") && hmD < t2m("17:25");   /* 창 = drawCardHtml 과 같은 서버 기본 창 */
@@ -462,14 +472,12 @@ function progDetail(s) {
     else if (s.who) { D.who = s.who; D.av = s.who.length <= 4 ? s.who : "AX"; D.whoSub = s.id === "road" ? "내부 강연" : s.sub; }
     D.st = at ? "출석 완료" : s.id === "expo" ? "자유 입장" : "자유 참석"; D.stc = "ok";
     D.kv = [["일시", s.id === "expo" ? "10월 26일 · 행사 시간 중" : day + progTm(s.tm)], ["장소", pl], ["참여 방법", s.id === "expo" ? "신청 없이 자유 관람" : "신청 없이 자유 참석"]];
-    if (ap) D.kv.push(["출석", at ? at + " 출석 완료" : "입구 QR 스캔 · " + attWinLbl(ap)]);
     D.secB = s.id === "expo" ? "1F 로비 6구역 · AX VISION · AX LAB · AX in Action · AX PLAY · AX LOUNGE · EVENT" :
-      ap ? "대강당 입구 QR을 찍으면 출석이 기록돼요." + (s.desc ? "<br>" + esc(s.desc) : "") :   /* 261005 최종 QA · 「별도 신청 없이」 = 칩 · 표와 같은 말 */
+      ap ? "입장할 때 QR을 한 번, 끝날 때 화면의 QR을 한 번 찍어요.<br>하나에 스탬프 1개씩 · 프로그램 참여는 2개까지" + (s.desc ? "<br>" + esc(s.desc) : "") :   /* v5.68 입장 1 + 끝 1 · 옛 입구 QR 한 번 문구 교체 */
       "별도 신청 없이 참여할 수 있어요. 시작 시간에 맞춰<br>" + esc(pl) + "으로 와 주세요.";
     if (s.id === "expo") D.link = '<button type="button" class="ax-link axs-plain axs-self" onclick="App.go(\'floor1\')">1F 부스 6구역 보기</button>';
-    var shut = ap && !at && attShut(ap);   /* 261005 최종 QA · 출석 창이 끝났으면(행사 뒤 포함) 스캔 버튼 대신 시간표 · 자유 참석 안내 줄(칩 · 표와 같은 말)은 뺐다 */
-    D.help = ap && !at ? (shut ? "출석 시간이 지났어요" : "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요") : "";   /* v4.38 (사용자 260925) 17F 는 사전 신청제 → 신청을 받지 않음 · 「사전 신청」이라는 말을 쓰지 않는다 */
-    D.btn = ap && !at && !shut ? progBtn("출석 QR 스캔", "scanOpen(\'a17\')") : timeBtn;
+    if (ap) attDetailFill(D, ap, timeBtn);   /* v5.68 입장 QR · 끝 QR 두 줄 · 지금 입장 수 · 창이 끝나면 시간표(261005 최종 QA 규칙 그대로) */
+    else { D.help = ""; D.btn = timeBtn; }
     if (par) D.pics = prizeGoHtml();   /* v5.20 오후 파트너 강연 · 경품 입구 한 줄 */
     return D;
   }

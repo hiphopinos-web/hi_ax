@@ -311,7 +311,7 @@ function stpMeta(s, got) {
   if (s.id === "p4") return (stampV2() ? "3종 완주 · " : "서로 다른 3종목 · ") + Math.min(MG_NEED, mgDone()) + " / " + MG_NEED;
   if (s.id === "p2") return "1F · 체험 2종";   /* 「스태프 인증」 칩 옆 104px · 이름(HiDI-Q · Hi-Helper)은 구역 줄 · 체험 안내 화면에 */
   if (s.id === "p5") return "1분 · AX LAB QR로도";
-  if (s.id === "p3") return "강연 · 상담 · 커피챗";
+  if (s.id === "p3") return progUnits() === 1 ? "2개 중 1개 · 하나 더" : "강연 · 상담 · 커피챗";   /* v5.68 17F 입장이나 끝 한쪽만 받은 상태 */
   if (s.id === "st") { var sst = stairState(); return sst.leg ? "진행 중 · " + sst.leg.fl + "F 시작" : stairLine(sst); }
   if (s.id === "sv") return SURVEY.open + "부터 · 60초";
   return s.where || "";
@@ -336,9 +336,11 @@ function stpRowHtml(s, i, st, full) {
   var test = !testMode() ? "" : got ? '<button type="button" class="axs-stpx" onclick="testStampUndo(\'' + s.id + '\')">테스트 · 완료 취소</button>' : '<button type="button" class="axs-stpx" onclick="testStamp(\'' + s.id + '\')">테스트 · 완료 처리</button>';
   /* v4.95 행동이 있는 줄은 줄 전체를 눌러도 같은 행동(안의 버튼 · 타일은 그 버튼만) · 키보드는 오른쪽 버튼 */
   var tap = a[1] ? ' onclick="if (!event.target.closest(\'button\')) { ' + a[1].replace(/"/g, "&quot;") + '; }"' : "";
-  return '<div class="axs-stp' + (got ? " done" : full ? " off" : "") + (tap ? " tap" : "") + '" data-stp="' + s.id + '"' + tap + ">" +
-    '<span class="axs-stpn" aria-hidden="true">' + (got ? CHECK_SVG : i + 1) + "</span>" +
-    '<div class="axs-stpb"><p class="ax-card-title">' + esc(s.title) + (got ? '<span class="ax-sr-only"> · 완료</span>' : "") + "</p>" +
+  /* v5.68 프로그램 참여 = 2개 · 제목 옆 「×2」 · 17F 한쪽만(p3h) = 번호 칸 반 채움 「1/2」 */
+  var half = !!s.x2 && !got && st.indexOf(STAMP_HALF) >= 0;
+  return '<div class="axs-stp' + (got ? " done" : half ? " half" : full ? " off" : "") + (tap ? " tap" : "") + '" data-stp="' + s.id + '"' + tap + ">" +
+    '<span class="axs-stpn" aria-hidden="true">' + (got ? CHECK_SVG : half ? "1/2" : i + 1) + "</span>" +
+    '<div class="axs-stpb"><p class="ax-card-title">' + esc(s.title) + (s.x2 ? '<span class="axs-x2" aria-label="스탬프 2개">×2</span>' : "") + (got ? '<span class="ax-sr-only"> · 완료</span>' : half ? '<span class="ax-sr-only"> · 2개 중 1개</span>' : "") + "</p>" +
     stpLineHtml(mode, esc(meta)) +
     tiles + test + "</div>" +
     (a[0] ? (a[1] ? '<button type="button" class="axs-stpa" onclick="' + a[1] + '">' + esc(a[0]) + "</button>" : '<span class="axs-stpa ' + (got ? "ok" : "off") + '">' + esc(a[0]) + "</span>") : "") +

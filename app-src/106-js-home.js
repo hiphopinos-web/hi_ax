@@ -147,11 +147,20 @@ function crowdCell(k) {
 }
 /* v4.73 (260930 사용자 결정) 엘리베이터 혼잡을 홈 맨 위 카드로 올리지 않는다 · 혼잡 표시는 이 2칸에서만.
    「계단 이용」 + 셰브론 = 엘리베이터 칸이 혼잡(제보)이고 설정 혼잡_계단 ON(총무 피난계단 승인 뒤 · sync crowd.st)일 때만 · 칸을 누르면 계단 스탬프 화면(stairOpen) · OFF 면 누를 수 없는 표시 그대로 */
+/* v5.68 (사용자 결정 261005 · design.md 5-2 개정) 셋째 칸 「17F 대강당」 · 원천 = 제보가 아니라 지금 강의의 현장 입장 QR 수 ÷ 좌석(서버 sync crowd.h · 송출 제외)
+   강의 시간 창 안에서만 수가 있다 · 상태 = 여유(surface) · 보통(brandSoft) · 혼잡(errorSoft) · 아래 줄 「입장 약 120명」(10명 단위 · 서버가 반올림) · 창 밖 = 「강의 없음」 */
+var HALL_LV = { ok: ["여유", ""], mid: ["보통", " pred"], jam: ["혼잡", " jam"] };
+function crowdHallCell() {
+  var c = crowdGet() || {}, h = c.h;
+  if (!h || !h.id) return { cls: "", st: "강의 없음", sub: "" };
+  var lv = HALL_LV[h.lv] || HALL_LV.ok;
+  return { cls: lv[1], st: lv[0], sub: h.n ? "입장 약 " + h.n + "명" : "입장 0명" };
+}
 function crowdStripHtml() {
   var st = crowdGet() && crowdGet().st ? 1 : 0;
   return '<div class="sect"><b>혼잡 제보</b></div>' +
-    '<div class="cstrip2">' + [["l", "1F 로비"], ["e", "엘리베이터"]].map(function (t) {
-      var x = crowdCell(t[0]), go = t[0] === "e" && x.cls === " jam" && st;
+    '<div class="cstrip2 c3">' + [["l", "1F 로비"], ["e", "엘리베이터"], ["h", "17F 대강당"]].map(function (t) {
+      var x = t[0] === "h" ? crowdHallCell() : crowdCell(t[0]), go = t[0] === "e" && x.cls === " jam" && st;
       var inner = '<p class="nm">' + t[1] + '</p><p class="st">' + x.st + "</p>" + (x.sub ? '<p class="sb">' + esc(x.sub) + "</p>" : "") + (go ? '<p class="go">' + lnkChev("계단 이용") + "</p>" : "");
       return go ? '<button type="button" class="cc' + x.cls + '" onclick="stairOpen()" aria-label="엘리베이터 혼잡 · 계단 이용">' + inner + "</button>" : '<div class="cc' + x.cls + '">' + inner + "</div>";
     }).join("") + "</div>" + (typeof crowdWatchHtml === "function" ? crowdWatchHtml() : "");   /* v4.76 혼잡일 때만 「풀리면 알림」 */

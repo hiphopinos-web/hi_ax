@@ -93,7 +93,8 @@ function crowdGet() { var c = S.get("crowd", null); return c && typeof c === "ob
 function crowdJam(k) { var c = crowdGet(), x = c && c[k]; return x && x.at > 0 && x.x > crowdNow() ? x : null; }
 function crowdStore(c) {
   if (!c || typeof c !== "object") return;
-  var v = { l: c.l || 0, e: c.e || 0, p: String(c.p || ""), w: String(c.w || ""), st: c.st ? 1 : 0 };
+  var h = c.h && typeof c.h === "object" && c.h.id ? { id: String(c.h.id), n: Number(c.h.n) || 0, lv: String(c.h.lv || ""), seats: Number(c.h.seats) || 0 } : 0;   /* v5.68 17F 대강당 = 현장 입장 수 ÷ 좌석(서버 hallNow_ · 강의 시간 창 안에서만 · 옛 서버는 없음) */
+  var v = { l: c.l || 0, e: c.e || 0, p: String(c.p || ""), w: String(c.w || ""), st: c.st ? 1 : 0, h: h };
   if (JSON.stringify(v) !== JSON.stringify(crowdGet())) S.set("crowd", v);
 }
 function crowdWin(s) { return String(s || "").replace("-", "~"); }

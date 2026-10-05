@@ -198,11 +198,18 @@ function stampBuzz(pattern) {
    어느 순간에 탭해도 바로 안착 · 연속 적립은 순차 재생 · 연출한 스탬프는 pp_seen 에 즉시 기록 · 모션 줄이기 = 가운데 정지 0.8초 후 사라짐, 흔들림·비행 없음. */
 var SPOP = { q: [], cur: null, ids: {}, opt: {} };
 /* v5.07 op = { to(): 제자리 { el, kind }, shake: 흔들 화면, done(spCur): 안착 직후 } · 최초 로그인 장면(lgxPop)이 쓴다 · 장면이 떠 있어도 이 팝은 장면 위에서 바로 돈다 */
-function stampOverlay(id, op) {
+/* v5.68 프로그램 참여 = 2개 · 팝 제목 p3 = 「프로그램 참여 ×2」 · p3h(17F 한쪽 1개) = 「프로그램 참여 1 / 2」 · 제자리는 같은 p3 줄 */
+function stampPopDef(id) {
+  if (id === STAMP_HALF) return { id: STAMP_HALF, title: "프로그램 참여 1 / 2" };
   var sd = STAMPS.filter(function (s) { return s.id === id; })[0];
+  return sd && sd.x2 ? { id: sd.id, title: sd.title + " ×2" } : sd;
+}
+function stampOverlay(id, op) {
+  var sd = stampPopDef(id);
   if (!sd) return false;
   var seen = ppSeenGet();
   if (seen.indexOf(id) < 0) { seen.push(id); S.set("pp_seen", seen); }   /* 재생 중복 방지 · 스탬프 탭이 다시 그려져도 또 안 튄다 */
+  if (id === STAMP_HALF && S.get("stamps", []).indexOf("p3") >= 0) return true;   /* v5.68 같은 동기화에 2개가 함께 왔으면 「×2」 팝 하나만 */
   if (op) { if (!SPOP.opt) SPOP.opt = {}; SPOP.opt[id] = op; }
   if (SPOP.ids[id] || (SPOP.cur && SPOP.cur.sd.id === id)) return true;
   SPOP.ids[id] = 1; SPOP.q.push(sd);
@@ -213,7 +220,7 @@ function stampOverlay(id, op) {
 function spTarget(id) {
   var v = App.current, t = null, kind = "";
   if (v === "exp") {   /* v4.84 스탬프 탭 = 그 행의 번호 칸 */
-    t = document.querySelector('#view [data-stp="' + id + '"] .axs-stpn'); if (t) kind = "card";
+    t = document.querySelector('#view [data-stp="' + (id === STAMP_HALF ? "p3" : id) + '"] .axs-stpn'); if (t) kind = "card";   /* v5.68 p3h = 프로그램 참여 줄 */
   } else if (v === "home") {
     var rail = document.querySelector("#view .rail"), n = stampGot();
     if (rail) {
@@ -358,7 +365,7 @@ function ppAfterRender(n, oldN, glow) {
   /* 핸들을 남긴다 · 테스트 되돌리기·초기화가 이 2초 사이에 일어나면 취소해야 pp_glow3·pp_seen 이 되살아나지 않는다 (v3.28) */
   PP.seenT = setTimeout(function () {
     PP.animOn = false; PP.seenT = null;
-    var st = S.get("stamps", []).filter(function (id) { return STAMPS.some(function (s) { return s.id === id; }); });
+    var st = S.get("stamps", []).filter(stampKnown);   /* v5.68 p3h 포함 */
     S.set("pp_seen", st);
     if (glow && stampCount() >= 3) S.set("pp_glow3", true);
   }, 2000);

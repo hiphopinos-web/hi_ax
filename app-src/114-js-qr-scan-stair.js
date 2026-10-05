@@ -60,7 +60,7 @@ function qrRoute(raw, t) {
   var m = raw.match(/#s=([A-Za-z0-9]+)/i), code = m ? m[1] : (/^[A-Za-z0-9]{3,12}$/.test(raw) ? raw : "");
   if (!code) { srShow({ st: "fail", why: "nocode" }); return; }
   var fl = (raw.match(/[#&?]fl=(\d{1,2})\b/i) || [])[1] || "", r = (raw.match(/[#&?]r=([12])\b/i) || [])[1] || "";
-  if (/^AXA/i.test(code) && !fl) { attByCode(code, (raw.match(/[#&?]p=([a-z0-9]{1,8})(?![a-z0-9])/i) || [])[1] || ""); return; }   /* v4.26 17F 출석 QR · 코드 판정은 서버(att_claim) · v4.81 &p=강연 id = 강연별 출석 QR(PPT) · 바로 출석 */
+  if (/^AXA/i.test(code) && !fl) { attByCode(code, (raw.match(/[#&?]p=([a-z0-9]{1,8})(?![a-z0-9])/i) || [])[1] || "", ((raw.match(/[#&?]k=(in|out)(?![a-z0-9])/i) || [])[1] || "").toLowerCase()); return; }   /* v5.68 &k=in | out = 입장 · 끝 QR(현장 · 송출 같은 모양 · 송출은 코드가 다르다)   /* v4.26 17F 출석 QR · 코드 판정은 서버(att_claim) · v4.81 &p=강연 id = 강연별 출석 QR(PPT) · 바로 출석 */
   if (/^AXD/i.test(code) && !fl) { drawByCode(code); return; }   /* v4.79 Outro 럭키드로우 추첨 체크인 QR · 코드 · 창 · 1인 1회는 서버(draw_in) */
   if (/^AXW/i.test(code) || fl) stairByCode(code, fl, r, t); else stampByCode(code, t);
 }
@@ -123,7 +123,7 @@ var SR_WHY = {
   param: ["사번으로 입장한 뒤 스캔해 주세요", "exp", "확인"],
   server: ["서버에 연결되지 않았어요", "scan", "다시 스캔"],
   stair: ["계단 QR은 계단 화면에서 처리돼요", "scan", "다시 스캔"],
-  att: ["17F 강연은 대강당 입구 출석 QR로 적립돼요", "scan", "다시 스캔"],   /* v4.26 옛 17F 좌석 QR(p3 코드) */
+  att: ["17F 강연은 입장 · 끝 QR로 적립돼요", "scan", "다시 스캔"],   /* v4.26 옛 17F 좌석 QR(p3 코드) */
   dwin: ["추첨 체크인 시간이 아니에요", "exp", "확인"],   /* v4.79 창 · 날짜 밖(서버 window · day) */
   dclosed: ["체크인이 마감됐어요", "exp", "확인"],   /* v4.81 사회자 마감 뒤(서버 closed · 사용자 결정 261001) */
   retired: ["지금은 쓰지 않는 QR이에요", "scan", "다시 스캔"],   /* v4.83 전시 QR 퀴즈 벽 QR */
@@ -283,74 +283,88 @@ function drawByCode(code) {
      찍으면 고르기 없이 그 강연으로 바로 att_claim · 시트는 결과(출석 · 이미 출석 · 시간 밖)만 · 서버는 바뀌지 않았다(옛 서버에서도 그대로 된다).
      모르는 p 는 무시하고 고르기 시트(a17 그대로) · p 를 모르는 옛 앱(열린 탭)도 고르기 시트로 간다.
    오프라인 저장은 하지 않는다(출석은 서버 시계로 판정 · 연결이 안 되면 다시 시도). */
-var ATT_17F = { lead: 15, progs: [
+/* v5.68 (사용자 확정 261005) 17F 강의 = 입장 QR 1개 + 끝 QR 1개 = 스탬프 2개 · 유튜브 송출 화면 QR = 원격 출석(코드가 따로 · 서버가 가른다)
+   QR 주소 = 출석 코드 + &p=<강의 id> + &k=in | out · 입장 창 = 시작 30분 전 ~ 시작 15분 뒤 · 끝 창 = 끝 10분 전 ~ 끝 10분 뒤(서버 설정 · sync aw 로 받는다)
+   스탬프 = 입장이 하나라도 있으면 1개 + 끝이 하나라도 있으면 1개(서버 p3h · p3) · 프로그램 참여 칸은 2개까지(10F · 커피챗 · 라운지와 같은 칸)
+   k 가 없는 QR(옛 입구 QR · 고르기 시트)은 서버가 그 시각에 열린 창으로 고른다 · 내 출석 기록 att_mine = { id: 입장 시각, "id.out": 끝 시각 } */
+var ATT_17F = { lead: 30, win: { i: [30, 15], o: [10, 10] }, progs: [
   { id: "key", nm: "기조연설", sub: "Intro 포함", s: "09:30", e: "10:20" },
   { id: "road", nm: "내부 강연", sub: "현대해상 AX 로드맵", s: "10:30", e: "11:00" },
   { id: "l1", nm: "파트너사 강연 · AWS", sub: "Agentic AI 시대의 일하는 방식 변화", s: "13:30", e: "15:00" },
   { id: "l2", nm: "파트너사 강연 · MS", sub: "AI와 친해지기", s: "15:10", e: "16:40" }
 ] };
-var ATT = { code: "", sel: "", res: null, fix: "" };
+var ATT = { code: "", sel: "", res: null, fix: "", k: "" };
 function attProg(id) { for (var i = 0; i < ATT_17F.progs.length; i++) if (ATT_17F.progs[i].id === id) return ATT_17F.progs[i]; return null; }
 function attMine() { return S.get("att_mine", {}) || {}; }
-function attMineAt(id) { return attMine()[id] || ""; }
-function attFrom(x) { return t2m(x.s) - ATT_17F.lead; }
-function attWinLbl(x) { return hm2(attFrom(x)) + "–" + x.e; }
-/* 261005 최종 QA · 그 강연의 출석 창이 끝났는가(행사 뒤 = 늘 끝) · 상세 화면이 끝난 뒤에도 「출석 QR 스캔」을 내밀던 것 */
-function attShut(x) { var ph = evPhase(); return !!x && (ph === "after" || (ph === "live" && attNow() >= t2m(x.e))); }
+/* 그 강의에 출석한 적이 있는가(입장이든 끝이든 · 칩 「출석」) · attMineK = 구분별 시각 */
+function attMineAt(id) { var m = attMine(); return m[id] || m[id + ".out"] || ""; }
+function attMineK(id, k) { return attMine()[k === "out" ? id + ".out" : id] || ""; }
+/* 창 · 서버 sync aw(설정 출석_입장창 · 출석_끝창)가 있으면 그것 · 없으면 기본 */
+function attW() { var w = S.get("att_w", null); return w && w.i && w.o && w.i.length === 2 && w.o.length === 2 ? w : ATT_17F.win; }
+function attKWin(x, k) { var w = attW(); return k === "out" ? { a: t2m(x.e) - w.o[0], b: t2m(x.e) + w.o[1] } : { a: t2m(x.s) - w.i[0], b: t2m(x.s) + w.i[1] }; }
+function attFrom(x) { return attKWin(x, "in").a; }
+function attWinLbl(x, k) { var w = attKWin(x, k || "in"); return hm2(w.a) + "–" + hm2(w.b); }
+/* 그 강의의 출석 창이 모두 끝났는가(행사 뒤 = 늘 끝) */
+function attShut(x) { var ph = evPhase(); return !!x && (ph === "after" || (ph === "live" && attNow() > attKWin(x, "out").b)); }
 function attTm() { var v = testMode() ? String(S.get("att_tm", "") || "") : ""; return /^\d{1,2}:\d{2}$/.test(v) ? v : ""; }
 function attNow() { var tm = attTm(); if (tm) return t2m(tm); var d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
-/* 지금 창 · open = 고를 수 있는 id · sel = 미리 고를 것(아직 출석 안 한 것 중 진행 중 우선, 없으면 곧 시작할 것) · next = 다음에 열리는 것 */
+/* 지금 창 · open = 입장이나 끝 창이 열린 id · sel = 미리 고를 것(그 창에서 아직 안 찍은 것 중 진행 중 우선, 없으면 곧 시작할 것) · next = 다음에 열리는 강의 */
 function attWin(t) {
-  var open = [], sel = "", selK = 99999, next = null, mine = attMine();
+  var open = [], sel = "", selK = 99999, next = null, nextA = 99999, mine = attMine();
   ATT_17F.progs.forEach(function (x) {
-    var a = attFrom(x), s0 = t2m(x.s), b = t2m(x.e);
-    if (t >= a && t <= b) {
+    var wi = attKWin(x, "in"), wo = attKWin(x, "out"), s0 = t2m(x.s);
+    var inO = t >= wi.a && t <= wi.b, outO = t >= wo.a && t <= wo.b;
+    if (inO || outO) {
       open.push(x.id);
       var k = (t >= s0 ? 0 : 10000) + s0;
-      if (!mine[x.id] && k < selK) { sel = x.id; selK = k; }
-    } else if (t < a && (!next || a < attFrom(next))) next = x;
+      if (((inO && !mine[x.id]) || (outO && !mine[x.id + ".out"])) && k < selK) { sel = x.id; selK = k; }
+    }
+    [wi.a, wo.a].forEach(function (a) { if (t < a && a < nextA) { next = x; nextA = a; } });
   });
-  return { open: open, sel: sel, next: next };
+  return { open: open, sel: sel, next: next, at: next ? nextA : 0 };
 }
-function attByCode(code, fixId) {
+function attByCode(code, fixId, k) {
   var u = S.get("user", {}) || {};
   if (!u.empId) { srShow({ st: "fail", why: "param" }); return; }
   var w = attWin(attNow()), fx = attProg(String(fixId || "").toLowerCase());
-  ATT.code = String(code || "").trim(); ATT.res = null; ATT.sel = fx ? fx.id : w.sel; ATT.fix = fx ? fx.id : "";
+  ATT.code = String(code || "").trim(); ATT.res = null; ATT.sel = fx ? fx.id : w.sel; ATT.fix = fx ? fx.id : ""; ATT.k = k === "in" || k === "out" ? k : "";
   var pid = fx ? fx.id : w.sel || (w.open[0]) || (w.next && w.next.id) || "l2";
-  var go = function () { PROG.sid = pid; App.go("sess_d"); sheetOpen(attSpec()); if (fx) attGo(); };   /* 뒤에는 그 강연 상세 · 시트를 닫으면 출석 상태가 보인다 · v4.81 강연별 QR 은 바로 출석 */
+  var go = function () { PROG.sid = pid; App.go("sess_d"); sheetOpen(attSpec()); if (fx) attGo(); };   /* 뒤에는 그 강연 상세 · 시트를 닫으면 출석 상태가 보인다 · 강연별 QR 은 바로 출석 */
   if (typeof qrGated === "function" && qrGated()) qrGateDefer(go); else go();
 }
 function attRowHtml(x, t, mine) {
-  var a = attFrom(x), s0 = t2m(x.s), b = t2m(x.e), at = mine[x.id], can = !at && t >= a && t <= b, on = can && ATT.sel === x.id;
-  var st = at ? "출석 " + at : t > b ? "종료" : t < a ? hm2(a) + "부터" : t >= s0 ? "진행 중" : x.s + " 시작";
+  var wi = attKWin(x, "in"), wo = attKWin(x, "out"), s0 = t2m(x.s), ai = mine[x.id], ao = mine[x.id + ".out"];
+  var can = (t >= wi.a && t <= wi.b && !ai) || (t >= wo.a && t <= wo.b && !ao), on = can && ATT.sel === x.id;
+  var st = ai && ao ? "입장 · 끝 출석" : can ? (t >= s0 ? "진행 중" : x.s + " 시작") : ai ? "입장 " + ai : ao ? "끝 " + ao : t > wo.b ? "종료" : t < wi.a ? hm2(wi.a) + "부터" : t > wi.b && t < wo.a ? "끝 QR " + hm2(wo.a) + "부터" : x.s + " 시작";
   return '<button type="button" class="axs-att" role="radio" aria-checked="' + on + '"' + (can ? ' onclick="attPick(\'' + x.id + '\')"' : " disabled") + ">" +
     '<span class="rd" aria-hidden="true"></span><span class="nm">' + esc(x.nm) + "</span>" +   /* 한 줄 · 큰글씨 360×640 에서도 시트 안 스크롤 없게(design.md A 5-7) · 시각은 상태 칸과 강연 상세 */
     '<span class="st">' + esc(st) + "</span></button>";
 }
+function attKLbl(k) { return k === "out" ? "끝 QR" : k === "in" ? "입장 QR" : "출석"; }
 /* 시트 내용 · 고르기 · 시간 밖 · 결과 세 모양 (M03 바텀 시트 · 자유 입력 없음) */
 function attSpec() {
   var r = ATT.res, tmRow = testMode() ? '<label class="axs-attt">테스트 · 시각<input type="time" value="' + esc(attTm()) + '" onchange="attTmSet(this.value)"></label>' : "";
   if (r) {
     var x = attProg(r.id) || { nm: r.id };
-    return { id: "att", title: r.dup ? "이미 출석했어요" : "출석했어요", lead: "<b>" + esc(x.nm) + "</b><br>10월 26일 " + esc(r.at) + " 출석",
-      body: (r.stamp ? '<div class="ax-inset axs-attok"><p class="ax-card-title">스탬프 「프로그램 참여」 적립</p><p class="ax-description">현재 스탬프 ' + r.stamp + " / " + STAMP_DENOM + "개</p></div>" : "") +
+    var more = !r.dup && r.pg === 1 && r.k === "in" && !attShut(x) ? '<p class="ax-meta">끝날 때 화면의 QR을 찍으면 1개 더</p>' : "";
+    return { id: "att", title: r.dup ? "이미 출석했어요" : "출석했어요", lead: "<b>" + esc(x.nm) + "</b><br>" + (r.k === "out" ? "끝 " : "입장 ") + esc(r.at) + (r.remote ? " · 유튜브 송출 출석" : ""),
+      body: (r.stamp ? '<div class="ax-inset axs-attok"><p class="ax-card-title">스탬프 「프로그램 참여」 ' + (r.add > 1 ? r.add + "개" : "1개") + ' 적립</p><p class="ax-description">현재 스탬프 ' + r.stamp + " / " + STAMP_DENOM + "개</p></div>" : "") + more +
         (r.test ? '<p class="ax-meta">테스트 계정 · 출석은 테스트 기록 · 스탬프는 이 기기에만</p>' : ""),
       go: "sheetClose()", goLbl: "확인" };
   }
-  if (ATT.fix) { var fx = attProg(ATT.fix);   /* v4.81 강연별 QR · 고르기 없음 · 실패하면 「다시 시도하기」 */
-    return { id: "att", title: "17F 강연 출석", lead: "<b>" + esc(fx.nm) + "</b>", body: tmRow, go: "attGo()", goLbl: "출석하기", goBusy: "출석하는 중" }; }
+  if (ATT.fix) { var fx = attProg(ATT.fix);   /* 강연별 QR · 고르기 없음 · 실패하면 「다시 시도하기」 */
+    return { id: "att", title: "17F 강연 출석", lead: "<b>" + esc(fx.nm) + "</b>" + (ATT.k ? "<br>" + attKLbl(ATT.k) : ""), body: tmRow, go: "attGo()", goLbl: "출석하기", goBusy: "출석하는 중" }; }
   var t = attNow(), w = attWin(t), mine = attMine();
   var list = '<div class="axs-attl" role="radiogroup" aria-label="출석할 강연">' + ATT_17F.progs.map(function (x) { return attRowHtml(x, t, mine); }).join("") + "</div>";
-  if (w.sel) return { id: "att", title: "17F 강연 출석", lead: "시작 " + ATT_17F.lead + "분 전부터 출석할 수 있어요", body: list + tmRow,
+  if (w.sel) return { id: "att", title: "17F 강연 출석", lead: "입장할 때 한 번, 끝날 때 한 번", body: list + tmRow,
     go: "attGo()", goLbl: "출석하기", goBusy: "출석하는 중", goOff: !ATT.sel };
   var lead = w.open.length ? "지금 출석할 수 있는 강연은<br>모두 출석했어요" :
-    w.next ? "다음 출석 · <b>" + esc(w.next.nm) + "</b><br>" + hm2(attFrom(w.next)) + "부터 (" + w.next.s + " 시작)" : "오늘 17F 강연 출석이 끝났어요";
+    w.next ? "다음 출석 · <b>" + esc(w.next.nm) + "</b><br>" + hm2(w.at) + "부터" : "오늘 17F 강연 출석이 끝났어요";
   return { id: "att", title: w.open.length ? "17F 강연 출석" : "지금은 출석 시간이 아니에요", lead: lead, body: list + tmRow, go: "sheetClose()", goLbl: "확인" };
 }
 function attRepaint() { if (SHEET.busy) botWait(false); SHEET.busy = false; SHEET.spec = attSpec(); if (el("axsSheet")) sheetPaint(); }
 function attPick(id) { if (SHEET.busy || ATT.res) return; ATT.sel = id; SHEET.err = null; attRepaint(); }
-function attTmSet(v) { S.set("att_tm", /^\d{1,2}:\d{2}$/.test(v || "") ? v : ""); ATT.res = null; ATT.sel = attWin(attNow()).sel; SHEET.err = null; attRepaint(); }
+function attTmSet(v) { S.set("att_tm", /^\d{1,2}:\d{2}$/.test(v || "") ? v : ""); ATT.res = null; ATT.sel = ATT.fix || attWin(attNow()).sel; SHEET.err = null; attRepaint(); }
 function attGo() {
   if (SHEET.busy || ATT.res) return;
   var x = attProg(ATT.sel), u = S.get("user", {}) || {};
@@ -358,42 +372,50 @@ function attGo() {
   if (!BE.on) { attLocal(x); return; }   /* 데모(서버 없음) · 같은 규칙을 이 기기에서 */
   sheetBusy(true);
   var p = { action: "att_claim", emp: u.empId, code: ATT.code, prog: x.id }, tm = attTm();
+  if (ATT.k) p.k = ATT.k;   /* v5.68 입장 · 끝 QR · 없으면 서버가 시각으로 고른다 */
   if (tm && testEmp()) p.tm = tm;
   beCall(p, attDone, function () { sheetFail({ t: "연결이 불안정해 출석하지 못했어요", b: "출석은 아직 되지 않았어요. 다시 시도해 주세요." }); });
 }
+/* 데모(서버 없음) · 서버와 같은 규칙(입장 · 끝 창 · 같은 구분 1회 · 17F 몫 = 입장 1 + 끝 1) */
 function attLocal(x) {
-  var t = attNow(), at = attMineAt(x.id);
-  if (!at && (t < attFrom(x) || t > t2m(x.e))) return attDone({ ok: false, reason: "window", open: attWinLbl(x) });
-  var first = !Object.keys(attMine()).length;
-  attDone({ ok: true, prog: x.id, at: at || hm2(t), dup: !!at, mine: [], stamp: !at && first ? { id: "p3", dry: true } : null, test: true });
+  var t = attNow(), wo = attKWin(x, "out"), k = ATT.k || (t >= wo.a && t <= wo.b ? "out" : "in"), kw = attKWin(x, k), at = attMineK(x.id, k);
+  if (!at && (t < kw.a || t > kw.b)) return attDone({ ok: false, reason: "window", k: k, open: hm2(kw.a) + "~" + hm2(kw.b) });
+  var m = attMine(), hasI = Object.keys(m).some(function (q) { return !/\.out$/.test(q); }) || k === "in", hasO = Object.keys(m).some(function (q) { return /\.out$/.test(q); }) || k === "out";
+  var pg = (hasI ? 1 : 0) + (hasO ? 1 : 0);
+  attDone({ ok: true, prog: x.id, k: k, at: at || hm2(t), dup: !!at, mine: [], pg: pg, stamp: at ? null : { id: pg >= 2 ? "p3" : "p3h", dry: true, pg: pg }, test: true });
 }
 function attDone(res) {
   if (!res || !res.ok) {
-    var why = res && res.reason, x = attProg(ATT.sel);
+    var why = res && res.reason, x = attProg(ATT.sel), kk = (res && res.k) || ATT.k;
     if (why === "nocode") { sheetClose(true); srShow({ st: "fail", why: "nocode" }); return; }
-    if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: (x ? x.nm + " · " : "") + String(res.open || "").replace("~", "–") + " 출석" }); return; }
+    if (why === "roff") { sheetFail({ t: "이 강연은 송출 출석이 없어요", b: "대강당 현장에서 출석해 주세요." }); return; }   /* v5.68 송출 QR · 서버 설정 송출_켬 밖 */
+    if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: (x ? x.nm + " · " : "") + (kk ? attKLbl(kk) + " " : "") + String(res.open || "").replace("~", "–") }); return; }
     sheetFail({ t: "출석하지 못했어요", b: "다시 시도해 주세요." });
     return;
   }
-  var m = attMine();
-  (res.mine || []).forEach(function (y) { if (y && y.id) m[y.id] = y.at; });
-  if (!m[res.prog]) m[res.prog] = res.at;
+  var m = attMine(), k0 = res.k === "out" ? "out" : "in";
+  (res.mine || []).forEach(function (y) { if (y && y.id) m[y.k === "out" ? y.id + ".out" : y.id] = y.at; });
+  var key = k0 === "out" ? res.prog + ".out" : res.prog;
+  if (!m[key]) m[key] = res.at;
   S.set("att_mine", m);
-  ATT.res = { id: res.prog, at: m[res.prog], dup: !!res.dup, stamp: attStamp(res), test: !!res.test };
+  var sn = attStamp(res);
+  ATT.res = { id: res.prog, at: m[key], dup: !!res.dup, k: k0, remote: !!res.remote, stamp: sn, add: res.stamp && !res.stamp.dry ? res.stamp.add || 0 : sn ? 1 : 0, pg: res.pg || 0, test: !!res.test };
   attRepaint();
-  App.render();   /* 뒤의 강연 상세 · 시간표 행이 「출석 완료」로 바뀐다 */
+  App.render();   /* 뒤의 강연 상세 · 시간표 행이 출석 상태로 바뀐다 */
 }
-/* 첫 출석 스탬프 p3 · 서버 목록이 정본(boothDone 과 같은 순서) · 테스트(dry)는 이 기기에만 · 새로 받았으면 현재 개수 */
+/* 17F 스탬프 · 서버 목록이 정본(boothDone 과 같은 순서) · 테스트(dry)는 이 기기에만 · 새로 받았으면 현재 개수(없으면 0)
+   v5.68 id = p3h(17F 한쪽 · 1개) | p3(2개째 · 또는 이미 있음) · add = 이번에 더한 개수(0이면 기록만) */
 function attStamp(res) {
   var st = res.stamp;
   if (!st) return 0;
+  var id = st.id === "p3" ? "p3" : STAMP_HALF;
   if (st.dry) {
     var s0 = S.get("stamps", []);
-    if (s0.indexOf("p3") >= 0) return 0;
-    ppSeenAdd("p3"); s0.push("p3"); S.set("stamps", s0);
+    if (s0.indexOf("p3") >= 0 || s0.indexOf(id) >= 0) return 0;
+    ppSeenAdd(id); s0.push(id); S.set("stamps", s0);
   } else {
-    if (st.dup) { if (st.stamps) stampSync(st.stamps); return 0; }
-    ppSeenAdd("p3");
+    if (st.dup || !st.add) { if (st.stamps) stampSync(st.stamps); return 0; }
+    ppSeenAdd(id);
     if (st.stamps) stampSync(st.stamps);
   }
   PP.just.p3 = hm2(new Date().getHours() * 60 + new Date().getMinutes());

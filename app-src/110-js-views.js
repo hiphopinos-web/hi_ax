@@ -52,7 +52,7 @@ var Views = {
      옛 「현장에서 / 앱에서」 두 칸 · 「신청이 필요한 프로그램」은 걷어냈다(상담 · 커피챗 · 포토부스 행은 프로그램 탭 아래 메뉴로) ═══ */
   exp: function () {
     var st = S.get("stamps", []), n = stampCount(), seen = S.get("pp_seen", []);
-    var newly = st.filter(function (id) { return seen.indexOf(id) < 0 && STAMPS.some(function (s) { return s.id === id; }); });
+    var newly = st.filter(function (id) { return seen.indexOf(id) < 0 && stampKnown(id); });
     var glow = n >= 3 && !S.get("roulette_used", false) && !S.get("pp_glow3", false);
     /* v3.49 서버 동기화 등으로 들어온 새 스탬프 1개는 같은 팝 · 여러 개면 조용히 본 것으로(옛 passport 규칙 그대로) */
     if (newly.length === 1) setTimeout(function () { var id1 = newly[0]; if (S.get("stamps", []).indexOf(id1) >= 0 && S.get("pp_seen", []).indexOf(id1) < 0) stampOverlay(id1); }, 0);

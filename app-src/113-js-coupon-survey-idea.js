@@ -30,7 +30,7 @@ var SV = { card: 0, busy: false, aggAt: 0 };
 /* v3.52 설문 잠금 · "time" = 14:30 전 · "nostamp" = 다른 스탬프 0개 · "" = 열림 (서버 survey_submit 와 같은 조건) */
 function surveyLock() {
   if (!surveyOpen()) return "time";
-  var other = S.get("stamps", []).filter(function (id) { return id !== "sv" && STAMPS.some(function (x) { return x.id === id; }); });
+  var other = S.get("stamps", []).filter(function (id) { return id !== "sv" && stampKnown(id); });   /* v5.68 p3h(17F 한쪽 1개)도 다른 스탬프 */
   return other.length ? "" : "nostamp";
 }
 function surveyOpen() {
@@ -131,7 +131,7 @@ function stampSync(list) {
   if (testEmp()) return;   /* v3.19 테스트 사번: 서버 stamps 가 로컬 테스트 적립을 덮지 않는다 */
   /* v3.97 (버그 260919) 빈 목록도 정본이다 · 관리자가 취소해 0개가 되면 기기에서도 0개 · 목록 자체가 없는 응답만 건너뛴다 */
   if (!Array.isArray(list)) return;
-  list = list.filter(function (id) { return STAMPS.some(function (s) { return s.id === id; }); });
+  list = list.filter(function (id) { return id === "p3h" || STAMPS.some(function (s) { return s.id === id; }); });   /* v5.68 p3h(STAMP_HALF · 17F 입장이나 끝 한쪽만 · 1개)는 지우지 않는다 */
   var pend = stampPend(), now = Date.now(), pchg = false;
   Object.keys(pend).forEach(function (id) {
     var p = pend[id] || {};
