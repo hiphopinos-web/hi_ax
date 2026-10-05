@@ -822,6 +822,7 @@ button.lnk{background:none;border:0;padding:0;font-family:inherit;white-space:no
 .hv-el b{font-size:var(--fs-b)}
 .hv-el span.m{font-size:var(--fs-c);color:var(--tx2);font-variant-numeric:tabular-nums}
 /* 261003 UI 정돈 · 요소 상태 띠 · 본부 요소 표 · 2열 KPI */
+.cfg-fx{display:flex;align-items:center;gap:4px;color:var(--tx2)}
 .hv-st{display:flex;align-items:center;gap:12px 24px;flex-wrap:wrap;padding:16px 24px;background:var(--sf);border:1px solid var(--line);border-radius:var(--r);margin-bottom:16px}
 .hv-st .hv-nums{margin-top:0;gap:8px 24px}
 .hv-st .r{margin-left:auto;display:flex;gap:8px}
@@ -2507,6 +2508,8 @@ function attWipe(){
 }
 var ATT_SHORT={ key:"기조", road:"내부", l1:"AWS", l2:"MS" };
 function attNew(d){ var p=(d&&d.progs)||[]; return !!(p.length&&("in" in p[0])); }
+/* 서버가 hallNow 에 더하는 정확한 현장 입장 수 필드 이름(관리자 응답 전용 · 이름이 바뀌면 여기 한 곳만 고친다) */
+var HALL_EXACT_KEY="x";
 var ATT_LV_N={ ok:["여유","ok"], mid:["보통","warn"], jam:["혼잡","bad"] };
 function attLv(d){ var L=d&&d.lv; return L&&L.length===2?L:[60,90]; }
 /* 대강당 % 칸 · 기준(응답 lv · 설정 「대강당_기준」)을 넘으면 배지 */
@@ -2514,8 +2517,8 @@ function attHallTag(p, L){ return p>=L[1]?tag(p+"%","bad"):p>=L[0]?tag(p+"%","wa
 /* 대강당 지금 상태 띠 · hallNow = { id, n(10명 단위 · 앱과 같은 값), lv, seats } | 0(강의 시간 밖) */
 function attHallBand(d){
   var hn=d.hallNow, L=attLv(d), p0=(d.progs||[]).filter(function(x){ return hn&&x.id===hn.id; })[0];
-  var st=hn&&ATT_LV_N[hn.lv]?ATT_LV_N[hn.lv]:["강의 시간 아님","off"], seats=hn?hn.seats:(d.denom||0), pc=hn&&seats?Math.round(hn.n/seats*100):0;
-  var nums=[["지금 강의",hn?(p0?p0.n:hn.id):"-"],["현장 입장(앱 표시)",hn?hn.n+"명 / "+seats+"석":"-"],["좌석 대비",hn?pc+"%":"-"]];
+  var st=hn&&ATT_LV_N[hn.lv]?ATT_LV_N[hn.lv]:["강의 시간 아님","off"], seats=hn?hn.seats:(d.denom||0), pc=hn&&seats?Math.round(hn.n/seats*100):0, ex=hn&&typeof hn[HALL_EXACT_KEY]==="number"?hn[HALL_EXACT_KEY]:null;
+  var nums=[["지금 강의",hn?(p0?p0.n:hn.id):"-"],["현장 입장"+(ex!=null?"":"(앱 표시)"),hn?(ex!=null?"앱 표시 "+hn.n+" · 실제 "+ex:hn.n)+"명 / "+seats+"석":"-"],["좌석 대비",hn?pc+"%":"-"]];
   return '<div class="hv-st">'+tag("대강당 "+st[0], st[1])+'<div class="hv-nums">'+nums.map(function(x){ return '<div><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>'; }).join("")+'</div>'+
     '<span class="cap">기준 보통 '+L[0]+'% · 혼잡 '+L[1]+'% · 좌석 '+(d.denom||0)+'석 · 송출 코드 '+(d.rcode?"있음":"없음")+'</span></div>';
 }
@@ -2572,7 +2575,7 @@ function viewAtt(){
     h+=card("강의별 출석","현장 = 대강당 QR · 송출 = 유튜브 화면 QR · 같은 강의 같은 구분은 한 번만", attTable(d));
     h+='<div class="grid g2">'+card("대강당 현장 입장","현장 입장 ÷ 좌석 "+(d.denom||0)+"석", attBars(d))+
       card("시간대별 입장 흐름",(d.bucket||10)+"분 단위 · 처음 출석한 시각 기준", flowT)+'</div>';
-    h+=memo('<p><b>QR</b> · 강의마다 입장 QR · 끝 QR 이 있고, 현장(대강당)과 유튜브 송출이 따로입니다. 입장 = 시작 '+W.i[0]+'분 전 ~ 시작 '+W.i[1]+'분 뒤, 끝 = 끝 '+W.o[0]+'분 전 ~ 끝 '+W.o[1]+'분 뒤(설정 출석_입장창 · 출석_끝창). 시간은 서버가 다시 봅니다.</p>'+
+    h+=memo('<p><b>QR</b> · 강의마다 입장 QR · 끝 QR 이 있고, 현장(대강당)과 유튜브 송출이 따로입니다. 입장 = 시작 '+W.i[0]+'분 전 ~ 시작 '+W.i[1]+'분 뒤, 끝 = 끝 '+W.o[0]+'분 전 ~ 끝 '+W.o[1]+'분 뒤(설정 출석_입장창 · 출석_끝창). 시간은 서버가 다시 봅니다. 이 창은 인쇄된 QR 과 연동되어 잠겨 있고(확정 261005), 바꾸기는 시스템 › 운영 설정에서 슈퍼관리자만 합니다.</p>'+
       '<p><b>스탬프</b> · 프로그램 참여는 2개입니다. 17F 어느 강의든 입장 1개 + 끝 1개. 한쪽만 찍으면 1개(명단에 1/2). 상담 · 커피챗으로 이미 2개면 그대로.</p>'+
       '<p><b>대강당</b> = 지금 강의의 현장 입장 ÷ 좌석(설정 대강당_좌석). 앱 홈 혼잡 칸과 같은 값이고 10명 단위로 보입니다. 송출 · 끝 QR 은 세지 않습니다. 송출은 송출_켬 에 든 강의만 받습니다.</p>'+
       '<p>부문별 집계는 두지 않습니다. 이 화면의 숫자에는 사번 · 이름이 없습니다.</p>');
@@ -6213,6 +6216,10 @@ function hvTestReset(emp){
 /* ══ 시스템 › 운영 설정 · 서버 cfg_list · cfg_set(허용 목록 키만 · 2단계) · lv3 키는 슈퍼관리자 ══ */
 /* v5.68 서버 설명 뒤에 붙이는 한 줄(바꾸면 어디가 달라지는지) · 설명 정본은 서버 CFG_ALLOW */
 var CFG_NOTE={ "대강당_좌석":"17F 출석 화면 · 앱 홈 혼잡 칸에 바로 반영", "대강당_기준":"앱 홈 혼잡 칸 · 17F 출석 상태 띠 색", "출석_입장창":"바꾸면 입장 QR 라벨 시각도 다시 인쇄", "출석_끝창":"바꾸면 끝 QR 라벨 시각도 다시 인쇄", "송출_켬":"꺼진 강의의 송출 QR 은 찍어도 거절" };
+/* 261005 사용자 확정 · 출석 시간 창은 인쇄된 QR 라벨에 박혀 있어 읽기 전용 · 바꾸려면 슈퍼관리자 L3 */
+var CFG_LOCK={ "출석_입장창":1, "출석_끝창":1 };
+var CFG_LOCK_NOTE="인쇄된 QR과 연동 · 확정 261005";
+function cfgLv(r){ return CFG_LOCK[r.k]?3:(r.lv||1); }
 function viewCfg(){
   var d=ST.data.cfgl;
   if(!d) return card("운영 설정","",skel());
@@ -6220,20 +6227,22 @@ function viewCfg(){
   if(!d.ok) return card("운영 설정","",'<div class="empty">설정을 받지 못했습니다('+esc(why(d))+').</div>');
   var rows=d.rows||[], sup=supOn(), ok=supOk();
   var tb='<div class="wrap"><table class="tb"><tr><th>설정</th><th>지금 값</th><th>기본</th><th>등급</th><th>바꾼 사람 · 시각</th><th></th></tr>'+rows.map(function(r){
-    var lk=r.lv>=3&&!ok, ro=!!r.ro;
-    return '<tr><td><b>'+esc(r.n||r.k)+'</b><div class="cap">'+esc(r.k)+(r.d?' · '+esc(r.d):'')+(CFG_NOTE[r.k]?' · '+esc(CFG_NOTE[r.k]):'')+'</div></td><td class="n"><b>'+esc(r.v===""?"(비어 있음)":r.v)+'</b></td><td class="n cap">'+esc(r.def)+'</td><td><span class="hv-lv">L'+(r.lv||1)+'</span></td><td class="cap">'+esc(r.by||"-")+(r.at?' · '+esc(short(r.at)):'')+'</td>'+
-      '<td>'+(ro?'<span class="cap">전용 화면에서</span>':'<button class="btn sm" onclick="hvCfgEdit(\''+jq(r.k)+'\')"'+(lk?' disabled title="'+(sup?"슈퍼관리자 본인 확인 뒤":"슈퍼관리자 전용")+'"':'')+'>'+(lk?LOCK_SVG+' ':'')+'바꾸기</button>')+'</td></tr>'; }).join("")+'</table></div>';
+    var fx=!!CFG_LOCK[r.k], lk=cfgLv(r)>=3&&!ok, ro=!!r.ro;
+    return '<tr><td><b>'+esc(r.n||r.k)+'</b><div class="cap">'+esc(r.k)+(r.d?' · '+esc(r.d):'')+(fx?'':(CFG_NOTE[r.k]?' · '+esc(CFG_NOTE[r.k]):''))+(fx?'<div class="cap cfg-fx">'+LOCK_SVG+' '+CFG_LOCK_NOTE+'</div>':'')+'</div></td><td class="n"><b>'+esc(r.v===""?"(비어 있음)":r.v)+'</b></td><td class="n cap">'+esc(r.def)+'</td><td><span class="hv-lv">L'+cfgLv(r)+'</span></td><td class="cap">'+esc(r.by||"-")+(r.at?' · '+esc(short(r.at)):'')+'</td>'+
+      '<td>'+(ro?'<span class="cap">전용 화면에서</span>':fx&&!sup?'<span class="cap">'+LOCK_SVG+' 잠김 · 슈퍼관리자만</span>':'<button class="btn sm" onclick="hvCfgEdit(\''+jq(r.k)+'\')"'+(lk?' disabled title="'+(sup?"슈퍼관리자 본인 확인 뒤":"슈퍼관리자 전용")+'"':'')+'>'+(lk?LOCK_SVG+' ':'')+'바꾸기</button>')+'</td></tr>'; }).join("")+'</table></div>';
   return (sup&&!ok?supGateView():"")+card("운영 설정", rows.length+"개 · 허용 목록 키만 · 비밀값은 없습니다", tb)+
     memo('<p><b>등급</b> · L1 · L2 는 확인 창(바뀌는 값 비교), L3 는 슈퍼관리자 본인 확인과 확인 문구 「설정변경」을 거칩니다. 모든 변경은 운영로그에 바꾼 사람 · 시각 · 키 · 새 값으로 남습니다.</p><p><b>전용 화면</b> · 푸시 · 혼잡 · 추첨 · 올림픽 · 타자 · 룰렛 소진처럼 전용 화면이 있는 키는 여기서 읽기만 합니다.</p>');
 }
 function hvCfgEdit(k){
   var r=(((ST.data.cfgl||{}).rows)||[]).filter(function(x){ return x.k===k; })[0]; if(!r) return;
-  if(r.lv>=3&&!supOk()){ toast("슈퍼관리자 본인 확인 뒤에 바꿉니다"); return; }
+  var L=cfgLv(r), fx=!!CFG_LOCK[k];
+  if(fx&&!supOn()){ toast("잠긴 설정입니다 · 슈퍼관리자만 바꿉니다"); return; }
+  if(L>=3&&!supOk()){ toast("슈퍼관리자 본인 확인 뒤에 바꿉니다"); return; }
   var inp=r.t==="enum"&&r.opts?'<select class="in w-f" id="hvCfgV" onchange="dlgGate()">'+r.opts.map(function(o){ return '<option'+(r.v===o?" selected":"")+'>'+esc(o)+'</option>'; }).join("")+'</select>':r.t==="onoff"?'<select class="in w-f" id="hvCfgV" onchange="dlgGate()"><option'+(r.v==="ON"?" selected":"")+'>ON</option><option'+(r.v==="OFF"?" selected":"")+'>OFF</option></select>':'<input class="in w-f" id="hvCfgV" value="'+esc(r.v)+'" oninput="dlgGate()"'+(r.t==="num"?' inputmode="numeric"':'')+'>';
-  var o={ t:(r.n||r.k)+" 바꾸기", who:esc(r.k)+"<span>지금 "+esc(r.v===""?"(비어 있음)":r.v)+" · 기본 "+esc(r.def)+"</span>", s:esc(r.d||""), x:'<label class="fld mt12">새 값'+inp+'</label>'+(r.t==="num"?'<p class="cap mt8">'+esc(r.lo)+' ~ '+esc(r.hi)+'</p>':''), ok:"저장", danger:r.lv>=2,
+  var o={ t:(r.n||r.k)+" 바꾸기", who:esc(r.k)+"<span>지금 "+esc(r.v===""?"(비어 있음)":r.v)+" · 기본 "+esc(r.def)+"</span>", s:esc(r.d||"")+(fx?'<br><b>QR 재인쇄 필요</b> · 이 값은 강의장에 붙인 입장 · 끝 QR 라벨의 시각과 같습니다. 바꾸면 16장을 다시 인쇄해 붙여야 하고, 그 전까지 라벨과 실제 출석 시간이 어긋납니다.':""), x:'<label class="fld mt12">새 값'+inp+'</label>'+(r.t==="num"?'<p class="cap mt8">'+esc(r.lo)+' ~ '+esc(r.hi)+'</p>':''), ok:"저장", danger:L>=2,
     gate:function(){ var v=el("hvCfgV"); return !!v&&String(v.value).trim()!==String(r.v); },
     onOk:function(){ var v=String(el("hvCfgV").value).trim(); call("cfg_set",{ k:k, v:v },function(x){ dlgForce(); if(x&&x.ok){ delete _cache[sig_("cfg_list",{})]; reload(["cfgl"]); toast("저장했습니다 · "+(r.n||k)+" = "+x.v); } else toast("실패: "+({ range:"범위를 벗어났습니다", key:"바꿀 수 없는 키입니다", ro:"전용 화면에서 바꿉니다" }[x&&x.reason]||why(x))); },function(e){ dlgForce(); toast("실패: "+why(e)); }); } };
-  if(r.lv>=3) o.word="설정변경";
+  if(L>=3) o.word="설정변경";
   dialog(o);
 }
 /* ══════════════════ v5.21 경품·재고 (사용자 결정 261003 · 디자인 시안/경품 재고/설계안.md §10) ══════════════════
