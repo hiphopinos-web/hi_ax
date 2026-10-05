@@ -1,4 +1,4 @@
-  /* v5.57 판 퀴즈 순서형 「팡」 키프레임(규칙은 판 문법 절 panCss 의 .axs-pan.qz 아래) · 둘러보기 자동 복귀 띠(#trd) */
+  /* v5.57 판 퀴즈 순서형 「팡」 키프레임(규칙은 판 문법 절 panCss 의 .axs-pan.qz 아래) · 둘러보기 복귀 떠 있는 단추(#trf · v5.67 · 옛 자동 복귀 띠 #trd 없앰) */
   @keyframes qzSlFlash { 0% { transform: scale(1); } 40% { transform: scale(1.05); border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: #FFFFFF; } 100% { transform: scale(1); } }
   /* v5.60 10F 세션 안내(sessGuideHtml · 시안 디자인 시안/세션 상세 정리/ · 시안의 .grp · .prep 은 앱 전역 .grp(목록 머리 여백)와 겹쳐 sgg · sgp 로 지었다) · 소제목 ink 굵게 + 얇은 구분선 · 주황 점 글머리 · 「준비할 것」 = 흰 면 상자(사전 신청자만) */
   .axs-sg { display: flex; flex-direction: column; gap: 20px; }
@@ -16,15 +16,25 @@
   @keyframes qzOxRing { 0% { transform: scale(1); opacity: 0.85; } 100% { transform: scale(1.14, 1.3); opacity: 0; } }
   @keyframes qzPangPill { 0% { transform: scale(0.4); opacity: 0; } 22% { transform: scale(1.12); opacity: 1; } 36% { transform: scale(1); opacity: 1; } 80% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.96); opacity: 0; } }
   @keyframes qzChipPop { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
-  /* v5.57 둘러보기에서 출발한 활동을 마치고 스탬프를 새로 받은 뒤 · 아래 띠(#trd) 「여기 머물기」 + 「둘러보기로 돌아가기」(3초 채움 → 자동) · 앱 폭 · 아래 메뉴 · 고정 버튼 위(그동안 숨김) · 시트 · 팝업 아래 · 움직임 줄이기 = 숫자만 */
-  #trd { position: fixed; left: 50%; bottom: 0; transform: translateX(-50%); width: 100%; max-width: var(--ax-app-max); z-index: 60; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--ax-space-8); padding: var(--ax-space-12) var(--ax-page-inset) max(var(--ax-space-16), env(safe-area-inset-bottom)); background: var(--ax-color-canvas); border-top: 1px solid var(--ax-color-divider); animation: trdIn 0.22s ease-out both; }
-  #trd .ax-button { width: 100%; min-width: 0; }
-  #trd .trd-go { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: var(--ax-space-8); }
-  #trd .trd-go > span, #trd .trd-go > b { position: relative; }
-  #trd .trd-bar { position: absolute; inset: 0; background: rgba(0,0,0,0.14); transform-origin: 0 50%; transform: scaleX(0); animation: trdFill 3s linear both; }
-  #trd.hold .trd-bar { animation-play-state: paused; }
-  #trd .trd-n { display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 999px; background: rgba(255,255,255,0.28); font-variant-numeric: tabular-nums; }
-  #trd.rm, #trd.rm .trd-bar { animation: none; }
-  @keyframes trdIn { 0% { transform: translate(-50%, 100%); } 100% { transform: translate(-50%, 0); } }
-  @keyframes trdFill { 0% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
-  body.trd-on .axs-fix.ax-bottom, body.trd-on #tabbar { visibility: hidden; }
+  /* v5.67 둘러보기 복귀 = 떠 있는 단추 하나(#trf · 사용자 261005) · 주황 원(52px) + 짙은 뒤로 화살표(onBrand · 흰 글자 금지) · 밑에 작은 「3D로 돌아가기」(흰 알약 · 본문 위에서도 읽힘)
+     자리 = 앱 폭 오른쪽 끝 · 맨 위로(TOP)와 같은 세로줄 그 위(아래 값은 trfSync 가 하단 메뉴 · 고정 버튼 높이로 정한다) · 시트 · 팝업 아래(z 36)
+     자동 복귀 = 둘레 3초 원(.cd · 짙은 선이 한 바퀴) · 시트 · 팝업 동안 멈춤(.hold) · 움직임 줄이기 = 원 없음 · 처음 나타날 때 한 번 톡(.pop) · 옛 v5.57 아래 띠(#trd) 없앰 */
+  #trf { position: fixed; z-index: 36; right: max(10px, calc(50% - var(--ax-app-max) / 2 + 10px)); bottom: 136px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0; border: 0; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  #trf .trf-c { position: relative; width: 52px; height: 52px; border-radius: var(--ax-radius-999); background: var(--ax-color-brand); color: var(--ax-color-onBrand); display: grid; place-items: center; box-shadow: 0 4px 14px rgba(25, 31, 40, 0.22), 0 1px 3px rgba(25, 31, 40, 0.18); }
+  #trf .trf-c > svg:not(.trf-r) { width: 26px; height: 26px; display: block; }
+  #trf .trf-l { padding: 2px 8px; border-radius: var(--ax-radius-999); background: rgba(255, 255, 255, 0.94); box-shadow: 0 1px 4px rgba(25, 31, 40, 0.16); color: var(--ax-color-ink); font: 600 0.75rem/1.35 var(--ax-font); white-space: nowrap; }
+  #trf:active .trf-c { transform: scale(0.94); }
+  #trf { transition: bottom 0.18s ease-out; }   /* 비키기(trfAvoid) · 움직임 줄이기 = 바로 */
+  @media (prefers-reduced-motion: reduce) { #trf { transition: none; } }
+  #trf .trf-r { position: absolute; left: -6px; top: -6px; width: 64px; height: 64px; transform: rotate(-90deg); pointer-events: none; overflow: visible; }
+  #trf .trf-r circle { fill: none; stroke: var(--ax-color-ink); stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 188.5; stroke-dashoffset: 188.5; opacity: 0; }
+  #trf.cd .trf-r circle { opacity: 1; animation: trfRing 3s linear both; }
+  #trf.cd.hold .trf-r circle { animation-play-state: paused; }
+  #trf.cd.rmcd .trf-r circle { animation: none; opacity: 0; }
+  #trf.pop .trf-c { animation: trfPop 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+  #trf.pop .trf-l { animation: trfIn 0.3s 0.12s ease-out both; }
+  @keyframes trfRing { 0% { stroke-dashoffset: 188.5; } 100% { stroke-dashoffset: 0; } }
+  @keyframes trfPop { 0% { transform: translateY(14px) scale(0.6); opacity: 0; } 60% { transform: translateY(-5px) scale(1.06); opacity: 1; } 100% { transform: none; opacity: 1; } }
+  @keyframes trfIn { from { opacity: 0; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { #trf.pop .trf-c, #trf.pop .trf-l, #trf.cd .trf-r circle { animation: none; } #trf.cd .trf-r circle { opacity: 0; } }
+  body.trf-on #view { padding-bottom: calc(136px + 76px + var(--ax-space-16) + env(safe-area-inset-bottom)); }   /* 본문 마지막 단추를 스크롤해 떠 있는 단추 위로 올릴 수 있게(단추 아래 136 + 높이 76) */

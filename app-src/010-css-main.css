@@ -593,6 +593,10 @@
   .typ-pv iframe { display: block; width: 100%; height: 100%; border: 0; }
   /* v5.45 타자 순위 화면 = 광고 칸 하나(사용자 261004 「등수를 중복으로 보여 줄 필요 없이 광고만 반복」) · 화면 폭에 맞춰 가운데 · 9:16 그대로 · 머리 · 경로 · 아래 탭(약 230px)을 뺀 높이 안 · 칸 안 누름 없음 */
   .typ-pv.full { width: min(100%, calc((100vh - 236px) * 0.5625)); width: min(100%, calc((100svh - 236px) * 0.5625)); min-width: min(100%, 220px); margin: 0 auto 8px; }
+  /* v5.67 (사용자 261005 캡처 「순위판 칸을 꽉 채워」) 타자 순위 화면(type_rank) = 칸이 헤더 · 경로 줄 바로 아래부터 하단 탭 위까지 · 좌우 끝까지 · 모서리 없음 · 9:16 판은 칸 안에서 TV 파일이 배율로 맞추고 남는 곳은 같은 점 무늬 밤색(tv/typing 은 사이니지 몫 · 손대지 않음)
+     높이 = typFullFit 이 실제 헤더 아래 끝 · 하단 탭 높이로 정한다(큰 글씨 · 가로 · 360 · 390 같은 식) · 아래 값은 그 전 첫 그림용 */
+  #view[data-v="type_rank"] { padding: 0; min-height: 0; }
+  #view[data-v="type_rank"] .typ-pv.full { width: 100%; min-width: 0; height: calc(100vh - 236px); height: var(--typ-h, calc(100svh - 236px)); aspect-ratio: auto; margin: 0; border-radius: 0; }
   .typ-pv.full iframe { pointer-events: none; }
   .tyb { scroll-margin-top: calc(var(--stick, 0px) + 8px); }
   @keyframes tybHot { 0%, 100% { box-shadow: inset 0 0 0 0 transparent; } 30% { box-shadow: inset 0 0 0 3px var(--rt-cream); } }   /* v5.15 1F 타자왕 순위판 줄 깜빡임(레트로 절은 .rt 규칙만) */

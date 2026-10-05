@@ -352,7 +352,7 @@ function progAlwaysHtml() {
 /* 구역 상세 · 간판 칩(v4.94 포인트 크기) → 부제 한 줄 → 보조 줄(운영 시간 · 룰렛 · 스탬프 없음) → 얇은 ink 줄 → 하는 일(주황 점) → (사실 표) → 행동 버튼 하나(있을 때만) · 뒤로 = 프로그램
    v4.99 스탬프 도장 = 카드 오른쪽 위(강연 상세 sess_d 와 같은 axs-sthost · stampTagHtml) */
 /* v5.65 AX LOUNGE · AX 커피챗 = 같은 부품(설계안 2절) · 간판 → 한 줄(커피챗 = 질문 3줄) → 시간 → 하는 일 → 지금 · 장소 → 서로 안내(카드 맨 아래 · 약한 링크) → 주 버튼 → 「참여 전 확인」 약한 버튼 → (펼침) 확인 표 + 커피 · 간식 사진 2장
-   펼침 상태 PROG.zchk(구역에 새로 들어오면 접힘) · 사은품 줄은 LOUNGE 에만(260918 예외) · 둘러보기 엘리베이터에서 왔으면 맨 아래 「둘러보기로 돌아가기」(v5.65) */
+   펼침 상태 PROG.zchk(구역에 새로 들어오면 접힘) · 사은품 줄은 LOUNGE 에만(260918 예외) · 둘러보기 엘리베이터에서 왔으면 떠 있는 「3D로 돌아가기」(v5.67 · 옛 v5.65 맨 아래 버튼 없앰) */
 function zonePairHtml(z, L) {
   var head = z.q ? '<p class="axs-xq">' + z.q.map(function (t) { return "<span>" + esc(t) + "</span>"; }).join("") + "</p>" : '<p class="axs-bar stm">' + esc(z.stm) + "</p>";
   var b = L.btn || ["", ""], open = !!PROG.zchk;
@@ -579,7 +579,7 @@ function progConfirm() {
     var tr = c.id === "dap" && tourRetLive() && TOUR_RET.id === "p3" ? TOUR_RET : null;   /* v5.57 둘러보기 LOUNGE 블록에서 출발 · 마침 = 상담 신청 완료(스탬프는 실제 상담 완료 때 스태프 인증으로) */
     App.go("sess_ok");   /* App.go 가 시트를 닫는다 */
     delete App.from.sess_ok;   /* 결과에서 뒤로 = 프로그램 목록 (확인 화면으로 돌아가지 않는다) */
-    if (tr) { TOUR_RET = tr; tr.v = "sess_ok"; tourRetDone(true); App.render(); }   /* 완료 화면에서 띠 3초 → 1층 · 뒤로 = 1층 */
+    if (tr) { TOUR_RET = tr; tr.v = "sess_ok"; tourRetDone(true); App.render(); }   /* 완료 화면에서 「3D로 돌아가기」 둘레 3초 → 1층(v5.67 · 옛 띠) · 뒤로 = 1층 */
   };
   var live = BE.on && u.empId;
   if (c.id === "dap") {

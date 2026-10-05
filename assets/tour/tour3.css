@@ -248,6 +248,19 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .ctl .jump.hint.soft .c, #axTour3.rm .ctl .jump.hint .c { animation: none; box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .42), 0 0 0 4px rgba(25, 31, 40, .14), 0 2px 10px rgba(25, 31, 40, .16); }
 @keyframes jumpHint { 0% { box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .42), 0 0 0 0 rgba(25, 31, 40, .32), 0 2px 10px rgba(25, 31, 40, .16); } 70% { box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .42), 0 0 0 12px rgba(25, 31, 40, 0), 0 2px 10px rgba(25, 31, 40, .16); } 100% { box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .42), 0 0 0 0 rgba(25, 31, 40, 0), 0 2px 10px rgba(25, 31, 40, .16); } }
 @media (prefers-reduced-motion: reduce) { #axTour3 .ctl .jump.hint .c { animation: none; box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .42), 0 0 0 4px rgba(25, 31, 40, .14); } }
+/* v5.67 점프 유인(사용자 261005 초등학생 시험) · 동전 아래 원 안 = 점프 단추가 통통 튀고 오른쪽 위에 작은 동전(받기 전 동전과 같은 흰 면 + 은회색 테 두 겹 · 색 테가 아니라 모양) · 「점프!」 한 번(단추 왼쪽) */
+#axTour3 .ctl .jump, #axTour3 .ctl .jump .c { position: relative; }
+#axTour3 .ctl .jump .cn { position: absolute; right: -6px; top: -6px; width: 22px; height: 22px; border-radius: 50%; background: #FAFBFC; box-shadow: inset 0 0 0 2px #6B7684, inset 0 0 0 5px #FAFBFC, inset 0 0 0 6.5px #6B7684, 0 1px 3px rgba(25, 31, 40, .25); opacity: 0; transform: scale(.4); transition: opacity .15s, transform .2s cubic-bezier(.2, .9, .3, 1.3); pointer-events: none; }
+#axTour3 .ctl .jump.aim .cn { opacity: 1; transform: none; }
+#axTour3 .ctl .jump.aim .c { animation: jumpAim .9s ease-in-out infinite; box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .42), 0 0 0 4px rgba(25, 31, 40, .14), 0 2px 10px rgba(25, 31, 40, .16); }
+@keyframes jumpAim { 0%, 100% { transform: translateY(0); } 28% { transform: translateY(-8px); } 50% { transform: translateY(0) scale(1.04, .96); } 62% { transform: translateY(-2px); } 74% { transform: translateY(0); } }
+#axTour3 .ctl .jump .jt { position: absolute; right: calc(100% + 2px); bottom: 26px; padding: 6px 11px; border-radius: 999px; background: rgba(25, 31, 40, .88); color: #FFFFFF; font-size: 15px; line-height: 20px; font-weight: 700; white-space: nowrap; pointer-events: none; }
+#axTour3 .ctl .jump .jt::after { content: ""; position: absolute; right: -5px; top: 50%; margin-top: -5px; border: 5px solid transparent; border-left-color: rgba(25, 31, 40, .88); border-right: 0; }
+#axTour3 .ctl .jump .jt.go { animation: jtIn .3s ease-out; }
+@keyframes jtIn { from { opacity: 0; transform: translateX(6px); } to { opacity: 1; transform: none; } }
+#axTour3.rm .ctl .jump.aim .c, #axTour3.rm .ctl .jump .jt.go { animation: none; }
+#axTour3.rm .ctl .jump .cn { transition: none; }
+@media (prefers-reduced-motion: reduce) { #axTour3 .ctl .jump.aim .c, #axTour3 .ctl .jump .jt.go { animation: none; } #axTour3 .ctl .jump .cn { transition: none; } }
 #axTour3 .gdir { position: absolute; left: 0; top: 0; width: 22px; height: 22px; z-index: 5; pointer-events: none; opacity: .8; }
 #axTour3 .gdir::before { content: ""; position: absolute; left: 3px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 0 3px rgba(255, 255, 255, .85); }
 #axTour3 .gdir::after { content: ""; position: absolute; left: 15px; top: 7px; border: 4px solid transparent; border-left: 6px solid var(--brand); border-right: 0; }
@@ -380,3 +393,23 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .iris .it { position: absolute; left: 16px; right: 16px; top: 50%; transform: translateY(-50%); margin: 0; text-align: center; color: #FFFFFF; font-size: 20px; font-weight: 700; line-height: 1.6; letter-spacing: 0; opacity: 0; transition: opacity .25s; }
 #axTour3 .iris .it span { display: block; }
 #axTour3 .iris .it.on { opacity: 1; }
+/* ═══ v5.67 포토부스 사진 찍기(사용자 261005) · 단추 = .look 알약 그대로(카메라 도형) · 작은 3 · 2 · 1 · 찰칵 흰 빛 · 폴라로이드 팝업 + 안내 한 줄 ═══ */
+#axTour3 .pcnt { position: absolute; left: 50%; top: 16px; z-index: 7; width: 44px; height: 44px; margin-left: -22px; border-radius: 50%; background: rgba(25, 31, 40, .72); color: #FFFFFF; font-size: 22px; line-height: 44px; font-weight: 700; text-align: center; pointer-events: none; font-variant-numeric: tabular-nums; }
+#axTour3 .pcnt.tick { animation: pcntTick .5s ease-out; }
+@keyframes pcntTick { 0% { transform: scale(.6); opacity: 0; } 35% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+#axTour3.ph .pad, #axTour3.ph .ctl { opacity: .35; pointer-events: none; transition: opacity .25s; }   /* 연출 동안 조작 잠금이 보이게 */
+#axTour3.rm.ph .pad, #axTour3.rm.ph .ctl { transition: none; }
+#axTour3 .pflash { position: absolute; inset: 0; z-index: 8; background: #FFFFFF; opacity: 0; pointer-events: none; }
+#axTour3 .pflash.go { animation: pflash .4s ease-out; }
+@keyframes pflash { 0% { opacity: 0; } 10% { opacity: .85; } 100% { opacity: 0; } }
+#axTour3 .pola { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 16px; background: rgba(25, 31, 40, .36); cursor: pointer; transition: opacity .2s; -webkit-tap-highlight-color: transparent; }
+#axTour3 .pola.out { opacity: 0; }
+#axTour3 .pola .pc { margin: 0; width: min(76%, 300px); padding: 12px 12px 0; border-radius: 3px; background: #FFFFFF; box-shadow: 0 14px 34px rgba(25, 31, 40, .32), 0 2px 6px rgba(25, 31, 40, .14); transform: rotate(-4deg); animation: polaIn .55s cubic-bezier(.2, .9, .3, 1.12); }
+#axTour3 .pola canvas { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; background: #EEF0F2; }
+#axTour3 .pola figcaption { display: flex; align-items: center; justify-content: center; height: 58px; color: var(--ink); font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: 0; white-space: nowrap; }
+#axTour3 .pola .pm { margin: 0; padding: 8px 16px; border-radius: 999px; background: rgba(25, 31, 40, .86); color: #FFFFFF; font-size: 15px; line-height: 22px; font-weight: 600; white-space: nowrap; animation: pmIn .3s .25s ease-out both; }
+@keyframes polaIn { 0% { transform: translateY(-48px) rotate(-11deg); opacity: 0; } 60% { opacity: 1; } 100% { transform: rotate(-4deg); opacity: 1; } }
+@keyframes pmIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+#axTour3.rm .pola .pc, #axTour3.rm .pola .pm, #axTour3.rm .pcnt.tick { animation: none; }
+#axTour3.rm .pola { transition: none; }
+@media (prefers-reduced-motion: reduce) { #axTour3 .pola .pc, #axTour3 .pola .pm, #axTour3 .pcnt.tick, #axTour3 .pflash.go { animation: none; } #axTour3 .pola { transition: none; } }

@@ -355,7 +355,7 @@ function qzResultHtml(x) {
     '<h2 class="ax-type-t2">AX 퀴즈 완주</h2><p class="qz-big"><b>' + right + "</b><span> / " + N + " 정답</span></p>" +
     '<p class="ax-meta">내 최고 ' + best[0] + " / " + best[1] + "</p></section>" +
     (wrong.length ? '<p class="axs-dot">틀린 문제 ' + wrong.length + "</p>" + rows : '<p class="axs-dot">모두 맞혔어요</p>') +
-    '<div class="ax-stack-tight">' + (tourRetLive() ? '<button type="button" class="ax-button" onclick="tourRetGo()">둘러보기로 돌아가기</button>' : '<button type="button" class="ax-button" onclick="App.tab(\'exp\')">스탬프 보기</button>') +   /* v5.57 둘러보기에서 출발 = 1층으로 */
+    '<div class="ax-stack-tight"><button type="button" class="ax-button" onclick="App.tab(\'exp\')">스탬프 보기</button>' +   /* v5.67 둘러보기 복귀 = 떠 있는 「3D로 돌아가기」(trf) 하나 · 옛 v5.57 결과 주 버튼 없앰 */
     '<button type="button" class="ax-button ax-button-weak" onclick="qzStart(true)">한 판 더</button></div></div>';
 }
 /* 목록(quiz) · 한 행 · 상태 칩(시작 전 · 이어 풀기 n / 10 · 완주 · 내 최고 n / 10) · 진행 막대 · 주 버튼 하나 */

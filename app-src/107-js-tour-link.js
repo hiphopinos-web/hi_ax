@@ -4,7 +4,7 @@
 /* v5.37 (사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) 둘러보기 v3 = 시험 페이지와 같은 공용 모듈(tour3.js · tour3.css · 캐릭터 걷기 · 40도 시점 · 왼손 패드 · 오른손 십자 · 작은 지도 · 스태프 챗봇 · 판 보기 · 돋보기 2개 · 움직임 줄이기 · 입장 암전)
    같은 약속 AXTour.open/close/back/isOpen · 옛 v2(tour.js · tour.css · 자동 둘러보기 · 평면 지도 · 구역 시트)로 되돌리려면 아래 목록의 tour3 두 개를 tour.css · tour.js 로 바꾸면 된다(파일은 그대로 둠) */
 /* v5.38 (사용자 261003) 둘러보기 손질 · 캐릭터 겹침(스태프 원 충돌) · 늘 카메라 쪽을 봄 · 조그 패드 · 안내데스크 깜빡임(겹친 면) · 정문 회전문 또렷하게 · 로비 음악(Web Audio 합성 · 「음악 없이」 · 위쪽 스피커 버튼) · 파일 이름 그대로 · 캐시 깨기 ver v538 */
-var TOUR = { ver: "v566", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
+var TOUR = { ver: "v567", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
 try { localStorage.removeItem('axfT3Diag'); } catch (e) {} window.AXT3_DIAG = /[?&]t3diag=1(?:&|$)/.test(location.search);   /* v5.47 진단은 주소에 ?t3diag=1 이 있는 그 페이지에서만 · 기억하지 않는다 · 옛 기기 기억은 지운다(사용자 261004) */   /* v5.44 둘러보기 실기기 진단(주소 ?t3diag=1 · 이 기기에 기억 · ?t3diag=0 이면 끔) · 화면 왼쪽 위에 GPU · 깊이 비트 · highp · DPR · fps */
 /* 켜기 스위치 · v5.28 true = 전체 공개(사용자 261003 「1층 3D 전체 공개」) · false 로 두면 입구 3곳 · 판 퀴즈 힌트 링크 · 열기가 모두 숨는다 */
 var TOUR_ON = true;
@@ -129,18 +129,18 @@ var TOUR_HOST = {
   },
   /* v5.65 (사용자 261005 「각 엘리베이터 이동시에도 각 안내장표로 갈 수 있을 것 같아 · 연결을 시켜보자」) 엘리베이터 층 단추 → 아이리스로 닫힌 뒤 그 층 앱 안내
    17 = 층 안내(floor_d · 17F 대강당 강연 흐름) · 10 = 층 안내(floor_d · 실습형 세션 A~E) · 18 = AX 커피챗 구역 상세(zone_d cchat)
-   돌아오기 = 뒤로(헤더 · 휴대폰) · 「둘러보기로 돌아가기」 = 엘리베이터 안(pose = { elev }) · 안내 화면이라 마침 · 자동 복귀 띠 없음(TOUR_RET.id 없음) */
+   돌아오기 = 뒤로(헤더 · 휴대폰) · 떠 있는 「3D로 돌아가기」(v5.67 trf) = 엘리베이터 안(pose = { elev }) · 안내 화면이라 마침 · 자동 복귀 띠 없음(TOUR_RET.id 없음) */
   floorGo: function (fl) {
     var pose = window.AXTour && AXTour.pose ? AXTour.pose() : null, under = App.current;
     if (window.AXTour) AXTour.close();
-    setTimeout(function () { TOUR_RET = { v: fl === 18 ? "zone_d" : "floor_d", under: under, pose: pose, fl: fl }; if (fl === 18) zoneOpen("cchat"); else { PROG.floor = fl; App.go("floor_d"); } }, 280);   /* 그리기 전에 기억(「둘러보기로 돌아가기」 단추가 첫 그림에 나온다) */
+    setTimeout(function () { TOUR_RET = { v: fl === 18 ? "zone_d" : "floor_d", under: under, pose: pose, fl: fl }; if (fl === 18) zoneOpen("cchat"); else { PROG.floor = fl; App.go("floor_d"); } trfSync(); }, 280);   /* 그리기 전에 기억(「둘러보기로 돌아가기」 단추가 첫 그림에 나온다) */
   },
   stampGo: function (id) {
     var GO = { qz: function () { App.go("quiz"); }, p4: function () { App.go("games"); }, p2: function () { qrPanelOpen("mine"); }, p5: function () { App.go("ideas"); }, p3: function () { progOpen("dap"); }, st: function () { stairOpen(); } };
     if (!GO[id]) return;
     var pose = window.AXTour && AXTour.pose ? AXTour.pose() : null, under = App.current;   /* v5.53 뒤로 오면 이 자리로(tourRetBack) */
     if (window.AXTour) AXTour.close();
-    setTimeout(function () { GO[id](); TOUR_RET = { v: App.current, under: under, pose: pose }; TOUR_RET.id = id; }, 280);   /* 둘러보기 암전(0.24초)이 끝난 뒤 · 도착한 화면을 기억 · v5.57 어느 스탬프 블록에서 왔는지(id · 마침 판정) */
+    setTimeout(function () { GO[id](); TOUR_RET = { v: App.current, under: under, pose: pose }; TOUR_RET.id = id; trfSync(); }, 280);   /* 둘러보기 암전(0.24초)이 끝난 뒤 · 도착한 화면을 기억 · v5.57 어느 스탬프 블록에서 왔는지(id · 마침 판정) */
   }
 };
 /* v5.65 층 안내(floor_d) · 엘리베이터 층 단추에서 온다(App.go 로도 열림 · 뒤로 = 프로그램) · 17F = 시간표 흐름 카드 중 17F 것만 · 10F = 세션 A~E 줄(누르면 세션 상세) */
@@ -159,10 +159,8 @@ function floorGuideHtml() {
   }).join("") + "</div>";
   return '<div class="ax-stack axs-flg"><p class="ax-description">' + esc(g.sub) + "</p>" + body + tourFloorBackHtml() + "</div>";   /* 층 이름은 헤더(FLOOR_GD hdr) · 판 문법(axs-bar)은 쓰지 않는다 */
 }
-/* 둘러보기 엘리베이터에서 온 층 안내 · 커피챗 상세 맨 아래 약한 버튼(그 밖에서 열면 없음) */
-function tourFloorBackHtml() {
-  return TOUR_RET && TOUR_RET.fl && tourRetLive() ? '<button type="button" class="ax-button ax-button-weak" onclick="tourRetGo()">둘러보기로 돌아가기</button>' : "";
-}
+/* 둘러보기 엘리베이터에서 온 층 안내 · 커피챗 상세 맨 아래 약한 버튼 · v5.67 없앰(사용자 261005 「둘러보기 복귀 버튼을 없애고 작은 플로팅 버튼(뒤로가기 아이콘) 밑에 3d로 돌아가기」) · 복귀 = 떠 있는 trf 하나 */
+function tourFloorBackHtml() { return ""; }
 /* v5.53 (사용자 261004 「3d에서 앱으로 갔다가 뒤로가기를 하면 3d로 돌아와야 하는데, 앱 메인 화면으로 돌아가」) 둘러보기 → 앱 화면 → 뒤로 = 둘러보기
    TOUR_RET = 바로 가기로 도착한 화면(v) · 그 밑에 있던 앱 화면(under) · 나가기 전 자리(pose)
    뒤로(헤더 ‹ · 휴대폰 뒤로 = 둘 다 App.back) 가 도착한 화면에서 나갈 때만 = 밑 화면으로 돌리고 둘러보기를 그 자리로 다시 연다 · 더 깊이 들어갔다면 원래 뒤로 단계를 다 거친 뒤 마지막에
@@ -180,8 +178,8 @@ function tourRetBack() {
 /* v5.57 (사용자 261004 「1층 > 스탬프 > 1층 이런식으로 와야 될 것 같아 · 다른 활동들도 그렇게 설정해줘」) 둘러보기에서 출발한 활동은 마치면 둘러보기로 · 앱에서 시작한 활동은 지금처럼 앱에 머문다(출처 = TOUR_RET)
    마침(tourRetDone) = AX 퀴즈 판 완주(qzFinish) · 미니 게임 한 판 결과 화면(gsResultHtml) · 아이디어 한 줄 제출 뒤 커피챗 질문에 답함(ideaCchat · 묻지 않는 경우는 제출 순간 ideaPush)
      · AX PLAY = 내 QR 화면에 스태프 인증 스탬프가 들어온 순간(stampSync · awardStamp → tourRetStamp) · 17F 강연 · 계단 안내 = 안내 화면이라 마침 없음(뒤로 = 둘러보기 · v5.53 그대로)
-   마친 뒤(done) = 그 활동의 어느 화면에서 뒤로 가도 둘러보기(App.back) · 결과 화면 버튼 「둘러보기로 돌아가기」(퀴즈 결과 주 버튼 · 게임 결과 · 아이디어 완료)
-   그 활동의 스탬프를 이번에 새로 받았으면(got) = 스탬프 연출 · 보상 안내 팝업이 모두 닫힌 뒤 아래 띠(#trd) 「둘러보기로 돌아가기」 3초 채움 → 자동 · 「여기 머물기」
+   마친 뒤(done) = 그 활동의 어느 화면에서 뒤로 가도 둘러보기(App.back) · (옛 결과 화면 아래 복귀 버튼은 v5.67 에서 없앰 · 떠 있는 「3D로 돌아가기」 #trf 하나)
+   그 활동의 스탬프를 이번에 새로 받았으면(got) = 스탬프 연출 · 보상 안내 팝업이 모두 닫힌 뒤 3초 자동 복귀(v5.67 = #trf 둘레 원 · 옛 아래 띠 #trd 없앰) · 머물기 = 단추 밖 누름
      · 띠 밖을 누르거나 화면을 옮기면 자동 취소(버튼 · 뒤로는 그대로) · 시트 · 팝업이 뜨면 그동안 멈춤 · 움직임 줄이기 = 채움 없이 숫자만
    이미 받은 스탬프(다시 푼 퀴즈 · 3종을 다 채우지 않은 게임 · 두 번째 아이디어) = 자동 없음 · 결과 화면 버튼 · 뒤로 */
 var TRD = { t: 0, tick: 0, end: 0, el: null };
@@ -206,24 +204,68 @@ function trdWait() {
     trdShow();
   }, 350);
 }
+/* v5.67 (사용자 261005 「3d로 돌아가기가 어떻게 해야 되는지 순간 프리징이 되는데」 · 「모든 메뉴가 위와 같은 버튼이 제일 하단에 있어서 대충 보는 사람은 이해 못할 것 같아 작은 플로팅 메뉴가 더 명확」 · 「둘러보기 복귀 버튼을 없애고 작은 플로팅 버튼(뒤로가기 아이콘) 밑에 3d로 돌아가기」)
+   둘러보기에서 출발한 앱 화면(tourRetLive = 도착한 화면 · 그 아래 단계) = 오른쪽 아래 떠 있는 단추 하나(#trf · 주황 원 + 짙은 뒤로 화살표 · 밑에 작은 「3D로 돌아가기」) · 누르면 tourRetGo(들어가기 전 자리)
+   자리 = 맨 위로(TOP · 아래 80px · 46px) 위 · 아래 고정 버튼(axs-fix) · 하단 메뉴가 더 높으면 그 위 · 앱 폭 오른쪽 끝(TOP 과 같은 세로줄)
+   안 보임 = 출처가 둘러보기가 아닐 때(아래 탭 · 다른 화면으로 가면 TOUR_RET 이 지워진다) · 둘러보기가 열려 있을 때 · 게임 판이 도는 동안(rtView · 결과 화면이 뜨면 보임)
+   처음 나타날 때 한 번 톡 튀어 오름(움직임 줄이기 = 없음)
+   자동 복귀(옛 v5.57 아래 띠 「여기 머물기 / 둘러보기로 돌아가기 3」 없앰) = 그 활동의 스탬프를 이번에 새로 받으면(got) 연출 · 팝업이 모두 닫힌 뒤 이 단추 둘레에 3초 원이 돈다 → 다 돌면 tourRetGo
+     단추 밖을 누르거나 키를 누르거나 다른 화면으로 가면 취소(= 머물기 · 단추는 남는다) · 시트 · 팝업이 뜨면 그동안 멈춤 · 움직임 줄이기 = 원 없이 3초 뒤 같은 동작(읽어 주기 「3초 뒤 3D로 돌아가요」) */
+var TRF_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 6 4 12l6 6"/><path d="M4.5 12H20"/></svg>';
+function trfWant() {
+  if (!tourRetLive() || el("app").hidden || TOUR.busy || (window.AXTour && AXTour.isOpen())) return false;
+  if (rtView(App.current) && !document.querySelector("#view .gs-res-go")) return false;   /* 게임 판 중 = 조작 단추를 가리지 않게 · 결과 화면에서 보임 */
+  if (App.current === "quiz_play" && typeof qzRun === "function" && qzRun()) return false;   /* 판 퀴즈 푸는 중 = 답 · 「다음 문제」 · 힌트 단추를 가리지 않게(실측 390 에서 걸침) · 결과 화면에서 보임 */
+  return true;
+}
+function trfSync() {
+  var f = el("trf");
+  if (!trfWant()) { if (f) { if (TRD.el === f) trdHide(); f.parentNode.removeChild(f); } document.body.classList.remove("trf-on"); return; }
+  if (!f) {
+    f = document.createElement("button"); f.type = "button"; f.id = "trf"; f.className = rgReduced() ? "rm" : "pop";
+    f.setAttribute("aria-label", "3D로 돌아가기 · 1층 둘러보기에서 있던 자리로");
+    f.onclick = tourRetGo;
+    f.innerHTML = '<span class="trf-c"><svg class="trf-r" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30"/></svg>' + TRF_SVG + '</span><span class="trf-l">3D로 돌아가기</span><span class="ax-sr-only trf-s" role="status"></span>';
+    document.body.appendChild(f);
+  }
+  var nav = el("tabbar"), fx = document.querySelector("#view .axs-fix.ax-bottom"), base = 0;
+  if (nav && nav.style.display !== "none") base = Math.max(base, nav.offsetHeight);
+  if (fx) base = Math.max(base, fx.offsetHeight);
+  f.style.bottom = trfAvoid(f, Math.max(base + 12, 136)) + "px";   /* 136 = 맨 위로(80 + 46) 위 10px · 본문 버튼이 밑에 오면 그 위로 */
+  document.body.classList.toggle("trf-on", !fx);   /* 고정 버튼이 없는 화면 = 본문 끝을 단추 위까지 올릴 수 있게 아래 여백(CSS) */
+}
+/* 비키기 · 본문의 큰 버튼(ax-button · 입력 칸 · 상담 시간 칸 · 접힘 머리 summary)이 단추 자리에 오면 그 버튼 위로 올린다(퀴즈 결과 「스탬프 보기」 · 게임 결과 「다시 하기」 실측 390 · 360) · 카드 줄은 왼쪽이 넓게 남아 그대로 · 화면 위쪽 절반까지만 · 더 못 올리면 기본 자리 */
+function trfAvoid(f, b0) {
+  var vh = window.innerHeight, h = f.offsetHeight || 76, fr = f.getBoundingClientRect(), L = fr.left - 4, R = fr.right + 4, b = b0, top = el("topbar") ? el("topbar").getBoundingClientRect().bottom : 0;
+  var rs = [].slice.call(document.querySelectorAll("#view .ax-button, #view input, #view textarea, #view select, #view .axs-slot, #view summary")).filter(function (e) { return !e.closest(".axs-fix"); }).map(function (e) { return e.getBoundingClientRect(); }).filter(function (r) { return r.width && r.height && r.left < R && L < r.right; });
+  for (var k = 0; k < 8; k++) {
+    var t = vh - b - h, bt = vh - b, hit = null;
+    rs.forEach(function (r) { if (r.top < bt + 4 && t - 4 < r.bottom && (!hit || r.top < hit.top)) hit = r; });
+    if (!hit) return b;
+    b = Math.ceil(vh - hit.top + 8);
+    if (vh - b - h < Math.max(top + 8, vh * 0.42)) return b0;
+  }
+  return b0;
+}
+var TRF_RAF = 0;
+window.addEventListener("scroll", function () { if (TRF_RAF || !el("trf")) return; TRF_RAF = requestAnimationFrame(function () { TRF_RAF = 0; trfSync(); }); }, { passive: true });
+setInterval(function () { if (typeof App !== "undefined" && App.current) trfSync(); }, 600);   /* 게임 결과 · 둘러보기 닫힘처럼 다시 그리기 없이 바뀌는 때 */
 function trdShow() {
-  trdHide();
-  var d = document.createElement("div");
-  d.id = "trd"; if (rgReduced()) d.className = "rm";
-  d.innerHTML = '<span class="ax-sr-only" role="status">' + TRD_MS / 1000 + "초 뒤 둘러보기로 돌아가요</span>" +
-    '<button type="button" class="ax-button ax-button-weak trd-stay" onclick="trdStay()">여기 머물기</button>' +
-    '<button type="button" class="ax-button trd-go" onclick="tourRetGo()"><i class="trd-bar" aria-hidden="true"></i><span>둘러보기로 돌아가기</span><b class="trd-n" aria-hidden="true">' + TRD_MS / 1000 + "</b></button>";
-  document.body.appendChild(d); document.body.classList.add("trd-on");
+  trdHide(); trfSync();
+  var d = el("trf"); if (!d) { trdWait(); return; }
+  d.classList.add("cd"); d.classList.toggle("rmcd", rgReduced());
+  var r = d.querySelector(".trf-r"); if (r) { r.style.animation = "none"; void r.offsetWidth; r.style.animation = ""; }
+  var s = d.querySelector(".trf-s"); if (s) s.textContent = TRD_MS / 1000 + "초 뒤 3D로 돌아가요";
   TRD.el = d; TRD.end = Date.now() + TRD_MS;
   document.addEventListener("pointerdown", trdPtr, true); document.addEventListener("keydown", trdKey, true);
   var last = Date.now(), step = function () {
     if (TRD.el !== d) return;
+    if (!tourRetLive() || !d.parentNode) { trdHide(); return; }   /* 다른 화면으로 감 = 취소 */
     var now = Date.now(), hold = !!(SPOP.cur || el("spop") || el("modal") || el("axsSheet") || document.hidden);
     if (hold) TRD.end += now - last;   /* 시트 · 팝업이 떠 있는 동안 멈춤 */
     last = now; d.classList.toggle("hold", hold);
     var left = TRD.end - now;
     if (left <= 0) { tourRetGo(); return; }
-    var n = d.querySelector(".trd-n"); if (n) n.textContent = String(Math.ceil(left / 1000));
     TRD.tick = setTimeout(step, Math.min(200, left));
   };
   step();
@@ -235,7 +277,7 @@ function trdHide() {
   if (!TRD) return;   /* 불러오는 중(App.go 가 먼저 불릴 때) */
   clearTimeout(TRD.t); clearTimeout(TRD.tick); TRD.t = TRD.tick = 0;
   document.removeEventListener("pointerdown", trdPtr, true); document.removeEventListener("keydown", trdKey, true);
-  if (TRD.el && TRD.el.parentNode) TRD.el.parentNode.removeChild(TRD.el);
-  TRD.el = null; document.body.classList.remove("trd-on");
+  if (TRD.el) { TRD.el.classList.remove("cd", "hold", "rmcd"); var s = TRD.el.querySelector(".trf-s"); if (s) s.textContent = ""; }
+  TRD.el = null;
 }
 

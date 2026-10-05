@@ -269,6 +269,7 @@ var App = {
     typPromoMount();   /* v5.31 타자왕 홍보 칸 · 화면에 보일 때 src */
     updateLed();
     if (v === "home") tourInvMaybe();   /* v5.46 1층 둘러보기 초대(한 번) */
+    if (typeof trfSync === "function") trfSync();   /* v5.67 둘러보기 복귀 떠 있는 단추 */
   }
 };
 /* v4.09 경로 줄 한 줄 맞춤 · 넘치면 가운데 단계를 앞에서부터 「…」 하나로 접는다 · 첫 단계와 지금 위치는 늘 보인다(지금 위치가 길면 말줄임) · 가로 스크롤 없음 */

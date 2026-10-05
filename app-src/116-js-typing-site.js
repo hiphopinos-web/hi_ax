@@ -133,7 +133,15 @@ function typPromoHtml(go) {
   return '<div class="typ-pv rt"><iframe data-src="' + TYP_SRC + '" loading="lazy" title="1F 타자왕 홍보 영상" tabindex="-1" aria-hidden="true" data-go="' + go + '"></iframe></div>';
 }
 function typPromoSet(f) { var u = f.getAttribute("data-src"); if (u) { f.removeAttribute("data-src"); f.src = u; } }
+/* v5.67 타자 순위 화면 칸 = 헤더(경로 줄 포함) 아래 끝 ~ 하단 탭 위 · 다시 그릴 때 · 창 크기 · 가로 세로 · 글자 크기가 바뀔 때 */
+function typFullFit() {
+  var f = document.querySelector('#view[data-v="type_rank"] .typ-pv.full'); if (!f) return;
+  var tb = el("topbar"), nav = el("tabbar"), top = tb ? Math.max(0, tb.getBoundingClientRect().bottom) : 0, nr = nav && nav.style.display !== "none" && getComputedStyle(nav).display !== "none" ? nav.getBoundingClientRect() : null, bot = nr && nr.height ? Math.min(window.innerHeight, nr.top) : window.innerHeight;   /* 하단 탭 = 고정(offsetParent 없음) · 위 끝을 잰다 */
+  f.style.setProperty("--typ-h", Math.max(200, Math.round(bot - top)) + "px");
+}
+window.addEventListener("resize", typFullFit);
 function typPromoMount() {
+  typFullFit();
   if (TYP_IO) TYP_IO.disconnect();
   var a = document.querySelectorAll(".typ-pv iframe[data-src]"); if (!a.length) return;
   if (!("IntersectionObserver" in window)) { [].forEach.call(a, typPromoSet); return; }
