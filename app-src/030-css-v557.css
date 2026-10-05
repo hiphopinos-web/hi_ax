@@ -11,6 +11,7 @@
   .axs-sg li .tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .axs-sg li .tx b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .axs-sg .sgp { border-top: 0; padding: 16px; border-radius: 16px; background: var(--ax-color-surface); }
+  .axs-sg .sgq { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }   /* v5.71 10F 끝 QR 한 줄(신청자만 · 준비할 것 상자 안) */
   /* v5.60 O/X 정답 작은 팡 키프레임(규칙은 판 문법 절 panCss 의 .axs-pan.qz .qz-ab.pop) */
   @keyframes qzOxPop { 0% { transform: scale(1); } 45% { transform: scale(1.06); } 100% { transform: scale(1); } }
   @keyframes qzOxRing { 0% { transform: scale(1); opacity: 0.85; } 100% { transform: scale(1.14, 1.3); opacity: 0; } }
