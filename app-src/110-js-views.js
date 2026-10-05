@@ -256,7 +256,7 @@ var Views = {
       '<h1 class="ax-title">' + esc(d.title) + "</h1>" +
       (d.who ? '<div class="axs-who">' + spkAvHtml(s.id, d.av) + '<span class="axs-tx"><span class="ax-card-title">' + esc(d.who) + '</span>' + (d.whoSub ? '<span class="ax-description">' + esc(d.whoSub) + "</span>" : "") + "</span></div>" : "") +
       '<dl class="ax-inset axs-kv">' + d.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl></section>" +
-      (d.extra || "") +
+      (d.extra || "") + (d.after || "") +
       ('sg' in d ? d.sg : '<section class="ax-stack-tight axs-gap12"><h2 class="ax-section-title">' + esc(d.secT) + '</h2><p class="ax-body">' + d.secB + "</p>" + (d.pics || "") + (d.link || "") + "</section>") +   /* v5.60 10F 세션은 sessGuideHtml */
       "</div>" +
       '<div class="ax-bottom axs-fix">' + (d.help ? '<p class="ax-meta">' + esc(d.help) + "</p>" : "") + d.btn + "</div>";
@@ -308,7 +308,7 @@ var Views = {
        모양은 체험 안내(E02)와 같은 AX-TDS 카드 · 단계 목록 · 하단 고정 버튼 하나 */
     var got2 = S.get("stamps", []).indexOf("p2") >= 0;
     /* v4.86 (261001 사용자 확정) 오픈 날짜 칩은 날짜가 확인될 때까지 비운다 · 확인되면 여기에만 적는다(예 "11.1 OPEN") · 빈 값 = 칩 없음 */
-    var OPEN = { hidiq: "", helper: "" };
+    var OPEN = BOOTH_OPEN;   /* v5.69 시트(boothSheet)와 같은 값 한 곳 */
     var booth = function (nm, open, sub, steps, note) {
       return '<section class="ax-card ax-stack-tight axs-gap12"><div class="ax-row"><h2 class="ax-section-title">' + nm + "</h2>" + (open ? '<span class="axs-chip">' + open + "</span>" : "") + "</div>" +
         '<p class="ax-description">' + sub + "</p>" +
@@ -319,8 +319,7 @@ var Views = {
     return '<div class="ax-stack">' +
       '<div class="axs-chiprow"><span class="axs-chip">1F AX PLAY · 2종</span>' + (got2 ? '<span class="axs-chip ok">적립 완료</span>' : "") + "</div>" +
       '<div class="ax-stack-tight"><h1 class="ax-title">HiDI-Q · Hi-Helper<br>직접 써 보기</h1><p class="ax-description">1곳 체험 = 스탬프 1개 · 체험 후 스태프가 내 QR 스캔</p></div>' +
-      booth("HiDI-Q", OPEN.hidiq, "문서를 올리고 질문하는 대화형 AI", ["문서 올리기", "질문하고 답 받기", "스태프에게 내 QR 보여주기"], "체험이 끝나면 올린 자료는 지워져요") +
-      booth("Hi-Helper (하이헬퍼)", OPEN.helper, "보험 설계를 1분 안에 추천하는 AI", ["피보험자 동의", "추천 방식 고르기", "스태프에게 내 QR 보여주기"], "") +
+      BOOTH_INFO.map(function (x) { return booth(x.nm, OPEN[x.k], x.sub, x.steps, x.note); }).join("") +
       (testMode() && !got2 ? '<button type="button" class="ax-button ax-button-weak" onclick="boothStamp()">완료 처리 (시연 · 테스트 모드)</button>' : "") +
       "</div>" + ax2Btn(got2 ? "스탬프 확인하기" : "내 QR 보여주기", got2 ? "expStamp('p2')" : "qrPanelOpen('mine')");
   },

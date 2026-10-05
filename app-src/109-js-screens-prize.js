@@ -214,7 +214,7 @@ function pzNextTxt(n) {
   return s ? "<b>" + (s.m - n) + "개</b> 더 모으면 " + s.t + " " + s.a + (s.fin ? " · 참여상" : "") : "모두 모았어요";
 }
 var PZ_DOWN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 9.5 12 15l5.5-5.5"/></svg>';   /* v5.33 표지 카드 아래 셰브론 = 아래 구역으로 */
-function prizeCoverHtml() {
+function prizeCoverHtml(noHead) {
   var n = Math.min(STAMP_DENOM, stampCount()), nx = PZ_STEP.filter(function (x) { return x.m > n; })[0], nm = nx ? nx.m : 0, dots = "";
   for (var i = 1; i <= STAMP_DENOM; i++) dots += '<span class="c"><i class="' + (i <= n ? "on" : i === n + 1 ? "nx" : "") + '">' + i + "</i></span>";   /* v5.33 6칸마다 점 하나 · 같은 크기 */
   var fill = n >= 2 ? "calc(" + (n - 1) + " * ((100% - 20px) / 6 + 4px))" : "0px";   /* 1번 칸 가운데부터 받은 마지막 칸 가운데까지(칸 폭 + 칸 사이 4px) */
@@ -225,10 +225,14 @@ function prizeCoverHtml() {
       (s.fin ? '<span class="fn" aria-hidden="true">+<span class="g">' + PZ_GIFT + "</span>참여상</span>" : "") +
       '<span class="bt" aria-hidden="true">' + (st === "nx" ? '<span class="tag">다음</span>' : st === "on" ? '<span class="tag on">' + CHECK_SVG + "달성</span>" : "") + '<span class="dn">' + PZ_DOWN + "</span></span></button>";
   }).join("");
-  return '<section class="axs-pz-cv"><p class="ey">AX Festival 2026</p><h1 class="ttl">스탬프 개수별 경품</h1>' +
+  return '<section class="axs-pz-cv">' + (noHead ? "" : '<p class="ey">AX Festival 2026</p><h1 class="ttl">스탬프 개수별 경품</h1>') +   /* v5.69 시트 = 제목은 시트 머리 */
     '<div class="now"><div class="tx"><p class="k">지금 내 스탬프</p><p class="nx">' + pzNextTxt(n) + '</p></div><p class="n"><b>' + n + "</b>개</p></div>" +
     '<div class="stp" role="img" aria-label="스탬프 ' + n + " / " + STAMP_DENOM + '"><span class="ln" aria-hidden="true"></span><span class="fl" aria-hidden="true" style="width:' + fill + '"></span>' + dots + "</div>" +
     '<div class="cds">' + cards + "</div></section>";
+}
+/* v5.69 경품 시트(detPaint · 라우트 prizes) · 제목 = 시트 머리 · 본문 = 표지(지금 내 스탬프 · 1~6 · 단계 카드) + 구역 · 버튼 없음(읽기) · 구역 바로 가기(prizeGo k)는 시트 본문 스크롤 */
+function prizeSheet() {
+  return { title: "스탬프 개수별 경품", body: '<div class="axs-pz' + (Date.now() - PZ.t < 900 ? " in" : "") + '">' + prizeCoverHtml(true) + PZ_SEC.map(prizeSecHtml).join("") + "</div>" };
 }
 function prizePosterHtml() {
   return '<div class="axs-pz' + (Date.now() - PZ.t < 900 ? " in" : "") + '">' + prizeCoverHtml() + PZ_SEC.map(prizeSecHtml).join("") + "</div>";

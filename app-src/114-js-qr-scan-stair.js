@@ -678,6 +678,47 @@ var EXP_GUIDE = {
     meta: "", cta: "계단 QR 스캔하기" }
 };
 function expGuide(id) { EXPG.id = EXP_GUIDE[id] ? id : "st"; App.go("exp_g"); }
+/* v5.69 체험 안내 시트(detPaint · 라우트 exp_g) · 머리 = 장소 칩 → 제목 한 줄 · 도장 · 본문 = 설명 → (계단 진행) → 단계 → 시간 → QR 안내 · 주 버튼(계단 QR 스캔하기 · 내 QR 보여주기) = 아래 고정 */
+function expgSheet() {
+  var id = EXPG.id, g = EXP_GUIDE[id], x = expGuideParts(id);
+  return { chips: '<span class="axs-chip">' + esc(g.chip) + "</span>", title: g.h.replace(/<br>/g, " "), seal: stampTagHtml(id),
+    body: '<p class="axs-dp">' + esc(x.desc) + "</p>" + x.prog + '<ol class="axs-steps">' + x.steps + "</ol>" + (g.meta ? '<p class="ax-meta">' + esc(g.meta) + "</p>" : "") + scanQNote() +
+      (g.link ? '<button type="button" class="ax-link axs-plain axs-self" onclick="' + g.link[1] + '">' + g.link[0] + "</button>" : ""),
+    foot: progBtn(g.cta, g.act || "scanOpen('" + id + "')") };
+}
+/* v5.69 AX PLAY 체험 안내 시트(라우트 booth) · 두 체험 = 같은 블록(이름 · 한 줄 · 단계 · 참고) · 주 버튼 하나 아래 고정 */
+var BOOTH_OPEN = { hidiq: "", helper: "" };   /* v4.86 오픈 날짜 칩 · 확인되면 여기에만 적는다(예 "11.1 OPEN") · 빈 값 = 칩 없음 */
+var BOOTH_INFO = [
+  { k: "hidiq", nm: "HiDI-Q", sub: "문서를 올리고 질문하는 대화형 AI", steps: ["문서 올리기", "질문하고 답 받기", "스태프에게 내 QR 보여주기"], note: "체험이 끝나면 올린 자료는 지워져요" },
+  { k: "helper", nm: "Hi-Helper (하이헬퍼)", sub: "보험 설계를 1분 안에 추천하는 AI", steps: ["피보험자 동의", "추천 방식 고르기", "스태프에게 내 QR 보여주기"], note: "" }
+];
+function boothSheet() {
+  var got2 = S.get("stamps", []).indexOf("p2") >= 0;
+  var blk = BOOTH_INFO.map(function (x) {
+    return '<section class="axs-dsec"><div class="axs-dsh3"><h3>' + x.nm + "</h3>" + (BOOTH_OPEN[x.k] ? '<span class="axs-chip">' + BOOTH_OPEN[x.k] + "</span>" : "") + "</div>" +
+      '<p class="axs-dp">' + x.sub + "</p>" +
+      '<ol class="axs-steps">' + x.steps.map(function (t, k) { return '<li><span class="axs-no">0' + (k + 1) + '</span><span class="axs-tx"><b class="ax-type-t5-strong">' + t + "</b></span></li>"; }).join("") + "</ol>" +
+      (x.note ? '<p class="ax-meta">' + x.note + "</p>" : "") + "</section>";
+  }).join("");
+  return { chips: '<span class="axs-chip">1F AX PLAY · 2종</span>', title: "HiDI-Q · Hi-Helper 직접 써 보기", seal: stampTagHtml("p2"),
+    body: '<p class="axs-dp">1곳 체험 = 스탬프 1개 · 체험 후 스태프가 내 QR 스캔</p>' + blk +
+      (testMode() && !got2 ? '<button type="button" class="ax-button ax-button-weak" onclick="boothStamp()">완료 처리 (시연 · 테스트 모드)</button>' : ""),
+    foot: got2 ? progBtn("스탬프 확인하기", "expStamp('p2')") : progBtn("내 QR 보여주기", "qrPanelOpen('mine')") };
+}
+/* 체험 안내 조각 · 전체 화면(expGuideHtml) · 시트(expgSheet)가 같이 쓴다 */
+function expGuideParts(id) {
+  var g = EXP_GUIDE[id], s = stairState();
+  var steps = g.steps.map(function (x, i) {
+    return '<li><span class="axs-no">0' + (i + 1) + '</span><span class="axs-tx"><b class="ax-type-t5-strong">' + x[0] + '</b><span class="ax-meta">' + esc(x[1]) + "</span></span></li>";
+  }).join("");
+  var prog = "";
+  if (id === "st" && ((s.goal || 1) > 1 || (s.total || 0) >= 1 || s.leg)) {
+    prog = '<section class="ax-card axs-gap12">' + stairGauge(s.total || 0, s.goal || 1) +
+      (s.leg ? '<p class="ax-description">진행 중 · ' + s.leg.fl + "F " + esc(s.leg.route || stairRoute(s.leg.r)) + " 시작 · " + esc(s.leg.at || "") + "</p>" +
+        '<button type="button" class="ax-button ax-button-weak" onclick="stairOpen()">진행 화면 보기</button>' : "") + "</section>";
+  }
+  return { steps: steps, prog: prog, desc: id === "st" && (s.goal || 1) > 1 ? "출발 층과 도착 층 방화문 앞 QR을 찍어요. 누적 " + s.goal + "개 층이면 스탬프를 받아요." : g.d };
+}
 function expGuideHtml() {
   var id = EXPG.id, g = EXP_GUIDE[id], s = stairState();
   var steps = g.steps.map(function (x, i) {

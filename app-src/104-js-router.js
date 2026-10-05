@@ -172,11 +172,16 @@ var App = {
     modalClose();
     var prev = this.booted ? this.current : null;   /* 첫 진입(딥링크·새로 고침 복귀)은 들어온 곳이 없다 */
     this.booted = true;
+    /* v5.69 상세 시트 · 알림 · 딥링크 · 3D 출발(DET.canon) · 첫 진입 = 들어온 곳 대신 그 항목이 있는 목록(PARENT)을 깔고 그 위에 시트 */
+    var dPrev = DET.shown.dv, dBase0 = DET.shown.base, canon = ((DET.canon && Date.now() - DET.canon < 1500) || !prev) && !isBack && detIs(v);   /* 표시는 1.5초만 유효(그 사이 App.go 가 없으면 버린다) */
+    DET.canon = 0;
     if (this.ROOTS.indexOf(v) >= 0) this.from = {};
+    else if (canon) { delete this.from[v]; detCanonList(v); }
     else if (!isBack && this.PARENT[v] && prev && prev !== v && SIGNAGE.indexOf(prev) < 0 && !this.isAnc(v, prev)) {
       if (this.PARENT[v] === prev) delete this.from[v]; else this.from[v] = prev;
     }
     this.current = v;
+    detHist(v, isBack, dPrev);   /* v5.69 시트에서 시트로 = 앞 내용을 기억(뒤로 = 앞 내용) */
     if (TOUR_RET && v !== TOUR_RET.v && !this.isAnc(TOUR_RET.v, v)) TOUR_RET = null;   /* v5.53 도착한 화면 밖으로 가면 둘러보기 돌아가기 지움 */
     if (typeof trdHide === "function") trdHide();   /* v5.57 화면을 옮기면 자동 복귀 띠 · 기다림을 접는다(한 판 더 · 다시 하기 · 다른 화면) */
     if (typeof wsRoleCheck === "function") wsRoleCheck();   /* v4.76 관리자 모드 = ops 방 */
@@ -197,8 +202,14 @@ var App = {
     if (TVF.on && SIGNAGE.indexOf(v) < 0) { TVF.on = false; TVF.orient = null; applyTvFull(); }
     this.render();
     el("view").scrollTop = 0;
-    window.scrollTo(0, v === "guide" && isBack ? PROG.scroll || 0 : 0);
-    if (PROG.anchor) { var an = el(PROG.anchor); PROG.anchor = ""; if (an) an.scrollIntoView({ block: "start" }); }   /* v4.93 별칭 진입 · 그 자리로(scroll-margin-top = 헤더 높이) */
+    /* v5.69 시트 = 뒤 목록 스크롤 그대로 · 목록에서 열 때 · 시트에서 시트로 · 시트를 닫을 때 · 시트에서 연 흐름에서 돌아올 때 모두 같은 자리 */
+    var dNow = DET.shown.dv, nb = DET.shown.base;
+    if (dNow && (dPrev ? dBase0 === nb : prev === nb)) { if (!dPrev) { DET.y = window.scrollY; DET.yb = nb; } }
+    else if (dNow) { var dy0 = isBack && DET.yb === nb ? DET.y : 0; window.scrollTo(0, dy0); DET.y = dy0; DET.yb = nb; }
+    else if (dPrev && v === dBase0) window.scrollTo(0, DET.yb === v ? DET.y : 0);
+    else window.scrollTo(0, v === "guide" && isBack ? PROG.scroll || 0 : 0);
+    if (dNow) PROG.anchor = "";
+    else if (PROG.anchor) { var an = el(PROG.anchor); PROG.anchor = ""; if (an) an.scrollIntoView({ block: "start" }); }   /* v4.93 별칭 진입 · 그 자리로(scroll-margin-top = 헤더 높이) */
     else if (v === "guide" && !isBack && PROG.seg !== "always") progFlowScroll();   /* v5.21 시간표에 들어오면 진행 중 카드가 보이게 */
     if (typeof checkMyState === "function") setTimeout(checkMyState, 80);
   },
@@ -207,7 +218,8 @@ var App = {
     RENDER_HELD = false;   /* v4.25 보류해 둔 그리기는 이번 그리기로 끝 */
     if (typeof LGX !== "undefined" && LGX.cur) { RENDER_HELD = true; return; }   /* v4.90 최초 로그인 장면 중에는 뒤 화면을 그리지 않는다(저장 · 동기화마다 그리던 무게가 장면을 끊었다) · 장면이 닫힐 때 그린다 */
     if (typeof wsRoleCheck === "function") wsRoleCheck();   /* v4.76 관리자 코드 확인 · 잠금 뒤 방 다시 고르기(같으면 아무 일도 안 한다) */
-    var v = this.current;
+    var v = this.current, dv = detIs(v) ? v : null;
+    if (dv) v = detBase(dv);   /* v5.69 읽기용 상세 = 뒤에 목록(헤더 · 하단 메뉴 · 본문)을 그대로 그리고 그 위에 시트(detPaint) */
     var tb = el("topbar"), par = this.parentOf(v);
     /* v4.04 헤더 = v4.02 구성 복원 (사용자 결정 260922 「헤더가 있는 게 더 갖춰진 느낌」)
        탭 루트 = 유틸 행(워드마크 · 일반/큰글씨 · 알림 종 · 설정) + 홈 인사 / 화면 이름 · 상세 = 뒤로 + 화면 이름 + 설정 */
@@ -264,6 +276,7 @@ var App = {
     if (aeId) { var aeN = el(aeId); if (aeN) { try { aeN.focus({ preventScroll: true }); if (aeSel) aeN.setSelectionRange(aeSel[0], aeSel[1]); } catch (e) {} } }   /* 다시 그려도 입력 중인 칸과 커서를 되돌린다 */
     if (v === "scan_q") { if (SCQ.tab === "scan") setTimeout(scanQStart, 80); else if (!QRM.timer) qrMineOn(); }   /* v5.23 카메라는 스캔 탭에서만 · 내 QR 탭은 6초 동기화 */
     if (v === "stair" && STR.mode === "start") stairTickOn();
+    detPaint(dv, v);
     if (typeof SPOP !== "undefined" && SPOP.cur && !SPOP.cur.done) { var spT = spTgt(SPOP.cur); if (spT.el) spT.el.classList.add("sp-wait"); }   /* v3.49 재렌더돼도 안착 전 자리는 비어 보이게 */
     kvMountAll();
     typPromoMount();   /* v5.31 타자왕 홍보 칸 · 화면에 보일 때 src */
@@ -359,6 +372,7 @@ pushGoTake();
 
 /* ── 뒤로가기 = 앱 안에서 위로 (v19) · 실수로 앱을 이탈하지 않게 히스토리 트랩 ── */
 var NAV = { lastBack: 0 };
+try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch (e) {}   /* v5.69 뒤로(트랩 popstate)마다 브라우저가 스크롤을 맨 위로 되돌리던 것 · 스크롤은 App.go 가 정한다(시트를 닫으면 목록 자리 그대로) */
 function navRepush() { try { history.pushState({ axf: 1 }, ""); } catch (e) {} }
 try { history.replaceState({ axf: 0 }, ""); navRepush(); } catch (e) {}
 window.addEventListener("popstate", function () {
@@ -370,6 +384,7 @@ window.addEventListener("popstate", function () {
   if (el("modal")) { if (typeof qrScanClose === "function" && el("qrVideo")) qrScanClose(); else modalClose(); navRepush(); return; }
   var fss = el("fsSheet"); if (fss && !fss.hidden) { fsSheet(false); navRepush(); return; }
   if (TVF.on) { tvFullExit(); navRepush(); return; }
+  if (detShown()) { detBack(); navRepush(); return; }   /* v5.69 상세 시트 · 뒤로 = 앞 시트 내용(시트에서 시트로 왔으면) · 없으면 시트를 닫고 목록(3D 출발이어도 · 3D 는 떠 있는 「3D로 돌아가기」) · 헤더 뒤로는 시트 뒷배경 아래라 누를 수 없다 */
   var p = App.parentOf(App.current);
   if (!p && App.current !== "home") p = "home";
   if (p) { App.back(); navRepush(); return; }
@@ -379,4 +394,184 @@ window.addEventListener("popstate", function () {
   toast("한 번 더 뒤로 가면 앱을 나갑니다");
   navRepush();
 });
+
+/* ═══ v5.69 읽기용 상세 = 바텀 시트 (사용자 261005 「밑에서 팝업으로 튀어오르게 · 메뉴 레벨 2에서 체류」 · 기준 사용자 = 초등학생 · 50대 수석님) ═══
+   탭(1단계) → 목록(2단계)에 머물고 읽고 버튼 하나 누르는 상세(3단계)는 목록 위로 올라오는 시트 하나(#axsDet).
+   라우트 id(sess_d · zone_d · booth · exp_g · prizes)는 그대로다 · 알림 · 딥링크 · 옛 onclick · 3D 바로 가기 · 검사가 같은 App.go 를 쓴다.
+   App.render = 뒤 목록(detBase · 그 라우트의 들어온 길에서 시트가 아닌 첫 화면)을 평소대로 그리고 시트를 그 위에 그린다(detPaint).
+   시트 사양 = 아래에서 0.28초(움직임 줄이기 = 즉시) · 높이 = 내용만큼, 최대 화면 90% · 머리(손잡이 · 칩 · 제목 · 도장 · 닫기) · 본문만 스크롤 · 주 버튼은 아래 고정
+   닫기 = 아래로 끌기 · 뒷배경 탭 · Esc · 닫기 단추 = 목록(스크롤 자리 그대로) · 하드웨어 뒤로 · 헤더 뒤로(App.back) = 앞 시트 내용이 있으면 그것 · 없으면 닫기
+   시트에서 다른 상세로 = 내용 교체(시트 위 시트 없음 · 앞 내용은 DET.hist) · 시트에서 조작 · 흐름 화면(상담 시간 고르기 · QR 스캔 · 아이디어 등)으로 = 시트를 닫고 전체 화면 · 거기서 뒤로 = 다시 목록 위 시트
+   짧은 확인 시트(#axsSheet · M03) · 팝업(#modal)은 이 시트 위에 뜬다(z 70 · 96 > 60) · 셋 모두 같은 끌어 닫기(sheetDrag) */
+var DET = { shown: { dv: null, base: null }, cur: null, hist: [], y: 0, yb: null, canon: 0, ry: 0, last: {} };
+var DET_V = ["sess_d", "zone_d", "booth", "exp_g", "prizes"];
+/* 시트로 그리는가 · 상담 시간 고르기(신청 전 AX LOUNGE 상담)는 조작 화면이라 전체 화면 그대로 */
+function detIs(v) {
+  if (DET_V.indexOf(v) < 0) return false;
+  if (v === "sess_d") { var s = progById(PROG.sid); if (!s) return false; if (s.id === "dap") { var r = myResv(); return !!(r && RESV_HOLD.indexOf(r.status) >= 0); } }
+  return true;
+}
+function detShown() { return !!(DET.shown.dv && DET.shown.dv === App.current && el("axsDet")); }
+/* 뒤에 깔 목록 = 들어온 길(parentOf)에서 시트가 아닌 첫 화면 */
+function detBase(v) { var cur = v, hop = 0; while (cur && detIs(cur) && hop < 8) { cur = App.parentOf(cur); hop++; } return cur || "home"; }
+/* 알림 · 딥링크 · 3D 출발 = 그 항목이 있는 목록 · 프로그램 탭은 그 줄이 있는 갈래(1F 구역 · 상담 · 커피챗 · 전시 = 상시 운영 · 강연 · 세션 = 시간표) · 경품 = 나의 보상 */
+function detCanonList(v) {
+  if (App.PARENT[v] === "guide") { var al = v === "zone_d" || (v === "sess_d" && (PROG.sid === "dap" || PROG.sid === "cchat" || PROG.sid === "expo")); PROG.seg = al ? "always" : "time"; PROG.scroll = 0; }
+  if (App.PARENT[v] === "my") MY.seg = "rw";
+}
+function detSnap(v) { return { v: v, sid: PROG.sid, zone: PROG.zone, zchk: !!PROG.zchk, eg: EXPG.id, y: 0 }; }
+function detKey(o) { return o ? o.v + "|" + (o.v === "sess_d" ? o.sid : o.v === "zone_d" ? o.zone : o.v === "exp_g" ? o.eg : "") : ""; }
+function detBodyY() { var b = document.querySelector("#axsDet .axs-dbody"); return b ? b.scrollTop : 0; }
+function detHist(v, isBack, dPrev) {
+  if (detIs(v)) {
+    if (isBack) return;
+    if (dPrev && DET.cur && detKey(DET.cur) !== detKey(detSnap(v))) { DET.cur.y = detBodyY(); DET.hist.push(DET.cur); if (DET.hist.length > 12) DET.hist.shift(); }
+    else if (!dPrev) DET.hist = [];
+    return;
+  }
+  var cur = App.parentOf(v), hop = 0;   /* 시트에서 연 흐름(전체 화면)이면 기억을 둔다(뒤로 오면 그 시트 · 그 앞 내용) */
+  while (cur && hop < 8) { if (detIs(cur)) return; cur = App.parentOf(cur); hop++; }
+  DET.hist = [];
+}
+/* 뒤로 · 앞 시트 내용 → 없으면 닫기 */
+function detBack() {
+  var h = DET.hist.pop();
+  if (!h) { detClose(); return; }
+  if (App.current !== h.v) delete App.from[App.current];
+  PROG.sid = h.sid; PROG.zone = h.zone; PROG.zchk = h.zchk; EXPG.id = h.eg; DET.ry = h.y || 0;
+  App.go(h.v, true);
+}
+/* 닫기 · 끌기 · 뒷배경 · Esc · 닫기 단추 = 목록 · 3D 에서 왔으면 「3D로 돌아가기」를 목록에 남긴다(목록에서 뒤로 = 3D) */
+function detClose() {
+  var v = App.current; if (!detIs(v)) return;
+  var base = detBase(v), cur = v, hop = 0;
+  DET.hist = [];
+  while (cur && cur !== base && hop < 8) { var p = App.parentOf(cur); delete App.from[cur]; cur = p; hop++; }
+  if (TOUR_RET && (TOUR_RET.v === v || App.isAnc(TOUR_RET.v, v))) TOUR_RET.v = base;
+  App.go(base, true);
+}
+var DET_SPEC = { sess_d: function () { return sessSheet(); }, zone_d: function () { return zoneSheet(); }, booth: function () { return boothSheet(); }, exp_g: function () { return expgSheet(); }, prizes: function () { return prizeSheet(); } };
+/* 그리기 · 같은 내용이면 칸마다 글이 바뀐 곳만 바꾼다(동기화마다 다시 그려도 시트 안 스크롤 · 영상 · 펼침이 그대로) */
+function detPaint(dv, base) {
+  var w = el("axsDet"), was = DET.shown;
+  DET.shown = { dv: dv, base: base };
+  if (!dv) { if (w) detGone(w, was.dv && was.base === base); document.documentElement.classList.remove("det-lock"); return; }
+  var sp = DET_SPEC[dv]() || {}, snap = detSnap(dv), first = !w, same = !first && DET.cur && detKey(DET.cur) === detKey(snap);
+  if (first) w = detMake();
+  var pan = w.firstChild, bd = pan.querySelector(".axs-dbody"), ft = pan.querySelector(".axs-dft"), y = same ? bd.scrollTop : DET.ry || 0;
+  DET.ry = 0;
+  pan.className = "ax-sheet axs-dsh" + (sp.cls ? " " + sp.cls : "");   /* 1F 구역 = 판 문법 경계(zoneSheet cls · 간판 칩 · 하는 일 · ink 줄) */
+  /* 머리 = [칩 줄 | 닫기] → [제목 | 도장](칩이 없으면 [제목 | 닫기] 한 줄) */
+  var xb = '<button type="button" class="axs-x" onclick="detClose()" aria-label="닫기">' + X_SVG + "</button>", h2 = '<h2 class="ax-type-t2" id="axsDetT">' + sp.title + "</h2>";
+  var hd = sp.chips ? '<div class="axs-dtop"><div class="axs-chiprow axs-dchips">' + sp.chips + "</div>" + xb + '</div><div class="axs-dtt">' + h2 + (sp.seal || "") + "</div>"
+    : '<div class="axs-dtop axs-dtt">' + h2 + (sp.seal || "") + xb + "</div>";
+  var fo = (sp.help ? '<p class="ax-meta">' + esc(sp.help) + "</p>" : "") + (sp.foot || "");
+  var put = function (n, k, h) { if (!same || DET.last[k] !== h) { n.innerHTML = h; DET.last[k] = h; } };
+  put(pan.querySelector(".axs-dhx"), "hd", hd);
+  put(bd, "bd", sp.body || "");
+  put(ft, "ft", fo);
+  ft.hidden = !fo;
+  bd.scrollTop = y;
+  if (!same && !first && !lgxRM()) { bd.classList.remove("sw"); void bd.offsetWidth; bd.classList.add("sw"); }   /* 시트에서 시트로 = 본문만 살짝 바뀜 */
+  if (PROG.anchor) { var an = el(PROG.anchor); if (an && bd.contains(an)) bd.scrollTop = Math.max(0, an.getBoundingClientRect().top - bd.getBoundingClientRect().top + bd.scrollTop - 8); }
+  DET.cur = snap;
+  document.documentElement.classList.add("det-lock");
+  detOv();
+  if (first) { try { pan.focus({ preventScroll: true }); } catch (e) {} }
+}
+function detMake() {
+  var w = document.createElement("div"); w.id = "axsDet";
+  w.innerHTML = '<div class="ax-sheet axs-dsh" role="dialog" aria-modal="true" aria-labelledby="axsDetT" tabindex="-1">' +
+    '<div class="axs-dhd"><span class="axs-grab" aria-hidden="true"></span><div class="axs-dhx"></div></div>' +
+    '<div class="axs-dbody"></div><div class="axs-dft"></div></div>';
+  DET.last = {};
+  w.addEventListener("click", function (e) { if (e.target === w) detClose(); });
+  w.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { e.preventDefault(); detClose(); return; }
+    if (e.key !== "Tab") return;
+    var b = [].slice.call(w.querySelectorAll("button:not([disabled]), a[href]")).filter(function (x) { return x.offsetParent; });
+    if (!b.length) { e.preventDefault(); return; }
+    var i = b.indexOf(document.activeElement);
+    if (e.shiftKey && i <= 0) { e.preventDefault(); b[b.length - 1].focus(); }
+    else if (!e.shiftKey && i === b.length - 1) { e.preventDefault(); b[0].focus(); }
+  });
+  var bd = w.querySelector(".axs-dbody");
+  bd.addEventListener("scroll", detOv, { passive: true });
+  el("frame").appendChild(w);
+  sheetDrag(w, function () { return w.firstChild; }, { scroller: function () { return bd; }, close: detClose });
+  if (!lgxRM()) w.classList.add("in");
+  return w;
+}
+/* 아래 고정 칸 위 구분선 = 본문이 그 아래로 더 있을 때만 */
+function detOv() {
+  var bd = document.querySelector("#axsDet .axs-dbody"), ft = document.querySelector("#axsDet .axs-dft");
+  if (bd && ft) ft.classList.toggle("ov", bd.scrollHeight - bd.clientHeight - bd.scrollTop > 2);
+}
+/* 사라지기 · 같은 목록으로 닫히면 아래로 0.22초 · 다른 화면으로 가면 바로(새 화면이 그 자리에 그려진다) · 끌어서 닫았으면 이미 내려가 있다 */
+function detGone(w, toBase) {
+  w.removeAttribute("id");
+  var pan = w.firstChild;
+  if (!toBase || lgxRM() || w.dataset.drop) { w.remove(); return; }
+  w.classList.remove("in"); w.classList.add("out");
+  if (pan) { pan.style.transition = "transform 0.22s cubic-bezier(0.4, 0, 1, 1)"; pan.style.transform = "translateY(105%)"; }
+  setTimeout(function () { w.remove(); }, 230);
+}
+/* 끌어 닫기 · 시트 셋(#axsDet · #axsSheet · #modal) 공통 · 머리(손잡이 · 제목 줄)는 어디서나 · 본문은 맨 위에서 아래로 끌 때만(그 밖에는 본문 스크롤)
+   멀리(높이 30% 또는 160px) 또는 빠르게 끌면 닫힘 · 아니면 제자리 · 손을 따라 뒷배경이 옅어진다 · 움직임 줄이기 = 끌기는 그대로 · 되돌아가는 움직임 없음 */
+function sheetDrag(box, getPan, o) {
+  var D = null, T = null, M = null;
+  var head = function (t, y, pan) { return !!t.closest(".axs-dhd, .axs-mhead, .axs-grab") || y - pan.getBoundingClientRect().top < 28; };
+  var start = function (y) {
+    var pan = getPan(); if (!pan || (o.can && !o.can())) return false;
+    D = { pan: pan, y0: y, y: y, t: Date.now(), v: 0, h: pan.offsetHeight || 1 };
+    pan.style.transition = "none"; box.classList.add("drag");
+    return true;
+  };
+  var move = function (y) {
+    if (!D) return;
+    var dy = Math.max(0, y - D.y0), now = Date.now();
+    D.v = (y - D.y) / Math.max(1, now - D.t); D.y = y; D.t = now;
+    D.pan.style.transform = dy ? "translateY(" + dy + "px)" : "";
+    box.style.setProperty("--dd", String(Math.max(0, 1 - dy / D.h).toFixed(3)));
+  };
+  var end = function () {
+    if (!D) return;
+    var d = D, dy = Math.max(0, d.y - d.y0); D = null; box.classList.remove("drag");
+    if (dy > Math.min(160, d.h * 0.3) || (d.v > 0.5 && dy > 24)) {
+      d.pan.style.transition = lgxRM() ? "none" : "transform 0.18s cubic-bezier(0.4, 0, 1, 1)"; d.pan.style.transform = "translateY(105%)"; box.style.setProperty("--dd", "0");
+      box.dataset.drop = "1";
+      setTimeout(function () { o.close(); }, lgxRM() ? 0 : 170);
+      return;
+    }
+    d.pan.style.transition = lgxRM() ? "none" : "transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)"; d.pan.style.transform = ""; box.style.removeProperty("--dd");
+  };
+  box.addEventListener("touchstart", function (e) {
+    T = null; if (D || e.touches.length !== 1) return;
+    var t = e.target, pan = getPan(); if (!pan || !pan.contains(t) || t.closest("input, textarea, select, iframe")) return;
+    var sc = o.scroller ? o.scroller() : pan, y = e.touches[0].clientY;
+    T = { y0: y, hd: head(t, y, pan), sc: sc, top: !sc || sc.scrollTop <= 0, live: false };
+  }, { passive: true });
+  box.addEventListener("touchmove", function (e) {
+    if (!T) return;
+    var y = e.touches[0].clientY, dy = y - T.y0;
+    if (!T.live) {
+      if (Math.abs(dy) < 6) return;
+      if (dy > 0 && (T.hd || (T.top && (!T.sc || T.sc.scrollTop <= 0))) && start(T.y0)) T.live = true;
+      else { T = null; return; }
+    }
+    if (e.cancelable) e.preventDefault();
+    move(y);
+  }, { passive: false });
+  var tEnd = function () { if (T && T.live) end(); T = null; };
+  box.addEventListener("touchend", tEnd); box.addEventListener("touchcancel", tEnd);
+  /* 마우스 · 펜 = 머리만 */
+  box.addEventListener("pointerdown", function (e) {
+    if (e.pointerType === "touch" || e.button > 0 || D) return;
+    var t = e.target, pan = getPan(); if (!pan || !pan.contains(t) || t.closest("button, a, input, textarea, select") || !head(t, e.clientY, pan)) return;
+    if (!start(e.clientY)) return;
+    M = function (ev) { move(ev.clientY); };
+    var up = function () { window.removeEventListener("pointermove", M); window.removeEventListener("pointerup", up); M = null; end(); };
+    window.addEventListener("pointermove", M); window.addEventListener("pointerup", up);
+  });
+}
 

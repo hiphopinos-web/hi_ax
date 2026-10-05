@@ -171,3 +171,6 @@
 .axs-pan .axs-zdt.axs-sthost > .axs-xq { padding-right: 64px; }
 .axs-pan .axs-zdt > .axs-sign + .axs-xq { margin-top: calc(var(--ax-space-8) * -1); }
 @media (prefers-reduced-motion: reduce) { .axs-pan .axs-xtog svg { transition: none; } }
+/* v5.69 구역 상세 시트(#axsDet · zoneSheet cls axs-pan) · 사실 표 열 = 구역 상세 카드와 같다 · 질문 3줄은 제목 바로 아래 */
+#axsDet .axs-pan .axs-kv { grid-template-columns: 56px minmax(0, 1fr); row-gap: var(--ax-space-8); }
+#axsDet .axs-pan .axs-xq { margin-top: calc(var(--ax-space-4) * -1); }

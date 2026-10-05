@@ -131,7 +131,7 @@ function noticePump() {
 function noticeGo(v, f) {
   modalClose();
   if (v.indexOf("card:") === 0) { expStamp(v.slice(5)); return; }   /* v4.06 이미 받음 · 저장한 스캔 적립 → 그 스탬프 카드 펼침 */
-  if (v === "my_sched") { SCHED.tab = "mine"; v = "guide_time"; }
+  if (v === "my_sched") { SCHED.tab = "mine"; v = "guide_time"; } if (typeof DET !== "undefined") DET.canon = Date.now();   /* v5.69 알림 「바로 가기」 = 그 항목이 있는 목록 위에 상세 시트 */
   App.go(v);
   if (f) setTimeout(function () { focusPulse(f); }, 120);
 }
@@ -275,6 +275,7 @@ function modalOpen(html, title) {
   d.innerHTML = '<div class="mcard" role="dialog" aria-modal="true"' + (title ? ' aria-labelledby="mTitle"' : "") + ">" + modalHeadHtml(title) + '<div class="axs-mbody">' + html + "</div></div>";
   d.addEventListener("click", function (e) { if (e.target === d) modalClose(); });
   el("frame").appendChild(d);
+  sheetDrag(d, function () { return d.querySelector(".mcard"); }, { close: function () { if (el("modal") === d) modalClose(); } });   /* v5.69 끌어 닫기 = 상세 시트와 같은 손(뒷배경 탭과 같은 닫기) */
 }
 function modalClose() {
   STAFFK = ""; STAFFE = ""; STAFFT = "";   /* 담당자 코드 · 사번 · 토큰을 화면과 함께 버린다 */ var m = el("modal"); if (m) m.remove();

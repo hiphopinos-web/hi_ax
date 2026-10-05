@@ -133,14 +133,14 @@ var TOUR_HOST = {
   floorGo: function (fl) {
     var pose = window.AXTour && AXTour.pose ? AXTour.pose() : null, under = App.current;
     if (window.AXTour) AXTour.close();
-    setTimeout(function () { TOUR_RET = { v: fl === 18 ? "zone_d" : "floor_d", under: under, pose: pose, fl: fl }; if (fl === 18) zoneOpen("cchat"); else { PROG.floor = fl; App.go("floor_d"); } trfSync(); }, 280);   /* 그리기 전에 기억(「둘러보기로 돌아가기」 단추가 첫 그림에 나온다) */
+    setTimeout(function () { if (typeof DET !== "undefined") DET.canon = Date.now(); TOUR_RET = { v: fl === 18 ? "zone_d" : "floor_d", under: under, pose: pose, fl: fl }; if (fl === 18) zoneOpen("cchat"); else { PROG.floor = fl; App.go("floor_d"); } trfSync(); }, 280);   /* 그리기 전에 기억(「둘러보기로 돌아가기」 단추가 첫 그림에 나온다) */
   },
   stampGo: function (id) {
     var GO = { qz: function () { App.go("quiz"); }, p4: function () { App.go("games"); }, p2: function () { qrPanelOpen("mine"); }, p5: function () { App.go("ideas"); }, p3: function () { progOpen("dap"); }, st: function () { stairOpen(); } };
     if (!GO[id]) return;
     var pose = window.AXTour && AXTour.pose ? AXTour.pose() : null, under = App.current;   /* v5.53 뒤로 오면 이 자리로(tourRetBack) */
     if (window.AXTour) AXTour.close();
-    setTimeout(function () { GO[id](); TOUR_RET = { v: App.current, under: under, pose: pose }; TOUR_RET.id = id; trfSync(); }, 280);   /* 둘러보기 암전(0.24초)이 끝난 뒤 · 도착한 화면을 기억 · v5.57 어느 스탬프 블록에서 왔는지(id · 마침 판정) */
+    setTimeout(function () { if (typeof DET !== "undefined") DET.canon = Date.now(); GO[id](); TOUR_RET = { v: App.current, under: under, pose: pose }; TOUR_RET.id = id; trfSync(); }, 280);   /* 둘러보기 암전(0.24초)이 끝난 뒤 · 도착한 화면을 기억 · v5.57 어느 스탬프 블록에서 왔는지(id · 마침 판정) */
   }
 };
 /* v5.65 층 안내(floor_d) · 엘리베이터 층 단추에서 온다(App.go 로도 열림 · 뒤로 = 프로그램) · 17F = 시간표 흐름 카드 중 17F 것만 · 10F = 세션 A~E 줄(누르면 세션 상세) */
@@ -228,16 +228,21 @@ function trfSync() {
     f.innerHTML = '<span class="trf-c"><svg class="trf-r" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30"/></svg>' + TRF_SVG + '</span><span class="trf-l">3D로 돌아가기</span><span class="ax-sr-only trf-s" role="status"></span>';
     document.body.appendChild(f);
   }
-  var nav = el("tabbar"), fx = document.querySelector("#view .axs-fix.ax-bottom"), base = 0;
-  if (nav && nav.style.display !== "none") base = Math.max(base, nav.offsetHeight);
-  if (fx) base = Math.max(base, fx.offsetHeight);
-  f.style.bottom = trfAvoid(f, Math.max(base + 12, 136)) + "px";   /* 136 = 맨 위로(80 + 46) 위 10px · 본문 버튼이 밑에 오면 그 위로 */
-  document.body.classList.toggle("trf-on", !fx);   /* 고정 버튼이 없는 화면 = 본문 끝을 단추 위까지 올릴 수 있게 아래 여백(CSS) */
+  var dt = typeof detShown === "function" && detShown(), nav = el("tabbar"), fx = dt ? null : document.querySelector("#view .axs-fix.ax-bottom"), base = 0;
+  if (dt) { var dft = document.querySelector("#axsDet .axs-dft"); base = dft && !dft.hidden ? dft.offsetHeight : 0; }   /* v5.69 상세 시트 위 = 시트 아래 고정 칸 바로 위(시트 본문 오른쪽 아래) */
+  else {
+    if (nav && nav.style.display !== "none") base = Math.max(base, nav.offsetHeight);
+    if (fx) base = Math.max(base, fx.offsetHeight);
+  }
+  f.style.bottom = trfAvoid(f, dt ? base + 12 : Math.max(base + 12, 136), dt ? "#axsDet .axs-dbody" : "#view") + "px";   /* 136 = 맨 위로(80 + 46) 위 10px · 본문 버튼이 밑에 오면 그 위로 */
+  document.body.classList.toggle("trf-on", !fx && !dt);   /* 고정 버튼이 없는 화면 = 본문 끝을 단추 위까지 올릴 수 있게 아래 여백(CSS) */
+  document.documentElement.classList.toggle("trf-det", !!dt);   /* 시트 본문 끝도 단추 위까지 올라오게(CSS) */
 }
 /* 비키기 · 본문의 큰 버튼(ax-button · 입력 칸 · 상담 시간 칸 · 접힘 머리 summary)이 단추 자리에 오면 그 버튼 위로 올린다(퀴즈 결과 「스탬프 보기」 · 게임 결과 「다시 하기」 실측 390 · 360) · 카드 줄은 왼쪽이 넓게 남아 그대로 · 화면 위쪽 절반까지만 · 더 못 올리면 기본 자리 */
-function trfAvoid(f, b0) {
+function trfAvoid(f, b0, rt) {
+  rt = rt || "#view";
   var vh = window.innerHeight, h = f.offsetHeight || 76, fr = f.getBoundingClientRect(), L = fr.left - 4, R = fr.right + 4, b = b0, top = el("topbar") ? el("topbar").getBoundingClientRect().bottom : 0;
-  var rs = [].slice.call(document.querySelectorAll("#view .ax-button, #view input, #view textarea, #view select, #view .axs-slot, #view summary")).filter(function (e) { return !e.closest(".axs-fix"); }).map(function (e) { return e.getBoundingClientRect(); }).filter(function (r) { return r.width && r.height && r.left < R && L < r.right; });
+  var rs = [].slice.call(document.querySelectorAll([".ax-button", "input", "textarea", "select", ".axs-slot", "summary"].map(function (s) { return rt + " " + s; }).join(", "))).filter(function (e) { return !e.closest(".axs-fix"); }).map(function (e) { return e.getBoundingClientRect(); }).filter(function (r) { return r.width && r.height && r.left < R && L < r.right; });
   for (var k = 0; k < 8; k++) {
     var t = vh - b - h, bt = vh - b, hit = null;
     rs.forEach(function (r) { if (r.top < bt + 4 && t - 4 < r.bottom && (!hit || r.top < hit.top)) hit = r; });

@@ -649,6 +649,7 @@ function pushGo(go, tag) {
   pushSeen(tag);
   if (["home", "photoq", "ev_cchat", "dap", "notices"].indexOf(go) < 0) go = "home";   /* v4.78 A5 notices = 공지 목록(긴급 공지 · 대상 지정) */
   if (!((S.get("user", {}) || {}).empId) || el("app").hidden) { PUSHGO = { go: go, tag: tag || "" }; return; }
+  if (typeof DET !== "undefined") DET.canon = Date.now();   /* v5.69 푸시 · 딥링크 = 그 항목이 있는 목록 위에 상세 시트 */
   App.go(go);
 }
 function pushGoRun() { if (!PUSHGO) return; var g = PUSHGO; PUSHGO = null; pushGo(g.go, g.tag); }
