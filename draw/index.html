@@ -130,7 +130,7 @@
   #bList.compact .who { display: flex; align-items: baseline; gap: .45em; }   /* 7명 이상 · 이름 옆에 부서 한 줄 */
   #bList.compact .nm { flex: none; max-width: 60%; } #bList.compact .dp { flex: 1 1 0; }
 
-  /* v5.03 참여상 숫자 발표 · 서버 추첨 · 숫자만(이름 · 부문 · 상품별 수량 없음) · 통을 그리지 않는다 */
+  /* v5.03 완주 경품 추첨 숫자 발표 · 서버 추첨 · 숫자만(이름 · 부문 · 상품별 수량 없음) · 통을 그리지 않는다 */
   #pFin .fin-in { position: absolute; left: 160px; right: 160px; top: 540px; transform: translateY(-50%); text-align: center; }
   #pFin .title { font-size: 96px; margin-top: 10px; }
   .fin-big { font-size: 240px; line-height: 1.05; font-weight: 700; color: var(--o); letter-spacing: -0.03em; margin-top: 30px; white-space: nowrap; }
@@ -234,7 +234,7 @@
 
   <section id="pFin" class="full"><div class="fin-in">
     <p class="eye">서버 추첨</p>
-    <h2 class="title">참여상 추첨 결과</h2>
+    <h2 class="title">완주 경품 추첨 결과</h2>
     <p class="fin-big" id="fBig"></p>
     <p class="meta" id="fMeta"></p>
     <p class="fin-note" id="fNote"></p>
@@ -266,7 +266,7 @@
       <tr><td>P · H</td><td>조작 창 · 이 안내</td></tr>
       <tr class="loc"><td>1 ~ 9 · V · D · A</td><td>등수 바로 가기 · 인트로 · 데모 체크인 (원격 화면에서는 안 씀)</td></tr>
     </table>
-    <p>순서: 체크인 시작 → 체크인 마감 → 6등 추첨 시작 → 섞기 시작 → 뽑기 → 확정 → … → 1등 → 결과판 → 참여상 발표 → 끝 화면. 콘솔 「추첨 › 진행」의 큰 버튼과 같은 순서라 어느 쪽으로 눌러도 됩니다.</p>
+    <p>순서: 체크인 시작 → 체크인 마감 → 6등 추첨 시작 → 섞기 시작 → 뽑기 → 확정 → … → 1등 → 결과판 → 완주 경품 추첨 발표 → 끝 화면. 콘솔 「추첨 › 진행」의 큰 버튼과 같은 순서라 어느 쪽으로 눌러도 됩니다.</p>
   </div>
 </div>
 <script src="../assets/server.js"></script>

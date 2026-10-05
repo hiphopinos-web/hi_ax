@@ -12,8 +12,8 @@ window.AXDRAW_CONTROL = function () {
   function send(m) { m.axd = 1; try { if (window.opener && !window.opener.closed) { window.opener.postMessage(m, "*"); return; } } catch (e) {} try { bc && bc.postMessage(m); } catch (e) {} }
   function cmd(c, a) { send({ type: "cmd", cmd: c, arg: a }); }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
-  var SCN = { idle: "대기", checkin: "체크인 중", closed: "체크인 마감", card: "등수 카드", mix: "섞는 중", tension: "감속 · 배출 대기", exit: "배출", reveal: "당첨 공개", board: "결과판", fin: "참여상 발표", end: "끝 화면" };
-  var NEXT = { idle: "체크인 시작", checkin: "체크인 마감(두 번)", closed: "등수 추첨 시작", card: "섞기 시작", mix: "뽑기", reveal: "확정", board: "참여상 발표(데모는 끝 화면)", fin: "끝 화면", end: "" };   /* 261004 · 송출 화면 nextCmd 와 같은 순서 */
+  var SCN = { idle: "대기", checkin: "체크인 중", closed: "체크인 마감", card: "등수 카드", mix: "섞는 중", tension: "감속 · 배출 대기", exit: "배출", reveal: "당첨 공개", board: "결과판", fin: "완주 경품 추첨 발표", end: "끝 화면" };
+  var NEXT = { idle: "체크인 시작", checkin: "체크인 마감(두 번)", closed: "등수 추첨 시작", card: "섞기 시작", mix: "뽑기", reveal: "확정", board: "완주 경품 추첨 발표(데모는 끝 화면)", fin: "끝 화면", end: "" };   /* 261004 · 송출 화면 nextCmd 와 같은 순서 */
 
   var css = document.createElement("style");
   css.textContent = [

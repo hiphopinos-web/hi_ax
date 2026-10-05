@@ -890,7 +890,7 @@
   }
   /* 다음 동작 하나 · Space(→ · PageDown · Enter)와 콘솔 「추첨 › 진행」 큰 버튼이 같은 순서다(콘솔 dcNext 와 같은 표)
    *   대기 → 체크인 시작 → 체크인 마감(두 번) → N등 추첨 시작(카드) → 섞기 시작 → 뽑기 → 확정 → (같은 등수 남으면 뽑기 · 다 차면 다음 등수 카드)
-   *   … 1등 확정 → 결과판 → 참여상 발표(서버 숫자) → 끝 화면 · 행운권 순서 = CFG.rounds(6등부터 1등 · 261002 사용자 결정) */
+   *   … 1등 확정 → 결과판 → 완주 경품 추첨 발표(서버 숫자) → 끝 화면 · 행운권 순서 = CFG.rounds(6등부터 1등 · 261002 사용자 결정) */
   function nextCmd() {
     if (SC === "end") return { c: "", n: "끝 · 모든 순서를 마쳤습니다" };
     if (T < busyUntil || NEXTCARD) return { c: "", n: "잠시만" };
@@ -905,7 +905,7 @@
         return { c: "draw", n: curRound().name + " 뽑기" };
       case "tension": case "exit": return { c: "", n: "뽑는 중" };
       case "reveal": return { c: "confirm", n: "확정", arg: WIN.r && WIN.r.id };
-      case "board": return CFG.mode === "server" ? { c: "fin", n: "참여상 발표" } : { c: "end", n: "끝 화면" };
+      case "board": return CFG.mode === "server" ? { c: "fin", n: "완주 경품 추첨 발표" } : { c: "end", n: "끝 화면" };
       case "fin": return { c: "end", n: "끝 화면" };
     }
     return { c: "", n: "끝" };
@@ -919,25 +919,25 @@
     keyRun(nx.c, nx.arg);
   }
   var WHY_TXT = { busy: "", scene: "지금 장면에서는 할 수 없습니다", drawing: "뽑는 중입니다", same: "", done: "", notclosed: "체크인을 먼저 마감합니다", round: "없는 등수입니다",
-    loading: "", full: "", empty: "", none: "", id: "다른 당첨입니다", arg: "참여상 숫자가 없습니다", unknown: "모르는 명령입니다", error: "오류" };
+    loading: "", full: "", empty: "", none: "", id: "다른 당첨입니다", arg: "완주 경품 추첨 숫자가 없습니다", unknown: "모르는 명령입니다", error: "오류" };
   function keyRun(c, arg) {
     var why = runCmd(c, arg == null ? "" : String(arg));
     if (!why) return;
     var w = String(why).split(":"), t = w[0] === "mixing" ? "섞는 중 · " + w[1] + "초 뒤 뽑기" : WHY_TXT[w[0]];
     if (t) toast(t, true);
   }
-  /* 참여상 발표 · 숫자는 서버만 안다 · 화면이 관리코드로 draw_cmd fin 을 보내고(콘솔 버튼과 같은 명령 · seq) 응답의 명령을 바로 실행한다(소켓으로 같은 seq 가 와도 한 번만) */
+  /* 완주 경품 추첨 발표 · 숫자는 서버만 안다 · 화면이 관리코드로 draw_cmd fin 을 보내고(콘솔 버튼과 같은 명령 · seq) 응답의 명령을 바로 실행한다(소켓으로 같은 seq 가 와도 한 번만) */
   var FINREQ = false;
   function finFromServer() {
-    if (CFG.mode !== "server" || !sessionKey()) { toast("참여상 발표는 서버에 연결된 화면에서만", true); return; }
+    if (CFG.mode !== "server" || !sessionKey()) { toast("완주 경품 추첨 발표는 서버에 연결된 화면에서만", true); return; }
     if (FINREQ) return;
-    FINREQ = true; toast("참여상 결과를 받는 중", true);
+    FINREQ = true; toast("완주 경품 추첨 결과를 받는 중", true);
     jsonp("draw_cmd", { cmd: "fin", arg: "", rid: "k" + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36) }, function (res) {
       FINREQ = false;
       KEYSRC = true;
       try {
         if (res && res.ok && res.cmd === "fin") remoteCmd(res.cmd, res.arg, res.seq, "srv");
-        else toast(res && res.reason === "fin" ? "참여상 추첨 전입니다 · 콘솔 「참여상」에서 먼저 추첨" : "보내지 못했습니다 · " + (res && (res.reason || res.err) || "응답 없음"), true);
+        else toast(res && res.reason === "fin" ? "완주 경품 추첨 전입니다 · 콘솔 「완주 경품 추첨」에서 먼저 추첨" : "보내지 못했습니다 · " + (res && (res.reason || res.err) || "응답 없음"), true);
       } finally { KEYSRC = false; }
       uiHelp();
     });
@@ -1407,7 +1407,7 @@
     drawStage();
     var worldA = 1;
     if (SC === "reveal" || SC === "card") worldA = STG.to ? 0.3 * (1 - clamp((T - STG.t0) / STG.dur, 0, 1)) : 0;
-    if (SC === "end" || SC === "fin") worldA = 0;   /* v5.03 참여상 숫자 장면 · 통을 그리지 않는다(물리 연출 없음) */
+    if (SC === "end" || SC === "fin") worldA = 0;   /* v5.03 완주 경품 추첨 숫자 장면 · 통을 그리지 않는다(물리 연출 없음) */
     if (SC === "board") worldA = 0.55;
     if (worldA > 0.01) {
       /* 카메라 · 감속하는 동안 6시 틈 쪽으로 조금 다가가고(멈출 때 한 번 흔들림), 공이 떨어지면 따라간다 */
@@ -1637,7 +1637,7 @@
     fade($("rWho"), 1, 0.35, 0.95); fade($("rPrize"), 1, 0.35, 1.05);
   }
   function uiAbsent() { fade($("rWho"), 0, 0.2); fade($("rPrize"), 0, 0.2); fade($("rAbs"), 1, 0.2); }
-  /* v5.03 참여상 숫자 발표 · 명령 arg = 당첨 W . 대상 N . 마감 HHMM [. 배송 MMDD] · 숫자는 서버 값 그대로 · 이름 · 부문 · 상품별 수량 없음 · 「서버 추첨」을 숨기지 않는다 */
+  /* v5.03 완주 경품 추첨 숫자 발표 · 명령 arg = 당첨 W . 대상 N . 마감 HHMM [. 배송 MMDD] · 숫자는 서버 값 그대로 · 이름 · 부문 · 상품별 수량 없음 · 「서버 추첨」을 숨기지 않는다 */
   function finArg(a) {
     var m = /^(\d{1,6})\.(\d{1,6})\.(\d{3,4})(?:\.(\d{3,4}))?$/.exec(String(a == null ? "" : a)); if (!m) return null;
     var hm = ("0" + m[3]).slice(-4), md = m[4] ? ("0" + m[4]).slice(-4) : "";
@@ -1694,7 +1694,7 @@
     set("hNext", esc(nx.n) + (nx.two ? " · 두 번" : ""));
     set("hNow", esc((SCN_KO[SC] || SC) + " · " + r.name + " " + roundWins(ST.round, true).length + "/" + r.count + " · 당첨 " + done + "명"));
   }
-  var SCN_KO = { idle: "대기", intro: "인트로", checkin: "체크인 중", closed: "체크인 마감", card: "등수 카드", mix: "섞는 중", tension: "뽑는 중", exit: "뽑는 중", reveal: "당첨 공개", board: "결과판", fin: "참여상 발표", end: "끝 화면" };
+  var SCN_KO = { idle: "대기", intro: "인트로", checkin: "체크인 중", closed: "체크인 마감", card: "등수 카드", mix: "섞는 중", tension: "뽑는 중", exit: "뽑는 중", reveal: "당첨 공개", board: "결과판", fin: "완주 경품 추첨 발표", end: "끝 화면" };
   function toast(msg, soft) {
     if (REC && !soft) return;
     if (remote()) { CMD.msg = msg || ""; pushCtl(msg); if (KEYSRC) keyTip(msg); return; }   /* 원격 · 대형 화면에 운영 안내를 띄우지 않는다(상태 보고로) · 키를 누른 진행자에게만 구석 작은 글자(261004) */
@@ -1804,7 +1804,7 @@
         return arg && String(arg) !== String(lw.id) ? "id" : "";
       case "board": return SC !== "mix" && SC !== "closed" ? "scene" : "";
       case "end": return SC === "tension" || SC === "exit" ? "drawing" : SC === "end" ? "same" : "";
-      case "fin": return SC === "tension" || SC === "exit" ? "drawing" : arg != null && arg !== "" && !finArg(arg) ? "arg" : "";   /* v5.03 참여상 발표 · 추첨 중만 아니면 */
+      case "fin": return SC === "tension" || SC === "exit" ? "drawing" : arg != null && arg !== "" && !finArg(arg) ? "arg" : "";   /* v5.03 완주 경품 추첨 발표 · 추첨 중만 아니면 */
     }
     return "unknown";
   }
@@ -1966,7 +1966,7 @@
       else if (s === "card") { SC = "mix"; goCard(); }
       else if (s === "board") scene("board");
       else if (s === "end") { scene("mix"); goEnd(); }
-      else if (s === "fin" && ST.fin) { MIX.target = 0; scene("fin"); }   /* v5.03 참여상 숫자 장면 그대로 */
+      else if (s === "fin" && ST.fin) { MIX.target = 0; scene("fin"); }   /* v5.03 완주 경품 추첨 숫자 장면 그대로 */
       else if (s === "closed") scene("closed");
       else if (s === "intro") scene("idle");
       else { scene("mix"); MIX.target = 1; }
