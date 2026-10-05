@@ -171,7 +171,7 @@ function stampTagHtml(id) {
 function stampLineHtml(id, left) { return '<div class="axs-stline">' + (left || "<span></span>") + stampTagHtml(id) + "</div>"; }
 /* 프로그램 상세 · p3 에 들어가는 것(17F 강연 · DAP 상담 · 커피챗 · 10F 는 P3_INCLUDE_10F) */
 function progStampId(s) {
-  return s && ((s.fl === 17 && PROG_CAT[s.id] === "강연") || s.id === "dap" || s.id === "cchat" || (P3_INCLUDE_10F && s.fl === 10 && PROG_CAT[s.id] === "실습") || (s.fl === 10 && PROG_CAT[s.id] === "실습" && !!sessMine(s.id))) ? "p3" : "";   /* v5.71 10F 끝 QR · 사전 신청자의 세션 상세에 도장 */
+  return s && ((s.fl === 17 && PROG_CAT[s.id] === "강연") || s.id === "dap" || s.id === "cchat" || (P3_INCLUDE_10F && s.fl === 10 && PROG_CAT[s.id] === "실습")) ? "p3" : "";
 }
 /* 잉크 튐 · 도장 가장자리에서 바깥으로 · O100~O30 사다리 · 보일 때만 만들고 0.9초 뒤 지운다 · scale 0.5 = 카드 인라인(절반 크기) */
 var INK_COLS = ["#FF7E31", "#FF7E31", "#FFA46E", "#FFB284", "#FFCFB0"];

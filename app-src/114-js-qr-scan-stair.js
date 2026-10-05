@@ -326,8 +326,6 @@ function attWin(t) {
 function attByCode(code, fixId, k) {
   var u = S.get("user", {}) || {};
   if (!u.empId) { srShow({ st: "fail", why: "param" }); return; }
-  var t10 = att10Sess(String(fixId || "").toLowerCase());
-  if (t10) { att10ByCode(code, t10); return; }   /* v5.71 10F 세션 끝 QR(&p=세션 id) · 아래 att10 */
   var w = attWin(attNow()), fx = attProg(String(fixId || "").toLowerCase());
   ATT.code = String(code || "").trim(); ATT.res = null; ATT.sel = fx ? fx.id : w.sel; ATT.fix = fx ? fx.id : ""; ATT.k = k === "in" || k === "out" ? k : "";
   var pid = fx ? fx.id : w.sel || (w.open[0]) || (w.next && w.next.id) || "l2";
@@ -424,68 +422,6 @@ function attStamp(res) {
   checkRewards();
   stampBuzz(25);
   return Math.min(STAMP_DENOM, stampCount());
-}
-/* ═══ v5.71 (사용자 확정 261005 「권장대로 10층 끝 QR 진행해」) 10F 실습 세션 끝 QR ═══
-   세션마다 끝 QR 하나(입장 QR 없음) · QR 주소 = 10F 출석 코드 + &p=<세션 id> + &k=out · 찍으면 고르기 없이 바로 att_claim(서버가 세션 id 로 가른다 · 코드는 앱에 없다)
-   창 = 끝 10분 전 ~ 끝 10분 뒤(17F 끝 창과 같은 설정 · sync aw) · 자격 = 사전 신청 명단(서버 · 앱 sessMine 과 같은 원천) · 세션 E 1 · 2회차는 같은 세션
-   결과 = 출석(스탬프 「프로그램 참여」 2개 · 이미 있으면 기록만) · 이미 출석 · 명단 밖(notpre · 담백한 안내 · 스탬프 없음 · design.md §7) · 다른 세션(other) · 시간 밖(window)
-   내 기록 = att_mine["<세션>.out"](17F 와 같은 저장) · 세션 상세 「끝 QR」 줄 · 시간표 칩 · 나의 일정 줄이 읽는다 */
-var ATT10 = { code: "", sid: "", res: null, info: null };
-function att10Sess(id) { var s = id ? sessById(id) : null; return s && s.fl === 10 && s.kind === "info" ? s : null; }
-function att10X(s) { var p = s.tm.split("~"); return { id: s.id, nm: s.ttl, s: p[0], e: p[1] }; }
-function att10ByCode(code, s) {
-  ATT10.code = String(code || "").trim(); ATT10.sid = s.id; ATT10.res = null; ATT10.info = null;
-  var go = function () { PROG.sid = s.id; App.go("sess_d"); sheetOpen(att10Spec()); att10Go(); };   /* 뒤에는 그 세션 상세 · 시트를 닫으면 출석 상태가 보인다 */
-  if (typeof qrGated === "function" && qrGated()) qrGateDefer(go); else go();
-}
-function att10Spec() {
-  var s = sessById(ATT10.sid) || { ttl: ATT10.sid }, r = ATT10.res, f = ATT10.info;
-  if (r) return { id: "att10", title: r.dup ? "이미 출석했어요" : "출석했어요", lead: "<b>" + esc(s.ttl) + "</b><br>끝 " + esc(r.at),
-    body: (r.stamp ? '<div class="ax-inset axs-attok"><p class="ax-card-title">스탬프 「프로그램 참여」 ' + r.add + '개 적립</p><p class="ax-description">현재 스탬프 ' + r.stamp + " / " + STAMP_DENOM + "개</p></div>" :
-      r.had ? '<p class="ax-meta">프로그램 참여 스탬프 2개는 이미 받았어요</p>' : "") + (r.test ? '<p class="ax-meta">테스트 계정 · 스탬프는 이 기기에만</p>' : ""),
-    go: "sheetClose()", goLbl: "확인" };
-  if (f) return { id: "att10", title: f.t, lead: f.l, go: "sheetClose()", goLbl: "확인" };
-  var tmRow = testMode() ? '<label class="axs-attt">테스트 · 시각<input type="time" value="' + esc(attTm()) + '" onchange="att10TmSet(this.value)"></label>' : "";
-  return { id: "att10", title: "10F 세션 출석", lead: "<b>" + esc(s.ttl) + "</b><br>끝 QR", body: tmRow, go: "att10Go()", goLbl: "출석하기", goBusy: "출석하는 중" };
-}
-function att10Repaint() { if (SHEET.busy) botWait(false); SHEET.busy = false; SHEET.err = null; SHEET.spec = att10Spec(); if (el("axsSheet")) sheetPaint(); }
-function att10TmSet(v) { S.set("att_tm", /^\d{1,2}:\d{2}$/.test(v || "") ? v : ""); ATT10.res = null; ATT10.info = null; att10Repaint(); }
-function att10Go() {
-  if (SHEET.busy || ATT10.res || ATT10.info) return;
-  var s = att10Sess(ATT10.sid), u = S.get("user", {}) || {};
-  if (!s) return;
-  if (!BE.on) { att10Local(s); return; }   /* 데모(서버 없음) · 같은 규칙을 이 기기에서 */
-  sheetBusy(true);
-  var p = { action: "att_claim", emp: u.empId, code: ATT10.code, prog: s.id, k: "out" }, tm = attTm();
-  if (tm && testEmp()) p.tm = tm;
-  beCall(p, att10Done, function () { sheetFail({ t: "연결이 불안정해 출석하지 못했어요", b: "출석은 아직 되지 않았어요. 다시 시도해 주세요." }); });
-}
-/* 데모(서버 없음) · 끝 창 · 같은 세션 1회 · 명단 = sessMine(테스트 오버레이 포함 · 테스트 모드는 명단 없이) */
-function att10Local(s) {
-  var x = att10X(s), t = attNow(), kw = attKWin(x, "out"), at = attMineK(s.id, "out");
-  if (!testMode() && !sessMine(s.id)) return att10Done({ ok: false, reason: "notpre", prog: s.id });
-  if (!at && (t < kw.a || t > kw.b)) return att10Done({ ok: false, reason: "window", prog: s.id, open: hm2(kw.a) + "~" + hm2(kw.b) });
-  att10Done({ ok: true, prog: s.id, k: "out", ten: true, at: at || hm2(t), dup: !!at, mine: [], pg: 2, stamp: at ? null : { id: "p3", dry: true, pg: 2 }, test: true });
-}
-function att10Done(res) {
-  var s = sessById(ATT10.sid) || { id: ATT10.sid, ttl: "" };
-  if (!res || !res.ok) {
-    var why = res && res.reason;
-    if (why === "nocode") { sheetClose(true); srShow({ st: "fail", why: "nocode" }); return; }
-    if (why === "notpre") { ATT10.info = { t: "사전 신청자 출석 QR이에요", l: "<b>" + esc(s.ttl) + "</b><br>17F 강연 · 1F 전시 · 18F 커피챗은 누구나 참여해요" }; att10Repaint(); return; }   /* design.md §7 · 오류 말투 없이 갈 수 있는 곳 한 줄 */
-    if (why === "other") { ATT10.info = { t: "신청한 세션의 QR을 찍어 주세요", l: "신청한 세션 · <b>" + esc(res.preName || "") + "</b>" }; att10Repaint(); return; }
-    if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: s.ttl + " · 끝 QR " + String(res.open || "").replace("~", "–") }); return; }
-    sheetFail({ t: "출석하지 못했어요", b: "다시 시도해 주세요." });
-    return;
-  }
-  var m = attMine(), key = s.id + ".out", s0 = S.get("stamps", []), before = s0.indexOf("p3") >= 0 ? 2 : s0.indexOf(STAMP_HALF) >= 0 ? 1 : 0;
-  (res.mine || []).forEach(function (y) { if (y && y.id) m[y.k === "out" ? y.id + ".out" : y.id] = y.at; });
-  if (!m[key]) m[key] = res.at;
-  S.set("att_mine", m);
-  var sn = attStamp(res);
-  ATT10.res = { at: m[key], dup: !!res.dup, stamp: sn, add: res.stamp && !res.stamp.dry ? res.stamp.add || 0 : Math.max(1, 2 - before), had: !!(res.stamp && !sn), test: !!res.test };
-  att10Repaint();
-  App.render();   /* 뒤의 세션 상세 · 시간표 · 나의 일정이 출석 상태로 바뀐다 */
 }
 
 /* ═══ 스캔 대기열 · 통신이 약한 곳(계단 복도 등) · 찍은 순서대로 보낸다 ═══
