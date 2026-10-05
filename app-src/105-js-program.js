@@ -231,6 +231,7 @@ var FLOOR1 = [
     cases: [["강북이 - 개인 맞춤형 시상 어플리케이션", "영업 사례 · 강북조직파트 김동건 전임"], ["AI컨설팅 도우미 - 판매 화법 어플리케이션", "영업 사례 · 안양AM지점 이은정 지점장"], ["하이핑거 - 보상 업무 지원 어플리케이션", "보상 사례 · 울산대인보상센터 이승철 대리"]] },   /* v5.60 판 16 ~ 18 한 컷(말풍선 · 인용 · 기능 칩) 대신 앱 이름 + 만든 사람(소속 · 이름 · 직급은 판 글자 그대로 · 사용자 「실명 남긴다」) */
   { id: "lounge", grp: "do", sign: "AX LOUNGE", hdr: "AX LOUNGE", kor: "내년 DAP 과제를 1:1로 상담하는 곳", fact: "", st: "p3",
     stm: "내년 DAP(데이터 분석 프로젝트) 과제로 해 볼 업무가 있다면 1:1로 상담해요",
+    lead: "내년 DAP(데이터 분석 프로젝트) 과제로 해 볼 업무가 있다면 1:1로 상담해요",   /* v5.70 시트 「하는 일」 첫 줄 = DAP 풀이(v5.69 시트화로 부제 stm 이 빠지며 함께 사라졌다 · v5.65 사용자 확정 문구) */
     todo: ["데이터사이언스파트와 업무 고민을 나누고 방향을 함께 찾아요", "앱에서 30분 상담을 신청해요", "상담이 끝나면 스탬프를 받아요"],
     gd: ["아직 구체적이지 않다면 18F AX 커피챗에서 비슷한 고민을 가진 사람들과 가볍게 이야기할 수 있어요", "18F AX 커피챗 보기", "cchat"],
     chk: [["진행", "업무 설명 → 병목 → 개선방안 · 30분"], ["신청", "신청 후 승인되면 앱에서 알려 드려요"], ["기록", "상담 내용은 기록되어 행사 후 정리해 공유돼요"], ["사은품", "상담을 완료하면 드려요"]] },   /* v5.65 (사용자 261005 「커피챗과 라운지는 권장대로」 · 정본 디자인 시안/라운지 커피챗 통일/설계안.md) 커피챗과 같은 틀 · 서로 안내(gd) · 참여 전 확인(chk) 패널 · 커피 · 간식 사진은 패널 안에만 */
@@ -389,7 +390,7 @@ function zoneSheet() {
   var open = !!PROG.zchk, b = L.btn;
   var body = (z.q ? '<p class="axs-xq">' + z.q.map(function (t) { return "<span>" + esc(t) + "</span>"; }).join("") + "</p>" : "") +
     (meta ? '<div class="cr">' + meta + "</div>" : "") +
-    '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + z.todo.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" + zoneCaseHtml(z) + zoneExHtml(z) +
+    '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + (z.lead ? [z.lead] : []).concat(z.todo).map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" + zoneCaseHtml(z) + zoneExHtml(z) +
     (kv ? '<hr class="axs-rule">' + kv : "") +
     (z.gd ? '<hr class="axs-rule"><div class="axs-xgd"><p class="axs-bar stm">' + esc(z.gd[0]) + '</p><button type="button" class="ax-link axs-plain axs-self" onclick="zoneOpen(\'' + z.gd[2] + '\')">' + esc(z.gd[1]) + "</button></div>" : "") +
     (z.chk ? '<button type="button" class="ax-button ax-button-weak axs-xtog" aria-expanded="' + open + '" aria-controls="zChk" onclick="zoneChkToggle(this)">참여 전 확인' + CHEV_SVG + "</button>" +

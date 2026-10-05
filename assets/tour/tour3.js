@@ -1437,6 +1437,259 @@
   /* ═══════════ 받기 ═══════════ */
   /* v5.51 불러오기 진행률(사용자 261004 「불러오는 중 125는 왜 나오지」) · 원인 = 압축 전송(gzip)이면 받은 바이트(풀린 크기)가 Content-Length(압축 크기)보다 커서 100 을 넘었다
    * 이제 0~100 만 · 줄어들지 않음 · 한 번이라도 100 을 넘기면(전체 크기를 믿을 수 없음) 숫자 없이 점 물결만 · tour-scene 은 모를 때 -1 을 넘긴다 */
+  /* ═══════════ v5.70 흉상 실물화(峨山 鄭周永 · 1915 - 2001 · 사용자 261005 「더 실사에 가깝게 · 그 앞에서 뛰면 살짝 웃어 주는 거야」) ═══════════
+   * 설치 모습 = 우리 로비 사진(금빛 · 호박색 대리석 벽 · 노란 · 베이지 대리석 받침 = 위 넓은 판 + 아래 기둥 · 앞면 먹색 글씨 · 기둥 앞 금빛 나뭇잎 띠 · 벽 새김 글씨는 무늬만)
+   * 흉상 = 청동 · 20년 지나 자연스럽게 어두워진 패티나(짙은 갈색 · 올리브 · 무광 · 결) · 위에서 비추는 따뜻한 빛을 꼭짓점 색에 구워 3D 판들 사이에서도 형태가 읽히게 · 은은한 반사(Phong)
+   * 얼굴 = 청동 조각상 수준의 형태(눈두덩 · 코 · 입 · 턱 · 귀 · 빗어 넘긴 머리)이고 실존 인물 초상을 정밀하게 옮기지 않는다 · 사진은 모양 참고만(텍스처로 쓰지 않음)
+   * 명판 = 글꼴 조판 그림 bust-plaque.webp(Noto Serif KR Black · SIL OFL 1.1 · 투명 바탕 먹색)
+   * 자리 · 크기 = 모형(lobby.glb 「bust」) 그대로 · 받침 치수 = build/layout.py BUST_PED · 모형의 받침 · 흉상 삼각형만 지우고(동쪽 화분은 남김) 같은 치수로 다시 세운다
+   *   걷기 지도(buildGrid) 앞에 세워 막힘 · 카메라 높이가 저절로 따라온다(받침 바닥 크기 같음 = 끼임 그대로)
+   * 반응 = 앞(남쪽 2.8m · 좌우 1.3m 안)에서 점프 → 둘레 은은한 빛 한 번(약 2초) + 입꼬리 · 눈가 아주 살짝(0.3초 올라 1.5초에 원래대로) · 말풍선 · 소리 · 윙크 없음
+   *   BUST_SMILE = false 면 미소를 끄고 빛만 · 움직임 줄이기도 빛만 */
+  var BUST_SMILE = true;
+  var BUST_PED = { plinth: [0.98, 0.70, 0.06], col: [0.64, 0.48, 0.56], cap: [0.94, 0.64, 0.46] };
+  var BU = null;
+  function bRnd(s) { return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+  function bSm(a, b, x) { var t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); }
+  function bG(x, y, x0, y0, sx, sy) { var dx = (x - x0) / sx, dy = (y - y0) / sy; return Math.exp(-0.5 * (dx * dx + dy * dy)); }
+  function bCv(w, h) { var c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+  function bTex(c, rep) { var t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; if (rep) t.wrapS = t.wrapT = T.RepeatWrapping; t.anisotropy = 4; return t; }
+  /* 노란 · 베이지 대리석(사진 91b1cc38 · fa895b66) · 얼룩 + 옅은 결 */
+  function bustMarble() {
+    var c = bCv(256, 256), g = c.getContext('2d'), R = bRnd(11);
+    g.fillStyle = '#D4AE6A'; g.fillRect(0, 0, 256, 256);
+    for (var i = 0; i < 220; i++) { var x = R() * 256, y = R() * 256, r = 6 + R() * 34; g.fillStyle = R() < 0.5 ? 'rgba(255,241,206,' + (0.05 + R() * 0.09).toFixed(3) + ')' : 'rgba(186,146,78,' + (0.04 + R() * 0.07).toFixed(3) + ')'; g.beginPath(); g.ellipse(x, y, r, r * (0.4 + R() * 0.6), R() * 3, 0, 6.3); g.fill(); }
+    for (var v = 0; v < 9; v++) {
+      var vx = R() * 256, vy = R() * 256, an = -0.5 + R() * 0.6; g.beginPath(); g.moveTo(vx, vy);
+      for (var s = 0; s < 36; s++) { an += (R() - 0.5) * 0.55; vx += Math.cos(an) * 8; vy += Math.sin(an) * 8; g.lineTo(vx, vy); }
+      g.strokeStyle = v % 3 === 0 ? 'rgba(156,112,52,0.30)' : 'rgba(255,247,222,0.42)'; g.lineWidth = 0.6 + R() * 1.3; g.stroke();
+    }
+    return bTex(c, false);
+  }
+  /* 청동 패티나 결(꼭짓점 색에 곱한다 · 밝기 0.8~1.0 · 올리브 얼룩) · 이음매 없이 감기게 가장자리를 넘는 얼룩은 반대편에도 */
+  function bustPatina() {
+    var c = bCv(256, 256), g = c.getContext('2d'), R = bRnd(5);
+    g.fillStyle = '#E2DED2'; g.fillRect(0, 0, 256, 256);
+    for (var i = 0; i < 900; i++) {
+      var x = R() * 256, y = R() * 256, r = 1 + R() * 7, col = R() < 0.55 ? 'rgba(112,122,86,' : R() < 0.5 ? 'rgba(84,66,44,' : 'rgba(255,246,226,';
+      g.fillStyle = col + (0.03 + R() * 0.07).toFixed(3) + ')';
+      for (var ox = -256; ox <= 256; ox += 256) for (var oy = -256; oy <= 256; oy += 256) { if (x + ox + r < 0 || x + ox - r > 256 || y + oy + r < 0 || y + oy - r > 256) continue; g.beginPath(); g.arc(x + ox, y + oy, r, 0, 6.3); g.fill(); }
+    }
+    var im = g.getImageData(0, 0, 256, 256), d = im.data;
+    for (var k = 0; k < d.length; k += 4) { var n = (R() - 0.5) * 22; d[k] += n; d[k + 1] += n; d[k + 2] += n; }
+    g.putImageData(im, 0, 0);
+    return bTex(c, true);
+  }
+  /* 금빛 나뭇잎(월계) 띠 · 줄기 하나에 잎이 마주나고 끝으로 갈수록 작아진다 */
+  function bustLaurel() {
+    var c = bCv(512, 128), g = c.getContext('2d');
+    var y = function (x) { return 66 - 10 * Math.sin((x - 40) / 430 * Math.PI); };
+    g.strokeStyle = '#9C7A34'; g.lineWidth = 4; g.lineCap = 'round'; g.beginPath(); g.moveTo(30, y(30)); for (var x = 30; x <= 486; x += 8) g.lineTo(x, y(x)); g.stroke();
+    for (var i = 0; i < 13; i++) {
+      var px = 52 + i * 33, k = 1 - i / 17, L = 34 * k + 10, W = 12 * k + 4, sl = Math.atan2(y(px + 2) - y(px - 2), 4);
+      [-1, 1].forEach(function (sd) {
+        g.save(); g.translate(px, y(px)); g.rotate(sl + sd * 0.62 + 0.25); g.translate(L * 0.55, 0);
+        var gr = g.createLinearGradient(0, -W, 0, W); gr.addColorStop(0, '#F1DA97'); gr.addColorStop(0.5, '#D2AE5C'); gr.addColorStop(1, '#9E7832');
+        g.fillStyle = gr; g.beginPath(); g.ellipse(0, 0, L * 0.55, W * 0.5, 0, 0, 6.3); g.fill();
+        g.strokeStyle = 'rgba(118,86,30,0.75)'; g.lineWidth = 1.2; g.stroke();
+        g.beginPath(); g.moveTo(-L * 0.5, 0); g.lineTo(L * 0.5, 0); g.strokeStyle = 'rgba(255,240,196,0.55)'; g.lineWidth = 1; g.stroke();
+        g.restore();
+      });
+    }
+    return bTex(c, false);
+  }
+  /* 벽 새김 글씨 무늬(내용은 옮기지 않음 · 글줄 모양만) · 밝은 새김 + 아래 그늘 한 줄 */
+  function bustCarve(seed) {
+    var c = bCv(256, 320), g = c.getContext('2d'), R = bRnd(seed);
+    for (var r = 0; r < 15; r++) {
+      var yy = 22 + r * 19.5, x = r === 0 ? 70 : 16, end = r === 0 ? 186 : 240 - (r === 14 ? 90 : R() * 18);
+      while (x < end) { var w = r === 0 ? 10 : 5 + R() * 7; g.fillStyle = 'rgba(255,236,204,0.55)'; g.fillRect(x, yy, w, r === 0 ? 7 : 5); g.fillStyle = 'rgba(92,48,18,0.30)'; g.fillRect(x, yy + (r === 0 ? 7 : 5), w, 1.5); x += w + (r === 0 ? 7 : 2.5 + R() * 3.5); }
+    }
+    return bTex(c, false);
+  }
+  /* 격자 한 장 · f(u, v, o) 가 o.p(자리) · o.d(미소 변위) · o.k(도드라짐 · 음수 = 오목) · o.uv · o.part 를 채운다 · 왼쪽 → 오른쪽(+x) · 아래 → 위(+y) = 바깥을 보는 삼각형 */
+  function bustGrid(Bf, nu, nv, f) {
+    var base = Bf.p.length / 3, o = {};
+    for (var j = 0; j <= nv; j++) for (var i = 0; i <= nu; i++) {
+      o.d = null; o.k = 0; o.part = 0; f(i / nu, j / nv, o);
+      Bf.p.push(o.p[0], o.p[1], o.p[2]); Bf.d.push(o.d ? o.d[0] : 0, o.d ? o.d[1] : 0, o.d ? o.d[2] : 0); Bf.k.push(o.k); Bf.uv.push(o.uv[0], o.uv[1]); Bf.part.push(o.part);
+    }
+    for (var jj = 0; jj < nv; jj++) for (var ii = 0; ii < nu; ii++) { var a = base + jj * (nu + 1) + ii, b = a + 1, cc = a + nu + 1, dd = cc + 1; if (ii * 2 < nu) Bf.ix.push(a, b, cc, b, dd, cc); else Bf.ix.push(a, b, dd, a, dd, cc); }   /* 대각선을 좌우 대칭으로(한쪽만 톱니가 지지 않게) */
+    Bf.seams.push([base, nu, nv]);
+  }
+  function bustNormals(pos, ix, seams) {
+    var g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setIndex(ix); g.computeVertexNormals();
+    var n = g.attributes.normal.array;
+    seams.forEach(function (s) { for (var j = 0; j <= s[2]; j++) { var a = (s[0] + j * (s[1] + 1)) * 3, b = a + s[1] * 3; for (var q = 0; q < 3; q++) { var m = (n[a + q] + n[b + q]) / 2; n[a + q] = n[b + q] = m; } } });
+    for (var i = 0; i < n.length; i += 3) { var L = Math.hypot(n[i], n[i + 1], n[i + 2]) || 1; n[i] /= L; n[i + 1] /= L; n[i + 2] /= L; }
+    return n;
+  }
+  /* 흉상 몸(가슴 · 어깨 · 정장 깃 · 넥타이) + 목 + 머리 · 받침 윗면 가운데가 원점 · +z = 정면(남쪽) · 높이 약 0.64m(꼭대기 바닥에서 약 1.72m · 모형과 같음) */
+  function bustBody() {
+    var Bf = { p: [], d: [], k: [], uv: [], part: [], ix: [], seams: [] };
+    /* 몸 · 단면 = 초타원(아래는 각진 가슴 · 위로 갈수록 둥글게) · [높이, 반폭, 반깊이, 지수, 앞뒤 중심] · 옆(팔)은 거의 곧게 · 어깨 모서리 → 목까지 약 20도 · 맨 위 = 목을 감싼 깃 */
+    var PR = [[0.003, 0.279, 0.139, 3.6, 0], [0.07, 0.283, 0.142, 3.6, 0], [0.14, 0.287, 0.143, 3.4, 0], [0.20, 0.290, 0.140, 3.2, 0], [0.232, 0.290, 0.135, 3.0, -0.004],
+      [0.254, 0.282, 0.128, 2.7, -0.006], [0.271, 0.260, 0.120, 2.5, -0.007], [0.285, 0.226, 0.113, 2.3, -0.006], [0.299, 0.184, 0.104, 2.2, -0.004], [0.314, 0.142, 0.094, 2.1, -0.001],
+      [0.329, 0.104, 0.083, 2.0, 0.003], [0.341, 0.080, 0.075, 2.0, 0.006], [0.352, 0.069, 0.071, 2.0, 0.008], [0.362, 0.065, 0.069, 2.0, 0.009], [0.366, 0.057, 0.061, 2.0, 0.009]];
+    function prof(t) {   /* 행 사이 Catmull-Rom */
+      var f = t * (PR.length - 1), i = Math.min(PR.length - 2, Math.floor(f)), u = f - i, r = [];
+      for (var q = 0; q < 5; q++) { var p0 = PR[Math.max(0, i - 1)][q], p1 = PR[i][q], p2 = PR[i + 1][q], p3 = PR[Math.min(PR.length - 1, i + 2)][q]; r.push(0.5 * (2 * p1 + (-p0 + p2) * u + (2 * p0 - 5 * p1 + 4 * p2 - p3) * u * u + (-p0 + 3 * p1 - 3 * p2 + p3) * u * u * u)); }
+      return r;
+    }
+    function se(c, p) { return (c < 0 ? -1 : 1) * Math.pow(Math.abs(c), 2 / p); }
+    /* 정장 앞(x = 가로 · y = 높이) · 셔츠 V(오목) · 넥타이(볼록 · 매듭) · 셔츠 깃 끝 · 양복 깃(볼록 · 안쪽이 두껍게 말림 · 노치) · 단추 · 가슴 주머니 */
+    function suit(x, y) {
+      var ax = Math.abs(x), yV = 0.10, up = Math.max(0, y - yV), vw = 0.006 + up * 0.30, d = 0, k = 0, E = 0.003;
+      if (y > yV - 0.004) {
+        var inV = (1 - bSm(vw - E, vw + E, ax)) * bSm(yV - 0.004, yV + 0.004, y);
+        var lw = vw + 0.055 + up * 0.09 - 0.024 * Math.exp(-Math.pow((y - 0.238) / 0.0075, 2)) * bSm(vw + 0.025, vw + 0.045, ax);
+        var inL = bSm(vw - E, vw + E, ax) * (1 - bSm(lw - E, lw + E, ax)) * (1 - bSm(0.292, 0.312, y)) * bSm(yV - 0.01, yV + 0.004, y);
+        var tw = y > 0.312 ? 0.020 : 0.016 + (0.312 - y) * 0.12, tie = ax < tw ? Math.sqrt(1 - (ax / tw) * (ax / tw)) : 0, tieOn = bSm(yV, yV + 0.01, y);
+        tieOn *= 1 - bSm(0.340, 0.348, y); var tieH = (y > 0.312 ? 0.017 : 0.0135) * tie * tieOn - (y > 0.309 && y < 0.315 ? 0.002 * tie : 0);
+        var cTip = y > 0.282 && ax > 0.016 && (y - 0.282) > (ax - 0.016) * 0.9 - 0.004 ? bSm(0.282, 0.292, y) : 0;   /* 셔츠 깃 끝(매듭 양옆에서 아래로 뾰족) */
+        var lap = inL * (0.0075 + 0.0035 * (1 - clamp((ax - vw) / Math.max(0.01, lw - vw), 0, 1)));
+        var shirt = -0.0095 * inV * (1 - tie * tieOn) + 0.0055 * cTip * inV * (1 - tie);
+        d = shirt + tieH + lap; k = -0.7 * inV * (1 - tie) * (1 - cTip) + lap * 60 + tieH * 25 + cTip * 0.4;
+      }
+      if (y < yV + 0.006) { var bt = bG(x, y, 0.004, 0.062, 0.0065, 0.0065); d += -0.0024 * Math.exp(-Math.pow((x - 0.004) / 0.0022, 2)) * (1 - bSm(yV - 0.006, yV + 0.006, y)) + 0.005 * bt; k += 0.4 * bt - 0.4 * Math.exp(-Math.pow((x - 0.004) / 0.0022, 2)); }   /* 앞 여밈 · 단추 */
+      if (x > 0.10 && x < 0.19) { var py = 0.150 + (x - 0.10) * 0.07, pk = Math.exp(-Math.pow((y - py) / 0.0024, 2)); d -= 0.0022 * pk; k -= 0.5 * pk; }   /* 왼쪽 가슴 주머니(입은 사람 왼쪽 = +x) */
+      return [d, k];
+    }
+    function suitAA(x, y) {   /* 3 x 3 표본 평균 · 칸보다 가는 깃 가장자리가 계단처럼 깨지지 않게 */
+      var a = 0, b = 0; for (var i = -1; i <= 1; i++) for (var j = -1; j <= 1; j++) { var q = suit(x + i * 0.0016, y + j * 0.0016); a += q[0]; b += q[1]; }
+      return [a / 9, b / 9];
+    }
+    bustGrid(Bf, 180, 96, function (u, v, o) {
+      var r = prof(v), s0 = 2 * u - 1, ang = Math.PI * (0.35 * s0 + 0.65 * s0 * s0 * s0), s = Math.sin(ang), c = Math.cos(ang);
+      var x = r[1] * se(s, r[3]), z = r[2] * se(c, r[3]) * (c > 0 ? 1.06 : 0.94) + r[4], y = r[0];
+      var F = bSm(0.2, 0.6, c), sk = F > 0.001 ? suitAA(x, y) : [0, 0];
+      var fold = 0.0016 * Math.sin(y * 95 + Math.abs(x) * 30) * bSm(0.16, 0.26, Math.abs(x)) * (1 - bSm(0.18, 0.24, y));   /* 팔 쪽 옷 주름 */
+      var nx = x / (r[1] * r[1]), nz = (z - r[4]) / (r[2] * r[2]), L = Math.hypot(nx, nz) || 1, dd = sk[0] * F + fold;
+      x += nx / L * dd; z += nz / L * dd;
+      o.p = [x, y, z]; o.k = sk[1] * F + fold * 120; o.uv = [u * 2, y * 2.4]; o.part = 1;
+    });
+    bustGrid(Bf, 40, 1, function (u, v, o) { var r = prof(0), ang = -Math.PI + 2 * Math.PI * u; o.p = [r[1] * se(Math.sin(ang), r[3]) * (1 - v), 0.003, (r[2] * se(Math.cos(ang), r[3]) * (Math.cos(ang) > 0 ? 1.06 : 0.94)) * (1 - v)]; o.uv = [u, 0]; o.part = 1; });   /* 밑면(받침 위 · 거의 안 보임) */
+    Bf.ix.splice(Bf.ix.length - 40 * 6, 40 * 6); (function () { var b0 = Bf.p.length / 3 - 82; for (var i = 0; i < 40; i++) Bf.ix.push(b0 + i, b0 + 41 + i, b0 + i + 1); })();   /* 밑면은 아래를 본다 */
+    /* 목 · 살짝 앞으로 기운 원기둥(깃 안에서 턱 밑까지) · 턱 밑은 그늘 */
+    bustGrid(Bf, 48, 10, function (u, v, o) {
+      var ang = -Math.PI + 2 * Math.PI * u, y = 0.33 + v * 0.12, zc = 0.008 + (y - 0.33) * 0.07;
+      o.p = [Math.sin(ang) * 0.056, y, zc + Math.cos(ang) * 0.060]; o.k = -0.6 * bSm(0.36, 0.41, y) * Math.max(0, Math.cos(ang)); o.uv = [u, y * 2.4]; o.part = 2;
+    });
+    /* 머리 · 가운데 (0, 0.50, 0.018) · 타원체 → 턱 좁히기 · 얼굴 앞면 평평하게 → 이목구비(가우스 돌기 · 홈) · 귀 · 빗어 넘긴 머리 · 앞쪽으로 칸을 몰아 촘촘히 */
+    var HC = [0, 0.478, 0.018], HS = 1.08, RX = 0.093, RY = 0.122, RZF = 0.106, RZB = 0.116;
+    var HL = [[0, 0.088], [0.5, 0.074], [0.9, 0.052], [1.18, 0.0], [1.32, 0.014], [1.48, 0.034], [1.78, 0.026], [2.2, -0.02], [Math.PI + 0.01, -0.056]];   /* 머리선 높이 · |경도| 0 = 정면 · 1.2 = 귀 앞 구레나룻 · 1.5 = 귀 위 · PI = 뒤 */
+    function hline(a) { for (var i = 1; i < HL.length; i++) if (a <= HL[i][0]) { var t = (a - HL[i - 1][0]) / (HL[i][0] - HL[i - 1][0]); return HL[i - 1][1] + (HL[i][1] - HL[i - 1][1]) * t; } return HL[HL.length - 1][1]; }
+    bustGrid(Bf, 100, 84, function (u, v, o) {
+      var s = 2 * u - 1, t = 2 * v - 1, th = Math.PI * (0.45 * s + 0.55 * s * s * s), ph = Math.PI / 2 * (0.6 * t + 0.4 * t * t * t);
+      var dx = Math.sin(th) * Math.cos(ph), dy = Math.sin(ph), dz = Math.cos(th) * Math.cos(ph);
+      var x = dx * RX, y = dy * RY, z = dz * (dz > 0 ? RZF : RZB);
+      var jaw = bSm(-0.035, -0.115, y); x *= (1 - 0.10 * jaw * jaw) * (1 + 0.06 * bSm(-0.05, 0.03, y) * (1 - bSm(0.095, 0.13, y))); if (y > 0) y *= 1 - 0.07 * dy * dy; if (z < 0) z *= 1 - 0.18 * jaw;
+      if (z > 0) z *= 1 - 0.14 * Math.min(1, (x / RX) * (x / RX)) * bSm(-0.13, 0.0, y);
+      var F = bSm(0.25, 0.62, dz), ax = Math.abs(x), sx = x < 0 ? -1 : 1, disp = 0, sm = [0, 0, 0], kk = 0;
+      if (F > 0.001) {
+        disp += 0.0065 * bG(ax, y, 0.030, 0.023, 0.022, 0.006) + 0.003 * bG(x, y, 0, 0.018, 0.012, 0.010);   /* 눈썹뼈 · 미간 */
+        var ex = ax - 0.034, lidY = 0.0042 * (1 - Math.min(1, (ex / 0.0125) * (ex / 0.0125))) + 0.0008, inE = Math.exp(-Math.pow(ex / 0.0125, 6));
+        var sock = -0.0075 * bG(ax, y, 0.034, 0.003, 0.016, 0.011), eye = 0.0062 * bG(ax, y, 0.034, 0.0, 0.0105, 0.0058), lid = 0.0016 * Math.exp(-Math.pow((y - lidY) / 0.0021, 2)) * inE - 0.0012 * Math.exp(-Math.pow((y - lidY - 0.0042) / 0.0016, 2)) * inE + 0.0008 * Math.exp(-Math.pow((y + 0.0058) / 0.0018, 2)) * inE;
+        disp += sock + eye + lid; kk += (sock + eye) * 30 + lid * 200;   /* 눈두덩 · 눈 · 쌍꺼풀 선(그늘은 약하게) */
+        var nt = clamp((0.006 - y) / 0.051, 0, 1), nw = 0.0072 + 0.0062 * nt, nose = y > -0.045 ? 0.003 + 0.025 * Math.pow(nt, 1.4) : 0.028 * Math.exp(-Math.pow((y + 0.045) / 0.0065, 2));
+        disp += nose * Math.exp(-(x * x) / (2 * nw * nw)) * (y < 0.008 ? 1 : Math.exp(-Math.pow((y - 0.008) / 0.006, 2)));   /* 코 */
+        disp += 0.008 * bG(ax, y, 0.0135, -0.044, 0.006, 0.006) + 0.011 * bG(ax, y, 0.050, -0.028, 0.020, 0.022) + 0.010 * bG(x, y, 0, -0.068, 0.030, 0.022);   /* 콧방울 · 광대 · 입 둘레 */
+        disp += 0.0035 * bG(x, y, 0, -0.062, 0.020, 0.0045) + 0.0045 * bG(x, y, 0, -0.077, 0.017, 0.005);   /* 윗입술 · 아랫입술 */
+        var ml = 0.0028 * Math.exp(-Math.pow((y + 0.0695) / 0.0028, 2)) / (1 + Math.exp((ax - 0.024) / 0.003)) + 0.0012 * bG(x, y, 0, -0.055, 0.003, 0.006) + 0.002 * bG(ax, y, 0.026, -0.071, 0.003, 0.003);
+        disp -= ml; kk -= ml * 80;   /* 입 선 · 인중 · 입꼬리 */
+        var qx = clamp(((ax - 0.017) * 0.014 + (y + 0.047) * -0.033) / (0.014 * 0.014 + 0.033 * 0.033), 0, 1), lx = 0.017 + 0.014 * qx, ly = -0.047 - 0.033 * qx;
+        var nl = 0.0026 * Math.exp(-(Math.pow(ax - lx, 2) + Math.pow(y - ly, 2)) / (0.003 * 0.003)); disp -= nl; kk -= nl * 50;   /* 팔자 주름 */
+        disp += 0.010 * bG(x, y, 0, -0.098, 0.018, 0.012) - 0.002 * bG(x, y, 0, -0.087, 0.012, 0.003);   /* 턱 · 턱 위 홈 */
+        disp -= 0.0008 * (Math.exp(-Math.pow((y - 0.045) / 0.0018, 2)) + Math.exp(-Math.pow((y - 0.058) / 0.0018, 2))) * bSm(0.045, 0.02, ax);   /* 이마 주름 두 줄 */
+        /* 미소(아주 살짝) · 입꼬리 위 · 바깥 · 뒤 · 볼 앞 · 위 · 아래 눈꺼풀 위 */
+        var m1 = bG(ax, y, 0.026, -0.071, 0.007, 0.006), m2 = bG(ax, y, 0.038, -0.045, 0.012, 0.012), m3 = bG(ax, y, 0.034, -0.008, 0.009, 0.004), m4 = bG(x, y, 0, -0.07, 0.02, 0.006);
+        sm = [(sx * 0.0018 * m1 + sx * 0.0006 * m2) * F, (0.0034 * m1 + 0.0020 * m2 + 0.0013 * m3 + 0.0004 * m4) * F, (-0.0012 * m1 + 0.0018 * m2 + 0.0008 * m3) * F];
+      }
+      disp *= F; kk = kk * F + disp * 40;
+      /* 귀 · 옆으로 붙은 판 + 안쪽 오목 */
+      var exs = bSm(0.72, 0.95, Math.abs(dx)), eG = exs * Math.exp(-Math.pow(Math.pow((y + 0.006) / 0.030, 2) + Math.pow((z + 0.006) / 0.017, 2), 1.6)), eH = exs * Math.exp(-Math.pow((y + 0.006) / 0.013, 2) - Math.pow((z + 0.004) / 0.008, 2));
+      /* 머리카락 · 머리선(HL) 위 · 두께 + 뒤로 빗은 잔결 */
+      var hy = hline(Math.abs(th)), hr = bSm(hy - 0.006, hy + 0.012, y) * (1 - 0.8 * eG), comb = 0.00045 * Math.sin(Math.atan2(dx, dy) * 84 + 1.5 * Math.sin(dz * 5) + 0.8 * Math.sin(Math.atan2(dx, dy) * 13)), hair = hr * (0.0052 + comb + 0.007 * bSm(0.04, 0.115, y) * clamp(dz + 0.4, 0, 1));
+      var L = Math.hypot(x / (RX * RX), y / (RY * RY), z / (RZF * RZF)) || 1, nx = x / (RX * RX) / L, ny = y / (RY * RY) / L, nz = z / (RZF * RZF) / L;
+      x += nx * hair + sx * (eG * (0.008 + 0.013 * bSm(0.004, -0.022, z)) * (0.65 + 0.35 * bSm(-0.035, 0.012, y)) - 0.006 * eH); y += ny * hair; z += nz * hair + disp;
+      o.p = [HC[0] + x * HS, HC[1] + y * HS, HC[2] + z * HS]; o.d = [sm[0] * HS, sm[1] * HS, sm[2] * HS]; o.k = kk - hr * 0.22 + comb * 350 * hr - 0.5 * eH; o.uv = [u, v]; o.part = 3;
+    });
+    return Bf;
+  }
+  function buildBust() {
+    var at = D.BLD.bust; if (!at) return;
+    var BX = at[0], BZ = at[1], P_ = BUST_PED, R = { cut: 0, plaque: 0 };
+    S.lobby.updateMatrixWorld(true);
+    /* 모형의 받침 · 흉상 · 옛 명판을 지운다 · 동쪽 화분(x BX + 0.86 · 검은 상자 폭 0.46)은 남긴다 */
+    var old = S.lobby.getObjectByName('bust');
+    if (old) {
+      var kill = [];
+      old.traverse(function (o) {
+        if (!o.isMesh) return;
+        if (o.material && o.material.name === 'plaque') { kill.push(o); return; }
+        R.cut += regionCut(o, null, null, function (tri) { return (tri[0].p[0] + tri[1].p[0] + tri[2].p[0]) / 3 < BX + 0.62; }) ? 1 : 0;
+      });
+      kill.forEach(function (o) { o.parent.remove(o); R.plaque++; });
+    }
+    var g = new T.Group(); g.name = 'bustNew'; g.position.set(BX - 16, 0, 6 - BZ); S.lobby.add(g);
+    /* 받침 · 아래 띠 · 기둥 · 위 넓은 판(앞면 명판 글씨) · 노란 · 베이지 대리석 · 기둥 앞 금빛 나뭇잎 띠 */
+    var mt = new T.MeshLambertMaterial({ map: bustMarble() }), mtD = new T.MeshLambertMaterial({ map: mt.map, color: 0xE6DCC8 });
+    var y1 = P_.plinth[2], y2 = y1 + P_.col[2], y3 = y2 + P_.cap[2];
+    var bx = function (s, y0, m) { var b = new T.Mesh(new T.BoxGeometry(s[0], s[2], s[1]), m); b.position.y = y0 + s[2] / 2; g.add(b); return b; };
+    bx(P_.plinth, 0, mtD); bx(P_.col, y1, mt); bx(P_.cap, y2, mt);
+    var plq = new T.Mesh(new T.PlaneGeometry(P_.cap[0] - 0.08, (P_.cap[0] - 0.08) / 2), new T.MeshBasicMaterial({ transparent: true, depthWrite: false, opacity: 0.92, color: 0xffffff }));
+    plq.position.set(0, y2 + P_.cap[2] * 0.52, P_.cap[1] / 2 + 0.003); plq.name = 'bustPlaque'; plq.visible = false; g.add(plq);   /* 그림을 받은 뒤에만 보인다(못 받으면 글씨 없는 받침) */
+    new T.TextureLoader().load(BASE + 'bust-plaque.webp?v=' + LABVER, function (t) { t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; plq.material.map = t; plq.material.needsUpdate = true; plq.visible = true; G.need = true; });
+    var lau = new T.Mesh(new T.PlaneGeometry(0.44, 0.11), new T.MeshLambertMaterial({ map: bustLaurel(), transparent: true, depthWrite: false }));
+    lau.position.set(0, y1 + P_.col[2] * 0.40, P_.col[1] / 2 + 0.003); g.add(lau);
+    /* 흉상(청동) */
+    var Bf = bustBody(), nV = Bf.p.length / 3, pos = new Float32Array(Bf.p), n0 = bustNormals(Bf.p, Bf.ix, Bf.seams);
+    var p2 = Bf.p.map(function (v, i) { return v + Bf.d[i]; }), n1 = bustNormals(p2, Bf.ix, Bf.seams), dn = new Float32Array(n0.length);
+    for (var i = 0; i < dn.length; i++) dn[i] = n1[i] - n0[i];
+    /* 꼭짓점 색 = 패티나(짙은 갈색 · 올리브 · 오목 = 더 짙고 푸르스름 · 도드라진 곳 = 손때로 밝은 갈색) × 위에서 비추는 따뜻한 빛(높을수록 · 위를 볼수록 밝게) */
+    var C = function (h) { var c = new T.Color(h); return [c.r, c.g, c.b]; }, cB = C(0x4F402B), cO = C(0x4B4730), cD = C(0x252519), cR = C(0x86673E), col = new Float32Array(nV * 3), Lx = 0.12, Ly = 0.92, Lz = 0.37, R2 = bRnd(3);
+    for (var v = 0; v < nV; v++) {
+      var k = Bf.k[v], nx = n0[v * 3], ny = n0[v * 3 + 1], nz = n0[v * 3 + 2], y = Bf.p[v * 3 + 1], ol = 0.35 + 0.3 * R2();
+      var c0 = [cB[0] + (cO[0] - cB[0]) * ol, cB[1] + (cO[1] - cB[1]) * ol, cB[2] + (cO[2] - cB[2]) * ol];
+      if (k < 0) { var a = Math.min(0.7, -k * 0.8); c0 = c0.map(function (q, j) { return q + (cD[j] - q) * a; }); } else { var b = Math.min(0.55, k * 0.6); c0 = c0.map(function (q, j) { return q + (cR[j] - q) * b; }); }
+      var lit = 0.55 + 0.95 * Math.max(0, nx * Lx + ny * Ly + nz * Lz) * (0.55 + 0.45 * bSm(0.12, 0.62, y)) + 0.12 * Math.max(0, nz);
+      col[v * 3] = c0[0] * lit * 1.07; col[v * 3 + 1] = c0[1] * lit; col[v * 3 + 2] = c0[2] * lit * 0.86;
+    }
+    var geo = new T.BufferGeometry();
+    geo.setAttribute('position', new T.BufferAttribute(pos, 3)); geo.setAttribute('normal', new T.BufferAttribute(n0, 3)); geo.setAttribute('color', new T.BufferAttribute(col, 3)); geo.setAttribute('uv', new T.Float32BufferAttribute(Bf.uv, 2));
+    geo.setIndex(Bf.ix); geo.morphAttributes.position = [new T.Float32BufferAttribute(Bf.d, 3)]; geo.morphAttributes.normal = [new T.BufferAttribute(dn, 3)]; geo.morphTargetsRelative = true; geo.computeBoundingSphere();
+    var pt = bustPatina(), mat = new T.MeshPhongMaterial({ vertexColors: true, map: pt, bumpMap: pt, bumpScale: 0.45, specular: 0x4A3C2A, shininess: 26, emissive: 0x000000 });
+    var mesh = new T.Mesh(geo, mat); mesh.name = 'bustBronze'; mesh.position.y = y3; g.add(mesh);
+    /* 둘레 빛(점프 반응 · 평소 숨김) · 흉상 뒤 따뜻한 번짐 */
+    var gc = bCv(128, 128), gx = gc.getContext('2d'), gr = gx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    gr.addColorStop(0, 'rgba(255,216,150,0.95)'); gr.addColorStop(0.38, 'rgba(255,190,110,0.45)'); gr.addColorStop(1, 'rgba(255,170,90,0)'); gx.fillStyle = gr; gx.fillRect(0, 0, 128, 128);
+    var glow = new T.Sprite(new T.SpriteMaterial({ map: bTex(gc, false), transparent: true, depthWrite: false, blending: T.AdditiveBlending, opacity: 0 }));
+    glow.scale.set(1.35, 1.35, 1); glow.position.set(0, y3 + 0.36, -0.10); glow.visible = false; glow.renderOrder = 2; g.add(glow);
+    /* 뒤 벽 새김 글씨 무늬 두 장(흉상 좌우 · 벽면 z 11.46 바로 앞 · 북쪽 벽 묶음에 넣어 단면 때 함께 숨는다) */
+    var sideN = S.lobby.getObjectByName('side_n');
+    [[BX - 1.2, 21], [BX + 1.2, 37]].forEach(function (w) {
+      var m = new T.Mesh(new T.PlaneGeometry(0.86, 1.08), new T.MeshBasicMaterial({ map: bustCarve(w[1]), transparent: true, depthWrite: false, opacity: 0.45 }));
+      m.position.set(w[0] - 16, 2.05, 6 - (D.BLD.lobbyN - 0.006)); m.name = 'bustCarve'; (sideN || S.lobby).add(m);
+    });
+    BU = { x: BX, z: BZ, g: g, mesh: mesh, mat: mat, glow: glow, t0: 0, n: 0, cut: R.cut, plaque: R.plaque, tris: Bf.ix.length / 3 };
+    G.bust = BU;
+  }
+  /* 앞에서 점프 → 반응 한 번(반응 중 또 뛰면 끝난 뒤에만 다시) */
+  function bustNear() {
+    if (!BU) return;
+    var p = planOf(G.pos), dx = p[0] - BU.x, dz = p[1] - BU.z, now = performance.now();
+    if (dz > -0.3 || dz < -2.8 || Math.abs(dx) > 1.3 || (BU.t0 && now - BU.t0 < 2000)) return;
+    BU.t0 = now; BU.n++; G.need = true;
+  }
+  function bustStep(now) {
+    if (!BU || !BU.t0) return false;
+    var e = (now - BU.t0) / 1000, gl = e < 0.35 ? e / 0.35 : e < 1.2 ? 1 : 1 - (e - 1.2) / 0.8, sm = BUST_SMILE && !RM ? (e < 0.3 ? e / 0.3 : e < 1.5 ? 1 : 1 - (e - 1.5) / 0.45) : 0;
+    gl = bSm(0, 1, gl); sm = bSm(0, 1, sm);
+    BU.mesh.morphTargetInfluences[0] = sm; BU.glow.visible = gl > 0.003; BU.glow.material.opacity = 0.42 * gl; BU.mat.emissive.setRGB(0.05 * gl, 0.032 * gl, 0.012 * gl);
+    BU.sm = sm; BU.gl = gl;
+    if (e >= 2.0) { BU.t0 = 0; BU.mesh.morphTargetInfluences[0] = 0; BU.glow.visible = false; BU.mat.emissive.setRGB(0, 0, 0); BU.sm = BU.gl = 0; }
+    return true;
+  }
   function loadProg(k) {
     if (k == null || !(k >= 0) || k > 1.0001) G.loadUnk = true;
     var p = G.loadUnk ? -1 : Math.max(G.loadK || 0, Math.min(1, k)); if (!G.loadUnk) G.loadK = p;
@@ -1447,7 +1700,7 @@
   function load() {
     $('load').hidden = false; G.loadK = 0; G.loadUnk = false; veilProg(0);
     S.load(BASE + 'lobby.glb?v=' + LABVER, function (k) { loadProg(k); }, function () {
-      fixCoplanar(S.lobby); fixLightmaps(S.lobby); fixDesks(S.lobby); remodel(); buildGrid(S.lobby); patchPillars(S.lobby); buildDoor();
+      fixCoplanar(S.lobby); fixLightmaps(S.lobby); fixDesks(S.lobby); remodel(); buildBust(); buildGrid(S.lobby); patchPillars(S.lobby); buildDoor();
       var st = STOPS[0], f = nearestFree(st.x, st.z); flood(f[0], f[1]);
       STOPS.forEach(function (s) { var q = nearestFree(s.x, s.z); if (q) { s.x = q[0]; s.z = q[1]; } });
       buildGuides(); hideCheckin(); buildTypingTv(); buildLaptops(); buildTvs();   /* v5.51 오락기 3대 없앰(사용자 261004) */
@@ -1593,7 +1846,7 @@
   function jump() {
     if (!G.loaded || G.scn !== 'lobby' || G.anim || PH.on || G.air || G.squeeze || G.sheetOpen) return;
     G.air = true; G.jv = JUMP_V; G.jy = 0; G.landT = 0; G.moved = true; G.need = true; AIM.t = performance.now(); aimTip(false);   /* v5.67 점프하면 「점프!」 시간 처음부터 */
-    joyNear();
+    joyNear(); bustNear();   /* v5.70 흉상 앞에서 뛰면 반응 */
   }
   /* v5.51 스태프 따라 뛰기(사용자 261004 「스태프도 살짝 웃는 표정으로 같이 통통」) · 내 캐릭터가 2m 안 스태프 앞에서 뛰면 0.15초 뒤 두 번 통통(0.3초씩) · 연달아 뛰면 이어서 맞춰 뛴다
    *   눈 = 반달(^ ^) 1.1초 · 그동안 머리 위 전파가 가장 진하게 · 룰렛 스태프의 혼자 통통(가까이 오면)은 이 동안 멈춘다(겹치지 않게) · 발동한 스태프만 계산 */
@@ -3647,6 +3900,7 @@
       busy = stepGuides(dt) || busy;
       busy = stepBlocks(now) || busy;   /* v5.49 스탬프 블록 */
       busy = pbStep(now) || busy;   /* v5.58 포토부스 단체 사진 */
+      busy = bustStep(now) || busy;   /* v5.70 흉상 빛 · 미소 */
       if (OCCA && !G.anim && !SH && !G.sheetFx) occClear();   /* v5.54 연출 밖에서 남은 비키기는 늘 원래대로 */
     }
     else if (G.scn === 'elev') { busy = stepElev(dt, now); elevCam(); }   /* v5.49 엘리베이터 안 */
@@ -4308,5 +4562,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.67', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.70', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();
