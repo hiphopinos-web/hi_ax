@@ -2685,10 +2685,10 @@ function drawCfgSave(){
 
 /* ══════════════════ 7-6d. 완주 경품 추첨 · 추첨 › 완주 경품 추첨 (v5.03 · 261002 사용자 결정 · 설계안 권장안 A) ══════════════════
  * 순서 = ① 17:00 마감(서버 시각 자동) ② 룰렛 잔여 실사 5칸(입고표 − 룰렛 사용 횟수와 대조 · 경고만) ③ 대상 확정(fin_lock) ④ Outro 행운권 10명
- *        ⑤ 완주 경품 추첨(fin_draw · 한 번만 · 서버가 시드 · 풀 해시를 남긴다) ⑥ 대형 화면 숫자 발표(draw_cmd fin) · 알림(그룹 참여상대상) ⑦ 배송 CSV(슈퍼관리자 PIN 뒤)
+ *        ⑤ 완주 경품 추첨(fin_draw · 한 번만 · 서버가 시드 · 풀 해시를 남긴다) ⑥ 대형 화면 숫자 발표(draw_cmd fin) · 알림(그룹 완주 경품 추첨 대상) ⑦ 배송 CSV(슈퍼관리자 PIN 뒤)
  * 이 화면에 사람 이름이 나오는 곳 = 수동 제외 · 포함 목록 · 교체 확인 창뿐 · 당첨자 명단은 CSV 로만(fin_export · sp) · 부문 통계 없음 · 새 CSS 는 fn- 로 시작한다.
  * 옛 서버(fin_state 모름)는 한 줄 안내 · 버튼을 그리지 않는다. */
-var FIN_GROUP="참여상대상";
+var FIN_GROUP="완주 경품 추첨 대상";   /* 261006 서버가 새 이름을 만든다(옛 「참여상대상」도 받는다) */
 var FINV={ rem:null, cfg:null, ex:{ emp:"", why:"" }, vo:{ emp:"", why:"" }, busy:"", ver:null };
 var FIN_PH={ open:["마감 전","off"], wait:["마감 · 확정 전","warn"], lock:["대상 확정",""], drawn:["추첨 완료","ok"] };
 var FIN_WHY={ early:"마감 시각 전에는 확정할 수 없습니다", drawn:"이미 추첨했습니다. 설정 · 잔여 · 제외는 바꿀 수 없습니다", nolock:"먼저 대상을 확정합니다", stale:"확정 뒤 제외 · 포함 · 마감이 바뀌었습니다. 대상을 다시 확정합니다",
@@ -2774,7 +2774,7 @@ function finPoolCard(d){
   var pv=d.pool||{}, lk=d.lock;
   var head=imp([["17:00 기준 스탬프 6개", finNum(pv.n)+"명"+(locked||off?" (지금 기록 기준 미리 보기)":"")],["마감 뒤 6개 (대상 아님)", finNum(pv.late)+"명"],["테스트 사번 (늘 제외)", finNum(pv.test)+"명"],["수동 제외 · 포함", (pv.exM||0)+" · "+(pv.inM||0)+"명"]]);
   var lockBtn=off?"":'<div class="fn-go"><button class="btn pri" onclick="finLockAsk()"'+(d.ph==="open"||FINV.busy?" disabled":"")+'>'+(FINV.busy==="fin_lock"?'<span class="spin" style="border-color:rgba(255,255,255,.4);border-top-color:#fff"></span>확정 중':locked?"다시 확정":"대상 확정")+'</button>'+
-    '<span class="cap">'+(d.ph==="open"?esc(String(d.cut).slice(0,16))+" 뒤에 확정합니다":locked&&lk?"확정 "+esc(short(lk.at))+" · "+finNum(lk.n)+"명 · 풀 해시 "+esc(String(lk.hash).slice(0,12)):"확정하면 시트 「참여상」에 대상이 한 줄씩 남습니다")+'</span></div>'+
+    '<span class="cap">'+(d.ph==="open"?esc(String(d.cut).slice(0,16))+" 뒤에 확정합니다":locked&&lk?"확정 "+esc(short(lk.at))+" · "+finNum(lk.n)+"명 · 풀 해시 "+esc(String(lk.hash).slice(0,12)):"확정하면 완주 경품 추첨 시트(이름: 참여상)에 대상이 한 줄씩 남습니다")+'</span></div>'+
     (d.stale?'<div class="note warn mt8">확정 뒤 수동 제외 · 포함 · 마감이 바뀌었습니다. <b>다시 확정</b>해야 추첨할 수 있습니다.</div>':'');
   return card("대상","17:00 서버 시각 기준 · 체크인 조건 없음",(off?"":head)+tb+form+lockBtn);
 }
@@ -2841,7 +2841,7 @@ function finShow(){
   dialog({ t:"대형 화면에 완주 경품 추첨 결과를 띄울까요?", s:"추첨 화면이 「완주 경품 추첨 결과 · 당첨 "+finNum(dr.W)+"명 · 대상 "+finNum(dr.N)+"명」 숫자 장면으로 바뀝니다. 이름 · 부문은 나오지 않습니다. 진행 패널의 「완주 경품 추첨 발표」와 같은 명령입니다.", ok:"발표",
     onOk:function(){ call("draw_cmd",{ cmd:"fin", arg:"", rid:dcRid() },function(r){ dlgForce(); toast(r&&r.ok?"대형 화면에 보냈습니다 · #"+r.seq:"보내지 못했습니다: "+(r&&r.reason==="cmd"?"서버가 이 명령을 모릅니다(v5.03 이전 서버)":finWhy(r))); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
 }
-/* 공지·푸시 메뉴(경로 푸시)에 그룹 「참여상대상」과 문구를 채워 연다(보내기는 그 화면의 확인 창을 그대로 거친다) · 잠금 화면 문구에 당첨 여부 · 이름 없음 */
+/* 공지·푸시 메뉴(경로 푸시)에 그룹 「완주 경품 추첨 대상」과 문구를 채워 연다(보내기는 그 화면의 확인 창을 그대로 거친다) · 잠금 화면 문구에 당첨 여부 · 이름 없음 */
 function finPush(){
   PF.t="완주 경품 추첨 결과"; PF.b="내 보상에서 확인하세요"; PF.go="home"; PF.f=specToF({ group:"g:"+FIN_GROUP }); PF.pv=null; PF.route="push";
   go("notice"); toast("공지·푸시 메뉴에 그룹 「"+FIN_GROUP+"」과 문구를 채웠습니다");
@@ -2927,7 +2927,7 @@ function finCfgSave(){
     onOk:function(){ finCall("fin_cfg",p,function(r){ toast(r&&r.ok?"설정을 저장했습니다":"실패: "+finWhy(r)); }); } });
 }
 function finResetAsk(){
-  dialog({ t:"완주 경품 시험 데이터를 비울까요?", s:"시트 「참여상」 · 확정 · 추첨 결과 · 룰렛 잔여 · 수동 목록 · 알림 그룹을 지웁니다. 마감 · 입고표 설정은 남습니다. 행사일(10/26)에는 서버가 받지 않습니다. <b>되돌릴 수 없습니다.</b>", ok:"비우기", danger:true,
+  dialog({ t:"완주 경품 시험 데이터를 비울까요?", s:"완주 경품 추첨 시트(이름: 참여상) · 확정 · 추첨 결과 · 룰렛 잔여 · 수동 목록 · 알림 그룹을 지웁니다. 마감 · 입고표 설정은 남습니다. 행사일(10/26)에는 서버가 받지 않습니다. <b>되돌릴 수 없습니다.</b>", ok:"비우기", danger:true,
     onOk:function(){ call("fin_reset",{ confirm:"RESET" },function(r){ dlgForce(); if(r&&r.ok){ FINV.ver=null; toast("비웠습니다 · "+r.cleared+"줄"); reload(["fin"]); } else toast("실패: "+finWhy(r)); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
 }
 function finMemo(){
@@ -6542,13 +6542,17 @@ var P10_NAME={ fld:"세션 A", ta:"세션 B", tb:"세션 C", aws:"세션 D", ms1
 var P10_CAP={ fld:62, ta:32, tb:28, aws:20, ms1:20, ms2:20 };   /* 서버 SESS_CAP 과 같은 값 · 서버가 cap 을 주면 그쪽 */
 var P10_MAX=400, P10_WORD="명단적용", P10_UWORD="명단되돌리기";
 var P10_ST={ ok:["정상","ok"], dup:["같은 줄 중복","off"], multi:["다른 세션 겹침","bad"], noros:["명부에 없음","bad"], sess:["세션 오류","bad"], emp:["사번 오류","bad"], eq:["E 회차 없음","warn"] };
-var P10={ name:"", grid:null, hdr:true, cE:-1, cS:-1, eDef:"ms1", mode:"replace", src:"file", paste:"", err:"", busy:"", filt:"", rows:null, pv:null, pvKey:"", pvBad:"", res:null, drag:false };
+var P10={ name:"", grid:null, hdr:true, cE:-1, cS:-1, eDef:"", mode:"replace", src:"file", paste:"", err:"", busy:"", filt:"", rows:null, pv:null, pvKey:"", pvBad:"", res:null, drag:false };
 SP_ACT.pre10_state=1; SP_ACT.pre10_preview=1; SP_ACT.pre10_apply=1; SP_ACT.pre10_undo=1;
 CTL_ACT.pre10_apply=["pp",function(p){ return "10F 명단 적용 · "+(p.mode==="add"?"추가":"교체")+" · "+(p.n||0)+"명"; }];
 CTL_ACT.pre10_undo=["pp","10F 명단 되돌림"];
 NEED.pre10=function(){ return supOk()?[{k:"p10s",a:"pre10_state"}]:[]; };
 HV_VIEW.viewPre10=function(){ return viewPre10(); };
 function p10Srv(){ var d=ST.data.p10s; return !d?"":hvUnknown(d)?"old":d.ok?"new":"err"; }
+function p10EDef(){ if(P10.eDef) return P10.eDef; var o=p10Opt0().e; return o==="ms2"||o==="2회차"?"ms2":o==="오류"||o==="bad"?"bad":"ms1"; }   /* 고르지 않았으면 서버 설정(10F명단_E회차)을 따른다 */
+function p10Opt0(){ var d=ST.data.p10s; return d&&d.ok&&d.opt?d.opt:{}; }
+function p10EName(v){ return v==="ms2"?"2회차":v==="bad"?"오류(세션 오류로 뺌)":"1회차"; }
+function p10KitTxt(){ return p10Opt0().kit==="지움"?"키트 명단에서는 지움 · 지급 기록은 그대로":"키트 명단에 남김 · 지급 기록 그대로"; }
 function p10Cap(id){ var d=ST.data.p10s, c=d&&d.ok&&d.cap; return c&&c[id]!=null?c[id]:P10_CAP[id]; }
 
 /* ── 읽기 · 글자(CSV · TSV · 붙여넣기) ── */
@@ -6677,7 +6681,7 @@ function p10Build(){
     var rawE=String(r[P10.cE]==null?"":r[P10.cE]).trim(), rawS=String(r[P10.cS]==null?"":r[P10.cS]).trim();
     if(!rawE&&!rawS) return;
     var e=normE(rawE).replace(/\.0+$/,""), s=p10Sess(rawS), eq=false;
-    if(s==="E"){ eq=true; s=P10.eDef==="bad"?"":P10.eDef; }
+    if(s==="E"){ eq=true; s=p10EDef()==="bad"?"":p10EDef(); }
     var x={ ln:base+i, rawE:rawE, rawS:rawS, emp:e, sid:s, eq:eq, st:"ok", name:"" };
     if(!/^[0-9A-Z]{3,12}$/.test(e)) x.st="emp";
     else if(!s) x.st="sess";
@@ -6707,12 +6711,12 @@ function p10Preview(force){
     if(P10.pvKey!==key) return;
     P10.busy="";
     if(r&&r.ok){ P10.pv=r; var by={}; (r.rows||[]).forEach(function(y){ by[y.emp]=y; });
-      (P10.rows||[]).forEach(function(x){ var y=by[x.emp]; x.name=y&&y.name||""; if(x.st==="ok"&&y&&y.st&&y.st!=="ok") x.st=y.st; }); }
+      (P10.rows||[]).forEach(function(x){ var y=by[x.emp]; x.name=y&&y.name||""; if(y&&y.eq) x.eq=true; if(x.st==="ok"&&y&&y.st&&y.st!=="ok") x.st=y.st; }); }
     else { P10.pv=null; P10.pvKey=""; P10.pvBad=key; toast("서버 대조 실패: "+p10Why(r)); }
     render();
   },function(e){ if(P10.pvKey!==key) return; P10.busy=""; P10.pv=null; P10.pvKey=""; P10.pvBad=key; toast("서버 대조 실패: "+p10Why(e)); render(); });
 }
-function p10Why(r){ r=r||{}; return { state:"그 사이 서버 명단이 바뀌었습니다. 미리보기를 다시 받았습니다", count:"인원이 미리보기와 다릅니다. 미리보기를 다시 받았습니다", word:"확인 문구가 다릅니다", empty:"적용할 사람이 없습니다", rows:"한 번에 "+P10_MAX+"줄까지 넣습니다", notlast:"마지막 적용만 되돌릴 수 있습니다", already:"이미 되돌렸습니다", param:"사번 · 세션 모양이 맞지 않는 줄이 있습니다", post:"이 서버는 이 처리를 받지 않습니다" }[r.reason]||(hvUnknown(r)?"서버 갱신 뒤 쓸 수 있습니다":why(r)); }
+function p10Why(r, ctx){ r=r||{}; var m={ state:ctx==="undo"?({ kit:"그 사이 「키트명단」을 손으로 고쳐서 되돌리지 않았습니다", sess:"그 사이 「강의신청」을 손으로 고쳐서 되돌리지 않았습니다", log:"적용 기록을 읽지 못해 되돌리지 않았습니다" }[r.why]||"그 사이 시트가 바뀌어 되돌리지 않았습니다"):"그 사이 서버 명단이 바뀌었습니다. 미리보기를 다시 받았습니다", count:"인원이 미리보기와 다릅니다"+(r.n!=null?"(서버 계산 "+r.n+"명)":"")+". 미리보기를 다시 받았습니다", word:"확인 문구가 다릅니다", empty:"적용할 사람이 없습니다", rows:"한 번에 "+(r.max||P10_MAX)+"줄까지 넣습니다", notlast:"마지막 적용만 되돌릴 수 있습니다", already:"이미 되돌렸거나 되돌릴 수 없는 적용입니다", notfound:"되돌릴 적용 기록을 찾지 못했습니다", param:"사번 · 세션 모양이 맞지 않는 줄이 있습니다"+(r.at?"("+r.at+"번째)":""), post:"이 서버는 이 처리를 받지 않습니다", super:"슈퍼관리자만 할 수 있습니다", spin:"슈퍼관리자 본인 확인이 필요합니다(PIN 을 다시 넣어 주세요)" }; return m[r.reason]||(hvUnknown(r)?"서버 갱신 뒤 쓸 수 있습니다":why(r)); }
 function p10Opt(k, v){ P10[k]=k==="cE"||k==="cS"?Number(v):k==="hdr"?!!v:v; if(k==="mode"){ P10.pv=null; P10.pvKey=""; render(); p10Preview(); return; } p10Build(); }
 function p10Filt(v){ P10.filt=P10.filt===v?"":v; render(); }
 
@@ -6722,6 +6726,7 @@ function viewPre10(){
   var srv=p10Srv(), h="";
   if(srv==="old") h+='<div class="bands">'+band("","이 서버는 아직 명단 넣기를 모릅니다. 미리보기는 콘솔 검사만 하고, <b>적용은 서버 갱신 뒤</b> 켜집니다.")+'</div>';
   else if(srv==="err") h+='<div class="bands">'+band("bad","서버 명단 상태를 받지 못했습니다("+esc(why(ST.data.p10s))+").",'<button class="btn sm" onclick="reload([\'p10s\'])">다시 시도</button>')+'</div>';
+  if(srv==="new"&&ST.data.p10s.opt){ var op=ST.data.p10s.opt; h+='<div class="bands">'+band("","서버 설정 · 키트 받은 사람이 명단에서 빠질 때 키트 명단에 <b>"+esc(op.kit||"남김")+"</b> · 회차 없는 E 는 <b>"+esc(op.e==="ms1"?"1회차":op.e==="ms2"?"2회차":op.e||"1회차")+"</b>(올릴 때 아래 「회차 없는 E」에서 이번만 바꿀 수 있습니다). 서버 설정을 바꾸려면 시트 「설정」의 「10F명단_키트빠짐」(남김 · 지움) · 「10F명단_E회차」(ms1 · ms2 · 오류) 칸을 고칩니다. 운영 설정 화면에는 아직 없습니다.")+'</div>'; }
   var main=p10CardUp()+(P10.grid?p10CardCols():"")+(P10.rows?p10CardPv()+p10CardGo():"")+(P10.res?p10CardRes():"");
   h+='<div class="ns-grid2 lay-fa"><div class="p10-main">'+main+'</div><div class="ns-side">'+p10CardNow()+'</div></div>';
   h+=memo('<p><b>무엇을 쓰나</b> · 적용하면 서버가 시트 「강의신청」(10F 끝 QR 자격)과 「키트명단」(체크인 존 키트 대조) 두 곳을 한 번에 바꿉니다. 키트 지급 기록 · 출석 · 스탬프는 건드리지 않습니다.</p>'+
@@ -6747,7 +6752,7 @@ function p10CardCols(){
   var fg='<div class="fgrid">'+
     '<label class="fld">사번 열<select class="in w-f" onchange="p10Opt(\'cE\',this.value)">'+opts(P10.cE)+'</select></label>'+
     '<label class="fld">세션 열<select class="in w-f" onchange="p10Opt(\'cS\',this.value)">'+opts(P10.cS)+'</select></label>'+
-    '<label class="fld">회차 없는 「E」<select class="in w-f" onchange="p10Opt(\'eDef\',this.value)"><option value="ms1"'+(P10.eDef==="ms1"?" selected":"")+'>1회차로 넣기</option><option value="ms2"'+(P10.eDef==="ms2"?" selected":"")+'>2회차로 넣기</option><option value="bad"'+(P10.eDef==="bad"?" selected":"")+'>세션 오류로 빼기</option></select></label>'+
+    '<label class="fld">회차 없는 「E」<select class="in w-f" onchange="p10Opt(\'eDef\',this.value)"><option value="ms1"'+(p10EDef()==="ms1"?" selected":"")+'>1회차로 넣기</option><option value="ms2"'+(p10EDef()==="ms2"?" selected":"")+'>2회차로 넣기</option><option value="bad"'+(p10EDef()==="bad"?" selected":"")+'>세션 오류로 빼기</option></select></label>'+
     '<label class="fld">넣는 방식<span class="seg"><button class="'+(P10.mode==="replace"?"on":"")+'" onclick="p10Opt(\'mode\',\'replace\')">교체 · 이 명단이 전체</button><button class="'+(P10.mode==="add"?"on":"")+'" onclick="p10Opt(\'mode\',\'add\')">추가 · 빠지는 사람 없음</button></span></label>'+
     '</div><label class="p10-ck mt12"><input type="checkbox"'+(P10.hdr?" checked":"")+' onchange="p10Opt(\'hdr\',this.checked)"> 첫 줄은 머리글(제목 줄)</label>';
   return card("② 열 고르기", P10.cE>=0&&P10.cS>=0?"자동으로 골랐습니다 · 맞는지 봅니다":"사번 · 세션 열을 고릅니다", fg);
@@ -6758,12 +6763,14 @@ function p10Count(){
 function p10CardPv(){
   var rows=P10.rows||[], c=p10Count(), srv=p10Srv(), pv=P10.pv, ok=p10Ok(), by={};
   P10_IDS.forEach(function(id){ by[id]=0; }); ok.forEach(function(x){ by[x.sid]++; });
+  if(pv&&pv.eq&&!c.eq) c.eq=pv.eq;
   var ch=[["","전체",c.all]].concat(["ok","dup","multi","noros","sess","emp","eq"].filter(function(k){ return k==="ok"||c[k]; }).map(function(k){ return [k,P10_ST[k][0],c[k]||0]; }));
   var chips0='<div class="chips">'+ch.map(function(x){ return '<button class="fchip'+(P10.filt===x[0]?" on":"")+(x[2]?"":" zero")+'" onclick="p10Filt(\''+x[0]+'\')">'+esc(x[1])+'<span class="cnt">'+x[2]+'</span></button>'; }).join("")+'</div>';
   var bands=[];
   if(c.all>P10_MAX) bands.push(band("bad","<b>"+c.all+"줄</b>입니다. 한 번에 "+P10_MAX+"줄까지 넣습니다. 나눠 올립니다."));
   if((c.multi||0)+(c.sess||0)+(c.emp||0)+(c.noros||0)) bands.push(band("warn","빨간 칩 줄 <b>"+((c.multi||0)+(c.sess||0)+(c.emp||0)+(c.noros||0))+"줄</b>은 빼고 넣습니다. 명단을 고쳐 다시 올리면 함께 들어갑니다."));
-  if(c.eq) bands.push(band("warn","회차 없는 E <b>"+c.eq+"명</b>을 "+(P10.eDef==="ms2"?"2회차":"1회차")+"로 넣습니다. 끝 QR 은 두 회차를 같은 세션으로 봅니다."));
+  var eqN=Math.max(c.eq||0, pv&&pv.eq||0);
+  if(eqN) bands.push(band("warn","회차 없는 E <b>"+eqN+"명</b>을 "+(p10EDef()==="bad"?"세션 오류로 뺍니다.":p10EName(p10EDef())+"로 넣습니다.")+" 끝 QR 은 두 회차를 같은 세션으로 봅니다. 세션별 인원 표만 한쪽으로 몰립니다."));
   if(srv==="old") bands.push(band("","명부 대조 · 지금 명단과 비교는 <b>서버 갱신 뒤</b> 나옵니다. 지금은 콘솔 검사(사번 모양 · 세션 · 중복 · 겹침)만 했습니다."));
   else if(P10.busy==="pv") bands.push(band("",'<span class="spin"></span>서버 명단 · 명부와 대조하는 중'));
   /* 세션별 */
@@ -6774,7 +6781,7 @@ function p10CardPv(){
   /* 지금 명단과 비교 */
   var df="";
   if(pv&&pv.diff){ var D=pv.diff, kg=(pv.kitGivenDel||[]).length, sp=(pv.stamped||[]).length;
-    df='<h3 class="p10-h">지금 서버 명단과 비교 · '+(P10.mode==="add"?"추가":"교체")+'</h3>'+imp([["새로 들어감",(D.add||[]).length+"명",(D.add||[]).length?"chg":""],["세션 바뀜",(D.chg||[]).length+"명",(D.chg||[]).length?"chg":""],["빠짐",(D.del||[]).length+"명",(D.del||[]).length?"loss":""],["그대로",(D.keep||0)+"명"]].concat(kg?[["빠지거나 바뀌는 사람 중 키트 이미 받음",kg+"명 · 지급 기록 그대로","loss"]]:[]).concat(sp?[["빠지는 사람 중 끝 QR 이미 찍음",sp+"명 · 스탬프 그대로","loss"]]:[]));
+    df='<h3 class="p10-h">지금 서버 명단과 비교 · '+(P10.mode==="add"?"추가":"교체")+'</h3>'+imp([["새로 들어감",(D.add||[]).length+"명",(D.add||[]).length?"chg":""],["세션 바뀜",(D.chg||[]).length+"명",(D.chg||[]).length?"chg":""],["빠짐",(D.del||[]).length+"명",(D.del||[]).length?"loss":""],["그대로",(D.keep||0)+"명"]].concat(kg?[["빠지거나 바뀌는 사람 중 키트 이미 받음",kg+"명 · "+p10KitTxt(),"loss"]]:[]).concat(sp?[["빠지는 사람 중 끝 QR 이미 찍음",sp+"명 · 스탬프 그대로","loss"]]:[]));
     if((D.chg||[]).length) df+='<p class="cap mt8">세션 바뀜 · '+D.chg.slice(0,8).map(function(y){ return esc(y.emp)+" "+esc(P10_NAME[y.from]||y.from)+" → "+esc(P10_NAME[y.to]||y.to); }).join(" · ")+(D.chg.length>8?" 외 "+(D.chg.length-8)+"명":"")+'</p>';
   }
   /* 줄 표 */
@@ -6806,20 +6813,27 @@ function p10ApplyAsk(){
   var nr=p10Ready(); if(nr){ toast(nr); return; }
   var pv=P10.pv, D=pv.diff||{}, ok=p10Ok(), c=p10Count(), out=(c.multi||0)+(c.sess||0)+(c.emp||0)+(c.noros||0);
   hvL3Go({ t:"10F 사전 신청 명단을 적용할까요?", who:(P10.mode==="add"?"추가":"교체")+"<span>"+esc(P10.name)+" · 적용 뒤 "+pv.n+"명</span>",
-    rows:[["적용 뒤 합계",pv.n+"명","chg"],["새로 들어감",(D.add||[]).length+"명"],["세션 바뀜",(D.chg||[]).length+"명"],["빠짐",(D.del||[]).length+"명",(D.del||[]).length?"loss":""],["올린 줄 중 빼는 줄",out+"줄",out?"loss":""]].concat((pv.kitGivenDel||[]).length?[["키트 이미 받은 사람",(pv.kitGivenDel||[]).length+"명 · 기록 그대로","loss"]]:[]),
+    rows:[["적용 뒤 합계",pv.n+"명","chg"],["새로 들어감",(D.add||[]).length+"명"],["세션 바뀜",(D.chg||[]).length+"명"],["빠짐",(D.del||[]).length+"명",(D.del||[]).length?"loss":""],["올린 줄 중 빼는 줄",out+"줄",out?"loss":""]].concat((pv.kitGivenDel||[]).length?[["키트 이미 받은 사람",(pv.kitGivenDel||[]).length+"명 · "+p10KitTxt(),"loss"]]:[]),
     s:"시트 「강의신청」과 「키트명단」이 함께 바뀝니다. 10F 끝 QR 자격이 이 명단으로 바로 바뀝니다.", ok:"적용", word:P10_WORD,
     run:function(fin){
       P10.busy="apply";
       callPost("pre10_apply",{ rows:p10Payload(), mode:P10.mode, sig:pv.sig||"", n:pv.n, confirm:P10_WORD },function(r){
         P10.busy="";
-        if(r&&r.ok){ P10.res=r; delete _cache[sig_("pre10_state",{})]; reload(["p10s"]); fin("명단을 적용했습니다", imp([["적용 뒤 합계",(r.n!=null?r.n:pv.n)+"명"],["새로 들어감",(r.add||0)+"명"],["세션 바뀜",(r.chg||0)+"명"],["빠짐",(r.del||0)+"명"]])); P10.pv=null; P10.pvKey=""; p10Preview(); }
+        if(r&&r.ok){ r.kg=(pv.kitGivenDel||[]).length; r.eq=r.eq||p10Count().eq||0; r.eName=p10EName(p10EDef()); P10.res=r; delete _cache[sig_("pre10_state",{})]; reload(["p10s"]); fin("명단을 적용했습니다", imp(p10ResRows(r,pv))); P10.pv=null; P10.pvKey=""; p10Preview(); }
         else { dlgForce(); toast("실패: "+p10Why(r)); if(r&&(r.reason==="state"||r.reason==="count")){ P10.pv=null; P10.pvKey=""; p10Preview(true); } else render(); }
       },function(e){ P10.busy=""; dlgForce(); toast("실패: "+p10Why(e)); render(); });
     } });
 }
+function p10ResRows(r, pv){
+  var o=[["적용 뒤 합계",(r.n!=null?r.n:(pv&&pv.n))+"명"],["새로 들어감",(r.add||0)+"명"],["세션 바뀜",(r.chg||0)+"명"],["빠짐",(r.del||0)+"명"]];
+  if(r.kitKeep) o.push(["키트 받은 사람 "+r.kitKeep+"명은 키트 명단에 남김","지급 기록 그대로"]);
+  else if(r.kg) o.push(["키트 받은 사람 "+r.kg+"명","키트 명단에서는 지움 · 지급 기록은 그대로"]);
+  if(r.eq) o.push(["회차 없는 E "+r.eq+"명",r.eName?r.eName+"로 넣음":"서버 설정대로 넣음"]);
+  return o;
+}
 function p10CardRes(){
   var r=P10.res;
-  return card("적용 결과", esc(short(r.at||""))+" · "+(r.mode==="add"?"추가":"교체"), imp([["적용 뒤 합계",(r.n||0)+"명"],["새로 들어감",(r.add||0)+"명"],["세션 바뀜",(r.chg||0)+"명"],["빠짐",(r.del||0)+"명"]].concat(r.kitKeep?[["키트 받은 사람 남김",r.kitKeep+"명"]]:[])));
+  return card("적용 결과", esc(short(r.at||""))+" · "+(r.mode==="add"?"추가":"교체"), imp(p10ResRows(r,null)));
 }
 function p10CardNow(){
   var d=ST.data.p10s, srv=p10Srv();
@@ -6843,8 +6857,8 @@ function p10UndoAsk(){
       callPost("pre10_undo",{ id:d.undo, confirm:P10_UWORD },function(r){
         P10.busy="";
         if(r&&r.ok){ P10.res=null; delete _cache[sig_("pre10_state",{})]; reload(["p10s"]); P10.pv=null; P10.pvKey=""; p10Preview(); fin("되돌렸습니다", imp([["지금 명단",(r.n!=null?r.n:"-")+"명"]])); }
-        else { dlgForce(); toast("실패: "+p10Why(r)); render(); }
-      },function(e){ P10.busy=""; dlgForce(); toast("실패: "+p10Why(e)); render(); });
+        else { dlgForce(); toast("실패: "+p10Why(r,"undo")); render(); }
+      },function(e){ P10.busy=""; dlgForce(); toast("실패: "+p10Why(e,"undo")); render(); });
     } });
 }
 /* 서버 상태를 받은 뒤 미리보기가 있으면 대조를 부른다(화면을 열자마자 올린 경우) */
