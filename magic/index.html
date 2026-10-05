@@ -2878,6 +2878,7 @@ function auraEnv(f, hd, k, t) {
   return { L, R: Rr, tip: { x: hd.x, y: top }, top, bot };
 }
 function stepAura(dt) {
+  if (FX.aura === 'haze') return stepAuraH(dt);   // 아지랑이 · 오로라(261005 저녁)
   if (FX.aura !== 'old') return stepAuraN(dt);   // 새 안(연출 고도화 261005)
   for (const p of AP) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .97; }
   AP = AP.filter(p => p.t < p.life);
@@ -2923,6 +2924,7 @@ function drawTestHead(f) {
   c.globalAlpha = .8 * f.a; c.strokeStyle = '#fff'; c.lineWidth = 2; c.setLineDash([8, 6]); c.strokeRect(f.x - f.w / 2, f.y - f.w / 2, f.w, f.w); c.restore();
 }
 function drawAuraAll() {
+  if (FX.aura === 'haze') { if (mouseMode) for (const f of XF) drawTestHead(f); hzDraw(); return; }   // 아지랑이 · 오로라(261005 저녁)
   if (FX.aura !== 'old') return drawAuraN();   // 새 안(연출 고도화 261005)
   if (!XF.length && !AP.length) return;
   if (mouseMode) for (const f of XF) drawTestHead(f);
@@ -2935,12 +2937,12 @@ function drawAuraAll() {
    「아우라랑 불꽃 손바닥 위에 올라오는 것, 창문을 닦듯 옆으로 솩 하는 것의 이미지가 더 고도화」. 그림만 바꾼다(판정 · 문구 · 문턱 그대로).
    주소 플래그로 안을 바꿔 본다(없으면 FX_DEF = 권장안):
      ?fx=old  세 연출 모두 261004 그대로 · ?fx=a / ?fx=b  세 연출 모두 그 안
-     하나씩: ?aura=old|a|b · ?flame=old|a|b · ?wipe=old|a|b (fx 보다 우선)
+     하나씩: ?aura=old|a|b|haze · ?flame=old|a|b|haze · ?wipe=old|a|b (fx 보다 우선) · 기본: 오라 · 손바닥 haze(261005 저녁) · 쓸기 a
    공통 원칙: 겹 쌓기(심지 · 몸통 · 바깥 빛 · 불티) · 밝은 로비 실사 위에서도 색이 하얗게 날아가지 않게 몸통은 보통 합성, 빛만 더하기(lighter) ·
    흔들림은 값 노이즈(nz3 · 같은 모양이 되풀이되지 않음) · 시작 · 유지 · 끝 3단 · 흐린 빛은 1/4 판에 그려 흐린 뒤 펴서 얹는다(shadowBlur 없음) ·
    무작위는 연출 전용(fxr · 게임과 시험의 Math.random 순서에 영향 없음) · 사람을 따내 합성하지 않는다(실사 거울 위에 빛 · 입자 · 굴절만) */
-const FX_DEF = { aura: 'a', flame: 'a', wipe: 'a' };
-const FX = (() => { const o = {}, g = qs.get('fx'); for (const k in FX_DEF) { const v = qs.get(k) || g; o[k] = v === 'old' || v === 'a' || v === 'b' ? v : FX_DEF[k]; } return o; })();
+const FX_DEF = { aura: 'haze', flame: 'haze', wipe: 'a' };   // 오라 · 손바닥 기본 = 아지랑이 · 오로라(사용자 261005 저녁 · a 는 플래그로만)
+const FX = (() => { const o = {}, g = qs.get('fx'); for (const k in FX_DEF) { const v = qs.get(k) || g; o[k] = v === 'old' || v === 'a' || v === 'b' || (k !== 'wipe' && v === 'haze') ? v : FX_DEF[k]; } return o; })();
 let fxs = 20261005;
 const fxr = () => (fxs = (Math.imul(fxs, 1664525) + 1013904223) >>> 0) / 4294967296;
 const frn = (a, b) => a + fxr() * (b - a);
@@ -2978,9 +2980,10 @@ function fxReset() { PFP = []; PFS = []; APN = []; WIPES = []; }
 // 첫 사용 때 판을 만들며 생기는 끊김을 막는다: 시작할 때 미리 만들고 한 번 칠해 둔다
 function fxWarm() {
   if (!auA) { auA = lowCv(); auB = lowCv(8); }
+  hzCv();
   if (!wpM) { wpM = lowCv(); wpM2 = lowCv(8); }
   if (!wpTmp) { wpF = lowCv(); wpF2 = lowCv(8); wpB = lowCv(); wpB2 = lowCv(8); wpTmp = document.createElement('canvas'); wpTmp.width = W; wpTmp.height = H; }
-  for (const c of [auA, auB, wpM, wpM2, wpF, wpF2, wpB, wpB2, wpTmp]) { const x = c.getContext('2d'); x.fillRect(0, 0, 1, 1); x.clearRect(0, 0, c.width, c.height); }
+  for (const c of [auA, auB, hzM, hzC, hzP, wpM, wpM2, wpF, wpF2, wpB, wpB2, wpTmp]) { const x = c.getContext('2d'); x.fillRect(0, 0, 1, 1); x.clearRect(0, 0, c.width, c.height); }
 }
 // 아지랑이: (sx, sy, w, hh) 칸의 지금 화면을 가로 띠로 잘라 노이즈만큼 옆으로 밀어 다시 그린다(아래 · 위 끝은 약하게)
 function fxHaze(sx, sy, w, hh, amp, seed) {
@@ -3028,9 +3031,9 @@ function pfStep(h, dt) {
     const pv = F.sp[i - 1], ex = q.x - pv.x, ey = q.y - pv.y, el = Math.hypot(ex, ey), mx = Hf / (PF.K - 1) * 1.7;   // 빠른 손에 꼬리가 끊겨 보이지 않게
     if (el > mx) { q.x = pv.x + ex / el * mx; q.y = pv.y + ey / el * mx; }
   }
-  if (h.puOn && !F.on) pfBurst(F, g, 1); else if (!h.puOn && F.on) pfBurst(F, g, 0);
+  if (FX.flame !== 'haze') { if (h.puOn && !F.on) pfBurst(F, g, 1); else if (!h.puOn && F.on) pfBurst(F, g, 0); }   // haze: 빛 고리 · 불티 없음
   F.on = !!h.puOn;
-  if (I > .05 && h.puOn) {
+  if (I > .05 && h.puOn && FX.flame !== 'haze') {
     F.em += (FX.flame === 'b' ? 300 : 120) * I * (1 + 1.5 * boost) * dt;
     while (F.em >= 1) { F.em--; if (PFP.length < PF.PMAX) pfEmit(F, g, 1); }
     F.se += 15 * I * (1 + boost) * dt;
@@ -3094,7 +3097,9 @@ function pfTongue(c, F, j, N, wk, lk, cols, comp, al, I, T) {
 function drawPalmFireN(h) {
   const F = h.pfx, I = (h.pf || 0) * Math.max(.4, h.xs || 0); if (!F || !F.sp || !F.g || I <= .02) return;
   const c = ctx, g = F.g, T = X.t, boost = h.pfBoost || 0, sp = F.sp, Hf = F.Hf, tip = sp[sp.length - 1];
+  if (FX.flame === 'haze' && hzMeas) return;   // 시험: 불투명도를 잴 때는 굴절(아지랑이)을 끈다(굴절은 불투명도가 아니다)
   fxHaze(tip.x - g.hw * 2.1, tip.y - Hf * .85, g.hw * 4.2, Hf * 1.05, g.S * .035 * I, F.id);   // 불꽃 위 공기가 일렁인다(영상 굴절)
+  if (FX.flame === 'haze') return;   // 부드러운 불기운은 hzPalmDraw 가 이미 그렸다(여기서는 위쪽 아지랑이만)
   c.save();
   c.globalCompositeOperation = 'lighter';   // 바깥 빛
   { const m = sp[2], r = Hf * (.95 + .3 * boost); c.globalAlpha = .2 * I; c.drawImage(SPR.glow, m.x - r, m.y - r, r * 2, r * 2); }
@@ -3217,6 +3222,122 @@ function drawAuraN() {
     for (const p of APN) { const k = p.t / p.life, tw = .55 + .45 * nz3(p.t * 6, p.sd, 7), r = p.r * 3 * (1 - .4 * k) * (k < .15 ? k / .15 : 1); c.globalAlpha = p.a * Math.pow(1 - k, 1.2) * tw; c.drawImage(SPR.sp, p.x - r, p.y - r, r * 2, r * 2); }
     c.restore();
   }
+}
+
+/* ----- 오라 · 손바닥 불기운 = 아지랑이 · 오로라(사용자 261005 저녁) -----
+   「선으로 되어 있어서 허접하다 · 몸에 가까운 곳은 조금 더 진하고 멀리 갈수록 옅어지게 · 가장 진한 곳도 50% 정도 · 손바닥 불꽃도 그런 형태」
+   선 · 테 · 또렷한 가장자리 · 불꽃 혀가 없다. 몸 가장자리(어깨 · 몸통 옆 · 팔)는 굵게, 몸통 안은 옅게 흰 판에 칠한 뒤 크게 흐려
+   몸 가까이가 가장 진하고 멀어질수록 0으로 사라지는 빛 안개를 만든다(사람 한가운데는 옅어 사람이 보인다). 머리 둘레와 그 위는 지운다(뾰족한 불길 · 금빛 머리 금지).
+   움직임: 몸 가장자리가 천천히 일렁이고 몸통 옆에서 어깨 쪽으로 옅은 안개 덩이가 3초쯤에 걸쳐 오른다 · 색은 주황 ~ 옅은 노랑이 천천히 옆으로 흐른다.
+   손을 들면 그 팔에도 안개가 붙고, 안개가 조금 넓고 진해진다. 시작 = 아래에서 위로 1초 동안 차오름 · 끝 = 떠나면 0.5초에 걸쳐 옅어짐.
+   손바닥(flame=haze): 손바닥 위로 피어오르는 부드러운 불기운(척추를 따라 둥근 빛 덩이를 겹침 · 손바닥 가까이 진하고 위로 옅어져 사라짐).
+   위로 솟는 방향 · 손 기울기 · 움직이면 꼬리가 휘는 관성(pfStep 척추)은 그대로. 불티 · 빛 고리는 없다. 위쪽 열기 아지랑이(굴절)는 drawPalmFireN 이 그린다.
+   불투명도 상한: 오라는 사람 전부를 1/4 판 하나에 그려(판의 알파는 1을 넘지 않는다) 화면에 HZ.MAX(0.49 · 8비트 반올림까지 0.5 안)로 한 번 얹는다.
+   손바닥 불기운은 손 그림(손바닥 빛) 위에 와야 해서 따로 얹되, 얹기 전에 오라 판만큼 덜어 낸다(p × (1 − 오라)).
+   그러면 오라 0.5A + 불기운 0.5p(1 − A)(1 − 0.5A) ≤ 0.5 라서, 사람이 겹쳐도 · 손을 들어도 · 오라와 불기운이 겹쳐도 가장 진한 곳은 0.5다(더하기 합성 없음). */
+const HZ = { MAX: .49, MIST: 6 };   // MAX: 화면에서 가장 진한 곳(0.5 · 8비트 반올림까지 0.5 안에 들게 0.49)
+let hzM = null, hzC = null, hzP = null, hzHide = false, hzMeas = false, hzAura = false;
+const HZS = {   // 손바닥 불기운 빛 덩이(최대 0.5라서 밝은 로비에서도 보이게 흰색 · 옅은 노랑 없이 진한 주황 쪽 · 밑동 가운데만 주황~노랑)
+  core: mkSpr([[0, 'rgba(255,170,70,1)'], [.4, 'rgba(255,127,50,.8)'], [1, 'rgba(229,101,26,0)']]),
+  body: mkSpr([[0, 'rgba(250,112,36,1)'], [.45, 'rgba(229,101,26,.65)'], [1, 'rgba(229,101,26,0)']]),
+};
+function hzCv() { const w = Math.floor(W / LR), h = Math.floor(H / LR); if (!hzM || hzM.width !== w || hzM.height !== h) { hzM = lowCv(); hzC = lowCv(); hzP = lowCv(); } }
+const hzSt = (a, b, x) => { const k = clamp((x - a) / (b - a), 0, 1); return k * k * (3 - 2 * k); };
+function hzArms(f, lh) {   // 이 사람에게 붙은 손(가장 가까운 얼굴의 손 · 좌우 한 개씩) · r = 들어 올린 정도
+  const ws = Math.max(f.w, AURA.MINW), out = [];
+  for (const h of lh) {
+    if (h.hzOwner !== f.id) continue;
+    const p = h.flm || h.lm; if (!p || !p[0]) continue;
+    const side = p[0].x >= f.x ? 1 : -1, sh = { x: f.x + side * 1.1 * ws, y: f.y + 1.15 * ws }, wr = { x: p[0].x, y: p[0].y };
+    const r = hzSt(-.2, 1.1, (sh.y - wr.y) / ws);   // 손목이 어깨 높이면 조금 · 어깨보다 얼굴 하나 위면 다
+    const o = out.find(q => q.side === side); if (!o) out.push({ side, sh, wr, r }); else if (r > o.r) Object.assign(o, { sh, wr, r });
+  }
+  return out;
+}
+function stepAuraH(dt) {
+  const lh = liveHands();
+  for (const h of lh) { let best = null, bd = 1e9; for (const f of XF) { if (f.a <= .05) continue; const d = Math.abs(h.c.x - f.x); if (d < f.w * 4 && d < bd) { bd = d; best = f; } } h.hzOwner = best ? best.id : -1; }
+  for (const f of XF) {
+    f.rv = clamp((f.rv || 0) + (f.a > .05 ? dt / 1.1 : -dt / .6), 0, 1);
+    f.hzK = lerp(f.hzK || 0, auK(f), 1 - Math.exp(-dt * 3));   // 손 든 정도(천천히 따라감 · 깜빡이지 않게)
+    f.arms = f.a > .05 ? hzArms(f, lh) : [];
+    const B = f.hzB || (f.hzB = []);
+    for (const b of B) b.t += dt;
+    for (let i = B.length - 1; i >= 0; i--) if (B[i].t >= B[i].life) B.splice(i, 1);
+    if (f.a > .05 && B.length < HZ.MIST && fxr() < dt * 2.2) B.push({ sd: fxr() < .5 ? -1 : 1, x: frn(.85, 1.4), t: 0, life: frn(2.6, 3.8), r: frn(.45, .7), dr: frn(-.12, .12) });
+  }
+}
+const HZ_BODY = [[-.42, .93], [-.8, .97], [-1.12, 1.12], [-1.27, 1.45], [-1.32, 2.1], [-1.36, 2.9], [-1.4, 4.3]];   // 몸 왼쪽(목 → 아래) · 얼굴 폭 단위
+function hzBody(m, f, ws, k, T, al) {   // 몸통은 옅게 채우고 몸 가장자리(어깨 · 몸통 옆)는 굵게 칠한다 · 흐리면 가장자리 가까이가 가장 진하고 안팎으로 옅어진다
+  const P = [], n = HZ_BODY.length, wid = 1 + .1 * k;
+  for (let i = 0; i < n; i++) P.push([HZ_BODY[i][0] * wid - .07 * (1 + k) * (fbm(i * .7, f.id, T * .35) * .5 + .5), HZ_BODY[i][1]]);
+  for (let i = n - 1; i >= 0; i--) P.push([-HZ_BODY[i][0] * wid + .07 * (1 + k) * (fbm(i * .7 + 9, f.id, T * .35 + 3) * .5 + .5), HZ_BODY[i][1]]);
+  const Q = [...P.slice(0, n).reverse(), ...P.slice(n).reverse()], path = () => { m.beginPath(); Q.forEach((q, j) => j ? m.lineTo(f.x + q[0] * ws, f.y + q[1] * ws) : m.moveTo(f.x + q[0] * ws, f.y + q[1] * ws)); };   // 왼쪽 아래 → 목 → 오른쪽 아래
+  path(); m.globalAlpha = al * .12; m.fill();
+  m.globalAlpha = al; m.lineJoin = 'round'; m.lineWidth = ws * (.42 + .12 * k); m.stroke();
+}
+function hzPalm(c, h, T) {   // 손바닥 위 부드러운 불기운(1/4 판 · 흐리기 뒤에 얹는다)
+  const F = h.pfx, I = (h.pf || 0) * Math.max(.4, h.xs || 0); if (!F || !F.sp || !F.g || I <= .02) return null;
+  const g = F.g, boost = h.pfBoost || 0, N = 14, tip = F.sp[F.sp.length - 1];
+  c.globalCompositeOperation = 'source-over';
+  for (let i = N - 1; i >= 0; i--) {   // 위에서 아래로(손바닥 쪽 진한 덩이가 위에 오게) · 밑동이 넓고 위로 갈수록 좁아지며 옅어진다
+    const u = i / (N - 1), P = pfAt(F.sp, u), sw = nz3(u * 2.2 - T * 1.6, F.id, T * .5) * g.hw * .45 * u;
+    const r = g.hw * (2.1 - .9 * u) * (1 + .25 * boost) * (.88 + .12 * nz3(u * 3 - T * 1.2, F.id + 5, T * .7)), a = I * Math.pow(1 - u * .93, 1.1);
+    c.globalAlpha = clamp(a, 0, 1); c.drawImage(u < .3 ? HZS.core : HZS.body, P.x - P.ty * sw - r, P.y + P.tx * sw - r, r * 2, r * 2);
+  }
+  c.save(); c.translate(g.bx, g.by - g.S * .05); c.rotate(Math.atan2(g.uy, g.ux)); c.scale(1, .5); { const r = g.hw * (1.2 + .3 * boost); c.globalAlpha = .7 * I; c.drawImage(HZS.core, -r, -r, r * 2, r * 2); } c.restore();
+  return tip;
+}
+function hzPalmDraw() {   // 손바닥 불기운(손 그림 위 · 오라 판만큼 덜어 낸 뒤 0.5로)
+  if (hzHide) return;
+  const hands = liveHands().filter(h => h.pfx && h.pfx.sp && h.pfx.g && (h.pf || 0) > .02); if (!hands.length) return;
+  hzCv(); const T = X.t, p = hzP.getContext('2d'); lowClear(p); p.setTransform(1 / LR, 0, 0, 1 / LR, 0, 0);
+  for (const h of hands) hzPalm(p, h, T);
+  p.setTransform(1, 0, 0, 1, 0, 0);
+  if (hzAura) { p.globalCompositeOperation = 'destination-out'; p.globalAlpha = 1; p.drawImage(hzC, 0, 0); p.globalCompositeOperation = 'source-over'; }
+  const c = ctx; c.save(); c.globalCompositeOperation = 'source-over'; c.globalAlpha = HZ.MAX; c.imageSmoothingQuality = 'high'; c.drawImage(hzP, 0, 0, W, H); c.restore();
+}
+function hzDraw() {   // 오라(사람 전부 한 판)
+  hzAura = false; if (hzHide) return;
+  const T = X.t, vis = XF.filter(f => f.a > .01);
+  if (!vis.length) return;
+  hzCv(); hzAura = true;
+  const hc = hzC.getContext('2d'); hc.setTransform(1, 0, 0, 1, 0, 0); hc.globalCompositeOperation = 'source-over'; hc.globalAlpha = 1; hc.filter = 'none'; hc.clearRect(0, 0, hzC.width, hzC.height);
+  if (vis.length) {
+    const m = hzM.getContext('2d'); lowClear(m); m.setTransform(1 / LR, 0, 0, 1 / LR, 0, 0); m.fillStyle = '#fff'; m.strokeStyle = '#fff'; m.lineCap = 'round';
+    let wsum = 0;
+    for (const f of vis) {
+      const ws = Math.max(f.w, AURA.MINW), k = f.hzK || 0, bot = f.y + 4.3 * ws; wsum += ws;
+      m.save(); m.beginPath(); m.rect(0, lerp(bot, f.y + .7 * ws, easeOut(f.rv || 0)), W, H); m.clip();   // 아래에서 위로 차오른다
+      hzBody(m, f, ws, k, T, f.a * (.8 + .2 * k));
+      for (const A of f.arms || []) { m.globalAlpha = f.a * (.3 + .5 * A.r); m.lineWidth = ws * (.38 + .08 * A.r); m.beginPath(); m.moveTo(A.sh.x, A.sh.y); m.lineTo(lerp(A.sh.x, A.wr.x, .72), lerp(A.sh.y, A.wr.y, .72)); m.stroke(); }   // 팔(손목 앞에서 멈춤 · 손바닥 불기운 자리를 비운다)
+      for (const b of f.hzB || []) {   // 몸통 옆에서 어깨 쪽으로 천천히 오르는 안개 덩이
+        const q = b.t / b.life, r = b.r * ws * (1 + .4 * q), x = f.x + b.sd * (b.x + b.dr * q) * ws, y = lerp(f.y + 2.5 * ws, f.y + 1.05 * ws, easeOut(q));
+        m.globalAlpha = f.a * Math.sin(Math.PI * q) * .85; m.drawImage(SPR.wt, x - r, y - r, r * 2, r * 2);
+      }
+      m.restore();
+    }
+    const kk = Math.max(...vis.map(f => f.hzK || 0)), R = clamp(wsum / vis.length * (.3 + .1 * kk) / LR, 5, 30);
+    hc.filter = `blur(${R.toFixed(1)}px)`; hc.drawImage(hzM, 0, 0); hc.globalAlpha = .6; hc.drawImage(hzM, 0, 0); hc.globalAlpha = 1;   // 넓게 번진 안개(멀어질수록 옅게)
+    hc.filter = `blur(${(R * .35).toFixed(1)}px)`; hc.drawImage(hzM, 0, 0);                     // 몸 가까이 조금 더 진하게
+    hc.globalCompositeOperation = 'destination-out';
+    hc.filter = `blur(${(R * .6).toFixed(1)}px)`; hc.globalAlpha = 1; hc.fillStyle = '#fff';       // 머리 둘레 · 위는 지운다
+    for (const f of vis) { const hd = headOf(f); hc.beginPath(); hc.ellipse(hd.x / LR, (hd.y - hd.ry * .25) / LR, hd.rx * 1.3 / LR, hd.ry * 1.35 / LR, 0, 0, 7); hc.fill(); }
+    hc.filter = 'none';
+    if (FX.flame === 'haze') for (const h of liveHands()) {   // 손바닥 불기운 자리는 오라를 덜어 둔다(둘을 합쳐도 0.5라서, 비워 두지 않으면 불기운이 오라에 묻힌다)
+      const F = h.pfx, I = (h.pf || 0) * Math.max(.4, h.xs || 0); if (!F || !F.sp || !F.g || I <= .02) continue;
+      for (let i = 0; i < 6; i++) { const P = pfAt(F.sp, i / 5), r = F.g.hw * (2.6 - .8 * i / 5) / LR; hc.globalAlpha = .75 * I; hc.drawImage(SPR.wt, P.x / LR - r, P.y / LR - r, r * 2, r * 2); }
+    }
+    // 색: 주황(O100) ~ 옅은 노랑 쪽 주황이 천천히 옆으로 흐른다(8초쯤에 한 바퀴 · 밝은 로비에서도 주황으로 읽히게 노랑은 조금만)
+    hc.globalCompositeOperation = 'source-in'; hc.globalAlpha = 1;
+    const gr = hc.createLinearGradient(0, 0, hzC.width, hzC.height * .3), ph = T * .12;
+    for (let i = 0; i <= 6; i++) { const u = .5 + .5 * Math.sin(Math.PI * 2 * (i / 6 * 1.4 - ph)); gr.addColorStop(i / 6, `rgb(${Math.round(lerp(240, 255, u))},${Math.round(lerp(104, 160, u))},${Math.round(lerp(30, 70, u))})`); }
+    hc.fillStyle = gr; hc.fillRect(0, 0, hzC.width, hzC.height);
+  }
+  hc.globalCompositeOperation = 'source-over'; hc.globalAlpha = 1;
+  const c = ctx; c.save(); c.globalCompositeOperation = 'source-over'; c.globalAlpha = HZ.MAX; c.imageSmoothingQuality = 'high'; c.drawImage(hzC, 0, 0, W, H); c.restore();   // 화면에는 한 번만 · 가장 진한 곳 0.5
+  // 어깨 바깥 위 열기 아지랑이(실사가 살짝 굴절 · 가까운 두 사람 · 머리는 비낀다)
+  if (!hzMeas) for (const f of vis.filter(f => f.a > .3).sort((a, b) => b.w - a.w).slice(0, 2)) { const ws = Math.max(f.w, AURA.MINW), amp = ws * .02 * f.a * (1 + .5 * (f.hzK || 0)); for (const sd of [-1, 1]) fxHaze(f.x + sd * 1.25 * ws - .4 * ws, f.y + .5 * ws, .8 * ws, .75 * ws, amp, f.id * 3 + sd); }
 }
 
 /* ----- 4 쓸기(새 안) -----
@@ -3445,7 +3566,7 @@ function drawExp() {
   if (FX.wipe === 'old') for (const s of X.sw) drawSweep(s);   // 4 쓸기 커튼(손 그림 아래)
   for (const h of lh) if (h.xs > 0) drawPalmGlow(h);
   if (FX.flame === 'old') for (const h of lh) drawPalmFire(h);   // 3 손바닥 위 불꽃
-  else { for (const h of lh) drawPalmFireN(h); drawPFP(); }   // 3 새 안
+  else { if (FX.flame === 'haze') hzPalmDraw(); for (const h of lh) drawPalmFireN(h); drawPFP(); }   // 3 새 안(haze: 부드러운 불기운 · 위 아지랑이)
   drawFire();
   for (const h of lh) if (h.xs > 0) drawEye(h, h.xs);
 }
@@ -3558,7 +3679,7 @@ window.__ax = {
     hands: liveHands().map(h => ({ id: h.id, L: h.L | 0, x: h.c.x | 0, y: h.c.y | 0, elig: xpElig(h), xa: +(h.xa || 0).toFixed(2), xs: +(h.xs || 0).toFixed(2), open: +h.open.toFixed(2), fist: !!h.fistOn, xfist: xFist(h), fire: +(h.fire || 0).toFixed(2), wd: (h.wd || 0) | 0, up: h.j3 && h.j3.n ? +h.j3.up.toFixed(2) : null, src: h.j3 ? h.j3.src : null, curl: h.j3 ? +h.j3.curl.toFixed(2) : null, open3: h.open3 === undefined ? null : +h.open3.toFixed(2), puOn: !!h.puOn, pf: +(h.pf || 0).toFixed(2), xpR: +(h.xpR || 1).toFixed(2), xpRw: +(h.xpRw || 1).toFixed(2) })) }),
   palmReset() { palmCal.v = 0; palmCal.c = 1; palmCal.n = 0; }, camHands: r => camHands(r).map(o => ({ L: o.L, hd: o.pts.hd, w3: o.pts.w3, j: hand3(o.pts.w3, o.pts.hd, false), x: o.pts[9].x })), camSize(w, h) { cam.vw = w; cam.vh = h; }, synth3, palm3: (cs, o) => hand3(synth3(cs, 0, o).w.map(p => ({ x: p.x * .09, y: p.y * .09, z: p.z * .09 })), (() => { const r = synth3(cs, 0, o); return { name: r.label, score: r.score }; })(), false),
   eyePts: () => liveHands().map(h => ({ id: h.id, raw: h.lm.map(p => [+p.x.toFixed(2), +p.y.toFixed(2)]), f: (h.flm || []).map(p => [+p.x.toFixed(2), +p.y.toFixed(2)]) })),
-  jitter(n) { jit = +n || 0; }, xp: XP, guide: () => GF.map(f => ({ s: f.cur, a: +f.a.toFixed(2), ok: f.ok, hook: f.hook })), expFace(v) { expFace = !!v; }, AURA, skip() { if (G) setPh('b-intro'); }, setPh: ph => setPh(ph),
+  jitter(n) { jit = +n || 0; }, xp: XP, guide: () => GF.map(f => ({ s: f.cur, a: +f.a.toFixed(2), ok: f.ok, hook: f.hook })), expFace(v) { expFace = !!v; }, hzHide(v) { hzHide = !!v; }, hzMeas(v) { hzMeas = !!v; }, hzCan: () => ({ m: hzM, c: hzC, p: hzP }), AURA, skip() { if (G) setPh('b-intro'); }, setPh: ph => setPh(ph),
   crowd, cr, crowdSet, crowdTick, dotState: () => dotInfo(), crq, CRQ, crDefer(v) { crq.on = !!v; },
   adm: () => ({ view: ADM.view, unlocked: ADM.unlocked, fails: ADM.fails, lockLeft: admLeft(), open: admIsOpen(), busy: ADM.busy, exitWhy: ADM.exitWhy || '', msg: $('admMsg').textContent, panel: $('cp').style.display === 'block', srv: admSrv().name, iv: crIv() }), admIdle(ms) { ADM.idleMs = +ms || 600000; },   // 시험: 관리자 모드 상태(값 없음) · 무조작 복귀 시간 줄이기
   async crowdImage(url) { const im = new Image(); await new Promise((r, j) => { im.onload = r; im.onerror = j; im.src = url; }); cr.testSrc = { el: im, w: im.naturalWidth, h: im.naturalHeight }; },
