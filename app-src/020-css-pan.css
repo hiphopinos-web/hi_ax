@@ -18,6 +18,8 @@
   .axs-pan .axs-sign { display: inline-flex; align-items: center; justify-content: center; flex: none; align-self: flex-start; box-sizing: border-box; width: auto; height: 24px; margin: 0; padding: 0 8px; overflow: hidden;
     border-radius: 4px; background: var(--ax-color-brand); color: #FFFFFF; line-height: 0; white-space: nowrap; }   /* v5.10 글자 = 점 글자 그림 12px(흰 점 · DotGlyph) */
   .axs-pan .axs-sign.lg { height: 26px; padding: 0 10px; }   /* 구역 상세 · 점 글자 14px */
+  .axs-pan .axs-dchips .axs-sign, .axs-pan .axs-dchips .axs-sign svg { flex: 0 1 auto; min-width: 0; max-width: 100%; }   /* v5.78 밤샘 QA · 좁은 폭(안드로이드 OS 글자 크게)에서 상세 시트 간판(AX COFFEE CHAT · AX in Action)이 닫기 X 밑으로 넘치던 것 · 간판이 줄 폭에 맞춰 줄어든다 */
+  .axs-pan .axs-dchips .axs-sign svg { height: auto; }
   .axs-pan .axs-bar { display: flex; flex-direction: column; gap: 2px; margin: var(--ax-space-4) 0 var(--ax-space-4) 2px; padding: 1px 0 1px 10px; border-left: 3px solid var(--ax-color-ink); }
   .axs-pan .axs-bar b { font: var(--ax-type-t4); color: var(--ax-color-ink); }
   .axs-pan .axs-bar span { font: var(--ax-type-caption); color: var(--ax-color-muted); }

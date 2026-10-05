@@ -1133,6 +1133,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #tabbar .ax-nav-link, #tabbar .axs-scan { font: 500 0.8125rem/1.125rem var(--ax-font); white-space: nowrap; }
   #tabbar .ax-nav-link[aria-current="page"] { color: var(--ax-color-ink); font-weight: 700; }
   #tabbar .ax-nav-link[aria-current="page"] .ax-icon { color: var(--ax-color-brand); }
+  /* v5.78 밤샘 QA · 안드로이드 OS 글자 크게(크롬이 페이지를 키워 폭 277 · 240 처럼 좁아짐) + 앱 큰글씨에서 「나의 참여」 끝 글자가 화면 밖으로 잘리던 것 · 좁은 폭에서 탭 라벨 글자만 한 단계 줄인다(선택 표시 · 아이콘 크기는 그대로) */
+  @media (max-width: 300px) { #tabbar .ax-nav-link, #tabbar .axs-scan { font-size: 0.75rem; letter-spacing: -0.02em; } }
+  @media (max-width: 250px) { #tabbar .ax-nav-link, #tabbar .axs-scan { font-size: 0.6875rem; letter-spacing: -0.04em; } }
   /* 목적지 행 · 승인 클래스 .ax-destination 을 버튼에 입힐 때의 기본값 되돌리기 */
   #app .ax-type-t2, #app .ax-type-t3, #app .ax-type-t4, #app .ax-type-t6-strong, #splash .ax-header { color: var(--ax-color-ink); }
   .axs-dest { width: 100%; border: 0; text-align: left; cursor: pointer; font-family: inherit; }
