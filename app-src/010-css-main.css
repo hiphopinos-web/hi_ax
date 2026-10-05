@@ -27,8 +27,8 @@
   /* word-break:keep-all = 한글을 어절 단위로 끊는다 · 단어 중간에서 잘리지 않고 통째로 다음 줄로 */
   body { background: var(--bg); font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif; display: flex; justify-content: center; color: var(--tx); word-break: keep-all; overflow-wrap: break-word; }
   button, input, textarea { font-family: inherit; }
-  #frame { position: relative; width: 100%; min-width: 0; max-width: var(--ax-app-max); min-height: 100dvh; background: var(--bg); }   /* v4.04 min-width 0 · body(flex) 안에서 긴 한 줄 글자가 앱 폭을 밀지 않게 */
-  #frame.splash-mode { height: 100dvh; overflow: hidden; }
+  #frame { position: relative; width: 100%; min-width: 0; max-width: var(--ax-app-max); min-height: 100vh; min-height: 100dvh; background: var(--bg); }   /* v4.04 min-width 0 · body(flex) 안에서 긴 한 줄 글자가 앱 폭을 밀지 않게 */
+  #frame.splash-mode { height: 100vh; height: 100dvh; overflow: hidden; }   /* v5.76 밤샘 QA · dvh 를 모르는 옛 웹뷰(크롬 108 전 · iOS 15.4 전 · 화웨이 · 샤오미 브라우저)는 이 줄이 무효라 첫 화면 높이가 0(빈 화면) · vh 를 먼저 둔다 */
 
   /* ───────── 스플래시 · 화이트 스테이지 + 도트 격자 + KV 오브젝트 (v29 · 수면 반사 영상·차임 폐기) ─────────
      점 하나(01) → 점 고리(02) → 점선 구체(04)가 점으로 모였다 흩어진다. 글자는 움직이지 않는다.
@@ -175,7 +175,7 @@
      헤더 v16 · 아이덴티티(네이비칩 + 톱니)는 전 화면 고정, 그 아래 줄만 화면에 따라 바뀐다.
      홈 = 슬로건 + 행사 정보줄 / 그 밖 = 제목줄(상세는 뒤로가기). 헤더 끝은 오렌지 2px 엣지로 본문과 분리 */
   /* AX-TDS v1 · 헤더 64 (탭 루트 = 화면 이름, 상세 = 뒤로 + 화면 이름) · 하단 메뉴 80 · 규칙은 파일 끝 「AX-TDS v1 셸」 절 */
-  #view { padding: var(--ax-space-24) var(--ax-page-inset) calc(var(--ax-nav-height) + var(--ax-space-32) + env(safe-area-inset-bottom)); min-height: calc(100dvh - var(--ax-header-height)); }
+  #view { padding: var(--ax-space-24) var(--ax-page-inset) calc(var(--ax-nav-height) + var(--ax-space-32) + env(safe-area-inset-bottom)); min-height: calc(100vh - var(--ax-header-height)); min-height: calc(100dvh - var(--ax-header-height)); }
   /* 게임·현장 타자·관리자·송출 화면은 4단계 전까지 옛 여백 그대로 (게임판 폭 계산이 16px 기준) */
   #view[data-v^="game_"], #view[data-v="type_site"], #view[data-v^="screen"], #view[data-v^="wall_"], #view[data-v="type_award"] { padding: 16px 16px 112px; }
 
@@ -448,7 +448,7 @@
   .rg-form { display: flex; gap: 8px; margin-top: 10px; }
   /* v3.36c 휴대폰 전체화면 플레이 */
   html.rg-lock, html.rg-lock body { overflow: hidden; overscroll-behavior: none; }
-  #rgPlay { position: fixed; left: 0; right: 0; top: 0; height: 100dvh; z-index: 300; display: flex; flex-direction: column; background: #FFEBE0; touch-action: manipulation; overscroll-behavior: none; }   /* v4.10 100% → 100dvh(사용자 제보 260922) · position:fixed 에서 100%는 뷰포트 전체(100vh)로 계산돼 모바일 주소창이 떠 있으면 아래 고정 조작 안내(.gs-foot)가 화면 밖으로 밀렸다 */
+  #rgPlay { position: fixed; left: 0; right: 0; top: 0; height: 100vh; height: 100dvh; z-index: 300; display: flex; flex-direction: column; background: #FFEBE0; touch-action: manipulation; overscroll-behavior: none; }   /* v4.10 100% → 100dvh(사용자 제보 260922) · position:fixed 에서 100%는 뷰포트 전체(100vh)로 계산돼 모바일 주소창이 떠 있으면 아래 고정 조작 안내(.gs-foot)가 화면 밖으로 밀렸다 */
   #rgPlay .rgp-top { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; }
   #rgPlay .rgp-t { font-weight: 800; font-size: 14px; color: #000; }
   #rgPlay .rgp-x { border: 2px solid #000; background: #fff; border-radius: 999px; padding: 4px 12px; font-weight: 800; font-size: 13px; }
@@ -645,12 +645,12 @@
   @keyframes rfxNudge { 0%, 80%, 100% { transform: translateY(0); } 85% { transform: translateY(-5px) rotate(-3deg); } 90% { transform: translateY(0) rotate(3deg); } 95% { transform: translateY(-2px); } }
   @keyframes rfxSpin { to { transform: rotate(360deg); } }
   @media (prefers-reduced-motion: reduce) { #modal .rfx-stage, #modal .rfx-rays, #modal .rfx-bot svg, #modal .rfx-bot .ant path { animation: none !important; } #modal .rfx-lid { transition: none; } #modal .rfx-num, #modal .rfx.open .rfx-num, #modal .rfx-num.land { animation: none !important; transform: translate(-50%, 0) scale(1); } #modal .rfx-bot .ant path { opacity: 0.3; } }
-  #modal .mcard { width: 100%; max-width: 360px; max-height: 82dvh; overflow-y: auto; background: var(--paper); border: 0; border-radius: 20px; padding: 20px; position: relative; animation: popIn 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  #modal .mcard { width: 100%; max-width: 360px; max-height: 82vh; max-height: 82dvh; overflow-y: auto; background: var(--paper); border: 0; border-radius: 20px; padding: 20px; position: relative; animation: popIn 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
   /* v4.13 모달·시트 머리 한 줄 · 제목 | X(48 터치) · X 는 본문 위에 떠 있지 않는다(겹침 없음) */
   #modal .mcard { padding: var(--ax-space-8) var(--ax-space-20) var(--ax-space-20); }
   /* v4.43 (사용자 260925 「팝업을 한 가지 규칙으로 · 따로 노는 팝업 없이」) 가운데 카드 팝업(modalOpen · 보상 알림 · 응모권 · 룰렛 · 안내)을 신청 확인 바텀 시트(#axsSheet · M03)와 같은 모양으로.
      아래에서 올라온다 · 위 모서리 32 · 손잡이 · 제목 t2 · 닫기 X · 주 버튼 = ax-button(브랜드 · 56) · 보조 버튼 = ax-button-weak · 뒷배경 = 먹 40% */
-  #modal { align-items: flex-end; padding: 0; background: color-mix(in srgb, var(--ax-color-ink) 40%, transparent); }
+  #modal { align-items: flex-end; padding: 0; background: rgba(25, 31, 40, 0.4); background: color-mix(in srgb, var(--ax-color-ink) 40%, transparent); }
   #modal .mcard { max-width: var(--ax-app-max); max-height: 88vh; border-radius: var(--ax-radius-32) var(--ax-radius-32) 0 0; padding: var(--ax-space-12) var(--ax-space-24) max(var(--ax-space-32), env(safe-area-inset-bottom)); background: var(--ax-color-surface); box-shadow: var(--ax-sheet-shadow); animation: mSheetUp 0.26s cubic-bezier(0.2, 0.8, 0.2, 1); }
   #modal .mcard::before { content: ""; display: block; width: 40px; height: 4px; margin: 0 auto var(--ax-space-4); border-radius: 999px; background: var(--ax-color-divider); }
   #modal .axs-mtitle { font: var(--ax-type-t2); padding-top: var(--ax-space-8); }
@@ -861,14 +861,14 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* AX Wave (네이비 + 금색 별자리 · 기둥 실물 연출 재현) */
 
   /* ── TV 전체화면 모드 (가로 대형 화면 · 프레임 448px 해제, 좌 월 / 우 정보) ── */
-  #frame.tv-mode { max-width: none; width: 100vw; height: 100dvh; min-height: 0; overflow: hidden; box-shadow: none; background: var(--ink); }
+  #frame.tv-mode { max-width: none; width: 100vw; height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; box-shadow: none; background: var(--ink); }
   #frame.tv-mode #view { padding: 0; }
   /* 범용 송출 전체 화면 · 가로(tv-h)/세로(tv-v) */
-  #frame.tv-full { max-width: none; width: 100vw; min-height: 100dvh; box-shadow: none; background: var(--ink); }
+  #frame.tv-full { max-width: none; width: 100vw; min-height: 100vh; min-height: 100dvh; box-shadow: none; background: var(--ink); }
   #frame.tv-full #view { margin: 0 auto; }
   #frame.tv-full.tv-h:not(.tv-mode) #view { max-width: 1500px; zoom: 1.3; }
   #frame.tv-full.tv-v:not(.tv-mode) #view { max-width: 700px; zoom: 1.12; }   /* 260924 이미 풀블리드(tv-mode)인 화면(1F TV 현황판 등)은 고정 배율 대신 뷰포트 비례 CSS를 그대로 쓴다 */
-  .tv { position: relative; width: 100vw; height: 100dvh; display: grid; grid-template-columns: 1fr 27vw; gap: 0; background: var(--ink); color: #fff; }
+  .tv { position: relative; width: 100vw; height: 100vh; height: 100dvh; display: grid; grid-template-columns: 1fr 27vw; gap: 0; background: var(--ink); color: #fff; }
   /* 세로 화면에서 전체화면을 켠 경우 · 위 월 / 아래 정보로 자동 전환 */
   @media (max-aspect-ratio: 1/1) {
     .tv { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
@@ -1378,7 +1378,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-empty { padding-top: var(--ax-space-24); }
   .axs-empty .axs-bot { align-items: flex-start; padding: 0; }
   /* 취소 시트 · 바닥 가림막은 ink 를 섞어 만든다(새 색 없음) */
-  #axsSheet { position: fixed; inset: 0; z-index: 70; display: flex; align-items: flex-end; justify-content: center; background: color-mix(in srgb, var(--ax-color-ink) 40%, transparent); }
+  #axsSheet { position: fixed; inset: 0; z-index: 70; display: flex; align-items: flex-end; justify-content: center; background: rgba(25, 31, 40, 0.4); background: color-mix(in srgb, var(--ax-color-ink) 40%, transparent); }
   #axsSheet .ax-sheet { width: 100%; max-width: var(--ax-app-max); max-height: 88vh; overflow-y: auto; padding-bottom: max(var(--ax-space-32), env(safe-area-inset-bottom)); color: var(--ax-color-ink); }
   /* 아래에서 올라오는 시트임을 알리는 손잡이 · 뒷배경을 눌러 닫는다 */
   #axsSheet .axs-kv { grid-template-columns: 72px minmax(0, 1fr); row-gap: var(--ax-space-12); }

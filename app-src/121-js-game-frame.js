@@ -36,8 +36,8 @@ document.addEventListener("focusout", function () { IME.on = false; }, true);
    조합 중에는 값을 절대 다시 쓰지 않는다(삼성 키보드는 조합 중 값이 바뀌면 조합이 깨진다) · 조합이 끝나면(compositionend) 한 번 정리 · 커서는 제자리 */
 function numOnly(n, e) {
   if (!n || (e && e.isComposing) || IME.on) return;
-  var v = n.value, c = v.replace(/\D/g, "");
-  if (c === v) return;
+  var v = n.value.replace(/[０-９]/g, function (d) { return String.fromCharCode(d.charCodeAt(0) - 0xFEE0); }), c = v.replace(/\D/g, "");   /* v5.76 밤샘 QA · 전각 숫자(일부 키보드 전각 모드)는 지우지 않고 반각으로 바꾼다(예전엔 사번 칸이 통째로 비었다) */
+  if (c === n.value) return;
   var at = n.selectionStart == null ? c.length : v.slice(0, n.selectionStart).replace(/\D/g, "").length;
   n.value = c;
   try { n.setSelectionRange(at, at); } catch (x) {}

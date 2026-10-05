@@ -199,7 +199,7 @@
      아래 media query 는 위 무조건 규칙과 선택자가 같아 순서로 이긴다(자리를 옮기지 말 것). */
   .rt .tytv { padding: 22px 30px 26px; }
   @media (max-height: 820px) and (orientation: landscape) {   /* 1280×720 · webOS 가 작은 뷰포트로 인식하는 경우 */
-    .rt .tytv { padding: 12px 20px 14px; display: flex; flex-direction: column; justify-content: center; min-height: 100dvh; }
+    .rt .tytv { padding: 12px 20px 14px; display: flex; flex-direction: column; justify-content: center; min-height: 100vh; min-height: 100dvh; }
     .rt .tytv .tytv-brand { font-size: 18px; }
     .rt .tytv .tytv-k { margin-top: 8px; }
     .rt .tytv .tytv-t { margin-top: 3px; font-size: 24px; line-height: 30px; }
@@ -210,7 +210,7 @@
     .rt .tytv .tytv-foot { margin-top: 8px; }
   }
   @media (orientation: portrait) {   /* 1080×1920 · 스탠바이미를 세워 둔 경우 · 가로 배치를 줄이지 않고 세로 전용으로 다시 짠다 */
-    .rt .tytv { padding: 40px 32px; display: flex; flex-direction: column; justify-content: center; min-height: 100dvh; }
+    .rt .tytv { padding: 40px 32px; display: flex; flex-direction: column; justify-content: center; min-height: 100vh; min-height: 100dvh; }
     .rt .tytv .tytv-brand { font-size: 30px; }
     .rt .tytv .tytv-k { margin-top: 20px; font-size: 20px; }
     .rt .tytv .tytv-t { margin-top: 10px; font-size: 44px; line-height: 54px; }
@@ -258,7 +258,7 @@
   .rt .tve-h { color: var(--rt-o100); }
   @media (prefers-reduced-motion: reduce) { .rt .rt-btn:active, .rt .btn.mint:active { transform: none; } }
   /* ── v4.32 1F 현장 셀프 모드 · 넓은 화면 3단(왼쪽 입력·안내 · 가운데 판 · 오른쪽 현장 TOP 10) · 판 도중 엔진 3단과 같은 틀(나무 이중 테두리 · 어두운 판 · 도트 글꼴) ── */
-  .rt .tsf { position: relative; height: 100dvh; overflow: hidden; background: var(--rt-bark); color: var(--rt-cream); font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16); }
+  .rt .tsf { position: relative; height: 100vh; height: 100dvh; overflow: hidden; background: var(--rt-bark); color: var(--rt-cream); font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; line-height: var(--rt-l16); }
   .rt .tsf-grid { box-sizing: border-box; height: 100%; display: grid; grid-template-columns: minmax(200px, 420px) var(--tsf-bw, 560px) minmax(200px, 420px); justify-content: center; gap: 16px; padding: 12px 16px 28px; }
   .rt .tsf-p { box-sizing: border-box; min-width: 0; min-height: 0; margin: 3px; padding: 24px 22px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; background: var(--rt-night); color: var(--rt-cream); box-shadow: var(--rt-line), inset 0 0 0 4px var(--rt-wood), inset 0 0 0 7px var(--rt-tan); }
   .rt .tsf-p p { margin: 0; }
@@ -371,7 +371,7 @@
   .rt .tsf-pts .tsf-k { margin: 0 0 2px; color: var(--rt-o100); }
   @media (max-height: 800px) { .rt .tsf-band { padding: 8px 14px; font-size: var(--rt-f24); line-height: var(--rt-l24); } .rt .tsf-r .tsf-row { padding: 6px 14px; } .rt .tsf-row { font-size: var(--rt-f16); line-height: var(--rt-l16); padding: 5px 8px; } .rt .tsf-p { padding: 18px 18px; gap: 6px; } .rt .tsf-in { height: 52px; } .rt .tsf-go { margin-top: 6px; padding: 8px 10px; } }
   @media (min-height: 1000px) { .rt .tsf-p { font-size: var(--rt-f24); line-height: var(--rt-l24); } .rt .tsf-big .tsf-s { font-size: var(--rt-f24); } }
-  @media (max-width: 959px) { .rt .tsf { height: auto; min-height: 100dvh; overflow: visible; } .rt .tsf-grid { grid-template-columns: minmax(0, 1fr); } .rt .tsf-c { display: none; } }
+  @media (max-width: 959px) { .rt .tsf { height: auto; min-height: 100vh; min-height: 100dvh; overflow: visible; } .rt .tsf-grid { grid-template-columns: minmax(0, 1fr); } .rt .tsf-c { display: none; } }
   /* v5.15 1F 타자왕 순위판(앱 「타자 순위」 현장 탭 · tybHtml) · 시안 「디자인 시안/타자왕 순위판/타자왕_순위판_휴대폰.html」
      HIGH SCORE = Neo둥근모 큰 글자(점 글자 아님 · design.md 5-20 7번 · 261003 사용자 A안) · 1~3위 O100 · O60 · O30 면 · 내 줄 크림 테두리
      순위가 바뀌면 줄이 미끄러진다(top 전환) · 동작 줄이기 = 그 자리에 바로 */

@@ -524,10 +524,11 @@ function pushAllow() {
   if (SHEET.busy) return;
   if (!("Notification" in window)) { sheetFail("이 브라우저는 알림을 받을 수 없어요"); return; }
   sheetBusy(true);
-  var once = false;
+  var once = false, tmo = null;
   var done = function (r) {
     if (once) return;
     once = true;
+    clearTimeout(tmo);
     var a = PUSH.after;
     PUSH.after = null;
     if (r !== "granted") { sheetClose(true); App.render(); return; }
@@ -538,6 +539,8 @@ function pushAllow() {
       App.render();
     });
   };
+  /* v5.76 밤샘 QA · 허용창이 뜨지 않거나(조용한 권한 알림 · 일부 브라우저) 답이 오지 않으면 「허용을 눌러 주세요」 덮개가 끝없이 남아 뒤로 · 탭으로도 빠져나갈 수 없었다 · 25초 뒤 닫는다(나중에 허용하면 다음에 열 때 pushFirst 가 구독한다) */
+  tmo = setTimeout(function () { if (!once) { done("timeout"); toast("알림 허용 창이 보이지 않으면 설정 › 알림에서 다시 켜 주세요"); } }, 25000);
   try { var pr = Notification.requestPermission(done); if (pr && pr.then) pr.then(done, function () { done("default"); }); } catch (e) { done("default"); }
 }
 /* 아이폰 사파리 탭 · 알림은 홈 화면 앱에서만(iOS 16.4 · 설치 뒤 로그인을 다시 한다) */
