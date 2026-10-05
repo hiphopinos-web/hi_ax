@@ -74,6 +74,12 @@
   #rgPlay.rt .rg-hud .rg-sc small { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; color: var(--rt-tan2); }
   #rgPlay.rt .rg-hud .rg-sc b, #rgPlay.rt .rg-hud .rg-tm { font-family: var(--rt-font); font-size: var(--rt-f24); font-weight: 400; line-height: var(--rt-l24); color: var(--rt-white); }
   #rgPlay.rt .rg-hud .rg-tm.hot { color: var(--rt-o100); }
+  /* v5.66 (디자인 감사 261005 하1) 테트리스 일시정지 단추 = 팡 · 점프와 같은 「일시정지」 · 「계속하기」(옛 「멈춤」 · 「계속」) · 길어진 단추 자리를 위해 HUD 이름표를 숫자 위로 올린다(오락실 SCORE 짜임)
+     360 · 큰글씨 · 점수 5자리에서도 글자가 겹치지 않는다(전에는 큰글씨에서 「줄 0레벨」이 겹쳤다) · 단추 좌우 여백 12 → 10 · 칸 사이 14 → 10 */
+  #rgPlay.rt.tetris .rg-hud { gap: 10px; }
+  #rgPlay.rt.tetris .rg-hud .rg-sc { flex-direction: column; align-items: flex-start; gap: 2px; }
+  #rgPlay.rt.tetris .rg-hud .rg-sc small, #rgPlay.rt.tetris .rg-hud .rg-sc b { line-height: 1; }
+  #rgPlay.rt.tetris .rgp-top .rgp-x, #rgPlay.rt.tetris .rgp-top .snd-btn { padding: 0 10px; }
   #rgPlay.rt .rgp-top .rgp-x, #rgPlay.rt .rgp-top .snd-btn { height: 40px; min-height: 40px; margin: 3px; padding: 0 12px; border: 0; border-radius: 0; background: var(--rt-tan2); color: var(--rt-bark);
     font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; box-shadow: var(--rt-line), inset -3px -3px 0 0 var(--rt-tan); }
   #rgPlay.rt .rgp-top .snd-btn.on { background: var(--rt-o100); color: var(--rt-btn); box-shadow: var(--rt-line), inset -3px -3px 0 0 var(--rt-deep); }

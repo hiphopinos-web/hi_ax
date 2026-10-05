@@ -881,12 +881,12 @@ var OK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 function qrPanelHtml(inner) {
   var u = S.get("user", {}) || {}, txt = myQrText();
   var body = !txt ?
-    '<p class="muted" style="margin-top:12px;font-size:calc(14.5px * var(--fs))">사번으로 입장하면 내 QR이 발급됩니다.</p>' :
+    '<p class="myqr-hint">사번으로 입장하면 내 QR이 발급됩니다.</p>' :
     '<div class="myqr' + (QRM.msg ? " axs-qrok" : "") + '">' + myQrSvg(216) + (QRM.msg ? '<span class="axs-okbadge">' + OK_SVG + "</span>" : "") + "</div>" +
     '<p class="myqr-nm">' + esc(u.name || "") + "<span>" + esc(u.empId || "") + "</span></p>" +
     (QRM.msg ? '<p class="axs-okline" role="status"><b>확인됨</b> · ' + esc(QRM.msg) + "</p>" : "") +
-    '<p class="muted" style="margin-top:8px;text-align:center;font-size:calc(13.5px * var(--fs));line-height:1.65">' +
-    '이 QR을 <b style="color:var(--hi)">스태프</b>에게 보여 주세요<br>화면 밝기를 올리면 더 빨리 읽혀요</p>' + qrMineStateHtml();   /* 261005 최종 QA · 「운영 데스크 스캐너」 → 「스태프」(AX PLAY · 스탬프 탭 · 부스 안내가 모두 「스태프에게 내 QR」이다 · 내 QR 을 찍는 곳은 데스크만이 아니다) */
+    '<p class="myqr-hint">' +   /* v5.66 (디자인 감사 261005 D4) 옛 v28 크기 → AX-TDS 타입 토큰(CSS myqr-hint) */
+    '이 QR을 <b>스태프</b>에게 보여 주세요<br>화면 밝기를 올리면 더 빨리 읽혀요</p>' + qrMineStateHtml();   /* 261005 최종 QA · 「운영 데스크 스캐너」 → 「스태프」(AX PLAY · 스탬프 탭 · 부스 안내가 모두 「스태프에게 내 QR」이다 · 내 QR 을 찍는 곳은 데스크만이 아니다) */
   var h = body;   /* v5.23 화면 안 카드 · 닫기는 헤더 뒤로 */
   return inner ? h : '<div id="qrPanel">' + h + "</div>";
 }

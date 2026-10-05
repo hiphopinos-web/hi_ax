@@ -278,7 +278,7 @@ function ttTopHtml() {
     '<span class="rg-sc"><small>레벨</small><b id="ttHudLv">1</b></span>' +
     '<span style="flex:1"></span>' +
     sndBtnHtml(false) +
-    '<button class="rg-ib rgp-x" type="button" data-on="계속" data-off="멈춤" aria-label="일시정지" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">멈춤</button></div>';   /* v3.87b 멈춤은 위 줄에 둔다 · 조작 묶음 옆에 두면 360px 폭에서 겹치고 잘못 눌린다 */
+    '<button class="rg-ib rgp-x" type="button" data-on="계속하기" data-off="일시정지" aria-label="일시정지" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">일시정지</button></div>';   /* v5.66 (디자인 감사 261005 하1) 「멈춤」 · 「계속」 → 팡 · 점프와 같은 「일시정지」 · 「계속하기」 · v3.87b 멈춤은 위 줄에 둔다 · 조작 묶음 옆에 두면 360px 폭에서 겹치고 잘못 눌린다 */
 }
 /* v3.87d (사용자 확정 260918) 버튼 네 개.
    왼손 = 왼쪽 · 오른쪽 · 한 칸 내리기 (십자의 위 칸은 없앴다) · 오른손 = 아래 안쪽 회전(시계만) · 대각선 위 바닥까지.

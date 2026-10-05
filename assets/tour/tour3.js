@@ -16,6 +16,17 @@
   var Q = new URLSearchParams(window.AXT3_Q || '');   /* 시험판(tour-lab)만 주소 값을 넘긴다 · 앱은 비어 있음 */
   var RM = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);   /* 기본 = 기기 설정 · 처음 안내 · 도움말의 「움직임 줄이기」로 바꾸면 이 기기에 기억(아래 start) */
   function $(id) { return document.getElementById('t3-' + id); }   /* 모든 id 는 t3- 접두(앱 id 와 겹치지 않게) */
+  /* v5.66 (디자인 감사 261005 D1 · design.md A-6) 이전 · 다음 단추의 ◀ ▶ 문자 → 앱 셰브론 모양(앱 CHEV_SVG · BACK_SVG 와 같은 꺾쇠 · 글자색을 따른다) */
+  var CHV_R = '<svg class="chv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg>';
+  var CHV_L = '<svg class="chv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>';
+  /* v5.66 (디자인 감사 261005 상4 · design.md A-6 · 5-20) 판 시트 · 경품 시트 · 타자왕 순위판 머리의 구역 칩 = 앱 구역 간판과 같은 점 글자(앱 DotGlyph · 흰 점 14px)
+   * 18F 커피챗 = 앱 간판 이름 「AX COFFEE CHAT」 · 점 글자가 없는 곳(시험판) · 점 글자에 없는 글자(한글 「자세히 보기」)는 글자 그대로 */
+  var SIGN_NM = { cafe: 'AX COFFEE CHAT' };
+  function signPaint(el, nm, lbl) {
+    var DG = window.DotGlyph;
+    if (DG && DG.svg && !/[^A-Za-z0-9 \/\-.:+!·?]/.test(nm)) { el.innerHTML = DG.svg(nm, { h: 14, hidden: true }); el.setAttribute('role', 'img'); el.setAttribute('aria-label', lbl || nm); el.classList.add('dot'); }
+    else { el.textContent = nm; el.removeAttribute('role'); el.removeAttribute('aria-label'); el.classList.remove('dot'); }
+  }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function P(x, z, y) { return new T.Vector3(x - 16, y || 0, 6 - z); }
   function N3(n) { return new T.Vector3(n[0], 0, -n[1]).normalize(); }
@@ -2802,11 +2813,11 @@
       return '<article class="card prize" aria-label="' + esc(p.rk + ' ' + p.nm) + '"><h2><span class="k">' + p.rk + '</span>' + esc(p.nm) + '<span class="q">' + p.q + '개</span></h2>' +
         '<div class="pic"><div class="pz' + (p.img.length > 1 ? ' two' : '') + '">' + p.img.map(function (im) { return '<span class="ph"><img alt="' + esc(p.nm) + '" data-src="' + ROOT + 'assets/prize/' + im + '.webp"><i>샘플</i></span>'; }).join('') + '</div></div></article>';
     });
-    openSheet({ name: '룰렛 경품' }, 0, null, cards);
+    openSheet({ name: 'EVENT', title: '룰렛 경품' }, 0, null, cards);   /* v5.66 칩 = EVENT 점 글자 · 「룰렛 경품」은 제목 줄(타자왕 순위판 머리와 같은 짜임) */
   }
   /* 타자왕 순위판 · 1층 TV 와 같은 전체 루프(../tv/typing/ · 후킹 · 게임 · 하는 법 · 상품 · 순위 TOP 10 · 마감 · 순위 30초 폴링 · 사용자 261003 「1층 랭킹 보드 화면 그대로 · 등수도」) · 시트 안 9:16 · 닫으면 iframe 을 비워 폴링 멈춤 */
   function openPromo() {
-    var v = $('vid'), b = $('vbody'); v.hidden = false; G.sheetOpen = true;
+    var v = $('vid'), b = $('vbody'); v.hidden = false; G.sheetOpen = true; signPaint($('vSign'), 'EVENT');   /* v5.66 점 글자 칩 */
     var W = b.clientWidth - 24, H = b.clientHeight - 24, w = Math.min(W, H * 9 / 16), h = w * 16 / 9;
     b.innerHTML = '<iframe title="1F 타자왕 순위판" src="' + ROOT + 'tv/typing/?open=1" style="width:' + w.toFixed(0) + 'px;height:' + h.toFixed(0) + 'px" allow="autoplay" loading="eager"></iframe>';
   }
@@ -2888,7 +2899,7 @@
     $('bPrev').disabled = G.stop <= 0 && G.mode !== 'free';
     $('bNext').disabled = G.stop >= STOPS.length - 1 && G.mode === 'stop';
     var nx = Math.min(STOPS.length - 1, G.stop + (G.mode === 'stop' || G.mode === 'auto' ? 1 : 1));
-    $('bNext').textContent = '다음 구역 ▶';
+    $('bNext').innerHTML = '다음 구역' + CHV_R;
     $('bNext').setAttribute('aria-label', '다음 구역: ' + STOPS[nx].name);
     $('navRow').hidden = G.scn === 'cafe' || G.scn === 'elev'; $('cafeRow').hidden = G.scn !== 'cafe';   /* v5.50 엘리베이터 안 = 이전 · 다음 구역 숨김(「1층에서 내리기」만 · v5.49 는 다시 그릴 때 되살아났다) */
     $('cap').hidden = true;
@@ -3452,8 +3463,9 @@
     var ps = cards || list || D.viewPages(z); if (!ps.length) return;   /* v5.58 판 보기 = 콘텐츠 판만(D.NOVIEW 빼고) */
     if (i == null) i = !cards && ps.length > 1 && D.SIGNS.indexOf(ps[0]) >= 0 ? 1 : 0;   /* 큰 버튼으로 열면 간판 다음 판부터(간판은 왼쪽으로 넘기면 있다) */
     SH = { z: z, ps: ps, i: clamp(i, 0, ps.length - 1), zoom: false, cards: !!cards }; $('pZoom').hidden = !!cards;
-    $('shSign').textContent = z ? z.name : '자세히 보기'; $('shSign').className = z ? 'sg' : 'sg ghost';
-    $('shTitle').textContent = '';
+    $('shSign').className = z ? 'sg' : 'sg ghost';
+    if (z) signPaint($('shSign'), z.sign || SIGN_NM[z.id] || z.name, z.name); else signPaint($('shSign'), '자세히 보기');   /* v5.66 점 글자 칩 · 읽는 이름 = 구역 이름 */
+    $('shTitle').textContent = z && z.title ? z.title : '';
     var sheet = $('sheet'); sheet.hidden = false; G.sheetOpen = true; G.cover = true; setRun(false); loadBoards();
     var W = $('trackWrap').clientWidth || window.innerWidth, iw = W - 24;
     $('track').innerHTML = cards ? cards.join('') : ps.map(function (p, k) {
@@ -3900,8 +3912,8 @@
     '  <nav class="bar" id="t3-bar">\n' +
     '    <div class="slot"><button type="button" class="cta" id="t3-cta" hidden></button><p class="where" id="t3-where">&nbsp;</p></div>\n' +
     '    <div class="row" id="t3-navRow">\n' +
-    '      <button type="button" class="nb" id="t3-bPrev">◀ 이전 구역</button>\n' +
-    '      <button type="button" class="nb pri" id="t3-bNext">다음 구역 ▶</button>\n' +
+    '      <button type="button" class="nb" id="t3-bPrev">' + CHV_L + '이전 구역</button>\n' +
+    '      <button type="button" class="nb pri" id="t3-bNext">다음 구역' + CHV_R + '</button>\n' +
     '    </div>\n' +
     '    <div class="row" id="t3-cafeRow" hidden>\n' +
     '      <button type="button" class="nb pri wide" id="t3-bBack1F">1층으로 돌아가기</button>\n' +
@@ -3917,9 +3929,9 @@
     '  </header>\n' +
     '  <div class="track-wrap" id="t3-trackWrap"><div class="track" id="t3-track"></div></div>\n' +
     '  <footer class="sf">\n' +
-    '    <button type="button" class="nb" id="t3-pPrev">◀ 이전</button>\n' +
+    '    <button type="button" class="nb" id="t3-pPrev">' + CHV_L + '이전</button>\n' +
     '    <button type="button" class="nb" id="t3-pZoom">크게</button>\n' +
-    '    <button type="button" class="nb" id="t3-pNext">다음 ▶</button>\n' +
+    '    <button type="button" class="nb" id="t3-pNext">다음' + CHV_R + '</button>\n' +
     '  </footer>\n' +
     '</section>\n' +
     '<section class="help" id="t3-help" role="dialog" aria-modal="true" aria-label="처음 안내" hidden>\n' +
@@ -3928,7 +3940,7 @@
     '    <p class="h2t">두 손가락으로 벌리면 크게, 오므리면 작게 봐요. 빈 바닥을 두 번 누르면 원래 크기예요.</p>\n' +
     '    <p class="h2t" id="t3-hSw">떠 있는 동전을 점프로 치면 그 활동으로 가요. 화면을 밀면 둘러봐요.</p>\n' +   /* v5.58 · v5.65 설정 「화면 밀어 시점 바꾸기」에 맞춰 setSwipe 가 바꾼다 */
     '    <p class="h2t pconly">PC에서는 W A S D로 걷고, ↑ 달리기 · ↓ 점프 · ← → 돌기예요.</p>\n' +
-    '    <div class="hdemo" aria-hidden="true"><span class="hbtn">다음 구역 ▶</span><span class="finger"></span></div>\n' +
+    '    <div class="hdemo" aria-hidden="true"><span class="hbtn">다음 구역' + CHV_R + '</span><span class="finger"></span></div>\n' +
     '    <label class="rmrow"><span class="t"><b>움직임 줄이기</b><span>어지러우면 켜세요</span></span><input type="checkbox" id="t3-rmChk" role="switch"><span class="sw" aria-hidden="true"></span></label>\n' +
     '    <label class="rmrow" id="t3-muRow"><span class="t"><b>음악 없이</b><span>조용히 보려면 켜세요</span></span><input type="checkbox" id="t3-muChk" role="switch"><span class="sw" aria-hidden="true"></span></label>\n' +
     '    <button type="button" class="nb pri wide" id="t3-hOk">시작하기</button>\n' +
@@ -3946,7 +3958,7 @@
     '  </div>\n' +
     '</section>\n' +
     '<section class="vid" id="t3-vid" role="dialog" aria-modal="true" aria-label="1F 타자왕 순위판" hidden>\n' +
-    '  <header class="sh"><span class="sg">EVENT</span><b>1F 타자왕 순위판</b><button type="button" class="close" id="t3-vClose">닫기</button></header>\n' +
+    '  <header class="sh"><span class="sg" id="t3-vSign">EVENT</span><b>1F 타자왕 순위판</b><button type="button" class="close" id="t3-vClose">닫기</button></header>\n' +
     '  <div class="vbody" id="t3-vbody"></div>\n' +
     '</section>\n' +
     '<div class="black" id="t3-black" aria-hidden="true"><canvas class="vcv" id="t3-veilCv"></canvas><p class="bt" id="t3-blackT">불러오는 중</p><p class="bn" id="t3-veilN"></p></div>\n' +
@@ -4053,5 +4065,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.65', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.66', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();

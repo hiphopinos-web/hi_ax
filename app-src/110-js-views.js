@@ -96,9 +96,9 @@ var Views = {
   notices: function () {
     var notices = S.get("notices", []).slice().sort(function (a, b) { return b.ts - a.ts; }).concat(DEFAULT_NOTICES);
     return notices.map(function (n) {
-      return '<div class="card soft mb8">' + (n.pinned ? '<span class="badge mint">고정</span> ' : "") +
-        '<b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">' + esc(n.title) + '</b><p class="muted" style="margin-top:5px">' + esc(n.body) + "</p>" +
-        (n.ts > 0 ? '<p style="margin-top:6px;font-size:calc(12.5px * var(--fs));color:var(--faint)">' + fmtTime(n.ts) + "</p>" : "") + "</div>";
+      return '<div class="card soft mb8 axs-ntc">' + (n.pinned ? '<span class="axs-ntc-pin">고정</span>' : "") +   /* v5.66 (디자인 감사 261005 D4) 옛 v28 크기 · 굵기 → AX-TDS 타입 토큰(CSS axs-ntc) */
+        '<b class="axs-ntc-t">' + esc(n.title) + '</b><p class="axs-ntc-b">' + esc(n.body) + "</p>" +
+        (n.ts > 0 ? '<p class="axs-ntc-d">' + fmtTime(n.ts) + "</p>" : "") + "</div>";
     }).join("");
   },
 

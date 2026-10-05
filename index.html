@@ -191,7 +191,7 @@
   #pwlost input::placeholder { font-weight: 700; color: var(--faint); }
   #pwlost .pw-msg { margin-top: 14px; font-size: calc(14.5px * var(--fs)); line-height: 1.6; color: var(--muted); }
   #pwlost .pw-ok { margin-top: 16px; font-size: calc(16px * var(--fs)); font-weight: 800; line-height: 1.6; color: var(--hi); }
-  #pwlost .pw-err { margin-top: 10px; font-size: calc(13.5px * var(--fs)); font-weight: 700; color: var(--bad); min-height: 1px; }
+  #pwlost .pw-err { margin-top: 10px; font-size: calc(13.5px * var(--fs)); font-weight: 700; color: var(--ax-color-error); min-height: 1px; }
   #pwlost .pw-link, #panel .pw-link { display: block; width: 100%; margin-top: 10px; border: 0; background: none; cursor: pointer; font-family: inherit; font-size: calc(14px * var(--fs)); font-weight: 700; color: var(--muted); text-decoration: underline; }
   #pwlost .q-eyebrow { font-size: calc(14px * var(--fs)); font-weight: 800; letter-spacing: -0.01em; color: var(--mint); }
   #pwlost .q-hello { margin-top: 14px; font-size: 26px; font-weight: 800; color: var(--hi); letter-spacing: -0.02em; }
@@ -262,7 +262,7 @@
   .progress5 span { flex: 1; height: 10px; background: var(--white); border-radius: 2px; }
   .progress5 span.on { background: var(--mint); }
   .timer { border-radius: 3px; background: var(--mint); color: var(--ax-color-onBrand); padding: 4px 10px; font-size: calc(13.5px * var(--fs)); font-weight: 800; }
-  .timer.hot { background: #ff5a4e; color: #fff; }
+  .timer.hot { background: var(--ax-color-error); color: var(--ax-color-inverse); }   /* v5.66 (디자인 감사 261005 D6) 오류 빨강 = error 토큰 */
   /* LED 전광판 공지 띠 · 블랙 스테이지에 Hi Orange 글자가 흐른다 (v29 · 네이비 폐기) */
   #ledbar { display: none; background: var(--ink); overflow: hidden; white-space: nowrap; padding: 8px 0; }
   #ledbar .led-track { display: inline-block; padding-left: 100%; animation: ledflow 32s linear infinite; font-weight: 800; color: var(--mint-deep); font-size: calc(15.5px * var(--fs)); letter-spacing: 0.02em; will-change: transform; }
@@ -402,9 +402,9 @@
   @keyframes spSettle { 0% { box-shadow: 0 0 0 0 rgba(255,126,49,0.55); } 100% { box-shadow: 0 0 0 10px rgba(255,126,49,0); } }
   #tabbar .ax-nav-link.sp-dot::after { content: ""; position: absolute; top: 16px; left: calc(50% + 8px); width: 8px; height: 8px; border-radius: 50%; background: var(--ax-color-brand); animation: spDot 0.9s ease-out both; }
   @keyframes spDot { 0% { transform: scale(0); opacity: 1; } 30% { transform: scale(1.3); } 60% { transform: scale(1); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
-  .scap { margin: 13px 2px 7px; font-size: calc(11.5px * var(--fs)); font-weight: 800; letter-spacing: 0.04em; color: var(--faint); }
+  .scap { margin: 13px 2px 7px; font: var(--ax-type-caption); font-weight: 600; color: var(--ax-color-muted); }   /* v5.66 (디자인 감사 261005 D4) 11.5px 800 → caption 600 */
   /* v3.19 테스트 버튼 · 회색 점선 = 운영(테스트) 요소임이 보이게, 위계 최하위 */
-  .btn.test { margin-top: 8px; background: transparent; border: 1.5px dashed var(--dimln); color: var(--faint); font-size: calc(12.5px * var(--fs)); font-weight: 700; padding: 9px; }
+  .btn.test { margin-top: 8px; background: transparent; border: 1.5px dashed var(--dimln); color: var(--faint); font: var(--ax-type-t7); font-weight: 600; padding: 9px; }   /* v5.66 (D4) 12.5px → t7 */
   @keyframes trailPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,126,49,0.32); } 50% { box-shadow: 0 0 0 7px rgba(255,126,49,0); } }
   @keyframes coupGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,126,49,0); } 40% { box-shadow: 0 0 0 5px rgba(255,126,49,0.4); } }
   .coupon { border-radius: 20px; overflow: hidden; margin-bottom: 12px; border: 0; }
@@ -429,13 +429,16 @@
   .qseg button.on { background: var(--mint); border-color: var(--mint); color: var(--ax-color-onBrand); }
   .myqr { margin-top: 14px; display: flex; justify-content: center; }
   .myqr svg { width: min(216px, 62vw); height: auto; padding: 12px; background: #fff; border: 1.5px solid var(--line); border-radius: 16px; }
-  .myqr-nm { margin-top: 10px; text-align: center; font-size: calc(16.5px * var(--fs)); font-weight: 800; color: var(--hi); }
-  .myqr-nm span { margin-left: 8px; font-family: var(--disp); font-size: calc(14.5px * var(--fs)); color: var(--faint); }
+  /* v5.66 (디자인 감사 261005 D4) 내 QR 이름 · 안내 · 대기 줄 = AX-TDS 타입 토큰(옛 16.5 · 14.5 · 13.5px · 굵기 800) */
+  .myqr-nm { margin-top: 10px; text-align: center; font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
+  .myqr-nm span { margin-left: 8px; font: var(--ax-type-t6-strong); color: var(--ax-color-muted); }
+  .myqr-hint { margin-top: 8px; text-align: center; font: var(--ax-type-t7); color: var(--ax-color-muted); }
+  .myqr-hint b { font-weight: 600; color: var(--ax-color-ink); }
   .qstate { margin-top: 12px; border: 1.5px solid var(--line); border-radius: 14px; overflow: hidden; }
   .qst { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 13px; background: var(--surface2); border-bottom: 1px solid var(--line); }
   .qst:last-child { border-bottom: 0; }
-  .qst .l { font-size: calc(13.5px * var(--fs)); font-weight: 700; color: var(--muted); }
-  .qst b { font-size: calc(14.5px * var(--fs)); font-weight: 800; color: var(--acc2); }
+  .qst .l { font: var(--ax-type-t7); font-weight: 600; color: var(--ax-color-muted); }
+  .qst b { font: var(--ax-type-t6-strong); color: var(--ax-color-brandText); }
   /* 층 칩 · 프로그램 탭(v3.7 복귀, 260829 a0668b9 구조)과 관리자 존 등급 화면 공용.
      v3.6 위계: 평상 칩 = 기본(흰 면 + 헤어라인) · 선택 = O100 채움 + 흰 글자(선택 상태 규정, 검정은 행동 전용이라 쓰지 않는다) */
   .fl-chips { display: flex; gap: 6px; }
@@ -457,7 +460,7 @@
   .game-hud { display: flex; gap: 8px; margin-bottom: 12px; }
   .game-hud .hud { flex: 1; background: var(--card); border: 0; border-radius: 14px; padding: 9px 6px; text-align: center; }
   .game-hud .hud .v { font-family: var(--disp); font-size: 20px; color: var(--hi); }
-  .game-hud .hud .v.hot { color: #e11d48; }
+  .game-hud .hud .v.hot { color: var(--ax-color-error); }   /* v5.66 (D6) */
   .game-hud .hud .l { font-size: calc(11.5px * var(--fs)); font-weight: 700; color: var(--muted); margin-top: 2px; }
   .chain-box { background: var(--ink); border: 0; color: #fff; border-radius: 20px; padding: 18px; text-align: center; margin-bottom: 12px; }
   .chain-box .who { font-size: calc(12.5px * var(--fs)); font-weight: 800; letter-spacing: 0.08em; color: rgba(255,255,255,0.55); }
@@ -915,6 +918,16 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* v4.13 홈 나의 일정 · 안쪽 스크롤(myscroll) 폐지 · 3개 + 목록 바로 아래 전폭 「일정 더보기 +N」(48 터치 · Weak 면) */
   .axs-more { display: flex; margin-top: var(--ax-space-8); min-height: var(--ax-touch-size); padding: var(--ax-space-12) var(--ax-space-16); font: var(--ax-type-t6-strong); }
   .oly-hub { margin-top: 10px; }
+  /* v5.66 (디자인 감사 261005 D4) 미니 게임 · AX 퀴즈 목록(oly-hub) 행 = AX-TDS 타입 토큰 · 옛 15.5 · 14 · 12.5px 굵기 800 */
+  .oly-hub .rc .tt { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
+  .oly-hub .tok { font: var(--ax-type-t6-strong); }
+  .oly-hub .tok b { font-weight: 600; }
+  .oly-hub .rc .rt .st { font: var(--ax-type-t7); font-weight: 600; color: var(--ax-color-brandText); }
+  /* v5.66 (D4) 공지 목록 · 고정 딱지 = Weak 면 칩(반경 8 · t7 700) · 제목 t5 strong · 본문 t6 · 시각 caption */
+  .axs-ntc .axs-ntc-pin { display: inline-flex; align-items: center; min-height: 24px; margin-right: var(--ax-space-8); padding: 0 var(--ax-space-8); border-radius: var(--ax-radius-8); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t7); font-weight: 700; vertical-align: 2px; }
+  .axs-ntc .axs-ntc-t { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
+  .axs-ntc .axs-ntc-b { margin-top: var(--ax-space-4); font: var(--ax-type-t6); color: var(--ax-color-body); }
+  .axs-ntc .axs-ntc-d { margin-top: var(--ax-space-8); font: var(--ax-type-caption); color: var(--ax-color-muted); }
   /* v3.50C AX 한 줄 · 검정 무대 위 한 줄 */
   /* v3.51 스피커 버튼 · 44px 터치 · 켬 = 오렌지 · 끔 = 회색 */
   .snd-btn { flex: none; width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid var(--dimln); border-radius: 12px; background: var(--white); color: var(--faint); cursor: pointer; padding: 0; }
@@ -1666,6 +1679,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* ═══ v4.84 (261001 앱 개편 2묶음) 홈 다음 스탬프 · 스탬프 탭 한 목록 · 프로그램 탭 메뉴 · 10F 세션 줄 · 1F 부스 6구역 (토큰만 · hex 없음) ═══ */
   #view[data-v="exp"] .axs-sec { display: flex; flex-direction: column; gap: var(--ax-space-12); }
   #view[data-v="exp"] .sect { margin: 0; align-items: center; }
+  #view[data-v="exp"] .sect b { font: var(--ax-type-t4); color: var(--ax-color-ink); }   /* v5.66 (디자인 감사 261005 D4) 옛 15.5px 800 · 12.5px 700 → 토큰(홈 .sect 와 같은 제목 크기) */
+  #view[data-v="exp"] .sect span { font: var(--ax-type-t7); color: var(--ax-color-muted); cursor: default; }
   #view[data-v="exp"] .lnk.sub { margin: 0 var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-muted); cursor: pointer; }
   #view[data-v="exp"] .nt { margin: 0 var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-body); }
   .axs-nx { gap: var(--ax-space-16); }
@@ -2195,6 +2210,12 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #rgPlay.rt .rg-hud .rg-sc small { font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; color: var(--rt-tan2); }
   #rgPlay.rt .rg-hud .rg-sc b, #rgPlay.rt .rg-hud .rg-tm { font-family: var(--rt-font); font-size: var(--rt-f24); font-weight: 400; line-height: var(--rt-l24); color: var(--rt-white); }
   #rgPlay.rt .rg-hud .rg-tm.hot { color: var(--rt-o100); }
+  /* v5.66 (디자인 감사 261005 하1) 테트리스 일시정지 단추 = 팡 · 점프와 같은 「일시정지」 · 「계속하기」(옛 「멈춤」 · 「계속」) · 길어진 단추 자리를 위해 HUD 이름표를 숫자 위로 올린다(오락실 SCORE 짜임)
+     360 · 큰글씨 · 점수 5자리에서도 글자가 겹치지 않는다(전에는 큰글씨에서 「줄 0레벨」이 겹쳤다) · 단추 좌우 여백 12 → 10 · 칸 사이 14 → 10 */
+  #rgPlay.rt.tetris .rg-hud { gap: 10px; }
+  #rgPlay.rt.tetris .rg-hud .rg-sc { flex-direction: column; align-items: flex-start; gap: 2px; }
+  #rgPlay.rt.tetris .rg-hud .rg-sc small, #rgPlay.rt.tetris .rg-hud .rg-sc b { line-height: 1; }
+  #rgPlay.rt.tetris .rgp-top .rgp-x, #rgPlay.rt.tetris .rgp-top .snd-btn { padding: 0 10px; }
   #rgPlay.rt .rgp-top .rgp-x, #rgPlay.rt .rgp-top .snd-btn { height: 40px; min-height: 40px; margin: 3px; padding: 0 12px; border: 0; border-radius: 0; background: var(--rt-tan2); color: var(--rt-bark);
     font-family: var(--rt-font); font-size: var(--rt-f16); font-weight: 400; box-shadow: var(--rt-line), inset -3px -3px 0 0 var(--rt-tan); }
   #rgPlay.rt .rgp-top .snd-btn.on { background: var(--rt-o100); color: var(--rt-btn); box-shadow: var(--rt-line), inset -3px -3px 0 0 var(--rt-deep); }
@@ -3110,7 +3131,7 @@ function sesAsk() {
   SES.askedAt = Date.now();
   modalOpen('<p class="myqr-nm" style="margin-top:4px">' + esc(u.name || "") + "<span>" + esc(u.empId || "") + "</span></p>" +
     '<input id="sesPin" class="input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" enterkeyhint="go" autocomplete="off" placeholder="비밀번호 4자리" style="margin-top:12px;text-align:center" oninput="numOnly(this, event)" onkeydown="onEnter(event, sesPinGo)">' +
-    '<p id="sesErr" role="alert" style="display:none;margin-top:8px;font-size:calc(14px * var(--fs));font-weight:700;color:#E5484D"></p>' +
+    '<p id="sesErr" role="alert" style="display:none;margin-top:8px;font-size:calc(14px * var(--fs));font-weight:700;color:var(--ax-color-error)"></p>' +
     '<button id="sesGo" class="btn mint" style="margin-top:10px" onclick="sesPinGo()">확인</button>', "비밀번호 다시 입력");
   setTimeout(function () { try { el("sesPin").focus(); } catch (e) {} }, 150);
 }
@@ -3273,7 +3294,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.65";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.66";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -5338,7 +5359,7 @@ function crowdStripHtml() {
 /* v5.37 (사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) 둘러보기 v3 = 시험 페이지와 같은 공용 모듈(tour3.js · tour3.css · 캐릭터 걷기 · 40도 시점 · 왼손 패드 · 오른손 십자 · 작은 지도 · 스태프 챗봇 · 판 보기 · 돋보기 2개 · 움직임 줄이기 · 입장 암전)
    같은 약속 AXTour.open/close/back/isOpen · 옛 v2(tour.js · tour.css · 자동 둘러보기 · 평면 지도 · 구역 시트)로 되돌리려면 아래 목록의 tour3 두 개를 tour.css · tour.js 로 바꾸면 된다(파일은 그대로 둠) */
 /* v5.38 (사용자 261003) 둘러보기 손질 · 캐릭터 겹침(스태프 원 충돌) · 늘 카메라 쪽을 봄 · 조그 패드 · 안내데스크 깜빡임(겹친 면) · 정문 회전문 또렷하게 · 로비 음악(Web Audio 합성 · 「음악 없이」 · 위쪽 스피커 버튼) · 파일 이름 그대로 · 캐시 깨기 ver v538 */
-var TOUR = { ver: "v565", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
+var TOUR = { ver: "v566", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
 try { localStorage.removeItem('axfT3Diag'); } catch (e) {} window.AXT3_DIAG = /[?&]t3diag=1(?:&|$)/.test(location.search);   /* v5.47 진단은 주소에 ?t3diag=1 이 있는 그 페이지에서만 · 기억하지 않는다 · 옛 기기 기억은 지운다(사용자 261004) */   /* v5.44 둘러보기 실기기 진단(주소 ?t3diag=1 · 이 기기에 기억 · ?t3diag=0 이면 끔) · 화면 왼쪽 위에 GPU · 깊이 비트 · highp · DPR · fps */
 /* 켜기 스위치 · v5.28 true = 전체 공개(사용자 261003 「1층 3D 전체 공개」) · false 로 두면 입구 3곳 · 판 퀴즈 힌트 링크 · 열기가 모두 숨는다 */
 var TOUR_ON = true;
@@ -6567,9 +6588,9 @@ var Views = {
   notices: function () {
     var notices = S.get("notices", []).slice().sort(function (a, b) { return b.ts - a.ts; }).concat(DEFAULT_NOTICES);
     return notices.map(function (n) {
-      return '<div class="card soft mb8">' + (n.pinned ? '<span class="badge mint">고정</span> ' : "") +
-        '<b style="font-size:calc(16.5px * var(--fs));color:var(--hi)">' + esc(n.title) + '</b><p class="muted" style="margin-top:5px">' + esc(n.body) + "</p>" +
-        (n.ts > 0 ? '<p style="margin-top:6px;font-size:calc(12.5px * var(--fs));color:var(--faint)">' + fmtTime(n.ts) + "</p>" : "") + "</div>";
+      return '<div class="card soft mb8 axs-ntc">' + (n.pinned ? '<span class="axs-ntc-pin">고정</span>' : "") +   /* v5.66 (디자인 감사 261005 D4) 옛 v28 크기 · 굵기 → AX-TDS 타입 토큰(CSS axs-ntc) */
+        '<b class="axs-ntc-t">' + esc(n.title) + '</b><p class="axs-ntc-b">' + esc(n.body) + "</p>" +
+        (n.ts > 0 ? '<p class="axs-ntc-d">' + fmtTime(n.ts) + "</p>" : "") + "</div>";
     }).join("");
   },
 
@@ -8731,12 +8752,12 @@ var OK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 function qrPanelHtml(inner) {
   var u = S.get("user", {}) || {}, txt = myQrText();
   var body = !txt ?
-    '<p class="muted" style="margin-top:12px;font-size:calc(14.5px * var(--fs))">사번으로 입장하면 내 QR이 발급됩니다.</p>' :
+    '<p class="myqr-hint">사번으로 입장하면 내 QR이 발급됩니다.</p>' :
     '<div class="myqr' + (QRM.msg ? " axs-qrok" : "") + '">' + myQrSvg(216) + (QRM.msg ? '<span class="axs-okbadge">' + OK_SVG + "</span>" : "") + "</div>" +
     '<p class="myqr-nm">' + esc(u.name || "") + "<span>" + esc(u.empId || "") + "</span></p>" +
     (QRM.msg ? '<p class="axs-okline" role="status"><b>확인됨</b> · ' + esc(QRM.msg) + "</p>" : "") +
-    '<p class="muted" style="margin-top:8px;text-align:center;font-size:calc(13.5px * var(--fs));line-height:1.65">' +
-    '이 QR을 <b style="color:var(--hi)">스태프</b>에게 보여 주세요<br>화면 밝기를 올리면 더 빨리 읽혀요</p>' + qrMineStateHtml();   /* 261005 최종 QA · 「운영 데스크 스캐너」 → 「스태프」(AX PLAY · 스탬프 탭 · 부스 안내가 모두 「스태프에게 내 QR」이다 · 내 QR 을 찍는 곳은 데스크만이 아니다) */
+    '<p class="myqr-hint">' +   /* v5.66 (디자인 감사 261005 D4) 옛 v28 크기 → AX-TDS 타입 토큰(CSS myqr-hint) */
+    '이 QR을 <b>스태프</b>에게 보여 주세요<br>화면 밝기를 올리면 더 빨리 읽혀요</p>' + qrMineStateHtml();   /* 261005 최종 QA · 「운영 데스크 스캐너」 → 「스태프」(AX PLAY · 스탬프 탭 · 부스 안내가 모두 「스태프에게 내 QR」이다 · 내 QR 을 찍는 곳은 데스크만이 아니다) */
   var h = body;   /* v5.23 화면 안 카드 · 닫기는 헤더 뒤로 */
   return inner ? h : '<div id="qrPanel">' + h + "</div>";
 }
@@ -11915,7 +11936,7 @@ function ttTopHtml() {
     '<span class="rg-sc"><small>레벨</small><b id="ttHudLv">1</b></span>' +
     '<span style="flex:1"></span>' +
     sndBtnHtml(false) +
-    '<button class="rg-ib rgp-x" type="button" data-on="계속" data-off="멈춤" aria-label="일시정지" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">멈춤</button></div>';   /* v3.87b 멈춤은 위 줄에 둔다 · 조작 묶음 옆에 두면 360px 폭에서 겹치고 잘못 눌린다 */
+    '<button class="rg-ib rgp-x" type="button" data-on="계속하기" data-off="일시정지" aria-label="일시정지" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">일시정지</button></div>';   /* v5.66 (디자인 감사 261005 하1) 「멈춤」 · 「계속」 → 팡 · 점프와 같은 「일시정지」 · 「계속하기」 · v3.87b 멈춤은 위 줄에 둔다 · 조작 묶음 옆에 두면 360px 폭에서 겹치고 잘못 눌린다 */
 }
 /* v3.87d (사용자 확정 260918) 버튼 네 개.
    왼손 = 왼쪽 · 오른쪽 · 한 칸 내리기 (십자의 위 칸은 없앴다) · 오른손 = 아래 안쪽 회전(시계만) · 대각선 위 바닥까지.
