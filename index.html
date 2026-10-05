@@ -1975,6 +1975,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-sg li .tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .axs-sg li .tx b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .axs-sg .sgp { border-top: 0; padding: 16px; border-radius: 16px; background: var(--ax-color-surface); }
+  .axs-sg .sgq { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }   /* v5.71 10F 끝 QR 한 줄(신청자만 · 준비할 것 상자 안) */
   /* v5.60 O/X 정답 작은 팡 키프레임(규칙은 판 문법 절 panCss 의 .axs-pan.qz .qz-ab.pop) */
   @keyframes qzOxPop { 0% { transform: scale(1); } 45% { transform: scale(1.06); } 100% { transform: scale(1); } }
   @keyframes qzOxRing { 0% { transform: scale(1); opacity: 0.85; } 100% { transform: scale(1.14, 1.3); opacity: 0; } }
@@ -3390,7 +3391,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.70";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.71";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -4884,7 +4885,7 @@ function progFlowItems(onlyFl) {
   });
   if (onlyFl) return pub.filter(function (p) { return p.fl === onlyFl; });   /* v5.65 층 안내(floor_d · 둘러보기 엘리베이터 17F) = 그 층 공용 일정만(개인 일정 · 대신하기 없음) */
   var tm = tenMine();
-  if (tm) { var tp = tm.tm.split("~"); mine.push({ k: "ten", pid: tm.id, a: t2m(tp[0]), b: t2m(tp[1]), t0: tp[0], t1: tp[1], ttl: tm.ttl, sub: tm.sub, fl: 10, pl: sessPlace(tm).replace(/^\d+F\s*·?\s*/, ""), go: "progOpen('" + tm.id + "')", chip: "내 세션", mine: true, rep: true }); }
+  if (tm) { var tp = tm.tm.split("~"); mine.push({ k: "ten", pid: tm.id, a: t2m(tp[0]), b: t2m(tp[1]), t0: tp[0], t1: tp[1], ttl: tm.ttl, sub: tm.sub, fl: 10, pl: sessPlace(tm).replace(/^\d+F\s*·?\s*/, ""), go: "progOpen('" + tm.id + "')", chip: "내 세션", mine: true, rep: true }); if (attMineK(tm.id, "out")) mine[mine.length - 1].chip = "출석"; }   /* v5.71 끝 QR 출석 = 17F 와 같은 칩 「출석」 */
   var r = myResv();
   if (r && r.slot && FL_DAP_OK.indexOf(r.status) >= 0) { var ra = t2m(r.slot); mine.push({ k: "dap", pid: "dap", a: ra, b: ra + (RESV_CONF.step || 30), t0: r.slot, t1: hm2(ra + (RESV_CONF.step || 30)), ttl: "AX LOUNGE 상담", sub: "", fl: 1, pl: "AX LOUNGE", go: "progOpen('dap')", chip: RESV_ST[r.status] || "승인 완료", mine: true }); }
   var c = S.get("cchat", null);
@@ -5127,7 +5128,7 @@ function progMine(id) {
 /* 목록 상태 한 줄 [글, 색] · ok = success · off = muted · "" = brandText */
 function progState(s) {
   if (s.kind === "open") return attStLbl(s.id) ? [attStLbl(s.id), "ok"] : [s.id === "expo" ? "자유 입장" : "자유 참석", ""];   /* v5.68 입장 · 끝 둘 다 = 출석 완료 · 하나만 = 입장 출석 | 끝 출석 */   /* v4.26 17F 는 출석하면 「출석 완료」 · v4.38 강연 = 「자유 참석」(시간표 딱지와 같은 말) · 전시 = 「자유 입장」 */
-  if (s.kind === "info") return sessMine(s.id) ? ["사전 신청 완료", "ok"] : ["사전 신청자 참여", ""];   /* v5.60 T3 */
+  if (s.kind === "info") return sessMine(s.id) && attMineK(s.id, "out") ? ["출석 완료", "ok"] : sessMine(s.id) ? ["사전 신청 완료", "ok"] : ["사전 신청자 참여", ""];   /* v5.60 T3 · v5.71 끝 QR 출석 = 출석 완료 */
   if (s.id === "dap") {
     var r = myResv();
     if (r && RESV_HOLD.indexOf(r.status) >= 0) return [RESV_ST[r.status] || "신청 완료", "ok"];
@@ -5157,7 +5158,8 @@ function sessGuideHtml(s, mine) {
   var li = function (it) { return '<li><span class="tx">' + (it.name ? "<b>" + esc(it.name) + "</b>" : "") + "<span>" + esc(it.desc) + "</span></span></li>"; };
   var intro = SESS_INTRO_ON && s.intro ? '<p class="intro">' + esc(s.intro) + "</p>" : "";
   var todo = (s.todo || []).length ? '<div class="sgg"><h3>하는 일</h3><ul>' + s.todo.map(li).join("") + "</ul></div>" : "";
-  var prep = mine && (s.prep || []).length ? '<div class="sgg sgp"><h3>준비할 것</h3><ul>' + s.prep.map(li).join("") + "</ul></div>" : "";
+  var pl = (s.prep || []).length, q10 = mine && s.fl === 10 ? '<p class="sgq">끝날 때 화면의 QR을 찍으면 스탬프 2개</p>' : "";   /* v5.71 10F 끝 QR · 신청자만 · 준비할 것 상자 안(준비할 것이 없는 세션 D · E 는 이 줄만) */
+  var prep = mine && (pl || q10) ? '<div class="sgg sgp">' + (pl ? "<h3>준비할 것</h3><ul>" + s.prep.map(li).join("") + "</ul>" : "") + q10 + "</div>" : "";
   return intro || todo || prep ? '<section class="axs-sg"><h2 class="ax-section-title">세션 안내</h2>' + intro + todo + prep + "</section>" : "";
 }
 /* v5.68 (사용자 확정 261005) 17F 강의 출석 = 입장 QR 1개 + 끝 QR 1개 = 스탬프 2개 · 상세 표 두 줄(입장 QR · 끝 QR) + 지금 입장 수(서버 sync crowd.h · 그 강의일 때만)
@@ -5222,12 +5224,14 @@ function progDetail(s) {
     return D;
   }
   if (s.kind === "info") {
-    var mi = sessMine(s.id);
+    var mi = sessMine(s.id), ax = att10X(s), ao = mi ? attMineK(s.id, "out") : "", tn = attNow(), kw = attKWin(ax, "out"), wo = mi && !ao && (evPhase() === "live" || !!attTm()) && tn >= kw.a && tn <= kw.b;
     D.cat = "실습형 세션 · " + s.ttl; D.title = s.sub;
     D.kv = [["일시", day + progTm(s.tm)], ["장소", pl], ["정원", s.capNote || ""], ["참여 방법", "사전 신청자 참여"]];   /* v5.60 T1 (design.md §7 배제로 읽히는 말) */
+    if (mi) D.kv.push(["끝 QR", ao ? ao + " 출석" : attWinLbl(ax, "out")]);   /* v5.71 10F 끝 QR(신청자만) · 출석하면 시각 */
+    if (ao) { D.st = "출석 완료"; D.stc = "ok"; }
     D.sg = sessGuideHtml(s, !!mi);   /* v5.60 세션 안내 = (한 줄 소개) → 하는 일 → 준비할 것(신청자만) · 셋 다 없으면 블록 없음 */
     D.help = mi ? "사전 신청 내역은 나의 일정에서 확인할 수 있어요" : "17F 강연 · 1F 전시 · 18F 커피챗은 누구나 참여해요";   /* v5.60 T2 */
-    D.btn = mi ? progBtn("나의 일정 보기", "mySched()", "ax-button-weak") : progBtn("전체 시간표 보기", "homeSched()", "ax-button-weak");   /* v5.60 시안 = 약한 버튼 */
+    D.btn = wo ? progBtn("끝 QR 스캔", "qrScanOpen()") : mi ? progBtn("나의 일정 보기", "mySched()", "ax-button-weak") : progBtn("전체 시간표 보기", "homeSched()", "ax-button-weak");   /* v5.60 시안 = 약한 버튼 · v5.71 끝 창이 열렸고 아직이면 스캔 */
     return D;
   }
   if (s.id === "dap") {
@@ -5511,7 +5515,7 @@ function myAgendaRow(x, j) {
 function myAgendaItems() {
   var items = myItems(true).filter(function (x) { return !x.ten; }), ts = tenMine();
   /* v5.64 (사용자 261005 「세션A가 펼쳐져 있는 게 이상 · 프로그램 탭 시간표처럼 · 상세는 눌러서」) 내 10F 세션 = 다른 일정과 같은 시간표 줄 · 시간 순서 · 누르면 세션 상세 · 옛 펼친 카드(tenMineCard · 「세션 상세」 단추) 삭제 */
-  if (ts) { var tsp = ts.tm.split("~"), tsm = sessMine(ts.id) || {}; items.push({ kind: "sess:" + ts.id, min: t2m(tsp[0]), go: "sessOpen('" + ts.id + "')", gTitle: ts.ttl, gSub: "내 세션 · " + sessPlace(ts) + (tsm.test ? " · 테스트" : ""), iv: [t2m(tsp[0]), t2m(tsp[1])] }); }
+  if (ts) { var tsp = ts.tm.split("~"), tsm = sessMine(ts.id) || {}; items.push({ kind: "sess:" + ts.id, min: t2m(tsp[0]), go: "sessOpen('" + ts.id + "')", gTitle: ts.ttl, gSub: "내 세션 · " + sessPlace(ts) + (tsm.test ? " · 테스트" : ""), iv: [t2m(tsp[0]), t2m(tsp[1])] }); if (attMineK(ts.id, "out")) items[items.length - 1].gSub = "출석 완료 · " + sessPlace(ts); }   /* v5.71 끝 QR 출석 */
   var r = myResv();
   if (r && r.status === "done" && r.slot) items.push({ kind: "resv_done", done: true, min: sessStartMin(r.slot), go: "App.go('dap')", gTitle: "AX LOUNGE 상담", sub: "1F AX LOUNGE", iv: [sessStartMin(r.slot), sessStartMin(r.slot) + (RESV_CONF.step || 30)] });   /* 끝난 상담도 지난 줄로 남긴다 */
   items.sort(function (a, b) { return (a.done ? 1 : 0) - (b.done ? 1 : 0) || (myAgendaNow(a) ? -1 : a.min) - (myAgendaNow(b) ? -1 : b.min); });
@@ -6167,7 +6171,7 @@ function stampTagHtml(id) {
 function stampLineHtml(id, left) { return '<div class="axs-stline">' + (left || "<span></span>") + stampTagHtml(id) + "</div>"; }
 /* 프로그램 상세 · p3 에 들어가는 것(17F 강연 · DAP 상담 · 커피챗 · 10F 는 P3_INCLUDE_10F) */
 function progStampId(s) {
-  return s && ((s.fl === 17 && PROG_CAT[s.id] === "강연") || s.id === "dap" || s.id === "cchat" || (P3_INCLUDE_10F && s.fl === 10 && PROG_CAT[s.id] === "실습")) ? "p3" : "";
+  return s && ((s.fl === 17 && PROG_CAT[s.id] === "강연") || s.id === "dap" || s.id === "cchat" || (P3_INCLUDE_10F && s.fl === 10 && PROG_CAT[s.id] === "실습") || (s.fl === 10 && PROG_CAT[s.id] === "실습" && !!sessMine(s.id))) ? "p3" : "";   /* v5.71 10F 끝 QR · 사전 신청자의 세션 상세에 도장 */
 }
 /* 잉크 튐 · 도장 가장자리에서 바깥으로 · O100~O30 사다리 · 보일 때만 만들고 0.9초 뒤 지운다 · scale 0.5 = 카드 인라인(절반 크기) */
 var INK_COLS = ["#FF7E31", "#FF7E31", "#FFA46E", "#FFB284", "#FFCFB0"];
@@ -8612,6 +8616,8 @@ function attWin(t) {
 function attByCode(code, fixId, k) {
   var u = S.get("user", {}) || {};
   if (!u.empId) { srShow({ st: "fail", why: "param" }); return; }
+  var t10 = att10Sess(String(fixId || "").toLowerCase());
+  if (t10) { att10ByCode(code, t10); return; }   /* v5.71 10F 세션 끝 QR(&p=세션 id) · 아래 att10 */
   var w = attWin(attNow()), fx = attProg(String(fixId || "").toLowerCase());
   ATT.code = String(code || "").trim(); ATT.res = null; ATT.sel = fx ? fx.id : w.sel; ATT.fix = fx ? fx.id : ""; ATT.k = k === "in" || k === "out" ? k : "";
   var pid = fx ? fx.id : w.sel || (w.open[0]) || (w.next && w.next.id) || "l2";
@@ -8708,6 +8714,68 @@ function attStamp(res) {
   checkRewards();
   stampBuzz(25);
   return Math.min(STAMP_DENOM, stampCount());
+}
+/* ═══ v5.71 (사용자 확정 261005 「권장대로 10층 끝 QR 진행해」) 10F 실습 세션 끝 QR ═══
+   세션마다 끝 QR 하나(입장 QR 없음) · QR 주소 = 10F 출석 코드 + &p=<세션 id> + &k=out · 찍으면 고르기 없이 바로 att_claim(서버가 세션 id 로 가른다 · 코드는 앱에 없다)
+   창 = 끝 10분 전 ~ 끝 10분 뒤(17F 끝 창과 같은 설정 · sync aw) · 자격 = 사전 신청 명단(서버 · 앱 sessMine 과 같은 원천) · 세션 E 1 · 2회차는 같은 세션
+   결과 = 출석(스탬프 「프로그램 참여」 2개 · 이미 있으면 기록만) · 이미 출석 · 명단 밖(notpre · 담백한 안내 · 스탬프 없음 · design.md §7) · 다른 세션(other) · 시간 밖(window)
+   내 기록 = att_mine["<세션>.out"](17F 와 같은 저장) · 세션 상세 「끝 QR」 줄 · 시간표 칩 · 나의 일정 줄이 읽는다 */
+var ATT10 = { code: "", sid: "", res: null, info: null };
+function att10Sess(id) { var s = id ? sessById(id) : null; return s && s.fl === 10 && s.kind === "info" ? s : null; }
+function att10X(s) { var p = s.tm.split("~"); return { id: s.id, nm: s.ttl, s: p[0], e: p[1] }; }
+function att10ByCode(code, s) {
+  ATT10.code = String(code || "").trim(); ATT10.sid = s.id; ATT10.res = null; ATT10.info = null;
+  var go = function () { PROG.sid = s.id; App.go("sess_d"); sheetOpen(att10Spec()); att10Go(); };   /* 뒤에는 그 세션 상세 · 시트를 닫으면 출석 상태가 보인다 */
+  if (typeof qrGated === "function" && qrGated()) qrGateDefer(go); else go();
+}
+function att10Spec() {
+  var s = sessById(ATT10.sid) || { ttl: ATT10.sid }, r = ATT10.res, f = ATT10.info;
+  if (r) return { id: "att10", title: r.dup ? "이미 출석했어요" : "출석했어요", lead: "<b>" + esc(s.ttl) + "</b><br>끝 " + esc(r.at),
+    body: (r.stamp ? '<div class="ax-inset axs-attok"><p class="ax-card-title">스탬프 「프로그램 참여」 ' + r.add + '개 적립</p><p class="ax-description">현재 스탬프 ' + r.stamp + " / " + STAMP_DENOM + "개</p></div>" :
+      r.had ? '<p class="ax-meta">프로그램 참여 스탬프 2개는 이미 받았어요</p>' : "") + (r.test ? '<p class="ax-meta">테스트 계정 · 스탬프는 이 기기에만</p>' : ""),
+    go: "sheetClose()", goLbl: "확인" };
+  if (f) return { id: "att10", title: f.t, lead: f.l, go: "sheetClose()", goLbl: "확인" };
+  var tmRow = testMode() ? '<label class="axs-attt">테스트 · 시각<input type="time" value="' + esc(attTm()) + '" onchange="att10TmSet(this.value)"></label>' : "";
+  return { id: "att10", title: "10F 세션 출석", lead: "<b>" + esc(s.ttl) + "</b><br>끝 QR", body: tmRow, go: "att10Go()", goLbl: "출석하기", goBusy: "출석하는 중" };
+}
+function att10Repaint() { if (SHEET.busy) botWait(false); SHEET.busy = false; SHEET.err = null; SHEET.spec = att10Spec(); if (el("axsSheet")) sheetPaint(); }
+function att10TmSet(v) { S.set("att_tm", /^\d{1,2}:\d{2}$/.test(v || "") ? v : ""); ATT10.res = null; ATT10.info = null; att10Repaint(); }
+function att10Go() {
+  if (SHEET.busy || ATT10.res || ATT10.info) return;
+  var s = att10Sess(ATT10.sid), u = S.get("user", {}) || {};
+  if (!s) return;
+  if (!BE.on) { att10Local(s); return; }   /* 데모(서버 없음) · 같은 규칙을 이 기기에서 */
+  sheetBusy(true);
+  var p = { action: "att_claim", emp: u.empId, code: ATT10.code, prog: s.id, k: "out" }, tm = attTm();
+  if (tm && testEmp()) p.tm = tm;
+  beCall(p, att10Done, function () { sheetFail({ t: "연결이 불안정해 출석하지 못했어요", b: "출석은 아직 되지 않았어요. 다시 시도해 주세요." }); });
+}
+/* 데모(서버 없음) · 끝 창 · 같은 세션 1회 · 명단 = sessMine(테스트 오버레이 포함 · 테스트 모드는 명단 없이) */
+function att10Local(s) {
+  var x = att10X(s), t = attNow(), kw = attKWin(x, "out"), at = attMineK(s.id, "out");
+  if (!testMode() && !sessMine(s.id)) return att10Done({ ok: false, reason: "notpre", prog: s.id });
+  if (!at && (t < kw.a || t > kw.b)) return att10Done({ ok: false, reason: "window", prog: s.id, open: hm2(kw.a) + "~" + hm2(kw.b) });
+  att10Done({ ok: true, prog: s.id, k: "out", ten: true, at: at || hm2(t), dup: !!at, mine: [], pg: 2, stamp: at ? null : { id: "p3", dry: true, pg: 2 }, test: true });
+}
+function att10Done(res) {
+  var s = sessById(ATT10.sid) || { id: ATT10.sid, ttl: "" };
+  if (!res || !res.ok) {
+    var why = res && res.reason;
+    if (why === "nocode") { sheetClose(true); srShow({ st: "fail", why: "nocode" }); return; }
+    if (why === "notpre") { ATT10.info = { t: "사전 신청자 출석 QR이에요", l: "<b>" + esc(s.ttl) + "</b><br>17F 강연 · 1F 전시 · 18F 커피챗은 누구나 참여해요" }; att10Repaint(); return; }   /* design.md §7 · 오류 말투 없이 갈 수 있는 곳 한 줄 */
+    if (why === "other") { ATT10.info = { t: "신청한 세션의 QR을 찍어 주세요", l: "신청한 세션 · <b>" + esc(res.preName || "") + "</b>" }; att10Repaint(); return; }
+    if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: s.ttl + " · 끝 QR " + String(res.open || "").replace("~", "–") }); return; }
+    sheetFail({ t: "출석하지 못했어요", b: "다시 시도해 주세요." });
+    return;
+  }
+  var m = attMine(), key = s.id + ".out", s0 = S.get("stamps", []), before = s0.indexOf("p3") >= 0 ? 2 : s0.indexOf(STAMP_HALF) >= 0 ? 1 : 0;
+  (res.mine || []).forEach(function (y) { if (y && y.id) m[y.k === "out" ? y.id + ".out" : y.id] = y.at; });
+  if (!m[key]) m[key] = res.at;
+  S.set("att_mine", m);
+  var sn = attStamp(res);
+  ATT10.res = { at: m[key], dup: !!res.dup, stamp: sn, add: res.stamp && !res.stamp.dry ? res.stamp.add || 0 : Math.max(1, 2 - before), had: !!(res.stamp && !sn), test: !!res.test };
+  att10Repaint();
+  App.render();   /* 뒤의 세션 상세 · 시간표 · 나의 일정이 출석 상태로 바뀐다 */
 }
 
 /* ═══ 스캔 대기열 · 통신이 약한 곳(계단 복도 등) · 찍은 순서대로 보낸다 ═══
