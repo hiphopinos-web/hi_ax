@@ -2539,6 +2539,22 @@ function attBars(d){
   return '<table class="tb plain bartb">'+progs.map(function(x){
     return barRow('<b>'+esc(x.n)+'</b> <span class="cap n">'+x.cnt+'명 · '+esc(x.s)+'–'+esc(x.e)+'</span>', x.cnt, den||1, '<b class="n">'+x.rate+'%</b>', den&&x.cnt>den); }).join("")+'</table>';
 }
+/* v5.71 (사용자 확정 261005) 10F 실습 세션 끝 QR · 사전 신청자에게 스탬프 2개 · 서버 att_stats ten[] = { id, n, s, e, win, pre(명단), cnt(출석), inPre(명단 중 출석) } · code10(코드 있음)
+ *   출석률 = inPre ÷ pre(pre 0 = 「명단 없음」) · 세션 E 1 · 2회차는 같은 세션으로 보므로 inPre 가 다른 회차 명단 사람을 포함할 수 있다 · 옛 서버(ten 없음)면 한 줄 안내 · 부문 통계 없음 */
+function att10Card(d){
+  var T=d.ten;
+  if(!Array.isArray(T)) return card("10F 실습 세션 · 끝 QR 출석","",'<div class="empty">이 서버는 10F 출석 집계(ten)를 주지 않습니다. 서버 갱신 뒤 보입니다.</div>');
+  var sp=0, sc=0, si=0;
+  var rows=T.map(function(x){ sp+=x.pre||0; sc+=x.cnt||0; si+=x.inPre||0;
+    var rt=x.pre?Math.round((x.inPre||0)/x.pre*100):null;
+    return '<tr><td><b>'+esc(x.n)+'</b><div class="cap n">'+esc(x.s)+'–'+esc(x.e)+'</div></td><td class="n">'+esc(x.win||"-")+'</td>'+
+      '<td class="n tdr">'+(x.pre||0)+'</td><td class="n tdr"><b>'+(x.cnt||0)+'</b></td><td class="n tdr">'+(x.inPre||0)+'</td>'+
+      '<td class="n tdr">'+(rt==null?tag("명단 없음","off"):'<b>'+rt+'%</b>')+'</td></tr>'; }).join("");
+  return card("10F 실습 세션 · 끝 QR 출석","사전 신청자만 · 찍으면 스탬프 2개 · 10F 코드 "+(d.code10?"있음":"없음"),
+    '<div class="wrap"><table class="tb"><tr><th>세션</th><th>끝 QR 시간</th><th class="tdr">명단</th><th class="tdr">출석</th><th class="tdr">명단 중 출석</th><th class="tdr">출석률</th></tr>'+rows+
+    (!T.length?emptyRow(6,"10F 세션 목록이 없습니다."):'<tr><td><b>합계</b></td><td></td><td class="n tdr">'+sp+'</td><td class="n tdr"><b>'+sc+'</b></td><td class="n tdr">'+si+'</td><td class="n tdr">'+(sp?Math.round(si/sp*100)+'%':'-')+'</td></tr>')+'</table></div>'+
+    (d.code10?'':'<p class="cap mt8">10F 코드가 아직 없습니다. QR 메뉴를 열면 서버가 만듭니다(att_list).</p>'));
+}
 function viewAtt(){
   var d=attCur(), base=ST.data.att||{};
   var h=tabHead();
@@ -2575,7 +2591,9 @@ function viewAtt(){
     h+=card("강의별 출석","현장 = 대강당 QR · 송출 = 유튜브 화면 QR · 같은 강의 같은 구분은 한 번만", attTable(d));
     h+='<div class="grid g2">'+card("대강당 현장 입장","현장 입장 ÷ 좌석 "+(d.denom||0)+"석", attBars(d))+
       card("시간대별 입장 흐름",(d.bucket||10)+"분 단위 · 처음 출석한 시각 기준", flowT)+'</div>';
-    h+=memo('<p><b>QR</b> · 강의마다 입장 QR · 끝 QR 이 있고, 현장(대강당)과 유튜브 송출이 따로입니다. 입장 = 시작 '+W.i[0]+'분 전 ~ 시작 '+W.i[1]+'분 뒤, 끝 = 끝 '+W.o[0]+'분 전 ~ 끝 '+W.o[1]+'분 뒤(설정 출석_입장창 · 출석_끝창). 시간은 서버가 다시 봅니다. 이 창은 인쇄된 QR 과 연동되어 잠겨 있고(확정 261005), 바꾸기는 시스템 › 운영 설정에서 슈퍼관리자만 합니다.</p>'+
+    h+=att10Card(d);
+    h+=memo('<p><b>10F 실습 세션</b> · 세션마다 끝 QR 하나(입장 QR 없음)입니다. 사전 신청 명단에 있는 사람만 스탬프 2개를 받고, 명단 밖이거나 다른 세션 신청자는 안내만 봅니다. 출석률 = 명단 중 출석 ÷ 명단. 세션 E 1 · 2회차는 같은 세션으로 봅니다. 코드는 17F 와 따로이고(codes.json a10), 바꾸기는 시스템 › 위험 구역입니다.</p>'+
+      '<p><b>QR</b> · 강의마다 입장 QR · 끝 QR 이 있고, 현장(대강당)과 유튜브 송출이 따로입니다. 입장 = 시작 '+W.i[0]+'분 전 ~ 시작 '+W.i[1]+'분 뒤, 끝 = 끝 '+W.o[0]+'분 전 ~ 끝 '+W.o[1]+'분 뒤(설정 출석_입장창 · 출석_끝창). 시간은 서버가 다시 봅니다. 이 창은 인쇄된 QR 과 연동되어 잠겨 있고(확정 261005), 바꾸기는 시스템 › 운영 설정에서 슈퍼관리자만 합니다.</p>'+
       '<p><b>스탬프</b> · 프로그램 참여는 2개입니다. 17F 어느 강의든 입장 1개 + 끝 1개. 한쪽만 찍으면 1개(명단에 1/2). 상담 · 커피챗으로 이미 2개면 그대로.</p>'+
       '<p><b>대강당</b> = 지금 강의의 현장 입장 ÷ 좌석(설정 대강당_좌석). 앱 홈 혼잡 칸과 같은 값이고 10명 단위로 보입니다. 송출 · 끝 QR 은 세지 않습니다. 송출은 송출_켬 에 든 강의만 받습니다.</p>'+
       '<p>부문별 집계는 두지 않습니다. 이 화면의 숫자에는 사번 · 이름이 없습니다.</p>');
@@ -2583,6 +2601,7 @@ function viewAtt(){
   }
   h+='<div class="grid g2">'+card("프로그램별 출석","분모 "+(d.denom||0)+"석(대강당 좌석) · 출석 = 시작 "+(d.lead||30)+"분 전 ~ 종료", attBars(d))+
     card("시간대별 입장 흐름",(d.bucket||10)+"분 단위 · 처음 출석한 시각 기준", flowT)+'</div>';
+  if(Array.isArray(d.ten)) h+=att10Card(d);
   h+=memo('<p><b>출석률</b> = 그 강연에 QR 로 출석한 사람 ÷ 대강당 좌석 '+(d.denom||0)+'석. 17F 에 오고도 QR 을 찍지 않은 사람은 세지 못합니다. 서서 듣는 사람까지 출석하면 100%를 넘을 수 있고 그 줄은 막대가 적갈색으로 바뀝니다.</p>'+
     '<p><b>출석 규칙</b> · 참가자가 대강당 입구 QR 을 찍으면 지금 진행 중인 강연이 미리 골라진 시트가 뜹니다. 시작 '+(d.lead||30)+'분 전부터 종료까지인 강연만 고를 수 있고, 시간은 서버가 다시 확인합니다. 한 사람이 여러 강연에 출석할 수 있고 같은 강연은 한 번만 셉니다.</p>'+
     '<p><b>QR</b> · 출석 QR 코드는 QR 메뉴 › 코드 · 인쇄에 있고 codes.json(a17)으로 인쇄 원본을 만듭니다. 코드를 바꾸면 입구 인쇄물을 다시 붙입니다.</p>'+
@@ -5430,6 +5449,7 @@ function qrCodesJson(){
   boothRows().forEach(function(r){ if(BOOTH_PRINT.indexOf(r.id)>=0) out[r.id]=r.code; });
   var al=ST.data.alist; if(al&&al.ok&&al.code) out.a17=al.code;
   if(al&&al.ok&&al.rcode) out[al.rkey||"a17r"]=al.rcode;   /* v5.68 유튜브 송출 출석 코드 */
+  if(al&&al.ok&&al.code10) out[al.key10||"a10"]=al.code10;   /* v5.71 10F 실습 세션 끝 QR 코드 */
   var dq=ST.data.dstat; if(dq&&dq.ok&&dq.code) out.d17=dq.code;   /* v4.79 추첨 체크인 */
   ((ST.data.stair||{}).rows||[]).forEach(function(r){ out["st"+("0"+r.fl).slice(-2)+"-"+r.r]=r.code; });
   return out;
@@ -5449,15 +5469,17 @@ function boothCard(){
   var al=ST.data.alist, attRow=al&&al.ok&&al.code?'<tr><td>'+tag("17F 출석")+'</td><td style="white-space:nowrap"><b>17F 대강당 · 강의 PPT</b></td><td class="n" style="white-space:nowrap">'+attWinTxt(al)+'</td><td class="n"><b>'+esc(al.code)+'</b></td>'+
     '<td class="n cap">'+esc(appBase())+'#s='+esc(al.code)+'&amp;p=강의&amp;k=in|out</td><td class="n cap">4_강의장 출석/att_*.png 8장</td><td>'+tag("운영","ok")+'</td></tr>'+
     (al.rcode?'<tr><td>'+tag("17F 송출")+'</td><td style="white-space:nowrap"><b>유튜브 송출 화면</b></td><td class="n" style="white-space:nowrap">송출 켠 강의 '+((al.ron||[]).length)+'개</td><td class="n"><b>'+esc(al.rcode)+'</b></td>'+
-    '<td class="n cap">'+esc(appBase())+'#s='+esc(al.rcode)+'&amp;p=강의&amp;k=in|out</td><td class="n cap">4_강의장 출석/att_*_yt.png 8장</td><td>'+tag("운영","ok")+'</td></tr>':''):'';
+    '<td class="n cap">'+esc(appBase())+'#s='+esc(al.rcode)+'&amp;p=강의&amp;k=in|out</td><td class="n cap">4_강의장 출석/att_*_yt.png 8장</td><td>'+tag("운영","ok")+'</td></tr>':'')+
+    (al.code10?'<tr><td>'+tag("10F 끝")+'</td><td style="white-space:nowrap"><b>10F 실습 세션 · 강의실 화면</b></td><td class="n" style="white-space:nowrap">세션마다 끝 '+((al.wins&&al.wins.o)?al.wins.o[0]+"분 전 ~ "+al.wins.o[1]+"분 뒤":"")+'</td><td class="n"><b>'+esc(al.code10)+'</b></td>'+
+    '<td class="n cap">'+esc(appBase())+'#s='+esc(al.code10)+'&amp;p=세션&amp;k=out</td><td class="n cap">4_강의장 출석/att10_*_out.png 6장</td><td>'+tag("운영","ok")+'</td></tr>':''):'';   /* v5.71 */
   return card("부스 QR","인쇄용 · 스탬프 01 · 02 · 17F 출석 · 코드를 바꾸면 다시 인쇄",
     (cur.length?'<div class="wrap"><table class="tb"><tr><th>스탬프</th><th>지점</th><th>운영 시간</th><th>코드</th><th>QR 내용</th><th>인쇄 파일</th><th>상태</th></tr>'+cur.map(function(r){
       return '<tr><td>'+tag("스탬프 "+STAMP_META[r.id].no)+'</td><td style="white-space:nowrap"><b>'+esc(r.name)+'</b></td><td class="n" style="white-space:nowrap">'+esc(hhmm(r.s))+' ~ '+esc(hhmm(r.e))+'</td><td class="n"><b>'+esc(r.code)+'</b></td>'+
         '<td class="n cap">'+esc(appBase())+'#s='+esc(r.code)+'</td><td class="n cap">'+esc(r.id)+'.png'+(QR_SAMPLE_IDS.indexOf(r.id)>=0?' '+tag("견본 · 인쇄 금지","bad"):'')+'</td><td>'+(r.on?tag("운영","ok"):tag("꺼짐","off"))+'</td></tr>'; }).join("")+attRow+'</table></div>'
       :'<div class="empty">설치된 부스 지점이 없습니다. 백엔드 stamp_install 로 만듭니다.</div>')+
     (old.length?'<p class="cap mt8">인쇄하지 않는 지점 '+old.map(function(r){ return esc(r.id+" "+r.name)+(r.id==="p3"?" (17F 좌석 QR 폐지 · 담당자 적립용 · 17F 는 출석 QR)":r.on?" (운영 중)":" (꺼짐)"); }).join(" · ")+'</p>':'')+
-    '<div class="row mt12"><button class="btn pri" onclick="qrCodesDl()">codes.json 내려받기 (부스 + 17F 출석 · 송출 + 계단)</button><span class="cap">인쇄 원본을 만드는 파일입니다. 아래 운영 메모의 순서대로 씁니다.</span></div>'+
-    memo('<ol><li><b>codes.json 내려받기</b>를 눌러 받은 파일로 <code>QR코드/codes.json</code>을 바꿉니다(부스 2곳 + 17F 출석 a17 · 송출 a17r + 계단 36곳의 지금 서버 코드).</li>'+
+    '<div class="row mt12"><button class="btn pri" onclick="qrCodesDl()">codes.json 내려받기 (부스 + 17F 출석 · 송출 + 10F 끝 + 계단)</button><span class="cap">인쇄 원본을 만드는 파일입니다. 아래 운영 메모의 순서대로 씁니다.</span></div>'+
+    memo('<ol><li><b>codes.json 내려받기</b>를 눌러 받은 파일로 <code>QR코드/codes.json</code>을 바꿉니다(부스 2곳 + 17F 출석 a17 · 송출 a17r + 10F 끝 a10 + 계단 36곳의 지금 서버 코드).</li>'+
       '<li><code>QR코드</code> 폴더에서 <code>python qr_mother.py</code>를 돌립니다. 모든 QR을 다시 만들고 인식 검증까지 합니다(실패가 있으면 종료코드 1).</li>'+
       '<li>인쇄 파일은 <code>QR코드/</code> 의 분류 폴더에 있습니다(앱 <code>1_앱</code> · 아이디어 한 줄 <code>2_아이디어 한줄/idea_A4.png</code> · 계단 <code>3_계단실</code> · 강의장 출석 <code>4_강의장 출석</code> · 쓰지 않는 p1 · p2 · a17 · d17 은 <code>_기타·보관/현장 QR</code>). 「QR 그림」 서브탭에서 바로 받아도 됩니다. 라벨에 「견본」이 보이면 인쇄하지 않습니다.</li>'+
       '<li>붙인 뒤 폰 기본 카메라로 한 번 찍어 이 표의 코드로 적립되는지 확인합니다.</li></ol>'+
@@ -5472,7 +5494,7 @@ var QR_SAMPLE_IDS=[];   /* 견본 코드(AXSSAMPLE)로 만든 out/ 파일의 id 
 var QR_BETA=["p1","p2","a17","wall1","wall2","wall3","st01-1","st01-2","st02-1","st02-2","st10-1","st10-2","app"];   /* 클로즈 베타 부착 13장 (사용자 확정 260928) */
 var QR_GRP={ app:"앱 링크", wall:"Wall", booth:"부스", att:"출석", draw:"추첨", stair:"계단", sign:"안내판" };
 /* v4.81 (261001 네 분류 정리) QR코드/1_앱 · 2_아이디어 한줄 · 3_계단실 · 4_강의장 출석 · 나머지는 _기타·보관/현장 QR · a17 · d17 은 그 안의 A4 */
-function qrFile(id){ return id==="app"?"QR코드/1_앱/app.png":id==="idea"?"QR코드/2_아이디어 한줄/idea_A4.png":/^st\d/.test(id)?"QR코드/3_계단실/"+id+".png":/^att_/.test(id)?"QR코드/4_강의장 출석/"+id+".png":id==="a17"||id==="d17"?"QR코드/_기타·보관/현장 QR/"+id+"_A4.png":"QR코드/_기타·보관/현장 QR/"+id+".png"; }
+function qrFile(id){ return id==="app"?"QR코드/1_앱/app.png":id==="idea"?"QR코드/2_아이디어 한줄/idea_A4.png":/^st\d/.test(id)?"QR코드/3_계단실/"+id+".png":/^att(10)?_/.test(id)?"QR코드/4_강의장 출석/"+id+".png":id==="a17"||id==="d17"?"QR코드/_기타·보관/현장 QR/"+id+"_A4.png":"QR코드/_기타·보관/현장 QR/"+id+".png"; }
 function qrStId(fl, r){ return "st"+("0"+fl).slice(-2)+"-"+r; }
 /* 표 한 줄 = { id, grp, name, place, time?, data(QR 내용), code?, file, st(on|off|sample|retired|fixed), today?(null = 집계 없음), todayAll?, note?, last?, n?, mis? } */
 function qrItems(){
@@ -5487,6 +5509,7 @@ function qrItems(){
       data:base+"#s="+r.code, code:r.code, file:qrFile(r.id), st:!r.on?"off":QR_SAMPLE_IDS.indexOf(r.id)>=0?"sample":"on", today:b.today==null?null:b.today, todayAll:b.todayAll, last:b.last||"" });
   });
   if(al&&al.ok&&al.code) out.push({ id:"a17", grp:"att", name:"17F 출석 · 현장", place:"17F 대강당 · 강의 PPT(입장 · 끝 8장)", time:attWinTxt(al), data:base+"#s="+al.code, code:al.code, file:qrFile("a17"), st:"on", today:qs.att?qs.att.today:null, note:qs.att?"사람 "+qs.att.people:"", last:qs.att?qs.att.last:"" });
+  if(al&&al.ok&&al.code10) out.push({ id:"a10", grp:"att", name:"10F 실습 세션 · 끝", place:"10F 강의실 화면(세션별 끝 QR 6장)", time:"사전 신청자만 · 세션마다 끝 창", data:base+"#s="+al.code10, code:al.code10, file:"QR코드/4_강의장 출석/att10_*_out.png", st:"on", today:qs.att10?qs.att10.today:null, note:qs.att10?"":(qs.ok?"서버 갱신 뒤 집계":""), last:qs.att10?qs.att10.last:"" });   /* v5.71 · qr_stats att10 = 17F att 와 따로 센다 */
   if(al&&al.ok&&al.rcode) out.push({ id:"a17r", grp:"att", name:"17F 출석 · 유튜브 송출", place:"송출 화면(입장 · 끝 8장)", time:"송출 켠 강의 "+((al.ron||[]).length)+"개", data:base+"#s="+al.rcode, code:al.rcode, file:"QR코드/4_강의장 출석/att_*_yt.png", st:"on", today:null });   /* v5.68 · 오늘 스캔은 현장과 합쳐 a17 줄에 */
   var dq=ST.data.dstat;   /* v4.79 추첨 체크인 · 오늘 스캔 대신 체크인 인원 */
   if(dq&&dq.ok&&dq.code) out.push({ id:"d17", grp:"draw", name:"Outro 경품 추첨 체크인", place:"17F 대강당 입구", time:String(dq.win||"").replace("-"," ~ ")+(dq.day?"":" · 매일(시험)"), data:base+"#s="+dq.code, code:dq.code, file:qrFile("d17"), st:"on", today:dq.in||0, note:"체크인 누적" });
@@ -5529,6 +5552,16 @@ var QV_ATT=[
   ["att_l2_out","l2","out",0,"파트너사 강연 · MS · 끝 QR","17F 끝 · 16:30~16:50 출석"],
   ["att_l2_out_yt","l2","out",1,"파트너사 강연 · MS · 끝 QR · 유튜브 송출","17F 끝 · 16:30~16:50 출석"]
 ];
+/* v5.71 (사용자 확정 261005) 10F 실습 세션 끝 QR 6장 · 문구 정본 = QR코드/qr_variants.json(att10_<id>_out) 그대로 · 코드 = att_list code10(a10) · 주소 #s=<코드>&p=<세션>&k=out
+ * [id, 세션 id, 라벨, 부제] · 라벨 시각은 인쇄물에 박힌다(출석_끝창 · 잠금) */
+var QV_ATT10=[
+  ["att10_fld_out","fld","세션 A · 끝 QR","10F 끝 · 16:30~16:50 출석 · 사전 신청자"],
+  ["att10_ta_out","ta","세션 B · 끝 QR","10F 끝 · 16:20~16:40 출석 · 사전 신청자"],
+  ["att10_tb_out","tb","세션 C · 끝 QR","10F 끝 · 16:20~16:40 출석 · 사전 신청자"],
+  ["att10_aws_out","aws","세션 D · 끝 QR","10F 끝 · 16:20~16:40 출석 · 사전 신청자"],
+  ["att10_ms1_out","ms1","세션 E · 1회차 · 끝 QR","10F 끝 · 14:40~15:00 출석 · 사전 신청자"],
+  ["att10_ms2_out","ms2","세션 E · 2회차 · 끝 QR","10F 끝 · 16:10~16:30 출석 · 사전 신청자"]
+];
 /* 출석 창 한 줄 · att_list wins(새 서버) · 없으면 옛 lead */
 function attWinTxt(al){ var W=al&&al.wins; return W&&W.i&&W.o?"입장 시작 "+W.i[0]+"분 전 ~ "+W.i[1]+"분 뒤 · 끝 "+W.o[0]+"분 전 ~ "+W.o[1]+"분 뒤":"강연마다 시작 "+((al&&al.lead)||30)+"분 전 ~ 종료"; }
 var QV_KEEP={ p1:["1F 전시 스탬프","09:00~17:30 · 1인 1회"], p2:["AX PLAY 스탬프","체험 후 찍기 · 1인 1회"] };
@@ -5541,6 +5574,9 @@ function qvItems(){
   if(al&&al.ok&&al.code){ var pids=(al.progs||[]).map(function(p){ return p.id; }), ron=al.ron||[];
     QV_ATT.forEach(function(a){ if(pids.indexOf(a[1])<0||(a[3]&&!al.rcode)) return;
       out.push({ id:a[0], grp:"lec", small:true, yt:!!a[3], label:a[4], sub:a[5], data:B+"#s="+(a[3]?al.rcode:al.code)+"&p="+a[1]+"&k="+a[2], roff:!!a[3]&&ron.indexOf(a[1])<0 }); }); }
+  if(al&&al.ok&&al.code10){ var p10=(al.progs10||[]).map(function(p){ return p.id; });
+    QV_ATT10.forEach(function(a){ if(p10.indexOf(a[1])<0) return;
+      out.push({ id:a[0], grp:"lec10", small:true, label:a[2], sub:a[3], data:B+"#s="+al.code10+"&p="+a[1]+"&k=out" }); }); }
   if(al&&al.ok&&al.code) out.push({ id:"a17", grp:"keep", label:"17F 강연 출석", sub:"QR을 찍고 강연을 고르세요", note:"강연마다 시작 15분 전부터 종료까지", acc:"17F", data:B+"#s="+al.code, why:"입구 고르기 방식 · 강연별 QR 로 대신" });
   if(al&&al.ok&&al.code) (al.progs||[]).forEach(function(p){   /* v5.68 옛 강연별 4장(입장 · 끝 구분 없음) · 서버가 창으로 고른다 · 보관 */
     out.push({ id:"att_"+p.id, grp:"keep", small:true, label:p.n, sub:"17F 출석 · "+(QV_LEC_SUB[p.id]||(p.s+"~"+p.e)), data:B+"#s="+al.code+"&p="+p.id, why:"옛 강연별 QR(입장 · 끝 구분 없음) · 16장으로 대신" }); });
@@ -5593,6 +5629,7 @@ function qvZip(files){
 var QV_ZIP={ busy:false };
 function qvZipStairs(){ qvZipGrp("stair","계단실","계단 코드를 아직 받지 못했습니다"); }
 function qvZipLec(){ qvZipGrp("lec","강의장출석","17F 출석 코드를 아직 받지 못했습니다"); }   /* v5.68 강의장 출석 16장 */
+function qvZipLec10(){ qvZipGrp("lec10","10F끝출석","10F 출석 코드를 아직 받지 못했습니다"); }   /* v5.71 10F 끝 QR 6장 */
 function qvZipGrp(grp, nm, none){
   var list=qvItems().filter(function(x){ return x.grp===grp; });
   if(!list.length){ toast(none); return; }
@@ -5608,12 +5645,12 @@ function qvTile(it){
   return '<div class="qv-it">'+(src?'<img class="qv-img" alt="" src="'+src+'">':'<div class="qv-img"></div>')+
     '<p class="qv-lb">'+esc(it.label)+'</p><p class="qv-sub">'+esc(it.sub||"")+'</p><p class="qv-url">'+esc(it.data)+'</p>'+
     (it.why?'<p class="qv-sub">'+(it.draw?tag(it.why,"warn"):esc(it.why))+'</p>':'')+(it.off?tag("꺼짐","off"):'')+(it.roff?tag("송출 꺼짐 · 설정 송출_켬","off"):'')+
-    '<div class="qv-acts"><button class="btn sm'+(it.grp==="keep"?"":" pri")+'" onclick="qvDl(\''+jq(it.id)+'\',0)">PNG</button>'+(it.grp==="lec"?'<button class="btn sm" onclick="qvDl(\''+jq(it.id)+'\',1)">QR만 PNG</button>':'')+'</div></div>';
+    '<div class="qv-acts"><button class="btn sm'+(it.grp==="keep"?"":" pri")+'" onclick="qvDl(\''+jq(it.id)+'\',0)">PNG</button>'+(it.grp==="lec"?'<button class="btn sm" onclick="qvDl(\''+jq(it.id)+'\',1)">QR만 PNG</button>':it.grp==="lec10"?'<button class="btn sm" onclick="qvDl(\''+jq(it.id)+'\',1)">QR만 PNG</button>':'')+'</div></div>';
 }
 function viewQrImg(){
   var all=qvItems(), by=function(g){ return all.filter(function(x){ return x.grp===g; }); };
   var grid=function(l){ return '<div class="qv-grid">'+l.map(qvTile).join("")+'</div>'; };
-  var st=by("stair"), lec=by("lec"), keep=by("keep");
+  var st=by("stair"), lec=by("lec"), lec10=by("lec10"), keep=by("keep");
   var h=card("1 · 앱","출력용 · 앱 주소 하나",grid(by("app")));
   h+=card("2 · 아이디어 한 줄","1층 부서 출력용 · 찍으면 로그인 뒤 아이디어 한 줄 화면 · 서버 코드 없음",grid(by("idea")));
   h+=card("3 · 계단실","출력용 · 방화문 앞 · "+st.length+"장(1F~18F × 비상계단 1·2)",st.length?grid(st):'<div class="empty">계단 코드를 받는 중이거나 설치된 지점이 없습니다.</div>',
@@ -5622,10 +5659,13 @@ function viewQrImg(){
   h+=card("4 · 강의장 출석","강의마다 입장 · 끝 · 현장 "+lecS.length+"장(PPT) · 유튜브 송출 "+lecR.length+"장 · "+esc(attWinTxt(al0)),
     lec.length?'<p class="cap">현장 · 대강당 PPT</p>'+grid(lecS)+(lecR.length?'<p class="cap mt12">유튜브 송출 화면 · 송출 켠 강의 '+esc((al0.ron||[]).join(" · ")||"없음")+'</p>'+grid(lecR):(al0.ok&&!al0.rcode?'<p class="cap mt12">이 서버는 송출 코드(a17r)를 주지 않아 송출 QR 이 없습니다.</p>':'')):'<div class="empty">17F 출석 코드(att_list)를 받는 중입니다.</div>',
     '<button class="btn sm pri" onclick="qvZipLec()"'+(lec.length?'':' disabled')+'>'+lec.length+'장 ZIP</button>');
+  h+=card("4 · 강의장 출석 · 10F 실습 세션","세션마다 끝 QR 하나 · "+lec10.length+"장 · 사전 신청자만 · 찍으면 스탬프 2개",   /* v5.71 */
+    lec10.length?grid(lec10):(al0.ok&&!al0.code10?'<div class="empty">이 서버는 10F 출석 코드(a10)를 주지 않습니다. 서버 갱신 뒤 보입니다.</div>':'<div class="empty">10F 출석 코드(att_list)를 받는 중입니다.</div>'),
+    '<button class="btn sm pri" onclick="qvZipLec10()"'+(lec10.length?'':' disabled')+'>'+lec10.length+'장 ZIP</button>');
   h+='<details class="qv-sec"><summary>보관 · 쓰지 않는 QR '+keep.length+'장 (17F 입구 고르기 · 부스 · 추첨 · Wall · 안내판)</summary>'+grid(keep)+'</details>';
   h+=memo('<p>그림은 이 화면이 서버 코드로 바로 그립니다. 그림 파일은 공개 저장소에 올리지 않습니다(코드가 공개되면 현장에 오지 않고도 적립됩니다). 내려받은 파일도 공유 드라이브 · 메신저에 올리지 않습니다.</p>'+
     '<p>규칙은 <code>QR코드/qr_mother.py</code> 와 같습니다: 일반 QR · 오류 정정 Q · 흰 바탕 · 검정 정사각 · 여백 4칸. 내려받기는 '+QV_PX+'px 기준(실제 폭은 모듈 크기에 맞춰 2,000px 남짓)입니다. 같은 그림이 <code>QR코드/</code> 의 분류 폴더(1_앱 · 2_아이디어 한줄 · 3_계단실 · 4_강의장 출석)에 있습니다.</p>'+
-    '<p>강의장 출석 QR 은 출석 코드(현장 a17 · 송출 a17r)에 강의 id(key · road · l1 · l2)와 구분(k=in 입장 · out 끝)을 붙인 것입니다. 라벨 문구는 <code>QR코드/qr_variants.json</code> 그대로입니다. 현장 코드를 바꾸면 현장 8장, 송출 코드를 바꾸면 송출 8장을 다시 받습니다. 추첨 체크인 QR(d17)은 추첨 화면이 직접 띄웁니다.</p>');
+    '<p>강의장 출석 QR 은 출석 코드(현장 a17 · 송출 a17r)에 강의 id(key · road · l1 · l2)와 구분(k=in 입장 · out 끝)을 붙인 것입니다. 라벨 문구는 <code>QR코드/qr_variants.json</code> 그대로입니다. 현장 코드를 바꾸면 현장 8장, 송출 코드를 바꾸면 송출 8장을 다시 받습니다. 10F 끝 QR 6장은 10F 코드(a10)에 세션 id(fld · ta · tb · aws · ms1 · ms2)와 k=out 을 붙인 것이고, 10F 코드를 바꾸면 6장을 다시 받습니다. 추첨 체크인 QR(d17)은 추첨 화면이 직접 띄웁니다.</p>');
   return h;
 }
 function viewQr(){
@@ -5863,7 +5903,7 @@ var CTL_ACT={
   type_nick_hide:["type","닉네임 숨김 · 해제"], type_nick_reset:["type","닉네임 초기화"], type_cfg:["type","결선 시간 저장"], type_self_cfg:["type","셀프 횟수 저장"],
   oly_rule:["game",function(p){ return p.lock!=null?(String(p.lock)==="1"?"올림픽 당일 잠금 켬":"올림픽 당일 잠금 끔"):"올림픽 점수 계수 저장"; }], ox_off:["game","O/X 문항 켜기 · 끄기 저장"],
   draw_cmd:["draw",function(p){ return "추첨 명령 · "+(p.cmd||""); }], draw_cfg:["draw","추첨 설정 저장"], fin_lock:["draw","참여상 대상 확정"], fin_draw:["draw","참여상 추첨"], fin_void:["draw","참여상 당첨 취소"], fin_cfg:["draw","참여상 설정 저장"], fin_rem:["draw","룰렛 잔여 입력"],
-  stamp_rotate:["qr","부스 QR 코드 교체"], stair_rotate:["qr","계단 QR 코드 교체"], att_rotate:["qr","17F 출석 코드 교체"],
+  stamp_rotate:["qr","부스 QR 코드 교체"], stair_rotate:["qr","계단 QR 코드 교체"], att_rotate:["qr","출석 코드 교체(17F · 10F)"],
   ro_set:["app",function(p){ return String(p.on)==="1"?"읽기 전용 켬":"읽기 전용 끔"; }],
   adm_code_set:["pp",function(p){ return (p.which==="grade"?"등급코드":"관리코드")+" 바꿈"; }], adm_roster_set:["pp","권한 명단 바꿈"], test_set:["pp","테스트 사번 바꿈"], test_reset:["pp","테스트 사번 처음 상태로"], cfg_set:["sy",function(p){ return "운영 설정 · "+(p.k||""); }],
   usr_reset_all:["sy","전체 초기화"], att_wipe:["sy","테스트 출석 기록 지움"], visit_wipe:["sy","테스트 접속 기록 지움"], game_wipe:["sy","테스트 게임 기록 지움"],
@@ -5986,7 +6026,7 @@ function hvCtl(k){
     b+='<p class="cap">월 점 개수 = 참여 기록 줄 수 + 설정 「월_사전점등」. 값은 <a href="#" onclick="go(\'s_cfg\');return false"><b>시스템 › 운영 설정</b></a>에서 봅니다.</p>';
   } else if(k==="qr"){
     b+='<div class="row"><button class="btn" onclick="navSel(\'e_qr\',3)">설치 점검</button><button class="btn" onclick="navSel(\'e_qr\',2)">codes.json · 인쇄</button></div>'+
-      hvDzRow("QR 코드 교체","부스 · 계단 · 17F 출석 코드를 새로 만듭니다 · 인쇄물을 다시 붙여야 합니다","go(\'s_danger\')",1);
+      hvDzRow("QR 코드 교체","부스 · 계단 · 17F · 10F 출석 코드를 새로 만듭니다 · 인쇄물을 다시 붙여야 합니다","go(\'s_danger\')",1);
   }
   return b;
 }
@@ -6130,14 +6170,15 @@ function hvRoAsk(){
     run:function(fin){ callPost("ro_set",{ on:on?"0":"1", to:"" },function(r){ if(r&&r.ok){ delete _cache[sig_("sync",{emp:""})]; reload(["sy"]); fin(r.ro?"읽기 전용을 켰습니다":"읽기 전용을 껐습니다", r.ro?"끄려면 시스템 › 위험 구역 › 읽기 전용 스위치에서 같은 단계를 거칩니다.":""); } else { dlgForce(); toast("실패: "+why(r)); } },function(e){ dlgForce(); toast("실패: "+why(e)); }); } });
 }
 /* QR 코드 교체 · stamp_rotate(부스) · stair_rotate(계단 36) · att_rotate(17F 출석) · 되돌리기 없음 · 인쇄물을 다시 붙인다 */
-var HV_ROT={ stamp:["stamp_rotate","부스 QR(p2 AX PLAY 등)","slist"], stair:["stair_rotate","계단 36곳","stair"], att:["att_rotate","17F 현장 출석(강의장 8장 · a17)","alist"], attr:["att_rotate","17F 유튜브 송출 출석(8장 · a17r)","alist",{ r:"1" }] };   /* v5.68 r=1 = 송출 코드만 */
+var HV_ROT={ stamp:["stamp_rotate","부스 QR(p2 AX PLAY 등)","slist"], stair:["stair_rotate","계단 36곳","stair"], att:["att_rotate","17F 현장 출석(강의장 8장 · a17)","alist"], attr:["att_rotate","17F 유튜브 송출 출석(8장 · a17r)","alist",{ r:"1" }], att10:["att_rotate","10F 실습 세션 끝 출석(6장 · a10)","alist",{ t:"10" }] };   /* v5.71 t=10 = 10F 코드만 */   /* v5.68 r=1 = 송출 코드만 */
 function hvRotAsk(k){
-  var R=HV_ROT[k], one=k==="att"||k==="attr", n=one?1:(((ST.data[R[2]]||{}).rows)||[]).length;
+  var R=HV_ROT[k], one=k==="att"||k==="attr"||k==="att10", n=one?1:(((ST.data[R[2]]||{}).rows)||[]).length;
   if(k==="attr"&&ST.data.alist&&ST.data.alist.ok&&!ST.data.alist.rcode){ toast("이 서버는 송출 코드가 없습니다"); return; }
+  if(k==="att10"&&ST.data.alist&&ST.data.alist.ok&&!ST.data.alist.code10){ toast("이 서버는 10F 출석 코드가 없습니다(서버 갱신 뒤)"); return; }
   hvL3Go({ t:R[1]+" 코드를 바꿀까요?", who:"QR 코드 교체<span>"+esc(R[1])+"</span>",
     rows:[["바뀌는 코드",n+(one?"개":"곳"),"loss"],[k==="attr"?"지금 송출 화면의 QR":"지금 붙어 있는 인쇄물","바꾸는 즉시 찍어도 적립 안 됨","loss"],["되돌리기","없음 · 새 코드로 다시 "+(k==="attr"?"만들기":"인쇄")]],
-    s:"<b>"+(k==="attr"?"송출 화면 QR 8장을 다시 만들어야 합니다.":"인쇄물을 다시 만들어 붙여야 합니다.")+"</b> 바꾼 뒤 「QR › 코드 · 인쇄」에서 codes.json 을 받아 QR 담당에게 넘깁니다.", ok:"코드 바꾸기", word:"코드교체",
-    run:function(fin){ call(R[0],R[3]||{},function(r){ if(r&&r.ok){ for(var c in _cache) if(/^(stamp_list|stair_list|att_list|qr_stats)/.test(c)) delete _cache[c]; reload([R[2]]); fin("코드를 바꿨습니다", (k==="attr"?"송출 화면 QR 8장을 다시 만듭니다(QR 그림 › 4 · 강의장 출석).":"인쇄물 "+(r.codes?r.codes.length:1)+"곳을 다시 붙입니다.")+" 「행사 요소 › QR › 코드 · 인쇄」에서 codes.json 을 받습니다."); } else { dlgForce(); toast("실패: "+why(r)); } },function(e){ dlgForce(); toast("실패: "+why(e)); }); } });
+    s:"<b>"+(k==="attr"?"송출 화면 QR 8장을 다시 만들어야 합니다.":k==="att10"?"10F 끝 QR 6장 인쇄물을 다시 뽑아야 합니다. 17F 코드는 그대로입니다.":"인쇄물을 다시 만들어 붙여야 합니다.")+"</b> 바꾼 뒤 「QR › 코드 · 인쇄」에서 codes.json 을 받아 QR 담당에게 넘깁니다.", ok:"코드 바꾸기", word:"코드교체",
+    run:function(fin){ call(R[0],R[3]||{},function(r){ if(r&&r.ok){ for(var c in _cache) if(/^(stamp_list|stair_list|att_list|qr_stats)/.test(c)) delete _cache[c]; reload([R[2]]); fin("코드를 바꿨습니다", (k==="attr"?"송출 화면 QR 8장을 다시 만듭니다(QR 그림 › 4 · 강의장 출석).":k==="att10"?"10F 끝 QR 6장 인쇄물을 다시 뽑습니다(QR 그림 › 4 · 강의장 출석 · 10F 실습 세션).":"인쇄물 "+(r.codes?r.codes.length:1)+"곳을 다시 붙입니다.")+" 「행사 요소 › QR › 코드 · 인쇄」에서 codes.json 을 받습니다."); } else { dlgForce(); toast("실패: "+why(r)); } },function(e){ dlgForce(); toast("실패: "+why(e)); }); } });
 }
 
 /* ══ 시스템 ══ */
