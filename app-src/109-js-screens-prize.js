@@ -87,11 +87,11 @@ function rewItems() {
     why: "1F EVENT 룰렛 · 내 QR 제시", go: "ppRouletteOpen()" });
   if (t) items.push({ k: "raffle", used: false, chip: "자동 발급", off: false, nm: "행운권", big: t + "장", why: "스탬프 " + Math.min(n, REWARD_CAP) + "개 · 17:00 Outro 현장 추첨", go: "ppDrawOpen()" });   /* v4.79 현장 추첨 안내는 추첨 안내 모달에 · v5.04 옛 「결과는 행사 후 개별 안내」 폐기 */
   var fs = finState(), f = S.get("fin", null) || {};   /* v5.04 참여상 · 서버 my.fin 이 있을 때만(없으면 카드 없음 · 아래 경품 카드의 「6개 모으면 참여상 추첨 대상」 한 줄뿐) */
-  if (fs === "in") items.push({ k: "fin", used: false, chip: "추첨 대상", nm: "참여상 추첨", big: "1회", why: "스탬프 6개", go: "finInfoOpen()", btn: "안내 보기" });
-  if (fs === "wait") items.push({ k: "fin", used: false, chip: "추첨 대기", cc: "", nm: "참여상 추첨", big: "1회", why: "스탬프 6개", go: "finInfoOpen()", btn: "안내 보기" });
-  if (fs === "win") items.push({ k: "fin", used: false, chip: "참여상 당첨", nm: esc(f.pz || "참여상"), big: "1개", pic: prizeByName(f.pz), why: "추첨 행사 이후 소속 부서로 배송", go: "finInfoOpen()", btn: "안내 보기" });
-  if (fs === "lose") items.push({ k: "fin", used: true, chip: "미당첨", off: true, nm: "참여상 추첨", big: "1회", why: finCountTxt(f) });
-  if (fs === "out") items.push({ k: "fin", used: true, chip: "집계 종료", off: true, nm: "참여상 추첨", big: "", why: "17:00 기준 스탬프 6개" });
+  if (fs === "in") items.push({ k: "fin", used: false, chip: "추첨 대상", nm: "완주 경품 추첨", big: "1회", why: "스탬프 6개", go: "finInfoOpen()", btn: "안내 보기" });
+  if (fs === "wait") items.push({ k: "fin", used: false, chip: "추첨 대기", cc: "", nm: "완주 경품 추첨", big: "1회", why: "스탬프 6개", go: "finInfoOpen()", btn: "안내 보기" });
+  if (fs === "win") items.push({ k: "fin", used: false, chip: "완주 경품 당첨", nm: esc(f.pz || "완주 경품"), big: "1개", pic: prizeByName(f.pz), why: "추첨 행사 이후 소속 부서로 배송", go: "finInfoOpen()", btn: "안내 보기" });
+  if (fs === "lose") items.push({ k: "fin", used: true, chip: "미당첨", off: true, nm: "완주 경품 추첨", big: "1회", why: finCountTxt(f) });
+  if (fs === "out") items.push({ k: "fin", used: true, chip: "집계 종료", off: true, nm: "완주 경품 추첨", big: "", why: "17:00 기준 스탬프 6개" });
   return items;
 }
 
@@ -157,7 +157,7 @@ var FIN_NOTE = "Outro에서 추첨 · 상품은 무작위<br>추첨 행사 이�
 var PZ_HERO = { draw: 3, fin: 1, roulette: 1, type: 1 };   /* v5.09 타자왕도 사진 카드(1등 대표 · 2 · 3등 2열) */
 var PZ_SEC = [
   { k: "draw", en: "LUCKY DRAW", t: "행운권 추첨", m: [4, 6], cd: "스탬프 4 · 5 · 6개 = 행운권 1 · 2 · 3장<br>17:00 Outro 현장 추첨<br>17F 입구 QR 체크인" },
-  { k: "fin", en: "PARTICIPATION", t: "참여상", m: [6, 6], cd: "스탬프 6개", note: FIN_NOTE },
+  { k: "fin", en: "COMPLETION DRAW", t: "완주 경품 추첨", m: [6, 6], cd: "스탬프 6개", note: FIN_NOTE },
   { k: "roulette", en: "ROULETTE", t: "룰렛", m: [3, 3], cd: "스탬프 3개 · 1F EVENT 룰렛 · 1인 1회" },
   { k: "type", en: "TYPING KING", t: "1F 타자왕 1~3위", sp: "스탬프와 별개", cd: "1F 현장 최고 기록 · 17:00 마감<br>Outro 시상", go: ["실시간 순위 보기", "typeSiteRankGo()"] }   /* v5.18 맨 아래 · 스탬프와 별개(선으로 나눔) · 순위판 입구(사용자 261003) */
 ];
@@ -187,15 +187,15 @@ function pzCard(p, unit, cls) {
 }
 function prizeSecHtml(s) {
   var g = PRIZES[s.k]; if (!g) return "";
-  var head = '<header class="axs-pz-sh" id="pz-' + s.k + '"><p class="en">' + s.en + "</p><h2>" + s.t + '</h2><p class="cd">' + (s.m ? pzMeter(s.m[0], s.m[1]) : "") + (s.sp ? '<span class="sp">' + s.sp + "</span>" : "") + "<span>" + s.cd + "</span></p></header>" +
-    (s.go ? '<button type="button" class="ax-button ax-button-weak" onclick="' + s.go[1] + '">' + s.go[0] + "</button>" : "");   /* v5.18 sp = 스탬프와 별개 알약 · go = 구역 버튼(타자왕 순위판) */
+  var head = '<header class="axs-pz-sh" id="pz-' + s.k + '"><p class="en">' + s.en + "</p><h2>" + s.t + '</h2><p class="cd">' + (s.m ? pzMeter(s.m[0], s.m[1]) : "") + (s.sp ? '<span class="sp">' + s.sp + "</span>" : "") + "<span>" + s.cd + "</span></p></header>";   /* v5.18 sp = 스탬프와 별개 알약 */
+  var go = s.go ? '<button type="button" class="ax-button ax-button-weak" onclick="' + s.go[1] + '">' + s.go[0] + "</button>" : "";   /* v5.73 (사용자 261005 「실시간 순위는 가장 아래 위치에 있어야 할 것 같아」) 구역 버튼(타자왕 순위판) = 블록 맨 아래(경품 사진 · 이름 · 안내 다음) · 옛 v5.18 = 머리 바로 아래 */
   var hn = PZ_HERO[s.k] || 0, rest = g.list.slice(hn), solo = rest.filter(function (p) { return !p.img2; }).length, k = 0;
   var body = g.list.slice(0, hn).map(function (p) { return pzCard(p, g.unit, " hero"); }).join("") +
     (rest.length ? '<div class="axs-pz-gr">' + rest.map(function (p) {   /* v5.18 사진 두 장 카드(img2) = 늘 넓은 카드 · 나머지에서 홀수로 남는 마지막 칸 = 넓은 카드 */
       if (p.img2) return pzCard(p, g.unit, " gr wide");
       k++; return pzCard(p, g.unit, " gr" + (solo % 2 && k === solo ? " wide" : ""));
     }).join("") + "</div>" : "");
-  return '<section class="axs-pz-sec' + (s.sp ? " sep" : "") + '">' + head + body + (s.note ? '<p class="axs-pz-nt">' + s.note + "</p>" : "") + "</section>";
+  return '<section class="axs-pz-sec' + (s.sp ? " sep" : "") + '">' + head + body + (s.note ? '<p class="axs-pz-nt">' + s.note + "</p>" : "") + go + "</section>";
 }
 /* v5.16 (사용자 시안 261003) 표지 = 작은 「AX Festival 2026」 · 큰 제목 「스탬프 개수별 경품」(옛 PRIZES 점 글자 · 조건 3줄은 걷었다)
    「지금 내 스탬프」 카드 = 다음 목표(주황 숫자) + 오른쪽 큰 주황 N개 · 6개면 「모두 모았어요」
@@ -211,7 +211,7 @@ var PZ_STEP = [
 ];
 function pzNextTxt(n) {
   var s = PZ_STEP.filter(function (x) { return x.m > n; })[0];
-  return s ? "<b>" + (s.m - n) + "개</b> 더 모으면 " + s.t + " " + s.a + (s.fin ? " · 참여상" : "") : "모두 모았어요";
+  return s ? "<b>" + (s.m - n) + "개</b> 더 모으면 " + s.t + " " + s.a + (s.fin ? " · 완주 경품 추첨" : "") : "모두 모았어요";
 }
 var PZ_DOWN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 9.5 12 15l5.5-5.5"/></svg>';   /* v5.33 표지 카드 아래 셰브론 = 아래 구역으로 */
 function prizeCoverHtml(noHead) {
@@ -219,10 +219,10 @@ function prizeCoverHtml(noHead) {
   for (var i = 1; i <= STAMP_DENOM; i++) dots += '<span class="c"><i class="' + (i <= n ? "on" : i === n + 1 ? "nx" : "") + '">' + i + "</i></span>";   /* v5.33 6칸마다 점 하나 · 같은 크기 */
   var fill = n >= 2 ? "calc(" + (n - 1) + " * ((100% - 20px) / 6 + 4px))" : "0px";   /* 1번 칸 가운데부터 받은 마지막 칸 가운데까지(칸 폭 + 칸 사이 4px) */
   var cards = '<p class="pre' + (n >= 3 ? " done" : "") + '"><span class="t">보상은</span><b>3개부터</b></p>' + PZ_STEP.map(function (s) {
-    var st = s.m <= n ? "on" : s.m === nm ? "nx" : "", lbl = "스탬프 " + s.m + "개 · " + s.t + " " + s.a + (s.fin ? " · 참여상" : "") + (st === "on" ? " · 달성" : st === "nx" ? " · 다음" : "");
+    var st = s.m <= n ? "on" : s.m === nm ? "nx" : "", lbl = "스탬프 " + s.m + "개 · " + s.t + " " + s.a + (s.fin ? " · 완주 경품 추첨" : "") + (st === "on" ? " · 달성" : st === "nx" ? " · 다음" : "");
     return '<button type="button" class="' + st + '" onclick="prizeJump(\'' + s.k + '\')" aria-label="' + lbl + '"><span class="i" aria-hidden="true">' + RAIL_ICO[s.ico] + "</span>" +
       '<span class="t" aria-hidden="true">' + s.t + '</span><b aria-hidden="true">' + s.a + "</b>" +
-      (s.fin ? '<span class="fn" aria-hidden="true">+<span class="g">' + PZ_GIFT + "</span>참여상</span>" : "") +
+      (s.fin ? '<span class="fn" aria-hidden="true">+<span class="g">' + PZ_GIFT + "</span>완주 추첨</span>" : "") +
       '<span class="bt" aria-hidden="true">' + (st === "nx" ? '<span class="tag">다음</span>' : st === "on" ? '<span class="tag on">' + CHECK_SVG + "달성</span>" : "") + '<span class="dn">' + PZ_DOWN + "</span></span></button>";
   }).join("");
   return '<section class="axs-pz-cv">' + (noHead ? "" : '<p class="ey">AX Festival 2026</p><h1 class="ttl">스탬프 개수별 경품</h1>') +   /* v5.69 시트 = 제목은 시트 머리 */
@@ -260,15 +260,15 @@ function finCountTxt(f) {
 /* 6번째 스탬프 상자 팝업에 붙는 한 줄(별도 팝업 없음 · 설계안 5.7) */
 function rfxFinLine() {
   if (raffleTickets(Math.min(REWARD_CAP, stampCount())) < RAFFLE_MAX) return "";
-  return finLate() ? "<br>참여상 추첨은 17:00 기준 6개까지 집계했어요" : "<br>참여상 추첨 대상 · 17:00 기준";
+  return finLate() ? "<br>완주 경품 추첨은 17:00 기준 6개까지 집계했어요" : "<br>완주 경품 추첨 대상 · 17:00 기준";
 }
 /* 참여상 안내 모달(설계안 6장 문구) */
 function finInfoOpen() {
   var f = S.get("fin", null) || {}, st = finState(), p = st === "win" ? prizeByName(f.pz) : null;
-  var head = st === "win" ? '<div class="axs-rwhd">' + prizePhHtml(p) + '<div class="ax-stack-tight"><p class="ax-meta">참여상 당첨</p><p class="ax-card-title">' + esc(f.pz || "") + "</p></div></div>" : "";
+  var head = st === "win" ? '<div class="axs-rwhd">' + prizePhHtml(p) + '<div class="ax-stack-tight"><p class="ax-meta">완주 경품 당첨</p><p class="ax-card-title">' + esc(f.pz || "") + "</p></div></div>" : "";
   modalOpen(head + '<p class="muted" style="' + (head ? "margin-top:12px;" : "") + 'font-size:calc(14.5px * var(--fs));line-height:1.7">스탬프 6개<br>' + FIN_NOTE + "</p>" +   /* v5.08 설명 두 줄만(사용자 261003) */
     prizeModalHtml("fin") +
-    '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "참여상");
+    '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "완주 경품 추첨");
 }
 /* 커피 · 간식 사진 2장 · 18F 커피챗 상세 · DAP 과제상담 상세 */
 function treatHtml() {
@@ -280,7 +280,7 @@ function treatHtml() {
 /* ── 스탬프 · 숫자는 현행 운영: 카드 8종 · 개수 상한 6 · 응모권 최대 3장 · 현황 모양은 홈과 같은 railHtml(v4.10) ── */
 function stampGoalText(n) {
   if (n < 3) return (3 - n) + "개 더 모으면 룰렛 1회";
-  if (n < STAMP_DENOM) return "1개 더 모으면 행운권 " + raffleTickets(n + 1) + "장" + (n === STAMP_DENOM - 1 && !finLate() ? " · 참여상 추첨" : "");   /* v5.06 6번째 = 참여상 추첨 대상도 되는 칸 · 17:00 뒤(finLate)에는 대상이 아니라 붙이지 않는다 */
+  if (n < STAMP_DENOM) return "1개 더 모으면 행운권 " + raffleTickets(n + 1) + "장" + (n === STAMP_DENOM - 1 && !finLate() ? " · 완주 경품 추첨" : "");   /* v5.06 6번째 = 참여상 추첨 대상도 되는 칸 · 17:00 뒤(finLate)에는 대상이 아니라 붙이지 않는다 */
   return STAMP_DENOM + "개 모두 모았어요 · 행운권 " + RAFFLE_MAX + "장";
 }
 

@@ -134,7 +134,22 @@ function progTm(tm) { return String(tm || "").replace("~", "–"); }
 /* 상담 두 가지는 시각이 아니라 운영 시간 안에 신청하는 것 · 시간표에는 운영 시간 한 줄로 · 포토부스(대기 번호)는 목록 「신청 가능」 몫 */
 /* v4.93 (261001 사용자 확정 · IA 검토 A1) 탭 맨 위 = [시간표 | 상시 운영] · 옛 [전체 | 나의 일정](progTT)은 걷었다(나의 일정 = 나의 참여 맨 위 한 곳) */
 function progSeg(g) { PROG.seg = g === "always" ? "always" : "time"; PROG.scroll = 0; App.render(); window.scrollTo(0, 0); if (PROG.seg === "time") progFlowScroll(); }
-function progAlwaysGo() { PROG.seg = "always"; PROG.scroll = 0; PROG.anchor = "zone1f"; App.tab("guide"); }   /* 점심 줄 · 나의 일정 빈 상태 · 옛 「신청할 수 있는 프로그램 보기」 */
+/* v5.73 (사용자 261005 「점심 자유 관람을 눌렀을 때 갑자기 상시 운영 탭으로 날아가는데 좀 더 부드럽게 · 상단의 시간표와 상시운영이 보이는 곳까지 · 지금은 한 칸 밑 위치」)
+   시간표에서 누르면 = 세그먼트 손잡이가 「상시 운영」으로 미끄러지고(0.25초) 아래 내용이 흐려졌다 바뀌어 다시 나타남 · 스크롤 = 맨 위(세그먼트가 보이고 바로 아래 1F 로비 머리) 부드럽게
+   다른 화면(나의 일정 빈 상태 · 상시 운영 보기 버튼)에서 = 프로그램 탭 맨 위(세그먼트) · 움직임 줄이기 = 바로 · 옛 v4.93 = 1F 로비 머리로(세그먼트가 화면 밖) */
+var PROG_SW = 0;
+function progAlwaysGo() {
+  var sg = App.current === "guide" && PROG.seg !== "always" && !detShown() ? document.querySelector("#view .axs-seg") : null, bd = sg && sg.nextElementSibling;
+  if (!sg || !bd || rgReduced()) { PROG.seg = "always"; PROG.scroll = 0; PROG.anchor = ""; App.tab("guide"); window.scrollTo(0, 0); return; }
+  clearTimeout(PROG_SW); sg.classList.add("sw-r"); bd.classList.add("sw-out");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  PROG_SW = setTimeout(function () {
+    PROG_SW = 0; if (App.current !== "guide") return;
+    PROG.seg = "always"; PROG.scroll = 0; PROG.anchor = ""; App.from = {}; App.render();
+    var b2 = document.querySelector("#view .axs-seg + *"); if (b2) { b2.classList.add("sw-in"); setTimeout(function () { b2.classList.remove("sw-in"); }, 320); }
+    if (window.scrollY > 0 && window.scrollY < 4) window.scrollTo(0, 0);
+  }, 250);
+}   /* 점심 줄 · 나의 일정 빈 상태 · 옛 「신청할 수 있는 프로그램 보기」 */
 /* v4.91 (사용자 261001 「아코디언을 펼치고 가는 것보다 자세히 보기로 한 번에」) 줄을 누르면 바로 그 상세로 · 이동 표시 = 오른쪽 셰브론(CHEV_SVG)
    갈 곳이 없는 줄은 누를 수 없고, 펼침에만 있던 한 줄(누가 · 무엇)을 제목 아래에 둔다 · v4.99 Intro · Outro 도 상세 한 장으로 간다(TL_PROG intro · outro) */
 function progTTRow(k, o) {
@@ -632,7 +647,7 @@ function progConfirm() {
     var tr = c.id === "dap" && tourRetLive() && TOUR_RET.id === "p3" ? TOUR_RET : null;   /* v5.57 둘러보기 LOUNGE 블록에서 출발 · 마침 = 상담 신청 완료(스탬프는 실제 상담 완료 때 스태프 인증으로) */
     App.go("sess_ok");   /* App.go 가 시트를 닫는다 */
     delete App.from.sess_ok;   /* 결과에서 뒤로 = 프로그램 목록 (확인 화면으로 돌아가지 않는다) */
-    if (tr) { TOUR_RET = tr; tr.v = "sess_ok"; tourRetDone(true); App.render(); }   /* 완료 화면에서 「3D로 돌아가기」 둘레 3초 → 1층(v5.67 · 옛 띠) · 뒤로 = 1층 */
+    if (tr) { TOUR_RET = tr; tr.v = "sess_ok"; tr.away = false; tourRetDone(true); App.render(); }   /* 완료 화면에서 「3D로 돌아가기」 둘레 3초 → 1층(v5.67 · 옛 띠) · 뒤로 = 1층 */
   };
   var live = BE.on && u.empId;
   if (c.id === "dap") {

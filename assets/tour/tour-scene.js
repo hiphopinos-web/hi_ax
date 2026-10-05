@@ -17,7 +17,7 @@
  *   S.setAtlas(i, tex)      쓰지 않는다(판 그림은 GLB 안) · 옛 약속 자리만
  *   S.DEF · S.CAFE_DEF      기본 시점 { t, r, th, ph } · S.cafeX · S.bubbleAt(말풍선 3D 점)
  *   S.limits(scn)           카메라 목표점 범위 { x: [a, b], z: [a, b] }
- *   S.frame(camera, scn)    그리기 바로 전 · 카메라 쪽 벽 · 천장 숨김(모형 단면) + 바닥 대리석 반사
+ *   S.frame(camera, scn, inside)    그리기 바로 전 · 카메라 쪽 벽 · 천장 숨김(모형 단면 · v5.73 inside = 카메라가 걸을 수 있는 공간 안이면 숨기지 않음) + 바닥 대리석 반사
  *   S.resize() · S.lowPower()(반사 끔) · S.dispose()
  *   S.refl(on) · S.reflOn() · S.cut()   v5.50 진단 모드(?t3diag=1) · 바닥 반사 켜고 끄기 · 지금 숨긴 벽 { side_s, side_e, side_w, side_n }
  *   S.TOUR                  자동 둘러보기 · establish = 첫 장면(남동쪽 높은 전경) · route = 동쪽 문(D)부터 반시계 동선 · pos · look = [x, z, 높이] · t = 도착 초 */
@@ -147,9 +147,11 @@
       }
       /* 카메라 쪽 벽 · 천장을 숨겨 모형 안이 보이게(분양 모형의 단면) */
       var lastVis = null;
-      function cutaway(camera) {
+      /* v5.73 inside = 따라오는 카메라가 걸을 수 있는 공간 안(tour3 카메라 받침대가 벽 · 유리 앞에서 멈춤) → 벽 · 코어를 숨기지 않고 받침(coreStub)도 세우지 않는다
+       *   (운영 261005 캡처 · 고객센터 칸 · 미팅룸 복도에서 카메라가 도면 z 11.66 북쪽이면 북쪽 벽 묶음이 통째로 숨어 벽 · 바닥이 잘려 보였다) · 연출 · 판 보기 · 처음 내려오기 카메라는 옛 규칙 그대로 */
+      function cutaway(camera, inside) {
         var x = camera.position.x + 16, z = 6 - camera.position.z, y = camera.position.y;
-        var vis = { side_s: z > -0.3, side_e: x < LW + 0.3, side_w: !(x < -0.3 && z < LD + 1), side_n: !(z > LD + 0.2) };
+        var vis = inside && y < CEIL - 0.05 ? { side_s: true, side_e: true, side_w: true, side_n: true } : { side_s: z > -0.3, side_e: x < LW + 0.3, side_w: !(x < -0.3 && z < LD + 1), side_n: !(z > LD + 0.2) };
         for (var k in sideGroups) sideGroups[k].visible = vis[k] !== false;
         lastVis = vis;   /* v5.50 진단 표시(숨긴 벽) */
         if (coreStub) coreStub.visible = !vis.side_n && y >= 3.25;   /* v5.64.1 받침은 내려다보기 카메라(3.34m 이상)에서만 · 눈높이 카메라(3.18m 이하)가 북쪽 벽 너머로 가면 그 윗면이 화면을 덮는 회색 판이 됐다(운영 v5.64 캡처) */
@@ -271,7 +273,7 @@
           }
         },
         setAtlas: function () {},
-        frame: function (camera, scn) { if (!loaded) return; cutaway(camera); renderRefl(camera, scn); },
+        frame: function (camera, scn, inside) { if (!loaded) return; cutaway(camera, !!inside); renderRefl(camera, scn); },   /* v5.73 inside(카메라 받침대 안) */
         resize: function () { if (REFL.rt) setupRefl(); },
         lowPower: function () { REFL.on = false; if (REFL.rt) { REFL.rt.dispose(); REFL.rt = null; } },
         /* v5.50 진단 모드 A/B · 바닥 반사 켜고 끄기(실기기에서 깜빡임 원인 가르기) */

@@ -4,7 +4,7 @@
 /* v5.37 (사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) 둘러보기 v3 = 시험 페이지와 같은 공용 모듈(tour3.js · tour3.css · 캐릭터 걷기 · 40도 시점 · 왼손 패드 · 오른손 십자 · 작은 지도 · 스태프 챗봇 · 판 보기 · 돋보기 2개 · 움직임 줄이기 · 입장 암전)
    같은 약속 AXTour.open/close/back/isOpen · 옛 v2(tour.js · tour.css · 자동 둘러보기 · 평면 지도 · 구역 시트)로 되돌리려면 아래 목록의 tour3 두 개를 tour.css · tour.js 로 바꾸면 된다(파일은 그대로 둠) */
 /* v5.38 (사용자 261003) 둘러보기 손질 · 캐릭터 겹침(스태프 원 충돌) · 늘 카메라 쪽을 봄 · 조그 패드 · 안내데스크 깜빡임(겹친 면) · 정문 회전문 또렷하게 · 로비 음악(Web Audio 합성 · 「음악 없이」 · 위쪽 스피커 버튼) · 파일 이름 그대로 · 캐시 깨기 ver v538 */
-var TOUR = { ver: "v572", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
+var TOUR = { ver: "v573", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
 try { localStorage.removeItem('axfT3Diag'); } catch (e) {} window.AXT3_DIAG = /[?&]t3diag=1(?:&|$)/.test(location.search);   /* v5.47 진단은 주소에 ?t3diag=1 이 있는 그 페이지에서만 · 기억하지 않는다 · 옛 기기 기억은 지운다(사용자 261004) */   /* v5.44 둘러보기 실기기 진단(주소 ?t3diag=1 · 이 기기에 기억 · ?t3diag=0 이면 끔) · 화면 왼쪽 위에 GPU · 깊이 비트 · highp · DPR · fps */
 /* 켜기 스위치 · v5.28 true = 전체 공개(사용자 261003 「1층 3D 전체 공개」) · false 로 두면 입구 3곳 · 판 퀴즈 힌트 링크 · 열기가 모두 숨는다 */
 var TOUR_ON = true;
@@ -184,7 +184,8 @@ function tourRetBack() {
    이미 받은 스탬프(다시 푼 퀴즈 · 3종을 다 채우지 않은 게임 · 두 번째 아이디어) = 자동 없음 · 결과 화면 버튼 · 뒤로 */
 var TRD = { t: 0, tick: 0, end: 0, el: null };
 var TRD_MS = 3000;
-function tourRetLive() { var r = TOUR_RET; return !!(r && tourOn() && (App.current === r.v || App.isAnc(r.v, App.current))); }
+function tourRetLive() { var r = TOUR_RET; return !!(r && !r.away && tourOn() && (App.current === r.v || App.isAnc(r.v, App.current))); }   /* 출발한 활동 안(마침 · 자동 복귀 판단) */
+function tourRetAny() { return !!(TOUR_RET && tourOn()); }   /* v5.73 둘러보기에서 나온 뒤 앱 어디서나(「3D로 돌아가기」 단추) */
 function tourRetDone(got) {
   if (!tourRetLive()) return;
   TOUR_RET.done = true;
@@ -207,13 +208,13 @@ function trdWait() {
 /* v5.67 (사용자 261005 「3d로 돌아가기가 어떻게 해야 되는지 순간 프리징이 되는데」 · 「모든 메뉴가 위와 같은 버튼이 제일 하단에 있어서 대충 보는 사람은 이해 못할 것 같아 작은 플로팅 메뉴가 더 명확」 · 「둘러보기 복귀 버튼을 없애고 작은 플로팅 버튼(뒤로가기 아이콘) 밑에 3d로 돌아가기」)
    둘러보기에서 출발한 앱 화면(tourRetLive = 도착한 화면 · 그 아래 단계) = 오른쪽 아래 떠 있는 단추 하나(#trf · 주황 원 + 짙은 뒤로 화살표 · 밑에 작은 「3D로 돌아가기」) · 누르면 tourRetGo(들어가기 전 자리)
    자리 = 맨 위로(TOP · 아래 80px · 46px) 위 · 아래 고정 버튼(axs-fix) · 하단 메뉴가 더 높으면 그 위 · 앱 폭 오른쪽 끝(TOP 과 같은 세로줄)
-   안 보임 = 출처가 둘러보기가 아닐 때(아래 탭 · 다른 화면으로 가면 TOUR_RET 이 지워진다) · 둘러보기가 열려 있을 때 · 게임 판이 도는 동안(rtView · 결과 화면이 뜨면 보임)
+   안 보임 = 출처가 둘러보기가 아닐 때(v5.73 = 3D로 돌아가거나 둘러보기를 새로 열 때 · 새로고침에만 지워진다 · 아래 탭 · 다른 화면으로 가도 남음 · 옛 v5.67 = 지움) · 둘러보기가 열려 있을 때 · 게임 판이 도는 동안(rtView · 결과 화면이 뜨면 보임)
    처음 나타날 때 한 번 톡 튀어 오름(움직임 줄이기 = 없음)
    자동 복귀(옛 v5.57 아래 띠 「여기 머물기 / 둘러보기로 돌아가기 3」 없앰) = 그 활동의 스탬프를 이번에 새로 받으면(got) 연출 · 팝업이 모두 닫힌 뒤 이 단추 둘레에 3초 원이 돈다 → 다 돌면 tourRetGo
      단추 밖을 누르거나 키를 누르거나 다른 화면으로 가면 취소(= 머물기 · 단추는 남는다) · 시트 · 팝업이 뜨면 그동안 멈춤 · 움직임 줄이기 = 원 없이 3초 뒤 같은 동작(읽어 주기 「3초 뒤 3D로 돌아가요」) */
 var TRF_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 6 4 12l6 6"/><path d="M4.5 12H20"/></svg>';
 function trfWant() {
-  if (!tourRetLive() || el("app").hidden || TOUR.busy || (window.AXTour && AXTour.isOpen())) return false;
+  if (!tourRetAny() || el("app").hidden || TOUR.busy || (window.AXTour && AXTour.isOpen())) return false;   /* v5.73 tourRetLive(출발 화면 아래만) → tourRetAny(앱 어디서나) */
   if (rtView(App.current) && !document.querySelector("#view .gs-res-go")) return false;   /* 게임 판 중 = 조작 단추를 가리지 않게 · 결과 화면에서 보임 */
   if (App.current === "quiz_play" && typeof qzRun === "function" && qzRun()) return false;   /* 판 퀴즈 푸는 중 = 답 · 「다음 문제」 · 힌트 단추를 가리지 않게(실측 390 에서 걸침) · 결과 화면에서 보임 */
   return true;

@@ -98,7 +98,7 @@ var App = {
     if (v === "floor_d") return FLOOR_GD[PROG.floor] ? FLOOR_GD[PROG.floor].hdr : "층별 안내";   /* v5.65 둘러보기 엘리베이터 층 안내 */
     return this.TITLES[v] || "";
   },
-  tab: function (t) { this.from = {}; TOUR_RET = null; this.go(t); },   /* v5.53 아래 탭 = 둘러보기로 돌아가기 지움 */
+  tab: function (t) { this.from = {}; this.go(t); },   /* v5.73 (사용자 261005 「전체 시간표 보기를 해서 이동되고 나면 길을 잃어버려 1층으로 못 돌아간다」) 아래 탭으로 가도 둘러보기 출처(TOUR_RET)는 남는다 · 옛 v5.53 · v5.67 「탭 = 지움」 바뀜 */
   /* v4.09 경로 줄 · 실제로 들어온 길 = 뒤로 버튼과 같은 사슬(parentOf · from) · [탭 첫 화면(또는 홈), …, 지금] */
   crumbs: function (v) {
     var out = [v], cur = v, hop = 0;
@@ -131,8 +131,8 @@ var App = {
     }).join("") + "</ol></nav>";
   },
   back: function () {
-    if (TOUR_RET && this.current === TOUR_RET.v && tourRetBack()) return;   /* v5.53 둘러보기 바로 가기로 온 화면 = 뒤로 가면 둘러보기 */
-    if (TOUR_RET && TOUR_RET.done && this.isAnc(TOUR_RET.v, this.current) && tourRetBack()) return;   /* v5.57 둘러보기에서 출발한 활동을 마쳤으면 그 활동의 어느 화면(결과 · 게임 · 완료)에서 뒤로 가도 둘러보기 */
+    if (TOUR_RET && !TOUR_RET.away && this.current === TOUR_RET.v && tourRetBack()) return;   /* v5.53 둘러보기 바로 가기로 온 화면 = 뒤로 가면 둘러보기 */
+    if (TOUR_RET && !TOUR_RET.away && TOUR_RET.done && this.isAnc(TOUR_RET.v, this.current) && tourRetBack()) return;   /* v5.57 둘러보기에서 출발한 활동을 마쳤으면 그 활동의 어느 화면(결과 · 게임 · 완료)에서 뒤로 가도 둘러보기 */
     if (QRS.hold) { QRS.gate = 0; QRS.gateQ = []; }   /* v4.13 인식 중 뒤로 = 미뤄 둔 전환을 버리고 바로 나간다 */
     var v = this.current, p = this.parentOf(v) || "home";
     delete this.from[v];
@@ -182,7 +182,7 @@ var App = {
     }
     this.current = v;
     detHist(v, isBack, dPrev);   /* v5.69 시트에서 시트로 = 앞 내용을 기억(뒤로 = 앞 내용) */
-    if (TOUR_RET && v !== TOUR_RET.v && !this.isAnc(TOUR_RET.v, v)) TOUR_RET = null;   /* v5.53 도착한 화면 밖으로 가면 둘러보기 돌아가기 지움 */
+    if (TOUR_RET && v !== TOUR_RET.v && !this.isAnc(TOUR_RET.v, v)) TOUR_RET.away = true;   /* v5.73 도착한 화면 밖으로 가도 둘러보기 출처는 남는다(「3D로 돌아가기」가 앱 어디서나 · 지움 = 3D로 돌아감 · 둘러보기를 새로 엶 · 새로고침) · away = 뒤로 · 활동 마침은 더 이상 3D로 잇지 않음 · 옛 v5.53 = 밖으로 가면 지움 */
     if (typeof trdHide === "function") trdHide();   /* v5.57 화면을 옮기면 자동 복귀 띠 · 기다림을 접는다(한 판 더 · 다시 하기 · 다른 화면) */
     if (typeof wsRoleCheck === "function") wsRoleCheck();   /* v4.76 관리자 모드 = ops 방 */
     /* v3.15 새로 고침 복귀 · 현재 화면의 소속 탭을 sessionStorage 에 기억(같은 브라우저 탭에서만, 다음 방문은 홈).

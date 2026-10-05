@@ -1146,6 +1146,17 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-seg { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ax-space-4); padding: var(--ax-space-4); border-radius: var(--ax-radius-16); background: var(--ax-color-divider); }
   .axs-seg button { min-height: var(--ax-touch-size); border: 0; border-radius: var(--ax-radius-12); background: transparent; color: var(--ax-color-body); font: var(--ax-type-t6-strong); cursor: pointer; }
   .axs-seg button[aria-selected="true"] { background: var(--ax-color-surface); color: var(--ax-color-ink); }
+  /* v5.73 시간표 → 상시 운영(점심 줄 progAlwaysGo) · 손잡이 미끄러짐 0.25초 + 아래 내용 흐려졌다 다시 · 움직임 줄이기 = 없음(JS 도 바로) */
+  .axs-seg { position: relative; }
+  .axs-seg button { position: relative; z-index: 1; }
+  .axs-seg.sw-r button[aria-selected="true"] { background: transparent; color: var(--ax-color-body); }
+  .axs-seg.sw-r button:last-child { color: var(--ax-color-ink); transition: color .25s ease; }
+  .axs-seg.sw-r::before { content: ""; position: absolute; top: var(--ax-space-4); bottom: var(--ax-space-4); left: var(--ax-space-4); width: calc(50% - var(--ax-space-4) * 1.5); border-radius: var(--ax-radius-12); background: var(--ax-color-surface); animation: axSegR .25s cubic-bezier(.3, .7, .3, 1) forwards; }
+  @keyframes axSegR { to { transform: translateX(calc(100% + var(--ax-space-4))); } }
+  .sw-out { opacity: 0; transition: opacity .18s ease; }
+  .sw-in { animation: axSwIn .3s ease both; }
+  @keyframes axSwIn { from { opacity: 0; transform: translateY(6px); } }
+  @media (prefers-reduced-motion: reduce) { .axs-seg.sw-r::before, .sw-in { animation: none; } .sw-out { transition: none; } }
   /* v4.10 스탬프 현황 M04 숫자 칸(axs-count·axs-cells·axs-cell) 폐기 · 홈과 같은 .rail 재사용(사용자 결정 260922) */
   .axs-hr { height: 1px; background: var(--ax-color-divider); }
   .axs-big { font: var(--ax-type-t1); color: var(--ax-color-ink); }
