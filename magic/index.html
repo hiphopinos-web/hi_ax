@@ -2569,7 +2569,7 @@ function drawCountView() {
   const big = !crowd.on ? '계수 꺼짐' : !cr.det ? (cr.err || '인식기 불러오는 중') : cr.total + '명';
   c.save(); c.font = '800 ' + (crowd.on && cr.det ? 150 : 72) + 'px ' + FONT; c.textAlign = 'right'; c.textBaseline = 'alphabetic';
   c.shadowColor = 'rgba(0,0,0,.7)'; c.shadowBlur = 18; c.fillStyle = crowd.on && cr.det ? ORANGE : '#fff'; c.fillText(big, W - 52, 170);
-  c.font = '600 28px ' + FONT; c.fillStyle = '#fff'; c.fillText(crowd.on && cr.det ? '지금 화면에 잡힌 사람' + (crowd.zones.length ? ' · 구역 ' + rows.map(r => r.name + ' ' + r.count).join(' · ') : '') : crowd.on ? '' : '왼쪽 아래 「계수 켜기」', W - 52, 216);
+  c.font = '600 28px ' + FONT; c.fillStyle = '#fff'; c.fillText(crowd.on && cr.det ? '지금 화면에 잡힌 사람' + (crowd.zones.length ? ' · ' + rows.map(r => r.name + ' ' + r.count + '명').join(' · ') : '') : crowd.on ? '' : '왼쪽 아래 「계수 켜기」', W - 52, 216);
   c.restore();
 }
 $('admOk').onclick = admSubmit; $('admNo').onclick = admClose;
