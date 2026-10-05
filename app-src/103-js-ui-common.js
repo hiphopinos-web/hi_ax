@@ -95,6 +95,20 @@ function toast(msg) {
   t.textContent = msg; t.classList.add("show");
   clearTimeout(toast._h); toast._h = setTimeout(function () { t.classList.remove("show"); }, 2400);
 }
+/* v5.77 밤샘 QA(261006) · 두 번 누름이 바뀐 화면의 다른 단추를 누르던 것 막기
+   실측(0.15~0.25초 간격 두 번 누름) · 설문 「다음」 → 같은 자리 「이전」(1단계로 되돌아가 앞으로 못 감) · AX 퀴즈 시작 → 첫 문제 답이 저절로 눌림 · 상세 시트 「닫기」 → 뒤 목록의 다른 항목이 열림
+   규칙 = 사람 손 누름(isTrusted · 키보드 누름 detail 0 은 제외)이 0.4초 안에 같은 자리(30px)에 또 오고, 첫 누름이 누른 것이 사라졌거나(다시 그림) 그 자리 맨 위가 아니면(시트 · 팝업이 덮음) 둘째를 버린다
+   같은 단추가 그대로 있으면(게임 · 연타 단추) 그대로 통과 · 입력칸은 막지 않는다 */
+var GHOST = { t: 0, x: 0, y: 0, el: null };
+window.addEventListener("click", function (e) {
+  if (!e.isTrusted || e.detail === 0) return;
+  var tg = e.target, now = Date.now(), g = GHOST;
+  if (g.el && now - g.t < 400 && Math.abs(e.clientX - g.x) < 30 && Math.abs(e.clientY - g.y) < 30 && tg !== g.el && !(g.el.contains && g.el.contains(tg)) && !/^(INPUT|TEXTAREA|SELECT|OPTION)$/.test(tg && tg.tagName || "")) {
+    var gone = !document.documentElement.contains(g.el) || !g.el.getClientRects().length, top = gone ? null : document.elementFromPoint(g.x, g.y);
+    if (gone || (top && top !== g.el && !g.el.contains(top))) { e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); return; }
+  }
+  GHOST = { t: now, x: e.clientX, y: e.clientY, el: tg };
+}, true);
 /* ── v3.53 확인 팝업 대기열 ──
    중요한 알림(보상 열림 · 포토부스 호출 · 신청/취소 완료 · 적립 실패 · 해야 할 일)은 토스트 대신 「확인」 팝업.
    가벼운 피드백(입력 검증 · 재시도 · 운영자 화면 · 테스트)은 토스트 그대로.
