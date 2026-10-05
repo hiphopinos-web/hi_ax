@@ -5940,8 +5940,8 @@ function viewHq(){
 /* 261003 카메라 계수 요약 칩(모아 보기 띠) · 카메라가 없거나 옛 서버면 아무것도 없다 · 혼잡 구역 = 빨강(혼잡 제보 칩과 같은 말) · 신호 없음 = 회색 */
 function camChip(){
   var d=ST.data.cam; if(!d||!d.ok||!(d.cams||[]).length) return "";
-  var lost=0, hot=0; d.cams.forEach(function(c){ var a=camAge(c,d), on=a>=0&&a<(Number(d.stale)||60); if(!on) lost++; else (c.z||[]).forEach(function(x){ if(x.s==="bad") hot++; }); });
-  return (hot?'<a href="#" onclick="go(\'f_crowd\');return false">'+tag("카메라 혼잡 "+hot+"구역","bad")+'</a>':'')+(lost?'<a href="#" onclick="go(\'f_crowd\');return false">'+tag("카메라 신호 없음 "+lost+"대","off")+'</a>':'');
+  var lost=0, hot=0, chk=0; d.cams.forEach(function(c){ var a=camAge(c,d), on=a>=0&&a<(Number(d.stale)||60); if(!on) lost++; else { chk+=camChk(c,d); (c.z||[]).forEach(function(x){ if(x.s==="bad") hot++; }); } });
+  return (chk?'<a href="#" onclick="go(\'f_crowd\');return false">'+tag("확인 요청 "+chk+"곳","warn")+'</a>':'')+(hot?'<a href="#" onclick="go(\'f_crowd\');return false">'+tag("카메라 혼잡 "+hot+"구역","bad")+'</a>':'')+(lost?'<a href="#" onclick="go(\'f_crowd\');return false">'+tag("카메라 신호 없음 "+lost+"대","off")+'</a>':'');
 }
 /* 현장 처리 › 혼잡 제보 · 옛 대시보드 카드 그대로 */
 function viewCrowdTab(){ return (viewCrowd()||'<div class="card">'+skel()+'</div>')+'<div id="camCard">'+viewCam()+'</div>'; }
@@ -5950,28 +5950,36 @@ function viewCrowdTab(){ return (viewCrowd()||'<div class="card">'+skel()+'</div
  * 이 화면이 열려 있으면 15초마다 이 카드만 다시 받는다(다른 칸 · 입력 중인 설정은 그대로) · 옛 서버(crowd_cam_list 없음) = 「서버 미배포」 */
 var CAM_W={ ok:["여유","ok"], mid:["보통","warn"], bad:["혼잡","bad"] }, CAMR={ at:0, busy:false };
 function camAge(c, d){ return c.age<0?-1:c.age+Math.max(0,Math.round((Date.now()-(d._got||Date.now()))/1000)); }
+/* 261005 현장 확인 요청 · 서버 판단 z[].j = check | calm | 빈값(옛 서버는 없음 = 빈값) · 스태프에게 보이는 신호일 뿐 참가자 앱에는 안 나간다 */
+function camJ(x){ var j=x&&x.j; return j==="check"||j==="calm"?j:""; }
+function camMagic(c){ return /·\s*magic\s*$/i.test(String(c.cam||"")); }
+function camOn(c,d){ var a=camAge(c,d); return a>=0&&a<(Number(d.stale)||60); }
+function camChk(c,d){ if(!camOn(c,d)) return 0; var n=0; (c.z||[]).forEach(function(x){ if(camJ(x)==="check") n++; }); return n; }
+function camJChip(x,on){ var j=camJ(x); if(!j) return ""; var t=j==="check"?tag("현장 확인 요청",on?"bad":"off"):tag("평소","off"); return ' <span'+(on?'':' style="opacity:.5"')+'>'+t+'</span>'; }
 function camAgo(s){ return s<0?"":s<60?s+"초 전":Math.floor(s/60)+"분 "+(s%60)+"초 전"; }
 function viewCam(){
   var d=ST.data.cam;
   if(!d) return card("카메라 계수","",skel());
   if(!d.ok) return card("카메라 계수","서버 미배포",'<div class="empty">이 서버에는 아직 카메라 계수가 없습니다. 서버를 새로 올린 뒤 보입니다.</div>');
   if(!d._got) d._got=Date.now();
-  var cams=d.cams||[], stale=Number(d.stale)||60, live=0, hot=0;
+  var cams=(d.cams||[]).map(function(c,i){ return { c:c, i:i, k:camChk(c,d)>0?0:1 }; }).sort(function(a,b){ return a.k-b.k||a.i-b.i; }).map(function(o){ return o.c; });
+  var stale=Number(d.stale)||60, live=0, hot=0, chkAll=0;
   var rows=cams.map(function(c){
-    var age=camAge(c,d), on=age>=0&&age<stale, z=c.z||[];
-    if(on){ live++; z.forEach(function(x){ if(x.s==="bad") hot++; }); }
+    var age=camAge(c,d), on=age>=0&&age<stale, z=c.z||[], ck=camChk(c,d);
+    if(on){ live++; chkAll+=ck; z.forEach(function(x){ if(x.s==="bad") hot++; }); }
     var sk=Math.abs(Number(c.skew)||0)>120?' <span class="cap">기기 시계 '+Math.abs(c.skew)+'초 어긋남</span>':'';
-    var head='<tr'+(on?'':' class="dim"')+'><td rowspan="'+(z.length+1)+'" style="vertical-align:top"><b>'+esc(c.cam)+'</b><div class="mt8">'+(on?tag("신호","ok"):tag("신호 없음","off"))+'</div>'+
+    var head='<tr'+(on?'':' class="dim"')+'><td rowspan="'+(z.length+1)+'" style="vertical-align:top"><b>'+esc(c.cam)+'</b>'+(camMagic(c)?' <span class="cap">판단 제외</span>':'')+'<div class="mt8">'+(on?tag("신호","ok"):tag("신호 없음","off"))+(ck?' '+tag("확인 요청 "+ck+"곳","bad"):'')+'</div>'+
       (on?'':'<div class="mt8"><button class="btn sm danger" onclick="camDel(\''+esc(String(c.cam).replace(/['\\]/g,""))+'\')">목록에서 빼기</button></div>')+'</td>'+
       '<td class="cap">화면 전체</td><td class="n tdr"><b>'+(c.tot|0)+'</b>명</td><td></td><td class="n cap" rowspan="'+(z.length+1)+'" style="vertical-align:top">'+esc(short(c.t))+'<br>'+esc(camAgo(age))+sk+'</td></tr>';
-    return head+z.map(function(x){ var w=CAM_W[x.s]||[x.s||"",""]; return '<tr'+(on?'':' class="dim"')+'><td>'+esc(x.n)+'</td><td class="n tdr"><b>'+(x.c|0)+'</b>명</td><td>'+(on?tag(w[0],w[1]):tag(w[0],"off"))+'</td></tr>'; }).join("");
+    return head+z.map(function(x){ var w=CAM_W[x.s]||[x.s||"",""]; return '<tr'+(on?'':' class="dim"')+'><td>'+esc(x.n)+'</td><td class="n tdr"><b>'+(x.c|0)+'</b>명</td><td>'+(on?tag(w[0],w[1]):tag(w[0],"off"))+camJChip(x,on)+'</td></tr>'; }).join("");
   }).join("");
-  var tb='<div class="wrap"><table class="tb"><tr><th>카메라</th><th>구역</th><th class="tdr">인원</th><th>상태</th><th>마지막 갱신</th></tr>'+rows+(!cams.length?emptyRow(5,"아직 들어온 카메라가 없습니다. 계수기 화면 「서버 전송」에서 보낼 곳과 등급코드를 넣으면 10초 안에 보입니다."):"")+'</table></div>';
+  var tb='<div class="wrap"><table class="tb"><tr><th>카메라</th><th>구역</th><th class="tdr">인원</th><th>상태 · 판단</th><th>마지막 갱신</th></tr>'+rows+(!cams.length?emptyRow(5,"아직 들어온 카메라가 없습니다. 계수기 화면 「서버 전송」에서 보낼 곳과 등급코드를 넣으면 10초 안에 보입니다."):"")+'</table></div>';
   var m='<p>노트북 카메라 계수기가 10초마다 숫자만 보냅니다(카메라 이름 · 구역 · 인원 · 상태). 영상과 이미지는 서버에 오지 않습니다.</p>'+
     '<p class="mt8">인원은 그 순간의 값이라 한두 명씩 오르내립니다. 구역 「혼잡」 기준은 계수기 화면에서 구역마다 정합니다.</p>'+
+    '<p class="mt8"><b>판단 규칙</b> 1분 중앙값이 혼잡 기준 이상 2분 → 확인 요청, 기준 80% 아래 2분 → 평소. 「현장 확인 요청」은 스태프가 가서 보라는 신호일 뿐이고, 참가자 앱에는 자동으로 나가지 않습니다(필요하면 스태프가 [혼잡 제보]). 「· magic」 카메라는 체험 참여자 수라 판단에서 뺍니다.</p>'+
     '<p class="mt8">스태프 혼잡 제보와 따로 움직이며 참가자 앱에는 나가지 않습니다. 카메라마다 1분에 한 번 시트 「카메라계수」에 남습니다(지금 '+(d.hist|0)+'줄).</p>'+
     '<p class="mt8">「목록에서 빼기」는 신호 없는 카메라만 지웁니다. 1분 기록은 남고, 그 카메라가 다시 보내면 목록에 다시 생깁니다.</p>';
-  var sub=cams.length?"신호 "+live+"대"+(cams.length>live?" · 신호 없음 "+(cams.length-live)+"대":"")+(hot?" · 혼잡 구역 "+hot+"곳":"")+" · 60초 넘게 안 오면 신호 없음":"노트북 카메라 숫자 · 60초 넘게 안 오면 신호 없음";
+  var sub=cams.length?"신호 "+live+"대"+(cams.length>live?" · 신호 없음 "+(cams.length-live)+"대":"")+(chkAll?" · 확인 요청 "+chkAll+"곳":"")+(hot?" · 혼잡 구역 "+hot+"곳":"")+" · 60초 넘게 안 오면 신호 없음":"노트북 카메라 숫자 · 60초 넘게 안 오면 신호 없음";
   return card("카메라 계수",sub,tb+memo(m),'<button class="btn sm" onclick="camPull(1)">새로고침</button>');
 }
 function camPaint(){ var c=el("camCard"); if(c) c.innerHTML=viewCam(); }
