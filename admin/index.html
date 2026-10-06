@@ -4432,7 +4432,7 @@ var PUSH_REC={ t:20, b:40 }, PUSH_MAX={ t:40, b:120 };   /* v4.78 A11 잠금 화
 var PUSH_GO_N={ home:"홈", notices:"공지 목록", photoq:"포토부스 번호표", ev_cchat:"커피챗", dap:"AX 라운지" };   /* v4.78 A5 공지 목록 */
 var PUSH_TYPES=[["all","전체 구독자"],["emps","개인(사번)"],["dap","AX 라운지 신청자"],["cchat","커피챗 신청자"],["photo","포토부스 대기"],["group","그룹(올린 명단)"]].filter(function(x){ return PHOTO_Q_ON||x[0]!=="photo"; });   /* v5.03 포토부스 대기열 폐지 */
 var PUSH_JOB_TAG={ "대기":"warn","처리중":"pri","완료":"ok","중단":"bad","취소":"off","건너뜀":"off" };
-var PUSH_AUTO=[["photo","포토부스"],["cchat","커피챗"],["dap","AX 라운지"],["crowd","혼잡 해소"]].filter(function(x){ return PHOTO_Q_ON||x[0]!=="photo"; });   /* v5.03 포토부스 대기열 폐지 */   /* v4.78 D1 AX 라운지 승인 · 10분 전 */
+var PUSH_AUTO=[["photo","포토부스"],["cchat","커피챗"],["dap","AX 라운지"],["crowd","혼잡 해소"],["scan","스캔 알림"]].filter(function(x){ return PHOTO_Q_ON||x[0]!=="photo"; });   /* v5.03 포토부스 대기열 폐지 */   /* v4.78 D1 AX 라운지 승인 · 10분 전 */
 var PUSH_SAFE="화재·대피 같은 안전 통지는 사내 방송·기존 안전 채널이 정본입니다. 푸시는 도달을 보장하지 않습니다. 이미 나간 푸시는 회수되지 않습니다.";
 /* v4.78 A11 발송 기준 · 문구 프리셋 · 정정 프리셋(○○ 칸을 채워야 보낼 수 있다) · A8 17F 강연 시간(잠정)에는 「소리 없이」를 미리 켠다 */
 var PUSH_RULE="푸시로 보내는 것: 안전 · 입장 · 시작 · 장소 변경 · 지연. 앱 공지만 하는 것: 안내 · 홍보 · 한산 · 혼잡 소식.";
@@ -4823,6 +4823,7 @@ function pushHistHtml(){
   var a='<div class="wrap mt12"><table class="tb"><tr><th>자동 알림 · 오늘</th><th class="tdr">건수</th><th class="tdr">대상 사람</th><th class="tdr">보낸 기기</th><th class="tdr">성공</th><th class="tdr">실패</th><th class="tdr">만료 정리</th><th class="tdr">대기</th><th>마지막</th></tr>'+
     PUSH_AUTO.map(function(k){ var x=auto.filter(function(y){ return y.kind===k[0]; })[0]||{ jobs:0, n:0, subs:0, ok:0, fail:0, gone:0, wait:0, last:"" };
       return '<tr class="hv"><td><b>'+esc(x.kname||k[1])+'</b></td><td class="n tdr">'+x.jobs+'</td><td class="n tdr">'+x.n+'</td><td class="n tdr">'+x.subs+'</td><td class="n tdr">'+x.ok+'</td><td class="n tdr'+(x.fail?' pbad':'')+'">'+x.fail+'</td><td class="n tdr">'+x.gone+'</td><td class="n tdr">'+x.wait+'</td><td class="n cap">'+esc(x.last?short(x.last):"-")+'</td></tr>'; }).join("")+'</table></div>';
+  a+='<p class="cap mt8">스캔 알림 = 스태프 폰이 QR 을 찍은 순간 그 참가자에게 가는 알림입니다. 사람당 하루 상한에 세지 않습니다.</p>';
   return t+a+(d.total>rows.length?'<p class="cap mt8">최근 '+rows.length+'줄 · 전체 '+d.total+'줄</p>':'');
 }
 /* 설정 · push_cfg 는 push_stats 모양을 돌려준다 */
@@ -6192,7 +6193,7 @@ function hvCtl(k){
   } else if(k==="draw"){
     var dr=ST.data.draw||{};
     b+='<div class="row"><button class="btn pri" onclick="navSel(\'e_draw\',0)">원격 진행</button>'+(dr.ok&&("closed" in dr)?'<button class="btn'+(dr.closed?'':' danger')+'" onclick="drawCloseSet('+(dr.closed?0:1)+')">'+(dr.closed?"체크인 다시 열기":"체크인 마감")+'</button>':'')+'<button class="btn" onclick="navSel(\'e_draw\',3)">선착순 참여상</button><button class="btn" onclick="navSel(\'e_draw\',4)">7등 랜덤 굿즈</button></div>'+
-      '<p class="cap mt8">7등 대상 확정 · 추첨 · 교체는 확인 문구를 넣어야 실행됩니다. 선착순 자격 취소 · 수동 포함은 사유가 필요합니다.</p>';
+      '<p class="cap mt8">7등 대상 확정 · 추첨 · 교체는 확인 문구를 넣어야 실행됩니다. 선착순 자격 취소 · 수동 지급(포함)은 사유가 필요합니다.</p>';
   } else if(k==="roul"){
     var out=!!sy.rouletteOut;
     b+='<div class="row"><button class="btn '+(out?"":"danger")+'" onclick="rouletteOut('+(out?0:1)+')">'+(out?"소진 안내 끄기":"소진 안내 켜기")+'</button><span class="cap">켜면 앱 룰렛 창에 「모두 소진」이 뜨고 스태프 폰이 룰렛을 차감하지 않습니다. 행운권은 그대로입니다.</span></div>';
@@ -6431,7 +6432,7 @@ function hvTestReset(emp){
 }
 /* ══ 시스템 › 운영 설정 · 서버 cfg_list · cfg_set(허용 목록 키만 · 2단계) · lv3 키는 슈퍼관리자 ══ */
 /* v5.68 서버 설명 뒤에 붙이는 한 줄(바꾸면 어디가 달라지는지) · 설명 정본은 서버 CFG_ALLOW */
-var CFG_NOTE={ "선착순_수량":"추첨 › 선착순 참여상에서도 바꿈 · 올리면 대기 줄이 자격으로", "선착순_마감":"이 시각 뒤 6개째는 자격 없음", "선착순_체크인포함":"OFF 면 체크인 3개를 뺀 6개로 판정", "선착순_숫자공개":"ALL · LOW · OFF · 앱 남은 수량 표시", "완주추첨_사용":"ON 일 때만 추첨 › 완주 경품 추첨 칩이 보임", "행운권_참석조건":"OFF = 행운권 번호 전체가 무대 풀 · ON = 17F 입구 체크인한 사람만 · 현재 운영: 체크인 없이 행운권 전체 추첨(사용자 261006)", "룰렛_마감":"이 시각 뒤 스태프 폰 룰렛 차감 거절 · 행사 요소 › 룰렛에 「마감 시각 지남」", "라운지_상담종료":"이 시각 뒤 시작하는 상담 슬롯은 신청 거절", "랜덤굿즈_수":"추첨 › 7등 랜덤 굿즈 당첨 수 · 상품은 룰렛 남은 경품에서 무작위", "아이디어_마감":"행사 요소 › 아이디어왕 후보 · 앱 입력 화면 마감 한 줄", "아이디어_사전오픈":"ON 이면 행사 전에도 앱 아이디어 입구가 열림", "아이디어왕_상":"등수 : 개월 : 인원 · 인원 합이 선정 상한", "라운지키트_수량":"경품·재고 키트 패널 라운지 쿼터", "아이디어_사전스탬프":"OFF 면 행사 전 아이디어의 스탬프는 10/26 첫 동기화 때 부여", "대강당_좌석":"출석(17F · 10F) 화면 · 앱 홈 혼잡 칸에 바로 반영", "대강당_기준":"앱 홈 혼잡 칸 · 출석(17F · 10F) 상태 띠 색", "출석_입장창":"바꾸면 입장 QR 라벨 시각도 다시 인쇄", "출석_끝창":"바꾸면 끝 QR 라벨 시각도 다시 인쇄", "송출_켬":"꺼진 강의의 송출 QR 은 찍어도 거절", "10F명단_키트빠짐":"10F 명단 넣기 미리보기 · 적용에 바로 반영", "10F명단_E회차":"10F 명단 넣기 미리보기 · 적용에 바로 반영" };
+var CFG_NOTE={ "선착순_방식":"수령순(기본) = 6개 모은 사람이 체크인존에 먼저 와서 받는 순 · 예약 · 대기마감 없음 · 달성순 = 옛 6개째 순번", "선착순_수량":"추첨 › 선착순 참여상에서도 바꿈 · 수령순 = 지급한 수 아래로 못 줄임 · 달성순 = 올리면 대기 줄이 자격으로", "선착순_마감":"= 지급 마감 시각 · 이 시각 뒤 체크인존 지급 거절(달성순 = 6개째 자격 없음)", "선착순_체크인포함":"OFF 면 체크인 3개를 뺀 6개로 판정", "선착순_숫자공개":"ALL · LOW · OFF · 앱 남은 수량 표시", "완주추첨_사용":"ON 일 때만 추첨 › 완주 경품 추첨 칩이 보임", "행운권_참석조건":"OFF = 행운권 번호 전체가 무대 풀 · ON = 17F 입구 체크인한 사람만 · 현재 운영: 체크인 없이 행운권 전체 추첨(사용자 261006)", "룰렛_마감":"이 시각 뒤 스태프 폰 룰렛 차감 거절 · 행사 요소 › 룰렛에 「마감 시각 지남」", "라운지_상담종료":"이 시각 뒤 시작하는 상담 슬롯은 신청 거절", "랜덤굿즈_수":"추첨 › 7등 랜덤 굿즈 당첨 수 · 상품은 룰렛 남은 경품에서 무작위", "아이디어_마감":"행사 요소 › 아이디어왕 후보 · 앱 입력 화면 마감 한 줄", "아이디어_사전오픈":"ON 이면 행사 전에도 앱 아이디어 입구가 열림", "아이디어왕_상":"등수 : 개월 : 인원 · 인원 합이 선정 상한", "라운지키트_수량":"경품·재고 키트 패널 라운지 쿼터", "아이디어_사전스탬프":"OFF 면 행사 전 아이디어의 스탬프는 10/26 첫 동기화 때 부여", "대강당_좌석":"출석(17F · 10F) 화면 · 앱 홈 혼잡 칸에 바로 반영", "대강당_기준":"앱 홈 혼잡 칸 · 출석(17F · 10F) 상태 띠 색", "출석_입장창":"바꾸면 입장 QR 라벨 시각도 다시 인쇄", "출석_끝창":"바꾸면 끝 QR 라벨 시각도 다시 인쇄", "송출_켬":"꺼진 강의의 송출 QR 은 찍어도 거절", "10F명단_키트빠짐":"10F 명단 넣기 미리보기 · 적용에 바로 반영", "10F명단_E회차":"10F 명단 넣기 미리보기 · 적용에 바로 반영" };
 /* 261005 사용자 확정 · 출석 시간 창은 인쇄된 QR 라벨에 박혀 있어 읽기 전용 · 바꾸려면 슈퍼관리자 L3 */
 var CFG_LOCK={ "출석_입장창":1, "출석_끝창":1 };
 var CFG_LOCK_NOTE="인쇄된 QR과 연동 · 확정 261005";
@@ -7268,12 +7269,12 @@ var FIN_LEGACY_SHOW=false;   /* 261006 옛 완주 경품 추첨 폐기 · true �
 function finOn(){ var f=ST.data.fin; return !!(f&&f.ok); }
 function pzOldCard(t){ return card(t,"",'<div class="note">이 서버는 아직 '+esc(t)+' 기능을 모릅니다. 서버 갱신 뒤 이 화면이 켜집니다.</div>'); }
 function pzErrCard(t, d){ return card(t,"",'<div class="empty">'+esc(t)+' 현황을 받지 못했습니다('+esc(pzWhy(d))+').</div>'); }
-var PZ_WHY={ shrink:"이미 자격을 받은 수보다 작게 줄일 수 없습니다", full:"선착순 수량이 다 찼습니다. 설정에서 수량을 올린 뒤 넣습니다", got:"이미 수령한 사람입니다. 수령 되돌리기를 먼저 합니다", notgot:"수령 기록이 없습니다",
+var PZ_WHY={ shrink:"이미 자격을 받았거나 지급한 수보다 작게 줄일 수 없습니다", out:"남은 수량이 없습니다(소진)", full:"선착순 수량이 다 찼습니다. 설정에서 수량을 올린 뒤 넣습니다", got:"이미 수령한 사람입니다. 수령 되돌리기를 먼저 합니다", notgot:"수령 기록이 없습니다",
   noelig:"스탬프 6개가 안 됩니다", closed:"마감 시각이 지났습니다", "void":"이미 취소된 자격입니다", off:"서버 설정에서 꺼져 있습니다", why:"사유를 적습니다", eventday:"행사일에는 비울 수 없습니다", confirm:"확인 문구가 필요합니다",
   drawn:"이미 추첨했습니다. 바꿀 수 없습니다", done:"이미 추첨했습니다. 결과는 그대로입니다", early:"마감 시각 전에는 확정할 수 없습니다", nolock:"먼저 대상을 확정합니다", stale:"확정 뒤 바뀌었습니다. 대상을 다시 확정합니다",
   max:"그 등수는 이미 다 찼습니다", late:"마감 뒤 접수입니다. 확인 칸을 체크합니다", nocand:"후보가 아닌 사번입니다", notwin:"이 사번은 지금 당첨자가 아닙니다", nodraw:"아직 추첨 전입니다",
   test:"테스트 사번은 넣지 않습니다", long:"글자 수가 너무 깁니다", dup:"이미 있습니다", noros:"명부에 없는 사번입니다", cut:"시각은 2026-10-26 17:00 형식입니다", rem:"룰렛 잔여를 먼저 저장합니다", param:"입력값을 확인합니다", qty:"수량을 확인합니다", rk:"등수를 고릅니다", text:"한 줄을 적습니다", ch:"경로를 고릅니다", notin:"명단에 없는 사번입니다" };
-function pzWhy(r){ r=r||{}; if(r.reason==="shrink"&&r.min!=null) return PZ_WHY.shrink+"(최소 "+r.min+")"; return PZ_WHY[r.reason]||(hvUnknown(r)?"서버 갱신 뒤 쓸 수 있습니다":why(r)); }
+function pzWhy(r){ r=r||{}; if(r.reason==="shrink"&&r.min!=null) return PZ_WHY.shrink+"(최소 "+r.min+")"; if(r.reason==="closed"&&r.cut) return "지급 마감 시각("+r.cut+")이 지났습니다"; return PZ_WHY[r.reason]||(hvUnknown(r)?"서버 갱신 뒤 쓸 수 있습니다":why(r)); }
 /* 쓰기 한 곳 · 확인 창을 닫고 · 성공하면 바뀐 키만 다시 받는다 */
 function pzCall(action, p, keys, done, post){
   (post?callPost:call)(action, p, function(r){ dlgForce(); r=r||{ ok:false }; if(r.ok&&keys&&keys.length) reload(keys); if(done) done(r); },
@@ -7301,7 +7302,7 @@ function pzBool(v){ v=String(v==null?"":v).toUpperCase(); return v==="ON"||v==="
 /* ── 등록 · 권한 · 기록 ── */
 SP_ACT.fcfs_export=1; SP_ACT.lk7_export=1; SP_ACT.ideaking_export=1;
 SP_ACT.lng_pre_state=1; SP_ACT.lng_pre_preview=1; SP_ACT.lng_pre_apply=1; SP_ACT.lng_pre_undo=1;
-CTL_ACT.fcfs_cfg=["draw","선착순 참여상 설정 저장"]; CTL_ACT.fcfs_void=["draw","선착순 자격 취소"]; CTL_ACT.fcfs_add=["draw","선착순 수동 포함"]; CTL_ACT.fcfs_undo=["draw","선착순 수령 되돌림"]; CTL_ACT.fcfs_reset=["draw","선착순 시험 데이터 비움"];
+CTL_ACT.fcfs_cfg=["draw","선착순 참여상 설정 저장"]; CTL_ACT.fcfs_void=["draw","선착순 자격 취소"]; CTL_ACT.fcfs_add=["draw",function(){ return fxByGive(ST.data.fx)?"선착순 수동 지급":"선착순 수동 포함"; }]; CTL_ACT.fcfs_undo=["draw","선착순 수령 되돌림"]; CTL_ACT.fcfs_reset=["draw","선착순 시험 데이터 비움"];
 CTL_ACT.lk7_cfg=["draw","7등 설정 저장"]; CTL_ACT.lk7_rem=["draw","룰렛 잔여 입력(7등)"]; CTL_ACT.lk7_lock=["draw","7등 대상 확정"]; CTL_ACT.lk7_draw=["draw","7등 랜덤 굿즈 추첨"]; CTL_ACT.lk7_void=["draw","7등 당첨 교체"]; CTL_ACT.lk7_reset=["draw","7등 시험 데이터 비움"];
 CTL_ACT.ideaking_pick=["ideak",function(p){ return "아이디어왕 "+(p.rk||"")+"등 선정"; }]; CTL_ACT.ideaking_unpick=["ideak","아이디어왕 선정 취소"]; CTL_ACT.idea_note=["ideak","아이디어 한 줄 기록(상담 · 커피챗)"];
 CTL_ACT.lng_pre_apply=["pp","라운지 사전 신청 명단 적용"]; CTL_ACT.lng_pre_undo=["pp","라운지 사전 신청 명단 되돌림"];
@@ -7324,40 +7325,52 @@ SUBNEED["draw:lk7"]=[{k:"lk",a:"lk7_state"}];
 /* ══ B2 · 추첨 › 선착순 참여상 ══ */
 var FX={ q:"", qIn:"", st:"", page:1, cfg:null, m:{ emp:"", why:"" }, busy:"" };
 var FX_ST=[["","전체"],["정상","자격"],["미수령","미수령"],["수령","수령"],["취소","취소"],["대기마감","대기마감"]];
+var FX_ST_GIVE=[["","전체"],["수령","지급"],["미수령","수령 전"],["취소","취소"]];   /* v5.98 수령순 · 대기마감 없음 · 수령 전 = 되돌린 줄 · 옛 예약 줄 */
+/* v5.98 수령순(사용자 261006 밤 「참여상 선착순은 받기 선착순이어야지」) · 서버 mode 「수령순」= 6개 모은 사람이 1F 체크인존에 먼저 와서 받는 순 · 자리 예약 · 대기마감 없음 · 줄은 지급 때 생김
+ * mode 가 없는 옛 응답 · 「달성순」은 지금까지 화면 그대로 */
+function fxByGive(d){ d=d||{}; return d.mode==="수령순"||(!d.mode&&(d.cfg||{}).mode==="수령순"); }
+function fxMin(d){ return fxByGive(d)?Math.max(0,Number(d.got)||0):fxElig(d); }
 var FX_VIA={ app:"앱", staff:"스태프", console:"콘솔", manual:"수동" };
-function fxStTag(r){ var s=String(r.st||""); if(s==="취소"||s==="void") return tag("취소","off"); if(s==="대기마감"||s==="wait"||s==="full") return tag("대기마감","warn"); return r.got?tag("수령","ok"):tag("자격","pri"); }
+function fxStTag(r){ var s=String(r.st||""); if(s==="취소"||s==="void") return tag("취소","off"); if(fxByGive(ST.data.fx)) return r.got?tag("지급","ok"):tag("수령 전","off"); if(s==="대기마감"||s==="wait"||s==="full") return tag("대기마감","warn"); return r.got?tag("수령","ok"):tag("자격","pri"); }
 function fxElig(d){ return Math.max(0, Math.min(Number(d.issued)||0, Number(d.cap)||0)-(Number(d.voided)||0)); }
 function viewFx(){
   var d=ST.data.fx;
   if(!d) return card("선착순 참여상","",skel());
-  if(hvUnknown(d)) return pzOldCard("선착순 참여상")+fxMemo();
+  if(hvUnknown(d)) return pzOldCard("선착순 참여상")+fxMemo(d);
   if(!d.ok) return pzErrCard("선착순 참여상", d);
   var c=d.cfg||{}, e=d.edge||{}, el0=fxElig(d), cut=d.cut!=null?d.cut:c.cut;
   var h=d.on===false||d.on===0||d.on==="OFF"?'<div class="bands">'+band("warn","<b>선착순 참여상이 꺼져 있습니다</b>(설정 「선착순_사용」 OFF). 6개 보상이 없고 앱에도 보이지 않습니다.")+'</div>':'';
-  h+='<div class="kpis pz-k6">'+kpi("수량",finNum(d.cap),"개",cut?"마감 "+esc(String(cut).slice(5,16)):"마감 없음 · 소진까지")+
+  if(fxByGive(d)) h+='<div class="kpis pz-k6">'+kpi("수량",finNum(d.cap),"개","방식 수령순 · 받는 순서")+
+    kpi("지급",finNum(d.issued),"개","체크인존에서 건넨 수")+
+    kpi("남음",finNum(d.left),"개","앱 표시 "+esc(d.show||c.show||"-")+(String(d.show||c.show)==="LOW"?" · "+(c.low!=null?c.low:30)+" 이하만":""))+
+    kpi("지급 마감",cut?esc(String(cut).slice(11,16)):"없음","",cut?"이 시각 뒤 지급 거절":"소진까지")+
+    kpi("취소",finNum(d.voided),"명","이 사람에게는 주지 않음")+
+    kpi("체크인 3개",d.incCk===false||d.incCk===0||d.incCk==="OFF"?"빼고":"포함","","6개 판정 · 자리 예약 · 대기 없음")+'</div>'+
+    '<p class="cap pz-edge">첫 지급 <b class="n">'+esc(e.first||"-")+'</b> · 마지막 지급 <b class="n">'+esc(e.last||"-")+'</b> · 6개 모은 사람이 1F 주차장 체크인존에 먼저 와서 받는 순서 · 서버 시각 '+esc(short(d.t||""))+'</p>';
+  else h+='<div class="kpis pz-k6">'+kpi("수량",finNum(d.cap),"개",cut?"마감 "+esc(String(cut).slice(5,16)):"마감 없음 · 소진까지")+
     kpi("발급",finNum(d.issued),"번","자격 "+finNum(el0)+"명 · 순번 = 6개째 서버 시각 순")+
     kpi("남음",finNum(d.left),"개","앱 표시 "+esc(d.show||c.show||"-")+(String(d.show||c.show)==="LOW"?" · "+(c.low!=null?c.low:30)+" 이하만":""))+
     kpi("수령",finNum(d.got),"명","미수령 "+finNum(Math.max(0,el0-(Number(d.got)||0)))+" · 1F 체크인존")+
     kpi("취소",finNum(d.voided),"명","자리는 돌려주지 않음")+
-    kpi("대기마감",finNum(d.waiting),"명","수량을 올리면 순서대로 자격")+'</div>';
-  h+='<p class="cap pz-edge">첫 자격 <b class="n">'+esc(e.first||"-")+'</b> · 마지막 자격 <b class="n">'+esc(e.last||"-")+'</b> · 체크인 3개 '+(d.incCk===false||d.incCk===0||d.incCk==="OFF"?"<b>빼고</b>":"포함해")+' 6개 판정 · 서버 시각 '+esc(short(d.t||""))+'</p>';
+    kpi("대기마감",finNum(d.waiting),"명","수량을 올리면 순서대로 자격")+'</div>'+
+    '<p class="cap pz-edge">첫 자격 <b class="n">'+esc(e.first||"-")+'</b> · 마지막 자격 <b class="n">'+esc(e.last||"-")+'</b> · 체크인 3개 '+(d.incCk===false||d.incCk===0||d.incCk==="OFF"?"<b>빼고</b>":"포함해")+' 6개 판정 · 서버 시각 '+esc(short(d.t||""))+'</p>';
   h+='<div class="grid g75"><div>'+fxListCard()+'</div><div>'+fxManCard()+fxCsvCard(d)+'</div></div>';
-  h+=fxCfgCard(d)+fxMemo();
+  h+=fxCfgCard(d)+fxMemo(d);
   return h;
 }
 function fxListCard(){
-  var L=ST.data.fxl, rows=L&&L.ok?L.rows||[]:[];
+  var L=ST.data.fxl, rows=L&&L.ok?L.rows||[]:[], bg=fxByGive(ST.data.fx);
   var tb=!L?skel():hvUnknown(L)?'<p class="cap">서버 갱신 뒤 보입니다.</p>':!L.ok?'<p class="cap">목록을 받지 못했습니다('+esc(pzWhy(L))+').</p>':
-    '<div class="wrap scrolly"><table class="tb pz-tb"><tr><th class="tdr">순번</th><th>사번</th><th>이름</th><th>부문</th><th>도달</th><th>상태</th><th>경로</th><th>수령</th><th class="tdr"></th></tr>'+rows.map(function(r){
+    '<div class="wrap scrolly"><table class="tb pz-tb"><tr><th class="tdr">'+(bg?"번호":"순번")+'</th><th>사번</th><th>이름</th><th>부문</th>'+(bg?'':'<th>도달</th>')+'<th>상태</th><th>경로</th><th>'+(bg?"지급":"수령")+'</th><th class="tdr"></th></tr>'+rows.map(function(r){
       var st=String(r.st||""), ok=!(st==="취소"||st==="void"||st==="대기마감"||st==="wait"||st==="full");
       var mn=(r.got?'<button type="button" role="menuitem" class="rm-i" onclick="fxUndoAsk(\''+jq(r.emp)+'\')">수령 되돌리기</button>':'')+(ok&&!r.got?'<button type="button" role="menuitem" class="rm-i bad" onclick="fxVoidAsk(\''+jq(r.emp)+'\')">자격 취소</button>':'');
-      return '<tr><td class="n tdr"><b>'+esc(r.rk)+'</b></td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.name||"-")+'</td><td class="cap">'+esc(r.dept||"")+'</td><td class="n cap">'+esc(String(r.at||"").slice(11,19)||"-")+'</td><td>'+fxStTag(r)+(r.memo?'<div class="iv-sub">'+esc(r.memo)+'</div>':'')+'</td><td class="cap">'+esc(FX_VIA[r.via]||r.via||"")+'</td><td class="n cap">'+(r.got?esc(String(r.gotAt||"").slice(11,16))+(r.gotBy?" · "+esc(r.gotBy):""):"-")+'</td><td class="tdr">'+rowMore(mn)+'</td></tr>'; }).join("")+
-    (!rows.length?emptyRow(9,FX.q||FX.st?"찾는 줄이 없습니다.":"아직 6개를 채운 사람이 없습니다."):"")+'</table></div>';
+      return '<tr><td class="n tdr"><b>'+esc(r.rk)+'</b></td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.name||"-")+'</td><td class="cap">'+esc(r.dept||"")+'</td>'+(bg?'':'<td class="n cap">'+esc(String(r.at||"").slice(11,19)||"-")+'</td>')+'<td>'+fxStTag(r)+(r.memo?'<div class="iv-sub">'+esc(r.memo)+'</div>':'')+'</td><td class="cap">'+esc(FX_VIA[r.via]||r.via||"")+'</td><td class="n cap">'+(r.got?esc(String(r.gotAt||"").slice(11,16))+(r.gotBy?" · "+esc(r.gotBy):""):"-")+'</td><td class="tdr">'+rowMore(mn)+'</td></tr>'; }).join("")+
+    (!rows.length?emptyRow(bg?8:9,FX.q||FX.st?"찾는 줄이 없습니다.":bg?"아직 지급한 사람이 없습니다.":"아직 6개를 채운 사람이 없습니다."):"")+'</table></div>';
   var n=L&&L.ok?Number(L.n)||rows.length:0, pg=FX.page||1, more=L&&L.ok&&n>pg*(Number(L.size)||Math.max(rows.length,1))&&rows.length>0;
-  var chipsH='<div class="chips">'+FX_ST.map(function(x){ return '<button class="fchip'+(FX.st===x[0]?" on":"")+'" onclick="fxSt(\''+jq(x[0])+'\')">'+esc(x[1])+'</button>'; }).join("")+'</div>';
+  var chipsH='<div class="chips">'+(bg?FX_ST_GIVE:FX_ST).map(function(x){ return '<button class="fchip'+(FX.st===x[0]?" on":"")+'" onclick="fxSt(\''+jq(x[0])+'\')">'+esc(x[1])+'</button>'; }).join("")+'</div>';
   var tool='<div class="toolbar"><input class="in w-m" inputmode="numeric" placeholder="사번 일부" value="'+esc(FX.qIn)+'" oninput="FX.qIn=this.value" onkeydown="if(event.key===\'Enter\')fxFind()"><button class="btn" onclick="fxFind()">찾기</button>'+(FX.q?'<button class="btn sm ghost" onclick="FX.qIn=\'\';fxFind()">지우기</button>':'')+'<span class="sp"></span><span class="cnt"><b>'+finNum(n)+'</b>줄</span></div>';
   var pager=L&&L.ok&&(pg>1||more)?'<div class="toolbar mt8"><button class="btn sm" onclick="fxPage(-1)"'+(pg>1?"":" disabled")+'>앞</button><span class="cap">'+pg+'쪽</span><button class="btn sm" onclick="fxPage(1)"'+(more?"":" disabled")+'>다음</button></div>':'';
-  return card("명단","이름 · 부문은 이 화면에만 · 행 오른쪽 메뉴 = 수령 되돌리기 · 자격 취소",chipsH+tool+tb+pager);
+  return card(bg?"지급 명단":"명단",(bg?"줄은 체크인존에서 지급할 때 생깁니다 · ":"")+"이름 · 부문은 이 화면에만 · 행 오른쪽 메뉴 = 수령 되돌리기 · 자격 취소",chipsH+tool+tb+pager);
 }
 function fxFind(){ FX.q=String(FX.qIn||"").replace(/\s/g,""); FX.page=1; ST.data.fxl=null; load(); render(); }
 function fxSt(v){ FX.st=FX.st===v?"":v; FX.page=1; ST.data.fxl=null; load(); render(); }
@@ -7384,11 +7397,11 @@ function fxUndoAsk(emp){
     onOk:function(){ var w=String(el("fxWhy").value).trim(); pzCall("fcfs_undo",{ emp:emp, why:w },["fx"],function(x){ if(x.ok){ fxPatch(emp,{ got:false, gotAt:"", gotBy:"" }); toast("수령 기록을 지웠습니다 · "+emp); } else toast("실패: "+pzWhy(x)); }); } });
 }
 function fxManCard(){
-  var b=FX.busy?" disabled":"";
+  var b=FX.busy?" disabled":"", bg=fxByGive(ST.data.fx);
   var body='<div class="fn-form"><label>사번<input class="in w-s" inputmode="numeric" value="'+esc(FX.m.emp)+'" oninput="FX.m.emp=this.value"></label>'+
-    '<label class="grow">사유<input class="in w-f" maxlength="60" value="'+esc(FX.m.why)+'" oninput="FX.m.why=this.value" placeholder="예: 17:00 경계 이의 · 앱 오류 확인"></label></div>'+
-    '<div class="fn-go"><button class="btn pri" onclick="fxAddAsk()"'+b+'>수동 포함</button><button class="btn" onclick="fxManGo(\'void\')"'+b+'>자격 취소</button><button class="btn" onclick="fxManGo(\'undo\')"'+b+'>수령 되돌리기</button></div>'+
-    '<p class="cap mt8">수동 포함은 남은 수량 안에서만 됩니다. 다 찼으면 아래 설정에서 수량을 먼저 올립니다. 모든 처리는 사유와 함께 운영로그에 남습니다.</p>';
+    '<label class="grow">사유<input class="in w-f" maxlength="60" value="'+esc(FX.m.why)+'" oninput="FX.m.why=this.value" placeholder="'+(bg?"예: 스캔 장애 · 실물 건넴":"예: 17:00 경계 이의 · 앱 오류 확인")+'"></label></div>'+
+    '<div class="fn-go"><button class="btn pri" onclick="fxAddAsk()"'+b+'>'+(bg?"수동 지급":"수동 포함")+'</button><button class="btn" onclick="fxManGo(\'void\')"'+b+'>자격 취소</button><button class="btn" onclick="fxManGo(\'undo\')"'+b+'>수령 되돌리기</button></div>'+
+    '<p class="cap mt8">'+(bg?"수동 지급은 스캔이 안 될 때 실물을 건넨 뒤 기록합니다. 남은 수량 안에서만 되고 스탬프 수는 보지 않습니다.":"수동 포함은 남은 수량 안에서만 됩니다. 다 찼으면 아래 설정에서 수량을 먼저 올립니다.")+' 모든 처리는 사유와 함께 운영로그에 남습니다.</p>';
   return card("수동 처리","사유 필수 · 확인 창",body);
 }
 function fxManGo(k){ var e=normE(FX.m.emp); if(!/^[0-9A-Z]{3,12}$/.test(e)){ toast("사번을 확인하세요"); return; } if(k==="void") fxVoidAsk(e); else fxUndoAsk(e); }
@@ -7396,12 +7409,24 @@ function fxAddAsk(){
   var e=normE(FX.m.emp), w=String(FX.m.why||"").trim(), d=ST.data.fx||{};
   if(!/^[0-9A-Z]{3,12}$/.test(e)){ toast("사번을 확인하세요"); return; }
   if(w.length<2){ toast("사유를 적습니다"); return; }
+  if(fxByGive(d)){ fxGiveAsk(e, w, d); return; }
   dialog({ t:"이 사번을 선착순 자격에 넣을까요?", who:esc(e)+"<span>"+esc(w)+"</span>", x:imp([["남은 수량",finNum(d.left)+"개",Number(d.left)>0?"chg":"loss"],["순번","맨 뒤 번호를 받습니다"]]),
     s:"6개 판정과 관계없이 자격을 줍니다. 앱에는 다음 동기화에 「수령 자격」으로 보입니다. 운영로그에 남습니다.", ok:"포함",
     onOk:function(){ pzCall("fcfs_add",{ emp:e, why:w },["fx","fxl"],function(r){ if(r.ok){ FX.m={ emp:"", why:"" }; toast("포함했습니다 · "+e+(r.rk?" · 순번 "+r.rk:"")); } else if(r.reason==="full") dialog({ t:"선착순 수량이 다 찼습니다", s:"아래 「설정」에서 수량을 올린 뒤 다시 넣습니다. 수량을 올리면 대기마감 줄이 먼저 자격이 됩니다.", ok:"확인" }); else toast("실패: "+pzWhy(r)); }); } });
 }
+/* v5.98 수령순 · 수동 지급(fcfs_add = 수령 시각 · 메모 「수동 지급 · 사유」 · 응답 give:1) */
+function fxGiveAsk(e, w, d){
+  dialog({ t:"이 사번에 선착순 참여상을 수동 지급할까요?", who:esc(e)+"<span>"+esc(w)+"</span>", x:imp([["남은 수량",finNum(d.left)+"개",Number(d.left)>0?"chg":"loss"],["기록","지급 시각 = 지금 · 메모 「수동 지급 · 사유」"]]),
+    s:"실물을 건넨 뒤 누릅니다. 스탬프 수는 보지 않습니다. 남은 수량이 하나 줄고 운영로그에 남습니다.", ok:"수동 지급",
+    onOk:function(){ pzCall("fcfs_add",{ emp:e, why:w },["fx","fxl"],function(r){
+      if(r.ok){ FX.m={ emp:"", why:"" }; toast("수동 지급했습니다 · "+e+(r.rk?" · "+r.rk+"번":"")); }
+      else if(r.reason==="full") dialog({ t:"남은 수량이 없습니다", s:"선착순 참여상이 모두 나갔습니다. 더 주려면 아래 「설정」에서 수량을 올립니다.", ok:"확인" });
+      else if(r.reason==="dup") dialog({ t:"이미 받은 사람입니다", s:"사번 "+esc(e)+(r.rk?" · "+esc(r.rk)+"번":"")+"으로 지급 기록이 있습니다. 잘못 찍은 기록이면 명단에서 「수령 되돌리기」를 먼저 합니다.", ok:"확인" });
+      else toast("실패: "+pzWhy(r)); }); } });
+}
 function fxCsvCard(d){
   var inner='<div class="fn-go" style="margin-top:0"><button class="btn pri" onclick="fxCsv(\'ship\')">미수령 발송 CSV</button><button class="btn" onclick="fxCsv(\'all\')">전체 자격 CSV</button></div>'+
+    (fxByGive(d)?'<p class="cap mt8">수령순은 받는 순간 줄이 생겨 「미수령 발송」에는 수령을 되돌린 줄 · 옛 예약 줄만 나옵니다.</p>':'')+
     '<p class="cap mt8">미수령 발송 = 자격이 있으나 당일 못 받은 사람(10/27 소속 부서로 발송). 순번 · 사번 · 이름 · 부문 · 도달 · 수령 시각. 근무지 · 배송지는 총무가 사번으로 붙입니다.</p>';
   return card("내려받기","슈퍼관리자 · 본인 확인 뒤",pzSupBox("선착순 명단",inner));
 }
@@ -7416,35 +7441,41 @@ function fxCsv(kind){
 function fxCfgVals(d){
   if(FX.cfg) return FX.cfg; var c=d.cfg||{};
   var onv=d.on!=null?d.on:c.on, ick=d.incCk!=null?d.incCk:c.incCk;
-  FX.cfg={ on:onv===false||onv===0||String(onv).toUpperCase()==="OFF"?"OFF":"ON", cap:String(d.cap!=null?d.cap:c.cap||""), cut:String(d.cut!=null?d.cut:c.cut||""), incCk:ick===false||ick===0||String(ick).toUpperCase()==="OFF"?"OFF":"ON", show:String(d.show||c.show||"ALL"), low:String(c.low!=null?c.low:d.low!=null?d.low:30) };
+  FX.cfg={ on:onv===false||onv===0||String(onv).toUpperCase()==="OFF"?"OFF":"ON", cap:String(d.cap!=null?d.cap:c.cap||""), cut:String(d.cut!=null?d.cut:c.cut||""), incCk:ick===false||ick===0||String(ick).toUpperCase()==="OFF"?"OFF":"ON", show:String(d.show||c.show||"ALL"), low:String(c.low!=null?c.low:d.low!=null?d.low:30), mode:String(d.mode||c.mode||"") };
   return FX.cfg;
 }
 function fxCfgCard(d){
   var v=fxCfgVals(d), sel=function(k,l,opts){ return '<label>'+l+'<select class="in w-s" onchange="FX.cfg.'+k+'=this.value">'+opts.map(function(o){ return '<option value="'+o[0]+'"'+(v[k]===o[0]?" selected":"")+'>'+esc(o[1])+'</option>'; }).join("")+'</select></label>'; };
   var inp=function(k,l,cls,ph){ return '<label>'+l+'<input class="in '+cls+'" value="'+esc(v[k])+'" oninput="FX.cfg.'+k+'=this.value"'+(ph?' placeholder="'+esc(ph)+'"':'')+'></label>'; };
-  var body='<div class="fn-form">'+sel("on","사용",[["ON","켬"],["OFF","끔"]])+inp("cap","수량","w-s")+inp("cut","마감(서버 시각 · 비우면 소진까지)","w-m","2026-10-26 17:00")+
+  var bg=fxByGive(d), mn=fxMin(d);
+  var body='<div class="fn-form">'+sel("on","사용",[["ON","켬"],["OFF","끔"]])+(v.mode?sel("mode","방식",[["수령순","수령순(받는 순서)"],["달성순","달성순(6개째 순번)"]]):"")+inp("cap","수량","w-s")+inp("cut",(bg?"지급 마감":"마감")+"(서버 시각 · 비우면 소진까지)","w-m","2026-10-26 17:00")+
     sel("incCk","체크인 3개",[["ON","포함"],["OFF","빼고 판정"]])+sel("show","남은 수량 앱 표시",[["ALL","늘"],["LOW","임박 때만"],["OFF","마감 여부만"]])+inp("low","임박 기준","w-s")+'</div>'+
-    '<div class="fn-go"><button class="btn" onclick="fxCfgSave()">설정 저장</button><span class="cap">수량을 줄여도 이미 자격을 받은 사람은 그대로입니다. 자격 수('+finNum(fxElig(d))+') 아래로는 서버가 받지 않습니다.</span>'+
+    '<div class="fn-go"><button class="btn" onclick="fxCfgSave()">설정 저장</button><span class="cap">'+(bg?"이미 지급한 수("+finNum(mn)+") 아래로는 서버가 받지 않습니다.":"수량을 줄여도 이미 자격을 받은 사람은 그대로입니다. 자격 수("+finNum(mn)+") 아래로는 서버가 받지 않습니다.")+'</span>'+
     '<button class="btn sm ghost" style="margin-left:auto" onclick="fxResetAsk()">시험 데이터 비우기</button></div>';
-  return memo(body,"선착순 설정 · 수량 "+finNum(d.cap)+" · 마감 "+(String(d.cut!=null?d.cut:(d.cfg||{}).cut||"")?String(d.cut!=null?d.cut:(d.cfg||{}).cut).slice(11,16):"없음")+" · 앱 표시 "+(d.show||(d.cfg||{}).show||"-"));
+  return memo(body,"선착순 설정 · "+(bg?"수령순 · ":v.mode?esc(v.mode)+" · ":"")+"수량 "+finNum(d.cap)+" · "+(bg?"지급 마감 ":"마감 ")+(String(d.cut!=null?d.cut:(d.cfg||{}).cut||"")?String(d.cut!=null?d.cut:(d.cfg||{}).cut).slice(11,16):"없음")+" · 앱 표시 "+(d.show||(d.cfg||{}).show||"-"));
 }
 function fxCfgSave(){
   var d=ST.data.fx||{}, v=fxCfgVals(d); FX.cfg=null; var o=fxCfgVals(d); FX.cfg=v;
-  var p={}, rows=[], N={ on:"사용", cap:"수량", cut:"마감", incCk:"체크인 3개", show:"앱 표시", low:"임박 기준" };
+  var bg=fxByGive(d), mn=fxMin(d), p={}, rows=[], N={ on:"사용", mode:"방식", cap:"수량", cut:bg?"지급 마감":"마감", incCk:"체크인 3개", show:"앱 표시", low:"임박 기준" };
   Object.keys(N).forEach(function(k){ var a=String(o[k]).trim(), b=String(v[k]).trim(); if(a!==b){ p[k]=b; rows.push([N[k], esc(a||"(없음)")+" → "+esc(b||"(없음)"), "chg"]); } });
   if(!rows.length){ toast("바뀐 것이 없습니다"); return; }
   if(p.cap!=null&&!/^\d{1,5}$/.test(p.cap)){ toast("수량은 숫자입니다"); return; }
   if(p.cut&&!/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(p.cut)){ toast(PZ_WHY.cut); return; }
-  var a=Number(o.cap), b=Number(v.cap), sh=p.cap!=null&&b<fxElig(d);
+  var a=Number(o.cap), b=Number(v.cap), sh=p.cap!=null&&b<mn;
   dialog({ t:p.cap!=null?"선착순 수량을 "+a+"에서 "+b+"로 바꿀까요?":"선착순 설정을 바꿀까요?", x:imp(rows),
-    s:(p.cap!=null?"이미 자격이 있는 사람은 그대로입니다."+(b>a?" 늘어난 만큼 대기마감 줄이 순번대로 자격이 됩니다.":""):"")+(sh?" <b>지금 자격 수("+fxElig(d)+")보다 작아 서버가 받지 않습니다.</b>":"")+" 운영로그에 남습니다.", ok:"저장",
+    s:(p.mode?"방식을 바꾸면 남은 수 · 명단 셈이 바로 바뀝니다(수령순 = 지급 수 · 달성순 = 6개째 순번). ":"")+(p.cap!=null?(bg?"남은 수 = 수량 − 지급 수입니다.":"이미 자격이 있는 사람은 그대로입니다."+(b>a?" 늘어난 만큼 대기마감 줄이 순번대로 자격이 됩니다.":"")):"")+(sh?" <b>지금 "+(bg?"지급 수":"자격 수")+"("+mn+")보다 작아 서버가 받지 않습니다.</b>":"")+" 운영로그에 남습니다.", ok:"저장",
     onOk:function(){ pzCall("fcfs_cfg",p,["fx","fxl"],function(r){ if(r.ok){ FX.cfg=null; toast("저장했습니다"); } else toast("실패: "+pzWhy(r)); }); } });
 }
 function fxResetAsk(){
   dialog({ t:"선착순 시험 데이터를 비울까요?", s:"시트 「선착순」의 순번 · 수령 기록을 지웁니다. 설정은 남습니다. 행사일(10/26)에는 서버가 받지 않습니다. <b>되돌릴 수 없습니다.</b>", ok:"비우기", danger:true, word:"시험비우기",
     onOk:function(){ pzCall("fcfs_reset",{ confirm:"RESET" },["fx","fxl"],function(r){ toast(r.ok?"비웠습니다 · "+(r.cleared||0)+"줄":"실패: "+pzWhy(r)); }); } });
 }
-function fxMemo(){
+function fxMemo(d){
+  if(fxByGive(d)) return memo('<p><b>방식</b> · 수령순입니다. 스탬프 6개를 모은 사람이 1F 주차장 체크인존에 먼저 와서 받는 순서로 수량까지 드립니다. 자리 예약 · 대기마감 · 승계가 없고, 6개째를 채운 순간에는 아무 줄도 생기지 않습니다.</p>'+
+    '<p><b>지급</b> · 체크인존 스태프 폰이 참가자 QR 을 찍는 순간 서버가 6개 · 남은 수량 · 지급 마감을 보고 줄을 씁니다. 번호 = 지급 순서. 스캔이 안 되면 「수동 지급」(사유 필수)으로 기록합니다.</p>'+
+    '<p><b>거절</b> · 이미 받음 · 자격 취소 · 테스트 사번 · 6개 미만 · 지급 마감 시각 지남 · 소진(남은 0)이면 지급하지 않습니다.</p>'+
+    '<p><b>취소</b> · 「자격 취소」한 사번은 6개여도 지급하지 않습니다. 이미 받은 사람은 취소하지 않고, 잘못 찍은 지급은 「수령 되돌리기」로 지웁니다(남은 수가 하나 늘어남).</p>'+
+    '<p><b>개인정보</b> · 이름 · 부문은 이 화면과 CSV(슈퍼관리자)에만 있습니다. 부문별 집계는 두지 않습니다.</p>');
   return memo('<p><b>순번</b> · 스탬프 6개째를 채운 순간의 서버 시각 순서입니다(같은 초면 서버가 처리한 순서). 순번이 수량 안이면 자격, 넘으면 「대기마감」으로 남습니다(지우지 않음). 수량을 올리면 대기마감 줄이 순번대로 자격이 됩니다.</p>'+
     '<p><b>수령</b> · 1F 체크인존 스태프 폰이 참가자 QR 을 찍어 기록합니다. 잘못 찍은 수령은 이 화면의 「수령 되돌리기」로 지웁니다(사유 필수).</p>'+
     '<p><b>취소</b> · 부정 적립 등으로 자격을 취소하면 그 자리는 다른 사람에게 돌아가지 않습니다(승계 없음). 필요하면 수량을 올립니다. 이미 수령한 사람은 취소하지 않습니다.</p>'+
@@ -7931,7 +7962,7 @@ var EZ_LIST=[
   { id:"z_gate", n:"관리자 도구", d:"전체 메뉴(7개)를 엽니다. 슈퍼관리자 본인 확인(앱 PIN) 뒤에 열립니다.", hide:1, parts:[P("zgate","","","viewEzGate")] }
 ];
 EZ_LIST.forEach(function(z){ var it={ id:z.id, m:z.id, n:z.n, ez:1, staff:z.staff?1:0, hide:z.hide?1:0, parts:z.parts }; NAV.push(it); NAVBY[z.id]=it; MENUBY[z.id]={ id:z.id, n:z.n, d:z.d }; });
-NEED.ztoday=function(){ return NEED.dash.concat([{k:"cam",a:"crowd_cam_list"},{k:"inv",a:"inv_state"},{k:"tres",a:"type_result"}]); };
+NEED.ztoday=function(){ return NEED.dash.concat([{k:"cam",a:"crowd_cam_list"},{k:"inv",a:"inv_state"},{k:"tres",a:"type_result"},{k:"fx",a:"fcfs_state"}]); };
 NEED.zwho=[{k:"stamp",a:"stamp_people"},{k:"acct",a:"acct_list"},{k:"nick",a:"type_nick_list"},{k:"sy",a:"sync",p:{emp:""}}];
 NEED.zstop=[{k:"pst",a:"push_stats"},{k:"sy",a:"sync",p:{emp:""}},{k:"noti",a:"sync",p:{emp:""}}];
 NEED.zroul=[{k:"sy",a:"sync",p:{emp:""}},{k:"stamp",a:"stamp_people"},{k:"cfgl",a:"cfg_list"}];
@@ -8036,7 +8067,7 @@ function ezHot(){ var cr=(ST.data.crowd&&ST.data.crowd.ok)?ST.data.crowd.crowd||
   if(d&&d.ok) (d.cams||[]).forEach(function(c){ n+=camChk(c,d); }); return n; }
 /* 줄 = [자동 결과(true · false · null=손으로), 할 일, 보조 한 줄, 가는 곳(js), 버튼 이름, 손 체크 id] */
 function ezItems(i){
-  var sy=ST.data.sy||{}, ps=pushSt(), wait=ezWait(), hot=ezHot(), low=ezInvLow(), live=ezScrLive();
+  var sy=ST.data.sy||{}, ps=pushSt(), wait=ezWait(), hot=ezHot(), low=ezInvLow(), live=ezScrLive(), fx=ST.data.fx, fxg=fx&&fx.ok&&fxByGive(fx), fxc=fxg&&fx.cut?String(fx.cut).slice(11,16):"17:00";
   var go=function(id,p){ return "navSel('"+id+"',"+(p||0)+")"; }, scr="ezScrTo()";
   return [
     [[ST.at&&!ST.err?true:ST.err?false:null,"서버 연결","",null,"",""],
@@ -8055,6 +8086,7 @@ function ezItems(i){
      [live,"추첨 화면 연결",live==null?"17F 큰 화면에서 추첨 화면을 엽니다":live?"화면이 상태를 보내는 중":"화면 보고 없음 · 아래 「화면 열기」",scr,"주소 보기",""],
      [null,"행운권 추첨 진행 · 큰 버튼 하나","무대 순서 띠를 따라 누릅니다",go("z_draw",0),"무대 진행","draw"],
      [null,"룰렛 남은 경품 실물 세기 → 재고 맞추기","재고 › 품목을 눌러 「남은 수 맞추기」",go("z_draw",3),"재고","count"],
+     fxg?[null,"선착순 참여상 · "+fxc+" 지급 마감 · 남음 "+finNum(fx.left),"6개 모은 분이 1F 주차장 체크인존에 먼저 와서 받는 순 · 수량 "+finNum(fx.cap)+" · 지급 "+finNum(fx.issued),go("z_draw",1),"열기","fcfs"]:
      [null,"선착순 참여상 · 17:00 마감 확인","6개 모은 순서대로 210명 · 체크인존 수령",go("z_draw",1),"열기","fcfs"],
      [null,"7등 랜덤 굿즈 · 룰렛 잔여 입력 → 대상 확정 → 추첨","행운권 번호가 있는 분 60세트 · 체크인 조건 없음",go("z_draw",2),"열기","lk7"]],
     [[ps?!ps.on:null,"웹 푸시 전체 정지","행사가 끝나면 멈춥니다",go("z_tell",2),"멈추기","pushoff"],
