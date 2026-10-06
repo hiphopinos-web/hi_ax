@@ -73,7 +73,7 @@
       rows: [{ a: [0.55, 1.97], r: [0, 1], n: [1, 0], pages: [39], label: 'AX 타자왕' },
              { a: [0.55, 5.85], r: [0, 1], n: [1, 0], pages: [34, 35, 36], sign: 0, label: 'AI 포토부스' },
              { a: [0.55, 9.15], r: [0, 1], n: [1, 0], pages: [37, 38], label: '룰렛' }] },
-    { id: 'lounge', name: 'AX LOUNGE', fl: '1F', signPg: 19, where: '로비 왼쪽 안쪽 · 미팅룸 들어가는 곳',
+    { id: 'lounge', name: 'AX 라운지', fl: '1F', signPg: 19, where: '로비 왼쪽 안쪽 · 미팅룸 들어가는 곳',
       rows: [{ a: [7.67, 10.95], r: [1, 0], n: [0, -1], pages: [20, 21], desk: 1, sign: 0 }],
       area: [0.0, 6.83, 11.46, 23.8] },                     /* 미팅룸 날개 전체(PDF 2쪽 초록 면) · 상담 자리 */
     { id: 'cafe', name: 'AX 커피챗', fl: '18F', signPg: 0, ghost: 1, rows: [] }

@@ -237,8 +237,8 @@ var Views = {
      (1F 부스 6구역 · AX LOUNGE 상담 · AX 커피챗 · AI 포토부스) · 260922 v4.13 두 층(목록 | 시간표)을 뒤집었다 */
   /* v4.93 (261001 사용자 확정 · IA 검토 8장 A1) 탭 맨 위 [시간표 | 상시 운영] · 상시 운영 = 1F 로비 6구역(현장 간판) + 18F AX 커피챗 · 판 문법 경계 axs-pan(design.md A-5 5-19) */
   guide: function () {
-    var al = PROG.seg === "always";
-    return '<div class="ax-stack' + (al ? " axs-pan" : "") + '">' + progSegHtml() + (al ? progAlwaysHtml() : progApplyHtml() + progTimeHtml()) + "</div>";   /* v5.82 시간표 맨 위 신청 줄(커피챗 · AX LOUNGE 상담 · 사용자 261006) · 상시 운영 칸에는 없다 */
+    var al = PROG.seg === "always", ap = PROG.seg === "apply";
+    return '<div class="ax-stack' + (al ? " axs-pan" : "") + '">' + progSegHtml() + (al ? progAlwaysHtml() : ap ? progApplyTabHtml() : progTimeHtml()) + "</div>";   /* v5.85 세 칸(사용자 261006) · 신청하기 = 커피챗 · AX 라운지 카드(v5.82 시간표 맨 위 신청 줄을 옮겼다) */
   },
 
   /* ═══ 전체 시간표 P05 / 내 일정 M02 · 라우트 guide_time 하나(SCHED.tab) · 옛 해시·딥링크·noticeGo(my_sched) 그대로 ═══
@@ -289,7 +289,7 @@ var Views = {
   sess_ok: function () {
     var o = PROG.ok, s = o && progById(o.id);
     if (!s) return '<div class="ax-stack">' + botHtml("신청 내역은 나의 일정에서 확인해 주세요") + '<button type="button" class="ax-button" onclick="mySched()">나의 일정 확인하기</button></div>';
-    var dap = s.id === "dap", pl = dap ? "1F AX LOUNGE" : sessPlace(s);
+    var dap = s.id === "dap", pl = dap ? "1F AX 라운지" : sessPlace(s);
     return '<div class="ax-stack axs-okwrap">' +
       '<span class="axs-okmark">완료</span>' +
       '<div class="ax-stack-tight axs-gap12 axs-center-tx"><h1 class="ax-type-t2">' + (dap ? "상담 신청이 접수됐어요" : "참여 신청이 완료됐어요") + "</h1>" +

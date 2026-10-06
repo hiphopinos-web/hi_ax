@@ -1465,6 +1465,32 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
      분류 칩 = 중립 canvas · 연사 칸 = canvas 바탕 + ink 글자 · 시간표 행 · 내 일정 카드 = 흰 면 · 하단 고정 바 = canvas */
   #view[data-v="guide"] .axs-rows { display: flex; flex-direction: column; gap: var(--ax-space-12); }
   .axs-apply .rc .rh .sb { white-space: normal; }   /* v5.82 시간표 맨 위 신청 줄 · 큰 글씨 360 에서 「아이디어 한 줄 쓰고 신청」이 말줄임으로 잘리지 않게 둘째 줄로(새 색 · 새 부품 없음) */
+  /* v5.85 (사용자 261006) 프로그램 세 칸 [시간표 | 상시 운영 | 신청하기] · 「신청하기」 옆 작은 주황 점 = 지금 신청할 수 있는 곳이 남음 · 시간표 → 상시 운영 미끄러짐(v5.73)은 첫 칸 → 둘째 칸 */
+  .axs-seg.axs-seg3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .axs-seg3 button { padding: 0 var(--ax-space-4); line-height: 1.25; word-break: keep-all; }
+  .axs-seg3 .axs-sdot { display: inline-block; width: 6px; height: 6px; margin-left: 3px; border-radius: 50%; background: var(--ax-color-brand); vertical-align: top; transform: translateY(1px); }
+  .axs-seg3.sw-r::before { width: calc((100% - var(--ax-space-4) * 4) / 3); }
+  .axs-seg3.sw-r button:last-child { color: var(--ax-color-body); }
+  .axs-seg3.sw-r button:nth-child(2) { color: var(--ax-color-ink); transition: color .25s ease; }
+  /* 신청하기 칸 = 흰 카드 두 장(ax-card) · 층 점 글자(O100) + 이름 + 신청함 칩 → 한 줄 → 사실 표 → (커피 · 간식 사진) → 주 버튼 + 「자세히 보기」 · 맨 아래 10F 줄(사전 신청자 · 테스트 사번만) */
+  .axs-apply { display: flex; flex-direction: column; gap: var(--ax-space-12); }
+  .axs-apc { gap: var(--ax-space-16); }
+  .axs-apc .hd { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ax-space-8); }
+  .axs-apc .hd .fl { display: flex; flex: none; color: var(--ax-color-brand); }
+  .axs-apc .hd h3 { margin: 0; }
+  .axs-apc .k { margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
+  .axs-apc .axs-kv { grid-template-columns: 76px minmax(0, 1fr); row-gap: var(--ax-space-8); }
+  .axs-apc .axs-kv dd { word-break: keep-all; }
+  .axs-apc .bt { display: flex; flex-direction: column; align-items: stretch; gap: var(--ax-space-4); }
+  .axs-apc .bt .ax-link { align-self: center; padding: 0 var(--ax-space-12); }
+  /* 좁은 폭(OS 글자 크게 · 폴더 바깥 화면 240~300) = 세그먼트 글자 한 단계 작게 · 카드 안쪽 여백 16 · 사실 표는 이름 위 · 값 아래 한 줄씩 */
+  @media (max-width: 300px) {
+    .axs-seg3 button { font-size: 0.875rem; letter-spacing: -0.02em; }
+    .axs-apc { padding: var(--ax-space-16); }
+    .axs-apc .axs-kv { grid-template-columns: minmax(0, 1fr); row-gap: 0; }
+    .axs-apc .axs-kv dd { margin-bottom: var(--ax-space-8); }
+  }
+  .axs-apnone { margin: 0; padding: var(--ax-space-24) var(--ax-space-16); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); text-align: center; }
   /* v4.13 ⓚ 분류 칩 4개 + 켜고 끄는 「신청 가능」 칩 · 좁으면 「신청 가능」이 다음 줄로 */
   #app .axs-filter5 { display: flex; flex-wrap: wrap; gap: var(--ax-space-8); }
   #app .axs-filter5 .axs-opf { flex: 0 0 auto; padding: var(--ax-space-12); box-shadow: inset 0 0 0 1px var(--ax-color-divider); }

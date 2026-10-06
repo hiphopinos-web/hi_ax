@@ -21,7 +21,7 @@
   var CHV_L = '<svg class="chv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>';
   /* v5.66 (디자인 감사 261005 상4 · design.md A-6 · 5-20) 판 시트 · 경품 시트 · 타자왕 순위판 머리의 구역 칩 = 앱 구역 간판과 같은 점 글자(앱 DotGlyph · 흰 점 14px)
    * 18F 커피챗 = 앱 간판 이름 「AX COFFEE CHAT」 · 점 글자가 없는 곳(시험판) · 점 글자에 없는 글자(한글 「자세히 보기」)는 글자 그대로 */
-  var SIGN_NM = { cafe: 'AX COFFEE CHAT' };
+  var SIGN_NM = { cafe: 'AX COFFEE CHAT', lounge: 'AX LOUNGE' };   /* v5.85 구역 이름 = 「AX 라운지」(사용자 261006) · 점 글자 칩은 현장 간판 영문 그대로 */
   function signPaint(el, nm, lbl) {
     var DG = window.DotGlyph;
     if (DG && DG.svg && !/[^A-Za-z0-9 \/\-.:+!·?]/.test(nm)) { el.innerHTML = DG.svg(nm, { h: 14, hidden: true }); el.setAttribute('role', 'img'); el.setAttribute('aria-label', lbl || nm); el.classList.add('dot'); }
@@ -3193,7 +3193,7 @@
     qz: { title: 'AX 퀴즈', desc: '5문제 · 모두 답하면 완주', cta: 'AX 퀴즈 풀기' },
     p5: { title: '아이디어 한 줄', desc: '아이디어 1건 제출', cta: '아이디어 쓰기' },
     p2: { title: 'AX PLAY', desc: '1F AX PLAY에서 HiDI-Q 또는 Hi-Helper 체험', cta: '내 QR 보여주기' },
-    p3: { title: '프로그램 참여', desc: '17F 강연 QR 출석 · AX LOUNGE 상담 · AX 커피챗 중 1회', cta: 'AX LOUNGE 상담 신청' },   /* v5.58 앱(v5.57)과 같게 */
+    p3: { title: '프로그램 참여', desc: '17F 강연 QR 출석 · AX 라운지 · AX 커피챗 중 1회', cta: 'AX 라운지 신청' },   /* v5.58 앱(v5.57)과 같게 */
     p4: { title: '미니 게임', desc: 'AX 팡 · 점프 · 테트리스 3종 · 종목마다 한 판', cta: '미니 게임 하기' },
     st: { title: '계단 이용', desc: '엘리베이터가 혼잡하면 오늘 하루는 계단을 이용해 보세요', cta: '계단 안내' }
   };
@@ -4754,5 +4754,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.84', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.85', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();

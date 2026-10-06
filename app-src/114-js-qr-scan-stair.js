@@ -1082,7 +1082,7 @@ var SCAN_SPOTS = [
   { id: "aws", nm: "10F 세션 D", kind: "sess", lb: "세션 D", will: "10F 세션 D 입장 처리" },
   { id: "ms1", nm: "10F 세션 E 1회차", kind: "sess", lb: "세션 E 1회차", will: "10F 세션 E 1회차 입장 처리" },
   { id: "ms2", nm: "10F 세션 E 2회차", kind: "sess", lb: "세션 E 2회차", will: "10F 세션 E 2회차 입장 처리" },
-  { id: "dap", nm: "1F AX LOUNGE 상담", kind: "roster", lb: "AX LOUNGE 상담 입장", tsub: "신청 명단", will: "AX LOUNGE 상담 입장 처리", cond: "신청 명단에 있는 사람만" },
+  { id: "dap", nm: "1F AX 라운지", kind: "roster", lb: "AX 라운지 입장", tsub: "신청 명단", will: "AX 라운지 입장 처리", cond: "신청 명단에 있는 사람만" },
   { id: "cchat", nm: "18F AX 커피챗", kind: "roster", lb: "커피챗 입장", tsub: "신청 명단", will: "커피챗 입장 처리", cond: "신청 명단에 있는 사람만" },
   { id: "q_photo", nm: "1F AI 포토부스", kind: "photo", lb: "포토부스 입장", tsub: "다음 번호 호출", will: "포토부스 입장 · 다음 번호 호출", cond: "앱에서 받은 대기 번호" },   /* 번호는 참가자가 앱에서 받는다 · 찍으면 입장 + 다음 호출 */
   /* v4.83 (261001) 1F 전시(p1) 스탬프 폐지 · AX PLAY(p2) = 체험 뒤 스태프가 참가자 내 QR 을 찍어 적립(스탬프 4) */

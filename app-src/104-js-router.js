@@ -64,7 +64,7 @@ var App = {
   TITLES: {
     home: "AX Festival", guide: "프로그램", exp: "스탬프", my: "나의 참여",
     passport: "스탬프", rewards: "나의 보상", prizes: "경품", games: "미니 게임", quiz: "AX 퀴즈",
-    notices: "공지", dap: "AX LOUNGE 상담 신청",
+    notices: "공지", dap: "AX 라운지 신청",
     booth: "AX PLAY",
     ideas: "아이디어 한 줄", ideas_mine: "내가 낸 아이디어", survey: "오늘 한 판 설문",
     sess_d: "프로그램", sess_cf: "신청 확인", sess_ok: "신청 완료",
@@ -108,7 +108,7 @@ var App = {
     if (v === "home") return "홈";
     if (v === "sess_d") {
       var s = progById(PROG.sid); if (!s) return "프로그램";
-      if (s.id === "dap") return "AX LOUNGE 상담";
+      if (s.id === "dap") return "AX 라운지";
       if (s.id === "cchat") return "AX 커피챗";
       var d = progDetail(s); return d.cat + (d.org && d.cat.indexOf(d.org) < 0 ? " · " + d.org : "");
     }
@@ -416,7 +416,7 @@ function detShown() { return !!(DET.shown.dv && DET.shown.dv === App.current && 
 function detBase(v) { var cur = v, hop = 0; while (cur && detIs(cur) && hop < 8) { cur = App.parentOf(cur); hop++; } return cur || "home"; }
 /* 알림 · 딥링크 · 3D 출발 = 그 항목이 있는 목록 · 프로그램 탭은 그 줄이 있는 갈래(1F 구역 · 상담 · 커피챗 · 전시 = 상시 운영 · 강연 · 세션 = 시간표) · 경품 = 나의 보상 */
 function detCanonList(v) {
-  if (App.PARENT[v] === "guide") { var al = v === "zone_d" || (v === "sess_d" && (PROG.sid === "dap" || PROG.sid === "cchat" || PROG.sid === "expo")); PROG.seg = al ? "always" : "time"; PROG.scroll = 0; }
+  if (App.PARENT[v] === "guide") { var ap = v === "sess_d" && (PROG.sid === "dap" || PROG.sid === "cchat"), al = v === "zone_d" || (v === "sess_d" && PROG.sid === "expo"); PROG.seg = ap ? "apply" : al ? "always" : "time"; PROG.scroll = 0; }   /* v5.85 상담 · 커피챗 신청 관리 = 신청하기 칸 */
   if (App.PARENT[v] === "my") MY.seg = "rw";
 }
 function detSnap(v) { return { v: v, sid: PROG.sid, zone: PROG.zone, zchk: !!PROG.zchk, eg: EXPG.id, y: 0 }; }
