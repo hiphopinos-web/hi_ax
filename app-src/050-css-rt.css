@@ -340,6 +340,15 @@
   .rt .tsf-steps b { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: var(--rt-o100); color: var(--rt-night); font-weight: 400; box-shadow: 0 0 0 2px var(--rt-ink); }
   .rt .tsf-key { display: inline-block; margin: 0 4px 4px 0; padding: 0 10px; background: var(--rt-cream); color: var(--rt-night); font-family: var(--rt-font); font-size: var(--rt-f16); box-shadow: 0 0 0 2px var(--rt-ink), 0 4px 0 2px var(--rt-tan); }
   .rt .tsf-foot { margin: 0; color: var(--rt-tan2); }
+  /* 261006 (사용자 결정 「QR을 찍으라는 화면만」) 대기 = 가운데 큰 접속 QR · 위 후킹 · 아래 한 줄 · 작은 줄 · 로그인 중 · 세 단계(카메라 표시 없음) */
+  .rt .tsf-gd.tsf-gq { top: 18px; gap: 12px; justify-content: center; }
+  .rt .tsf-hk { margin: 0; font-size: var(--rt-f32); line-height: var(--rt-l32); color: var(--rt-cream); text-shadow: var(--rt-out2); word-break: keep-all; }
+  .rt .tsf-hk em { font-style: normal; color: var(--rt-o100); }
+  .rt .tsf-qbig { flex: none; width: min(440px, 72cqw, calc(100cqh - 380px)); max-width: none; min-width: 180px; padding: 0; box-shadow: 0 0 0 3px var(--rt-ink), 0 0 0 9px var(--rt-o100), 0 0 0 12px var(--rt-ink); }
+  .rt .tsf-lh { margin: 0; padding: 4px 14px; background: var(--rt-bark); color: var(--rt-o100); box-shadow: var(--rt-line); animation: tsfBlink 1.06s steps(1) infinite; }
+  .rt .tsf-lh[hidden] { display: none; }
+  @media (prefers-reduced-motion: reduce) { .rt .tsf-lh { animation: none; } }
+  @container (max-height: 760px) { .rt .tsf-gd.tsf-gq { top: 10px; gap: 8px; } .rt .tsf-hk { font-size: var(--rt-f24); line-height: var(--rt-l24); } .rt .tsf-qbig { width: min(400px, 72cqw, calc(100cqh - 360px)); } }
   /* 폰 창 · 폰 둘레만 확대 · 네 귀퉁이 조준선 · 한 줄 + 힌트 · 거리 다섯 칸(가운데 두 칸 = 좋아요 자리) */
   .rt .tsf-scan { position: absolute; left: 0; right: 0; top: 100px; bottom: 12px; z-index: 2; display: none; flex-direction: column; align-items: center; gap: 10px; }
   .rt .tsf.scan-on .tsf-scan { display: flex; }

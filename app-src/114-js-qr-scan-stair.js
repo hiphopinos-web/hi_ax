@@ -22,10 +22,21 @@ function scanLinkRun() {
   if (Date.now() - (p.t || 0) > 30 * 60000) return;
   qrRoute(p.raw, p.t);
 }
+/* 261006 1F 타자왕 노트북 접속 QR(#q=type&lt=)을 로그인 전에 찍고 들어왔다 · 그 순간 서버가 토큰을 5분 붙잡는다(처음 로그인이 1분을 넘겨도 「다시 찍어 주세요」가 안 뜨게)
+   토큰마다 한 번 · 응답은 쓰지 않는다(로그인 뒤 type_link_join 이 판정) · 실패 · 옛 서버는 조용히 넘어간다(예전처럼 60초) */
+var TLK_HOLD = { lt: "" };
+function typeLinkHold(raw) {
+  var m = String(raw || "").match(/#q=type\b[^#]*[&]lt=([A-Za-z0-9]{8,16})/i);
+  if (!m || ((S.get("user", {}) || {}).empId)) return;
+  var lt = m[1].toLowerCase(); if (TLK_HOLD.lt === lt) return;
+  TLK_HOLD.lt = lt;
+  beCall({ action: "type_link_hold", lt: lt }, function () {}, function () {});
+}
 /* 로그인 화면 한 줄 · 화면에 없는 정보(찍은 것이 로그인 뒤 이어진다)만 */
 function scanLinkNote() {
   var p = scanLinkPeek();
   if (!p) return;
+  typeLinkHold(p.raw);   /* 261006 타자왕 노트북 토큰 붙잡기(로그인 전일 때만) */
   var msg = /^#q=idea\b/i.test(p.raw) ? "로그인하면 아이디어 한 줄로 이어져요" : /^#q=type\b/i.test(p.raw) ? "로그인하면 노트북에 연결돼요" : /^#q=/i.test(p.raw) ? "로그인하면 퀴즈로 이어져요" : "로그인하면 이어서 적립";   /* v4.80 아이디어 한 줄 QR */
   ["entryForm", "quick"].forEach(function (id) {
     var box = el(id);
@@ -67,8 +78,12 @@ function qrHandle(raw) { qrRoute(raw, Date.now()); }
 /* ═══ v5.61 (261004 사용자 결정) 1F 타자왕 노트북 접속 QR · 방법 2 ═══
    노트북 화면 왼쪽 QR = 앱 주소#q=type&lt=일회용 토큰(노트북마다 · 40초 교체 · 60초 만료 · 한 번 쓰면 끝)
    폰 기본 카메라로 찍으면 앱이 열리고(로그인 전이면 로그인 뒤 · scanLinkRun) · 앱 안 스캐너로 찍어도 같다 → type_link_join(본인 세션) → 「노트북 화면을 보세요 · SPACE로 시작」
-   판정(명부 · 남은 도전 · 시간 창 · 테스트 사번)은 노트북 카메라로 내 QR 을 읽은 것(방법 1)과 같은 서버 판정(typeSelfCheck_) · 토큰이 없으면(#q=type 만) 내 QR 화면을 연다 */
+   판정(명부 · 남은 도전 · 시간 창 · 테스트 사번)은 노트북 카메라로 내 QR 을 읽은 것(방법 1)과 같은 서버 판정(typeSelfCheck_) · 토큰이 없으면(#q=type 만) 내 QR 화면을 연다
+   261006 (사용자 결정 「QR을 찍으라는 화면만」) 토큰이 없으면 「노트북 화면의 QR을 찍어 주세요」(옛 내 QR 화면 · 카메라에 비추라는 토스트 삭제) · 실패 화면 단추 = QR 다시 찍기 · 홈으로
+     로그인 전에 찍고 들어오면 그 순간 토큰을 서버에 보내 붙잡는다(type_link_hold · 5분 · 처음 로그인이 1분을 넘겨도 그대로 연결) · 그사이 노트북이 다른 사람에게 넘어갔으면 taken */
 var TLK_WHY = {
+  notok: ["노트북 화면의 QR을<br>찍어 주세요", "1F 타자왕 노트북", "scan"],
+  taken: ["노트북 화면의 QR을<br>다시 찍어 주세요", "그사이 다른 분이 먼저 시작했어요 · 그 판이 끝나면 다시", "scan"],
   link: ["노트북 화면의 QR을<br>다시 찍어 주세요", "QR은 1분마다 바뀌어요", "scan"],
   used: ["노트북 화면의 QR을<br>다시 찍어 주세요", "이미 연결에 쓴 QR이에요", "scan"],
   limit: ["오늘 도전을<br>모두 쓰셨어요", "순위는 1층 타자왕 TV에서", "home"],
@@ -81,7 +96,7 @@ var TLK_WHY = {
 };
 function typeLinkGo(raw) {
   var m = String(raw || "").match(/[#&]lt=([A-Za-z0-9]{8,16})/), u = S.get("user", {}) || {};
-  if (!m) { qrPanelOpen("mine"); toast("노트북 위 카메라에 내 QR을 비추세요"); return; }
+  if (!m) { srShow({ st: "link", lt: "", raw: String(raw || ""), lk: "notok" }); return; }
   var lt = m[1].toLowerCase(), base = { st: "link", lt: lt, raw: String(raw) };
   if (!u.empId) { srShow(Object.assign(base, { lk: "param" })); return; }
   if (!BE.on) { srShow(Object.assign(base, { lk: "net" })); return; }
@@ -107,8 +122,8 @@ function typeLinkHtml(o) {
     return { body: h, btn: ax2Btn("확인", "App.tab('home')") };
   }
   var w = TLK_WHY[o.lk] || TLK_WHY.other, sub = o.lk === "window" ? (o.win || []).join(" · ") : o.lk === "limit" && o.limit ? "1인 " + o.limit + "회 · " + w[1] : w[1];
-  h = '<span class="axs-chip err axs-self">1F 타자왕 · 연결되지 않음</span><h1 class="ax-title">' + w[0] + "</h1>" + (sub ? '<p class="ax-description">' + esc(sub) + "</p>" : "");
-  var btn = w[2] === "scan" ? ax2Btn("QR 다시 찍기", "scanOpen('')", "내 QR 열기", "qrPanelOpen('mine')") : w[2] === "retry" ? ax2Btn("다시 시도", "typeLinkGo(SR.raw)", "홈으로", "App.tab('home')") : ax2Btn("확인", "App.tab('home')");
+  h = '<span class="axs-chip ' + (o.lk === "notok" ? "off" : "err") + ' axs-self">1F 타자왕' + (o.lk === "notok" ? "" : " · 연결되지 않음") + '</span><h1 class="ax-title">' + w[0] + "</h1>" + (sub && o.lk !== "notok" ? '<p class="ax-description">' + esc(sub) + "</p>" : "");
+  var btn = w[2] === "scan" ? ax2Btn(o.lk === "notok" ? "QR 찍기" : "QR 다시 찍기", "scanOpen('')", "홈으로", "App.tab('home')") : w[2] === "retry" ? ax2Btn("다시 시도", "typeLinkGo(SR.raw)", "홈으로", "App.tab('home')") : ax2Btn("확인", "App.tab('home')");
   return { body: h, btn: btn };
 }
 

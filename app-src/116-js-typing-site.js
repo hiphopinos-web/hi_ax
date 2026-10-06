@@ -287,14 +287,19 @@ function qzStampCheck(srv) {
      ③ 방법 2 = 노트북 화면 왼쪽 접속 QR(앱 주소 #q=type&lt=일회용 토큰) 을 폰 기본 카메라로 · 로그인하면 이 노트북에 붙는다(서버 type_link_* · 판정은 방법 1 과 같은 typeSelfCheck_)
      ④ 대기 화면 = ▲ 카메라 · 「방법 1 · 앱의 내 QR을 위 카메라에」 · 왼쪽 「방법 2」 · 아래 세 단계 · 15초마다 덮던 TOP 3 없앰 · 봇 데모는 배경으로 약하게
      ⑤ 확인 → 0.8초 → READY(큰 SPACE 키 · 60초 · 마지막 5초 카운트) · 닉네임 60초 · 결과 10초(8초 뒤 다음 사람 QR) · READY · 닉네임에서 60초(v5.63 · 261005 사용자 결정) 넘게 손을 안 대면 다른 사람 QR 로 바뀐다
-     ⑥ 서버 응답이 없으면 1.2초 뒤 세 번까지 다시 · 문의처 = 「1층 안내 데스크」 · 도전 시간 밖이면 스캔을 끄고 안내만 · 한/영은 엔진이 로마자를 두벌식으로 바꿔 넣어 안내하지 않는다 */
+     ⑥ 서버 응답이 없으면 1.2초 뒤 세 번까지 다시 · 문의처 = 「1층 안내 데스크」 · 도전 시간 밖이면 스캔을 끄고 안내만 · 한/영은 엔진이 로마자를 두벌식으로 바꿔 넣어 안내하지 않는다
+   261006 (사용자 결정 「그냥 QR을 찍으라는 화면만 간단하게 남겨 두자」) 진입 = 노트북 화면 QR 하나
+     대기 화면 주인공 = 가운데 큰 접속 QR + 「폰으로 이 QR을 찍으세요」 + 작은 줄 「앱이 있으면 앱의 QR 버튼으로」 + 세 단계 · 위에 후킹 「당신의 프롬프팅 속도를 보여 주세요」(둘러보기 타자왕 말과 같다)
+     방법 1(내 QR → 노트북 카메라) 안내 · ▲ 카메라 · 스캔 창 · 거리 막대는 화면에서 뺐다 · 카메라는 켜지 않는다(권한도 묻지 않는다) · 코드는 그대로(TSF_CAM 하나로 되살린다)
+     폰이 로그인 전에 토큰을 보내면 서버가 5분 붙잡는다(type_link_hold) · 노트북 = 「폰에서 로그인하는 중」 한 줄 · QR 은 계속 보인다(다른 사람은 새 토큰으로 · 노트북이 멈추지 않는다) */
+var TSF_CAM = false;   /* 261006 노트북 카메라(방법 1) · false = 카메라를 켜지 않고 화면에도 카메라 표시 · 스캔 창이 없다 · true = v5.61 그대로 */
 var TSF = { ph: "attract", msg: "", emp: "", nick: "", info: null, busy: false, ticket: "", res: null, sub: null, send: "", why: "", top: null, topT: 0, resAt: 0, phAt: 0, idle: 0, t: null, raf: 0, unl: false, snd: true, cfg: null, cfgT: 0,
   cam: { stream: null, timer: null, err: "", last: "", lastT: 0, busy: false, cv: null, g: null, res: "" }, race: null, err: null, nm: "", nmBad: false, retry: 0, via: "", closedK: "",
   sc: { on: false, hits: [], last: 0, box: null, tgt: null, rect: null, di: 2, n3: false, since: 0, okAt: 0, lum: 128, tick: 0, cands: 0, ms: 0, msg: "", hint: "", staff: 0 },
-  lk: { tok: "", at: 0, busy: false, pollAt: 0, retryAt: 0, fail: 0, url: "" }, dbg: /[?&]tsfdbg=1\b/.test(location.search) };
+  lk: { tok: "", at: 0, busy: false, pollAt: 0, retryAt: 0, fail: 0, url: "", hold: false }, dbg: /[?&]tsfdbg=1\b/.test(location.search) };
 var TSF_READY_MS = 60000, TSF_NICK_MS = 60000, TSF_RES_MS = 10000, TSF_RES_SCAN_MS = 8000, TSF_SWAP_MS = 60000, TSF_JOIN_S = 0.8, TSF_LINK_ROT = 40000, TSF_LINK_POLL = 1500;
 var TSF_DESK = "1층 안내 데스크로 알려 주세요";
-var TSF_WHY = { param: "QR을 읽지 못했어요 · 다시 비춰 주세요", unknown: "명부에서 찾을 수 없어요 · " + TSF_DESK, window: "지금은 도전 시간이 아니에요", auth: "관리코드가 바뀌었어요 · " + TSF_DESK, range: "기록이 범위를 넘어 저장하지 않았어요", net: "연결이 불안정해요 · 잠시 뒤 다시 해 주세요",
+var TSF_WHY = { param: "확인하지 못했어요 · QR을 다시 찍어 주세요", unknown: "명부에서 찾을 수 없어요 · " + TSF_DESK, window: "지금은 도전 시간이 아니에요", auth: "관리코드가 바뀌었어요 · " + TSF_DESK, range: "기록이 범위를 넘어 저장하지 않았어요", net: "연결이 불안정해요 · 잠시 뒤 다시 해 주세요",
   locked: "관리 연결이 잠시 막혔어요 · " + TSF_DESK,   /* v4.65 서버 잠금(같은 와이파이에서 코드를 30번 틀림) */
   dup: "다른 노트북에서 도전 중이에요 · 그 판이 끝나면 다시",   /* v5.61 같은 사번이 다른 노트북에서 4분 안에 시작(서버 type_self_start dup) */
   qr: "다시 한 번 비춰 주세요 · 폰 화면을 켜 둔 채로", qrexp: "다시 한 번 비춰 주세요 · 폰 화면을 켜 둔 채로", qrold: "앱에서 다시 로그인해 주세요 · 비밀번호로 로그인한 뒤 내 QR" };   /* v5.12 서버 QR 확인(selfQr_) · v5.61 문구 = 행동 한 줄 */
@@ -339,8 +344,8 @@ function tsfSetupHtml() {
   var on = TSF.snd !== false;
   return '<div class="ax-stack">' +
     '<section class="ax-card ax-stack-tight axs-gap12"><h2 class="ax-section-title">1F 현장 셀프 모드</h2>' +
-    '<p class="ax-description">이 노트북을 참가자 전용 화면으로 바꿔요. 참가자가 앱의 내 QR을 노트북 카메라에 비추거나, 화면의 QR을 폰 카메라로 찍고 SPACE로 시작해요.</p>' +
-    '<p class="ax-meta">켜면 카메라 권한을 한 번 물어요 · 끄기 = 화면 왼쪽 아래 「관리」 또는 F2 → 관리코드</p>' +
+    '<p class="ax-description">이 노트북을 참가자 전용 화면으로 바꿔요. 참가자가 화면의 QR을 폰으로 찍고 SPACE로 시작해요.</p>' +
+    '<p class="ax-meta">' + (TSF_CAM ? "켜면 카메라 권한을 한 번 물어요 · " : "") + "끄기 = 화면 왼쪽 아래 「관리」 또는 F2 → 관리코드</p>" +
     '<label class="ax-sr-only" for="tsfCode">관리코드</label>' +
     '<input id="tsfCode" class="ax-field" type="password" inputmode="numeric" pattern="[0-9]*" enterkeyhint="go" autocomplete="off" placeholder="관리코드" onkeydown="onEnter(event, tsfEnable)">' +
     '<div class="qseg" role="group" aria-label="효과음"><button type="button" class="' + (on ? "on" : "") + '" onclick="TSF.snd = true; App.render()">효과음 켜기</button>' +
@@ -390,10 +395,10 @@ function tsfAdmin() {
   var on = S.get("site_sound", true) === true, C = TSF.cam;
   modalOpen('<div class="ax-stack-tight axs-gap12"><label class="ax-sr-only" for="tsfOffCode">관리코드</label>' +
     '<input id="tsfOffCode" class="ax-field" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="관리코드" onkeydown="onEnter(event, tsfOffGo)">' +
-    '<p class="ax-meta" id="tsfOffMsg">효과음 ' + (on ? "켜짐" : "꺼짐") + " · 카메라 " + (C.stream ? "켜짐 " + esc(C.res) : "꺼짐") + " · 한 번 읽기 " + Math.round(TSF.sc.ms) + "ms · 방법 2 " + (TSF.lk.tok ? "켜짐" : "꺼짐") + "</p>" +
+    '<p class="ax-meta" id="tsfOffMsg">효과음 ' + (on ? "켜짐" : "꺼짐") + (TSF_CAM ? " · 카메라 " + (C.stream ? "켜짐 " + esc(C.res) : "꺼짐") + " · 한 번 읽기 " + Math.round(TSF.sc.ms) + "ms" : "") + " · 접속 QR " + (TSF.lk.tok ? "켜짐" : "꺼짐") + (TSF.lk.hold ? " · 폰 로그인 중" : "") + "</p>" +
     '<button type="button" class="ax-button" onclick="tsfOffGo()">셀프 모드 끄기</button>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="tsfSndGo()">효과음 ' + (on ? "끄기" : "켜기") + "</button>" +
-    '<button type="button" class="ax-button ax-button-weak" onclick="tsfStaffView()">카메라 전체 보기(20초)</button>' +
+    (TSF_CAM ? '<button type="button" class="ax-button ax-button-weak" onclick="tsfStaffView()">카메라 전체 보기(20초)</button>' : "") +
     '<button type="button" class="ax-button ax-button-weak" onclick="modalClose()">닫기</button></div>', "스태프 전용");
   setTimeout(function () { var n = el("tsfOffCode"); if (n) n.focus(); }, 60);
 }
@@ -421,6 +426,7 @@ function tsfStaffView() { if (!tsfCodeOk()) return; modalClose(); TSF.sc.staff =
 /* ── 카메라 · 노트북 내장 카메라를 늘 켜 두고 읽는다 · v5.61 1080p 요청(없으면 카메라가 고른 값) · 초점 · 노출 연속(되는 카메라만) · 영상은 화면에 내지 않는다 ── */
 function tsfCamStart() {
   var C = TSF.cam;
+  if (!TSF_CAM) return;   /* 261006 카메라를 켜지 않는다(권한도 묻지 않는다) */
   if (C.stream) { tsfCamAttach(); return; }
   if (C.busy) return;
   if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) { C.err = "nocam"; tsfPaint(); return; }
@@ -699,7 +705,7 @@ function tsfCheckQr(raw) {
 /* 확인 결과 한 곳 · 방법 1(카메라 · type_self_check) · 방법 2(폰 접속 · type_link_poll got) 가 같은 판정을 같은 화면으로 */
 function tsfCheckRes(r, via) {
   TSF.busy = false; TSF.retry = 0;
-  if (!r || !r.ok) { tsfErr(TSF_WHY[r && r.reason] || "확인하지 못했어요 · 다시 비춰 주세요"); sfx("rgmiss"); return; }
+  if (!r || !r.ok) { tsfErr(TSF_WHY[r && r.reason] || "확인하지 못했어요 · QR을 다시 찍어 주세요"); sfx("rgmiss"); return; }
   if (!r.inWin) { tsfErr(TSF_WHY.window, (r.win || []).join(" · ")); sfx("rgmiss"); return; }
   if (r.left <= 0) { tsfErr(tsfLimitMsg(r), "순위는 오른쪽 화면에서", 6); sfx("rgmiss"); return; }
   TSF.emp = r.emp; TSF.info = r; TSF.nick = r.nick || ""; TSF.via = via || "";
@@ -708,11 +714,12 @@ function tsfCheckRes(r, via) {
 }
 /* ── v5.61 방법 2 · 노트북 화면 접속 QR(앱 주소#q=type&lt=토큰) · 대기 · 안내 · 결과(8초 뒤)에서만 띄운다 · 40초마다 새 토큰 · 1.5초마다 서버에 묻는다 ──
    서버가 폰의 접속을 받으면(type_link_join) 다음 물음(type_link_poll)에 그 사람의 확인 결과(got)가 온다 → tsfCheckRes(방법 1 과 같은 화면)
-   QR 을 내릴 때(READY · 판 · 닉네임 · 시간 밖)는 토큰을 버린다(off) · 서버가 없거나 옛 서버면 칸에 「잠시만요」만(방법 1 은 그대로) */
+   QR 을 내릴 때(READY · 판 · 닉네임 · 시간 밖)는 토큰을 버린다(off) · 서버가 없거나 옛 서버면 칸에 「잠시만요」만(방법 1 은 그대로)
+   261006 QR 은 대기 화면 가운데 하나(결과 화면 왼쪽 QR 없음 · 안내(err)는 토큰만 살려 두고 대기로 돌아오면 바로) · 물음 응답 hold 1 = 폰이 붙잡고 로그인하는 중(「폰에서 로그인하는 중」) */
 function tsfLinkWant() {
   if (!BE.on || RG.on || TSF.busy || tsfClosed()) return false;
   var ph = TSF.ph;
-  return ph === "attract" || ph === "err" || (ph === "result" && TSF.send !== "sending" && performance.now() - TSF.resAt > TSF_RES_SCAN_MS);
+  return ph === "attract" || ph === "err";
 }
 function tsfLinkUrl(tok) { return location.origin + location.pathname + "#q=type&lt=" + tok; }
 function tsfLinkTick() {
@@ -736,19 +743,21 @@ function tsfLinkPoll() {
   beCall({ action: "type_link_poll", key: tsfKey(), tok: tsfTok(), dev: tsfDev() }, function (r) {
     L.busy = false;
     if (!r || !r.ok) return;
-    if (r.got) { L.tok = L.url = ""; tsfDbg("got", r.got.ok ? 1 : 0); if (tsfLinkWant()) { if (!TSF.unl && S.get("site_sound", true) === true) { TSF.unl = true; sfxUnlock(); } sfx("scan"); tsfCheckRes(r.got, "link"); } return; }
+    if (r.got) { L.tok = L.url = ""; L.hold = false; tsfDbg("got", r.got.ok ? 1 : 0); if (tsfLinkWant()) { if (!TSF.unl && S.get("site_sound", true) === true) { TSF.unl = true; sfxUnlock(); } sfx("scan"); tsfCheckRes(r.got, "link"); } return; }
     if (r.none && L.tok === tk) { L.tok = L.url = ""; }   /* 서버가 토큰을 잊었다(다시 띄움 · 만료) · 다음 시계에 새로 받는다 */
+    var hd = !!r.hold; if (hd !== L.hold) { L.hold = hd; tsfDbg("hold", hd ? 1 : 0); tsfLinkPaint(); }   /* 261006 폰이 붙잡고 로그인하는 중 */
   }, function () { L.busy = false; });
 }
 function tsfLinkDrop() {
-  var L = TSF.lk; if (!L.tok) return;
+  var L = TSF.lk; L.hold = false; if (!L.tok) return;
   L.tok = ""; L.url = ""; tsfDbg("link", "");
   if (BE.on) beCall({ action: "type_link_new", key: tsfKey(), tok: tsfTok(), dev: tsfDev(), off: 1 }, function () {}, function () {});
 }
-/* 접속 QR 칸만 다시 그린다 · 일반 QR(검정 정사각 · 흰 바탕 · ECC Q · 장식 없음 · 261001 규칙) · 폭은 왼쪽 판에 맞춘다 */
+/* 접속 QR 칸만 다시 그린다 · 일반 QR(검정 정사각 · 흰 바탕 · ECC Q · 장식 없음 · 261001 규칙) · 폭은 칸에 맞춘다(261006 가운데 큰 칸 · 480 까지) · 「폰에서 로그인하는 중」 줄 */
 function tsfLinkPaint() {
+  var lh = el("tsfLh"); if (lh) lh.hidden = !(TSF.lk.hold && TSF.lk.tok);
   var box = el("tsfLqr"); if (!box) return;
-  var L = TSF.lk, px = Math.max(160, Math.min(300, (box.clientWidth || 300)));
+  var L = TSF.lk, px = Math.max(160, Math.min(480, (box.clientWidth || 300)));
   if (L.tok && L.url) box.innerHTML = qrTextSvg(L.url, px, 4, "Q").replace("border-radius:8px", "border-radius:0");
   else box.innerHTML = '<p class="tsf-lw">' + (L.fail >= 2 ? "잠시 뒤에 나와요" : "QR을 준비하는 중") + "</p>";
 }
@@ -764,18 +773,19 @@ function tsfRacePull() {
   }, function () {});
 }
 /* ── 참가자 화면 · 처음 한 번 그리고 그 뒤는 칸만 고친다(카메라 · 닉네임 칸이 끊기지 않게) ──
-   v5.61 3단 = 왼쪽(방법 2 접속 QR · 도전자 · 다음 도전자) / 가운데 판(▲ 카메라 · 방법 1 안내 · 폰 창) / 오른쪽 HIGH SCORE · 영상(tsfVid)은 보이지 않는 원본(읽기 전용) */
+   v5.61 3단 = 왼쪽(방법 2 접속 QR · 도전자 · 다음 도전자) / 가운데 판(▲ 카메라 · 방법 1 안내 · 폰 창) / 오른쪽 HIGH SCORE · 영상(tsfVid)은 보이지 않는 원본(읽기 전용)
+   261006 3단 = 왼쪽(규칙 · 도전자 · 다음 도전자) / 가운데 판(대기 = 큰 접속 QR) / 오른쪽 HIGH SCORE · ▲ 카메라 · 폰 창은 TSF_CAM 일 때만 */
 function tsfHtml() {
   return '<div class="tsf ph-' + TSF.ph + '"><video id="tsfVid" class="tsf-vsrc" muted playsinline autoplay aria-hidden="true"></video><div class="tsf-grid" style="--tsf-bw:' + tsfBw() + 'px">' +
     '<div class="tsf-l" id="tsfLx">' + tsfLeftHtml() + "</div>" +
     '<section class="tsf-c"><canvas id="tsfCv" aria-hidden="true"></canvas><div class="tsf-ov" id="tsfOv">' + tsfOvHtml() + "</div>" +
-    '<div class="tsf-camtag" aria-hidden="true"><i></i><b>카메라</b></div>' +
+    (TSF_CAM ? '<div class="tsf-camtag" aria-hidden="true"><i></i><b>카메라</b></div>' +
     '<div class="tsf-scan" id="tsfScan" aria-live="polite"><div class="tsf-sw"><canvas id="tsfScanCv" aria-hidden="true"></canvas><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div>' +
-    '<p class="tsf-sm" id="tsfScanMsg"></p><p class="tsf-sh" id="tsfScanHint"></p><div class="tsf-bar" id="tsfBar"><i></i><i></i><i></i><i></i><i></i></div><p class="tsf-bl"><span>멀어요</span><span>좋아요</span><span>가까워요</span></p></div></section>' +
+    '<p class="tsf-sm" id="tsfScanMsg"></p><p class="tsf-sh" id="tsfScanHint"></p><div class="tsf-bar" id="tsfBar"><i></i><i></i><i></i><i></i><i></i></div><p class="tsf-bl"><span>멀어요</span><span>좋아요</span><span>가까워요</span></p></div>' : "") + "</section>" +
     '<section class="tsf-r" id="tsfR">' + tsfRightHtml() + "</section>" +
     '</div><button type="button" class="tsf-adm" tabindex="-1" onclick="tsfAdmin()">관리</button></div>';
 }
-/* 왼쪽 · 대기 · 안내 · 결과(접속 QR 이 떠 있을 때) = 방법 2 · 도전자 = 닉네임 · 남은 도전 · 내 최고 · 키 · 결과 = 다음 도전자 · 시간 밖 = 규칙 */
+/* 왼쪽 · 대기 · 안내 · 시간 밖 = 규칙(261006 접속 QR 은 가운데로) · 도전자 = 닉네임 · 남은 도전 · 내 최고 · 키 · 결과 = 다음 도전자 */
 function tsfLeftHtml() {
   var ph = TSF.ph, i = TSF.info;
   if ((ph === "join" || ph === "ready" || ph === "nick") && i) {
@@ -784,10 +794,8 @@ function tsfLeftHtml() {
       '<section class="tsf-p tsf-rule">' + (ph === "nick" ? "<p>Enter 저장</p><p>Esc 처음으로</p>" : '<p class="tsf-hint go">SPACE 시작</p><p>Tab 닉네임 바꾸기</p><p>Esc 처음으로</p>') + "</section>";
   }
   var rule = '<section class="tsf-p tsf-rule"><p>1인 ' + tsfLimit() + "회 · 최고 점수로 순위</p><p>목숨 " + RAIN_LIVES + "개를 다 잃으면 끝</p><p>17:00 마감 · 1~3위 Outro 시상</p></section>";
-  if (tsfClosed()) return rule;
-  if (ph === "result" && !tsfLinkWant()) return '<section class="tsf-p"><p class="tsf-k">다음 도전자</p><p class="tsf-go">앱의 내 QR을 비추세요</p><p class="tsf-hint" id="tsfCount">' + Math.round(TSF_RES_MS / 1000) + "초 뒤 처음 화면 · SPACE 바로</p></section>";
-  return '<section class="tsf-p tsf-m2"><p class="tsf-chip">방법 2</p><p class="tsf-m2t">폰 카메라로<br>이 QR 찍기</p>' +
-    '<div class="tsf-lqr" id="tsfLqr"></div><p class="tsf-m2s">앱이 없어도 돼요</p><p class="tsf-m2s s">로그인하면 이 노트북에 연결돼요</p></section>';
+  if (ph === "result" && !tsfClosed()) return '<section class="tsf-p"><p class="tsf-k">다음 도전자</p><p class="tsf-go">곧 QR이 나와요</p><p class="tsf-hint" id="tsfCount">' + Math.round(TSF_RES_MS / 1000) + "초 뒤 처음 화면 · SPACE 바로</p></section>";
+  return rule;
 }
 /* 오른쪽 · HIGH SCORE TOP 5(결과 화면에서만 방금 도전한 사람 줄 · 다음 사람에게 남의 줄을 짚어 보이지 않게) + 점수 규칙 */
 function tsfRightHtml() {
@@ -804,19 +812,23 @@ function tsfRightHtml() {
 var TSF_PHONE = '<svg class="tsf-phs" viewBox="0 0 22 36" shape-rendering="crispEdges" aria-hidden="true"><rect x="0" y="0" width="22" height="36" fill="#000"/><rect x="1" y="1" width="20" height="34" fill="#2A2118"/><rect x="2" y="3" width="18" height="29" fill="#F3E7D8"/><rect x="2" y="3" width="18" height="3" fill="#FF7E31"/>' +
   '<rect x="4" y="9" width="14" height="14" fill="#FFFFFF"/><path fill="#000" d="M5 10h4v4H5zM13 10h4v4h-4zM5 18h4v4H5zM10 10h2v1h-2zM10 12h1v2h-1zM11 15h2v1h-2zM14 16h1v2h-1zM15 15h2v1h-2zM10 17h1v1h-1zM11 19h1v3h-1zM13 19h2v1h-2zM16 19h1v3h-1zM13 21h2v1h-2z"/><path fill="#FFFFFF" d="M6 11h2v2H6zM14 11h2v2h-2zM6 19h2v2H6z"/><path fill="#000" d="M7 12h0zM6.5 11.5h1v1h-1zM14.5 11.5h1v1h-1zM6.5 19.5h1v1h-1z"/>' +
   '<rect x="5" y="25" width="12" height="2" fill="#B8AEA6"/><rect x="8" y="33" width="6" height="1" fill="#F3E7D8"/></svg>';
+/* 261006 대기 화면 = 후킹 한 줄 · 큰 접속 QR · 「폰으로 이 QR을 찍으세요」 · 작은 줄(아이폰 기본 카메라 = 사파리에서 다시 로그인 · 앱이 있으면 앱 안 QR 버튼이 빠르다) · 로그인 중 한 줄 · 세 단계 */
+var TSF_HOOK = "당신의 <em>프롬프팅 속도</em>를 보여 주세요";   /* 둘러보기 타자왕 말 · 앱 · TV 같은 문구(사용자 261006) */
 function tsfGuideHtml() {
   var cl = tsfClosed(), ce = TSF.cam.err;
   if (cl) return '<div class="tsf-gd"><p class="tsf-chip">' + (cl.next ? "준비 중" : "오늘 마감") + '</p><p class="tsf-h">' + (cl.next ? "<span><em>" + esc(cl.next) + "</em>에</span><span>" + (cl.first ? "시작해요" : "다시 열려요") + "</span>" : "<span>오늘 도전은</span><span>끝났어요</span>") + "</p>" +
     '<p class="tsf-gs">' + (cl.next ? "1인 " + tsfLimit() + "회 · 최고 점수로 순위" : "1~3위는 17:00 Outro에서 시상") + "</p></div>";
+  if (!TSF_CAM) return '<div class="tsf-gd tsf-gq"><p class="tsf-hk">' + TSF_HOOK + '</p><div class="tsf-lqr tsf-qbig" id="tsfLqr"></div>' +
+    '<p class="tsf-h"><span>폰으로 이 QR을 찍으세요</span></p><p class="tsf-gs s">앱이 있으면 앱의 QR 버튼으로</p><p class="tsf-lh" id="tsfLh" role="status" hidden>폰에서 로그인하는 중</p>' + tsfStepsHtml(true) + "</div>";
   if (ce === "deny" || ce === "nocam") return '<div class="tsf-gd"><p class="tsf-chip">방법 1 쉬는 중</p><p class="tsf-h"><span>카메라가</span><span>켜지지 않았어요</span></p>' +
     '<p class="tsf-gs">왼쪽 <em>방법 2</em> QR을 폰 카메라로 찍어 주세요</p><p class="tsf-gs s">' + TSF_DESK + "</p>" + tsfStepsHtml() + "</div>";
   return '<div class="tsf-gd"><p class="tsf-chip">방법 1</p><p class="tsf-h"><span>앱의 <em>내 QR</em>을</span><span>위 <em>카메라</em>에 비추세요</span></p>' +
     '<div class="tsf-ill"><p class="tsf-arm">팔을 쭉 펴고<br>폰 화면이<br>카메라를 보게</p><div class="tsf-ph"><i class="tsf-up"></i>' + TSF_PHONE + "</div>" +
     '<div class="tsf-qrb"><span class="tsf-nav"><b><svg aria-hidden="true"><use href="#qr-corners"/></svg></b></span><p>앱 가운데<br><em>QR 버튼</em> → 내 QR</p></div></div>' + tsfStepsHtml() + "</div>";
 }
-function tsfStepsHtml() {
-  return '<div class="tsf-steps"><p><b>1</b><span>QR을 노트북에</span></p><p><b>2</b><span><kbd class="tsf-key">SPACE</kbd>로 시작</span></p><p><b>3</b><span>떨어지는 단어 입력</span></p></div>' +
-    '<p class="tsf-foot">1인 ' + tsfLimit() + "회 · 최고 점수로 순위 · 17:00 마감 · 1~3위 Outro 시상</p>";
+function tsfStepsHtml(q) {   /* q = 261006 새 진입(QR 찍기 · 규칙은 왼쪽 판) */
+  return '<div class="tsf-steps"><p><b>1</b><span>' + (q ? "QR 찍기" : "QR을 노트북에") + '</span></p><p><b>2</b><span><kbd class="tsf-key">SPACE</kbd>로 시작</span></p><p><b>3</b><span>떨어지는 단어 입력</span></p></div>' +
+    (q ? "" : '<p class="tsf-foot">1인 ' + tsfLimit() + "회 · 최고 점수로 순위 · 17:00 마감 · 1~3위 Outro 시상</p>");
 }
 /* 가운데 판 위 DOM · 대기 안내(attract) · 닉네임 칸(nick) · 결과(result) · 나머지는 캔버스(tsfPrevDraw) */
 function tsfOvHtml() {
@@ -838,11 +850,11 @@ function tsfPaint() {
   var cl = tsfClosed();
   root.className = "tsf ph-" + TSF.ph + (TSF.sc.on ? " scan-on" : "") + (cl ? " closed" : "");
   TSF.closedK = cl ? "c" + cl.next : "";
-  var lx = el("tsfLx"), lk = TSF.ph + "|" + TSF.closedK + "|" + (TSF.ph === "result" ? (tsfLinkWant() ? 1 : 0) : "") + "|" + (TSF.info ? TSF.nick + TSF.info.left : "");
+  var lx = el("tsfLx"), lk = TSF.ph + "|" + TSF.closedK + "|" + (TSF.info ? TSF.nick + TSF.info.left : "");
   if (lx && lx._k !== lk) { lx._k = lk; lx.innerHTML = tsfLeftHtml(); tsfLinkPaint(); }
   var rr = el("tsfR"); if (rr) rr.innerHTML = tsfRightHtml();
   var ov = el("tsfOv"), key = TSF.ph + "|" + (TSF.ph === "result" ? TSF.send : "") + "|" + TSF.closedK + "|" + (TSF.ph === "attract" ? TSF.cam.err : "");
-  if (ov && ov._k !== key) { ov._k = key; ov.innerHTML = tsfOvHtml(); }
+  if (ov && ov._k !== key) { ov._k = key; ov.innerHTML = tsfOvHtml(); tsfLinkPaint(); }   /* 261006 접속 QR = 가운데 */
 }
 function tsfNickFocus() { setTimeout(function () { var n = el("tsfNick"); if (n && TSF.ph === "nick" && !el("modal")) { n.focus(); try { n.setSelectionRange(n.value.length, n.value.length); } catch (e) {} } }, 30); }
 function tsfNm(m, bad) { TSF.nm = m || ""; TSF.nmBad = !!bad; var b = el("tsfNickLn"); if (b) { b.textContent = TSF.nm || "2~8자 · 한글·영문·숫자"; b.className = "tsf-ln" + (TSF.nmBad ? " bad" : ""); } }
@@ -992,8 +1004,7 @@ function tsfTick() {
   else if (ph === "result") {
     var left = Math.max(0, Math.ceil((TSF_RES_MS - (performance.now() - TSF.resAt)) / 1000)), c = el("tsfCount");
     if (c) c.textContent = left + "초 뒤 처음 화면 · SPACE 바로";
-    if (left <= 0 && TSF.send !== "sending") tsfReset();
-    else { var lw = tsfLinkWant() ? 1 : 0; if (lw !== TSF.lw) { TSF.lw = lw; tsfPaint(); } }   /* 8초 뒤 왼쪽 = 방법 2 접속 QR */
+    if (left <= 0 && TSF.send !== "sending") tsfReset();   /* 261006 결과 화면 왼쪽 QR 없음 · 10초 뒤 대기 화면 가운데 QR */
   }
   if (TSF.cam.stream && !TSF.cam.timer) tsfCamAttach();
   if (TSF.ph === "attract") { tsfRankPull(); tsfCfgPull(); }
@@ -1056,7 +1067,7 @@ function tsfResHtml() {
   /* v4.50(260925) 테스트 사번도 실제로 저장되어 dry 가 없다 · TSF.emp 가 테스트 사번이면 줄 끝에만 표시 */
   var rank = TSF.send === "sending" ? "기록 저장 중" : TSF.send === "ok" ? (x.pb ? "신기록!" : "내 최고 " + typePts(x.best || 0)) + (x.me ? " · 현장 " + x.me.rank + "위" : "") + (TEST_EMP.indexOf(TSF.emp) >= 0 ? " · 테스트 사번" : "") :
     "저장하지 못했어요 · " + (TSF.why === "net" ? "서버 응답 없음" : TSF.why === "limit" ? "도전 횟수를 넘었어요" : TSF_WHY[TSF.why] || TSF.why);
-  var left = TSF.send === "ok" ? (x.left > 0 ? "남은 도전 " + x.left + "회 · 다시 하려면 내 QR" : "도전 " + lim + "회를 모두 쓰셨어요 · 고마워요") : "";
+  var left = TSF.send === "ok" ? (x.left > 0 ? "남은 도전 " + x.left + "회 · 다시 하려면 QR 찍기" : "도전 " + lim + "회를 모두 쓰셨어요 · 고마워요") : "";
   var cap = r.why === "cap";
   return rtGoHtml({ title: cap ? "TIME UP" : "GAME OVER", sub: "AX 단어 소나기 · " + (TSF.nick || "익명 참가자"),
     line: cap ? "180초를 버텼어요 · 목숨 보너스" : "단어 " + (RG.lives0 || RAIN_LIVES) + "개를 놓쳤어요",
