@@ -1098,6 +1098,28 @@ function kpi(l,v,u,x,click){ return '<div class="kpi'+(click?" link":"")+'"'+(cl
 function tag(s, cls){ return '<span class="tag'+(cls?" "+cls:"")+'">'+esc(s)+'</span>'; }
 var RESV_TAG={ "신청":"warn","승인":"","체크인":"pri","완료":"ok","노쇼":"bad","취소":"off" };
 var CC_TAG={ "대기":"warn","매칭":"","참석":"pri","완료":"ok","취소":"off" };
+/* 261006 (사용자 제보 「AX 라운지 승인 뒤 직원이 취소했는데 콘솔에 반영이 안 된다」) 취소 기록(서버 prev · cxAt · cxBy · 커피챗 cxSeat)
+   승인 · 매칭 뒤 취소 = 「취소(승인 뒤)」 · 「취소(매칭 뒤)」 주의 배지 · 앱에서 취소한 지 CX_RECENT 안이면 「처리할 것」에 흐린 줄로 남긴다(세지 않는다 · 사라져 보이지 않게)
+   옛 서버 · 옛 행은 prev 가 없어 예전처럼 「취소」 */
+var CX_AFTER={ resv:"승인", cc:"매칭" }, CX_RECENT=600000;
+function cxAfter(r, kind){ return !!(r && r.status==="취소" && r.prev===CX_AFTER[kind]); }
+function cxLbl(r, kind){ return cxAfter(r, kind)?"취소("+CX_AFTER[kind]+" 뒤)":r.status; }
+function cxTag(r, kind){ var after=cxAfter(r, kind); return tag(cxLbl(r, kind), after?"warn":(kind==="resv"?RESV_TAG:CC_TAG)[r.status]); }
+function cxMs(r){ var m=/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/.exec(String((r&&r.cxAt)||"")); return m?Date.parse(m[1]+"-"+m[2]+"-"+m[3]+"T"+m[4]+":"+m[5]+":"+m[6]+"+09:00"):0; }
+function cxRecent(r, kind){ return cxAfter(r, kind) && r.cxBy==="앱" && Date.now()-cxMs(r)<CX_RECENT; }
+function cxWho(r){ return r&&r.cxBy?esc(r.cxBy)+" "+esc(String(r.cxAt||"").slice(11,16)):""; }
+/* 새로 받은 목록에서 「앱에서 승인 · 매칭 뒤 취소」를 처음 본 순간 한 번 알린다 · 첫 목록은 이미 있던 것으로 본다 */
+var CX_SEEN={ resv:null, cc:null };
+function cxNotice(){
+  var msg=[];
+  [["resv",(ST.data.resv||{}).rows,function(r){ return r.id; },function(r){ return "AX 라운지 "+hhmm(r.slot); }],
+   ["cc",(ST.data.cchat||{}).rows,function(r){ return normE(r.emp)+"|"+r.cxAt; },function(r){ return "커피챗"+(r.cxSeat?" "+r.cxSeat:""); }]].forEach(function(x){
+    if(!x[1]) return;
+    var first=!CX_SEEN[x[0]], seen=CX_SEEN[x[0]]||(CX_SEEN[x[0]]={});
+    x[1].forEach(function(r){ if(!cxAfter(r, x[0])||r.cxBy!=="앱") return; var k=x[2](r); if(seen[k]) return; seen[k]=1; if(!first&&cxRecent(r, x[0])) msg.push({ t:r.name+" · "+x[3](r), a:CX_AFTER[x[0]] }); });
+  });
+  if(msg.length) toast((msg.length>1?msg.length+"건 · ":"")+msg[0].t+" · 앱에서 취소했습니다("+msg[0].a+" 뒤)", { ms:8000 });
+}
 function emptyRow(n, msg){ return '<tr><td colspan="'+n+'"><div class="empty">'+esc(msg)+'</div></td></tr>'; }
 /* 261003 UI 정돈 · 공통 상태 표시 · 알림 띠(정보 · 주의 · 위험) · 빈 줄 · 불러오는 중 뼈대 */
 function band(kind, html, right){ return '<div class="band'+(kind?" "+kind:"")+'"><span>'+html+'</span>'+(right?'<span class="r">'+right+'</span>':'')+'</div>'; }
@@ -1357,14 +1379,15 @@ function load(manual, opts){
     ccSplitPref();
     pwTake(out);
     applyOvr();
+    cxNotice();   /* 261006 앱에서 승인 · 매칭 뒤 취소 알림 */
     ST.at=new Date(); ST.err=err;
     stampTick();
-    renderTabs(); render(); schedule();
+    renderTabs(); render(); if(!opts.keepPoll) schedule();   /* 261006 keepPoll = 실시간 사건 · 빠른 확인으로 일부만 받을 때 5분 전체 갱신 시계를 미루지 않는다 */
     if(manual&&!err) toast("갱신했습니다");
   });
 }
 /* 처리(부여·취소·승인·발송 등) 뒤에 쓴다. 탭 전체를 다시 받지 않고 그 처리로 바뀐 액션만 강제로 새로 받는다. */
-function reload(keys){ load(false,{only:keys,force:true}); }
+function reload(keys, keep){ load(false,{only:keys,force:true,keepPoll:!!keep}); }
 /* 헤더의 「마지막 업데이트 n분 전」 · 네트워크 없이 문구만 다시 그린다(15초마다 틱) */
 function stampTick(){
   var s=el("stamp"); if(!s) return;   /* 261003 UI 정돈 · 상단바 상태 한 줄 = 점(연결 · 실패 · 확인 중) + 글자 */
@@ -1452,9 +1475,9 @@ function drwHead(name, sub0){ return '<div class="dh"><div><div class="nm">'+esc
 /* 한 사람의 신청 이력 · 신청 탭이 이미 받은 네 목록에서 모은다 */
 function personHist(emp){
   var e=normE(emp), out=[];
-  ((ST.data.resv||{}).rows||[]).forEach(function(r){ if(normE(r.emp)===e) out.push(["상담 "+hhmm(r.slot), r.status, short(r.ts)]); });
-  ((ST.data.cchat||{}).rows||[]).forEach(function(r){ if(normE(r.emp)===e) out.push(["커피챗"+(r.tag?" · "+r.tag:""), r.status, short(r.ts)]); });
-  var h='<h3>신청 기록</h3>'+(out.length?'<ul class="hist">'+out.map(function(x){ return '<li><span class="t">'+esc(x[2])+'</span><span style="flex:1">'+esc(x[0])+'</span>'+tag(x[1], RESV_TAG[x[1]]||CC_TAG[x[1]]||"off")+'</li>'; }).join("")+'</ul>':'<p class="cap">없음</p>');
+  ((ST.data.resv||{}).rows||[]).forEach(function(r){ if(normE(r.emp)===e) out.push(["상담 "+hhmm(r.slot), cxLbl(r,"resv"), short(r.ts)]); });   /* 261006 취소(승인 뒤) */
+  ((ST.data.cchat||{}).rows||[]).forEach(function(r){ if(normE(r.emp)===e) out.push(["커피챗"+(r.tag?" · "+r.tag:""), cxLbl(r,"cc"), short(r.ts)]); });
+  var h='<h3>신청 기록</h3>'+(out.length?'<ul class="hist">'+out.map(function(x){ return '<li><span class="t">'+esc(x[2])+'</span><span style="flex:1">'+esc(x[0])+'</span>'+tag(x[1], RESV_TAG[x[1]]||CC_TAG[x[1]]||(/ 뒤\)$/.test(x[1])?"warn":"off"))+'</li>'; }).join("")+'</ul>':'<p class="cap">없음</p>');
   var hs=HIST[e]||[];
   h+='<h3>이 콘솔에서 한 처리</h3>'+(hs.length?'<ul class="hist">'+hs.map(function(x){ return '<li><span class="t">'+esc(x.t)+'</span><span>'+esc(x.x)+'</span></li>'; }).join("")+'</ul>':'<p class="cap">아직 없음 · 서버 기록은 시트가 정본입니다</p>');
   return h;
@@ -2250,7 +2273,7 @@ function viewResv(){
   var rows=resvRows().slice(), f=ST.filt||"todo";
   var by={}; rows.forEach(function(r){ by[r.status]=(by[r.status]||0)+1; });
   var todoN=(by["신청"]||0)+(by["승인"]||0)+(by["체크인"]||0);
-  var shown=rows.filter(function(r){ return match(r,["emp","name","dept","slot","memo"]) && (f==="all"||(f==="todo"&&RESV_NEXT[r.status])||r.status===f); });
+  var shown=rows.filter(function(r){ return match(r,["emp","name","dept","slot","memo"]) && (f==="all"||(f==="todo"&&(RESV_NEXT[r.status]||cxRecent(r,"resv")))||r.status===f); });   /* 261006 앱에서 승인 뒤 취소한 지 10분 안 = 흐린 줄로 남긴다(세지 않는다) */
   var o={"신청":0,"승인":1,"체크인":2,"완료":3,"노쇼":4,"취소":5};
   shown.sort(function(a,b){ return (o[a.status]-o[b.status])||(hhmm(a.slot)<hhmm(b.slot)?-1:1); });
   var h=chips([{v:"todo",n:"처리할 것",c:todoN},"|",{v:"신청",n:"신청",c:by["신청"]||0},">",{v:"승인",n:"승인",c:by["승인"]||0},">",{v:"체크인",n:"체크인",c:by["체크인"]||0},">",{v:"완료",n:"완료",c:by["완료"]||0},"|",{v:"노쇼",n:"노쇼",c:by["노쇼"]||0},{v:"취소",n:"취소",c:by["취소"]||0},{v:"all",n:"전체",c:rows.length}], f, "setFilt");
@@ -2266,13 +2289,13 @@ function viewResv(){
   body+='<div class="toolbar">'+searchBox("사번 · 이름 · 슬롯 · 메모 검색")+'<span class="cnt"><b>'+shown.length+'</b> / '+rows.length+'건</span></div>';
   body+='<div class="wrap"><table class="tb"><tr><th class="ckc">'+ckAll("r:",shown.map(function(r){return r.id;}))+'</th><th>슬롯</th><th>이름</th><th>부문</th><th>신청 시각</th><th>상태</th><th>메모</th><th class="tdr">다음 행동</th></tr>'+
     shown.map(function(r){ var s=r.status, nx=RESV_NEXT[s], sd=RESV_SIDE[s]||[], k="r:"+r.id;
-      return '<tr class="hv click'+(ST.sel[k]?" sel":"")+'" onclick="drwOpen(\'resv\',\''+jq(r.id)+'\')"><td class="ckc">'+ck1(k)+'</td>'+
+      return '<tr class="hv click'+(ST.sel[k]?" sel":"")+(s==="취소"&&f==="todo"?" dim":"")+'" onclick="drwOpen(\'resv\',\''+jq(r.id)+'\')"><td class="ckc">'+ck1(k)+'</td>'+
         '<td class="n"><b>'+esc(hhmm(r.slot))+'</b></td><td><div class="who2">'+esc(r.name)+'<small class="n">'+esc(r.emp)+'</small></div></td><td>'+esc(r.dept)+'</td><td class="n cap">'+esc(short(r.ts))+'</td>'+
-        '<td>'+tag(s,RESV_TAG[s])+'</td><td class="cap" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.memo||"")+'</td>'+
+        '<td>'+cxTag(r,"resv")+(cxAfter(r,"resv")&&r.cxBy?'<small class="cap n" style="display:block">'+cxWho(r)+'</small>':'')+'</td><td class="cap" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.memo||"")+'</td>'+
         '<td><div class="acts">'+rowMore(sd.map(function(a){ return '<button type="button" role="menuitem" class="rm-i bad" onclick="event.stopPropagation();resvDo([\''+jq(r.id)+'\'],\''+a+'\')">'+a+'</button>'; }).join(""))+
         (nx?'<button class="btn sm pri" style="min-width:72px" onclick="event.stopPropagation();resvDo([\''+jq(r.id)+'\'],\''+nx+'\')">'+nx+'</button>':'<span class="cap">끝</span>')+'</div></td></tr>'; }).join("")+
     (!shown.length?emptyRow(8,f==="todo"?"처리할 신청이 없습니다.":"해당하는 신청이 없습니다."):'')+'</table></div>';
-  body+=memo('<p>신청 → 승인 → 체크인 → 완료 순서입니다. 체크인이나 완료를 누르는 순간 스탬프 03 「프로그램 참여」가 적립됩니다(1인 1회). 상태는 참가자 앱에 10초 안에 반영됩니다.</p><p>노쇼·취소는 확인 창을 거칩니다. 승인·노쇼·취소는 처리 뒤 7초 동안 알림의 「되돌리기」로 이전 상태로 돌릴 수 있습니다. 취소한 슬롯은 그 사이 다른 사람이 앱에서 신청할 수 있으니 되돌리기는 바로 누르세요.</p>');
+  body+=memo('<p>참가자가 앱에서 취소하면 이 화면에 바로 반영됩니다. 승인한 뒤 취소한 신청은 「취소(승인 뒤)」로 표시되고, 10분 동안 「처리할 것」에 흐린 줄로 남습니다. 그 시간은 다른 사람이 다시 신청할 수 있고, 아직 보내지 않은 승인 · 10분 전 알림은 서버가 거둡니다.</p><p>신청 → 승인 → 체크인 → 완료 순서입니다. 체크인이나 완료를 누르는 순간 스탬프 03 「프로그램 참여」가 적립됩니다(1인 1회). 상태는 참가자 앱에 10초 안에 반영됩니다.</p><p>노쇼·취소는 확인 창을 거칩니다. 승인·노쇼·취소는 처리 뒤 7초 동안 알림의 「되돌리기」로 이전 상태로 돌릴 수 있습니다. 취소한 슬롯은 그 사이 다른 사람이 앱에서 신청할 수 있으니 되돌리기는 바로 누르세요.</p>');
   return h+card("", "", body);
 }
 /* 상태 바꾸기 · 한 건이든 여러 건이든 같은 길 · 낙관적으로 먼저 바꿔 그리고, 실패한 행만 원래대로 */
@@ -2331,7 +2354,7 @@ function drwResv(id){
   var r=resvById(id); if(!r) return "";
   var s=r.status, nx=RESV_NEXT[s], sd=RESV_SIDE[s]||[];
   var h=drwHead(r.name, '사번 '+esc(r.emp)+(r.dept?' · '+esc(r.dept):''))+'<div class="db">';
-  h+='<h3>1F AX 라운지</h3><div class="row" style="justify-content:space-between"><b class="n" style="font-size:var(--fs-h2)">슬롯 '+esc(hhmm(r.slot))+'</b>'+tag(s,RESV_TAG[s])+'</div><p class="cap mt8">신청 '+esc(short(r.ts))+'</p>';
+  h+='<h3>1F AX 라운지</h3><div class="row" style="justify-content:space-between"><b class="n" style="font-size:var(--fs-h2)">슬롯 '+esc(hhmm(r.slot))+'</b>'+cxTag(r,"resv")+'</div><p class="cap mt8">신청 '+esc(short(r.ts))+(s==="취소"&&r.cxBy?' · '+esc(r.cxBy)+'에서 취소 '+esc(short(r.cxAt))+(r.prev?' · 취소 전 '+esc(r.prev):''):'')+'</p>';
   h+='<div class="mt12">'+stepsHtml(["신청","승인","체크인","완료"], s, ["노쇼","취소"])+'</div>';
   h+='<div class="row mt16">'+(nx?'<button class="btn pri" onclick="resvDo([\''+jq(r.id)+'\'],\''+nx+'\')">'+nx+'</button>':'')+(sd.length?'<span class="dz-r">'+sd.map(function(a){ return '<button class="btn danger" onclick="resvDo([\''+jq(r.id)+'\'],\''+a+'\')">'+a+'</button>'; }).join("")+'</span>':'')+(!nx&&!sd.length?'<span class="cap">더 처리할 것이 없습니다.</span>':'')+'</div>';
   if(nx==="체크인"||nx==="완료") h+='<p class="cap mt8">'+nx+'을 누르면 스탬프 03 「프로그램 참여」가 적립됩니다.</p>';
@@ -2351,7 +2374,7 @@ function viewCchat(){
   var by={}; rows.forEach(function(r){ by[r.status]=(by[r.status]||0)+1; });
   var ord={"대기":0,"매칭":1,"참석":2,"완료":3,"취소":4};
   rows.sort(function(a,b){ return ((ord[a.status]!=null?ord[a.status]:9)-(ord[b.status]!=null?ord[b.status]:9))||(a.ts<b.ts?-1:1); });
-  var shown=rows.filter(function(r){ return match(r,["emp","name","dept","tag","pref","table"]) && (f==="all"||(f==="todo"&&(r.status==="대기"||r.status==="매칭"||r.status==="참석"))||r.status===f); });
+  var shown=rows.filter(function(r){ return match(r,["emp","name","dept","tag","pref","table"]) && (f==="all"||(f==="todo"&&(r.status==="대기"||r.status==="매칭"||r.status==="참석"||cxRecent(r,"cc")))||r.status===f); });   /* 261006 앱에서 매칭 뒤 취소한 지 10분 안 = 흐린 줄 */
   var h=chips([{v:"todo",n:"처리할 것",c:(by["대기"]||0)+(by["매칭"]||0)+(by["참석"]||0)},"|",{v:"대기",n:"대기",c:by["대기"]||0},">",{v:"매칭",n:"매칭",c:by["매칭"]||0},">",{v:"참석",n:"참석",c:by["참석"]||0},">",{v:"완료",n:"완료",c:by["완료"]||0},"|",{v:"취소",n:"취소",c:by["취소"]||0},{v:"all",n:"전체",c:rows.length}], f, "setFilt");
   h+=ccCapHtml(rows);
   var sel=selKeys("c:").map(ccBy).filter(Boolean), body='';
@@ -2374,11 +2397,11 @@ function viewCchat(){
       else if(s==="매칭") act=''+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'취소\')">취소</button>')+'<button class="btn sm" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'완료\')">완료</button><button class="btn sm pri" style="min-width:72px" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'참석\')">참석</button>';
       else if(s==="참석") act='<button class="btn sm pri" style="min-width:72px" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'완료\')">완료</button>';
       else act='<span class="cap">끝</span>';
-      return '<tr class="hv click'+(ST.sel[k]?" sel":"")+'" onclick="drwOpen(\'cc\',\''+e+'\')"><td class="ckc">'+ck1(k)+'</td><td><div class="who2">'+esc(r.name)+'<small class="n">'+esc(r.emp)+'</small></div></td><td>'+esc(r.dept)+'</td><td>'+(r.tag?tag(r.tag,"off"):'<span class="cap">-</span>')+'</td><td>'+(r.pref?esc(r.pref):'<span class="cap">-</span>')+'</td><td class="n cap">'+esc(short(r.ts))+'</td>'+
-        '<td>'+tag(s,CC_TAG[s])+'</td><td class="n">'+(r.round||r.table?'<b>'+esc(hhmm(r.round)||"-")+'</b> · '+esc(r.table||"-"):'<span class="cap">-</span>')+'</td>'+
+      return '<tr class="hv click'+(ST.sel[k]?" sel":"")+(s==="취소"&&f==="todo"?" dim":"")+'" onclick="drwOpen(\'cc\',\''+e+'\')"><td class="ckc">'+ck1(k)+'</td><td><div class="who2">'+esc(r.name)+'<small class="n">'+esc(r.emp)+'</small></div></td><td>'+esc(r.dept)+'</td><td>'+(r.tag?tag(r.tag,"off"):'<span class="cap">-</span>')+'</td><td>'+(r.pref?esc(r.pref):'<span class="cap">-</span>')+'</td><td class="n cap">'+esc(short(r.ts))+'</td>'+
+        '<td>'+cxTag(r,"cc")+(cxAfter(r,"cc")&&r.cxBy?'<small class="cap n" style="display:block">'+cxWho(r)+'</small>':'')+'</td><td class="n">'+(r.round||r.table?'<b>'+esc(hhmm(r.round)||"-")+'</b> · '+esc(r.table||"-"):r.cxSeat?'<span class="cap">비움 · '+esc(r.cxSeat)+'</span>':'<span class="cap">-</span>')+'</td>'+
         '<td><div class="acts">'+act+'</div></td></tr>'; }).join("")+
     (!shown.length?emptyRow(9,f==="todo"?"처리할 커피챗이 없습니다.":"해당하는 신청이 없습니다."):'')+'</table></div>';
-  body+=memo('<p>회차와 테이블을 넣고 매칭을 누르면 참가자 앱에 「18F · 회차 · 테이블」로 뜹니다. 같은 관심 태그끼리 한 테이블에 묶는 것이 기본입니다. 여러 명을 체크하면 같은 회차·테이블로 한 번에 매칭합니다.</p><p>테이블에 온 사람은 「참석」 또는 「완료」를 누르면 스탬프 03 「프로그램 참여」가 적립됩니다(1인 1회). 그래서 참석·완료에는 되돌리기가 없습니다. 매칭·취소는 7초 동안 되돌릴 수 있습니다.</p>');
+  body+=memo('<p>참가자가 앱에서 취소하면 바로 반영됩니다. 매칭한 뒤 취소한 신청은 「취소(매칭 뒤)」와 비운 자리(회차 · 테이블)로 표시되고, 10분 동안 「처리할 것」에 흐린 줄로 남습니다. 그 자리는 다른 사람으로 채울 수 있습니다.</p><p>회차와 테이블을 넣고 매칭을 누르면 참가자 앱에 「18F · 회차 · 테이블」로 뜹니다. 같은 관심 태그끼리 한 테이블에 묶는 것이 기본입니다. 여러 명을 체크하면 같은 회차·테이블로 한 번에 매칭합니다.</p><p>테이블에 온 사람은 「참석」 또는 「완료」를 누르면 스탬프 03 「프로그램 참여」가 적립됩니다(1인 1회). 그래서 참석·완료에는 되돌리기가 없습니다. 매칭·취소는 7초 동안 되돌릴 수 있습니다.</p>');
   return h+card("", "", body);
 }
 /* v4.47 선착순 정원 · 수동 마감 스위치 (앱 CCHAT_CAP · CCHAT_CLOSE_T 와 같은 값)
@@ -2475,7 +2498,7 @@ function drwCchat(emp){
   var r=ccBy(emp); if(!r) return "";
   var s=r.status, e=jq(r.emp);
   var h=drwHead(r.name, '사번 '+esc(r.emp)+(r.dept?' · '+esc(r.dept):''))+'<div class="db">';
-  h+='<h3>커피챗 · 18F</h3><div class="row" style="justify-content:space-between"><span>'+(r.tag?tag(r.tag,"off"):'<span class="cap">관심 태그 없음</span>')+'</span>'+tag(s,CC_TAG[s])+'</div><p class="cap mt8">신청 '+esc(short(r.ts))+'</p>';
+  h+='<h3>커피챗 · 18F</h3><div class="row" style="justify-content:space-between"><span>'+(r.tag?tag(r.tag,"off"):'<span class="cap">관심 태그 없음</span>')+'</span>'+cxTag(r,"cc")+'</div><p class="cap mt8">신청 '+esc(short(r.ts))+(s==="취소"&&r.cxBy?' · '+esc(r.cxBy)+'에서 취소 '+esc(short(r.cxAt))+(r.cxSeat?' · 비운 자리 '+esc(r.cxSeat):''):'')+'</p>';
   h+='<div class="mt12">'+stepsHtml(["대기","매칭","참석","완료"], s, ["취소"])+'</div>';
   if(s==="대기"||s==="매칭"){
     h+='<h3>'+(s==="대기"?"회차 · 테이블 배정":"회차 · 테이블 변경")+'</h3><div class="row"><label class="fld">회차<input class="in w-m" type="time" value="'+esc(ccVal(r,"round"))+'" oninput="ccDraft(\''+e+'\',\'round\',this.value)"></label>'+
@@ -4260,7 +4283,17 @@ function opsOn(m){
   /* v4.76 알림 작업이 생기거나 끝남 → 알림 카드 · 이력 · 혼잡 제보가 바뀜 → 혼잡 카드(대시보드) · 안 보는 화면은 캐시만 버린다 */
   else if(m.k==="push"){ clearTimeout(OPS_T.push); OPS_T.push=setTimeout(function(){ if(ST.tab==="push"||ST.tab==="dash"||ST.tab==="notice") pushPull(); else { delete _cache[sig_("push_stats",{})]; delete _cache[sig_("push_hist",{n:50})]; } },300); }
   else if(m.k==="crowd"){ if(ST.tab==="dash"||ST.tab==="crowd"){ clearTimeout(OPS_T.crowd); OPS_T.crowd=setTimeout(function(){ reload(["crowd"]); },300); } else delete _cache[sig_("crowd_log",{})]; }
+  /* 261006 상담 · 커피챗 상태가 바뀜(앱 신청 · 취소 · 다른 콘솔) → 그 목록만 곧바로 다시 받는다 · 예전에는 5분 갱신을 기다려 승인 뒤 취소가 몇 분 동안 「승인」으로 남았다
+     그 줄에 덮어 둔 처리 직후 값(ovr)은 버린다(서버가 바뀌었다고 알렸으니 · 덮기가 남으면 20초 동안 옛 값을 다시 그린다) */
+  else if(m.k==="resv"||m.k==="cchat"){
+    var dk=m.k==="resv"?"resv":"cchat";
+    if(m.k==="resv"&&m.id) delete ST.ovr["resv:"+m.id]; else if(m.k==="cchat") for(var ok0 in ST.ovr) if(ok0.indexOf("cc:")===0) delete ST.ovr[ok0];
+    if(ST.tab==="apply"||ST.tab==="dash"||ST.tab==="idea"){ clearTimeout(OPS_T[dk]); OPS_T[dk]=setTimeout(function(){ reload([dk], true); },300); }
+    else delete _cache[sig_(dk==="resv"?"resv_list":"cchat_list",{})];
+  }
 }
+/* 261006 실시간 연결이 없을 때(옛 서버 · 소켓 꺼짐 · 연결 실패) 신청 · 대시보드 화면은 상담 · 커피챗 목록만 60초마다 다시 받는다(그 밖의 화면 · 가려진 탭은 쉰다) */
+setInterval(function(){ if(!authed()||document.hidden||OPS.st==="ok"||ST.busy) return; if(ST.tab!=="apply"&&ST.tab!=="dash") return; reload(["resv","cchat"], true); },60000);
 document.addEventListener("visibilitychange",function(){ if(!document.hidden&&authed()&&OPS.cfg&&!OPS.ws) opsOpen(); });
 
 /* ══════════════════ 7-10. 알림(웹 푸시) · v4.76 (260930 · 「웹 푸시 기획.md」 5장 · 6장 · 「홈 화면 설치 유도 · 레드팀 토론.md」 채택 5) ══════════════════
