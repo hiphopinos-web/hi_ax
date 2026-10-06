@@ -1583,14 +1583,55 @@
   function holdStart(kind, dir) { if (G.anim || !G.loaded || PH.on) return; HOLD = { kind: kind, dir: dir, t0: performance.now(), amt: 0 }; G.need = true; }
   function holdEnd() {
     if (!HOLD) return; var h = HOLD; HOLD = null;
-    if (h.kind === 'rot') { var min = 15 * Math.PI / 180; if (h.amt < min) G.azTo += h.dir * (min - h.amt); }
+    if (h.kind === 'rot') { var min = 15 * Math.PI / 180; if (h.amt < min) rotBy(h.dir * (min - h.amt)); }
     else if (h.amt < 0.5) setDist(G.dist + h.dir * (0.5 - h.amt));
     G.need = true;
+  }
+  /* v5.81 (사용자 261006 iOS 제보 「우로 돌기를 눌러도 캐릭터가 돌지 않고 직진하는 것 같다」) 돌기 = 시점과 몸이 같이 돈다
+   *   옛 v5.51 = 시점만 돌고 몸은 그대로 · 서서 누르면 카메라만 캐릭터 둘레를 돌아 캐릭터는 안 도는 것처럼 보였고 · 달리기 한 번 누름(runStick = 몸이 보는 쪽) 중에는 몸이 그대로라 화면만 돌고 캐릭터는 곧장 달렸다
+   *   조이스틱을 미는 동안 = 몸은 미는 쪽(stepBot)이 정하므로 시점만 · 걸어가기(자동 길) · 비집기 · 연출 · 사진 찍기 = 시점만 · 화면 밀어 돌기(v5.58) = 둘러보기라 시점만(그대로) */
+  function rotBy(d) {
+    G.azTo += d;
+    var stk = G.stick && (Math.abs(G.stick.x) + Math.abs(G.stick.y)) > 0.05;
+    if (G.scn === 'lobby' && !stk && G.mode !== 'auto' && !G.squeeze && !G.anim && !PH.on) { if (G.face == null) G.face = G.h; G.face += d; }
+    G.rotN = (G.rotN || 0) + 1;
+  }
+  /* v5.81 돌기 단추 누름 한 길(iOS · 안드로이드 · PC 같은 길) · 손가락 하나 = 누름 하나
+   *   터치 기기는 포인터(pointerdown)와 터치(touchstart)가 둘 다 온다 · 먼저 온 쪽으로 시작하고 0.3초 안 같은 단추의 둘째 신호는 같은 누름에 붙인다
+   *   끝 = 그 손가락을 뗄 때만 · 터치가 붙었으면 touchend · touchcancel(iOS 의 포인터 취소 · 캡처 잃음으로 일찍 끝나지 않게) · 터치가 없는 기기(마우스 · 펜)는 같은 pointerId 의 pointerup · pointercancel
+   *   조이스틱 손가락을 떼도 돌기는 이어진다 · 옛 lostpointercapture 끝 · 터치 setPointerCapture 없앰(터치는 브라우저가 이미 붙잡는다)
+   *   touchstart 를 막는다(passive false) = iOS 가 길게 누름 · 두 번 누름 · 가장자리 밀기 같은 제 동작으로 누름을 가로채지 않게 · 클릭은 쓰지 않는다
+   *   안전망 = 창의 touchend(그 손가락이 화면에 없으면) · pointerup(같은 id) · 창 포커스 잃음 · 화면 숨김 */
+  var RB = null;
+  function rbHas(L, id) { if (!L) return false; for (var i = 0; i < L.length; i++) if (L[i].identifier === id) return true; return false; }
+  function rbStart(el, dir, pid, tid) {
+    var now = performance.now();
+    if (RB && RB.el === el && now - RB.t0 < 300 && ((pid != null && RB.pid == null) || (tid != null && RB.tid == null))) { if (pid != null) RB.pid = pid; if (tid != null) RB.tid = tid; return; }   /* 같은 손가락의 둘째 신호 */
+    if (RB) RB.el.classList.remove('kp');
+    RB = { el: el, dir: dir, pid: pid, tid: tid, t0: now }; el.classList.add('kp');
+    holdStart('rot', dir);
+    if (G.rbLog && G.rbLog.length < 60) G.rbLog.push({ s: dir, p: pid, t: tid, ms: Math.round(now) });
+  }
+  function rbEnd() { if (!RB) return; var r = RB; RB = null; r.el.classList.remove('kp'); if (G.rbLog && G.rbLog.length < 60) G.rbLog.push({ e: r.dir, ms: Math.round(performance.now() - r.t0) }); holdEnd(); }
+  function rotWire() {
+    [['rotL', 1], ['rotR', -1]].forEach(function (q) {
+      var el = $(q[0]), dir = q[1];
+      el.addEventListener('pointerdown', function (e) { e.preventDefault(); if (e.pointerType !== 'touch') { try { el.setPointerCapture(e.pointerId); } catch (x) {} } rbStart(el, dir, e.pointerId, null); });
+      el.addEventListener('touchstart', function (e) { if (e.cancelable) e.preventDefault(); var t = e.changedTouches && e.changedTouches[0]; if (t) rbStart(el, dir, null, t.identifier); }, { passive: false });
+      ['touchend', 'touchcancel'].forEach(function (ev) { el.addEventListener(ev, function (e) { if (RB && RB.el === el && RB.tid != null && rbHas(e.changedTouches, RB.tid)) rbEnd(); }); });
+      ['pointerup', 'pointercancel'].forEach(function (ev) { el.addEventListener(ev, function (e) { if (RB && RB.el === el && RB.tid == null && e.pointerId === RB.pid) rbEnd(); }); });
+      el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+      el.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); holdStart('rot', dir); setTimeout(holdEnd, 0); } });
+    });
+    ['touchend', 'touchcancel'].forEach(function (ev) { window.addEventListener(ev, function (e) { if (RB && RB.tid != null && !rbHas(e.touches, RB.tid)) rbEnd(); }, true); });
+    ['pointerup', 'pointercancel'].forEach(function (ev) { window.addEventListener(ev, function (e) { if (RB && RB.tid == null && e.pointerId === RB.pid) rbEnd(); }, true); });
+    window.addEventListener('blur', rbEnd);
+    document.addEventListener('visibilitychange', function () { if (document.hidden) rbEnd(); });
   }
   function stepHold(dt) {
     if (!HOLD) return false;
     var t = (performance.now() - HOLD.t0) / 1000, ramp = RM ? 1 : clamp(t / 0.2, 0.25, 1);
-    if (HOLD.kind === 'rot') { var da = (RM ? 35 : 60) * Math.PI / 180 * ramp * dt; G.azTo += HOLD.dir * da; HOLD.amt += da; }
+    if (HOLD.kind === 'rot') { var da = (RM ? 35 : 60) * Math.PI / 180 * ramp * dt; rotBy(HOLD.dir * da); HOLD.amt += da; }
     else { var dd = 2.4 * ramp * dt, before = G.dist; setDist(G.dist + HOLD.dir * dd); HOLD.amt += Math.abs(G.dist - before); }
     return true;
   }
@@ -4257,13 +4298,7 @@
     if (Q.get('lbl') === 'a') $('ctl').classList.add('la');
     $('cta').onclick = function () { if (performance.now() - (G.guardT || 0) < 500) return; if (G.spot && G.spot.spot === 'typing') { openPromo(); return; } var z = G.near; if (!z) return; if (z.id === 'cafe') { toCafe(); return; } enterPanel(z); };
     $('vClose').onclick = closePromo;
-    [['rotL', 'rot', 1], ['rotR', 'rot', -1]].forEach(function (q) {
-      var el = $(q[0]);
-      el.addEventListener('pointerdown', function (e) { e.preventDefault(); try { el.setPointerCapture(e.pointerId); } catch (x) {} holdStart(q[1], q[2]); });
-      ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (ev) { el.addEventListener(ev, holdEnd); });
-      el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-      el.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); holdStart(q[1], q[2]); setTimeout(holdEnd, 0); } });
-    });
+    rotWire();   /* v5.81 돌기 단추 = 손가락 하나 한 길(위 rotWire) */
     setDist(G.dist);
     /* v5.49 달리기(누르면 켜고 끔) · 점프(누르는 순간 · 손가락이 화면에 닿자마자 뛰어야 경쾌하다 · 키보드 Enter/Space 는 click 으로) */
     var rb = $('bRun'), rpd = 0;   /* v5.51 점프처럼 누르는 순간 달려 나간다 */
@@ -4326,9 +4361,9 @@
     '    <div class="dest" id="t3-dest" hidden></div>\n' +
     '    <div class="ctl" id="t3-ctl" aria-label="움직임 버튼">\n' +
     '      <button class="n run" type="button" id="t3-bRun" aria-label="달리기 · 누르면 앞으로 달려 나가요"><span class="c"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12l6-6 6 6"/><path d="M6 18l6-6 6 6"/></svg></span><span class="l">달리기</span><kbd class="kh" aria-hidden="true">↑</kbd></button>\n' +   /* v5.58 (사용자 261004 「달리기는 ^ 하나인데 겹치거나 달리는 느낌 · 점프 버튼도 점프인지 애매」) 후보 비교(shots/v558/icons_candidates.png) 뒤 = 달리기 R3(겹친 위 꺾쇠 + 왼쪽 속도 선 3) · 점프 J4(바닥 선 위로 떠오른 공 + 아래 튐 선 3) · v5.64 (사용자 261005 「3줄은 없어도 될 것 같아 · 이거 하나면 충분해」) 달리기 = 겹친 위 꺾쇠 둘만 · 단추 가운데 */
-    '      <button class="w" type="button" id="t3-rotL" aria-label="시점 왼쪽으로 90도 돌리기"><span class="c"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 3v4h4"/></svg></span><span class="l">좌로 돌기</span><kbd class="kh" aria-hidden="true">←</kbd></button>\n' +
+    '      <button class="w" type="button" id="t3-rotL" aria-label="좌로 돌기 · 누르고 있으면 계속 돌아요"><span class="c"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 3v4h4"/></svg></span><span class="l">좌로 돌기</span><kbd class="kh" aria-hidden="true">←</kbd></button>\n' +
     '      <span class="dot" aria-hidden="true"></span>\n' +
-    '      <button class="e" type="button" id="t3-rotR" aria-label="시점 오른쪽으로 90도 돌리기"><span class="c"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.5-5.8"/><path d="M20 3v4h-4"/></svg></span><span class="l">우로 돌기</span><kbd class="kh" aria-hidden="true">→</kbd></button>\n' +
+    '      <button class="e" type="button" id="t3-rotR" aria-label="우로 돌기 · 누르고 있으면 계속 돌아요"><span class="c"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.5-5.8"/><path d="M20 3v4h-4"/></svg></span><span class="l">우로 돌기</span><kbd class="kh" aria-hidden="true">→</kbd></button>\n' +
     '      <button class="s jump" type="button" id="t3-bJump" aria-label="점프"><span class="c"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><circle cx="12" cy="6.2" r="3.6" fill="currentColor" stroke="none"/><path d="M8.6 12.3v3.4M12 12.3v4.6M15.4 12.3v3.4" stroke-width="2"/></svg><span class="cn" aria-hidden="true"></span></span><span class="l">점프</span><kbd class="kh" aria-hidden="true">↓</kbd><span class="jt" id="t3-jtip" aria-hidden="true" hidden>점프!</span></button>\n' +
     '    </div>\n' +
     '    <span class="gdir" id="t3-gdir" hidden aria-hidden="true"></span>\n' +   /* v5.58 스태프가 안 보일 때 가장자리 방향 점 */
@@ -4502,5 +4537,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.79', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.81', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();
