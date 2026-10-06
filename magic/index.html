@@ -385,10 +385,13 @@ async function cycleCamera() {   // 공용 엔진(camera.js): 다음 장치 · �
   if (r.text) camToast(r.text);
 }
 
-{ // 화면 오른쪽 아래 작은 버튼: 키보드가 안 먹을 때 클릭으로 카메라 전환
+{ // 작은 버튼: 키보드가 안 먹을 때 클릭으로 카메라 전환
+  // 261006 단순화: 오른쪽 아래는 「게임 하기」 자리라 왼쪽 아래로 옮기고, 스태프가 마우스를 움직일 때만 4초 보인다(지나가는 사람에게는 글자가 안 보이게)
   const b = document.createElement('button'); b.textContent = '카메라 바꾸기 (V)';
-  b.style.cssText = 'position:fixed;right:20px;bottom:20px;z-index:50;padding:10px 18px;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:rgba(0,0,0,.45);color:#fff;font:600 18px Pretendard,sans-serif;cursor:pointer;opacity:.55';
-  b.onmouseenter = () => b.style.opacity = '1'; b.onmouseleave = () => b.style.opacity = '.55';
+  b.style.cssText = 'position:fixed;left:20px;bottom:20px;z-index:50;padding:10px 18px;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:rgba(0,0,0,.45);color:#fff;font:600 18px Pretendard,sans-serif;cursor:pointer;opacity:0;transition:opacity .3s;pointer-events:none';
+  let hov = false, tm = 0; const show = () => { b.style.opacity = hov ? '1' : '.55'; b.style.pointerEvents = 'auto'; clearTimeout(tm); tm = setTimeout(() => { if (!hov) { b.style.opacity = '0'; b.style.pointerEvents = 'none'; } }, 4000); };
+  addEventListener('pointermove', show, { passive: true });
+  b.onmouseenter = () => { hov = true; b.style.opacity = '1'; }; b.onmouseleave = () => { hov = false; show(); };
   b.onclick = e => { e.stopPropagation(); cycleCamera(); };
   document.body.appendChild(b);
 }
@@ -509,7 +512,14 @@ const SK = {
   wave: { name: '작은 파동', how: '편 손바닥을 앞으로 내밀기', cost: 20, cd: .35, dmg: 8, need: 1, T: 2.2 },
   mtw: { name: 'ME to WE 파', how: '두 손바닥을 함께 내밀기', cost: 50, cd: .6, dmg: 12, need: 2, T: 2.4 },
   dodge: { name: '피하기', how: '날아오는 공을 고개를 옆으로 움직여 피하기', cost: 0, cd: 0, dmg: 0, need: 0, T: 2.6 },
+  pf: { name: '불기운', how: '손을 펴 들기', cost: 0, cd: 0, dmg: 1, need: 1, T: 2 },   // 261006 1인 개편: 편 손 불기운이 저절로 날아가 맞힌다(손마다 PF_GAP초에 한 번)
 };
+/* 1인 게임 개편(사용자 261006 「50대 수석님도 1초 만에」): 1인/2인 선택 · 연습 4단계 · 머리 위 동그라미 준비 · 기력 · 생명 · 피하기 · 결과 점수 · 등급을 기본에서 뺐다.
+   흐름: 「게임 하기」 → 3 · 2 · 1 → 꼬마 → 골렘 → 보스(GAME_T초 안) → 「성공」(ME to WE 피날레) 또는 「시간 끝」 → 체험 화면.
+   조작은 체험과 같은 문법: 편 손 = 불기운이 저절로 날아감 · 주먹 내지르기 · 주먹 쥐었다 펴기 = 공격 · 편 손 내밀기 = 큰 불덩이 · 두 손바닥 밀기 = ME to WE 심볼(보스 마무리).
+   피하기(날아오는 물건 · 고개 피하기 · 생명)는 지우지 않고 주소 끝 ?dodge=1 일 때만 켠다. 2인 코드는 들어가는 길만 막고 남겨 두었다(되살리기용) */
+const DODGE = qs.get('dodge') === '1';
+const GAME_T = 40, PF_GAP = .6, GBURST_CD = .6, END_FIN = 5, END_OVER = 3;   // 제한 시간(초) · 편 손 불기운 간격 · 주먹 펴기 공격 쉼 · 끝 화면 시간(성공 · 시간 끝)
 /* 연습 단계 안내(사용자 261004): 기술마다 두 단계 문장. 화면 위쪽 가운데에 지금 할 동작 하나만 크게 띄우고, 손 상태가 바뀌면 다음 단계로 넘어간다
    [0] 손(얼굴)이 안 보일 때 · [1] 첫 동작 · [2] 내밀기. 시연 화면(p-demo)에는 [1] → [2]를 한 줄로 */
 const STEPS = {
@@ -561,22 +571,27 @@ const ARC_H = 60, ARC_K = .1;                          // 포물선 높이 = ARC
 // 준비 화면(피드백2): 두 팔을 머리 위로 올려 손끝을 맞댄 동그라미 1초 · 15초 지나면 자동 시작
 // 판정: 두 손이 화면 위 30% 안 + 서로 가까움(손바닥 중심 거리 < 손 크기 x 3.2 또는 손끝끼리 < 손 크기 x 1.0)
 //       한 손이 화면 위로 잘려 사라져도 남은 손이 위쪽에 있고 직전(0.8초 안)에 두 손이 가까웠으면 인정
-const READY_AUTO = 15, TOPZ = H * .3, CIRCLE_SEC = 1, CIRCLE_NEAR = 3.2, CIRCLE_TIP = 1, CIRCLE_MEM = .8, INTRO_T = 4.4;
+const READY_AUTO = 15, TOPZ = H * .3, CIRCLE_SEC = 1, CIRCLE_NEAR = 3.2, CIRCLE_TIP = 1, CIRCLE_MEM = .8, INTRO_T = 3.05;   // 261006: 「실전 시작」 카드를 빼고 3 · 2 · 1 만(4.4 → 3.05초)
 const CIRCLE_MUTE = .5;                         // 실전 중 머리 위 동그라미 자세(와 그 뒤 0.5초)에서는 내지르기를 버린다(팔을 내리며 손 크기가 변하는 것을 공격으로 오인하지 않게)
 const THR_WIN = .2, THR_RATIO = 1.22;          // 내지르기: 0.2초 안에 손 크기(카메라 쪽 접근)가 1.22배 이상
 const DUAL_WAIT = .2, DUAL_WIN = .25;          // 두 손바닥: 첫 손바닥 뒤 0.2초 기다려 짝을 찾는다(0.25초 안이면 ME to WE 파)
 const FIST_OPEN = .42, FIST_OFF = .55, PALM_OPEN = .6;   // 손 상태: 이보다 접히면 주먹(불꽃이 붙음) · 한 번 주먹이면 FIST_OFF를 넘게 펴야 풀린다 · PALM_OPEN보다 펴지면 손바닥
 // 피드백4: 예전에는 불꽃은 open < .45에서 붙는데 내지르기 판정은 open < .35만 주먹이라, 불꽃이 붙은 채 내질러도 「애매」로 소리 없이 버려졌다. 이제 불꽃이 붙은 상태(h.fistOn) = 주먹 판정
-const BOSS_HP = [96, 200], MERGE_AT = .4;   // 사용자 261004(세 마리): 보스 하나에 실전 시간 대부분이 걸리게 · 2인은 한 마리를 둘이 친다 · 이전: 피드백4: 기력이 빨리 차 두 손바닥이 잦아져 60·84 · 2인: 보스 체력이 40% 이하가 되면 합체기로 마무리 · 피드백2: 박수(보스 30 피해)가 빠진 만큼 체력을 줄였다(이전 50·70) · 피드백3: 주먹이 주력(기력 0)이 되어 보스전에 공격(큰 공 · 넓은 공격)이 몇 번 오도록 다시 늘림(36·50 → 60·84) · 피드백3 2차: 판 길이 목표(실전 45~50초)에 맞춰 36·50
+const BOSS_HP = [56, 200], MERGE_AT = .4;   // 261006: 1인 96 → 56   // 사용자 261004(세 마리): 보스 하나에 실전 시간 대부분이 걸리게 · 2인은 한 마리를 둘이 친다 · 이전: 피드백4: 기력이 빨리 차 두 손바닥이 잦아져 60·84 · 2인: 보스 체력이 40% 이하가 되면 합체기로 마무리 · 피드백2: 박수(보스 30 피해)가 빠진 만큼 체력을 줄였다(이전 50·70) · 피드백3: 주먹이 주력(기력 0)이 되어 보스전에 공격(큰 공 · 넓은 공격)이 몇 번 오도록 다시 늘림(36·50 → 60·84) · 피드백3 2차: 판 길이 목표(실전 45~50초)에 맞춰 36·50
 // 1인 보스 마무리(사용자 261004 「두 손바닥이 결정타」): 주먹 · 손바닥으로는 체력 FINISH_AT까지만 깎이고, 마지막은 두 손바닥. 그 선에서 FINISH_WAIT초가 지나도 못 하면 주먹으로도 끝낼 수 있다(끝없이 길어지지 않게)
-const FINISH_AT = .2, FINISH_WAIT = 5;
+const FINISH_AT = .2, FINISH_WAIT = 3;   // 261006: 5 → 3초(제한 시간 안에서 두 손바닥을 못 찾은 사람도 끝낼 수 있게)
 const finFloor = e => Math.ceil(e.max * FINISH_AT);
 
 /* ---------------- 손 → 플레이어 ---------------- */
 let G = null;                    // 한 판 상태
 const NP = () => (G && G.np) || 1;
 function region(side) { return NP() === 2 ? (side ? { x0: 960, x1: W, cx: 1440, w: 960 } : { x0: 0, x1: 960, cx: 480, w: 960 }) : { x0: 0, x1: W, cx: 960, w: W }; }
-function playerHands(i) { const lh = liveHands(), arr = NP() === 2 ? lh.filter(h => h.side === i) : lh.slice(); return arr.sort((a, b) => b.L - a.L).slice(0, 2); }
+// 1인(261006): 주인공 = 가장 크고 가운데에 가까운 얼굴(FS[0]) 둘레의 손. 얼굴이 없으면 화면의 큰 손 둘
+function playerHands(i) {
+  const lh = liveHands(); let arr = NP() === 2 ? lh.filter(h => h.side === i) : lh.slice();
+  if (NP() === 1 && faceVis(0)) { const f = FS[0], near = arr.filter(h => Math.abs(h.c.x - f.x) < Math.max(f.w, 120) * 3.2); if (near.length) arr = near; }
+  return arr.sort((a, b) => b.L - a.L).slice(0, 2);
+}
 // 손 하나의 지표(매 프레임): 내지르기 순간과 그때의 손 상태
 function handFeat(h, dt) {
   h.age = (h.age || 0) + dt;
@@ -612,7 +627,7 @@ function circlePose(pl) {
 // 한 사람의 기술 판정. 결과는 pl.evs 에 담는다(한 프레임에 주먹 두 개도 가능)
 function detectPlayer(pl, dt) {
   const hs = pl.hands; pl.evs = [];
-  pl.circ = circlePose(pl);
+  pl.circ = circlePose(pl);   // 머리 위 동그라미(준비 화면은 261006에 뺐지만 팔을 내리며 생기는 오발 막기에는 그대로 쓴다)
   if (pl.circ) pl.circHold = (pl.circHold || 0) + dt; else if (now - pl.circAt > CIRCLE_MUTE) pl.circHold = 0;
   // 동그라미를 0.4초 이상 만들었던 손이 그 뒤 0.5초 안에 빠르게 내려오는 중이면 내지르기를 버린다(팔을 내리며 손 각도가 바뀌어 손이 커 보이는 것)
   // 머리 위에서 그대로 두 손바닥을 내미는 것은 막지 않는다(손이 아래로 빠르게 움직이지 않으므로)
@@ -629,6 +644,13 @@ function detectPlayer(pl, dt) {
     else pl.pend = { t: now, h, at };
   }
   if (pl.pend && now - pl.pend.t >= DUAL_WAIT) { const p = pl.pend; pl.pend = null; pl.evs.push({ k: 'wave', at: p.at }); }
+  // 261006 체험과 같은 문법: 주먹을 쥐었다(0.25초 · 거의 제자리) 펴면 주먹 공격 한 번(burst)
+  for (const h of hs) {
+    if (h.fistOn) { h.gxf = (h.wv || 0) < XP.BURST_SPD ? (h.gxf || 0) + dt : 0; h.gxrel = -9; continue; }
+    if ((h.gxf || 0) >= XP.BURST_FIST) h.gxrel = now; h.gxf = 0;
+    if (h.gxrel > -9 && now - h.gxrel > XP.BURST_WIN) h.gxrel = -9;
+    if (h.gxrel > -9 && h.open > PALM_OPEN && now >= (h.gxcd || 0)) { h.gxrel = -9; h.gxcd = now + GBURST_CD; pl.evs.push({ k: 'fist', at: { x: h.c.x, y: h.c.y, L: h.L, h }, burst: true }); }
+  }
 }
 const castLog = [];   // 시험용: 발동된 기술 기록
 
@@ -1027,7 +1049,7 @@ function nameTag(x, y, name, a = 1, size = 30) {
 const ENAME = { mini: '반복 업무 꼬마', golem: '서류 더미 골렘', boss: '레거시 보스', dummy: '연습용 샌드백' };
 /* 체력 [1인, 2인](사용자 261004 「세 마리로 정리」): 꼬마 = 주먹 몇 방 · 골렘 = 주먹 여러 방 또는 손바닥 두 방 + 주먹 · 보스 = BOSS_HP(마무리는 두 손바닥)
    2인은 한 마리를 둘이 함께 치므로 크게. 연습용 샌드백은 쓰러지지 않는다(맞으면 출렁) */
-const EHP = { mini: [18, 28], golem: [34, 56], dummy: [1e9, 1e9] };
+const EHP = { mini: [12, 28], golem: [24, 56], dummy: [1e9, 1e9] };   // 261006 1인 개편(기력 없음 · 제한 시간 GAME_T): 18 · 34 → 12 · 24(서툰 사람도 시간 안에)
 // 지침(사용자 261004 판 길이 조정): 차례 몬스터는 나온 뒤 [첫 시각, 둘째 시각](초)이 지나면 받는 피해 2배 · 3배. 서툰 사람의 판이 지나치게 길어지지 않게
 // 꼬마 · 골렘은 따로 표시하지 않고, 보스는 첫 시각(BOSS_TIRED)에 「보스 약해짐」
 const TIRED_AT = { mini: [4, 10], golem: [5, 12], boss: [BOSS_TIRED, 18] };
@@ -1129,7 +1151,7 @@ function trackFaces(dt) {
     if (fresh) {
       const cand = two ? list.filter(q => i ? q.x >= 960 : q.x < 960) : (i ? [] : list);
       if (cand.length) {
-        const recent = now - f.seen < .5, sc = q => q.w - (recent ? dist(q, f) * .4 : 0);   // 방금 본 얼굴 가까이 있는 것 우선, 아니면 가장 큰(가까운) 얼굴
+        const recent = now - f.seen < .5, sc = q => q.w - (recent ? dist(q, f) * .4 : 0) - (two ? 0 : Math.abs(q.x - 960) * .08);   // 방금 본 얼굴 가까이 있는 것 우선, 아니면 가장 큰(가까운) 얼굴 · 1인은 가운데 쪽을 조금 더(261006 주인공)
         const b = cand.reduce((a, q) => sc(q) > sc(a) ? q : a);
         if (!recent) { f.x = b.x; f.y = b.y; f.w = b.w; f.vx = f.vy = 0; }
         else { const dm = rawFaces.t - f.seen; if (dm > .01 && dm < .3) { f.vx = lerp(f.vx || 0, (b.x - f.tx) / dm, .6); f.vy = lerp(f.vy || 0, (b.y - f.ty) / dm, .6); } }
@@ -1154,6 +1176,7 @@ const flying = side => G.eshots.some(s => !s.practice && !s.res && s.side === si
 const sideFree = side => telling(side) < ATK_MAX && !flying(side) && now >= (G.rest[side] || 0);
 // 적 공격: wait(다음 예고까지 대기) → tele(예고 고리가 차오름, 마지막 ATK_WARN초는 「!」) → 던짐 → wait
 function stepAttack(e, wdt) {
+  if (!DODGE) return;   // 261006: 몬스터가 던지지 않는다(피하기 · 생명은 ?dodge=1 에서만)
   if (!e.atk || G.ph !== 'b-wave' && G.ph !== 'b-boss') return;
   if (G.merge) return;   // 2인 합체 연출 중에는 멈춘다
   const T = ATK_TELE[e.type];
@@ -1279,7 +1302,7 @@ function hitEnemy(pl, e, dmg, k) {
   if (e.type === 'dummy') { e.wv = (e.wv || 0) + (Math.random() < .5 ? -1 : 1) * rnd(4, 6); e.face = .5; }
   e.hp -= dmg; e.hitT = 1;
   const kill = e.hp <= 0;
-  marker(e.px, e.py, kill); if (dmg > 0 && dmg < 999) pops.push({ text: `-${dmg}`, x: e.px + rnd(-30, 30) + (e.type === 'boss' ? 200 * e.ps : 110), y: e.py - 60 * e.ps - 20, t: 0, dur: .9, size: e.type === 'boss' ? 100 : 84, col: ORANGE_L, rise: 80 });
+  marker(e.px, e.py, kill); if (DODGE && dmg > 0 && dmg < 999) pops.push({ text: `-${dmg}`, x: e.px + rnd(-30, 30) + (e.type === 'boss' ? 200 * e.ps : 110), y: e.py - 60 * e.ps - 20, t: 0, dur: .9, size: e.type === 'boss' ? 100 : 84, col: ORANGE_L, rise: 80 });
   if (pl) { pl.combo++; pl.comboT = now; pl.comboPop = 1; G.maxCombo = Math.max(G.maxCombo, pl.combo); }
   G.slow = Math.max(G.slow, kill ? .1 : .05);
   if (kill) { if (e.type !== 'dummy') G.killBy.push(e.type + ':' + (k || '')); killE(e); } else sfx.tick();   // 시험 기록: 무엇으로 처치했나
@@ -1289,7 +1312,7 @@ function killE(e) {
   e.alive = false;
   if (e.type === 'boss') { bossDie(e); return; }
   if (e.type === 'dummy') { G.dummyAt = now + .6; boom(e.px, e.py, .6, true); sfx.kill(); return; }
-  G.kills++; boom(e.px, e.py, e.type === 'golem' ? .9 : .5, true); sfx.kill(); killFeed(ENAME[e.type] + ' 처치!');
+  G.kills++; boom(e.px, e.py, e.type === 'golem' ? .9 : .5, true); sfx.kill(); if (DODGE) killFeed(ENAME[e.type] + ' 처치!');
   // 피드백4: 맞은 방향으로 튕겨 날아가며 돌다가 사라진다(2D)
   const dx = e.kdx || 0, dy = e.kdy || -1;
   G.dead.push({ type: e.type, x: e.px, y: e.py, s: e.ps, ph: e.ph, et: e.t, rot0: e.rot, vx: dx * 900 + rnd(-200, 200), vy: Math.min(-500, dy * 900) - rnd(200, 400), vr: rnd(7, 12) * (dx >= 0 ? 1 : -1), rot: 0, t: 0 });
@@ -1303,7 +1326,9 @@ function drawDead() {
   }
 }
 function canCast(pl, k, practice) {
+  if (k === 'pf') return '';
   if (now < pl.cool[k]) return 'cool';
+  if (!DODGE) return '';   // 261006: 기력 없음(기력 · 탈진 · 「기력이 부족합니다」는 ?dodge=1 옛 판에서만)
   if (k === 'fist' || practice) return '';
   if (now < pl.exUntil) return 'ex';
   if (pl.en < SK[k].cost) return 'en';   // 피드백3: 손바닥 20 · 두 손바닥 50이 있어야 나간다(탈진 없음)
@@ -1324,9 +1349,14 @@ function cast(pl, ev, practice) {
     return false;
   }
   castLog.push({ k, t: now, i: pl.i }); if (castLog.length > 500) castLog.shift();
-  pl.cool[k] = now + SK[k].cd; if (k !== 'fist') { pl.cool.wave = Math.max(pl.cool.wave, now + .25); pl.cool.mtw = Math.max(pl.cool.mtw, now + .25); }
-  if (!practice && SK[k].cost > 0) { pl.en = Math.max(0, pl.en - SK[k].cost); pl.lastCast = now; }
+  if (k !== 'pf') { pl.cool[k] = now + SK[k].cd; if (k !== 'fist') { pl.cool.wave = Math.max(pl.cool.wave, now + .25); pl.cool.mtw = Math.max(pl.cool.mtw, now + .25); } }
+  if (!practice && SK[k].cost > 0 && DODGE) { pl.en = Math.max(0, pl.en - SK[k].cost); pl.lastCast = now; }
   const tg = pickTarget(pl);   // 손이 어디 있든 지금 조준된 적
+  if (k === 'pf') {   // 편 손 불기운: 손바닥 불기운 끝에서 작은 불덩이가 대상으로 날아간다(대상이 없으면 쏘지 않는다)
+    if (!tg) return false;
+    G.shots.push({ k: 'pf', i: pl.i, x0: at.x, y0: at.y, tg, tx: tg.px, ty: tg.py, t: 0, dur: .32 });
+    return true;
+  }
   if (k === 'fist') {
     // 피드백4: 주먹이 인식되면 반드시 보이는 결과. 대상이 있으면 불꽃 줄기 → 크게 움찔·튕김 + 피해 숫자 + 「퍽」 · 없으면 허공에 불꽃 펀치
     crack(at.x, at.y, at.L * .8); sfx.punch(); fireThrust(at.h, tg ? tg.px : undefined, tg ? tg.py : undefined);
@@ -1358,13 +1388,17 @@ function updateShots(wdt) {
     if (s.tg && !s.tg.alive && !s.done) { const n = pickTarget(G.pl[s.i]); if (n) { s.x0 = s.cx === undefined ? s.x0 : s.cx; s.y0 = s.cy === undefined ? s.y0 : s.cy; s.t = 0; s.dur = .16; s.tg = n; } }
     if (s.tg && s.tg.alive) { s.tx = s.tg.px; s.ty = s.tg.py; }
     const k = clamp(s.t / s.dur, 0, 1), e = s.k === 'mtw' ? k * k * (3 - 2 * k) : k; s.cx = lerp(s.x0, s.tx, e); s.cy = lerp(s.y0, s.ty, e);
-    if (s.k === 'wave') spark(s.cx + rnd(-10, 10), s.cy + rnd(-10, 10), { vx: rnd(-80, 80), vy: rnd(-80, 80), r: rnd(8, 14), life: .3, col: c1() });
+    if (s.k === 'pf') { if (FIRE.length < FIRE_MAX + 60) FIRE.push({ x: s.cx + rnd(-8, 8), y: s.cy + rnd(-8, 8), vx: rnd(-40, 40), vy: -rnd(60, 160), t: 0, life: rnd(.2, .34), r: rnd(26, 40) }); }   // 불덩이 꼬리(불꽃 주먹과 같은 불똥)
+    else if (s.k === 'wave') spark(s.cx + rnd(-10, 10), s.cy + rnd(-10, 10), { vx: rnd(-80, 80), vy: rnd(-80, 80), r: rnd(8, 14), life: .3, col: c1() });
     else { const kb = clamp(k - .12, 0, 1), eb = kb * kb * (3 - 2 * kb), bx = lerp(s.x0, s.tx, eb), by = lerp(s.y0, s.ty, eb); for (let i = 0; i < 5; i++) spark(bx + rnd(-60, 60), by + rnd(-30, 30), { vx: rnd(-150, 150), vy: rnd(-150, 150), r: rnd(8, 16), life: .3, col: c1() }); }
     if (k >= 1 && !s.done) {
       s.done = true; const pl = G.pl[s.i];
       // 명중 판정에 거리·경로 조건이 없다: 대상이 살아 있으면 반드시 맞고, 맞은 자리 둘레의 적도 함께 맞는다(범위 피해)
       const tg = s.tg && s.tg.alive ? s.tg : null;
-      if (s.k === 'wave') {
+      if (s.k === 'pf') {
+        if (tg) { knock(tg, s.x0, s.y0, .35); embers(s.tx, s.ty, .5); const k0 = G.kills; const h = hitEnemy(pl, tg, SK.pf.dmg, 'pf'); stat('pf', G.kills - k0, h ? 1 : 0); }
+        EFX.push({ t: 0, dur: .3, draw: q => { ring(s.tx, s.ty, lerp(20, 90, easeOut(q)), 1 - q, 6, ORANGE_L); } });
+      } else if (s.k === 'wave') {
         boom(s.tx, s.ty, .8, true); sfx.pop();
         EFX.push({ t: 0, dur: .4, draw: q => { ring(s.tx, s.ty, lerp(30, WAVE_SPLASH, easeOut(q)), 1 - q, 8, '#fff'); } });
         if (tg) knock(tg, s.x0, s.y0, .8);
@@ -1397,7 +1431,7 @@ function stepMerge(dt) {
 function bossDie(b) {
   b.alive = false; G.kills++; G.cleared = true; G.bossAt = { x: b.px, y: b.py };
   for (const e of G.en) if (e !== b && e.alive) { e.alive = false; boom(e.px, e.py, .4, true); }
-  G.en = []; G.shots = []; G.eshots = []; G.merge = null; killFeed('레거시 보스 처치!');
+  G.en = []; G.shots = []; G.eshots = []; G.merge = null; if (DODGE) killFeed('레거시 보스 처치!');
   sfx.boom(); flash = .45; G.slow = .9; shake = 2;   // 피드백1: 흰 화면 덮기 없음(짧은 밝아짐만)
   const x = b.px, y = b.py;
   EFX.push({ t: 0, dur: 2, draw: k => { glowCircle(x, y, lerp(120, 1300, easeOut(k)), (1 - k) * .95); ring(x, y, lerp(60, 1200, easeOut(k)), 1 - k, 22, '#fff'); ring(x, y, lerp(40, 900, easeOut(k)), 1 - k, 14, ORANGE); } });
@@ -1412,16 +1446,17 @@ let idleT = 0, engT = 0, SEL = null;
 function clearFx() { pops = []; fx = []; P2 = []; EFX = []; CRACKS = []; DOTB = []; FIRE = []; flash = 0; shake = 0; }
 // 사용자 261004: 게임이 끝나거나(결과 뒤) 손이 없으면 체험 모드로 돌아온다. 옛 게임 대기 화면(stepIdle · drawIdle)은 코드만 보존(지금은 가지 않음)
 function toIdle() { toExp(); }
-function toSelect() { S.mode = 'select'; SEL = { t: 0, g: [0, 0], absent: 0 }; sfx.tap(); }
+// 261006: 「게임 하기」 · G 키 = 바로 1인 게임(3 · 2 · 1). 옛 1인/2인 선택 화면(stepSelect · drawSelect)은 코드만 남겼다
+function toSelect() { sfx.tap(); startGame(1, true); }
 function startGame(np, skip = false) {
-  audio(); sfx.start(); S.mode = 'game'; clearFx(); SEL = null;
+  audio(); sfx.start(); S.mode = 'game'; clearFx(); fxReset(); SEL = null;
   G = { np, ph: 'p-demo', t: 0, pi: 0, pl: [newPlayer(0)], life: LIFE_MAX, kills: 0, bossTired: false, en: [], eid: 0, wave: 0, wt: 0, sched: [], shots: [], eshots: [], hurtLog: [], merge: null, mergeKill: false, calls: [], banner: null,
     marks: [], feed: [], maxCombo: 0, dummyAt: 0, dim: 0, slow: 0, dslow: 0, white: 0, hurt: 0, absent: 0, paused: false, cleared: false, grade: '', gapT: 0,
-    dodges: 0, dodgeLog: [], rest: [0, 0], dead: [], fistLog: [], stageE: null, finT: 0, finOpen: false, finGift: false, enNoteN: 0, killBy: [], st: { fist: { n: 0, kills: 0, hits: 0 }, wave: { n: 0, kills: 0, hits: 0 }, mtw: { n: 0, kills: 0, hits: 0 } } };
+    dodges: 0, dodgeLog: [], rest: [0, 0], dead: [], fistLog: [], stageE: null, finT: 0, finOpen: false, finGift: false, enNoteN: 0, killBy: [], st: { fist: { n: 0, kills: 0, hits: 0 }, wave: { n: 0, kills: 0, hits: 0 }, mtw: { n: 0, kills: 0, hits: 0 }, pf: { n: 0, kills: 0, hits: 0 } }, clock: 0, timeout: false };
   if (np === 2) G.pl.push(newPlayer(1));
   tuneFor(np);
   for (const h of hands) h.side = h.c.x < 960 ? 0 : 1;
-  if (skip) setPh('b-intro');
+  setPh('b-intro');   // 261006: 연습 · 준비 화면 없이 바로 3 · 2 · 1(옛 연습 단계 p-demo · p-try · ready 는 코드만 남김)
 }
 function setPh(ph) {
   G.ph = ph; G.t = 0; for (const pl of G.pl) { pl.done = false; } if (ph === 'p-try' || ph === 'ready' || ph === 'b-intro') G.dead = [];
@@ -1433,15 +1468,24 @@ function setPh(ph) {
 function startStage(i) {
   const type = STAGES[i]; G.wave = i; G.wt = 0; G.gapT = 0; G.finT = 0; G.finOpen = false; G.feed = [];   // 앞 몬스터 「처치!」 띠가 새 몬스터 이름표와 겹치지 않게
   if (type === 'boss') { startBoss(); return; }
-  const e = spawn(type, -1); G.stageE = e; G.banner = { text: `${i + 1} / ${STAGES.length}  ${ENAME[type]}`, t: 0, low: true };
+  const e = spawn(type, -1); G.stageE = e; if (DODGE) G.banner = { text: `${i + 1} / ${STAGES.length}  ${ENAME[type]}`, t: 0, low: true };   // 261006: 이름 띠는 옛 판에서만
   burst(960, STAGE_Y[type], 34, '#fff', 900, .5); ringWave(960, STAGE_Y[type], 40, type === 'golem' ? 520 : 440, 9, ORANGE_L, .55); sfx.pop();
   setPh('b-wave');
 }
-function startBoss() { G.wave = 2; G.banner = { text: `${STAGES.length} / ${STAGES.length}  ${ENAME.boss}`, t: 0, low: true }; G.stageE = spawn('boss', 0); setPh('b-boss'); sfx.boss(); }
+function startBoss() { G.wave = 2; if (DODGE) G.banner = { text: `${STAGES.length} / ${STAGES.length}  ${ENAME.boss}`, t: 0, low: true }; G.stageE = spawn('boss', 0); setPh('b-boss'); sfx.boss(); }
 function gradeOf() { return G.cleared ? (G.life >= 4 ? '대마법사' : '마법사') : G.kills >= 2 ? '견습 마법사' : '마법 입문자'; }function practiceGauge(pl, key) {
   let m = 0; for (const h of pl.hands) m = Math.max(m, clamp((h.thrR - 1) / (THR_RATIO - 1), 0, 1)); return m;
 }
 
+// 261006: 게임에서도 체험과 같은 편 손 불기운(주인공 손만 · 다른 사람 손은 불기운 없음)
+function stepGameFire(dt) {
+  X.t += dt; const mine = new Set(); for (const pl of G.pl) for (const h of pl.hands) mine.add(h.id);
+  for (const h of liveHands()) {
+    const el = xpElig(h); h.xa = el ? (h.xa || 0) + dt : Math.max(0, (h.xa || 0) - dt * 2); h.xs = xpStrength(h.xa);
+    h.noPf = !mine.has(h.id) || G.ph === 'fin' || G.ph === 'over'; stepPalmUp(h, dt, xpHist(h));
+  }
+  if (FX.flame !== 'old') pfUpdate(dt);
+}
 function stepGame(dt) {
   G.t += dt;
   const two = NP() === 2;
@@ -1455,6 +1499,7 @@ function stepGame(dt) {
   G.absent = here ? 0 : G.absent + dt;
   if (G.absent > (ph0 === 'ready' ? ABSENT_READY : ABSENT_GAME) && G.ph !== 'result') { G.lastExit = { ph: ph0, t: +G.t.toFixed(1) }; toIdle(); return; }
   for (const pl of G.pl) { stepSpirit(pl, dt); detectPlayer(pl, dt); pl.g = lerp(pl.g, G.ph === 'p-try' ? practiceGauge(pl, PRACTICE[G.pi]) : 0, 1 - Math.exp(-dt * 12)); pl.comboPop = Math.max(0, pl.comboPop - dt * 4); if (now - pl.comboT > 3) pl.combo = 0; }
+  stepGameFire(dt);
   G.calls.forEach(c => c.t += dt); G.calls = G.calls.filter(c => c.t < .8);
   G.marks.forEach(m => m.t += dt); G.marks = G.marks.filter(m => m.t < (m.kill ? .45 : .28));
   G.feed.forEach(f => f.t += dt); G.feed = G.feed.filter(f => f.t < 1.6);
@@ -1506,6 +1551,15 @@ function stepGame(dt) {
       if ((e0 < SK.wave.cost && pl.en >= SK.wave.cost) || (e0 < SK.mtw.cost && pl.en >= SK.mtw.cost)) { pl.enFlash = 1; pl.flashN = (pl.flashN || 0) + 1; }   // 사용자 261004: 손바닥(20) · 두 손바닥(50)을 다시 쓸 수 있게 되면 기력 바가 반짝인다
       pl.enFlash = Math.max(0, (pl.enFlash || 0) - dt / .9);
       if (ph !== 'b-intro' && !G.merge) for (const ev of pl.evs) cast(pl, ev, false);
+      if ((ph === 'b-wave' || ph === 'b-boss') && !G.merge && !G.paused) for (const h of pl.hands) {   // 편 손 불기운이 저절로 날아간다(손마다 PF_GAP초)
+        if (!h.puOn || (h.pf || 0) < .6 || now < (h.pfT || 0) || !pickTarget(pl)) continue;
+        h.pfT = now + PF_GAP; const F = h.pfx, tip = F && F.sp ? F.sp[Math.min(F.sp.length - 1, 3)] : h.c;
+        cast(pl, { k: 'pf', at: { x: tip.x, y: tip.y, L: h.L, h } }, false);
+      }
+    }
+    if ((ph === 'b-wave' || ph === 'b-boss') && !G.paused && !G.cleared) {   // 261006: 제한 시간(GAME_T초 · 사람이 안 보여 멈춘 동안은 흐르지 않는다)
+      G.clock += dt;
+      if (G.clock >= GAME_T) { G.timeout = true; setPh('over'); sfx.no(); for (const e of G.en) e.flee = true; G.shots = []; G.eshots = []; return; }
     }
     if (ph === 'b-intro') {   // 3 · 2 · 1 카운트다운(각 1초) → 「실전 시작」 카드(1.4초) → 첫 몬스터(꼬마)
       const n = Math.floor(G.t) + 1;
@@ -1523,7 +1577,7 @@ function stepGame(dt) {
       if (two) stepMerge(dt);
       else if (b && b.hp <= finFloor(b) && !G.finOpen) { G.finT = (G.finT || 0) + wdt; if (G.finT > FINISH_WAIT) G.finOpen = true; }   // 1인: FINISH_WAIT초가 지나도 못 하면 주먹으로도 끝낼 수 있다
       // 시간 초과 실패 없음: BOSS_TIRED(피드백3 2차: 40 → 18초)가 지나면 보스가 지쳐 받는 피해 2배(2인은 합체 없이도 마무리 가능)
-      if (G.t > BOSS_TIRED && !G.bossTired && G.ph === 'b-boss') { G.bossTired = true; G.banner = { text: '보스 약해짐', t: 0 }; sfx.tired(); }
+      if (G.t > BOSS_TIRED && !G.bossTired && G.ph === 'b-boss') { G.bossTired = true; if (DODGE) { G.banner = { text: '보스 약해짐', t: 0 }; sfx.tired(); } }   // 261006: 지친 보스는 글자 없이 피해만 2배
     }
     if (G.ph[0] === 'b') { updateEnemies(wdt); updateShots(wdt); updateEShots(wdt); }
     return;
@@ -1531,8 +1585,9 @@ function stepGame(dt) {
   if (ph === 'fin') {
     G.slow = Math.max(0, G.slow - dt);
     if (!G.finPop && G.t > .7) { G.finPop = true; ringWave(960, FIN_Y, 72, 1100, 8, '#fff', 1.2); ringWave(960, FIN_Y, 48, 800, 10, ORANGE_L, 1.4); }   // 마크가 나타나는 순간 둘레로 퍼지는 점
-    if (G.t > 5.6) { G.grade = gradeOf(); setPh('result'); sfx.end(); } return; }
-  if (ph === 'over') { updateEnemies(dt); if (G.t > 2.6) { G.grade = gradeOf(); setPh('result'); } return; }
+    if (!G.endSfx && G.t > 2.2) { G.endSfx = true; sfx.end(); }
+    if (G.t > END_FIN) { G.grade = gradeOf(); G.lastExit = { ph: 'fin', t: +G.t.toFixed(1) }; toIdle(); } return; }   // 261006: 결과 화면(점수 · 등급) 없이 「성공」 뒤 체험으로
+  if (ph === 'over') { updateEnemies(dt); if (G.t > END_OVER) { G.grade = gradeOf(); G.lastExit = { ph: 'over', t: +G.t.toFixed(1) }; toIdle(); } return; }
   if (ph === 'result') { if (G.t > 7) toIdle(); }
 }
 // 손이 화면 위쪽 가장자리 밖으로 나갔는지: 방금 놓친 손(0.25~0.6초)의 마지막 자리가 위쪽이거나, 위쪽에서 사라진 지 TOP_GRACE초 안
@@ -1590,6 +1645,7 @@ function drawHandIcon(x, y, s, on) {
   c.save(); c.translate(x - 13 * s, y + 6 * s); c.rotate(-.7); c.beginPath(); c.roundRect(-3 * s, -14 * s, 6 * s, 16 * s, 3 * s); c.fill(); c.restore(); c.restore();
 }
 function drawSeen() {
+  if (!DODGE) return;   // 261006: 손 · 얼굴 인식 아이콘은 피하기 옛 판에서만(손은 불기운 · 손 가이드로 보인다)
   if (!G || !['p-try', 'p-win', 'ready', 'b-intro', 'b-wave', 'b-boss'].includes(G.ph)) return;
   const two = NP() === 2;
   G.pl.forEach(pl => {
@@ -1644,11 +1700,12 @@ function drawPractice() {
    지금 할 동작 하나를 화면 위쪽 가운데에 큰 글자로(실사 위에서 읽히게 위쪽 그늘 띠). 손 상태가 바뀌면 다음 단계로, 성공하면 「좋아요」.
    체험 모드 = 1칸(stepExp가 정함) · 게임 연습 = 1인 1칸 / 2인 왼쪽 · 오른쪽 2칸(stepGuide가 정함). 글자가 바뀔 때만 짧게 바꿔 낀다 */
 const GD = { Y: 118, SIZE: 104, HOOK: 124, BAND: 250, BAND2: 340, TWO_DY: 26, HOLD: .45, IN: .18, OUT: .12 };
-const mkFade = () => ({ cur: '', a: 0, hold: 0, ok: false, hook: false, pop: 0 });
+const mkFade = () => ({ cur: '', a: 0, hold: 0, ok: false, hook: false, pop: 0, dim: false, dk: 1 });   // dim: 아무도 없을 때 은은하게(dk 가 XG.DIM 쪽으로 천천히)
 const GF = [mkFade(), mkFade()];
 function fadeTo(f, m, dt) {   // m = { s, ok, hook } 또는 null(없음)
   const s = m ? m.s : '';
   f.hold = Math.max(0, f.hold - dt); f.pop = Math.max(0, f.pop - dt / .25);
+  if (m) f.dim = !!m.dim; f.dk = lerp(f.dk, f.dim ? XG.DIM : 1, 1 - Math.exp(-dt * 3));
   if (s === f.cur) { f.a = Math.min(1, f.a + dt / GD.IN); f.ok = !!(m && m.ok); f.hook = !!(m && m.hook); return; }
   if (f.cur && f.hold > 0 && !(m && m.ok)) { f.a = Math.min(1, f.a + dt / GD.IN); return; }   // 손 모양이 문턱에서 흔들려도 글자가 깜빡이지 않게 최소 HOLD초는 둔다(「좋아요」는 바로)
   f.a -= dt / GD.OUT;
@@ -1695,7 +1752,7 @@ function drawGuideSlot(f, x, y, size, maxW) {
   if (S.mode === 'exp') { const gl = guideLines(f.cur, size, maxW); if (gl.lines.length === 2) { drawGuideLines(f, x, y, gl); return; } }
   c.save(); c.font = `900 ${size}px ${FONT}`;
   const tw = c.measureText(f.cur).width; if (tw > maxW) { size *= maxW / tw; c.font = `900 ${size}px ${FONT}`; }
-  const sc = 1 + .07 * easeOut(f.pop); c.globalAlpha = easeOut(f.a); c.translate(x, y); c.scale(sc, sc);
+  const sc = 1 + .07 * easeOut(f.pop); c.globalAlpha = easeOut(f.a) * (S.mode === 'exp' ? f.dk : 1); c.translate(x, y); c.scale(sc, sc);
   c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
   c.lineWidth = size * .1; c.strokeStyle = 'rgba(0,0,0,.6)'; c.strokeText(f.cur, 0, 0);
   if (f.ok || f.hook) { c.shadowColor = 'rgba(255,127,50,.95)'; c.shadowBlur = size * .45; } else { c.shadowColor = 'rgba(0,0,0,.6)'; c.shadowBlur = size * .2; }
@@ -1715,11 +1772,11 @@ function drawGuideLines(f, x, y, gl) {
 }
 function drawTopGuide() {
   const two = S.mode === 'game' && NP() === 2, fs = two ? GF : [GF[0]];
-  const ba = Math.max(...fs.map(f => f.cur ? f.a : 0)); if (ba <= .01) return;
-  const twoL = S.mode === 'exp' && GF[0].cur && guideLines(GF[0].cur, GF[0].hook ? GD.HOOK : GD.SIZE, 1560).lines.length === 2;
+  const ba = Math.max(...fs.map(f => f.cur ? f.a * (S.mode === 'exp' ? f.dk : 1) : 0)); if (ba <= .01) return;
+  const twoL = S.mode === 'exp' && GF[0].cur && guideLines(GF[0].cur, GD.HOOK, 1560).lines.length === 2;
   guideBand(ba, two ? 300 : twoL ? GD.BAND2 : GD.BAND);
   if (two) fs.forEach((f, i) => drawGuideSlot(f, i ? 1440 : 480, 192, 66, 860));   // 2인: 왼쪽 위 「연습」 표시 아래
-  else { const f = GF[0]; drawGuideSlot(f, 960, GD.Y, f.hook ? GD.HOOK : GD.SIZE, S.mode === 'game' ? 1140 : 1560); }
+  else { const f = GF[0]; drawGuideSlot(f, 960, GD.Y, S.mode === 'exp' || f.hook ? GD.HOOK : GD.SIZE, S.mode === 'game' ? 1140 : 1560); }
 }
 // 연습 표시: 화면 테두리 점선 + 왼쪽 위 「연습 n/4」 (연습 단계 내내 · 실전에는 없음)
 function drawPracticeBadge() {
@@ -1749,6 +1806,7 @@ function drawReady() {
 // 실전 시작: 3 · 2 · 1 → 「실전 시작」
 function drawCountdown() {
   const c = ctx, t = G.t; c.fillStyle = `rgba(0,0,0,${t < 3 ? .5 : .5 * clamp((INTRO_T - t) / .4, 0, 1)})`; c.fillRect(0, 0, W, H);
+  if (t >= 3 && !DODGE) return;   // 261006: 「실전 시작 · 조준은 자동 · 날아오면 고개로 피하기」 카드는 옛 판에서만
   if (t < 3) {
     const n = 3 - Math.floor(t), f = t % 1, s = lerp(1.7, 1, easeOut(f / .25)), a = f > .8 ? 1 - (f - .8) / .2 : 1;
     ring(960, 520, 230 + 120 * easeOut(f), (1 - f) * .9, 12, ORANGE);
@@ -1833,13 +1891,13 @@ function drawEnemies() {
     outlined(e.px, e.py, bx.R * s, draw, tele ? { outer: warn && blink > .5 ? '#fff' : RED, glow: RED, glowB: warn ? 50 : 30, wo: 13 * big, wi: 6 * big } : { wo: 11 * big, wi: 6 * big });
     if (e.side === -1 && e.type !== 'boss' && e.z > .25) {   // 차례 몬스터(꼬마 · 골렘): 이름표 + 체력 막대(크게)
       const y = e.py - bx.top * s - 34, w = e.type === 'golem' ? 300 : 260, x = e.px - w / 2, a = clamp((e.z - .25) / .5, 0, 1);
-      ctx.save(); ctx.globalAlpha *= a; nameTag(e.px, y - 50, ENAME[e.type], 1, 38);
+      ctx.save(); ctx.globalAlpha *= a; if (DODGE) nameTag(e.px, y - 50, ENAME[e.type], 1, 38);   // 261006: 이름표는 옛 판에서만(체력 막대는 그대로)
       ctx.fillStyle = 'rgba(0,0,0,.7)'; ctx.beginPath(); ctx.roundRect(x - 8, y - 14, w + 16, 28, 14); ctx.fill(); ctx.fillStyle = ORANGE; ctx.beginPath(); ctx.roundRect(x, y - 8, w * clamp(e.hp / e.max, 0, 1), 16, 8); ctx.fill(); ctx.restore();
     }
-    else if (e.type === 'mini' && e.lead && e.z > .3 && !tele) nameTag(e.px, e.py - bx.top * s - 30, ENAME.mini, 1, 30);
-    if (e.type === 'dummy') nameTag(e.px, e.py - bx.top * s - 34, ENAME.dummy, 1, 30);
+    else if (DODGE && e.type === 'mini' && e.lead && e.z > .3 && !tele) nameTag(e.px, e.py - bx.top * s - 30, ENAME.mini, 1, 30);
+    if (DODGE && e.type === 'dummy') nameTag(e.px, e.py - bx.top * s - 34, ENAME.dummy, 1, 30);
     if (e.type === 'golem' && e.z > .25 && e.side !== -1) { const y = e.py - bx.top * s - 30; nameTag(e.px, y - 38, ENAME.golem, 1, 30); const w = 180, x = e.px - w / 2; ctx.fillStyle = 'rgba(0,0,0,.7)'; ctx.beginPath(); ctx.roundRect(x - 6, y - 10, w + 12, 20, 10); ctx.fill(); ctx.fillStyle = ORANGE; ctx.beginPath(); ctx.roundRect(x, y - 6, w * clamp(e.hp / e.max, 0, 1), 12, 6); ctx.fill(); }
-    if (e.type === 'boss' && e.t > 1.2) { const w = 560, x = 960 - w / 2, y = e.py - bx.top * s - 34; ctx.fillStyle = 'rgba(0,0,0,.7)'; ctx.beginPath(); ctx.roundRect(x - 10, y - 18, w + 20, 36, 18); ctx.fill(); ctx.fillStyle = ORANGE; ctx.beginPath(); ctx.roundRect(x, y - 9, w * clamp(e.hp / e.max, 0, 1), 18, 9); ctx.fill(); if (NP() === 2) { ctx.fillStyle = '#fff'; ctx.fillRect(x + w * MERGE_AT - 3, y - 16, 6, 32); } else if (!G.finOpen) { ctx.fillStyle = '#fff'; ctx.fillRect(x + w * FINISH_AT - 3, y - 16, 6, 32); } nameTag(x - 130, y, ENAME.boss, 1, 32); }   // 흰 눈금 = 두 손바닥으로 마무리하는 선
+    if (e.type === 'boss' && e.t > 1.2) { const w = 560, x = 960 - w / 2, y = e.py - bx.top * s - 34; ctx.fillStyle = 'rgba(0,0,0,.7)'; ctx.beginPath(); ctx.roundRect(x - 10, y - 18, w + 20, 36, 18); ctx.fill(); ctx.fillStyle = ORANGE; ctx.beginPath(); ctx.roundRect(x, y - 9, w * clamp(e.hp / e.max, 0, 1), 18, 9); ctx.fill(); if (NP() === 2) { ctx.fillStyle = '#fff'; ctx.fillRect(x + w * MERGE_AT - 3, y - 16, 6, 32); } else if (!G.finOpen) { ctx.fillStyle = '#fff'; ctx.fillRect(x + w * FINISH_AT - 3, y - 16, 6, 32); } if (DODGE) nameTag(x - 130, y, ENAME.boss, 1, 32); }   // 흰 눈금 = 두 손바닥으로 마무리하는 선
     if (e.hitT > 0 && e.type !== 'boss') glowCircle(e.px, e.py, bx.R * .9 * s, e.hitT * .9, '255,255,255');
     if (warn) drawTele(e, 'badge');
     ctx.restore();
@@ -1957,7 +2015,8 @@ function drawFaceGhost() {
 function drawShots() {
   for (const s of G.shots) {
     const x = s.cx || s.x0, y = s.cy || s.y0, k = clamp(s.t / s.dur, 0, 1);
-    if (s.k === 'wave') { glowCircle(x, y, 120 - 50 * k, 1); glowCircle(x, y, 50, 1, '255,255,255'); ring(x, y, 46 - 16 * k, 1, 6, '#fff'); }
+    if (s.k === 'pf') { glowCircle(x, y, 70, .9, '255,127,50'); glowCircle(x, y, 30, 1, '255,214,90'); glowCircle(x, y, 12, 1, '255,246,216'); }   // 작은 불덩이(진한 주황 → 노랑 → 흰 심지)
+    else if (s.k === 'wave') { glowCircle(x, y, 120 - 50 * k, 1); glowCircle(x, y, 50, 1, '255,255,255'); ring(x, y, 46 - 16 * k, 1, 6, '#fff'); }
     else { const sc = lerp(1.25, .6, k); logoDraw(x, y, 300 * sc, 1, .9); }
   }
   const M = G.merge;
@@ -2041,6 +2100,14 @@ function drawLives() {
     c.restore();
   }
 }
+// 남은 시간 막대(261006): 가운데 위 막대 하나 · 숫자 없음 · 흰빛(O5)으로 몬스터 체력 막대(주황)와 구별 · 마지막 8초는 주황으로 바뀌어 맥박(시간이 줄어든다는 이유가 있는 움직임)
+function drawClock() {
+  const c = ctx, w = 760, h = 26, x = 960 - w / 2, y = DODGE ? 140 : 62, p = clamp(1 - G.clock / GAME_T, 0, 1), low = GAME_T - G.clock < 8 && !G.cleared && G.ph !== 'over';
+  c.save(); c.fillStyle = 'rgba(0,0,0,.6)'; c.beginPath(); c.roundRect(x - 12, y - h / 2 - 12, w + 24, h + 24, (h + 24) / 2); c.fill();
+  c.fillStyle = 'rgba(255,255,255,.16)'; c.beginPath(); c.roundRect(x, y - h / 2, w, h, h / 2); c.fill();
+  if (p > .005) { c.fillStyle = low ? ORANGE_L : 'rgba(255,246,240,.92)'; if (low) { c.shadowColor = ORANGE_L; c.shadowBlur = 14 + 14 * (.5 + .5 * Math.sin(now * 9)); } c.beginPath(); c.roundRect(x, y - h / 2, Math.max(h, w * p), h, h / 2); c.fill(); }
+  c.restore();
+}
 function drawGame() {
   const c = ctx, ph = G.ph, two = NP() === 2;
   if (ph[0] === 'p') { drawPractice(); return; }
@@ -2051,9 +2118,12 @@ function drawGame() {
     drawEnemies();
     if (ph !== 'over') G.pl.forEach(drawSpirit);
     drawShots();
-    for (const pl of G.pl) for (const h of pl.hands) drawPalm(h, pl);
+    // 261006: 손은 체험과 같은 문법(편 손 불기운 · 불꽃 주먹 · 은은한 손 가이드). 옛 흰 원반 · 「주먹」 「손바닥」 이름표는 ?dodge=1 옛 판에서만
+    if (DODGE) for (const pl of G.pl) for (const h of pl.hands) drawPalm(h, pl);
+    else if (FX.flame === 'haze') { hzPalmDraw(); for (const h of liveHands()) drawPalmFireN(h); }
     drawFire();
-    if (ph !== 'over') { drawFaceGhost(); drawEShots(); }
+    if (!DODGE) for (const h of liveHands()) drawEye(h, Math.max(.4, h.xs || 0));
+    if (ph !== 'over' && DODGE) { drawFaceGhost(); drawEShots(); }
   }
 }
 // 피날레(피드백2): 마크 전체가 작게 나타나 커지며 자리 잡는다 + 둘레로 점 입자(마크와 별개)
@@ -2090,16 +2160,19 @@ function drawGameTop() {
     // 공격 직전(「!」)인 적이 있으면: 화면 가장자리 붉은 맥박
     const warnN = G.en.filter(e => e.alive && !e.flee && e.atk === 'tele' && e.ak >= ATK_TELE[e.type] - ATK_WARN).length;
     if (warnN) { const a = .3 * (.5 + .5 * Math.sin(now * 12)); c.save(); const g = c.createRadialGradient(960, 540, 520, 960, 540, 1150); g.addColorStop(0, 'rgba(210,32,48,0)'); g.addColorStop(1, `rgba(210,32,48,${a})`); c.fillStyle = g; c.fillRect(0, 0, W, H); c.restore(); }
-    drawLives();
-    if (ph !== 'b-intro') drawStages();   // 실전 표시: 왼쪽 위 「n / 3」 + 몬스터 아이콘 3개
-    for (const pl of G.pl) drawEnergy(pl);
+    if (DODGE) drawLives();
+    if (ph !== 'b-intro') { drawStages(); drawClock(); }   // 실전 표시: 왼쪽 위 「n / 3」 + 몬스터 아이콘 3개 · 가운데 위 남은 시간 막대(261006)
+    if (DODGE) for (const pl of G.pl) drawEnergy(pl);
     G.feed.forEach((f, i) => { const a = clamp(f.t / .1, 0, 1) * clamp((1.6 - f.t) / .3, 0, 1), y = 150 + (G.feed.length - 1 - i) * 66, s = f.t < .12 ? lerp(1.4, 1, f.t / .12) : 1; c.save(); c.globalAlpha = a; c.translate(960, y); c.scale(s, s); c.font = `900 50px ${FONT}`; const w = c.measureText(f.text).width + 70; c.restore(); c.save(); c.globalAlpha = a; pill(960, y, w * s, 62, 'rgba(255,127,50,.88)'); txt(f.text, 960, y, 50 * s, '#fff', 'center', 900); c.restore(); });
     if (ph === 'b-intro') drawCountdown();
-    if (G.banner) { const b = G.banner, a = clamp(b.t / .2, 0, 1) * clamp((1.6 - b.t) / .4, 0, 1); c.save(); c.globalAlpha = a; if (b.low) { const sc = b.t < .2 ? lerp(1.3, 1, easeOut(b.t / .2)) : 1; c.translate(960, 868); c.scale(sc, sc); c.font = `900 84px ${FONT}`; const bw = c.measureText(b.text).width + 120; pill(0, 0, bw, 130, 'rgba(255,127,50,.92)'); txt(b.text, 0, 2, 84, '#fff', 'center', 900); } else txt(b.text, 960, 470, 170, '#fff', 'center', 900); c.restore(); }   // 차례 몬스터 등장: 아래쪽 「n / 3 이름」(몬스터를 가리지 않게)
-    G.pl.forEach(drawEnNote);
-    if (ph === 'b-boss' && !two) {   // 1인 마무리 안내
+    if (G.banner) { const b = G.banner, a = clamp(b.t / .2, 0, 1) * clamp((1.6 - b.t) / .4, 0, 1); c.save(); c.globalAlpha = a; if (b.low) { const sc = b.t < .2 ? lerp(1.3, 1, easeOut(b.t / .2)) : 1; c.translate(960, 868); c.scale(sc, sc); c.font = `900 84px ${FONT}`; const bw = c.measureText(b.text).width + 120; pill(0, 0, bw, 130, 'rgba(255,127,50,.92)'); txt(b.text, 0, 2, 84, '#fff', 'center', 900); } else txt(b.text, 960, 470, 170, '#fff', 'center', 900); c.restore(); }   // (옛 판) 차례 몬스터 등장 띠
+    if (DODGE) G.pl.forEach(drawEnNote);
+    if (ph === 'b-boss' && !two) {   // 1인 마무리 안내(261006: 글자 대신 두 손바닥 밀기 그림 하나 · 보스 아래)
       const boss = G.en.find(e => e.type === 'boss');
-      if (boss && boss.t > 1.6 && !G.banner && !G.finOpen && boss.hp <= finFloor(boss)) { pill(960, 880, 900, 84, 'rgba(0,0,0,.72)'); txt('마무리: 두 손바닥', 960, 880, 52, '#fff', 'center', 800); }
+      if (boss && boss.t > 1.6 && !G.banner && !G.finOpen && boss.hp <= finFloor(boss)) {
+        if (boss.finAt === undefined) boss.finAt = now; const bx = 960, by = 905, bs = 210, a = clamp((now - boss.finAt) / .3, 0, 1);
+        c.save(); c.globalAlpha = a; c.beginPath(); c.roundRect(bx - bs * .9, by - bs / 2, bs * 1.8, bs, 40); c.fillStyle = 'rgba(0,0,0,.6)'; c.fill(); c.strokeStyle = ORANGE; c.lineWidth = 5; c.stroke(); c.clip(); drawDemo('mtw', now, bx, by + 10, bs * .2, 1); c.restore();
+      }
     }
     if (ph === 'b-boss' && two) {
       const boss = G.en.find(e => e.type === 'boss');
@@ -2110,18 +2183,18 @@ function drawGameTop() {
     }
     if (!G.banner && ph !== 'b-intro') {
       if (two) G.pl.forEach(pl => { if (pl.absent > .8) sideMsg(pl.i, `${SIDE[pl.i]}: 손을 보여 주세요`); });
-      else if (G.pl[0].absent > .8) drawGuideHand('손을 보여 주세요');
-      // 얼굴이 1.5초 넘게 안 보이면(손은 보임): 피하기 판정을 못 하니 알려 준다
-      if (faceJudge()) G.pl.forEach(pl => { if (pl.absent === 0 && pl.noFace > 1.5) { const r = region(pl.i), m = two ? `${SIDE[pl.i]}: 얼굴이 안 보입니다` : '얼굴이 안 보입니다'; c.save(); c.font = `800 44px ${FONT}`; const w = c.measureText(m).width + 70; c.restore(); pill(r.cx, 860, w, 76, 'rgba(0,0,0,.7)'); txt(m, r.cx, 860, 44, '#fff', 'center', 800); } });
+      else if (G.pl[0].absent > .8) drawGuideHand(XMSG);   // 261006: 체험과 같은 한 줄 「손을 펴 보세요」
+      // 얼굴이 1.5초 넘게 안 보이면(손은 보임): 피하기 판정을 못 하니 알려 준다(옛 판)
+      if (DODGE && faceJudge()) G.pl.forEach(pl => { if (pl.absent === 0 && pl.noFace > 1.5) { const r = region(pl.i), m = two ? `${SIDE[pl.i]}: 얼굴이 안 보입니다` : '얼굴이 안 보입니다'; c.save(); c.font = `800 44px ${FONT}`; const w = c.measureText(m).width + 70; c.restore(); pill(r.cx, 860, w, 76, 'rgba(0,0,0,.7)'); txt(m, r.cx, 860, 44, '#fff', 'center', 800); } });
     }
     if (G.hurt > 0) { c.save(); const g = c.createRadialGradient(960, 540, 420, 960, 540, 1150); g.addColorStop(0, 'rgba(210,32,48,0)'); g.addColorStop(1, `rgba(210,32,48,${.8 * G.hurt})`); c.fillStyle = g; c.fillRect(0, 0, W, H); c.restore(); }
   } else if (ph === 'over') {
     c.fillStyle = `rgba(0,0,0,${.6 * clamp(G.t / .5, 0, 1)})`; c.fillRect(0, 0, W, H);
-    txt('소탕 실패', 960, 480, 190, '#fff', 'center', 900); txt(G.timeout ? '시간 종료' : '생명이 모두 사라졌습니다', 960, 640, 56, '#D9D9D9', 'center', 700);
+    c.save(); c.globalAlpha = easeOut(G.t / .4); txt(G.timeout ? '시간 끝' : '끝', 960, 520, 190, '#fff', 'center', 900); c.restore();   // 261006: 한 줄만
   } else if (ph === 'fin') {
     const t = G.t; c.fillStyle = `rgba(0,0,0,${.55 * clamp(t / .8, 0, 1)})`; c.fillRect(0, 0, W, H);
     if (t > .7) drawFinLogo(t - .7);
-    if (t > 2.4) { c.save(); c.globalAlpha = easeOut((t - 2.4) / .5); txt('레거시 보스 소탕', 960, 800, 72, '#FFD8C1', 'center', 800); c.restore(); }
+    if (t > 2.2) { const k = easeOut((t - 2.2) / .4), sc = lerp(1.25, 1, k); c.save(); c.globalAlpha = k * clamp((END_FIN - t) / .4, 0, 1); c.translate(960, 850); c.scale(sc, sc); txt('성공', 0, 0, 150, '#fff', 'center', 900); c.restore(); }   // 261006: 「레거시 보스 소탕」 · 결과 점수 대신 「성공」 한 줄
   } else if (ph === 'result') {
     c.fillStyle = 'rgba(0,0,0,.72)'; c.fillRect(0, 0, W, H); const e = easeOut(G.t / .5);
     c.save(); c.globalAlpha = e; txt(G.cleared ? '소탕 완료' : '소탕 실패', 960, 330, 150, '#fff', 'center', 900);
@@ -2138,7 +2211,7 @@ function drawDebug() {
   if (G) for (const pl of G.pl) L.push(`P${pl.i} 손 ${pl.hands.length} 기력 ${pl.en | 0} 동그라미 ${pl.circ} ${pl.circT.toFixed(1)} 콤보 ${pl.combo}${pl.pend ? ' 손바닥대기' : ''} 얼굴 ${faceVis(pl.i) ? `${FS[pl.i].x | 0},${FS[pl.i].y | 0} 폭 ${FS[pl.i].w | 0}` : '없음'}`);
   L.push(`인식 손 ${perf.hand.toFixed(1)}ms · 얼굴 ${faceOK ? (S.mode === 'game' ? perf.face.toFixed(1) + 'ms (2프레임마다)' : S.mode === 'exp' && expFace ? perf.face.toFixed(1) + `ms (체험 ${FACE_EXP_EVERY}프레임마다 · 얼굴 ${XF.length} · 오라 점 ${AP.length})` : '멈춤') + ' · 호출 ' + perf.faceN + '회' : mouseMode ? '시험 입력' : '모델 없음'}${G ? ' · 회피 ' + G.dodges : ''}`);
   if (S.mode === 'exp') {
-    L.push(`체험 · 손 ${liveHands().length} (온전 ${liveHands().filter(h => h.xa >= XP.FULL).length}) · 안내 ${X.gi + 1} ${XSTEP[X.gi]} · 터짐 ${X.burstN} · 밀기 ${X.pushN} (한 손만 ${X.push1N}) · 하늘 ${X.upN} · 마주 ${X.arcN}(전기 ${ELA.filter(e => e.on).length}쌍 · 스파크 ${ELP.length}) · 연출 ${FX.aura}/${FX.flame} · 게이지 ${X.gauge.toFixed(2)} · 쿨다운 ${Math.max(0, X.cool - now).toFixed(1)}초`);
+    L.push(`체험 · 손 ${liveHands().length} (온전 ${liveHands().filter(h => h.xa >= XP.FULL).length}) · 안내 ${X.played ? '숨김' : X.away > XG.AWAY ? '은은히' : '보임'} · 터짐 ${X.burstN} · 밀기 ${X.pushN} (한 손만 ${X.push1N}) · 불기운 ${X.upN} · 마주 ${X.arcN}(전기 ${ELA.filter(e => e.on).length}쌍 · 스파크 ${ELP.length}) · 연출 ${FX.aura}/${FX.flame} · 게이지 ${X.gauge.toFixed(2)} · 쿨다운 ${Math.max(0, X.cool - now).toFixed(1)}초`);
     L.push(`손바닥 약속 ${palmCal.c === 1 ? '기본' : '반대'}${HD_FLIP < 0 ? '(palmflip)' : ''} · 굽힘 투표 ${palmCal.v}/${palmCal.n} · 3D y ${worldY.s === 1 ? '그대로' : '뒤집음'} (${worldY.v})`);
     for (const s of arcDebugLines()) L.push(s);
     for (const h of liveHands()) { const j = h.j3; L.push(`  손#${h.id} 하늘 ${j && j.n ? j.up.toFixed(2) : '모름'} 정면 ${j && j.n ? j.cam.toFixed(2) : '-'} (${j ? j.src || '-' : '3D 없음'}${h.j3 && h.lp && h.lp.hd ? ' ' + h.lp.hd.name + ' ' + h.lp.hd.score.toFixed(2) : ''}) 굽힘 ${j ? j.curl.toFixed(2) : '-'} 3D펴짐 ${h.open3 !== undefined ? h.open3.toFixed(2) : '-'} · 밀기 x${(h.xpR || 1).toFixed(2)} 폭 x${(h.xpRw || 1).toFixed(2)}${h.puOn ? ' · 불꽃' : ''}`); }
@@ -2644,19 +2717,20 @@ $('avOn').onclick = () => { ADM.lastAct = Date.now(); crowdSet(true); admPaint()
      손을 옆으로 크게 움직이는 것에는 아무 연출도 없다
    손은 모두 같다(플레이어 · 좌우 배정 없음, 최대 4손). 문턱: 크기 HAND_MIN 이상 · 화면 가장자리 10% 밖 · 0.5초 넘게 잡힌 손만 온전히(그 전엔 약하게)
    빠진 것: 몬스터 · 피하기 · 기력 · 생명 · 점수 · 결과 · 효과음(무음)
-   오른쪽 아래 「게임 하기」에 손을 대고 있으면(0.3초 머문 뒤부터 2초 게이지) 게임(ME/WE 선택 → 연습 → 준비 → 실전)으로 · 게임이 끝나거나 손이 10초 없으면 돌아온다 */
+   오른쪽 아래 모서리 작은 「게임 하기」에 손을 대고 있으면(0.3초 머문 뒤부터 2초 게이지) 1인 게임(3 · 2 · 1 → 세 마리 · 제한 시간)으로 · 게임이 끝나거나 손이 10초 없으면 돌아온다
+   261006 단순화: 화면 글자는 「손을 펴 보세요」 한 줄 · 편 손 = 불기운(손바닥 방향 무관 · 흔들면 불꽃 꼬리) · 1 · 2 · 4는 안내 없는 숨은 재미 · 3 「손바닥을 하늘로」는 편 손 불기운에 합쳤다 */
 const XP = {
   EDGE: .1, WEAK: .3, FULL: .5,                      // 가장자리 10% 제외 · 잡히자마자 30% 세기로 시작 · 0.5초 뒤 온전히(0.15초에 걸쳐 올라감)
-  BURST_FIST: .25, BURST_WIN: .5, BURST_CD: .6,      // 1 터짐: 주먹 0.25초 이상 → 푼 뒤 0.5초 안에 손바닥 · 손마다 0.6초 쉼
+  BURST_FIST: .25, BURST_WIN: .5, BURST_CD: .6, BURST_SPD: 4,   // 1 터짐: 주먹 0.25초 이상(거의 제자리) → 푼 뒤 0.5초 안에 손바닥 · 손마다 0.6초 쉼
   OPEN: .5,                                          // 2 「편 손」 문턱(2D 펴짐)
   PUSH_WIN: .35, PUSH_R: 1.2, PUSH_RW: 1.12, PUSH_LAT: .12, PUSH_PAIR: 7, DUAL: .25, PUSH_CD: 3, PUSH_FACE: .6, PUSH_TURN: .9,   // 2 밀기: 0.35초 안 손 크기 1.2배 · 폭 1.12배(손을 돌려 커 보이는 것은 버림) · 그사이 위치 이동 화면 폭 12% 미만 · 그사이 손이 계속 카메라를 봄(3D 0.6 이상, 약 53도 안) · 두 손 거리 < 손 크기 x 7 · 0.25초 안 · 3초 쉼
-  BTN: { x: 1680, y: 900, w: 370, h: 124 }, DWELL: .3, FILL: 2, DRAIN: 1.6,   // 「게임 하기」: 0.3초 머문 뒤 2초 게이지 · 벗어나면 0.6초 안에 빈다
+  BTN: { x: 1786, y: 1006, w: 236, h: 76 }, DWELL: .3, FILL: 2, DRAIN: 1.6,   // 「게임 하기」(261006 단순화: 오른쪽 아래 모서리에 작게 · 판정 = 버튼 크기 그대로): 0.3초 머문 뒤 2초 게이지 · 벗어나면 0.6초 안에 빈다
   EMB: 9,
 };
 const PUSH_DUR = 2.8;
 function newEmber(init) { return { x: rnd(120, W - 120), y: init ? rnd(140, H - 60) : H + 30, vy: -rnd(16, 38), ph: rnd(0, 7), sw: rnd(12, 30), r: rnd(4.5, 7.5), a: rnd(.55, .9) }; }
 function newExp() { return { t: 0, emb: Array.from({ length: XP.EMB }, () => newEmber(true)), cool: -99, bloom: null, gauge: 0, dwell: 0, msg: 1, quiet: 9, small: false, burstN: 0, pushN: 0, push1N: 0, upN: 0, arcN: 0, log: [],
-  gi: 0, dm: 0, okUntil: -9, noHand: 9, away: 0, started: false, resetN: 0, hookOn: false, hookT: 0, hookN: 0, guide: '' }; }
+  away: 9, played: false, idleT: 0, guide: '' }; }
 let X = newExp();
 let ELA = [], ELP = [];   // 4 마주 보기: 손 짝 상태(전기 연출 포함) · 스파크 입자
 const xlog = e => { X.log.push(e); if (X.log.length > 200) X.log.shift(); };   // 시험 · 디버그용 기록(오래 켜 두어도 늘지 않게)
@@ -2778,22 +2852,25 @@ function xpPush(a, b) {   // 2 두 손바닥 밀기: 원본 심볼(통째)이 �
   } });
   xDone('push');
 }
-// 3 손바닥을 하늘로: 손바닥 쪽 법선이 위(up > 0.55)인 편 손을 0.25초 유지 → 불꽃이 피어 타오른다 · up < 0.3 · 주먹 · 손 놓침이면 꺼진다
-// 261006(사용자 「되고 있는지 잘 느껴지지 않아」): 실제 웹캠은 손 이름이 잠깐 약해지거나(방향 모름) 주먹 판정이 한 프레임 튀어 불기운이 깜빡였다.
-//   켜기: 유지 시간 0.3 → 0.25초 · 사이에 0.12초 넘게 끊기지 않으면 쌓인다 / 끄기: 꺼질 조건이 0.3초 이어질 때만(주먹 0.12초 · 방향 모름만이면 0.5초)
+/* 편 손 불기운(사용자 261006 단순화 「손을 펴 보세요」): 손을 펴서 들기만 하면 손바닥 위에 불기운이 피어오른다. 손바닥 방향(카메라 · 하늘)은 보지 않는다.
+   옛 「손바닥을 하늘로」(3D 법선 위 0.55 · 가만히 · 0.5초 넘게 잡힌 손)는 이 규칙의 한 경우로 합쳤다.
+   켜기: 펴짐(2D · 3D 중 큰 값) PF_ON.OPEN 이상 · 주먹 아님 · 주먹을 푼 지 FIST_GAP초 · 잡힌 지 AGE초 · 화면 가장자리 밖 · 마주 보기 판정 중이 아님 → HOLD초 유지(0.12초 넘게 끊기지 않으면 쌓인다)
+     흔드는 손(손 크기 2배/초 넘게 움직임)은 반쯤 편 손(OPEN_MOVE)도 켠다 · 가만히 있는 느슨한 주먹(펴짐 0.44 ~ 0.52)은 켜지 않는다 · 손을 펴는 순간부터 약 0.27초 · 새로 들어온 손은 약 0.33초
+   끄기(히스테리시스): 주먹 0.12초 · 마주 보기 전기 켜짐 0.12초 · 펴짐 OPEN_OFF 미만 0.3초 · 가장자리 0.3초 */
+const PF_ON = { OPEN: .6, OPEN_MOVE: .35, OPEN_OFF: .3, FIST_GAP: .15, AGE: .2, HOLD: .12, MOVE: 2 };
 function stepPalmUp(h, dt, q) {
-  const j = h.j3, up = j && j.n ? j.up : -1;
   if (xFist(h)) h.xfLast = now;
-  let sp = 0; { let o = null; for (const s of q) if (now - s.t >= .2) o = s; if (o) sp = Math.hypot(h.c.x - o.x, h.c.y - o.y) / Math.max(.05, now - o.t); }
+  let sp = 0; { let o = null; for (const s of q) if (now - s.t >= .15) o = s; if (o) sp = Math.hypot(h.c.x - o.x, h.c.y - o.y) / Math.max(.05, now - o.t); }
+  const sz = xpLr(h), opn = Math.max(h.open, h.open3 === undefined ? 0 : h.open3), moving = sp > PF_ON.MOVE * sz; h.wv = sp / Math.max(1, sz);
   const arcM = ELA.some(e => (e.ia === h.id || e.ib === h.id) && (e.on || e.m && e.seen && e.m.on)), arcE = arcM && ELA.some(e => e.on && (e.ia === h.id || e.ib === h.id));   // 4 마주 보기가 먼저(앞 프레임 판정)
-  const ready = j && j.n && !xFist(h) && j.open3 >= P3.OPEN3 && now - (h.xfLast || -9) > P3.FIST_GAP && xpElig(h) && (h.xa || 0) >= XP.FULL && !arcM;
+  const ready = !xFist(h) && opn >= (moving ? PF_ON.OPEN_MOVE : PF_ON.OPEN) && now - (h.xfLast || -9) > PF_ON.FIST_GAP && xpElig(h) && (h.xa || 0) >= PF_ON.AGE && !arcM && !h.noPf;
   if (!h.puOn) {
-    if (ready && up > P3.ON && sp < P3.STILL * xpLr(h)) { h.puT = (h.puT || 0) + dt; h.puMiss = 0; } else { h.puMiss = (h.puMiss || 0) + dt; if (h.puMiss > P3.MISS) h.puT = 0; }
-    if (h.puT >= P3.HOLD) { h.puOn = true; h.puT = 0; h.puOff = 0; h.pfBoost = 1; h.pfIgn = 0; X.upN++; xlog({ k: 'up', t: now, id: h.id, up: +up.toFixed(2) }); xDone('up'); }
+    if (ready) { h.puT = (h.puT || 0) + dt; h.puMiss = 0; } else { h.puMiss = (h.puMiss || 0) + dt; if (h.puMiss > P3.MISS) h.puT = 0; }
+    if (h.puT >= PF_ON.HOLD) { h.puOn = true; h.puT = 0; h.puOff = 0; h.pfBoost = 1; h.pfIgn = 0; X.upN++; xlog({ k: 'up', t: now, id: h.id, open: +opn.toFixed(2) }); xDone('up'); }
   } else {
-    const fist = xFist(h), lost = !j || !j.n, bad = fist || !xpElig(h) || arcE || (!lost && up < P3.OFF);
-    h.puOff = bad || lost ? (h.puOff || 0) + dt : 0;
-    if (h.puOff > (fist || arcE ? P3.FIST_OFF : bad ? P3.OFF_HOLD : P3.LOST_HOLD)) { h.puOn = false; h.puT = 0; h.puOff = 0; }
+    const fist = xFist(h), shut = opn < PF_ON.OPEN_OFF, bad = fist || arcE || h.noPf || shut || !xpElig(h);
+    h.puOff = bad ? (h.puOff || 0) + dt : 0;
+    if (h.puOff > (fist || arcE || h.noPf ? P3.FIST_OFF : P3.OFF_HOLD)) { h.puOn = false; h.puT = 0; h.puOff = 0; }
   }
   h.pf = clamp((h.pf || 0) + (h.puOn ? dt / .2 : -dt / .3), 0, 1); h.pfBoost = Math.max(0, (h.pfBoost || 0) - dt * 1.1); if (h.pfIgn !== undefined) h.pfIgn += dt;
   if (FX.flame !== 'old') pfStep(h, dt);   // 새 안: 척추 · 입자 · 불티(연출 고도화 261005)
@@ -2989,7 +3066,8 @@ function stepExp(dt) {
     h.xa = el ? (h.xa || 0) + dt : Math.max(0, (h.xa || 0) - dt * 2); h.xs = xpStrength(h.xa);
     if (h.xa >= XP.FULL) full++; else if (!el && h.L >= HAND_NEAR && xpLr(h) < HAND_MIN) small++;
     // 1 주먹 → 펴기 터짐: 주먹 0.25초 이상 쥐었다 푼 뒤 0.5초 안에 손바닥이 되면
-    if (xFist(h)) { h.xf = (h.xf || 0) + dt; h.xrel = -9; }
+    // 261006 흔들기 오발 막기: 흔드는 손이 흐려져 반쯤 오므라졌다 펴지는 것은 터짐이 아니다. 주먹 시간은 손이 거의 제자리(손 크기 BURST_SPD배/초 미만)일 때만 센다
+    if (xFist(h)) { h.xf = (h.wv || 0) < XP.BURST_SPD ? (h.xf || 0) + dt : 0; h.xrel = -9; }
     else {
       if ((h.xf || 0) >= XP.BURST_FIST) h.xrel = now; h.xf = 0;
       if (h.xrel > -9 && now - h.xrel > XP.BURST_WIN) h.xrel = -9;
@@ -3012,60 +3090,40 @@ function stepExp(dt) {
   if (X.bloom) { X.bloom.t += dt; if (X.bloom.t >= PUSH_DUR) X.bloom = null; }
   if (FX.flame !== 'old') pfUpdate(dt);
   // 「게임 하기」: 손바닥 중심이 버튼 위에 0.3초 머문 뒤부터 2초 게이지 · 벗어나면 빠르게 빈다
-  const B = XP.BTN, inBtn = lh.some(h => h.L >= HAND_MIN && Math.abs(h.c.x - B.x) < B.w / 2 + 20 && Math.abs(h.c.y - B.y) < B.h / 2 + 20);
+  const B = XP.BTN, inBtn = lh.some(h => h.L >= HAND_MIN && Math.abs(h.c.x - B.x) < B.w / 2 && Math.abs(h.c.y - B.y) < B.h / 2);
   X.dwell = inBtn ? X.dwell + dt : 0;
   X.gauge = inBtn && X.dwell >= XP.DWELL ? X.gauge + dt / XP.FILL : Math.max(0, X.gauge - dt * XP.DRAIN);
   // 대기 모습(불씨 진하게): 온전히 잡힌 손이 0.6초 넘게 없고 · 진행 중인 사람이 없을 때(261005 밤: 진행 중이면 손이 잠깐 나가도 대기로 가지 않는다)
   X.quiet = full ? 0 : X.quiet + dt; X.small = small > 0 && !full;
-  X.msg = clamp(X.msg + (X.quiet > .6 && !X.started ? dt / .5 : -dt / .25), 0, 1);
+  X.msg = clamp(X.msg + (X.quiet > .6 && !X.played ? dt / .5 : -dt / .25), 0, 1);
   trackExpFaces(dt); stepAura(dt);
   expGuide(dt, lh, full);
   if (X.gauge >= 1) { xlog({ k: 'game', t: now }); toSelect(); }
 }
-/* ----- 체험 모드 단계 안내(사용자 261004 피드백) -----
-   순환: 1 「주먹을 쥐었다가 펴 보세요」 → 2 「두 손바닥을 정면으로 해서 앞으로 힘껏 밀어 보세요」 → 3 「손바닥을 하늘로 해 보세요」 → 4 「두 손바닥을 마주 보게 해 보세요」 → 1 (261005 밤: 옛 4단계 쓸기는 뺐고 같은 밤 마주 보기를 4단계로)
-   어느 동작이든 하면 그 효과 + 「좋아요」 · 안내는 이번 바퀴에서 아직 안 한 다음 동작으로(네 가지를 다 하면 새 바퀴) · 1 단계에서 주먹을 쥐고 있으면 「주먹을 확 펴 보세요」
-   손이 없으면 「손을 보여 주세요」 · 손이 작으면 「조금 더 가까이」 · 손이 없고 얼굴이 정면으로 1초 넘게 보이면 호객 문구 · 무음
-   진행 유지(사용자 261005 밤 「손이 화면 밖에 없어지면 하다가 리셋된다 · 사람이 있으면 계속 진행」): 예전에는 온전히 잡힌 손이 3초 없으면(화면 밖 · 가장자리 10% · 내린 손)
-   단계가 처음으로 돌아갔고, 0.6초만 지나도 호객 문구 · 「손을 보여 주세요」로 바뀌어 처음부터인 것처럼 보였다.
-   이제: 사람(손 · 얼굴 · 계수가 켜졌으면 사람 상자, expPresent)이 보이는 동안은 손이 없어도 지금 단계 · 한 단계 기록을 그대로 두고, 지금 단계 문구를 계속 보인다.
-   사람도 손도 XG.RESET초 없을 때만 처음으로(사람이 바뀌어도 이 시간으로만 판단 · 얼굴로 사람을 가리지 않는다). 호객 문구 · 대기 모습(불씨)은 아직 아무 동작도 안 한 때만 */
-const XG = { OK: .9, OK_PUSH: 2, RESET: 9, OPEN_AT: .12, HOOK_T: 1, HOOK_SWAP: 2.6 };
+/* ----- 체험 모드 안내 한 줄(사용자 261006 단순화 「50대 수석님도 지나가다 1초 만에」) -----
+   화면 글자는 「손을 펴 보세요」 한 줄뿐이다. 손을 펴면 그 손바닥 위에 불기운이 피어오른다(stepPalmUp).
+   보임: 불꽃 · 전기 · 심볼이 아직 안 나왔을 때(사람이 있으면 크게 · 아무도 없으면 은은하게 XG.DIM)
+   숨김: 불기운 · 전기 · 심볼 · 터짐 중 하나라도 나오면 바로(그 뒤 손을 들고 있는 동안은 계속 숨김)
+   다시 보임: 손을 다 내리고(온전히 잡힌 손 없음) XG.BACK초가 지나면
+   주먹 쥐었다 펴기(터짐) · 두 손바닥 마주 보기(전기) · 두 손바닥 앞으로 밀기(심볼)는 안내 없이 해 보면 나오는 숨은 재미다.
+   사람 있음(expPresent): 손 · 얼굴 · (계수가 켜졌으면) 사람 상자. 아무도 없을 때 문구를 은은하게 두는 이유: 지나가는 사람이 멀리서 무엇을 하는 화면인지 3초 안에 읽게
+   (옛 4단계 순환 · 「좋아요」 · 호객 「체험하고 가세요」 · 「조금 더 가까이」 · 진행 유지 · 9초 리셋은 261006에 지웠다) */
+const XG = { BACK: 3, DIM: .5, AWAY: 1.5 };
 const XPR = { FACE_W: 60, BOX_H: .35, BOX_AGE: 10000 };   // 사람 있음: 얼굴 폭 60px 이상(먼 행인 제외) · 사람 상자 높이 화면 35% 이상 · 상자는 10초 안 계수만
 function expPresent(lh) {
   if (lh.length) return true;   // 손(가장자리 · 작은 손 포함)
   if (XF.some(f => now - f.seen < AURA.LOST && f.w >= XPR.FACE_W)) return true;   // 얼굴(정면 · 옆얼굴)
   return !!(crowd.on && cr.at && Date.now() - cr.at < XPR.BOX_AGE && cr.dets.some(d => d.box && Math.abs(d.box[1].y - d.box[0].y) >= H * XPR.BOX_H));   // 계수 켜짐: 사람 상자
 }
-const XSTEP = ['fist', 'push', 'up', 'arc'];
-const XN = XSTEP.length, XALL = (1 << XN) - 1;
-const XMSG = { show: '손을 보여 주세요', fist: '주먹을 쥐었다가 펴 보세요', open: '주먹을 확 펴 보세요', push: '두 손바닥을 정면으로 해서 앞으로 힘껏 밀어 보세요', up: '손바닥을 하늘로 해 보세요', arc: '두 손바닥을 마주 보게 해 보세요', near: '조금 더 가까이', hook: ['체험하고 가세요', '손을 들어 보세요'] };
-function xDone(k) {
-  const i = XSTEP.indexOf(k); X.okUntil = Math.max(X.okUntil, now + (k === 'push' ? XG.OK_PUSH : XG.OK)); X.dm |= 1 << i; X.started = true;
-  if (X.dm === XALL) { X.dm = 0; X.gi = (i + 1) % XN; return; }
-  for (let d = 1; d <= XN; d++) { const j = (X.gi + d) % XN; if (!(X.dm >> j & 1)) { X.gi = j; return; } }
-}
+const XMSG = '손을 펴 보세요';
+function xDone(k) { X.played = true; X.idleT = 0; }   // 무엇이든 나오면 안내를 숨긴다(k: 'fist' · 'push' · 'up' · 'arc')
 function expGuide(dt, lh, full) {
-  X.noHand = full ? 0 : X.noHand + dt;
   X.away = expPresent(lh) ? 0 : X.away + dt;
-  if (X.away > XG.RESET && (X.started || X.gi || X.dm)) { X.gi = 0; X.dm = 0; X.started = false; X.resetN++; xlog({ k: 'reset', t: now }); }   // 사람도 손도 XG.RESET초 없으면 처음 단계로
-  const main = lh.filter(h => (h.xa || 0) >= XP.FULL && xpElig(h)).sort((a, b) => b.L - a.L)[0];
-  const hookOn = !full && !X.started && X.quiet > .6 && !X.small && XF.some(f => f.frontT >= XG.HOOK_T);
-  if (hookOn && !X.hookOn) { X.hookN++; xlog({ k: 'hook', t: now }); }
-  X.hookOn = hookOn; X.hookT = hookOn ? X.hookT + dt : 0;
-  let m;
-  if (now < X.okUntil) m = { s: GOOD, ok: true };
-  else if (!full) {
-    if (X.quiet <= .6) m = GF[0].cur ? { s: GF[0].cur, ok: GF[0].ok, hook: GF[0].hook } : { s: XMSG.show };   // 손이 막 잡히는 중(0.5초) · 잠깐 놓침: 글자를 그대로 둔다
-    else if (X.small) m = { s: XMSG.near };
-    else if (X.started) m = { s: XMSG[XSTEP[X.gi]] };   // 진행 유지: 손이 나가 있어도 지금 단계 그대로
-    else if (hookOn) m = { s: XMSG.hook[Math.floor(X.hookT / XG.HOOK_SWAP) % 2], hook: true };
-    else m = { s: XMSG.show };
-  }
-  else if (X.gi === 0 && main && xFist(main) && (main.xf || 0) >= XG.OPEN_AT) m = { s: XMSG.open };
-  else m = { s: XMSG[XSTEP[X.gi]] };
-  if (m.s === GOOD && GF[0].cur === GOOD && !m.ok) m.ok = true;
-  X.guide = m.s; fadeTo(GF[0], m, dt);
+  const lit = lh.some(h => h.puOn) || ELA.some(e => e.on) || !!X.bloom;
+  if (lit) { X.played = true; X.idleT = 0; } else X.idleT = full ? 0 : X.idleT + dt;
+  if (X.played && X.idleT > XG.BACK) X.played = false;
+  const m = X.played ? null : { s: XMSG, dim: X.away > XG.AWAY, hook: X.away <= XG.AWAY };
+  X.guide = m ? m.s : ''; fadeTo(GF[0], m, dt);
 }
 
 /* ----- 체험 모드 얼굴 · 몸 둘레 오라(사용자 261004 호객) -----
@@ -3245,11 +3303,36 @@ function pfGeom(h) {
   const n = h.j3 && h.j3.n, lean = n ? clamp(-n.x * .8, -.55, .55) : 0;   // 거울 화면: 화면 x = -(원본 x)
   return { bx, by: by - S * .06, S, ux, uy, hw: Math.max(al, S * .55) * .55, lean };
 }
+/* 흔들기 불꽃 꼬리(사용자 261006 「손을 흔들면 불이 일렁이는 형태로 따라오게」): 불기운이 켜진 손이 움직이면 지나온 자리에 손바닥 불기운과 같은 빛 덩이(진한 주황 → 노랑 → 흰 심지)를 남긴다.
+   빠를수록 길고(수명 TR.LIFE0 → LIFE1초) 밝다 · 위로 살짝 솟으며 옅어진다 · 손을 멈추면 남은 꼬리가 0.3 ~ 0.6초에 잦아든다(선 · 혀 모양 없음)
+   빠른 손은 점 사이가 벌어지지 않게 사이를 채운다 · 손이 잠깐(TR.GAP초까지) 안 잡히면 마지막 위치와 속도로 이어 간다(카메라가 흔들리는 손을 놓치는 프레임)
+   척추 관성(꼬리 휨)도 빠를수록 크게: 따라오는 속도 1/(1 + TR.BEND x 빠르기) · 마디 최대 길이 1.7 → 1.7 + TR.STRETCH x 빠르기 */
+const TR = { V0: 1.5, V1: 9, LIFE0: .3, LIFE1: .6, MAX: 26, GAP: .3, BEND: 2.2, STRETCH: 2.2, RISE: 1.6, SP: .7, EMB: 14 };
+function pfTrail(h, F, g, dt, I) {
+  const tr = F.tr || (F.tr = []);
+  for (const p of tr) { p.t += dt; p.y -= p.S * TR.RISE * dt * (1 + p.k); p.x += nz3(p.sd, p.t * 3, F.id) * p.S * .6 * dt; }
+  while (tr.length && tr[0].t >= tr[0].life) tr.shift();
+  if (!g || I <= .02) return;
+  const sp = Math.hypot(F.vx, F.vy) / Math.max(1, g.S), k = clamp((sp - TR.V0) / (TR.V1 - TR.V0), 0, 1); F.wk = lerp(F.wk || 0, k, 1 - Math.exp(-dt * (k > (F.wk || 0) ? 14 : 8)));
+  if (k < .04 || F.wk < .04) return;   // 손이 멈추면 새 점을 더하지 않는다(남은 꼬리만 0.3 ~ 0.6초에 잦아든다)
+  const last = tr[tr.length - 1], step = g.hw * TR.SP, life = lerp(TR.LIFE0, TR.LIFE1, F.wk);
+  const add = (x, y) => { tr.push({ x, y, t: 0, life, k: F.wk, I, S: g.S, hw: g.hw, sd: frn(0, 99) }); if (tr.length > TR.MAX) tr.shift(); };
+  if (last && last.t < .1) { const d = Math.hypot(g.bx - last.x, g.by - last.y), n = Math.min(6, Math.floor(d / step)); for (let i = 1; i <= n; i++) add(lerp(last.x, g.bx, i / (n + 1)), lerp(last.y, g.by, i / (n + 1))); }
+  add(g.bx, g.by);
+  F.te = (F.te || 0) + TR.EMB * F.wk * dt; while (F.te >= 1) { F.te--; pfEmber(g, .8); }   // 꼬리에서 흩날리는 불씨
+}
 function pfStep(h, dt) {
-  const I = h.pf || 0, F = h.pfx || (h.pfx = { sp: null, em: 0, se: 0, on: false, vx: 0, vy: 0, px: 0, py: 0, Hf: 0, g: null, id: h.id * 7.31 });
-  if (I <= .01 && !h.puOn) { F.sp = null; F.on = false; return; }
+  const I = h.pf || 0, F = h.pfx || (h.pfx = { sp: null, em: 0, se: 0, on: false, vx: 0, vy: 0, px: 0, py: 0, Hf: 0, g: null, id: h.id * 7.31, ox: 0, oy: 0 });
+  if (I <= .01 && !h.puOn) { F.sp = null; F.on = false; pfTrail(h, F, null, dt, 0); return; }
   const g = pfGeom(h), boost = h.pfBoost || 0, T = X.t;
+  // 손을 잠깐 놓친 프레임(h.seen 이 지나감): 마지막 속도로 조금 더 나아간다(최대 TR.GAP초 · 점점 느려짐) · 다시 잡히면 0.1초에 걸쳐 제자리로
+  const miss = now - h.seen;
+  if (miss > .04 && miss < TR.GAP) { const dm = Math.exp(-miss * 5); F.ox += (F.vx0 || 0) * dm * dt; F.oy += (F.vy0 || 0) * dm * dt; }
+  else { const k = 1 - Math.exp(-dt * 25); F.ox = lerp(F.ox, 0, k); F.oy = lerp(F.oy, 0, k); }
+  g.bx += F.ox; g.by += F.oy;
   if (F.sp && dt > 1e-4) { F.vx = lerp(F.vx, (g.bx - F.px) / dt, .3); F.vy = lerp(F.vy, (g.by - F.py) / dt, .3); } F.px = g.bx; F.py = g.by; F.g = g;
+  if (miss <= .04) { F.vx0 = F.vx; F.vy0 = F.vy; }
+  pfTrail(h, F, g, dt, I * Math.max(.4, h.xs || 0));
   const ig = pfIgnK(h), Hf = FX.flame === 'haze' ? g.S * HZ.PH * (1 + HZ.IGN_H * ig) * (.35 + .65 * easeOut(I)) : g.S * (3.6 + 1.1 * boost) * (.25 + .75 * easeOut(I)); F.Hf = Hf;   // haze: 높이 HZ.PH · 켜짐 순간 훅(261006)
   let dx = g.lean, dy = -1; const dl = Math.hypot(dx, dy); dx /= dl; dy /= dl; F.dx = dx; F.dy = dy;
   if (!F.sp) F.sp = Array.from({ length: PF.K }, (_, i) => ({ x: g.bx + dx * Hf * i / (PF.K - 1), y: g.by + dy * Hf * i / (PF.K - 1) }));
@@ -3257,8 +3340,8 @@ function pfStep(h, dt) {
     const u = i / (PF.K - 1), q = F.sp[i], sw = fbm(u * 1.3, F.id, T * 1.25 - u * .9) * g.S * .42 * Math.pow(u, 1.3);
     const tx = g.bx + dx * Hf * u - dy * sw, ty = g.by + dy * Hf * u + dx * sw;
     if (!i) { q.x = tx; q.y = ty; continue; }
-    const k = 1 - Math.exp(-dt * 30 / (1 + i * 1.1)); q.x = lerp(q.x, tx, k); q.y = lerp(q.y, ty, k);
-    const pv = F.sp[i - 1], ex = q.x - pv.x, ey = q.y - pv.y, el = Math.hypot(ex, ey), mx = Hf / (PF.K - 1) * 1.7;   // 빠른 손에 꼬리가 끊겨 보이지 않게
+    const wk = F.wk || 0, k = 1 - Math.exp(-dt * 30 / ((1 + i * 1.1) * (1 + TR.BEND * wk))); q.x = lerp(q.x, tx, k); q.y = lerp(q.y, ty, k);   // 흔들수록 위 마디가 더 늦게 따라온다(꼬리 휨)
+    const pv = F.sp[i - 1], ex = q.x - pv.x, ey = q.y - pv.y, el = Math.hypot(ex, ey), mx = Hf / (PF.K - 1) * (1.7 + TR.STRETCH * wk);   // 빠른 손에 꼬리가 끊겨 보이지 않게
     if (el > mx) { q.x = pv.x + ex / el * mx; q.y = pv.y + ey / el * mx; }
   }
   if (FX.flame !== 'haze') { if (h.puOn && !F.on) pfBurst(F, g, 1); else if (!h.puOn && F.on) pfBurst(F, g, 0); }   // haze: 빛 고리 · 불티 없음
@@ -3587,11 +3670,21 @@ function hzPalm(c, h, T) {   // 손바닥 위 부드러운 불기운(1/4 판 · 
   { const r = R0 * .85; c.globalAlpha = clamp(I, 0, 1); c.drawImage(HZS.wick, -r, -r, r * 2, r * 2); } c.restore();
   return tip;
 }
+function hzTrail(c, h) {   // 흔들기 꼬리(오래된 것부터 · 손바닥 불기운과 같은 빛 덩이 · 1/4 판)
+  const tr = h.pfx && h.pfx.tr; if (!tr || !tr.length) return;
+  c.globalCompositeOperation = 'source-over';
+  for (const p of tr) {
+    const u = p.t / p.life, f = Math.pow(1 - u, 1.4) * (u < .06 ? u / .06 : 1), R0 = p.hw * HZ.PK, r = R0 * (1.25 + .35 * p.k) * (1 - .35 * u);
+    c.globalAlpha = clamp(p.I * (.45 + .45 * p.k) * f, 0, 1); c.drawImage(HZS.body, p.x - r, p.y - r, r * 2, r * 2);
+    if (u < .55) { const r2 = r * .55, a2 = p.I * (.35 + .4 * p.k) * Math.pow(1 - u / .55, 1.2); c.globalAlpha = clamp(a2, 0, 1); c.drawImage(HZS.mid, p.x - r2, p.y - r2, r2 * 2, r2 * 2); }
+  }
+}
 function hzPalmDraw() {   // 손바닥 불기운(손 그림 위 · HZ.PALM 으로 · 261005 밤 2차: 오라와 겹쳐도 덜어 내지 않는다)
   if (hzHide) return;
-  const c = ctx, hands = liveHands().filter(h => h.pfx && h.pfx.sp && h.pfx.g && (h.pf || 0) > .02);
-  if (hands.length) {
+  const c = ctx, all = liveHands(), hands = all.filter(h => h.pfx && h.pfx.sp && h.pfx.g && (h.pf || 0) > .02), trails = all.filter(h => h.pfx && h.pfx.tr && h.pfx.tr.length);
+  if (hands.length || trails.length) {
     hzCv(); const T = X.t, p = hzP.getContext('2d'); lowClear(p); p.setTransform(1 / LR, 0, 0, 1 / LR, 0, 0);
+    for (const h of trails) hzTrail(p, h);   // 꼬리가 아래 · 서 있는 불기운이 위
     for (const h of hands) hzPalm(p, h, T);
     p.setTransform(1, 0, 0, 1, 0, 0);
     if (!hzMeas) {   // 손바닥 둘레가 따뜻하게 밝아지는 빛 번짐(화면 합성 · 불기운 아래)
@@ -3662,7 +3755,12 @@ function hzDraw() {   // 오라(사람 전부 한 판)
 
 /* ----- 체험 모드 그리기 ----- */
 function bonePath(c, pts) { c.beginPath(); for (const [i, j] of BONES) { c.moveTo(pts[i].x, pts[i].y); c.lineTo(pts[j].x, pts[j].y); } }
-function drawEye(h, a) {   // AI의 눈: 관절 21점(오렌지 점) + 뼈대(가는 선). 밝은 배경에서도 보이게 얇은 그늘을 깐다
+/* 손 가이드(사용자 261006 「손가락 가이드라인 색이 너무 진해 화면을 꽉 채우고 정신이 없다」): 불꽃 · 오라 · 전기가 주인공이고 가이드는 「기계가 손을 읽고 있다」만 은은하게.
+   후보(주소 ?eye=): old = 옛 진한 주황 점 · 선 / a = 흰색 저불투명 선 · 점(늘 같은 세기) / b = 선 없이 손끝 5점 + 손목만 / c = a 를 처음 잡힐 때만 또렷하게 → 서서히 옅게 · 연출이 켜지면 더 옅게(권장 · 기본)
+   색 = 흰색에 가까운 O5(255,246,240) · 두께 · 점은 손 크기(손목 ~ 중지뿌리 px, 1920 기준 좌표)에 비례 · 멀리 있는 작은 손은 더 옅게 · 관리자 D 디버그는 옛 또렷한 표시 */
+const EYE_MODE = (v => ['old', 'a', 'b', 'c'].includes(v) ? v : 'c')(qs.get('eye'));
+const EYE = { COL: '255,246,240', LINE: .3, DOT: .45, TIP: .55, HALO: .12, LW: .014, LW_MIN: 1, R: .024, R_TIP: .032, R_MIN: 1.6, FIRST: 1.2, FADE: .8, REST: .4, FX: .3, SMALL: .45 };
+function drawEyeOld(h, a) {
   const pts = h.flm || h.lm, L = h.L, c = ctx; if (a <= .01 || !pts) return;
   c.save(); c.lineCap = 'round'; c.lineJoin = 'round';
   c.globalAlpha = a * .45; c.strokeStyle = 'rgba(0,0,0,.7)'; c.lineWidth = Math.max(3.5, L * .05); bonePath(c, pts); c.stroke();
@@ -3672,6 +3770,31 @@ function drawEye(h, a) {   // AI의 눈: 관절 21점(오렌지 점) + 뼈대(�
     c.globalAlpha = a * .5; c.fillStyle = 'rgba(0,0,0,.8)'; c.beginPath(); c.arc(p.x, p.y, r + 1.8, 0, 7); c.fill();
     c.globalAlpha = a; c.fillStyle = ORANGE; c.beginPath(); c.arc(p.x, p.y, r, 0, 7); c.fill();
     if (tip) { c.fillStyle = '#fff'; c.beginPath(); c.arc(p.x, p.y, r * .38, 0, 7); c.fill(); }
+  }
+  c.restore();
+}
+function eyeK(h) {   // 손 하나의 가이드 세기(0 ~ 1): 작은 손 · (c) 잡힌 뒤 시간 · 연출 켜짐
+  const sz = clamp((h.L - HAND_NEAR) / (HAND_MIN * 1.5 - HAND_NEAR), 0, 1); let k = lerp(EYE.SMALL, 1, sz);
+  const fx = clamp(Math.max(h.pf || 0, h.fire || 0, ELA.some(e => e.v > .05 && (e.ia === h.id || e.ib === h.id)) ? 1 : 0), 0, 1);
+  if (EYE_MODE === 'c') { k *= lerp(1, EYE.REST, clamp(((h.age || 0) - EYE.FIRST) / EYE.FADE, 0, 1)); k *= lerp(1, EYE.FX, fx); }
+  else k *= lerp(1, .5, fx);
+  return k;
+}
+function drawEye(h, a) {
+  if (EYE_MODE === 'old' || debug) return drawEyeOld(h, a);
+  const pts = h.flm || h.lm, L = h.L, c = ctx; if (a <= .01 || !pts) return;
+  const k = a * eyeK(h); if (k <= .01) return;
+  const lw = Math.max(EYE.LW_MIN, L * EYE.LW), col = EYE.COL;
+  c.save(); c.lineCap = 'round'; c.lineJoin = 'round';
+  if (EYE_MODE !== 'b') {
+    c.globalAlpha = k * EYE.HALO; c.strokeStyle = '#000'; c.lineWidth = lw * 2.6; bonePath(c, pts); c.stroke();   // 밝은 로비에서 흰 선이 사라지지 않게 아주 옅은 그늘
+    c.globalAlpha = k * EYE.LINE; c.strokeStyle = `rgb(${col})`; c.lineWidth = lw; bonePath(c, pts); c.stroke();
+  }
+  c.fillStyle = `rgb(${col})`;
+  for (let i = 0; i < 21; i++) {
+    const tip = TIPS.includes(i); if (EYE_MODE === 'b' && !tip && i !== 0) continue;
+    const p = pts[i], r = Math.max(EYE.R_MIN, L * (tip ? EYE.R_TIP : EYE.R)) * (EYE_MODE === 'b' ? 1.2 : 1);
+    c.globalAlpha = k * (tip || EYE_MODE === 'b' ? EYE.TIP : EYE.DOT); c.beginPath(); c.arc(p.x, p.y, r, 0, 7); c.fill();
   }
   c.restore();
 }
@@ -3712,17 +3835,17 @@ function drawFlameIcon(x, y, s) {   // 「게임 하기」 아이콘: 작은 불
   c.save(); const g = c.createLinearGradient(0, y + s * .6, 0, y - s); g.addColorStop(0, ORANGE_D); g.addColorStop(1, ORANGE_L);
   c.fillStyle = g; drop(1, 0); c.fill(); c.fillStyle = '#FFEBE0'; drop(.45, s * .22); c.fill(); c.restore();
 }
-function drawGameBtn() {
-  const B = XP.BTN, c = ctx, g = clamp(X.gauge, 0, 1), hot = X.dwell > 0, R = B.h / 2 - 18, ix = B.x - B.w / 2 + B.h / 2, iy = B.y;
-  c.save();
-  c.fillStyle = hot ? 'rgba(0,0,0,.72)' : 'rgba(0,0,0,.55)'; c.beginPath(); c.roundRect(B.x - B.w / 2, B.y - B.h / 2, B.w, B.h, B.h / 2); c.fill();
+function drawGameBtn() {   // 261006 단순화: 오른쪽 아래 모서리 작은 버튼 · 평소엔 옅게(손이 닿으면 밝아짐) · 체험 손이 잘못 닿지 않게 판정 = 버튼 크기
+  const B = XP.BTN, c = ctx, g = clamp(X.gauge, 0, 1), hot = X.dwell > 0, R = B.h / 2 - 13, ix = B.x - B.w / 2 + B.h / 2, iy = B.y;
+  c.save(); c.globalAlpha = hot || g > 0 ? 1 : .7;
+  c.fillStyle = hot ? 'rgba(0,0,0,.7)' : 'rgba(0,0,0,.42)'; c.beginPath(); c.roundRect(B.x - B.w / 2, B.y - B.h / 2, B.w, B.h, B.h / 2); c.fill();
   if (g > 0) { c.save(); c.clip(); c.fillStyle = 'rgba(255,127,50,.78)'; c.fillRect(B.x - B.w / 2, B.y - B.h / 2, B.w * g, B.h); c.restore(); c.beginPath(); c.roundRect(B.x - B.w / 2, B.y - B.h / 2, B.w, B.h, B.h / 2); }   // 게이지: 버튼이 왼쪽부터 오렌지로 찬다
-  c.lineWidth = 3; c.strokeStyle = hot ? ORANGE_L : 'rgba(255,255,255,.45)'; c.stroke();
-  drawFlameIcon(ix, iy + 4, R * .78);
-  c.lineCap = 'round'; c.lineWidth = 7; c.strokeStyle = 'rgba(255,255,255,.22)'; c.beginPath(); c.arc(ix, iy, R, 0, 7); c.stroke();
-  if (g > 0) { c.strokeStyle = '#fff'; c.shadowColor = ORANGE; c.shadowBlur = 16; c.beginPath(); c.arc(ix, iy, R, -Math.PI / 2, -Math.PI / 2 + g * Math.PI * 2); c.stroke(); }
+  c.lineWidth = 2; c.strokeStyle = hot ? ORANGE_L : 'rgba(255,255,255,.3)'; c.stroke();
+  drawFlameIcon(ix, iy + 3, R * .78);
+  c.lineCap = 'round'; c.lineWidth = 5; c.strokeStyle = 'rgba(255,255,255,.18)'; c.beginPath(); c.arc(ix, iy, R, 0, 7); c.stroke();
+  if (g > 0) { c.strokeStyle = '#fff'; c.shadowColor = ORANGE; c.shadowBlur = 12; c.beginPath(); c.arc(ix, iy, R, -Math.PI / 2, -Math.PI / 2 + g * Math.PI * 2); c.stroke(); }
   c.restore();
-  txt('게임 하기', ix + R + 26, B.y + 2, 48, '#fff', 'left', 800);
+  txt('게임 하기', ix + R + 18, B.y + 2, 34, hot || g > 0 ? '#fff' : 'rgba(255,255,255,.72)', 'left', 800);
 }
 function drawExp() {
   const lh = liveHands(), ea = lerp(.45, 1, X.msg);   // 불씨: 손이 잡혀 있으면 옅게
@@ -3738,7 +3861,8 @@ function drawExp() {
   else { if (FX.flame === 'haze') hzPalmDraw(); for (const h of lh) drawPalmFireN(h); drawPFP(); }   // 3 새 안(haze: 부드러운 불기운 · 위 아지랑이)
   drawFire();
   drawArcs();   // 4 마주 보기 전기(손 관절 그림 아래)
-  for (const h of lh) if (h.xs > 0) drawEye(h, h.xs);
+  const B = XP.BTN;
+  for (const h of lh) { const onBtn = Math.abs(h.c.x - B.x) < B.w / 2 + 40 && Math.abs(h.c.y - B.y) < B.h / 2 + 40, a = onBtn ? Math.max(h.xs, .8) : h.xs; if (a > 0) drawEye(h, a); }   // 버튼에 손을 대면 가장자리여도 손 가이드를 보인다
 }
 function drawExpTop() {
   const c = ctx;
@@ -3748,7 +3872,7 @@ function drawExpTop() {
 }
 
 /* ---------------- 입력 키 ----------------
-   G 게임 모드 바로(체험 → ME/WE 선택, 스태프용 · 261004) · N 건너뛰기(연습 중 → 준비 화면, 준비 화면 → 카운트다운, 체험·선택이면 ME로 바로 카운트다운 · 261005 P 에서 옮김) · M ME 시작 · W WE 시작 · Esc 체험 화면으로
+   G · N · M 게임 바로(1인 · 3 · 2 · 1, 스태프용 · 261006 단순화) · Esc 체험 화면으로 · 주소 끝 ?dodge=1 = 피하기 · 생명 · 기력이 있는 옛 판 · ?eye=old|a|b|c = 손 가이드 후보
    P 관리자 모드(사번 · 관리코드 → 계수 화면 · 다시 P = 마술 화면 · 261005) · C 계수 설정은 관리자로 풀린 동안만
    마우스 시험(?mouse=1): 1 주먹 / 2 편 손 / 3 손바닥을 하늘로(켜고 끄기) · 스크롤 위로 3칸 또는 Space = 내지르기(손이 커짐) · Shift 두 번째 손(점 대칭, 같은 크기로 함께 내지름 = 두 손바닥) · O 머리 위 동그라미 켜기/끄기
    B 2인 거울(마우스 손을 가로로 뒤집은 손을 오른쪽 사람으로) · D 디버그 · F 전체 화면 · V 카메라 · C 계수 설정
@@ -3771,10 +3895,8 @@ addEventListener('keydown', e => {
   if (k === 'v' || k === 'V') { cycleCamera(); return; }
   if (k === 'd' || k === 'D') debug = !debug;
   else if (k === 'f' || k === 'F') { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => { }); }
-  else if (k === 'g' || k === 'G') { if (S.mode === 'exp' || S.mode === 'idle') toSelect(); }   // 스태프: 게임 모드 바로(ME/WE 선택)
-  else if (k === 'n' || k === 'N') { if (S.mode !== 'game') startGame(1, true); else if (G.ph[0] === 'p') setPh('ready'); else if (G.ph === 'ready') setPh('b-intro'); }
-  else if (k === 'm' || k === 'M') { if (S.mode !== 'game') startGame(1); }
-  else if (k === 'w' || k === 'W') { if (S.mode !== 'game') startGame(2); }
+  else if (k === 'g' || k === 'G') { if (S.mode === 'exp' || S.mode === 'idle') toSelect(); }   // 스태프: 게임 바로(1인 · 3 · 2 · 1)
+  else if (k === 'n' || k === 'N' || k === 'm' || k === 'M') { if (S.mode !== 'game') startGame(1, true); }   // 261006: 바로 1인 게임(옛 W 2인 시작은 지웠다)
   else if (k === 'b' || k === 'B') { if (mouseMode) { mouse.dual = !mouse.dual; mouse.last = clk(); } }
   else if (k === '1' || k === '2') { if (mouseMode) { mouse.pose = k === '1' ? 1 : 0; mouse.last = clk(); } }
   else if (k === ' ') { if (mouseMode) { mh.Lt = Math.max(mh.L, 100) * 1.7; mouse.last = clk(); } }
@@ -3835,7 +3957,8 @@ window.__ax = {
   throwAt: e => throwAt(e), throwPractice: i => throwPractice(G.pl[i]), FS, perf,
   pose(n) { mouse.pose = n; mouse.last = clk(); }, circleKey(v) { mouse.circle = !!v; mouse.last = clk(); }, thrustKey() { mh.Lt = Math.max(mh.L, 100) * 1.7; mouse.last = clk(); }, shift(v) { if (v && !mouse.shift) { mouse.ax = mouse.x + (mouse.x > 960 ? -220 : 220); mouse.ay = mouse.y; } mouse.shift = !!v; }, dual(v) { mouse.dual = !!v; },
   wheel(n) { mh.Lt = clamp(mh.Lt * Math.pow(1.13, n), 60, 280); mouse.last = clk(); },
-  state: () => ({ mode: S.mode, ph: G && G.ph, np: G && G.np, pi: G && G.pi, t: G && +G.t.toFixed(2), life: G && G.life, kills: G && G.kills, wave: G && G.wave, grade: G && G.grade, cleared: G && G.cleared, merge: !!(G && G.merge), sel: SEL && SEL.g.slice(),
+  GAME_T, INTRO_T, DODGE, EYE_MODE, PF_ON, TR,
+  state: () => ({ mode: S.mode, ph: G && G.ph, clock: G ? +G.clock.toFixed(2) : null, timeout: G ? G.timeout : null, np: G && G.np, pi: G && G.pi, t: G && +G.t.toFixed(2), life: G && G.life, kills: G && G.kills, wave: G && G.wave, grade: G && G.grade, cleared: G && G.cleared, merge: !!(G && G.merge), sel: SEL && SEL.g.slice(),
     maxCombo: G && G.maxCombo, readyBy: G && G.readyBy, bossTired: G && G.bossTired, logo: LOGO.ok,
     pl: G ? G.pl.map(p => ({ en: +p.en.toFixed(1), ex: now < p.exUntil, done: p.done, hands: p.hands.length, circ: p.circ, circT: +p.circT.toFixed(2), ready: p.ready, muted: p.muted || 0, combo: p.combo })) : [],
     en: G ? G.en.map(e => ({ type: e.type, side: e.side, z: +e.z.toFixed(2), hp: e.hp, x: e.px | 0, y: e.py | 0, atk: e.atk || '', ak: +(e.ak || 0).toFixed(2) })) : [],
@@ -3845,11 +3968,11 @@ window.__ax = {
   fx: () => ({ fire: FIRE.length, efx: EFX.length, fireLv: liveHands().map(h => +(h.fire || 0).toFixed(2)), dotb: DOTB.map(c => +c.t.toFixed(2)), eshots: G ? G.eshots.filter(s => !s.res).map(s => +(s.t / s.dur).toFixed(2)) : [], eres: G ? G.eshots.filter(s => s.res).map(s => s.res + ':' + s.kind + ':' + (+s.pt.toFixed(2))) : [], ekind: G ? G.eshots.filter(s => !s.res).map(s => s.kind) : [], tele: G ? G.en.filter(e => e.atk === 'tele').map(e => +(e.ak / ATK_TELE[e.type]).toFixed(2)) : [], cracks: CRACKS.length, marks: G ? G.marks.length : 0, merge: G && G.merge ? +G.merge.t.toFixed(2) : -1, shots: G ? G.shots.map(s => ({ k: s.k, p: +(s.t / s.dur).toFixed(2) })) : [] }),
   async backdrop(url) { if (!url) { testBg = null; return; } const im = new Image(); await new Promise((r, j) => { im.onload = r; im.onerror = j; im.src = url; }); testBg = im; },
   start: startGame, idle: toIdle, select: toSelect, toExp, sfx,
-  exp: () => ({ mode: S.mode, burst: X.burstN, push: X.pushN, push1: X.push1N, up: X.upN, arc: X.arcN, arcs: ELA.map(e => ({ key: e.key, on: e.on, v: +e.v.toFixed(2), gap: +e.gap.toFixed(2), hold: +e.hold.toFixed(2), m: e.m ? { fa: +e.m.fa.toFixed(2), fb: +e.m.fb.toFixed(2), nar: +e.m.nar.toFixed(2), upv: +e.m.upv.toFixed(2), dyr: +e.m.dyr.toFixed(2), hor: +e.m.hor.toFixed(2), ny: +e.m.ny.toFixed(2), nz: +e.m.nz.toFixed(2), amb: [e.m.ambA, e.m.ambB], chk: { ...e.m.chk }, same: e.m.same, two: e.m.two } : null })), elp: ELP.length, gauge: +X.gauge.toFixed(2), dwell: +X.dwell.toFixed(2), cool: +Math.max(0, X.cool - now).toFixed(2), msg: +X.msg.toFixed(2), small: X.small, gi: X.gi, dm: X.dm, away: +X.away.toFixed(2), started: X.started, resetN: X.resetN, cal: { ...palmCal }, wy: { ...worldY },
+  exp: () => ({ mode: S.mode, burst: X.burstN, push: X.pushN, push1: X.push1N, up: X.upN, arc: X.arcN, arcs: ELA.map(e => ({ key: e.key, on: e.on, v: +e.v.toFixed(2), gap: +e.gap.toFixed(2), hold: +e.hold.toFixed(2), m: e.m ? { fa: +e.m.fa.toFixed(2), fb: +e.m.fb.toFixed(2), nar: +e.m.nar.toFixed(2), upv: +e.m.upv.toFixed(2), dyr: +e.m.dyr.toFixed(2), hor: +e.m.hor.toFixed(2), ny: +e.m.ny.toFixed(2), nz: +e.m.nz.toFixed(2), amb: [e.m.ambA, e.m.ambB], chk: { ...e.m.chk }, same: e.m.same, two: e.m.two } : null })), elp: ELP.length, gauge: +X.gauge.toFixed(2), dwell: +X.dwell.toFixed(2), cool: +Math.max(0, X.cool - now).toFixed(2), msg: +X.msg.toFixed(2), small: X.small, away: +X.away.toFixed(2), played: X.played, idleT: +X.idleT.toFixed(2), cal: { ...palmCal }, wy: { ...worldY },
     bloom: X.bloom ? { stage: X.bloom.stage, t: +X.bloom.t.toFixed(2), h: bloomSize(X.bloom) | 0 } : null, log: X.log.slice(), faceN: perf.faceN, fire: FIRE.length,
-    fx: { ...FX }, pfp: PFP.length, pfs: PFS.length, apn: APN.length, guide: X.guide, shown: GF[0].cur, step: XSTEP[X.gi], hook: X.hookOn, hookN: X.hookN, aura: AP.length,
+    fx: { ...FX }, pfp: PFP.length, pfs: PFS.length, apn: APN.length, guide: X.guide, shown: GF[0].cur, dim: GF[0].dim, aura: AP.length,
     faces: XF.map(f => ({ id: f.id, x: f.x | 0, y: f.y | 0, w: f.w | 0, a: +f.a.toFixed(2), pw: +f.pw.toFixed(2), frontT: +f.frontT.toFixed(2), up: !!f.up })),
-    hands: liveHands().map(h => ({ id: h.id, L: h.L | 0, x: h.c.x | 0, y: h.c.y | 0, elig: xpElig(h), xa: +(h.xa || 0).toFixed(2), xs: +(h.xs || 0).toFixed(2), open: +h.open.toFixed(2), fist: !!h.fistOn, xfist: xFist(h), fire: +(h.fire || 0).toFixed(2), wd: (h.wd || 0) | 0, up: h.j3 && h.j3.n ? +h.j3.up.toFixed(2) : null, src: h.j3 ? h.j3.src : null, curl: h.j3 ? +h.j3.curl.toFixed(2) : null, open3: h.open3 === undefined ? null : +h.open3.toFixed(2), puOn: !!h.puOn, pf: +(h.pf || 0).toFixed(2), xpR: +(h.xpR || 1).toFixed(2), xpRw: +(h.xpRw || 1).toFixed(2) })) }),
+    hands: liveHands().map(h => ({ id: h.id, L: h.L | 0, x: h.c.x | 0, y: h.c.y | 0, elig: xpElig(h), xa: +(h.xa || 0).toFixed(2), xs: +(h.xs || 0).toFixed(2), open: +h.open.toFixed(2), fist: !!h.fistOn, xfist: xFist(h), fire: +(h.fire || 0).toFixed(2), wd: (h.wd || 0) | 0, up: h.j3 && h.j3.n ? +h.j3.up.toFixed(2) : null, src: h.j3 ? h.j3.src : null, curl: h.j3 ? +h.j3.curl.toFixed(2) : null, open3: h.open3 === undefined ? null : +h.open3.toFixed(2), puOn: !!h.puOn, pf: +(h.pf || 0).toFixed(2), wv: +(h.wv || 0).toFixed(1), tr: h.pfx && h.pfx.tr ? h.pfx.tr.length : 0, wk: h.pfx ? +(h.pfx.wk || 0).toFixed(2) : 0, xpR: +(h.xpR || 1).toFixed(2), xpRw: +(h.xpRw || 1).toFixed(2) })) }),
   palmReset() { palmCal.v = 0; palmCal.c = 1; palmCal.n = 0; }, arcPair: (a, b) => arcPair(a, b), ARC, ELC, P3,
   rec: { toggle: () => recToggle(), on: () => REC.on, saved: () => REC.saved ? { name: REC.saved.name, doc: REC.saved.doc } : null, lines: () => arcDebugLines() },   // 시험: 손 좌표 기록(관리자 잠금 풀기는 시험 훅에 없다)
  camHands: r => camHands(r).map(o => ({ L: o.L, hd: o.pts.hd, w3: o.pts.w3, j: hand3(o.pts.w3, o.pts.hd, false), x: o.pts[9].x, pts: o.pts.map(q => ({ x: q.x, y: q.y })) })), camSize(w, h) { cam.vw = w; cam.vh = h; }, synth3, palm3: (cs, o) => hand3(synth3(cs, 0, o).w.map(p => ({ x: p.x * .09, y: p.y * .09, z: p.z * .09 })), (() => { const r = synth3(cs, 0, o); return { name: r.label, score: r.score }; })(), false),
