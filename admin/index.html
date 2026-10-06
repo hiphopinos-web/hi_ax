@@ -1007,7 +1007,9 @@ var CC_STATUS = ["대기","매칭","참석","완료","취소"];
 var TEN_SESS = ["fld","ta","tb","aws","ms1","ms2"];
 
 /* ══════════════════ 1. 공통 ══════════════════ */
-function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+/* v5.85 표시용 이름 통일: 서버가 아직 옛 이름(AX LOUNGE 상담)을 보내도 화면에는 「AX 라운지」로 보인다. 키·비교값은 건드리지 않는다(esc는 표시 문자열 전용). */
+function loungeName(s){ return String(s).replace(/1F AX LOUNGE 상담/g,"1F AX 라운지").replace(/AX LOUNGE 상담 신청자/g,"AX 라운지 신청자").replace(/AX LOUNGE 상담 10분 전/g,"AX 라운지 10분 전").replace(/1F AX LOUNGE/g,"1F AX 라운지").replace(/AX LOUNGE 상담/g,"AX 라운지").replace(/AX LOUNGE/g,"AX 라운지"); }
+function esc(s){ return loungeName(String(s==null?"":s)).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
 /* onclick 안에 넣는 문자열 · 사번·ID 는 영숫자라 그 밖의 글자는 버린다 */
 function jq(s){ return String(s==null?"":s).replace(/[^0-9A-Za-z_\-.:가-힣]/g,""); }
 function el(id){ return document.getElementById(id); }
@@ -1472,7 +1474,7 @@ var GUIDE={
   race:[["준비","아침에 <b>좌석 링크</b>를 선수 노트북마다 한 번 엽니다. 관리코드는 필요 없고, 진행자가 연 판에만 참가됩니다."],["판 열기","좌석 수(1~4)를 고르고 <b>판 열기</b>를 누르면 선수 노트북에 이름 입력이 나옵니다. 한 명만 앉아도 <b>시작</b>할 수 있습니다."],["큰 화면","<b>큰 화면 열기</b>는 전체 화면 대전 화면입니다. 1명이면 카드 한 장과 오늘 1등, 2명이면 2분할, 3~4명이면 4분할입니다. 마우스를 움직이면 아래 오른쪽에 진행 버튼이 나옵니다(N 판 열기 · S 시작 · E 지금 끝내기 · R 결과와 시상)."],["기록","시간 제한은 없고 목숨을 다 잃으면 끝납니다. 모두 끝나면 결과가 「타자대전」 시트에 한 번 기록됩니다. <b>오늘 기록</b>에서 점수 순위와 CSV 를 봅니다. 판 길이는 설정 시트의 타자대전_목숨과 타자대전_상한초로 조절합니다."]],
   notice:[["① 내용","제목 · 본문을 넣습니다. 오른쪽 미리보기가 입력하는 대로 바뀝니다. 문구 프리셋 · 정정 프리셋 · 앱 공지 문구 버튼이 칸을 채웁니다."],["② 받는 사람","<b>전체</b> · <b>사람 고르기</b> · 신청자 묶음 · 저장한 그룹 중 하나를 고릅니다. 사람 고르기는 이름 · 부서 · 사번 일부로 찾아 칩으로 쌓고, 사번 여러 개를 붙여넣으면 칩으로 바뀝니다. 칩마다 푸시가 켜졌는지 보입니다."],["③ 경로","<b>앱 안 공지</b>는 모든 참가자의 앱 홈 카드 · 공지 목록, <b>웹 푸시</b>는 알림을 켠 기기의 잠금 화면, <b>둘 다</b>는 두 곳 모두입니다. 앱 안 공지는 사람을 고를 수 없어 받는 사람이 전체일 때만 됩니다."],["④ 보내기","보내기 전에 <b>테스트로 보내기</b>로 내 폰에서 먼저 봅니다. 보내기를 누르면 확인 창이 한 번 더 뜨고, 전체이거나 300명 이상이면 인원 숫자를 직접 넣습니다. 푸시가 막히면(정지 · 시간 밖 · 5분 안 같은 제목 · 하루 상한) 공지도 나가지 않습니다. 이미 나간 푸시는 회수되지 않습니다."],["중지 · 기록","송출 중인 앱 공지는 맨 위 줄에서 중지합니다. 푸시가 나간 건은 아래 보낸 기록에 남습니다."]],
   sched:[["예약 만들기","종류 · 날짜 · 시각 · 제목을 넣고 <b>예약 만들기</b>를 누릅니다. 「Outro 10분 전」 · 「경품 추첨 시작」 버튼이 문구를 채웁니다(추첨 시각은 직접 넣습니다). <b>푸시도 보내기</b>를 켜면 그 시각에 푸시도 나갑니다(「경품 추첨 시작」은 행운권 보유자가 기본)."],["2분 전","실행 2분 전부터 모든 메뉴 위에 배너가 뜹니다. 진행이 밀리면 <b>+5분</b>, 하지 않을 거면 <b>취소</b>를 누릅니다."],["지금 실행","목록의 <b>지금 실행</b>은 시각을 기다리지 않고 바로 냅니다."],["관람 시간표","확정 전까지 <b>가상 데이터</b>입니다. 표를 고치고 저장할 수 있고, 발송 스위치는 표가 확정될 때까지 꺼 둡니다(켜면 관람 시간 푸시가 나갑니다)."]],
-  push:[["보내기","공지 · 푸시 보내기와 테스트 발송은 <b>공지·푸시</b> 메뉴 한 곳에서 합니다."],["발송 설정","오발송이면 먼저 1단계 수동 발송 잠금, 자동 알림까지 문제면 2단계 전체 정지입니다. 보낼 수 있는 시간 · 날짜 · 상한도 여기서 바꿉니다."],["그룹","10F 세션 신청자처럼 앱이 모르는 명단을 올리면 공지·푸시 메뉴의 「저장한 그룹」으로 고를 수 있습니다."],["이력","자동 알림(커피챗 · AX LOUNGE 상담 · 혼잡 해소)까지 모든 발송이 한 줄씩 남습니다(편집 불가)."]],
+  push:[["보내기","공지 · 푸시 보내기와 테스트 발송은 <b>공지·푸시</b> 메뉴 한 곳에서 합니다."],["발송 설정","오발송이면 먼저 1단계 수동 발송 잠금, 자동 알림까지 문제면 2단계 전체 정지입니다. 보낼 수 있는 시간 · 날짜 · 상한도 여기서 바꿉니다."],["그룹","10F 세션 신청자처럼 앱이 모르는 명단을 올리면 공지·푸시 메뉴의 「저장한 그룹」으로 고를 수 있습니다."],["이력","자동 알림(커피챗 · AX 라운지 · 혼잡 해소)까지 모든 발송이 한 줄씩 남습니다(편집 불가)."]],
   adm:[["본인 확인","들어갈 때 슈퍼관리자 본인의 앱 PIN 4자리를 한 번 더 넣습니다. 30분 동안 쓰고, 새로 고침하거나 잠그면 다시 묻습니다."],["명단","콘솔 명단과 앱 스태프 명단은 따로입니다. 사번을 쉼표로 여러 명 넣을 수 있고, 이름은 계정 시트에서 찾습니다."],["처음 저장","명단을 처음 저장하는 순간부터 그 명단대로 들어옵니다. 저장 전에는 콘솔은 슈퍼관리자만, 앱은 코드만 맞으면 들어옵니다."],["빼기","빼는 즉시 그 사람의 로그인이 끊깁니다. 7초 안에 되돌리기로 다시 넣을 수 있습니다. 슈퍼관리자는 뺄 수 없습니다."],["공용 코드","새 코드를 두 번 넣어 바꿉니다. 바꾸면 그 코드를 쓰던 스태프 폰 · 셀프 노트북 · 추첨 화면 · 다른 콘솔이 새 코드를 다시 넣습니다."]],
   photo:[["호출","<b>다음 번호 호출</b>을 누르면 맨 앞 번호의 앱에 「지금 입장하세요」가 뜹니다."],["건너뛰기 · 완료","호출 후 10분 안에 오지 않으면 건너뛰기, 도착하면 완료입니다."]],
   art:[["설정","접수 폼 주소와 두 마감 시각을 저장합니다."],["공개","작품을 공개 · 샘플 · 숨김으로 바꿉니다."],["시상","좋아요 순위와 CSV 로 시상합니다."]]
@@ -1541,7 +1543,7 @@ function viewDash(mode){   /* v5.14 기록 › 현황 요약 · mode "todo" = �
 
   var todo=[
     { v:pw, t:"비밀번호 분실 요청", d:"본인 확인 후 초기화", go:"go('acct')" },
-    { v:rvBy["신청"]||0, t:"상담 승인 대기", d:"1F AX LOUNGE · 신청 상태", go:"goTo('apply','resv','신청')" },
+    { v:rvBy["신청"]||0, t:"상담 승인 대기", d:"1F AX 라운지 · 신청 상태", go:"goTo('apply','resv','신청')" },
     { v:rvBy["승인"]||0, t:"상담 체크인 대기", d:"승인됐고 아직 오지 않음", go:"goTo('apply','resv','승인')" },
     { v:ccBy["대기"]||0, t:"커피챗 매칭 대기", d:"18F · 회차와 테이블 배정", go:"goTo('apply','cchat','대기')" }
   ];   /* v5.03 포토부스 대기열 폐지 */   /* v4.26 강연 정원 초과 알림은 17F 자유 참석 전환으로 뺐다 */
@@ -1561,7 +1563,7 @@ function viewDash(mode){   /* v5.14 기록 › 현황 요약 · mode "todo" = �
   /* v4.26 17F 출석 · 프로그램별 인원과 출석률(v4.27 분모 = 대강당 좌석 · 서버 ATT_SEATS) · 누르면 출석(17F · 10F) 메뉴 · v5.68 새 서버면 막대 = 현장 입장 ÷ 좌석 */
   var capCard=card("17F 출석",at0.ok?"QR 출석 "+(at0.people||0)+"명 · "+(attNew(at0)?"막대 = 현장 입장 ÷ ":"분모 ")+(at0.denom||0)+"석(대강당 좌석)":"집계를 받지 못했습니다",
     (at0.ok?attBars(at0):'<div class="empty">백엔드 v4.26(출석) 배포 뒤에 보입니다.</div>')+'<p class="cap mt8"><a href="#" onclick="go(\'att\');return false">출석(17F · 10F) 메뉴에서 시간대별 흐름 보기</a></p>');
-  h+='<div>'+card("상담 흐름","1F AX LOUNGE · 전체 "+rv.length+"건 · 칸을 누르면 그 상태 목록으로",flow(["신청","승인","체크인","완료"],rvBy,["노쇼","취소"],"resv"))+
+  h+='<div>'+card("상담 흐름","1F AX 라운지 · 전체 "+rv.length+"건 · 칸을 누르면 그 상태 목록으로",flow(["신청","승인","체크인","완료"],rvBy,["노쇼","취소"],"resv"))+
     card("커피챗 흐름","18F · 전체 "+cc.length+"명",flow(["대기","매칭","참석","완료"],ccBy,["취소"],"cchat"))+capCard+'</div></div>';
   h+='<div class="grid g2">'+card("스탬프 보유 분포","참여 기록이 있는 사람 "+sp.length+"명",
     '<table class="tb plain bartb">'+dist.map(function(c,i){ var rw=i>=3?(i===3?"룰렛":i<STAMP_DENOM?"응모 "+(i-3)+"장":"응모 "+RAFFLE_MAX+"장 · 한도"):""; return barRow('<b class="n">'+i+'개</b>'+(rw?' <span class="cap">'+rw+'</span>':''), c, mx, c+'명'); }).join("")+'</table>'+
@@ -2237,7 +2239,7 @@ function ckAll(prefix, keys){ var all=keys.length&&keys.every(function(k){ retur
 function ck1(k){ return '<input type="checkbox" class="ck" '+(ST.sel[k]?"checked ":"")+'onclick="event.stopPropagation()" onchange="selToggle(\''+jq(k)+'\',this.checked)">'; }
 function namesOf(rows){ var n=rows.map(function(r){ return esc(r.name||r.emp); }); return n.slice(0,8).join(", ")+(n.length>8?" 외 "+(n.length-8)+"명":""); }
 
-/* ── 상담 · 1F AX LOUNGE · resv_set 으로 상태를 바꾼다 ── */
+/* ── 1F AX 라운지 · resv_set 으로 상태를 바꾼다 ── */
 var RESV_NEXT={ "신청":"승인", "승인":"체크인", "체크인":"완료" };
 var RESV_SIDE={ "신청":["취소"], "승인":["노쇼","취소"] };
 var RESV_UNDO={ "승인":1, "노쇼":1, "취소":1 };   /* 체크인·완료는 스탬프 03 이 적립되어 되돌리지 않는다 */
@@ -2328,7 +2330,7 @@ function drwResv(id){
   var r=resvById(id); if(!r) return "";
   var s=r.status, nx=RESV_NEXT[s], sd=RESV_SIDE[s]||[];
   var h=drwHead(r.name, '사번 '+esc(r.emp)+(r.dept?' · '+esc(r.dept):''))+'<div class="db">';
-  h+='<h3>상담 · 1F AX LOUNGE</h3><div class="row" style="justify-content:space-between"><b class="n" style="font-size:var(--fs-h2)">슬롯 '+esc(hhmm(r.slot))+'</b>'+tag(s,RESV_TAG[s])+'</div><p class="cap mt8">신청 '+esc(short(r.ts))+'</p>';
+  h+='<h3>1F AX 라운지</h3><div class="row" style="justify-content:space-between"><b class="n" style="font-size:var(--fs-h2)">슬롯 '+esc(hhmm(r.slot))+'</b>'+tag(s,RESV_TAG[s])+'</div><p class="cap mt8">신청 '+esc(short(r.ts))+'</p>';
   h+='<div class="mt12">'+stepsHtml(["신청","승인","체크인","완료"], s, ["노쇼","취소"])+'</div>';
   h+='<div class="row mt16">'+(nx?'<button class="btn pri" onclick="resvDo([\''+jq(r.id)+'\'],\''+nx+'\')">'+nx+'</button>':'')+(sd.length?'<span class="dz-r">'+sd.map(function(a){ return '<button class="btn danger" onclick="resvDo([\''+jq(r.id)+'\'],\''+a+'\')">'+a+'</button>'; }).join("")+'</span>':'')+(!nx&&!sd.length?'<span class="cap">더 처리할 것이 없습니다.</span>':'')+'</div>';
   if(nx==="체크인"||nx==="완료") h+='<p class="cap mt8">'+nx+'을 누르면 스탬프 03 「프로그램 참여」가 적립됩니다.</p>';
@@ -2492,7 +2494,7 @@ function drwCchat(emp){
 /* ══════════════════ 7-5. 설문 (v3.35) ══════════════════
  * 답은 사번 없이 저장된다(서버 설문응답 시트). 여기도 사람 단위가 아니라 집계만 본다.
  * 문항 문구는 앱 SURVEY 상수와 같게 둔다(기획 확정 시 두 곳을 함께 바꾼다). */
-var SURVEY_PLACE_NAME = { p1:"1F 부스", p2:"AX PLAY", p7:"전시 QR 퀴즈", p3:"17F 강연", dap:"AX LOUNGE 상담", cchat:"18F AX 커피챗" };
+var SURVEY_PLACE_NAME = { p1:"1F 부스", p2:"AX PLAY", p7:"전시 QR 퀴즈", p3:"17F 강연", dap:"AX 라운지", cchat:"18F AX 커피챗" };
 /* v3.52b 설문 = 범용 틀 · 문항은 앱 SURVEY_Q 한 곳 · 서버가 문항 id 별로 형식별 기본 집계만 준다(선택 비율 · 점수 분포 · 한 줄) */
 /* ══════════════════ 7-6. 17F 출석 (v4.26 · 260924 사용자 확정) ══════════════════
  * 17F 강연은 전부 자유 참석 · 참가자가 대강당 입구 QR 을 찍고 프로그램을 골라 출석한다(서버 att_claim).
@@ -3503,7 +3505,7 @@ function nickReset(emp){
    보내기 = 경로에 따라 예전 함수 그대로: 앱 공지만 · 둘 다 = noticeSend(NT 에 옮겨 담는다 · 확인 창 · 인원 확인 · 보류), 푸시만 = pushSendAsk.
    앱 안 공지는 서버가 한 번에 하나 · 모든 참가자에게만 낸다(사람을 고를 수 없다) · 받는 사람이 전체(조건 없음)가 아니면 푸시만 고를 수 있다.
    문자 · 알림톡 같은 앱 밖 발송은 없다(260923 폐기 · 웹 푸시만 260930 도입). */
-var NS_WHO=[["all","전체"],["emps","사람 고르기"],["dap","AX LOUNGE 상담 신청자"],["cchat","커피챗 신청자"],["group","저장한 그룹"]];
+var NS_WHO=[["all","전체"],["emps","사람 고르기"],["dap","AX 라운지 신청자"],["cchat","커피챗 신청자"],["group","저장한 그룹"]];
 var NS_RT=[
   ["notice","앱 안 공지","앱 홈 공지 카드(30분) · 공지 목록"],
   ["push","웹 푸시","알림을 켠 기기의 잠금 화면"],
@@ -3742,7 +3744,7 @@ function nsHistHtml0(){
     rows.map(function(j){ return '<tr class="hv"><td class="n cap">'+esc(short(j.made))+'</td><td>'+(j.kind==="test"?tag("테스트","off"):esc(NS_KN[j.kind]||j.kname||j.kind))+'</td>'+
       '<td><b>'+esc(j.title)+'</b>'+(j.body?'<div class="cap">'+esc(j.body)+'</div>':'')+'</td><td class="cap">'+esc(j.desc)+'</td><td class="n tdr">'+j.n+'</td><td class="n tdr">'+j.subs+'</td><td class="n tdr">'+j.ok+'</td><td class="n tdr'+(j.fail?' pbad':'')+'">'+j.fail+'</td>'+
       '<td>'+tag(j.st||"-",PUSH_JOB_TAG[j.st]||"off")+(j.res?'<div class="cap">'+esc(j.res)+'</div>':'')+'</td><td class="cap">'+esc(j.by)+'</td></tr>'; }).join("")+
-    (!rows.length?emptyRow(10,"아직 보낸 푸시가 없습니다."):"")+'</table></div>'+(d.total>rows.length?'<p class="cap mt8">최근 '+rows.length+'줄 · 전체 '+d.total+'줄 · 자동 알림(커피챗 · AX LOUNGE 상담 · 혼잡 해소)은 알림 메뉴에 오늘 묶음으로 있습니다.</p>':'<p class="cap mt8">자동 알림(커피챗 · AX LOUNGE 상담 · 혼잡 해소)은 알림 메뉴에 오늘 묶음으로 있습니다.</p>');
+    (!rows.length?emptyRow(10,"아직 보낸 푸시가 없습니다."):"")+'</table></div>'+(d.total>rows.length?'<p class="cap mt8">최근 '+rows.length+'줄 · 전체 '+d.total+'줄 · 자동 알림(커피챗 · AX 라운지 · 혼잡 해소)은 알림 메뉴에 오늘 묶음으로 있습니다.</p>':'<p class="cap mt8">자동 알림(커피챗 · AX 라운지 · 혼잡 해소)은 알림 메뉴에 오늘 묶음으로 있습니다.</p>');
 }
 
 /* v3.80 타자 기록은 「버틴 시간」(1/100초) · 표에는 초로 보여 준다 */
@@ -4098,7 +4100,7 @@ function noticeStopC(id){
    2분 전 배너 = 모든 메뉴 위에 「17:00 경품 추첨 시작 · 1분 40초 뒤」 + [+5분] [취소] · 새 화면을 열지 않은 운영자도 본다.
    목록은 60초마다(소켓이 붙어 있으면 5분 · 서버가 알리면 곧바로) 새로 받는다. 옛 서버(sched_list 없음)는 한 줄 안내.
    실시간 연결(ops 방) = 서버가 ws 를 주면 콘솔이 스태프 토큰으로 붙는다 · 포토부스 줄이 바뀌면 포토부스 · 대시보드를 새로 받는다 · 예약이 바뀌면 목록을 새로 받는다. */
-var SCHK={ notice:"공지", outro:"Outro", crowd_notify:"혼잡 만료 알림", visit_slot:"관람 시간 알림", cchat_remind:"커피챗 10분 전", dap_remind:"AX LOUNGE 상담 10분 전" };   /* v4.78 D1 AX LOUNGE 상담 10분 전 = 서버가 승인된 상담 시간마다 잡는다 */   /* v4.77 커피챗 10분 전 = 서버가 매칭 회차마다 잡는다(매칭 · 변경 · 취소 때 다시 맞춘다) */
+var SCHK={ notice:"공지", outro:"Outro", crowd_notify:"혼잡 만료 알림", visit_slot:"관람 시간 알림", cchat_remind:"커피챗 10분 전", dap_remind:"AX 라운지 10분 전" };   /* v4.78 D1 AX 라운지 10분 전 = 서버가 승인된 상담 시간마다 잡는다 */   /* v4.77 커피챗 10분 전 = 서버가 매칭 회차마다 잡는다(매칭 · 변경 · 취소 때 다시 맞춘다) */
 var SCH_TAG={ "대기":"warn","실행중":"pri","완료":"ok","취소":"off","지남":"bad","오류":"bad" };
 var SCH_PRE=[
   { n:"Outro 10분 전", kind:"outro", t:"Outro 10분 전", b:"17F 대강당 · 17:00 시작", at:"16:50", tgt:"all" },   /* v4.78 A18 1F 에서 17F 까지 엘리베이터 대기 */
@@ -4116,7 +4118,7 @@ function viewSched(){
   var rows=d.rows||[], now=Date.now(), open=rows.filter(function(r){ return r.st==="대기"||r.st==="실행중"; });
   var tb='<div class="wrap"><table class="tb"><tr><th>실행 시각</th><th>종류</th><th>내용</th><th>상태</th><th>결과</th><th class="tdr">처리</th></tr>'+
     rows.map(function(r){ var wait=r.st==="대기", soon=wait&&r.ms-now<=(d.soonMs||120000)&&r.ms>now;
-      var what=r.kind==="notice"||r.kind==="outro"?'<b>'+esc(r.title)+'</b>'+(r.body?'<div class="cap">'+esc(r.body)+'</div>':'')+(r.push?'<div class="mt8">'+tag("푸시","pri")+' <span class="cap">'+esc(r.pdesc||"")+'</span></div>':''):r.kind==="visit_slot"?esc(r.slot)+(r.f?'<div class="cap">'+esc(r.f)+'층</div>':''):r.kind==="cchat_remind"?'18F 커피챗 '+esc(r.slot)+'<div class="cap">매칭된 사람에게 푸시</div>':r.kind==="dap_remind"?'1F AX LOUNGE 상담 '+esc(r.slot)+'<div class="cap">승인된 사람에게 푸시</div>':r.kind==="crowd_notify"?esc(r.tgt==="elev"?"엘리베이터":r.tgt==="lobby"?"1F 로비":r.tgt):"";
+      var what=r.kind==="notice"||r.kind==="outro"?'<b>'+esc(r.title)+'</b>'+(r.body?'<div class="cap">'+esc(r.body)+'</div>':'')+(r.push?'<div class="mt8">'+tag("푸시","pri")+' <span class="cap">'+esc(r.pdesc||"")+'</span></div>':''):r.kind==="visit_slot"?esc(r.slot)+(r.f?'<div class="cap">'+esc(r.f)+'층</div>':''):r.kind==="cchat_remind"?'18F 커피챗 '+esc(r.slot)+'<div class="cap">매칭된 사람에게 푸시</div>':r.kind==="dap_remind"?'1F AX 라운지 '+esc(r.slot)+'<div class="cap">승인된 사람에게 푸시</div>':r.kind==="crowd_notify"?esc(r.tgt==="elev"?"엘리베이터":r.tgt==="lobby"?"1F 로비":r.tgt):"";
       return '<tr class="hv'+(soon?" soon":"")+'"><td class="n"><b>'+esc(String(r.at).slice(5).replace("-","/"))+'</b>'+(wait&&r.ms>now?'<div class="cap">'+schLeft(r.ms)+' 뒤</div>':'')+'</td><td>'+esc(SCHK[r.kind]||r.kname||r.kind)+'<div class="cap">'+esc(r.by||"")+'</div></td><td>'+what+'</td>'+
         '<td>'+tag(r.st, SCH_TAG[r.st]||"off")+'</td><td class="cap">'+esc(r.res||"")+'</td>'+
         '<td>'+(wait?'<div class="acts"><button class="btn sm" onclick="schEdit(\''+jq(r.id)+'\',\'run\')">지금 실행</button><button class="btn sm" onclick="schEdit(\''+jq(r.id)+'\',\'delay\')">+5분</button>'+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="schEdit(\''+jq(r.id)+'\',\'cancel\')">취소</button>')+'</div>':'<div class="acts"><span class="cap">-</span></div>')+'</td></tr>'; }).join("")+
@@ -4267,10 +4269,10 @@ document.addEventListener("visibilitychange",function(){ if(!document.hidden&&au
    실수 방지(6-2) = 미리보기(0.4초 모아서) · 확인 창(전체이거나 300명 이상이면 인원 숫자 직접 입력) · 10분 안 전체 발송은 한 번 더(force) · 나에게 시험.
    부문은 대상 조건으로만(콘솔 안) · 부문별 숫자는 어디에도 두지 않는다. 실시간 연결 수는 서버 집계가 없어 두지 않는다. */
 var PUSH_REC={ t:20, b:40 }, PUSH_MAX={ t:40, b:120 };   /* v4.78 A11 잠금 화면 권장(제목 20 · 본문 40 · 핵심은 본문 앞 30자) · 서버 한도 40 · 120 */
-var PUSH_GO_N={ home:"홈", notices:"공지 목록", photoq:"포토부스 번호표", ev_cchat:"커피챗", dap:"AX LOUNGE 상담" };   /* v4.78 A5 공지 목록 */
-var PUSH_TYPES=[["all","전체 구독자"],["emps","개인(사번)"],["dap","AX LOUNGE 상담 신청자"],["cchat","커피챗 신청자"],["photo","포토부스 대기"],["group","그룹(올린 명단)"]].filter(function(x){ return PHOTO_Q_ON||x[0]!=="photo"; });   /* v5.03 포토부스 대기열 폐지 */
+var PUSH_GO_N={ home:"홈", notices:"공지 목록", photoq:"포토부스 번호표", ev_cchat:"커피챗", dap:"AX 라운지" };   /* v4.78 A5 공지 목록 */
+var PUSH_TYPES=[["all","전체 구독자"],["emps","개인(사번)"],["dap","AX 라운지 신청자"],["cchat","커피챗 신청자"],["photo","포토부스 대기"],["group","그룹(올린 명단)"]].filter(function(x){ return PHOTO_Q_ON||x[0]!=="photo"; });   /* v5.03 포토부스 대기열 폐지 */
 var PUSH_JOB_TAG={ "대기":"warn","처리중":"pri","완료":"ok","중단":"bad","취소":"off","건너뜀":"off" };
-var PUSH_AUTO=[["photo","포토부스"],["cchat","커피챗"],["dap","AX LOUNGE 상담"],["crowd","혼잡 해소"]].filter(function(x){ return PHOTO_Q_ON||x[0]!=="photo"; });   /* v5.03 포토부스 대기열 폐지 */   /* v4.78 D1 AX LOUNGE 상담 승인 · 10분 전 */
+var PUSH_AUTO=[["photo","포토부스"],["cchat","커피챗"],["dap","AX 라운지"],["crowd","혼잡 해소"]].filter(function(x){ return PHOTO_Q_ON||x[0]!=="photo"; });   /* v5.03 포토부스 대기열 폐지 */   /* v4.78 D1 AX 라운지 승인 · 10분 전 */
 var PUSH_SAFE="화재·대피 같은 안전 통지는 사내 방송·기존 안전 채널이 정본입니다. 푸시는 도달을 보장하지 않습니다. 이미 나간 푸시는 회수되지 않습니다.";
 /* v4.78 A11 발송 기준 · 문구 프리셋 · 정정 프리셋(○○ 칸을 채워야 보낼 수 있다) · A8 17F 강연 시간(잠정)에는 「소리 없이」를 미리 켠다 */
 var PUSH_RULE="푸시로 보내는 것: 안전 · 입장 · 시작 · 장소 변경 · 지연. 앱 공지만 하는 것: 안내 · 홍보 · 한산 · 혼잡 소식.";
@@ -4514,7 +4516,7 @@ function viewPush(){
   h+=card("발송 이력","공지 · 예약 · 대상 지정 · 시험은 한 줄씩 · 자동 알림은 오늘 묶음",'<div id="pxHist">'+pushHistHtml()+'</div>');
   var L=pushLim();
   h+=memo('<p><b>도달</b> · 알림을 구독한 기기에만 갑니다. 아이폰은 홈 화면 앱에서만 받습니다. 도달 불가 인원에게는 앱 안 공지가 정본입니다.</p>'+
-    '<p><b>상한</b> · 사람당 하루 '+L.day+'건(포토부스 · 커피챗 · AX LOUNGE 상담 · 혼잡 해소 · 시험은 세지 않음) · 전체급(전체 또는 '+L.confirm+'명 이상) 하루 '+L.all+'회 · 전체급 '+L.gap+'분 안이면 한 번 더 확인 · 같은 제목 · 같은 대상 5분 안 거절 · 개인 '+L.emps+'명까지 · 전체급은 인원 숫자 확인 뒤 '+(L.hold||0)+'초 보류(그 사이 취소).</p>'+
+    '<p><b>상한</b> · 사람당 하루 '+L.day+'건(포토부스 · 커피챗 · AX 라운지 · 혼잡 해소 · 시험은 세지 않음) · 전체급(전체 또는 '+L.confirm+'명 이상) 하루 '+L.all+'회 · 전체급 '+L.gap+'분 안이면 한 번 더 확인 · 같은 제목 · 같은 대상 5분 안 거절 · 개인 '+L.emps+'명까지 · 전체급은 인원 숫자 확인 뒤 '+(L.hold||0)+'초 보류(그 사이 취소).</p>'+
     '<p><b>멈출 때</b> · 오발송이면 보류 창에서 취소 · 이미 나갔으면 1단계 수동 발송 잠금 + 정정 프리셋 · 자동 알림까지 문제면 2단계 전체 정지. 기준표는 「QA/푸시 운영 절차.md」.</p>'+
     '<p><b>문구</b> · 잠금 화면에 그대로 보입니다. 이름 · 부문 · 행운권 수 · 경품을 쓰지 않습니다. 제목 '+PUSH_REC.t+'자 · 본문 '+PUSH_REC.b+'자 안이면 잘리지 않습니다.</p>'+
     '<p><b>안전</b> · '+esc(PUSH_SAFE)+'</p>'+
@@ -4550,19 +4552,19 @@ function pushCfgHtml(){
   var o=[["ON","토큰 필요(기본)"],["OFF","토큰 없이도 받음"]].map(function(x){ return '<option value="'+x[0]+'"'+((st.tok==="OFF"?"OFF":"ON")===x[0]?" selected":"")+'>'+x[1]+'</option>'; }).join("");
   var L=pushLim(), man=st.manual!==0, v78=st.manual!=null;   /* v4.78 옛 서버(manual 없음)는 새 줄을 숨긴다 */
   /* 261003 UI 정돈 6단계 · 잠그기 · 전체 정지(위험)는 일반 설정 줄 사이가 아니라 카드 맨 아래 「멈추기 · 잠그기」 구역으로(버튼 · 확인 절차 그대로) */
-  var stop=(v78?'<div class="pk"><b>1단계 수동 발송 잠금</b>'+(man?tag("풀림","ok"):tag("잠김","bad"))+'<button class="btn sm '+(man?"danger":"pri")+'" onclick="pushManAsk('+(man?0:1)+')">'+(man?"잠그기":"풀기")+'</button><span class="cap">공지 · 대상 지정 · 예약 알림만 막습니다. 포토부스 · 커피챗 · AX LOUNGE 상담 알림은 계속 나갑니다. 먼저 이것부터.</span></div>':'')+
+  var stop=(v78?'<div class="pk"><b>1단계 수동 발송 잠금</b>'+(man?tag("풀림","ok"):tag("잠김","bad"))+'<button class="btn sm '+(man?"danger":"pri")+'" onclick="pushManAsk('+(man?0:1)+')">'+(man?"잠그기":"풀기")+'</button><span class="cap">공지 · 대상 지정 · 예약 알림만 막습니다. 포토부스 · 커피챗 · AX 라운지 알림은 계속 나갑니다. 먼저 이것부터.</span></div>':'')+
     '<div class="pk"><b>'+(v78?"2단계 전체 정지":"발송")+'</b>'+(st.on?tag("켜짐","ok"):tag("전체 정지","bad"))+'<button class="btn sm '+(st.on?"danger":"pri")+'" onclick="pushOnAsk('+(st.on?0:1)+')">'+(st.on?"전체 정지":"다시 켜기")+'</button><span class="cap">자동 알림까지 모두 멈추고 대기 작업을 취소합니다.</span></div>';
   return card("발송 설정","",
     '<div class="pk"><b>보낼 수 있는 시간</b><input class="in w-m" id="pxTime" value="'+esc(st.time)+'" placeholder="08:30-18:30"><button class="btn sm" onclick="pushTimeSave()">저장</button>'+(st.win?tag("지금 안","ok"):tag("지금 밖 · 시험만","warn"))+'</div>'+
     (v78?'<div class="pk"><b>발송 허용 날짜</b><input class="in w-m" id="pxDates" value="'+esc((st.dates||[]).join(", "))+'" placeholder="비우면 제한 없음 · 예: 2026-10-26"><button class="btn sm" onclick="pushDatesSave()">저장</button>'+(st.dateOk?tag((st.dates||[]).length?"오늘 허용":"제한 없음","ok"):tag("오늘은 발송 날짜 아님 · 시험만","warn"))+
       '<p class="cap" style="width:100%">목록 밖 날짜에는 나에게 시험만 나갑니다(자동 알림 포함). 마지막 날짜가 지나면 참가자 폰이 알림 구독을 스스로 지웁니다. 10/22 동결 때 2026-10-26 을 넣고, 리허설 · 실폰 확인 날은 그날을 더합니다.</p></div>'+
       '<div class="pk"><b>상한 · 보류 · 유효</b><span class="pz-nums"><label class="fld">사람당 하루<input class="in" id="pxDay" inputmode="numeric" value="'+esc(String(L.day))+'"></label><label class="fld">전체급 하루<input class="in" id="pxAll" inputmode="numeric" value="'+esc(String(L.all))+'"></label><label class="fld">보류(초)<input class="in" id="pxHold" inputmode="numeric" value="'+esc(String(L.hold))+'"></label><label class="fld">공지 유효(분)<input class="in" id="pxTtl" inputmode="numeric" value="'+esc(String(L.ttl))+'"></label><button class="btn sm" onclick="pushNumSave()">저장</button></span>'+
-      '<p class="cap" style="width:100%">사람당 하루 = 공지 · 추첨 · 대상 지정처럼 요청하지 않은 알림(포토부스 · 커피챗 · AX LOUNGE 상담 · 혼잡 해소는 세지 않음). 전체급 = 전체 또는 '+esc(String(L.confirm))+'명 이상. 보류 = 전체급을 누른 뒤 취소할 수 있는 시간(0 = 끔). 긴급 상황에서 모자라면 여기서 올립니다.</p></div>':'')+
+      '<p class="cap" style="width:100%">사람당 하루 = 공지 · 추첨 · 대상 지정처럼 요청하지 않은 알림(포토부스 · 커피챗 · AX 라운지 · 혼잡 해소는 세지 않음). 전체급 = 전체 또는 '+esc(String(L.confirm))+'명 이상. 보류 = 전체급을 누른 뒤 취소할 수 있는 시간(0 = 끔). 긴급 상황에서 모자라면 여기서 올립니다.</p></div>':'')+
     '<div class="pk"><b>토큰 기준</b><span>'+esc(tk)+'</span>'+tag(st.tokReq?"지금 토큰 필요":"지금 토큰 없이","off")+
       '<span class="row" style="gap:8px;flex-wrap:nowrap"><select class="in sm w-m" id="pxTok">'+o+'</select><button class="btn sm" onclick="pushTokAsk()">바꾸기</button></span>'+
       '<p class="cap" style="width:100%">알림 구독 · 알림 설정 · 실시간 연결이 같은 기준을 씁니다. 기본은 토큰 필요(사용자 결정 260930) · 토큰 없는 폰은 소켓 대신 폴링 · 알림을 켤 수 없습니다.</p></div>'+
     (st.ccDay?'<div class="pk"><b>커피챗 10분 전</b><input class="in w-m" id="pxCcDay" value="'+esc(st.ccDay)+'" placeholder="2026-10-26"><button class="btn sm" onclick="pushCcDaySave()">저장</button>'+
-      '<p class="cap" style="width:100%">매칭된 회차 · 승인된 AX LOUNGE 상담 시작 '+esc(String(st.ccPre||10))+'분 전에 그 사람에게 알림이 갑니다(예약 메뉴에 시간마다 한 줄 · 커피챗 · AX LOUNGE 상담 둘 다 이 날짜). 날짜를 비우면 행사일 2026-10-26 · 시험 때만 오늘로 두고 끝나면 비웁니다.</p></div>':'')+   /* v4.77 옛 서버(ccDay 없음)는 줄을 숨긴다 */
+      '<p class="cap" style="width:100%">매칭된 회차 · 승인된 AX 라운지 시작 '+esc(String(st.ccPre||10))+'분 전에 그 사람에게 알림이 갑니다(예약 메뉴에 시간마다 한 줄 · 커피챗 · AX 라운지 둘 다 이 날짜). 날짜를 비우면 행사일 2026-10-26 · 시험 때만 오늘로 두고 끝나면 비웁니다.</p></div>':'')+   /* v4.77 옛 서버(ccDay 없음)는 줄을 숨긴다 */
     '<div class="dz-h">멈추기 · 잠그기</div>'+stop);
 }
 function pushCcDaySave(){
@@ -4671,7 +4673,7 @@ function pushCfgGo(p, msg){
 /* v4.78 A3 1단계 수동 발송 잠금 · A4 발송 허용 날짜 · A7 상한 · 보류 · 유효 */
 function pushManAsk(on){
   dialog({ t:on?"수동 발송 잠금을 풀까요?":"수동 발송을 잠글까요?",
-    s:on?"공지 푸시 · 대상 지정 · 예약 알림이 다시 나갑니다.":"공지 푸시 · 대상 지정 · 예약 · 관람 시간 알림이 나가지 않고 <b>대기 · 보류 중인 사람 알림은 취소</b>됩니다. 포토부스 · 커피챗 · AX LOUNGE 상담 · 혼잡 해소 알림은 계속 나갑니다. 앱 안 공지는 그대로 나갑니다.",
+    s:on?"공지 푸시 · 대상 지정 · 예약 알림이 다시 나갑니다.":"공지 푸시 · 대상 지정 · 예약 · 관람 시간 알림이 나가지 않고 <b>대기 · 보류 중인 사람 알림은 취소</b>됩니다. 포토부스 · 커피챗 · AX 라운지 · 혼잡 해소 알림은 계속 나갑니다. 앱 안 공지는 그대로 나갑니다.",
     ok:on?"풀기":"잠그기", danger:!on, onOk:function(){ pushCfgGo({ manual:on?"ON":"OFF" }, on?"수동 발송 잠금을 풀었습니다":"수동 발송을 잠갔습니다(1단계)"); } });
 }
 function pushDatesSave(){
@@ -4689,7 +4691,7 @@ function pushNumSave(){
 }
 function pushOnAsk(on){
   dialog({ t:on?"알림 발송을 다시 켤까요?":"알림을 전체 정지할까요?",
-    s:on?"정지 동안 취소된 작업은 다시 나가지 않습니다.":"지금부터 모든 알림(공지 푸시 · 대상 지정 · 포토부스 · 커피챗 · AX LOUNGE 상담 · 혼잡 해소 · 예약)이 나가지 않고 <b>대기 작업은 취소</b>됩니다. 앱 안 공지는 그대로 나갑니다. 사람이 보내는 알림만 문제면 1단계 수동 발송 잠금을 먼저 씁니다.",
+    s:on?"정지 동안 취소된 작업은 다시 나가지 않습니다.":"지금부터 모든 알림(공지 푸시 · 대상 지정 · 포토부스 · 커피챗 · AX 라운지 · 혼잡 해소 · 예약)이 나가지 않고 <b>대기 작업은 취소</b>됩니다. 앱 안 공지는 그대로 나갑니다. 사람이 보내는 알림만 문제면 1단계 수동 발송 잠금을 먼저 씁니다.",
     ok:on?"다시 켜기":"전체 정지", danger:!on, onOk:function(){ pushCfgGo({ on:on?"ON":"OFF" }, on?"알림 발송을 켰습니다":"알림을 전체 정지했습니다"); } });
 }
 function pushTimeSave(){
@@ -5146,7 +5148,7 @@ function ideaCsv(){
   csvDl("아이디어_"+new Date().toISOString().slice(0,10)+".csv", out.join("\n"));
 }
 
-/* ── 9-2. 담당 명단 · 1F AX LOUNGE 상담 · 18F 커피챗 (v4.26 17F 강연은 자유 참석이라 명단 없음) ──
+/* ── 9-2. 담당 명단 · 1F AX 라운지 · 18F 커피챗 (v4.26 17F 강연은 자유 참석이라 명단 없음) ──
  * v4.72 (260930 QA 6 결정 · 스태프 폰에서 담당 명단 탭을 뺀 대신) 콘솔이 입장 처리 · 노쇼 표시 · 노쇼 해제를 모두 한다. 서버는 staff_mark(in · noshow · clear) 그대로.
  *   입장 처리 = 상담 체크인 · 커피챗 참석과 같다(스탬프 03 적립 · 노쇼 표시가 있었으면 서버가 풀어 준다).
  * v4.74 (260930) 입장 취소(staff_mark unin) · 입장 처리됨 줄에 「입장 취소」 · 상담 체크인 → 승인 · 커피챗 참석 → 매칭(테이블이 없으면 대기) · 스탬프 03 은 그대로(확인 창에 적는다) · 처리 뒤 7초 되돌리기(다시 입장 처리 · 스탬프는 그대로라 겹치지 않는다) · 원장이 「완료」인 줄에는 버튼이 없다.
@@ -5154,7 +5156,7 @@ function ideaCsv(){
  *   옛 서버는 from 을 읽지 않는다. 그래서 누르는 순간 명단을 한 번 새로 받아 이 화면이 본 상태(st · raw · 줄 id)와 같을 때만 보내는 절차를 그대로 둔다(새 서버에서도 같다). 다르면 그 행만 새 상태로 고치고 보내지 않는다. 옛 서버에 입장 취소를 보내면 「이 서버는 아직 입장 취소를 받지 않습니다」.
  *   같은 사람의 줄이 둘이면(첫 상담을 마친 사람의 두 번째 상담) 서버 staff_mark 가 고르는 줄과 같은 규칙(진행 중 → 입장한 줄 → 나머지)으로 버튼을 그 줄에만 둔다. 옛 서버는 시간 순 첫 줄을 골라 「이미 입장」(dup)으로 답한다 · 그러면 성공으로 그리지 않고 명단을 다시 받는다.
  * 노쇼 표시는 담당표시 시트 한 줄이고 원장(신청 · 상담 · 커피챗 시트)은 그대로다. 좌석 · 슬롯 반환은 각 신청 화면에서. */
-var ROS_PROGS=[{v:"dap",n:"1F AX LOUNGE 상담"},{v:"cchat",n:"18F 커피챗"}];
+var ROS_PROGS=[{v:"dap",n:"1F AX 라운지"},{v:"cchat",n:"18F 커피챗"}];
 var ROS={ prog:"dap", f:"all" };
 var ROS_LAB={ "in":"입장 처리", unin:"입장 취소", noshow:"노쇼 표시", clear:"노쇼 해제" };
 var ROS_RAW_IN={ dap:"체크인", cchat:"참석" };
@@ -5205,7 +5207,7 @@ function viewRoster(){
     '<p><b>입장 취소</b>는 잘못 누른 입장을 되돌립니다. 상담은 「체크인」에서 「승인」으로, 커피챗은 「참석」에서 「매칭」(테이블이 없으면 「대기」)으로 돌아가고 <b>스탬프 03은 그대로</b> 남습니다(스탬프 · 행운권이 흔들리지 않게). 그래서 다시 입장 처리를 해도 스탬프가 또 쌓이지 않습니다. 입장 취소는 확인 창을 거치고, 처리 뒤 7초 동안 되돌리기(다시 입장 처리)가 뜹니다. 상담이 「완료」인 줄은 되돌릴 수 없습니다.</p>'+
     '<p><b>노쇼 표시</b>는 담당표시 시트에 한 줄 남기는 표시입니다. 신청 · 상담 · 커피챗 원장은 바뀌지 않습니다. 이미 입장한 사람은 노쇼로 표시할 수 없고, 노쇼로 표시된 사람이 입장하면 표시가 자동으로 풀립니다(입장과 노쇼가 함께 남지 않습니다).</p>'+
     '<p>같은 사람이 상담을 두 번 잡았으면(첫 상담을 마친 뒤 두 번째) 진행 중인 줄에만 버튼이 있습니다. 두 운영자가 같은 사람을 동시에 누르면, 나중에 누른 쪽은 「그 사이 바뀌었습니다」로 멈추고 그 행만 새 상태로 바뀝니다.</p>'+
-    '<p>AX LOUNGE 상담을 상담 승인 화면에서 「노쇼」로 바꾼 경우(원장 노쇼)는 여기서 처리하지 않습니다. 상담 승인 화면의 되돌리기를 씁니다.</p>');
+    '<p>AX 라운지을 상담 승인 화면에서 「노쇼」로 바꾼 경우(원장 노쇼)는 여기서 처리하지 않습니다. 상담 승인 화면의 되돌리기를 씁니다.</p>');
   return h+card("",rosName(p),body);
 }
 function rosRow(emp){ var d=rosData(); return rosPick((d&&d.rows)||[], emp); }
@@ -6441,11 +6443,11 @@ function viewInv(){
   var rec=d.recent||[];
   h+=card("최근 기록", "원장 최근 20줄 · 지우지 않고 되돌림 한 줄을 남깁니다",
     rec.length?'<div class="wrap"><table class="tb"><tr><th>시각</th><th>품목</th><th>구분</th><th class="tdr">수량</th><th>곳</th><th>사번</th><th></th></tr>'+rec.map(function(r){ return '<tr'+(r.v?' style="opacity:.5"':'')+'><td class="n cap">'+esc(short(r.t))+'</td><td>'+esc(r.n)+'</td><td>'+esc(IV_KIND[r.k]||r.k)+(r.v?' '+tag("되돌림","off"):'')+'</td><td class="n tdr">'+invN(r.q)+'</td><td class="cap">'+esc(IV_PLACE[r.place]||r.place||"")+'</td><td class="n">'+esc(r.emp||"")+'</td><td>'+(!r.v&&/^(give|box|chk)$/.test(r.k)?'<button class="btn sm" onclick="invUndoAsk(\''+jq(r.rid)+'\',\''+jq(r.id)+'\')">되돌리기</button>':'')+'</td></tr>'; }).join("")+'</table></div>':'<p class="cap">아직 없습니다.</p>');
-  h+=memo('<p><b>나감</b> · 원장(룰렛 등급 · 체크인 존 키트 · 박스 개봉 · 콘솔 지급 · 수량 맞추기)과 서버에 이미 있는 기록(행운권 당첨 · 완주 경품 당첨 · 타자왕 1~3위(17:00 뒤) · AX LOUNGE 상담 완료)을 합친 값입니다. 되돌린 기록은 빠집니다.</p>'+
+  h+=memo('<p><b>나감</b> · 원장(룰렛 등급 · 체크인 존 키트 · 박스 개봉 · 콘솔 지급 · 수량 맞추기)과 서버에 이미 있는 기록(행운권 당첨 · 완주 경품 당첨 · 타자왕 1~3위(17:00 뒤) · AX 라운지 완료)을 합친 값입니다. 되돌린 기록은 빠집니다.</p>'+
     '<p><b>룰렛 5등급</b> · 총수량은 완주 경품 입고표와 같은 값입니다. 17:00 실물 잔여는 「럭키드로우·완주 경품 추첨 › 완주 경품 추첨」에서 넣습니다(완주 경품 추첨이 그 값을 씁니다). 2등이 먼저 바닥나면 커피 예비 40병으로 보충합니다(결정 4).</p>'+
     '<p><b>커피</b> · 「참고」 숫자는 커피챗 참석 · 상담 입장 수입니다. 박스당 수량이 정해져야 스태프 폰의 「박스 1개 열었음」이 셉니다.</p>'+
     '<p><b>슈퍼관리자</b> · 남은 수 맞추기 · 총수량 · 품목 편집은 본인 확인(PIN)과 사유를 넣고 확인 문구를 쳐야 저장됩니다. 운영로그 · 조정 기록에 남습니다. 가격은 어디에도 넣지 않습니다.</p>'+
-    '<p><b>경고에서 빠지는 것</b> · 수량 미정(AX LOUNGE 상담 사은품 등) · C 등급(생수 · 목걸이 · 브로셔 · 포스터 · 스태프 유니폼). AI 구독권 · 간식 · AX LOUNGE 상담 사은품 수량은 재고 관리에서 뺐습니다(결정 8).</p>');
+    '<p><b>경고에서 빠지는 것</b> · 수량 미정(AX 라운지 사은품 등) · C 등급(생수 · 목걸이 · 브로셔 · 포스터 · 스태프 유니폼). AI 구독권 · 간식 · AX 라운지 사은품 수량은 재고 관리에서 뺐습니다(결정 8).</p>');
   return h;
 }
 /* ── 상세 서랍 ── */
