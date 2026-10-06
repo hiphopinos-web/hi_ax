@@ -874,6 +874,26 @@ details.hv-dz.off>summary b{color:var(--tx3)}
 .iv-form .in.w{width:var(--w-in-m)}
 .note.iv-nb{color:var(--bad);background:var(--bad-bg);border-color:var(--bad-bd)}
 @media(max-width:720px){.iv-form .in,.iv-form .in.w{width:100%}.iv-form .fld{flex:1 1 140px}}
+/* 261006 경품·재고 쉬운 판 */
+.iv-st .iv-line{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:8px 24px;font-size:var(--fs-b);font-weight:600;font-variant-numeric:tabular-nums}
+.iv-st .iv-line .tag{margin-right:4px}
+.iv-tb td.iv-left{font-size:var(--fs-h2);font-weight:700}
+.iv-tb td.iv-left.bad,.iv-big b.bad{color:var(--bad)}
+.iv-tb tr.iv-grp td{height:32px;padding:0 12px;background:var(--soft);font-size:var(--fs-c);font-weight:600;color:var(--tx2)}
+.iv-off{margin:12px 0 0;font-size:var(--fs-s);color:var(--tx3);line-height:1.7}
+.iv-off a{color:var(--tx3);text-decoration:underline}
+.iv-big{display:flex;align-items:center;gap:12px;padding:16px;border:1px solid var(--line);border-radius:8px}
+.iv-big span{font-size:var(--fs-s);color:var(--tx2);font-weight:600}
+.iv-big b{font-size:var(--fs-kpi);font-weight:700;font-variant-numeric:tabular-nums}
+.iv-adj{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.iv-adj #ivAd{padding-bottom:8px}
+.iv-why{margin-top:12px}
+details.iv-more .mb{padding-left:0}
+h3.iv-h{font-size:var(--fs-h2);font-weight:700;color:var(--tx);margin:24px 0 12px}
+h3.iv-h:first-child{margin-top:8px}
+details.iv-set{margin-top:24px}
+details.iv-set .mb{padding-left:0}
+@media(max-width:720px){.iv-tb th,.iv-tb td{padding-left:8px;padding-right:8px}.iv-tb tr.iv-grp td{padding:0 8px}}
 @media(max-width:1100px){.grid.grid>:nth-child(n){grid-column:span 12}}   /* 261003 너비 · 1100 아래는 격자 칸을 한 줄로(칸 규칙보다 뒤 · 더 구체적) */
 /* v5.72 10F 사전 신청 명단(p10-) */
 .p10-main>.card:first-child{margin-top:0}
@@ -6427,7 +6447,7 @@ function hvCfgEdit(k){
  * 가격은 어디에도 없다 · 지급 목록은 사번 · 이름만(부문 없음 · 260917) · 클래스 이름은 iv- 로 시작.
  * 같은 파일을 다른 세션이 함께 고치는 중이라(261003) 옛 함수(elSt · hvCtl · hvScrHtml · hvNeedX · renderDrawer)는 고치지 않고 감싸서 넓힌다. */
 var IVF={ g:"", pin:0, give:{}, list:{} };
-var IV_KIND={ give:"지급", box:"박스 개봉", chk:"체크인", adj:"수량 맞추기", cfg:"품목 편집", void:"되돌림", auto:"자동" };
+var IV_KIND={ give:"나감", box:"박스 개봉", chk:"체크인", adj:"남은 수 맞추기", cfg:"품목 편집", void:"되돌림", auto:"자동" };
 var IV_PLACE={ roulette:"룰렛", gate:"체크인 존", box:"박스", console:"콘솔", lucky:"행운권", fin:"완주 경품 추첨", type:"타자왕", dap:"상담", fcfs:"선착순 참여상", lk7:"7등 랜덤 굿즈", idea:"아이디어왕" };
 HVS.inv=1;
 NEED.inv=[{k:"inv",a:"inv_state"},{k:"sy",a:"sync",p:{emp:""}}];
@@ -6436,7 +6456,7 @@ HV_EL.push(["inv","경품·재고","e_inv"]);
 HV_ELREC.inv="";
 HV_VIEW.viewInv=function(){ return viewInv(); };
 SP_ACT.inv_adjust=1; SP_ACT.inv_cfg=1;
-CTL_ACT.inv_give=["inv",function(p){ return "경품 지급 기록 · "+invNm(p.id)+" "+(p.n||1)+(p.emp?" · "+p.emp:""); }];
+CTL_ACT.inv_give=["inv",function(p){ return "경품 나감 기록 · "+invNm(p.id)+" "+(p.n||1)+(p.emp?" · "+p.emp:""); }];
 CTL_ACT.inv_undo=["inv","재고 기록 되돌림"];
 CTL_ACT.inv_adjust=["inv",function(p){ return "남은 수 맞추기 · "+invNm(p.id)+" → "+p.cnt; }];
 CTL_ACT.inv_cfg=["inv",function(p){ return "품목 편집 · "+(p.id==="new"?(p.n||"새 품목"):invNm(p.id)); }];
@@ -6469,14 +6489,13 @@ function invLunch(d){ var m=invMin(d.now); return m>=690&&m<810; }
 var _ivElSt=elSt;
 elSt=function(k){
   if(k!=="inv") return _ivElSt(k);
-  var d=invD(), o={ p:["열어 보면 표시","off"], m:"총수량 · 나간 수 · 남은 수", nums:[] };
+  var d=invD(), o={ p:["열어 보면 표시","off"], m:"처음 수량 · 나감 · 남은 수", nums:[] };
   if(!d) return o;
   if(hvUnknown(d)){ o.p=["서버 갱신 뒤","off"]; o.m="서버를 새로 올리면 켜집니다"; o.nums=[["소진 경고","-"],["룰렛 등급 미입력","-"],["여유 키트","-"]]; return o; }
   if(!d.ok){ o.p=["받지 못함","bad"]; o.m=why(d); return o; }
-  var W=invWarns(d), bad=W.filter(function(x){ return x.lv==="bad"; }).length, sp=(d.kit||{}).spare, pend=(d.roul||{}).pending||0;
-  o.p=W.length?[(bad?"소진 임박 ":"소진 경고 ")+W.length,bad?"bad":"warn"]:["정상","ok"];
-  o.nums=[["소진 경고",W.length+"개"],["룰렛 등급 미입력",invN(pend)+"회"],["여유 키트",sp==null?"-":invN(sp)+"개"]];
-  o.m=W.length?W[0].t:"경고 없음 · 룰렛 등급 미입력 "+invN(pend);
+  var L=invLine(d);   /* 261006 쉬운 판 · 한 줄 문장 */
+  o.p=L.lv==="ok"?["여유","ok"]:L.out?["없음 "+L.out+(L.low?" · 곧 바닥 "+L.low:""),"bad"]:["곧 바닥 "+L.low,"warn"];
+  o.m=L.t; o.nums=[];
   return o;
 };
 var _ivCtl=hvCtl;
@@ -6485,7 +6504,7 @@ hvCtl=function(k){
   var d=invD(), sy=ST.data.sy||{}, zero=d&&d.ok?(d.items||[]).filter(function(it){ return it.src==="roul"&&it.q!=null&&it.left<=0; }):[];
   return (zero.length&&!sy.rouletteOut?'<div class="note warn">'+esc(zero.map(function(x){ return x.n; }).join(" · "))+' 소진 · 룰렛 소진 안내를 켤지 정합니다(자동으로 켜지지 않음)</div><div class="row mt8"><button class="btn danger" onclick="rouletteOut(1)">룰렛 소진 안내 켜기</button></div>':'')+
     '<div class="row'+(zero.length&&!sy.rouletteOut?" mt12":"")+'"><button class="btn" onclick="navSel(\'e_roul\',0)">룰렛 소진 안내</button><button class="btn" onclick="navSel(\'e_draw\',4)">7등 랜덤 굿즈 · 룰렛 잔여 실사</button></div>'+
-    '<p class="cap mt8">수동 지급 · 되돌리기는 품목을 눌러 엽니다. 남은 수 맞추기 · 총수량 · 품목 편집은 슈퍼관리자가 본인 확인과 사유를 넣고 합니다.</p>';
+    '<p class="cap mt8">남은 수 맞추기 · 누가 받았나 · 되돌리기는 품목 줄을 눌러 엽니다.</p>';
 };
 var _ivScr=hvScrHtml;
 hvScrHtml=function(k){
@@ -6509,84 +6528,128 @@ renderDrawer=function(){
   var db=box.querySelector(".db"); if(db) db.scrollTop=sc;
   if(aid&&el(aid)&&document.activeElement!==el(aid)) el(aid).focus();
 };
-/* ── 화면 ── */
+/* ── 화면 · 261006 쉬운 판(사용자 「재고 관리 프로그램이 너무 어렵다」) ──
+ *   기본 = 한 표(품목 · 처음 수량 · 나감 · 남은 수 · 상태 한 단어) · 현장에서 세는 것(룰렛 · 키트 · 커피) 위 · 자동으로 세는 것 아래 · 미정은 회색 한 줄
+ *   등급 · 소진 예상 · 키트 대비표 · 기록 · 메모 = 「더 보기」 접힘 하나 · 서랍 = 남은 수 맞추기 · 누가 받았나 · 설정(접힘: 손으로 나감 기록 · 총수량 · 품목 편집 · 추가)
+ *   서버 호출 · 권한(슈퍼관리자 + 본인 확인 PIN) · 확인 문구는 그대로. */
 function invBoxNeed(it){ return !!it&&it.src==="box"&&it.on&&!it.box; }   /* 박스 개봉 품목인데 박스당 수량이 없으면 스태프 폰 「박스 열기」가 nobox 로 막힌다 */
-function invTag(it, d){
-  if(it.q==null) return tag(it.g==="C"?"기록 안 함":"수량 미정","off");
-  if(!it.on) return tag("쓰지 않음","off");
+var IV_HAND={ roul:0, kit:1, box:2 }, IV_AUTO={ lucky:1, fcfs:1, lk7:1, type:1, dap:1, fin:1 };
+IVF.adj={}; IVF.set={}; IVF.all={}; IVF.more=false; IVF.re="";
+function invTx(s){ return String(s||"").replace(/콘솔 지급/g,"콘솔 기록").replace(/지급/g,"줌"); }   /* 서버 품목 글(note · how)의 옛 낱말을 현장 말로 */
+function invSt(it, d){
+  if(it.q==null) return ["미정","off"];
+  if(!it.on) return ["쓰지 않음","off"];
+  if(it.left<=0) return ["없음","bad"];
   var w=invWarn(it,d);
-  return w?tag(it.left<=0?"소진":w.lv==="bad"?"소진 임박":"주의",w.lv):tag("여유","ok");
+  return w?["곧 바닥",w.lv]:["여유","ok"];
 }
-function invBarHtml(it, d){
-  if(it.q==null) return '<span class="cap">'+(it.out?"나감 "+invN(it.out):"-")+'</span>';
-  var w=invWarn(it,d), p=it.q>0?Math.max(0,Math.min(100,Math.round(it.left/it.q*100))):0;
-  return '<div class="iv-bar"><div class="bar'+(w&&w.lv==="bad"?" over":w?" iv-w":"")+'"><i style="width:'+p+'%"></i></div><b class="n">'+invN(it.left)+'</b></div>';
+/* 상태 띠 한 줄 · 「곧 바닥: 룰렛 1등 텀블러 · 7개 남음」 */
+function invLine(d){
+  var low=[], out=[];
+  (d.items||[]).forEach(function(it){ if(!invWarn(it,d)) return; if(it.left<=0) out.push(it); else low.push(it); });
+  low.sort(function(a,b){ return a.left/(a.q||1)-b.left/(b.q||1); });
+  var p=[];
+  if(out.length) p.push(["없음",out.slice(0,3).map(function(x){ return x.n; }).join(" · ")+(out.length>3?" 외 "+(out.length-3)+"개":""),"bad"]);
+  if(low.length) p.push(["곧 바닥",low.slice(0,2).map(function(x){ return x.n+" · "+invN(x.left)+"개 남음"; }).join(" / ")+(low.length>2?" 외 "+(low.length-2)+"개":""),"warn"]);
+  return { p:p, t:p.length?p.map(function(x){ return x[0]+": "+x[1]; }).join(" / "):"모두 여유", lv:out.length?"bad":low.length?"warn":"ok", out:out.length, low:low.length };
 }
+var _ivFrame=hvFrame;
+hvFrame=function(k){
+  if(k!=="inv") return _ivFrame(k);
+  var d=invD(); if(!d||!d.ok||hvUnknown(d)) return _ivFrame(k);
+  var L=invLine(d), op=HVO.inv||"";
+  return '<div class="hv-st iv-st"><div class="iv-line">'+(L.p.length?L.p.map(function(x){ return '<span>'+tag(x[0],x[2])+' '+esc(x[1])+'</span>'; }).join(""):tag("여유","ok")+' <span>모두 여유</span>')+'</div>'+
+    '<div class="r"><button class="btn sm'+(op==="ctl"?" on":"")+'" aria-expanded="'+(op==="ctl")+'" onclick="hvOpenP(\'inv\',\'ctl\')">통제</button></div></div>'+
+    (op==="ctl"?'<div class="hv-pn">'+card("통제","",hvCtl(k),'<button class="btn sm" onclick="hvOpenP(\'inv\',\'ctl\')">접기</button>')+'</div>':'');
+};
 function viewInv(){
-  var d=invD(), sup=supOn(), sok=supOk();
+  var d=invD(), sup=supOn();
   if(!d) return card("경품·재고","",skel());
   if(hvUnknown(d)) return card("경품·재고","",'<div class="note">이 서버는 아직 경품·재고를 모릅니다. 서버 갱신 뒤 이 화면이 켜집니다. 그 전에는 룰렛 소진 안내 · 완주 경품 추첨 룰렛 잔여 입력을 각 요소에서 씁니다.</div>');
   if(!d.ok) return card("경품·재고","",'<div class="empty">재고를 받지 못했습니다('+esc(why(d))+').</div>');
-  var items=d.items||[], W=invWarns(d), h="";
-  if(sup&&!sok&&IVF.pin) h+=supGateView();
-  /* 1 경고 */
-  if(W.length) h+=card("소진 경고", W.length+"개 · 소진 예상은 최근 30분 기준"+(invLunch(d)?" · 점심 시간대라 참고":""),
-    '<div class="iv-warn">'+W.map(function(w){ return '<div class="it">'+tag(w.lv==="bad"?"빨강":"노랑",w.lv)+'<span>'+esc(w.t)+'</span><button class="btn sm" onclick="drwOpen(\'inv\',\''+jq(w.id)+'\')">상세</button></div>'; }).join("")+'</div>');
+  var items=d.items||[], h="";
+  if(sup&&!supOk()&&IVF.pin) h+=supGateView();
+  if(supOk()&&IVF.re){ var re=IVF.re; IVF.re=""; setTimeout(function(){ if(invItem(re)) drwOpen("inv",re); },0); }   /* 본인 확인 뒤 보던 서랍으로(입력값은 IVF.adj 에 남아 있다) */
   var nb=items.filter(invBoxNeed);
-  if(nb.length) h+='<div class="bands">'+band("warn","박스당 수량이 비어 있습니다 · "+nb.map(function(x){ return "<b>"+esc(x.n)+"</b>"; }).join(" · ")+" · 스태프 폰의 「박스 1개 열었음」이 막힙니다. 커피는 1개씩이라 박스당 <b>1</b>로 저장합니다.",'<button class="btn sm'+(sup?"":" lk")+'" onclick="drwOpen(\'inv\',\''+jq(nb[0].id)+'\')">'+(sup?"":LOCK_SVG+" ")+'열기</button>')+'</div>';
-  /* 2 품목 표 */
+  if(nb.length) h+='<div class="bands">'+band("warn","박스당 수량이 비어 있습니다 · "+nb.map(function(x){ return "<b>"+esc(x.n)+"</b>"; }).join(" · ")+" · 스태프 폰 「박스 1개 열었음」이 막힙니다. 커피는 박스당 <b>1</b>.",'<button class="btn sm'+(sup?"":" lk")+'" onclick="IVF.set[\''+jq(nb[0].id)+'\']=true;drwOpen(\'inv\',\''+jq(nb[0].id)+'\')">'+(sup?"":LOCK_SVG+" ")+'열기</button>')+'</div>';
+  h+=invHumWarn(d);
+  var use=items.filter(function(x){ return x.q!=null&&x.on; }), off=items.filter(function(x){ return x.q==null||!x.on; });
+  var hand=use.filter(function(x){ return x.src in IV_HAND; }).map(function(x,i){ return [x,i]; }).sort(function(a,b){ return IV_HAND[a[0].src]-IV_HAND[b[0].src]||a[1]-b[1]; }).map(function(x){ return x[0]; });
+  var auto=use.filter(function(x){ return IV_AUTO[x.src]; }), etc=use.filter(function(x){ return !(x.src in IV_HAND)&&!IV_AUTO[x.src]; });
+  var row=function(it){ var s=invSt(it,d); return '<tr class="iv-row" data-iv="'+esc(it.id)+'" onclick="drwOpen(\'inv\',\''+jq(it.id)+'\')"><td><b>'+esc(it.n)+'</b></td><td class="n tdr hide-m">'+invN(it.q)+'</td><td class="n tdr">'+invN(it.out)+'</td><td class="n tdr iv-left'+(s[1]==="bad"?" bad":"")+'">'+invN(it.left)+'</td><td>'+tag(s[0],s[1])+'</td></tr>'; };
+  var grp=function(t,list){ return list.length?'<tr class="iv-grp"><td colspan="5">'+esc(t)+'</td></tr>'+list.map(row).join(""):""; };
+  var tb='<div class="wrap"><table class="tb iv-tb"><tr><th>품목</th><th class="tdr hide-m">처음 수량</th><th class="tdr">나감</th><th class="tdr">남은 수</th><th>상태</th></tr>'+
+    grp("현장에서 세는 것",hand)+grp("자동으로 세는 것",auto)+grp("그 밖",etc)+(!use.length?emptyRow(5,"품목이 없습니다."):"")+'</table></div>';
+  var gray=off.length?'<p class="iv-off">미정 · '+off.map(function(x){ return '<a href="#" onclick="drwOpen(\'inv\',\''+jq(x.id)+'\');return false">'+esc(x.n)+(x.q!=null&&!x.on?"(쓰지 않음)":"")+'</a>'; }).join(" · ")+'</p>':'';
+  h+=card("품목","줄을 누르면 누가 받았나 · 남은 수 맞추기",tb+gray,'<span class="cap">서버 시각 <b class="n">'+esc(hhmm(d.now))+'</b></span>');
+  return h+invMore(d);
+}
+/* 더 보기 · 접힘 하나 · 예전 화면의 등급 · 소진 예상 · 키트 대비표 · 기록 · 메모를 그대로 담는다 */
+function invMore(d){
+  var items=d.items||[], sup=supOn(), R=d.roul||{}, K=d.kit||{};
   var cnt={ "":items.length, A:0, B:0, C:0 }; items.forEach(function(x){ cnt[x.g]=(cnt[x.g]||0)+1; });
   var gch='<div class="chips">'+["","A","B","C"].map(function(g){ return '<button class="fchip'+(IVF.g===g?" on":"")+'" onclick="IVF.g=\''+g+'\';render()">'+(g?g+" "+({A:"사람별",B:"수량만",C:"기록 안 함"})[g]:"전체")+'<span class="cnt">'+cnt[g]+'</span></button>'; }).join("")+'</div>';
   var add='<button class="btn sm'+(sup?"":" lk")+'" onclick="invCfgAsk(\'new\')"'+(sup?"":' disabled title="슈퍼관리자만 바꿀 수 있어요"')+'>'+LOCK_SVG+' 품목 추가</button>';
   var list=items.filter(function(x){ return !IVF.g||x.g===IVF.g; });
-  var tb='<div class="wrap"><table class="tb"><tr><th>품목</th><th>등급</th><th class="tdr">총수량</th><th class="tdr">나감</th><th>남음</th><th>소진 예상</th><th>입력</th><th>상태</th></tr>'+list.map(function(it){
-    return '<tr class="iv-row" onclick="drwOpen(\'inv\',\''+jq(it.id)+'\')"><td><b>'+esc(it.n)+'</b>'+(it.note?'<div class="iv-sub">'+esc(it.note)+'</div>':'')+'</td><td>'+esc(it.g)+'</td><td class="n tdr">'+(it.q==null?'<span class="cap">미정</span>':invN(it.q))+'</td><td class="n tdr">'+invN(it.out)+(it.ref!=null?'<div class="iv-sub">참고 '+invN(it.ref)+'</div>':'')+(it.rsv!=null?'<div class="iv-sub">선착순 자격 '+invN(it.rsv)+'</div>':'')+'</td><td>'+invBarHtml(it,d)+'</td><td class="n">'+esc(invEta(it,d))+'</td><td class="cap">'+esc(it.how||"")+'</td><td>'+invTag(it,d)+'</td></tr>'; }).join("")+
-    (!list.length?emptyRow(8,"품목이 없습니다."):"")+'</table></div>';
-  var R=d.roul||{};
-  var foot='<p class="cap mt8">룰렛 사용 <b class="n">'+invN(R.used)+'</b>회 · 등급 입력 <b class="n">'+invN(R.graded)+'</b> · 미입력 <b class="n">'+invN(R.pending)+'</b>(스태프 폰에서 등급을 안 누른 횟수 · 마감 실사로 맞춥니다)'+(d.luckOther?' · 행운권 당첨 중 품목과 이어지지 않은 '+invN(d.luckOther)+'건(경품 글자 확인)':'')+'</p>';
-  h+=card("품목", "총수량 · 나감 · 남음 · 서버 시각 "+esc(hhmm(d.now)), '<div class="toolbar">'+gch+'<span class="sp"></span>'+add+'</div>'+tb+foot);
-  /* 3 키트 */
-  var K=d.kit||{};
-  h+=invHumWarn(d)+card("사전 신청 키트", "체크인 존 스캔 = 체크인 + 키트 지급 + 체크인 스탬프 3개", invLngLine(K)+imp([["사전 신청 명단",K.list||K.preDap?invN(K.pre)+"명"+(K.preDap!=null?" (라운지 "+invN(K.preDap)+"명 포함)":""):"아직 없음"],["신청자 지급",invN(K.givenPre)+"명"],["명단 밖 지급(여유 키트)",invN(K.givenOut)+"명"],["체크인 존 스캔",invN(K.chk)+"명"],["신청했으나 아직 안 받음",invN(K.preLeft)+"명"],["여유 키트",K.spare==null?"-":invN(K.spare)+"개",K.spare!=null&&K.spare<=0?"loss":""]])+
-    (K.lounge?'<p class="cap mt8">남은 라운지 키트를 럭키드로우 경품으로 돌리면 품목 「사전 신청 키트」를 눌러 슈퍼관리자가 「남은 수 맞추기」(사유 「기타」 · 메모 「럭키드로우 편입」)로 기록합니다.</p>':'')+
-    (K.list?'':'<p class="cap mt8">사전 신청 명단이 아직 없어요. 명단이 오면 지금은 모두 「명단 밖」으로 보고 여유 키트에서 지급합니다. 여유가 0 이 되면 스태프 폰이 「룰렛 굿즈로 대체」를 띄웁니다.</p>'));
-  /* 4 조정 기록 · 5 최근 기록 */
+  var t1='<div class="wrap"><table class="tb"><tr><th>품목</th><th>등급</th><th class="tdr">처음 수량</th><th class="tdr">나감</th><th class="tdr">남은 수</th><th>바닥 예상</th><th>세는 곳</th></tr>'+list.map(function(it){
+    return '<tr class="iv-row" onclick="drwOpen(\'inv\',\''+jq(it.id)+'\')"><td>'+esc(it.n)+(it.note?'<div class="iv-sub">'+esc(invTx(it.note))+'</div>':'')+'</td><td>'+esc(it.g)+'</td><td class="n tdr">'+(it.q==null?'<span class="cap">미정</span>':invN(it.q))+'</td><td class="n tdr">'+invN(it.out)+(it.ref!=null?'<div class="iv-sub">참고 '+invN(it.ref)+'</div>':'')+(it.rsv!=null?'<div class="iv-sub">선착순 자격 '+invN(it.rsv)+'</div>':'')+'</td><td class="n tdr">'+invN(it.left)+'</td><td class="n">'+esc(invEta(it,d))+'</td><td class="cap">'+esc(invTx(it.how))+'</td></tr>'; }).join("")+
+    (!list.length?emptyRow(7,"품목이 없습니다."):"")+'</table></div>';
+  var foot='<p class="cap mt8">룰렛 사용 <b class="n">'+invN(R.used)+'</b>회 · 등급 누름 <b class="n">'+invN(R.graded)+'</b> · 안 누름 <b class="n">'+invN(R.pending)+'</b>(스태프 폰에서 등급을 안 누른 횟수 · 마감 실사로 맞춥니다)'+(d.luckOther?' · 행운권 당첨 중 품목과 이어지지 않은 '+invN(d.luckOther)+'건(경품 글자 확인)':'')+' · 바닥 예상 = 최근 30분 속도'+(invLunch(d)?' · 점심 시간대라 참고':'')+'</p>';
+  var kit=invLngLine(K)+imp([["사전 신청 명단",K.list||K.preDap?invN(K.pre)+"명"+(K.preDap!=null?" (라운지 "+invN(K.preDap)+"명 포함)":""):"아직 없음"],["신청자 받음",invN(K.givenPre)+"명"],["명단 밖 받음(여유 키트)",invN(K.givenOut)+"명"],["체크인 존 스캔",invN(K.chk)+"명"],["신청했으나 아직 안 받음",invN(K.preLeft)+"명"],["여유 키트",K.spare==null?"-":invN(K.spare)+"개",K.spare!=null&&K.spare<=0?"loss":""]])+
+    (K.lounge?'<p class="cap mt8">남은 라운지 키트를 럭키드로우 경품으로 돌리면 「사전 신청 키트」 줄을 눌러 남은 수 맞추기(사유 「기타」 · 메모 「럭키드로우 편입」)로 남깁니다.</p>':'')+
+    (K.list?'':'<p class="cap mt8">사전 신청 명단이 아직 없습니다. 그동안은 모두 명단 밖으로 보고 여유 키트에서 줍니다. 여유가 0 이면 스태프 폰이 「룰렛 굿즈로 대체」를 띄웁니다.</p>');
   var adj=d.adj||[];
-  h+=card("조정 기록", "누가 · 언제 · 어느 품목 · 바뀐 값 · 사유 · 읽기만",
-    adj.length?'<div class="wrap"><table class="tb"><tr><th>시각</th><th>품목</th><th>구분</th><th>내용</th><th>처리자</th></tr>'+adj.map(function(r){ return '<tr><td class="n cap">'+esc(short(r.t))+'</td><td>'+esc(r.n)+'</td><td>'+esc(IV_KIND[r.k]||r.k)+'</td><td>'+(r.k==="adj"?'<b class="n">'+(r.q>0?"−"+invN(r.q):r.q<0?"+"+invN(-r.q):"0")+'</b> · ':'')+esc(r.why)+'</td><td class="n cap">'+esc(r.by||"-")+'</td></tr>'; }).join("")+'</table></div>':'<p class="cap">아직 없습니다.</p>');
+  var t2=adj.length?'<div class="wrap"><table class="tb"><tr><th>시각</th><th>품목</th><th>구분</th><th>내용</th><th>처리자</th></tr>'+adj.map(function(r){ return '<tr><td class="n cap">'+esc(short(r.t))+'</td><td>'+esc(r.n)+'</td><td>'+esc(IV_KIND[r.k]||r.k)+'</td><td>'+(r.k==="adj"?'<b class="n">'+(r.q>0?"−"+invN(r.q):r.q<0?"+"+invN(-r.q):"0")+'</b> · ':'')+esc(r.why)+'</td><td class="n cap">'+esc(r.by||"-")+'</td></tr>'; }).join("")+'</table></div>':'<p class="cap">아직 없습니다.</p>';
   var rec=d.recent||[];
-  h+=card("최근 기록", "원장 최근 20줄 · 지우지 않고 되돌림 한 줄을 남깁니다",
-    rec.length?'<div class="wrap"><table class="tb"><tr><th>시각</th><th>품목</th><th>구분</th><th class="tdr">수량</th><th>곳</th><th>사번</th><th></th></tr>'+rec.map(function(r){ return '<tr'+(r.v?' style="opacity:.5"':'')+'><td class="n cap">'+esc(short(r.t))+'</td><td>'+esc(r.n)+'</td><td>'+esc(IV_KIND[r.k]||r.k)+(r.v?' '+tag("되돌림","off"):'')+'</td><td class="n tdr">'+invN(r.q)+'</td><td class="cap">'+esc(IV_PLACE[r.place]||r.place||"")+'</td><td class="n">'+esc(r.emp||"")+'</td><td>'+(!r.v&&/^(give|box|chk)$/.test(r.k)?'<button class="btn sm" onclick="invUndoAsk(\''+jq(r.rid)+'\',\''+jq(r.id)+'\')">되돌리기</button>':'')+'</td></tr>'; }).join("")+'</table></div>':'<p class="cap">아직 없습니다.</p>');
-  h+=memo('<p><b>나감</b> · 원장(룰렛 등급 · 체크인 존 키트 · 박스 개봉 · 콘솔 지급 · 수량 맞추기)과 서버에 이미 있는 기록(행운권 당첨 · 선착순 참여상 수령 · 7등 당첨 · 타자왕 1~3위(17:00 뒤) · AX 라운지 완료)을 합친 값입니다. 되돌린 기록은 빠집니다.</p>'+
-    '<p><b>가습기</b> · 나감 = 선착순 참여상 수령 + 라운지 초과 대체 지급입니다. 「선착순 자격」은 수령 여부와 관계없이 자격을 받은 수입니다. 자격 + 라운지 초과 대체가 총수량을 넘으면 위에 경고가 뜹니다.</p>'+
-    '<p><b>룰렛 5등급</b> · 총수량은 서버 입고표 값입니다. 17:00 실물 잔여는 「럭키드로우 · 선착순 참여상 · 7등 › 7등 랜덤 굿즈」에서 넣습니다(7등 남은 경품 총수가 그 값을 씁니다). 2등이 먼저 바닥나면 커피 예비 40병으로 보충합니다(결정 4).</p>'+
-    '<p><b>커피</b> · 「참고」 숫자는 커피챗 참석 · 상담 입장 수입니다. 박스당 수량이 정해져야 스태프 폰의 「박스 1개 열었음」이 셉니다. 커피는 1개씩(박스당 1)입니다. 비어 있으면 위 안내가 뜨고, 품목 편집의 박스당 칸에 1이 미리 들어갑니다.</p>'+
-    '<p><b>슈퍼관리자</b> · 남은 수 맞추기 · 총수량 · 품목 편집은 본인 확인(PIN)과 사유를 넣고 확인 문구를 쳐야 저장됩니다. 운영로그 · 조정 기록에 남습니다. 가격은 어디에도 넣지 않습니다.</p>'+
-    '<p><b>경고에서 빠지는 것</b> · 수량 미정(AX 라운지 사은품 등) · C 등급(생수 · 목걸이 · 브로셔 · 포스터 · 스태프 유니폼). AI 구독권 · 간식 · AX 라운지 사은품 수량은 재고 관리에서 뺐습니다(결정 8).</p>');
-  return h;
+  var t3=rec.length?'<div class="wrap"><table class="tb"><tr><th>시각</th><th>품목</th><th>구분</th><th class="tdr">수량</th><th>곳</th><th>사번</th><th></th></tr>'+rec.map(function(r){ return '<tr'+(r.v?' class="dim"':'')+'><td class="n cap">'+esc(short(r.t))+'</td><td>'+esc(r.n)+'</td><td>'+esc(IV_KIND[r.k]||r.k)+(r.v?' '+tag("되돌림","off"):'')+'</td><td class="n tdr">'+invN(r.q)+'</td><td class="cap">'+esc(IV_PLACE[r.place]||r.place||"")+'</td><td class="n">'+esc(r.emp||"")+'</td><td>'+(!r.v&&/^(give|box|chk)$/.test(r.k)?'<button class="btn sm" onclick="invUndoAsk(\''+jq(r.rid)+'\',\''+jq(r.id)+'\')">되돌리기</button>':'')+'</td></tr>'; }).join("")+'</table></div>':'<p class="cap">아직 없습니다.</p>';
+  var memoP='<p><b>나감</b> · 스태프 폰(룰렛 등급 · 체크인 존 키트 · 박스 열기) · 콘솔 기록 · 남은 수 맞추기와 서버에 이미 있는 기록(행운권 당첨 · 선착순 참여상 수령 · 7등 당첨 · 타자왕 1~3위(17:00 뒤) · AX 라운지 상담 완료)을 합친 값입니다. 되돌린 기록은 빠집니다.</p>'+
+    '<p><b>곧 바닥</b> · 남은 수가 경고율(기본 15%) 아래이거나, 최근 30분 속도로 마감 전에 바닥날 때입니다. 5% 아래 · 30분 안이면 빨강. 수량 미정 · C 등급 · 쓰지 않는 품목은 빠집니다.</p>'+
+    '<p><b>가습기</b> · 나감 = 선착순 참여상 수령 + 라운지 초과 대체입니다. 선착순 자격 + 라운지 초과 대체가 처음 수량을 넘으면 위에 안내가 뜹니다.</p>'+
+    '<p><b>룰렛 5등급</b> · 처음 수량은 서버 입고표 값입니다. 17:00 실물 잔여는 「럭키드로우 · 선착순 참여상 · 7등 › 7등 랜덤 굿즈」에서 넣습니다. 2등이 먼저 바닥나면 커피 예비 40병으로 보충합니다(결정 4).</p>'+
+    '<p><b>커피</b> · 「참고」는 커피챗 참석 · 상담 입장 수입니다. 박스당 수량(커피는 1)이 있어야 스태프 폰 「박스 1개 열었음」이 셉니다.</p>'+
+    '<p><b>슈퍼관리자</b> · 남은 수 맞추기 · 처음 수량 · 품목 편집은 본인 확인(PIN)과 확인 문구를 거칩니다. 운영로그에 남습니다. 가격은 어디에도 넣지 않습니다.</p>'+
+    '<p><b>띄우는 화면</b> · 없습니다. 입력은 스태프 폰(룰렛 스캔 결과 5버튼 · 체크인 존 스캔 · 박스 열기)과 이 화면에서 합니다.</p>';
+  return '<details class="memo iv-more"'+(IVF.more?" open":"")+' ontoggle="IVF.more=this.open"><summary>더 보기 · 등급 · 바닥 예상 · 키트 · 기록</summary><div class="mb">'+
+    '<h3 class="iv-h">모든 품목 · 등급 · 바닥 예상</h3><div class="toolbar">'+gch+'<span class="sp"></span>'+add+'</div>'+t1+foot+
+    '<h3 class="iv-h">사전 신청 키트</h3>'+kit+
+    '<h3 class="iv-h">맞추기 · 편집 기록</h3>'+t2+
+    '<h3 class="iv-h">최근 기록 20줄</h3>'+t3+
+    '<h3 class="iv-h">메모</h3>'+memoP+'</div></details>';
 }
-/* ── 상세 서랍 ── */
+/* ── 서랍 · 남은 수 맞추기 · 누가 받았나 · 설정(접힘) ── */
 function invListLoad(id, force){
   if(!force&&(IVF.list[id]==="busy"||IVF.list[id])) return;
   IVF.list[id]="busy";
   call("inv_list",{ id:id },function(r){ IVF.list[id]=r||{ ok:false }; if(ST.drw&&ST.drw.kind==="inv"&&ST.drw.k===id) renderDrawer(); },function(e){ IVF.list[id]=e||{ ok:false, reason:"network" }; if(ST.drw&&ST.drw.kind==="inv") renderDrawer(); });
 }
+function invAdjOk(A){ var c=String(A.c||"").trim(), n=Number(c); return c!==""&&n>=0&&Math.round(n)===n&&!!A.why; }
+function invAdjDiff(it, c){ c=String(c||"").trim(); var n=Number(c); if(c===""||!(n>=0)||Math.round(n)!==n) return "실물을 세어 넣으세요"; var df=n-it.left; return invN(it.left)+" → "+invN(n)+" · 차이 "+(df>0?"+":"")+invN(df); }
+function ivAdjIn(id, v){ var it=invItem(id), A=IVF.adj[id]||(IVF.adj[id]={ c:"", why:"" }); A.c=v; var o=el("ivAd"), b=el("ivAgo"); if(o&&it) o.textContent=invAdjDiff(it,v); if(b) b.disabled=!(supOn()&&invAdjOk(A)); }
+function ivWhy(w){ var id=ST.drw&&ST.drw.k; if(!id) return; var A=IVF.adj[id]||(IVF.adj[id]={ c:"", why:"" }); A.why=A.why===w?"":w; renderDrawer(); }
 function drwInv(id){
   var d=invD(), it=invItem(id); if(!it) return "";
-  var sup=supOn(), lk=sup?"":' disabled title="슈퍼관리자만 바꿀 수 있어요"', G=IVF.give[id]||(IVF.give[id]={ n:"1", emp:"", memo:"" });
+  var sup=supOn(), lk=sup?"":' disabled title="슈퍼관리자만 바꿀 수 있어요"', s=invSt(it,d), A=IVF.adj[id]||(IVF.adj[id]={ c:"", why:"" }), G=IVF.give[id]||(IVF.give[id]={ n:"1", emp:"", memo:"" });
   invListLoad(id);
-  var L=IVF.list[id], w=invWarn(it,d);
-  var h=drwHead(it.n, esc(it.g+" 등급 · "+(it.how||"")+(it.note?" · "+it.note:"")))+'<div class="db">';
-  if(w) h+='<div class="note '+(w.lv==="bad"?"iv-nb":"warn")+'">'+esc(w.t)+'</div>';
-  h+=imp([["총수량",it.q==null?"미정":invN(it.q)],["나감",invN(it.out)+(it.auto?" (자동 "+invN(it.auto)+(it.fin?" · 완주 경품 추첨 "+invN(it.fin):"")+")":"")],["남음",it.left==null?"-":invN(it.left),w?"loss":""]].concat(it.rsv!=null?[["선착순 자격(수령 포함)",invN(it.rsv)]]:[]).concat([["최근 30분",invN(it.r30)],["소진 예상",invEta(it,d)],["박스당",it.box?invN(it.box)+"개":"-"],["경고율",(it.w||15)+"%"]]).concat(it.ref!=null?[["참고(참석 · 입장)",invN(it.ref)]]:[]));
-  h+='<h3>수동 지급</h3><div class="iv-form"><label class="fld">개수<input class="in" id="ivGn" inputmode="numeric" value="'+esc(G.n)+'" oninput="IVF.give[\''+jq(id)+'\'].n=this.value"></label><label class="fld">사번(선택)<input class="in w" id="ivGe" inputmode="numeric" value="'+esc(G.emp)+'" oninput="IVF.give[\''+jq(id)+'\'].emp=this.value"></label><label class="fld">메모(선택)<input class="in w" id="ivGm" value="'+esc(G.memo)+'" maxlength="60" oninput="IVF.give[\''+jq(id)+'\'].memo=this.value"></label><button class="btn pri" onclick="invGiveGo(\''+jq(id)+'\')">지급 기록</button></div>'+
-    '<p class="cap mt8">남는 현장 전달 · 교체분처럼 스태프 폰 밖에서 나간 것만 적습니다. 바로 뒤 알림의 되돌리기로 취소합니다.</p>';
-  h+='<h3>슈퍼관리자</h3><div class="row"><button class="btn'+(sup?"":" lk")+'" onclick="invAdjAsk(\''+jq(id)+'\')"'+(it.q==null?' disabled title="총수량이 정해진 품목만"':lk)+'>'+LOCK_SVG+' 남은 수 맞추기</button><button class="btn'+(sup?"":" lk")+'" onclick="invCfgAsk(\''+jq(id)+'\')"'+lk+'>'+LOCK_SVG+' 총수량 · 품목 편집</button></div>';
-  if(!sup) h+='<p class="cap mt8">슈퍼관리자만 바꿀 수 있어요. 필요하면 슈퍼관리자에게 요청하세요.</p>';
-  var A=it.g==="A", rows=L&&L.ok?L.rows||[]:[];
+  var L=IVF.list[id];
+  var h=drwHead(it.n, esc(it.q==null?"수량 미정":"처음 "+invN(it.q)+" · 나감 "+invN(it.out)))+'<div class="db">';
+  h+='<div class="iv-big"><span>남은 수</span><b class="n'+(s[1]==="bad"?" bad":"")+'">'+(it.q==null?"-":invN(it.left))+'</b>'+tag(s[0],s[1])+'</div>';
+  if(it.q!=null){
+    var whys=d.why||["분실","파손","추가 입고","세기 오류","기타"];
+    h+='<h3>남은 수 맞추기</h3><div class="iv-adj"><label class="fld">실물 센 수<input class="in w-s" id="ivAc" inputmode="numeric" autocomplete="off" value="'+esc(A.c)+'" oninput="ivAdjIn(\''+jq(id)+'\',this.value)"'+(sup?"":" disabled")+'></label><span class="cap n" id="ivAd">'+esc(invAdjDiff(it,A.c))+'</span></div>'+
+      '<div class="chips iv-why" aria-label="사유">'+whys.map(function(w){ return '<button class="fchip'+(A.why===w?" on":"")+'" onclick="ivWhy(\''+jq(w)+'\')"'+(sup?"":" disabled")+'>'+esc(w)+'</button>'; }).join("")+'</div>'+
+      '<div class="row mt12"><button class="btn pri" id="ivAgo" onclick="invAdjGo(\''+jq(id)+'\')"'+(sup&&invAdjOk(A)?"":" disabled")+'>'+(sup?"":LOCK_SVG+" ")+'맞추기</button><span class="cap">'+(sup?"사유 하나를 고르면 눌립니다":"슈퍼관리자만")+'</span></div>';
+  }
+  var rows=L&&L.ok?L.rows||[]:[], all=IVF.all[id], show=all?rows:rows.slice(0,20);
   var lst=!L||L==="busy"?skel():hvUnknown(L)?'<p class="cap">서버 갱신 뒤 보입니다.</p>':!L.ok?'<p class="cap">목록을 받지 못했습니다('+esc(why(L))+').</p>':
-    rows.length?'<div class="wrap"><table class="tb"><tr><th>시각</th><th>사번</th><th>이름</th><th>구분</th><th class="tdr">수량</th><th></th></tr>'+rows.map(function(r){ return '<tr'+(r.v?' style="opacity:.5"':'')+'><td class="n cap">'+esc(short(r.t))+'</td><td class="n">'+esc(r.emp||"-")+'</td><td>'+esc(r.name||"")+'</td><td class="cap">'+esc((IV_KIND[r.k]||r.k)+(r.place?" · "+(IV_PLACE[r.place]||r.place):"")+(r.why&&r.k==="auto"?" · "+r.why:""))+(r.v?' '+tag("되돌림","off"):'')+'</td><td class="n tdr">'+invN(r.q)+'</td><td>'+(!r.v&&r.rid&&/^(give|box|chk)$/.test(r.k)?'<button class="btn sm" onclick="invUndoAsk(\''+jq(r.rid)+'\',\''+jq(id)+'\')">되돌리기</button>':'')+'</td></tr>'; }).join("")+'</table></div>':'<p class="cap">아직 없습니다.</p>';
-  h+='<h3>지급 목록</h3>'+(A?lst:'<details class="memo"><summary>목록 펼치기 · '+(L&&L.ok?invN(rows.length)+"줄":"")+'</summary><div class="mb">'+lst+'</div></details>');
+    rows.length?'<div class="wrap"><table class="tb"><tr><th>시각</th><th>사번</th><th>이름</th><th class="tdr">수량</th><th></th></tr>'+show.map(function(r){ return '<tr'+(r.v?' class="dim"':'')+'><td class="n cap">'+esc(short(r.t))+'</td><td class="n">'+esc(r.emp||"-")+'</td><td>'+esc(r.name||"")+(r.v?' '+tag("되돌림","off"):'')+'<div class="iv-sub">'+esc((IV_KIND[r.k]||r.k)+(r.place?" · "+(IV_PLACE[r.place]||r.place):"")+(r.why&&r.k==="auto"?" · "+r.why:""))+'</div></td><td class="n tdr">'+invN(r.q)+'</td><td>'+(!r.v&&r.rid&&/^(give|box|chk)$/.test(r.k)?'<button class="btn sm" onclick="invUndoAsk(\''+jq(r.rid)+'\',\''+jq(id)+'\')">되돌리기</button>':'')+'</td></tr>'; }).join("")+'</table></div>'+
+      (rows.length>20&&!all?'<p class="mt8"><a class="lnk" href="#" onclick="IVF.all[\''+jq(id)+'\']=1;renderDrawer();return false">전체 '+invN(rows.length)+'줄 보기</a></p>':''):'<p class="cap">아직 없습니다.</p>';
+  h+='<h3>누가 받았나'+(L&&L.ok?' · '+invN(rows.length)+'줄':'')+'</h3>'+lst;
+  h+='<details class="memo iv-set"'+(IVF.set[id]?" open":"")+' ontoggle="IVF.set[\''+jq(id)+'\']=this.open"><summary>설정</summary><div class="mb">'+
+    imp([["등급",esc(it.g)+(it.how?" · "+esc(invTx(it.how)):"")],["나감 중 자동",it.auto?invN(it.auto)+(it.fin?" (완주 경품 추첨 "+invN(it.fin)+")":""):"-"]].concat(it.rsv!=null?[["선착순 자격(수령 포함)",invN(it.rsv)]]:[]).concat([["최근 30분",invN(it.r30)],["바닥 예상",esc(invEta(it,d))],["박스당",it.box?invN(it.box)+"개":"-"],["경고율",(it.w||15)+"%"]]).concat(it.ref!=null?[["참고(참석 · 입장)",invN(it.ref)]]:[]).concat(it.note?[["메모",esc(invTx(it.note))]]:[]))+
+    '<h3>손으로 나감 기록</h3><div class="iv-form"><label class="fld">개수<input class="in" id="ivGn" inputmode="numeric" value="'+esc(G.n)+'" oninput="IVF.give[\''+jq(id)+'\'].n=this.value"></label><label class="fld">사번(선택)<input class="in w" id="ivGe" inputmode="numeric" value="'+esc(G.emp)+'" oninput="IVF.give[\''+jq(id)+'\'].emp=this.value"></label><label class="fld">메모(선택)<input class="in w" id="ivGm" value="'+esc(G.memo)+'" maxlength="60" oninput="IVF.give[\''+jq(id)+'\'].memo=this.value"></label><button class="btn" onclick="invGiveGo(\''+jq(id)+'\')">나감 기록</button></div>'+
+    '<p class="cap mt8">스태프 폰 밖에서 나간 것만(현장 전달 · 교체분). 바로 뒤 알림에서 되돌립니다.</p>'+
+    '<div class="row mt12"><button class="btn'+(sup?"":" lk")+'" onclick="invCfgAsk(\''+jq(id)+'\')"'+lk+'>'+LOCK_SVG+' 처음 수량 · 품목 편집</button><button class="btn'+(sup?"":" lk")+'" onclick="invCfgAsk(\'new\')"'+lk+'>'+LOCK_SVG+' 품목 추가</button></div>'+
+    (sup?'':'<p class="cap mt8">슈퍼관리자만 바꿀 수 있어요.</p>')+'</div></details>';
   return h+'</div>';
 }
 function invAfter(id){ delete IVF.list[id]; reload(["inv"]); if(ST.drw&&ST.drw.kind==="inv") invListLoad(ST.drw.k, true); }
@@ -6604,24 +6667,26 @@ function invUndoAsk(rid, id){
   dialog({ t:"이 기록을 되돌릴까요?", who:esc(invNm(id))+"<span>기록 "+esc(rid)+"</span>", x:imp([["원장","되돌림 한 줄이 남습니다(지우지 않음)"],["나감 · 남음","이 기록만큼 돌아옵니다","chg"]]), ok:"되돌리기", danger:true,
     onOk:function(){ call("inv_undo",{ rid:rid },function(r){ dlgForce(); if(r&&r.ok){ invAfter(id); toast("되돌렸습니다 · "+(r.n||invNm(id))); } else toast("실패: "+invWhy(r)); },function(e){ dlgForce(); toast("실패: "+invWhy(e)); }); } });
 }
-/* L3 · 슈퍼관리자 · 본인 확인이 없으면 이 화면 위에 PIN 칸을 띄운다 */
-function invSupReady(){
+/* L3 · 슈퍼관리자 · 본인 확인이 없으면 이 화면 위에 PIN 칸을 띄운다 · re = 확인 뒤 다시 열 서랍 */
+function invSupReady(re){
   if(!supOn()){ toast("슈퍼관리자만 할 수 있습니다"); return false; }
-  if(!supOk()){ IVF.pin=1; drwClose(true); render(); window.scrollTo(0,0); toast("먼저 이 화면 위의 본인 확인(PIN)을 마칩니다"); return false; }
+  if(!supOk()){ IVF.pin=1; IVF.re=re||""; drwClose(true); render(); window.scrollTo(0,0); toast("먼저 이 화면 위의 본인 확인(PIN)을 마칩니다"); return false; }
   return true;
 }
-function invAdjAsk(id){
-  var it=invItem(id); if(!it||it.q==null||!invSupReady()) return;
-  var d=invD(), whyO=(d.why||["분실","파손","추가 입고","세기 오류","기타"]).map(function(x){ return '<option>'+esc(x)+'</option>'; }).join("");
-  window.ivAdjDiff=function(){ var v=el("ivAc"), o=el("ivAd"); if(!v||!o) return; var c=String(v.value).trim(), n=Number(c); if(c===""||!(n>=0)||Math.round(n)!==n){ o.textContent="실물 센 값을 넣으세요"; return; } var df=n-it.left; o.textContent="시스템 "+invN(it.left)+" → 실물 "+invN(n)+" · 차이 "+(df>0?"+":"")+invN(df)+(it.q>0&&Math.abs(df)>=it.q*0.05?" · 총수량의 5% 이상입니다. 다시 세어 보세요":""); };
-  dialog({ t:"남은 수 맞추기", who:esc(it.n)+"<span>시스템 남은 수 "+invN(it.left)+" · 총수량 "+invN(it.q)+"</span>", wide:true, danger:true, ok:"맞추기", word:"수량맞추기",
-    s:"실물을 센 값을 넣으세요. 차이는 조정 기록으로 남습니다."+(it.src==="roul"?" 17:00 실물 잔여는 완주 경품 추첨 화면에서 넣습니다(완주 경품 추첨이 그 값을 씁니다).":""),
-    x:'<div class="iv-form mt12"><label class="fld">실물 남은 수<input class="in" id="ivAc" inputmode="numeric" oninput="ivAdjDiff();dlgGate()"></label><label class="fld">사유<select class="in w" id="ivAw">'+whyO+'</select></label></div><label class="fld mt8">메모(필수 · 2~60자)<input class="in w-f" id="ivAm" maxlength="60" oninput="dlgGate()"></label><p class="cap mt8 n" id="ivAd">실물 센 값을 넣으세요</p>',
-    gate:function(){ var c=String((el("ivAc")||{}).value||"").trim(), n=Number(c), m=String((el("ivAm")||{}).value||"").trim(); return c!==""&&n>=0&&Math.round(n)===n&&m.length>=2; }, focus:"ivAc",
-    onOk:function(){ call("inv_adjust",{ id:id, cnt:String(el("ivAc").value).trim(), why:el("ivAw").value, memo:String(el("ivAm").value).trim() },function(r){ dlgForce(); if(r&&r.ok){ invAfter(id); dialog({ t:"남은 수를 맞췄습니다", s:esc(r.n)+" · "+invN(r.before)+" → "+invN(r.after)+" · 조정 기록에 남았습니다.", ok:"확인했습니다" }); } else toast("실패: "+invWhy(r)); },function(e){ dlgForce(); toast("실패: "+invWhy(e)); }); } });
+function invAdjAsk(id){ drwOpen("inv",id); }   /* 261006 · 남은 수 맞추기는 서랍에서 바로(실물 센 수 → 사유 한 단어 → 확인) */
+function invAdjGo(id){
+  var it=invItem(id), A=IVF.adj[id]||{}; if(!it||it.q==null) return;
+  if(!invAdjOk(A)){ toast("실물 센 수와 사유를 고르세요"); return; }
+  if(!invSupReady(id)) return;
+  var n=Number(String(A.c).trim()), df=n-it.left, big=it.q>0&&Math.abs(df)>=it.q*0.05;
+  dialog({ t:"남은 수를 맞출까요?", who:esc(it.n)+"<span>사유 "+esc(A.why)+"</span>", danger:true, ok:"맞추기", word:"수량맞추기",
+    x:imp([["남은 수",invN(it.left)+" → "+invN(n),"chg"],["차이",(df>0?"+":"")+invN(df)]])+(big?'<div class="note warn mt8">차이가 처음 수량의 5% 이상입니다. 한 번 더 세어 보세요.</div>':'')+
+      '<label class="fld mt12">메모(선택)<input class="in w-f" id="ivAm" maxlength="60" autocomplete="off"></label>',
+    onOk:function(){ var m=String((el("ivAm")||{}).value||"").trim();
+      call("inv_adjust",{ id:id, cnt:String(n), why:A.why, memo:m.length>=2?m:"현장 실사" },function(r){ dlgForce(); if(r&&r.ok){ IVF.adj[id]={ c:"", why:"" }; invAfter(id); toast("맞췄습니다 · "+(r.n||it.n)+" "+invN(r.before)+" → "+invN(r.after)); } else toast("실패: "+invWhy(r)); },function(e){ dlgForce(); toast("실패: "+invWhy(e)); }); } });
 }
 function invCfgAsk(id){
-  if(!invSupReady()) return;
+  if(!invSupReady(id==="new"?"":id)) return;
   var nw=id==="new", it=nw?{ id:"new", n:"", g:"B", q:null, box:null, w:15, m:"", on:1, note:"", src:"manual" }:invItem(id); if(!it) return;
   var coffee1=!nw&&invBoxNeed(it);   /* 261006 커피는 1개씩 · 박스당 비어 있으면 1을 미리 넣는다(저장은 사람이 누른다) */
   var fix=it.fixq==="fin", hum=it.id==="hum", nm=fix&&!hum?String(it.n).replace(/^룰렛 \d등 /,""):it.n;
@@ -6646,7 +6711,7 @@ function invCfgAsk(id){
       var q=v("ivCq"); p.q=q===""?(fix?"":"미정"):q; p.box=v("ivCb"); p.w=v("ivCw"); p.on=v("ivCo"); p.note=v("ivCt"); if(el("ivCk")) p.m=v("ivCk");
       call("inv_cfg",p,function(r){ dlgForce(); if(r&&r.ok){ invAfter(r.id||id); dialog({ t:nw?"품목을 추가했습니다":"저장했습니다", s:esc((r.ch||[]).join(" · ")), ok:"확인했습니다" }); } else toast("실패: "+invWhy(r)); },function(e){ dlgForce(); toast("실패: "+invWhy(e)); }); } });
 }
-GUIDE.e_inv=[["품목 표","총수량 · 나감 · 남음 · 소진 예상입니다. 소진 예상은 최근 30분 속도 기준이고, 마감 전에 바닥날 품목은 노랑, 30분 안이면 빨강입니다."],["상세","품목을 누르면 오른쪽에 지급 목록 · 수동 지급 · 되돌리기가 나옵니다."],["슈퍼관리자","남은 수 맞추기 · 총수량 · 품목 편집은 자물쇠 버튼입니다. 본인 확인(PIN) · 사유 · 확인 문구를 거칩니다."],["입력","룰렛 등급 · 체크인 존 키트 · 박스 개봉은 스태프 폰에서 들어옵니다(앱 갱신 뒤). 행운권 · 완주 경품 추첨 · 타자왕 · 상담 완료는 서버 기록을 자동으로 셉니다."]];
+GUIDE.e_inv=[["품목 표","처음 수량 · 나감 · 남은 수 · 상태(여유 · 곧 바닥 · 없음)입니다. 현장에서 세는 것(룰렛 · 키트 · 커피)이 위, 자동으로 세는 것이 아래입니다."],["줄 누르기","오른쪽에 남은 수 맞추기와 누가 받았나가 나옵니다. 실물을 세어 숫자를 넣고 사유를 고르면 맞춥니다(슈퍼관리자 · 본인 확인 · 확인 문구)."],["설정","서랍 아래 「설정」에 손으로 나감 기록 · 처음 수량 · 품목 편집 · 품목 추가가 접혀 있습니다."],["더 보기","등급 · 바닥 예상 · 키트 대비표 · 기록은 화면 아래 「더 보기」에 있습니다."]];
 /* 화면별 도움말(머리의 「사용 안내」) · 새 화면 */
 GUIDE.hq=[["모드","행사 전 · 당일 · 행사 후는 서버 날짜로 자동입니다. 눌러 바꾸면 이 브라우저만 기억합니다. 모드는 점검 목록과 위험 구역의 「전체 초기화」 표시만 바꿉니다."],["지금 할 일","숫자가 있는 줄만 위에 옵니다. <b>처리하기</b>를 누르면 그 처리함으로 갑니다."],["행사 요소","요소마다 지금 상태 한 줄입니다. 누르면 상태 · 통제 · 화면 · 기록 틀로 갑니다."],["최근 통제 기록","누가 언제 무엇을 켰고 껐고 보냈는지입니다. 코드 · PIN 값은 남지 않습니다."]];
 GUIDE.e_app=GUIDE.e_game=GUIDE.e_type=GUIDE.e_draw=GUIDE.e_roul=GUIDE.e_sign=GUIDE.e_qr=[["상태","알약 하나와 숫자 몇 개입니다. 「마지막 변경」은 가장 최근 통제 기록입니다."],["통제","켜고 끄는 버튼과 그 요소의 설정입니다. 위험한 것은 회색 상자 안에 접혀 있고, 눌러야 펼쳐집니다."],["화면","TV · 대형 스크린에 띄우는 화면입니다. <b>화면 열기</b>는 새 창, <b>주소 복사</b>는 송출 PC 에 붙여 넣을 주소입니다. 코드는 주소에 없고 그 화면에서 넣습니다."],["세부 작업","아래 칩이 예전 화면입니다. 기능은 그대로입니다."]];
@@ -7558,7 +7623,7 @@ function invHumWarn(d){
 function invLngLine(K){
   var L=K.lounge; if(!L) return "";
   var pd=Number(K.preDap)||0, ex=Math.max(0,pd-(Number(L.q)||0));
-  return '<div class="pz-lng">'+imp([["라운지 사전 신청 쿼터",invN(L.q)+"세트"],["라운지 명단",invN(pd)+"명"+(ex?" · 쿼터보다 "+invN(ex)+"명 많음":""),ex?"loss":""],["라운지 키트 지급",invN(L.given)+"명"],["쿼터 초과 · 가습기 대체 지급",invN(L.over)+"명",L.over?"loss":""],["라운지 키트 남음",invN(L.left)+"세트"]])+
+  return '<div class="pz-lng">'+imp([["라운지 사전 신청 쿼터",invN(L.q)+"세트"],["라운지 명단",invN(pd)+"명"+(ex?" · 쿼터보다 "+invN(ex)+"명 많음":""),ex?"loss":""],["라운지 키트 받음",invN(L.given)+"명"],["쿼터 초과 · 가습기로 대신 줌",invN(L.over)+"명",L.over?"loss":""],["라운지 키트 남음",invN(L.left)+"세트"]])+
     (ex?'<p class="cap mt8">체크인 순서대로 '+invN(L.q)+'명까지 키트, 그 뒤 '+invN(ex)+'명은 스태프 폰에 「대체」가 뜨고 가습기를 줍니다.</p>':'')+'</div>';
 }
 /* ══ B7 · 스탬프 · 사전등록 체크인 3개(ck · 8칸 밖) ══ */
