@@ -259,10 +259,10 @@ var FLOOR1 = [
   { id: "action", grp: "see", sign: "AX in Action", kor: "AI 업무 사례를 보는 곳", fact: "동료가 만든 앱 3개", st: "",
     stm: "동료가 AI로 만든 현장 앱을 보는 곳", todo: ["현장 인터뷰 영상을 봐요"],
     cases: [["강북이 - 개인 맞춤형 시상 어플리케이션", "영업 사례 · 강북조직파트 김동건 전임"], ["AI컨설팅 도우미 - 판매 화법 어플리케이션", "영업 사례 · 안양AM지점 이은정 지점장"], ["하이핑거 - 보상 업무 지원 어플리케이션", "보상 사례 · 울산대인보상센터 이승철 대리"]] },   /* v5.60 판 16 ~ 18 한 컷(말풍선 · 인용 · 기능 칩) 대신 앱 이름 + 만든 사람(소속 · 이름 · 직급은 판 글자 그대로 · 사용자 「실명 남긴다」) */
-  { id: "lounge", grp: "do", sign: "AX LOUNGE", hdr: "AX 라운지", kor: "내년 DAP 과제를 1:1로 상담하는 곳", fact: "", st: "p3",
+  { id: "lounge", grp: "do", sign: "AX LOUNGE", hdr: "AX 라운지", kor: "내년 DAP 과제를 1:1로 상담하는 곳", fact: "", st: "",   /* v5.94 (사용자 결정 261006) 라운지 상담은 스탬프 없음 */
     stm: "내년 DAP(데이터 분석 프로젝트) 과제로 해 볼 업무가 있다면 1:1로 상담해요",
     lead: "내년 DAP(데이터 분석 프로젝트) 과제로 해 볼 업무가 있다면 1:1로 상담해요",   /* v5.70 시트 「하는 일」 첫 줄 = DAP 풀이(v5.69 시트화로 부제 stm 이 빠지며 함께 사라졌다 · v5.65 사용자 확정 문구) */
-    todo: ["데이터사이언스파트와 업무 고민을 나누고 방향을 함께 찾아요", "앱에서 30분 상담을 신청해요", "상담이 끝나면 스탬프를 받아요"],
+    todo: ["데이터사이언스파트와 업무 고민을 나누고 방향을 함께 찾아요", "앱에서 30분 상담을 신청해요"],
     gd: ["아직 구체적이지 않다면 18F AX 커피챗에서 비슷한 고민을 가진 사람들과 가볍게 이야기할 수 있어요", "18F AX 커피챗 보기", "cchat"],
     chk: [["진행", "업무 설명 → 병목 → 개선방안 · 30분"], ["신청", "신청 후 승인되면 앱에서 알려 드려요"], ["기록", "상담 내용은 기록되어 행사 후 정리해 공유돼요"], ["사은품", "상담을 마치면 커피 · 쿠키 · 노트 · 볼펜"]] },   /* v5.65 (사용자 261005 「커피챗과 라운지는 권장대로」 · 정본 디자인 시안/라운지 커피챗 통일/설계안.md) 커피챗과 같은 틀 · 서로 안내(gd) · 참여 전 확인(chk) 패널 · 커피 · 간식 사진은 패널 안에만 */
   { id: "play", grp: "do", sign: "AX PLAY", kor: "AI를 직접 써 보는 곳", fact: "HiDI-Q · Hi-Helper", st: "p2",
@@ -293,9 +293,9 @@ function zoneExHtml(z) {
 /* v5.65 18F = AX 커피챗 하나(「라운지」 표기 없음) · 1F AX LOUNGE 와 같은 구역 상세(zone_d) 틀 · 한 줄 = 질문 3줄(q) · 시간은 매칭 후 앱에서 안내(운영 시간 확정 문서 없음)
    상태 · 주 버튼 = zoneLive cchat(옛 프로그램 탭 18F 줄 ccSub · 옛 상세 progDetail 신청 전 분기를 옮겼다) · 신청한 뒤 「내 신청」 = 프로그램 상세(sess_d · 매칭 · 취소) */
 var FLOOR18 = [
-  { id: "cchat", grp: "", sign: "AX COFFEE CHAT", hdr: "AX 커피챗", kor: "비슷한 고민을 가진 사람들과 이야기하는 곳", fact: "", st: "p3",
+  { id: "cchat", grp: "", sign: "AX COFFEE CHAT", hdr: "AX 커피챗", kor: "비슷한 고민을 가진 사람들과 이야기하는 곳", fact: "", st: "",   /* v5.94 (사용자 결정 261006) 커피챗은 스탬프 없음 */
     q: ["내 업무에 AI를 쓸 수 있을까?", "나와 비슷한 고민을 하는 사람이 있을까?", "어떻게 시작하지?"],
-    todo: ["비슷한 고민을 가진 사람들과 멘토가 한 테이블에서 다음 한 걸음을 찾아요", "아이디어 한 줄을 남기고 시간대를 골라 신청해요", "참석하면 스탬프를 받아요"],
+    todo: ["비슷한 고민을 가진 사람들과 멘토가 한 테이블에서 다음 한 걸음을 찾아요", "아이디어 한 줄을 남기고 시간대를 골라 신청해요"],
     gd: ["과제로 키우고 싶은 업무가 있다면 1F AX 라운지에서 1:1로 상담할 수 있어요", "1F AX 라운지 보기", "lounge"],
     chk: [["진행", "주제 소개 → 고민 나누기 → 다음 한 걸음"], ["매칭", "고른 시간대에 맞춰 매칭해요"], ["정원", "선착순 " + CCHAT_CAP + "명"], ["알림", "매칭되면 하이웍스로 알려 드려요. 앱 나의 참여에서도 볼 수 있어요"]] }
 ];
@@ -532,7 +532,7 @@ function sessGuideHtml(s, mine) {
   var li = function (it) { return '<li><span class="tx">' + (it.name ? "<b>" + esc(it.name) + "</b>" : "") + "<span>" + esc(it.desc) + "</span></span></li>"; };
   var intro = SESS_INTRO_ON && s.intro ? '<p class="intro">' + esc(s.intro) + "</p>" : "";
   var todo = (s.todo || []).length ? '<div class="sgg"><h3>하는 일</h3><ul>' + s.todo.map(li).join("") + "</ul></div>" : "";
-  var pl = (s.prep || []).length, q10 = mine && s.fl === 10 ? '<p class="sgq">끝날 때 화면의 QR을 찍으면 스탬프 2개</p>' : "";   /* v5.71 10F 끝 QR · 신청자만 · 준비할 것 상자 안(준비할 것이 없는 세션 D · E 는 이 줄만) */
+  var pl = (s.prep || []).length, q10 = "";   /* v5.94 (사용자 결정 261006) 10F 끝 QR 스탬프 없음 · 옛 줄 「끝날 때 화면의 QR을 찍으면 스탬프 2개」(v5.71) 삭제 · 끝 QR 출석 자체는 그대로 된다 */
   var prep = mine && (pl || q10) ? '<div class="sgg sgp">' + (pl ? "<h3>준비할 것</h3><ul>" + s.prep.map(li).join("") + "</ul>" : "") + q10 + "</div>" : "";
   return intro || todo || prep ? '<section class="axs-sg"><h2 class="ax-section-title">세션 안내</h2>' + intro + todo + prep + "</section>" : "";
 }
@@ -590,7 +590,7 @@ function progDetail(s) {
     D.st = at ? "출석 완료" : s.id === "expo" ? "자유 입장" : "자유 참석"; D.stc = "ok";
     D.kv = [["일시", s.id === "expo" ? "10월 26일 · 행사 시간 중" : day + progTm(s.tm)], ["장소", pl], ["참여 방법", s.id === "expo" ? "신청 없이 자유 관람" : "신청 없이 자유 참석"]];
     D.secB = s.id === "expo" ? "1F 로비 6구역 · AX VISION · AX LAB · AX in Action · AX PLAY · AX 라운지 · EVENT" :
-      ap ? "입장할 때 QR을 한 번, 끝날 때 화면의 QR을 한 번 찍어요.<br>하나에 스탬프 1개씩 · 프로그램 참여는 2개까지" + (s.desc ? "<br>" + esc(s.desc) : "") :   /* v5.68 입장 1 + 끝 1 · 옛 입구 QR 한 번 문구 교체 */
+      ap ? "입장할 때 QR을 한 번, 끝날 때 화면의 QR을 한 번 찍어요." + (par ? "<br>하나에 스탬프 1개씩 · AWS · MS 합쳐 2개까지" : "") + (s.desc ? "<br>" + esc(s.desc) : "") :   /* v5.68 입장 1 + 끝 1 · v5.94 (사용자 결정 261006) 스탬프 줄은 오후 파트너 강연만 · 오전 강연은 출석만 */
       "별도 신청 없이 참여할 수 있어요. 시작 시간에 맞춰<br>" + esc(pl) + "으로 와 주세요.";
     if (s.id === "expo") D.link = '<button type="button" class="ax-link axs-plain axs-self" onclick="App.go(\'floor1\')">1F 부스 6구역 보기</button>';
     if (ap) attDetailFill(D, ap, timeBtn);   /* v5.68 입장 QR · 끝 QR 두 줄 · 지금 입장 수 · 창이 끝나면 시간표(261005 최종 QA 규칙 그대로) */

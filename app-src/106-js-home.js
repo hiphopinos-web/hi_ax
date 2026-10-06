@@ -86,6 +86,7 @@ function myScheduleHtml() {
   var hm0 = new Date().getHours() * 60 + new Date().getMinutes();
   if (!surveyLock() && !surveyDone() && evPhase() === "live" && hm0 >= t2m("16:40") && hm0 < t2m("17:10"))
     rows.push([-1, "App.go('survey')", "설문", "오늘 한 판 설문", "60초 · 스탬프 1개", "mine"]);
+  var ckr = ckGuideRow(); if (ckr) rows.push(ckr);   /* v5.94 사전등록 체크인 3개 → 룰렛 → 강의장(룰렛을 쓰면 사라진다) */
   /* v3.43 · 내 항목은 myItems 하나에서 (종류별 1건 · 테스트 오버레이 겹침 제거) */
   myItems(true).forEach(function (x) {
     rows.push([x.min, x.go, x.badge, x.title, x.sub, x.call && !x.photo && isBlack("call") ? "act" : "mine", x.place, x.iv ? x.iv[1] : null]);

@@ -363,7 +363,7 @@ function stpMeta(s, got) {
   if (s.id === "p4") return (stampV2() ? "3종 완주 · " : "서로 다른 3종목 · ") + Math.min(MG_NEED, mgDone()) + " / " + MG_NEED;
   if (s.id === "p2") return "1F · 체험 2종";   /* 「스태프 인증」 칩 옆 104px · 이름(HiDI-Q · Hi-Helper)은 구역 줄 · 체험 안내 화면에 */
   if (s.id === "p5") return "1분 · AX LAB QR로도";
-  if (s.id === "p3") return progUnits() === 1 ? "2개 중 1개 · 하나 더" : "강연 · 상담 · 커피챗";   /* v5.68 17F 입장이나 끝 한쪽만 받은 상태 */
+  if (s.id === "p3") return progUnits() === 1 ? "2개 중 1개 · 하나 더" : "17F 오후 AWS · MS 강연";   /* v5.68 17F 입장이나 끝 한쪽만 받은 상태 · v5.94 오후 파트너 강연만 */
   if (s.id === "st") { var sst = stairState(); return sst.leg ? "진행 중 · " + sst.leg.fl + "F 시작" : stairLine(sst); }
   if (s.id === "sv") return SURVEY.open + "부터 · 60초";
   return s.where || "";

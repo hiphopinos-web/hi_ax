@@ -128,3 +128,10 @@
   /* 끌어 닫기(sheetDrag) · 짧은 확인 시트 · 팝업도 같은 손 · 손을 따라 뒷배경이 옅어진다 */
   #axsSheet.drag, #modal.drag { background: color-mix(in srgb, var(--ax-color-ink) calc(40% * var(--dd, 1)), transparent); }
   #axsSheet .axs-grab, #axsSheet .axs-mhead, #modal .axs-mhead { touch-action: none; }
+  /* v5.94 (사용자 결정 261006) 사전등록 체크인 안내 · 체크인 3개 → 룰렛 → 강의장 · 번호 원(O100) + 굵은 한 줄 + 옅은 한 줄 */
+  #axsSheet .axs-ckg { list-style: none; margin: var(--ax-space-16) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--ax-space-12); counter-reset: ckg; }
+  #axsSheet .axs-ckg li { display: flex; gap: 12px; align-items: flex-start; counter-increment: ckg; }
+  #axsSheet .axs-ckg li::before { content: counter(ckg); flex: none; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--ax-color-brand); color: var(--ax-color-on); font: var(--ax-type-t7); font-weight: 700; }
+  #axsSheet .axs-ckg .tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; word-break: keep-all; }
+  #axsSheet .axs-ckg b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  #axsSheet .axs-ckg .tx span { font: var(--ax-type-t7); color: var(--ax-color-body); }

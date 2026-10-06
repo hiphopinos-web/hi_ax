@@ -169,9 +169,39 @@ function stampTagHtml(id) {
 }
 /* 줄 모양 · 왼쪽 글(없으면 빈칸) + 오른쪽 도장 · 제목·칩 줄이 없는 화면(미니게임 · QR 퀴즈 목록 · 설문 결과)이 쓴다 */
 function stampLineHtml(id, left) { return '<div class="axs-stline">' + (left || "<span></span>") + stampTagHtml(id) + "</div>"; }
-/* 프로그램 상세 · p3 에 들어가는 것(17F 강연 · DAP 상담 · 커피챗 · 10F 는 P3_INCLUDE_10F) */
+/* 프로그램 상세 · p3 에 들어가는 것 · v5.94 (사용자 결정 261006) 17F 오후 파트너 강연(AWS l1 · MS l2)만 · 오전 강연 · DAP 상담 · 커피챗 · 10F 는 도장 없음(옛 규칙 = hi_ax git v5.93) */
+var P3_PM = ["l1", "l2"];
 function progStampId(s) {
-  return s && ((s.fl === 17 && PROG_CAT[s.id] === "강연") || s.id === "dap" || s.id === "cchat" || (P3_INCLUDE_10F && s.fl === 10 && PROG_CAT[s.id] === "실습") || (s.fl === 10 && PROG_CAT[s.id] === "실습" && !!sessMine(s.id))) ? "p3" : "";   /* v5.71 10F 끝 QR · 사전 신청자의 세션 상세에 도장 */
+  return s && P3_PM.indexOf(s.id) >= 0 ? "p3" : "";
+}
+/* ═══ v5.94 (사용자 결정 261006 「사전프로그램 신청자의 경우에는 체크인 시에 3 스탬프를 부여하니, 그걸로 룰렛권을 받고 그대로 룰렛장으로 이동해서 룰렛 한 바퀴 돌리고 바로 강의장으로 가도록 유도하자」) ═══
+   사전등록 체크인 3개(ck) → 1F EVENT 룰렛 → 10F 강의장(내 세션 시각 · 장소) | 라운지 사전등록자(서버 my.ckg = dap) = 1F AX 라운지 상담 시각
+   안내 시트 = 스탬프 연출이 끝난 뒤 한 번(사건 뒤 안내 · 「먼저 묻지 않는다」 안 · 막지 않는다 = 뒷배경 · 끌어 닫기 · 「닫기」) · 본 기록 ck_guide(사람별)
+   보내는 곳 = stampSync 가 ck 를 새로 받은 순간 notice 줄(run) · 「룰렛 1회 열림」 알림은 이 시트가 대신한다(겹쳐 띄우지 않는다)
+   홈 한 줄(나의 일정 맨 위) = 같은 순서 · 대상 = ck 가 있고 룰렛을 아직 안 쓴 사람(소진 · 마감이면 없음) · 룰렛을 쓰면 사라진다 */
+function ckGuideOn() { return S.get("stamps", []).indexOf(STAMP_CK) >= 0 && !S.get("roulette_used", false) && !S.get("roulette_out", false); }
+/* 마지막 줄 · 10F = 내 세션(tenMine · 시각 · 장소) · 라운지 = 상담 시각(내 상담 신청이 있으면) · 갈래를 모르면(옛 서버) 10F 세션이 있으면 10F */
+function ckGuideDest() {
+  var g = S.get("ck_grp", ""), t = g === "dap" ? null : tenMine();
+  if (t) return { k: "10F", nm: "10F " + t.ttl, at: String(t.tm || "").split("~")[0], pl: sessPlace(t) };
+  if (g === "10F") return { k: "10F", nm: "10F 실습형 세션", at: "13:30", pl: "세션별 장소는 프로그램 탭" };
+  var r = myResv(), sl = r && RESV_HOLD.indexOf(r.status) >= 0 && r.slot ? hhmm(r.slot) : "";
+  return { k: "1F", nm: "1F AX 라운지", at: sl, pl: sl ? "내 상담 시간" : "상담 시간에 맞춰" };
+}
+function ckGuideSteps(d) {
+  return '<ol class="axs-ckg"><li><span class="tx"><b>1F EVENT 룰렛에서 한 바퀴</b><span>룰렛 부스에서 내 QR 보여 주기</span></span></li>' +
+    '<li><span class="tx"><b>' + esc(d.nm) + "</b><span>" + esc((d.at ? d.at + " · " : "") + d.pl) + "</span></span></li></ol>";
+}
+function ckGuideOpen(again) {
+  if (!again) { if (S.get("ck_guide", 0) || !ckGuideOn()) return; S.set("ck_guide", 1); }
+  sheetOpen({ id: "ckgo", title: "스탬프 3개 · 룰렛 1회권이 생겼어요", body: ckGuideSteps(ckGuideDest()),
+    go: "sheetClose(true); qrPanelOpen('mine')", goLbl: "내 QR 보여주기", keep: "닫기", keepWeak: true, keepLast: true });
+}
+/* 홈 나의 일정 맨 위 한 줄 · [정렬 분, onclick, 뱃지, 제목, 보조 줄, 뱃지 상태] (myScheduleHtml 의 rows 와 같은 모양) */
+function ckGuideRow() {
+  if (!ckGuideOn()) return null;
+  var d = ckGuideDest();
+  return [-2, "ckGuideOpen(true)", "룰렛", "1F 룰렛 → " + d.nm, (d.at ? d.at + " · " : "") + d.pl, "act"];   /* 375px 한 줄(제목 · 보조 줄 말줄임 없이) · 누르면 같은 시트 */
 }
 /* 잉크 튐 · 도장 가장자리에서 바깥으로 · O100~O30 사다리 · 보일 때만 만들고 0.9초 뒤 지운다 · scale 0.5 = 카드 인라인(절반 크기) */
 var INK_COLS = ["#FF7E31", "#FF7E31", "#FFA46E", "#FFB284", "#FFCFB0"];

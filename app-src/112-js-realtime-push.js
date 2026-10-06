@@ -137,6 +137,7 @@ function beSync(after) {
       /* v5 · 체크인·대기 상태는 서버가 정본이다(운영 데스크 스캐너가 쓰므로 앱은 받아쓰기만 한다).
          내 차례가 되면 한 번만 알린다 · 폴링마다 토스트가 뜨지 않게 직전 상태와 비교. */
       if (res.my.checkin) S.set("checkin", res.my.checkin);
+      if ("ckg" in res.my && String(res.my.ckg || "") !== S.get("ck_grp", "")) S.set("ck_grp", String(res.my.ckg || ""));   /* v5.94 사전등록 갈래(10F | dap) · 체크인 안내 시트 마지막 줄 */
       if (res.my.stamps) { stampSync(res.my.stamps); stampPendRetry(); lgCheck(res.my.stamps); }   /* v4.83 최초 로그인 스탬프 */
       if (res.my.stair) { var st9 = Object.assign({}, res.my.stair, { emp: String(u.empId || "") }); if (JSON.stringify(st9) !== JSON.stringify(S.get("stair", null))) S.set("stair", st9); }   /* v4.06 계단 진행 · 서버가 정본 · v4.54 물어본 사번을 붙여 저장 */   /* 스탬프는 서버가 정본 · v3.97 빈 목록 포함 · 못 보낸 적립은 다시 보낸다 */
       if ("roulette" in res.my && !testEmp()) S.set("roulette_used", !!res.my.roulette);   /* 룰렛 사용 여부도 서버가 정본 (260909) · 테스트 사번은 로컬 */

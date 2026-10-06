@@ -129,7 +129,7 @@ function notice(o) {
   var k = o.key || (o.title + "|" + (o.body || ""));
   if ((NOTICE.cur && NOTICE.cur.k === k) || NOTICE.q.some(function (x) { return x.k === k; }) || Date.now() - (NOTICE.last[k] || 0) < 3000) return;
   o.k = k;
-  if (o.urgent) NOTICE.q.unshift(o); else NOTICE.q.push(o);   /* v4.64 (QA 260930) 급한 것(포토부스 입장 등)은 쌓인 안내보다 먼저 */
+  if (o.urgent || o.first) NOTICE.q.unshift(o); else NOTICE.q.push(o);   /* v5.94 first = 쌓인 안내보다 먼저(체크인 안내 시트 → 그다음 행운권 상자 · 게임 중 토스트 없음) */   /* v4.64 (QA 260930) 급한 것(포토부스 입장 등)은 쌓인 안내보다 먼저 */
   if (o.urgent && el("rgPlay")) toast(o.title);   /* 게임 중에도 급한 것은 제목만 먼저 · 팝업은 게임을 나온 뒤 */
   clearTimeout(NOTICE.t); NOTICE.t = setTimeout(noticePump, 60);
 }
@@ -143,6 +143,7 @@ function noticePump() {
   if (noticeBusy()) { NOTICE.t = setTimeout(noticePump, 400); return; }
   var o = NOTICE.q.shift();
   NOTICE.last[o.k] = Date.now();
+  if (o.run) { try { o.run(); } catch (e) {} NOTICE.t = setTimeout(noticePump, 400); return; }   /* v5.94 팝업 대신 시트(사전등록 체크인 안내) · 다음 안내는 시트가 닫힌 뒤(noticeBusy 가 axsSheet 를 본다) */
   if (o.raffle) modalOpen(rfxHtml(o), esc(o.title));   /* v4.42 응모권 = 보물상자 · v4.49 모든 응모권을 직접 연다(v4.44 의 두 번째부터 자동 열기 폐지) */
   else modalOpen('<div class="ntc">' + (o.body ? '<p class="ntc-b">' + esc(o.body) + "</p>" : "") +
     (o.go ? '<button class="btn mint" style="margin-top:14px" onclick="noticeGo(\'' + o.go + "','" + (o.focus || "") + '\')">' + (o.goLbl || "바로 가기") + '</button><button class="btn line" style="margin-top:8px" onclick="modalClose()">확인</button>'

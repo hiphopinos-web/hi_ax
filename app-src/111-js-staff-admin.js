@@ -66,11 +66,11 @@ function scanBigHtml() {
   if (!r) return "";
   return '<section class="axs-sres ' + r.tone + '" role="status" aria-live="polite">' +
     '<p class="axs-sres-who">' + esc(r.who || "") + '<span class="n">' + esc(hhmmss(r.t)) + "</span></p>" +
-    '<p class="axs-sres-h">' + esc(r.head) + "</p>" + (r.sub ? '<p class="axs-sres-s">' + esc(r.sub) + "</p>" : "") + (r.inv ? invResHtml(r) : "") + "</section>";
+    '<p class="axs-sres-h">' + esc(r.head) + "</p>" + (r.sub ? '<p class="axs-sres-s">' + esc(r.sub) + "</p>" : "") + (r.go ? '<p class="axs-sres-s"><b>' + esc(r.go) + "</b></p>" : "") + (r.inv ? invResHtml(r) : "") + "</section>";   /* v5.94 go = 스태프가 할 말 한 줄(체크인 → 룰렛 부스) */
 }
 function hhmmss(t) { var d = new Date(t || Date.now()), p = function (n) { return (n < 10 ? "0" : "") + n; }; return p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds()); }
-function scanShow(tone, who, head, sub) {
-  SCAN.res = { tone: tone, who: who, head: head, sub: sub || "", t: Date.now() };
+function scanShow(tone, who, head, sub, go) {
+  SCAN.res = { tone: tone, who: who, head: head, sub: sub || "", go: go || "", t: Date.now() };
   var box = el("scanRes");
   if (box) box.innerHTML = scanBigHtml();
   if (tone === "ok") stampBuzz(60);
