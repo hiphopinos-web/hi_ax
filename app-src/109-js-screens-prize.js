@@ -77,7 +77,7 @@ function myRewardHtml() {
       '<div class="axs-hr"></div><p class="ax-description">' + why + "</p>" +
       (x.go ? '<button type="button" class="ax-button ax-button-weak" onclick="' + x.go + '">' + (x.btn || "사용 방법 보기") + "</button>" : "") + "</section>";
   }).join("");
-  return '<section class="axs-sec axs-myrw">' + railHtml(n, false, null, false) + "</section>" + goal +
+  return '<section class="axs-sec axs-myrw">' + railHtml(n, false, null, false) + "</section>" + goal + kitMyRowHtml() +   /* 261006 키트 사이즈 · 명단 사번만 */
     (cards ? '<section class="ax-stack-tight axs-gap12"><h2 class="ax-section-title">받은 보상</h2>' + cards + "</section>" : "");
 }
 /* 받은 보상 · 룰렛 1회권(3개) · 행운권(4개부터 자동) · 참여상 · 계산은 기존 상수·함수 그대로(REWARD_CAP · raffleTickets) */

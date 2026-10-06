@@ -171,3 +171,20 @@
   .axs-pzm .tx b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }
   .axs-pzm .tx span { font: var(--ax-type-t7); font-weight: 600; color: var(--ax-color-brandText); }
   .axs-pzm .axs-chev { flex: none; width: 20px; height: 20px; color: var(--ax-color-brandText); }
+  /* 261006 키트 사이즈 사전 선택(kit) · 행 = 출석 고르기(.axs-att) 그대로 · 5개 이하 남음 = error 글자 · 정한 뒤 = 체크 원(success) + 큰 제목 · 키 · 값 줄 · 마감 충돌 = errorSoft 한 줄 */
+  .axs-kitz .nm { font: var(--ax-type-t5-strong); }
+  .axs-kitz .st.low { color: var(--ax-color-error); }
+  .axs-kithd { display: flex; flex-direction: column; gap: var(--ax-space-4); }
+  .axs-kithd .ax-section-title, .axs-kithd .ax-description { margin: 0; word-break: keep-all; }
+  .axs-kitok { display: flex; flex-direction: column; align-items: center; gap: var(--ax-space-8); text-align: center; }
+  .axs-kitok .ok { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--ax-color-successSoft); color: var(--ax-color-success); }
+  .axs-kitok .ok svg { width: 24px; height: 24px; }
+  .axs-kitok h2, .axs-kitok p { margin: 0; word-break: keep-all; }
+  .axs-kitkv { margin: 0; display: flex; flex-direction: column; }
+  .axs-kitkv div { display: flex; justify-content: space-between; align-items: baseline; gap: var(--ax-space-12); padding: var(--ax-space-12) 0; border-top: 1px solid var(--ax-color-divider); }
+  .axs-kitkv div:first-child { border-top: 0; padding-top: 0; }
+  .axs-kitkv div:last-child { padding-bottom: 0; }
+  .axs-kitkv dt { flex: none; font: var(--ax-type-t7); color: var(--ax-color-body); }
+  .axs-kitkv dd { margin: 0; min-width: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); text-align: right; word-break: keep-all; }
+  .axs-kitnote { margin: 0 var(--ax-space-4); word-break: keep-all; }
+  .axs-kitmsg { margin: 0; padding: var(--ax-space-12) var(--ax-space-16); border-radius: var(--ax-radius-12); background: var(--ax-color-errorSoft); color: var(--ax-color-ink); font: var(--ax-type-t6-strong); word-break: keep-all; }

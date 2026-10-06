@@ -164,3 +164,123 @@ function stampSync(list) {
 }
 var STAMP_SYNC = { warm: false };
 
+/* ════════════════ 261006 키트 사이즈 사전 선택(사용자 261006 밤 · 기획 `디자인 시안/체크인존 운영/기획안.md` 6 · 7.1절 · 서버 ks* · 검사 §250) ════════════════
+   서버 my.kit 이 있을 때만 보인다(키트명단 사번 · 그 밖의 사람에게는 홈 카드 · 화면 · 설정 줄 · 나의 참여 줄 어디에도 없다 · 사은품 비표시 원칙 260917 의 예외는 명단 사번에게만)
+   st pick = 사이즈 5칸(남은 수 · 0 = 마감 회색) · 정하기를 누르면 서버가 잠금 안에서 판정(먼저 온 쪽) · 진 쪽 = 「L이 방금 마감됐어요」 · 마감 전까지 몇 번이든 바꾼다
+   st hum = 라운지 사전 신청 등록 순이 수량(29)을 넘은 사람 · 사이즈 없이 가습기 안내(담담하게)
+   문구 = 「키트」 · 「사이즈」만(「사은품」 · 「선물」 · 가격 없음) · 알림 허용은 정한 직후 한 번(가치 순간 · pushAsk kit) */
+var KIT = { sel: "", edit: false, busy: false, msg: "" };
+var KIT_SIZES = ["S", "M", "L", "XL", "2XL"], KIT_ITEM = "플리스 재킷", KIT_GET = "10/26(월) 08:00부터 · 1F 주차장 체크인존", KIT_LOW = 5;
+function kitMy() { var k = S.get("kit", null); return k && typeof k === "object" && (k.st === "pick" || k.st === "hum") ? k : null; }
+/* 「2026-10-21 18:00」 → 「10/21(수) 18:00」 */
+function kitWhen(c) {
+  var m = /^(\d{4})-(\d\d)-(\d\d) (\d\d:\d\d)/.exec(String(c || ""));
+  if (!m) return "";
+  return Number(m[2]) + "/" + Number(m[3]) + "(" + "일월화수목금토".charAt(new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getDay()) + ") " + m[4];
+}
+function kitRo(z) { return z + (z === "M" ? "으로" : "로"); }   /* 엠으로 · 에스로 · 엘로 · 엑스엘로 */
+function kitGa(z) { return z + (z === "S" ? "가" : "이"); }      /* 에스가 · 엠이 · 엘이 */
+function kitCanSet(k) { return !!k && k.st === "pick" && (k.ph === "open" || k.ph === "chg"); }
+function kitSeenKey(k) { return k ? k.st + ":" + k.ph + ":" + (k.sz || "") : ""; }
+/* 홈 카드 · 고르는 기간에 아직 안 고름 · 자동 배정 뒤 변경 기간(한 번 열어 보면 사라짐) · 라운지 초과 안내(한 번 열어 보면 사라짐) */
+function kitCardHtml() {
+  var k = kitMy();
+  if (!k) return "";
+  var seen = S.get("kit_seen", "") === kitSeenKey(k), t = "", m = "", a = "보기";
+  if (k.st === "pick" && k.ph === "open" && !k.sz) { t = "플리스 사이즈 고르기"; m = "마감 " + kitWhen(k.close); a = "고르기"; }
+  else if (k.st === "pick" && k.ph === "chg" && k.how === "auto" && !seen) { t = kitRo(k.sz) + " 배정됐어요"; m = "바꾸기 " + kitWhen(k.chg) + "까지 · 남은 사이즈만"; }
+  else if (k.st === "hum" && (k.ph === "open" || k.ph === "chg") && !seen) { t = "AX 라운지 사전 신청 키트 안내"; m = "1F 주차장 체크인존에서 가습기로 드려요"; }
+  if (!t) return "";
+  return '<button type="button" class="ax-destination axs-dest" onclick="kitOpen()">' +
+    '<span class="axs-tx"><span class="axs-chiprow"><span class="axs-chip">사전 신청 키트</span></span>' +
+    '<span class="ax-card-title">' + esc(t) + '</span><span class="ax-meta">' + esc(m) + "</span></span>" +
+    '<span class="ax-destination-action">' + a + "</span></button>";
+}
+/* 나의 참여 › 나의 보상 한 줄 · 설정 줄 */
+function kitMyRowHtml() {
+  var k = kitMy();
+  if (!k) return "";
+  var t = k.st === "hum" ? "사전 신청 키트 · 가습기" : k.sz ? "플리스 사이즈 " + k.sz : "플리스 사이즈 고르기", d = k.st === "hum" ? "1F 주차장 체크인존" : k.sz ? KIT_GET : "마감 " + kitWhen(k.close);
+  return '<div class="axs-list">' + axDest(esc(t), esc(d), lnkChev(k.st === "pick" && !k.sz && kitCanSet(k) ? "고르기" : "보기"), "kitOpen()") + "</div>";
+}
+function kitFsRow() {
+  var b = el("fsKit"), k = kitMy(), st = el("fsKitSt");
+  if (!b) return;
+  b.hidden = !k;
+  if (st) st.textContent = !k ? "" : k.st === "hum" ? "가습기" : k.sz || "고르기 전";
+}
+function kitOpen() {
+  var k = kitMy();
+  if (!k) return;
+  KIT.sel = ""; KIT.edit = false; KIT.msg = "";
+  S.put("kit_seen", kitSeenKey(k));
+  App.go("kit");
+}
+function kitPick(z) { if (KIT.busy) return; KIT.sel = z; KIT.msg = ""; App.render(); }
+function kitEdit(on) { KIT.edit = !!on; KIT.sel = ""; KIT.msg = ""; App.render(); }
+function kitSend() {
+  var k = kitMy(), u = S.get("user", {}) || {}, z = KIT.sel;
+  if (!k || !z || KIT.busy || !BE.on || !u.empId) return;
+  KIT.busy = true; App.render();
+  beCall({ action: "kit_size_set", emp: u.empId, size: z }, function (res) {
+    KIT.busy = false;
+    if (res && res.kit && typeof res.kit === "object") S.put("kit", res.kit);
+    if (res && res.ok) {
+      KIT.sel = ""; KIT.edit = false; KIT.msg = "";
+      S.put("kit_seen", kitSeenKey(res.kit));
+      App.render(); window.scrollTo(0, 0);
+      if (!res.same) pushAsk("kit", {});   /* 가치 순간 · 정한 직후 한 번(pushAsk 가 하루 횟수 · 같은 자리 한 번을 지킨다) */
+      return;
+    }
+    var why = res && res.reason;
+    if (why === "nokit") { S.set("kit", null); App.go("home"); return; }
+    KIT.sel = "";
+    KIT.msg = why === "sold" ? kitGa(res.size || z) + " 방금 마감됐어요. 다른 사이즈를 골라 주세요" : why === "closed" ? "사이즈 변경 기간이 끝났어요" : why === "notopen" ? "아직 고르는 기간이 아니에요" : why === "hum" ? "" : "전달되지 않았어요. 다시 눌러 주세요";
+    App.render();
+  }, function () { KIT.busy = false; KIT.msg = "연결이 불안정해요. 다시 눌러 주세요"; App.render(); });
+}
+function kitRowHtml(z, k) {
+  var n = k.left && k.left[z] != null ? Number(k.left[z]) : 0, mine = k.sz === z, can = !KIT.busy && (n > 0 || mine), on = KIT.sel === z;
+  var st = mine ? "지금 사이즈" : n > 0 ? "남은 " + n : "마감";
+  return '<button type="button" class="axs-att axs-kitz" role="radio" aria-checked="' + on + '"' + (can ? ' onclick="kitPick(\'' + z + '\')"' : " disabled") + ">" +
+    '<span class="rd" aria-hidden="true"></span><span class="nm">' + z + "</span>" +
+    '<span class="st' + (!mine && n > 0 && n <= KIT_LOW ? " low" : "") + '">' + st + "</span></button>";
+}
+function kitKvHtml(rows) {
+  return '<dl class="axs-kitkv">' + rows.map(function (r) { return "<div><dt>" + r[0] + "</dt><dd>" + r[1] + "</dd></div>"; }).join("") + "</dl>";
+}
+function kitHtml() {
+  var k = kitMy();
+  if (!k) return '<div class="ax-stack">' + botHtml("사전 신청 키트 안내가 없어요") + "</div>";
+  var msg = KIT.msg ? '<p class="axs-kitmsg" role="alert">' + esc(KIT.msg) + "</p>" : "";
+  if (k.st === "hum") {
+    return '<div class="ax-stack">' +
+      '<section class="ax-card axs-kithd"><h2 class="ax-section-title">AX 라운지 사전 신청 키트는 ' + (Number(k.q) || 29) + "명까지예요</h2>" +
+      '<p class="ax-description">1F 주차장 체크인존에서 가습기로 드려요</p></section>' +
+      '<section class="ax-card">' + kitKvHtml([["수령", esc(KIT_GET)]]) + "</section></div>";
+  }
+  var head = '<section class="ax-card axs-kithd"><h2 class="ax-section-title">' + KIT_ITEM + " + 에코백</h2>" +
+    '<p class="ax-description">' + esc(KIT_GET) + "에서 받아요</p></section>";
+  if (k.sz && !KIT.edit) {
+    var chg = k.ph === "open" ? kitWhen(k.close) + "까지" : k.ph === "chg" ? kitWhen(k.chg) + "까지 · 남은 사이즈만" : "마감";
+    return '<div class="ax-stack">' + msg +
+      '<section class="ax-card axs-kitok"><span class="ok" aria-hidden="true">' + CHECK_SVG + "</span>" +
+      '<h2 class="ax-type-t3">' + kitRo(k.sz) + (k.how === "auto" ? " 배정됐어요" : " 정했어요") + "</h2>" +
+      '<p class="ax-description">' + KIT_ITEM + " " + k.sz + " + 에코백</p></section>" +
+      '<section class="ax-card">' + kitKvHtml([["바꾸기", esc(chg)], ["수령", esc(KIT_GET)]]) + "</section>" +
+      (kitCanSet(k) ? '<button type="button" class="ax-button ax-button-weak" onclick="kitEdit(1)">사이즈 바꾸기</button>' : "") + "</div>";
+  }
+  if (k.ph === "before") return '<div class="ax-stack">' + head + '<p class="ax-meta axs-kitnote">' + esc(kitWhen(k.open)) + "부터 고를 수 있어요</p></div>";
+  if (k.ph === "end") return '<div class="ax-stack">' + head + '<p class="ax-meta axs-kitnote">고르는 기간이 끝났어요 · 사이즈는 체크인존에서 남은 것으로 드려요</p></div>';
+  var note = k.ph === "open" ? esc(kitWhen(k.close)) + "까지 정해 주세요<br>먼저 정한 순서대로 마감돼요 · 안 정하면 남은 사이즈로 배정돼요" : esc(kitWhen(k.chg)) + "까지 남은 사이즈로만 바꿀 수 있어요";
+  var z = KIT.sel, go = z && z !== k.sz;
+  return '<div class="ax-stack">' + msg + head +
+    '<section class="ax-card"><div class="axs-attl" role="radiogroup" aria-label="사이즈">' + KIT_SIZES.map(function (x) { return kitRowHtml(x, k); }).join("") + "</div></section>" +
+    '<p class="ax-meta axs-kitnote">' + note + "</p>" +
+    '<button type="button" class="ax-button" ' + (KIT.busy ? 'disabled aria-busy="true"' : go ? 'onclick="kitSend()"' : "disabled") + ">" + (KIT.busy ? "정하는 중" : go ? kitRo(z) + (k.sz ? " 바꾸기" : " 정하기") : "사이즈를 골라 주세요") + "</button>" +
+    (KIT.edit ? '<button type="button" class="ax-button ax-button-weak" onclick="kitEdit(0)"' + (KIT.busy ? " disabled" : "") + ">그대로 두기</button>" : "") + "</div>";
+}
+Views.kit = function () { return kitHtml(); };
+App.PARENT.kit = "my";
+App.TITLES.kit = "사전 신청 키트";
+PUSH_T.kit = "받을 때 알려 드려요";   /* 가치 순간 · 정한 직후(10/26 체크인존 안내) */

@@ -146,6 +146,8 @@ function beSync(after) {
       var fc9 = res.my.fcfs && typeof res.my.fcfs === "object" ? res.my.fcfs : null, lk9 = res.my.lk7 && typeof res.my.lk7 === "object" ? res.my.lk7 : null;
       if (JSON.stringify(fc9) !== JSON.stringify(S.get("fcfs", null))) S.set("fcfs", fc9);
       if (JSON.stringify(lk9) !== JSON.stringify(S.get("lk7", null))) S.set("lk7", lk9);
+      var kt9 = res.my.kit && typeof res.my.kit === "object" ? res.my.kit : null;   /* 261006 키트 사이즈 · 키트명단 사번만(없으면 null = 홈 카드 · 화면 · 설정 줄 없음) */
+      if (JSON.stringify(kt9) !== JSON.stringify(S.get("kit", null))) S.set("kit", kt9);
       /* v3.21 B 포토부스 번호표 · 서버가 정본(없으면 null) · 바뀐 경우에만 저장해 불필요한 재렌더를 막는다 */
       /* v3.35 · v3.99 서버 스탬프 목록에 설문(sv)이 있을 때만 · 관리자가 08 을 취소하면 답이 남아 있어도 다시 제출할 수 있다(GAS @74) */
       if (res.my.survey === true && !S.get("survey_done", false) && !testEmp() && (res.my.stamps || []).indexOf("sv") >= 0) S.set("survey_done", true);
@@ -537,6 +539,7 @@ function pushExHtml(ctx, opt) {
   var t = "포토부스 입장하세요", b = "1F · " + (opt.no || 14) + "번 · 10분 안에 입장";   /* v4.78 A10 실제 푸시 문구와 같게(제목에 주제어) */
   if (ctx === "cchat" || ctx === "first") { t = "커피챗 매칭 완료"; b = "18F · 15:00 · TABLE 3"; }   /* v5.05 포토부스 대기 폐지면 처음 안내 예시도 커피챗 */
   if (ctx === "dap") { t = "AX 라운지 승인 완료"; b = "1F AX 라운지 · 14:20"; }   /* v5.83 실제 승인 알림(notifyUser)과 같은 말 · 개편안 초안 「과제상담」은 v5.64 이름 규칙(AX LOUNGE 상담)으로 */
+  if (ctx === "kit") { t = "사전 신청 키트 수령 안내"; b = "10/26(월) 08:00부터 · 1F 주차장 체크인존"; }   /* 261006 키트 사이즈 정한 직후 */
   if (ctx === "crowd") { t = opt.tgt === "lobby" ? "1F 로비 혼잡이 풀렸어요" : "엘리베이터 혼잡이 풀렸어요"; b = (opt.tgt === "lobby" ? "1F 로비" : "1F 승강기 홀") + " · 15:07"; }
   return '<div class="axs-pex" aria-hidden="true"><img src="icons/icon-192.png" alt=""><div><b>' + esc(t) + "</b><span>" + esc(b) + "</span></div></div>";
 }

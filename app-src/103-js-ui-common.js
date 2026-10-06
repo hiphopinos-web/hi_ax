@@ -44,6 +44,7 @@ function fsSheet(on) {
   if (on && el("fsPush")) el("fsPush").hidden = !(typeof pushReady === "function" && (pushReady() || pushRelogin()));   /* v4.76 알림 · 새 서버(공개키)일 때만 · v5.34 토큰 없는 옛 로그인도 줄을 보인다(다시 로그인 안내) */
   if (on) a2hsRow();   /* v4.88 앱 설치 · 홈 화면에 추가 한 단어 · 홈 화면 앱이면 숨김 · 줄이 다 숨으면 「앱」 제목도 */
   if (on) fsRowState();
+  if (on && typeof kitFsRow === "function") kitFsRow();   /* 261006 키트 사이즈 줄 · 명단 사번만 */
   box.hidden = !on;
 }
 /* v5.83 (최초 진입 가볍게 · 개편안 2-4) 설정 「앱」 줄 오른쪽 = 지금 상태 한 단어(설명 문장 없음) · 알림 켜짐 · 꺼짐 · 효과음 켜짐 · 꺼짐 · 바로가기 설치는 설치되면 줄이 숨는다(a2hsHide) */
