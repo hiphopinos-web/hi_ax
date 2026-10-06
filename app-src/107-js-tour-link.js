@@ -244,4 +244,46 @@ function trdHide() {   /* 인사 기다림 접기(화면을 옮길 때 · 띠 �
   if (!TRD) return;   /* 불러오는 중(App.go 가 먼저 불릴 때) */
   clearTimeout(TRD.t); TRD.t = 0;
 }
+/* 261007 (사용자 「Admin 페이지에 모형 둘러보기 로그를 남겨 줘 · 사람마다 최종 로그인 옆에」) 행사 둘러보기 접속 기록 · 서버 tour_log(열 때 1번 · 닫을 때 1번 · 콘솔 계정 목록 · 한 사람 관리)
+   3D · 2D 대체 모두 AXTour.isOpen() 하나로 본다(1초마다 · 가려진 동안은 보지 않음 · tour3.js 는 고치지 않음) · 닫을 때 머문 초 · 들른 구역 수(__tour3.api.visit · 없으면 0)
+   같은 방문 = 닫고 TLOG.GAP(10분) 안에 다시 열면 보내지 않는다(서버도 같은 규칙 · 층 안내 · 스탬프로 갔다 돌아오기 포함) · 로그인 전 · 데모 · 오프라인 = 버림(다시 보내지 않음)
+   열기를 못 보낸 방문은 닫기도 보내지 않는다(지난 방문 칸을 덮지 않게) · 화면이 가려지면(앱 전환 · 탭 닫기) 닫기를 sendBeacon 으로 · 실패해도 둘러보기는 모른다 */
+var TLOG = { on: 0, ok: 0, t0: 0, end: 0, z: 0, GAP: 600000 };
+function tlogEmp() { var u = S.get("user", {}) || {}; return u.empId ? String(u.empId) : ""; }
+function tlogCan() { return !!(GAS_URL && BE.on && tlogEmp() && navigator.onLine !== false && !visitSkip()); }
+function tlogZ() { try { var g = window.__tour3, v = g && g.api && g.api.visit ? g.api.visit() : null; return v && v.seen ? v.seen.length : 0; } catch (e) { return 0; } }
+function tlogSend(ev, beacon) {
+  try {
+    var p = { action: "tour_log", emp: tlogEmp(), ev: ev };
+    if (ev === "close") { p.sec = Math.max(0, Math.round((Date.now() - TLOG.t0) / 1000)); p.z = TLOG.z; }
+    if (beacon && navigator.sendBeacon) {
+      var ses = sesParam(p), b = new URLSearchParams();
+      if (ses) p.ses = ses;
+      for (var k in p) if (Object.prototype.hasOwnProperty.call(p, k)) b.append(k, p[k]);
+      if (navigator.sendBeacon(GAS_URL, b)) return;
+      delete p.ses;
+    }
+    beCall(p, function () {}, function () {});
+  } catch (e) {}
+}
+function tlogOpen() {
+  TLOG.on = 1;
+  if (TLOG.end && Date.now() - TLOG.end < TLOG.GAP) return;   /* 같은 방문 · 보내지 않음 */
+  TLOG.t0 = Date.now(); TLOG.z = 0; TLOG.ok = tlogCan() ? 1 : 0;
+  if (TLOG.ok) tlogSend("open");
+}
+function tlogClose(beacon) {
+  if (!TLOG.on) return;
+  TLOG.on = 0; TLOG.end = Date.now(); TLOG.z = Math.max(TLOG.z, tlogZ());
+  if (TLOG.ok && tlogCan()) tlogSend("close", beacon);
+}
+function tlogTick() {
+  if (document.hidden) return;
+  var o = !!(window.AXTour && AXTour.isOpen());
+  if (o) TLOG.z = Math.max(TLOG.z, tlogZ());
+  if (o && !TLOG.on) tlogOpen(); else if (!o && TLOG.on) tlogClose(false);
+}
+setInterval(tlogTick, 1000);
+document.addEventListener("visibilitychange", function () { if (document.hidden) tlogClose(true); });
+window.addEventListener("pagehide", function () { tlogClose(true); });
 
