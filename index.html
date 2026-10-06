@@ -1416,6 +1416,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .ssc-opt { display: flex; align-items: center; justify-content: space-between; gap: var(--ax-space-12); min-height: 52px; padding: 0 var(--ax-space-4); border: 0; border-bottom: 1px solid var(--ax-color-divider); background: none; color: var(--ax-color-ink); font: var(--ax-type-t5); text-align: left; cursor: pointer; }
   .ssc-opt b { font: var(--ax-type-t5-strong); color: var(--ax-color-brandText); }
   .ssc-opt .axs-chev { width: 18px; height: 18px; color: var(--ax-color-muted); }
+  .ssc-code { margin-top: var(--ax-space-12); text-align: center; }   /* v6.00 스태프 코드 창(명단 사번 · 처음 한 번) */
+  .ssc-codego { margin-top: var(--ax-space-12); }
   #toast { white-space: pre-line; }   /* v5.98 스캔 알림 두 줄(제목 / 본문) · 다른 알림은 줄바꿈 글자가 없어 그대로 */
   .axs-sres { padding: var(--ax-space-16) var(--ax-space-20); border-radius: var(--ax-radius-20); background: var(--ax-color-canvas); color: var(--ax-color-body); }
   .axs-sres.ok { background: var(--ax-color-successSoft); color: var(--ax-color-success); box-shadow: inset 0 0 0 2px var(--ax-color-success); }
@@ -3627,7 +3629,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.99";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 · v5.99 = 261006 키트 사이즈 사전 선택(키트명단 사번만 · 홈 카드 · 사전 신청 키트 화면 · 설정 · 나의 보상 줄 · 라운지 등록 순 초과 = 가습기 안내 · 서버 ks* · §250) · v5.98 = 261006 스태프 폰 연속 스캔(관리자 모드 폰 = 가운데 단추 「스캔」 · 자리 칩 · 톱니 · 결과 띠 1.5초 · 화면 꺼짐 막기) · 스캔 순간 참가자 알림(소켓 · 푸시) · 선착순 참여상 = 받기 선착순(남은 N · 「자격」 말 없음) · v5.97 = 261006 스탬프 감사 후속(AX PLAY 부스 코드 = 「스태프에게 내 QR을 보여 주세요」 · 「응모」 → 「행운권」 · 「선착순 참여상」 표기) · v5.95 = 261006 프로그램 참여 스탬프 = 17F 오후 AWS · MS 강연만(오전 강연 · 송출 · 10F · 커피챗 · 라운지 스탬프 문구 삭제) · 사전등록 체크인 3개 → 룰렛 → 강의장 안내 시트 · 홈 한 줄 · 스태프 키트 결과 「룰렛 부스로 안내해 주세요」 · v5.94 = 261006 타자왕 노트북 진입 = 화면 QR 하나(카메라 끔 · 큰 접속 QR · 후킹 「당신의 프롬프팅 속도를 보여 주세요」 · 로그인 전 토큰 붙잡기 5분 · 폰 「노트북 화면의 QR을 찍어 주세요」) · v5.93 = 261006 둘러보기 눌러서 가기(바닥 · 판 · 동전 · 포토부스 · 룰렛 · 엘리베이터 · 스태프 = 걸어가서 바로 · 첫 손가락 안내 · 숨 쉬는 테두리) · 설치 안내(「설치 중」 시트 · 설정 줄 = 바로 설치 창) · v5.92 = 7등 랜덤 굿즈 · 체크인 없는 추첨 */
+var APP_VER = "v6.00";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 · v6.00 = 261006 밤 스태프 판정 = 로그인만으로(앱 스태프 명단 사번 = 가운데 단추 「스캔」 · 처음 누를 때만 코드 한 번 · 명단에서 빠지면 「내 QR」 · 서버 staff) · 스캔 자리에서 10F 세션 입장 숨김(SCAN_10F_UI) · v5.99 = 261006 키트 사이즈 사전 선택(키트명단 사번만 · 홈 카드 · 사전 신청 키트 화면 · 설정 · 나의 보상 줄 · 라운지 등록 순 초과 = 가습기 안내 · 서버 ks* · §250) · v5.98 = 261006 스태프 폰 연속 스캔(관리자 모드 폰 = 가운데 단추 「스캔」 · 자리 칩 · 톱니 · 결과 띠 1.5초 · 화면 꺼짐 막기) · 스캔 순간 참가자 알림(소켓 · 푸시) · 선착순 참여상 = 받기 선착순(남은 N · 「자격」 말 없음) · v5.97 = 261006 스탬프 감사 후속(AX PLAY 부스 코드 = 「스태프에게 내 QR을 보여 주세요」 · 「응모」 → 「행운권」 · 「선착순 참여상」 표기) · v5.95 = 261006 프로그램 참여 스탬프 = 17F 오후 AWS · MS 강연만(오전 강연 · 송출 · 10F · 커피챗 · 라운지 스탬프 문구 삭제) · 사전등록 체크인 3개 → 룰렛 → 강의장 안내 시트 · 홈 한 줄 · 스태프 키트 결과 「룰렛 부스로 안내해 주세요」 · v5.94 = 261006 타자왕 노트북 진입 = 화면 QR 하나(카메라 끔 · 큰 접속 QR · 후킹 「당신의 프롬프팅 속도를 보여 주세요」 · 로그인 전 토큰 붙잡기 5분 · 폰 「노트북 화면의 QR을 찍어 주세요」) · v5.93 = 261006 둘러보기 눌러서 가기(바닥 · 판 · 동전 · 포토부스 · 룰렛 · 엘리베이터 · 스태프 = 걸어가서 바로 · 첫 손가락 안내 · 숨 쉬는 테두리) · 설치 안내(「설치 중」 시트 · 설정 줄 = 바로 설치 창) · v5.92 = 7등 랜덤 굿즈 · 체크인 없는 추첨 */
 var A2HS = { deferred: null, open: false, pending: false };   /* v5.91 pending = 이 탭에서 크롬 설치 창 「설치」를 눌렀다(설치 중 · 다시 설치 막기) */
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -3877,7 +3879,7 @@ var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_ro
   "wave_extra", "test_mine", "type_nick", "type_nick_edit", "type_best", "mem_seen", "ox_seen",
   "pang_best", "jump_best", "gw_best", "gw_time_best", "tt_best", "pang_cleared", "jump_cleared", "gw_cleared", "type_cleared", "tetris_cleared", "ox_cleared",
   "oly2_best_*", "oly2_done_*", "oly_pend", "draw_in", "qz_run", "qz_last", "qz_best", "qz_kseen", "qz_pend", "gs_how",
-  "push_me", "push_ep", "crowd_watch"];   /* v4.76 내 알림 설정 · 보낸 구독 주소 · 혼잡 풀리면 알림 */
+  "push_me", "push_ep", "crowd_watch", "staff_me"];   /* v4.76 내 알림 설정 · 보낸 구독 주소 · 혼잡 풀리면 알림 */
 function storeIsDevice(k) {
   k = String(k || "");
   return STORE_DEVICE.some(function (d) { return d.slice(-1) === "*" ? k.indexOf(d.slice(0, -1)) === 0 : k === d; });
@@ -4709,7 +4711,7 @@ var App = {
     };
     var T = this.TABS;
     /* 가운데 = QR 화면(v5.23 사용자 261003 · 기본 내 QR · 스캔은 탭) · 주황 원 + 짙은 글리프 · 둥근 모서리 그림(qr-corners)만(v5.75 원 안 「QR」 글자 없앰 · 아래 「내 QR」 라벨이 이름) */
-    var stf = typeof staffOn === "function" && staffOn();   /* v5.98 (사용자 261006 밤) 스태프 폰(관리자 모드를 연 기기) = 가운데 단추가 곧바로 스태프 연속 스캐너 · 일반 직원은 그대로 내 QR */
+    var stf = typeof staffBtn === "function" && staffBtn();   /* v5.98 (사용자 261006 밤) 스태프 폰 = 가운데 단추가 곧바로 스태프 연속 스캐너 · 일반 직원은 그대로 내 QR · v6.00 앱 스태프 명단 사번이면 로그인만으로(staffBtn · 서버 staff) */
     nav.innerHTML = btn(T[0]) + btn(T[1]) +
       (stf ? '<button class="axs-scan" onclick="sscOpen()" aria-label="스태프 스캔"><span class="axs-scan-c" aria-hidden="true">' +
         '<svg><use href="#qr-corners"/></svg></span><span aria-hidden="true">스캔</span></button>' :
@@ -7846,7 +7848,7 @@ function admScanHtml() {
         '<div class="axs-stiles">' + SCAN_SPOTS.filter(function (x) { return x.kind === "sess"; }).map(scanTileHtml).join("") + "</div>";
     }
     return '<h2 class="ax-section-title">무엇을 찍나요?</h2><div class="axs-stiles">' +
-      SCAN_TILES.map(function (id) {   /* v5.05 포토부스 대기 폐지 · 정리 #7 타일 목록에서 뺐다 */ return id === "sess" ? '<button type="button" class="axs-stile" onclick="scanChoose(\'sess\')"><b>10F 세션 입장</b><span>A~E 고르기</span></button>' : scanTileHtml(scanSpot(id)); }).join("") + "</div>" +
+      SCAN_TILES.map(function (id) {   /* v5.05 포토부스 대기 폐지 · 정리 #7 타일 목록에서 뺐다 · v6.00 10F 세션 타일은 SCAN_10F_UI 일 때만 */ return id === "sess" ? (!SCAN_10F_UI ? "" : '<button type="button" class="axs-stile" onclick="scanChoose(\'sess\')"><b>10F 세션 입장</b><span>A~E 고르기</span></button>') : scanTileHtml(scanSpot(id)); }).join("") + "</div>" +
       (sp ? '<button type="button" class="ax-button ax-button-weak" onclick="SCAN.pick = false; App.render()">' + esc(sp.lb || sp.nm) + " 그대로 찍기</button>" : "") + log + INV_LNK;
   }
   var w = scanWhat(sp), out = sp.kind === "roulette" && S.get("roulette_out", false);
@@ -7890,6 +7892,42 @@ var SSC_BAND_MS = 1500;
 Views.sscan = function () { return sscHtml(); };
 var SSC_SUB = { p2: [["hdq", "하이디큐"], ["hhp", "하이헬퍼"]] };   /* 같은 동작(stamp_grant p2) · 칩에 어느 부스인지만 */
 function staffOn() { return !!S.get("admin_authed", false) && admRole() !== "grade" && !!(admTok() || admKey()); }   /* 새 판정 없음 · 관리자 모드(사번 + 코드 · admin_check)를 이 폰에서 연 스태프 */
+/* v6.00 (사용자 261006 밤 「로그인만으로 바뀜」) 앱 스태프 명단(서버 설정 관리명단_앱 · 콘솔에서 넣음)에 있는 사번 = 로그인 · sync 응답 staff 1 → 처음부터 가운데 단추 「스캔」.
+ *   처음 누를 때만 코드를 한 번(sscCodeAsk → admVerify 그대로 · 코드 · 토큰 저장 방식 그대로) · 그 뒤로는 바로 연속 스캐너(staffOn).
+ *   staff_me = true | false(서버가 말함 · 다른 사람 명단 · 코드는 오지 않는다) · 없음(옛 서버 · 로그인 직후 응답 전) = 예전대로 관리자 모드를 연 폰만(staffOn).
+ *   명단에서 빠지면 다음 sync 에 false → 「내 QR」(스캔 화면에 있었으면 홈으로) · 서버도 그 사번의 사람 토큰을 곧바로 막는다(admIn_). */
+function staffMe() { var v = S.get("staff_me", null); return v === true || v === false ? v : null; }
+function staffBtn() { var m = staffMe(); return m === null ? staffOn() : m; }
+function staffMeIn(v) {
+  if (v !== 0 && v !== 1 && v !== true && v !== false) return;   /* 옛 서버 · 필드 없음 = 그대로 */
+  var on = !!v;
+  if (staffMe() === on) return;
+  S.set("staff_me", on);
+  if (!on && App.current === "sscan") App.go("home");
+}
+var SSC_CK = { busy: false };
+function sscCodeAsk() {
+  modalOpen('<p class="ax-body">처음 한 번만 입력해요</p>' +
+    '<label class="ax-sr-only" for="sscCode">스태프 코드</label>' +
+    '<input id="sscCode" class="ax-field ssc-code" inputmode="numeric" pattern="[0-9]*" enterkeyhint="go" autocomplete="off" placeholder="코드를 입력해 주세요" onkeydown="onEnter(event, sscCodeGo)">' +
+    '<button type="button" class="ax-button ssc-codego" id="sscCodeGo" onclick="sscCodeGo()">확인하기</button>', "스태프 코드");
+  setTimeout(function () { try { el("sscCode").focus(); } catch (e) {} }, 150);
+}
+function sscCodeGo() {
+  var v = String((el("sscCode") || {}).value || "").trim(), b = el("sscCodeGo");
+  if (SSC_CK.busy) return;
+  if (!v) { toast("코드를 입력해 주세요"); return; }
+  if (!BE.on) { toast("서버에 연결되지 않아 열 수 없어요"); return; }
+  if (sscSndOn()) sfxUnlock();   /* 누른 손짓에서 소리를 연다(응답 뒤에는 손짓이 아니다) */
+  SSC_CK.busy = true; if (b) { b.disabled = true; b.textContent = "확인하는 중"; }
+  var undo = function () { SSC_CK.busy = false; var b2 = el("sscCodeGo"); if (b2) { b2.disabled = false; b2.textContent = "확인하기"; } };
+  admVerify(v, function (role) {
+    undo(); modalClose();
+    S.set("admin_authed", true);
+    if (role === "grade") { toast("이 코드로는 혼잡 제보만 할 수 있어요"); App.go("admin"); return; }
+    App.go("sscan");
+  }, undefined, undefined, undo);
+}
 /* 같은 사람(사번) 3초 · 계속 비치면 시계를 다시 잰다 */
 function scanSeen(emp) { if (emp && emp === SCAN.lastE && Date.now() - SCAN.seenE < 3000) { SCAN.seenE = Date.now(); return true; } return false; }
 function sscSub(id) { var L = SSC_SUB[id || SCAN.spot], v = S.get("scan_sub", ""); return L ? (L.filter(function (x) { return x[0] === v; })[0] || L[0]) : null; }
@@ -7919,7 +7957,7 @@ function sscBandHtml() {
   return '<div class="ssc-band' + (b ? " c-" + b.c : "") + '" id="sscBand" role="status" aria-live="assertive"' + (b ? "" : " hidden") + ">" + (b ? "<b>" + esc(b.t) + "</b>" + (b.s ? "<span>" + esc(b.s) + "</span>" : "") : "") + "</div>";
 }
 function sscBandPaint() { var n = el("sscBand"); if (n) n.outerHTML = sscBandHtml(); }
-function sscOpen() { if (sscSndOn()) sfxUnlock(); App.go("sscan"); }
+function sscOpen() { if (!staffOn()) { sscCodeAsk(); return; } if (sscSndOn()) sfxUnlock(); App.go("sscan"); }   /* v6.00 명단 사번 · 이 폰에서 아직 코드를 안 넣었으면 한 번 */
 function sscClose() { App.back(); }
 function sscMine() { qrPanelOpen("mine"); }
 function sscHtml() {
@@ -7972,7 +8010,7 @@ function sscWake(on) {
   } catch (e) { SSC.wlReq = false; }
 }
 document.addEventListener("visibilitychange", function () { if (!document.hidden && App.current === "sscan") sscMount(); });
-/* 톱니 · 자리 칩 = 자리 고르기 시트 · 1F 자리 → 10F 세션 · 아래에 소리 · 내 QR · 관리자 모드 화면 */
+/* 톱니 · 자리 칩 = 자리 고르기 시트 · 1F 자리 → 10F 세션(v6.00 SCAN_10F_UI 일 때만 · 사용자 261006 밤 「10층은 출석 확인 없다」) · 아래에 소리 · 내 QR · 관리자 모드 화면 */
 function sscSheetBody() {
   var cur = SCAN.spot, cs = sscSub(), tile = function (sp, sub, lb) {
     var on = sp.id === cur && (!sub || (cs && cs[0] === sub));
@@ -7980,13 +8018,13 @@ function sscSheetBody() {
   };
   var one = [], ten = [];
   SCAN_TILES.forEach(function (id) {
-    if (id === "sess") { SCAN_SPOTS.filter(function (x) { return x.kind === "sess"; }).forEach(function (sp) { ten.push(tile(sp, "", sp.lb || sp.nm)); }); return; }
+    if (id === "sess") { if (SCAN_10F_UI) SCAN_SPOTS.filter(function (x) { return x.kind === "sess"; }).forEach(function (sp) { ten.push(tile(sp, "", sp.lb || sp.nm)); }); return; }   /* v6.00 10층은 출석 확인 없음(SCAN_10F_UI) */
     var sp = scanSpot(id); if (!sp) return;
     if (SSC_SUB[id]) SSC_SUB[id].forEach(function (u) { one.push(tile(sp, u[0], sp.nm + " · " + u[1])); });
     else one.push(tile(sp, "", sp.lb || sp.nm));
   });
   var snd = sscSndOn();
-  return '<div class="axs-stiles ssc-picks">' + one.join("") + '</div><h3 class="ax-meta ssc-h">10F 세션 입장</h3><div class="axs-stiles ssc-picks">' + ten.join("") + "</div>" +
+  return '<div class="axs-stiles ssc-picks">' + one.join("") + "</div>" + (ten.length ? '<h3 class="ax-meta ssc-h">10F 세션 입장</h3><div class="axs-stiles ssc-picks">' + ten.join("") + "</div>" : "") +
     '<div class="ssc-opts"><button type="button" class="ssc-opt" aria-pressed="' + snd + '" onclick="sscSnd()"><span>스캔 소리</span><b>' + (snd ? "켬" : "끔") + "</b></button>" +
     '<button type="button" class="ssc-opt" onclick="sheetClose(true); sscMine()"><span>내 QR 보여주기</span>' + CHEV_SVG + "</button>" +
     '<button type="button" class="ssc-opt" onclick="sheetClose(true); App.go(\'admin\')"><span>관리자 모드 · 혼잡 제보 · 재고</span>' + CHEV_SVG + "</button></div>";
@@ -8199,6 +8237,7 @@ function beSync(after) {
       /* v5 · 체크인·대기 상태는 서버가 정본이다(운영 데스크 스캐너가 쓰므로 앱은 받아쓰기만 한다).
          내 차례가 되면 한 번만 알린다 · 폴링마다 토스트가 뜨지 않게 직전 상태와 비교. */
       if (res.my.checkin) S.set("checkin", res.my.checkin);
+      if ("staff" in res.my) staffMeIn(res.my.staff);   /* v6.00 앱 스태프 명단(1 | 0) · 없으면 옛 서버 = 그대로 */
       if ("ckg" in res.my && String(res.my.ckg || "") !== S.get("ck_grp", "")) S.set("ck_grp", String(res.my.ckg || ""));   /* v5.94 사전등록 갈래(10F | dap) · 체크인 안내 시트 마지막 줄 */
       if (res.my.stamps) { stampSync(res.my.stamps); stampPendRetry(); lgCheck(res.my.stamps); }   /* v4.83 최초 로그인 스탬프 */
       if (res.my.stair) { var st9 = Object.assign({}, res.my.stair, { emp: String(u.empId || "") }); if (JSON.stringify(st9) !== JSON.stringify(S.get("stair", null))) S.set("stair", st9); }   /* v4.06 계단 진행 · 서버가 정본 · v4.54 물어본 사번을 붙여 저장 */   /* 스탬프는 서버가 정본 · v3.97 빈 목록 포함 · 못 보낸 적립은 다시 보낸다 */
@@ -8449,7 +8488,7 @@ function admAuthLost() { var m = admLostMsg(); admLock(); toast(m + " · 다시 
    담당자 적립은 **참가자 폰**에서 도는 화면이라, 여기서 관리코드를 저장하면
    그 참가자 기기에 코드가 영구히 남는다(260830 발견 · cd92d8c에서 들어간 회귀).
    v4.86 staffEmp = 담당자 적립에서 스태프가 친 사번(참가자 세션은 싣지 않는다 · 그 폰의 로그인은 참가자 것) · done(역할, 코드, 응답) */
-function admVerify(v, done, keep, staffEmp) {
+function admVerify(v, done, keep, staffEmp, fail) {   /* v6.00 fail = 틀림 · 연결 실패 때(스태프 코드 창 단추 되살리기) */
   v = String(v || "").trim();
   if (!v) { toast("코드를 입력해 주세요"); return; }
   /* 서버가 판정하므로 서버 없이는 열 수 없다. 로컬 비교로 되돌리면 상수가 되살아난다. */
@@ -8458,6 +8497,7 @@ function admVerify(v, done, keep, staffEmp) {
   if (keep === false) { if (staffEmp) { q.aemp = String(staffEmp); q.asc = "a"; } }
   else if (u.empId) { q.aemp = String(u.empId); q.asc = "a"; if (u.ses) q.ases = String(u.ses); }   /* v4.86 로그인 안 한 폰은 예전처럼 코드만(기기) */
   beCall(q, function (res) {
+    if (!(res && res.ok) && fail) fail();
     if (res && res.ok) {
       if (keep !== false) {
         S.set("adm_key", v);
@@ -8468,7 +8508,7 @@ function admVerify(v, done, keep, staffEmp) {
       done(res.role || "admin", v, res);
     } else if (res && res.reason === "ses") { SES.need = true; toast("로그인 확인이 필요해요 · 비밀번호를 넣은 뒤 다시 확인해 주세요"); setTimeout(sesAsk, 300); }   /* v4.86 이 폰의 로그인 토큰이 그 사번 것이 아님 · 지남 */
     else toast(res && res.reason === "locked" ? admLockedMsg(res) : q.aemp ? "명단에 없는 사번이거나 코드가 맞지 않아요" : "코드가 올바르지 않습니다.");   /* v4.65 잠금은 틀린 코드와 다르게 */
-  }, function () { toast("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요."); });
+  }, function () { if (fail) fail(); toast("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요."); });
 }
 
 /* ════════════════ v4.76 웹 푸시 · 260930 사용자 확정 (루트 「웹 푸시 기획.md」 2 · 4장 · 「홈 화면 설치 유도 · 레드팀 토론.md」 3장 채택 1 · 2) ════════════════
@@ -10222,9 +10262,13 @@ var SCAN_SPOTS = [
   /* v5.90 (261006 경품 기획 변경) 1F 체크인존 · 선착순 참여상 수령(fcfs_give · QR 서명) · 키트 타일과 같은 모양 */
   { id: "fcfs", nm: "체크인 존 · 참여상", kind: "fcfs", lb: "체크인 존 · 참여상", tsub: "선착순 수령", will: "선착순 참여상 수령", cond: "스탬프 6개 · 남은 수량 안에서 먼저 온 순서" }   /* v5.98 받기 선착순 */
 ];
+/* v6.00 (사용자 261006 밤 「10층은 출석 확인 없다」) 스태프 스캔 자리 · 관리자 모드 QR 스캔에서 10F 세션 A~E 입장 자리를 숨긴다(표시만 · SCAN_SPOTS · sess_in · 서버 SESS_META 는 그대로 · 되살리려면 true)
+ *   이 폰에 10F 세션 자리가 기억돼 있으면 비운다(자리 고르기부터) */
+var SCAN_10F_UI = false;
 var SCAN_TILES = ["roulette", "kit", "fcfs", "p2", "dap", "cchat", "sess"];   /* 자주 쓰는 룰렛 · 포토 · 스탬프(AX PLAY)가 위 · 10F 세션은 한 타일에서 A~E · v4.83 1F 전시 타일 삭제 */
 function scanSpot(id) { return SCAN_SPOTS.filter(function (s) { return s.id === id; })[0] || null; }
 var SCAN = { spot: S.get("scan_spot", "") !== "q_photo" ? S.get("scan_spot", "") : "", log: [], last: "", lastT: 0, on: false, pick: false, sub: "", res: null };
+if (!SCAN_10F_UI && (scanSpot(SCAN.spot) || {}).kind === "sess") SCAN.spot = "";   /* v6.00 옛 기기에 남은 10F 세션 자리 */
 
 function scanPick(id) { scanStop(); SCAN.spot = scanSpot(id) ? id : ""; SCAN.last = ""; SCAN.lastE = ""; S.set("scan_spot", SCAN.spot); App.render(); }   /* v4.65 위치를 바꾸면 3초 중복 가드도 푼다(같은 사람을 다른 위치에서 곧바로) */
 function scanStart() {
@@ -16922,6 +16966,7 @@ function lfBusy(btn, on, label) {
         }
         personClaim(known.empId);   /* v4.56 */
         S.set("user", { empId: known.empId, name: res.name || known.name, dept: res.dept || "", ses: res.ses || "" });   /* v4.67 참가자 세션 토큰(새 서버만) */
+        staffMeIn(res.staff);   /* v6.00 앱 스태프 명단 사번 = 가운데 단추 「스캔」 */
         if (res.dept) S.set("dept", res.dept);
         knownSet({ empId: known.empId, name: res.name || known.name, dept: res.dept || "" });
         /* v4.87 최초 로그인이면 장면 · 아니면 예전 입장 · v4.94 재방문 화면은 장면이 덮은 뒤(또는 예전 입장 직전)에 걷는다(장면이 이 화면의 점에서 시작)
@@ -17002,6 +17047,7 @@ function lfBusy(btn, on, label) {
         }
         personClaim(id);   /* v4.56 로그인 사번이 이 기기 기록 주인과 다르면 먼저 지운다 */
         S.set("user", { empId: id, name: res.name || nm, dept: res.dept || "", ses: res.ses || "" });   /* v4.67 참가자 세션 토큰(새 서버만) */
+        staffMeIn(res.staff);   /* v6.00 앱 스태프 명단 사번 = 가운데 단추 「스캔」 */
         if (res.dept) S.set("dept", res.dept);
         knownSet({ empId: id, name: res.name || nm, dept: res.dept || "" });   /* 다음 접속엔 비밀번호만 */
         /* v4.87 최초 로그인이면 장면(띠가 화면 전체로 커진다) · 아니면 예전 입장 · 장면을 튼 새 계정에는 「비밀번호가 등록되었어요」 팝업을 띄우지 않는다(입력칸 아래 안내가 같은 말) */

@@ -48,7 +48,7 @@ function admScanHtml() {
         '<div class="axs-stiles">' + SCAN_SPOTS.filter(function (x) { return x.kind === "sess"; }).map(scanTileHtml).join("") + "</div>";
     }
     return '<h2 class="ax-section-title">무엇을 찍나요?</h2><div class="axs-stiles">' +
-      SCAN_TILES.map(function (id) {   /* v5.05 포토부스 대기 폐지 · 정리 #7 타일 목록에서 뺐다 */ return id === "sess" ? '<button type="button" class="axs-stile" onclick="scanChoose(\'sess\')"><b>10F 세션 입장</b><span>A~E 고르기</span></button>' : scanTileHtml(scanSpot(id)); }).join("") + "</div>" +
+      SCAN_TILES.map(function (id) {   /* v5.05 포토부스 대기 폐지 · 정리 #7 타일 목록에서 뺐다 · v6.00 10F 세션 타일은 SCAN_10F_UI 일 때만 */ return id === "sess" ? (!SCAN_10F_UI ? "" : '<button type="button" class="axs-stile" onclick="scanChoose(\'sess\')"><b>10F 세션 입장</b><span>A~E 고르기</span></button>') : scanTileHtml(scanSpot(id)); }).join("") + "</div>" +
       (sp ? '<button type="button" class="ax-button ax-button-weak" onclick="SCAN.pick = false; App.render()">' + esc(sp.lb || sp.nm) + " 그대로 찍기</button>" : "") + log + INV_LNK;
   }
   var w = scanWhat(sp), out = sp.kind === "roulette" && S.get("roulette_out", false);
@@ -92,6 +92,42 @@ var SSC_BAND_MS = 1500;
 Views.sscan = function () { return sscHtml(); };
 var SSC_SUB = { p2: [["hdq", "하이디큐"], ["hhp", "하이헬퍼"]] };   /* 같은 동작(stamp_grant p2) · 칩에 어느 부스인지만 */
 function staffOn() { return !!S.get("admin_authed", false) && admRole() !== "grade" && !!(admTok() || admKey()); }   /* 새 판정 없음 · 관리자 모드(사번 + 코드 · admin_check)를 이 폰에서 연 스태프 */
+/* v6.00 (사용자 261006 밤 「로그인만으로 바뀜」) 앱 스태프 명단(서버 설정 관리명단_앱 · 콘솔에서 넣음)에 있는 사번 = 로그인 · sync 응답 staff 1 → 처음부터 가운데 단추 「스캔」.
+ *   처음 누를 때만 코드를 한 번(sscCodeAsk → admVerify 그대로 · 코드 · 토큰 저장 방식 그대로) · 그 뒤로는 바로 연속 스캐너(staffOn).
+ *   staff_me = true | false(서버가 말함 · 다른 사람 명단 · 코드는 오지 않는다) · 없음(옛 서버 · 로그인 직후 응답 전) = 예전대로 관리자 모드를 연 폰만(staffOn).
+ *   명단에서 빠지면 다음 sync 에 false → 「내 QR」(스캔 화면에 있었으면 홈으로) · 서버도 그 사번의 사람 토큰을 곧바로 막는다(admIn_). */
+function staffMe() { var v = S.get("staff_me", null); return v === true || v === false ? v : null; }
+function staffBtn() { var m = staffMe(); return m === null ? staffOn() : m; }
+function staffMeIn(v) {
+  if (v !== 0 && v !== 1 && v !== true && v !== false) return;   /* 옛 서버 · 필드 없음 = 그대로 */
+  var on = !!v;
+  if (staffMe() === on) return;
+  S.set("staff_me", on);
+  if (!on && App.current === "sscan") App.go("home");
+}
+var SSC_CK = { busy: false };
+function sscCodeAsk() {
+  modalOpen('<p class="ax-body">처음 한 번만 입력해요</p>' +
+    '<label class="ax-sr-only" for="sscCode">스태프 코드</label>' +
+    '<input id="sscCode" class="ax-field ssc-code" inputmode="numeric" pattern="[0-9]*" enterkeyhint="go" autocomplete="off" placeholder="코드를 입력해 주세요" onkeydown="onEnter(event, sscCodeGo)">' +
+    '<button type="button" class="ax-button ssc-codego" id="sscCodeGo" onclick="sscCodeGo()">확인하기</button>', "스태프 코드");
+  setTimeout(function () { try { el("sscCode").focus(); } catch (e) {} }, 150);
+}
+function sscCodeGo() {
+  var v = String((el("sscCode") || {}).value || "").trim(), b = el("sscCodeGo");
+  if (SSC_CK.busy) return;
+  if (!v) { toast("코드를 입력해 주세요"); return; }
+  if (!BE.on) { toast("서버에 연결되지 않아 열 수 없어요"); return; }
+  if (sscSndOn()) sfxUnlock();   /* 누른 손짓에서 소리를 연다(응답 뒤에는 손짓이 아니다) */
+  SSC_CK.busy = true; if (b) { b.disabled = true; b.textContent = "확인하는 중"; }
+  var undo = function () { SSC_CK.busy = false; var b2 = el("sscCodeGo"); if (b2) { b2.disabled = false; b2.textContent = "확인하기"; } };
+  admVerify(v, function (role) {
+    undo(); modalClose();
+    S.set("admin_authed", true);
+    if (role === "grade") { toast("이 코드로는 혼잡 제보만 할 수 있어요"); App.go("admin"); return; }
+    App.go("sscan");
+  }, undefined, undefined, undo);
+}
 /* 같은 사람(사번) 3초 · 계속 비치면 시계를 다시 잰다 */
 function scanSeen(emp) { if (emp && emp === SCAN.lastE && Date.now() - SCAN.seenE < 3000) { SCAN.seenE = Date.now(); return true; } return false; }
 function sscSub(id) { var L = SSC_SUB[id || SCAN.spot], v = S.get("scan_sub", ""); return L ? (L.filter(function (x) { return x[0] === v; })[0] || L[0]) : null; }
@@ -121,7 +157,7 @@ function sscBandHtml() {
   return '<div class="ssc-band' + (b ? " c-" + b.c : "") + '" id="sscBand" role="status" aria-live="assertive"' + (b ? "" : " hidden") + ">" + (b ? "<b>" + esc(b.t) + "</b>" + (b.s ? "<span>" + esc(b.s) + "</span>" : "") : "") + "</div>";
 }
 function sscBandPaint() { var n = el("sscBand"); if (n) n.outerHTML = sscBandHtml(); }
-function sscOpen() { if (sscSndOn()) sfxUnlock(); App.go("sscan"); }
+function sscOpen() { if (!staffOn()) { sscCodeAsk(); return; } if (sscSndOn()) sfxUnlock(); App.go("sscan"); }   /* v6.00 명단 사번 · 이 폰에서 아직 코드를 안 넣었으면 한 번 */
 function sscClose() { App.back(); }
 function sscMine() { qrPanelOpen("mine"); }
 function sscHtml() {
@@ -174,7 +210,7 @@ function sscWake(on) {
   } catch (e) { SSC.wlReq = false; }
 }
 document.addEventListener("visibilitychange", function () { if (!document.hidden && App.current === "sscan") sscMount(); });
-/* 톱니 · 자리 칩 = 자리 고르기 시트 · 1F 자리 → 10F 세션 · 아래에 소리 · 내 QR · 관리자 모드 화면 */
+/* 톱니 · 자리 칩 = 자리 고르기 시트 · 1F 자리 → 10F 세션(v6.00 SCAN_10F_UI 일 때만 · 사용자 261006 밤 「10층은 출석 확인 없다」) · 아래에 소리 · 내 QR · 관리자 모드 화면 */
 function sscSheetBody() {
   var cur = SCAN.spot, cs = sscSub(), tile = function (sp, sub, lb) {
     var on = sp.id === cur && (!sub || (cs && cs[0] === sub));
@@ -182,13 +218,13 @@ function sscSheetBody() {
   };
   var one = [], ten = [];
   SCAN_TILES.forEach(function (id) {
-    if (id === "sess") { SCAN_SPOTS.filter(function (x) { return x.kind === "sess"; }).forEach(function (sp) { ten.push(tile(sp, "", sp.lb || sp.nm)); }); return; }
+    if (id === "sess") { if (SCAN_10F_UI) SCAN_SPOTS.filter(function (x) { return x.kind === "sess"; }).forEach(function (sp) { ten.push(tile(sp, "", sp.lb || sp.nm)); }); return; }   /* v6.00 10층은 출석 확인 없음(SCAN_10F_UI) */
     var sp = scanSpot(id); if (!sp) return;
     if (SSC_SUB[id]) SSC_SUB[id].forEach(function (u) { one.push(tile(sp, u[0], sp.nm + " · " + u[1])); });
     else one.push(tile(sp, "", sp.lb || sp.nm));
   });
   var snd = sscSndOn();
-  return '<div class="axs-stiles ssc-picks">' + one.join("") + '</div><h3 class="ax-meta ssc-h">10F 세션 입장</h3><div class="axs-stiles ssc-picks">' + ten.join("") + "</div>" +
+  return '<div class="axs-stiles ssc-picks">' + one.join("") + "</div>" + (ten.length ? '<h3 class="ax-meta ssc-h">10F 세션 입장</h3><div class="axs-stiles ssc-picks">' + ten.join("") + "</div>" : "") +
     '<div class="ssc-opts"><button type="button" class="ssc-opt" aria-pressed="' + snd + '" onclick="sscSnd()"><span>스캔 소리</span><b>' + (snd ? "켬" : "끔") + "</b></button>" +
     '<button type="button" class="ssc-opt" onclick="sheetClose(true); sscMine()"><span>내 QR 보여주기</span>' + CHEV_SVG + "</button>" +
     '<button type="button" class="ssc-opt" onclick="sheetClose(true); App.go(\'admin\')"><span>관리자 모드 · 혼잡 제보 · 재고</span>' + CHEV_SVG + "</button></div>";

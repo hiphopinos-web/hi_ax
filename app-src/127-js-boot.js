@@ -134,6 +134,7 @@
         }
         personClaim(known.empId);   /* v4.56 */
         S.set("user", { empId: known.empId, name: res.name || known.name, dept: res.dept || "", ses: res.ses || "" });   /* v4.67 참가자 세션 토큰(새 서버만) */
+        staffMeIn(res.staff);   /* v6.00 앱 스태프 명단 사번 = 가운데 단추 「스캔」 */
         if (res.dept) S.set("dept", res.dept);
         knownSet({ empId: known.empId, name: res.name || known.name, dept: res.dept || "" });
         /* v4.87 최초 로그인이면 장면 · 아니면 예전 입장 · v4.94 재방문 화면은 장면이 덮은 뒤(또는 예전 입장 직전)에 걷는다(장면이 이 화면의 점에서 시작)
@@ -214,6 +215,7 @@
         }
         personClaim(id);   /* v4.56 로그인 사번이 이 기기 기록 주인과 다르면 먼저 지운다 */
         S.set("user", { empId: id, name: res.name || nm, dept: res.dept || "", ses: res.ses || "" });   /* v4.67 참가자 세션 토큰(새 서버만) */
+        staffMeIn(res.staff);   /* v6.00 앱 스태프 명단 사번 = 가운데 단추 「스캔」 */
         if (res.dept) S.set("dept", res.dept);
         knownSet({ empId: id, name: res.name || nm, dept: res.dept || "" });   /* 다음 접속엔 비밀번호만 */
         /* v4.87 최초 로그인이면 장면(띠가 화면 전체로 커진다) · 아니면 예전 입장 · 장면을 튼 새 계정에는 「비밀번호가 등록되었어요」 팝업을 띄우지 않는다(입력칸 아래 안내가 같은 말) */

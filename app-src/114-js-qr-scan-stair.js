@@ -1135,9 +1135,13 @@ var SCAN_SPOTS = [
   /* v5.90 (261006 경품 기획 변경) 1F 체크인존 · 선착순 참여상 수령(fcfs_give · QR 서명) · 키트 타일과 같은 모양 */
   { id: "fcfs", nm: "체크인 존 · 참여상", kind: "fcfs", lb: "체크인 존 · 참여상", tsub: "선착순 수령", will: "선착순 참여상 수령", cond: "스탬프 6개 · 남은 수량 안에서 먼저 온 순서" }   /* v5.98 받기 선착순 */
 ];
+/* v6.00 (사용자 261006 밤 「10층은 출석 확인 없다」) 스태프 스캔 자리 · 관리자 모드 QR 스캔에서 10F 세션 A~E 입장 자리를 숨긴다(표시만 · SCAN_SPOTS · sess_in · 서버 SESS_META 는 그대로 · 되살리려면 true)
+ *   이 폰에 10F 세션 자리가 기억돼 있으면 비운다(자리 고르기부터) */
+var SCAN_10F_UI = false;
 var SCAN_TILES = ["roulette", "kit", "fcfs", "p2", "dap", "cchat", "sess"];   /* 자주 쓰는 룰렛 · 포토 · 스탬프(AX PLAY)가 위 · 10F 세션은 한 타일에서 A~E · v4.83 1F 전시 타일 삭제 */
 function scanSpot(id) { return SCAN_SPOTS.filter(function (s) { return s.id === id; })[0] || null; }
 var SCAN = { spot: S.get("scan_spot", "") !== "q_photo" ? S.get("scan_spot", "") : "", log: [], last: "", lastT: 0, on: false, pick: false, sub: "", res: null };
+if (!SCAN_10F_UI && (scanSpot(SCAN.spot) || {}).kind === "sess") SCAN.spot = "";   /* v6.00 옛 기기에 남은 10F 세션 자리 */
 
 function scanPick(id) { scanStop(); SCAN.spot = scanSpot(id) ? id : ""; SCAN.last = ""; SCAN.lastE = ""; S.set("scan_spot", SCAN.spot); App.render(); }   /* v4.65 위치를 바꾸면 3초 중복 가드도 푼다(같은 사람을 다른 위치에서 곧바로) */
 function scanStart() {

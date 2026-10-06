@@ -137,6 +137,7 @@ function beSync(after) {
       /* v5 · 체크인·대기 상태는 서버가 정본이다(운영 데스크 스캐너가 쓰므로 앱은 받아쓰기만 한다).
          내 차례가 되면 한 번만 알린다 · 폴링마다 토스트가 뜨지 않게 직전 상태와 비교. */
       if (res.my.checkin) S.set("checkin", res.my.checkin);
+      if ("staff" in res.my) staffMeIn(res.my.staff);   /* v6.00 앱 스태프 명단(1 | 0) · 없으면 옛 서버 = 그대로 */
       if ("ckg" in res.my && String(res.my.ckg || "") !== S.get("ck_grp", "")) S.set("ck_grp", String(res.my.ckg || ""));   /* v5.94 사전등록 갈래(10F | dap) · 체크인 안내 시트 마지막 줄 */
       if (res.my.stamps) { stampSync(res.my.stamps); stampPendRetry(); lgCheck(res.my.stamps); }   /* v4.83 최초 로그인 스탬프 */
       if (res.my.stair) { var st9 = Object.assign({}, res.my.stair, { emp: String(u.empId || "") }); if (JSON.stringify(st9) !== JSON.stringify(S.get("stair", null))) S.set("stair", st9); }   /* v4.06 계단 진행 · 서버가 정본 · v4.54 물어본 사번을 붙여 저장 */   /* 스탬프는 서버가 정본 · v3.97 빈 목록 포함 · 못 보낸 적립은 다시 보낸다 */
@@ -387,7 +388,7 @@ function admAuthLost() { var m = admLostMsg(); admLock(); toast(m + " · 다시 
    담당자 적립은 **참가자 폰**에서 도는 화면이라, 여기서 관리코드를 저장하면
    그 참가자 기기에 코드가 영구히 남는다(260830 발견 · cd92d8c에서 들어간 회귀).
    v4.86 staffEmp = 담당자 적립에서 스태프가 친 사번(참가자 세션은 싣지 않는다 · 그 폰의 로그인은 참가자 것) · done(역할, 코드, 응답) */
-function admVerify(v, done, keep, staffEmp) {
+function admVerify(v, done, keep, staffEmp, fail) {   /* v6.00 fail = 틀림 · 연결 실패 때(스태프 코드 창 단추 되살리기) */
   v = String(v || "").trim();
   if (!v) { toast("코드를 입력해 주세요"); return; }
   /* 서버가 판정하므로 서버 없이는 열 수 없다. 로컬 비교로 되돌리면 상수가 되살아난다. */
@@ -396,6 +397,7 @@ function admVerify(v, done, keep, staffEmp) {
   if (keep === false) { if (staffEmp) { q.aemp = String(staffEmp); q.asc = "a"; } }
   else if (u.empId) { q.aemp = String(u.empId); q.asc = "a"; if (u.ses) q.ases = String(u.ses); }   /* v4.86 로그인 안 한 폰은 예전처럼 코드만(기기) */
   beCall(q, function (res) {
+    if (!(res && res.ok) && fail) fail();
     if (res && res.ok) {
       if (keep !== false) {
         S.set("adm_key", v);
@@ -406,7 +408,7 @@ function admVerify(v, done, keep, staffEmp) {
       done(res.role || "admin", v, res);
     } else if (res && res.reason === "ses") { SES.need = true; toast("로그인 확인이 필요해요 · 비밀번호를 넣은 뒤 다시 확인해 주세요"); setTimeout(sesAsk, 300); }   /* v4.86 이 폰의 로그인 토큰이 그 사번 것이 아님 · 지남 */
     else toast(res && res.reason === "locked" ? admLockedMsg(res) : q.aemp ? "명단에 없는 사번이거나 코드가 맞지 않아요" : "코드가 올바르지 않습니다.");   /* v4.65 잠금은 틀린 코드와 다르게 */
-  }, function () { toast("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요."); });
+  }, function () { if (fail) fail(); toast("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요."); });
 }
 
 /* ════════════════ v4.76 웹 푸시 · 260930 사용자 확정 (루트 「웹 푸시 기획.md」 2 · 4장 · 「홈 화면 설치 유도 · 레드팀 토론.md」 3장 채택 1 · 2) ════════════════
