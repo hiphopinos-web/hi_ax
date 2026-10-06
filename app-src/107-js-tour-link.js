@@ -179,12 +179,14 @@ function tourRetBack() {
    마침(tourRetDone) = AX 퀴즈 판 완주(qzFinish) · 미니 게임 한 판 결과 화면(gsResultHtml) · 아이디어 한 줄 제출 뒤 커피챗 질문에 답함(ideaCchat · 묻지 않는 경우는 제출 순간 ideaPush)
      · AX PLAY = 내 QR 화면에 스태프 인증 스탬프가 들어온 순간(stampSync · awardStamp → tourRetStamp) · 17F 강연 · 계단 안내 = 안내 화면이라 마침 없음(뒤로 = 둘러보기 · v5.53 그대로)
    마친 뒤(done) = 그 활동의 어느 화면에서 뒤로 가도 둘러보기(App.back) · (옛 결과 화면 아래 복귀 버튼은 v5.67 에서 없앰 · 떠 있는 「3D로 돌아가기」 #trf 하나)
-   그 활동의 스탬프를 이번에 새로 받았으면(got) = 스탬프 연출 · 보상 안내 팝업이 모두 닫힌 뒤 3초 자동 복귀(v5.67 = #trf 둘레 원 · 옛 아래 띠 #trd 없앰) · 머물기 = 단추 밖 누름
-     · 띠 밖을 누르거나 화면을 옮기면 자동 취소(버튼 · 뒤로는 그대로) · 시트 · 팝업이 뜨면 그동안 멈춤 · 움직임 줄이기 = 채움 없이 숫자만
-   이미 받은 스탬프(다시 푼 퀴즈 · 3종을 다 채우지 않은 게임 · 두 번째 아이디어) = 자동 없음 · 결과 화면 버튼 · 뒤로 */
-var TRD = { t: 0, tick: 0, end: 0, el: null };
-var TRD_MS = 3000;
-function tourRetLive() { var r = TOUR_RET; return !!(r && !r.away && tourOn() && (App.current === r.v || App.isAnc(r.v, App.current))); }   /* 출발한 활동 안(마침 · 자동 복귀 판단) */
+   그 활동의 스탬프를 이번에 새로 받았으면(got) = 스탬프 연출 · 보상 안내 팝업이 모두 닫힌 뒤 띠 챗봇이 한 번 더 인사(v5.80 · 옛 3초 자동 복귀 없앰 · 아래 v5.80 주석)
+   이미 받은 스탬프(다시 푼 퀴즈 · 3종을 다 채우지 않은 게임 · 두 번째 아이디어) = 인사 없음 · 띠 · 뒤로 */
+/* v5.80 (사용자 261006 「가만히 있으면 3초 있다가 그냥 돌아가버린다는거야? 이건 좀 너무 행동 강제 아닌가?」 → 「자동 복귀 없애기」)
+   저절로 둘러보기로 돌아가는 일 없음(옛 v5.57 아래 띠 · v5.67 단추 둘레 원 · v5.74 띠 안 3초 차오름 · 신청 완료 화면 3초 모두 없앰) · 돌아가기 = 띠를 누르거나 뒤로(App.back)
+   대신 시선 = 스탬프를 새로 받으면(got) 연출 · 팝업 · 시트가 모두 닫힌 뒤(trdBusy · 0.35초마다 살핌) 띠 챗봇이 처음 나타날 때와 같은 인사(hi · 약 1.8초 · 통통 3번 · 전파 펄스 · 눈웃음)를 한 번 더 · 띠 글 그대로
+   화면을 옮기면 기다림을 접는다(trdHide · 라우터) · 움직임 줄이기 = 정지 그림(인사 없음) */
+var TRD = { t: 0 };
+function tourRetLive() { var r = TOUR_RET; return !!(r && !r.away && tourOn() && (App.current === r.v || App.isAnc(r.v, App.current))); }   /* 출발한 활동 안(마침 · 인사 판단) */
 function tourRetAny() { return !!(TOUR_RET && tourOn()); }   /* v5.73 둘러보기에서 나온 뒤 앱 어디서나(「3D로 돌아가기」 단추) */
 function tourRetDone(got) {
   if (!tourRetLive()) return;
@@ -192,7 +194,7 @@ function tourRetDone(got) {
   if (got) { TOUR_RET.got = true; trdWait(); }
 }
 function tourRetStamp(id) { if (TOUR_RET && TOUR_RET.id === id && id !== "p5") tourRetDone(true); }   /* 아이디어는 커피챗 질문에 답한 뒤(ideaCchat) */
-function tourRetGo() { trdHide(); if (!tourRetBack()) App.render(); }
+function tourRetGo() { trdHide(); if (!tourRetBack()) App.render(); }   /* 띠 누름 */
 function trdBusy() {
   return !!(SPOP.cur || SPOP.q.length || el("spop") || el("lgx") || el("modal") || el("axsSheet") || NOTICE.cur || NOTICE.q.length || el("app").hidden || TOUR.busy || (window.AXTour && AXTour.isOpen()) || document.hidden);
 }
@@ -202,28 +204,27 @@ function trdWait() {
     TRD.t = 0;
     if (!tourRetLive() || !TOUR_RET.got) return;
     if (trdBusy()) { trdWait(); return; }
-    trdShow();
+    trfSync();
+    var f = el("trf"); if (!f) { trdWait(); return; }   /* 띠가 숨은 때(게임 판 · 상세 시트) = 보일 때까지 */
+    TOUR_RET.got = false; trfHi(f);
   }, 350);
 }
 /* v5.67 (사용자 261005 「3d로 돌아가기가 어떻게 해야 되는지 순간 프리징이 되는데」 · 「모든 메뉴가 위와 같은 버튼이 제일 하단에 있어서 대충 보는 사람은 이해 못할 것 같아 작은 플로팅 메뉴가 더 명확」 · 「둘러보기 복귀 버튼을 없애고 작은 플로팅 버튼(뒤로가기 아이콘) 밑에 3d로 돌아가기」)
    둘러보기에서 출발한 앱 화면(tourRetLive = 도착한 화면 · 그 아래 단계) = 오른쪽 아래 떠 있는 단추 하나(#trf · 주황 원 + 짙은 뒤로 화살표 · 밑에 작은 「3D로 돌아가기」) · 누르면 tourRetGo(들어가기 전 자리)
    자리 = 맨 위로(TOP · 아래 80px · 46px) 위 · 아래 고정 버튼(axs-fix) · 하단 메뉴가 더 높으면 그 위 · 앱 폭 오른쪽 끝(TOP 과 같은 세로줄)
    안 보임 = 출처가 둘러보기가 아닐 때(v5.73 = 3D로 돌아가거나 둘러보기를 새로 열 때 · 새로고침에만 지워진다 · 아래 탭 · 다른 화면으로 가도 남음 · 옛 v5.67 = 지움) · 둘러보기가 열려 있을 때 · 게임 판이 도는 동안(rtView · 결과 화면이 뜨면 보임)
-   처음 나타날 때 한 번 톡 튀어 오름(움직임 줄이기 = 없음)
-   자동 복귀(옛 v5.57 아래 띠 「여기 머물기 / 둘러보기로 돌아가기 3」 없앰) = 그 활동의 스탬프를 이번에 새로 받으면(got) 연출 · 팝업이 모두 닫힌 뒤 이 단추 둘레에 3초 원이 돈다 → 다 돌면 tourRetGo
-     단추 밖을 누르거나 키를 누르거나 다른 화면으로 가면 취소(= 머물기 · 단추는 남는다) · 시트 · 팝업이 뜨면 그동안 멈춤 · 움직임 줄이기 = 원 없이 3초 뒤 같은 동작(읽어 주기 「3초 뒤 3D로 돌아가요」) */
+   처음 나타날 때 한 번 톡 튀어 오름(움직임 줄이기 = 없음) */
 /* v5.74 (사용자 261006 「저 위치 저 모양이 적절하고 일반적인 어플리케이션에서 활용하는 문법인지」 → 「하단 탭 위 얇은 띠(권장)」 · 캡처에서 오른쪽 아래 둥근 단추가 목록 셰브론을 가렸다)
    통화 앱 「통화로 돌아가기」 · 음악 앱 「지금 재생 중」 · 지도 「길안내로 돌아가기」와 같은 문법 = 하단 탭 바로 위 화면 폭 얇은 띠 하나(#trf.trf-band) · 띠 전체가 누름 영역 · 누르면 tourRetGo(들어가기 전 자리)
    띠 = 좌우 여백 page-inset · 높이 48 · 연주황 면(brandSoft) + 진한 주황 글(brandText · 화면 주 버튼 주황 면과 겨루지 않게) · 왼쪽 챗봇(A-4 원본 BOT_SVG 작게) · 「1층 둘러보기로 돌아가기」 · 오른쪽 셰브론
    자리 = 하단 메뉴(또는 아래 고정 버튼 axs-fix)가 더 높으면 그 위 8px · 본문 끝 = 띠 높이만큼 여백(body.trf-on #view::after · 내용 가림 0 · 옛 비키기 trfAvoid 없앰) · 맨 위로(TOP) 단추는 띠 위로(--trfb)
    안 보임 = 출처가 둘러보기가 아닐 때(v5.73 유지 범위 = 3D로 돌아가거나 둘러보기를 새로 열 때 · 새로고침에만 지워진다) · 둘러보기가 열려 있을 때 · 게임 판 · 퀴즈 푸는 중 · v5.74 읽기용 상세 시트(5-7b)가 열려 있는 동안(시트 닫기 = 목록 · 목록에서 띠로)
-   처음 나타날 때 아래에서 한 번 올라옴(움직임 줄이기 = 없음)
-   자동 복귀 = 그 활동의 스탬프를 이번에 새로 받으면(got) 연출 · 팝업이 모두 닫힌 뒤 띠 안이 왼쪽에서 오른쪽으로 3초 동안 차오르고 글이 「3초 뒤 둘러보기로」(초를 센다) → 다 차면 tourRetGo
-     띠 밖을 누르거나 키를 누르거나 다른 화면으로 가면 취소(= 머물기 · 띠는 남고 글이 돌아온다) · 확인 시트 · 팝업이 뜨면 그동안 멈춤 · 움직임 줄이기 = 차오름 없이 글만 세고 3초 뒤 같은 동작 */
+   처음 나타날 때 아래에서 한 번 올라옴(움직임 줄이기 = 없음) · (v5.80 3초 차오름 자동 복귀 없앰) */
 var TRF_LBL = "행사 둘러보기로 돌아가기";   /* v5.79 (사용자 261006) 이름 통일 · 옛 「1층 둘러보기로 돌아가기」 */
 /* v5.79 (사용자 261006 「복귀 띠 눈에 띄게」) 띠 왼쪽 챗봇 = 홈 둘러보기 카드 아이콘과 같은 부품(tourBotHtml 합성 · BOT_WAVE 전파 · TOUR_BOT_SM 눈웃음 · design.md A-4 승인 예외)
    둘러보기에서 나올 때마다 띠가 처음 나타나면 한 번(hi · 약 1.8초) = 통통 3번 · 전파 펄스 · 눈웃음 → 그 뒤 = 홈 카드와 같은 은은한 반복(3초 통통 3px · 9초에 깜빡임 2번 + 눈웃음 1번 · 전파 최대 0.7)
-   다시 그려져도(시트 · 게임 동안 숨었다가) 같은 출발이면 인사는 다시 하지 않는다(TRF_HI) · 움직임 줄이기 = 정지 그림 + 전파 0.35 */
+   다시 그려져도(시트 · 게임 동안 숨었다가) 같은 출발이면 인사는 다시 하지 않는다(TRF_HI) · 움직임 줄이기 = 정지 그림 + 전파 0.35
+   v5.80 스탬프를 새로 받은 뒤 한 번 더 = trfHi(같은 hi 클래스를 떼었다 다시 붙여 처음부터) */
 var TRF_HI = null;
 function trfWant() {
   if (!tourRetAny() || el("app").hidden || TOUR.busy || (window.AXTour && AXTour.isOpen())) return false;   /* v5.73 tourRetLive(출발 화면 아래만) → tourRetAny(앱 어디서나) */
@@ -234,13 +235,13 @@ function trfWant() {
 }
 function trfSync() {
   var f = el("trf");
-  if (!trfWant()) { if (f) { if (TRD.el === f) trdHide(); f.parentNode.removeChild(f); } document.body.classList.remove("trf-on"); return; }
+  if (!trfWant()) { if (f) f.parentNode.removeChild(f); document.body.classList.remove("trf-on"); return; }
   if (!f) {
     f = document.createElement("button"); f.type = "button"; f.id = "trf"; f.className = "trf-band " + (rgReduced() ? "rm" : "pop" + (TRF_HI !== TOUR_RET ? " hi" : ""));
     TRF_HI = TOUR_RET;
     f.setAttribute("aria-label", TRF_LBL + " · 있던 자리로");
     f.onclick = tourRetGo;
-    f.innerHTML = '<span class="trf-p" aria-hidden="true"></span><span class="trf-i" aria-hidden="true">' + (typeof BOT_SVG === "string" ? BOT_SVG.replace("</svg>", BOT_WAVE + TOUR_BOT_SM + "</svg>") : "") + '</span><span class="trf-l" aria-hidden="true">' + TRF_LBL + '</span><span class="trf-v" aria-hidden="true">' + CHEV_SVG + '</span><span class="ax-sr-only trf-s" role="status"></span>';
+    f.innerHTML = '<span class="trf-i" aria-hidden="true">' + (typeof BOT_SVG === "string" ? BOT_SVG.replace("</svg>", BOT_WAVE + TOUR_BOT_SM + "</svg>") : "") + '</span><span class="trf-l" aria-hidden="true">' + TRF_LBL + '</span><span class="trf-v" aria-hidden="true">' + CHEV_SVG + '</span>';
     document.body.appendChild(f);
   }
   var nav = el("tabbar"), fx = document.querySelector("#view .axs-fix.ax-bottom"), base = 0;
@@ -251,37 +252,12 @@ function trfSync() {
   document.body.classList.add("trf-on");   /* 본문 끝 여백 · 맨 위로 단추를 띠 위로(CSS) */
 }
 setInterval(function () { if (typeof App !== "undefined" && App.current) trfSync(); }, 600);   /* 게임 결과 · 둘러보기 닫힘처럼 다시 그리기 없이 바뀌는 때 */
-function trdShow() {
-  trdHide(); trfSync();
-  var d = el("trf"); if (!d) { trdWait(); return; }
-  d.classList.add("cd"); d.classList.toggle("rmcd", rgReduced());
-  var pg = d.querySelector(".trf-p"); if (pg) { pg.style.animation = "none"; void pg.offsetWidth; pg.style.animation = ""; }
-  var s = d.querySelector(".trf-s"), lb = d.querySelector(".trf-l"), sec = -1;
-  if (s) s.textContent = TRD_MS / 1000 + "초 뒤 행사 둘러보기로 돌아가요";
-  TRD.el = d; TRD.end = Date.now() + TRD_MS;
-  document.addEventListener("pointerdown", trdPtr, true); document.addEventListener("keydown", trdKey, true);
-  var last = Date.now(), step = function () {
-    if (TRD.el !== d) return;
-    if (!tourRetLive() || !d.parentNode) { trdHide(); return; }   /* 다른 화면으로 감 = 취소 */
-    var now = Date.now(), hold = !!(SPOP.cur || el("spop") || el("modal") || el("axsSheet") || document.hidden);
-    if (hold) TRD.end += now - last;   /* 확인 시트 · 팝업이 떠 있는 동안 멈춤 */
-    last = now; d.classList.toggle("hold", hold);
-    var left = TRD.end - now;
-    if (left <= 0) { tourRetGo(); return; }
-    var n = Math.max(1, Math.ceil(left / 1000));
-    if (n !== sec && lb) { sec = n; lb.textContent = n + "초 뒤 둘러보기로"; }   /* 띠 글 = 남은 초(3 · 2 · 1) */
-    TRD.tick = setTimeout(step, Math.min(200, left));
-  };
-  step();
+function trfHi(f) {   /* v5.80 띠 챗봇 인사 한 번 더 · 움직임 줄이기 = 정지 그림 */
+  if (rgReduced() || f.classList.contains("rm")) return;
+  f.classList.remove("hi"); void f.offsetWidth; f.classList.add("hi");
 }
-function trdPtr(e) { if (TRD.el && !TRD.el.contains(e.target)) trdStay(); }
-function trdKey(e) { if (TRD.el && !TRD.el.contains(e.target) && e.key !== "Tab" && e.key !== "Shift") trdStay(); }
-function trdStay() { if (TOUR_RET) TOUR_RET.got = false; trdHide(); }
-function trdHide() {
+function trdHide() {   /* 인사 기다림 접기(화면을 옮길 때 · 띠 누름 · 둘러보기로 돌아갈 때) */
   if (!TRD) return;   /* 불러오는 중(App.go 가 먼저 불릴 때) */
-  clearTimeout(TRD.t); clearTimeout(TRD.tick); TRD.t = TRD.tick = 0;
-  document.removeEventListener("pointerdown", trdPtr, true); document.removeEventListener("keydown", trdKey, true);
-  if (TRD.el) { TRD.el.classList.remove("cd", "hold", "rmcd"); var s = TRD.el.querySelector(".trf-s"), lb = TRD.el.querySelector(".trf-l"); if (s) s.textContent = ""; if (lb) lb.textContent = TRF_LBL; }   /* v5.74 머물기 = 띠 글 원래대로 */
-  TRD.el = null;
+  clearTimeout(TRD.t); TRD.t = 0;
 }
 

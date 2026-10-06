@@ -659,7 +659,7 @@ function progConfirm() {
     var tr = c.id === "dap" && tourRetLive() && TOUR_RET.id === "p3" ? TOUR_RET : null;   /* v5.57 둘러보기 LOUNGE 블록에서 출발 · 마침 = 상담 신청 완료(스탬프는 실제 상담 완료 때 스태프 인증으로) */
     App.go("sess_ok");   /* App.go 가 시트를 닫는다 */
     delete App.from.sess_ok;   /* 결과에서 뒤로 = 프로그램 목록 (확인 화면으로 돌아가지 않는다) */
-    if (tr) { TOUR_RET = tr; tr.v = "sess_ok"; tr.away = false; tourRetDone(true); App.render(); }   /* 완료 화면에서 「3D로 돌아가기」 둘레 3초 → 1층(v5.67 · 옛 띠) · 뒤로 = 1층 */
+    if (tr) { TOUR_RET = tr; tr.v = "sess_ok"; tr.away = false; tourRetDone(true); App.render(); }   /* 완료 화면에 머문다 · 띠 챗봇 인사 한 번(v5.80 · 옛 3초 자동 복귀 없앰) · 띠 · 뒤로 = 둘러보기 */
   };
   var live = BE.on && u.empId;
   if (c.id === "dap") {
