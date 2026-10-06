@@ -132,6 +132,7 @@
   .fs-big .axs-pz-c:not(.gr) .tx { flex-wrap: wrap; }
   .fs-big .axs-pz-gr { grid-template-columns: minmax(0, 1fr); }
   .fs-big .axs-pz-c.wide .axs-pz-ph { aspect-ratio: 1 / 1; }
+  .fs-big .axs-pz-c.wide .axs-pz-ph.two { aspect-ratio: 2 / 1; }   /* v5.88 큰 글씨 · 사진 두 장(룰렛 2등)은 정사각 두 칸 그대로(1:1 이면 사진 아래 빈 흰 칸이 생겼다) */
   @keyframes axsPzIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
   @keyframes axsPzZoom { from { transform: scale(1.04); } to { transform: none; } }
   .axs-pz.in .axs-pz-cv > *, .axs-pz.in .axs-pz-sec:first-of-type > * { animation: axsPzIn 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }

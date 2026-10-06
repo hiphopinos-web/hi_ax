@@ -2286,6 +2286,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .fs-big .axs-pz-c:not(.gr) .tx { flex-wrap: wrap; }
   .fs-big .axs-pz-gr { grid-template-columns: minmax(0, 1fr); }
   .fs-big .axs-pz-c.wide .axs-pz-ph { aspect-ratio: 1 / 1; }
+  .fs-big .axs-pz-c.wide .axs-pz-ph.two { aspect-ratio: 2 / 1; }   /* v5.88 큰 글씨 · 사진 두 장(룰렛 2등)은 정사각 두 칸 그대로(1:1 이면 사진 아래 빈 흰 칸이 생겼다) */
   @keyframes axsPzIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
   @keyframes axsPzZoom { from { transform: scale(1.04); } to { transform: none; } }
   .axs-pz.in .axs-pz-cv > *, .axs-pz.in .axs-pz-sec:first-of-type > * { animation: axsPzIn 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
@@ -3501,7 +3502,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.87";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.88";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -6862,15 +6863,16 @@ function rewItems() {
 /* ════════════════ v5.04 경품 안내 · 참여상 (261002 사용자 확정 · CLAUDE.md 「보상」 · 「경품 앱 공개」) ════════════════
    룰렛 · 행운권 · 참여상 경품의 이름 · 사진 · 수량만 보여 준다 · 가격 · 사전등록자 키트 · 실습 세션 기념품은 넣지 않는다.
    사진 = assets/prize/<img>.webp(정사각 240 · 커피 · 간식 360) · 실물 사진이 오면 같은 이름으로 파일만 바꾸고 PRIZE_SAMPLE 을 false 로(항목 하나만이면 그 항목에 s: 0).
+   v5.88 (사용자 261006 상품 시안 「디자인 시안/00.상품들」) 룰렛 5등급 · 완주 경품 · 커피 = <이름>_v2(흰 바탕 정사각 600 · 커피 400) · 시안 렌더라 샘플 딱지 유지 · 옛 이름 rl1~rl5 · rl2_coffee · rl2_keyring 파일은 1층 둘러보기(tour3.js ROUL)가 아직 써서 남김
    수량은 이 표 한 곳이다(룰렛 2등 100 = 커피 + 키캡 키링 · 남는 커피 40은 예비라 보이지 않는다 · 사용자 확정 261002). */
 var PRIZE_DIR = "assets/prize/", PRIZE_SAMPLE = true;
 var PRIZES = {
   roulette: { unit: "개", list: [
-    { rk: "1등", nm: "텀블러", q: 60, img: "rl1_tumbler" },
-    { rk: "2등", nm: "커피 + 키캡 키링", q: 100, img: "rl2_coffee", img2: "rl2_keyring" },   /* v5.18 합성 사진 대신 두 장 나란히(사용자 261003) */
-    { rk: "3등", nm: "컵받침", q: 150, img: "rl3_coaster" },
-    { rk: "4등", nm: "판스티커", q: 250, img: "rl4_sticker" },
-    { rk: "5등", nm: "볼펜", q: 400, img: "rl5_pen", tall: 1 }] },   /* v5.33 tall = 넓은 칸에서도 자르지 않는다(사선 볼펜 사진) */
+    { rk: "1등", nm: "텀블러", q: 60, img: "rl1_tumbler_v2" },
+    { rk: "2등", nm: "커피 + 키캡 키링", q: 100, img: "rl2_coffee_v2", img2: "rl2_keyring_v2" },   /* v5.18 합성 사진 대신 두 장 나란히(사용자 261003) */
+    { rk: "3등", nm: "컵받침", q: 150, img: "rl3_coaster_v2" },
+    { rk: "4등", nm: "판스티커", q: 250, img: "rl4_sticker_v2" },
+    { rk: "5등", nm: "볼펜", q: 400, img: "rl5_pen_v2", tall: 1 }] },   /* v5.33 tall = 넓은 칸에서도 자르지 않는다(사선 볼펜 사진) */
   draw: { unit: "명", list: [
     { rk: "1등", nm: "아이패드", q: 1, img: "ld1_ipad" },
     { rk: "2등", nm: "신라호텔 파크뷰 뷔페 식사권 2매", q: 1, img: "ld2_shilla" },
@@ -6879,7 +6881,7 @@ var PRIZES = {
     { rk: "5등", nm: "풀리오 종아리 마사지기", q: 2, img: "ld5_pulio" },
     { rk: "6등", nm: "현대백화점 상품권 10만원", q: 3, img: "ld6_hyundai" }] },
   fin: { unit: "개", list: [
-    { rk: "", nm: "무선 무드등 가습기", q: 210, img: "fin_humidifier" }] },
+    { rk: "", nm: "무선 무드등 가습기", q: 210, img: "fin_humidifier_v2" }] },
   /* v5.05 1F 타자왕 1~3위(17:00 Outro 시상) · v5.09 (261003 사용자 확정) 새 상품 · 사진 = 제조사 공식 컷 */
   type: { unit: "명", list: [
     { rk: "1등", nm: "기계식 키보드", sub: "체리 G80-3872", q: 1, img: "ty1_cherry", flat: 1 },   /* v5.18 flat = 사진 2:1(위아래 여백 자르기) */
@@ -6888,7 +6890,7 @@ var PRIZES = {
 };
 /* 커피 · 간식(18F 커피챗 · 1F DAP 과제상담) · 커피 = 페트병(우리 스티커 목업) · 간식 = 달곰 베이크샵 휘낭시에 · 스콘(블로그 사진 합성 · 임시) · 바꿀 때는 파일만 */
 var TREATS = [
-  { nm: "커피", sub: "콜드브루 · 헤이즐넛", img: "cc_coffee" },
+  { nm: "커피", sub: "콜드브루 · 헤이즐넛", img: "cc_coffee_v2" },
   { nm: "간식", sub: "휘낭시에 · 스콘", img: "cc_snack" }
 ];
 function prizePhHtml(p, w) {
@@ -6942,7 +6944,7 @@ function pzNeedHtml(s) {
   }).join("") + "</ul></div>";
 }
 var PZ = { t: 0 };
-var PZ_THUMB = ["ld1_ipad", "fin_humidifier", "rl1_tumbler"];   /* 입구 사진 3장 = assets/prize/t_<img>.webp(96px) */
+var PZ_THUMB = ["ld1_ipad", "fin_humidifier_v2", "rl1_tumbler_v2"];   /* 입구 사진 3장 = assets/prize/t_<img>.webp(96px) */
 function prizeGo(k) { PROG.anchor = k ? "pz-" + k : ""; PZ.t = Date.now(); App.go("prizes"); }
 function prizeJump(k) {
   var a = el("pz-" + k); if (!a) return;
