@@ -323,6 +323,8 @@
   .axs-stag svg { display: block; }
   .axs-stag:not(.on) { border-radius: 50%; background: var(--ax-color-surface); }   /* 받기 전 = 흰 면 위 회색 도장(회색 바탕에서 묻히지 않게) */
   .axs-sthost > .axs-stag { position: absolute; top: -6px; right: 0; }
+  .axs-stag .axs-stxw { position: relative; display: block; width: 100%; height: 100%; }   /* v5.96 도장 ×2 알약 자리 */
+  .axs-stag .axs-stx { position: absolute; right: -8px; bottom: -4px; min-width: 26px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--ax-color-brand); color: var(--ax-color-ink); font: 800 13px/20px var(--ax-font); letter-spacing: -0.02em; text-align: center; box-shadow: 0 0 0 2px var(--ax-color-surface); }
   .ax-card.axs-sthost > .axs-stag { top: calc(var(--ax-space-24) - 6px); right: var(--ax-space-20); }
   .axs-sthost > .axs-chiprow, .axs-sthost > .ax-title, .axs-sthost > .ax-meta, .axs-sthost > .axs-gauge, .axs-sthost > h1 { padding-right: 64px; }
   .axs-sthost > .axs-gauge { margin-right: 64px; padding-right: 0; }
@@ -1099,6 +1101,11 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .rnum .tkt { background: var(--ax-color-inset); }
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .rnum .tkt.new { background: var(--ax-color-brand); color: var(--ax-color-onBrand); }   /* v4.44 열기 전 응모권 = 누를 수 있는 주황 칩 */
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .cap { font: var(--ax-type-t7); color: var(--ax-color-brandText); }
+  /* v5.96 (사용자 261006 밤) 선착순 두 줄 = 6번 칸(3장) 라벨 아래 가운데 · 넘치면 레일 오른쪽 끝(라벨 줄 여백 15px 안)에 맞춤 · 줄 높이만큼 아래를 띄운다 */
+  .rail .lbls.fx6 { margin-bottom: calc(36px * var(--fs)); }
+  #view .rail .lbls span.fx6 { top: calc(17px * var(--fs)); left: 100%; transform: translateX(min(-50%, calc(15px - 100%))); display: flex; flex-direction: column; align-items: center; gap: 1px; font: 600 calc(11px * var(--fs))/1.25 var(--ax-font); letter-spacing: -0.01em; color: var(--ax-color-brandText); white-space: nowrap; }
+  #view .rail .lbls span.fx6 b { font-weight: 800; }
+  #view .rail .lbls span.fx6 b.k { font-weight: 600; }
   #view[data-v="home"] .axs-rows { display: flex; flex-direction: column; gap: var(--ax-space-8); }
   #view[data-v="home"] .rc { margin: 0; border: 0; border-radius: var(--ax-radius-20); background: var(--ax-color-surface); box-shadow: none; --rc-px: var(--ax-space-16); }
   #view[data-v="home"] .rc.my, #view[data-v="home"] .rc.now { background: var(--ax-color-surface); box-shadow: none; }

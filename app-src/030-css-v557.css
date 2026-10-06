@@ -60,7 +60,18 @@
   @keyframes trfHiSm { 0%, 12%, 88%, 100% { opacity: 0; } 15%, 85% { opacity: 1; } }
   @keyframes trfHiEye { 0%, 12%, 88%, 100% { opacity: 1; } 15%, 85% { opacity: 0; } }
   #trf .trf-m { position: relative; z-index: 2; display: flex; align-items: center; gap: 2px; min-width: 0; max-width: 100%; padding: 0 var(--ax-space-8) 0 var(--ax-space-12); border-radius: 999px; background: var(--ax-color-brandSoft); }   /* 글 알약 = 띠와 같은 면 · 챗봇이 뒤로 지나간다 */
-  #trf .trf-l { flex: 0 1 auto; min-width: 0; overflow: hidden; font: var(--ax-type-t6-strong); line-height: 40px; white-space: nowrap; text-overflow: ellipsis; }
+  #trf .trf-l { flex: 0 1 auto; min-width: 0; overflow: hidden; font: 600 1.125rem/40px var(--ax-font); letter-spacing: -0.01em; white-space: nowrap; text-overflow: ellipsis; }   /* v5.96 15px → 18px(큰글씨 = rem 배율) · 좁은 폭은 아래 미디어에서만 줄임 */
+  #trf .trf-l .w, #trf .trf-v { animation: trfWave 3s ease-in-out infinite; animation-delay: calc(var(--i) * 60ms); will-change: transform; }
+  #trf .trf-l .w { display: inline-block; }
+  @keyframes trfWave { 0%, 14%, 100% { transform: translateY(0); } 7% { transform: translateY(-3px); } }   /* 한 글자 = 0.42초 떠올랐다 내려옴 · 13글자 + 셰브론 = 약 1.2초 물결 · 나머지 쉼 */
+  @media (max-width: 359px) { #trf .trf-l { font-size: 1rem; } }
+  @media (max-width: 319px) { #trf .trf-l { font-size: 0.9375rem; } }
+  html.fs-big #trf .trf-l { font-size: 1.0625rem; }   /* 큰글씨 = 배율이 이미 크다 · 한 줄 유지 */
+  @media (max-width: 389px) { html.fs-big #trf .trf-l { font-size: 0.9375rem; } }
+  @media (max-width: 319px) { html.fs-big #trf .trf-l { font-size: 0.8125rem; } }
+  #trf.rm .trf-l .w, #trf.rm .trf-v { animation: none; transform: none; }
+  body.trf-sleep #trf .trf-l .w, body.trf-sleep #trf .trf-v { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) { #trf .trf-l .w, #trf .trf-v { animation: none !important; transform: none !important; } }
   #trf .trf-v { display: block; flex: none; width: 20px; height: 20px; }
   #trf .trf-v .axs-chev { display: block; width: 20px; height: 20px; }
   #trf:active { filter: brightness(0.96); }   /* 앱 눌림 문법(010 · v5.74) · #trf 는 #frame 밖(body) */

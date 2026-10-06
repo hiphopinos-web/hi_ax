@@ -294,6 +294,20 @@ function fcfsLeftHtml(n) {
   var x = fxGet(); if (!x || n >= STAMP_DENOM || x.left < 0) return "";
   return '<p class="cap fx">' + (x.left === 0 ? "선착순 참여상 · 마감" : "선착순 참여상 · 남은 " + x.left + " / " + x.cap) + "</p>";
 }
+/* v5.96 (사용자 261006 밤 「디자인이 이상하다」 · 메인 결정) 스탬프 탭 · 나의 보상 레일 = 6번 칸(3장) 라벨 아래 작은 두 줄 「선착순」 / 상태 · 옛 왼쪽 한 줄(fcfsLeftHtml)은 홈 레일에만
+   상태 = 수령 자격(got) · 수령 완료(done) · 마감(full · closed · 남은 0 · 마감 시각 뒤) · 남은 n / cap · 숫자를 숨기면(left -1 · 숫자공개 LOW 임박 전 · OFF) 「선착순」만 · 취소(void)는 지금 줄처럼 그리지 않는다 · 꺼짐(fx 없음) 없음 */
+function fcfsRailTxt() {
+  var x = fxGet(); if (!x) return null;
+  var f = fcfsMy(), st = f ? f.st : "";
+  if (st === "void") return null;
+  if (st === "got") return "수령 자격";
+  if (st === "done") return "수령 완료";
+  if (st === "full" || st === "closed" || x.left === 0 || fcfsLate()) return "마감";
+  return x.left > 0 ? x.left + " / " + x.cap : "";
+}
+function fcfsRailHtml() { var t = fcfsRailTxt(); return t == null ? "" : '<span class="fx6"><b class="k">선착순</b>' + (t ? "<b>" + t + "</b>" : "") + "</span>"; }
+/* 6개 다 모은 캡션 뒤 · 스탬프 탭(두 줄이 상태를 말한다) = 받을 곳만 */
+function fcfsCapWhere() { var f = fcfsMy(); return f && f.st === "got" ? " · 1F 체크인존에서 수령" : ""; }
 /* 6번째 스탬프 상자 팝업 한 줄 */
 function fcfsPopLine() {
   if (raffleTickets(Math.min(REWARD_CAP, stampCount())) < RAFFLE_MAX) return "";

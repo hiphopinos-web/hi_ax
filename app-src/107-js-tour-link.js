@@ -118,7 +118,7 @@ var TOUR_HOST = {
 };
 /* v5.65 층 안내(floor_d) · 엘리베이터 층 단추에서 온다(App.go 로도 열림 · 뒤로 = 프로그램) · 17F = 시간표 흐름 카드 중 17F 것만 · 10F = 세션 A~E 줄(누르면 세션 상세) */
 var FLOOR_GD = {
-  17: { hdr: "17F 대강당", sub: "신청 없이 자유 참석 · 입장 · 끝 QR 출석" },
+  17: { hdr: "17F 대강당", sub: "신청 없이 자유 참석" },   /* v5.96 출석 QR 은 오후 AWS · MS 상세에서만 */
   10: { hdr: "10F 실습형 세션", sub: "사전 신청자 참여 · 5개 세션" }
 };
 function floorGuideHtml() {
@@ -199,6 +199,8 @@ var TRF_LBL = "행사 둘러보기로 돌아가기";   /* v5.79 (사용자 26100
    다시 그려져도(시트 · 게임 동안 숨었다가) 같은 출발이면 인사는 다시 하지 않는다(TRF_HI) · 움직임 줄이기 = 정지 그림 + 전파 0.35
    v5.80 스탬프를 새로 받은 뒤 한 번 더 = trfHi(같은 hi 클래스를 떼었다 다시 붙여 처음부터) */
 var TRF_HI = null;
+/* v5.96 (사용자 261006 밤 「글자가 웨이브 물결 치는(왼 → 우) 효과 · 폰트 사이즈를 조금 더」) 글자마다 span(--i = 순서) · 왼쪽부터 60ms 씩 늦게 3px 떠올랐다 내려옴 · 3초 한 바퀴(물결 약 1.2초 + 쉼 약 1.8초) · 읽기 = 버튼 aria-label 한 덩어리(글 칸은 aria-hidden) · 움직임 줄이기 = 정지 */
+function trfWaveHtml(t) { return String(t).split("").map(function (c, i) { return '<span class="w" style="--i:' + i + '">' + (c === " " ? "&nbsp;" : esc(c)) + "</span>"; }).join(""); }
 function trfWant() {
   if (!tourRetAny() || el("app").hidden || TOUR.busy || (window.AXTour && AXTour.isOpen())) return false;   /* v5.73 tourRetLive(출발 화면 아래만) → tourRetAny(앱 어디서나) */
   if (rtView(App.current) && !document.querySelector("#view .gs-res-go")) return false;   /* 게임 판 중 = 조작 단추를 가리지 않게 · 결과 화면에서 보임 */
@@ -216,7 +218,7 @@ function trfSync() {
     f.onclick = tourRetGo;
     /* v5.84 (사용자 261006 「챗봇이 거기서 왔다 갔다 하면 눈이 갈 것 같아」) 글 = 띠 가운데(trf-m · 띠와 같은 면) · 챗봇 = 띠 안을 좌우로 걷는다(trf-trk · trf-run · 글 뒤로 지나감 · 글은 늘 위) */
     f.innerHTML = '<span class="trf-trk" aria-hidden="true"><span class="trf-run"><span class="trf-i"><span class="trf-hop">' + (typeof BOT_SVG === "string" ? BOT_SVG.replace("</svg>", BOT_WAVE + TOUR_BOT_SM + "</svg>") : "") + '</span></span></span></span>' +
-      '<span class="trf-m" aria-hidden="true"><span class="trf-l">' + TRF_LBL + '</span><span class="trf-v">' + CHEV_SVG + '</span></span>';
+      '<span class="trf-m" aria-hidden="true"><span class="trf-l">' + trfWaveHtml(TRF_LBL) + '</span><span class="trf-v" style="--i:' + TRF_LBL.length + '">' + CHEV_SVG + '</span></span>';   /* v5.96 글자 물결(셰브론 = 마지막 글자) */
     document.body.appendChild(f);
     if (f.classList.contains("hi")) trfHold(f);
   }

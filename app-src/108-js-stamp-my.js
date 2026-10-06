@@ -162,10 +162,12 @@ function stampMarkHtml(withRing, size) {
    판정은 스탬프 카드와 같은 원천(S stamps = 서버 sync + 이 기기 적립) · 6개 한도 뒤 7·8번째로 받은 것도 기록이 있으니 「완료」.
    도장 연출은 붙이지 않는다(완료 팝이 따로 있다) · 화면을 다시 그릴 때 색만 바뀐다. */
 var STAG_SZ = 52;
-function stampTagHtml(id) {
-  if (S.get("stamps", []).indexOf(id) >= 0) return '<span class="axs-stag on" role="img" aria-label="스탬프 받음">' + stampSealSvg(STAG_SZ) + "</span>";
+/* v5.96 (사용자 261006 밤 「스탬프 모양이 두 개이거나 곱하기 2 표시」) x = 2 이상이면 도장 오른쪽 아래 O100 알약 「×2」(곱셈 기호 U+00D7) · 17F 오후 강연(p3 · 입장 1 + 끝 1) */
+function stampTagHtml(id, x) {
+  var xb = x > 1 ? '<b class="axs-stx" aria-hidden="true">\u00D7' + x + "</b>" : "", xl = x > 1 ? " · " + x + "개" : "", w0 = xb ? '<span class="axs-stxw">' : "", w1 = xb ? xb + "</span>" : "";
+  if (S.get("stamps", []).indexOf(id) >= 0) return '<span class="axs-stag on" role="img" aria-label="스탬프 받음' + xl + '">' + w0 + stampSealSvg(STAG_SZ) + w1 + "</span>";
   var mg = id === "p4" ? Math.min(MG_NEED, mgDone()) + "/" + MG_NEED : "";
-  return '<span class="axs-stag" role="img" aria-label="' + (mg ? "스탬프 · 종목 " + mg : "스탬프 받기 전") + '">' + stampSealSvg(STAG_SZ, "currentColor", mg || "스탬프", mg ? 22 : 17) + "</span>";
+  return '<span class="axs-stag" role="img" aria-label="' + (mg ? "스탬프 · 종목 " + mg : "스탬프 받기 전") + xl + '">' + w0 + stampSealSvg(STAG_SZ, "currentColor", mg || "스탬프", mg ? 22 : 17) + w1 + "</span>";
 }
 /* 줄 모양 · 왼쪽 글(없으면 빈칸) + 오른쪽 도장 · 제목·칩 줄이 없는 화면(미니게임 · QR 퀴즈 목록 · 설문 결과)이 쓴다 */
 function stampLineHtml(id, left) { return '<div class="axs-stline">' + (left || "<span></span>") + stampTagHtml(id) + "</div>"; }
@@ -455,12 +457,13 @@ function railHtml(n, glow, dispN, home) {
       RAIL_ICO[m[3]] + '<span class="no">' + m[0] + "</span></button>";
     lb += '<span class="' + (n >= m[0] ? "on" : m[0] === nextAt ? "next" : "") + '" style="left:' + pos + '">' + m[1] + "</span>";
   });
+  var fx6 = home ? "" : fcfsRailHtml();   /* v5.96 (사용자 261006 밤) 스탬프 탭 · 나의 보상 = 선착순 두 줄을 6번 칸(3장) 아래로 · 홈은 옛 한 줄 그대로 */
   return '<div class="rail">' +
     '<div class="hd"><span class="nm">스탬프 보상</span><span class="cnt"><span id="ppCnt">' + shown + "</span><small> / " + STAMP_DENOM + "</small></span></div>" +
     '<div class="rb"><i style="width:' + railPos(n).toFixed(1) + '%"></i>' + mk + "</div>" +
-    '<div class="lbls">' + lb + "</div>" +
-    (out0 ? '<p class="cap">' + (roulCut() ? "룰렛 " + roulCutHm() + " 마감" : "룰렛 소진") + "</p>" : dispN >= STAMP_DENOM ? '<p class="cap">' + STAMP_DENOM + "개 모두 모았어요" + fcfsCapTxt() + "</p>" : "") +
-    fcfsLeftHtml(dispN) +   /* v5.90 선착순 참여상 남은 수량 한 줄(홈 · 스탬프 탭 같은 레일) */
+    '<div class="lbls' + (fx6 ? " fx6" : "") + '">' + lb + fx6 + "</div>" +
+    (out0 ? '<p class="cap">' + (roulCut() ? "룰렛 " + roulCutHm() + " 마감" : "룰렛 소진") + "</p>" : dispN >= STAMP_DENOM ? '<p class="cap">' + STAMP_DENOM + "개 모두 모았어요" + (home ? fcfsCapTxt() : fcfsCapWhere()) + "</p>" : "") +
+    (home ? fcfsLeftHtml(dispN) : "") +   /* v5.90 선착순 참여상 남은 수량 한 줄(홈 · 스탬프 탭 같은 레일) */
     raffleNumsHtml(n) + prizeGoHtml() +   /* v5.08 경품 보기 입구(홈 · 스탬프 탭 같은 레일) */
     "</div>";
 }

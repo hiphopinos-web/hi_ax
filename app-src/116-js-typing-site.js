@@ -125,6 +125,8 @@ function typeSec(v) { return (Number(v || 0) / 100).toFixed(1) + "초"; }
    받기 = src 를 data-src 에 두었다가 칸이 화면에 들어오면(IntersectionObserver) 넣는다(loading=lazy 보다 엄격 · 안 본 사람은 0 요청) · 점 글자는 design.md 「타자왕 홍보 영상 칸」 예외 안
    누름 = 칸이 부모에 postMessage({ axfTy: "tap" }) → 순위 화면 = 아래 1F 현장 TOP 10 판으로 부드럽게 · EVENT 구역 = 타자왕 순위 화면으로 */
 var TYP_SRC = "tv/typing/?promo=1", TYP_IO = null;
+/* v5.96 (사용자 261006 밤 「여기에 타자왕 광고는 없애줘」) 1F EVENT 구역 상세(시트 zoneSheet · 옛 화면 zoneDetailHtml)의 홍보 칸 끔 · 타자 순위 화면(type_rank) 칸은 그대로 · 되살리려면 true */
+var EV_TYP_PROMO = false;
 /* v5.45 타자 순위 화면 = TV 순위판 루프 그대로(tv/typing/ · 주소 값 없음 · 후킹 → 게임 → 하는 법 → 상품 → 순위 → 마감 · 17:00 뒤 = 순위 → 상품 → 마감)
    순위 장면 = 1F 현장 TOP 10(공개 type_rank mode site · 30초마다 · 앱 순위판이 하던 20초 받기는 멈춤) · 칸 안 누름 없음(TV 의 「누르면 전체 화면」이 안 돌게) · 화면 꺼짐 방지 · 전체 화면 권한 끔 */
 var TYP_SRC_RANK = "tv/typing/?promo=1&rank=1&t=23", TYB_SHOW = false;   /* v5.53 앱 칸 = 가벼운 판(promo · rank=1 · 33초 판 · TV 7c208cf) · t=23 = 순위 장면부터(사용자 261004 권장안 승인 · 1.7MB 자체 글꼴 · 30초 폴링 대신 앱 글꼴 · 60초) · TYB_SHOW = 옛 HIGH SCORE 순위판(tybHtml) · 코드는 그대로 두고 숨김 */

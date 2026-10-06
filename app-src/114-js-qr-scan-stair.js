@@ -310,6 +310,12 @@ var ATT_17F = { lead: 30, win: { i: [30, 15], o: [10, 10] }, progs: [
 ] };
 var ATT = { code: "", sel: "", res: null, fix: "", k: "" };
 function attProg(id) { for (var i = 0; i < ATT_17F.progs.length; i++) if (ATT_17F.progs[i].id === id) return ATT_17F.progs[i]; return null; }
+/* v5.96 (사용자 결정 261006 밤 「출석체크로 스탬프가 부여되는 강의는 17층 MS · AWS 강의뿐」 · 전수 워싱) 앱이 출석 QR(입장 · 끝)을 안내하고 찍게 하는 강연 = 17F 오후 AWS(l1) · MS(l2)만
+   오전 Intro · 기조연설 · 내부 강연 · 10F 세션 끝 QR 은 표시만 끈다(표 ATT_17F · 서버 att_claim · 결과 처리 · 저장은 그대로 · 되살리려면 이 목록에 id 를 넣고 ATT10_UI 를 켠다)
+   ATT10_UI = 10F 세션 상세 「끝 QR」 줄 · 끝 QR 스캔 단추 · 출석 칩 · 나의 일정 「출석 완료」 */
+var ATT_UI_PROGS = ["l1", "l2"], ATT10_UI = false;
+function attUi(id) { return ATT_UI_PROGS.indexOf(id) >= 0 ? attProg(id) : null; }
+function attUiProgs() { return ATT_17F.progs.filter(function (x) { return ATT_UI_PROGS.indexOf(x.id) >= 0; }); }
 function attMine() { return S.get("att_mine", {}) || {}; }
 /* 그 강의에 출석한 적이 있는가(입장이든 끝이든 · 칩 「출석」) · attMineK = 구분별 시각 */
 function attMineAt(id) { var m = attMine(); return m[id] || m[id + ".out"] || ""; }
@@ -326,7 +332,7 @@ function attNow() { var tm = attTm(); if (tm) return t2m(tm); var d = new Date()
 /* 지금 창 · open = 입장이나 끝 창이 열린 id · sel = 미리 고를 것(그 창에서 아직 안 찍은 것 중 진행 중 우선, 없으면 곧 시작할 것) · next = 다음에 열리는 강의 */
 function attWin(t) {
   var open = [], sel = "", selK = 99999, next = null, nextA = 99999, mine = attMine();
-  ATT_17F.progs.forEach(function (x) {
+  attUiProgs().forEach(function (x) {   /* v5.96 고르기 · 다음 출석 = 앱이 안내하는 강연만 */
     var wi = attKWin(x, "in"), wo = attKWin(x, "out"), s0 = t2m(x.s);
     var inO = t >= wi.a && t <= wi.b, outO = t >= wo.a && t <= wo.b;
     if (inO || outO) {
@@ -364,15 +370,17 @@ function attSpec() {
   if (r) {
     var x = attProg(r.id) || { nm: r.id };
     var more = !r.dup && r.pg === 1 && r.k === "in" && P3_PM.indexOf(r.id) >= 0 && !attShut(x) ? '<p class="ax-meta">끝날 때 화면의 QR을 찍으면 1개 더</p>' : "";   /* v5.94 스탬프는 오후 파트너 강연만 */
+    if (!r.stamp && (!attUi(r.id) || r.nost || r.remote)) return { id: "att", title: r.dup ? "이미 기록됐어요" : "출석이 기록됐어요", lead: "<b>" + esc(x.nm) + "</b>",   /* v5.96 오전 강연 · 송출 · 서버 범위 밖(nost) = 기록만 · 스탬프 기대를 만들지 않게 담담하게 · 오류로 만들지 않는다 */
+      body: r.test ? '<p class="ax-meta">테스트 계정 · 테스트 기록</p>' : "", go: "sheetClose()", goLbl: "확인" };
     return { id: "att", title: r.dup ? "이미 출석했어요" : "출석했어요", lead: "<b>" + esc(x.nm) + "</b><br>" + (r.k === "out" ? "끝 " : "입장 ") + esc(r.at) + (r.remote ? " · 유튜브 송출 출석" : ""),
       body: (r.stamp ? '<div class="ax-inset axs-attok"><p class="ax-card-title">스탬프 「프로그램 참여」 ' + (r.add > 1 ? r.add + "개" : "1개") + ' 적립</p><p class="ax-description">현재 스탬프 ' + r.stamp + " / " + STAMP_DENOM + "개</p></div>" : "") + more +
         (r.test ? '<p class="ax-meta">테스트 계정 · 출석은 테스트 기록 · 스탬프는 이 기기에만</p>' : ""),
       go: "sheetClose()", goLbl: "확인" };
   }
   if (ATT.fix) { var fx = attProg(ATT.fix);   /* 강연별 QR · 고르기 없음 · 실패하면 「다시 시도하기」 */
-    return { id: "att", title: "17F 강연 출석", lead: "<b>" + esc(fx.nm) + "</b>" + (ATT.k ? "<br>" + attKLbl(ATT.k) : ""), body: tmRow, go: "attGo()", goLbl: "출석하기", goBusy: "출석하는 중" }; }
+    return { id: "att", title: "17F 강연 출석", lead: "<b>" + esc(fx.nm) + "</b>" + (ATT.k && attUi(fx.id) ? "<br>" + attKLbl(ATT.k) : ""), body: tmRow, go: "attGo()", goLbl: "출석하기", goBusy: "출석하는 중" }; }
   var t = attNow(), w = attWin(t), mine = attMine();
-  var list = '<div class="axs-attl" role="radiogroup" aria-label="출석할 강연">' + ATT_17F.progs.map(function (x) { return attRowHtml(x, t, mine); }).join("") + "</div>";
+  var list = '<div class="axs-attl" role="radiogroup" aria-label="출석할 강연">' + attUiProgs().map(function (x) { return attRowHtml(x, t, mine); }).join("") + "</div>";
   if (w.sel) return { id: "att", title: "17F 강연 출석", lead: "입장할 때 한 번, 끝날 때 한 번", body: list + tmRow,
     go: "attGo()", goLbl: "출석하기", goBusy: "출석하는 중", goOff: !ATT.sel };
   var lead = w.open.length ? "지금 출석할 수 있는 강연은<br>모두 출석했어요" :
@@ -407,8 +415,8 @@ function attDone(res) {
   if (!res || !res.ok) {
     var why = res && res.reason, x = attProg(ATT.sel), kk = (res && res.k) || ATT.k;
     if (why === "nocode") { sheetClose(true); srShow({ st: "fail", why: "nocode" }); return; }
-    if (why === "roff") { sheetFail({ t: "이 강연은 송출 출석이 없어요", b: "대강당 현장에서 출석해 주세요." }); return; }   /* v5.68 송출 QR · 서버 설정 송출_켬 밖 */
-    if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: (x ? x.nm + " · " : "") + (kk ? attKLbl(kk) + " " : "") + String(res.open || "").replace("~", "–") }); return; }
+    if (why === "roff") { sheetFail({ t: "지금은 쓰지 않는 QR이에요", b: "다시 스캔해 주세요." }); return; }   /* v5.96 송출 출석 안내 없음 */   /* v5.68 송출 QR · 서버 설정 송출_켬 밖 */
+    if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: (x ? x.nm + " · " : "") + (kk && x && attUi(x.id) ? attKLbl(kk) + " " : "") + String(res.open || "").replace("~", "–") }); return; }
     sheetFail({ t: "출석하지 못했어요", b: "다시 시도해 주세요." });
     return;
   }
@@ -418,7 +426,7 @@ function attDone(res) {
   if (!m[key]) m[key] = res.at;
   S.set("att_mine", m);
   var sn = attStamp(res);
-  ATT.res = { id: res.prog, at: m[key], dup: !!res.dup, k: k0, remote: !!res.remote, stamp: sn, add: res.stamp && !res.stamp.dry ? res.stamp.add || 0 : sn ? 1 : 0, pg: res.pg || 0, test: !!res.test };
+  ATT.res = { id: res.prog, at: m[key], dup: !!res.dup, k: k0, remote: !!res.remote, stamp: sn, add: res.stamp && !res.stamp.dry ? res.stamp.add || 0 : sn ? 1 : 0, pg: res.pg || 0, nost: !!res.nost, test: !!res.test };
   attRepaint();
   App.render();   /* 뒤의 강연 상세 · 시간표 행이 출석 상태로 바뀐다 */
 }
@@ -458,13 +466,13 @@ function att10ByCode(code, s) {
 }
 function att10Spec() {
   var s = sessById(ATT10.sid) || { ttl: ATT10.sid }, r = ATT10.res, f = ATT10.info;
-  if (r) return { id: "att10", title: r.dup ? "이미 출석했어요" : "출석했어요", lead: "<b>" + esc(s.ttl) + "</b><br>끝 " + esc(r.at),
+  if (r) return { id: "att10", title: r.stamp ? (r.dup ? "이미 출석했어요" : "출석했어요") : r.dup ? "이미 기록됐어요" : "출석이 기록됐어요", lead: "<b>" + esc(s.ttl) + "</b>" + (ATT10_UI ? "<br>끝 " + esc(r.at) : ""),   /* v5.96 스탬프 없는 출석 = 기록만 · 담담하게 */
     body: (r.stamp ? '<div class="ax-inset axs-attok"><p class="ax-card-title">스탬프 「프로그램 참여」 ' + r.add + '개 적립</p><p class="ax-description">현재 스탬프 ' + r.stamp + " / " + STAMP_DENOM + "개</p></div>" :
-      r.had ? '<p class="ax-meta">프로그램 참여 스탬프 2개는 이미 받았어요</p>' : "") + (r.test ? '<p class="ax-meta">테스트 계정 · 스탬프는 이 기기에만</p>' : ""),
+      r.had ? '<p class="ax-meta">프로그램 참여 스탬프 2개는 이미 받았어요</p>' : "") + (r.test ? '<p class="ax-meta">테스트 계정 · ' + (r.stamp ? "스탬프는 이 기기에만" : "테스트 기록") + '</p>' : ""),
     go: "sheetClose()", goLbl: "확인" };
   if (f) return { id: "att10", title: f.t, lead: f.l, go: "sheetClose()", goLbl: "확인" };
   var tmRow = testMode() ? '<label class="axs-attt">테스트 · 시각<input type="time" value="' + esc(attTm()) + '" onchange="att10TmSet(this.value)"></label>' : "";
-  return { id: "att10", title: "10F 세션 출석", lead: "<b>" + esc(s.ttl) + "</b><br>끝 QR", body: tmRow, go: "att10Go()", goLbl: "출석하기", goBusy: "출석하는 중" };
+  return { id: "att10", title: "10F 세션 출석", lead: "<b>" + esc(s.ttl) + "</b>" + (ATT10_UI ? "<br>끝 QR" : ""), body: tmRow, go: "att10Go()", goLbl: "출석하기", goBusy: "출석하는 중" };
 }
 function att10Repaint() { if (SHEET.busy) botWait(false); SHEET.busy = false; SHEET.err = null; SHEET.spec = att10Spec(); if (el("axsSheet")) sheetPaint(); }
 function att10TmSet(v) { S.set("att_tm", /^\d{1,2}:\d{2}$/.test(v || "") ? v : ""); ATT10.res = null; ATT10.info = null; att10Repaint(); }
@@ -492,7 +500,7 @@ function att10Done(res) {
     if (why === "nocode") { sheetClose(true); srShow({ st: "fail", why: "nocode" }); return; }
     if (why === "notpre") { ATT10.info = { t: "사전 신청자 출석 QR이에요", l: "<b>" + esc(s.ttl) + "</b><br>17F 강연 · 1F 전시 · 18F 커피챗은 누구나 참여해요" }; att10Repaint(); return; }   /* design.md §7 · 오류 말투 없이 갈 수 있는 곳 한 줄 */
     if (why === "other") { ATT10.info = { t: "신청한 세션의 QR을 찍어 주세요", l: "신청한 세션 · <b>" + esc(res.preName || "") + "</b>" }; att10Repaint(); return; }
-    if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: s.ttl + " · 끝 QR " + String(res.open || "").replace("~", "–") }); return; }
+    if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: s.ttl + (ATT10_UI ? " · 끝 QR " : " · ") + String(res.open || "").replace("~", "–") }); return; }
     sheetFail({ t: "출석하지 못했어요", b: "다시 시도해 주세요." });
     return;
   }
