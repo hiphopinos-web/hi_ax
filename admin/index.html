@@ -911,6 +911,16 @@ textarea.in.p10-ta{min-height:144px;font-variant-numeric:tabular-nums}
 /* v5.90 경품 기획 변경(261006) · 선착순 · 7등 · 아이디어왕 · 라운지 명단 · pz- */
 .kpis.pz-k6{grid-template-columns:repeat(6,minmax(0,1fr))}
 .pz-edge{margin:8px 0 0;font-variant-numeric:tabular-nums}
+/* 261006 키트 플리스 사이즈(ks-) · 단계 띠 4칸 */
+.ks-ph{list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0 0}
+.ks-ph li{display:flex;flex-direction:column;gap:2px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--sf);color:var(--tx2);min-width:0}
+.ks-ph li b{font-size:var(--fs-b);font-weight:600}
+.ks-ph li span{font-size:var(--fs-c);color:var(--tx2)}
+.ks-ph li.done{background:var(--soft);color:var(--tx3)}
+.ks-ph li.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.ks-ph li.on span{color:#fff;opacity:.85}
+.ks-tb tr.sum td{border-top:1px solid var(--line3)}
+@media (max-width:720px){ .ks-ph{grid-template-columns:repeat(2,minmax(0,1fr))} }
 .pz-tb td{vertical-align:top}
 .pz-tb td:nth-child(3){white-space:nowrap}
 .pz-tb td:nth-child(6){min-width:120px}
@@ -1707,7 +1717,7 @@ function viewDash(mode){   /* v5.14 기록 › 현황 요약 · mode "todo" = �
   var mx=Math.max.apply(null,dist.concat([1]));
   /* v4.26 17F 출석 · 프로그램별 인원과 출석률(v4.27 분모 = 대강당 좌석 · 서버 ATT_SEATS) · 누르면 출석(17F · 10F) 메뉴 · v5.68 새 서버면 막대 = 현장 입장 ÷ 좌석 */
   var capCard=card("17F 출석",at0.ok?"QR 출석 "+(at0.people||0)+"명 · "+(attNew(at0)?"막대 = 현장 입장 ÷ ":"분모 ")+(at0.denom||0)+"석(대강당 좌석)":"집계를 받지 못했습니다",
-    (at0.ok?attBars(at0):'<div class="empty">백엔드 v4.26(출석) 배포 뒤에 보입니다.</div>')+'<p class="cap mt8"><a href="#" onclick="go(\'att\');return false">출석(17F · 10F) 메뉴에서 시간대별 흐름 보기</a></p>');
+    (at0.ok?attBars(at0):'<div class="empty">백엔드 v4.26(출석) 배포 뒤에 보입니다.</div>')+'<p class="cap mt8"><a href="#" onclick="go(\'att\');return false">출석(17F) 메뉴에서 시간대별 흐름 보기</a></p>');
   h+='<div>'+card("상담 흐름","1F AX 라운지 · 전체 "+rv.length+"건 · 칸을 누르면 그 상태 목록으로",flow(["신청","승인","체크인","완료"],rvBy,["노쇼","취소"],"resv"))+
     card("커피챗 흐름","18F · 전체 "+cc.length+"명",flow(["대기","매칭","참석","완료"],ccBy,["취소"],"cchat"))+capCard+'</div></div>';
   h+='<div class="grid g2">'+card("스탬프 보유 분포","참여 기록이 있는 사람 "+sp.length+"명",
@@ -5551,6 +5561,7 @@ function admListCard(sc, d){
   var L=d[sc]||{ rows:[] }, rows=L.rows||[], m=ADM_SC[sc];
   var right=L.set?tag("적용 중 · "+rows.length+"명","ok"):tag(sc==="c"?"저장 전 · 슈퍼관리자만":"저장 전 · 코드만 맞으면","warn");
   var note=(!L.set?'<p class="note" style="margin-bottom:12px">'+(sc==="c"?"아직 저장하지 않아 슈퍼관리자만 들어옵니다. 사번을 추가하면 그때부터 명단대로 들어옵니다.":"아직 저장하지 않아 코드만 맞으면 스태프 화면이 열립니다. 사번을 추가하면 그때부터 명단에 있는 사람만 엽니다.")+'</p>':'')+
+    (sc==="a"?'<p class="cap" style="margin:0 0 12px">앱 스태프 = 로그인하면 가운데 단추가 스캔</p>':'')+
     (sc==="a"&&!ADM_APP_LIVE?'<p class="note warnl" style="margin:0 0 12px">지금 앱은 스태프 화면을 열 때 사번을 보내지 않아 이 명단이 아직 걸리지 않습니다. 앱 업데이트 뒤부터 적용됩니다.</p>':'');
   var add='<div class="row" style="margin-bottom:12px;flex-wrap:nowrap"><input class="in grow" id="admIn_'+sc+'" inputmode="numeric" autocomplete="off" placeholder="사번 · 여러 명은 쉼표로" value="'+esc(ADMF[sc])+'" oninput="ADMF.'+sc+'=this.value" onkeydown="if(event.key===\'Enter\')admAdd(\''+sc+'\')"><button class="btn pri" onclick="admAdd(\''+sc+'\')">추가</button></div>';
   var tb='<div class="wrap scrolly" style="max-height:480px"><table class="tb"><tr><th>사번</th><th>이름</th><th>부문</th><th class="tdr"></th></tr>'+rows.map(function(r){
@@ -5972,7 +5983,7 @@ var NAV=[
   { id:"r_visit", m:"rc", n:"접속", parts:[P("visit")] },
   { id:"r_idea", m:"rc", n:"아이디어", parts:[P("idea","list","최신순 목록"),P("idea","group","분야별 묶음")] },
   { id:"r_survey", m:"rc", n:"설문", parts:[P("survey")] },
-  { id:"r_att", m:"rc", n:"출석(17F · 10F)", parts:[P("att")] },
+  { id:"r_att", m:"rc", n:"출석(17F)", parts:[P("att")] },
   { id:"r_stamp", m:"rc", n:"스탬프 현황", parts:[P("stamp","all")] },
   { id:"r_stair", m:"rc", n:"계단", parts:[P("stamp","stair")] },
   { id:"r_game", m:"rc", n:"게임별 통계", parts:[P("typing","stats")] },
@@ -6234,7 +6245,7 @@ function hvChecks(mode){
   var L={
     pre:[[null,"QR 인쇄본이 지금 코드와 같은지 · 행사 요소 › QR › 설치 점검","e_qr"],[null,"견본 · 인쇄 금지 QR 0장","e_qr"],[null,"10/25 베타 기록 정리 · 시스템 › 위험 구역","s_danger"],[null,"테스트 사번 정리 · 사람·권한 › 테스트 사번","p_test"],[!hvRo(),"서버 읽기 전용 꺼짐"],[null,"관리코드를 바꿨다면 PC 의 admin_code.gas 도 고침"]],
     day:[[!hvRo(),"서버 읽기 전용 꺼짐"],[!sy.rouletteOut,"룰렛 소진 안내 꺼짐(소진 전까지)","e_roul"],[d.ok?!!d.locked:null,"AX 올림픽 당일 잠금 켬","e_game"],[ps?!!ps.on:null,"웹 푸시 발송 켜짐","n_push"],[null,"추첨 화면 원격 연결 확인","e_draw"],[null,"타자왕 좌석 링크 · 부스 TV 열기","e_type"]],
-    post:[[null,"선착순 미수령 발송 · 7등 우편 CSV 받기(슈퍼관리자)","e_draw"],[ps?!ps.on:null,"웹 푸시 전체 정지","n_push"],[null,"7일 안 개인 기록 폐기(서버 담당 · clearOpsData)"]]
+    post:[[null,"선착순 미수령(참고용 · 발송 없음) · 7등 우편 CSV 받기(슈퍼관리자)","e_draw"],[ps?!ps.on:null,"웹 푸시 전체 정지","n_push"],[null,"7일 안 개인 기록 폐기(서버 담당 · clearOpsData)"]]
   }[mode]||[];
   return L.map(function(x){ var c=x[0]===true?"ok":x[0]===false?"warn":""; return '<div class="hv-ck '+c+'"><i></i><span>'+esc(x[1])+'</span>'+(x[2]?'<a class="lnk" href="#" onclick="go(\''+x[2]+'\');return false">열기</a>':'')+'</div>'; }).join("");
 }
@@ -7002,7 +7013,7 @@ function viewPre10(){
   if(srv==="new"&&ST.data.p10s.opt){ var op=ST.data.p10s.opt; h+='<div class="bands">'+band("","서버 설정 · 키트 받은 사람이 명단에서 빠질 때 키트 명단에 <b>"+esc(op.kit||"남김")+"</b> · 회차 없는 E 는 <b>"+esc(op.e==="ms1"?"1회차":op.e==="ms2"?"2회차":op.e||"1회차")+"</b>(올릴 때 아래 「회차 없는 E」에서 이번만 바꿀 수 있습니다). 서버 설정을 바꾸려면 "+(cfgHasP10()?'<a href="#" onclick="cfgGoP10();return false" style="color:var(--navy);font-weight:600">운영 설정에서 바꿉니다</a>.':"시트 「설정」의 「10F명단_키트빠짐」(남김 · 지움) · 「10F명단_E회차」(ms1 · ms2 · 오류) 칸을 고칩니다. 운영 설정 화면에는 아직 없습니다."))+'</div>'; }
   var main=p10CardUp()+(P10.grid?p10CardCols():"")+(P10.rows?p10CardPv()+p10CardGo():"")+(P10.res?p10CardRes():"");
   h+='<div class="ns-grid2 lay-fa"><div class="p10-main">'+main+'</div><div class="ns-side">'+p10CardNow()+'</div></div>';
-  h+=memo('<p><b>무엇을 쓰나</b> · 적용하면 서버가 시트 「강의신청」(10F 끝 QR 자격)과 「키트명단」(체크인 존 키트 대조) 두 곳을 한 번에 바꿉니다. 키트 지급 기록 · 출석 · 스탬프는 건드리지 않습니다.</p>'+
+  h+=memo('<p><b>무엇을 쓰나</b> · 적용하면 서버가 시트 「강의신청」(앱 「내 세션」)과 「키트명단」(체크인 존 키트 대조) 두 곳을 한 번에 바꿉니다. 키트 지급 기록 · 출석 · 스탬프는 건드리지 않습니다.</p>'+
     '<p><b>교체와 추가</b> · 교체 = 올린 명단이 전체 명단이 됩니다(없는 사람은 빠짐). 추가 = 올린 사람만 더하거나 세션을 바꿉니다. 10/16 첫 명단은 교체, 그 뒤 추가 명단은 추가로 넣습니다.</p>'+
     '<p><b>세션 칸</b> · A~E 글자로 받습니다. 세션 E 는 E1 · E2(1 · 2회차)로 적습니다. 회차가 없는 E 는 위 「열 고르기」에서 정한 회차로 넣습니다. 끝 QR 은 E 두 회차를 같은 세션으로 봅니다.</p>'+
     '<p><b>한 사람 한 세션</b> · 같은 사번이 두 세션(E 두 회차 포함)에 있으면 「다른 세션 겹침」으로 빼고 넣습니다. 명단을 고쳐 다시 올립니다.</p>'+
@@ -7089,7 +7100,7 @@ function p10ApplyAsk(){
   var pv=P10.pv, D=pv.diff||{}, ok=p10Ok(), c=p10Count(), out=(c.multi||0)+(c.sess||0)+(c.emp||0)+(c.noros||0);
   hvL3Go({ t:"10F 사전 신청 명단을 적용할까요?", who:(P10.mode==="add"?"추가":"교체")+"<span>"+esc(P10.name)+" · 적용 뒤 "+pv.n+"명</span>",
     rows:[["적용 뒤 합계",pv.n+"명","chg"],["새로 들어감",(D.add||[]).length+"명"],["세션 바뀜",(D.chg||[]).length+"명"],["빠짐",(D.del||[]).length+"명",(D.del||[]).length?"loss":""],["올린 줄 중 빼는 줄",out+"줄",out?"loss":""]].concat((pv.kitGivenDel||[]).length?[["키트 이미 받은 사람",(pv.kitGivenDel||[]).length+"명 · "+p10KitTxt(),"loss"]]:[]),
-    s:"시트 「강의신청」과 「키트명단」이 함께 바뀝니다. 10F 끝 QR 자격이 이 명단으로 바로 바뀝니다.", ok:"적용", word:P10_WORD,
+    s:"시트 「강의신청」과 「키트명단」이 함께 바뀝니다. 앱 「내 세션」이 이 명단으로 바로 바뀝니다.", ok:"적용", word:P10_WORD,
     run:function(fin){
       P10.busy="apply";
       callPost("pre10_apply",{ rows:p10Payload(), mode:P10.mode, sig:pv.sig||"", n:pv.n, confirm:P10_WORD },function(r){
@@ -7165,9 +7176,9 @@ function viewPre10Row(){
   else if(!d.ok) main=card("지금 명단","",'<div class="bands">'+band("bad","명단을 받지 못했습니다("+esc(why(d))+").",'<button class="btn sm" onclick="reload([\'p10l\'])">다시 시도</button>')+'</div>');
   else main=p10RowAddCard()+p10RowListCard(d);
   return '<div class="ns-grid2 lay-fa"><div class="p10-main">'+main+'</div><div class="ns-side">'+p10CardNow()+'</div></div>'+
-    memo('<p><b>무엇이 바뀌나</b> · 추가 · 옮기기 · 빼기를 누르면 서버가 시트 「강의신청」(10F 끝 QR 자격 · 앱 「내 세션」)과 「키트명단」(체크인 존 키트 대조)을 그 한 사람만 고칩니다. 참가자 앱에는 다음 새로 고침(동기화) 때 보입니다.</p>'+
+    memo('<p><b>무엇이 바뀌나</b> · 추가 · 옮기기 · 빼기를 누르면 서버가 시트 「강의신청」(앱 「내 세션」 · 10F 끝 QR 은 쓰지 않음)과 「키트명단」(체크인 존 키트 대조)을 그 한 사람만 고칩니다. 참가자 앱에는 다음 새로 고침(동기화) 때 보입니다.</p>'+
       '<p><b>명부</b> · 명부에 있는 사번만 넣습니다(명단 올리기와 같은 규칙). 한 사람은 한 세션입니다. 이미 명단에 있는 사람은 「옮기기」로 세션을 바꿉니다.</p>'+
-      '<p><b>키트 · 출석</b> · 키트를 이미 받은 사람을 빼면 서버 설정(10F명단_키트빠짐)대로 키트 명단에 남기거나 지웁니다. 지급 기록 · 이미 찍은 끝 QR 출석 · 스탬프는 그대로입니다.</p>'+
+      '<p><b>키트 · 출석</b> · 키트를 이미 받은 사람을 빼면 서버 설정(10F명단_키트빠짐)대로 키트 명단에 남기거나 지웁니다. 지급 기록 · 스탬프는 그대로입니다.</p>'+
       '<p><b>되돌리기</b> · 오른쪽 「되돌리기」는 최근 한 건(한 사람 고치기 또는 통째 적용)만 되돌립니다. 한 사람을 고친 뒤에는 그 앞의 통째 적용을 되돌릴 수 없습니다(고친 것이 사라지지 않게). 그 사이 누가 시트를 손으로 고쳤으면 서버가 되돌리지 않고 알려 줍니다.</p>'+
       '<p><b>정원</b> · 정원을 넘어도 넣을 수 있습니다. 확인 창에 「정원 넘음」이 뜹니다.</p>');
 }
@@ -7185,15 +7196,15 @@ function p10RowListCard(d){
   vis.sort(function(a,b){ return P10_IDS.indexOf(a.sid)-P10_IDS.indexOf(b.sid)||String(a.name||"").localeCompare(String(b.name||""),"ko")||(a.emp<b.emp?-1:1); });
   var chips='<div class="chips">'+[["","전체"]].concat(P10_IDS.map(function(id){ return [id,P10_NAME[id]]; })).map(function(c){ var n=cnt[c[0]]||0, cap=c[0]?p10Cap(c[0]):0; return '<button class="fchip'+(P10R.f===c[0]?" on":"")+(n?"":" zero")+'" onclick="p10RowF(\''+c[0]+'\')">'+esc(c[1])+'<span class="cnt">'+n+(cap&&n>cap?' · 넘음':'')+'</span></button>'; }).join("")+'</div>';
   var tool='<div class="toolbar mt12"><input class="in w-m" type="search" autocomplete="off" placeholder="사번 · 이름 찾기" value="'+esc(P10R.q)+'" oninput="P10R.q=this.value;render()"><span class="cnt">'+vis.length+'명 보임</span></div>';
-  var tb='<div class="wrap scrolly mt12"><table class="tb p10-rt"><tr><th>사번</th><th>이름</th><th>세션</th><th>넣은 시각</th><th>키트</th><th>끝 QR</th><th class="tdr">처리</th></tr>'+vis.map(function(x){
+  var tb='<div class="wrap scrolly mt12"><table class="tb p10-rt"><tr><th>사번</th><th>이름</th><th>세션</th><th>넣은 시각</th><th>키트</th><th class="tdr">처리</th></tr>'+vis.map(function(x){
     var ed=P10R.edit===x.emp, e=jq(x.emp);
     var ses=ed?'<select class="in" aria-label="옮길 세션" onchange="P10R.editS=this.value">'+p10RowOpts(P10R.editS||x.sid,false)+'</select>':esc(P10_NAME[x.sid]||x.sid);
     var act=ed?'<div class="acts"><button class="btn sm pri" onclick="p10RowMoveAsk(\''+e+'\')"'+(P10R.busy?" disabled":"")+'>'+LOCK_SVG+' 옮기기</button><button class="btn sm" onclick="P10R.edit=\'\';render()">닫기</button></div>':
       '<div class="acts"><button class="btn sm" onclick="P10R.edit=\''+e+'\';P10R.editS=\'\';render()"'+(P10R.busy?" disabled":"")+'>옮기기</button><button class="btn sm danger" onclick="p10RowDelAsk(\''+e+'\')"'+(P10R.busy?" disabled":"")+'>'+LOCK_SVG+' 빼기</button></div>';
-    return '<tr'+(P10R.hl===x.emp?' class="on"':'')+'><td class="n"><b>'+esc(x.emp)+'</b></td><td>'+esc(x.name||"-")+(P10R.hl===x.emp?' '+tag("방금","ok"):'')+'</td><td>'+ses+'</td><td class="n cap">'+esc(short(x.at||""))+'</td><td>'+(x.kit?tag("받음",""):'<span class="cap">-</span>')+'</td><td>'+(x.att?tag("출석","ok"):'<span class="cap">-</span>')+'</td><td>'+act+'</td></tr>'; }).join("")+
-    (!vis.length?emptyRow(7,L.length?"찾는 사람이 없습니다.":"명단이 비었습니다. 「명단 올리기」에서 처음 명단을 넣습니다."):"")+'</table></div>';
+    return '<tr'+(P10R.hl===x.emp?' class="on"':'')+'><td class="n"><b>'+esc(x.emp)+'</b></td><td>'+esc(x.name||"-")+(P10R.hl===x.emp?' '+tag("방금","ok"):'')+'</td><td>'+ses+'</td><td class="n cap">'+esc(short(x.at||""))+'</td><td>'+(x.kit?tag("받음",""):'<span class="cap">-</span>')+'</td><td>'+act+'</td></tr>'; }).join("")+
+    (!vis.length?emptyRow(6,L.length?"찾는 사람이 없습니다.":"명단이 비었습니다. 「명단 올리기」에서 처음 명단을 넣습니다."):"")+'</table></div>';
   var gone=d.gone?'<p class="cap mt8">명단에서 빠졌지만 키트를 이미 받아 키트 명단에 남은 사람 '+d.gone+'명(비고 「명단 빠짐 · 지급됨」)은 이 목록에 없습니다.</p>':'';
-  return card("지금 명단", (d.n||0)+"명 · 10F 끝 QR 자격 · 앱 내 세션", chips+tool+tb+gone);
+  return card("지금 명단", (d.n||0)+"명 · 앱 내 세션 · 키트 명단", chips+tool+tb+gone);
 }
 /* 추가 · 먼저 명부 대조(pre10_preview · 쓰기 없음)로 이름 · 명부 여부를 본 뒤 확인 창 */
 function p10RowAddAsk(){
@@ -7213,7 +7224,7 @@ function p10RowAddAsk(){
     if((D.chg||[]).length){ reload(["p10l"]); toast("그 사이 다른 세션에 들어가 있습니다 · 목록을 다시 받았습니다"); return; }
     var by=r.by||{}, cap=p10Cap(sid), over=(by[sid]||0)>cap;
     hvL3Go({ t:"10F 명단에 한 사람을 넣을까요?", who:esc(emp)+"<span>"+esc(y.name||"이름 없음")+"</span>",
-      rows:[["넣을 세션",esc(P10_NAME[sid]),"chg"],["넣은 뒤 세션 인원",(by[sid]||0)+"명 · 정원 "+cap+(over?" · 정원 넘음":""),over?"loss":""],["넣은 뒤 10F 명단",(r.n||0)+"명"],["바로 바뀌는 것","10F 끝 QR 자격 · 앱 내 세션 · 키트 명단"]],
+      rows:[["넣을 세션",esc(P10_NAME[sid]),"chg"],["넣은 뒤 세션 인원",(by[sid]||0)+"명 · 정원 "+cap+(over?" · 정원 넘음":""),over?"loss":""],["넣은 뒤 10F 명단",(r.n||0)+"명"],["바로 바뀌는 것","앱 내 세션 · 키트 명단"]],
       s:"시트 「강의신청」과 「키트명단」에 이 한 사람만 넣습니다.", ok:"추가", word:P10_RWORD,
       run:function(fin){ p10RowGo("pre10_row_set",{ emp:emp, sid:sid, from:"", confirm:P10_RWORD },fin); } });
   },function(e){ P10R.busy=""; render(); toast("실패: "+p10Why(e,"row")); });
@@ -7226,13 +7237,13 @@ function p10RowMoveAsk(emp){
   hvL3Go({ t:"세션을 옮길까요?", who:esc(x.emp)+"<span>"+esc(x.name||"이름 없음")+"</span>",
     rows:[["지금 세션",esc(P10_NAME[x.sid])],["옮길 세션",esc(P10_NAME[to]),"chg"],["옮긴 뒤 세션 인원",n2+"명 · 정원 "+cap+(over?" · 정원 넘음":""),over?"loss":""]]
       .concat(x.kit?[["키트 이미 받음","지급 기록 그대로 · 키트 명단의 세션만 바뀜"]]:[]).concat(x.att?[["끝 QR 이미 출석","기록 그대로"]]:[]),
-    s:"10F 끝 QR 자격과 앱 「내 세션」이 새 세션으로 바로 바뀝니다.", ok:"옮기기", word:P10_RWORD,
+    s:"앱 「내 세션」이 새 세션으로 바로 바뀝니다.", ok:"옮기기", word:P10_RWORD,
     run:function(fin){ p10RowGo("pre10_row_set",{ emp:x.emp, sid:to, from:x.sid, confirm:P10_RWORD },fin); } });
 }
 function p10RowDelAsk(emp){
   var x=p10RowFind(emp); if(!x){ toast("목록에 없습니다"); return; }
   hvL3Go({ t:"10F 명단에서 뺄까요?", who:esc(x.emp)+"<span>"+esc(x.name||"이름 없음")+" · "+esc(P10_NAME[x.sid])+"</span>",
-    rows:[["10F 끝 QR 자격","사라짐","loss"],["앱 내 세션","사라짐","loss"],["10F 명단",Math.max(0,((ST.data.p10l||{}).n||1)-1)+"명으로"]]
+    rows:[["앱 내 세션","사라짐","loss"],["10F 명단",Math.max(0,((ST.data.p10l||{}).n||1)-1)+"명으로"]]
       .concat(x.kit?[["키트 이미 받음",p10KitTxt(),"loss"]]:[]).concat(x.att?[["끝 QR 이미 출석","기록 그대로","loss"]]:[]),
     s:"시트 「강의신청」의 이 사람 10F 줄을 취소로 바꾸고 「키트명단」에서 뺍니다. 오른쪽 「되돌리기」로 되돌릴 수 있습니다(최근 한 건).", ok:"빼기", word:P10_DWORD,
     run:function(fin){ p10RowGo("pre10_row_del",{ emp:x.emp, from:x.sid, confirm:P10_DWORD },fin); } });
@@ -7425,16 +7436,16 @@ function fxGiveAsk(e, w, d){
       else toast("실패: "+pzWhy(r)); }); } });
 }
 function fxCsvCard(d){
-  var inner='<div class="fn-go" style="margin-top:0"><button class="btn pri" onclick="fxCsv(\'ship\')">미수령 발송 CSV</button><button class="btn" onclick="fxCsv(\'all\')">전체 자격 CSV</button></div>'+
-    (fxByGive(d)?'<p class="cap mt8">수령순은 받는 순간 줄이 생겨 「미수령 발송」에는 수령을 되돌린 줄 · 옛 예약 줄만 나옵니다.</p>':'')+
-    '<p class="cap mt8">미수령 발송 = 자격이 있으나 당일 못 받은 사람(10/27 소속 부서로 발송). 순번 · 사번 · 이름 · 부문 · 도달 · 수령 시각. 근무지 · 배송지는 총무가 사번으로 붙입니다.</p>';
+  var inner='<div class="fn-go" style="margin-top:0"><button class="btn pri" onclick="fxCsv(\'ship\')">미수령 CSV · 참고용</button><button class="btn" onclick="fxCsv(\'all\')">전체 자격 CSV</button></div>'+
+    (fxByGive(d)?'<p class="cap mt8">수령순은 받는 순간 줄이 생겨 「미수령」에는 수령을 되돌린 줄 · 옛 예약 줄만 나옵니다.</p>':'')+
+    '<p class="cap mt8"><b>참고용 · 다음 날 발송 없음</b> · 선착순은 당일 수령만 합니다. 미수령 = 자격이 있으나 당일 받지 않은 사람. 순번 · 사번 · 이름 · 부문 · 도달 · 수령 시각.</p>';
   return card("내려받기","슈퍼관리자 · 본인 확인 뒤",pzSupBox("선착순 명단",inner));
 }
 function fxCsv(kind){
   call("fcfs_export",{ kind:kind },function(r){
     if(!r||!r.ok){ toast("실패: "+(r&&r.reason==="spin"?"본인 확인이 필요합니다(PIN)":pzWhy(r))); return; }
     var rows=r.rows||[];
-    pzCsv("선착순참여상_"+(kind==="ship"?"미수령발송":"전체자격")+"_"+pzDay(r.t)+".csv",["순번","사번","이름","부문","선착순 순번","도달 시각","수령 시각"],rows.map(function(x){ return [x.no,x.emp,x.name,x.dept,x.rk,x.at,x.gotAt]; }));
+    pzCsv("선착순참여상_"+(kind==="ship"?"미수령_참고용":"전체자격")+"_"+pzDay(r.t)+".csv",["순번","사번","이름","부문","선착순 순번","도달 시각","수령 시각"],rows.map(function(x){ return [x.no,x.emp,x.name,x.dept,x.rk,x.at,x.gotAt]; }));
     toast("내려받았습니다 · "+rows.length+"줄");
   },function(){ toast("서버 응답 없음"); });
 }
@@ -7893,11 +7904,12 @@ function viewLngPre(){
   var up=LP.src==="file"?'<label class="p10-drop"><input type="file" accept=".xlsx,.csv,.tsv,.txt" onchange="lpFile(this)"><b>'+(LP.busy==="read"?'<span class="spin"></span>읽는 중':"엑셀(.xlsx) · CSV 파일 고르기")+'</b><span class="cap">줄마다 첫 사번 칸만 읽습니다 · 5MB</span></label>':
     '<textarea class="in p10-ta" rows="6" placeholder="사번을 한 줄에 하나씩 붙여 넣기" oninput="LP.paste=this.value">'+esc(LP.paste)+'</textarea><div class="toolbar mt12"><button class="btn pri" onclick="lpPasteGo()">읽기</button></div>';
   var got=LP.emps?'<div class="toolbar mt12"><span class="cnt"><b>'+esc(LP.name)+'</b> · 사번 '+LP.emps.length+'명'+(LP.bad?" · 같은 사번 "+LP.bad+"줄 뺌":"")+'</span><span class="sp"></span><button class="btn sm" onclick="LP.emps=null;LP.pv=null;LP.paste=\'\';LP.name=\'\';render()">지우고 다시</button></div>':'';
-  var main=card("① 명단 올리기","사번만 받습니다 · 붙여넣기 · 엑셀 · CSV",(LP.err?'<div class="bands">'+band("bad",esc(LP.err))+'</div>':'')+'<div class="toolbar">'+seg+'</div>'+up+got);
+  var lq=Number(d.quota!=null?d.quota:29)||29;
+  var main=card("① 명단 올리기","사번만 받습니다 · 붙여넣기 · 엑셀 · CSV",'<p class="note" style="margin:0 0 12px"><b>상담 신청 순으로 정렬해 붙여 넣으세요</b> · 1~'+lq+'번 키트 · '+(lq+1)+'번부터 가습기</p>'+(LP.err?'<div class="bands">'+band("bad",esc(LP.err))+'</div>':'')+'<div class="toolbar">'+seg+'</div>'+up+got);
   if(LP.emps) main+=lpPvCard()+lpGoCard();
   h+='<div class="ns-grid2 lay-fa"><div class="p10-main">'+main+'</div><div class="ns-side">'+lpNowCard()+'</div></div>';
   h+=memo('<p><b>무엇을 쓰나</b> · 적용하면 서버가 시트 「키트명단」의 라운지 줄(세션 dap)만 바꿉니다. 10F 명단 · 키트 지급 기록은 건드리지 않고, 10F 명단을 다시 넣어도 라운지 줄은 남습니다.</p>'+
-    '<p><b>쿼터</b> · 라운지 키트는 '+esc(d.quota!=null?d.quota:29)+'세트입니다. 명단이 쿼터보다 많으면 체크인 순서대로 쿼터를 넘는 사람은 가습기로 대체 지급합니다(스태프 폰에 「대체」). 체크인 때 스탬프 3개가 들어갑니다.</p>'+
+    '<p><b>쿼터</b> · 라운지 키트는 '+esc(d.quota!=null?d.quota:29)+'세트입니다. 명단 줄 순서(= 상담 신청 순) 1~'+esc(d.quota!=null?d.quota:29)+'번이 키트, 그 뒤는 가습기로 대체 지급합니다(스태프 폰에 「대체」 · 키트 사이즈도 고르지 않음). 체크인 때 스탬프 3개가 들어갑니다.</p>'+
     '<p><b>되돌리기</b> · 마지막 적용만 되돌립니다. 이미 받은 키트 · 스탬프는 그대로 남습니다.</p>'+
     '<p><b>개인정보</b> · 명단은 이 화면 메모리에만 있습니다. 원본 파일은 이 PC 에서 지웁니다.</p>');
   return h;
@@ -7944,8 +7956,103 @@ function lpUndoAsk(){
 }
 (function(){ var r0=render; render=function(){ r0(); if(ST.nav==="p_lng"&&LP.emps&&!LP.pv&&!LP.busy&&lpSrv()==="new") setTimeout(function(){ lpPreview(); },0); }; })();
 
+/* ══════════════════ 261006 키트 플리스 사이즈(ks-) · 관리자 도구 › 사람·권한 · 행사 전 운영(10/16 열림 ~ 10/21 마감 ~ 10/23 변경 마감) ══════════════════
+ * 서버 kit_size_state(관리코드 · 읽기) · kit_size_auto(슈퍼관리자 + 본인 확인 sp · 미리보기 GET → 실행 POST mode=run · confirm=ASSIGN · sig)
+ * 자동 배정 버튼은 고르기 마감 뒤(ph chg | end)에만 · 한 번만(서버가 auto 기록을 남긴다) · 옛 서버(액션 없음) = 「서버 갱신 뒤」 */
+NAV.splice(NAV.findIndex(function(it){ return it.id==="p_lng"; })+1, 0, { id:"p_kit", m:"pp", n:"키트 플리스 사이즈", sup:1, parts:[P("kitsz","","","viewKitSize")] });
+NAVBY.p_kit=NAV.filter(function(it){ return it.id==="p_kit"; })[0];
+MENUBY.pp.d="계정 · 한 사람 관리 · 테스트 사번 · 10F 사전 신청 명단 · 라운지 명단 · 키트 플리스 사이즈 · 권한 명단 · 공용 코드입니다.";
+NEED.kitsz=[{k:"kss",a:"kit_size_state"}];
+SP_ACT.kit_size_auto=1;
+CTL_ACT.kit_size_auto=["pp",function(p){ return "키트 사이즈 자동 배정"; }];
+HV_VIEW.viewKitSize=function(){ return viewKitSize(); };
+CFG_NOTE["키트사이즈_수량"]="형식 = 사이즈와 수량을 붙이고 띄어 씀 · 예 「S25 M55 L65 XL50 2XL25」 · 다섯 사이즈(S · M · L · XL · 2XL) · 형식이 틀리면 기본값";
+CFG_NOTE["키트사이즈_열림"]="형식 「2026-10-16 09:00」 · 이 시각부터 앱에서 고름 · 비우면 바로 열림";
+CFG_NOTE["키트사이즈_마감"]="형식 「2026-10-21 18:00」 · 이 시각까지 자유롭게 바꿈 · 뒤에 사람·권한 › 키트 플리스 사이즈에서 자동 배정";
+CFG_NOTE["키트사이즈_변경마감"]="형식 「2026-10-23 18:00」 · 마감 뒤 이 시각까지 남는 사이즈로만 바꿈 · 비우면 경계 없음(마감과 함께 끝)";
+var KS_CFG=["키트사이즈_수량","키트사이즈_열림","키트사이즈_마감","키트사이즈_변경마감"];
+var KS_PH=[["before","열림 전"],["open","고르는 중"],["chg","변경 마감 전"],["end","마감"]];
+var KS_SZ=["S","M","L","XL","2XL"];
+var KS={ pv:null, busy:"", err:"" };
+var KS_WORD="자동배정";
+function ksWhy(r){ r=r||{}; return ({ word:"확인 문구가 맞지 않습니다", notclosed:"고르기 마감 전입니다. 마감 시각 뒤에 배정합니다", done:"이미 자동 배정했습니다(한 번만 합니다)", state:"미리보기 뒤에 누가 사이즈를 바꿨습니다. 미리보기를 다시 봅니다", post:"실행 요청 방식이 맞지 않습니다. 콘솔을 새로 고친 뒤 다시 합니다", spin:"본인 확인(PIN)이 필요합니다", super:"슈퍼관리자만 할 수 있습니다" })[r.reason]||(hvUnknown(r)?"서버 갱신 뒤 쓸 수 있습니다":why(r)); }
+function ksSrv(){ var d=ST.data.kss; return !d?"":hvUnknown(d)?"old":d.ok?"new":"err"; }
+function ksN(v){ return finNum(v); }
+function ksT(s){ s=String(s||""); return s?esc(s.slice(5).replace("-","/")):"정하지 않음"; }
+function ksPhBar(d){
+  var i0=KS_PH.map(function(x){ return x[0]; }).indexOf(d.ph);
+  var at=[d.open?"~ "+ksT(d.open):"바로",d.close?"~ "+ksT(d.close):"끝 없음",d.chg?"~ "+ksT(d.chg):"경계 없음",d.chg?ksT(d.chg)+" ~":d.close?ksT(d.close)+" ~":"-"];
+  return '<ol class="ks-ph">'+KS_PH.map(function(x,i){ return '<li class="'+(i===i0?"on":i<i0?"done":"")+'"><b>'+esc(x[1])+'</b><span class="n">'+at[i]+'</span></li>'; }).join("")+'</ol>';
+}
+function ksPhLine(ph){ return ({ before:"아직 앱에서 고를 수 없습니다. 열림 시각부터 고릅니다.", open:"참가자가 앱에서 고르고 몇 번이든 바꿉니다.", chg:"고르기는 마감됐습니다. 남는 사이즈로만 바꿀 수 있습니다. 안 고른 사람은 자동 배정합니다.", end:"모두 마감됐습니다. 앱에서 바꾸지 않습니다." })[ph]||""; }
+function ksTable(d){
+  var q=d.qty||{}, t=d.taken||{}, l=d.left||{}, g=d.got||{}, S=(d.sizes&&d.sizes.length?d.sizes:KS_SZ), sum={ q:0, t:0, l:0, g:0 };
+  var rows=S.map(function(z){ var a=Number(q[z])||0, b=Number(t[z])||0, c=Number(l[z])||0, e=Number(g[z])||0; sum.q+=a; sum.t+=b; sum.l+=c; sum.g+=e;
+    return '<tr><td><b>'+esc(z)+'</b></td><td class="n tdr">'+ksN(a)+'</td><td class="n tdr">'+ksN(b)+'</td><td class="n tdr">'+(c?ksN(c):tag("다 참","warn"))+'</td><td class="n tdr">'+ksN(e)+'</td></tr>'; }).join("");
+  return '<div class="wrap"><table class="tb ks-tb"><tr><th>사이즈</th><th class="tdr">수량</th><th class="tdr">정함</th><th class="tdr">남음</th><th class="tdr">받음</th></tr>'+rows+
+    '<tr class="sum"><td><b>합계</b></td><td class="n tdr"><b>'+ksN(d.tot!=null?d.tot:sum.q)+'</b></td><td class="n tdr"><b>'+ksN(sum.t)+'</b></td><td class="n tdr"><b>'+ksN(sum.l)+'</b></td><td class="n tdr"><b>'+ksN(sum.g)+'</b></td></tr></table></div>'+
+    '<p class="cap mt8">정함 = 직접 고름 '+ksN((d.how||{}).pick)+' · 자동 배정 '+ksN((d.how||{}).auto)+' · 받음 = 1F 체크인존에서 키트를 받은 사람(정한 사이즈 기준).</p>';
+}
+function ksAutoRes(a){
+  var sz=a.size||{};
+  return imp([["배정 시각",esc(short(a.at||"")),""],["누가",esc(a.by||"-")],["배정한 사람",ksN(a.n)+"명","chg"],["남는 키트가 모자라 못 준 사람",ksN(a.short)+"명",a.short?"loss":""],["사이즈별",KS_SZ.map(function(z){ return esc(z)+" "+ksN(sz[z]); }).join(" · ")],["씨앗 · 서명",'<span class="n">'+esc(a.seed||"-")+" · "+esc(a.sig||"-")+'</span>']]);
+}
+function ksAutoCard(d){
+  var ph=d.ph, closed=ph==="chg"||ph==="end";
+  if(d.auto) return card("안 고른 사람 자동 배정","끝남 · 한 번만 합니다",ksAutoRes(d.auto)+'<p class="cap mt8">같은 명단 상태와 같은 씨앗이면 같은 결과가 나옵니다(서명으로 재현 확인).</p>',tag("배정함","ok"));
+  if(!closed) return card("안 고른 사람 자동 배정","고르기 마감 뒤에 엽니다",'<p class="cap">마감 '+ksT(d.close)+' 뒤에 이 자리에 「안 고른 사람 자동 배정」 버튼이 나옵니다. 지금 안 고른 사람 '+ksN(d.none)+'명.</p>');
+  var pv=KS.pv, inner;
+  if(!pv) inner='<div class="toolbar"><span class="cnt">안 고른 사람 <b>'+ksN(d.none)+'</b>명</span><span class="sp"></span><button class="btn pri" onclick="ksPreview()"'+(KS.busy||!d.none?" disabled":"")+'>'+(KS.busy==="pv"?'<span class="spin" style="border-color:rgba(255,255,255,.4);border-top-color:#fff"></span>계산 중':"안 고른 사람 자동 배정 · 미리보기")+'</button></div>'+
+    (d.none?'<p class="cap mt8">미리보기는 바꾸지 않습니다. 남은 사이즈 수에 비례해 씨앗 순서로 나눕니다.</p>':'<p class="cap mt8">안 고른 사람이 없습니다.</p>');
+  else {
+    var by=pv.by||{}, rows=pv.rows||[];
+    inner=(pv.short?'<div class="bands">'+band("warn","남은 키트가 <b>"+ksN(pv.short)+"명</b>만큼 모자랍니다. 그 사람들은 사이즈 없이 남습니다.")+'</div>':'')+
+      imp([["안 고른 사람",ksN(pv.n)+"명"],["배정",ksN(pv.give)+"명","chg"],["모자람",ksN(pv.short)+"명",pv.short?"loss":""],["사이즈별",KS_SZ.map(function(z){ return esc(z)+" "+ksN(by[z]); }).join(" · ")],["씨앗 · 서명",'<span class="n">'+esc(pv.seed||"-")+" · "+esc(pv.sig||"-")+'</span>']])+
+      '<div class="wrap scrolly mt12" style="max-height:320px"><table class="tb"><tr><th>사번</th><th>이름</th><th>배정 사이즈</th></tr>'+rows.map(function(x){ return '<tr><td class="n">'+esc(x.emp)+'</td><td>'+esc(x.name||"-")+'</td><td>'+(x.sz?'<b>'+esc(x.sz)+'</b>':tag("모자람","warn"))+'</td></tr>'; }).join("")+(!rows.length?emptyRow(3,"안 고른 사람이 없습니다."):"")+'</table></div>'+
+      (pv.n>rows.length?'<p class="cap mt8">앞 '+rows.length+'명만 보입니다(전체 '+ksN(pv.n)+'명).</p>':'')+
+      '<div class="row mt12" style="gap:8px"><button class="btn" onclick="KS.pv=null;render()">닫기</button><button class="btn danger" onclick="ksRunAsk()"'+(KS.busy||!pv.can||!pv.give?" disabled":"")+'>'+LOCK_SVG+' 배정 실행</button></div>'+
+      (!pv.can?'<p class="cap mt8">지금은 실행할 수 없습니다'+(pv.done?"(이미 배정함)":"(마감 전)")+'.</p>':'');
+  }
+  var box=!supOn()?'<div class="note">자동 배정은 슈퍼관리자만 합니다. 슈퍼관리자 사번으로 이 콘솔에 들어와야 합니다.</div>':!supOk()?pzSupBox("배정 미리보기",""):inner+'<p class="cap mt8">본인 확인 '+supLeftMin()+'분 남음 · 실행하면 운영로그에 남습니다.</p>';
+  return card("안 고른 사람 자동 배정","슈퍼관리자 · 본인 확인 뒤 · 한 번만",box);
+}
+function ksPreview(){
+  if(KS.busy) return; KS.busy="pv"; render();
+  call("kit_size_auto",{},function(r){ KS.busy=""; if(r&&r.ok){ KS.pv=r; } else { KS.pv=null; toast("미리보기 실패: "+ksWhy(r)); } render(); },function(e){ KS.busy=""; toast("미리보기 실패: "+ksWhy(e)); render(); });
+}
+function ksRunAsk(){
+  var pv=KS.pv; if(!pv) return; var by=pv.by||{};
+  hvL3Go({ t:"안 고른 사람에게 사이즈를 자동 배정할까요?", who:"키트 플리스 사이즈<span>안 고른 "+ksN(pv.n)+"명 · 한 번만</span>",
+    rows:[["배정",ksN(pv.give)+"명","chg"],["모자람(사이즈 없이 남음)",ksN(pv.short)+"명",pv.short?"loss":""],["사이즈별",KS_SZ.map(function(z){ return esc(z)+" "+ksN(by[z]); }).join(" · ")],["이미 고른 사람","그대로"]],
+    s:"시트 「키트명단」의 안 고른 사람 줄에 사이즈 · 시각 · 「자동」이 들어갑니다. <b>한 번만 하고 콘솔에서 되돌리지 않습니다.</b> 참가자 앱에는 「자동 배정」으로 보입니다.", ok:"배정 실행", word:KS_WORD,
+    run:function(fin){ KS.busy="run"; render();
+      callPost("kit_size_auto",{ mode:"run", confirm:"ASSIGN", sig:pv.sig||"" },function(r){ KS.busy="";
+        if(r&&r.ok){ KS.pv=null; delete _cache[sig_("kit_size_state",{})]; reload(["kss"]); fin("자동 배정했습니다", r.done?ksAutoRes(r.done):""); }
+        else { dlgForce(); if(r&&r.reason==="state") KS.pv=null; toast("실패: "+ksWhy(r)); render(); } },function(e){ KS.busy=""; dlgForce(); toast("실패: "+ksWhy(e)); render(); }); } });
+}
+function ksGoCfg(){
+  navSel("s_cfg",0); var n=0;
+  (function t(){ var r=document.querySelectorAll(KS_CFG.map(function(k){ return 'tr[data-cfgk="'+k+'"]'; }).join(","));
+    if(r.length){ r[0].scrollIntoView({block:"center"}); for(var i=0;i<r.length;i++){ r[i].classList.remove("flash"); void r[i].offsetWidth; r[i].classList.add("flash"); } } else if(n++<30) setTimeout(t,100); })();
+}
+function viewKitSize(){
+  var d=ST.data.kss, srv=ksSrv();
+  if(!d) return card("키트 플리스 사이즈","",skel());
+  if(srv==="old") return '<div class="bands">'+band("","이 서버는 아직 키트 사이즈를 모릅니다. <b>서버 갱신 뒤</b> 보입니다.")+'</div>';
+  if(srv==="err") return '<div class="bands">'+band("bad","사이즈 현황을 받지 못했습니다("+esc(ksWhy(d))+").",'<button class="btn sm" onclick="reload([\'kss\'])">다시 시도</button>')+'</div>';
+  var h='<div class="toolbar"><span class="cnt">'+esc(ksPhLine(d.ph))+'</span><span class="sp"></span><button class="btn sm" onclick="ksGoCfg()">기간 · 수량 바꾸기(운영 설정)</button></div>'+ksPhBar(d);
+  h+='<div class="kpis mt12">'+kpi("대상",ksN(d.elig),"명","10F 명단 + 라운지 "+ksN(d.q)+"번까지")+kpi("정함",ksN(((d.how||{}).pick||0)+((d.how||{}).auto||0)),"명","직접 "+ksN((d.how||{}).pick)+" · 자동 "+ksN((d.how||{}).auto))+
+    kpi("안 고름",ksN(d.none),"명",d.ph==="chg"||d.ph==="end"?(d.auto?"자동 배정 뒤 남은 사람":"아래에서 자동 배정"):"마감 뒤 자동 배정")+kpi("라운지 초과",ksN(d.hum),"명","라운지 "+ksN(d.q+1)+"번부터 · 가습기 · 사이즈 없음")+'</div>';
+  h+='<div class="ns-grid2 lay-fa"><div class="p10-main">'+card("사이즈별","수량 "+ksN(d.tot)+"벌 · 받은 시각 "+esc(short(d.t||"")),ksTable(d))+'</div><div class="ns-side">'+ksAutoCard(d)+'</div></div>';
+  h+=memo('<p><b>누가 고르나</b> · 키트명단(10F 사전 신청 명단 + 라운지 사전 신청 명단)에 있는 사람만 앱에서 고릅니다. 라운지는 명단 줄 순서(상담 신청 순) 1~'+esc(d.q)+'번만 키트, 그 뒤는 가습기라 사이즈가 없습니다.</p>'+
+    '<p><b>단계</b> · 열림 전 → 고르는 중(몇 번이든 바꿈) → 변경 마감 전(남는 사이즈로만 바꿈) → 마감. 시각과 수량은 시스템 › 운영 설정의 키트사이즈_수량 · 열림 · 마감 · 변경마감에서 바꿉니다(형식 「2026-10-21 18:00」, 변경마감을 비우면 마감과 함께 끝).</p>'+
+    '<p><b>남음</b> · 수량 − 정한 수입니다. 0 이 된 사이즈는 앱에서 고를 수 없습니다. 수량을 정한 수보다 적게 줄이면 남음이 0 으로 보입니다.</p>'+
+    '<p><b>자동 배정</b> · 고르기 마감 뒤 한 번만 합니다. 안 고른 사람을 씨앗 순서로 줄 세우고 남은 사이즈를 남은 수에 비례해 나눕니다. 같은 명단 상태 + 같은 씨앗이면 같은 결과입니다. 미리보기 뒤 누가 사이즈를 바꾸면 실행이 거절되고 미리보기를 다시 봅니다.</p>'+
+    '<p><b>기록</b> · 자동 배정은 운영로그에 남습니다. 사이즈는 시트 「키트명단」 3칸 · 시각 6칸 · 구분(선택 | 자동) 7칸에 있습니다.</p>');
+  return h;
+}
 /* 새로 고침 · 새 항목(아이디어왕 · 라운지 명단)에 있었으면 그 자리로(위 복원은 이 항목이 생기기 전에 돈다) */
-try{ (function(){ var v=sessionStorage.getItem("axf_hv_nav")||"", id=v.split(":")[0]; if(ST.nav==="hq"&&(id==="e_idea"||id==="p_lng")&&NAVBY[id]){ ST.nav=id; ST.part[id]=0; } })(); }catch(e){}
+try{ (function(){ var v=sessionStorage.getItem("axf_hv_nav")||"", id=v.split(":")[0]; if(ST.nav==="hq"&&(id==="e_idea"||id==="p_lng"||id==="p_kit")&&NAVBY[id]){ ST.nav=id; ST.part[id]=0; } })(); }catch(e){}
 /* ══════════════════ 261006 쉬운 화면 5개 + 「관리자 도구」(사용자 결정 261006 「권장대로」 · 디자인 시안/콘솔 최소화/기획.md) ══════════════════
  * 기본 = 화면 5개 ① 오늘 · ② 현장 처리 · ③ 사람 찾기 · ④ 알리기 · ⑤ 추첨·경품. 지금 7메뉴 전체 콘솔은 지우지 않고 머리 구석 「관리자 도구」(슈퍼관리자 + 본인 확인 PIN) 뒤로.
  * 슈퍼관리자가 아닌 운영자 = ②③만(화면 수준 제한 · 서버 권한은 그대로) · ①④⑤ · 관리자 도구는 보이지 않는다.
@@ -8077,7 +8184,7 @@ function ezItems(i){
      [null,"TV 화면 켜기 · 스탬프 월 · 타자왕 TV","아래 「화면 열기」에서 엽니다",scr,"주소 보기","tv"],
      [null,"타자왕 셀프 노트북 켜기","노트북에서 주소를 열고 관리코드를 넣습니다",scr,"주소 보기","self"],
      [null,"스태프 폰 관리자 모드 로그인 확인","QR 스캔 · 혼잡 제보를 쓰는 폰",null,"","staff"],
-     [null,"17F 오후 AWS · MS 입장 · 끝 QR 4장 붙임 확인","스탬프를 주는 출석 QR 은 이 4장뿐 · 기조연설 · 내부 강연 · 10F 는 출석 기록만",null,"","att4"]],
+     [null,"17F 오후 AWS · MS 입장 · 끝 QR 4장 붙임 확인","스탬프를 주는 출석 QR 은 이 4장뿐 · 기조연설 · 내부 강연은 출석 기록만 · 10F 출석 QR 은 쓰지 않음",null,"","att4"]],
     [[wait?false:true,"대기 건 처리 · 상담 · 커피챗 · PIN 분실",wait?wait+"건 대기":"대기 없음",go("z_field",0),"처리하러 가기",""],
      [hot?false:true,"혼잡 제보 · 카메라 확인 요청",hot?hot+"곳":"없음",go("z_field",4),"보기",""],
      [low==null?null:!low.length,"재고 경고",low==null?"재고를 받지 못했습니다":low.length?low.slice(0,3).map(function(x){ return x.n+" "+invN(x.left); }).join(" · ")+(low.length>3?" 외 "+(low.length-3):""):"곧 바닥인 품목 없음",go("z_draw",3),"재고 보기",""],
