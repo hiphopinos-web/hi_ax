@@ -907,13 +907,14 @@ function myAgendaItems() {
 /* ═══ v6.04 (사용자 261007 「사전신청자 191명의 나의 일정 탭에는 오전 키노트 · 로드맵 · 오후 아웃트로까지 다 박아 줘 · 형태도 이걸 차용 · 내가 신청한 일정과 자율 참석 일정이 구분」)
    10F 명단(tenMine · 서버 sync my.sess · 테스트 사번 오버레이)의 나의 일정 = 프로그램 › 시간표와 같은 하루 흐름(progFlowHtml 틀 · 노드 · 레일 · 카드)
    줄 = 자유 참석(Intro · 기조연설 · 내부 강연 · 점심 · Outro) + 신청(내 10F 세션 · AX 라운지 상담 · 매칭된 커피챗 · 시작 시각 순서 · 겹치면 둘 다)
-   오후 파트너사 강연(AWS · MS) = 내 세션과 시간이 겹쳐 이 흐름에는 넣지 않는다(시간표 탭에는 그대로 · MYFL_SKIP)
+   오후 파트너사 강연(AWS · MS) = v6.06 (사용자 261007) 내 10F 세션과 시간이 겹치지 않으면 자유 참석 카드로 넣고 겹치면 뺀다(MYFL_LEC · 세션 E 1회차 14:50 끝 → 15:10 MS · 2회차 15:00 시작 → 13:30 AWS · 시간표 탭에는 그대로)
    구분 = 신청: 주황 2px 테두리 + 오른쪽 위 칩 「신청」 + 노드 주황 채운 점 · 자유 참석: 흰 카드 그대로 + 회색 칩 「자유 참석」 · 누르면 시간표와 같은 상세(progOpen)
    시각이 없는 것(대기 · 계단 · 커피챗 매칭 대기)은 흐름 위 행 카드 그대로(myAgendaRow) · 일반 직원은 옛 나의 일정 그대로 */
-var MYFL_SKIP = ["l1", "l2"];
+var MYFL_LEC = ["l1", "l2"];
 function myFlowOn() { return !!tenMine(); }
 function myFlowItems() {
-  var pub = progFlowItems().filter(function (o) { return !o.mine && MYFL_SKIP.indexOf(o.k) < 0; }), mine = [];
+  var tm = tenMine(), tp = tm ? tm.tm.split("~").map(function (t) { return t2m(t); }) : null;
+  var pub = progFlowItems().filter(function (o) { return !o.mine && (MYFL_LEC.indexOf(o.k) < 0 || (!!tp && (o.b <= tp[0] || o.a >= tp[1]))); }), mine = [];
   myAgendaItems().forEach(function (x) {
     if (!x.iv || myAgendaNow(x)) return;
     var k = x.kind, o = { k: k, my: k, a: x.iv[0], b: x.iv[1], t0: hm2(x.iv[0]), t1: hm2(x.iv[1]), mine: true };
@@ -928,14 +929,16 @@ function myFlowItems() {
   return pub.concat(mine).sort(function (x, y) { return x.a - y.a || (y.mine ? 1 : 0) - (x.mine ? 1 : 0); });
 }
 /* 카드 = progFlowCard 와 같은 틀(층 점 글자 · 장소 · ~끝 · 제목 · 보조 한 줄 · 셰브론) + 머리 줄 오른쪽 끝 칩 · data-my = 알림 「내 일정 확인하기」가 튕기는 자리(focusTarget my:조각) */
+/* v6.06 진행 중인 신청 카드 = 칩 「진행 중」(나의 참여 · 홈 같은 말) */
 function myFlowCard(o, hmN, isF) {
-  var past = hmN >= o.b, chip = o.mine ? '<span class="axs-chip mc">신청</span>' : '<span class="axs-chip off mc">자유 참석</span>';
+  var past = hmN >= o.b, chip = o.mine ? '<span class="axs-chip mc">' + (isF ? "진행 중" : "신청") + "</span>" : '<span class="axs-chip off mc">자유 참석</span>';
   return '<button type="button" class="fc' + (o.mine ? " mine" : "") + (past ? " past" : "") + (isF ? " focus" : "") + '"' + (o.go ? ' onclick="' + o.go + '"' : " disabled") + ' data-fl="' + esc(o.k) + '"' + (o.my ? ' data-my="' + esc(o.my) + '"' : "") + ">" +
     '<span class="mt">' + (o.fl ? flFloor(o.fl) : "") + '<span class="pl">' + esc(o.pl) + '</span><span class="e">~' + o.t1 + "</span>" + chip + "</span>" +
     '<span class="t">' + (isF ? '<span class="ax-sr-only">진행 중 </span>' : "") + '<span class="tt">' + esc(o.ttl) + "</span></span>" +
     (o.sub ? '<span class="s">' + esc(o.sub) + "</span>" : "") + (past || !o.go ? "" : '<span class="chv">' + CHEV_SVG + "</span>") + "</button>";
 }
-function myFlowHtml(its) { return '<div class="axs-fl axs-myfl">' + progFlowHtml(0, its) + "</div>"; }
+/* v6.06 h = 홈(axs-myfl-h · 신청 카드만 · 노드 · 레일 없음 · 진행 중 카드 둘레 고리) */
+function myFlowHtml(its, h) { return '<div class="axs-fl axs-myfl' + (h ? " axs-myfl-h" : "") + '">' + progFlowHtml(0, its) + "</div>"; }
 /* 나의 참여 쪽 분 단위 갱신(시간표 탭 setInterval 과 같은 규칙 · 보일 때만 · 분이 바뀌면 흐름만) */
 var MYFL_KEY = "";
 setInterval(function () {

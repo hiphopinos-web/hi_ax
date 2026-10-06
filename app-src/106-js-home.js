@@ -102,16 +102,17 @@ function myScheduleHtml() {
   /* v5.82 (사용자 261006 「커피챗 앞으로」 결정 2) 커피챗 신청 줄 한 줄 · 신청 전 · 마감 아님 · 행사 끝나기 전만(cchatRowHtml) · 일정 3개 상한(SCHED_VIEW)에 넣지 않는 별도 줄 · v5.85 누르면 프로그램 › 신청하기 칸(progApplyGo)
      일정이 비었으면 「신청한 프로그램 없음」 줄을 이 줄로 대체 · 일정이 있으면 목록 끝(더보기 버튼 앞) · 신청한 뒤에는 myItems 의 커피챗 줄(대기 · 시각)이 맡아 이 줄은 사라진다 */
   var ap = cchatRowHtml();
-  /* v6.04 (사용자 261007) 10F 명단 = 나의 참여 › 나의 일정과 같은 하루 흐름 · 홈은 남은 줄 3개(SCHED_VIEW) + 「일정 더보기 +N」
+  /* v6.06 (사용자 261007 「홈 나의 일정은 신청 카드만 · 하루 전체 타임라인은 나의 참여에서만」) 10F 명단 홈 = 신청 카드만(내 10F 세션 · AX 라운지 · 커피챗) · 노드 · 레일 · 큰 점 없음(axs-myfl-h) · 진행 중이면 그 카드 칩 「진행 중」 + 둘레 고리
+     v6.04 (사용자 261007) 10F 명단 = 나의 참여 › 나의 일정과 같은 하루 흐름 · 홈은 남은 줄 3개(SCHED_VIEW) + 「일정 더보기 +N」
      위 행 카드 = 시각 없는 줄만(설문 · 선착순 참여상 · 체크인 → 룰렛 · 대기 · 계단 · 커피챗 매칭 대기 · 커피챗 신청 줄) · 시각 있는 신청(상담 · 커피챗)은 흐름 안 · 행사 중 「지금」 줄은 흐름의 큰 점이 맡는다 */
   if (myFlowOn()) {
     var ph1 = evPhase(), fr = rows.filter(function (r) { return r[7] == null; });
-    var fl = ph1 === "after" ? [] : myFlowItems().filter(function (o) { return ph1 !== "live" || o.b > hm0; }), fm = Math.max(0, fl.length - SCHED_VIEW);
+    var fl = ph1 === "after" ? [] : myFlowItems().filter(function (o) { return o.mine && (ph1 !== "live" || o.b > hm0); }), fm = Math.max(0, fl.length - SCHED_VIEW);
     var top = (ph1 === "after" ? schedNowRow() : "") + fr.map(function (r) {
       return rcHtml({ cls: " my", onclick: r[1], link: true, left: tokBadge(esc(r[2]), r[5]), title: esc(r[3]), sub: esc(r[4]), place: r[6] });
     }).join("") + ap;
     if (!fl.length) top += rcHtml({ cls: "", onclick: "mySched()", link: true, left: rcIcon(App.ICONS.guide_time), title: "남은 일정 없음", sub: "지난 일정은 나의 일정에서" });
-    return head + (top ? '<div class="axs-rows">' + top + "</div>" : "") + (fl.length ? myFlowHtml(fl.slice(0, SCHED_VIEW)) : "") +
+    return head + (top ? '<div class="axs-rows">' + top + "</div>" : "") + (fl.length ? myFlowHtml(fl.slice(0, SCHED_VIEW), 1) : "") +
       (fm ? '<button type="button" class="ax-button ax-button-weak axs-more" onclick="mySched()" aria-label="나의 일정 ' + fm + '개 더 보기">일정 더보기 +' + fm + "</button>" : "");
   }
   if (!rows.length) {
