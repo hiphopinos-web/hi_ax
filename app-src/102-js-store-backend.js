@@ -327,7 +327,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.82";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.83";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -467,14 +467,13 @@ function a2hsRow() {
   if (t) t.textContent = a2hsWord();
   var vv = el("fsVer"); if (vv) vv.textContent = "앱 " + APP_VER;   /* v5.01 열어 둔 옛 탭인지 가려내기 */
   var lb = el("fsLbApp"), pu = el("fsPush");
-  if (lb) lb.hidden = b.hidden && (!pu || pu.hidden);
+  if (lb) lb.hidden = b.hidden && (!pu || pu.hidden) && !el("fsSnd");   /* v5.83 효과음 · 오프닝 다시 보기 줄은 늘 있다 */
 }
 /* 하단 시트 · 입장 직후 1회 자동 + 설정에서 수동 호출 */
-function a2hsSheet(on, top) {   /* v4.89 top = 최초 로그인 장면 위로 띄운다 · 닫으면 A2HS.after(장면 시트가 다음 카드로) */
+function a2hsSheet(on) {   /* v5.83 옛 top(최초 로그인 장면 위) · A2HS.after(장면 시트 다음 카드)는 접속 질문과 함께 삭제 */
   var box = el("a2hs");
   if (!box) return;
-  if (!on) { box.hidden = true; A2HS.open = false; box.style.zIndex = ""; var af = A2HS.after; A2HS.after = null; if (af) af(); return; }
-  if (top) box.style.zIndex = "395";
+  if (!on) { box.hidden = true; A2HS.open = false; return; }
   A2HS.open = true;
   if (el("a2hsT")) el("a2hsT").textContent = a2hsWord();
   var body = el("a2hsBody"), h = "";
@@ -517,7 +516,8 @@ function a2hsCopy() {
   else done();
 }
 /* 260829 사용자 지시 · 입장 직후 자동 노출과 홈 카드는 폐기, 설정 시트에서만 진입한다
-   v4.76 로그인 직후 한 번 · 설치 안내가 아니라 알림(허용된 기기는 이 사번으로 다시 등록 · 홈 화면 앱으로 처음 들어온 사람에게만 「알림을 켤까요?」) */
+   v4.76 로그인 직후 한 번 · 설치 안내가 아니라 알림(허용된 기기는 이 사번으로 다시 등록 · 홈 화면 앱으로 처음 들어온 사람에게만 「알림을 켤까요?」)
+   v5.83 (최초 진입 가볍게) 이 함수는 pushFirst 만 부른다 · 바로가기 설치 안내는 설정 › 바로가기 설치와 알림이 필요한 순간의 아이폰 단계 시트에서만 */
 function a2hsAuto() { setTimeout(pushFirst, 1800); }
 
 
@@ -549,9 +549,9 @@ var STORE_DEVICE = ["vid", "a2hs", "fs", "t",
   "site_sound", "game_sound", "rain_sound", "jp_tut",
   "self_on", "self_key", "self_tok", "scan_spot", "adm_tab", "tyaw_tab", "tyaw_hide", "tyaw_oly_pg", "self_dev",
   "type_rank_*", "oly_tab", "oly_ev",
-  "notices", "notices_wipe1", "entry_pref", "entry_ask_day", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "resv_conf", "crowd", "stv", "att_w",
-  "art_demo_n", "ev_phase", "toff", "tour_inv",
-  "push_ask", "push_first", "push_ask_ios"];   /* v5.46 tour_inv = 1층 둘러보기 초대 한 번(기기 기준) · v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) · v4.78 아이폰 탭 · 앱 속 브라우저 안내는 하루 한 번 */
+  "notices", "notices_wipe1", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "resv_conf", "crowd", "stv", "att_w",
+  "art_demo_n", "ev_phase", "toff", "tour_seen",
+  "push_ask", "push_first", "push_ask_ios"];   /* v5.83 tour_seen = 둘러보기를 한 번 열었다(홈 카드 자리 · 기기 기준 · 옛 v5.46 tour_inv · v4.89 entry_pref · entry_ask_day 는 쓰지 않는다) · v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) · v4.78 아이폰 탭 · 앱 속 브라우저 안내는 하루 한 번 */
 var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_role", "adm_tok", "adm_emp", "dept",
   "stamps", "pp_seen", "pp_base", "pp_glow3", "stamp_pend", "lg_try", "lgx_seen", "scan_q", "stair", "checkin", "queue", "resv", "sess_my", "att_mine", "att_tm",
   "cchat", "cchat_pref", "cchat_att", "ideas", "idea_draft", "survey_draft", "survey_done", "survey_mine", "survey_force", "noti_seen",

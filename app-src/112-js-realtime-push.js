@@ -500,14 +500,15 @@ function pushAsk(ctx, opt, after) {
 /* 떠 있는 팝업(번호표 안내 등) · 시트 · 스탬프 연출이 닫힌 뒤에 */
 function pushSheetWait(ctx, opt, n) {
   if (n > 150) return;
-  if (typeof tourInvHold === "function" && tourInvHold()) { setTimeout(function () { pushSheetWait(ctx, opt, n); }, 400); return; }   /* v5.46 둘러보기 초대 · 둘러보기가 닫힌 뒤(기다린 시간은 세지 않는다) */
+  if (typeof tourInvHold === "function" && tourInvHold()) { setTimeout(function () { pushSheetWait(ctx, opt, n); }, 400); return; }   /* v5.46 둘러보기가 열려 있는 동안 · 닫힌 뒤(기다린 시간은 세지 않는다) · v5.83 초대 시트 삭제 */
   if (el("modal") || el("axsSheet") || SPOP.cur || SPOP.q.length || el("app").hidden || el("rgPlay")) { setTimeout(function () { pushSheetWait(ctx, opt, n + 1); }, 400); return; }
   pushSheet(ctx, opt);
 }
-var PUSH_T = { photo: "차례가 되면 알려 드려요", cchat: "매칭되면 알려 드려요", crowd: "풀리면 알려 드려요", first: "알림을 켤까요?" };
+var PUSH_T = { photo: "차례가 되면 알려 드려요", cchat: "매칭되면 알려 드려요", crowd: "풀리면 알려 드려요", dap: "승인되면 알려 드려요", first: "알림을 켤까요?" };   /* v5.83 dap = DAP 과제상담 신청 직후(가치 순간 · 최초 진입 가볍게) */
 function pushExHtml(ctx, opt) {
   var t = "포토부스 입장하세요", b = "1F · " + (opt.no || 14) + "번 · 10분 안에 입장";   /* v4.78 A10 실제 푸시 문구와 같게(제목에 주제어) */
   if (ctx === "cchat" || ctx === "first") { t = "커피챗 매칭 완료"; b = "18F · 15:00 · TABLE 3"; }   /* v5.05 포토부스 대기 폐지면 처음 안내 예시도 커피챗 */
+  if (ctx === "dap") { t = "AX LOUNGE 상담 승인 완료"; b = "1F AX LOUNGE · 14:20"; }   /* v5.83 실제 승인 알림(notifyUser)과 같은 말 · 개편안 초안 「과제상담」은 v5.64 이름 규칙(AX LOUNGE 상담)으로 */
   if (ctx === "crowd") { t = opt.tgt === "lobby" ? "1F 로비 혼잡이 풀렸어요" : "엘리베이터 혼잡이 풀렸어요"; b = (opt.tgt === "lobby" ? "1F 로비" : "1F 승강기 홀") + " · 15:07"; }
   return '<div class="axs-pex" aria-hidden="true"><img src="icons/icon-192.png" alt=""><div><b>' + esc(t) + "</b><span>" + esc(b) + "</span></div></div>";
 }

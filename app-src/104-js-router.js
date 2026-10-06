@@ -277,11 +277,11 @@ var App = {
     if (v === "scan_q") { if (SCQ.tab === "scan") setTimeout(scanQStart, 80); else if (!QRM.timer) qrMineOn(); }   /* v5.23 카메라는 스캔 탭에서만 · 내 QR 탭은 6초 동기화 */
     if (v === "stair" && STR.mode === "start") stairTickOn();
     detPaint(dv, v);
+    if (v !== "ideas" && typeof IDEA !== "undefined") IDEA.cc = false;   /* v5.83 커피챗에서 온 아이디어 쓰기 표시는 그 화면 안에서만 */
     if (typeof SPOP !== "undefined" && SPOP.cur && !SPOP.cur.done) { var spT = spTgt(SPOP.cur); if (spT.el) spT.el.classList.add("sp-wait"); }   /* v3.49 재렌더돼도 안착 전 자리는 비어 보이게 */
     kvMountAll();
     typPromoMount();   /* v5.31 타자왕 홍보 칸 · 화면에 보일 때 src */
     updateLed();
-    if (v === "home") tourInvMaybe();   /* v5.46 1층 둘러보기 초대(한 번) */
     if (typeof trfSync === "function") trfSync();   /* v5.67 둘러보기 복귀 떠 있는 단추 */
   }
 };

@@ -123,7 +123,7 @@
      띠·무대는 v29 스테이지(흰 면 + 주황 면 + 도트 격자) · 시트·버튼은 AX-TDS 토큰(design.md A-1 「월드는 배경까지」) */
   #lgx { position: fixed; inset: 0; z-index: 390; overflow: hidden; touch-action: none; contain: strict; }   /* v4.90 장면 안 배치가 바깥(로그인 · 앱) 배치 계산을 다시 부르지 않게 */
   #lgx > canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-  #lgx .lgx-skip { position: absolute; z-index: 2; top: calc(env(safe-area-inset-top) + var(--ax-space-8)); right: max(var(--ax-space-8), calc((100vw - var(--ax-app-max, 480px)) / 2 + var(--ax-space-8))); min-height: 48px; padding: 0 var(--ax-space-16); border: 0; border-radius: var(--ax-radius-999, 999px); background: rgba(255, 255, 255, 0.92); color: var(--ax-color-ink); font: var(--ax-type-t6-strong); cursor: pointer; }
+  #lgx .lgx-skip { position: absolute; z-index: 2; top: calc(env(safe-area-inset-top) + var(--ax-space-8)); right: max(var(--ax-space-8), calc((100vw - var(--ax-app-max, 480px)) / 2 + var(--ax-space-8))); min-height: 48px; padding: 0 var(--ax-space-16); border: 0; border-radius: var(--ax-radius-999, 999px); background: var(--ax-color-ink); color: var(--ax-color-inverse, #FFFFFF); font: 700 16px/1.4 var(--ax-font); cursor: pointer; }   /* v5.83 어두운 알약 · 흰 하늘 · 주황 수면 어디서나 보인다(옛 흰 92% 알약은 흰 하늘에 묻혔다) · 누른 순간부터 보임 */
   #lgx .lgx-lock { position: absolute; z-index: 1; left: 50%; transform: translateX(-50%); width: min(100%, var(--ax-app-max, 480px)); padding: 0 var(--ax-space-24); text-align: center; color: var(--ax-color-brand, #FF7F32); opacity: 0; pointer-events: none; }   /* 흰 무대 위 브랜드 문구 = Vibrant Orange · 두 줄 모두 20px 이상 600 이상(design.md §3 크기 조건) */
   #lgx .lgx-lock b { display: block; font-size: 26px; font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; }
   #lgx .lgx-lock span { display: block; margin-top: var(--ax-space-4); font-size: 20px; font-weight: 600; line-height: 1.45; }
@@ -143,15 +143,9 @@
   #lgx .lgx-st { font: var(--ax-type-t7); color: var(--ax-color-muted); }
   #lgx .lgx-next:empty { display: none; }
   #lgx .lgx-home:not(.lgx-go) { align-self: center; min-height: 48px; padding: 0 var(--ax-space-16); border: 0; background: transparent; cursor: pointer; }
-  /* v4.89 도장 직후 질문 · 고르기 전에는 다음 카드와 「홈으로」를 접는다(주황 주 버튼 하나) */
-  #lgx .lgx-ask { display: flex; flex-direction: column; gap: var(--ax-space-12); }
-  #lgx .lgx-ask[hidden], #lgx.ask .lgx-next, #lgx.ask .lgx-home { display: none; }
-  #lgx .lgx-askq { margin: var(--ax-space-4) 0 var(--ax-space-4); font: var(--ax-type-t4); color: var(--ax-color-ink); }
   #lgx .lgx-auto { position: relative; overflow: hidden; }
   #lgx .lgx-auto.run::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--ax-color-onBrand); opacity: 0.35; transform-origin: left center; animation: lgxAuto 1.6s linear forwards; }
   @keyframes lgxAuto { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-  .axs-eask { display: flex; flex-direction: column; gap: var(--ax-space-12); }   /* v4.89 홈 질문 카드 */
-  .axs-eask .axs-eask-qr { align-self: center; min-height: 44px; padding: 0 var(--ax-space-16); border: 0; background: transparent; cursor: pointer; }
   /* v4.94 키보드가 올라오면(kbSync · kb-on) 로그인 두 화면을 보이는 높이로 줄인다
      v5.02 줄 자리는 lfLayout 이 줄어든 높이로 다시 계산한다(안내 · QR 한 줄 · 링크가 먼저 접히고 행사명이 작아진다 · 접기 규칙과 낮은 화면 media 는 없다) */
   html.kb-on #splash, html.kb-on #quick { bottom: var(--kb, 0px); }
@@ -865,6 +859,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #fsSheet .fs-admin { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 9px; cursor: pointer; background: var(--card); border: 0; border-radius: 14px; padding: 15px 16px; font-family: inherit; font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); }
   #fsSheet .fs-admin span { color: var(--faint); }
   #fsSheet .fs-admin .fs-lbl { color: inherit; }   /* v4.88 줄 이름이 span 이라도 본문 색(앱 설치 · 홈 화면에 추가) */
+  #fsSheet .fs-admin > span:last-child { display: flex; align-items: center; gap: 8px; }   /* v5.83 줄 오른쪽 = 상태 한 단어 + 셰브론 */
+  #fsSheet .fs-st { font-size: calc(14px * var(--fs)); font-weight: 600; color: var(--muted); }
+  #fsSheet .fs-admin.on .fs-st { color: var(--ax-color-brandText, #E5531A); }   /* 효과음 켜짐 */
   #fsSheet .fs-close { margin-top: 18px; cursor: pointer; }   /* v4.13 검정 → Weak(보조 버튼 규칙) */
   #fsSheet .fs-ver { margin: 10px 0 0; text-align: center; font-size: calc(12.5px * var(--fs)); color: var(--faint); }   /* v5.01 앱 버전 · 캡션 */
   .rrow { display: flex; align-items: center; gap: 9px; padding: 6px 0; }
@@ -2822,8 +2819,11 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
       <div class="axs-mhead"><h2 class="axs-mtitle fs-t" id="fsT">설정</h2><button type="button" class="axs-x" onclick="fsSheet(false)" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></div>
       <!-- v4.71 (260930 사용자 요청) 글자 크기는 헤더 「일반 · 큰글씨」 한 곳 · 설정 시트에서 뺐다(좁은 폰도 헤더에 남긴다) -->
       <p class="fs-lb" id="fsLbApp">앱</p>
-      <button class="fs-admin" id="fsPush" hidden onclick="fsSheet(false); pushSetOpen()">알림<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
+      <button class="fs-admin" id="fsPush" hidden onclick="fsSheet(false); pushSetOpen()">알림<span><b class="fs-st" id="fsPushSt"></b><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
       <button class="fs-admin" id="fsA2hs" onclick="fsSheet(false); a2hsOpen()"><span id="fsA2hsT" class="fs-lbl">바로가기 설치</span><span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
+      <!-- v5.83 (최초 진입 가볍게) 효과음 = 시트 안에서 바로 전환(game_sound 하나 · 게임 안 토글과 같은 값) · 오프닝 다시 보기 = 최초 로그인 장면 시연(스탬프 · 서버 변경 없음) -->
+      <button class="fs-admin" id="fsSnd" role="switch" aria-checked="false" onclick="fsSndToggle()">효과음<span><b class="fs-st" id="fsSndSt">꺼짐</b></span></button>
+      <button class="fs-admin" id="fsLgx" onclick="fsSheet(false); lgxReplay()">오프닝 다시 보기<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
       <p class="fs-lb">운영</p>
       <button class="fs-admin" onclick="fsSheet(false); App.go('admin')">관리자 모드<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
       <button class="fs-admin" onclick="axfLogout()">로그아웃 · 다른 사번으로 입장<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
@@ -3459,7 +3459,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.82";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.83";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -3599,14 +3599,13 @@ function a2hsRow() {
   if (t) t.textContent = a2hsWord();
   var vv = el("fsVer"); if (vv) vv.textContent = "앱 " + APP_VER;   /* v5.01 열어 둔 옛 탭인지 가려내기 */
   var lb = el("fsLbApp"), pu = el("fsPush");
-  if (lb) lb.hidden = b.hidden && (!pu || pu.hidden);
+  if (lb) lb.hidden = b.hidden && (!pu || pu.hidden) && !el("fsSnd");   /* v5.83 효과음 · 오프닝 다시 보기 줄은 늘 있다 */
 }
 /* 하단 시트 · 입장 직후 1회 자동 + 설정에서 수동 호출 */
-function a2hsSheet(on, top) {   /* v4.89 top = 최초 로그인 장면 위로 띄운다 · 닫으면 A2HS.after(장면 시트가 다음 카드로) */
+function a2hsSheet(on) {   /* v5.83 옛 top(최초 로그인 장면 위) · A2HS.after(장면 시트 다음 카드)는 접속 질문과 함께 삭제 */
   var box = el("a2hs");
   if (!box) return;
-  if (!on) { box.hidden = true; A2HS.open = false; box.style.zIndex = ""; var af = A2HS.after; A2HS.after = null; if (af) af(); return; }
-  if (top) box.style.zIndex = "395";
+  if (!on) { box.hidden = true; A2HS.open = false; return; }
   A2HS.open = true;
   if (el("a2hsT")) el("a2hsT").textContent = a2hsWord();
   var body = el("a2hsBody"), h = "";
@@ -3649,7 +3648,8 @@ function a2hsCopy() {
   else done();
 }
 /* 260829 사용자 지시 · 입장 직후 자동 노출과 홈 카드는 폐기, 설정 시트에서만 진입한다
-   v4.76 로그인 직후 한 번 · 설치 안내가 아니라 알림(허용된 기기는 이 사번으로 다시 등록 · 홈 화면 앱으로 처음 들어온 사람에게만 「알림을 켤까요?」) */
+   v4.76 로그인 직후 한 번 · 설치 안내가 아니라 알림(허용된 기기는 이 사번으로 다시 등록 · 홈 화면 앱으로 처음 들어온 사람에게만 「알림을 켤까요?」)
+   v5.83 (최초 진입 가볍게) 이 함수는 pushFirst 만 부른다 · 바로가기 설치 안내는 설정 › 바로가기 설치와 알림이 필요한 순간의 아이폰 단계 시트에서만 */
 function a2hsAuto() { setTimeout(pushFirst, 1800); }
 
 
@@ -3681,9 +3681,9 @@ var STORE_DEVICE = ["vid", "a2hs", "fs", "t",
   "site_sound", "game_sound", "rain_sound", "jp_tut",
   "self_on", "self_key", "self_tok", "scan_spot", "adm_tab", "tyaw_tab", "tyaw_hide", "tyaw_oly_pg", "self_dev",
   "type_rank_*", "oly_tab", "oly_ev",
-  "notices", "notices_wipe1", "entry_pref", "entry_ask_day", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "resv_conf", "crowd", "stv", "att_w",
-  "art_demo_n", "ev_phase", "toff", "tour_inv",
-  "push_ask", "push_first", "push_ask_ios"];   /* v5.46 tour_inv = 1층 둘러보기 초대 한 번(기기 기준) · v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) · v4.78 아이폰 탭 · 앱 속 브라우저 안내는 하루 한 번 */
+  "notices", "notices_wipe1", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "resv_conf", "crowd", "stv", "att_w",
+  "art_demo_n", "ev_phase", "toff", "tour_seen",
+  "push_ask", "push_first", "push_ask_ios"];   /* v5.83 tour_seen = 둘러보기를 한 번 열었다(홈 카드 자리 · 기기 기준 · 옛 v5.46 tour_inv · v4.89 entry_pref · entry_ask_day 는 쓰지 않는다) · v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) · v4.78 아이폰 탭 · 앱 속 브라우저 안내는 하루 한 번 */
 var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_role", "adm_tok", "adm_emp", "dept",
   "stamps", "pp_seen", "pp_base", "pp_glow3", "stamp_pend", "lg_try", "lgx_seen", "scan_q", "stair", "checkin", "queue", "resv", "sess_my", "att_mine", "att_tm",
   "cchat", "cchat_pref", "cchat_att", "ideas", "idea_draft", "survey_draft", "survey_done", "survey_mine", "survey_force", "noti_seen",
@@ -3776,8 +3776,18 @@ function fsSheet(on) {
   if (on) fsPaint();
   if (on && el("fsPush")) el("fsPush").hidden = !(typeof pushReady === "function" && (pushReady() || pushRelogin()));   /* v4.76 알림 · 새 서버(공개키)일 때만 · v5.34 토큰 없는 옛 로그인도 줄을 보인다(다시 로그인 안내) */
   if (on) a2hsRow();   /* v4.88 앱 설치 · 홈 화면에 추가 한 단어 · 홈 화면 앱이면 숨김 · 줄이 다 숨으면 「앱」 제목도 */
+  if (on) fsRowState();
   box.hidden = !on;
 }
+/* v5.83 (최초 진입 가볍게 · 개편안 2-4) 설정 「앱」 줄 오른쪽 = 지금 상태 한 단어(설명 문장 없음) · 알림 켜짐 · 꺼짐 · 효과음 켜짐 · 꺼짐 · 바로가기 설치는 설치되면 줄이 숨는다(a2hsHide) */
+function fsRowState() {
+  var ps = el("fsPushSt"), ss = el("fsSnd"), st = el("fsSndSt");
+  if (ps) ps.textContent = typeof pushState === "function" && pushState().on ? "켜짐" : "꺼짐";
+  var on = S.get("game_sound", null) === true;
+  if (st) st.textContent = on ? "켜짐" : "꺼짐";
+  if (ss) { ss.setAttribute("aria-checked", String(on)); ss.classList.toggle("on", on); }
+}
+function fsSndToggle() { if (typeof sndToggle === "function") sndToggle(false); fsRowState(); }   /* 게임 안 스피커와 같은 값(game_sound) */
 fsApply(fsGet());   /* 스플래시·로그인 화면부터 바로 적용 */
 
 var MEM = {};
@@ -4000,6 +4010,7 @@ function scheduleCoffeechat() {
       beCall(req, function (res) {
         if (res && res.ok) { pushAsk("cchat", {}); return; }   /* v4.76 가치 순간 ② 「매칭되면 알려 드려요」 */
         if (res && res.reason === "noidea" && !retried) { retried = true; ideaFlush(); setTimeout(send, CCHAT_RETRY_MS); return; }
+        if (res && res.reason === "noidea") { S.set("cchat", null); NOTICE.q = NOTICE.q.filter(function (x) { return x.k !== "cchat:ok"; }); if (NOTICE.cur && NOTICE.cur.k === "cchat:ok") modalClose(); ideaCcGo(); return; }   /* v5.83 (사용자 261006 「권장대로」) 다시 보내도 서버에 아이디어가 없다(콘솔로 받은 p5 등) = 실패 안내 대신 아이디어 쓰기(커피챗 흐름 · 제출하면 신청 질문으로) */
         fail();
       }, fail);
     };
@@ -4107,7 +4118,7 @@ function ideaPush(text, tag, anon, ch) {
   if (IDEA.step === "done" || cchatClosed()) tourRetDone(!had);
 }
 /* v4.07 아이디어 제출 뒤 단계 · null = 입력 폼 · "ask" = 커피챗 참석 질문 · "done" = 제출 완료 (다른 화면에서 들어오면 폼으로) */
-var IDEA = { step: null, yes: false, draft: null, tag: "", anon: false, err: "" };
+var IDEA = { step: null, yes: false, draft: null, tag: "", anon: false, err: "", cc: false };   /* v5.83 cc = 커피챗에서 왔다(ideaCcGo) */
 var CCHAT_TXT = "커피와 간식을 드려요 · 멘토와 내 고민을 가볍게 나눠요";   /* v5.04 (261002 회의) 간식 = 휘낭시에 · 스콘(쿠키 아님) · 종류는 상세의 사진 줄(treatHtml)에 */
 /* v4.45 (사용자 260925 「커피챗은 아이디어 한 줄이 필수 · 선호 시간대를 받아 그 시간에 매칭 · 매칭되면 하이웍스 안내 · 앱 나의 참여에서도 확인」)
    선호 시간대 = 여러 개 고를 수 있다 · 「언제든 좋아요」는 혼자 · 하나 이상 골라야 신청 · 서버에는 사람이 읽는 글(pref)로 보낸다(콘솔 커피챗 표 「희망 시간」) */
@@ -4161,13 +4172,15 @@ function cchatApply() {
   if (cchatClosed()) { sheetClose(true); toast("커피챗 신청이 마감됐어요"); App.render(); return; }   /* v4.47 시트를 여는 사이 마감 */
   sheetClose(true);   /* v4.18 확인 시트에서 온다 · 요청은 낙관 저장이라 기다릴 것이 없다 */
   scheduleCoffeechat();
-  if (S.get("cchat", null)) notice({ title: "커피챗 신청 완료", body: "희망 " + cchatPrefTxt() + " · " + CCHAT_NOTE });
+  if (S.get("cchat", null)) notice({ key: "cchat:ok", title: "커피챗 신청 완료", body: "희망 " + cchatPrefTxt() + " · " + CCHAT_NOTE });   /* v5.83 key = noidea 로 되돌릴 때 이 안내를 거둔다 */
   App.render();
 }
-function ideaMineN() {
-  var e = (S.get("user", {}) || {}).empId, n = S.get("ideas", []).filter(function (i) { return i.empId === e; }).length;
-  return n || (S.get("stamps", []).indexOf("p5") >= 0 ? 1 : 0);   /* v4.64 (QA 260930) 아이디어는 이 기기에만 남는다 · 다른 기기 · 다시 로그인하면 0 이라 커피챗을 못 열었다 · 서버 스탬프 p5(아이디어 한 줄) = 낸 사람 */
+function ideaMineN() {   /* 커피챗 신청 가능 = 이 기기의 내 아이디어 1건 이상 */
+  var e = (S.get("user", {}) || {}).empId;
+  return S.get("ideas", []).filter(function (i) { return i.empId === e; }).length;   /* v5.83 (사용자 261006 「권장대로」) 옛 v4.64 「p5 스탬프 = 1건」 걷음 · 서버는 v5.82 부터 아이디어 행 없는 신청을 noidea 로 거절한다(콘솔로 받은 p5 · 다른 기기에서 낸 사람) · 0건 = 「아이디어 쓰고 신청하기」 · 서버 아이디어 수는 sync 에 없어 새 호출은 만들지 않는다 */
 }
+/* v5.83 커피챗에서 온 아이디어 쓰기 · 화면 위 한 줄 「커피챗은 아이디어 한 줄과 함께 신청해요」 · 제출하면 「이 아이디어로 커피챗을 신청할까요?」(IDEA.step ask) · 다른 화면을 그리면 표시를 접는다(라우터) */
+function ideaCcGo() { IDEA.cc = true; IDEA.step = null; App.go("ideas"); }
 /* v4.15 (사용자 확정 260922) 아이디어 서버 저장 · 커피챗 매칭에 필수 · 콘솔이 idea_list 로 본다.
    제출 ID(cid)를 같이 보내 재전송해도 한 번만 쓴다 · 서버에 닿으면 srv 에 시각 · 닿지 않은 내 것은 sync 때 다시 보낸다(옛 기기 로컬 아이디어도 이 길로 올라간다) */
 var IDEA_SENDING = {};
@@ -4512,11 +4525,11 @@ var App = {
     if (v === "scan_q") { if (SCQ.tab === "scan") setTimeout(scanQStart, 80); else if (!QRM.timer) qrMineOn(); }   /* v5.23 카메라는 스캔 탭에서만 · 내 QR 탭은 6초 동기화 */
     if (v === "stair" && STR.mode === "start") stairTickOn();
     detPaint(dv, v);
+    if (v !== "ideas" && typeof IDEA !== "undefined") IDEA.cc = false;   /* v5.83 커피챗에서 온 아이디어 쓰기 표시는 그 화면 안에서만 */
     if (typeof SPOP !== "undefined" && SPOP.cur && !SPOP.cur.done) { var spT = spTgt(SPOP.cur); if (spT.el) spT.el.classList.add("sp-wait"); }   /* v3.49 재렌더돼도 안착 전 자리는 비어 보이게 */
     kvMountAll();
     typPromoMount();   /* v5.31 타자왕 홍보 칸 · 화면에 보일 때 src */
     updateLed();
-    if (v === "home") tourInvMaybe();   /* v5.46 1층 둘러보기 초대(한 번) */
     if (typeof trfSync === "function") trfSync();   /* v5.67 둘러보기 복귀 떠 있는 단추 */
   }
 };
@@ -5188,7 +5201,7 @@ function zoneLive(z) {
     o.fact = mt && c.round ? cnow.replace("매칭 완료", "매칭 완료 · " + c.round) : ino ? "아이디어 한 줄 쓰고 신청" : cnow;
     o.chip = att ? ["완료", "ok"] : c ? ["내 신청", ""] : cl ? ["마감", "off"] : null;
     o.kv = [["지금", cnow], ["장소", "18F"]];
-    o.btn = att || c ? ["내 신청", "progOpen('cchat')"] : cl ? ["신청 마감", "", "", true] : ideaMineN() ? ["커피챗 신청하기", "cchatApplyOpen()", "cchatApplyBtn"] : ["아이디어 쓰고 신청하기", "App.go('ideas')"];
+    o.btn = att || c ? ["내 신청", "progOpen('cchat')"] : cl ? ["신청 마감", "", "", true] : ideaMineN() ? ["커피챗 신청하기", "cchatApplyOpen()", "cchatApplyBtn"] : ["아이디어 쓰고 신청하기", "ideaCcGo()"];   /* v5.83 커피챗 흐름의 아이디어 쓰기(화면 위 한 줄 · 제출하면 신청 질문) */
   } else if (z.id === "event") {
     o.kv = [["포토부스", "10:00~17:00"], ["장소", "1F EVENT"]];   /* v5.05 포토부스 대기 없음 · 운영 시간만 */
   }
@@ -5503,6 +5516,7 @@ function progConfirm() {
     App.go("sess_ok");   /* App.go 가 시트를 닫는다 */
     delete App.from.sess_ok;   /* 결과에서 뒤로 = 프로그램 목록 (확인 화면으로 돌아가지 않는다) */
     if (tr) { TOUR_RET = tr; tr.v = "sess_ok"; tr.away = false; tourRetDone(true); App.render(); }   /* 완료 화면에 머문다 · 띠 챗봇 인사 한 번(v5.80 · 옛 3초 자동 복귀 없앰) · 띠 · 뒤로 = 둘러보기 */
+    if (c.id === "dap") pushAsk("dap", {});   /* v5.83 가치 순간 ④ 「승인되면 알려 드려요」 · 하루 3회 · 아이폰 탭 하루 1회 규칙은 pushAsk 그대로 · 완료 화면이 그려진 뒤(pushSheetWait) */
   };
   var live = BE.on && u.empId;
   if (c.id === "dap") {
@@ -5886,6 +5900,7 @@ function tourOn() { return (TOUR_ON && !TOUR_OFF) || TOUR_PEEK; }
 function tourOpen(o) {
   if (!tourOn()) return;
   o = o || {};
+  if (!S.get("tour_seen", false)) S.put("tour_seen", true);   /* v5.83 처음 열면 홈 카드가 원래 자리로(tourHeroOn) · 기기 기준 */
   var keep = o.hint && tourRetLive() ? TOUR_RET : null;   /* v5.57 둘러보기에서 출발한 AX 퀴즈의 힌트 「모형에서 보기」는 출처를 지우지 않는다(퀴즈를 마치면 그대로 1층으로) */
   if (!o.restore) TOUR_RET = null;   /* v5.53 그냥 열면 돌아가기 기억 지움 */
   if (keep) TOUR_RET = keep;
@@ -5902,7 +5917,7 @@ function tourOpen(o) {
     document.head.appendChild(n);
   });
 }
-/* 입구 · 상시 운영 1F 맨 위 카드 · 홈 나의 일정 아래 한 줄(tourHomeHtml) · 최초 로그인 초대장 · 이름은 세 곳 모두 「행사장 둘러보기」(사용자 261004)
+/* 입구 · 상시 운영 1F 맨 위 카드 · 홈 나의 일정 아래 한 줄(tourHomeHtml) · (v5.83 최초 로그인 초대장 삭제) · 이름은 세 곳 모두 「행사장 둘러보기」(사용자 261004)
    v5.60 (사용자 261004 안2 「연주황 카드로 크게」 · 시안 디자인 시안/시간표 층 색/시안.html ?b=2 · design.md A-4 승인된 예외) 상시 운영 입구 = 홈 줄과 같은 행(rcHtml) + 연주황 면 · O25 테두리 · 캐릭터 52 · 제목 17 · 설명 한 줄
    옛 흰 줄(axs-zfl 「1층 둘러보기」 · 구역 카드와 높이가 같아 입구로 안 보였다)과 구역 상세 「모형에서 보기」는 지웠다 */
 var TOUR_ST_DESC = "엘리베이터가 혼잡하면 오늘 하루는 계단을 이용해 보세요";   /* v5.64 둘러보기 계단 블록 카드 */
@@ -5928,46 +5943,18 @@ var TOUR_BOT_SM = '<g class="sm"><path d="M75.4 102.6 A6.2 6.2 0 0 1 87.1 102.6"
 function tourBotHtml() {
   return '<span class="ico tbot" style="--td:-' + (Date.now() % 9000) + 'ms">' + BOT_SVG.replace("</svg>", BOT_WAVE + TOUR_BOT_SM + "</svg>") + "</span>";
 }
-function tourHomeHtml() {   /* 당일 · 종료 뒤 · 나의 일정 아래 */
-  return tourOn() && evPhase() !== "before" ? tourLineHtml() : "";
+function tourHomeHtml() {   /* 당일 · 종료 뒤 · 나의 일정 아래(둘러보기를 한 번 연 뒤) */
+  return tourOn() && !tourHeroOn() ? tourLineHtml() : "";
 }
-function tourHeroHtml() {   /* 행사 전 · 광고판 바로 아래 */
-  return tourOn() && evPhase() === "before" ? tourLineHtml() : "";
+function tourHeroHtml() {   /* 행사 전 · 광고판 바로 아래 · v5.83 첫 방문(tour_seen 없음)은 당일에도 */
+  return tourOn() && tourHeroOn() ? tourLineHtml() : "";
 }
-/* v5.46 (사용자 261004 「시작하기 로그인을 하고 나서 > 푸쉬창 처럼 팝업창이 초대장이 뜨는 게 낫지 않겠어?」 · 「대놓고 대상자를 특정하거나 그 사람들을 위한 문구로 가져가지는 말자」) 1층 둘러보기 초대
-   홈에 들어간 뒤 바텀 시트(M03) 한 장 · 봉투가 열리며 3D 로비 사진 · 주 버튼 「1층 둘러보기」 · 약한 버튼 「나중에 하기」 · 스탬프 말 없음
-   한 번 닫으면(두 버튼 · 뒷배경 · Esc · 뒤로) 이 기기에서 다시 뜨지 않는다(tour_inv · 기기 키) · TOUR_ON 이 꺼져 있으면 없음
-   순서: 최초 로그인 장면 · 다른 시트 · 팝업 · 스탬프 연출 · 설치 안내 · 설정 · 둘러보기가 모두 닫힌 홈에서 · 알림 첫 질문은 이 초대와 둘러보기가 닫힌 뒤(pushSheetWait · tourInvHold)
-   찍은 QR 을 이어 가는 방문(scanLinkRun · 장면의 scan 닫힘)은 건너뛰고 다음 방문의 홈에서 · 기존 가입자도 다음 홈에서 한 번 · 시연(#demo)은 &inv 일 때만 */
-var TINV = { skip: false, t: 0, t0: 0, ok: false };
-var TINV_IMG = "assets/tour/inv/";
-function tourInvOk() {
-  if (!TOUR_ON || TOUR_OFF || TINV.skip || S.get("tour_inv", false)) return false;
-  if (!(S.get("user", {}) || {}).empId || /^#(self|tv=)/i.test(VISIT.hash0) || (/^#demo/i.test(VISIT.hash0) && !/[&#]inv\b/.test(VISIT.hash0))) return false;
-  return !(typeof tsfOn === "function" && tsfOn());
-}
-function tourInvBusy() {
-  return !!(LGX.cur || el("lgx") || el("modal") || el("axsSheet") || el("spop") || SPOP.cur || SPOP.q.length || NOTICE.cur || NOTICE.q.length || el("rgPlay") || el("app").hidden ||
-    (typeof qrGated === "function" && qrGated()) || a2hsShown() || (el("fsSheet") && !el("fsSheet").hidden) || TOUR.busy || (window.AXTour && AXTour.isOpen()));
-}
-/* 홈을 그릴 때마다(App.render) · 홈에 1.2초 머문 뒤 · 바쁘면 0.4초마다 다시 본다 · 홈을 떠나면 멈추고 다음 홈에서 다시 */
-function tourInvMaybe() {
-  if (TINV.t || !tourInvOk()) return;
-  TINV.t = setTimeout(tourInvTry, 1200);
-}
-function tourInvTry() {
-  TINV.t = 0;
-  if (!tourInvOk() || App.current !== "home") return;
-  if (tourInvBusy()) { TINV.t = setTimeout(tourInvTry, 400); return; }
-  sheetOpen({ id: "tourinv", title: "AX Festival 2026에 오신 것을 환영합니다", lead: "지금 1층 로비를 3D로 둘러볼 수 있습니다.",
-    top: '<div class="axs-inv ' + (lgxRM() ? "st-open" : "run") + '" aria-hidden="true"><div class="ph"><img src="' + TINV_IMG + 'invite.jpg" alt=""></div>' +
-      '<i class="pc l"></i><i class="pc r"></i><i class="pc b"></i><i class="pc t"></i><span class="seal">AX</span></div>',
-    go: "tourInvGo()", goLbl: "행사 둘러보기", keep: "나중에 하기", keepWeak: true, keepLast: true, onClose: tourInvDone });
-}
-function tourInvDone() { S.put("tour_inv", true); }
-function tourInvGo() { tourInvDone(); sheetClose(true); tourOpen(); }
-/* 다른 질문(알림 첫 질문 등)은 초대를 기다리는 홈 · 둘러보기를 여는 중 · 열려 있는 동안 미룬다 */
-function tourInvHold() { return (tourInvOk() && App.current === "home") || TOUR.busy || !!(window.AXTour && AXTour.isOpen()); }
+function tourHeroOn() { return evPhase() === "before" || !S.get("tour_seen", false); }
+/* v5.83 (사용자 261006 「최초 진입 가볍게」 결정 3 · 옛 v5.46 사용자 261004 요청 번복) 둘러보기 초대 시트(tourinv · 봉투 · 「나중에 하기」) 삭제
+   입구 = 홈 「행사 둘러보기」 카드 · 둘러보기를 처음 열기 전(기기 키 tour_seen 없음)에는 당일에도 광고판 바로 아래(tourHeroHtml) · 처음 열면 원래 자리(당일 = 나의 일정 아래)
+   그림 assets/tour/inv/invite.jpg · CSS .axs-inv(봉투) 파일은 남긴다(참조만 끊음) · 옛 기기 키 tour_inv 는 쓰지 않는다 · 되살리기 = hi_ax git v5.82 */
+/* 다른 질문(알림 첫 질문 등)은 둘러보기를 여는 중 · 열려 있는 동안 미룬다 */
+function tourInvHold() { return TOUR.busy || !!(window.AXTour && AXTour.isOpen()); }
 var TOUR_HOST = {
   sign: function (nm, big) { return zoneSign(nm, big ? "lg" : ""); },
   zone: function (id) {
@@ -6415,7 +6402,7 @@ function spNext() {
     var v = (op && op.shake) || el("view"); if (v) { v.classList.remove("sp-shake"); void v.offsetWidth; v.classList.add("sp-shake"); }
   }, 420);
   at(function () { spScroll(cur); }, 700);
-  at(function () { spFly(cur); }, hint ? 1500 : 1050);   /* v4.44 한 줄이 있으면 0.45초 더 머문다(0.4초만 보여 읽지 못했다) */
+  at(function () { spFly(cur); }, op ? 900 : hint ? 1500 : 1050);   /* v4.44 한 줄이 있으면 0.45초 더 머문다(0.4초만 보여 읽지 못했다) · v5.83 최초 로그인 장면이 부른 도장(op) = 0.9초(사용자 261006 「약 1.4초로」 · 모양 그대로 · 한 줄 유지) */
 }
 /* 목표가 화면 밖이면 먼저 부드럽게 스크롤 */
 function spScroll(cur) {
@@ -6459,10 +6446,11 @@ function spFlyGo(cur, t) {
     frames.push({ transform: "translate(" + x.toFixed(1) + "px," + y.toFixed(1) + "px) scale(" + (1 + (s1 - 1) * e).toFixed(4) + ")" });
   }
   cur.path = { dx: dx, dy: dy, s1: s1, kind: t.kind };
-  cur.anims.push(stage.animate(frames, { duration: 500, fill: "forwards" }));
-  cur.anims.push(cur.d.querySelector(".sp-dim").animate([{ opacity: 1 }, { opacity: 0 }], { duration: 450, fill: "forwards" }));
+  var fd = cur.op ? 400 : 500;   /* v5.83 장면 도장 비행 0.4초(옛 0.5) */
+  cur.anims.push(stage.animate(frames, { duration: fd, fill: "forwards" }));
+  cur.anims.push(cur.d.querySelector(".sp-dim").animate([{ opacity: 1 }, { opacity: 0 }], { duration: fd - 50, fill: "forwards" }));
   cur.anims.push(cur.d.querySelector(".sp-text").animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, fill: "forwards" }));
-  cur.timers.push(setTimeout(function () { spFinish(cur); }, 500));
+  cur.timers.push(setTimeout(function () { spFinish(cur); }, fd));
 }
 /* 안착 · 어느 순간에 탭해도 여기로 바로 온다 */
 function spFinish(cur) {
@@ -7069,9 +7057,9 @@ var Views = {
     return '<div class="ax-stack">' +
       betaBannerHtml() +   /* v4.55 클로즈 베타 배너 · 맨 위 흰 줄 · 값 없으면 빈 문자열 */
       homeNoticeHtml() +
-      drawCardHtml() + entryAskHtml() +   /* v4.84 Outro 추첨 체크인(16:40~17:25 · 체크인 전만) · 광고판 위 조건부 자리 · v4.89 접속 방법 질문(하루 한 번) */
+      drawCardHtml() +   /* v4.84 Outro 추첨 체크인(16:40~17:25 · 체크인 전만) · 광고판 위 조건부 자리 · v5.83 접속 방법 질문 카드 삭제 */
       billboardHtml() +
-      tourHeroHtml() +   /* v5.46 행사 전 1층 둘러보기 큰 카드 · 광고판 바로 아래 · 스탬프 위(광고판 자리는 그대로 · design.md A-5) */
+      tourHeroHtml() +   /* v5.46 행사 전 1층 둘러보기 큰 카드 · 광고판 바로 아래 · 스탬프 위(광고판 자리는 그대로 · design.md A-5) · v5.83 둘러보기를 처음 열기 전(tour_seen 없음)에는 당일에도 여기 */
       '<section class="axs-sec axs-railgo" onclick="if (!event.target.closest(\'.mk, .sect span\')) App.tab(\'exp\')">' + myCouponHtml() + "</section>" +   /* v4.84 레일 면을 누르면 스탬프 탭 · 마커는 v4.02 대로 룰렛·응모 안내 */
       '<section class="axs-sec">' + myScheduleHtml() + "</section>" +
       tourHomeHtml() +   /* v5.11 1층 둘러보기 입구 · 나의 일정 아래 · 혼잡 위(광고판보다 위로 올리지 않는다 · design.md A-5) */
@@ -7235,7 +7223,7 @@ var Views = {
     setTimeout(ideaFit, 0);
     return '<div class="ax-stack axs-form">' +
       '<div class="ax-stack-tight axs-gap12 axs-sthost">' + stampTagHtml("p5") + '<h1 class="ax-type-t2">문득 떠오른<br>&ldquo;이거 AI로 되겠는데?&rdquo;</h1>' +
-      '<p class="ax-body" id="ideaAward">' + IDEA_AWARD_TXT + "</p></div>" +
+      '<p class="ax-body" id="ideaAward">' + IDEA_AWARD_TXT + "</p>" + (IDEA.cc && !cchat ? '<p class="ax-type-t6-strong axs-ideacc">커피챗은 아이디어 한 줄과 함께 신청해요</p>' : "") + "</div>" +   /* v5.83 커피챗에서 왔을 때 한 줄(ideaCcGo) */
       '<div class="ax-stack-tight"><label class="ax-sr-only" for="ideaText">아이디어 한 줄</label>' +
       '<textarea id="ideaText" class="ax-field axs-ta axs-grow" rows="4" maxlength="' + IDEA_MAX + '" placeholder="떠오른 생각을 자유롭게 적어 주세요" oninput="ideaInput(this.value)" onfocus="kbFocus(this)" aria-describedby="ideaLeft">' + esc(dr) + "</textarea>" +
       '<div class="axs-cnt"><p class="ax-meta" id="ideaLeft" aria-live="polite">' + ideaLeftTxt(n, dr) + '</p><p class="ax-meta"><span id="ideaCnt">' + dr.length.toLocaleString() + "</span>/" + IDEA_MAX.toLocaleString() + "</p></div></div>" +
@@ -8069,14 +8057,15 @@ function pushAsk(ctx, opt, after) {
 /* 떠 있는 팝업(번호표 안내 등) · 시트 · 스탬프 연출이 닫힌 뒤에 */
 function pushSheetWait(ctx, opt, n) {
   if (n > 150) return;
-  if (typeof tourInvHold === "function" && tourInvHold()) { setTimeout(function () { pushSheetWait(ctx, opt, n); }, 400); return; }   /* v5.46 둘러보기 초대 · 둘러보기가 닫힌 뒤(기다린 시간은 세지 않는다) */
+  if (typeof tourInvHold === "function" && tourInvHold()) { setTimeout(function () { pushSheetWait(ctx, opt, n); }, 400); return; }   /* v5.46 둘러보기가 열려 있는 동안 · 닫힌 뒤(기다린 시간은 세지 않는다) · v5.83 초대 시트 삭제 */
   if (el("modal") || el("axsSheet") || SPOP.cur || SPOP.q.length || el("app").hidden || el("rgPlay")) { setTimeout(function () { pushSheetWait(ctx, opt, n + 1); }, 400); return; }
   pushSheet(ctx, opt);
 }
-var PUSH_T = { photo: "차례가 되면 알려 드려요", cchat: "매칭되면 알려 드려요", crowd: "풀리면 알려 드려요", first: "알림을 켤까요?" };
+var PUSH_T = { photo: "차례가 되면 알려 드려요", cchat: "매칭되면 알려 드려요", crowd: "풀리면 알려 드려요", dap: "승인되면 알려 드려요", first: "알림을 켤까요?" };   /* v5.83 dap = DAP 과제상담 신청 직후(가치 순간 · 최초 진입 가볍게) */
 function pushExHtml(ctx, opt) {
   var t = "포토부스 입장하세요", b = "1F · " + (opt.no || 14) + "번 · 10분 안에 입장";   /* v4.78 A10 실제 푸시 문구와 같게(제목에 주제어) */
   if (ctx === "cchat" || ctx === "first") { t = "커피챗 매칭 완료"; b = "18F · 15:00 · TABLE 3"; }   /* v5.05 포토부스 대기 폐지면 처음 안내 예시도 커피챗 */
+  if (ctx === "dap") { t = "AX LOUNGE 상담 승인 완료"; b = "1F AX LOUNGE · 14:20"; }   /* v5.83 실제 승인 알림(notifyUser)과 같은 말 · 개편안 초안 「과제상담」은 v5.64 이름 규칙(AX LOUNGE 상담)으로 */
   if (ctx === "crowd") { t = opt.tgt === "lobby" ? "1F 로비 혼잡이 풀렸어요" : "엘리베이터 혼잡이 풀렸어요"; b = (opt.tgt === "lobby" ? "1F 로비" : "1F 승강기 홀") + " · 15:07"; }
   return '<div class="axs-pex" aria-hidden="true"><img src="icons/icon-192.png" alt=""><div><b>' + esc(t) + "</b><span>" + esc(b) + "</span></div></div>";
 }
@@ -8457,7 +8446,6 @@ function scanLinkRun() {
   if (!p) return;
   if (!((S.get("user", {}) || {}).empId)) return;
   scanLinkClear();
-  TINV.skip = true;   /* v5.46 찍은 QR 목적지를 방해하지 않는다 · 둘러보기 초대는 다음 방문의 홈에서 */
   if (Date.now() - (p.t || 0) > 30 * 60000) return;
   qrRoute(p.raw, p.t);
 }
@@ -15021,13 +15009,16 @@ function xitionRun(switchNow) {
          (v5.02 · 사용자 261002 「뜬금없는 동그란 원이 나왔다가 ME 가 된다 · 점이 새롭게 ME 로 바뀌는 게 좋겠다」 · 동료 점이 날아와 원을 이루던 02 Circle 단계 삭제)
          → 수평선에 내려앉는 순간 수면에 「We」가 비친다 → 반듯한 거울 장면이 머문다 → 그 사이로 원본 「to」가 끼어들고, 두 줄이 밀리며 원본 심볼의 삐딱한 배치에 그대로 안착한다
          (마지막 정지 프레임 = 원본 심볼의 점 좌표 · 합성만 · 다시 그리지 않는다) → 수면이 빠지고 부제 「ME to WE : 나의 경험을 우리의 가능성으로」가 처음이자 한 번 나온다.
-   3막 = 도장과 다음 행동: 「최초 로그인」 도장 → (접속 방법 질문) → 홈(v4.95 · 다음 스탬프 카드 없음) · 찍은 QR 이 있으면 그 카드 한 장.
+   3막 = 도장과 다음 행동: 「최초 로그인」 도장 → 「시작하기」 하나 → 홈(v4.95 · 다음 스탬프 카드 없음) · 찍은 QR 이 있으면 그 카드 한 장.
+         v5.83 (사용자 261006 「최초 진입 가볍게」 · 디자인 시안/최초 진입 가볍게/개편안.md) 접속 방법 질문(옛 v4.89 「앞으로 어떻게 들어올까요?」 · 홈 하루 1회 카드 · 질문 뒤 토스트) 삭제 · 아무것도 먼저 묻지 않는다
+         오프닝 압축 = 실제 시간 → 장면 시각(lgxMap) · 앞 구간 0.55 → 0.3초 · 0 ~ land 를 ×1.9 · land ~ end(슬로건 1.15초)는 그대로 · 합 약 4.2초(옛 6.85초)
+         건너뛰기 = 어두운 알약 · 누른 순간(0초)부터 · 장면 아무 데나 탭해도 건너뜀 · 설정 「오프닝 다시 보기」 = 시연 재생(lgxReplay · 스탬프 · 서버 없음)
          v5.07 (사용자 261003 「최초 로그인 스탬프가 전체 화면에 찍히는 다른 애니메이션과 같은 형태여야 · 두 번째부터는 없어도」) 도장 = 다른 스탬프와 같은 전체 화면 팝(stampOverlay · SPOP)
          → 시트의 도장 칸으로 안착. 나의 점이 도장 칸으로 날아가던 분신 · 시트 안 작은 도장은 걷었다. 두 번째 로그인부터는 장면도 팝도 없다(lgxEnter · 이미 받음 = 보통 입장).
    거울: M 을 위아래로 뒤집으면 W 다. 소문자 e 는 뒤집으면 e 가 아니므로 수면에는 원본 「We」 줄이 바로 선 채 비친다(마법 거울 · A안).
    B안(대문자 ME/WE 덩어리 → to 가 들어오며 원본 글자꼴로 변형)은 시안 비교용으로 남긴다(LGX.mode · 앱 기본 A).
    글자(부제)는 들어올 때 움직이지 않는다(투명도만) · v5.05 장면이 다 선 뒤 물결 한 번(lgxWave · 사용자 261002). 행사명은 글자가 아니라 점으로 바뀐 뒤 그 점이 움직인다(design.md §4 · v5.02 명시). 점 3층 크기 비(38:18:8) · 보라 핵 물결은 원본 엔진과 같다. */
-var LGX = { cur: null, mode: "A", PRE: { suck: 0.55, iris: 0.2 }, IRIS: 0.65, T: {   /* v5.02 박자 · t = 0 은 점(나)이 생기는 순간 · 앞 구간(PRE · 행사명 → 점)은 음수 시각 · v5.07 도장 팝 6.48(찍힘 약 6.9) + 앞 구간 0.55 = 약 7.5초 · 시트 칸 안착 약 8.5초 */
+var LGX = { cur: null, mode: "A", PRE: { suck: 0.55, iris: 0.2 }, PRER: { suck: 0.3, iris: 0.2 }, RATE: 1.9, IRIS: 0.65, T: {   /* v5.83 PRE = 장면 시각(그림 박자 그대로) · PRER = 실제로 걸리는 앞 구간 · RATE = 0 ~ land 를 몇 배 빠르게(lgxMap) */   /* v5.02 박자 · t = 0 은 점(나)이 생기는 순간 · 앞 구간(PRE · 행사명 → 점)은 음수 시각 · v5.07 도장 팝 6.48(찍힘 약 6.9) + 앞 구간 0.55 = 약 7.5초 · 시트 칸 안착 약 8.5초 */
   rise: 0.05,        /* 점(나)이 솟아 Me 가운데 높이로(0.6초 스프링) · 그동안 하늘이 열린다(IRIS 0.65) */
   burst: 0.6,        /* 점이 흩어지며 반듯한 Me 로(가까운 점부터 0.36초에 걸쳐 · 점마다 0.7초 스프링 · 나는 맨 나중) */
   drop: 1.75,        /* 떨어지기 시작 */
@@ -15035,7 +15026,7 @@ var LGX = { cur: null, mode: "A", PRE: { suck: 0.55, iris: 0.2 }, IRIS: 0.65, T:
   to: 3.65,          /* 반듯한 거울 장면(약 0.9초 머묾) 뒤 · to 가 끼어든다 */
   land: 5.15,        /* 원본 심볼에 안착 · 두세 번 작게 출렁임 · 부제(핵심 메시지)가 나타난다 */
   end: 6.3,          /* 로고와 메시지가 머문 뒤(1.15초) 시트 */
-  pop: 6.48          /* v5.07 도장 = 다른 스탬프와 같은 전체 화면 팝(stampOverlay · 딤 · 화면 폭 60% 도장 · 0.42초에 찍힘 · 1.5초 뒤 시트의 도장 칸으로 0.5초 비행) */
+  pop: 6.48          /* v5.07 도장 = 다른 스탬프와 같은 전체 화면 팝(stampOverlay · 딤 · 화면 폭 60% 도장 · 0.42초에 찍힘 · 1.5초 뒤 시트의 도장 칸으로 0.5초 비행 · v5.83 장면 도장은 0.9초 뒤 0.4초 비행 = 약 1.4초) */
 } };
 var LGX_C = { o: ["#FF7F32", "#FF963E", "#E6CCFF"], w: ["#FFFFFF", "#FFD2B6", "#FFFFFF"], bgW: "#FFFFFF", bgO: "#FF7F32" };
 var LGX_LD = [0.5, 0.58, 0.44, 0.52, 0.56, 0.64];   /* 글자별 안착 시작(to 기준 초) · M e t o W e · 먼저 두 줄이 벌어지고 to 가 수평선을 따라 들어온 뒤 다 함께 원본 자리로 */
@@ -15579,19 +15570,21 @@ function lgxPlay(o) {
     '<div class="lgx-sheet">' +
       '<div class="lgx-row"><span class="lgx-seal" aria-hidden="true"></span><div class="lgx-rt"><b>최초 로그인</b><span class="lgx-st">적립 확인 중</span></div></div>' +
       '<div class="lgx-next">' + (o.sheet || "") + "</div>" +
-      (o.start ? '<button type="button" class="ax-button lgx-home lgx-go">시작하기</button>' : '<button type="button" class="ax-link lgx-home">홈으로</button>') +   /* v4.95 찍은 QR 이 없으면 주 버튼 「시작하기」 하나(= 홈) */
+      (o.start ? '<button type="button" class="ax-button lgx-home lgx-go">' + (o.startLbl || "시작하기") + "</button>" : '<button type="button" class="ax-link lgx-home">홈으로</button>') +   /* v4.95 찍은 QR 이 없으면 주 버튼 「시작하기」 하나(= 홈) */
     "</div>" +
     '<p class="ax-sr-only lgx-live" aria-live="polite"></p>';
   document.body.appendChild(d);
   var intro = o.intro === "suck" && o.sample && !rm ? "suck" : "iris";   /* 동작 줄이기 = 앞 구간 없이 마지막 장면으로 */
-  if (o.host) lfFxSettle(o.host, LGX.PRE.suck);   /* v5.27 로그인 배경 점등이 0.55초 동안 가라앉아 장면 첫 면(정지 격자)과 이어진다 */
-  var cv = d.querySelector("canvas"), cur = LGX.cur = { intro: intro, pre: LGX.PRE[intro], wait: intro === "suck", w0: performance.now(), suck: null, o: o, d: d, cv: cv, rm: rm, mode: o.mode || LGX.mode, srv: o.srv || "wait", t0: performance.now(), raf: 0, skip: 0, stamped: false, lq: false, dts: [], covered: false, sparks: null, closed: false };
-  d.querySelector(".lgx-skip").addEventListener("click", function () { lgxSkip(); });
+  if (o.host) lfFxSettle(o.host, LGX.PRER.suck);   /* v5.27 로그인 배경 점등이 앞 구간(v5.83 실제 0.3초) 동안 가라앉아 장면 첫 면(정지 격자)과 이어진다 */
+  var cv = d.querySelector("canvas"), cur = LGX.cur = { intro: intro, pre: LGX.PRE[intro], preR: LGX.PRER[intro], wait: intro === "suck", w0: performance.now(), suck: null, o: o, d: d, cv: cv, rm: rm, mode: o.mode || LGX.mode, srv: o.srv || "wait", t0: performance.now(), raf: 0, skip: 0, stamped: false, lq: false, dts: [], covered: false, sparks: null, closed: false };
+  d.querySelector(".lgx-skip").addEventListener("click", function (e) { e.stopPropagation(); lgxSkip(); });
+  /* v5.83 장면 아무 데나 탭 = 건너뛰기(시트 · 버튼 위 탭은 제외 · 이미 끝난 장면이면 아무 일 없음) */
+  d.addEventListener("click", function (e) { if (e.target.closest && e.target.closest(".lgx-sheet, button")) return; lgxSkip(); });
   d.querySelector(".lgx-home").addEventListener("click", function () { lgxClose("home"); });
   /* 다음 행동 카드의 버튼 · 장면을 먼저 닫고 그 버튼이 원래 하던 일(화면 이동)을 그대로 한다 */
   d.querySelector(".lgx-next").addEventListener("click", function (e) { if (e.target.closest && e.target.closest("button")) lgxClose("go"); }, true);
   lgxLayout(cur);
-  if (rm) cur.skip = LGX.T.end + cur.pre;
+  if (rm) cur.skip = lgxReal(cur, LGX.T.end);
   cur.raf = requestAnimationFrame(function f(now) { if (cur.closed) return; lgxFrame(cur, now); cur.raf = requestAnimationFrame(f); });
   return cur;
 }
@@ -15605,9 +15598,7 @@ function lgxLayout(cur) {
   var sm = Math.min((fw - 32) / rowW, H * 0.78 / rowH), yh = Math.round(H * 0.5), rowCx = (b0.x0 + b1.x1) / 2;
   /* 원본 심볼(점 반지름 포함 x 33~1033 · y 158~1372) 자리 두 벌 · 로고 머묾 = 화면 가운데 크게(H) · 시트가 올라오면 시트 위 칸으로 줄어든다(S)
      시트 위 칸이 너무 좁으면(큰글씨 + 낮은 폰) 시트가 올라올 때 부제를 감춘다(lockOff · 부제는 로고 머묾 동안 이미 보였다) */
-  var askEl = cur.d.querySelector(".lgx-ask[hidden]"); if (askEl) askEl.hidden = false;   /* v5.05 도장 뒤 열릴 질문까지 넣은 시트 높이로 자리를 잡는다(질문이 열리며 부제를 덮던 것 · 물결이 시트 뒤에서 돌았다) */
   var sh = cur.d.querySelector(".lgx-sheet"), shH = sh ? sh.offsetHeight : 0, lk = cur.d.querySelector(".lgx-lock"), lkH = lk ? lk.offsetHeight : 60, top = 56;
-  if (askEl) askEl.hidden = true;
   var sfH = Math.max(0.1, Math.min((fw - 72) / 1000, (H - top - 48 - lkH - 20) / 1214)), gTopH = top + Math.max(0, (H - 48 - top - (1214 * sfH + 20 + lkH)) / 2);
   var bot = H - shH - 12, avail = bot - top - lkH - 20, lockOff = avail / 1214 < 0.085;
   if (lockOff) avail = bot - top - 8;
@@ -15661,8 +15652,21 @@ function lgxSeed(cur, t) {
   var L = cur.L, id = cur.idle, u = (t - LGX.T.rise) / 0.6, e = lgxSpring(u, 0.55, 1.2);
   return [L.cx, id.y + (L.meCy - id.y) * e - Math.sin(lgxCl(u) * 3.1416) * 10, id.d * (1 + 0.12 * lgxCl(e)), 0];
 }
-function lgxSkip() { var cur = LGX.cur; if (!cur) return; var t = lgxNow(cur); if (t < LGX.T.end) cur.skip += LGX.T.end - t; }
-function lgxNow(cur) { return cur.o.fixedT != null ? cur.o.fixedT : (performance.now() - cur.t0) / 1000 + cur.skip - cur.pre; }   /* 앞 구간(pre)은 음수 시각 */
+function lgxSkip() { var cur = LGX.cur; if (!cur || cur.closed) return; var t = lgxNow(cur); if (t < LGX.T.end) cur.skip += lgxReal(cur, LGX.T.end) - lgxReal(cur, t); }
+/* v5.83 실제 경과(r · 앞 구간 포함 · 초) → 장면 시각(t · 앞 구간은 음수) · 구간별 기울기 · 앞 구간 = pre / preR 배 · 0 ~ land = RATE 배 · land 뒤(슬로건 · 시트 · 도장) = 1배
+   skip 은 실제 초로 더한다(건너뛴 뒤에도 슬로건 · 도장 박자는 1배 그대로) */
+function lgxMap(cur, r) {
+  var ps = cur.pre, pr = cur.preR || ps, a = LGX.T.land / LGX.RATE;
+  if (r < pr) return -ps + r * ps / pr;
+  r -= pr;
+  return r < a ? r * LGX.RATE : LGX.T.land + (r - a);
+}
+function lgxReal(cur, t) {   /* lgxMap 의 거꾸로 */
+  var ps = cur.pre, pr = cur.preR || ps;
+  if (t < 0) return (t + ps) * pr / ps;
+  return t < LGX.T.land ? pr + t / LGX.RATE : pr + LGX.T.land / LGX.RATE + (t - LGX.T.land);
+}
+function lgxNow(cur) { return cur.o.fixedT != null ? cur.o.fixedT : lgxMap(cur, (performance.now() - cur.t0) / 1000 + cur.skip); }   /* 앞 구간(pre)은 음수 시각 */
 /* 서버 결과 · ok = 적립 확인 · fail = 못 보냄(다음 동기화에서 조용히) · none = 이 서버에는 최초 로그인 도장이 없다(줄을 감춘다) */
 function lgxSrv(state) { var cur = LGX.cur; if (!cur || cur.srv === "ok") return; cur.srv = state; }
 function lgxFadeOut(d) { try { d.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, fill: "forwards" }); } catch (e) {} setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); }, 240); }
@@ -15764,7 +15768,7 @@ function lgxFrame(cur, now) {
     else {
       cur.wait = false; cur.t0 = pn;
       try { cur.suck = cur.o.sample(); } catch (e) { cur.suck = null; }
-      if (!cur.suck || !cur.suck.length) { cur.intro = "iris"; cur.pre = LGX.PRE.iris; }   /* 행사명이 접혀 있거나 못 읽으면 점 하나가 하늘을 연다 */
+      if (!cur.suck || !cur.suck.length) { cur.intro = "iris"; cur.pre = LGX.PRE.iris; cur.preR = LGX.PRER.iris; }   /* 행사명이 접혀 있거나 못 읽으면 점 하나가 하늘을 연다 */
     }
   }
   var t = lgxNow(cur);
@@ -15776,7 +15780,7 @@ function lgxFrame(cur, now) {
   if (cur.lastNow && t > 0.6) { cur.dts.push(now - cur.lastNow); if (cur.dts.length > 12) cur.dts.shift(); if (cur.dts.length === 12 && !cur.lq) { var md = cur.dts.slice().sort(function (x, y) { return x - y; })[6]; if (md > 22) cur.lq = true; } }
   cur.lastNow = now;
   cx.setTransform(L.dpr, 0, 0, L.dpr, 0, 0); cx.clearRect(0, 0, W, H);
-  if (t < 0) { cur.d.querySelector(".lgx-skip").style.display = "none"; if (!cur.wait) lgxPre(cur, cx, t); return; }
+  if (t < 0) { if (!cur.wait) lgxPre(cur, cx, t); return; }   /* v5.83 건너뛰기는 앞 구간에도 보인다(누른 순간부터) */
   /* 무대 · 전체 주황 위에 점(나)에서 흰 하늘이 열린다 · 수평선 = 화면 가운데 · to 가 들어오면 수면이 빠져 흰 무대만 남는다
      v4.90 뒤에서 앱 화면으로 바꾸는 일(홈 그리기)은 장면이 닫힐 때 한 번(lgxClose) · 장면 도중에는 무거운 일을 하지 않는다 */
   var line = L.yh;
@@ -15981,62 +15985,8 @@ function lgxSheetHtml() {
     '<div class="axs-nx-t"><div class="ax-stack-tight"><h2 class="ax-section-title">' + t + "</h2></div></div>" +
     '<button type="button" class="ax-button lgx-auto">' + lbl + "</button></section>" };
 }
-/* v4.89 (사용자 261001 「앞으로도 계속 접속 어떻게 할 건지 묻게 만들고, QR로 접속하기 or 바로가기 설치하기 · 바로가기 설치하기 쪽에 주황색」)
-   도장이 찍힌 직후 시트의 첫 단계 = 「앞으로 어떻게 들어올까요?」 · 주 버튼(주황) 바로가기 설치하기 · 약한 버튼 QR로 접속하기
-   그동안 찍은 QR 카드와 「시작하기 · 홈으로」는 접어 둔다(시트에 주황 주 버튼이 둘이 되지 않게)
-   v4.95 고르면 곧바로 홈(답이 곧 「시작」이다 · 버튼을 한 번 더 누르게 하지 않는다) · 찍은 QR 이 있으면 그 카드로 넘어가 저절로 이어 간다 · QR 을 고르면 홈에서 한 줄 안내
-   묻지 않는 경우 = 이미 홈 화면 앱(standalone) · 이 기기에서 이미 골랐다(entry_pref · 기기 기준) */
-function lgxAskWanted() { return !a2hsHide() && !S.get("entry_pref", null); }
-var LGXASK = { cur: null, scan: false };
-function lgxAskHtml() {
-  return '<div class="lgx-ask" hidden><p class="lgx-askq">앞으로 어떻게 들어올까요?</p>' +
-    '<button type="button" class="ax-button" onclick="lgxAskApp()">' + a2hsWord() + '하기</button>' +
-    '<button type="button" class="ax-button ax-button-weak" onclick="lgxAskQr()">QR로 접속하기</button></div>';
-}
-/* 바로가기 설치하기 · 설치창이 있으면(안드로이드 크롬 · 삼성 인터넷 · 엣지) 그 자리에서 · 아니면 기기별 안내(아이폰 = 공유 → 홈 화면에 추가 · 메신저 안 브라우저 = 다른 브라우저로 열기) · 끝나면 다음 카드 */
-function lgxAskApp() {
-  S.put("entry_pref", "app"); S.put("entry_ask_day", entryDay()); HOMEASK.on = false;
-  if (A2HS.deferred) {
-    var ev = A2HS.deferred; A2HS.deferred = null;
-    try { ev.prompt(); } catch (e) { lgxAskDone("app"); return; }
-    ev.userChoice.then(function (r) {
-      if (r && r.outcome === "accepted") { a2hsMarkDismissed(); notice({ key: "a2hs", title: a2hsWord() + " 완료", body: "홈 화면의 AX Festival 아이콘으로 열기" }); }
-      lgxAskDone("app");
-    }, function () { lgxAskDone("app"); });
-    return;
-  }
-  A2HS.after = function () { lgxAskDone("app"); };
-  try { a2hsSheet(true, true); } catch (e) {}   /* 장면 위로 띄운다 · 닫으면 after */
-  if (!a2hsShown()) {   /* v5.01 안내를 못 열었으면 토스트 · 장면은 다음 단계로 */
-    A2HS.after = null; A2HS.open = false;
-    setTimeout(function () { toast("설치 방법을 열지 못했어요. 설정 › " + a2hsWord() + "에서 다시 열어 주세요"); }, 450);
-    lgxAskDone("app");
-  }
-}
-function lgxAskQr() { S.put("entry_pref", "qr"); S.put("entry_ask_day", entryDay()); HOMEASK.on = false; lgxAskDone("qr"); }
-function lgxAskDone(how) {
-  var cur = LGXASK.cur; LGXASK.cur = null;
-  if (!cur || !cur.d.parentNode || LGX.cur !== cur) return;
-  if (how === "qr") setTimeout(function () { toast("입구와 각 층의 QR을 찍으면 다시 들어와요"); }, 450);
-  if (!LGXASK.scan) { lgxClose("home"); return; }   /* v4.95 답하면 곧바로 홈 */
-  var ask = cur.d.querySelector(".lgx-ask"); if (ask) ask.parentNode.removeChild(ask);
-  cur.d.classList.remove("ask");
-  lgxScanGo(cur);
-}
-/* v4.89 홈 질문 카드 · 장면을 보지 않은 재로그인 사람(entry_pref 없음)과 「QR로 접속하기」를 고른 사람에게 하루 한 번(entry_ask_day · 기기 기준)
-   홈 맨 위 조건부 자리(광고판 위) · 무거운 팝업이 아니라 카드 · 홈 주 버튼(다음 스탬프)과 겹치지 않게 바로가기 설치하기는 약한 버튼(연주황) · QR 은 글자 링크
-   그날 처음 보인 순간 기록하고, 이 방문 동안에는(홈이 4초마다 다시 그려져도) 고를 때까지 그대로 둔다 · 홈 화면 앱 · 이미 설치를 고른 사람 · 장면 중에는 없음 */
-var HOMEASK = { on: false };
-function entryDay() { var d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
-function entryAskHtml() {
-  if (a2hsHide() || S.get("entry_pref", null) === "app" || LGX.cur || el("app").hidden || !(S.get("user", {}) || {}).empId) return "";   /* 앱이 보일 때만 그날을 센다 */
-  if (!HOMEASK.on) { if (S.get("entry_ask_day", "") === entryDay()) return ""; HOMEASK.on = true; S.put("entry_ask_day", entryDay()); }
-  return '<section class="ax-card axs-eask"><h2 class="ax-section-title">앞으로 어떻게 들어올까요?</h2>' +
-    '<button type="button" class="ax-button ax-button-weak" onclick="entryAskApp()">' + a2hsWord() + '하기</button>' +
-    '<button type="button" class="ax-link axs-eask-qr" onclick="entryAskQr()">QR로 접속하기</button></section>';
-}
-function entryAskApp() { HOMEASK.on = false; lgxAskApp(); App.render(); }
-function entryAskQr() { HOMEASK.on = false; S.put("entry_pref", "qr"); toast("입구와 각 층의 QR을 찍으면 다시 들어와요"); App.render(); }
+/* v5.83 (사용자 261006 「최초 진입 가볍게」 「나」 · 옛 v4.89 사용자 261001 결정 번복) 접속 방법 질문 삭제 = 오프닝 시트 단계 · 홈 하루 1회 카드 · 질문 뒤 토스트 · 기기 키 entry_pref · entry_ask_day 를 더는 쓰지 않는다(남은 값은 무해)
+   바로가기 설치는 설정 › 바로가기 설치 · 알림은 그 순간(커피챗 · 혼잡 · DAP 신청 · 홈 화면 앱 첫 열림)에만 묻는다 · 되살리기 = hi_ax git v5.82 */
 /* 찍은 QR 카드 · 1.6초 뒤 저절로 이어 간다(버튼에 진행 막대) */
 function lgxScanGo(cur) {
   var b = cur.d.querySelector(".lgx-auto"); if (b) b.classList.add("run");
@@ -16045,31 +15995,27 @@ function lgxScanGo(cur) {
 /* 장면 시작 · cover() = 화면을 다 덮은 순간 그 뒤에서 앱으로 바꾼다 · mode = send | ok | test */
 function lgxStart(emp, mode, cover, demo) {
   lgxMark(emp);
-  var sh = lgxSheetHtml(), host = lfHost(), ask = lgxAskWanted();   /* v5.02 보이는 로그인 화면(첫 화면 #splash | 재방문 #quick) · 그 행사명이 점이 되어 빨려 든다 */
+  var sh = lgxSheetHtml(), host = lfHost();   /* v5.02 보이는 로그인 화면(첫 화면 #splash | 재방문 #quick) · 그 행사명이 점이 되어 빨려 든다 */
   var cur = lgxPlay({ host: host, intro: host ? "suck" : "iris", sheet: sh.html, start: !sh.scan,
     ready: host ? function () { return lfStill(host); } : null,
     sample: host ? function () { return lfTitleDots(host); } : null,
     onTick: host ? function (t, c) { lfFade(host, t, c); } : null,
     onCover: cover,
-    onSettle: function () {
-      if (ask) {   /* 도장 직후 · 질문이 먼저 · 고른 뒤 다음 카드 */
-        LGXASK.cur = cur; LGXASK.scan = sh.scan;
-        var q = cur.d.querySelector(".lgx-ask"); if (q) q.hidden = false;
-        return;
-      }
-      if (sh.scan) lgxScanGo(cur);
-    },
-    onClose: function (how) { LGXASK.cur = null; if (host) lfFadeReset(host); lgxAfter(how); } });
-  if (ask) { cur.d.classList.add("ask"); cur.d.querySelector(".lgx-next").insertAdjacentHTML("beforebegin", lgxAskHtml()); lgxLayout(cur); }   /* v5.05 질문까지 넣은 시트로 자리 다시 */
+    onSettle: function () { if (sh.scan) lgxScanGo(cur); },   /* v5.83 질문 없음 · 찍은 QR 이 있으면 그 카드로 이어 간다 · 없으면 「시작하기」 하나(자동 홈 이동 없음) */
+    onClose: function (how) { if (host) lfFadeReset(host); lgxAfter(how); } });
   if (demo) return cur;
   if (mode === "test" || mode === "ok") { lgxLocal(); lgxSrv("ok"); }
   else lgxPush(function (r) { if (r === "added" || r === "dup") { lgxLocal(); lgxSrv("ok"); } else lgxSrv(r === "none" ? "none" : "fail"); });
   return cur;
 }
+/* v5.83 설정 › 오프닝 다시 보기 · 같은 장면을 시연으로 한 번(로그인 화면 없음 = 점 하나가 하늘을 연다 · 도장 줄 없음 · 서버 · 스탬프 · 기록 변경 없음) · 닫기 = 장면만 걷는다 */
+function lgxReplay() {
+  if (LGX.cur || el("lgx")) return;
+  lgxPlay({ host: null, intro: "iris", sheet: "", start: true, startLbl: "닫기", srv: "none", onClose: function () { BILL.t0 = performance.now(); } });
+}
 /* 장면이 닫힌 뒤 · 광고판 위상 기준 · 미뤄 둔 찍은 QR · 알림 이동 · 홈 화면 추가 안내 · 기다리던 팝 */
 function lgxAfter(how) {
   BILL.t0 = performance.now();   /* 광고판은 장면의 마지막 그림(원본 심볼 · me 구간)에서 이어 시작 */
-  if (how === "scan") TINV.skip = true;   /* v5.46 찍은 QR 로 이어 가는 장면 · 둘러보기 초대는 다음 방문 */
   if (how === "home" && App.current !== "home") App.go("home"); else if (App.current === "home" && how !== "go") App.render();
   setTimeout(scanLinkRun, 120);
   setTimeout(pushGoRun, 200);
@@ -16112,12 +16058,7 @@ function lfBusy(btn, on, label) {
     el("app").hidden = false;
     axfStop(el("kvCv"));
     BILL.t0 = performance.now();   /* v3.89 입장 전환이 끝나는 순간 = 광고판 위상 0 · 전환의 ME to WE 심볼에서 그대로 이어진다 */
-    /* 글자 크기를 한 번도 고른 적 없으면, 그런 기능이 있다는 것만 조용히 알린다 (1회) */
-    try {
-      if (!scene && !localStorage.getItem(LS_FS)) setTimeout(function () {
-        if (App.current === "home" && el("a2hs").hidden) toast("글씨가 작으면 위의 「큰글씨」를 눌러 주세요");
-      }, 3200);
-    } catch (e) {}
+    /* v5.83 (최초 진입 가볍게) 큰글씨 안내 토스트 삭제 · 헤더 「일반 · 큰글씨」 토글이 늘 보인다 */
     /* v4.06 스캔 링크(#s= · #q=)는 스크립트 시작 때 주소에서 꺼내 두었다(scanLinkTake) · 보던 탭으로 들어간 뒤 같은 분기(qrRoute)로 */
     var target = "home";
     try {
@@ -16327,10 +16268,7 @@ function lfBusy(btn, on, label) {
         knownSet({ empId: id, name: res.name || nm, dept: res.dept || "" });   /* 다음 접속엔 비밀번호만 */
         /* v4.87 최초 로그인이면 장면(띠가 화면 전체로 커진다) · 아니면 예전 입장 · 장면을 튼 새 계정에는 「비밀번호가 등록되었어요」 팝업을 띄우지 않는다(입력칸 아래 안내가 같은 말) */
         lgxEnter(res, function () {
-          enterApp(); a2hsAuto(); setTimeout(reset, 1500);
-          if (res.isNew) setTimeout(function () {
-            notice({ key: "pin", title: "비밀번호가 등록되었어요", body: "다음 입장에도 같은 4자리" });
-          }, 700);
+          enterApp(); a2hsAuto(); setTimeout(reset, 1500);   /* v5.83 「비밀번호가 등록되었어요」 팝업 삭제(입력칸 아래 안내가 같은 말) */
         }, function () { enterNow(true); reset(); });
         beSync();   /* v4.57 로그인 직후 내 상태를 곧바로(예전 stats 한 번 대신) */
         visitSend("login");   /* v4.27 같은 방문에 사번을 붙여 한 번 더 · 비로그인 → 로그인 전환 */

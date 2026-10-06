@@ -43,8 +43,18 @@ function fsSheet(on) {
   if (on) fsPaint();
   if (on && el("fsPush")) el("fsPush").hidden = !(typeof pushReady === "function" && (pushReady() || pushRelogin()));   /* v4.76 알림 · 새 서버(공개키)일 때만 · v5.34 토큰 없는 옛 로그인도 줄을 보인다(다시 로그인 안내) */
   if (on) a2hsRow();   /* v4.88 앱 설치 · 홈 화면에 추가 한 단어 · 홈 화면 앱이면 숨김 · 줄이 다 숨으면 「앱」 제목도 */
+  if (on) fsRowState();
   box.hidden = !on;
 }
+/* v5.83 (최초 진입 가볍게 · 개편안 2-4) 설정 「앱」 줄 오른쪽 = 지금 상태 한 단어(설명 문장 없음) · 알림 켜짐 · 꺼짐 · 효과음 켜짐 · 꺼짐 · 바로가기 설치는 설치되면 줄이 숨는다(a2hsHide) */
+function fsRowState() {
+  var ps = el("fsPushSt"), ss = el("fsSnd"), st = el("fsSndSt");
+  if (ps) ps.textContent = typeof pushState === "function" && pushState().on ? "켜짐" : "꺼짐";
+  var on = S.get("game_sound", null) === true;
+  if (st) st.textContent = on ? "켜짐" : "꺼짐";
+  if (ss) { ss.setAttribute("aria-checked", String(on)); ss.classList.toggle("on", on); }
+}
+function fsSndToggle() { if (typeof sndToggle === "function") sndToggle(false); fsRowState(); }   /* 게임 안 스피커와 같은 값(game_sound) */
 fsApply(fsGet());   /* 스플래시·로그인 화면부터 바로 적용 */
 
 var MEM = {};
@@ -267,6 +277,7 @@ function scheduleCoffeechat() {
       beCall(req, function (res) {
         if (res && res.ok) { pushAsk("cchat", {}); return; }   /* v4.76 가치 순간 ② 「매칭되면 알려 드려요」 */
         if (res && res.reason === "noidea" && !retried) { retried = true; ideaFlush(); setTimeout(send, CCHAT_RETRY_MS); return; }
+        if (res && res.reason === "noidea") { S.set("cchat", null); NOTICE.q = NOTICE.q.filter(function (x) { return x.k !== "cchat:ok"; }); if (NOTICE.cur && NOTICE.cur.k === "cchat:ok") modalClose(); ideaCcGo(); return; }   /* v5.83 (사용자 261006 「권장대로」) 다시 보내도 서버에 아이디어가 없다(콘솔로 받은 p5 등) = 실패 안내 대신 아이디어 쓰기(커피챗 흐름 · 제출하면 신청 질문으로) */
         fail();
       }, fail);
     };
@@ -374,7 +385,7 @@ function ideaPush(text, tag, anon, ch) {
   if (IDEA.step === "done" || cchatClosed()) tourRetDone(!had);
 }
 /* v4.07 아이디어 제출 뒤 단계 · null = 입력 폼 · "ask" = 커피챗 참석 질문 · "done" = 제출 완료 (다른 화면에서 들어오면 폼으로) */
-var IDEA = { step: null, yes: false, draft: null, tag: "", anon: false, err: "" };
+var IDEA = { step: null, yes: false, draft: null, tag: "", anon: false, err: "", cc: false };   /* v5.83 cc = 커피챗에서 왔다(ideaCcGo) */
 var CCHAT_TXT = "커피와 간식을 드려요 · 멘토와 내 고민을 가볍게 나눠요";   /* v5.04 (261002 회의) 간식 = 휘낭시에 · 스콘(쿠키 아님) · 종류는 상세의 사진 줄(treatHtml)에 */
 /* v4.45 (사용자 260925 「커피챗은 아이디어 한 줄이 필수 · 선호 시간대를 받아 그 시간에 매칭 · 매칭되면 하이웍스 안내 · 앱 나의 참여에서도 확인」)
    선호 시간대 = 여러 개 고를 수 있다 · 「언제든 좋아요」는 혼자 · 하나 이상 골라야 신청 · 서버에는 사람이 읽는 글(pref)로 보낸다(콘솔 커피챗 표 「희망 시간」) */
@@ -428,13 +439,15 @@ function cchatApply() {
   if (cchatClosed()) { sheetClose(true); toast("커피챗 신청이 마감됐어요"); App.render(); return; }   /* v4.47 시트를 여는 사이 마감 */
   sheetClose(true);   /* v4.18 확인 시트에서 온다 · 요청은 낙관 저장이라 기다릴 것이 없다 */
   scheduleCoffeechat();
-  if (S.get("cchat", null)) notice({ title: "커피챗 신청 완료", body: "희망 " + cchatPrefTxt() + " · " + CCHAT_NOTE });
+  if (S.get("cchat", null)) notice({ key: "cchat:ok", title: "커피챗 신청 완료", body: "희망 " + cchatPrefTxt() + " · " + CCHAT_NOTE });   /* v5.83 key = noidea 로 되돌릴 때 이 안내를 거둔다 */
   App.render();
 }
-function ideaMineN() {
-  var e = (S.get("user", {}) || {}).empId, n = S.get("ideas", []).filter(function (i) { return i.empId === e; }).length;
-  return n || (S.get("stamps", []).indexOf("p5") >= 0 ? 1 : 0);   /* v4.64 (QA 260930) 아이디어는 이 기기에만 남는다 · 다른 기기 · 다시 로그인하면 0 이라 커피챗을 못 열었다 · 서버 스탬프 p5(아이디어 한 줄) = 낸 사람 */
+function ideaMineN() {   /* 커피챗 신청 가능 = 이 기기의 내 아이디어 1건 이상 */
+  var e = (S.get("user", {}) || {}).empId;
+  return S.get("ideas", []).filter(function (i) { return i.empId === e; }).length;   /* v5.83 (사용자 261006 「권장대로」) 옛 v4.64 「p5 스탬프 = 1건」 걷음 · 서버는 v5.82 부터 아이디어 행 없는 신청을 noidea 로 거절한다(콘솔로 받은 p5 · 다른 기기에서 낸 사람) · 0건 = 「아이디어 쓰고 신청하기」 · 서버 아이디어 수는 sync 에 없어 새 호출은 만들지 않는다 */
 }
+/* v5.83 커피챗에서 온 아이디어 쓰기 · 화면 위 한 줄 「커피챗은 아이디어 한 줄과 함께 신청해요」 · 제출하면 「이 아이디어로 커피챗을 신청할까요?」(IDEA.step ask) · 다른 화면을 그리면 표시를 접는다(라우터) */
+function ideaCcGo() { IDEA.cc = true; IDEA.step = null; App.go("ideas"); }
 /* v4.15 (사용자 확정 260922) 아이디어 서버 저장 · 커피챗 매칭에 필수 · 콘솔이 idea_list 로 본다.
    제출 ID(cid)를 같이 보내 재전송해도 한 번만 쓴다 · 서버에 닿으면 srv 에 시각 · 닿지 않은 내 것은 sync 때 다시 보낸다(옛 기기 로컬 아이디어도 이 길로 올라간다) */
 var IDEA_SENDING = {};

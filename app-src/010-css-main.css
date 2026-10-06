@@ -95,7 +95,7 @@
      띠·무대는 v29 스테이지(흰 면 + 주황 면 + 도트 격자) · 시트·버튼은 AX-TDS 토큰(design.md A-1 「월드는 배경까지」) */
   #lgx { position: fixed; inset: 0; z-index: 390; overflow: hidden; touch-action: none; contain: strict; }   /* v4.90 장면 안 배치가 바깥(로그인 · 앱) 배치 계산을 다시 부르지 않게 */
   #lgx > canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-  #lgx .lgx-skip { position: absolute; z-index: 2; top: calc(env(safe-area-inset-top) + var(--ax-space-8)); right: max(var(--ax-space-8), calc((100vw - var(--ax-app-max, 480px)) / 2 + var(--ax-space-8))); min-height: 48px; padding: 0 var(--ax-space-16); border: 0; border-radius: var(--ax-radius-999, 999px); background: rgba(255, 255, 255, 0.92); color: var(--ax-color-ink); font: var(--ax-type-t6-strong); cursor: pointer; }
+  #lgx .lgx-skip { position: absolute; z-index: 2; top: calc(env(safe-area-inset-top) + var(--ax-space-8)); right: max(var(--ax-space-8), calc((100vw - var(--ax-app-max, 480px)) / 2 + var(--ax-space-8))); min-height: 48px; padding: 0 var(--ax-space-16); border: 0; border-radius: var(--ax-radius-999, 999px); background: var(--ax-color-ink); color: var(--ax-color-inverse, #FFFFFF); font: 700 16px/1.4 var(--ax-font); cursor: pointer; }   /* v5.83 어두운 알약 · 흰 하늘 · 주황 수면 어디서나 보인다(옛 흰 92% 알약은 흰 하늘에 묻혔다) · 누른 순간부터 보임 */
   #lgx .lgx-lock { position: absolute; z-index: 1; left: 50%; transform: translateX(-50%); width: min(100%, var(--ax-app-max, 480px)); padding: 0 var(--ax-space-24); text-align: center; color: var(--ax-color-brand, #FF7F32); opacity: 0; pointer-events: none; }   /* 흰 무대 위 브랜드 문구 = Vibrant Orange · 두 줄 모두 20px 이상 600 이상(design.md §3 크기 조건) */
   #lgx .lgx-lock b { display: block; font-size: 26px; font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; }
   #lgx .lgx-lock span { display: block; margin-top: var(--ax-space-4); font-size: 20px; font-weight: 600; line-height: 1.45; }
@@ -115,15 +115,9 @@
   #lgx .lgx-st { font: var(--ax-type-t7); color: var(--ax-color-muted); }
   #lgx .lgx-next:empty { display: none; }
   #lgx .lgx-home:not(.lgx-go) { align-self: center; min-height: 48px; padding: 0 var(--ax-space-16); border: 0; background: transparent; cursor: pointer; }
-  /* v4.89 도장 직후 질문 · 고르기 전에는 다음 카드와 「홈으로」를 접는다(주황 주 버튼 하나) */
-  #lgx .lgx-ask { display: flex; flex-direction: column; gap: var(--ax-space-12); }
-  #lgx .lgx-ask[hidden], #lgx.ask .lgx-next, #lgx.ask .lgx-home { display: none; }
-  #lgx .lgx-askq { margin: var(--ax-space-4) 0 var(--ax-space-4); font: var(--ax-type-t4); color: var(--ax-color-ink); }
   #lgx .lgx-auto { position: relative; overflow: hidden; }
   #lgx .lgx-auto.run::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--ax-color-onBrand); opacity: 0.35; transform-origin: left center; animation: lgxAuto 1.6s linear forwards; }
   @keyframes lgxAuto { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-  .axs-eask { display: flex; flex-direction: column; gap: var(--ax-space-12); }   /* v4.89 홈 질문 카드 */
-  .axs-eask .axs-eask-qr { align-self: center; min-height: 44px; padding: 0 var(--ax-space-16); border: 0; background: transparent; cursor: pointer; }
   /* v4.94 키보드가 올라오면(kbSync · kb-on) 로그인 두 화면을 보이는 높이로 줄인다
      v5.02 줄 자리는 lfLayout 이 줄어든 높이로 다시 계산한다(안내 · QR 한 줄 · 링크가 먼저 접히고 행사명이 작아진다 · 접기 규칙과 낮은 화면 media 는 없다) */
   html.kb-on #splash, html.kb-on #quick { bottom: var(--kb, 0px); }
@@ -837,6 +831,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #fsSheet .fs-admin { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 9px; cursor: pointer; background: var(--card); border: 0; border-radius: 14px; padding: 15px 16px; font-family: inherit; font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); }
   #fsSheet .fs-admin span { color: var(--faint); }
   #fsSheet .fs-admin .fs-lbl { color: inherit; }   /* v4.88 줄 이름이 span 이라도 본문 색(앱 설치 · 홈 화면에 추가) */
+  #fsSheet .fs-admin > span:last-child { display: flex; align-items: center; gap: 8px; }   /* v5.83 줄 오른쪽 = 상태 한 단어 + 셰브론 */
+  #fsSheet .fs-st { font-size: calc(14px * var(--fs)); font-weight: 600; color: var(--muted); }
+  #fsSheet .fs-admin.on .fs-st { color: var(--ax-color-brandText, #E5531A); }   /* 효과음 켜짐 */
   #fsSheet .fs-close { margin-top: 18px; cursor: pointer; }   /* v4.13 검정 → Weak(보조 버튼 규칙) */
   #fsSheet .fs-ver { margin: 10px 0 0; text-align: center; font-size: calc(12.5px * var(--fs)); color: var(--faint); }   /* v5.01 앱 버전 · 캡션 */
   .rrow { display: flex; align-items: center; gap: 9px; padding: 6px 0; }

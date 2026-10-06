@@ -19,7 +19,6 @@ function scanLinkRun() {
   if (!p) return;
   if (!((S.get("user", {}) || {}).empId)) return;
   scanLinkClear();
-  TINV.skip = true;   /* v5.46 찍은 QR 목적지를 방해하지 않는다 · 둘러보기 초대는 다음 방문의 홈에서 */
   if (Date.now() - (p.t || 0) > 30 * 60000) return;
   qrRoute(p.raw, p.t);
 }

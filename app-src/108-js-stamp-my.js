@@ -285,7 +285,7 @@ function spNext() {
     var v = (op && op.shake) || el("view"); if (v) { v.classList.remove("sp-shake"); void v.offsetWidth; v.classList.add("sp-shake"); }
   }, 420);
   at(function () { spScroll(cur); }, 700);
-  at(function () { spFly(cur); }, hint ? 1500 : 1050);   /* v4.44 한 줄이 있으면 0.45초 더 머문다(0.4초만 보여 읽지 못했다) */
+  at(function () { spFly(cur); }, op ? 900 : hint ? 1500 : 1050);   /* v4.44 한 줄이 있으면 0.45초 더 머문다(0.4초만 보여 읽지 못했다) · v5.83 최초 로그인 장면이 부른 도장(op) = 0.9초(사용자 261006 「약 1.4초로」 · 모양 그대로 · 한 줄 유지) */
 }
 /* 목표가 화면 밖이면 먼저 부드럽게 스크롤 */
 function spScroll(cur) {
@@ -329,10 +329,11 @@ function spFlyGo(cur, t) {
     frames.push({ transform: "translate(" + x.toFixed(1) + "px," + y.toFixed(1) + "px) scale(" + (1 + (s1 - 1) * e).toFixed(4) + ")" });
   }
   cur.path = { dx: dx, dy: dy, s1: s1, kind: t.kind };
-  cur.anims.push(stage.animate(frames, { duration: 500, fill: "forwards" }));
-  cur.anims.push(cur.d.querySelector(".sp-dim").animate([{ opacity: 1 }, { opacity: 0 }], { duration: 450, fill: "forwards" }));
+  var fd = cur.op ? 400 : 500;   /* v5.83 장면 도장 비행 0.4초(옛 0.5) */
+  cur.anims.push(stage.animate(frames, { duration: fd, fill: "forwards" }));
+  cur.anims.push(cur.d.querySelector(".sp-dim").animate([{ opacity: 1 }, { opacity: 0 }], { duration: fd - 50, fill: "forwards" }));
   cur.anims.push(cur.d.querySelector(".sp-text").animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, fill: "forwards" }));
-  cur.timers.push(setTimeout(function () { spFinish(cur); }, 500));
+  cur.timers.push(setTimeout(function () { spFinish(cur); }, fd));
 }
 /* 안착 · 어느 순간에 탭해도 여기로 바로 온다 */
 function spFinish(cur) {

@@ -374,7 +374,7 @@ function zoneLive(z) {
     o.fact = mt && c.round ? cnow.replace("매칭 완료", "매칭 완료 · " + c.round) : ino ? "아이디어 한 줄 쓰고 신청" : cnow;
     o.chip = att ? ["완료", "ok"] : c ? ["내 신청", ""] : cl ? ["마감", "off"] : null;
     o.kv = [["지금", cnow], ["장소", "18F"]];
-    o.btn = att || c ? ["내 신청", "progOpen('cchat')"] : cl ? ["신청 마감", "", "", true] : ideaMineN() ? ["커피챗 신청하기", "cchatApplyOpen()", "cchatApplyBtn"] : ["아이디어 쓰고 신청하기", "App.go('ideas')"];
+    o.btn = att || c ? ["내 신청", "progOpen('cchat')"] : cl ? ["신청 마감", "", "", true] : ideaMineN() ? ["커피챗 신청하기", "cchatApplyOpen()", "cchatApplyBtn"] : ["아이디어 쓰고 신청하기", "ideaCcGo()"];   /* v5.83 커피챗 흐름의 아이디어 쓰기(화면 위 한 줄 · 제출하면 신청 질문) */
   } else if (z.id === "event") {
     o.kv = [["포토부스", "10:00~17:00"], ["장소", "1F EVENT"]];   /* v5.05 포토부스 대기 없음 · 운영 시간만 */
   }
@@ -689,6 +689,7 @@ function progConfirm() {
     App.go("sess_ok");   /* App.go 가 시트를 닫는다 */
     delete App.from.sess_ok;   /* 결과에서 뒤로 = 프로그램 목록 (확인 화면으로 돌아가지 않는다) */
     if (tr) { TOUR_RET = tr; tr.v = "sess_ok"; tr.away = false; tourRetDone(true); App.render(); }   /* 완료 화면에 머문다 · 띠 챗봇 인사 한 번(v5.80 · 옛 3초 자동 복귀 없앰) · 띠 · 뒤로 = 둘러보기 */
+    if (c.id === "dap") pushAsk("dap", {});   /* v5.83 가치 순간 ④ 「승인되면 알려 드려요」 · 하루 3회 · 아이폰 탭 하루 1회 규칙은 pushAsk 그대로 · 완료 화면이 그려진 뒤(pushSheetWait) */
   };
   var live = BE.on && u.empId;
   if (c.id === "dap") {

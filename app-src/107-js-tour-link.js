@@ -19,6 +19,7 @@ function tourOn() { return (TOUR_ON && !TOUR_OFF) || TOUR_PEEK; }
 function tourOpen(o) {
   if (!tourOn()) return;
   o = o || {};
+  if (!S.get("tour_seen", false)) S.put("tour_seen", true);   /* v5.83 처음 열면 홈 카드가 원래 자리로(tourHeroOn) · 기기 기준 */
   var keep = o.hint && tourRetLive() ? TOUR_RET : null;   /* v5.57 둘러보기에서 출발한 AX 퀴즈의 힌트 「모형에서 보기」는 출처를 지우지 않는다(퀴즈를 마치면 그대로 1층으로) */
   if (!o.restore) TOUR_RET = null;   /* v5.53 그냥 열면 돌아가기 기억 지움 */
   if (keep) TOUR_RET = keep;
@@ -35,7 +36,7 @@ function tourOpen(o) {
     document.head.appendChild(n);
   });
 }
-/* 입구 · 상시 운영 1F 맨 위 카드 · 홈 나의 일정 아래 한 줄(tourHomeHtml) · 최초 로그인 초대장 · 이름은 세 곳 모두 「행사장 둘러보기」(사용자 261004)
+/* 입구 · 상시 운영 1F 맨 위 카드 · 홈 나의 일정 아래 한 줄(tourHomeHtml) · (v5.83 최초 로그인 초대장 삭제) · 이름은 세 곳 모두 「행사장 둘러보기」(사용자 261004)
    v5.60 (사용자 261004 안2 「연주황 카드로 크게」 · 시안 디자인 시안/시간표 층 색/시안.html ?b=2 · design.md A-4 승인된 예외) 상시 운영 입구 = 홈 줄과 같은 행(rcHtml) + 연주황 면 · O25 테두리 · 캐릭터 52 · 제목 17 · 설명 한 줄
    옛 흰 줄(axs-zfl 「1층 둘러보기」 · 구역 카드와 높이가 같아 입구로 안 보였다)과 구역 상세 「모형에서 보기」는 지웠다 */
 var TOUR_ST_DESC = "엘리베이터가 혼잡하면 오늘 하루는 계단을 이용해 보세요";   /* v5.64 둘러보기 계단 블록 카드 */
@@ -61,46 +62,18 @@ var TOUR_BOT_SM = '<g class="sm"><path d="M75.4 102.6 A6.2 6.2 0 0 1 87.1 102.6"
 function tourBotHtml() {
   return '<span class="ico tbot" style="--td:-' + (Date.now() % 9000) + 'ms">' + BOT_SVG.replace("</svg>", BOT_WAVE + TOUR_BOT_SM + "</svg>") + "</span>";
 }
-function tourHomeHtml() {   /* 당일 · 종료 뒤 · 나의 일정 아래 */
-  return tourOn() && evPhase() !== "before" ? tourLineHtml() : "";
+function tourHomeHtml() {   /* 당일 · 종료 뒤 · 나의 일정 아래(둘러보기를 한 번 연 뒤) */
+  return tourOn() && !tourHeroOn() ? tourLineHtml() : "";
 }
-function tourHeroHtml() {   /* 행사 전 · 광고판 바로 아래 */
-  return tourOn() && evPhase() === "before" ? tourLineHtml() : "";
+function tourHeroHtml() {   /* 행사 전 · 광고판 바로 아래 · v5.83 첫 방문(tour_seen 없음)은 당일에도 */
+  return tourOn() && tourHeroOn() ? tourLineHtml() : "";
 }
-/* v5.46 (사용자 261004 「시작하기 로그인을 하고 나서 > 푸쉬창 처럼 팝업창이 초대장이 뜨는 게 낫지 않겠어?」 · 「대놓고 대상자를 특정하거나 그 사람들을 위한 문구로 가져가지는 말자」) 1층 둘러보기 초대
-   홈에 들어간 뒤 바텀 시트(M03) 한 장 · 봉투가 열리며 3D 로비 사진 · 주 버튼 「1층 둘러보기」 · 약한 버튼 「나중에 하기」 · 스탬프 말 없음
-   한 번 닫으면(두 버튼 · 뒷배경 · Esc · 뒤로) 이 기기에서 다시 뜨지 않는다(tour_inv · 기기 키) · TOUR_ON 이 꺼져 있으면 없음
-   순서: 최초 로그인 장면 · 다른 시트 · 팝업 · 스탬프 연출 · 설치 안내 · 설정 · 둘러보기가 모두 닫힌 홈에서 · 알림 첫 질문은 이 초대와 둘러보기가 닫힌 뒤(pushSheetWait · tourInvHold)
-   찍은 QR 을 이어 가는 방문(scanLinkRun · 장면의 scan 닫힘)은 건너뛰고 다음 방문의 홈에서 · 기존 가입자도 다음 홈에서 한 번 · 시연(#demo)은 &inv 일 때만 */
-var TINV = { skip: false, t: 0, t0: 0, ok: false };
-var TINV_IMG = "assets/tour/inv/";
-function tourInvOk() {
-  if (!TOUR_ON || TOUR_OFF || TINV.skip || S.get("tour_inv", false)) return false;
-  if (!(S.get("user", {}) || {}).empId || /^#(self|tv=)/i.test(VISIT.hash0) || (/^#demo/i.test(VISIT.hash0) && !/[&#]inv\b/.test(VISIT.hash0))) return false;
-  return !(typeof tsfOn === "function" && tsfOn());
-}
-function tourInvBusy() {
-  return !!(LGX.cur || el("lgx") || el("modal") || el("axsSheet") || el("spop") || SPOP.cur || SPOP.q.length || NOTICE.cur || NOTICE.q.length || el("rgPlay") || el("app").hidden ||
-    (typeof qrGated === "function" && qrGated()) || a2hsShown() || (el("fsSheet") && !el("fsSheet").hidden) || TOUR.busy || (window.AXTour && AXTour.isOpen()));
-}
-/* 홈을 그릴 때마다(App.render) · 홈에 1.2초 머문 뒤 · 바쁘면 0.4초마다 다시 본다 · 홈을 떠나면 멈추고 다음 홈에서 다시 */
-function tourInvMaybe() {
-  if (TINV.t || !tourInvOk()) return;
-  TINV.t = setTimeout(tourInvTry, 1200);
-}
-function tourInvTry() {
-  TINV.t = 0;
-  if (!tourInvOk() || App.current !== "home") return;
-  if (tourInvBusy()) { TINV.t = setTimeout(tourInvTry, 400); return; }
-  sheetOpen({ id: "tourinv", title: "AX Festival 2026에 오신 것을 환영합니다", lead: "지금 1층 로비를 3D로 둘러볼 수 있습니다.",
-    top: '<div class="axs-inv ' + (lgxRM() ? "st-open" : "run") + '" aria-hidden="true"><div class="ph"><img src="' + TINV_IMG + 'invite.jpg" alt=""></div>' +
-      '<i class="pc l"></i><i class="pc r"></i><i class="pc b"></i><i class="pc t"></i><span class="seal">AX</span></div>',
-    go: "tourInvGo()", goLbl: "행사 둘러보기", keep: "나중에 하기", keepWeak: true, keepLast: true, onClose: tourInvDone });
-}
-function tourInvDone() { S.put("tour_inv", true); }
-function tourInvGo() { tourInvDone(); sheetClose(true); tourOpen(); }
-/* 다른 질문(알림 첫 질문 등)은 초대를 기다리는 홈 · 둘러보기를 여는 중 · 열려 있는 동안 미룬다 */
-function tourInvHold() { return (tourInvOk() && App.current === "home") || TOUR.busy || !!(window.AXTour && AXTour.isOpen()); }
+function tourHeroOn() { return evPhase() === "before" || !S.get("tour_seen", false); }
+/* v5.83 (사용자 261006 「최초 진입 가볍게」 결정 3 · 옛 v5.46 사용자 261004 요청 번복) 둘러보기 초대 시트(tourinv · 봉투 · 「나중에 하기」) 삭제
+   입구 = 홈 「행사 둘러보기」 카드 · 둘러보기를 처음 열기 전(기기 키 tour_seen 없음)에는 당일에도 광고판 바로 아래(tourHeroHtml) · 처음 열면 원래 자리(당일 = 나의 일정 아래)
+   그림 assets/tour/inv/invite.jpg · CSS .axs-inv(봉투) 파일은 남긴다(참조만 끊음) · 옛 기기 키 tour_inv 는 쓰지 않는다 · 되살리기 = hi_ax git v5.82 */
+/* 다른 질문(알림 첫 질문 등)은 둘러보기를 여는 중 · 열려 있는 동안 미룬다 */
+function tourInvHold() { return TOUR.busy || !!(window.AXTour && AXTour.isOpen()); }
 var TOUR_HOST = {
   sign: function (nm, big) { return zoneSign(nm, big ? "lg" : ""); },
   zone: function (id) {

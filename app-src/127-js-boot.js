@@ -8,12 +8,7 @@
     el("app").hidden = false;
     axfStop(el("kvCv"));
     BILL.t0 = performance.now();   /* v3.89 입장 전환이 끝나는 순간 = 광고판 위상 0 · 전환의 ME to WE 심볼에서 그대로 이어진다 */
-    /* 글자 크기를 한 번도 고른 적 없으면, 그런 기능이 있다는 것만 조용히 알린다 (1회) */
-    try {
-      if (!scene && !localStorage.getItem(LS_FS)) setTimeout(function () {
-        if (App.current === "home" && el("a2hs").hidden) toast("글씨가 작으면 위의 「큰글씨」를 눌러 주세요");
-      }, 3200);
-    } catch (e) {}
+    /* v5.83 (최초 진입 가볍게) 큰글씨 안내 토스트 삭제 · 헤더 「일반 · 큰글씨」 토글이 늘 보인다 */
     /* v4.06 스캔 링크(#s= · #q=)는 스크립트 시작 때 주소에서 꺼내 두었다(scanLinkTake) · 보던 탭으로 들어간 뒤 같은 분기(qrRoute)로 */
     var target = "home";
     try {
@@ -223,10 +218,7 @@
         knownSet({ empId: id, name: res.name || nm, dept: res.dept || "" });   /* 다음 접속엔 비밀번호만 */
         /* v4.87 최초 로그인이면 장면(띠가 화면 전체로 커진다) · 아니면 예전 입장 · 장면을 튼 새 계정에는 「비밀번호가 등록되었어요」 팝업을 띄우지 않는다(입력칸 아래 안내가 같은 말) */
         lgxEnter(res, function () {
-          enterApp(); a2hsAuto(); setTimeout(reset, 1500);
-          if (res.isNew) setTimeout(function () {
-            notice({ key: "pin", title: "비밀번호가 등록되었어요", body: "다음 입장에도 같은 4자리" });
-          }, 700);
+          enterApp(); a2hsAuto(); setTimeout(reset, 1500);   /* v5.83 「비밀번호가 등록되었어요」 팝업 삭제(입력칸 아래 안내가 같은 말) */
         }, function () { enterNow(true); reset(); });
         beSync();   /* v4.57 로그인 직후 내 상태를 곧바로(예전 stats 한 번 대신) */
         visitSend("login");   /* v4.27 같은 방문에 사번을 붙여 한 번 더 · 비로그인 → 로그인 전환 */
