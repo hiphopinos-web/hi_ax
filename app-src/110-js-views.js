@@ -17,7 +17,6 @@ var Views = {
   home: function () {
     return '<div class="ax-stack">' +
       betaBannerHtml() +   /* v4.55 클로즈 베타 배너 · 맨 위 흰 줄 · 값 없으면 빈 문자열 */
-      homeNoticeHtml() +
       drawCardHtml() + kitCardHtml() +   /* v4.84 Outro 추첨 체크인(16:40~17:25 · 체크인 전만) · 광고판 위 조건부 자리 · v5.83 접속 방법 질문 카드 삭제 · 261006 kitCardHtml = 키트 사이즈(키트명단 사번만 · 서버 my.kit · 고르는 기간 · 자동 배정 · 라운지 초과 안내) */
       billboardHtml() +
       tourHeroHtml() +   /* v5.46 행사 전 1층 둘러보기 큰 카드 · 광고판 바로 아래 · 스탬프 위(광고판 자리는 그대로 · design.md A-5) · v5.83 둘러보기를 처음 열기 전(tour_seen 없음)에는 당일에도 여기 */
@@ -59,7 +58,7 @@ var Views = {
     else if (newly.length > 1) setTimeout(function () { S.set("pp_seen", seen.concat(newly)); }, 0);
     if (glow) ppAfterRender(n, n, glow);
     var testBar = !testMode() ? "" :
-      '<p class="scap" style="margin:0 2px 8px">테스트 ' + (BE.on ? "계정" : "모드") + ' · 스탬프는 이 기기에만 기록됩니다 · <span style="cursor:pointer;text-decoration:underline" onclick="testStampReset()">스탬프 초기화</span> · <span style="cursor:pointer;text-decoration:underline" onclick="testMineShuffle()">테스트 · 나의 일정 다시 섞기</span></p>';
+      '<p class="scap" style="margin:0 2px 8px">테스트 ' + (BE.on ? "계정" : "모드") + ' · 스탬프는 이 기기에만 기록됩니다 · <span style="cursor:pointer;text-decoration:underline" onclick="testStampReset()">스탬프 초기화</span> · <span style="cursor:pointer;text-decoration:underline" onclick="testMineShuffle()">테스트 · 나의 일정 다시 섞기</span> · <span style="cursor:pointer;text-decoration:underline" onclick="ttOpen()">시각 바꿔 보기</span></p>';
     var full = n >= STAMP_DENOM;
     return '<div class="ax-stack axs-stpv">' + testBar +
       '<section class="axs-sec">' + railHtml(n, glow, null, false) + "</section>" +
@@ -95,6 +94,7 @@ var Views = {
 
   notices: function () {
     var notices = S.get("notices", []).slice().sort(function (a, b) { return b.ts - a.ts; }).concat(DEFAULT_NOTICES);
+    if (typeof ntcMark === "function") ntcMark(notices.map(function (n) { return n.id; }));   /* 261007 목록을 열면 읽음 · 공지 시트가 다시 뜨지 않는다 */
     return notices.map(function (n) {
       return '<div class="card soft mb8 axs-ntc">' + (n.pinned ? '<span class="axs-ntc-pin">고정</span>' : "") +   /* v5.66 (디자인 감사 261005 D4) 옛 v28 크기 · 굵기 → AX-TDS 타입 토큰(CSS axs-ntc) */
         '<b class="axs-ntc-t">' + esc(n.title) + '</b><p class="axs-ntc-b">' + esc(n.body) + "</p>" +

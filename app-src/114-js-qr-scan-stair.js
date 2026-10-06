@@ -265,7 +265,7 @@ function boothDone(res, late, code) {
     ppSeenAdd(id);   /* 결과 화면이 연출이다 · 도장 팝을 겹치지 않는다 */
     stampSync(res.stamps);
   }
-  PP.just[id] = hm2(new Date().getHours() * 60 + new Date().getMinutes());
+  PP.just[id] = hm2(hmNow());
   PP.open[id] = true;
   checkRewards();
   stampBuzz(25);
@@ -337,8 +337,8 @@ function attFrom(x) { return attKWin(x, "in").a; }
 function attWinLbl(x, k) { var w = attKWin(x, k || "in"); return hm2(w.a) + "–" + hm2(w.b); }
 /* 그 강의의 출석 창이 모두 끝났는가(행사 뒤 = 늘 끝) */
 function attShut(x) { var ph = evPhase(); return !!x && (ph === "after" || (ph === "live" && attNow() > attKWin(x, "out").b)); }
-function attTm() { var v = testMode() ? String(S.get("att_tm", "") || "") : ""; return /^\d{1,2}:\d{2}$/.test(v) ? v : ""; }
-function attNow() { var tm = attTm(); if (tm) return t2m(tm); var d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
+function attTm() { var o = testMode() ? ttGet() : null; return o ? hm2(o.m) : ""; }   /* 261007 옛 att_tm → 시험 시각 tt 하나(ttGet · 테스트 모드만) */
+function attNow() { return hmNow(); }
 /* 지금 창 · open = 입장이나 끝 창이 열린 id · sel = 미리 고를 것(그 창에서 아직 안 찍은 것 중 진행 중 우선, 없으면 곧 시작할 것) · next = 다음에 열리는 강의 */
 function attWin(t) {
   var open = [], sel = "", selK = 99999, next = null, nextA = 99999, mine = attMine();
@@ -399,7 +399,7 @@ function attSpec() {
 }
 function attRepaint() { if (SHEET.busy) botWait(false); SHEET.busy = false; SHEET.spec = attSpec(); if (el("axsSheet")) sheetPaint(); }
 function attPick(id) { if (SHEET.busy || ATT.res) return; ATT.sel = id; SHEET.err = null; attRepaint(); }
-function attTmSet(v) { S.set("att_tm", /^\d{1,2}:\d{2}$/.test(v || "") ? v : ""); ATT.res = null; ATT.sel = ATT.fix || attWin(attNow()).sel; SHEET.err = null; attRepaint(); }
+function attTmSet(v) { ttPick(v); ATT.res = null; ATT.sel = ATT.fix || attWin(attNow()).sel; SHEET.err = null; attRepaint(); }
 function attGo() {
   if (SHEET.busy || ATT.res) return;
   var x = attProg(ATT.sel), u = S.get("user", {}) || {};
@@ -455,7 +455,7 @@ function attStamp(res) {
     ppSeenAdd(id);
     if (st.stamps) stampSync(st.stamps);
   }
-  PP.just.p3 = hm2(new Date().getHours() * 60 + new Date().getMinutes());
+  PP.just.p3 = hm2(hmNow());
   checkRewards();
   stampBuzz(25);
   return Math.min(STAMP_DENOM, stampCount());
@@ -485,7 +485,7 @@ function att10Spec() {
   return { id: "att10", title: "10F 세션 출석", lead: "<b>" + esc(s.ttl) + "</b>" + (ATT10_UI ? "<br>끝 QR" : ""), body: tmRow, go: "att10Go()", goLbl: "출석하기", goBusy: "출석하는 중" };
 }
 function att10Repaint() { if (SHEET.busy) botWait(false); SHEET.busy = false; SHEET.err = null; SHEET.spec = att10Spec(); if (el("axsSheet")) sheetPaint(); }
-function att10TmSet(v) { S.set("att_tm", /^\d{1,2}:\d{2}$/.test(v || "") ? v : ""); ATT10.res = null; ATT10.info = null; att10Repaint(); }
+function att10TmSet(v) { ttPick(v); ATT10.res = null; ATT10.info = null; att10Repaint(); }
 function att10Go() {
   if (SHEET.busy || ATT10.res || ATT10.info) return;
   var s = att10Sess(ATT10.sid), u = S.get("user", {}) || {};
@@ -615,7 +615,7 @@ function stairDone(res, sc, late, act) {
     ppSeenAdd("st");
     if (st.dry) { var l = S.get("stamps", []); if (l.indexOf("st") < 0) { l.push("st"); S.set("stamps", l); } }
     else if (res.stamps) stampSync(res.stamps);
-    PP.just.st = hm2(new Date().getHours() * 60 + new Date().getMinutes());
+    PP.just.st = hm2(hmNow());
     checkRewards(); stampBuzz(25);
   } else if (st && st.revoked) {
     if (st.dry || testEmp()) S.set("stamps", S.get("stamps", []).filter(function (x) { return x !== "st"; }));
@@ -960,7 +960,7 @@ function qrMineCheck() {
   if (!msg) return;
   QRM.snap = b; QRM.msg = msg; QRM.until = Date.now() + 90000;
   stampBuzz(25);
-  var box = el("qrPanel"); if (box) box.innerHTML = qrPanelHtml(true);
+  toast(msg);   /* 261007 내 QR 화면은 QR + 이름 · 사번만 · 스태프가 찍은 결과는 토스트로만(옛 「확인됨」 배지 · 한 줄 폐기) */
 }
 
 /* ═══════════════ 양방향 QR (260830) ═══════════════
@@ -1046,35 +1046,14 @@ function qrPanelOpen(tab) {
 }
 var OK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 function qrPanelHtml(inner) {
+  /* 261007 (사용자 「1F 룰렛 1회권 · 차감 모두 싹 지워 · 그냥 순수하게 내 QR만 보이고」 「사번 이름만 보이게」) 내 QR 화면 = QR + 이름 · 사번만
+     옛 안내 두 줄(스태프에게 보여 주세요 · 화면 밝기) · 상태 줄(대기 · 체크인 · 룰렛 1회권 줄) · 「확인됨」 배지 · 한 줄은 걷었다 · 스태프가 찍은 결과는 토스트로만(qrMineCheck) */
   var u = S.get("user", {}) || {}, txt = myQrText();
-  var body = !txt ?
+  var h = !txt ?
     '<p class="myqr-hint">사번으로 입장하면 내 QR이 발급됩니다.</p>' :
-    '<div class="myqr' + (QRM.msg ? " axs-qrok" : "") + '">' + myQrSvg(216) + (QRM.msg ? '<span class="axs-okbadge">' + OK_SVG + "</span>" : "") + "</div>" +
-    '<p class="myqr-nm">' + esc(u.name || "") + "<span>" + esc(u.empId || "") + "</span></p>" +
-    (QRM.msg ? '<p class="axs-okline" role="status"><b>확인됨</b> · ' + esc(QRM.msg) + "</p>" : "") +
-    '<p class="myqr-hint">' +   /* v5.66 (디자인 감사 261005 D4) 옛 v28 크기 → AX-TDS 타입 토큰(CSS myqr-hint) */
-    '이 QR을 <b>스태프</b>에게 보여 주세요<br>화면 밝기를 올리면 더 빨리 읽혀요</p>' + qrMineStateHtml();   /* 261005 최종 QA · 「운영 데스크 스캐너」 → 「스태프」(AX PLAY · 스탬프 탭 · 부스 안내가 모두 「스태프에게 내 QR」이다 · 내 QR 을 찍는 곳은 데스크만이 아니다) */
-  var h = body;   /* v5.23 화면 안 카드 · 닫기는 헤더 뒤로 */
+    '<div class="myqr">' + myQrSvg(216) + "</div>" +
+    '<p class="myqr-nm">' + esc(u.name || "") + "<span>" + esc(u.empId || "") + "</span></p>";
   return inner ? h : '<div id="qrPanel">' + h + "</div>";
-}
-/* 내 QR 아래에 지금 걸려 있는 대기·체크인을 같이 보여준다(QR을 꺼낸 이유가 대개 이것이다) */
-function qrMineStateHtml() {
-  var q = S.get("queue", {}), ck = S.get("checkin", {}), out = [];
-  Object.keys(q).forEach(function (k) {
-    var sp = scanSpot(k), r = q[k];
-    if (!sp || !r || r.status === "done") return;
-    out.push('<div class="qst"><span class="l">' + esc(sp.nm) + '</span><b>' +
-      (r.status === "call" ? "지금 입장하세요" : r.no + "번 · 대기 중") + "</b></div>");
-  });
-  Object.keys(ck).forEach(function (k) {
-    var sp = scanSpot(k);
-    if (sp) out.push('<div class="qst"><span class="l">' + esc(sp.nm) + '</span><b>' +
-      (ck[k] === "done" ? "참여 완료" : "입장 확인") + "</b></div>");
-  });
-  /* 룰렛 1회권 · QR을 내미는 가장 흔한 순간이라 여기서도 상태를 같이 보여준다 (260909) */
-  if (stampCount() >= 3) out.push('<div class="qst"><span class="l">1F 룰렛 1회권</span><b>' +
-    (S.get("roulette_used", false) ? "사용 완료" : "스캔하면 차감") + "</b></div>");
-  return out.length ? '<div class="qstate">' + out.join("") + "</div>" : "";
 }
 
 /* ── 카메라 (참가자 모달 · 운영자 화면 공용) ── */

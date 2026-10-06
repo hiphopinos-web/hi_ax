@@ -16,6 +16,8 @@
 <script src="assets/rain-engine.js"></script>
 <!-- v4.61 서버 주소 한 곳(assets/server.js · 앱 · 콘솔이 같이 읽는다 · 전환은 이 파일 한 줄) -->
 <script src="assets/server.js"></script>
+<!-- 261007 (사용자 「로그인 기록이 있는 사람이 다시 들어오면 바로 메인으로」) 이 기기에 저장된 로그인이 있으면 로그인 첫 화면을 그리지 않는다(axf-saved · 부팅이 전환 없이 바로 홈 · 비침 0) · 부팅이 클래스를 걷는다 -->
+<script>try { var axfU0 = JSON.parse(localStorage.getItem("axf_user") || "null"); if (axfU0 && axfU0.empId && !/^#(self|tv=|demo)/i.test(location.hash)) document.documentElement.className += " axf-saved"; } catch (e) {}</script>
 <!-- 본문 서체 · 로컬 미설치 기기에서도 Pretendard로 렌더 (오프라인이면 시스템 고딕으로 자동 폴백) -->
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">

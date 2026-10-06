@@ -17,9 +17,9 @@ var BILL_ORANGE = true;   /* performance.now() 기준 · AXF.t0 와 같은 시�
 function billBase() { return BILL.t0 || (window.AXF && AXF.t0 ? AXF.t0 : performance.now()); }
 var EV_START = new Date(2026, 9, 26, 9, 0), EV_END = new Date(2026, 9, 26, 18, 0);
 function evPhase() {
-  var o = S.get("ev_phase", null);
+  var o = ttGet() ? null : S.get("ev_phase", null);   /* 261007 시험 시각(tt)이 있으면 그 시각으로 · ev_phase 는 데모 강제 */
   if (o) return o;
-  var now = new Date();
+  var now = appNow();
   return now < EV_START ? "before" : now > EV_END ? "after" : "live";
 }
 /* 홈 히어로 = 지금 진행 중 (한 화면 안에 들어가야 하므로 시간·제목·장소·다음 일정만). 눌러서 타임라인으로 */
@@ -83,7 +83,7 @@ function myScheduleHtml() {
      내 것을 보여주는 자리는 여기 하나뿐이다(홈에 별도 스트립을 만들지 않는다, design.md) */
   var q = S.get("queue", {}), qk;
   /* v3.35 · Outro 전 사회자 안내(16:45 설문 안내) 시간대에만 홈 첫 줄로 · 그 밖에는 스탬프 탭 카드가 입구 */
-  var hm0 = new Date().getHours() * 60 + new Date().getMinutes();
+  var hm0 = hmNow();
   if (!surveyLock() && !surveyDone() && evPhase() === "live" && hm0 >= t2m("16:40") && hm0 < t2m("17:10"))
     rows.push([-1, "App.go('survey')", "설문", "오늘 한 판 설문", "60초 · 스탬프 1개", "mine"]);
   var fgr = fcfsGotRow(); if (fgr) rows.push(fgr);   /* v5.97 선착순 참여상 수령 전 = 맨 위 한 줄(받으면 사라진다) */
@@ -143,7 +143,7 @@ var STAMP_MODE = { lg: "자동", qz: "폰으로", p4: "폰으로", p2: "스태�
 function drawCardHtml() {
   if (!lkCond()) return "";   /* v5.92 (사용자 261006) 행운권 참석 조건 OFF = 추첨 체크인 카드 없음 */
   if (evPhase() !== "live" || S.get("draw_in", false)) return "";
-  var hm = new Date().getHours() * 60 + new Date().getMinutes();
+  var hm = hmNow();
   if (hm < t2m("16:40") || hm >= t2m("17:25")) return "";
   return '<button type="button" class="ax-destination axs-dest" onclick="qrScanOpen()">' +
     '<span class="axs-tx"><span class="axs-chiprow"><span class="axs-chip">추첨 체크인</span></span>' +

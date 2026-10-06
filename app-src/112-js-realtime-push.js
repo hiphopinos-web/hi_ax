@@ -186,6 +186,7 @@ function beNoticeIn(n, nOff) {
     if (!nz.some(function (x) { return x.id === n.id; })) {
       nz.unshift({ id: n.id, title: n.title || "", body: n.body || "", ts: n.ts || Date.now() });
       S.set("notices", nz);
+      if (typeof ntcCheck === "function") ntcCheck();   /* 261007 새 공지 = 아래에서 올라오는 시트 한 번 */
     }
   }
 }

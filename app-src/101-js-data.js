@@ -173,8 +173,19 @@ function tenMine() { return SESSIONS.filter(function (s) { return s.fl === 10 &&
 /* v5.64 tenMineCard(펼친 내 세션 카드) 삭제 · 나의 일정에서 시간표 줄 하나(myAgendaHtml) */
 /* v4.84 지금 줄 = 기기 시각 · 옛 NOW_INDEX(데모 고정 1 = 기조연설)는 행사 당일에도 기조연설에 머물렀다(시안 2 와 달랐다)
    시간 칸 안이면 그 줄 · 사이 시간이면 다음 줄 · 마지막이 끝난 뒤면 마지막 줄 · 시간 미정(always) · 숨김(off) 줄은 건너뛴다 */
-/* v5.21 시험 시각 훅 · 시험 모드(testMode · 데모 #demo · 테스트 사번)에서만 S "att_tm"(출석 시험 시각과 같은 값)을 지금 시각으로 쓴다 · 데모 주소 &now=14:20 · 운영 참가자는 늘 기기 시각 */
-function hmNow() { var tm = ""; try { tm = attTm(); } catch (e) { tm = ""; } if (tm) return t2m(tm); var d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
+/* v5.21 시험 시각 훅 · 시험 모드(testMode · 데모 #demo · 테스트 사번)에서만 · 데모 주소 &now=14:20 · 운영 참가자는 늘 기기 시각
+   261007 (사용자 「테스트 계정에서는 시간을 조정해서 각 시간마다 홈이 어떻게 보이는지」) 시험 시각 하나로 합침 = S "tt" { d: "pre"(10/25) | "day"(10/26), m: 분 }
+     옛 att_tm(출석 시험 시각) · 데모 &now= 가 모두 이 값을 쓴다 · ev_phase(데모 강제 국면)는 tt 가 없을 때만 · 테스트 모드가 아니면 tt 는 읽지도 않는다(운영 참가자 = 기기 시각 그대로)
+     앱 「지금」 = appNow() 한 곳(srv = 서버 시계 보정 toff) · 서버 판정(스탬프 시간 창 · 마감)은 실제 서버 시각 그대로 */
+var TT_MIN = 450, TT_MAX = 1080, TT_STEP = 10;   /* 07:30 ~ 18:00 · 10분 */
+function ttGet() {
+  if (typeof testMode !== "function" || !testMode()) return null;
+  var o = S.get("tt", null);
+  return o && (o.d === "pre" || o.d === "day") && typeof o.m === "number" && o.m >= 0 && o.m < 1440 ? o : null;
+}
+function ttMs() { var o = ttGet(); return o ? new Date(2026, 9, o.d === "pre" ? 25 : 26, Math.floor(o.m / 60), o.m % 60).getTime() : null; }
+function appNow(srv) { var t = ttMs(); return new Date(t != null ? t : Date.now() + (srv && typeof sesOff === "function" ? sesOff() : 0)); }
+function hmNow() { var tm = ""; try { tm = attTm(); } catch (e) { tm = ""; } if (tm) return t2m(tm); var d = appNow(); return d.getHours() * 60 + d.getMinutes(); }
 function nowIdx() {
   var hm = hmNow(), nx = -1, last = -1;
   for (var i = 0; i < TIMELINE.length; i++) {

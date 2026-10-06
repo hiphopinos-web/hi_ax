@@ -45,6 +45,7 @@ function fsSheet(on) {
   if (on) a2hsRow();   /* v4.88 앱 설치 · 홈 화면에 추가 한 단어 · 홈 화면 앱이면 숨김 · 줄이 다 숨으면 「앱」 제목도 */
   if (on) fsRowState();
   if (on && typeof kitFsRow === "function") kitFsRow();   /* 261006 키트 사이즈 줄 · 명단 사번만 */
+  if (on && el("fsTt")) { var tto = ttGet(), tm0 = testMode(); el("fsTt").hidden = !tm0; el("fsTen").hidden = !tm0; el("fsLbTest").hidden = !tm0; if (el("fsTtSt")) el("fsTtSt").textContent = tto ? ttLbl(tto) : "꺼짐"; if (el("fsTenSt")) el("fsTenSt").textContent = testTenLbl(); }   /* 261007 테스트 도구 · 테스트 모드만 */
   box.hidden = !on;
 }
 /* v5.83 (최초 진입 가볍게 · 개편안 2-4) 설정 「앱」 줄 오른쪽 = 지금 상태 한 단어(설명 문장 없음) · 알림 켜짐 · 꺼짐 · 효과음 켜짐 · 꺼짐 · 바로가기 설치는 설치되면 줄이 숨는다(a2hsHide) */
@@ -56,6 +57,47 @@ function fsRowState() {
   if (ss) { ss.setAttribute("aria-checked", String(on)); ss.classList.toggle("on", on); }
 }
 function fsSndToggle() { if (typeof sndToggle === "function") sndToggle(false); fsRowState(); }   /* 게임 안 스피커와 같은 값(game_sound) */
+/* ── 261007 시각 바꿔 보기(사용자 「테스트 계정에서는 시간의 흐름을 볼 수 있게 시간을 조정해서 각 시간마다 홈이 어떻게 보이는지」) ──
+   테스트 모드(testMode = 테스트 사번 · 데모)에서만 · 설정 「앱」 줄(fsTt) · 스탬프 탭 테스트 줄에서 연다 · 일반 직원 · 운영 계정은 줄도 띠도 없고 ttGet 이 늘 null
+   날짜(10/25 전날 · 10/26 당일) + 시각(07:30 ~ 18:00 · 10분) · 켜면 앱 「지금」(appNow · hmNow · evPhase)이 그 시각 · 헤더 맨 위 띠 「시험 시각 10/26 13:40 · 끄기」
+   앱 화면만 바뀐다 · 서버 판정(스탬프 시간 창 · 마감)은 실제 서버 시각 그대로 */
+var TTD = { d: "day", m: 600 };
+var TT_PICKS = ["07:50", "09:35", "10:40", "12:00", "13:40", "15:20", "16:50", "17:10", "17:40"];
+function ttvFit(m) { m = Math.round(m / TT_STEP) * TT_STEP; return m < TT_MIN ? TT_MIN : m > TT_MAX ? TT_MAX : m; }
+function ttLbl(o) { return (o.d === "pre" ? "10/25" : "10/26") + " " + hm2(o.m); }
+function ttPick(v) { if (!testMode()) return; S.set("tt", /^\d{1,2}:\d{2}$/.test(v || "") ? { d: (ttGet() || {}).d || "day", m: t2m(v) } : null); }   /* 출석 시트의 테스트 시각 칸 · 같은 시험 시각 */
+function ttOpen() {
+  if (!testMode()) return;
+  var o = ttGet(), d = new Date();
+  TTD = o ? { d: o.d, m: o.m } : { d: "day", m: ttvFit(d.getHours() * 60 + d.getMinutes()) };
+  sheetOpen(ttSpec());
+}
+function ttSpec() {
+  var on = !!ttGet();
+  return { id: "tt", title: "테스트 도구", body: ttBody(), go: "ttApply()", goLbl: "이 시각으로 보기",
+    keep: on ? "끄기" : "닫기", keepAct: on ? "sheetClose(true); ttOff()" : "sheetClose()", keepWeak: true, keepLast: true };
+}
+function ttBody() {
+  var dBtn = function (k, t) { return '<button type="button" role="tab" aria-selected="' + (TTD.d === k) + '" onclick="ttDay(\'' + k + '\')">' + t + "</button>"; };
+  var stp = function (dm) { return '<button type="button" class="ax-button ax-button-weak" onclick="ttStep(' + dm + ')">' + (dm > 0 ? "+" : "−") + Math.abs(dm) + "분</button>"; };
+  var tv = testTen();
+  return '<div class="axs-ttv">' +
+    '<p class="axs-ttv-h">내 10F 세션</p><div class="axs-ttv-p">' + TEST_TENS.map(function (x) { var on = tv === null ? false : (tv || "none") === x[0]; return '<button type="button" class="axs-chip' + (on ? " on" : "") + '" aria-pressed="' + on + '" onclick="testTenSet(\'' + x[0] + '\')">' + x[1] + "</button>"; }).join("") + "</div>" +
+    '<p class="axs-ttv-h">시각 바꿔 보기</p>' +
+    '<div class="axs-seg" role="tablist" aria-label="날짜">' + dBtn("pre", "10/25 전날") + dBtn("day", "10/26 당일") + "</div>" +
+    '<p class="axs-ttv-t" id="ttT" aria-live="polite">' + ttLbl(TTD) + "</p>" +
+    '<input class="axs-ttv-r" type="range" min="' + TT_MIN + '" max="' + TT_MAX + '" step="' + TT_STEP + '" value="' + TTD.m + '" aria-label="시각" oninput="ttDrag(this.value)">' +
+    '<div class="axs-ttv-s">' + stp(-30) + stp(-10) + stp(10) + stp(30) + "</div>" +
+    '<div class="axs-ttv-p">' + TT_PICKS.map(function (h) { return '<button type="button" class="axs-chip' + (t2m(h) === TTD.m ? " on" : "") + '" aria-pressed="' + (t2m(h) === TTD.m) + '" onclick="ttDrag(\'' + t2m(h) + '\', 1)">' + h + "</button>"; }).join("") + "</div>" +
+    '<p class="ax-meta">앱 화면만 바뀌어요 · 서버 판정(스탬프 시간 창 · 마감 · 10F 명단)은 실제 서버 시각 · 실제 명단 그대로예요</p></div>';
+}
+function ttRepaint() { if (SHEET.id === "tt" && el("axsSheet")) { SHEET.spec = ttSpec(); sheetPaint(); } }
+function ttDay(d) { TTD.d = d === "pre" ? "pre" : "day"; ttRepaint(); }
+function ttStep(dm) { TTD.m = ttvFit(TTD.m + dm); ttRepaint(); }
+function ttDrag(v, paint) { TTD.m = ttvFit(+v); if (paint) { ttRepaint(); return; } var t = el("ttT"); if (t) t.textContent = ttLbl(TTD); }   /* 끄는 중에는 글자만(다시 그리면 손잡이를 놓친다) */
+function ttApply() { if (!testMode()) return; S.set("tt", { d: TTD.d, m: ttvFit(TTD.m) }); sheetClose(true); App.render(); }
+function ttOff() { S.set("tt", null); App.render(); toast("시험 시각을 껐어요"); }
+function ttBarHtml() { var o = ttGet(); return o ? '<div class="axs-ttbar" role="status"><button type="button" class="t" onclick="ttOpen()">시험 시각 <b>' + ttLbl(o) + '</b></button><button type="button" class="x" onclick="ttOff()">끄기</button></div>' : ""; }
 fsApply(fsGet());   /* 스플래시·로그인 화면부터 바로 적용 */
 
 var MEM = {};
@@ -142,7 +184,9 @@ function noticePump() {
   clearTimeout(NOTICE.t);
   if (NOTICE.cur || !NOTICE.q.length) return;
   if (noticeBusy()) { NOTICE.t = setTimeout(noticePump, 400); return; }
-  var o = NOTICE.q.shift();
+  var qi = 0; while (qi < NOTICE.q.length && NOTICE.q[qi].hold && NOTICE.q[qi].hold()) qi++;   /* 261007 hold = 지금은 미룰 안내(공지 시트 · ntcHold) · 다른 안내는 먼저 */
+  if (qi >= NOTICE.q.length) { NOTICE.t = setTimeout(noticePump, 600); return; }
+  var o = NOTICE.q.splice(qi, 1)[0];
   NOTICE.last[o.k] = Date.now();
   if (o.run) { try { o.run(); } catch (e) {} NOTICE.t = setTimeout(noticePump, 400); return; }   /* v5.94 팝업 대신 시트(사전등록 체크인 안내) · 다음 안내는 시트가 닫힌 뒤(noticeBusy 가 axsSheet 를 본다) */
   if (o.raffle) modalOpen(rfxHtml(o), esc(o.title));   /* v4.42 응모권 = 보물상자 · v4.49 모든 응모권을 직접 연다(v4.44 의 두 번째부터 자동 열기 폐지) */
@@ -474,7 +518,7 @@ function ideaMineN() {   /* 커피챗 신청 가능 = 이 기기의 내 아이�
 /* v5.83 커피챗에서 온 아이디어 쓰기 · 화면 위 한 줄 「커피챗은 아이디어 한 줄과 함께 신청해요」 · 제출하면 「이 아이디어로 커피챗을 신청할까요?」(IDEA.step ask) · 다른 화면을 그리면 표시를 접는다(라우터) */
 function ideaCcGo() { IDEA.cc = true; IDEA.step = null; App.go("ideas"); }
 /* v5.90 (261006) 아이디어 입구 · 서버 pub.idea { open, cut, late, prz, ps } · 행사 전 + 사전 오픈 OFF = 입구 숨김(테스트 사번 · 커피챗에서 온 경우 제외) · 옛 서버(없음) = 예전처럼 */
-function evPreDay() { var o = S.get("ev_phase", null); if (o) return o === "before"; return new Date(Date.now() + sesOff()) < new Date(2026, 9, 26); }
+function evPreDay() { var o = ttGet() ? null : S.get("ev_phase", null); if (o) return o === "before"; return appNow(true) < new Date(2026, 9, 26); }
 function ideaGateOff() { var ip = S.get("idea_pub", null); return !!ip && !ip.open && evPreDay() && !testEmp(); }
 function ideaStampLater() { var ip = S.get("idea_pub", null); return !!ip && !ip.ps && evPreDay() && !testEmp(); }
 /* v6.07 (사용자 261007 「아이디어 한 줄 입력하는 쪽에 시상 관련 후킹 메시지」) 입력 화면 시상 묶음 = 한 줄 + 경품 시트 아이디어왕 카드 3장(pzR3Html · 같은 그림 · 작게) + 마감 한 줄 */

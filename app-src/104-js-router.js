@@ -244,6 +244,7 @@ var App = {
         gear + "</div>" +   /* v4.15 관리자 잠금은 관리자 화면 맨 아래 「관리자 모드 끝내기」 */
         this.crumbHtml(v);   /* v4.09 경로 줄 · 헤더 구분선 바로 아래 */
     }
+    if (typeof ttBarHtml === "function") { var ttb = ttBarHtml(); if (ttb) tb.insertAdjacentHTML("afterbegin", ttb); }   /* 261007 시험 시각 띠 · 테스트 모드에서 켰을 때만 */
     tb.style.display = SIGNAGE.indexOf(v) >= 0 || v === "sscan" ? "none" : "";   /* v5.98 스태프 스캔 = 자기 머리 줄(닫기 · 자리 칩 · 톱니) */
     if (v === "type_site" && tsfOn()) tb.style.display = "none";   /* v4.32 셀프 모드 참가자 화면 · 헤더 없음 */
     crumbFit();
@@ -313,7 +314,7 @@ function crumbFit() {
   for (var i = 1; i < li.length - 1 && need(); i++) li[i].classList.add("gone");
 }
 /* 게임 판 중에는 경로 줄을 숨긴다(시작·결과 화면에는 보인다) */
-/* LED 공지 띠는 AX-TDS 1단계(260922)에서 폐기 · 공지는 홈 맨 위 카드 한 장(homeNoticeHtml) · 30분 창(LED_TTL)은 그 카드가 이어 쓴다 */
+/* LED 공지 띠는 AX-TDS 1단계(260922)에서 폐기 · 261007 홈 공지 카드(homeNoticeHtml)도 폐기 · 공지 = 아래에서 올라오는 시트(ntcOpen) · LED_TTL 은 이제 쓰지 않는다(옛 값 보관) */
 var LED_TTL = 30 * 60000;
 function updateLed() {}
 setInterval(updateLed, 30000);

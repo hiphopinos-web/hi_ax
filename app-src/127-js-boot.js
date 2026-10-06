@@ -22,6 +22,7 @@
       setTimeout(scanLinkRun, 400);
       setTimeout(pushGoRun, 500);   /* v4.76 알림을 눌러 들어왔으면 그 화면으로 */
     }
+    setTimeout(function () { if (typeof ntcCheck === "function") ntcCheck(); }, 700);   /* 261007 앱을 열 때 안 읽은 최근 공지 = 시트 한 번(장면 · 팝 · 다른 안내가 끝난 뒤 · 대기열) */
   }
   // 캡처 모드(#...cap): 프레임을 좌상단 고정 정폭으로 · 헤드리스 스크린샷용
   if (/cap/.test(location.hash)) {
@@ -66,8 +67,8 @@
     S.set("gw_cleared", true);
     S.set("dept", "보상부문");
     S.set("ev_phase", "live");
-    var nq = location.hash.match(/[&#]now=(\d{1,2}:\d{2})/);   /* v5.21 시험 시각 고정(hmNow · attNow) · 데모에서만 */
-    if (nq) S.set("att_tm", nq[1]);
+    var nq = location.hash.match(/[&#]now=(\d{1,2}:\d{2})/);   /* v5.21 시험 시각 고정(hmNow · attNow) · 데모에서만 · 261007 시험 시각 tt(10/26)로 */
+    if (nq) S.set("tt", { d: "day", m: t2m(nq[1]) });
     /* v4.71 혼잡 제보 캡처 · &crowd=e(엘리베이터 혼잡) · l(로비 혼잡) · p(엘리베이터 예상) · s(계단 연결 ON) 글자를 섞어 쓴다 */
     var cq = location.hash.match(/crowd=([elpshmj]+)/);   /* v5.68 h · m · j = 17F 대강당 여유 · 보통 · 혼잡(기조연설 · 데모 수) */
     if (cq) { var n0 = Date.now(), jm = { at: n0 - 180000, x: n0 + 720000 }, hl = /j/.test(cq[1]) ? ["jam", 210] : /m/.test(cq[1]) ? ["mid", 150] : /h/.test(cq[1]) ? ["ok", 120] : null; S.set("crowd", { l: /l/.test(cq[1]) ? jm : 0, e: /e/.test(cq[1]) ? jm : 0, p: /p/.test(cq[1]) ? "11:00-11:20" : "", w: /p/.test(cq[1]) ? "11:00-11:20" : "", st: /s/.test(cq[1]) ? 1 : 0, h: hl ? { id: "key", n: hl[1], lv: hl[0], seats: 230 } : 0 }); }
@@ -101,10 +102,12 @@
   scanLinkNote();   /* v4.06 찍고 들어왔는데 로그인 전이면 로그인 화면에 한 줄 */
   var savedU = S.get("user", {});
   if (savedU && savedU.empId) {
-    enterApp();
+    /* 261007 (사용자 「로그인 기록이 있는 사람이 재차 들어오면 바로 메인으로」) 저장된 로그인 = 로그인 화면 · 입장 전환(1초) 없이 바로 홈(axf-saved 가 첫 그림부터 로그인 화면을 가린다) */
+    enterNow(); document.documentElement.classList.remove("axf-saved");
     a2hsAuto();   /* v5.34 (311537 진단 · 사용자 261003) 로그인 유지로 홈 화면 앱을 처음 연 사람에게도 「알림을 켤까요?」 한 번(pushFirst · 기기당 1회 push_first · 차단이면 묻지 않음) · 허용된 기기는 다시 등록 */
     return;
   }
+  document.documentElement.classList.remove("axf-saved");
   if (visitStandalone() && el("saCard")) { el("saCard").hidden = false; lfSoon(); }   /* v4.76 홈 화면 앱으로 처음 열림 · 로그인을 한 번 더 */
   var known = BE.on ? knownGet() : null;
   function quickLogin() {

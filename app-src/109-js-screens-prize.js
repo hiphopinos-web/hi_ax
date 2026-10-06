@@ -32,15 +32,48 @@ function botWait(on, msg) {
 }
 
 /* ── 홈 (H01) · 공지 카드 한 장 → [포토부스 호출] → 인사 → 진행 중 카드(주 행동) → 전체 시간표 · 체험 찾기 → 광고판(사용자 결정 예외) ── */
-function homeNoticeHtml() {
-  var ns = S.get("notices", []), latest = null;
-  for (var i = 0; i < ns.length; i++) { if (ns[i] && ns[i].ts > 0 && Date.now() - ns[i].ts < LED_TTL) { latest = ns[i]; break; } }
-  if (!latest) return "";
-  return '<button type="button" class="ax-destination axs-dest" onclick="App.go(\'notices\')">' +
-    '<span class="axs-tx"><span class="axs-chiprow"><span class="axs-chip">공지</span></span>' +
-    '<span class="ax-card-title">' + esc(latest.title) + "</span>" + (latest.body ? '<span class="ax-meta">' + esc(latest.body) + "</span>" : "") + "</span>" +
-    '<span class="ax-destination-action">전체</span></button>';
+/* ── 261007 공지 = 아래에서 올라오는 시트(사용자 「공지사항은 홈 화면을 재조합하는 형태? 밑에서 올라오는 팝업 형태? 후자가 맞을 것 같아」) ──
+   옛 홈 맨 위 공지 카드(homeNoticeHtml · 30분 창)는 걷었다 · 공지가 와도 홈이 다시 짜이지 않는다 · 헤더 종 목록 · 개수 점은 그대로
+   새 공지가 도착하면(소켓 · sync = beNoticeIn) · 앱을 열 때(enterNow) 안 읽은 최근(6시간) 공지가 있으면 시트 한 번 · 공지마다 이 기기에 한 번(ntc_rd · 공지 목록을 열어도 읽음)
+   여러 개면 가장 새것 한 장 + 「공지 n개 더 보기」(공지 목록) · 본문에 링크(https)가 있으면 주 버튼 「링크 열기」 + 「확인」
+   다른 안내(스탬프 팝 · 사전등록 안내 · 선착순 안내 · 확인 팝업 · 다른 시트)와는 같은 대기열(notice · run)로 하나씩
+   글을 쓰는 중 · 게임 화면 · 둘러보기 3D 안 · 스캔 중 · 상세 시트가 열려 있으면 미뤘다가(ntcHold) 나온 뒤 · 커피챗 마감 신호(CCHAT_CLOSE_T)는 공지로 쌓지 않아 뜨지 않는다 */
+var NTC_RECENT = 6 * 3600000, NTC = { url: "" };
+function ntcRead() { return S.get("ntc_rd", []) || []; }
+function ntcMark(ids) { var rd = ntcRead(), ch = false; ids.forEach(function (i) { if (i && rd.indexOf(i) < 0) { rd.push(i); ch = true; } }); if (ch) S.put("ntc_rd", rd.slice(-80)); }
+/* 기준선(ntc_base · 기기) = 이 기기에서 처음 공지를 확인한 순간 · 그 전에 나간 공지는 읽은 것으로(새 기기 · 앱 업데이트 직후 첫 로그인에 지난 공지가 몰려 뜨지 않게) */
+function ntcBase() { var b = S.get("ntc_base", null); if (b === null) { b = Date.now() + (typeof sesOff === "function" ? sesOff() : 0); S.put("ntc_base", b); } return b; }
+function ntcUnread() {
+  var rd = ntcRead(), now = Date.now(), base = ntcBase();
+  return (S.get("notices", []) || []).filter(function (n) { return n && n.id && n.ts > 0 && n.ts > base && now - n.ts < NTC_RECENT && rd.indexOf(n.id) < 0 && n.title !== CCHAT_CLOSE_T; })
+    .sort(function (a, b) { return b.ts - a.ts; });
 }
+function ntcHold() {
+  var a = document.activeElement, tg = a && a.tagName;
+  if (tg === "TEXTAREA" || (tg === "INPUT" && !/^(button|range|checkbox|radio)$/i.test(a.type || ""))) return true;   /* 글을 쓰는 중 */
+  if (/^(game_|quiz_play$|ideas$|survey$|type_site$)/.test(App.current || "")) return true;   /* 게임 · 퀴즈 풀기 · 아이디어 · 설문 화면 */
+  if (App.current === "scan_q" && typeof SCQ !== "undefined" && SCQ.tab === "scan") return true;   /* 스캔 중 */
+  if (el("qrVideo") || el("axsDet") || (window.AXTour && AXTour.isOpen && AXTour.isOpen())) return true;   /* 카메라 · 상세 시트 · 둘러보기 3D */
+  return false;
+}
+function ntcCheck() {
+  if (!S.get("user", null) || /^#(tv=|self)/i.test(location.hash)) return;
+  var u = ntcUnread(); if (!u.length) return;
+  notice({ key: "ntc:" + u[0].id, run: ntcOpen, hold: ntcHold });
+}
+function ntcOpen() {
+  var u = ntcUnread(); if (!u.length) return;
+  var n = u[0], more = u.length - 1, m = /https?:\/\/[^\s<>"']+/.exec(String(n.body || ""));
+  NTC.url = m ? m[0] : "";
+  ntcMark(u.map(function (x) { return x.id; }));   /* 한 번 띄우면 읽음(닫는 방법과 상관없이) · 나머지는 「더 보기」 목록에서 */
+  sheetOpen({ id: "ntc", title: n.title || "공지",
+    body: '<div class="axs-ntcs"><p class="axs-ntcs-c"><span class="axs-chip">공지</span><span class="ax-meta">' + esc(fmtTime(n.ts)) + "</span></p>" +
+      (n.body ? '<p class="axs-ntcs-b">' + esc(n.body) + "</p>" : "") +
+      (more ? '<button type="button" class="axs-ntcs-more" onclick="sheetClose(true); App.go(\'notices\')">공지 ' + more + "개 더 보기</button>" : "") + "</div>",
+    go: NTC.url ? "ntcLink()" : "sheetClose()", goLbl: NTC.url ? "링크 열기" : "확인",
+    keep: NTC.url ? "확인" : "", keepWeak: true, keepLast: true });
+}
+function ntcLink() { var u = NTC.url; sheetClose(true); if (/^https?:\/\//.test(u)) window.open(u, "_blank", "noopener"); }
 /* v4.55 클로즈 베타 홈 배너 · 서버 설정 「베타_폼」 값이 있을 때만 홈 맨 위 흰 줄로 노출.
    서버가 행사 전날(10/25)부터는 값이 있어도 빈 문자열을 내려보내 자동으로 숨긴다(기기 시계가 아니라 서버 날짜 기준). */
 function betaBannerHtml() {
@@ -298,7 +331,7 @@ function fcfsOpen() { var x = fxGet(); return !!x && x.left !== 0 && !fcfsLate()
 function fcfsLate() {
   var x = fxGet(), cut = String((x && x.cut) || "").split(":");
   if (cut.length < 2) return false;
-  var d = new Date(Date.now() + sesOff());
+  var d = appNow(true);
   return d.getFullYear() === 2026 && d.getMonth() === 9 && d.getDate() === 26 && d.getHours() * 60 + d.getMinutes() >= (+cut[0]) * 60 + (+cut[1]);
 }
 /* v5.97 (사용자 261006 밤) 경품 시트 선착순 상품 제목 오른쪽 = 남은 수량 · 숫자공개 규칙(ALL · LOW · OFF → left -1 = 숨김)을 따른다 · 0 · 마감 시각 뒤 = 「마감」 · 숨김 = 총수량 */
@@ -350,7 +383,7 @@ function drawWhenTxt() { return lkCond() ? "Outro 현장 추첨은 17F 입구 QR
 function roulCutHm() { return String(S.get("rcut", "") || ""); }
 function roulCut() {
   var c = roulCutHm().split(":"); if (c.length < 2) return false;
-  var d = new Date(Date.now() + sesOff());
+  var d = appNow(true);
   return d.getFullYear() === 2026 && d.getMonth() === 9 && d.getDate() === 26 && d.getHours() * 60 + d.getMinutes() >= (+c[0]) * 60 + (+c[1]);
 }
 function ideaKingN() { var ip = S.get("idea_pub", null), n = 0; ((ip && ip.prz) || []).forEach(function (x) { n += +x.n || 0; }); return n || 5; }

@@ -28,6 +28,7 @@
   body { background: var(--bg); font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif; display: flex; justify-content: center; color: var(--tx); word-break: keep-all; overflow-wrap: break-word; }
   button, input, textarea { font-family: inherit; }
   #frame { position: relative; width: 100%; min-width: 0; max-width: var(--ax-app-max); min-height: 100vh; min-height: 100dvh; background: var(--bg); }   /* v4.04 min-width 0 · body(flex) 안에서 긴 한 줄 글자가 앱 폭을 밀지 않게 */
+  .axf-saved #splash, .axf-saved #quick { visibility: hidden; }   /* 261007 저장된 로그인 = 로그인 화면 비침 없이 바로 홈(000-head 의 작은 스크립트 · 부팅이 걷는다) */
   #frame.splash-mode { height: 100vh; height: 100dvh; overflow: hidden; }   /* v5.76 밤샘 QA · dvh 를 모르는 옛 웹뷰(크롬 108 전 · iOS 15.4 전 · 화웨이 · 샤오미 브라우저)는 이 줄이 무효라 첫 화면 높이가 0(빈 화면) · vh 를 먼저 둔다 */
 
   /* ───────── 스플래시 · 화이트 스테이지 + 도트 격자 + KV 오브젝트 (v29 · 수면 반사 영상·차임 폐기) ─────────
@@ -1853,6 +1854,25 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   @keyframes tinvB { from { transform: none; } to { transform: translateY(101%); } }
   @media (prefers-reduced-motion: reduce) { .axs-inv.run .pc, .axs-inv.run .seal { animation: none; display: none; } }
   /* v5.53 행사 전 큰 카드(사진 4장 순환 · 칩 · 버튼 · 진행 막대) 걷음 · 홈 입구 = 한 줄 「행사장 둘러보기」(아래 .ico.tbot 줄) */
+  /* 261007 공지 시트(ntcOpen) · 칩 + 시각 한 줄 → 본문(줄바꿈 그대로) → 「공지 n개 더 보기」 */
+  .axs-ntcs { display: flex; flex-direction: column; gap: var(--ax-space-12); margin-top: var(--ax-space-4); }
+  .axs-ntcs-c { display: flex; align-items: center; gap: var(--ax-space-8); margin: 0; }
+  .axs-ntcs-b { margin: 0; font: var(--ax-type-t5); color: var(--ax-color-body); white-space: pre-line; word-break: keep-all; overflow-wrap: anywhere; max-height: 40vh; overflow-y: auto; }
+  .axs-ntcs-more { align-self: flex-start; min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--ax-color-brandText); font: var(--ax-type-t6-strong); text-decoration: underline; cursor: pointer; }
+  /* 261007 시각 바꿔 보기(테스트 모드만) · 헤더 맨 위 띠 + 시트 · 옅은 주황 알약 문법(brandSoft · brandText) */
+  #topbar .axs-ttbar { display: flex; align-items: center; gap: var(--ax-space-8); min-height: 32px; margin: 0 calc(-1 * var(--ax-page-inset)); padding: 0 var(--ax-page-inset); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t7); }
+  #topbar .axs-ttbar button { border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; padding: var(--ax-space-4) 0; }
+  #topbar .axs-ttbar .t { flex: 1; text-align: left; }
+  #topbar .axs-ttbar .t b { font-weight: 700; }
+  #topbar .axs-ttbar .x { font-weight: 600; text-decoration: underline; }
+  .axs-ttv { display: flex; flex-direction: column; gap: var(--ax-space-12); margin-top: var(--ax-space-8); }
+  .axs-ttv-h { margin: var(--ax-space-4) 0 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-ttv-t { margin: 0; text-align: center; font: var(--ax-type-t2); font-weight: 700; color: var(--ax-color-ink); font-variant-numeric: tabular-nums; }
+  .axs-ttv-r { width: 100%; accent-color: var(--ax-color-brand); }
+  .axs-ttv-s { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--ax-space-8); }
+  .axs-ttv-s .ax-button { min-height: 44px; }
+  .axs-ttv-p { display: flex; flex-wrap: wrap; gap: var(--ax-space-8); }
+  .axs-ttv-p .axs-chip.on { background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
   /* v5.56 (사용자 261004 「행사장 둘러보기의 아이콘이 너무 허접해 · 챗봇을 배치」) 왼쪽 원 = 옛 3D 로비 사진(thumb.jpg · 지움) 대신 행사 캐릭터 챗봇(원본 BOT_SVG 합성 · design.md A-4)
      둘러보기 안 「내 캐릭터」와 같은 주황 · 연주황 몸 · 원 = 연주황(brandSoft · O10) 테 없음 · 캐릭터 46px(viewBox 200 그대로 · 원 42 안에 다 들어감)
      움직임 = 3초에 한 번 천천히 통통(위로 3px · 모양 그대로) · 머리 위 전파 호 3개 은은하게(최대 0.7) · 9초마다 눈 깜빡임 2번 · 반달 눈웃음 1번

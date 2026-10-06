@@ -1022,6 +1022,14 @@ function lgxAfter(how) {
 function lgxEnter(res, normal, cover) {
   var emp = String((S.get("user", {}) || {}).empId || "");
   if (!LGX_ON || !emp || !BE.on || !stampV2() || lgxSeen(emp) || lgxHasLg()) { normal(); return; }
+  /* 261007 (사용자 「로그인 기록이 있는 사람이 재차 로그인하면 건너뛰기가 보이는 게 아니라 바로 메인으로」) 서버가 아는 기존 계정(로그인 응답 isNew false · 초기화 뒤 새 PIN pwset)
+     = 전에 로그인한 사번 · 다른 기기 · 다른 브라우저 · 로그아웃 뒤 · 앱 업데이트 뒤 모두 오프닝 · 도장 팝 없이 바로 홈 · 첫 로그인 스탬프(lg)는 조용히 맞춘다(서버에 없으면 보내고 이 기기에 팝 없이)
+     오프닝은 그 사번의 진짜 첫 로그인(새 계정 isNew · pwset 아님)에서만 · 테스트 사번도 같다(계정이 있으니 바로 홈 · 다시 보려면 설정 「오프닝 다시 보기」) */
+  if (res && (res.isNew === false || res.pwset)) {
+    lgxMark(emp);
+    if (testEmp()) lgxLocal(); else lgxPush(function (r) { if (r === "added" || r === "dup") lgxLocal(); });
+    normal(); return;
+  }
   if (testEmp()) { lgxStart(emp, "test", cover); return; }
   if (res && res.isNew && !res.pwset) { lgxStart(emp, "send", cover); return; }
   var done = false;   /* v4.95 로그인 두 화면 예외 · 덮개 없이 기다린다(누른 버튼이 「확인 중」을 그대로 들고 있다) */

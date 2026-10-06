@@ -38,8 +38,7 @@ function surveyOpen() {
   var ph = evPhase();
   if (ph === "after") return true;
   if (ph !== "live") return false;
-  var d = new Date();
-  return d.getHours() * 60 + d.getMinutes() >= t2m(SURVEY.open);
+  return hmNow() >= t2m(SURVEY.open);
 }
 function surveyDone() { return S.get("survey_done", false) || S.get("stamps", []).indexOf("sv") >= 0; }
 function surveyPlaces() {

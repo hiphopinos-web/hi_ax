@@ -6,6 +6,7 @@ function sessMy() { return S.get("sess_my", {}); }
 function sessMine(id) {
   var s0 = sessById(id);
   if (s0 && s0.kind === "open") return null;
+  var tt0 = testTen(); if (tt0 !== null && s0 && s0.fl === 10) return tt0 === id ? { slot: null, pre: true, test: true } : null;   /* 261007 테스트 · 내 10F 세션(테스트 모드만 · 실제 명단 · 서버에 쓰지 않음) */
   var m = sessMy()[id] || null;
   if (m) return m;
   var t = testMine().filter(function (x) { return x.t === "sess" && x.id === id; })[0];   /* v3.40 테스트 오버레이 · 실제 키에 쓰지 않음 */
@@ -21,8 +22,21 @@ function testMine() {
   if (!testMode() || /cap/.test(location.hash) || TMG_BUSY) return [];   /* v3.43 생성 중 재귀 방지 */
   var m = S.get("test_mine", null);
   if (!m || !m.items) { m = testMineGen(); S.set("test_mine", m); }
-  return m.items;
+  return testTen() !== null ? m.items.filter(function (x) { return x.t !== "sess"; }) : m.items;   /* 261007 10F 는 「테스트 · 내 10F 세션」이 정한다(무작위 10F 는 뺀다) */
 }
+/* ── 261007 (사용자 「310555 테스트 계정은 세션 A 참석자로」) 테스트 · 내 10F 세션 ──
+   테스트 모드만 · S "test_ten" = 세션 id | "none" · 테스트 사번은 고르기 전 기본 A(fld) · 데모는 고르기 전 null(옛 무작위 오버레이 그대로)
+   고르면 sessMine · tenMine 이 그 세션 사전 신청자로 본다(나의 일정 하루 흐름 · 홈 신청 카드 · 시간표 10F) · 실제 명단(sess_my) · 서버 판정은 그대로 */
+var TEST_TENS = [["none", "없음"], ["fld", "A"], ["ta", "B"], ["tb", "C"], ["aws", "D"], ["ms1", "E1"], ["ms2", "E2"]];
+function testTen() {
+  if (!testMode()) return null;
+  var v = S.get("test_ten", null);
+  if (v === null) v = testEmp() ? "fld" : null;
+  if (v === null) return null;
+  return v !== "none" && TEST_TENS.some(function (x) { return x[0] === v; }) ? v : "";
+}
+function testTenLbl() { var v = testTen(); if (v === null) return "무작위"; var s = v && sessById(v); return s ? s.ttl : "없음"; }
+function testTenSet(v) { if (!testMode()) return; S.set("test_ten", v); TMH.at = 0; if (typeof ttRepaint === "function") ttRepaint(); App.render(); }
 var TMG_BUSY = false;
 function testMineGen() {
   TMG_BUSY = true;
@@ -83,7 +97,7 @@ function myItems(withTest) {
   var kinds = out.map(function (x) { return x.kind; }), ivs = out.filter(function (x) { return x.iv; }).map(function (x) { return x.iv; });
   var hasTen = out.some(function (x) { return x.ten; });
   var clash = function (iv) { return ivs.some(function (b) { return iv[0] < b[1] && b[0] < iv[1]; }); };
-  var now = new Date().getHours() * 60 + new Date().getMinutes();
+  var now = hmNow();
   testMine().forEach(function (x) {
     var it = null;
     if (x.t === "resv") it = { place: "1F AX 라운지", min: t2m(x.slot), go: "App.go('dap')", badge: x.slot, label: x.slot, title: "AX 라운지", gTitle: "AX 라운지", sub: "테스트", gSub: "1F AX 라운지 · 승인 · 테스트", kind: "resv", iv: [t2m(x.slot), t2m(x.slot) + 30] };
