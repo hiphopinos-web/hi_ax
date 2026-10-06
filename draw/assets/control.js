@@ -12,8 +12,9 @@ window.AXDRAW_CONTROL = function () {
   function send(m) { m.axd = 1; try { if (window.opener && !window.opener.closed) { window.opener.postMessage(m, "*"); return; } } catch (e) {} try { bc && bc.postMessage(m); } catch (e) {} }
   function cmd(c, a) { send({ type: "cmd", cmd: c, arg: a }); }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
-  var SCN = { idle: "대기", checkin: "체크인 중", closed: "체크인 마감", card: "등수 카드", mix: "섞는 중", tension: "감속 · 배출 대기", exit: "배출", reveal: "당첨 공개", board: "결과판", fin: "완주 경품 추첨 발표", end: "끝 화면" };
-  var NEXT = { idle: "체크인 시작", checkin: "체크인 마감(두 번)", closed: "등수 추첨 시작", card: "섞기 시작", mix: "뽑기", reveal: "확정", board: "완주 경품 추첨 발표(데모는 끝 화면)", fin: "끝 화면", end: "" };   /* 261004 · 송출 화면 nextCmd 와 같은 순서 */
+  var SCN = { idle: "대기", checkin: "체크인 중", closed: "체크인 마감", nock_checkin: "공 넣는 중", nock_closed: "추첨 준비 끝", card: "등수 카드", mix: "섞는 중", tension: "감속 · 배출 대기", exit: "배출", reveal: "당첨 공개", board: "결과판", fin: "완주 경품 추첨 발표", end: "끝 화면" };
+  var NEXT_NOCK = { idle: "추첨 준비 · 공 넣기", checkin: "" };   /* 261006 체크인 없음 · 다 넣으면 저절로 준비 끝 */
+  var NEXT = { idle: "체크인 시작", checkin: "체크인 마감(두 번)", closed: "등수 추첨 시작", card: "섞기 시작", mix: "뽑기", reveal: "확정", board: "끝 화면(서버 설정 완주추첨_사용 ON 이면 그 발표 먼저)", fin: "끝 화면", end: "" };   /* 261004 · 송출 화면 nextCmd 와 같은 순서 */
 
   var css = document.createElement("style");
   css.textContent = [
@@ -52,6 +53,8 @@ window.AXDRAW_CONTROL = function () {
     '<label>부재 시 공 제외</label><input id="f-abs" type="checkbox">' +
     '<label>첫 추첨 최소 섞기</label><input id="f-minmix" type="text" placeholder="0:30, 5:20, 10:10" title="체크인 분:초 · 체크인이 그 분 이상이면 그 초">' +
     '<label>체크인한 분만</label><input id="f-chk" type="checkbox">' +
+    '<label>체크인 화면 쓰기</label><input id="f-ckui" type="checkbox" title="끄면(기본 · 261006) 체크인 QR · 인원 없이 행운권 번호 전체에서 추첨">' +
+    '<label>통에 보이는 공 상한</label><input id="f-bmax" type="number" min="100" max="4000" title="행운권이 더 많으면 무작위 대표 공만 · 당첨은 행운권 전체에서">' +
     '<label>이름 표시</label><select id="f-name"><option value="mask">가운데 가림 (홍*동)</option><option value="none">번호만</option></select>' +
     '<label>부서 표시</label><input id="f-dept" type="checkbox">' +
     '<label>체크인 티커 이름</label><input id="f-tick" type="checkbox">' +
@@ -76,7 +79,7 @@ window.AXDRAW_CONTROL = function () {
   $("k-saver").onclick = function () { send({ type: "cfg", cfg: { rounds: rounds } }); };
   $("k-savecfg").onclick = function () {
     var c = { mode: $("f-mode").value, demoN: +$("f-demoN").value || 170, demoRate: +$("f-demoRate").value || 9, onePerPerson: $("f-one").checked, absentRemove: $("f-abs").checked,
-      checkinOnly: $("f-chk").checked, nameMode: $("f-name").value, showDept: $("f-dept").checked, tickerNames: $("f-tick").checked, beat: $("f-beat").checked, server: $("f-srv").value.trim(),
+      checkinOnly: $("f-chk").checked, ckUI: $("f-ckui").checked, ballMax: +$("f-bmax").value || 1000, nameMode: $("f-name").value, showDept: $("f-dept").checked, tickerNames: $("f-tick").checked, beat: $("f-beat").checked, server: $("f-srv").value.trim(),
       minMix: ($("f-minmix").value || "").split(",").map(function (x) { var a = x.split(":"); return [+a[0], +a[1]]; }).filter(function (x) { return x[0] >= 0 && x[1] > 0; }) };
     if (!c.minMix.length) delete c.minMix;
     if ($("f-key").value) c.key = $("f-key").value;
@@ -95,14 +98,15 @@ window.AXDRAW_CONTROL = function () {
     if (!m || !m.axd || m.type !== "state") return;
     S = m;
     $("k-conn").textContent = "송출 창 연결됨 · " + (m.demo ? "데모" : "서버") + " · " + m.fps + " fps";
-    $("k-sc").textContent = SCN[m.scene] || m.scene;
+    var nock = !m.cfg.ckUI, nx = nock && m.scene in NEXT_NOCK ? NEXT_NOCK[m.scene] : NEXT[m.scene];
+    $("k-sc").textContent = (nock && SCN["nock_" + m.scene]) || SCN[m.scene] || m.scene;
     $("k-ar").textContent = m.arrived + "명";
     $("k-bl").textContent = m.inside + "개";
-    $("k-next").textContent = "다음 · " + (NEXT[m.scene] || "연출 중");
-    $("k-next").disabled = !NEXT[m.scene];
+    $("k-next").textContent = "다음 · " + (nx || "연출 중");
+    $("k-next").disabled = !nx;
     $("k-mute").textContent = m.muted ? "소리 켜기" : "소리 끄기";
     if (m.toast) $("k-toast").textContent = m.toast;
-    $("k-srv").textContent = "서버: " + (m.srv.url || "주소 없음") + (m.srv.status ? " · " + m.srv.status : "") + (m.srv.log ? " · " + m.srv.log : "") + (m.srv.queue ? " · 미전송 " + m.srv.queue : "") + (m.srv.close ? " · " + m.srv.close : "") + (m.qr ? " · 체크인 QR " + (m.qr.code || m.qr.st || "없음") : "");
+    $("k-srv").textContent = "서버: " + (m.srv.url || "주소 없음") + (m.srv.status ? " · " + m.srv.status : "") + (m.srv.log ? " · " + m.srv.log : "") + (m.srv.queue ? " · 미전송 " + m.srv.queue : "") + (m.srv.close ? " · " + m.srv.close : "") + (m.qr && m.cfg.ckUI ? " · 체크인 QR " + (m.qr.code || m.qr.st || "없음") : "") + (m.srv.att === "ON" && !m.cfg.ckUI ? " · 주의: 서버 행운권_참석조건 ON(체크인한 사람만 통에 들어감) · 체크인 화면이 꺼져 있습니다" : "");
     $("k-log").innerHTML = m.results.slice().reverse().map(function (r) {
       return "<tr><td>" + esc(r.rname || "") + " " + r.slot + "</td><td><b>" + r.no + "</b></td><td>" + esc(maskN(r.nm)) + "</td><td>" + ({ win: "당첨", absent: "부재", undone: "취소" }[r.st] || r.st) + "</td><td>" + String(r.at).slice(11, 19) + "</td></tr>";
     }).join("") || '<tr><td colspan="5" class="c-mut">아직 없음</td></tr>';
@@ -110,7 +114,7 @@ window.AXDRAW_CONTROL = function () {
       cfgLoaded = true; var c = m.cfg;
       rounds = JSON.parse(JSON.stringify(c.rounds)); drawRounds();
       $("f-mode").value = c.mode; $("f-demoN").value = c.demoN; $("f-demoRate").value = c.demoRate; $("f-one").checked = c.onePerPerson; $("f-abs").checked = c.absentRemove;
-      $("f-chk").checked = c.checkinOnly; $("f-name").value = c.nameMode; $("f-dept").checked = c.showDept; $("f-tick").checked = c.tickerNames; $("f-beat").checked = c.beat; $("f-srv").value = c.server || ""; $("f-minmix").value = (c.minMix || []).map(function (x) { return x[0] + ":" + x[1]; }).join(", ");
+      $("f-chk").checked = c.checkinOnly; $("f-ckui").checked = !!c.ckUI; $("f-bmax").value = c.ballMax || 1000; $("f-name").value = c.nameMode; $("f-dept").checked = c.showDept; $("f-tick").checked = c.tickerNames; $("f-beat").checked = c.beat; $("f-srv").value = c.server || ""; $("f-minmix").value = (c.minMix || []).map(function (x) { return x[0] + ":" + x[1]; }).join(", ");
     }
   }
   document.addEventListener("keydown", function (e) { if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; if (e.key === " " || e.key === "Enter") { e.preventDefault(); cmd("next"); } });

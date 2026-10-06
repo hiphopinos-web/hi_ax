@@ -63,14 +63,21 @@
     intro: true,             /* 첫 Space 에 실사 인트로 1회(261001 확정) · 건너뛰기 = Space */
     pal: 1,                  /* 색 대비 · 1 = 통 무채색 + 오렌지 공(261001 사용자 확정) · 2 = 통 오렌지 + 크림 공(비교안 보관 · ?pal=2) */
     server: "",
+    ckUI: false,             /* 261006 사용자 결정 「럭키드로우에서 체크인 요소는 일단 없앤다 · 행운권 중에서 추첨」 · false = 체크인 QR · 체크인 인원 · 티커를 숨기고 「행운권 번호 전체에서 추첨」(서버 설정 행운권_참석조건과 무관) · true = 옛 체크인 화면(코드 보존 · 조작 창 또는 ?ck=1) */
+    ballMax: 1000,           /* 261006 통에 보이는 공 상한(ckUI false 일 때) · 행운권이 더 많으면 무작위 대표 공만 넣고 당첨은 행운권 전체에서 암호 난수로 정한다(위험 R6 · 공 5,000개는 통이 굳어 섞이지 않는다) */
     roundsV: "261002"        /* 경품 단계 판 · 저장값의 판이 이와 다르면(옛 ROUND 01 표 등) 버리고 위 표를 쓴다(261004) · 조작 창에서 고치면 이 판으로 저장된다 */
   };
   var CFG = load(LS_CFG, null);
   if (CFG && CFG.rounds && CFG.roundsV !== DEF.roundsV) { delete CFG.rounds; delete CFG.roundsV; }
   CFG = Object.assign(JSON.parse(JSON.stringify(DEF)), CFG || {});
   if (REC || BENCH) CFG = JSON.parse(JSON.stringify(DEF));
-  if (REC) { CFG.rounds = [{ name: "ROUND 01", prize: "경품 A", count: 2 }, { name: "FINAL", prize: "경품 C", count: 1 }]; CFG.demoRate = 20; }   /* 쇼릴 대본 전용 */
+  if (REC) { CFG.rounds = [{ name: "ROUND 01", prize: "경품 A", count: 2 }, { name: "FINAL", prize: "경품 C", count: 1 }]; CFG.demoRate = 20; CFG.ckUI = true; }   /* 쇼릴 대본 전용(옛 체크인 대본 그대로) */
   if (QPAL) CFG.pal = QPAL;
+  if (Q.has("ck")) CFG.ckUI = Q.get("ck") === "1";                   /* 시험용 · ?ck=1 옛 체크인 화면 · ?ck=0 행운권 전체 */
+  if (+Q.get("demo") > 0) CFG.demoT = Math.min(9000, +Q.get("demo"));   /* 시험용 · ?demo=5000 = 데모 행운권 5,000장(사람 수는 1~3장씩 맞춘다) */
+  if (+Q.get("bmax") > 0) CFG.ballMax = +Q.get("bmax");
+  function NOCK() { return !CFG.ckUI; }                                 /* 체크인 요소 없음(기본) */
+  function ballCap() { return clamp(+CFG.ballMax || 1000, 100, 4000); }
   if (Q.get("remote") === "1" && !REC && !BENCH) CFG.mode = Q.get("mode") === "demo" ? "demo" : "server";   /* 콘솔이 여는 원격 화면(../draw/?remote=1) = 서버 모드 · 모의 시험은 &mode=demo */
   function load(k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
   function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
@@ -108,12 +115,14 @@
   var SUR = "김이박최정강조윤장임한오서신권황안송류홍전고문양손배백허유남심노하곽성차주우구민진나지엄원천방공현함변염여추도소석선설마길연위표명기반왕금옥육인맹제모탁국어은편용".split("");
   var GIV = "민서준우지현수아은도윤하예진서연주원시영태경가채유호재성다온나혜인소희동건규빈승환정미선지훈석".split("");
   var DEPT = ["경영지원", "디지털전략", "장기보험", "자동차보험", "일반보험", "리스크관리", "재무", "인사총무", "영업기획", "보상서비스"];
-  function demoPool(n, seed) {
-    var r = mulberry(seed), people = {}, order = [], used = {};
-    for (var i = 0; i < n; i++) {
+  function demoPool(n, seed, maxT) {
+    var r = mulberry(seed), people = {}, order = [], used = {}, tot = 0;
+    if (maxT) n = maxT;                                /* 261006 · 행운권 장수로 만든다(?demo=5000) */
+    for (var i = 0; i < n && !(maxT && tot >= maxT); i++) {
       var k = r() < 0.5 ? 1 : r() < 0.6 ? 2 : 3;      /* 응모권 1장 50% · 2장 30% · 3장 20% (가정) */
       var nm = SUR[Math.floor(r() * SUR.length)] + GIV[Math.floor(r() * GIV.length)] + GIV[Math.floor(r() * GIV.length)];
       var nos = [];
+      if (maxT) k = Math.min(k, maxT - tot); tot += k;
       while (nos.length < k) { var no = 1 + Math.floor(r() * 9999); if (used[no]) continue; used[no] = 1; nos.push(pad4(no)); }
       var pk = "d" + i;
       people[pk] = { nm: nm, dp: DEPT[Math.floor(r() * DEPT.length)], nos: nos };
@@ -138,11 +147,14 @@
     sc.src = url + (url.indexOf("?") >= 0 ? "&" : "?") + q.join("&");
     document.head.appendChild(sc);
   }
+  function pollMs() { return NOCK() ? 30000 : 3000; }   /* 261006 · 체크인 없음 = 대기 화면 숫자만 바뀐다 · 30초(행운권 전체 읽기는 서버에서 수 초 걸린다 · 서버 부하를 늘리지 않는다) */
   function sessionKey() { try { return sessionStorage.getItem("axfDraw.key") || ""; } catch (e) { return ""; } }
   /* 서버 풀 읽기 · 새 액션 draw_pool(체크인 명단 + 가린 이름) 이 있으면 그것, 없으면 기존 raffle_list(응모권 전원 · 이름 없음) */
   function serverLoad(done) {
-    SRV.status = "불러오는 중";
+    if (SRV.loading) { done(false); return; }          /* 261006 · 참석 조건 OFF 면 한 번에 수 초(행운권 전체) · 앞 요청이 끝나기 전에 또 보내지 않는다 */
+    SRV.status = "불러오는 중"; SRV.loading = true;
     jsonp("draw_pool", { since: SRV.since || "" }, function (res) {
+      SRV.loading = false;
       if (res && res.ok) {
         SRV.status = "draw_pool 연결"; SRV.hasPool = true;
         if (!ST.pool || ST.pool.kind !== "server") ST.pool = { people: {}, order: [], kind: "server" };
@@ -150,11 +162,14 @@
           if (!ST.pool.people[r.pk]) { ST.pool.people[r.pk] = { nm: r.nm || "", dp: r.dp || "", nos: (r.no || []).map(String) }; ST.pool.order.push(r.pk); }
           else ST.pool.people[r.pk].nos = (r.no || []).map(String);
           if (r.x && !ST.out[r.pk] && (r.x === "win" ? CFG.onePerPerson : CFG.absentRemove)) ST.out[r.pk] = r.x;   /* 서버 기록에 이미 당첨 · 부재 */
+          if (NOCK()) return;                          /* 261006 · 체크인 없음 · 공은 「추첨 준비」 때 nockQueue 가 한꺼번에 넣는다 */
           if (r.in && CFG.checkinOnly && !ST.closed) queueArrival(r.pk);
           else if (r.in && CFG.checkinOnly && ST.closed) lateIn(r.pk);
         });
-        SRV.since = res.cursor || SRV.since; SRV.balls = res.balls;
-        if (!CFG.checkinOnly) ST.pool.order.forEach(queueArrival);
+        SRV.since = res.cursor || SRV.since; SRV.balls = res.balls; SRV.all = !!res.all;
+        if (NOCK()) { if (SC === "checkin" && !ST.closed) nockQueue(); }
+        else if (!CFG.checkinOnly) ST.pool.order.forEach(queueArrival);
+        uiPool();
         if (!SRV.stateChecked) { SRV.stateChecked = true; serverState(); }
         done(true); return;
       }
@@ -170,7 +185,8 @@
           });
           order.sort(function (a, b) { return String(first[a]).localeCompare(String(first[b])); });
           ST.pool = { people: people, order: order, kind: "server" };
-          order.forEach(queueArrival);
+          if (NOCK()) { if (SC === "checkin" && !ST.closed) nockQueue(); } else order.forEach(queueArrival);
+          uiPool();
           done(true);
         });
         return;
@@ -339,7 +355,7 @@
   /* 통 움직임 · spin = 각속도가 목표로(체크인 0.8 · 대기 0.2 · 섞기 1.6 rad/s) · park = 감속해 틈을 세운다 · hold = 서 있다
    * 체크인 중에도 통은 천천히 돈다 · 넣을 공이 있으면 틈이 12시로 다가올 때 자연스럽게 감속해 세우고, 그 틈으로 묶어서 넣은 뒤 다시 돈다(최대 2.6초)
    * 체크인 밖(재추첨 · 취소로 돌아오는 공)은 바로 틈을 12시에 세운다 · 추첨 배출 뒤에는 0.35초 뒤 다시 돈다 */
-  var LOADW = 0.8, MIXT = 0, MIXSKIP = false, MIXSKIPAT = 0, MINMIX = 10, CHKSIM = false, DROPT = 0;
+  var NOCKMIX = 10, LOADW = 0.8, MIXT = 0, MIXSKIP = false, MIXSKIPAT = 0, MINMIX = 10, CHKSIM = false, DROPT = 0;
   function minMixFor(m) { if (REC) return 10; var r = CFG.minMix && CFG.minMix.length ? CFG.minMix : DEF.minMix, v = 10;   /* 쇼릴(녹화)은 10초 고정 */ r.forEach(function (x) { if (m >= x[0]) v = x[1]; }); return v; }
   function dropsDue() { for (var k = 0; k < DROPS.length; k++) if (DROPS[k].at <= T) return true; return false; }
   /* v3.2 · 섞기 = 통을 앞뒤로 번갈아 세게 돌린다(세탁조처럼 · 한쪽 약 1.5초 · 2.2 rad/s · 빠르게 방향을 바꾼다)
@@ -366,14 +382,14 @@
       spinStep(dt, chk);
       if (due && SC !== "tension" && SC !== "exit") {
         var D = ((TOP - gapAng()) % 6.2832 + 6.2832) % 6.2832;
-        if (!chk) startPark(TOP, 0.4, 0.9, 0.9, 1.8);
+        if (!chk || NOCK()) startPark(TOP, 0.4, 0.9, 0.9, 1.8);   /* 261006 · 한꺼번에 넣을 때는 바로 12시로 */
         else if (D > 0.3 && D < 0.75 && T >= AG.bu) startPark(TOP, 0.2, 1, 0.4, 1.6);   /* 틈이 12시로 다가올 때만 · 남은 각도만큼 자연스럽게 선다 · 흔드는 중이면 끝난 뒤 */
       }
     } else if (DRM.mode === "park") { if (SC !== "tension" || CHKSIM) stepPark(); }
     else if (DRM.mode === "hold") {
       MIX.w = 0;
       if (DRM.at === TOP) {
-        var held = T - DRM.t0, more = due && !(chk && held > 2.6);
+        var held = T - DRM.t0, more = due && !(chk && !NOCK() && held > 2.6);
         if (more || nFalling) doorSet(1, chk || CHKSIM ? 0.35 : 0.7);   /* 12시 · 문을 열고 넣는다(체크인 중에는 작게) */
         else if (held > 0.35) { doorSet(0, chk || CHKSIM ? 0.35 : 0.7); if (DOOR.v <= 0.02) { DRM.mode = "spin"; if (chk) AG.bu = T + AG.ckb; } }   /* 다 넣으면 닫고 다시 돈다 · 체크인 중이면 먼저 흔든다 */
       }
@@ -794,23 +810,59 @@
     ARR.lastPk.unshift(pk); if (ARR.lastPk.length > 4) ARR.lastPk.length = 4;
     ARR.dirty = true;
   }
+  /* 261006 · 체크인 없음(NOCK) · 「추첨 준비」를 누르면 그때까지의 행운권을 한꺼번에 통에 넣는다
+   *   넣는 순서 = 암호 난수로 섞은 행운권 순서(먼저 들어간 공 · 나중 공이 사람과 상관없다)
+   *   행운권이 ballCap() 보다 많으면 ST.big · 그 수만큼 무작위 대표 공만 넣는다 · 당첨은 capture 에서 행운권 전체 중 암호 난수(bigPick)
+   *   공이 없는 사람도 ST.arrived 에 넣는다(= 추첨 대상) · 다시 불러도 이미 넣은 사람은 건너뛴다 */
+  function cryptoShuffle(a) { var u = cryptoUnits(a.length); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(u[i] * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function nockQueue() {
+    if (!ST.pool) return;
+    var seen = {}; ST.arrived.forEach(function (pk) { seen[pk] = 1; });
+    var fresh = ST.pool.order.filter(function (pk) { return !seen[pk] && !ST.out[pk]; });
+    if (!fresh.length) { if (ST.big == null) { ST.big = false; ST.repN = 0; persist(); } return; }
+    var tk = [];
+    fresh.forEach(function (pk) { (ST.pool.people[pk].nos || []).forEach(function (no) { tk.push([pk, no]); }); });
+    if (ST.big == null) { ST.big = tk.length > ballCap(); ST.repN = 0; }
+    cryptoShuffle(tk);
+    var take = ST.big ? tk.slice(0, Math.max(0, ballCap() - ST.repN)) : tk;
+    ST.rep = ST.rep || {};
+    take.forEach(function (x) { (ST.rep[x[0]] || (ST.rep[x[0]] = [])).push(x[1]); DROPS.push({ at: T, no: x[1], pk: x[0] }); });
+    ST.repN += take.length;
+    fresh.forEach(function (pk) { ST.arrived.push(pk); });
+    ARR.dirty = true; persist(); uiPool();
+  }
+  /* 대표 공 모드 · 지금 추첨 대상 행운권 전체(통에 넣은 사람 · 당첨 · 부재로 빠진 사람 제외 · 이미 당첨된 번호 제외) */
+  function bigTickets() {
+    var won = {}, out = [];
+    ST.results.forEach(function (r) { if (r.st === "win") won[r.no] = 1; });
+    ST.arrived.forEach(function (pk) { if (ST.out[pk]) return; var p = ST.pool && ST.pool.people[pk]; if (p) p.nos.forEach(function (no) { if (!won[no]) out.push([pk, no]); }); });
+    return out;
+  }
+  function bigPick() { var a = bigTickets(); if (!a.length) return null; var x = a[Math.floor(cryptoUnits(1)[0] * a.length)]; return { pk: x[0], no: x[1], n: a.length }; }
+  function nockLoading() { return NOCK() && SC === "checkin" && (ST.big == null || DROPS.length > 0 || nFalling > 0); }
   var DROPS = [];
   function stepDrops() {
     if (!(DRM.mode === "hold" && DRM.at === TOP) || !doorOpen()) return;   /* 틈이 12시에 서 있고 문이 열렸을 때만 넣는다 */
-    if ((SC === "checkin" || CHKSIM) && T - DRM.t0 > 2.6) return;
+    var bulk = NOCK() && SC === "checkin";             /* 261006 · 한꺼번에 넣기 · 문을 열어 둔 채 다 넣을 때까지(약 초당 100개) */
+    if ((SC === "checkin" || CHKSIM) && !bulk && T - DRM.t0 > 2.6) return;
     if (T < DROPT) return;
-    for (var k = 0; k < DROPS.length; k++) {
+    for (var k = 0, got = 0; k < DROPS.length; k++) {
       var d = DROPS[k]; if (T < d.at) continue;
       DROPS.splice(k--, 1);
       if (ballOfNo[d.no] != null) continue;
-      DROPT = T + 0.02;                               /* 초당 50개까지 · 틈으로 쏟아붓는다 */
+      DROPT = T + (bulk ? 0.01 : 0.02);               /* 초당 50개까지 · 틈으로 쏟아붓는다 */
       var gx = DX + Math.cos(gapAng()) * DR, jx = (rng() - 0.5) * Math.max(0, gapHalfW() - R) * 1.6;   /* 12시 틈 바로 위에서 떨어진다 */
-      addBall(d.no, d.pk, gx + jx, -30 - rng() * 30, 0, 420 + rng() * 200, 1);
-      break;
+      addBall(d.no, d.pk, gx + jx, -30 - rng() * 30 - got * R * 2.2, 0, 420 + rng() * 200, 1);
+      if (++got >= (bulk ? 2 : 1)) break;
     }
   }
   function stepArrivals(dt) {
     if (SC !== "checkin") return;
+    if (NOCK()) {                                      /* 261006 · 다 넣으면 저절로 준비 끝 · 행운권을 아직 못 받았으면 5초마다 다시 읽는다 */
+      if (CFG.mode === "server" && !ST.pool && !SRV.loading && T > (SRV.retryT || 0)) { SRV.retryT = T + 5; serverLoad(function () {}); }
+      if (!ST.closed && ST.big != null && !DROPS.length && !nFalling && DRM.mode === "spin" && sT() > 2) closeCheckin();
+      return;
+    }
     if (ST.pool && ST.pool.kind === "demo" && ARR.auto) {
       /* 데모 · 처음엔 드문드문, 점점 몰린다(실제 입장 곡선 가정) */
       var rate = CFG.demoRate * (0.25 + 0.75 * EIO(sT() / 12));
@@ -831,7 +883,7 @@
     if (!ST.pool) return;
     var list = [], won = {};
     ST.results.forEach(function (r) { if (r.st === "win") won[r.no] = 1; });
-    ST.arrived.forEach(function (pk) { if (ST.out[pk]) return; var p = ST.pool.people[pk]; if (p) p.nos.forEach(function (no) { if (!won[no]) list.push([no, pk]); }); });
+    ST.arrived.forEach(function (pk) { if (ST.out[pk]) return; var p = ST.pool.people[pk], nos = ST.rep ? ST.rep[pk] || [] : p && p.nos; if (p && nos) nos.forEach(function (no) { if (!won[no]) list.push([no, pk]); }); });   /* 261006 · 대표 공 모드면 넣었던 대표 공만 */
     nAlive = list.length; R = RT = targetRadius();
     list.forEach(function (x, k) {
       var a = rng() * 6.2832, d = Math.sqrt(rng()) * (DR - R * 1.5);
@@ -896,8 +948,8 @@
     if (T < busyUntil || NEXTCARD) return { c: "", n: "잠시만" };
     switch (SC) {
       case "intro": return { c: "skip", n: "인트로 건너뛰기" };
-      case "idle": return { c: cmdWhy("intro", "") ? "checkin" : "intro", n: "체크인 시작" };
-      case "checkin": return { c: "close", n: "체크인 마감", two: 1 };
+      case "idle": return { c: cmdWhy("intro", "") ? "checkin" : "intro", n: NOCK() ? "추첨 준비 · 공 넣기" : "체크인 시작" };
+      case "checkin": return NOCK() ? { c: "", n: "공을 넣는 중 · 다 넣으면 준비 끝" } : { c: "close", n: "체크인 마감", two: 1 };
       case "closed": return { c: "round", n: curRound().name + " 추첨 시작" };
       case "card": return { c: "mix", n: "섞기 시작" };
       case "mix":
@@ -905,7 +957,7 @@
         return { c: "draw", n: curRound().name + " 뽑기" };
       case "tension": case "exit": return { c: "", n: "뽑는 중" };
       case "reveal": return { c: "confirm", n: "확정", arg: WIN.r && WIN.r.id };
-      case "board": return CFG.mode === "server" ? { c: "fin", n: "완주 경품 추첨 발표" } : { c: "end", n: "끝 화면" };
+      case "board": return CFG.mode === "server" && SRV.finOn ? { c: "fin", n: "완주 경품 추첨 발표" } : { c: "end", n: "끝 화면" };   /* 261006 · 설정 완주추첨_사용 OFF(기본)면 건너뛴다 */
       case "fin": return { c: "end", n: "끝 화면" };
     }
     return { c: "", n: "끝" };
@@ -919,7 +971,7 @@
     keyRun(nx.c, nx.arg);
   }
   var WHY_TXT = { busy: "", scene: "지금 장면에서는 할 수 없습니다", drawing: "뽑는 중입니다", same: "", done: "", notclosed: "체크인을 먼저 마감합니다", round: "없는 등수입니다",
-    loading: "", full: "", empty: "", none: "", id: "다른 당첨입니다", arg: "완주 경품 추첨 숫자가 없습니다", unknown: "모르는 명령입니다", error: "오류" };
+    loading: "공을 넣는 중입니다", full: "", empty: "", none: "", id: "다른 당첨입니다", arg: "완주 경품 추첨 숫자가 없습니다", unknown: "모르는 명령입니다", error: "오류" };
   function keyRun(c, arg) {
     var why = runCmd(c, arg == null ? "" : String(arg));
     if (!why) return;
@@ -967,22 +1019,28 @@
   }
   function lock(sec) { busyUntil = T + sec; }
   function startCheckin() {
-    if (CFG.mode === "demo" && (!ST.pool || ST.pool.kind !== "demo")) ST.pool = demoPool(CFG.demoN, ST.seed);
+    if (CFG.mode === "demo" && (!ST.pool || ST.pool.kind !== "demo")) ST.pool = demoPool(CFG.demoN, ST.seed, CFG.demoT);
     if (CFG.mode === "server" && !ST.pool) serverLoad(function () { pushCtl(); });
-    if (!QRS.mat) qrCode();
-    ARR.auto = CFG.mode === "demo";
+    if (!QRS.mat && !NOCK()) qrCode();
+    ARR.auto = CFG.mode === "demo" && !NOCK();
     /* ME to WE 심볼 점이 흩어져 떨어진다 → 빈 통 */
     scatterSymbol();
     if (!ST.ckAt) { ST.ckAt = REC ? T * 1000 : Date.now(); persist(); }   /* 체크인 길이(분) → 첫 추첨 최소 섞기 */
     DRM.mode = "spin"; MIX.target = 0; scene("checkin"); lock(0.6);   /* 체크인 중에도 통은 천천히 돈다 · 틈이 12시에 올 때 묶어서 넣는다 */
     SFX.play("whoosh", 0.9);
+    if (NOCK()) {                                      /* 261006 · 지금까지 받은 행운권을 넣고, 마지막으로 한 번 더 읽어 그사이 생긴 번호까지 넣는다(그 뒤로는 읽지 않는다) */
+      if (SRV.polling) { clearInterval(SRV.polling); SRV.polling = null; }
+      nockQueue();
+      if (CFG.mode === "server" && SRV.hasPool) serverLoad(function () {});
+      return;
+    }
     if (CFG.mode === "server") { if (SRV.polling) clearInterval(SRV.polling); SRV.polling = setInterval(function () { if ((SC === "idle" || SC === "checkin") && SRV.hasPool) serverLoad(function () {}); }, 3000); }
   }
   function closeCheckin() {
     if (SC !== "checkin") return;
     ARR.q.length = 0; ARR.auto = false; DROPS.length = DROPS.filter(function (d) { return d.at <= T + 0.5; }).length ? DROPS.length : 0;
     qrBurst(); MIXT = 0; MIXSKIP = false; MIXSKIPAT = 0; MIX.target = (LOADW - 0.2) / TUNE.wmix;
-    ST.ckMin = ST.ckAt ? ((REC ? T * 1000 : Date.now()) - ST.ckAt) / 60000 : 0; MINMIX = minMixFor(ST.ckMin);
+    ST.ckMin = ST.ckAt ? ((REC ? T * 1000 : Date.now()) - ST.ckAt) / 60000 : 0; MINMIX = NOCK() ? NOCKMIX : minMixFor(ST.ckMin);   /* 261006 · 섞은 순서로 넣었으니 체크인 길이 규칙 대신 10초 */
     ST.closed = true; if (SRV.polling) { clearInterval(SRV.polling); SRV.polling = null; }
     /* 서버 체크인도 닫는다 · draw_cfg 에 closed 가 생기면 쓰인다 · 지금 서버는 모르는 값을 무시하고 설정을 그대로 돌려준다(쓰기 없음) */
     if (CFG.mode === "server") jsonp("draw_cfg", { closed: 1 }, function (res) { SRV.closeStatus = res && res.ok ? (res.closed ? "서버 체크인 닫힘" : "서버가 닫기를 아직 모름 · 화면만 마감") : "서버 닫기 실패 · 화면만 마감"; pushCtl(); });
@@ -1051,10 +1109,16 @@
   function capture(i) {
     GAP.live = false; GAP.pull = 0; doorSet(0, MC.on ? 0 : 0.5);   /* 지나간 그 스텝에 문이 닫힌다 */
     if (MC.on) { MC.hit = i; return; }
-    var el = eligible().length, r = curRound(), wins = roundWins(ST.round).length, pp = ST.pool.people[bpk[i]] || {};
+    var bp = ST.big ? bigPick() : null;
+    if (bp) {                                         /* 261006 대표 공 모드 · 떨어진 공에 행운권 전체에서 암호 난수로 뽑은 번호를 붙인다(공은 연출 · 결과는 전체 추첨) */
+      if (ballOfNo[bno[i]] === i) delete ballOfNo[bno[i]];
+      bno[i] = bp.no; bpk[i] = bp.pk; bnoI[i] = +bp.no; bnum[i] = numOf(bp.no); if (ballOfNo[bp.no] == null) ballOfNo[bp.no] = i;
+    }
+    var el = bp ? bp.n : eligible().length, r = curRound(), wins = roundWins(ST.round).length, pp = ST.pool.people[bpk[i]] || {};
     var res = { id: "r" + Date.now().toString(36) + Math.floor(rng() * 1e4), round: ST.round, slot: wins + 1, no: bno[i], pk: bpk[i],
       nm: pp.nm || "", dp: pp.dp || "", prize: r.prize, rname: r.name, at: new Date().toISOString(), st: "win", pool: el, sec: +(T - DRAW.t0).toFixed(2) };
-    if (MIXSKIP && !ST.results.length) { res.mskip = 1; res.mixed = MIXSKIPAT; }   /* 첫 추첨 · 최소 섞기를 건너뛰었다(로컬 기록) */
+    if (MIXSKIP && !ST.results.length) { res.mskip = 1; res.mixed = MIXSKIPAT; }
+    if (bp) res.big = 1;                              /* 대표 공 모드로 뽑힘(로컬 기록) */   /* 첫 추첨 · 최소 섞기를 건너뛰었다(로컬 기록) */
     ST.results.push(res); ST.pending = res.id; ST.drawing = 0; if (CFG.onePerPerson) ST.out[res.pk] = "win"; persist(); serverLog(res);
     WIN.i = i; WIN.r = res; WIN.z = 0; WIN.w = 0;
     /* 떨어지는 공의 월드 위치 · 속도(카메라가 따라간다) */
@@ -1503,12 +1567,15 @@
   var PANELS = { intro: "", idle: "pIdle", checkin: "pCheck", closed: "pCheck", mix: "pMix", tension: "pMix", exit: "pMix", reveal: "pReveal", card: "pCard", board: "pBoard", end: "pEnd", fin: "pFin" };
   function uiScene() {
     var s = SC, on = PANELS[s];
-    ["pIdle", "pCheck", "pMix", "pReveal", "pCard", "pBoard", "pEnd", "pFin"].forEach(function (id) {
+    if (NOCK() && (s === "idle" || s === "checkin" || s === "closed")) on = "pPool";   /* 261006 체크인 요소 없음 */
+    document.body.classList.toggle("nock", NOCK());
+    ["pIdle", "pCheck", "pPool", "pMix", "pReveal", "pCard", "pBoard", "pEnd", "pFin"].forEach(function (id) {
       if (id === on) { if (s !== "exit") fade($(id), 1, 0.35, 0.22); }
       else fade($(id), 0, 0.2);
     });
     if (s === "idle") uiIdleCount();
-    if (s === "checkin" || s === "closed") uiCheck();
+    if ((s === "checkin" || s === "closed") && !NOCK()) uiCheck();
+    if (on === "pPool") uiPool();
     if (s === "mix" || s === "tension" || s === "exit") uiMix();
     if (s === "card") uiCard();
     if (s === "board") uiBoard();
@@ -1530,6 +1597,7 @@
       if (res && res.ok && res.code) qrSet(String(res.code), "");
       else { QRS.mat = null; QRS.code = ""; QRS.st = res && res.ok ? "서버 업데이트 뒤 표시" : "QR 코드를 불러오지 못했습니다<br>조작 창의 관리코드를 확인하세요"; qrShow(); }
       if (res && res.ok && res.closed != null) SRV.srvClosed = +res.closed;   /* 서버 체크인 마감 여부(추첨_마감) · 없으면 옛 서버 */
+      if (res && res.ok && res.pool) { SRV.stat = res.pool; SRV.att = res.att; uiPool(); }   /* 261006 · 응모 인원 · 행운권 장수(draw_pool 이 오기 전 대기 화면 숫자) */
       pushCtl(); if (done) done();
     });
   }
@@ -1567,7 +1635,31 @@
     }
     QRS.gone = true; c.style.opacity = "0";
   }
-  function uiIdleCount() { set("iCnt", (ST.arrived.length + ARR.q.length).toLocaleString("en-US")); }
+  function uiIdleCount() { set("iCnt", (ST.arrived.length + ARR.q.length).toLocaleString("en-US")); uiPool(); }
+  /* 261006 · 체크인 없음 · 응모 인원 · 행운권 장수 · 처음 받는 데 수 초(행운권 전체) 걸리면 「불러오는 중」 · 서버 집계(draw_stats pool)가 먼저 오면 그 숫자 */
+  function nf(v) { return Number(v || 0).toLocaleString("en-US"); }
+  function poolCount() {
+    var ppl = 0, tks = 0;
+    if (ST.pool) ST.pool.order.forEach(function (pk) { var p = ST.pool.people[pk]; if (p && p.nos.length && !ST.out[pk]) { ppl++; tks += p.nos.length; } });
+    else if (SRV.stat) { ppl = +SRV.stat.n || 0; tks = +SRV.stat.balls || 0; }
+    return { ppl: ppl, tks: tks, known: !!ST.pool || !!SRV.stat };
+  }
+  function uiPool() {
+    if (!NOCK()) return;
+    var el = $("pPool"); if (!el) return;
+    var c = poolCount(), loadPool = CFG.mode === "server" && !ST.pool, s = SC;
+    set("oPeo", c.known ? nf(c.ppl) : "-"); set("oTk", c.known ? nf(c.tks) : "-");
+    set("oTitle", s === "checkin" ? "추첨 준비" : s === "closed" ? "추첨 준비 끝" : "경품 추첨");
+    var note = loadPool ? "행운권 불러오는 중" : s === "idle" ? "" : ST.big ? "통에는 무작위 " + nf(ST.repN) + "장 · 당첨은 행운권 전체에서" : "공 1개 = 행운권 1장";
+    var on = $("oNote"); on.textContent = note; on.classList.toggle("load", loadPool);
+    $("oLk7").style.display = s === "idle" ? "" : "none";
+  }
+  /* 7등 랜덤 굿즈 한 줄(대기 · 끝 화면) · 무대에서 뽑지 않는다 · 세트 구성 사진(앱 룰렛 경품 _v2) 겹쳐 보이기 */
+  var LK7 = { n: 60, pics: ["rl1_tumbler_v2", "rl4_sticker_v2", "rl2_keyring_v2", "rl5_pen_v2"] };
+  function lk7Html() {
+    return '<span class="pics">' + LK7.pics.map(function (f) { var k = (PIC_K[f] || 0.59) * 100 + "%"; return '<span><img src="' + PIC_DIR + f + '.webp" alt="" decoding="async" style="width:' + k + ";height:" + k + '"></span>'; }).join("") + "</span>" +
+      "<span><b>7등 랜덤 굿즈 " + LK7.n + "명</b><em>행사 뒤 추첨 · 사내 우편 발송</em></span>";
+  }
   function uiCheck() {
     var balls = 0; ST.arrived.forEach(function (pk) { var p = ST.pool && ST.pool.people[pk]; if (p) balls += p.nos.length; });
     set("cEye", ST.closed ? "Check-in closed." : "Check-in");
@@ -1613,6 +1705,7 @@
     var r = curRound(), wins = roundWins(ST.round, true), n = wins.length;
     set("mEye", esc(r.name)); fitText($("mEye"), 42, 30, 1);
     set("mTitle", esc(r.prize)); fitText($("mTitle"), 92, 60, 2);
+    picInto($("mPic"), $("mImg"), r);
     set("mMeta", SC === "mix" && n >= r.count ? "추첨 완료" : r.count + "명 중 " + Math.min(r.count, n + 1) + "번째 추첨");
     var L = $("mList"), h = wins.map(function (w) { return '<div class="wrow"><span class="no">' + w.no + "</span>" + whoHtml(w) + "</div>"; }).join("");
     if (L && L._h !== h) { L._h = h; L.innerHTML = h; fitMList(); }
@@ -1632,7 +1725,7 @@
     set("rEye", esc(rr.name) + " · " + r.slot + " / " + rr.count); fitText($("rEye"), 44, 30, 1);
     set("rName", named ? esc(mask(r.nm)) : "앱의 응모 번호를 확인해 주세요"); fitText($("rName"), named ? 118 : 72, named ? 76 : 48, 2);
     set("rDept", named && CFG.showDept && r.dp ? esc(String(r.dp).trim()) : ""); fitText($("rDept"), 44, 34, 2);
-    set("rPrize", esc(rr.prize)); fitText($("rPrize"), 54, 38, 2);
+    set("rPz", esc(rr.prize)); picInto($("rPic"), $("rImg"), rr); fitText($("rPz"), 54, 38, 2);
     fade($("rWho"), 0, 0); fade($("rPrize"), 0, 0); fade($("rAbs"), 0, 0);
     fade($("rWho"), 1, 0.35, 0.95); fade($("rPrize"), 1, 0.35, 1.05);
   }
@@ -1652,13 +1745,26 @@
   }
   /* 261004 등수 카드 사진 · 등수 이름(6등 … 1등)으로 앱 경품 사진 파일을 참조 · 처음에 미리 불러온다 · 못 불러오면 빈 원(사진 칸 숨김) */
   var PIC_DIR = "../assets/prize/", PIC = { "1등": "ld1_ipad", "2등": "ld2_shilla", "3등": "ld3_minix", "4등": "ld4_airpods", "5등": "ld5_pulio", "6등": "ld6_hyundai" }, PIC_OK = {};
+  /* 261006 · 원 안 사진 크기(원 지름 대비) · 규칙 하나 = 사진의 흰 바탕 밖(상품) 가장 먼 점이 원 반지름의 84% 안(여백 16%) · k = 0.42 / 상품 최대 반지름(사진 폭 대비 · 파일에서 잰 값)
+   *   파일이 바뀌면 다시 잰다(디자인 시안/사이니지 운영 안내 · 럭키드로우) · 표에 없는 파일 = 0.59(정사각 사진 전체가 원 안) */
+  var PIC_K = { ld1_ipad: 0.79, ld2_shilla: 0.59, ld3_minix: 0.90, ld4_airpods: 0.92, ld5_pulio: 0.84, ld6_hyundai: 0.90, rl1_tumbler_v2: 0.87, rl4_sticker_v2: 0.75, rl2_keyring_v2: 0.83, rl5_pen_v2: 0.79 };
+  function picK(img, f) { var k = (PIC_K[f] || 0.59) * 100 + "%"; img.style.width = k; img.style.height = k; }
   (function () { Object.keys(PIC).forEach(function (k) { var im = new Image(); im.onload = function () { PIC_OK[k] = 1; }; im.onerror = function () { PIC_OK[k] = 0; }; im.src = PIC_DIR + PIC[k] + ".webp"; }); })();
+  /* 261006 · 섞기 · 당첨 공개에도 같은 사진(작은 원) · 없으면 칸을 숨긴다 */
+  function picInto(box, img, r) {
+    if (!box || !img) return;
+    var k = String(r && r.name || "").replace(/\s/g, ""), f = PIC[k];
+    if (!f || PIC_OK[k] === 0) { box.classList.remove("on"); img.removeAttribute("src"); return; }
+    var src = PIC_DIR + f + ".webp";
+    if (img.getAttribute("src") !== src) { img.onerror = function () { box.classList.remove("on"); }; img.setAttribute("src", src); picK(img, f); }
+    box.classList.add("on");
+  }
   function uiCardPic(r) {
     var box = $("kPic"), img = $("kImg"), f = PIC[String(r.name).replace(/\s/g, "")];
     box.classList.remove("in"); box.style.opacity = 0;
     if (!f || PIC_OK[String(r.name).replace(/\s/g, "")] === 0) { img.removeAttribute("src"); return; }
     img.onerror = function () { box.classList.remove("in"); box.style.opacity = 0; };
-    img.src = PIC_DIR + f + ".webp";
+    img.src = PIC_DIR + f + ".webp"; picK(img, f);
     void box.offsetWidth; box.classList.add("in");
   }
   function uiCard() { var r = curRound(); uiCardPic(r); set("kEye", esc(r.name)); fitText($("kEye"), 42, 30, 1); set("kTitle", esc(r.prize)); fitText($("kTitle"), 150, 96, 2); set("kMeta", r.count + "명 추첨"); }
@@ -1675,8 +1781,10 @@
   function uiTick() {
     if ((tickN++ % 6) !== 0) return;
     if (SC === "idle") uiIdleCount();
+    else if (SC === "checkin" || SC === "closed") uiPool();
     uiHelp();
-    set("mCount", '<span class="lab">통 안의 공</span><b>' + nInside.toLocaleString("en-US") + "</b><em>개</em>");
+    if (NOCK() && ST.pool) { var bt = bigTickets().length; set("mCount", '<span class="lab">행운권</span><b>' + nf(bt) + '</b><em>장</em><span class="snote">' + (ST.big ? "통에는 무작위 " + nf(nInside) + "장 · 당첨은 행운권 전체에서" : "공 1개 = 행운권 1장") + "</span>"); }   /* 261006 */
+    else set("mCount", '<span class="lab">통 안의 공</span><b>' + nInside.toLocaleString("en-US") + "</b><em>개</em>");
     if (document.body.classList.contains("hud-on")) set("hud", Math.round(FPS.v) + " fps · 공 " + nAlive + " · r " + R.toFixed(1) + " · 품질 " + QA.tier + (GL ? " · 입체" : " · 2D 대체") + " · 물리 " + PH.ms.toFixed(1) + "ms · 그리기 " + RD.ms.toFixed(1) + "ms");
     if (SC === "mix") { var r = curRound(), n = roundWins(ST.round, true).length; set("mMeta", n >= r.count ? "추첨 완료" : r.count + "명 중 " + Math.min(r.count, n + 1) + "번째 추첨"); }
   }
@@ -1692,9 +1800,9 @@
     if (!document.body.classList.contains("help-on")) return;
     var nx = nextCmd(), r = curRound(), done = ST.results.filter(function (x) { return x.st === "win"; }).length;
     set("hNext", esc(nx.n) + (nx.two ? " · 두 번" : ""));
-    set("hNow", esc((SCN_KO[SC] || SC) + " · " + r.name + " " + roundWins(ST.round, true).length + "/" + r.count + " · 당첨 " + done + "명"));
+    set("hNow", esc((SCN_KO[(NOCK() ? "nock_" : "") + SC] || SCN_KO[SC] || SC) + " · " + r.name + " " + roundWins(ST.round, true).length + "/" + r.count + " · 당첨 " + done + "명"));
   }
-  var SCN_KO = { idle: "대기", intro: "인트로", checkin: "체크인 중", closed: "체크인 마감", card: "등수 카드", mix: "섞는 중", tension: "뽑는 중", exit: "뽑는 중", reveal: "당첨 공개", board: "결과판", fin: "완주 경품 추첨 발표", end: "끝 화면" };
+  var SCN_KO = { idle: "대기", intro: "인트로", checkin: "체크인 중", closed: "체크인 마감", nock_checkin: "공 넣는 중", nock_closed: "추첨 준비 끝", card: "등수 카드", mix: "섞는 중", tension: "뽑는 중", exit: "뽑는 중", reveal: "당첨 공개", board: "결과판", fin: "완주 경품 추첨 발표", end: "끝 화면" };
   function toast(msg, soft) {
     if (REC && !soft) return;
     if (remote()) { CMD.msg = msg || ""; pushCtl(msg); if (KEYSRC) keyTip(msg); return; }   /* 원격 · 대형 화면에 운영 안내를 띄우지 않는다(상태 보고로) · 키를 누른 진행자에게만 구석 작은 글자(261004) */
@@ -1724,7 +1832,7 @@
   }
   function snapshot(msg) {
     return { axd: 1, type: "state", scene: SC, cfg: CFG, round: ST.round, results: ST.results, arrived: ST.arrived.length, balls: nAlive, inside: nInside,
-      closed: ST.closed, muted: !SFX.on, qr: { code: QRS.code, url: QRS.url, st: String(QRS.st || "").replace(/<br>/g, " ") }, srv: { close: SRV.closeStatus || "", status: SRV.status, log: SRV.logStatus || "", queue: SRV.queue.length, hasPool: !!SRV.hasPool, url: CFG.server || window.AXF_SERVER || "" },
+      closed: ST.closed, muted: !SFX.on, qr: { code: QRS.code, url: QRS.url, st: String(QRS.st || "").replace(/<br>/g, " ") }, srv: { close: SRV.closeStatus || "", status: SRV.status, log: SRV.logStatus || "", queue: SRV.queue.length, hasPool: !!SRV.hasPool, att: SRV.att || "", url: CFG.server || window.AXF_SERVER || "" },
       pool: ST.pool ? ST.pool.order.length : 0, toast: msg || "", fps: Math.round(FPS.v), demo: CFG.mode === "demo", q: QA.tier, gl: !!GL, late: SRV.late || 0, state: SRV.stateStatus || "" };
   }
   var lastPush = 0;
@@ -1781,7 +1889,7 @@
       case "idle": return SC === "tension" || SC === "exit" ? "drawing" : SC === "idle" ? "same" : "";
       case "intro": return SC !== "idle" ? "scene" : !CFG.intro || ST.introDone ? "done" : "";   /* 261004 · 인트로는 한 번(체크인 시작 = 첫 번에만 인트로 → 체크인) */
       case "checkin": return SC !== "idle" ? "scene" : "";
-      case "close": return SC !== "checkin" ? "scene" : "";
+      case "close": return SC !== "checkin" ? "scene" : nockLoading() ? "loading" : "";   /* 261006 · 체크인 없음 · 공을 다 넣으면 저절로 마감(그 전에는 받지 않는다) */
       case "round":
         if (!ST.closed) return "notclosed";
         if (["closed", "mix", "card"].indexOf(SC) < 0) return "scene";
@@ -1824,7 +1932,7 @@
       case "confirm": confirmWin(); return "";
       case "absent": redraw(); return "";
       case "undo": return undoLast() || "";
-      case "board": scene("board"); MIX.target = 0.15; return "";
+      case "board": scene("board"); MIX.target = 0.15; finCheck(); return "";
       case "end": goEnd(); return "";
       case "fin": var fa = finArg(arg); if (!fa) return "arg"; ST.fin = fa; persist(); goFin(); return "";
     }
@@ -1859,6 +1967,12 @@
       remoteCmd(c.cmd, c.arg, c.seq, "srv");
     });
   }
+  /* 261006 · 옛 「완주 경품 추첨」 발표 장면은 설정 완주추첨_사용 ON 일 때만 · 결과판에 처음 갈 때 한 번 묻는다(OFF = { ok:false, reason:'off' } · 옛 서버 { ok:true, off:true }) */
+  function finCheck() {
+    if (CFG.mode !== "server" || !sessionKey() || SRV.finAsked) return;
+    SRV.finAsked = true;
+    jsonp("fin_state", {}, function (res) { SRV.finOn = !!(res && res.ok && !res.off); uiHelp(); scrPush(true); });
+  }
   /* 30초마다 draw_stats(관리코드) · 추첨 코드 · 서버 마감 여부(명령은 draw_scr 응답과 소켓으로 받는다) */
   function cmdPoll() {
     if (CFG.mode !== "server" || !sessionKey()) return;
@@ -1866,6 +1980,7 @@
       if (!res || !res.ok) return;
       if (res.code && res.code !== QRS.code) qrSet(String(res.code), "");
       if (res.closed != null) SRV.srvClosed = +res.closed;
+      if (res.pool) { SRV.stat = res.pool; SRV.att = res.att; uiPool(); }   /* 261006 · 응모 인원 · 행운권 장수(서버 집계) */
     });
   }
   function remoteBoot() {
@@ -1885,7 +2000,7 @@
       try { sessionStorage.setItem("axfDraw.key", v); } catch (x) {}
       document.getElementById("keyIn").value = ""; document.getElementById("keyErr").textContent = "확인 중";
       jsonp("draw_stats", {}, function (res) {
-        if (res && res.ok) { document.body.classList.remove("needkey"); document.getElementById("keyErr").textContent = ""; WSD.give = false; WSD.fails = 0; qrCode(); remoteBoot(); if (!ST.pool) serverLoad(function () { pushCtl(); }); if (!SRV.polling && !ST.closed) SRV.polling = setInterval(function () { if ((SC === "idle" || SC === "checkin") && SRV.hasPool) serverLoad(function () { uiIdleCount(); }); }, 3000); }
+        if (res && res.ok) { document.body.classList.remove("needkey"); document.getElementById("keyErr").textContent = ""; WSD.give = false; WSD.fails = 0; qrCode(); remoteBoot(); if (!ST.pool) serverLoad(function () { pushCtl(); }); if (!SRV.polling && !ST.closed) SRV.polling = setInterval(function () { if ((SC === "idle" || SC === "checkin") && SRV.hasPool) serverLoad(function () { uiIdleCount(); }); }, pollMs()); }
         else { try { sessionStorage.removeItem("axfDraw.key"); } catch (x) {} document.getElementById("keyErr").textContent = "연결되지 않았습니다 · " + (res && (res.reason || res.err) || "응답 없음"); }
       });
     });
@@ -1942,13 +2057,16 @@
     if (GL) GL.setPalette(CFG.pal);
     if (!GL) glEl.style.display = "none";
     applyTier(0, "시작");
-    MINMIX = minMixFor(ST.ckMin || 0);
+    MINMIX = NOCK() ? NOCKMIX : minMixFor(ST.ckMin || 0);
     set("wm", AXF_WORDMARK);
+    set("oLk7", lk7Html()); set("eLk7", lk7Html());   /* 261006 · 7등 한 줄 */
+    document.body.classList.toggle("nock", NOCK());
+    if (NOCK()) set("hOrder", "순서: 추첨 준비(행운권 전체를 통에 넣고 다 넣으면 저절로 준비 끝) → 6등 추첨 시작 → 섞기 시작 → 뽑기 → 확정 → … → 1등 → 결과판 → 끝 화면. 콘솔 「추첨 › 진행」의 큰 버튼과 같은 순서라 어느 쪽으로 눌러도 됩니다.");
     resize(); window.addEventListener("resize", function () { resize(); });
     document.addEventListener("keydown", onKey);
     document.addEventListener("fullscreenchange", function () { setTimeout(resize, 50); });
     document.body.classList.toggle("demo", CFG.mode === "demo");
-    if (document.fonts && document.fonts.load) document.fonts.load("800 40px AXP").then(function () { atlas.key = ""; if (GL) GL.refreshGlyphs(); refitAll(); });
+    if (document.fonts && document.fonts.load) document.fonts.load("800 40px AXP").then(function () { atlas.key = ""; if (GL) GL.refreshGlyphs(); refitAll(); }).catch(function () {});
     if (BENCH) {
       ST.pool = demoPool(BENCH, 99); ST.arrived = []; var c = 0;
       ST.pool.order.forEach(function (pk) { var p = ST.pool.people[pk]; if (c < BENCH) { if (c + p.nos.length > BENCH) p.nos.length = BENCH - c; ST.arrived.push(pk); c += p.nos.length; } });
@@ -1962,7 +2080,7 @@
         WIN.r = last; WIN.x = 960; WIN.y = 470; WIN.z = 1; WIN.i = -1;
         var bi = ballOfNo[last.no]; if (bi != null) killBall(bi);
         SC = "exit"; startRevealRestore();
-      } else if (s === "checkin") { SC = "checkin"; DRM.mode = "spin"; scene("checkin"); ARR.auto = false; if (CFG.mode === "server") SRV.polling = setInterval(function () { if (SC === "checkin" && SRV.hasPool) serverLoad(function () {}); }, 3000); }
+      } else if (s === "checkin") { SC = "checkin"; DRM.mode = "spin"; scene("checkin"); ARR.auto = false; if (CFG.mode === "server") SRV.polling = setInterval(function () { if (SC === "checkin" && SRV.hasPool) serverLoad(function () {}); }, pollMs()); }
       else if (s === "card") { SC = "mix"; goCard(); }
       else if (s === "board") scene("board");
       else if (s === "end") { scene("mix"); goEnd(); }
@@ -1973,12 +2091,13 @@
       var wasDrawing = s === "tension" || ST.drawing; ST.drawing = 0;   /* 공이 틈을 지나기 전이면 결정이 없다 · 다시 누르면 된다 */
       toast("이어서 진행합니다 · 당첨 " + ST.results.filter(function (r) { return r.st === "win"; }).length + "건" + (wasDrawing && SC === "mix" ? " · 감속 중이던 추첨은 결과 없이 다시 뽑습니다" : ""), true);
     } else scene("idle");
+    if (!BENCH && !REC && CFG.mode === "demo" && NOCK() && (!ST.pool || ST.pool.kind !== "demo")) { ST.pool = demoPool(CFG.demoN, ST.seed, CFG.demoT); uiPool(); }   /* 261006 · 데모 대기 화면 숫자 */
     if (CFG.mode === "server" && ST.pool == null) serverLoad(function () { pushCtl(); });
     if (SRV.queue.length) flushQueue();
     qrCode();
     remoteBoot();
     /* 서버 모드 · 대기 화면부터 체크인 명단을 읽는다(공은 체크인 장면이 시작되면 들어간다 · 그 전에는 숫자만) */
-    if (CFG.mode === "server" && !SRV.polling && !ST.closed) SRV.polling = setInterval(function () { if ((SC === "idle" || SC === "checkin") && SRV.hasPool) serverLoad(function () { uiIdleCount(); }); }, 3000);
+    if (CFG.mode === "server" && !SRV.polling && !ST.closed) SRV.polling = setInterval(function () { if ((SC === "idle" || SC === "checkin") && SRV.hasPool) serverLoad(function () { uiIdleCount(); }); }, pollMs());
     if (!REC) requestAnimationFrame(loop);
     window.__axd = { act: act, state: function () { return ST; }, cfg: function () { return CFG; }, boost: function (e) { MIX.target = e; }, kick: KICK, tune: TUNE, sim: function (n, L, m, reps) { var out = []; for (var r = 0; r < (reps || 1); r++) out.push(simDraw(n, L, m)); return out; }, minmix: function (v) { if (v != null) MINMIX = v; return MINMIX; }, mixskip: function () { return { skip: MIXSKIP, at: MIXSKIPAT, t: +MIXT.toFixed(1), can: canSkipMix() }; }, mc: function (n, m, f) { var r = monteCarlo(n, m, f); return { res: r, spinEsc: MC.spinEsc, second: MC.second }; }, pos: function () { return { x: Array.prototype.slice.call(bx, 0, NB), y: Array.prototype.slice.call(by, 0, NB), s: Array.prototype.slice.call(bs, 0, NB) }; }, 
       /* 시험용 · (가) 회전을 빠르게 하면 틈 앞을 지나는 공이 얼마나 느는가 · wmix 로 sec 초 섞으며 1초에 틈 앞(벽에 닿은 채 틈 폭 안)에 새로 들어오는 공 수 */

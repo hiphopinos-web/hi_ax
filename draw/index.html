@@ -65,6 +65,7 @@
   #pIdle .qrow { margin-top: 30px; }
   body.remote #hud, body.remote #toast { display: none !important; }   /* 원격 · 대형 화면에 운영 흔적 없음 · 키 안내(H)는 진행자가 켤 때만 */
   body.remote #help .loc { display: none; }
+  body.nock #help .ckrow { display: none; }
   /* 원격 · 처음 한 번 관리코드 입력(노트북에서 전체 화면 전에) · 연결되면 사라진다 */
   #keyBox { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 420px; max-width: calc(100% - 32px); background: #141414; border: 1px solid rgba(255,255,255,.16); border-radius: 16px; padding: 24px; display: none; cursor: auto; z-index: 20; font-family: var(--f); color: #fff; }
   body.needkey #keyBox { display: block; } body.needkey { cursor: auto; }
@@ -84,7 +85,34 @@
   .trow b { font-weight: 600; min-width: 140px; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: none; }
   .chip { display: inline-block; padding: 5px 16px; border-radius: 999px; background: rgba(255,126,49,.16); color: var(--hi); font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
+  /* 261006 체크인 없음(기본) · 대기 · 공 넣기 · 준비 끝 = 「행운권 번호 전체에서 추첨」 한 장(체크인 QR · 인원 · 티커는 ckUI 일 때만 · 옛 #pIdle · #pCheck 보존) */
+  #pPool .title { font-size: 96px; margin-top: 6px; }
+  .o-cap { font-size: 40px; line-height: 1.3; font-weight: 700; color: var(--txt); margin-top: 34px; }
+  .o-st { display: flex; gap: 64px; margin-top: 30px; }
+  .o-st .lab { font-size: 28px; line-height: 1.3; font-weight: 500; color: var(--sub); }
+  .o-st .num { display: flex; align-items: baseline; gap: 8px; color: var(--o); }
+  .o-st .num span { font-size: 96px; line-height: 1.05; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .o-st .num em { font-style: normal; font-size: 34px; font-weight: 600; }
+  .o-note { font-size: 28px; line-height: 1.45; font-weight: 500; color: var(--sub); margin-top: 26px; min-height: 41px; }
+  .o-note.load::after { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--o); margin-left: 14px; vertical-align: middle; animation: oDot 1s ease-in-out infinite; }
+  @keyframes oDot { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+  /* 7등 랜덤 굿즈 한 줄 · 무대에서 뽑지 않는다 · 사진 = 앱 룰렛 경품 _v2 를 겹친 그림(같은 파일 참조) */
+  .lk7 { display: flex; align-items: center; gap: 26px; }
+  .lk7 .pics { display: flex; flex: none; padding-left: 6px; }   /* 원끼리 살짝만 겹친다(상품이 가려지지 않게) */
+  .lk7 .pics span { display: flex; width: 80px; height: 80px; border-radius: 50%; background: #fff; overflow: hidden; margin-left: -6px; box-shadow: 0 0 0 4px #000; }
+  .lk7 b { display: block; font-size: 32px; line-height: 1.3; font-weight: 700; color: var(--txt); }
+  .lk7 em { display: block; font-style: normal; font-size: 26px; line-height: 1.35; font-weight: 500; color: var(--sub); margin-top: 2px; }
+  #oLk7 { margin-top: auto; }
+  #eLk7 { position: absolute; left: 0; right: 0; top: 860px; }
+
   #pMix .title { margin-top: 8px; }
+  /* 261006 섞기 · 등수 옆 상품 사진(등수 카드와 같은 파일) */
+  .mhead { display: flex; align-items: center; gap: 26px; }
+  .mhead .eye { flex: 1 1 0; min-width: 0; }
+  .mpic { width: 132px; height: 132px; flex: none; border-radius: 50%; overflow: hidden; background: #fff; box-shadow: 0 0 0 6px rgba(255,255,255,.16); display: none; }
+  .mpic.on { display: flex; }
+  .stat { flex-wrap: wrap; }
+  .stat .snote { flex: 1 0 100%; font-size: 24px; line-height: 1.4; font-weight: 500; color: var(--sub); margin-top: 6px; }
   #mMeta { font-size: 40px; line-height: 1.4; font-weight: 600; color: var(--txt); margin-top: 18px; }
   #mList { margin-top: 26px; flex: 1 1 0; min-height: 0; overflow: hidden; }   /* 넘치면 오래된 줄부터 접고 「앞의 n명」 */
   .wrow { display: grid; grid-template-columns: 140px minmax(0, 1fr); column-gap: 28px; align-items: center; min-height: 80px; padding: 8px 0; border-top: 1px solid rgba(255,255,255,.12); font-size: 42px; font-weight: 600; color: var(--txt); }
@@ -102,17 +130,27 @@
   #rEye { position: absolute; left: 0; right: 0; top: 150px; font-size: 44px; font-weight: 600; color: #fff; }
   #rNo { position: absolute; left: 0; right: 0; top: 214px; font-size: 30px; font-weight: 500; color: rgba(255,255,255,.8); }
   /* v3.1 · 이름 · 부서 · 경품이 한 기둥으로 쌓인다(부서가 두 줄이 되어도 경품과 겹치지 않는다) */
-  #rTxt { position: absolute; left: 160px; right: 160px; top: 676px; display: flex; flex-direction: column; }
+  #rTxt { position: absolute; left: 160px; right: 160px; top: 650px; display: flex; flex-direction: column; }
   #rWho { opacity: 0; }
   #rName { font-size: 118px; line-height: 1.12; font-weight: 700; color: #fff; letter-spacing: 0.02em; }
   #rDept { font-size: 44px; line-height: 1.3; font-weight: 500; color: rgba(255,255,255,.92); margin-top: 6px; }
   #rDept:empty { display: none; }
-  #rPrize { font-size: 54px; line-height: 1.3; font-weight: 600; color: #fff; margin-top: 24px; opacity: 0; }
+  /* 261006 · 경품 줄 = 상품 사진(원) + 경품명 + 「당첨을 축하합니다 · 경품은 따로 전달합니다」(당첨자가 대강당에 없을 수 있다) */
+  #rPrize { display: flex; align-items: center; justify-content: center; gap: 30px; margin-top: 22px; opacity: 0; }
+  #rPic { width: 156px; height: 156px; flex: none; border-radius: 50%; overflow: hidden; background: #fff; box-shadow: 0 0 0 7px rgba(255,255,255,.3); display: none; }
+  #rPic.on { display: flex; }
+  .rpz-t { flex: 0 1 auto; min-width: 0; max-width: 1180px; text-align: left; }
+  #rPic:not(.on) + .rpz-t { text-align: center; }
+  #rPz { font-size: 54px; line-height: 1.25; font-weight: 600; color: #fff; }
+  #rCong { font-size: 30px; line-height: 1.35; font-weight: 500; color: rgba(255,255,255,.92); margin-top: 8px; }
   #rAbs { position: absolute; left: 0; right: 0; top: 700px; font-size: 96px; font-weight: 700; color: #fff; opacity: 0; }
 
   /* 261004 등수 카드 · 통 중심(600, 590) 안쪽 원에 상품 사진 · 고리(지름 824) 안쪽 지름 600 · 사진 = ../assets/prize/ (앱 경품 사진 파일 그대로 참조) */
   #kPic { position: absolute; left: -804px; top: 290px; width: 600px; height: 600px; border-radius: 50%; overflow: hidden; background: #fff; opacity: 0; box-shadow: 0 0 0 10px rgba(255,255,255,.28); }
-  #kPic img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  /* 261006 사용자 「동그라미를 벗어나 잘린다」 · 원 안 사진 = object-fit contain · 사진마다 상품이 원 반지름의 84% 안에 들도록 줄인다(draw.js PIC_K · 잘림 없음) */
+  #kPic, .mpic, #rPic, .lk7 .pics span { align-items: center; justify-content: center; }
+  #kPic { display: flex; }
+  #kPic img, .mpic img, #rPic img, .lk7 .pics img { flex: none; width: 62%; height: 62%; object-fit: contain; }
   #kPic.in { animation: kpIn .7s cubic-bezier(.2,.7,.2,1) .2s both; }
   @keyframes kpIn { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: scale(1); } }
   #pCard .eye { color: #fff; }
@@ -191,6 +229,18 @@
     </div>
   </div></section>
 
+  <section id="pPool" class="panel"><div class="col">
+    <p class="eye" id="oEye">Lucky Draw</p>
+    <h1 class="title" id="oTitle">경품 추첨</h1>
+    <p class="o-cap">행운권 번호 전체에서 추첨</p>
+    <div class="o-st">
+      <div><p class="lab">응모</p><p class="num"><span id="oPeo">0</span><em>명</em></p></div>
+      <div><p class="lab">행운권</p><p class="num"><span id="oTk">0</span><em>장</em></p></div>
+    </div>
+    <p class="o-note" id="oNote"></p>
+    <div class="lk7" id="oLk7"></div>
+  </div></section>
+
   <section id="pCheck" class="panel"><div class="col">
     <p class="eye" id="cEye">Check-in</p>
     <div class="qrow">
@@ -206,7 +256,7 @@
   </div></section>
 
   <section id="pMix" class="panel"><div class="col">
-    <p class="eye fit" id="mEye"></p>
+    <div class="mhead"><span class="mpic" id="mPic"><img id="mImg" alt="" decoding="async"></span><p class="eye fit" id="mEye"></p></div>
     <h2 class="title fit" id="mTitle"></h2>
     <p id="mMeta"></p>
     <div id="mList"></div>
@@ -216,7 +266,7 @@
   <section id="pReveal" class="full">
     <p id="rEye" class="fit"></p>
     <p id="rNo">응모 번호</p>
-    <div id="rTxt"><div id="rWho"><p id="rName" class="fit"></p><p id="rDept" class="fit"></p></div><p id="rPrize" class="fit"></p></div>
+    <div id="rTxt"><div id="rWho"><p id="rName" class="fit"></p><p id="rDept" class="fit"></p></div><div id="rPrize"><span id="rPic"><img id="rImg" alt="" decoding="async"></span><div class="rpz-t"><p id="rPz" class="fit"></p><p id="rCong">당첨을 축하합니다 · 경품은 따로 전달합니다</p></div></div></div>
     <p id="rAbs">부재 · 다시 추첨합니다</p>
   </section>
 
@@ -244,7 +294,7 @@
     <p class="eye">Thank you.</p>
     <h2 class="title">ME to WE :</h2>
     <p class="meta">나의 경험을 우리의 가능성으로</p>
-  </div></section>
+  </div><div class="lk7" id="eLk7"></div></section>
 
   <div id="demoMark">DEMO · 가짜 참가자 데이터</div>
   <div id="toast"></div>
@@ -260,13 +310,13 @@
       <tr><td>Space · → · PageDown</td><td>다음 (위에 적힌 동작)</td></tr>
       <tr><td>R 두 번</td><td>부재 · 다시 뽑기 (당첨 공개 중)</td></tr>
       <tr><td>U 두 번</td><td>마지막 당첨 취소</td></tr>
-      <tr><td>C 두 번</td><td>체크인 마감</td></tr>
+      <tr class="ckrow"><td>C 두 번</td><td>체크인 마감</td></tr>
       <tr><td>E 두 번 · I 두 번</td><td>끝 화면 · 대기 화면</td></tr>
       <tr><td>F · M</td><td>전체 화면 · 소리</td></tr>
       <tr><td>P · H</td><td>조작 창 · 이 안내</td></tr>
       <tr class="loc"><td>1 ~ 9 · V · D · A</td><td>등수 바로 가기 · 인트로 · 데모 체크인 (원격 화면에서는 안 씀)</td></tr>
     </table>
-    <p>순서: 체크인 시작 → 체크인 마감 → 6등 추첨 시작 → 섞기 시작 → 뽑기 → 확정 → … → 1등 → 결과판 → 완주 경품 추첨 발표 → 끝 화면. 콘솔 「추첨 › 진행」의 큰 버튼과 같은 순서라 어느 쪽으로 눌러도 됩니다.</p>
+    <p id="hOrder">순서: 체크인 시작 → 체크인 마감 → 6등 추첨 시작 → 섞기 시작 → 뽑기 → 확정 → … → 1등 → 결과판 → 완주 경품 추첨 발표 → 끝 화면. 콘솔 「추첨 › 진행」의 큰 버튼과 같은 순서라 어느 쪽으로 눌러도 됩니다.</p>
   </div>
 </div>
 <script src="../assets/server.js"></script>
