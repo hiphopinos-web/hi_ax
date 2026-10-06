@@ -15,7 +15,7 @@ function notifyUser(title, body, target, focus) {
 }
 /* 내 상태 전환 감지 · 서버 sync·로컬 storage 어느 쪽이 바꿔도 여기서 팝업 1회 */
 function checkMyState() {
-  if (App.current === "admin" || SIGNAGE.indexOf(App.current) >= 0) return;
+  if (App.current === "admin" || App.current === "sscan" || SIGNAGE.indexOf(App.current) >= 0) return;   /* v5.98 스태프 스캔 중에는 내 알림을 띄우지 않는다(나오면 띄운다) */
   var seen = S.get("noti_seen", {});
   var changed = false;
   var my = myResv();
@@ -34,7 +34,7 @@ function checkMyState() {
   }
   /* v5.90 선착순 참여상 수령 자격 · 앱이 열려 있으면 팝업 1회(푸시 없음 · 계약 5.1) · 옛 완주 경품 당첨 팝업은 지웠다 */
   var fq = fcfsMy();
-  if (fq && fq.st === "got" && seen.fcfs !== "got") {
+  if (fcfsReady(fq) && seen.fcfs !== "got") {   /* v5.98 수령순 ready = 옛 got 과 같은 순간(6개째) · 본 표시는 그대로 got */
     seen.fcfs = "got"; changed = true;
     notice({ key: "fcfs:got", first: true, run: function () { fcfsGotOpen(); } });   /* v5.97 (사용자 261006 밤) 팝업 대신 수령 안내 시트 · 스탬프 연출 뒤 · 쌓인 행운권 상자보다 먼저(first) */
   }
@@ -328,6 +328,24 @@ WS.h.ops = function (m) {   /* v4.76 스태프 폰 ops 방 · 혼잡 카드 곧�
   if (m.crowd && typeof crowdStore === "function") crowdStore(m.crowd); else wsSyncSoon(1500);
 };
 WS.h.tv = function (m) { if (WS.role === "tv") tvWsPull(false, m.k); };
+WS.h.scan = function (m) { scanTellIn(m); };   /* v5.98 개인 사건 scan · 스태프 폰 스캔(서버 scanTell_) */
+/* v5.98 선착순 참여상 소진 순간 · 서버가 참가자 방에 한 번(소켓만 · 푸시 없음) · 6개 · 아직 안 받은(ready) 사람에게만 한 줄 · 화면은 sync 로 */
+WS.h.fcfsout = function () {
+  var was = fcfsReady(fcfsMy());
+  if (BE.on && typeof wsSyncSoon === "function") wsSyncSoon(3000);
+  if (was && App.current !== "sscan") toast("선착순 참여상이 모두 나갔어요");
+};
+/* v5.98 (사용자 261006 밤 「QR 스캔이 되면 완료 푸시가 나가나? 룰렛은 행운을 빌어요」) 스태프가 내 QR 을 찍은 순간
+ * 소켓 개인 사건(scan) 또는 앱이 보일 때 온 푸시(태그 scan:<사건 키>) · 같은 사건은 한 번(SCANTELL) · 곧바로 sync(스탬프 연출 · 화면 · 내 QR 「확인됨」)
+ * 스탬프(AX PLAY 등) · 키트 = sync 만(도장 연출 · 사전등록 안내 시트가 알린다) · 룰렛 · 선착순 = 짧은 알림 한 줄(「룰렛 1회 사용 · 행운을 빌어요!」) */
+var SCANTELL = { seen: [] };
+function scanTellIn(m) {
+  var sk = String(m && m.sk || "");
+  if (!sk || SCANTELL.seen.indexOf(sk) >= 0) return;
+  SCANTELL.seen.push(sk); if (SCANTELL.seen.length > 40) SCANTELL.seen.shift();
+  if (BE.on) { if (POLL.t) { clearTimeout(POLL.t); POLL.t = null; } pollTick(); }
+  if (m.s === "roul" || m.s === "fcfs") { var t = String(m.tt || ""), b = String(m.b || ""); if (t) toast(t + (b ? "\n" + b : ""));   /* 두 줄(「룰렛 1회 사용」 / 「행운을 빌어요!」) · 글 중간에서 줄이 갈리지 않게(#toast pre-line) */ stampBuzz([60, 40, 60]); }   /* 제목 = tt(t 는 Hub 가 사건 종류로 쓴다) */
+}
 /* TV · 힌트가 오면 기존 읽기 1회(순위판 · 올림픽) · 처음 붙었을 때도 1회 */
 function tvWsPull(all, k) {
   if (App.current !== "wall_type") return;
@@ -661,7 +679,7 @@ function pushSeen(tag) {
 }
 function pushGo(go, tag) {
   pushSeen(tag);
-  if (["home", "photoq", "ev_cchat", "dap", "notices"].indexOf(go) < 0) go = "home";   /* v4.78 A5 notices = 공지 목록(긴급 공지 · 대상 지정) */
+  if (["home", "photoq", "ev_cchat", "dap", "notices"].indexOf(go) < 0 && go !== "exp" && go !== "rewards") go = "home";   /* v5.98 스캔 알림 = 스탬프 탭(exp) · 나의 보상(rewards) */   /* v4.78 A5 notices = 공지 목록(긴급 공지 · 대상 지정) */
   if (!((S.get("user", {}) || {}).empId) || el("app").hidden) { PUSHGO = { go: go, tag: tag || "" }; return; }
   if (typeof DET !== "undefined") DET.canon = Date.now();   /* v5.69 푸시 · 딥링크 = 그 항목이 있는 목록 위에 상세 시트 */
   App.go(go);
@@ -671,7 +689,8 @@ function pushGoRun() { if (!PUSHGO) return; var g = PUSHGO; PUSHGO = null; pushG
 function pushIn(d) {
   if (!d || document.visibilityState !== "visible") return;
   var tag = String(d.tag || "");
-  if (/^(photo|cchat|dap):/.test(tag) || /^N\d+$/.test(tag)) { if (typeof wsSyncSoon === "function") wsSyncSoon(800); return; }   /* v4.78 dap: 승인은 앱 안 「과제상담 승인 완료」 한 곳 */
+  if (/^(photo|cchat|dap):/.test(tag) || /^N\d+$/.test(tag)) { if (typeof wsSyncSoon === "function") wsSyncSoon(800); return; }
+  if (/^scan:/.test(tag)) { scanTellIn({ sk: tag.slice(5), s: tag.slice(5).split(".")[0], tt: d.t, b: d.b }); return; }   /* v5.98 소켓으로 먼저 받았으면 건너뛴다 */   /* v4.78 dap: 승인은 앱 안 「과제상담 승인 완료」 한 곳 */
   if (!d.t) return;
   notice({ key: "push:" + (tag || d.j || d.t), title: String(d.t), body: String(d.b || ""), go: d.go && d.go !== "home" ? d.go : "", urgent: !!d.u });
 }

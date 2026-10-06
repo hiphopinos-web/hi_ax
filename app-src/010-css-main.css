@@ -1341,6 +1341,54 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-will-chg { flex: none; min-height: 40px; padding: 0 var(--ax-space-16); border: 0; border-radius: var(--ax-radius-12); background: var(--ax-color-surface); color: var(--ax-color-ink); box-shadow: inset 0 0 0 1px var(--ax-color-divider); font: var(--ax-type-t6-strong); cursor: pointer; }
   .axs-camgo { min-height: 64px; font: var(--ax-type-t5-strong); }
   .axs-scam video { max-height: 36vh; }
+  /* v5.98 스태프 스캔(sscan) · 짙은 면 · 맨 위 닫기 · 자리 칩 · 오늘 처리 수 · 톱니 / 카메라 크게(남은 높이 전부) · 위에 결과 띠 1.5초 / 아래(엄지) = 결과 판 · 내 QR · 최근 스캔 */
+  #view[data-v="sscan"] { padding: var(--ax-space-12) var(--ax-page-inset) calc(var(--ax-space-16) + env(safe-area-inset-bottom)); min-height: 100vh; min-height: 100dvh; }
+  .ssc { display: flex; flex-direction: column; gap: var(--ax-space-12); min-height: calc(100vh - 28px - env(safe-area-inset-bottom)); min-height: calc(100dvh - 28px - env(safe-area-inset-bottom)); }
+  .ssc-top { display: flex; align-items: center; gap: var(--ax-space-8); }
+  .ssc-ib { flex: none; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; border-radius: var(--ax-radius-12); background: transparent; color: var(--ax-color-inverse); cursor: pointer; }
+  .ssc-ib svg { width: 24px; height: 24px; }
+  .ssc-spot { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 0; min-height: 52px; padding: var(--ax-space-4) var(--ax-space-16); border: 1px solid var(--ax-color-brand); border-radius: var(--ax-radius-16); background: rgba(255, 127, 50, 0.14); color: var(--ax-color-inverse); text-align: left; cursor: pointer; font-family: inherit; }
+  .ssc-spot span { font: var(--ax-type-caption); color: var(--ax-color-disabled); }
+  .ssc-spot b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--ax-type-t5-strong); }
+  .ssc-n { flex: none; margin: 0; display: flex; flex-direction: column; align-items: center; min-width: 44px; color: var(--ax-color-inverse); }
+  .ssc-n span { font: var(--ax-type-caption); color: var(--ax-color-disabled); }
+  .ssc-n b { font: var(--ax-type-t4); font-weight: 800; font-variant-numeric: tabular-nums; }
+  .ssc-will { margin: 0; font: var(--ax-type-t6); color: var(--ax-color-disabled); word-break: keep-all; }
+  .ssc-will b { color: var(--ax-color-inverse); font-weight: 700; }
+  .ssc-will span { display: block; font: var(--ax-type-caption); }
+  .ssc-will.bad b, .ssc-will.bad span { color: var(--ax-color-errorSoft); }
+  .ssc-cam { position: relative; flex: 1 1 auto; min-height: 46vh; border-radius: var(--ax-radius-20); overflow: hidden; background: var(--ax-color-body); }
+  .ssc-cam video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ssc-fr { position: absolute; inset: 22% 14%; border: 2px solid rgba(255, 255, 255, 0.85); border-radius: var(--ax-radius-24); pointer-events: none; }
+  .ssc-cam.off { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--ax-space-16); padding: var(--ax-space-24); color: var(--ax-color-inverse); text-align: center; font: var(--ax-type-t5); }
+  .ssc-cam.off p { margin: 0; }
+  .ssc-camgo { position: absolute; left: var(--ax-space-16); right: var(--ax-space-16); bottom: var(--ax-space-16); z-index: 3; }
+  .ssc-band { position: absolute; left: var(--ax-space-12); right: var(--ax-space-12); top: var(--ax-space-12); z-index: 3; display: flex; flex-direction: column; gap: 2px; padding: var(--ax-space-16) var(--ax-space-20); border-radius: var(--ax-radius-16); background: rgba(25, 31, 40, 0.86); color: var(--ax-color-inverse); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28); animation: sscIn .16s ease-out; }
+  .ssc-band[hidden] { display: none; }
+  .ssc-band b { font: var(--ax-type-t3); font-weight: 800; word-break: keep-all; }
+  .ssc-band span { font: var(--ax-type-t6-strong); opacity: 0.94; word-break: keep-all; }
+  .ssc-band.c-ok { background: var(--ax-color-success); }
+  .ssc-band.c-dup { background: var(--ax-color-muted); }
+  .ssc-band.c-roul { background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
+  .ssc-band.c-bad { background: var(--ax-color-error); }
+  @keyframes sscIn { from { transform: translateY(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .ssc-band { animation: none; } }
+  .ssc-bot { display: flex; flex-direction: column; gap: var(--ax-space-12); }
+  .ssc-bot .axs-sres { padding: var(--ax-space-12) var(--ax-space-16); }
+  .ssc-bot .axs-sres-h { font: var(--ax-type-t4); font-weight: 800; }
+  .ssc-acts { display: flex; gap: var(--ax-space-8); }
+  .ssc-acts .ax-button { flex: 1; }
+  .ssc-log summary { min-height: 44px; display: flex; align-items: center; font: var(--ax-type-t6-strong); color: var(--ax-color-disabled); cursor: pointer; }
+  .ssc-log #scanLog { padding: var(--ax-space-4) var(--ax-space-16); border-radius: var(--ax-radius-12); background: var(--ax-color-surface); }
+  .ssc-log .axs-lg { display: flex; align-items: baseline; justify-content: space-between; gap: var(--ax-space-12); padding: var(--ax-space-8) 0; border-bottom: 1px solid var(--ax-color-divider); font: var(--ax-type-t6); color: var(--ax-color-muted); }
+  .ssc-picks .axs-stile { min-height: 76px; }
+  .ssc-picks .axs-stile.on { background: var(--ax-color-brandSoft); box-shadow: inset 0 0 0 2px var(--ax-color-brand); }
+  .ssc-h { margin: var(--ax-space-16) 0 var(--ax-space-8); }
+  .ssc-opts { display: flex; flex-direction: column; margin-top: var(--ax-space-16); border-top: 1px solid var(--ax-color-divider); }
+  .ssc-opt { display: flex; align-items: center; justify-content: space-between; gap: var(--ax-space-12); min-height: 52px; padding: 0 var(--ax-space-4); border: 0; border-bottom: 1px solid var(--ax-color-divider); background: none; color: var(--ax-color-ink); font: var(--ax-type-t5); text-align: left; cursor: pointer; }
+  .ssc-opt b { font: var(--ax-type-t5-strong); color: var(--ax-color-brandText); }
+  .ssc-opt .axs-chev { width: 18px; height: 18px; color: var(--ax-color-muted); }
+  #toast { white-space: pre-line; }   /* v5.98 스캔 알림 두 줄(제목 / 본문) · 다른 알림은 줄바꿈 글자가 없어 그대로 */
   .axs-sres { padding: var(--ax-space-16) var(--ax-space-20); border-radius: var(--ax-radius-20); background: var(--ax-color-canvas); color: var(--ax-color-body); }
   .axs-sres.ok { background: var(--ax-color-successSoft); color: var(--ax-color-success); box-shadow: inset 0 0 0 2px var(--ax-color-success); }
   .axs-sres.bad { background: var(--ax-color-errorSoft); color: var(--ax-color-error); box-shadow: inset 0 0 0 2px var(--ax-color-error); }

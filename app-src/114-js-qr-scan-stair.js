@@ -896,7 +896,8 @@ function scanQStart() {
 var QRM_SYNC_MS = 6000;
 var QRM = { timer: null, until: 0, snap: null, msg: "", busy: false };
 function qrMineSnap() {
-  return { ck: JSON.stringify(S.get("checkin", {})), q: S.get("queue", {}), ru: !!S.get("roulette_used", false) };
+  var f = typeof fcfsMy === "function" ? fcfsMy() : null;
+  return { ck: JSON.stringify(S.get("checkin", {})), q: S.get("queue", {}), ru: !!S.get("roulette_used", false), st: (S.get("stamps", []) || []).slice(), fq: f && f.st || "" };   /* v5.98 스탬프 · 선착순도 본다(스태프가 내 QR 을 찍은 순간 「확인됨」) */
 }
 function qrMineOn() {
   qrMineOff();
@@ -953,6 +954,9 @@ function qrMineCheck() {
     if (s1.status !== s0.status || s1.no !== s0.no) msg = s1.status === "call" ? "지금 입장하세요 · " + nm : s1.status === "done" ? "완료 · " + nm : nm + " · " + s1.no + "번" + (s1.ahead ? " · 앞 " + s1.ahead + "명" : "");
   }
   if (!a.ru && b.ru) msg = "룰렛 1회 사용 · 지금 돌리세요";
+  var nst = (b.st || []).filter(function (x) { return (a.st || []).indexOf(x) < 0; });   /* v5.98 스태프 적립(AX PLAY · 체크인 3개) */
+  if (nst.length) msg = nst.indexOf("ck") >= 0 ? "사전등록 체크인 · 스탬프 3개" : stampTitle(nst[nst.length - 1]) + " 스탬프 적립";
+  if (a.fq !== "done" && b.fq === "done") msg = "선착순 참여상 수령";
   if (!msg) return;
   QRM.snap = b; QRM.msg = msg; QRM.until = Date.now() + 90000;
   stampBuzz(25);
@@ -1089,6 +1093,7 @@ function qrCamStart() {
   }).catch(function () {
     qrCamStop();
     if (App.current === "scan_q" && !SCAN.on) { SCQ.err = "deny"; App.render(); return; }   /* v4.06 Q02 · 화면 안에서 거부 상태 */
+    if (App.current === "sscan") { SSC.camErr = true; SCAN.on = false; App.render(); }   /* v5.98 스태프 스캔 · 「카메라 켜기」 단추로 다시 */
     if (el("qrVideo")) modalClose();
     notice({ key: "cam", title: "카메라를 열 수 없어요", body: "브라우저 설정에서 카메라 권한 허용" });
   });
@@ -1128,13 +1133,13 @@ var SCAN_SPOTS = [
   /* v5.34 (설계안 §10 결정 2) 사옥 밖 체크인 존(몽골텐트) · 찍으면 체크인 + 키트 지급 기록(inv_kit) · 10F 입장(sess_in)과 따로 */
   { id: "kit", nm: "체크인 존 · 키트", kind: "kit", lb: "체크인 존 · 키트", tsub: "체크인 + 지급", will: "체크인 + 키트 지급", cond: "사전 신청 명단이면 바로 지급" },
   /* v5.90 (261006 경품 기획 변경) 1F 체크인존 · 선착순 참여상 수령(fcfs_give · QR 서명) · 키트 타일과 같은 모양 */
-  { id: "fcfs", nm: "체크인 존 · 참여상", kind: "fcfs", lb: "체크인 존 · 참여상", tsub: "선착순 수령", will: "선착순 참여상 수령", cond: "스탬프 6개 · 선착순 자격" }
+  { id: "fcfs", nm: "체크인 존 · 참여상", kind: "fcfs", lb: "체크인 존 · 참여상", tsub: "선착순 수령", will: "선착순 참여상 수령", cond: "스탬프 6개 · 남은 수량 안에서 먼저 온 순서" }   /* v5.98 받기 선착순 */
 ];
 var SCAN_TILES = ["roulette", "kit", "fcfs", "p2", "dap", "cchat", "sess"];   /* 자주 쓰는 룰렛 · 포토 · 스탬프(AX PLAY)가 위 · 10F 세션은 한 타일에서 A~E · v4.83 1F 전시 타일 삭제 */
 function scanSpot(id) { return SCAN_SPOTS.filter(function (s) { return s.id === id; })[0] || null; }
 var SCAN = { spot: S.get("scan_spot", "") !== "q_photo" ? S.get("scan_spot", "") : "", log: [], last: "", lastT: 0, on: false, pick: false, sub: "", res: null };
 
-function scanPick(id) { scanStop(); SCAN.spot = scanSpot(id) ? id : ""; SCAN.last = ""; S.set("scan_spot", SCAN.spot); App.render(); }   /* v4.65 위치를 바꾸면 3초 중복 가드도 푼다(같은 사람을 다른 위치에서 곧바로) */
+function scanPick(id) { scanStop(); SCAN.spot = scanSpot(id) ? id : ""; SCAN.last = ""; SCAN.lastE = ""; S.set("scan_spot", SCAN.spot); App.render(); }   /* v4.65 위치를 바꾸면 3초 중복 가드도 푼다(같은 사람을 다른 위치에서 곧바로) */
 function scanStart() {
   if (!SCAN.spot) { toast("찍을 목적을 먼저 골라 주세요"); return; }
   if (!qrScanSupported()) { toast("이 기기에서는 카메라를 열 수 없어요"); return; }
@@ -1146,8 +1151,9 @@ function scanStop() { SCAN.on = false; qrCamStop(); }
 /* 연속 스캔이라 같은 QR이 몇 프레임 연속으로 잡힌다. 3초 안의 같은 코드는 무시한다 */
 function scanHit(raw) {
   var emp = qrParseUser(raw);
+  if (scanSeen(emp)) return;   /* v5.98 같은 사람 QR 이 카메라에 계속 비치면 3초를 다시 잰다(서명 QR 은 20초마다 글자가 바뀐다 · 사번으로 본다) · 치웠다가 3초 뒤 다시 대면 찍힌다 */
   if (raw === SCAN.last && Date.now() - SCAN.lastT < 3000) return;   /* v4.65 참가자 QR 이 아닌 것도 3초에 한 번 · 전에는 카메라가 보는 동안 0.12초마다 한 줄씩 기록을 밀어냈다 */
-  SCAN.last = raw; SCAN.lastT = Date.now();
+  SCAN.last = raw; SCAN.lastT = Date.now(); SCAN.lastE = emp || ""; SCAN.seenE = Date.now();
   if (!emp) { scanLog("", "참가자 QR이 아니에요", false); scanShow("bad", "", "참가자 QR이 아니에요", "참가자 앱의 내 QR을 찍어 주세요"); return; }
   var sp = scanSpot(SCAN.spot);
   if (!sp) return;
@@ -1164,7 +1170,7 @@ function scanHit(raw) {
   scanLog(emp, "처리 중", null);
   scanShow("wait", emp, "확인하는 중", sp.will || sp.nm);
   beCall(params, function (res) { scanDone(emp, sp, res); },
-    function () { scanLog(emp, "서버 응답 없음 · 다시 찍어 주세요", false, true); scanShow("bad", emp, "서버 응답 없음", "다시 찍어 주세요"); SCAN.last = ""; });
+    function () { scanLog(emp, "서버 응답 없음 · 다시 찍어 주세요", false, true); scanShow("bad", emp, "서버 응답 없음", "다시 찍어 주세요"); SCAN.last = ""; SCAN.lastE = ""; });
 }
 function scanDone(emp, sp, res) {
   if (!res || !res.ok) {
@@ -1174,7 +1180,7 @@ function scanDone(emp, sp, res) {
     if (/잠금|Lock|timeout|시간초과/i.test(err)) {
       scanLog(emp, "서버가 잠시 붐벼요 · 다시 찍어 주세요", null, true);
       scanShow("wait", emp, "서버가 잠시 붐벼요", "다시 찍어 주세요");
-      SCAN.last = "";                       /* 같은 QR을 곧바로 다시 찍을 수 있게 중복 가드 해제 */
+      SCAN.last = ""; SCAN.lastE = "";      /* 같은 QR을 곧바로 다시 찍을 수 있게 중복 가드 해제 */
       return;
     }
     if (why === "auth") { var lm = admLostMsg(); scanLog(emp, lm + " · 다시 입력해 주세요", false, true); scanShow("bad", emp, lm, "다시 입력해 주세요"); admAuthLost(); return; }   /* v4.65 */
@@ -1208,6 +1214,9 @@ function scanDone(emp, sp, res) {
   var who = sp.kind === "stamp" ? res.who || "" : res.name || "";   /* v4.65 stamp_grant name = 스탬프 이름 · 참가자 이름은 who(새 서버) */
   scanLog(emp, (who ? who + " · " : "") + ok, true, true);
   var dup = !!res.dup;
+  /* v5.98 스태프 스캔 화면 결과 띠(sscBand) 문구 · 스탬프 = 「AX PLAY 적립 · 스탬프 n / 6」 · 룰렛 = 주황 「룰렛 1회 사용 · 남은 0」 */
+  if (sp.kind === "stamp") SCAN.bd = dup ? { t: "이미 받음", s: sp.nm } : { t: sp.nm + " 적립", s: res.n ? "스탬프 " + res.n + " / 6" : "" };
+  else if (sp.kind === "roulette") SCAN.bd = { c: "roul", t: "룰렛 1회 사용 · 남은 0", s: "스탬프 " + (res.n || "") + "개 · 바로 돌리세요" };
   scanShow(dup ? "dup" : "ok", who || emp,
     sp.kind === "sess" || sp.kind === "roster" ? (dup ? "이미 입장 처리됨" : "입장 완료") :
       sp.kind === "photo" ? res.no + "번 입장 완료" :
@@ -1287,6 +1296,7 @@ function invKitGive() {
     if (r && r.ok && r.kit === "give") {
       R.tone = "ok"; R.head = "키트 지급"; R.sub = "여유 키트에서" + (r.spare != null ? " · 남은 " + r.spare : ""); R.inv = "kitdone";
       INVS.rid = String(r.rid || ""); INVS.rt = Date.now(); stampBuzz(60);
+      sscShow("ok", r.name || emp, "키트 지급", R.sub);   /* v5.98 스태프 스캔 화면 띠 · 오늘 처리 수 */
       scanLog(emp, (r.name ? r.name + " · " : "") + "키트 지급(명단 밖)", true);
       setTimeout(function () { if (INVS.id === id && invMine()) invPaint(); }, 5100);
     } else if (r && r.reason === "spare0") { R.tone = "bad"; R.head = "여유 키트 없음"; R.sub = "룰렛 굿즈로 대체해 주세요"; R.inv = ""; stampBuzz([120, 80, 120]); }
@@ -1313,10 +1323,10 @@ function invKitUndo() {
 /* v5.90 선착순 참여상 수령 결과 · new 수령 처리 · dup 이미 수령 · none(noelig 6개 미달 · full 마감 · closed 17:00 뒤 · void 취소 · off 꺼짐) */
 function fcfsDone(emp, res) {
   var who = res.name || emp, lf = res.left != null ? " · 남은 " + res.left : "";
-  if (res.give === "new") { scanLog(emp, (res.name ? res.name + " · " : "") + "선착순 참여상 수령 처리", true, true); scanShow("ok", who, "선착순 참여상 수령 처리", "무선 무드등 가습기 1개 전달" + lf); return; }
+  if (res.give === "new") { scanLog(emp, (res.name ? res.name + " · " : "") + "선착순 참여상 수령 처리" + (res.nth ? " · " + res.nth + "번째" : ""), true, true); SCAN.bd = { t: "선착순 지급" + (res.nth ? " (" + res.nth + "번째)" : ""), s: "무선 무드등 가습기 1개 전달" + lf }; scanShow("ok", who, "선착순 참여상 수령 처리", "무선 무드등 가습기 1개 전달" + lf); return; }   /* v5.98 nth = 지급 순서(수령순) */
   if (res.give === "dup") { scanLog(emp, (res.name ? res.name + " · " : "") + "이미 수령", true, true); scanShow("dup", who, "이미 수령", (res.at || "") + "에 받았어요"); return; }
-  var why = res.reason, msg = why === "noelig" ? ["자격 없음", "스탬프 6개 미달" + (res.n != null ? " (현재 " + res.n + "개)" : "")] : why === "full" ? ["마감", "선착순 수량이 먼저 찼어요 · 6개 달성은 행운권 3장"] :
-    why === "closed" ? ["마감", "17:00 이후 달성"] : why === "void" ? ["취소된 자격", "운영 본부에 문의해 주세요"] : why === "off" ? ["지금은 받지 않아요", "선착순 참여상 꺼짐"] : ["처리하지 못했어요", String(why || "")];
+  var why = res.reason, msg = why === "noelig" ? ["스탬프 " + (res.n != null ? res.n + "개" : "6개 미만") + " · 6개 필요", "6개를 모으면 받을 수 있어요"] : why === "full" ? ["마감", "선착순 수량이 먼저 찼어요 · 6개 달성은 행운권 3장"] : why === "out" ? ["마감", "선착순 참여상이 모두 나갔어요"] : why === "test" ? ["테스트 계정", "기록하지 않았어요"] :   /* v5.98 수령순 out · test · 「자격」 말 없음 */
+    why === "closed" ? ["마감", (res.cut || "17:00") + " 지급 마감"] : why === "void" ? ["지급 불가", "운영 본부에 문의해 주세요"] : why === "off" ? ["지금은 받지 않아요", "선착순 참여상 꺼짐"] : ["처리하지 못했어요", String(why || "")];
   scanLog(emp, (res.name ? res.name + " · " : "") + msg[0], false, true);
   scanShow("bad", who, msg[0], msg[1]);
 }
@@ -1478,7 +1488,7 @@ function staffStampGive(id) {
   var u = S.get("user", {}) || {};
   var key = STAFFK, se = STAFFE, st = STAFFT;
   modalClose();                       /* STAFFK 는 여기서 비워지므로 위에서 미리 복사해 둔다 */
-  var q = { action: "stamp_grant", emp: u.empId || "", id: id };
+  var q = { action: "stamp_grant", emp: u.empId || "", id: id, nt: "0" };   /* v5.98 nt 0 = 참가자 알림 없음(이 폰이 바로 그린다) */
   if (se && st) { q.tok = st; q.aemp = se; } else q.key = key;   /* v4.86 사람 토큰이 있으면 코드는 보내지 않는다 */
   beCall(q,
     function (res) {
@@ -1587,14 +1597,15 @@ function qrScanHit(raw, pts) {
   /* 운영자 스캐너는 참가자 QR 이 아니거나 3초 안 같은 코드면 멈추지 않는다(기존 로그 · 중복 가드 그대로) · v4.32 옛 타자왕전 스태프 QR 확인은 셀프 모드로 대체돼 없다 */
   if (SCAN.on) {
     var emp = qrParseUser(raw), lst = SCAN;
-    if (!emp || (raw === lst.last && Date.now() - lst.lastT < 3000)) { scanHit(raw); return; }
+    if (!emp || (raw === lst.last && Date.now() - lst.lastT < 3000) || (emp === lst.lastE && Date.now() - lst.seenE < 3000)) { scanHit(raw); return; }   /* v5.98 같은 사람(사번) 3초 · 계속 비치면 다시 잰다(scanSeen) */
   }
   QRS.hold = true; QRS.gate = Date.now() + QR_HOLD; QRS.gateQ = [];
   if (QRS.timer) { clearInterval(QRS.timer); QRS.timer = null; }   /* 머무는 동안 프레임을 훑지 않는다 */
   if (QRS.hint) { clearTimeout(QRS.hint); QRS.hint = null; }
   qrHoldShow(pts);
   stampBuzz(30);
-  var s0 = SFX.site; SFX.site = false; sfx("scan"); SFX.site = s0;
+  if (App.current === "sscan") sscSfx("scan");   /* v5.98 스태프 스캔 화면 = 그 화면 소리 설정(기본 켬 · 톱니에서 끄기) */
+  else { var s0 = SFX.site; SFX.site = false; sfx("scan"); SFX.site = s0; }
   var cont = SCAN.on;
   if (SCAN.on) scanHit(raw);                  /* 운영자 스캐너 · 연속 스캔이라 닫지 않는다 */
   else qrHandle(raw);                         /* 요청은 지금 · 화면 전환만 0.8초 뒤 */

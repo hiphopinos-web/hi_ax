@@ -135,7 +135,7 @@ function notice(o) {
 }
 function noticeBusy() {
   return !!((typeof qrGated === "function" && qrGated()) || SPOP.cur || SPOP.q.length || el("spop") || el("lgx") || el("modal") || el("axsSheet") || el("rgPlay") || el("app").hidden ||
-    App.current === "admin" || App.current === "scan_res" || App.current === "stair" || SIGNAGE.indexOf(App.current) >= 0);   /* v4.06 결과·계단 화면이 연출이다 · 보상 안내는 나온 뒤 */
+    App.current === "admin" || App.current === "sscan" || App.current === "scan_res" || App.current === "stair" || SIGNAGE.indexOf(App.current) >= 0);   /* v4.06 결과·계단 화면이 연출이다 · 보상 안내는 나온 뒤 */
 }
 function noticePump() {
   clearTimeout(NOTICE.t);

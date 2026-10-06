@@ -59,7 +59,8 @@ var App = {
     game_tetris: "games", game_pang: "games", game_jump: "games", quiz_play: "quiz", oly_rank: "games", type_rank: "guide", floor1: "guide",   /* v4.83 퀴즈 두 종목의 뒤로가기 = AX 퀴즈 */
     /* 프로그램 · 신청 (2단계에서 재디자인) */
     dap: "guide", ev_cchat: "guide", sess_d: "guide", sess_cf: "sess_d", sess_ok: "guide", zone_d: "guide", floor_d: "guide",   /* v4.93 구역 상세 · 뒤로 = 프로그램(상시 운영) */
-    admin: "my", type_site: "admin", wall_type: "admin", type_award: "admin"
+    admin: "my", type_site: "admin", wall_type: "admin", type_award: "admin",
+    sscan: "home"   /* v5.98 스태프 스캔 · 뒤로 = 들어온 곳 */
   },
   TITLES: {
     home: "AX Festival", guide: "프로그램", exp: "스탬프", my: "나의 참여",
@@ -71,7 +72,7 @@ var App = {
     ev_cchat: "내 커피챗",
     floor1: "1F 부스", zone_d: "1F 구역",
     admin: "관리자 모드", game_tetris: "테트리스", type_site: "1F 현장 셀프 모드", wall_type: "", type_award: "", type_rank: "1F 타자왕 순위",
-    game_pang: "AX 팡", game_jump: "ME to WE 점프", quiz_play: "퀴즈 풀기", oly_rank: "미니 게임 순위"
+    game_pang: "AX 팡", game_jump: "ME to WE 점프", quiz_play: "퀴즈 풀기", oly_rank: "미니 게임 순위", sscan: "스태프 스캔"
   },
   /* 들어온 곳 기억 · 같은 화면을 여러 곳에서 연다(시간표 = 홈 · 나의 참여, 미니게임 = 체험 · 스탬프 카드) → 뒤로가기는 들어온 곳으로 */
   from: {},
@@ -162,7 +163,8 @@ var App = {
     if (typeof sheetClose === "function" && el("axsSheet")) sheetClose(true);
     if (v === "ideas" && this.current !== "ideas") IDEA.step = null;   /* v4.07 다시 들어오면 입력 폼부터 */
     if (this.current === "guide" && v !== "guide") PROG.scroll = window.scrollY;   /* 목록 스크롤 보존 (뒤로 오면 되돌린다) */   /* v4.01 AI 사생대회 폐기 · 배너·해시(#demo=art 등)·뒤로가기를 포함한 모든 진입을 홈으로 돌린다 */
-    if (this.current === "scan_q" && v !== "scan_q") { qrCamStop(); qrMineOff(); qrWakeOff(true); SCQ.paused = false; }   /* v4.06 Q02 를 떠나면 카메라를 끈다 · v5.23 내 QR 동기화도 */
+    if (this.current === "scan_q" && v !== "scan_q") { qrCamStop(); qrMineOff(); qrWakeOff(true); SCQ.paused = false; }
+    if (this.current === "sscan" && v !== "sscan") sscLeave();   /* v5.98 스태프 스캔을 떠나면 카메라 · 화면 꺼짐 막기를 끈다 */   /* v4.06 Q02 를 떠나면 카메라를 끈다 · v5.23 내 QR 동기화도 */
       if (this.current === "game_tetris" && v !== "game_tetris") ttStop();
     if (this.current === "game_pang" && v !== "game_pang") pgStop();
     if (this.current === "type_site" && v !== "type_site") { tsfStop(); if (RG.on && RG.mode === "site") rgStop(); }
@@ -242,14 +244,15 @@ var App = {
         gear + "</div>" +   /* v4.15 관리자 잠금은 관리자 화면 맨 아래 「관리자 모드 끝내기」 */
         this.crumbHtml(v);   /* v4.09 경로 줄 · 헤더 구분선 바로 아래 */
     }
-    tb.style.display = SIGNAGE.indexOf(v) >= 0 ? "none" : "";
+    tb.style.display = SIGNAGE.indexOf(v) >= 0 || v === "sscan" ? "none" : "";   /* v5.98 스태프 스캔 = 자기 머리 줄(닫기 · 자리 칩 · 톱니) */
     if (v === "type_site" && tsfOn()) tb.style.display = "none";   /* v4.32 셀프 모드 참가자 화면 · 헤더 없음 */
     crumbFit();
     /* 헤더 높이를 실측해 sticky 기준선으로 넘긴다 */
     el("frame").style.setProperty("--stick", tb.offsetHeight + "px");
     var nav = el("tabbar");
     document.body.dataset.pg = v === "scan_q" && SCQ.tab === "scan" ? "d" : "";   /* v5.23 내 QR 탭은 밝은 면 */   /* v4.06 · 프로그램 탭 흰 페이지(v4.05) 폐지 · 다른 탭과 같은 canvas + 흰 카드 · Q02 스캔만 카메라 화면(짙은 면) */
-    nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "sess_d" || v === "sess_cf" || v === "sess_ok" || (v === "ideas" && IDEA.step) || ["exp_g", "scan_q", "scan_res", "stair"].indexOf(v) >= 0 || v === "game_tetris" || v === "game_pang" || v === "game_jump" || v === "game_ox" || v === "type_site") ? "none" : "";
+    nav.style.display = (SIGNAGE.indexOf(v) >= 0 || v === "sess_d" || v === "sess_cf" || v === "sess_ok" || (v === "ideas" && IDEA.step) || ["exp_g", "scan_q", "scan_res", "stair"].indexOf(v) >= 0 || v === "sscan" || v === "game_tetris" || v === "game_pang" || v === "game_jump" || v === "game_ox" || v === "type_site") ? "none" : "";
+    if (v === "sscan") document.body.dataset.pg = "d";   /* v5.98 스태프 스캔 = 짙은 면 · 아래 메뉴 없음 */
     var activeTab = this.tabOf(v), ico = this.NAV_ICO;
     var btn = function (t) {   /* v5.75 선택 표시 세 겹 = 채움 아이콘(-f) + 주황 아이콘 + 짙은 굵은 라벨(CSS) · 선택 안 됨 = 선 아이콘 + 회색 */
       var on = activeTab === t[0];
@@ -258,9 +261,12 @@ var App = {
     };
     var T = this.TABS;
     /* 가운데 = QR 화면(v5.23 사용자 261003 · 기본 내 QR · 스캔은 탭) · 주황 원 + 짙은 글리프 · 둥근 모서리 그림(qr-corners)만(v5.75 원 안 「QR」 글자 없앰 · 아래 「내 QR」 라벨이 이름) */
+    var stf = typeof staffOn === "function" && staffOn();   /* v5.98 (사용자 261006 밤) 스태프 폰(관리자 모드를 연 기기) = 가운데 단추가 곧바로 스태프 연속 스캐너 · 일반 직원은 그대로 내 QR */
     nav.innerHTML = btn(T[0]) + btn(T[1]) +
+      (stf ? '<button class="axs-scan" onclick="sscOpen()" aria-label="스태프 스캔"><span class="axs-scan-c" aria-hidden="true">' +
+        '<svg><use href="#qr-corners"/></svg></span><span aria-hidden="true">스캔</span></button>' :
       '<button class="axs-scan" onclick="qrOpen()" aria-label="내 QR · QR 스캔"><span class="axs-scan-c" aria-hidden="true">' +
-      '<svg><use href="#qr-corners"/></svg></span><span aria-hidden="true">내 QR</span></button>' +
+      '<svg><use href="#qr-corners"/></svg></span><span aria-hidden="true">내 QR</span></button>') +
       btn(T[2]) + btn(T[3]);
     el("view").dataset.v = v;
     if (v === "scan_q") el("view").dataset.qt = SCQ.tab; else delete el("view").dataset.qt;
@@ -276,6 +282,7 @@ var App = {
     if (aeId) { var aeN = el(aeId); if (aeN) { try { aeN.focus({ preventScroll: true }); if (aeSel) aeN.setSelectionRange(aeSel[0], aeSel[1]); } catch (e) {} } }   /* 다시 그려도 입력 중인 칸과 커서를 되돌린다 */
     if (v === "scan_q") { if (SCQ.tab === "scan") setTimeout(scanQStart, 80); else if (!QRM.timer) qrMineOn(); }   /* v5.23 카메라는 스캔 탭에서만 · 내 QR 탭은 6초 동기화 */
     if (v === "stair" && STR.mode === "start") stairTickOn();
+    if (v === "sscan") setTimeout(sscMount, 0);   /* v5.98 새 video 에 카메라를 다시 붙이거나 켠다 */
     detPaint(dv, v);
     if (v !== "ideas" && typeof IDEA !== "undefined") IDEA.cc = false;   /* v5.83 커피챗에서 온 아이디어 쓰기 표시는 그 화면 안에서만 */
     if (typeof SPOP !== "undefined" && SPOP.cur && !SPOP.cur.done) { var spT = spTgt(SPOP.cur); if (spT.el) spT.el.classList.add("sp-wait"); }   /* v3.49 재렌더돼도 안착 전 자리는 비어 보이게 */

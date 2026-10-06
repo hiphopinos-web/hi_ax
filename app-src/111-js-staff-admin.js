@@ -75,7 +75,133 @@ function scanShow(tone, who, head, sub, go) {
   if (box) box.innerHTML = scanBigHtml();
   if (tone === "ok") stampBuzz(60);
   else if (tone === "bad") stampBuzz([120, 80, 120]);
+  var bd = SCAN.bd; SCAN.bd = null;   /* v5.98 결과 띠 문구(scanDone 이 넣는다 · 없으면 제목 · 한 줄 그대로) */
+  sscShow(tone, who, head, sub, bd);
 }
+
+/* ═══ v5.98 스태프 폰 연속 스캔 (사용자 261006 밤 「스태프가 바쁜데 핸드폰을 켜고 QR을 찍고 그러면 정신이 없을 수 있을 것 같아」 · 「스태프들 관리자 모드로 핸드폰을 들고」
+ *     · 「스태프 사번으로 로그인하면 QR 코드 부분에 관리자용 QR 코드 스캐너를 심으면 · 어디 스캐너인지 알아야 하니 설정 버튼은 필요」) ═══
+ * 스태프 폰(관리자 모드를 연 기기 · staffOn) = 아래 가운데 큰 원 단추가 「스캔」 → 이 화면(sscan). 일반 직원은 그대로 「내 QR」.
+ * 맨 위 = 닫기 · 자리 칩 · 오늘 이 폰 처리 수 · 톱니(자리 고르기 시트 · 스캔 소리 · 내 QR · 관리자 모드 화면). 자리는 이 기기에 기억(scan_spot · AX PLAY 부스 = scan_sub).
+ * 처음(자리 없음) = 시트부터. 자리가 있으면 카메라가 곧바로 켜지고 계속 켜진 채 다음 사람을 기다린다(scanHit · scanDone 그대로 · 찍을 때마다 메뉴를 다시 고르지 않는다).
+ * 찍으면 = 진동 + 짧은 소리(이 화면 설정 · 기본 켬) + 카메라 위 큰 결과 띠 1.5초(초록 성공 · 회색 이미 · 주황 룰렛 · 빨강 실패 · 이름 가운데 가림) → 저절로 다음 대기.
+ * 같은 사람 QR 이 계속 비쳐도 3초 안 재스캔은 무시(scanSeen · 계속 비치면 다시 잰다). 화면 꺼짐 막기(Wake Lock · 지원 기기). 등급 · 키트 · 되돌리기 단추는 아래(엄지 자리) 결과 판 그대로(invResHtml).
+ * 오프라인 저장은 하지 않는다(스태프 스캔은 원래 저장 방식이 없다 · 룰렛 이중 사용을 막으려면 그 자리에서 서버 판정) · 서버 미연결 = 띠 「기록되지 않았어요」. 기존 관리자 모드 › QR 스캔 경로는 그대로 둔다. */
+var SSC = { band: null, bandT: null, camErr: false, starting: false, wl: null, wlReq: false };
+var SSC_BAND_MS = 1500;
+Views.sscan = function () { return sscHtml(); };
+var SSC_SUB = { p2: [["hdq", "하이디큐"], ["hhp", "하이헬퍼"]] };   /* 같은 동작(stamp_grant p2) · 칩에 어느 부스인지만 */
+function staffOn() { return !!S.get("admin_authed", false) && admRole() !== "grade" && !!(admTok() || admKey()); }   /* 새 판정 없음 · 관리자 모드(사번 + 코드 · admin_check)를 이 폰에서 연 스태프 */
+/* 같은 사람(사번) 3초 · 계속 비치면 시계를 다시 잰다 */
+function scanSeen(emp) { if (emp && emp === SCAN.lastE && Date.now() - SCAN.seenE < 3000) { SCAN.seenE = Date.now(); return true; } return false; }
+function sscSub(id) { var L = SSC_SUB[id || SCAN.spot], v = S.get("scan_sub", ""); return L ? (L.filter(function (x) { return x[0] === v; })[0] || L[0]) : null; }
+function sscSpotLb(sp) { var u = sscSub(sp.id); return u ? sp.nm + " · " + u[1] : sp.kind === "sess" ? sp.nm : sp.lb || sp.nm; }
+function sscDay() { var d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
+function sscCnt() { var c = S.get("ssc_cnt", null); return c && c.d === sscDay() ? Number(c.n) || 0 : 0; }
+function sscCntUp() { S.put("ssc_cnt", { d: sscDay(), n: sscCnt() + 1 }); var b = el("sscN"); if (b) b.textContent = sscCnt(); }
+function sscSndOn() { return S.get("ssc_snd", true) === true; }
+function sscSfx(name) { if (!sscSndOn()) return; var c = sfxCtx(); if (!c) return; try { if (c.state !== "running") c.resume(); } catch (e) {} try { sfxPlay(name); } catch (e) {} }
+/* 이름 가운데 가림(홍길동 → 홍*동) · 사번만 있으면 가운데 두 자리 */
+function sscMask(s) {
+  s = String(s || ""); var a = Array.from(s);
+  if (/^\d{5,}$/.test(s)) return s.slice(0, 2) + "**" + s.slice(-2);
+  return a.length <= 1 ? s : a.length === 2 ? a[0] + "*" : a[0] + new Array(a.length - 1).join("*") + a[a.length - 1];
+}
+function sscShow(tone, who, head, sub, bd) {
+  if (tone === "ok") sscCntUp();
+  var c = bd && bd.c || tone;
+  SSC.band = { c: c, t: tone === "wait" ? head : (who ? sscMask(who) + " · " : "") + (bd && bd.t || head), s: bd && bd.s != null ? bd.s : sub || "" };
+  sscBandPaint();
+  if (SSC.bandT) clearTimeout(SSC.bandT);
+  SSC.bandT = setTimeout(function () { SSC.bandT = null; SSC.band = null; sscBandPaint(); }, tone === "wait" ? 16000 : SSC_BAND_MS);
+  if (App.current === "sscan" && tone !== "wait") sscSfx(tone === "bad" ? "rgmiss" : tone === "dup" ? "tik" : "ting");
+}
+function sscBandHtml() {
+  var b = SSC.band;
+  return '<div class="ssc-band' + (b ? " c-" + b.c : "") + '" id="sscBand" role="status" aria-live="assertive"' + (b ? "" : " hidden") + ">" + (b ? "<b>" + esc(b.t) + "</b>" + (b.s ? "<span>" + esc(b.s) + "</span>" : "") : "") + "</div>";
+}
+function sscBandPaint() { var n = el("sscBand"); if (n) n.outerHTML = sscBandHtml(); }
+function sscOpen() { if (sscSndOn()) sfxUnlock(); App.go("sscan"); }
+function sscClose() { App.back(); }
+function sscMine() { qrPanelOpen("mine"); }
+function sscHtml() {
+  var sp = scanSpot(SCAN.spot), w = sp ? scanWhat(sp) : "";
+  var top = '<div class="ssc-top"><button type="button" class="ssc-ib" onclick="sscClose()" aria-label="닫기">' + X_SVG + "</button>" +
+    '<button type="button" class="ssc-spot" onclick="sscSheet()"><span>자리</span><b>' + esc(sp ? sscSpotLb(sp) : "자리를 골라 주세요") + "</b></button>" +
+    '<p class="ssc-n"><span>오늘</span><b id="sscN">' + sscCnt() + "</b></p>" +
+    '<button type="button" class="ssc-ib" onclick="sscSheet()" aria-label="자리 · 설정">' + GEAR_SVG + "</button></div>";
+  var warn = BE.on ? "" : '<div class="axs-err" role="alert"><b>서버에 연결되지 않았어요</b><span>이 상태로 찍으면 기록되지 않아요</span></div>';
+  var will = sp ? '<p class="ssc-will' + (sp.kind === "roulette" && S.get("roulette_out", false) ? " bad" : "") + '">찍으면 <b>' + esc(sp.will || sp.nm) + "</b>" + (w ? "<span>" + esc(w) + "</span>" : "") + "</p>" : "";
+  var cam = !sp ? '<div class="ssc-cam off"><p>먼저 자리를 골라 주세요</p><button type="button" class="ax-button" onclick="sscSheet()">자리 고르기</button></div>'
+    : !qrScanSupported() ? '<div class="ssc-cam off"><p>이 기기에서는 카메라를 열 수 없어요</p></div>'
+    : '<div class="ssc-cam"><video id="qrVideo" playsinline muted></video><span class="ssc-fr" aria-hidden="true"></span>' + sscBandHtml() +
+      (SSC.camErr ? '<button type="button" class="ax-button ssc-camgo" onclick="sscCamGo()">카메라 켜기</button>' : "") + "</div>";
+  var log = '<details class="ssc-log"><summary>최근 스캔</summary><div id="scanLog">' + scanLogHtml() + "</div></details>";
+  return '<div class="ssc">' + top + warn + will + cam + '<div class="ssc-bot"><div id="scanRes">' + scanBigHtml() + "</div>" +
+    '<div class="ssc-acts"><button type="button" class="ax-button ax-button-weak" onclick="sscMine()">내 QR</button></div>' + log + "</div></div>";
+}
+/* 그린 뒤 · 카메라를 새 video 에 다시 붙이거나 켠다(App.render 가 video 를 새로 만든다) */
+function sscMount() {
+  if (App.current !== "sscan") return;
+  sscWake(true);
+  var sp = scanSpot(SCAN.spot), v = el("qrVideo");
+  if (!sp || !v || !qrScanSupported() || SSC.camErr) return;
+  var st = QRS.stream, dead = st && st.getVideoTracks && st.getVideoTracks().some(function (t) { return t.readyState === "ended"; });
+  if (dead) { qrCamStop(); st = null; }
+  if (st) {
+    if (v.srcObject !== st) { v.srcObject = st; var pp = v.play(); if (pp && pp.catch) pp.catch(function () {}); }
+    if (!QRS.timer && !QRS.hold) QRS.timer = setInterval(qrScanTick, 120);
+    return;
+  }
+  if (SSC.starting) return;
+  SCAN.on = true; SSC.starting = true;
+  setTimeout(function () { SSC.starting = false; if (App.current === "sscan" && SCAN.on && !QRS.stream && el("qrVideo")) qrCamStart(); }, 40);
+}
+function sscCamGo() { SSC.camErr = false; if (sscSndOn()) sfxUnlock(); App.render(); }
+function sscLeave() { scanStop(); SSC.starting = false; sscWake(false); }
+function sscWake(on) {
+  if (!on) { var l = SSC.wl; SSC.wl = null; if (l) { try { var p = l.release(); if (p && p.catch) p.catch(function () {}); } catch (e) {} } return; }
+  if (SSC.wl || SSC.wlReq || document.hidden || App.current !== "sscan") return;
+  try {
+    if (!navigator.wakeLock || typeof navigator.wakeLock.request !== "function") return;
+    SSC.wlReq = true;
+    navigator.wakeLock.request("screen").then(function (l) {
+      SSC.wlReq = false;
+      if (App.current !== "sscan") { try { var p = l.release(); if (p && p.catch) p.catch(function () {}); } catch (e) {} return; }
+      SSC.wl = l;
+      try { l.addEventListener("release", function () { if (SSC.wl === l) SSC.wl = null; }); } catch (e) {}
+    }, function () { SSC.wlReq = false; });
+  } catch (e) { SSC.wlReq = false; }
+}
+document.addEventListener("visibilitychange", function () { if (!document.hidden && App.current === "sscan") sscMount(); });
+/* 톱니 · 자리 칩 = 자리 고르기 시트 · 1F 자리 → 10F 세션 · 아래에 소리 · 내 QR · 관리자 모드 화면 */
+function sscSheetBody() {
+  var cur = SCAN.spot, cs = sscSub(), tile = function (sp, sub, lb) {
+    var on = sp.id === cur && (!sub || (cs && cs[0] === sub));
+    return '<button type="button" class="axs-stile ssc-pick' + (on ? " on" : "") + '" aria-pressed="' + on + '" onclick="sscPick(\'' + sp.id + "', '" + sub + '\')"><b>' + esc(lb) + "</b><span>" + esc(sp.will || sp.nm) + "</span></button>";
+  };
+  var one = [], ten = [];
+  SCAN_TILES.forEach(function (id) {
+    if (id === "sess") { SCAN_SPOTS.filter(function (x) { return x.kind === "sess"; }).forEach(function (sp) { ten.push(tile(sp, "", sp.lb || sp.nm)); }); return; }
+    var sp = scanSpot(id); if (!sp) return;
+    if (SSC_SUB[id]) SSC_SUB[id].forEach(function (u) { one.push(tile(sp, u[0], sp.nm + " · " + u[1])); });
+    else one.push(tile(sp, "", sp.lb || sp.nm));
+  });
+  var snd = sscSndOn();
+  return '<div class="axs-stiles ssc-picks">' + one.join("") + '</div><h3 class="ax-meta ssc-h">10F 세션 입장</h3><div class="axs-stiles ssc-picks">' + ten.join("") + "</div>" +
+    '<div class="ssc-opts"><button type="button" class="ssc-opt" aria-pressed="' + snd + '" onclick="sscSnd()"><span>스캔 소리</span><b>' + (snd ? "켬" : "끔") + "</b></button>" +
+    '<button type="button" class="ssc-opt" onclick="sheetClose(true); sscMine()"><span>내 QR 보여주기</span>' + CHEV_SVG + "</button>" +
+    '<button type="button" class="ssc-opt" onclick="sheetClose(true); App.go(\'admin\')"><span>관리자 모드 · 혼잡 제보 · 재고</span>' + CHEV_SVG + "</button></div>";
+}
+function sscSheet() { sheetOpen({ id: "sscspot", title: "어디서 찍나요?", lead: "고른 자리는 이 폰에 기억해요", body: sscSheetBody(), go: "sheetClose()", goLbl: "닫기" }); }
+function sscPick(id, sub) {
+  if (!scanSpot(id)) return;
+  S.set("scan_sub", sub || "");
+  sheetClose(true);
+  SSC.camErr = false; SCAN.res = null; SSC.band = null;
+  scanPick(id);   /* 기억 · 중복 가드 해제 · 다시 그림 → sscMount 가 카메라를 켠다 */
+}
+function sscSnd() { var on = !sscSndOn(); S.set("ssc_snd", on); if (on) { sfxUnlock(); sscSfx("ting"); } if (SHEET.id === "sscspot" && el("axsSheet")) { SHEET.spec.body = sscSheetBody(); sheetPaint(); } }
 
 /* ── ② 혼잡 제보 · v4.71 (260930 사용자 확정 · 「혼잡도 제보 기획.md」 권장안) ──
  * 대상 두 곳(엘리베이터 = 1F 승강기 홀 상행 대기 · 1F 로비) · 붐빌 때만 [혼잡 제보] → [재확인](15분 다시) · [해소](바로 끝) · 15분 뒤 저절로 꺼진다(서버 시각).
