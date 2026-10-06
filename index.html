@@ -3629,7 +3629,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v6.01";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 · v6.01 = 261007 둘러보기 v5.99(손가락 안내 = 들어올 때마다 + 6초 서 있으면 다시 · 방문당 3번 · 직접 눌러 걸어가 본 기기는 끝 · 첫 안내 둘째 줄 「다음 구역」 저절로 걷기 · 흉상 얼굴 주름 부드럽게) · v6.00 = 261006 밤 스태프 판정 = 로그인만으로(앱 스태프 명단 사번 = 가운데 단추 「스캔」 · 처음 누를 때만 코드 한 번 · 명단에서 빠지면 「내 QR」 · 서버 staff) · 스캔 자리에서 10F 세션 입장 숨김(SCAN_10F_UI) · v5.99 = 261006 키트 사이즈 사전 선택(키트명단 사번만 · 홈 카드 · 사전 신청 키트 화면 · 설정 · 나의 보상 줄 · 라운지 등록 순 초과 = 가습기 안내 · 서버 ks* · §250) · v5.98 = 261006 스태프 폰 연속 스캔(관리자 모드 폰 = 가운데 단추 「스캔」 · 자리 칩 · 톱니 · 결과 띠 1.5초 · 화면 꺼짐 막기) · 스캔 순간 참가자 알림(소켓 · 푸시) · 선착순 참여상 = 받기 선착순(남은 N · 「자격」 말 없음) · v5.97 = 261006 스탬프 감사 후속(AX PLAY 부스 코드 = 「스태프에게 내 QR을 보여 주세요」 · 「응모」 → 「행운권」 · 「선착순 참여상」 표기) · v5.95 = 261006 프로그램 참여 스탬프 = 17F 오후 AWS · MS 강연만(오전 강연 · 송출 · 10F · 커피챗 · 라운지 스탬프 문구 삭제) · 사전등록 체크인 3개 → 룰렛 → 강의장 안내 시트 · 홈 한 줄 · 스태프 키트 결과 「룰렛 부스로 안내해 주세요」 · v5.94 = 261006 타자왕 노트북 진입 = 화면 QR 하나(카메라 끔 · 큰 접속 QR · 후킹 「당신의 프롬프팅 속도를 보여 주세요」 · 로그인 전 토큰 붙잡기 5분 · 폰 「노트북 화면의 QR을 찍어 주세요」) · v5.93 = 261006 둘러보기 눌러서 가기(바닥 · 판 · 동전 · 포토부스 · 룰렛 · 엘리베이터 · 스태프 = 걸어가서 바로 · 첫 손가락 안내 · 숨 쉬는 테두리) · 설치 안내(「설치 중」 시트 · 설정 줄 = 바로 설치 창) · v5.92 = 7등 랜덤 굿즈 · 체크인 없는 추첨 */
+var APP_VER = "v6.02";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 · v6.02 = 261007 점프 게임 바닥 = 붉은 벽돌(jpBrickCv · 무늬 한 장 반복) · v6.01 = 261007 둘러보기 v5.99(손가락 안내 = 들어올 때마다 + 6초 서 있으면 다시 · 방문당 3번 · 직접 눌러 걸어가 본 기기는 끝 · 첫 안내 둘째 줄 「다음 구역」 저절로 걷기 · 흉상 얼굴 주름 부드럽게) · v6.00 = 261006 밤 스태프 판정 = 로그인만으로(앱 스태프 명단 사번 = 가운데 단추 「스캔」 · 처음 누를 때만 코드 한 번 · 명단에서 빠지면 「내 QR」 · 서버 staff) · 스캔 자리에서 10F 세션 입장 숨김(SCAN_10F_UI) · v5.99 = 261006 키트 사이즈 사전 선택(키트명단 사번만 · 홈 카드 · 사전 신청 키트 화면 · 설정 · 나의 보상 줄 · 라운지 등록 순 초과 = 가습기 안내 · 서버 ks* · §250) · v5.98 = 261006 스태프 폰 연속 스캔(관리자 모드 폰 = 가운데 단추 「스캔」 · 자리 칩 · 톱니 · 결과 띠 1.5초 · 화면 꺼짐 막기) · 스캔 순간 참가자 알림(소켓 · 푸시) · 선착순 참여상 = 받기 선착순(남은 N · 「자격」 말 없음) · v5.97 = 261006 스탬프 감사 후속(AX PLAY 부스 코드 = 「스태프에게 내 QR을 보여 주세요」 · 「응모」 → 「행운권」 · 「선착순 참여상」 표기) · v5.95 = 261006 프로그램 참여 스탬프 = 17F 오후 AWS · MS 강연만(오전 강연 · 송출 · 10F · 커피챗 · 라운지 스탬프 문구 삭제) · 사전등록 체크인 3개 → 룰렛 → 강의장 안내 시트 · 홈 한 줄 · 스태프 키트 결과 「룰렛 부스로 안내해 주세요」 · v5.94 = 261006 타자왕 노트북 진입 = 화면 QR 하나(카메라 끔 · 큰 접속 QR · 후킹 「당신의 프롬프팅 속도를 보여 주세요」 · 로그인 전 토큰 붙잡기 5분 · 폰 「노트북 화면의 QR을 찍어 주세요」) · v5.93 = 261006 둘러보기 눌러서 가기(바닥 · 판 · 동전 · 포토부스 · 룰렛 · 엘리베이터 · 스태프 = 걸어가서 바로 · 첫 손가락 안내 · 숨 쉬는 테두리) · 설치 안내(「설치 중」 시트 · 설정 줄 = 바로 설치 창) · v5.92 = 7등 랜덤 굿즈 · 체크인 없는 추첨 */
 var A2HS = { deferred: null, open: false, pending: false };   /* v5.91 pending = 이 탭에서 크롬 설치 창 「설치」를 눌렀다(설치 중 · 다시 설치 막기) */
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -15427,13 +15427,33 @@ function jpWorld(ctx, dist) {
     for (var yy = JP_GY - 34; yy < JP_GY - 4; yy += 6) ctx.fillRect(tx2, yy, 2, 3);
   }
   ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(0, JP_GY, JP_W, 1);
-  ctx.fillStyle = RAIN_PAL.o50; ctx.fillRect(0, JP_GY + 1, JP_W, 3);
-  var goff = Math.floor(dist) % 6;
-  for (var gx = -6; gx < JP_W + 6; gx += 6) { ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(gx + 2 - goff, JP_GY + 1, 2, 2); }
-  for (var dy = JP_GY + 4; dy < JP_H; dy += 6) for (var dx = -6; dx < JP_W + 6; dx += 6) {
-    ctx.fillStyle = ((dx + 6 + dy) / 6) % 2 ? RAIN_PAL.soil : RAIN_PAL.soil2; ctx.fillRect(dx - goff, dy, 6, 6);
-  }
+  ctx.fillStyle = JP_BRICK.top; ctx.fillRect(0, JP_GY + 1, JP_W, 1);   /* 윗면 밝은 테 한 줄 */
+  /* v6.01 바닥 = 붉은 벽돌(사용자 261007) · 무늬 한 장을 반복 · 땅과 같은 속도(정수 칸)로 흐른다 */
+  var boff = Math.floor(dist) % JP_BRICK.w;
+  ctx.save(); ctx.translate(-boff, JP_GY + 2);
+  ctx.fillStyle = jpBrickPat(ctx); ctx.fillRect(0, 0, JP_W + JP_BRICK.w, JP_H - JP_GY - 2);
+  ctx.restore();
 }
+/* v6.01 (사용자 261007 「바닥을 붉은 벽돌로 · 성처럼 네모난 벽돌」) 벽돌 무늬 · 한 장 = 16 × 8칸(줄눈 포함 · 가로 2 : 세로 1) · 줄마다 반 장 엇갈림
+   벽돌 면 · 위와 왼쪽 밝은 칸 · 아래 어두운 칸 · 어두운 줄눈 · 무늬 16 × 16 한 장을 오프스크린 캔버스에 한 번 그리고 createPattern 으로 깐다
+   색 = 오렌지 사다리 끝의 붉은 주황 · 웜브라운 줄눈(design.md 5-16 레트로 판 안 색 · 파랑 없음) · 판정 · 규칙과 상관없는 그림 */
+var JP_BRICK = { w: 16, h: 8, face: "#C2541E", hi: "#D96A2E", lo: "#A4441A", joint: "#4A2210", top: "#FFA46E" }, JP_BRICKCV = null;
+function jpBrickCv() {
+  if (JP_BRICKCV) return JP_BRICKCV;
+  var B = JP_BRICK, c = document.createElement("canvas"); c.width = B.w; c.height = B.h * 2;
+  var g = c.getContext("2d");
+  g.fillStyle = B.joint; g.fillRect(0, 0, B.w, B.h * 2);
+  [[0, 0, B.w - 1], [B.h, B.w / 2, B.w - 1]].forEach(function (r) {   /* [위 y, 벽돌 왼쪽 x, 면 폭] · 아랫줄은 반 장 밀려 무늬 가장자리에서 이어진다 */
+    for (var s = -B.w; s <= 0; s += B.w) {
+      var x = r[1] + s, y = r[0];
+      g.fillStyle = B.face; g.fillRect(x, y, r[2], B.h - 1);
+      g.fillStyle = B.lo; g.fillRect(x + 1, y + B.h - 2, r[2] - 1, 1);
+      g.fillStyle = B.hi; g.fillRect(x, y, r[2], 1); g.fillRect(x, y, 1, B.h - 1);
+    }
+  });
+  return (JP_BRICKCV = c);
+}
+function jpBrickPat(ctx) { return ctx._jpBrick || (ctx._jpBrick = ctx.createPattern(jpBrickCv(), "repeat")); }
 function jpCoinCv() {
   if (JP_COINCV) return JP_COINCV;
   var c = document.createElement("canvas"); c.width = 10; c.height = 8;

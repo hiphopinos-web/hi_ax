@@ -595,13 +595,33 @@ function jpWorld(ctx, dist) {
     for (var yy = JP_GY - 34; yy < JP_GY - 4; yy += 6) ctx.fillRect(tx2, yy, 2, 3);
   }
   ctx.fillStyle = RAIN_PAL.ink; ctx.fillRect(0, JP_GY, JP_W, 1);
-  ctx.fillStyle = RAIN_PAL.o50; ctx.fillRect(0, JP_GY + 1, JP_W, 3);
-  var goff = Math.floor(dist) % 6;
-  for (var gx = -6; gx < JP_W + 6; gx += 6) { ctx.fillStyle = RAIN_PAL.o100; ctx.fillRect(gx + 2 - goff, JP_GY + 1, 2, 2); }
-  for (var dy = JP_GY + 4; dy < JP_H; dy += 6) for (var dx = -6; dx < JP_W + 6; dx += 6) {
-    ctx.fillStyle = ((dx + 6 + dy) / 6) % 2 ? RAIN_PAL.soil : RAIN_PAL.soil2; ctx.fillRect(dx - goff, dy, 6, 6);
-  }
+  ctx.fillStyle = JP_BRICK.top; ctx.fillRect(0, JP_GY + 1, JP_W, 1);   /* 윗면 밝은 테 한 줄 */
+  /* v6.01 바닥 = 붉은 벽돌(사용자 261007) · 무늬 한 장을 반복 · 땅과 같은 속도(정수 칸)로 흐른다 */
+  var boff = Math.floor(dist) % JP_BRICK.w;
+  ctx.save(); ctx.translate(-boff, JP_GY + 2);
+  ctx.fillStyle = jpBrickPat(ctx); ctx.fillRect(0, 0, JP_W + JP_BRICK.w, JP_H - JP_GY - 2);
+  ctx.restore();
 }
+/* v6.01 (사용자 261007 「바닥을 붉은 벽돌로 · 성처럼 네모난 벽돌」) 벽돌 무늬 · 한 장 = 16 × 8칸(줄눈 포함 · 가로 2 : 세로 1) · 줄마다 반 장 엇갈림
+   벽돌 면 · 위와 왼쪽 밝은 칸 · 아래 어두운 칸 · 어두운 줄눈 · 무늬 16 × 16 한 장을 오프스크린 캔버스에 한 번 그리고 createPattern 으로 깐다
+   색 = 오렌지 사다리 끝의 붉은 주황 · 웜브라운 줄눈(design.md 5-16 레트로 판 안 색 · 파랑 없음) · 판정 · 규칙과 상관없는 그림 */
+var JP_BRICK = { w: 16, h: 8, face: "#C2541E", hi: "#D96A2E", lo: "#A4441A", joint: "#4A2210", top: "#FFA46E" }, JP_BRICKCV = null;
+function jpBrickCv() {
+  if (JP_BRICKCV) return JP_BRICKCV;
+  var B = JP_BRICK, c = document.createElement("canvas"); c.width = B.w; c.height = B.h * 2;
+  var g = c.getContext("2d");
+  g.fillStyle = B.joint; g.fillRect(0, 0, B.w, B.h * 2);
+  [[0, 0, B.w - 1], [B.h, B.w / 2, B.w - 1]].forEach(function (r) {   /* [위 y, 벽돌 왼쪽 x, 면 폭] · 아랫줄은 반 장 밀려 무늬 가장자리에서 이어진다 */
+    for (var s = -B.w; s <= 0; s += B.w) {
+      var x = r[1] + s, y = r[0];
+      g.fillStyle = B.face; g.fillRect(x, y, r[2], B.h - 1);
+      g.fillStyle = B.lo; g.fillRect(x + 1, y + B.h - 2, r[2] - 1, 1);
+      g.fillStyle = B.hi; g.fillRect(x, y, r[2], 1); g.fillRect(x, y, 1, B.h - 1);
+    }
+  });
+  return (JP_BRICKCV = c);
+}
+function jpBrickPat(ctx) { return ctx._jpBrick || (ctx._jpBrick = ctx.createPattern(jpBrickCv(), "repeat")); }
 function jpCoinCv() {
   if (JP_COINCV) return JP_COINCV;
   var c = document.createElement("canvas"); c.width = 10; c.height = 8;
