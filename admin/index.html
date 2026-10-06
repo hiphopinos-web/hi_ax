@@ -886,6 +886,7 @@ textarea.in.p10-ta{min-height:144px;font-variant-numeric:tabular-nums}
 .p10-ck{display:inline-flex;gap:8px;align-items:center;font-size:var(--fs-s);color:var(--tx2);cursor:pointer}
 .p10-h{margin:16px 0 0;font-size:var(--fs-s);font-weight:600;color:var(--tx2)}
 .p10-go{text-decoration:none}
+.p10-rt td{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -5805,7 +5806,7 @@ var NAV=[
   { id:"p_acct", m:"pp", n:"계정 목록", parts:[P("acct","list")] },
   { id:"p_one", m:"pp", n:"한 사람 관리", parts:[P("acct","one")] },
   { id:"p_test", m:"pp", n:"테스트 사번", sup:1, parts:[P("test","","","viewTest")] },
-  { id:"p_pre10", m:"pp", n:"10F 사전 신청 명단", sup:1, parts:[P("pre10","","","viewPre10")] },   /* v5.72 (261005) 명단 넣기 · 강의신청 + 키트명단 */
+  { id:"p_pre10", m:"pp", n:"10F 사전 신청 명단", sup:1, parts:[P("pre10","up","명단 올리기","viewPre10"),P("pre10","row","한 사람씩 고치기","viewPre10Row")] },   /* v5.72 (261005) 명단 넣기 · 강의신청 + 키트명단 */
   { id:"p_ros", m:"pp", n:"권한 명단", sup:1, parts:[P("adm","ros")] },
   { id:"p_code", m:"pp", n:"관리코드 · 등급코드", sup:1, parts:[P("adm","code")] },
   { id:"r_sum", m:"rc", n:"현황 요약", parts:[P("dash","","","viewDash")] },
@@ -6551,7 +6552,7 @@ var P10_NAME={ fld:"세션 A", ta:"세션 B", tb:"세션 C", aws:"세션 D", ms1
 var P10_CAP={ fld:63, ta:32, tb:28, aws:20, ms1:20, ms2:20 };   /* 서버 SESS_CAP 과 같은 값 · 서버가 cap 을 주면 그쪽 */
 var P10_MAX=400, P10_WORD="명단적용", P10_UWORD="명단되돌리기";
 var P10_ST={ ok:["정상","ok"], dup:["같은 줄 중복","off"], multi:["다른 세션 겹침","bad"], noros:["명부에 없음","bad"], sess:["세션 오류","bad"], emp:["사번 오류","bad"], eq:["E 회차 없음","warn"] };
-var P10={ name:"", grid:null, hdr:true, cE:-1, cS:-1, eDef:"", mode:"replace", src:"file", paste:"", err:"", busy:"", filt:"", rows:null, pv:null, pvKey:"", pvBad:"", res:null, drag:false };
+var P10={ book:null, name:"", grid:null, hdr:true, cE:-1, cS:-1, eDef:"", mode:"replace", src:"file", paste:"", err:"", busy:"", filt:"", rows:null, pv:null, pvKey:"", pvBad:"", res:null, drag:false };
 SP_ACT.pre10_state=1; SP_ACT.pre10_preview=1; SP_ACT.pre10_apply=1; SP_ACT.pre10_undo=1;
 CTL_ACT.pre10_apply=["pp",function(p){ return "10F 명단 적용 · "+(p.mode==="add"?"추가":"교체")+" · "+(p.n||0)+"명"; }];
 CTL_ACT.pre10_undo=["pp","10F 명단 되돌림"];
@@ -6585,7 +6586,7 @@ function p10Csv(t){
   if(cell!==""||row.length){ row.push(cell); out.push(row); }
   return out.filter(function(r){ return r.some(function(x){ return String(x).trim()!==""; }); });
 }
-/* ── 읽기 · xlsx(zip) · 첫 시트 ── */
+/* ── 읽기 · xlsx(zip) · v5.87 시트 전부 · 병합 칸 채움 ── */
 function p10Inflate(bytes, method){
   if(method===0) return Promise.resolve(bytes);
   if(method!==8||!window.DecompressionStream) return Promise.reject(new Error("unzip"));
@@ -6610,34 +6611,86 @@ function p10Tags(n, t){ return [].slice.call(n.getElementsByTagNameNS("*",t)); }
 function p10Xlsx(buf){
   var files=p10Zip(buf), dec=new TextDecoder("utf-8");
   function get(name){ var f=files[name]; return f?p10Inflate(f.data,f.m).then(function(b){ return dec.decode(b); }):Promise.resolve(""); }
-  var ss=[], target="xl/worksheets/sheet1.xml";
+  var ss=[], list=[];
   return Promise.all([get("xl/sharedStrings.xml"),get("xl/workbook.xml"),get("xl/_rels/workbook.xml.rels")]).then(function(a){
     if(a[0]) ss=p10Tags(p10Xml(a[0]),"si").map(function(si){ return p10Tags(si,"t").map(function(t){ return t.textContent; }).join(""); });
-    if(a[1]&&a[2]){
-      var sh=p10Tags(p10Xml(a[1]),"sheet")[0], rid=sh&&(sh.getAttribute("r:id")||sh.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships","id"));
-      p10Tags(p10Xml(a[2]),"Relationship").forEach(function(r){ if(r.getAttribute("Id")===rid){ var t=r.getAttribute("Target")||""; target=t.charAt(0)==="/"?t.slice(1):"xl/"+t.replace(/^\.\//,""); } });
-    }
-    if(!files[target]) target=Object.keys(files).filter(function(k){ return /^xl\/worksheets\/[^/]+\.xml$/.test(k); }).sort()[0]||"";
-    if(!target) throw new Error("sheet");
-    return get(target);
-  }).then(function(x){
-    var grid=[];
-    p10Tags(p10Xml(x),"row").forEach(function(r){
-      var row=[];
-      p10Tags(r,"c").forEach(function(c, j){
-        var ref=c.getAttribute("r")||"", col=j, m=ref.match(/^([A-Z]+)/);
-        if(m){ col=0; for(var q=0;q<m[1].length;q++) col=col*26+(m[1].charCodeAt(q)-64); col--; }
-        var t=c.getAttribute("t"), vv=p10Tags(c,"v")[0], val=vv?vv.textContent:"";
-        if(t==="s") val=ss[Number(val)]||"";
-        else if(t==="inlineStr") val=p10Tags(c,"t").map(function(e){ return e.textContent; }).join("");
-        else if(t!=="str"&&t!=="b"&&/^-?\d+(\.0+)?$/.test(val)) val=val.replace(/\.0+$/,"");
-        while(row.length<col) row.push("");
-        row[col]=val;
-      });
-      grid.push(row);
-    });
-    return grid.filter(function(r){ return r.some(function(x){ return String(x||"").trim()!==""; }); });
+    var tg={};
+    if(a[2]) p10Tags(p10Xml(a[2]),"Relationship").forEach(function(r){ var t=r.getAttribute("Target")||""; tg[r.getAttribute("Id")]=t.charAt(0)==="/"?t.slice(1):"xl/"+t.replace(/^\.\//,""); });
+    if(a[1]) p10Tags(p10Xml(a[1]),"sheet").forEach(function(sh){ var rid=sh.getAttribute("r:id")||sh.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships","id"); if(tg[rid]&&files[tg[rid]]) list.push({ name:sh.getAttribute("name")||"", path:tg[rid] }); });
+    if(!list.length){ var f0=Object.keys(files).filter(function(k){ return /^xl\/worksheets\/[^/]+\.xml$/.test(k); }).sort()[0]; if(f0) list.push({ name:"", path:f0 }); }
+    if(!list.length) throw new Error("sheet");
+    return Promise.all(list.map(function(s){ return get(s.path); }));
+  }).then(function(xs){
+    var sheets=xs.map(function(x, i){ return { name:list[i].name, rows:p10SheetRows(x, ss) }; });
+    var bk=p10Book(sheets);
+    if(bk) return bk;
+    return sheets[0].rows.map(function(r){ return r.c; }).filter(function(r){ return r.some(function(x){ return String(x||"").trim()!==""; }); });
   });
+}
+function p10Ref(s){ var m=String(s||"").match(/^([A-Z]+)(\d+)$/); if(!m) return null; var c=0; for(var q=0;q<m[1].length;q++) c=c*26+(m[1].charCodeAt(q)-64); return { c:c-1, r:Number(m[2]) }; }
+/* 한 시트 · [{ n:행 번호, c:[칸] }] · 병합 칸(mergeCell)은 범위 전체에 왼쪽 위 값을 채운다(세션 E 「1회차」 비고처럼 아래 줄이 빈칸으로 읽히지 않게) */
+function p10SheetRows(x, ss){
+  var doc=p10Xml(x), rows=[], byN={};
+  p10Tags(doc,"row").forEach(function(r, k){
+    var n=Number(r.getAttribute("r"))||(k+1), row=[];
+    p10Tags(r,"c").forEach(function(c, j){
+      var p=p10Ref(c.getAttribute("r")), col=p?p.c:j;
+      var t=c.getAttribute("t"), vv=p10Tags(c,"v")[0], val=vv?vv.textContent:"";
+      if(t==="s") val=ss[Number(val)]||"";
+      else if(t==="inlineStr") val=p10Tags(c,"t").map(function(e){ return e.textContent; }).join("");
+      else if(t!=="str"&&t!=="b"&&/^-?\d+(\.0+)?$/.test(val)) val=val.replace(/\.0+$/,"");
+      while(row.length<col) row.push("");
+      row[col]=val;
+    });
+    rows.push({ n:n, c:row }); byN[n]=row;
+  });
+  p10Tags(doc,"mergeCell").forEach(function(m){
+    var rf=String(m.getAttribute("ref")||"").split(":"), a=p10Ref(rf[0]), b=p10Ref(rf[1]);
+    if(!a||!b) return;
+    var v=(byN[a.r]||[])[a.c]; if(v==null||v==="") return;
+    for(var rr=a.r; rr<=b.r&&rr-a.r<2000; rr++){
+      var row=byN[rr]; if(!row){ row=byN[rr]=[]; rows.push({ n:rr, c:row }); }
+      for(var cc=a.c; cc<=b.c&&cc-a.c<50; cc++){ while(row.length<cc) row.push(""); if(row[cc]==null||row[cc]==="") row[cc]=v; }
+    }
+  });
+  rows.sort(function(p, q){ return p.n-q.n; });
+  return rows;
+}
+/* 세션별 시트 묶음(붙임2 모양) → [사번, 세션, 위치] 한 표 · out.meta = 읽은 시트 · 건너뛴 시트 · 건너뛴 줄 · E 회차
+ * 세션 = 시트 이름(「세션A」 · 「A」) 또는 맨 위 3줄 제목(「■ 세션A 참석 대상자」) · 시트에 세션 칸이 따로 있으면 묶지 않는다(첫 시트 그대로 읽기)
+ * 머리 줄 = 위 10줄 안에서 「사번」이 있는 줄 · 사번 모양이 아닌 줄(합계 「(이상: n명)」 · 빈 줄)은 건너뛰고 센다
+ * 세션 E 회차 = 비고 칸(병합 채움)의 「1회차」 · 「2회차」 · 없으면 다른 칸에서 한 가지로만 읽힐 때 · 그래도 없으면 회차 없는 E(위 「회차 없는 E」 설정) */
+function p10Round(v){ var m=String(v==null?"":v).match(/([12])\s*회\s*차/); return m?m[1]:""; }
+function p10SheetSess(sh){
+  var m=String(sh.name||"").match(/세션\s*([A-Ea-e])(?![A-Za-z])/)||String(sh.name||"").trim().match(/^([A-Ea-e])$/);
+  for(var i=0;!m&&i<Math.min(3,sh.rows.length);i++) m=(sh.rows[i].c||[]).join(" ").match(/세션\s*([A-E])(?![A-Za-z])/);
+  return m?m[1].toUpperCase():"";
+}
+function p10Book(sheets){
+  var out=[["사번","세션","위치"]], meta={ sheets:[], skip:[], blank:0, rows:0, eFill:0, eNo:0 }, EMP=/사번|사원\s*번호|직원\s*번호/;
+  sheets.forEach(function(sh){
+    var L=p10SheetSess(sh), rows=sh.rows, hi=-1, hdr=[];
+    for(var i=0;i<Math.min(10,rows.length);i++) if((rows[i].c||[]).some(function(v){ return EMP.test(String(v||"")); })){ hi=i; hdr=rows[i].c.map(function(v){ return String(v||""); }); break; }
+    var own=hdr.some(function(h){ return /^\s*(세션|과정|신청\s*세션|session|track)\s*$/i.test(h); });
+    if(!L||hi<0||own){ meta.skip.push(sh.name||"(이름 없음)"); return; }
+    var cE=-1, cN=-1;
+    hdr.forEach(function(h, j){ if(cE<0&&EMP.test(h)) cE=j; if(cN<0&&/비고|회차|차수/.test(h)) cN=j; });
+    meta.sheets.push(sh.name||("세션"+L));
+    rows.slice(hi+1).forEach(function(r){
+      var c=r.c||[], e=normE(c[cE]).replace(/\.0+$/,"");
+      if(!/^[0-9A-Z]{3,12}$/.test(e)){ if(c.some(function(x){ return String(x||"").trim()!==""; })) meta.blank++; return; }
+      var lab=L;
+      if(L==="E"){
+        var k=cN>=0?p10Round(c[cN]):"";
+        if(!k){ var ks={}; c.forEach(function(v, j){ if(j!==cE){ var q=p10Round(v); if(q) ks[q]=1; } }); var kk=Object.keys(ks); k=kk.length===1?kk[0]:""; }
+        if(k){ lab="E"+k; meta.eFill++; } else meta.eNo++;
+      }
+      out.push([e, lab, (sh.name||("세션"+L))+" "+r.n+"행"]); meta.rows++;
+    });
+  });
+  if(!meta.sheets.length) return null;
+  out.meta=meta;
+  return out;
 }
 function p10File(inp){
   var f=inp&&inp.files&&inp.files[0]; if(!f) return;
@@ -6648,12 +6701,12 @@ function p10Load(f){
   var nm=String(f.name||""), x=/\.xlsx$/i.test(nm), bad=/\.(xls|xlsm|xlsb|numbers|ods)$/i.test(nm)&&!x;
   if(bad){ P10.err="이 형식은 읽지 못합니다. 엑셀에서 .xlsx 또는 CSV 로 저장해 올리세요"; render(); return; }
   P10.busy="read"; P10.err=""; render();
-  f.arrayBuffer().then(function(buf){ return x?p10Xlsx(buf):p10Csv(p10Text(buf)); }).then(function(g){ P10.busy=""; p10Set(g, nm); })
+  f.arrayBuffer().then(function(buf){ return x?p10Xlsx(buf):p10Csv(p10Text(buf)); }).then(function(g){ P10.busy=""; P10.book=g&&g.meta||null; p10Set(g, nm); })
     .catch(function(e){ P10.busy=""; P10.err=x?"xlsx 를 읽지 못했습니다("+(e&&e.message==="unzip"?"이 브라우저는 압축 풀기를 지원하지 않습니다 · CSV 로 저장해 올리세요":"파일이 깨졌거나 암호가 걸려 있습니다")+")":"파일을 읽지 못했습니다"; render(); });
 }
-function p10PasteGo(){ var t=String(P10.paste||""); if(!t.trim()){ toast("붙여 넣은 내용이 없습니다"); return; } p10Set(p10Csv(t), "붙여넣기"); }
+function p10PasteGo(){ var t=String(P10.paste||""); if(!t.trim()){ toast("붙여 넣은 내용이 없습니다"); return; } P10.book=null; p10Set(p10Csv(t), "붙여넣기"); }
 function p10Drop(e){ e.preventDefault(); P10.drag=false; var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f) p10Load(f); else render(); }
-function p10Reset(){ P10.name=""; P10.grid=null; P10.rows=null; P10.pv=null; P10.pvKey=""; P10.err=""; P10.filt=""; P10.res=null; P10.paste=""; render(); }
+function p10Reset(){ P10.book=null; P10.name=""; P10.grid=null; P10.rows=null; P10.pv=null; P10.pvKey=""; P10.err=""; P10.filt=""; P10.res=null; P10.paste=""; render(); }
 /* ── 세션 글자 → id · '' = 오류 · 'E' = 회차 없는 E ── */
 function p10Sess(v){
   var s=String(v==null?"":v).trim(); if(!s) return "";
@@ -6691,7 +6744,7 @@ function p10Build(){
     if(!rawE&&!rawS) return;
     var e=normE(rawE).replace(/\.0+$/,""), s=p10Sess(rawS), eq=false;
     if(s==="E"){ eq=true; s=p10EDef()==="bad"?"":p10EDef(); }
-    var x={ ln:base+i, rawE:rawE, rawS:rawS, emp:e, sid:s, eq:eq, st:"ok", name:"" };
+    var x={ ln:P10.book?String(r[2]||""):base+i, rawE:rawE, rawS:rawS, emp:e, sid:s, eq:eq, st:"ok", name:"" };
     if(!/^[0-9A-Z]{3,12}$/.test(e)) x.st="emp";
     else if(!s) x.st="sess";
     rows.push(x);
@@ -6725,7 +6778,7 @@ function p10Preview(force){
     render();
   },function(e){ if(P10.pvKey!==key) return; P10.busy=""; P10.pv=null; P10.pvKey=""; P10.pvBad=key; toast("서버 대조 실패: "+p10Why(e)); render(); });
 }
-function p10Why(r, ctx){ r=r||{}; var m={ state:ctx==="undo"?({ kit:"그 사이 「키트명단」을 손으로 고쳐서 되돌리지 않았습니다", sess:"그 사이 「강의신청」을 손으로 고쳐서 되돌리지 않았습니다", log:"적용 기록을 읽지 못해 되돌리지 않았습니다" }[r.why]||"그 사이 시트가 바뀌어 되돌리지 않았습니다"):"그 사이 서버 명단이 바뀌었습니다. 미리보기를 다시 받았습니다", count:"인원이 미리보기와 다릅니다"+(r.n!=null?"(서버 계산 "+r.n+"명)":"")+". 미리보기를 다시 받았습니다", word:"확인 문구가 다릅니다", empty:"적용할 사람이 없습니다", rows:"한 번에 "+(r.max||P10_MAX)+"줄까지 넣습니다", notlast:"마지막 적용만 되돌릴 수 있습니다", already:"이미 되돌렸거나 되돌릴 수 없는 적용입니다", notfound:"되돌릴 적용 기록을 찾지 못했습니다", param:"사번 · 세션 모양이 맞지 않는 줄이 있습니다"+(r.at?"("+r.at+"번째)":""), post:"이 서버는 이 처리를 받지 않습니다", super:"슈퍼관리자만 할 수 있습니다", spin:"슈퍼관리자 본인 확인이 필요합니다(PIN 을 다시 넣어 주세요)" }; return m[r.reason]||(hvUnknown(r)?"서버 갱신 뒤 쓸 수 있습니다":why(r)); }
+function p10Why(r, ctx){ r=r||{}; var m={ noros:"명부에 없는 사번입니다", same:"이미 그 세션에 있습니다", notin:"이미 명단에 없습니다. 목록을 다시 받았습니다", state:ctx==="row"?"그 사이 이 사람의 명단이 바뀌었습니다. 목록을 다시 받았습니다":ctx==="undo"?({ kit:"그 사이 「키트명단」을 손으로 고쳐서 되돌리지 않았습니다", sess:"그 사이 「강의신청」을 손으로 고쳐서 되돌리지 않았습니다", log:"적용 기록을 읽지 못해 되돌리지 않았습니다" }[r.why]||"그 사이 시트가 바뀌어 되돌리지 않았습니다"):"그 사이 서버 명단이 바뀌었습니다. 미리보기를 다시 받았습니다", count:"인원이 미리보기와 다릅니다"+(r.n!=null?"(서버 계산 "+r.n+"명)":"")+". 미리보기를 다시 받았습니다", word:"확인 문구가 다릅니다", empty:"적용할 사람이 없습니다", rows:"한 번에 "+(r.max||P10_MAX)+"줄까지 넣습니다", notlast:"마지막 적용만 되돌릴 수 있습니다", already:"이미 되돌렸거나 되돌릴 수 없는 적용입니다", notfound:"되돌릴 적용 기록을 찾지 못했습니다", param:"사번 · 세션 모양이 맞지 않는 줄이 있습니다"+(r.at?"("+r.at+"번째)":""), post:"이 서버는 이 처리를 받지 않습니다", super:"슈퍼관리자만 할 수 있습니다", spin:"슈퍼관리자 본인 확인이 필요합니다(PIN 을 다시 넣어 주세요)" }; return m[r.reason]||(hvUnknown(r)?"서버 갱신 뒤 쓸 수 있습니다":why(r)); }
 function p10Opt(k, v){ P10[k]=k==="cE"||k==="cS"?Number(v):k==="hdr"?!!v:v; if(k==="mode"){ P10.pv=null; P10.pvKey=""; render(); p10Preview(); return; } p10Build(); }
 function p10Filt(v){ P10.filt=P10.filt===v?"":v; render(); }
 
@@ -6750,10 +6803,12 @@ function p10CardUp(){
   var seg='<span class="seg"><button class="'+(P10.src==="file"?"on":"")+'" onclick="P10.src=\'file\';render()">파일</button><button class="'+(P10.src==="paste"?"on":"")+'" onclick="P10.src=\'paste\';render()">붙여넣기</button></span>';
   var body;
   if(P10.src==="file") body='<label class="p10-drop'+(P10.drag?" on":"")+'" ondragover="event.preventDefault();if(!P10.drag){P10.drag=true;this.classList.add(\'on\')}" ondragleave="P10.drag=false;this.classList.remove(\'on\')" ondrop="p10Drop(event)">'+
-    '<input type="file" accept=".xlsx,.csv,.tsv,.txt" onchange="p10File(this)"><b>'+(P10.busy==="read"?'<span class="spin"></span>읽는 중':'엑셀(.xlsx) · CSV 파일을 고르거나 여기에 끌어 놓기')+'</b><span class="cap">첫 시트만 읽습니다 · 5MB · '+P10_MAX+'줄까지</span></label>';
+    '<input type="file" accept=".xlsx,.csv,.tsv,.txt" onchange="p10File(this)"><b>'+(P10.busy==="read"?'<span class="spin"></span>읽는 중':'엑셀(.xlsx) · CSV 파일을 고르거나 여기에 끌어 놓기')+'</b><span class="cap">세션별 시트(세션A~E)면 모두 · 아니면 첫 시트 · 5MB · '+P10_MAX+'줄까지</span></label>';
   else body='<textarea class="in p10-ta" rows="6" placeholder="엑셀에서 사번 · 세션 두 칸을 복사해 붙여 넣기&#10;예: 990901&#9;B" oninput="P10.paste=this.value">'+esc(P10.paste)+'</textarea><div class="toolbar mt12"><button class="btn pri" onclick="p10PasteGo()">읽기</button></div>';
-  var got=P10.grid?'<div class="toolbar mt12"><span class="cnt"><b>'+esc(P10.name)+'</b> · '+P10.grid.length+'줄 읽음</span><span class="sp"></span><button class="btn sm" onclick="p10Reset()">지우고 다시</button></div>':'';
-  return card("① 명단 올리기","사번 · 세션 두 칸이면 됩니다",(P10.err?'<div class="bands">'+band("bad",esc(P10.err))+'</div>':'')+'<div class="toolbar">'+seg+'</div>'+body+got);
+  var bk=P10.book, got=P10.grid?'<div class="toolbar mt12"><span class="cnt"><b>'+esc(P10.name)+'</b> · '+(bk?bk.rows+'명 읽음':P10.grid.length+'줄 읽음')+'</span><span class="sp"></span><button class="btn sm" onclick="p10Reset()">지우고 다시</button></div>':'';
+  if(P10.grid&&bk) got+='<div class="bands mt8">'+band("","시트 <b>"+bk.sheets.length+"개</b>("+esc(bk.sheets.join(" · "))+")에서 읽었습니다 · 세션은 시트 이름으로"+(bk.eFill?" · 세션 E 회차 <b>"+bk.eFill+"명</b>은 병합된 비고 칸에서":"")+
+    (bk.skip.length?" · 명단이 아닌 시트 "+bk.skip.length+"개":"")+(bk.blank?" · 합계 · 빈 줄 "+bk.blank+"줄":"")+(bk.skip.length||bk.blank?"은 건너뜀":"")+".")+(bk.eNo?band("warn","세션 E 시트에서 회차를 못 읽은 <b>"+bk.eNo+"명</b>은 「회차 없는 E」로 넣습니다."):"")+'</div>';
+  return card("① 명단 올리기","사번 · 세션 두 칸 또는 세션별 시트",(P10.err?'<div class="bands">'+band("bad",esc(P10.err))+'</div>':'')+'<div class="toolbar">'+seg+'</div>'+body+got);
 }
 function p10CardCols(){
   var g=P10.grid, w=g.reduce(function(a,r){ return Math.max(a,r.length); },0), hd=g[0]||[], sm=(P10.hdr?g[1]:g[0])||[];
@@ -6828,7 +6883,7 @@ function p10ApplyAsk(){
       P10.busy="apply";
       callPost("pre10_apply",{ rows:p10Payload(), mode:P10.mode, sig:pv.sig||"", n:pv.n, confirm:P10_WORD },function(r){
         P10.busy="";
-        if(r&&r.ok){ r.kg=(pv.kitGivenDel||[]).length; r.eq=r.eq||p10Count().eq||0; r.eName=p10EName(p10EDef()); P10.res=r; delete _cache[sig_("pre10_state",{})]; reload(["p10s"]); fin("명단을 적용했습니다", imp(p10ResRows(r,pv))); P10.pv=null; P10.pvKey=""; p10Preview(); }
+        if(r&&r.ok){ p10RowDrop(); delete ST.data.p10l; r.kg=(pv.kitGivenDel||[]).length; r.eq=r.eq||p10Count().eq||0; r.eName=p10EName(p10EDef()); P10.res=r; delete _cache[sig_("pre10_state",{})]; reload(["p10s"]); fin("명단을 적용했습니다", imp(p10ResRows(r,pv))); P10.pv=null; P10.pvKey=""; p10Preview(); }
         else { dlgForce(); toast("실패: "+p10Why(r)); if(r&&(r.reason==="state"||r.reason==="count")){ P10.pv=null; P10.pvKey=""; p10Preview(true); } else render(); }
       },function(e){ P10.busy=""; dlgForce(); toast("실패: "+p10Why(e)); render(); });
     } });
@@ -6851,24 +6906,143 @@ function p10CardNow(){
   var by=d.by||{}, L=d.last;
   var tb='<div class="wrap"><table class="tb"><tr><th>세션</th><th class="tdr">명단</th><th class="tdr">정원</th></tr>'+P10_IDS.map(function(id){ var n=by[id]||0, cap=p10Cap(id); return '<tr><td>'+esc(P10_NAME[id])+'</td><td class="n tdr"><b>'+n+'</b>'+(n>cap?' '+tag("넘음","warn"):'')+'</td><td class="n tdr">'+cap+'</td></tr>'; }).join("")+'<tr><td><b>합계</b></td><td class="n tdr"><b>'+(d.n||0)+'</b></td><td></td></tr></table></div>';
   var info=imp([["키트명단",(d.kit||0)+"명"],["키트 지급",(d.kitGiven||0)+"명"],["명부",d.ros?(d.ros||0).toLocaleString()+"줄":"없음 · 명부 대조 불가",d.ros?"":"loss"]]);
-  var last=L?'<p class="cap mt12">마지막 적용 · '+esc(short(L.at||""))+' · '+(L.mode==="add"?"추가":"교체")+' · '+esc(L.by||"")+(L.st==="undone"?" · 되돌림":"")+'</p>':'<p class="cap mt12">콘솔에서 적용한 적이 없습니다.</p>';
-  var und=d.undo?'<div class="dz-h">되돌릴 수 없는 처리</div><div class="toolbar"><span class="cap">마지막 적용 전 명단으로</span><span class="sp"></span><button class="btn danger" onclick="p10UndoAsk()"'+(P10.busy?" disabled":"")+'>되돌리기</button></div>':'';
+  var LA=d.lastAny&&d.lastAny.k==="row"?d.lastAny:null;
+  var last=L?'<p class="cap mt12">마지막 통째 적용 · '+esc(short(L.at||""))+' · '+(L.mode==="add"?"추가":"교체")+' · '+esc(L.by||"")+(L.st==="undone"?" · 되돌림":"")+'</p>':'<p class="cap mt12">콘솔에서 통째 적용한 적이 없습니다.</p>';
+  if(LA&&(!L||String(LA.at)>=String(L.at))) last+='<p class="cap">마지막 한 사람 고치기 · '+esc(short(LA.at||""))+' · '+esc(p10OpName(LA.mode))+' · '+esc(LA.by||"")+(LA.st==="undone"?" · 되돌림":"")+'</p>';
+  var und=d.undo?'<div class="dz-h">되돌릴 수 없는 처리</div><div class="toolbar"><span class="cap">'+(LA&&d.undo===LA.id?"마지막 한 사람 고치기 전으로":"마지막 적용 전 명단으로")+'</span><span class="sp"></span><button class="btn danger" onclick="p10UndoAsk()"'+(P10.busy?" disabled":"")+'>되돌리기</button></div>':'';
   return card("지금 서버 명단", (d.n||0)+"명 · 끝 QR 자격", tb+info+last+und);
 }
+function p10OpName(m){ return m==="move"?"옮기기":m==="del"?"빼기":"추가"; }
 function p10UndoAsk(){
-  var d=ST.data.p10s||{}, L=d.last||{};
+  var d=ST.data.p10s||{}, L=d.last||{}, LA=d.lastAny&&d.lastAny.id===d.undo?d.lastAny:null;
   if(!d.undo){ toast("되돌릴 적용이 없습니다"); return; }
-  hvL3Go({ t:"마지막 명단 적용을 되돌릴까요?", who:esc(short(L.at||""))+"<span>"+(L.mode==="add"?"추가":"교체")+" · "+esc(L.by||"")+"</span>",
-    rows:[["강의신청 · 키트명단","적용 전으로","chg"],["새로 들어간 사람",(L.add||0)+"명 · 빠짐","loss"],["빠졌던 사람",(L.del||0)+"명 · 다시 들어감"],["끝 QR 출석 · 스탬프 · 키트 지급","그대로"]],
+  if(LA&&LA.k==="row"){ L=LA; }
+  var row=L.k==="row", nm=function(id){ return esc(P10_NAME[id]||id||""); };
+  hvL3Go({ t:row?"마지막 한 사람 고치기를 되돌릴까요?":"마지막 명단 적용을 되돌릴까요?", who:row?esc(L.emp||"")+"<span>"+esc(L.name||"")+" · "+p10OpName(L.mode)+" · "+esc(short(L.at||""))+"</span>":esc(short(L.at||""))+"<span>"+(L.mode==="add"?"추가":"교체")+" · "+esc(L.by||"")+"</span>",
+    rows:(row?(L.mode==="add"?[["넣은 사람",nm(L.sid)+"에서 다시 빠짐","loss"]]:L.mode==="move"?[["세션",nm(L.sid)+" → "+nm(L.from),"chg"]]:[["뺀 사람","다시 "+nm(L.from)+" 명단으로","chg"]]):
+      [["강의신청 · 키트명단","적용 전으로","chg"],["새로 들어간 사람",(L.add||0)+"명 · 빠짐","loss"],["빠졌던 사람",(L.del||0)+"명 · 다시 들어감"]]).concat([["끝 QR 출석 · 스탬프 · 키트 지급","그대로"]]),
     s:"그 사이 누가 시트를 손으로 고쳤으면 서버가 되돌리지 않고 알려 줍니다.", ok:"되돌리기", word:P10_UWORD,
     run:function(fin){
       P10.busy="undo";
       callPost("pre10_undo",{ id:d.undo, confirm:P10_UWORD },function(r){
         P10.busy="";
-        if(r&&r.ok){ P10.res=null; delete _cache[sig_("pre10_state",{})]; reload(["p10s"]); P10.pv=null; P10.pvKey=""; p10Preview(); fin("되돌렸습니다", imp([["지금 명단",(r.n!=null?r.n:"-")+"명"]])); }
+        if(r&&r.ok){ P10.res=null; P10R.hl=""; delete _cache[sig_("pre10_state",{})]; p10RowDrop(); reload(["p10s","p10l"]); P10.pv=null; P10.pvKey=""; p10Preview(); fin("되돌렸습니다", imp([["지금 명단",(r.n!=null?r.n:"-")+"명"]])); }
         else { dlgForce(); toast("실패: "+p10Why(r,"undo")); render(); }
       },function(e){ P10.busy=""; dlgForce(); toast("실패: "+p10Why(e,"undo")); render(); });
     } });
+}
+/* ══════════════════ v5.87 (사용자 261006 「신청자 명단은 계속 바뀔 수 있으니 ADMIN 페이지에서 수정할 수 있게」) 10F 명단 · 한 사람씩 고치기 ══════════════════
+ * 서버 액션 = pre10_row_list(읽기) · pre10_row_set(추가 · 옮기기 · 확인 문구 명단수정) · pre10_row_del(빼기 · 확인 문구 명단삭제) · 모두 슈퍼관리자 + 본인 확인(sp) · 쓰기는 POST
+ * 콘솔이 본 지금 세션(from)을 같이 보낸다 · 그 사이 바뀌었으면 서버가 state 로 거절하고 목록을 다시 받는다 · 처리한 줄만 고친다(목록 전체를 다시 받지 않는다)
+ * 기록 · 되돌리기는 통째 적용과 같은 시트(「명단적용」 · 구분 row) · 같은 「되돌리기」(최근 한 건) · 이름 · 사번은 이 화면 메모리에만(통제 기록에는 세션 이름만) */
+var P10_RWORD="명단수정", P10_DWORD="명단삭제";
+var P10R={ q:"", f:"", add:"", addS:"", edit:"", editS:"", busy:"", hl:"" };
+SP_ACT.pre10_row_list=1; SP_ACT.pre10_row_set=1; SP_ACT.pre10_row_del=1;
+CTL_ACT.pre10_row_set=["pp",function(p){ return "10F 명단 한 사람 "+(p.from?"옮김 · "+(P10_NAME[p.from]||p.from)+" → ":"추가 · ")+(P10_NAME[p.sid]||p.sid); }];
+CTL_ACT.pre10_row_del=["pp",function(p){ return "10F 명단 한 사람 빼기 · "+(P10_NAME[p.from]||p.from||""); }];
+SUBNEED["pre10:row"]=function(){ return supOk()?[{k:"p10l",a:"pre10_row_list"}]:[]; };
+HV_VIEW.viewPre10Row=function(){ return viewPre10Row(); };
+function p10RowF(id){ P10R.f=id&&P10R.f===id?"":id; render(); }
+function p10RowFind(emp){ var d=ST.data.p10l, L=d&&d.ok&&d.list||[]; for(var i=0;i<L.length;i++) if(L[i].emp===emp) return L[i]; return null; }
+function p10RowDrop(){ delete _cache[sig_("pre10_row_list",{})]; }   /* 다음에 이 칸을 열면 서버에서 새로 받는다 */
+function p10RowOpts(cur, none){ return (none?'<option value="">세션 고르기</option>':'')+P10_IDS.map(function(id){ return '<option value="'+id+'"'+(cur===id?" selected":"")+'>'+esc(P10_NAME[id])+'</option>'; }).join(""); }
+function viewPre10Row(){
+  if(!supOk()) return supGateView();
+  var d=ST.data.p10l, main;
+  if(!d) main=card("지금 명단","",skel());
+  else if(hvUnknown(d)) main=card("지금 명단","",'<div class="note">이 서버는 아직 한 사람씩 고치기를 모릅니다. 서버를 새로 올린 뒤 씁니다. 그 전에는 「명단 올리기」에서 추가 · 교체로 고칩니다.</div>');
+  else if(!d.ok) main=card("지금 명단","",'<div class="bands">'+band("bad","명단을 받지 못했습니다("+esc(why(d))+").",'<button class="btn sm" onclick="reload([\'p10l\'])">다시 시도</button>')+'</div>');
+  else main=p10RowAddCard()+p10RowListCard(d);
+  return '<div class="ns-grid2 lay-fa"><div class="p10-main">'+main+'</div><div class="ns-side">'+p10CardNow()+'</div></div>'+
+    memo('<p><b>무엇이 바뀌나</b> · 추가 · 옮기기 · 빼기를 누르면 서버가 시트 「강의신청」(10F 끝 QR 자격 · 앱 「내 세션」)과 「키트명단」(체크인 존 키트 대조)을 그 한 사람만 고칩니다. 참가자 앱에는 다음 새로 고침(동기화) 때 보입니다.</p>'+
+      '<p><b>명부</b> · 명부에 있는 사번만 넣습니다(명단 올리기와 같은 규칙). 한 사람은 한 세션입니다. 이미 명단에 있는 사람은 「옮기기」로 세션을 바꿉니다.</p>'+
+      '<p><b>키트 · 출석</b> · 키트를 이미 받은 사람을 빼면 서버 설정(10F명단_키트빠짐)대로 키트 명단에 남기거나 지웁니다. 지급 기록 · 이미 찍은 끝 QR 출석 · 스탬프는 그대로입니다.</p>'+
+      '<p><b>되돌리기</b> · 오른쪽 「되돌리기」는 최근 한 건(한 사람 고치기 또는 통째 적용)만 되돌립니다. 한 사람을 고친 뒤에는 그 앞의 통째 적용을 되돌릴 수 없습니다(고친 것이 사라지지 않게). 그 사이 누가 시트를 손으로 고쳤으면 서버가 되돌리지 않고 알려 줍니다.</p>'+
+      '<p><b>정원</b> · 정원을 넘어도 넣을 수 있습니다. 확인 창에 「정원 넘음」이 뜹니다.</p>');
+}
+function p10RowAddCard(){
+  var body='<div class="toolbar"><input class="in w-m" inputmode="numeric" autocomplete="off" placeholder="사번" value="'+esc(P10R.add)+'" oninput="P10R.add=this.value.trim()" onkeydown="if(event.key===\'Enter\')p10RowAddAsk()">'+
+    '<select class="in w-m" aria-label="넣을 세션" onchange="P10R.addS=this.value">'+p10RowOpts(P10R.addS,true)+'</select>'+
+    '<button class="btn pri" onclick="p10RowAddAsk()"'+(P10R.busy?" disabled":"")+'>'+LOCK_SVG+' '+(P10R.busy==="chk"?'<span class="spin"></span>명부 대조 중':"추가")+'</button></div>'+
+    '<p class="cap">명부에 있는 사번만 넣습니다. 이미 명단에 있으면 아래 목록에서 그 사람을 찾아 옮깁니다.</p>';
+  return card("한 사람 추가","사번 · 세션을 넣고 추가를 누릅니다",body);
+}
+function p10RowListCard(d){
+  var L=(d.list||[]).slice(), q=String(P10R.q||"").trim().toUpperCase(), cnt={ "":L.length };
+  P10_IDS.forEach(function(id){ cnt[id]=0; }); L.forEach(function(x){ cnt[x.sid]=(cnt[x.sid]||0)+1; });
+  var vis=L.filter(function(x){ return (!P10R.f||x.sid===P10R.f)&&(!q||x.emp.indexOf(q)>=0||String(x.name||"").toUpperCase().indexOf(q)>=0); });
+  vis.sort(function(a,b){ return P10_IDS.indexOf(a.sid)-P10_IDS.indexOf(b.sid)||String(a.name||"").localeCompare(String(b.name||""),"ko")||(a.emp<b.emp?-1:1); });
+  var chips='<div class="chips">'+[["","전체"]].concat(P10_IDS.map(function(id){ return [id,P10_NAME[id]]; })).map(function(c){ var n=cnt[c[0]]||0, cap=c[0]?p10Cap(c[0]):0; return '<button class="fchip'+(P10R.f===c[0]?" on":"")+(n?"":" zero")+'" onclick="p10RowF(\''+c[0]+'\')">'+esc(c[1])+'<span class="cnt">'+n+(cap&&n>cap?' · 넘음':'')+'</span></button>'; }).join("")+'</div>';
+  var tool='<div class="toolbar mt12"><input class="in w-m" type="search" autocomplete="off" placeholder="사번 · 이름 찾기" value="'+esc(P10R.q)+'" oninput="P10R.q=this.value;render()"><span class="cnt">'+vis.length+'명 보임</span></div>';
+  var tb='<div class="wrap scrolly mt12"><table class="tb p10-rt"><tr><th>사번</th><th>이름</th><th>세션</th><th>넣은 시각</th><th>키트</th><th>끝 QR</th><th class="tdr">처리</th></tr>'+vis.map(function(x){
+    var ed=P10R.edit===x.emp, e=jq(x.emp);
+    var ses=ed?'<select class="in" aria-label="옮길 세션" onchange="P10R.editS=this.value">'+p10RowOpts(P10R.editS||x.sid,false)+'</select>':esc(P10_NAME[x.sid]||x.sid);
+    var act=ed?'<div class="acts"><button class="btn sm pri" onclick="p10RowMoveAsk(\''+e+'\')"'+(P10R.busy?" disabled":"")+'>'+LOCK_SVG+' 옮기기</button><button class="btn sm" onclick="P10R.edit=\'\';render()">닫기</button></div>':
+      '<div class="acts"><button class="btn sm" onclick="P10R.edit=\''+e+'\';P10R.editS=\'\';render()"'+(P10R.busy?" disabled":"")+'>옮기기</button><button class="btn sm danger" onclick="p10RowDelAsk(\''+e+'\')"'+(P10R.busy?" disabled":"")+'>'+LOCK_SVG+' 빼기</button></div>';
+    return '<tr'+(P10R.hl===x.emp?' class="on"':'')+'><td class="n"><b>'+esc(x.emp)+'</b></td><td>'+esc(x.name||"-")+(P10R.hl===x.emp?' '+tag("방금","ok"):'')+'</td><td>'+ses+'</td><td class="n cap">'+esc(short(x.at||""))+'</td><td>'+(x.kit?tag("받음",""):'<span class="cap">-</span>')+'</td><td>'+(x.att?tag("출석","ok"):'<span class="cap">-</span>')+'</td><td>'+act+'</td></tr>'; }).join("")+
+    (!vis.length?emptyRow(7,L.length?"찾는 사람이 없습니다.":"명단이 비었습니다. 「명단 올리기」에서 처음 명단을 넣습니다."):"")+'</table></div>';
+  var gone=d.gone?'<p class="cap mt8">명단에서 빠졌지만 키트를 이미 받아 키트 명단에 남은 사람 '+d.gone+'명(비고 「명단 빠짐 · 지급됨」)은 이 목록에 없습니다.</p>':'';
+  return card("지금 명단", (d.n||0)+"명 · 10F 끝 QR 자격 · 앱 내 세션", chips+tool+tb+gone);
+}
+/* 추가 · 먼저 명부 대조(pre10_preview · 쓰기 없음)로 이름 · 명부 여부를 본 뒤 확인 창 */
+function p10RowAddAsk(){
+  var emp=normE(P10R.add).replace(/\.0+$/,""), sid=P10R.addS;
+  if(!/^[0-9A-Z]{3,12}$/.test(emp)){ toast("사번을 확인하세요"); return; }
+  if(P10_IDS.indexOf(sid)<0){ toast("넣을 세션을 고르세요"); return; }
+  var x=p10RowFind(emp);
+  if(x){ if(x.sid===sid){ toast("이미 "+P10_NAME[sid]+" 명단에 있습니다"); return; }
+    P10R.q=emp; P10R.f=""; P10R.edit=emp; P10R.editS=sid; render(); toast("이미 "+P10_NAME[x.sid]+" 명단에 있습니다 · 목록에서 옮기기를 누릅니다"); return; }
+  P10R.busy="chk"; render();
+  callPost("pre10_preview",{ rows:emp+":"+sid, mode:"add" },function(r){
+    P10R.busy=""; render();
+    if(!r||!r.ok){ toast("실패: "+p10Why(r,"row")); return; }
+    var y=(r.rows||[])[0]||{};
+    if(y.st==="noros"){ toast("명부에 없는 사번입니다 · 사번을 다시 봅니다"); return; }
+    var D=r.diff||{};
+    if((D.chg||[]).length){ reload(["p10l"]); toast("그 사이 다른 세션에 들어가 있습니다 · 목록을 다시 받았습니다"); return; }
+    var by=r.by||{}, cap=p10Cap(sid), over=(by[sid]||0)>cap;
+    hvL3Go({ t:"10F 명단에 한 사람을 넣을까요?", who:esc(emp)+"<span>"+esc(y.name||"이름 없음")+"</span>",
+      rows:[["넣을 세션",esc(P10_NAME[sid]),"chg"],["넣은 뒤 세션 인원",(by[sid]||0)+"명 · 정원 "+cap+(over?" · 정원 넘음":""),over?"loss":""],["넣은 뒤 10F 명단",(r.n||0)+"명"],["바로 바뀌는 것","10F 끝 QR 자격 · 앱 내 세션 · 키트 명단"]],
+      s:"시트 「강의신청」과 「키트명단」에 이 한 사람만 넣습니다.", ok:"추가", word:P10_RWORD,
+      run:function(fin){ p10RowGo("pre10_row_set",{ emp:emp, sid:sid, from:"", confirm:P10_RWORD },fin); } });
+  },function(e){ P10R.busy=""; render(); toast("실패: "+p10Why(e,"row")); });
+}
+function p10RowMoveAsk(emp){
+  var x=p10RowFind(emp), to=P10R.editS||(x&&x.sid);
+  if(!x){ toast("목록에 없습니다"); return; }
+  if(!to||to===x.sid){ toast("옮길 세션을 고르세요"); return; }
+  var by=(ST.data.p10l||{}).by||{}, cap=p10Cap(to), n2=(by[to]||0)+1, over=n2>cap;
+  hvL3Go({ t:"세션을 옮길까요?", who:esc(x.emp)+"<span>"+esc(x.name||"이름 없음")+"</span>",
+    rows:[["지금 세션",esc(P10_NAME[x.sid])],["옮길 세션",esc(P10_NAME[to]),"chg"],["옮긴 뒤 세션 인원",n2+"명 · 정원 "+cap+(over?" · 정원 넘음":""),over?"loss":""]]
+      .concat(x.kit?[["키트 이미 받음","지급 기록 그대로 · 키트 명단의 세션만 바뀜"]]:[]).concat(x.att?[["끝 QR 이미 출석","스탬프 그대로"]]:[]),
+    s:"10F 끝 QR 자격과 앱 「내 세션」이 새 세션으로 바로 바뀝니다.", ok:"옮기기", word:P10_RWORD,
+    run:function(fin){ p10RowGo("pre10_row_set",{ emp:x.emp, sid:to, from:x.sid, confirm:P10_RWORD },fin); } });
+}
+function p10RowDelAsk(emp){
+  var x=p10RowFind(emp); if(!x){ toast("목록에 없습니다"); return; }
+  hvL3Go({ t:"10F 명단에서 뺄까요?", who:esc(x.emp)+"<span>"+esc(x.name||"이름 없음")+" · "+esc(P10_NAME[x.sid])+"</span>",
+    rows:[["10F 끝 QR 자격","사라짐","loss"],["앱 내 세션","사라짐","loss"],["10F 명단",Math.max(0,((ST.data.p10l||{}).n||1)-1)+"명으로"]]
+      .concat(x.kit?[["키트 이미 받음",p10KitTxt(),"loss"]]:[]).concat(x.att?[["끝 QR 이미 출석","스탬프 그대로","loss"]]:[]),
+    s:"시트 「강의신청」의 이 사람 10F 줄을 취소로 바꾸고 「키트명단」에서 뺍니다. 오른쪽 「되돌리기」로 되돌릴 수 있습니다(최근 한 건).", ok:"빼기", word:P10_DWORD,
+    run:function(fin){ p10RowGo("pre10_row_del",{ emp:x.emp, from:x.sid, confirm:P10_DWORD },fin); } });
+}
+/* 쓰기 · 성공하면 그 한 줄만 고친다 · state · notin 이면 목록을 다시 받는다 */
+function p10RowGo(action, prm, fin){
+  P10R.busy="go";
+  callPost(action, prm, function(r){
+    P10R.busy="";
+    if(r&&r.ok){
+      var d=ST.data.p10l;
+      if(d&&d.ok){ var L=d.list||(d.list=[]), i=-1; L.forEach(function(y,k){ if(y.emp===prm.emp) i=k; });
+        if(action==="pre10_row_del"){ if(i>=0) L.splice(i,1); P10R.hl=""; } else if(r.row){ if(i>=0) L[i]=r.row; else L.push(r.row); P10R.hl=r.row.emp; }
+        d.n=r.n; d.by=r.by; }
+      P10R.edit=""; P10R.editS=""; if(action==="pre10_row_set"&&!prm.from){ P10R.add=""; }
+      p10RowDrop(); delete _cache[sig_("pre10_state",{})]; reload(["p10s"]); P10.pv=null; P10.pvKey="";
+      var o=action==="pre10_row_del"?[["뺀 사람",esc(prm.emp)+" · "+esc(P10_NAME[r.from]||r.from)],["10F 명단",r.n+"명"]].concat(r.kit?[["키트 이미 받음",r.kitKeep?"키트 명단에 남김(비고 「명단 빠짐 · 지급됨」)":"키트 명단에서 지움 · 지급 기록 그대로"]]:[]):
+        [[r.op==="move"?"옮긴 사람":"넣은 사람",esc(prm.emp)+(r.row&&r.row.name?" · "+esc(r.row.name):"")],["세션",(r.op==="move"?esc(P10_NAME[r.from])+" → ":"")+esc(P10_NAME[prm.sid])],["10F 명단",r.n+"명"]];
+      render(); fin(action==="pre10_row_del"?"뺐습니다":r.op==="move"?"옮겼습니다":"넣었습니다", imp(o.concat([["되돌리기","오른쪽 「되돌리기」 · 최근 한 건"]])));
+    } else { dlgForce(); toast("실패: "+p10Why(r,"row")); if(r&&(r.reason==="state"||r.reason==="notin"||r.reason==="same")){ p10RowDrop(); reload(["p10l"]); } render(); }
+  },function(e){ P10R.busy=""; dlgForce(); toast("실패: "+p10Why(e,"row")); render(); });
 }
 /* 서버 상태를 받은 뒤 미리보기가 있으면 대조를 부른다(화면을 열자마자 올린 경우) */
 (function(){ var r0=render; render=function(){ r0(); if(ST.nav==="p_pre10"&&P10.rows&&!P10.pv&&!P10.busy&&p10Srv()==="new") setTimeout(function(){ p10Preview(); },0); }; })();
