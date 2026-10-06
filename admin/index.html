@@ -3388,7 +3388,7 @@ function viewTypeNick(){
     '<div class="fld"><label for="selfWin">타자왕 마감</label><div class="row nw"><input class="in w-m" id="selfWin" value="'+esc((tr.win||[]).join(",").replace(/~/g,"-"))+'"><button class="btn" onclick="selfWinSave()">저장</button></div><span class="cap">운영 시간 · 끝 = 마감 · 예 09:00-17:00</span></div>'+   /* v5.03 결선 없음 · 17:00 마감(서버 키 타자_결선 그대로) */
     '<div class="fld fw"><label>노트북 주소</label><div class="row nw"><input class="in grow" readonly value="'+esc(selfLink())+'"><button class="btn" onclick="selfLinkCopy()">주소 복사</button></div></div></div>'+
     memo('<p>켜는 법 · ① 노트북 크롬에서 위 주소를 엽니다 ② 관리코드를 넣고 효과음(기본 켜짐)을 고른 뒤 「셀프 모드 켜기」 ③ 이후 화면은 참가자 전용입니다(새로 고침·재부팅해도 유지) ④ 끄기·효과음 = 화면 왼쪽 아래 「관리」 → 관리코드.</p>'+
-      '<p>참가자는 앱의 내 QR 을 노트북 카메라에 비추고(게임 닉네임이 없으면 정한 뒤) SPACE 로 시작합니다(v5.12 · 사번 입력 없음 · 켤 때 카메라 권한 허용). 시작하는 순간 1회로 셉니다(중간에 그만둬도 돌려주지 않음). 테스트 사번(310555)은 기록을 남기지 않습니다. 「타자왕 마감」은 운영 시간이고 끝 시각이 마감입니다(기본 09:00-17:00 · 결선 없음 · 1~3위는 Outro 시상).</p>'+
+      '<p>참가자는 ① 노트북 화면의 QR 을 폰으로 찍고(게임 닉네임이 없으면 정한 뒤) ② 노트북에서 SPACE 로 시작해 ③ 떨어지는 단어를 입력합니다(사번 입력 없음). 시작하는 순간 1회로 셉니다(중간에 그만둬도 돌려주지 않음). 테스트 사번(310555)은 기록을 남기지 않습니다. 「타자왕 마감」은 운영 시간이고 끝 시각이 마감입니다(기본 09:00-17:00 · 결선 없음 · 1~3위는 Outro 시상).</p>'+
       ''));   /* v5.14 토너먼트(타자왕전 판) 안내는 지웠다 · 대전 · 결선 없음(261002) */
   h+=card("1F 타자왕 상위 5","Outro 1~3위 시상 · 타자왕 운영 "+esc((tr.win||[]).join(" · ")),
     '<div class="wrap"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">점수</th><th class="tdr">정확도</th><th>기록 시각</th></tr>'+
@@ -6510,6 +6510,7 @@ renderDrawer=function(){
   if(aid&&el(aid)&&document.activeElement!==el(aid)) el(aid).focus();
 };
 /* ── 화면 ── */
+function invBoxNeed(it){ return !!it&&it.src==="box"&&it.on&&!it.box; }   /* 박스 개봉 품목인데 박스당 수량이 없으면 스태프 폰 「박스 열기」가 nobox 로 막힌다 */
 function invTag(it, d){
   if(it.q==null) return tag(it.g==="C"?"기록 안 함":"수량 미정","off");
   if(!it.on) return tag("쓰지 않음","off");
@@ -6531,6 +6532,8 @@ function viewInv(){
   /* 1 경고 */
   if(W.length) h+=card("소진 경고", W.length+"개 · 소진 예상은 최근 30분 기준"+(invLunch(d)?" · 점심 시간대라 참고":""),
     '<div class="iv-warn">'+W.map(function(w){ return '<div class="it">'+tag(w.lv==="bad"?"빨강":"노랑",w.lv)+'<span>'+esc(w.t)+'</span><button class="btn sm" onclick="drwOpen(\'inv\',\''+jq(w.id)+'\')">상세</button></div>'; }).join("")+'</div>');
+  var nb=items.filter(invBoxNeed);
+  if(nb.length) h+='<div class="bands">'+band("warn","박스당 수량이 비어 있습니다 · "+nb.map(function(x){ return "<b>"+esc(x.n)+"</b>"; }).join(" · ")+" · 스태프 폰의 「박스 1개 열었음」이 막힙니다. 커피는 1개씩이라 박스당 <b>1</b>로 저장합니다.",'<button class="btn sm'+(sup?"":" lk")+'" onclick="drwOpen(\'inv\',\''+jq(nb[0].id)+'\')">'+(sup?"":LOCK_SVG+" ")+'열기</button>')+'</div>';
   /* 2 품목 표 */
   var cnt={ "":items.length, A:0, B:0, C:0 }; items.forEach(function(x){ cnt[x.g]=(cnt[x.g]||0)+1; });
   var gch='<div class="chips">'+["","A","B","C"].map(function(g){ return '<button class="fchip'+(IVF.g===g?" on":"")+'" onclick="IVF.g=\''+g+'\';render()">'+(g?g+" "+({A:"사람별",B:"수량만",C:"기록 안 함"})[g]:"전체")+'<span class="cnt">'+cnt[g]+'</span></button>'; }).join("")+'</div>';
@@ -6557,7 +6560,7 @@ function viewInv(){
   h+=memo('<p><b>나감</b> · 원장(룰렛 등급 · 체크인 존 키트 · 박스 개봉 · 콘솔 지급 · 수량 맞추기)과 서버에 이미 있는 기록(행운권 당첨 · 선착순 참여상 수령 · 7등 당첨 · 타자왕 1~3위(17:00 뒤) · AX 라운지 완료)을 합친 값입니다. 되돌린 기록은 빠집니다.</p>'+
     '<p><b>가습기</b> · 나감 = 선착순 참여상 수령 + 라운지 초과 대체 지급입니다. 「선착순 자격」은 수령 여부와 관계없이 자격을 받은 수입니다. 자격 + 라운지 초과 대체가 총수량을 넘으면 위에 경고가 뜹니다.</p>'+
     '<p><b>룰렛 5등급</b> · 총수량은 서버 입고표 값입니다. 17:00 실물 잔여는 「럭키드로우 · 선착순 참여상 · 7등 › 7등 랜덤 굿즈」에서 넣습니다(7등 남은 경품 총수가 그 값을 씁니다). 2등이 먼저 바닥나면 커피 예비 40병으로 보충합니다(결정 4).</p>'+
-    '<p><b>커피</b> · 「참고」 숫자는 커피챗 참석 · 상담 입장 수입니다. 박스당 수량이 정해져야 스태프 폰의 「박스 1개 열었음」이 셉니다.</p>'+
+    '<p><b>커피</b> · 「참고」 숫자는 커피챗 참석 · 상담 입장 수입니다. 박스당 수량이 정해져야 스태프 폰의 「박스 1개 열었음」이 셉니다. 커피는 1개씩(박스당 1)입니다. 비어 있으면 위 안내가 뜨고, 품목 편집의 박스당 칸에 1이 미리 들어갑니다.</p>'+
     '<p><b>슈퍼관리자</b> · 남은 수 맞추기 · 총수량 · 품목 편집은 본인 확인(PIN)과 사유를 넣고 확인 문구를 쳐야 저장됩니다. 운영로그 · 조정 기록에 남습니다. 가격은 어디에도 넣지 않습니다.</p>'+
     '<p><b>경고에서 빠지는 것</b> · 수량 미정(AX 라운지 사은품 등) · C 등급(생수 · 목걸이 · 브로셔 · 포스터 · 스태프 유니폼). AI 구독권 · 간식 · AX 라운지 사은품 수량은 재고 관리에서 뺐습니다(결정 8).</p>');
   return h;
@@ -6596,7 +6599,7 @@ function invGiveGo(id){
     else toast("실패: "+invWhy(r));
   },function(e){ toast("실패: "+invWhy(e)); });
 }
-function invWhy(r){ r=r||{}; return { dup:"이 사번은 이미 받았습니다", notfound:"품목을 찾지 못했습니다", already:"이미 되돌린 기록입니다", kind:"조정 · 편집 기록은 되돌리지 않습니다(다시 맞춥니다)", noq:"총수량이 정해진 품목만 맞춥니다", memo:"사유를 2~60자로 넣으세요", same:"바뀐 것이 없습니다", drawn:"완주 경품 추첨 뒤라 룰렛 · 가습기 수량은 바꾸지 않습니다", fixed:"이 품목 이름은 바꾸지 않습니다", full:"새 품목은 9개까지입니다", name:"이름을 확인하세요(30자 · 기호 제외)", q:"총수량을 확인하세요(0 이상 정수 · 룰렛 · 가습기는 미정 불가)", box:"박스당 수량은 1~999", w:"경고율은 1~50", nobox:"박스당 수량이 정해지지 않았습니다" }[r.reason]||why(r); }
+function invWhy(r){ r=r||{}; return { dup:"이 사번은 이미 받았습니다", notfound:"품목을 찾지 못했습니다", already:"이미 되돌린 기록입니다", kind:"조정 · 편집 기록은 되돌리지 않습니다(다시 맞춥니다)", noq:"총수량이 정해진 품목만 맞춥니다", memo:"사유를 2~60자로 넣으세요", same:"바뀐 것이 없습니다", drawn:"완주 경품 추첨 뒤라 룰렛 · 가습기 수량은 바꾸지 않습니다", fixed:"이 품목 이름은 바꾸지 않습니다", full:"새 품목은 9개까지입니다", name:"이름을 확인하세요(30자 · 기호 제외)", q:"총수량을 확인하세요(0 이상 정수 · 룰렛 · 가습기는 미정 불가)", box:"박스당 수량은 1~999", w:"경고율은 1~50", nobox:"박스당 수량이 정해지지 않았습니다(커피는 박스당 1로 저장)" }[r.reason]||why(r); }
 function invUndoAsk(rid, id){
   dialog({ t:"이 기록을 되돌릴까요?", who:esc(invNm(id))+"<span>기록 "+esc(rid)+"</span>", x:imp([["원장","되돌림 한 줄이 남습니다(지우지 않음)"],["나감 · 남음","이 기록만큼 돌아옵니다","chg"]]), ok:"되돌리기", danger:true,
     onOk:function(){ call("inv_undo",{ rid:rid },function(r){ dlgForce(); if(r&&r.ok){ invAfter(id); toast("되돌렸습니다 · "+(r.n||invNm(id))); } else toast("실패: "+invWhy(r)); },function(e){ dlgForce(); toast("실패: "+invWhy(e)); }); } });
@@ -6620,13 +6623,14 @@ function invAdjAsk(id){
 function invCfgAsk(id){
   if(!invSupReady()) return;
   var nw=id==="new", it=nw?{ id:"new", n:"", g:"B", q:null, box:null, w:15, m:"", on:1, note:"", src:"manual" }:invItem(id); if(!it) return;
+  var coffee1=!nw&&invBoxNeed(it);   /* 261006 커피는 1개씩 · 박스당 비어 있으면 1을 미리 넣는다(저장은 사람이 누른다) */
   var fix=it.fixq==="fin", hum=it.id==="hum", nm=fix&&!hum?String(it.n).replace(/^룰렛 \d등 /,""):it.n;
   var f=function(lab, inp){ return '<label class="fld">'+lab+inp+'</label>'; };
   var x='<div class="iv-form mt12">'+
     f("이름",'<input class="in w" id="ivCn" maxlength="30" value="'+esc(nm)+'"'+(hum?" disabled":"")+' oninput="dlgGate()">')+
     (fix?'':f("등급",'<select class="in" id="ivCg">'+["A","B","C"].map(function(g){ return '<option'+(it.g===g?" selected":"")+'>'+g+'</option>'; }).join("")+'</select>'))+
     f("총수량"+(fix?"":"(비우면 미정)"),'<input class="in" id="ivCq" inputmode="numeric" value="'+(it.q==null?"":esc(it.q))+'">')+
-    f("박스당",'<input class="in" id="ivCb" inputmode="numeric" value="'+(it.box==null?"":esc(it.box))+'">')+
+    f("박스당"+(coffee1?"(커피 1개씩)":""),'<input class="in" id="ivCb" inputmode="numeric" value="'+(it.box==null?(coffee1?"1":""):esc(it.box))+'">')+
     f("경고율 %",'<input class="in" id="ivCw" inputmode="numeric" value="'+esc(it.w||15)+'">')+
     (it.src==="lucky"?f("경품 글자 열쇠말",'<input class="in w" id="ivCk" maxlength="20" value="'+esc(it.m||"")+'">'):'')+
     f("사용",'<select class="in" id="ivCo"><option value="1"'+(it.on?" selected":"")+'>사용</option><option value="0"'+(it.on?"":" selected")+'>쓰지 않음</option></select>')+
@@ -6649,7 +6653,7 @@ GUIDE.e_app=GUIDE.e_game=GUIDE.e_type=GUIDE.e_draw=GUIDE.e_roul=GUIDE.e_sign=GUI
 GUIDE.s_danger=[["등급","L1 = 되돌리기 알림 · L2 = 대상 · 인원 확인 창 · L3 = 슈퍼관리자 PIN → 미리 세기 → 확인 문구 → 결과 창(책갈피 · 되돌리기 명령)입니다."],["접힘","모든 줄이 접혀 있습니다. 눌러야 버튼이 보입니다."],["행사일","10/26 에는 전체 초기화를 열지 않습니다. 서버도 받지 않습니다."]];
 GUIDE.stamp=[["사람 찾기","왼쪽 칸에 사번이나 이름을 넣고 한 사람을 고릅니다."],["8칸 확인","획득한 칸은 네이비, 획득 경로(현장 QR · 담당자 부여 · 앱 자동)가 칸 안에 보입니다. 프로그램 참여(06)는 2개로 세고(×2), 17F 한쪽만 찍었으면 「1/2」입니다."],["부여","담당자 부여는 AX PLAY(04) · 프로그램 참여(06 · 2개) · 계단(07)입니다(서버 grantIds). 최초 로그인 · AX 퀴즈 · 미니 게임 · 아이디어 · 설문은 앱 안의 행동이라 부여하지 않습니다."],["취소","취소 범위는 서버 설정 「스탬프취소_범위」가 정합니다. 확인 창에서 보상 변화를 먼저 보여 주고, 룰렛을 이미 돌렸거나 발급된 행운권이 줄어드는 취소는 서버가 거부합니다."],["되돌리기","처리 직후 알림의 <b>되돌리기</b>로 바로 원래대로 돌릴 수 있습니다. 모든 부여 · 취소는 참여 기록에 행으로 남습니다(지우지 않음)."]];
 GUIDE.typing=[["게임별 통계","미니 게임 세 종목(AX 팡 · ME to WE 점프 · 테트리스) 전원 점수 · 최고 점수 중앙 · 만점 도달 · CSV 입니다. AX 퀴즈는 한 판 완주만 보고 순위가 없어 카드가 없습니다."],["재보정","1,000점에서 크게 벗어난 종목은 행사 요소 › AX 퀴즈·게임 › 점수 계수에서 고칩니다."]];   /* v5.14 현재 기획으로 다시 씀(옛 다섯 종목 · O/X 문항 · 타자왕전 안내 삭제) */
-GUIDE.e_type=[["1F 셀프","1F 노트북에서 참가자가 앱의 내 QR 로 들어와 도전합니다. 도전 횟수와 운영 시간(끝 = 17:00 마감)을 바꿉니다."],["상위 5","점수 높은 순입니다. Outro 에서 1~3위를 시상합니다."],["화면","부스 세로 TV · 가로 TV 순환 · 셀프 노트북 주소입니다."]];
+GUIDE.e_type=[["1F 셀프","1F 노트북에서 참가자가 ① 화면의 QR 을 폰으로 찍고 ② SPACE 로 시작해 ③ 떨어지는 단어를 입력하며 도전합니다. 도전 횟수와 운영 시간(끝 = 17:00 마감)을 바꿉니다."],["상위 5","점수 높은 순입니다. Outro 에서 1~3위를 시상합니다."],["화면","부스 세로 TV · 가로 TV 순환 · 셀프 노트북 주소입니다."]];
 /* ══════════════════ v5.72 (사용자 결정 261005 「권장대로」) 사람·권한 › 10F 사전 신청 명단 ══════════════════
  * 명단(사번 · 세션, 엑셀 .xlsx · CSV 또는 붙여넣기)을 받아 서버가 시트 「강의신청」(10F 끝 QR 자격)과 「키트명단」(체크인 존 키트)에 한 번에 쓴다.
  * 서버 명세 = 디자인 시안/10F 명단 넣기/서버_명세.md · 액션 pre10_state · pre10_preview · pre10_apply · pre10_undo(모두 슈퍼관리자 + 본인 확인 sp)
@@ -7492,16 +7496,17 @@ function lkMemo(){
 }
 
 /* ══ B8 · Outro 진행 순서(안) · 사회자 멘트 · 진행 패널 아래 ══ */
-function olyStepOn(){ try{ return localStorage.getItem("axf_oly_step")!=="0"; }catch(e){ return true; } }
-function olyStepSet(v){ try{ localStorage.setItem("axf_oly_step", v?"1":"0"); }catch(e){} if(typeof DC!=="undefined") DC.sig=""; render(); }
 function ikHour(t){ var m=String(t||"").match(/(\d{1,2}):(\d{2})/); if(!m) return "오늘 오후 4시"; var h=Number(m[1]), mm=Number(m[2]); return "오늘 "+(h<12?"오전 ":"오후 ")+(h>12?h-12:h)+"시"+(mm?" "+mm+"분":""); }
 function ikNames(rk){ var ik=ST.data.ik, ps=ik&&ik.ok&&ik.picks||[]; return ps.filter(function(p){ return Number(p.rk)===rk; }).map(function(p){ return (p.name||p.emp)+"님"; }); }
+function lkMc(){   /* 261006 행운권 단계 멘트 · 참석조건 OFF(현재 운영) = 체크인 없이 번호 전체가 풀 · 경품은 따로 전달 */
+  var off=drawAttOff(ST.data.draw);
+  return "지금부터 행운권 현장 추첨을 시작합니다. "+(off?"행운권 번호가 있는 분 전체가 대상이고, 당첨되시면 경품은 따로 전달해 드립니다. ":"")+"위 진행 패널 큰 버튼으로 진행합니다.";
+}
 function outroSteps(){
   var ik=ST.data.ik, ok=ik&&ik.ok, cut=ok?ik.cut:"", N=[1,2,3].map(ikNames), tr=ST.data.tres||{}, top=tr.top||[];
   var idea="아이디어왕 시상입니다. "+ikHour(cut)+"까지 접수된 아이디어 중 1등 "+(N[0].join(", ")||"○○○님")+", 2등 "+(N[1].join(", ")||"○○○님")+", 3등 "+(N[2].join(", ")||"○○○님")+"입니다. 상품은 AI 구독권이고 따로 전달해 드립니다.";
   var typ="1F 타자왕 시상입니다. 1위 "+(top[0]?(top[0].nick||"○○○")+"님":"○○○님")+", 2위 "+(top[1]?(top[1].nick||"○○○")+"님":"○○○님")+", 3위 "+(top[2]?(top[2].nick||"○○○")+"님":"○○○님")+" 앞으로 나와 주세요.";
-  var L=[["마무리 연설","오늘 AX Festival 2026 을 마무리하는 말씀을 듣겠습니다."],["DAP 시상","DAP 우수 성과자 시상을 진행하겠습니다."],["아이디어왕 시상",idea],["1F 타자왕 시상",typ],["행운권 현장 추첨 · 1~6등 10명","지금부터 행운권 현장 추첨을 시작합니다. 위 진행 패널 큰 버튼으로 진행합니다."]];
-  if(olyStepOn()) L.push(["미니게임 올림픽 시상(검토 중)","미니게임 올림픽 종합 1~3위 시상입니다."]);
+  var L=[["마무리 연설","오늘 AX Festival 2026 을 마무리하는 말씀을 듣겠습니다."],["DAP 시상","DAP 우수 성과자 시상을 진행하겠습니다."],["아이디어왕 시상",idea],["1F 타자왕 시상",typ],["행운권 현장 추첨 · 1~6등 10명",lkMc()]];
   return L;
 }
 function dcOutroCard(){
@@ -7518,8 +7523,7 @@ function drawSetX(d){
   var a=card("행운권 참석조건",v==null?"서버 갱신 뒤":"지금 "+(off?"OFF":"ON"),
     '<div class="row">'+(v==null?tag("서버 갱신 뒤","off"):off?tag("OFF · 번호 전체가 풀","pri"):tag("ON · 17F 입구 체크인한 사람만","warn"))+cfgBtn("행운권_참석조건")+'</div>'+
     '<p class="cap mt8">OFF = 모든 행운권 번호가 무대 추첨 풀입니다(당첨자 발표만 · 경품은 나중에 전달). ON = 17F 입구 추첨 QR 로 체크인한 사람의 번호만 풀입니다. 바꾸면 추첨 화면이 다음 풀부터 따릅니다.</p>');
-  var o=card("Outro 순서(안)","진행 패널 아래 사회자 멘트에 쓰입니다",'<ol class="pz-outro sm">'+outroSteps().map(function(x){ return '<li><b>'+esc(x[0])+'</b></li>'; }).join("")+'</ol>'+
-    '<label class="p10-ck mt12"><input type="checkbox"'+(olyStepOn()?" checked":"")+' onchange="olyStepSet(this.checked)"> 미니게임 올림픽 시상 단계 보이기(검토 중 · 이 브라우저만)</label>');
+  var o=card("Outro 순서(안)","진행 패널 아래 사회자 멘트에 쓰입니다",'<ol class="pz-outro sm">'+outroSteps().map(function(x){ return '<li><b>'+esc(x[0])+'</b></li>'; }).join("")+'</ol>');
   return '<div class="grid g2">'+a+o+'</div>';
 }
 
