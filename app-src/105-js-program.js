@@ -568,14 +568,15 @@ function progDetail(s) {
       return D;
     }
     var din = !!S.get("draw_in", false), hmD = hmNow(), dwin = evPhase() === "live" && hmD >= t2m("16:40") && hmD < t2m("17:25");   /* 창 = drawCardHtml 과 같은 서버 기본 창 */
+    var lc = lkCond();   /* v5.92 (사용자 261006 「럭키드로우에서 체크인 요소는 일단은 없애 놓자 · 행운권 중에서 추첨」) 참석 조건 OFF(서버 lkcond) = 체크인 줄 · 추첨 QR 단추 · 체크인 안내 없음 */
     D.who = s.who; D.av = s.who; D.whoSub = "일하는 방식";
-    D.st = din ? "추첨 체크인 완료" : "자유 참석"; D.stc = "ok";
-    D.kv.push(["체크인", din ? "추첨 체크인 완료" : "16:40–17:25 · 입구 QR"]);   /* 375px 한 줄 · 추첨 QR 은 아래 「현장 추첨」 */
+    D.st = lc && din ? "추첨 체크인 완료" : "자유 참석"; D.stc = "ok";
+    if (lc) D.kv.push(["체크인", din ? "추첨 체크인 완료" : "16:40–17:25 · 입구 QR"]);   /* 375px 한 줄 · 추첨 QR 은 아래 「현장 추첨」 */
     D.extra = '<section class="axs-dsec"><h3>진행</h3><ul class="axs-ddot"><li>CSO 마무리 연설 · 일하는 방식</li><li>DAP 우수 성과자 시상</li><li>현장 추첨</li></ul></section>';   /* v5.69 시트 = 「하는 일」과 같은 점 목록 */
     D.secT = "현장 추첨";
-    D.secB = "16:40부터 대강당 입구 추첨 QR로 체크인해요.<br>체크인한 사람의 행운권 번호 중에서 뽑아요.<br>행운권은 스탬프 4개부터 생겨요.";
-    D.help = din ? "" : dwin ? "현장에서만 체크인할 수 있어요" : evPhase() === "after" || (evPhase() === "live" && hmD >= t2m("17:25")) ? "추첨 체크인 마감" : "16:40부터 체크인할 수 있어요";   /* 261005 최종 QA · 행사가 끝난 뒤에도 「16:40부터」가 남던 것 */
-    D.btn = !din && dwin ? progBtn("추첨 QR 스캔", "qrScanOpen()") : timeBtn;
+    D.secB = lc ? "16:40부터 대강당 입구 추첨 QR로 체크인해요.<br>체크인한 사람의 행운권 번호 중에서 뽑아요.<br>행운권은 스탬프 4개부터 생겨요." : "행운권 번호 전체에서 뽑아요.<br>당첨되면 경품은 따로 전달해요.<br>행운권은 스탬프 4개부터 생겨요.";
+    D.help = din || !lc ? "" : dwin ? "현장에서만 체크인할 수 있어요" : evPhase() === "after" || (evPhase() === "live" && hmD >= t2m("17:25")) ? "추첨 체크인 마감" : "16:40부터 체크인할 수 있어요";   /* 261005 최종 QA · 행사가 끝난 뒤에도 「16:40부터」가 남던 것 */
+    D.btn = lc && !din && dwin ? progBtn("추첨 QR 스캔", "qrScanOpen()") : timeBtn;
     D.pics = prizeGoHtml("draw");   /* v5.20 (사용자 261003 후킹 권장 2) 경품 입구 한 줄 · 행운권 구역으로 */
     return D;
   }

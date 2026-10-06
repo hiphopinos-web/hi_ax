@@ -70,7 +70,7 @@ function myRewardHtml() {
   var n = stampCount(), items = rewItems(), list = items.filter(function (x) { return !x.used; }).concat(items.filter(function (x) { return x.used; }));
   var goal = n < STAMP_DENOM ? '<div class="axs-list">' + axDest(esc(stampGoalText(n)), "", lnkChev("스탬프 보기"), "App.tab('exp')") + "</div>" : "";
   var cards = list.map(function (x) {
-    var big = x.k === "raffle" ? "" : x.big, why = x.k === "raffle" ? "17:00 Outro 현장 추첨 · 17F 입구 QR 체크인" : x.why;
+    var big = x.k === "raffle" ? "" : x.big, why = x.k === "raffle" ? (lkCond() ? "17:00 Outro 현장 추첨 · 17F 입구 QR 체크인" : "17:00 Outro 현장 추첨 · 당첨되면 경품은 따로 전달") : x.why;   /* v5.92 (사용자 261006 「럭키드로우에서 체크인 요소는 일단은 없애 놓자」) 참석 조건 OFF = 체크인 문구 없음 */
     var tt = '<div class="ax-stack-tight"><h2 class="ax-section-title">' + x.nm + "</h2>" + (big ? '<p class="axs-big">' + big + "</p>" : "") + "</div>";
     return '<section class="ax-card" data-rw="' + x.k + '"><span class="axs-chip axs-self' + (x.off ? " off" : x.cc != null ? x.cc : " ok") + '">' + x.chip + "</span>" +
       (x.pic ? '<div class="axs-rwhd">' + prizePhHtml(x.pic) + tt + "</div>" : tt) +   /* v5.04 참여상 당첨 = 상품 사진 */
@@ -93,10 +93,11 @@ function rewItems() {
   if (f && f.st === "full") items.push({ k: "fin", used: true, chip: "마감", off: true, nm: "선착순 참여상", big: "", why: cap + "명 마감 · 6개 달성은 행운권 3장" });
   if (f && f.st === "void") items.push({ k: "fin", used: true, chip: "취소", off: true, nm: "선착순 참여상", big: "", why: "자격이 취소됐어요 · 운영진 문의" });
   if (f && f.st === "closed") items.push({ k: "fin", used: true, chip: "마감", off: true, nm: "선착순 참여상", big: "", why: "17:00 이후 달성" });
-  /* v5.90 행운권 7등 랜덤 굿즈 · 서버 my.lk7 이 있고 행운권 보유(in)일 때 · 추첨 뒤 당첨이면 당첨 칩 */
-  var l7 = S.get("lk7", null);
-  if (l7 && l7.in && l7.ph !== "done") items.push({ k: "lk7", used: false, chip: "추첨 대기", cc: "", nm: "랜덤 굿즈", big: "", why: "행사 뒤 추첨 · 사내 우편 발송" });
-  if (l7 && l7.ph === "done" && l7.w) items.push({ k: "lk7", used: false, chip: "당첨", nm: "랜덤 굿즈", big: "1세트", why: "사내 우편으로 발송" });
+  /* v5.90 행운권 7등 랜덤 굿즈 · 서버 my.lk7 이 있고 행운권 보유(in)일 때 · 추첨 뒤 당첨이면 당첨 칩
+     v5.92 (사용자 261006 「7등 랜덤 굿즈의 경우에는 정말 랜덤으로」) 고정 세트 없음 · 룰렛 남은 경품에서 무작위 · 수는 PRIZES.lk7 한 곳 */
+  var l7 = S.get("lk7", null), l7n = PRIZES.lk7.list[0].q;
+  if (l7 && l7.in && l7.ph !== "done") items.push({ k: "lk7", used: false, chip: "추첨 대기", cc: "", nm: "랜덤 굿즈", big: "", why: "룰렛 남은 경품에서 무작위 · 행사 뒤 " + l7n + "명 추첨 · 사내 우편 발송" });
+  if (l7 && l7.ph === "done" && l7.w) items.push({ k: "lk7", used: false, chip: "당첨", nm: "랜덤 굿즈", big: "", why: "룰렛 남은 경품에서 무작위 · 사내 우편 발송" });
   return items;
 }
 
@@ -120,11 +121,11 @@ var PRIZES = {
     { rk: "4등", nm: "에어팟 4", q: 2, img: "ld4_airpods" },
     { rk: "5등", nm: "풀리오 종아리 마사지기", q: 2, img: "ld5_pulio" },
     { rk: "6등", nm: "현대백화점 상품권 10만원", q: 3, img: "ld6_hyundai" }] },
-  /* v5.90 fin 칸 = 선착순 참여상(키는 그대로 · 구역 id pz-fin) · 7등 랜덤 굿즈(lk7 · 사진 = 세트 구성 두 장) · 아이디어왕(idea · AI 구독권 카드 그림 idea1 ~ 3 · 사용자 261006 「가」 · 바꿀 때는 파일만) */
+  /* v5.90 fin 칸 = 선착순 참여상(키는 그대로 · 구역 id pz-fin) · 7등 랜덤 굿즈(lk7 · v5.92 대표 그림 한 장 lk7_random_v2 = 룰렛 _v2 사진 여섯 장을 묶은 것 · 고정 세트 없음) · 아이디어왕(idea · AI 구독권 카드 그림 idea1 ~ 3 · 사용자 261006 「가」 · 바꿀 때는 파일만) */
   fin: { unit: "개", list: [
     { rk: "", nm: "무선 무드등 가습기", q: 210, img: "fin_humidifier_v2" }] },
-  lk7: { unit: "세트", list: [
-    { rk: "7등", nm: "랜덤 굿즈", sub: "텀블러 · 판스티커 · 키캡 키링 · 볼펜", q: 60, img: "rl1_tumbler_v2", img2: "rl4_sticker_v2" }] },
+  lk7: { unit: "명", list: [
+    { rk: "7등", nm: "랜덤 굿즈", sub: "룰렛 남은 경품에서 무작위", q: 60, img: "lk7_random_v2" }] },
   idea: { unit: "명", list: [
     { rk: "1등", nm: "AI 구독권 6개월", q: 1, img: "idea1" },
     { rk: "2등", nm: "AI 구독권 3개월", q: 1, img: "idea2" },
@@ -190,7 +191,7 @@ var PZ_ICO = {
 /* v5.90 (261006 경품 기획 변경 · 계약.md 5절) 행운권 받으려면 줄2 = 참석 조건(sync lkcond) 따라 · 7등 · 선착순 참여상 · 아이디어왕 구역 · 서버 필드가 없으면(on) 구역을 그리지 않는다 */
 var PZ_SEC = [
   { k: "draw", en: "LUCKY DRAW", t: "행운권 추첨", need: function () { return [["stamp", "스탬프 4개부터 행운권", "6개면 3장"], lkCond() ? ["qr", "Outro 참석 · 17F 입구 QR 체크인", "16:40부터 · 17:00 현장 추첨"] : ["cup", "17F Outro 현장 추첨", "17:00 · 당첨자 발표만, 경품은 나중에 전달"]]; } },
-  { k: "lk7", en: "7TH PRIZE", t: "행운권 7등 · 랜덤 굿즈 60세트", on: function () { return !!S.get("lk7", null); }, need: [["stamp", "스탬프 4개 이상(행운권 보유)", "1~6등 당첨자는 제외"], ["box", "행사 뒤 추첨", "사내 우편으로 발송"]] },
+  { k: "lk7", en: "7TH PRIZE", t: "행운권 7등 · 랜덤 굿즈", on: function () { return !!S.get("lk7", null); }, need: function () { return [["stamp", "스탬프 4개 이상(행운권 보유)", "1~6등 당첨자는 제외"], ["box", "행사 뒤 " + PRIZES.lk7.list[0].q + "명 추첨", "룰렛 남은 경품에서 무작위 · 사내 우편 발송"]]; } },   /* v5.92 정말 랜덤(사용자 261006) */
   { k: "fin", en: "FIRST COME", t: "선착순 참여상", on: function () { return !!fxGet(); }, need: function () { var x = fxGet() || {}; return [["stamp", "스탬프 6개를 먼저 채운 " + (x.cap || 210) + "명", x.left === 0 ? "선착순 마감" : x.left > 0 ? "남은 수량 " + x.left + "개" : ""], ["box", "1F 체크인존에서 수령", "당일 못 받으면 10/27 소속 부서로 발송"]]; } },
   { k: "roulette", en: "ROULETTE", t: "룰렛", need: function () { return [["stamp", "스탬프 3개면 룰렛 1회", "1인 1회"], ["qr", "1F EVENT 룰렛 부스에서 내 QR 제시", S.get("rcut", "") ? "룰렛 " + S.get("rcut", "") + " 마감" : ""]]; } },
   { k: "idea", en: "IDEA KING", t: "아이디어왕", on: function () { return !!S.get("idea_pub", null); }, need: function () { var ip = S.get("idea_pub", null) || {}; return [["stamp", (ip.cut || "16:00") + "까지 아이디어 한 줄", "AX 라운지 · 커피챗 · 앱 어느 경로든"], ["cup", "Outro에서 시상", ideaKingN() + "명 · AI 구독권"]]; } },

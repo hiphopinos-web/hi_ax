@@ -126,6 +126,7 @@ function myCouponHtml() {
 var STAMP_MODE = { lg: "자동", qz: "폰으로", p4: "폰으로", p2: "스태프 인증", p5: "폰으로", p3: "현장", st: "현장", sv: "폰으로", p1: "현장", p7: "현장" };
 /* v4.84 Outro 추첨 체크인 카드 · 16:40~17:25(서버 기본 창) · 체크인하면(draw_in 기록) 내린다 · 행사 중에만 */
 function drawCardHtml() {
+  if (!lkCond()) return "";   /* v5.92 (사용자 261006) 행운권 참석 조건 OFF = 추첨 체크인 카드 없음 */
   if (evPhase() !== "live" || S.get("draw_in", false)) return "";
   var hm = new Date().getHours() * 60 + new Date().getMinutes();
   if (hm < t2m("16:40") || hm >= t2m("17:25")) return "";
