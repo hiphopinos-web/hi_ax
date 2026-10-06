@@ -211,11 +211,12 @@ function progFlowHtml(onlyFl) {
     var span = nx ? nx.a - r.a : 0, p = nx ? Math.max(0, Math.min(1, (hmN - r.a) / span)) : 0, ex = nx ? Math.min(52, Math.round(span * 0.35)) : 0;
     var rl = nx ? '<i class="rl' + (p >= 1 ? " done" : p > 0 ? " cur" : "") + '" style="--p:' + p.toFixed(3) + '"></i>' : "";
     return '<div class="fr ' + st + '" style="--ex:' + ex + 'px"><span class="tm">' + r.t0 + '</span><span class="ln" aria-hidden="true"><i class="nd"></i>' + rl + '</span><div class="cs">' +
-      r.its.map(function (o) { return progFlowCard(o, hmN, focus === o); }).join("") + (!onlyFl && r.t0 === TEN_ROW_AT && !tenMine() ? progTenRowHtml() : "") + "</div></div>";
+      r.its.map(function (o) { return progFlowCard(o, hmN, focus === o); }).join("") + (!onlyFl && r.t0 === TEN_ROW_AT && applyTenShow() ? progTenRowHtml() : "") + "</div></div>";
   }).join("");
 }
 /* v5.74 (사용자 261006 「사전 신청자 대상 강의에 대한 입구가 없는 것 같은데 · 적절한 위치」) 10F 실습형 세션 입구 = 13:30 칸 맨 아래 작은 한 줄(카드보다 낮은 위계 · 시간표 노드 · 진행 중 판정에 들지 않는다)
-   누르면 10F 실습형 세션 목록(floor_d · 엘리베이터 10F 안내와 같은 2단계) → 세션 줄 → 시트 · 사전 신청자(tenMine)에게는 숨긴다(내 세션 카드가 같은 칸에 있다) · 배제 말투 없이 「사전 신청자 참여」(design.md §7) */
+   누르면 10F 실습형 세션 목록(floor_d · 엘리베이터 10F 안내와 같은 2단계) → 세션 줄 → 시트 · 배제 말투 없이 「사전 신청자 참여」(design.md §7)
+   v5.86 (사용자 261006) 보이는 사람 = [신청하기] 칸 10F 줄과 같은 규칙(applyTenShow · 10F 명단 tenMine · 테스트 사번 testMode) · 일반 직원에게는 없다 · 옛 v5.74 「사전 신청자에게는 숨김」은 뒤집음 */
 var TEN_ROW_AT = "13:30";
 function progTenGo() { PROG.floor = 10; App.go("floor_d"); }
 function progTenRowHtml() {

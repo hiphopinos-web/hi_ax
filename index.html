@@ -3501,7 +3501,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.85";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.86";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
 var A2HS = { deferred: null, open: false };
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -5080,11 +5080,12 @@ function progFlowHtml(onlyFl) {
     var span = nx ? nx.a - r.a : 0, p = nx ? Math.max(0, Math.min(1, (hmN - r.a) / span)) : 0, ex = nx ? Math.min(52, Math.round(span * 0.35)) : 0;
     var rl = nx ? '<i class="rl' + (p >= 1 ? " done" : p > 0 ? " cur" : "") + '" style="--p:' + p.toFixed(3) + '"></i>' : "";
     return '<div class="fr ' + st + '" style="--ex:' + ex + 'px"><span class="tm">' + r.t0 + '</span><span class="ln" aria-hidden="true"><i class="nd"></i>' + rl + '</span><div class="cs">' +
-      r.its.map(function (o) { return progFlowCard(o, hmN, focus === o); }).join("") + (!onlyFl && r.t0 === TEN_ROW_AT && !tenMine() ? progTenRowHtml() : "") + "</div></div>";
+      r.its.map(function (o) { return progFlowCard(o, hmN, focus === o); }).join("") + (!onlyFl && r.t0 === TEN_ROW_AT && applyTenShow() ? progTenRowHtml() : "") + "</div></div>";
   }).join("");
 }
 /* v5.74 (사용자 261006 「사전 신청자 대상 강의에 대한 입구가 없는 것 같은데 · 적절한 위치」) 10F 실습형 세션 입구 = 13:30 칸 맨 아래 작은 한 줄(카드보다 낮은 위계 · 시간표 노드 · 진행 중 판정에 들지 않는다)
-   누르면 10F 실습형 세션 목록(floor_d · 엘리베이터 10F 안내와 같은 2단계) → 세션 줄 → 시트 · 사전 신청자(tenMine)에게는 숨긴다(내 세션 카드가 같은 칸에 있다) · 배제 말투 없이 「사전 신청자 참여」(design.md §7) */
+   누르면 10F 실습형 세션 목록(floor_d · 엘리베이터 10F 안내와 같은 2단계) → 세션 줄 → 시트 · 배제 말투 없이 「사전 신청자 참여」(design.md §7)
+   v5.86 (사용자 261006) 보이는 사람 = [신청하기] 칸 10F 줄과 같은 규칙(applyTenShow · 10F 명단 tenMine · 테스트 사번 testMode) · 일반 직원에게는 없다 · 옛 v5.74 「사전 신청자에게는 숨김」은 뒤집음 */
 var TEN_ROW_AT = "13:30";
 function progTenGo() { PROG.floor = 10; App.go("floor_d"); }
 function progTenRowHtml() {
@@ -5967,7 +5968,7 @@ function crowdStripHtml() {
 /* v5.37 (사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) 둘러보기 v3 = 시험 페이지와 같은 공용 모듈(tour3.js · tour3.css · 캐릭터 걷기 · 40도 시점 · 왼손 패드 · 오른손 십자 · 작은 지도 · 스태프 챗봇 · 판 보기 · 돋보기 2개 · 움직임 줄이기 · 입장 암전)
    같은 약속 AXTour.open/close/back/isOpen · 옛 v2(tour.js · tour.css · 자동 둘러보기 · 평면 지도 · 구역 시트)로 되돌리려면 아래 목록의 tour3 두 개를 tour.css · tour.js 로 바꾸면 된다(파일은 그대로 둠) */
 /* v5.38 (사용자 261003) 둘러보기 손질 · 캐릭터 겹침(스태프 원 충돌) · 늘 카메라 쪽을 봄 · 조그 패드 · 안내데스크 깜빡임(겹친 면) · 정문 회전문 또렷하게 · 로비 음악(Web Audio 합성 · 「음악 없이」 · 위쪽 스피커 버튼) · 파일 이름 그대로 · 캐시 깨기 ver v538 */
-var TOUR = { ver: "v585", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
+var TOUR = { ver: "v586", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
 try { localStorage.removeItem('axfT3Diag'); } catch (e) {} window.AXT3_DIAG = /[?&]t3diag=1(?:&|$)/.test(location.search);   /* v5.47 진단은 주소에 ?t3diag=1 이 있는 그 페이지에서만 · 기억하지 않는다 · 옛 기기 기억은 지운다(사용자 261004) */   /* v5.44 둘러보기 실기기 진단(주소 ?t3diag=1 · 이 기기에 기억 · ?t3diag=0 이면 끔) · 화면 왼쪽 위에 GPU · 깊이 비트 · highp · DPR · fps */
 /* 켜기 스위치 · v5.28 true = 전체 공개(사용자 261003 「1층 3D 전체 공개」) · false 로 두면 입구 3곳 · 판 퀴즈 힌트 링크 · 열기가 모두 숨는다 */
 var TOUR_ON = true;
@@ -11632,7 +11633,7 @@ var OX_BANK = [
   { id: "F68", c: 4, lv: 2, q: "질문은 한꺼번에 여러 개 묻는 게 좋다", a: "X", e: "질문은 하나씩 나누어 한다.", g: "tipq", rv: 1, z: "play", h: "play.hq.tips" },
   { id: "F71", c: 4, lv: 2, q: "태아보험 설계는 출산예정일만 넣으면 된다", a: "O", e: "임신 주수별 필수 담보를 담아 설계한다.", g: "hhf", rv: 1, z: "play", h: "play.hh.intro" },
   { id: "F72", c: 4, lv: 3, q: "Hi-Helper는 신상품도 바로 추천에 반영한다", a: "X", e: "신상품과 신담보는 반영까지 시간이 걸린다.", g: "hhn", rv: 1, z: "play", h: "play.hh.check" },
-  { id: "F74", c: 4, lv: 1, q: "AX LOUNGE는 업무 고민을 이야기하는 곳이다", a: "O", e: "바꾸고 싶은 업무와 반복되는 불편을 이야기한다.", g: "lg", rv: 1, z: "lounge", h: "lounge.intro" },
+  { id: "F74", c: 4, lv: 1, q: "AX 라운지는 업무 고민을 이야기하는 곳이다", a: "O", e: "바꾸고 싶은 업무와 반복되는 불편을 이야기한다.", g: "lg", rv: 1, z: "lounge", h: "lounge.intro" },
   { id: "F83", c: 4, lv: 1, q: "in Action 앱은 외부 업체가 만들어 줬다", a: "X", e: "현장 구성원이 AI와 데이터로 직접 만들었다.", g: "ia", rv: 1, z: "action", h: "action.intro" },
   { id: "F84", c: 4, lv: 2, q: "AI컨설팅 도우미는 판매 화법을 알려 준다", a: "O", e: "상품의 강점을 판매 화법으로 제공하는 앱이다.", g: "ap", rv: 1, z: "action", h: "action.consult" },
   { id: "F85", c: 4, lv: 2, q: "Hi-Helper는 추천 설계안을 하나만 준다", a: "X", e: "추천 설계안 TOP1~3을 비교해 볼 수 있다.", g: "hhr", rv: 1, z: "play", h: "play.hh.tips" }

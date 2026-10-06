@@ -243,24 +243,7 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 
 /* ═══ v5.49 (사용자 261004) 스탬프 블록 이름표 · 게이트 「더 힘내세요!」 · 스탬프 카드 · 엘리베이터 버튼판 ═══ */
 /* v5.58 블록 이름표 없앰(.blab 은 만들지 않음) · 점프 강조 · 스태프 방향 점 · 말풍선 나타남 페이드 · 자세히 보기 판 위 자리 */
-#axTour3 .ctl .jump.hint .c { animation: jumpHint 1.4s ease-out infinite; }
-/* v5.65 블록 근처 힌트 = 주황 없이 무채색 테 맥박(약하게) · 처음 친 뒤(soft) · 움직임 줄이기 = 멈춘 테 하나 */
-#axTour3 .ctl .jump.hint.soft .c, #axTour3.rm .ctl .jump.hint .c { animation: none; box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .42), 0 0 0 4px rgba(25, 31, 40, .14), 0 2px 10px rgba(25, 31, 40, .16); }
-@keyframes jumpHint { 0% { box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .42), 0 0 0 0 rgba(25, 31, 40, .32), 0 2px 10px rgba(25, 31, 40, .16); } 70% { box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .42), 0 0 0 12px rgba(25, 31, 40, 0), 0 2px 10px rgba(25, 31, 40, .16); } 100% { box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .42), 0 0 0 0 rgba(25, 31, 40, 0), 0 2px 10px rgba(25, 31, 40, .16); } }
-@media (prefers-reduced-motion: reduce) { #axTour3 .ctl .jump.hint .c { animation: none; box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .42), 0 0 0 4px rgba(25, 31, 40, .14); } }
-/* v5.67 점프 유인(사용자 261005 초등학생 시험) · 동전 아래 원 안 = 점프 단추가 통통 튀고 오른쪽 위에 작은 동전(받기 전 동전과 같은 흰 면 + 은회색 테 두 겹 · 색 테가 아니라 모양) · 「점프!」 한 번(단추 왼쪽) */
-#axTour3 .ctl .jump, #axTour3 .ctl .jump .c { position: relative; }
-#axTour3 .ctl .jump .cn { position: absolute; right: -6px; top: -6px; width: 22px; height: 22px; border-radius: 50%; background: #FAFBFC; box-shadow: inset 0 0 0 2px #6B7684, inset 0 0 0 5px #FAFBFC, inset 0 0 0 6.5px #6B7684, 0 1px 3px rgba(25, 31, 40, .25); opacity: 0; transform: scale(.4); transition: opacity .15s, transform .2s cubic-bezier(.2, .9, .3, 1.3); pointer-events: none; }
-#axTour3 .ctl .jump.aim .cn { opacity: 1; transform: none; }
-#axTour3 .ctl .jump.aim .c { animation: jumpAim .9s ease-in-out infinite; box-shadow: inset 0 0 0 2px rgba(25, 31, 40, .42), 0 0 0 4px rgba(25, 31, 40, .14), 0 2px 10px rgba(25, 31, 40, .16); }
-@keyframes jumpAim { 0%, 100% { transform: translateY(0); } 28% { transform: translateY(-8px); } 50% { transform: translateY(0) scale(1.04, .96); } 62% { transform: translateY(-2px); } 74% { transform: translateY(0); } }
-#axTour3 .ctl .jump .jt { position: absolute; right: calc(100% + 2px); bottom: 26px; padding: 6px 11px; border-radius: 999px; background: rgba(25, 31, 40, .88); color: #FFFFFF; font-size: 15px; line-height: 20px; font-weight: 700; white-space: nowrap; pointer-events: none; }
-#axTour3 .ctl .jump .jt::after { content: ""; position: absolute; right: -5px; top: 50%; margin-top: -5px; border: 5px solid transparent; border-left-color: rgba(25, 31, 40, .88); border-right: 0; }
-#axTour3 .ctl .jump .jt.go { animation: jtIn .3s ease-out; }
-@keyframes jtIn { from { opacity: 0; transform: translateX(6px); } to { opacity: 1; transform: none; } }
-#axTour3.rm .ctl .jump.aim .c, #axTour3.rm .ctl .jump .jt.go { animation: none; }
-#axTour3.rm .ctl .jump .cn { transition: none; }
-@media (prefers-reduced-motion: reduce) { #axTour3 .ctl .jump.aim .c, #axTour3 .ctl .jump .jt.go { animation: none; } #axTour3 .ctl .jump .cn { transition: none; } }
+/* v5.86 (사용자 261006 「점프 버튼이 스탬프 근처에 갔을 때 바뀌는 데 이상해 · 원래 네 개의 버튼으로 복귀」) 점프 단추 맥박(hint · soft) · 통통(aim) · 동전 표시(.cn) · 「점프!」(.jt) 스타일 없앰 = 조작 단추 넷은 어디서나 같은 모양(되살리기 = 정리 기록.md) */
 #axTour3 .gdir { position: absolute; left: 0; top: 0; width: 22px; height: 22px; z-index: 5; pointer-events: none; opacity: .8; }
 #axTour3 .gdir::before { content: ""; position: absolute; left: 3px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 0 3px rgba(255, 255, 255, .85); }
 #axTour3 .gdir::after { content: ""; position: absolute; left: 15px; top: 7px; border: 4px solid transparent; border-left: 6px solid var(--brand); border-right: 0; }
