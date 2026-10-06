@@ -312,6 +312,7 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .sct { margin: 2px 0 6px; font-size: 22px; line-height: 30px; font-weight: 800; }
 #axTour3 .scd { margin: 0 0 6px; font-size: 16px; line-height: 24px; color: var(--body); word-break: keep-all; }
 #axTour3 .scg { margin: 0 0 6px; font-size: 15px; line-height: 22px; font-weight: 700; color: var(--muted); }
+#axTour3 .sce { margin: 0 0 6px; font-size: 14px; line-height: 20px; color: var(--muted); }   /* v5.96 프로그램 참여 카드 = 엘리베이터 한 줄(작게) */
 #axTour3 .sccard .nb { display: block; width: 100%; margin-top: 10px; }
 #axTour3 .sccard .nb.pri { margin-top: 16px; background: var(--brand); color: var(--onBrand); }
 /* 엘리베이터 버튼판 · 은색 헤어라인 판 · 둥근 버튼 · 누르면 주황 고리(불) */
