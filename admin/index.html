@@ -934,6 +934,34 @@ textarea.in.p10-ta{min-height:144px;font-variant-numeric:tabular-nums}
 .pz-lng{margin-bottom:12px}
 @media(max-width:1100px){.kpis.pz-k6{grid-template-columns:repeat(3,minmax(0,1fr))}.pz-slots{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:720px){.kpis.pz-k6{grid-template-columns:repeat(2,minmax(0,1fr))}.pz-slots{grid-template-columns:minmax(0,1fr)}.pz-tx{max-width:none}}
+/* ── 261006 쉬운 화면 5개 · 「관리자 도구」(디자인 시안/콘솔 최소화/기획.md · 사용자 결정 「권장대로」) · 클래스는 ez- 로 시작 ── */
+.ez-tool{font-size:var(--fs-s);font-weight:600;color:var(--tx3);padding:4px 8px;border-radius:var(--r-xs);white-space:nowrap}
+.ez-tool:hover{color:var(--tx);background:var(--soft)}
+.ez-tool.back{color:var(--navy);background:var(--navy05);border:1px solid var(--navy1)}
+.ez-ph{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:16px}
+.ez-ph button{text-align:left;background:var(--sf);border:1px solid var(--line);border-radius:var(--r-s);padding:8px 12px;min-width:0}
+.ez-ph button small{display:block;font-size:var(--fs-s);color:var(--tx2);font-variant-numeric:tabular-nums}
+.ez-ph button b{font-size:var(--fs-b)}
+.ez-ph button.past{background:var(--soft);color:var(--tx3)}
+.ez-ph button.past small{color:var(--tx3)}
+.ez-ph button.now{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy);background:var(--navy05)}
+.ez-ph button.now b{color:var(--navy)}
+.ez-ph button.peek{border-color:var(--tx3)}
+.ez-ck{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line2)}
+.ez-ck:first-child{border-top:0;padding-top:0}
+.ez-ck .bx{width:22px;height:22px;border-radius:var(--r-xs);border:2px solid var(--line3);flex:none;display:grid;place-items:center;background:var(--sf);color:#fff}
+.ez-ck button.bx:hover{border-color:var(--navy)}
+.ez-ck .bx.ok{background:var(--ok);border-color:var(--ok)}
+.ez-ck .bx.warn{border-color:var(--warn);background:var(--warn-bg)}
+.ez-ck .bx svg{width:12px;height:12px}
+.ez-ck .t{flex:1;min-width:0}
+.ez-ck .t small{display:block;font-size:var(--fs-s);color:var(--tx2)}
+.ez-ck.done .t>span{color:var(--tx2)}
+.ez-big{width:100%;height:56px;font-size:var(--fs-h2)}
+.ez-chat{margin:24px 0 8px;font-size:var(--fs-s);color:var(--tx2);text-align:center}
+.ez-who .lnb .in{height:44px;font-size:var(--fs-h2)}
+.ez-top3 td b{font-size:var(--fs-h2)}
+@media(max-width:720px){.ez-ph{grid-template-columns:repeat(2,minmax(0,1fr))}.ez-tool{padding:4px}}
 </style>
 </head>
 <body>
@@ -1773,7 +1801,7 @@ function viewAcctOne(){
     '<p><b>최초 로그인 되돌리기</b> · 시험용입니다. 그 사람 폰에서 <b>먼저 로그아웃</b>해 두세요. 로그인된 채로 두면 다음 동기화(30초 안)에 도장만 다시 찍히고 장면은 나오지 않습니다. 로그아웃 → 되돌리기 → 다시 로그인 순서면 최초 로그인 장면과 도장이 다시 나옵니다.</p>'+
     '<p><b>기록</b> · 모든 처리는 시트 「운영로그」에 대상 사번 · 이름 · 무엇을 · 처리한 콘솔 사번과 시각으로 남습니다. PIN 값은 어디에도 남지 않습니다.</p>');
 }
-function usPanel(emp){
+function usPanel(emp, lite){   /* 261006 lite = 사람 찾기(쉬운 화면) · 머리 카드 · 게임 기록 카드를 뺀다(스탬프 카드가 머리를 맡는다) */
   var k=normE(emp), d=ST.data[usKey(emp)], a=usAcct(emp), old=usOld(d);
   if(!d){ setTimeout(function(){ usFetch(emp); },0); return '<div class="card" style="margin-top:0">'+skel()+'</div>'; }
   if(!d.ok&&!old) return '<div class="card" style="margin-top:0"><div class="empty">'+esc(d.reason==="notfound"?"계정 · 명부에 없는 사번입니다":why(d))+'</div></div>';
@@ -1783,6 +1811,7 @@ function usPanel(emp){
     '<div class="r">'+(p.sup?tag("슈퍼관리자","pri"):"")+(old?tag("옛 서버","warn"):"")+'<button class="btn sm ghost" onclick="usSel(\'\')">선택 해제</button><button class="btn sm" onclick="usReload(\''+jq(emp)+'\',[\'nick\'])">새로고침</button></div></div>';
   if(d.eventDay) h+='<div class="note warn mt12"><b>오늘은 행사일입니다.</b> 지우기 전에 경품 · 시상 담당과 먼저 맞추세요.</div>';
   h+='</div>';
+  if(lite) h=d.eventDay?'<div class="note warn mt12"><b>오늘은 행사일입니다.</b> 지우기 전에 경품 · 시상 담당과 먼저 맞추세요.</div>':'';
   /* 1. 게임 기록 */
   var g='';
   if(old) g='<div class="note">이 서버는 아직 사람별 게임 기록을 주지 않습니다. '+usNew()+'</div>';
@@ -1801,7 +1830,7 @@ function usPanel(emp){
       '<button class="btn sm danger" onclick="usGame(\''+jq(emp)+'\',\'sel\')"'+(nSel?'':' disabled')+'>고른 종목 지우기'+(nSel?' ('+nSel+')':'')+'</button>'+
       '<button class="btn sm danger" onclick="usGame(\''+jq(emp)+'\',\'all\')"'+(any?'':' disabled')+'>게임 기록 전부 지우기</button></div>';
   }
-  h+=card("게임 기록","순위 · 내 최고에서 빠집니다",g);
+  if(!lite) h+=card("게임 기록","순위 · 내 최고에서 빠집니다",g);
   /* 2. 닉네임 */
   var nk=old?(function(){ var r=usNickRow(emp); return r&&r.nick?{nick:r.nick,hidden:!!r.hidden}:null; })():d.nick;
   var n='<div class="us-row"><span class="cap">지금</span>'+(nk?'<b style="font-size:var(--fs-h2)">'+esc(nk.nick)+'</b>'+(nk.hidden?tag("숨김 · 순위판에 「이름 숨김」","warn"):tag("공개","ok")):'<span class="muted">없음 · 순위판에 「익명 참가자」</span>')+'</div>';
@@ -7886,6 +7915,237 @@ function lpUndoAsk(){
 
 /* 새로 고침 · 새 항목(아이디어왕 · 라운지 명단)에 있었으면 그 자리로(위 복원은 이 항목이 생기기 전에 돈다) */
 try{ (function(){ var v=sessionStorage.getItem("axf_hv_nav")||"", id=v.split(":")[0]; if(ST.nav==="hq"&&(id==="e_idea"||id==="p_lng")&&NAVBY[id]){ ST.nav=id; ST.part[id]=0; } })(); }catch(e){}
+/* ══════════════════ 261006 쉬운 화면 5개 + 「관리자 도구」(사용자 결정 261006 「권장대로」 · 디자인 시안/콘솔 최소화/기획.md) ══════════════════
+ * 기본 = 화면 5개 ① 오늘 · ② 현장 처리 · ③ 사람 찾기 · ④ 알리기 · ⑤ 추첨·경품. 지금 7메뉴 전체 콘솔은 지우지 않고 머리 구석 「관리자 도구」(슈퍼관리자 + 본인 확인 PIN) 뒤로.
+ * 슈퍼관리자가 아닌 운영자 = ②③만(화면 수준 제한 · 서버 권한은 그대로) · ①④⑤ · 관리자 도구는 보이지 않는다.
+ * 화면은 옛 화면 함수를 그대로 부른다(서버 호출 · 권한 · 위험 가드 L1~L3 그대로). 쉬운 화면 항목은 NAV 끝에 붙고(ez:1) 저마다 메뉴(MENUBY)를 가진다.
+ * 옛 함수(navSel · navFind · renderTabs · meTag · hvNeedX · hvPt)는 고치지 않고 감싼다(같은 파일을 다른 세션이 함께 고친다).
+ * 10/25 이후 코드 동결 · 값 변경은 채팅으로 Claude(① 맨 아래 한 줄) · 기획의 D 항목은 숨김만(관리자 도구 안에서는 그대로 열린다).
+ * 완주 경품 추첨은 CLAUDE.md 확정 사항이라 ⑤ 칩으로 늘 보인다(서버 설정 「완주추첨_사용」이 꺼져 있으면 그 화면이 서버 안내를 보인다). 새 CSS 는 ez- 로 시작한다. */
+var EZ_LIST=[
+  { id:"z_today", n:"오늘", d:"지금 시간대에 할 일 · 서버 상태 · 긴급 공지입니다.", parts:[P("ztoday","","","viewToday")] },
+  { id:"z_field", n:"현장 처리", d:"줄 서 있는 일을 처리합니다. 위 칩으로 고릅니다.", staff:1, parts:[P("apply","resv","상담"),P("apply","cchat","커피챗"),P("apply","roster","담당 명단"),P("acct","pw","PIN 분실"),P("crowd","","혼잡 제보","viewCrowdTab")] },
+  { id:"z_who", n:"사람 찾기", d:"사번이나 이름으로 한 사람을 찾아 스탬프 · 닉네임 · PIN 을 처리합니다.", staff:1, parts:[P("zwho","","","viewWho")] },
+  { id:"z_tell", n:"알리기", d:"참가자에게 공지 · 푸시를 보내고, 예약을 미루거나 취소합니다.", parts:[P("notice","","보내기"),P("sched","","예약"),P("zstop","","멈추기","viewEzStop")] },
+  { id:"z_draw", n:"추첨·경품", d:"Outro 무대 진행 · 경품 추첨 · 재고 · 룰렛 소진 · 타자왕 1~3위입니다.", parts:[P("draw","run","무대 진행"),P("draw","fin","완주 경품 추첨"),P("draw","fcfs","선착순 참여상"),P("draw","lk7","7등 랜덤 굿즈"),P("inv","","재고","viewInv"),P("zroul","","룰렛 소진","viewEzRoul"),P("ztype","","타자왕 1~3위","viewEzType")] },
+  { id:"z_gate", n:"관리자 도구", d:"전체 메뉴(7개)를 엽니다. 슈퍼관리자 본인 확인(앱 PIN) 뒤에 열립니다.", hide:1, parts:[P("zgate","","","viewEzGate")] }
+];
+EZ_LIST.forEach(function(z){ var it={ id:z.id, m:z.id, n:z.n, ez:1, staff:z.staff?1:0, hide:z.hide?1:0, parts:z.parts }; NAV.push(it); NAVBY[z.id]=it; MENUBY[z.id]={ id:z.id, n:z.n, d:z.d }; });
+NEED.ztoday=function(){ return NEED.dash.concat([{k:"cam",a:"crowd_cam_list"},{k:"inv",a:"inv_state"},{k:"tres",a:"type_result"}]); };
+NEED.zwho=[{k:"stamp",a:"stamp_people"},{k:"acct",a:"acct_list"},{k:"nick",a:"type_nick_list"},{k:"sy",a:"sync",p:{emp:""}}];
+NEED.zstop=[{k:"pst",a:"push_stats"},{k:"sy",a:"sync",p:{emp:""}},{k:"noti",a:"sync",p:{emp:""}}];
+NEED.zroul=[{k:"sy",a:"sync",p:{emp:""}},{k:"stamp",a:"stamp_people"},{k:"cfgl",a:"cfg_list"}];
+NEED.ztype=[{k:"tres",a:"type_result"}];
+NEED.zgate=[];
+HV_VIEW.viewToday=function(){ return viewToday(); }; HV_VIEW.viewWho=function(){ return viewWho(); }; HV_VIEW.viewEzStop=function(){ return viewEzStop(); };
+HV_VIEW.viewEzRoul=function(){ return viewEzRoul(); }; HV_VIEW.viewEzType=function(){ return viewEzType(); }; HV_VIEW.viewEzGate=function(){ return viewEzGate(); };
+
+/* ── 모드 · 쉬운 화면(기본) ↔ 관리자 도구(이 탭만 기억) ── */
+ST.ez=true; try{ ST.ez=sessionStorage.getItem("axf_ez")!=="tool"; }catch(e){}
+ST.ezPend=null; ST.ezPeek=null; ST.wz={ q:"" };
+function ezStaff(){ return !!(ST.me&&!ST.me.sup); }
+function ezMode(){ return ezStaff()?true:ST.ez; }
+function ezSetTool(on){ ST.ez=!on; try{ if(on) sessionStorage.setItem("axf_ez","tool"); else sessionStorage.removeItem("axf_ez"); }catch(e){} }
+function ezHome(){ return ezStaff()?"z_field":"z_today"; }
+function ezAllowed(id){ var it=NAVBY[id]; if(!it||!it.ez) return false; if(id==="z_gate") return supOn(); return !ezStaff()||!!it.staff; }
+function ezToolOpen(){ if(!supOn()){ toast("슈퍼관리자만 엽니다"); return; } if(supOk()){ ezToolGo(); return; } ST.ezPend=null; navSel("z_gate",0); }
+function ezToolGo(){ var t=ST.ezPend||{ id:"hq", i:0 }; ST.ezPend=null; ezSetTool(true); navSel(t.id, t.i); }
+function ezBack(){ ezSetTool(false); navSel(ezHome(),0); }
+/* 화면 전환 한 곳(navSel)을 감싼다 · 쉬운 화면에서 도구 항목으로 가려 하면 = 슈퍼관리자는 본인 확인 뒤 도구로 · 운영자는 그대로 둔다 */
+(function(){
+  var _ns=navSel;
+  navSel=function(id, i){
+    var it=NAVBY[id]||NAV[0];
+    if(it.ez){
+      if(!ezAllowed(it.id)){ it=NAVBY[ezHome()]; i=0; }
+      if(it.id!=="z_gate") ezSetTool(false);
+      return _ns(it.id, i);
+    }
+    if(!ezMode()) return _ns(it.id, i);
+    if(!ST.me) return _ns(ezHome(), 0);
+    if(supOn()){
+      if(supOk()){ ezSetTool(true); return _ns(it.id, i); }
+      ST.ezPend={ id:it.id, i:i||0 }; return _ns("z_gate", 0);
+    }
+    if(it.id!==ST.nav) toast("관리자 도구 안의 화면입니다(슈퍼관리자)");
+    if(!ezAllowed(ST.nav)) return _ns(ezHome(), 0);
+  };
+  /* 옛 버튼(go('acct') · goTo('apply','resv') 등) · 쉬운 화면이면 쉬운 화면 항목을 먼저 찾는다 */
+  var _nf=navFind, EZ_ALIAS={ "stamp:one":["z_who",0], "acct:one":["z_who",0], "typing:type":["z_draw",6] };
+  navFind=function(tab, sub){
+    if(!ezMode()) return _nf(tab, sub);
+    var cur=navCur(), hit=null, any=null, L=[cur].concat(NAV.filter(function(it){ return it.ez&&it!==cur&&ezAllowed(it.id); }));
+    L.forEach(function(it){ if(!it.ez) return; it.parts.forEach(function(p,i){ if(p.tab!==tab) return; if(!any) any={ id:it.id, i:i }; if(!hit&&(!p.sub||!sub||p.sub===sub)) hit={ id:it.id, i:i }; }); });
+    var al=EZ_ALIAS[tab+":"+(sub||"")]||(tab==="stamp"&&!sub?EZ_ALIAS["stamp:one"]:null);
+    if(!hit&&al&&ezAllowed(al[0])) return { id:al[0], i:al[1] };
+    return hit||any||_nf(tab, sub);
+  };
+  /* 윗줄 · 쉬운 화면이면 화면 5개(운영자는 2개) · 현장 처리에 대기 수 */
+  var _rt=renderTabs;
+  renderTabs=function(){
+    _rt(); ezTopBtn();
+    if(!ezMode()) return;
+    var cur=navCur().id, fdN=pwWait()+hvFieldWait();
+    el("tabs").innerHTML=EZ_LIST.filter(function(z){ return !z.hide&&ezAllowed(z.id); }).map(function(z){ var b=z.id==="z_field"&&fdN?'<em class="tbadge">'+fdN+'</em>':''; return '<button class="'+(cur===z.id?"on":"")+'" onclick="navSel(\''+z.id+'\',ST.part[\''+z.id+'\']||0)">'+esc(z.n)+b+'</button>'; }).join("");
+  };
+  /* 역할을 안 순간(로그인 · 새로 고침) · 운영자가 ②③ 밖에 있으면 ② 로 */
+  var _mt=meTag;
+  meTag=function(){ _mt(); ezTopBtn(); if(ST.me&&!ST._ezFix&&(ezStaff()?!ezAllowed(ST.nav):(ezMode()&&!(NAVBY[ST.nav]||{}).ez))){ ST._ezFix=1; setTimeout(function(){ ST._ezFix=0; if(authed()&&ST.me&&(ezStaff()?!ezAllowed(ST.nav):(ezMode()&&!(NAVBY[ST.nav]||{}).ez))){ if(ezStaff()) ezSetTool(false); navSel(ezHome(),0); } },0); } };
+  var _nx=hvNeedX;
+  hvNeedX=function(t){
+    var o=_nx(t), it=navCur(), add=[];
+    if(it.id==="z_draw"&&t==="draw") add=HV_ELNEED.draw||[];
+    if(!add.length) return o;
+    var seen={}, n=NEED[t], x=SUBNEED[t+":"+(ST.subs[t]||"")];
+    (typeof n==="function"?n():n||[]).concat(typeof x==="function"?x():(x||[])).concat(o).forEach(function(q){ seen[q.k]=1; });
+    return o.concat(add.filter(function(q){ if(seen[q.k]) return false; seen[q.k]=1; return true; }));
+  };
+  var _pt=hvPt;
+  hvPt=function(){ var id=ST.nav; if(id==="z_today") return "dash"; if(id==="z_who"||id==="z_gate") return "form"; if(id==="z_tell") return navPi()===0?"form":"list"; return _pt(); };
+})();
+/* 머리 구석 · 쉬운 화면 = 흐린 「관리자 도구」 · 도구 안 = 「쉬운 화면으로」 · 슈퍼관리자에게만 */
+function ezTopBtn(){
+  var hr=document.querySelector("header.top .hr"); if(!hr) return;
+  var b=el("ezTool");
+  if(!b){ b=document.createElement("button"); b.id="ezTool"; b.type="button"; b.onclick=function(){ if(ezMode()) ezToolOpen(); else ezBack(); }; hr.insertBefore(b, hr.firstChild); }
+  var em=ezMode(); b.hidden=!supOn(); b.className="ez-tool"+(em?"":" back"); b.textContent=em?"관리자 도구":"쉬운 화면으로";
+  b.title=em?"전체 메뉴 · 슈퍼관리자 본인 확인 뒤":"화면 5개로 돌아갑니다";
+}
+
+/* ══ ① 오늘 ══ */
+/* 서버 시각 · stats.t(서버 벽시계 「YYYY-MM-DD HH:MM」) + 받은 뒤 지난 분 · 로컬 서버에서만 sessionStorage axf_ez_now 로 흉내(시험용 · 운영 무시) */
+function ezOver(){ if(hvEnv()[0]!=="로컬") return null; var v=""; try{ v=sessionStorage.getItem("axf_ez_now")||""; }catch(e){} var m=v.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{1,2}):(\d{2})/); return m?{ d:m[1], m:(+m[2])*60+(+m[3]), fake:1 }:null; }
+function ezNow(){
+  var o=ezOver(); if(o) return o;
+  var t=String((ST.data.stats||{}).t||(ST.data.sy||{}).t||""), m=t.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{1,2}):(\d{2})/);
+  if(!m){ var d=new Date(); return { d:hvToday(), m:d.getHours()*60+d.getMinutes(), loc:1 }; }
+  var add=ST.at?Math.max(0,Math.floor((Date.now()-ST.at.getTime())/60000)):0;
+  return { d:m[1], m:Math.min((+m[2])*60+(+m[3])+add, 24*60-1) };
+}
+function ezHm(m){ return ("0"+Math.floor(m/60)).slice(-2)+":"+("0"+(m%60)).slice(-2); }
+var EZ_SLOT=[{ n:"오픈 전", w:"~09:30" },{ n:"운영 중", w:"09:30~17:00" },{ n:"마감 · Outro", w:"17:00~17:30" },{ n:"행사 후", w:"17:30~" }];
+function ezSlot(){ var w=ezNow(); if(w.d<EVENT_DAY) return { i:0, pre:1, w:w }; if(w.d>EVENT_DAY) return { i:3, w:w }; return { i:w.m<570?0:w.m<1020?1:w.m<1050?2:3, w:w }; }
+function ezPeek(i){ ST.ezPeek=ST.ezPeek===i?null:i; render(); }
+/* 손으로 하는 줄의 체크 · 이 브라우저 · 그날만 */
+function ezCk(){ try{ return JSON.parse(localStorage.getItem("axf_ez_ck")||"{}")||{}; }catch(e){ return {}; } }
+function ezTick(id){ var w=ezNow(), s=ezCk(), d=s[w.d]||{}; d[id]=d[id]?0:1; s={}; s[w.d]=d; try{ localStorage.setItem("axf_ez_ck", JSON.stringify(s)); }catch(e){} render(); }
+function ezScrLive(){ var s=(ST.data.dstat||ST.data.draw||{}).scr; return s?Number(s.age)<15:null; }
+function ezInvLow(){ var d=ST.data.inv; if(!d||!d.ok) return null; return (d.items||[]).filter(function(it){ var s=invSt(it,d); return s[1]==="bad"||s[1]==="warn"; }); }
+function ezWait(){ var r=0; try{ var r0=ST._right; viewDash("todo").forEach(function(x){ r+=Number(x.v)||0; }); ST._right=r0; }catch(e){} return r; }
+function ezHot(){ var cr=(ST.data.crowd&&ST.data.crowd.ok)?ST.data.crowd.crowd||{}:{}, n=["e","l"].filter(function(k){ return cr[k]&&cr[k].x>Date.now(); }).length, d=ST.data.cam;
+  if(d&&d.ok) (d.cams||[]).forEach(function(c){ n+=camChk(c,d); }); return n; }
+/* 줄 = [자동 결과(true · false · null=손으로), 할 일, 보조 한 줄, 가는 곳(js), 버튼 이름, 손 체크 id] */
+function ezItems(i){
+  var sy=ST.data.sy||{}, ps=pushSt(), wait=ezWait(), hot=ezHot(), low=ezInvLow(), live=ezScrLive();
+  var go=function(id,p){ return "navSel('"+id+"',"+(p||0)+")"; }, scr="ezScrTo()";
+  return [
+    [[ST.at&&!ST.err?true:ST.err?false:null,"서버 연결","",null,"",""],
+     [!hvRo(),"서버 읽기 전용 꺼짐","",null,"",""],
+     [ps?!!ps.on:null,"웹 푸시 발송 켜짐",ps?"":"푸시 상태를 받지 못했습니다 · 멈추기 화면에서 봅니다",go("z_tell",2),"보기","push"],
+     [!sy.rouletteOut,"룰렛 소진 안내 꺼짐","경품이 떨어지기 전까지 꺼 둡니다",go("z_draw",5),"보기",""],
+     [null,"TV 화면 켜기 · 스탬프 월 · 타자왕 TV","아래 「화면 열기」에서 엽니다",scr,"주소 보기","tv"],
+     [null,"타자왕 셀프 노트북 켜기","노트북에서 주소를 열고 관리코드를 넣습니다",scr,"주소 보기","self"],
+     [null,"스태프 폰 관리자 모드 로그인 확인","QR 스캔 · 혼잡 제보를 쓰는 폰",null,"","staff"]],
+    [[wait?false:true,"대기 건 처리 · 상담 · 커피챗 · PIN 분실",wait?wait+"건 대기":"대기 없음",go("z_field",0),"처리하러 가기",""],
+     [hot?false:true,"혼잡 제보 · 카메라 확인 요청",hot?hot+"곳":"없음",go("z_field",4),"보기",""],
+     [low==null?null:!low.length,"재고 경고",low==null?"재고를 받지 못했습니다":low.length?low.slice(0,3).map(function(x){ return x.n+" "+invN(x.left); }).join(" · ")+(low.length>3?" 외 "+(low.length-3):""):"곧 바닥인 품목 없음",go("z_draw",4),"재고 보기",""],
+     [null,"룰렛 경품이 떨어지면 소진 안내 켜기","켜면 앱 룰렛 창에 「모두 소진」",go("z_draw",5),"열기","roul"]],
+    [[null,"타자왕 1~3위 확인 · 사회자에게 전달","17:00 마감 기록",go("z_draw",6),"1~3위 보기","type"],
+     [live,"추첨 화면 연결",live==null?"17F 큰 화면에서 추첨 화면을 엽니다":live?"화면이 상태를 보내는 중":"화면 보고 없음 · 아래 「화면 열기」",scr,"주소 보기",""],
+     [null,"행운권 추첨 진행 · 큰 버튼 하나","무대 순서 띠를 따라 누릅니다",go("z_draw",0),"무대 진행","draw"],
+     [null,"룰렛 남은 경품 실물 세기 → 재고 맞추기","재고 › 품목을 눌러 「남은 수 맞추기」",go("z_draw",4),"재고","count"],
+     [null,"완주 경품 추첨 · 대상 확정 → 추첨","6개 모은 사람 중 럭키드로우 · 다음 날 발송",go("z_draw",1),"열기","fin"]],
+    [[ps?!ps.on:null,"웹 푸시 전체 정지","행사가 끝나면 멈춥니다",go("z_tell",2),"멈추기","pushoff"],
+     [null,"배송 명단 · 우편 CSV · 통계 받기","채팅으로 Claude 에게 요청합니다",null,"","post"]]
+  ][i]||[];
+}
+var EZ_OK='<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5"/></svg>';
+function ezCkHtml(i, w){
+  var tick=(ezCk()[w.d])||{};
+  return ezItems(i).map(function(x){
+    var auto=x[0]!==null, ok=auto?x[0]===true:!!tick[x[5]], bad=auto&&x[0]===false;
+    var bx=auto?'<span class="bx'+(ok?" ok":bad?" warn":"")+'" title="자동 확인">'+(ok?EZ_OK:"")+'</span>':'<button type="button" class="bx'+(ok?" ok":"")+'" aria-pressed="'+ok+'" aria-label="'+esc(x[1])+' 했음" onclick="ezTick(\''+x[5]+'\')">'+(ok?EZ_OK:"")+'</button>';
+    return '<div class="ez-ck'+(ok?" done":"")+'">'+bx+'<div class="t"><span>'+esc(x[1])+'</span><small>'+(auto?"자동 확인":"했으면 네모를 누릅니다")+(x[2]?" · "+esc(x[2]):"")+'</small></div>'+(x[3]?'<button class="btn sm'+(bad?" pri":"")+'" onclick="'+x[3]+'">'+esc(x[4])+'</button>':'')+'</div>';
+  }).join("");
+}
+function ezScrTo(){ var c=el("ezScr"); if(c) c.scrollIntoView({ behavior:"smooth", block:"start" }); }
+function ezStrip(){
+  var cn=hvConn(), env=hvEnv(), st=ST.data.stats||{}, ps=pushSt(), hot=ezHot(), low=ezInvLow(), w=ezNow();
+  return '<div class="hv-strip"><i class="dot '+(cn[1]==="ok"?"ok":cn[1]==="bad"?"bad":"")+'"></i><span><b>'+esc(cn[0])+'</b></span>'+tag(env[0], env[1])+
+    (hvRo()?tag("읽기 전용 켜짐","warn"):"")+(ps?tag(ps.on?"푸시 켜짐":"푸시 전체 정지", ps.on?"ok":"bad"):"")+
+    (hot?'<a href="#" onclick="navSel(\'z_field\',4);return false">'+tag("혼잡 확인 "+hot+"곳","bad")+'</a>':'')+
+    (low&&low.length?'<a href="#" onclick="navSel(\'z_draw\',4);return false">'+tag("재고 경고 "+low.length+"건","warn")+'</a>':'')+
+    '<span class="sp"></span><span class="cap">'+(w.fake?"시험 시각 ":"서버 시각 ")+'<b class="n">'+esc(w.d.slice(5).replace("-","/")+" "+ezHm(w.m))+'</b></span></div>';
+}
+function viewToday(){
+  var s=ezSlot(), w=s.w, show=ST.ezPeek!=null?ST.ezPeek:s.i;
+  var ph='<div class="ez-ph" role="tablist">'+EZ_SLOT.map(function(x,i){ var now=!s.pre&&i===s.i, past=!s.pre&&i<s.i;
+    return '<button role="tab" aria-selected="'+(i===show)+'" class="'+(now?"now":past?"past":"")+(i===show&&!now?" peek":"")+'" onclick="ezPeek('+i+')"><small>'+esc(x.w)+(now?" · 지금":"")+'</small><b>'+esc(x.n)+'</b></button>'; }).join("")+'</div>';
+  var sub=s.pre?"행사 전 · 10/26 당일에는 지금 칸이 저절로 열립니다":show===s.i?"자동 확인 줄은 스스로 체크됩니다":"다른 시간대 미리 보기 · 다시 누르면 지금 칸";
+  var ck=card(EZ_SLOT[show].n+" 체크", sub, ezCkHtml(show, w));
+  var r0=ST._right, todo=viewDash("todo"); ST._right=r0;
+  var on=todo.filter(function(x){ return x.v; });
+  var todoH=on.length?'<div class="todo">'+on.map(function(x){ return '<div class="it"><div class="v">'+x.v+'</div><div><div class="t">'+esc(x.t)+'</div><div class="d">'+esc(x.d)+'</div></div><button class="btn sm pri" onclick="'+x.go+'">처리하러 가기</button></div>'; }).join("")+'</div>':'<p class="cap">지금 처리할 일이 없습니다.</p>';
+  var nt=(ST.data.sy||{}).notice;
+  var urg=card("긴급 공지","앱 안 공지와 푸시를 한 번에 보냅니다",'<button class="btn pri ez-big" onclick="navSel(\'z_tell\',0)">긴급 공지 쓰기</button>'+
+    (nt?'<div class="row mt12">'+tag("송출 중","pri")+'<span class="cap">'+esc(nt.title||"")+'</span><span class="sp" style="flex:1"></span><button class="btn sm danger" onclick="noticeStopC(\''+jq(nt.id)+'\')">공지 중지</button></div>':''));
+  var A=appBase(), rows=[["추첨 화면 · 원격","17F 큰 화면 · 코드는 그 화면에서",dcScreenUrl()],["ME to WE 스탬프 월","1F 스탠바이미",A+"wall/"],["타자왕 부스 TV","1F 세로 TV",A+"#tv=type&fix=site"],["타자왕 TV 순환","1F 가로 TV",A+"#tv=type"],["타자왕 셀프 노트북","코드는 그 화면에서",A+"#self"]];
+  var scr='<div id="ezScr">'+card("화면 열기","TV · 큰 화면에 띄우는 주소 · 주소에는 코드가 없습니다",'<div class="wrap"><table class="tb hv-scr"><tr><th>화면</th><th class="hide-m">어디에</th><th></th></tr>'+rows.map(function(r){
+    return '<tr><td><b>'+esc(r[0])+'</b></td><td class="cap hide-m">'+esc(r[1])+'</td><td><div class="acts"><button class="btn sm pri" onclick="hvOpen(\''+esc(r[2])+'\')">열기</button><button class="btn sm" onclick="hvCopy(\''+esc(r[2])+'\')">복사</button></div></td></tr>'; }).join("")+'</table></div>')+'</div>';
+  return ezStrip()+ph+'<div class="grid g75"><div>'+ck+card("지금 할 일", on.length?on.length+"가지 대기":"대기 없음", todoH)+'</div><div>'+urg+scr+'</div></div>'+
+    '<p class="ez-chat">설정 변경은 채팅으로 요청합니다 · 예: 「푸시 시간 21시까지로 늘려줘」 「텀블러 재고 55개로 맞춰줘」</p>';
+}
+/* 1분마다 ① 을 다시 그린다(시간대 칸이 저절로 넘어가게 · 입력 중이면 쉰다) */
+setInterval(function(){ if(document.hidden||!authed()||ST.nav!=="z_today"||ST.busy) return; var a=document.activeElement; if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return; render(); },60000);
+
+/* ══ ③ 사람 찾기 · 한 칸 → 스탬프 8칸(spPanel) + 닉네임 · PIN · 최초 로그인(usPanel 가벼운 판) · 고른 사람은 스탬프 화면과 같은 ST.sp.emp ══ */
+function ezWhoQ(v){ ST.wz.q=v; render(); }
+function ezWhoList(){ var P=spPeople(), q=String(ST.wz.q||"").trim().toLowerCase(); if(!q) return { P:P, q:q, list:[] };
+  return { P:P, q:q, list:P.list.filter(function(r){ return String(r.emp).toLowerCase().indexOf(q)>=0||String(r.name||"").toLowerCase().indexOf(q)>=0; }) }; }
+function ezWhoPick(emp){ ST.sp.emp=emp; ST.us.emp=emp; ST.us.sel={}; ST.us.take=false; render(); }
+function ezWhoEnter(){ var L=ezWhoList().list; if(L.length) ezWhoPick(L[0].emp); }
+function viewWho(){
+  var W=ezWhoList(), list=W.list, cur=ST.sp.emp?W.P.by[normE(ST.sp.emp)]:null;
+  if(cur) ST.us.emp=cur.emp;
+  var h='<div class="sp ez-who"><div class="lnb"><input class="in" placeholder="사번 또는 이름" aria-label="사번 또는 이름" value="'+esc(ST.wz.q)+'" oninput="ezWhoQ(this.value)" onkeydown="if(event.key===\'Enter\')ezWhoEnter()">'+
+    '<div class="cap">'+(W.q?'찾은 사람 '+list.length+'명':'사번이나 이름을 넣으면 찾습니다')+'</div><ul>'+
+    list.slice(0,50).map(function(r){ var on=cur&&normE(cur.emp)===normE(r.emp);
+      return '<li><button class="'+(on?"on":"")+'" onclick="ezWhoPick(\''+jq(r.emp)+'\')"><div style="min-width:0"><div class="nm">'+esc(r.name||"(이름 없음)")+'</div><div class="em">'+esc(r.emp)+(r.dept?' · '+esc(r.dept):'')+'</div></div><span class="c">'+capN(r.n)+' / '+STAMP_DENOM+'</span></button></li>'; }).join("")+
+    (list.length>50?'<li class="cap" style="padding:8px">50명까지 · 더 좁혀 주세요</li>':'')+(W.q&&!list.length?'<li class="cap" style="padding:8px">찾는 사람이 없습니다. 가입 전인 사람은 앱에 기록이 없습니다.</li>':'')+'</ul></div>';
+  h+='<div>'+(cur?spPanel(cur)+usPanel(cur.emp,1):'<div class="card" style="margin-top:0"><div class="empty">사번이나 이름으로 한 사람을 고르세요.<br>스탬프 부여 · 취소, 닉네임 숨기기, PIN 초기화, 최초 로그인 되돌리기를 여기서 합니다.</div></div>')+'</div></div>';
+  return h;
+}
+
+/* ══ ④ 알리기 › 멈추기 · 웹 푸시 전체 정지 · 앱 공지 중지(확인 창은 옛 것 그대로) ══ */
+function viewEzStop(){
+  var ps=pushSt(), sy=ST.data.noti||ST.data.sy||{}, nt=sy.notice;
+  var a=card("웹 푸시", ps?(ps.on?"발송 켜짐":"전체 정지"):"", ps?'<div class="row">'+(ps.on?tag("발송 켜짐","ok"):tag("전체 정지","bad"))+'<button class="btn '+(ps.on?"danger":"pri")+'" onclick="pushOnAsk('+(ps.on?0:1)+')">'+(ps.on?"전체 정지":"다시 켜기")+'</button></div><p class="cap mt8">잘못 보냈을 때 · 행사가 끝났을 때 누릅니다. 자동 알림까지 모두 멈추고 대기 작업을 취소합니다.</p>':emptyLine("이 서버는 푸시 상태를 주지 않습니다."));
+  var b=card("앱 안 공지", nt?"송출 중":"송출 없음", nt?'<div class="row"><b>'+esc(nt.title||"")+'</b><span class="sp" style="flex:1"></span><button class="btn danger" onclick="noticeStopC(\''+jq(nt.id)+'\')">공지 중지</button></div><p class="cap mt8">다음 동기화 때 모든 폰 화면에서 사라집니다.</p>':'<p class="cap">지금 송출 중인 앱 공지가 없습니다.</p>');
+  return '<div class="grid g2" style="margin-top:0">'+a+b+'</div>';
+}
+/* ══ ⑤ 추첨·경품 › 룰렛 소진 · 타자왕 1~3위 ══ */
+function viewEzRoul(){
+  var s=elSt("roul");
+  return '<div class="hv-st">'+tag(s.p[0], s.p[1])+'<div class="hv-nums">'+s.nums.map(function(x){ return '<div><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>'; }).join("")+'</div></div>'+card("룰렛 소진 안내","경품이 떨어진 순간 켭니다",hvCtl("roul"));
+}
+function viewEzType(){
+  var tr=ST.data.tres; if(!tr) return card("1F 타자왕 1~3위","",skel());
+  var top=(tr.top||[]).slice(0,3), win=(tr.win||[]).join(" · ");
+  return card("1F 타자왕 1~3위","점수 높은 순 · 사람마다 최고 기록 하나"+(win?" · 운영 "+esc(win):" · 17:00 마감"),
+    '<div class="wrap"><table class="tb ez-top3"><tr><th>순위</th><th>닉네임</th><th>이름</th><th class="hide-m">사번</th><th class="tdr">점수</th><th class="hide-m">기록 시각</th></tr>'+
+    (top.length?top.map(function(r){ return '<tr><td class="n"><b>'+esc(r.rank)+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name||"")+'</td><td class="n hide-m">'+esc(r.emp||"")+'</td><td class="n tdr">'+Number(r.score||0).toLocaleString()+'점</td><td class="n cap hide-m">'+esc(short(r.ts))+'</td></tr>'; }).join(""):emptyRow(6,"아직 현장 기록이 없습니다."))+'</table></div>'+
+    '<p class="cap mt8">Outro 에서 사회자가 닉네임으로 부릅니다. 부적절한 닉네임은 <a class="lnk" href="#" onclick="navSel(\'z_who\',0);return false">사람 찾기</a>에서 숨깁니다.</p>',
+    '<button class="btn sm" onclick="reload([\'tres\'])">새로고침</button>');
+}
+/* ══ 관리자 도구 입구 · 본인 확인(PIN)이 살아 있으면 바로 도구로 ══ */
+function viewEzGate(){
+  if(!supOn()) return card("관리자 도구","",emptyLine("슈퍼관리자만 엽니다."));
+  if(supOk()){ setTimeout(function(){ if(ST.nav==="z_gate"&&supOk()) ezToolGo(); },0); return '<div class="card">'+skel()+'</div>'; }
+  return supGateView();
+}
+/* 새로 고침 · 쉬운 화면이면 저장된 도구 항목 대신 첫 화면으로(역할은 meTag 가 다시 본다) */
+if(ST.ez&&!(NAVBY[ST.nav]||{}).ez) ST.nav="z_today";
+if(ST.nav==="z_gate") ST.nav="z_today";
 /* ══════════════════ 8. 시작 ══════════════════ */
 (function(){ var p=navPart(); ST.tab=p.tab; if(p.sub) ST.subs[p.tab]=p.sub; })();   /* v5.14 새로 고침해도 보던 메뉴 그대로 */
 renderTabs();
