@@ -40,12 +40,12 @@
    * x · z = 도면 미터(서쪽 벽 0 → 동쪽 · 남쪽 유리 0 → 북쪽) · 캐릭터가 서는 자리 = 판 줄 앞 2.5~3m(데스크 · 기둥 피함) */
   var STOPS = [
     { id: 'start', name: '로비', x: 27.3, z: 8.9, look: [20, 7.8], where: '로비' },   /* 어느 구역 판 줄에서도 4.2m 밖(입장하자마자 판 보기가 뜨던 버그 · 사용자 261003) */
-    { id: 'vision', zone: 'vision', x: 29.0, z: 3.6 },
+    { id: 'vision', zone: 'vision', x: 29.0, z: 3.6, gAt: [29.75, 5.85], gFace: [27.3, 8.9] },   /* v5.79 (사용자 261006 「옆 두 번째 판 앞 NPC와 너무 붙어 있다」) 스태프 = 구역 입구 쪽(첫 판 · TV 앞 통로 옆 · 옛 자리 29.7, 2.5 는 AX LAB 스태프와 2.9m) · AX LAB 스태프와 4.3m · 이 멈춤 자리에서 2.3m(AX LAB 스태프 2.44m 보다 가까워 말풍선 3m 규칙 그대로 이 구역 말) · 로비 들어오는 쪽을 본다 */
     { id: 'lab', zone: 'lab', x: 27.9, z: 3.25 },
     { id: 'action', zone: 'action', x: 22.3, z: 3.25 },
     { id: 'play', zone: 'play', x: 9.6, z: 3.0, look: [8.6, 0.55] },
     /* EVENT = 세 자리(사용자 261003) · 타자왕(홍보 영상) · 포토부스(판 보기 · 챗봇 없음) · 룰렛(호객만 · 판 보기 없음) */
-    { id: 'typing', zone: 'event', spot: 'typing', name: 'AX 타자왕', x: 3.3, z: 2.5, look: [0.55, 2.47], say: '당신의 프롬프트 속도를 보여주세요', go: '' },   /* v5.64 (사용자 261005 「프롬프트 실력보다는 속도」 · 원문 「보셔주세요」는 「보여주세요」로) 옛 「타자왕 1~3위 경품 · 17:00 마감」 */
+    { id: 'typing', zone: 'event', spot: 'typing', name: 'AX 타자왕', x: 3.3, z: 2.5, look: [0.55, 2.47], say: '당신의 프롬프팅 속도를 보여\u00A0주세요', go: '' },   /* v5.79 (사용자 261006) 프롬프트(입력한 글) → 프롬프팅(쓰는 행위 · 속도를 재는 대상) · 「보여 주세요」 띄어 씀(앱 「눌러 주세요」와 같게 · 말풍선 232px 두 줄이 「속도를 / 보여 주세요」로 끊기게 붙는 빈칸 u00A0) · v5.64 (사용자 261005 「프롬프트 실력보다는 속도」 · 원문 「보셔주세요」는 「보여주세요」로) 옛 「타자왕 1~3위 경품 · 17:00 마감」 */
     { id: 'event', zone: 'event', name: '포토부스', x: 5.3, z: 7.35, look: [0.55, 7.35], noGuide: true },   /* v5.58 촬영 기계(가운데 칸 앞 · 도면 3.6, 7.35) 뒤에서 벽 쪽 단체 사진을 봄 */
     { id: 'roulette', zone: 'event', spot: 'roulette', name: '룰렛 이벤트', x: 3.4, z: 10.1, look: [0.55, 10.15], say: '스탬프 3개면 룰렛을 돌려요', go: '', hand: true },
     { id: 'lounge', zone: 'lounge', x: 8.7, z: 8.3 }
@@ -927,7 +927,7 @@
   function phLog(ph) { if (PH.log.length < 40) PH.log.push({ ph: ph, t: Math.round(performance.now() - PH.t0), at: planOf(G.pos).map(function (q) { return +q.toFixed(2); }) }); }
   function phStart() {
     var now = performance.now();
-    PH.on = true; PH.t0 = now; PH.pt = now; PH.near = false; PH.log = []; PH.cnt = 0; PH.smile = false; PH.h0 = G.h; ROOTEL.classList.add('ph'); $('shot').hidden = true; $('look').hidden = true; lookFrame(null);
+    PH.on = true; PH.t0 = now; PH.pt = now; PH.near = false; PH.log = []; PH.smile = false; PH.h0 = G.h; ROOTEL.classList.add('ph'); $('shot').hidden = true; $('look').hidden = true; lookFrame(null);
     setRun(false); G.runKey = false; G.stick = null; G.path = null; G.goal = null; G.mode = 'free'; $('dest').hidden = true; G.air = false; G.jy = 0; G.landT = 0; G.push = 0; G.pushK = 0; tiltHome(true); HOLD = null;
     var p = planOf(G.pos), K = PB.at, sz = p[1] < K[1] ? 6.42 : 8.28, pts = [p]; PH.side = p[1] < K[1] ? -1 : 1;
     if (p[0] > 3.0) { if (Math.abs(p[1] - K[1]) < 0.95) pts.push([Math.max(p[0], 4.25), sz]); pts.push([K[0], sz]); }   /* 기계(도면 x 3.36 ~ 3.84 · z 7.01 ~ 7.69) 동쪽이면 옆으로 돌아서 */
@@ -939,7 +939,6 @@
   function phFriends(k) {   /* 0 = 원래 자리 · 1 = 사진 자리 */
     PB.bots.forEach(function (b, i) { var a = PB_FR[i], q = PH_FR[i]; b.m.position.copy(toThree(a[0] + (q[0] - a[0]) * k, a[1] + (q[1] - a[1]) * k)); });
   }
-  var PH_SMILE = 500;   /* v5.73 찰칵 몇 ms 전에 웃기 시작 */
   function phSmile(on) { smileSet(botParts.eyes, botParts.smiles, on); PB.bots.forEach(function (b) { smileSet(b.m.userData.eyes, b.m.userData.smiles, on); }); }
   function phPose(walkW, hop, dt) {   /* 내 캐릭터 몸(걷기 통통 · 기울임 · 발 · 다 같이 통통) */
     if (walkW) G.walkT += dt * 11;
@@ -957,7 +956,7 @@
     return PH.pi >= PH.path.length;
   }
   function phEase(k) { k = clamp(k, 0, 1); return k * k * (3 - 2 * k); }
-  /* stepBot 대신(PH.on 동안) · 단계 = walk → turn → hop → cnt → (찰칵) → wait → pop → back(팝업 뒤에서 제자리로) */
+  /* stepBot 대신(PH.on 동안) · 단계 = walk → turn → hop → (찰칵 · v5.79 3 · 2 · 1 없음) → wait → pop → back(팝업 뒤에서 제자리로) */
   function phBot(dt, now) {
     var e = now - PH.pt, hopY = 0, walkW = 0;
     if (PH.ph === 'walk') {
@@ -969,11 +968,7 @@
     } else if (PH.ph === 'hop') {
       var hk = e / 380; hopY = hk > 0 && hk < 1 ? Math.sin(hk * Math.PI) * 0.12 : 0;
       PB.bots.forEach(function (b, i) { var k = (e - (i + 1) * 70) / 380; b.m.userData.body.position.y = k > 0 && k < 1 ? Math.sin(k * Math.PI) * 0.12 : 0; });
-      if (e > 760) { PB.bots.forEach(function (b) { b.m.userData.body.position.y = 0; }); PH.ph = 'cnt'; PH.pt = now; phCount(3); phLog('cnt'); }
-    } else if (PH.ph === 'cnt') {
-      var n = 3 - Math.floor(e / 560); if (n !== PH.cnt && n >= 1) phCount(n);
-      if (!PH.smile && e >= 560 * 3 - PH_SMILE) { PH.smile = true; phSmile(true); phLog('smile'); }   /* v5.73 「1」 무렵(찰칵 0.5초 전) 다 같이 눈웃음 · 카운트 중엔 가만히 */
-      if (e >= 560 * 3) { phCount(0); phShoot(); PH.ph = 'wait'; PH.pt = now; phLog('shot'); }
+      if (e > 660) { PB.bots.forEach(function (b) { b.m.userData.body.position.y = 0; }); PH.smile = true; phSmile(true); phLog('smile'); phShoot(); PH.ph = 'wait'; PH.pt = now; phLog('shot'); }   /* v5.79 (사용자 261006 「3 · 2 · 1 카운트 없이 바로 찍힌다」) 다 같이 통통 내려앉는 순간 = 눈웃음 + 찰칵(흰 빛) · 옛 3 · 2 · 1(0.56초씩) 없앰 */
     } else if (PH.ph === 'wait') {
       var fk = (now - (PH.flashT || 0)) / 260, fo = fk > 0 && fk < 1 ? 1 - fk : 0; PB.flash.material.opacity = fo; PB.white.forEach(function (w) { w.visible = fo > 0; w.material.opacity = fo * 0.95; });
       if (e > 380) phPop(now);
@@ -989,7 +984,6 @@
     if (PH.on) phPose(walkW, hopY, dt);
     return true;
   }
-  function phCount(n) { PH.cnt = n; var c = $('pcnt'); if (!c) return; if (!n) { c.hidden = true; return; } c.textContent = String(n); c.hidden = false; c.classList.remove('tick'); void c.offsetWidth; c.classList.add('tick'); }
   function phShoot() {
     var lite = MUS.lite || (G.probeResult && G.probeResult.p50 > 34), RW = lite ? 640 : 960, RH = lite ? 480 : 720;
     if (!PH.rt || PH.rt.width !== RW) { if (PH.rt) PH.rt.dispose(); PH.rt = new T.WebGLRenderTarget(RW, RH, { depthBuffer: true }); PH.rt.texture.generateMipmaps = false; }
@@ -1045,7 +1039,7 @@
     PH.on = false; PH.ph = ''; G.mode = 'free'; G.path = null; G.moveV = 0; phLog('end'); nearestStop(); updateUi(true); G.need = true; G.last = 0;
   }
   function phAbort() {   /* 둘러보기를 닫을 때 · 연출 중이면 걷는 곳으로 */
-    clearTimeout(PH.popTm); var el = $('pola'); if (el) { el.hidden = true; el.classList.remove('out'); } phCount(0);
+    clearTimeout(PH.popTm); var el = $('pola'); if (el) { el.hidden = true; el.classList.remove('out'); }
     if (!PH.on) return;
     phFriends(0); phSmile(false); PB.bots.forEach(function (b) { b.m.userData.body.position.y = 0; }); PB.flash.material.opacity = 0; PB.white.forEach(function (w) { w.visible = false; });
     var o = phOut(); G.pos.copy(toThree(o[0], o[1])); G.h = G.face = Math.PI / 2; phPose(0, 0, 0); phEnd();
@@ -1563,7 +1557,7 @@
       fixCoplanar(S.lobby); fixLightmaps(S.lobby); fixDesks(S.lobby); remodel(); buildBust(); buildGrid(S.lobby); patchPillars(S.lobby); buildDoor();
       var st = STOPS[0], f = nearestFree(st.x, st.z); flood(f[0], f[1]);
       STOPS.forEach(function (s) { var q = nearestFree(s.x, s.z); if (q) { s.x = q[0]; s.z = q[1]; } });
-      buildGuides(); hideCheckin(); buildTypingTv(); buildLaptops(); buildTvs();   /* v5.51 오락기 3대 없앰(사용자 261004) */
+      buildGuides(); buildRooms(); hideCheckin(); buildTypingTv(); buildLaptops(); buildTvs();   /* v5.51 오락기 3대 없앰(사용자 261004) */
       if (G.wallScr) { var wv = MOT.on ? motAdd(G.wallScr, 'wall') : tvAdd(G.wallScr, 64, Math.round(64 * WW.h / WW.w), 'wall'); wv.sphere.radius = Math.hypot(WW.w, WW.h) / 2 + 0.1; G.tvN = TVS.length; }   /* v5.45 가벽 전체 화면 · 같은 픽셀 광고 루프(행사명 → ME to WE → 물결) · 화면 비율대로 64 × 96 */
       STOPS.forEach(function (s) { if (!free(s.x, s.z)) { var q = nearestFree(s.x, s.z); if (q) { s.x = q[0]; s.z = q[1]; } } });   /* v5.38 멈춤 자리가 스태프 · TV 원 안이면 밖으로 */
       G.ceil = S.lobby.getObjectByName('ceiling');
@@ -1804,12 +1798,14 @@
   /* v5.73 카메라 선분 훑기 · 머리(도면 hx, hz · 높이 1.25) → (tx, ty, tz)(three 좌표) · 막히지 않고 갈 수 있는 비율 0 ~ 1 · 0.05m 걸음 · 머리 자리부터 막혔으면 0 */
   function camRay(tx, ty, tz) {
     if (!cocc) return 1;
+    var sk = G.squeeze && G.scn === 'lobby' ? SQ_CAM : null;   /* v5.79 (사용자 261006 「예전엔 뒤에서 지켜봐 쭈압 하고 튕겨 나가는 모습이 보였는데 지금은 갑자기 줌인」) 게이트 비집기 동안 = 게이트 칸 안의 낮은 층(1.65m 아래 · 함 · 유리 날개)은 막힘으로 안 본다 · 높은 벽은 그대로 막는다 */
     var ox = G.pos.x + 16, oz = 6 - G.pos.z, oy = 1.25, ex = tx + 16, ez = 6 - tz, dx = ex - ox, dy = ty - oy, dz = ez - oz, L = Math.sqrt(dx * dx + dy * dy + dz * dz);
     if (L < 1e-4) return 1;
     var n = Math.ceil(L / 0.05), last = 0, f = 1;
     for (var i = 0; i <= n; i++) {
-      var t = i / n, y = oy + dy * t, c = gi(ox + dx * t, oz + dz * t), sl = Math.floor(y / COCC_H);
-      if (c < 0 || y >= 4.8 || (sl >= 0 && ((cocc[c] >>> sl) & 1))) { f = i ? Math.max(0, last - 0.05 / L) : 0; break; }
+      var t = i / n, y = oy + dy * t, qx = ox + dx * t, qz = oz + dz * t, c = gi(qx, qz), sl = Math.floor(y / COCC_H), cb = c < 0 ? 0 : cocc[c];
+      if (sk && qx > sk.x0 && qx < sk.x1 && qz > sk.z0 && qz < sk.z1) cb &= sk.hi;
+      if (c < 0 || y >= 4.8 || (sl >= 0 && ((cb >>> sl) & 1))) { f = i ? Math.max(0, last - 0.05 / L) : 0; break; }
       last = t;
     }
     /* 기둥 · 카메라 자리가 기둥(반폭 0.55) + 0.25m 안이면 그 상자에 들어가기 전까지 */
@@ -1897,6 +1893,7 @@
     col = col || '#FF7F32';
     if (ARC[col]) return ARC[col];
     var c = document.createElement('canvas'); c.width = c.height = 128; var g = c.getContext('2d');
+    if (col === ARC_STAFF) { g.strokeStyle = '#FFFFFF'; g.lineWidth = 21; g.lineCap = 'round'; g.beginPath(); g.arc(64, 84, 48, Math.PI * 1.22, Math.PI * 1.78); g.stroke(); }   /* v5.79 (사용자 261006 「룰렛 주황 면 앞에서 회갈색으로 탁해짐」) 스태프 전파 밑에 조금 더 굵은 흰 테 · 사라지며 옅어져도 바탕과 섞이지 않는다 · 내 캐릭터 · 인터뷰 TV 주황 전파는 그대로 */
     g.strokeStyle = col; g.lineWidth = 13; g.lineCap = 'round'; g.beginPath(); g.arc(64, 84, 48, Math.PI * 1.22, Math.PI * 1.78); g.stroke();
     var t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; ARC[col] = t; return t;
   }
@@ -1933,14 +1930,57 @@
       if (!s.zone || s.zone === 'cafe' || !s.look || s.noGuide) return;
       var fx = s.look[0] - s.x, fz = s.look[1] - s.z, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
       var rx = fz, rz = -fx;   /* 판을 보는 사람의 오른쪽(도면 좌표 · z 북쪽) */
-      var gx = s.x + rx * 1.1 + fx * 0.7, gz = s.z + rz * 1.1 + fz * 0.7, q = nearestFree(gx, gz) || [gx, gz];
+      var gx = s.gAt ? s.gAt[0] : s.x + rx * 1.1 + fx * 0.7, gz = s.gAt ? s.gAt[1] : s.z + rz * 1.1 + fz * 0.7, q = nearestFree(gx, gz) || [gx, gz];   /* v5.79 gAt = 자리 직접(VISION) */
       var m = makeGuide(!!s.hand); m.position.copy(toThree(q[0], q[1]));
-      var h0 = Math.atan2(-fx, fz);   /* 평소 = 통로(판 반대쪽)를 본다 · three 방향 = (sin h, cos h), 도면 z 북쪽 = three -z */
+      var h0 = s.gFace ? Math.atan2(s.gFace[0] - q[0], -(s.gFace[1] - q[1])) : Math.atan2(-fx, fz);   /* v5.79 gFace = 그 점을 본다 · 평소 = 통로(판 반대쪽)를 본다 · three 방향 = (sin h, cos h), 도면 z 북쪽 = three -z */
       m.rotation.y = h0; S.lobby.add(m);
       /* 걸음 막기 · v5.38 칸 번호로 꽉 찬 원(옛 코드는 소수 좌표를 0.1m 씩 더해 칸을 구해 반올림 오차로 원 안에 빈칸이 줄줄이 생겼고, 캐릭터가 그 틈으로 스태프를 뚫고 지나갔다 · 사용자 261003 「캐릭터가 겹치는 버그」) */
       blockDisc(q[0], q[1], GUIDE_R);
       guides.push({ m: m, stop: k, id: s.id, zone: s.zone, spot: s.spot || '', at: [q[0], q[1]], h: h0, h0: h0, text: s.say || ZT[s.zone] || '', go: s.go == null ? '자세히 보기' : s.go });
     });
+  }
+  /* ═══════════ v5.79 미팅룸 1 · 2 · 3 안 대화(사용자 261006) ═══════════
+   * 방마다 스태프 챗봇 1명(파랑 · makeGuide) + 직원 1명(같은 모양 · 무채색 회색 · makeCritter)이 탁자를 사이에 두고 마주 앉아 대화 · 글자 · 이름 없음 · 누를 수 없음 · 말풍선 없음
+   * 자리 = 모형 탁자 옆 의자(wing_body 실측 261006 · 앉은 높이 0.45) · 대각선으로 마주 봐 유리 밖에서 둘 다 보인다 · 방 안은 걷는 곳이 아니라 통로를 막지 않는다
+   * 말하는 쪽 = 2.4초씩 번갈아 · 작게 통통 + 머리 위 말줄임 점 3개(흰 알약 · 점이 차례로 짙어짐 · 머리 바로 위 1.62m · 유리 뒤에 그려 반투명 유리에 흐려지지 않음 renderOrder 3) · 움직임 줄이기 = 통통 없이 가운데 점만
+   * 내 캐릭터가 방에서 10m 안일 때만 보이고 움직인다 */
+  var ROOMS = [
+    { s: [1.15, 14.9], n: [2.65, 14.1] },   /* 미팅룸 2 · 탁자 x 1.45 ~ 2.35 · z 13.7 ~ 16.1 · 의자 서쪽 x 1.15 · 동쪽 x 2.65 · z 14.1 · 14.9 · 15.7 */
+    { s: [1.15, 20.5], n: [2.65, 19.7] },   /* 미팅룸 1 · 탁자 z 19.3 ~ 21.7 · 의자 z 19.7 · 20.5 · 21.3 */
+    { s: [5.05, 25.6], n: [6.15, 24.1] }    /* 미팅룸 3 · 탁자 x 4.8 ~ 6.4 · z 24.4 ~ 25.3 · 의자 x 5.05 · 5.6 · 6.15 · 남쪽 z 24.1 · 북쪽 z 25.6 */
+  ], ROOM_SEAT = 0.45, ROOM_PER = 2.4, ROOM_DOT_Y = 1.62, ROOM_NEAR = 10, roomTalk = [], DOTS_TEX = null;
+  function dotsTex(k) {   /* 흰 알약 + 점 3개 · k = 짙은 점(0 ~ 2) */
+    var c = document.createElement('canvas'); c.width = 128; c.height = 64; var g = c.getContext('2d');
+    g.fillStyle = '#FFFFFF'; g.strokeStyle = '#C4C9CF'; g.lineWidth = 3; g.beginPath(); g.moveTo(32, 8); g.lineTo(96, 8); g.arc(96, 32, 24, -Math.PI / 2, Math.PI / 2); g.lineTo(32, 56); g.arc(32, 32, 24, Math.PI / 2, Math.PI * 1.5); g.closePath(); g.fill(); g.stroke();
+    [40, 64, 88].forEach(function (x, i) { g.fillStyle = i === k ? '#4E5359' : '#B4B8BC'; g.beginPath(); g.arc(x, 32, 7.5, 0, Math.PI * 2); g.fill(); });
+    var t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; return t;
+  }
+  function roomFace(m, a, b) { m.rotation.y = Math.atan2(b[0] - a[0], -(b[1] - a[1])); }
+  function buildRooms() {
+    DOTS_TEX = [0, 1, 2].map(dotsTex);
+    ROOMS.forEach(function (r, i) {
+      var g = new T.Group(); g.name = 'roomTalk';
+      var st = makeGuide(false); st.userData.waves.forEach(function (w) { w.visible = false; });
+      var nb = makeCritter(0xD5D8DC, 0x6B7077, 0x4E5359);   /* 직원 = 무채색(주황 · 파랑 아님) */
+      [[st, r.s, r.n], [nb, r.n, r.s]].forEach(function (q) { q[0].position.copy(toThree(q[1][0], q[1][1])); q[0].position.y = ROOM_SEAT; roomFace(q[0], q[1], q[2]); g.add(q[0]); });
+      var dots = new T.Sprite(new T.SpriteMaterial({ map: DOTS_TEX[1], transparent: true, depthWrite: false })); dots.scale.set(0.34, 0.17, 1); dots.renderOrder = 3; g.add(dots);   /* 유리(renderOrder 2 · 깊이 안 씀) 다음에 그린다 */
+      S.lobby.add(g);
+      roomTalk.push({ g: g, s: st, n: nb, dots: dots, c: [(r.s[0] + r.n[0]) / 2, (r.s[1] + r.n[1]) / 2], ph: i * 0.37 });
+    });
+  }
+  function stepRooms() {
+    if (!roomTalk.length) return false;
+    var p = planOf(G.pos), any = false, ck = G.clock || 0;
+    roomTalk.forEach(function (r) {
+      var on = Math.hypot(p[0] - r.c[0], p[1] - r.c[1]) < ROOM_NEAR; if (r.g.visible !== on) r.g.visible = on; if (!on) return; any = true;
+      var u = ck / ROOM_PER + r.ph, who = Math.floor(u) % 2, f = u - Math.floor(u), sp = who ? r.n : r.s, ls = who ? r.s : r.n;
+      ls.userData.body.position.y = 0;
+      sp.userData.body.position.y = RM || f > 0.8 ? 0 : Math.abs(Math.sin(f * Math.PI * 4)) * 0.035;
+      r.dots.position.set(sp.position.x, ROOM_DOT_Y, sp.position.z);
+      r.dots.visible = f < 0.88;
+      r.dots.material.map = DOTS_TEX[RM ? 1 : Math.floor(ck * 3.3) % 3];
+    });
+    return any;
   }
   /* v5.49 (사용자 261004 「회사의 방향이에요(자세히 보기) 이런 식」) 말풍선 = 무엇이 있는지 한마디 + 오른쪽 「자세히 보기」 한 줄 · 옛 「~을 보는 곳이에요」보다 짧게 */
   var STAIR = { id: 'stairs', at: [13.4, 10.3], r: 3.0, m: { position: new T.Vector3(13.4 - 16, 0.6, 6 - 11.2) }, text: '오늘은 계단 어떠세요?', go: '스탬프 받기', stamp: 'st', zone: null, spot: '' };
@@ -3307,6 +3347,7 @@
    * 쭈압 1.0초 = 가장 가까운 틈 가운데로 줄 맞춤(0.3) · 옆이 홀쭉 0.58(0.3 · 함과 옆으로 안 겹침) · 앞뒤 1.6배(0.1~0.55) · 중심이 틈 속을 지나(천천히 → 빨라짐) 몸 뒤끝이 반대편 면에 닿는 자리(중심 12.56 + 0.539)까지
    * 푱 0.2초 = 그 순간(뒤끝 - 반대편 면 = 0)부터 0.6m 더 · 낮게 날듯(최고 0.16m) · 둥글게 돌아옴 · 띠용 0.9초 = 착지 자리(뒤끝이 반대편 면에서 0.8m · 출렁여도 0.74m 밖 · 게이트와 겹침 0) */
   var SQ = { a: 1000, b: 200, c: 900, pop: 0.6, hop: 0.16 }, GZ = { ze: 11.26, zx: 12.56, lanes: [17.545, 18.405, 19.255] }, BR = 0.337;
+  var SQ_CAM = { x0: GATE.x0 - 0.25, x1: GATE.x1 + 0.25, z0: GZ.ze - 0.35, z1: GZ.zx + 0.35, hi: ~((1 << Math.ceil(1.65 / COCC_H)) - 1) };   /* v5.79 비집기 동안 카메라 막힘에서 뺄 칸(게이트 함 · 유리 날개 둘레 · 0.15m 층 11개 = 1.65m 아래) */
   function stepPush(dt, p0, nz, blocked) {
     var on = !!p0 && !G.squeeze && G.scn === 'lobby' && p0[0] > GATE.x0 && p0[0] < GATE.x1 && p0[1] > GATE.z && nz > 0.55 && blocked;
     if (on) { G.push = (G.push || 0) + dt; G.pushDir = Math.PI; if (G.push >= PUSH_T) startSqueeze(); }
@@ -3798,6 +3839,7 @@
       if (G.anim) { stepAnim(now); busy = true; } else busy = stepCam(dt) || busy || held;
       if (busy) updateUi(false);
       busy = stepGuides(dt) || busy;
+      busy = stepRooms() || busy;   /* v5.79 미팅룸 안 대화 */
       busy = stepBlocks(now) || busy;   /* v5.49 스탬프 블록 */
       busy = pbStep(now) || busy;   /* v5.58 포토부스 단체 사진 */
       if (OCCA && !G.anim && !SH && !G.sheetFx) occClear();   /* v5.54 연출 밖에서 남은 비키기는 늘 원래대로 */
@@ -3964,7 +4006,7 @@
   /* 3D 를 못 그리는 기기 · 평면 지도 · 목록 대신 짧은 안내 한 줄(사용자 261003 「평면 지도 · 목록은 없애고 3D 만」) */
   function noGl(msg) {
     G.mapMode = true; $('cv').style.visibility = 'hidden'; $('load').hidden = true; $('bar').hidden = true; $('pad').hidden = true; $('mini').hidden = true; $('ctl').hidden = true; $('pins').innerHTML = ''; $('mags').innerHTML = '';
-    var m = $('nogl'); m.hidden = false; m.textContent = msg || '이 기기에서는 3D 둘러보기를 볼 수 없어요'; veilSet(0);
+    var m = $('nogl'); m.hidden = false; m.textContent = msg || '이 기기에서는 3D 행사 둘러보기를 볼 수 없어요'; veilSet(0);
   }
 
   /* ═══════════ 처음 안내(한 문장 · 한 번) ═══════════ */
@@ -4267,8 +4309,8 @@
   var ROOTEL = null, OPTS = {}, PEND = null;
   var TEMPLATE = '<div class="t3app">\n' +
     '  <header class="hd">\n' +
-    '    <button type="button" class="hb back" id="t3-bClose" aria-label="둘러보기 닫기"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>\n' +
-    '    <h1>1층 둘러보기 <span class="tag" id="t3-tag" hidden>시험판</span></h1>\n' +
+    '    <button type="button" class="hb back" id="t3-bClose" aria-label="행사 둘러보기 닫기"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>\n' +
+    '    <h1>행사 둘러보기 <span class="tag" id="t3-tag" hidden>시험판</span></h1>\n' +
     '    <button type="button" class="hb snd" id="t3-bSnd" aria-pressed="true" aria-label="음악 끄기" hidden><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path class="w" d="M15.5 9a4.2 4.2 0 0 1 0 6"/><path class="w" d="M18.3 6.5a8 8 0 0 1 0 11"/><path class="x" d="M16 9.5l5 5M21 9.5l-5 5"/></svg></button>\n' +
     '    <button type="button" class="hb cfgh" id="t3-bCfg" aria-label="설정 · 시점 · 음악 · 움직임 줄이기">설정</button>\n' +   /* v5.53 글자 단추 「설정」(사용자 261004 「설정 버튼 위치도 이상하고 · 밝기 조절하는 애처럼 보여」 · 옛 작은 지도 아래 둥근 톱니 자리는 비움) */
     '    <button type="button" class="hb" id="t3-bHelp">도움말</button>\n' +
@@ -4293,7 +4335,6 @@
     '    <button type="button" class="gbub" id="t3-gbub" hidden><span id="t3-gbubT"></span><span class="go">스탬프 받기</span></button>\n' +
     '    <button type="button" class="look" id="t3-look" hidden aria-label="자세히 보기"><span class="lk" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.2"/><path d="M15.2 15.2l5 5"/></svg></span><span class="lt">자세히 보기</span><kbd class="kh" aria-hidden="true">Enter</kbd></button>\n' +   /* v5.54 자세히 보기 하나 */
     '    <button type="button" class="look shot" id="t3-shot" hidden aria-label="사진 찍기 · 포토부스 친구들과 단체 사진"><span class="lk" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3.5 8h3.4l1.7-2.5h6.8L17.1 8h3.4v11.5h-17z"/><circle cx="12" cy="13.5" r="3.4"/></svg></span><span class="lt">사진 찍기</span><kbd class="kh" aria-hidden="true">Enter</kbd></button>\n' +   /* v5.67 포토부스 사진 찍기(자세히 보기와 같은 알약) */
-    '    <div class="pcnt" id="t3-pcnt" hidden aria-hidden="true"></div>\n' +   /* v5.67 작은 3 · 2 · 1 */
     '    <div class="pflash" id="t3-pflash" hidden aria-hidden="true"></div>\n' +   /* v5.67 찰칵 흰 빛 */
     '    <div class="pola" id="t3-pola" role="dialog" aria-label="방금 찍은 사진 · 누르면 닫혀요" hidden><figure class="pc"><canvas id="t3-polaC" width="480" height="360"></canvas><figcaption>2026.10.26 AX Festival</figcaption></figure><p class="pm">동료들과 추억을 남기세요</p></div>\n' +   /* v5.67 폴라로이드(사용자 문구 그대로) */
     '    <div class="cheer" id="t3-cheer" role="status" aria-live="polite" hidden>더 힘내세요!</div>\n' +
@@ -4369,7 +4410,7 @@
     '<div class="fade" id="t3-fade" aria-hidden="true"></div>\n' +
     '<div class="toast" id="t3-toast" role="status" aria-live="polite"></div>';
   function buildDom() {
-    ROOTEL = document.createElement('div'); ROOTEL.id = 'axTour3'; ROOTEL.setAttribute('role', 'dialog'); ROOTEL.setAttribute('aria-modal', 'true'); ROOTEL.setAttribute('aria-label', '1층 둘러보기');
+    ROOTEL = document.createElement('div'); ROOTEL.id = 'axTour3'; ROOTEL.setAttribute('role', 'dialog'); ROOTEL.setAttribute('aria-modal', 'true'); ROOTEL.setAttribute('aria-label', '행사 둘러보기');
     ROOTEL.innerHTML = TEMPLATE; document.body.appendChild(ROOTEL);
     if (OPTS.standalone) { ROOTEL.classList.add('standalone'); $('tag').hidden = false; $('bClose').hidden = true; }
     $('bClose').onclick = function () { close(); };
@@ -4461,5 +4502,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.75', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.79', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();

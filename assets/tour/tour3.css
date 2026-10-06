@@ -394,10 +394,7 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .iris .it span { display: block; }
 #axTour3 .iris .it.on { opacity: 1; }
 /* ═══ v5.67 포토부스 사진 찍기(사용자 261005) · 단추 = .look 알약 그대로(카메라 도형) · 작은 3 · 2 · 1 · 찰칵 흰 빛 · 폴라로이드 팝업 + 안내 한 줄 ═══ */
-/* v5.73 (사용자 261005 「3 2 1 카운팅이 가운데에 왔으면 · 지금은 너무 위에 떠」) 화면 가운데 · 다섯 얼굴 바로 위(가운데 44% 는 얼굴과 겹쳐 36%) · 옛 top 16px */
-#axTour3 .pcnt { position: absolute; left: 50%; top: 36%; z-index: 7; width: 44px; height: 44px; margin-left: -22px; margin-top: -22px; border-radius: 50%; background: rgba(25, 31, 40, .72); color: #FFFFFF; font-size: 22px; line-height: 44px; font-weight: 700; text-align: center; pointer-events: none; font-variant-numeric: tabular-nums; }
-#axTour3 .pcnt.tick { animation: pcntTick .5s ease-out; }
-@keyframes pcntTick { 0% { transform: scale(.6); opacity: 0; } 35% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+/* v5.79 (사용자 261006) 3 · 2 · 1 카운트 없앰(누르면 자리 잡자마자 찰칵) · 옛 숫자 동그라미(v5.67 · v5.73 화면 가운데 36%) 삭제 */
 #axTour3.ph .pad, #axTour3.ph .ctl { opacity: .35; pointer-events: none; transition: opacity .25s; }   /* 연출 동안 조작 잠금이 보이게 */
 #axTour3.rm.ph .pad, #axTour3.rm.ph .ctl { transition: none; }
 #axTour3 .pflash { position: absolute; inset: 0; z-index: 8; background: #FFFFFF; opacity: 0; pointer-events: none; }
@@ -411,6 +408,6 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .pola .pm { margin: 0; padding: 8px 16px; border-radius: 999px; background: rgba(25, 31, 40, .86); color: #FFFFFF; font-size: 15px; line-height: 22px; font-weight: 600; white-space: nowrap; animation: pmIn .3s .25s ease-out both; }
 @keyframes polaIn { 0% { transform: translateY(-48px) rotate(-11deg); opacity: 0; } 60% { opacity: 1; } 100% { transform: rotate(-4deg); opacity: 1; } }
 @keyframes pmIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-#axTour3.rm .pola .pc, #axTour3.rm .pola .pm, #axTour3.rm .pcnt.tick { animation: none; }
+#axTour3.rm .pola .pc, #axTour3.rm .pola .pm { animation: none; }
 #axTour3.rm .pola { transition: none; }
-@media (prefers-reduced-motion: reduce) { #axTour3 .pola .pc, #axTour3 .pola .pm, #axTour3 .pcnt.tick, #axTour3 .pflash.go { animation: none; } #axTour3 .pola { transition: none; } }
+@media (prefers-reduced-motion: reduce) { #axTour3 .pola .pc, #axTour3 .pola .pm, #axTour3 .pflash.go { animation: none; } #axTour3 .pola { transition: none; } }
