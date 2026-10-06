@@ -6,7 +6,8 @@
  *   가상 이름 채우기(261004 사용자 「10위까지 일단은 가상의 이름으로」) = 실제 기록이 10명보다 적으면 빈 자리를 가상 닉네임으로 · 화면에서만(서버 · 시트에 안 씀) ·
  *     실제 최고 = 1위 · 실제 최저 = 10위 · 가상은 그 사이 점수(끝자리 들쭉날쭉 · 시드 고정) · 실제 1명이면 그 사람이 10위 · 가상 9명은 위(1.5~10배 · 상한 9,800) · NEW 없음 · 행사일(10/26) 한국 날짜부터 자동으로 꺼짐 · FILL_ON = false 또는 &fill=0 = 끄기 ·
  *     기본 TV · ?open=1 에만 · ?promo=1&rank=1(앱 칸)은 &fill=1 일 때만
- *   광고 = 후킹 0~2.6(「당신의 프롬프트 입력 속도는?」이 쳐진다) · 실제 게임 몽타주 2.6~14.2 · 행동 14.2~18(「1F 로비 노트북에서 도전」이 쳐지고 앱 QR → 노트북 카메라 → SPACE)
+ *   광고 = 후킹 0~2.6(「당신의 프롬프트 입력 속도는?」이 쳐진다) · 실제 게임 몽타주 2.6~14.2 · 행동 14.2~18(「1F 로비 노트북에서 도전」이 쳐지고 참가 방법 세 줄 · 261006 사용자 새 진입 =
+ *     1 노트북 화면 QR 찍기(조준선) · 2 SPACE로 시작(눌림 → START) · 3 떨어지는 단어 입력(단어 둘이 떨어지고 하나가 쳐져 터진다) · 옛 「앱 QR → 노트북 카메라」 안내는 지움)
  *   와르르 전환(261004 사용자 「벽돌이 와르르 무너지듯」) = 후킹 → 게임 · 게임(PERFECT) → 행동 · 행동 → 상품 · 나가는 장면을 캔버스 한 장(#fx)에 그린 뒤 도트 3×2칸 벽돌(약 290개)로 나눠 위 줄부터 중력으로 떨어뜨린다(0.95초) ·
  *     게임 안 연출(CLOUD CLEAR → BONUS 도트 전환)은 그대로 · 상품 → 순위 · 순위 → 광고는 그냥 바뀐다(전환 종류를 하나로)
  *   몽타주 = 실제 게임 엔진(../../assets/rain-engine.js)의 그리기 함수(rgDraw · rgTransDraw · rtPanel …)로 지금 게임(v5.42)과 같은 그림 · 실제 게임에 가까운 속도 · 컷 세 개 ·
@@ -181,7 +182,7 @@
     if (on) tpSet(HK, Math.floor((lt - 0.2) / 0.085));
   }
 
-  /* 행동 · 앱 QR → 노트북 카메라 → SPACE(눌림) → START */
+  /* 행동 · 참가 방법 세 줄(261006 사용자 · 새 진입) = 1 노트북 화면 QR 찍기(조준선) → 2 SPACE(눌림) → START → 3 떨어지는 단어가 쳐져 터진다 */
   var QRM = [];   /* 와르르 전환이 같은 QR 을 다시 그린다 */
   function qrSvg(seed) {
     var n = 21, h = "", r = seed;
@@ -196,14 +197,24 @@
     return '<svg viewBox="0 0 21 21" fill="#000" shape-rendering="crispEdges" aria-hidden="true">' + h + "</svg>";
   }
   $("qr").innerHTML = qrSvg(7);
+  /* 떨어지는 단어 두 개 · 행동 장면 시작 기준 초(a → b 사이 같은 빠르기로 y0 → y1) · hit = 쳐져 오렌지 · out = 터짐 */
+  var WD = [{ e: $("wd1"), a: 1.5, b: 3.1, y0: 12, y1: 124, hit: 2.6, out: 3.1 }, { e: $("wd2"), a: 1.5, b: 3.8, y0: -44, y1: 96 }];
+  function wdAt(s) {
+    WD.forEach(function (w) {
+      var y = w.y0 + (w.y1 - w.y0) * Math.max(0, Math.min(1, (s - w.a) / (w.b - w.a)));
+      w.e.style.transform = "translateY(" + y.toFixed(1) + "px)";
+      cls(w.e, "hit", !!w.hit && s >= w.hit); cls(w.e, "out", !!w.out && s >= w.out);
+    });
+  }
   function actDraw(lt) {
     var a = $("act"), on = lt >= T_ACT;
     cls(a, "on", on);
     if (!on) return;
     var s = lt - T_ACT;
     tpSet(AH, Math.floor((s - 0.15) / 0.065));
-    cls(a, "seen", s >= 2.25);
-    cls(a, "dn", s >= 2.7 && s < 2.95);
+    cls(a, "seen", s >= 1.45);
+    cls(a, "dn", s >= 2.0 && s < 2.25);
+    wdAt(s);
   }
 
   /* 몽타주 · 실제 게임 엔진 그리기 함수로 · 논리 좌표 = 실제 노트북 게임판(폭 560) · 1.7배로 그린다 */
@@ -560,28 +571,46 @@
     c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(CV, 0, 0);
   }
   function rect(c, x, y, w, h, col) { c.fillStyle = col; c.fillRect(x, y, w, h); }
+  function txRich(c, e) {   /* 한 줄 글자 · 강조(<b>)만 다른 색 · 가로 자리는 DOM 그대로(Range) · 세로는 줄 높이 가운데 */
+    var cs = fnt(c, e), r = sxy(e), px = parseFloat(cs.fontSize), m = asc(c, "가", px), lh = parseFloat(cs.lineHeight) || (m.a + m.d), y = r.y + (lh - (m.a + m.d)) / 2 + m.a, ls = "letterSpacing" in c;
+    if (ls) c.letterSpacing = cs.letterSpacing === "normal" ? "0px" : cs.letterSpacing;
+    c.textAlign = "left"; c.textBaseline = "alphabetic";
+    Array.prototype.forEach.call(e.childNodes, function (n) {
+      var t = n.textContent; if (!t || !t.trim()) return;
+      var rg = document.createRange(); rg.selectNodeContents(n); var b = rg.getBoundingClientRect(), S = stage.getBoundingClientRect();
+      c.fillStyle = n.nodeType === 1 ? getComputedStyle(n).color : cs.color;
+      c.fillText(t.replace(/^\s+/, ""), (b.left - S.left) / K + (n.nodeType === 3 && /^\s/.test(t) ? c.measureText(" ").width : 0), y);
+    });
+    if (ls) c.letterSpacing = "0px";
+  }
   function paintAct(c) {
     var a = $("act"), fz = a.querySelectorAll("[data-at]"), was = a.classList.contains("on"), i;
     for (i = 0; i < fz.length; i++) { fz[i].style.transition = "none"; fz[i].classList.add("in"); }
-    cls(a, "on", true); cls(a, "seen", true); cls(a, "dn", false); tpSet(AH, AH.total);
+    cls(a, "on", true); cls(a, "seen", true); cls(a, "dn", false); tpSet(AH, AH.total); wdAt(DUR.ad - T_ACT);
     paintTp(c, AH);
-    ["ic1", "ic2", "ic3"].forEach(function (id) {
-      var ic = $(id), b = sxy(ic.querySelector(".bx")), lb = ic.querySelector(".lb");
+    ["st1", "st2", "st3"].forEach(function (id) {
+      var st = $(id), b = sxy(st.querySelector(".bx")), no = st.querySelector(".no"), n = sxy(no);
       rect(c, b.x, b.y - 4, b.w, 4, "#000"); rect(c, b.x, b.y + b.h, b.w, 4, "#000"); rect(c, b.x - 4, b.y, 4, b.h, "#000"); rect(c, b.x + b.w, b.y, 4, b.h, "#000");
       rect(c, b.x, b.y, b.w, b.h, "#5E3218"); rect(c, b.x + 4, b.y + 4, b.w - 8, b.h - 8, "#D9A066"); rect(c, b.x + 8, b.y + 8, b.w - 16, b.h - 16, "#2A2118");
-      txBox(c, lb, lb.textContent, true);
+      txRich(c, st.querySelector(".lb"));
+      if (id === "st3") {   /* 떨어지는 단어 · 상자 안만 */
+        c.save(); c.beginPath(); c.rect(b.x + 8, b.y + 8, b.w - 16, b.h - 16); c.clip();
+        WD.forEach(function (w) {
+          if (w.e.classList.contains("out")) return;
+          var r = sxy(w.e); rect(c, r.x - 3, r.y - 3, r.w + 6, r.h + 6, "#000"); rect(c, r.x, r.y, r.w, r.h, w.e.classList.contains("hit") ? "#FF7E31" : "#FFEBE0");
+          txBox(c, w.e, w.e.textContent, "v");
+        });
+        c.restore();
+      }
+      rect(c, n.x - 4, n.y - 4, n.w + 8, n.h + 8, "#000"); rect(c, n.x, n.y, n.w, n.h, "#FF7E31"); txBox(c, no, no.textContent, "v");
     });
-    var ph = sxy(a.querySelector(".phn")), sc = sxy(a.querySelector(".phn .scr")), qv = sxy(a.querySelector(".phn svg")), u = qv.w / 21;
-    rect(c, ph.x - 8, ph.y - 8, ph.w + 16, ph.h + 16, "#E3B884"); rect(c, ph.x, ph.y, ph.w, ph.h, "#1B1712"); rect(c, sc.x, sc.y, sc.w, sc.h, "#F3E7D8");
+    var nb = sxy(a.querySelector(".ntb")), sc = sxy(a.querySelector(".ntb .scr")), qv = sxy(a.querySelector(".ntb svg")), u = qv.w / 21, f = sxy(a.querySelector(".ntb .fd"));
+    rect(c, nb.x - 30, nb.y + nb.h + 20, nb.w + 60, 20, "#E3B884"); rect(c, nb.x - 8, nb.y - 8, nb.w + 16, nb.h + 16, "#E3B884"); rect(c, nb.x, nb.y, nb.w, nb.h, "#1B1712"); rect(c, sc.x, sc.y, sc.w, sc.h, "#F3E7D8");
     c.fillStyle = "#000"; QRM.forEach(function (q) { c.fillRect(qv.x + q[0] * u, qv.y + q[1] * u, u * 1.02, u * 1.02); });
-    var nb = sxy(a.querySelector(".ntb")), cm = sxy(a.querySelector(".ntb .cam")), ok = a.querySelector(".ntb .ok");
-    rect(c, nb.x - 30, nb.y + nb.h + 20, nb.w + 60, 24, "#E3B884"); rect(c, nb.x - 8, nb.y - 8, nb.w + 16, nb.h + 16, "#E3B884"); rect(c, nb.x, nb.y, nb.w, nb.h, "#1B1712");
-    rect(c, cm.x - 8, cm.y - 8, cm.w + 16, cm.h + 16, "rgba(255,126,49,.35)"); rect(c, cm.x, cm.y, cm.w, cm.h, "#FF7E31");
-    txBox(c, ok, ok.textContent, true);
+    [[0, 0, 32, 8], [0, 0, 8, 32], [f.w - 32, 0, 32, 8], [f.w - 8, 0, 8, 32], [0, f.h - 8, 32, 8], [0, f.h - 32, 8, 32], [f.w - 32, f.h - 8, 32, 8], [f.w - 8, f.h - 32, 8, 32]].forEach(function (q) { rect(c, f.x + q[0], f.y + q[1], q[2], q[3], "#FF7E31"); });
     var ky = a.querySelector(".key"), k = sxy(ky);
     rect(c, k.x - 6, k.y + 10, k.w + 12, k.h + 12, "#7A3E1C"); rect(c, k.x - 6, k.y - 6, k.w + 12, k.h + 12, "#000"); rect(c, k.x, k.y, k.w, k.h, "#F3E7D8");
     txBox(c, ky, ky.textContent, "v");
-    Array.prototype.forEach.call(a.querySelectorAll(".ar"), function (e) { var r = sxy(e); rect(c, r.x + 14, r.y + 28, 24, 24, "#FF7E31"); c.beginPath(); c.moveTo(r.x + 38, r.y + 16); c.lineTo(r.x + 38, r.y + 64); c.lineTo(r.x + 62, r.y + 40); c.closePath(); c.fill(); });
     var st = $("act-s"); txBox(c, st, st.textContent, true, "#D64524");
     for (i = 0; i < fz.length; i++) fz[i].style.transition = "";
     cls(a, "on", was); AH.n = -1;
