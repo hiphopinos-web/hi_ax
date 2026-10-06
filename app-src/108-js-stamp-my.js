@@ -201,6 +201,7 @@ var SPOP = { q: [], cur: null, ids: {}, opt: {} };
 /* v5.68 프로그램 참여 = 2개 · 팝 제목 p3 = 「프로그램 참여 ×2」 · p3h(17F 한쪽 1개) = 「프로그램 참여 1 / 2」 · 제자리는 같은 p3 줄 */
 function stampPopDef(id) {
   if (id === STAMP_HALF) return { id: STAMP_HALF, title: "프로그램 참여 1 / 2" };
+  if (id === "ck") return { id: "ck", title: "사전등록 체크인 ×3" };   /* v5.90 STAMP_CK(이 함수만 떼어 검사하므로 글자 그대로) */
   var sd = STAMPS.filter(function (s) { return s.id === id; })[0];
   return sd && sd.x2 ? { id: sd.id, title: sd.title + " ×2" } : sd;
 }
@@ -428,7 +429,8 @@ function railHtml(n, glow, dispN, home) {
     '<div class="hd"><span class="nm">스탬프 보상</span><span class="cnt"><span id="ppCnt">' + shown + "</span><small> / " + STAMP_DENOM + "</small></span></div>" +
     '<div class="rb"><i style="width:' + railPos(n).toFixed(1) + '%"></i>' + mk + "</div>" +
     '<div class="lbls">' + lb + "</div>" +
-    (out0 ? '<p class="cap">룰렛 소진</p>' : dispN >= STAMP_DENOM ? '<p class="cap">' + STAMP_DENOM + "개 모두 모았어요</p>" : "") +
+    (out0 ? '<p class="cap">' + (roulCut() ? "룰렛 " + roulCutHm() + " 마감" : "룰렛 소진") + "</p>" : dispN >= STAMP_DENOM ? '<p class="cap">' + STAMP_DENOM + "개 모두 모았어요" + fcfsCapTxt() + "</p>" : "") +
+    fcfsLeftHtml(dispN) +   /* v5.90 선착순 참여상 남은 수량 한 줄(홈 · 스탬프 탭 같은 레일) */
     raffleNumsHtml(n) + prizeGoHtml() +   /* v5.08 경품 보기 입구(홈 · 스탬프 탭 같은 레일) */
     "</div>";
 }
@@ -451,13 +453,13 @@ function ppRouletteOpen() {
   var body;
   /* v3.33 룰렛 소진 안내 · 관리 콘솔 스탬프 탭(roulette_out)에서 켠다 */
   if (S.get("roulette_out", false) && !used) {
-    body = '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));font-weight:800;color:var(--hi)">룰렛 소진</p>';
+    body = '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));font-weight:800;color:var(--hi)">' + (roulCut() ? "룰렛 " + roulCutHm() + " 마감" : "룰렛 소진") + "</p>";   /* v5.90 시각 마감 = 소진과 같은 처리 */
   } else if (used) {
     body = "";
   } else if (n < 3) {
     body = '<p class="muted" style="margin-top:8px;font-size:calc(14.5px * var(--fs))">스탬프 3개 · 1F EVENT · 1인 1회</p>';
   } else {
-    body = '<p class="muted" style="margin-top:10px;font-size:calc(13.5px * var(--fs));line-height:1.65">1F EVENT 룰렛 부스에서 QR 제시</p>' +
+    body = '<p class="muted" style="margin-top:10px;font-size:calc(13.5px * var(--fs));line-height:1.65">1F EVENT 룰렛 부스에서 QR 제시' + (S.get("rcut", "") ? "<br>룰렛 " + esc(S.get("rcut", "")) + " 마감" : "") + "</p>" +
       '<button type="button" class="ax-button" style="margin-top:10px" onclick="qrPanelOpen(\'mine\')">내 QR 보여주기</button>';   /* v5.23 내 QR 은 QR 화면 한 곳(룰렛 1회권 상태 줄 포함) */
   }
   modalOpen(head + body + prizeModalHtml("roulette") + '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "룰렛 1회권");   /* v5.04 경품표(사진 · 이름 · 수량) */
@@ -528,7 +530,7 @@ function rfxLand(nums, late) {   /* nums = 번호 배열(없으면 null) · late
   var w = el("rfx"); if (!w) return;
   var nm = el("rfxNum"); nm.classList.remove("roll"); nm.innerHTML = nums ? nums.map(function (x) { return "<b>" + rfxDot(x, nums.length > 1, true) + "</b>"; }).join("") : "발급 중"; nm.classList.toggle("wait", !nums);
   if (late) { nm.classList.remove("land"); void nm.offsetWidth; nm.classList.add("land"); }
-  el("rfxSay").innerHTML = nums ? (nums.length > 1 ? "번호 " + nums.length + "개가 나왔어요! 행운을 빌어요" : "행운을 빌어요!") + "<br>Outro 현장 추첨은 17F 입구 QR 체크인" + rfxFinLine() : "번호가 아직 발급 중이에요<br>곧 나의 보상에 나타나요";   /* v4.79 무대 추첨 = 추첨 QR 체크인한 사람만 · v5.04 6개째는 참여상 한 줄(별도 팝업 없음) */
+  el("rfxSay").innerHTML = nums ? (nums.length > 1 ? "번호 " + nums.length + "개가 나왔어요! 행운을 빌어요" : "행운을 빌어요!") + "<br>" + drawWhenTxt() + fcfsPopLine() : "번호가 아직 발급 중이에요<br>곧 나의 보상에 나타나요";   /* v4.79 무대 추첨 = 추첨 QR 체크인한 사람만 · v5.04 6개째는 참여상 한 줄(별도 팝업 없음) */
   el("rfxCap").textContent = nums ? "내 행운권 번호 · 17:00 Outro 추첨" : "행운권은 이미 발급됐어요 · 17:00 Outro 추첨";   /* v5.04 옛 「결과는 행사 후 개별 안내」(260909 사후 추첨 안) 폐기 */
   el("rfxBtns").innerHTML = '<button class="btn mint" style="margin-top:14px" onclick="modalClose()">확인</button><button class="btn line" style="margin-top:8px" onclick="noticeGo(\'rewards\',\'raffle\')">나의 보상에서 보기</button>';
   if (nums && typeof stampBuzz === "function") stampBuzz(30);
@@ -548,7 +550,7 @@ function ppDrawOpen() {
   }
   modalOpen('<p class="muted" style="font-size:calc(14.5px * var(--fs));line-height:1.7">스탬프 4개 1장 · 5개 2장 · 6개 3장 · 자동 발급<br>지금 <b style="color:var(--hi)">' + t + '장</b></p>' +
     tickets +
-    '<p class="muted" style="margin-top:8px;font-size:calc(13.5px * var(--fs));line-height:1.65">17:00 Outro 현장 추첨 · 16:40부터 17F 입구 QR 체크인</p>' +   /* v4.79 무대 추첨 · v4.83 사용자 표시 용어 「행운권」 · v5.04 옛 「행운권 추첨 결과는 행사 후 개별 안내」 줄 삭제(사후 추첨 없음) */
+    '<p class="muted" style="margin-top:8px;font-size:calc(13.5px * var(--fs));line-height:1.65">' + (lkCond() ? "17:00 Outro 현장 추첨 · 16:40부터 17F 입구 QR 체크인" : "17:00 Outro 현장 추첨 · 당첨자 발표만, 경품은 나중에 전달") + '</p>' +   /* v5.90 행운권_참석조건(sync lkcond) */   /* v4.79 무대 추첨 · v4.83 사용자 표시 용어 「행운권」 · v5.04 옛 「행운권 추첨 결과는 행사 후 개별 안내」 줄 삭제(사후 추첨 없음) */
     prizeModalHtml("draw") +   /* v5.04 1~6등 10명 · 사진 · 이름 · 인원 */
     '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "행운권");
 }

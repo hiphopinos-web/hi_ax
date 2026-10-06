@@ -255,7 +255,7 @@ var FLOOR1 = [
   { id: "vision", grp: "see", sign: "AX VISION", kor: "회사가 가는 방향을 보는 곳", fact: "AX 로드맵 · 영상", st: "",
     stm: "회사가 어디로 가는지 보는 곳", todo: ["AX 로드맵 2026~2028을 봐요", "키비주얼 영상을 봐요"] },
   { id: "lab", grp: "see", sign: "AX LAB", kor: "DAP 과제를 보는 곳", fact: "우수 과제 · 아이디어 한 줄 QR", st: "p5",
-    stm: "DAP 과제 보고 아이디어 남기는 곳", todo: ["우수 과제와 2026 프로젝트를 봐요", "끝 판 QR로 아이디어 한 줄을 써요"], btn: ["아이디어 쓰기", "App.go('ideas')"] },
+    stm: "DAP 과제 보고 아이디어 남기는 곳", todo: ["우수 과제와 2026 프로젝트를 봐요", "끝 판 QR로 아이디어 한 줄을 써요"], btn: ["아이디어 쓰기", "App.go('ideas')"], btnOff: function () { return ideaGateOff(); } },   /* v5.90 사전 오픈 OFF · 행사 전 = 버튼 숨김 */
   { id: "action", grp: "see", sign: "AX in Action", kor: "AI 업무 사례를 보는 곳", fact: "동료가 만든 앱 3개", st: "",
     stm: "동료가 AI로 만든 현장 앱을 보는 곳", todo: ["현장 인터뷰 영상을 봐요"],
     cases: [["강북이 - 개인 맞춤형 시상 어플리케이션", "영업 사례 · 강북조직파트 김동건 전임"], ["AI컨설팅 도우미 - 판매 화법 어플리케이션", "영업 사례 · 안양AM지점 이은정 지점장"], ["하이핑거 - 보상 업무 지원 어플리케이션", "보상 사례 · 울산대인보상센터 이승철 대리"]] },   /* v5.60 판 16 ~ 18 한 컷(말풍선 · 인용 · 기능 칩) 대신 앱 이름 + 만든 사람(소속 · 이름 · 직급은 판 글자 그대로 · 사용자 「실명 남긴다」) */
@@ -264,7 +264,7 @@ var FLOOR1 = [
     lead: "내년 DAP(데이터 분석 프로젝트) 과제로 해 볼 업무가 있다면 1:1로 상담해요",   /* v5.70 시트 「하는 일」 첫 줄 = DAP 풀이(v5.69 시트화로 부제 stm 이 빠지며 함께 사라졌다 · v5.65 사용자 확정 문구) */
     todo: ["데이터사이언스파트와 업무 고민을 나누고 방향을 함께 찾아요", "앱에서 30분 상담을 신청해요", "상담이 끝나면 스탬프를 받아요"],
     gd: ["아직 구체적이지 않다면 18F AX 커피챗에서 비슷한 고민을 가진 사람들과 가볍게 이야기할 수 있어요", "18F AX 커피챗 보기", "cchat"],
-    chk: [["진행", "업무 설명 → 병목 → 개선방안 · 30분"], ["신청", "신청 후 승인되면 앱에서 알려 드려요"], ["기록", "상담 내용은 기록되어 행사 후 정리해 공유돼요"], ["사은품", "상담을 완료하면 드려요"]] },   /* v5.65 (사용자 261005 「커피챗과 라운지는 권장대로」 · 정본 디자인 시안/라운지 커피챗 통일/설계안.md) 커피챗과 같은 틀 · 서로 안내(gd) · 참여 전 확인(chk) 패널 · 커피 · 간식 사진은 패널 안에만 */
+    chk: [["진행", "업무 설명 → 병목 → 개선방안 · 30분"], ["신청", "신청 후 승인되면 앱에서 알려 드려요"], ["기록", "상담 내용은 기록되어 행사 후 정리해 공유돼요"], ["사은품", "상담을 마치면 커피 · 쿠키 · 노트 · 볼펜"]] },   /* v5.65 (사용자 261005 「커피챗과 라운지는 권장대로」 · 정본 디자인 시안/라운지 커피챗 통일/설계안.md) 커피챗과 같은 틀 · 서로 안내(gd) · 참여 전 확인(chk) 패널 · 커피 · 간식 사진은 패널 안에만 */
   { id: "play", grp: "do", sign: "AX PLAY", kor: "AI를 직접 써 보는 곳", fact: "HiDI-Q · Hi-Helper", st: "p2",
     stm: "HiDI-Q와 Hi-Helper를 직접 써 보는 곳", todo: ["노트북에서 HiDI-Q, Hi-Helper를 써 봐요", "스태프에게 내 QR을 보여 주면 적립"], btn: ["체험 안내", "App.go('booth')"] },   /* v5.60 기능 목록 판 한 컷 2장 삭제(판 · 모형에 있다) */
   { id: "event", grp: "do", sign: "EVENT", kor: "사진 · 룰렛 · 타자왕이 있는 곳", fact: "", st: "",
@@ -345,14 +345,14 @@ function applyCardHtml(o) {
 function applyCchatHtml() {
   var s = cchatState(); if (!s) return "";
   var z = zoneById("cchat"), L = zoneLive(z), c = S.get("cchat", null), mt = !!(c && c.status === "matched");
-  var kv = [["지금", s.mine ? s.t : ideaMineN() ? "아이디어 제출 완료 · 신청 가능" : "아이디어 한 줄 쓰면 신청할 수 있어요"], ["시간", mt && c.round ? "10월 26일 " + c.round : "매칭 후 앱에서 안내"]];
+  var kv = [["지금", s.mine ? s.t : ideaMineN() ? "아이디어 제출 완료 · 신청 가능" : "아이디어 한 줄 쓰면 신청할 수 있어요"], ["시간", mt && c.round ? "10월 26일 " + c.round : "매칭 후 앱에서 안내"], ["사은품", "커피 · 쿠키 · 노트 · 볼펜"]];   /* v5.90 */
   return applyCardHtml({ k: "cchat", nm: "AX 커피챗", fl: 18, mine: s.mine, kor: z.kor, kv: kv, extra: treatHtml(), btn: L.btn, more: "cchatGo()" });
 }
 function applyLoungeHtml() {
   var s = loungeState(); if (!s) return "";
   var z = zoneById("lounge"), L = zoneLive(z);
   var btn = s.mine ? ["내 신청", "progOpen('dap')"] : ["시간 고르기", "progOpen('dap')"];
-  return applyCardHtml({ k: "lounge", nm: "AX 라운지", fl: 1, mine: s.mine, kor: z.kor, kv: [["지금", s.t], ["시간", L.tm + " · 1:1 30분"], ["사은품", "상담을 완료하면 드려요"]], btn: btn, more: "zoneOpen('lounge')" });
+  return applyCardHtml({ k: "lounge", nm: "AX 라운지", fl: 1, mine: s.mine, kor: z.kor, kv: [["지금", s.t], ["시간", L.tm + " · 1:1 30분"], ["사은품", "커피 · 쿠키 · 노트 · 볼펜"]], btn: btn, more: "zoneOpen('lounge')" });
 }
 /* 10F 실습형 세션 줄 = 사전 신청자(10F 명단 · tenMine)와 테스트 사번(testMode · 310555 · 데모)에게만 · 일반 직원에게는 없다(사용자 261006) */
 function applyTenShow() { return !!tenMine() || testMode(); }
@@ -397,7 +397,7 @@ function zoneStampHtml(z) {
 }
 /* 지금 상태 · 원천은 옛 메뉴와 같다(myResv · RESV_ST · resvRemain) · fact = 줄 보조 한 줄 · chip = 간판 오른쪽 상태 칩 · kv = 상세 사실 표 · btn = 상세 행동 */
 function zoneLive(z) {
-  var o = { fact: z.fact, chip: null, kv: null, btn: z.btn || null };
+  var o = { fact: z.fact, chip: null, kv: null, btn: z.btn && !(z.btnOff && z.btnOff()) ? z.btn : null };   /* v5.90 btnOff = 입구 숨김(아이디어 사전 오픈 OFF · 행사 전) */
   if (z.id === "lounge") {
     var r = myResv(), rl = r && RESV_LIVE.indexOf(r.status) >= 0, dn = r && r.status === "done", n = resvRemain();
     var now = rl ? (RESV_ST[r.status] || "신청 완료") + " " + r.slot : dn ? "상담 완료" : n > 0 ? "남은 시간 " + n + "개" : resvSlots().every(resvPast) ? "오늘 상담 접수 마감" : "오늘 상담 시간이 모두 찼어요";   /* 261005 지난 시간뿐이면 「모두 찼어요」가 아니라 마감 */

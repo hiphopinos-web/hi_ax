@@ -123,12 +123,15 @@ var REWARD_CAP = STAMP_DENOM;   /* 보상 계산 상한 = 개수 상한 */
 /* v5.68 (사용자 확정 261005) 프로그램 참여 = 2개 · 서버 stampCnt_ 와 같은 셈 · p3 = 2개 · p3h(17F 입장이나 끝 한쪽만) = 1개 · 둘 다면 2개
    stampGot = 상한 전 개수(6을 넘긴 적립 판정용) · stampCount = 화면 · 보상 개수(최대 6) · 서버 sync stamps 에 p3h 가 실려 온다(stampSync 가 지우지 않는다) */
 var STAMP_HALF = "p3h";
+/* v5.90 (261006 경품 기획 변경) ck = 사전등록 체크인 3개 · 8장 카드(STAMPS) 밖 · 서버 STAMP_UNITS.ck = 3 · stampUnits_ 와 같은 셈(검사 237) */
+var STAMP_CK = "ck", STAMP_CK_N = 3;
 function stampUnitsOf(list) {
   var n = 0, seen = {}, half = false;
   (list || []).forEach(function (id) {
     if (seen[id]) return;
     seen[id] = 1;
     if (id === STAMP_HALF) { half = true; return; }
+    if (id === "ck") { n += 3; return; }   /* = STAMP_CK · STAMP_CK_N(이 함수만 떼어 검사하므로 글자 그대로) */
     var sd = STAMPS.filter(function (s) { return s.id === id; })[0];
     if (sd) n += sd.x2 ? 2 : 1;
   });
@@ -138,7 +141,7 @@ function stampGot() { return stampUnitsOf(S.get("stamps", [])); }
 /* 프로그램 참여 칸 0 · 1 · 2 */
 function progUnits() { var st = S.get("stamps", []); return st.indexOf("p3") >= 0 ? 2 : st.indexOf(STAMP_HALF) >= 0 ? 1 : 0; }
 /* 정의 8종 + p3h(서버가 아는 스탬프 id) */
-function stampKnown(id) { return id === STAMP_HALF || STAMPS.some(function (s) { return s.id === id; }); }
+function stampKnown(id) { return id === STAMP_HALF || id === STAMP_CK || STAMPS.some(function (s) { return s.id === id; }); }
 function stampCount() { return Math.min(STAMP_DENOM, stampGot()); }
 /* 3개 = 룰렛(응모권 0) · 4·5·6 = 1·2·3장 · 6개 넘게 받아도 3장 */
 function raffleTickets(n) { return Math.max(0, Math.min(RAFFLE_MAX, Math.min(REWARD_CAP, n) - 3)); }

@@ -1089,9 +1089,11 @@ var SCAN_SPOTS = [
   { id: "p2", nm: "AX PLAY", kind: "stamp", lb: "AX PLAY 스탬프", tsub: "체험 확인 · 적립", will: "AX PLAY 스탬프 적립", cond: "HiDI-Q 또는 Hi-Helper 체험을 마친 사람" },
   { id: "roulette", nm: "1F EVENT 룰렛", kind: "roulette", lb: "룰렛 체크인", tsub: "1회 사용", will: "룰렛 1회 사용", cond: "스탬프 3개 이상 · 1인 1회" },   /* 260909 · 스탬프 3개=1회, 판정은 서버 */
   /* v5.34 (설계안 §10 결정 2) 사옥 밖 체크인 존(몽골텐트) · 찍으면 체크인 + 키트 지급 기록(inv_kit) · 10F 입장(sess_in)과 따로 */
-  { id: "kit", nm: "체크인 존 · 키트", kind: "kit", lb: "체크인 존 · 키트", tsub: "체크인 + 지급", will: "체크인 + 키트 지급", cond: "사전 신청 명단이면 바로 지급" }
+  { id: "kit", nm: "체크인 존 · 키트", kind: "kit", lb: "체크인 존 · 키트", tsub: "체크인 + 지급", will: "체크인 + 키트 지급", cond: "사전 신청 명단이면 바로 지급" },
+  /* v5.90 (261006 경품 기획 변경) 1F 체크인존 · 선착순 참여상 수령(fcfs_give · QR 서명) · 키트 타일과 같은 모양 */
+  { id: "fcfs", nm: "체크인 존 · 참여상", kind: "fcfs", lb: "체크인 존 · 참여상", tsub: "선착순 수령", will: "선착순 참여상 수령", cond: "스탬프 6개 · 선착순 자격" }
 ];
-var SCAN_TILES = ["roulette", "kit", "p2", "dap", "cchat", "sess"];   /* 자주 쓰는 룰렛 · 포토 · 스탬프(AX PLAY)가 위 · 10F 세션은 한 타일에서 A~E · v4.83 1F 전시 타일 삭제 */
+var SCAN_TILES = ["roulette", "kit", "fcfs", "p2", "dap", "cchat", "sess"];   /* 자주 쓰는 룰렛 · 포토 · 스탬프(AX PLAY)가 위 · 10F 세션은 한 타일에서 A~E · v4.83 1F 전시 타일 삭제 */
 function scanSpot(id) { return SCAN_SPOTS.filter(function (s) { return s.id === id; })[0] || null; }
 var SCAN = { spot: S.get("scan_spot", "") !== "q_photo" ? S.get("scan_spot", "") : "", log: [], last: "", lastT: 0, on: false, pick: false, sub: "", res: null };
 
@@ -1120,6 +1122,7 @@ function scanHit(raw) {
   else if (sp.kind === "photo") params.action = "photo_enter";
   else if (sp.kind === "stamp") { params.action = "stamp_grant"; params.id = sp.id; }
   else if (sp.kind === "kit") params.action = "inv_kit";   /* v5.34 */
+  else if (sp.kind === "fcfs") params.action = "fcfs_give";   /* v5.90 */
   else params.action = "roulette_redeem";
   scanLog(emp, "처리 중", null);
   scanShow("wait", emp, "확인하는 중", sp.will || sp.nm);
@@ -1160,6 +1163,7 @@ function scanDone(emp, sp, res) {
     return;
   }
   if (sp.kind === "kit") { kitDone(emp, res); return; }   /* v5.34 */
+  if (sp.kind === "fcfs") { fcfsDone(emp, res); return; }   /* v5.90 */
   var ok = sp.kind === "sess" || sp.kind === "roster" ? (res.dup ? "이미 입장 처리됨" : "입장 확인") :
     sp.kind === "photo" ? res.no + "번 입장" + (res.early ? "(순서보다 먼저)" : "") + " · " + (res.next ? res.next.no + "번 호출" : "대기 번호 없음") :
       sp.kind === "stamp" ? (res.dup ? "이미 받은 스탬프" : "스탬프 적립 · " + sp.nm) :
@@ -1269,11 +1273,23 @@ function invKitUndo() {
     invPaint();
   }, function () { if (INVS.id !== id) return; INVS.busy = false; INVS.msg = "서버 응답 없음 · 콘솔에서 확인해 주세요"; if (invMine()) invPaint(); });
 }
+/* v5.90 선착순 참여상 수령 결과 · new 수령 처리 · dup 이미 수령 · none(noelig 6개 미달 · full 마감 · closed 17:00 뒤 · void 취소 · off 꺼짐) */
+function fcfsDone(emp, res) {
+  var who = res.name || emp, lf = res.left != null ? " · 남은 " + res.left : "";
+  if (res.give === "new") { scanLog(emp, (res.name ? res.name + " · " : "") + "참여상 수령 처리", true, true); scanShow("ok", who, "참여상 수령 처리", "무선 무드등 가습기 1개 전달" + lf); return; }
+  if (res.give === "dup") { scanLog(emp, (res.name ? res.name + " · " : "") + "이미 수령", true, true); scanShow("dup", who, "이미 수령", (res.at || "") + "에 받았어요"); return; }
+  var why = res.reason, msg = why === "noelig" ? ["자격 없음", "스탬프 6개 미달" + (res.n != null ? " (현재 " + res.n + "개)" : "")] : why === "full" ? ["마감", "선착순 수량이 먼저 찼어요 · 6개 달성은 행운권 3장"] :
+    why === "closed" ? ["마감", "17:00 이후 달성"] : why === "void" ? ["취소된 자격", "운영 본부에 문의해 주세요"] : why === "off" ? ["지금은 받지 않아요", "선착순 참여상 꺼짐"] : ["처리하지 못했어요", String(why || "")];
+  scanLog(emp, (res.name ? res.name + " · " : "") + msg[0], false, true);
+  scanShow("bad", who, msg[0], msg[1]);
+}
 /* 체크인 존 스캔 결과 */
 function kitDone(emp, res) {
   var who = res.name || emp, sp = res.spare == null ? "수량 미정" : String(res.spare);
-  if (res.kit === "give") { scanLog(emp, (res.name ? res.name + " · " : "") + "키트 지급", true, true); scanShow("ok", who, "키트 지급", res.pre ? "세션 " + res.pre + " · 사전 신청자" : "체크인 + 지급"); return; }
-  if (res.kit === "dup") { scanLog(emp, (res.name ? res.name + " · " : "") + "이미 지급됨", true, true); scanShow("dup", who, "이미 지급됨", (res.at || "") + "에 받았어요"); return; }
+  var ck = res.ck === "new" ? " · 스탬프 +3" : "";   /* v5.90 사전등록 체크인 3개(서버 ck) */
+  if (res.kit === "sub") { scanLog(emp, (res.name ? res.name + " · " : "") + "라운지 초과 · 가습기 대체" + ck, true, true); scanShow("ok", who, "가습기로 대체 지급", "라운지 키트 수량 초과" + ck); return; }   /* v5.90 라운지 쿼터를 넘은 사전등록자 */
+  if (res.kit === "give") { scanLog(emp, (res.name ? res.name + " · " : "") + "키트 지급" + ck, true, true); scanShow("ok", who, "키트 지급", (res.grp === "dap" ? "라운지 사전등록" : res.pre ? "세션 " + res.pre + " · 사전 신청자" : "체크인 + 지급") + ck); return; }
+  if (res.kit === "dup") { scanLog(emp, (res.name ? res.name + " · " : "") + (res.sub ? "이미 가습기 대체" : "이미 지급됨") + ck, true, true); scanShow("dup", who, res.sub ? "이미 가습기로 받음" : "이미 지급됨", (res.at || "") + "에 받았어요" + ck); return; }
   scanLog(emp, (res.name ? res.name + " · " : "") + "체크인 · 명단 밖", null, true);
   scanShow("dup", who, "사전 신청 명단에 없어요", "여유 키트 " + sp + (res.list ? "" : " · 명단 대기 중"));
   SCAN.res.inv = "kit";

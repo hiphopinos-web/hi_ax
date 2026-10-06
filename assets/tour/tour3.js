@@ -3138,7 +3138,7 @@
     }, function () {});
   }
   /* 돋보기 · 딱 두 곳(사용자 261003 「이벤트 판은 크게 보기를 없애고 경품 보기 · 타자왕 광고 보기만」)
-   * ① 룰렛 「경품 보기」(앱 경품 사진 · 가격 없음 · 샘플 딱지) ② 타자왕 「타자왕 광고 보기」(../tv/typing/?promo=1) · 다른 구역은 챗봇 말풍선 → 판 보기 */
+   * ① 룰렛 「경품 보기」(앱 경품 사진 · 가격 없음 · v5.90 샘플 딱지 뗌) ② 타자왕 「타자왕 광고 보기」(../tv/typing/?promo=1) · 다른 구역은 챗봇 말풍선 → 판 보기 */
   var mags = [];
   function buildMags() {
     var box = $('mags'); box.innerHTML = ''; mags = [];
@@ -3431,12 +3431,12 @@
     toast('앱에서는 「' + i.cta + '」 화면으로 가요');
   }
 
-  /* 룰렛 상품 · 앱 경품 표(index.html PRIZES.roulette)와 같은 이름 · 수량 · 사진 · 가격 없음 · 실물 사진 전까지 「샘플」 딱지 */
-  var ROUL = [{ rk: '1등', nm: '텀블러', q: 60, img: ['rl1_tumbler'] }, { rk: '2등', nm: '커피 + 키캡 키링', q: 100, img: ['rl2_coffee', 'rl2_keyring'] }, { rk: '3등', nm: '컵받침', q: 150, img: ['rl3_coaster'] }, { rk: '4등', nm: '판스티커', q: 250, img: ['rl4_sticker'] }, { rk: '5등', nm: '볼펜', q: 400, img: ['rl5_pen'] }];
+  /* 룰렛 상품 · 앱 경품 표(index.html PRIZES.roulette)와 같은 이름 · 수량 · 사진 · 가격 없음 · v5.90 (사용자 261006) 새 수량 60 · 140 · 210 · 210 · 340 · 사진 = 앱과 같은 _v2 · 「샘플」 딱지 뗌 */
+  var ROUL = [{ rk: '1등', nm: '텀블러', q: 60, img: ['rl1_tumbler_v2'] }, { rk: '2등', nm: '커피 + 키캡 키링', q: 140, img: ['rl2_coffee_v2', 'rl2_keyring_v2'] }, { rk: '3등', nm: '컵받침', q: 210, img: ['rl3_coaster_v2'] }, { rk: '4등', nm: '판스티커', q: 210, img: ['rl4_sticker_v2'] }, { rk: '5등', nm: '볼펜', q: 340, img: ['rl5_pen_v2'] }];
   function openPrize() {
     var cards = ROUL.map(function (p) {
       return '<article class="card prize" aria-label="' + esc(p.rk + ' ' + p.nm) + '"><h2><span class="k">' + p.rk + '</span>' + esc(p.nm) + '<span class="q">' + p.q + '개</span></h2>' +
-        '<div class="pic"><div class="pz' + (p.img.length > 1 ? ' two' : '') + '">' + p.img.map(function (im) { return '<span class="ph"><img alt="' + esc(p.nm) + '" data-src="' + ROOT + 'assets/prize/' + im + '.webp"><i>샘플</i></span>'; }).join('') + '</div></div></article>';
+        '<div class="pic"><div class="pz' + (p.img.length > 1 ? ' two' : '') + '">' + p.img.map(function (im) { return '<span class="ph"><img alt="' + esc(p.nm) + '" data-src="' + ROOT + 'assets/prize/' + im + '.webp"></span>'; }).join('') + '</div></div></article>';
     });
     openSheet({ name: 'EVENT', title: '룰렛 경품' }, 0, null, cards);   /* v5.66 칩 = EVENT 점 글자 · 「룰렛 경품」은 제목 줄(타자왕 순위판 머리와 같은 짜임) */
   }

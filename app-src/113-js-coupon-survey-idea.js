@@ -131,7 +131,7 @@ function stampSync(list) {
   if (testEmp()) return;   /* v3.19 테스트 사번: 서버 stamps 가 로컬 테스트 적립을 덮지 않는다 */
   /* v3.97 (버그 260919) 빈 목록도 정본이다 · 관리자가 취소해 0개가 되면 기기에서도 0개 · 목록 자체가 없는 응답만 건너뛴다 */
   if (!Array.isArray(list)) return;
-  list = list.filter(function (id) { return id === "p3h" || STAMPS.some(function (s) { return s.id === id; }); });   /* v5.68 p3h(STAMP_HALF · 17F 입장이나 끝 한쪽만 · 1개)는 지우지 않는다 */
+  list = list.filter(function (id) { return id === "p3h" || id === "ck" || STAMPS.some(function (s) { return s.id === id; }); });   /* v5.90 ck(사전등록 체크인 3개)도 지우지 않는다 */   /* v5.68 p3h(STAMP_HALF · 17F 입장이나 끝 한쪽만 · 1개)는 지우지 않는다 */
   var pend = stampPend(), now = Date.now(), pchg = false;
   Object.keys(pend).forEach(function (id) {
     var p = pend[id] || {};

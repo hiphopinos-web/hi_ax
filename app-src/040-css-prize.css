@@ -23,6 +23,8 @@
   .axs-treat figcaption { display: flex; flex-direction: column; gap: 2px; }
   .axs-treat figcaption b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .axs-treat figcaption span { font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
+  .axs-ph.ico { display: flex; align-items: center; justify-content: center; background: var(--ax-color-brand-soft, #FFEBE0); color: var(--ax-color-brand, #FF7E31); }   /* v5.90 사진 없는 지급품 칸 */
+  .axs-ph.ico svg { width: 44%; height: 44%; }
   /* ═══════ v5.08 경품 포스터(prizes) · 입구 (261003 사용자 「경품 사진이 작다 · 포스터처럼 · 싼티 없이 · 스탬프 누적표에서 바로」 · 「제품 사진을 더 크게 부각」)
      구성 = 표지(먹색 면 + 도트 격자 + 주황 3중 원 점 · 「Prizes」) → 행운권 → 참여상 → 룰렛 → 1F 타자왕(v5.09 사진 카드 · 1등 대표 + 2 · 3등 2열)
      표지 먹색 면 = 이 화면 맨 위 한 구역 한정(design.md §1 스테이지 「블랙 = 포스터 블랙판」 · 앱 셸 블랙 금지의 예외 · 판 퀴즈 1F 판 문법과 같은 「구역 한정」) · 손이 닿는 줄은 앱 문법

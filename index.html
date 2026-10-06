@@ -2177,6 +2177,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-treat figcaption { display: flex; flex-direction: column; gap: 2px; }
   .axs-treat figcaption b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .axs-treat figcaption span { font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
+  .axs-ph.ico { display: flex; align-items: center; justify-content: center; background: var(--ax-color-brand-soft, #FFEBE0); color: var(--ax-color-brand, #FF7E31); }   /* v5.90 사진 없는 지급품 칸 */
+  .axs-ph.ico svg { width: 44%; height: 44%; }
   /* ═══════ v5.08 경품 포스터(prizes) · 입구 (261003 사용자 「경품 사진이 작다 · 포스터처럼 · 싼티 없이 · 스탬프 누적표에서 바로」 · 「제품 사진을 더 크게 부각」)
      구성 = 표지(먹색 면 + 도트 격자 + 주황 3중 원 점 · 「Prizes」) → 행운권 → 참여상 → 룰렛 → 1F 타자왕(v5.09 사진 카드 · 1등 대표 + 2 · 3등 2열)
      표지 먹색 면 = 이 화면 맨 위 한 구역 한정(design.md §1 스테이지 「블랙 = 포스터 블랙판」 · 앱 셸 블랙 금지의 예외 · 판 퀴즈 1F 판 문법과 같은 「구역 한정」) · 손이 닿는 줄은 앱 문법
@@ -3021,12 +3023,15 @@ var REWARD_CAP = STAMP_DENOM;   /* 보상 계산 상한 = 개수 상한 */
 /* v5.68 (사용자 확정 261005) 프로그램 참여 = 2개 · 서버 stampCnt_ 와 같은 셈 · p3 = 2개 · p3h(17F 입장이나 끝 한쪽만) = 1개 · 둘 다면 2개
    stampGot = 상한 전 개수(6을 넘긴 적립 판정용) · stampCount = 화면 · 보상 개수(최대 6) · 서버 sync stamps 에 p3h 가 실려 온다(stampSync 가 지우지 않는다) */
 var STAMP_HALF = "p3h";
+/* v5.90 (261006 경품 기획 변경) ck = 사전등록 체크인 3개 · 8장 카드(STAMPS) 밖 · 서버 STAMP_UNITS.ck = 3 · stampUnits_ 와 같은 셈(검사 237) */
+var STAMP_CK = "ck", STAMP_CK_N = 3;
 function stampUnitsOf(list) {
   var n = 0, seen = {}, half = false;
   (list || []).forEach(function (id) {
     if (seen[id]) return;
     seen[id] = 1;
     if (id === STAMP_HALF) { half = true; return; }
+    if (id === "ck") { n += 3; return; }   /* = STAMP_CK · STAMP_CK_N(이 함수만 떼어 검사하므로 글자 그대로) */
     var sd = STAMPS.filter(function (s) { return s.id === id; })[0];
     if (sd) n += sd.x2 ? 2 : 1;
   });
@@ -3036,7 +3041,7 @@ function stampGot() { return stampUnitsOf(S.get("stamps", [])); }
 /* 프로그램 참여 칸 0 · 1 · 2 */
 function progUnits() { var st = S.get("stamps", []); return st.indexOf("p3") >= 0 ? 2 : st.indexOf(STAMP_HALF) >= 0 ? 1 : 0; }
 /* 정의 8종 + p3h(서버가 아는 스탬프 id) */
-function stampKnown(id) { return id === STAMP_HALF || STAMPS.some(function (s) { return s.id === id; }); }
+function stampKnown(id) { return id === STAMP_HALF || id === STAMP_CK || STAMPS.some(function (s) { return s.id === id; }); }
 function stampCount() { return Math.min(STAMP_DENOM, stampGot()); }
 /* 3개 = 룰렛(응모권 0) · 4·5·6 = 1·2·3장 · 6개 넘게 받아도 3장 */
 function raffleTickets(n) { return Math.max(0, Math.min(RAFFLE_MAX, Math.min(REWARD_CAP, n) - 3)); }
@@ -3502,7 +3507,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.89";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.90";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 · v5.90 = 261006 경품 기획 변경(선착순 참여상 · 체크인 3개 · 룰렛 960 · 17:00 마감 · 행운권 참석 조건 · 7등 · 아이디어왕 · 샘플 딱지 제거 · 커피챗 지급품 · 라운지 종료 · 아이디어 사전 오픈) */
 var A2HS = { deferred: null, open: false };
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -3726,11 +3731,12 @@ var STORE_DEVICE = ["vid", "a2hs", "fs", "t",
   "type_rank_*", "oly_tab", "oly_ev",
   "notices", "notices_wipe1", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "resv_conf", "crowd", "stv", "att_w",
   "art_demo_n", "ev_phase", "toff", "tour_seen",
-  "push_ask", "push_first", "push_ask_ios"];   /* v5.83 tour_seen = 둘러보기를 한 번 열었다(홈 카드 자리 · 기기 기준 · 옛 v5.46 tour_inv · v4.89 entry_pref · entry_ask_day 는 쓰지 않는다) · v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) · v4.78 아이폰 탭 · 앱 속 브라우저 안내는 하루 한 번 */
+  "fx", "rcut", "lkcond", "idea_pub", "lng_end",
+  "push_ask", "push_first", "push_ask_ios"];   /* v5.90 fx · rcut · lkcond · idea_pub · lng_end = 서버 공용 값(선착순 남은 수 · 룰렛 마감 · 행운권 참석 조건 · 아이디어왕 · 라운지 종료) */   /* v5.83 tour_seen = 둘러보기를 한 번 열었다(홈 카드 자리 · 기기 기준 · 옛 v5.46 tour_inv · v4.89 entry_pref · entry_ask_day 는 쓰지 않는다) · v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) · v4.78 아이폰 탭 · 앱 속 브라우저 안내는 하루 한 번 */
 var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_role", "adm_tok", "adm_emp", "dept",
   "stamps", "pp_seen", "pp_base", "pp_glow3", "stamp_pend", "lg_try", "lgx_seen", "scan_q", "stair", "checkin", "queue", "resv", "sess_my", "att_mine", "att_tm",
   "cchat", "cchat_pref", "cchat_att", "ideas", "idea_draft", "survey_draft", "survey_done", "survey_mine", "survey_force", "noti_seen",
-  "raffle_seen", "raffle_opened", "raffle_nums", "roulette_used", "roulette_open", "fin",
+  "raffle_seen", "raffle_opened", "raffle_nums", "roulette_used", "roulette_open", "fcfs", "lk7",
   "wave_extra", "test_mine", "type_nick", "type_nick_edit", "type_best", "mem_seen", "ox_seen",
   "pang_best", "jump_best", "gw_best", "gw_time_best", "tt_best", "pang_cleared", "jump_cleared", "gw_cleared", "type_cleared", "tetris_cleared", "ox_cleared",
   "oly2_best_*", "oly2_done_*", "oly_pend", "draw_in", "qz_run", "qz_last", "qz_best", "qz_kseen", "qz_pend", "gs_how",
@@ -4102,8 +4108,10 @@ function m2t(m) { var h = Math.floor(m / 60), mm = m % 60; return (h < 10 ? "0" 
 function resvConf() { return S.get("resv_conf", RESV_CONF); }
 function resvSlots() {
   var c = resvConf(), out = [];
+  var le = /^\d\d:\d\d$/.test(String(S.get("lng_end", "") || "")) ? t2m(S.get("lng_end", "")) : 0;   /* v5.90 라운지_상담종료(sync lng.end) 이후 시작 슬롯은 빼낸다 */
   for (var m = t2m(c.start); m + c.step <= t2m(c.end); m += c.step) {
     if (m >= t2m(c.lunch) && m < t2m(c.lunchEnd)) continue;
+    if (le && m >= le) continue;
     out.push(m2t(m));
   }
   return out;
@@ -4152,8 +4160,9 @@ function ideaPush(text, tag, anon, ch) {
   ideas.push(it);
   S.set("ideas", ideas);
   var had = S.get("stamps", []).indexOf("p5") >= 0;   /* v5.57 이번 제출로 처음 받는가 */
+  if (IDEA.cc) it.cc = 1;   /* v5.90 커피챗 신청 화면에서 온 아이디어(서버 early 예외) */
   ideaSend(it);   /* v4.15 서버 저장(idea_submit · 커피챗 매칭 재료 · 콘솔 열람) · 서버가 참여 로그 idea 한 줄도 쓴다(옛 bePush idea 대신) · 실패하면 sync 때 다시 */
-  awardStamp("p5");
+  if (!ideaStampLater()) awardStamp("p5");   /* v5.90 행사 전 아이디어 스탬프는 10/26 첫 접속 때 서버가 준다(아이디어_사전스탬프 OFF) */
   IDEA.step = S.get("cchat", null) ? "done" : "ask";   /* v4.07 커피챗 요청은 참석 의사를 물은 뒤 (ideaCchat) */
   checkRewards();
   waveBump();
@@ -4224,6 +4233,15 @@ function ideaMineN() {   /* 커피챗 신청 가능 = 이 기기의 내 아이�
 }
 /* v5.83 커피챗에서 온 아이디어 쓰기 · 화면 위 한 줄 「커피챗은 아이디어 한 줄과 함께 신청해요」 · 제출하면 「이 아이디어로 커피챗을 신청할까요?」(IDEA.step ask) · 다른 화면을 그리면 표시를 접는다(라우터) */
 function ideaCcGo() { IDEA.cc = true; IDEA.step = null; App.go("ideas"); }
+/* v5.90 (261006) 아이디어 입구 · 서버 pub.idea { open, cut, late, prz, ps } · 행사 전 + 사전 오픈 OFF = 입구 숨김(테스트 사번 · 커피챗에서 온 경우 제외) · 옛 서버(없음) = 예전처럼 */
+function evPreDay() { var o = S.get("ev_phase", null); if (o) return o === "before"; return new Date(Date.now() + sesOff()) < new Date(2026, 9, 26); }
+function ideaGateOff() { var ip = S.get("idea_pub", null); return !!ip && !ip.open && evPreDay() && !testEmp(); }
+function ideaStampLater() { var ip = S.get("idea_pub", null); return !!ip && !ip.ps && evPreDay() && !testEmp(); }
+/* 아이디어 입력 화면 머리 한 줄 · 마감 전 「아이디어왕 접수 16:00 마감」 · 뒤 「접수 마감 · 제출은 받아요」 */
+function ideaCutHtml() {
+  var ip = S.get("idea_pub", null); if (!ip || !ip.cut) return "";
+  return '<p class="ax-type-t6-strong axs-ideacut">' + (ip.late ? "아이디어왕 접수 마감 · 제출은 받아요" : "아이디어왕 접수 " + esc(ip.cut) + " 마감") + "</p>";
+}
 /* v4.15 (사용자 확정 260922) 아이디어 서버 저장 · 커피챗 매칭에 필수 · 콘솔이 idea_list 로 본다.
    제출 ID(cid)를 같이 보내 재전송해도 한 번만 쓴다 · 서버에 닿으면 srv 에 시각 · 닿지 않은 내 것은 sync 때 다시 보낸다(옛 기기 로컬 아이디어도 이 길로 올라간다) */
 var IDEA_SENDING = {};
@@ -4231,7 +4249,7 @@ function ideaSend(it) {
   var u = S.get("user", {}) || {};
   if (!BE.on || !u.empId || !it || it.srv || !it.text || IDEA_SENDING[it.id]) return;
   IDEA_SENDING[it.id] = 1;
-  beCall({ action: "idea_submit", emp: u.empId, name: u.name || "", dept: S.get("dept", null) || "", cid: it.id, text: it.text, tag: it.tag || "", anon: it.anon ? 1 : 0, ch: it.ch || "app" },
+  beCall({ action: "idea_submit", emp: u.empId, name: u.name || "", dept: S.get("dept", null) || "", cid: it.id, text: it.text, tag: it.tag || "", anon: it.anon ? 1 : 0, ch: it.ch || "app", cc: it.cc ? 1 : 0 },
     function (res) { delete IDEA_SENDING[it.id]; if (res && res.ok) S.set("ideas", S.get("ideas", []).map(function (x) { return x.id === it.id ? Object.assign({}, x, { srv: Date.now() }) : x; })); },
     function () { delete IDEA_SENDING[it.id]; });
 }
@@ -5133,7 +5151,7 @@ var FLOOR1 = [
   { id: "vision", grp: "see", sign: "AX VISION", kor: "회사가 가는 방향을 보는 곳", fact: "AX 로드맵 · 영상", st: "",
     stm: "회사가 어디로 가는지 보는 곳", todo: ["AX 로드맵 2026~2028을 봐요", "키비주얼 영상을 봐요"] },
   { id: "lab", grp: "see", sign: "AX LAB", kor: "DAP 과제를 보는 곳", fact: "우수 과제 · 아이디어 한 줄 QR", st: "p5",
-    stm: "DAP 과제 보고 아이디어 남기는 곳", todo: ["우수 과제와 2026 프로젝트를 봐요", "끝 판 QR로 아이디어 한 줄을 써요"], btn: ["아이디어 쓰기", "App.go('ideas')"] },
+    stm: "DAP 과제 보고 아이디어 남기는 곳", todo: ["우수 과제와 2026 프로젝트를 봐요", "끝 판 QR로 아이디어 한 줄을 써요"], btn: ["아이디어 쓰기", "App.go('ideas')"], btnOff: function () { return ideaGateOff(); } },   /* v5.90 사전 오픈 OFF · 행사 전 = 버튼 숨김 */
   { id: "action", grp: "see", sign: "AX in Action", kor: "AI 업무 사례를 보는 곳", fact: "동료가 만든 앱 3개", st: "",
     stm: "동료가 AI로 만든 현장 앱을 보는 곳", todo: ["현장 인터뷰 영상을 봐요"],
     cases: [["강북이 - 개인 맞춤형 시상 어플리케이션", "영업 사례 · 강북조직파트 김동건 전임"], ["AI컨설팅 도우미 - 판매 화법 어플리케이션", "영업 사례 · 안양AM지점 이은정 지점장"], ["하이핑거 - 보상 업무 지원 어플리케이션", "보상 사례 · 울산대인보상센터 이승철 대리"]] },   /* v5.60 판 16 ~ 18 한 컷(말풍선 · 인용 · 기능 칩) 대신 앱 이름 + 만든 사람(소속 · 이름 · 직급은 판 글자 그대로 · 사용자 「실명 남긴다」) */
@@ -5142,7 +5160,7 @@ var FLOOR1 = [
     lead: "내년 DAP(데이터 분석 프로젝트) 과제로 해 볼 업무가 있다면 1:1로 상담해요",   /* v5.70 시트 「하는 일」 첫 줄 = DAP 풀이(v5.69 시트화로 부제 stm 이 빠지며 함께 사라졌다 · v5.65 사용자 확정 문구) */
     todo: ["데이터사이언스파트와 업무 고민을 나누고 방향을 함께 찾아요", "앱에서 30분 상담을 신청해요", "상담이 끝나면 스탬프를 받아요"],
     gd: ["아직 구체적이지 않다면 18F AX 커피챗에서 비슷한 고민을 가진 사람들과 가볍게 이야기할 수 있어요", "18F AX 커피챗 보기", "cchat"],
-    chk: [["진행", "업무 설명 → 병목 → 개선방안 · 30분"], ["신청", "신청 후 승인되면 앱에서 알려 드려요"], ["기록", "상담 내용은 기록되어 행사 후 정리해 공유돼요"], ["사은품", "상담을 완료하면 드려요"]] },   /* v5.65 (사용자 261005 「커피챗과 라운지는 권장대로」 · 정본 디자인 시안/라운지 커피챗 통일/설계안.md) 커피챗과 같은 틀 · 서로 안내(gd) · 참여 전 확인(chk) 패널 · 커피 · 간식 사진은 패널 안에만 */
+    chk: [["진행", "업무 설명 → 병목 → 개선방안 · 30분"], ["신청", "신청 후 승인되면 앱에서 알려 드려요"], ["기록", "상담 내용은 기록되어 행사 후 정리해 공유돼요"], ["사은품", "상담을 마치면 커피 · 쿠키 · 노트 · 볼펜"]] },   /* v5.65 (사용자 261005 「커피챗과 라운지는 권장대로」 · 정본 디자인 시안/라운지 커피챗 통일/설계안.md) 커피챗과 같은 틀 · 서로 안내(gd) · 참여 전 확인(chk) 패널 · 커피 · 간식 사진은 패널 안에만 */
   { id: "play", grp: "do", sign: "AX PLAY", kor: "AI를 직접 써 보는 곳", fact: "HiDI-Q · Hi-Helper", st: "p2",
     stm: "HiDI-Q와 Hi-Helper를 직접 써 보는 곳", todo: ["노트북에서 HiDI-Q, Hi-Helper를 써 봐요", "스태프에게 내 QR을 보여 주면 적립"], btn: ["체험 안내", "App.go('booth')"] },   /* v5.60 기능 목록 판 한 컷 2장 삭제(판 · 모형에 있다) */
   { id: "event", grp: "do", sign: "EVENT", kor: "사진 · 룰렛 · 타자왕이 있는 곳", fact: "", st: "",
@@ -5223,14 +5241,14 @@ function applyCardHtml(o) {
 function applyCchatHtml() {
   var s = cchatState(); if (!s) return "";
   var z = zoneById("cchat"), L = zoneLive(z), c = S.get("cchat", null), mt = !!(c && c.status === "matched");
-  var kv = [["지금", s.mine ? s.t : ideaMineN() ? "아이디어 제출 완료 · 신청 가능" : "아이디어 한 줄 쓰면 신청할 수 있어요"], ["시간", mt && c.round ? "10월 26일 " + c.round : "매칭 후 앱에서 안내"]];
+  var kv = [["지금", s.mine ? s.t : ideaMineN() ? "아이디어 제출 완료 · 신청 가능" : "아이디어 한 줄 쓰면 신청할 수 있어요"], ["시간", mt && c.round ? "10월 26일 " + c.round : "매칭 후 앱에서 안내"], ["사은품", "커피 · 쿠키 · 노트 · 볼펜"]];   /* v5.90 */
   return applyCardHtml({ k: "cchat", nm: "AX 커피챗", fl: 18, mine: s.mine, kor: z.kor, kv: kv, extra: treatHtml(), btn: L.btn, more: "cchatGo()" });
 }
 function applyLoungeHtml() {
   var s = loungeState(); if (!s) return "";
   var z = zoneById("lounge"), L = zoneLive(z);
   var btn = s.mine ? ["내 신청", "progOpen('dap')"] : ["시간 고르기", "progOpen('dap')"];
-  return applyCardHtml({ k: "lounge", nm: "AX 라운지", fl: 1, mine: s.mine, kor: z.kor, kv: [["지금", s.t], ["시간", L.tm + " · 1:1 30분"], ["사은품", "상담을 완료하면 드려요"]], btn: btn, more: "zoneOpen('lounge')" });
+  return applyCardHtml({ k: "lounge", nm: "AX 라운지", fl: 1, mine: s.mine, kor: z.kor, kv: [["지금", s.t], ["시간", L.tm + " · 1:1 30분"], ["사은품", "커피 · 쿠키 · 노트 · 볼펜"]], btn: btn, more: "zoneOpen('lounge')" });
 }
 /* 10F 실습형 세션 줄 = 사전 신청자(10F 명단 · tenMine)와 테스트 사번(testMode · 310555 · 데모)에게만 · 일반 직원에게는 없다(사용자 261006) */
 function applyTenShow() { return !!tenMine() || testMode(); }
@@ -5275,7 +5293,7 @@ function zoneStampHtml(z) {
 }
 /* 지금 상태 · 원천은 옛 메뉴와 같다(myResv · RESV_ST · resvRemain) · fact = 줄 보조 한 줄 · chip = 간판 오른쪽 상태 칩 · kv = 상세 사실 표 · btn = 상세 행동 */
 function zoneLive(z) {
-  var o = { fact: z.fact, chip: null, kv: null, btn: z.btn || null };
+  var o = { fact: z.fact, chip: null, kv: null, btn: z.btn && !(z.btnOff && z.btnOff()) ? z.btn : null };   /* v5.90 btnOff = 입구 숨김(아이디어 사전 오픈 OFF · 행사 전) */
   if (z.id === "lounge") {
     var r = myResv(), rl = r && RESV_LIVE.indexOf(r.status) >= 0, dn = r && r.status === "done", n = resvRemain();
     var now = rl ? (RESV_ST[r.status] || "신청 완료") + " " + r.slot : dn ? "상담 완료" : n > 0 ? "남은 시간 " + n + "개" : resvSlots().every(resvPast) ? "오늘 상담 접수 마감" : "오늘 상담 시간이 모두 찼어요";   /* 261005 지난 시간뿐이면 「모두 찼어요」가 아니라 마감 */
@@ -5832,7 +5850,8 @@ function schedNowRow() {
   /* v3.71 (사용자 확정 260918) 행사 전 D-N 줄 삭제 · 날짜·장소는 홈 머리에 이미 있다 */
   if (ph === "before") return "";
   if (ph === "after") {
-    return rcHtml({ cls: " past", onclick: finState() ? "App.go('rewards')" : go, link: true, left: tokBadge("종료", "dim"), title: "행사가 끝났습니다", sub: finState() ? "완주 경품 추첨 결과 · 나의 보상" : "" });   /* v5.04 옛 「추첨 결과는 개별 안내」(260909 사후 추첨 안) 폐기 · 참여상 상태가 있을 때만 내 보상으로 */
+    var fh = fcfsMy() && (fcfsMy().st === "got" || fcfsMy().st === "done");   /* v5.90 선착순 참여상 */
+    return rcHtml({ cls: " past", onclick: fh ? "App.go('rewards')" : go, link: true, left: tokBadge("종료", "dim"), title: "행사가 끝났습니다", sub: fh ? (fcfsMy().st === "got" ? "선착순 참여상 수령 자격" : "선착순 참여상 수령 완료") + " · 나의 보상" : "" });   /* v5.04 옛 「추첨 결과는 개별 안내」(260909 사후 추첨 안) 폐기 · 참여상 상태가 있을 때만 내 보상으로 */
   }
   var ni = nowIdx(), now = TIMELINE[ni];
   /* 다음 일정에서 상시 항목(always)은 건너뛴다 (v3.18) */
@@ -6057,11 +6076,11 @@ var TOUR_HOST = {
   acts: function (id) {
     var go = function (v) { return function () { App.go(v); }; };
     if (id === "vision" || id === "action") return [{ lbl: "AX 퀴즈 풀기", run: go("quiz") }];
-    if (id === "lab") return [{ lbl: "아이디어 한 줄 쓰기", run: go("ideas") }];
+    if (id === "lab") return ideaGateOff() ? [] : [{ lbl: "아이디어 한 줄 쓰기", run: go("ideas") }];   /* v5.90 사전 오픈 OFF · 행사 전 = 숨김 */
     if (id === "play") return [{ lbl: "체험 안내 보기", run: go("booth") }];
     if (id === "lounge") { var L = zoneLive(zoneById("lounge")); return [{ lbl: L.btn ? L.btn[0] : "상담 신청", run: function () { progOpen("dap"); } }]; }
     if (id === "event") return [{ lbl: "룰렛 경품 보기", run: function () { prizeGo("roulette"); } }, { lbl: "1F 타자왕 순위", run: typeSiteRankGo }];
-    if (id === "cafe") return [{ lbl: S.get("cchat", null) ? "내 커피챗 보기" : ideaMineN() ? "커피챗 신청" : "아이디어 쓰고 신청", run: cchatOpen }, { lbl: "아이디어 한 줄 쓰기", run: go("ideas") }];   /* v5.65 신청 전 = 구역 상세(zone_d cchat) */
+    if (id === "cafe") return [{ lbl: S.get("cchat", null) ? "내 커피챗 보기" : ideaMineN() ? "커피챗 신청" : "아이디어 쓰고 신청", run: cchatOpen }].concat(ideaGateOff() ? [] : [{ lbl: "아이디어 한 줄 쓰기", run: go("ideas") }]);   /* v5.65 신청 전 = 구역 상세(zone_d cchat) */
     return [];
   },
   crowd: function (id) { var k = id === "cafe" ? "e" : "l", x = crowdCell(k); return { nm: k === "e" ? "엘리베이터" : "1F 로비", st: x.st, sub: x.sub, cls: x.cls }; },
@@ -6419,6 +6438,7 @@ var SPOP = { q: [], cur: null, ids: {}, opt: {} };
 /* v5.68 프로그램 참여 = 2개 · 팝 제목 p3 = 「프로그램 참여 ×2」 · p3h(17F 한쪽 1개) = 「프로그램 참여 1 / 2」 · 제자리는 같은 p3 줄 */
 function stampPopDef(id) {
   if (id === STAMP_HALF) return { id: STAMP_HALF, title: "프로그램 참여 1 / 2" };
+  if (id === "ck") return { id: "ck", title: "사전등록 체크인 ×3" };   /* v5.90 STAMP_CK(이 함수만 떼어 검사하므로 글자 그대로) */
   var sd = STAMPS.filter(function (s) { return s.id === id; })[0];
   return sd && sd.x2 ? { id: sd.id, title: sd.title + " ×2" } : sd;
 }
@@ -6646,7 +6666,8 @@ function railHtml(n, glow, dispN, home) {
     '<div class="hd"><span class="nm">스탬프 보상</span><span class="cnt"><span id="ppCnt">' + shown + "</span><small> / " + STAMP_DENOM + "</small></span></div>" +
     '<div class="rb"><i style="width:' + railPos(n).toFixed(1) + '%"></i>' + mk + "</div>" +
     '<div class="lbls">' + lb + "</div>" +
-    (out0 ? '<p class="cap">룰렛 소진</p>' : dispN >= STAMP_DENOM ? '<p class="cap">' + STAMP_DENOM + "개 모두 모았어요</p>" : "") +
+    (out0 ? '<p class="cap">' + (roulCut() ? "룰렛 " + roulCutHm() + " 마감" : "룰렛 소진") + "</p>" : dispN >= STAMP_DENOM ? '<p class="cap">' + STAMP_DENOM + "개 모두 모았어요" + fcfsCapTxt() + "</p>" : "") +
+    fcfsLeftHtml(dispN) +   /* v5.90 선착순 참여상 남은 수량 한 줄(홈 · 스탬프 탭 같은 레일) */
     raffleNumsHtml(n) + prizeGoHtml() +   /* v5.08 경품 보기 입구(홈 · 스탬프 탭 같은 레일) */
     "</div>";
 }
@@ -6669,13 +6690,13 @@ function ppRouletteOpen() {
   var body;
   /* v3.33 룰렛 소진 안내 · 관리 콘솔 스탬프 탭(roulette_out)에서 켠다 */
   if (S.get("roulette_out", false) && !used) {
-    body = '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));font-weight:800;color:var(--hi)">룰렛 소진</p>';
+    body = '<p style="margin-top:8px;font-size:calc(14.5px * var(--fs));font-weight:800;color:var(--hi)">' + (roulCut() ? "룰렛 " + roulCutHm() + " 마감" : "룰렛 소진") + "</p>";   /* v5.90 시각 마감 = 소진과 같은 처리 */
   } else if (used) {
     body = "";
   } else if (n < 3) {
     body = '<p class="muted" style="margin-top:8px;font-size:calc(14.5px * var(--fs))">스탬프 3개 · 1F EVENT · 1인 1회</p>';
   } else {
-    body = '<p class="muted" style="margin-top:10px;font-size:calc(13.5px * var(--fs));line-height:1.65">1F EVENT 룰렛 부스에서 QR 제시</p>' +
+    body = '<p class="muted" style="margin-top:10px;font-size:calc(13.5px * var(--fs));line-height:1.65">1F EVENT 룰렛 부스에서 QR 제시' + (S.get("rcut", "") ? "<br>룰렛 " + esc(S.get("rcut", "")) + " 마감" : "") + "</p>" +
       '<button type="button" class="ax-button" style="margin-top:10px" onclick="qrPanelOpen(\'mine\')">내 QR 보여주기</button>';   /* v5.23 내 QR 은 QR 화면 한 곳(룰렛 1회권 상태 줄 포함) */
   }
   modalOpen(head + body + prizeModalHtml("roulette") + '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "룰렛 1회권");   /* v5.04 경품표(사진 · 이름 · 수량) */
@@ -6746,7 +6767,7 @@ function rfxLand(nums, late) {   /* nums = 번호 배열(없으면 null) · late
   var w = el("rfx"); if (!w) return;
   var nm = el("rfxNum"); nm.classList.remove("roll"); nm.innerHTML = nums ? nums.map(function (x) { return "<b>" + rfxDot(x, nums.length > 1, true) + "</b>"; }).join("") : "발급 중"; nm.classList.toggle("wait", !nums);
   if (late) { nm.classList.remove("land"); void nm.offsetWidth; nm.classList.add("land"); }
-  el("rfxSay").innerHTML = nums ? (nums.length > 1 ? "번호 " + nums.length + "개가 나왔어요! 행운을 빌어요" : "행운을 빌어요!") + "<br>Outro 현장 추첨은 17F 입구 QR 체크인" + rfxFinLine() : "번호가 아직 발급 중이에요<br>곧 나의 보상에 나타나요";   /* v4.79 무대 추첨 = 추첨 QR 체크인한 사람만 · v5.04 6개째는 참여상 한 줄(별도 팝업 없음) */
+  el("rfxSay").innerHTML = nums ? (nums.length > 1 ? "번호 " + nums.length + "개가 나왔어요! 행운을 빌어요" : "행운을 빌어요!") + "<br>" + drawWhenTxt() + fcfsPopLine() : "번호가 아직 발급 중이에요<br>곧 나의 보상에 나타나요";   /* v4.79 무대 추첨 = 추첨 QR 체크인한 사람만 · v5.04 6개째는 참여상 한 줄(별도 팝업 없음) */
   el("rfxCap").textContent = nums ? "내 행운권 번호 · 17:00 Outro 추첨" : "행운권은 이미 발급됐어요 · 17:00 Outro 추첨";   /* v5.04 옛 「결과는 행사 후 개별 안내」(260909 사후 추첨 안) 폐기 */
   el("rfxBtns").innerHTML = '<button class="btn mint" style="margin-top:14px" onclick="modalClose()">확인</button><button class="btn line" style="margin-top:8px" onclick="noticeGo(\'rewards\',\'raffle\')">나의 보상에서 보기</button>';
   if (nums && typeof stampBuzz === "function") stampBuzz(30);
@@ -6766,7 +6787,7 @@ function ppDrawOpen() {
   }
   modalOpen('<p class="muted" style="font-size:calc(14.5px * var(--fs));line-height:1.7">스탬프 4개 1장 · 5개 2장 · 6개 3장 · 자동 발급<br>지금 <b style="color:var(--hi)">' + t + '장</b></p>' +
     tickets +
-    '<p class="muted" style="margin-top:8px;font-size:calc(13.5px * var(--fs));line-height:1.65">17:00 Outro 현장 추첨 · 16:40부터 17F 입구 QR 체크인</p>' +   /* v4.79 무대 추첨 · v4.83 사용자 표시 용어 「행운권」 · v5.04 옛 「행운권 추첨 결과는 행사 후 개별 안내」 줄 삭제(사후 추첨 없음) */
+    '<p class="muted" style="margin-top:8px;font-size:calc(13.5px * var(--fs));line-height:1.65">' + (lkCond() ? "17:00 Outro 현장 추첨 · 16:40부터 17F 입구 QR 체크인" : "17:00 Outro 현장 추첨 · 당첨자 발표만, 경품은 나중에 전달") + '</p>' +   /* v5.90 행운권_참석조건(sync lkcond) */   /* v4.79 무대 추첨 · v4.83 사용자 표시 용어 「행운권」 · v5.04 옛 「행운권 추첨 결과는 행사 후 개별 안내」 줄 삭제(사후 추첨 없음) */
     prizeModalHtml("draw") +   /* v5.04 1~6등 10명 · 사진 · 이름 · 인원 */
     '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "행운권");
 }
@@ -6859,12 +6880,17 @@ function rewItems() {
   if (n >= 3) items.push({ k: "roulette", used: used, chip: used ? "사용 완료" : out0 ? "룰렛 소진" : "사용 가능", off: used || out0, nm: "룰렛 1회권", big: "1회",
     why: "1F EVENT 룰렛 · 내 QR 제시", go: "ppRouletteOpen()" });
   if (t) items.push({ k: "raffle", used: false, chip: "자동 발급", off: false, nm: "행운권", big: t + "장", why: "스탬프 " + Math.min(n, REWARD_CAP) + "개 · 17:00 Outro 현장 추첨", go: "ppDrawOpen()" });   /* v4.79 현장 추첨 안내는 추첨 안내 모달에 · v5.04 옛 「결과는 행사 후 개별 안내」 폐기 */
-  var fs = finState(), f = S.get("fin", null) || {};   /* v5.04 참여상 · 서버 my.fin 이 있을 때만(없으면 카드 없음 · 아래 경품 카드의 「6개 모으면 참여상 추첨 대상」 한 줄뿐) */
-  if (fs === "in") items.push({ k: "fin", used: false, chip: "추첨 대상", nm: "완주 경품 추첨", big: "1회", why: "스탬프 6개", go: "finInfoOpen()", btn: "안내 보기" });
-  if (fs === "wait") items.push({ k: "fin", used: false, chip: "추첨 대기", cc: "", nm: "완주 경품 추첨", big: "1회", why: "스탬프 6개", go: "finInfoOpen()", btn: "안내 보기" });
-  if (fs === "win") items.push({ k: "fin", used: false, chip: "완주 경품 당첨", nm: esc(f.pz || "완주 경품"), big: "1개", pic: prizeByName(f.pz), why: "추첨 행사 이후 소속 부서로 배송", go: "finInfoOpen()", btn: "안내 보기" });
-  if (fs === "lose") items.push({ k: "fin", used: true, chip: "미당첨", off: true, nm: "완주 경품 추첨", big: "1회", why: finCountTxt(f) });
-  if (fs === "out") items.push({ k: "fin", used: true, chip: "집계 종료", off: true, nm: "완주 경품 추첨", big: "", why: "17:00 기준 스탬프 6개" });
+  /* v5.90 (261006 경품 기획 변경 · 계약.md 5.1) 선착순 참여상 · 서버 my.fcfs 가 있을 때만(없으면 카드 없음) · 상태 got · done · full · void · closed */
+  var f = fcfsMy(), fx = fxGet(), cap = fx ? fx.cap : 210;
+  if (f && f.st === "got") items.push({ k: "fin", used: false, chip: "수령 자격", nm: "선착순 참여상", big: "1개", why: "1F 체크인존에서 수령" + (f.at ? " · " + esc(f.at) + " 달성" : ""), go: "fcfsInfoOpen()", btn: "안내 보기" });
+  if (f && f.st === "done") items.push({ k: "fin", used: true, chip: "수령 완료", off: true, nm: "선착순 참여상", big: "", why: "무선 무드등 가습기" });
+  if (f && f.st === "full") items.push({ k: "fin", used: true, chip: "마감", off: true, nm: "선착순 참여상", big: "", why: cap + "명 마감 · 6개 달성은 행운권 3장" });
+  if (f && f.st === "void") items.push({ k: "fin", used: true, chip: "취소", off: true, nm: "선착순 참여상", big: "", why: "자격이 취소됐어요 · 운영진 문의" });
+  if (f && f.st === "closed") items.push({ k: "fin", used: true, chip: "마감", off: true, nm: "선착순 참여상", big: "", why: "17:00 이후 달성" });
+  /* v5.90 행운권 7등 랜덤 굿즈 · 서버 my.lk7 이 있고 행운권 보유(in)일 때 · 추첨 뒤 당첨이면 당첨 칩 */
+  var l7 = S.get("lk7", null);
+  if (l7 && l7.in && l7.ph !== "done") items.push({ k: "lk7", used: false, chip: "추첨 대기", cc: "", nm: "랜덤 굿즈", big: "", why: "행사 뒤 추첨 · 사내 우편 발송" });
+  if (l7 && l7.ph === "done" && l7.w) items.push({ k: "lk7", used: false, chip: "당첨", nm: "랜덤 굿즈", big: "1세트", why: "사내 우편으로 발송" });
   return items;
 }
 
@@ -6873,14 +6899,14 @@ function rewItems() {
    사진 = assets/prize/<img>.webp(정사각 240 · 커피 · 간식 360) · 실물 사진이 오면 같은 이름으로 파일만 바꾸고 PRIZE_SAMPLE 을 false 로(항목 하나만이면 그 항목에 s: 0).
    v5.88 (사용자 261006 상품 시안 「디자인 시안/00.상품들」) 룰렛 5등급 · 완주 경품 · 커피 = <이름>_v2(흰 바탕 정사각 600 · 커피 400) · 시안 렌더라 샘플 딱지 유지 · 옛 이름 rl1~rl5 · rl2_coffee · rl2_keyring 파일은 1층 둘러보기(tour3.js ROUL)가 아직 써서 남김
    수량은 이 표 한 곳이다(룰렛 2등 100 = 커피 + 키캡 키링 · 남는 커피 40은 예비라 보이지 않는다 · 사용자 확정 261002). */
-var PRIZE_DIR = "assets/prize/", PRIZE_SAMPLE = true;
+var PRIZE_DIR = "assets/prize/", PRIZE_SAMPLE = false;   /* v5.90 (사용자 261006) 「샘플」 딱지 모두 뗌 · CSS .smp 는 남김 */
 var PRIZES = {
   roulette: { unit: "개", list: [
     { rk: "1등", nm: "텀블러", q: 60, img: "rl1_tumbler_v2" },
-    { rk: "2등", nm: "커피 + 키캡 키링", q: 100, img: "rl2_coffee_v2", img2: "rl2_keyring_v2" },   /* v5.18 합성 사진 대신 두 장 나란히(사용자 261003) */
-    { rk: "3등", nm: "컵받침", q: 150, img: "rl3_coaster_v2" },
-    { rk: "4등", nm: "판스티커", q: 250, img: "rl4_sticker_v2" },
-    { rk: "5등", nm: "볼펜", q: 400, img: "rl5_pen_v2", tall: 1 }] },   /* v5.33 tall = 넓은 칸에서도 자르지 않는다(사선 볼펜 사진) */
+    { rk: "2등", nm: "커피 + 키캡 키링", q: 140, img: "rl2_coffee_v2", img2: "rl2_keyring_v2" },   /* v5.90 새 인쇄본 140 · 210 · 210 · 340 */   /* v5.18 합성 사진 대신 두 장 나란히(사용자 261003) */
+    { rk: "3등", nm: "컵받침", q: 210, img: "rl3_coaster_v2" },
+    { rk: "4등", nm: "판스티커", q: 210, img: "rl4_sticker_v2" },
+    { rk: "5등", nm: "볼펜", q: 340, img: "rl5_pen_v2", tall: 1 }] },   /* v5.33 tall = 넓은 칸에서도 자르지 않는다(사선 볼펜 사진) */
   draw: { unit: "명", list: [
     { rk: "1등", nm: "아이패드", q: 1, img: "ld1_ipad" },
     { rk: "2등", nm: "신라호텔 파크뷰 뷔페 식사권 2매", q: 1, img: "ld2_shilla" },
@@ -6888,8 +6914,15 @@ var PRIZES = {
     { rk: "4등", nm: "에어팟 4", q: 2, img: "ld4_airpods" },
     { rk: "5등", nm: "풀리오 종아리 마사지기", q: 2, img: "ld5_pulio" },
     { rk: "6등", nm: "현대백화점 상품권 10만원", q: 3, img: "ld6_hyundai" }] },
+  /* v5.90 fin 칸 = 선착순 참여상(키는 그대로 · 구역 id pz-fin) · 7등 랜덤 굿즈(lk7 · 사진 = 세트 구성 두 장) · 아이디어왕(idea · AI 구독권 카드 그림 idea1 ~ 3 · 사용자 261006 「가」 · 바꿀 때는 파일만) */
   fin: { unit: "개", list: [
     { rk: "", nm: "무선 무드등 가습기", q: 210, img: "fin_humidifier_v2" }] },
+  lk7: { unit: "세트", list: [
+    { rk: "7등", nm: "랜덤 굿즈", sub: "텀블러 · 판스티커 · 키캡 키링 · 볼펜", q: 60, img: "rl1_tumbler_v2", img2: "rl4_sticker_v2" }] },
+  idea: { unit: "명", list: [
+    { rk: "1등", nm: "AI 구독권 6개월", q: 1, img: "idea1" },
+    { rk: "2등", nm: "AI 구독권 3개월", q: 1, img: "idea2" },
+    { rk: "3등", nm: "AI 구독권 1개월", q: 3, img: "idea3" }] },
   /* v5.05 1F 타자왕 1~3위(17:00 Outro 시상) · v5.09 (261003 사용자 확정) 새 상품 · 사진 = 제조사 공식 컷 */
   type: { unit: "명", list: [
     { rk: "1등", nm: "기계식 키보드", sub: "체리 G80-3872", q: 1, img: "ty1_cherry", flat: 1 },   /* v5.18 flat = 사진 2:1(위아래 여백 자르기) */
@@ -6897,11 +6930,20 @@ var PRIZES = {
     { rk: "3등", nm: "기계식 키보드", sub: "AULA F108 Pro", q: 1, img: "ty3_aula" }] }
 };
 /* 커피 · 간식(18F 커피챗 · 1F DAP 과제상담) · 커피 = 페트병(우리 스티커 목업) · 간식 = 달곰 베이크샵 휘낭시에 · 스콘(블로그 사진 합성 · 임시) · 바꿀 때는 파일만 */
+/* v5.90 (261006) 상담 · 커피챗 지급 = 커피 · 쿠키 · 노트 · 볼펜 · 커피 = 룰렛 2등과 같은 페트병 두 병(콜드브루 · 디카페인) · 쿠키 · 노트 · 볼펜 사진은 아직 없어 아이콘 칸(ico · 사진이 오면 img 만 채운다) */
 var TREATS = [
-  { nm: "커피", sub: "콜드브루 · 헤이즐넛", img: "cc_coffee_v2" },
-  { nm: "간식", sub: "휘낭시에 · 스콘", img: "cc_snack" }
+  { nm: "커피", sub: "콜드브루 · 디카페인", img: "cc_coffee_v2", img2: "cc_decaf_v2" },
+  { nm: "쿠키", sub: "광화문 달곰 베이크샵", ico: "cookie" },
+  { nm: "노트", sub: "", ico: "note" },
+  { nm: "볼펜", sub: "", ico: "pen" }
 ];
+var TREAT_ICO = {
+  cookie: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="16"/><circle cx="18" cy="19" r="1.6" fill="currentColor"/><circle cx="28" cy="17" r="1.6" fill="currentColor"/><circle cx="30" cy="28" r="1.6" fill="currentColor"/><circle cx="19" cy="30" r="1.6" fill="currentColor"/><circle cx="24" cy="24" r="1.4" fill="currentColor"/></svg>',
+  note: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="12" y="8" width="26" height="32" rx="3"/><path d="M12 14h-3M12 22h-3M12 30h-3M18 16h14M18 22h14M18 28h9"/></svg>',
+  pen: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M33 9l6 6-21 21-8 2 2-8z"/><path d="M29 13l6 6"/></svg>'
+};
 function prizePhHtml(p, w) {
+  if (p && !p.img && p.ico && TREAT_ICO[p.ico]) return '<span class="axs-ph ico" aria-hidden="true">' + TREAT_ICO[p.ico] + "</span>";   /* v5.90 사진 없는 지급품 = 아이콘 칸 */
   if (!p || !p.img) return '<span class="axs-ph" aria-hidden="true"></span>';
   var im = function (n) { return '<img src="' + PRIZE_DIR + n + '.webp" alt="" width="' + (w || 240) + '" height="' + (w || 240) + '" loading="lazy" decoding="async" onerror="this.remove()">'; };
   return '<span class="axs-ph' + (p.img2 ? " two" : "") + '" aria-hidden="true">' + im(p.img) + (p.img2 ? im(p.img2) : "") +   /* v5.18 img2 = 사진 두 장 나란히 */
@@ -6927,8 +6969,8 @@ function prizeGuideHtml() {
    화면 id = prizes · 들어오는 곳 = 스탬프 보상 레일(홈 · 스탬프 탭) · 나의 참여 · 내 보상 · 룰렛 1회권 · 행운권 · 참여상 모달(그 구역으로 바로)
    데이터는 위 PRIZES 한 곳 · 대표(PZ_HERO 개수만큼 앞에서부터) = 폭 가득 사진 · 나머지 2열 · 홀수로 남는 마지막 칸은 넓은 카드
    참여상 설명은 두 줄만(FIN_NOTE · 사용자 261003 「이 두 가지 정보만 남겨 두고 나머지는 없애 줘」) */
-var FIN_NOTE = "Outro에서 추첨 · 상품은 무작위<br>추첨 행사 이후 소속 부서로 배송";   /* v5.60 W10 (사용자 「빼」 · 261003 「두 줄만」 번복) 「남은 룰렛 경품도 함께」 삭제 */
-var PZ_HERO = { draw: 3, fin: 1, roulette: 1, type: 1 };   /* v5.09 타자왕도 사진 카드(1등 대표 · 2 · 3등 2열) */
+/* v5.90 옛 FIN_NOTE(완주 경품 추첨 두 줄)는 선착순 안내(fcfsInfoOpen)로 바뀌었다 */
+var PZ_HERO = { draw: 3, lk7: 1, fin: 1, roulette: 1, idea: 0, type: 1 };   /* v5.09 타자왕도 사진 카드(1등 대표 · 2 · 3등 2열) */
 /* v5.74 (사용자 261006 「텍스트 위주 · 불필요한 정보 · 아웃트로 참석해야 추첨 대상이 된다는 게 중요한데 별도 박스로 확 눈에 들어와야」) 블록마다 「받으려면」 조건 박스 하나
    need = [아이콘, 굵은 한 줄(할 일), 옅은 한 줄(때 · 곳 · 덧붙임)] 두 줄 · 옛 조건 줄(cd) · 점 6개(pzMeter) · 「스탬프와 별개」 알약(sp) · 참여상 아래 설명(note)은 걷었다(4 · 5 · 6개 = 1 · 2 · 3장은 위 단계 카드가 말한다)
    사실 근거 = CLAUDE.md 보상 · 경품 · 타자왕 줄 · 「디자인 시안/완주 경품 추첨/설계안.md」(17:00 기준 · 체크인 조건 없음 · 다음 날 소속 부서로 배송) · Outro 상세(16:40부터 입구 추첨 QR) · 타자왕 1~3위 시상 참석 · 못 오면 대리 수상(사용자 261006) */
@@ -6939,15 +6981,19 @@ var PZ_ICO = {
   key: SICO + '<rect x="2.5" y="6.5" width="19" height="11" rx="2"/><path d="M6 10h.01M9 10h.01M12 10h.01M15 10h.01M18 10h.01M7.5 14h9"/></svg>',
   cup: SICO + '<path d="M7.5 4h9v5a4.5 4.5 0 0 1-9 0z"/><path d="M7.5 6H4.5a3 3 0 0 0 3 4M16.5 6h3a3 3 0 0 1-3 4M12 13.5V17M8.5 20h7M9.5 17h5"/></svg>'
 };
+/* v5.90 (261006 경품 기획 변경 · 계약.md 5절) 행운권 받으려면 줄2 = 참석 조건(sync lkcond) 따라 · 7등 · 선착순 참여상 · 아이디어왕 구역 · 서버 필드가 없으면(on) 구역을 그리지 않는다 */
 var PZ_SEC = [
-  { k: "draw", en: "LUCKY DRAW", t: "행운권 추첨", need: [["stamp", "스탬프 4개부터 행운권", "6개면 3장"], ["qr", "Outro 참석 · 17F 입구 QR 체크인", "16:40부터 · 17:00 현장 추첨"]] },
-  { k: "fin", en: "COMPLETION DRAW", t: "완주 경품 추첨", need: [["stamp", "17:00까지 스탬프 6개", "자동 응모 · 체크인 필요 없어요"], ["box", "다음 날 소속 부서로 배송", "Outro에서 추첨 · 상품은 무작위"]] },
-  { k: "roulette", en: "ROULETTE", t: "룰렛", need: [["stamp", "스탬프 3개면 룰렛 1회", "1인 1회"], ["qr", "1F EVENT 룰렛 부스에서 내 QR 제시"]] },
+  { k: "draw", en: "LUCKY DRAW", t: "행운권 추첨", need: function () { return [["stamp", "스탬프 4개부터 행운권", "6개면 3장"], lkCond() ? ["qr", "Outro 참석 · 17F 입구 QR 체크인", "16:40부터 · 17:00 현장 추첨"] : ["cup", "17F Outro 현장 추첨", "17:00 · 당첨자 발표만, 경품은 나중에 전달"]]; } },
+  { k: "lk7", en: "7TH PRIZE", t: "행운권 7등 · 랜덤 굿즈 60세트", on: function () { return !!S.get("lk7", null); }, need: [["stamp", "스탬프 4개 이상(행운권 보유)", "1~6등 당첨자는 제외"], ["box", "행사 뒤 추첨", "사내 우편으로 발송"]] },
+  { k: "fin", en: "FIRST COME", t: "선착순 참여상", on: function () { return !!fxGet(); }, need: function () { var x = fxGet() || {}; return [["stamp", "스탬프 6개를 먼저 채운 " + (x.cap || 210) + "명", x.left === 0 ? "선착순 마감" : x.left > 0 ? "남은 수량 " + x.left + "개" : ""], ["box", "1F 체크인존에서 수령", "당일 못 받으면 10/27 소속 부서로 발송"]]; } },
+  { k: "roulette", en: "ROULETTE", t: "룰렛", need: function () { return [["stamp", "스탬프 3개면 룰렛 1회", "1인 1회"], ["qr", "1F EVENT 룰렛 부스에서 내 QR 제시", S.get("rcut", "") ? "룰렛 " + S.get("rcut", "") + " 마감" : ""]]; } },
+  { k: "idea", en: "IDEA KING", t: "아이디어왕", on: function () { return !!S.get("idea_pub", null); }, need: function () { var ip = S.get("idea_pub", null) || {}; return [["stamp", (ip.cut || "16:00") + "까지 아이디어 한 줄", "AX 라운지 · 커피챗 · 앱 어느 경로든"], ["cup", "Outro에서 시상", ideaKingN() + "명 · AI 구독권"]]; } },
   { k: "type", en: "TYPING KING", t: "1F 타자왕 1~3위", sep: 1, need: [["key", "1F 현장 기록 1~3위", "17:00 마감 · 스탬프와 별개"], ["cup", "Outro 시상 참석", "못 오면 대리 수상"]], go: ["실시간 순위 보기", "typeSiteRankGo()"] }   /* v5.18 맨 아래 · 선으로 나눔 · 순위판 입구 = 블록 맨 아래(v5.73) */
 ];
 /* 「받으려면」 박스 · 연주황 면(brandSoft) · 아이콘 주황 · 굵은 글 ink · 옅은 글 body · 읽어 주기 = 「받으려면」 + 줄마다 */
 function pzNeedHtml(s) {
-  return '<div class="axs-pz-need" role="group" aria-label="' + esc(s.t) + ' 받으려면"><p class="k" aria-hidden="true">받으려면</p><ul>' + s.need.map(function (r) {
+  var need = typeof s.need === "function" ? s.need() : s.need;   /* v5.90 서버 값(참석 조건 · 남은 수량 · 마감 시각)을 그릴 때 읽는다 */
+  return '<div class="axs-pz-need" role="group" aria-label="' + esc(s.t) + ' 받으려면"><p class="k" aria-hidden="true">받으려면</p><ul>' + need.map(function (r) {
     return '<li><span class="i" aria-hidden="true">' + PZ_ICO[r[0]] + '</span><span class="x"><b>' + esc(r[1]) + "</b>" + (r[2] ? "<span>" + esc(r[2]) + "</span>" : "") + "</span></li>";
   }).join("") + "</ul></div>";
 }
@@ -6972,7 +7018,7 @@ function pzCard(p, unit, cls) {
     "<b>" + esc(p.nm) + (p.sub ? "<small>" + esc(p.sub) + "</small>" : "") + '</b><span class="q">' + p.q.toLocaleString() + unit + "</span></div>" + ph + "</article>";   /* v5.33 글 줄 먼저 · 사진 아래 */
 }
 function prizeSecHtml(s) {
-  var g = PRIZES[s.k]; if (!g) return "";
+  var g = PRIZES[s.k]; if (!g || (s.on && !s.on())) return "";
   var head = '<header class="axs-pz-sh" id="pz-' + s.k + '"><p class="en" aria-hidden="true">' + s.en + "</p><h2>" + s.t + "</h2></header>" + pzNeedHtml(s);   /* v5.74 머리 = 영문 장식 · 제목 · 「받으려면」 박스 */
   var go = s.go ? '<button type="button" class="ax-button ax-button-weak" onclick="' + s.go[1] + '">' + s.go[0] + "</button>" : "";   /* v5.73 (사용자 261005 「실시간 순위는 가장 아래 위치에 있어야 할 것 같아」) 구역 버튼(타자왕 순위판) = 블록 맨 아래(경품 사진 · 이름 · 안내 다음) · 옛 v5.18 = 머리 바로 아래 */
   var hn = PZ_HERO[s.k] || 0, rest = g.list.slice(hn), solo = rest.filter(function (p) { return !p.img2; }).length, k = 0;
@@ -6997,7 +7043,7 @@ var PZ_STEP = [
 ];
 function pzNextTxt(n) {
   var s = PZ_STEP.filter(function (x) { return x.m > n; })[0];
-  return s ? "<b>" + (s.m - n) + "개</b> 더 모으면 " + s.t + " " + s.a + (s.fin ? " · 완주 경품 추첨" : "") : "모두 모았어요";
+  return s ? "<b>" + (s.m - n) + "개</b> 더 모으면 " + s.t + " " + s.a + (s.fin && fcfsOpen() ? " · 선착순 참여상" : "") : "모두 모았어요";   /* v5.90 */
 }
 var PZ_DOWN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 9.5 12 15l5.5-5.5"/></svg>';   /* v5.33 표지 카드 아래 셰브론 = 아래 구역으로 */
 function prizeCoverHtml(noHead) {
@@ -7005,10 +7051,10 @@ function prizeCoverHtml(noHead) {
   for (var i = 1; i <= STAMP_DENOM; i++) dots += '<span class="c"><i class="' + (i <= n ? "on" : i === n + 1 ? "nx" : "") + '">' + i + "</i></span>";   /* v5.33 6칸마다 점 하나 · 같은 크기 */
   var fill = n >= 2 ? "calc(" + (n - 1) + " * ((100% - 20px) / 6 + 4px))" : "0px";   /* 1번 칸 가운데부터 받은 마지막 칸 가운데까지(칸 폭 + 칸 사이 4px) */
   var cards = '<p class="pre' + (n >= 3 ? " done" : "") + '"><span class="t">보상은</span><b>3개부터</b></p>' + PZ_STEP.map(function (s) {
-    var st = s.m <= n ? "on" : s.m === nm ? "nx" : "", lbl = "스탬프 " + s.m + "개 · " + s.t + " " + s.a + (s.fin ? " · 완주 경품 추첨" : "") + (st === "on" ? " · 달성" : st === "nx" ? " · 다음" : "");
+    var st = s.m <= n ? "on" : s.m === nm ? "nx" : "", lbl = "스탬프 " + s.m + "개 · " + s.t + " " + s.a + (s.fin && fxGet() ? " · 선착순 참여상" : "") + (st === "on" ? " · 달성" : st === "nx" ? " · 다음" : "");
     return '<button type="button" class="' + st + '" onclick="prizeJump(\'' + s.k + '\')" aria-label="' + lbl + '"><span class="i" aria-hidden="true">' + RAIL_ICO[s.ico] + "</span>" +
       '<span class="t" aria-hidden="true">' + s.t + '</span><b aria-hidden="true">' + s.a + "</b>" +
-      (s.fin ? '<span class="fn" aria-hidden="true">+<span class="g">' + PZ_GIFT + "</span>완주 추첨</span>" : "") +
+      (s.fin && fxGet() ? '<span class="fn" aria-hidden="true">+<span class="g">' + PZ_GIFT + "</span>선착순</span>" : "") +
       '<span class="bt" aria-hidden="true">' + (st === "nx" ? '<span class="tag">다음</span>' : st === "on" ? '<span class="tag on">' + CHECK_SVG + "달성</span>" : "") + '<span class="dn">' + PZ_DOWN + "</span></span></button>";
   }).join("");
   return '<section class="axs-pz-cv">' + (noHead ? "" : '<p class="ey">AX Festival 2026</p><h1 class="ttl">스탬프 개수별 경품</h1>') +   /* v5.69 시트 = 제목은 시트 머리 */
@@ -7023,39 +7069,44 @@ function prizeSheet() {
 function prizePosterHtml() {
   return '<div class="axs-pz' + (Date.now() - PZ.t < 900 ? " in" : "") + '">' + prizeCoverHtml() + PZ_SEC.map(prizeSecHtml).join("") + "</div>";
 }
-/* 참여상 상태 · 서버 sync my.fin 이 정본(없으면 null = 그리지 않는다 · 서버 배포 전에도 안전)
-   my.fin 모양(설계안 6장 · 7장 · 서버 담당과 맞출 것) = { ph: "open" | "lock" | "done", cut: "17:00", in: 대상 여부, w: 당첨 여부(done 뒤), pz: 상품명, n: 대상 수, wn: 당첨 수 }
-   open 동안 6개인데 in 이 아직 false 면(방금 6개째 · 다음 sync 전) 17:00 전에는 대상으로 본다 · 17:00 뒤면 대상 아님 */
-function finLate() {
-  var d = new Date(Date.now() + sesOff()), f = S.get("fin", null) || {}, cut = String(f.cut || "17:00").split(":");
-  return d.getFullYear() === 2026 && d.getMonth() === 9 && d.getDate() === 26 && d.getHours() * 60 + d.getMinutes() >= (+cut[0] || 17) * 60 + (+cut[1] || 0);
+/* v5.90 (261006 경품 기획 변경) 옛 완주 경품 추첨 앱 함수(finLate · finState · finCountTxt · rfxFinLine · finInfoOpen)는 지웠다 · 서버가 완주추첨_사용 OFF 면 my.fin 을 보내지 않는다 · 되살리기 = 루트 「정리 기록.md」 v5.90 절
+   선착순 참여상 = 서버 sync my.fcfs { st, cnt, need, at, ship, ck } · pub.fx { on, cap, left(-1 = 숨김), cut, show } · 없으면(옛 서버) 아무것도 그리지 않는다 · 순번은 앱에 오지 않는다 */
+function fcfsMy() { var f = S.get("fcfs", null); return f && typeof f === "object" && f.st && f.st !== "off" ? f : null; }
+function fxGet() { var x = S.get("fx", null); return x && typeof x === "object" && x.on ? x : null; }
+function fcfsOpen() { var x = fxGet(); return !!x && x.left !== 0 && !fcfsLate(); }   /* 남아 있고 마감 전 */
+function fcfsLate() {
+  var x = fxGet(), cut = String((x && x.cut) || "").split(":");
+  if (cut.length < 2) return false;
+  var d = new Date(Date.now() + sesOff());
+  return d.getFullYear() === 2026 && d.getMonth() === 9 && d.getDate() === 26 && d.getHours() * 60 + d.getMinutes() >= (+cut[0]) * 60 + (+cut[1]);
 }
-function finState() {
-  var f = S.get("fin", null);
-  if (!f || typeof f !== "object") return null;
-  var ph = String(f.ph || "open"), six = stampCount() >= STAMP_DENOM;
-  if (ph === "done") return f.in ? (f.w ? "win" : "lose") : six ? "out" : null;
-  if (ph === "lock" || ph === "wait") return f.in ? "wait" : six ? "out" : null;
-  if (f.in || (six && !finLate())) return "in";
-  return six ? "out" : null;
+/* 6개 레일 캡션 뒤 · 수령 자격 · 수령 완료 · 마감 */
+function fcfsCapTxt() { var f = fcfsMy(); return !f ? "" : f.st === "got" ? " · 참여상 수령 자격 · 1F 체크인존" : f.st === "done" ? " · 참여상 수령 완료" : f.st === "full" ? " · 참여상 마감" : ""; }
+/* 남은 수량 한 줄 · 6개 전 · 서버가 숫자를 숨기면(-1) 안 그린다 · 0 = 마감 */
+function fcfsLeftHtml(n) {
+  var x = fxGet(); if (!x || n >= STAMP_DENOM || x.left < 0) return "";
+  return '<p class="cap fx">' + (x.left === 0 ? "선착순 참여상 · 마감" : "선착순 참여상 · 남은 " + x.left + " / " + x.cap) + "</p>";
 }
-function finCountTxt(f) {
-  var n = +f.n || 0, w = +f.wn || 0;
-  return n && w ? "대상 " + n.toLocaleString() + "명 중 " + w.toLocaleString() + "명 당첨" : n ? "대상 " + n.toLocaleString() + "명" : "스탬프 6개";
-}
-/* 6번째 스탬프 상자 팝업에 붙는 한 줄(별도 팝업 없음 · 설계안 5.7) */
-function rfxFinLine() {
+/* 6번째 스탬프 상자 팝업 한 줄 */
+function fcfsPopLine() {
   if (raffleTickets(Math.min(REWARD_CAP, stampCount())) < RAFFLE_MAX) return "";
-  return finLate() ? "<br>완주 경품 추첨은 17:00 기준 6개까지 집계했어요" : "<br>완주 경품 추첨 대상 · 17:00 기준";
+  var f = fcfsMy(); return !f ? "" : f.st === "got" ? "<br>선착순 참여상 수령 자격이 생겼어요" : f.st === "full" ? "<br>선착순 참여상은 마감됐어요" : "";
 }
-/* 참여상 안내 모달(설계안 6장 문구) */
-function finInfoOpen() {
-  var f = S.get("fin", null) || {}, st = finState(), p = st === "win" ? prizeByName(f.pz) : null;
-  var head = st === "win" ? '<div class="axs-rwhd">' + prizePhHtml(p) + '<div class="ax-stack-tight"><p class="ax-meta">완주 경품 당첨</p><p class="ax-card-title">' + esc(f.pz || "") + "</p></div></div>" : "";
-  modalOpen(head + '<p class="muted" style="' + (head ? "margin-top:12px;" : "") + 'font-size:calc(14.5px * var(--fs));line-height:1.7">스탬프 6개<br>' + FIN_NOTE + "</p>" +   /* v5.08 설명 두 줄만(사용자 261003) */
-    prizeModalHtml("fin") +
-    '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "완주 경품 추첨");
+function fcfsInfoOpen() {
+  var x = fxGet() || {};
+  modalOpen('<p class="muted" style="font-size:calc(14.5px * var(--fs));line-height:1.7">스탬프 6개를 먼저 채운 ' + (x.cap || 210) + "명<br>수령 자격은 6개째에 바로 생겨요<br>1F 체크인존에서 수령 · 당일 못 받으면 10/27 소속 부서로 발송</p>" +
+    prizeModalHtml("fin") + '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "선착순 참여상");
 }
+/* 행운권 참석 조건(sync lkcond · 옛 서버 = 조건 있음) · 룰렛 마감 시각(sync rcut) · 아이디어왕 인원 */
+function lkCond() { var v = S.get("lkcond", null); return v === null ? true : !!v; }
+function drawWhenTxt() { return lkCond() ? "Outro 현장 추첨은 17F 입구 QR 체크인" : "17:00 Outro 현장 추첨 · 당첨자 발표"; }
+function roulCutHm() { return String(S.get("rcut", "") || ""); }
+function roulCut() {
+  var c = roulCutHm().split(":"); if (c.length < 2) return false;
+  var d = new Date(Date.now() + sesOff());
+  return d.getFullYear() === 2026 && d.getMonth() === 9 && d.getDate() === 26 && d.getHours() * 60 + d.getMinutes() >= (+c[0]) * 60 + (+c[1]);
+}
+function ideaKingN() { var ip = S.get("idea_pub", null), n = 0; ((ip && ip.prz) || []).forEach(function (x) { n += +x.n || 0; }); return n || 5; }
 /* 커피 · 간식 사진 2장 · 18F 커피챗 상세 · DAP 과제상담 상세 */
 function treatHtml() {
   return '<div class="axs-treat">' + TREATS.map(function (t) {
@@ -7066,7 +7117,11 @@ function treatHtml() {
 /* ── 스탬프 · 숫자는 현행 운영: 카드 8종 · 개수 상한 6 · 응모권 최대 3장 · 현황 모양은 홈과 같은 railHtml(v4.10) ── */
 function stampGoalText(n) {
   if (n < 3) return (3 - n) + "개 더 모으면 룰렛 1회";
-  if (n < STAMP_DENOM) return "1개 더 모으면 행운권 " + raffleTickets(n + 1) + "장" + (n === STAMP_DENOM - 1 && !finLate() ? " · 완주 경품 추첨" : "");   /* v5.06 6번째 = 참여상 추첨 대상도 되는 칸 · 17:00 뒤(finLate)에는 대상이 아니라 붙이지 않는다 */
+  if (n < STAMP_DENOM) return "1개 더 모으면 행운권 " + raffleTickets(n + 1) + "장" + (n === STAMP_DENOM - 1 && fcfsOpen() ? " · 선착순 참여상" : "");   /* v5.90 6번째 = 선착순 참여상 · 남아 있고 마감 전일 때만 */
+  var f = fcfsMy();   /* v5.90 계약 5.1 */
+  if (f && f.st === "got") return STAMP_DENOM + "개 모두 모았어요 · 참여상 수령 자격";
+  if (f && f.st === "done") return STAMP_DENOM + "개 모두 모았어요 · 참여상 수령 완료";
+  if (f && f.st === "full") return STAMP_DENOM + "개 모두 모았어요 · 참여상은 마감";
   return STAMP_DENOM + "개 모두 모았어요 · 행운권 " + RAFFLE_MAX + "장";
 }
 
@@ -7108,6 +7163,7 @@ function stpMeta(s, got) {
 }
 /* 오른쪽 행동 [글, onclick] · onclick 이 없으면 글만(완료 · 열리는 시각) */
 function stpAct(s, got) {
+  if (s.id === "p5" && ideaGateOff()) return [got ? "완료" : "10/26부터", ""];   /* v5.90 아이디어 사전 오픈 OFF · 행사 전 = 입구 숨김 */
   if (got) return s.id === "p5" ? ["더 쓰기", "App.go('ideas')"] : s.id === "sv" ? ["결과", "App.go('survey')"] :
     s.id === "qz" ? ["다시 하기", "App.go('quiz')"] : s.id === "p4" ? ["다시 하기", "App.go('games')"] : ["완료", ""];   /* v5.16 (사용자 261003 「스탬프가 완료되면 더 안 된다」) 스탬프는 한 번 · 게임은 몇 번이든 · 받은 줄도 목록으로 */
   if (s.id === "lg") return ["자동", ""];
@@ -7321,11 +7377,12 @@ var Views = {
     /* v4.08 입력·제출 화면 = 전체 화면 · 하단 메뉴 숨김 · 아래 고정 주 버튼(5글자 이상이면 켜짐) + 약한 버튼
        쓴 내용은 어떤 경우에도 지우지 않는다(IDEA.draft · 기기 저장 idea_draft · 다시 그려도 그대로) · 공백은 글자 수에서 뺀다 */
     /* v5.39 (사용자 261003 「2,000자 이상 · 아래 예시 및 분류는 없애자」) 최대 IDEA_MAX(3,000)자 · 칸은 쓰면 늘고 최대 높이 안에서 스크롤 · 예시 칩 · 분야 칩은 그리지 않는다(코드 IDEA_EX · ideaEx · pickTag 는 보존) · 분야는 빈 값으로 보낸다 */
+    if (ideaGateOff() && !IDEA.cc) return '<div class="ax-stack">' + stampLineHtml("p5") + botHtml("아이디어 한 줄은 10월 26일에 열려요") + "</div>";   /* v5.90 사전 오픈 OFF · 행사 전 */
     var dr = ideaDraft(), n = ideaLen(dr);
     setTimeout(ideaFit, 0);
     return '<div class="ax-stack axs-form">' +
       '<div class="ax-stack-tight axs-gap12 axs-sthost">' + stampTagHtml("p5") + '<h1 class="ax-type-t2">문득 떠오른<br>&ldquo;이거 AI로 되겠는데?&rdquo;</h1>' +
-      '<p class="ax-body" id="ideaAward">' + IDEA_AWARD_TXT + "</p>" + (IDEA.cc && !cchat ? '<p class="ax-type-t6-strong axs-ideacc">커피챗은 아이디어 한 줄과 함께 신청해요</p>' : "") + "</div>" +   /* v5.83 커피챗에서 왔을 때 한 줄(ideaCcGo) */
+      ideaCutHtml() + '<p class="ax-body" id="ideaAward">' + IDEA_AWARD_TXT + (ideaStampLater() ? "<br>스탬프는 10/26 행사 당일에 적립돼요" : "") + "</p>" + (IDEA.cc && !cchat ? '<p class="ax-type-t6-strong axs-ideacc">커피챗은 아이디어 한 줄과 함께 신청해요</p>' : "") + "</div>" +   /* v5.83 커피챗에서 왔을 때 한 줄(ideaCcGo) */
       '<div class="ax-stack-tight"><label class="ax-sr-only" for="ideaText">아이디어 한 줄</label>' +
       '<textarea id="ideaText" class="ax-field axs-ta axs-grow" rows="4" maxlength="' + IDEA_MAX + '" placeholder="떠오른 생각을 자유롭게 적어 주세요" oninput="ideaInput(this.value)" onfocus="kbFocus(this)" aria-describedby="ideaLeft">' + esc(dr) + "</textarea>" +
       '<div class="axs-cnt"><p class="ax-meta" id="ideaLeft" aria-live="polite">' + ideaLeftTxt(n, dr) + '</p><p class="ax-meta"><span id="ideaCnt">' + dr.length.toLocaleString() + "</span>/" + IDEA_MAX.toLocaleString() + "</p></div></div>" +
@@ -7691,11 +7748,11 @@ function checkMyState() {
     seen.cchat = "m:" + c.round + c.table; changed = true;
     notifyUser("커피챗 매칭 완료", "18F · " + hhmm(c.round) + " · TABLE " + c.table, "ev_cchat");
   }
-  /* v5.04 참여상 당첨 · 앱이 열려 있으면 팝업 1회(미당첨은 조용히 내 보상만 · 설계안 6장) */
-  var fin = S.get("fin", null);
-  if (finState() === "win" && seen.fin !== "w:" + (fin.pz || "")) {
-    seen.fin = "w:" + (fin.pz || ""); changed = true;
-    notice({ key: "fin:win", title: "완주 경품 당첨", body: (fin.pz ? fin.pz + " · " : "") + "추첨 행사 이후 소속 부서로 배송", go: "rewards", focus: "fin", goLbl: "나의 보상에서 보기" });
+  /* v5.90 선착순 참여상 수령 자격 · 앱이 열려 있으면 팝업 1회(푸시 없음 · 계약 5.1) · 옛 완주 경품 당첨 팝업은 지웠다 */
+  var fq = fcfsMy();
+  if (fq && fq.st === "got" && seen.fcfs !== "got") {
+    seen.fcfs = "got"; changed = true;
+    notice({ key: "fcfs:got", title: "선착순 참여상", body: "선착순 참여상 수령 자격이 생겼어요 · 1F 체크인존에서 수령", go: "rewards", focus: "fin", goLbl: "나의 보상에서 보기" });
   }
   if (changed) S.set("noti_seen", seen);
 }
@@ -7738,7 +7795,14 @@ function beSync(after) {
     if (!BE.stats) BE.stats = {};
     BE.stats.wall = res.wall;
     BE.stats.sess = res.sess || null;
-    if ("rouletteOut" in res && !!res.rouletteOut !== S.get("roulette_out", false)) S.set("roulette_out", !!res.rouletteOut);   /* v3.33 */
+    if ("rouletteOut" in res && !!res.rouletteOut !== S.get("roulette_out", false)) S.set("roulette_out", !!res.rouletteOut);   /* v3.33 · v5.90 룰렛_마감 시각 지남도 여기(서버가 합쳐 보낸다) */
+    /* v5.90 (261006 경품 기획 변경 · 계약 4.5) 서버가 보낼 때만 저장 · 없으면 앱은 그 요소를 그리지 않는다 */
+    var sv9 = function (k, v) { if (JSON.stringify(v) !== JSON.stringify(S.get(k, null))) S.set(k, v); };
+    if ("fx" in res) sv9("fx", res.fx && typeof res.fx === "object" ? res.fx : null);
+    if ("rcut" in res) sv9("rcut", String(res.rcut || ""));
+    if ("lkcond" in res) sv9("lkcond", res.lkcond ? 1 : 0);
+    if ("idea" in res) sv9("idea_pub", res.idea && typeof res.idea === "object" ? res.idea : null);
+    if (res.lng && typeof res.lng === "object" && "end" in res.lng) sv9("lng_end", String(res.lng.end || ""));
     if ("cchatOut" in res && !!res.cchatOut !== S.get("cchat_out", false)) S.set("cchat_out", !!res.cchatOut);   /* v4.47 GAS 가 생기면 */
     if ("betaForm" in res && (res.betaForm || "") !== S.get("beta_form", "")) S.set("beta_form", res.betaForm || "");   /* v4.55 클로즈 베타 배너 링크(없으면 빈 문자열) */
     if (res.crowd) crowdStore(res.crowd);   /* v4.71 혼잡 제보(새 서버만 보낸다 · 없으면 「제보 없음」 그대로) */
@@ -7793,8 +7857,10 @@ function beSync(after) {
       if (res.my.stair) { var st9 = Object.assign({}, res.my.stair, { emp: String(u.empId || "") }); if (JSON.stringify(st9) !== JSON.stringify(S.get("stair", null))) S.set("stair", st9); }   /* v4.06 계단 진행 · 서버가 정본 · v4.54 물어본 사번을 붙여 저장 */   /* 스탬프는 서버가 정본 · v3.97 빈 목록 포함 · 못 보낸 적립은 다시 보낸다 */
       if ("roulette" in res.my && !testEmp()) S.set("roulette_used", !!res.my.roulette);   /* 룰렛 사용 여부도 서버가 정본 (260909) · 테스트 사번은 로컬 */
       if (res.my.tickets && !testEmp()) S.set("raffle_nums", res.my.tickets);   /* v3.12 응모권 번호 · 서버 발급 정본 */
-      var fin9 = res.my.fin && typeof res.my.fin === "object" ? res.my.fin : null;   /* v5.04 참여상 · 서버가 보낼 때만(없으면 null = 앱이 상태를 그리지 않는다) */
-      if (JSON.stringify(fin9) !== JSON.stringify(S.get("fin", null))) S.set("fin", fin9);
+      /* v5.90 선착순 참여상 · 7등 랜덤 굿즈 · 서버가 보낼 때만(없으면 null = 그리지 않는다) · 옛 my.fin 은 저장하지 않는다 */
+      var fc9 = res.my.fcfs && typeof res.my.fcfs === "object" ? res.my.fcfs : null, lk9 = res.my.lk7 && typeof res.my.lk7 === "object" ? res.my.lk7 : null;
+      if (JSON.stringify(fc9) !== JSON.stringify(S.get("fcfs", null))) S.set("fcfs", fc9);
+      if (JSON.stringify(lk9) !== JSON.stringify(S.get("lk7", null))) S.set("lk7", lk9);
       /* v3.21 B 포토부스 번호표 · 서버가 정본(없으면 null) · 바뀐 경우에만 저장해 불필요한 재렌더를 막는다 */
       /* v3.35 · v3.99 서버 스탬프 목록에 설문(sv)이 있을 때만 · 관리자가 08 을 취소하면 답이 남아 있어도 다시 제출할 수 있다(GAS @74) */
       if (res.my.survey === true && !S.get("survey_done", false) && !testEmp() && (res.my.stamps || []).indexOf("sv") >= 0) S.set("survey_done", true);
@@ -8497,7 +8563,7 @@ function stampSync(list) {
   if (testEmp()) return;   /* v3.19 테스트 사번: 서버 stamps 가 로컬 테스트 적립을 덮지 않는다 */
   /* v3.97 (버그 260919) 빈 목록도 정본이다 · 관리자가 취소해 0개가 되면 기기에서도 0개 · 목록 자체가 없는 응답만 건너뛴다 */
   if (!Array.isArray(list)) return;
-  list = list.filter(function (id) { return id === "p3h" || STAMPS.some(function (s) { return s.id === id; }); });   /* v5.68 p3h(STAMP_HALF · 17F 입장이나 끝 한쪽만 · 1개)는 지우지 않는다 */
+  list = list.filter(function (id) { return id === "p3h" || id === "ck" || STAMPS.some(function (s) { return s.id === id; }); });   /* v5.90 ck(사전등록 체크인 3개)도 지우지 않는다 */   /* v5.68 p3h(STAMP_HALF · 17F 입장이나 끝 한쪽만 · 1개)는 지우지 않는다 */
   var pend = stampPend(), now = Date.now(), pchg = false;
   Object.keys(pend).forEach(function (id) {
     var p = pend[id] || {};
@@ -9618,9 +9684,11 @@ var SCAN_SPOTS = [
   { id: "p2", nm: "AX PLAY", kind: "stamp", lb: "AX PLAY 스탬프", tsub: "체험 확인 · 적립", will: "AX PLAY 스탬프 적립", cond: "HiDI-Q 또는 Hi-Helper 체험을 마친 사람" },
   { id: "roulette", nm: "1F EVENT 룰렛", kind: "roulette", lb: "룰렛 체크인", tsub: "1회 사용", will: "룰렛 1회 사용", cond: "스탬프 3개 이상 · 1인 1회" },   /* 260909 · 스탬프 3개=1회, 판정은 서버 */
   /* v5.34 (설계안 §10 결정 2) 사옥 밖 체크인 존(몽골텐트) · 찍으면 체크인 + 키트 지급 기록(inv_kit) · 10F 입장(sess_in)과 따로 */
-  { id: "kit", nm: "체크인 존 · 키트", kind: "kit", lb: "체크인 존 · 키트", tsub: "체크인 + 지급", will: "체크인 + 키트 지급", cond: "사전 신청 명단이면 바로 지급" }
+  { id: "kit", nm: "체크인 존 · 키트", kind: "kit", lb: "체크인 존 · 키트", tsub: "체크인 + 지급", will: "체크인 + 키트 지급", cond: "사전 신청 명단이면 바로 지급" },
+  /* v5.90 (261006 경품 기획 변경) 1F 체크인존 · 선착순 참여상 수령(fcfs_give · QR 서명) · 키트 타일과 같은 모양 */
+  { id: "fcfs", nm: "체크인 존 · 참여상", kind: "fcfs", lb: "체크인 존 · 참여상", tsub: "선착순 수령", will: "선착순 참여상 수령", cond: "스탬프 6개 · 선착순 자격" }
 ];
-var SCAN_TILES = ["roulette", "kit", "p2", "dap", "cchat", "sess"];   /* 자주 쓰는 룰렛 · 포토 · 스탬프(AX PLAY)가 위 · 10F 세션은 한 타일에서 A~E · v4.83 1F 전시 타일 삭제 */
+var SCAN_TILES = ["roulette", "kit", "fcfs", "p2", "dap", "cchat", "sess"];   /* 자주 쓰는 룰렛 · 포토 · 스탬프(AX PLAY)가 위 · 10F 세션은 한 타일에서 A~E · v4.83 1F 전시 타일 삭제 */
 function scanSpot(id) { return SCAN_SPOTS.filter(function (s) { return s.id === id; })[0] || null; }
 var SCAN = { spot: S.get("scan_spot", "") !== "q_photo" ? S.get("scan_spot", "") : "", log: [], last: "", lastT: 0, on: false, pick: false, sub: "", res: null };
 
@@ -9649,6 +9717,7 @@ function scanHit(raw) {
   else if (sp.kind === "photo") params.action = "photo_enter";
   else if (sp.kind === "stamp") { params.action = "stamp_grant"; params.id = sp.id; }
   else if (sp.kind === "kit") params.action = "inv_kit";   /* v5.34 */
+  else if (sp.kind === "fcfs") params.action = "fcfs_give";   /* v5.90 */
   else params.action = "roulette_redeem";
   scanLog(emp, "처리 중", null);
   scanShow("wait", emp, "확인하는 중", sp.will || sp.nm);
@@ -9689,6 +9758,7 @@ function scanDone(emp, sp, res) {
     return;
   }
   if (sp.kind === "kit") { kitDone(emp, res); return; }   /* v5.34 */
+  if (sp.kind === "fcfs") { fcfsDone(emp, res); return; }   /* v5.90 */
   var ok = sp.kind === "sess" || sp.kind === "roster" ? (res.dup ? "이미 입장 처리됨" : "입장 확인") :
     sp.kind === "photo" ? res.no + "번 입장" + (res.early ? "(순서보다 먼저)" : "") + " · " + (res.next ? res.next.no + "번 호출" : "대기 번호 없음") :
       sp.kind === "stamp" ? (res.dup ? "이미 받은 스탬프" : "스탬프 적립 · " + sp.nm) :
@@ -9798,11 +9868,23 @@ function invKitUndo() {
     invPaint();
   }, function () { if (INVS.id !== id) return; INVS.busy = false; INVS.msg = "서버 응답 없음 · 콘솔에서 확인해 주세요"; if (invMine()) invPaint(); });
 }
+/* v5.90 선착순 참여상 수령 결과 · new 수령 처리 · dup 이미 수령 · none(noelig 6개 미달 · full 마감 · closed 17:00 뒤 · void 취소 · off 꺼짐) */
+function fcfsDone(emp, res) {
+  var who = res.name || emp, lf = res.left != null ? " · 남은 " + res.left : "";
+  if (res.give === "new") { scanLog(emp, (res.name ? res.name + " · " : "") + "참여상 수령 처리", true, true); scanShow("ok", who, "참여상 수령 처리", "무선 무드등 가습기 1개 전달" + lf); return; }
+  if (res.give === "dup") { scanLog(emp, (res.name ? res.name + " · " : "") + "이미 수령", true, true); scanShow("dup", who, "이미 수령", (res.at || "") + "에 받았어요"); return; }
+  var why = res.reason, msg = why === "noelig" ? ["자격 없음", "스탬프 6개 미달" + (res.n != null ? " (현재 " + res.n + "개)" : "")] : why === "full" ? ["마감", "선착순 수량이 먼저 찼어요 · 6개 달성은 행운권 3장"] :
+    why === "closed" ? ["마감", "17:00 이후 달성"] : why === "void" ? ["취소된 자격", "운영 본부에 문의해 주세요"] : why === "off" ? ["지금은 받지 않아요", "선착순 참여상 꺼짐"] : ["처리하지 못했어요", String(why || "")];
+  scanLog(emp, (res.name ? res.name + " · " : "") + msg[0], false, true);
+  scanShow("bad", who, msg[0], msg[1]);
+}
 /* 체크인 존 스캔 결과 */
 function kitDone(emp, res) {
   var who = res.name || emp, sp = res.spare == null ? "수량 미정" : String(res.spare);
-  if (res.kit === "give") { scanLog(emp, (res.name ? res.name + " · " : "") + "키트 지급", true, true); scanShow("ok", who, "키트 지급", res.pre ? "세션 " + res.pre + " · 사전 신청자" : "체크인 + 지급"); return; }
-  if (res.kit === "dup") { scanLog(emp, (res.name ? res.name + " · " : "") + "이미 지급됨", true, true); scanShow("dup", who, "이미 지급됨", (res.at || "") + "에 받았어요"); return; }
+  var ck = res.ck === "new" ? " · 스탬프 +3" : "";   /* v5.90 사전등록 체크인 3개(서버 ck) */
+  if (res.kit === "sub") { scanLog(emp, (res.name ? res.name + " · " : "") + "라운지 초과 · 가습기 대체" + ck, true, true); scanShow("ok", who, "가습기로 대체 지급", "라운지 키트 수량 초과" + ck); return; }   /* v5.90 라운지 쿼터를 넘은 사전등록자 */
+  if (res.kit === "give") { scanLog(emp, (res.name ? res.name + " · " : "") + "키트 지급" + ck, true, true); scanShow("ok", who, "키트 지급", (res.grp === "dap" ? "라운지 사전등록" : res.pre ? "세션 " + res.pre + " · 사전 신청자" : "체크인 + 지급") + ck); return; }
+  if (res.kit === "dup") { scanLog(emp, (res.name ? res.name + " · " : "") + (res.sub ? "이미 가습기 대체" : "이미 지급됨") + ck, true, true); scanShow("dup", who, res.sub ? "이미 가습기로 받음" : "이미 지급됨", (res.at || "") + "에 받았어요" + ck); return; }
   scanLog(emp, (res.name ? res.name + " · " : "") + "체크인 · 명단 밖", null, true);
   scanShow("dup", who, "사전 신청 명단에 없어요", "여유 키트 " + sp + (res.list ? "" : " · 명단 대기 중"));
   SCAN.res.inv = "kit";

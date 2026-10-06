@@ -32,11 +32,11 @@ function checkMyState() {
     seen.cchat = "m:" + c.round + c.table; changed = true;
     notifyUser("커피챗 매칭 완료", "18F · " + hhmm(c.round) + " · TABLE " + c.table, "ev_cchat");
   }
-  /* v5.04 참여상 당첨 · 앱이 열려 있으면 팝업 1회(미당첨은 조용히 내 보상만 · 설계안 6장) */
-  var fin = S.get("fin", null);
-  if (finState() === "win" && seen.fin !== "w:" + (fin.pz || "")) {
-    seen.fin = "w:" + (fin.pz || ""); changed = true;
-    notice({ key: "fin:win", title: "완주 경품 당첨", body: (fin.pz ? fin.pz + " · " : "") + "추첨 행사 이후 소속 부서로 배송", go: "rewards", focus: "fin", goLbl: "나의 보상에서 보기" });
+  /* v5.90 선착순 참여상 수령 자격 · 앱이 열려 있으면 팝업 1회(푸시 없음 · 계약 5.1) · 옛 완주 경품 당첨 팝업은 지웠다 */
+  var fq = fcfsMy();
+  if (fq && fq.st === "got" && seen.fcfs !== "got") {
+    seen.fcfs = "got"; changed = true;
+    notice({ key: "fcfs:got", title: "선착순 참여상", body: "선착순 참여상 수령 자격이 생겼어요 · 1F 체크인존에서 수령", go: "rewards", focus: "fin", goLbl: "나의 보상에서 보기" });
   }
   if (changed) S.set("noti_seen", seen);
 }
@@ -79,7 +79,14 @@ function beSync(after) {
     if (!BE.stats) BE.stats = {};
     BE.stats.wall = res.wall;
     BE.stats.sess = res.sess || null;
-    if ("rouletteOut" in res && !!res.rouletteOut !== S.get("roulette_out", false)) S.set("roulette_out", !!res.rouletteOut);   /* v3.33 */
+    if ("rouletteOut" in res && !!res.rouletteOut !== S.get("roulette_out", false)) S.set("roulette_out", !!res.rouletteOut);   /* v3.33 · v5.90 룰렛_마감 시각 지남도 여기(서버가 합쳐 보낸다) */
+    /* v5.90 (261006 경품 기획 변경 · 계약 4.5) 서버가 보낼 때만 저장 · 없으면 앱은 그 요소를 그리지 않는다 */
+    var sv9 = function (k, v) { if (JSON.stringify(v) !== JSON.stringify(S.get(k, null))) S.set(k, v); };
+    if ("fx" in res) sv9("fx", res.fx && typeof res.fx === "object" ? res.fx : null);
+    if ("rcut" in res) sv9("rcut", String(res.rcut || ""));
+    if ("lkcond" in res) sv9("lkcond", res.lkcond ? 1 : 0);
+    if ("idea" in res) sv9("idea_pub", res.idea && typeof res.idea === "object" ? res.idea : null);
+    if (res.lng && typeof res.lng === "object" && "end" in res.lng) sv9("lng_end", String(res.lng.end || ""));
     if ("cchatOut" in res && !!res.cchatOut !== S.get("cchat_out", false)) S.set("cchat_out", !!res.cchatOut);   /* v4.47 GAS 가 생기면 */
     if ("betaForm" in res && (res.betaForm || "") !== S.get("beta_form", "")) S.set("beta_form", res.betaForm || "");   /* v4.55 클로즈 베타 배너 링크(없으면 빈 문자열) */
     if (res.crowd) crowdStore(res.crowd);   /* v4.71 혼잡 제보(새 서버만 보낸다 · 없으면 「제보 없음」 그대로) */
@@ -134,8 +141,10 @@ function beSync(after) {
       if (res.my.stair) { var st9 = Object.assign({}, res.my.stair, { emp: String(u.empId || "") }); if (JSON.stringify(st9) !== JSON.stringify(S.get("stair", null))) S.set("stair", st9); }   /* v4.06 계단 진행 · 서버가 정본 · v4.54 물어본 사번을 붙여 저장 */   /* 스탬프는 서버가 정본 · v3.97 빈 목록 포함 · 못 보낸 적립은 다시 보낸다 */
       if ("roulette" in res.my && !testEmp()) S.set("roulette_used", !!res.my.roulette);   /* 룰렛 사용 여부도 서버가 정본 (260909) · 테스트 사번은 로컬 */
       if (res.my.tickets && !testEmp()) S.set("raffle_nums", res.my.tickets);   /* v3.12 응모권 번호 · 서버 발급 정본 */
-      var fin9 = res.my.fin && typeof res.my.fin === "object" ? res.my.fin : null;   /* v5.04 참여상 · 서버가 보낼 때만(없으면 null = 앱이 상태를 그리지 않는다) */
-      if (JSON.stringify(fin9) !== JSON.stringify(S.get("fin", null))) S.set("fin", fin9);
+      /* v5.90 선착순 참여상 · 7등 랜덤 굿즈 · 서버가 보낼 때만(없으면 null = 그리지 않는다) · 옛 my.fin 은 저장하지 않는다 */
+      var fc9 = res.my.fcfs && typeof res.my.fcfs === "object" ? res.my.fcfs : null, lk9 = res.my.lk7 && typeof res.my.lk7 === "object" ? res.my.lk7 : null;
+      if (JSON.stringify(fc9) !== JSON.stringify(S.get("fcfs", null))) S.set("fcfs", fc9);
+      if (JSON.stringify(lk9) !== JSON.stringify(S.get("lk7", null))) S.set("lk7", lk9);
       /* v3.21 B 포토부스 번호표 · 서버가 정본(없으면 null) · 바뀐 경우에만 저장해 불필요한 재렌더를 막는다 */
       /* v3.35 · v3.99 서버 스탬프 목록에 설문(sv)이 있을 때만 · 관리자가 08 을 취소하면 답이 남아 있어도 다시 제출할 수 있다(GAS @74) */
       if (res.my.survey === true && !S.get("survey_done", false) && !testEmp() && (res.my.stamps || []).indexOf("sv") >= 0) S.set("survey_done", true);

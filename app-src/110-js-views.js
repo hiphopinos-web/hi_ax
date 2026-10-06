@@ -180,11 +180,12 @@ var Views = {
     /* v4.08 입력·제출 화면 = 전체 화면 · 하단 메뉴 숨김 · 아래 고정 주 버튼(5글자 이상이면 켜짐) + 약한 버튼
        쓴 내용은 어떤 경우에도 지우지 않는다(IDEA.draft · 기기 저장 idea_draft · 다시 그려도 그대로) · 공백은 글자 수에서 뺀다 */
     /* v5.39 (사용자 261003 「2,000자 이상 · 아래 예시 및 분류는 없애자」) 최대 IDEA_MAX(3,000)자 · 칸은 쓰면 늘고 최대 높이 안에서 스크롤 · 예시 칩 · 분야 칩은 그리지 않는다(코드 IDEA_EX · ideaEx · pickTag 는 보존) · 분야는 빈 값으로 보낸다 */
+    if (ideaGateOff() && !IDEA.cc) return '<div class="ax-stack">' + stampLineHtml("p5") + botHtml("아이디어 한 줄은 10월 26일에 열려요") + "</div>";   /* v5.90 사전 오픈 OFF · 행사 전 */
     var dr = ideaDraft(), n = ideaLen(dr);
     setTimeout(ideaFit, 0);
     return '<div class="ax-stack axs-form">' +
       '<div class="ax-stack-tight axs-gap12 axs-sthost">' + stampTagHtml("p5") + '<h1 class="ax-type-t2">문득 떠오른<br>&ldquo;이거 AI로 되겠는데?&rdquo;</h1>' +
-      '<p class="ax-body" id="ideaAward">' + IDEA_AWARD_TXT + "</p>" + (IDEA.cc && !cchat ? '<p class="ax-type-t6-strong axs-ideacc">커피챗은 아이디어 한 줄과 함께 신청해요</p>' : "") + "</div>" +   /* v5.83 커피챗에서 왔을 때 한 줄(ideaCcGo) */
+      ideaCutHtml() + '<p class="ax-body" id="ideaAward">' + IDEA_AWARD_TXT + (ideaStampLater() ? "<br>스탬프는 10/26 행사 당일에 적립돼요" : "") + "</p>" + (IDEA.cc && !cchat ? '<p class="ax-type-t6-strong axs-ideacc">커피챗은 아이디어 한 줄과 함께 신청해요</p>' : "") + "</div>" +   /* v5.83 커피챗에서 왔을 때 한 줄(ideaCcGo) */
       '<div class="ax-stack-tight"><label class="ax-sr-only" for="ideaText">아이디어 한 줄</label>' +
       '<textarea id="ideaText" class="ax-field axs-ta axs-grow" rows="4" maxlength="' + IDEA_MAX + '" placeholder="떠오른 생각을 자유롭게 적어 주세요" oninput="ideaInput(this.value)" onfocus="kbFocus(this)" aria-describedby="ideaLeft">' + esc(dr) + "</textarea>" +
       '<div class="axs-cnt"><p class="ax-meta" id="ideaLeft" aria-live="polite">' + ideaLeftTxt(n, dr) + '</p><p class="ax-meta"><span id="ideaCnt">' + dr.length.toLocaleString() + "</span>/" + IDEA_MAX.toLocaleString() + "</p></div></div>" +

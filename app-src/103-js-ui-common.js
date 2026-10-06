@@ -326,8 +326,10 @@ function m2t(m) { var h = Math.floor(m / 60), mm = m % 60; return (h < 10 ? "0" 
 function resvConf() { return S.get("resv_conf", RESV_CONF); }
 function resvSlots() {
   var c = resvConf(), out = [];
+  var le = /^\d\d:\d\d$/.test(String(S.get("lng_end", "") || "")) ? t2m(S.get("lng_end", "")) : 0;   /* v5.90 라운지_상담종료(sync lng.end) 이후 시작 슬롯은 빼낸다 */
   for (var m = t2m(c.start); m + c.step <= t2m(c.end); m += c.step) {
     if (m >= t2m(c.lunch) && m < t2m(c.lunchEnd)) continue;
+    if (le && m >= le) continue;
     out.push(m2t(m));
   }
   return out;
@@ -376,8 +378,9 @@ function ideaPush(text, tag, anon, ch) {
   ideas.push(it);
   S.set("ideas", ideas);
   var had = S.get("stamps", []).indexOf("p5") >= 0;   /* v5.57 이번 제출로 처음 받는가 */
+  if (IDEA.cc) it.cc = 1;   /* v5.90 커피챗 신청 화면에서 온 아이디어(서버 early 예외) */
   ideaSend(it);   /* v4.15 서버 저장(idea_submit · 커피챗 매칭 재료 · 콘솔 열람) · 서버가 참여 로그 idea 한 줄도 쓴다(옛 bePush idea 대신) · 실패하면 sync 때 다시 */
-  awardStamp("p5");
+  if (!ideaStampLater()) awardStamp("p5");   /* v5.90 행사 전 아이디어 스탬프는 10/26 첫 접속 때 서버가 준다(아이디어_사전스탬프 OFF) */
   IDEA.step = S.get("cchat", null) ? "done" : "ask";   /* v4.07 커피챗 요청은 참석 의사를 물은 뒤 (ideaCchat) */
   checkRewards();
   waveBump();
@@ -448,6 +451,15 @@ function ideaMineN() {   /* 커피챗 신청 가능 = 이 기기의 내 아이�
 }
 /* v5.83 커피챗에서 온 아이디어 쓰기 · 화면 위 한 줄 「커피챗은 아이디어 한 줄과 함께 신청해요」 · 제출하면 「이 아이디어로 커피챗을 신청할까요?」(IDEA.step ask) · 다른 화면을 그리면 표시를 접는다(라우터) */
 function ideaCcGo() { IDEA.cc = true; IDEA.step = null; App.go("ideas"); }
+/* v5.90 (261006) 아이디어 입구 · 서버 pub.idea { open, cut, late, prz, ps } · 행사 전 + 사전 오픈 OFF = 입구 숨김(테스트 사번 · 커피챗에서 온 경우 제외) · 옛 서버(없음) = 예전처럼 */
+function evPreDay() { var o = S.get("ev_phase", null); if (o) return o === "before"; return new Date(Date.now() + sesOff()) < new Date(2026, 9, 26); }
+function ideaGateOff() { var ip = S.get("idea_pub", null); return !!ip && !ip.open && evPreDay() && !testEmp(); }
+function ideaStampLater() { var ip = S.get("idea_pub", null); return !!ip && !ip.ps && evPreDay() && !testEmp(); }
+/* 아이디어 입력 화면 머리 한 줄 · 마감 전 「아이디어왕 접수 16:00 마감」 · 뒤 「접수 마감 · 제출은 받아요」 */
+function ideaCutHtml() {
+  var ip = S.get("idea_pub", null); if (!ip || !ip.cut) return "";
+  return '<p class="ax-type-t6-strong axs-ideacut">' + (ip.late ? "아이디어왕 접수 마감 · 제출은 받아요" : "아이디어왕 접수 " + esc(ip.cut) + " 마감") + "</p>";
+}
 /* v4.15 (사용자 확정 260922) 아이디어 서버 저장 · 커피챗 매칭에 필수 · 콘솔이 idea_list 로 본다.
    제출 ID(cid)를 같이 보내 재전송해도 한 번만 쓴다 · 서버에 닿으면 srv 에 시각 · 닿지 않은 내 것은 sync 때 다시 보낸다(옛 기기 로컬 아이디어도 이 길로 올라간다) */
 var IDEA_SENDING = {};
@@ -455,7 +467,7 @@ function ideaSend(it) {
   var u = S.get("user", {}) || {};
   if (!BE.on || !u.empId || !it || it.srv || !it.text || IDEA_SENDING[it.id]) return;
   IDEA_SENDING[it.id] = 1;
-  beCall({ action: "idea_submit", emp: u.empId, name: u.name || "", dept: S.get("dept", null) || "", cid: it.id, text: it.text, tag: it.tag || "", anon: it.anon ? 1 : 0, ch: it.ch || "app" },
+  beCall({ action: "idea_submit", emp: u.empId, name: u.name || "", dept: S.get("dept", null) || "", cid: it.id, text: it.text, tag: it.tag || "", anon: it.anon ? 1 : 0, ch: it.ch || "app", cc: it.cc ? 1 : 0 },
     function (res) { delete IDEA_SENDING[it.id]; if (res && res.ok) S.set("ideas", S.get("ideas", []).map(function (x) { return x.id === it.id ? Object.assign({}, x, { srv: Date.now() }) : x; })); },
     function () { delete IDEA_SENDING[it.id]; });
 }

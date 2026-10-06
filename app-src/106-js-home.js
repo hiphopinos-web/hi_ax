@@ -30,7 +30,8 @@ function schedNowRow() {
   /* v3.71 (사용자 확정 260918) 행사 전 D-N 줄 삭제 · 날짜·장소는 홈 머리에 이미 있다 */
   if (ph === "before") return "";
   if (ph === "after") {
-    return rcHtml({ cls: " past", onclick: finState() ? "App.go('rewards')" : go, link: true, left: tokBadge("종료", "dim"), title: "행사가 끝났습니다", sub: finState() ? "완주 경품 추첨 결과 · 나의 보상" : "" });   /* v5.04 옛 「추첨 결과는 개별 안내」(260909 사후 추첨 안) 폐기 · 참여상 상태가 있을 때만 내 보상으로 */
+    var fh = fcfsMy() && (fcfsMy().st === "got" || fcfsMy().st === "done");   /* v5.90 선착순 참여상 */
+    return rcHtml({ cls: " past", onclick: fh ? "App.go('rewards')" : go, link: true, left: tokBadge("종료", "dim"), title: "행사가 끝났습니다", sub: fh ? (fcfsMy().st === "got" ? "선착순 참여상 수령 자격" : "선착순 참여상 수령 완료") + " · 나의 보상" : "" });   /* v5.04 옛 「추첨 결과는 개별 안내」(260909 사후 추첨 안) 폐기 · 참여상 상태가 있을 때만 내 보상으로 */
   }
   var ni = nowIdx(), now = TIMELINE[ni];
   /* 다음 일정에서 상시 항목(always)은 건너뛴다 (v3.18) */

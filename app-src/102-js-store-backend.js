@@ -327,7 +327,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.89";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 */
+var APP_VER = "v5.90";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 · v5.90 = 261006 경품 기획 변경(선착순 참여상 · 체크인 3개 · 룰렛 960 · 17:00 마감 · 행운권 참석 조건 · 7등 · 아이디어왕 · 샘플 딱지 제거 · 커피챗 지급품 · 라운지 종료 · 아이디어 사전 오픈) */
 var A2HS = { deferred: null, open: false };
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -551,11 +551,12 @@ var STORE_DEVICE = ["vid", "a2hs", "fs", "t",
   "type_rank_*", "oly_tab", "oly_ev",
   "notices", "notices_wipe1", "cchat_close_id", "roulette_out", "cchat_out", "beta_form", "resv_conf", "crowd", "stv", "att_w",
   "art_demo_n", "ev_phase", "toff", "tour_seen",
-  "push_ask", "push_first", "push_ask_ios"];   /* v5.83 tour_seen = 둘러보기를 한 번 열었다(홈 카드 자리 · 기기 기준 · 옛 v5.46 tour_inv · v4.89 entry_pref · entry_ask_day 는 쓰지 않는다) · v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) · v4.78 아이폰 탭 · 앱 속 브라우저 안내는 하루 한 번 */
+  "fx", "rcut", "lkcond", "idea_pub", "lng_end",
+  "push_ask", "push_first", "push_ask_ios"];   /* v5.90 fx · rcut · lkcond · idea_pub · lng_end = 서버 공용 값(선착순 남은 수 · 룰렛 마감 · 행운권 참석 조건 · 아이디어왕 · 라운지 종료) */   /* v5.83 tour_seen = 둘러보기를 한 번 열었다(홈 카드 자리 · 기기 기준 · 옛 v5.46 tour_inv · v4.89 entry_pref · entry_ask_day 는 쓰지 않는다) · v4.76 알림 안내 시트 횟수 · 홈 화면 앱 첫 안내(기기 기준) · v4.78 아이폰 탭 · 앱 속 브라우저 안내는 하루 한 번 */
 var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_role", "adm_tok", "adm_emp", "dept",
   "stamps", "pp_seen", "pp_base", "pp_glow3", "stamp_pend", "lg_try", "lgx_seen", "scan_q", "stair", "checkin", "queue", "resv", "sess_my", "att_mine", "att_tm",
   "cchat", "cchat_pref", "cchat_att", "ideas", "idea_draft", "survey_draft", "survey_done", "survey_mine", "survey_force", "noti_seen",
-  "raffle_seen", "raffle_opened", "raffle_nums", "roulette_used", "roulette_open", "fin",
+  "raffle_seen", "raffle_opened", "raffle_nums", "roulette_used", "roulette_open", "fcfs", "lk7",
   "wave_extra", "test_mine", "type_nick", "type_nick_edit", "type_best", "mem_seen", "ox_seen",
   "pang_best", "jump_best", "gw_best", "gw_time_best", "tt_best", "pang_cleared", "jump_cleared", "gw_cleared", "type_cleared", "tetris_cleared", "ox_cleared",
   "oly2_best_*", "oly2_done_*", "oly_pend", "draw_in", "qz_run", "qz_last", "qz_best", "qz_kseen", "qz_pend", "gs_how",
