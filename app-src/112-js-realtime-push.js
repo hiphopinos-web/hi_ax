@@ -30,7 +30,7 @@ function checkMyState() {
   var c = S.get("cchat", null);
   if (c && c.status === "matched" && seen.cchat !== "m:" + c.round + c.table) {
     seen.cchat = "m:" + c.round + c.table; changed = true;
-    notifyUser("커피챗 매칭 완료", "18F · " + hhmm(c.round) + " · TABLE " + c.table, "ev_cchat");
+    notifyUser("커피챗에 선정됐어요", "18F · " + hhmm(c.round) + " · TABLE " + c.table, "ev_cchat");   /* v6.07 매칭 → 선정(서버 푸시 제목과 같다) */
   }
   /* v5.90 선착순 참여상 수령 자격 · 앱이 열려 있으면 팝업 1회(푸시 없음 · 계약 5.1) · 옛 완주 경품 당첨 팝업은 지웠다 */
   var fq = fcfsMy();
@@ -536,10 +536,10 @@ function pushSheetWait(ctx, opt, n) {
   if (el("modal") || el("axsSheet") || SPOP.cur || SPOP.q.length || el("app").hidden || el("rgPlay")) { setTimeout(function () { pushSheetWait(ctx, opt, n + 1); }, 400); return; }
   pushSheet(ctx, opt);
 }
-var PUSH_T = { photo: "차례가 되면 알려 드려요", cchat: "매칭되면 알려 드려요", crowd: "풀리면 알려 드려요", dap: "승인되면 알려 드려요", first: "알림을 켤까요?" };   /* v5.83 dap = DAP 과제상담 신청 직후(가치 순간 · 최초 진입 가볍게) */
+var PUSH_T = { photo: "차례가 되면 알려 드려요", cchat: "선정되면 알려 드려요", crowd: "풀리면 알려 드려요", dap: "승인되면 알려 드려요", first: "알림을 켤까요?" };   /* v5.83 dap = DAP 과제상담 신청 직후(가치 순간 · 최초 진입 가볍게) */
 function pushExHtml(ctx, opt) {
   var t = "포토부스 입장하세요", b = "1F · " + (opt.no || 14) + "번 · 10분 안에 입장";   /* v4.78 A10 실제 푸시 문구와 같게(제목에 주제어) */
-  if (ctx === "cchat" || ctx === "first") { t = "커피챗 매칭 완료"; b = "18F · 15:00 · TABLE 3"; }   /* v5.05 포토부스 대기 폐지면 처음 안내 예시도 커피챗 */
+  if (ctx === "cchat" || ctx === "first") { t = "커피챗에 선정됐어요"; b = "18F · 15:00 · TABLE 3"; }   /* v5.05 포토부스 대기 폐지면 처음 안내 예시도 커피챗 */
   if (ctx === "dap") { t = "AX 라운지 승인 완료"; b = "1F AX 라운지 · 14:20"; }   /* v5.83 실제 승인 알림(notifyUser)과 같은 말 · 개편안 초안 「과제상담」은 v5.64 이름 규칙(AX LOUNGE 상담)으로 */
   if (ctx === "kit") { t = "사전 신청 키트 수령 안내"; b = "10/26(월) 08:00부터 · 1F 주차장 체크인존"; }   /* 261006 키트 사이즈 정한 직후 */
   if (ctx === "crowd") { t = opt.tgt === "lobby" ? "1F 로비 혼잡이 풀렸어요" : "엘리베이터 혼잡이 풀렸어요"; b = (opt.tgt === "lobby" ? "1F 로비" : "1F 승강기 홀") + " · 15:07"; }
@@ -549,7 +549,7 @@ function pushSheet(ctx, opt) {
   var k = envKind();
   if (k === "ios-tab") { pushIosSheet(); return; }
   if (k === "inapp") { pushInappSheet(); return; }
-  sheetOpen({ id: "push", title: PUSH_T[ctx] || PUSH_T.first, lead: ctx === "first" ? ("커피챗 매칭과 공지를 알려 드려요") : "앱을 닫아도 잠금 화면에 알림이 와요",
+  sheetOpen({ id: "push", title: PUSH_T[ctx] || PUSH_T.first, lead: ctx === "first" ? ("커피챗 선정과 공지를 알려 드려요") : "앱을 닫아도 잠금 화면에 알림이 와요",
     body: pushExHtml(ctx, opt) + '<p class="axs-pnote">허용하면 이 기기로 알림을 보냅니다. 행사 후 삭제됩니다</p>',
     go: "pushAllow()", goLbl: "알림 받기", goBusy: "허용을 눌러 주세요" });   /* v4.78 A13 브라우저 허용창이 떠 있는 동안 */
 }
@@ -618,7 +618,7 @@ function pushSetPaint() {
   if (s.on) {
     var fl = Number(me.floor) || 0, fls = "";
     for (var f = 3; f <= 15; f++) fls += '<button type="button" class="axs-flr' + (f === fl ? " on" : "") + '" aria-pressed="' + (f === fl) + '" onclick="pushPrefSet(\'floor\', ' + f + ')">' + f + "층</button>";
-    rows = '<div class="axs-psets"><div class="axs-pset"><span>내 차례 · 매칭</span><b>켜짐</b></div>' + pushTgl("공지 · 추첨", "pub", me.pub !== 0) + (PUSH.vis === 1 ? pushTgl("관람 시간", "visit", me.visit === 1) : "") + "</div>" +
+    rows = '<div class="axs-psets"><div class="axs-pset"><span>내 차례 · 선정</span><b>켜짐</b></div>' + pushTgl("공지 · 추첨", "pub", me.pub !== 0) + (PUSH.vis === 1 ? pushTgl("관람 시간", "visit", me.visit === 1) : "") + "</div>" +
       (PUSH.vis === 1 && me.visit === 1 ? '<p class="axs-pnote">근무 층</p><div class="axs-flrs">' + fls + "</div>" : "");   /* v4.78 A6 관람 시간 행 · 근무 층은 서버 발송 스위치가 켜졌을 때만(꺼져 있으면 유령 스위치) */
   }
   var go = s.act === "on" ? "pushSetOn()" : s.act === "ios" ? "sheetClose(true); pushIosSheet()" : s.act === "inapp" ? "sheetClose(true); pushInappSheet()" : "sheetClose()";

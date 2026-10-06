@@ -1514,6 +1514,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-fl6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .axs-fl6 .axs-none { grid-column: 1 / -1; font: var(--ax-type-t6-strong); }
   /* v4.88 커피챗 선호 시간대 = 상담 시간 칸과 같은 칸 · 여러 개 고르기는 체크 표시로 알린다 · 「언제든 좋아요」는 한 줄 전체 */
+  .axs-cpref { grid-template-columns: repeat(3, minmax(0, 1fr)); }   /* v6.07 시간대 세 칸(13~16시 · 사용자 261007) + 「언제든 좋아요」 한 줄 */
   .axs-cpref .axs-none { grid-column: 1 / -1; }
   .axs-cpref-pg .axs-slot:not([aria-pressed="true"]) { background: var(--ax-color-surface); }
   .axs-multi .axs-slot { display: inline-flex; align-items: center; justify-content: center; gap: var(--ax-space-4); }

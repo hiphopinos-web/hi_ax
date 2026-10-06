@@ -1639,8 +1639,9 @@ function qrScanClose() {
   if (el("qrVideo")) modalClose();
 }
 /* v4.06 qrHandle → qrRoute (3단계 절 · 링크와 스캐너가 같은 분기) */
-/* v4.08 글자 수 = 공백을 뺀 글자 · 5글자 이상이면 제출 버튼이 켜진다 · 입력은 지우지 않는다 */
-var IDEA_MIN = 5;
+/* v4.08 글자 수 = 공백을 뺀 글자 · 5글자 이상이면 제출 버튼이 켜진다 · 입력은 지우지 않는다
+   v6.07 (사용자 261007 「아이디어 한 줄이 그래도 50자는 최소한」) 50자 · 공백 포함(앞뒤 공백만 뺀다) · 서버 IDEA_MIN 과 같다(모자라면 short) */
+var IDEA_MIN = 50;
 /* v5.39 (사용자 261003 「2,000자 이상」) 최대 3,000자 · 서버 IDEA_MAX 와 같다(서버는 넘으면 long 으로 거절) · 칸 maxlength 가 먼저 막는다 */
 var IDEA_MAX = 3000;
 /* 칸 높이 = 쓴 만큼(최대 높이는 CSS .axs-grow · 넘으면 칸 안에서 스크롤) · 키 입력마다 · 그린 직후 한 번 */
@@ -1656,12 +1657,28 @@ function ideaMineTxt(i) {
   return esc(op ? t : cut) + ' <button type="button" class="ax-link axs-plain" aria-expanded="' + op + '" onclick="ideaMineOpen(\'' + esc(i.id) + '\')">' + (op ? "접기" : "펼치기 · " + a.length.toLocaleString() + "자") + "</button>";
 }
 function ideaMineOpen(id) { IDEA_OPEN[id] = !IDEA_OPEN[id]; App.render(); }
-function ideaLen(v) { return String(v || "").replace(/\s/g, "").length; }
-function ideaDraft() { if (IDEA.draft == null) IDEA.draft = String(S.get("idea_draft", "") || ""); return IDEA.draft; }
-function ideaLeftTxt(n, v) { return n >= IDEA_MIN ? "제출할 수 있어요" : n === 0 ? IDEA_MIN + "글자 이상 쓰면 제출할 수 있어요" : (IDEA_MIN - n) + "글자 더 쓰면 제출할 수 있어요"; }
+function ideaLen(v) { return Array.from(String(v || "").trim()).length; }   /* v6.07 공백 포함 · 앞뒤 공백 제외 · 코드 포인트(서버 ideaLen_ 과 같은 셈 · 이모지 1) */
+function ideaDraft() { if (IDEA.draft == null) { IDEA.draft = String(S.get("idea_draft", "") || ""); IDEA.resume = !!IDEA.draft.trim(); } return IDEA.draft; }   /* v6.07 resume = 저장된 글로 다시 들어왔다(「이어 써요」) */
+/* v6.07 50자 전 = 「50자 이상 써 주세요 · 지금 n자」 · 3,000자 가까이(남은 300자부터) = 남은 글자 · 다 차면 더 쓸 수 없다고 */
+function ideaLeftTxt(n, v) {
+  var left = IDEA_MAX - String(v || "").length;
+  if (n < IDEA_MIN) return IDEA_MIN + "자 이상 써 주세요" + (n ? " · 지금 " + n + "자" : "");
+  if (left <= 0) return IDEA_MAX.toLocaleString() + "자까지 쓸 수 있어요";
+  return left <= 300 ? "남은 글자 " + left.toLocaleString() + "자" : "제출할 수 있어요";
+}
+/* v6.07 (사용자 261007 「임시 저장 기능도」) 쓰는 동안 이 기기에 저장(idea_draft · 글자마다 · 로그아웃하면 지워지는 사람 키) · 저장 시각 idea_draft_t { e: 사번, t } · 다른 사번 글이면 표시하지 않는다
+   칸 아래 한 줄 = 다시 들어온 첫 화면 「hh:mm에 쓰던 글을 이어 써요」 · 쓰기 시작하면 「자동 저장됨 · hh:mm」 · 제출에 성공하면 둘 다 지운다 */
+function ideaHm(t) { var d = new Date(t); return (d.getHours() < 10 ? "0" : "") + d.getHours() + ":" + (d.getMinutes() < 10 ? "0" : "") + d.getMinutes(); }
+function ideaSavedTxt(dr) {
+  var m = S.get("idea_draft_t", null), e = String((S.get("user", {}) || {}).empId || "");
+  if (!String(dr || "").trim() || !m || !m.t || (m.e && m.e !== e)) return "";
+  return IDEA.resume ? ideaHm(m.t) + "에 쓰던 글을 이어 써요" : "자동 저장됨 · " + ideaHm(m.t);
+}
 function ideaInput(v) {
   IDEA.draft = v; S.put("idea_draft", v);   /* v4.25 조용한 저장 · 다시 그리지 않는다(한글 조합 보호) */
-  var n = ideaLen(v), c = el("ideaCnt"), l = el("ideaLeft"), b = el("ideaGo");
+  IDEA.resume = false; S.put("idea_draft_t", { e: String((S.get("user", {}) || {}).empId || ""), t: Date.now() });   /* v6.07 저장 시각 */
+  var n = ideaLen(v), c = el("ideaCnt"), l = el("ideaLeft"), b = el("ideaGo"), sv = el("ideaSaved");
+  if (sv) sv.textContent = ideaSavedTxt(v);
   if (c) c.textContent = v.length.toLocaleString();
   ideaFit();
   if (l) l.textContent = ideaLeftTxt(n, v);
@@ -1673,7 +1690,7 @@ function submitIdea() {
   var nth = counters().ideas;
   try { ideaPush(text, "", !!IDEA.anon, "app"); }   /* v5.39 분야 칩 없음 · 빈 값(콘솔 「분야 없음」) */
   catch (e) { IDEA.err = "제출하지 못했어요. 다시 눌러 주세요."; App.render(); return; }   /* 실패해도 쓴 내용은 남는다 */
-  IDEA.draft = ""; S.set("idea_draft", ""); IDEA.err = "";
+  IDEA.draft = ""; S.set("idea_draft", ""); S.del("idea_draft_t"); IDEA.resume = false; IDEA.err = "";   /* v6.07 제출 성공 = 저장 글 · 시각 지움 */
   App.render(); window.scrollTo(0, 0);   /* v4.07 커피챗 참석 질문(또는 제출 완료)으로 */
   if (WALL_ON) setTimeout(function () { toast("오늘 " + (nth + 1).toLocaleString() + "번째 아이디어! ME to WE 월에 점 하나가 켜졌어요."); }, 100);   /* v5.00 월 문구는 WALL_ON 일 때만 · 제출 완료는 다음 화면이 알린다 */
 }

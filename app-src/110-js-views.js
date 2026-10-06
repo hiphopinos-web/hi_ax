@@ -157,18 +157,23 @@ var Views = {
     var mine = S.get("ideas", []).filter(function (i) { return i.empId === (S.get("user", {}).empId); });
     var cchat = S.get("cchat", null);
     /* v4.07 제출 뒤 두 장 · 질문(예 = 주 버튼 · 아니요 = 약한 버튼) → 완료 */
-    if (IDEA.step === "ask" && cchatClosed()) IDEA.step = "done";   /* v4.47 마감이면 묻지 않는다 */
+    if (IDEA.step === "ask" && (cchatClosed() || cchatOver())) IDEA.step = "done";   /* v4.47 마감이면 묻지 않는다 · v6.07 커피챗 하루가 끝났으면(16:00 뒤) 묻지 않는다 */
+    /* v6.07 (사용자 261007 「아이디어 한 줄 제출 > 커피챗 희망 여부(여기에서 기념품 노출) > 신청자 중 선정」) 제출 직후 희망 묶음
+       = 질문 + 18F · 13:00~16:00 + 지급품 사진 한 줄(커피 · 쿠키 · 노트 · 볼펜 = treatHtml sm) + 가능한 시간대(선택 · 여러 개 · 선정 때 시간 맞추기) + 선정 안내
+       주 버튼 「희망해요」(시간대를 안 골라도 켜짐 = 언제든) · 약한 버튼 「괜찮아요」 · 옛 「이 아이디어로 커피챗을 신청할까요?」 · 선착순 30명 · 시간대 필수는 걷었다 */
     if (IDEA.step === "ask") {
-      return '<div class="ax-stack axs-okwrap">' +
-        '<div class="ax-stack-tight axs-gap12 axs-center-tx"><p class="ax-meta">아이디어 제출 완료</p><h1 class="ax-type-t2">이 아이디어로 커피챗을 신청할까요?</h1>' +
-        '<p class="ax-body">' + CCHAT_TXT.replace(" · ", "<br>") + "</p></div>" +
-        cchatPrefHtml("ask") + '<div class="ax-card ax-stack-tight axs-gap12"><p class="ax-card-title">AX 커피챗 · 18F</p><p class="ax-description">선착순 ' + CCHAT_CAP + "명<br>고른 시간대에 맞춰 매칭해요<br>" + CCHAT_NOTE.replace(" · ", "<br>") + "</p></div></div>" +   /* v5.82 (261006 사용자 결정 6) 시간대 칸을 안내 카드 위로 · 390 x 844 에서 「언제든 좋아요」 칩이 아래 고정 버튼 뒤로 반쯤 잘렸다(고르는 칸이 먼저 보이게 · 안내 카드는 그 아래) */
-        '<div class="ax-bottom axs-fix">' + progBtn(cchatPref().length ? "신청할게요" : "시간대를 골라 주세요", "ideaCchat(1)", "", "ideaYes", !cchatPref().length) + progBtn("나중에 할게요", "ideaCchat(0)", "ax-button-weak", "ideaNo") + "</div>";   /* v4.45 선호 시간대를 골라야 신청 · v5.82 「참석」 → 「신청」(사용자 261006 결정 3 · 질문 시점은 신청이고 옛 아니요 버튼은 거절처럼 읽혔다) */
+      return '<div class="ax-stack axs-okwrap axs-ccask">' +
+        '<div class="ax-stack-tight axs-gap12 axs-center-tx"><p class="ax-meta">아이디어 제출 완료</p><h1 class="ax-type-t2">AX 커피챗에<br>참여하고 싶으세요?</h1>' +
+        '<p class="ax-body">18F · ' + CCHAT_HOURS + "<br>작은 테이블에서 아이디어를 함께 이야기해요</p></div>" +
+        '<div class="ax-card ax-stack-tight axs-gap12"><p class="ax-card-title">참여하면 드려요</p>' + treatHtml(1) + "</div>" +
+        cchatPrefHtml("ask") + '<p class="ax-meta axs-center-tx">희망한 분 중 선정해요<br>' + CCHAT_NOTE + "</p></div>" +
+        '<div class="ax-bottom axs-fix">' + progBtn("희망해요", "ideaCchat(1)", "", "ideaYes") + progBtn("괜찮아요", "ideaCchat(0)", "ax-button-weak", "ideaNo") + "</div>";
     }
     if (IDEA.step === "done") {
       /* v5.82 (사용자 261006 「커피챗 앞으로」) 신청 전 = 주 버튼 「커피챗 신청하기」(질문 화면 다시) · 신청한 뒤 = 「내 커피챗 보기」 · 마감 = 주 버튼 없음 · 「한 줄 더 남기기」는 글 링크로 · 옛 안내 「프로그램 › 상담에서」(v4.93 에 없어진 경로) 삭제 */
-      var ccl = cchatClosed(), cl = !cchat ? (ccl ? "커피챗은 선착순 " + CCHAT_CAP + "명이 모두 찼어요" : "아직 신청하지 않았어요") : cchat.status === "matched" ? "커피챗 매칭 완료 · " + esc(cchat.round) + " TABLE " + esc(cchat.table) : "커피챗 신청 완료 · " + CCHAT_NOTE;
-      var pri = cchat || S.get("cchat_att", false) ? progBtn("내 커피챗 보기", "progOpen('cchat')", "", "ideaCcGo") : ccl ? "" : progBtn("커피챗 신청하기", "IDEA.step='ask';App.render()", "", "ideaCcGo");
+      /* v6.07 희망제 · 희망 접수 = 「희망 접수됐어요 · 선정되면 하이웍스 · 앱 알림으로 알려 드려요」 · 선정 = 시각 · 테이블 · 희망 전 = 「커피챗 희망하기」(묶음 다시) */
+      var ccl = cchatClosed() || cchatOver(), cl = !cchat ? (ccl ? "커피챗 희망 접수가 끝났어요" : "아직 희망하지 않았어요") : cchat.status === "matched" ? "커피챗 선정 · " + esc(cchat.round) + " TABLE " + esc(cchat.table) : "희망 접수됐어요<br>" + CCHAT_NOTE;
+      var pri = cchat || S.get("cchat_att", false) ? progBtn("내 커피챗 보기", "progOpen('cchat')", "", "ideaCcGo") : ccl ? "" : progBtn("커피챗 희망하기", "IDEA.step='ask';App.render()", "", "ideaCcGo");
       return '<div class="ax-stack axs-okwrap">' +
         '<span class="axs-okmark">완료</span>' +
         '<div class="ax-stack-tight axs-gap12 axs-center-tx"><h1 class="ax-type-t2">아이디어를 제출했어요</h1>' +
@@ -177,7 +182,7 @@ var Views = {
         '<button type="button" class="ax-link axs-plain axs-self" onclick="IDEA.step=null;App.render()">한 줄 더 남기기</button></div>' +
         '<div class="ax-bottom axs-fix">' + pri + progBtn("내가 낸 아이디어 보기", "App.go(\'ideas_mine\')", pri ? "ax-button-weak" : "") + "</div>";   /* v5.67 둘러보기 복귀 = 떠 있는 「행사 둘러보기로 돌아가기」(trf) 하나 */
     }
-    /* v4.08 입력·제출 화면 = 전체 화면 · 하단 메뉴 숨김 · 아래 고정 주 버튼(5글자 이상이면 켜짐) + 약한 버튼
+    /* v4.08 입력·제출 화면 = 전체 화면 · 하단 메뉴 숨김 · 아래 고정 주 버튼(5글자 이상이면 켜짐 · v6.07 50자 공백 포함) + 약한 버튼
        쓴 내용은 어떤 경우에도 지우지 않는다(IDEA.draft · 기기 저장 idea_draft · 다시 그려도 그대로) · 공백은 글자 수에서 뺀다 */
     /* v5.39 (사용자 261003 「2,000자 이상 · 아래 예시 및 분류는 없애자」) 최대 IDEA_MAX(3,000)자 · 칸은 쓰면 늘고 최대 높이 안에서 스크롤 · 예시 칩 · 분야 칩은 그리지 않는다(코드 IDEA_EX · ideaEx · pickTag 는 보존) · 분야는 빈 값으로 보낸다 */
     if (ideaGateOff() && !IDEA.cc) return '<div class="ax-stack">' + stampLineHtml("p5") + botHtml("아이디어 한 줄은 10월 26일에 열려요") + "</div>";   /* v5.90 사전 오픈 OFF · 행사 전 */
@@ -185,10 +190,11 @@ var Views = {
     setTimeout(ideaFit, 0);
     return '<div class="ax-stack axs-form">' +
       '<div class="ax-stack-tight axs-gap12 axs-sthost">' + stampTagHtml("p5") + '<h1 class="ax-type-t2">문득 떠오른<br>&ldquo;이거 AI로 되겠는데?&rdquo;</h1>' +
-      ideaCutHtml() + '<p class="ax-body" id="ideaAward">' + IDEA_AWARD_TXT + (ideaStampLater() ? "<br>스탬프는 10/26 행사 당일에 적립돼요" : "") + "</p>" + (IDEA.cc && !cchat ? '<p class="ax-type-t6-strong axs-ideacc">커피챗은 아이디어 한 줄과 함께 신청해요</p>' : "") + "</div>" +   /* v5.83 커피챗에서 왔을 때 한 줄(ideaCcGo) */
+      ideaPrizeHtml() + (ideaStampLater() ? '<p class="ax-body">스탬프는 10/26 행사 당일에 적립돼요</p>' : "") + (IDEA.cc && !cchat ? '<p class="ax-type-t6-strong axs-ideacc">커피챗은 아이디어 한 줄을 내고 희망해요</p>' : ideaCcLineHtml()) + "</div>" +   /* v5.83 커피챗에서 왔을 때 한 줄(ideaCcGo) · v6.07 시상 묶음(ideaPrizeHtml · 옛 마감 줄 + 시상 줄 두 줄) · 커피챗 한 줄(ideaCcLineHtml) */
       '<div class="ax-stack-tight"><label class="ax-sr-only" for="ideaText">아이디어 한 줄</label>' +
       '<textarea id="ideaText" class="ax-field axs-ta axs-grow" rows="4" maxlength="' + IDEA_MAX + '" placeholder="떠오른 생각을 자유롭게 적어 주세요" oninput="ideaInput(this.value)" onfocus="kbFocus(this)" aria-describedby="ideaLeft">' + esc(dr) + "</textarea>" +
-      '<div class="axs-cnt"><p class="ax-meta" id="ideaLeft" aria-live="polite">' + ideaLeftTxt(n, dr) + '</p><p class="ax-meta"><span id="ideaCnt">' + dr.length.toLocaleString() + "</span>/" + IDEA_MAX.toLocaleString() + "</p></div></div>" +
+      '<div class="axs-cnt"><p class="ax-meta" id="ideaLeft" aria-live="polite">' + ideaLeftTxt(n, dr) + '</p><p class="ax-meta"><span id="ideaCnt">' + dr.length.toLocaleString() + "</span>/" + IDEA_MAX.toLocaleString() + "</p></div>" +
+      '<p class="ax-meta axs-saved" id="ideaSaved">' + esc(ideaSavedTxt(dr)) + "</p></div>" +   /* v6.07 자동 저장 · 이어 쓰기 한 줄 */
       '<label class="axs-check"><input type="checkbox" id="ideaAnon"' + (IDEA.anon ? " checked" : "") + ' onchange="IDEA.anon=this.checked">익명으로 표시 (시상 시에만 본인 확인)</label>' +
       (IDEA.err ? '<div class="axs-err" role="alert"><b>' + esc(IDEA.err) + "</b><span>쓴 내용은 그대로 있어요</span></div>" : "") +
       (mine.length ? '<button type="button" class="ax-link axs-plain axs-self" onclick="App.go(\'ideas_mine\')">내가 낸 아이디어 ' + mine.length + "건</button>" : "") +

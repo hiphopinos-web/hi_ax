@@ -25,6 +25,24 @@
   .axs-treat figcaption span { font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
   .axs-ph.ico { display: flex; align-items: center; justify-content: center; background: var(--ax-color-brand-soft, #FFEBE0); color: var(--ax-color-brand, #FF7E31); }   /* v5.90 사진 없는 지급품 칸 */
   .axs-ph.ico svg { width: 44%; height: 44%; }
+  /* v6.07 볼펜(룰렛 5등 사진) = 사선이라 자르지 않는다 · 흰 바탕 사진 */
+  .axs-ph.fit { background: var(--ax-color-surface); box-shadow: inset 0 0 0 1px var(--ax-color-divider); }
+  .axs-ph.fit img { object-fit: contain; }
+  /* v6.07 커피챗 희망 묶음 · 지급품 한 줄 4칸(커피 · 쿠키 · 노트 · 볼펜) · 이름만 · 작은 글 */
+  .axs-treat.sm { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--ax-space-8); }
+  .axs-treat.sm figure { gap: var(--ax-space-4); }
+  .axs-treat.sm .axs-ph { border-radius: var(--ax-radius-12); }
+  .axs-treat.sm figcaption { align-items: center; text-align: center; }
+  .axs-treat.sm figcaption b { font: var(--ax-type-t7); font-weight: 700; }
+  .axs-treat.sm figcaption span { display: none; }
+  /* v6.07 아이디어 입력 화면 시상 묶음 · 연주황 면(받으려면 박스와 같은 면) · 한 줄 + 아이디어왕 카드 3장(경품 시트와 같은 그림 · 폭만 줄임) + 마감 한 줄 */
+  .axs-ideaprz { display: flex; flex-direction: column; gap: var(--ax-space-8); margin: 0; padding: var(--ax-space-16); border-radius: var(--ax-radius-16); background: var(--ax-color-brandSoft); }
+  .axs-ideaprz .h { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }
+  .axs-ideaprz .axs-pz-r3 { width: 100%; max-width: 300px; margin: 0 auto; }
+  .axs-ideaprz .c { margin: 0; font: var(--ax-type-t7); font-weight: 700; color: var(--ax-color-brandText); text-align: center; }
+  .axs-saved { margin: 0; min-height: 1.2em; }
+  .axs-ideacc { word-break: keep-all; }
+  .axs-okwrap.axs-ccask { padding-top: var(--ax-space-16); }   /* v6.07 희망 묶음 · 시간대 칸이 아래 고정 버튼에 덜 가리게 */
   /* ═══════ v5.08 경품 포스터(prizes) · 입구 (261003 사용자 「경품 사진이 작다 · 포스터처럼 · 싼티 없이 · 스탬프 누적표에서 바로」 · 「제품 사진을 더 크게 부각」)
      구성 = 표지(먹색 면 + 도트 격자 + 주황 3중 원 점 · 「Prizes」) → 행운권 → 참여상 → 룰렛 → 1F 타자왕(v5.09 사진 카드 · 1등 대표 + 2 · 3등 2열)
      표지 먹색 면 = 이 화면 맨 위 한 구역 한정(design.md §1 스테이지 「블랙 = 포스터 블랙판」 · 앱 셸 블랙 금지의 예외 · 판 퀴즈 1F 판 문법과 같은 「구역 한정」) · 손이 닿는 줄은 앱 문법

@@ -142,7 +142,7 @@ var TREATS = [
   { nm: "커피", sub: "콜드브루 · 디카페인", img: "cc_coffee_v2", img2: "cc_decaf_v2" },
   { nm: "쿠키", sub: "광화문 달곰 베이크샵", ico: "cookie" },
   { nm: "노트", sub: "", ico: "note" },
-  { nm: "볼펜", sub: "", ico: "pen" }
+  { nm: "볼펜", sub: "", img: "rl5_pen_v2", fit: 1 }   /* v6.07 (사용자 261007 「볼펜은 룰렛의 볼펜과 같은 거야」) 룰렛 5등 사진 · fit = 자르지 않는다(사선 볼펜) */
 ];
 var TREAT_ICO = {
   cookie: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="16"/><circle cx="18" cy="19" r="1.6" fill="currentColor"/><circle cx="28" cy="17" r="1.6" fill="currentColor"/><circle cx="30" cy="28" r="1.6" fill="currentColor"/><circle cx="19" cy="30" r="1.6" fill="currentColor"/><circle cx="24" cy="24" r="1.4" fill="currentColor"/></svg>',
@@ -153,7 +153,7 @@ function prizePhHtml(p, w) {
   if (p && !p.img && p.ico && TREAT_ICO[p.ico]) return '<span class="axs-ph ico" aria-hidden="true">' + TREAT_ICO[p.ico] + "</span>";   /* v5.90 사진 없는 지급품 = 아이콘 칸 */
   if (!p || !p.img) return '<span class="axs-ph" aria-hidden="true"></span>';
   var im = function (n) { return '<img src="' + PRIZE_DIR + n + '.webp" alt="" width="' + (w || 240) + '" height="' + (w || 240) + '" loading="lazy" decoding="async" onerror="this.remove()">'; };
-  return '<span class="axs-ph' + (p.img2 ? " two" : "") + '" aria-hidden="true">' + im(p.img) + (p.img2 ? im(p.img2) : "") +   /* v5.18 img2 = 사진 두 장 나란히 */
+  return '<span class="axs-ph' + (p.img2 ? " two" : "") + (p.fit ? " fit" : "") + '" aria-hidden="true">' + im(p.img) + (p.img2 ? im(p.img2) : "") +   /* v5.18 img2 = 사진 두 장 나란히 */
     (PRIZE_SAMPLE && p.s !== 0 ? '<span class="smp">샘플</span>' : "") + "</span>";
 }
 /* 모달 아래 경품 한 줄(룰렛 1회권 · 행운권 · 참여상 안내) · v5.08 옛 목록 대신 대표 사진 + 요약 + 「경품 보기」(포스터 그 구역으로) */
@@ -224,15 +224,21 @@ function pzCard(p, unit, cls, qt) {
   return '<article class="axs-pz-c' + cls + (p.flat ? " flat" : "") + (p.tall ? " tall" : "") + '"><div class="tx">' + (p.rk ? '<span class="rk">' + p.rk + "</span>" : "") +
     "<b>" + esc(p.nm) + (p.sub ? "<small>" + esc(p.sub) + "</small>" : "") + '</b><span class="q">' + esc(qt || p.q.toLocaleString() + unit) + "</span></div>" + ph + "</article>";   /* v5.97 qt = 구역이 준 수량 글(선착순 남은 수량) */   /* v5.33 글 줄 먼저 · 사진 아래 */
 }
+/* v5.97 (사용자 261006 밤 「3등 이상하게 편집 · 한 줄에」) 같은 그림 카드 3장 = 한 줄 3칸 · 같은 크기 · 그림 아래 「1등 · 1명」 한 줄(개월은 카드 그림 알약)
+   v6.07 함수로 뺐다 · 경품 시트 아이디어왕 구역과 아이디어 입력 화면(ideaPrizeHtml · 작게)이 같은 그림 · 같은 모양을 쓴다 */
+function pzR3Html(k) {
+  var g = PRIZES[k]; if (!g) return "";
+  return '<div class="axs-pz-r3">' + g.list.map(function (p) {
+    return '<article class="axs-pz-c r3" aria-label="' + esc(p.rk + " " + p.nm + " " + p.q + g.unit) + '">' + '<span class="axs-pz-ph">' + (p.img ? '<img src="' + PRIZE_DIR + p.img + '.webp" alt="" width="600" height="600" loading="lazy" decoding="async" onerror="this.remove()">' : "") + "</span>" +
+      '<p class="cp" aria-hidden="true"><b>' + p.rk + "</b> · " + p.q + g.unit + "</p></article>";
+  }).join("") + "</div>";
+}
 function prizeSecHtml(s) {
   var g = PRIZES[s.k]; if (!g || (s.on && !s.on())) return "";
   var head = '<header class="axs-pz-sh" id="pz-' + s.k + '"><p class="en" aria-hidden="true">' + s.en + "</p><h2>" + s.t + "</h2></header>" + pzNeedHtml(s);   /* v5.74 머리 = 영문 장식 · 제목 · 「받으려면」 박스 */
   var go = s.go ? '<button type="button" class="ax-button ax-button-weak" onclick="' + s.go[1] + '">' + s.go[0] + "</button>" : "";   /* v5.73 (사용자 261005 「실시간 순위는 가장 아래 위치에 있어야 할 것 같아」) 구역 버튼(타자왕 순위판) = 블록 맨 아래(경품 사진 · 이름 · 안내 다음) · 옛 v5.18 = 머리 바로 아래 */
   var hn = PZ_HERO[s.k] || 0, rest = g.list.slice(hn), solo = rest.filter(function (p) { return !p.img2; }).length, k = 0;
-  if (s.r3) return '<section class="axs-pz-sec' + (s.sep ? " sep" : "") + '">' + head + '<div class="axs-pz-r3">' + g.list.map(function (p) {   /* v5.97 (사용자 261006 밤 「3등 이상하게 편집 · 한 줄에」) 같은 그림 카드 3장 = 한 줄 3칸 · 같은 크기 · 그림 아래 「1등 · 1명」 한 줄(개월은 카드 그림 알약) */
-    return '<article class="axs-pz-c r3" aria-label="' + esc(p.rk + " " + p.nm + " " + p.q + g.unit) + '">' + '<span class="axs-pz-ph">' + (p.img ? '<img src="' + PRIZE_DIR + p.img + '.webp" alt="" width="600" height="600" loading="lazy" decoding="async" onerror="this.remove()">' : "") + "</span>" +
-      '<p class="cp" aria-hidden="true"><b>' + p.rk + "</b> · " + p.q + g.unit + "</p></article>";
-  }).join("") + "</div>" + go + "</section>";
+  if (s.r3) return '<section class="axs-pz-sec' + (s.sep ? " sep" : "") + '">' + head + pzR3Html(s.k) + go + "</section>";   /* v6.07 카드 3장 = pzR3Html 한 곳(아이디어 입력 화면 시상 묶음이 같은 함수를 부른다) */
   var body = g.list.slice(0, hn).map(function (p) { return pzCard(p, g.unit, " hero", s.qt && s.qt()); }).join("") +
     (rest.length ? '<div class="axs-pz-gr">' + rest.map(function (p) {   /* v5.18 사진 두 장 카드(img2) = 늘 넓은 카드 · 나머지에서 홀수로 남는 마지막 칸 = 넓은 카드 */
       if (p.img2) return pzCard(p, g.unit, " gr wide");
@@ -349,8 +355,8 @@ function roulCut() {
 }
 function ideaKingN() { var ip = S.get("idea_pub", null), n = 0; ((ip && ip.prz) || []).forEach(function (x) { n += +x.n || 0; }); return n || 5; }
 /* 커피 · 간식 사진 2장 · 18F 커피챗 상세 · DAP 과제상담 상세 */
-function treatHtml() {
-  return '<div class="axs-treat">' + TREATS.map(function (t) {
+function treatHtml(sm) {   /* v6.07 sm = 한 줄 4칸(커피챗 희망 묶음) */
+  return '<div class="axs-treat' + (sm ? " sm" : "") + '">' + TREATS.map(function (t) {
     return "<figure>" + prizePhHtml(t, 360) + "<figcaption><b>" + esc(t.nm) + "</b><span>" + esc(t.sub) + "</span></figcaption></figure>";
   }).join("") + "</div>";
 }
