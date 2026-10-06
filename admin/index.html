@@ -6549,7 +6549,7 @@ GUIDE.e_type=[["1F 셀프","1F 노트북에서 참가자가 앱의 내 QR 로 �
  * 명단 값은 이 화면 메모리에만 둔다(저장소 · sessionStorage 에 남기지 않는다) · 이름 · 사번은 슈퍼관리자 화면에만 · 클래스 이름은 p10- 로 시작 */
 var P10_IDS=["fld","ta","tb","aws","ms1","ms2"];
 var P10_NAME={ fld:"세션 A", ta:"세션 B", tb:"세션 C", aws:"세션 D", ms1:"세션 E · 1회차", ms2:"세션 E · 2회차" };
-var P10_CAP={ fld:63, ta:32, tb:28, aws:20, ms1:20, ms2:20 };   /* 서버 SESS_CAP 과 같은 값 · 서버가 cap 을 주면 그쪽 */
+var P10_CAP={ fld:63, ta:32, tb:28, aws:28, ms1:20, ms2:20 };   /* 서버 SESS_CAP 과 같은 값 · 서버가 cap 을 주면 그쪽 */
 var P10_MAX=400, P10_WORD="명단적용", P10_UWORD="명단되돌리기";
 var P10_ST={ ok:["정상","ok"], dup:["같은 줄 중복","off"], multi:["다른 세션 겹침","bad"], noros:["명부에 없음","bad"], sess:["세션 오류","bad"], emp:["사번 오류","bad"], eq:["E 회차 없음","warn"] };
 var P10={ book:null, name:"", grid:null, hdr:true, cE:-1, cS:-1, eDef:"", mode:"replace", src:"file", paste:"", err:"", busy:"", filt:"", rows:null, pv:null, pvKey:"", pvBad:"", res:null, drag:false };
