@@ -240,6 +240,7 @@ function stampPopDef(id) {
 function stampOverlay(id, op) {
   var sd = stampPopDef(id);
   if (!sd) return false;
+  if (id === "lg" && typeof lgfxMark === "function") lgfxMark();   /* v6.07 이 기기 · 이 사번은 최초 로그인 도장을 봤다 */
   var seen = ppSeenGet();
   if (seen.indexOf(id) < 0) { seen.push(id); S.set("pp_seen", seen); }   /* 재생 중복 방지 · 스탬프 탭이 다시 그려져도 또 안 튄다 */
   if (id === STAMP_HALF && S.get("stamps", []).indexOf("p3") >= 0) return true;   /* v5.68 같은 동기화에 2개가 함께 왔으면 「×2」 팝 하나만 */

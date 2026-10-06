@@ -231,11 +231,28 @@ function awardStamp(id) {
 function lgCheck(list) {
   var emp = String((S.get("user", {}) || {}).empId || "");
   if (!stampV2() || !emp || LGX.cur) return;   /* v4.87 장면이 도는 중이면 장면이 보낸다 */
+  if ((list || []).indexOf("lg") >= 0) lgfxRun(emp);   /* v6.07 9월 시험 때 이미 받은 사람도 이 기기 · 이 사번으로 한 번 도장 팝 */
   if ((list || []).indexOf("lg") >= 0 || S.get("stamps", []).indexOf("lg") >= 0 || stampPend().lg) return;
   var tr = S.get("lg_try", null);
   if (tr && tr.emp === emp && Date.now() - (tr.t || 0) < 1800000) return;
   S.set("lg_try", { emp: emp, t: Date.now() });
   awardStamp("lg");
+}
+/* v6.07 (사용자 261007 「9월 시험 때 이미 로그인한 사람도 최초 스탬프 효과가 나도록」) 서버에 lg 가 이미 있어도 이 기기에서 이 사번이 아직 안 봤으면 「최초 로그인」 도장 팝을 한 번만
+   연출만 한다(다시 적립하지 않는다 · 개수 · 서버 기록 그대로) · 본 기록 = 기기 키 lgfx_261007(사번 목록 · 로그아웃해도 남는다) · lg 팝이 뜨면 어디서든 기록(stampOverlay · 장면 도장 포함)
+   로그인 직후 · 이미 로그인된 앱을 연 경우 모두 첫 동기화(lgCheck)에서 · 입장 전환이 끝난 뒤(0.9초) · 장면이 떠 있으면 하지 않는다 · 다른 팝 · 안내와는 SPOP 줄 세우기 그대로 */
+var LGFX_WAIT = 0;
+function lgfxSeen(emp) { return (S.get("lgfx_261007", []) || []).indexOf(String(emp)) >= 0; }
+function lgfxMark() { var emp = String((S.get("user", {}) || {}).empId || ""), a = S.get("lgfx_261007", []) || []; if (emp && a.indexOf(emp) < 0) { a.push(emp); S.put("lgfx_261007", a); } }
+function lgfxRun(emp) {
+  if (lgfxSeen(emp) || LGFX_WAIT) return;
+  LGFX_WAIT = 1;
+  setTimeout(function () {
+    LGFX_WAIT = 0;
+    var me = String((S.get("user", {}) || {}).empId || "");
+    if (me !== String(emp) || lgfxSeen(emp) || LGX.cur || el("lgx") || S.get("stamps", []).indexOf("lg") < 0) return;
+    stampOverlay("lg");
+  }, 900);
 }
 /* ── v3.97 보내기 전 적립(대기 목록) · 서버 스탬프 목록이 정본이되, 아직 서버에 닿지 않은 내 적립은 지우지 않는다 ──
    stamp_pend = { id: { t: 적립 시각, ok: 서버가 push 를 받은 시각(0 = 아직) } }
