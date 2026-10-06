@@ -3430,11 +3430,13 @@
   }
   /* ── 엘리베이터 장면 · 로비에서 멀리(three x +300) 따로 세운다 · 처음 탈 때 만든다 ── */
   var EV = { g: null, O: new T.Vector3(300, 0, 0), W: 2.3, D: 2.0, H: 2.45, bots: [], hopT: -9, lookT: 0, look: null };   /* v5.65 (사용자 261005 「엘리베이터가 비좁아서 엉덩이가 튀어 나오니 거기까지 확장」) 폭 2.1 → 2.3 · 깊이 1.6 → 2.0 · 몸 반지름 0.337 + 발밑 고리 0.42 가 벽 · 바닥 끝 안 */
-  function steelTex(w, h, seed) {
-    var c = document.createElement('canvas'); c.width = w; c.height = h; var g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, w * 0.3, h);
-    gr.addColorStop(0, '#D7DADD'); gr.addColorStop(0.45, '#B9BEC3'); gr.addColorStop(0.7, '#CDD0D4'); gr.addColorStop(1, '#AEB3B8'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  function steelTex(w, h, seed) {   /* 261006 (사용자 엘리베이터 영상) 벽 = 결이 거의 안 보이는 새틴 스테인리스(조명 받은 따뜻한 은색 · 위쪽 넓은 반사 · 세로 반사 띠 · 고운 점 결) · 옛 = 가로 헤어라인이 또렷한 은색 */
+    var c = document.createElement('canvas'); c.width = w; c.height = h; var g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, h);
+    gr.addColorStop(0, '#E0DEDB'); gr.addColorStop(0.35, '#D0CECB'); gr.addColorStop(0.75, '#C5C3C0'); gr.addColorStop(1, '#CCCAC7'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
     var r = seed || 7; function rnd() { r = (r * 16807) % 2147483647; return r / 2147483647; }
-    for (var i = 0; i < w * h / 90; i++) { var y = rnd() * h, x = rnd() * w - 40, L = 30 + rnd() * 160, a = 0.04 + rnd() * 0.1; g.fillStyle = rnd() < 0.5 ? 'rgba(255,255,255,' + a + ')' : 'rgba(60,66,72,' + a + ')'; g.fillRect(x, y, L, 1); }   /* 가로 헤어라인 */
+    for (var b = 0; b < 3; b++) { var bx = rnd() * w, bw = w * (0.12 + rnd() * 0.18), lg = g.createLinearGradient(bx - bw, 0, bx + bw, 0); lg.addColorStop(0, 'rgba(255,255,255,0)'); lg.addColorStop(0.5, 'rgba(255,255,255,' + (0.1 + rnd() * 0.08).toFixed(3) + ')'); lg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = lg; g.fillRect(bx - bw, 0, bw * 2, h); }   /* 세로 넓은 반사 띠 */
+    for (var i = 0; i < w * h / 8; i++) { var a = 0.025 + rnd() * 0.035; g.fillStyle = rnd() < 0.5 ? 'rgba(255,255,255,' + a + ')' : 'rgba(70,72,74,' + a + ')'; g.fillRect(rnd() * w, rnd() * h, 1, 1); }   /* 고운 점 결 */
+    for (var j = 0; j < w * h / 500; j++) { g.fillStyle = 'rgba(255,255,255,' + (0.02 + rnd() * 0.03) + ')'; g.fillRect(rnd() * w - 10, rnd() * h, 10 + rnd() * 40, 1); }   /* 아주 옅은 짧은 결 */
     var t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; return t;
   }
   function evText(txt, w, h, col, bg, font) {
@@ -3463,11 +3465,14 @@
     var rose = new T.MeshPhongMaterial({ color: 0xC0866A, specular: 0x8A5A44, shininess: 60 });
     var steel = new T.MeshPhongMaterial({ map: steelTex(256, 512, 11), specular: 0x5A5F64, shininess: 38 }), steelD = new T.MeshPhongMaterial({ map: steelTex(256, 512, 29), color: 0xC9CDD1, specular: 0x4A4F54, shininess: 30 }), seam = lam(0x6E747A), dark = lam(0x2B2F34);
     function box(w, h, d, m, x, y, z) { var o = new T.Mesh(new T.BoxGeometry(w, h, d), m); o.position.set(x, y, z); g.add(o); return o; }
-    /* 바닥 · 짙은 화강석(점) + 둘레 스테인리스 띠 */
-    var fc = document.createElement('canvas'); fc.width = fc.height = 256; var fg = fc.getContext('2d'); fg.fillStyle = '#3E4247'; fg.fillRect(0, 0, 256, 256);
-    for (var i = 0; i < 2600; i++) { var v = 40 + Math.floor(Math.random() * 70); fg.fillStyle = 'rgba(' + v + ',' + (v + 3) + ',' + (v + 6) + ',.8)'; fg.fillRect(Math.random() * 256, Math.random() * 256, 1 + Math.random() * 2, 1 + Math.random() * 2); }
-    var ft = new T.CanvasTexture(fc); ft.colorSpace = T.SRGBColorSpace; ft.wrapS = ft.wrapT = T.RepeatWrapping; ft.repeat.set(2, 1.5);
-    var floor = new T.Mesh(new T.PlaneGeometry(W, D), new T.MeshLambertMaterial({ map: ft })); floor.rotation.x = -Math.PI / 2; g.add(floor);
+    /* 바닥 · 261006 (사용자 엘리베이터 영상) 밝은 크림 대리석(옅은 구름 · 가는 결 · 은은한 광택) + 둘레 스테인리스 띠 · 옛 = 짙은 화강석 점 무늬 */
+    var fc = document.createElement('canvas'); fc.width = fc.height = 512; var fg = fc.getContext('2d'), fr = 31; function frn() { fr = (fr * 16807) % 2147483647; return fr / 2147483647; }
+    fg.fillStyle = '#E3DDD1'; fg.fillRect(0, 0, 512, 512);
+    for (var i = 0; i < 26; i++) { var cx = frn() * 512, cy = frn() * 512, cr = 40 + frn() * 120, rg0 = fg.createRadialGradient(cx, cy, 0, cx, cy, cr); rg0.addColorStop(0, frn() < 0.5 ? 'rgba(244,240,232,.5)' : 'rgba(208,199,184,.35)'); rg0.addColorStop(1, 'rgba(227,221,209,0)'); fg.fillStyle = rg0; fg.fillRect(cx - cr, cy - cr, cr * 2, cr * 2); }   /* 옅은 구름 */
+    fg.lineCap = 'round'; for (var vn = 0; vn < 9; vn++) { var vx = frn() * 512, vy = frn() * 512; fg.strokeStyle = 'rgba(150,138,120,' + (0.1 + frn() * 0.12).toFixed(3) + ')'; fg.lineWidth = 0.8 + frn() * 1.6; fg.beginPath(); fg.moveTo(vx, vy); fg.bezierCurveTo(vx + 80 + frn() * 120, vy + (frn() - 0.5) * 160, vx + 160 + frn() * 140, vy + (frn() - 0.5) * 220, vx + 260 + frn() * 200, vy + (frn() - 0.5) * 260); fg.stroke(); }   /* 가는 결 */
+    for (var sp = 0; sp < 2400; sp++) { var sv = 190 + Math.floor(frn() * 50); fg.fillStyle = 'rgba(' + sv + ',' + (sv - 6) + ',' + (sv - 16) + ',.35)'; fg.fillRect(frn() * 512, frn() * 512, 1, 1); }
+    var ft = new T.CanvasTexture(fc); ft.colorSpace = T.SRGBColorSpace; ft.anisotropy = 4;
+    var floor = new T.Mesh(new T.PlaneGeometry(W, D), new T.MeshPhongMaterial({ map: ft, specular: 0x24221F, shininess: 60 })); floor.rotation.x = -Math.PI / 2; g.add(floor);
     box(W, 0.012, 0.06, steel, 0, 0.006, fz + 0.03); box(W, 0.012, 0.06, steel, 0, 0.006, -fz - 0.03);
     /* 옆 벽(세 장 · 이음줄) · 손잡이 */
     [-1, 1].forEach(function (sd) {
@@ -3485,18 +3490,19 @@
     box(0.006, DH, 0.034, seam, 0, DH / 2, fz - 0.012);
     /* v5.58 (사용자 261004 엘리베이터 내부 사진) 문 오른쪽 세로 조작반 기둥(헤어라인 스테인리스 · 바닥 ~ 천장) · 맨 위 모니터(위 = 광고 · 아래 띠 = ▲ + 층 숫자) · 버튼 두 줄(왼 1~9 · 오른 10~18 · 위에서 아래로 큰 수부터) · 열림 · 닫힘 · 비상 · 정원 표시판
      *   모니터 아래 띠 = 사진은 파란 띠 · 앱 디자인 규칙(파랑 금지)대로 먹색 띠 + 주황 ▲ + 흰 숫자 · 날짜 · 날씨 · 상표 로고는 넣지 않는다 · 누를 수 있는 것은 화면 오른쪽 층 단추(18 · 17 · 10) · 누르면 같은 층 버튼에 주황 불 */
-    var CX = DW / 2 + 0.17, CW = 0.24;
+    var CX = DW / 2 + 0.2, CW = 0.3;   /* 261006 영상 = 기둥이 문틀에 붙고 더 넓다(옛 0.17 · 0.24) */
     box(CW, H - 0.02, 0.016, steelD, CX, H / 2, fz + 0.008);
-    var MW = 0.22, MH = 0.2, MY = 1.86;
+    var MW = 0.27, MH = 0.22, MY = 1.98;   /* 261006 영상 = 모니터가 기둥 폭에 가깝게 크고 천장 쪽(옛 0.22 · 0.2 · 1.86) */
     box(MW + 0.012, MH + 0.012, 0.006, dark, CX, MY, fz + 0.019);
     var scr = new T.Mesh(new T.PlaneGeometry(MW, MH * 0.74), new T.MeshBasicMaterial({ color: 0x14171C, toneMapped: false })); scr.position.set(CX, MY + MH * 0.13, fz + 0.023); scr.name = 'tvScreen'; scr.userData = { tv: true, elev: true }; g.add(scr);
     EV.indCv = document.createElement('canvas'); EV.indCv.width = 220; EV.indCv.height = 52; EV.indTex = new T.CanvasTexture(EV.indCv); EV.indTex.colorSpace = T.SRGBColorSpace; evInd(1, false);
     var ind = new T.Mesh(new T.PlaneGeometry(MW, MH * 0.26), new T.MeshBasicMaterial({ map: EV.indTex, toneMapped: false })); ind.position.set(CX, MY - MH * 0.37, fz + 0.023); g.add(ind);
+    var SPY = MY - MH / 2 - 0.2; box(0.05, 0.008, 0.004, dark, CX, SPY, fz + 0.018);   /* 261006 영상 · 모니터 아래 작은 스피커 틈(상표 글자는 넣지 않는다) */
     EV.btn = {}; var ringOff = new T.MeshBasicMaterial({ color: 0xA9AEB3, toneMapped: false }), ringOn = new T.MeshBasicMaterial({ color: 0xFF7F32, toneMapped: false }), RG = new T.RingGeometry(0.0155, 0.0195, 24), CG = new T.CircleGeometry(0.0158, 24);
-    EV.ringOff = ringOff; EV.ringOn = ringOn;
+    EV.ringOff = ringOff; EV.ringOn = ringOn; var FM = {};
     for (var f2 = 1; f2 <= 18; f2++) {
       var col2 = f2 <= 9 ? 0 : 1, row = f2 <= 9 ? 9 - f2 : 18 - f2, bx = CX + (col2 ? 0.026 : -0.026), by = 1.47 - row * 0.05;
-      var face = new T.Mesh(CG, new T.MeshBasicMaterial({ map: evBtnTex(String(f2)), toneMapped: false })); face.position.set(bx, by, fz + 0.019); g.add(face);
+      var fm2 = new T.MeshBasicMaterial({ map: evBtnTex(String(f2)), toneMapped: false }); FM[f2] = fm2; var face = new T.Mesh(CG, fm2); face.position.set(bx, by, fz + 0.019); g.add(face);
       var rg = new T.Mesh(RG, ringOff); rg.position.set(bx, by, fz + 0.0195); g.add(rg); EV.btn[f2] = rg;
     }
     ['◁▷', '▷◁'].forEach(function (t, i) { var b2 = new T.Mesh(CG, new T.MeshBasicMaterial({ map: evBtnTex(t, 20), toneMapped: false })); b2.position.set(CX + (i ? 0.026 : -0.026), 0.98, fz + 0.019); g.add(b2); var r3 = new T.Mesh(RG, ringOff); r3.position.set(b2.position.x, 0.98, fz + 0.0195); g.add(r3); });   /* 열림 · 닫힘(도형 문자) */
@@ -3508,6 +3514,30 @@
      *   은색 테(벽에서 5mm 띄움) + 짙은 베젤(테에서 1mm) + 화면(베젤에서 4mm) · 같은 면에 겹치는 판 없음 · 1층 TV 와 같은 홍보부 모션(m/ · VideoTexture · 보일 때만 · 움직임 줄이기 = 정지 그림) */
     EV.tv = MOT.on ? motAdd(scr, 'elev') : tvAdd(scr, 64, 64, 'elev');   /* v5.58 광고 = 조작반 모니터 위쪽(옛 v5.55 왼쪽 위 0.34m 화면은 없앰) */
     if (EV.tv.mot) EV.tv.mot.ord = EV_ORD;   /* 짧은 영상부터(달리기 2초 · AX 3초 · 꽃 6초) · 들어서자마자 움직임 */
+    /* 261006 (사용자 엘리베이터 영상 · 문 양쪽에 같은 조작반) 문 왼쪽 기둥 = 오른쪽과 같은 짜임(맨 위 모니터 · 같은 광고 · 같은 층 띠 · 스피커 틈 · 버튼 18개 두 줄 · 열림 · 닫힘)
+     *   광고 판 · 층 띠 · 버튼 그림은 오른쪽 것을 같이 쓴다(영상 하나 · 캔버스 하나 · 새 그리기 없음) · 왼쪽 버튼 테 = EV.btnL(누르면 양쪽 다 주황) */
+    var LX = -CX;
+    box(CW, H - 0.02, 0.016, steelD, LX, H / 2, fz + 0.008);
+    box(MW + 0.012, MH + 0.012, 0.006, dark, LX, MY, fz + 0.019);
+    var scrL = new T.Mesh(scr.geometry, scr.material); scrL.position.set(LX, scr.position.y, scr.position.z); scrL.name = 'evScreenL'; scr.children.forEach(function (c) { var k = new T.Mesh(c.geometry, c.material); k.position.copy(c.position); k.raycast = function () {}; scrL.add(k); }); g.add(scrL);
+    var indL = new T.Mesh(ind.geometry, ind.material); indL.position.set(LX, ind.position.y, ind.position.z); g.add(indL);
+    box(0.05, 0.008, 0.004, dark, LX, SPY, fz + 0.018);
+    EV.btnL = {};
+    for (var f3 = 1; f3 <= 18; f3++) {
+      var c3 = f3 <= 9 ? 0 : 1, r3w = f3 <= 9 ? 9 - f3 : 18 - f3, x3 = LX + (c3 ? 0.026 : -0.026), y3 = 1.47 - r3w * 0.05;
+      var fc3 = new T.Mesh(CG, FM[f3]); fc3.position.set(x3, y3, fz + 0.019); g.add(fc3);
+      var rg3 = new T.Mesh(RG, ringOff); rg3.position.set(x3, y3, fz + 0.0195); g.add(rg3); EV.btnL[f3] = rg3;
+    }
+    ['◁▷', '▷◁'].forEach(function (t, i) { var b4 = new T.Mesh(CG, new T.MeshBasicMaterial({ map: evBtnTex(t, 20), toneMapped: false })); b4.position.set(LX + (i ? 0.026 : -0.026), 0.98, fz + 0.019); g.add(b4); var r4 = new T.Mesh(RG, ringOff); r4.position.set(b4.position.x, 0.98, fz + 0.0195); g.add(r4); });
+    /* 261006 영상 · 왼쪽 옆 벽 앞쪽 = 가로 조작반(손잡이 바로 위 · 스테인리스 판 · 단추 3줄 x 6 + 왼쪽 단추 3 · 문 쪽 끝 검은 안내판) · 그림 한 장(누르지 않음 · 글자 없음)
+     *   벽 안쪽 면에서 4mm 띄운 판(벽과 같은 면 겹침 없음) · 손잡이(높이 0.92) 위 1.02 ~ 1.18 */
+    var hc = document.createElement('canvas'); hc.width = 512; hc.height = 140; var hg = hc.getContext('2d'), hgr = hg.createLinearGradient(0, 0, 0, 140);
+    hgr.addColorStop(0, '#D6D7D8'); hgr.addColorStop(1, '#BDBFC1'); hg.fillStyle = hgr; hg.fillRect(0, 0, 512, 140); hg.strokeStyle = 'rgba(90,94,98,.55)'; hg.lineWidth = 3; hg.strokeRect(1.5, 1.5, 509, 137);
+    hg.fillStyle = '#1E2125'; hg.fillRect(418, 14, 80, 112); hg.fillStyle = 'rgba(200,204,208,.55)'; [30, 44, 58, 72, 86, 100].forEach(function (y) { hg.fillRect(428, y, 60, 3); });   /* 검은 안내판(글자 대신 줄) */
+    function hbtn(x, y, r) { var bg = hg.createRadialGradient(x - 3, y - 4, 1, x, y, r); bg.addColorStop(0, '#F2F3F4'); bg.addColorStop(1, '#A9AEB3'); hg.fillStyle = bg; hg.beginPath(); hg.arc(x, y, r, 0, Math.PI * 2); hg.fill(); hg.strokeStyle = '#80868C'; hg.lineWidth = 2; hg.stroke(); }
+    [36, 70, 104].forEach(function (y) { hbtn(34, y, 11); for (var k = 0; k < 6; k++) hbtn(110 + k * 50, y, 14); });
+    var ht = new T.CanvasTexture(hc); ht.colorSpace = T.SRGBColorSpace; ht.anisotropy = 4;
+    var hp = new T.Mesh(new T.PlaneGeometry(0.62, 0.17), new T.MeshLambertMaterial({ map: ht })); hp.rotation.y = Math.PI / 2; hp.position.set(-W / 2 + 0.004, 1.1, fz + 0.62); hp.name = 'evSidePanel'; g.add(hp);   /* 판 오른쪽(그림) = 문 쪽 */
     /* 계란판 · 3 × 3 · 나는 맨 뒤 가운데 */
     var COLS = [[0x8DBBEB, 0x001F5B, 0x00184A], [0xB8E0C8, 0x2E7D5B, 0x245F46], [0xF6C1CF, 0xB4466A, 0x8E3653], [0xD7C8F2, 0x5B3FA0, 0x47317D], [0xFFE08A, 0xC98A00, 0xA06E00], [0xC9D2DC, 0x4E5968, 0x3C4552], [0xA8DDE0, 0x1F7A80, 0x175F63], [0xFFD0B0, 0xD9622B, 0xB24E20]], ci = 0;
     [-0.58, -0.06, 0.46].forEach(function (z, ri) {   /* v5.65 앞줄 = 문에서 0.42m(옛 0.4) · 뒷줄 몸 뒤끝 0.80 · 고리 0.88 < 바닥 끝 1.0 */
@@ -3582,7 +3612,7 @@
   function pressFloor(btn) {
     if (EV.seq) return;
     btn.classList.add('lit'); G.need = true;
-    var fl = +btn.getAttribute('data-f'); EV.goF = fl; if (EV.btn && EV.btn[fl]) EV.btn[fl].material = EV.ringOn;   /* v5.58 조작반 그 층 버튼 주황 테 */
+    var fl = +btn.getAttribute('data-f'); EV.goF = fl; if (EV.btn && EV.btn[fl]) EV.btn[fl].material = EV.ringOn;   /* v5.58 조작반 그 층 버튼 주황 테 */ if (EV.btnL && EV.btnL[fl]) EV.btnL[fl].material = EV.ringOn;   /* 261006 왼쪽 조작반도 */
     if (fl === 1) elevGo('exit');
     else { EV.hopT = performance.now(); var h = HOST(); elevGo(h && h.floorGo ? 'floor' : 'demo'); }
     setTimeout(function () { btn.classList.remove('lit'); }, 1400);
@@ -3670,7 +3700,7 @@
     });
   }
   function irEnd() {
-    EV.rise = null; EV.indUp = false; evInd(1, false); var eh0 = $('evp') && $('evp').querySelector('.evh'); if (eh0) { eh0.textContent = '층 선택'; eh0.classList.remove('up'); } if (EV.btn) Object.keys(EV.btn).forEach(function (k) { EV.btn[k].material = EV.ringOff; });   /* v5.58 */
+    EV.rise = null; EV.indUp = false; evInd(1, false); var eh0 = $('evp') && $('evp').querySelector('.evh'); if (eh0) { eh0.textContent = '층 선택'; eh0.classList.remove('up'); } if (EV.btn) Object.keys(EV.btn).forEach(function (k) { EV.btn[k].material = EV.ringOff; }); if (EV.btnL) Object.keys(EV.btnL).forEach(function (k) { EV.btnL[k].material = EV.ringOff; });   /* v5.58 */
     EV.seq = null; IR.cur = null; irText(false); irDraw(0, 0, 0, 0); var el = $('iris'); if (el) el.hidden = true;
     smileSet(botParts.eyes, botParts.smiles, false); G.need = true;
   }
@@ -4537,5 +4567,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.81', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.82', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();
