@@ -1731,24 +1731,44 @@ function viewDash(mode){   /* v5.14 기록 › 현황 요약 · mode "todo" = �
 }
 
 /* ══════════════════ 5. 계정 ══════════════════ */
+/* 261007 모형 둘러보기 접속 기록(앱 v6.09 · 서버 eb904a1ef3d7) · acct_list 행 tour = { first, last, n, min, z, test? } · 한 번도 안 들어간 사람은 tour 없음 · 응답 tourSum = { people, visits, test } · 옛 서버는 tour 가 없어 칸이 「-」
+   부문별 집계는 만들지 않는다(부문 통계 금지) */
+ST.acT=ST.acT||{ sort:"", no:0 };
+function tourOf(r){ var t=r&&r.tour; return t&&typeof t==="object"&&t.last?t:null; }
+function tourCell(r){ var t=tourOf(r); if(!t) return '<span class="cap">-</span>'; var c=t.test?' style="color:var(--mute,#8a8f98)"':''; return '<span class="n"'+c+'>'+esc(short(t.last))+'</span> <span class="cap">· '+(Number(t.n)||1)+'회'+(t.test?' · 테스트':'')+'</span>'; }
+function acSet(k,v){ ST.acT[k]=v; render(); }
+function usTourCard(p, old){
+  var t=tourOf(p); var rows;
+  if(old||p.tour===undefined) return '<div class="card"><h3>모형 둘러보기</h3><p class="cap">이 서버는 아직 둘러보기 접속 기록을 주지 않습니다.</p></div>';
+  if(!t) return '<div class="card"><h3>모형 둘러보기</h3><p class="cap">아직 한 번도 열지 않았습니다.</p></div>';
+  function it(l,v){ return '<div><div class="l">'+l+'</div><div class="v n" style="font-size:var(--fs-h2)">'+v+'</div></div>'; }
+  return '<div class="card"><h3>모형 둘러보기'+(t.test?' '+tag("테스트 계정","off"):'')+'</h3><div class="pp-sum">'+it("처음",esc(short(t.first)||"-"))+it("마지막",esc(short(t.last)))+it("횟수",(Number(t.n)||1)+'<em>회</em>')+
+    it("마지막 머문 시간",t.min==null?'-':esc(String(t.min))+'<em>분</em>')+it("들른 구역",t.z==null?'-':esc(String(t.z))+'<em>곳</em>')+'</div></div>';
+}
 function viewAcctList(){   /* v5.01 계정 › 계정 목록(예전 계정 화면 그대로 · 머리와 칩은 viewAcct) */
-  var rows=((ST.data.acct||{}).rows||[]).slice();
-  rows.sort(function(a,b){ return (b.last||"")<(a.last||"")?-1:1; });
-  var shown=rows.filter(function(r){ return match(r,["emp","name","dept"]); });
+  var rows=((ST.data.acct||{}).rows||[]).slice(), A=ST.acT;
+  var tourSum=(ST.data.acct||{}).tourSum||null;
+  if(A.sort==="tl") rows.sort(function(a,b){ var x=(tourOf(a)||{}).last||"", y=(tourOf(b)||{}).last||""; return y<x?-1:y>x?1:0; });
+  else if(A.sort==="tn") rows.sort(function(a,b){ return ((tourOf(b)||{}).n||0)-((tourOf(a)||{}).n||0); });
+  else rows.sort(function(a,b){ return (b.last||"")<(a.last||"")?-1:1; });
+  var shown=rows.filter(function(r){ return match(r,["emp","name","dept"]) && (!A.no||!tourOf(r)); });
   var byDept={}; rows.forEach(function(r){ byDept[r.dept||"(미상)"]=(byDept[r.dept||"(미상)"]||0)+1; });
   /* pw===false 만 「초기화 대기」. 필드가 없으면(옛 백엔드) 등록으로 본다. */
   var waiting=rows.filter(function(r){ return r.pw===false; }).length, roster=(ST.data.acct||{}).roster||0;
   var h="";
   h+='<div class="kpis">'+kpi("가입 계정",rows.length,"명")+kpi("명부",roster,"명","가입률 "+pct(rows.length,roster)+"%")+kpi("부문 수",Object.keys(byDept).length,"개")+kpi("비밀번호 초기화 대기",waiting,"명",waiting?"본인이 앱에서 새 비밀번호를 넣으면 풀립니다":"")+'</div>';
   h+='<p class="cap mt12">PIN 분실 요청은 <a href="#" onclick="go(\'f_pw\');return false"><b>현장 처리 › PIN 분실 요청</b></a>, 참가자 본인 확인 숫자는 <a href="#" onclick="go(\'r_ses\');return false"><b>기록 › 참가자 본인 확인</b></a>에 있습니다.</p>';   /* v5.14 이관 */
-  var body='<div class="toolbar">'+searchBox("사번 · 이름 · 부문 검색")+'<span class="cnt"><b>'+shown.length+'</b> / '+rows.length+'명</span></div>';
-  body+='<div class="wrap scrolly" style="max-height:620px"><table class="tb"><tr><th>사번</th><th>이름</th><th>부문</th><th>가입</th><th>최근 접속</th><th>비밀번호</th><th class="tdr">처리</th></tr>'+
+  var body='<div class="toolbar">'+searchBox("사번 · 이름 · 부문 검색")+'<span class="cnt"><b>'+shown.length+'</b> / '+rows.length+'명</span>'+
+    '<select class="in sm" onchange="acSet(\'sort\',this.value)"><option value=""'+(A.sort===""?" selected":"")+'>최근 접속 순</option><option value="tl"'+(A.sort==="tl"?" selected":"")+'>둘러보기 최근 순</option><option value="tn"'+(A.sort==="tn"?" selected":"")+'>둘러보기 횟수 순</option></select>'+
+    '<label class="row cap" style="gap:6px"><input type="checkbox" class="ck"'+(A.no?" checked":"")+' onchange="acSet(\'no\',this.checked?1:0)">둘러보기 안 함만</label></div>';
+  if(tourSum&&tourSum.people!=null) body+='<p class="cap" style="margin:4px 0 8px">모형 둘러보기 · 둘러본 사람 <b>'+(Number(tourSum.people)||0)+'</b>명 · 방문 <b>'+(Number(tourSum.visits)||0)+'</b>회'+(tourSum.test?' · 테스트 '+(Number(tourSum.test)||0):'')+'</p>';
+  body+='<div class="wrap scrolly" style="max-height:620px"><table class="tb"><tr><th>사번</th><th>이름</th><th>부문</th><th>가입</th><th>최근 접속</th><th>둘러보기</th><th>비밀번호</th><th class="tdr">처리</th></tr>'+
     shown.slice(0,500).map(function(r){ var wait=r.pw===false;
-      return '<tr class="hv"><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td><td>'+esc(r.dept)+'</td><td class="n cap">'+esc(short(r.joined))+'</td><td class="n">'+esc(short(r.last))+'</td>'+
+      return '<tr class="hv"><td class="n">'+esc(r.emp)+'</td><td><b>'+esc(r.name)+'</b></td><td>'+esc(r.dept)+'</td><td class="n cap">'+esc(short(r.joined))+'</td><td class="n">'+esc(short(r.last))+'</td><td>'+tourCell(r)+'</td>'+
         '<td>'+(wait?tag("초기화 대기","warn"):tag("사용 중","off"))+'</td>'+
         '<td class="tdr"><div class="acts">'+(wait?'<span class="cap">새 비밀번호 입력 대기</span>':''+rowMore('<button type="button" role="menuitem" class="rm-i"'+esc(r.emp)+'" data-name="'+esc(r.name)+'" onclick="pwReset(this)">비밀번호 초기화</button>')+'')+'<button class="btn sm" onclick="usOpen(\''+jq(r.emp)+'\')">관리</button></div></td></tr>'; }).join("")+
-    (shown.length>500?'<tr><td colspan="7" class="cap">500명까지만 표시합니다. 검색으로 좁혀 주세요.</td></tr>':'')+(!shown.length?emptyRow(7,"해당하는 계정이 없습니다."):'')+'</table></div>';
-  body+=memo('<p>최근 접속 = 앱을 마지막으로 연 시각입니다(v3.83부터 앱 사용 중에도 갱신 · 약 10분 간격). 그 전 기록은 마지막 비밀번호 입력 시각입니다.</p><p>비밀번호 초기화는 지금 비밀번호를 지우고, 본인이 앱에서 다음에 입력하는 4자리를 새 비밀번호로 등록합니다. 스탬프·신청 기록은 그대로입니다. 운영 로그에 남습니다.</p>');
+    (shown.length>500?'<tr><td colspan="8" class="cap">500명까지만 표시합니다. 검색으로 좁혀 주세요.</td></tr>':'')+(!shown.length?emptyRow(8,"해당하는 계정이 없습니다."):'')+'</table></div>';
+  body+=memo('<p>최근 접속 = 앱을 마지막으로 연 시각입니다(v3.83부터 앱 사용 중에도 갱신 · 약 10분 간격). 그 전 기록은 마지막 비밀번호 입력 시각입니다. 둘러보기 = 행사 모형(3D · 2D) 둘러보기를 마지막으로 연 시각과 누적 횟수입니다(앱 v6.09부터 기록 · 한 번도 안 열었으면 「-」 · 테스트 계정은 회색).</p><p>비밀번호 초기화는 지금 비밀번호를 지우고, 본인이 앱에서 다음에 입력하는 4자리를 새 비밀번호로 등록합니다. 스탬프·신청 기록은 그대로입니다. 운영 로그에 남습니다.</p>');
   h+=card("가입 계정","최근 접속 순",body);
   h+=card("부문별 가입","",'<div class="row">'+Object.keys(byDept).sort(function(a,b){return byDept[b]-byDept[a];}).map(function(d){ return '<span class="tag off">'+esc(d)+' <b class="n">'+byDept[d]+'</b></span>'; }).join("")+'</div>');
   return h;
@@ -1825,6 +1845,7 @@ function usPanel(emp, lite){   /* 261006 lite = 사람 찾기(쉬운 화면) · 
   if(d.eventDay) h+='<div class="note warn mt12"><b>오늘은 행사일입니다.</b> 지우기 전에 경품 · 시상 담당과 먼저 맞추세요.</div>';
   h+='</div>';
   if(lite) h=d.eventDay?'<div class="note warn mt12"><b>오늘은 행사일입니다.</b> 지우기 전에 경품 · 시상 담당과 먼저 맞추세요.</div>':'';
+  h+=usTourCard(d, old);   /* 261007 모형 둘러보기 접속 기록 */
   /* 1. 게임 기록 */
   var g='';
   if(old) g='<div class="note">이 서버는 아직 사람별 게임 기록을 주지 않습니다. '+usNew()+'</div>';
