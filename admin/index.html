@@ -1438,7 +1438,53 @@ function applyOvr(){
   ap((ST.data.cchat||{}).rows, function(r){ return "cc:"+normE(r.emp); });
 }
 
-/* 값을 고칠 때 있던 자리를 지킨다. 화면을 통째로 다시 그리므로 스크롤·포커스를 직접 되돌린다. */
+/* 261006 한글 입력(IME) 보호 · 사용자 제보 「가입 계정 검색칸에 이름을 치면 ㅂㅏㄱㅎㅕㄴ… 으로 풀려 들어가고 0 / 55명」
+ * 원인 = 입력할 때마다 render() 가 #view 를 innerHTML 로 통째로 바꿔, 조합 중인 입력칸이 새 칸으로 바뀌며 조합이 끊겼다.
+ * 고침 ① keepEdit(box, html) · 포커스된 입력칸(과 그 위 조상 줄)은 DOM 에 그대로 두고 나머지(목록 · 숫자 · 다른 칸)만 새것으로 바꾼다.
+ *        칸이 바뀌지 않으므로 조합 · 커서 · 포커스가 그대로다. 새 화면에서 같은 칸을 못 찾으면(화면 구조가 바뀜) 예전처럼 통째로 그린다.
+ *        render() 와 서랍(renderDrawer)이 모두 이 함수를 쓴다 · 주기 새로 고침이 조합 중에 와도 같다.
+ *      ② 조합 중(compositionstart ~ compositionend) 의 입력 이벤트는 바로 넘기지 않고 250ms 모아 한 번 · 조합이 끝나면 바로 한 번 검색한다.
+ *        한국어 입력기는 마지막 글자를 계속 조합 중으로 두므로 「끝날 때만」 찾으면 결과가 늦다 · 그래서 조합 중에도 모아서 찾는다. */
+var IME={ on:false, pend:null, t:0, pass:0 };
+function imeFire(t){ clearTimeout(IME.t); IME.pend=null; if(!t||!document.documentElement.contains(t)) return; IME.pass=1; try{ t.dispatchEvent(new Event("input",{ bubbles:true })); } finally { IME.pass=0; } }
+document.addEventListener("compositionstart",function(){ IME.on=true; },true);
+document.addEventListener("compositionend",function(e){ IME.on=false; var t=IME.pend; if(t&&t===e.target) imeFire(t); },true);
+document.addEventListener("input",function(e){
+  if(IME.pass||!(e.isComposing||IME.on)) return;
+  var t=e.target; if(!t||!t.getAttribute||!t.getAttribute("oninput")) return;
+  e.stopPropagation();   /* 문서 캡처 단계에서 멈춤 = 칸의 oninput(검색 · render)이 조합 중에는 바로 돌지 않는다 */
+  IME.pend=t; clearTimeout(IME.t); IME.t=setTimeout(function(){ imeFire(t); },250);
+},true);
+function keepEditOk(ae){ return !!ae&&(ae.tagName==="TEXTAREA"||(ae.tagName==="INPUT"&&!/^(checkbox|radio|button|submit|reset|file|range|color)$/i.test(ae.type||""))); }
+function keepAttr(o,n,leaf){
+  [].slice.call(o.attributes).forEach(function(a){ if(!n.hasAttribute(a.name)&&!(leaf&&a.name==="value")) o.removeAttribute(a.name); });
+  [].slice.call(n.attributes).forEach(function(a){ if(leaf&&a.name==="value") return; if(o.getAttribute(a.name)!==a.value) o.setAttribute(a.name,a.value); });
+}
+function keepEdit(box, html){
+  var ae=document.activeElement;
+  if(!keepEditOk(ae)||!box.contains(ae)){ box.innerHTML=html; return false; }
+  var all=box.querySelectorAll("input,select,textarea"), idx=[].indexOf.call(all,ae), tmp=document.createElement("div");
+  tmp.innerHTML=html;
+  var na=tmp.querySelectorAll("input,select,textarea")[idx];
+  if(!na||na.tagName!==ae.tagName||(na.getAttribute("oninput")||"")!==(ae.getAttribute("oninput")||"")||(na.getAttribute("placeholder")||"")!==(ae.getAttribute("placeholder")||"")){ box.innerHTML=html; return false; }
+  var oc=[], nc=[], x;
+  for(x=ae;x&&x!==box;x=x.parentNode) oc.unshift(x);
+  for(x=na;x&&x!==tmp;x=x.parentNode) nc.unshift(x);
+  if(oc.length!==nc.length||oc.some(function(o,i){ return o.tagName!==nc[i].tagName; })){ box.innerHTML=html; return false; }
+  var op=box, np=tmp;
+  for(var j=0;j<oc.length;j++){
+    var o=oc[j], n=nc[j], kids=[].slice.call(np.childNodes), k=kids.indexOf(n);
+    [].slice.call(op.childNodes).forEach(function(c){ if(c!==o) op.removeChild(c); });
+    kids.slice(0,k).forEach(function(c){ op.insertBefore(c,o); });
+    kids.slice(k+1).forEach(function(c){ op.appendChild(c); });
+    keepAttr(o,n,j===oc.length-1);
+    op=o; np=n;
+  }
+  /* 칸 값 · 조합 중이 아니고 새 화면이 다른 값을 줬으면(예: 찾기 뒤 비우기) 그 값으로 · 커서는 끝 */
+  if(ae.tagName==="INPUT"&&!IME.on&&na.hasAttribute("value")&&ae.value!==na.getAttribute("value")) ae.value=na.getAttribute("value");
+  return true;
+}
+/* 값을 고칠 때 있던 자리를 지킨다. 화면을 통째로 다시 그리므로 스크롤·포커스를 직접 되돌린다(입력칸에 포커스가 있으면 keepEdit 가 그 칸을 그대로 둔다). */
 function render(){
   stSync();   /* v4.83 스탬프 칸 체계(새 8종 · 옛 서버면 옛 8종) */
   var v=el("view"), top=window.scrollY, ae=document.activeElement, fIdx=-1, selS=null, selE=null;
@@ -1457,9 +1503,9 @@ function render(){
   if(ST.err&&ST.err.reason==="locked") h='<div class="bands err-banner">'+band("bad",'<b>서버가 이 연결을 잠갔습니다.</b> '+esc(lockedMsg())+' 잠금이 풀리면 이 탭을 새로 고칩니다. 한 번 들어온 탭은 그 뒤로 잠금을 받지 않습니다.')+'</div>'+h;
   else if(ST.err) h='<div class="bands err-banner">'+band("bad",'일부 데이터를 못 받았습니다('+esc(why(ST.err))+'). 표시된 값은 마지막으로 받은 것입니다.','<button class="btn sm" onclick="refresh()">다시 시도</button>')+'</div>'+h;
   v.setAttribute("data-pt", hvPt());
-  v.innerHTML=hvHead()+h;
+  var kept=keepEdit(v,hvHead()+h);
   moreRows(v);
-  if(fIdx>=0){ var f2=v.querySelectorAll("input,select,textarea"); if(f2[fIdx]){ try{f2[fIdx].focus({preventScroll:true});}catch(e){f2[fIdx].focus();} try{ if(selS!=null) f2[fIdx].setSelectionRange(selS,selE); }catch(e){} } }
+  if(fIdx>=0&&!kept){ var f2=v.querySelectorAll("input,select,textarea"); if(f2[fIdx]){ try{f2[fIdx].focus({preventScroll:true});}catch(e){f2[fIdx].focus();} try{ if(selS!=null) f2[fIdx].setSelectionRange(selS,selE); }catch(e){} } }
   window.scrollTo(0,top);
   renderDrawer();
 }
@@ -1481,7 +1527,7 @@ function hvPt(){ return PT_FORM[ST.nav]?"form":PT_DASH[ST.nav]?"dash":"list"; }
 function setQ(v){ ST.q=v; render(); }
 function setFilt(v){ ST.filt=v; ST.sel={}; render(); }
 function setSub(v){ ST.subs[ST.tab]=v; ST.q=""; ST.filt=""; ST.sel={}; drwClose(true); load(); render(); }
-function match(row, fields){ if(!ST.q) return true; var q=ST.q.toLowerCase(); return fields.some(function(f){ return String(row[f]||"").toLowerCase().indexOf(q)>=0; }); }
+function match(row, fields){ var q=String(ST.q||"").trim().toLowerCase(); if(!q) return true;   /* 261006 앞뒤 공백 무시 */ return fields.some(function(f){ return String(row[f]||"").toLowerCase().indexOf(q)>=0; }); }
 
 /* ── 상세 패널 (오른쪽 서랍) ── */
 function drwOpen(kind, k){ ST.drw={ kind:kind, k:k }; renderDrawer(); }
@@ -1493,7 +1539,7 @@ function renderDrawer(){
   if(!h){ ST.drw=null; box.className=""; el("drwBg").className=""; return; }
   var keep=box.querySelector("textarea"), memoV=keep&&keep===document.activeElement?keep.value:null;
   var sc=(box.querySelector(".db")||{}).scrollTop||0;
-  box.innerHTML=h; box.className="on"; el("drwBg").className="on";
+  keepEdit(box,h); box.className="on"; el("drwBg").className="on";   /* 261006 IME 보호 · 메모 칸 조합 유지 */
   if(memoV!=null){ var t=box.querySelector("textarea"); if(t){ t.value=memoV; t.focus(); } }
   var db=box.querySelector(".db"); if(db) db.scrollTop=sc;
 }
@@ -2719,7 +2765,7 @@ function viewDraw(){
   h+=memo('<p><b>체크인</b> · 참가자가 17F 대강당 입구 추첨 QR 을 찍으면 체크인됩니다(1인 1회 · '+esc(d.win||"16:40-17:25")+'). 그때 응모 번호가 확정되고, 행운권이 없으면 체크인만 되고 앱에 「행운권이 없어요」가 뜹니다. 출석(17F · 10F) · 스탬프와는 따로입니다.</p>'+
     '<p><b>통 안의 공</b> = 체크인한 사람의 응모 번호 수(한 사람 최대 3개). 무대에서는 공 하나를 뽑고, 당첨자는 1인 1회, 부재면 그 사람의 공을 통에서 뺍니다.</p>'+
     '<p><b>참석조건</b> · 설정 「행운권_참석조건」이 OFF 면 체크인과 관계없이 행운권 번호 전체가 풀입니다(당첨자 발표만 · 경품은 나중에 전달). ON 이면 위 체크인한 사람의 번호만 풀입니다. 「설정」 칩에서 바꿉니다.</p>'+
-    '<p><b>7등 랜덤 굿즈</b> · 60세트는 행사 뒤 서버가 따로 추첨합니다(「7등 랜덤 굿즈」 칩). 무대 1~6등 당첨자는 빠집니다.</p>'+
+    '<p><b>7등 랜덤 굿즈</b> · 60명은 행사 뒤 서버가 따로 추첨합니다(「7등 랜덤 굿즈」 칩). 상품은 룰렛 남은 경품에서 무작위입니다. 무대 1~6등 당첨자는 빠집니다.</p>'+
     '<p>송출 화면은 가린 이름(김*나)만 받습니다. 부문별 집계는 두지 않습니다.</p>');
   return h;
 }
@@ -6335,7 +6381,7 @@ function hvTestReset(emp){
 }
 /* ══ 시스템 › 운영 설정 · 서버 cfg_list · cfg_set(허용 목록 키만 · 2단계) · lv3 키는 슈퍼관리자 ══ */
 /* v5.68 서버 설명 뒤에 붙이는 한 줄(바꾸면 어디가 달라지는지) · 설명 정본은 서버 CFG_ALLOW */
-var CFG_NOTE={ "선착순_수량":"추첨 › 선착순 참여상에서도 바꿈 · 올리면 대기 줄이 자격으로", "선착순_마감":"이 시각 뒤 6개째는 자격 없음", "선착순_체크인포함":"OFF 면 체크인 3개를 뺀 6개로 판정", "선착순_숫자공개":"ALL · LOW · OFF · 앱 남은 수량 표시", "완주추첨_사용":"ON 일 때만 추첨 › 완주 경품 추첨 칩이 보임", "행운권_참석조건":"OFF = 행운권 번호 전체가 무대 풀 · ON = 17F 입구 체크인한 사람만", "룰렛_마감":"이 시각 뒤 스태프 폰 룰렛 차감 거절 · 행사 요소 › 룰렛에 「마감 시각 지남」", "라운지_상담종료":"이 시각 뒤 시작하는 상담 슬롯은 신청 거절", "랜덤굿즈_구성":"추첨 › 7등 랜덤 굿즈 구성 가능 세트 표에 반영", "아이디어_마감":"행사 요소 › 아이디어왕 후보 · 앱 입력 화면 마감 한 줄", "아이디어_사전오픈":"ON 이면 행사 전에도 앱 아이디어 입구가 열림", "아이디어왕_상":"등수 : 개월 : 인원 · 인원 합이 선정 상한", "라운지키트_수량":"경품·재고 키트 패널 라운지 쿼터", "아이디어_사전스탬프":"OFF 면 행사 전 아이디어의 스탬프는 10/26 첫 동기화 때 부여", "대강당_좌석":"출석(17F · 10F) 화면 · 앱 홈 혼잡 칸에 바로 반영", "대강당_기준":"앱 홈 혼잡 칸 · 출석(17F · 10F) 상태 띠 색", "출석_입장창":"바꾸면 입장 QR 라벨 시각도 다시 인쇄", "출석_끝창":"바꾸면 끝 QR 라벨 시각도 다시 인쇄", "송출_켬":"꺼진 강의의 송출 QR 은 찍어도 거절", "10F명단_키트빠짐":"10F 명단 넣기 미리보기 · 적용에 바로 반영", "10F명단_E회차":"10F 명단 넣기 미리보기 · 적용에 바로 반영" };
+var CFG_NOTE={ "선착순_수량":"추첨 › 선착순 참여상에서도 바꿈 · 올리면 대기 줄이 자격으로", "선착순_마감":"이 시각 뒤 6개째는 자격 없음", "선착순_체크인포함":"OFF 면 체크인 3개를 뺀 6개로 판정", "선착순_숫자공개":"ALL · LOW · OFF · 앱 남은 수량 표시", "완주추첨_사용":"ON 일 때만 추첨 › 완주 경품 추첨 칩이 보임", "행운권_참석조건":"OFF = 행운권 번호 전체가 무대 풀 · ON = 17F 입구 체크인한 사람만 · 현재 운영: 체크인 없이 행운권 전체 추첨(사용자 261006)", "룰렛_마감":"이 시각 뒤 스태프 폰 룰렛 차감 거절 · 행사 요소 › 룰렛에 「마감 시각 지남」", "라운지_상담종료":"이 시각 뒤 시작하는 상담 슬롯은 신청 거절", "랜덤굿즈_수":"추첨 › 7등 랜덤 굿즈 당첨 수 · 상품은 룰렛 남은 경품에서 무작위", "아이디어_마감":"행사 요소 › 아이디어왕 후보 · 앱 입력 화면 마감 한 줄", "아이디어_사전오픈":"ON 이면 행사 전에도 앱 아이디어 입구가 열림", "아이디어왕_상":"등수 : 개월 : 인원 · 인원 합이 선정 상한", "라운지키트_수량":"경품·재고 키트 패널 라운지 쿼터", "아이디어_사전스탬프":"OFF 면 행사 전 아이디어의 스탬프는 10/26 첫 동기화 때 부여", "대강당_좌석":"출석(17F · 10F) 화면 · 앱 홈 혼잡 칸에 바로 반영", "대강당_기준":"앱 홈 혼잡 칸 · 출석(17F · 10F) 상태 띠 색", "출석_입장창":"바꾸면 입장 QR 라벨 시각도 다시 인쇄", "출석_끝창":"바꾸면 끝 QR 라벨 시각도 다시 인쇄", "송출_켬":"꺼진 강의의 송출 QR 은 찍어도 거절", "10F명단_키트빠짐":"10F 명단 넣기 미리보기 · 적용에 바로 반영", "10F명단_E회차":"10F 명단 넣기 미리보기 · 적용에 바로 반영" };
 /* 261005 사용자 확정 · 출석 시간 창은 인쇄된 QR 라벨에 박혀 있어 읽기 전용 · 바꾸려면 슈퍼관리자 L3 */
 var CFG_LOCK={ "출석_입장창":1, "출석_끝창":1 };
 var CFG_LOCK_NOTE="인쇄된 QR과 연동 · 확정 261005";
@@ -6459,9 +6505,9 @@ renderDrawer=function(){
   var box=el("drw"), h=drwInv(d.k);
   if(!h){ ST.drw=null; box.className=""; el("drwBg").className=""; return; }
   var sc=(box.querySelector(".db")||{}).scrollTop||0, ae=document.activeElement, aid=ae&&box.contains(ae)?ae.id:"";
-  box.innerHTML=h; box.className="on"; el("drwBg").className="on";
+  keepEdit(box,h); box.className="on"; el("drwBg").className="on";   /* 261006 IME 보호 */
   var db=box.querySelector(".db"); if(db) db.scrollTop=sc;
-  if(aid&&el(aid)) el(aid).focus();
+  if(aid&&el(aid)&&document.activeElement!==el(aid)) el(aid).focus();
 };
 /* ── 화면 ── */
 function invTag(it, d){
@@ -6510,7 +6556,7 @@ function viewInv(){
     rec.length?'<div class="wrap"><table class="tb"><tr><th>시각</th><th>품목</th><th>구분</th><th class="tdr">수량</th><th>곳</th><th>사번</th><th></th></tr>'+rec.map(function(r){ return '<tr'+(r.v?' style="opacity:.5"':'')+'><td class="n cap">'+esc(short(r.t))+'</td><td>'+esc(r.n)+'</td><td>'+esc(IV_KIND[r.k]||r.k)+(r.v?' '+tag("되돌림","off"):'')+'</td><td class="n tdr">'+invN(r.q)+'</td><td class="cap">'+esc(IV_PLACE[r.place]||r.place||"")+'</td><td class="n">'+esc(r.emp||"")+'</td><td>'+(!r.v&&/^(give|box|chk)$/.test(r.k)?'<button class="btn sm" onclick="invUndoAsk(\''+jq(r.rid)+'\',\''+jq(r.id)+'\')">되돌리기</button>':'')+'</td></tr>'; }).join("")+'</table></div>':'<p class="cap">아직 없습니다.</p>');
   h+=memo('<p><b>나감</b> · 원장(룰렛 등급 · 체크인 존 키트 · 박스 개봉 · 콘솔 지급 · 수량 맞추기)과 서버에 이미 있는 기록(행운권 당첨 · 선착순 참여상 수령 · 7등 당첨 · 타자왕 1~3위(17:00 뒤) · AX 라운지 완료)을 합친 값입니다. 되돌린 기록은 빠집니다.</p>'+
     '<p><b>가습기</b> · 나감 = 선착순 참여상 수령 + 라운지 초과 대체 지급입니다. 「선착순 자격」은 수령 여부와 관계없이 자격을 받은 수입니다. 자격 + 라운지 초과 대체가 총수량을 넘으면 위에 경고가 뜹니다.</p>'+
-    '<p><b>룰렛 5등급</b> · 총수량은 서버 입고표 값입니다. 17:00 실물 잔여는 「럭키드로우 · 선착순 참여상 · 7등 › 7등 랜덤 굿즈」에서 넣습니다(7등 세트 수가 그 값을 씁니다). 2등이 먼저 바닥나면 커피 예비 40병으로 보충합니다(결정 4).</p>'+
+    '<p><b>룰렛 5등급</b> · 총수량은 서버 입고표 값입니다. 17:00 실물 잔여는 「럭키드로우 · 선착순 참여상 · 7등 › 7등 랜덤 굿즈」에서 넣습니다(7등 남은 경품 총수가 그 값을 씁니다). 2등이 먼저 바닥나면 커피 예비 40병으로 보충합니다(결정 4).</p>'+
     '<p><b>커피</b> · 「참고」 숫자는 커피챗 참석 · 상담 입장 수입니다. 박스당 수량이 정해져야 스태프 폰의 「박스 1개 열었음」이 셉니다.</p>'+
     '<p><b>슈퍼관리자</b> · 남은 수 맞추기 · 총수량 · 품목 편집은 본인 확인(PIN)과 사유를 넣고 확인 문구를 쳐야 저장됩니다. 운영로그 · 조정 기록에 남습니다. 가격은 어디에도 넣지 않습니다.</p>'+
     '<p><b>경고에서 빠지는 것</b> · 수량 미정(AX 라운지 사은품 등) · C 등급(생수 · 목걸이 · 브로셔 · 포스터 · 스태프 유니폼). AI 구독권 · 간식 · AX 라운지 사은품 수량은 재고 관리에서 뺐습니다(결정 8).</p>');
@@ -7125,8 +7171,8 @@ function pzErrCard(t, d){ return card(t,"",'<div class="empty">'+esc(t)+' 현황
 var PZ_WHY={ shrink:"이미 자격을 받은 수보다 작게 줄일 수 없습니다", full:"선착순 수량이 다 찼습니다. 설정에서 수량을 올린 뒤 넣습니다", got:"이미 수령한 사람입니다. 수령 되돌리기를 먼저 합니다", notgot:"수령 기록이 없습니다",
   noelig:"스탬프 6개가 안 됩니다", closed:"마감 시각이 지났습니다", "void":"이미 취소된 자격입니다", off:"서버 설정에서 꺼져 있습니다", why:"사유를 적습니다", eventday:"행사일에는 비울 수 없습니다", confirm:"확인 문구가 필요합니다",
   drawn:"이미 추첨했습니다. 바꿀 수 없습니다", done:"이미 추첨했습니다. 결과는 그대로입니다", early:"마감 시각 전에는 확정할 수 없습니다", nolock:"먼저 대상을 확정합니다", stale:"확정 뒤 바뀌었습니다. 대상을 다시 확정합니다",
-  ack:"세트가 모자랍니다. 확인 칸을 체크합니다", max:"그 등수는 이미 다 찼습니다", late:"마감 뒤 접수입니다. 확인 칸을 체크합니다", nocand:"후보가 아닌 사번입니다", notwin:"이 사번은 지금 당첨자가 아닙니다", nodraw:"아직 추첨 전입니다",
-  test:"테스트 사번은 넣지 않습니다", short:"세트가 모자랍니다. 확인 칸을 체크합니다", long:"글자 수가 너무 깁니다", dup:"이미 있습니다", noros:"명부에 없는 사번입니다", cut:"시각은 2026-10-26 17:00 형식입니다", rem:"룰렛 잔여를 먼저 저장합니다", param:"입력값을 확인합니다", build:"구성은 r1:1,r4:1 형식입니다", qty:"수량을 확인합니다", rk:"등수를 고릅니다", text:"한 줄을 적습니다", ch:"경로를 고릅니다", notin:"명단에 없는 사번입니다" };
+  max:"그 등수는 이미 다 찼습니다", late:"마감 뒤 접수입니다. 확인 칸을 체크합니다", nocand:"후보가 아닌 사번입니다", notwin:"이 사번은 지금 당첨자가 아닙니다", nodraw:"아직 추첨 전입니다",
+  test:"테스트 사번은 넣지 않습니다", long:"글자 수가 너무 깁니다", dup:"이미 있습니다", noros:"명부에 없는 사번입니다", cut:"시각은 2026-10-26 17:00 형식입니다", rem:"룰렛 잔여를 먼저 저장합니다", param:"입력값을 확인합니다", qty:"수량을 확인합니다", rk:"등수를 고릅니다", text:"한 줄을 적습니다", ch:"경로를 고릅니다", notin:"명단에 없는 사번입니다" };
 function pzWhy(r){ r=r||{}; if(r.reason==="shrink"&&r.min!=null) return PZ_WHY.shrink+"(최소 "+r.min+")"; return PZ_WHY[r.reason]||(hvUnknown(r)?"서버 갱신 뒤 쓸 수 있습니다":why(r)); }
 /* 쓰기 한 곳 · 확인 창을 닫고 · 성공하면 바뀐 키만 다시 받는다 */
 function pzCall(action, p, keys, done, post){
@@ -7306,57 +7352,58 @@ function fxMemo(){
     '<p><b>개인정보</b> · 이름 · 부문은 이 화면과 CSV(슈퍼관리자)에만 있습니다. 부문별 집계는 두지 않습니다.</p>');
 }
 
-/* ══ B3 · 추첨 › 7등 랜덤 굿즈 (lk7_* · 완주 경품 추첨과 같은 순서 · 대형 화면 발표 없음) ══ */
+/* ══ B3 · 추첨 › 7등 랜덤 굿즈 (lk7_* · 대형 화면 발표 없음)
+ * 261006 「정말 랜덤」 전환(사용자 「7등 랜덤 굿즈의 경우에는 정말 랜덤으로 남겨줘」): 고정 세트 구성 · 구성 가능 세트 표 · 부족 확인 칸 없음.
+ * 순서 = 룰렛 잔여 실사(품목별) → 남은 경품 총수(참고 · 당첨 수보다 적으면 노랑 안내만) → 대상 확정 → 추첨 → 재현 검증 → 사내 우편 CSV.
+ * 옛 서버(stock.sets · short)와도 동작: 총수는 parts 합으로 계산, 추첨은 늘 ack=1 을 함께 보낸다(새 서버는 무시). */
 var LK={ rem:null, cfg:null, vo:{ emp:"", why:"" }, ver:null, busy:"" };
 var LK_ROUL=[["r1","1등 텀블러"],["r2","2등 커피 + 키캡 키링"],["r3","3등 컵받침"],["r4","4등 판스티커"],["r5","5등 볼펜"]];
-var LK_PART={ r1:"텀블러", r2:"키캡 키링", r3:"컵받침", r4:"판스티커", r5:"볼펜" };
 var LK_PH={ open:["마감 전","off"], wait:["마감 · 확정 전","warn"], lock:["대상 확정",""], drawn:["추첨 완료","ok"] };
-function lkPart(id){ return LK_PART[id]||id; }   /* 서버 parts = { id, n(세트당 개수), left, need(목표 세트 × n) } */
+function lkQty(d){ return Number(d.qty!=null?d.qty:(d.cfg||{}).qty)||0; }
+function lkLeft(d){ var q={}, sk=d.stock||{}; (sk.parts||[]).forEach(function(x){ q[x.id]=Number(x.left)||0; }); if(d.rem&&d.rem.q) Object.keys(d.rem.q).forEach(function(k){ q[k]=Number(d.rem.q[k])||0; }); return q; }
+function lkTotal(d){ var sk=d.stock||{}; if(sk.total!=null&&!(d.rem&&d.rem.q)) return Number(sk.total)||0; var q=lkLeft(d), t=0; LK_ROUL.forEach(function(x){ t+=q[x[0]]||0; }); return t; }
 function viewLk7(){
   var d=ST.data.lk;
   if(!d) return card("7등 랜덤 굿즈","",skel());
   if(hvUnknown(d)) return pzOldCard("7등 랜덤 굿즈")+lkMemo();
   if(!d.ok) return pzErrCard("7등 랜덤 굿즈", d);
-  var P=LK_PH[d.ph]||["-",""], pool=d.pool||{ n:(d.draw||{}).N }, sk=d.stock||{}, qty=Number(d.qty!=null?d.qty:(d.cfg||{}).qty)||0, dr=d.draw||null, sets=Number(sk.sets)||0;
+  var P=LK_PH[d.ph]||["-",""], pool=d.pool||{ n:(d.draw||{}).N }, qty=lkQty(d), dr=d.draw||null, tot=lkTotal(d), low=tot<qty;
   ST._right=(ST._right?ST._right+" ":"")+tag(P[0],P[1]);
   var st=[["마감 "+String(d.cut||"").slice(11,16),d.ph!=="open"],["룰렛 잔여",lkRemDone(d)],["대상 확정",d.ph==="lock"||d.ph==="drawn"],["추첨",d.ph==="drawn"]], cur=-1;
   for(var i=0;i<st.length;i++) if(!st[i][1]){ cur=i; break; }
   var h='<div class="fn-step">'+st.map(function(x,i){ return '<span class="'+(x[1]?"done":i===cur?"on":"")+'">'+(i+1)+' '+esc(x[0])+'</span>'; }).join("")+'</div>';
   h+='<div class="kpis">'+kpi(d.ph==="lock"||d.ph==="drawn"?"대상 (확정)":"대상 (미리 보기)",finNum(d.lock&&d.lock.n!=null?d.lock.n:pool.n),"명","행운권 보유 · 1~6등 "+finNum(pool.lucky)+"명 · 테스트 "+finNum(pool.test)+"명 제외")+
-    kpi("목표",finNum(qty),"세트","세트 = "+esc(lkBuildTxt((d.cfg||{}).build)||"-"))+
-    kpi("구성 가능",finNum(sets),"세트",sets<qty?tag("부족 "+(qty-sets),"warn"):"목표만큼 가능")+
+    kpi("당첨 수",finNum(qty),"명","룰렛 남은 경품에서 사람마다 무작위")+
+    kpi("남은 경품 총수",finNum(tot),"개",low?tag("당첨 수보다 "+finNum(qty-tot)+"개 적음","warn"):lkRemDone(d)?"실사 기준 · 참고":"재고 계산값 · 참고")+
     kpi("당첨",dr?finNum(dr.W):"-","명",dr?"대상 "+finNum(dr.N)+" · 추첨 "+esc(short(dr.at||"")):"행사 뒤 추첨 · 사내 우편")+'</div>';
-  h+='<div class="grid g2">'+lkRemCard(d)+lkSetCard(d)+'</div>';
+  h+='<div class="grid g2">'+lkRemCard(d)+lkTotCard(d)+'</div>';
   h+=dr?'<div class="grid g75"><div>'+lkResultCard(d)+'</div><div>'+lkVoidCard()+lkCsvCard()+'</div></div>':lkLockCard(d)+lkDrawCard(d);
   h+=lkCfgCard(d)+lkMemo();
   return h;
 }
 function lkRemDone(d){ return !!(d.rem||(d.stock&&d.stock.src==="rem")); }
-function lkBuildTxt(b){ return String(b||"").split(",").filter(Boolean).map(function(x){ var a=x.split(":"); return lkPart(a[0])+(Number(a[1])>1?" "+a[1]+"개":""); }).join(" · "); }
-function lkRemVals(d){ if(LK.rem) return LK.rem; var q=(d.rem&&d.rem.q)||{}, o={}; if(!d.rem&&d.stock&&d.stock.src==="rem") (d.stock.parts||[]).forEach(function(x){ q[x.id]=x.left; });   /* 서버가 실사값을 쓰는 중이면 구성 품목 칸은 그 값으로 */ LK_ROUL.forEach(function(x){ o[x[0]]=q[x[0]]==null?"":String(q[x[0]]); }); return o; }
+function lkRemVals(d){ if(LK.rem) return LK.rem; var q=(d.rem&&d.rem.q)||{}, o={}; if(!d.rem&&d.stock&&d.stock.src==="rem") (d.stock.parts||[]).forEach(function(x){ q[x.id]=x.left; });   /* 서버가 실사값을 쓰는 중이면 그 값으로 */ LK_ROUL.forEach(function(x){ o[x[0]]=q[x[0]]==null?"":String(q[x[0]]); }); return o; }
 function lkRemCard(d){
   var v=lkRemVals(d), off=d.ph==="drawn";
   var body='<div class="fn-rem">'+LK_ROUL.map(function(x){ return '<label>'+esc(x[1])+'<input class="in" inputmode="numeric" maxlength="4" value="'+esc(v[x[0]])+'" oninput="lkRemIn(\''+x[0]+'\',this.value)"'+(off?" disabled":"")+'></label>'; }).join("")+'</div>'+
     (d.rem&&d.rem.warn||d.remWarn?'<div class="note warn mt12">입고 − 룰렛 사용 횟수와 차이가 큽니다. 실사를 다시 확인하세요(저장은 됩니다).</div>':'')+
     '<div class="fn-go"><button class="btn pri" onclick="lkRemSave()"'+(off?" disabled":"")+'>잔여 저장</button><span class="cap">'+(lkRemDone(d)&&!d.rem?"저장됨 · 서버가 실사값을 씁니다":d.rem?"저장 "+esc(short(d.rem.at||""))+(d.rem.by?" · "+esc(d.rem.by):""):"아직 입력 전")+(off?" · 추첨 뒤 잠김":"")+'</span></div>';
-  return card("룰렛 잔여 실사","17:00 직후 1F EVENT 부스 실물을 세어 넣습니다",body);
+  return card("룰렛 잔여 실사","17:00 직후 1F EVENT 부스 실물을 품목별로 세어 넣습니다",body);
 }
 function lkRemIn(id, v){ var d=ST.data.lk||{}; if(!LK.rem) LK.rem=lkRemVals(d); LK.rem[id]=String(v).replace(/\D/g,"").slice(0,4); }
 function lkRemSave(){
-  var d=ST.data.lk||{}, v=lkRemVals(d), p={}, rows=[];
-  for(var i=0;i<LK_ROUL.length;i++){ var x=LK_ROUL[i]; if(v[x[0]]===""){ toast(x[1]+" 칸이 비었습니다"); return; } p[x[0]]=Number(v[x[0]]); rows.push([x[1], finNum(p[x[0]])+"개"]); }
+  var d=ST.data.lk||{}, v=lkRemVals(d), p={}, rows=[], t=0;
+  for(var i=0;i<LK_ROUL.length;i++){ var x=LK_ROUL[i]; if(v[x[0]]===""){ toast(x[1]+" 칸이 비었습니다"); return; } p[x[0]]=Number(v[x[0]]); t+=p[x[0]]; rows.push([x[1], finNum(p[x[0]])+"개"]); }
+  rows.push(["남은 경품 총수", finNum(t)+"개", "chg"]);
   dialog({ t:"룰렛 잔여를 저장할까요?", x:imp(rows), s:"서버가 입고 − 룰렛 사용 횟수와 대조해 차이가 크면 알려 줍니다(막지 않음). 추첨 전까지 다시 고칠 수 있습니다.", ok:"저장",
     onOk:function(){ pzCall("lk7_rem",p,["lk"],function(r){ if(r.ok){ LK.rem=null; toast(r.warn?"저장했습니다 · 예상과 차이가 큽니다":"룰렛 잔여를 저장했습니다",{ ms:r.warn?5000:2400 }); } else toast("실패: "+pzWhy(r)); }); } });
 }
-function lkSetCard(d){
-  var sk=d.stock||{}, parts=sk.parts||[], short0=sk.short||[], qty=Number(d.qty!=null?d.qty:(d.cfg||{}).qty)||0, sets=Number(sk.sets)||0;
-  var tb='<div class="wrap"><table class="tb"><tr><th>품목</th><th class="tdr">세트당</th><th class="tdr">잔여</th><th class="tdr">만들 수 있는 세트</th><th>상태</th></tr>'+parts.map(function(p){
-    var per=Number(p.n)||1, can=Math.floor((Number(p.left)||0)/per), bad=short0.indexOf(p.id)>=0||can<qty;
-    return '<tr><td><b>'+esc(lkPart(p.id))+'</b></td><td class="n tdr">'+finNum(per)+'</td><td class="n tdr">'+finNum(p.left)+'</td><td class="n tdr"><b>'+finNum(can)+'</b></td><td>'+(bad?tag("부족","warn"):tag("충분","ok"))+'</td></tr>'; }).join("")+
-    (!parts.length?emptyRow(5,"구성 품목이 없습니다."):"")+'<tr><td><b>구성 가능</b></td><td></td><td></td><td class="n tdr"><b>'+finNum(sets)+'</b> / '+finNum(qty)+'</td><td>'+(sets<qty?tag("목표보다 적음","warn"):tag("목표 가능","ok"))+'</td></tr></table></div>';
-  var miss=parts.filter(function(p){ return short0.indexOf(p.id)>=0||Math.floor((Number(p.left)||0)/(Number(p.n)||1))<qty; }).map(function(p){ return lkPart(p.id); });
-  var warn=sets<qty?'<div class="note warn mt12">구성 가능 <b>'+finNum(sets)+'세트</b> · 목표 '+finNum(qty)+'세트보다 적습니다. 부족 품목: <b>'+esc(miss.join(" · ")||"-")+'</b>. 설정에서 수량을 줄이거나 구성을 바꿉니다. 그대로 추첨하면 '+finNum(sets)+'명만 뽑습니다.</div>':'';
-  return card("구성 가능 세트 수","품목별 잔여 ÷ 세트당 개수 · 가장 적은 품목이 세트 수",tb+warn+(lkRemDone(d)?'':'<p class="cap mt8">잔여 실사 전에는 서버가 입고 − 사용으로 계산한 값입니다.</p>'));
+function lkTotCard(d){
+  var q=lkLeft(d), qty=lkQty(d), tot=lkTotal(d), low=tot<qty;
+  var tb='<div class="wrap"><table class="tb"><tr><th>품목</th><th class="tdr">남은 수</th></tr>'+LK_ROUL.map(function(x){ return '<tr><td>'+esc(x[1])+'</td><td class="n tdr">'+finNum(q[x[0]]||0)+'</td></tr>'; }).join("")+
+    '<tr><td><b>합계</b></td><td class="n tdr"><b>'+finNum(tot)+'</b></td></tr></table></div>';
+  var warn=low?'<div class="note warn mt12">남은 경품 <b>'+finNum(tot)+'개</b> · 당첨 '+finNum(qty)+'명보다 적습니다. 추첨은 그대로 진행됩니다. 포장 전에 모자란 몫을 어떻게 채울지 정합니다.</div>':'';
+  return card("남은 경품 총수","참고 · 당첨자마다 이 안에서 무작위로 담아 포장합니다",tb+warn+(lkRemDone(d)?'':'<p class="cap mt8">잔여 실사 전에는 서버가 입고 − 사용으로 계산한 값입니다.</p>'));
 }
 function lkLockCard(d){
   var pool=d.pool||{}, lk=d.lock, locked=d.ph==="lock";
@@ -7371,20 +7418,18 @@ function lkLockAsk(){
     onOk:function(){ pzCall("lk7_lock",{},["lk"],function(r){ toast(r.ok?"대상 "+finNum(r.locked&&r.locked.n)+"명을 확정했습니다":"실패: "+pzWhy(r)); }); } });
 }
 function lkDrawCard(d){
-  var sk=d.stock||{}, qty=Number(d.qty!=null?d.qty:(d.cfg||{}).qty)||0, sets=Number(sk.sets)||0, N=d.lock?Number(d.lock.n)||0:Number((d.pool||{}).n)||0, W=Math.min(N, Math.min(qty, sets));
+  var qty=lkQty(d), tot=lkTotal(d), N=d.lock?Number(d.lock.n)||0:Number((d.pool||{}).n)||0, W=Math.min(N, qty);
   var ready=d.ph==="lock"&&!d.stale;
-  var body=imp([["대상",finNum(N)+"명"],["세트",finNum(sets)+" / 목표 "+finNum(qty), sets<qty?"loss":""],["당첨 (예상)",finNum(W)+"명","chg"]])+
-    (sets<qty?'<div class="note warn mt12">세트가 목표보다 적습니다. 실행할 때 확인 칸을 체크해야 합니다.</div>':'')+
-    '<div class="fn-go"><button class="btn danger fill" onclick="lkDrawAsk()"'+(ready?"":" disabled")+'>7등 추첨 실행</button><span class="cap">'+(!d.rem?"룰렛 잔여를 먼저 저장합니다":d.ph!=="lock"?"대상을 먼저 확정합니다":d.stale?"대상을 다시 확정합니다":(lkRemDone(d)?"":"룰렛 잔여 실사 전 · 재고 계산값 기준 · ")+"한 번만 실행됩니다 · 결과는 앱 내 보상에 반영")+'</span></div>';
+  var body=imp([["대상",finNum(N)+"명"],["당첨 (예상)",finNum(W)+"명","chg"],["남은 경품 총수 (참고)",finNum(tot)+"개",tot<qty?"loss":""]])+
+    '<div class="fn-go"><button class="btn danger fill" onclick="lkDrawAsk()"'+(ready?"":" disabled")+'>7등 추첨 실행</button><span class="cap">'+(!lkRemDone(d)&&d.ph==="lock"?"룰렛 잔여 실사 전 · 재고 계산값 기준 · ":"")+(d.ph!=="lock"?"대상을 먼저 확정합니다":d.stale?"대상을 다시 확정합니다":"한 번만 실행됩니다 · 결과는 앱 내 보상에 반영")+'</span></div>';
   return card("추첨","서버가 한 번에 뽑습니다 · 행사 뒤 · 대형 화면 발표 없음",body);
 }
 function lkDrawAsk(){
-  var d=ST.data.lk||{}, sk=d.stock||{}, qty=Number(d.qty!=null?d.qty:(d.cfg||{}).qty)||0, sets=Number(sk.sets)||0, isShort=sets<qty, N=d.lock?Number(d.lock.n)||0:0;
-  dialog({ t:"7등 랜덤 굿즈 추첨을 실행할까요?", who:"7등 랜덤 굿즈<span>대상 "+finNum(N)+"명 · 세트 "+finNum(Math.min(qty,sets))+"</span>",
-    x:isShort?'<label class="row mt12" style="gap:8px"><input type="checkbox" class="ck" id="lkAck" onchange="dlgGate()"><span>세트가 '+finNum(sets)+'개뿐입니다(목표 '+finNum(qty)+'). 만들 수 있는 만큼만 뽑습니다.</span></label>':"",
+  var d=ST.data.lk||{}, qty=lkQty(d), tot=lkTotal(d), N=d.lock?Number(d.lock.n)||0:0;
+  dialog({ t:"7등 랜덤 굿즈 추첨을 실행할까요?", who:"7등 랜덤 굿즈<span>대상 "+finNum(N)+"명 · 당첨 "+finNum(Math.min(N,qty))+"명</span>",
+    x:tot<qty?'<div class="note warn mt12">남은 경품 '+finNum(tot)+'개 · 당첨 '+finNum(qty)+'명보다 적습니다(안내만).</div>':"",
     s:"<b>한 번 실행하면 되돌릴 수 없습니다.</b> 시드 · 풀 해시가 남고 「재현 검증」으로 같은 결과를 다시 계산합니다.", ok:"추첨 실행", danger:true, word:"추첨실행",
-    gate:isShort?function(){ var c=el("lkAck"); return !!(c&&c.checked); }:null,
-    onOk:function(){ pzCall("lk7_draw",{ ack:isShort?"1":"" },["lk"],function(r){ toast(r.ok?"추첨했습니다 · 당첨 "+finNum(r.drawn&&r.drawn.W)+"명":"실패: "+pzWhy(r),{ ms:5000 }); }); } });
+    onOk:function(){ pzCall("lk7_draw",{ ack:"1" },["lk"],function(r){ toast(r.ok?"추첨했습니다 · 당첨 "+finNum(r.drawn&&r.drawn.W)+"명":"실패: "+pzWhy(r),{ ms:5000 }); }); } });   /* ack = 옛 서버(세트 부족 short) 호환 · 새 서버는 무시 */
 }
 function lkResultCard(d){
   var dr=d.draw||{}, v=LK.ver;
@@ -7395,7 +7440,7 @@ function lkResultCard(d){
 function lkVerify(){ call("lk7_verify",{},function(r){ LK.ver=r||{ ok:false }; render(); toast(r&&r.ok&&r.same?"재현 결과가 같습니다":"재현 결과를 확인하세요"); },function(){ toast("서버 응답 없음"); }); }
 function lkVoidCard(){
   var body='<div class="fn-form"><label>사번<input class="in w-s" inputmode="numeric" value="'+esc(LK.vo.emp)+'" oninput="LK.vo.emp=this.value"></label><label class="grow">사유<input class="in w-f" maxlength="60" value="'+esc(LK.vo.why)+'" oninput="LK.vo.why=this.value" placeholder="예: 퇴사 · 발송 불가"></label><button class="btn" onclick="lkVoidAsk()">미리 보기</button></div>'+
-    '<p class="cap mt8">당첨을 취소하면 예비 1순위가 이어받습니다. 예비가 없으면 세트는 보관입니다.</p>';
+    '<p class="cap mt8">당첨을 취소하면 예비 1순위가 이어받습니다. 예비가 없으면 그 경품은 보관입니다.</p>';
   return card("당첨 교체","발송 불가 · 자격 취소",body);
 }
 function lkVoidAsk(){
@@ -7404,38 +7449,34 @@ function lkVoidAsk(){
   if(w.length<2){ toast("사유를 적습니다"); return; }
   call("lk7_void",{ emp:e, dry:"1" },function(r){
     if(!r||!r.ok){ toast("실패: "+pzWhy(r)); return; }
-    dialog({ t:"이 당첨을 취소할까요?", who:esc(r.name||"-")+" · "+esc(e)+"<span>7등 랜덤 굿즈</span>", x:imp([["사유",esc(w)],["승계",r.sub?esc(r.sub.name||"-")+" · "+esc(r.sub.emp||"")+(r.sub.rk?" (예비 "+r.sub.rk+"순위)":""):"예비 없음 · 세트 보관",r.sub?"chg":"loss"]]),
+    dialog({ t:"이 당첨을 취소할까요?", who:esc(r.name||"-")+" · "+esc(e)+"<span>7등 랜덤 굿즈</span>", x:imp([["사유",esc(w)],["승계",r.sub?esc(r.sub.name||"-")+" · "+esc(r.sub.emp||"")+(r.sub.rk?" (예비 "+r.sub.rk+"순위)":""):"예비 없음 · 경품 보관",r.sub?"chg":"loss"]]),
       s:"<b>되돌릴 수 없습니다.</b> 승계자는 앱에서 당첨으로 바뀝니다. 운영로그에 남습니다.", ok:"당첨 취소", danger:true, word:"당첨취소",
-      onOk:function(){ pzCall("lk7_void",{ emp:e, why:w },["lk"],function(x){ if(x.ok){ LK.vo={ emp:"", why:"" }; toast("취소했습니다"+(x.sub?" · 예비 승계":" · 세트 보관"),{ ms:5000 }); } else toast("실패: "+pzWhy(x)); }); } });
+      onOk:function(){ pzCall("lk7_void",{ emp:e, why:w },["lk"],function(x){ if(x.ok){ LK.vo={ emp:"", why:"" }; toast("취소했습니다"+(x.sub?" · 예비 승계":" · 경품 보관"),{ ms:5000 }); } else toast("실패: "+pzWhy(x)); }); } });
   },function(){ toast("서버 응답 없음"); });
 }
 function lkCsvCard(){
-  return card("사내 우편 CSV","슈퍼관리자 · 본인 확인 뒤",pzSupBox("7등 당첨 명단",'<div class="fn-go" style="margin-top:0"><button class="btn pri" onclick="lkCsv()">7등 당첨 CSV</button></div><p class="cap mt8">순번 · 사번 · 이름 · 부문 · 세트 번호 · 당첨 시각. 소속 부서 · 행랑 주소는 총무가 사번으로 붙입니다.</p>'));
+  return card("사내 우편 CSV","슈퍼관리자 · 본인 확인 뒤",pzSupBox("7등 당첨 명단",'<div class="fn-go" style="margin-top:0"><button class="btn pri" onclick="lkCsv()">7등 당첨 CSV</button></div><p class="cap mt8">순번 · 사번 · 이름 · 부문 · 당첨 번호 · 당첨 시각. 담을 경품은 포장 때 룰렛 남은 경품에서 무작위로 고릅니다. 소속 부서 · 행랑 주소는 총무가 사번으로 붙입니다.</p>'));
 }
 function lkCsv(){
   call("lk7_export",{},function(r){
     if(!r||!r.ok){ toast("실패: "+(r&&r.reason==="spin"?"본인 확인이 필요합니다(PIN)":pzWhy(r))); return; }
     var rows=r.rows||[];
-    pzCsv("7등랜덤굿즈_사내우편_"+pzDay(r.t)+".csv",["순번","사번","이름","부문","세트 번호","당첨 시각"],rows.map(function(x){ return [x.no,x.emp,x.name,x.dept,x.set,x.at]; }));
+    pzCsv("7등랜덤굿즈_사내우편_"+pzDay(r.t)+".csv",["순번","사번","이름","부문","당첨 번호","당첨 시각"],rows.map(function(x){ return [x.no,x.emp,x.name,x.dept,x.set,x.at]; }));
     toast("내려받았습니다 · "+rows.length+"줄");
   },function(){ toast("서버 응답 없음"); });
 }
-function lkCfgVals(d){ if(LK.cfg) return LK.cfg; var c=d.cfg||{}; LK.cfg={ qty:String(c.qty!=null?c.qty:d.qty!=null?d.qty:""), cut:String(c.cut||d.cut||""), build:String(c.build||"") }; return LK.cfg; }
+function lkCfgVals(d){ if(LK.cfg) return LK.cfg; var c=d.cfg||{}; LK.cfg={ qty:String(c.qty!=null?c.qty:d.qty!=null?d.qty:""), cut:String(c.cut||d.cut||"") }; return LK.cfg; }
 function lkCfgCard(d){
   var v=lkCfgVals(d), off=d.ph==="drawn"?" disabled":"";
-  var body='<div class="fn-form"><label>세트 수<input class="in w-s" value="'+esc(v.qty)+'" oninput="LK.cfg.qty=this.value"'+off+'></label><label>풀 기준 시각<input class="in w-m" value="'+esc(v.cut)+'" oninput="LK.cfg.cut=this.value" placeholder="2026-10-26 17:00"'+off+'></label>'+
-    '<label class="grow">구성(품목 : 개수)<input class="in w-f" value="'+esc(v.build)+'" oninput="LK.cfg.build=this.value" placeholder="r1:1,r4:1,r2:1,r5:1"'+off+'></label></div>'+
-    '<p class="cap mt8">구성 품목 = r1 텀블러 · r2 키캡 키링 · r3 컵받침 · r4 판스티커 · r5 볼펜. 바꾸면 구성 가능 세트 수가 다시 계산됩니다.</p>'+
+  var body='<div class="fn-form"><label>당첨 수<input class="in w-s" value="'+esc(v.qty)+'" oninput="LK.cfg.qty=this.value"'+off+'></label><label>풀 기준 시각<input class="in w-m" value="'+esc(v.cut)+'" oninput="LK.cfg.cut=this.value" placeholder="2026-10-26 17:00"'+off+'></label></div>'+
     '<div class="fn-go"><button class="btn" onclick="lkCfgSave()"'+off+'>설정 저장</button><span class="cap">'+(off?"추첨 뒤에는 바꿀 수 없습니다":"기준 시각을 바꾸면 대상을 다시 확정합니다")+'</span><button class="btn sm ghost" style="margin-left:auto" onclick="lkResetAsk()">시험 데이터 비우기</button></div>';
-  return memo(body,"7등 설정 · "+esc(v.qty||"-")+"세트 · 기준 "+esc(String(v.cut).slice(11,16)||"-")+" · 구성 "+esc(v.build||"-"));
+  return memo(body,"7등 설정 · 당첨 "+esc(v.qty||"-")+"명 · 기준 "+esc(String(v.cut).slice(11,16)||"-"));
 }
 function lkCfgSave(){
   var d=ST.data.lk||{}, v=lkCfgVals(d); LK.cfg=null; var o=lkCfgVals(d); LK.cfg=v;
-  var p={}, rows=[], N={ qty:"세트 수", cut:"풀 기준 시각", build:"구성" };
+  var p={}, rows=[], N={ qty:"당첨 수", cut:"풀 기준 시각" };
   Object.keys(N).forEach(function(k){ var a=String(o[k]).trim(), b=String(v[k]).trim(); if(a!==b){ p[k]=b; rows.push([N[k],esc(a||"(없음)")+" → "+esc(b||"(없음)"),"chg"]); } });
   if(!rows.length){ toast("바뀐 것이 없습니다"); return; }
-  if(p.build!=null&&!/^r[1-5]:\d+(,r[1-5]:\d+)*$/.test(p.build.replace(/\s/g,""))){ toast(PZ_WHY.build); return; }
-  if(p.build!=null) p.build=p.build.replace(/\s/g,"");
   dialog({ t:"7등 설정을 바꿀까요?", x:imp(rows), s:"운영로그에 남습니다.", ok:"저장", onOk:function(){ pzCall("lk7_cfg",p,["lk"],function(r){ if(r.ok){ LK.cfg=null; toast("저장했습니다"); } else toast("실패: "+pzWhy(r)); }); } });
 }
 function lkResetAsk(){
@@ -7444,8 +7485,9 @@ function lkResetAsk(){
 }
 function lkMemo(){
   return memo('<p><b>대상</b> · 풀 기준 시각(기본 17:00)까지 행운권 번호가 한 장이라도 있는 사람(스탬프 4개 이상)입니다. 무대 행운권 1~6등 당첨자와 테스트 사번은 빠집니다. 지방 근무자도 들어갑니다. 선착순 참여상과 겹쳐도 됩니다.</p>'+
-    '<p><b>순서</b> · 17:00 룰렛 마감 → 부스 실물을 세어 잔여 저장 → 구성 가능 세트 확인 → 대상 확정 → 추첨(행사 뒤 · 한 번만) → 재현 검증 → CSV 로 사내 우편 발송. 발송 불가는 「당첨 교체」로 예비가 이어받습니다.</p>'+
-    '<p><b>세트</b> · 기본 구성은 텀블러 · 판스티커 · 키캡 키링 · 볼펜 1개씩입니다. 가장 적게 남은 품목이 세트 수를 정합니다. 목표보다 적으면 수량을 줄이거나 구성을 바꿉니다(회의 결정).</p>'+
+    '<p><b>순서</b> · 17:00 룰렛 마감 → 부스 실물을 품목별로 세어 잔여 저장 → 남은 경품 총수 확인 → 대상 확정 → 추첨(행사 뒤 · 한 번만) → 재현 검증 → CSV 로 사내 우편 발송. 발송 불가는 「당첨 교체」로 예비가 이어받습니다.</p>'+
+    '<p><b>상품</b> · 고정 세트가 없습니다(사용자 261006 「정말 랜덤으로」). 서버는 당첨자만 뽑고, 각 당첨자에게 담을 경품은 포장 때 룰렛 남은 경품에서 무작위로 고릅니다. 앱에는 「랜덤 굿즈」로만 보입니다. 남은 경품이 당첨 수보다 적어도 추첨은 막지 않습니다.</p>'+
+    '<p><b>재고</b> · 「경품·재고」의 7등 랜덤 굿즈 나감 = 당첨 수입니다. 룰렛 품목별 차감은 하지 않습니다(무엇을 담았는지는 포장 기준).</p>'+
     '<p><b>개인정보</b> · 이름은 CSV(슈퍼관리자 PIN 뒤)와 교체 확인 창에만 나옵니다. 부문별 집계는 두지 않습니다.</p>');
 }
 
