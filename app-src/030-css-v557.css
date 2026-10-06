@@ -22,35 +22,51 @@
      자리(bottom) = trfSync 가 하단 메뉴 · 아래 고정 버튼 높이 + 8px 로 정한다 · z 36(하단 메뉴 40 · 시트 60 아래 · 시트가 열리면 띠는 숨김)
      처음 나타날 때 아래에서 한 번(.pop) · (v5.80 3초 차오름 자동 복귀 · .trf-p · .cd · .hold · .rmcd 없앰 · 스탬프를 새로 받으면 챗봇 인사 .hi 한 번 더) */
   #trf.trf-band { position: fixed; z-index: 36; left: max(var(--ax-page-inset), calc(50% - var(--ax-app-max) / 2 + var(--ax-page-inset))); right: max(var(--ax-page-inset), calc(50% - var(--ax-app-max) / 2 + var(--ax-page-inset))); bottom: 88px; display: flex; align-items: center; gap: var(--ax-space-8); min-height: 48px; margin: 0; padding: 4px var(--ax-space-12) 4px var(--ax-space-8); overflow: hidden; border: 0; border-radius: var(--ax-radius-16); background: var(--ax-color-brandSoft); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ax-color-brand) 22%, transparent), 0 4px 14px rgba(25, 31, 40, 0.12); color: var(--ax-color-brandText); font-family: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-  #trf .trf-i { display: block; flex: none; width: 32px; height: 32px; }
+  /* v5.84 (사용자 261006 「행사 둘러보기로 돌아가기 칸에 공간이 많으니 챗봇이 좀 돌아다니면 좋겠어 · 글은 가운데 · 챗봇이 왔다 갔다」) 띠 챗봇 걷기 · 16초 한 바퀴
+     0~1초 왼쪽 끝에서 눈웃음 → 1~8초 오른쪽으로 걸음(걸음마다 3px 통통 · 걷는 쪽으로 6도 기울기) → 8~9초 오른쪽 끝에서 깜빡임 → 9~16초 몸을 뒤집고 왼쪽으로 · 한 번 가로지르기 7초
+     글(trf-m)은 띠 가운데 · 띠와 같은 면(brandSoft) 알약 · z 2 · 챗봇(trf-trk · z 1)은 글 뒤로 지나간다(글은 늘 다 보인다 · 240px 폭에서도) · 걷기 = transform 만(run translateX · i 뒤집기 · hop translateY)
+     인사(.hi)는 걷던 자리에서(.halt 1.9초 동안 걷기 멈춤) · 화면이 숨으면 멈춤(body.trf-sleep) · 움직임 줄이기 = 왼쪽에 정지 */
+  #trf.trf-band { justify-content: center; padding: 4px var(--ax-space-12); }
+  #trf .trf-trk { position: absolute; z-index: 1; top: 0; bottom: 0; left: var(--ax-space-8); right: var(--ax-space-8); pointer-events: none; }
+  #trf .trf-run { position: absolute; left: 0; top: 50%; width: calc(100% - 32px); height: 32px; margin-top: -16px; animation: trfWalk 16s linear infinite; will-change: transform; }
+  #trf .trf-i { display: block; width: 32px; height: 32px; animation: trfFace 16s linear infinite; }
+  #trf .trf-hop { display: block; width: 100%; height: 100%; animation: trfStep 16s linear infinite; }
   #trf .trf-i svg { display: block; width: 100%; height: 100%; overflow: visible; }
-  /* v5.79 띠 챗봇 = 홈 둘러보기 카드 아이콘과 같은 움직임(010 tbHop · tbEye · tbSmile · tbWave 그대로) · 처음 한 번(.hi) = 통통 3번 · 전파 펄스 · 눈웃음 뒤 은은한 반복 */
-  #trf .trf-i svg { animation: tbHop 3s infinite; }
-  #trf .trf-i .eye { transform-box: fill-box; transform-origin: center; animation: tbEye 9s linear infinite; }
+  #trf .trf-i .eye { transform-box: fill-box; transform-origin: center; animation: trfEye16 16s linear infinite; }
   #trf .trf-i .sm path { fill: none; stroke: var(--ax-color-ink); stroke-width: 4.4; stroke-linecap: round; }
-  #trf .trf-i .sm { opacity: 0; animation: tbSmile 9s linear infinite; }
+  #trf .trf-i .sm { opacity: 0; animation: trfSm16 16s linear infinite; }
   #trf .trf-i .ant path { fill: none; stroke: var(--ax-color-brand); stroke-width: 5.5; stroke-linecap: round; opacity: 0; animation: tbWave 3s ease-out infinite; }
   #trf .trf-i .ant path:nth-child(2) { animation-delay: -2.8s; }
   #trf .trf-i .ant path:nth-child(3) { animation-delay: -2.6s; }
-  #trf.hi .trf-i svg { animation: trfHiHop 0.5s 0.3s 3 ease-in-out, tbHop 3s 1.8s infinite; }
-  #trf.hi .trf-i .eye { animation: trfHiEye 1.6s 0.3s linear, tbEye 9s 1.9s linear infinite; }
-  #trf.hi .trf-i .sm { animation: trfHiSm 1.6s 0.3s linear, tbSmile 9s 1.9s linear infinite; }
+  @keyframes trfWalk { 0%, 6% { transform: translateX(0); animation-timing-function: cubic-bezier(.45, 0, .55, 1); } 50%, 56% { transform: translateX(100%); animation-timing-function: cubic-bezier(.45, 0, .55, 1); } 100% { transform: translateX(0); } }
+  @keyframes trfFace { 0%, 6% { transform: none; } 8%, 48% { transform: rotate(6deg); } 50% { transform: none; } 53%, 56% { transform: scaleX(-1); } 58%, 98% { transform: scaleX(-1) rotate(6deg); } 100% { transform: scaleX(-1); } }
+  @keyframes trfStep { 0% { transform: translateY(0px); } 6% { transform: translateY(0px); } 7.562% { transform: translateY(-3px); } 9.125% { transform: translateY(0px); } 10.688% { transform: translateY(-3px); } 12.25% { transform: translateY(0px); } 13.812% { transform: translateY(-3px); } 15.375% { transform: translateY(0px); } 16.938% { transform: translateY(-3px); } 18.5% { transform: translateY(0px); } 20.062% { transform: translateY(-3px); } 21.625% { transform: translateY(0px); } 23.188% { transform: translateY(-3px); } 24.75% { transform: translateY(0px); } 26.312% { transform: translateY(-3px); } 27.875% { transform: translateY(0px); } 29.438% { transform: translateY(-3px); } 31% { transform: translateY(0px); } 32.562% { transform: translateY(-3px); } 34.125% { transform: translateY(0px); } 35.688% { transform: translateY(-3px); } 37.25% { transform: translateY(0px); } 38.812% { transform: translateY(-3px); } 40.375% { transform: translateY(0px); } 41.938% { transform: translateY(-3px); } 43.5% { transform: translateY(0px); } 45.062% { transform: translateY(-3px); } 46.625% { transform: translateY(0px); } 48.188% { transform: translateY(-3px); } 49.75% { transform: translateY(0px); } 50% { transform: translateY(0px); } 56% { transform: translateY(0px); } 57.562% { transform: translateY(-3px); } 59.125% { transform: translateY(0px); } 60.688% { transform: translateY(-3px); } 62.25% { transform: translateY(0px); } 63.812% { transform: translateY(-3px); } 65.375% { transform: translateY(0px); } 66.938% { transform: translateY(-3px); } 68.5% { transform: translateY(0px); } 70.062% { transform: translateY(-3px); } 71.625% { transform: translateY(0px); } 73.188% { transform: translateY(-3px); } 74.75% { transform: translateY(0px); } 76.312% { transform: translateY(-3px); } 77.875% { transform: translateY(0px); } 79.438% { transform: translateY(-3px); } 81% { transform: translateY(0px); } 82.562% { transform: translateY(-3px); } 84.125% { transform: translateY(0px); } 85.688% { transform: translateY(-3px); } 87.25% { transform: translateY(0px); } 88.812% { transform: translateY(-3px); } 90.375% { transform: translateY(0px); } 91.938% { transform: translateY(-3px); } 93.5% { transform: translateY(0px); } 95.062% { transform: translateY(-3px); } 96.625% { transform: translateY(0px); } 98.188% { transform: translateY(-3px); } 99.75% { transform: translateY(0px); } 100% { transform: translateY(0px); } }
+  @keyframes trfEye16 { 0%, 1%, 5.4%, 52%, 53.6%, 100% { transform: scaleY(1); opacity: 1; } 1.1%, 5.3% { transform: scaleY(1); opacity: 0; } 52.8% { transform: scaleY(.12); opacity: 1; } }
+  @keyframes trfSm16 { 0%, 1%, 5.4%, 100% { opacity: 0; } 1.1%, 5.3% { opacity: 1; } }
+  /* 인사(.hi) · 걷던 자리에서 통통 3번 · 전파 펄스 · 눈웃음(뒤에 놓인 인사 애니메이션이 이긴다) */
+  #trf.hi .trf-i svg { animation: trfHiHop 0.5s 0.3s 3 ease-in-out; }
+  #trf.hi .trf-i .eye { animation: trfEye16 16s linear infinite, trfHiEye 1.6s 0.3s linear; }
+  #trf.hi .trf-i .sm { animation: trfSm16 16s linear infinite, trfHiSm 1.6s 0.3s linear; }
   #trf.hi .trf-i .ant path { animation: trfHiWave 0.6s 0.3s 3 ease-out, tbWave 3s 1.8s ease-out infinite; }
   #trf.hi .trf-i .ant path:nth-child(2) { animation-delay: 0.38s, -1s; }
   #trf.hi .trf-i .ant path:nth-child(3) { animation-delay: 0.46s, -0.8s; }
-  #trf.rm .trf-i svg, #trf.rm .trf-i .eye, #trf.rm .trf-i .sm, #trf.rm .trf-i .ant path { animation: none; }
+  #trf.halt .trf-run, #trf.halt .trf-i, #trf.halt .trf-hop, body.trf-sleep #trf .trf-run, body.trf-sleep #trf .trf-i, body.trf-sleep #trf .trf-hop { animation-play-state: paused; }
+  #trf.halt .trf-i .eye, #trf.halt .trf-i .sm { animation-play-state: paused, running; }
+  #trf.rm .trf-run, #trf.rm .trf-i, #trf.rm .trf-hop, #trf.rm .trf-i svg, #trf.rm .trf-i .eye, #trf.rm .trf-i .sm, #trf.rm .trf-i .ant path { animation: none; transform: none; }
+  #trf.rm .trf-i .sm { opacity: 0; }
   #trf.rm .trf-i .ant path { opacity: .35; }
   @keyframes trfHiHop { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(-5px); } }
   @keyframes trfHiWave { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: 0; } }
   @keyframes trfHiSm { 0%, 12%, 88%, 100% { opacity: 0; } 15%, 85% { opacity: 1; } }
   @keyframes trfHiEye { 0%, 12%, 88%, 100% { opacity: 1; } 15%, 85% { opacity: 0; } }
-  #trf .trf-l { flex: 1 1 auto; min-width: 0; overflow: hidden; font: var(--ax-type-t6-strong); white-space: nowrap; text-overflow: ellipsis; }
+  #trf .trf-m { position: relative; z-index: 2; display: flex; align-items: center; gap: 2px; min-width: 0; max-width: 100%; padding: 0 var(--ax-space-8) 0 var(--ax-space-12); border-radius: 999px; background: var(--ax-color-brandSoft); }   /* 글 알약 = 띠와 같은 면 · 챗봇이 뒤로 지나간다 */
+  #trf .trf-l { flex: 0 1 auto; min-width: 0; overflow: hidden; font: var(--ax-type-t6-strong); line-height: 40px; white-space: nowrap; text-overflow: ellipsis; }
   #trf .trf-v { display: block; flex: none; width: 20px; height: 20px; }
   #trf .trf-v .axs-chev { display: block; width: 20px; height: 20px; }
   #trf:active { filter: brightness(0.96); }   /* 앱 눌림 문법(010 · v5.74) · #trf 는 #frame 밖(body) */
   #trf.pop { animation: trfUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
   @keyframes trfUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-  @media (prefers-reduced-motion: reduce) { #trf.pop { animation: none; } #trf .trf-i svg, #trf .trf-i .eye, #trf .trf-i .sm, #trf .trf-i .ant path { animation: none !important; } #trf .trf-i .sm { opacity: 0; } #trf .trf-i .ant path { opacity: .35; } }
+  @media (prefers-reduced-motion: reduce) { #trf.pop { animation: none; } #trf .trf-run, #trf .trf-i, #trf .trf-hop, #trf .trf-i svg, #trf .trf-i .eye, #trf .trf-i .sm, #trf .trf-i .ant path { animation: none !important; transform: none !important; } #trf .trf-i .sm { opacity: 0; } #trf .trf-i .ant path { opacity: .35; } }
   html.kb-on #trf { display: none; }   /* 키보드가 올라오면(입력 중) 띠는 잠시 숨김 */
   body.trf-on #view::after { content: ""; display: block; height: 56px; flex: none; }   /* 본문 끝을 띠 위까지 올릴 수 있게(띠 48 + 8) · 내용 가림 0 */
   body.trf-on #topbtn { bottom: calc(var(--trfb, 88px) + 56px); }   /* 맨 위로 단추 = 띠 위 */

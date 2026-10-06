@@ -884,6 +884,8 @@
       S.lobby.add(m); PB.bots.push({ m: m, ph: i * 1.7, h0: m.rotation.y });
     });
     blockRect(0.6, 1.75, 6.15, 8.55);   /* 사진 자리(판 앞 띠) · 친구들과 겹치지 않게 */
+    var rg = new T.Mesh(new T.RingGeometry(0.36, 0.5, 40), new T.MeshBasicMaterial({ color: 0xFF7F32, transparent: true, opacity: 0.22, depthWrite: false, toneMapped: false }));   /* v5.84 찍는 자리 바닥 원 */
+    rg.rotation.x = -Math.PI / 2; var rp = toThree(PH_SLOT[0], PH_SLOT[1]); rg.position.set(rp.x, 0.012, rp.z); rg.renderOrder = 2; rg.raycast = function () {}; rg.name = 'photoSpot'; S.lobby.add(rg); PB.ring = rg;
     /* 보조 카메라 · 렌즈 자리에서 벽 쪽 */
     PB.cam = new T.PerspectiveCamera(40, 4 / 3, 0.2, 12);
     var lp = toThree(K[0] - 0.12, K[1]); PB.cam.position.set(lp.x, 1.62, lp.z); var lt = toThree(0.9, K[1]); PB.cam.lookAt(lt.x, 0.8, lt.z); PB.cam.layers.set(5);
@@ -932,17 +934,34 @@
    * 기계 앞 · 뒤 화면 = 방금 사진(45초 · 그동안 기계의 저절로 찍기는 쉰다) · 저장 · 공유 · 스탬프 없음
    * 움직임 줄이기 = 걷기 · 통통 · 3 · 2 · 1 없이 바로 그 자리에서 찰칵 → 팝업(떨어지는 움직임 없음) */
   var PH = { on: false, near: false, ph: '', t0: 0, pt: 0, path: null, pi: 0, keep: 0, rt: null, cam: null, tex: null, cv: null, n: 0, popT: 0, still: 0, popped: false, cnt: 0, log: [], snd: 0 };
-  var PH_R = 2.3, PH_R2 = 2.6, PH_SLOT = [1.0, 7.35], PH_OUT = [2.7, 6.45], PH_V = 2.4, PH_POP = 3800, PH_CAM = [6.2, 6.3, 3.6];   /* 끝 자리 = 기계 옆(들어온 쪽 · 기계 뒤 카메라에서 가려지지 않게) */
+  /* v5.84 (사용자 261006 「사진 찍기 버튼이 좀 더 명확하게 · 지금은 사람들이 눌러 볼 생각을 안 한다」 · 자동으로 데려가지 않음)
+   *   단추 = 기계 3m 안(한 번 뜨면 3.3m 까지) · 포토부스가 가장 가까운 자리일 때만(룰렛 · 타자왕 자리에서는 없음) · 화면 아래 가운데 주 버튼(O100 면 · onBrand 글 · 카메라 · 높이 52)
+   *   처음 뜰 때 통통 두 번 → 은은한 숨 쉬는 빛(::after · opacity · transform 만) · 움직임 줄이기 = 정지 · 찍는 자리(PH_SLOT) 바닥 = 주황 원(가까이 오면 은은하게 숨 쉼)
+   *   말풍선 = 「여기서 같이 사진 찍어요」(이번 방문 1번 · 그 근처 스태프 말풍선 대신) · 누른 뒤 걸어 들어가 통통 · 찰칵 흐름은 그대로 */
+  var PH_R = 3.0, PH_R2 = 3.3, PH_SAY = '여기서 같이 사진 찍어요';
+  var PH_OLD_R = 2.3, PH_OLD_R2 = 2.6, PH_SLOT = [1.0, 7.35], PH_OUT = [2.7, 6.45], PH_V = 2.4, PH_POP = 3800, PH_CAM = [6.2, 6.3, 3.6];   /* 끝 자리 = 기계 옆(들어온 쪽 · 기계 뒤 카메라에서 가려지지 않게) */
   var PH_FR = [[1.6, 6.2], [1.13, 6.7], [1.13, 8.0], [1.6, 8.5]];   /* 사진 찍을 때 친구 자리 · 가운데(z 7.35)를 비운 활 모양 · 몸 지름 0.64 보다 넓게 */
   function phNear() {
     if (!PB.g || !G.loaded || G.scn !== 'lobby' || G.anim || G.sheetOpen || G.mapMode || G.bigMap || SH || G.squeeze || PH.on || EV.seq) return false;
-    var p = planOf(G.pos); return Math.hypot(p[0] - PB.at[0], p[1] - PB.at[1]) < (PH.near ? PH_R2 : PH_R);
+    var p = planOf(G.pos), d = Math.hypot(p[0] - PB.at[0], p[1] - PB.at[1]);
+    if (d >= (PH.near ? PH_R2 : PH_R)) return false;
+    return !STOPS.some(function (s) { return s.spot && Math.hypot(s.x - p[0], s.z - p[1]) < d; });   /* 룰렛 · 타자왕 자리가 더 가까우면 그쪽 */
   }
   function placeShot(now) {
     var b = $('shot'); if (!b) return;
     var n = phNear(); PH.near = n;
+    phRing(n, now);
     if (!n) { if (!b.hidden) b.hidden = true; PH.still = 0; PH.popped = false; return; }
-    var walk = G.moveV > 0.2 || G.mode === 'auto' || !!G.air;
+    var c0 = toThree(PB.at[0], PB.at[1]); _ib.set(c0.x, 1.25, c0.z).project(camera);
+    if (!(_ib.z < 1 && Math.abs(_ib.x) < 0.95 && Math.abs(_ib.y) < 0.95)) { if (!b.hidden) b.hidden = true; PH.near = false; PH.popped = false; return; }   /* 기계가 화면에 보일 때만(등지고 있으면 없음) */
+    if (b.hidden) {
+      b.hidden = false; b.classList.add('pri'); b.classList.remove('walk', 'on3d'); var st0 = b.style; st0.left = st0.top = st0.right = st0.bottom = st0.transform = '';
+      var sr = $('stage').getBoundingClientRect(), jl = Math.min($('bJump').getBoundingClientRect().left, $('bRun').getBoundingClientRect().left) - sr.left;   /* 가운데 · 단 점프(위로 뜬 때) · 달리기 단추와 12px 띄움(빛 테 포함) */
+      st0.left = Math.round(Math.max(b.offsetWidth / 2 + 12, Math.min(sr.width / 2, jl - 20 - b.offsetWidth / 2))) + 'px';
+    }
+    if (!PH.popped && !RM) { PH.popped = true; b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }   /* v5.84 처음 뜰 때 통통 두 번 */
+    return;
+    var walk = G.moveV > 0.2 || G.mode === 'auto' || !!G.air;   /* 옛 v5.67 기계 위에 뜨는 알약(아래는 쓰지 않음 · 되돌리기용) */
     if (walk) PH.still = 0; else if (!PH.still) PH.still = now;
     var calm = !walk && now - PH.still > 250;
     var W = $('stage').clientWidth, H = $('stage').clientHeight, bw = b.offsetWidth || 150, bh = b.offsetHeight || 48, c = toThree(PB.at[0], PB.at[1]), st = b.style;
@@ -957,6 +976,13 @@
     if (calm && !PH.popped && !RM) { PH.popped = true; b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
     x = clamp(x, bw / 2 + 12, W - bw / 2 - 12); y = clamp(y, 80 + bh / 2, ctlT - bh / 2);
     st.right = 'auto'; st.bottom = 'auto'; st.left = '0px'; st.top = '0px'; st.transform = 'translate(' + (x - bw / 2).toFixed(1) + 'px,' + (y - bh / 2).toFixed(1) + 'px)'; b.classList.add('on3d');
+  }
+  /* v5.84 찍는 자리 바닥 주황 원 · 늘 옅게 · 가까이 오면 숨 쉼(그때만 다시 그림) · 움직임 줄이기 = 정지 */
+  function phRing(n, now) {
+    var r = PB.ring; if (!r) return;
+    var a = PH.on ? 0 : n ? (RM ? 0.55 : 0.42 + 0.2 * Math.sin(now / 420)) : 0.22;
+    if (Math.abs(r.material.opacity - a) > 0.004) { r.material.opacity = a; G.need = true; }
+    if (n && !RM && !PH.on) G.need = true;
   }
   function doShot() {
     if (performance.now() - (G.guardT || 0) < 500) return;
@@ -2165,9 +2191,42 @@
     if (GV.want !== GV.vis && now - GV.since > 200) GV.vis = GV.want;
     return GV.vis;
   }
+  /* v5.84 (최초 진입 가볍게 · 개편안 2-8) 첫 5분 안내를 덜 · 말풍선 = 구역(스태프)당 이번 방문 1번 · 3.5초 뒤 흐려짐 · 「자세히 보기」 단추는 그대로
+   *   방향점 = 둘러보기를 연 뒤 90초 숨김 · 그 뒤 한 번 나타나면 최대 5초 · 「더 힘내세요!」 = 이번 방문 3번까지
+   *   방문 = 둘러보기를 새로 열 때(앱 화면에서 뒤로 돌아온 restore 는 같은 방문) */
+  var VIS = { t0: 0, bub: {}, dirGd: null, dirAt: 0, cheerN: 0 }, BUB_MS = 3500, BUB_FADE = 400, DIR_WAIT = 90000, DIR_MS = 5000, CHEER_MAX = 3;
+  function visitReset() { VIS.t0 = performance.now(); VIS.bub = {}; VIS.dirGd = null; VIS.dirAt = 0; VIS.cheerN = 0; VIS.seen = {}; }
+  /* v5.84 (사용자 261006 「1층을 다 둘러보셨으면 엘리베이터를 타고 다른 층으로 이동해 보세요라는 권고」 · 메인 권장안) 엘리베이터 권유 한 번 · 막지 않음
+   *   조건 = 이번 방문에 1층 구역 멈춤 자리 70% 이상(3m 안) 들르고 3분 지남 · 또는 5분 지남 · 이 기기에서 처음(axfTour3ElevTip) · 엘리베이터를 탄 적 없음(axfTour3Elev)
+   *   로비에서만 · 포토부스 근처 · 연출 · 시트 · 카드 · 도움말 · 한 줄 힌트 · 큰 지도 동안은 기다림 · 8초 뒤 저절로 사라짐 · 그동안 작은 지도 엘리베이터 자리 강조
+   *   「엘리베이터로 가기」 = 가장 가까운 엘리베이터(게이트 앞 · 방화문 앞)까지 자동 걷기(walkTo) · 닫기 × · 움직임 줄이기 = 움직임 없이 나타남 */
+  var ETIP = { iv: 0, t: 0 }, ETIP_MIN = 180000, ETIP_MAX = 300000, ETIP_RATE = 0.7, ETIP_MS = 8000, ETIP_R = 3.0, ETIP_TO = [[18.4, 9.7], [28.7, 17.3]];
+  function etipTick() {
+    if (!G.open || !G.loaded || G.scn !== 'lobby') return;
+    var p = planOf(G.pos), zs = STOPS.filter(function (s) { return s.zone; });
+    zs.forEach(function (s) { if (Math.hypot(s.x - p[0], s.z - p[1]) < ETIP_R) VIS.seen[s.id] = 1; });
+    if (store.get('axfTour3ElevTip') === '1' || store.get('axfTour3Elev') === '1' || !$('etip').hidden) return;
+    var el = performance.now() - VIS.t0, rate = Object.keys(VIS.seen).length / (zs.length || 1);
+    if (!((el >= ETIP_MIN && rate >= ETIP_RATE) || el >= ETIP_MAX)) return;
+    if (PH.on || PH.near || SH || SCARD || G.anim || G.squeeze || G.bigMap || EV.seq || !$('help').hidden || !$('hint').hidden || !$('pola').hidden) return;   /* 다음 틱에 다시 */
+    etipShow();
+  }
+  function etipShow() {
+    store.set('axfTour3ElevTip', '1'); G.etipN = (G.etipN || 0) + 1;
+    var e = $('etip'); e.hidden = false; e.classList.toggle('in', !RM); ROOTEL.classList.add('etip-on');
+    clearTimeout(ETIP.t); ETIP.t = setTimeout(etipHide, ETIP_MS);
+  }
+  function etipHide() { clearTimeout(ETIP.t); var e = $('etip'); if (e) { e.hidden = true; e.classList.remove('in'); } if (ROOTEL) ROOTEL.classList.remove('etip-on'); }
+  function etipGo() {
+    etipHide(); if (!G.loaded || G.scn !== 'lobby' || PH.on) return;
+    var p = planOf(G.pos), q = ETIP_TO.reduce(function (a, b) { return Math.hypot(b[0] - p[0], b[1] - p[1]) < Math.hypot(a[0] - p[0], a[1] - p[1]) ? b : a; });
+    walkTo(q[0], q[1]); G.etipGo = q;
+  }
   function placeDir(gd) {   /* 가장자리 방향 점 · 스태프 쪽 */
     var d = $('gdir'); if (!d) return;
-    if (!gd) { if (!d.hidden) d.hidden = true; return; }
+    var now = performance.now();
+    if (gd && gd !== VIS.dirGd) { VIS.dirGd = gd; VIS.dirAt = now; }
+    if (!gd || now - VIS.t0 < DIR_WAIT || now - VIS.dirAt > DIR_MS) { if (!gd) VIS.dirGd = null; if (!d.hidden) d.hidden = true; return; }
     var W = $('stage').clientWidth, H = $('stage').clientHeight; _p.copy(gd.m.position); _p.y = 0.9; _p.project(camera);
     var x = _p.x, y = _p.y; if (_p.z > 1) { x = -x; y = -y; }
     var m = Math.max(Math.abs(x) / 0.86, Math.abs(y) / 0.86, 1e-3); if (m < 1 && _p.z <= 1) m = 1; x /= m; y /= m;
@@ -2176,16 +2235,32 @@
   }
   function placeBubble() {
     var b = $('gbub');
+    if (PH.near && !PH.on && !G.anim && G.scn === 'lobby') { phBubble(b); return; }   /* v5.84 포토부스 근처 = 「여기서 같이 사진 찍어요」(이번 방문 1번) */
     if (!G.talk || G.anim || G.scn !== 'lobby') { if (!b.hidden) b.hidden = true; placeDir(null); return; }
-    var gd = G.talk, seen = gd.stamp || guideSeen(gd, performance.now());
+    var gd = G.talk, now = performance.now(), b0 = VIS.bub[gd.id];
+    if (!gd.stamp && b0 && now - b0 > BUB_MS) { if (!b.hidden) { b.hidden = true; b.classList.remove('out'); } placeDir(null); return; }   /* v5.84 이번 방문에 이미 한 번 말했다 */
+    var seen = gd.stamp || guideSeen(gd, now);
     if (!seen) { if (!b.hidden) b.hidden = true; placeDir(gd); return; }
     placeDir(null);
+    if (!gd.stamp) { if (!b0) VIS.bub[gd.id] = b0 = now; b.classList.toggle('out', now - b0 > BUB_MS - BUB_FADE); }
     _p.copy(gd.m.position); _p.y = 1.72; _p.project(camera);   /* 전파(머리 위 1.0~1.5m)가 보이게 그 위에 */
     if (_p.z > 1) { b.hidden = true; return; }
     if (b.getAttribute('data-z') !== gd.id) { b.setAttribute('data-z', gd.id); $('gbubT').textContent = gd.text; var go = b.querySelector('.go'); go.textContent = gd.go; go.hidden = !gd.go || !gd.stamp; }   /* v5.54 구역 스태프 = 한마디만(「자세히 보기」는 아래 단추 하나) · 계단 「스탬프 받기」만 알약 */
     b.hidden = false;
     var W = $('stage').clientWidth, H = $('stage').clientHeight, bw = b.offsetWidth || 220, x = clamp((_p.x + 1) / 2 * W, bw / 2 + 8, W - bw / 2 - 8), y = Math.max((1 - _p.y) / 2 * H, b.offsetHeight + 8);
     var lk = $('look'); if (lk && !lk.hidden) { var lt = lk.offsetTop, ll = lk.offsetLeft, lw = lk.offsetWidth; if (y + 7 > lt - 6 && y - b.offsetHeight < lt + lk.offsetHeight && x + bw / 2 > ll - 4 && x - bw / 2 < ll + lw + 4) y = Math.max(b.offsetHeight + 8, lt - 13); }   /* v5.54 자세히 보기 단추와 겹치면 단추 위로 · v5.58 단추가 어디든 */
+    b.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) translate(-50%,-100%)';
+  }
+
+  function phBubble(b) {
+    var now = performance.now(), b0 = VIS.bub.photo; placeDir(null);
+    if (b0 && now - b0 > BUB_MS) { if (!b.hidden) { b.hidden = true; b.classList.remove('out'); } return; }
+    _p.copy(toThree(1.3, PB.at[1])); _p.y = 1.35; _p.project(camera);
+    if (_p.z > 1) { b.hidden = true; return; }
+    if (!b0) VIS.bub.photo = b0 = now;
+    if (b.getAttribute('data-z') !== 'photo') { b.setAttribute('data-z', 'photo'); $('gbubT').textContent = PH_SAY; b.querySelector('.go').hidden = true; }
+    b.hidden = false; b.classList.toggle('out', now - b0 > BUB_MS - BUB_FADE);
+    var W = $('stage').clientWidth, H = $('stage').clientHeight, bw = b.offsetWidth || 200, x = clamp((_p.x + 1) / 2 * W, bw / 2 + 8, W - bw / 2 - 8), y = Math.max((1 - _p.y) / 2 * H, b.offsetHeight + 8);
     b.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) translate(-50%,-100%)';
   }
 
@@ -3084,7 +3159,8 @@
     var keep = [], hid = 0;
     function rc(el) { var r = el.getBoundingClientRect(); return r.width ? r : null; }
     function hit(a, b) { return a.left < b.right + 4 && b.left < a.right + 4 && a.top < b.bottom + 4 && b.top < a.bottom + 4; }
-    var lk = $('look'), gb = $('gbub'), sb = $('shot');
+    var lk = $('look'), gb = $('gbub'), sb = $('shot'), et = $('etip');
+    if (et && !et.hidden) { var re = rc(et); if (re) keep.push(re); }   /* v5.84 엘리베이터 권유 = 말풍선보다 앞 */
     if (sb && !sb.hidden) { var r0 = rc(sb); if (r0) keep.push(r0); }   /* v5.67 사진 찍기 = 맨 앞 */
     if (lk && !lk.hidden) { var r1 = rc(lk); if (r1) keep.push(r1); }
     if (gb && !gb.hidden) { var r2 = rc(gb); if (r2 && keep.some(function (k) { return hit(k, r2); })) { gb.style.visibility = 'hidden'; hid++; } else { gb.style.visibility = ''; if (r2) keep.push(r2); } } else if (gb) gb.style.visibility = '';
@@ -3395,6 +3471,7 @@
     });
     o += '<circle cx="' + mmX(B.revolve) + '" cy="' + mmY(0) + '" r="3" fill="#4E5968"/><circle cx="' + mmX(32.57) + '" cy="' + mmY(8.4) + '" r="3" fill="#4E5968"/><rect x="' + mmX(17.0) + '" y="' + mmY(11.7) + '" width="' + (2.8 * MM.k).toFixed(1) + '" height="3" fill="#4E5968"/>';
     o += '<rect x="' + mmX(WW.x1 - WW.w) + '" y="' + mmY(WW.z + 0.15) + '" width="' + (WW.w * MM.k).toFixed(1) + '" height="2" fill="#191F28"/>';   /* v5.45 가벽 */
+    o += '<circle class="mmev" cx="' + mmX(18.4) + '" cy="' + mmY(10.45) + '" r="9"/><circle class="mmev" cx="' + mmX(27.6) + '" cy="' + mmY(17.3) + '" r="9"/>';   /* v5.84 엘리베이터 권유 동안만 보이는 강조 */
     o += '<g id="t3-mmMe"><path d="M0,-8 L5,3 L0,1 L-5,3 Z" fill="#191F28"/><circle r="4.2" fill="#FF7F32" stroke="#FFFFFF" stroke-width="1.5"/></g></g></svg>';
     $('mini').innerHTML = o; G.mmAz = null;
   }
@@ -3479,7 +3556,8 @@
     else if (G.push) G.push = Math.max(0, G.push - dt * 2.5);
     G.pushK = (G.push || 0) > 0.05 ? clamp(G.push / PUSH_T, 0, 1) : 0;
     var ch = $('cheer'), show = ((G.push || 0) > 0.12 && !G.squeeze) || (!!G.squeeze && performance.now() - G.squeeze.t0 < (RM ? 150 : SQ.a));   /* v5.51 쭈압 동안도 「더 힘내세요!」 */
-    if (ch.hidden === show) { ch.hidden = !show; if (show) { ch.classList.remove('pop'); ch.getBoundingClientRect(); ch.classList.add('pop'); } }
+    if (show && ch.hidden && VIS.cheerN >= CHEER_MAX) show = false;   /* v5.84 이번 방문 3번까지(밀기 · 비집기는 그대로) */
+    if (ch.hidden === show) { ch.hidden = !show; if (show) { VIS.cheerN++; ch.classList.remove('pop'); ch.getBoundingClientRect(); ch.classList.add('pop'); } }
   }
   function placeCheer() {
     var ch = $('cheer'); if (ch.hidden) return;
@@ -3670,6 +3748,7 @@
     $('where').textContent = on ? '엘리베이터 안 · 몇 층으로 갈까요?' : $('where').textContent;
   }
   function toElev() {
+    store.set('axfTour3Elev', '1'); etipHide();   /* v5.84 엘리베이터를 탄 사람에게는 권유 없음 */
     veilText(''); veilCover(360, null, function () {   /* v5.51 전환 막 */
       if (!EV.g) buildElev();
       G.squeeze = null; G.sqK = 0; G.stick = null; G.scn = 'elev'; S.lobby.visible = false; S.cafe.visible = false; EV.g.visible = true;
@@ -4168,7 +4247,25 @@
   }
 
   /* ═══════════ 처음 안내(한 문장 · 한 번) ═══════════ */
-  function maybeHelp() { if (Q.get('nohelp') !== '1' && !store.get('axfTour3Help')) showHelp(); }
+  /* v5.84 (앱 v5.83 「최초 진입 가볍게」 · 사용자 261006 「나」) 첫 입장 = 막는 처음 안내 카드 대신 한 줄 힌트(#t3-hint · 막지 않음) · 처음 움직이거나 8초에 사라짐 · 기기당 1회(axfTour3Help 그대로)
+   *   나머지 문장(확대 · 동전 점프 · 화면 밀기) · 움직임 줄이기 · 음악 없이 스위치는 헤더 「도움말」 카드에 그대로 · 옛 「시작하기」에서 음악 시작(MUS.deferred) 없앰 = 여는 누름에서 시작(음악 기본 켬 그대로 · 사용자 결정 1) */
+  var HINT_MS = 8000;
+  function maybeHelp() { if (Q.get('nohelp') !== '1' && !store.get('axfTour3Help')) showHint(); }
+  function showHint() {
+    var h = $('hint'); if (!h) return;
+    store.set('axfTour3Help', '1');
+    var t0 = performance.now(), mv0 = !!G.moved; G.moved = false;
+    h.hidden = false; h.classList.remove('out');
+    clearInterval(G.hintT);
+    G.hintT = setInterval(function () {
+      if (!G.open || G.moved || performance.now() - t0 > HINT_MS) { clearInterval(G.hintT); G.hintT = 0; hideHint(); if (mv0) G.moved = true; }
+    }, 200);
+  }
+  function hideHint() {
+    var h = $('hint'); if (!h || h.hidden) return;
+    if (RM) { h.hidden = true; return; }
+    h.classList.add('out'); setTimeout(function () { h.hidden = true; h.classList.remove('out'); }, 300);
+  }
   /* 입장 연출 · 던전 이동처럼 암전(처음부터 검은 화면 · 받는 동안 「불러오는 중」) → 가운데 「1F · AX Festival 2026」 0.8초 → 밝아지며 높은 스카이뷰 → 캐릭터로 줌인(1.3초) → 처음 안내 · 합 2.5초 안 · 움직임 줄이기 = 짧은 페이드만 */
   function entrance() {   /* v5.51 암전 대신 전환 막(주황 점 격자) · 다 받으면 흰 점이 가득 → 「1F · AX Festival 2026」 → 가운데부터 점이 걷히며 스카이뷰 */
     var t = $('blackT'); veilProg(1); veilText('1F · AX Festival 2026', true);
@@ -4177,10 +4274,10 @@
       veilText(''); veilProg(null);
       intro(afterIntro);   /* 스카이뷰에서 시작 */
       veilReveal(620, null);
-    }, 800);
+    }, 400);   /* v5.84 전환 글 0.8 → 0.4초(최초 진입 가볍게) */
   }
-  function showHelp() { $('help').hidden = false; }
-  function hideHelp() { $('help').hidden = true; store.set('axfTour3Help', '1'); G.guardT = performance.now(); if (MUS.deferred) { MUS.deferred = false; musStart(2); } }   /* v5.38 첫 입장 음악 = 「시작하기」 누름에서 */   /* 닫는 탭이 아래 버튼까지 가지 않게 0.5초 막음 */
+  function showHelp() { hideHint(); $('help').hidden = false; }   /* v5.84 헤더 「도움말」 카드 */
+  function hideHelp() { $('help').hidden = true; store.set('axfTour3Help', '1'); G.guardT = performance.now(); }   /* v5.38 첫 입장 음악 = 「시작하기」 누름에서 */   /* 닫는 탭이 아래 버튼까지 가지 않게 0.5초 막음 */
 
   /* ═══════════ 로비 음악(v5.38 · 사용자 261003 「1층 로비에서 잔잔한 음악이 나오면 좋겠어」 · v5.40 카페 음악으로 바꿈) ═══════════
    * v5.40 사용자 261003 「카페에 와 있는 것 같은 상큼한 기분 · 영감을 얻을 수 있을 것 같은 느낌」 · 소리 크기는 그대로(사용자 결정 · 마스터 0.42)
@@ -4194,7 +4291,7 @@
    *   첫 입장 = 처음 안내의 「시작하기」(누름)에서 시작 · 「음악 없이」를 고르면 AudioContext 를 만들지 않는다 · 위쪽 스피커 버튼과 같은 설정(axfTour3Music · 기본 켬)
    *   모바일 자동 재생 제한 = 여는 누름 안에서 만들고 · 그래도 멈춰 있으면 화면 첫 누름에서 다시 깨운다 · navigator.audioSession = ambient(듣던 음악을 끊지 않고 무음 모드를 따른다 · 닫으면 되돌림)
    * 끄려면 AXTour.open({ music: false }) · 버튼도 숨는다 */
-  var MUS = { want: true, ctx: null, out: null, st: null, timer: 0, gen: 0, made: 0, deferred: false, oldType: null, lite: false };
+  var MUS = { want: true, ctx: null, out: null, st: null, timer: 0, gen: 0, made: 0, oldType: null, lite: false };
   var MUS_VOL = 0.42, TRIM_B = 0.42, SNV_B = 0.035;   /* 미리 듣기 렌더 기준 최고 약 -15 dBFS · 평균(RMS) 약 -27 dBFS(배경 음악 크기 · v5.38 과 같게 맞춤) */
   /* 스타일 · b = 로파이(앱 · 사용자 261003 결정) · a = 보사노바(v5.40 · 되돌림 · 미리 듣기 비교용 · musOffline 에서만) · trim = 악기 합 크기(스타일마다 v5.38 크기에 맞춤) */
   var MUS_STY = 'b', MSTY = {
@@ -4369,7 +4466,7 @@
   }
   function musSet(on) {   /* 위쪽 스피커 버튼 · 처음 안내의 「음악 없이」 둘 다 이것 하나 */
     MUS.want = !!on; store.set('axfTour3Music', on ? '1' : '0');
-    if (on) { if (!MUS.deferred || $('help').hidden) { MUS.deferred = false; musStart(1.2); } }
+    if (on) musStart(1.2);
     else musStop(true, 0.5);
     musUi();
   }
@@ -4378,9 +4475,8 @@
     b.hidden = !musOn(); b.classList.toggle('off', !MUS.want); b.setAttribute('aria-pressed', MUS.want ? 'true' : 'false'); b.setAttribute('aria-label', MUS.want ? '음악 끄기' : '음악 켜기');
     if (k) k.checked = !MUS.want; var row = $('muRow'); if (row) row.hidden = !musOn();
   }
-  function musOpen() {   /* 둘러보기를 여는 누름 안 · 처음 안내가 뜰 차례면 「시작하기」까지 기다린다 */
-    MUS.deferred = Q.get('nohelp') !== '1' && !store.get('axfTour3Help');
-    musUi(); if (!MUS.deferred) musStart(2);
+  function musOpen() {   /* 둘러보기를 여는 누름 안에서 시작(v5.84 처음 안내 카드가 없어 「시작하기」를 기다리지 않는다 · 기본 켬 · 스피커로 끔) */
+    musUi(); musStart(2);
   }
   function musWire() {
     var v = store.get('axfTour3Music'); MUS.want = v !== '0';
@@ -4389,7 +4485,7 @@
     /* 자동 재생이 막혀 멈춰 있으면 화면 첫 누름에서 깨운다(처음 안내가 떠 있는 동안 · 아직 고르기 전에는 시작하지 않음) */
     ['pointerdown', 'touchend', 'keydown'].forEach(function (ev) {
       ROOTEL.addEventListener(ev, function () {
-        if (!G.open || !musOn() || !MUS.want || MUS.deferred || !$('help').hidden || document.hidden) return;
+        if (!G.open || !musOn() || !MUS.want || document.hidden) return;
         if (!MUS.ctx || MUS.ctx.state === 'suspended') musStart(MUS.ctx ? 1 : 2);
       }, true);
     });
@@ -4406,7 +4502,7 @@
     musSchedule(c, g, st, sec);
     return c.startRendering();
   };
-  G.mus = function () { return { style: MUS_STY, want: MUS.want, deferred: MUS.deferred, made: MUS.made, state: MUS.ctx ? MUS.ctx.state : 'none', timer: !!MUS.timer, gain: MUS.out ? +MUS.out.master.gain.value.toFixed(3) : null, session: navigator.audioSession ? navigator.audioSession.type : 'n/a' }; };
+  G.mus = function () { return { style: MUS_STY, want: MUS.want, made: MUS.made, state: MUS.ctx ? MUS.ctx.state : 'none', timer: !!MUS.timer, gain: MUS.out ? +MUS.out.master.gain.value.toFixed(3) : null, session: navigator.audioSession ? navigator.audioSession.type : 'n/a' }; };
 
   /* ═══════════ 시작 ═══════════ */
   function boot() {
@@ -4431,6 +4527,7 @@
     Array.prototype.forEach.call($('evp').querySelectorAll('.evb'), function (b) { b.onclick = function () { pressFloor(b); }; });
     $('gbub').onclick = function () { if (performance.now() - (G.guardT || 0) < 500) return; var gd = G.talk; if (!gd) return; if (gd.stamp) { openStampCard(gd.stamp); return; } if (gd.spot === 'typing') { openPromo(); return; } if (!gd.go) return; doLook(); };   /* v5.54 말풍선 = 자세히 보기 단추와 같은 일 */
     $('look').onclick = doLook;
+    $('etGo').onclick = etipGo; $('etX').onclick = etipHide;   /* v5.84 */
     $('shot').onclick = doShot; $('pola').addEventListener('click', phClose);   /* v5.67 사진 찍기 · 팝업 톡 = 닫기 */
     var rs = store.get('axfTour3RM'); if (rs === '1' || rs === '0') RM = rs === '1';
     ROOTEL.classList.toggle('rm', RM); $('rmChk').checked = RM;
@@ -4452,7 +4549,7 @@
     requestAnimationFrame(loop);
   }
   /* 시험 · 녹화용 손잡이(앱에는 없음) */
-  G.api = { scene: function () { return S; }, proj: function (x, y, z) { _p.set(x, y, z).project(camera); var r = $('stage').getBoundingClientRect(); return [r.left + (_p.x + 1) / 2 * r.width, r.top + (1 - _p.y) / 2 * r.height, _p.z]; },   /* v5.51 확인용 · 3D 점 → 화면 좌표(실제 톡 확인) */ shotCamKeep: function (x, y, z, lx, ly, lz, face) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); if (face) { guides.forEach(function (g) { g.m.rotation.y = Math.atan2(camera.position.x - g.m.position.x, camera.position.z - g.m.position.z); }); bot.rotation.y = Math.atan2(camera.position.x - bot.position.x, camera.position.z - bot.position.z); } S.frame(camera, 'lobby'); if (G.ceil) G.ceil.visible = false; renderer.render(scene, camera); G.hold = true; }, shotCam: function (x, y, z, lx, ly, lz, inside) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); var bv = bot.visible; bot.visible = false; S.frame(camera, 'lobby', !!inside); renderer.render(scene, camera); bot.visible = bv; G.hold = true; }, guides: function () { return guides.map(function (g) { return [g.zone, g.at, +g.h.toFixed(2)]; }); }, enter: function (zid, pg) { enterPanel(D.Z(zid), pg || null); }, pose: function (x, z, yaw, h) { G.pos.copy(toThree(x, z)); G.mode = 'free'; G.path = null; G.yaw = yaw; G.h = h == null ? yaw + Math.PI : h; G.yo = 0; G.need = true; }, goStop: goStop, openSheet: function (zid, i) { openSheet(D.Z(zid), i || 0); }, closeSheet: closeSheet, setPage: function (k) { setPage(k); }, tap: tap, walkTo: walkTo, plan: function () { return planOf(G.pos); }, cam: function () { return planOf(camera.position).concat([camera.position.y]); }, toCafe: toCafe, back: backTo1F, free: free, hw: function (x, z) { var c = gi(x, z); return c < 0 ? -1 : hw[c] * 0.05; }, move: moveStep, attrAt: attrAt, round: function () { return ROUND.slice(); }, slow: function (f) { DIVE_FX = f || 1; }, occ: function () { var A = OCCA; return A ? { pg: A.face.userData.pg, ent: A.ent.length, tris: A.ent.reduce(function (n, e) { return n + e.gh.geometry.drawRange.count / 3; }, 0), tvs: A.tvs.length, alpha: A.alpha, hid: A.dyn.filter(function (o) { return o.userData.occ; }).length } : null; }, look: function () { return LOOK.key; },   /* v5.54 확인용 */ sqLog: function (on) { if (on) G.sqLog = []; return G.sqLog; }, wd: function (x, z) { var c = gi(x, z); return c < 0 ? -1 : wd[c]; }, gate: function () { return { GZ: GZ, BR: BR, SQ: SQ }; },   xf: function () { return XF ? { b: XF.b, fr: XF.fr, M: XF.M } : null; }, faceQuad: function () { var f = G.lastFace || (XF && XF.face); return f ? xfQuad(f) : null; },   /* v5.56 확인용 */ camLog: function (on) { G.camLog = on ? [] : null; }, camStep: function (dt) { stepCam(dt || 0); S.frame(camera, 'lobby', G.scn === 'lobby' && !G.anim && !!G.camIn); return { cam: planOf(camera.position).concat([camera.position.y]), k: G.boomK, fp: !!G.fp, inside: !!G.camIn, cut: S.cut(), stub: !!(S.lobby.getObjectByName('coreStub') || {}).visible, ray: camRay(camera.position.x, camera.position.y, camera.position.z) }; }, cocc: function (x, z, y) { var c = gi(x, z); return !cocc || c < 0 ? -1 : (cocc[c] >>> Math.floor(y / COCC_H)) & 1; },   /* v5.73 확인용 */ tvs: function () { return TVS.map(function (v) { var m = v.mot; return { kind: v.kind, w: v.w, h: v.h, at: planOf(v.c).map(function (q) { return +q.toFixed(2); }), on: v.on, n: v.n, mot: m ? { ord: m.ord.join(' '), k: m.k, cur: m.cur, loops: m.loops, show: m.show, paused: m.el.paused, t: +m.el.currentTime.toFixed(2), rs: m.el.readyState, blocked: m.blocked } : null }; }); }, mot: function () { return { on: MOT.on, n: MOT.n, got: MOT.got, fps: MOT_FPS, files: Object.keys(MOT.blob) }; }, elev: function () { toElev(); }, pb: function () { return { n: PB.n, on: PB.on, cut: G.kioskCut, relit: G.kioskRelit, trueN: G.trueN, posterHi: G.posterHi, gate: G.gateGlass }; },   /* v5.58 확인용 */ ph: function () { var p = planOf(G.pos); return { on: PH.on, ph: PH.ph, n: PH.n, ms: PH.ms, size: PH.size, snd: PH.snd, near: PH.near, keep: PH.keep > performance.now(), pola: !$('pola').hidden, pos: [+p[0].toFixed(2), +p[1].toFixed(2)], h: +G.h.toFixed(3), free: free(p[0], p[1]), log: PH.log }; }, phStart: function () { if (phNear()) phStart(); return PH.on; }, aim: function () { return { aim: AIM.b ? AIM.b.id : null, demo: !!AIM.demo, demoN: G.aimDemoN || 0, tipN: G.aimTipN || 0, tip: !$('jtip').hidden, cls: $('bJump').className, blk: BLOCKS.map(function (b) { return { id: b.id, at: b.at.map(function (q) { return +q.toFixed(2); }), got: b.got, prox: +b.prox.toFixed(2), lit: +b.lit.toFixed(2) }; }) }; },   /* v5.67 확인용 */ iris: function () { return { seq: EV.seq ? EV.seq.ph[EV.seq.i][0] : null, cur: IR.cur, log: IR.log, dings: IR.dings }; }, face: function () { return irFace(); }, dingAt: dingAt, mus: function () { return { want: MUS.want, on: musOn(), ctx: MUS.ctx ? MUS.ctx.state : null }; } };   /* v5.55 확인용 */
+  G.api = { scene: function () { return S; }, proj: function (x, y, z) { _p.set(x, y, z).project(camera); var r = $('stage').getBoundingClientRect(); return [r.left + (_p.x + 1) / 2 * r.width, r.top + (1 - _p.y) / 2 * r.height, _p.z]; },   /* v5.51 확인용 · 3D 점 → 화면 좌표(실제 톡 확인) */ shotCamKeep: function (x, y, z, lx, ly, lz, face) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); if (face) { guides.forEach(function (g) { g.m.rotation.y = Math.atan2(camera.position.x - g.m.position.x, camera.position.z - g.m.position.z); }); bot.rotation.y = Math.atan2(camera.position.x - bot.position.x, camera.position.z - bot.position.z); } S.frame(camera, 'lobby'); if (G.ceil) G.ceil.visible = false; renderer.render(scene, camera); G.hold = true; }, shotCam: function (x, y, z, lx, ly, lz, inside) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); var bv = bot.visible; bot.visible = false; S.frame(camera, 'lobby', !!inside); renderer.render(scene, camera); bot.visible = bv; G.hold = true; }, guides: function () { return guides.map(function (g) { return [g.zone, g.at, +g.h.toFixed(2)]; }); }, enter: function (zid, pg) { enterPanel(D.Z(zid), pg || null); }, pose: function (x, z, yaw, h) { G.pos.copy(toThree(x, z)); G.mode = 'free'; G.path = null; G.yaw = yaw; G.h = h == null ? yaw + Math.PI : h; G.yo = 0; G.need = true; }, goStop: goStop, openSheet: function (zid, i) { openSheet(D.Z(zid), i || 0); }, closeSheet: closeSheet, setPage: function (k) { setPage(k); }, tap: tap, walkTo: walkTo, plan: function () { return planOf(G.pos); }, cam: function () { return planOf(camera.position).concat([camera.position.y]); }, toCafe: toCafe, back: backTo1F, free: free, hw: function (x, z) { var c = gi(x, z); return c < 0 ? -1 : hw[c] * 0.05; }, move: moveStep, attrAt: attrAt, round: function () { return ROUND.slice(); }, slow: function (f) { DIVE_FX = f || 1; }, occ: function () { var A = OCCA; return A ? { pg: A.face.userData.pg, ent: A.ent.length, tris: A.ent.reduce(function (n, e) { return n + e.gh.geometry.drawRange.count / 3; }, 0), tvs: A.tvs.length, alpha: A.alpha, hid: A.dyn.filter(function (o) { return o.userData.occ; }).length } : null; }, look: function () { return LOOK.key; },   /* v5.54 확인용 */ sqLog: function (on) { if (on) G.sqLog = []; return G.sqLog; }, wd: function (x, z) { var c = gi(x, z); return c < 0 ? -1 : wd[c]; }, gate: function () { return { GZ: GZ, BR: BR, SQ: SQ }; },   xf: function () { return XF ? { b: XF.b, fr: XF.fr, M: XF.M } : null; }, faceQuad: function () { var f = G.lastFace || (XF && XF.face); return f ? xfQuad(f) : null; },   /* v5.56 확인용 */ camLog: function (on) { G.camLog = on ? [] : null; }, camStep: function (dt) { stepCam(dt || 0); S.frame(camera, 'lobby', G.scn === 'lobby' && !G.anim && !!G.camIn); return { cam: planOf(camera.position).concat([camera.position.y]), k: G.boomK, fp: !!G.fp, inside: !!G.camIn, cut: S.cut(), stub: !!(S.lobby.getObjectByName('coreStub') || {}).visible, ray: camRay(camera.position.x, camera.position.y, camera.position.z) }; }, cocc: function (x, z, y) { var c = gi(x, z); return !cocc || c < 0 ? -1 : (cocc[c] >>> Math.floor(y / COCC_H)) & 1; },   /* v5.73 확인용 */ tvs: function () { return TVS.map(function (v) { var m = v.mot; return { kind: v.kind, w: v.w, h: v.h, at: planOf(v.c).map(function (q) { return +q.toFixed(2); }), on: v.on, n: v.n, mot: m ? { ord: m.ord.join(' '), k: m.k, cur: m.cur, loops: m.loops, show: m.show, paused: m.el.paused, t: +m.el.currentTime.toFixed(2), rs: m.el.readyState, blocked: m.blocked } : null }; }); }, mot: function () { return { on: MOT.on, n: MOT.n, got: MOT.got, fps: MOT_FPS, files: Object.keys(MOT.blob) }; }, elev: function () { toElev(); }, pb: function () { return { n: PB.n, on: PB.on, cut: G.kioskCut, relit: G.kioskRelit, trueN: G.trueN, posterHi: G.posterHi, gate: G.gateGlass }; },   /* v5.58 확인용 */ ph: function () { var p = planOf(G.pos); return { on: PH.on, ph: PH.ph, n: PH.n, ms: PH.ms, size: PH.size, snd: PH.snd, near: PH.near, keep: PH.keep > performance.now(), pola: !$('pola').hidden, pos: [+p[0].toFixed(2), +p[1].toFixed(2)], h: +G.h.toFixed(3), free: free(p[0], p[1]), log: PH.log }; }, phStart: function () { if (phNear()) phStart(); return PH.on; }, aim: function () { return { aim: AIM.b ? AIM.b.id : null, demo: !!AIM.demo, demoN: G.aimDemoN || 0, tipN: G.aimTipN || 0, tip: !$('jtip').hidden, cls: $('bJump').className, blk: BLOCKS.map(function (b) { return { id: b.id, at: b.at.map(function (q) { return +q.toFixed(2); }), got: b.got, prox: +b.prox.toFixed(2), lit: +b.lit.toFixed(2) }; }) }; },   /* v5.67 확인용 */ iris: function () { return { seq: EV.seq ? EV.seq.ph[EV.seq.i][0] : null, cur: IR.cur, log: IR.log, dings: IR.dings }; }, face: function () { return irFace(); }, dingAt: dingAt, mus: function () { return { want: MUS.want, on: musOn(), ctx: MUS.ctx ? MUS.ctx.state : null }; }, visit: function (ago) { if (ago) VIS.t0 -= ago; return { age: Math.round(performance.now() - VIS.t0), seen: Object.keys(VIS.seen || {}), bub: Object.keys(VIS.bub), cheerN: VIS.cheerN, etipN: G.etipN || 0, etip: !$('etip').hidden, go: G.etipGo || null, ring: PB.ring ? +PB.ring.material.opacity.toFixed(2) : null, shot: !$('shot').hidden, shotCls: $('shot').className }; } };   /* v5.84 확인용 */   /* v5.55 확인용 */
 
   /* ═══════════ 앱 안 열기 · 닫기 · 뒤로(v5.37 정식 앱 이식 · 사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) ═══════════
    * window.AXTour = { open(o), close(), back(), isOpen() } · 옛 tour.js 와 같은 약속(앱 tourOpen · 뒤로 가기 popstate 가 그대로 부른다)
@@ -4490,6 +4587,8 @@
     '    <div class="pflash" id="t3-pflash" hidden aria-hidden="true"></div>\n' +   /* v5.67 찰칵 흰 빛 */
     '    <div class="pola" id="t3-pola" role="dialog" aria-label="방금 찍은 사진 · 누르면 닫혀요" hidden><figure class="pc"><canvas id="t3-polaC" width="480" height="360"></canvas><figcaption>2026.10.26 AX Festival</figcaption></figure><p class="pm">동료들과 추억을 남기세요</p></div>\n' +   /* v5.67 폴라로이드(사용자 문구 그대로) */
     '    <div class="cheer" id="t3-cheer" role="status" aria-live="polite" hidden>더 힘내세요!</div>\n' +
+    '    <p class="hint" id="t3-hint" role="status" hidden>왼쪽 원으로 걷고, 오른쪽 버튼으로 점프 · 달리기</p>\n' +
+    '    <div class="etip" id="t3-etip" role="status" hidden><p class="et">1층을 다 둘러보셨나요?<br>엘리베이터로 다른 층도 둘러보세요</p><div class="eb"><button type="button" class="nb pri" id="t3-etGo">엘리베이터로 가기</button><button type="button" class="ex" id="t3-etX" aria-label="닫기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></div></div>\n' +   /* v5.84 엘리베이터 권유 */   /* v5.84 첫 입장 한 줄 힌트(막지 않음) */
     '    <div class="evp" id="t3-evp" role="group" aria-label="엘리베이터 층 버튼" hidden><span class="evh">층 선택</span><button type="button" class="evb" data-f="18" aria-label="18층"><b>18</b></button><button type="button" class="evb" data-f="17" aria-label="17층"><b>17</b></button><button type="button" class="evb" data-f="10" aria-label="10층"><b>10</b></button><button type="button" class="evb" data-f="1" aria-label="1층 · 내리기"><b>1</b></button></div>\n' +
     '    <div class="bubble" id="t3-bubble" hidden>아이디어 한 줄을 내면 커피챗을 신청할 수 있어요</div>\n' +
     '    <div class="fps" id="t3-fps" hidden></div>\n' +
@@ -4520,7 +4619,7 @@
     '    <button type="button" class="nb" id="t3-pNext">다음' + CHV_R + '</button>\n' +
     '  </footer>\n' +
     '</section>\n' +
-    '<section class="help" id="t3-help" role="dialog" aria-modal="true" aria-label="처음 안내" hidden>\n' +
+    '<section class="help" id="t3-help" role="dialog" aria-modal="true" aria-label="도움말" hidden>\n' +   /* v5.84 헤더 「도움말」에서만 연다(첫 입장 = 한 줄 힌트) */
     '  <div class="hcard">\n' +
     '    <p class="h1t">왼쪽 동그라미로 걷고, 오른쪽 버튼으로 점프 · 달리기 · 돌기를 해요. 「다음 구역」을 누르면 알아서 걸어가요.</p>\n' +
     '    <p class="h2t">두 손가락으로 벌리면 크게, 오므리면 작게 봐요. 빈 바닥을 두 번 누르면 원래 크기예요.</p>\n' +
@@ -4529,7 +4628,7 @@
     '    <div class="hdemo" aria-hidden="true"><span class="hbtn">다음 구역' + CHV_R + '</span><span class="finger"></span></div>\n' +
     '    <label class="rmrow"><span class="t"><b>움직임 줄이기</b><span>어지러우면 켜세요</span></span><input type="checkbox" id="t3-rmChk" role="switch"><span class="sw" aria-hidden="true"></span></label>\n' +
     '    <label class="rmrow" id="t3-muRow"><span class="t"><b>음악 없이</b><span>조용히 보려면 켜세요</span></span><input type="checkbox" id="t3-muChk" role="switch"><span class="sw" aria-hidden="true"></span></label>\n' +
-    '    <button type="button" class="nb pri wide" id="t3-hOk">시작하기</button>\n' +
+    '    <button type="button" class="nb pri wide" id="t3-hOk">닫기</button>\n' +
     '  </div>\n' +
     '</section>\n' +
 '<section class="scard" id="t3-scard" role="dialog" aria-modal="true" aria-labelledby="t3-scT" tabindex="-1" hidden>\n' +
@@ -4583,7 +4682,6 @@
     var k = stopOf(z.id, pg); if (k < 0) return;
     placeAt(k, true); G.moved = true; updateUi(true);
     if (pg && z.id !== 'event') PEND = { z: z, pg: pg };   /* EVENT 는 판 보기가 없다 */
-    if (PEND && MUS.deferred) { MUS.deferred = false; musStart(2); }   /* 판 보기로 바로 가면 처음 안내가 뜨지 않는다 · 음악은 지금(막히면 첫 누름에서) */
   }
   function afterIntro() { if (PEND) { var p = PEND; PEND = null; enterPanel(p.z, p.pg); return; } maybeHelp(); }
   function show() {
@@ -4593,6 +4691,8 @@
   }
   function open(o) {
     OPTS = o || {};
+    if (!OPTS.restore) visitReset();   /* v5.84 새 방문 · 말풍선 · 방향점 · 「더 힘내세요!」 횟수 · 들른 구역 */
+    clearInterval(ETIP.iv); ETIP.iv = setInterval(etipTick, 1000);   /* v5.84 엘리베이터 권유 살핌(열려 있는 동안 1초마다 · 가벼움) */
     if (!ROOTEL) { buildDom(); veilSet(1); veilProg(0); show(); boot(); musOpen(); return; }
     if (G.open) { if (G.loaded) applyTarget(); return; }
     veilSet(1); veilText(''); veilProg(null);
@@ -4633,7 +4733,7 @@
     if (SH) { closeSheet(true); G.lastFace = null; }
     occClear(); $('look').hidden = true;
     closeCfg(); closeBigMap();
-    $('help').hidden = true; G.anim = null; HOLD = null; G.stick = null; musStop(true, 0.6);   /* v5.38 음악 = 암전과 함께 줄고 닫힘 */
+    $('help').hidden = true; $('hint').hidden = true; clearInterval(G.hintT); clearInterval(ETIP.iv); etipHide(); G.anim = null; HOLD = null; G.stick = null; musStop(true, 0.6);   /* v5.38 음악 = 암전과 함께 줄고 닫힘 */
     veilText(''); veilProg(null); veilCover(RM ? 150 : 240, null);   /* v5.51 나갈 때 전환 막(점이 덮는다) */
     setTimeout(function () {
       ROOTEL.hidden = true; G.open = false;
@@ -4654,5 +4754,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.83', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.84', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();
