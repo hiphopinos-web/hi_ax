@@ -42,7 +42,7 @@ var TOUR_ST_DESC = "엘리베이터가 혼잡하면 오늘 하루는 계단을 �
 var TOUR_SUB = "1층 3D · 층별 안내까지";   /* v5.65 (사용자 261005 · 엘리베이터 층 단추가 17F · 10F · 18F 안내로 이어짐) 옛 v5.64 「1층 부스 3D로 미리 보기」 · 그 전 「1층 부스와 판을 3D로 미리 보기」 */
 /* v5.64 (사용자 261005 「홈화면도 이것과 통일해줘」) 입구 카드 하나(tourCardHtml) = 상시 운영 1F 맨 위 · 홈(나의 일정 아래 · 행사 전 = 광고판 아래) 두 곳이 같이 쓴다 */
 function tourCardHtml() {
-  return rcHtml({ cls: " axs-tourgo axs-tourbig", onclick: "tourOpen()", link: true, left: tourBotHtml(), title: "행사장 둘러보기", sub: TOUR_SUB });
+  return rcHtml({ cls: " axs-tourgo axs-tourbig", onclick: "tourOpen()", link: true, left: tourBotHtml(), title: "행사 둘러보기", sub: TOUR_SUB });   /* v5.79 (사용자 261006) 이름 = 「행사 둘러보기」 하나(옛 「행사장 둘러보기」 · 띠 「1층 둘러보기로 돌아가기」) */
 }
 function tourRowHtml() {
   if (!tourOn()) return "";
@@ -95,7 +95,7 @@ function tourInvTry() {
   sheetOpen({ id: "tourinv", title: "AX Festival 2026에 오신 것을 환영합니다", lead: "지금 1층 로비를 3D로 둘러볼 수 있습니다.",
     top: '<div class="axs-inv ' + (lgxRM() ? "st-open" : "run") + '" aria-hidden="true"><div class="ph"><img src="' + TINV_IMG + 'invite.jpg" alt=""></div>' +
       '<i class="pc l"></i><i class="pc r"></i><i class="pc b"></i><i class="pc t"></i><span class="seal">AX</span></div>',
-    go: "tourInvGo()", goLbl: "행사장 둘러보기", keep: "나중에 하기", keepWeak: true, keepLast: true, onClose: tourInvDone });
+    go: "tourInvGo()", goLbl: "행사 둘러보기", keep: "나중에 하기", keepWeak: true, keepLast: true, onClose: tourInvDone });
 }
 function tourInvDone() { S.put("tour_inv", true); }
 function tourInvGo() { tourInvDone(); sheetClose(true); tourOpen(); }
@@ -220,7 +220,11 @@ function trdWait() {
    처음 나타날 때 아래에서 한 번 올라옴(움직임 줄이기 = 없음)
    자동 복귀 = 그 활동의 스탬프를 이번에 새로 받으면(got) 연출 · 팝업이 모두 닫힌 뒤 띠 안이 왼쪽에서 오른쪽으로 3초 동안 차오르고 글이 「3초 뒤 둘러보기로」(초를 센다) → 다 차면 tourRetGo
      띠 밖을 누르거나 키를 누르거나 다른 화면으로 가면 취소(= 머물기 · 띠는 남고 글이 돌아온다) · 확인 시트 · 팝업이 뜨면 그동안 멈춤 · 움직임 줄이기 = 차오름 없이 글만 세고 3초 뒤 같은 동작 */
-var TRF_LBL = "1층 둘러보기로 돌아가기";
+var TRF_LBL = "행사 둘러보기로 돌아가기";   /* v5.79 (사용자 261006) 이름 통일 · 옛 「1층 둘러보기로 돌아가기」 */
+/* v5.79 (사용자 261006 「복귀 띠 눈에 띄게」) 띠 왼쪽 챗봇 = 홈 둘러보기 카드 아이콘과 같은 부품(tourBotHtml 합성 · BOT_WAVE 전파 · TOUR_BOT_SM 눈웃음 · design.md A-4 승인 예외)
+   둘러보기에서 나올 때마다 띠가 처음 나타나면 한 번(hi · 약 1.8초) = 통통 3번 · 전파 펄스 · 눈웃음 → 그 뒤 = 홈 카드와 같은 은은한 반복(3초 통통 3px · 9초에 깜빡임 2번 + 눈웃음 1번 · 전파 최대 0.7)
+   다시 그려져도(시트 · 게임 동안 숨었다가) 같은 출발이면 인사는 다시 하지 않는다(TRF_HI) · 움직임 줄이기 = 정지 그림 + 전파 0.35 */
+var TRF_HI = null;
 function trfWant() {
   if (!tourRetAny() || el("app").hidden || TOUR.busy || (window.AXTour && AXTour.isOpen())) return false;   /* v5.73 tourRetLive(출발 화면 아래만) → tourRetAny(앱 어디서나) */
   if (rtView(App.current) && !document.querySelector("#view .gs-res-go")) return false;   /* 게임 판 중 = 조작 단추를 가리지 않게 · 결과 화면에서 보임 */
@@ -232,10 +236,11 @@ function trfSync() {
   var f = el("trf");
   if (!trfWant()) { if (f) { if (TRD.el === f) trdHide(); f.parentNode.removeChild(f); } document.body.classList.remove("trf-on"); return; }
   if (!f) {
-    f = document.createElement("button"); f.type = "button"; f.id = "trf"; f.className = "trf-band " + (rgReduced() ? "rm" : "pop");
+    f = document.createElement("button"); f.type = "button"; f.id = "trf"; f.className = "trf-band " + (rgReduced() ? "rm" : "pop" + (TRF_HI !== TOUR_RET ? " hi" : ""));
+    TRF_HI = TOUR_RET;
     f.setAttribute("aria-label", TRF_LBL + " · 있던 자리로");
     f.onclick = tourRetGo;
-    f.innerHTML = '<span class="trf-p" aria-hidden="true"></span><span class="trf-i" aria-hidden="true">' + (typeof BOT_SVG === "string" ? BOT_SVG : "") + '</span><span class="trf-l" aria-hidden="true">' + TRF_LBL + '</span><span class="trf-v" aria-hidden="true">' + CHEV_SVG + '</span><span class="ax-sr-only trf-s" role="status"></span>';
+    f.innerHTML = '<span class="trf-p" aria-hidden="true"></span><span class="trf-i" aria-hidden="true">' + (typeof BOT_SVG === "string" ? BOT_SVG.replace("</svg>", BOT_WAVE + TOUR_BOT_SM + "</svg>") : "") + '</span><span class="trf-l" aria-hidden="true">' + TRF_LBL + '</span><span class="trf-v" aria-hidden="true">' + CHEV_SVG + '</span><span class="ax-sr-only trf-s" role="status"></span>';
     document.body.appendChild(f);
   }
   var nav = el("tabbar"), fx = document.querySelector("#view .axs-fix.ax-bottom"), base = 0;
@@ -252,7 +257,7 @@ function trdShow() {
   d.classList.add("cd"); d.classList.toggle("rmcd", rgReduced());
   var pg = d.querySelector(".trf-p"); if (pg) { pg.style.animation = "none"; void pg.offsetWidth; pg.style.animation = ""; }
   var s = d.querySelector(".trf-s"), lb = d.querySelector(".trf-l"), sec = -1;
-  if (s) s.textContent = TRD_MS / 1000 + "초 뒤 1층 둘러보기로 돌아가요";
+  if (s) s.textContent = TRD_MS / 1000 + "초 뒤 행사 둘러보기로 돌아가요";
   TRD.el = d; TRD.end = Date.now() + TRD_MS;
   document.addEventListener("pointerdown", trdPtr, true); document.addEventListener("keydown", trdKey, true);
   var last = Date.now(), step = function () {

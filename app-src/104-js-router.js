@@ -399,7 +399,7 @@ window.addEventListener("popstate", function () {
    탭(1단계) → 목록(2단계)에 머물고 읽고 버튼 하나 누르는 상세(3단계)는 목록 위로 올라오는 시트 하나(#axsDet).
    라우트 id(sess_d · zone_d · booth · exp_g · prizes)는 그대로다 · 알림 · 딥링크 · 옛 onclick · 3D 바로 가기 · 검사가 같은 App.go 를 쓴다.
    App.render = 뒤 목록(detBase · 그 라우트의 들어온 길에서 시트가 아닌 첫 화면)을 평소대로 그리고 시트를 그 위에 그린다(detPaint).
-   시트 사양 = 아래에서 0.28초(움직임 줄이기 = 즉시) · 높이 = 내용만큼, 최대 화면 90% · 머리(손잡이 · 칩 · 제목 · 도장 · 닫기) · 본문만 스크롤 · 주 버튼은 아래 고정
+   시트 사양 = 아래에서 0.28초(움직임 줄이기 = 즉시) · 높이 = 화면 85%(v5.79 · 내용이 짧아도 · 더 길면 본문 스크롤 · 짧은 안내 fit = 내용만큼) · 머리(손잡이 · 칩 · 제목 · 도장 · 닫기) · 본문만 스크롤 · 주 버튼은 아래 고정
    닫기 = 아래로 끌기 · 뒷배경 탭 · Esc · 닫기 단추 = 목록(스크롤 자리 그대로) · 하드웨어 뒤로 · 헤더 뒤로(App.back) = 앞 시트 내용이 있으면 그것 · 없으면 닫기
    시트에서 다른 상세로 = 내용 교체(시트 위 시트 없음 · 앞 내용은 DET.hist) · 시트에서 조작 · 흐름 화면(상담 시간 고르기 · QR 스캔 · 아이디어 등)으로 = 시트를 닫고 전체 화면 · 거기서 뒤로 = 다시 목록 위 시트
    짧은 확인 시트(#axsSheet · M03) · 팝업(#modal)은 이 시트 위에 뜬다(z 70 · 96 > 60) · 셋 모두 같은 끌어 닫기(sheetDrag) */
@@ -460,15 +460,16 @@ function detPaint(dv, base) {
   if (first) w = detMake();
   var pan = w.firstChild, bd = pan.querySelector(".axs-dbody"), ft = pan.querySelector(".axs-dft"), y = same ? bd.scrollTop : DET.ry || 0;
   DET.ry = 0;
-  pan.className = "ax-sheet axs-dsh" + (sp.cls ? " " + sp.cls : "");   /* 1F 구역 = 판 문법 경계(zoneSheet cls · 간판 칩 · 하는 일 · ink 줄) */
-  /* 머리 = [칩 줄 | 닫기] → [제목 | 도장](칩이 없으면 [제목 | 닫기] 한 줄) */
-  var xb = '<button type="button" class="axs-x" onclick="detClose()" aria-label="닫기">' + X_SVG + "</button>", h2 = '<h2 class="ax-type-t2" id="axsDetT">' + sp.title + "</h2>";
-  var hd = sp.chips ? '<div class="axs-dtop"><div class="axs-chiprow axs-dchips">' + sp.chips + "</div>" + xb + '</div><div class="axs-dtt">' + h2 + (sp.seal || "") + "</div>"
-    : '<div class="axs-dtop axs-dtt">' + h2 + (sp.seal || "") + xb + "</div>";
+  pan.className = "ax-sheet axs-dsh" + (sp.cls ? " " + sp.cls : "") + (sp.fit ? " axs-dfit" : "");   /* 1F 구역 = 판 문법 경계(zoneSheet cls · 간판 칩 · 하는 일 · ink 줄) */
+  /* v5.79 (사용자 261006 「제목 표시줄이 너무 긴데 다이어트」) 머리 = [짧은 이름 한 줄(sp.name · 12자 안팎) | 닫기] 하나
+     칩 · 긴 정식 제목 · 도장 = 본문 첫 줄(axs-dlead · 본문과 함께 스크롤) · 이름과 같은 제목은 다시 쓰지 않는다 · 옛 머리 = [칩 줄 | 닫기] → [제목 | 도장] */
+  var xb = '<button type="button" class="axs-x" onclick="detClose()" aria-label="닫기">' + X_SVG + "</button>", nm = sp.name || sp.title || "", lt = sp.title && sp.title !== nm ? sp.title : "";
+  var hd = '<div class="axs-dtop"><h2 class="ax-type-t4 axs-dname" id="axsDetT">' + nm + "</h2>" + xb + "</div>";
+  var ld = sp.chips || lt || sp.seal ? '<div class="axs-dlead"><div class="axs-dlx">' + (sp.chips ? '<div class="axs-chiprow axs-dchips">' + sp.chips + "</div>" : "") + (lt ? '<p class="ax-type-t2 axs-dltt">' + lt + "</p>" : "") + "</div>" + (sp.seal || "") + "</div>" : "";
   var fo = (sp.help ? '<p class="ax-meta">' + esc(sp.help) + "</p>" : "") + (sp.foot || "");
   var put = function (n, k, h) { if (!same || DET.last[k] !== h) { n.innerHTML = h; DET.last[k] = h; } };
   put(pan.querySelector(".axs-dhx"), "hd", hd);
-  put(bd, "bd", sp.body || "");
+  put(bd, "bd", ld + (sp.body || ""));
   put(ft, "ft", fo);
   ft.hidden = !fo;
   bd.scrollTop = y;

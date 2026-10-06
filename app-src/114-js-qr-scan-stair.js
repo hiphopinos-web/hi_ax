@@ -734,10 +734,10 @@ var EXPG = { id: "st" };
 var EXP_GUIDE = {
   /* v5.64 옛 p1(전시 QR) · p7(벽 QR 퀴즈) 안내 삭제 · 지금 스탬프 8종에 없고 들어가는 길도 없다(정리 기록.md) */
   /* v4.83 (261001) AX PLAY · 스태프 인증 · 참가자가 찍는 부스 QR 은 보관 · 체험 뒤 스태프가 내 QR 을 찍는다(스태프 모드 목적 타일 「AX PLAY」) */
-  p2: { chip: "1F · AX PLAY", h: "AX PLAY에서<br>체험해 보세요", d: "HiDI-Q 또는 Hi-Helper를 체험한 뒤 스태프에게 내 QR을 보여 주세요.",
+  p2: { chip: "1F · AX PLAY", nm: "AX PLAY 체험", sc: "1F", h: "AX PLAY에서<br>체험해 보세요", d: "HiDI-Q 또는 Hi-Helper를 체험한 뒤 스태프에게 내 QR을 보여 주세요.",
     steps: [["부스 체험", "HiDI-Q · Hi-Helper 중 1곳"], ["내 QR 보여주기", "스태프가 내 QR을 스캔"], ["적립 확인", "스탬프 탭에서 확인"]],
     meta: "09:30~16:30 · 1인 1회", cta: "내 QR 보여주기", act: "qrPanelOpen('mine')" },
-  st: { chip: "1F~18F · 비상계단 1·2", h: "계단으로<br>이동해 보세요", d: "한 개 층만 이동해도 스탬프를 받아요.",   /* 261005 최종 QA · 「출발 층과 도착 층 방화문 앞 QR을 찍어요」 = 아래 단계 01 · 03 과 같은 말 */
+  st: { chip: "1F~18F · 비상계단 1·2", nm: "계단 이용", h: "계단으로<br>이동해 보세요", d: "한 개 층만 이동해도 스탬프를 받아요.",   /* 261005 최종 QA · 「출발 층과 도착 층 방화문 앞 QR을 찍어요」 = 아래 단계 01 · 03 과 같은 말 */
     steps: [["출발 층 QR 스캔", "방화문 앞 QR"], ["계단으로 이동", STAIR_SAFE], ["도착 층 QR 스캔", "오르기·내려가기 모두 인정"]],
     meta: "", cta: "계단 QR 스캔하기" }
 };
@@ -745,7 +745,7 @@ function expGuide(id) { EXPG.id = EXP_GUIDE[id] ? id : "st"; App.go("exp_g"); }
 /* v5.69 체험 안내 시트(detPaint · 라우트 exp_g) · 머리 = 장소 칩 → 제목 한 줄 · 도장 · 본문 = 설명 → (계단 진행) → 단계 → 시간 → QR 안내 · 주 버튼(계단 QR 스캔하기 · 내 QR 보여주기) = 아래 고정 */
 function expgSheet() {
   var id = EXPG.id, g = EXP_GUIDE[id], x = expGuideParts(id);
-  return { chips: '<span class="axs-chip">' + esc(g.chip) + "</span>", title: g.h.replace(/<br>/g, " "), seal: stampTagHtml(id),
+  return { name: g.nm, chips: '<span class="axs-chip">' + esc(g.sc || g.chip) + "</span>", title: g.h.replace(/<br>/g, " "), seal: stampTagHtml(id),   /* v5.79 머리 = 짧은 이름 · 칩 · 제목 · 도장 = 본문 첫 줄 */
     body: '<p class="axs-dp">' + esc(x.desc) + "</p>" + x.prog + '<ol class="axs-steps">' + x.steps + "</ol>" + (g.meta ? '<p class="ax-meta">' + esc(g.meta) + "</p>" : "") + scanQNote() +
       (g.link ? '<button type="button" class="ax-link axs-plain axs-self" onclick="' + g.link[1] + '">' + g.link[0] + "</button>" : ""),
     foot: progBtn(g.cta, g.act || "scanOpen('" + id + "')") };
@@ -764,7 +764,7 @@ function boothSheet() {
       '<ol class="axs-steps">' + x.steps.map(function (t, k) { return '<li><span class="axs-no">0' + (k + 1) + '</span><span class="axs-tx"><b class="ax-type-t5-strong">' + t + "</b></span></li>"; }).join("") + "</ol>" +
       (x.note ? '<p class="ax-meta">' + x.note + "</p>" : "") + "</section>";
   }).join("");
-  return { chips: '<span class="axs-chip">1F AX PLAY · 2종</span>', title: "HiDI-Q · Hi-Helper 직접 써 보기", seal: stampTagHtml("p2"),
+  return { name: "AX PLAY 체험", chips: '<span class="axs-chip">1F · 2종</span>', title: "HiDI-Q · Hi-Helper 직접 써 보기", seal: stampTagHtml("p2"),   /* v5.79 머리 = 짧은 이름 · 칩에서 이름과 겹치는 「AX PLAY」를 뺐다 */
     body: '<p class="axs-dp">1곳 체험 = 스탬프 1개 · 체험 후 스태프가 내 QR 스캔</p>' + blk +
       (testMode() && !got2 ? '<button type="button" class="ax-button ax-button-weak" onclick="boothStamp()">완료 처리 (시연 · 테스트 모드)</button>' : ""),
     foot: got2 ? progBtn("스탬프 확인하기", "expStamp('p2')") : progBtn("내 QR 보여주기", "qrPanelOpen('mine')") };

@@ -242,9 +242,9 @@ function prizeCoverHtml(noHead) {
     '<div class="stp" role="img" aria-label="스탬프 ' + n + " / " + STAMP_DENOM + '"><span class="ln" aria-hidden="true"></span><span class="fl" aria-hidden="true" style="width:' + fill + '"></span>' + dots + "</div>" +
     '<div class="cds">' + cards + "</div></section>";
 }
-/* v5.69 경품 시트(detPaint · 라우트 prizes) · 제목 = 시트 머리 · 본문 = 표지(지금 내 스탬프 · 1~6 · 단계 카드) + 구역 · 버튼 없음(읽기) · 구역 바로 가기(prizeGo k)는 시트 본문 스크롤 */
+/* v5.69 경품 시트(detPaint · 라우트 prizes) · 제목 = 시트 머리(v5.79 짧은 이름 = 이 제목 그대로 · 본문 첫 줄 제목 없음) · 본문 = 표지(지금 내 스탬프 · 1~6 · 단계 카드) + 구역 · 버튼 없음(읽기) · 구역 바로 가기(prizeGo k)는 시트 본문 스크롤 */
 function prizeSheet() {
-  return { title: "스탬프 개수별 경품", body: '<div class="axs-pz' + (Date.now() - PZ.t < 900 ? " in" : "") + '">' + prizeCoverHtml(true) + PZ_SEC.map(prizeSecHtml).join("") + "</div>" };
+  return { name: "스탬프 개수별 경품", body: '<div class="axs-pz' + (Date.now() - PZ.t < 900 ? " in" : "") + '">' + prizeCoverHtml(true) + PZ_SEC.map(prizeSecHtml).join("") + "</div>" };
 }
 function prizePosterHtml() {
   return '<div class="axs-pz' + (Date.now() - PZ.t < 900 ? " in" : "") + '">' + prizeCoverHtml() + PZ_SEC.map(prizeSecHtml).join("") + "</div>";

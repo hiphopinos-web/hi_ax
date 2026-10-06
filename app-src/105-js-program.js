@@ -402,7 +402,7 @@ function zoneDetailHtml() {
     "</div>" + (ev ? typPromoHtml("go") : "") + zonePicHtml(z) + (L.btn ? '<button type="button" class="ax-button" onclick="' + L.btn[1] + '">' + esc(L.btn[0]) + "</button>" : "") + "</div>";   /* v5.60 E (사용자 261004 「모형에서 보기 굳이 없어도 될 버튼 · 여기서 길 잃는 수석님 많을 듯」) 구역 상세의 「모형에서 보기」 삭제 · 둘러보기 입구 = 상시 운영 맨 위 카드 · 홈 줄 */
 }
 /* ═══ v5.69 구역 상세 시트(detPaint · 라우트 zone_d) · 1F 6구역 + 18F AX 커피챗 · v5.65 통일 구역 상세(zonePairHtml)의 순서 그대로 · 판 문법 경계 = 시트(pan)
-   머리 = 간판 칩 + 상태 칩 → 한국어 한 줄(제목) · 오른쪽 위 도장 · 본문 = (커피챗 질문 3줄) · 시간 · 룰렛 한 줄 → 하는 일 → (사례) → 지금 · 장소 → 서로 안내 → 참여 전 확인 펼침 → (EVENT 타자왕 홍보 · 판 한 컷)
+   머리 = 간판 칩 + 상태 칩 → 한국어 한 줄(제목) · 오른쪽 위 도장(v5.79 머리 = 간판만 · 상태 칩 · 한국어 한 줄 · 도장은 본문 첫 줄) · 본문 = (커피챗 질문 3줄) · 시간 · 룰렛 한 줄 → 하는 일 → (사례) → 지금 · 장소 → 서로 안내 → 참여 전 확인 펼침 → (EVENT 타자왕 홍보 · 판 한 컷)
    주 버튼(상담 신청 · 커피챗 신청 · 아이디어 쓰기 · 체험 안내)은 아래 고정 · 버튼이 없는 구역(VISION · in Action · EVENT)은 아래 칸 없음
    옛 부제(stm)는 쓰지 않는다 · 제목(kor)과 같은 말을 두 번 하던 자리(문구 다이어트) */
 function zoneSheet() {
@@ -418,7 +418,7 @@ function zoneSheet() {
     (z.chk ? '<button type="button" class="ax-button ax-button-weak axs-xtog" aria-expanded="' + open + '" aria-controls="zChk" onclick="zoneChkToggle(this)">참여 전 확인' + CHEV_SVG + "</button>" +
       '<section class="axs-xchk" id="zChk" aria-label="참여 전 확인"' + (open ? "" : " hidden") + '><dl class="axs-kv">' + z.chk.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl>" + treatHtml() + "</section>" : "") +
     (ev ? typPromoHtml("go") : "") + zonePicHtml(z);
-  return { cls: "axs-pan", chips: zoneSign(z.sign, "lg") + zoneChip(L.chip), title: esc(z.kor), seal: seal ? pill : "", body: body,
+  return { cls: "axs-pan", name: zoneSign(z.sign, "lg"), chips: zoneChip(L.chip), title: esc(z.kor), seal: seal ? pill : "", body: body,   /* v5.79 머리 이름 = 구역 간판 하나(현장 부스 사인과 같은 글자 · 한국어 이름을 따로 두지 않는다) · 상태 칩 · 한국어 한 줄 · 도장 = 본문 첫 줄 */
     foot: b ? progBtn(esc(b[0]), b[1], "", b[2] || "", !!b[3]) : "" };
 }
 function progOpen(id) { PROG.sid = id; App.go("sess_d"); }
@@ -600,17 +600,22 @@ function progDetail(s) {
 /* ═══ v5.69 상세 시트(detPaint · 라우트 sess_d) · 17F Intro · 강연 · Outro · 10F 세션 · 1F 전시 · AX LOUNGE 상담 신청 관리 · AX 커피챗 신청 관리 ═══
    1F 구역 상세(zoneSheet)와 같은 리듬 = 머리(분류 칩 · 상태 칩 → 제목 · 오른쪽 도장) → 사람 한 줄 → 하는 일(진행 · 세션 안내) → 정보 표 → 참여 전 확인 → (사은품 코드 · 경품 · 링크) · 주 버튼 = 아래 고정
    상담 시간 고르기(신청 전 상담)는 detIs 가 전체 화면(Views.sess_d)으로 둔다 · 경로 줄 없음(시트는 새 단계가 아니다 · design.md 5-8) */
+/* v5.79 (사용자 261006 「제목 표시줄 다이어트」) 시트 머리 = 짧은 이름 한 줄 · 10F 세션은 ttl(세션 A · 세션 E · 1회차) · 긴 정식 제목 = 본문 첫 줄 큰 제목
+   분류 칩은 이름과 겹치는 말을 뺀다(「실습형 세션 · 세션 A」 → 「실습형 세션」 · 「기조연설」 = 이름이면 칩 없음) · 제목이 이름과 같으면 부제(sub)를 제목으로 · 사람 줄 보조가 이름 · 제목과 같으면 뺀다 */
+var SESS_NM = { intro: "Intro", outro: "Outro", key: "기조연설", road: "내부 강연", l1: "AWS 강연", l2: "MS 강연", expo: "1F 부스", dap: "AX LOUNGE 상담", cchat: "AX 커피챗" };
 function sessSheet() {
   var s = progById(PROG.sid);
-  if (!s) return { title: "프로그램을 찾을 수 없어요", body: botHtml("목록에서 다시 골라 주세요"), foot: progBtn("프로그램 보기", "App.tab('guide')", "ax-button-weak") };
+  if (!s) return { name: "프로그램", title: "프로그램을 찾을 수 없어요", fit: 1, body: botHtml("목록에서 다시 골라 주세요"), foot: progBtn("프로그램 보기", "App.tab('guide')", "ax-button-weak") };   /* v5.79 짧은 안내 = 내용만큼(fit) */
   var d = progDetail(s), stp = progStampId(s);
-  var who = d.who ? '<div class="axs-who">' + spkAvHtml(s.id, d.av) + '<span class="axs-tx"><span class="ax-card-title">' + esc(d.who) + "</span>" + (d.whoSub ? '<span class="ax-description">' + esc(d.whoSub) + "</span>" : "") + "</span></div>" : "";
+  var nm = SESS_NM[s.id] || s.ttl, cat = d.cat.replace(" · " + nm, ""), tt = d.title === nm ? (s.id === "expo" ? "" : s.sub) : d.title, ws = d.whoSub === nm || d.whoSub === tt ? "" : d.whoSub;
+  if (cat === nm) cat = "";
+  var who = d.who ? '<div class="axs-who">' + spkAvHtml(s.id, d.av) + '<span class="axs-tx"><span class="ax-card-title">' + esc(d.who) + "</span>" + (ws ? '<span class="ax-description">' + esc(ws) + "</span>" : "") + "</span></div>" : "";
   var kv = d.kv.length ? '<dl class="ax-inset axs-kv">' + d.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl>" : "";
   var sg = "sg" in d ? d.sg : "";
   var chk = !("sg" in d) && d.secB ? '<section class="axs-dsec"><h3>' + esc(d.secT === "참여 전 확인해 주세요" ? "참여 전 확인" : d.secT) + '</h3><p class="axs-dp">' + d.secB + "</p></section>" : "";
   return {
-    chips: '<span class="axs-chip cat">' + esc(d.cat) + "</span>" + (d.st ? '<span class="axs-chip ' + d.stc + '">' + esc(d.st) + "</span>" : ""),
-    title: esc(d.title), seal: stp ? stampTagHtml(stp) : "",
+    name: esc(nm), chips: (cat ? '<span class="axs-chip cat">' + esc(cat) + "</span>" : "") + (d.st ? '<span class="axs-chip ' + d.stc + '">' + esc(d.st) + "</span>" : ""),
+    title: esc(tt), seal: stp ? stampTagHtml(stp) : "",
     body: who + (d.extra || "") + sg + kv + chk + (d.after || "") + (d.pics || "") + (d.link || ""),
     help: d.help, foot: d.btn
   };
