@@ -198,20 +198,22 @@ function progFlowItems(onlyFl) {
      같은 시각 순서 = 17F 등 공용 줄 먼저 · 내 10F 세션은 그 아래(k ten) · 상담 · 커피챗(30분 · 20분)은 지금처럼 끼워 넣기(같은 시각이면 먼저) */
   return pub.concat(mine).sort(function (x, y) { return x.a - y.a || (x.k === "ten" ? 1 : 0) - (y.k === "ten" ? 1 : 0) || (y.mine ? 1 : 0) - (x.mine ? 1 : 0); });
 }
-function progFlowHtml(onlyFl) {
-  var ph = evPhase(), hmN = ph === "before" ? -1 : ph === "after" ? 99999 : hmNow(), its = progFlowItems(onlyFl), g = [], by = {};
+/* v6.04 myIts = 나의 일정 하루 흐름(10F 명단 · myFlowItems) · 같은 노드 · 레일 · 카드 틀에 카드만 myFlowCard(신청 = 주황 테두리 + 칩 · 자유 참석 = 흰 카드 + 회색 칩) · 10F 입구 줄 · 분 갱신 키 없음 */
+function progFlowHtml(onlyFl, myIts) {
+  var ph = evPhase(), hmN = ph === "before" ? -1 : ph === "after" ? 99999 : hmNow(), its = myIts || progFlowItems(onlyFl), g = [], by = {};
   its.forEach(function (o) { if (!by[o.t0]) { by[o.t0] = { t0: o.t0, a: o.a, its: [] }; g.push(by[o.t0]); } by[o.t0].its.push(o); });
   var act = its.filter(function (o) { return hmN >= o.a && hmN < o.b; });
   act.sort(function (x, y) { return (y.mine ? 1 : 0) - (x.mine ? 1 : 0) || x.a - y.a; });
   var focus = act[0] || null;
-  if (!onlyFl) PROG.flKey = ph + hmN;
+  if (!onlyFl && !myIts) PROG.flKey = ph + hmN;
   return g.map(function (r, i) {
     var nx = g[i + 1], b = Math.max.apply(null, r.its.map(function (o) { return o.b; }));
     var st = focus && r.its.indexOf(focus) >= 0 ? "now" : r.its.some(function (o) { return hmN >= o.a && hmN < o.b; }) ? "on" : hmN >= b ? "past" : "next";
     var span = nx ? nx.a - r.a : 0, p = nx ? Math.max(0, Math.min(1, (hmN - r.a) / span)) : 0, ex = nx ? Math.min(52, Math.round(span * 0.35)) : 0;
     var rl = nx ? '<i class="rl' + (p >= 1 ? " done" : p > 0 ? " cur" : "") + '" style="--p:' + p.toFixed(3) + '"></i>' : "";
-    return '<div class="fr ' + st + '" style="--ex:' + ex + 'px"><span class="tm">' + r.t0 + '</span><span class="ln" aria-hidden="true"><i class="nd"></i>' + rl + '</span><div class="cs">' +
-      r.its.map(function (o) { return progFlowCard(o, hmN, focus === o); }).join("") + (!onlyFl && r.t0 === TEN_ROW_AT && applyTenShow() ? progTenRowHtml() : "") + "</div></div>";
+    var mn = myIts && r.its.some(function (o) { return o.mine; }) ? " mine" : "";   /* 나의 일정 · 내 일정이 든 줄 = 노드도 주황 채운 점 */
+    return '<div class="fr ' + st + mn + '" style="--ex:' + ex + 'px"><span class="tm">' + r.t0 + '</span><span class="ln" aria-hidden="true"><i class="nd"></i>' + rl + '</span><div class="cs">' +
+      r.its.map(function (o) { return (myIts ? myFlowCard : progFlowCard)(o, hmN, focus === o); }).join("") + (!onlyFl && !myIts && r.t0 === TEN_ROW_AT && applyTenShow() ? progTenRowHtml() : "") + "</div></div>";
   }).join("");
 }
 /* v5.74 (사용자 261006 「사전 신청자 대상 강의에 대한 입구가 없는 것 같은데 · 적절한 위치」) 10F 실습형 세션 입구 = 13:30 칸 맨 아래 작은 한 줄(카드보다 낮은 위계 · 시간표 노드 · 진행 중 판정에 들지 않는다)
@@ -902,9 +904,57 @@ function myAgendaItems() {
   items.sort(function (a, b) { return (a.done ? 1 : 0) - (b.done ? 1 : 0) || (myAgendaNow(a) ? -1 : a.min) - (myAgendaNow(b) ? -1 : b.min); });
   return items;
 }
+/* ═══ v6.04 (사용자 261007 「사전신청자 191명의 나의 일정 탭에는 오전 키노트 · 로드맵 · 오후 아웃트로까지 다 박아 줘 · 형태도 이걸 차용 · 내가 신청한 일정과 자율 참석 일정이 구분」)
+   10F 명단(tenMine · 서버 sync my.sess · 테스트 사번 오버레이)의 나의 일정 = 프로그램 › 시간표와 같은 하루 흐름(progFlowHtml 틀 · 노드 · 레일 · 카드)
+   줄 = 자유 참석(Intro · 기조연설 · 내부 강연 · 점심 · Outro) + 신청(내 10F 세션 · AX 라운지 상담 · 매칭된 커피챗 · 시작 시각 순서 · 겹치면 둘 다)
+   오후 파트너사 강연(AWS · MS) = 내 세션과 시간이 겹쳐 이 흐름에는 넣지 않는다(시간표 탭에는 그대로 · MYFL_SKIP)
+   구분 = 신청: 주황 2px 테두리 + 오른쪽 위 칩 「신청」 + 노드 주황 채운 점 · 자유 참석: 흰 카드 그대로 + 회색 칩 「자유 참석」 · 누르면 시간표와 같은 상세(progOpen)
+   시각이 없는 것(대기 · 계단 · 커피챗 매칭 대기)은 흐름 위 행 카드 그대로(myAgendaRow) · 일반 직원은 옛 나의 일정 그대로 */
+var MYFL_SKIP = ["l1", "l2"];
+function myFlowOn() { return !!tenMine(); }
+function myFlowItems() {
+  var pub = progFlowItems().filter(function (o) { return !o.mine && MYFL_SKIP.indexOf(o.k) < 0; }), mine = [];
+  myAgendaItems().forEach(function (x) {
+    if (!x.iv || myAgendaNow(x)) return;
+    var k = x.kind, o = { k: k, my: k, a: x.iv[0], b: x.iv[1], t0: hm2(x.iv[0]), t1: hm2(x.iv[1]), mine: true };
+    if (k.indexOf("sess:") === 0) {
+      var s = sessById(k.slice(5)); if (!s) return;
+      o.ttl = s.ttl; o.sub = (ATT10_UI && attMineK(s.id, "out") ? "출석 완료 · " : "") + s.sub + ((sessMine(s.id) || {}).test ? " · 테스트" : ""); o.fl = 10; o.pl = sessPlace(s).replace(/^\d+F\s*·?\s*/, ""); o.go = "progOpen('" + s.id + "')";
+    } else if (k === "resv" || k === "resv_done") { o.ttl = "AX 라운지"; o.sub = myAgendaSub(x).split(" · ")[0] + (x.test ? " · 테스트" : ""); o.fl = 1; o.pl = "AX 라운지"; o.go = "progOpen('dap')"; }
+    else if (k === "cchat") { o.ttl = "AX 커피챗"; o.sub = "매칭 완료" + (x.test ? " · 테스트" : ""); o.fl = 18; o.pl = String(x.sub || "").split(" · ")[0]; o.go = "progOpen('cchat')"; }
+    else return;
+    mine.push(o);
+  });
+  return pub.concat(mine).sort(function (x, y) { return x.a - y.a || (y.mine ? 1 : 0) - (x.mine ? 1 : 0); });
+}
+/* 카드 = progFlowCard 와 같은 틀(층 점 글자 · 장소 · ~끝 · 제목 · 보조 한 줄 · 셰브론) + 머리 줄 오른쪽 끝 칩 · data-my = 알림 「내 일정 확인하기」가 튕기는 자리(focusTarget my:조각) */
+function myFlowCard(o, hmN, isF) {
+  var past = hmN >= o.b, chip = o.mine ? '<span class="axs-chip mc">신청</span>' : '<span class="axs-chip off mc">자유 참석</span>';
+  return '<button type="button" class="fc' + (o.mine ? " mine" : "") + (past ? " past" : "") + (isF ? " focus" : "") + '"' + (o.go ? ' onclick="' + o.go + '"' : " disabled") + ' data-fl="' + esc(o.k) + '"' + (o.my ? ' data-my="' + esc(o.my) + '"' : "") + ">" +
+    '<span class="mt">' + (o.fl ? flFloor(o.fl) : "") + '<span class="pl">' + esc(o.pl) + '</span><span class="e">~' + o.t1 + "</span>" + chip + "</span>" +
+    '<span class="t">' + (isF ? '<span class="ax-sr-only">진행 중 </span>' : "") + '<span class="tt">' + esc(o.ttl) + "</span></span>" +
+    (o.sub ? '<span class="s">' + esc(o.sub) + "</span>" : "") + (past || !o.go ? "" : '<span class="chv">' + CHEV_SVG + "</span>") + "</button>";
+}
+function myFlowHtml(its) { return '<div class="axs-fl axs-myfl">' + progFlowHtml(0, its) + "</div>"; }
+/* 나의 참여 쪽 분 단위 갱신(시간표 탭 setInterval 과 같은 규칙 · 보일 때만 · 분이 바뀌면 흐름만) */
+var MYFL_KEY = "";
+setInterval(function () {
+  if (App.current !== "my" || document.hidden) return;
+  var f = el("myFlow"); if (!f) return;
+  var ph = evPhase(), k = ph + (ph === "before" ? -1 : ph === "after" ? 99999 : hmNow());
+  if (k !== MYFL_KEY) { MYFL_KEY = k; f.innerHTML = progFlowHtml(0, myFlowItems()); }
+}, 20000);
 /* v5.65 나의 참여 › 나의 일정 갈래 · 이름은 위 세그먼트가 말한다(옛 제목 줄 「나의 일정」 삭제 · 날짜 · 개수 한 줄만) */
 function myAgendaHtml() {
   var items = myAgendaItems(), n = items.length;
+  if (myFlowOn()) {   /* v6.04 10F 명단 = 하루 흐름 */
+    var fl = myFlowItems(), nm = fl.filter(function (o) { return o.mine; }).length, rws = items.filter(function (x) { return !x.iv || myAgendaNow(x); });
+    var cx1 = items.some(function (x) { return x.kind === "resv" || x.kind === "cchat"; });
+    return '<section class="axs-msec" id="mysched"><p class="ax-meta">10월 26일 · 신청 ' + nm + "개 · 자유 참석 " + (fl.length - nm) + "개</p>" +
+      (rws.length ? '<div class="axs-tt axs-mtt">' + rws.map(myAgendaRow).join("") + "</div>" : "") +
+      '<div class="axs-fl axs-myfl" id="myFlow">' + progFlowHtml(0, fl) + "</div>" +
+      (cx1 ? '<p class="ax-meta">신청 취소는 신청 상세에서 할 수 있어요</p>' : "") + "</section>";
+  }
   var head = n ? '<p class="ax-meta">10월 26일 · ' + n + "개</p>" : "";
   if (!n) return '<section class="axs-msec" id="mysched">' + head + '<p class="ax-description">신청한 프로그램이 아직 없어요 · 17F 강연과 1F 전시는 신청 없이 갈 수 있어요</p>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="progAlwaysGo()">상시 운영 보기</button></section>';
