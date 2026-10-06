@@ -399,7 +399,7 @@ window.addEventListener("popstate", function () {
    탭(1단계) → 목록(2단계)에 머물고 읽고 버튼 하나 누르는 상세(3단계)는 목록 위로 올라오는 시트 하나(#axsDet).
    라우트 id(sess_d · zone_d · booth · exp_g · prizes)는 그대로다 · 알림 · 딥링크 · 옛 onclick · 3D 바로 가기 · 검사가 같은 App.go 를 쓴다.
    App.render = 뒤 목록(detBase · 그 라우트의 들어온 길에서 시트가 아닌 첫 화면)을 평소대로 그리고 시트를 그 위에 그린다(detPaint).
-   시트 사양 = 아래에서 0.28초(움직임 줄이기 = 즉시) · 높이 = 화면 85%(v5.79 · 내용이 짧아도 · 더 길면 본문 스크롤 · 짧은 안내 fit = 내용만큼) · 머리(손잡이 · 칩 · 제목 · 도장 · 닫기) · 본문만 스크롤 · 주 버튼은 아래 고정
+   시트 사양 = 아래에서 0.28초(움직임 줄이기 = 즉시) · 높이 = 앱 헤더 바로 아래까지(v5.89 · v5.79 85% · 내용이 짧아도 · 더 길면 본문 스크롤 · 짧은 안내 fit = 내용만큼) · 머리(손잡이 · 칩 · 제목 · 도장 · 닫기) · 본문만 스크롤 · 주 버튼은 아래 고정
    닫기 = 아래로 끌기 · 뒷배경 탭 · Esc · 닫기 단추 = 목록(스크롤 자리 그대로) · 하드웨어 뒤로 · 헤더 뒤로(App.back) = 앞 시트 내용이 있으면 그것 · 없으면 닫기
    시트에서 다른 상세로 = 내용 교체(시트 위 시트 없음 · 앞 내용은 DET.hist) · 시트에서 조작 · 흐름 화면(상담 시간 고르기 · QR 스캔 · 아이디어 등)으로 = 시트를 닫고 전체 화면 · 거기서 뒤로 = 다시 목록 위 시트
    짧은 확인 시트(#axsSheet · M03) · 팝업(#modal)은 이 시트 위에 뜬다(z 70 · 96 > 60) · 셋 모두 같은 끌어 닫기(sheetDrag) */
@@ -458,6 +458,7 @@ function detPaint(dv, base) {
   if (!dv) { if (w) detGone(w, was.dv && was.base === base); document.documentElement.classList.remove("det-lock"); return; }
   var sp = DET_SPEC[dv]() || {}, snap = detSnap(dv), first = !w, same = !first && DET.cur && detKey(DET.cur) === detKey(snap);
   if (first) w = detMake();
+  detTop(w);
   var pan = w.firstChild, bd = pan.querySelector(".axs-dbody"), ft = pan.querySelector(".axs-dft"), y = same ? bd.scrollTop : DET.ry || 0;
   DET.ry = 0;
   pan.className = "ax-sheet axs-dsh" + (sp.cls ? " " + sp.cls : "") + (sp.fit ? " axs-dfit" : "");   /* 1F 구역 = 판 문법 경계(zoneSheet cls · 간판 칩 · 하는 일 · ink 줄) */
@@ -504,6 +505,13 @@ function detMake() {
   return w;
 }
 /* 아래 고정 칸 위 구분선 = 본문이 그 아래로 더 있을 때만 · v5.74 머리 아래 구분선 = 본문이 머리 밑으로 스크롤됐을 때만(사용자 261006 캡처 「시트 머리 아래 깨진 그림 띠」 = 경품 사진 아래 끝이 선 없이 머리에 잘려 보였다) */
+/* v5.89 시트 위 끝 = 앱 헤더 아래 경계(실측 · 안전 영역 · 큰 글씨로 헤더 높이가 달라도 맞음) · 헤더가 없으면 CSS 기본(화면 85%) */
+function detTop(w) {
+  w = w || el("axsDet"); if (!w) return;
+  var tb = el("topbar"), r = tb && tb.offsetHeight ? tb.getBoundingClientRect() : null;
+  if (r && r.bottom > 0 && r.bottom < innerHeight * 0.5) w.style.setProperty("--dtop", Math.round(r.bottom) + "px"); else w.style.removeProperty("--dtop");
+}
+window.addEventListener("resize", function () { detTop(); });
 function detOv() {
   var bd = document.querySelector("#axsDet .axs-dbody"), ft = document.querySelector("#axsDet .axs-dft"), hd = document.querySelector("#axsDet .axs-dhd");
   if (bd && ft) ft.classList.toggle("ov", bd.scrollHeight - bd.clientHeight - bd.scrollTop > 2);

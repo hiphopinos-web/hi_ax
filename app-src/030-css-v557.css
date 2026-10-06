@@ -72,7 +72,7 @@
   body.trf-on #topbtn { bottom: calc(var(--trfb, 88px) + 56px); }   /* 맨 위로 단추 = 띠 위 */
   /* ═══ v5.69 읽기용 상세 = 바텀 시트(#axsDet · detPaint · 사용자 261005) · AX-TDS 시트 문법 그대로(.ax-sheet 반경 32 · 그림자 sheet-shadow · 뒷배경 ink 40% · 손잡이 axs-grab · 닫기 axs-x)
      구조 = 머리(손잡이 · 칩 · 제목 · 도장 · 닫기 · 끌기 손잡이 영역) → 본문(혼자 스크롤 · 끝에서 튕김 없음) → 아래 고정 칸(주 버튼 하나 · 본문이 더 있으면 위 구분선)
-     높이 = 내용만큼 · 최대 화면 90%(v5.79 = 처음부터 화면 85% · 사용자 261006 「조금 더 올라와도」 · 내용이 더 길면 본문 스크롤 · 짧은 안내 axs-dfit = 내용만큼) · 들어옴 0.28초(아래에서) · 나감 0.22초 · 움직임 줄이기 = 즉시 · 시트에서 시트로 = 본문만 0.22초 페이드
+     높이 = 내용만큼 · v5.89 = 처음부터 앱 헤더 바로 아래까지(--dtop = 헤더 아래 경계 실측 · 위 끝과 6px 띄워 둥근 모서리 · 사용자 261006 「빨간 줄까지」 · v5.79 85%) · 내용이 더 길면 본문 스크롤 · 짧은 안내 axs-dfit = 내용만큼) · 들어옴 0.28초(아래에서) · 나감 0.22초 · 움직임 줄이기 = 즉시 · 시트에서 시트로 = 본문만 0.22초 페이드
      z = 60(하단 메뉴 40 · v5.74 둘러보기 복귀 띠는 시트 동안 숨김 · 짧은 확인 시트 70 · 팝업 96 아래) · 주황 면 = 주 버튼 하나(간판 칩 · 도장 · 칩은 기존 그대로) ═══ */
   #axsDet { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
   #axsDet::before { content: ""; position: absolute; inset: 0; background: rgba(25, 31, 40, 0.4); background: color-mix(in srgb, var(--ax-color-ink) 40%, transparent); opacity: var(--dd, 1); pointer-events: none; }
@@ -80,7 +80,7 @@
   #axsDet.in .axs-dsh { animation: detUp 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
   #axsDet.out { pointer-events: none; }
   #axsDet.out::before { opacity: 0; transition: opacity 0.22s ease-in; }
-  #axsDet .axs-dsh { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 0; width: 100%; max-width: var(--ax-app-max); height: 85vh; height: 85dvh; max-height: 90vh; max-height: 90dvh; padding: 0; overflow: hidden; outline: none; color: var(--ax-color-ink); will-change: transform; }
+  #axsDet .axs-dsh { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 0; width: 100%; max-width: var(--ax-app-max); height: calc(100% - var(--dtop, 15%) - 6px); max-height: calc(100% - var(--dtop, 15%) - 6px); padding: 0; overflow: hidden; outline: none; color: var(--ax-color-ink); will-change: transform; }
   #axsDet .axs-dsh.axs-dfit { height: auto; }
   #axsDet .axs-dhd { position: relative; z-index: 1; flex: none; padding: var(--ax-space-12) var(--ax-space-24) var(--ax-space-8); touch-action: none; cursor: grab; box-shadow: 0 1px 0 transparent; transition: box-shadow 0.15s; }
   #axsDet .axs-dhd.ov { box-shadow: 0 1px 0 var(--ax-color-divider); }   /* v5.74 본문이 머리 밑으로 스크롤됐을 때만 구분선(detOv · 아래 고정 칸 .ov 와 같은 문법) */
