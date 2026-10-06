@@ -252,6 +252,9 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .gbub.out { opacity: 0; pointer-events: none; }   /* v5.84 말풍선 3.5초 뒤 흐려짐(구역당 이번 방문 1번) */
 #axTour3 .hint { position: absolute; left: 50%; bottom: 216px; transform: translateX(-50%); z-index: 5; width: max-content; max-width: calc(100% - 32px); margin: 0; padding: 10px 18px; border-radius: 999px; background: var(--ink); color: #FFFFFF; font-size: 15px; line-height: 22px; font-weight: 700; text-align: center; word-break: keep-all; pointer-events: none; box-shadow: 0 4px 14px rgba(25, 31, 40, .22); transition: opacity .3s ease; }   /* v5.84 첫 입장 한 줄 힌트 · 어두운 알약(앱 건너뛰기와 같은 ink) · 조이스틱 · 버튼 위 · 막지 않음 */
 #axTour3 .hint[hidden] { display: none; }
+#axTour3 .hint .h2 { display: block; margin-top: 2px; font-size: 13px; line-height: 18px; font-weight: 500; color: rgba(255, 255, 255, .78); }   /* v5.99 한 방문 첫 안내 둘째 줄(다음 구역 = 저절로 걷기) */
+#axTour3 .hint .h2[hidden] { display: none; }
+#axTour3 .hint.two { border-radius: 20px; padding: 10px 18px 9px; }
 /* v5.91 첫 입장 손가락 안내(눌러서 가기) · 손끝(왼쪽 위 12, 3) = 바닥 한 점 · 주황 원이 퍼지며 톡 · 막지 않음 · 움직임 줄이기 = 정지 */
 #axTour3 .hfg { position: absolute; left: 0; top: 0; z-index: 5; width: 0; height: 0; pointer-events: none; }
 #axTour3 .hfg[hidden] { display: none; }
