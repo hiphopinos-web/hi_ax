@@ -137,7 +137,8 @@ var SR_WHY = {
   param: ["사번으로 입장한 뒤 스캔해 주세요", "exp", "확인"],
   server: ["서버에 연결되지 않았어요", "scan", "다시 스캔"],
   stair: ["계단 QR은 계단 화면에서 처리돼요", "scan", "다시 스캔"],
-  att: ["17F 오후 강연은 입장 · 끝 QR로 적립돼요", "scan", "다시 스캔"],   /* v5.94 오후 파트너 강연만 */   /* v4.26 옛 17F 좌석 QR(p3 코드) */
+  att: ["17F 오후 강연은 입장 · 끝 QR로 적립돼요", "scan", "다시 스캔"],
+  staff: ["체험을 마치면 스태프가 내 QR을 찍어 적립해요", "myqr", "내 QR 보여주기"],   /* v5.97 (261006 감사 상2 · 사용자 D1=A) AX PLAY 부스 코드 = 서버 staff · 오류 연출 없이 안내만(scanResHtml) */   /* v5.94 오후 파트너 강연만 */   /* v4.26 옛 17F 좌석 QR(p3 코드) */
   dwin: ["추첨 체크인 시간이 아니에요", "exp", "확인"],   /* v4.79 창 · 날짜 밖(서버 window · day) */
   dclosed: ["체크인이 마감됐어요", "exp", "확인"],   /* v4.81 사회자 마감 뒤(서버 closed · 사용자 결정 261001) */
   retired: ["지금은 쓰지 않는 QR이에요", "scan", "다시 스캔"],   /* v4.83 전시 QR 퀴즈 벽 QR */
@@ -155,6 +156,7 @@ function srDupPopup(id, name, at, test) {
 function srAct(k) {
   if (k === "scan") { scanOpen(SCQ.ctx); return; }
   if (k === "staff") { staffStampOpen(); return; }
+  if (k === "myqr") { qrPanelOpen("mine"); return; }   /* v5.97 AX PLAY = 스태프가 내 QR 을 찍는다 */
   if (k === "card") { expStamp(SR.id); return; }
   App.tab("exp");
 }
@@ -179,15 +181,22 @@ function scanResHtml() {
       '<p class="ax-meta">저장된 스캔 ' + scanQList().length + "건</p>";
     return { body: h, btn: ax2Btn("확인", "srAct('exp')") };
   }
-  if (o.st === "draw") {   /* v4.79 추첨 체크인 완료 · 응모 번호(공) 수 · 0장이면 한 줄 */
+  if (o.st === "draw") {   /* v4.79 추첨 체크인 완료 · 행운권 번호(공) 수 · 0장이면 한 줄 · v5.97 「응모」 → 「행운권」(감사 하1) */
     var dn = (o.nos || []).slice(0, 3);
     h = '<div class="axs-res-bot">' + bot + "</div>" +
       '<span class="axs-chip ok axs-self">' + (o.dup ? "이미 체크인 · " + esc(o.at) : "17F 대강당 · Outro") + "</span>" +
       '<h1 class="ax-title">추첨 체크인<br>완료</h1>' +
-      '<section class="axs-res-card"><p class="ax-type-t7 axs-bt">응모 번호</p><p class="axs-res-n">' + (o.n ? o.n + "개" : "없음") + "</p>" +
+      '<section class="axs-res-card"><p class="ax-type-t7 axs-bt">행운권 번호</p><p class="axs-res-n">' + (o.n ? o.n + "개" : "없음") + "</p>" +
       '<p class="ax-description">' + (dn.length ? dn.map(esc).join(" · ") : "행운권이 없어요 · 스탬프 4개부터") + "</p></section>" +
       (o.test ? '<p class="ax-meta">테스트 계정</p>' : "");
     return { body: h, btn: ax2Btn("확인", "srAct('exp')") };
+  }
+  if (o.why === "staff") {   /* v5.97 (261006 감사 상2) AX PLAY 부스 코드 · 「적립되지 않음」 빨간 칩 대신 담담한 안내 */
+    h = '<div class="axs-res-bot">' + bot + "</div>" +
+      '<span class="axs-chip off axs-self">AX PLAY · 스태프 인증</span>' +
+      '<h1 class="ax-title">스태프에게<br>내 QR을 보여 주세요</h1>' +
+      '<p class="ax-description">' + esc(SR_WHY.staff[0]) + "</p>";
+    return { body: h, btn: ax2Btn(SR_WHY.staff[2], "srAct('myqr')", "체험으로 돌아가기", "srAct('exp')") };
   }
   var w = SR_WHY[o.why] || SR_WHY.other, dw = !!o.draw;
   h = '<span class="axs-chip err axs-self">' + (dw ? "체크인되지 않음" : "적립되지 않음") + "</span>" +
@@ -236,6 +245,7 @@ function boothDone(res, late, code) {
   if (!res || !res.ok) {
     var why = res && res.reason;
     if (why === "stair") { stairByCode(code, "", "", Date.now()); return; }   /* 계단 코드가 부스 경로로 들어온 경우(옛 인쇄물) */
+    if (late && why === "staff") { notice({ key: "claim:late:staff", title: "AX PLAY는 스태프가 적립해요", body: "체험을 마치면 스태프에게 내 QR을 보여 주세요" }); return; }   /* v5.97 감사 상2 */
     if (late) { notice({ key: "claim:late:" + why, title: "저장한 스캔이 적립되지 않았어요", body: (SR_WHY[why] || SR_WHY.other)[0] }); return; }
     srShow({ st: "fail", why: SR_WHY[why] ? why : "other", open: res && res.open || "" });
     return;
@@ -1303,7 +1313,7 @@ function invKitUndo() {
 /* v5.90 선착순 참여상 수령 결과 · new 수령 처리 · dup 이미 수령 · none(noelig 6개 미달 · full 마감 · closed 17:00 뒤 · void 취소 · off 꺼짐) */
 function fcfsDone(emp, res) {
   var who = res.name || emp, lf = res.left != null ? " · 남은 " + res.left : "";
-  if (res.give === "new") { scanLog(emp, (res.name ? res.name + " · " : "") + "참여상 수령 처리", true, true); scanShow("ok", who, "참여상 수령 처리", "무선 무드등 가습기 1개 전달" + lf); return; }
+  if (res.give === "new") { scanLog(emp, (res.name ? res.name + " · " : "") + "선착순 참여상 수령 처리", true, true); scanShow("ok", who, "선착순 참여상 수령 처리", "무선 무드등 가습기 1개 전달" + lf); return; }
   if (res.give === "dup") { scanLog(emp, (res.name ? res.name + " · " : "") + "이미 수령", true, true); scanShow("dup", who, "이미 수령", (res.at || "") + "에 받았어요"); return; }
   var why = res.reason, msg = why === "noelig" ? ["자격 없음", "스탬프 6개 미달" + (res.n != null ? " (현재 " + res.n + "개)" : "")] : why === "full" ? ["마감", "선착순 수량이 먼저 찼어요 · 6개 달성은 행운권 3장"] :
     why === "closed" ? ["마감", "17:00 이후 달성"] : why === "void" ? ["취소된 자격", "운영 본부에 문의해 주세요"] : why === "off" ? ["지금은 받지 않아요", "선착순 참여상 꺼짐"] : ["처리하지 못했어요", String(why || "")];

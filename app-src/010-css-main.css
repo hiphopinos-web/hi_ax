@@ -1102,10 +1102,13 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .rnum .tkt.new { background: var(--ax-color-brand); color: var(--ax-color-onBrand); }   /* v4.44 열기 전 응모권 = 누를 수 있는 주황 칩 */
   #view:is([data-v="home"], [data-v="my"], [data-v="exp"]) .rail .cap { font: var(--ax-type-t7); color: var(--ax-color-brandText); }
   /* v5.96 (사용자 261006 밤) 선착순 두 줄 = 6번 칸(3장) 라벨 아래 가운데 · 넘치면 레일 오른쪽 끝(라벨 줄 여백 15px 안)에 맞춤 · 줄 높이만큼 아래를 띄운다 */
-  .rail .lbls.fx6 { margin-bottom: calc(36px * var(--fs)); }
-  #view .rail .lbls span.fx6 { top: calc(17px * var(--fs)); left: 100%; transform: translateX(min(-50%, calc(15px - 100%))); display: flex; flex-direction: column; align-items: center; gap: 1px; font: 600 calc(11px * var(--fs))/1.25 var(--ax-font); letter-spacing: -0.01em; color: var(--ax-color-brandText); white-space: nowrap; }
-  #view .rail .lbls span.fx6 b { font-weight: 800; }
-  #view .rail .lbls span.fx6 b.k { font-weight: 600; }
+  .rail .lbls.fx6 { margin-bottom: calc(15px * var(--fs) + 34px); }
+  /* v5.97 (사용자 261006 밤) 선착순 = 「3장」과 다른 요소 · 작은 알약 한 줄 · 흰 바탕 + 연한 주황 테(brand 35%) · 「선착순」 회색 · 상태 굵은 검정 · got 만 주황 · 가운데 = 6번 노드 축 · 넘치면 오른쪽 끝 = 노드 오른쪽 끝(15px = 노드 반지름) · 줄바꿈 없음 */
+  #view .rail .lbls span.fx6 { top: calc(15px * var(--fs) + 10px); left: 100%; transform: translateX(min(-50%, calc(15px - 100%))); display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border: 1px solid rgba(255, 127, 50, 0.35); border-radius: 999px; background: var(--ax-color-surface); font: 600 min(calc(11px * var(--fs)), 13px)/1.3 var(--ax-font); letter-spacing: -0.01em; color: var(--ax-color-muted); white-space: nowrap; }
+  #view .rail .lbls span.fx6 .k { position: static; transform: none; font: inherit; color: var(--ax-color-muted); }
+  #view .rail .lbls span.fx6 b { font-weight: 800; color: var(--ax-color-ink); }
+  #view .rail .lbls span.fx6.got { border-color: var(--ax-color-brand); background: var(--ax-color-brandSoft); }
+  #view .rail .lbls span.fx6.got b { color: var(--ax-color-brandText); }
   #view[data-v="home"] .axs-rows { display: flex; flex-direction: column; gap: var(--ax-space-8); }
   #view[data-v="home"] .rc { margin: 0; border: 0; border-radius: var(--ax-radius-20); background: var(--ax-color-surface); box-shadow: none; --rc-px: var(--ax-space-16); }
   #view[data-v="home"] .rc.my, #view[data-v="home"] .rc.now { background: var(--ax-color-surface); box-shadow: none; }

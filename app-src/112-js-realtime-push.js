@@ -36,7 +36,7 @@ function checkMyState() {
   var fq = fcfsMy();
   if (fq && fq.st === "got" && seen.fcfs !== "got") {
     seen.fcfs = "got"; changed = true;
-    notice({ key: "fcfs:got", title: "선착순 참여상", body: "선착순 참여상 수령 자격이 생겼어요 · 1F 체크인존에서 수령", go: "rewards", focus: "fin", goLbl: "나의 보상에서 보기" });
+    notice({ key: "fcfs:got", first: true, run: function () { fcfsGotOpen(); } });   /* v5.97 (사용자 261006 밤) 팝업 대신 수령 안내 시트 · 스탬프 연출 뒤 · 쌓인 행운권 상자보다 먼저(first) */
   }
   if (changed) S.set("noti_seen", seen);
 }

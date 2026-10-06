@@ -541,7 +541,7 @@ function rfxOpen() {
   w.classList.add("open");
   var got = pick();
   if (got) { rfxLand(got, false); return; }   /* 이미 있으면 상자에서 튀어 오르는 연출(rfxPop) 그대로 */
-  nm.classList.add("roll"); el("rfxSay").textContent = "응모 번호를 꺼내고 있어요…";
+  nm.classList.add("roll"); el("rfxSay").textContent = "행운권 번호를 꺼내고 있어요…";   /* v5.97 감사 하1 */
   el("rfxBtns").innerHTML = '<button class="btn line" style="margin-top:14px" onclick="modalClose()">나중에 보기</button>';   /* 굴러가는 동안 「상자 열기」는 할 일이 없다 */
   if (BE.on && !testEmp()) beSync();
   var roll = function () { var s = []; for (var k = from; k < t; k++) s.push(String(1000 + Math.floor(Math.random() * 9000))); nm.innerHTML = s.map(function (x) { return "<b>" + rfxDot(x, t - from > 1, false) + "</b>"; }).join(""); };   /* v5.10 굴러가는 숫자는 읽지 않는다(aria-live 가 70ms 마다 읽던 것) */

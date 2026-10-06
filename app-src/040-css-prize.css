@@ -129,6 +129,20 @@
   .axs-pz-c.flat .axs-pz-ph { aspect-ratio: 2 / 1; }
   /* v5.33 (사용자 261003 「볼펜 그림이 잘렸다」) tall = 세로로 긴 사진 · 넓은 칸(2:1)에서 자르지 않고 전체(contain · 칸 높이 = 2열 사진과 같은 크기) */
   .axs-pz-c.tall .axs-pz-ph img { object-fit: contain; }
+  /* v5.97 (사용자 261006 밤 「3등 이상하게 편집」) 홀수로 남아 넓어진 마지막 칸(행운권 6등 등) = 사진을 자르지 않는다(contain · 흰 바탕 사진이라 좌우 여백만) · 납작한 상품(flat)은 그대로 cover */
+  .axs-pz-c.wide:not(.flat) .axs-pz-ph img { object-fit: contain; }
+  /* v5.97 아이디어왕 = 같은 그림 카드 3장 한 줄 3칸 · 같은 크기 · 잘림 없음 · 그림 아래 「1등 · 1명」 · 큰 글씨 · 좁은 폭도 3칸(글자만 줄어든다) */
+  .axs-pz-r3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ax-space-8); }
+  .axs-pz-c.r3 { border-radius: var(--ax-radius-16); background: transparent; }
+  .axs-pz-c.r3 > .axs-pz-ph { margin-top: 0; border-radius: var(--ax-radius-16); background: transparent; }
+  .axs-pz-c.r3 .axs-pz-ph img { object-fit: contain; }
+  .axs-pz-c.r3 .cp { margin: 0; padding: var(--ax-space-8) 0 0; font: var(--ax-type-t7); font-size: min(calc(13px * var(--fs)), 15px); color: var(--ax-color-body); text-align: center; white-space: nowrap; }
+  .axs-pz-c.r3 .cp b { font: inherit; font-weight: 700; color: var(--ax-color-brandText); }
+  /* v5.97 선착순 참여상 수령 안내 시트(fcfsGotOpen) · 가습기 사진 + 장소 한 줄 + 상품 한 줄 */
+  .axs-fcg { text-align: center; }
+  .axs-fcg img { display: block; width: min(52vw, 200px); height: auto; aspect-ratio: 1 / 1; margin: 0 auto var(--ax-space-12); object-fit: contain; }
+  .axs-fcg .t { margin: 0; font: var(--ax-type-t4); font-weight: 700; color: var(--ax-color-ink); word-break: keep-all; }
+  .axs-fcg .s { margin: var(--ax-space-4) 0 0; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
   /* v5.18 스탬프와 별개 구역(1F 타자왕) · 위 구역들과 얇은 선으로 나눈다 · 순위 보기 버튼(블록 맨 아래) · v5.74 알약 · 아래 설명 줄은 「받으려면」 박스로 옮겼다 */
   .axs-pz-sec.sep { margin-top: var(--ax-space-48); padding-top: var(--ax-space-32); border-top: 1px solid var(--ax-color-divider); }
   .fs-big .axs-pz-c:not(.gr) .tx { flex-wrap: wrap; }

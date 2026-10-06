@@ -297,7 +297,7 @@ var FLOOR18 = [
     q: ["내 업무에 AI를 쓸 수 있을까?", "나와 비슷한 고민을 하는 사람이 있을까?", "어떻게 시작하지?"],
     todo: ["비슷한 고민을 가진 사람들과 멘토가 한 테이블에서 다음 한 걸음을 찾아요", "아이디어 한 줄을 남기고 시간대를 골라 신청해요"],
     gd: ["과제로 키우고 싶은 업무가 있다면 1F AX 라운지에서 1:1로 상담할 수 있어요", "1F AX 라운지 보기", "lounge"],
-    chk: [["진행", "주제 소개 → 고민 나누기 → 다음 한 걸음"], ["매칭", "고른 시간대에 맞춰 매칭해요"], ["정원", "선착순 " + CCHAT_CAP + "명"], ["알림", "매칭되면 하이웍스로 알려 드려요. 앱 나의 참여에서도 볼 수 있어요"]] }
+    chk: [["진행", "주제 소개 → 고민 나누기 → 다음 한 걸음"], ["매칭", "고른 시간대에 맞춰 매칭해요"], ["정원", "선착순 " + CCHAT_CAP + "명"], ["알림", "매칭되면 하이웍스로 알려 드려요\n앱 나의 참여에서도 볼 수 있어요"]]   /* v5.97 (사용자 261006 밤) 두 문장 = 두 줄(마침표 없이 · 표 값의 \n = 줄바꿈) */ }
 ];
 function zoneById(id) { return FLOOR1.concat(FLOOR18).filter(function (z) { return z.id === id; })[0] || null; }
 function zoneOpen(id) { PROG.zone = id; PROG.zchk = false; App.go("zone_d"); }
@@ -451,7 +451,7 @@ function progAlwaysHtml() {
 function zonePairHtml(z, L) {
   var head = z.q ? '<p class="axs-xq">' + z.q.map(function (t) { return "<span>" + esc(t) + "</span>"; }).join("") + "</p>" : '<p class="axs-bar stm">' + esc(z.stm) + "</p>";
   var b = L.btn || ["", ""], open = !!PROG.zchk;
-  var chk = '<section class="axs-zdt axs-xchk" id="zChk" aria-label="참여 전 확인"' + (open ? "" : " hidden") + '><dl class="axs-kv">' + z.chk.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl>" + treatHtml() + "</section>";
+  var chk = '<section class="axs-zdt axs-xchk" id="zChk" aria-label="참여 전 확인"' + (open ? "" : " hidden") + '><dl class="axs-kv">' + z.chk.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]).replace(/\n/g, "<br>") + "</dd>"; }).join("") + "</dl>" + treatHtml() + "</section>";
   return '<div class="ax-stack axs-pan"><div class="axs-zdt axs-sthost">' + zoneStampHtml(z) + zoneSign(z.sign, "lg") + head +
     '<div class="cr"><span class="axs-pt">' + esc(L.tm || "") + "</span></div>" +
     '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + z.todo.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" +
@@ -486,7 +486,7 @@ function zoneSheet() {
     (kv ? '<hr class="axs-rule">' + kv : "") +
     (z.gd ? '<hr class="axs-rule"><div class="axs-xgd"><p class="axs-bar stm">' + esc(z.gd[0]) + '</p><button type="button" class="ax-link axs-plain axs-self" onclick="zoneOpen(\'' + z.gd[2] + '\')">' + esc(z.gd[1]) + "</button></div>" : "") +
     (z.chk ? '<button type="button" class="ax-button ax-button-weak axs-xtog" aria-expanded="' + open + '" aria-controls="zChk" onclick="zoneChkToggle(this)">참여 전 확인' + CHEV_SVG + "</button>" +
-      '<section class="axs-xchk" id="zChk" aria-label="참여 전 확인"' + (open ? "" : " hidden") + '><dl class="axs-kv">' + z.chk.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl>" + treatHtml() + "</section>" : "") +
+      '<section class="axs-xchk" id="zChk" aria-label="참여 전 확인"' + (open ? "" : " hidden") + '><dl class="axs-kv">' + z.chk.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]).replace(/\n/g, "<br>") + "</dd>"; }).join("") + "</dl>" + treatHtml() + "</section>" : "") +
     (ev && EV_TYP_PROMO ? typPromoHtml("go") : "") + zonePicHtml(z);   /* v5.96 (사용자 261006 밤 「여기에 타자왕 광고는 없애줘」) EVENT 구역 상세 = 홍보 칸 없음 · 스위치 EV_TYP_PROMO */
   return { cls: "axs-pan", name: zoneSign(z.sign, "lg"), chips: zoneChip(L.chip), title: esc(z.kor), seal: seal ? pill : "", body: body,   /* v5.79 머리 이름 = 구역 간판 하나(현장 부스 사인과 같은 글자 · 한국어 이름을 따로 두지 않는다) · 상태 칩 · 한국어 한 줄 · 도장 = 본문 첫 줄 */
     foot: b ? progBtn(esc(b[0]), b[1], "", b[2] || "", !!b[3]) : "" };
@@ -727,7 +727,7 @@ function progConfirm() {
     /* 실패는 시트 안에 사유와 다음 행동 · 성공해야만 결과(P04)로 넘어간다 */
     if (err) { c.err = err; sheetFail({ t: err.t, b: err.b, act: err.act, lbl: err.lbl }); return; }
     PROG.ok = { id: c.id, slot: c.slot || "" }; PROG.cf = null;
-    var tr = c.id === "dap" && tourRetLive() && TOUR_RET.id === "p3" ? TOUR_RET : null;   /* v5.57 둘러보기 LOUNGE 블록에서 출발 · 마침 = 상담 신청 완료(스탬프는 실제 상담 완료 때 스태프 인증으로) */
+    var tr = c.id === "dap" && tourRetLive() && TOUR_RET.id === "p3" ? TOUR_RET : null;   /* v5.57 둘러보기 LOUNGE 블록에서 출발 · 마침 = 상담 신청 완료(261006 라운지 상담은 스탬프 없음) */
     App.go("sess_ok");   /* App.go 가 시트를 닫는다 */
     delete App.from.sess_ok;   /* 결과에서 뒤로 = 프로그램 목록 (확인 화면으로 돌아가지 않는다) */
     if (tr) { TOUR_RET = tr; tr.v = "sess_ok"; tr.away = false; tourRetDone(true); App.render(); }   /* 완료 화면에 머문다 · 띠 챗봇 인사 한 번(v5.80 · 옛 3초 자동 복귀 없앰) · 띠 · 뒤로 = 둘러보기 */
