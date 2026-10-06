@@ -5948,7 +5948,7 @@ var NAV=[
   { id:"e_app", m:"el", n:"앱", el:"app", parts:[P("app","","","viewElEmpty")] },
   { id:"e_game", m:"el", n:"AX 퀴즈·게임", el:"game", parts:[P("typing","oly","점수 계수 · 당일 잠금"),P("typing","ox","AX 퀴즈 문항")] },
   { id:"e_type", m:"el", n:"타자왕", el:"type", parts:[P("typing","type","1F 셀프 · 상위 · 닉네임")].concat(RACE_ON?[P("race","live","대전 판 진행")]:[]) },
-  { id:"e_draw", m:"el", n:"럭키드로우 · 선착순 참여상 · 7등", el:"draw", parts:[P("draw","run","진행"),P("draw","stat","현황"),P("draw","set","설정"),P("draw","fcfs","선착순 참여상"),P("draw","lk7","7등 랜덤 굿즈"),P("draw","fin","완주 경품 추첨",null,{ hide:function(){ return !finOn(); } })] },   /* 261006 경품 기획 변경 · 옛 완주 경품 추첨은 서버 설정 「완주추첨_사용」 ON 일 때만(fin_state 가 off 면 숨김) */
+  { id:"e_draw", m:"el", n:"럭키드로우 · 선착순 참여상 · 7등", el:"draw", parts:[P("draw","run","진행"),P("draw","stat","현황"),P("draw","set","설정"),P("draw","fcfs","선착순 참여상"),P("draw","lk7","7등 랜덤 굿즈"),P("draw","fin","완주 경품 추첨",null,{ hide:function(){ return !(FIN_LEGACY_SHOW&&finOn()); } })] },   /* 261006 경품 기획 변경 · 옛 완주 경품 추첨은 서버 설정 「완주추첨_사용」 ON 일 때만(fin_state 가 off 면 숨김) */
   { id:"e_roul", m:"el", n:"룰렛", el:"roul", parts:[P("stamp","ops","","viewElEmpty")] },
   { id:"e_sign", m:"el", n:"사이니지·월", el:"sign", parts:[P("sign","","","viewElEmpty")] },
   { id:"e_qr", m:"el", n:"QR", el:"qr", parts:[P("qr","img","QR 그림"),P("qr","list","전체 목록"),P("qr","print","코드 · 인쇄"),P("qr","check","설치 점검")] },
@@ -7263,6 +7263,7 @@ function p10RowGo(action, prm, fin){
  * 이름 · 사번은 이 콘솔 화면과 CSV 에만 · 부문 통계 없음(260917) · 새 CSS 는 pz- 로 시작한다. */
 var CK_ID="ck";
 function ckUnits(){ var U=stUnitMap(); return U[CK_ID]||3; }
+var FIN_LEGACY_SHOW=false;   /* 261006 옛 완주 경품 추첨 폐기 · true 로 바꾸면 관리자 도구 칩이 다시 보인다 */
 function finOn(){ var f=ST.data.fin; return !!(f&&f.ok); }
 function pzOldCard(t){ return card(t,"",'<div class="note">이 서버는 아직 '+esc(t)+' 기능을 모릅니다. 서버 갱신 뒤 이 화면이 켜집니다.</div>'); }
 function pzErrCard(t, d){ return card(t,"",'<div class="empty">'+esc(t)+' 현황을 받지 못했습니다('+esc(pzWhy(d))+').</div>'); }
@@ -7313,7 +7314,7 @@ SUBNEED["draw:set"]=[{k:"cfgl",a:"cfg_list"}];
 SUBNEED["draw:fcfs"]=function(){ var p={ page:String(FX.page||1) }; if(FX.q) p.q=FX.q; if(FX.st) p.st=FX.st; return [{k:"fxl",a:"fcfs_list",p:p}]; };
 SUBNEED["draw:lk7"]=[{k:"lk",a:"lk7_state"}];
 (function(){ var _vd=viewDraw; viewDraw=function(){ var sv=sub()||"run"; if(sv==="fcfs") return viewFx(); if(sv==="lk7") return viewLk7(); return _vd(); }; })();
-(function(){ var _vf=viewFin; viewFin=function(){ var d=ST.data.fin; if(d&&d.ok===false&&d.reason==="off") return '<div class="note">옛 「완주 경품 추첨」은 꺼져 있습니다(서버 설정 「완주추첨_사용」 OFF). 6개 보상은 「선착순 참여상」입니다.</div>'; return _vf(); }; })();
+(function(){ var _vf=viewFin; viewFin=function(){ var d=ST.data.fin; if(d&&d.ok===false&&d.reason==="off") return '<div class="note">옛 「완주 경품 추첨」은 폐기됐습니다(261006 · 서버 설정 「완주추첨_사용」 OFF). 6개 보상은 「선착순 참여상」(체크인존 수령 · 17:00 마감)입니다.</div>'; return _vf(); }; })();
 /* 요소 띠 · 셋째 숫자 = 선착순 남음 */
 (function(){ var _es=elSt; elSt=function(k){ var o=_es(k);
   if(k==="draw"){ var fx=ST.data.fx; if(fx&&fx.ok){ o.nums[2]=["선착순 남음",finNum(fx.left)+" / "+finNum(fx.cap)]; o.m=(o.m||"")+" · 선착순 남음 "+finNum(fx.left); } else if(!finOn()) o.nums[2]=["선착순 남음","-"]; }
@@ -7919,13 +7920,13 @@ try{ (function(){ var v=sessionStorage.getItem("axf_hv_nav")||"", id=v.split(":"
  * 화면은 옛 화면 함수를 그대로 부른다(서버 호출 · 권한 · 위험 가드 L1~L3 그대로). 쉬운 화면 항목은 NAV 끝에 붙고(ez:1) 저마다 메뉴(MENUBY)를 가진다.
  * 옛 함수(navSel · navFind · renderTabs · meTag · hvNeedX · hvPt)는 고치지 않고 감싼다(같은 파일을 다른 세션이 함께 고친다).
  * 10/25 이후 코드 동결 · 값 변경은 채팅으로 Claude(① 맨 아래 한 줄) · 기획의 D 항목은 숨김만(관리자 도구 안에서는 그대로 열린다).
- * 완주 경품 추첨은 CLAUDE.md 확정 사항이라 ⑤ 칩으로 늘 보인다(서버 설정 「완주추첨_사용」이 꺼져 있으면 그 화면이 서버 안내를 보인다). 새 CSS 는 ez- 로 시작한다. */
+ * 261006 옛 완주 경품 추첨(261002)은 폐기: ⑤ 칩에서 뺌(FIN_LEGACY_SHOW=false · 코드 보존). ⑤ 순서 = 무대 진행 · 선착순 참여상 · 7등 랜덤 굿즈 · 재고 · 룰렛 소진 · 타자왕. 새 CSS 는 ez- 로 시작한다. */
 var EZ_LIST=[
   { id:"z_today", n:"오늘", d:"지금 시간대에 할 일 · 서버 상태 · 긴급 공지입니다.", parts:[P("ztoday","","","viewToday")] },
   { id:"z_field", n:"현장 처리", d:"줄 서 있는 일을 처리합니다. 위 칩으로 고릅니다.", staff:1, parts:[P("apply","resv","상담"),P("apply","cchat","커피챗"),P("apply","roster","담당 명단"),P("acct","pw","PIN 분실"),P("crowd","","혼잡 제보","viewCrowdTab")] },
   { id:"z_who", n:"사람 찾기", d:"사번이나 이름으로 한 사람을 찾아 스탬프 · 닉네임 · PIN 을 처리합니다.", staff:1, parts:[P("zwho","","","viewWho")] },
   { id:"z_tell", n:"알리기", d:"참가자에게 공지 · 푸시를 보내고, 예약을 미루거나 취소합니다.", parts:[P("notice","","보내기"),P("sched","","예약"),P("zstop","","멈추기","viewEzStop")] },
-  { id:"z_draw", n:"추첨·경품", d:"Outro 무대 진행 · 경품 추첨 · 재고 · 룰렛 소진 · 타자왕 1~3위입니다.", parts:[P("draw","run","무대 진행"),P("draw","fin","완주 경품 추첨"),P("draw","fcfs","선착순 참여상"),P("draw","lk7","7등 랜덤 굿즈"),P("inv","","재고","viewInv"),P("zroul","","룰렛 소진","viewEzRoul"),P("ztype","","타자왕 1~3위","viewEzType")] },
+  { id:"z_draw", n:"추첨·경품", d:"무대 진행 · 선착순 참여상 · 7등 · 재고 · 룰렛 소진 · 타자왕 1~3위입니다.", parts:[P("draw","run","무대 진행"),P("draw","fcfs","선착순 참여상"),P("draw","lk7","7등 랜덤 굿즈"),P("inv","","재고","viewInv"),P("zroul","","룰렛 소진","viewEzRoul"),P("ztype","","타자왕 1~3위","viewEzType")] },
   { id:"z_gate", n:"관리자 도구", d:"전체 메뉴(7개)를 엽니다. 슈퍼관리자 본인 확인(앱 PIN) 뒤에 열립니다.", hide:1, parts:[P("zgate","","","viewEzGate")] }
 ];
 EZ_LIST.forEach(function(z){ var it={ id:z.id, m:z.id, n:z.n, ez:1, staff:z.staff?1:0, hide:z.hide?1:0, parts:z.parts }; NAV.push(it); NAVBY[z.id]=it; MENUBY[z.id]={ id:z.id, n:z.n, d:z.d }; });
@@ -7969,7 +7970,7 @@ function ezBack(){ ezSetTool(false); navSel(ezHome(),0); }
     if(!ezAllowed(ST.nav)) return _ns(ezHome(), 0);
   };
   /* 옛 버튼(go('acct') · goTo('apply','resv') 등) · 쉬운 화면이면 쉬운 화면 항목을 먼저 찾는다 */
-  var _nf=navFind, EZ_ALIAS={ "stamp:one":["z_who",0], "acct:one":["z_who",0], "typing:type":["z_draw",6] };
+  var _nf=navFind, EZ_ALIAS={ "stamp:one":["z_who",0], "acct:one":["z_who",0], "typing:type":["z_draw",5] };
   navFind=function(tab, sub){
     if(!ezMode()) return _nf(tab, sub);
     var cur=navCur(), hit=null, any=null, L=[cur].concat(NAV.filter(function(it){ return it.ez&&it!==cur&&ezAllowed(it.id); }));
@@ -8040,19 +8041,20 @@ function ezItems(i){
     [[ST.at&&!ST.err?true:ST.err?false:null,"서버 연결","",null,"",""],
      [!hvRo(),"서버 읽기 전용 꺼짐","",null,"",""],
      [ps?!!ps.on:null,"웹 푸시 발송 켜짐",ps?"":"푸시 상태를 받지 못했습니다 · 멈추기 화면에서 봅니다",go("z_tell",2),"보기","push"],
-     [!sy.rouletteOut,"룰렛 소진 안내 꺼짐","경품이 떨어지기 전까지 꺼 둡니다",go("z_draw",5),"보기",""],
+     [!sy.rouletteOut,"룰렛 소진 안내 꺼짐","경품이 떨어지기 전까지 꺼 둡니다",go("z_draw",4),"보기",""],
      [null,"TV 화면 켜기 · 스탬프 월 · 타자왕 TV","아래 「화면 열기」에서 엽니다",scr,"주소 보기","tv"],
      [null,"타자왕 셀프 노트북 켜기","노트북에서 주소를 열고 관리코드를 넣습니다",scr,"주소 보기","self"],
      [null,"스태프 폰 관리자 모드 로그인 확인","QR 스캔 · 혼잡 제보를 쓰는 폰",null,"","staff"]],
     [[wait?false:true,"대기 건 처리 · 상담 · 커피챗 · PIN 분실",wait?wait+"건 대기":"대기 없음",go("z_field",0),"처리하러 가기",""],
      [hot?false:true,"혼잡 제보 · 카메라 확인 요청",hot?hot+"곳":"없음",go("z_field",4),"보기",""],
-     [low==null?null:!low.length,"재고 경고",low==null?"재고를 받지 못했습니다":low.length?low.slice(0,3).map(function(x){ return x.n+" "+invN(x.left); }).join(" · ")+(low.length>3?" 외 "+(low.length-3):""):"곧 바닥인 품목 없음",go("z_draw",4),"재고 보기",""],
-     [null,"룰렛 경품이 떨어지면 소진 안내 켜기","켜면 앱 룰렛 창에 「모두 소진」",go("z_draw",5),"열기","roul"]],
-    [[null,"타자왕 1~3위 확인 · 사회자에게 전달","17:00 마감 기록",go("z_draw",6),"1~3위 보기","type"],
+     [low==null?null:!low.length,"재고 경고",low==null?"재고를 받지 못했습니다":low.length?low.slice(0,3).map(function(x){ return x.n+" "+invN(x.left); }).join(" · ")+(low.length>3?" 외 "+(low.length-3):""):"곧 바닥인 품목 없음",go("z_draw",3),"재고 보기",""],
+     [null,"룰렛 경품이 떨어지면 소진 안내 켜기","켜면 앱 룰렛 창에 「모두 소진」",go("z_draw",4),"열기","roul"]],
+    [[null,"타자왕 1~3위 확인 · 사회자에게 전달","17:00 마감 기록",go("z_draw",5),"1~3위 보기","type"],
      [live,"추첨 화면 연결",live==null?"17F 큰 화면에서 추첨 화면을 엽니다":live?"화면이 상태를 보내는 중":"화면 보고 없음 · 아래 「화면 열기」",scr,"주소 보기",""],
      [null,"행운권 추첨 진행 · 큰 버튼 하나","무대 순서 띠를 따라 누릅니다",go("z_draw",0),"무대 진행","draw"],
-     [null,"룰렛 남은 경품 실물 세기 → 재고 맞추기","재고 › 품목을 눌러 「남은 수 맞추기」",go("z_draw",4),"재고","count"],
-     [null,"완주 경품 추첨 · 대상 확정 → 추첨","6개 모은 사람 중 럭키드로우 · 다음 날 발송",go("z_draw",1),"열기","fin"]],
+     [null,"룰렛 남은 경품 실물 세기 → 재고 맞추기","재고 › 품목을 눌러 「남은 수 맞추기」",go("z_draw",3),"재고","count"],
+     [null,"선착순 참여상 · 17:00 마감 확인","6개 모은 순서대로 210명 · 체크인존 수령",go("z_draw",1),"열기","fcfs"],
+     [null,"7등 랜덤 굿즈 · 룰렛 잔여 입력 → 대상 확정 → 추첨","행운권 번호가 있는 분 60세트 · 체크인 조건 없음",go("z_draw",2),"열기","lk7"]],
     [[ps?!ps.on:null,"웹 푸시 전체 정지","행사가 끝나면 멈춥니다",go("z_tell",2),"멈추기","pushoff"],
      [null,"배송 명단 · 우편 CSV · 통계 받기","채팅으로 Claude 에게 요청합니다",null,"","post"]]
   ][i]||[];
@@ -8072,7 +8074,7 @@ function ezStrip(){
   return '<div class="hv-strip"><i class="dot '+(cn[1]==="ok"?"ok":cn[1]==="bad"?"bad":"")+'"></i><span><b>'+esc(cn[0])+'</b></span>'+tag(env[0], env[1])+
     (hvRo()?tag("읽기 전용 켜짐","warn"):"")+(ps?tag(ps.on?"푸시 켜짐":"푸시 전체 정지", ps.on?"ok":"bad"):"")+
     (hot?'<a href="#" onclick="navSel(\'z_field\',4);return false">'+tag("혼잡 확인 "+hot+"곳","bad")+'</a>':'')+
-    (low&&low.length?'<a href="#" onclick="navSel(\'z_draw\',4);return false">'+tag("재고 경고 "+low.length+"건","warn")+'</a>':'')+
+    (low&&low.length?'<a href="#" onclick="navSel(\'z_draw\',3);return false">'+tag("재고 경고 "+low.length+"건","warn")+'</a>':'')+
     '<span class="sp"></span><span class="cap">'+(w.fake?"시험 시각 ":"서버 시각 ")+'<b class="n">'+esc(w.d.slice(5).replace("-","/")+" "+ezHm(w.m))+'</b></span></div>';
 }
 function viewToday(){
