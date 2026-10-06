@@ -96,17 +96,20 @@ function myScheduleHtml() {
   var head = '<div class="sect"><b>나의 일정</b>' +
     '<span role="button" tabindex="0" aria-label="나의 일정 바로가기" onclick="mySched()">' + lnkChev("바로가기") + "</span></div>";
   /* v3.13: 첫 줄 = 「지금·다음」(구 히어로 흡수 · 시간 뱃지 공용 tok, 진행 중 = 검정) · v3.22 모든 행 = 공용 행 카드 */
+  /* v5.82 (사용자 261006 「커피챗 앞으로」 결정 2) 커피챗 신청 줄 한 줄 · 신청 전 · 마감 아님 · 행사 끝나기 전만(cchatRowHtml) · 일정 3개 상한(SCHED_VIEW)에 넣지 않는 별도 줄
+     일정이 비었으면 「신청한 프로그램 없음」 줄을 이 줄로 대체 · 일정이 있으면 목록 끝(더보기 버튼 앞) · 신청한 뒤에는 myItems 의 커피챗 줄(대기 · 시각)이 맡아 이 줄은 사라진다 */
+  var ap = cchatRowHtml();
   if (!rows.length) {
     return head + '<div class="axs-rows">' + schedNowRow() +
-      (all0 ? rcHtml({ cls: "", onclick: "mySched()", link: true, left: rcIcon(App.ICONS.guide_time), title: "남은 일정 없음", sub: "지난 일정은 나의 일정에서" })
-        : rcHtml({ cls: "", onclick: "App.tab('guide')", link: true, left: rcIcon(App.ICONS.guide), title: "신청한 프로그램 없음", sub: "프로그램에서 신청" })) + "</div>";
+      (all0 ? rcHtml({ cls: "", onclick: "mySched()", link: true, left: rcIcon(App.ICONS.guide_time), title: "남은 일정 없음", sub: "지난 일정은 나의 일정에서" }) + ap
+        : ap || rcHtml({ cls: "", onclick: "App.tab('guide')", link: true, left: rcIcon(App.ICONS.guide), title: "신청한 프로그램 없음", sub: "프로그램에서 신청" })) + "</div>";
   }
   /* v4.13 (사용자 결정 260922) 카드 안 스크롤(창 안의 창) 폐지 · 3개만 · 4개 이상이면 목록 바로 아래 전폭 버튼 「일정 더보기 +N」(숨은 개수) → 나의 참여 › 내 일정 · 3개 이하면 버튼 없음 */
   var more = Math.max(0, rows.length - SCHED_VIEW);
   var cards = rows.slice(0, SCHED_VIEW).map(function (r) {
     return rcHtml({ cls: " my", onclick: r[1], link: true, left: tokBadge(esc(r[2]), r[5]), title: esc(r[3]), sub: esc(r[4]), place: r[6] });
   }).join("");
-  return head + '<div class="axs-rows">' + schedNowRow() + cards + "</div>" +
+  return head + '<div class="axs-rows">' + schedNowRow() + cards + ap + "</div>" +
     (more ? '<button type="button" class="ax-button ax-button-weak axs-more" onclick="mySched()" aria-label="나의 일정 ' + more + '개 더 보기">일정 더보기 +' + more + "</button>" : "");
 }
 

@@ -160,19 +160,22 @@ var Views = {
     if (IDEA.step === "ask" && cchatClosed()) IDEA.step = "done";   /* v4.47 마감이면 묻지 않는다 */
     if (IDEA.step === "ask") {
       return '<div class="ax-stack axs-okwrap">' +
-        '<div class="ax-stack-tight axs-gap12 axs-center-tx"><p class="ax-meta">아이디어 제출 완료</p><h1 class="ax-type-t2">커피챗에 참석하시겠어요?</h1>' +
+        '<div class="ax-stack-tight axs-gap12 axs-center-tx"><p class="ax-meta">아이디어 제출 완료</p><h1 class="ax-type-t2">이 아이디어로 커피챗을 신청할까요?</h1>' +
         '<p class="ax-body">' + CCHAT_TXT.replace(" · ", "<br>") + "</p></div>" +
-        '<div class="ax-card ax-stack-tight axs-gap12"><p class="ax-card-title">AX 커피챗 · 18F</p><p class="ax-description">선착순 ' + CCHAT_CAP + "명<br>고른 시간대에 맞춰 매칭해요<br>" + CCHAT_NOTE.replace(" · ", "<br>") + "</p></div>" + cchatPrefHtml("ask") + "</div>" +
-        '<div class="ax-bottom axs-fix">' + progBtn(cchatPref().length ? "참석할게요" : "시간대를 골라 주세요", "ideaCchat(1)", "", "ideaYes", !cchatPref().length) + progBtn("참석하지 않을게요", "ideaCchat(0)", "ax-button-weak", "ideaNo") + "</div>";   /* v4.45 선호 시간대를 골라야 참석 */
+        cchatPrefHtml("ask") + '<div class="ax-card ax-stack-tight axs-gap12"><p class="ax-card-title">AX 커피챗 · 18F</p><p class="ax-description">선착순 ' + CCHAT_CAP + "명<br>고른 시간대에 맞춰 매칭해요<br>" + CCHAT_NOTE.replace(" · ", "<br>") + "</p></div></div>" +   /* v5.82 (261006 사용자 결정 6) 시간대 칸을 안내 카드 위로 · 390 x 844 에서 「언제든 좋아요」 칩이 아래 고정 버튼 뒤로 반쯤 잘렸다(고르는 칸이 먼저 보이게 · 안내 카드는 그 아래) */
+        '<div class="ax-bottom axs-fix">' + progBtn(cchatPref().length ? "신청할게요" : "시간대를 골라 주세요", "ideaCchat(1)", "", "ideaYes", !cchatPref().length) + progBtn("나중에 할게요", "ideaCchat(0)", "ax-button-weak", "ideaNo") + "</div>";   /* v4.45 선호 시간대를 골라야 신청 · v5.82 「참석」 → 「신청」(사용자 261006 결정 3 · 질문 시점은 신청이고 옛 아니요 버튼은 거절처럼 읽혔다) */
     }
     if (IDEA.step === "done") {
-      var cl = !cchat ? (cchatClosed() ? "커피챗은 선착순 " + CCHAT_CAP + "명이 모두 찼어요" : "커피챗은 프로그램 › 상담에서 언제든 신청할 수 있어요") : cchat.status === "matched" ? "커피챗 매칭 완료 · " + esc(cchat.round) + " TABLE " + esc(cchat.table) : "커피챗 신청 완료 · " + CCHAT_NOTE;
+      /* v5.82 (사용자 261006 「커피챗 앞으로」) 신청 전 = 주 버튼 「커피챗 신청하기」(질문 화면 다시) · 신청한 뒤 = 「내 커피챗 보기」 · 마감 = 주 버튼 없음 · 「한 줄 더 남기기」는 글 링크로 · 옛 안내 「프로그램 › 상담에서」(v4.93 에 없어진 경로) 삭제 */
+      var ccl = cchatClosed(), cl = !cchat ? (ccl ? "커피챗은 선착순 " + CCHAT_CAP + "명이 모두 찼어요" : "아직 신청하지 않았어요") : cchat.status === "matched" ? "커피챗 매칭 완료 · " + esc(cchat.round) + " TABLE " + esc(cchat.table) : "커피챗 신청 완료 · " + CCHAT_NOTE;
+      var pri = cchat || S.get("cchat_att", false) ? progBtn("내 커피챗 보기", "progOpen('cchat')", "", "ideaCcGo") : ccl ? "" : progBtn("커피챗 신청하기", "IDEA.step='ask';App.render()", "", "ideaCcGo");
       return '<div class="ax-stack axs-okwrap">' +
         '<span class="axs-okmark">완료</span>' +
         '<div class="ax-stack-tight axs-gap12 axs-center-tx"><h1 class="ax-type-t2">아이디어를 제출했어요</h1>' +
         '<p class="ax-body">' + IDEA_AWARD_TXT + "</p></div>" +
-        '<div class="ax-card ax-stack-tight axs-gap12"><p class="ax-card-title">AX 커피챗</p><p class="ax-description" id="ideaCcLine">' + cl + "</p></div></div>" +
-        '<div class="ax-bottom axs-fix">' + progBtn("내가 낸 아이디어 보기", "App.go(\'ideas_mine\')")   /* v5.67 둘러보기 복귀 = 떠 있는 「3D로 돌아가기」(trf) 하나 */ + progBtn("한 줄 더 남기기", "IDEA.step=null;App.render()", "ax-button-weak") + "</div>";
+        '<div class="ax-card ax-stack-tight axs-gap12"><p class="ax-card-title">AX 커피챗 · 18F</p><p class="ax-description" id="ideaCcLine">' + cl + "</p></div>" +
+        '<button type="button" class="ax-link axs-plain axs-self" onclick="IDEA.step=null;App.render()">한 줄 더 남기기</button></div>' +
+        '<div class="ax-bottom axs-fix">' + pri + progBtn("내가 낸 아이디어 보기", "App.go(\'ideas_mine\')", pri ? "ax-button-weak" : "") + "</div>";   /* v5.67 둘러보기 복귀 = 떠 있는 「행사 둘러보기로 돌아가기」(trf) 하나 */
     }
     /* v4.08 입력·제출 화면 = 전체 화면 · 하단 메뉴 숨김 · 아래 고정 주 버튼(5글자 이상이면 켜짐) + 약한 버튼
        쓴 내용은 어떤 경우에도 지우지 않는다(IDEA.draft · 기기 저장 idea_draft · 다시 그려도 그대로) · 공백은 글자 수에서 뺀다 */
@@ -235,7 +238,7 @@ var Views = {
   /* v4.93 (261001 사용자 확정 · IA 검토 8장 A1) 탭 맨 위 [시간표 | 상시 운영] · 상시 운영 = 1F 로비 6구역(현장 간판) + 18F AX 커피챗 · 판 문법 경계 axs-pan(design.md A-5 5-19) */
   guide: function () {
     var al = PROG.seg === "always";
-    return '<div class="ax-stack' + (al ? " axs-pan" : "") + '">' + progSegHtml() + (al ? progAlwaysHtml() : progTimeHtml()) + "</div>";
+    return '<div class="ax-stack' + (al ? " axs-pan" : "") + '">' + progSegHtml() + (al ? progAlwaysHtml() : progApplyHtml() + progTimeHtml()) + "</div>";   /* v5.82 시간표 맨 위 신청 줄(커피챗 · AX LOUNGE 상담 · 사용자 261006) · 상시 운영 칸에는 없다 */
   },
 
   /* ═══ 전체 시간표 P05 / 내 일정 M02 · 라우트 guide_time 하나(SCHED.tab) · 옛 해시·딥링크·noticeGo(my_sched) 그대로 ═══

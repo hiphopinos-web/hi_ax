@@ -1467,6 +1467,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
      목록 행 = 흰 카드(반경 20, 나의 참여·체험 목적지 행과 같은 면) · 층 배지 = brandSoft(홈 일정 시간 배지와 같은 강조) · 필터 선택 = brandSoft(내 보상 필터와 같다)
      분류 칩 = 중립 canvas · 연사 칸 = canvas 바탕 + ink 글자 · 시간표 행 · 내 일정 카드 = 흰 면 · 하단 고정 바 = canvas */
   #view[data-v="guide"] .axs-rows { display: flex; flex-direction: column; gap: var(--ax-space-12); }
+  .axs-apply .rc .rh .sb { white-space: normal; }   /* v5.82 시간표 맨 위 신청 줄 · 큰 글씨 360 에서 「아이디어 한 줄 쓰고 신청」이 말줄임으로 잘리지 않게 둘째 줄로(새 색 · 새 부품 없음) */
   /* v4.13 ⓚ 분류 칩 4개 + 켜고 끄는 「신청 가능」 칩 · 좁으면 「신청 가능」이 다음 줄로 */
   #app .axs-filter5 { display: flex; flex-wrap: wrap; gap: var(--ax-space-8); }
   #app .axs-filter5 .axs-opf { flex: 0 0 auto; padding: var(--ax-space-12); box-shadow: inset 0 0 0 1px var(--ax-color-divider); }

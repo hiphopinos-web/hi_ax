@@ -259,8 +259,18 @@ function scheduleCoffeechat() {
     var ideas = S.get("ideas", []);
     var last = ideas.length ? ideas[ideas.length - 1] : {};
     var fail = function () { S.set("cchat", null); notice({ key: "cchatR:fail", title: "커피챗 신청이 전달되지 않았어요", body: "잠시 뒤 커피챗 상세에서 다시 신청해 주세요" }); App.render(); };
-    beCall({ action: "cchat_req", emp: u.empId, name: u.name || "", dept: S.get("dept", null) || "", tag: (last.tag || "") + CCHAT_TAG_SEP + cchatPrefTxt(), pref: cchatPrefTxt() },   /* v4.45 pref = 선호 시간대(서버 GAS 가 「희망시간」 칸에 저장해야 콘솔에 보인다) */
-      function (res) { if (!res || !res.ok) fail(); else pushAsk("cchat", {}); }, fail);   /* v4.76 가치 순간 ② 「매칭되면 알려 드려요」 */
+    var req = { action: "cchat_req", emp: u.empId, name: u.name || "", dept: S.get("dept", null) || "", tag: (last.tag || "") + CCHAT_TAG_SEP + cchatPrefTxt(), pref: cchatPrefTxt() };   /* v4.45 pref = 선호 시간대(서버 GAS 가 「희망시간」 칸에 저장해야 콘솔에 보인다) */
+    /* v5.82 (사용자 261006 「커피챗 앞으로」 결정 1) 서버도 아이디어 행이 없으면 noidea 로 거절한다 · 방금 낸 아이디어가 아직 서버에 닿지 않았을 수 있어
+       아이디어를 한 번 다시 보내고(ideaFlush) 2초 뒤 한 번만 다시 신청한다(retried · 그 사이 S cchat 이 pending 이라 다른 입구는 이 함수 첫 줄에서 막힌다) · 그래도 noidea 면 지금의 실패 안내 */
+    var retried = false;
+    var send = function () {
+      beCall(req, function (res) {
+        if (res && res.ok) { pushAsk("cchat", {}); return; }   /* v4.76 가치 순간 ② 「매칭되면 알려 드려요」 */
+        if (res && res.reason === "noidea" && !retried) { retried = true; ideaFlush(); setTimeout(send, CCHAT_RETRY_MS); return; }
+        fail();
+      }, fail);
+    };
+    send();
     return;   /* 매칭은 운영자가 콘솔에서 · 완료되면 sync 폴링이 팝업을 띄운다 */
   }
   setTimeout(function () {
@@ -377,6 +387,7 @@ var CCHAT_TAG_SEP = " / 희망 ";
    마감 신호 = 서버 수정 없이 콘솔 공지(notice_set)를 빌린다 · 제목이 CCHAT_CLOSE_T 인 공지는 참가자 화면에 띄우지 않고 마감 표시로만 쓴다 · 공지 중지(notice_clear)가 다시 열기
    나중에 GAS 가 sync 에 cchatOut 을 주면 그쪽을 따른다(rouletteOut 과 같은 모양) */
 var CCHAT_CAP = 30;
+var CCHAT_RETRY_MS = 2000;   /* v5.82 서버 noidea 뒤 한 번 다시 신청하기까지 */
 var CCHAT_CLOSE_T = "[운영] 커피챗 신청 마감";
 function cchatClosed() { return !!S.get("cchat_out", false) || !!S.get("cchat_close_id", ""); }
 function cchatPref() { var a = S.get("cchat_pref", []); return Array.isArray(a) ? a : []; }
@@ -408,6 +419,7 @@ function ideaCchat(yes) {
   if (yes) scheduleCoffeechat();
   IDEA.step = "done";
   tourRetDone(!!(TOUR_RET && TOUR_RET.p5));   /* v5.57 아이디어 한 줄 마침(둘러보기에서 출발했으면) */
+  if (TOUR_RET) TOUR_RET.p5 = false;   /* v5.82 완료 화면 「커피챗 신청하기」로 질문에 다시 답해도 인사는 한 번 */
   App.render();
 }
 /* 나중에 마음이 바뀐 사람 · 커피챗 상세(P02)의 주 버튼 · 아이디어가 1건 이상일 때만 */

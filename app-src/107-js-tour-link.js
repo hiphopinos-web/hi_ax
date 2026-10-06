@@ -115,7 +115,7 @@ var TOUR_HOST = {
     if (id === "play") return [{ lbl: "체험 안내 보기", run: go("booth") }];
     if (id === "lounge") { var L = zoneLive(zoneById("lounge")); return [{ lbl: L.btn ? L.btn[0] : "상담 신청", run: function () { progOpen("dap"); } }]; }
     if (id === "event") return [{ lbl: "룰렛 경품 보기", run: function () { prizeGo("roulette"); } }, { lbl: "1F 타자왕 순위", run: typeSiteRankGo }];
-    if (id === "cafe") return [{ lbl: S.get("cchat", null) ? "내 커피챗 보기" : "커피챗 신청", run: cchatOpen }, { lbl: "아이디어 한 줄 쓰기", run: go("ideas") }];   /* v5.65 신청 전 = 구역 상세(zone_d cchat) */
+    if (id === "cafe") return [{ lbl: S.get("cchat", null) ? "내 커피챗 보기" : ideaMineN() ? "커피챗 신청" : "아이디어 쓰고 신청", run: cchatOpen }, { lbl: "아이디어 한 줄 쓰기", run: go("ideas") }];   /* v5.65 신청 전 = 구역 상세(zone_d cchat) */
     return [];
   },
   crowd: function (id) { var k = id === "cafe" ? "e" : "l", x = crowdCell(k); return { nm: k === "e" ? "엘리베이터" : "1F 로비", st: x.st, sub: x.sub, cls: x.cls }; },
