@@ -205,8 +205,8 @@ var SESSIONS = [
     desc: TIME_TBD },
   { id: "l2", fl: 17, zone: "hall", kind: "open", ttl: "파트너사 강연 · MS", sub: "AI와 친해지기", who: "MS", tm: "15:10~16:40", cap: 235, seed: 96,
     desc: TIME_TBD },
-  { id: "fld", fl: 10, zone: "conf", kind: "info", ttl: "세션 A", sub: "영업 및 보상 현장 우수 사례 강연 및 실습", who: "", tm: "13:30~16:40", cap: 62, seed: 50,
-    capNote: "62명",
+  { id: "fld", fl: 10, zone: "conf", kind: "info", ttl: "세션 A", sub: "영업 및 보상 현장 우수 사례 강연 및 실습", who: "", tm: "13:30~16:40", cap: 63, seed: 50,
+    capNote: "63명",   /* v5.81 정원 62 → 63(사용자 261006) */
     todo: [{ desc: "동료 활용 사례 공유 및 AI활용 교안 제공" }, { desc: "원하는 주제 선택 및 개발 실습 진행" }],
     prep: [{ desc: "노트북은 1인 1대 배정돼요" }] },
   { id: "ta", fl: 10, zone: "heart18", kind: "info", ttl: "세션 B", sub: "“내 데이터”로 만드는 통계 현황 리포팅 실습", who: "", tm: "13:30~16:30", cap: 32, seed: 24,
