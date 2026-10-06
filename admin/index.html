@@ -631,6 +631,7 @@ table.brk tr.tot td{border-bottom:0;border-top:1px solid var(--line3)}
 .dc-conn{display:inline-flex;align-items:center;font-size:var(--fs-s);font-weight:700;border-radius:99px;padding:4px 12px;border:1px solid var(--line);font-variant-numeric:tabular-nums}
 .dc-conn.ok{color:var(--ok);background:var(--ok-bg);border-color:var(--ok-bd)}
 .dc-conn.bad{color:var(--bad);background:var(--bad-bg);border-color:var(--bad-bd)}
+.dc-att{margin-bottom:12px}
 .dc-rej{margin-bottom:12px;padding:12px 16px;border:1px solid var(--bad-bd);background:var(--bad-bg);color:var(--bad);border-radius:var(--r-s);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .dc-stat{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:12px}
 .dc-stat div{background:var(--soft);border:1px solid var(--line2);border-radius:var(--r-s);padding:8px 12px;min-width:0}
@@ -2759,7 +2760,7 @@ function viewDraw(){
   if(sv==="fin") return h+viewFin();
   if(!d||!d.ok) return h+'<div class="err-banner">추첨 현황을 받지 못했습니다('+esc(why(d))+'). 백엔드가 v4.79(추첨) 이상인지 확인합니다.</div>';
   if(sv==="run") return h+viewDrawRun(d)+memo('<p><b>준비</b> · 대형 스크린 PC 에서 「추첨 화면 열기」(또는 복사한 주소)로 추첨 화면을 원격 모드로 띄우고, 화면에 관리코드를 넣은 뒤 전체 화면(F)으로 둡니다. 이 노트북은 사회자 옆에 둡니다. 위 표시가 「화면 연결됨」이면 화면이 2초마다 상태를 보내고 있습니다. 5초 넘게 보고가 없으면 붉게 바뀝니다.</p>'+
-    '<p><b>버튼</b> · 지금 장면에서 화면이 받는 명령만 켜지고, 다음 차례 버튼은 남색으로 채워집니다. 체크인 마감 · 부재 · 마지막 취소 · 끝 화면 · 화면 초기화는 3초 안에 두 번 눌러야 나갑니다. 체크인 마감은 서버의 체크인도 함께 닫고, 체크인 시작은 닫혀 있던 체크인을 다시 엽니다.</p>'+
+    '<p><b>버튼</b> · 지금 장면에서 화면이 받는 명령만 켜지고, 다음 차례 버튼은 남색으로 채워집니다. 부재 · 마지막 취소 · 끝 화면 · 화면 초기화는 3초 안에 두 번 눌러야 나갑니다. 「추첨 준비 · 공 넣기」는 누른 순간까지의 행운권을 섞어 통에 넣고(약 10초), 다 넣으면 화면이 저절로 「추첨 준비 끝」이 됩니다. 체크인 시작 · 마감 버튼은 없습니다.</p>'+
     '<p><b>당첨</b> · 공은 화면이 뽑고 기록합니다. 이 콘솔은 결과를 바꾸지 않습니다. 당첨자가 없으면 「부재 · 다시 추첨」, 잘못 확정했으면 「마지막 취소」를 보냅니다. 실명 · 부서는 상품 전달용으로 이 화면에만 나옵니다(화면은 가린 이름).</p>'+
     '<p><b>끊겼을 때</b> · 명령은 서버에 남아 있어 화면이 다시 연결되면 마지막 명령을 확인합니다. 오래된 명령은 다시 실행하지 않습니다. 화면이 거절한 명령은 위에 붉은 알림으로 뜹니다. 시험 때는 추첨 화면의 조작 창(P 키)도 같이 쓸 수 있습니다.</p>');
   var h0=h, aOff=drawAttOff(d), pl=d.pool||null;   /* 261006 행운권_참석조건 OFF = 행운권 번호 전체가 풀(체크인 숫자는 참고) */
@@ -3066,15 +3067,15 @@ function finMemo(){
  * 화면 상태 = 화면이 2초마다 보내는 draw_scr · 소켓 drawscr(바뀔 때) + draw_stats 의 scr(2~5초 폴링)로 받는다.
  * 당첨은 화면이 정하고 draw_log 로 기록한다 · 이 패널은 결과를 바꾸지 않는다 · 부재 · 취소도 명령이다(arg = 방금 당첨 기록 id).
  * 되돌리기 어려운 명령(마감 · 부재 · 취소 · 끝 · 화면 초기화)은 두 번 누른다(3초 안) · 실명 · 부서는 이 콘솔만(상품 전달용) · 새 CSS 는 dc- 로 시작한다. */
-var DC_SCN={ idle:"대기", checkin:"체크인 중", closed:"체크인 마감", card:"라운드 카드", mix:"섞는 중", tension:"감속 · 배출 대기", exit:"배출", reveal:"당첨 공개", board:"결과판", end:"끝 화면", intro:"인트로", fin:"완주 경품 추첨 발표" };
+var DC_SCN={ idle:"대기", checkin:"추첨 준비 · 공 넣는 중", closed:"추첨 준비 끝", card:"라운드 카드", mix:"섞는 중", tension:"감속 · 배출 대기", exit:"배출", reveal:"당첨 공개", board:"결과판", end:"끝 화면", intro:"인트로", fin:"완주 경품 추첨 발표" };
 /* 버튼 순서 = 진행 순서 · two = 두 번 누르기 */
 var DC_BTN=[
-  { c:"checkin", n:"체크인 시작" }, { c:"close", n:"체크인 마감", two:1 }, { c:"round", n:"라운드 시작" },
+  { c:"checkin", n:"추첨 준비 · 공 넣기" }, { c:"round", n:"라운드 시작" },   /* 261006 체크인 시작 · 체크인 마감(두 번)은 무대 화면이 받지 않는다 · 공을 다 넣으면 화면이 저절로 준비 끝 */
   { c:"mix", n:"섞기" }, { c:"draw", n:"추첨" }, { c:"confirm", n:"확정" },
   { c:"absent", n:"부재 · 다시 추첨", two:1 }, { c:"undo", n:"마지막 취소", two:1 }, { c:"board", n:"결과판" },
   { c:"end", n:"끝 화면", two:1 }, { c:"idle", n:"대기 화면" }
 ];
-var DC_SUB=[ { c:"intro", n:"인트로 영상" }, { c:"fin", n:"완주 경품 추첨 발표" }, { c:"reset_screen", n:"화면 초기화", two:1 } ];   /* v5.03 fin = 완주 경품 추첨 숫자 장면(숫자는 서버가 채운다 · 추첨 전이면 서버가 거절) */
+var DC_SUB=[ { c:"intro", n:"인트로 영상" }, { c:"close", n:"체크인 마감 · 시험용", two:1 }, { c:"fin", n:"완주 경품 추첨 발표" }, { c:"reset_screen", n:"화면 초기화", two:1 } ];   /* 261006 close = 무대 화면에서 「체크인 화면 쓰기」를 켠 시험용 · 평소에는 화면이 거절(scene · loading) */   /* v5.03 fin = 완주 경품 추첨 숫자 장면(숫자는 서버가 채운다 · 추첨 전이면 서버가 거절) */
 /* 화면이 ready(받는 명령 목록)를 보내지 않을 때만 쓰는 장면별 기본 규칙 */
 var DC_MAP={ idle:["checkin","intro","board","end","fin"], intro:["idle","checkin"], checkin:["close","idle"], closed:["round","idle","fin"], card:["mix","undo","board","idle"], mix:["draw"], tension:[], exit:[],
   reveal:["confirm","absent","undo"], board:["round","undo","end","idle","fin"], end:["idle","fin"], fin:["end","idle","fin"] };
@@ -3083,8 +3084,8 @@ var DC_NEXT={ idle:"checkin", checkin:"close", closed:"round", card:"mix", mix:"
 var DC_MC={
   idle:"잠시 뒤 경품 추첨을 시작합니다. 앱을 열어 두세요.",
   intro:"지금부터 AX Festival 2026 경품 추첨을 시작하겠습니다.",
-  checkin:"화면의 QR 을 앱으로 찍으면 추첨 체크인이 됩니다. 행운권이 있는 분의 번호가 공이 되어 통에 들어갑니다.",
-  closed:"체크인을 마감했습니다. 통 안의 공이 오늘 응모하신 번호입니다. 첫 경품을 뽑겠습니다.",
+  checkin:"행운권 번호가 공이 되어 통에 들어가고 있습니다. 약 10초 걸립니다. 잠시만 기다려 주세요.",
+  closed:"추첨 준비가 끝났습니다. 통 안의 공이 행운권 번호입니다. 첫 경품을 뽑겠습니다.",
   card:"이번에는 {round} 경품을 뽑겠습니다. 경품은 화면에 나온 대로 소개합니다.",
   mix:"공을 섞고 있습니다. 잠시 뒤 한 개가 나옵니다.",
   tension:"곧 나옵니다.", exit:"나왔습니다.",
@@ -3216,10 +3217,10 @@ function dcNext(s){
   if(!s) return { c:"", n:"화면 보고 없음", sub:"추첨 화면을 먼저 엽니다(위 「추첨 화면 열기」)" };
   var R=s.round&&!/^\d+$/.test(String(s.round))?s.round:"다음 등수";
   switch(s.scene){
-    case "idle": return { c:dcReady("intro")?"intro":"checkin", n:"체크인 시작", sub:"화면에 QR 이 나오고 체크인을 받습니다" };
-    case "intro": return { c:"", n:"인트로 재생 중", sub:"끝나면 체크인이 시작됩니다 · 화면 Space = 건너뛰기" };
-    case "checkin": return { c:"close", n:"체크인 마감", two:1, sub:"마감하면 더 받지 않습니다" };
-    case "closed": return { c:"round", n:R+" 추첨 시작", sub:"등수 · 경품 카드가 나옵니다" };
+    case "idle": { var iv=dcReady("intro"); return { c:iv?"intro":"checkin", n:"추첨 준비 · 공 넣기", sub:iv?"처음 한 번은 인트로 영상이 먼저 나옵니다 · 영상이 끝난 순간까지의 행운권이 대상 · 공 넣기 약 10초":"누른 순간까지의 행운권이 대상 · 공 넣기 약 10초" }; }   /* 261006 체크인 없음 · 행운권을 섞어 통에 넣고 다 넣으면 화면이 저절로 준비 끝 */
+    case "intro": return { c:"", n:"인트로 재생 중", sub:"끝나면 공이 들어갑니다 · 화면 Space = 건너뛰기" };
+    case "checkin": return { c:"", n:"공을 넣는 중 · 다 넣으면 준비 끝", sub:"약 10초 · 끝나면 첫 등수 추첨 버튼이 나옵니다" };
+    case "closed": return { c:"round", n:R+" 추첨 시작", sub:"추첨 준비 끝 · 등수 · 경품 카드가 나옵니다" };
     case "card": return { c:"mix", n:"섞기 시작", sub:"공을 섞습니다 · 첫 추첨은 최소 섞기 뒤" };
     case "mix":
       if(s.need_s!=null&&Number(s.need_s)>0) return { c:"", n:"섞는 중 · "+Math.ceil(Number(s.need_s))+"초 뒤 뽑기", sub:"화면 Space = 섞기 건너뛰기" };
@@ -3234,7 +3235,7 @@ function dcNext(s){
   return { c:"", n:DC_SCN[s.scene]||s.scene||"-", sub:"" };
 }
 /* 무대 순서 띠 · 지금 단계에 네이비 */
-var DC_STEPS=[["체크인",["idle","intro","checkin"]],["행운권 6등 → 1등",["closed","card","mix","tension","exit","reveal"]],["결과판",["board"]],["완주 경품 추첨",["fin"]],["끝",["end"]]];
+var DC_STEPS=[["추첨 준비",["idle","intro","checkin"]],["행운권 6등 → 1등",["closed","card","mix","tension","exit","reveal"]],["결과판",["board"]],["완주 경품 추첨",["fin"]],["끝",["end"]]];
 function dcSteps(s){
   var L=DC_STEPS.filter(function(x){ return x[1][0]!=="fin"||finOn(); });   /* 261006 완주 경품 추첨 단계는 옛 설정 ON 일 때만 */
   var at=-1; if(s) L.forEach(function(x,i){ if(x[1].indexOf(s.scene)>=0) at=i; });
@@ -3254,7 +3255,7 @@ function dcGo(){
 var DC_WHY={ busy:"연출 중이었습니다", scene:"지금 장면에서는 받지 않습니다", drawing:"뽑는 중이었습니다", same:"이미 그 화면입니다", done:"인트로는 이미 틀었습니다", notclosed:"체크인 마감 전입니다",
   round:"없는 등수입니다", loading:"공을 넣는 중이었습니다", full:"이 등수 인원이 다 찼습니다", empty:"통에 공이 없습니다", none:"취소할 당첨이 없습니다", id:"다른 당첨이었습니다(화면이 먼저 넘어감)", arg:"완주 경품 추첨 숫자가 없습니다", stale:"30초 넘게 늦게 도착해 실행하지 않았습니다", unknown:"화면이 모르는 명령입니다", error:"화면 오류" };
 function dcWhy(w){ w=String(w||""); var m=/^mixing:(\d+)/.exec(w); return m?"섞는 중이었습니다 · "+m[1]+"초 남음":DC_WHY[w]||w||"이유 없음"; }
-var DC_KEYS=[["Space · → · PageDown","다음 · 큰 버튼과 같다"],["R 두 번","부재 · 다시 뽑기"],["U 두 번","마지막 당첨 취소"],["C 두 번","체크인 마감"],["E 두 번","끝 화면"],["F · M · H","전체 화면 · 소리 · 키 안내"]];
+var DC_KEYS=[["Space · → · PageDown","다음 · 큰 버튼과 같다"],["R 두 번","부재 · 다시 뽑기"],["U 두 번","마지막 당첨 취소"],["E 두 번","끝 화면"],["F · M · H","전체 화면 · 소리 · 키 안내"]];
 function dcBody(d){
   if(!("cmd" in d)) return '<div class="err-banner">지금 서버는 원격 진행(v4.82) 이전입니다. 운영 서버 배포 뒤에 이 패널을 씁니다. 그 전에는 추첨 화면의 키보드로 진행합니다.</div>';
   var s=DC.scr, sc=s?s.scene:"", nx=dcNext(s);
@@ -3292,7 +3293,8 @@ function dcBody(d){
     :'<div class="empty">아직 당첨 공개가 없습니다.</div>';
   var right=card("방금 당첨", "실명 · 부서는 상품 전달용 · 이 화면만", won)+
     card("사회자 멘트", s?esc(DC_SCN[sc]||sc):"장면 모름", '<p class="dc-mc">'+esc(s?dcMc(s):DC_MC.idle)+'</p>');
-  return head+rej+'<div class="grid g75"><div>'+main+more+'</div><div>'+right+'</div></div>';
+  var attW=drawAttOn(d)?'<div class="note warn dc-att">무대 화면 조작 창(P)에서 『체크인 화면 쓰기』를 함께 켜야 체크인을 받을 수 있어요</div>':"";   /* 261006 설정 행운권_참석조건 ON · 무대 화면은 기본으로 체크인 UI 가 꺼져 있다 */
+  return head+rej+attW+'<div class="grid g75"><div>'+main+more+'</div><div>'+right+'</div></div>';
 }
 
 /* ══════════════════ 7-4b. 접속 기록 (v4.27 · 260924 사용자 질문) ══════════════════
@@ -7565,7 +7567,7 @@ function ikHour(t){ var m=String(t||"").match(/(\d{1,2}):(\d{2})/); if(!m) retur
 function ikNames(rk){ var ik=ST.data.ik, ps=ik&&ik.ok&&ik.picks||[]; return ps.filter(function(p){ return Number(p.rk)===rk; }).map(function(p){ return (p.name||p.emp)+"님"; }); }
 function lkMc(){   /* 261006 행운권 단계 멘트 · 참석조건 OFF(현재 운영) = 체크인 없이 번호 전체가 풀 · 경품은 따로 전달 */
   var off=drawAttOff(ST.data.draw);
-  return "지금부터 행운권 현장 추첨을 시작합니다. "+(off?"행운권 번호가 있는 분 전체가 대상이고, 당첨되시면 경품은 따로 전달해 드립니다. ":"")+"위 진행 패널 큰 버튼으로 진행합니다.";
+  return "지금부터 행운권 현장 추첨을 시작합니다. "+(off?"행운권 번호가 있는 분 전체가 대상이고, 당첨되시면 경품은 따로 전달해 드립니다. ":"")+"위 진행 패널 큰 버튼으로 진행합니다. 「추첨 준비」를 누르면 공이 들어가는 동안 약 10초 걸립니다.";   /* 261006 */
 }
 function outroSteps(){
   var ik=ST.data.ik, ok=ik&&ik.ok, cut=ok?ik.cut:"", N=[1,2,3].map(ikNames), tr=ST.data.tres||{}, top=tr.top||[];
@@ -7582,6 +7584,7 @@ function dcOutroCard(){
 (function(){ var _db=dcBody; dcBody=function(d){ var h=_db(d); return ("cmd" in (d||{}))?h+dcOutroCard():h; }; })();
 
 /* ══ B9 · B10 · 추첨 › 설정 · 행운권 참석조건 ══ */
+function drawAttOn(d){ d=d||{}; var v=d.att!=null?d.att:cfgVal("행운권_참석조건"); return v!=null&&String(v).toUpperCase()==="ON"; }
 function drawAttOff(d){ d=d||{}; if(d.att!=null) return String(d.att).toUpperCase()==="OFF"; var v=cfgVal("행운권_참석조건"); return v!=null&&String(v).toUpperCase()==="OFF"; }
 function drawSetX(d){
   var v=d.att!=null?String(d.att).toUpperCase():cfgVal("행운권_참석조건"), off=v!=null&&String(v).toUpperCase()==="OFF";
