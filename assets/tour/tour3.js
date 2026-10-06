@@ -980,7 +980,7 @@
   /* v5.84 찍는 자리 바닥 주황 원 · 늘 옅게 · 가까이 오면 숨 쉼(그때만 다시 그림) · 움직임 줄이기 = 정지 */
   function phRing(n, now) {
     var r = PB.ring; if (!r) return;
-    var a = PH.on ? 0 : n ? (RM ? 0.55 : 0.42 + 0.2 * Math.sin(now / 420)) : 0.22;
+    var a = PH.on ? 0 : n ? (RM ? 0.55 : 0.42 + 0.2 * Math.sin(now / 420)) : RM ? 0.22 : 0.2 + 0.08 * Math.sin(G.clock * 2.4);   /* v5.91 멀리서도 은은히 숨(눌러서 가기 · 판 테두리와 같은 박자) */
     if (Math.abs(r.material.opacity - a) > 0.004) { r.material.opacity = a; G.need = true; }
     if (n && !RM && !PH.on) G.need = true;
   }
@@ -1671,7 +1671,7 @@
       G.ceil = S.lobby.getObjectByName('ceiling');
       G.loaded = true; $('load').hidden = true;
       placeAt(0, true); applyTarget();
-      buildPins(); buildMini(); buildMags(); buildBlocks(); occBuild(); lookFrameMesh();   /* v5.54 판 앞 물체 덩어리 · 자세히 보기 테두리 */
+      buildPins(); buildMini(); buildMags(); buildBlocks(); occBuild(); lookFrameMesh(); buildTaps();   /* v5.54 판 앞 물체 덩어리 · 자세히 보기 테두리 */
       try { renderer.compile(scene, camera); } catch (e) {}
       G.need = true; G.loadMs = Math.round(performance.now() - G.t0);
       entrance();
@@ -1757,8 +1757,8 @@
     if (!path) { placeAt(k, false); return; }
     startWalk(path, k);
   }
-  function startWalk(path, stopK) {
-    G.moved = true;
+  function startWalk(path, stopK, act) {
+    G.moved = true; G.tapAct = act || null;   /* v5.91 걸어간 뒤 할 일(눌러서 가기) · 새 걸음마다 갈아 끼운다 */
     var p = planOf(G.pos), L = 0, prev = p; path.forEach(function (q) { L += Math.hypot(q[0] - prev[0], q[1] - prev[1]); prev = q; });
     G.path = path; G.pathI = 0; G.goal = stopK; G.mode = 'auto'; G.speed = clamp(L / 3.6, 2.6, 6.5); G.need = true; $('dest').hidden = stopK != null;
     G.walkTo = path[path.length - 1];
@@ -1767,10 +1767,12 @@
   }
   function flash() { veilCover(200, null, function () { veilReveal(260, null); }); }   /* v5.51 바로 옮기기(움직임 줄이기) = 전환 막(움직임 줄이기면 짧은 페이드) */
   function arrive() {
+    var ta = G.tapAct; G.tapAct = null;   /* v5.91 */
     G.path = null; $('dest').hidden = true;
     if (G.goal != null) { var s = STOPS[G.goal]; G.stop = G.goal; G.mode = 'stop'; if (s.look) { var za = faceAz(s); G.azTo = G.az + Math.atan2(Math.sin(za - G.az), Math.cos(za - G.az)); } }   /* 구역 앞에 닿으면 그 판 줄이 정면이 되는 방위로 돌아선다(90도 단위) */
     else { G.mode = 'free'; nearestStop(); }
     G.goal = null; updateUi(true);
+    if (ta) tapRun(ta);   /* v5.91 도착 = 그 일을 연다 */
   }
   function nearestStop() { var p = planOf(G.pos), best = 0, bd = 1e9; STOPS.forEach(function (s, i) { var d = Math.hypot(s.x - p[0], s.z - p[1]); if (d < bd) { bd = d; best = i; } }); G.stop = best; }
 
@@ -2220,7 +2222,7 @@
   function etipGo() {
     etipHide(); if (!G.loaded || G.scn !== 'lobby' || PH.on) return;
     var p = planOf(G.pos), q = ETIP_TO.reduce(function (a, b) { return Math.hypot(b[0] - p[0], b[1] - p[1]) < Math.hypot(a[0] - p[0], a[1] - p[1]) ? b : a; });
-    walkTo(q[0], q[1]); G.etipGo = q;
+    G.etipGo = q; tapGo({ k: q === ETIP_TO[0] ? 'gate' : 'cs' });   /* v5.91 가장 가까운 엘리베이터까지 걸어가 탄다(눌러서 가기와 같다) */
   }
   function placeDir(gd) {   /* 가장자리 방향 점 · 스태프 쪽 */
     var d = $('gdir'); if (!d) return;
@@ -3891,12 +3893,7 @@
     if (!ok) return;
     try { dingAt(c, c.destination, c.currentTime + (delay || 0) + 0.01); } catch (e) {}
   }
-  function goGate() {   /* 「엘리베이터 타기」 표지 · 게이트 앞까지 걸어가 게이트가 화면 위로 오게 돈다(이 누름에서만 시점이 돈다) */
-    var p = planOf(G.pos), path = findPath(p[0], p[1], GATE.at[0], GATE.at[1]);
-    G.azTo = G.az + Math.atan2(Math.sin(Math.PI - G.az), Math.cos(Math.PI - G.az));
-    if (path) { G.goal = null; startWalk(path, null); }
-    toast('게이트 쪽(위)으로 계속 밀어 보세요');
-  }
+  function goGate() { tapGo({ k: 'gate' }); }   /* 「엘리베이터 타기」 표지 · v5.91 게이트 앞까지 걸어가 비집기 연출 그대로 탑승(눌러서 가기와 같다 · 옛 = 걸어가서 「게이트 쪽(위)으로 계속 밀어 보세요」) */
 
   /* ═══════════ 18F 장면 ═══════════ */
   function toCafe() { setRun(false); veilText(''); veilCover(320, null, function () { toCafeNow(); setTimeout(function () { veilReveal(420, null); }, 60); }); }   /* v5.51 전환 막 */
@@ -3974,7 +3971,7 @@
     pad.addEventListener('pointerdown', function (e) {
       if (pp != null || !G.loaded || G.scn !== 'lobby' || G.pinchOn) return; e.preventDefault();
       pp = e.pointerId; try { pad.setPointerCapture(e.pointerId); } catch (x) {}
-      G.moved = true; G.path = null; G.goal = null; $('dest').hidden = true; padMove(e);
+      G.moved = true; G.path = null; G.goal = null; G.tapAct = null; $('dest').hidden = true; padMove(e);
     });
     pad.addEventListener('pointermove', function (e) { if (e.pointerId === pp) padMove(e); });
     function padEnd(e) { if (e.pointerId !== pp) return; pp = null; setKnob(0, 0, false); G.stick = null; nearestStop(); updateUi(true); }   /* v5.51 달리기는 한 번 누름(켜 두는 상태 없음) · 손을 떼도 남은 달리기는 끝까지 */
@@ -3995,7 +3992,7 @@
       if (PH.on) { if ((e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') && !$('pola').hidden) { e.preventDefault(); phClose(); } return; }   /* v5.67 사진 찍기 연출 = 키 막음 · 팝업 = Enter · Space · Esc 로 닫기 */
       if (e.key === 'Enter' && !e.repeat && !$('shot').hidden && !/BUTTON|A|INPUT/.test((e.target && e.target.tagName) || '')) { e.preventDefault(); doShot(); return; }   /* v5.67 사진 찍기 */
       if (e.key === 'Enter' && !e.repeat && !$('look').hidden && !/BUTTON|A|INPUT/.test((e.target && e.target.tagName) || '')) { e.preventDefault(); doLook(); return; }   /* v5.54 자세히 보기 */
-      if (KMOVE[code]) { keys[KMOVE[code]] = 1; G.stick = keyStick(); setKnob(G.stick.x, G.stick.y, true); G.moved = true; G.path = null; G.need = true; e.preventDefault(); return; }
+      if (KMOVE[code]) { keys[KMOVE[code]] = 1; G.stick = keyStick(); setKnob(G.stick.x, G.stick.y, true); G.moved = true; G.path = null; G.tapAct = null; G.need = true; e.preventDefault(); return; }
       var act = KRH[code] || (e.key === ' ' && !/BUTTON/.test((e.target && e.target.tagName) || '') ? 'jump' : null);
       if (act) {
         e.preventDefault(); if (e.repeat) return;
@@ -4025,34 +4022,143 @@
     for (var i = 0; i < hits.length; i++) {
       var h = hits[i], o = h.object; if (!isShown(o) || o === shadow) continue;
       var mat = o.material; if (mat && mat.transparent && mat.opacity < 0.3) continue;   /* 유리 · 바닥 강조 */
-      if (o.userData && o.userData.door && h.point.y > 0.2) continue;   /* v5.38 정문 덧붙임(유리 반사 · 띠 · 틀)은 누름을 막지 않는다 */
       var pn = planOf(h.point);
+      var ek = h.point.y > 0.1 ? tapElev(pn) : null; if (ek) { tapGo({ k: ek }); return; }   /* v5.91 게이트 · 작은 홀 엘리베이터(방화문 포함) = 걸어가서 탄다 */
+      if (o.userData && o.userData.door && h.point.y > 0.2) continue;   /* v5.38 정문 덧붙임(유리 반사 · 띠 · 틀)은 누름을 막지 않는다 */
       /* 비워진 기둥은 지나친다 */
       var pi = PIL.findIndex(function (q) { return Math.abs(q[0] - pn[0]) < 0.8 && Math.abs(q[1] - pn[1]) < 0.8; });
       if (pi >= 0 && G.fade[pi] < 0.5) continue;
       var u = o.userData || {};
-      if (u.promo) { openPromo(); return; }
-      if (u.stamp) { var bb = BLOCKS.filter(function (q) { return q.id === u.stamp; })[0]; if (bb) hitBlock(bb); return; }   /* v5.49 블록을 톡 = 점프한 것과 같다 */
+      if (u.promo) { tapGo({ k: 'promo' }); return; }
+      if (u.stamp) { var bb = BLOCKS.filter(function (q) { return q.id === u.stamp; })[0]; if (bb) tapGo({ k: 'coin', b: bb }); return; }   /* v5.91 동전 = 아래까지 걸어가 점프(옛 v5.49 = 선 자리에서 hitBlock) */
+      var gd = guideOf(o); if (gd) { tapGo({ k: 'guide', gd: gd }); return; }   /* v5.91 스태프 = 앞까지 걸어가 말풍선 */
+      var ev = h.point.y > 0.1 ? tapEvent(o, pn, u) : null; if (ev) { tapGo({ k: ev }); return; }   /* v5.91 포토부스 · 룰렛 · 타자왕 */
       if (u.pg || u.zone) {
         var z = D.Z(u.zone) || D.zoneOfPg(u.pg);
-        if (z && z.id !== 'cafe' && z.id !== 'event') { enterPanel(z, u.pg || null); return; }
+        if (z && z.id !== 'cafe' && z.id !== 'event') { tapGo({ k: 'board', z: z, pg: u.pg || null }); return; }   /* v5.91 판 = 앞까지 걸어가 판 보기(옛 = 선 자리에서 바로) */
         if (z && z.id === 'event') return;
       }
       if (h.point.y < 0.2) {
         var tn = performance.now(), lt = G.lastTap;   /* v5.51 빈 바닥 두 번 톡(0.35초 · 40px 안) = 기본 거리로 · 첫 톡에 시작한 걸음은 멈춘다 */
         G.lastTap = { t: tn, x: x, y: y };
-        if (lt && tn - lt.t < 350 && Math.hypot(x - lt.x, y - lt.y) < 40) { G.lastTap = null; G.path = null; G.mode = 'free'; $('dest').hidden = true; setDist(DDEF); toast('기본 크기로 봐요'); return; }
+        if (lt && tn - lt.t < 350 && Math.hypot(x - lt.x, y - lt.y) < 40) { G.lastTap = null; G.path = null; G.tapAct = null; G.mode = 'free'; $('dest').hidden = true; setDist(DDEF); toast('기본 크기로 봐요'); return; }
         walkTo(pn[0], pn[1], x, y); return;
       }
       return;
     }
   }
-  function walkTo(x, z, sx, sy) {
-    var q = nearestFree(x, z); if (!q) { toast('거기는 갈 수 없어요'); return; }
-    var p = planOf(G.pos), path = findPath(p[0], p[1], q[0], q[1]);
-    if (!path) { toast('거기는 갈 수 없어요'); return; }
-    hideDrag(); G.goal = null; startWalk(path, null);
-    var d = $('dest'); d.hidden = false; G.destAt = toThree(q[0], q[1]);
+  function walkTo(x, z, sx, sy) {   /* v5.91 길이 없으면 가장 가까운 갈 수 있는 자리(reachPath) · 주황 원 = 실제로 가는 자리 */
+    var r = reachPath(x, z); if (!r) { toast('거기는 갈 수 없어요'); return; }
+    hideDrag(); G.goal = null; G.destAt = toThree(r.q[0], r.q[1]); startWalk(r.path, null);
+  }
+  /* ═══════════ v5.91 눌러서 가기(사용자 261006 「조작 단추는 지금 그대로 두고, 화면을 눌러서 가는 방식을 주된 방법으로」) ═══════════
+   * 바닥 = 그 자리로 걸어간다(주황 원 · 길이 없으면 가장 가까운 갈 수 있는 자리 reachPath) · 조이스틱 · 단추 넷 · 화면 밀기 · 위아래 시점 · 기본 시점은 그대로
+   * 눌러서 할 수 있는 것 = 그 앞까지 걸어가서 바로 그 일을 연다
+   *   판 = 판 보기(자세히 보기와 같다) · 동전 = 아래에서 점프(동전 점프와 같은 카드) · 포토부스 = 사진 찍기 흐름 · 룰렛 = 경품 보기 · 타자왕 TV · 판 = 순위판
+   *   게이트 = 앞까지 걸어가 비집기 연출 그대로 탑승(밀지 않아도) · 작은 홀 엘리베이터 문 = 바로 탑승 · 스태프 = 앞에서 말풍선(이번 방문에 이미 말했어도 다시)
+   *   이미 가까우면 걷지 않고 바로 · 걷는 중 조이스틱 · WASD · 달리기 · 다른 곳 누르기 · 이전 · 다음 구역 = 그 일 취소(startWalk 가 G.tapAct 를 갈아 끼우고 · 패드 · 키는 지운다)
+   *   움직임 줄이기 = 걷지 않고 그 자리로(startWalk 와 같다) */
+  function guideOf(o) { while (o) { for (var k = 0; k < guides.length; k++) if (guides[k].m === o) return guides[k]; o = o.parent; } return null; }
+  function tapElev(pn) {
+    if (pn[0] > GATE.x0 - 0.2 && pn[0] < GATE.x1 + 0.2 && pn[1] > GZ.ze - 0.35 && pn[1] < 19.7) return 'gate';   /* 게이트 함 · 그 뒤 엘리베이터 통로 */
+    if (pn[0] > VB.x0 - 0.3 && pn[0] < FDW.x + 0.15 && pn[1] > VB.z0 - 0.1 && pn[1] < VB.z1 + 0.1) return 'cs';   /* 작은 홀(방화문 · 엘리베이터 문) */
+    return null;
+  }
+  function tapEvent(o, pn, u) {
+    if (underName(o, /^photoKiosk$/) || Math.hypot(pn[0] - PB.at[0], pn[1] - PB.at[1]) < 1.4) return 'photo';   /* 기계 · 친구들 */
+    var w = D.PROPS.wheel; if (Math.hypot(pn[0] - w[0], pn[1] - w[1]) < 0.9) return 'prize';
+    var z = u.pg || u.zone ? D.Z(u.zone) || D.zoneOfPg(u.pg) : null;
+    if (z && z.id === 'event') return pn[1] < 4.6 ? 'promo' : pn[1] < 9.0 ? 'photo' : 'prize';   /* 판 줄 = 타자왕 · 포토부스 · 룰렛 순(남 → 북) */
+    return null;
+  }
+  function stopAt(id) { var s = STOPS.filter(function (q) { return q.id === id; })[0]; return s ? [s.x, s.z] : null; }
+  var _tq = new T.Vector3(), _hq = new T.Vector3();
+  /* 어디로 걸어갈지 · { at: 도면 자리 } · 이미 가까우면 { now: true } */
+  function tapSpot(a) {
+    var p = planOf(G.pos), dd = function (q) { return Math.hypot(q[0] - p[0], q[1] - p[1]); };
+    if (a.k === 'board') {
+      var pk = pickFace(a.z, a.pg && D.SIGNS.indexOf(a.pg) < 0 ? a.pg : firstPg(a.z));
+      if (!pk || !pk.f) { var k = stopOf(a.z.id, a.pg); return k < 0 ? null : { at: [STOPS[k].x, STOPS[k].z] }; }
+      var F = occFrame(pk.f), r = occIn(F, G.pos.x, G.pos.z), c = pk.f.userData.c, DS = [1.9, 2.4, 1.5];
+      if (r[0] > 0.3 && r[0] < 2.8 && Math.abs(r[1]) < F.w / 2 + 0.4) return { now: true };   /* 판 앞 2.8m 안 */
+      for (var i = 0; i < DS.length; i++) { var q = planOf(_tq.set(c.x + F.nx * DS[i], 0, c.z + F.nz * DS[i])); if (free(q[0], q[1])) return { at: q }; }
+      return { at: planOf(_tq.set(c.x + F.nx * DS[0], 0, c.z + F.nz * DS[0])) };
+    }
+    if (a.k === 'coin') return Math.hypot(a.b.x - G.pos.x, a.b.z - G.pos.z) < 0.35 ? { now: true } : { at: a.b.at };
+    if (a.k === 'photo') return dd(PB.at) < PH_R ? { now: true } : { at: stopAt('event') };
+    if (a.k === 'prize') return dd(D.PROPS.wheel) < 2.6 ? { now: true } : { at: stopAt('roulette') };
+    if (a.k === 'promo') { var ts = stopAt('typing'); return dd(ts) < 1.2 ? { now: true } : { at: ts }; }
+    if (a.k === 'gate') return dd(GATE.at) < 0.6 ? { now: true } : { at: GATE.at };
+    if (a.k === 'cs') { var cq = [VB.x0 + 0.45, (VB.z0 + VB.z1) / 2]; return dd(cq) < 0.6 ? { now: true } : { at: cq }; }
+    if (a.k === 'guide') { var g = a.gd.at, gl = dd(g); return gl < 2.6 ? { now: true } : { at: [g[0] + (p[0] - g[0]) / gl * 1.7, g[1] + (p[1] - g[1]) / gl * 1.7] }; }
+    return null;
+  }
+  /* 가장 가까운 갈 수 있는 자리까지의 길 · 누른 자리에서 내 자리 쪽으로 10% 씩 당겨 보며 처음 길이 나는 곳 */
+  function reachPath(x, z) {
+    var p = planOf(G.pos);
+    for (var k = 0; k <= 10; k++) {
+      var t = 1 - k / 10, q = nearestFree(p[0] + (x - p[0]) * t, p[1] + (z - p[1]) * t); if (!q) continue;
+      var path = findPath(p[0], p[1], q[0], q[1]); if (path) return { q: q, path: path, k: k };
+    }
+    return null;
+  }
+  function tapGo(a) {
+    if (!G.loaded || G.scn !== 'lobby' || PH.on || G.anim || G.sheetOpen || G.sheetFx || G.squeeze || EV.seq) return;
+    var s = tapSpot(a); if (!s) return;
+    G.tapLog = G.tapLog || []; if (G.tapLog.length < 60) G.tapLog.push({ k: a.k, now: !!s.now, t: Math.round(performance.now()) });
+    if (a.k === 'gate') G.azTo = G.az + Math.atan2(Math.sin(Math.PI - G.az), Math.cos(Math.PI - G.az));   /* 게이트가 화면 위로(옛 goGate 와 같다 · 이 누름에서만 시점이 돈다) */
+    if (s.now) { G.path = null; G.goal = null; G.tapAct = null; $('dest').hidden = true; tapRun(a); return; }
+    var r = reachPath(s.at[0], s.at[1]); if (!r) { toast('거기는 갈 수 없어요'); return; }
+    hideDrag(); G.goal = null; G.destAt = toThree(r.q[0], r.q[1]); startWalk(r.path, null, a);
+  }
+  function tapRun(a) {
+    G.tapPend = a.k;
+    setTimeout(function () {
+      G.tapPend = null;
+      if (!G.open || !G.loaded || G.scn !== 'lobby' || PH.on || G.anim || G.sheetOpen || G.sheetFx || G.squeeze || EV.seq || G.path) return;
+      G.moved = true; G.tapDone = (G.tapDone || []).concat([a.k]).slice(-20);
+      if (a.k === 'board') enterPanel(a.z, a.pg);
+      else if (a.k === 'coin') tapCoin(a.b);
+      else if (a.k === 'photo') phStart();
+      else if (a.k === 'prize') { var w = D.PROPS.wheel, p = planOf(G.pos); G.face = Math.atan2(w[0] - p[0], -(w[1] - p[1])); openPrize(); }
+      else if (a.k === 'promo') openPromo();
+      else if (a.k === 'gate') startSqueeze();
+      else if (a.k === 'cs') { G.csGo = true; EV.from = 'cs'; setRun(false); if (MOT.on) motGet(EV_ORD[0]).catch(function () {}); toElev(); setTimeout(function () { G.csGo = false; }, 800); }
+      else if (a.k === 'guide') { delete VIS.bub[a.gd.id]; G.need = true; }
+    }, RM ? 0 : 80);
+  }
+  function tapCoin(b) {   /* 아래에 섰으면 점프(머리로 콩 · 같은 카드) · 0.65초 안에 안 맞으면 바로 카드 */
+    var t0 = b.bumpT;
+    if (Math.hypot(b.x - G.pos.x, b.z - G.pos.z) < 0.45 && !G.air) { jump(); setTimeout(function () { if (b.bumpT === t0 && G.open && G.scn === 'lobby' && !SCARD && !G.sheetOpen) hitBlock(b); }, RM ? 60 : 650); }
+    else hitBlock(b);
+  }
+  /* v5.91 눌러서 할 수 있는 것 = 은은한 숨 · 판 = 주황 테두리(판 전부 한 메시 · 그리기 1번) · 룰렛 · 게이트 · 작은 홀 = 바닥 주황 원
+   *   동전 빛 · 포토부스 원 · 스태프 전파는 원래 있는 것 · 불투명도만 숨 쉼(2.6초) · 판 보기 · 연출 · 비집기 동안 숨김 · 움직임 줄이기 = 정지 */
+  var TAPS = { fr: null, rings: [], mat: null, rmat: null };
+  function buildTaps() {
+    var pos = [], idx = [], n = 0, TW = 0.05;
+    Object.keys(S.faces).forEach(function (key) {
+      var pg = +key, f = S.faces[key];
+      if (D.SIGNS.indexOf(pg) >= 0 || HIDE_PG.indexOf(pg) >= 0 || D.NOVIEW.indexOf(pg) >= 0 || pg >= 40 || !isShown(f)) return;
+      var z = D.zoneOfPg(pg); if (!z || z.id === 'cafe') return;
+      var u = f.userData, F = occFrame(f), w = u.size[0] / 2 + 0.05, hh = u.size[1] / 2 + 0.05, rx = F.nz, rz = -F.nx, cx = u.c.x + F.nx * 0.025, cz = u.c.z + F.nz * 0.025;
+      var P = function (q) { pos.push(cx + rx * q[0], u.c.y + q[1], cz + rz * q[0]); return n++; };
+      var oi = [[-w, -hh], [w, -hh], [w, hh], [-w, hh]].map(P), ii = [[-w + TW, -hh + TW], [w - TW, -hh + TW], [w - TW, hh - TW], [-w + TW, hh - TW]].map(P);
+      for (var e = 0; e < 4; e++) { var e1 = (e + 1) % 4; idx.push(oi[e], oi[e1], ii[e1], oi[e], ii[e1], ii[e]); }
+    });
+    TAPS.mat = new T.MeshBasicMaterial({ color: 0xFF7F32, transparent: true, opacity: 0.3, depthWrite: false, toneMapped: false, side: T.DoubleSide });
+    if (n) { var g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setIndex(idx); var m = new T.Mesh(g, TAPS.mat); m.name = 'tapFrames'; m.raycast = function () {}; m.renderOrder = 3; m.frustumCulled = false; S.lobby.add(m); TAPS.fr = m; G.tapFrames = n / 8; }
+    var RG = new T.RingGeometry(0.36, 0.5, 40); TAPS.rmat = new T.MeshBasicMaterial({ color: 0xFF7F32, transparent: true, opacity: 0.3, depthWrite: false, toneMapped: false });
+    [[D.PROPS.wheel[0] + 0.85, D.PROPS.wheel[1]], GATE.at, [VB.x0 + 0.45, (VB.z0 + VB.z1) / 2]].forEach(function (q) {   /* 룰렛 앞 · 게이트 앞 · 작은 홀 */
+      var r = new T.Mesh(RG, TAPS.rmat), tp = toThree(q[0], q[1]); r.rotation.x = -Math.PI / 2; r.position.set(tp.x, 0.013, tp.z); r.renderOrder = 2; r.raycast = function () {}; r.name = 'tapRing'; S.lobby.add(r); TAPS.rings.push(r);
+    });
+  }
+  function stepTaps() {
+    if (!TAPS.mat) return false;
+    var on = G.scn === 'lobby' && !G.anim && !SH && !G.squeeze, k = RM ? 0.5 : 0.5 + 0.5 * Math.sin(G.clock * 2.4);
+    if (TAPS.fr) TAPS.fr.visible = on; TAPS.rings.forEach(function (r) { r.visible = on; });
+    TAPS.mat.opacity = 0.22 + 0.36 * k; TAPS.rmat.opacity = 0.25 + 0.3 * k;
+    return on && !RM;
   }
 
   /* ═══════════ 그리기 ═══════════ */
@@ -4077,6 +4183,7 @@
       busy = stepRooms() || busy;   /* v5.79 미팅룸 안 대화 */
       busy = stepBlocks(now) || busy;   /* v5.49 스탬프 블록 */
       busy = pbStep(now) || busy;   /* v5.58 포토부스 단체 사진 */
+      busy = stepTaps() || busy;   /* v5.91 눌러서 할 수 있는 것 숨 */
       if (OCCA && !G.anim && !SH && !G.sheetFx) occClear();   /* v5.54 연출 밖에서 남은 비키기는 늘 원래대로 */
     }
     else if (G.scn === 'elev') { busy = stepElev(dt, now); elevCam(); }   /* v5.49 엘리베이터 안 */
@@ -4248,19 +4355,32 @@
   /* ═══════════ 처음 안내(한 문장 · 한 번) ═══════════ */
   /* v5.84 (앱 v5.83 「최초 진입 가볍게」 · 사용자 261006 「나」) 첫 입장 = 막는 처음 안내 카드 대신 한 줄 힌트(#t3-hint · 막지 않음) · 처음 움직이거나 8초에 사라짐 · 기기당 1회(axfTour3Help 그대로)
    *   나머지 문장(확대 · 동전 점프 · 화면 밀기) · 움직임 줄이기 · 음악 없이 스위치는 헤더 「도움말」 카드에 그대로 · 옛 「시작하기」에서 음악 시작(MUS.deferred) 없앰 = 여는 누름에서 시작(음악 기본 켬 그대로 · 사용자 결정 1) */
-  var HINT_MS = 8000;
-  function maybeHelp() { if (Q.get('nohelp') !== '1' && !store.get('axfTour3Help')) showHint(); }
+  /* v5.91 (사용자 261006 「화면을 눌러서 가는 방식을 주된 방법으로」) 첫 입장 = 손가락 그림이 바닥 한 곳을 톡 누르는 모습 + 「가고 싶은 곳을 눌러 보세요」(옛 한 줄 힌트 대체)
+   *   막지 않음 · 아무 데나 닿으면(누름 · 키) 끝 · 처음 움직여도 끝 · 12초 · 기기당 1번(axfTour3Tap · 옛 한 줄 힌트를 본 기기도 한 번)
+   *   손가락 자리 = 캐릭터 앞 3m 바닥(걸을 수 있는 자리)의 화면 좌표 · 움직임 줄이기 = 손가락 · 원 정지 */
+  var HINT_MS = 12000;
+  function maybeHelp() { if (Q.get('nohelp') !== '1' && !store.get('axfTour3Tap')) showHint(); }
   function showHint() {
     var h = $('hint'); if (!h) return;
-    store.set('axfTour3Help', '1');
-    var t0 = performance.now(), mv0 = !!G.moved; G.moved = false;
-    h.hidden = false; h.classList.remove('out');
+    store.set('axfTour3Tap', '1'); G.hintN = (G.hintN || 0) + 1;
+    var t0 = performance.now(), mv0 = !!G.moved; G.moved = false; G.hintTouch = false;
+    h.hidden = false; h.classList.remove('out'); hintFinger(true);
     clearInterval(G.hintT);
     G.hintT = setInterval(function () {
-      if (!G.open || G.moved || performance.now() - t0 > HINT_MS) { clearInterval(G.hintT); G.hintT = 0; hideHint(); if (mv0) G.moved = true; }
-    }, 200);
+      if (!G.open || G.moved || G.hintTouch || performance.now() - t0 > HINT_MS) { clearInterval(G.hintT); G.hintT = 0; hideHint(); if (mv0) G.moved = true; }
+    }, 120);
+  }
+  function hintFinger(on) {
+    var f = $('hfg'); if (!f) return;
+    if (!on) { f.hidden = true; return; }
+    var a = planOf(_hq.copy(G.pos).addScaledVector(_tq.set(Math.sin(G.az), 0, Math.cos(G.az)), 3.0)), q = nearestFree(a[0], a[1]) || a;
+    var W = $('stage').clientWidth, H = $('stage').clientHeight, s = toThree(q[0], q[1]).project(camera), x = W / 2, y = H * 0.45;
+    if (s.z < 1 && Math.abs(s.x) < 1 && Math.abs(s.y) < 1) { x = (s.x + 1) / 2 * W; y = (1 - s.y) / 2 * H; }
+    x = clamp(x, 60, W - 60); y = clamp(y, 110, H - 320);   /* 손가락(아래 46px)이 알약 · 조작부와 겹치지 않게 */
+    f.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px)'; f.hidden = false; G.hintAt = [Math.round(x), Math.round(y)];
   }
   function hideHint() {
+    hintFinger(false);
     var h = $('hint'); if (!h || h.hidden) return;
     if (RM) { h.hidden = true; return; }
     h.classList.add('out'); setTimeout(function () { h.hidden = true; h.classList.remove('out'); }, 300);
@@ -4532,6 +4652,8 @@
     ROOTEL.classList.toggle('rm', RM); $('rmChk').checked = RM;
     $('rmChk').onchange = function () { RM = $('rmChk').checked; store.set('axfTour3RM', RM ? '1' : '0'); ROOTEL.classList.toggle('rm', RM); G.need = true; };
     musWire();
+    ROOTEL.addEventListener('pointerdown', function () { if (!$('hint').hidden) G.hintTouch = true; }, true);   /* v5.91 첫 손가락 안내 = 아무 데나 닿으면 끝(누름은 그대로 지나간다) */
+    window.addEventListener('keydown', function () { if (G.open && !$('hint').hidden) G.hintTouch = true; }, true);
     $('bHelp').onclick = showHelp; $('hOk').onclick = hideHelp; $('help').addEventListener('click', function (e) { if (e.target === $('help')) hideHelp(); });
     wireSheet(); wireCfg(); loadBoards();
     var dq = Q.get('t3diag');   /* 시험판 주소 값 · 앱은 index.html 이 주소에 ?t3diag=1 이 있을 때만 window.AXT3_DIAG = true */
@@ -4550,6 +4672,8 @@
   /* 시험 · 녹화용 손잡이(앱에는 없음) */
   G.api = { scene: function () { return S; }, proj: function (x, y, z) { _p.set(x, y, z).project(camera); var r = $('stage').getBoundingClientRect(); return [r.left + (_p.x + 1) / 2 * r.width, r.top + (1 - _p.y) / 2 * r.height, _p.z]; },   /* v5.51 확인용 · 3D 점 → 화면 좌표(실제 톡 확인) */ shotCamKeep: function (x, y, z, lx, ly, lz, face) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); if (face) { guides.forEach(function (g) { g.m.rotation.y = Math.atan2(camera.position.x - g.m.position.x, camera.position.z - g.m.position.z); }); bot.rotation.y = Math.atan2(camera.position.x - bot.position.x, camera.position.z - bot.position.z); } S.frame(camera, 'lobby'); if (G.ceil) G.ceil.visible = false; renderer.render(scene, camera); G.hold = true; }, shotCam: function (x, y, z, lx, ly, lz, inside) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); var bv = bot.visible; bot.visible = false; S.frame(camera, 'lobby', !!inside); renderer.render(scene, camera); bot.visible = bv; G.hold = true; }, guides: function () { return guides.map(function (g) { return [g.zone, g.at, +g.h.toFixed(2)]; }); }, enter: function (zid, pg) { enterPanel(D.Z(zid), pg || null); }, pose: function (x, z, yaw, h) { G.pos.copy(toThree(x, z)); G.mode = 'free'; G.path = null; G.yaw = yaw; G.h = h == null ? yaw + Math.PI : h; G.yo = 0; G.need = true; }, goStop: goStop, openSheet: function (zid, i) { openSheet(D.Z(zid), i || 0); }, closeSheet: closeSheet, setPage: function (k) { setPage(k); }, tap: tap, walkTo: walkTo, plan: function () { return planOf(G.pos); }, cam: function () { return planOf(camera.position).concat([camera.position.y]); }, toCafe: toCafe, back: backTo1F, free: free, hw: function (x, z) { var c = gi(x, z); return c < 0 ? -1 : hw[c] * 0.05; }, move: moveStep, attrAt: attrAt, round: function () { return ROUND.slice(); }, slow: function (f) { DIVE_FX = f || 1; }, occ: function () { var A = OCCA; return A ? { pg: A.face.userData.pg, ent: A.ent.length, tris: A.ent.reduce(function (n, e) { return n + e.gh.geometry.drawRange.count / 3; }, 0), tvs: A.tvs.length, alpha: A.alpha, hid: A.dyn.filter(function (o) { return o.userData.occ; }).length } : null; }, look: function () { return LOOK.key; },   /* v5.54 확인용 */ sqLog: function (on) { if (on) G.sqLog = []; return G.sqLog; }, wd: function (x, z) { var c = gi(x, z); return c < 0 ? -1 : wd[c]; }, gate: function () { return { GZ: GZ, BR: BR, SQ: SQ }; },   xf: function () { return XF ? { b: XF.b, fr: XF.fr, M: XF.M } : null; }, faceQuad: function () { var f = G.lastFace || (XF && XF.face); return f ? xfQuad(f) : null; },   /* v5.56 확인용 */ camLog: function (on) { G.camLog = on ? [] : null; }, camStep: function (dt) { stepCam(dt || 0); S.frame(camera, 'lobby', G.scn === 'lobby' && !G.anim && !!G.camIn); return { cam: planOf(camera.position).concat([camera.position.y]), k: G.boomK, fp: !!G.fp, inside: !!G.camIn, cut: S.cut(), stub: !!(S.lobby.getObjectByName('coreStub') || {}).visible, ray: camRay(camera.position.x, camera.position.y, camera.position.z) }; }, cocc: function (x, z, y) { var c = gi(x, z); return !cocc || c < 0 ? -1 : (cocc[c] >>> Math.floor(y / COCC_H)) & 1; },   /* v5.73 확인용 */ tvs: function () { return TVS.map(function (v) { var m = v.mot; return { kind: v.kind, w: v.w, h: v.h, at: planOf(v.c).map(function (q) { return +q.toFixed(2); }), on: v.on, n: v.n, mot: m ? { ord: m.ord.join(' '), k: m.k, cur: m.cur, loops: m.loops, show: m.show, paused: m.el.paused, t: +m.el.currentTime.toFixed(2), rs: m.el.readyState, blocked: m.blocked } : null }; }); }, mot: function () { return { on: MOT.on, n: MOT.n, got: MOT.got, fps: MOT_FPS, files: Object.keys(MOT.blob) }; }, elev: function () { toElev(); }, pb: function () { return { n: PB.n, on: PB.on, cut: G.kioskCut, relit: G.kioskRelit, trueN: G.trueN, posterHi: G.posterHi, gate: G.gateGlass }; },   /* v5.58 확인용 */ ph: function () { var p = planOf(G.pos); return { on: PH.on, ph: PH.ph, n: PH.n, ms: PH.ms, size: PH.size, snd: PH.snd, near: PH.near, keep: PH.keep > performance.now(), pola: !$('pola').hidden, pos: [+p[0].toFixed(2), +p[1].toFixed(2)], h: +G.h.toFixed(3), free: free(p[0], p[1]), log: PH.log }; }, phStart: function () { if (phNear()) phStart(); return PH.on; }, aim: function () { return { aim: AIM.b ? AIM.b.id : null, demo: !!AIM.demo, demoN: G.aimDemoN || 0, tipN: G.aimTipN || 0, tip: !!($('jtip') && !$('jtip').hidden), cls: $('bJump').className, blk: BLOCKS.map(function (b) { return { id: b.id, at: b.at.map(function (q) { return +q.toFixed(2); }), got: b.got, prox: +b.prox.toFixed(2), lit: +b.lit.toFixed(2) }; }) }; },   /* v5.67 확인용 */ iris: function () { return { seq: EV.seq ? EV.seq.ph[EV.seq.i][0] : null, cur: IR.cur, log: IR.log, dings: IR.dings }; }, face: function () { return irFace(); }, dingAt: dingAt, mus: function () { return { want: MUS.want, on: musOn(), ctx: MUS.ctx ? MUS.ctx.state : null }; }, visit: function (ago) { if (ago) VIS.t0 -= ago; return { age: Math.round(performance.now() - VIS.t0), seen: Object.keys(VIS.seen || {}), bub: Object.keys(VIS.bub), cheerN: VIS.cheerN, etipN: G.etipN || 0, etip: !$('etip').hidden, go: G.etipGo || null, ring: PB.ring ? +PB.ring.material.opacity.toFixed(2) : null, shot: !$('shot').hidden, shotCls: $('shot').className }; } };   /* v5.84 확인용 */   /* v5.55 확인용 */
 
+  G.api.taps = function () { return { act: G.tapAct ? G.tapAct.k : null, pend: G.tapPend || null, done: G.tapDone || [], log: G.tapLog || [], frames: G.tapFrames || 0, rings: TAPS.rings.length, op: TAPS.mat ? +TAPS.mat.opacity.toFixed(3) : null, vis: TAPS.fr ? TAPS.fr.visible : null, hint: !$('hint').hidden, hfg: !$('hfg').hidden, hintAt: G.hintAt || null, hintN: G.hintN || 0, sq: !!G.squeeze, scn: G.scn, sheet: !!G.sheetOpen, scard: !!SCARD, ph: !!PH.on, talk: G.talk ? G.talk.id : null, bub: !$('gbub').hidden }; };   /* v5.91 확인용 */
+  G.api.tapGo = function (k, id) { if (k === 'coin') { var b = BLOCKS.filter(function (q) { return q.id === id; })[0]; if (b) tapGo({ k: 'coin', b: b }); return; } if (k === 'guide') { var g = guides.filter(function (q) { return q.zone === id || q.id === id; })[0]; if (g) tapGo({ k: 'guide', gd: g }); return; } if (k === 'board') { tapGo({ k: 'board', z: D.Z(id[0]), pg: id[1] || null }); return; } tapGo({ k: k }); };
   /* ═══════════ 앱 안 열기 · 닫기 · 뒤로(v5.37 정식 앱 이식 · 사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) ═══════════
    * window.AXTour = { open(o), close(), back(), isOpen() } · 옛 tour.js 와 같은 약속(앱 tourOpen · 뒤로 가기 popstate 가 그대로 부른다)
    * o.zone = 그 구역 앞에서 시작(입장 연출 뒤) · o.hint = 판 퀴즈 힌트 코드(tour-data HINT_PG) → 그 판이 있는 지점 앞 + 그 판 판 보기 · o.standalone = 시험판(닫기 없음)
@@ -4586,7 +4710,8 @@
     '    <div class="pflash" id="t3-pflash" hidden aria-hidden="true"></div>\n' +   /* v5.67 찰칵 흰 빛 */
     '    <div class="pola" id="t3-pola" role="dialog" aria-label="방금 찍은 사진 · 누르면 닫혀요" hidden><figure class="pc"><canvas id="t3-polaC" width="480" height="360"></canvas><figcaption>2026.10.26 AX Festival</figcaption></figure><p class="pm">동료들과 추억을 남기세요</p></div>\n' +   /* v5.67 폴라로이드(사용자 문구 그대로) */
     '    <div class="cheer" id="t3-cheer" role="status" aria-live="polite" hidden>더 힘내세요!</div>\n' +
-    '    <p class="hint" id="t3-hint" role="status" hidden>왼쪽 원으로 걷고, 오른쪽 버튼으로 점프 · 달리기</p>\n' +
+    '    <p class="hint" id="t3-hint" role="status" hidden>가고 싶은 곳을 눌러 보세요</p>\n' +   /* v5.91 첫 입장 = 손가락 + 이 한 줄 */
+    '    <span class="hfg" id="t3-hfg" hidden aria-hidden="true"><i class="rp"></i><svg class="fh" width="40" height="46" viewBox="0 0 40 46" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a4 4 0 0 1 4 4v13.5l11.2 2.2a5 5 0 0 1 4 5.6l-1.6 10.5a6.5 6.5 0 0 1-6.4 5.5h-8.6a6.5 6.5 0 0 1-5-2.4l-6.8-8.4a3.3 3.3 0 0 1 4.8-4.5L8 31.2V7a4 4 0 0 1 4-4z" fill="#FFFFFF" stroke="#191F28" stroke-width="2.2"/><path d="M16 21v5.5M21.4 22v5M26.4 23.2v4.4" stroke="#191F28" stroke-width="1.8"/></svg></span>\n' +
     '    <div class="etip" id="t3-etip" role="status" hidden><p class="et">1층을 다 둘러보셨나요?<br>엘리베이터로 다른 층도 둘러보세요</p><div class="eb"><button type="button" class="nb pri" id="t3-etGo">엘리베이터로 가기</button><button type="button" class="ex" id="t3-etX" aria-label="닫기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></div></div>\n' +   /* v5.84 엘리베이터 권유 */   /* v5.84 첫 입장 한 줄 힌트(막지 않음) */
     '    <div class="evp" id="t3-evp" role="group" aria-label="엘리베이터 층 버튼" hidden><span class="evh">층 선택</span><button type="button" class="evb" data-f="18" aria-label="18층"><b>18</b></button><button type="button" class="evb" data-f="17" aria-label="17층"><b>17</b></button><button type="button" class="evb" data-f="10" aria-label="10층"><b>10</b></button><button type="button" class="evb" data-f="1" aria-label="1층 · 내리기"><b>1</b></button></div>\n' +
     '    <div class="bubble" id="t3-bubble" hidden>아이디어 한 줄을 내면 커피챗을 신청할 수 있어요</div>\n' +
@@ -4620,7 +4745,8 @@
     '</section>\n' +
     '<section class="help" id="t3-help" role="dialog" aria-modal="true" aria-label="도움말" hidden>\n' +   /* v5.84 헤더 「도움말」에서만 연다(첫 입장 = 한 줄 힌트) */
     '  <div class="hcard">\n' +
-    '    <p class="h1t">왼쪽 동그라미로 걷고, 오른쪽 버튼으로 점프 · 달리기 · 돌기를 해요. 「다음 구역」을 누르면 알아서 걸어가요.</p>\n' +
+    '    <p class="h1t">가고 싶은 곳을 누르면 걸어가요. 판 · 동전 · 스태프를 누르면 그 앞에서 바로 열려요.</p>\n' +   /* v5.91 눌러서 가기가 첫 줄 */
+    '    <p class="h2t">왼쪽 동그라미로 걷고, 오른쪽 버튼으로 점프 · 달리기 · 돌기를 해요. 「다음 구역」을 누르면 알아서 걸어가요.</p>\n' +
     '    <p class="h2t">두 손가락으로 벌리면 크게, 오므리면 작게 봐요. 빈 바닥을 두 번 누르면 원래 크기예요.</p>\n' +
     '    <p class="h2t" id="t3-hSw">떠 있는 동전을 점프로 치면 그 활동으로 가요. 화면을 밀면 둘러봐요.</p>\n' +   /* v5.58 · v5.65 설정 「화면 밀어 시점 바꾸기」에 맞춰 setSwipe 가 바꾼다 */
     '    <p class="h2t pconly">PC에서는 W A S D로 걷고, ↑ 달리기 · ↓ 점프 · ← → 돌기예요.</p>\n' +
@@ -4732,7 +4858,7 @@
     if (SH) { closeSheet(true); G.lastFace = null; }
     occClear(); $('look').hidden = true;
     closeCfg(); closeBigMap();
-    $('help').hidden = true; $('hint').hidden = true; clearInterval(G.hintT); clearInterval(ETIP.iv); etipHide(); G.anim = null; HOLD = null; G.stick = null; musStop(true, 0.6);   /* v5.38 음악 = 암전과 함께 줄고 닫힘 */
+    $('help').hidden = true; $('hint').hidden = true; $('hfg').hidden = true; clearInterval(G.hintT); clearInterval(ETIP.iv); etipHide(); G.anim = null; HOLD = null; G.stick = null; musStop(true, 0.6);   /* v5.38 음악 = 암전과 함께 줄고 닫힘 */
     veilText(''); veilProg(null); veilCover(RM ? 150 : 240, null);   /* v5.51 나갈 때 전환 막(점이 덮는다) */
     setTimeout(function () {
       ROOTEL.hidden = true; G.open = false;
@@ -4753,5 +4879,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.86', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.91', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();

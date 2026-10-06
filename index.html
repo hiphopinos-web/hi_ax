@@ -3507,8 +3507,8 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v5.92";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 · v5.92 = 7등 랜덤 굿즈 정말 랜덤 · 체크인 없는 추첨 문구(사용자 261006) · v5.90 = 261006 경품 기획 변경(선착순 참여상 · 체크인 3개 · 룰렛 960 · 17:00 마감 · 행운권 참석 조건 · 7등 · 아이디어왕 · 샘플 딱지 제거 · 커피챗 지급품 · 라운지 종료 · 아이디어 사전 오픈) */
-var A2HS = { deferred: null, open: false };
+var APP_VER = "v5.93";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 · v5.93 = 261006 둘러보기 눌러서 가기(바닥 · 판 · 동전 · 포토부스 · 룰렛 · 엘리베이터 · 스태프 = 걸어가서 바로 · 첫 손가락 안내 · 숨 쉬는 테두리) · 설치 안내(「설치 중」 시트 · 설정 줄 = 바로 설치 창) · v5.92 = 7등 랜덤 굿즈 · 체크인 없는 추첨 */
+var A2HS = { deferred: null, open: false, pending: false };   /* v5.91 pending = 이 탭에서 크롬 설치 창 「설치」를 눌렀다(설치 중 · 다시 설치 막기) */
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
   document.addEventListener("keydown", function (e) { if (e.key !== "Shift" && e.key !== "Control" && e.key !== "Alt" && e.key !== "Meta") h.setAttribute("data-kbd", "1"); }, true);
@@ -3527,18 +3527,21 @@ function a2hsMarkDismissed() {
   try { window.localStorage.setItem("axf_a2hs", "1"); } catch (e) {}
 }
 /* 안드로이드 네이티브 설치창 · 성공하면 그대로 앱 아이콘 생성 */
+/* v5.91 (조사 「디자인 시안/설치 속도/조사.md」 권장 A) 「설치」를 누른 순간은 설치가 시작될 뿐이다(크롬 · 구글 서버가 앱을 만들고 플레이가 깐다 · 길게는 1분 · appinstalled 도 시작할 때 온다)
+   옛 「앱 설치 완료」 알림을 없애고 같은 시트를 「설치 중」 안내로 다시 연다 · 이 탭에서는 다시 설치 창을 띄우지 않는다(A2HS.pending) · 거절 = 시트를 닫고 아무 말 없음 */
 function a2hsInstall() {
+  if (A2HS.pending) { a2hsSheet(true); return; }
   if (!A2HS.deferred) { a2hsSheet(true); return; }
   var ev = A2HS.deferred;
   A2HS.deferred = null;
   ev.prompt();
   ev.userChoice.then(function (r) {
-    a2hsSheet(false);
     if (r && r.outcome === "accepted") {
+      A2HS.pending = true;
       a2hsMarkDismissed();
-      notice({ key: "a2hs", title: a2hsWord() + " 완료", body: "홈 화면의 AX Festival 아이콘으로 열기" });
+      a2hsSheet(true);
       App.render();
-    }
+    } else a2hsSheet(false);
   });
 }
 
@@ -3620,7 +3623,8 @@ function a2hsIosSteps(ua, touch) {
 }
 /* 안내가 실제로 떴는가 · 안 떴으면 조용히 실패하지 않고 토스트(v5.01) */
 function a2hsShown() { var b = el("a2hs"); return !!(b && !b.hidden && A2HS.open); }
-function a2hsOpen() {   /* 설정 › 바로가기 설치 줄 */
+function a2hsOpen() {   /* 설정 › 바로가기 설치 줄 · v5.91 (조사 권장 B) 크롬 설치 창이 준비돼 있으면 시트 없이 바로(누름 2 → 1) · 없으면 지금처럼 안내 시트 */
+  if (A2HS.deferred && !A2HS.pending && !isStandalone() && !A2HS.inst && !isInApp()) { try { a2hsInstall(); return; } catch (e) {} }
   try { a2hsSheet(true); } catch (e) {}
   if (!a2hsShown()) toast("설치 방법을 열지 못했어요. 화면을 새로 고친 뒤 다시 눌러 주세요");
 }
@@ -3644,7 +3648,7 @@ function a2hsRow() {
   var b = el("fsA2hs"), t = el("fsA2hsT");
   if (!b) return;
   b.hidden = a2hsHide();
-  if (t) t.textContent = a2hsWord();
+  if (t) t.textContent = A2HS.pending ? a2hsWord() + " 중" : a2hsWord();   /* v5.91 설치 중이면 「앱 설치 중」(누르면 같은 안내) */
   var vv = el("fsVer"); if (vv) vv.textContent = "앱 " + APP_VER;   /* v5.01 열어 둔 옛 탭인지 가려내기 */
   var lb = el("fsLbApp"), pu = el("fsPush");
   if (lb) lb.hidden = b.hidden && (!pu || pu.hidden) && !el("fsSnd");   /* v5.83 효과음 · 오프닝 다시 보기 줄은 늘 있다 */
@@ -3656,6 +3660,7 @@ function a2hsSheet(on) {   /* v5.83 옛 top(최초 로그인 장면 위) · A2HS
   if (!on) { box.hidden = true; A2HS.open = false; return; }
   A2HS.open = true;
   if (el("a2hsT")) el("a2hsT").textContent = a2hsWord();
+  a2hsPendUi(box, false);
   var body = el("a2hsBody"), h = "";
   var url = location.origin + location.pathname;
   var copyRow = '<div class="a-url" onclick="a2hsCopy()">' + url +
@@ -3667,6 +3672,12 @@ function a2hsSheet(on) {   /* v5.83 옛 top(최초 로그인 장면 위) · A2HS
   } else if (isInApp()) {
     h = '<div class="a-note">지금은 <b>메신저 안 브라우저</b>라 바로가기를 설치할 수 없어요.<br>' +
       (isIOS() ? '메뉴에서 <b>&ldquo;Safari로 열기&rdquo;</b>를 누른 뒤 다시 시도해 주세요.</div>' : '오른쪽 위 메뉴에서 <b>&ldquo;다른 브라우저로 열기&rdquo;</b>를 누른 뒤 다시 시도해 주세요.</div>') + copyRow;
+  } else if (A2HS.pending) {   /* v5.91 「설치」를 누른 뒤 · 끝난 시점은 알 수 없어 기다리는 법과 찾을 곳만 */
+    a2hsPendUi(box, true);
+    h = '<div class="a-note" style="text-align:center">홈 화면에 아이콘이 생기기까지 길게는 1분쯤 걸려요</div>' +
+      '<div class="a-note" style="text-align:center">알림창의 설치 알림이 사라지면 끝난 거예요</div>' +
+      '<div class="a-note" style="text-align:center">홈 화면에 없으면 전체 앱 목록에서 <b>AX Festival</b>을 찾아 주세요</div>' +
+      '<button class="a-go" onclick="a2hsSheet(false)">확인</button>';
   } else if (A2HS.deferred) {
     h = '<button class="a-go" onclick="a2hsInstall()">' + a2hsWord() + '</button>' +
       '<div class="a-note" style="text-align:center">' + (a2hsAndChrome() ? "설치창에서 &ldquo;설치&rdquo;를 누르세요" : "설치창에서 &ldquo;설치&rdquo;를 누르면 끝") + "</div>";
@@ -3688,6 +3699,12 @@ function a2hsSheet(on) {   /* v5.83 옛 top(최초 로그인 장면 위) · A2HS
   body.innerHTML = h;
   box.hidden = false;
   box.scrollTop = 0;
+}
+function a2hsPendUi(box, on) {   /* v5.91 설치 중 안내 = 제목 「앱 설치 중이에요」 · 부제 · 아래 닫기 줄은 감춘다(확인 단추 하나) */
+  var tt = el("a2hsT"), sub = box.querySelector(".a-s"), later = box.querySelector(".a-later");
+  if (on && tt) tt.textContent = a2hsWord() + " 중이에요";
+  if (sub) sub.style.display = on ? "none" : "";
+  if (later) later.style.display = on ? "none" : "";
 }
 function a2hsCopy() {
   var u = location.origin + location.pathname;
@@ -5998,7 +6015,7 @@ function crowdStripHtml() {
 /* v5.37 (사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) 둘러보기 v3 = 시험 페이지와 같은 공용 모듈(tour3.js · tour3.css · 캐릭터 걷기 · 40도 시점 · 왼손 패드 · 오른손 십자 · 작은 지도 · 스태프 챗봇 · 판 보기 · 돋보기 2개 · 움직임 줄이기 · 입장 암전)
    같은 약속 AXTour.open/close/back/isOpen · 옛 v2(tour.js · tour.css · 자동 둘러보기 · 평면 지도 · 구역 시트)로 되돌리려면 아래 목록의 tour3 두 개를 tour.css · tour.js 로 바꾸면 된다(파일은 그대로 둠) */
 /* v5.38 (사용자 261003) 둘러보기 손질 · 캐릭터 겹침(스태프 원 충돌) · 늘 카메라 쪽을 봄 · 조그 패드 · 안내데스크 깜빡임(겹친 면) · 정문 회전문 또렷하게 · 로비 음악(Web Audio 합성 · 「음악 없이」 · 위쪽 스피커 버튼) · 파일 이름 그대로 · 캐시 깨기 ver v538 */
-var TOUR = { ver: "v586", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
+var TOUR = { ver: "v591", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
 try { localStorage.removeItem('axfT3Diag'); } catch (e) {} window.AXT3_DIAG = /[?&]t3diag=1(?:&|$)/.test(location.search);   /* v5.47 진단은 주소에 ?t3diag=1 이 있는 그 페이지에서만 · 기억하지 않는다 · 옛 기기 기억은 지운다(사용자 261004) */   /* v5.44 둘러보기 실기기 진단(주소 ?t3diag=1 · 이 기기에 기억 · ?t3diag=0 이면 끔) · 화면 왼쪽 위에 GPU · 깊이 비트 · highp · DPR · fps */
 /* 켜기 스위치 · v5.28 true = 전체 공개(사용자 261003 「1층 3D 전체 공개」) · false 로 두면 입구 3곳 · 판 퀴즈 힌트 링크 · 열기가 모두 숨는다 */
 var TOUR_ON = true;

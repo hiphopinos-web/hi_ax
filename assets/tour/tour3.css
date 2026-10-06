@@ -252,6 +252,15 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .gbub.out { opacity: 0; pointer-events: none; }   /* v5.84 말풍선 3.5초 뒤 흐려짐(구역당 이번 방문 1번) */
 #axTour3 .hint { position: absolute; left: 50%; bottom: 216px; transform: translateX(-50%); z-index: 5; width: max-content; max-width: calc(100% - 32px); margin: 0; padding: 10px 18px; border-radius: 999px; background: var(--ink); color: #FFFFFF; font-size: 15px; line-height: 22px; font-weight: 700; text-align: center; word-break: keep-all; pointer-events: none; box-shadow: 0 4px 14px rgba(25, 31, 40, .22); transition: opacity .3s ease; }   /* v5.84 첫 입장 한 줄 힌트 · 어두운 알약(앱 건너뛰기와 같은 ink) · 조이스틱 · 버튼 위 · 막지 않음 */
 #axTour3 .hint[hidden] { display: none; }
+/* v5.91 첫 입장 손가락 안내(눌러서 가기) · 손끝(왼쪽 위 12, 3) = 바닥 한 점 · 주황 원이 퍼지며 톡 · 막지 않음 · 움직임 줄이기 = 정지 */
+#axTour3 .hfg { position: absolute; left: 0; top: 0; z-index: 5; width: 0; height: 0; pointer-events: none; }
+#axTour3 .hfg[hidden] { display: none; }
+#axTour3 .hfg .rp { position: absolute; left: -22px; top: -22px; width: 44px; height: 44px; border-radius: 50%; box-shadow: inset 0 0 0 3px var(--brand), 0 0 0 1px rgba(255, 255, 255, .7); animation: hfgRp 1.6s ease-out infinite; }
+#axTour3 .hfg .fh { position: absolute; left: -12px; top: -3px; width: 40px; height: 46px; filter: drop-shadow(0 3px 6px rgba(25, 31, 40, .3)); animation: hfgTap 1.6s ease-in-out infinite; }
+@keyframes hfgTap { 0%, 100% { transform: translate(10px, 18px); } 32%, 52% { transform: translate(0, 0) scale(.94); } }
+@keyframes hfgRp { 0%, 34% { transform: scale(.35); opacity: 0; } 40% { opacity: 1; } 100% { transform: scale(1.35); opacity: 0; } }
+#axTour3.rm .hfg .rp, #axTour3.rm .hfg .fh { animation: none; }
+@media (prefers-reduced-motion: reduce) { #axTour3 .hfg .rp, #axTour3 .hfg .fh { animation: none; } }
 /* v5.84 포토부스 「사진 찍기」 = 화면 아래 가운데 주 버튼(조작부 위 · 조이스틱 · 달리기 · 점프와 안 겹침) · O100 면 + onBrand 글 · 카메라 · 높이 52 · 통통 두 번 → 숨 쉬는 빛 */
 #axTour3 .look.shot.pri { left: 50%; right: auto; bottom: var(--lookB, 214px); height: 52px; padding: 0 22px 0 14px; background: var(--brand); color: var(--onBrand); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 6px 16px rgba(229, 103, 30, .35); font-size: 17px; font-weight: 800; transform: translateX(-50%); opacity: 1; }
 #axTour3 .look.shot.pri .lk { width: 30px; height: 30px; background: transparent; color: var(--onBrand); }
