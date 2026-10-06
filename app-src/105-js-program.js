@@ -955,15 +955,30 @@ function myFlowItems() {
 }
 /* 카드 = progFlowCard 와 같은 틀(층 점 글자 · 장소 · ~끝 · 제목 · 보조 한 줄 · 셰브론) + 머리 줄 오른쪽 끝 칩 · data-my = 알림 「내 일정 확인하기」가 튕기는 자리(focusTarget my:조각) */
 /* v6.06 진행 중인 신청 카드 = 칩 「진행 중」(나의 참여 · 홈 같은 말) */
-function myFlowCard(o, hmN, isF) {
+/* v6.11 h = 홈 카드(시각 칸 없음 · 머리 줄 「13:30 ~ 16:40」) · 나의 참여 하루 흐름은 그대로 「~16:40」 */
+function myFlowCard(o, hmN, isF, h) {
   var past = hmN >= o.b, chip = o.mine ? '<span class="axs-chip mc">' + (isF ? "진행 중" : "신청") + "</span>" : '<span class="axs-chip off mc">자유 참석</span>';
   return '<button type="button" class="fc' + (o.mine ? " mine" : "") + (past ? " past" : "") + (isF ? " focus" : "") + '"' + (o.go ? ' onclick="' + o.go + '"' : " disabled") + ' data-fl="' + esc(o.k) + '"' + (o.my ? ' data-my="' + esc(o.my) + '"' : "") + ">" +
-    '<span class="mt">' + (o.fl ? flFloor(o.fl) : "") + '<span class="pl">' + esc(o.pl) + '</span><span class="e">~' + o.t1 + "</span>" + chip + "</span>" +
+    '<span class="mt">' + (o.fl ? flFloor(o.fl) : "") + '<span class="pl">' + esc(o.pl) + '</span><span class="e">' + (h ? o.t0 + " ~ " : "~") + o.t1 + "</span>" + chip + "</span>" +
     '<span class="t">' + (isF ? '<span class="ax-sr-only">진행 중 </span>' : "") + '<span class="tt">' + esc(o.ttl) + "</span></span>" +
     (o.sub ? '<span class="s">' + esc(o.sub) + "</span>" : "") + (past || !o.go ? "" : '<span class="chv">' + CHEV_SVG + "</span>") + "</button>";
 }
-/* v6.06 h = 홈(axs-myfl-h · 신청 카드만 · 노드 · 레일 없음 · 진행 중 카드 둘레 고리) */
-function myFlowHtml(its, h) { return '<div class="axs-fl axs-myfl' + (h ? " axs-myfl-h" : "") + '">' + progFlowHtml(0, its) + "</div>"; }
+function myFlowHtml(its) { return '<div class="axs-fl axs-myfl">' + progFlowHtml(0, its) + "</div>"; }
+/* v6.11 (사용자 261007 「홈 탭의 시간 표기 때문에 크기가 다른 것들이랑 너비가 다른데 · 통일감을 해친다」) 홈 나의 일정(10F 명단) = 왼쪽 시각 칸 없이 카드만(axs-myfl-h)
+   시각은 카드 머리 줄 「13:30 ~ 16:40」 · 홈 다른 카드(rcHtml)와 같은 너비 · 둥글기 20 · 그림자 없음 · 간격 8 · 신청 = 주황 테두리 · 칩 그대로 · 진행 중 = 칩 「진행 중」 + 둘레 고리(O25) */
+function myFlowHomeHtml(its) {
+  var ph = evPhase(), hmN = ph === "before" ? -1 : ph === "after" ? 99999 : hmNow();
+  var act = its.filter(function (o) { return hmN >= o.a && hmN < o.b; }).sort(function (x, y) { return (y.mine ? 1 : 0) - (x.mine ? 1 : 0) || x.a - y.a; });
+  return '<div class="axs-fl axs-myfl axs-myfl-h">' + its.map(function (o) { return myFlowCard(o, hmN, act[0] === o, 1); }).join("") + "</div>";
+}
+/* v6.11 (사용자 261007 「Outro는 설명해 주는 거 좋을 것 같아」) 홈 나의 일정 · 신청 일정이 다 끝났고 Outro 가 남았으면 Outro 안내 카드(자유 참석 · 누르면 Outro 상세) */
+function myOutroItem() {
+  var o = progFlowItems().filter(function (x) { return x.k === "outro"; })[0], c = {};
+  if (!o) return null;
+  for (var k in o) c[k] = o[k];
+  c.sub = "DAP 시상 · 행운권 추첨";
+  return c;
+}
 /* 나의 참여 쪽 분 단위 갱신(시간표 탭 setInterval 과 같은 규칙 · 보일 때만 · 분이 바뀌면 흐름만) */
 var MYFL_KEY = "";
 setInterval(function () {

@@ -111,8 +111,11 @@ function myScheduleHtml() {
     var top = (ph1 === "after" ? schedNowRow() : "") + fr.map(function (r) {
       return rcHtml({ cls: " my", onclick: r[1], link: true, left: tokBadge(esc(r[2]), r[5]), title: esc(r[3]), sub: esc(r[4]), place: r[6] });
     }).join("") + ap;
-    if (!fl.length) top += rcHtml({ cls: "", onclick: "mySched()", link: true, left: rcIcon(App.ICONS.guide_time), title: "남은 일정 없음", sub: "지난 일정은 나의 일정에서" });
-    return head + (top ? '<div class="axs-rows">' + top + "</div>" : "") + (fl.length ? myFlowHtml(fl.slice(0, SCHED_VIEW), 1) : "") +
+    /* v6.11 (사용자 261007) 신청 일정이 다 끝났으면 Outro 안내 카드 · Outro 도 끝났으면(또는 행사 뒤) 「남은 일정 없음」 그대로 */
+    var oc = !fl.length && ph1 !== "after" ? myOutroItem() : null;
+    if (oc && ph1 === "live" && oc.b <= hm0) oc = null;
+    if (!fl.length && !oc) top += rcHtml({ cls: "", onclick: "mySched()", link: true, left: rcIcon(App.ICONS.guide_time), title: "남은 일정 없음", sub: "지난 일정은 나의 일정에서" });
+    return head + (top ? '<div class="axs-rows">' + top + "</div>" : "") + (fl.length ? myFlowHomeHtml(fl.slice(0, SCHED_VIEW)) : oc ? myFlowHomeHtml([oc]) : "") +
       (fm ? '<button type="button" class="ax-button ax-button-weak axs-more" onclick="mySched()" aria-label="나의 일정 ' + fm + '개 더 보기">일정 더보기 +' + fm + "</button>" : "");
   }
   if (!rows.length) {

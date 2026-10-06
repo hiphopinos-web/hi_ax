@@ -4,46 +4,50 @@
    끝 = 60초 완주 또는 하트 3개 소진. 처음 10초는 장애물이 드물고 느리다 → 이후 조금씩 빨라진다.
    코인 = AX 토큰. 점수 = 코인 × 30 + 버틴 초 × 5 (v3.94 넘은 장애물 +20 폐지 · 순위는 생존 시간). 장애물 이름·모양은 중립적인 사물만(회사·동료를 부정적으로 그리지 않는다). */
 /* v3.75 (사용자 확정 260918) 60초 제한 폐지 → 오래 버틴 시간이 기록 · 갈수록 빨라지고 장애물이 촘촘해진다.
-   안전 상한 5분 · 올림픽 환산은 기록/목표(길수록 좋다) · 목표 60초(6000 = 1/100초) · 팡(빠를수록 좋다)과 반대 방향이다. */
-var JP_W = 180, JP_H = 240, JP_GY = 196, JP_PX = 30, JP_MAX_SEC = 300, JP_HEARTS = 3, JP_G = 820, JP_JV = 300, JP_JV2 = 245, JP_INV = 1.0;
+   안전 상한 5분 · 올림픽 환산은 기록/목표(길수록 좋다) · 목표 60초(6000 = 1/100초) · 팡(빠를수록 좋다)과 반대 방향이다.
+   v6.11 (사용자 261007 「점프가 5분을 넘을 가능성」 · 「스태프 계정이 끝판 깼어 · 난이도를 올려 줘」) 시간 제한 없음 · 끝 = 하트 3개 소진 또는 만점 3,000(끝판).
+   조사(운영 기록 · 봇) · 5분 상한은 닿은 적도 닿을 수도 없었다(운영 점프 판 최대 82.8초 · 완벽 봇도 만점 3,000 에서 약 77초에 끝) · 끝판 = 만점 3,000.
+   30초부터 더 어렵게(JP_HARD · jpSpeed · jpGapPx · jpGapSec · jpNewP) · 처음 30초는 그대로 · 사람 반응 봇(200~300ms) 같은 18판 중앙 67.9초 → 55.1초 · 만점 4판 → 0판 · 완벽 봇은 그대로 만점(풀 수 있는 판). */
+var JP_W = 180, JP_H = 240, JP_GY = 196, JP_PX = 30, JP_HEARTS = 3, JP_G = 820, JP_JV = 300, JP_JV2 = 245, JP_INV = 1.0;
 var JP_ITEM_EVERY = 15, JP_ITEM_SEC = 5;   /* 아이템 · 15초마다 하나 · 5초 동안 */
 /* v3.98 AI 상식 문장 · v4.30 (사용자 확정 260924) 기억력 은행에서 빌려 쓰지 않고 점프 전용 JP_FACTS(O/X 참 명제 결) · JP_BG_MAX 자 이하만
    v4.92 (261001 사용자 승인 · 앱 개편 4묶음) 1층 부스 판 기준 30문장 · 정본 「기억력 문제 은행 v3.json」 jump = 「QA/문제 은행 확정안 v1.json」 jump · dom = 1층 구역
    v4.00 (사용자 요청 260919) 흘러가는 배경 → 공중에 뜬 글자 블록(2단 점프 미션) · 들이받으면 글자가 흩어지며 점수 보너스 · 결과 화면에 획득 목록
-   블록 = 바닥에서 80~110 높이(1단 점프 머리 최고 75 · 2단 점프 113) · 앞뒤 장애물과 떨어뜨려 회피와 동시에 요구하지 않는다 */
+   블록 = 바닥에서 80~110 높이(1단 점프 머리 최고 75 · 2단 점프 113) · 앞뒤 장애물과 떨어뜨려 회피와 동시에 요구하지 않는다
+   v6.11 (사용자 261007 「AX 상식이 너무 허접하고 주어가 빠진 것들이 많아」) 30문장 전부 다시 씀 · 모든 문장에 주어 · 한 문장 = 사실 하나 · 근거 = 1층 판(assets/tour/tour-boards.js) · id · 난이도 배분(14 · 11 · 5) 그대로 · 정본 「QA/문제 은행 확정안 v1.json」 jump 도 같이 */
 var JP_BG_MAX = 21, JP_BG_FIRST = 7, JP_BG_EVERY = 10;
 var JP_FACT = { w: 104, h: 30, lo: 80 };   /* v4.02 블록 점수는 올림픽 규칙 jump.fact(기본 100 · v4.00 의 임시 +150 폐지) */
 var JP_FACTS = [
   { id: "jp01", lv: 1, dom: "vision", text: "AX는 AI로 일하는 방식을 바꿔요" },
-  { id: "jp02", lv: 1, dom: "vision", text: "중심에는 언제나 사람이 있어요" },
-  { id: "jp03", lv: 1, dom: "vision", text: "판단과 결정은 사람이 해요" },
-  { id: "jp04", lv: 1, dom: "lab", text: "아이디어 한 줄을 남겨 봐요" },
-  { id: "jp05", lv: 1, dom: "vision", text: "2027년은 확산과 체화의 해예요" },
-  { id: "jp06", lv: 1, dom: "vision", text: "2028년은 혁신과 연결의 해예요" },
-  { id: "jp07", lv: 1, dom: "lab", text: "DAP는 현업과 함께 풀어요" },
-  { id: "jp08", lv: 1, dom: "lab", text: "코딩을 몰라도 지원할 수 있어요" },
-  { id: "jp09", lv: 1, dom: "lab", text: "내 고민도 DAP가 될 수 있어요" },
-  { id: "jp10", lv: 1, dom: "action", text: "현장 동료가 직접 만들었어요" },
-  { id: "jp11", lv: 1, dom: "play", text: "문서는 5개까지 올려요" },
-  { id: "jp12", lv: 1, dom: "play", text: "필요한 부분만 올려요" },
-  { id: "jp13", lv: 1, dom: "play", text: "질문은 하나씩 나누어 해요" },
-  { id: "jp14", lv: 1, dom: "lounge", text: "업무 고민, 함께 풀어 봐요" },
-  { id: "jp15", lv: 2, dom: "vision", text: "2027년엔 업무별 Agent예요" },
+  { id: "jp02", lv: 1, dom: "vision", text: "사람은 목표를 정하고 결과를 판단해요" },
+  { id: "jp03", lv: 1, dom: "vision", text: "2026년 로드맵은 공감과 참여예요" },
+  { id: "jp04", lv: 1, dom: "lab", text: "아이디어 한 줄은 QR로 남겨요" },
+  { id: "jp05", lv: 1, dom: "vision", text: "2027년 로드맵은 확산과 체화예요" },
+  { id: "jp06", lv: 1, dom: "vision", text: "2028년 로드맵은 혁신과 연결이에요" },
+  { id: "jp07", lv: 1, dom: "lab", text: "DAP는 데이터로 업무 문제를 풀어요" },
+  { id: "jp08", lv: 1, dom: "lab", text: "DAP는 코딩을 몰라도 지원해요" },
+  { id: "jp09", lv: 1, dom: "lab", text: "내 업무 고민도 DAP 과제가 돼요" },
+  { id: "jp10", lv: 1, dom: "action", text: "하이핑거는 보상 직원이 만든 앱이에요" },
+  { id: "jp11", lv: 1, dom: "play", text: "HiDI-Q에는 문서를 5개까지 올려요" },
+  { id: "jp12", lv: 1, dom: "play", text: "HiDI-Q에는 필요한 장만 올려요" },
+  { id: "jp13", lv: 1, dom: "play", text: "HiDI-Q에는 질문을 하나씩 해요" },
+  { id: "jp14", lv: 1, dom: "lounge", text: "AX 라운지에서는 업무 고민을 상담해요" },
+  { id: "jp15", lv: 2, dom: "vision", text: "2027년 목표는 업무별 Agent예요" },
   { id: "jp16", lv: 2, dom: "vision", text: "Agent는 도구와 작업을 연결해요" },
-  { id: "jp17", lv: 2, dom: "lab", text: "데이터로 판단해 일해요" },
-  { id: "jp18", lv: 2, dom: "action", text: "영업 시상을 알려 주는 앱이 있어요" },
-  { id: "jp19", lv: 2, dom: "play", text: "HiDI-Q는 문서를 읽고 답해요" },
-  { id: "jp20", lv: 2, dom: "play", text: "번역해도 원본 양식 그대로예요" },
-  { id: "jp21", lv: 2, dom: "play", text: "보고서 초안도 받아 볼 수 있어요" },
-  { id: "jp22", lv: 2, dom: "play", text: "하이헬퍼는 1분 안에 추천해요" },
-  { id: "jp23", lv: 2, dom: "play", text: "추천 전에 동의를 먼저 받아요" },
-  { id: "jp24", lv: 2, dom: "play", text: "태아보험도 설계할 수 있어요" },
-  { id: "jp25", lv: 2, dom: "lounge", text: "고민에서 실행 방법까지 정해요" },
-  { id: "jp26", lv: 3, dom: "play", text: "신상품은 반영이 늦을 수 있어요" },
-  { id: "jp27", lv: 3, dom: "play", text: "바로컨설팅 내역을 먼저 봐요" },
-  { id: "jp28", lv: 3, dom: "action", text: "통화녹취도 AI가 분석해요" },
+  { id: "jp17", lv: 2, dom: "vision", text: "데이터는 판단에 필요한 근거가 돼요" },
+  { id: "jp18", lv: 2, dom: "action", text: "강북이는 예상 시상금을 알려 줘요" },
+  { id: "jp19", lv: 2, dom: "play", text: "HiDI-Q는 올린 문서로 답해요" },
+  { id: "jp20", lv: 2, dom: "play", text: "HiDI-Q는 원본 양식대로 번역해요" },
+  { id: "jp21", lv: 2, dom: "play", text: "HiDI-Q는 보고서 초안도 써 줘요" },
+  { id: "jp22", lv: 2, dom: "play", text: "하이헬퍼는 1분 안에 설계를 추천해요" },
+  { id: "jp23", lv: 2, dom: "play", text: "하이헬퍼는 피보험자 동의 후에 추천해요" },
+  { id: "jp24", lv: 2, dom: "play", text: "하이헬퍼는 태아보험도 설계해요" },
+  { id: "jp25", lv: 2, dom: "lounge", text: "AX 라운지는 실행 방법까지 정해요" },
+  { id: "jp26", lv: 3, dom: "play", text: "신상품은 하이헬퍼 반영이 늦어요" },
+  { id: "jp27", lv: 3, dom: "action", text: "AI 컨설팅 도우미는 화법을 알려 줘요" },
+  { id: "jp28", lv: 3, dom: "action", text: "하이핑거는 통화녹취도 분석해요" },
   { id: "jp29", lv: 3, dom: "vision", text: "법률 Agent는 근거와 함께 답해요" },
-  { id: "jp30", lv: 3, dom: "vision", text: "지금의 DAP가 첫걸음이 돼요" }
+  { id: "jp30", lv: 3, dom: "vision", text: "의료심사 Agent는 심사를 도와요" }
 ];
 var JP_FACT_W = [50, 40, 10];   /* v4.30 난이도 가중 · 쉬움 50 · 보통 40 · 어려움 10 (사용자 확정 260924) */
 /* 한 판에 나올 문장 순서 · 한 줄마다 난이도를 가중 무작위로 고르고(쉬움 50 · 보통 40 · 어려움 10), 그 난이도에서 아직 안 나온 문장을 무작위로 ·
@@ -311,7 +315,23 @@ function jpTap() {
 }
 /* v3.75 속도 램프 · 55에서 시작해 부드럽게 오르고 200에서 멈춘다 (평균 40~70초 · 잘하면 2분대) */
 /* v5.60 후반 난이도 안2(사용자 261004) · 상한 200 → 230(약 87초에 닿는다) · 그 뒤로 평탄 구간이 짧아진다 */
-function jpSpeed(t) { return Math.min(230, 55 + t * 1.55 * JP_RAMP); }
+/* v6.11 (사용자 261007 「난이도를 올려 줘」) 처음 30초는 그대로(처음 하는 사람) · 30초부터 기울기 JP_HARD.k 배 · JP_HARD.top 에 닿은 뒤에도 초당 JP_HARD.creep 씩 계속 올라 JP_HARD.max 에서 멈춘다
+   (예전 = 87초에 230 에서 평탄 · 시간 제한 없음이라 끝없이 버티는 판을 막으려고 끝까지 오른다) */
+var JP_HARD = { at: 30, k: 2.2, top: 320, creep: 0.5, max: 380, pNew: 0.6, gapAt: 30, gapTo: 55, gapMin: 0.5, gk: 6 };
+function jpSpeed(t) {
+  var H = JP_HARD, a = 55 + Math.min(t, H.at) * 1.55 * JP_RAMP;
+  if (t <= H.at) return a;
+  var b = a + (t - H.at) * 1.55 * JP_RAMP * H.k;
+  if (b <= H.top) return b;
+  var tTop = H.at + (H.top - a) / (1.55 * JP_RAMP * H.k);
+  return Math.min(H.max, H.top + (t - tTop) * H.creep);
+}
+/* v6.11 간격 거리 하한(픽셀) · 30초까지 175 → 130 그대로 · 30초부터 줄어드는 기울기 JP_HARD.gk 배 · 78 아래로는 안 간다 */
+function jpGapPx(t) { var H = JP_HARD, r = 1.15 * JP_RAMP; return Math.max(78, t <= H.at ? 175 - t * r : 175 - H.at * r - (t - H.at) * r * H.gk); }
+/* v6.11 일반 장애물 최소 간격(초) · 30초까지 JP_GAP_SEC 0.65 그대로 → 55초에 0.5 · 사람은 이 간격에서 주로 부딪힌다(봇 실측) · 물리 한계(약 0.25초)보다 넉넉히 크다 */
+function jpGapSec(t) { var H = JP_HARD; return t <= H.gapAt ? JP_GAP_SEC : Math.max(H.gapMin, JP_GAP_SEC - (t - H.gapAt) * (JP_GAP_SEC - H.gapMin) / (H.gapTo - H.gapAt)); }
+/* v6.11 새 유형(간판 · 구멍 · 오르내리는 상자) 비율 · 45초에 45% · 60초부터 초당 0.6%p 더 올라 85초에 60% */
+function jpNewP(t) { var p = Math.min(JP_NEW_P, 0.3 + (t - JP_NEW[0].at) * 0.006); return t < 60 ? p : Math.min(JP_HARD.pNew, p + (t - 60) * 0.006); }
 /* v5.60 새 유형 앞뒤 착지 보장 · 60초까지 1.3초 → 100초에 1.0초로 점차 줄어든다 */
 function jpLandSec(t) { return t < 60 ? 1.3 : Math.max(1.0, 1.3 - (t - 60) * 0.0075); }
 /* v3.75 몸 크기 = 아이템 상태 그대로 (그린 크기와 판정이 같아야 한다) */
@@ -368,7 +388,6 @@ function jpUpdate(dt, now) {
   var t = jpEl(now);
   JP.surv = t;
   if (JP.say) { JP.say.t -= dt; if (JP.say.t <= 0) JP.say = null; }   /* v4.28 AI 상식 말풍선 · 게임 시간으로 센다(멈추면 같이 멈춘다) */
-  if (t >= JP_MAX_SEC) { jpEnd("time"); return; }   /* 안전 상한 5분 */
   jpPressTick();
   gsFx(JP, dt);
   if (JP.inv > 0) JP.inv = Math.max(0, JP.inv - dt);
@@ -394,13 +413,13 @@ function jpUpdate(dt, now) {
     JP.nextK = null;
     JP.obs.push({ k: k, x: JP_W + 4, w: JP_OBS[k].w, passed: false, hit: false, ph: Math.random() * Math.PI * 2 });
     /* v3.75 간격이 계속 좁아진다(부드럽게) · 하한 78 */
-    var gMin = Math.max(78, 175 - t * 1.15 * JP_RAMP, jpSpeed(t) * JP_GAP_SEC), gMax = gMin + Math.max(34, 70 - t * 0.4 * JP_RAMP);
+    var gMin = Math.max(jpGapPx(t), jpSpeed(t) * jpGapSec(t)), gMax = gMin + Math.max(34, 70 - t * 0.4 * JP_RAMP);
     JP.nextObs = gMin + Math.random() * (gMax - gMin);
     /* v3.94 다음 장애물을 지금 정한다 · 새 유형이 앞뒤에 오면 착지할 거리(속도 × 1.3초)를 보장 · 처음 나오는 유형은 거리를 더 두고 예고 배너 */
     var sp0 = jpSpeed(t), open = JP_NEW.filter(function (n) { return t >= n.at; });
     var first = open.filter(function (n) { return !JP.seen[n.k]; })[0];
     var isNew = !!JP_NEW.filter(function (n) { return n.k === k; })[0];
-    var pNew = open.length ? Math.min(JP_NEW_P, 0.3 + (t - JP_NEW[0].at) * 0.006) : 0;
+    var pNew = open.length ? jpNewP(t) : 0;
     var nx = first || (!isNew && Math.random() < pNew ? jpBagNext(open) : null);
     if (nx) {
       JP.nextK = nx.k;
@@ -464,7 +483,7 @@ function jpUpdate(dt, now) {
 function jpEnd(why) {
   if (!JP.on || JP.ending) return;
   JP.ending = { t: 1.2, why: why }; JP.banner = null;
-  sfx(why === "time" || why === "full" ? "fanfare" : "over");
+  sfx(why === "full" ? "fanfare" : "over");   /* v6.11 시간 끝(time) 없음 */
 }
 /* v4.02 제출 구성 요소 · obs 넘은 장애물 · coin 코인 단위(높은 코인 2) · fact AI 상식 · hits 부딪힘 · surv 버틴 1/100초(참고) · pz 직접 멈춘 횟수 */
 function jpParts() { return { obs: JP.dodged, coin: JP.coinN, fact: JP.facts.length, hits: JP.hits, surv: Math.round((JP.surv || 0) * 100), pz: JP.pz || 0 }; }
@@ -482,8 +501,8 @@ function jpEndFinal(why) {
   var fh = '<section class="ax-card ax-stack-tight jp-facts"><h2 class="ax-card-title">AX 상식 ' + facts.length + "개 획득</h2>" +   /* v4.28 「1개 = 점수 +100」은 결과 접힘(점수 구성 · 점수 규칙)으로 */
     (facts.length ? '<ul class="gs-list">' + facts.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>"
       : '<p class="ax-description">공중의 글자 블록을 2단 점프로 들이받으면 모을 수 있어요</p>') + "</section>";
-  root.innerHTML = gsResultHtml("jump", { why: why === "full" ? "done" : "over", label: why === "full" ? "만점" : "결과", title: why === "full" ? "만점" : why === "time" ? "TIME UP" : "GAME OVER", reason: "",
-    oly: { key: "jump", parts: parts, score: sc, ref: [["버틴 시간", (parts.surv / 100).toFixed(1) + "초"], ["부딪힘", JP.hits + "번"]] }, banner: fh });
+  root.innerHTML = gsResultHtml("jump", { why: why === "full" ? "done" : "over", label: why === "full" ? "만점" : "결과", title: why === "full" ? "만점" : "GAME OVER", reason: "",
+    oly: { key: "jump", parts: parts, score: sc, ref: [["버틴 시간", ttSecTxt(parts.surv / 100)], ["부딪힘", JP.hits + "번"]] }, banner: fh });   /* v6.11 시간 제한 없음 · 1분부터 「1분 05.2초」(테트리스와 같은 ttSecTxt) */
   window.scrollTo(0, 0);
 }
 /* v4.00 새 유형 섞기 · 열린 유형을 가방에 한 번씩 넣고 하나씩 꺼낸다 · 비면 다시 채운다 · 바로 전과 같은 유형은 뒤로 미룬다
