@@ -2,12 +2,12 @@
    왜 바꿨나: 휴대폰 한글 입력(IME)에 기대는 게임이라 실기에서 오류가 잦았다 → 글자 입력이 아예 없는 게임으로 바꾼다.
    1F 현장 타자왕전(노트북 · 물리 키보드 · 경품)은 그대로다 · 소나기 엔진과 화면은 type_site 전용으로 살아 있다.
    규칙: 10×20 · 블록 7종 · 회전(막히면 좌우·위로 한 칸씩 밀어 본다) · 한 칸 내리기 · 즉시 떨어뜨리기 ·
-        한 번에 지운 줄 1/2/3/4 = 100/300/500/800 × 레벨 · TT_LV_LINES 줄마다 레벨 +1 → 낙하가 빨라진다 · 안전 상한 5분.
+        한 번에 지운 줄 1/2/3/4 = 100/300/500/800 × 레벨 · TT_LV_LINES 줄마다 레벨 +1 → 낙하가 빨라진다 · 시간 제한 없음(v6.05 · 블록이 맨 위까지 쌓이면 끝).
    기록 = 버틴 시간(1/100초 · 길수록 좋다 · v3.87 사용자 확정) · 지운 줄·점수·레벨은 결과 카드의 보조 지표 · 올림픽 목표 60초.
    조작: 화면 아래 가상 버튼이 기본이다(늘 보인다 · 최소 54px + 히트 영역 5~8px · 좌·우·한 칸은 누르고 있으면 0.17초 뒤 0.05초마다 반복 · 마지막 누름 우선).
         쓸어넘기기(좌우 이동 · 아래 내리기 · 위로 즉시 떨어뜨리기 · 탭 회전)는 보조로 같이 동작한다.
    보기: v3.48 플랫 · 흰 바탕 · 블록 7종은 채움이 모두 다르다 · 유령 블록 · 다음 블록 · 줄 지울 때 번쩍임. 이모지 없음. */
-var TT_COLS = 10, TT_ROWS = 20, TT_MAX_SEC = 300;
+var TT_COLS = 10, TT_ROWS = 20, TT_SURV_CAP = 1000000;   /* v6.05 (사용자 261007 「테트리스가 5분을 넘을 수도 있는 거잖아? 이 리미트는 없애야겠네」) 5분 끝내기(옛 300초 상수) 없앰 · 게임 오버까지 · TT_SURV_CAP = 제출 surv 상한(1/100초 · 서버 OLY_TT_SURV_MAX · 약 2시간 46분) */
 var TT_DAS = 0.17, TT_ARR = 0.05, TT_SOFT_REP = 0.05;      /* v4.01 누르고 있을 때 · 첫 반복까지 0.17초, 그다음 0.05초 (구 0.22 / 0.07) */
 var TT_LOCK = 0.5, TT_LOCK_MAX = 12;                        /* 바닥에 닿고 고정될 때까지 · 움직이면 미뤄지되 12번까지 */
 /* v4.02 (점수 체계 v2) 줄 점수 × 레벨 · 한 칸 내리기 +1 · 바닥까지 +2 는 폐지 · 점수 = olyScore("tetris", ttParts()) · 레벨은 낙하 속도에만 쓴다 */
@@ -155,7 +155,7 @@ function ttLock() {
    줄 수는 지운 횟수에서 바로 센다(줄이 사라지는 연출 중에 판이 끝나도 앞뒤가 맞게) */
 function ttParts() {
   var c = TT.clears, lines = c[0] + 2 * c[1] + 3 * c[2] + 4 * c[3];
-  return { blk: TT.locked || 0, c1: c[0], c2: c[1], c3: c[2], c4: c[3], lines: lines, lv: Math.min(15, 1 + Math.floor(lines / TT_LV_LINES)), surv: Math.min(TT_MAX_SEC * 100, Math.round((TT.surv || 0) * 100)), pz: TT.pz || 0 };   /* v6.03 5분 완주 판 = 30000 · 넘긴 첫 프레임 값(30001~)을 서버가 range 로 거절하던 버그(사용자 제보 261007) */
+  return { blk: TT.locked || 0, c1: c[0], c2: c[1], c3: c[2], c4: c[3], lines: lines, lv: Math.min(15, 1 + Math.floor(lines / TT_LV_LINES)), surv: Math.min(TT_SURV_CAP, Math.round((TT.surv || 0) * 100)), pz: TT.pz || 0 };   /* v6.05 실제 버틴 시간 그대로(5분 상한 없음) · 서버 물리 상한까지만 */
 }
 /* v4.21 2줄 이상 한 번에 지웠을 때 한 줄 · 같은 문장이 연달아 나오지 않게 비복원으로 뽑는다 */
 function ttLineMsg(n) {
@@ -376,10 +376,9 @@ function ttUpdate(dt, now) {
     return;
   }
   var el0 = (now - TT.t0) / 1000;
-  TT.surv = Math.min(el0, TT_MAX_SEC);   /* v6.03 결과 「버틴 시간」 · 제출 surv 가 5분을 넘지 않게 */
+  TT.surv = el0;   /* v6.05 결과 「버틴 시간」 = 실제 시간(일시정지 뺀 값 · 5분에 멈추지 않는다) */
   gsFx(TT, dt);
   if (TT.drop) { TT.drop.t -= dt; if (TT.drop.t <= 0) TT.drop = null; }
-  if (el0 >= TT_MAX_SEC) { ttEnd("time"); return; }
   if (TT.flash) { TT.flash.t -= dt; if (TT.flash.t <= 0) ttCollapse(); return; }
   if (TT.rep) {
     TT.rep.t -= dt;
@@ -417,6 +416,11 @@ function ttEnd(why) {
   TT.banner = null;
   sfx(why === "full" ? "fanfare" : "over");   /* v4.02 만점 종료는 축하음 */
 }
+/* v6.05 결과 「버틴 시간」 · 1분 전 = 「42.3초」 · 1분부터 = 「7분 05.2초」(5분에 멈추지 않는 실제 시간) */
+function ttSecTxt(sec) {
+  var t = Math.max(0, Math.floor((Number(sec) || 0) * 10)) / 10, m = Math.floor(t / 60), r = (t - m * 60).toFixed(1);
+  return m ? m + "분 " + (r.length < 4 ? "0" : "") + r + "초" : r + "초";
+}
 function ttEndFinal(why) {
   if (!TT.on) return;
   TT.ending = null;
@@ -426,8 +430,8 @@ function ttEndFinal(why) {
   var root = el("ttRoot"); if (!root) return;
   var sc = olySubmit("tetris", parts);
   if (sc > prev) setTimeout(function () { sfx("best"); }, 250);
-  root.innerHTML = gsResultHtml("tetris", { why: why === "full" ? "done" : "over", label: why === "full" ? "만점" : "결과", title: why === "full" ? "만점" : why === "time" ? "5분 완주" : "GAME OVER", reason: "",
-    oly: { key: "tetris", parts: parts, score: sc, ref: [["버틴 시간", surv.toFixed(1) + "초"], ["레벨", parts.lv]] } });
+  root.innerHTML = gsResultHtml("tetris", { why: why === "full" ? "done" : "over", label: why === "full" ? "만점" : "결과", title: why === "full" ? "만점" : "GAME OVER", reason: "",
+    oly: { key: "tetris", parts: parts, score: sc, ref: [["버틴 시간", ttSecTxt(surv)], ["레벨", parts.lv]] } });
   window.scrollTo(0, 0);
 }
 /* ── 그리기 · 전부 CSS px 좌표 (캔버스는 기기 해상도) ── */
@@ -564,7 +568,7 @@ function ttMsgDraw(ctx, L) {
 }
 /* v4.23 공용 끝 화면(rtEnd) · 문구는 그대로 */
 function ttEndDraw(ctx, L) {
-  rtEnd(ctx, L.W, L.oy, L.oy + L.bh, TT.ending.why === "full" ? "만점 " + olyFmt(olyCap()) : TT.ending.why === "time" ? "5분 완주" : "GAME OVER",
+  rtEnd(ctx, L.W, L.oy, L.oy + L.bh, TT.ending.why === "full" ? "만점 " + olyFmt(olyCap()) : "GAME OVER",
     olyFmt(TT.score) + "점 · " + ttParts().lines + "줄", { s: 3, tp: 32, sp: 16, maxW: 320 });
 }
 /* 시작 화면 미리보기 · 정지 화면 */
