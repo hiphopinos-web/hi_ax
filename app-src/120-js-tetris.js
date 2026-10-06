@@ -155,7 +155,7 @@ function ttLock() {
    줄 수는 지운 횟수에서 바로 센다(줄이 사라지는 연출 중에 판이 끝나도 앞뒤가 맞게) */
 function ttParts() {
   var c = TT.clears, lines = c[0] + 2 * c[1] + 3 * c[2] + 4 * c[3];
-  return { blk: TT.locked || 0, c1: c[0], c2: c[1], c3: c[2], c4: c[3], lines: lines, lv: Math.min(15, 1 + Math.floor(lines / TT_LV_LINES)), surv: Math.round((TT.surv || 0) * 100), pz: TT.pz || 0 };
+  return { blk: TT.locked || 0, c1: c[0], c2: c[1], c3: c[2], c4: c[3], lines: lines, lv: Math.min(15, 1 + Math.floor(lines / TT_LV_LINES)), surv: Math.min(TT_MAX_SEC * 100, Math.round((TT.surv || 0) * 100)), pz: TT.pz || 0 };   /* v6.03 5분 완주 판 = 30000 · 넘긴 첫 프레임 값(30001~)을 서버가 range 로 거절하던 버그(사용자 제보 261007) */
 }
 /* v4.21 2줄 이상 한 번에 지웠을 때 한 줄 · 같은 문장이 연달아 나오지 않게 비복원으로 뽑는다 */
 function ttLineMsg(n) {
@@ -376,7 +376,7 @@ function ttUpdate(dt, now) {
     return;
   }
   var el0 = (now - TT.t0) / 1000;
-  TT.surv = el0;
+  TT.surv = Math.min(el0, TT_MAX_SEC);   /* v6.03 결과 「버틴 시간」 · 제출 surv 가 5분을 넘지 않게 */
   gsFx(TT, dt);
   if (TT.drop) { TT.drop.t -= dt; if (TT.drop.t <= 0) TT.drop = null; }
   if (el0 >= TT_MAX_SEC) { ttEnd("time"); return; }
