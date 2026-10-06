@@ -1653,6 +1653,70 @@
     BU = { x: BX, z: BZ, g: g, cut: R.cut, plaque: R.plaque, top: YTOP };
     G.bust = BU;
   }
+  /* ═══════════ v5.98 흉상 몸체 = 실물 영상 4K 프레임 4장(정면 · 양쪽 비스듬히 · 오른쪽 옆)으로 만든 3D 모델(bust-hq.glb) (사용자 261006 밤 「동상은 실물처럼 작업을 빡세게 해줘」 · 「힉스필드 3D 생성」 승인) ═══════════
+   * 받침 · 명판 · 나뭇잎 띠 · 벽 새김 무늬 · 동쪽 화분 = v5.73 그대로(사용자 「받침대 같은 것들은 그대로 둬」) · 바뀌는 것 = 받침 윗면 위 몸체만
+   * 모델 = Hunyuan3D v3(20만 삼각형 · 같은 4장으로 만든 Meshy 판보다 옆 실루엣 · 몸 두께가 실물에 가까움) → 3만 삼각형(입가만 살짝 고름 · 실물은 다문 입) · 주름 · 옷깃은 고해상도에서 구운 법선 맵 · 오목한 곳 그늘(AO) · 영상 조명에 물든 주황 얼룩은 걷어 냄
+   * 크기 = 폭 0.62m(받침 윗면 폭 0.94 의 0.66 · 실물 영상 정면 · 비스듬히 프레임의 글자 간격과 받침 모서리로 잰 비율 = 모형 원래 몸체 폭 0.63 과 같음) · 높이 0.62 · 깊이 0.44 · 파일 안에 미터로 구워 둠 · 원점 = 바닥 가운데 · 정면 = 남쪽(로비 쪽)
+   * 늦게 받기 = 모형을 그리고 첫 50장 측정(G.probed)이 끝난 뒤(늦어도 8초) · 받기 전 · 못 받으면 = 모형 원래 몸체 그대로 · 받으면 원래 몸체 삼각형을 지우고 바꾼다
+   * 저사양(측정 중간값 34ms 넘음) = 가벼운 판 bust-hq-lo.glb(5천 삼각형 · 텍스처 1024) */
+  var BUSTHQ = { ver: 'v598', file: 'bust-hq.glb', lite: 'bust-hq-lo.glb', env: null, envI: 2.4, hemi: { value: 0.6 }, dir: { value: 1.5 } };
+  /* 이 몸체만 쓰는 둘레 빛 · 위 = 천장 조명(실물 영상처럼 위에서 내리비춤) · 가운데 = 주황 대리석 벽 · 아래 = 어두운 받침 쪽 · 다른 물체는 그대로(재질 하나에만 envMap) */
+  function bustEnv() {
+    if (BUSTHQ.env) return BUSTHQ.env;
+    var c = bCv(256, 128), g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 128);
+    gr.addColorStop(0, '#FFF2DE'); gr.addColorStop(0.12, '#E6CFB0'); gr.addColorStop(0.3, '#7E5440'); gr.addColorStop(0.5, '#4A3226'); gr.addColorStop(0.7, '#584638'); gr.addColorStop(1, '#2C2622');
+    g.fillStyle = gr; g.fillRect(0, 0, 256, 128);
+    [[64, 10], [192, 14]].forEach(function (q) { var r = g.createRadialGradient(q[0], q[1], 1, q[0], q[1], 22); r.addColorStop(0, 'rgba(255,250,240,1)'); r.addColorStop(1, 'rgba(255,250,240,0)'); g.fillStyle = r; g.fillRect(0, 0, 256, 128); });
+    var tx = new T.CanvasTexture(c); tx.mapping = T.EquirectangularReflectionMapping; tx.colorSpace = T.SRGBColorSpace;
+    var pm = new T.PMREMGenerator(renderer); BUSTHQ.env = pm.fromEquirectangular(tx).texture; pm.dispose(); tx.dispose();
+    return BUSTHQ.env;
+  }
+  function bustHQLater() {
+    if (!BU || BU.hq) return;
+    BU.hq = 'wait'; var t0 = performance.now();
+    (function poll() { if (!BU || BU.hq !== 'wait') return; if (G.probed || performance.now() - t0 > 8000) bustHQLoad(); else setTimeout(poll, 250); })();
+  }
+  /* 가벼운 판 고르기 = 첫 50장 측정 중간값 34ms 넘음 · 8초 안에 측정이 안 끝나면 그동안 그린 장(10장 이상)으로 · 그것도 없으면 가벼운 판 */
+  function bustHQLite() {
+    if (G.probeResult) return G.probeResult.p50 > 34;
+    var p = G.probe || []; if (p.length < 11) return true;
+    var d = []; for (var i = 1; i < p.length; i++) d.push(p[i] - p[i - 1]); d.sort(function (a, b) { return a - b; });
+    return d[Math.floor(d.length / 2)] > 34;
+  }
+  function bustHQLoad() {
+    if (!T.GLTFLoader) { BU.hq = 'fail'; return; }
+    var lite = bustHQLite(), t0 = performance.now(), ld = new T.GLTFLoader();
+    BU.hq = 'load'; BU.hqLite = lite;
+    if (window.MeshoptDecoder) ld.setMeshoptDecoder(window.MeshoptDecoder);
+    ld.load(BASE + (lite ? BUSTHQ.lite : BUSTHQ.file) + '?v=' + BUSTHQ.ver, function (gl) {
+      try { bustHQPut(gl.scene, t0); } catch (e) { BU.hq = 'fail'; BU.hqErr = String((e && e.message) || e); }
+    }, null, function (e) { BU.hq = 'fail'; BU.hqErr = String((e && e.message) || e); });
+  }
+  function bustHQPut(root, t0) {
+    var mesh = null; root.traverse(function (o) { if (o.isMesh && !mesh) mesh = o; });
+    if (!mesh) throw new Error('흉상 모델 없음');
+    var m = mesh.material; m.envMap = bustEnv(); m.envMapIntensity = BUSTHQ.envI; m.aoMapIntensity = 1;
+    /* 방 전체 빛(반구) 중 이 몸체가 받는 몫만 줄인다(평평한 회색 → 위에서 비춘 청동 · 다른 물체 빛은 그대로) */
+    m.onBeforeCompile = function (sh) {
+      sh.uniforms.uHemiK = BUSTHQ.hemi; sh.uniforms.uDirK = BUSTHQ.dir;
+      var lf = T.ShaderChunk.lights_fragment_begin.replace('irradiance += getHemisphereLightIrradiance(', 'irradiance += uHemiK * getHemisphereLightIrradiance(').replace('getDirectionalLightInfo( directionalLight, directLight );', 'getDirectionalLightInfo( directionalLight, directLight ); directLight.color *= uDirK;');
+      sh.fragmentShader = 'uniform float uHemiK;\nuniform float uDirK;\n' + sh.fragmentShader.replace('#include <lights_fragment_begin>', lf);
+    };
+    m.customProgramCacheKey = function () { return 'bustHQ'; }; m.needsUpdate = true;
+    mesh.name = 'bustHQ'; root.name = 'bustHQRoot'; root.position.set(0, BU.top, 0); BU.g.add(root);   /* 묶음째 넣는다(압축 위치 복원 변환이 노드에 있다) */
+    /* 바닥 닿는 곳 옅은 그늘(받침 윗면 · 몸체 바닥보다 조금 넓게) */
+    var c = bCv(128, 128), g = c.getContext('2d'), r = g.createRadialGradient(64, 64, 8, 64, 64, 64);
+    r.addColorStop(0, 'rgba(40,30,22,0.55)'); r.addColorStop(0.62, 'rgba(40,30,22,0.38)'); r.addColorStop(1, 'rgba(40,30,22,0)'); g.fillStyle = r; g.fillRect(0, 0, 128, 128);
+    var sh = new T.Mesh(new T.PlaneGeometry(0.78, 0.56), new T.MeshBasicMaterial({ map: bTex(c, false), transparent: true, depthWrite: false }));
+    sh.rotation.x = -Math.PI / 2; sh.position.set(0, BU.top + 0.002, 0); sh.name = 'bustHQShade'; BU.g.add(sh);
+    /* 모형 원래 몸체(받침 윗면 위 · 화분 서쪽) 삼각형을 지운다 */
+    var old = S.lobby.getObjectByName('bust'), cut = 0;
+    if (old) old.traverse(function (o) { if (o.isMesh) cut += regionCut(o, null, null, function (tri) { return (tri[0].p[0] + tri[1].p[0] + tri[2].p[0]) / 3 < BU.x + 0.62 && Math.min(tri[0].p[2], tri[1].p[2], tri[2].p[2]) > BU.top - 0.02; }); });
+    var ix = mesh.geometry.index;
+    BU.hq = 'on'; BU.hqK = BUSTHQ; BU.hqCut = cut; BU.hqTris = ix ? ix.count / 3 : 0; BU.hqMs = Math.round(performance.now() - t0);
+    try { renderer.compile(scene, camera); } catch (e) {}
+    G.need = true;
+  }
   function loadProg(k) {
     if (k == null || !(k >= 0) || k > 1.0001) G.loadUnk = true;
     var p = G.loadUnk ? -1 : Math.max(G.loadK || 0, Math.min(1, k)); if (!G.loadUnk) G.loadK = p;
@@ -1676,6 +1740,7 @@
       try { renderer.compile(scene, camera); } catch (e) {}
       G.need = true; G.loadMs = Math.round(performance.now() - G.t0);
       entrance();
+      bustHQLater();   /* v5.98 실물 흉상 몸체는 모형을 그린 뒤 따로 받는다(첫 불러오기 시간 그대로) */
     }, function () { noGl('모형을 받지 못했어요 · 새로 고침해 주세요'); });
   }
 
@@ -4883,5 +4948,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.97', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v5.98', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();
