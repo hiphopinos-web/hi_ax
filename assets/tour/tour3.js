@@ -956,7 +956,7 @@
     if (!(_ib.z < 1 && Math.abs(_ib.x) < 0.95 && Math.abs(_ib.y) < 0.95)) { if (!b.hidden) b.hidden = true; PH.near = false; PH.popped = false; return; }   /* 기계가 화면에 보일 때만(등지고 있으면 없음) */
     if (b.hidden) {
       b.hidden = false; b.classList.add('pri'); b.classList.remove('walk', 'on3d'); var st0 = b.style; st0.left = st0.top = st0.right = st0.bottom = st0.transform = '';
-      var sr = $('stage').getBoundingClientRect(), jl = Math.min($('bJump').getBoundingClientRect().left, $('bRun').getBoundingClientRect().left) - sr.left;   /* 가운데 · 단 점프(위로 뜬 때) · 달리기 단추와 12px 띄움(빛 테 포함) */
+      var sr = $('stage').getBoundingClientRect(), jl = $('bJump').getBoundingClientRect().left - sr.left;   /* 가운데 · 단 점프 단추와 띄움(빛 테 포함) · 261007 달리기 단추 없음 */
       st0.left = Math.round(Math.max(b.offsetWidth / 2 + 12, Math.min(sr.width / 2, jl - 20 - b.offsetWidth / 2))) + 'px';
     }
     if (!PH.popped && !RM) { PH.popped = true; b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }   /* v5.84 처음 뜰 때 통통 두 번 */
@@ -1770,38 +1770,8 @@
     if (G.scn === 'lobby' && !stk && G.mode !== 'auto' && !G.squeeze && !G.anim && !PH.on) { if (G.face == null) G.face = G.h; G.face += d; }
     G.rotN = (G.rotN || 0) + 1;
   }
-  /* v5.81 돌기 단추 누름 한 길(iOS · 안드로이드 · PC 같은 길) · 손가락 하나 = 누름 하나
-   *   터치 기기는 포인터(pointerdown)와 터치(touchstart)가 둘 다 온다 · 먼저 온 쪽으로 시작하고 0.3초 안 같은 단추의 둘째 신호는 같은 누름에 붙인다
-   *   끝 = 그 손가락을 뗄 때만 · 터치가 붙었으면 touchend · touchcancel(iOS 의 포인터 취소 · 캡처 잃음으로 일찍 끝나지 않게) · 터치가 없는 기기(마우스 · 펜)는 같은 pointerId 의 pointerup · pointercancel
-   *   조이스틱 손가락을 떼도 돌기는 이어진다 · 옛 lostpointercapture 끝 · 터치 setPointerCapture 없앰(터치는 브라우저가 이미 붙잡는다)
-   *   touchstart 를 막는다(passive false) = iOS 가 길게 누름 · 두 번 누름 · 가장자리 밀기 같은 제 동작으로 누름을 가로채지 않게 · 클릭은 쓰지 않는다
-   *   안전망 = 창의 touchend(그 손가락이 화면에 없으면) · pointerup(같은 id) · 창 포커스 잃음 · 화면 숨김 */
-  var RB = null;
-  function rbHas(L, id) { if (!L) return false; for (var i = 0; i < L.length; i++) if (L[i].identifier === id) return true; return false; }
-  function rbStart(el, dir, pid, tid) {
-    var now = performance.now();
-    if (RB && RB.el === el && now - RB.t0 < 300 && ((pid != null && RB.pid == null) || (tid != null && RB.tid == null))) { if (pid != null) RB.pid = pid; if (tid != null) RB.tid = tid; return; }   /* 같은 손가락의 둘째 신호 */
-    if (RB) RB.el.classList.remove('kp');
-    RB = { el: el, dir: dir, pid: pid, tid: tid, t0: now }; el.classList.add('kp');
-    holdStart('rot', dir);
-    if (G.rbLog && G.rbLog.length < 60) G.rbLog.push({ s: dir, p: pid, t: tid, ms: Math.round(now) });
-  }
-  function rbEnd() { if (!RB) return; var r = RB; RB = null; r.el.classList.remove('kp'); if (G.rbLog && G.rbLog.length < 60) G.rbLog.push({ e: r.dir, ms: Math.round(performance.now() - r.t0) }); holdEnd(); }
-  function rotWire() {
-    [['rotL', 1], ['rotR', -1]].forEach(function (q) {
-      var el = $(q[0]), dir = q[1];
-      el.addEventListener('pointerdown', function (e) { e.preventDefault(); if (e.pointerType !== 'touch') { try { el.setPointerCapture(e.pointerId); } catch (x) {} } rbStart(el, dir, e.pointerId, null); });
-      el.addEventListener('touchstart', function (e) { if (e.cancelable) e.preventDefault(); var t = e.changedTouches && e.changedTouches[0]; if (t) rbStart(el, dir, null, t.identifier); }, { passive: false });
-      ['touchend', 'touchcancel'].forEach(function (ev) { el.addEventListener(ev, function (e) { if (RB && RB.el === el && RB.tid != null && rbHas(e.changedTouches, RB.tid)) rbEnd(); }); });
-      ['pointerup', 'pointercancel'].forEach(function (ev) { el.addEventListener(ev, function (e) { if (RB && RB.el === el && RB.tid == null && e.pointerId === RB.pid) rbEnd(); }); });
-      el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-      el.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); holdStart('rot', dir); setTimeout(holdEnd, 0); } });
-    });
-    ['touchend', 'touchcancel'].forEach(function (ev) { window.addEventListener(ev, function (e) { if (RB && RB.tid != null && !rbHas(e.touches, RB.tid)) rbEnd(); }, true); });
-    ['pointerup', 'pointercancel'].forEach(function (ev) { window.addEventListener(ev, function (e) { if (RB && RB.tid == null && e.pointerId === RB.pid) rbEnd(); }, true); });
-    window.addEventListener('blur', rbEnd);
-    document.addEventListener('visibilitychange', function () { if (document.hidden) rbEnd(); });
-  }
+  /* 261007 (사용자 「권장대로 진행해 줘」 · 둘러보기 조작 재검토 A) 좌로 · 우로 돌기 단추 삭제 = 그 단추의 손가락 한 길(v5.81 RB · rbStart · rbEnd · rotWire · iOS 터치 가로채기 대응)도 삭제
+   *   돌기 = 화면 밀기(SWIPE · 기본 켬) · PC 키보드 ← →(누르는 동안 holdStart · 떼면 holdEnd) · 도착 자동 정렬 */
   function stepHold(dt) {
     if (!HOLD) return false;
     var t = (performance.now() - HOLD.t0) / 1000, ramp = RM ? 1 : clamp(t / 0.2, 0.25, 1);
@@ -1865,8 +1835,8 @@
       if (d <= step) { G.pos.copy(toThree(q[0], q[1])); G.pathI++; if (G.pathI >= G.path.length) arrive(); }
       else { var nx = p[0] + dx / d * step, nz = p[1] + dz / d * step; G.pos.copy(toThree(nx, nz)); }
       moving = Math.min(1, G.speed / 3); G.fwdT = 0; G.run = 0; G.realV = 0; G.push = 0;
-    } else if ((G.stick && (Math.abs(G.stick.x) + Math.abs(G.stick.y)) > 0.05) || runStick()) {
-      var STK = G.stick && (Math.abs(G.stick.x) + Math.abs(G.stick.y)) > 0.05 ? G.stick : runStick();   /* v5.51 달리기 한 번 누름 = 조그 없이도 앞으로 */
+    } else if (G.stick && (Math.abs(G.stick.x) + Math.abs(G.stick.y)) > 0.05) {
+      var STK = G.stick;   /* 261007 달리기 한 번 누름(runStick) 삭제 = 조그 · WASD 만 */
       /* 고정 패드 · 화면 기준 · 위 = 화면 위쪽으로 */
       /* 방향 기준은 끌기 시작할 때의 카메라로 고정한다(끄는 동안 카메라가 돌아도 같은 쪽으로 걷는다) */
       var fw = _v.set(Math.sin(G.az), 0, Math.cos(G.az));   /* 패드 위 = 화면 위쪽(시점을 돌려도 늘 화면 기준) */
@@ -1964,26 +1934,11 @@
    * v5.50 (사용자 261004 권장안 확정) 달리는 동안 효과 없음 · 빨라지는 것뿐(옛 v5.49 발밑 먼지 · 몸 앞으로 기울임 · 시야각 +7도는 뺐다)
    * 옛 v5.40 「앞으로 3초 밀면 저절로 달리기」는 v5.47 에서 끔(사용자 「이상하다」) · 그 코드는 이것으로 바꿨다 */
   var WALK_V = 3.2, RUN_RAMP = 0.3;
-  /* v5.51 (사용자 261004 「달리기 버튼은 점프 버튼처럼 누르면 달려 나가는 버튼」) 한 번 누름 = DASH_S(0.8)초 동안 달리기 속도(걷기 x 2 = 6.4m/s)로 앞(조그가 있으면 그 방향 · 없으면 화면 위쪽 = 캐릭터가 보는 쪽)
-   *   붙을 때 0.08초 · 끝 0.3초에 걸쳐 부드럽게 걷기로 · 한 번에 약 4.6m · 달리는 중 다시 누름 = 시간만 이어 붙인다(남은 시간 최대 DASH_MAX · 속도는 그대로) · 충돌은 걷기와 같은 판정(막히면 멈추거나 미끄러짐)
-   *   켜 두는 상태 없음 · 판 보기 · 스탬프 카드 · 설정 · 엘리베이터 · 18F · 닫기 = 바로 그침 · 키보드 Shift(누르는 동안 · 조그와 함께)는 그대로 */
-  var DASH_S = 0.8, DASH_MAX = 1.8;   /* 한 번 = 약 4.6m(60fps 실측 계산 · 191절) */
-  function setRun(on) { if (on) { dash(); return; } G.dashEnd = 0; G.runOn = false; var b = $('bRun'); if (b) { b.classList.remove('on'); b.setAttribute('aria-pressed', 'false'); } }
-  function dash() {
-    if (!G.loaded || G.scn !== 'lobby' || G.anim || PH.on || G.sheetOpen || G.squeeze || G.pinchOn) return;
-    var now = performance.now() / 1000; G.dashEnd = Math.min(now + DASH_MAX, Math.max(now, G.dashEnd || 0) + DASH_S); G.mode = G.mode === 'auto' ? 'free' : G.mode; G.path = null; G.moved = true; G.need = true;
-    G.dashLog = G.dashLog || []; if (G.dashLog.length < 50) G.dashLog.push({ t: +now.toFixed(3), x: +G.pos.x.toFixed(3), z: +G.pos.z.toFixed(3) });
-    var b = $('bRun'); if (b) b.classList.add('on');
-  }
-  function runStick() {
-    if (!(G.dashEnd > performance.now() / 1000) || G.mode === 'auto' || G.scn !== 'lobby' || G.sheetOpen || G.anim || G.squeeze) return null;
-    var st = G.stick, f = G.face != null ? G.face : G.az; return st && Math.hypot(st.x, st.y) > 0.12 ? null : { x: Math.sin(G.az - f), y: -Math.cos(f - G.az) };   /* v5.51 지금 바라보는 쪽으로(화면 조그 좌표로 바꿈) */
-  }
+  /* 261007 (사용자 「권장대로 진행해 줘」 · 둘러보기 조작 재검토 A) 달리기 단추 삭제(오작동 · 옛 v5.51 한 번 누름 대시가 걷던 자동 길을 끊고 4.6m 튀어 나갔다) · dash · runStick · DASH_S 삭제
+   *   남는 달리기 = PC Shift 를 누르는 동안(조그 · WASD 를 0.3 넘게 밀 때 · 0.3초에 2배) · setRun(false) = 바로 그침(판 보기 · 카드 · 설정 · 엘리베이터 · 닫기) */
+  function setRun() { G.run = 0; }
   function stepRun(dt) {
-    var now = performance.now() / 1000, left = (G.dashEnd || 0) - now, st = G.stick;
-    if (left > 0) { var tg = left > 0.3 ? 1 : left / 0.3; tg = tg * tg * (3 - 2 * tg); G.run = G.run < tg ? Math.min(tg, G.run + dt / 0.08) : tg; G.runOn = true; return; }
-    if (G.runOn) { G.runOn = false; var b = $('bRun'); if (b) b.classList.remove('on'); }
-    var want = G.runKey && st && Math.hypot(st.x, st.y) > 0.3;
+    var st = G.stick, want = G.runKey && st && Math.hypot(st.x, st.y) > 0.3;
     if (want) { if (!G.run) G.runAt = performance.now(); G.run = Math.min(1, G.run + dt / RUN_RAMP); }
     else G.run = Math.max(0, G.run - dt / 0.15);
   }
@@ -2713,11 +2668,11 @@
   /* ═══════════ 설정 창(v5.51 · 사용자 261004 · 옛 +/- 자리의 톱니) · 앱 바텀 시트 문법 · 시점 · 음악 · 움직임 줄이기 · 처음 안내의 같은 선택과 서로 맞춘다 · 떠 있는 동안 3D 는 계속 그린다 ═══════════
    * 위쪽 줄 소리 단추는 그대로 둔다(빨리 끄는 용도 · 설정 창의 음악과 같은 값) */
   /* v5.65 (사용자 261005 「설정의 내려다보기 시점은 없애고 시점을 바꾸지 않는 설정을 넣자」) 옛 시점 줄(내려다보기 · 눈높이 · setView) 삭제 · 「화면 밀어 시점 바꾸기」 켬(기본) · 끔 · 기기에 기억(axfTour3Swipe)
-   *   끄면 화면 밀기로 좌우 돌기 · 위아래 시선이 모두 꺼진다 · 돌기 단추 · 조그 · PC 키는 그대로 · 처음 안내 한 줄도 이 값에 맞춘다 */
+   *   끄면 화면 밀기로 좌우 돌기 · 위아래 시선이 모두 꺼진다 · 조그 · PC 키는 그대로(261007 돌기 단추 없음) · 도움말 「화면을 좌우로 밀면 돌아봐요」 · 끌기 안내도 이 값에 맞춘다 */
   function setSwipe(on, keep) {
     G.swipeOn = !!on; if (!keep) store.set('axfTour3Swipe', on ? '1' : '0');
     var c = $('cfSw'); if (c) c.checked = G.swipeOn;
-    var h = $('hSw'); if (h) h.textContent = G.swipeOn ? '떠 있는 동전을 점프로 치면 그 활동으로 가요. 화면을 밀면 둘러봐요.' : '떠 있는 동전을 점프로 치면 그 활동으로 가요. 돌기 단추로 둘러봐요.';
+    var h = $('hSw'); if (h) h.hidden = !G.swipeOn;   /* 261007 도움말 「화면을 좌우로 밀면 돌아봐요.」 = 켬일 때만 */
     if (!G.swipeOn) tiltHome(true);
   }
   function cfgSync() { var m = $('cfMu'), r = $('cfRm'); if (m) m.checked = MUS.want; if (r) r.checked = RM; var row = $('cfMuRow'); if (row) row.hidden = !musOn(); setSwipe(G.swipeOn !== false, true); }
@@ -3994,7 +3949,7 @@
 
   /* ═══════════ 입력 · 왼쪽 아래 고정 패드 = 걷기(위 = 화면 위쪽) · 화면 톡 = 걷기 / 판 열기 · 두 손가락 = 거리 2단계 · 그 밖의 끌기는 아무 일 없음 ═══════════ */
   var ray = new T.Raycaster(), ptr = null, pinch = null, pads = new Map();
-  var SWIPE_DEG = 180, SWIPE_MIN = 8, TILT_DEG = 60;   /* v5.65 위아래 = 화면 높이 한 번 60도(범위는 TILT_UP · TILT_DN 이 막는다) */   /* v5.58 화면 밀어 돌기 · 화면 폭 한 번 = 180도(실기기 감으로 이 값 하나만 바꾼다) · 8px 아래 = 톡 · 손 떼면 바로 멈춤(관성 없음 · 캡처 비교 · 멈추는 자리가 예측됨) */
+  var SWIPE_DEG = 180, SWIPE_MIN = 12, TILT_DEG = 60;   /* 261007 (둘러보기 조작 재검토 A · 결정 6) 밀기 문턱 8 → 12px = 떨리는 톡이 밀기로 읽히지 않게(톡 판정 ptr.moved 12px 와 같은 값 · 추정값 · 실기기로 이 값 하나만 바꾼다) */   /* v5.65 위아래 = 화면 높이 한 번 60도(범위는 TILT_UP · TILT_DN 이 막는다) */   /* v5.58 화면 밀어 돌기 · 화면 폭 한 번 = 180도(실기기 감으로 이 값 하나만 바꾼다) · 문턱 아래 = 톡 · 손 떼면 바로 멈춤(관성 없음 · 캡처 비교 · 멈추는 자리가 예측됨) */
   function hideDrag() {}
   function wireStage() {
     var cv = $('cv');
@@ -4012,9 +3967,9 @@
         setDist(pinch.dist0 / k); if (G.distLog && G.distLog.length < 300) G.distLog.push(+G.dist.toFixed(3));   /* 벌리기 = 가까이 · 오므리기 = 멀리(연속) */
       }
       if (ptr && e.pointerId === ptr.id && Math.hypot(e.clientX - ptr.x0, e.clientY - ptr.y0) > 12) ptr.moved = true;
-      /* v5.58 (사용자 261004 「화면을 미는 행위로도 화면을 왼쪽 오른쪽 회전」) 가로로 8px 넘게 밀면 돌기(오른쪽으로 밀기 = 우로 돌기 · 화면 폭 한 번 = SWIPE_DEG) · 그 뒤로는 톡이 아님 · 위아래는 무시 */
-      /* v5.65 (사용자 261005 「권장대로」) 거의 수직(세로가 가로의 2배 이상 · 8px 넘게)으로 밀면 위아래 시선(위로 밀기 = 위를 봄 · 위 20도 · 아래 10도) · 대각선 · 가로 = 좌우 돌기만 · 한 번 정해지면 그 손가락이 뗄 때까지 그 한 가지
-       *   「화면 밀어 시점 바꾸기」를 끄면(G.swipeOn false) 둘 다 없음(돌기 단추 · 조그 · PC 키는 그대로) */
+      /* v5.58 (사용자 261004 「화면을 미는 행위로도 화면을 왼쪽 오른쪽 회전」) 가로로 SWIPE_MIN(261007 12px) 넘게 밀면 돌기(오른쪽으로 밀기 = 우로 돌기 · 화면 폭 한 번 = SWIPE_DEG) · 그 뒤로는 톡이 아님 · 위아래는 무시 */
+      /* v5.65 (사용자 261005 「권장대로」) 거의 수직(세로가 가로의 2배 이상 · SWIPE_MIN 넘게)으로 밀면 위아래 시선(위로 밀기 = 위를 봄 · 위 20도 · 아래 10도) · 대각선 · 가로 = 좌우 돌기만 · 한 번 정해지면 그 손가락이 뗄 때까지 그 한 가지
+       *   「화면 밀어 시점 바꾸기」를 끄면(G.swipeOn false) 둘 다 없음(조그 · PC 키는 그대로 · 261007 돌기 단추 없음) */
       if (ptr && e.pointerId === ptr.id && !pinch && G.loaded && G.scn === 'lobby' && !G.anim && !G.sheetOpen && !EV.seq && G.swipeOn !== false) {
         var dx0 = e.clientX - ptr.x0, dy0 = e.clientY - ptr.y0;
         if (!ptr.rot && !ptr.tilt && Math.abs(dy0) > SWIPE_MIN && Math.abs(dy0) >= Math.abs(dx0) * 2) { ptr.tilt = true; ptr.moved = true; ptr.py = ptr.y0 + (dy0 > 0 ? SWIPE_MIN : -SWIPE_MIN); G.tiltDrag = true; clearTimeout(G.tiltT); }
@@ -4060,10 +4015,10 @@
     pad.addEventListener('pointerup', padEnd); pad.addEventListener('pointercancel', padEnd);
     pad.addEventListener('contextmenu', function (e) { e.preventDefault(); });
     /* v5.51 PC 두 손 조작(사용자 261004) · 왼손 WASD = 걷기(W 앞 · S 뒤 · A · D 옆걸음 · 몸은 카메라 방향 그대로 · 대각 = 조그와 같은 정규화)
-     *   오른손 = 오른쪽 십자 단추 배치 그대로 · ↑ / I 달리기 · ↓ / K 점프 · ← / J 좌로 돌기 · → / L 우로 돌기 · Space 점프 · Shift(누르는 동안) 달리기
-     *   돌기 = 단추와 같다(누르는 동안 holdStart · 떼면 holdEnd → 짧게 = 정해진 양 · 길게 = 계속) · 입력칸에 쓰는 중 · 판 보기 · 설정 · 큰 지도 · 스탬프 카드 = 무시(Esc = 닫기)
-     *   옛 방향키 = 걷기는 WASD 로 옮겼다 */
-    var keys = {}, KMOVE = { KeyW: 'u', KeyS: 'd', KeyA: 'l', KeyD: 'r' }, KRH = { ArrowUp: 'run', KeyI: 'run', ArrowDown: 'jump', KeyK: 'jump', ArrowLeft: 'rotL', KeyJ: 'rotL', ArrowRight: 'rotR', KeyL: 'rotR' }, KBTN = { run: 'bRun', jump: 'bJump', rotL: 'rotL', rotR: 'rotR' }, kRot = null;
+     * 261007 (사용자 「권장대로 진행해 줘」 · 둘러보기 조작 재검토 A · 결정 4) 화면 단추가 점프 하나라 키도 줄인다
+     *   W A S D 걷기 · ↑ ↓ = W S 와 같이 앞뒤 걷기 · ← → 돌기(누르는 동안 holdStart · 떼면 holdEnd → 짧게 15도 · 길게 계속) · Space 점프 · Shift(누르는 동안) 달리기
+     *   옛 ↑ / I 달리기(대시) · ↓ / K 점프 · J · L 돌기(오른쪽 십자 단추 배치) 삭제 · 입력칸에 쓰는 중 · 판 보기 · 설정 · 큰 지도 · 스탬프 카드 = 무시(Esc = 닫기) */
+    var keys = {}, KMOVE = { KeyW: 'u', KeyS: 'd', KeyA: 'l', KeyD: 'r', ArrowUp: 'u', ArrowDown: 'd' }, KRH = { ArrowLeft: 'rotL', ArrowRight: 'rotR' }, kRot = null;
     G.keyLog = [];
     function typing(e) { var t = e.target; return !!t && (/INPUT|TEXTAREA|SELECT/.test(t.tagName || '') || t.isContentEditable); }
     window.addEventListener('keydown', function (e) {
@@ -4074,13 +4029,13 @@
       if (PH.on) { if ((e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') && !$('pola').hidden) { e.preventDefault(); phClose(); } return; }   /* v5.67 사진 찍기 연출 = 키 막음 · 팝업 = Enter · Space · Esc 로 닫기 */
       if (e.key === 'Enter' && !e.repeat && !$('shot').hidden && !/BUTTON|A|INPUT/.test((e.target && e.target.tagName) || '')) { e.preventDefault(); doShot(); return; }   /* v5.67 사진 찍기 */
       if (e.key === 'Enter' && !e.repeat && !$('look').hidden && !/BUTTON|A|INPUT/.test((e.target && e.target.tagName) || '')) { e.preventDefault(); doLook(); return; }   /* v5.54 자세히 보기 */
-      if (KMOVE[code]) { keys[KMOVE[code]] = 1; G.stick = keyStick(); setKnob(G.stick.x, G.stick.y, true); G.moved = true; G.path = null; G.tapAct = null; if (G.mode === 'auto') { G.mode = 'free'; G.goal = null; $('dest').hidden = true; } G.need = true; e.preventDefault(); return; }
+      if (KMOVE[code]) { keys[code] = KMOVE[code]; G.stick = keyStick(); setKnob(G.stick.x, G.stick.y, true); G.moved = true; G.path = null; G.tapAct = null; if (G.mode === 'auto') { G.mode = 'free'; G.goal = null; $('dest').hidden = true; } G.need = true; e.preventDefault(); return; }
       var act = KRH[code] || (e.key === ' ' && !/BUTTON/.test((e.target && e.target.tagName) || '') ? 'jump' : null);
       if (act) {
         e.preventDefault(); if (e.repeat) return;
-        var bt = $(KBTN[act]); if (bt) bt.classList.add('kp');
+        if (act === 'jump') $('bJump').classList.add('kp');
         if (G.keyLog.length < 200) G.keyLog.push({ k: code, act: act, t: Math.round(performance.now()), x: +G.pos.x.toFixed(3), z: +G.pos.z.toFixed(3), az: +G.az.toFixed(4) });
-        if (act === 'run') dash(); else if (act === 'jump') jump(); else { kRot = code; holdStart('rot', act === 'rotL' ? 1 : -1); }
+        if (act === 'jump') jump(); else { kRot = code; holdStart('rot', act === 'rotL' ? 1 : -1); }
         return;
       }
       if (e.key === 'Shift') G.runKey = true;
@@ -4088,11 +4043,11 @@
     window.addEventListener('keyup', function (e) {
       if (!G.open) return; var code = e.code;
       if (e.key === 'Shift') G.runKey = false;
-      var act = KRH[code] || (e.key === ' ' ? 'jump' : null); if (act) { var bt = $(KBTN[act]); if (bt) bt.classList.remove('kp'); if (code === kRot) { kRot = null; holdEnd(); } }
-      if (KMOVE[code]) { delete keys[KMOVE[code]]; G.stick = Object.keys(keys).length ? keyStick() : null; if (G.stick) setKnob(G.stick.x, G.stick.y, true); else { setKnob(0, 0, false); nearestStop(); updateUi(true); } }
+      var act = KRH[code] || (e.key === ' ' ? 'jump' : null); if (act) { if (act === 'jump') $('bJump').classList.remove('kp'); if (code === kRot) { kRot = null; holdEnd(); } }
+      if (KMOVE[code]) { delete keys[code]; G.stick = Object.keys(keys).length ? keyStick() : null; if (G.stick) setKnob(G.stick.x, G.stick.y, true); else { setKnob(0, 0, false); nearestStop(); updateUi(true); } }
     });
     window.addEventListener('blur', function () { keys = {}; G.runKey = false; if (kRot) { kRot = null; holdEnd(); } if (G.open && G.stick) { G.stick = null; setKnob(0, 0, false); } });
-    function keyStick() { var x = (keys.r ? 1 : 0) - (keys.l ? 1 : 0), y = (keys.d ? 1 : 0) - (keys.u ? 1 : 0), m = Math.hypot(x, y) || 1; return { x: x / m, y: y / m }; }   /* 대각 = 손잡이도 링 안 대각(길이 1) */
+    function keyStick() { var k = {}; Object.keys(keys).forEach(function (c) { k[keys[c]] = 1; }); var x = (k.r ? 1 : 0) - (k.l ? 1 : 0), y = (k.d ? 1 : 0) - (k.u ? 1 : 0), m = Math.hypot(x, y) || 1; return { x: x / m, y: y / m }; }   /* 261007 keys = 키 코드별 방향(W 와 ↑ 를 같이 눌렀다 하나만 떼도 앞으로 그대로) */   /* 대각 = 손잡이도 링 안 대각(길이 1) */
   }
   function isShown(o) { while (o) { if (!o.visible) return false; o = o.parent; } return true; }
   function tap(x, y) {
@@ -4484,10 +4439,38 @@
   function tapLearned() { if (store.get('axfTour3TapUsed') !== '1') store.set('axfTour3TapUsed', '1'); }   /* 직접 눌러 걸어가 봄 = 다음부터 안내 없음 */
   function hintBusy() {
     return !G.open || !G.loaded || G.scn !== 'lobby' || document.hidden || !!G.path || !!G.stick || G.air || !!HOLD || !!G.anim || !!G.squeeze || G.bigMap || !!EV.seq || PH.on || PH.near || !!SH || !!SCARD || G.sheetOpen ||
-      !$('help').hidden || !$('pola').hidden || !$('etip').hidden || !$('vid').hidden || !$('cfg').hidden;
+      !$('help').hidden || !$('pola').hidden || !$('etip').hidden || !$('vid').hidden || !$('cfg').hidden || !$('swc').hidden;
+  }
+  /* 261007 (사용자 「권장대로 진행해 줘」 · 둘러보기 조작 재검토 A · 결정 3) 돌기 단추가 없어져 시점 돌리기 = 화면 밀기 · 첫 구역에 도착한 뒤 한 번 「화면을 좌우로 밀면 돌아봐요」 + 손가락이 좌우로 미는 그림
+   *   이 기기 1회(axfTour3SwCoach) · 3초 · 막지 않음(누름 통과) · 아무 데나 닿거나 키 · 움직이면 끝 · 다시 보기 = 도움말 둘째 줄
+   *   도착 = 움직인 뒤 구역 앞(G.near · 자동 걷기 끝 · 도착 정렬 돌기 끝) 0.5초 넘게 · 손가락 안내(#t3-hint) · 말풍선 · 판 보기 · 연출 등과 겹치지 않을 때(hintBusy)
+   *   이미 화면을 밀어 본 기기(G.swipeN) · 밀기 끔(설정) · 주소 nohelp=1 = 띄우지 않음 · 움직임 줄이기 = 손가락 · 화살표 정지 */
+  var SWC_MS = 3000;
+  function swcTick(now) {
+    if (store.get('axfTour3SwCoach') === '1' || Q.get('nohelp') === '1' || G.swipeOn === false) return;
+    if (G.swipeN) { store.set('axfTour3SwCoach', '1'); return; }   /* 밀어 본 사람 = 이미 안다 */
+    var at = G.moved && G.near && G.mode !== 'auto' && !G.path && Math.abs(G.azTo - G.az) < 0.02;
+    if (!at || !$('hint').hidden || hintBusy()) { G.swcAt = 0; return; }
+    if (!G.swcAt) { G.swcAt = now; return; }
+    if (now - G.swcAt < 500) return;
+    swcShow();
+  }
+  function swcShow() {
+    var c = $('swc'); if (!c || !c.hidden) return;
+    store.set('axfTour3SwCoach', '1'); G.swcN = (G.swcN || 0) + 1;
+    var t0 = performance.now(); G.hintTouch = false;
+    c.hidden = false; c.classList.remove('out');
+    clearInterval(G.swcT);
+    G.swcT = setInterval(function () { if (!G.open || G.hintTouch || G.stick || G.path || G.air || performance.now() - t0 > SWC_MS) { clearInterval(G.swcT); G.swcT = 0; swcHide(); } }, 120);   /* 닿음 · 키(G.hintTouch) · 걷기 · 점프 = 끝 */
+  }
+  function swcHide() {
+    var c = $('swc'); if (!c || c.hidden) return;
+    if (RM) { c.hidden = true; return; }
+    c.classList.add('out'); setTimeout(function () { c.hidden = true; c.classList.remove('out'); }, 300);
   }
   function hintTick() {   /* 0.5초마다(열려 있는 동안) · 가벼움 */
     var now = performance.now(), k = G.pos.x.toFixed(2) + ',' + G.pos.z.toFixed(2) + ',' + G.azTo.toFixed(2);
+    swcTick(now);
     if (k !== G.idleKey) { G.idleKey = k; G.idleAt = now; }
     if (!$('hint').hidden || hintBusy()) { G.idleAt = now; return; }
     if (now - (G.idleAt || now) < HINT_IDLE || (VIS.hintN || 0) >= HINT_MAX || !hintOk()) return;
@@ -4764,13 +4747,8 @@
     if (Q.get('lbl') === 'a') $('ctl').classList.add('la');
     $('cta').onclick = function () { if (performance.now() - (G.guardT || 0) < 500) return; if (G.spot && G.spot.spot === 'typing') { openPromo(); return; } var z = G.near; if (!z) return; if (z.id === 'cafe') { toCafe(); return; } enterPanel(z); };
     $('vClose').onclick = closePromo;
-    rotWire();   /* v5.81 돌기 단추 = 손가락 하나 한 길(위 rotWire) */
     setDist(G.dist);
-    /* v5.49 달리기(누르면 켜고 끔) · 점프(누르는 순간 · 손가락이 화면에 닿자마자 뛰어야 경쾌하다 · 키보드 Enter/Space 는 click 으로) */
-    var rb = $('bRun'), rpd = 0;   /* v5.51 점프처럼 누르는 순간 달려 나간다 */
-    rb.addEventListener('pointerdown', function (e) { e.preventDefault(); rpd = performance.now(); dash(); });
-    rb.addEventListener('click', function () { if (performance.now() - rpd > 600) dash(); });
-    rb.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    /* 점프(누르는 순간 · 손가락이 화면에 닿자마자 뛰어야 경쾌하다 · 키보드 Enter/Space 는 click 으로) · 261007 달리기 단추 삭제 */
     var jb = $('bJump'), jpd = 0;
     jb.addEventListener('pointerdown', function (e) { e.preventDefault(); jpd = performance.now(); jump(); });
     jb.addEventListener('click', function () { if (performance.now() - jpd > 600) jump(); });
@@ -4786,8 +4764,8 @@
     ROOTEL.classList.toggle('rm', RM); $('rmChk').checked = RM;
     $('rmChk').onchange = function () { RM = $('rmChk').checked; store.set('axfTour3RM', RM ? '1' : '0'); ROOTEL.classList.toggle('rm', RM); G.need = true; };
     musWire();
-    ROOTEL.addEventListener('pointerdown', function () { if (!$('hint').hidden) G.hintTouch = true; G.idleAt = performance.now(); }, true);   /* v5.91 첫 손가락 안내 = 아무 데나 닿으면 끝(누름은 그대로 지나간다) */
-    window.addEventListener('keydown', function () { if (G.open && !$('hint').hidden) G.hintTouch = true; G.idleAt = performance.now(); }, true);
+    ROOTEL.addEventListener('pointerdown', function () { if (!$('hint').hidden || !$('swc').hidden) G.hintTouch = true; G.idleAt = performance.now(); }, true);   /* v5.91 첫 손가락 안내 = 아무 데나 닿으면 끝(누름은 그대로 지나간다) */
+    window.addEventListener('keydown', function () { if (G.open && (!$('hint').hidden || !$('swc').hidden)) G.hintTouch = true; G.idleAt = performance.now(); }, true);
     $('bHelp').onclick = showHelp; $('hOk').onclick = hideHelp; $('help').addEventListener('click', function (e) { if (e.target === $('help')) hideHelp(); });
     wireSheet(); wireCfg(); loadBoards();
     var dq = Q.get('t3diag');   /* 시험판 주소 값 · 앱은 index.html 이 주소에 ?t3diag=1 이 있을 때만 window.AXT3_DIAG = true */
@@ -4834,12 +4812,8 @@
     '    <div class="load" id="t3-load">모형 불러오는 중</div>\n' +
     '    <div class="pad" id="t3-pad" role="application" aria-label="움직이기 패드 · 밀면 그쪽으로 걸어요"><span class="knob" id="t3-knob"></span><kbd class="kh kw" aria-hidden="true">WASD</kbd></div>\n' +
     '    <div class="dest" id="t3-dest" hidden></div>\n' +
-    '    <div class="ctl" id="t3-ctl" aria-label="움직임 버튼">\n' +
-    '      <button class="n run" type="button" id="t3-bRun" aria-label="달리기 · 누르면 앞으로 달려 나가요"><span class="c"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12l6-6 6 6"/><path d="M6 18l6-6 6 6"/></svg></span><span class="l">달리기</span><kbd class="kh" aria-hidden="true">↑</kbd></button>\n' +   /* v5.58 (사용자 261004 「달리기는 ^ 하나인데 겹치거나 달리는 느낌 · 점프 버튼도 점프인지 애매」) 후보 비교(shots/v558/icons_candidates.png) 뒤 = 달리기 R3(겹친 위 꺾쇠 + 왼쪽 속도 선 3) · 점프 J4(바닥 선 위로 떠오른 공 + 아래 튐 선 3) · v5.64 (사용자 261005 「3줄은 없어도 될 것 같아 · 이거 하나면 충분해」) 달리기 = 겹친 위 꺾쇠 둘만 · 단추 가운데 */
-    '      <button class="w" type="button" id="t3-rotL" aria-label="좌로 돌기 · 누르고 있으면 계속 돌아요"><span class="c"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 3v4h4"/></svg></span><span class="l">좌로 돌기</span><kbd class="kh" aria-hidden="true">←</kbd></button>\n' +
-    '      <span class="dot" aria-hidden="true"></span>\n' +
-    '      <button class="e" type="button" id="t3-rotR" aria-label="우로 돌기 · 누르고 있으면 계속 돌아요"><span class="c"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.5-5.8"/><path d="M20 3v4h-4"/></svg></span><span class="l">우로 돌기</span><kbd class="kh" aria-hidden="true">→</kbd></button>\n' +
-    '      <button class="s jump" type="button" id="t3-bJump" aria-label="점프"><span class="c"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><circle cx="12" cy="6.2" r="3.6" fill="currentColor" stroke="none"/><path d="M8.6 12.3v3.4M12 12.3v4.6M15.4 12.3v3.4" stroke-width="2"/></svg></span><span class="l">점프</span><kbd class="kh" aria-hidden="true">↓</kbd></button>\n' +
+    '    <div class="ctl" id="t3-ctl">\n' +
+    '      <button class="s jump" type="button" id="t3-bJump" aria-label="점프"><span class="c"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><circle cx="12" cy="6.2" r="3.6" fill="currentColor" stroke="none"/><path d="M8.6 12.3v3.4M12 12.3v4.6M15.4 12.3v3.4" stroke-width="2"/></svg></span><span class="l">점프</span><kbd class="kh" aria-hidden="true">Space</kbd></button>\n' +   /* 261007 (둘러보기 조작 재검토 A) 조작부 = 점프 하나(원 72px · 아이콘 그대로) · 달리기 · 좌로 · 우로 돌기 · 가운데 점 삭제 */
     '    </div>\n' +
     '    <span class="gdir" id="t3-gdir" hidden aria-hidden="true"></span>\n' +   /* v5.58 스태프가 안 보일 때 가장자리 방향 점 */
     '    <button type="button" class="gbub" id="t3-gbub" hidden><span id="t3-gbubT"></span><span class="go">스탬프 받기</span></button>\n' +
@@ -4849,6 +4823,7 @@
     '    <div class="pola" id="t3-pola" role="dialog" aria-label="방금 찍은 사진 · 누르면 닫혀요" hidden><figure class="pc"><canvas id="t3-polaC" width="480" height="360"></canvas><figcaption>2026.10.26 AX Festival</figcaption></figure><p class="pm">동료들과 추억을 남기세요</p></div>\n' +   /* v5.67 폴라로이드(사용자 문구 그대로) */
     '    <div class="cheer" id="t3-cheer" role="status" aria-live="polite" hidden>더 힘내세요!</div>\n' +
     '    <p class="hint" id="t3-hint" role="status" hidden>가고 싶은 곳을 눌러 보세요<span class="h2" id="t3-hint2" hidden>또는 아래 「다음 구역」을 누르면 저절로 걸어가요</span></p>\n' +   /* v5.91 첫 입장 = 손가락 + 이 한 줄 */
+    '    <div class="swc" id="t3-swc" role="status" hidden><p class="swt">화면을 좌우로 밀면 돌아봐요</p><span class="swa" aria-hidden="true"><i class="ar"></i><svg class="fh" width="40" height="46" viewBox="0 0 40 46" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a4 4 0 0 1 4 4v13.5l11.2 2.2a5 5 0 0 1 4 5.6l-1.6 10.5a6.5 6.5 0 0 1-6.4 5.5h-8.6a6.5 6.5 0 0 1-5-2.4l-6.8-8.4a3.3 3.3 0 0 1 4.8-4.5L8 31.2V7a4 4 0 0 1 4-4z" fill="#FFFFFF" stroke="#191F28" stroke-width="2.2"/><path d="M16 21v5.5M21.4 22v5M26.4 23.2v4.4" stroke="#191F28" stroke-width="1.8"/></svg></span></div>\n' +   /* 261007 첫 구역 도착 뒤 끌기 안내(swcTick) */
     '    <span class="hfg" id="t3-hfg" hidden aria-hidden="true"><i class="rp"></i><svg class="fh" width="40" height="46" viewBox="0 0 40 46" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a4 4 0 0 1 4 4v13.5l11.2 2.2a5 5 0 0 1 4 5.6l-1.6 10.5a6.5 6.5 0 0 1-6.4 5.5h-8.6a6.5 6.5 0 0 1-5-2.4l-6.8-8.4a3.3 3.3 0 0 1 4.8-4.5L8 31.2V7a4 4 0 0 1 4-4z" fill="#FFFFFF" stroke="#191F28" stroke-width="2.2"/><path d="M16 21v5.5M21.4 22v5M26.4 23.2v4.4" stroke="#191F28" stroke-width="1.8"/></svg></span>\n' +
     '    <div class="etip" id="t3-etip" role="status" hidden><p class="et">1층을 다 둘러보셨나요?<br>엘리베이터로 다른 층도 둘러보세요</p><div class="eb"><button type="button" class="nb pri" id="t3-etGo">엘리베이터로 가기</button><button type="button" class="ex" id="t3-etX" aria-label="닫기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></div></div>\n' +   /* v5.84 엘리베이터 권유 */   /* v5.84 첫 입장 한 줄 힌트(막지 않음) */
     '    <div class="evp" id="t3-evp" role="group" aria-label="엘리베이터 층 버튼" hidden><span class="evh">층 선택</span><button type="button" class="evb" data-f="18" aria-label="18층"><b>18</b></button><button type="button" class="evb" data-f="17" aria-label="17층"><b>17</b></button><button type="button" class="evb" data-f="10" aria-label="10층"><b>10</b></button><button type="button" class="evb" data-f="1" aria-label="1층 · 내리기"><b>1</b></button></div>\n' +
@@ -4884,10 +4859,10 @@
     '<section class="help" id="t3-help" role="dialog" aria-modal="true" aria-label="도움말" hidden>\n' +   /* v5.84 헤더 「도움말」에서만 연다(첫 입장 = 한 줄 힌트) */
     '  <div class="hcard">\n' +
     '    <p class="h1t">가고 싶은 곳을 누르면 걸어가요. 판 · 동전 · 스태프를 누르면 그 앞에서 바로 열려요.</p>\n' +   /* v5.91 눌러서 가기가 첫 줄 */
-    '    <p class="h2t">왼쪽 동그라미로 걷고, 오른쪽 버튼으로 점프 · 달리기 · 돌기를 해요. 「다음 구역」을 누르면 알아서 걸어가요.</p>\n' +
+    '    <p class="h2t">왼쪽 동그라미로 걷고, 오른쪽 버튼으로 점프해요. <span id="t3-hSw">화면을 좌우로 밀면 돌아봐요. </span>「다음 구역」을 누르면 알아서 걸어가요.</p>\n' +   /* 261007 둘러보기 조작 A · 가운데 문장 = 설정 「화면 밀어 시점 바꾸기」를 끄면 숨김(setSwipe) */
     '    <p class="h2t">두 손가락으로 벌리면 크게, 오므리면 작게 봐요. 빈 바닥을 두 번 누르면 원래 크기예요.</p>\n' +
-    '    <p class="h2t" id="t3-hSw">떠 있는 동전을 점프로 치면 그 활동으로 가요. 화면을 밀면 둘러봐요.</p>\n' +   /* v5.58 · v5.65 설정 「화면 밀어 시점 바꾸기」에 맞춰 setSwipe 가 바꾼다 */
-    '    <p class="h2t pconly">PC에서는 W A S D로 걷고, ↑ 달리기 · ↓ 점프 · ← → 돌기예요.</p>\n' +
+    '    <p class="h2t">떠 있는 동전을 점프로 치면 그 활동으로 가요.</p>\n' +   /* 261007 「화면을 밀면 둘러봐요」는 둘째 줄로 옮김 */
+    '    <p class="h2t pconly">PC에서는 W A S D로 걷고, Space로 점프, ← →로 돌아요. 마우스로 밀어도 돌아요.</p>\n' +
     '    <div class="hdemo" aria-hidden="true"><span class="hbtn">다음 구역' + CHV_R + '</span><span class="finger"></span></div>\n' +
     '    <label class="rmrow"><span class="t"><b>움직임 줄이기</b><span>어지러우면 켜세요</span></span><input type="checkbox" id="t3-rmChk" role="switch"><span class="sw" aria-hidden="true"></span></label>\n' +
     '    <label class="rmrow" id="t3-muRow"><span class="t"><b>음악 없이</b><span>조용히 보려면 켜세요</span></span><input type="checkbox" id="t3-muChk" role="switch"><span class="sw" aria-hidden="true"></span></label>\n' +
@@ -4915,7 +4890,7 @@
     '<section class="cfg" id="t3-cfg" role="dialog" aria-modal="true" aria-labelledby="t3-cfgT" tabindex="-1" hidden>\n' +
     '  <div class="cfcard">\n' +
     '    <h2 class="cft" id="t3-cfgT">설정</h2>\n' +
-    '    <label class="rmrow"><span class="t"><b>화면 밀어 시점 바꾸기</b><span>끄면 돌기 단추로만 돌아요</span></span><input type="checkbox" id="t3-cfSw" role="switch"><span class="sw" aria-hidden="true"></span></label>\n' +
+    '    <label class="rmrow"><span class="t"><b>화면 밀어 시점 바꾸기</b><span>끄면 화면을 밀어도 돌지 않아요</span></span><input type="checkbox" id="t3-cfSw" role="switch"><span class="sw" aria-hidden="true"></span></label>\n' +
     '    <label class="rmrow" id="t3-cfMuRow"><span class="t"><b>음악</b><span>잔잔한 로비 음악</span></span><input type="checkbox" id="t3-cfMu" role="switch"><span class="sw" aria-hidden="true"></span></label>\n' +
     '    <label class="rmrow"><span class="t"><b>움직임 줄이기</b><span>어지러우면 켜세요</span></span><input type="checkbox" id="t3-cfRm" role="switch"><span class="sw" aria-hidden="true"></span></label>\n' +
     '    <button type="button" class="nb wide" id="t3-cfX">닫기</button>\n' +
@@ -4998,7 +4973,7 @@
     if (SH) { closeSheet(true); G.lastFace = null; }
     occClear(); $('look').hidden = true;
     closeCfg(); closeBigMap();
-    $('help').hidden = true; $('hint').hidden = true; $('hfg').hidden = true; clearInterval(G.hintT); clearInterval(G.hintIv); clearInterval(ETIP.iv); etipHide(); G.anim = null; HOLD = null; G.stick = null; musStop(true, 0.6);   /* v5.38 음악 = 암전과 함께 줄고 닫힘 */
+    $('help').hidden = true; $('hint').hidden = true; $('hfg').hidden = true; $('swc').hidden = true; clearInterval(G.swcT); clearInterval(G.hintT); clearInterval(G.hintIv); clearInterval(ETIP.iv); etipHide(); G.anim = null; HOLD = null; G.stick = null; musStop(true, 0.6);   /* v5.38 음악 = 암전과 함께 줄고 닫힘 */
     veilText(''); veilProg(null); veilCover(RM ? 150 : 240, null);   /* v5.51 나갈 때 전환 막(점이 덮는다) */
     setTimeout(function () {
       ROOTEL.hidden = true; G.open = false;
@@ -5019,5 +4994,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v6.17', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v6.25', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();
