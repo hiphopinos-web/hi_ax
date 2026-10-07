@@ -8002,13 +8002,13 @@ NEED.kitsz=[{k:"kss",a:"kit_size_state"}];
 SP_ACT.kit_size_auto=1;
 CTL_ACT.kit_size_auto=["pp",function(p){ return "키트 사이즈 자동 배정"; }];
 HV_VIEW.viewKitSize=function(){ return viewKitSize(); };
-CFG_NOTE["키트사이즈_수량"]="형식 = 사이즈와 수량을 붙이고 띄어 씀 · 예 「S25 M55 L65 XL50 2XL25」 · 다섯 사이즈(S · M · L · XL · 2XL) · 형식이 틀리면 기본값";
+CFG_NOTE["키트사이즈_수량"]="형식 = 사이즈와 수량을 붙이고 띄어 씀 · 예 「SS50 L105 2XL45 3XL20」 · 네 사이즈(SS · L · 2XL · 3XL) · 형식이 틀리면 기본값";
 CFG_NOTE["키트사이즈_열림"]="형식 「2026-10-16 09:00」 · 이 시각부터 앱에서 고름 · 비우면 바로 열림";
 CFG_NOTE["키트사이즈_마감"]="형식 「2026-10-21 18:00」 · 이 시각까지 자유롭게 바꿈 · 뒤에 사람·권한 › 키트 플리스 사이즈에서 자동 배정";
 CFG_NOTE["키트사이즈_변경마감"]="형식 「2026-10-23 18:00」 · 마감 뒤 이 시각까지 남는 사이즈로만 바꿈 · 비우면 경계 없음(마감과 함께 끝)";
 var KS_CFG=["키트사이즈_수량","키트사이즈_열림","키트사이즈_마감","키트사이즈_변경마감"];
 var KS_PH=[["before","열림 전"],["open","고르는 중"],["chg","변경 마감 전"],["end","마감"]];
-var KS_SZ=["S","M","L","XL","2XL"];
+var KS_SZ=["SS","L","2XL","3XL"];
 var KS={ pv:null, busy:"", err:"" };
 var KS_WORD="자동배정";
 function ksWhy(r){ r=r||{}; return ({ word:"확인 문구가 맞지 않습니다", notclosed:"고르기 마감 전입니다. 마감 시각 뒤에 배정합니다", done:"이미 자동 배정했습니다(한 번만 합니다)", state:"미리보기 뒤에 누가 사이즈를 바꿨습니다. 미리보기를 다시 봅니다", post:"실행 요청 방식이 맞지 않습니다. 콘솔을 새로 고친 뒤 다시 합니다", spin:"본인 확인(PIN)이 필요합니다", super:"슈퍼관리자만 할 수 있습니다" })[r.reason]||(hvUnknown(r)?"서버 갱신 뒤 쓸 수 있습니다":why(r)); }
@@ -8332,7 +8332,7 @@ if(ST.nav==="z_gate") ST.nav="z_today";
  * 서버 ck_state(읽기) · ck_next {w}(그 창구 다음 번호 강제 호출) · ck_reset(POST · 관리자 도구 › 위험 구역) · 옛 서버 = 「서버 갱신 뒤」.
  * 소켓 ops 방 사건 ckd { w, d } 가 오면 그 창구 칸만 바로 고치고(호출 번호 · 대기 수) 숫자는 곧 다시 받는다 · 소켓이 없으면 15초마다 다시 받는다.
  * 화면 주소에는 코드 · 토큰이 없다(창구 화면은 그 화면에서 관리코드를 넣는다). */
-var CK_TV="https://hiphopinos-web.github.io/hi_ax/tv/checkin/", CK_WINS=["A","B","C","D"], CK_SZ=["S","M","L","XL","2XL"];
+var CK_TV="https://hiphopinos-web.github.io/hi_ax/tv/checkin/", CK_WINS=["A","B","C","D"], CK_SZ=["SS","L","2XL","3XL"];
 var CK={ t:null, n:0 };
 function ckDesk(w){ return CK_TV+"desk.html?w="+w; }
 function ckScreens(){ return [["체크인 TV 대기판","1F 체크인존 TV · 호출 번호",CK_TV]].concat(CK_WINS.map(function(w){ return ["창구 화면 "+w,"창구 "+w+" 태블릿 · 찍는 사람과 나눠 주는 사람이 함께 봄",ckDesk(w)]; })); }
@@ -8409,7 +8409,7 @@ function ckResetAsk(){
 }
 CFG_NOTE["체크인_번호표"]="형식 ON 또는 OFF · OFF 면 번호 없이 창구 글자만 안내하고 바로 지급";
 CFG_NOTE["체크인_개시"]="형식 「08:00」(24시간 시:분) · 이 시각부터 번호표를 줌 · 그 전에는 창구 글자만";
-CFG_NOTE["체크인_창구"]="형식 「A=S,2XL B=M C=L D=XL」 · 창구 글자=사이즈(쉼표) · 창구끼리 띄어 씀 · 다섯 사이즈(S M L XL 2XL)가 A~D 에 모두 있어야 하고 틀리면 기본값";
+CFG_NOTE["체크인_창구"]="형식 「A=SS B=L C=2XL D=3XL」 · 창구 글자=사이즈(쉼표) · 창구끼리 띄어 씀 · 네 사이즈(SS L 2XL 3XL)가 A~D 에 모두 있어야 하고 틀리면 기본값";
 CFG_NOTE["선착순_지급시작"]="형식 「10:30」(24시간 시:분) · 행사일 이 시각부터 선착순 참여상 지급 · 날짜는 선착순_마감의 날짜 · 그 전 지급은 서버가 거절";
 
 /* CSS · ck- */
