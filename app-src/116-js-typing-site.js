@@ -58,7 +58,7 @@ function rgFormHtml() {
     '<button class="btn mint" type="submit" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" ontouchstart="event.preventDefault(); rgEnter()">쏘기</button></form>';
 }
 function rgInputHtml() {
-  return '<input id="rgIn" class="input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" inputmode="text" maxlength="12" placeholder="' + (rgAutoOn() ? "단어를 치면 바로 터져요" : "떨어지는 단어를 치고 Enter") + '" ' +
+  return '<input id="rgIn" class="input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" inputmode="text" maxlength="12" placeholder="' + (rgAutoOn() ? "맞게 치면 엔터 없이 바로 터져요" : "떨어지는 단어를 치고 Enter") + '" ' +
     'onpaste="event.preventDefault()" ondrop="event.preventDefault()" oninput="rgLive(event)">';
 }
 function rgPause() {
@@ -839,20 +839,22 @@ function tsfLeftHtml() {
       "<p>남은 도전 " + i.left + "회 / " + i.limit + "회</p>" + (i.best ? "<p>내 최고 " + typePts(i.best) + "</p>" : "<p>첫 도전</p>") + "</section>" +
       '<section class="tsf-p tsf-rule">' + (ph === "nick" ? "<p>Enter 저장</p><p>Esc 처음으로</p>" : '<p class="tsf-hint go">SPACE 시작</p><p>Tab 닉네임 바꾸기</p><p>Esc 처음으로</p>') + "</section>";
   }
-  var rule = '<section class="tsf-p tsf-rule"><p>1인 ' + tsfLimit() + "회 · 최고 점수로 순위</p><p>목숨 " + RAIN_LIVES + "개를 다 잃으면 끝</p><p>17:00 마감 · 1~3위 Outro 시상</p></section>";
+  /* 261007(사용자 「오른쪽 순위표 10등까지 · 일부 정보는 왼쪽으로」) 오른쪽 점수 설명을 왼쪽으로 · 방법 · 점수 두 묶음 · 엔터 없이 한 줄 */
+  var rule = '<section class="tsf-p tsf-rule"><p class="tsf-rh">방법</p><p>맞게 치면 엔터 없이 터져요</p><p>목숨 ' + RAIN_LIVES + "개를 다 잃으면 끝</p><p>1인 " + tsfLimit() + "회 · 최고 점수로 순위</p><p>17:00 마감 · 1~3위 Outro 시상</p></section>" +
+    '<section class="tsf-p tsf-rule"><p class="tsf-rh">점수</p><p>글자 × 10 × 콤보(최대 3배)</p><p>구름이 비면 보너스 스테이지</p><p>빠르고 정확할수록 보너스</p><p>180초 버티면 목숨 × ' + RAIN_LIFE_BONUS + "</p></section>";   /* 줄마다 한 줄에 들어가게 짧게(1920 · 1366 · 24 · 16px) */
   if (ph === "result" && !tsfClosed()) return '<section class="tsf-p"><p class="tsf-k">다음 도전자</p><p class="tsf-go">SPACE = 새 QR</p><p class="tsf-hint" id="tsfCount">' + Math.round(TSF_RES_MS / 1000) + "초 뒤 처음 화면</p></section>";   /* 261007 처음 화면 = 광고 · SPACE = 곧바로 QR */
   return rule;
 }
-/* 오른쪽 · HIGH SCORE TOP 5(결과 화면에서만 방금 도전한 사람 줄 · 다음 사람에게 남의 줄을 짚어 보이지 않게) + 점수 규칙 */
+/* 오른쪽 · HIGH SCORE TOP 10(결과 화면에서만 방금 도전한 사람 줄 · 다음 사람에게 남의 줄을 짚어 보이지 않게) · 261007 TOP 5 → 10 · 점수 규칙은 왼쪽(tsfLeftHtml)으로 */
 function tsfRightHtml() {
   var r = TSF.top, top = (r && r.top) || [], hl = TSF.ph === "result", h = '<p class="tsf-band">HIGH SCORE</p><div id="tsfRank">';
   if (!r) h += '<p class="tsf-hint">불러오는 중</p>';
-  else for (var i = 0; i < 5; i++) {
+  else for (var i = 0; i < 10; i++) {
     var x = top[i];
     h += '<div class="tsf-row' + (i < 3 && x ? " top" : "") + (hl && x && x.me ? " me" : "") + '"><span class="no">' + (i + 1) + '</span><span class="nm">' + (x ? esc(x.name) : "<i>도전을 기다려요</i>") + '</span><span class="sc">' + (x ? typePts(x.score) : "") + "</span></div>";
   }
-  if (r && hl && r.me && r.me.rank > 5) h += '<p class="tsf-hint">내 순위 ' + r.me.rank + "위 · " + typePts(r.me.score) + "</p>";
-  return h + '</div><div class="tsf-pts"><p class="tsf-k">점수</p><p>단어 = 글자 × 10 × 콤보(최대 3배)</p><p>구름이 다 비면 보너스 스테이지 · 문장 따라 치기</p><p>빠르고 정확할수록 보너스</p><p>180초까지 버티면 목숨 × ' + RAIN_LIFE_BONUS + "</p></div>";
+  if (r && hl && r.me && r.me.rank > 10) h += '<p class="tsf-hint">내 순위 ' + r.me.rank + "위 · " + typePts(r.me.score) + "</p>";
+  return h + "</div>";
 }
 /* v5.61 가운데 판 안내(대기) · 방법 1 = 앱의 내 QR 을 위 카메라에 · 폰 그림이 위로 · 앱 가운데 QR 버튼 그림 · 세 단계(SPACE 키 그림) · 카메라가 없으면 방법 2 로 · 시간 밖이면 그 안내만 */
 var TSF_PHONE = '<svg class="tsf-phs" viewBox="0 0 22 36" shape-rendering="crispEdges" aria-hidden="true"><rect x="0" y="0" width="22" height="36" fill="#000"/><rect x="1" y="1" width="20" height="34" fill="#2A2118"/><rect x="2" y="3" width="18" height="29" fill="#F3E7D8"/><rect x="2" y="3" width="18" height="3" fill="#FF7E31"/>' +
@@ -1031,8 +1033,8 @@ function tsfReadyDraw(ctx, w, h, blink) {
   var cx = w / 2, cmp = h < 720, y, i = TSF.info || {};
   var line = function (t, yy, px, col) { ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = rtFont(px); if (ctx.measureText(t).width > w - 32 && px > 16) px = 16; rtText(ctx, t, cx, yy, px, col, RAIN_PAL.ink); };
   var rows = [
-    ["rain", "단어 치기", ["구름에서 내리는 단어를 쳐서 없애요", "바닥에 닿으면 목숨 -1 · 목숨 " + (RAIN_LIVES || 5) + "개"]],
-    ["line", "보너스 스테이지", ["구름이 다 비면 문장을 따라 쳐요", "빠르고 정확할수록 보너스"]],
+    ["rain", "단어 치기", ["내리는 단어를 맞게 치면 엔터 없이 터져요", "바닥에 닿으면 목숨 -1 · 목숨 " + (RAIN_LIVES || 5) + "개"]],   /* 261007 엔터 없이(rgAutoOn · site) */
+    ["line", "보너스 스테이지", ["구름이 다 비면 문장을 따라 쳐요", "다 맞으면 엔터 없이 끝 · 빠를수록 보너스"]],
     ["star", "점수 · 순위", ["단어 + 콤보 + 보너스 스테이지", "1인 " + tsfLimit() + "회 · 최고 점수로 순위"]]
   ];
   var u = cmp ? 3 : 4, iw = 16 * u, px = 14, pw = w - 2 * px, pad = cmp ? 12 : 16, tx = px + pad + iw + 18, tw = px + pw - pad - tx, hl = cmp ? 34 : 40, dl = cmp ? 20 : 24, gap = cmp ? 8 : 14;

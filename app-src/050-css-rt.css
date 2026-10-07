@@ -279,6 +279,7 @@
   .rt .tsf-in:disabled { background: var(--rt-dim); }
   .rt .tsf-go { margin-top: 12px; padding: 12px 14px; font-size: var(--rt-f32); line-height: var(--rt-l32); color: var(--rt-o100); background: var(--rt-bark); box-shadow: var(--rt-line); text-align: center; animation: tsfBlink 1.06s steps(1) infinite; }
   .rt .tsf-rule { gap: 4px; color: var(--rt-tan2); }
+  .rt .tsf-rule .tsf-rh { margin-bottom: 4px; color: var(--rt-o100); }   /* 261007 왼쪽 규칙 묶음 머리(방법 · 점수) · 오른쪽 점수 설명을 왼쪽으로 옮김 */
   /* v4.51(260925 사용자) 가운데 판만 전체 높이 · 틀 한 단계 강하게(판 안쪽부터 먹 3 · O100 4 · 먹 3 = 게임 중 캔버스 틀과 같다) · 왼쪽 = 위쪽 상자만 · 오른쪽 = 순위표(행 수만큼) */
   .rt .tsf-l { min-width: 0; min-height: 0; align-self: center; display: flex; flex-direction: column; gap: 12px; }
   .rt .tsf-c { position: relative; min-width: 0; min-height: 0; margin: 10px; background: var(--rt-o10); box-shadow: 0 0 0 3px var(--rt-ink), 0 0 0 7px var(--rt-o100), 0 0 0 10px var(--rt-ink); }
