@@ -461,7 +461,7 @@ function olyRankHtml() {
       (ov.length ? olyPodiumHtml(top) + '<div class="oly-list">' + rest + "</div>" : '<p class="ax-description">아직 ' + (OVE.length === 3 ? "세" : "다섯") + " 종목을 모두 한 사람이 없어요</p>") +
       '<p class="oly-pos">' + (op ? esc(op) : me.done ? "내 총점 " + olyFmt(me.total) : "한 판 하면 순위에 올라가요") + "</p></section>";
   }
-  return h + '<p class="ax-meta">명예 순위 · 경품 없음 · Outro에서 종합 1~3위 호명</p></div>';
+  return h + '</div>';   /* v6.27 바닥 문구(명예 순위 · 경품 없음 · 종합 호명) 삭제(사용자 261008 · 올림픽 시상 없음 261006) */
 }
 /* ── TV 순위판 (wall_type · 1920×1080) · ① 종합 포디움(1위 180px · 2·3위 140px) + 4~10위 ② 종목별 1~3위(96px) ── */
 function olyTvPodium() {
