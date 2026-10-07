@@ -248,6 +248,8 @@ function rgBindInput(inp) {
   inp.addEventListener("compositionend", function () { rgCompEnd(); });
   inp.addEventListener("keydown", function (e) { if (e.key === "Escape" && inp === rgEl("rgIn")) { e.preventDefault(); rgAutoClear(); return; } if (rgBlk(e, inp)) return; rgHgKey(e, inp); });   /* Esc = 즉시 비우기 · v5.24 비구름 전환 연타 막기(rgBlk) · 그 밖 = 로마자 → 한글 */
   inp.addEventListener("beforeinput", function (e) { rgHgBefore(e, inp); });
+  inp.addEventListener("keydown", function (e) { rgDeadKey(e, inp); });   /* 261007 키가 칸에 안 들어오는 상태(조합 연결 끊김) 알아채기 */
+  ["input", "compositionstart", "compositionupdate"].forEach(function (k) { inp.addEventListener(k, function () { RG.kd = 0; }); });
 }
 /* v5.24 비구름 · 막힌 동안(읽기 전용) 누른 글자 키는 버린다 ·
    261003 고침 · 옛 방식은 막힌 키마다 0.25초 막기를 다시 늘려서 키 간격이 0.25초보다 짧으면(분당 250타 ≈ 0.24초) 입력이 열린 뒤에도 글자가 줄줄이 사라지거나 반쪽만 들어갔다 ·
@@ -263,6 +265,60 @@ function rgBlk(e, inp) {
 /* 따라 쓰기 표시와 채점(rgBonusScore)을 같은 규칙으로 · 겹 공백 = 한 칸 · 앞 공백 없음 · 끝 공백 한 칸은 치는 중이라 남긴다(채점은 trim) */
 function rgBnsNorm(s) { return String(s || "").replace(/\s+/g, " ").replace(/^ /, ""); }
 function rgFocus() { var i = rgEl("rgIn"); if (i && document.activeElement !== i) i.focus(); }
+/* ═══ 261007 입력칸 포커스 지킴이 (키보드만 쓰는 1F 노트북) ═══
+   증상: 보너스 스테이지에 들어가면 마우스로 판을 눌러야만 문장이 쳐졌다(사용자 261007) · 노트북 부스는 키보드만 쓴다.
+   원인 후보 둘을 다 막는다 · ① 입력칸이 DOM 포커스를 잃음(전환 · 다시 그리기 · 숨긴 칸 주변 클릭) · ② 포커스는 칸에 있는데 한글 자판 조합 연결이 끊김
+   (조합 중 비우기 · 읽기 전용 전환 뒤 브라우저 쪽 자판 상태가 남아 키가 칸에 안 들어온다 · 마우스 클릭이 브라우저 쪽 조합을 끝내 주어서 「클릭하면 된다」).
+   ㉠ 입력을 열 때(보너스 GO · 판 복귀 · rgLock(false)) 같은 칸을 한 번 놓았다 다시 잡는다(rgRefocus) · 브라우저가 자판 조합 상태를 새로 붙인다.
+   ㉡ 판 도중 매 프레임 · 포커스가 칸 밖(문서 · 판 안 단추 등)이면 되돌린다(rgFocusGuard).
+   ㉢ 판 도중 칸 밖에서 키가 눌리면 문서 캡처에서 먼저 칸으로 옮긴다(rgKeyGuard) · 그 키 글자는 옮긴 칸으로 들어간다(로마자 키는 칸에서와 같이 두벌식으로 · 첫 글자도 잃지 않는다).
+   ㉣ 키는 눌리는데 칸이 연달아 그대로면(조합 연결 끊김) 다시 잡는다(rgDeadKey · RAIN_DEAD_KEYS 번).
+   다른 글 입력칸(세션 비밀번호 시트 등)에 있는 포커스는 빼앗지 않는다 · 멈춤 · 끝난 판 · 휴대폰(셀프 아닌 터치 기기)은 손대지 않는다. */
+var RAIN_DEAD_KEYS = 2;
+function rgFocusWant() {
+  var i = rgEl("rgIn");
+  if (!i || !RG.on || RG.paused || RG.ending || i.disabled) return null;
+  if (RG.mode !== "site" && rgTouch()) return null;
+  return i;
+}
+function rgFocusMine(a) {   /* 이 포커스를 칸으로 가져와도 되는가 */
+  if (!a || a === document.body || a === document.documentElement) return true;
+  var p = rgEl("rgPlay"); if (p && p.contains(a)) return true;
+  return !/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName || "") && !a.isContentEditable;
+}
+function rgRefocus(inp) {
+  if (!inp) return;
+  RG.kd = 0;
+  try { if (document.activeElement === inp) inp.blur(); inp.focus({ preventScroll: true }); } catch (e) {}
+}
+function rgFocusGuard() {
+  var i = rgFocusWant(); if (!i) return;
+  var a = document.activeElement;
+  if (a === i || !rgFocusMine(a)) return;
+  try { i.focus({ preventScroll: true }); } catch (e) {}
+}
+function rgKeyGuard(e) {
+  var i = rgFocusWant(); if (!i) return;
+  var a = document.activeElement, k = e.key || "";
+  if (a === i || !rgFocusMine(a) || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (k.length !== 1 && k !== "Process" && e.keyCode !== 229 && k !== "Enter" && k !== "Backspace") return;
+  try { i.focus({ preventScroll: true }); } catch (x) {}
+  if (document.activeElement !== i) return;
+  if (k === "Enter") { e.preventDefault(); if (!i.readOnly) rgEnter(); return; }   /* 칸 밖에서 눌린 Enter 는 폼 제출이 안 되므로 여기서 */
+  if (rgBlk(e, i)) return;
+  rgHgKey(e, i);   /* 로마자 키 = 칸에서와 같이 두벌식 · 그 밖 글자는 포커스를 옮긴 칸에 브라우저가 넣는다 */
+}
+if (typeof document !== "undefined" && document && typeof document.addEventListener === "function") document.addEventListener("keydown", rgKeyGuard, true);
+function rgDeadKey(e, inp) {
+  if (!RG.on || RG.paused || RG.ending || inp.readOnly || inp.disabled || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+  var k = e.key || "";
+  if (k.length !== 1 && k !== "Process" && e.keyCode !== 229) return;
+  if (RG.bonus && RG.bonus.ph === "type" && performance.now() < (RG.blkUntil || 0)) return;
+  var mx = inp.maxLength > 0 ? inp.maxLength : (RG.inMax || 12);
+  if ((inp.value || "").length >= mx) return;   /* 칸이 꽉 차서 안 들어가는 것은 끊김이 아니다 */
+  RG.kd = (RG.kd || 0) + 1;
+  if (RG.kd > RAIN_DEAD_KEYS) { RG.kd = 0; rgRefocus(inp); RG.deadFix = (RG.deadFix || 0) + 1; }
+}
 function rgCompEnd() {
   RG.composing = false;
   if (RG.pendingEnter) { RG.pendingEnter = false; setTimeout(rgSubmit, 0); }
@@ -409,7 +465,7 @@ function rgHgPut(inp, j) {
   if (!j) return;
   var s = rgHgAdd(inp.value, j, RG.hk);
   if (s.length > (RG.inMax || 12)) return;   /* 입력창 maxlength 12(v5.12 보너스 스테이지 40) · 값을 코드로 넣으면 maxlength 가 걸리지 않는다 */
-  inp.value = s; RG.hk = true;
+  inp.value = s; RG.hk = true; RG.kd = 0;
   rgLive(null);
 }
 function rgHgDel(inp) { var b = rgHgBack(inp.value); inp.value = b.s; RG.hk = b.on; rgLive(null); }
@@ -557,6 +613,7 @@ function rgFrame() {
   var now = performance.now(), dt = Math.min(0.05, (now - RG.last) / 1000);
   RG.last = now;
   rgUpdate(dt, now);
+  rgFocusGuard();   /* 261007 입력칸이 포커스를 잃었으면 이 프레임에 되돌린다 */
   var cv = rgEl("rgCv");
   if (!cv) { rgStop(); return; }
   rgDraw(cv.getContext("2d"), now);
@@ -1158,6 +1215,7 @@ function rgLock(on) {
   rgClearInput(); RG.pendingEnter = false;
   if (!inp) return;
   inp.readOnly = !!on;
+  if (!on) rgRefocus(inp);   /* 261007 보너스 GO · 판 복귀 = 마우스 클릭이 하던 일(포커스 · 자판 조합 연결 새로) */
   if (on) setTimeout(function () { if (RG.bonus && RG.bonus.ph !== "type" && inp.value) inp.value = ""; }, 60);
 }
 /* v5.30 보너스 화면은 판 안 장면(wout ~ bin) · 그 밖(clear · 전환 · 제목 카드)은 판이 아니다 */
