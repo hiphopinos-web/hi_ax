@@ -204,7 +204,7 @@ function nowIdx() {
    17F 는 대강당 입구 QR 로 출석한다(ATT_17F · att_claim) · 옛 seat(좌석 신청 · v3.31b)은 종류째 걷어냈다.
    10F 실습형 세션은 info (v3.31b 사용자 확정 · 현장 신청 없음 · 신청은 앱 밖 사전 공지로 끝남) · cap 은 되돌릴 때를 위해 남긴다.
    10F 실습형 세션은 5개 중 1개만(sessConflict · 백엔드 sessBook_ reason ten). id 는 기존 유지:
-   fld=세션 A · ta=세션 B · tb=세션 C · aws=세션 D · ms1·ms2=세션 E 1·2회차(v3.31 회차 분리 · 80분 × 2회, 사이 10분).
+   fld=세션 A · ta=세션 B · tb=세션 C · aws=세션 D · ms1·ms2=세션 E 1·2회차(v3.31 회차 분리 · 261007 1회차 13:30~15:00 · 2회차 15:00~16:30 · 운영진 메신저).
    세션 E 는 회차마다 행 하나(공용 행 카드 · 인라인 신청 그대로). 회차 선택 UI 를 따로 두지 않는 이유:
    시간 뱃지·잔여석·신청 버튼이 회차마다 다르고, 두 회차 사이 교체는 10F 1인 1세션 교체 모달이 그대로 처리한다.
    capNote = 정원 보조 문구
@@ -222,27 +222,27 @@ var SESSIONS = [
     desc: "" },
   { id: "l2", fl: 17, zone: "hall", kind: "open", ttl: "파트너사 강연 · MS", sub: "AI와 친해지기", who: "MS", tm: "15:10~16:40", cap: 235, seed: 96,
     desc: "" },
-  { id: "fld", fl: 10, zone: "conf", kind: "info", ttl: "세션 A", sub: "영업 및 보상 현장 우수 사례 강연 및 실습", who: "", tm: "13:30~16:40", cap: 63, seed: 50,
+  { id: "fld", fl: 10, zone: "conf", kind: "info", ttl: "세션 A", sub: "영업 및 보상 현장 우수 사례 강연 및 실습", who: "김동건 전임 · 이은정 지점장 · 이승철 대리", tm: "13:30~16:40", cap: 63, seed: 50,
     capNote: "63명",   /* v5.81 정원 62 → 63(사용자 261006) */
     todo: [{ desc: "동료 활용 사례 공유 및 AI활용 교안 제공" }, { name: "실습 주제 예시 · 3개 중 하나", desc: "원하는 주제 선택 및 개발 실습 진행", sub: ["시책비 자동 계산 프로그램", "영업 캘린더 · 상품별 화법 도구", "보상 실무자용 개인 agent (사고약도 · 면부책 검색 · 위변조 검증)"] }],   /* v6.20 실습 주제 3개(붙임2 커리큘럼 안 · 사용자 261007 「이것만 넣자」) · 「예시」 = 바뀔 수 있음 */
     prep: [{ desc: "노트북은 1인 1대 배정돼요" }] },
-  { id: "ta", fl: 10, zone: "heart18", kind: "info", ttl: "세션 B", sub: "“내 데이터”로 만드는 통계 현황 리포팅 실습", who: "", tm: "13:30~16:30", cap: 32, seed: 24,
+  { id: "ta", fl: 10, zone: "h01", kind: "info", ttl: "세션 B", sub: "“내 데이터”로 만드는 통계 현황 리포팅 실습", who: "임경덕 강사", tm: "13:30~16:30", cap: 32, seed: 24,
     capNote: "최대 32명",
     intro: "실제 업무 정기 데이터로 분석, 리포트 자동화, 대시보드 개발까지 실습합니다.",
     todo: [{ name: "데이터 분석", desc: "실제 업무 정기 데이터의 AI 활용 분석(기초, 증감, 예측모델)" }, { name: "리포트 자동화", desc: "분석 결과 리포트 개발 반복 작업 자동화 코드 작성" }, { name: "대시보드 개발", desc: "데이터 삽입 → 실시간 결과 반영 HTML앱 개발" }],
     prep: [{ desc: "본인 업무 데이터를 사전에 제출해요" }, { desc: "노트북은 1인 1대 배정돼요" }] },
-  { id: "tb", fl: 10, zone: "heart18", kind: "info", ttl: "세션 C", sub: "“내가 보는 자료”로 만드는 외부자료 리서치 자동화 실습", who: "", tm: "13:30~16:30", cap: 28, seed: 15,
+  { id: "tb", fl: 10, zone: "h06", kind: "info", ttl: "세션 C", sub: "“내가 보는 자료”로 만드는 외부자료 리서치 자동화 실습", who: "권혜영 강사", tm: "13:30~16:30", cap: 28, seed: 15,
     capNote: "28명",   /* v5.05 (261002 사용자 결정) 정원 20 → 28 */
     intro: "외부자료 리서치, 요약 및 정리, 자동 알림 시스템 개발까지 실습합니다.",
     todo: [{ name: "외부자료 리서치", desc: "최신 갱신 외부자료 검색 및 수집(법령, 뉴스, 공시 등)" }, { name: "요약 및 정리", desc: "수집된 자료 자동 정리(중복 또는 예전 자료 제외 등)" }, { name: "자동 알림 시스템 개발", desc: "주기적인 새정보 업데이트 알림 봇 개발" }],
     prep: [{ desc: "본인이 검색하고 활용하는 웹사이트를 사전에 조사해요" }, { desc: "노트북은 1인 1대 배정돼요" }] },
-  { id: "aws", fl: 10, zone: "heart56", kind: "info", ttl: "세션 D", sub: "Claude Code를 활용한 바이브 코딩 실습 (AWS)", who: "", tm: "13:30~16:30", cap: 28, seed: 16,
+  { id: "aws", fl: 10, zone: "h08", kind: "info", ttl: "세션 D", sub: "Claude Code를 활용한 바이브 코딩 실습 (AWS)", who: "조재구 (AWS)", tm: "13:30~16:30", cap: 28, seed: 16,
     capNote: "28명",   /* v5.87 정원 20 → 28(사용자 261006 · 사전 신청 명단 28명) */
     todo: [{ desc: "AI를 활용한 업무 적용 실습" }], prep: [] },   /* v5.60 남는 내용이 제목뿐 · 블록을 안 그렸다 → v6.20 한 줄(사용자 261007) */
-  { id: "ms1", fl: 10, zone: "tbd", kind: "info", ttl: "세션 E · 1회차", sub: "MS Copilot을 활용한 문서 작성 실습 (MS)", who: "", tm: "13:30~14:50", cap: 20, seed: 12,
+  { id: "ms1", fl: 10, zone: "h07", kind: "info", ttl: "세션 E · 1회차", sub: "MS Copilot을 활용한 문서 작성 실습 (MS)", who: "김진우 (MS)", tm: "13:30~15:00", cap: 20, seed: 12,
     capNote: "20명",
     todo: [{ desc: "초급 과정 · Chat, Word, PPT, Agent Builder, Copilot Studio" }], prep: [] },
-  { id: "ms2", fl: 10, zone: "tbd", kind: "info", ttl: "세션 E · 2회차", sub: "MS Copilot을 활용한 문서 작성 실습 (MS)", who: "", tm: "15:00~16:20", cap: 20, seed: 9,
+  { id: "ms2", fl: 10, zone: "h07", kind: "info", ttl: "세션 E · 2회차", sub: "MS Copilot을 활용한 문서 작성 실습 (MS)", who: "김진우 (MS)", tm: "15:00~16:30", cap: 20, seed: 9,
     capNote: "20명",
     todo: [{ desc: "초급 과정 · Chat, Word, PPT, Agent Builder, Copilot Studio" }], prep: [] },
   /* v5.64 AI 포토부스 프로그램 상세(photo · kind queue) 삭제 · v5.05 포토부스 대기 폐지 뒤 들어가는 길이 없는 빈 상세였다(정리 기록.md) */
@@ -255,13 +255,13 @@ var SESSIONS = [
 /* v47: 층별 안내(PROG_FL 존 목록·동선 영상) 전면 삭제 · 안내는 타임라인과 현장 사이니지가 맡는다.
    프로그램 상세의 위치 표기용 존 이름만 남긴다. */
 /* v3.40 10F 세션 장소 · 여기 한 곳 (기획 변경 시 이 값만)
-   출처: 층별 기획안 260803 평면도의 10F 존 배정(컨퍼런스룸 · Heart 1·7~8 · Heart 5·6)을 v3.29 세션 id 승계
-   (fld 현장 프로그램 → 세션 A · ta·tb Track A·B → 세션 B·C · aws 바이브코딩 → 세션 D)로 옮긴 값이며, 백엔드 SESS_META 존
-   (f10_conf · f10_h18 · f10_h56)과 일치한다. 공식 공지 붙임2는 「10층」만 적고 호실은 적지 않아 충돌은 없다.
-   세션 E(신설)는 배정 기록이 없어 「장소 추후 안내」. */
-var TEN_ROOM = { fld: "10F 컨퍼런스룸", ta: "10F Heart 1 · 7~8", tb: "10F Heart 1 · 7~8", aws: "10F Heart 5 · 6", ms1: "10F · 장소 추후 안내", ms2: "10F · 장소 추후 안내" };
+   261007 운영진 메신저(데이터사이언스파트 → 홍보부) 기준 · 세션마다 방이 다르다 · 표기는 메신저 그대로 「01 HEART」
+   세션 A = 컨퍼런스룸 · B = 01 HEART · C = 06 HEART · D = 08 HEART · E(1 · 2회차) = 07 HEART
+   존 키 = 방 단위(conf · h01 · h06 · h07 · h08 · 글자만) · 옛 heart18 「Heart 1 · 7~8」 · heart56 「Heart 5 · 6」 · tbd 「장소 추후 안내」는 지웠다
+   백엔드 SESS_META 존(혼잡 구역)은 방을 품은 구역 그대로 f10_conf · f10_h18(01 · 07 · 08) · f10_h56(06) */
+var TEN_ROOM = { fld: "10F 컨퍼런스룸", ta: "10F · 01 HEART", tb: "10F · 06 HEART", aws: "10F · 08 HEART", ms1: "10F · 07 HEART", ms2: "10F · 07 HEART" };
 function sessPlace(s) { return TEN_ROOM[s.id] || (s.fl + "F " + (ZONE_NM[s.zone] || "")).trim(); }
-var ZONE_NM = { hall: "대강당", heart18: "Heart 1 · 7~8", heart56: "Heart 5 · 6", conf: "컨퍼런스룸", tbd: "장소 추후 안내", promo: "EVENT", lounge: "", dap: "AX 라운지" };
+var ZONE_NM = { hall: "대강당", conf: "컨퍼런스룸", h01: "01 HEART", h06: "06 HEART", h07: "07 HEART", h08: "08 HEART", promo: "EVENT", lounge: "", dap: "AX 라운지" };
 /* 층별 상시 활동 표(FL_OPEN)와 층 머리 표기(FLTAG)는 260923 삭제 · 그것만 그리던 flListHtml 이 v4.15 시간표 재설계로 없어졌다.
    상시 활동은 스탬프 탭 카드가, 프로그램 목록은 progRowHtml 이 맡는다. */
 /* v4.93 seg = 프로그램 탭 [시간표 | 상시 운영](같은 세션 안에서 마지막 본 쪽) · zone = 구역 상세(zone_d) 구역 · anchor = 옛 진입 별칭이 그린 뒤 스크롤할 자리 */
