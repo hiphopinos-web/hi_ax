@@ -4437,7 +4437,7 @@ function opsOpen(){
   ws.onmessage=function(e){ if(OPS.ws!==ws) return; if(e.data==="o"){ OPS.pongAt=Date.now(); return; } var m; try{ m=JSON.parse(e.data); }catch(x){ return; }
     if(m.t==="ok"){ OPS.st="ok"; OPS.fails=0; OPS.pongAt=Date.now(); opsPing(true); schNext(); return; }
     if(m.t==="no"){ OPS.give=true; return; }
-    if(m.t==="ops") opsOn(m); };
+    if(m.t==="ops") opsOn(m); else if(m.t==="ckd") ckOnDesk(m); };
   ws.onclose=function(e){ if(OPS.ws!==ws) return; var was=OPS.st==="ok"; OPS.ws=null; OPS.st="off"; opsPing(false); schNext();
     if(e&&(e.code===4000||e.code===4001)||OPS.give||!OPS.cfg) return;
     if(was){ OPS.t=setTimeout(function(){ OPS.t=null; opsOpen(); },Math.random()*10000); return; }
@@ -6431,6 +6431,8 @@ function viewDanger(){
   rows+=row("L3","QR 코드 교체","새 코드를 만들면 인쇄물을 다시 붙여야 함",'<div class="row">'+["stamp","stair","att"].map(function(k){ return '<button class="btn danger sm" onclick="hvRotAsk(\''+k+'\')"'+(ok?'':' disabled')+'>'+esc(HV_ROT[k][1])+'</button>'; }).join("")+'</div>'+
     '<details class="memo"><summary>게시하지 않음(261006) · 송출 · 10F 끝 코드 교체 · 펼치기</summary><div class="mb"><p class="cap">이 QR 은 스탬프를 주지 않고 인쇄하지도 않습니다. 코드는 보존만 합니다.</p><div class="row">'+["attr","att10"].map(function(k){ return '<button class="btn danger sm" onclick="hvRotAsk(\''+k+'\')"'+(ok?'':' disabled')+'>'+esc(HV_ROT[k][1])+'</button>'; }).join("")+'</div></div></details>'+(ok?'':'<p class="cap mt8">위에서 본인 확인 뒤</p>'),1);
   rows+=row("L3","테스트 사번 처음 상태로","테스트 사번의 기록 전부(실사번은 서버가 거부)",'<button class="btn sm" onclick="go(\'p_test\')">사람·권한 › 테스트 사번</button>',1);
+  rows+=row("L3","체크인 시험 데이터 비우기","오늘 번호표 · 창구 화면 카드 전부(시험 전용)",
+    day?'<p class="cap">행사일(10/26)에는 서버가 받지 않아 열지 않습니다.</p>':'<button class="btn danger sm" onclick="ckResetAsk()"'+(ok?'':' disabled')+'>비우기</button>'+(ok?'':' <span class="cap">위에서 본인 확인 뒤</span>'),1);
   rows+=row("L2","테스트 출석 기록 지우기","테스트 계정 출석 "+(att.test||0)+"건 · 실제 참가자 기록은 지워지지 않음",'<button class="btn danger sm" onclick="attWipe()"'+(att.test?'':' disabled')+'>지우기</button>');
   rows+=row("L2","테스트 접속 기록 지우기","테스트 계정 · 그 기기 접속 "+(vis.test||0)+"건",'<button class="btn danger sm" onclick="visWipe()"'+(vis.test?'':' disabled')+'>지우기</button>');
   h+=card("위험 구역","눌러야 펼쳐집니다 · L3 = 슈퍼관리자 PIN → 미리 세기 → 확인 문구 · L2 = 대상 · 인원 확인 창",rows+
@@ -7391,7 +7393,7 @@ function viewFx(){
     kpi("지급 마감",cut?esc(String(cut).slice(11,16)):"없음","",cut?"이 시각 뒤 지급 거절":"소진까지")+
     kpi("취소",finNum(d.voided),"명","이 사람에게는 주지 않음")+
     kpi("체크인 3개",d.incCk===false||d.incCk===0||d.incCk==="OFF"?"빼고":"포함","","6개 판정 · 자리 예약 · 대기 없음")+'</div>'+
-    '<p class="cap pz-edge">첫 지급 <b class="n">'+esc(e.first||"-")+'</b> · 마지막 지급 <b class="n">'+esc(e.last||"-")+'</b> · 6개 모은 사람이 1F 주차장 체크인존에 먼저 와서 받는 순서 · 서버 시각 '+esc(short(d.t||""))+'</p>';
+    '<p class="cap pz-edge">첫 지급 <b class="n">'+esc(e.first||"-")+'</b> · 마지막 지급 <b class="n">'+esc(e.last||"-")+'</b> · '+(c.start?'지급 시작 <b class="n">'+esc(c.start)+'</b> · ':'')+'6개 모은 사람이 1F 주차장 체크인존에 먼저 와서 받는 순서 · 서버 시각 '+esc(short(d.t||""))+'</p>';
   else h+='<div class="kpis pz-k6">'+kpi("수량",finNum(d.cap),"개",cut?"마감 "+esc(String(cut).slice(5,16)):"마감 없음 · 소진까지")+
     kpi("발급",finNum(d.issued),"번","자격 "+finNum(el0)+"명 · 순번 = 6개째 서버 시각 순")+
     kpi("남음",finNum(d.left),"개","앱 표시 "+esc(d.show||c.show||"-")+(String(d.show||c.show)==="LOW"?" · "+(c.low!=null?c.low:30)+" 이하만":""))+
@@ -7497,7 +7499,7 @@ function fxCfgCard(d){
     sel("incCk","체크인 3개",[["ON","포함"],["OFF","빼고 판정"]])+sel("show","남은 수량 앱 표시",[["ALL","늘"],["LOW","임박 때만"],["OFF","마감 여부만"]])+inp("low","임박 기준","w-s")+'</div>'+
     '<div class="fn-go"><button class="btn" onclick="fxCfgSave()">설정 저장</button><span class="cap">'+(bg?"이미 지급한 수("+finNum(mn)+") 아래로는 서버가 받지 않습니다.":"수량을 줄여도 이미 자격을 받은 사람은 그대로입니다. 자격 수("+finNum(mn)+") 아래로는 서버가 받지 않습니다.")+'</span>'+
     '<button class="btn sm ghost" style="margin-left:auto" onclick="fxResetAsk()">시험 데이터 비우기</button></div>';
-  return memo(body,"선착순 설정 · "+(bg?"수령순 · ":v.mode?esc(v.mode)+" · ":"")+"수량 "+finNum(d.cap)+" · "+(bg?"지급 마감 ":"마감 ")+(String(d.cut!=null?d.cut:(d.cfg||{}).cut||"")?String(d.cut!=null?d.cut:(d.cfg||{}).cut).slice(11,16):"없음")+" · 앱 표시 "+(d.show||(d.cfg||{}).show||"-"));
+  return memo(body,"선착순 설정 · "+(bg?"수령순 · ":v.mode?esc(v.mode)+" · ":"")+"수량 "+finNum(d.cap)+" · "+(bg&&(d.cfg||{}).start?"지급 시작 "+esc((d.cfg||{}).start)+" · ":"")+(bg?"지급 마감 ":"마감 ")+(String(d.cut!=null?d.cut:(d.cfg||{}).cut||"")?String(d.cut!=null?d.cut:(d.cfg||{}).cut).slice(11,16):"없음")+" · 앱 표시 "+(d.show||(d.cfg||{}).show||"-"));
 }
 function fxCfgSave(){
   var d=ST.data.fx||{}, v=fxCfgVals(d); FX.cfg=null; var o=fxCfgVals(d); FX.cfg=v;
@@ -7518,7 +7520,7 @@ function fxResetAsk(){
 function fxMemo(d){
   if(fxByGive(d)) return memo('<p><b>방식</b> · 수령순입니다. 스탬프 6개를 모은 사람이 1F 주차장 체크인존에 먼저 와서 받는 순서로 수량까지 드립니다. 자리 예약 · 대기마감 · 승계가 없고, 6개째를 채운 순간에는 아무 줄도 생기지 않습니다.</p>'+
     '<p><b>지급</b> · 체크인존 스태프 폰이 참가자 QR 을 찍는 순간 서버가 6개 · 남은 수량 · 지급 마감을 보고 줄을 씁니다. 번호 = 지급 순서. 스캔이 안 되면 「수동 지급」(사유 필수)으로 기록합니다.</p>'+
-    '<p><b>거절</b> · 이미 받음 · 자격 취소 · 테스트 사번 · 6개 미만 · 지급 마감 시각 지남 · 소진(남은 0)이면 지급하지 않습니다.</p>'+
+    '<p><b>거절</b> · 이미 받음 · 자격 취소 · 테스트 사번 · 6개 미만 · 지급 시작(기본 10:30) 전 · 지급 마감 시각 지남 · 소진(남은 0)이면 지급하지 않습니다.</p>'+
     '<p><b>취소</b> · 「자격 취소」한 사번은 6개여도 지급하지 않습니다. 이미 받은 사람은 취소하지 않고, 잘못 찍은 지급은 「수령 되돌리기」로 지웁니다(남은 수가 하나 늘어남).</p>'+
     '<p><b>개인정보</b> · 이름 · 부문은 이 화면과 CSV(슈퍼관리자)에만 있습니다. 부문별 집계는 두지 않습니다.</p>');
   return memo('<p><b>순번</b> · 스탬프 6개째를 채운 순간의 서버 시각 순서입니다(같은 초면 서버가 처리한 순서). 순번이 수량 안이면 자격, 넘으면 「대기마감」으로 남습니다(지우지 않음). 수량을 올리면 대기마감 줄이 순번대로 자격이 됩니다.</p>'+
@@ -8096,14 +8098,14 @@ try{ (function(){ var v=sessionStorage.getItem("axf_hv_nav")||"", id=v.split(":"
  * 261006 옛 완주 경품 추첨(261002)은 폐기: ⑤ 칩에서 뺌(FIN_LEGACY_SHOW=false · 코드 보존). ⑤ 순서 = 무대 진행 · 선착순 참여상 · 7등 랜덤 굿즈 · 재고 · 룰렛 소진 · 타자왕. 새 CSS 는 ez- 로 시작한다. */
 var EZ_LIST=[
   { id:"z_today", n:"오늘", d:"지금 시간대에 할 일 · 서버 상태 · 긴급 공지입니다.", parts:[P("ztoday","","","viewToday")] },
-  { id:"z_field", n:"현장 처리", d:"줄 서 있는 일을 처리합니다. 위 칩으로 고릅니다.", staff:1, parts:[P("apply","resv","상담"),P("apply","cchat","커피챗"),P("apply","roster","담당 명단"),P("acct","pw","PIN 분실"),P("crowd","","혼잡 제보","viewCrowdTab")] },
+  { id:"z_field", n:"현장 처리", d:"줄 서 있는 일을 처리합니다. 위 칩으로 고릅니다.", staff:1, parts:[P("apply","resv","상담"),P("apply","cchat","커피챗"),P("apply","roster","담당 명단"),P("acct","pw","PIN 분실"),P("crowd","","혼잡 제보","viewCrowdTab"),P("ck","","체크인존","viewCk")] },
   { id:"z_who", n:"사람 찾기", d:"사번이나 이름으로 한 사람을 찾아 스탬프 · 닉네임 · PIN 을 처리합니다.", staff:1, parts:[P("zwho","","","viewWho")] },
   { id:"z_tell", n:"알리기", d:"참가자에게 공지 · 푸시를 보내고, 예약을 미루거나 취소합니다.", parts:[P("notice","","보내기"),P("sched","","예약"),P("zstop","","멈추기","viewEzStop")] },
   { id:"z_draw", n:"추첨·경품", d:"무대 진행 · 선착순 참여상 · 7등 · 재고 · 룰렛 소진 · 타자왕 1~3위입니다.", parts:[P("draw","run","무대 진행"),P("draw","fcfs","선착순 참여상"),P("draw","lk7","7등 랜덤 굿즈"),P("inv","","재고","viewInv"),P("zroul","","룰렛 소진","viewEzRoul"),P("ztype","","타자왕 1~3위","viewEzType")] },
   { id:"z_gate", n:"관리자 도구", d:"전체 메뉴(7개)를 엽니다. 슈퍼관리자 본인 확인(앱 PIN) 뒤에 열립니다.", hide:1, parts:[P("zgate","","","viewEzGate")] }
 ];
 EZ_LIST.forEach(function(z){ var it={ id:z.id, m:z.id, n:z.n, ez:1, staff:z.staff?1:0, hide:z.hide?1:0, parts:z.parts }; NAV.push(it); NAVBY[z.id]=it; MENUBY[z.id]={ id:z.id, n:z.n, d:z.d }; });
-NEED.ztoday=function(){ return NEED.dash.concat([{k:"cam",a:"crowd_cam_list"},{k:"inv",a:"inv_state"},{k:"tres",a:"type_result"},{k:"fx",a:"fcfs_state"}]); };
+NEED.ztoday=function(){ return NEED.dash.concat([{k:"cam",a:"crowd_cam_list"},{k:"inv",a:"inv_state"},{k:"tres",a:"type_result"},{k:"fx",a:"fcfs_state"},{k:"ck",a:"ck_state"}]); };
 NEED.zwho=[{k:"stamp",a:"stamp_people"},{k:"acct",a:"acct_list"},{k:"nick",a:"type_nick_list"},{k:"sy",a:"sync",p:{emp:""}}];
 NEED.zstop=[{k:"pst",a:"push_stats"},{k:"sy",a:"sync",p:{emp:""}},{k:"noti",a:"sync",p:{emp:""}}];
 NEED.zroul=[{k:"sy",a:"sync",p:{emp:""}},{k:"stamp",a:"stamp_people"},{k:"cfgl",a:"cfg_list"}];
@@ -8208,7 +8210,7 @@ function ezHot(){ var cr=(ST.data.crowd&&ST.data.crowd.ok)?ST.data.crowd.crowd||
   if(d&&d.ok) (d.cams||[]).forEach(function(c){ n+=camChk(c,d); }); return n; }
 /* 줄 = [자동 결과(true · false · null=손으로), 할 일, 보조 한 줄, 가는 곳(js), 버튼 이름, 손 체크 id] */
 function ezItems(i){
-  var sy=ST.data.sy||{}, ps=pushSt(), wait=ezWait(), hot=ezHot(), low=ezInvLow(), live=ezScrLive(), fx=ST.data.fx, fxg=fx&&fx.ok&&fxByGive(fx), fxc=fxg&&fx.cut?String(fx.cut).slice(11,16):"17:00";
+  var sy=ST.data.sy||{}, ps=pushSt(), wait=ezWait(), hot=ezHot(), low=ezInvLow(), live=ezScrLive(), fx=ST.data.fx, fxg=fx&&fx.ok&&fxByGive(fx), fxc=fxg&&fx.cut?String(fx.cut).slice(11,16):"17:00", ck=ckOk(), fst=(fx&&fx.ok&&fx.cfg&&fx.cfg.start)||"10:30";
   var go=function(id,p){ return "navSel('"+id+"',"+(p||0)+")"; }, scr="ezScrTo()";
   return [
     [[ST.at&&!ST.err?true:ST.err?false:null,"서버 연결","",null,"",""],
@@ -8218,11 +8220,14 @@ function ezItems(i){
      [null,"TV 화면 켜기 · 스탬프 월 · 타자왕 TV","아래 「화면 열기」에서 엽니다",scr,"주소 보기","tv"],
      [null,"타자왕 셀프 노트북 켜기","노트북에서 주소를 열고 관리코드를 넣습니다",scr,"주소 보기","self"],
      [null,"스태프 폰 관리자 모드 로그인 확인","QR 스캔 · 혼잡 제보를 쓰는 폰",null,"","staff"],
+     [ck?ckPhase(ck)!=="off":null,"체크인 번호표 켜짐",ck?(ckPhase(ck)==="pre"?"개시 전 · "+ck.cfg.open+"부터 번호를 줍니다":"1F 체크인존 번호표 · 창구 A~D"):"번호표 상태를 받지 못했습니다 · 서버 갱신 전이면 보이지 않습니다",go("z_field",5),"보기","ckon"],
+     [null,"체크인 창구 태블릿 4대 · TV 켜기","창구 화면 A~D 와 체크인 TV 주소는 아래 「화면 열기」",scr,"주소 보기","ckscr"],
      [null,"17F 오후 AWS · MS 입장 · 끝 QR 4장 붙임 확인","스탬프를 주는 출석 QR 은 이 4장뿐 · 기조연설 · 내부 강연은 출석 기록만 · 10F 출석 QR 은 쓰지 않음",null,"","att4"]],
     [[wait?false:true,"대기 건 처리 · 상담 · 커피챗 · PIN 분실",wait?wait+"건 대기":"대기 없음",go("z_field",0),"처리하러 가기",""],
      [hot?false:true,"혼잡 제보 · 카메라 확인 요청",hot?hot+"곳":"없음",go("z_field",4),"보기",""],
      [low==null?null:!low.length,"재고 경고",low==null?"재고를 받지 못했습니다":low.length?low.slice(0,3).map(function(x){ return x.n+" "+invN(x.left); }).join(" · ")+(low.length>3?" 외 "+(low.length-3):""):"곧 바닥인 품목 없음",go("z_draw",3),"재고 보기",""],
-     [null,"룰렛 경품이 떨어지면 소진 안내 켜기","켜면 앱 룰렛 창에 「모두 소진」",go("z_draw",4),"열기","roul"]],
+     [null,"룰렛 경품이 떨어지면 소진 안내 켜기","켜면 앱 룰렛 창에 「모두 소진」",go("z_draw",4),"열기","roul"],
+     [null,fst+" 선착순 지급 시작","체크인존 · 6개 모은 분이 먼저 와서 받는 순 · 그 전에는 서버가 지급을 거절",go("z_draw",1),"열기","fcstart"]],
     [[null,"타자왕 1~3위 확인 · 사회자에게 전달","17:00 마감 기록",go("z_draw",5),"1~3위 보기","type"],
      [live,"추첨 화면 연결",live==null?"17F 큰 화면에서 추첨 화면을 엽니다":live?"화면이 상태를 보내는 중":"화면 보고 없음 · 아래 「화면 열기」",scr,"주소 보기",""],
      [null,"행운권 추첨 진행 · 큰 버튼 하나","무대 순서 띠를 따라 누릅니다",go("z_draw",0),"무대 진행","draw"],
@@ -8245,11 +8250,12 @@ function ezCkHtml(i, w){
 }
 function ezScrTo(){ var c=el("ezScr"); if(c) c.scrollIntoView({ behavior:"smooth", block:"start" }); }
 function ezStrip(){
-  var cn=hvConn(), env=hvEnv(), st=ST.data.stats||{}, ps=pushSt(), hot=ezHot(), low=ezInvLow(), w=ezNow();
+  var cn=hvConn(), env=hvEnv(), st=ST.data.stats||{}, ps=pushSt(), hot=ezHot(), low=ezInvLow(), w=ezNow(), ck0=ckOk(), ckw=ck0&&ckPhase(ck0)!=="off"?ckWaitSum(ck0):null;
   return '<div class="hv-strip"><i class="dot '+(cn[1]==="ok"?"ok":cn[1]==="bad"?"bad":"")+'"></i><span><b>'+esc(cn[0])+'</b></span>'+tag(env[0], env[1])+
     (hvRo()?tag("읽기 전용 켜짐","warn"):"")+(ps?tag(ps.on?"푸시 켜짐":"푸시 전체 정지", ps.on?"ok":"bad"):"")+
     (hot?'<a href="#" onclick="navSel(\'z_field\',4);return false">'+tag("혼잡 확인 "+hot+"곳","bad")+'</a>':'')+
     (low&&low.length?'<a href="#" onclick="navSel(\'z_draw\',3);return false">'+tag("재고 경고 "+low.length+"건","warn")+'</a>':'')+
+    (ckw!=null?'<a href="#" onclick="navSel(\'z_field\',5);return false">'+tag("체크인 대기 "+ckw+"명",ckw?"pri":"")+'</a>':'')+
     '<span class="sp"></span><span class="cap">'+(w.fake?"시험 시각 ":"서버 시각 ")+'<b class="n">'+esc(w.d.slice(5).replace("-","/")+" "+ezHm(w.m))+'</b></span></div>';
 }
 function viewToday(){
@@ -8259,12 +8265,13 @@ function viewToday(){
   var sub=s.pre?"행사 전 · 10/26 당일에는 지금 칸이 저절로 열립니다":show===s.i?"자동 확인 줄은 스스로 체크됩니다":"다른 시간대 미리 보기 · 다시 누르면 지금 칸";
   var ck=card(EZ_SLOT[show].n+" 체크", sub, ezCkHtml(show, w));
   var r0=ST._right, todo=viewDash("todo"); ST._right=r0;
-  var on=todo.filter(function(x){ return x.v; });
+  var on=todo.filter(function(x){ return x.v; }), ck0=ckOk();
+  if(ck0&&ckPhase(ck0)!=="off"&&ckWaitSum(ck0)) on=on.concat([{ v:ckWaitSum(ck0), t:"체크인존 대기", d:CK_WINS.map(function(w){ return w+" "+((ck0.stat[w]||{}).wait||0); }).join(" · "), go:"navSel('z_field',5)" }]);
   var todoH=on.length?'<div class="todo">'+on.map(function(x){ return '<div class="it"><div class="v">'+x.v+'</div><div><div class="t">'+esc(x.t)+'</div><div class="d">'+esc(x.d)+'</div></div><button class="btn sm pri" onclick="'+x.go+'">처리하러 가기</button></div>'; }).join("")+'</div>':'<p class="cap">지금 처리할 일이 없습니다.</p>';
   var nt=(ST.data.sy||{}).notice;
   var urg=card("긴급 공지","앱 안 공지와 푸시를 한 번에 보냅니다",'<button class="btn pri ez-big" onclick="navSel(\'z_tell\',0)">긴급 공지 쓰기</button>'+
     (nt?'<div class="row mt12">'+tag("송출 중","pri")+'<span class="cap">'+esc(nt.title||"")+'</span><span class="sp" style="flex:1"></span><button class="btn sm danger" onclick="noticeStopC(\''+jq(nt.id)+'\')">공지 중지</button></div>':''));
-  var A=appBase(), rows=[["추첨 화면 · 원격","17F 큰 화면 · 코드는 그 화면에서",dcScreenUrl()],["ME to WE 스탬프 월","1F 스탠바이미",A+"wall/"],["타자왕 부스 TV","1F 세로 TV",A+"#tv=type&fix=site"],["타자왕 TV 순환","1F 가로 TV",A+"#tv=type"],["타자왕 셀프 노트북","코드는 그 화면에서",A+"#self"]];
+  var A=appBase(), rows=[["추첨 화면 · 원격","17F 큰 화면 · 코드는 그 화면에서",dcScreenUrl()],["ME to WE 스탬프 월","1F 스탠바이미",A+"wall/"],["타자왕 부스 TV","1F 세로 TV",A+"#tv=type&fix=site"],["타자왕 TV 순환","1F 가로 TV",A+"#tv=type"],["타자왕 셀프 노트북","코드는 그 화면에서",A+"#self"]].concat(ckScreens());
   var scr='<div id="ezScr">'+card("화면 열기","TV · 큰 화면에 띄우는 주소 · 주소에는 코드가 없습니다",'<div class="wrap"><table class="tb hv-scr"><tr><th>화면</th><th class="hide-m">어디에</th><th></th></tr>'+rows.map(function(r){
     return '<tr><td><b>'+esc(r[0])+'</b></td><td class="cap hide-m">'+esc(r[1])+'</td><td><div class="acts"><button class="btn sm pri" onclick="hvOpen(\''+esc(r[2])+'\')">열기</button><button class="btn sm" onclick="hvCopy(\''+esc(r[2])+'\')">복사</button></div></td></tr>'; }).join("")+'</table></div>')+'</div>';
   return ezStrip()+ph+'<div class="grid g75"><div>'+ck+card("지금 할 일", on.length?on.length+"가지 대기":"대기 없음", todoH)+'</div><div>'+urg+scr+'</div></div>'+
@@ -8321,6 +8328,98 @@ function viewEzGate(){
 /* 새로 고침 · 쉬운 화면이면 저장된 도구 항목 대신 첫 화면으로(역할은 meTag 가 다시 본다) */
 if(ST.ez&&!(NAVBY[ST.nav]||{}).ez) ST.nav="z_today";
 if(ST.nav==="z_gate") ST.nav="z_today";
+/* ══════════════════ 261007 체크인존 번호표 · ② 현장 처리 › 체크인존 ══════════════════
+ * 서버 ck_state(읽기) · ck_next {w}(그 창구 다음 번호 강제 호출) · ck_reset(POST · 관리자 도구 › 위험 구역) · 옛 서버 = 「서버 갱신 뒤」.
+ * 소켓 ops 방 사건 ckd { w, d } 가 오면 그 창구 칸만 바로 고치고(호출 번호 · 대기 수) 숫자는 곧 다시 받는다 · 소켓이 없으면 15초마다 다시 받는다.
+ * 화면 주소에는 코드 · 토큰이 없다(창구 화면은 그 화면에서 관리코드를 넣는다). */
+var CK_TV="https://hiphopinos-web.github.io/hi_ax/tv/checkin/", CK_WINS=["A","B","C","D"], CK_SZ=["S","M","L","XL","2XL"];
+var CK={ t:null, n:0 };
+function ckDesk(w){ return CK_TV+"desk.html?w="+w; }
+function ckScreens(){ return [["체크인 TV 대기판","1F 체크인존 TV · 호출 번호",CK_TV]].concat(CK_WINS.map(function(w){ return ["창구 화면 "+w,"창구 "+w+" 태블릿 · 찍는 사람과 나눠 주는 사람이 함께 봄",ckDesk(w)]; })); }
+function ckScrRows(){ return ckScreens().map(function(r){ return '<tr><td><b>'+esc(r[0])+'</b></td><td class="cap hide-m">'+esc(r[1])+'</td><td><div class="acts"><button class="btn sm pri" onclick="hvOpen(\''+esc(r[2])+'\')">열기</button><button class="btn sm" onclick="hvCopy(\''+esc(r[2])+'\')">복사</button></div></td></tr>'; }).join(""); }
+function ckOk(){ var d=ST.data.ck; return d&&d.ok&&d.stat?d:null; }
+function ckWaitSum(d){ d=d||ckOk(); if(!d) return null; var n=0; CK_WINS.forEach(function(w){ n+=Number((d.stat[w]||{}).wait)||0; }); return n; }
+function ckSizes(d, w){ var m=(d.cfg&&d.cfg.map)||{}, out=[]; CK_SZ.forEach(function(z){ if(m[z]===w) out.push(z); }); Object.keys(m).forEach(function(z){ if(m[z]===w&&out.indexOf(z)<0) out.push(z); }); return out; }
+function ckAvg(s){ var v=Number(s)||0; return v>0?(Math.round(v/6)/10)+"분":"-"; }
+/* 번호표 상태 · off = 꺼짐 · pre = 개시 전 · on */
+function ckPhase(d){ var c=d.cfg||{}; if(String(c.on).toUpperCase()==="OFF") return "off"; var t=String(d.t||"").slice(11,16), o=String(c.open||""); return o&&t&&t<o?"pre":"on"; }
+function ckBand(d){
+  var c=d.cfg||{}, ph=ckPhase(d);
+  if(ph==="off") return '<div class="bands">'+band("warn","<b>번호표가 꺼져 있습니다</b>(운영 설정 「체크인_번호표」 OFF). 번호 없이 창구 글자만 안내하고, QR 을 찍으면 바로 지급합니다.")+'</div>';
+  if(ph==="pre") return '<div class="bands">'+band("","<b>번호표 개시 전</b> · <b class=\"n\">"+esc(c.open)+"</b>부터 번호를 줍니다(운영 설정 「체크인_개시」). 그 전에는 창구 글자만 안내합니다.")+'</div>';
+  return "";
+}
+function ckWinCard(d, w){
+  var s=d.stat[w]||{}, b=((d.board||{}).w||{})[w]||{}, cur=b.cur, sz=ckSizes(d,w), wait=Number(s.wait)||0;
+  var curH=cur?'<b class="n ck-no">'+esc(cur.no)+'</b><span class="cap"> '+esc(cur.nm||"")+(cur.ct?' · '+esc(String(cur.ct).slice(0,5))+' 호출':'')+'</span>':'<span class="cap">호출 중인 번호 없음</span>';
+  return '<div class="ck-w" data-ckw="'+w+'"><div class="ck-h"><b class="ck-l">창구 '+w+'</b><span class="cap">'+(sz.length?esc(sz.join(" · "))+' 사이즈':'담당 사이즈 없음')+'</span></div>'+
+    '<div class="ck-k"><div><span>발급</span><b class="n">'+finNum(s.issued)+'</b></div><div><span>완료</span><b class="n">'+finNum(s.done)+'</b></div><div><span>대기</span><b class="n">'+finNum(wait)+'</b></div><div><span>평균 처리</span><b class="n">'+(Number(s.done)?ckAvg(s.avg):"-")+'</b></div></div>'+
+    '<div class="ck-c"><span class="cap">지금 호출</span><span>'+curH+'</span></div>'+
+    '<div class="acts"><button class="btn sm pri" onclick="ckNextAsk(\''+w+'\')"'+(wait?'':' disabled title="대기 번호 없음"')+'>다음 번호 부르기</button><button class="btn sm" onclick="hvOpen(\''+esc(ckDesk(w))+'\')">창구 화면 열기</button></div></div>';
+}
+function viewCk(){
+  var d=ST.data.ck, scr=card("화면 열기","TV · 창구 태블릿에 띄우는 주소 · 주소에는 코드가 없습니다",'<div class="wrap"><table class="tb hv-scr"><tr><th>화면</th><th class="hide-m">어디에</th><th></th></tr>'+ckScrRows()+'</table></div>');
+  if(!d) return card("체크인존","",skel());
+  if(hvUnknown(d)) return pzOldCard("체크인존 번호표")+scr;
+  if(!d.ok) return pzErrCard("체크인존 번호표", d)+scr;
+  var n=ckWaitSum(d), c=d.cfg||{};
+  var sub="번호표 "+(String(c.on).toUpperCase()==="OFF"?"꺼짐":"켜짐")+(c.open?" · 개시 "+esc(c.open):"")+" · 대기 합계 "+finNum(n)+"명";
+  return ckBand(d)+card("체크인존 창구 A~D",sub,'<div class="ck-g">'+CK_WINS.map(function(w){ return ckWinCard(d,w); }).join("")+'</div>',
+      '<button class="btn sm" onclick="reload([\'ck\'],true)">새로고침</button>')+scr+
+    memo('<p><b>번호 흐름</b> · 접수 스태프가 참가자 QR 을 찍으면 사이즈에 맞는 창구 번호표(예 B-007)가 나옵니다. 창구에서 지급을 마치면 그 창구의 다음 번호가 저절로 호출됩니다(창구 화면이 켜져 있으면 「건넴」을 누를 때).</p>'+
+      '<p><b>다음 번호 부르기</b> · 비상용입니다. 호출 중인 사람이 있어도 건너뛰고 그 창구의 다음 대기 번호를 부릅니다. 건너뛴 사람은 「놓친 번호」로 남아, 돌아와 창구에서 QR 을 찍으면 그대로 지급합니다.</p>'+
+      '<p><b>평균 처리</b> · 그 창구가 최근 5건을 처리한 평균(분)입니다. 담당 사이즈는 운영 설정 「체크인_창구」를 따릅니다.</p>');
+}
+/* 다음 번호 부르기 · L2 확인 창 · 처리한 창구 칸만 고친다 */
+function ckNextAsk(w){
+  var d=ckOk(); if(!d) return;
+  var s=d.stat[w]||{}, b=((d.board||{}).w||{})[w]||{}, cur=b.cur, nx=(b.nx||[])[0];
+  dialog({ t:"창구 "+w+"의 다음 번호를 부를까요?", x:imp([["창구","창구 "+w,""],["지금 호출",cur?esc(cur.no+" "+(cur.nm||"")):"없음",cur?"chg":""],["다음 호출",nx?esc(nx.no+" "+(nx.nm||"")):"대기 "+finNum(s.wait)+"명",""]]),
+    s:(cur?"<b>지금 호출 중인 사람을 건너뜁니다.</b> ":"")+"대기 중 가장 앞 번호가 호출되고 TV · 그 사람 폰에 알림이 갑니다. 건너뛴 사람은 돌아와 창구에서 QR 을 찍으면 지급합니다. 운영로그에 남습니다.", ok:"다음 번호 부르기",
+    onOk:function(){ pzCall("ck_next",{ w:w },null,function(r){
+      if(r&&r.ok){ if(r.called){ ckPatch(w,{ cur:{ no:r.called.no, nm:r.called.nm, ct:"" } }); toast("창구 "+w+" · "+r.called.no+" 호출했습니다"); } else toast("창구 "+w+" · 부를 대기 번호가 없습니다"); ckSoon(0); }
+      else toast("실패: "+pzWhy(r)); }); } });
+}
+/* 한 창구 칸만 고친다 · o = board.w[w] 에 덮을 값 */
+function ckPatch(w, o){ var d=ckOk(); if(!d) return; d.board=d.board||{}; d.board.w=d.board.w||{}; var b=d.board.w[w]=d.board.w[w]||{}; for(var k in o) b[k]=o[k]; if(ckSee()) render(); }
+function ckSee(){ var it=navCur(); return !!it&&(it.id==="z_today"||(it.id==="z_field"&&(it.parts[navPi()]||{}).tab==="ck")); }
+function ckSoon(ms){ clearTimeout(CK.t); CK.t=setTimeout(function(){ if(!authed()) return; if(ckSee()) reload(["ck"],true); else delete _cache[sig_("ck_state",{})]; }, ms==null?400:ms); }
+/* 소켓 ckd · 그 창구만 바로(호출 번호 · 대기 수) · 숫자는 곧 다시 */
+function ckOnDesk(m){
+  var d=ckOk(), w=String(m&&m.w||""); if(!d||CK_WINS.indexOf(w)<0) return;
+  var x=m.d||{}, o={};
+  if(x.cur!==undefined) o.cur=x.cur?{ no:x.cur.no, nm:x.cur.nm, ct:x.cur.ct||"" }:null;
+  if(x.nx) o.nx=x.nx;
+  if(x.n!=null){ o.n=x.n; if(d.stat[w]) d.stat[w].wait=x.n; }
+  if(Object.keys(o).length) ckPatch(w,o);
+  ckSoon(600);
+}
+/* 소켓이 없으면 15초 · 있으면 60초(놓친 사건 보정) · 보이는 화면에서만 */
+setInterval(function(){ if(document.hidden||!authed()||ST.busy||!ckSee()) return; CK.n++; if(OPS.st==="ok"&&CK.n%4) return; var a=document.activeElement; if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return; reload(["ck"],true); },15000);
+CTL_ACT.ck_next=["inv",function(p){ return "체크인 창구 "+(p.w||"")+" 다음 번호 호출"; }]; CTL_ACT.ck_reset=["inv","체크인 시험 데이터 비움"];
+NEED.ck=[{k:"ck",a:"ck_state"}];
+HV_VIEW.viewCk=function(){ return viewCk(); };
+/* 관리자 도구 › 위험 구역 › 체크인 시험 데이터 비우기(L3) */
+function ckResetAsk(){
+  dialog({ t:"체크인 시험 데이터를 비울까요?", s:"오늘 번호표(시트 「번호표」)와 창구 화면 카드를 모두 지우고 TV · 창구 화면을 빈 판으로 되돌립니다. 번호표 설정과 지급 기록(키트 원장)은 남습니다. <b>행사일(10/26)에는 서버가 받지 않습니다.</b> <b>되돌릴 수 없습니다.</b>", ok:"비우기", danger:true, word:"시험비우기",
+    onOk:function(){ pzCall("ck_reset",{ confirm:"RESET" },["ck"],function(r){
+      if(r&&r.ok){ delete _cache[sig_("ck_state",{})]; ST.data.ck=null; }
+      if(r&&r.ok) toast("비웠습니다 · 번호표 "+(r.cleared||0)+"줄 · 창구 카드 "+(r.desk||0)+"줄");
+      else toast(r&&r.reason==="eventday"?"행사일(10/26)에는 비울 수 없습니다":"실패: "+pzWhy(r)); },true); } });
+}
+CFG_NOTE["체크인_번호표"]="형식 ON 또는 OFF · OFF 면 번호 없이 창구 글자만 안내하고 바로 지급";
+CFG_NOTE["체크인_개시"]="형식 「08:00」(24시간 시:분) · 이 시각부터 번호표를 줌 · 그 전에는 창구 글자만";
+CFG_NOTE["체크인_창구"]="형식 「A=S,2XL B=M C=L D=XL」 · 창구 글자=사이즈(쉼표) · 창구끼리 띄어 씀 · 다섯 사이즈(S M L XL 2XL)가 A~D 에 모두 있어야 하고 틀리면 기본값";
+CFG_NOTE["선착순_지급시작"]="형식 「10:30」(24시간 시:분) · 행사일 이 시각부터 선착순 참여상 지급 · 날짜는 선착순_마감의 날짜 · 그 전 지급은 서버가 거절";
+
+/* CSS · ck- */
+(function(){ var s=document.createElement("style"); s.textContent=
+".ck-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.ck-w{border:1px solid var(--line);border-radius:var(--r);padding:16px;background:var(--sf)}"+
+".ck-h{display:flex;align-items:baseline;gap:12px;margin-bottom:12px}.ck-l{font-size:var(--fs-h2);color:var(--navy)}"+
+".ck-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}.ck-k div{display:flex;flex-direction:column;gap:2px}.ck-k span{font-size:var(--fs-s);color:var(--tx3)}.ck-k b{font-size:var(--fs-h2);font-variant-numeric:tabular-nums}"+
+".ck-c{display:flex;gap:12px;align-items:baseline;padding:12px 0;border-top:1px solid var(--line2);margin-bottom:12px;min-height:24px}.ck-no{font-size:var(--fs-h1);color:var(--navy);font-variant-numeric:tabular-nums}"+
+"@media(max-width:720px){.ck-g{grid-template-columns:minmax(0,1fr)}.ck-k{grid-template-columns:repeat(2,minmax(0,1fr))}}"; document.head.appendChild(s); })();
+
 /* ══════════════════ 8. 시작 ══════════════════ */
 (function(){ var p=navPart(); ST.tab=p.tab; if(p.sub) ST.subs[p.tab]=p.sub; })();   /* v5.14 새로 고침해도 보던 메뉴 그대로 */
 renderTabs();
