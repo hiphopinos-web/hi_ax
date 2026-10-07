@@ -23,11 +23,12 @@ function scanLinkRun() {
   qrRoute(p.raw, p.t);
 }
 /* 261006 1F 타자왕 노트북 접속 QR(#q=type&lt=)을 로그인 전에 찍고 들어왔다 · 그 순간 서버가 토큰을 5분 붙잡는다(처음 로그인이 1분을 넘겨도 「다시 찍어 주세요」가 안 뜨게)
-   토큰마다 한 번 · 응답은 쓰지 않는다(로그인 뒤 type_link_join 이 판정) · 실패 · 옛 서버는 조용히 넘어간다(예전처럼 60초) */
+   토큰마다 한 번 · 응답은 쓰지 않는다(로그인 뒤 type_link_join 이 판정) · 실패 · 옛 서버는 조용히 넘어간다(예전처럼 60초)
+   261007 (사용자 「늦게 찍으면 만료」) 로그인한 폰도 앱이 뜨자마자 붙잡는다(스크립트 시작 · hashchange) · 카메라 링크를 늦게 누르거나 앱이 늦게 떠도 1분 안에 연 QR 은 5분 동안 연결된다 */
 var TLK_HOLD = { lt: "" };
 function typeLinkHold(raw) {
   var m = String(raw || "").match(/#q=type\b[^#]*[&]lt=([A-Za-z0-9]{8,16})/i);
-  if (!m || ((S.get("user", {}) || {}).empId)) return;
+  if (!m) return;
   var lt = m[1].toLowerCase(); if (TLK_HOLD.lt === lt) return;
   TLK_HOLD.lt = lt;
   beCall({ action: "type_link_hold", lt: lt }, function () {}, function () {});
@@ -49,8 +50,10 @@ function scanLinkNote() {
   });
   lfSoon();
 }
+(function () { var p = scanLinkPeek(); if (p) typeLinkHold(p.raw); })();   /* 261007 앱이 뜨는 순간(로그인 여부와 상관없이) */
 window.addEventListener("hashchange", function () {
   if (!scanLinkTake()) return;
+  var p = scanLinkPeek(); if (p) typeLinkHold(p.raw);   /* 261007 이미 열린 탭 */
   if (!el("app").hidden) setTimeout(scanLinkRun, 60);
   else scanLinkNote();
 });
@@ -76,7 +79,7 @@ function qrRoute(raw, t) {
 }
 function qrHandle(raw) { qrRoute(raw, Date.now()); }
 /* ═══ v5.61 (261004 사용자 결정) 1F 타자왕 노트북 접속 QR · 방법 2 ═══
-   노트북 화면 왼쪽 QR = 앱 주소#q=type&lt=일회용 토큰(노트북마다 · 40초 교체 · 60초 만료 · 한 번 쓰면 끝)
+   노트북 화면 왼쪽 QR = 앱 주소#q=type&lt=일회용 토큰(노트북마다 · 30초 교체(261007 40 → 30) · 60초 만료 · 한 번 쓰면 끝)
    폰 기본 카메라로 찍으면 앱이 열리고(로그인 전이면 로그인 뒤 · scanLinkRun) · 앱 안 스캐너로 찍어도 같다 → type_link_join(본인 세션) → 「노트북 화면을 보세요 · SPACE로 시작」
    판정(명부 · 남은 도전 · 시간 창 · 테스트 사번)은 노트북 카메라로 내 QR 을 읽은 것(방법 1)과 같은 서버 판정(typeSelfCheck_) · 토큰이 없으면(#q=type 만) 내 QR 화면을 연다
    261006 (사용자 결정 「QR을 찍으라는 화면만」) 토큰이 없으면 「노트북 화면의 QR을 찍어 주세요」(옛 내 QR 화면 · 카메라에 비추라는 토스트 삭제) · 실패 화면 단추 = QR 다시 찍기 · 홈으로

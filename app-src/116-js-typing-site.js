@@ -298,8 +298,11 @@ var TSF_CAM = false;   /* 261006 노트북 카메라(방법 1) · false = 카메
 var TSF = { ph: "attract", msg: "", emp: "", nick: "", info: null, busy: false, ticket: "", res: null, sub: null, send: "", why: "", top: null, topT: 0, resAt: 0, phAt: 0, idle: 0, t: null, raf: 0, unl: false, snd: true, cfg: null, cfgT: 0,
   cam: { stream: null, timer: null, err: "", last: "", lastT: 0, busy: false, cv: null, g: null, res: "" }, race: null, err: null, nm: "", nmBad: false, retry: 0, via: "", closedK: "",
   sc: { on: false, hits: [], last: 0, box: null, tgt: null, rect: null, di: 2, n3: false, since: 0, okAt: 0, lum: 128, tick: 0, cands: 0, ms: 0, msg: "", hint: "", staff: 0 },
-  lk: { tok: "", at: 0, busy: false, pollAt: 0, retryAt: 0, fail: 0, url: "", hold: false }, dbg: /[?&]tsfdbg=1\b/.test(location.search) };
-var TSF_READY_MS = 60000, TSF_NICK_MS = 60000, TSF_RES_MS = 10000, TSF_RES_SCAN_MS = 8000, TSF_SWAP_MS = 60000, TSF_JOIN_S = 0.8, TSF_LINK_ROT = 40000, TSF_LINK_POLL = 1500;
+  lk: { tok: "", at: 0, busy: false, pollAt: 0, retryAt: 0, fail: 0, url: "", hold: false, gen: 0, sent: 0, n: 0 }, dbg: /[?&]tsfdbg=1\b/.test(location.search) };
+var TSF_READY_MS = 60000, TSF_NICK_MS = 60000, TSF_RES_MS = 10000, TSF_RES_SCAN_MS = 8000, TSF_SWAP_MS = 60000, TSF_JOIN_S = 0.8, TSF_LINK_ROT = 30000, TSF_LINK_POLL = 1500;
+/* 261007 (사용자 「늦게 찍으면 만료」) 화면 QR 나이 상한 · 토큰은 요청을 보낸 때부터 센다(서버 발급 시각보다 늘 이르다 = 보수적) · 45초를 넘긴 QR 은 새 토큰을 못 받았어도 내린다(서버 만료 60초 · 찍고 앱이 뜰 시간 15초 이상 남김)
+   TSF_LINK_WAIT = 서버 물음 · 새 토큰 요청이 6초 안에 안 오면 버리고 다시(앱 공용 타임아웃 15초를 기다리면 그사이 QR 이 늙는다) · 실패 뒤 다시 = 2 · 4 · 8 · 15초 */
+var TSF_LINK_MAX = 45000, TSF_LINK_WAIT = 6000;
 var TSF_DESK = "1층 안내 데스크로 알려 주세요";
 var TSF_WHY = { param: "확인하지 못했어요 · QR을 다시 찍어 주세요", unknown: "명부에서 찾을 수 없어요 · " + TSF_DESK, window: "지금은 도전 시간이 아니에요", auth: "관리코드가 바뀌었어요 · " + TSF_DESK, range: "기록이 범위를 넘어 저장하지 않았어요", net: "연결이 불안정해요 · 잠시 뒤 다시 해 주세요",
   locked: "관리 연결이 잠시 막혔어요 · " + TSF_DESK,   /* v4.65 서버 잠금(같은 와이파이에서 코드를 30번 틀림) */
@@ -714,7 +717,7 @@ function tsfCheckRes(r, via) {
   tsfRacePull();
   tsfPh("join"); sfx("rgjoin");
 }
-/* ── v5.61 방법 2 · 노트북 화면 접속 QR(앱 주소#q=type&lt=토큰) · 대기 · 안내 · 결과(8초 뒤)에서만 띄운다 · 40초마다 새 토큰 · 1.5초마다 서버에 묻는다 ──
+/* ── v5.61 방법 2 · 노트북 화면 접속 QR(앱 주소#q=type&lt=토큰) · 대기 · 안내 · 결과(8초 뒤)에서만 띄운다 · 30초마다 새 토큰(261007 40 → 30 · 화면 QR 은 45초까지만) · 1.5초마다 서버에 묻는다 ──
    서버가 폰의 접속을 받으면(type_link_join) 다음 물음(type_link_poll)에 그 사람의 확인 결과(got)가 온다 → tsfCheckRes(방법 1 과 같은 화면)
    QR 을 내릴 때(READY · 판 · 닉네임 · 시간 밖)는 토큰을 버린다(off) · 서버가 없거나 옛 서버면 칸에 「잠시만요」만(방법 1 은 그대로)
    261006 QR 은 대기 화면 가운데 하나(결과 화면 왼쪽 QR 없음 · 안내(err)는 토큰만 살려 두고 대기로 돌아오면 바로) · 물음 응답 hold 1 = 폰이 붙잡고 로그인하는 중(「폰에서 로그인하는 중」) */
@@ -727,41 +730,57 @@ function tsfLinkUrl(tok) { return location.origin + location.pathname + "#q=type
 function tsfLinkTick() {
   var L = TSF.lk, now = Date.now();
   if (!tsfLinkWant()) { if (L.tok) tsfLinkDrop(); return; }
+  if (L.busy && now - L.sent > TSF_LINK_WAIT) { L.busy = false; L.gen++; L.fail++; L.retryAt = now + tsfLinkBack(); tsfDbg("lkwait", L.fail); }   /* 응답이 안 온다 · 늦은 응답은 버린다 */
+  if (L.tok && now - L.at > TSF_LINK_MAX) { L.tok = L.url = ""; L.hold = false; tsfDbg("link", "old"); }   /* 만료에 가까운 QR 은 내린다(새 토큰을 못 받았어도) */
+  var bx = el("tsfLqr"); if (bx && bx._tk !== tsfLinkKey()) tsfLinkPaint();
   if (L.busy || document.hidden) return;
-  if (!L.tok || now - L.at > TSF_LINK_ROT) { if (now >= L.retryAt) tsfLinkNew(); return; }
+  if (!L.tok || now - L.at > TSF_LINK_ROT) {
+    if (L.tok && L.pollAt < L.at + TSF_LINK_ROT) { tsfLinkPoll(); return; }   /* 바꿀 때가 된 뒤 한 번 더 묻고 바꾼다(교체 직전에 앞 토큰으로 들어온 폰을 놓치지 않게 · 서버는 교체 때 그 앞 토큰을 잊는다) */
+    if (now >= L.retryAt) tsfLinkNew(); return;
+  }
   if (now - L.pollAt >= TSF_LINK_POLL) tsfLinkPoll();
 }
+function tsfLinkBack() { return [2000, 4000, 8000, 15000][Math.min(3, Math.max(0, TSF.lk.fail - 1))]; }
 function tsfLinkNew() {
-  var L = TSF.lk; L.busy = true;
+  var L = TSF.lk, g = ++L.gen, sent = Date.now(); L.busy = true; L.sent = sent;
   beCall({ action: "type_link_new", key: tsfKey(), tok: tsfTok(), dev: tsfDev() }, function (r) {
+    if (g !== L.gen) return;
     L.busy = false;
-    if (!r || !r.ok || !r.tok) { L.fail++; L.retryAt = Date.now() + 15000; if (!L.tok) tsfLinkPaint(); return; }
-    L.tok = r.tok; L.at = L.pollAt = Date.now(); L.fail = 0; L.url = tsfLinkUrl(r.tok); tsfDbg("link", r.tok);
+    if (!r || !r.ok || !r.tok) { L.fail++; L.retryAt = Date.now() + tsfLinkBack(); tsfLinkPaint(); return; }
+    L.tok = r.tok; L.at = sent; L.pollAt = Date.now(); L.fail = 0; L.n++; L.url = tsfLinkUrl(r.tok); tsfDbg("link", r.tok);
     tsfLinkPaint();
-  }, function () { L.busy = false; L.fail++; L.retryAt = Date.now() + 8000; });
+  }, function () { if (g !== L.gen) return; L.busy = false; L.fail++; L.retryAt = Date.now() + tsfLinkBack(); tsfLinkPaint(); });
 }
 function tsfLinkPoll() {
-  var L = TSF.lk, tk = L.tok; L.busy = true; L.pollAt = Date.now();
+  var L = TSF.lk, tk = L.tok, g = ++L.gen; L.busy = true; L.pollAt = L.sent = Date.now();
   beCall({ action: "type_link_poll", key: tsfKey(), tok: tsfTok(), dev: tsfDev() }, function (r) {
+    if (g !== L.gen) return;
     L.busy = false;
     if (!r || !r.ok) return;
     if (r.got) { L.tok = L.url = ""; L.hold = false; tsfDbg("got", r.got.ok ? 1 : 0); if (tsfLinkWant()) { if (!TSF.unl && S.get("site_sound", true) === true) { TSF.unl = true; sfxUnlock(); } sfx("scan"); tsfCheckRes(r.got, "link"); } return; }
-    if (r.none && L.tok === tk) { L.tok = L.url = ""; }   /* 서버가 토큰을 잊었다(다시 띄움 · 만료) · 다음 시계에 새로 받는다 */
+    if (r.none && L.tok === tk) { L.tok = L.url = ""; tsfLinkPaint(); }   /* 서버가 토큰을 잊었다(다시 띄움 · 만료) · 옛 QR 을 내리고 다음 시계에 새로 받는다 */
     var hd = !!r.hold; if (hd !== L.hold) { L.hold = hd; tsfDbg("hold", hd ? 1 : 0); tsfLinkPaint(); }   /* 261006 폰이 붙잡고 로그인하는 중 */
-  }, function () { L.busy = false; });
+  }, function () { if (g === L.gen) L.busy = false; });
 }
 function tsfLinkDrop() {
   var L = TSF.lk; L.hold = false; if (!L.tok) return;
-  L.tok = ""; L.url = ""; tsfDbg("link", "");
+  L.tok = ""; L.url = ""; L.gen++; L.busy = false; tsfDbg("link", "");
   if (BE.on) beCall({ action: "type_link_new", key: tsfKey(), tok: tsfTok(), dev: tsfDev(), off: 1 }, function () {}, function () {});
+}
+/* 261007 칸에 지금 있어야 할 것 · 살아 있는 토큰(45초 안)이면 그 토큰 · 아니면 안내 글(실패 2번 이상 · 처음 · 새로 받는 중) · 시계마다 칸과 대조해 다르면 다시 그린다 */
+function tsfLinkKey() {
+  var L = TSF.lk;
+  if (L.tok && L.url && Date.now() - L.at <= TSF_LINK_MAX) return L.tok;
+  return L.fail >= 2 ? "w2" : L.n ? "w1" : "w0";
 }
 /* 접속 QR 칸만 다시 그린다 · 일반 QR(검정 정사각 · 흰 바탕 · ECC Q · 장식 없음 · 261001 규칙) · 폭은 칸에 맞춘다(261006 가운데 큰 칸 · 480 까지) · 「폰에서 로그인하는 중」 줄 */
 function tsfLinkPaint() {
   var lh = el("tsfLh"); if (lh) lh.hidden = !(TSF.lk.hold && TSF.lk.tok);
   var box = el("tsfLqr"); if (!box) return;
-  var L = TSF.lk, px = Math.max(160, Math.min(480, (box.clientWidth || 300)));
-  if (L.tok && L.url) box.innerHTML = qrTextSvg(L.url, px, 4, "Q").replace("border-radius:8px", "border-radius:0");
-  else box.innerHTML = '<p class="tsf-lw">' + (L.fail >= 2 ? "잠시 뒤에 나와요" : "QR을 준비하는 중") + "</p>";
+  var L = TSF.lk, px = Math.max(160, Math.min(480, (box.clientWidth || 300))), k = tsfLinkKey();
+  box._tk = k;   /* 261007 그린 것 · 시계(tsfLinkTick)가 대조 · 45초 넘은 QR 은 그리지 않는다 */
+  if (k === L.tok) box.innerHTML = qrTextSvg(L.url, px, 4, "Q").replace("border-radius:8px", "border-radius:0");
+  else box.innerHTML = '<p class="tsf-lw">' + (k === "w2" ? "잠시 뒤에 나와요" : k === "w1" ? "QR을 새로 받는 중" : "QR을 준비하는 중") + "</p>";
 }
 /* 추월 레이스 · 현장 순위 100명(도전자 본인 줄 뺌 · 점수 내림차순) · 판이 이미 시작했으면 바로 넣는다 */
 function tsfRacePull() {
@@ -1171,6 +1190,8 @@ function hsPull() {
     if (!same && hsOn()) App.render();
   }, function () { TYHS.busy = false; hsFail(); });
 }
+/* 261007 노트북 창이 다시 보이면(가려짐 · 화면 잠금 · 다른 창 전체 화면 뒤) 시계를 기다리지 않고 곧바로 · 늙은 QR 은 내리고 새로 받는다 */
+document.addEventListener("visibilitychange", function () { if (!document.hidden && App.current === "type_site" && tsfOn()) tsfLinkTick(); });
 document.addEventListener("visibilitychange", function () {
   if (document.hidden) { if (TYHS.t) { clearTimeout(TYHS.t); TYHS.t = null; } return; }
   if (hsOn()) hsPull();   /* 다시 보이면 곧바로 한 번 */
