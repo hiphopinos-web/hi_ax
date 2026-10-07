@@ -2531,6 +2531,25 @@ function ccPfList(r){ return String(r.pref||"").split(/\s*·\s*/).filter(Boolean
 function ccPfHas(r, k){ var a=ccPfList(r); if(k==="none") return !a.length; if(k==="any") return a.some(function(x){ return x.indexOf("언제든")>=0; }); var lb=(CC_PF.filter(function(x){ return x[0]===k; })[0]||[])[1]; return a.indexOf(lb)>=0; }
 function ccPfSet(k){ ST.ccPf=ST.ccPf===k?"":k; render(); }
 function ccPfTags(r){ var a=ccPfList(r); return a.length?a.map(function(x){ return tag(x, x.indexOf("언제든")>=0?"off":"pri"); }).join(" "):'<span class="cap">안 고름</span>'; }
+/* 261007 회차 확정(사용자) · 30분 간격 6회 · 한 회 20분 · 선정 입력은 이 6개에서 고른다(옛 값이 서버에 있으면 그 값도 보여 준다) */
+var CC_ROUNDS=["13:00","13:30","14:00","14:30","15:00","15:30"];
+var CC_RD_MIN=20;
+var CC_PF_RD={ "13":["13:00","13:30"], "14":["14:00","14:30"], "15":["15:00","15:30"] };
+ST.ccRd=ST.ccRd||"";
+function ccRdEnd(k){ var m=String(k).match(/^(\d{1,2}):(\d{2})$/); if(!m) return ""; var t=(+m[1])*60+(+m[2])+CC_RD_MIN; return ("0"+Math.floor(t/60)).slice(-2)+":"+("0"+t%60).slice(-2); }
+function ccRdLbl(k){ return k+"~"+ccRdEnd(k); }
+/* 그 사람의 희망 시간대 → 추천 회차(언제든 = 모두 · 안 고름 = 추천 없음) */
+function ccRec(r){ var out=[]; ccPfList(r).forEach(function(x){ if(x.indexOf("언제든")>=0){ CC_ROUNDS.forEach(function(k){ if(out.indexOf(k)<0) out.push(k); }); return; } var m=x.match(/^(\d{1,2})~/); (CC_PF_RD[m&&m[1]]||[]).forEach(function(k){ if(out.indexOf(k)<0) out.push(k); }); }); return out.sort(); }
+function ccRdOpts(cur, rec, cnt){
+  cur=hhmm(cur||""); var all=CC_ROUNDS.slice(); if(cur&&all.indexOf(cur)<0) all.push(cur);
+  function o(k){ var old=CC_ROUNDS.indexOf(k)<0; return '<option value="'+esc(k)+'"'+(k===cur?" selected":"")+'>'+esc((old?k+" (기존 값)":ccRdLbl(k))+(cnt?" · 희망 "+(cnt[k]||0)+"명":""))+'</option>'; }
+  var r=all.filter(function(k){ return rec.indexOf(k)>=0; }), x=all.filter(function(k){ return rec.indexOf(k)<0; });
+  return '<option value="">회차 고르기</option>'+(r.length&&x.length?'<optgroup label="희망 시간대에 맞는 회차">'+r.map(o).join("")+'</optgroup><optgroup label="그 밖의 회차">'+x.map(o).join("")+'</optgroup>':all.map(o).join(""));
+}
+function ccRdSel(cur, rec, js, cls){ return '<select class="in '+(cls||"sm")+'" style="width:176px" onclick="event.stopPropagation()" onchange="'+js+'">'+ccRdOpts(cur,rec)+'</select>'; }
+function ccRdSet(k){ ST.ccRd=ST.ccRd===k?"":k; render(); }
+function ccRdIs(r){ return r.status==="매칭"||r.status==="참석"||r.status==="완료"; }
+function ccBulkCnt(sel){ var c={}; sel.forEach(function(r){ ccRec(r).forEach(function(k){ c[k]=(c[k]||0)+1; }); }); return c; }
 function viewCchat(){
   /* 기본은 「처리할 것」(대기·매칭·참석) · 대기를 맨 위로 */
   var rows=ccRows().slice(), f=ST.filt||"todo";
@@ -2538,16 +2557,19 @@ function viewCchat(){
   var ord={"대기":0,"매칭":1,"참석":2,"완료":3,"취소":4};
   rows.sort(function(a,b){ return ((ord[a.status]!=null?ord[a.status]:9)-(ord[b.status]!=null?ord[b.status]:9))||(a.ts<b.ts?-1:1); });
   var pf=ST.ccPf||"";
-  var shown=rows.filter(function(r){ return match(r,["emp","name","dept","tag","pref","table"]) && (!pf||ccPfHas(r,pf)) && (f==="all"||(f==="todo"&&(r.status==="대기"||r.status==="매칭"||r.status==="참석"||cxRecent(r,"cc")))||r.status===f); });   /* 261006 앱에서 매칭 뒤 취소한 지 10분 안 = 흐린 줄 */
+  var rd=ST.ccRd||"";
+  var shown=rows.filter(function(r){ if(rd) return match(r,["emp","name","dept","tag","pref","table"]) && ccRdIs(r) && hhmm(r.round)===rd; return match(r,["emp","name","dept","tag","pref","table"]) && (!pf||ccPfHas(r,pf)) && (f==="all"||(f==="todo"&&(r.status==="대기"||r.status==="매칭"||r.status==="참석"||cxRecent(r,"cc")))||r.status===f); });   /* 261006 앱에서 매칭 뒤 취소한 지 10분 안 = 흐린 줄 */
   var h=chips([{v:"todo",n:"처리할 것",c:(by["대기"]||0)+(by["매칭"]||0)+(by["참석"]||0)},"|",{v:"대기",n:"희망",c:by["대기"]||0},">",{v:"매칭",n:"선정",c:by["매칭"]||0},">",{v:"참석",n:"참석",c:by["참석"]||0},">",{v:"완료",n:"완료",c:by["완료"]||0},"|",{v:"취소",n:"취소",c:by["취소"]||0},{v:"all",n:"전체",c:rows.length}], f, "setFilt");
   h+=ccCapHtml(rows);
   h+='<div class="chips"><span class="cap" style="align-self:center">희망 시간대</span>'+CC_PF.map(function(x){ var n=rows.filter(function(r){ return r.status!=="취소"&&ccPfHas(r,x[0]); }).length; return '<button class="fchip'+(pf===x[0]?" on":"")+(n?"":" zero")+'" onclick="ccPfSet(\''+x[0]+'\')">'+esc(x[1])+'<span class="cnt">'+n+'</span></button>'; }).join("")+(pf?'<button class="btn sm ghost" onclick="ccPfSet(\''+pf+'\')">시간대 걸러 보기 끄기</button>':'')+'</div>';
+  var rdList=CC_ROUNDS.slice(); rows.forEach(function(r){ var k=hhmm(r.round); if(ccRdIs(r)&&k&&rdList.indexOf(k)<0) rdList.push(k); });
+  h+='<div class="chips"><span class="cap" style="align-self:center">회차별 선정</span>'+rdList.map(function(k){ var n=rows.filter(function(r){ return ccRdIs(r)&&hhmm(r.round)===k; }).length, old=CC_ROUNDS.indexOf(k)<0; return '<button class="fchip'+(rd===k?" on":"")+(n?"":" zero")+'" onclick="ccRdSet(\''+k+'\')">'+esc((old?k+" (기존 값)":ccRdLbl(k)+"("+CC_RD_MIN+"분)")+" · 선정 "+n+"명")+'</button>'; }).join("")+(rd?'<button class="btn sm ghost" onclick="ccRdSet(\''+rd+'\')">회차별 보기 끄기</button>':'')+'</div>';
   var sel=selKeys("c:").map(ccBy).filter(Boolean), body='';
   if(sel.length){
     var canM=sel.filter(function(r){return r.status==="대기"||r.status==="매칭";}).length, canC=canM;
     var bd=ST.bulk||{};
     body+='<div class="bulk"><span class="c"><b>'+sel.length+'명</b> 선택 · 같은 회차·테이블로 선정</span>'+
-      '<input class="in sm w-s" type="time" value="'+esc(bd.round||"")+'" oninput="ST.bulk.round=this.value">'+
+      '<select class="in sm" style="width:196px" onchange="ST.bulk.round=this.value">'+ccRdOpts(bd.round,[],ccBulkCnt(sel))+'</select>'+
       '<input class="in sm w-s" placeholder="테이블" value="'+esc(bd.table||"")+'" oninput="ST.bulk.table=this.value">'+
       '<button class="btn sm pri" '+(canM?"":"disabled ")+'onclick="ccMatch(selKeys(\'c:\'),true)">일괄 선정'+(canM?' '+canM:'')+'</button>'+
       '<button class="btn sm danger" '+(canC?"":"disabled ")+'onclick="ccDo(selKeys(\'c:\'),\'취소\')">일괄 취소'+(canC?' '+canC:'')+'</button>'+
@@ -2556,7 +2578,7 @@ function viewCchat(){
   body+='<div class="toolbar">'+searchBox("사번 · 이름 · 태그 · 테이블 검색")+'<span class="cnt"><b>'+shown.length+'</b> / '+rows.length+'명</span></div>';
   body+='<div class="wrap"><table class="tb"><tr><th class="ckc">'+ckAll("c:",shown.map(function(r){return normE(r.emp);}))+'</th><th>이름</th><th>부문</th><th>관심 태그</th><th>희망 시간대</th><th>희망한 때</th><th>상태</th><th>회차 · 테이블</th><th class="tdr">다음 행동</th></tr>'+
     shown.map(function(r){ var s=r.status, k="c:"+normE(r.emp), e=jq(r.emp), act='';
-      if(s==="대기") act='<input class="in sm w-s" type="time" value="'+esc(ccVal(r,"round"))+'" onclick="event.stopPropagation()" oninput="ccDraft(\''+e+'\',\'round\',this.value)">'+
+      if(s==="대기") act=ccRdSel(ccVal(r,"round"), ccRec(r), "ccDraft('"+e+"','round',this.value)")+
         '<input class="in sm w-s" placeholder="테이블 (예 T1)" value="'+esc(ccVal(r,"table"))+'" onclick="event.stopPropagation()" oninput="ccDraft(\''+e+'\',\'table\',this.value)">'+
         ''+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'취소\')">취소</button>')+'<button class="btn sm pri" style="min-width:72px" onclick="event.stopPropagation();ccMatch([\''+e+'\'])">선정</button>';
       else if(s==="매칭") act=''+rowMore('<button type="button" role="menuitem" class="rm-i bad" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'취소\')">취소</button>')+'<button class="btn sm" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'완료\')">완료</button><button class="btn sm pri" style="min-width:72px" onclick="event.stopPropagation();ccDo([\''+e+'\'],\'참석\')">참석</button>';
@@ -2566,7 +2588,7 @@ function viewCchat(){
         '<td>'+cxTag(r,"cc")+(cxAfter(r,"cc")&&r.cxBy?'<small class="cap n" style="display:block">'+cxWho(r)+'</small>':'')+'</td><td class="n">'+(r.round||r.table?'<b>'+esc(hhmm(r.round)||"-")+'</b> · '+esc(r.table||"-"):r.cxSeat?'<span class="cap">비움 · '+esc(r.cxSeat)+'</span>':'<span class="cap">-</span>')+'</td>'+
         '<td><div class="acts">'+act+'</div></td></tr>'; }).join("")+
     (!shown.length?emptyRow(9,f==="todo"?"처리할 커피챗이 없습니다.":"해당하는 희망이 없습니다."):'')+'</table></div>';
-  body+=memo('<p>커피챗은 아이디어 한 줄을 낸 참가자가 제출 화면에서 「희망」하고(가능한 시간대 13~14 · 14~15 · 15~16 · 언제든, 안 골라도 됨), 운영진이 희망자 중에서 「선정」합니다. 운영 시간은 13:00~16:00입니다. 위 「희망 시간대」 칩으로 시간대별 희망자만 걸러 봅니다(여러 시간대를 고른 사람은 각각에 들어갑니다).</p><p>참가자가 앱에서 취소하면 바로 반영됩니다. 선정한 뒤 취소한 희망은 「취소(선정 뒤)」와 비운 자리(회차 · 테이블)로 표시되고, 10분 동안 「처리할 것」에 흐린 줄로 남습니다. 그 자리는 다른 사람으로 채울 수 있습니다.</p><p>회차와 테이블을 넣고 선정을 누르면 참가자 앱에 「18F · 회차 · 테이블」로 뜨고, 「커피챗에 선정됐어요」 푸시와 시작 10분 전 알림이 나갑니다. 회차 입력 예시(확정 전): 30분 간격 13:00 · 13:30 · 14:00 · 14:30 · 15:00 · 15:30, 한 회 20분. 같은 관심 태그끼리 한 테이블에 묶는 것이 기본입니다. 여러 명을 체크하면 같은 회차·테이블로 한 번에 선정합니다.</p><p>테이블에 온 사람은 「참석」 또는 「완료」를 눌러도 스탬프는 주지 않습니다(프로그램 참여 스탬프는 17F 오후 AWS · MS 강연 입장 · 끝 QR만). 참석·완료에는 되돌리기가 없습니다. 선정·취소는 7초 동안 되돌릴 수 있습니다.</p>');
+  body+=memo('<p>커피챗은 아이디어 한 줄을 낸 참가자가 제출 화면에서 「희망」하고(가능한 시간대 13~14 · 14~15 · 15~16 · 언제든, 안 골라도 됨), 운영진이 희망자 중에서 「선정」합니다. 운영 시간은 13:00~16:00입니다. 위 「희망 시간대」 칩으로 시간대별 희망자만 걸러 봅니다(여러 시간대를 고른 사람은 각각에 들어갑니다).</p><p>참가자가 앱에서 취소하면 바로 반영됩니다. 선정한 뒤 취소한 희망은 「취소(선정 뒤)」와 비운 자리(회차 · 테이블)로 표시되고, 10분 동안 「처리할 것」에 흐린 줄로 남습니다. 그 자리는 다른 사람으로 채울 수 있습니다.</p><p>회차와 테이블을 넣고 선정을 누르면 참가자 앱에 「18F · 회차 · 테이블」로 뜨고, 「커피챗에 선정됐어요」 푸시와 시작 10분 전 알림이 나갑니다. 회차 확정(261007): 30분 간격 13:00 · 13:30 · 14:00 · 14:30 · 15:00 · 15:30, 한 회 20분이며 선정 때 이 6개에서 고릅니다. 고르기 목록에는 그 사람의 희망 시간대에 맞는 회차(13~14시 = 13:00 · 13:30 등, 언제든 = 모두)가 위에 먼저 나옵니다. 위 「회차별 선정」 칩으로 회차마다 선정 명단을 봅니다. 같은 관심 태그끼리 한 테이블에 묶는 것이 기본입니다. 여러 명을 체크하면 같은 회차·테이블로 한 번에 선정합니다.</p><p>테이블에 온 사람은 「참석」 또는 「완료」를 눌러도 스탬프는 주지 않습니다(프로그램 참여 스탬프는 17F 오후 AWS · MS 강연 입장 · 끝 QR만). 참석·완료에는 되돌리기가 없습니다. 선정·취소는 7초 동안 되돌릴 수 있습니다.</p>');
   return h+card("", "", body);
 }
 /* v4.47 수동 마감 스위치 (앱 CCHAT_CLOSE_T 와 같은 값 · 261007 선착순 30명 정원 폐기 · 희망 접수 마감만 남김)
@@ -2667,7 +2689,7 @@ function drwCchat(emp){
   h+='<h3>커피챗 · 18F</h3><div class="row" style="justify-content:space-between"><span>'+(r.tag?tag(r.tag,"off"):'<span class="cap">관심 태그 없음</span>')+'</span>'+cxTag(r,"cc")+'</div><div class="row mt8"><span class="cap">희망 시간대</span>'+ccPfTags(r)+'</div><p class="cap mt8">희망 '+esc(short(r.ts))+(s==="취소"&&r.cxBy?' · '+esc(r.cxBy)+'에서 취소 '+esc(short(r.cxAt))+(r.cxSeat?' · 비운 자리 '+esc(r.cxSeat):''):'')+'</p>';
   h+='<div class="mt12">'+stepsHtml(["대기","매칭","참석","완료"], s, ["취소"], ccLbl)+'</div>';
   if(s==="대기"||s==="매칭"){
-    h+='<h3>'+(s==="대기"?"선정 · 회차 · 테이블":"선정 회차 · 테이블 변경")+'</h3><div class="row"><label class="fld">회차<input class="in w-m" type="time" value="'+esc(ccVal(r,"round"))+'" oninput="ccDraft(\''+e+'\',\'round\',this.value)"></label>'+
+    h+='<h3>'+(s==="대기"?"선정 · 회차 · 테이블":"선정 회차 · 테이블 변경")+'</h3><div class="row"><label class="fld">회차'+ccRdSel(ccVal(r,"round"), ccRec(r), "ccDraft('"+e+"','round',this.value)", "")+'</label>'+
       '<label class="fld">테이블<input class="in w-s" placeholder="예: T3" value="'+esc(ccVal(r,"table"))+'" oninput="ccDraft(\''+e+'\',\'table\',this.value)"></label>'+
       '<button class="btn pri" style="align-self:flex-end" onclick="ccMatch([\''+e+'\'])">'+(s==="대기"?"선정":"변경")+'</button></div>';
   }
