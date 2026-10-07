@@ -129,7 +129,7 @@
   .axs-pz-c b { flex: 1 1 auto; min-width: 0; font: var(--ax-type-t4); font-weight: 700; color: var(--ax-color-ink); word-break: keep-all; }
   .axs-pz-c b small { display: block; margin-top: 2px; font: var(--ax-type-t7); font-weight: 600; color: var(--ax-color-muted); }   /* v5.35 제품명 = 경품명 아래 작은 회색 줄(타자왕) */
   .axs-pz-c .q { flex: none; font: var(--ax-type-t6-strong); color: var(--ax-color-muted); }
-  .axs-pz-gr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ax-space-12); }
+  .axs-pz-gr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ax-space-32) var(--ax-space-12); margin-top: var(--ax-space-20); }   /* v6.25 등수 묶음 사이 간격(사용자 261007 「3 · 4등 글이 2등 사진의 설명처럼 읽힌다」) · 글이 사진 위라서 위 카드 사진 바로 밑에 다음 등수 글이 붙어 보였다 → 줄 사이 32 · 대표 카드와 격자 사이 12 + 20 */
   .axs-pz-c.gr { border-radius: var(--ax-radius-20); }
   .axs-pz-c.gr .smp { right: var(--ax-space-8); top: var(--ax-space-8); }
   .axs-pz-c.gr .tx { flex-direction: column; align-items: flex-start; gap: 2px; padding: var(--ax-space-12) var(--ax-space-16) var(--ax-space-4); }

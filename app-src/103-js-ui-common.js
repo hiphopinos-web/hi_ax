@@ -407,6 +407,16 @@ function modalHeadHtml(title, onx, tid) {
   return '<div class="axs-mhead">' + (title ? '<h2 class="axs-mtitle" id="' + (tid || "mTitle") + '">' + title + "</h2>" : '<span class="axs-mtitle"></span>') +
     '<button type="button" class="axs-x" onclick="' + (onx || "modalClose()") + '" aria-label="닫기">' + X_SVG + "</button></div>";
 }
+/* v6.25 내용형 시트 공통 높이(사용자 261007) · 내용이 화면 높이(위 끝 --ax-sheet-top 아래)의 60% 이상이면 같은 높이(.axs-tall)로 · 그보다 짧은 확인 · 안내는 내용 높이 그대로(빈 공간이 절반을 넘지 않게) · 룰렛 · 응모권 상자(.rfx)는 연출이라 제외 · was = 한 번 키가 커진 시트는 다시 그릴 때 줄이지 않는다(오류 줄 등으로 흔들리지 않게) */
+function sheetTall(card, was) {
+  if (!card || card.querySelector(".rfx")) return false;
+  card.classList.remove("axs-tall");
+  var nat = card.scrollHeight;
+  card.classList.add("axs-tall");
+  var cap = card.clientHeight;
+  if (!(was || nat >= cap * 0.6)) card.classList.remove("axs-tall");
+  return card.classList.contains("axs-tall");
+}
 function modalOpen(html, title) {
   modalClose();
   var d = document.createElement("div");
@@ -414,6 +424,7 @@ function modalOpen(html, title) {
   d.innerHTML = '<div class="mcard" role="dialog" aria-modal="true"' + (title ? ' aria-labelledby="mTitle"' : "") + ">" + modalHeadHtml(title) + '<div class="axs-mbody">' + html + "</div></div>";
   d.addEventListener("click", function (e) { if (e.target === d) modalClose(); });
   el("frame").appendChild(d);
+  sheetTall(d.querySelector(".mcard"));
   sheetDrag(d, function () { return d.querySelector(".mcard"); }, { close: function () { if (el("modal") === d) modalClose(); } });   /* v5.69 끌어 닫기 = 상세 시트와 같은 손(뒷배경 탭과 같은 닫기) */
 }
 function modalClose() {

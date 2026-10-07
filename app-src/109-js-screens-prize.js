@@ -128,8 +128,8 @@ function rewItems() {
   if (f && f.st === "closed") items.push({ k: "fin", used: true, chip: "마감", off: true, nm: "선착순 참여상", big: "", why: ((fxGet() || {}).cut || "17:00") + " 지급 마감" });
   /* v5.90 행운권 7등 랜덤 굿즈 · 서버 my.lk7 이 있고 행운권 보유(in)일 때 · 추첨 뒤 당첨이면 당첨 칩
      v5.92 (사용자 261006 「7등 랜덤 굿즈의 경우에는 정말 랜덤으로」) 고정 세트 없음 · 룰렛 남은 경품에서 무작위 · 수는 PRIZES.lk7 한 곳 */
-  var l7 = S.get("lk7", null), l7n = PRIZES.lk7.list[0].q;
-  if (l7 && l7.in && l7.ph !== "done") items.push({ k: "lk7", used: false, chip: "추첨 대기", cc: "", nm: "랜덤 굿즈", big: "", why: "룰렛 남은 경품에서 무작위 · 행사 뒤 " + l7n + "명 추첨 · 사내 우편 발송" });
+  var l7 = S.get("lk7", null);   /* v6.25 7등 수량 = 「수량 추후 공개」(사용자 261007 · 남은 경품으로 꾸려서 수가 정해지지 않았다) · 수는 어디에도 쓰지 않는다 */
+  if (l7 && l7.in && l7.ph !== "done") items.push({ k: "lk7", used: false, chip: "추첨 대기", cc: "", nm: "랜덤 굿즈", big: "", why: "룰렛 남은 경품에서 무작위 · 행사 뒤 추첨 · 사내 우편 발송" });
   if (l7 && l7.ph === "done" && l7.w) items.push({ k: "lk7", used: false, chip: "당첨", nm: "랜덤 굿즈", big: "", why: "룰렛 남은 경품에서 무작위 · 사내 우편 발송" });
   return items;
 }
@@ -158,7 +158,7 @@ var PRIZES = {
   fin: { unit: "개", list: [
     { rk: "", nm: "무선 무드등 가습기", q: 210, img: "fin_humidifier_v2" }] },
   lk7: { unit: "명", list: [
-    { rk: "7등", nm: "랜덤 굿즈", sub: "룰렛 남은 경품에서 무작위", q: 60, img: "lk7_random_v2" }] },
+    { rk: "7등", nm: "랜덤 굿즈", sub: "룰렛 남은 경품에서 무작위", qt: "수량 추후 공개", img: "lk7_random_v2" }] },
   idea: { unit: "명", list: [
     { rk: "1등", nm: "AI 구독권 6개월", q: 1, img: "idea1" },
     { rk: "2등", nm: "AI 구독권 3개월", q: 1, img: "idea2" },
@@ -192,7 +192,7 @@ function prizePhHtml(p, w) {
 /* 모달 아래 경품 한 줄(룰렛 1회권 · 행운권 · 참여상 안내) · v5.08 옛 목록 대신 대표 사진 + 요약 + 「경품 보기」(포스터 그 구역으로) */
 function prizeModalHtml(kind) {
   var g = PRIZES[kind]; if (!g) return "";
-  var p = g.list[0], sum = (p.rk ? p.rk + " " : "") + p.nm + (g.list.length > 1 ? " 외 " + (g.list.length - 1) + "종" : " " + p.q.toLocaleString() + g.unit);
+  var p = g.list[0], sum = (p.rk ? p.rk + " " : "") + p.nm + (g.list.length > 1 ? " 외 " + (g.list.length - 1) + "종" : " " + (p.qt || p.q.toLocaleString() + g.unit));
   return '<div class="axs-mprz"><button type="button" class="axs-pzm" onclick="prizeGo(\'' + kind + '\')">' + prizePhHtml(p) +
     '<span class="tx"><b>' + esc(sum) + "</b><span>경품 보기</span></span>" + CHEV_SVG + "</button></div>";
 }
@@ -224,7 +224,7 @@ var PZ_ICO = {
 /* v5.90 (261006 경품 기획 변경 · 계약.md 5절) 행운권 받으려면 줄2 = 참석 조건(sync lkcond) 따라 · 7등 · 선착순 참여상 · 아이디어왕 구역 · 서버 필드가 없으면(on) 구역을 그리지 않는다 */
 var PZ_SEC = [
   { k: "draw", en: "LUCKY DRAW", t: "행운권 추첨", need: function () { return [["stamp", "스탬프 4개부터 행운권", "6개면 3장"], lkCond() ? ["qr", "Outro 참석 · 17F 입구 QR 체크인", "16:40부터 · 17:00 현장 추첨"] : ["cup", "17F Outro 현장 추첨", "17:00 · 당첨자 발표만, 경품은 나중에 전달"]]; } },
-  { k: "lk7", en: "7TH PRIZE", t: "행운권 7등 · 랜덤 굿즈", on: function () { return !!S.get("lk7", null); }, need: function () { return [["stamp", "스탬프 4개 이상(행운권 보유)", "1~6등 당첨자는 제외"], ["box", "행사 뒤 " + PRIZES.lk7.list[0].q + "명 추첨", "룰렛 남은 경품에서 무작위 · 사내 우편 발송"]]; } },   /* v5.92 정말 랜덤(사용자 261006) */
+  { k: "lk7", en: "7TH PRIZE", t: "행운권 7등 · 랜덤 굿즈", on: function () { return !!S.get("lk7", null); }, need: function () { return [["stamp", "스탬프 4개 이상(행운권 보유)", "1~6등 당첨자는 제외"], ["box", "행사 뒤 추첨", "룰렛 남은 경품에서 무작위 · 사내 우편 발송"]]; } },   /* v5.92 정말 랜덤(사용자 261006) */
   { k: "fin", en: "FIRST COME", t: "선착순 참여상", on: function () { return !!fxGet(); }, need: function () { var x = fxGet() || {}; return fcfsAtL([["stamp", "스탬프 6개를 모으고", ""], ["box", "1F 주차장 체크인존에 먼저 온 " + (x.cap || 210) + "명", ""]]); }   /* v5.98 받기 선착순 */, qt: function () { return fcfsQtyTxt(); } },   /* v5.97 (사용자 261006 밤) 남은 수량은 상품 제목 오른쪽 한 곳(fcfsQtyTxt) · 상자 줄 삭제 · 「당일 못 받으면 발송」 줄 삭제(「선착순인데 당일 못 받는 건 말이 안 되잖아」) */
   { k: "roulette", en: "ROULETTE", t: "룰렛", need: function () { return [["stamp", "스탬프 3개면 룰렛 1회", "1인 1회"], ["qr", "1F EVENT 룰렛 부스에서 내 QR 제시", S.get("rcut", "") ? "룰렛 " + S.get("rcut", "") + " 마감" : ""]]; } },
   { k: "idea", en: "IDEA KING", t: "아이디어왕", r3: 1, on: function () { return !!S.get("idea_pub", null); }, need: function () { var ip = S.get("idea_pub", null) || {}; return [["stamp", (ip.cut || "16:00") + "까지 아이디어 한 줄", "AX 라운지 · 커피챗 · 앱 어느 경로든"], ["cup", "Outro에서 시상", ideaKingN() + "명 · AI 구독권"]]; } },
@@ -255,7 +255,7 @@ function pzCard(p, unit, cls, qt) {
   var ph = '<span class="axs-pz-ph' + (p.img2 ? " two" : "") + '">' + (p.img ? im(p.img) + (p.img2 ? im(p.img2) : "") +
     (PRIZE_SAMPLE && p.s !== 0 ? '<span class="smp">샘플</span>' : "") : "") + "</span>";
   return '<article class="axs-pz-c' + cls + (p.flat ? " flat" : "") + (p.tall ? " tall" : "") + '"><div class="tx">' + (p.rk ? '<span class="rk">' + p.rk + "</span>" : "") +
-    "<b>" + esc(p.nm) + (p.sub ? "<small>" + esc(p.sub) + "</small>" : "") + '</b><span class="q">' + esc(qt || p.q.toLocaleString() + unit) + "</span></div>" + ph + "</article>";   /* v5.97 qt = 구역이 준 수량 글(선착순 남은 수량) */   /* v5.33 글 줄 먼저 · 사진 아래 */
+    "<b>" + esc(p.nm) + (p.sub ? "<small>" + esc(p.sub) + "</small>" : "") + '</b><span class="q">' + esc(qt || p.qt || p.q.toLocaleString() + unit) + "</span></div>" + ph + "</article>";   /* v5.97 qt = 구역이 준 수량 글(선착순 남은 수량) */   /* v5.33 글 줄 먼저 · 사진 아래 */
 }
 /* v5.97 (사용자 261006 밤 「3등 이상하게 편집 · 한 줄에」) 같은 그림 카드 3장 = 한 줄 3칸 · 같은 크기 · 그림 아래 「1등 · 1명」 한 줄(개월은 카드 그림 알약)
    v6.07 함수로 뺐다 · 경품 시트 아이디어왕 구역과 아이디어 입력 화면(ideaPrizeHtml · 작게)이 같은 그림 · 같은 모양을 쓴다 */

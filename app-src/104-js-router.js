@@ -466,7 +466,6 @@ function detPaint(dv, base) {
   if (!dv) { if (w) detGone(w, was.dv && was.base === base); document.documentElement.classList.remove("det-lock"); return; }
   var sp = DET_SPEC[dv]() || {}, snap = detSnap(dv), first = !w, same = !first && DET.cur && detKey(DET.cur) === detKey(snap);
   if (first) w = detMake();
-  detTop(w);
   var pan = w.firstChild, bd = pan.querySelector(".axs-dbody"), ft = pan.querySelector(".axs-dft"), y = same ? bd.scrollTop : DET.ry || 0;
   DET.ry = 0;
   pan.className = "ax-sheet axs-dsh" + (sp.cls ? " " + sp.cls : "") + (sp.fit ? " axs-dfit" : "");   /* 1F 구역 = 판 문법 경계(zoneSheet cls · 간판 칩 · 하는 일 · ink 줄) */
@@ -513,13 +512,7 @@ function detMake() {
   return w;
 }
 /* 아래 고정 칸 위 구분선 = 본문이 그 아래로 더 있을 때만 · v5.74 머리 아래 구분선 = 본문이 머리 밑으로 스크롤됐을 때만(사용자 261006 캡처 「시트 머리 아래 깨진 그림 띠」 = 경품 사진 아래 끝이 선 없이 머리에 잘려 보였다) */
-/* v5.89 시트 위 끝 = 앱 헤더 아래 경계(실측 · 안전 영역 · 큰 글씨로 헤더 높이가 달라도 맞음) · 헤더가 없으면 CSS 기본(화면 85%) */
-function detTop(w) {
-  w = w || el("axsDet"); if (!w) return;
-  var tb = el("topbar"), r = tb && tb.offsetHeight ? tb.getBoundingClientRect() : null;
-  if (r && r.bottom > 0 && r.bottom < innerHeight * 0.5) w.style.setProperty("--dtop", Math.round(r.bottom) + "px"); else w.style.removeProperty("--dtop");
-}
-window.addEventListener("resize", function () { detTop(); });
+/* v6.25 시트 위 끝 = CSS 변수 --ax-sheet-top 한 곳(옛 v5.89 detTop · 앱 머리 실측은 폐기) */
 function detOv() {
   var bd = document.querySelector("#axsDet .axs-dbody"), ft = document.querySelector("#axsDet .axs-dft"), hd = document.querySelector("#axsDet .axs-dhd");
   if (bd && ft) ft.classList.toggle("ov", bd.scrollHeight - bd.clientHeight - bd.scrollTop > 2);

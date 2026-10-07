@@ -822,6 +822,7 @@ function sheetPaint(first) {
     (sp.kv && sp.kv.length && !e ? '<dl class="ax-inset axs-kv">' + sp.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl>" : "") +
     (e ? '<div class="axs-err" role="alert"><b>' + esc(e.t) + "</b>" + (e.b ? "<span>" + esc(e.b) + "</span>" : "") + "</div>" : "") +
     '<div class="ax-stack-tight axs-gap12">' + (sp.keepLast ? go + keep : keep + go) + "</div></div>";   /* v5.46 keepLast = 주 버튼 위 · 약한 버튼 아래(둘러보기 초대) */
+  SHEET.tall = sheetTall(w.querySelector(".ax-sheet"), SHEET.tall);   /* v6.25 긴 시트 = 공통 높이 */
   /* 위험한 확정은 유지 버튼에, 그 밖에는 주 버튼에 포커스를 둔다(닫기 X 에 먼저 걸리지 않게) */
   var f = w.querySelector(sp.keep ? "button:not([disabled])" : "#axsSheetGo:not([disabled])") || w.querySelector("button:not([disabled])");
   if (f && (first || !w.contains(document.activeElement))) f.focus();
@@ -840,7 +841,7 @@ function sheetClose(silent) {
   var w = el("axsSheet"); if (w) w.remove();
   if (SHEET.busy) botWait(false);   /* v4.36 확정 응답으로 닫힐 때 덮개도 걷는다 */
   var oc = SHEET.spec && SHEET.spec.onClose;   /* v5.46 어떻게 닫든(버튼 · 뒷배경 · Esc · 뒤로) 한 번 */
-  SHEET.busy = false; SHEET.err = null; SHEET.spec = null;
+  SHEET.busy = false; SHEET.err = null; SHEET.spec = null; SHEET.tall = false;
   if (oc) { try { oc(); } catch (e) {} }
   if (!silent && SHEET.back) { var t = el(SHEET.back); if (t) t.focus(); }
 }
