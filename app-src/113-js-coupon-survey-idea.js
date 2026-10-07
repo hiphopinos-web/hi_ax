@@ -142,6 +142,8 @@ function stampSync(list) {
      로그인 · 로그아웃(personWipe)으로 본 기록(pp_seen)이 비면 첫 동기화가 돌려준 스탬프는 이미 받은 것인데 「안 본 것」으로 남았다.
      그 뒤 아이디어 도장(p5)만 본 기록에 들어가면, 스탬프 탭의 「새 스탬프 1개면 팝」 규칙이 예전 스탬프(예: 1F 전시)의 연출을 다시 틀었다.
      본 기록이 아예 없을 때(키 없음)의 첫 목록 = 기준선 · 본 것으로 조용히 적는다 · 그 뒤로 새로 생긴 스탬프만 한 번 팝 */
+  var base0 = S.get("pp_seen", null) === null || !!S.get("pp_base", 0);   /* 261007 같은 기준선으로 보상 알림도(rwBaseline · 분석 P1) */
+  if (base0 && typeof rwBaseline === "function") { var cur0 = S.get("stamps", []), ps0 = S.get("pp_seen", []) || []; rwBaseline(list, ps0.filter(function (id) { return cur0.indexOf(id) < 0; })); }   /* fresh = 스캔이 본 기록에 먼저 적은 새 스탬프 */
   if (S.get("pp_seen", null) === null) S.put("pp_seen", list.slice());
   else if (S.get("pp_base", 0)) { var sb = S.get("pp_seen", []); list.forEach(function (id) { if (sb.indexOf(id) < 0) sb.push(id); }); S.put("pp_seen", sb); }   /* v5.07 기준선 대기(ppSeenGet) */
   if (S.get("pp_base", 0)) S.put("pp_base", 0);

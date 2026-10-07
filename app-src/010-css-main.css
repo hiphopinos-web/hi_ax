@@ -1907,6 +1907,15 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-ttv-s .ax-button { min-height: 44px; }
   .axs-ttv-p { display: flex; flex-wrap: wrap; gap: var(--ax-space-8); }
   .axs-ttv-p .axs-chip.on { background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
+  /* 261007 홈 「다음 할 일」 카드(nxCardHtml) · 목적지 카드(.ax-destination) 그대로 + 오른쪽 위 × · 단추 글자는 아래 끝 · 그림자 없음
+     홈 카드 통일(사용자 261007 「통일감」) = 홈의 목적지 카드(추첨 체크인 · 키트 · 다음 할 일)도 홈 행 카드(.rc · 둘러보기 카드)와 같은 안쪽 여백 16 · 둥글기 20 · 너비는 모두 화면 폭(ax-stack) 그대로 */
+  #view[data-v="home"] .axs-dest { padding: var(--ax-space-16); border-radius: var(--ax-radius-20); box-shadow: none; }
+  .axs-nxh { position: relative; }
+  .axs-nxh .axs-dest { align-items: flex-end; padding-right: var(--ax-space-16); }
+  .axs-nxh .axs-dest .axs-tx { gap: var(--ax-space-4); padding-right: var(--ax-space-32); }
+  .axs-nxh .ax-card-title { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
+  .axs-nxh .ax-meta { color: var(--ax-color-muted); }
+  .axs-nxh-x { position: absolute; top: var(--ax-space-4); right: var(--ax-space-4); }
   /* v5.56 (사용자 261004 「행사장 둘러보기의 아이콘이 너무 허접해 · 챗봇을 배치」) 왼쪽 원 = 옛 3D 로비 사진(thumb.jpg · 지움) 대신 행사 캐릭터 챗봇(원본 BOT_SVG 합성 · design.md A-4)
      둘러보기 안 「내 캐릭터」와 같은 주황 · 연주황 몸 · 원 = 연주황(brandSoft · O10) 테 없음 · 캐릭터 46px(viewBox 200 그대로 · 원 42 안에 다 들어감)
      움직임 = 3초에 한 번 천천히 통통(위로 3px · 모양 그대로) · 머리 위 전파 호 3개 은은하게(최대 0.7) · 9초마다 눈 깜빡임 2번 · 반달 눈웃음 1번

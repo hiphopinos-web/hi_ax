@@ -140,6 +140,8 @@
       <button class="fs-admin" id="fsA2hs" onclick="fsSheet(false); a2hsOpen()"><span id="fsA2hsT" class="fs-lbl">바로가기 설치</span><span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
       <!-- v5.83 (최초 진입 가볍게) 효과음 = 시트 안에서 바로 전환(game_sound 하나 · 게임 안 토글과 같은 값) · 오프닝 다시 보기 = 최초 로그인 장면 시연(스탬프 · 서버 변경 없음) -->
       <button class="fs-admin" id="fsSnd" role="switch" aria-checked="false" onclick="fsSndToggle()">효과음<span><b class="fs-st" id="fsSndSt">꺼짐</b></span></button>
+      <!-- 261007 「다음 할 일」 카드 켜기 · 끄기(카드 × = 그날만 끔 · 이 줄 = 다시 켬 · 끔) -->
+      <button class="fs-admin" id="fsNx" role="switch" aria-checked="true" onclick="nxFsToggle()">다음 할 일 카드<span><b class="fs-st" id="fsNxSt">켜짐</b></span></button>
       <button class="fs-admin" id="fsLgx" onclick="fsSheet(false); lgxReplay()">오프닝 다시 보기<span><svg class="axs-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></span></button>
       <!-- 261007 테스트 도구 · 테스트 사번(데모)만 보인다(fsSheet) · 앱 화면만 바꾼다(시계 · 내 10F 세션) · 서버 판정은 그대로 -->
       <p class="fs-lb" id="fsLbTest" hidden>테스트</p>

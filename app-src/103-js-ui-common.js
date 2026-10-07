@@ -55,6 +55,7 @@ function fsRowState() {
   var on = S.get("game_sound", null) === true;
   if (st) st.textContent = on ? "켜짐" : "꺼짐";
   if (ss) { ss.setAttribute("aria-checked", String(on)); ss.classList.toggle("on", on); }
+  if (typeof nxFsState === "function") nxFsState();   /* 261007 다음 할 일 카드 줄 */
 }
 function fsSndToggle() { if (typeof sndToggle === "function") sndToggle(false); fsRowState(); }   /* 게임 안 스피커와 같은 값(game_sound) */
 /* ── 261007 시각 바꿔 보기(사용자 「테스트 계정에서는 시간의 흐름을 볼 수 있게 시간을 조정해서 각 시간마다 홈이 어떻게 보이는지」) ──
@@ -180,14 +181,40 @@ function noticeBusy() {
   return !!((typeof qrGated === "function" && qrGated()) || SPOP.cur || SPOP.q.length || el("spop") || el("lgx") || el("modal") || el("axsSheet") || el("rgPlay") || el("app").hidden ||
     App.current === "admin" || App.current === "sscan" || App.current === "scan_res" || App.current === "stair" || SIGNAGE.indexOf(App.current) >= 0);   /* v4.06 결과·계단 화면이 연출이다 · 보상 안내는 나온 뒤 */
 }
+/* 261007 (사용자 「로그인 직후 자동 안내는 처음 10초에 1개만」 · 기획 `디자인 시안/재로그인 · 다음 할 일/분석.md` P3) 로그인 · 앱 열기 직후 10초 창(NB)
+   창 안에서 저절로 뜨는 안내(NB_AUTO = 사전등록 체크인 시트 · 공지 시트 · 선착순 시트 · 행운권 상자 · 룰렛 열림 · 상태 알림 nu:)는 1개만
+   첫 동기화를 최대 3초 기다려 가장 급한 것 하나(NB_RANK 순서)를 고른다 · 하나가 뜬 뒤 = 홈 줄 · 레일 · 종 목록이 같은 것을 말하는 안내(NB_DROP)는 버림 · 상태 알림(라운지 승인 · 커피챗 선정)은 창이 끝난 뒤
+   호출(urgent) · 사람이 누른 결과(스캔 · 신청 등 그 밖의 key) · 스탬프 팝(SPOP · lgfx 포함)은 이 규칙 밖 · 시작 = 앱을 연 순간(이 파일을 읽은 때) · 로그인 성공(lgxEnter) · 오프닝이 닫힌 뒤(lgxAfter) */
+var NB = { t: Date.now(), n: 0, sync: 0, base: 0 }, NB_MS = 10000, NB_WAIT = 3000;
+var NB_AUTO = /^(ck:guide|ntc:|fcfs:got|rw:raffle|rw:roulette|nu:)/, NB_DROP = /^(ck:guide|ntc:|fcfs:got|rw:raffle|rw:roulette)/, NB_RANK = ["ck:guide", "ntc:", "fcfs:got", "rw:raffle", "rw:roulette", "nu:"];
+function nbStart() { NB.t = Date.now(); NB.n = 0; NB.sync = 0; }
+function nbOn() { return Date.now() - NB.t < NB_MS; }
+function nbAuto(o) { return !o.urgent && NB_AUTO.test(o.k || ""); }
+function nbRank(o) { if (o.urgent) return -1; for (var i = 0; i < NB_RANK.length; i++) if ((o.k || "").indexOf(NB_RANK[i]) === 0) return i; return 99; }
+/* 창 안 줄 세우기 · true = 이번 차례는 쉬고 다시(예약은 여기서) */
+function nbGate() {
+  if (!nbOn() || !NOTICE.q.some(nbAuto)) return false;
+  if (!NB.n) {
+    if (!NB.sync && BE.on && Date.now() - NB.t < NB_WAIT) { NOTICE.t = setTimeout(noticePump, 300); return true; }
+    NOTICE.q.sort(function (a, b) { return nbRank(a) - nbRank(b); });
+    return false;
+  }
+  NOTICE.q = NOTICE.q.filter(function (x) { return !(nbAuto(x) && NB_DROP.test(x.k)); });
+  if (!NOTICE.q.length) return true;
+  if (!NOTICE.q.some(function (x) { return !nbAuto(x); })) { NOTICE.t = setTimeout(noticePump, NB_MS - (Date.now() - NB.t) + 60); return true; }
+  NOTICE.q.sort(function (a, b) { return (nbAuto(a) ? 1 : 0) - (nbAuto(b) ? 1 : 0); });
+  return false;
+}
 function noticePump() {
   clearTimeout(NOTICE.t);
   if (NOTICE.cur || !NOTICE.q.length) return;
   if (noticeBusy()) { NOTICE.t = setTimeout(noticePump, 400); return; }
+  if (nbGate()) return;
   var qi = 0; while (qi < NOTICE.q.length && NOTICE.q[qi].hold && NOTICE.q[qi].hold()) qi++;   /* 261007 hold = 지금은 미룰 안내(공지 시트 · ntcHold) · 다른 안내는 먼저 */
   if (qi >= NOTICE.q.length) { NOTICE.t = setTimeout(noticePump, 600); return; }
   var o = NOTICE.q.splice(qi, 1)[0];
   NOTICE.last[o.k] = Date.now();
+  if (nbOn() && nbAuto(o)) NB.n++;   /* 261007 10초 창 안 자동 안내 하나 */
   if (o.run) { try { o.run(); } catch (e) {} NOTICE.t = setTimeout(noticePump, 400); return; }   /* v5.94 팝업 대신 시트(사전등록 체크인 안내) · 다음 안내는 시트가 닫힌 뒤(noticeBusy 가 axsSheet 를 본다) */
   if (o.raffle) modalOpen(rfxHtml(o), esc(o.title));   /* v4.42 응모권 = 보물상자 · v4.49 모든 응모권을 직접 연다(v4.44 의 두 번째부터 자동 열기 폐지) */
   else modalOpen('<div class="ntc">' + (o.body ? '<p class="ntc-b">' + esc(o.body) + "</p>" : "") +
@@ -245,6 +272,7 @@ function checkRewards() {
   var n = stampCount();
   if (n >= 3 && !S.get("roulette_open", false)) {
     S.set("roulette_open", true);
+    if (!S.get("roulette_used", false))   /* 261007 (분석 P1) 룰렛을 이미 쓴 사람에게는 어느 경우에도 「열림」을 띄우지 않는다 */
     notice({ key: "rw:roulette", title: "룰렛 1회 열림", body: "1F EVENT 룰렛 부스에서 내 QR 제시", go: "rewards", focus: "roulette", goLbl: "나의 보상에서 보기" });
   }
   var t = raffleTickets(n);
@@ -256,6 +284,19 @@ function checkRewards() {
     if (BE.on && !testEmp() && raffleNums().length < t) beSync();   /* v4.43 새 번호를 미리 받아 둔다 · 스탬프 연출이 도는 동안 도착해 상자를 열면 바로 보인다 */
     notice({ key: "rw:raffle", raffle: t, title: rfxTitle(t), body: "행운권 발급 · 17:00 Outro 추첨", go: "rewards", focus: "raffle", goLbl: "나의 보상에서 보기" });   /* v4.42 raffle = 보물상자 팝업(rfxHtml) */
   }
+}
+/* 261007 (사용자 결정 「재로그인 반복 팝업 고침」 · 분석 P1 · P4) 첫 동기화 기준선 · 이 기기에서 처음 받은 서버 목록 = 이미 알린 것
+   새 기기 · 다른 브라우저 · 로그아웃 뒤 다시 들어온 첫 동기화(본 기록 pp_seen 이 없거나 기준선 대기 pp_base)에서 stampSync 가 부른다
+   룰렛 열림(roulette_open) · 행운권 상자(raffle_seen · raffle_opened) · 사전등록 체크인 안내(ck_guide)를 조용히 채운다 · 팝업 · 상자 · 시트를 다시 띄우지 않는다
+   fresh = 이번 세션에 새로 생긴 스탬프(스캔 결과가 본 기록에 먼저 적은 것 · 이 기기 목록에 아직 없는 것) · 이것만 빼고 센다 → 그 스탬프로 넘은 문턱은 지금처럼 알린다
+   홈 레일 · 나의 보상 · 사전등록 홈 줄(ckGuideRow)은 그대로 보인다 · 최초 로그인 도장 팝(lgfx_261007)은 이 규칙 밖 */
+function rwBaseline(list, fresh) {
+  var old = list.filter(function (id) { return fresh.indexOf(id) < 0; });
+  var n0 = Math.min(STAMP_DENOM, stampUnitsOf(old)), t0 = raffleTickets(n0);
+  if (n0 >= 3 && !S.get("roulette_open", false)) S.put("roulette_open", true);
+  if (t0 > S.get("raffle_seen", 0)) S.put("raffle_seen", t0);
+  if (S.get("raffle_opened", null) === null || S.get("raffle_opened", 0) < t0) S.put("raffle_opened", t0);
+  if (old.indexOf("ck") >= 0 && !S.get("ck_guide", 0)) S.put("ck_guide", 1);
 }
 /* 앱 안 행동으로 붙는 3종(미니게임·아이디어·전시 QR 퀴즈) 전용.
    현장 QR 은 stampByCode 가 서버로 보내므로 여기를 타지 않는다. */
@@ -459,7 +500,7 @@ var CCHAT_PREF = [["13", "13~14시"], ["14", "14~15시"], ["15", "15~16시"], ["
 var CCHAT_HOURS = "13:00~16:00", CCHAT_END_M = 16 * 60;   /* v6.07 커피챗 운영 시간(사용자 261007) · 끝나면 아직 선정 전인 희망 줄을 조용히 걷는다(cchatOver) */
 var CCHAT_NOTE = "선정되면 하이웍스 · 앱 알림으로 알려 드려요";   /* v6.07 (사용자 261007 「아이디어 한 줄 제출 > 커피챗 희망 여부 > 신청자 중 선정」) 옛 「매칭되면 하이웍스로 알려 드려요 · 앱 나의 참여에서도」 */
 /* v6.07 커피챗 하루가 끝났다(행사일 16:00 뒤 · 서버 시각 · 또는 행사 뒤) · 선정 안 된 희망은 알리지 않고 줄만 걷는다(소외 없음 톤) */
-function cchatOver() { if (evPhase() === "after") return true; var d = new Date(Date.now() + sesOff()); return d.getFullYear() === 2026 && d.getMonth() === 9 && d.getDate() === 26 && d.getHours() * 60 + d.getMinutes() >= CCHAT_END_M; }
+function cchatOver() { if (evPhase() === "after") return true; var d = appNow(1); return d.getFullYear() === 2026 && d.getMonth() === 9 && d.getDate() === 26 && d.getHours() * 60 + d.getMinutes() >= CCHAT_END_M; }   /* 261007 시험 시각(appNow · 1 = 서버 시계 보정) */
 /* v4.46 서버(GAS)는 cchat_req 의 tag 를 이미 저장 · 콘솔에 돌려준다 · 선호 시간대를 tag 뒤에 붙여 보내 서버 수정 없이 콘솔 「희망 시간」에 보이게 한다(콘솔이 CCHAT_TAG_SEP 로 다시 나눈다) · pref 파라미터도 같이 보낸다(나중에 GAS 가 칸을 만들면 그쪽이 우선) */
 var CCHAT_TAG_SEP = " / 희망 ";
 /* v4.47 (사용자 260925 · 화요일 회의에서 숫자 확정 예정) 커피챗 선착순 · 멘토 2명 각자 테이블 · 회차당 최대 4명 · 20분

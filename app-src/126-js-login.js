@@ -1017,9 +1017,11 @@ function lgxAfter(how) {
   setTimeout(pushGoRun, 200);
   a2hsAuto();
   setTimeout(function () { if (SPOP.q.length && !SPOP.cur) spNext(); noticePump(); }, 300);
+  if (typeof nbStart === "function") nbStart();   /* 261007 오프닝이 닫힌 순간부터 10초 창(자동 안내 1개 · 분석 P3) */
 }
 /* 로그인 성공 뒤 하나의 입구 · normal() = 예전 입장(1초 전환 + 뒤처리) · cover() = 장면용 입장(뒤처리는 장면이 닫힌 뒤) */
 function lgxEnter(res, normal, cover) {
+  if (typeof nbStart === "function") nbStart();   /* 261007 로그인 성공 = 10초 창 시작(자동 안내 1개 · 분석 P3) */
   var emp = String((S.get("user", {}) || {}).empId || "");
   if (!LGX_ON || !emp || !BE.on || !stampV2() || lgxSeen(emp) || lgxHasLg()) { normal(); return; }
   /* 261007 (사용자 「로그인 기록이 있는 사람이 재차 로그인하면 건너뛰기가 보이는 게 아니라 바로 메인으로」) 서버가 아는 기존 계정(로그인 응답 isNew false · 초기화 뒤 새 PIN pwset)

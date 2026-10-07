@@ -14,29 +14,31 @@ function notifyUser(title, body, target, focus) {
   notice({ key: "nu:" + title + "|" + body, title: title, body: body, go: target || "", focus: focus || "", goLbl: target === "home" ? "홈에서 보기" : "", urgent: /입장|차례/.test(title) });
 }
 /* 내 상태 전환 감지 · 서버 sync·로컬 storage 어느 쪽이 바꿔도 여기서 팝업 1회 */
-function checkMyState() {
+/* 261007 (분석 P4) base = 이 기기의 첫 동기화(beSync · 본 기록 기준선 대기) · 서버에 이미 있는 상태(라운지 승인 · 커피챗 선정 · 선착순)는 본 것으로만 적고 띄우지 않는다 · 그 뒤 바뀐 것만 알린다 */
+function checkMyState(base) {
+  base = base || (typeof NB !== "undefined" && !!NB.base);   /* 첫 동기화를 받아쓰는 동안 저장 이벤트로 불린 경우도(axf-store → checkMyState) */
   if (App.current === "admin" || App.current === "sscan" || SIGNAGE.indexOf(App.current) >= 0) return;   /* v5.98 스태프 스캔 중에는 내 알림을 띄우지 않는다(나오면 띄운다) */
   var seen = S.get("noti_seen", {});
   var changed = false;
   var my = myResv();
   if (my && my.status === "approved" && seen.resv !== my.id + ":approved") {
     seen.resv = my.id + ":approved"; changed = true;
-    notifyUser("AX 라운지 승인 완료", "1F AX 라운지", "dap");
+    if (!base) notifyUser("AX 라운지 승인 완료", "1F AX 라운지", "dap");
   }
   if (my && my.status === "canceled" && seen.resvX !== my.id + ":canceled") {
     seen.resvX = my.id + ":canceled"; changed = true;
-    notifyUser("AX 라운지 신청 취소", "", "dap");
+    if (!base) notifyUser("AX 라운지 신청 취소", "", "dap");
   }
   var c = S.get("cchat", null);
   if (c && c.status === "matched" && seen.cchat !== "m:" + c.round + c.table) {
     seen.cchat = "m:" + c.round + c.table; changed = true;
-    notifyUser("커피챗에 선정됐어요", "18F · " + hhmm(c.round) + " · TABLE " + c.table, "ev_cchat");   /* v6.07 매칭 → 선정(서버 푸시 제목과 같다) */
+    if (!base) notifyUser("커피챗에 선정됐어요", "18F · " + hhmm(c.round) + " · TABLE " + c.table, "ev_cchat");   /* v6.07 매칭 → 선정(서버 푸시 제목과 같다) */
   }
   /* v5.90 선착순 참여상 수령 자격 · 앱이 열려 있으면 팝업 1회(푸시 없음 · 계약 5.1) · 옛 완주 경품 당첨 팝업은 지웠다 */
   var fq = fcfsMy();
   if (fcfsReady(fq) && seen.fcfs !== "got") {   /* v5.98 수령순 ready = 옛 got 과 같은 순간(6개째) · 본 표시는 그대로 got */
     seen.fcfs = "got"; changed = true;
-    notice({ key: "fcfs:got", first: true, run: function () { fcfsGotOpen(); } });   /* v5.97 (사용자 261006 밤) 팝업 대신 수령 안내 시트 · 스탬프 연출 뒤 · 쌓인 행운권 상자보다 먼저(first) */
+    if (!base) notice({ key: "fcfs:got", first: true, run: function () { fcfsGotOpen(); } });   /* v5.97 (사용자 261006 밤) 팝업 대신 수령 안내 시트 · 스탬프 연출 뒤 · 쌓인 행운권 상자보다 먼저(first) */
   }
   if (changed) S.set("noti_seen", seen);
 }
@@ -92,6 +94,8 @@ function beSync(after) {
     if (res.crowd) crowdStore(res.crowd);   /* v4.71 혼잡 제보(새 서버만 보낸다 · 없으면 「제보 없음」 그대로) */
     if (res.aw && res.aw.i && res.aw.o && JSON.stringify(res.aw) !== JSON.stringify(S.get("att_w", null))) S.put("att_w", { i: res.aw.i, o: res.aw.o });   /* v5.68 17F 입장 · 끝 QR 창(서버 설정) · 조용히 저장 */
     beNoticeIn(res.notice, res.noticeOff || []);   /* v4.75 공지 · 중지는 소켓(WS.h.notice)과 같은 함수 */
+    var nbBase = !!res.my && !!u.empId && !testEmp() && (S.get("pp_seen", null) === null || !!S.get("pp_base", 0));   /* 261007 이 기기 첫 동기화(분석 P4 · stampSync 기준선과 같은 조건 · 그보다 먼저 잰다) */
+    if (nbBase && typeof NB !== "undefined") NB.base = 1;
     if (res.my) {
       var all = resvAll();
       if (res.my.resv) {
@@ -164,7 +168,9 @@ function beSync(after) {
         S.set("queue", nowQ);
       }
     }
-    checkMyState();
+    checkMyState(nbBase);
+    if (typeof NB !== "undefined") NB.base = 0;
+    if (typeof NB !== "undefined") NB.sync = 1;   /* 261007 10초 창 · 첫 동기화가 줄에 넣을 것을 다 넣었다(nbGate) */
     qrMineCheck();   /* v4.06 내 QR 이 열려 있으면 방금 바뀐 것 한 줄(확인됨) */
     if (App.current === "home") App.render();
   }, function () { if (after) after(false); });
@@ -595,12 +601,14 @@ function pushInappSheet() {
 }
 /* 로그인 직후(a2hsAuto) · 허용된 기기는 이 사번으로 다시 등록 · 홈 화면 앱으로 처음 들어온 사람에게만 한 번 묻는다 */
 function pushFirst() {
+  if (typeof nbOn === "function" && nbOn() && NB.n) { setTimeout(pushFirst, NB_MS - (Date.now() - NB.t) + 200); return; }   /* 261007 로그인 직후 10초 창에 다른 안내가 이미 떴으면 창이 끝난 뒤(분석 P3) */
   PUSH.firstWant = true;
   if (!pushReady()) return;
   PUSH.firstWant = false;
   if (envKind() === "push" && pushPerm() === "granted") { pushEnsure(); return; }
   if (!visitStandalone() || S.get("push_first", false)) return;
   S.put("push_first", true);
+  if (typeof nbOn === "function" && nbOn()) NB.n++;   /* 이 질문이 그 창의 한 개 */
   pushAsk("first", {});
 }
 /* 설정 › 알림 · 상태 한 줄 + 내 차례 · 매칭(끌 수 없음) · 공지 · 추첨 · 관람 시간(근무 층) */
