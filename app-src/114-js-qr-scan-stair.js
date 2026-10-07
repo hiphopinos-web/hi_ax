@@ -87,7 +87,7 @@ function qrHandle(raw) { qrRoute(raw, Date.now()); }
 var TLK_WHY = {
   notok: ["노트북 화면의 QR을<br>찍어 주세요", "1F 타자왕 노트북", "scan"],
   taken: ["노트북 화면의 QR을<br>다시 찍어 주세요", "그사이 다른 분이 먼저 시작했어요 · 그 판이 끝나면 다시", "scan"],
-  link: ["노트북 화면의 QR을<br>다시 찍어 주세요", "QR은 1분마다 바뀌어요", "scan"],
+  link: ["노트북 화면의 QR을<br>다시 찍어 주세요", "노트북 키보드를 누르면 새 QR이 나와요", "scan"],   /* 261007 노트북 = 광고 → 키 → 새 QR */
   used: ["노트북 화면의 QR을<br>다시 찍어 주세요", "이미 연결에 쓴 QR이에요", "scan"],
   limit: ["오늘 도전을<br>모두 쓰셨어요", "순위는 1층 타자왕 TV에서", "home"],
   window: ["지금은 도전<br>시간이 아니에요", "", "home"],

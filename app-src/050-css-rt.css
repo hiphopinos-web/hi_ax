@@ -349,6 +349,43 @@
   .rt .tsf-lh[hidden] { display: none; }
   @media (prefers-reduced-motion: reduce) { .rt .tsf-lh { animation: none; } }
   @container (max-height: 760px) { .rt .tsf-gd.tsf-gq { top: 10px; gap: 8px; } .rt .tsf-hk { font-size: var(--rt-f24); line-height: var(--rt-l24); } .rt .tsf-qbig { width: min(400px, 72cqw, calc(100cqh - 360px)); } }
+  /* 261007 (사용자 「화면 보호기처럼 광고가 돌다가 키보드를 건드리면 새 QR」) QR 화면 남은 시간 막대 · 광고(ph-ad) = 카드 한 장 + 점 넷 + 맨 아래 「키보드를 눌러 시작」(늘 · 크게) · QR 없음 */
+  .rt .tsf-qbig { width: min(440px, 72cqw, calc(100cqh - 404px)); }
+  .rt .tsf-tm { flex: none; box-sizing: border-box; width: min(440px, 72cqw); height: 12px; margin: 8px 0 0; background: var(--rt-bark); box-shadow: var(--rt-line); }
+  .rt .tsf-tm i { display: block; height: 100%; background: var(--rt-o100); transition: width 0.3s linear; }
+  @container (max-height: 760px) { .rt .tsf-qbig { width: min(400px, 72cqw, calc(100cqh - 380px)); } .rt .tsf-tm { height: 10px; } }
+  .rt .tsf-ad { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 28px 22px 22px; text-align: center; }
+  .rt .tsf-adc { flex: 1 1 auto; min-height: 0; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; animation: tsfAdIn 0.36s steps(3) both; }
+  .rt .tsf-adc p { margin: 0; }
+  .rt .tsf-adk { padding: 4px 16px; font-size: var(--rt-f24); line-height: var(--rt-l24); background: var(--rt-o100); color: var(--rt-night); box-shadow: var(--rt-line); }
+  .rt .tsf-adh { font-size: var(--rt-f48); line-height: var(--rt-l48); color: var(--rt-white); text-shadow: var(--rt-out3); word-break: keep-all; }
+  .rt .tsf-adh.s { font-size: var(--rt-f32); line-height: var(--rt-l32); text-shadow: var(--rt-out2); }
+  .rt .tsf-adh em, .rt .tsf-ads em { font-style: normal; color: var(--rt-o100); }
+  .rt .tsf-ads { font-size: var(--rt-f24); line-height: var(--rt-l24); color: var(--rt-tan2); word-break: keep-all; }
+  .rt .tsf-adn1 { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--rt-f48); line-height: var(--rt-l48); color: var(--rt-o100); text-shadow: var(--rt-out3); }
+  .rt .tsf-adsc { padding: 6px 18px; font-size: var(--rt-f32); line-height: var(--rt-l32); background: var(--rt-night); color: var(--rt-white); box-shadow: var(--rt-line); }
+  .rt .tsf-adp { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .rt .tsf-adp figure { margin: 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .rt .tsf-adp .ph { box-sizing: border-box; width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--rt-white); box-shadow: 0 0 0 3px var(--rt-ink), 0 0 0 7px var(--rt-o100), 0 0 0 10px var(--rt-ink); }
+  .rt .tsf-adp img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .rt .tsf-adp figcaption { display: flex; flex-direction: column; gap: 2px; color: var(--rt-cream); word-break: keep-all; }
+  .rt .tsf-adp figcaption b { font-weight: 400; font-size: var(--rt-f32); line-height: var(--rt-l32); color: var(--rt-o100); text-shadow: var(--rt-out2); }
+  .rt .tsf-adp figcaption small { font-size: var(--rt-f16); line-height: var(--rt-l16); color: var(--rt-tan2); }
+  .rt .tsf-adw { display: flex; flex-direction: column; align-items: stretch; gap: 14px; width: min(100%, 460px); }
+  .rt .tsf-adw p { display: flex; align-items: center; gap: 16px; padding: 12px 16px; margin: 3px; text-align: left; font-size: var(--rt-f32); line-height: var(--rt-l32); background: var(--rt-bark); color: var(--rt-cream); box-shadow: var(--rt-line); }
+  .rt .tsf-adw b { flex: none; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-weight: 400; background: var(--rt-o100); color: var(--rt-night); box-shadow: 0 0 0 2px var(--rt-ink); }
+  .rt .tsf-adw .tsf-key { margin: 0 8px 4px 0; font-size: var(--rt-f24); line-height: var(--rt-l24); }
+  .rt .tsf-add { flex: none; display: flex; gap: 10px; }
+  .rt .tsf-add i { width: 12px; height: 12px; background: var(--rt-wood); box-shadow: 0 0 0 2px var(--rt-ink); }
+  .rt .tsf-add i.on { background: var(--rt-o100); }
+  .rt .tsf-adgo { flex: none; box-sizing: border-box; width: 100%; margin: 3px 0 0; padding: 16px 12px; display: flex; align-items: center; justify-content: center; gap: 18px; font-size: var(--rt-f48); line-height: var(--rt-l48); color: var(--rt-o100); background: var(--rt-night); box-shadow: var(--rt-line), inset 0 0 0 4px var(--rt-wood); text-shadow: var(--rt-out2); animation: tsfBlink 1.06s steps(1) infinite; word-break: keep-all; }
+  .rt .tsf-adgo.c { color: var(--rt-cream); animation: none; }
+  .rt .tsf-adkb { flex: none; display: flex; gap: 6px; }
+  .rt .tsf-adkb i { width: 26px; height: 26px; background: var(--rt-cream); box-shadow: 0 0 0 2px var(--rt-ink), 0 5px 0 2px var(--rt-tan); animation: tsfKey 1.8s steps(1) infinite; }
+  .rt .tsf-adkb i:nth-child(2) { animation-delay: 0.6s; }
+  .rt .tsf-adkb i:nth-child(3) { animation-delay: 1.2s; }
+  @container (max-height: 760px) { .rt .tsf-ad { padding: 18px 16px 14px; gap: 8px; } .rt .tsf-adc { gap: 12px; } .rt .tsf-adh { font-size: var(--rt-f32); line-height: var(--rt-l32); } .rt .tsf-adn1 { font-size: var(--rt-f32); line-height: var(--rt-l32); } .rt .tsf-adgo { padding: 10px 10px; font-size: var(--rt-f32); line-height: var(--rt-l32); } .rt .tsf-adw p { padding: 8px 12px; font-size: var(--rt-f24); line-height: var(--rt-l24); } .rt .tsf-adw b { width: 36px; height: 36px; } .rt .tsf-adp figcaption b { font-size: var(--rt-f24); line-height: var(--rt-l24); } }
+  @media (prefers-reduced-motion: reduce) { .rt .tsf-adc, .rt .tsf-adgo, .rt .tsf-adkb i { animation: none; } .rt .tsf-tm i { transition: none; } }
   /* 폰 창 · 폰 둘레만 확대 · 네 귀퉁이 조준선 · 한 줄 + 힌트 · 거리 다섯 칸(가운데 두 칸 = 좋아요 자리) */
   .rt .tsf-scan { position: absolute; left: 0; right: 0; top: 100px; bottom: 12px; z-index: 2; display: none; flex-direction: column; align-items: center; gap: 10px; }
   .rt .tsf.scan-on .tsf-scan { display: flex; }

@@ -293,16 +293,24 @@ function qzStampCheck(srv) {
    261006 (사용자 결정 「그냥 QR을 찍으라는 화면만 간단하게 남겨 두자」) 진입 = 노트북 화면 QR 하나
      대기 화면 주인공 = 가운데 큰 접속 QR + 「폰으로 이 QR을 찍으세요」 + 작은 줄 「앱이 있으면 앱의 QR 버튼으로」 + 세 단계 · 위에 후킹 「당신의 프롬프팅 속도를 보여 주세요」(둘러보기 타자왕 말과 같다)
      방법 1(내 QR → 노트북 카메라) 안내 · ▲ 카메라 · 스캔 창 · 거리 막대는 화면에서 뺐다 · 카메라는 켜지 않는다(권한도 묻지 않는다) · 코드는 그대로(TSF_CAM 하나로 되살린다)
-     폰이 로그인 전에 토큰을 보내면 서버가 5분 붙잡는다(type_link_hold) · 노트북 = 「폰에서 로그인하는 중」 한 줄 · QR 은 계속 보인다(다른 사람은 새 토큰으로 · 노트북이 멈추지 않는다) */
+     폰이 로그인 전에 토큰을 보내면 서버가 5분 붙잡는다(type_link_hold) · 노트북 = 「폰에서 로그인하는 중」 한 줄 · QR 은 계속 보인다(다른 사람은 새 토큰으로 · 노트북이 멈추지 않는다)
+   261007 (사용자 「QR 을 계속 보여 주지 말고 화면 보호기처럼 광고가 돌다가 키보드를 건드리면 새 QR」) 대기 = 광고(ph "ad") · QR 은 깨웠을 때만(ph "attract")
+     광고 = 카드 넷(후킹 · 1~3위 경품 사진 · 지금 1위 · 참여 방법) 7초씩 · 맨 아래 「키보드를 눌러 시작」 늘 · 크게 · QR · 토큰 없음(늘 보이는 QR 을 사진으로 찍어 가 다른 자리에서 붙던 것 · 계속 바꾸느라 생긴 만료 QR 을 없앤다)
+     깨우기 = 아무 키 · 마우스 누름 · 터치 → 그 순간 새 토큰 → 큰 QR + 「폰 카메라로 찍어 주세요」 + 남은 시간 막대 · 깨운 키는 삼킨다(게임 입력으로 가지 않는다)
+     QR 이 떠 있는 동안 토큰을 바꾸지 않는다 · 서버가 물음(1.5초)마다 수명을 늘린다(마지막 물음 + 15초 · 3분 상한 · 2분 30초 넘게 떠 있으면 그때 새로) · 옛 서버(연장 없음)면 v6.18 그대로 30초 교체
+     QR 화면에서 60초 동안 아무도 붙지 않으면(키 · 누름 = 연장 · 폰 로그인 중 = 연장) 광고로 돌아가며 서버 토큰을 지운다(off) · 판 · 결과가 끝나도 광고 · 안내(err)가 끝나면 QR 화면(다시 찍기) */
 var TSF_CAM = false;   /* 261006 노트북 카메라(방법 1) · false = 카메라를 켜지 않고 화면에도 카메라 표시 · 스캔 창이 없다 · true = v5.61 그대로 */
-var TSF = { ph: "attract", msg: "", emp: "", nick: "", info: null, busy: false, ticket: "", res: null, sub: null, send: "", why: "", top: null, topT: 0, resAt: 0, phAt: 0, idle: 0, t: null, raf: 0, unl: false, snd: true, cfg: null, cfgT: 0,
+var TSF = { ph: "ad", adAt: 0, adI: -1, msg: "", emp: "", nick: "", info: null, busy: false, ticket: "", res: null, sub: null, send: "", why: "", top: null, topT: 0, resAt: 0, phAt: 0, idle: 0, t: null, raf: 0, unl: false, snd: true, cfg: null, cfgT: 0,
   cam: { stream: null, timer: null, err: "", last: "", lastT: 0, busy: false, cv: null, g: null, res: "" }, race: null, err: null, nm: "", nmBad: false, retry: 0, via: "", closedK: "",
   sc: { on: false, hits: [], last: 0, box: null, tgt: null, rect: null, di: 2, n3: false, since: 0, okAt: 0, lum: 128, tick: 0, cands: 0, ms: 0, msg: "", hint: "", staff: 0 },
-  lk: { tok: "", at: 0, busy: false, pollAt: 0, retryAt: 0, fail: 0, url: "", hold: false, gen: 0, sent: 0, n: 0 }, dbg: /[?&]tsfdbg=1\b/.test(location.search) };
+  lk: { tok: "", at: 0, busy: false, pollAt: 0, retryAt: 0, fail: 0, url: "", hold: false, gen: 0, sent: 0, n: 0, ext: false, okAt: 0, srv: false }, dbg: /[?&]tsfdbg=1\b/.test(location.search) };
 var TSF_READY_MS = 60000, TSF_NICK_MS = 60000, TSF_RES_MS = 10000, TSF_RES_SCAN_MS = 8000, TSF_SWAP_MS = 60000, TSF_JOIN_S = 0.8, TSF_LINK_ROT = 30000, TSF_LINK_POLL = 1500;
 /* 261007 (사용자 「늦게 찍으면 만료」) 화면 QR 나이 상한 · 토큰은 요청을 보낸 때부터 센다(서버 발급 시각보다 늘 이르다 = 보수적) · 45초를 넘긴 QR 은 새 토큰을 못 받았어도 내린다(서버 만료 60초 · 찍고 앱이 뜰 시간 15초 이상 남김)
    TSF_LINK_WAIT = 서버 물음 · 새 토큰 요청이 6초 안에 안 오면 버리고 다시(앱 공용 타임아웃 15초를 기다리면 그사이 QR 이 늙는다) · 실패 뒤 다시 = 2 · 4 · 8 · 15초 */
 var TSF_LINK_MAX = 45000, TSF_LINK_WAIT = 6000;
+/* 261007 광고 · 깨우기 숫자 한 곳 · TSF_AD_MS 광고 카드 한 장 · TSF_WAKE_MS QR 화면에서 아무도 안 붙으면 광고로(키 · 누름 = 처음부터) · 아래는 연장 토큰(서버 live 응답이 있을 때만)
+   TSF_LINK_RENEW 이만큼 떠 있으면 새 토큰(서버 상한 3분보다 30초 이르게) · TSF_LINK_CAP 새 토큰을 못 받아도 이때까지만 보임 · TSF_LINK_FRESH 마지막으로 연장된 물음(보낸 때)에서 이만큼 지나면 내림(서버 15초 · 폰이 앱을 열 9초 남김) */
+var TSF_AD_MS = 7000, TSF_WAKE_MS = 60000, TSF_LINK_RENEW = 150000, TSF_LINK_CAP = 165000, TSF_LINK_FRESH = 6000;
 var TSF_DESK = "1층 안내 데스크로 알려 주세요";
 var TSF_WHY = { param: "확인하지 못했어요 · QR을 다시 찍어 주세요", unknown: "명부에서 찾을 수 없어요 · " + TSF_DESK, window: "지금은 도전 시간이 아니에요", auth: "관리코드가 바뀌었어요 · " + TSF_DESK, range: "기록이 범위를 넘어 저장하지 않았어요", net: "연결이 불안정해요 · 잠시 뒤 다시 해 주세요",
   locked: "관리 연결이 잠시 막혔어요 · " + TSF_DESK,   /* v4.65 서버 잠금(같은 와이파이에서 코드를 30번 틀림) */
@@ -325,11 +333,19 @@ function tsfDbg(k, v) {   /* v5.61 시험 훅 · 주소에 ?tsfdbg=1 일 때만 
   var w = window.__tsf || (window.__tsf = { ev: [], st: {} });
   w.ev.push({ t: Math.round(performance.now()), k: k, v: v === undefined ? "" : v }); if (w.ev.length > 3000) w.ev.shift();
 }
-/* 다음 사람 · 대기 화면으로(순위 · 카메라 · 설정은 그대로) */
-function tsfReset() {
-  TSF.ph = "attract"; TSF.emp = ""; TSF.nick = ""; TSF.info = null; TSF.busy = false; TSF.ticket = ""; TSF.res = null; TSF.sub = null; TSF.send = ""; TSF.why = ""; TSF.race = null; TSF.err = null; TSF.nm = ""; TSF.nmBad = false; TSF.retry = 0; TSF.via = "";
-  TSF.phAt = performance.now(); TSF.idle = Date.now(); TSF.cam.last = ""; TSF.snd = true; tsfDbg("ph", "attract");
+/* 다음 사람 · 대기 화면으로(순위 · 카메라 · 설정은 그대로) · 261007 기본 = 광고(ad) · wake = QR 화면(attract) */
+function tsfReset(wake) {
+  if (!wake && TSF.ph !== "ad") { TSF.adAt = performance.now(); TSF.adI = -1; }
+  TSF.ph = wake ? "attract" : "ad"; TSF.emp = ""; TSF.nick = ""; TSF.info = null; TSF.busy = false; TSF.ticket = ""; TSF.res = null; TSF.sub = null; TSF.send = ""; TSF.why = ""; TSF.race = null; TSF.err = null; TSF.nm = ""; TSF.nmBad = false; TSF.retry = 0; TSF.via = "";
+  TSF.phAt = performance.now(); TSF.idle = Date.now(); TSF.cam.last = ""; TSF.snd = true; tsfDbg("ph", TSF.ph);
   if (App.current === "type_site") { if (document.querySelector(".tsf")) tsfPaint(); else App.render(); tsfRankPull(true); }
+}
+/* 261007 깨우기 · 광고 → QR 화면 · 그 순간 새 토큰(실패 셈을 비우고 곧바로) · 시간 밖이면 깨우지 않는다(광고 맨 아래 줄이 시간 안내) */
+function tsfWake() {
+  if (tsfClosed()) return false;
+  var L = TSF.lk; L.fail = 0; L.retryAt = 0; L.n = 0;
+  tsfReset(true); tsfDbg("wake", 1); tsfLinkTick();
+  return true;
 }
 function tsfPh(p) { TSF.ph = p; TSF.phAt = performance.now(); TSF.idle = Date.now(); tsfDbg("ph", p); tsfPaint(); if (p === "nick") tsfNickFocus(); }
 /* 안내 화면 · t1 큰 줄 · t2 작은 줄 · sec 초 뒤 대기(기본 4 · 횟수 소진 6) · TSF_WHY 한 줄(「큰 줄 · 작은 줄」)은 둘로 나눠 쓴다 */
@@ -720,7 +736,8 @@ function tsfCheckRes(r, via) {
 /* ── v5.61 방법 2 · 노트북 화면 접속 QR(앱 주소#q=type&lt=토큰) · 대기 · 안내 · 결과(8초 뒤)에서만 띄운다 · 30초마다 새 토큰(261007 40 → 30 · 화면 QR 은 45초까지만) · 1.5초마다 서버에 묻는다 ──
    서버가 폰의 접속을 받으면(type_link_join) 다음 물음(type_link_poll)에 그 사람의 확인 결과(got)가 온다 → tsfCheckRes(방법 1 과 같은 화면)
    QR 을 내릴 때(READY · 판 · 닉네임 · 시간 밖)는 토큰을 버린다(off) · 서버가 없거나 옛 서버면 칸에 「잠시만요」만(방법 1 은 그대로)
-   261006 QR 은 대기 화면 가운데 하나(결과 화면 왼쪽 QR 없음 · 안내(err)는 토큰만 살려 두고 대기로 돌아오면 바로) · 물음 응답 hold 1 = 폰이 붙잡고 로그인하는 중(「폰에서 로그인하는 중」) */
+   261006 QR 은 대기 화면 가운데 하나(결과 화면 왼쪽 QR 없음 · 안내(err)는 토큰만 살려 두고 대기로 돌아오면 바로) · 물음 응답 hold 1 = 폰이 붙잡고 로그인하는 중(「폰에서 로그인하는 중」)
+   261007 QR 은 깨웠을 때(attract)만 · 광고(ad)에서는 토큰을 지운다 · 새 토큰 응답에 live 가 있으면(연장 서버) 떠 있는 동안 바꾸지 않는다(물음 live 1 = 늘어남 · okAt) · 없으면 위 30초 교체 그대로 */
 function tsfLinkWant() {
   if (!BE.on || RG.on || TSF.busy || tsfClosed()) return false;
   var ph = TSF.ph;
@@ -729,16 +746,22 @@ function tsfLinkWant() {
 function tsfLinkUrl(tok) { return location.origin + location.pathname + "#q=type&lt=" + tok; }
 function tsfLinkTick() {
   var L = TSF.lk, now = Date.now();
-  if (!tsfLinkWant()) { if (L.tok) tsfLinkDrop(); return; }
+  if (!tsfLinkWant()) { if (L.tok || L.srv || L.busy) tsfLinkDrop(); return; }   /* 261007 광고로 가면 토큰을 서버에서도 지운다(받는 중 · 내린 뒤에도) */
   if (L.busy && now - L.sent > TSF_LINK_WAIT) { L.busy = false; L.gen++; L.fail++; L.retryAt = now + tsfLinkBack(); tsfDbg("lkwait", L.fail); }   /* 응답이 안 온다 · 늦은 응답은 버린다 */
-  if (L.tok && now - L.at > TSF_LINK_MAX) { L.tok = L.url = ""; L.hold = false; tsfDbg("link", "old"); }   /* 만료에 가까운 QR 은 내린다(새 토큰을 못 받았어도) */
+  if (L.tok && !tsfLinkLive(now)) { L.tok = L.url = ""; L.hold = false; tsfDbg("link", "old"); }   /* 만료에 가까운 QR 은 내린다(새 토큰을 못 받았어도) */
   var bx = el("tsfLqr"); if (bx && bx._tk !== tsfLinkKey()) tsfLinkPaint();
   if (L.busy || document.hidden) return;
-  if (!L.tok || now - L.at > TSF_LINK_ROT) {
-    if (L.tok && L.pollAt < L.at + TSF_LINK_ROT) { tsfLinkPoll(); return; }   /* 바꿀 때가 된 뒤 한 번 더 묻고 바꾼다(교체 직전에 앞 토큰으로 들어온 폰을 놓치지 않게 · 서버는 교체 때 그 앞 토큰을 잊는다) */
+  var rot = L.ext ? TSF_LINK_RENEW : TSF_LINK_ROT;   /* 261007 연장 토큰 = 떠 있는 동안 바꾸지 않는다(2분 30초 넘게 떠 있을 때만) · 옛 서버 = 30초 교체 */
+  if (!L.tok || now - L.at > rot) {
+    if (L.tok && L.pollAt < L.at + rot) { tsfLinkPoll(); return; }   /* 바꿀 때가 된 뒤 한 번 더 묻고 바꾼다(교체 직전에 앞 토큰으로 들어온 폰을 놓치지 않게 · 서버는 교체 때 그 앞 토큰을 잊는다) */
     if (now >= L.retryAt) tsfLinkNew(); return;
   }
   if (now - L.pollAt >= TSF_LINK_POLL) tsfLinkPoll();
+}
+/* 261007 화면 QR 이 서버에서 살아 있나(보수적으로) · 받은 지 45초 안(서버 60초) · 또는 연장 토큰이면 마지막 연장 물음을 보낸 지 6초 안(서버 15초)이면서 2분 45초 안(서버 3분) */
+function tsfLinkLive(now) {
+  var L = TSF.lk;
+  return now - L.at <= TSF_LINK_MAX || (L.ext && now - L.okAt <= TSF_LINK_FRESH && now - L.at <= TSF_LINK_CAP);
 }
 function tsfLinkBack() { return [2000, 4000, 8000, 15000][Math.min(3, Math.max(0, TSF.lk.fail - 1))]; }
 function tsfLinkNew() {
@@ -748,29 +771,31 @@ function tsfLinkNew() {
     L.busy = false;
     if (!r || !r.ok || !r.tok) { L.fail++; L.retryAt = Date.now() + tsfLinkBack(); tsfLinkPaint(); return; }
     L.tok = r.tok; L.at = sent; L.pollAt = Date.now(); L.fail = 0; L.n++; L.url = tsfLinkUrl(r.tok); tsfDbg("link", r.tok);
+    L.ext = !!(r.live && r.max); L.okAt = sent; L.srv = true;   /* 261007 연장을 아는 서버 · 지우기(off) 대상 */
     tsfLinkPaint();
   }, function () { if (g !== L.gen) return; L.busy = false; L.fail++; L.retryAt = Date.now() + tsfLinkBack(); tsfLinkPaint(); });
 }
 function tsfLinkPoll() {
-  var L = TSF.lk, tk = L.tok, g = ++L.gen; L.busy = true; L.pollAt = L.sent = Date.now();
+  var L = TSF.lk, tk = L.tok, g = ++L.gen, sent = Date.now(); L.busy = true; L.pollAt = L.sent = sent;
   beCall({ action: "type_link_poll", key: tsfKey(), tok: tsfTok(), dev: tsfDev() }, function (r) {
     if (g !== L.gen) return;
     L.busy = false;
     if (!r || !r.ok) return;
     if (r.got) { L.tok = L.url = ""; L.hold = false; tsfDbg("got", r.got.ok ? 1 : 0); if (tsfLinkWant()) { if (!TSF.unl && S.get("site_sound", true) === true) { TSF.unl = true; sfxUnlock(); } sfx("scan"); tsfCheckRes(r.got, "link"); } return; }
     if (r.none && L.tok === tk) { L.tok = L.url = ""; tsfLinkPaint(); }   /* 서버가 토큰을 잊었다(다시 띄움 · 만료) · 옛 QR 을 내리고 다음 시계에 새로 받는다 */
+    if (r.live && tk && L.tok === tk && r.cur === tk) L.okAt = sent;   /* 261007 서버가 이 물음으로 이 토큰을 늘렸다 */
     var hd = !!r.hold; if (hd !== L.hold) { L.hold = hd; tsfDbg("hold", hd ? 1 : 0); tsfLinkPaint(); }   /* 261006 폰이 붙잡고 로그인하는 중 */
   }, function () { if (g === L.gen) L.busy = false; });
 }
 function tsfLinkDrop() {
-  var L = TSF.lk; L.hold = false; if (!L.tok) return;
-  L.tok = ""; L.url = ""; L.gen++; L.busy = false; tsfDbg("link", "");
+  var L = TSF.lk; L.hold = false; if (!L.tok && !L.srv && !L.busy) return;
+  L.tok = ""; L.url = ""; L.gen++; L.busy = false; L.srv = false; tsfDbg("link", "");
   if (BE.on) beCall({ action: "type_link_new", key: tsfKey(), tok: tsfTok(), dev: tsfDev(), off: 1 }, function () {}, function () {});
 }
 /* 261007 칸에 지금 있어야 할 것 · 살아 있는 토큰(45초 안)이면 그 토큰 · 아니면 안내 글(실패 2번 이상 · 처음 · 새로 받는 중) · 시계마다 칸과 대조해 다르면 다시 그린다 */
 function tsfLinkKey() {
   var L = TSF.lk;
-  if (L.tok && L.url && Date.now() - L.at <= TSF_LINK_MAX) return L.tok;
+  if (L.tok && L.url && tsfLinkLive(Date.now())) return L.tok;
   return L.fail >= 2 ? "w2" : L.n ? "w1" : "w0";
 }
 /* 접속 QR 칸만 다시 그린다 · 일반 QR(검정 정사각 · 흰 바탕 · ECC Q · 장식 없음 · 261001 규칙) · 폭은 칸에 맞춘다(261006 가운데 큰 칸 · 480 까지) · 「폰에서 로그인하는 중」 줄 */
@@ -815,7 +840,7 @@ function tsfLeftHtml() {
       '<section class="tsf-p tsf-rule">' + (ph === "nick" ? "<p>Enter 저장</p><p>Esc 처음으로</p>" : '<p class="tsf-hint go">SPACE 시작</p><p>Tab 닉네임 바꾸기</p><p>Esc 처음으로</p>') + "</section>";
   }
   var rule = '<section class="tsf-p tsf-rule"><p>1인 ' + tsfLimit() + "회 · 최고 점수로 순위</p><p>목숨 " + RAIN_LIVES + "개를 다 잃으면 끝</p><p>17:00 마감 · 1~3위 Outro 시상</p></section>";
-  if (ph === "result" && !tsfClosed()) return '<section class="tsf-p"><p class="tsf-k">다음 도전자</p><p class="tsf-go">곧 QR이 나와요</p><p class="tsf-hint" id="tsfCount">' + Math.round(TSF_RES_MS / 1000) + "초 뒤 처음 화면 · SPACE 바로</p></section>";
+  if (ph === "result" && !tsfClosed()) return '<section class="tsf-p"><p class="tsf-k">다음 도전자</p><p class="tsf-go">SPACE = 새 QR</p><p class="tsf-hint" id="tsfCount">' + Math.round(TSF_RES_MS / 1000) + "초 뒤 처음 화면</p></section>";   /* 261007 처음 화면 = 광고 · SPACE = 곧바로 QR */
   return rule;
 }
 /* 오른쪽 · HIGH SCORE TOP 5(결과 화면에서만 방금 도전한 사람 줄 · 다음 사람에게 남의 줄을 짚어 보이지 않게) + 점수 규칙 */
@@ -840,7 +865,8 @@ function tsfGuideHtml() {
   if (cl) return '<div class="tsf-gd"><p class="tsf-chip">' + (cl.next ? "준비 중" : "오늘 마감") + '</p><p class="tsf-h">' + (cl.next ? "<span><em>" + esc(cl.next) + "</em>에</span><span>" + (cl.first ? "시작해요" : "다시 열려요") + "</span>" : "<span>오늘 도전은</span><span>끝났어요</span>") + "</p>" +
     '<p class="tsf-gs">' + (cl.next ? "1인 " + tsfLimit() + "회 · 최고 점수로 순위" : "1~3위는 17:00 Outro에서 시상") + "</p></div>";
   if (!TSF_CAM) return '<div class="tsf-gd tsf-gq"><p class="tsf-hk">' + TSF_HOOK + '</p><div class="tsf-lqr tsf-qbig" id="tsfLqr"></div>' +
-    '<p class="tsf-h"><span>폰으로 이 QR을 찍으세요</span></p><p class="tsf-gs s">앱이 있으면 앱의 QR 버튼으로</p><p class="tsf-lh" id="tsfLh" role="status" hidden>폰에서 로그인하는 중</p>' + tsfStepsHtml(true) + "</div>";
+    '<div class="tsf-tm" id="tsfTm" role="presentation"><i style="width:' + tsfWakePct() + '%"></i></div>' +   /* 261007 남은 시간 막대(60초 · 키 · 누름 = 다시 가득) */
+    '<p class="tsf-h"><span>폰 카메라로 찍어 주세요</span></p><p class="tsf-gs s">앱이 있으면 앱의 QR 버튼으로</p><p class="tsf-lh" id="tsfLh" role="status" hidden>폰에서 로그인하는 중</p>' + tsfStepsHtml(true) + "</div>";
   if (ce === "deny" || ce === "nocam") return '<div class="tsf-gd"><p class="tsf-chip">방법 1 쉬는 중</p><p class="tsf-h"><span>카메라가</span><span>켜지지 않았어요</span></p>' +
     '<p class="tsf-gs">왼쪽 <em>방법 2</em> QR을 폰 카메라로 찍어 주세요</p><p class="tsf-gs s">' + TSF_DESK + "</p>" + tsfStepsHtml() + "</div>";
   return '<div class="tsf-gd"><p class="tsf-chip">방법 1</p><p class="tsf-h"><span>앱의 <em>내 QR</em>을</span><span>위 <em>카메라</em>에 비추세요</span></p>' +
@@ -852,7 +878,50 @@ function tsfStepsHtml(q) {   /* q = 261006 새 진입(QR 찍기 · 규칙은 왼
     (q ? "" : '<p class="tsf-foot">1인 ' + tsfLimit() + "회 · 최고 점수로 순위 · 17:00 마감 · 1~3위 Outro 시상</p>");
 }
 /* 가운데 판 위 DOM · 대기 안내(attract) · 닉네임 칸(nick) · 결과(result) · 나머지는 캔버스(tsfPrevDraw) */
+/* 261007 광고(ph "ad") · QR 없음 · 카드 넷이 7초씩 돈다 · 맨 아래 「키보드를 눌러 시작」(늘 · 크게) · 시간 밖이면 그 줄 = 시간 안내 · 카드만 갈아 끼운다(tsfAdTick)
+   카드 = 후킹(뒤 봇 데모가 비친다) · 1~3위 경품 사진(PRIZES.type 그대로 · 가격 없음) · 지금 1위(현장 순위 · 없으면 첫 기록) · 참여 방법 세 단계 */
+var TSF_ADS = ["hook", "prize", "top", "how"];
+function tsfAdIdx() { return Math.floor(Math.max(0, performance.now() - TSF.adAt) / TSF_AD_MS) % TSF_ADS.length; }
+function tsfAdCard(k) {
+  if (k === "prize") {
+    var li = (typeof PRIZES !== "undefined" && PRIZES.type && PRIZES.type.list) || [];
+    return '<p class="tsf-adk">1~3위 경품</p><div class="tsf-adp">' + li.map(function (x) {
+      return '<figure><span class="ph"><img src="' + PRIZE_DIR + x.img + '.webp" alt="" loading="eager" decoding="async"></span><figcaption><b>' + esc(x.rk) + "</b>" + esc(x.nm) + "<small>" + esc(x.sub || "") + "</small></figcaption></figure>";
+    }).join("") + '</div><p class="tsf-ads">17:00 마감 · 1~3위 Outro 시상</p>';
+  }
+  if (k === "top") {
+    var t = (TSF.top && TSF.top.top) || [], a = t[0];
+    if (!a) return '<p class="tsf-adk">현장 1위</p><p class="tsf-adh">첫 기록의<br><em>주인공</em>이 되어 보세요</p><p class="tsf-ads">1인 ' + tsfLimit() + "회 · 최고 점수로 순위</p>";
+    return '<p class="tsf-adk">지금 1위</p><p class="tsf-adn1">' + esc(a.name) + '</p><p class="tsf-adsc">' + typePts(a.score) + "</p>" +
+      (t[1] ? '<p class="tsf-ads">2위 ' + esc(t[1].name) + " · " + typePts(t[1].score) + (t[2] ? "<br>3위 " + esc(t[2].name) + " · " + typePts(t[2].score) : "") + "</p>" : "") +
+      '<p class="tsf-adh s">이 점수를 <em>넘어</em> 보세요</p>';
+  }
+  if (k === "how") return '<p class="tsf-adk">참여 방법</p><div class="tsf-adw">' +
+    '<p><b>1</b><span><kbd class="tsf-key">아무 키</kbd>누르기</span></p><p><b>2</b><span>폰으로 QR 찍기</span></p><p><b>3</b><span>노트북에서 <kbd class="tsf-key">SPACE</kbd>시작</span></p></div>' +
+    '<p class="tsf-ads">앱 로그인 한 번이면 끝 · 1인 ' + tsfLimit() + "회</p>";
+  return '<p class="tsf-adk">1F 타자왕</p><p class="tsf-adh">당신의<br><em>프롬프팅 속도</em>를<br>보여 주세요</p><p class="tsf-ads">떨어지는 단어를 쳐서 없애요</p>';   /* hook · TSF_HOOK 과 같은 말 */
+}
+function tsfAdGo() {
+  var cl = tsfClosed();
+  if (cl) return '<p class="tsf-adgo c">' + (cl.next ? esc(cl.next) + "에 " + (cl.first ? "시작해요" : "다시 열려요") : "오늘 도전은 끝났어요") + "</p>";
+  return '<p class="tsf-adgo"><span class="tsf-adkb" aria-hidden="true"><i></i><i></i><i></i></span>키보드를 눌러 시작</p>';
+}
+function tsfAdHtml() {
+  var i = tsfAdIdx(); TSF.adI = i;
+  return '<div class="tsf-ad" id="tsfAd"><div class="tsf-adc a-' + TSF_ADS[i] + '" id="tsfAdc">' + tsfAdCard(TSF_ADS[i]) + '</div><div class="tsf-add" id="tsfAdd" aria-hidden="true">' +
+    TSF_ADS.map(function (x, k) { return "<i" + (k === i ? ' class="on"' : "") + "></i>"; }).join("") + "</div>" + tsfAdGo() + "</div>";
+}
+/* 시계마다 · 카드 차례가 바뀌면 카드 칸 · 점만 갈아 끼운다(맨 아래 줄은 그대로) · 지금 1위 카드는 순위가 새로 오면 다시 */
+function tsfAdTick(force) {
+  if (TSF.ph !== "ad") return;
+  var i = tsfAdIdx(), c = el("tsfAdc"); if (!c || (i === TSF.adI && !force)) return;
+  TSF.adI = i; c.className = "tsf-adc a-" + TSF_ADS[i]; c.innerHTML = tsfAdCard(TSF_ADS[i]);
+  var d = el("tsfAdd"); if (d) [].forEach.call(d.children, function (x, k) { x.className = k === i ? "on" : ""; });
+}
+/* QR 화면 남은 시간(%) · 폰 로그인 중이면 가득 */
+function tsfWakePct() { return TSF.lk.hold ? 100 : Math.max(0, Math.min(100, Math.round(100 - (Date.now() - TSF.idle) * 100 / TSF_WAKE_MS))); }
 function tsfOvHtml() {
+  if (TSF.ph === "ad") return tsfAdHtml();
   if (TSF.ph === "attract") return tsfGuideHtml();
   if (TSF.ph === "nick") {
     var cur = (TSF.info && TSF.info.nick) || "";
@@ -886,6 +955,7 @@ function tsfRankPull(force) {
     if (!r || !r.ok) return;
     TSF.top = r;
     var b = el("tsfR"); if (b && App.current === "type_site") b.innerHTML = tsfRightHtml();
+    if (TSF_ADS[TSF.adI] === "top") tsfAdTick(true);   /* 261007 지금 1위 카드 */
   }, function () {});
 }
 /* 가운데 판 · 판이 돌지 않을 때 · 바탕 = 대기 데모(봇이 혼자 친다 · v5.61 대기에서는 약하게 · 안내는 DOM) · 위에 단계별 글자(점 글자 + 도트 글꼴) */
@@ -902,7 +972,8 @@ function tsfPrevDraw() {
   var veil = function (a) { ctx.fillStyle = "rgba(24,22,20," + a + ")"; ctx.fillRect(0, 0, w, h); };
   var line = function (t, yy, px, col) { ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = rtFont(px); if (ctx.measureText(t).width > w - 32 && px > 16) px = px === 48 ? 32 : 16; rtText(ctx, t, cx, yy, px, col, RAIN_PAL.ink); };
   ctx.save();
-  if (ph === "attract") { veil(TSF.sc.on ? 1 : 0.86); tsfGuideMask(ctx, cv, w); }   /* v5.61 결정 ⑧ B · 봇 데모는 배경으로 약하게 · 안내는 tsfGuideHtml · 261005 최종 QA · 카메라 화면(scan-on) = 데모 가림 · 안내 제목 뒤 = 데모 가림(tsfGuideMask) */
+  if (ph === "ad") veil(TSF.sc.on ? 1 : TSF_ADS[TSF.adI] === "hook" ? 0.5 : 0.9);   /* 261007 광고 · 후킹 카드에서만 봇 데모가 비친다(게임이 도는 모습) */
+  else if (ph === "attract") { veil(TSF.sc.on ? 1 : 0.86); tsfGuideMask(ctx, cv, w); }   /* v5.61 결정 ⑧ B · 봇 데모는 배경으로 약하게 · 안내는 tsfGuideHtml · 261005 최종 QA · 카메라 화면(scan-on) = 데모 가림 · 안내 제목 뒤 = 데모 가림(tsfGuideMask) */
   else if (ph === "check") {
     veil(0.6);
     rtDots(ctx, "QR OK", cx, y, dh, RAIN_PAL.o100, { align: "center", line: RAIN_PAL.ink });
@@ -1019,16 +1090,22 @@ function tsfTick() {
   if (RG.on) return;
   var now = Date.now(), el2 = (performance.now() - TSF.phAt) / 1000, ph = TSF.ph, cl = tsfClosed();
   if ((cl ? "c" + cl.next : "") !== TSF.closedK) tsfPaint();
-  if (ph === "join" && el2 > TSF_JOIN_S) tsfPh(TSF.nick ? "ready" : "nick");
-  else if (ph === "err" && el2 > ((TSF.err && TSF.err.dur) || 4)) tsfReset();
+  if (ph === "ad") tsfAdTick();
+  else if (ph === "attract") {   /* 261007 QR 화면 · 폰 로그인 중이면 연장 · 60초 동안 아무도 안 붙으면 광고(토큰은 다음 시계에 off) · 시간 밖이 되면 광고 */
+    if (TSF.lk.hold) TSF.idle = now;
+    if (cl || now - TSF.idle > TSF_WAKE_MS) tsfReset();
+    else { var tm = el("tsfTm"); if (tm && tm.firstChild) tm.firstChild.style.width = tsfWakePct() + "%"; }
+  }
+  else if (ph === "join" && el2 > TSF_JOIN_S) tsfPh(TSF.nick ? "ready" : "nick");
+  else if (ph === "err" && el2 > ((TSF.err && TSF.err.dur) || 4)) { if (!tsfWake()) tsfReset(); }   /* 261007 안내 뒤 = QR 화면(다시 찍기) · 시간 밖이면 광고 */
   else if ((ph === "ready" && now - TSF.idle > TSF_READY_MS) || (ph === "nick" && now - TSF.idle > TSF_NICK_MS)) tsfReset();   /* 자리를 뜬 사람이 다음 사람에게 남지 않게 */
   else if (ph === "result") {
     var left = Math.max(0, Math.ceil((TSF_RES_MS - (performance.now() - TSF.resAt)) / 1000)), c = el("tsfCount");
-    if (c) c.textContent = left + "초 뒤 처음 화면 · SPACE 바로";
+    if (c) c.textContent = left + "초 뒤 처음 화면";
     if (left <= 0 && TSF.send !== "sending") tsfReset();   /* 261006 결과 화면 왼쪽 QR 없음 · 10초 뒤 대기 화면 가운데 QR */
   }
   if (TSF.cam.stream && !TSF.cam.timer) tsfCamAttach();
-  if (TSF.ph === "attract") { tsfRankPull(); tsfCfgPull(); }
+  if (TSF.ph === "attract" || TSF.ph === "ad") { tsfRankPull(); tsfCfgPull(); }
 }
 /* 닉네임 칸 · 공백은 받지 않는다(규칙 = 타자 닉네임 · 한글·영문·숫자 2~8자) · 조합 중에는 값을 고치지 않는다 · 형식에 없는 글자만 바로 알린다 */
 function tsfNickIn(n, e) {
@@ -1105,9 +1182,14 @@ function tsfKeyDoc(e) {
   if (!TSF.unl && S.get("site_sound", true) === true) { TSF.unl = true; sfxUnlock(); }
   if (e.key === "F2") { e.preventDefault(); tsfAdmin(); return; }
   var sp = e.code === "Space" || e.key === " ", ph = TSF.ph;
+  if (ph === "ad") {   /* 261007 깨우기 · 아무 키(한/영 · Shift 하나여도) · 그 키는 삼킨다(어디로도 가지 않는다) · 꾹 누름 반복은 한 번만 */
+    e.preventDefault(); e.stopPropagation();
+    if (!e.repeat) tsfWake();
+    return;
+  }
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   if (ph === "result") {
-    if (sp) { e.preventDefault(); if (!e.repeat && performance.now() - TSF.resAt > 1500) tsfReset(); }
+    if (sp) { e.preventDefault(); if (!e.repeat && performance.now() - TSF.resAt > 1500) { if (!tsfWake()) tsfReset(); } }   /* 261007 SPACE = 곧바로 새 QR */
     return;
   }
   if (ph === "ready") {
@@ -1128,6 +1210,12 @@ function tsfKeyDoc(e) {
   if (sp || e.key === "Tab") e.preventDefault();   /* 대기 · 확인 중 · 안내 = 키로 할 일 없음 · 공백 · Tab 이 단추로 새지 않게 */
 }
 document.addEventListener("keydown", tsfKeyDoc);
+/* 261007 마우스 누름 · 터치도 깨운다(광고 화면 어디든 · 「관리」 단추는 그대로) · QR 화면에서 누르면 남은 시간이 다시 가득 */
+document.addEventListener("pointerdown", function (e) {
+  if (App.current !== "type_site" || !tsfOn() || RG.on || el("modal") || !e.target || !e.target.closest || !e.target.closest(".tsf") || e.target.closest(".tsf-adm")) return;
+  if (TSF.ph === "ad") { e.preventDefault(); if (!TSF.unl && S.get("site_sound", true) === true) { TSF.unl = true; sfxUnlock(); } tsfWake(); }
+  else if (TSF.ph === "attract") tsfPoke();
+}, true);
 window.addEventListener("resize", function () { if (App.current === "type_site" && tsfOn() && !RG.on) { var g = document.querySelector(".tsf-grid"); if (g) g.style.setProperty("--tsf-bw", tsfBw() + "px"); tsfPrevDraw(); tsfLinkPaint(); } });
 
 /* ── 1F TV 순위판 · 로그인 없음 · 앱 상위 10 ↔ 현장 상위 5 번갈아(12초) · 닉네임만 · 30초마다 새로 받음 ── */

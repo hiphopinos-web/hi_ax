@@ -479,6 +479,8 @@
   @keyframes tsfUp { 50% { background-position: 0 -8px; } }   /* v5.61 폰 위 점선이 위로 흐른다 */
   @keyframes tsfGd { 0% { margin-top: 0; } 50% { margin-top: -6px; } }   /* v5.24 셀프 모드 카메라 상자 「내 QR」 그림이 위아래로 두 칸 */
   @keyframes tsfBlink { 50% { color: #D64524; } }   /* v4.32 셀프 모드 「SPACE를 눌러 시작」 · 글자는 사라지지 않고 밝기만 오간다(O100 ↔ 어두운 오렌지 · v4.29b) */
+  @keyframes tsfAdIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }   /* 261007 1F 타자왕 노트북 광고 카드가 들어올 때(세 칸 계단) */
+  @keyframes tsfKey { 0%, 33% { transform: translateY(4px); box-shadow: 0 0 0 2px #000, 0 1px 0 2px #D9A066; background: #FFA46E; } 34%, 100% { transform: none; } }   /* 261007 광고 맨 아래 「키보드를 눌러 시작」 키 셋이 차례로 눌린다 */
   #rgPlay .rg-hud .rg-ib.off { color: #B8AEA6; border-color: #D9D2CC; text-decoration: line-through; }
   #rgPlay .rg-hud .rg-ib, #rgPlay.rain .rg-hud .rgp-x { flex: none; min-width: 44px; height: 44px; padding: 0 8px; border: 2px solid #000; border-radius: 12px; background: #fff; font-weight: 800; font-size: 13px; color: #000; }
   #rgPlay .rgp-mid.fill { display: block; overflow: hidden; }
