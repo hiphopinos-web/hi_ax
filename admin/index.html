@@ -8052,23 +8052,25 @@ function lpUndoAsk(){
 /* ══════════════════ 261006 키트 플리스 사이즈(ks-) · 관리자 도구 › 사람·권한 · 행사 전 운영(10/16 열림 ~ 10/21 마감 ~ 10/23 변경 마감) ══════════════════
  * 서버 kit_size_state(관리코드 · 읽기) · kit_size_auto(슈퍼관리자 + 본인 확인 sp · 미리보기 GET → 실행 POST mode=run · confirm=ASSIGN · sig)
  * 자동 배정 버튼은 고르기 마감 뒤(ph chg | end)에만 · 한 번만(서버가 auto 기록을 남긴다) · 옛 서버(액션 없음) = 「서버 갱신 뒤」 */
-NAV.splice(NAV.findIndex(function(it){ return it.id==="p_lng"; })+1, 0, { id:"p_kit", m:"pp", n:"키트 플리스 사이즈", sup:1, parts:[P("kitsz","","","viewKitSize")] });
+NAV.splice(NAV.findIndex(function(it){ return it.id==="p_lng"; })+1, 0, { id:"p_kit", m:"pp", n:"기념품 옷 사이즈", sup:1, parts:[P("kitsz","","","viewKitSize")] });   /* 261008 「키트 플리스 사이즈」 → 스태프 포함 · 신청번호 · 엑셀 */
 NAVBY.p_kit=NAV.filter(function(it){ return it.id==="p_kit"; })[0];
-MENUBY.pp.d="계정 · 한 사람 관리 · 테스트 사번 · 10F 사전 신청 명단 · 라운지 명단 · 키트 플리스 사이즈 · 권한 명단 · 공용 코드입니다.";
-NEED.kitsz=[{k:"kss",a:"kit_size_state"}];
-SP_ACT.kit_size_auto=1;
+MENUBY.pp.d="계정 · 한 사람 관리 · 테스트 사번 · 10F 사전 신청 명단 · 라운지 명단 · 기념품 옷 사이즈 · 권한 명단 · 공용 코드입니다.";
+NEED.kitsz=function(){ return [{k:"kss",a:"kit_size_state"}].concat(supOk()?[{k:"ksl",a:"kit_size_list"}]:[]); };   /* 261008 신청 목록(이름 · 부서) = 본인 확인 뒤 */
+SP_ACT.kit_size_auto=1; SP_ACT.kit_size_list=1; SP_ACT.kit_staff_preview=1; SP_ACT.kit_staff_apply=1;
+CTL_ACT.kit_staff_apply=["pp",function(p){ return "스태프 의류 명단 적용 · "+(p.mode==="add"?"추가":"교체"); }];
 CTL_ACT.kit_size_auto=["pp",function(p){ return "키트 사이즈 자동 배정"; }];
 HV_VIEW.viewKitSize=function(){ return viewKitSize(); };
 CFG_NOTE["키트사이즈_수량"]="형식 = 사이즈와 수량을 붙이고 띄어 씀 · 예 「SS50 L105 2XL45 3XL20」 · 네 사이즈(SS · L · 2XL · 3XL) · 형식이 틀리면 기본값";
 CFG_NOTE["키트사이즈_열림"]="형식 「2026-10-16 09:00」 · 이 시각부터 앱에서 고름 · 비우면 바로 열림";
 CFG_NOTE["키트사이즈_마감"]="형식 「2026-10-21 18:00」 · 이 시각까지 자유롭게 바꿈 · 뒤에 사람·권한 › 키트 플리스 사이즈에서 자동 배정";
 CFG_NOTE["키트사이즈_변경마감"]="형식 「2026-10-23 18:00」 · 마감 뒤 이 시각까지 남는 사이즈로만 바꿈 · 비우면 경계 없음(마감과 함께 끝)";
-var KS_CFG=["키트사이즈_수량","키트사이즈_열림","키트사이즈_마감","키트사이즈_변경마감"];
+CFG_NOTE["스태프의류_수량"]="형식 = 「SS10 L25 2XL10 3XL5」 · 스태프 풀(사전 신청과 따로) · 네 사이즈 · 형식이 틀리면 기본값";
+var KS_CFG=["키트사이즈_수량","스태프의류_수량","키트사이즈_열림","키트사이즈_마감","키트사이즈_변경마감"];
 var KS_PH=[["before","열림 전"],["open","고르는 중"],["chg","변경 마감 전"],["end","마감"]];
 var KS_SZ=["SS","L","2XL","3XL"];
 var KS={ pv:null, busy:"", err:"" };
 var KS_WORD="자동배정";
-function ksWhy(r){ r=r||{}; return ({ word:"확인 문구가 맞지 않습니다", notclosed:"고르기 마감 전입니다. 마감 시각 뒤에 배정합니다", done:"이미 자동 배정했습니다(한 번만 합니다)", state:"미리보기 뒤에 누가 사이즈를 바꿨습니다. 미리보기를 다시 봅니다", post:"실행 요청 방식이 맞지 않습니다. 콘솔을 새로 고친 뒤 다시 합니다", spin:"본인 확인(PIN)이 필요합니다", super:"슈퍼관리자만 할 수 있습니다" })[r.reason]||(hvUnknown(r)?"서버 갱신 뒤 쓸 수 있습니다":why(r)); }
+function ksWhy(r){ r=r||{}; return ({ rows:"사번이 너무 많습니다", param:"사번 형식이 맞지 않는 줄이 있습니다", word:"확인 문구가 맞지 않습니다", notclosed:"고르기 마감 전입니다. 마감 시각 뒤에 배정합니다", done:"이미 자동 배정했습니다(한 번만 합니다)", state:"미리보기 뒤에 누가 사이즈를 바꿨습니다. 미리보기를 다시 봅니다", post:"실행 요청 방식이 맞지 않습니다. 콘솔을 새로 고친 뒤 다시 합니다", spin:"본인 확인(PIN)이 필요합니다", super:"슈퍼관리자만 할 수 있습니다" })[r.reason]||(hvUnknown(r)?"서버 갱신 뒤 쓸 수 있습니다":why(r)); }
 function ksSrv(){ var d=ST.data.kss; return !d?"":hvUnknown(d)?"old":d.ok?"new":"err"; }
 function ksN(v){ return finNum(v); }
 function ksT(s){ s=String(s||""); return s?esc(s.slice(5).replace("-","/")):"정하지 않음"; }
@@ -8078,13 +8080,13 @@ function ksPhBar(d){
   return '<ol class="ks-ph">'+KS_PH.map(function(x,i){ return '<li class="'+(i===i0?"on":i<i0?"done":"")+'"><b>'+esc(x[1])+'</b><span class="n">'+at[i]+'</span></li>'; }).join("")+'</ol>';
 }
 function ksPhLine(ph){ return ({ before:"아직 앱에서 고를 수 없습니다. 열림 시각부터 고릅니다.", open:"참가자가 앱에서 고르고 몇 번이든 바꿉니다.", chg:"고르기는 마감됐습니다. 남는 사이즈로만 바꿀 수 있습니다. 안 고른 사람은 자동 배정합니다.", end:"모두 마감됐습니다. 앱에서 바꾸지 않습니다." })[ph]||""; }
-function ksTable(d){
+function ksTable(d, stf){
   var q=d.qty||{}, t=d.taken||{}, l=d.left||{}, g=d.got||{}, S=(d.sizes&&d.sizes.length?d.sizes:KS_SZ), sum={ q:0, t:0, l:0, g:0 };
   var rows=S.map(function(z){ var a=Number(q[z])||0, b=Number(t[z])||0, c=Number(l[z])||0, e=Number(g[z])||0; sum.q+=a; sum.t+=b; sum.l+=c; sum.g+=e;
-    return '<tr><td><b>'+esc(z)+'</b></td><td class="n tdr">'+ksN(a)+'</td><td class="n tdr">'+ksN(b)+'</td><td class="n tdr">'+(c?ksN(c):tag("다 참","warn"))+'</td><td class="n tdr">'+ksN(e)+'</td></tr>'; }).join("");
-  return '<div class="wrap"><table class="tb ks-tb"><tr><th>사이즈</th><th class="tdr">수량</th><th class="tdr">정함</th><th class="tdr">남음</th><th class="tdr">받음</th></tr>'+rows+
-    '<tr class="sum"><td><b>합계</b></td><td class="n tdr"><b>'+ksN(d.tot!=null?d.tot:sum.q)+'</b></td><td class="n tdr"><b>'+ksN(sum.t)+'</b></td><td class="n tdr"><b>'+ksN(sum.l)+'</b></td><td class="n tdr"><b>'+ksN(sum.g)+'</b></td></tr></table></div>'+
-    '<p class="cap mt8">정함 = 직접 고름 '+ksN((d.how||{}).pick)+' · 자동 배정 '+ksN((d.how||{}).auto)+' · 받음 = 1F 체크인존에서 키트를 받은 사람(정한 사이즈 기준).</p>';
+    return '<tr><td><b>'+esc(z)+'</b></td><td class="n tdr">'+ksN(a)+'</td><td class="n tdr">'+ksN(b)+'</td><td class="n tdr">'+(c?ksN(c):tag("품절","warn"))+'</td>'+(stf?'':'<td class="n tdr">'+ksN(e)+'</td>')+'</tr>'; }).join("");
+  return '<div class="wrap"><table class="tb ks-tb"><tr><th>사이즈</th><th class="tdr">수량</th><th class="tdr">정함</th><th class="tdr">남음</th>'+(stf?'':'<th class="tdr">받음</th>')+'</tr>'+rows+
+    '<tr class="sum"><td><b>합계</b></td><td class="n tdr"><b>'+ksN(d.tot!=null?d.tot:sum.q)+'</b></td><td class="n tdr"><b>'+ksN(sum.t)+'</b></td><td class="n tdr"><b>'+ksN(sum.l)+'</b></td>'+(stf?'':'<td class="n tdr"><b>'+ksN(sum.g)+'</b></td>')+'</tr></table></div>'+
+    '<p class="cap mt8">정함 = 직접 고름 '+ksN((d.how||{}).pick)+' · 자동 배정 '+ksN((d.how||{}).auto)+(stf?' · 스태프 풀은 사전 신청 재고와 따로 셉니다.':' · 받음 = 1F 체크인존에서 키트를 받은 사람(정한 사이즈 기준).')+'</p>';
 }
 function ksAutoRes(a){
   var sz=a.size||{};
@@ -8101,7 +8103,7 @@ function ksAutoCard(d){
     var by=pv.by||{}, rows=pv.rows||[];
     inner=(pv.short?'<div class="bands">'+band("warn","남은 키트가 <b>"+ksN(pv.short)+"명</b>만큼 모자랍니다. 그 사람들은 사이즈 없이 남습니다.")+'</div>':'')+
       imp([["안 고른 사람",ksN(pv.n)+"명"],["배정",ksN(pv.give)+"명","chg"],["모자람",ksN(pv.short)+"명",pv.short?"loss":""],["사이즈별",KS_SZ.map(function(z){ return esc(z)+" "+ksN(by[z]); }).join(" · ")],["씨앗 · 서명",'<span class="n">'+esc(pv.seed||"-")+" · "+esc(pv.sig||"-")+'</span>']])+
-      '<div class="wrap scrolly mt12" style="max-height:320px"><table class="tb"><tr><th>사번</th><th>이름</th><th>배정 사이즈</th></tr>'+rows.map(function(x){ return '<tr><td class="n">'+esc(x.emp)+'</td><td>'+esc(x.name||"-")+'</td><td>'+(x.sz?'<b>'+esc(x.sz)+'</b>':tag("모자람","warn"))+'</td></tr>'; }).join("")+(!rows.length?emptyRow(3,"안 고른 사람이 없습니다."):"")+'</table></div>'+
+      '<div class="wrap scrolly mt12" style="max-height:320px"><table class="tb"><tr><th>사번</th><th>이름</th><th>배정 사이즈</th></tr>'+rows.map(function(x){ return '<tr><td class="n">'+esc(x.emp)+(x.pool==="staff"?" "+tag("스태프","off"):"")+'</td><td>'+esc(x.name||"-")+'</td><td>'+(x.sz?'<b>'+esc(x.sz)+'</b>':tag("모자람","warn"))+'</td></tr>'; }).join("")+(!rows.length?emptyRow(3,"안 고른 사람이 없습니다."):"")+'</table></div>'+
       (pv.n>rows.length?'<p class="cap mt8">앞 '+rows.length+'명만 보입니다(전체 '+ksN(pv.n)+'명).</p>':'')+
       '<div class="row mt12" style="gap:8px"><button class="btn" onclick="KS.pv=null;render()">닫기</button><button class="btn danger" onclick="ksRunAsk()"'+(KS.busy||!pv.can||!pv.give?" disabled":"")+'>'+LOCK_SVG+' 배정 실행</button></div>'+
       (!pv.can?'<p class="cap mt8">지금은 실행할 수 없습니다'+(pv.done?"(이미 배정함)":"(마감 전)")+'.</p>':'');
@@ -8117,10 +8119,10 @@ function ksRunAsk(){
   var pv=KS.pv; if(!pv) return; var by=pv.by||{};
   hvL3Go({ t:"안 고른 사람에게 사이즈를 자동 배정할까요?", who:"키트 플리스 사이즈<span>안 고른 "+ksN(pv.n)+"명 · 한 번만</span>",
     rows:[["배정",ksN(pv.give)+"명","chg"],["모자람(사이즈 없이 남음)",ksN(pv.short)+"명",pv.short?"loss":""],["사이즈별",KS_SZ.map(function(z){ return esc(z)+" "+ksN(by[z]); }).join(" · ")],["이미 고른 사람","그대로"]],
-    s:"시트 「키트명단」의 안 고른 사람 줄에 사이즈 · 시각 · 「자동」이 들어갑니다. <b>한 번만 하고 콘솔에서 되돌리지 않습니다.</b> 참가자 앱에는 「자동 배정」으로 보입니다.", ok:"배정 실행", word:KS_WORD,
+    s:"시트 「키트명단」 · 「스태프의류」의 안 고른 사람 줄에 사이즈 · 시각 · 「자동」이 들어가고 신청번호가 생깁니다. <b>한 번만 하고 콘솔에서 되돌리지 않습니다.</b> 참가자 앱에는 「자동 배정」으로 보입니다.", ok:"배정 실행", word:KS_WORD,
     run:function(fin){ KS.busy="run"; render();
       callPost("kit_size_auto",{ mode:"run", confirm:"ASSIGN", sig:pv.sig||"" },function(r){ KS.busy="";
-        if(r&&r.ok){ KS.pv=null; delete _cache[sig_("kit_size_state",{})]; reload(["kss"]); fin("자동 배정했습니다", r.done?ksAutoRes(r.done):""); }
+        if(r&&r.ok){ KS.pv=null; delete _cache[sig_("kit_size_state",{})]; delete _cache[sig_("kit_size_list",{})]; reload(["kss","ksl"]); fin("자동 배정했습니다", r.done?ksAutoRes(r.done):""); }
         else { dlgForce(); if(r&&r.reason==="state") KS.pv=null; toast("실패: "+ksWhy(r)); render(); } },function(e){ KS.busy=""; dlgForce(); toast("실패: "+ksWhy(e)); render(); }); } });
 }
 function ksGoCfg(){
@@ -8130,20 +8132,152 @@ function ksGoCfg(){
 }
 function viewKitSize(){
   var d=ST.data.kss, srv=ksSrv();
-  if(!d) return card("키트 플리스 사이즈","",skel());
+  if(!d) return card("기념품 옷 사이즈","",skel());
   if(srv==="old") return '<div class="bands">'+band("","이 서버는 아직 키트 사이즈를 모릅니다. <b>서버 갱신 뒤</b> 보입니다.")+'</div>';
   if(srv==="err") return '<div class="bands">'+band("bad","사이즈 현황을 받지 못했습니다("+esc(ksWhy(d))+").",'<button class="btn sm" onclick="reload([\'kss\'])">다시 시도</button>')+'</div>';
+  var st=d.st||null, sh=(st&&st.how)||{};
   var h='<div class="toolbar"><span class="cnt">'+esc(ksPhLine(d.ph))+'</span><span class="sp"></span><button class="btn sm" onclick="ksGoCfg()">기간 · 수량 바꾸기(운영 설정)</button></div>'+ksPhBar(d);
-  h+='<div class="kpis mt12">'+kpi("대상",ksN(d.elig),"명","10F 명단 + 라운지 "+ksN(d.q)+"번까지")+kpi("정함",ksN(((d.how||{}).pick||0)+((d.how||{}).auto||0)),"명","직접 "+ksN((d.how||{}).pick)+" · 자동 "+ksN((d.how||{}).auto))+
-    kpi("안 고름",ksN(d.none),"명",d.ph==="chg"||d.ph==="end"?(d.auto?"자동 배정 뒤 남은 사람":"아래에서 자동 배정"):"마감 뒤 자동 배정")+kpi("라운지 초과",ksN(d.hum),"명","라운지 "+ksN(d.q+1)+"번부터 · 가습기 · 사이즈 없음")+'</div>';
-  h+='<div class="ns-grid2 lay-fa"><div class="p10-main">'+card("사이즈별","수량 "+ksN(d.tot)+"벌 · 받은 시각 "+esc(short(d.t||"")),ksTable(d))+'</div><div class="ns-side">'+ksAutoCard(d)+'</div></div>';
-  h+=memo('<p><b>누가 고르나</b> · 키트명단(10F 사전 신청 명단 + 라운지 사전 신청 명단)에 있는 사람만 앱에서 고릅니다. 라운지는 명단 줄 순서(상담 신청 순) 1~'+esc(d.q)+'번만 키트, 그 뒤는 가습기라 사이즈가 없습니다.</p>'+
-    '<p><b>단계</b> · 열림 전 → 고르는 중(몇 번이든 바꿈) → 변경 마감 전(남는 사이즈로만 바꿈) → 마감. 시각과 수량은 시스템 › 운영 설정의 키트사이즈_수량 · 열림 · 마감 · 변경마감에서 바꿉니다(형식 「2026-10-21 18:00」, 변경마감을 비우면 마감과 함께 끝).</p>'+
-    '<p><b>남음</b> · 수량 − 정한 수입니다. 0 이 된 사이즈는 앱에서 고를 수 없습니다. 수량을 정한 수보다 적게 줄이면 남음이 0 으로 보입니다.</p>'+
-    '<p><b>자동 배정</b> · 고르기 마감 뒤 한 번만 합니다. 안 고른 사람을 씨앗 순서로 줄 세우고 남은 사이즈를 남은 수에 비례해 나눕니다. 같은 명단 상태 + 같은 씨앗이면 같은 결과입니다. 미리보기 뒤 누가 사이즈를 바꾸면 실행이 거절되고 미리보기를 다시 봅니다.</p>'+
-    '<p><b>기록</b> · 자동 배정은 운영로그에 남습니다. 사이즈는 시트 「키트명단」 3칸 · 시각 6칸 · 구분(선택 | 자동) 7칸에 있습니다.</p>');
+  h+='<div class="kpis mt12">'+kpi("사전 신청 대상",ksN(d.elig),"명","10F 명단 + 라운지 "+ksN(d.q)+"번까지")+(st?kpi("스태프 대상",ksN(st.elig),"명",st.dup?"사전 신청과 겹친 "+ksN(st.dup)+"명은 사전 신청 쪽":"스태프 의류 명단"):"")+
+    kpi("정함",ksN(((d.how||{}).pick||0)+((d.how||{}).auto||0)+(sh.pick||0)+(sh.auto||0)),"명","직접 "+ksN(((d.how||{}).pick||0)+(sh.pick||0))+" · 자동 "+ksN(((d.how||{}).auto||0)+(sh.auto||0)))+
+    kpi("안 고름",ksN((d.none||0)+((st&&st.none)||0)),"명",d.ph==="chg"||d.ph==="end"?(d.auto?"자동 배정 뒤 남은 사람":"아래에서 자동 배정"):"마감 뒤 자동 배정")+kpi("라운지 초과",ksN(d.hum),"명","라운지 "+ksN(d.q+1)+"번부터 · 가습기 · 옷 없음")+'</div>';
+  h+='<div class="ns-grid2 lay-fa"><div class="p10-main">'+card("사이즈별 · 사전 신청","수량 "+ksN(d.tot)+"벌 · 받은 시각 "+esc(short(d.t||"")),ksTable(d))+
+    (st?card("사이즈별 · 스태프","수량 "+ksN(st.tot)+"벌 · 따로 재고",ksTable(st,1)):card("사이즈별 · 스태프","",'<p class="cap">이 서버는 아직 스태프 풀을 모릅니다(서버 갱신 뒤).</p>'))+
+    '</div><div class="ns-side">'+ksAutoCard(d)+ksStCard(d)+'</div></div>';
+  h+=ksListCard();
+  h+=memo('<p><b>누가 고르나</b> · 키트명단(10F 사전 신청 명단 + 라운지 사전 신청 명단)과 스태프 의류 명단에 있는 사람만 앱에서 고릅니다. 라운지는 명단 줄 순서(상담 신청 순) 1~'+esc(d.q)+'번만 키트, 그 뒤는 가습기라 사이즈가 없습니다. 두 명단에 다 있으면 사전 신청 쪽 하나만 씁니다.</p>'+
+    '<p><b>재고</b> · 사전 신청 풀(키트사이즈_수량)과 스태프 풀(스태프의류_수량)은 따로 셉니다. 한쪽이 품절이어도 다른 쪽은 그대로입니다. 수량을 정한 수보다 적게 줄이면 남음이 0 으로 보입니다.</p>'+
+    '<p><b>신청번호</b> · 처음 사이즈를 정할 때(직접 · 자동 배정) 서버가 한 번 줍니다. 사전 신청 K-001 ~ · 스태프 S-001 ~. 사이즈를 바꿔도, 명단에서 빠졌다 다시 들어와도 같은 번호입니다. 번호에 사번은 없습니다. 교환 때 이 번호로 찾습니다(아래 목록 검색 · 체크인존 창구 결과 띠).</p>'+
+    '<p><b>단계</b> · 열림 전 → 고르는 중(몇 번이든 바꿈) → 변경 마감 전(남는 사이즈로만 바꿈) → 마감. 두 풀이 같은 기간을 씁니다. 시각과 수량은 시스템 › 운영 설정에서 바꿉니다(형식 「2026-10-21 18:00」, 변경마감을 비우면 마감과 함께 끝).</p>'+
+    '<p><b>자동 배정</b> · 고르기 마감 뒤 한 번만 합니다. 풀마다 안 고른 사람을 씨앗 순서로 줄 세우고 그 풀의 남은 사이즈를 남은 수에 비례해 나눕니다. 같은 명단 상태 + 같은 씨앗이면 같은 결과입니다. 미리보기 뒤 누가 사이즈를 바꾸면 실행이 거절되고 미리보기를 다시 봅니다.</p>'+
+    '<p><b>기록</b> · 사이즈는 시트 「키트명단」 3 · 6 · 7칸, 「스태프의류」 4 · 5 · 6칸, 신청번호 · 변경 횟수는 「옷신청번호」에 있습니다. 명단 적용 · 자동 배정은 운영로그에 남습니다.</p>'+
+    '<p><b>개인정보</b> · 목록 · 엑셀에는 이름 · 부서가 들어갑니다. 내려받은 파일은 쓰고 나서 이 PC 에서 지웁니다.</p>');
   return h;
 }
+/* ══ 261008 기념품 옷 신청 목록(kit_size_list · 슈퍼관리자 + 본인 확인) · 신청번호 · 사번 · 이름 검색 · 대상 칸 · 엑셀(.xlsx) · CSV ══ */
+var KSL={ q:"", pool:"all" }, KSL_MAX=400, KSL_POOL={ kit:"사전 신청", staff:"스태프" }, KSL_HOW={ pick:"직접", auto:"자동" };
+function kslSrv(){ var d=ST.data.ksl; return !d?"":hvUnknown(d)?"old":d.ok?"new":"err"; }
+function kslRows(){
+  var d=ST.data.ksl||{}, q=String(KSL.q||"").trim().toUpperCase().replace(/\s/g,""), nq=normE(q);
+  return (d.rows||[]).filter(function(r){
+    if(KSL.pool!=="all"&&r.pool!==KSL.pool) return false;
+    if(!q) return true;
+    return String(r.no||"").toUpperCase().replace(/-/g,"").indexOf(q.replace(/-/g,""))>=0||normE(r.emp).indexOf(nq)>=0||String(r.name||"").replace(/\s/g,"").toUpperCase().indexOf(q)>=0;
+  });
+}
+function kslTbHtml(){
+  var rs=kslRows(), show=rs.slice(0,KSL_MAX);
+  return show.map(function(r){ return '<tr><td class="n">'+(r.no?'<b>'+esc(r.no)+'</b>':'<span class="cap">-</span>')+'</td><td>'+tag(KSL_POOL[r.pool]||r.pool,r.pool==="staff"?"off":"")+'</td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.name||"-")+'</td><td>'+esc(r.dept||"-")+'</td>'+
+    '<td>'+(r.sz?'<b>'+esc(r.sz)+'</b>':tag("안 고름","warn"))+'</td><td class="n">'+esc(r.at?short(r.at):"-")+'</td><td>'+esc(r.how?KSL_HOW[r.how]||r.how:"-")+'</td><td class="n tdr">'+ksN(r.cn||0)+'</td><td class="n">'+esc(r.got?short(r.got):r.pool==="staff"?"":"-")+'</td></tr>'; }).join("")+
+    (!rs.length?emptyRow(10,KSL.q?"찾는 사람이 없습니다.":"대상이 없습니다."):"")+(rs.length>KSL_MAX?'<tr><td colspan="10"><p class="cap">앞 '+KSL_MAX+'명만 보입니다(전체 '+rs.length+'명) · 검색으로 좁히거나 엑셀로 내려받습니다.</p></td></tr>':"");
+}
+function kslCnt(){ var d=ST.data.ksl||{}, all=(d.rows||[]).length, rs=kslRows(); return (rs.length===all?"":rs.length+" / ")+all+"명"; }
+function kslQ(v){ KSL.q=v; var t=el("ksl_tb"); if(t) t.innerHTML=kslTbHtml(); var c=el("ksl_cnt"); if(c) c.textContent=kslCnt(); }
+function kslPool(p){ KSL.pool=p; render(); }
+function ksListCard(){
+  if(!supOn()) return card("신청 목록","",'<div class="note">신청 목록(이름 · 부서)은 슈퍼관리자만 봅니다.</div>');
+  if(!supOk()) return card("신청 목록","신청번호 · 사번 · 이름 검색 · 엑셀",pzSupBox("신청 목록 보기",""));
+  var d=ST.data.ksl, srv=kslSrv();
+  if(!d) return card("신청 목록","",skel());
+  if(srv==="old") return card("신청 목록","",emptyLine("서버 갱신 뒤 보입니다."));
+  if(srv==="err") return card("신청 목록","",'<div class="bands">'+band("bad","목록을 받지 못했습니다("+esc(ksWhy(d))+").",'<button class="btn sm" onclick="reload([\'ksl\'])">다시 시도</button>')+'</div>');
+  var seg='<span class="seg">'+[["all","전체"],["kit","사전 신청"],["staff","스태프"]].map(function(x){ return '<button class="'+(KSL.pool===x[0]?"on":"")+'" onclick="kslPool(\''+x[0]+'\')">'+x[1]+'</button>'; }).join("")+'</span>';
+  var tools='<div class="toolbar">'+seg+'<input class="in" style="max-width:240px" placeholder="신청번호 · 사번 · 이름" value="'+esc(KSL.q)+'" oninput="kslQ(this.value)"><span class="cnt" id="ksl_cnt">'+kslCnt()+'</span><span class="sp"></span>'+
+    '<button class="btn sm" onclick="kslXlsx()">엑셀(.xlsx) 내려받기</button><button class="btn sm" onclick="kslCsv()">CSV</button><button class="btn sm" onclick="reload([\'ksl\'])">새로 고침</button></div>';
+  var tb='<div class="wrap scrolly mt12" style="max-height:520px"><table class="tb"><tr><th>신청번호</th><th>대상</th><th>사번</th><th>이름</th><th>부서</th><th>사이즈</th><th>신청 시각</th><th>구분</th><th class="tdr">변경</th><th>키트 수령</th></tr><tbody id="ksl_tb">'+kslTbHtml()+'</tbody></table></div>';
+  return card("신청 목록","받은 시각 "+esc(short(d.t||""))+(d.hum?" · 라운지 초과(가습기) "+ksN(d.hum)+"명은 목록 밖":""),tools+tb+'<p class="cap mt8">신청번호 = 처음 정할 때 한 번 · 사이즈를 바꿔도 같은 번호 · 변경 = 처음 정한 뒤 바꾼 횟수 · 엑셀은 화면 검색과 상관없이 전체를 내려받습니다.</p>');
+}
+/* 내보내기 열 · 신청번호 · 대상 · 사번 · 이름 · 부서 · 사이즈 · 신청 시각(+ 구분 · 변경 횟수) */
+var KSL_HEAD=["신청번호","대상","사번","이름","부서","사이즈","신청 시각","구분","변경 횟수"];
+function kslOut(){ var d=ST.data.ksl||{}; return (d.rows||[]).map(function(r){ return [r.no||"",KSL_POOL[r.pool]||r.pool,r.emp,r.name||"",r.dept||"",r.sz||"",r.at||"",r.how?KSL_HOW[r.how]||r.how:"",Number(r.cn)||0]; }); }
+function kslName(ext){ var t=String((ST.data.ksl||{}).t||""), m=/^20(\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d)/.exec(t); return "기념품옷_신청목록_"+(m?m[1]+m[2]+m[3]+"_"+m[4]+m[5]:"목록")+"."+ext; }
+function kslCsv(){ if(!(ST.data.ksl||{}).rows) return; pzCsv(kslName("csv"), KSL_HEAD, kslOut().map(function(r){ return r.map(function(v,i){ v=String(v); return i<6&&/^[=+\-@]/.test(v)?"'"+v:v; }); })); }
+function kslXlsx(){
+  if(!(ST.data.ksl||{}).rows) return;
+  var b=xlsxBlob("기념품 옷 신청", KSL_HEAD, kslOut(), [10,10,12,10,22,8,18,8,10]);
+  var a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=kslName("xlsx");
+  document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },400);
+  toast("엑셀 내려받기 · "+(ST.data.ksl.rows.length)+"명");
+}
+/* 바깥 라이브러리 없는 .xlsx · 시트 하나 · 글자 = inlineStr(사번 앞 0 · 글자 그대로) · 숫자 = 숫자 · 머리 굵게 · 첫 줄 고정 · 무압축 zip(qvZip) */
+function xlsxEsc(v){ return String(v==null?"":v).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,"").replace(/[&<>"]/g,function(c){ return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]; }); }
+function xlsxCol(i){ var x=""; i++; while(i>0){ var m=(i-1)%26; x=String.fromCharCode(65+m)+x; i=Math.floor((i-1)/26); } return x; }
+function xlsxBlob(sheet, head, rows, widths){
+  var X='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n', NS='http://schemas.openxmlformats.org/', enc=new TextEncoder();
+  var sd=[head].concat(rows).map(function(r,ri){ return '<row r="'+(ri+1)+'">'+r.map(function(v,ci){ var ref=xlsxCol(ci)+(ri+1), s=ri?"":' s="1"';
+    return typeof v==="number"&&isFinite(v)?'<c r="'+ref+'"'+s+'><v>'+v+'</v></c>':'<c r="'+ref+'" t="inlineStr"'+s+'><is><t xml:space="preserve">'+xlsxEsc(v)+'</t></is></c>'; }).join("")+'</row>'; }).join("");
+  var cols=widths&&widths.length?'<cols>'+widths.map(function(w,i){ return '<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>'; }).join("")+'</cols>':"";
+  var f=[
+    ["[Content_Types].xml",X+'<Types xmlns="'+NS+'package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
+    ["_rels/.rels",X+'<Relationships xmlns="'+NS+'package/2006/relationships"><Relationship Id="rId1" Type="'+NS+'officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+    ["xl/workbook.xml",X+'<workbook xmlns="'+NS+'spreadsheetml/2006/main" xmlns:r="'+NS+'officeDocument/2006/relationships"><sheets><sheet name="'+xlsxEsc(String(sheet).slice(0,31))+'" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+    ["xl/_rels/workbook.xml.rels",X+'<Relationships xmlns="'+NS+'package/2006/relationships"><Relationship Id="rId1" Type="'+NS+'officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="'+NS+'officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+    ["xl/styles.xml",X+'<styleSheet xmlns="'+NS+'spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="맑은 고딕"/></font><font><b/><sz val="11"/><name val="맑은 고딕"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'],
+    ["xl/worksheets/sheet1.xml",X+'<worksheet xmlns="'+NS+'spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'+cols+'<sheetData>'+sd+'</sheetData></worksheet>']
+  ];
+  return new Blob([qvZip(f.map(function(x){ return { name:x[0], data:enc.encode(x[1]) }; }))],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+}
+/* ══ 261008 스태프 의류 명단(kit_staff_preview · kit_staff_apply · 슈퍼관리자 + 본인 확인) · 사번 붙여 넣기 · 엑셀 · 명부 대조 · 교체 | 추가 · 라운지 명단과 같은 흐름 ══ */
+var KST={ src:"paste", paste:"", name:"", emps:null, bad:0, mode:"replace", pv:null, pvKey:"", pvBad:"", busy:"", err:"" };
+var KST_WORD="스태프의류명단", KST_ST={ ok:["정상","ok"], noros:["명부에 없음","bad"], dup:["중복","off"], kit:["사전 신청과 겹침 · 사전 신청 쪽","warn"] };
+function kstGrid(g, nm){
+  var out=[], seen={}, bad=0;
+  (g||[]).forEach(function(r){ (r||[]).some(function(c){ var e=normE(String(c==null?"":c)).replace(/\.0+$/,""); if(/^[0-9]{4,10}$|^[0-9A-Z]{3,12}$/.test(e)&&/\d/.test(e)){ if(seen[e]) bad++; else { seen[e]=1; out.push(e); } return true; } return false; }); });
+  KST.name=nm; KST.emps=out; KST.bad=bad; KST.err=out.length?"":"사번을 찾지 못했습니다"; KST.pv=null; KST.pvKey=""; render(); kstPreview();
+}
+function kstFile(inp){
+  var f=inp&&inp.files&&inp.files[0]; if(!f) return; inp.value="";
+  if(f.size>5*1024*1024){ KST.err="파일이 5MB 를 넘습니다"; render(); return; }
+  var x=/\.xlsx$/i.test(String(f.name||""));
+  KST.busy="read"; render();
+  f.arrayBuffer().then(function(buf){ return x?p10Xlsx(buf):p10Csv(p10Text(buf)); }).then(function(g){ KST.busy=""; kstGrid(g, f.name); }).catch(function(){ KST.busy=""; KST.err="파일을 읽지 못했습니다. CSV 로 저장해 올리거나 붙여 넣습니다"; render(); });
+}
+function kstPasteGo(){ var t=String(KST.paste||""); if(!t.trim()){ toast("붙여 넣은 내용이 없습니다"); return; } kstGrid(p10Csv(t), "붙여넣기"); }
+function kstPreview(force){
+  if(ksSrv()!=="new"||!(ST.data.kss||{}).st||!KST.emps||!KST.emps.length) return;
+  var key=KST.mode+"|"+KST.emps.join(";"); if(!force&&KST.pvKey===key&&KST.pv) return; if(!force&&KST.pvBad===key) return;
+  KST.pvKey=key; KST.busy="pv"; render();
+  callPost("kit_staff_preview",{ rows:KST.emps.join(";"), mode:KST.mode },function(r){ if(KST.pvKey!==key) return; KST.busy=""; if(r&&r.ok) KST.pv=r; else { KST.pv=null; KST.pvBad=key; toast("서버 대조 실패: "+ksWhy(r)); } render(); },
+    function(e){ if(KST.pvKey!==key) return; KST.busy=""; KST.pv=null; KST.pvBad=key; toast("서버 대조 실패: "+ksWhy(e)); render(); });
+}
+function kstMode(m){ KST.mode=m; KST.pv=null; KST.pvKey=""; render(); kstPreview(); }
+function kstOkEmps(){ var pv=KST.pv; if(!pv) return []; return (pv.rows||[]).filter(function(x){ return x.st==="ok"||x.st==="kit"; }).map(function(x){ return x.emp; }); }
+function ksStCard(d){
+  var st=d.st;
+  if(!st) return card("스태프 의류 명단","",'<p class="cap">서버 갱신 뒤 올릴 수 있습니다.</p>');
+  var head=imp([["지금 명단",ksN(st.elig+(st.dup||0))+"명"],["옷 대상",ksN(st.elig)+"명","chg"],["사전 신청과 겹침",ksN(st.dup||0)+"명",st.dup?"loss":""],["스태프 재고",KS_SZ.map(function(z){ return esc(z)+" "+ksN((st.qty||{})[z]); }).join(" · ")]])+
+    '<div class="toolbar mt8"><span class="cap">재고는 운영 설정 「스태프의류_수량」</span><span class="sp"></span><button class="btn sm" onclick="ksGoCfg()">재고 바꾸기</button></div>';
+  if(!supOn()) return card("스태프 의류 명단","사번만 · 명부 대조",head+'<div class="note mt8">명단 올리기는 슈퍼관리자만 합니다.</div>');
+  if(!supOk()) return card("스태프 의류 명단","사번만 · 명부 대조",head+pzSupBox("명단 올리기",""));
+  var seg='<span class="seg"><button class="'+(KST.src==="file"?"on":"")+'" onclick="KST.src=\'file\';render()">파일</button><button class="'+(KST.src==="paste"?"on":"")+'" onclick="KST.src=\'paste\';render()">붙여넣기</button></span>';
+  var up=KST.src==="file"?'<label class="p10-drop"><input type="file" accept=".xlsx,.csv,.tsv,.txt" onchange="kstFile(this)"><b>'+(KST.busy==="read"?'<span class="spin"></span>읽는 중':"엑셀(.xlsx) · CSV 파일 고르기")+'</b><span class="cap">줄마다 첫 사번 칸만 읽습니다 · 5MB</span></label>':
+    '<textarea class="in p10-ta" rows="5" placeholder="옷을 받는 스태프 사번을 한 줄에 하나씩" oninput="KST.paste=this.value">'+esc(KST.paste)+'</textarea><div class="toolbar mt8"><button class="btn pri" onclick="kstPasteGo()">읽기</button></div>';
+  var got=KST.emps?'<div class="toolbar mt8"><span class="cnt"><b>'+esc(KST.name)+'</b> · 사번 '+KST.emps.length+'명'+(KST.bad?" · 같은 사번 "+KST.bad+"줄 뺌":"")+'</span><span class="sp"></span><button class="btn sm" onclick="KST.emps=null;KST.pv=null;KST.paste=\'\';KST.name=\'\';render()">지우고 다시</button></div>':"";
+  var body=head+'<div class="dz-h">명단 올리기</div>'+(KST.err?'<div class="bands">'+band("bad",esc(KST.err))+'</div>':"")+'<div class="toolbar">'+seg+'</div>'+up+got;
+  if(KST.emps){
+    var pv=KST.pv;
+    if(!pv) body+=KST.busy==="pv"?'<p class="cap mt8"><span class="spin"></span>서버 명부 · 지금 명단과 대조하는 중</p>':'<div class="toolbar mt8"><button class="btn" onclick="kstPreview(true)">다시 대조</button></div>';
+    else {
+      var rows=pv.rows||[], c={ ok:0, noros:0, dup:0, kit:0 }, D=pv.diff||{}, ok=kstOkEmps(); rows.forEach(function(x){ c[x.st]=(c[x.st]||0)+1; });
+      body+='<div class="toolbar mt8"><span class="seg"><button class="'+(KST.mode==="replace"?"on":"")+'" onclick="kstMode(\'replace\')">교체 · 이 명단이 전체</button><button class="'+(KST.mode==="add"?"on":"")+'" onclick="kstMode(\'add\')">추가</button></span></div>'+
+        (c.noros?'<div class="bands mt8">'+band("warn","명부에 없는 사번 <b>"+c.noros+"명</b>은 빼고 넣습니다.")+'</div>':"")+(c.kit?'<div class="bands mt8">'+band("warn","사전 신청 명단과 겹치는 <b>"+c.kit+"명</b>은 사전 신청 쪽에서 고릅니다(스태프 재고를 쓰지 않음).")+'</div>':"")+
+        imp([["적용 뒤 명단",ksN(pv.n)+"명","chg"],["새로 들어감",ksN(D.add)+"명"],["빠짐(고른 사이즈 풀림)",ksN(D.del)+"명",D.del?"loss":""],["그대로",ksN(D.keep)+"명"]])+
+        '<div class="wrap scrolly mt8" style="max-height:220px"><table class="tb"><tr><th>사번</th><th>이름</th><th>상태</th></tr>'+rows.map(function(x){ var t=KST_ST[x.st]||[x.st,"off"]; return '<tr><td class="n"><b>'+esc(x.emp)+'</b></td><td>'+esc(x.name||"-")+'</td><td>'+tag(t[0],t[1])+'</td></tr>'; }).join("")+'</table></div>'+
+        '<div class="toolbar mt8"><span class="cnt">넣는 사람 <b>'+ok.length+'</b>명 · '+(KST.mode==="add"?"추가":"교체")+'</span><span class="sp"></span><button class="btn pri" onclick="kstApplyAsk()"'+(!ok.length&&KST.mode==="add"||KST.busy?" disabled":"")+'>'+LOCK_SVG+' 명단 적용</button></div>';
+    }
+  }
+  return card("스태프 의류 명단","사번만 · 명부 대조 · 슈퍼관리자",body);
+}
+function kstApplyAsk(){
+  var pv=KST.pv, ok=kstOkEmps(); if(!pv) return;
+  hvL3Go({ t:"스태프 의류 명단을 적용할까요?", who:(KST.mode==="add"?"추가":"교체")+"<span>"+esc(KST.name)+" · 적용 뒤 "+pv.n+"명</span>",
+    rows:[["적용 뒤 명단",pv.n+"명","chg"],["빠짐(고른 사이즈 풀림)",((pv.diff||{}).del||0)+"명",(pv.diff||{}).del?"loss":""],["신청번호","그대로(빠졌다 다시 들어와도 같은 번호)"]],
+    s:"시트 「스태프의류」가 바뀝니다. 이 사번들은 앱 홈에 「기념품 옷 사이즈 선택하기」가 보이고 스태프 재고에서 고릅니다.", ok:"적용", word:KST_WORD,
+    run:function(fin){ KST.busy="apply";
+      callPost("kit_staff_apply",{ rows:ok.join(";"), mode:KST.mode, sig:pv.sig||"", confirm:KST_WORD },function(r){ KST.busy="";
+        if(r&&r.ok){ KST.pv=null; KST.pvKey=""; KST.emps=null; KST.paste=""; delete _cache[sig_("kit_size_state",{})]; delete _cache[sig_("kit_size_list",{})]; reload(["kss","ksl"]); fin("명단을 적용했습니다", imp([["지금 스태프 의류 명단",(r.n!=null?r.n:"-")+"명"]])); }
+        else { dlgForce(); if(r&&r.reason==="state") KST.pv=null; toast("실패: "+ksWhy(r)); render(); } },function(e){ KST.busy=""; dlgForce(); toast("실패: "+ksWhy(e)); render(); }); } });
+}
+(function(){ var r0=render; render=function(){ r0(); if(ST.nav==="p_kit"&&KST.emps&&!KST.pv&&!KST.busy&&ksSrv()==="new") setTimeout(function(){ kstPreview(); },0); }; })();
 /* 새로 고침 · 새 항목(아이디어왕 · 라운지 명단)에 있었으면 그 자리로(위 복원은 이 항목이 생기기 전에 돈다) */
 try{ (function(){ var v=sessionStorage.getItem("axf_hv_nav")||"", id=v.split(":")[0]; if(ST.nav==="hq"&&(id==="e_idea"||id==="p_lng"||id==="p_kit")&&NAVBY[id]){ ST.nav=id; ST.part[id]=0; } })(); }catch(e){}
 /* ══════════════════ 261006 쉬운 화면 5개 + 「관리자 도구」(사용자 결정 261006 「권장대로」 · 디자인 시안/콘솔 최소화/기획.md) ══════════════════
