@@ -167,11 +167,11 @@ var STAMP_SYNC = { warm: false };
 
 /* ════════════════ 261006 키트 사이즈 사전 선택(사용자 261006 밤 · 기획 `디자인 시안/체크인존 운영/기획안.md` 6 · 7.1절 · 서버 ks* · 검사 §250) ════════════════
    서버 my.kit 이 있을 때만 보인다(키트명단 사번 · 그 밖의 사람에게는 홈 카드 · 화면 · 설정 줄 · 나의 참여 줄 어디에도 없다 · 사은품 비표시 원칙 260917 의 예외는 명단 사번에게만)
-   st pick = 사이즈 5칸(남은 수 · 0 = 마감 회색) · 정하기를 누르면 서버가 잠금 안에서 판정(먼저 온 쪽) · 진 쪽 = 「L이 방금 마감됐어요」 · 마감 전까지 몇 번이든 바꾼다
+   st pick = 사이즈 4칸(SS · L · 2XL · 3XL · 사용자 261007 · 남은 수 · 0 = 마감 회색) · 정하기를 누르면 서버가 잠금 안에서 판정(먼저 온 쪽) · 진 쪽 = 「L이 방금 마감됐어요」 · 마감 전까지 몇 번이든 바꾼다
    st hum = 라운지 사전 신청 등록 순이 수량(29)을 넘은 사람 · 사이즈 없이 가습기 안내(담담하게)
    문구 = 「키트」 · 「사이즈」만(「사은품」 · 「선물」 · 가격 없음) · 알림 허용은 정한 직후 한 번(가치 순간 · pushAsk kit) */
 var KIT = { sel: "", edit: false, busy: false, msg: "" };
-var KIT_SIZES = ["S", "M", "L", "XL", "2XL"], KIT_ITEM = "플리스 재킷", KIT_GET = "10/26(월) 08:00부터 · 1F 주차장 체크인존", KIT_LOW = 5;
+var KIT_SIZES = ["SS", "L", "2XL", "3XL"], KIT_ITEM = "플리스 재킷", KIT_GET = "10/26(월) 08:00부터 · 1F 주차장 체크인존", KIT_LOW = 5;
 function kitMy() { var k = S.get("kit", null); return k && typeof k === "object" && (k.st === "pick" || k.st === "hum") ? k : null; }
 /* 「2026-10-21 18:00」 → 「10/21(수) 18:00」 */
 function kitWhen(c) {
@@ -179,8 +179,8 @@ function kitWhen(c) {
   if (!m) return "";
   return Number(m[2]) + "/" + Number(m[3]) + "(" + "일월화수목금토".charAt(new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getDay()) + ") " + m[4];
 }
-function kitRo(z) { return z + (z === "M" ? "으로" : "로"); }   /* 엠으로 · 에스로 · 엘로 · 엑스엘로 */
-function kitGa(z) { return z + (z === "S" ? "가" : "이"); }      /* 에스가 · 엠이 · 엘이 */
+function kitRo(z) { return z + (z === "M" ? "으로" : "로"); }   /* 에스에스로 · 엘로 · 투엑스엘로 · 쓰리엑스엘로(옛 M = 엠으로) */
+function kitGa(z) { return z + (/S$/.test(z) ? "가" : "이"); }   /* 에스에스가 · 엘이 · 투엑스엘이 · 쓰리엑스엘이 */
 function kitCanSet(k) { return !!k && k.st === "pick" && (k.ph === "open" || k.ph === "chg"); }
 function kitSeenKey(k) { return k ? k.st + ":" + k.ph + ":" + (k.sz || "") : ""; }
 /* 홈 카드 · 고르는 기간에 아직 안 고름 · 자동 배정 뒤 변경 기간(한 번 열어 보면 사라짐) · 라운지 초과 안내(한 번 열어 보면 사라짐) */

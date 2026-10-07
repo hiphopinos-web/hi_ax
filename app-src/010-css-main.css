@@ -1396,7 +1396,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   @media (prefers-reduced-motion: reduce) { .ssc-band { animation: none; } }
   /* 261007 체크인존 창구 · 결과 띠 big = 사이즈 · 창구 글자 아주 크게(창구 스태프가 한눈에) */
   .ssc-band.big { flex-direction: row; align-items: center; gap: var(--ax-space-16); }
-  .ssc-band.big .bg { font-style: normal; font: var(--ax-type-display); font-size: 72px; font-weight: 900; line-height: 1; min-width: 1.1em; text-align: center; letter-spacing: -0.02em; }
+  .ssc-band.big .bg { font-style: normal; font: var(--ax-type-display); font-size: 72px; font-weight: 900; line-height: 1; min-width: 1.1em; text-align: center; letter-spacing: -0.02em; white-space: nowrap; flex: none; }
+  .ssc-band.big.l3 .bg { font-size: 56px; }   /* 261007 사이즈 4종 · 2XL · 3XL 세 글자가 「3X / L」로 꺾이지 않게 한 줄 + 조금 작게 */
   .ssc-band.big .tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   /* 261007 체크인 번호표 · 홈 맨 위 내 번호 카드(대기 흰 카드 · 곧 차례 O100 테두리 · 호출 = 주황 면 · 수령 완료) */
   .axs-ckq { position: relative; background: var(--ax-color-surface); border-radius: var(--ax-radius-20); padding: var(--ax-space-20); box-shadow: var(--ax-card-shadow); color: var(--ax-color-ink); }

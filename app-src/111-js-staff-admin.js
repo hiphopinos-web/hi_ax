@@ -154,7 +154,7 @@ function sscShow(tone, who, head, sub, bd) {
 }
 function sscBandHtml() {
   var b = SSC.band;
-  if (b && b.big) return '<div class="ssc-band big c-' + b.c + '" id="sscBand" role="status" aria-live="assertive"><i class="bg">' + esc(b.big) + '</i><div class="tx"><b>' + esc(b.t) + "</b>" + (b.s ? "<span>" + esc(b.s) + "</span>" : "") + "</div></div>";   /* 261007 */
+  if (b && b.big) return '<div class="ssc-band big c-' + b.c + (String(b.big).length >= 3 ? " l3" : "") + '" id="sscBand" role="status" aria-live="assertive"><i class="bg">' + esc(b.big) + '</i><div class="tx"><b>' + esc(b.t) + "</b>" + (b.s ? "<span>" + esc(b.s) + "</span>" : "") + "</div></div>";   /* 261007 */
   return '<div class="ssc-band' + (b ? " c-" + b.c : "") + '" id="sscBand" role="status" aria-live="assertive"' + (b ? "" : " hidden") + ">" + (b ? "<b>" + esc(b.t) + "</b>" + (b.s ? "<span>" + esc(b.s) + "</span>" : "") : "") + "</div>";
 }
 function sscBandPaint() { var n = el("sscBand"); if (n) n.outerHTML = sscBandHtml(); }

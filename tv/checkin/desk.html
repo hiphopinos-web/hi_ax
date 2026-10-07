@@ -116,12 +116,13 @@
   /* ── 그리기 ── */
   function card(c, i, mk) {
     var first = i === 0, nm = mk ? mask(c.nm) : c.nm, sz = c.sz || "?", bz = D.busy[c.id];
+    var wn = c.k === "win" ? (/([A-E]) 창구 안내$/.exec(c.msg || "") || [])[1] || "E" : "";   /* 261007 사이즈마다 한 창구 · 다른 창구 사이즈 = 그 창구 글자(B 등) · 라운지 초과 · 명단 밖 = E(서버 msg 끝 「X 창구 안내」) */
     var cls = "cd" + (first ? " first" : "") + (c.k === "win" ? " win" : c.k === "dup" ? " dup" : "") + (mk ? " masked" : "");
-    var tag = c.k === "give" ? (first ? "지금 건넬 사람" : i + 1 + "번째") : c.k === "win" ? "E 창구 안내" : c.k === "dup" ? "이미 받음" : "안내";
+    var tag = c.k === "give" ? (first ? "지금 건넬 사람" : i + 1 + "번째") : c.k === "win" ? wn + " 창구 안내" : c.k === "dup" ? "이미 받음" : "안내";
     var acts = c.k === "give"
       ? '<button type="button" class="bt" data-op="hand" data-id="' + c.id + '"' + (bz ? " disabled" : "") + ">건넴</button>" + (c.undo ? '<button type="button" class="bt weak" data-op="undo" data-id="' + c.id + '"' + (bz ? " disabled" : "") + ">취소</button>" : "")
       : '<button type="button" class="bt weak" data-op="clear" data-id="' + c.id + '"' + (bz ? " disabled" : "") + ">닫기</button>";
-    var big = c.k === "give" ? sz : c.k === "win" ? "E" : "-";
+    var big = c.k === "give" ? sz : c.k === "win" ? wn : "-";
     return '<div class="' + cls + '"><div class="sz' + (String(big).length >= 3 ? " s3" : "") + '">' + esc(big) + '</div><div class="who"><span class="tag">' + esc(tag) + "</span>" +
       '<div class="nm">' + esc(nm) + (c.dp ? "<span>" + esc(c.dp) + "</span>" : "") + "</div>" +
       '<div class="mt">' + (c.no ? "<b>" + esc(c.no) + "</b> · " : "번호 없음 · ") + esc(c.at.slice(0, 5)) + (c.msg ? " · " + esc(c.msg) : "") + "</div></div>" +
