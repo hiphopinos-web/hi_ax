@@ -121,7 +121,7 @@
     var hot = B.showing ? B.showing.w : "";
     document.getElementById("wins").innerHTML = W.map(function (w) {
       var x = (b && b.w && b.w[w]) || { cur: null, nx: [], n: 0 }, more = x.n > 3 ? x.n - 3 : 0;
-      return '<div class="win' + (x.cur ? "" : " none") + (w === hot ? " hot" : "") + '" id="w' + w + '"><div class="L"><b>' + w + "</b><span>창구</span></div>" +
+      return '<div class="win' + (x.cur ? "" : " none") + (w === hot ? " hot" : "") + '" id="w' + w + '"><div class="L"><b>' + w + "</b><span>창구" + (x.sz && x.sz.length ? " · " + esc(x.sz.join(" · ")) : "") + "</span></div>" +
         (x.cur ? '<div class="now">' + esc(x.cur.no) + '</div><div class="nm">' + esc(x.cur.nm) + "</div>" : '<div class="now">-</div><div class="nm">' + (x.n ? "곧 호출" : "바로 오세요") + "</div>") +
         '<div class="nx"><small>다음</small>' + (x.nx || []).map(function (y) { return "<div>" + esc(y.no) + "<span>" + esc(y.nm) + "</span></div>"; }).join("") + (more ? '<p class="more">그 뒤 ' + more + "명</p>" : "") + "</div></div>";
     }).join("");
