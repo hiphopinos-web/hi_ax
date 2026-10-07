@@ -156,7 +156,8 @@ var TIMELINE = [
   /* always=1 (v3.18): 기간이 길어서가 아니라 「그 시간 안에 아무 때나 들르는」 참여 방식이라 상시 묶음.
      10F 오후 세션(내내 참석)·점심(시간대 구분 역할)은 시간표 유지 */
   { time: "", end: "", title: "AX 커피챗", short: "13:00~16:00 · 선정되면 앱에서 안내", place: "18F", desc: "13:00~16:00 · 선정되면 앱에서 안내", tag: "희망자 중 선정", always: 1 },   /* v6.07 (사용자 261007) 희망 → 선정 · 운영 13:00~16:00 */
-  { time: "13:30", end: "15:00", title: "파트너사 강연 · AWS", short: "Agentic AI 시대의 일하는 방식 변화 · 구태훈 박사(AWS)", place: "17F 대강당", desc: "입장 · 끝 QR로 출석", tag: "자유 참석", par: 1 },
+  { time: "13:30", end: "14:50", title: "파트너사 강연 · AWS", short: "Agentic AI 시대의 일하는 방식 변화 · 구태훈 박사(AWS)", place: "17F 대강당", desc: "입장 · 끝 QR로 출석", tag: "자유 참석", par: 1 },
+  { time: "14:50", end: "15:10", title: "휴식", short: "", place: "17F 대강당", desc: "", tag: "휴식", brk: 1 },   /* 261007 (사용자 확정 「AWS 13:30~14:50 · 휴식 14:50~15:10 · MS 15:10~16:40」) 시간표 17F 작은 줄(progFlowBrk) · 스탬프 · 출석 없음 · 홈 「지금」 = 휴식 · 다음 MS */
   { off: 1, time: "13:30", end: "16:30", title: "10F 실습형 세션 A~E", short: "사전 신청자 참여 · 5개 세션 중 1개", place: "10F", desc: "사전 신청자 참여 · 세션별 장소는 프로그램 탭", tag: "사전 신청자 참여", par: 1 },
   { time: "15:10", end: "16:40", title: "파트너사 강연 · MS", short: "AI와 친해지기 · MS", place: "17F 대강당", desc: "입장 · 끝 QR로 출석", tag: "자유 참석", par: 1 },
   /* v3.50 사회자 순서 (사용자 확정 260917) · Outro 문항 기능 폐지 · 설문 참여 안내 → 17:00 Outro */
@@ -210,17 +211,17 @@ function nowIdx() {
    v5.60 (사용자 261004 「권장대로 진행」 · 내용 워싱 v2 · 정본 = 디자인 시안/세션 상세 정리/세션상세_구조화.json) 옛 desc · info 표 → 참여자 말 세 칸
    intro = 한 줄 소개(B · C 만 · SESS_INTRO_ON 이 0 이면 그리지 않는다 · 앱이 만든 문장이라 꺼 둔다) · todo = 하는 일 [{ name?, desc }] (전원)
    prep = 준비할 것 [{ desc }] (sessMine 사전 신청자만) · 교육환경 · 산출물 · 비고 · 대상 직군 · 진행 원문은 지웠다(되살릴 문장 = 위 JSON 의 removed) */
-var TIME_TBD = "세부 시간은 바뀔 수 있어요";   /* v5.60 W9 말투 */
+var TIME_TBD = "세부 시간은 바뀔 수 있어요";   /* v5.60 W9 말투 · 261007 오후 파트너 강연 시각 확정(AWS 13:30~14:50 · MS 15:10~16:40)으로 쓰는 곳 없음 · 다시 잠정 시각이 생기면 desc 에 넣는다 */
 var SESS_INTRO_ON = 0;   /* v5.60 10F 세션 B · C 한 줄 소개(intro) 켜기 · 끄기 */
 var SESSIONS = [
   { id: "key", fl: 17, zone: "hall", kind: "open", ttl: "기조연설", sub: "AI 환경 · 전략", who: "CTO", tm: "09:40~10:20", cap: 235, seed: 187,
     desc: "" },
   { id: "road", fl: 17, zone: "hall", kind: "open", ttl: "내부 강연", sub: "현대해상 AX 로드맵", who: "디지털전략본부장", tm: "10:30~11:00", cap: 235, seed: 120,
     desc: "" },
-  { id: "l1", fl: 17, zone: "hall", kind: "open", ttl: "파트너사 강연 · AWS", sub: "Agentic AI 시대의 일하는 방식 변화", who: "구태훈 박사 (AWS)", tm: "13:30~15:00", cap: 235, seed: 141,
-    desc: TIME_TBD },
+  { id: "l1", fl: 17, zone: "hall", kind: "open", ttl: "파트너사 강연 · AWS", sub: "Agentic AI 시대의 일하는 방식 변화", who: "구태훈 박사 (AWS)", tm: "13:30~14:50", cap: 235, seed: 141,
+    desc: "" },
   { id: "l2", fl: 17, zone: "hall", kind: "open", ttl: "파트너사 강연 · MS", sub: "AI와 친해지기", who: "MS", tm: "15:10~16:40", cap: 235, seed: 96,
-    desc: TIME_TBD },
+    desc: "" },
   { id: "fld", fl: 10, zone: "conf", kind: "info", ttl: "세션 A", sub: "영업 및 보상 현장 우수 사례 강연 및 실습", who: "", tm: "13:30~16:40", cap: 63, seed: 50,
     capNote: "63명",   /* v5.81 정원 62 → 63(사용자 261006) */
     todo: [{ desc: "동료 활용 사례 공유 및 AI활용 교안 제공" }, { desc: "원하는 주제 선택 및 개발 실습 진행" }],

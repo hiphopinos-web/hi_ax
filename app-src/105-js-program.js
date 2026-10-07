@@ -198,6 +198,7 @@ function progFlowItems(onlyFl) {
   TIMELINE.forEach(function (t) {
     if (t.always || t.off || !t.time) return;
     var pid = TL_PROG[t.title] || "", pm = /^(\d+)F\s*(.*)$/.exec(t.place || "") || ["", "", t.place || ""];
+    if (t.brk) { var bm = /^(\d+)F/.exec(t.place || ""); pub.push({ k: "brk", brk: 1, pid: "", a: t2m(t.time), b: t2m(t.end), t0: t.time, t1: t.end, ttl: t.title, sub: "", fl: bm ? +bm[1] : 0, pl: "" }); return; }   /* 261007 휴식 줄(progFlowBrk) */
     pub.push({ k: pid || t.title, pid: pid, a: t2m(t.time), b: t2m(t.end), t0: t.time, t1: t.end, ttl: t.title, sub: FL_SUB[pid] || "", fl: +pm[1] || 0, pl: pm[2],
       go: pid === "#1F" ? "progAlwaysGo()" : pid && pid.charAt(0) !== "#" ? "progOpen('" + pid + "')" : "", chip: attUi(pid) && attMineAt(pid) ? "출석" : "", lec: !!attUi(pid) });
   });
@@ -238,7 +239,10 @@ function progTenGo() { PROG.floor = 10; App.go("floor_d"); }
 function progTenRowHtml() {
   return '<button type="button" class="fx10" onclick="progTenGo()" data-fl="ten10"><span class="dg-w">' + flFloor(10) + '</span><span class="x"><b>실습형 세션</b><span>사전 신청자 참여 · 5개 세션</span></span><span class="chv">' + CHEV_SVG + "</span></button>";
 }
+/* 261007 (사용자 확정 「AWS 13:30~14:50 · 휴식 14:50~15:10 · MS 15:10~16:40」) 17F 휴식 줄 = 카드보다 낮은 위계(면 없음 · 작은 글 · 누름 없음) · 「휴식」 한 단어 + 끝 시각 · 스탬프 · 출석 없음 */
+function progFlowBrk(o, hmN) { return '<div class="fbk' + (hmN >= o.b ? " past" : "") + '" data-fl="brk"><b>' + esc(o.ttl) + '</b><span class="e">~' + o.t1 + "</span></div>"; }
 function progFlowCard(o, hmN, isF) {
+  if (o.brk) return progFlowBrk(o, hmN);
   var past = hmN >= o.b, ac = isF && o.lec && !o.chip ? '<span class="ac">입장 · 끝 QR로 출석</span>' : "";   /* v5.68 */
   return '<button type="button" class="fc' + (past ? " past" : "") + (isF ? " focus" : "") + '"' + (o.go ? ' onclick="' + o.go + '"' : " disabled") + ' data-fl="' + esc(o.k) + '">' +
     '<span class="mt">' + (o.fl ? flFloor(o.fl) : "") + '<span class="pl">' + esc(o.pl) + '</span><span class="e">~' + o.t1 + "</span></span>" +
@@ -939,7 +943,7 @@ var MYFL_LEC = ["l1", "l2"];
 function myFlowOn() { return !!tenMine(); }
 function myFlowItems() {
   var tm = tenMine(), tp = tm ? tm.tm.split("~").map(function (t) { return t2m(t); }) : null;
-  var pub = progFlowItems().filter(function (o) { return !o.mine && (MYFL_LEC.indexOf(o.k) < 0 || (!!tp && (o.b <= tp[0] || o.a >= tp[1]))); }), mine = [];
+  var pub = progFlowItems().filter(function (o) { return !o.mine && ((MYFL_LEC.indexOf(o.k) < 0 && !o.brk) || (!!tp && (o.b <= tp[0] || o.a >= tp[1]))); }), mine = [];   /* 261007 휴식 줄도 강연과 같이 내 10F 세션과 겹치면 뺀다 */
   myAgendaItems().forEach(function (x) {
     if (!x.iv || myAgendaNow(x)) return;
     var k = x.kind, o = { k: k, my: k, a: x.iv[0], b: x.iv[1], t0: hm2(x.iv[0]), t1: hm2(x.iv[1]), mine: true };
@@ -957,6 +961,7 @@ function myFlowItems() {
 /* v6.06 진행 중인 신청 카드 = 칩 「진행 중」(나의 참여 · 홈 같은 말) */
 /* v6.11 h = 홈 카드(시각 칸 없음 · 머리 줄 「13:30 ~ 16:40」) · 나의 참여 하루 흐름은 그대로 「~16:40」 */
 function myFlowCard(o, hmN, isF, h) {
+  if (o.brk) return progFlowBrk(o, hmN);
   var past = hmN >= o.b, chip = o.mine ? '<span class="axs-chip mc">' + (isF ? "진행 중" : "신청") + "</span>" : '<span class="axs-chip off mc">자유 참석</span>';
   return '<button type="button" class="fc' + (o.mine ? " mine" : "") + (past ? " past" : "") + (isF ? " focus" : "") + '"' + (o.go ? ' onclick="' + o.go + '"' : " disabled") + ' data-fl="' + esc(o.k) + '"' + (o.my ? ' data-my="' + esc(o.my) + '"' : "") + ">" +
     '<span class="mt">' + (o.fl ? flFloor(o.fl) : "") + '<span class="pl">' + esc(o.pl) + '</span><span class="e">' + (h ? o.t0 + " ~ " : "~") + o.t1 + "</span>" + chip + "</span>" +

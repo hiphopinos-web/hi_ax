@@ -1438,6 +1438,11 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-fl .fc.past { background: transparent; box-shadow: inset 0 0 0 1px var(--ax-color-divider); }
   .axs-fl .fc.past .t { color: var(--ax-color-muted); font-weight: 500; }
   .axs-fl .fc.focus { box-shadow: inset 0 0 0 2px var(--ax-color-brand); }
+  /* 261007 17F 휴식 줄(progFlowBrk) · 카드보다 낮은 위계 = 면 · 테두리 없음 · 작은 글 · 노드 가운데 높이에 맞춘 한 줄 */
+  .axs-fl .fbk { display: flex; align-items: baseline; gap: var(--ax-space-8); padding: 9px 14px 0; font: var(--ax-type-t7); color: var(--ax-color-muted); }
+  .axs-fl .fbk b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .axs-fl .fbk .e { font-variant-numeric: tabular-nums; }
+  .axs-fl .fbk.past b { color: var(--ax-color-muted); font-weight: 500; }
   /* v5.74 13:30 칸 맨 아래 10F 실습형 세션 입구(progTenRowHtml) · 카드보다 낮은 위계 = 흰 면 없이 옅은 inset 면 · 작은 글 · 층 점 글자 · 셰브론 */
   .axs-fl .fx10 { display: flex; align-items: center; gap: var(--ax-space-8); width: 100%; min-height: 48px; margin: 0; padding: 8px 10px 8px 14px; border: 0; border-radius: var(--ax-radius-12); background: var(--ax-color-inset); box-shadow: inset 0 0 0 1px var(--ax-color-divider); color: var(--ax-color-ink); text-align: left; font: inherit; cursor: pointer; }
   .axs-fl .fx10 .dg-w { display: flex; flex: none; color: var(--ax-color-brand); }
@@ -3392,7 +3397,8 @@ var TIMELINE = [
   /* always=1 (v3.18): 기간이 길어서가 아니라 「그 시간 안에 아무 때나 들르는」 참여 방식이라 상시 묶음.
      10F 오후 세션(내내 참석)·점심(시간대 구분 역할)은 시간표 유지 */
   { time: "", end: "", title: "AX 커피챗", short: "13:00~16:00 · 선정되면 앱에서 안내", place: "18F", desc: "13:00~16:00 · 선정되면 앱에서 안내", tag: "희망자 중 선정", always: 1 },   /* v6.07 (사용자 261007) 희망 → 선정 · 운영 13:00~16:00 */
-  { time: "13:30", end: "15:00", title: "파트너사 강연 · AWS", short: "Agentic AI 시대의 일하는 방식 변화 · 구태훈 박사(AWS)", place: "17F 대강당", desc: "입장 · 끝 QR로 출석", tag: "자유 참석", par: 1 },
+  { time: "13:30", end: "14:50", title: "파트너사 강연 · AWS", short: "Agentic AI 시대의 일하는 방식 변화 · 구태훈 박사(AWS)", place: "17F 대강당", desc: "입장 · 끝 QR로 출석", tag: "자유 참석", par: 1 },
+  { time: "14:50", end: "15:10", title: "휴식", short: "", place: "17F 대강당", desc: "", tag: "휴식", brk: 1 },   /* 261007 (사용자 확정 「AWS 13:30~14:50 · 휴식 14:50~15:10 · MS 15:10~16:40」) 시간표 17F 작은 줄(progFlowBrk) · 스탬프 · 출석 없음 · 홈 「지금」 = 휴식 · 다음 MS */
   { off: 1, time: "13:30", end: "16:30", title: "10F 실습형 세션 A~E", short: "사전 신청자 참여 · 5개 세션 중 1개", place: "10F", desc: "사전 신청자 참여 · 세션별 장소는 프로그램 탭", tag: "사전 신청자 참여", par: 1 },
   { time: "15:10", end: "16:40", title: "파트너사 강연 · MS", short: "AI와 친해지기 · MS", place: "17F 대강당", desc: "입장 · 끝 QR로 출석", tag: "자유 참석", par: 1 },
   /* v3.50 사회자 순서 (사용자 확정 260917) · Outro 문항 기능 폐지 · 설문 참여 안내 → 17:00 Outro */
@@ -3446,17 +3452,17 @@ function nowIdx() {
    v5.60 (사용자 261004 「권장대로 진행」 · 내용 워싱 v2 · 정본 = 디자인 시안/세션 상세 정리/세션상세_구조화.json) 옛 desc · info 표 → 참여자 말 세 칸
    intro = 한 줄 소개(B · C 만 · SESS_INTRO_ON 이 0 이면 그리지 않는다 · 앱이 만든 문장이라 꺼 둔다) · todo = 하는 일 [{ name?, desc }] (전원)
    prep = 준비할 것 [{ desc }] (sessMine 사전 신청자만) · 교육환경 · 산출물 · 비고 · 대상 직군 · 진행 원문은 지웠다(되살릴 문장 = 위 JSON 의 removed) */
-var TIME_TBD = "세부 시간은 바뀔 수 있어요";   /* v5.60 W9 말투 */
+var TIME_TBD = "세부 시간은 바뀔 수 있어요";   /* v5.60 W9 말투 · 261007 오후 파트너 강연 시각 확정(AWS 13:30~14:50 · MS 15:10~16:40)으로 쓰는 곳 없음 · 다시 잠정 시각이 생기면 desc 에 넣는다 */
 var SESS_INTRO_ON = 0;   /* v5.60 10F 세션 B · C 한 줄 소개(intro) 켜기 · 끄기 */
 var SESSIONS = [
   { id: "key", fl: 17, zone: "hall", kind: "open", ttl: "기조연설", sub: "AI 환경 · 전략", who: "CTO", tm: "09:40~10:20", cap: 235, seed: 187,
     desc: "" },
   { id: "road", fl: 17, zone: "hall", kind: "open", ttl: "내부 강연", sub: "현대해상 AX 로드맵", who: "디지털전략본부장", tm: "10:30~11:00", cap: 235, seed: 120,
     desc: "" },
-  { id: "l1", fl: 17, zone: "hall", kind: "open", ttl: "파트너사 강연 · AWS", sub: "Agentic AI 시대의 일하는 방식 변화", who: "구태훈 박사 (AWS)", tm: "13:30~15:00", cap: 235, seed: 141,
-    desc: TIME_TBD },
+  { id: "l1", fl: 17, zone: "hall", kind: "open", ttl: "파트너사 강연 · AWS", sub: "Agentic AI 시대의 일하는 방식 변화", who: "구태훈 박사 (AWS)", tm: "13:30~14:50", cap: 235, seed: 141,
+    desc: "" },
   { id: "l2", fl: 17, zone: "hall", kind: "open", ttl: "파트너사 강연 · MS", sub: "AI와 친해지기", who: "MS", tm: "15:10~16:40", cap: 235, seed: 96,
-    desc: TIME_TBD },
+    desc: "" },
   { id: "fld", fl: 10, zone: "conf", kind: "info", ttl: "세션 A", sub: "영업 및 보상 현장 우수 사례 강연 및 실습", who: "", tm: "13:30~16:40", cap: 63, seed: 50,
     capNote: "63명",   /* v5.81 정원 62 → 63(사용자 261006) */
     todo: [{ desc: "동료 활용 사례 공유 및 AI활용 교안 제공" }, { desc: "원하는 주제 선택 및 개발 실습 진행" }],
@@ -3856,7 +3862,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v6.14";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 · v6.14 = 261007 PC 넓은 창 = 휴대폰 틀(000-head 틀 스크립트 · 앱은 틀 안 iframe 에서 휴대폰 폭 그대로 · 휴대폰 · 좁은 창 · TV · #self · cap 은 그대로 · ?frame=0 끔) · v6.13 = 261007 홈 「다음 할 일」 카드(광고판 아래 · 둘러보기 카드와 한 자리 교대 · 행사 당일만 · × 그날 끔 · 설정 줄 · nxPick) · 재로그인 반복 팝업 고침(첫 동기화 기준선 rwBaseline · checkMyState base) · 로그인 직후 10초 자동 안내 1개(NB · nbGate) · 커피챗 하루 끝도 appNow · v6.12 = 261007 체크인존 번호표(접수 · 창구 A~E 자리 · 사이즈 아주 크게 · 「B-023 · 홍*동 → B 창구」 · 다른 창구 · 명단 밖 = E 창구 안내) · 홈 맨 위 내 번호 카드(대기 · 곧 차례 · 호출 진동 · 놓친 번호 · 수령 완료) · 체크인 TV 대기판 · 창구 화면(태블릿) · 선착순 10:30부터 문구 · v6.11 = 261007 점프 시간 제한 없앰 · 30초부터 더 어렵게 · AX 상식 30문장 다시 씀 · 홈 나의 일정 카드 너비 · Outro 안내 · v6.10 = 261007 테스트 도구(시각 바꿔 보기 tt · appNow · 헤더 띠 · 내 10F 세션 test_ten · 310555 기본 A) · 공지 = 아래에서 올라오는 시트(ntcOpen · 홈 공지 카드 폐기 · 기기당 1번 · 기준선 ntc_base) · 내 QR = QR + 이름 · 사번만 · 재로그인 = 오프닝 없이 바로 홈 · 저장된 로그인 = 로그인 화면 비침 · 전환 없이 홈 · v6.09 = 261007 행사 둘러보기 접속 기록(서버 tour_log · 열 때 1번 · 닫을 때 1번 · 10분 안 다시 열기 = 같은 방문 · 3D · 2D 대체 모두 AXTour.isOpen · 가려지면 sendBeacon · tlog*) · v6.08 = 261007 아이디어 한 줄 보강(시상 묶음 · 50자 ~ 3,000자 · 자동 저장 · 커피챗 희망 → 선정 13:00~16:00 · 볼펜 사진) · v6.07 = 261007 9월 시험 때 이미 최초 로그인 스탬프를 받은 사람도 이 기기 · 이 사번으로 한 번 「최초 로그인」 도장 팝(연출만 · 기기 키 lgfx_261007 · lgfxRun) · v6.06 = 261007 나의 일정 후속(10F 명단 · 내 세션과 겹치지 않는 오후 강연 = 자유 참석 카드 · MYFL_LEC · 홈 = 신청 카드만 axs-myfl-h · 진행 중 칩 「진행 중」 + 고리) · v6.05 = 261007 테트리스 시간 제한 없앰(5분 끝내기 · 「5분 완주」 · surv 300초 멈춤 삭제 · 게임 오버까지 · 결과 「버틴 시간」 = 실제 시간 · 시작 화면 「시간 제한 없음」 · 서버 OLY_TT_SURV_MAX) · v6.04 = 261007 10F 명단 나의 일정 = 시간표와 같은 하루 흐름(myFlowItems · 신청 주황 테두리 + 칩) · v6.03 = 261007 테트리스 5분 완주 판 surv 30000 상한(서버 range 거절 버그) · v6.02 = 261007 점프 게임 바닥 = 붉은 벽돌(jpBrickCv · 무늬 한 장 반복) · v6.01 = 261007 둘러보기 v5.99(손가락 안내 = 들어올 때마다 + 6초 서 있으면 다시 · 방문당 3번 · 직접 눌러 걸어가 본 기기는 끝 · 첫 안내 둘째 줄 「다음 구역」 저절로 걷기 · 흉상 얼굴 주름 부드럽게) · v6.00 = 261006 밤 스태프 판정 = 로그인만으로(앱 스태프 명단 사번 = 가운데 단추 「스캔」 · 처음 누를 때만 코드 한 번 · 명단에서 빠지면 「내 QR」 · 서버 staff) · 스캔 자리에서 10F 세션 입장 숨김(SCAN_10F_UI) · v5.99 = 261006 키트 사이즈 사전 선택(키트명단 사번만 · 홈 카드 · 사전 신청 키트 화면 · 설정 · 나의 보상 줄 · 라운지 등록 순 초과 = 가습기 안내 · 서버 ks* · §250) · v5.98 = 261006 스태프 폰 연속 스캔(관리자 모드 폰 = 가운데 단추 「스캔」 · 자리 칩 · 톱니 · 결과 띠 1.5초 · 화면 꺼짐 막기) · 스캔 순간 참가자 알림(소켓 · 푸시) · 선착순 참여상 = 받기 선착순(남은 N · 「자격」 말 없음) · v5.97 = 261006 스탬프 감사 후속(AX PLAY 부스 코드 = 「스태프에게 내 QR을 보여 주세요」 · 「응모」 → 「행운권」 · 「선착순 참여상」 표기) · v5.95 = 261006 프로그램 참여 스탬프 = 17F 오후 AWS · MS 강연만(오전 강연 · 송출 · 10F · 커피챗 · 라운지 스탬프 문구 삭제) · 사전등록 체크인 3개 → 룰렛 → 강의장 안내 시트 · 홈 한 줄 · 스태프 키트 결과 「룰렛 부스로 안내해 주세요」 · v5.94 = 261006 타자왕 노트북 진입 = 화면 QR 하나(카메라 끔 · 큰 접속 QR · 후킹 「당신의 프롬프팅 속도를 보여 주세요」 · 로그인 전 토큰 붙잡기 5분 · 폰 「노트북 화면의 QR을 찍어 주세요」) · v5.93 = 261006 둘러보기 눌러서 가기(바닥 · 판 · 동전 · 포토부스 · 룰렛 · 엘리베이터 · 스태프 = 걸어가서 바로 · 첫 손가락 안내 · 숨 쉬는 테두리) · 설치 안내(「설치 중」 시트 · 설정 줄 = 바로 설치 창) · v5.92 = 7등 랜덤 굿즈 · 체크인 없는 추첨 */
+var APP_VER = "v6.15";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 · v6.15 = 261007 17F 오후 파트너 강연 시각 확정(AWS 13:30~14:50 · 휴식 14:50~15:10 시간표 줄 · MS 15:10~16:40) · v6.14 = 261007 PC 넓은 창 = 휴대폰 틀(000-head 틀 스크립트 · 앱은 틀 안 iframe 에서 휴대폰 폭 그대로 · 휴대폰 · 좁은 창 · TV · #self · cap 은 그대로 · ?frame=0 끔) · v6.13 = 261007 홈 「다음 할 일」 카드(광고판 아래 · 둘러보기 카드와 한 자리 교대 · 행사 당일만 · × 그날 끔 · 설정 줄 · nxPick) · 재로그인 반복 팝업 고침(첫 동기화 기준선 rwBaseline · checkMyState base) · 로그인 직후 10초 자동 안내 1개(NB · nbGate) · 커피챗 하루 끝도 appNow · v6.12 = 261007 체크인존 번호표(접수 · 창구 A~E 자리 · 사이즈 아주 크게 · 「B-023 · 홍*동 → B 창구」 · 다른 창구 · 명단 밖 = E 창구 안내) · 홈 맨 위 내 번호 카드(대기 · 곧 차례 · 호출 진동 · 놓친 번호 · 수령 완료) · 체크인 TV 대기판 · 창구 화면(태블릿) · 선착순 10:30부터 문구 · v6.11 = 261007 점프 시간 제한 없앰 · 30초부터 더 어렵게 · AX 상식 30문장 다시 씀 · 홈 나의 일정 카드 너비 · Outro 안내 · v6.10 = 261007 테스트 도구(시각 바꿔 보기 tt · appNow · 헤더 띠 · 내 10F 세션 test_ten · 310555 기본 A) · 공지 = 아래에서 올라오는 시트(ntcOpen · 홈 공지 카드 폐기 · 기기당 1번 · 기준선 ntc_base) · 내 QR = QR + 이름 · 사번만 · 재로그인 = 오프닝 없이 바로 홈 · 저장된 로그인 = 로그인 화면 비침 · 전환 없이 홈 · v6.09 = 261007 행사 둘러보기 접속 기록(서버 tour_log · 열 때 1번 · 닫을 때 1번 · 10분 안 다시 열기 = 같은 방문 · 3D · 2D 대체 모두 AXTour.isOpen · 가려지면 sendBeacon · tlog*) · v6.08 = 261007 아이디어 한 줄 보강(시상 묶음 · 50자 ~ 3,000자 · 자동 저장 · 커피챗 희망 → 선정 13:00~16:00 · 볼펜 사진) · v6.07 = 261007 9월 시험 때 이미 최초 로그인 스탬프를 받은 사람도 이 기기 · 이 사번으로 한 번 「최초 로그인」 도장 팝(연출만 · 기기 키 lgfx_261007 · lgfxRun) · v6.06 = 261007 나의 일정 후속(10F 명단 · 내 세션과 겹치지 않는 오후 강연 = 자유 참석 카드 · MYFL_LEC · 홈 = 신청 카드만 axs-myfl-h · 진행 중 칩 「진행 중」 + 고리) · v6.05 = 261007 테트리스 시간 제한 없앰(5분 끝내기 · 「5분 완주」 · surv 300초 멈춤 삭제 · 게임 오버까지 · 결과 「버틴 시간」 = 실제 시간 · 시작 화면 「시간 제한 없음」 · 서버 OLY_TT_SURV_MAX) · v6.04 = 261007 10F 명단 나의 일정 = 시간표와 같은 하루 흐름(myFlowItems · 신청 주황 테두리 + 칩) · v6.03 = 261007 테트리스 5분 완주 판 surv 30000 상한(서버 range 거절 버그) · v6.02 = 261007 점프 게임 바닥 = 붉은 벽돌(jpBrickCv · 무늬 한 장 반복) · v6.01 = 261007 둘러보기 v5.99(손가락 안내 = 들어올 때마다 + 6초 서 있으면 다시 · 방문당 3번 · 직접 눌러 걸어가 본 기기는 끝 · 첫 안내 둘째 줄 「다음 구역」 저절로 걷기 · 흉상 얼굴 주름 부드럽게) · v6.00 = 261006 밤 스태프 판정 = 로그인만으로(앱 스태프 명단 사번 = 가운데 단추 「스캔」 · 처음 누를 때만 코드 한 번 · 명단에서 빠지면 「내 QR」 · 서버 staff) · 스캔 자리에서 10F 세션 입장 숨김(SCAN_10F_UI) · v5.99 = 261006 키트 사이즈 사전 선택(키트명단 사번만 · 홈 카드 · 사전 신청 키트 화면 · 설정 · 나의 보상 줄 · 라운지 등록 순 초과 = 가습기 안내 · 서버 ks* · §250) · v5.98 = 261006 스태프 폰 연속 스캔(관리자 모드 폰 = 가운데 단추 「스캔」 · 자리 칩 · 톱니 · 결과 띠 1.5초 · 화면 꺼짐 막기) · 스캔 순간 참가자 알림(소켓 · 푸시) · 선착순 참여상 = 받기 선착순(남은 N · 「자격」 말 없음) · v5.97 = 261006 스탬프 감사 후속(AX PLAY 부스 코드 = 「스태프에게 내 QR을 보여 주세요」 · 「응모」 → 「행운권」 · 「선착순 참여상」 표기) · v5.95 = 261006 프로그램 참여 스탬프 = 17F 오후 AWS · MS 강연만(오전 강연 · 송출 · 10F · 커피챗 · 라운지 스탬프 문구 삭제) · 사전등록 체크인 3개 → 룰렛 → 강의장 안내 시트 · 홈 한 줄 · 스태프 키트 결과 「룰렛 부스로 안내해 주세요」 · v5.94 = 261006 타자왕 노트북 진입 = 화면 QR 하나(카메라 끔 · 큰 접속 QR · 후킹 「당신의 프롬프팅 속도를 보여 주세요」 · 로그인 전 토큰 붙잡기 5분 · 폰 「노트북 화면의 QR을 찍어 주세요」) · v5.93 = 261006 둘러보기 눌러서 가기(바닥 · 판 · 동전 · 포토부스 · 룰렛 · 엘리베이터 · 스태프 = 걸어가서 바로 · 첫 손가락 안내 · 숨 쉬는 테두리) · 설치 안내(「설치 중」 시트 · 설정 줄 = 바로 설치 창) · v5.92 = 7등 랜덤 굿즈 · 체크인 없는 추첨 */
 var A2HS = { deferred: null, open: false, pending: false };   /* v5.91 pending = 이 탭에서 크롬 설치 창 「설치」를 눌렀다(설치 중 · 다시 설치 막기) */
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -5585,6 +5591,7 @@ function progFlowItems(onlyFl) {
   TIMELINE.forEach(function (t) {
     if (t.always || t.off || !t.time) return;
     var pid = TL_PROG[t.title] || "", pm = /^(\d+)F\s*(.*)$/.exec(t.place || "") || ["", "", t.place || ""];
+    if (t.brk) { var bm = /^(\d+)F/.exec(t.place || ""); pub.push({ k: "brk", brk: 1, pid: "", a: t2m(t.time), b: t2m(t.end), t0: t.time, t1: t.end, ttl: t.title, sub: "", fl: bm ? +bm[1] : 0, pl: "" }); return; }   /* 261007 휴식 줄(progFlowBrk) */
     pub.push({ k: pid || t.title, pid: pid, a: t2m(t.time), b: t2m(t.end), t0: t.time, t1: t.end, ttl: t.title, sub: FL_SUB[pid] || "", fl: +pm[1] || 0, pl: pm[2],
       go: pid === "#1F" ? "progAlwaysGo()" : pid && pid.charAt(0) !== "#" ? "progOpen('" + pid + "')" : "", chip: attUi(pid) && attMineAt(pid) ? "출석" : "", lec: !!attUi(pid) });
   });
@@ -5625,7 +5632,10 @@ function progTenGo() { PROG.floor = 10; App.go("floor_d"); }
 function progTenRowHtml() {
   return '<button type="button" class="fx10" onclick="progTenGo()" data-fl="ten10"><span class="dg-w">' + flFloor(10) + '</span><span class="x"><b>실습형 세션</b><span>사전 신청자 참여 · 5개 세션</span></span><span class="chv">' + CHEV_SVG + "</span></button>";
 }
+/* 261007 (사용자 확정 「AWS 13:30~14:50 · 휴식 14:50~15:10 · MS 15:10~16:40」) 17F 휴식 줄 = 카드보다 낮은 위계(면 없음 · 작은 글 · 누름 없음) · 「휴식」 한 단어 + 끝 시각 · 스탬프 · 출석 없음 */
+function progFlowBrk(o, hmN) { return '<div class="fbk' + (hmN >= o.b ? " past" : "") + '" data-fl="brk"><b>' + esc(o.ttl) + '</b><span class="e">~' + o.t1 + "</span></div>"; }
 function progFlowCard(o, hmN, isF) {
+  if (o.brk) return progFlowBrk(o, hmN);
   var past = hmN >= o.b, ac = isF && o.lec && !o.chip ? '<span class="ac">입장 · 끝 QR로 출석</span>' : "";   /* v5.68 */
   return '<button type="button" class="fc' + (past ? " past" : "") + (isF ? " focus" : "") + '"' + (o.go ? ' onclick="' + o.go + '"' : " disabled") + ' data-fl="' + esc(o.k) + '">' +
     '<span class="mt">' + (o.fl ? flFloor(o.fl) : "") + '<span class="pl">' + esc(o.pl) + '</span><span class="e">~' + o.t1 + "</span></span>" +
@@ -6326,7 +6336,7 @@ var MYFL_LEC = ["l1", "l2"];
 function myFlowOn() { return !!tenMine(); }
 function myFlowItems() {
   var tm = tenMine(), tp = tm ? tm.tm.split("~").map(function (t) { return t2m(t); }) : null;
-  var pub = progFlowItems().filter(function (o) { return !o.mine && (MYFL_LEC.indexOf(o.k) < 0 || (!!tp && (o.b <= tp[0] || o.a >= tp[1]))); }), mine = [];
+  var pub = progFlowItems().filter(function (o) { return !o.mine && ((MYFL_LEC.indexOf(o.k) < 0 && !o.brk) || (!!tp && (o.b <= tp[0] || o.a >= tp[1]))); }), mine = [];   /* 261007 휴식 줄도 강연과 같이 내 10F 세션과 겹치면 뺀다 */
   myAgendaItems().forEach(function (x) {
     if (!x.iv || myAgendaNow(x)) return;
     var k = x.kind, o = { k: k, my: k, a: x.iv[0], b: x.iv[1], t0: hm2(x.iv[0]), t1: hm2(x.iv[1]), mine: true };
@@ -6344,6 +6354,7 @@ function myFlowItems() {
 /* v6.06 진행 중인 신청 카드 = 칩 「진행 중」(나의 참여 · 홈 같은 말) */
 /* v6.11 h = 홈 카드(시각 칸 없음 · 머리 줄 「13:30 ~ 16:40」) · 나의 참여 하루 흐름은 그대로 「~16:40」 */
 function myFlowCard(o, hmN, isF, h) {
+  if (o.brk) return progFlowBrk(o, hmN);
   var past = hmN >= o.b, chip = o.mine ? '<span class="axs-chip mc">' + (isF ? "진행 중" : "신청") + "</span>" : '<span class="axs-chip off mc">자유 참석</span>';
   return '<button type="button" class="fc' + (o.mine ? " mine" : "") + (past ? " past" : "") + (isF ? " focus" : "") + '"' + (o.go ? ' onclick="' + o.go + '"' : " disabled") + ' data-fl="' + esc(o.k) + '"' + (o.my ? ' data-my="' + esc(o.my) + '"' : "") + ">" +
     '<span class="mt">' + (o.fl ? flFloor(o.fl) : "") + '<span class="pl">' + esc(o.pl) + '</span><span class="e">' + (h ? o.t0 + " ~ " : "~") + o.t1 + "</span>" + chip + "</span>" +
@@ -10098,7 +10109,7 @@ function drawByCode(code) {
    고를 수 있는 것 = 시작 ATT_17F.lead(15)분 전 ~ 종료인 프로그램만(미리 다 찍기 방지) · 없으면 다음에 열리는 시각을 알린다.
    코드는 앱에 없다 · 접두(AXA)로 출석 QR 임을 알아보고 코드 전체를 서버(att_claim)에 보낸다 · 코드 · 시간 창 · 중복은 서버가 다시 판정한다.
    한 사람이 여러 프로그램에 출석할 수 있다(같은 프로그램은 1회) · 첫 출석에서 스탬프 「프로그램 참여」 1회(서버 · A안).
-   프로그램 표는 여기 한 곳 · 서버 ATT_PROGS 와 같아야 한다(검사 85절) · Outro 는 넣지 않는다 · 파트너 강연 시간은 잠정(이 표만 고친다).
+   프로그램 표는 여기 한 곳 · 서버 ATT_PROGS 와 같아야 한다(검사 85절) · Outro 는 넣지 않는다 · 파트너 강연 시각 = 사용자 확정 261007(AWS 13:30~14:50 · MS 15:10~16:40).
    시각 모의: 테스트 모드(310555 · 데모)만 시트 안 「테스트 시각」 · 서버도 테스트 사번만 tm 을 받는다.
    v4.81 (사용자 결정 261001) 강연별 출석 QR = 같은 출석 코드 + &p=<강연 id>(key · road · l1 · l2) · 강의장 PPT 에 띄운다.
      찍으면 고르기 없이 그 강연으로 바로 att_claim · 시트는 결과(출석 · 이미 출석 · 시간 밖)만 · 서버는 바뀌지 않았다(옛 서버에서도 그대로 된다).
@@ -10112,7 +10123,7 @@ function drawByCode(code) {
 var ATT_17F = { lead: 30, win: { i: [30, 15], o: [10, 10] }, progs: [
   { id: "key", nm: "기조연설", sub: "Intro 포함", s: "09:30", e: "10:20" },
   { id: "road", nm: "내부 강연", sub: "현대해상 AX 로드맵", s: "10:30", e: "11:00" },
-  { id: "l1", nm: "파트너사 강연 · AWS", sub: "Agentic AI 시대의 일하는 방식 변화", s: "13:30", e: "15:00" },
+  { id: "l1", nm: "파트너사 강연 · AWS", sub: "Agentic AI 시대의 일하는 방식 변화", s: "13:30", e: "14:50" },   /* 261007 사용자 확정 · 휴식 14:50~15:10 */
   { id: "l2", nm: "파트너사 강연 · MS", sub: "AI와 친해지기", s: "15:10", e: "16:40" }
 ] };
 var ATT = { code: "", sel: "", res: null, fix: "", k: "" };
