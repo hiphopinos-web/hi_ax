@@ -9,6 +9,8 @@
   .axs-sg li { display: flex; gap: 10px; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
   .axs-sg li::before { content: ""; flex: none; width: 6px; height: 6px; margin-top: 0.62em; border-radius: 50%; background: var(--ax-color-brand); }
   .axs-sg li .tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .axs-sg li .tx .sb { padding-left: 12px; text-indent: -12px; color: var(--ax-color-body); }   /* v6.20 세션 A 실습 주제 줄 */
+  .axs-sg li .tx .sb::before { content: "· "; }
   .axs-sg li .tx b { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .axs-sg .sgp { border-top: 0; padding: 16px; border-radius: 16px; background: var(--ax-color-surface); }
   .axs-sg .sgq { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); word-break: keep-all; }   /* v5.71 10F 끝 QR 한 줄(신청자만 · 준비할 것 상자 안) */

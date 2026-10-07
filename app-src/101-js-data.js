@@ -209,7 +209,7 @@ function nowIdx() {
    시간 뱃지·잔여석·신청 버튼이 회차마다 다르고, 두 회차 사이 교체는 10F 1인 1세션 교체 모달이 그대로 처리한다.
    capNote = 정원 보조 문구
    v5.60 (사용자 261004 「권장대로 진행」 · 내용 워싱 v2 · 정본 = 디자인 시안/세션 상세 정리/세션상세_구조화.json) 옛 desc · info 표 → 참여자 말 세 칸
-   intro = 한 줄 소개(B · C 만 · SESS_INTRO_ON 이 0 이면 그리지 않는다 · 앱이 만든 문장이라 꺼 둔다) · todo = 하는 일 [{ name?, desc }] (전원)
+   intro = 한 줄 소개(B · C 만 · SESS_INTRO_ON 이 0 이면 그리지 않는다 · 앱이 만든 문장이라 꺼 둔다) · todo = 하는 일 [{ name?, desc, sub? }] (전원 · sub = 설명 아래 작은 줄 목록 v6.20)
    prep = 준비할 것 [{ desc }] (sessMine 사전 신청자만) · 교육환경 · 산출물 · 비고 · 대상 직군 · 진행 원문은 지웠다(되살릴 문장 = 위 JSON 의 removed) */
 var TIME_TBD = "세부 시간은 바뀔 수 있어요";   /* v5.60 W9 말투 · 261007 오후 파트너 강연 시각 확정(AWS 13:30~14:50 · MS 15:10~16:40)으로 쓰는 곳 없음 · 다시 잠정 시각이 생기면 desc 에 넣는다 */
 var SESS_INTRO_ON = 0;   /* v5.60 10F 세션 B · C 한 줄 소개(intro) 켜기 · 끄기 */
@@ -224,7 +224,7 @@ var SESSIONS = [
     desc: "" },
   { id: "fld", fl: 10, zone: "conf", kind: "info", ttl: "세션 A", sub: "영업 및 보상 현장 우수 사례 강연 및 실습", who: "", tm: "13:30~16:40", cap: 63, seed: 50,
     capNote: "63명",   /* v5.81 정원 62 → 63(사용자 261006) */
-    todo: [{ desc: "동료 활용 사례 공유 및 AI활용 교안 제공" }, { desc: "원하는 주제 선택 및 개발 실습 진행" }],
+    todo: [{ desc: "동료 활용 사례 공유 및 AI활용 교안 제공" }, { name: "실습 주제 예시 · 3개 중 하나", desc: "원하는 주제 선택 및 개발 실습 진행", sub: ["시책비 자동 계산 프로그램", "영업 캘린더 · 상품별 화법 도구", "보상 실무자용 개인 agent (사고약도 · 면부책 검색 · 위변조 검증)"] }],   /* v6.20 실습 주제 3개(붙임2 커리큘럼 안 · 사용자 261007 「이것만 넣자」) · 「예시」 = 바뀔 수 있음 */
     prep: [{ desc: "노트북은 1인 1대 배정돼요" }] },
   { id: "ta", fl: 10, zone: "heart18", kind: "info", ttl: "세션 B", sub: "“내 데이터”로 만드는 통계 현황 리포팅 실습", who: "", tm: "13:30~16:30", cap: 32, seed: 24,
     capNote: "최대 32명",
@@ -238,13 +238,13 @@ var SESSIONS = [
     prep: [{ desc: "본인이 검색하고 활용하는 웹사이트를 사전에 조사해요" }, { desc: "노트북은 1인 1대 배정돼요" }] },
   { id: "aws", fl: 10, zone: "heart56", kind: "info", ttl: "세션 D", sub: "Claude Code를 활용한 바이브 코딩 실습 (AWS)", who: "", tm: "13:30~16:30", cap: 28, seed: 16,
     capNote: "28명",   /* v5.87 정원 20 → 28(사용자 261006 · 사전 신청 명단 28명) */
-    todo: [], prep: [] },   /* v5.60 남는 내용이 제목뿐 · 세션 안내 블록을 그리지 않는다 */
+    todo: [{ desc: "AI를 활용한 업무 적용 실습" }], prep: [] },   /* v5.60 남는 내용이 제목뿐 · 블록을 안 그렸다 → v6.20 한 줄(사용자 261007) */
   { id: "ms1", fl: 10, zone: "tbd", kind: "info", ttl: "세션 E · 1회차", sub: "MS Copilot을 활용한 문서 작성 실습 (MS)", who: "", tm: "13:30~14:50", cap: 20, seed: 12,
     capNote: "20명",
-    todo: [], prep: [] },
+    todo: [{ desc: "초급 과정 · Chat, Word, PPT, Agent Builder, Copilot Studio" }], prep: [] },
   { id: "ms2", fl: 10, zone: "tbd", kind: "info", ttl: "세션 E · 2회차", sub: "MS Copilot을 활용한 문서 작성 실습 (MS)", who: "", tm: "15:00~16:20", cap: 20, seed: 9,
     capNote: "20명",
-    todo: [], prep: [] },
+    todo: [{ desc: "초급 과정 · Chat, Word, PPT, Agent Builder, Copilot Studio" }], prep: [] },
   /* v5.64 AI 포토부스 프로그램 상세(photo · kind queue) 삭제 · v5.05 포토부스 대기 폐지 뒤 들어가는 길이 없는 빈 상세였다(정리 기록.md) */
   { id: "dap", fl: 1, zone: "dap", kind: "link", go: "dap", ttl: "AX 라운지", sub: "데이터사이언스파트 · 1:1 30분", who: "", tm: "09:30~16:30",
     /* v3.54 사은품 문구는 사용자 확정으로 유지 (CLAUDE.md 「참여자 앱에 사은품 안내 없음」의 예외 · 260918) */

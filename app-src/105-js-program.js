@@ -554,7 +554,7 @@ function spkAvHtml(id, av) {
 /* v5.60 10F 세션 안내 · 소제목 「하는 일」(1F 구역 상세와 같은 ink 굵게 + 얇은 구분선) · 주황 점 글머리 · 이름이 있으면 굵게 + 설명 아래 줄
    「준비할 것」은 사전 신청자(sessMine)에게만 · 한 줄 소개는 SESS_INTRO_ON 일 때만 · 다 비면 "" (블록 자체를 그리지 않는다) */
 function sessGuideHtml(s, mine) {
-  var li = function (it) { return '<li><span class="tx">' + (it.name ? "<b>" + esc(it.name) + "</b>" : "") + "<span>" + esc(it.desc) + "</span></span></li>"; };
+  var li = function (it) { return '<li><span class="tx">' + (it.name ? "<b>" + esc(it.name) + "</b>" : "") + "<span>" + esc(it.desc) + "</span>" + (it.sub || []).map(function (x) { return '<span class="sb">' + esc(x) + "</span>"; }).join("") + "</span></li>"; };
   var intro = SESS_INTRO_ON && s.intro ? '<p class="intro">' + esc(s.intro) + "</p>" : "";
   var todo = (s.todo || []).length ? '<div class="sgg"><h3>하는 일</h3><ul>' + s.todo.map(li).join("") + "</ul></div>" : "";
   var pl = (s.prep || []).length, q10 = "";   /* v5.94 (사용자 결정 261006) 10F 끝 QR 스탬프 없음 · 옛 줄 「끝날 때 화면의 QR을 찍으면 스탬프 2개」(v5.71) 삭제 · 끝 QR 출석 자체는 그대로 된다 */
