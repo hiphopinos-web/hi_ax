@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lucky Draw Drum · 기획 데모</title>
+<meta name="robots" content="noindex">
+<!-- 261008 기획 데모 · 럭키드로우 추첨기 재설계(믹서 드럼 · 감속 · 캡슐 · 번호 릴) · 운영 화면 draw/index.html 은 그대로 둔다
+     가짜 행운권만 쓴다(서버 호출 없음) · 키: Space 다음 · C 당첨자 확인(흉내) · N 다음 등수 · M 소리 · F 전체 화면 · H 키 안내
+     주소 인자: ?n=300 가짜 행운권 장수 · ?hud=1 프레임 수 · ?confirm=0 확인 흉내 끔 · ?rec=1 녹화(프레임 단위 진행) -->
+<link rel="icon" href="../icons/icon-192.png">
+<style>
+  @font-face { font-family: "AXP"; src: url("assets/PretendardVariable.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+  :root {
+    --o: #FF7E31; --hi: #FF963E; --o50: #FFB284; --o25: #FFD8C1;
+    --txt: rgba(255,255,255,.88); --sub: rgba(255,255,255,.6); --faint: rgba(255,255,255,.34);
+    --brand: var(--o);
+    --f: "AXP", "Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; cursor: none; }
+  body { font-family: var(--f); color: var(--txt); word-break: keep-all; -webkit-font-smoothing: antialiased; }
+  body.st-orange { --brand: #fff; --txt: #fff; --sub: rgba(255,255,255,.86); }
+  #cv { position: fixed; left: 0; top: 0; display: block; }
+  #frame { position: fixed; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; pointer-events: none; }
+  .tab { font-variant-numeric: tabular-nums; }
+  .fade { transition: opacity .45s ease; }
+
+  #lock { position: absolute; left: 120px; top: 64px; right: 120px; display: flex; justify-content: space-between; align-items: flex-start; }
+  #wm { width: 190px; color: var(--brand); }
+  #wm svg { display: block; width: 100%; height: auto; }
+  #slg { font-size: 30px; font-weight: 500; color: var(--brand); letter-spacing: -0.01em; }
+
+  /* 섞기 · 오른쪽 단(x 1104 ~ 1800) · 글자는 제자리 · 투명도로만 */
+  #side { position: absolute; left: 1104px; top: 236px; width: 696px; height: 708px; display: flex; flex-direction: column; }
+  .sh { display: flex; align-items: center; gap: 28px; }
+  #sPic { width: 150px; height: 150px; flex: none; border-radius: 50%; background: #fff; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 6px rgba(255,255,255,.16); }
+  #sPic img, #pPic img { width: 80%; height: 80%; object-fit: contain; }
+  #sEye { font-size: 64px; line-height: 1.1; font-weight: 700; color: var(--o); letter-spacing: -0.01em; }
+  #sCnt { font-size: 32px; line-height: 1.3; font-weight: 600; color: var(--sub); margin-top: 6px; }
+  #sTitle { font-size: 76px; line-height: 1.18; font-weight: 700; color: #fff; letter-spacing: -0.015em; margin-top: 36px; }
+  #sWon { margin-top: auto; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.14); }
+  #sWon .lab { font-size: 28px; font-weight: 500; color: var(--sub); }
+  #sNos { display: flex; flex-wrap: wrap; gap: 8px 30px; margin-top: 10px; min-height: 66px; font-size: 56px; line-height: 1.15; font-weight: 700; color: var(--o); font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+  #sNos .dim { color: rgba(255,255,255,.22); }
+  #sRule { font-size: 26px; line-height: 1.4; font-weight: 500; color: var(--sub); margin-top: 18px; }
+
+  /* 공개 · 번호 릴은 캔버스 · 글자는 위 · 아래 고정 자리 */
+  #rv { position: absolute; inset: 0; opacity: 0; }
+  #rEye { position: absolute; left: 0; right: 0; top: 150px; text-align: center; font-size: 46px; font-weight: 700; color: #fff; }
+  #rLab { position: absolute; left: 0; right: 0; top: 216px; text-align: center; font-size: 30px; font-weight: 500; color: rgba(255,255,255,.82); }
+  #rPrize { position: absolute; left: 160px; right: 160px; top: 772px; display: flex; align-items: center; justify-content: center; gap: 30px; opacity: 0; }
+  #pPic { width: 132px; height: 132px; flex: none; border-radius: 50%; background: #fff; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 6px rgba(255,255,255,.3); }
+  #pTxt { font-size: 54px; line-height: 1.2; font-weight: 700; color: #fff; }
+  #rOk { position: absolute; left: 0; right: 0; top: 946px; display: flex; align-items: center; justify-content: center; gap: 16px; font-size: 38px; font-weight: 700; color: #fff; opacity: 0; }
+  #rOk .dots { display: inline-flex; gap: 10px; }
+  #rOk .dots i { width: 12px; height: 12px; border-radius: 50%; background: #fff; opacity: .3; animation: okd 1.2s ease-in-out infinite; }
+  #rOk .dots i:nth-child(2) { animation-delay: .2s; } #rOk .dots i:nth-child(3) { animation-delay: .4s; }
+  @keyframes okd { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+  #rOk.done .dots { display: none; }
+  #rOk .ck { display: none; width: 46px; height: 46px; border-radius: 50%; background: #fff; position: relative; }
+  #rOk .ck::after { content: ""; position: absolute; left: 15px; top: 9px; width: 11px; height: 21px; border: solid var(--o); border-width: 0 6px 6px 0; transform: rotate(45deg); }
+  #rOk.done .ck { display: inline-block; }
+
+  #demoMark { position: absolute; left: 120px; bottom: 44px; font-size: 22px; font-weight: 600; color: var(--faint); letter-spacing: .02em; }
+  #hud { position: absolute; left: 120px; bottom: 80px; font-size: 22px; color: #9f9; font-family: Consolas, monospace; display: none; }
+  body.hud-on #hud { display: block; }
+  #help { position: absolute; right: 40px; bottom: 40px; width: 560px; background: rgba(12,12,12,.92); border: 1px solid rgba(255,255,255,.14); border-radius: 20px; padding: 22px 26px; display: none; color: #fff; font-size: 20px; line-height: 1.7; }
+  body.help-on #help { display: block; }
+  #help b { color: var(--hi); display: inline-block; width: 120px; }
+  #help .now { font-size: 26px; font-weight: 700; color: var(--o); margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="frame">
+  <div id="lock"><div id="wm"></div><div id="slg">ME to WE</div></div>
+
+  <section id="side">
+    <div class="sh"><span id="sPic"><img id="sImg" alt="" decoding="async"></span><div><p id="sEye"></p><p id="sCnt"></p></div></div>
+    <h2 id="sTitle"></h2>
+    <div id="sWon"><p class="lab">당첨 번호</p><p id="sNos"></p><p id="sRule">행운권 번호 = 앱 「나의 보상」</p></div>
+  </section>
+
+  <section id="rv">
+    <p id="rEye"></p>
+    <p id="rLab">행운권 번호</p>
+    <div id="rPrize"><span id="pPic"><img id="pImg" alt="" decoding="async"></span><p id="pTxt"></p></div>
+    <p id="rOk"><span class="ck"></span><span id="rOkT">당첨자 확인 중</span><span class="dots"><i></i><i></i><i></i></span></p>
+  </section>
+
+  <div id="demoMark">DEMO · 가짜 행운권 · 추첨기 재설계 시안</div>
+  <div id="hud"></div>
+  <div id="help"><p class="now" id="hNow"></p>
+    <p><b>Space</b>다음(뽑기 · 확정)</p>
+    <p><b>C</b>당첨자 확인(앱 응답 흉내)</p>
+    <p><b>N</b>다음 등수</p>
+    <p><b>M · F · H</b>소리 · 전체 화면 · 이 안내</p>
+  </div>
+</div>
+<script src="assets/wordmark.js"></script>
+<script src="assets/sfx.js"></script>
+<script src="assets/drum.js"></script>
+</body>
+</html>
