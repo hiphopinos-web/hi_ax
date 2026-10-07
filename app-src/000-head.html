@@ -58,6 +58,16 @@
   var F = null, last = "", ops = false, bip = null, sbc = "";
   function idoc() { try { return F.contentDocument; } catch (e) { return null; } }
   function opsNow() { var d = idoc(), f = d && d.getElementById("frame"); return !!f && /\b(tv-mode|tv-full|screen-mode)\b/.test(f.className); }
+  function tourNow() { try { var iw = F.contentWindow; return !!((iw.TOUR && iw.TOUR.busy) || (iw.AXTour && iw.AXTour.isOpen())); } catch (e) { return false; } }   /* 261007 (사용자 「노트북에서 둘러보기 = 창 전체로」) 행사 둘러보기를 여는 중 · 열려 있는 동안 = 틀을 걷고 창 전체(TV 와 같은 axf-full) · 닫히면 휴대폰 틀로 · 앱 스크롤 그대로 */
+  var tsy = 0;
+  function opsSet(o) {
+    if (o === ops) return; var iw = null; try { iw = F.contentWindow; } catch (e) {}
+    var tv = tourNow(); if (o && tv && iw) tsy = iw.scrollY || 0;
+    ops = o; fit();
+    if (o && tv) { try { F.focus(); iw.focus(); } catch (e) {} }   /* 클릭 없이 W A S D 가 바로 둘러보기로 */
+    else if (!o && iw && tsy) { var y = tsy; tsy = 0; try { iw.requestAnimationFrame(function () { iw.scrollTo(0, y); }); } catch (e) {} }
+  }
+  W.__axfFit = function () { opsSet(opsNow() || tourNow()); };
   function fit() {
     var w = W.innerWidth, hh = W.innerHeight, phone = !ops && w >= 900 && hh >= 600;
     H.classList.toggle("axf-full", !phone);
@@ -96,7 +106,7 @@
     if (c !== sbc) { sbc = c; var e = D.getElementById("axfSb"); if (e) e.style.backgroundColor = c; }
   }
   function tick() {
-    var o = opsNow(); if (o !== ops) { ops = o; fit(); }
+    opsSet(opsNow() || tourNow());
     if (!ops) { try { sbPaint(); } catch (e) {} }
     try { var il = F.contentWindow.location, u = il.href; if (u !== last && (il.pathname === IP || il.pathname === P)) { last = u; var want = P + il.search + il.hash; if (want !== L.pathname + L.search + L.hash) history.replaceState(history.state, "", want); } } catch (e) {}   /* 주소 줄 = 틀 안 앱의 주소(?·#) · 새로 고침해도 같은 화면 · 앱이 지운 #s= · #q= 는 여기서도 지워진다 */
   }

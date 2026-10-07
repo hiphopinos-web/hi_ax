@@ -23,18 +23,44 @@ function tourOpen(o) {
   var keep = o.hint && tourRetLive() ? TOUR_RET : null;   /* v5.57 둘러보기에서 출발한 AX 퀴즈의 힌트 「모형에서 보기」는 출처를 지우지 않는다(퀴즈를 마치면 그대로 1층으로) */
   if (!o.restore) TOUR_RET = null;   /* v5.53 그냥 열면 돌아가기 기억 지움 */
   if (keep) TOUR_RET = keep;
-  if (window.AXTour) { AXTour.open(o); return; }
+  if (window.AXTour) { tpcKeys(); AXTour.open(o); tpcShell(); return; }
   if (TOUR.busy) return;
-  TOUR.busy = true;
+  TOUR.busy = true; tpcShell();
   var left = TOUR.files.length, bad = false, q = "?v=" + TOUR.ver;
   /* v5.64 (사용자 261005 「가운데랑 하단에 두 개 떠」) 앱 하단 「여는 중」 알림 삭제 · 안내는 둘러보기 자체 불러오기 화면 하나 */
   TOUR.files.forEach(function (f) {
     var n = /\.css$/.test(f) ? document.createElement("link") : document.createElement("script");
     if (n.tagName === "LINK") { n.rel = "stylesheet"; n.href = "assets/tour/" + f + q; } else { n.src = "assets/tour/" + f + q; n.async = false; }   /* 스크립트는 붙인 순서대로 실행 */
-    n.onload = function () { if (--left === 0 && !bad) { TOUR.busy = false; if (window.AXTour) AXTour.open(o); } };
+    n.onload = function () { if (--left === 0 && !bad) { TOUR.busy = false; if (window.AXTour) { tpcKeys(); AXTour.open(o); } tpcShell(); } };
     n.onerror = function () { if (bad) return; bad = true; TOUR.busy = false; toast("둘러보기를 열지 못했어요 · 연결을 확인해 주세요"); };
     document.head.appendChild(n);
   });
+}
+/* 261007 (사용자 「노트북에서 둘러보기 = 창 전체로」) PC 휴대폰 틀(000-head) 안이면 둘러보기를 여는 순간 틀에 알려 창 전체로(틀도 0.25초마다 살펴 닫히면 휴대폰 틀로) · 틀 밖 = 할 일 없음 */
+function tpcShell() { try { if (window.parent !== window && window.parent.__axfFit) window.parent.__axfFit(); } catch (e) {} }
+/* 마우스 기기(PC)에서 둘러보기를 넓게(t3-wide) · 둘러보기 본체(tour3.css)는 폭 520 가운데 기둥이라 PC 넓은 창에서만 그 상한을 걷는다(아래 「이전 · 다음 구역」 단추 줄 · 판 보기 · 설정 시트는 520 그대로 · 3D 그림판은 무대 크기를 따라간다) · 휴대폰 · 터치 태블릿 = 그대로
+   PC 키 안내 = 무대 왼쪽 위 작은 한 줄(tour3.js 키 맵 그대로 · W A S D 걷기 · ← → 돌기 · 화면 누르기 = 그곳으로) · 6초 뒤 옅게 · 누름 통과 · 둘러보기가 닫히면 숨김 */
+var TPC_KEYS = "W A S D 걷기 · ← → 돌기 · 마우스로 눌러서 가기";
+function tpcFine() { try { return window.matchMedia("(hover: hover) and (pointer: fine)").matches; } catch (e) { return false; } }
+function tpcWideNow(open) { return !!open && tpcFine() && (window.innerWidth >= 700 || !!(window.parent !== window && window.parent.__axfFit)); }
+function tpcKeys() {
+  if (!tpcFine()) return;
+  var k = el("tpcKeys"), H = document.documentElement;
+  if (!k) {
+    var cs = document.createElement("style"); cs.id = "tpcCss";
+    cs.textContent = "html.t3-wide #axTour3 .t3app{max-width:none;box-shadow:none}html.t3-wide #axTour3 .bar>*{max-width:520px;margin-left:auto;margin-right:auto}" +
+      "#tpcKeys{position:fixed;left:12px;top:calc(68px + env(safe-area-inset-top, 0px));z-index:9001;pointer-events:none;padding:5px 12px;border-radius:999px;background:rgba(25,31,40,.72);color:#FFFFFF;font-size:13px;line-height:18px;font-weight:600;white-space:nowrap;transition:opacity .6s}";
+    document.head.appendChild(cs);
+    k = document.createElement("div"); k.id = "tpcKeys"; k.setAttribute("aria-hidden", "true"); k.textContent = TPC_KEYS; k.hidden = true;
+    document.body.appendChild(k);
+    setInterval(function () {
+      var o = !!(window.AXTour && AXTour.isOpen()), w = tpcWideNow(o) && window.innerWidth >= 700;
+      if (k.hidden === w) k.hidden = !w;
+      if (o && H.classList.contains("t3-wide") !== tpcWideNow(o)) { H.classList.toggle("t3-wide", tpcWideNow(o)); try { window.dispatchEvent(new Event("resize")); } catch (e) {} }
+    }, 300);
+  }
+  H.classList.toggle("t3-wide", tpcWideNow(true));
+  k.style.opacity = "1"; clearTimeout(k._t); k._t = setTimeout(function () { k.style.opacity = ".45"; }, 6000);
 }
 /* 입구 · 상시 운영 1F 맨 위 카드 · 홈 나의 일정 아래 한 줄(tourHomeHtml) · (v5.83 최초 로그인 초대장 삭제) · 이름은 세 곳 모두 「행사장 둘러보기」(사용자 261004)
    v5.60 (사용자 261004 안2 「연주황 카드로 크게」 · 시안 디자인 시안/시간표 층 색/시안.html ?b=2 · design.md A-4 승인된 예외) 상시 운영 입구 = 홈 줄과 같은 행(rcHtml) + 연주황 면 · O25 테두리 · 캐릭터 52 · 제목 17 · 설명 한 줄
