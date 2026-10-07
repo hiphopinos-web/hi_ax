@@ -1658,7 +1658,7 @@
   var LK7 = { pics: ["rl1_tumbler_v2", "rl4_sticker_v2", "rl2_keyring_v2", "rl5_pen_v2"] };
   function lk7Html() {
     return '<span class="pics">' + LK7.pics.map(function (f) { var k = (PIC_K[f] || 0.59) * 100 + "%"; return '<span><img src="' + PIC_DIR + f + '.webp" alt="" decoding="async" style="width:' + k + ";height:" + k + '"></span>'; }).join("") + "</span>" +
-      "<span><b>7등 랜덤 굿즈 · 수량 추후 공개</b><em>행사 뒤 추첨 · 사내 우편 발송</em></span>";   /* 261007 수량 = 「수량 추후 공개」(60 고정 삭제 · 남은 경품으로 꾸려 수가 정해지지 않음) */
+      "<span><b>7등 랜덤 굿즈 · 수량 추후 공개</b><em>행사 뒤 추첨 · 행랑 발송</em></span>";   /* 261007 수량 = 「수량 추후 공개」(60 고정 삭제 · 남은 경품으로 꾸려 수가 정해지지 않음) */
   }
   function uiCheck() {
     var balls = 0; ST.arrived.forEach(function (pk) { var p = ST.pool && ST.pool.people[pk]; if (p) balls += p.nos.length; });
