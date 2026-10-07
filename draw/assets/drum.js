@@ -4,7 +4,7 @@
  *   테두리 = 점 48개 고리(돈다) · 12시 멈춤쇠가 점을 칠 때마다 「딱」 · 감속하면 박자가 벌어진다
  *   Space → 통이 3.6~6.5초에 걸쳐 감속 → 출구(테두리 문)가 6시에 선다 → 문이 열리고 공 하나가 빠진다
  *     → 공이 앞으로 굴러와 화면 가운데에서 캡슐처럼 열린다 → 번호 릴 4칸이 왼쪽부터 멈춘다(맨 끝 칸이 가장 느리다)
- *     → 오렌지 스테이지로 바뀌며 점이 팡 → 경품 줄 → 「당첨자 확인 중」(당첨자가 앱에서 확인하면 「확인 완료」 · 데모는 흉내)
+ *     → 오렌지 스테이지로 바뀌며 점이 팡 → 경품 줄 → 「당첨자 확인 대기」(당첨자가 앱에서 확인하면 「확인 완료」 · 데모는 흉내)
  *   당첨 번호는 Space 를 누른 순간 암호 난수로 먼저 정한다 · 통 · 공 · 릴은 그 결과를 보여 주는 연출일 뿐(결과를 바꾸지 않는다)
  *   공은 대표 공(행운권이 많으면 최대 BALLMAX 개) · 운영에서는 서버 · 기존 bigPick 이 정한 번호를 받는다
  *   그림 = 2D 캔버스 하나에 3D 투영(원근 · 아래로 내려다보는 각) · 공 그림은 미리 구운 스프라이트(회전 32단 × 색 3)
@@ -13,6 +13,7 @@
   "use strict";
   var Q = new URLSearchParams(location.search);
   var REC = Q.has("rec"), HUD = Q.has("hud"), NT = clamp(+Q.get("n") || 300, 10, 9000), AUTOOK = Q.get("confirm") !== "0";
+  var MINB = clamp(+Q.get("minb") || 0, 0, 360);   /* 시험용 · ?minb=120 = 행운권이 적어도 통에 대표 공을 이만큼(결정 대기 · 기본 = 장수 그대로) */
   var W0 = 1920, H0 = 1080, PITCH = 30;
   var C = { o: "#FF7E31", hi: "#FF963E", o50: "#FFB284", o25: "#FFD8C1", w: "#FFFFFF", k: "#000000" };
   var FONT = '"AXP", "Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif';
@@ -44,6 +45,7 @@
     { name: "2등", prize: "신라호텔 파크뷰 뷔페 식사권 2매", count: 1, pic: "ld2_shilla", k: 0.59 },
     { name: "1등", prize: "아이패드", count: 1, pic: "ld1_ipad", k: 0.79 }
   ];
+  if (+Q.get("multi") > 0) ROUNDS[0].count = clamp(+Q.get("multi"), 1, 6);   /* 시험용 · ?multi=4 = 6등 4명(두 줄 배치 확인) */
   var TICKETS = [];
   (function () { var r = mulberry(7 + NT), used = {}; while (TICKETS.length < NT) { var n = 1 + Math.floor(r() * 9999); if (used[n]) continue; used[n] = 1; TICKETS.push(pad4(n)); } })();
   var ST = { round: 0, wins: [], won: {} };            /* wins = [{round, no, ok}] */
@@ -242,7 +244,7 @@
     drawRibs(true);
     drawRim();
     drawLip();
-    if (WIN.i >= 0 && WIN.ph === "drop") drawOneBall(WIN.i);
+    for (var k = 0; k < WB.length; k++) if (WB[k].ph === "drop") drawOneBall(WB[k].i);
     cx.globalAlpha = 1;
   }
   /* 살(경선) 8줄 · 앞 극(축 끝)에서 퍼진다 · 앞쪽 반만 진하게 */
@@ -264,7 +266,7 @@
     buildSprites();
     if (!ORD || ORD.length !== NB) { ORD = new Int32Array(NB); ZS = new Float32Array(NB); }
     var n = 0, i;
-    for (i = 0; i < NB; i++) if (live_[i] && i !== WIN.i) { prj(px_[i], py_[i], pz_[i]); ZS[i] = PRJ.z; ORD[n++] = i; }
+    for (i = 0; i < NB; i++) if (live_[i]) { prj(px_[i], py_[i], pz_[i]); ZS[i] = PRJ.z; ORD[n++] = i; }
     var o = Array.prototype.slice.call(ORD, 0, n); o.sort(function (a, b) { return ZS[a] - ZS[b]; });
     var sz = SPR.sz, img = SPR.c;
     for (var q = 0; q < o.length; q++) {
@@ -275,7 +277,7 @@
       cx.drawImage(img, kk * sz, tone_[i] * sz, sz, sz, PRJ.x - r, PRJ.y - r, 2 * r, 2 * r);
     }
     cx.globalAlpha = CAMD.a;
-    if (WIN.i >= 0 && WIN.ph === "inside") drawOneBall(WIN.i);
+    for (var k = 0; k < WB.length; k++) if (WB[k].ph === "inside") drawOneBall(WB[k].i);
   }
   function drawOneBall(i) {
     prj(px_[i], py_[i], pz_[i]); var r = RB * PRJ.s, kk = Math.floor(angN(ba_[i]) / 6.2832 * NROT) % NROT;
@@ -334,13 +336,18 @@
     cx.lineCap = "butt";
   }
 
-  /* ─────────────── 진행 ─────────────── */
+  /* ─────────────── 진행 ───────────────
+   * 261008 여러 명 당첨 · 한 번 누르면 그 등수 남은 인원 K 명을 한꺼번에 정한다(암호 난수 · 중복 없음)
+   *   공 K 개가 0.5초 간격으로 출구에서 차례로 굴러 나와 자기 칸으로 간다 → 화면을 K 칸으로 나눠 릴이 동시에 돈다
+   *   칸마다 0.4초씩 엇갈려 서고 · 마지막 칸 끝자리가 가장 늦게 · 그 순간 팡 한 번 · 확인 표시는 칸마다 따로 */
   var T = 0, SC = "spin", sc0 = 0, HITS = 0, lastHitT = 0;
-  var PAWL = { k: 0, last: 0, snd: 0 }, GATE = { v: 0, tgt: 0 };
+  var PAWL = { k: 0, last: 0, snd: 0 }, GATE = { v: 0, tgt: 0, t0: 0 };
   var SLOW = { t0: 0, D: 4, th0: 0, w0: 0, trav: 0, kp: 1.8, tick: 0, heart: 0 };
-  var WIN = { i: -1, no: "", ph: "", t0: 0 };
-  var REEL = { on: false, t0: 0, stops: [], digits: [0, 0, 0, 0], pos: [0, 0, 0, 0], done: [0, 0, 0, 0], last: [0, 0, 0, 0] };
-  var OK = { st: 0, at: 0 };                          /* 0 없음 · 1 확인 중 · 2 확인 완료 */
+  var WB = [], NOS = [];                               /* WB = 나오는 공(칸 순서) · NOS = 이번에 정한 당첨 번호 */
+  var LAY = { K: 1, cols: 1, rows: 1, s: 1, cells: [], br: 250 };
+  var REEL = { on: false, t0: 0, cells: [] };
+  var OKS = [];                                        /* 칸마다 0 없음 · 1 확인 대기 · 2 확인 완료 */
+  var EXGAP = 0.5;                                     /* 공 사이 간격(초) */
   function scene(s) { SC = s; sc0 = T; document.body.dataset.scene = s; uiHelp(); }
   function sT() { return T - sc0; }
 
@@ -349,13 +356,32 @@
     if (SC === "spin") return startDraw();
     if (SC === "done") return backToSpin();
   }
+  function pickWinners(k) {                           /* 버튼 순간 · 행운권 전체에서 암호 난수로 k 장(중복 없음 · 1인 1회 규칙은 운영 서버 몫) */
+    var left = TICKETS.filter(function (t) { return !ST.won[t]; }), out = [];
+    for (var n = 0; n < k && left.length; n++) { var j = Math.floor((REC ? rng() : cryptoUnit()) * left.length); out.push(left[j]); left.splice(j, 1); }
+    return out;
+  }
+  /* 칸 배치 · 3명까지 한 줄 · 4명부터 두 줄 · s = 1명 기준 대비 배율 */
+  var PANW = 4 * 232 + 3 * 28, PANH = 330 + 52;
+  function layout(K) {
+    var cols = K <= 3 ? K : Math.ceil(K / 2), rows = K <= 3 ? 1 : 2;
+    var pw = K > 1 ? PANW + 28 : PANW, ph = K > 1 ? PANH + 28 : PANH;   /* 여러 명이면 칸마다 판 하나(테두리 14) */
+    var s = Math.min(1, (1800 / cols - (K > 1 ? 70 : 50)) / pw, rows === 1 ? 1 : 230 / ph);
+    var ys = rows === 1 ? [560] : [450, 770], cells = [];
+    for (var j = 0; j < K; j++) {
+      var row = rows === 1 ? 0 : (j < cols ? 0 : 1), inRow = rows === 1 ? K : (row ? K - cols : cols), col = row ? j - cols : j;
+      cells.push({ x: 960 + (col - (inRow - 1) / 2) * (1800 / cols), y: ys[row], okY: rows === 1 ? 900 : ys[row] + ph * s / 2 + 6 });
+    }
+    LAY = { K: K, cols: cols, rows: rows, s: s, cells: cells, br: clamp(260 * s, 110, 250) };
+  }
   function startDraw() {
-    var r = ROUNDS[ST.round];
-    if (roundWins(ST.round).length >= r.count) { nextRound(); return; }
+    var r = ROUNDS[ST.round], left = r.count - roundWins(ST.round).length;
+    if (left <= 0) { nextRound(); return; }
     if (DRM.w < WMIX * 0.6) return;                  /* 아직 덜 돌았다 */
-    var no = pickWinner(); if (!no) return;
-    WIN.no = no; WIN.i = -1; WIN.ph = "";
-    /* 감속 계획 · ω(t) = ω0 (1 - t/D)^k · 이동각 = ω0 D/(k+1) · 출구가 6시(gateAng = π/2 + 2πn)에 서도록 D 를 3.6~6.5초 안에서 고른다 */
+    NOS = pickWinners(left); if (!NOS.length) return;
+    layout(NOS.length);
+    WB = NOS.map(function (no, j) { return { no: no, i: -1, ph: "wait", t0: 0, cell: j }; });
+    /* 감속 계획 · ω(t) = ω0 (1 - t/D)^k · 이동각 = ω0 D/(k+1) · 출구가 6시(gateAng = π/2 + 2πn)에 서도록 D 를 3.6~6초 안에서 고른다 */
     var w0 = DRM.w, need = angN(-(DRM.th + GATE0)), D = 0, kp = 1.6, m = 0, ok = false, KPS = [1.6, 1.3, 2.0, 1.0, 2.5];
     for (var a = 0; a < KPS.length && !ok; a++) for (m = 0; m < 6; m++) { kp = KPS[a]; D = (need + m * 6.2832) * (kp + 1) / w0; if (D >= 3.6 && D <= 6.0) { ok = true; break; } if (D > 6) break; }
     SLOW.kp = kp; SLOW.t0 = T; SLOW.D = D; SLOW.th0 = DRM.th; SLOW.w0 = w0; SLOW.trav = need + m * 6.2832; SLOW.tick = Math.floor(DRM.th / (6.2832 / NPEG)); SLOW.heart = T + D * 0.55;
@@ -389,49 +415,65 @@
     if (lv !== PAWL.air) { PAWL.air = lv; SFX.play("air", lv); }
     if (DRM.mode === "slow" && T >= SLOW.heart) { SFX.play("heart"); SLOW.heart = T + Math.max(0.5, 0.9 - (T - SLOW.t0) * 0.05); }
   }
-  /* 정지 → 0.6초 정적 → 문이 열린다 → 출구 가장 가까운 공 하나가 빠진다(번호는 이미 정해진 당첨 번호) */
+  /* 정지 → 1초 정적 → 문이 열린다 → 공이 EXGAP 초 간격으로 하나씩 빠진다(번호는 이미 정해진 당첨 번호 · 공은 출구에 가장 가까운 것) */
+  var YB = 0;
   function stepWin(dt) {
     GATE.v += (GATE.tgt - GATE.v) * (1 - Math.exp(-dt * 10));
-    if (SC === "settle" && sT() > 1.0) { GATE.tgt = 1; SFX.play("hatch", true, 1); scene("gate"); }
-    if (SC === "gate" && sT() > 0.32 && WIN.i < 0) {
-      var gx = 0, gy = RW, best = -1, bd = 1e9;
-      for (var i = 0; i < NB; i++) if (live_[i]) { var d = Math.hypot(px_[i] - gx, py_[i] - gy, pz_[i] * 1.4); if (d < bd) { bd = d; best = i; } }
-      WIN.i = best; WIN.ph = "inside"; WIN.t0 = T; WIN.sx = px_[best]; WIN.sy = py_[best]; WIN.sz = pz_[best]; live_[best] = 0;
+    if (SC === "settle" && sT() > 1.0) { GATE.tgt = 1; GATE.t0 = T; SFX.play("hatch", true, 1); scene("exit"); }
+    if (SC !== "exit" && SC !== "fly") return;
+    YB = RW + 30 - RB * 0.2;
+    var last = WB.length - 1;
+    for (var k = 0; k < WB.length; k++) {
+      var b = WB[k];
+      if (b.ph === "wait" && T >= GATE.t0 + 0.32 + k * EXGAP) {
+        var best = -1, bd = 1e9;
+        for (var i = 0; i < NB; i++) if (live_[i]) { var d = Math.hypot(px_[i], py_[i] - RW, pz_[i] * 1.4); if (d < bd) { bd = d; best = i; } }
+        b.i = best; b.ph = "inside"; b.t0 = T; b.sx = px_[best]; b.sy = py_[best]; b.sz = pz_[best]; live_[best] = 0;
+      }
+      var j = b.i;
+      if (b.ph === "inside") {                    /* 출구로 미끄러져 빠진다 */
+        var e = EIO((T - b.t0) / 0.42);
+        px_[j] = b.sx * (1 - e); py_[j] = b.sy + (RW + 6 - b.sy) * e; pz_[j] = b.sz * (1 - e); ba_[j] += dt * 9;
+        if (T - b.t0 >= 0.42) { b.ph = "drop"; b.t0 = T; SFX.play("drop", 0.3); }
+      } else if (b.ph === "drop") {               /* 받침에 톡 떨어져 한 번 튄다 · 다음 공이 오면 바로 떠난다 */
+        var t2 = T - b.t0, hb = Math.abs(Math.sin(Math.min(t2, 0.5) / 0.5 * Math.PI)) * 26 * Math.max(0, 1 - t2 / 0.5);
+        py_[j] = Math.min(YB, RW + 6 + 0.5 * G * t2 * t2); if (py_[j] >= YB) py_[j] = YB - hb; ba_[j] += dt * 6;
+        if (t2 > 0.5 || (k < last && WB[k + 1].ph === "drop")) {
+          b.ph = "fly"; b.t0 = T; SFX.play("roll", 0.8); SFX.play("whoosh", 0.9);
+          prj(0, py_[j], 0); b.fx0 = PRJ.x; b.fy0 = PRJ.y; b.fr0 = RB * PRJ.s; b.a0 = ba_[j]; b.X = b.fx0; b.Y = b.fy0; b.Rr = b.fr0; b.ang = b.a0;
+          if (k === 0) fadeEl("side", 0, 0.3);
+          if (k === last) { GATE.tgt = 0; SFX.play("hatch", false, 0.6); scene("fly"); }
+        }
+      } else if (b.ph === "fly") {                /* 앞으로 굴러와 자기 칸 · 마지막 공이 나가면 통은 위로 밀려나며 사라진다 */
+        var u = clamp((T - b.t0) / 1.15, 0, 1), e2 = EIO(u), c = LAY.cells[b.cell];
+        b.X = b.fx0 + (c.x - b.fx0) * e2; b.Y = b.fy0 + (c.y - b.fy0) * e2 - Math.sin(u * Math.PI) * 60;
+        b.Rr = b.fr0 + (LAY.br - b.fr0) * Math.pow(e2, 1.4); b.ang = b.a0 + (1 - Math.pow(1 - u, 3)) * 14;
+        if (u >= 1) { b.ph = "set"; b.ang = 0; b.ts = T; }
+      } else if (b.ph === "set") {                /* 칸에 서서 다른 공을 기다린다 · 살짝 떠 있다 */
+        var c2 = LAY.cells[b.cell]; b.X = c2.x; b.Y = c2.y + Math.sin((T - b.ts) * 3.2) * 6 * (1 - Math.exp(-(T - b.ts) * 3));
+      }
     }
-    if (WIN.ph === "inside") {                    /* 출구로 미끄러져 빠진다 */
-      var t = (T - WIN.t0) / 0.42, e = EIO(t), i2 = WIN.i;
-      px_[i2] = WIN.sx * (1 - e); py_[i2] = WIN.sy + (RW + 6 - WIN.sy) * e; pz_[i2] = WIN.sz * (1 - e); ba_[i2] += dt * 9;
-      if (t >= 1) { WIN.ph = "drop"; WIN.t0 = T; SFX.play("drop", 0.3); }
-    } else if (WIN.ph === "drop") {               /* 받침에 톡 떨어져 한 번 튄다 */
-      var t2 = T - WIN.t0, i3 = WIN.i, yb = RW + 30 - RB * 0.2, hb = Math.abs(Math.sin(Math.min(t2, 0.5) / 0.5 * Math.PI)) * 26 * Math.max(0, 1 - t2 / 0.5);
-      py_[i3] = Math.min(yb, RW + 6 + 0.5 * G * t2 * t2); if (py_[i3] >= yb) py_[i3] = yb - hb; ba_[i3] += dt * 6;
-      if (t2 > 0.5) { WIN.ph = "fly"; WIN.t0 = T; GATE.tgt = 0; SFX.play("hatch", false, 0.6); SFX.play("roll", 0.9); SFX.play("whoosh", 1.0); scene("fly"); fadeEl("side", 0, 0.3); prj(0, yb, 0); WIN.fx0 = PRJ.x; WIN.fy0 = PRJ.y; WIN.fr0 = RB * PRJ.s; WIN.a0 = ba_[i3]; }
-    }
-    if (SC === "fly") {                           /* 앞으로 굴러와 화면 가운데 · 통은 위로 밀려나며 사라진다(카메라가 공을 따라 내려간다) */
-      var u = clamp(sT() / 1.25, 0, 1), e2 = EIO(u);
-      CAMD.k = 1 + 0.5 * e2; CAMD.oy = -560 * e2; CAMD.ox = -120 * e2; CAMD.a = 1 - EO(u * 2.2);
-      var fx = WIN.fx0 + (960 - WIN.fx0) * e2, fy = WIN.fy0 + (500 - WIN.fy0) * e2 - Math.sin(u * Math.PI) * 60;
-      WIN.X = fx; WIN.Y = fy; WIN.Rr = WIN.fr0 + (250 - WIN.fr0) * Math.pow(e2, 1.4);
-      WIN.ang = WIN.a0 + (1 - Math.pow(1 - u, 3)) * 14;   /* 구르다가 이음선이 수평으로 선다 */
-      if (u >= 1) { WIN.ang = 0; scene("open"); REEL.on = true; REEL.t0 = T + 0.25; planReels(); uiReveal(); SFX.play("hatch", true, 0.9); SFX.play("whoosh", 0.5); }
+    if (SC === "fly") {
+      var lb = WB[last], uu = clamp((T - lb.t0) / 1.15, 0, 1), ee = EIO(uu);
+      CAMD.k = 1 + 0.5 * ee; CAMD.oy = -560 * ee; CAMD.ox = -120 * ee; CAMD.a = 1 - EO(uu * 2.2);
+      if (lb.ph === "set") { scene("open"); REEL.on = true; REEL.t0 = T + 0.25; planReels(); uiReveal(); SFX.play("hatch", true, 0.9); SFX.play("whoosh", 0.5); }
     }
   }
-  /* 번호 릴 · 왼쪽 세 칸은 차례로 멈추고 · 맨 끝 칸은 박자가 벌어지며 가장 늦게 */
+  /* 번호 릴 · 칸 j 는 0.4j 초씩 늦게 · 각 칸 왼쪽 세 자리는 차례로 · 끝자리는 마지막 칸만 박자가 벌어지며 가장 늦게 */
   function planReels() {
-    var d = WIN.no.split("").map(Number);
-    REEL.digits = d; REEL.done = [0, 0, 0, 0];
-    REEL.stops = [0.9, 1.45, 2.0, 3.9];
-    REEL.spd = [13, 14, 15, 16];
-    REEL.last = [-1, -1, -1, -1];
-    /* 시작 위치를 거꾸로 맞춘다 · 등속 → 3차 감속(처음 속도 = 등속)으로 끝이 정확히 목표 숫자(속도 끊김 없음) */
-    for (var k = 0; k < 4; k++) { var sl = slowLen(k), ts = REEL.stops[k] - sl; REEL.pos[k] = d[k] - REEL.spd[k] * ts - REEL.spd[k] * sl / 3; }
+    var K = WB.length;
+    REEL.cells = WB.map(function (b, j) {
+      var d = b.no.split("").map(Number), o = j * 0.4, fin = j === K - 1;
+      var c = { digits: d, stops: [0.9 + o, 1.3 + o, 1.7 + o, fin ? 1.7 + o + 1.9 : 2.2 + o], slow: [0.5, 0.5, 0.5, fin ? 1.9 : 0.5], spd: [13, 14, 15, 16], pos: [0, 0, 0, 0], done: [0, 0, 0, 0], last: [-1, -1, -1, -1], fin: fin };
+      /* 시작 위치를 거꾸로 맞춘다 · 등속 → 3차 감속(처음 속도 = 등속)으로 끝이 정확히 목표 숫자(속도 끊김 없음) */
+      for (var k = 0; k < 4; k++) { var ts = c.stops[k] - c.slow[k]; c.pos[k] = d[k] - c.spd[k] * ts - c.spd[k] * c.slow[k] / 3; }
+      return c;
+    });
   }
-  function slowLen(k) { return k === 3 ? 1.9 : 0.5; }
-  function reelPos(k, t) {                         /* t = 릴 시작 뒤 초 · 반환 = 숫자 위치(정수 = 그 숫자가 가운데) */
-    var stop = REEL.stops[k], spd = REEL.spd[k], tgt = REEL.digits[k];
-    var slowL = slowLen(k), ts = stop - slowL;       /* 감속 시작 */
-    if (t < ts) return REEL.pos[k] + spd * t;
-    var pS = REEL.pos[k] + spd * ts, A = spd * slowL / 3, want = pS + A, u = clamp((t - ts) / slowL, 0, 1);   /* 3차 감속 · 처음 속도 = spd · 끝 속도 0 */
+  function reelPos(c, k, t) {                      /* t = 릴 시작 뒤 초 · 반환 = 숫자 위치(정수 = 그 숫자가 가운데) */
+    var stop = c.stops[k], spd = c.spd[k], slowL = c.slow[k], ts = stop - slowL;
+    if (t < ts) return c.pos[k] + spd * t;
+    var pS = c.pos[k] + spd * ts, A = spd * slowL / 3, want = pS + A, u = clamp((t - ts) / slowL, 0, 1);
     var p = pS + A * (1 - Math.pow(1 - u, 3));
     if (u >= 1) { var ov = t - stop; p = want + (ov < 0.35 ? Math.sin(ov / 0.35 * Math.PI) * 0.06 * Math.exp(-ov * 6) : 0); }
     return p;
@@ -439,45 +481,62 @@
   function stepReels() {
     if (!REEL.on) return;
     var t = T - REEL.t0;
-    for (var k = 0; k < 4; k++) {
-      var p = reelPos(k, Math.max(0, t)), cell = Math.floor(p + 0.5);
-      if (t > 0 && cell !== REEL.last[k]) { if (REEL.last[k] >= 0 && t > REEL.stops[k] - slowLen(k)) SFX.play("tick", k === 3 ? clamp((t - 2.0) / 1.9, 0, 1) : 0.3 + k * 0.15); REEL.last[k] = cell; }
-      if (!REEL.done[k] && t >= REEL.stops[k]) {
-        REEL.done[k] = 1;
-        if (k < 3) { SFX.play("bell", [523.25, 659.25, 783.99][k], 0.16); SFX.play("stamp"); }
-        else reveal();
+    REEL.cells.forEach(function (c, j) {
+      for (var k = 0; k < 4; k++) {
+        var cell = Math.floor(reelPos(c, k, Math.max(0, t)) + 0.5);
+        if (t > 0 && cell !== c.last[k]) { if (c.last[k] >= 0 && t > c.stops[k] - c.slow[k] && (k === 3 || REEL.cells.length === 1)) SFX.play("tick", c.fin && k === 3 ? clamp((t - c.stops[2]) / 1.9, 0, 1) : 0.4); c.last[k] = cell; }
+        if (!c.done[k] && t >= c.stops[k]) {
+          c.done[k] = 1;
+          if (c.fin && k === 3) reveal();
+          else if (k === 3) { SFX.play("bell", [523.25, 659.25, 783.99, 880][j % 4], 0.16); SFX.play("stamp"); }
+          else if (REEL.cells.length === 1) SFX.play("bell", [523.25, 659.25, 783.99][k], 0.12);
+          else SFX.play("stamp");
+        }
       }
-    }
+    });
     if (SC === "open" && t > 0.2) scene("reels");
   }
+  function grpY() { return LAY.rows === 1 ? 560 : 608; }
   function reveal() {
-    var r = ROUNDS[ST.round];
-    ST.wins.push({ round: ST.round, no: WIN.no, ok: 0 }); ST.won[WIN.no] = 1;
+    WB.forEach(function (b) { ST.wins.push({ round: ST.round, no: b.no, ok: 0 }); ST.won[b.no] = 1; });
     scene("done");
-    stageTo("orange", 960, 500, 0.6);
+    stageTo("orange", 960, grpY(), 0.6);
     SFX.play("hit");
-    burst(960, 500);
-    setTxt("pTxt", r.prize);
-    picInto("pPic", "pImg", r);
-    later(0.5, function () { fadeEl("rPrize", 1, 0.5); });
-    OK.st = 1; OK.at = T;
-    later(1.6, function () { var el = document.getElementById("rOk"); el.classList.remove("done"); setTxt("rOkT", "당첨자 확인 중"); fadeEl("rOk", 1, 0.4); });
-    if (AUTOOK) { var w = REC ? (ST.wins.length % 3 === 2 ? 99 : 2.2) : 3 + rng() * 4; later(1.6 + w, function () { if (SC === "done" && OK.st === 1) confirmOk(); }); }
+    burst(960, grpY());
+    OKS = WB.map(function () { return 1; }); uiDemoBtns();
+    later(1.4, function () { if (SC !== "done") return; OKS.forEach(function (s, j) { fadeEl("ok" + j, 1, 0.4); }); });
+    if (AUTOOK) WB.forEach(function (b, j) {
+      var K = WB.length, w = REC ? (K >= 3 && j === K - 1 ? 99 : 2.0 + j * 1.0) : (rng() < 0.85 ? 2.4 + rng() * 5 : 99);
+      later(w, function () { if (SC === "done" && OKS[j] === 1) confirmOk(j); });
+    });
   }
-  /* 당첨자가 앱에서 「확인」을 눌렀다(서버 → 화면) · 누가인지는 보이지 않는다 · 점 고리 하나가 번호를 감싸고 퍼진다 */
-  function confirmOk() {
-    if (SC !== "done" || OK.st !== 1) return;
-    OK.st = 2; ST.wins[ST.wins.length - 1].ok = 1;
-    var el = document.getElementById("rOk"); el.classList.add("done"); setTxt("rOkT", "당첨자 확인 완료"); el.style.opacity = 1;
-    ring(960, 500, 64, 900, 9, 1.1); ring(960, 500, 40, 600, 12, 1.3);
-    SFX.play("bell", 1046.5, 0.14); SFX.play("bell", 1318.5, 0.1);
+  /* 당첨자가 앱에서 「확인」을 눌렀다(서버 → 화면) · 누가인지는 보이지 않는다 · 그 칸에 점 고리 하나 · C 키 = 아직 안 된 칸 중 왼쪽부터 */
+  function confirmOk(j) {
+    if (SC !== "done") return;
+    if (j == null) j = OKS.indexOf(1);
+    if (j < 0 || OKS[j] !== 1) return;
+    OKS[j] = 2;
+    var el = okEl(j); el.classList.add("done"); el.querySelector("b").textContent = "당첨자 확인 완료"; el.style.opacity = 1; delete FD["ok" + j]; uiDemoBtns();
+    var c = LAY.cells[j], sc = LAY.s;
+    ring(c.x, c.y, 48, 700 * sc + 200, 8, 1.0, 140 * sc + 40); ring(c.x, c.y, 30, 450 * sc + 150, 11, 1.2, 100 * sc + 40);
+    SFX.play("bell", 1046.5 + j * 120, 0.14); SFX.play("bell", 1318.5 + j * 120, 0.1);
+  }
+  /* 데모 상태 단추 · 칸마다 확인 완료 ↔ 확인 대기(운영에서는 서버가 보내는 상태로 바뀐다) */
+  function unconfirm(j) {
+    if (SC !== "done" || OKS[j] !== 2) return;
+    OKS[j] = 1; var el = okEl(j); el.classList.remove("done"); el.querySelector("b").textContent = "당첨자 확인 대기"; uiDemoBtns();
+  }
+  function uiDemoBtns() {
+    var box = document.getElementById("demoBtns"); if (!box) return;
+    if (REC || SC !== "done" || !OKS.length) { box.style.display = "none"; return; }
+    box.style.display = "flex";
+    box.innerHTML = '<span>데모 · 가짜 확인 상태</span>' + OKS.map(function (st, j) { return '<button type="button" data-j="' + j + '" class="' + (st === 2 ? "on" : "") + '">' + (j + 1) + "번 칸 · " + (st === 2 ? "확인 완료" : "확인 대기") + "</button>"; }).join("");
   }
   function backToSpin() {
-    REEL.on = false; OK.st = 0;
-    fadeEl("rv", 0, 0.35); fadeEl("rPrize", 0, 0.3); fadeEl("rOk", 0, 0.3);
-    stageTo("black", 960, 500, 0.6);
-    if (WIN.i >= 0) { live_[WIN.i] = 0; }
-    WIN.i = -1; WIN.ph = "";
+    REEL.on = false; OKS = []; uiDemoBtns();
+    fadeEl("rv", 0, 0.35); fadeEl("rPrize", 0, 0.3);
+    stageTo("black", 960, grpY(), 0.6);
+    WB = [];
     CAMD.k = 1; CAMD.ox = 0; CAMD.oy = 0; CAMD.a = 0; CAMD.fin = T;
     DRM.mode = "spin"; DRM.w = 0.5; DRM.tgt = WMIX;
     var r = ROUNDS[ST.round]; if (roundWins(ST.round).length >= r.count && ST.round < ROUNDS.length - 1) ST.round++;
@@ -488,41 +547,52 @@
   function nextRound() { ST.round = (ST.round + 1) % ROUNDS.length; if (!ST.round) ST.wins = []; fadeEl("side", 0, 0.2); later(0.25, function () { uiSide(); fadeEl("side", 1, 0.4); }); SFX.play("whoosh", 0.5); }
 
   /* ─────────────── 공개 그림 · 캡슐 · 릴 · 점 ─────────────── */
-  var DIG = null;                                     /* 숫자 0~9 점 좌표(칸 가운데 기준) */
-  var CELLW = 232, CELLH = 330, DSTEP = 15, DOTR = 6.3, REELX = 960, REELY = 500, GAPX = 28;
+  var DIG = null, DIGH = 0;                           /* 숫자 0~9 점 좌표(칸 가운데 기준) · DIGH = 점 글자 실제 높이(1명 배율 · px) */
+  var CELLW = 232, CELLH = 330, DSTEP = 15, DOTR = 6.3, GAPX = 28;
   function buildDigits() {
     var c = document.createElement("canvas"), w = CELLW, h = CELLH + 40; c.width = w; c.height = h;
     var g = c.getContext("2d", { willReadFrequently: true });
-    DIG = [];
+    DIG = []; var y0 = 1e9, y1 = -1e9;
     for (var d = 0; d < 10; d++) {
       g.clearRect(0, 0, w, h); g.fillStyle = "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.font = "800 400px " + FONT; g.fillText(String(d), w / 2, h / 2 + 16);
       var px = g.getImageData(0, 0, w, h).data, pts = [];
-      for (var y = DSTEP / 2; y < h; y += DSTEP) for (var x = DSTEP / 2; x < w; x += DSTEP) if (px[(Math.floor(y) * w + Math.floor(x)) * 4 + 3] > 110) pts.push(x - w / 2, y - h / 2);
+      for (var y = DSTEP / 2; y < h; y += DSTEP) for (var x = DSTEP / 2; x < w; x += DSTEP) if (px[(Math.floor(y) * w + Math.floor(x)) * 4 + 3] > 110) { pts.push(x - w / 2, y - h / 2); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
       DIG.push(pts);
     }
+    DIGH = y1 - y0 + 2 * DOTR;
   }
-  function reelCellX(k) { return REELX + (k - 1.5) * (CELLW + GAPX); }
+  function reelCellX(k) { return (k - 1.5) * (CELLW + GAPX); }
   function drawReels() {
     if (!REEL.on || !DIG) return;
-    var t = Math.max(0, T - REEL.t0), appear = clamp((T - REEL.t0 + 0.25) / 0.45, 0, 1);
-    cx.setTransform(vs, 0, 0, vs, vox, voy);
-    var top = REELY - CELLH / 2 - 26, bot = REELY + CELLH / 2 + 26;
-    /* 릴 창 · 칸마다 아주 옅은 판 */
+    var t = Math.max(0, T - REEL.t0), appear = clamp((T - REEL.t0 + 0.25) / 0.45, 0, 1), s = LAY.s;
+    var top = -CELLH / 2 - 26, bot = CELLH / 2 + 26;
     cx.globalAlpha = appear;
-    cx.fillStyle = STG.base === "orange" && !STG.to ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)";
-    for (var k = 0; k < 4; k++) { var x0 = reelCellX(k) - CELLW / 2; rr(x0, top, CELLW, bot - top, 22); cx.fill(); }
-    for (k = 0; k < 4; k++) {
-      var p = reelPos(k, t), base = Math.floor(p), fr = p - base, sp = REEL.done[k] ? 0 : Math.abs(reelPos(k, t + 0.016) - p) / 0.016;
-      var cxk = reelCellX(k);
-      cx.save(); cx.beginPath(); cx.rect(cxk - CELLW / 2, top, CELLW, bot - top); cx.clip();
-      var stretch = clamp(sp * 0.45, 0, 6);       /* 빨리 돌면 점이 세로로 늘어난다(잔상) */
-      for (var j = -1; j <= 1; j++) {
-        var dgt = ((base + j) % 10 + 10) % 10, oy = REELY - (j - fr) * (CELLH + 30);
-        drawDigitDots(DIG[dgt], cxk, oy, stretch, top, bot);
+    REEL.cells.forEach(function (c, j) {
+      var L = LAY.cells[j];
+      cx.setTransform(vs * s, 0, 0, vs * s, vox + vs * L.x, voy + vs * L.y);
+      cx.fillStyle = STG.base === "orange" && !STG.to ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)";
+      if (REEL.cells.length > 1) { rr(-PANW / 2 - 14, top - 14, PANW + 28, bot - top + 28, 30); cx.fill(); }   /* 여러 명 · 칸 하나 = 판 하나(번호 넷이 한 묶음으로 읽힌다) */
+      else for (var k = 0; k < 4; k++) { rr(reelCellX(k) - CELLW / 2, top, CELLW, bot - top, 22); cx.fill(); }
+      for (k = 0; k < 4; k++) {
+        var p = reelPos(c, k, t), base = Math.floor(p), fr = p - base, sp = c.done[k] ? 0 : Math.abs(reelPos(c, k, t + 0.016) - p) / 0.016;
+        var cxk = reelCellX(k);
+        cx.save(); cx.beginPath(); cx.rect(cxk - CELLW / 2, top, CELLW, bot - top); cx.clip();
+        var stretch = clamp(sp * 0.45, 0, 6);     /* 빨리 돌면 점이 세로로 늘어난다(잔상) */
+        for (var jj = -1; jj <= 1; jj++) drawDigitDots(DIG[((base + jj) % 10 + 10) % 10], cxk, -(jj - fr) * (CELLH + 30), stretch, top, bot);
+        cx.restore();
       }
-      cx.restore();
-    }
+    });
     cx.globalAlpha = 1;
+  }
+  /* 등분 선 · 칸 사이 점선(움직이지 않는다) */
+  function drawDividers() {
+    if (!REEL.on || LAY.K < 2) return;
+    var al = clamp((T - REEL.t0 + 0.25) / 0.45, 0, 1) * 0.42, segs = [], y0 = 320, y1 = LAY.rows === 1 ? 860 : 900;
+    if (LAY.rows === 1) for (var j = 1; j < LAY.K; j++) { var x = (LAY.cells[j - 1].x + LAY.cells[j].x) / 2; segs.push([x, y0, x, y1]); }
+    else { segs.push([960, y0, 960, y1]); var ym = (LAY.cells[0].y + LAY.cells[LAY.K - 1].y) / 2 + 22; segs.push([180, ym, 1740, ym]); }
+    cx.setTransform(vs, 0, 0, vs, vox, voy); cx.globalAlpha = al; cx.fillStyle = "#fff"; cx.beginPath();
+    segs.forEach(function (sg) { var L = Math.hypot(sg[2] - sg[0], sg[3] - sg[1]), n = Math.floor(L / 18); for (var q = 0; q <= n; q++) { var x = sg[0] + (sg[2] - sg[0]) * q / n, y = sg[1] + (sg[3] - sg[1]) * q / n; cx.moveTo(x + 3, y); cx.arc(x, y, 3, 0, 6.2832); } });
+    cx.fill(); cx.globalAlpha = 1;
   }
   function drawDigitDots(pts, ox, oy, st, top, bot) {
     cx.fillStyle = "#fff"; cx.beginPath();
@@ -536,31 +606,35 @@
     cx.fill();
   }
   function rr(x, y, w, h, r) { cx.beginPath(); cx.moveTo(x + r, y); cx.arcTo(x + w, y, x + w, y + h, r); cx.arcTo(x + w, y + h, x, y + h, r); cx.arcTo(x, y + h, x, y, r); cx.arcTo(x, y, x + w, y, r); cx.closePath(); }
-  /* 날아오는 공 · 캡슐(위 색 · 아래 흰색) · 가운데에 서면 위아래로 갈라진다 */
+  /* 날아오는 공 · 캡슐(위 색 · 아래 흰색) · 칸에 서면 다 같이 위아래로 갈라진다 */
   function drawFlyBall() {
-    if (!(SC === "fly" || SC === "open" || SC === "reels")) return;
-    var tone = WIN.i >= 0 ? TONES[tone_[WIN.i]] : C.o, X = WIN.X, Y = WIN.Y, R = WIN.Rr, sep = 0, al = 1;
-    if (SC !== "fly") { var u = clamp((T - REEL.t0 + 0.25) / 0.55, 0, 1); sep = EIO(u) * 640; al = 1 - EIO(clamp(u * 1.4 - 0.3, 0, 1)); }
-    if (al <= 0.01) return;
-    cx.setTransform(vs, 0, 0, vs, vox, voy); cx.globalAlpha = al;
-    for (var half = 0; half < 2; half++) {
-      cx.save();
-      var oy = half ? sep : -sep;
-      cx.translate(X, Y + oy); cx.rotate(WIN.ang);
-      cx.beginPath(); cx.arc(0, 0, R, half ? 0 : Math.PI, half ? Math.PI : 6.2832); cx.closePath(); cx.clip();
-      cx.rotate(-WIN.ang);
-      cx.fillStyle = half ? "#F4F1EE" : tone; cx.fillRect(-R, -R, 2 * R, 2 * R);
-      var sh = cx.createRadialGradient(-R * 0.38, -R * 0.42 - oy * 0, R * 0.05, 0, 0, R * 1.05);
-      sh.addColorStop(0, "rgba(255,255,255,0.55)"); sh.addColorStop(0.3, "rgba(255,255,255,0.05)"); sh.addColorStop(0.78, "rgba(0,0,0,0.12)"); sh.addColorStop(1, "rgba(0,0,0,0.5)");
-      cx.fillStyle = sh; cx.fillRect(-R, -R, 2 * R, 2 * R);
-      cx.restore();
-    }
-    if (SC !== "fly" && sep > 0 && sep < 200) {     /* 갈라지는 순간 · 이음선에서 빛 한 줄 */
-      cx.globalAlpha = al * (1 - sep / 200); cx.fillStyle = "#fff"; cx.fillRect(X - R * 1.4, Y - 3 - sep * 0.1, R * 2.8, 6 + sep * 0.2);
-    }
-    if (SC === "fly") {                             /* 이음선 */
-      cx.globalAlpha = 1; cx.strokeStyle = "rgba(0,0,0,0.28)"; cx.lineWidth = Math.max(1.5, R * 0.05);
-      cx.beginPath(); cx.moveTo(X - Math.cos(WIN.ang) * R, Y - Math.sin(WIN.ang) * R); cx.lineTo(X + Math.cos(WIN.ang) * R, Y + Math.sin(WIN.ang) * R); cx.stroke();
+    if (!(SC === "exit" || SC === "fly" || SC === "open" || SC === "reels")) return;
+    var split = SC === "open" || SC === "reels", u = split ? clamp((T - REEL.t0 + 0.25) / 0.55, 0, 1) : 0;
+    for (var k = 0; k < WB.length; k++) {
+      var b = WB[k];
+      if (b.ph !== "fly" && b.ph !== "set") continue;
+      var tone = TONES[tone_[b.i]], X = b.X, Y = b.Y, R = b.Rr, sep = split ? EIO(u) * R * 2.6 : 0, al = split ? 1 - EIO(clamp(u * 1.4 - 0.3, 0, 1)) : 1;
+      if (al <= 0.01) continue;
+      cx.setTransform(vs, 0, 0, vs, vox, voy); cx.globalAlpha = al;
+      for (var half = 0; half < 2; half++) {
+        cx.save();
+        var oy = half ? sep : -sep;
+        cx.translate(X, Y + oy); cx.rotate(b.ang);
+        cx.beginPath(); cx.arc(0, 0, R, half ? 0 : Math.PI, half ? Math.PI : 6.2832); cx.closePath(); cx.clip();
+        cx.rotate(-b.ang);
+        cx.fillStyle = half ? "#F4F1EE" : tone; cx.fillRect(-R, -R, 2 * R, 2 * R);
+        var sh = cx.createRadialGradient(-R * 0.38, -R * 0.42, R * 0.05, 0, 0, R * 1.05);
+        sh.addColorStop(0, "rgba(255,255,255,0.55)"); sh.addColorStop(0.3, "rgba(255,255,255,0.05)"); sh.addColorStop(0.78, "rgba(0,0,0,0.12)"); sh.addColorStop(1, "rgba(0,0,0,0.5)");
+        cx.fillStyle = sh; cx.fillRect(-R, -R, 2 * R, 2 * R);
+        cx.restore();
+      }
+      if (split && sep > 0 && sep < R * 0.8) {     /* 갈라지는 순간 · 이음선에서 빛 한 줄 */
+        cx.globalAlpha = al * (1 - sep / (R * 0.8)); cx.fillStyle = "#fff"; cx.fillRect(X - R * 1.4, Y - 3 - sep * 0.1, R * 2.8, 6 + sep * 0.2);
+      }
+      if (!split) {                                 /* 이음선 */
+        cx.globalAlpha = 1; cx.strokeStyle = "rgba(0,0,0,0.28)"; cx.lineWidth = Math.max(1.5, R * 0.05);
+        cx.beginPath(); cx.moveTo(X - Math.cos(b.ang) * R, Y - Math.sin(b.ang) * R); cx.lineTo(X + Math.cos(b.ang) * R, Y + Math.sin(b.ang) * R); cx.stroke();
+      }
     }
     cx.globalAlpha = 1;
   }
@@ -570,7 +644,7 @@
     for (var k = 0; k < 380; k++) { var a = rng() * 6.2832, s = 300 + rng() * 1500; PT.push({ x: x, y: y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 300, life: 1.4 + rng() * 1.4, t: 0, r: 3 + rng() * 8, g: 800, d: 1.5 }); }
     ring(x, y, 72, 1500, 7, 1.0);
   }
-  function ring(x, y, n, sp, r, life) { for (var k = 0; k < n; k++) { var a = k / n * 6.2832; PT.push({ x: x + Math.cos(a) * 200, y: y + Math.sin(a) * 200, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: life, t: 0, r: r, g: 0, d: 2.2 }); } }
+  function ring(x, y, n, sp, r, life, r0) { r0 = r0 == null ? 200 : r0; for (var k = 0; k < n; k++) { var a = k / n * 6.2832; PT.push({ x: x + Math.cos(a) * r0, y: y + Math.sin(a) * r0, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: life, t: 0, r: r, g: 0, d: 2.2 }); } }
   function stepParticles(dt) {
     for (var k = PT.length - 1; k >= 0; k--) { var p = PT[k]; p.t += dt; if (p.t >= p.life) { PT.splice(k, 1); continue; } var dm = Math.exp(-p.d * dt); p.vx *= dm; p.vy = p.vy * dm + p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; }
   }
@@ -598,14 +672,20 @@
     for (var k = ws.length; k < r.count; k++) h += '<span class="dim">····</span>';
     document.getElementById("sNos").innerHTML = h;
   }
+  /* 공개 글자 · 경품 줄은 등분 위에 하나 · 확인 표시는 칸마다(칸 아래) */
+  function okEl(j) { return document.getElementById("ok" + j); }
   function uiReveal() {
-    var r = ROUNDS[ST.round], n = roundWins(ST.round).length + 1;
-    setTxt("rEye", r.name + (r.count > 1 ? " · " + n + "번째" : ""));
-    document.getElementById("rPrize").style.opacity = 0; document.getElementById("rOk").style.opacity = 0;
-    fadeEl("rv", 1, 0.4);
+    var r = ROUNDS[ST.round], K = WB.length, h = "";
+    setTxt("pTxt", r.name + " · " + r.prize + (K > 1 ? " · " + K + "명" : ""));
+    picInto("pPic", "pImg", r);
+    document.getElementById("rLab").style.top = (LAY.rows === 1 ? 262 : 250) + "px";
+    for (var j = 0; j < K; j++) { var c = LAY.cells[j]; h += '<p class="okc' + (LAY.rows > 1 ? " sm" : "") + '" id="ok' + j + '" style="left:' + c.x + "px;top:" + c.okY + 'px"><span class="ck"></span><b>당첨자 확인 대기</b><span class="dots"><i></i><i></i><i></i></span></p>'; }
+    document.getElementById("okWrap").innerHTML = h;
+    document.getElementById("rPrize").style.opacity = 0;
+    fadeEl("rv", 1, 0.4); fadeEl("rPrize", 1, 0.5);
   }
   function uiHelp() {
-    var m = { spin: "Space · 뽑기", slow: "감속 중", settle: "정지", gate: "출구 열림", fly: "공 나옴", open: "번호", reels: "번호", done: "Space · 확정 → 다시 섞기  ·  C 확인 흉내" };
+    var m = { spin: "Space · 뽑기", slow: "감속 중", settle: "정지", exit: "공 나오는 중", fly: "공 나옴", open: "번호", reels: "번호", done: "Space · 확정 → 다시 섞기  ·  C 확인 흉내" };
     setTxt("hNow", m[SC] || "");
   }
 
@@ -629,6 +709,7 @@
     drawDrum();
     drawFlyBall();
     drawParticles();
+    drawDividers();
     drawReels();   /* 번호가 늘 맨 위(점 팡이 번호를 가리지 않는다) */
   }
   function loop(now) {
@@ -640,7 +721,7 @@
   function onKey(e) {
     var k = e.key;
     if (k === " " || k === "Spacebar" || k === "ArrowRight" || k === "PageDown") { e.preventDefault(); press(); }
-    else if (k === "c" || k === "C") confirmOk();
+    else if (k === "c" || k === "C") confirmOk();   /* 아직 확인 안 된 칸 중 왼쪽부터 */
     else if (k === "n" || k === "N") { if (SC === "spin") nextRound(); }
     else if (k === "m" || k === "M") { SFX.ensure(); SFX.mute(SFX.on); }
     else if (k === "f" || k === "F") { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function () {}); else document.exitFullscreen(); }
@@ -652,6 +733,7 @@
     step: function (n, dt) { for (var i = 0; i < n; i++) update(dt || 1 / 30); render(); return -1; },
     key: function (k) { onKey({ key: k, preventDefault: function () {} }); },
     scene: function () { return SC; },
+    info: function () { return { K: LAY.K, s: LAY.s, digitPx: Math.round(DIGH * LAY.s), pct: +(DIGH * LAY.s / 10.8).toFixed(1) }; },
     t: function () { return T; },
     audio: function (dur) {
       return SFX.render(SFX.log, dur).then(function (buf) {
@@ -670,10 +752,11 @@
     document.getElementById("wm").innerHTML = window.AXF_WORDMARK || "AX Festival 2026";
     if (HUD) document.body.classList.add("hud-on");
     if (REC) { SFX.log = []; SFX.clock = function () { return T; }; }
-    initBalls(NT);
+    initBalls(Math.max(NT, MINB));
     resize();
     window.addEventListener("resize", resize);
     window.addEventListener("keydown", onKey);
+    document.getElementById("demoBtns").addEventListener("click", function (e) { var b = e.target.closest("button"); if (!b) return; SFX.ensure(); var j = +b.dataset.j; if (OKS[j] === 2) unconfirm(j); else confirmOk(j); });
     uiSide(); uiHelp();
     DRM.w = WMIX; DRM.mode = "spin";
     for (var k = 0; k < 120; k++) { update(1 / 60); }   /* 처음부터 섞이는 중인 통 */

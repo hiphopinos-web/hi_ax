@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex">
 <!-- 261008 기획 데모 · 럭키드로우 추첨기 재설계(믹서 드럼 · 감속 · 캡슐 · 번호 릴) · 운영 화면 draw/index.html 은 그대로 둔다
      가짜 행운권만 쓴다(서버 호출 없음) · 키: Space 다음 · C 당첨자 확인(흉내) · N 다음 등수 · M 소리 · F 전체 화면 · H 키 안내
-     주소 인자: ?n=300 가짜 행운권 장수 · ?hud=1 프레임 수 · ?confirm=0 확인 흉내 끔 · ?rec=1 녹화(프레임 단위 진행) -->
+     주소 인자: ?n=300 가짜 행운권 장수 · ?multi=4 6등 인원 바꾸기(두 줄 배치 시험) · ?minb=120 통에 대표 공 최소 수 · ?hud=1 프레임 수 · ?confirm=0 확인 흉내 끔 · ?rec=1 녹화(프레임 단위 진행) -->
 <link rel="icon" href="../icons/icon-192.png">
 <style>
   @font-face { font-family: "AXP"; src: url("assets/PretendardVariable.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
@@ -47,21 +47,28 @@
 
   /* 공개 · 번호 릴은 캔버스 · 글자는 위 · 아래 고정 자리 */
   #rv { position: absolute; inset: 0; opacity: 0; }
-  #rEye { position: absolute; left: 0; right: 0; top: 150px; text-align: center; font-size: 46px; font-weight: 700; color: #fff; }
-  #rLab { position: absolute; left: 0; right: 0; top: 216px; text-align: center; font-size: 30px; font-weight: 500; color: rgba(255,255,255,.82); }
-  #rPrize { position: absolute; left: 160px; right: 160px; top: 772px; display: flex; align-items: center; justify-content: center; gap: 30px; opacity: 0; }
-  #pPic { width: 132px; height: 132px; flex: none; border-radius: 50%; background: #fff; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 6px rgba(255,255,255,.3); }
-  #pTxt { font-size: 54px; line-height: 1.2; font-weight: 700; color: #fff; }
-  #rOk { position: absolute; left: 0; right: 0; top: 946px; display: flex; align-items: center; justify-content: center; gap: 16px; font-size: 38px; font-weight: 700; color: #fff; opacity: 0; }
-  #rOk .dots { display: inline-flex; gap: 10px; }
-  #rOk .dots i { width: 12px; height: 12px; border-radius: 50%; background: #fff; opacity: .3; animation: okd 1.2s ease-in-out infinite; }
-  #rOk .dots i:nth-child(2) { animation-delay: .2s; } #rOk .dots i:nth-child(3) { animation-delay: .4s; }
+  #rPrize { position: absolute; left: 160px; right: 160px; top: 118px; display: flex; align-items: center; justify-content: center; gap: 26px; opacity: 0; }
+  #pPic { width: 110px; height: 110px; flex: none; border-radius: 50%; background: #fff; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 6px rgba(255,255,255,.3); }
+  #pTxt { font-size: 52px; line-height: 1.2; font-weight: 700; color: #fff; }
+  #rLab { position: absolute; left: 0; right: 0; top: 262px; text-align: center; font-size: 30px; font-weight: 500; color: rgba(255,255,255,.82); }
+  /* 칸마다 확인 표시 · 칸 가운데 아래 */
+  .okc { position: absolute; transform: translateX(-50%); display: flex; align-items: center; gap: 14px; white-space: nowrap; font-size: 36px; font-weight: 700; color: #fff; opacity: 0; }
+  .okc.sm { font-size: 28px; gap: 10px; }
+  .okc .dots { display: inline-flex; gap: 8px; }
+  .okc .dots i { width: 10px; height: 10px; border-radius: 50%; background: #fff; opacity: .3; animation: okd 1.2s ease-in-out infinite; }
+  .okc .dots i:nth-child(2) { animation-delay: .2s; } .okc .dots i:nth-child(3) { animation-delay: .4s; }
   @keyframes okd { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
-  #rOk.done .dots { display: none; }
-  #rOk .ck { display: none; width: 46px; height: 46px; border-radius: 50%; background: #fff; position: relative; }
-  #rOk .ck::after { content: ""; position: absolute; left: 15px; top: 9px; width: 11px; height: 21px; border: solid var(--o); border-width: 0 6px 6px 0; transform: rotate(45deg); }
-  #rOk.done .ck { display: inline-block; }
+  .okc.done .dots { display: none; }
+  .okc .ck { display: none; width: 44px; height: 44px; border-radius: 50%; background: #fff; position: relative; flex: none; }
+  .okc.sm .ck { width: 34px; height: 34px; }
+  .okc .ck::after { content: ""; position: absolute; left: 34%; top: 16%; width: 22%; height: 46%; border: solid var(--o); border-width: 0 5px 5px 0; transform: rotate(45deg); }
+  .okc.done .ck { display: inline-block; }
 
+  /* 데모 상태 단추(무대 화면 데모 전용 · 운영에 없음) · 공개 장면에서만 보인다 */
+  #demoBtns { position: absolute; right: 40px; bottom: 30px; display: none; align-items: center; gap: 10px; pointer-events: auto; cursor: auto; z-index: 5; }
+  #demoBtns span { font-size: 18px; font-weight: 600; color: rgba(255,255,255,.75); margin-right: 4px; }
+  #demoBtns button { font-family: var(--f); font-size: 18px; font-weight: 600; height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,.5); background: rgba(0,0,0,.18); color: #fff; cursor: pointer; }
+  #demoBtns button.on { background: #fff; color: #A63D00; border-color: #fff; }
   #demoMark { position: absolute; left: 120px; bottom: 44px; font-size: 22px; font-weight: 600; color: var(--faint); letter-spacing: .02em; }
   #hud { position: absolute; left: 120px; bottom: 80px; font-size: 22px; color: #9f9; font-family: Consolas, monospace; display: none; }
   body.hud-on #hud { display: block; }
@@ -83,17 +90,17 @@
   </section>
 
   <section id="rv">
-    <p id="rEye"></p>
-    <p id="rLab">행운권 번호</p>
     <div id="rPrize"><span id="pPic"><img id="pImg" alt="" decoding="async"></span><p id="pTxt"></p></div>
-    <p id="rOk"><span class="ck"></span><span id="rOkT">당첨자 확인 중</span><span class="dots"><i></i><i></i><i></i></span></p>
+    <p id="rLab">행운권 번호</p>
+    <div id="okWrap"></div>
   </section>
 
   <div id="demoMark">DEMO · 가짜 행운권 · 추첨기 재설계 시안</div>
+  <div id="demoBtns"></div>
   <div id="hud"></div>
   <div id="help"><p class="now" id="hNow"></p>
     <p><b>Space</b>다음(뽑기 · 확정)</p>
-    <p><b>C</b>당첨자 확인(앱 응답 흉내)</p>
+    <p><b>C</b>당첨자 확인(앱 응답 흉내 · 1번 칸부터 · 화면 오른쪽 아래 단추로도)</p>
     <p><b>N</b>다음 등수</p>
     <p><b>M · F · H</b>소리 · 전체 화면 · 이 안내</p>
   </div>
