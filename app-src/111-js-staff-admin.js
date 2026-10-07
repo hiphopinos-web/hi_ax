@@ -5,14 +5,14 @@
 /* v4.71 (260930 사용자 결정) 폰 관리자 모드 = 「QR 스캔」 · 「혼잡 제보」 두 개만 · 크고 쉽게.
  * 옛 「혼잡도」(층 · 존 3단 · admZoneHtml)와 「담당 명단」(admListHtml)은 코드를 두고 진입만 뺐다(명단 · 노쇼 표시는 콘솔 신청 › 담당 명단).
  * 등급코드(role grade)로 들어오면 혼잡 제보만 보인다(서버도 다른 액션을 auth 로 막는다). */
-var ADM_TABS = [["scan", "QR 스캔"], ["crowd", "혼잡 제보"]];
+var ADM_TABS = [["scan", "QR 스캔"]];   /* 261008 「혼잡 제보」 탭 진입 뺌(admCrowdHtml 코드는 남김) · 지금 현장 제보 = 홈 칸 · 스캔 화면 「줄」(cnSheet) */
 function admTab(t) { scanStop(); S.set("adm_tab", t); App.render(); window.scrollTo(0, 0); }
 function admHtml() {
   var grade = admRole() === "grade";
   var tab = grade ? "crowd" : S.get("adm_tab", "scan");
-  var fn = { scan: admScanHtml, crowd: admCrowdHtml };
+  var fn = { scan: admScanHtml, crowd: cnAdmNote };   /* 261008 등급 담당 = 홈 칸 안내 */
   if (!fn[tab]) tab = "scan";
-  var seg = grade ? '<p class="ax-meta">등급 담당 · 혼잡 제보만 할 수 있어요</p>' :
+  var seg = grade ? '<p class="ax-meta">등급 담당 · 지금 현장 제보만 할 수 있어요</p>' : ADM_TABS.length < 2 ? "" :
     '<div class="axs-seg axs-admseg" role="tablist" aria-label="관리자 기능">' + ADM_TABS.map(function (t) {
       return '<button type="button" role="tab" aria-selected="' + (tab === t[0]) + '" onclick="admTab(\'' + t[0] + '\')">' + t[1] + "</button>";
     }).join("") + "</div>";
@@ -124,7 +124,9 @@ function sscCodeGo() {
   admVerify(v, function (role) {
     undo(); modalClose();
     S.set("admin_authed", true);
-    if (role === "grade") { toast("이 코드로는 혼잡 제보만 할 수 있어요"); App.go("admin"); return; }
+    var then = SSC_CK.then; SSC_CK.then = null;
+    if (then) { then(); return; }   /* 261008 지금 현장 칸에서 연 코드 창 · 넣은 뒤 그 입력 시트로 */
+    if (role === "grade") { toast("이 코드로는 지금 현장 제보만 할 수 있어요"); App.go("home"); return; }
     App.go("sscan");
   }, undefined, undefined, undo);
 }
@@ -158,13 +160,14 @@ function sscBandHtml() {
   return '<div class="ssc-band' + (b ? " c-" + b.c : "") + '" id="sscBand" role="status" aria-live="assertive"' + (b ? "" : " hidden") + ">" + (b ? "<b>" + esc(b.t) + "</b>" + (b.s ? "<span>" + esc(b.s) + "</span>" : "") : "") + "</div>";
 }
 function sscBandPaint() { var n = el("sscBand"); if (n) n.outerHTML = sscBandHtml(); }
-function sscOpen() { if (!staffOn()) { sscCodeAsk(); return; } if (sscSndOn()) sfxUnlock(); App.go("sscan"); }   /* v6.00 명단 사번 · 이 폰에서 아직 코드를 안 넣었으면 한 번 */
+function sscOpen() { SSC_CK.then = null; if (!staffOn()) { sscCodeAsk(); return; } if (sscSndOn()) sfxUnlock(); App.go("sscan"); }   /* v6.00 명단 사번 · 이 폰에서 아직 코드를 안 넣었으면 한 번 */
 function sscClose() { App.back(); }
 function sscMine() { qrPanelOpen("mine"); }
 function sscHtml() {
   var sp = scanSpot(SCAN.spot), w = sp ? scanWhat(sp) : "";
   var top = '<div class="ssc-top"><button type="button" class="ssc-ib" onclick="sscClose()" aria-label="닫기">' + X_SVG + "</button>" +
     '<button type="button" class="ssc-spot" onclick="sscSheet()"><span>자리</span><b>' + esc(sp ? sscSpotLb(sp) : "자리를 골라 주세요") + "</b></button>" +
+    sscCnBtn(sp) +   /* 261008 룰렛 · AX PLAY 자리 = 「줄」(지금 현장 입력 시트) */
     '<p class="ssc-n"><span>오늘</span><b id="sscN">' + sscCnt() + "</b></p>" +
     '<button type="button" class="ssc-ib" onclick="sscSheet()" aria-label="자리 · 설정">' + GEAR_SVG + "</button></div>";
   var warn = BE.on ? "" : '<div class="axs-err" role="alert"><b>서버에 연결되지 않았어요</b><span>이 상태로 찍으면 기록되지 않아요</span></div>';
@@ -257,7 +260,7 @@ function crowdJam(k) { var c = crowdGet(), x = c && c[k]; return x && x.at > 0 &
 function crowdStore(c) {
   if (!c || typeof c !== "object") return;
   var h = c.h && typeof c.h === "object" && c.h.id ? { id: String(c.h.id), n: Number(c.h.n) || 0, lv: String(c.h.lv || ""), seats: Number(c.h.seats) || 0 } : 0;   /* v5.68 17F 대강당 = 현장 입장 수 ÷ 좌석(서버 hallNow_ · 강의 시간 창 안에서만 · 옛 서버는 없음) */
-  var v = { l: c.l || 0, e: c.e || 0, p: String(c.p || ""), w: String(c.w || ""), st: c.st ? 1 : 0, h: h };
+  var v = { l: c.l || 0, e: c.e || 0, p: String(c.p || ""), w: String(c.w || ""), st: c.st ? 1 : 0, h: h, n: c.n && typeof c.n === "object" ? c.n : 0 };   /* 261008 지금 현장(n) */
   if (JSON.stringify(v) !== JSON.stringify(crowdGet())) S.set("crowd", v);
 }
 function crowdWin(s) { return String(s || "").replace("-", "~"); }
@@ -295,6 +298,125 @@ function crowdSend(t, a) {
     toast(crowdName(t) + " · " + ({ jam: "혼잡", re: "재확인", clear: "해소" })[a]);
     App.render();
   }, function () { CRW.busy = ""; toast("전송 실패 · 다시 눌러주세요"); App.render(); });
+}
+/* ════════ 261008 「지금 현장」 스태프 제보 (사용자 결정 261008 · 기획 `디자인 시안/혼잡도 재설계 261008/기획안.md` 6장) ════════
+ * 진입 = 홈 2×2 칸(앱 스태프 명단 사번 · staffBtn) · 스캔 화면 자리 칩 옆 「줄」(룰렛 · AX PLAY 자리) · 관리자 모드로 또 들어가지 않는다
+ *   이 폰에서 코드를 아직 안 넣었으면 처음 한 번만(sscCodeAsk · 이어서 이 시트) · 등급코드 · 관리코드 · 사람 토큰 모두 된다(서버 gradeAuth_)
+ * 시트 = 숫자 5단추(룰렛 · 포토부스 0 · 5 · 10 · 15 · 20+ / AX PLAY 0 · 2 · 4 · 6 · 8+) · 17F = 5단계 세로 한 줄(엄지 · 단계마다 보고 누르는 기준 작은 글씨)
+ *   누르는 순간 저장(확인 단추 없음 · crowd_rep set) · 시트가 닫히고 5초 「저장됨 · 되돌리기」 · 시트 안 「되돌리기」(2분 안) | 「자동으로」(제보 지움)
+ *   전송 실패 = 「전송 실패 · 다시 눌러주세요」 · 자동 재전송 없음(늦게 닿은 값이 되살아나지 않게)
+ * 처리 시간 재기(룰렛 · 포토부스 · AX PLAY) = 「시작」 → 시트가 닫혀도 아래 칩 「재는 중 · 12초 · 끝」 → 「끝」 = crowd_cal 한 건(5초 미만 · 300초 넘음은 버린다) */
+var CN_NM = { r: "1F 룰렛", p: "1F 포토부스", a: "1F AX PLAY", h: "17F 대강당" };
+var CN_VS = { r: [0, 5, 10, 15, 20], p: [0, 5, 10, 15, 20], a: [0, 2, 4, 6, 8] };
+var CN_HSTD = ["", "30% 이하", "절반쯤", "70%쯤", "90%쯤 · 띄엄띄엄 빈자리", "빈자리 없음 · 서서 듣는 사람"];
+var CNS = { k: "", busy: false, ut: {}, last: {}, sw: null, swT: null, undoT: null };
+function cnNow() { return Date.now() + (typeof sesOff === "function" ? sesOff() : 0); }
+function cnAuthed() { return !!(admTok() || admKey()); }
+function cnSheet(k) {
+  if (!CN_NM[k]) return;
+  if (!BE.on) { toast("서버에 연결되지 않아 기록되지 않아요"); return; }
+  if (!cnAuthed()) { SSC_CK.then = function () { cnSheet(k); }; sscCodeAsk(); return; }
+  CNS.k = k;
+  sheetOpen(cnSpec(k));
+}
+function cnSpec(k) { return { id: "cn", title: k === "h" ? "17F 대강당 · 자리" : k === "a" ? "1F AX PLAY · 기다리는 사람" : CN_NM[k] + " · 줄 몇 명?", body: cnBody(k), noGo: true }; }
+function cnRepaint() { if (SHEET.id === "cn" && SHEET.spec && el("axsSheet")) { SHEET.spec.body = cnBody(CNS.k); sheetPaint(); } }
+function cnBody(k) {
+  var x = cnCell(k), n = cnGet() || {}, now = cnNow(), ut = CNS.ut[k] > now, dis = CNS.busy ? " disabled" : "";
+  var cur = x.cls === " none" ? "정보 없음" : x.st + (x.sub ? " · " + x.sub : "");
+  var head = '<p class="cn-now">지금 <b>' + esc(cur) + "</b></p>";
+  var pad;
+  if (k === "h") {
+    pad = '<div class="cn-lv" role="group" aria-label="17F 대강당 자리">' + [1, 2, 3, 4, 5].map(function (v) {
+      return '<button type="button" class="cn-lv' + v + '"' + dis + ' onclick="cnSend(\'h\', ' + v + ')"><b>' + CN_HLV[v] + "</b><span>" + CN_HSTD[v] + "</span></button>";
+    }).join("") + "</div>";
+  } else {
+    pad = '<div class="cn-num" role="group" aria-label="' + CN_NM[k] + (k === "a" ? " 기다리는 사람" : " 줄 인원") + '">' + CN_VS[k].map(function (v, i) {
+      return '<button type="button"' + dis + ' onclick="cnSend(\'' + k + '\', ' + v + ')">' + v + (i === 4 ? "+" : "") + "</button>";
+    }).join("") + "</div>";
+  }
+  var lr = CNS.last[k], sx = n[k] && typeof n[k] === "object" ? n[k] : null;
+  var who = lr && lr.at > now - 900000 ? "제보 " + crowdHm(lr.at) + " · " + lr.txt : !sx ? "제보 없음" : sx.s === "q" ? "입장 QR 하한 · 제보 없음" : sx.s === "a" ? "룰렛 스캔 기록 · 자동" : "제보 " + crowdHm(sx.at);
+  var foot = '<div class="cn-row"><span>' + esc(who) + "</span>" +
+    (ut ? '<button type="button"' + dis + ' onclick="cnUndo(\'' + k + '\')">되돌리기</button>' : '<button type="button"' + dis + ' onclick="cnAuto(\'' + k + '\')">자동으로</button>') + "</div>";
+  var sw = "";
+  if (k !== "h") {
+    var c = n.cal && n.cal[k], run = CNS.sw && CNS.sw.k === k;
+    sw = '<div class="cn-row"><span>처리 시간 ' + (c ? c[0] + "초 · 오늘 재기 " + c[1] : "사전값") + "</span></div>" +
+      '<button type="button" class="cn-swgo' + (run ? " rec" : "") + '" onclick="' + (run ? "cnSwEnd()" : "cnSwStart('" + k + "')") + '">' + (run ? "끝 · " + cnSwSec() + "초" : "시간 재기 시작") + "</button>";
+  }
+  return head + pad + foot + sw;
+}
+function cnValTxt(k, v) { return k === "h" ? CN_HLV[v] : (k === "a" ? "기다림 " : "줄 ") + v + (v === CN_VS[k][4] ? "+" : "") + "명"; }
+function cnCall(q, ok) {
+  if (CNS.busy) return;
+  CNS.busy = true; cnRepaint();
+  beCall(admA(q), function (res) {
+    CNS.busy = false;
+    if (res && res.reason === "auth") { sheetClose(true); admAuthLost(); return; }
+    if (!res || !res.ok) {
+      toast(res && res.reason === "locked" ? admLockedMsg(res) : res && res.reason === "late" ? "되돌릴 수 있는 시간이 지났어요" : res && /unknown action/.test(String(res.err || "")) ? "이 서버는 아직 지금 현장 제보를 받지 않아요" : "전송 실패 · 다시 눌러주세요");
+      if (res && res.crowd) crowdStore(res.crowd);
+      cnRepaint(); return;
+    }
+    if (res.crowd) crowdStore(res.crowd);
+    ok(res);
+  }, function () { CNS.busy = false; toast("전송 실패 · 다시 눌러주세요"); cnRepaint(); });
+}
+function cnSend(k, v) {
+  cnCall({ action: "crowd_rep", tgt: k, v: v, op: "set" }, function (res) {
+    var now = cnNow();
+    CNS.ut[k] = res.ut || now + 120000; CNS.last[k] = { at: now, txt: cnValTxt(k, v) };
+    sheetClose(true);
+    cnUndoBar(k, CN_NM[k] + " · " + cnValTxt(k, v) + " · 저장됨");
+  });
+}
+function cnUndo(k) {
+  cnCall({ action: "crowd_rep", tgt: k, op: "undo" }, function () { CNS.ut[k] = 0; CNS.last[k] = null; cnUndoBarOff(); toast(CN_NM[k] + " · 되돌렸어요"); cnRepaint(); });
+}
+function cnAuto(k) {
+  cnCall({ action: "crowd_rep", tgt: k, op: "auto" }, function (res) { CNS.ut[k] = res.ut || cnNow() + 120000; CNS.last[k] = null; toast(CN_NM[k] + " · 자동으로"); cnRepaint(); });
+}
+/* 저장 직후 5초 · 화면 아래 한 줄 + 「되돌리기」 */
+function cnUndoBar(k, msg) {
+  cnUndoBarOff();
+  var b = document.createElement("div");
+  b.id = "cnUndo"; b.className = "cn-undo"; b.setAttribute("role", "status");
+  b.innerHTML = "<span>" + esc(msg) + '</span><button type="button" onclick="cnUndo(\'' + k + '\')">되돌리기</button>';
+  el("frame").appendChild(b);
+  CNS.undoT = setTimeout(cnUndoBarOff, 5000);
+}
+function cnUndoBarOff() { if (CNS.undoT) { clearTimeout(CNS.undoT); CNS.undoT = null; } var b = el("cnUndo"); if (b && b.parentNode) b.parentNode.removeChild(b); }
+/* 처리 시간 재기 · 시작 → 떠 있는 칩 → 끝 */
+function cnSwSec() { return CNS.sw ? Math.max(0, Math.round((Date.now() - CNS.sw.t0) / 1000)) : 0; }
+function cnSwStart(k) {
+  CNS.sw = { k: k, t0: Date.now() };
+  sheetClose(true);
+  cnSwPaint();
+  if (CNS.swT) clearInterval(CNS.swT);
+  CNS.swT = setInterval(cnSwPaint, 1000);
+}
+function cnSwPaint() {
+  var c = el("cnSw");
+  if (!CNS.sw) { if (c && c.parentNode) c.parentNode.removeChild(c); return; }
+  if (!c) { c = document.createElement("div"); c.id = "cnSw"; c.className = "cn-sw"; c.setAttribute("role", "status"); el("frame").appendChild(c); }
+  c.innerHTML = "<span>" + esc(CN_NM[CNS.sw.k]) + " · 재는 중 <b>" + cnSwSec() + '초</b></span><button type="button" class="x" onclick="cnSwStop()" aria-label="재기 취소">' + X_SVG + '</button><button type="button" class="go" onclick="cnSwEnd()">끝</button>';
+  if (SHEET.id === "cn") cnRepaint();
+}
+function cnSwStop() { if (CNS.swT) clearInterval(CNS.swT); CNS.swT = null; CNS.sw = null; cnSwPaint(); cnRepaint(); }
+function cnSwEnd() {
+  if (!CNS.sw) return;
+  var k = CNS.sw.k, sec = cnSwSec();
+  cnSwStop();
+  if (sec < 5 || sec > 300) { toast("5초 ~ 300초만 기록해요 · 다시 재 주세요"); return; }
+  cnCall({ action: "crowd_cal", tgt: k, sec: sec }, function (res) { toast(CN_NM[k] + " · " + sec + "초 기록 · 오늘 " + ((res.cal && res.cal.k) || 1) + "건"); cnRepaint(); });
+}
+function cnAdmNote() { return '<section class="ax-card ax-stack-tight axs-gap12"><h2 class="ax-card-title">지금 현장 제보</h2><p class="ax-meta">홈 「지금 현장」 칸을 눌러 제보해요</p><button type="button" class="ax-button" onclick="App.go(\'home\')">홈으로</button></section>'; }
+function sscCnBtn(sp) {
+  var k = sp && sp.id === "roulette" ? "r" : sp && sp.id === "p2" ? "a" : "";
+  if (!k) return "";
+  var n = cnGet() || {}, dot = String(n.dot || "").indexOf(k) >= 0;
+  return '<button type="button" class="ssc-q" onclick="cnSheet(\'' + k + '\')" aria-label="' + CN_NM[k] + ' 줄 제보">줄' + (dot ? '<i class="cn-dot" aria-hidden="true"></i>' : "") + "</button>";
 }
 
 

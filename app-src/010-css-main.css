@@ -724,6 +724,53 @@
   .cstrip2 .cc.pred .st { font: var(--ax-type-t6-strong); color: var(--ax-color-brandText); }
   /* v4.73 (260930 사용자 결정) 엘리베이터 혼잡 + 계단 스위치 ON 이면 칸 자체가 계단 스탬프 화면으로 가는 버튼 · 「계단 이용」 + 셰브론 한 줄 */
   .cstrip2 button.cc { display: block; width: 100%; border: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+  /* 261008 지금 현장 2×2 · 칸 = 이름 · 상태 · 짧은 말 · 색 사다리(여유 흰 면 → 보통 brandSoft → 붐빔 brand 28% → 거의 만석 · 혼잡 errorSoft → 만석 error 면 + 흰 글자) · 새 토큰 없음 */
+  .cstrip2.cn4 .cc { position: relative; min-width: 0; padding: 10px 14px; }
+  .cstrip2.cn4 .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cstrip2.cn4 .st { margin: 2px 0 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .cstrip2.cn4 .sb { margin: 0; color: var(--ax-color-body); overflow: hidden; text-overflow: ellipsis; }
+  .cstrip2.cn4 .cc.none .st { font: var(--ax-type-t7); color: var(--ax-color-muted); }
+  .cstrip2.cn4 .cc.busy { background: color-mix(in srgb, var(--ax-color-brand) 28%, var(--ax-color-surface)); }
+  .cstrip2.cn4 .cc.busy .st { color: var(--ax-color-brandText); }
+  .cstrip2.cn4 .cc.full { background: var(--ax-color-error); }
+  .cstrip2.cn4 .cc.full :is(.nm, .st, .sb) { color: var(--ax-color-inverse); }
+  .cn-dot { position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; border-radius: var(--ax-radius-999); background: var(--ax-color-brand); box-shadow: 0 0 0 2px var(--ax-color-surface); }
+  #view[data-v="home"] .sect span.cn-t, #view[data-v="home"] .sect span.cn-st { min-height: 0; font: var(--ax-type-caption); color: var(--ax-color-muted); }
+  #view[data-v="home"] .sect span.cn-st { font-weight: 700; color: var(--ax-color-brandText); }
+  /* 261008 홈 스탬프 블록 여백만 줄인다(내용 · 보상 단계 · 6칸 그대로 · 사용자 「스탬프가 첫 화면에 · 필요하면 조정」) */
+  #view[data-v="home"] .axs-railgo { gap: var(--ax-space-4); margin-top: calc(var(--ax-space-8) * -1); }
+  #view[data-v="home"] .axs-railgo .sect span { min-height: 32px; }
+  #view[data-v="home"] .axs-railgo .rail { padding: var(--ax-space-12) var(--ax-space-20); }
+  #view[data-v="home"] .axs-railgo .axs-pzgo { min-height: 44px; margin-top: var(--ax-space-8); padding-top: var(--ax-space-4); padding-bottom: var(--ax-space-4); }
+  /* 261008 지금 현장 스태프 입력 시트 · 저장됨 · 재는 중 띠 · 스캔 화면 「줄」 */
+  .cn-now { margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); }
+  .cn-now b { font-weight: 600; color: var(--ax-color-ink); }
+  .cn-num { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--ax-space-8); margin-top: var(--ax-space-16); }
+  .cn-num button { min-height: 64px; border: 0; border-radius: var(--ax-radius-16); background: var(--ax-color-surface); box-shadow: inset 0 0 0 1px var(--ax-color-divider); font: var(--ax-type-t3); color: var(--ax-color-ink); cursor: pointer; touch-action: manipulation; }
+  .cn-lv { display: flex; flex-direction: column; gap: var(--ax-space-8); margin-top: var(--ax-space-16); }
+  .cn-lv button { display: flex; align-items: center; justify-content: space-between; gap: var(--ax-space-12); min-height: 56px; padding: 0 var(--ax-space-16); border: 0; border-radius: var(--ax-radius-16); background: var(--ax-color-surface); box-shadow: inset 0 0 0 1px var(--ax-color-divider); text-align: left; cursor: pointer; touch-action: manipulation; }
+  .cn-lv b { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
+  .cn-lv span { font: var(--ax-type-caption); color: var(--ax-color-body); text-align: right; }
+  .cn-lv .cn-lv2 { background: var(--ax-color-brandSoft); box-shadow: none; }
+  .cn-lv .cn-lv3 { background: color-mix(in srgb, var(--ax-color-brand) 28%, var(--ax-color-surface)); box-shadow: none; }
+  .cn-lv .cn-lv4 { background: var(--ax-color-errorSoft); box-shadow: none; }
+  .cn-lv .cn-lv5 { background: var(--ax-color-error); box-shadow: none; }
+  .cn-lv .cn-lv5 :is(b, span) { color: var(--ax-color-inverse); }
+  .cn-num button:active, .cn-lv button:active { box-shadow: inset 0 0 0 3px var(--ax-color-brand); }
+  .cn-num button:disabled, .cn-lv button:disabled { opacity: 0.5; }
+  .cn-row { display: flex; align-items: center; justify-content: space-between; gap: var(--ax-space-12); min-height: 44px; margin-top: var(--ax-space-12); }
+  .cn-row span { min-width: 0; font: var(--ax-type-t7); color: var(--ax-color-muted); }
+  .cn-row button { flex: none; min-height: 44px; padding: 0 var(--ax-space-4); border: 0; background: none; font: var(--ax-type-t6-strong); color: var(--ax-color-brandText); cursor: pointer; }
+  .cn-swgo { width: 100%; min-height: 52px; margin-top: var(--ax-space-4); border: 0; border-radius: var(--ax-radius-16); background: var(--ax-color-brandSoft); font: var(--ax-type-t6-strong); color: var(--ax-color-brandText); cursor: pointer; }
+  .cn-swgo.rec { background: var(--ax-color-errorSoft); color: var(--ax-color-error); }
+  .cn-undo, .cn-sw { position: fixed; left: 50%; bottom: 104px; z-index: 95; display: flex; align-items: center; gap: var(--ax-space-8); width: min(420px, calc(100% - 32px)); padding: var(--ax-space-4) var(--ax-space-8) var(--ax-space-4) var(--ax-space-16); border-radius: var(--ax-radius-16); background: var(--ax-color-ink); color: var(--ax-color-inverse); font: var(--ax-type-t6); transform: translateX(-50%); }
+  .cn-undo span, .cn-sw span { flex: 1; min-width: 0; }
+  .cn-undo button { flex: none; min-height: 44px; padding: 0 var(--ax-space-8); border: 0; background: none; font: var(--ax-type-t6-strong); color: var(--ax-color-brand); cursor: pointer; }
+  .cn-sw .x { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 44px; height: 44px; border: 0; background: none; color: var(--ax-color-inverse); cursor: pointer; }
+  .cn-sw .x svg { width: 20px; height: 20px; }
+  .cn-sw .go { flex: none; min-height: 44px; padding: 0 var(--ax-space-16); border: 0; border-radius: var(--ax-radius-12); background: var(--ax-color-brand); font: var(--ax-type-t6-strong); color: var(--ax-color-onBrand); cursor: pointer; }
+  .ssc-q { position: relative; flex: none; min-height: 52px; padding: 0 var(--ax-space-16); border: 1px solid var(--ax-color-brand); border-radius: var(--ax-radius-16); background: rgba(255, 127, 50, 0.14); font: var(--ax-type-t5-strong); color: var(--ax-color-inverse); cursor: pointer; }
+  .ssc-q .cn-dot { top: 6px; right: 6px; box-shadow: none; }
   .cstrip2 .go { margin: var(--ax-space-4) 0 0; font: var(--ax-type-caption); font-weight: 700; color: var(--ax-color-brandText); white-space: nowrap; }
 /* v4.76 웹 푸시 · 혼잡 「풀리면 알림」 · 알림 안내 시트(예시 카드 · 작은 글씨 · 아이폰 단계) · 설정 › 알림 · 홈 화면 앱 첫 화면 카드
    v4.76d 클래스 이름을 axs-psteps · axs-psets · axs-pset 으로 나눴다(v4.76 이 기존 프로그램 행 axs-prow · 가이드 단계 axs-steps 와 같은 이름을 써서 프로그램 목록 행이 가운데로 몰렸다) */

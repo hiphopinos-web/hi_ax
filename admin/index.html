@@ -1431,7 +1431,7 @@ var NEED={
   /* v5.14 위계 개편 · 새 화면(옛 탭이 없는 것) */
   app:[{k:"sy",a:"sync",p:{emp:""}},{k:"pst",a:"push_stats"}],
   sign:[{k:"stats",a:"stats"}],
-  crowd:[{k:"crowd",a:"crowd_log"},{k:"cam",a:"crowd_cam_list"}],   /* 261003 카메라 계수(혼잡도 계수기 · 옛 서버는 「서버 미배포」 한 줄) */
+  crowd:[{k:"cnow",a:"crowd_now"},{k:"crowd",a:"crowd_log"},{k:"cam",a:"crowd_cam_list"}],   /* 261008 지금 현장(crowd_now) */   /* 261003 카메라 계수(혼잡도 계수기 · 옛 서버는 「서버 미배포」 한 줄) */
   test:[],
   sys:[{k:"sy",a:"sync",p:{emp:""}},{k:"stats",a:"stats"}],
   cfg:[],
@@ -4487,7 +4487,7 @@ function opsOn(m){
   if(m.k==="sched"){ clearTimeout(OPS_T.sched); OPS_T.sched=setTimeout(function(){ schPull(true); },300); }
   /* v4.76 알림 작업이 생기거나 끝남 → 알림 카드 · 이력 · 혼잡 제보가 바뀜 → 혼잡 카드(대시보드) · 안 보는 화면은 캐시만 버린다 */
   else if(m.k==="push"){ clearTimeout(OPS_T.push); OPS_T.push=setTimeout(function(){ if(ST.tab==="push"||ST.tab==="dash"||ST.tab==="notice") pushPull(); else { delete _cache[sig_("push_stats",{})]; delete _cache[sig_("push_hist",{n:50})]; } },300); }
-  else if(m.k==="crowd"){ if(ST.tab==="dash"||ST.tab==="crowd"){ clearTimeout(OPS_T.crowd); OPS_T.crowd=setTimeout(function(){ reload(["crowd"]); },300); } else delete _cache[sig_("crowd_log",{})]; }
+  else if(m.k==="crowd"){ if(ST.tab==="dash"||ST.tab==="crowd"){ clearTimeout(OPS_T.crowd); OPS_T.crowd=setTimeout(function(){ reload(ST.tab==="crowd"?["crowd","cnow"]:["crowd"]); },300); } else { delete _cache[sig_("crowd_log",{})]; delete _cache[sig_("crowd_now",{})]; } }   /* 261008 지금 현장도 */
   /* 261006 상담 · 커피챗 상태가 바뀜(앱 신청 · 취소 · 다른 콘솔) → 그 목록만 곧바로 다시 받는다 · 예전에는 5분 갱신을 기다려 승인 뒤 취소가 몇 분 동안 「승인」으로 남았다
      그 줄에 덮어 둔 처리 직후 값(ovr)은 버린다(서버가 바뀌었다고 알렸으니 · 덮기가 남으면 20초 동안 옛 값을 다시 그린다) */
   else if(m.k==="resv"||m.k==="cchat"){
@@ -6041,7 +6041,7 @@ var NAV=[
   { id:"f_ros", m:"fd", n:"담당 명단", parts:[P("apply","roster")] },
   { id:"f_pw", m:"fd", n:"PIN 분실 요청", parts:[P("acct","pw")] },
   { id:"f_stamp", m:"fd", n:"스탬프 부여 · 취소", parts:[P("stamp","one")] },
-  { id:"f_crowd", m:"fd", n:"혼잡 제보", parts:[P("crowd","","","viewCrowdTab")] },
+  { id:"f_crowd", m:"fd", n:"지금 현장", parts:[P("crowd","","","viewCrowdTab")] },   /* 261008 옛 「혼잡 제보」 */
   { id:"p_acct", m:"pp", n:"계정 목록", parts:[P("acct","list")] },
   { id:"p_one", m:"pp", n:"한 사람 관리", parts:[P("acct","one")] },
   { id:"p_test", m:"pp", n:"테스트 사번", sup:1, parts:[P("test","","","viewTest")] },
@@ -6349,8 +6349,70 @@ function camChip(){
   var lost=0, hot=0, chk=0; d.cams.forEach(function(c){ var a=camAge(c,d), on=a>=0&&a<(Number(d.stale)||60); if(!on) lost++; else { chk+=camChk(c,d); (c.z||[]).forEach(function(x){ if(x.s==="bad") hot++; }); } });
   return (chk?'<a href="#" onclick="go(\'f_crowd\');return false">'+tag("확인 요청 "+chk+"곳","warn")+'</a>':'')+(hot?'<a href="#" onclick="go(\'f_crowd\');return false">'+tag("카메라 혼잡 "+hot+"구역","bad")+'</a>':'')+(lost?'<a href="#" onclick="go(\'f_crowd\');return false">'+tag("카메라 신호 없음 "+lost+"대","off")+'</a>':'');
 }
-/* 현장 처리 › 혼잡 제보 · 옛 대시보드 카드 그대로 */
-function viewCrowdTab(){ return (viewCrowd()||'<div class="card">'+skel()+'</div>')+'<div id="camCard">'+viewCam()+'</div>'; }
+/* ── 261008 지금 현장 (사용자 결정 261008 · 기획 「디자인 시안/혼잡도 재설계 261008/기획안.md」) · 현장 처리 › 지금 현장 ──
+ * 서버 crowd_now(관리코드 · 읽기) = 대상 4(1F 룰렛 · 1F 포토부스 · 1F AX PLAY · 17F 대강당)마다 지금 값 · 지금 제보 · 처리 시간(사용값 · 출처 · 사전값 · 오늘 샘플) · 리허설 샘플 · 17F QR 하한
+ * 쓰기 = crowd_rep(대리 제보 · 자동으로 · 되돌리기 · 관리코드 · 이력 역할 「관리」) · crowd_now_set(op cfg = 사전값 · 기준 · 스위치 · apply = 리허설 중앙값을 사전값으로 · unapply = 이전 값으로)
+ * 리허설 보정 쓰는 법 = 행사 전날 리허설에서 스태프가 입력 시트 「시간 재기 시작 → 끝」을 존마다 여러 번 → 이 카드 「리허설 측정」 줄의 중앙값을 보고 [적용] · 틀렸으면 [되돌리기]
+ *   당일(행사일) 샘플은 리허설 값 위에 덧보정(3건 이상 = 당일 중앙값 · 1~2건 = 사전값과 평균) · 리허설 · 시험 샘플은 행사 전 비우기(시트 「혼잡보정」 · clearBetaData)
+ * 옛 「혼잡 제보」(로비 · 엘리베이터) · 「카메라 계수」 카드는 아래 접어 둠(코드 · 서버 그대로) · 옛 서버(crowd_now 없음) = 한 줄 안내 */
+var CN_NMS={ r:"1F 룰렛", p:"1F 포토부스", a:"1F AX PLAY", h:"17F 대강당" }, CN_VSA={ r:[0,5,10,15,20], p:[0,5,10,15,20], a:[0,2,4,6,8], h:[1,2,3,4,5] };
+var CN_HLVA=["","여유","보통","붐빔","거의 만석","만석"], CN_SRC={ base:"사전값 사용", cal:"재기 반영", auto:"스캔 자동" };
+function cnCellTxt(k, x){
+  if(!x) return tag("정보 없음","off");
+  if(k==="h"){ var lv=Math.max(1,Math.min(5,Number(x.lv)||1)); return tag(CN_HLVA[lv], lv>=4?"bad":lv>=2?"warn":"ok")+' <span class="cap">'+esc(crowdHm(x.at))+' 기준 · '+(x.s==="q"?"입장 QR 하한":"스태프")+'</span>'; }
+  var st=x.lv==="jam"?"혼잡":x.lv==="mid"?"보통":"여유", sub=k==="a"?(x.q?"대기 약 "+Math.max(1,Math.round(x.m))+"분":"자리 있음"):(x.m<2.5?"바로 가능":"약 "+Math.min(20,Math.round(x.m/5)*5)+"분");
+  return tag(st, x.lv==="jam"?"bad":x.lv==="mid"?"warn":"ok")+' <span class="cap">'+esc(sub)+' · '+esc(x.q)+'명 · '+(x.s==="a"?"스캔 자동":"제보 "+esc(crowdHm(x.at)))+'</span>';
+}
+function viewCnow(){
+  var d=ST.data.cnow;
+  if(!d) return '<div class="card">'+skel()+'</div>';
+  if(!d.ok) return card("지금 현장","",'<div class="note">'+(/unknown action/.test(String(d.err||""))?"이 서버에는 아직 지금 현장이 없습니다. 서버를 새로 올린 뒤 보입니다.":esc(why(d)))+'</div>');
+  var tg=d.tg||{}, cf=d.cfg||{}, nw=d.now||Date.now();
+  var rows=["r","p","a","h"].map(function(k){
+    var o=tg[k]||{}, rep=o.rep, cal=o.cal, left=rep?Math.max(1,Math.ceil((rep.x-nw)/60000)):0;
+    var repTx=rep?esc(rep.txt)+' <span class="cap">'+esc(crowdHm(rep.at))+' · '+left+'분 남음</span>':'<span class="cap">없음</span>';
+    var tTx=k==="h"?(o.qr?'입장 QR <b>'+esc(o.qr.n)+'명</b> × '+esc(o.qr.coef)+' = '+esc(o.qr.pct)+'% → '+esc(CN_HLVA[o.qr.lv])+' <span class="cap">('+esc(o.qr.id==="l1"?"AWS":"MS")+')</span>':'<span class="cap">QR 하한 없음(오후 강연 입장 창 밖)</span>')+'<br><span class="cap">스태프 단계 '+(o.staff?esc(CN_HLVA[o.staff]):"없음")+' · 표시 단계 '+(o.cell?esc(CN_HLVA[o.cell.lv]):"정보 없음")+'</span>'
+      :cal?'<b>'+esc(cal.t)+'초</b> <span class="cap">'+esc(CN_SRC[cal.src]||cal.src)+' · 사전값 '+esc(cal.pre)+'초 · 오늘 재기 '+esc(cal.k)+'건'+(k==="r"?' · 스캔 자동 '+(cal.auto?esc(cal.auto)+'초':'없음')+'(간격 '+esc(cal.g)+')':'')+' · 동시 '+esc(o.c)+'</span>':'';
+    var btns=CN_VSA[k].map(function(v,i){ return '<button class="btn sm" onclick="cnRep(\''+k+'\','+v+')">'+(k==="h"?CN_HLVA[v]:v+(i===4?"+":""))+'</button>'; }).join("")+
+      '<button class="btn sm" onclick="cnRepOp(\''+k+'\',\'auto\')">자동으로</button>'+(o.ut?'<button class="btn sm danger" onclick="cnRepOp(\''+k+'\',\'undo\')">되돌리기</button>':'');
+    return '<tr><td><b>'+CN_NMS[k]+'</b></td><td>'+cnCellTxt(k,o.cell)+'</td><td>'+repTx+'</td><td>'+tTx+'</td></tr><tr><td></td><td colspan="3"><div class="row" style="gap:6px;flex-wrap:wrap"><span class="cap">대리 제보</span>'+btns+'</div></td></tr>';
+  }).join("");
+  var tb='<div class="wrap"><table class="tb"><tr><th>대상</th><th>지금 값(참가자 홈)</th><th>지금 제보</th><th>처리 시간 · 17F 근거</th></tr>'+rows+'</table></div>';
+  var reh='<div class="grid g3 mt12" style="margin-top:12px">'+["r","p","a"].map(function(k){
+    var o=tg[k]||{}, r=o.reh||{n:0,rows:[]}, pre=o.cal?o.cal.pre:"";
+    return '<div class="card" style="margin-top:0"><b>'+CN_NMS[k]+'</b><p class="cap mt8">리허설 측정 '+esc(r.n)+'건'+(r.n?' · 중앙값 <b>'+esc(r.med)+'초</b>':'')+' · 지금 사전값 '+esc(pre)+'초'+(o.prev!=null?' · 적용 전 '+esc(o.prev)+'초':'')+'</p>'+
+      '<div class="row mt8" style="gap:6px"><button class="btn sm pri" onclick="cnApply(\''+k+'\')"'+(r.n<2?" disabled":"")+'>중앙값 적용</button>'+(o.prev!=null?'<button class="btn sm" onclick="cnUnapply(\''+k+'\')">되돌리기</button>':'')+'</div>'+
+      (r.rows&&r.rows.length?'<p class="cap mt8">'+r.rows.slice(0,8).map(function(x){ return esc(short(x.t))+' '+esc(x.s)+'초'; }).join(" · ")+'</p>':'')+
+      (o.today&&o.today.length?'<p class="cap">오늘 '+o.today.map(function(x){ return esc(short(x.t))+' '+esc(x.s)+'초'; }).join(" · ")+'</p>':'')+'</div>';
+  }).join("")+'</div><p class="cap mt8">리허설 날 스태프가 입력 시트 「시간 재기 시작 → 끝」을 존마다 3번 이상 재면 여기 쌓입니다. 행사일('+esc(d.day)+')이 아닌 날의 측정만 리허설로 셉니다. 당일 측정은 이 값 위에 덧보정합니다.</p>';
+  var hist=(d.rows||[]).slice(0,15), ht='<div class="wrap mt12"><table class="tb"><tr><th>시각</th><th>대상</th><th>제보</th><th>누가</th></tr>'+
+    hist.map(function(r){ return '<tr><td class="n cap">'+esc(short(r.t))+'</td><td>'+esc(r.tgt)+'</td><td>'+esc(r.act)+'</td><td class="cap">'+esc(r.role==="관리"?"콘솔 · 관리코드":"스태프")+'</td></tr>'; }).join("")+(!hist.length?emptyRow(4,"아직 제보가 없습니다."):"")+'</table></div>';
+  var F=function(id,lb,v,w){ return '<label class="cap">'+lb+'<br><input id="'+id+'" class="in '+(w||"w-s")+'" value="'+esc(v==null?"":v)+'"></label>'; };
+  var set='<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><b>홈 표시</b>'+(cf.show?tag("켜짐","ok"):tag("꺼짐","off"))+'<button class="btn sm '+(cf.show?"danger":"")+'" onclick="cnCfg({show:\''+(cf.show?"OFF":"ON")+'\'}, \''+(cf.show?"홈에서 숨겼습니다":"홈에 보입니다")+'\')">'+(cf.show?"숨기기":"켜기")+'</button><span class="cap">끄면 참가자 홈에서 「지금 현장」 섹션이 통째로 사라집니다(리허설 실패 때 대체).</span></div>'+
+    '<div class="row mt12" style="gap:8px;flex-wrap:wrap;align-items:flex-end">'+F("cnRt","룰렛 처리(초)",cf.rt)+F("cnRc","룰렛 동시",cf.rc)+F("cnPt","포토 처리(초)",cf.pt)+F("cnPc","포토 동시",cf.pc)+F("cnAt","AX PLAY 체험(초)",cf.at)+F("cnAc","AX PLAY 자리",cf.ac)+'</div>'+
+    '<div class="row mt12" style="gap:8px;flex-wrap:wrap;align-items:flex-end">'+F("cnQth","줄 기준(분 · 보통,혼잡)",cf.qth)+F("cnAth","AX PLAY 기준(분)",cf.ath)+F("cnHm","17F 유효(1~2단계,3~5단계 분)",cf.hm)+F("cnHqc","17F QR 계수",cf.hqc)+F("cnHqth","17F QR 기준(%)",cf.hqth,"w-l")+F("cnDay","행사일(비우면 오늘)",cf.day)+
+    '<button class="btn pri" onclick="cnCfgSave()">저장</button></div>'+
+    '<p class="cap mt8">제보 유효 '+esc(cf.min)+'분(혼잡 제보 설정과 같은 값) · 17F 좌석 '+esc(cf.seats)+'석 · QR 계수 = 찍는 비율 보정(리허설 · 첫 강연 때 스태프 단계와 비교해 조정) · 남은 좌석 숫자는 참가자에게 보이지 않습니다.</p>'+
+    '<div class="row mt8" style="gap:8px;align-items:center"><span class="cap">옛 17F 입장 수 칸(sync crowd.h)</span>'+(cf.hallqr?tag("켜짐","warn"):tag("꺼짐","off"))+'<button class="btn sm" onclick="cnCfg({hallqr:\''+(cf.hallqr?"OFF":"ON")+'\'}, \'바꿨습니다\')">'+(cf.hallqr?"끄기":"켜기")+'</button></div>';
+  return card("지금 현장","홈 2×2 · 스태프 제보 · 룰렛 스캔 · 17F 오후 강연 QR 하한 · "+esc(short(d.t)),tb+'<h3 class="mt12">리허설 보정</h3>'+reh+'<h3 class="mt12">최근 제보</h3>'+ht+(ezIn()?prepFold(set,"지금 현장 사전값 · 기준","cnow"):memo(set,"사전값 · 기준 · 스위치")),'<button class="btn sm" onclick="reload([\'cnow\'])">새로고침</button>');
+}
+function cnRep(k, v){ call("crowd_rep",{tgt:k,v:v,op:"set"},function(r){ if(r&&r.ok){ toast(CN_NMS[k]+" · 대리 제보 "+(k==="h"?CN_HLVA[v]:v)); reload(["cnow"]); } else toast("실패: "+why(r)); },function(){ toast("서버 응답 없음"); }); }
+function cnRepOp(k, op){ call("crowd_rep",{tgt:k,op:op},function(r){ if(r&&r.ok){ toast(CN_NMS[k]+" · "+(op==="undo"?"되돌림":"자동으로")); reload(["cnow"]); } else toast(r&&r.reason==="late"?"되돌릴 수 있는 2분이 지났습니다":"실패: "+why(r)); },function(){ toast("서버 응답 없음"); }); }
+function cnCfg(p, msg){ p.op="cfg"; call("crowd_now_set",p,function(r){ if(r&&r.ok){ toast(msg); ST.data.cnow=r; reload(["cnow"]); } else toast("실패: 「"+esc((r||{}).reason||"")+"」 값이 올바르지 않습니다"); },function(){ toast("서버 응답 없음"); }); }
+function cnCfgSave(){
+  var g=function(id){ var e=document.getElementById(id); return e?String(e.value).trim():""; }, cf=(ST.data.cnow||{}).cfg||{}, p={};
+  [["cnRt","rt"],["cnRc","rc"],["cnPt","pt"],["cnPc","pc"],["cnAt","at"],["cnAc","ac"],["cnQth","qth"],["cnAth","ath"],["cnHm","hm"],["cnHqc","hqc"],["cnHqth","hqth"],["cnDay","day"]].forEach(function(x){ var v=g(x[0]); if(v!==String(cf[x[1]]==null?"":cf[x[1]])) p[x[1]]=v; });
+  if(!Object.keys(p).length){ toast("바뀐 값이 없습니다"); return; }
+  cnCfg(p,"저장했습니다");
+}
+function cnApply(k){
+  var o=((ST.data.cnow||{}).tg||{})[k]||{}, r=o.reh||{};
+  dialog({ t:CN_NMS[k]+" 사전값을 리허설 중앙값으로 바꿀까요?", s:"지금 "+(o.cal?o.cal.pre:"")+"초 → <b>"+esc(r.med)+"초</b>(리허설 측정 "+esc(r.n)+"건). 당일 재기는 이 값 위에 덧보정합니다. 이전 값은 보관되어 되돌릴 수 있습니다.", ok:"적용",
+    onOk:function(){ call("crowd_now_set",{op:"apply",tgt:k},function(x){ dlgForce(); if(x&&x.ok){ toast(CN_NMS[k]+" · 사전값 적용"); ST.data.cnow=x; reload(["cnow"]); } else toast(x&&x.reason==="few"?"리허설 측정이 2건 이상이어야 합니다":"실패: "+why(x)); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
+}
+function cnUnapply(k){ call("crowd_now_set",{op:"unapply",tgt:k},function(x){ if(x&&x.ok){ toast(CN_NMS[k]+" · 이전 사전값으로"); ST.data.cnow=x; reload(["cnow"]); } else toast("실패: "+why(x)); },function(){ toast("서버 응답 없음"); }); }
+/* 현장 처리 › 지금 현장 · 261008 새 카드가 위 · 옛 혼잡 제보(로비 · 엘리베이터) · 카메라 계수는 아래 접어 둠(코드 그대로) */
+function viewCrowdTab(){ return viewCnow()+memo((viewCrowd()||'<div class="card">'+skel()+'</div>')+'<div id="camCard">'+viewCam()+'</div>', "옛 혼잡 제보(로비 · 엘리베이터) · 카메라 계수"); }
 /* ── 261003 카메라 계수 · 혼잡도 계수기(노트북 카메라)가 10초마다 보낸 숫자 · 서버 crowd_cam_list(관리코드) · 영상 없음 ──
  * 카메라 › 구역 › 인원 · 상태 · 마지막 갱신 · 60초 넘게 안 오면 「신호 없음」(회색) · 참가자 앱에는 나가지 않는다(사용자 결정 대기)
  * 이 화면이 열려 있으면 15초마다 이 카드만 다시 받는다(다른 칸 · 입력 중인 설정은 그대로) · 옛 서버(crowd_cam_list 없음) = 「서버 미배포」 */
@@ -8289,7 +8351,7 @@ try{ (function(){ var v=sessionStorage.getItem("axf_hv_nav")||"", id=v.split(":"
  * 261006 옛 완주 경품 추첨(261002)은 폐기: ⑤ 칩에서 뺌(FIN_LEGACY_SHOW=false · 코드 보존). ⑤ 순서 = 무대 진행 · 선착순 참여상 · 7등 랜덤 굿즈 · 재고 · 룰렛 소진 · 타자왕. 새 CSS 는 ez- 로 시작한다. */
 var EZ_LIST=[
   { id:"z_today", n:"오늘", d:"지금 시간대에 할 일 · 서버 상태 · 긴급 공지입니다.", parts:[P("ztoday","","","viewToday")] },
-  { id:"z_field", n:"현장 처리", d:"줄 서 있는 일을 처리합니다. 위 칩으로 고릅니다.", staff:1, parts:[P("apply","resv","상담"),P("apply","cchat","커피챗"),P("apply","roster","담당 명단"),P("acct","pw","PIN 분실"),P("crowd","","혼잡 제보","viewCrowdTab"),P("ck","","체크인존","viewCk")] },
+  { id:"z_field", n:"현장 처리", d:"줄 서 있는 일을 처리합니다. 위 칩으로 고릅니다.", staff:1, parts:[P("apply","resv","상담"),P("apply","cchat","커피챗"),P("apply","roster","담당 명단"),P("acct","pw","PIN 분실"),P("crowd","","지금 현장","viewCrowdTab"),P("ck","","체크인존","viewCk")] },
   { id:"z_who", n:"사람 찾기", d:"사번이나 이름으로 한 사람을 찾아 스탬프 · 닉네임 · PIN 을 처리합니다.", staff:1, parts:[P("zwho","","","viewWho")] },
   { id:"z_tell", n:"알리기", d:"참가자에게 공지 · 푸시를 보내고, 예약을 미루거나 취소합니다.", parts:[P("notice","","보내기"),P("sched","","예약"),P("zstop","","멈추기","viewEzStop")] },
   { id:"z_draw", n:"추첨·경품", d:"무대 진행 · 선착순 참여상 · 7등 · 재고 · 룰렛 소진 · 타자왕 1~3위입니다.", parts:[P("draw","run","무대 진행"),P("draw","fcfs","선착순 참여상"),P("draw","lk7","7등 랜덤 굿즈"),P("inv","","재고","viewInv"),P("zroul","","룰렛 소진","viewEzRoul"),P("ztype","","타자왕 1~3위","viewEzType")] },

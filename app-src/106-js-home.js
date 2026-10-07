@@ -170,24 +170,46 @@ function crowdCell(k) {
 }
 /* v4.73 (260930 사용자 결정) 엘리베이터 혼잡을 홈 맨 위 카드로 올리지 않는다 · 혼잡 표시는 이 2칸에서만.
    「계단 이용」 + 셰브론 = 엘리베이터 칸이 혼잡(제보)이고 설정 혼잡_계단 ON(총무 피난계단 승인 뒤 · sync crowd.st)일 때만 · 칸을 누르면 계단 스탬프 화면(stairOpen) · OFF 면 누를 수 없는 표시 그대로 */
-/* v5.68 (사용자 결정 261005 · design.md 5-2 개정) 셋째 칸 「17F 대강당」 · 원천 = 제보가 아니라 지금 강의의 현장 입장 QR 수 ÷ 좌석(서버 sync crowd.h · 송출 제외)
-   강의 시간 창 안에서만 수가 있다 · 상태 = 여유(surface) · 보통(brandSoft) · 혼잡(errorSoft) · 아래 줄 「입장 약 120명」(10명 단위 · 서버가 반올림) · 창 밖 = 「강의 없음」 */
-var HALL_LV = { ok: ["여유", ""], mid: ["보통", " pred"], jam: ["혼잡", " jam"] };
-function crowdHallCell() {
-  var c = crowdGet() || {}, h = c.h;
-  if (!h || !h.id) return { cls: "", st: "강의 없음", sub: "" };
-  var lv = HALL_LV[h.lv] || HALL_LV.ok;
-  return { cls: lv[1], st: lv[0], sub: h.n ? "입장 약 " + h.n + "명" : "입장 0명" };
+/* ════════════════ 261008 홈 「지금 현장」 2×2 (사용자 결정 261008 · 기획 `디자인 시안/혼잡도 재설계 261008/기획안.md`) ════════════════
+   칸 = 1F 룰렛 · 1F 포토부스 · 1F AX PLAY · 17F 대강당 · 원천 = 서버 sync crowd.n(스태프 한 번 누름 + 룰렛 스캔 기록 + 17F 오후 강연 입장 QR 하한 · 카메라 없음)
+   자리 = 홈 스탬프 블록 바로 아래 · 행사 당일(nxDay · 테스트 계정은 「시각 바꿔 보기」)만 · 서버 혼잡_표시 OFF(n.on 0) = 섹션 통째로 숨김 · 옛 서버(n 없음) = 네 칸 「정보 없음」
+   칸 = 이름 · 상태 단어 · 짧은 말 · 값이 없으면 「정보 없음」(여유로 단정하지 않는다) · 17F 는 5단계(여유 · 보통 · 붐빔 · 거의 만석 · 만석) + 「14:32 기준」 · 남은 좌석 숫자는 쓰지 않는다
+   색 = 여유 흰 면 · 보통 brandSoft · 붐빔 brand 28% · 거의 만석 · 혼잡 errorSoft · 만석 error 면 + 흰 글자 · 상태 단어를 늘 함께(색만으로 전하지 않는다)
+   일반 참가자는 칸을 눌러도 아무 일 없음(div) · 앱 스태프 명단 사번(staffBtn)만 칸이 단추 → 입력 시트(cnSheet · 111) · 섹션 제목 오른쪽 「눌러서 제보」 · 서버가 알린 점(n.dot)
+   옛 「혼잡 제보」 3칸(1F 로비 · 엘리베이터 · 17F 입장 QR 수) · 「계단 이용」 연결 · 「풀리면 알림」은 진입만 뺐다(crowdCell · crowdWatchHtml 코드는 남김 · 되살리기 = hi_ax git v6.29) */
+var CN_K = [["r", "1F 룰렛"], ["p", "1F 포토부스"], ["a", "1F AX PLAY"], ["h", "17F 대강당"]];
+var CN_HLV = ["", "여유", "보통", "붐빔", "거의 만석", "만석"];
+var CN_HCLS = ["", " ok", " pred", " busy", " jam", " full"];
+function cnGet() { var c = crowdGet(); return c && c.n && typeof c.n === "object" ? c.n : null; }
+function cnShow() { var n = cnGet(); return nxDay() && !(n && n.on === 0); }
+function cnStaff() { return typeof staffBtn === "function" && staffBtn() === true; }
+function cnSub(k, x) {
+  if (k === "h") return crowdHm(x.at) + " 기준";
+  if (k === "a") { if (!x.q) return "자리 있음"; var m = Math.max(1, Math.round(x.m)); return m >= 5 ? "대기 5분 이상" : "대기 약 " + m + "분"; }
+  if (!(x.m >= 2.5)) return "바로 가능";
+  var r = Math.round(x.m / 5) * 5;
+  return r > 15 ? "15분 이상" : "약 " + r + "분";
+}
+/* 칸 하나 · { cls, st, sub, at } · 값 없음 = 「정보 없음」 */
+function cnCell(k) {
+  var n = cnGet(), x = n && n[k] && typeof n[k] === "object" ? n[k] : null;
+  if (!x) return { cls: " none", st: "정보 없음", sub: "", at: 0 };
+  if (k === "h") { var lv = Math.max(1, Math.min(5, Number(x.lv) || 1)); return { cls: CN_HCLS[lv], st: CN_HLV[lv], sub: cnSub(k, x), at: Number(x.at) || 0 }; }
+  return { cls: x.lv === "jam" ? " jam" : x.lv === "mid" ? " pred" : " ok", st: x.lv === "jam" ? "혼잡" : x.lv === "mid" ? "보통" : "여유", sub: cnSub(k, x), at: Number(x.at) || 0 };
 }
 function crowdStripHtml() {
-  var st = crowdGet() && crowdGet().st ? 1 : 0;
-  return '<div class="sect"><b>혼잡 제보</b></div>' +
-    '<div class="cstrip2 c3">' + [["l", "1F 로비"], ["e", "엘리베이터"], ["h", "17F 대강당"]].map(function (t) {
-      var x = t[0] === "h" ? crowdHallCell() : crowdCell(t[0]), go = t[0] === "e" && x.cls === " jam" && st;
-      var inner = '<p class="nm">' + t[1] + '</p><p class="st">' + x.st + "</p>" + (x.sub ? '<p class="sb">' + esc(x.sub) + "</p>" : "") + (go ? '<p class="go">' + lnkChev("계단 이용") + "</p>" : "");
-      return go ? '<button type="button" class="cc' + x.cls + '" onclick="stairOpen()" aria-label="엘리베이터 혼잡 · 계단 이용">' + inner + "</button>" : '<div class="cc' + x.cls + '">' + inner + "</div>";
-    }).join("") + "</div>" + (typeof crowdWatchHtml === "function" ? crowdWatchHtml() : "");   /* v4.76 혼잡일 때만 「풀리면 알림」 */
+  if (!cnShow()) return "";
+  var n = cnGet() || {}, st = cnStaff(), dot = String(n.dot || ""), cells = CN_K.map(function (t) { var x = cnCell(t[0]); x.k = t[0]; x.nm = t[1]; return x; });
+  var ats = cells.filter(function (x) { return x.at > 0; }).map(function (x) { return x.at; }), oldest = ats.length ? Math.min.apply(null, ats) : 0;
+  var right = st ? '<span class="cn-st">눌러서 제보</span>' : oldest ? '<span class="cn-t">' + crowdHm(oldest) + " 기준</span>" : "";
+  return '<div class="sect"><b>지금 현장</b>' + right + "</div>" +
+    '<div class="cstrip2 cn4">' + cells.map(function (x) {
+      var inner = '<p class="nm">' + x.nm + '</p><p class="st">' + x.st + "</p>" + (x.sub ? '<p class="sb">' + esc(x.sub) + "</p>" : "") + (st && dot.indexOf(x.k) >= 0 ? '<i class="cn-dot" aria-hidden="true"></i>' : "");
+      return st ? '<button type="button" class="cc' + x.cls + '" onclick="cnSheet(\'' + x.k + '\')" aria-label="' + x.nm + " · " + x.st + (x.sub ? " · " + esc(x.sub) : "") + ' · 제보">' + inner + "</button>"
+        : '<div class="cc' + x.cls + '">' + inner + "</div>";
+    }).join("") + "</div>";
 }
+function cnHomeHtml() { var h = crowdStripHtml(); return h ? '<section class="axs-sec axs-cn">' + h + "</section>" : ""; }
 
 /* ════════════════ 261007 홈 「다음 할 일」 카드 (사용자 261007 결정 (나) 「홈 막지 않는 카드 한 장」 · 기획 `디자인 시안/재로그인 · 다음 할 일/분석.md` 5장) ════════════════
    자리 = 광고판 바로 아래 · 「행사 둘러보기」 카드와 한 자리를 교대한다(한 번에 한 장 · Views.home 의 tourHeroHtml() 바로 뒤 · 새 자리 없음)

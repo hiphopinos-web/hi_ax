@@ -70,6 +70,15 @@
     var nq = location.hash.match(/[&#]now=(\d{1,2}:\d{2})/);   /* v5.21 시험 시각 고정(hmNow · attNow) · 데모에서만 · 261007 시험 시각 tt(10/26)로 */
     if (nq) S.set("tt", { d: "day", m: t2m(nq[1]) });
     /* v4.71 혼잡 제보 캡처 · &crowd=e(엘리베이터 혼잡) · l(로비 혼잡) · p(엘리베이터 예상) · s(계단 연결 ON) 글자를 섞어 쓴다 */
+    var cnq = location.hash.match(/[&#]cn=((?:[rpa][0-3]|h[0-5])+)/);   /* 261008 지금 현장 캡처 · &cn=r3p2a1h4 · r · p · a = 0 정보 없음 · 1 여유 · 2 보통 · 3 혼잡 · h = 0 ~ 5 · &cnst = 스태프 칸(명단 사번처럼) */
+    if (cnq) {
+      var t9 = appNow().getTime() - 180000, cnv = function (k) { var m = cnq[1].match(new RegExp(k + "(\\d)")); return m ? Number(m[1]) : 0; }, cnn = { on: 1, dot: /[&#]cnst/.test(location.hash) ? "h" : "", cal: { r: [40, 0], p: [40, 0], a: [300, 0] } };
+      var Q = { r: [null, { lv: "ok", m: 1.3, q: 2 }, { lv: "mid", m: 6.7, q: 10 }, { lv: "jam", m: 13.3, q: 20 }], a: [null, { lv: "ok", m: 0, q: 0 }, { lv: "mid", m: 2.5, q: 4 }, { lv: "jam", m: 5, q: 8 }] };
+      ["r", "p", "a"].forEach(function (k) { var v = cnv(k), b = (k === "a" ? Q.a : Q.r)[v]; cnn[k] = b ? { lv: b.lv, m: b.m, q: b.q, at: t9, s: "s" } : 0; });
+      cnn.h = cnv("h") ? { lv: cnv("h"), at: t9 + 60000, s: "s" } : 0;
+      S.set("crowd", { l: 0, e: 0, p: "", w: "", st: 0, h: 0, n: cnn });
+      if (/[&#]cnst/.test(location.hash)) S.set("staff_me", true);
+    }
     var cq = location.hash.match(/crowd=([elpshmj]+)/);   /* v5.68 h · m · j = 17F 대강당 여유 · 보통 · 혼잡(기조연설 · 데모 수) */
     if (cq) { var n0 = Date.now(), jm = { at: n0 - 180000, x: n0 + 720000 }, hl = /j/.test(cq[1]) ? ["jam", 210] : /m/.test(cq[1]) ? ["mid", 150] : /h/.test(cq[1]) ? ["ok", 120] : null; S.set("crowd", { l: /l/.test(cq[1]) ? jm : 0, e: /e/.test(cq[1]) ? jm : 0, p: /p/.test(cq[1]) ? "11:00-11:20" : "", w: /p/.test(cq[1]) ? "11:00-11:20" : "", st: /s/.test(cq[1]) ? 1 : 0, h: hl ? { id: "key", n: hl[1], lv: hl[0], seats: 230 } : 0 }); }
     var target = dm[1] || "home";

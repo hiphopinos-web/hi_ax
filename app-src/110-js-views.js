@@ -21,10 +21,10 @@ var Views = {
       drawCardHtml() + kitCardHtml() +   /* v4.84 Outro 추첨 체크인(16:40~17:25 · 체크인 전만) · 광고판 위 조건부 자리 · v5.83 접속 방법 질문 카드 삭제 · 261006 kitCardHtml = 키트 사이즈(키트명단 사번만 · 서버 my.kit · 고르는 기간 · 자동 배정 · 라운지 초과 안내) */
       billboardHtml() +
       tourHeroHtml() + nxCardHtml() +   /* 261007 「다음 할 일」 카드(행사 당일 · 둘러보기 카드와 한 자리 교대 · 한 번에 한 장) · v5.46 행사 전 1층 둘러보기 큰 카드 · 광고판 바로 아래 · 스탬프 위(광고판 자리는 그대로 · design.md A-5) · v5.83 둘러보기를 처음 열기 전(tour_seen 없음)에는 당일에도 여기 */
-      '<section class="axs-sec axs-railgo" onclick="if (!event.target.closest(\'.mk, .sect span\')) App.tab(\'exp\')">' + myCouponHtml() + "</section>" +   /* v4.84 레일 면을 누르면 스탬프 탭 · 마커는 v4.02 대로 룰렛·응모 안내 */
+      '<section class="axs-sec axs-railgo" onclick="if (!event.target.closest(\'.mk, .sect span\')) App.tab(\'exp\')">' + myCouponHtml() + "</section>" +
+      cnHomeHtml() +   /* 261008 「지금 현장」 2×2 · 스탬프 블록 바로 아래(사용자 261008 「스탬프가 첫 화면에 · 스탬프 아래까지는 허용」) · 행사 당일만 · 옛 맨 아래 「혼잡 제보」 칸은 걷었다 */   /* v4.84 레일 면을 누르면 스탬프 탭 · 마커는 v4.02 대로 룰렛·응모 안내 */
       '<section class="axs-sec">' + myScheduleHtml() + "</section>" +
       tourHomeHtml() +   /* v5.11 1층 둘러보기 입구 · 나의 일정 아래 · 혼잡 위(광고판보다 위로 올리지 않는다 · design.md A-5) */
-      '<section class="axs-sec">' + crowdStripHtml() + "</section>" +   /* v4.62 층별 혼잡도 복원(260929) · v4.71 혼잡 제보 2칸 · v4.73 엘리베이터 혼잡은 홈 맨 위 카드 없이 이 2칸에서만 */
       "</div>";
   },
 

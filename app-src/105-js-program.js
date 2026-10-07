@@ -564,13 +564,11 @@ function sessGuideHtml(s, mine) {
 /* v5.68 (사용자 확정 261005) 17F 강의 출석 = 입장 QR 1개 + 끝 QR 1개 = 스탬프 2개 · 상세 표 두 줄(입장 QR · 끝 QR) + 지금 입장 수(서버 sync crowd.h · 그 강의일 때만)
    상태 칩 = 둘 다 「출석 완료」 · 하나만 「입장 출석」 | 「끝 출석」 · 창이 모두 끝나면 버튼 대신 시간표 */
 function attStLbl(id) { var ai = attMineK(id, "in"), ao = attMineK(id, "out"); return ai && ao ? "출석 완료" : ai ? "입장 출석" : ao ? "끝 출석" : ""; }
-function hallLine(id) { var c = crowdGet(), h = c && c.h; if (!h || h.id !== id) return ""; var lv = HALL_LV[h.lv] || HALL_LV.ok; return (h.n ? "입장 약 " + h.n + "명" : "입장 0명") + " · 좌석 " + lv[0]; }
 function attDetailFill(D, ap, timeBtn) {
-  var ai = attMineK(ap.id, "in"), ao = attMineK(ap.id, "out"), shut = attShut(ap), hl = hallLine(ap.id);
+  var ai = attMineK(ap.id, "in"), ao = attMineK(ap.id, "out"), shut = attShut(ap);   /* 261008 「지금 · 입장 약 N명」 줄 삭제(입장 QR 수 · 지금 현장 2×2 가 맡는다) */
   D.st = attStLbl(ap.id) || "자유 참석"; D.stc = "ok";
   if (ai || ao) { D.kv.push(["입장 QR", ai ? ai + " 출석" : "아직"]); D.kv.push(["끝 QR", ao ? ao + " 출석" : "아직"]); }   /* 261008 (사용자 「통제하지 말자」) QR 시간 창 표기 없음 */
   else D.kv.push(["출석 QR", "강연 중 화면의 QR"]);
-  if (hl) D.kv.push(["지금", hl]);
   D.help = ai && ao ? "" : shut ? "출석 시간이 지났어요" : "";
   D.btn = (ai && ao) || shut ? timeBtn : progBtn("출석 QR 스캔", "scanOpen(\'a17\')");
 }
@@ -821,7 +819,7 @@ function sheetPaint(first) {
     (sp.body || "") +
     (sp.kv && sp.kv.length && !e ? '<dl class="ax-inset axs-kv">' + sp.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl>" : "") +
     (e ? '<div class="axs-err" role="alert"><b>' + esc(e.t) + "</b>" + (e.b ? "<span>" + esc(e.b) + "</span>" : "") + "</div>" : "") +
-    '<div class="ax-stack-tight axs-gap12">' + (sp.keepLast ? go + keep : keep + go) + "</div></div>";   /* v5.46 keepLast = 주 버튼 위 · 약한 버튼 아래(둘러보기 초대) */
+    (sp.noGo ? "" : '<div class="ax-stack-tight axs-gap12">' + (sp.keepLast ? go + keep : keep + go) + "</div>") + "</div>";   /* 261008 noGo = 단추를 누르는 순간 저장하는 시트(지금 현장 제보) · 확인 단추 없음 */   /* v5.46 keepLast = 주 버튼 위 · 약한 버튼 아래(둘러보기 초대) */
   SHEET.tall = sheetTall(w.querySelector(".ax-sheet"), SHEET.tall);   /* v6.25 긴 시트 = 공통 높이 */
   /* 위험한 확정은 유지 버튼에, 그 밖에는 주 버튼에 포커스를 둔다(닫기 X 에 먼저 걸리지 않게) */
   var f = w.querySelector(sp.keep ? "button:not([disabled])" : "#axsSheetGo:not([disabled])") || w.querySelector("button:not([disabled])");
