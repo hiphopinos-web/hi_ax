@@ -137,6 +137,14 @@
   .axs-pz-c.gr b { font: var(--ax-type-t6-strong); }
   .axs-pz-c.gr .q { font: var(--ax-type-t7); }
   .axs-pz-c.wide { grid-column: 1 / -1; }
+  /* v6.29 (사용자 261008 「상품마다 옅고 얇은 회색선」) 등수 묶음(글 + 사진) 사이마다 헤어라인 1px(divider) · 묶음 위쪽 · 묶음 사이 간격 32 한가운데(위 16 · 아래 16 + 글 여백)
+     2열 격자에서는 같은 줄 두 칸의 선이 칸 사이 12px 를 건너 이어진다(오른쪽 · 왼쪽 6px 씩 · 격자 바깥은 overflow-x clip 으로 자른다 · 못 자르는 브라우저는 칸 폭만큼만) · 블록 첫 묶음 위와 블록 사이(큰 제목)에는 선 없음 · 카드 테두리 · 블록 구분선 안은 채택하지 않았다(사진이 큰 카드가 답답해 보임) */
+  .axs-pz-c:not(.r3) { position: relative; overflow: visible; }   /* 선이 카드 위쪽 간격으로 나오게 · 사진 아래 모서리는 사진이 직접 둥글게 */
+  .axs-pz-c.hero .axs-pz-ph { border-radius: 0 0 var(--ax-radius-24) var(--ax-radius-24); }
+  .axs-pz-c.gr .axs-pz-ph { border-radius: 0 0 var(--ax-radius-20) var(--ax-radius-20); }
+  .axs-pz-c.hero + .axs-pz-c.hero { margin-top: var(--ax-space-20); }
+  .axs-pz-c.hero + .axs-pz-c.hero::before, .axs-pz-c.gr::before { content: ""; position: absolute; left: 0; right: 0; top: calc(var(--ax-space-16) * -1); height: 1px; background: var(--ax-color-divider); pointer-events: none; }
+  @supports (overflow-x: clip) { .axs-pz-gr { overflow-x: clip; } .axs-pz-c.gr::before { left: -6px; right: -6px; } }
   .axs-pz-c.wide .axs-pz-ph { aspect-ratio: 2 / 1; }
   /* v5.18 사진 두 장(룰렛 2등 커피 · 키캡 키링 · 합성 대신 나란히 두 칸 · 사용자 261003) · 넓은 카드 2:1 = 정사각 두 칸 · 사이 2px */
   .axs-pz-ph.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; aspect-ratio: 2 / 1; }
