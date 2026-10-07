@@ -196,7 +196,7 @@ function crowdStripHtml() {
    고르는 순서(위에서 처음 맞는 것 하나 · nxPick)
      ① 급한 내 것 · 체크인 번호 카드(ckqCardHtml)가 홈 맨 위에 있으면 없음 · 커피챗 선정 10분 전 ~ 시작 5분 = 카드
      ② 사전등록 체크인 → 룰렛(ckGuideOn) = 없음(홈 줄 ckGuideRow 가 맡는다) · ③ 6개 = 없음
-     ④ 시각 창 · 오후 강연 입장 창(시작 30분 전 ~ 15분 뒤 · 서버 aw · 10F 명단은 내 세션과 겹치는 강연 제외 · 프로그램 참여 2칸이면 없음) → 아이디어 마감 1시간 전 → 설문(14:30~ · 16:40~17:10 은 나의 일정 줄이 맡는다)
+     ④ 시각 창 · 오후 강연 카드(시작 30분 전 ~ 15분 뒤 · 강연 시각 기준 · 출석 QR 창 설정과 무관(261008) · 10F 명단은 내 세션과 겹치는 강연 제외 · 프로그램 참여 2칸이면 없음) → 아이디어 마감 1시간 전 → 설문(14:30~ · 16:40~17:10 은 나의 일정 줄이 맡는다)
      ⑤ 둘러보기를 다 보기 전 = 없음(「행사 둘러보기」 카드가 그 자리 · nxTourHero) · ⑥ 다 본 뒤 = 아직 안 받은 짧은 스탬프(퀴즈 → 아이디어 → 미니 게임 → AX PLAY → 계단)
    「다 봤다」(tour_done · 기기 키) = 한 번 열어 1층 구역 멈춤 자리 8곳 중 6곳(70%) 이상 들르거나 3분(엘리베이터 권유와 같은 기준 · 분석 결정 5) · 다 본 뒤 둘러보기 카드는 나의 일정 아래로
    끄기 = 카드 × → 그날 끔(nx_off = 그날 날짜 · 기기 키) · 설정 「앱」 「다음 할 일 카드」 줄로 다시 켬(줄에서 끄면 nx_off = all) · 꺼져 있으면 둘러보기 카드 자리는 옛 규칙(tour_seen)
@@ -220,12 +220,12 @@ function nxPick() {
     if (hm >= r - NX_CC[0] && hm < r + NX_CC[1]) return { id: "cc", chip: "곧 시작", t: "AX 커피챗 " + hhmm(c.round), s: "18F" + (c.table ? " · TABLE " + c.table : ""), a: "보기", go: "App.go('ev_cchat')" };
   }
   if (typeof ckGuideOn === "function" && ckGuideOn()) return null;   /* ② 홈 줄 「체크인 → 룰렛 → 강의장」 */
-  var tm = tenMine(), tp = tm ? tm.tm.split("~").map(function (x) { return t2m(x); }) : null, aw = S.get("att_w", null), wi = aw && aw.i ? aw.i : [30, 15];
+  var tm = tenMine(), tp = tm ? tm.tm.split("~").map(function (x) { return t2m(x); }) : null;
   if (progUnits() < 2) for (var i = 0; i < MYFL_LEC.length; i++) {   /* ④ 오후 강연 입장 창 */
     var s = sessById(MYFL_LEC[i]); if (!s) continue;
     var iv = s.tm.split("~").map(function (x) { return t2m(x); });
     if (tp && iv[0] < tp[1] && iv[1] > tp[0]) continue;   /* 내 10F 세션 시간 */
-    if (hm >= iv[0] - wi[0] && hm < iv[0] + wi[1]) return { id: "lec:" + s.id, chip: hm < iv[0] ? "곧 시작" : "진행 중", t: hm2(iv[0]) + " " + SESS_NM[s.id], s: "17F 대강당 · 입장 QR과 끝 QR", a: "보기", go: "progOpen('" + s.id + "')" };
+    if (hm >= iv[0] - 30 && hm < iv[0] + 15) return { id: "lec:" + s.id, chip: hm < iv[0] ? "곧 시작" : "진행 중", t: hm2(iv[0]) + " " + SESS_NM[s.id], s: "17F 대강당 · 입장 QR과 끝 QR", a: "보기", go: "progOpen('" + s.id + "')" };
   }
   var ip = S.get("idea_pub", null) || {}, cut = t2m(ip.cut || "16:00");
   if (!nxGot("p5") && !ideaGateOff() && !ip.late && hm >= cut - 60 && hm < cut) return { id: "p5c", chip: hm2(cut) + " 마감", t: "아이디어 한 줄", s: "스탬프 1개 · 폰으로", a: "쓰기", go: "App.go('ideas')" };

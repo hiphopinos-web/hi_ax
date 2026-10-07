@@ -311,11 +311,11 @@ function drawByCode(code) {
      모르는 p 는 무시하고 고르기 시트(a17 그대로) · p 를 모르는 옛 앱(열린 탭)도 고르기 시트로 간다.
    오프라인 저장은 하지 않는다(출석은 서버 시계로 판정 · 연결이 안 되면 다시 시도). */
 /* v5.68 (사용자 확정 261005) 17F 강의 = 입장 QR 1개 + 끝 QR 1개 = 스탬프 2개 · 유튜브 송출 화면 QR = 원격 출석(코드가 따로 · 서버가 가른다)
-   QR 주소 = 출석 코드 + &p=<강의 id> + &k=in | out · 입장 창 = 시작 30분 전 ~ 시작 15분 뒤 · 끝 창 = 끝 10분 전 ~ 끝 10분 뒤(서버 설정 · sync aw 로 받는다)
+   QR 주소 = 출석 코드 + &p=<강의 id> + &k=in | out · 입장 창 = 시작 30분 전 ~ 시작 3시간 뒤 · 끝 창 = 끝 2시간 전 ~ 끝 30분 뒤(서버 설정 · sync aw 로 받는다 · 261008 사용자 「통제하지 말자」 = 강연 내내 입장 · 끝 둘 다 인정 · 앱은 시간 창을 보여 주지 않는다)
    스탬프 = 입장이 하나라도 있으면 1개 + 끝이 하나라도 있으면 1개(서버 p3h · p3) · 프로그램 참여 칸은 2개까지(10F · 커피챗 · 라운지와 같은 칸)
    v5.94 (사용자 결정 261006) 스탬프는 오후 파트너 강연(AWS l1 · MS l2) 현장 입장 · 끝만 · 오전 강연 · 유튜브 송출 출석은 기록 · 대강당 혼잡도만(서버 nost 1)
    k 가 없는 QR(옛 입구 QR · 고르기 시트)은 서버가 그 시각에 열린 창으로 고른다 · 내 출석 기록 att_mine = { id: 입장 시각, "id.out": 끝 시각 } */
-var ATT_17F = { lead: 30, win: { i: [30, 15], o: [10, 10] }, progs: [
+var ATT_17F = { lead: 30, win: { i: [30, 180], o: [120, 30] }, progs: [
   { id: "key", nm: "기조연설", sub: "Intro 포함", s: "09:30", e: "10:20" },
   { id: "road", nm: "내부 강연", sub: "현대해상 AX 로드맵", s: "10:30", e: "11:00" },
   { id: "l1", nm: "파트너사 강연 · AWS", sub: "Agentic AI 시대의 일하는 방식 변화", s: "13:30", e: "14:50" },   /* 261007 사용자 확정 · 휴식 14:50~15:10 */
@@ -371,7 +371,7 @@ function attByCode(code, fixId, k) {
 function attRowHtml(x, t, mine) {
   var wi = attKWin(x, "in"), wo = attKWin(x, "out"), s0 = t2m(x.s), ai = mine[x.id], ao = mine[x.id + ".out"];
   var can = (t >= wi.a && t <= wi.b && !ai) || (t >= wo.a && t <= wo.b && !ao), on = can && ATT.sel === x.id;
-  var st = ai && ao ? "입장 · 끝 출석" : can ? (t >= s0 ? "진행 중" : x.s + " 시작") : ai ? "입장 " + ai : ao ? "끝 " + ao : t > wo.b ? "종료" : t < wi.a ? hm2(wi.a) + "부터" : t > wi.b && t < wo.a ? "끝 QR " + hm2(wo.a) + "부터" : x.s + " 시작";
+  var st = ai && ao ? "입장 · 끝 출석" : can ? (t >= s0 ? "진행 중" : x.s + " 시작") : ai ? "입장 " + ai : ao ? "끝 " + ao : t > wo.b ? "종료" : x.s + " 시작";
   return '<button type="button" class="axs-att" role="radio" aria-checked="' + on + '"' + (can ? ' onclick="attPick(\'' + x.id + '\')"' : " disabled") + ">" +
     '<span class="rd" aria-hidden="true"></span><span class="nm">' + esc(x.nm) + "</span>" +   /* 한 줄 · 큰글씨 360×640 에서도 시트 안 스크롤 없게(design.md A 5-7) · 시각은 상태 칸과 강연 상세 */
     '<span class="st">' + esc(st) + "</span></button>";
@@ -397,7 +397,7 @@ function attSpec() {
   if (w.sel) return { id: "att", title: "17F 강연 출석", lead: "입장할 때 한 번, 끝날 때 한 번", body: list + tmRow,
     go: "attGo()", goLbl: "출석하기", goBusy: "출석하는 중", goOff: !ATT.sel };
   var lead = w.open.length ? "지금 출석할 수 있는 강연은<br>모두 출석했어요" :
-    w.next ? "다음 출석 · <b>" + esc(w.next.nm) + "</b><br>" + hm2(w.at) + "부터" : "오늘 17F 강연 출석이 끝났어요";
+    w.next ? "다음 강연 · <b>" + esc(w.next.nm) + "</b><br>" + w.next.s + " 시작" : "오늘 17F 강연 출석이 끝났어요";
   return { id: "att", title: w.open.length ? "17F 강연 출석" : "지금은 출석 시간이 아니에요", lead: lead, body: list + tmRow, go: "sheetClose()", goLbl: "확인" };
 }
 function attRepaint() { if (SHEET.busy) botWait(false); SHEET.busy = false; SHEET.spec = attSpec(); if (el("axsSheet")) sheetPaint(); }
@@ -429,7 +429,7 @@ function attDone(res) {
     var why = res && res.reason, x = attProg(ATT.sel), kk = (res && res.k) || ATT.k;
     if (why === "nocode") { sheetClose(true); srShow({ st: "fail", why: "nocode" }); return; }
     if (why === "roff") { sheetFail({ t: "지금은 쓰지 않는 QR이에요", b: "다시 스캔해 주세요." }); return; }   /* v5.96 송출 출석 안내 없음 */   /* v5.68 송출 QR · 서버 설정 송출_켬 밖 */
-    if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: (x ? x.nm + " · " : "") + (kk && x && attUi(x.id) ? attKLbl(kk) + " " : "") + String(res.open || "").replace("~", "–") }); return; }
+    if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: x ? x.nm + " · " + x.s + "–" + x.e : "" }); return; }
     sheetFail({ t: "출석하지 못했어요", b: "다시 시도해 주세요." });
     return;
   }

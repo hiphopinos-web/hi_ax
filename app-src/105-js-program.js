@@ -568,8 +568,8 @@ function hallLine(id) { var c = crowdGet(), h = c && c.h; if (!h || h.id !== id)
 function attDetailFill(D, ap, timeBtn) {
   var ai = attMineK(ap.id, "in"), ao = attMineK(ap.id, "out"), shut = attShut(ap), hl = hallLine(ap.id);
   D.st = attStLbl(ap.id) || "자유 참석"; D.stc = "ok";
-  D.kv.push(["입장 QR", ai ? ai + " 출석" : attWinLbl(ap, "in")]);
-  D.kv.push(["끝 QR", ao ? ao + " 출석" : attWinLbl(ap, "out")]);
+  if (ai || ao) { D.kv.push(["입장 QR", ai ? ai + " 출석" : "아직"]); D.kv.push(["끝 QR", ao ? ao + " 출석" : "아직"]); }   /* 261008 (사용자 「통제하지 말자」) QR 시간 창 표기 없음 */
+  else D.kv.push(["출석 QR", "강연 중 화면의 QR"]);
   if (hl) D.kv.push(["지금", hl]);
   D.help = ai && ao ? "" : shut ? "출석 시간이 지났어요" : "";
   D.btn = (ai && ao) || shut ? timeBtn : progBtn("출석 QR 스캔", "scanOpen(\'a17\')");
