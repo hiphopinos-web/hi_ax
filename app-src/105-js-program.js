@@ -626,7 +626,7 @@ function progDetail(s) {
   if (s.kind === "info") {
     var mi = sessMine(s.id), ax = att10X(s), ao = mi ? attMineK(s.id, "out") : "", tn = attNow(), kw = attKWin(ax, "out"), wo = mi && !ao && (evPhase() === "live" || !!attTm()) && tn >= kw.a && tn <= kw.b;
     D.cat = "실습형 세션 · " + s.ttl; D.title = s.sub;
-    D.kv = [["일시", day + progTm(s.tm)], ["장소", pl]].concat(s.who ? [["진행", s.who]] : [], [["정원", s.capNote || ""], ["참여 방법", "사전 신청자 참여"]]);   /* v5.60 T1 (design.md §7 배제로 읽히는 말) · v6.21 진행 = 강사 · 발표자 실명 · 소속(261007 운영진 메신저 · 실명은 남기는 원칙 261004) */
+    D.kv = [["일시", day + progTm(s.tm)], ["장소", pl]].concat(s.who ? [["강사", s.who.split(" · ").map(function (n) { return n.replace(/ /g, "\u00a0"); }).join(" · ")]] : [], [["정원", s.capNote || ""], ["참여 방법", "사전 신청자 참여"]]);   /* v5.60 T1 (design.md §7 배제로 읽히는 말) · v6.22 줄 이름 「강사」 · 이름 단위로만 줄이 꺾임(이름 안 공백 = 붙임 공백) · v6.21 진행 = 강사 · 발표자 실명 · 소속(261007 운영진 메신저 · 실명은 남기는 원칙 261004) */
     if (mi && ATT10_UI) D.kv.push(["끝 QR", ao ? ao + " 출석" : attWinLbl(ax, "out")]);   /* v5.71 10F 끝 QR(신청자만) · 출석하면 시각 */
     if (ao && ATT10_UI) { D.st = "출석 완료"; D.stc = "ok"; }   /* v5.96 10F 끝 QR 표시 끔 */
     D.sg = sessGuideHtml(s, !!mi);   /* v5.60 세션 안내 = (한 줄 소개) → 하는 일 → 준비할 것(신청자만) · 셋 다 없으면 블록 없음 */
