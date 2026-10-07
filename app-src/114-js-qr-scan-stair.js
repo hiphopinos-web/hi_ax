@@ -1112,12 +1112,22 @@ var SCAN_SPOTS = [
   /* v5.34 (설계안 §10 결정 2) 사옥 밖 체크인 존(몽골텐트) · 찍으면 체크인 + 키트 지급 기록(inv_kit) · 10F 입장(sess_in)과 따로 */
   { id: "kit", nm: "체크인 존 · 키트", kind: "kit", lb: "체크인 존 · 키트", tsub: "체크인 + 지급", will: "체크인 + 키트 지급", cond: "사전 신청 명단이면 바로 지급" },
   /* v5.90 (261006 경품 기획 변경) 1F 체크인존 · 선착순 참여상 수령(fcfs_give · QR 서명) · 키트 타일과 같은 모양 */
-  { id: "fcfs", nm: "체크인 존 · 참여상", kind: "fcfs", lb: "체크인 존 · 참여상", tsub: "선착순 수령", will: "선착순 참여상 수령", cond: "스탬프 6개 · 남은 수량 안에서 먼저 온 순서" }   /* v5.98 받기 선착순 */
+  { id: "fcfs", nm: "체크인 존 · 참여상", kind: "fcfs", lb: "체크인 존 · 참여상", tsub: "선착순 수령", will: "선착순 참여상 수령", cond: "스탬프 6개 · 남은 수량 안에서 먼저 온 순서" },   /* v5.98 받기 선착순 */
+  /* 261007 체크인존 번호표 · 창구(사용자 261006 밤 확정 · 기획 「디자인 시안/체크인존 운영」) · 접수 = 번호 발급(ck_ticket) · 창구 A ~ D = 키트 지급(inv_kit win · 다른 창구 사이즈 · 명단 밖이면 안내만)
+     · E = 명단 밖 · 교환(예전 키트 자리와 같은 처리) · 타일 목록에서는 「kit」 자리를 이 여섯 개로 펼친다(SCAN_CK_TILES · 옛 kit 자리가 기억된 폰은 그대로 돈다) */
+  { id: "ckin", nm: "체크인 접수", kind: "ckin", lb: "체크인 접수", tsub: "번호표 발급", will: "번호표 발급 · 창구 안내", cond: "사전등록 명단 · 사이즈로 창구가 정해져요" },
+  { id: "kA", nm: "체크인 A 창구", kind: "kit", win: "A", lb: "A 창구", tsub: "키트 지급", will: "A 창구 키트 지급", cond: "번호와 상관없이 찍으면 지급 · 다른 사이즈는 안내" },
+  { id: "kB", nm: "체크인 B 창구", kind: "kit", win: "B", lb: "B 창구", tsub: "키트 지급", will: "B 창구 키트 지급", cond: "번호와 상관없이 찍으면 지급 · 다른 사이즈는 안내" },
+  { id: "kC", nm: "체크인 C 창구", kind: "kit", win: "C", lb: "C 창구", tsub: "키트 지급", will: "C 창구 키트 지급", cond: "번호와 상관없이 찍으면 지급 · 다른 사이즈는 안내" },
+  { id: "kD", nm: "체크인 D 창구", kind: "kit", win: "D", lb: "D 창구", tsub: "키트 지급", will: "D 창구 키트 지급", cond: "번호와 상관없이 찍으면 지급 · 다른 사이즈는 안내" },
+  { id: "kE", nm: "체크인 E 창구", kind: "kit", win: "E", lb: "E 창구", tsub: "명단 밖 · 교환", will: "E 창구 · 명단 확인 · 지급", cond: "명단 밖 · 라운지 초과 · 사이즈 교환" }
 ];
 /* v6.00 (사용자 261006 밤 「10층은 출석 확인 없다」) 스태프 스캔 자리 · 관리자 모드 QR 스캔에서 10F 세션 A~E 입장 자리를 숨긴다(표시만 · SCAN_SPOTS · sess_in · 서버 SESS_META 는 그대로 · 되살리려면 true)
  *   이 폰에 10F 세션 자리가 기억돼 있으면 비운다(자리 고르기부터) */
 var SCAN_10F_UI = false;
 var SCAN_TILES = ["roulette", "kit", "fcfs", "p2", "dap", "cchat", "sess"];   /* 자주 쓰는 룰렛 · 포토 · 스탬프(AX PLAY)가 위 · 10F 세션은 한 타일에서 A~E · v4.83 1F 전시 타일 삭제 */
+var SCAN_CK_TILES = ["ckin", "kA", "kB", "kC", "kD", "kE"];   /* 261007 「kit」 타일 자리 = 체크인 접수 + 창구 A ~ E */
+function scanTileIds() { var o = []; SCAN_TILES.forEach(function (id) { if (id === "kit") o.push.apply(o, SCAN_CK_TILES); else o.push(id); }); return o; }
 function scanSpot(id) { return SCAN_SPOTS.filter(function (s) { return s.id === id; })[0] || null; }
 var SCAN = { spot: S.get("scan_spot", "") !== "q_photo" ? S.get("scan_spot", "") : "", log: [], last: "", lastT: 0, on: false, pick: false, sub: "", res: null };
 if (!SCAN_10F_UI && (scanSpot(SCAN.spot) || {}).kind === "sess") SCAN.spot = "";   /* v6.00 옛 기기에 남은 10F 세션 자리 */
@@ -1149,13 +1159,17 @@ function scanHit(raw) {
   else if (sp.kind === "stamp") { params.action = "stamp_grant"; params.id = sp.id; }
   else if (sp.kind === "kit") params.action = "inv_kit";   /* v5.34 */
   else if (sp.kind === "fcfs") params.action = "fcfs_give";   /* v5.90 */
+  else if (sp.kind === "ckin") params.action = "ck_ticket";   /* 261007 체크인 접수 · 번호표 */
   else params.action = "roulette_redeem";
+  if (sp.win) params.win = sp.win;   /* 261007 창구 A ~ E · 서버가 사이즈 창구를 본다 */
   scanLog(emp, "처리 중", null);
   scanShow("wait", emp, "확인하는 중", sp.will || sp.nm);
   beCall(params, function (res) { scanDone(emp, sp, res); },
     function () { scanLog(emp, "서버 응답 없음 · 다시 찍어 주세요", false, true); scanShow("bad", emp, "서버 응답 없음", "다시 찍어 주세요"); SCAN.last = ""; SCAN.lastE = ""; });
 }
 function scanDone(emp, sp, res) {
+  if (sp.kind === "ckin" && res && res.ok) { ckinDone(emp, res); return; }   /* 261007 */
+  if (sp.kind === "kit" && res && res.reason === "win") { kitWinDone(emp, res); return; }   /* 261007 다른 창구 · 명단 밖 = 안내만(지급 안 함) */
   if (!res || !res.ok) {
     var why = res && res.reason;
     /* 시트 잠금 충돌은 실패가 아니라 「지금 붐빔」이다(실측). 담당자가 다시 찍으면 되므로 「처리 실패」로 말하지 않는다 */
@@ -1308,6 +1322,7 @@ function fcfsDone(emp, res) {
   var who = res.name || emp, lf = res.left != null ? " · 남은 " + res.left : "";
   if (res.give === "new") { scanLog(emp, (res.name ? res.name + " · " : "") + "선착순 참여상 수령 처리" + (res.nth ? " · " + res.nth + "번째" : ""), true, true); SCAN.bd = { t: "선착순 지급" + (res.nth ? " (" + res.nth + "번째)" : ""), s: "무선 무드등 가습기 1개 전달" + lf }; scanShow("ok", who, "선착순 참여상 수령 처리", "무선 무드등 가습기 1개 전달" + lf); return; }   /* v5.98 nth = 지급 순서(수령순) */
   if (res.give === "dup") { scanLog(emp, (res.name ? res.name + " · " : "") + "이미 수령", true, true); scanShow("dup", who, "이미 수령", (res.at || "") + "에 받았어요"); return; }
+  if (res.reason === "notyet") { var st0 = res.start || "10:30"; scanLog(emp, (res.name ? res.name + " · " : "") + st0 + "부터 지급", null, true); SCAN.bd = { c: "dup", t: st0 + "부터 지급", s: "선착순 참여상 · 체크인 마무리 뒤" }; scanShow("dup", who, st0 + "부터 지급", "선착순 참여상 · 체크인 마무리 뒤"); return; }   /* 261007 (사용자 「10시 30분부터 열자 · 혼선 없도록」) 회색 */
   var why = res.reason, msg = why === "noelig" ? ["스탬프 " + (res.n != null ? res.n + "개" : "6개 미만") + " · 6개 필요", "6개를 모으면 받을 수 있어요"] : why === "full" ? ["마감", "선착순 수량이 먼저 찼어요 · 6개 달성은 행운권 3장"] : why === "out" ? ["마감", "선착순 참여상이 모두 나갔어요"] : why === "test" ? ["테스트 계정", "기록하지 않았어요"] :   /* v5.98 수령순 out · test · 「자격」 말 없음 */
     why === "closed" ? ["마감", (res.cut || "17:00") + " 지급 마감"] : why === "void" ? ["지급 불가", "운영 본부에 문의해 주세요"] : why === "off" ? ["지금은 받지 않아요", "선착순 참여상 꺼짐"] : ["처리하지 못했어요", String(why || "")];
   scanLog(emp, (res.name ? res.name + " · " : "") + msg[0], false, true);
@@ -1318,6 +1333,8 @@ function kitDone(emp, res) {
   var who = res.name || emp, sp = res.spare == null ? "수량 미정" : String(res.spare);
   var ck = res.ck === "new" ? " · 스탬프 +3" : "";   /* v5.90 사전등록 체크인 3개(서버 ck) */
   var go = res.ck === "new" && !res.ru ? "룰렛 부스로 안내해 주세요" : "";   /* v5.94 (사용자 결정 261006) 체크인 3개 → 룰렛 → 강의장 · 룰렛을 이미 쓴 사람은 없음(서버 ru) */
+  var wn = (scanSpot(SCAN.spot) || {}).win || "";   /* 261007 창구 자리 · 결과 띠 = 사이즈 아주 크게 + 가린 이름 + 번호(창구 스태프는 아무것도 누르지 않는다) */
+  if (wn && wn !== "E" && (res.kit === "give" || res.kit === "dup")) SCAN.bd = res.kit === "give" ? { c: "ok", big: res.sz || "", t: (res.no ? res.no + " · " : "") + "지급", s: res.sz ? "사이즈 " + res.sz + ck : "사이즈 미정 · 명단 확인" + ck, x: 4 } : { c: "dup", big: "", t: "이미 받음", s: (res.at || "") + "에 받았어요", x: 3 };
   if (res.kit === "sub") { scanLog(emp, (res.name ? res.name + " · " : "") + "라운지 초과 · 가습기 대체" + ck, true, true); scanShow("ok", who, "가습기로 대체 지급", "라운지 키트 수량 초과" + ck, go); return; }   /* v5.90 라운지 쿼터를 넘은 사전등록자 */
   if (res.kit === "give") { scanLog(emp, (res.name ? res.name + " · " : "") + "키트 지급" + ck, true, true); scanShow("ok", who, "키트 지급", (res.grp === "dap" ? "라운지 사전등록" : res.pre ? "세션 " + res.pre + " · 사전 신청자" : "체크인 + 지급") + ck, go); return; }
   if (res.kit === "dup") { scanLog(emp, (res.name ? res.name + " · " : "") + (res.sub ? "이미 가습기 대체" : "이미 지급됨") + ck, true, true); scanShow("dup", who, res.sub ? "이미 가습기로 받음" : "이미 지급됨", (res.at || "") + "에 받았어요" + ck, go); return; }
@@ -1326,6 +1343,27 @@ function kitDone(emp, res) {
   SCAN.res.inv = "kit";
   INVS.id = SCAN.res.t; INVS.emp = emp; INVS.busy = false; INVS.msg = ""; INVS.rid = ""; INVS.rt = 0;
   invPaint();
+}
+/* 261007 창구 자리에서 다른 창구 사이즈 · 라운지 초과 · 명단 밖 = 지급하지 않고 안내(빨강 · 창구 글자 크게) */
+function kitWinDone(emp, res) {
+  var who = res.name || emp, w = res.want || "E", t = res.out ? "명단 밖 · E 창구로 안내" : w === "E" ? "E 창구로 안내" : "다른 창구 · " + w + " 창구로 안내", sb = res.out ? "사전등록 명단에 없어요" : w === "E" ? "라운지 초과 · 가습기 대체" : "이 사이즈는 " + w + " 창구에 있어요";
+  SCAN.bd = { c: "bad", big: w, t: t, s: sb, x: 3 };
+  scanLog(emp, (res.name ? res.name + " · " : "") + t, false, true);
+  scanShow("bad", who, t, sb);
+}
+/* 261007 체크인 접수(ck_ticket) 결과 · new · dup = 「B-007 · 홍*동 → B 창구」 크게 · off = 번호 없이 바로 그 창구 · got = 이미 받음(회색) · out(빨강) · hum · nosz(회색) = E 창구로 안내 */
+function ckinDone(emp, res) {
+  var who = res.name || emp, nm = res.nm || sscMask(who), w = res.w || "E", t = res.t, tone = "ok", big = w, hd, sb, full;
+  if (t === "new" || t === "dup") {
+    hd = res.no + " → " + w + " 창구"; full = res.no + " · " + nm + " → " + w + " 창구";
+    sb = res.st === "call" || !res.ah ? "바로 " + w + " 창구로" : "앞에 " + res.ah + "명" + (res.eta ? " · 약 " + res.eta + "분" : "") + " · 차례가 되면 폰이 울려요";
+    if (t === "dup") { tone = "dup"; sb = "이미 받은 번호 · " + sb; }
+  } else if (t === "off") { hd = w + " 창구로 안내"; full = nm + " → " + w + " 창구"; sb = "번호 없이 바로 " + w + " 창구로" + (res.sw && res.open ? " · 번호는 " + res.open + "부터" : ""); }
+  else if (t === "got") { tone = "dup"; big = ""; hd = "이미 받음"; full = nm + " · 이미 받음"; sb = (res.at || "") + "에 받았어요"; }
+  else { tone = t === "out" ? "bad" : "dup"; big = "E"; hd = "E 창구로 안내"; full = nm + " → E 창구"; sb = t === "out" ? "사전등록 명단에 없어요" : t === "hum" ? "라운지 초과 · 가습기 대체" : "사이즈 미정 · E 창구에서 정해요"; }
+  SCAN.bd = { c: tone, big: big, full: 1, t: full, s: sb, x: 3 };
+  scanLog(emp, (res.name ? res.name + " · " : "") + hd, tone === "bad" ? false : true, true);
+  scanShow(tone, who, hd, sb);
 }
 function invResHtml(r) {
   if (r.t !== INVS.id) return "";

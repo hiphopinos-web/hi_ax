@@ -48,7 +48,7 @@ function admScanHtml() {
         '<div class="axs-stiles">' + SCAN_SPOTS.filter(function (x) { return x.kind === "sess"; }).map(scanTileHtml).join("") + "</div>";
     }
     return '<h2 class="ax-section-title">무엇을 찍나요?</h2><div class="axs-stiles">' +
-      SCAN_TILES.map(function (id) {   /* v5.05 포토부스 대기 폐지 · 정리 #7 타일 목록에서 뺐다 · v6.00 10F 세션 타일은 SCAN_10F_UI 일 때만 */ return id === "sess" ? (!SCAN_10F_UI ? "" : '<button type="button" class="axs-stile" onclick="scanChoose(\'sess\')"><b>10F 세션 입장</b><span>A~E 고르기</span></button>') : scanTileHtml(scanSpot(id)); }).join("") + "</div>" +
+      scanTileIds().map(function (id) {   /* v5.05 포토부스 대기 폐지 · 정리 #7 타일 목록에서 뺐다 · v6.00 10F 세션 타일은 SCAN_10F_UI 일 때만 */ return id === "sess" ? (!SCAN_10F_UI ? "" : '<button type="button" class="axs-stile" onclick="scanChoose(\'sess\')"><b>10F 세션 입장</b><span>A~E 고르기</span></button>') : scanTileHtml(scanSpot(id)); }).join("") + "</div>" +
       (sp ? '<button type="button" class="ax-button ax-button-weak" onclick="SCAN.pick = false; App.render()">' + esc(sp.lb || sp.nm) + " 그대로 찍기</button>" : "") + log + INV_LNK;
   }
   var w = scanWhat(sp), out = sp.kind === "roulette" && S.get("roulette_out", false);
@@ -146,14 +146,15 @@ function sscMask(s) {
 function sscShow(tone, who, head, sub, bd) {
   if (tone === "ok") sscCntUp();
   var c = bd && bd.c || tone;
-  SSC.band = { c: c, t: tone === "wait" ? head : (who ? sscMask(who) + " · " : "") + (bd && bd.t || head), s: bd && bd.s != null ? bd.s : sub || "" };
+  SSC.band = { c: c, big: bd && bd.big || "", t: tone === "wait" ? head : bd && bd.full ? bd.t : (who ? sscMask(who) + " · " : "") + (bd && bd.t || head), s: bd && bd.s != null ? bd.s : sub || "" };   /* 261007 big = 사이즈 · 창구 글자 아주 크게 · full = 문구 그대로(접수 「B-007 · 홍*동 → B 창구」) */
   sscBandPaint();
   if (SSC.bandT) clearTimeout(SSC.bandT);
-  SSC.bandT = setTimeout(function () { SSC.bandT = null; SSC.band = null; sscBandPaint(); }, tone === "wait" ? 16000 : SSC_BAND_MS);
+  SSC.bandT = setTimeout(function () { SSC.bandT = null; SSC.band = null; sscBandPaint(); }, tone === "wait" ? 16000 : SSC_BAND_MS * (bd && bd.x || 1));   /* 261007 창구 띠는 다음 사람까지 더 오래(x 배) */
   if (App.current === "sscan" && tone !== "wait") sscSfx(tone === "bad" ? "rgmiss" : tone === "dup" ? "tik" : "ting");
 }
 function sscBandHtml() {
   var b = SSC.band;
+  if (b && b.big) return '<div class="ssc-band big c-' + b.c + '" id="sscBand" role="status" aria-live="assertive"><i class="bg">' + esc(b.big) + '</i><div class="tx"><b>' + esc(b.t) + "</b>" + (b.s ? "<span>" + esc(b.s) + "</span>" : "") + "</div></div>";   /* 261007 */
   return '<div class="ssc-band' + (b ? " c-" + b.c : "") + '" id="sscBand" role="status" aria-live="assertive"' + (b ? "" : " hidden") + ">" + (b ? "<b>" + esc(b.t) + "</b>" + (b.s ? "<span>" + esc(b.s) + "</span>" : "") : "") + "</div>";
 }
 function sscBandPaint() { var n = el("sscBand"); if (n) n.outerHTML = sscBandHtml(); }
@@ -217,7 +218,7 @@ function sscSheetBody() {
     return '<button type="button" class="axs-stile ssc-pick' + (on ? " on" : "") + '" aria-pressed="' + on + '" onclick="sscPick(\'' + sp.id + "', '" + sub + '\')"><b>' + esc(lb) + "</b><span>" + esc(sp.will || sp.nm) + "</span></button>";
   };
   var one = [], ten = [];
-  SCAN_TILES.forEach(function (id) {
+  scanTileIds().forEach(function (id) {
     if (id === "sess") { if (SCAN_10F_UI) SCAN_SPOTS.filter(function (x) { return x.kind === "sess"; }).forEach(function (sp) { ten.push(tile(sp, "", sp.lb || sp.nm)); }); return; }   /* v6.00 10층은 출석 확인 없음(SCAN_10F_UI) */
     var sp = scanSpot(id); if (!sp) return;
     if (SSC_SUB[id]) SSC_SUB[id].forEach(function (u) { one.push(tile(sp, u[0], sp.nm + " · " + u[1])); });

@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>창구 화면 · AX Festival 2026</title>
+<link rel="icon" href="../../icons/icon-192.png">
+<!-- 261007 창구 화면(태블릿 · 사용자 「배달 사고가 나면 안 되니까 태블릿 화면을 보고 · 한 명은 계속 찍고 한 명은 나눠 주고」)
+     창구마다 2인 1조 · 찍는 사람 = 폰 연속 스캔(창구 자리) · 나눠 주는 사람 = 이 화면 맨 위 카드의 사이즈 봉투 · 이름 확인 → 「건넴」(그 순간 다음 번호 호출)
+     주소 = desk.html?w=B(?srv= 로 서버를 바꿈) · 처음 한 번 스태프 코드(관리자 모드와 같은 코드 · 사번은 관리자 명단이 있을 때) · 토큰은 이 기기에만
+     실명 · 부서 앞 두 글자는 이 화면(스태프 인증)에만 · 30초 동안 손대지 않고 새 카드도 없으면 이름을 가린다(누르면 다시) · 잠금 = 토큰 지우기
+     데이터 = ck_desk(10초 맞추기 · 살아 있음 표시) + 소켓 ops 방 ckd(곧바로) · 꺼졌다 켜져도 서버에서 그대로 복원 · 같은 창구 2대 = 같은 내용 -->
+<style>
+  @font-face { font-family: "AXP"; src: url("../../draw/assets/PretendardVariable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+  :root { --o100: #FF7E31; --o5: #FFF6F0; --o15: #FFE3D1; --ink: #191F28; --body: #4E5968; --muted: #8B95A1; --line: #E5E8EB; --bg: #F2F4F6; --card: #FFFFFF; --ok: #0E8A4F; --okS: #E6F6EE; --bad: #D93025; --badS: #FDECEA; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); }
+  body { font-family: "AXP", "Pretendard Variable", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; color: var(--ink); word-break: keep-all; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+  button { font: inherit; cursor: pointer; }
+  .top { display: flex; align-items: center; gap: 16px; padding: 14px 24px; background: var(--card); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 2; }
+  .top .w { width: 56px; height: 56px; border-radius: 50%; background: var(--o100); color: #FFFFFF; font-weight: 800; font-size: 32px; line-height: 56px; text-align: center; }
+  .top h1 { margin: 0; font-size: 24px; font-weight: 800; }
+  .top .cur { margin-left: auto; font-size: 20px; color: var(--body); text-align: right; }
+  .top .cur b { color: var(--ink); font-size: 26px; font-variant-numeric: tabular-nums; }
+  .top .lk { border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 10px 16px; font-size: 16px; color: var(--body); }
+  .net { font-size: 14px; color: var(--muted); }
+  .net.off { color: var(--bad); font-weight: 700; }
+  main { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; padding: 20px 24px 40px; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+  .stack { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .empty { background: var(--card); border-radius: 24px; padding: 64px 24px; text-align: center; color: var(--muted); font-size: 24px; font-weight: 600; }
+  .cd { background: var(--card); border-radius: 24px; padding: 18px 22px; display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; align-items: center; gap: 20px; box-shadow: 0 1px 0 var(--line); position: relative; animation: inn .35s ease-out; }
+  @keyframes inn { from { transform: translateY(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .cd .sz { width: 120px; height: 120px; border-radius: 20px; background: var(--o5); color: var(--o100); font-weight: 900; font-size: 72px; line-height: 120px; text-align: center; letter-spacing: -0.02em; }
+  .cd .sz.s3 { font-size: 54px; }
+  .cd .who { min-width: 0; }
+  .cd .nm { font-size: 40px; font-weight: 800; line-height: 1.15; }
+  .cd .nm span { font-size: 24px; font-weight: 600; color: var(--body); margin-left: 10px; }
+  .cd .mt { margin-top: 6px; font-size: 20px; color: var(--body); font-variant-numeric: tabular-nums; }
+  .cd .mt b { color: var(--ink); }
+  .cd .acts { display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
+  .bt { border: 0; border-radius: 16px; padding: 0 26px; height: 64px; font-size: 24px; font-weight: 800; background: var(--o100); color: #FFFFFF; min-width: 150px; }
+  .bt.weak { background: var(--bg); color: var(--body); height: 48px; font-size: 18px; font-weight: 700; }
+  .bt[disabled] { opacity: 0.5; }
+  .cd.first { grid-template-columns: 200px minmax(0, 1fr) auto; padding: 26px 28px; box-shadow: inset 0 0 0 3px var(--o100); }
+  .cd.first .sz { width: 200px; height: 200px; line-height: 200px; font-size: 128px; border-radius: 28px; background: var(--o100); color: #FFFFFF; }
+  .cd.first .sz.s3 { font-size: 92px; }
+  .cd.first .nm { font-size: 56px; }
+  .cd.first .bt:not(.weak) { height: 96px; font-size: 32px; min-width: 200px; }
+  .cd .tag { display: inline-block; font-size: 16px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: var(--bg); color: var(--body); margin-bottom: 6px; }
+  .cd.first .tag { background: var(--o15); color: #B8541A; }
+  .cd.win { box-shadow: inset 0 0 0 3px var(--bad); }
+  .cd.win .sz { background: var(--badS); color: var(--bad); }
+  .cd.win .tag { background: var(--badS); color: var(--bad); }
+  .cd.dup .sz { background: var(--bg); color: var(--muted); }
+  .cd.masked .nm { color: var(--muted); }
+  .side { display: flex; flex-direction: column; gap: 14px; }
+  .pn { background: var(--card); border-radius: 20px; padding: 18px 20px; }
+  .pn h2 { margin: 0 0 10px; font-size: 16px; color: var(--muted); font-weight: 700; }
+  .pn .big { font-size: 44px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .pn .row { display: flex; justify-content: space-between; font-size: 20px; line-height: 1.7; font-variant-numeric: tabular-nums; }
+  .pn .row span { color: var(--muted); }
+  .pn p { margin: 0; color: var(--muted); font-size: 16px; }
+  .gate { max-width: 460px; margin: 10vh auto; background: var(--card); border-radius: 24px; padding: 32px; }
+  .gate h1 { margin: 0 0 6px; font-size: 28px; }
+  .gate p { margin: 0 0 20px; color: var(--body); }
+  .gate label { display: block; font-size: 15px; color: var(--body); margin: 14px 0 6px; }
+  .gate input { width: 100%; height: 56px; border: 1px solid var(--line); border-radius: 14px; padding: 0 16px; font: inherit; font-size: 22px; }
+  .gate .wsel { display: flex; gap: 10px; }
+  .gate .wsel button { flex: 1; height: 64px; border-radius: 14px; border: 2px solid var(--line); background: var(--card); font-size: 28px; font-weight: 800; }
+  .gate .wsel button.on { border-color: var(--o100); background: var(--o5); color: var(--o100); }
+  .gate .bt { width: 100%; margin-top: 24px; }
+  .gate .er { color: var(--bad); font-weight: 700; min-height: 24px; margin-top: 12px; }
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: rgba(25, 31, 40, 0.92); color: #FFFFFF; padding: 14px 22px; border-radius: 14px; font-size: 18px; font-weight: 700; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  #toast.on { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { .cd { animation: none; } }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" role="status"></div>
+<script src="../../assets/server.js"></script>
+<script src="assets/ckio.js"></script>
+<script>
+(function () {
+  "use strict";
+  var esc = CKIO.esc, Q = CKIO.Q, WS = ["A", "B", "C", "D"];
+  var LS = { get: function (k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+  var D = { w: WS.indexOf(String(Q.w || "").toUpperCase()) >= 0 ? String(Q.w).toUpperCase() : LS.get("axfDesk.w", "B"), tok: LS.get("axfDesk.tok", ""), emp: LS.get("axfDesk.emp", ""), d: null, busy: {}, touch: Date.now(), newAt: 0, sock: null, sockOn: false, okAt: 0, pollT: null, dev: "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7) };
+  var MASK_MS = 30000;
+  function toast(t) { var n = document.getElementById("toast"); n.textContent = t; n.className = "on"; clearTimeout(toast.t); toast.t = setTimeout(function () { n.className = ""; }, 2200); }
+  function mask(s) { var a = String(s || "").split(""); return a.length <= 1 ? s : a.length === 2 ? a[0] + "*" : a[0] + "*" + a[a.length - 1]; }
+  function masked() { return Date.now() - Math.max(D.touch, D.newAt) > MASK_MS; }
+  function auth(o) { o.tok = D.tok; if (D.emp) o.aemp = D.emp; return o; }
+  /* ── 잠금 해제 ── */
+  function gate(msg) {
+    document.getElementById("app").innerHTML = '<div class="gate"><h1>창구 화면</h1><p>스태프 코드를 한 번 넣으면 이 기기에 기억해요</p>' +
+      '<label>창구</label><div class="wsel">' + WS.map(function (w) { return '<button type="button" data-w="' + w + '" class="' + (w === D.w ? "on" : "") + '">' + w + "</button>"; }).join("") + "</div>" +
+      '<label for="ge">사번(관리자 명단이 있으면)</label><input id="ge" inputmode="numeric" autocomplete="off" value="' + esc(D.emp) + '">' +
+      '<label for="gc">스태프 코드</label><input id="gc" inputmode="numeric" type="password" autocomplete="off">' +
+      '<button type="button" class="bt" id="gg">열기</button><p class="er" id="gr">' + esc(msg || "") + "</p></div>";
+    Array.prototype.forEach.call(document.querySelectorAll(".wsel button"), function (b) { b.onclick = function () { D.w = b.getAttribute("data-w"); gate(); }; });
+    document.getElementById("gg").onclick = function () {
+      var code = document.getElementById("gc").value.trim(), emp = document.getElementById("ge").value.trim();
+      if (!code) { document.getElementById("gr").textContent = "코드를 넣어 주세요"; return; }
+      var p = { action: "admin_check", key: code }; if (emp) { p.aemp = emp; p.asc = "c"; }
+      document.getElementById("gg").disabled = true;
+      CKIO.jsonp(p, function (r) {
+        if (r && r.ok && r.role === "admin" && r.tok) { D.tok = r.tok; D.emp = emp; LS.set("axfDesk.tok", D.tok); LS.set("axfDesk.emp", emp); LS.set("axfDesk.w", D.w); start(); return; }
+        gate(r && r.reason === "locked" ? "잠시 뒤 다시 해 주세요" : r && r.role === "grade" ? "이 코드로는 열 수 없어요" : "코드를 다시 확인해 주세요");
+      });
+    };
+  }
+  function lock() { LS.set("axfDesk.tok", ""); D.tok = ""; if (D.sock) D.sock.close(); D.sock = null; clearTimeout(D.pollT); gate(); }
+  /* ── 그리기 ── */
+  function card(c, i, mk) {
+    var first = i === 0, nm = mk ? mask(c.nm) : c.nm, sz = c.sz || "?", bz = D.busy[c.id];
+    var cls = "cd" + (first ? " first" : "") + (c.k === "win" ? " win" : c.k === "dup" ? " dup" : "") + (mk ? " masked" : "");
+    var tag = c.k === "give" ? (first ? "지금 건넬 사람" : i + 1 + "번째") : c.k === "win" ? "E 창구 안내" : c.k === "dup" ? "이미 받음" : "안내";
+    var acts = c.k === "give"
+      ? '<button type="button" class="bt" data-op="hand" data-id="' + c.id + '"' + (bz ? " disabled" : "") + ">건넴</button>" + (c.undo ? '<button type="button" class="bt weak" data-op="undo" data-id="' + c.id + '"' + (bz ? " disabled" : "") + ">취소</button>" : "")
+      : '<button type="button" class="bt weak" data-op="clear" data-id="' + c.id + '"' + (bz ? " disabled" : "") + ">닫기</button>";
+    var big = c.k === "give" ? sz : c.k === "win" ? "E" : "-";
+    return '<div class="' + cls + '"><div class="sz' + (String(big).length >= 3 ? " s3" : "") + '">' + esc(big) + '</div><div class="who"><span class="tag">' + esc(tag) + "</span>" +
+      '<div class="nm">' + esc(nm) + (c.dp ? "<span>" + esc(c.dp) + "</span>" : "") + "</div>" +
+      '<div class="mt">' + (c.no ? "<b>" + esc(c.no) + "</b> · " : "번호 없음 · ") + esc(c.at.slice(0, 5)) + (c.msg ? " · " + esc(c.msg) : "") + "</div></div>" +
+      '<div class="acts">' + acts + "</div></div>";
+  }
+  function render() {
+    var d = D.d, mk = masked();
+    if (!d) { document.getElementById("app").innerHTML = '<div class="empty">불러오는 중</div>'; return; }
+    var cards = d.cards || [], live = D.sockOn || Date.now() - D.okAt < 20000;
+    var top = '<div class="top"><div class="w">' + esc(D.w) + "</div><div><h1>" + esc(D.w) + ' 창구 화면</h1><span class="net' + (live ? "" : " off") + '">' + (live ? (D.sockOn ? "실시간 연결" : "10초마다 맞춤") : "연결 확인 중") + "</span></div>" +
+      '<div class="cur">지금 호출 <b>' + esc(d.cur ? d.cur.no : "-") + "</b><br>대기 " + (d.n || 0) + "명</div>" +
+      '<button type="button" class="lk" id="lk">잠금</button></div>';
+    var stack = cards.length ? cards.map(function (c, i) { return card(c, i, mk); }).join("") : '<div class="empty">찍힌 사람이 없어요<br><small>찍는 사람이 QR을 찍으면 여기에 카드가 쌓여요</small></div>';
+    var side = '<div class="side"><div class="pn"><h2>다음 호출</h2>' + ((d.nx || []).length ? d.nx.map(function (x) { return '<div class="row">' + esc(x.no) + "<span>" + esc(x.nm) + "</span></div>"; }).join("") : "<p>대기 번호 없음</p>") + "</div>" +
+      '<div class="pn"><h2>방금 건넴</h2>' + ((d.done || []).length ? d.done.map(function (x) { return '<div class="row">' + esc(x.sz || "-") + " · " + esc(mk ? mask(x.nm) : x.nm) + "<span>" + esc(x.ht.slice(0, 5)) + "</span></div>"; }).join("") : "<p>아직 없어요</p>") + "</div>" +
+      '<div class="pn"><h2>순서</h2><p>맨 위 카드의 사이즈 봉투 · 이름 확인 · 건넨 뒤 「건넴」 · 누르면 다음 번호를 불러요</p></div></div>';
+    document.getElementById("app").innerHTML = top + '<main><div class="stack">' + stack + "</div>" + side + "</main>";
+    document.getElementById("lk").onclick = lock;
+    Array.prototype.forEach.call(document.querySelectorAll("[data-op]"), function (b) { b.onclick = function (e) { e.stopPropagation(); op(b.getAttribute("data-id"), b.getAttribute("data-op")); }; });
+  }
+  function take(d) {
+    if (!d || !d.ok || d.w !== D.w) return;
+    var had = {}; ((D.d && D.d.cards) || []).forEach(function (c) { had[c.id] = 1; });
+    if ((d.cards || []).some(function (c) { return !had[c.id]; })) D.newAt = Date.now();
+    D.d = d; D.okAt = Date.now(); render();
+  }
+  function op(id, o) {
+    if (D.busy[id]) return;
+    D.touch = Date.now(); D.busy[id] = 1;
+    if (o === "hand" || o === "clear") { D.d.cards = D.d.cards.filter(function (c) { return c.id !== id; }); }
+    render();
+    CKIO.jsonp(auth({ action: "ck_desk_op", id: id, op: o }), function (r) {
+      delete D.busy[id];
+      if (r && r.ok) { if (r.d) take(r.d); if (o === "hand" && r.called) toast(r.called.no + " 호출"); if (o === "undo") toast(r.undo ? "지급을 취소했어요" : "취소하지 못했어요 · 콘솔에서 확인"); return; }
+      if (r && r.reason === "auth") { lock(); return; }
+      toast(r && r.reason === "late" ? "2분이 지나 취소할 수 없어요 · 콘솔에서" : r && r.reason === "already" ? "이미 처리된 카드예요" : "처리하지 못했어요 · 다시 눌러 주세요");
+      pull();
+    });
+  }
+  function pull() {
+    clearTimeout(D.pollT);
+    CKIO.jsonp(auth({ action: "ck_desk", w: D.w }), function (r) {
+      if (r && r.reason === "auth") { lock(); return; }
+      if (r && r.ok) take(r); else render();
+      D.pollT = setTimeout(pull, 10000);
+    });
+  }
+  function start() {
+    history.replaceState(null, "", location.pathname + "?w=" + D.w + (Q.srv ? "&srv=" + encodeURIComponent(Q.srv) : ""));
+    D.d = null; render(); pull();
+    if (D.sock) D.sock.close();
+    D.sock = CKIO.sock("ops", function () { return { t: "hello", tok: D.tok, key: "", d: D.dev, v: "ck261007", emp: D.emp }; }, function (m) { if (m.t === "ckd" && m.w === D.w && m.d) take(m.d); }, function (on) { D.sockOn = on; render(); });
+  }
+  document.addEventListener("pointerdown", function () { var was = masked(); D.touch = Date.now(); if (was && D.d) render(); }, true);
+  setInterval(function () { if (D.d && masked() && !document.querySelector(".cd.masked") && (D.d.cards || []).length) render(); }, 2000);
+  if (D.tok) start(); else gate();
+  window.__desk = D;
+})();
+</script>
+</body>
+</html>

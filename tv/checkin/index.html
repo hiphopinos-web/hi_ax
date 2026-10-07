@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>체크인 대기판 · AX Festival 2026</title>
+<link rel="icon" href="../../icons/icon-192.png">
+<!-- 261007 체크인 TV 대기판 · 사용자 261006 밤 확정(TV = 대기 번호 + 가린 이름 + 창구) · 기획 「디자인 시안/체크인존 운영」 7.3절 · 시안 03 · 04 · 05
+     1920 × 1080 가로 · 블랙 스테이지(종일) · 호출 순간 = 위쪽 오렌지 띠 + 0.6초 강조 · 번호표를 안 쓰는 시간 = 오렌지 스테이지 「번호 없이 바로 오세요」
+     데이터 = 공개 읽기 ck_board(가린 이름만 · 사번 · 사이즈 없음) 3초 폴링 + 소켓 tv 방 ck(곧바로) · 끊기면 마지막 화면 그대로 + 구석에 「연결 확인 중」
+     주소 = ../../assets/server.js(?srv= 로 바꿈) · 소리 = 기본 끔(?snd=1 이면 짧은 차임) · 노트북 + HDMI 전체 화면 브라우저 -->
+<style>
+  @font-face { font-family: "AXP"; src: url("../../draw/assets/PretendardVariable.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+  :root { --o100: #FF7E31; --o60: #FFA46E; --o25: #FFCFB0; --ink: #000000; --t1: #FFFFFF; --t2: #C7CCD1; --t3: #9AA2AB; --line: rgba(255, 255, 255, 0.14); }
+  html, body { margin: 0; height: 100%; background: #000000; overflow: hidden; }
+  body { font-family: "AXP", "Pretendard Variable", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; color: var(--t1); word-break: keep-all; -webkit-font-smoothing: antialiased; cursor: none; }
+  #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; overflow: hidden; background: var(--ink); transition: background .5s ease; }
+  #stage.idle { background: var(--o100); }
+  .grid { position: absolute; inset: -48px; background-image: radial-gradient(rgba(255, 255, 255, 0.09) 2.4px, transparent 2.4px); background-size: 48px 48px; animation: drift 24s linear infinite; }
+  #stage.idle .grid { background-image: radial-gradient(rgba(255, 255, 255, 0.32) 2.8px, transparent 2.8px); }
+  @keyframes drift { to { transform: translate(48px, 48px); } }
+  .hd { position: absolute; left: 64px; right: 64px; top: 44px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .hd h1 { margin: 0; font-weight: 800; font-size: 44px; line-height: 1; }
+  .hd small { display: block; font-weight: 600; font-size: 26px; line-height: 1.3; color: var(--o100); margin-top: 10px; }
+  #stage.idle .hd small { color: #FFFFFF; opacity: 0.9; }
+  .clock { text-align: right; font-weight: 700; font-size: 46px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .clock small { color: var(--t2); font-weight: 500; }
+  #stage.idle .clock small { color: #FFFFFF; }
+  .wins { position: absolute; left: 64px; right: 64px; top: 176px; height: 640px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; transition: top .45s ease, height .45s ease, opacity .3s; }
+  .win { background: rgba(255, 255, 255, 0.06); border: 2px solid var(--line); border-radius: 28px; padding: 28px 30px; display: flex; flex-direction: column; position: relative; min-width: 0; transition: opacity .3s, border-color .3s, background .3s; }
+  .win .L { display: flex; align-items: center; gap: 16px; }
+  .win .L b { width: 76px; height: 76px; border-radius: 50%; background: var(--o100); color: #FFFFFF; font-weight: 800; font-size: 44px; line-height: 76px; text-align: center; }
+  .win .L span { font-weight: 600; font-size: 30px; color: var(--t2); }
+  .win .now { margin-top: 26px; font-weight: 800; font-size: 112px; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .win .nm { font-weight: 700; font-size: 44px; line-height: 1.2; color: var(--o100); margin-top: 12px; min-height: 53px; }
+  .win.none .now { color: #5B636D; font-size: 72px; margin-top: 44px; }
+  .win.none .nm { color: var(--t3); font-size: 30px; }
+  .win .nx { margin-top: auto; border-top: 2px solid var(--line); padding-top: 18px; height: 262px; box-sizing: border-box; flex: none; }   /* 네 칸 「다음」 줄 높이를 같게 */
+  .win .nx small { display: block; font-weight: 600; font-size: 24px; color: var(--t3); margin-bottom: 6px; }
+  .win .nx div { display: flex; justify-content: space-between; font-weight: 600; font-size: 36px; line-height: 1.6; color: #E6E9EC; font-variant-numeric: tabular-nums; }
+  .win .nx div span { color: var(--t3); font-weight: 500; }
+  .win .nx .more { font-size: 24px; color: var(--t3); line-height: 1.4; }
+  .win.flash { border-color: var(--o100); background: rgba(255, 126, 49, 0.16); animation: pop .6s ease-out; }
+  @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.03); } 100% { transform: scale(1); } }
+  #stage.calling .wins { top: 330px; height: 490px; }
+  #stage.calling .win { opacity: 0.55; }
+  #stage.calling .win.hot { opacity: 1; border-color: var(--o100); background: rgba(255, 126, 49, 0.12); }
+  #stage.calling .win .now { font-size: 84px; margin-top: 16px; }
+  #stage.calling .win .nm { font-size: 34px; min-height: 41px; }
+  #stage.calling .win .nx { height: 206px; }
+  #stage.calling .win .nx div { font-size: 30px; line-height: 1.45; }
+  .band { position: absolute; left: 0; right: 0; top: 0; height: 300px; background: var(--o100); display: flex; align-items: center; justify-content: center; gap: 56px; color: #FFFFFF; transform: translateY(-100%); transition: transform .45s cubic-bezier(.2, .8, .2, 1); overflow: hidden; }
+  .band:before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(255, 255, 255, 0.28) 2.6px, transparent 2.6px); background-size: 48px 48px; background-position: 24px 24px; }
+  .band > * { position: relative; }
+  #stage.calling .band { transform: none; }
+  .band .n { font-weight: 800; font-size: 190px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .band.go .n { animation: pop2 .6s ease-out; }
+  @keyframes pop2 { 0% { transform: scale(0.86); opacity: 0.3; } 60% { transform: scale(1.06); opacity: 1; } 100% { transform: scale(1); } }
+  .band .arr { font-weight: 700; font-size: 76px; }
+  .band .m { font-weight: 700; font-size: 76px; line-height: 1.15; }
+  .band .m small { display: block; font-weight: 600; font-size: 40px; opacity: 0.95; margin-top: 6px; }
+  .estrip { position: absolute; left: 64px; right: 64px; top: 844px; height: 112px; border-radius: 24px; border: 2px solid var(--line); display: flex; align-items: center; padding: 0 36px; gap: 28px; }
+  .estrip b { width: 76px; height: 76px; border-radius: 50%; border: 4px solid var(--o100); color: var(--o100); font-weight: 800; font-size: 44px; line-height: 68px; text-align: center; flex: none; box-sizing: border-box; }
+  .estrip div { font-weight: 700; font-size: 40px; line-height: 1.3; }
+  .estrip em { font-style: normal; font-weight: 500; font-size: 30px; color: var(--t2); margin-left: 12px; }
+  .ft { position: absolute; left: 64px; right: 64px; bottom: 34px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 30px; color: var(--t2); gap: 32px; }
+  .ft .ms { color: var(--o60); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .idlev { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  #stage.idle .idlev { display: flex; }
+  #stage.idle .wins, #stage.idle .estrip, #stage.idle .ft, #stage.idle .band { display: none; }
+  .idlev h2 { margin: 0; font-weight: 800; font-size: 150px; line-height: 1.1; letter-spacing: -0.01em; }
+  .idlev p { margin: 34px 0 0; font-weight: 700; font-size: 52px; }
+  .idlev .pill { margin-top: 64px; display: inline-flex; align-items: center; gap: 22px; padding: 22px 44px; border-radius: 28px; background: rgba(0, 0, 0, 0.18); font-weight: 700; font-size: 44px; }
+  .idlev .pill i { font-style: normal; width: 64px; height: 64px; border-radius: 50%; background: #FFFFFF; color: var(--o100); font-weight: 800; font-size: 38px; line-height: 64px; }
+  .idlev .pill em { font-style: normal; font-weight: 500; font-size: 32px; opacity: 0.92; }
+  .idlev .mtw { position: absolute; left: 64px; bottom: 40px; font-weight: 700; font-size: 32px; }
+  #net { position: absolute; right: 18px; bottom: 10px; font-size: 18px; font-weight: 600; color: var(--t3); opacity: 0; transition: opacity .3s; }
+  #net.on { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { .grid, .band.go .n, .win.flash { animation: none; } .band, .wins { transition: none; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="grid"></div>
+  <div class="band" id="band" aria-live="assertive"><span class="n" id="bN"></span><span class="arr">&rarr;</span><span class="m"><span id="bM"></span><small id="bW"></small></span></div>
+  <div class="hd"><div><h1>AX Festival 2026</h1><small>사전등록 체크인</small></div><div class="clock"><span id="clk">--:--</span><small id="wt">대기 없음</small></div></div>
+  <div class="wins" id="wins"></div>
+  <div class="estrip" id="estrip"></div>
+  <div class="ft"><span id="ftL">번호가 불리면 창구로 오세요</span><span class="ms" id="ftM"></span><span id="ftR">내 QR을 접수에서 보여 주세요</span></div>
+  <div class="idlev"><h2>번호 없이 바로 오세요</h2><p>A B C D 창구 · 내 QR을 보여 주시면 바로 드려요</p><div class="pill" id="idleE"></div><div class="mtw">ME to WE</div></div>
+  <div id="net">연결 확인 중</div>
+</div>
+<script src="../../assets/server.js"></script>
+<script src="assets/ckio.js"></script>
+<script>
+(function () {
+  "use strict";
+  var esc = CKIO.esc, Q = CKIO.Q, W = ["A", "B", "C", "D"], stage = document.getElementById("stage");
+  var B = { last: null, seen: {}, first: true, okAt: 0, q: [], showing: null, bandT: null, polls: 0, fails: 0, sockOn: false };
+  var SND = Q.snd === "1";
+  function fit() { var s = Math.min(innerWidth / 1920, innerHeight / 1080); stage.style.transform = "translate(" + Math.round((innerWidth - 1920 * s) / 2) + "px," + Math.round((innerHeight - 1080 * s) / 2) + "px) scale(" + s + ")"; }
+  addEventListener("resize", fit); fit();
+  function p2(n) { return (n < 10 ? "0" : "") + n; }
+  function tick() { var d = new Date(); document.getElementById("clk").textContent = p2(d.getHours()) + ":" + p2(d.getMinutes()); document.getElementById("net").className = Date.now() - B.okAt > 15000 && B.okAt ? "on" : ""; }
+  setInterval(tick, 1000); tick();
+  function chime() {
+    if (!SND) return;
+    try { var C = new (window.AudioContext || window.webkitAudioContext)(), t = C.currentTime; [880, 1320].forEach(function (f, i) { var o = C.createOscillator(), g = C.createGain(); o.frequency.value = f; o.connect(g); g.connect(C.destination); g.gain.setValueAtTime(0.0001, t + i * 0.16); g.gain.exponentialRampToValueAtTime(0.25, t + i * 0.16 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.16 + 0.5); o.start(t + i * 0.16); o.stop(t + i * 0.16 + 0.55); }); } catch (e) {}
+  }
+  function idleOf(b) { if (!b || !b.on) return true; return !b.n && W.every(function (w) { return !(b.w[w] && b.w[w].cur); }); }
+  function eTxt(b) {
+    if (b && b.fpre && b.fs) return { t: "선착순 참여상 · 사이즈 교환 " + b.fs + "부터", s: "명단 밖 · 라운지 가습기는 지금" };
+    return { t: "가습기 수령 · 사이즈 교환", s: "번호 없이 바로 오세요" };
+  }
+  function render(b) {
+    var idle = idleOf(b), e = eTxt(b);
+    stage.classList.toggle("idle", idle);
+    document.getElementById("wt").textContent = b && b.n ? "대기 " + b.n + "명" + (b.eta ? " · 약 " + b.eta + "분" : "") : "대기 없음";
+    document.getElementById("idleE").innerHTML = "<i>E</i>" + esc(e.t) + (b && b.fpre ? " <em>" + esc(e.s) + "</em>" : "");
+    document.getElementById("estrip").innerHTML = "<b>E</b><div>" + esc(e.t) + "<em>" + esc(e.s) + "</em></div>";
+    var hot = B.showing ? B.showing.w : "";
+    document.getElementById("wins").innerHTML = W.map(function (w) {
+      var x = (b && b.w && b.w[w]) || { cur: null, nx: [], n: 0 }, more = x.n > 3 ? x.n - 3 : 0;
+      return '<div class="win' + (x.cur ? "" : " none") + (w === hot ? " hot" : "") + '" id="w' + w + '"><div class="L"><b>' + w + "</b><span>창구</span></div>" +
+        (x.cur ? '<div class="now">' + esc(x.cur.no) + '</div><div class="nm">' + esc(x.cur.nm) + "</div>" : '<div class="now">-</div><div class="nm">' + (x.n ? "곧 호출" : "바로 오세요") + "</div>") +
+        '<div class="nx"><small>다음</small>' + (x.nx || []).map(function (y) { return "<div>" + esc(y.no) + "<span>" + esc(y.nm) + "</span></div>"; }).join("") + (more ? '<p class="more">그 뒤 ' + more + "명</p>" : "") + "</div></div>";
+    }).join("");
+    var ms = (b && b.ms) || [];
+    document.getElementById("ftM").textContent = ms.length ? "놓친 번호 " + ms.map(function (m) { return m.no; }).join(" · ") + " · 창구에서 바로 받아 가세요" : "";
+  }
+  /* 호출 순간 · 창구마다 지금 번호가 바뀌면 띠 한 번(6초 · 여러 개면 차례로) */
+  function calls(b) {
+    if (!b || !b.w) return;
+    W.forEach(function (w) {
+      var c = b.w[w] && b.w[w].cur, key = c ? c.no + "@" + c.ct : "";
+      if (key && B.seen[w] !== key && !B.first) B.q.push({ w: w, no: c.no, nm: c.nm });
+      B.seen[w] = key;
+    });
+    B.first = false;
+    if (!B.showing) nextBand();
+  }
+  function nextBand() {
+    var c = B.q.shift();
+    if (!c || idleOf(B.last)) { B.showing = null; stage.classList.remove("calling"); render(B.last); return; }
+    B.showing = c;
+    var band = document.getElementById("band");
+    document.getElementById("bN").textContent = c.no; document.getElementById("bM").textContent = c.nm; document.getElementById("bW").textContent = c.w + " 창구로 오세요";
+    band.classList.remove("go"); void band.offsetWidth; band.classList.add("go");
+    stage.classList.add("calling"); render(B.last);
+    var el = document.getElementById("w" + c.w); if (el) { el.classList.add("flash"); }
+    chime();
+    clearTimeout(B.bandT); B.bandT = setTimeout(nextBand, B.q.length ? 4000 : 6000);
+  }
+  function take(b) {
+    if (!b || !b.ok || !b.w) return;
+    B.okAt = Date.now();
+    var same = B.last && B.last.v === b.v && B.last.on === b.on && B.last.fpre === b.fpre && JSON.stringify(B.last.w) === JSON.stringify(b.w) && JSON.stringify(B.last.ms) === JSON.stringify(b.ms);
+    B.last = b;
+    if (!same) { render(b); calls(b); }
+  }
+  function poll() {
+    B.polls++;
+    CKIO.jsonp({ action: "ck_board" }, function (r) { if (r && r.ok) { B.fails = 0; take(r); } else B.fails++; setTimeout(poll, B.sockOn ? 5000 : 2500 + Math.min(10000, B.fails * 2000)); }, 10000);
+  }
+  CKIO.sock("tv", { t: "hello", v: "ck261007" }, function (m) { if (m.t === "ck" && m.b) take(m.b); }, function (on) { B.sockOn = on; });
+  render(null); poll();
+  window.__ck = B;
+})();
+</script>
+</body>
+</html>

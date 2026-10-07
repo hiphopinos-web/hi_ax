@@ -1389,6 +1389,39 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .ssc-band.c-bad { background: var(--ax-color-error); }
   @keyframes sscIn { from { transform: translateY(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
   @media (prefers-reduced-motion: reduce) { .ssc-band { animation: none; } }
+  /* 261007 체크인존 창구 · 결과 띠 big = 사이즈 · 창구 글자 아주 크게(창구 스태프가 한눈에) */
+  .ssc-band.big { flex-direction: row; align-items: center; gap: var(--ax-space-16); }
+  .ssc-band.big .bg { font-style: normal; font: var(--ax-type-display); font-size: 72px; font-weight: 900; line-height: 1; min-width: 1.1em; text-align: center; letter-spacing: -0.02em; }
+  .ssc-band.big .tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  /* 261007 체크인 번호표 · 홈 맨 위 내 번호 카드(대기 흰 카드 · 곧 차례 O100 테두리 · 호출 = 주황 면 · 수령 완료) */
+  .axs-ckq { position: relative; background: var(--ax-color-surface); border-radius: var(--ax-radius-20); padding: var(--ax-space-20); box-shadow: var(--ax-card-shadow); color: var(--ax-color-ink); }
+  .axs-ckq .tp { display: flex; justify-content: space-between; align-items: center; margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); }
+  .axs-ckq .ch { font: var(--ax-type-caption); font-weight: 700; padding: 4px 10px; border-radius: var(--ax-radius-999); background: var(--ax-color-inset); color: var(--ax-color-body); }
+  .axs-ckq .no { margin: var(--ax-space-8) 0 0; font-size: 64px; line-height: 1.05; font-weight: 900; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .axs-ckq .nm { margin: var(--ax-space-4) 0 0; font: var(--ax-type-t5-strong); }
+  .axs-ckq .ln { margin: var(--ax-space-12) 0 0; font: var(--ax-type-t5-strong); }
+  .axs-ckq .sb { margin: var(--ax-space-4) 0 0; font: var(--ax-type-t7); color: var(--ax-color-body); }
+  .axs-ckq.soon { box-shadow: inset 0 0 0 2px var(--ax-color-brand), var(--ax-card-shadow); }
+  .axs-ckq.soon .ch { background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); }
+  .axs-ckq.call { background: var(--ax-color-brand); color: var(--ax-color-onBrand); animation: ckqIn .6s ease-out; }
+  .axs-ckq.call .tp, .axs-ckq.call .sb { color: var(--ax-color-onBrand); opacity: 0.92; }
+  .axs-ckq.call .ch { background: rgba(0, 0, 0, 0.16); color: var(--ax-color-onBrand); }
+  .axs-ckq.call .no { font-size: 76px; }
+  .axs-ckq .axs-ckq-qr { margin-top: var(--ax-space-16); width: 100%; background: var(--ax-color-surface); color: var(--ax-color-brandText); }
+  .axs-ckq.done { text-align: center; padding-top: var(--ax-space-24); }
+  .axs-ckq.done .ok { display: inline-flex; width: 48px; height: 48px; border-radius: 50%; align-items: center; justify-content: center; background: var(--ax-color-successSoft); color: var(--ax-color-success); }
+  .axs-ckq.done .ok svg { width: 24px; height: 24px; }
+  .axs-ckq.done .h { margin: var(--ax-space-8) 0 0; font: var(--ax-type-t3); font-weight: 800; }
+  .axs-ckq.done .s { margin: var(--ax-space-4) 0 var(--ax-space-12); font: var(--ax-type-t7); color: var(--ax-color-body); }
+  .axs-ckq.done .rw { display: flex; justify-content: space-between; align-items: center; padding: var(--ax-space-12) 0; border-top: 1px solid var(--ax-color-divider); font: var(--ax-type-t6); text-align: left; }
+  .axs-ckq.done .rw span { color: var(--ax-color-body); }
+  .axs-ckq.done .dots { display: inline-flex; gap: 6px; }
+  .axs-ckq.done .dots b { width: 18px; height: 18px; border-radius: 50%; background: var(--ax-color-brand); }
+  .axs-ckq.done .ax-button { width: 100%; margin-top: var(--ax-space-8); }
+  .axs-ckq-x { position: absolute; right: var(--ax-space-8); top: var(--ax-space-8); width: var(--ax-touch-size); height: var(--ax-touch-size); border: 0; background: none; color: var(--ax-color-body); display: inline-flex; align-items: center; justify-content: center; }
+  .axs-ckq-x svg { width: 20px; height: 20px; }
+  @keyframes ckqIn { 0% { transform: scale(0.96); } 50% { transform: scale(1.02); } 100% { transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .axs-ckq.call { animation: none; } }
   .ssc-bot { display: flex; flex-direction: column; gap: var(--ax-space-12); }
   .ssc-bot .axs-sres { padding: var(--ax-space-12) var(--ax-space-16); }
   .ssc-bot .axs-sres-h { font: var(--ax-type-t4); font-weight: 800; }

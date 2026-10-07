@@ -149,6 +149,7 @@ function beSync(after) {
       if (JSON.stringify(lk9) !== JSON.stringify(S.get("lk7", null))) S.set("lk7", lk9);
       var kt9 = res.my.kit && typeof res.my.kit === "object" ? res.my.kit : null;   /* 261006 키트 사이즈 · 키트명단 사번만(없으면 null = 홈 카드 · 화면 · 설정 줄 없음) */
       if (JSON.stringify(kt9) !== JSON.stringify(S.get("kit", null))) S.set("kit", kt9);
+      ckqIn(res.my.ckq || null);   /* 261007 체크인 번호표 · 오늘 번호가 있을 때만(없으면 카드 없음) */
       /* v3.21 B 포토부스 번호표 · 서버가 정본(없으면 null) · 바뀐 경우에만 저장해 불필요한 재렌더를 막는다 */
       /* v3.35 · v3.99 서버 스탬프 목록에 설문(sv)이 있을 때만 · 관리자가 08 을 취소하면 답이 남아 있어도 다시 제출할 수 있다(GAS @74) */
       if (res.my.survey === true && !S.get("survey_done", false) && !testEmp() && (res.my.stamps || []).indexOf("sv") >= 0) S.set("survey_done", true);
@@ -332,7 +333,8 @@ WS.h.ops = function (m) {   /* v4.76 스태프 폰 ops 방 · 혼잡 카드 곧�
   if (m.crowd && typeof crowdStore === "function") crowdStore(m.crowd); else wsSyncSoon(1500);
 };
 WS.h.tv = function (m) { if (WS.role === "tv") tvWsPull(false, m.k); };
-WS.h.scan = function (m) { scanTellIn(m); };   /* v5.98 개인 사건 scan · 스태프 폰 스캔(서버 scanTell_) */
+WS.h.scan = function (m) { scanTellIn(m); };
+WS.h.ckq = function (m) { if (WS.role === "p") ckqIn(m.q || null); };   /* 261007 내 번호 · 앞에 몇 명 · 호출(진동) · 수령 */   /* v5.98 개인 사건 scan · 스태프 폰 스캔(서버 scanTell_) */
 /* v5.98 선착순 참여상 소진 순간 · 서버가 참가자 방에 한 번(소켓만 · 푸시 없음) · 6개 · 아직 안 받은(ready) 사람에게만 한 줄 · 화면은 sync 로 */
 WS.h.fcfsout = function () {
   var was = fcfsReady(fcfsMy());
