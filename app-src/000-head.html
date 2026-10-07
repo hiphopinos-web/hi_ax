@@ -6,6 +6,115 @@
 <title>AX Festival 2026 · ME to WE</title>
 <!-- 홈 화면에 추가 = 아이콘 한 번으로 실행 (설치·스토어 없음) -->
 <link rel="manifest" href="manifest.json">
+<!-- 261007 PC 휴대폰 틀(사용자 261007 긴급 「PC 화면에서도 핸드폰처럼」) · 넓은 창(폭 900 이상 · 높이 600 이상 · 마우스 기기)에서만 이 창은 기기 틀만 그리고 앱은 틀 안 iframe(같은 주소)에서 휴대폰 폭 그대로 돈다
+     그래서 바텀 시트 · 탭 막대 · 모달 · 게임 · 둘러보기 · 카메라처럼 화면에 붙는(fixed) 것과 vh · 스크롤이 모두 틀 안에서 휴대폰과 똑같다 · 앱 코드는 바꾸지 않는다
+     틀을 안 쓰는 곳(지금 그대로): 휴대폰 · 태블릿(터치 전용) · 좁은 창 · #tv= · #self · 셀프 노트북(self_on) · 주소에 cap · file:// 단일 파일 · 자동화 브라우저(헤드리스 캡처 도구) · ?frame=0 · #noframe(이 탭 동안 끔) · ?frame=1 = 강제로 켬(확인용)
+     틀 안 앱이 TV · 송출 화면(tv-mode · tv-full · screen-mode)으로 바뀌면 틀을 걷고 창 전체로 · 창을 좁히면 틀을 걷고 창 전체로(새로 고침 없음)
+     이 창에서는 앱이 돌지 않는다: 아래 <plaintext> 가 이 창의 나머지 앱 코드를 글자로 삼킨다(두 번 돌지 않게 · 접속 기록 · 소켓 · 알림이 하나만) -->
+<script>
+(function () {
+  var W = window, D = document, H = D.documentElement, L = location, ss = null, mm = function (q) { try { return W.matchMedia(q).matches; } catch (e) { return false; } };
+  var isTop = true; try { isTop = W.top === W.self; } catch (e) { isTop = false; }
+  if (!isTop) {   /* 틀 안 앱 · 바로 위가 틀이고 휴대폰 모양일 때만 표시(스크롤 막대 숨김) */
+    try { var pc = W.parent.document.documentElement.className; if (W.parent === W.top && /\baxf-shell\b/.test(pc) && !/\baxf-full\b/.test(pc)) H.className += " axf-inphone"; } catch (e) {}
+    return;
+  }
+  if (L.protocol === "file:") return;
+  try { ss = W.sessionStorage; } catch (e) {}
+  var q = L.search || "", h = L.hash || "";
+  if (/[?&]frame=0(&|$)/.test(q) || /(^#|&)noframe\b/i.test(h)) {
+    try { ss.setItem("axf_noframe", "1"); } catch (e) {}
+    if (/^#noframe$/i.test(h)) { try { history.replaceState(history.state, "", L.pathname + L.search); } catch (e) {} }
+    return;
+  }
+  if (/[?&]frame=1(&|$)/.test(q)) { try { ss.removeItem("axf_noframe"); } catch (e) {} }
+  else {
+    try { if (ss && ss.getItem("axf_noframe") === "1") return; } catch (e) {}
+    if (navigator.webdriver) return;
+    if (/^#(self|tv=)/i.test(h) || /cap/.test(h)) return;
+    try { if (localStorage.getItem("axf_self_on") === "true" && JSON.parse(localStorage.getItem("axf_self_key") || "\"\"")) return; } catch (e) {}
+    if (!W.matchMedia || mm("(hover: none) and (pointer: coarse)")) return;
+    if (!mm("(min-width: 900px) and (min-height: 600px)")) return;
+  }
+  var P = L.pathname, IP = /\/index\.html$/i.test(P) ? P.replace(/index\.html$/i, "") : /\/$/.test(P) ? P + "index.html" : "";   /* 틀 안 주소 = 같은 앱의 다른 경로(/ ↔ /index.html) · 조상과 같은 주소의 iframe 은 브라우저가 막을 수 있다 */
+  if (!IP) return;
+  H.className += " axf-shell";
+  var CSS = "html.axf-shell,html.axf-shell body{margin:0;height:100%;overflow:hidden;background:#F2F4F6}" +
+    "html.axf-shell plaintext{display:none!important}" +
+    "#axfShell{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#F2F4F6}" +
+    ".axf-dev{position:relative;flex:none;padding:12px;border-radius:58px;background:#16191E;box-shadow:inset 0 0 0 1px #3A3F47,0 0 0 1px rgba(25,31,40,.08),0 32px 72px rgba(25,31,40,.20),0 8px 20px rgba(25,31,40,.10);transform:scale(var(--axf-sc,1));transform-origin:50% 50%}" +
+    ".axf-dev::before,.axf-dev::after{content:\"\";position:absolute;width:3px;border-radius:2px;background:#2B3038}" +
+    ".axf-dev::before{right:-3px;top:196px;height:92px}" +
+    ".axf-dev::after{left:-3px;top:168px;height:120px;background:linear-gradient(#2B3038 0 44px,transparent 44px 58px,#2B3038 58px)}" +
+    ".axf-scr{position:relative;display:flex;flex-direction:column;width:390px;height:var(--axf-sh,874px);border-radius:46px;overflow:hidden;background:#FFFFFF;isolation:isolate}" +
+    ".axf-sb{position:relative;flex:none;height:30px;background:#FFFFFF;transition:background-color .2s}" +
+    ".axf-scr iframe{display:block;flex:1 1 auto;width:100%;min-height:0;border:0;background:#FFFFFF}" +
+    ".axf-cam{position:absolute;left:50%;top:4px;width:80px;height:22px;margin-left:-40px;border-radius:11px;background:#000000;pointer-events:none}" +
+    ".axf-cam::after{content:\"\";position:absolute;right:8px;top:6px;width:10px;height:10px;border-radius:50%;background:#1C2230;box-shadow:inset 0 0 0 2px #0A0C10}" +
+    "html.axf-full .axf-dev{width:100%;height:100%;padding:0;border-radius:0;background:none;box-shadow:none;transform:none}" +
+    "html.axf-full .axf-dev::before,html.axf-full .axf-dev::after,html.axf-full .axf-sb{display:none}" +
+    "html.axf-full .axf-scr{width:100%;height:100%;border-radius:0}";
+  D.write("<" + "style id=\"axfShellCss\">" + CSS + "<" + "/style></head><body><div id=\"axfShell\"><div class=\"axf-dev\"><div class=\"axf-scr\"><div class=\"axf-sb\" id=\"axfSb\"><i class=\"axf-cam\" aria-hidden=\"true\"></i></div><iframe id=\"axfIn\" title=\"AX Festival 2026\" allow=\"camera; microphone; fullscreen; autoplay; clipboard-write; screen-wake-lock; web-share\" allowfullscreen></iframe></div></div></div><plaintext hidden>");
+  var F = null, last = "", ops = false, bip = null, sbc = "";
+  function idoc() { try { return F.contentDocument; } catch (e) { return null; } }
+  function opsNow() { var d = idoc(), f = d && d.getElementById("frame"); return !!f && /\b(tv-mode|tv-full|screen-mode)\b/.test(f.className); }
+  function fit() {
+    var w = W.innerWidth, hh = W.innerHeight, phone = !ops && w >= 900 && hh >= 600;
+    H.classList.toggle("axf-full", !phone);
+    if (phone) {
+      var av = hh - 72, sh = Math.max(640, Math.min(874, av)), sc = Math.min(1, av / sh, (w - 48) / 414);   /* 화면 = 위 상태 줄 30 + 앱(최대 390 x 844) · 낮은 창은 비율 그대로 줄인다 */
+      H.style.setProperty("--axf-sh", sh + "px"); H.style.setProperty("--axf-sc", String(Math.round(sc * 1000) / 1000));
+    }
+    var d = idoc(); if (d && d.documentElement) d.documentElement.classList.toggle("axf-inphone", phone);
+  }
+  function giveBip() { if (!bip || !F) return; try { var iw = F.contentWindow; if (!iw || iw.document.readyState === "loading") return; var e = new iw.Event("beforeinstallprompt", { cancelable: true }); e.prompt = function () { return bip.prompt(); }; e.userChoice = bip.userChoice; e.platforms = bip.platforms; bip = null; iw.dispatchEvent(e); } catch (x) {} }   /* 설치 창 이벤트는 맨 위 창에만 온다 · 틀 안 앱 창에 같은 이벤트로 다시 보내 앱의 받는 곳이 그대로 처리한다 */
+  var CV = null;
+  function cvAt(c, x) {   /* 그림판(canvas)으로 칠한 화면(로그인 주황 등) = 맨 윗줄 40점 중 가장 많은 색 · 따로 만든 작은 그림판에 옮겨 읽는다(앱 그림판은 건드리지 않음) */
+    try {
+      var r = c.getBoundingClientRect(); if (!r.width || !c.width) return "";
+      var sx = Math.max(0, Math.round((x - 20 - r.left) * c.width / r.width)), sw = Math.max(1, Math.round(40 * c.width / r.width)), sy = Math.max(0, Math.round((1 - r.top) * c.height / r.height));
+      if (!CV) CV = D.createElement("canvas"); CV.width = 40; CV.height = 1;
+      var x2 = CV.getContext("2d", { willReadFrequently: true }); x2.clearRect(0, 0, 40, 1); x2.drawImage(c, sx, sy, sw, 1, 0, 0, 40, 1);
+      var px = x2.getImageData(0, 0, 40, 1).data, cnt = {}, best = "", bn = 0, j, key;
+      for (j = 0; j < 160; j += 4) { key = px[j] + "," + px[j + 1] + "," + px[j + 2] + "," + (px[j + 3] / 255).toFixed(2); cnt[key] = (cnt[key] || 0) + 1; if (cnt[key] > bn) { bn = cnt[key]; best = key; } }
+      return best ? "rgba(" + best + ")" : "";
+    } catch (e) { return ""; }
+  }
+  function sbPaint() {   /* 위 상태 줄(카메라 섬 자리) = 앱 맨 위 색을 따라간다(겹친 반투명 덮개까지 섞어서) · 섬이 앱 머리 글자를 가리지 않는다 */
+    var d = idoc(), iw = F && F.contentWindow; if (!d || !d.elementsFromPoint || !iw) return;
+    var st = d.elementsFromPoint(iw.innerWidth / 2, 1), r = 0, g = 0, b = 0, a = 0, i, m, ea, k;
+    for (i = 0; i < st.length && a < 0.99; i++) {
+      var bg = st[i].tagName === "CANVAS" ? cvAt(st[i], iw.innerWidth / 2) : iw.getComputedStyle(st[i]).backgroundColor || "";
+      if ((m = /^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/.exec(bg))) ea = m[4] === undefined ? 1 : +m[4];
+      else if ((m = /^color\(srgb ([\d.]+) ([\d.]+) ([\d.]+)(?: \/ ([\d.]+))?\)/.exec(bg))) { m = [0, m[1] * 255, m[2] * 255, m[3] * 255, m[4]]; ea = m[4] === undefined ? 1 : +m[4]; }
+      else continue;
+      if (!ea) continue;
+      k = (1 - a) * ea; r += m[1] * k; g += m[2] * k; b += m[3] * k; a += k;
+    }
+    k = 1 - a; r += 255 * k; g += 255 * k; b += 255 * k;
+    var c = "rgb(" + Math.round(r) + "," + Math.round(g) + "," + Math.round(b) + ")";
+    if (c !== sbc) { sbc = c; var e = D.getElementById("axfSb"); if (e) e.style.backgroundColor = c; }
+  }
+  function tick() {
+    var o = opsNow(); if (o !== ops) { ops = o; fit(); }
+    if (!ops) { try { sbPaint(); } catch (e) {} }
+    try { var il = F.contentWindow.location, u = il.href; if (u !== last && (il.pathname === IP || il.pathname === P)) { last = u; var want = P + il.search + il.hash; if (want !== L.pathname + L.search + L.hash) history.replaceState(history.state, "", want); } } catch (e) {}   /* 주소 줄 = 틀 안 앱의 주소(?·#) · 새로 고침해도 같은 화면 · 앱이 지운 #s= · #q= 는 여기서도 지워진다 */
+  }
+  function boot() {
+    if (F) return;
+    F = D.getElementById("axfIn"); if (!F) return;
+    fit();
+    F.addEventListener("load", function () { ops = opsNow(); fit(); giveBip(); if (D.activeElement === D.body) { try { F.focus(); } catch (e) {} } });
+    F.src = IP + L.search + L.hash;
+    W.addEventListener("resize", fit);
+    setInterval(tick, 250);
+  }
+  W.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); bip = e; giveBip(); });   /* 설치 창은 맨 위 창에만 온다 · 틀 안 앱의 설치 단추가 그대로 쓰게 넘긴다 */
+  try { navigator.serviceWorker.addEventListener("message", function (e) { var m = e.data || {}; if (m.axf !== "go") return; try { var iw = F.contentWindow; iw.navigator.serviceWorker.dispatchEvent(new iw.MessageEvent("message", { data: m })); } catch (x) {} }); } catch (e) {}   /* 알림을 눌렀는데 서비스워커가 이 바깥 창을 골랐으면 틀 안 앱에 그대로 넘긴다(옮겨 가기만 · 받은 알림 push 는 앱이 직접 받는다) */
+  boot();
+  D.addEventListener("DOMContentLoaded", boot);
+})();
+</script>
 <!-- AX-TDS v1 (260922 · design.md §A) · 홍보부 앱 디자인 가이드 패키지의 잠긴 토큰·컴포넌트 · 이 두 파일은 고치지 않는다 -->
 <link rel="stylesheet" href="design-handoff/design-system/tokens.css">
 <link rel="stylesheet" href="design-handoff/design-system/components.css">

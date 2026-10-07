@@ -1916,6 +1916,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-nxh .ax-card-title { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); }
   .axs-nxh .ax-meta { color: var(--ax-color-muted); }
   .axs-nxh-x { position: absolute; top: var(--ax-space-4); right: var(--ax-space-4); }
+  /* 261007 PC 휴대폰 틀 안(000-head 의 틀 스크립트가 html 에 axf-inphone 을 건다 · 틀이 휴대폰 모양일 때만) = 휴대폰처럼 스크롤 막대를 감춘다(윈도 막대 약 15px 이 앱 폭 390 을 375 로 줄이지 않게) · 휴대폰 · 좁은 창 · 틀 밖 · 틀을 걷은 창 전체 모드에는 이 클래스가 없다 */
+  html.axf-inphone, html.axf-inphone * { scrollbar-width: none; }
+  html.axf-inphone ::-webkit-scrollbar { display: none; }
   /* v5.56 (사용자 261004 「행사장 둘러보기의 아이콘이 너무 허접해 · 챗봇을 배치」) 왼쪽 원 = 옛 3D 로비 사진(thumb.jpg · 지움) 대신 행사 캐릭터 챗봇(원본 BOT_SVG 합성 · design.md A-4)
      둘러보기 안 「내 캐릭터」와 같은 주황 · 연주황 몸 · 원 = 연주황(brandSoft · O10) 테 없음 · 캐릭터 46px(viewBox 200 그대로 · 원 42 안에 다 들어감)
      움직임 = 3초에 한 번 천천히 통통(위로 3px · 모양 그대로) · 머리 위 전파 호 3개 은은하게(최대 0.7) · 9초마다 눈 깜빡임 2번 · 반달 눈웃음 1번
