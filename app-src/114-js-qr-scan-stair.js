@@ -1337,9 +1337,9 @@ function kitDone(emp, res) {
   var ck = res.ck === "new" ? " · 스탬프 +3" : "";   /* v5.90 사전등록 체크인 3개(서버 ck) */
   var go = res.ck === "new" && !res.ru ? "룰렛 부스로 안내해 주세요" : "";   /* v5.94 (사용자 결정 261006) 체크인 3개 → 룰렛 → 강의장 · 룰렛을 이미 쓴 사람은 없음(서버 ru) */
   var wn = (scanSpot(SCAN.spot) || {}).win || "";   /* 261007 창구 자리 · 결과 띠 = 사이즈 아주 크게 + 가린 이름 + 번호(창구 스태프는 아무것도 누르지 않는다) */
-  if (wn && wn !== "E" && (res.kit === "give" || res.kit === "dup")) SCAN.bd = res.kit === "give" ? { c: "ok", big: res.sz || "", t: (res.no ? res.no + " · " : "") + "지급", s: res.sz ? "사이즈 " + res.sz + ck : "사이즈 미정 · 명단 확인" + ck, x: 4 } : { c: "dup", big: "", t: "이미 받음", s: (res.at || "") + "에 받았어요", x: 3 };
+  if (wn && wn !== "E" && (res.kit === "give" || res.kit === "dup")) SCAN.bd = res.kit === "give" ? { c: "ok", big: res.sz || "", t: (res.no ? res.no + " · " : "") + "지급", s: res.sz ? "사이즈 " + res.sz + (res.kno ? " · " + res.kno : "") + ck : "사이즈 미정 · 명단 확인" + ck, x: 4 } : { c: "dup", big: "", t: "이미 받음", s: (res.at || "") + "에 받았어요", x: 3 };
   if (res.kit === "sub") { scanLog(emp, (res.name ? res.name + " · " : "") + "라운지 초과 · 가습기 대체" + ck, true, true); scanShow("ok", who, "가습기로 대체 지급", "라운지 키트 수량 초과" + ck, go); return; }   /* v5.90 라운지 쿼터를 넘은 사전등록자 */
-  if (res.kit === "give") { scanLog(emp, (res.name ? res.name + " · " : "") + "키트 지급" + ck, true, true); scanShow("ok", who, "키트 지급", (res.grp === "dap" ? "라운지 사전등록" : res.pre ? "세션 " + res.pre + " · 사전 신청자" : "체크인 + 지급") + ck, go); return; }
+  if (res.kit === "give") { scanLog(emp, (res.name ? res.name + " · " : "") + "키트 지급" + ck, true, true); scanShow("ok", who, "키트 지급", (res.grp === "dap" ? "라운지 사전등록" : res.pre ? "세션 " + res.pre + " · 사전 신청자" : "체크인 + 지급") + (res.kno ? " · " + res.kno : "") + ck, go); return; }   /* 261008 옷 신청번호(K-012 · 교환 때 같은 번호) */
   if (res.kit === "dup") { scanLog(emp, (res.name ? res.name + " · " : "") + (res.sub ? "이미 가습기 대체" : "이미 지급됨") + ck, true, true); scanShow("dup", who, res.sub ? "이미 가습기로 받음" : "이미 지급됨", (res.at || "") + "에 받았어요" + ck, go); return; }
   scanLog(emp, (res.name ? res.name + " · " : "") + "체크인 · 명단 밖", null, true);
   scanShow("dup", who, "사전 신청 명단에 없어요", "여유 키트 " + sp + (res.list ? "" : " · 명단 대기 중"));

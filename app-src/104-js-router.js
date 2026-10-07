@@ -412,7 +412,7 @@ window.addEventListener("popstate", function () {
    시트에서 다른 상세로 = 내용 교체(시트 위 시트 없음 · 앞 내용은 DET.hist) · 시트에서 조작 · 흐름 화면(상담 시간 고르기 · QR 스캔 · 아이디어 등)으로 = 시트를 닫고 전체 화면 · 거기서 뒤로 = 다시 목록 위 시트
    짧은 확인 시트(#axsSheet · M03) · 팝업(#modal)은 이 시트 위에 뜬다(z 70 · 96 > 60) · 셋 모두 같은 끌어 닫기(sheetDrag) */
 var DET = { shown: { dv: null, base: null }, cur: null, hist: [], y: 0, yb: null, canon: 0, ry: 0, last: {} };
-var DET_V = ["sess_d", "zone_d", "booth", "exp_g", "prizes"];
+var DET_V = ["sess_d", "zone_d", "booth", "exp_g", "prizes", "kit"];   /* 261008 kit = 기념품 옷 사이즈 상품 시트 */
 /* 시트로 그리는가 · 상담 시간 고르기(신청 전 AX LOUNGE 상담)는 조작 화면이라 전체 화면 그대로 */
 function detIs(v) {
   if (DET_V.indexOf(v) < 0) return false;
@@ -458,7 +458,7 @@ function detClose() {
   if (TOUR_RET && (TOUR_RET.v === v || App.isAnc(TOUR_RET.v, v))) TOUR_RET.v = base;
   App.go(base, true);
 }
-var DET_SPEC = { sess_d: function () { return sessSheet(); }, zone_d: function () { return zoneSheet(); }, booth: function () { return boothSheet(); }, exp_g: function () { return expgSheet(); }, prizes: function () { return prizeSheet(); } };
+var DET_SPEC = { sess_d: function () { return sessSheet(); }, zone_d: function () { return zoneSheet(); }, booth: function () { return boothSheet(); }, exp_g: function () { return expgSheet(); }, prizes: function () { return prizeSheet(); }, kit: function () { return kitSheet(); } };
 /* 그리기 · 같은 내용이면 칸마다 글이 바뀐 곳만 바꾼다(동기화마다 다시 그려도 시트 안 스크롤 · 영상 · 펼침이 그대로) */
 function detPaint(dv, base) {
   var w = el("axsDet"), was = DET.shown;
