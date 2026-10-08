@@ -724,22 +724,23 @@
   .cstrip2 .cc.pred .st { font: var(--ax-type-t6-strong); color: var(--ax-color-brandText); }
   /* v4.73 (260930 사용자 결정) 엘리베이터 혼잡 + 계단 스위치 ON 이면 칸 자체가 계단 스탬프 화면으로 가는 버튼 · 「계단 이용」 + 셰브론 한 줄 */
   .cstrip2 button.cc { display: block; width: 100%; border: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; }
-  /* 261008 지금 현장 2×2 · 칸 = 이름 · 상태 · 짧은 말 · 색 사다리(여유 흰 면 → 보통 brandSoft → 붐빔 brand 28% → 거의 만석 · 혼잡 errorSoft → 만석 error 면 + 흰 글자) · 새 토큰 없음 */
-  .cstrip2.cn4 .cc { position: relative; min-width: 0; padding: 10px 14px; }
+  /* 261008 지금 현장 2×2 · 칸 = 이름 · 상태 · 짧은 말 · 칸 면은 상태와 상관없이 흰 면 하나 + 테두리 · 상태는 신호등 점 + 상태 글자 색만(사용자 「초록 노랑 붉은 신호등 색」 · 이 칸만의 오렌지 사다리 예외 · design.md) · 초록 = success · 빨강 = error 토큰 · 노랑만 이 칸 전용 --cn-mid(흰 바탕 글자 대비 4.5:1 이상) */
+  .cstrip2.cn4 { --cn-go: var(--ax-color-success); --cn-mid: #9A6208; --cn-stop: var(--ax-color-error); }
+  .cstrip2.cn4 .cc { position: relative; min-width: 0; padding: 10px 14px; background: var(--ax-color-surface); box-shadow: inset 0 0 0 1px var(--ax-color-divider); }
   .cstrip2.cn4 .nm { display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; }
   .cstrip2.cn4 .nm .cn-nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .cstrip2.cn4 .nm .dg { width: auto; height: 0.8em; color: var(--ax-color-brand); }   /* 261008 층 표기 점문자 · 글자 높이의 0.8 · 큰 글씨에서도 같이 커짐 · 주황 O100(프로그램 탭 층 표기와 같은 문법) */
-  .cstrip2.cn4 .cc.busy .nm .dg { color: var(--ax-color-brandText); }
-  .cstrip2.cn4 .cc.full .nm .dg { color: var(--ax-color-inverse); }
   .cstrip2.cn4 .cn-tv { position: absolute; right: 10px; bottom: 6px; font: var(--ax-type-caption); font-size: 10px; font-style: normal; line-height: 1; color: var(--ax-color-muted); }   /* 261008 테스트 사번 무작위 시험값 표시 */
-  .cstrip2.cn4 .cc.full .cn-tv { color: var(--ax-color-inverse); opacity: 0.8; }
-  .cstrip2.cn4 .st { margin: 2px 0 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  .cstrip2.cn4 .st { display: flex; align-items: center; gap: 7px; margin: 2px 0 0; font: var(--ax-type-t6-strong); color: var(--ax-color-muted); --lamp: var(--ax-color-divider); }
+  .cstrip2.cn4 .st .lamp { flex: none; width: 11px; height: 11px; border-radius: var(--ax-radius-999); background: var(--lamp); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lamp) 22%, transparent); }   /* 신호등 점 · 옅은 같은 색 바깥 고리 */
+  .cstrip2.cn4 .cc.ok .st { --lamp: var(--cn-go); color: var(--cn-go); }
+  .cstrip2.cn4 .cc.pred .st, .cstrip2.cn4 .cc.busy .st { --lamp: var(--cn-mid); color: var(--cn-mid); }
+  .cstrip2.cn4 .cc.jam .st, .cstrip2.cn4 .cc.full .st { --lamp: var(--cn-stop); color: var(--cn-stop); }
+  .cstrip2.cn4 .cc.full .st { font-weight: 800; }
+  .cstrip2.cn4 .cc.full .st .lamp { box-shadow: 0 0 0 2px var(--ax-color-surface), 0 0 0 4px var(--cn-stop); }   /* 만석 = 점 둘레에 한 겹 더(거의 만석과 구분) */
+  .cstrip2.cn4 .cc.none .st .lamp { background: var(--ax-color-muted); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ax-color-muted) 22%, transparent); opacity: 0.55; }
   .cstrip2.cn4 .sb { margin: 0; color: var(--ax-color-body); overflow: hidden; text-overflow: ellipsis; }
   .cstrip2.cn4 .cc.none .st { font: var(--ax-type-t7); color: var(--ax-color-muted); }
-  .cstrip2.cn4 .cc.busy { background: color-mix(in srgb, var(--ax-color-brand) 28%, var(--ax-color-surface)); }
-  .cstrip2.cn4 .cc.busy .st { color: var(--ax-color-brandText); }
-  .cstrip2.cn4 .cc.full { background: var(--ax-color-error); }
-  .cstrip2.cn4 .cc.full :is(.nm, .st, .sb) { color: var(--ax-color-inverse); }
   .cn-dot { position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; border-radius: var(--ax-radius-999); background: var(--ax-color-brand); box-shadow: 0 0 0 2px var(--ax-color-surface); }
   #view[data-v="home"] .sect span.cn-t, #view[data-v="home"] .sect span.cn-st { min-height: 0; font: var(--ax-type-caption); color: var(--ax-color-muted); }
   #view[data-v="home"] .sect span.cn-st { font-weight: 700; color: var(--ax-color-brandText); }
