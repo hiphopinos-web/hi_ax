@@ -173,11 +173,15 @@ var STAMP_SYNC = { warm: false };
    신청을 누르면 서버가 잠금 안에서 판정(먼저 온 쪽) · 진 쪽 = 「L이 방금 품절됐어요」 · 마감 전까지 몇 번이든 바꾼다
    st hum = 라운지 사전 신청 등록 순이 수량(29)을 넘은 사람 · 사이즈 없이 가습기 안내(담담하게)
    문구 = 「기념품」 · 「사이즈」만(「사은품」 · 「선물」 · 가격 없음) · 알림 허용은 정한 직후 한 번(가치 순간 · pushAsk kit) */
-var KIT = { sel: "", edit: false, busy: false, msg: "", tbl: false };
+var KIT = { sel: "", edit: false, busy: false, msg: "", tbl: false, fo: {} };
 var KIT_SIZES = ["SS", "L", "2XL", "3XL"], KIT_ITEM = "플리스 재킷", KIT_NAME = "AX Festival 2026 플리스 재킷", KIT_GET = "10/26(월) 08:00부터 · 1F 주차장 체크인존", KIT_GET_ST = "따로 안내해 드려요", KIT_LOW = 5;
 /* 261008 실측 사이즈표(사용자 261008 「이 제품 · 글리머 리플렉트 플리스 자켓」 · 제조사 상세 이미지의 표 · 단위 cm · 옛 추천 사이즈표(가슴둘레 · 키 · 몸무게 예시) 폐기) · [사이즈, 총장, 가슴너비, 어깨너비, 소매기장]
-   제조사 표 = S · M · L · LL(XL) · 3L(2XL) · 우리 사이즈 넷만 · S 자리에 SS(실측 확인 중 · 사용자 261008) · L = L · 2XL = 3L(2XL) · 3XL = 제조사 표에 없음(확인 중) · 값 없는 줄 = 「확인 중」 */
-var KIT_TBL = [["SS"], ["L", "72", "59", "50", "63"], ["2XL", "78", "66", "54", "65"], ["3XL"]];
+   제조사 표 = SS · S · M · L · LL(XL) · 3L(2XL) · 4L · 5L · 우리 사이즈 넷만 · 대응(사용자 261008 ① 「제조사 표기대로」 · 사용자가 보낸 전체 사이즈표) = SS = SS · L = L · 2XL = 제조사 3L · 3XL = 제조사 4L · 값 없는 줄 = 「확인 중」(지금은 없음) */
+var KIT_TBL = [["SS", "63", "50", "44", "60"], ["L", "72", "59", "50", "63"], ["2XL", "78", "66", "54", "65"], ["3XL", "80", "70", "56", "66"]];
+/* 261008 상품 정보 · 세탁 방법 · 주의사항(사용자 261008 「제조사 상세 페이지 내용을 그대로」 · 접힘 3칸) · 제조사 상세 이미지의 사실 정보만(홍보 문단 · 가격 · 판매처 · 상표 없음) · 세탁 · 주의 = 상세 문구 그대로(띄어쓰기만 앱 기준) */
+var KIT_INFO = [["소재", "폴리에스터 100%"], ["원단", "265g/㎡ 플리스 · 부드럽고 따뜻해요"], ["계절", "가을부터 봄까지 데일리로 입어요"], ["색상", "블랙"], ["디테일", "앞 지퍼 · 왼가슴 수납 포켓 · 양옆 주머니 · 뒷목 반사 소재"], ["제조국", "미얀마, 중국"]];
+var KIT_WASH = ["30도 이하 찬물 세탁", "이염 방지를 위한 단독 세탁", "중성세제 사용 (표백제 사용 금지)", "자연 건조 (건조기 사용 자제)"];
+var KIT_NOTE = ["염색된 의류는 세탁 시 물 빠짐이 발생할 수 있습니다.", "세탁 방법에 따라 제품이 변형되거나 수축될 수 있습니다.", "마찰이 잦은 활동 시 보풀이 생길 수 있습니다.", "프린트 부위는 다림질을 피하거나, 반드시 천을 덧대어 다려 주시기 바랍니다.", "폴리에스터 혼방 소재는 열에 약하므로, 다림질 시 반드시 천을 덧대고 저온으로 다려 주시기 바랍니다."];
 var KIT_IMG = "assets/kit/fleece.webp";   /* 261008 상품 사진(홍보부 원본 후리스자켓.png · 블랙 · 가슴 ME to WE · 4:3 · 800px · 옛 제조사 네이비 사진 대체) */
 /* 261008 테스트 사번 미리 보기(사용자 261008) · 테스트 계정(testEmp)이 명단에 없으면 이 기기에서만 보이는 신청 화면 · 서버 재고 · 신청번호를 쓰지 않는다(dry) · 고른 사이즈 = 기기 키 kit_t · 「테스트」 표시
    기간 = 운영 설정과 같은 값(열림 10/08 09:00 · 마감 10/21 18:00 · 변경 마감 10/23 18:00) · 앱 「지금」(appNow · 「시각 바꿔 보기」)으로 판정 · 남은 수 = 기본 수량 · 명단에 있으면 서버 my.kit 그대로(일반 참가자 규칙) */
@@ -269,13 +273,14 @@ function kitFsRow() {
 function kitOpen() {
   var k = kitMy();
   if (!k) return;
-  KIT.sel = ""; KIT.edit = false; KIT.msg = ""; KIT.tbl = false;
+  KIT.sel = ""; KIT.edit = false; KIT.msg = ""; KIT.tbl = false; KIT.fo = {};
   S.put("kit_seen", kitSeenKey(k));
   App.go("kit");
 }
 function kitPick(z) { if (KIT.busy) return; KIT.sel = z; KIT.msg = ""; App.render(); }
 function kitEdit(on) { KIT.edit = !!on; KIT.sel = ""; KIT.msg = ""; App.render(); kitTop(); }
 function kitTbl() { KIT.tbl = !KIT.tbl; App.render(); }
+function kitFold(k) { KIT.fo = KIT.fo || {}; KIT.fo[k] = !KIT.fo[k]; App.render(); }   /* 261008 상품 정보 · 세탁 방법 · 주의사항 접힘 */
 function kitTop() { var bd = document.querySelector("#axsDet .axs-dbody"); if (bd) bd.scrollTop = 0; }
 function kitSend() {
   var k = kitMy(), u = S.get("user", {}) || {}, z = KIT.sel;
@@ -316,16 +321,30 @@ function kitKvHtml(rows) {
 }
 /* 상품 사진 · 261008 제조사 대표 사진(앞모습 · 「샘플」 딱지 없음 · 옛 회색 「상품 이미지」 예시 칸 대체) · 큰 칸(상품 화면) · 작은 칸(완료 요약) */
 function kitImgHtml(sm) { return '<div class="axs-kitimg has' + (sm ? " sm" : "") + '"><img src="' + KIT_IMG + '" alt="' + (sm ? "" : KIT_ITEM + " 앞모습") + '" width="800" height="600" decoding="async"></div>'; }
-/* 실측 사이즈표 · 접힘(KIT.tbl) · 표 위 「단위 cm · SS · 3XL 실측은 확인 중이에요」 · 값이 없는 줄 = 네 칸을 합친 「확인 중」 */
+/* 접힘 한 칸(사이즈표와 같은 문법) · 제목 줄 = 버튼(aria-expanded) · 펼치면 아래에 내용 */
+function kitFoldHtml(id, title, open, onclick, inner) {
+  return '<section class="axs-kittbl"><button type="button" class="axs-kittog" aria-expanded="' + open + '"' + (open ? ' aria-controls="' + id + '"' : "") + ' onclick="' + onclick + '"><span>' + title + "</span>" + CHEV_SVG + "</button>" +
+    (open ? '<div class="axs-kittb" id="' + id + '">' + inner + "</div>" : "") + "</section>";
+}
+/* 실측 사이즈표 · 접힘(KIT.tbl) · 표 위 「단위 cm · 재는 위치에 따라 오차」 · 값이 없는 줄 = 네 칸을 합친 「확인 중」 */
 function kitTblHtml() {
-  var tb = KIT.tbl ? '<div class="axs-kittb" id="kitTb"><p class="ax-meta">단위 cm · SS · 3XL 실측은 확인 중이에요</p><table><thead><tr><th scope="col">사이즈</th><th scope="col">총장</th><th scope="col">가슴너비</th><th scope="col">어깨너비</th><th scope="col">소매기장</th></tr></thead><tbody>' +
-    KIT_TBL.map(function (r) { return '<tr><th scope="row">' + r[0] + "</th>" + (r.length > 1 ? "<td>" + r.slice(1).join("</td><td>") + "</td>" : '<td colspan="4" class="tbd">확인 중</td>') + "</tr>"; }).join("") + "</tbody></table></div>" : "";
-  return '<section class="axs-kittbl"><button type="button" class="axs-kittog" aria-expanded="' + KIT.tbl + '"' + (KIT.tbl ? ' aria-controls="kitTb"' : "") + ' onclick="kitTbl()"><span>실측 사이즈표</span>' + CHEV_SVG + "</button>" + tb + "</section>";
+  var tb = '<p class="ax-meta">단위 cm · 재는 위치에 따라 오차가 있을 수 있어요</p><table><thead><tr><th scope="col">사이즈</th><th scope="col">총장</th><th scope="col">가슴너비</th><th scope="col">어깨너비</th><th scope="col">소매기장</th></tr></thead><tbody>' +
+    KIT_TBL.map(function (r) { return '<tr><th scope="row">' + r[0] + "</th>" + (r.length > 1 ? "<td>" + r.slice(1).join("</td><td>") + "</td>" : '<td colspan="4" class="tbd">확인 중</td>') + "</tr>"; }).join("") + "</tbody></table>";
+  return kitFoldHtml("kitTb", "실측 사이즈표", !!KIT.tbl, "kitTbl()", tb);
+}
+/* 상품 정보(소재 · 원단 · 색상 · 디테일 · 제조국 · 값 줄) · 세탁 방법 · 주의사항(점 목록) · 순서 = 상품 정보 → 실측 사이즈표 → 세탁 방법 → 주의사항 */
+function kitFoldsHtml() {
+  var fo = KIT.fo || {};
+  var ul = function (a) { return '<ul class="axs-kitul">' + a.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>"; };
+  return kitFoldHtml("kitFoInfo", "상품 정보", !!fo.info, "kitFold('info')", kitKvHtml(KIT_INFO) + '<p class="ax-meta">g/㎡는 1제곱미터당 몇 그램인지 나타내는 단위예요. 숫자가 클수록 더 두껍고 무거워요</p>') +
+    kitTblHtml() +
+    kitFoldHtml("kitFoWash", "세탁 방법", !!fo.wash, "kitFold('wash')", ul(KIT_WASH)) +
+    kitFoldHtml("kitFoNote", "주의사항", !!fo.note, "kitFold('note')", ul(KIT_NOTE));
 }
 /* 상품 머리(이미지 · 상품명 · 한 줄 설명) */
 function kitProdHtml(k) {
   return kitImgHtml() + '<section class="axs-kitprod"><p class="axs-kitbr">AX Festival 2026</p><h3 class="ax-type-t3">' + KIT_ITEM + "</h3>" +
-    '<p class="ax-description">' + (kitStaff(k) ? "스태프용 행사 기념 플리스예요" : "행사 기념 플리스 · 에코백과 함께 받아요") + "</p></section>";
+    '<p class="ax-description">' + (kitStaff(k) ? "스태프용 행사 기념 플리스예요 · 부드럽고 따뜻한 폴리에스터" : "행사 기념 플리스 · 에코백과 함께 받아요") + "</p></section>";
 }
 /* 신청 완료 · 신청번호 · 사이즈 · 변경 기한 · 수령 */
 function kitDoneHtml(k) {
@@ -352,7 +371,7 @@ function kitSheet() {
   var chips = '<section class="axs-kitsz"><div class="axs-kitszh"><h3 class="ax-type-t5-strong">사이즈</h3>' + (ph === "open" ? '<span class="ax-meta">마감 ' + esc(kitWhen(k.close)) + "</span>" : "") + "</div>" +
     '<div class="axs-kitcs" role="radiogroup" aria-label="사이즈">' + KIT_SIZES.map(function (x) { return kitChipHtml(x, k); }).join("") + "</div>" +
     '<p class="ax-meta axs-kitnote">' + note + "</p></section>";
-  var body = msg + kitProdHtml(k) + (ph === "end" ? '<p class="ax-meta axs-kitnote">' + note + "</p>" : chips) + kitTblHtml() + kitKvHtml([["수령", esc(kitGetTxt(k))]]);
+  var body = msg + kitProdHtml(k) + (ph === "end" ? '<p class="ax-meta axs-kitnote">' + note + "</p>" : chips) + kitFoldsHtml() + kitKvHtml([["수령", esc(kitGetTxt(k))]]);
   var foot = "";
   if (kitCanSet(k)) {
     var z = KIT.sel, go = !!z && z !== k.sz, lb = KIT.busy ? "신청하는 중" : k.sz ? "사이즈 변경" : "이 사이즈로 신청";
