@@ -276,9 +276,19 @@ function kitOpen() {
   if (!k) return;
   KIT.sel = ""; KIT.edit = false; KIT.msg = ""; KIT.tbl = false; KIT.fo = {};
   S.put("kit_seen", kitSeenKey(k));
+  KIT_SIZES.forEach(function (z) { try { new Image().src = "assets/kit/fit_" + z + ".webp"; } catch (e) {} });   /* 261008 착용 사진 4장(65KB)을 미리 받아 칩을 누르면 바로 바뀐다 */
   App.go("kit");
 }
-function kitPick(z) { if (KIT.busy) return; KIT.sel = z; KIT.msg = ""; App.render(); }
+function kitPick(z) {
+  if (KIT.busy) return;
+  KIT.sel = z; KIT.msg = ""; App.render();
+  /* 261008 사이즈 칩은 사진보다 아래라 사진이 화면 밖이면 바뀐 걸 못 본다 · 사진이 절반 넘게 위로 지나갔을 때만 사진 쪽으로 올려 보여 준다(칩 · 신청 단추는 그대로 아래 있다) */
+  try {
+    var bd = document.querySelector("#axsDet .axs-dbody"), fg = bd && bd.querySelector(".axs-kitfig");
+    var ft = fg ? bd.scrollTop + fg.getBoundingClientRect().top - bd.getBoundingClientRect().top : 0;
+    if (fg && bd.scrollTop > ft + fg.offsetHeight * 0.5) bd.scrollTo({ top: Math.max(0, ft - 12), behavior: window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  } catch (e) {}
+}
 function kitEdit(on) { KIT.edit = !!on; KIT.sel = ""; KIT.msg = ""; App.render(); kitTop(); }
 function kitTbl() { KIT.tbl = !KIT.tbl; App.render(); }
 function kitFold(k) { KIT.fo = KIT.fo || {}; KIT.fo[k] = !KIT.fo[k]; App.render(); }   /* 261008 상품 정보 · 세탁 방법 · 주의사항 접힘 */
@@ -320,8 +330,16 @@ function kitChipHtml(z, k) {
 function kitKvHtml(rows) {
   return '<dl class="axs-kitkv">' + rows.map(function (r) { return "<div><dt>" + r[0] + "</dt><dd>" + r[1] + "</dd></div>"; }).join("") + "</dl>";
 }
-/* 상품 사진 · 261008 제조사 대표 사진(앞모습 · 「샘플」 딱지 없음 · 옛 회색 「상품 이미지」 예시 칸 대체) · 큰 칸(상품 화면) · 작은 칸(완료 요약) */
-function kitImgHtml(sm) { return '<div class="axs-kitimg has' + (sm ? " sm" : "") + '"><img src="' + KIT_IMG + '" alt="' + (sm ? "" : KIT_ITEM + " 앞모습") + '" width="800" height="600" decoding="async"></div>'; }
+/* 상품 사진 · 261008 제조사 대표 사진(앞모습 · 「샘플」 딱지 없음 · 옛 회색 「상품 이미지」 예시 칸 대체) · 큰 칸(상품 화면) · 작은 칸(완료 요약)
+   261008 사이즈별 착용 사진(사용자 「얼굴 넣은 것으로 앱에 반영해줘」) · 큰 칸 = z(고른 사이즈 · 없으면 신청한 사이즈)가 있으면 그 착용 사진 + 아래 캡션 「모델 175cm · 70kg · L 착용」 · 없으면 상품 사진 · 칸은 늘 정사각(높이 고정 · 사진 비율이 달라도 레이아웃이 안 움직임) · hint = 사이즈 칩이 있는 화면의 고르기 전 한 줄(캡션 자리를 비워 두지 않음) · 데이터는 지역 값(검사 샌드박스가 KIT_* 변수를 골라 싣기 때문) */
+function kitImgHtml(sm, z, hint) {
+  var FIT = { SS: "158cm · 50kg", L: "175cm · 70kg", "2XL": "180cm · 85kg", "3XL": "183cm · 100kg" }, fit = !sm && z && FIT[z] ? FIT[z] : "";
+  var cap = fit ? "모델 " + fit + " · " + z + " 착용" : "";
+  var img = fit ? '<img src="assets/kit/fit_' + z + '.webp" alt="' + cap + '" width="680" height="1024" decoding="sync">' : '<img src="' + KIT_IMG + '" alt="' + (sm ? "" : KIT_ITEM + " 앞모습") + '" width="800" height="600" decoding="async">';
+  var box = '<div class="axs-kitimg has' + (sm ? " sm" : "") + (fit ? " fit" : "") + '">' + img + "</div>";
+  if (sm) return box;
+  return '<div class="axs-kitfig">' + box + (cap || hint ? '<p class="ax-meta axs-kitcap">' + (cap || "사이즈를 누르면 착용 사진이 보여요") + "</p>" : "") + "</div>";
+}
 /* 접힘 한 칸(사이즈표와 같은 문법) · 제목 줄 = 버튼(aria-expanded) · 펼치면 아래에 내용 */
 function kitFoldHtml(id, title, open, onclick, inner) {
   return '<section class="axs-kittbl"><button type="button" class="axs-kittog" aria-expanded="' + open + '"' + (open ? ' aria-controls="' + id + '"' : "") + ' onclick="' + onclick + '"><span>' + title + "</span>" + CHEV_SVG + "</button>" +
@@ -344,13 +362,13 @@ function kitFoldsHtml() {
 }
 /* 상품 머리(이미지 · 상품명 · 한 줄 설명) */
 function kitProdHtml(k) {
-  return kitImgHtml() + '<section class="axs-kitprod"><p class="axs-kitbr">AX Festival 2026</p><h3 class="ax-type-t3">' + KIT_ITEM + "</h3>" +
+  return kitImgHtml(0, KIT.sel || k.sz || "", k.ph === "open" || k.ph === "chg") + '<section class="axs-kitprod"><p class="axs-kitbr">AX Festival 2026</p><h3 class="ax-type-t3">' + KIT_ITEM + "</h3>" +
     '<p class="ax-description">' + (kitStaff(k) ? "스태프용 행사 기념 플리스예요 · 부드럽고 따뜻한 폴리에스터" : "행사 기념 플리스 · 에코백과 함께 받아요") + "</p></section>";
 }
 /* 신청 완료 · 신청번호 · 사이즈 · 변경 기한 · 수령 */
 function kitDoneHtml(k) {
   var chg = k.ph === "open" ? kitWhen(k.close) + "까지 변경 가능" : k.ph === "chg" ? kitWhen(k.chg) + "까지 · 남은 사이즈만" : "마감";
-  return '<section class="axs-kitok"><span class="ok" aria-hidden="true">' + CHECK_SVG + "</span>" +
+  return kitImgHtml(0, k.sz) + '<section class="axs-kitok"><span class="ok" aria-hidden="true">' + CHECK_SVG + "</span>" +
     '<h3 class="ax-type-t3">' + kitRo(k.sz) + (k.how === "auto" ? " 배정됐어요" : " 신청 완료") + "</h3>" +
     (k.no ? '<p class="axs-kitno">신청번호 <b>' + esc(k.no) + "</b></p>" : "") + "</section>" +
     '<section class="axs-kitsum">' + kitImgHtml(1) + '<div class="tx"><b>' + KIT_NAME + '</b><span>사이즈 ' + esc(k.sz) + (kitStaff(k) ? "" : " · 에코백 포함") + "</span></div></section>" +
