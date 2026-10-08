@@ -608,7 +608,7 @@ function pushIosSheet() {
 }
 function pushInappSheet() {
   sheetOpen({ id: "pushin", title: "다른 브라우저로 열어 주세요", lead: "메신저 안에서는 알림을 받을 수 없어요",
-    body: '<p class="axs-pnote">오른쪽 위 메뉴에서 다른 브라우저로 열기 · 아이폰은 Safari · 안드로이드는 Chrome</p>',
+    body: '<p class="axs-pnote">오른쪽 위 메뉴에서 다른 브라우저로 열기 · Safari · Chrome</p>',
     go: "a2hsCopy(); sheetClose()", goLbl: "주소 복사" });
 }
 /* 로그인 직후(a2hsAuto) · 허용된 기기는 이 사번으로 다시 등록 · 홈 화면 앱으로 처음 들어온 사람에게만 한 번 묻는다 */

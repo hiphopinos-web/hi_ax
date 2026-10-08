@@ -778,7 +778,7 @@ var EXPG = { id: "st" };
 var EXP_GUIDE = {
   /* v5.64 옛 p1(전시 QR) · p7(벽 QR 퀴즈) 안내 삭제 · 지금 스탬프 8종에 없고 들어가는 길도 없다(정리 기록.md) */
   /* v4.83 (261001) AX PLAY · 스태프 인증 · 참가자가 찍는 부스 QR 은 보관 · 체험 뒤 스태프가 내 QR 을 찍는다(스태프 모드 목적 타일 「AX PLAY」) */
-  p2: { chip: "1F · AX PLAY", nm: "AX PLAY 체험", sc: "1F", h: "AX PLAY에서<br>체험해 보세요", d: "HiDI-Q 또는 Hi-Helper를 체험한 뒤 스태프에게 내 QR을 보여 주세요.",
+  p2: { chip: "1F · AX PLAY", nm: "AX PLAY 체험", sc: "1F", h: "AX PLAY에서<br>체험해 보세요", d: "체험한 뒤 스태프에게 내 QR을 보여 주세요.",
     steps: [["부스 체험", "HiDI-Q · Hi-Helper 중 1곳"], ["내 QR 보여주기", "스태프가 내 QR을 스캔"], ["적립 확인", "스탬프 탭에서 확인"]],
     meta: "09:30~16:30 · 1인 1회", cta: "내 QR 보여주기", act: "qrPanelOpen('mine')" },
   st: { chip: "1F~18F · 비상계단 1·2", nm: "계단 이용", h: "계단으로<br>이동해 보세요", d: "한 개 층만 이동해도 스탬프를 받아요.",   /* 261005 최종 QA · 「출발 층과 도착 층 방화문 앞 QR을 찍어요」 = 아래 단계 01 · 03 과 같은 말 */

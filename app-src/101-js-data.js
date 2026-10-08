@@ -284,7 +284,7 @@ var SURVEY_PLACES = [
   ["p3", "17F 강연"], ["dap", "1F AX 라운지"], ["cchat", "18F AX 커피챗"]
 ];
 var DEFAULT_NOTICES = [
-  { id: "n1", title: "AX Festival 2026에 오신 것을 환영합니다", body: "행사 당일 운영 안내와 바뀐 내용이 이곳에 올라와요.", ts: 0, pinned: true }
+  { id: "n1", title: "AX Festival 2026에 오신 것을 환영합니다", body: "당일 운영 안내와 바뀐 내용이 올라와요.", ts: 0, pinned: true }
 ];
 
 /* ════════════════ v10 신규 데이터 · 기획서 v2(260822 1층 반영) ════════════════ */

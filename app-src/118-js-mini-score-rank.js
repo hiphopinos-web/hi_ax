@@ -290,7 +290,7 @@ function olyEvPos(key, v) {
 }
 /* 종합 한 줄 · 「종합 12위 · 동메달까지 1,150점」 · 자격 전이면 「종합 순위까지 2종목 · 테트리스 · 기억력」 */
 function olyOverallPos(me) {
-  if (me.left) return "종합 순위까지 " + me.left + "종목 · " + olyOvEvents().filter(function (e) { return !me.ev[e.key]; }).map(function (e) { return e.short; }).join(" · ");
+  if (me.left) return "남은 종목 · " + olyOvEvents().filter(function (e) { return !me.ev[e.key]; }).map(function (e) { return e.short; }).join(" · ");
   if (testEmp()) return "내 기록 · 테스트라 순위에 들어가지 않아요";   /* v4.16 테스트 계정은 서버에 쓰지 않아 순위 계산이 안 된다(가짜 순위 대신 안내) */
   if (!me.sv || !me.rank) return "";
   var t = olyPosText(me);

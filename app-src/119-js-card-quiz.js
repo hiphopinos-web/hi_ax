@@ -457,7 +457,7 @@ function olyRankHtml() {
     var rest = ov.slice(3).map(function (x) { return olyRowHtml(x, olyFmt(x.total), "", false, isMe(x)); }).join("");
     if (me.sv && me.rank > ov.length) rest += '<div class="oly-gap"></div>' + olyRowHtml({ rank: me.rank, name: nick + " (나)" }, olyFmt(me.total), "", false, true);
     var op = olyOverallPos(me);
-    h += '<section class="ax-card oly-card"><div class="ax-stack-tight"><h2 class="ax-section-title">종합 순위</h2><p class="ax-description">' + olyOvSum() + " 최고 점수 합계" + (at ? " · " + at + " 기준" : "") + " · " + olyFmt(olyMax()) + "점 만점</p></div>" +
+    h += '<section class="ax-card oly-card"><div class="ax-stack-tight"><h2 class="ax-section-title">종합 순위</h2><p class="ax-description">' + olyOvEvents().length + "종목 최고점 합계" + (at ? " · " + at + " 기준" : "") + " · " + olyFmt(olyMax()) + "점 만점</p></div>" +
       (ov.length ? olyPodiumHtml(top) + '<div class="oly-list">' + rest + "</div>" : '<p class="ax-description">아직 ' + (OVE.length === 3 ? "세" : "다섯") + " 종목을 모두 한 사람이 없어요</p>") +
       '<p class="oly-pos">' + (op ? esc(op) : me.done ? "내 총점 " + olyFmt(me.total) : "한 판 하면 순위에 올라가요") + "</p></section>";
   }
