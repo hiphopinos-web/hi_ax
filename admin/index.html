@@ -1703,7 +1703,7 @@ function viewDash(mode){   /* v5.14 기록 › 현황 요약 · mode "todo" = �
   var ccBy={}; cc.forEach(function(r){ ccBy[r.status]=(ccBy[r.status]||0)+1; });
   var pw=pwWait();
 
-  var h=tabHead(st.t?'<span class="cap">서버 시각 <b class="n">'+esc(st.t)+'</b></span>':'');
+  var h=tabHead((st.t?'<span class="cap">서버 시각 <b class="n">'+esc(st.t)+'</b></span>':'')+ogStageHtml());   /* 261008 지금 오픈 단계 한 줄 */
   h+='<div class="kpis">'+
     kpi("가입 계정",ac.length,"명",roster?'명부 '+roster+'명 중 '+pct(ac.length,roster)+'%':'',"go('acct')")+
     kpi("스탬프 참여",active,"명",'1개 이상 · 평균 '+(active?(sp.reduce(function(a,r){return a+capN(r.n);},0)/active).toFixed(1):"0")+'개',"go('stamp')")+
@@ -6337,7 +6337,7 @@ function viewHq(){
   tabHead((mode!==hvModeAuto()?'<span class="cap">손으로 바꿈 · 날짜 기준 '+HV_MODE_N[hvModeAuto()]+'</span>':'')+'<span class="hv-seg" title="모드">'+["pre","day","post"].map(function(m){ return '<button class="'+(mode===m?"on":"")+'" onclick="hvModeSet(\''+m+'\')">'+HV_MODE_N[m]+'</button>'; }).join("")+'</span>');
   var h='<div class="hv-strip"><i class="dot '+(cn[1]==="ok"?"ok":cn[1]==="bad"?"bad":"")+'"></i><span><b>'+esc(cn[0])+'</b></span>'+tag(hvRo()?"읽기 전용 켜짐":"읽기 전용 꺼짐", hvRo()?"warn":"off")+tag(env[0], env[1])+
     (hot.length?'<a href="#" onclick="go(\'f_crowd\');return false">'+tag("혼잡 제보 "+hot.length+"곳","bad")+'</a>':'')+camChip()+
-    '<span class="sp"></span>'+(st.t?'<span class="cap">서버 시각 <b class="n">'+esc(st.t)+'</b></span>':'')+'</div>';
+    '<span class="sp"></span>'+(st.t?'<span class="cap">서버 시각 <b class="n">'+esc(st.t)+'</b></span>':'')+ogStageHtml()+'</div>';   /* 261008 지금 오픈 단계 */
   var r0=ST._right, todo=viewDash("todo"); ST._right=r0; var on=todo.filter(function(x){ return x.v; }), zero=todo.filter(function(x){ return !x.v; });
   var todoH='<div class="todo">'+on.map(function(x){ return '<div class="it"><div class="v">'+x.v+'</div><div><div class="t">'+esc(x.t)+'</div><div class="d">'+esc(x.d)+'</div></div><button class="btn sm pri" onclick="'+x.go+'">처리하기</button></div>'; }).join("")+
     zero.map(function(x){ return '<div class="it zero"><div class="v">0</div><div class="t">'+esc(x.t)+'</div><span></span></div>'; }).join("")+'</div>'+(on.length?'':'<p class="cap mt8">지금 처리할 일이 없습니다.</p>');
@@ -6696,9 +6696,18 @@ hvScrHtml=function(k){
   if(k!=="inv") return _ivScr(k);
   return '<p class="cap">띄우는 화면이 없습니다. 입력은 스태프 폰(룰렛 스캔 결과 5버튼 · 체크인 존 스캔 · 박스 열기)과 이 화면에서 합니다. 스태프 폰 화면은 앱 갱신 뒤 켜집니다.</p>';
 };
+/* 261008 단계별 오픈(서버 cfg_list og { ph, t1, t2 }) · 본부 머리 오른쪽 한 줄 「지금 오픈 단계: 테스트 기간 / 1차 / 전체」 · 옛 서버(og 없음) = 아무것도 안 그림 · 바꾸는 곳 = 시스템 › 운영 설정 */
+var OG_STAGE={ test:"테스트 기간", first:"1차 · 사전 신청자 · 스태프", all:"전체", off:"문 꺼짐 · 누구나" };
+function ogStageHtml(){ var o=((ST.data.cfgl||{}).og)||null; if(!o||!OG_STAGE[o.ph]) return "";
+  var nx=o.ph==="test"&&o.t1?" · 1차 "+short(o.t1):o.ph==="first"&&o.t2?" · 전체 "+short(o.t2):"";
+  return ' <span class="cap">지금 오픈 단계 <b>'+esc(OG_STAGE[o.ph])+'</b>'+esc(nx)+'</span>'; }
+CFG_NOTE["오픈_문"]="OFF = 1차 기간에도 명단 없이 누구나 · 지금 단계는 오늘 · 본부 화면 띠에";
+CFG_NOTE["오픈_1차"]="형식 「2026-10-19 00:00」 · 이 시각 전 = 테스트 기간(누구나) · 허용 명단 = 10F 사전 신청 · 키트명단(라운지 포함) · 스태프 의류 · 관리 명단(앱 · 콘솔) · 테스트 사번";
+CFG_NOTE["오픈_2차"]="형식 「2026-10-21 00:00」 · 명단 밖 사람의 앱 화면 「○월 ○일(요일)부터 열려요」 날짜";
 var _ivNeedX=hvNeedX;
 hvNeedX=function(t){
   var o=_ivNeedX(t);
+  if(t==="dash"&&HVS.cfg&&!o.some(function(x){ return x.k==="cfgl"; })) o=o.concat([{k:"cfgl",a:"cfg_list"}]);   /* 261008 오픈 단계 */
   if(t==="dash"&&navCur().id==="hq"&&HVS.inv&&!o.some(function(x){ return x.k==="inv"; })&&!(NEED.dash||[]).some(function(x){ return x.k==="inv"; })) o=o.concat([{k:"inv",a:"inv_state"}]);
   return o;
 };
@@ -8446,7 +8455,7 @@ var EZ_LIST=[
   { id:"z_gate", n:"행사 전 준비 · 전체 메뉴", d:"설정 · 명단 · 시험 · 기록이 모인 전체 메뉴(7개)입니다. 슈퍼관리자 본인 확인(앱 PIN) 뒤에 열립니다.", hide:1, parts:[P("zgate","","","viewEzGate")] }
 ];
 EZ_LIST.forEach(function(z){ var it={ id:z.id, m:z.id, n:z.n, ez:1, staff:z.staff?1:0, hide:z.hide?1:0, parts:z.parts }; NAV.push(it); NAVBY[z.id]=it; MENUBY[z.id]={ id:z.id, n:z.n, d:z.d }; });
-NEED.ztoday=function(){ return NEED.dash.concat([{k:"cam",a:"crowd_cam_list"},{k:"inv",a:"inv_state"},{k:"tres",a:"type_result"},{k:"fx",a:"fcfs_state"},{k:"ck",a:"ck_state"}]); };
+NEED.ztoday=function(){ return NEED.dash.concat([{k:"cam",a:"crowd_cam_list"},{k:"inv",a:"inv_state"},{k:"tres",a:"type_result"},{k:"fx",a:"fcfs_state"},{k:"ck",a:"ck_state"}]).concat(HVS.cfg?[{k:"cfgl",a:"cfg_list"}]:[]); };   /* 261008 cfgl = 지금 오픈 단계(ezStrip) */
 NEED.zwho=[{k:"stamp",a:"stamp_people"},{k:"acct",a:"acct_list"},{k:"nick",a:"type_nick_list"},{k:"sy",a:"sync",p:{emp:""}}];
 NEED.zstop=[{k:"pst",a:"push_stats"},{k:"sy",a:"sync",p:{emp:""}},{k:"noti",a:"sync",p:{emp:""}}];
 NEED.zroul=[{k:"sy",a:"sync",p:{emp:""}},{k:"stamp",a:"stamp_people"},{k:"cfgl",a:"cfg_list"}];
@@ -8597,7 +8606,7 @@ function ezStrip(){
     (hot?'<a href="#" onclick="navSel(\'z_field\',4);return false">'+tag("혼잡 확인 "+hot+"곳","bad")+'</a>':'')+
     (low&&low.length?'<a href="#" onclick="navSel(\'z_draw\',3);return false">'+tag("재고 경고 "+low.length+"건","warn")+'</a>':'')+
     (ckw!=null?'<a href="#" onclick="navSel(\'z_field\',5);return false">'+tag("체크인 대기 "+ckw+"명",ckw?"pri":"")+'</a>':'')+
-    '<span class="sp"></span><span class="cap">'+(w.fake?"시험 시각 ":"서버 시각 ")+'<b class="n">'+esc(w.d.slice(5).replace("-","/")+" "+ezHm(w.m))+'</b></span></div>';
+    '<span class="sp"></span><span class="cap">'+(w.fake?"시험 시각 ":"서버 시각 ")+'<b class="n">'+esc(w.d.slice(5).replace("-","/")+" "+ezHm(w.m))+'</b></span>'+ogStageHtml()+'</div>';   /* 261008 지금 오픈 단계 */
 }
 function viewToday(){
   var s=ezSlot(), w=s.w, show=ST.ezPeek!=null?ST.ezPeek:s.i;

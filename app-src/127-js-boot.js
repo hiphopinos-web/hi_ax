@@ -109,6 +109,7 @@
   /* ── 재방문: 이 기기를 기억하고 있으면 영상 스플래시를 건너뛰고 비밀번호만 받는다 ── */
   /* v19: 이 기기에서 입장한 적 있으면 스플래시·비밀번호 없이 바로 재입장 (로그아웃은 설정에서) */
   scanLinkNote();   /* v4.06 찍고 들어왔는데 로그인 전이면 로그인 화면에 한 줄 */
+  ogCheck();   /* 261008 단계별 오픈 · 지난번 「열려요」 화면을 받은 기기 = 그 화면을 먼저 깔고 서버에 다시 묻는다 */
   var savedU = S.get("user", {});
   if (savedU && savedU.empId) {
     /* 261007 (사용자 「로그인 기록이 있는 사람이 재차 들어오면 바로 메인으로」) 저장된 로그인 = 로그인 화면 · 입장 전환(1초) 없이 바로 홈(axf-saved 가 첫 그림부터 로그인 화면을 가린다) */
@@ -133,6 +134,7 @@
       beCall({ action: "login", emp: known.empId, name: known.name, h: h }, function (res) {
         if (!res || !res.ok) {
           reset();
+          if (res && res.reason === "notopen") return;   /* 261008 단계별 오픈 · beCall 이 「열려요」 화면을 띄웠다 */
           var msg = {
             pw: "비밀번호가 맞지 않습니다. 처음 정한 4자리를 입력해 주세요.",
             lock: "비밀번호를 여러 번 틀렸어요. 10분 뒤 다시 시도하거나 운영 데스크에 문의해 주세요.",
@@ -215,6 +217,7 @@
       beCall({ action: "login", emp: id, name: nm, h: h }, function (res) {
         if (!res || !res.ok) {
           reset();
+          if (res && res.reason === "notopen") return;   /* 261008 단계별 오픈 · beCall 이 「열려요」 화면을 띄웠다 */
           var msg = {
             notfound: "사번을 확인하지 못했어요. 다시 확인해 주세요 · 계속되면 운영 데스크에 문의해 주세요",   /* v5.60 T11 */
             name: "이름이 사번과 맞지 않아요. 다시 확인해 주세요",

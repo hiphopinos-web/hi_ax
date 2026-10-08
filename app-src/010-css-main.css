@@ -1249,6 +1249,15 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* 동작 줄이기 · 떠 있기 · 깜빡임 · 전파를 모두 멈춘다(호는 옅게 남는다) */
   @media (prefers-reduced-motion: reduce) { .axs-bot svg, .axs-bot .eye, .axs-bot .ant path { animation: none; } .axs-bot .ant path { opacity: 0.3; } }
   /* 화면이 통째로 비어서 기다리는 자리 · 로그인·입장 처리 중 (버튼 안 잠김 상태에는 쓰지 않는다) */
+  /* 261008 단계별 오픈 · 「열려요」 한 화면(ogShow) · 로그인 · 홈 · 시트 위 · 최초 로그인 장면(390) · 도장 팝(400) 아래 */
+  #ogGate { position: fixed; inset: 0; z-index: 380; display: flex; align-items: center; justify-content: center; padding: var(--ax-page-inset); padding-bottom: calc(var(--ax-space-64) + env(safe-area-inset-bottom, 0px)); background: var(--ax-color-canvas); text-align: center; }
+  #ogGate .og-in { display: flex; flex-direction: column; align-items: center; gap: var(--ax-space-16); max-width: 360px; }
+  #ogGate svg { width: 88px; height: 88px; display: block; }
+  #ogGate h1 { margin: 0; color: var(--ax-color-ink); word-break: keep-all; }
+  #ogGate h1 b { color: var(--ax-color-brandText); font-weight: inherit; }
+  #ogGate .ax-description { margin: 0; color: var(--ax-color-body); word-break: keep-all; }
+  #ogGate .ax-description span { white-space: nowrap; }   /* 큰 글씨 · 좁은 폭 = 가운뎃점에서 줄바꿈 */
+  #ogGate .og-out { position: absolute; left: 50%; bottom: calc(var(--ax-space-24) + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); border: 0; background: transparent; padding: 0 var(--ax-space-16); cursor: pointer; color: var(--ax-color-muted); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
   #axsWait { position: fixed; inset: 0; z-index: 130; display: flex; align-items: center; justify-content: center; padding: var(--ax-page-inset); background: var(--ax-color-canvas); }
   /* 비밀번호 찾기 화면 · 입력 56 / 주 버튼 56 모양만 A01 에 맞춘다(재방문 #quick 은 v4.94 수면형 .axs-lf) */
   #pwlost input { min-height: var(--ax-button-height); border: 1px solid var(--ax-color-divider); border-radius: var(--ax-radius-12); background: var(--ax-color-inset); color: var(--ax-color-ink); }
