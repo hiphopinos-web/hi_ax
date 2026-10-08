@@ -491,9 +491,9 @@ function ppRouletteOpen() {
   } else if (used) {
     body = "";
   } else if (n < 3) {
-    body = '<p class="muted" style="margin-top:8px;font-size:calc(14.5px * var(--fs))">스탬프 3개 · 1F EVENT · 1인 1회</p>';
+    body = needBoxHtml("받으려면", "룰렛 받으려면", pzNeedRows("roulette"));   /* 261008 받으려면 상자(경품 시트 룰렛 구역과 같은 줄) · 옛 회색 한 줄 「스탬프 3개 · 1F EVENT · 1인 1회」 */
   } else {
-    body = '<p class="muted" style="margin-top:10px;font-size:calc(13.5px * var(--fs));line-height:1.65">1F EVENT 룰렛 부스에서 QR 제시' + (S.get("rcut", "") ? "<br>룰렛 " + esc(S.get("rcut", "")) + " 마감" : "") + "</p>" +
+    body = needBoxHtml("받으려면", "룰렛 받으려면", pzNeedRows("roulette")) +   /* 261008 받으려면 상자 · 옛 회색 줄 「1F EVENT 룰렛 부스에서 QR 제시 / 룰렛 HH:MM 마감」(마감 시각은 상자 둘째 줄 보조 글) */
       '<button type="button" class="ax-button" style="margin-top:10px" onclick="qrPanelOpen(\'mine\')">내 QR 보여주기</button>';   /* v5.23 내 QR 은 QR 화면 한 곳(룰렛 1회권 상태 줄 포함) */
   }
   modalOpen(head + body + prizeModalHtml("roulette") + '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "룰렛 1회권");   /* v5.04 경품표(사진 · 이름 · 수량) */
@@ -582,9 +582,8 @@ function ppDrawOpen() {
     }
     tickets = '<div class="tkts">' + chips + "</div>";
   }
-  modalOpen('<p class="muted" style="font-size:calc(14.5px * var(--fs));line-height:1.7">스탬프 4개 1장 · 5개 2장 · 6개 3장 · 자동 발급<br>지금 <b style="color:var(--hi)">' + t + '장</b></p>' +
-    tickets +
-    '<p class="muted" style="margin-top:8px;font-size:calc(13.5px * var(--fs));line-height:1.65">' + (lkCond() ? "17:00 Closing Speech 현장 추첨 · 16:40부터 17F 입구 QR 체크인" : "17:00 Closing Speech 현장 추첨 · 경품은 따로 전달") + '</p>' +   /* v5.90 행운권_참석조건(sync lkcond) */   /* v4.79 무대 추첨 · v4.83 사용자 표시 용어 「행운권」 · v5.04 옛 「행운권 추첨 결과는 행사 후 개별 안내」 줄 삭제(사후 추첨 없음) */
+  modalOpen('<div class="axs-chiprow"><span class="axs-chip' + (t ? "" : " off") + '">지금 ' + t + "장</span></div>" + tickets +   /* 261008 상태 = 룰렛 1회권 팝업과 같은 칩 한 줄 */
+    needBoxHtml("받으려면", "행운권 받으려면", [["stamp", "스탬프 4개 1장 · 5개 2장 · 6개 3장", "자동 발급"]].concat(pzNeedRows("draw").slice(1))) +   /* 261008 받으려면 상자 · 둘째 줄 = 경품 시트 행운권 추첨 구역 둘째 줄(참석 조건 lkcond 따라) · 옛 회색 줄 「스탬프 4개 1장 · 5개 2장 · 6개 3장 · 자동 발급」 · 「17:00 Closing Speech 현장 추첨 · 경품은 따로 전달」(lc 「· 16:40부터 17F 입구 QR 체크인」) */   /* v5.90 행운권_참석조건(sync lkcond) */   /* v4.79 무대 추첨 · v4.83 사용자 표시 용어 「행운권」 · v5.04 옛 「행운권 추첨 결과는 행사 후 개별 안내」 줄 삭제(사후 추첨 없음) */
     prizeModalHtml("draw") +   /* v5.04 1~6등 10명 · 사진 · 이름 · 인원 */
     '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "행운권");
 }

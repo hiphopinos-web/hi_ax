@@ -231,11 +231,19 @@ var PZ_SEC = [
   { k: "type", en: "TYPING KING", t: "1F 타자왕 1~3위", sep: 1, need: [["key", "1F 현장 기록 1~3위", "17:00 마감 · 스탬프와 별개"], ["cup", "Closing Speech 시상 참석", ""]], go: ["실시간 순위 보기", "typeSiteRankGo()"] }   /* v5.18 맨 아래 · 선으로 나눔 · 순위판 입구 = 블록 맨 아래(v5.73) · v5.97 Outro 시상 보조 줄 삭제(사용자 261006 밤 「투머치」) */
 ];
 /* 「받으려면」 박스 · 연주황 면(brandSoft) · 아이콘 주황 · 굵은 글 ink · 옅은 글 body · 읽어 주기 = 「받으려면」 + 줄마다 */
+/* 261008 상자 공용(사용자 「참여 전 확인 아래 부분을 행운권 추첨의 받으려면 부분처럼 정비 · 정돈되지 않은 부분들도」) · 조건 · 방법 · 받는 법 안내 = 이 상자 하나 · 같은 CSS(.axs-pz-need)
+   쓰는 곳 = 경품 시트 구역 · AWS · MS 강연 상세 · Closing Speech 현장 추첨 · AX PLAY 체험 · 룰렛 1회권 · 행운권 · 선착순 참여상 팝업 · (기념품 옷 받는 방법은 검사 샌드박스 때문에 같은 틀을 그 함수 안에 적는다)
+   k = 위 작은 라벨(주황) · aria = 읽어 주기 이름 · rows = [아이콘(PZ_ICO), 굵은 한 줄(할 일), 옅은 한 줄(덧붙임 · 없으면 빈 값)] */
+function needBoxHtml(k, aria, rows) {
+  return '<div class="axs-pz-need" role="group" aria-label="' + esc(aria) + '"><p class="k" aria-hidden="true">' + esc(k) + "</p><ul>" + rows.map(function (r) {
+    return '<li><span class="i" aria-hidden="true">' + (PZ_ICO[r[0]] || "") + '</span><span class="x"><b>' + esc(r[1]) + "</b>" + (r[2] ? "<span>" + esc(r[2]) + "</span>" : "") + "</span></li>";
+  }).join("") + "</ul></div>";
+}
+/* 경품 시트 구역의 받으려면 줄 그대로(강연 상세 · 팝업이 같은 줄을 쓴다 · 문구가 한 곳) */
+function pzNeedRows(k) { var s = PZ_SEC.filter(function (x) { return x.k === k; })[0]; return !s ? [] : typeof s.need === "function" ? s.need() : s.need; }
 function pzNeedHtml(s) {
   var need = typeof s.need === "function" ? s.need() : s.need;   /* v5.90 서버 값(참석 조건 · 남은 수량 · 마감 시각)을 그릴 때 읽는다 */
-  return '<div class="axs-pz-need" role="group" aria-label="' + esc(s.t) + ' 받으려면"><p class="k" aria-hidden="true">받으려면</p><ul>' + need.map(function (r) {
-    return '<li><span class="i" aria-hidden="true">' + PZ_ICO[r[0]] + '</span><span class="x"><b>' + esc(r[1]) + "</b>" + (r[2] ? "<span>" + esc(r[2]) + "</span>" : "") + "</span></li>";
-  }).join("") + "</ul></div>";
+  return needBoxHtml("받으려면", s.t + " 받으려면", need);
 }
 var PZ = { t: 0 };
 var PZ_THUMB = ["ld1_ipad", "fin_humidifier_v2", "rl1_tumbler_v2"];   /* 입구 사진 3장 = assets/prize/t_<img>.webp(96px) */
@@ -427,7 +435,7 @@ function lk7WinSpec() {
 }
 function fcfsInfoOpen() {
   var x = fxGet() || {};
-  modalOpen('<p class="muted" style="font-size:calc(14.5px * var(--fs));line-height:1.7">스탬프 6개를 모으고<br>' + esc(fcfsAt("1F 주차장 체크인존")) + "에 먼저 온 " + (x.cap || 210) + "명</p>" +   /* v5.98 받기 선착순 */
+  modalOpen(needBoxHtml("받으려면", "선착순 참여상 받으려면", pzNeedRows("fin")) +   /* 261008 받으려면 상자(경품 시트 선착순 구역과 같은 줄) · 옛 회색 두 줄 「스탬프 6개를 모으고 / 1F 주차장 체크인존에 먼저 온 N명」 · v5.98 받기 선착순 */
     prizeModalHtml("fin") + '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "선착순 참여상");
 }
 /* 행운권 참석 조건(sync lkcond · 옛 서버 = 조건 있음) · 룰렛 마감 시각(sync rcut) · 아이디어왕 인원 */

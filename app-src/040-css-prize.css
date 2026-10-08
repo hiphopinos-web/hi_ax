@@ -116,8 +116,9 @@
   .axs-pz-need .i { display: block; flex: none; width: 24px; height: 24px; color: var(--ax-color-brand); }
   .axs-pz-need .i svg { display: block; width: 100%; height: 100%; }
   .axs-pz-need .x { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .axs-pz-need b { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); word-break: keep-all; }
+  .axs-pz-need b { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); word-break: keep-all; text-wrap: pretty; }   /* 261008 큰글씨에서 마지막 줄에 한 낱말만 남지 않게(지원 안 하는 브라우저는 그대로) */
   .axs-pz-need .x > span { font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
+  #modal .axs-pz-need { margin-top: var(--ax-space-12); }   /* 261008 팝업(룰렛 1회권 · 행운권 · 선착순 참여상) · 위 상태 칩 · 행운권 번호와 붙지 않게 */
   /* 경품 카드 · 사진이 주인공 · 흰 카드 위 흰 바탕 사진이 이어지게(사진 바탕은 빌드에서 흰색으로 맞췄다) */
   .axs-pz-c { display: flex; flex-direction: column; min-width: 0; margin: 0; overflow: hidden; border-radius: var(--ax-radius-24); background: var(--ax-color-surface); }
   .axs-pz-ph { position: relative; display: block; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; background: var(--ax-color-surface); }
@@ -283,10 +284,7 @@
   .axs-kitok { display: flex; flex-direction: column; align-items: center; gap: var(--ax-space-8); text-align: center; }
   .axs-kitok .ok { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--ax-color-successSoft); color: var(--ax-color-success); }
   .axs-kitok .ok svg { width: 24px; height: 24px; }
-  .axs-kitget { margin: var(--ax-space-12) var(--ax-space-4) 0; padding: 14px 16px; border-radius: 14px; background: var(--ax-color-brandSoft); text-align: left; }   /* 261008 받는 방법 상자 */
-  .axs-kitget .h { margin: 0 0 4px; font-size: 13px; font-weight: 700; color: var(--ax-color-brandText, inherit); }
-  .axs-kitget .m { margin: 0; font-size: 16px; font-weight: 700; word-break: keep-all; }
-  .axs-kitget .s { margin: 4px 0 0; font-size: 14px; word-break: keep-all; }
+  .axs-pz-need.axs-kitget { margin: var(--ax-space-12) 0 0; text-align: left; }   /* 261008 받는 방법 상자 = 받으려면 상자(.axs-pz-need) 그대로 · 자리 간격만 · 옛 전용 글자 크기(13 · 16 · 14px 고정) 삭제 */
   .axs-kitok h2, .axs-kitok h3, .axs-kitok p { margin: 0; word-break: keep-all; }
   .axs-kitkv { margin: 0; display: flex; flex-direction: column; }
   .axs-kitkv div { display: flex; justify-content: space-between; align-items: baseline; gap: var(--ax-space-12); padding: var(--ax-space-12) 0; border-top: 1px solid var(--ax-color-divider); }

@@ -575,7 +575,7 @@ function attDetailFill(D, ap, timeBtn) {
 }
 /* 상세 한 장의 내용 · 화면(sess_d)과 확인(sess_cf)이 같은 값을 쓴다 */
 function progDetail(s) {
-  var D = { cat: "", org: "", title: s.ttl, who: "", whoSub: "", av: "", st: "", stc: "", kv: [], cfKv: [], extra: "", after: "", secT: "참여 전 확인해 주세요", secB: "", link: "", help: "", btn: "" };   /* v5.69 after = 확인 블록 아래(상담 완료 사은품 코드 · 「아래 코드를」 문장 바로 아래) */
+  var D = { cat: "", org: "", title: s.ttl, who: "", whoSub: "", av: "", st: "", stc: "", kv: [], cfKv: [], extra: "", after: "", secT: "참여 전 확인해 주세요", secB: "", need: "", link: "", help: "", btn: "" };   /* 261008 need = 「받으려면」 상자(needBoxHtml · 확인 블록 제목 아래 · 회색 맨글자 대신) · v5.69 after = 확인 블록 아래(상담 완료 사은품 코드 · 「아래 코드를」 문장 바로 아래) */
   var day = "10월 26일 · ", pl = s.id === "expo" ? "1F 로비" : s.id === "dap" ? "1F AX 라운지" : sessPlace(s);
   var timeBtn = progBtn("전체 시간표 보기", "homeSched()");
   var cxBtn = progBtn("신청 취소하기", "progCancelOpen(\'" + s.id + "\')", "axs-btn-danger", "cxBtn");
@@ -598,7 +598,7 @@ function progDetail(s) {
     if (lc) D.kv.push(["체크인", din ? "추첨 체크인 완료" : "16:40–17:25 · 입구 QR"]);   /* 375px 한 줄 · 추첨 QR 은 아래 「현장 추첨」 */
     D.extra = '<section class="axs-dsec"><h3>진행</h3><ul class="axs-ddot"><li>Closing Speech · 정경선 CSO</li><li>DAP 우수 성과자 시상</li><li>현장 추첨</li></ul></section>';   /* v5.69 시트 = 「하는 일」과 같은 점 목록 */
     D.secT = "현장 추첨";
-    D.secB = lc ? "16:40부터 대강당 입구 추첨 QR로 체크인해요.<br>체크인한 사람의 행운권 번호 중에서 뽑아요.<br>행운권은 스탬프 4개부터 생겨요." : "행운권 번호 전체에서 뽑아요.<br>당첨되면 경품은 따로 전달해요.<br>행운권은 스탬프 4개부터 생겨요.";
+    D.need = needBoxHtml("받으려면", "현장 추첨 받으려면", pzNeedRows("draw"));   /* 261008 받으려면 상자 = 경품 시트 행운권 추첨 구역과 같은 줄(참석 조건 lkcond 따라) · 옛 회색 세 줄(lc 「16:40부터 대강당 입구 추첨 QR로 체크인해요 · 체크인한 사람의 행운권 번호 중에서 뽑아요」 / 「행운권 번호 전체에서 뽑아요 · 당첨되면 경품은 따로 전달해요」 · 「행운권은 스탬프 4개부터 생겨요」) */
     D.help = din || !lc ? "" : dwin ? "현장에서만 체크인할 수 있어요" : evPhase() === "after" || (evPhase() === "live" && hmD >= t2m("17:25")) ? "추첨 체크인 마감" : "16:40부터 체크인할 수 있어요";   /* 261005 최종 QA · 행사가 끝난 뒤에도 「16:40부터」가 남던 것 */
     D.btn = lc && !din && dwin ? progBtn("추첨 QR 스캔", "qrScanOpen()") : timeBtn;
     D.pics = prizeGoHtml("draw");   /* v5.20 (사용자 261003 후킹 권장 2) 경품 입구 한 줄 · 행운권 구역으로 */
@@ -614,11 +614,13 @@ function progDetail(s) {
     D.st = at ? "출석 완료" : s.id === "expo" ? "자유 입장" : "자유 참석"; D.stc = "ok";
     D.kv = [["일시", s.id === "expo" ? "10월 26일 · 행사 시간 중" : day + progTm(s.tm)], ["장소", pl], ["참여 방법", s.id === "expo" ? "신청 없이 자유 관람" : "신청 없이 자유 참석"]];
     D.secB = s.id === "expo" ? "1F 로비 6구역 · AX VISION · AX LAB · AX in Action · AX PLAY · AX 라운지 · EVENT" :
-      ap ? "입장할 때 QR 한 번, 끝날 때 화면의 QR 한 번 찍어요." + (par ? "<br>입장 1개 + 끝 1개 = 스탬프 2개<br>AWS · MS 합쳐 2개까지" : "") + (s.desc ? "<br>" + esc(s.desc) : "") :   /* v5.96 (사용자 261006 밤 도장 ×2) 강연 하나로 2개를 다 채운다는 뜻 */   /* v5.68 입장 1 + 끝 1 · v5.94 (사용자 결정 261006) 스탬프 줄은 오후 파트너 강연만 · 오전 강연은 출석만 */
+      ap && par ? (s.desc ? esc(s.desc) : "") :   /* 261008 오후 AWS · MS = 아래 받으려면 상자(D.need) */
+      ap ? "입장할 때 QR 한 번, 끝날 때 화면의 QR 한 번 찍어요." + (s.desc ? "<br>" + esc(s.desc) : "") :   /* v5.96 (사용자 261006 밤 도장 ×2) 강연 하나로 2개를 다 채운다는 뜻 */   /* v5.68 입장 1 + 끝 1 · v5.94 (사용자 결정 261006) 스탬프 줄은 오후 파트너 강연만 · 오전 강연은 출석만 */
       s.desc ? esc(s.desc) : "";   /* v5.96 오전 강연 = 참여 전 확인 칸 없음(일시 · 장소 · 참여 방법 표와 같은 말을 되풀이하지 않는다) */
     if (s.id === "expo") D.link = '<button type="button" class="ax-link axs-plain axs-self" onclick="App.go(\'floor1\')">1F 부스 6구역 보기</button>';
     if (ap) attDetailFill(D, ap, timeBtn);   /* v5.68 입장 QR · 끝 QR 두 줄 · 지금 입장 수 · 창이 끝나면 시간표(261005 최종 QA 규칙 그대로) */
     else { D.help = ""; D.btn = timeBtn; }
+    if (ap && par) D.need = needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "입장 · 끝 QR 한 번씩", "끝 QR은 화면에 떠요"], ["stamp", "입장 1개 + 끝 1개 = 스탬프 2개", "AWS · MS 합쳐 2개까지"]]);   /* 261008 (사용자 「참여 전 확인 아래 부분을 받으려면 부분처럼」) 옛 회색 세 줄 「입장할 때 QR 한 번, 끝날 때 화면의 QR 한 번 찍어요 / 입장 1개 + 끝 1개 = 스탬프 2개 / AWS · MS 합쳐 2개까지」 · 시간 · 규칙 강조 없음 */
     if (par) D.pics = prizeGoHtml();   /* v5.20 오후 파트너 강연 · 경품 입구 한 줄 */
     return D;
   }
@@ -711,7 +713,7 @@ function sessSheet() {
   var who = d.who ? '<div class="axs-who">' + spkAvHtml(s.id, d.av) + '<span class="axs-tx"><span class="ax-card-title">' + esc(d.who) + "</span>" + (ws ? '<span class="ax-description">' + esc(ws) + "</span>" : "") + "</span></div>" : "";
   var kv = d.kv.length ? '<dl class="ax-inset axs-kv">' + d.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl>" : "";
   var sg = "sg" in d ? d.sg : "";
-  var chk = !("sg" in d) && d.secB ? '<section class="axs-dsec"><h3>' + esc(d.secT === "참여 전 확인해 주세요" ? "참여 전 확인" : d.secT) + '</h3><p class="axs-dp">' + d.secB + "</p></section>" : "";
+  var chk = !("sg" in d) && (d.secB || d.need) ? '<section class="axs-dsec"><h3>' + esc(d.secT === "참여 전 확인해 주세요" ? "참여 전 확인" : d.secT) + "</h3>" + (d.secB ? '<p class="axs-dp">' + d.secB + "</p>" : "") + (d.need || "") + "</section>" : "";   /* 261008 제목 아래 = 회색 글(secB) 또는 받으려면 상자(need) */
   return {
     name: esc(nm), chips: (cat ? '<span class="axs-chip cat">' + esc(cat) + "</span>" : "") + (d.st ? '<span class="axs-chip ' + d.stc + '">' + esc(d.st) + "</span>" : ""),
     title: esc(tt), seal: stp ? stampTagHtml(stp, stp === "p3" ? 2 : 0) : "",   /* v5.96 오후 강연 도장 ×2(입장 1 + 끝 1) */

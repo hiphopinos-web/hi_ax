@@ -809,7 +809,7 @@ function boothSheet() {
       (x.note ? '<p class="ax-meta">' + x.note + "</p>" : "") + "</section>";
   }).join("");
   return { name: "AX PLAY 체험", chips: '<span class="axs-chip">1F · 2종</span>', title: "HiDI-Q · Hi-Helper 직접 써 보기", seal: stampTagHtml("p2"),   /* v5.79 머리 = 짧은 이름 · 칩에서 이름과 겹치는 「AX PLAY」를 뺐다 */
-    body: '<p class="axs-dp">1곳 체험 = 스탬프 1개 · 체험 후 스태프가 내 QR 스캔</p>' + blk +
+    body: needBoxHtml("스탬프 받으려면", "AX PLAY 스탬프 받으려면", [["stamp", "1곳 체험 = 스탬프 1개", "체험 후 스태프가 내 QR 스캔"]]) + blk +   /* 261008 받으려면 상자(옛 회색 한 줄 「1곳 체험 = 스탬프 1개 · 체험 후 스태프가 내 QR 스캔」) */
       (testMode() && !got2 ? '<button type="button" class="ax-button ax-button-weak" onclick="boothStamp()">완료 처리 (시연 · 테스트 모드)</button>' : ""),
     foot: got2 ? progBtn("스탬프 확인하기", "expStamp('p2')") : progBtn("내 QR 보여주기", "qrPanelOpen('mine')") };
 }

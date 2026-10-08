@@ -488,7 +488,7 @@ function kitProdHtml(k) {
 function kitDoneHtml(k) {
   /* 261008 받는 방법 상자(사용자 「중요한 정보이니 신청 완료 시 수령 방법 안내를 따로 주자」) · 체크 바로 아래 · 스태프 = 행사 전 미리 전달(사용자 결정) · 사전 신청 = 당일 체크인존 · 검사 샌드박스 때문에 함수로 빼지 않는다 */
   var st0 = kitStaff(k), gm = st0 ? "따로 전달해 드려요" : "10/26(월) 08:00부터 · 1F 주차장 체크인존", gs = st0 ? "" : "내 QR을 보여 주면 바로 드려요";
-  var gb = '<section class="axs-kitget"><p class="h">받는 방법</p><p class="m">' + esc(gm) + "</p>" + (gs ? '<p class="s">' + esc(gs) + "</p>" : "") + "</section>";
+  var gb = '<div class="axs-pz-need axs-kitget" role="group" aria-label="받는 방법"><p class="k" aria-hidden="true">받는 방법</p><ul><li><span class="i" aria-hidden="true">' + (typeof PZ_ICO === "object" ? PZ_ICO.box : "") + '</span><span class="x"><b>' + esc(gm) + "</b>" + (gs ? "<span>" + esc(gs) + "</span>" : "") + "</span></li></ul></div>";   /* 261008 받으려면 상자와 같은 틀 · 같은 CSS(needBoxHtml 과 같은 마크업 · 함수를 부르지 않는 까닭은 위 줄) */
   var chg = k.ph === "open" ? kitWhen(k.close) + "까지 변경 가능" : k.ph === "chg" ? kitWhen(k.chg) + "까지 · 남은 사이즈만" : "마감";
   return '<section class="axs-kitok"><span class="ok" aria-hidden="true">' + CHECK_SVG + "</span>" +
     '<h3 class="ax-type-t3">' + kitRo(k.sz) + (k.how === "auto" ? " 배정됐어요" : " 신청 완료") + "</h3>" +
