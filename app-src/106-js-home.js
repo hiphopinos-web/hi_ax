@@ -86,6 +86,7 @@ function myScheduleHtml() {
   var hm0 = hmNow();
   if (!surveyLock() && !surveyDone() && evPhase() === "live" && hm0 >= t2m("16:40") && hm0 < t2m("17:10"))
     rows.push([-1, "App.go('survey')", "설문", "오늘 한 판 설문", "60초 · 스탬프 1개", "mine"]);
+  var lkr = luckyRow(); if (lkr) rows.push(lkr);   /* 261008 럭키드로우 당첨 = 맨 위 한 줄(확인 전 주황 점) */
   var fgr = fcfsGotRow(); if (fgr) rows.push(fgr);   /* v5.97 선착순 참여상 수령 전 = 맨 위 한 줄(받으면 사라진다) */
   var ckr = ckGuideRow(); if (ckr) rows.push(ckr);   /* v5.94 사전등록 체크인 3개 → 룰렛 → 강의장(룰렛을 쓰면 사라진다) */
   /* v3.43 · 내 항목은 myItems 하나에서 (종류별 1건 · 테스트 오버레이 겹침 제거) */
@@ -109,7 +110,7 @@ function myScheduleHtml() {
     var ph1 = evPhase(), fr = rows.filter(function (r) { return r[7] == null; });
     var fl = ph1 === "after" ? [] : myFlowItems().filter(function (o) { return o.mine && (ph1 !== "live" || o.b > hm0); }), fm = Math.max(0, fl.length - SCHED_VIEW);
     var top = (ph1 === "after" ? schedNowRow() : "") + fr.map(function (r) {
-      return rcHtml({ cls: " my", onclick: r[1], link: true, left: tokBadge(esc(r[2]), r[5]), title: esc(r[3]), sub: esc(r[4]), place: r[6] });
+      return rcHtml({ cls: " my", onclick: r[1], link: true, left: tokBadge(esc(r[2]), r[5]), title: esc(r[3]) + (r[8] ? '<i class="axs-ndot" aria-label="확인 전"></i>' : ""), sub: esc(r[4]), place: r[6] });
     }).join("") + ap;
     /* v6.11 (사용자 261007) 신청 일정이 다 끝났으면 Outro 안내 카드 · Outro 도 끝났으면(또는 행사 뒤) 「남은 일정 없음」 그대로 */
     var oc = !fl.length && ph1 !== "after" ? myOutroItem() : null;
@@ -126,7 +127,7 @@ function myScheduleHtml() {
   /* v4.13 (사용자 결정 260922) 카드 안 스크롤(창 안의 창) 폐지 · 3개만 · 4개 이상이면 목록 바로 아래 전폭 버튼 「일정 더보기 +N」(숨은 개수) → 나의 참여 › 내 일정 · 3개 이하면 버튼 없음 */
   var more = Math.max(0, rows.length - SCHED_VIEW);
   var cards = rows.slice(0, SCHED_VIEW).map(function (r) {
-    return rcHtml({ cls: " my", onclick: r[1], link: true, left: tokBadge(esc(r[2]), r[5]), title: esc(r[3]), sub: esc(r[4]), place: r[6] });
+    return rcHtml({ cls: " my", onclick: r[1], link: true, left: tokBadge(esc(r[2]), r[5]), title: esc(r[3]) + (r[8] ? '<i class="axs-ndot" aria-label="확인 전"></i>' : ""), sub: esc(r[4]), place: r[6] });
   }).join("");
   return head + '<div class="axs-rows">' + schedNowRow() + cards + ap + "</div>" +
     (more ? '<button type="button" class="ax-button ax-button-weak axs-more" onclick="mySched()" aria-label="나의 일정 ' + more + '개 더 보기">일정 더보기 +' + more + "</button>" : "");

@@ -169,6 +169,11 @@
   .axs-fcg img { display: block; width: min(52vw, 200px); height: auto; aspect-ratio: 1 / 1; margin: 0 auto var(--ax-space-12); object-fit: contain; }
   .axs-fcg .t { margin: 0; font: var(--ax-type-t4); font-weight: 700; color: var(--ax-color-ink); word-break: keep-all; }
   .axs-fcg .s { margin: var(--ax-space-4) 0 0; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
+  /* 261008 럭키드로우 당첨 시트 · 등수 = 큰 주황 글자(브랜드 한 곳) · 경품 사진 · 이름 · 행운권 번호 · 홈 줄 확인 전 점 */
+  .axs-lkw { padding: var(--ax-space-8) 0 var(--ax-space-4); }
+  .axs-lkw img { width: min(56vw, 220px); }
+  .axs-lkw .rk { margin: 0 0 var(--ax-space-4); font-size: calc(40px * var(--fs)); line-height: 1.1; font-weight: 800; color: var(--ax-color-brand); letter-spacing: -0.02em; }
+  .axs-ndot { display: inline-block; width: 8px; height: 8px; margin-left: 6px; border-radius: 50%; background: var(--ax-color-brand); vertical-align: middle; }
   /* v5.18 스탬프와 별개 구역(1F 타자왕) · 위 구역들과 얇은 선으로 나눈다 · 순위 보기 버튼(블록 맨 아래) · v5.74 알약 · 아래 설명 줄은 「받으려면」 박스로 옮겼다 */
   .axs-pz-sec.sep { margin-top: var(--ax-space-48); padding-top: var(--ax-space-32); border-top: 1px solid var(--ax-color-divider); }
   .fs-big .axs-pz-c:not(.gr) .tx { flex-wrap: wrap; }

@@ -378,6 +378,53 @@ function fcfsGotOpen(again) {
 }
 /* 홈 나의 일정 맨 위 한 줄 · 수령 전(got)만 · 받음 · 취소 · 마감이면 없음 · [정렬 분, onclick, 뱃지, 제목, 보조 줄, 뱃지 상태] */
 function fcfsGotRow() { var ln = fcfsLeftN(); return fcfsReady(fcfsMy()) ? [-3, "fcfsGotOpen(true)", "참여상", "선착순 참여상", fcfsAt("1F 주차장 체크인존") + (ln ? " · 남은 " + ln : ""), "act"] : null; }   /* v5.98 ready 만 · 소진(out)이면 사라진다 */
+/* ════════════════ 261008 럭키드로우 당첨 알림 · 본인 확인 (사용자 261008 「슬롯 릴로 하고 당첨자 폰 알림도 넣자」) ════════════════
+   서버 sync my.lucky = { id, rk, prize, no, ack, at } | null(S "lucky") · 소켓 개인 사건 lucky · 알림(태그 lucky:<id>)을 받으면 곧바로 sync
+   당첨 시트 = 공통 바텀 시트 · 등수 · 경품(이름 · 사진 = PRIZES.draw) · 행운권 번호 · 큰 주 버튼 「확인」 → 서버 draw_ack(본인 세션) → 「확인 완료」 + 수령 안내
+   확인 전이면 이 앱을 연 동안 한 번 저절로 뜬다(LUCKY.shown) · 홈 나의 일정 맨 위 한 줄(확인 전 = 주황 뱃지 + 점) · 확인 뒤에는 저절로 뜨지 않는다
+   7등 랜덤 굿즈(my.lk7 w) = 확인 단추 없이 안내만 한 번(noti_seen.lk7w) · 무대 확인 없음 · 행랑 발송
+   수령 안내 문구 = 지금 앱 문구(「당첨되면 경품은 따로 전달」) 그대로 · 바뀌면 LUCKY_GET 한 곳 */
+var LUCKY = { shown: {} }, LUCKY_GET = "경품은 나중에 따로 전달해요";
+function luckyMy() { var x = S.get("lucky", null); return x && typeof x === "object" && x.id ? x : null; }
+function luckyPrize(x) { var hit = null; (PRIZES.draw.list || []).forEach(function (p) { if (!hit && x && x.rk && p.rk === x.rk) hit = p; }); return hit; }
+function luckyTitle(x) { return "럭키드로우 " + (x && x.rk ? x.rk + " " : "") + "당첨"; }
+function luckyBody(x) {
+  var p = luckyPrize(x), nm = p ? p.nm : String(x.prize || "");
+  return '<div class="axs-fcg axs-lkw">' + (p && p.img ? '<img src="' + PRIZE_DIR + p.img + '.webp" alt="" width="240" height="240" decoding="async" onerror="this.remove()">' : "") +
+    (x.rk ? '<p class="rk">' + esc(x.rk) + "</p>" : "") + (nm ? '<p class="t">' + esc(nm) + "</p>" : "") + (x.no ? '<p class="s">행운권 번호 ' + esc(x.no) + "</p>" : "") + "</div>";
+}
+function luckySpec() {
+  var x = luckyMy(); if (!x) return null;
+  if (x.ack) return { id: "lucky", title: "확인 완료", lead: "무대 화면에 표시됐어요" + (x.at ? " · " + esc(x.at) : "") + "<br>" + esc(LUCKY_GET), body: luckyBody(x), go: "sheetClose()", goLbl: "닫기" };
+  return { id: "lucky", title: "럭키드로우 당첨", lead: "지금 17F 무대 화면을 봐 주세요<br>확인을 누르면 무대 화면에 표시돼요", body: luckyBody(x), go: "luckyAck()", goLbl: "확인", goBusy: "확인하는 중" };
+}
+function luckyOpen(k) { var sp = k === "lk7" ? lk7WinSpec() : luckySpec(); if (!sp) return; if (k !== "lk7") LUCKY.shown[luckyMy().id] = 1; sheetOpen(sp); }   /* 당첨 시트 · 7등 안내가 여는 곳 하나 */
+function luckyAck() {
+  if (SHEET.busy) return;
+  var x = luckyMy(), u = S.get("user", {}) || {};
+  if (!x) { sheetClose(true); return; }
+  var done = function (at) { S.set("lucky", Object.assign({}, x, { ack: 1, at: at || "" })); if (el("axsSheet")) luckyOpen(); stampBuzz([60, 40, 60]); if (App.current === "home") App.render(); };
+  if (!BE.on || !u.empId) { var d0 = appNow(true); return done(d0.getHours() + ":" + ("0" + d0.getMinutes()).slice(-2)); }   /* 데모 · 서버 없음 */
+  sheetBusy(true);
+  beCall({ action: "draw_ack", emp: u.empId, id: x.id }, function (res) {
+    if (res && res.ok) { sheetBusy(false); return done(res.at); }
+    if (res && res.reason === "notwin") { sheetFail({ t: "당첨 기록이 바뀌었어요", b: "무대 안내를 따라 주세요" }); beSync(); return; }
+    if (res && res.reason === "ses") { sheetFail({ t: "비밀번호를 한 번 더 입력해 주세요", b: "본인 확인 뒤 다시 눌러 주세요" }); return; }
+    sheetFail({ t: "확인되지 않았어요", b: "잠시 뒤 다시 눌러 주세요" });
+  }, function () { sheetFail({ t: "서버에 연결되지 않았어요", b: "잠시 뒤 다시 눌러 주세요" }); });
+}
+/* 홈 나의 일정 맨 위 한 줄 · [정렬 분, onclick, 뱃지, 제목, 보조 줄, 뱃지 상태, 장소, 끝, 점] */
+function luckyRow() {
+  var x = luckyMy(); if (!x) return null;
+  return [-4, "luckyOpen()", "당첨", "럭키드로우" + (x.rk ? " " + x.rk : ""), x.ack ? "확인 완료 · " + LUCKY_GET.replace("해요", "") : "눌러서 확인해 주세요", "act", undefined, undefined, x.ack ? 0 : 1];
+}
+/* 7등 랜덤 굿즈 당첨 안내(확인 단추 없음 · 한 번) */
+function lk7WinSpec() {
+  var p = PRIZES.lk7.list[0];
+  return { id: "lk7win", title: "럭키드로우 당첨", lead: "행사 뒤 행랑으로 보내 드려요",
+    body: '<div class="axs-fcg axs-lkw"><img src="' + PRIZE_DIR + p.img + '.webp" alt="" width="600" height="600" decoding="async" onerror="this.remove()"><p class="rk">7등</p><p class="t">' + esc(p.nm) + '</p><p class="s">' + esc(p.sub || "") + "</p></div>",
+    go: "sheetClose()", goLbl: "확인" };
+}
 function fcfsInfoOpen() {
   var x = fxGet() || {};
   modalOpen('<p class="muted" style="font-size:calc(14.5px * var(--fs));line-height:1.7">스탬프 6개를 모으고<br>' + esc(fcfsAt("1F 주차장 체크인존")) + "에 먼저 온 " + (x.cap || 210) + "명</p>" +   /* v5.98 받기 선착순 */

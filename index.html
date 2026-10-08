@@ -2666,6 +2666,11 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-fcg img { display: block; width: min(52vw, 200px); height: auto; aspect-ratio: 1 / 1; margin: 0 auto var(--ax-space-12); object-fit: contain; }
   .axs-fcg .t { margin: 0; font: var(--ax-type-t4); font-weight: 700; color: var(--ax-color-ink); word-break: keep-all; }
   .axs-fcg .s { margin: var(--ax-space-4) 0 0; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
+  /* 261008 럭키드로우 당첨 시트 · 등수 = 큰 주황 글자(브랜드 한 곳) · 경품 사진 · 이름 · 행운권 번호 · 홈 줄 확인 전 점 */
+  .axs-lkw { padding: var(--ax-space-8) 0 var(--ax-space-4); }
+  .axs-lkw img { width: min(56vw, 220px); }
+  .axs-lkw .rk { margin: 0 0 var(--ax-space-4); font-size: calc(40px * var(--fs)); line-height: 1.1; font-weight: 800; color: var(--ax-color-brand); letter-spacing: -0.02em; }
+  .axs-ndot { display: inline-block; width: 8px; height: 8px; margin-left: 6px; border-radius: 50%; background: var(--ax-color-brand); vertical-align: middle; }
   /* v5.18 스탬프와 별개 구역(1F 타자왕) · 위 구역들과 얇은 선으로 나눈다 · 순위 보기 버튼(블록 맨 아래) · v5.74 알약 · 아래 설명 줄은 「받으려면」 박스로 옮겼다 */
   .axs-pz-sec.sep { margin-top: var(--ax-space-48); padding-top: var(--ax-space-32); border-top: 1px solid var(--ax-color-divider); }
   .fs-big .axs-pz-c:not(.gr) .tx { flex-wrap: wrap; }
@@ -4016,7 +4021,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v6.32";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 · v6.32 = 261008 홈 「지금 현장」 2×2(1F 룰렛 · 1F 포토부스 · 1F AX PLAY · 17F 대강당 5단계 · 스탬프 블록 바로 아래 · 행사 당일만 · 스탬프 블록 여백 줄임) · 스태프 입력 시트(누르면 저장 · 5초 되돌리기 · 자동으로 · 시간 재기) · 스캔 화면 「줄」 · 옛 로비 · 엘리베이터 · 17F 입장 수 칸 · 풀리면 알림 · 혼잡 제보 탭 진입 뺌 · v6.31 = 261008 기념품 옷 사이즈 선택(사용자 261008 「쇼핑몰 문법 · 재고 · 고유번호 · 스태프 포함」 · 홈 카드 「기념품 옷 사이즈 선택하기」 → 「L로 신청 완료 · 신청번호 K-012 · 마감 전 변경 가능」 · 상품 시트 = 공통 바텀 시트(라우트 kit · 상품 이미지 예시 칸 · 사이즈 칩 n개 남음 · 품절 임박 · 품절 · 추천 사이즈표 예시 접힘 · 아래 고정 「이 사이즈로 신청」 | 「사이즈 변경」 · 완료 = 신청번호) · 스태프 의류 명단 사번(pool staff · 수령 따로 안내) · 창구 결과 띠에 신청번호 · 서버 ks* §288) · v6.30 = 261008 17F AWS · MS 출석 QR 시간 안내 걷기(사용자 「우리 쪽에서 통제하지 말자」 · 상세 입장 · 끝 QR 줄 · 고르기 시트 · 시간 밖 안내에서 QR 창 시각 삭제 · 앱 기본 창 넓게 · 홈 카드는 강연 시각 기준) · v6.29 = 261008 경품 시트 등수 묶음(글 + 사진) 사이 옅은 회색 헤어라인 1px(사용자 「상품마다 옅고 얇은 회색선 · 균형을 보고 판단」 · 카드 테두리 · 블록 선 안은 채택 안 함) · v6.28 = 261008 7등 발송 표기 「사내 우편 발송」 → 「행랑 발송」(앱 · 추첨 무대 · 콘솔) · v6.27 = 261008 AX 올림픽 순위 바닥 문구(명예 순위 · 경품 없음 · 종합 호명) 삭제 · v6.26 = 261007 행운권 7등 랜덤 굿즈 수량 「수량 추후 공개」(60 고정 삭제) + 긴 상세 시트(경품 · 세션 · 구역 · 부스 · 전시) 높이 = 화면의 약 92%(위 끝 8%) + 경품 시트 등수 묶음 사이 간격 · v6.25 = 261007 행사 둘러보기 조작 A(사용자 「권장대로 진행해 줘」) · 달리기 · 좌로 · 우로 돌기 단추 삭제 · 점프 원 72px 오른쪽 아래 엄지 자리 · 첫 구역 도착 뒤 끌기 안내 1회 「화면을 좌우로 밀면 돌아봐요」 · 밀기 문턱 8 → 12px · PC 키 ↑ ↓ 걷기 · Space 점프 · ← → 돌기 · 둘러보기 v6.25 · v6.24 = 261007 10F 세션 상세 줄 이름 「진행」 → 「강사」(사용자 「강사가 맞을 것 같고」) · 세션 B · C 값 「임경덕」 · 「권혜영」(줄 이름과 겹치지 않게) · 값은 이름 단위로만 줄이 꺾임 · v6.23 = 261007 타자왕 보너스 스테이지(친 글자 뭉개짐 고침 · 짝짓기 rgBnsAlign · 「문장을 먼저 읽어 두세요」 32 · 3 · 2 · 1 · GO 팡 rgBnsPop) · 엔터 없이 안내(입력칸 · READY · 대기 왼쪽 · 보너스) · 노트북 대기 오른쪽 순위 TOP 10 · 점수 설명 왼쪽으로 · v6.22 = 261007 PC 휴대폰 틀에서 행사 둘러보기 = 틀을 걷고 창 전체(000-head tourNow · opsSet · 닫으면 틀로 · 스크롤 그대로 · 포커스를 틀 안으로 넘겨 클릭 없이 W A S D) · PC 아래 가운데 키 안내 한 줄(tpcKeys · 6초 뒤 옅게) · v6.21 = 261007 10F 실습 장소 · 진행 · 세션 E 회차 시간(운영진 메신저 · A 컨퍼런스룸 · B 01 HEART · C 06 HEART · D 08 HEART · E 07 HEART · E 13:30~15:00 / 15:00~16:30 · 상세 사실 표 「진행」 줄) · v6.20 = 261007 10F 세션 상세 보강(세션 A 실습 주제 예시 3개 · 세션 D 「AI를 활용한 업무 적용 실습」 · 세션 E 두 회차 「초급 과정 · Chat, Word, PPT, Agent Builder, Copilot Studio」 · 붙임2) · v6.19 = 261007 타자왕 노트북 대기 = 광고 순환(후킹 · 1~3위 경품 · 지금 1위 · 참여 방법 7초씩 · 맨 아래 「키보드를 눌러 시작」 · QR · 토큰 없음) · 아무 키 · 누름 = 새 QR(깨운 키 삼킴 · 남은 시간 막대) · 떠 있는 동안 토큰 그대로(서버 물음 연장 · 3분 상한) · 60초 아무도 안 붙으면 광고 + 서버 토큰 지움 · 폰 「노트북 키보드를 누르면 새 QR이 나와요」 · v6.18 = 261007 타자왕 노트북 접속 QR 나이 상한(30초 교체 · 화면 QR 45초까지만 · 못 받으면 「QR을 새로 받는 중」 · 물음 6초 버림 · 창이 다시 보이면 곧바로 · 바꾸기 전 한 번 더 묻기 · 폰은 로그인해 있어도 앱이 뜨자마자 토큰 붙잡기 5분) · v6.17 = 261007 둘러보기 v6.17 눌러서 가기 오작동 고침(누른 그 동전 · 계단 동전 둘 · 동전 언저리 누름 · 스태프 말풍선이 동전을 덮지 않음 · 연타 카드 한 번 · 조그 = 자동 걷기 끝 · 연출 중 화면 누름 무시 · TOUR.ver v617) · v6.16 = 261007 플리스 사이즈 4종(SS · L · 2XL · 3XL · 옛 S · M · XL 폐기 · 사이즈 고르기 4칸 · 조사 SS가) · 창구 띠 세 글자 사이즈 한 줄(l3 56px) · v6.15 = 261007 17F 오후 파트너 강연 시각 확정(AWS 13:30~14:50 · 휴식 14:50~15:10 시간표 줄 · MS 15:10~16:40) · v6.14 = 261007 PC 넓은 창 = 휴대폰 틀(000-head 틀 스크립트 · 앱은 틀 안 iframe 에서 휴대폰 폭 그대로 · 휴대폰 · 좁은 창 · TV · #self · cap 은 그대로 · ?frame=0 끔) · v6.13 = 261007 홈 「다음 할 일」 카드(광고판 아래 · 둘러보기 카드와 한 자리 교대 · 행사 당일만 · × 그날 끔 · 설정 줄 · nxPick) · 재로그인 반복 팝업 고침(첫 동기화 기준선 rwBaseline · checkMyState base) · 로그인 직후 10초 자동 안내 1개(NB · nbGate) · 커피챗 하루 끝도 appNow · v6.12 = 261007 체크인존 번호표(접수 · 창구 A~E 자리 · 사이즈 아주 크게 · 「B-023 · 홍*동 → B 창구」 · 다른 창구 · 명단 밖 = E 창구 안내) · 홈 맨 위 내 번호 카드(대기 · 곧 차례 · 호출 진동 · 놓친 번호 · 수령 완료) · 체크인 TV 대기판 · 창구 화면(태블릿) · 선착순 10:30부터 문구 · v6.11 = 261007 점프 시간 제한 없앰 · 30초부터 더 어렵게 · AX 상식 30문장 다시 씀 · 홈 나의 일정 카드 너비 · Outro 안내 · v6.10 = 261007 테스트 도구(시각 바꿔 보기 tt · appNow · 헤더 띠 · 내 10F 세션 test_ten · 310555 기본 A) · 공지 = 아래에서 올라오는 시트(ntcOpen · 홈 공지 카드 폐기 · 기기당 1번 · 기준선 ntc_base) · 내 QR = QR + 이름 · 사번만 · 재로그인 = 오프닝 없이 바로 홈 · 저장된 로그인 = 로그인 화면 비침 · 전환 없이 홈 · v6.09 = 261007 행사 둘러보기 접속 기록(서버 tour_log · 열 때 1번 · 닫을 때 1번 · 10분 안 다시 열기 = 같은 방문 · 3D · 2D 대체 모두 AXTour.isOpen · 가려지면 sendBeacon · tlog*) · v6.08 = 261007 아이디어 한 줄 보강(시상 묶음 · 50자 ~ 3,000자 · 자동 저장 · 커피챗 희망 → 선정 13:00~16:00 · 볼펜 사진) · v6.07 = 261007 9월 시험 때 이미 최초 로그인 스탬프를 받은 사람도 이 기기 · 이 사번으로 한 번 「최초 로그인」 도장 팝(연출만 · 기기 키 lgfx_261007 · lgfxRun) · v6.06 = 261007 나의 일정 후속(10F 명단 · 내 세션과 겹치지 않는 오후 강연 = 자유 참석 카드 · MYFL_LEC · 홈 = 신청 카드만 axs-myfl-h · 진행 중 칩 「진행 중」 + 고리) · v6.05 = 261007 테트리스 시간 제한 없앰(5분 끝내기 · 「5분 완주」 · surv 300초 멈춤 삭제 · 게임 오버까지 · 결과 「버틴 시간」 = 실제 시간 · 시작 화면 「시간 제한 없음」 · 서버 OLY_TT_SURV_MAX) · v6.04 = 261007 10F 명단 나의 일정 = 시간표와 같은 하루 흐름(myFlowItems · 신청 주황 테두리 + 칩) · v6.03 = 261007 테트리스 5분 완주 판 surv 30000 상한(서버 range 거절 버그) · v6.02 = 261007 점프 게임 바닥 = 붉은 벽돌(jpBrickCv · 무늬 한 장 반복) · v6.01 = 261007 둘러보기 v5.99(손가락 안내 = 들어올 때마다 + 6초 서 있으면 다시 · 방문당 3번 · 직접 눌러 걸어가 본 기기는 끝 · 첫 안내 둘째 줄 「다음 구역」 저절로 걷기 · 흉상 얼굴 주름 부드럽게) · v6.00 = 261006 밤 스태프 판정 = 로그인만으로(앱 스태프 명단 사번 = 가운데 단추 「스캔」 · 처음 누를 때만 코드 한 번 · 명단에서 빠지면 「내 QR」 · 서버 staff) · 스캔 자리에서 10F 세션 입장 숨김(SCAN_10F_UI) · v5.99 = 261006 키트 사이즈 사전 선택(키트명단 사번만 · 홈 카드 · 사전 신청 키트 화면 · 설정 · 나의 보상 줄 · 라운지 등록 순 초과 = 가습기 안내 · 서버 ks* · §250) · v5.98 = 261006 스태프 폰 연속 스캔(관리자 모드 폰 = 가운데 단추 「스캔」 · 자리 칩 · 톱니 · 결과 띠 1.5초 · 화면 꺼짐 막기) · 스캔 순간 참가자 알림(소켓 · 푸시) · 선착순 참여상 = 받기 선착순(남은 N · 「자격」 말 없음) · v5.97 = 261006 스탬프 감사 후속(AX PLAY 부스 코드 = 「스태프에게 내 QR을 보여 주세요」 · 「응모」 → 「행운권」 · 「선착순 참여상」 표기) · v5.95 = 261006 프로그램 참여 스탬프 = 17F 오후 AWS · MS 강연만(오전 강연 · 송출 · 10F · 커피챗 · 라운지 스탬프 문구 삭제) · 사전등록 체크인 3개 → 룰렛 → 강의장 안내 시트 · 홈 한 줄 · 스태프 키트 결과 「룰렛 부스로 안내해 주세요」 · v5.94 = 261006 타자왕 노트북 진입 = 화면 QR 하나(카메라 끔 · 큰 접속 QR · 후킹 「당신의 프롬프팅 속도를 보여 주세요」 · 로그인 전 토큰 붙잡기 5분 · 폰 「노트북 화면의 QR을 찍어 주세요」) · v5.93 = 261006 둘러보기 눌러서 가기(바닥 · 판 · 동전 · 포토부스 · 룰렛 · 엘리베이터 · 스태프 = 걸어가서 바로 · 첫 손가락 안내 · 숨 쉬는 테두리) · 설치 안내(「설치 중」 시트 · 설정 줄 = 바로 설치 창) · v5.92 = 7등 랜덤 굿즈 · 체크인 없는 추첨 */
+var APP_VER = "v6.33";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 · v6.33 = 261008 럭키드로우 당첨자 폰 알림(사용자 261008 「당첨자 폰 알림도 넣자」 · 서버 draw_log win → 소켓 lucky · 푸시 「럭키드로우 당첨 · 지금 17F 무대 화면을 봐 주세요」 · sync my.lucky) · 당첨 시트(공통 바텀 시트 · 등수 큰 주황 글자 · 경품 사진 · 이름 · 행운권 번호 · 주 버튼 「확인」 → draw_ack 본인 세션 → 「확인 완료 · 무대 화면에 표시됐어요」 + 「경품은 나중에 따로 전달해요」) · 홈 나의 일정 맨 위 「럭키드로우 N등 당첨」 한 줄(확인 전 주황 점) · 7등 랜덤 굿즈 = 확인 단추 없는 안내 시트 한 번 · 콘솔 추첨 기록 「폰 확인」 칸 · 검사 §293 · v6.32 = 261008 홈 「지금 현장」 2×2(1F 룰렛 · 1F 포토부스 · 1F AX PLAY · 17F 대강당 5단계 · 스탬프 블록 바로 아래 · 행사 당일만 · 스탬프 블록 여백 줄임) · 스태프 입력 시트(누르면 저장 · 5초 되돌리기 · 자동으로 · 시간 재기) · 스캔 화면 「줄」 · 옛 로비 · 엘리베이터 · 17F 입장 수 칸 · 풀리면 알림 · 혼잡 제보 탭 진입 뺌 · v6.31 = 261008 기념품 옷 사이즈 선택(사용자 261008 「쇼핑몰 문법 · 재고 · 고유번호 · 스태프 포함」 · 홈 카드 「기념품 옷 사이즈 선택하기」 → 「L로 신청 완료 · 신청번호 K-012 · 마감 전 변경 가능」 · 상품 시트 = 공통 바텀 시트(라우트 kit · 상품 이미지 예시 칸 · 사이즈 칩 n개 남음 · 품절 임박 · 품절 · 추천 사이즈표 예시 접힘 · 아래 고정 「이 사이즈로 신청」 | 「사이즈 변경」 · 완료 = 신청번호) · 스태프 의류 명단 사번(pool staff · 수령 따로 안내) · 창구 결과 띠에 신청번호 · 서버 ks* §288) · v6.30 = 261008 17F AWS · MS 출석 QR 시간 안내 걷기(사용자 「우리 쪽에서 통제하지 말자」 · 상세 입장 · 끝 QR 줄 · 고르기 시트 · 시간 밖 안내에서 QR 창 시각 삭제 · 앱 기본 창 넓게 · 홈 카드는 강연 시각 기준) · v6.29 = 261008 경품 시트 등수 묶음(글 + 사진) 사이 옅은 회색 헤어라인 1px(사용자 「상품마다 옅고 얇은 회색선 · 균형을 보고 판단」 · 카드 테두리 · 블록 선 안은 채택 안 함) · v6.28 = 261008 7등 발송 표기 「사내 우편 발송」 → 「행랑 발송」(앱 · 추첨 무대 · 콘솔) · v6.27 = 261008 AX 올림픽 순위 바닥 문구(명예 순위 · 경품 없음 · 종합 호명) 삭제 · v6.26 = 261007 행운권 7등 랜덤 굿즈 수량 「수량 추후 공개」(60 고정 삭제) + 긴 상세 시트(경품 · 세션 · 구역 · 부스 · 전시) 높이 = 화면의 약 92%(위 끝 8%) + 경품 시트 등수 묶음 사이 간격 · v6.25 = 261007 행사 둘러보기 조작 A(사용자 「권장대로 진행해 줘」) · 달리기 · 좌로 · 우로 돌기 단추 삭제 · 점프 원 72px 오른쪽 아래 엄지 자리 · 첫 구역 도착 뒤 끌기 안내 1회 「화면을 좌우로 밀면 돌아봐요」 · 밀기 문턱 8 → 12px · PC 키 ↑ ↓ 걷기 · Space 점프 · ← → 돌기 · 둘러보기 v6.25 · v6.24 = 261007 10F 세션 상세 줄 이름 「진행」 → 「강사」(사용자 「강사가 맞을 것 같고」) · 세션 B · C 값 「임경덕」 · 「권혜영」(줄 이름과 겹치지 않게) · 값은 이름 단위로만 줄이 꺾임 · v6.23 = 261007 타자왕 보너스 스테이지(친 글자 뭉개짐 고침 · 짝짓기 rgBnsAlign · 「문장을 먼저 읽어 두세요」 32 · 3 · 2 · 1 · GO 팡 rgBnsPop) · 엔터 없이 안내(입력칸 · READY · 대기 왼쪽 · 보너스) · 노트북 대기 오른쪽 순위 TOP 10 · 점수 설명 왼쪽으로 · v6.22 = 261007 PC 휴대폰 틀에서 행사 둘러보기 = 틀을 걷고 창 전체(000-head tourNow · opsSet · 닫으면 틀로 · 스크롤 그대로 · 포커스를 틀 안으로 넘겨 클릭 없이 W A S D) · PC 아래 가운데 키 안내 한 줄(tpcKeys · 6초 뒤 옅게) · v6.21 = 261007 10F 실습 장소 · 진행 · 세션 E 회차 시간(운영진 메신저 · A 컨퍼런스룸 · B 01 HEART · C 06 HEART · D 08 HEART · E 07 HEART · E 13:30~15:00 / 15:00~16:30 · 상세 사실 표 「진행」 줄) · v6.20 = 261007 10F 세션 상세 보강(세션 A 실습 주제 예시 3개 · 세션 D 「AI를 활용한 업무 적용 실습」 · 세션 E 두 회차 「초급 과정 · Chat, Word, PPT, Agent Builder, Copilot Studio」 · 붙임2) · v6.19 = 261007 타자왕 노트북 대기 = 광고 순환(후킹 · 1~3위 경품 · 지금 1위 · 참여 방법 7초씩 · 맨 아래 「키보드를 눌러 시작」 · QR · 토큰 없음) · 아무 키 · 누름 = 새 QR(깨운 키 삼킴 · 남은 시간 막대) · 떠 있는 동안 토큰 그대로(서버 물음 연장 · 3분 상한) · 60초 아무도 안 붙으면 광고 + 서버 토큰 지움 · 폰 「노트북 키보드를 누르면 새 QR이 나와요」 · v6.18 = 261007 타자왕 노트북 접속 QR 나이 상한(30초 교체 · 화면 QR 45초까지만 · 못 받으면 「QR을 새로 받는 중」 · 물음 6초 버림 · 창이 다시 보이면 곧바로 · 바꾸기 전 한 번 더 묻기 · 폰은 로그인해 있어도 앱이 뜨자마자 토큰 붙잡기 5분) · v6.17 = 261007 둘러보기 v6.17 눌러서 가기 오작동 고침(누른 그 동전 · 계단 동전 둘 · 동전 언저리 누름 · 스태프 말풍선이 동전을 덮지 않음 · 연타 카드 한 번 · 조그 = 자동 걷기 끝 · 연출 중 화면 누름 무시 · TOUR.ver v617) · v6.16 = 261007 플리스 사이즈 4종(SS · L · 2XL · 3XL · 옛 S · M · XL 폐기 · 사이즈 고르기 4칸 · 조사 SS가) · 창구 띠 세 글자 사이즈 한 줄(l3 56px) · v6.15 = 261007 17F 오후 파트너 강연 시각 확정(AWS 13:30~14:50 · 휴식 14:50~15:10 시간표 줄 · MS 15:10~16:40) · v6.14 = 261007 PC 넓은 창 = 휴대폰 틀(000-head 틀 스크립트 · 앱은 틀 안 iframe 에서 휴대폰 폭 그대로 · 휴대폰 · 좁은 창 · TV · #self · cap 은 그대로 · ?frame=0 끔) · v6.13 = 261007 홈 「다음 할 일」 카드(광고판 아래 · 둘러보기 카드와 한 자리 교대 · 행사 당일만 · × 그날 끔 · 설정 줄 · nxPick) · 재로그인 반복 팝업 고침(첫 동기화 기준선 rwBaseline · checkMyState base) · 로그인 직후 10초 자동 안내 1개(NB · nbGate) · 커피챗 하루 끝도 appNow · v6.12 = 261007 체크인존 번호표(접수 · 창구 A~E 자리 · 사이즈 아주 크게 · 「B-023 · 홍*동 → B 창구」 · 다른 창구 · 명단 밖 = E 창구 안내) · 홈 맨 위 내 번호 카드(대기 · 곧 차례 · 호출 진동 · 놓친 번호 · 수령 완료) · 체크인 TV 대기판 · 창구 화면(태블릿) · 선착순 10:30부터 문구 · v6.11 = 261007 점프 시간 제한 없앰 · 30초부터 더 어렵게 · AX 상식 30문장 다시 씀 · 홈 나의 일정 카드 너비 · Outro 안내 · v6.10 = 261007 테스트 도구(시각 바꿔 보기 tt · appNow · 헤더 띠 · 내 10F 세션 test_ten · 310555 기본 A) · 공지 = 아래에서 올라오는 시트(ntcOpen · 홈 공지 카드 폐기 · 기기당 1번 · 기준선 ntc_base) · 내 QR = QR + 이름 · 사번만 · 재로그인 = 오프닝 없이 바로 홈 · 저장된 로그인 = 로그인 화면 비침 · 전환 없이 홈 · v6.09 = 261007 행사 둘러보기 접속 기록(서버 tour_log · 열 때 1번 · 닫을 때 1번 · 10분 안 다시 열기 = 같은 방문 · 3D · 2D 대체 모두 AXTour.isOpen · 가려지면 sendBeacon · tlog*) · v6.08 = 261007 아이디어 한 줄 보강(시상 묶음 · 50자 ~ 3,000자 · 자동 저장 · 커피챗 희망 → 선정 13:00~16:00 · 볼펜 사진) · v6.07 = 261007 9월 시험 때 이미 최초 로그인 스탬프를 받은 사람도 이 기기 · 이 사번으로 한 번 「최초 로그인」 도장 팝(연출만 · 기기 키 lgfx_261007 · lgfxRun) · v6.06 = 261007 나의 일정 후속(10F 명단 · 내 세션과 겹치지 않는 오후 강연 = 자유 참석 카드 · MYFL_LEC · 홈 = 신청 카드만 axs-myfl-h · 진행 중 칩 「진행 중」 + 고리) · v6.05 = 261007 테트리스 시간 제한 없앰(5분 끝내기 · 「5분 완주」 · surv 300초 멈춤 삭제 · 게임 오버까지 · 결과 「버틴 시간」 = 실제 시간 · 시작 화면 「시간 제한 없음」 · 서버 OLY_TT_SURV_MAX) · v6.04 = 261007 10F 명단 나의 일정 = 시간표와 같은 하루 흐름(myFlowItems · 신청 주황 테두리 + 칩) · v6.03 = 261007 테트리스 5분 완주 판 surv 30000 상한(서버 range 거절 버그) · v6.02 = 261007 점프 게임 바닥 = 붉은 벽돌(jpBrickCv · 무늬 한 장 반복) · v6.01 = 261007 둘러보기 v5.99(손가락 안내 = 들어올 때마다 + 6초 서 있으면 다시 · 방문당 3번 · 직접 눌러 걸어가 본 기기는 끝 · 첫 안내 둘째 줄 「다음 구역」 저절로 걷기 · 흉상 얼굴 주름 부드럽게) · v6.00 = 261006 밤 스태프 판정 = 로그인만으로(앱 스태프 명단 사번 = 가운데 단추 「스캔」 · 처음 누를 때만 코드 한 번 · 명단에서 빠지면 「내 QR」 · 서버 staff) · 스캔 자리에서 10F 세션 입장 숨김(SCAN_10F_UI) · v5.99 = 261006 키트 사이즈 사전 선택(키트명단 사번만 · 홈 카드 · 사전 신청 키트 화면 · 설정 · 나의 보상 줄 · 라운지 등록 순 초과 = 가습기 안내 · 서버 ks* · §250) · v5.98 = 261006 스태프 폰 연속 스캔(관리자 모드 폰 = 가운데 단추 「스캔」 · 자리 칩 · 톱니 · 결과 띠 1.5초 · 화면 꺼짐 막기) · 스캔 순간 참가자 알림(소켓 · 푸시) · 선착순 참여상 = 받기 선착순(남은 N · 「자격」 말 없음) · v5.97 = 261006 스탬프 감사 후속(AX PLAY 부스 코드 = 「스태프에게 내 QR을 보여 주세요」 · 「응모」 → 「행운권」 · 「선착순 참여상」 표기) · v5.95 = 261006 프로그램 참여 스탬프 = 17F 오후 AWS · MS 강연만(오전 강연 · 송출 · 10F · 커피챗 · 라운지 스탬프 문구 삭제) · 사전등록 체크인 3개 → 룰렛 → 강의장 안내 시트 · 홈 한 줄 · 스태프 키트 결과 「룰렛 부스로 안내해 주세요」 · v5.94 = 261006 타자왕 노트북 진입 = 화면 QR 하나(카메라 끔 · 큰 접속 QR · 후킹 「당신의 프롬프팅 속도를 보여 주세요」 · 로그인 전 토큰 붙잡기 5분 · 폰 「노트북 화면의 QR을 찍어 주세요」) · v5.93 = 261006 둘러보기 눌러서 가기(바닥 · 판 · 동전 · 포토부스 · 룰렛 · 엘리베이터 · 스태프 = 걸어가서 바로 · 첫 손가락 안내 · 숨 쉬는 테두리) · 설치 안내(「설치 중」 시트 · 설정 줄 = 바로 설치 창) · v5.92 = 7등 랜덤 굿즈 · 체크인 없는 추첨 */
 var A2HS = { deferred: null, open: false, pending: false };   /* v5.91 pending = 이 탭에서 크롬 설치 창 「설치」를 눌렀다(설치 중 · 다시 설치 막기) */
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -4265,7 +4270,7 @@ var STORE_PERSON = ["user", "known", "owner", "admin_authed", "adm_key", "adm_ro
   "raffle_seen", "raffle_opened", "raffle_nums", "roulette_used", "roulette_open", "fcfs", "lk7", "ck_guide", "ck_grp", "kit", "kit_seen", "ckq", "ckq_seen",
   "wave_extra", "test_mine", "type_nick", "type_nick_edit", "type_best", "mem_seen", "ox_seen",
   "pang_best", "jump_best", "gw_best", "gw_time_best", "tt_best", "pang_cleared", "jump_cleared", "gw_cleared", "type_cleared", "tetris_cleared", "ox_cleared",
-  "oly2_best_*", "oly2_done_*", "oly_pend", "draw_in", "qz_run", "qz_last", "qz_best", "qz_kseen", "qz_pend", "gs_how",
+  "oly2_best_*", "oly2_done_*", "oly_pend", "draw_in", "lucky", "qz_run", "qz_last", "qz_best", "qz_kseen", "qz_pend", "gs_how",
   "push_me", "push_ep", "crowd_watch", "staff_me"];   /* v4.76 내 알림 설정 · 보낸 구독 주소 · 혼잡 풀리면 알림 */
 function storeIsDevice(k) {
   k = String(k || "");
@@ -6659,6 +6664,7 @@ function myScheduleHtml() {
   var hm0 = hmNow();
   if (!surveyLock() && !surveyDone() && evPhase() === "live" && hm0 >= t2m("16:40") && hm0 < t2m("17:10"))
     rows.push([-1, "App.go('survey')", "설문", "오늘 한 판 설문", "60초 · 스탬프 1개", "mine"]);
+  var lkr = luckyRow(); if (lkr) rows.push(lkr);   /* 261008 럭키드로우 당첨 = 맨 위 한 줄(확인 전 주황 점) */
   var fgr = fcfsGotRow(); if (fgr) rows.push(fgr);   /* v5.97 선착순 참여상 수령 전 = 맨 위 한 줄(받으면 사라진다) */
   var ckr = ckGuideRow(); if (ckr) rows.push(ckr);   /* v5.94 사전등록 체크인 3개 → 룰렛 → 강의장(룰렛을 쓰면 사라진다) */
   /* v3.43 · 내 항목은 myItems 하나에서 (종류별 1건 · 테스트 오버레이 겹침 제거) */
@@ -6682,7 +6688,7 @@ function myScheduleHtml() {
     var ph1 = evPhase(), fr = rows.filter(function (r) { return r[7] == null; });
     var fl = ph1 === "after" ? [] : myFlowItems().filter(function (o) { return o.mine && (ph1 !== "live" || o.b > hm0); }), fm = Math.max(0, fl.length - SCHED_VIEW);
     var top = (ph1 === "after" ? schedNowRow() : "") + fr.map(function (r) {
-      return rcHtml({ cls: " my", onclick: r[1], link: true, left: tokBadge(esc(r[2]), r[5]), title: esc(r[3]), sub: esc(r[4]), place: r[6] });
+      return rcHtml({ cls: " my", onclick: r[1], link: true, left: tokBadge(esc(r[2]), r[5]), title: esc(r[3]) + (r[8] ? '<i class="axs-ndot" aria-label="확인 전"></i>' : ""), sub: esc(r[4]), place: r[6] });
     }).join("") + ap;
     /* v6.11 (사용자 261007) 신청 일정이 다 끝났으면 Outro 안내 카드 · Outro 도 끝났으면(또는 행사 뒤) 「남은 일정 없음」 그대로 */
     var oc = !fl.length && ph1 !== "after" ? myOutroItem() : null;
@@ -6699,7 +6705,7 @@ function myScheduleHtml() {
   /* v4.13 (사용자 결정 260922) 카드 안 스크롤(창 안의 창) 폐지 · 3개만 · 4개 이상이면 목록 바로 아래 전폭 버튼 「일정 더보기 +N」(숨은 개수) → 나의 참여 › 내 일정 · 3개 이하면 버튼 없음 */
   var more = Math.max(0, rows.length - SCHED_VIEW);
   var cards = rows.slice(0, SCHED_VIEW).map(function (r) {
-    return rcHtml({ cls: " my", onclick: r[1], link: true, left: tokBadge(esc(r[2]), r[5]), title: esc(r[3]), sub: esc(r[4]), place: r[6] });
+    return rcHtml({ cls: " my", onclick: r[1], link: true, left: tokBadge(esc(r[2]), r[5]), title: esc(r[3]) + (r[8] ? '<i class="axs-ndot" aria-label="확인 전"></i>' : ""), sub: esc(r[4]), place: r[6] });
   }).join("");
   return head + '<div class="axs-rows">' + schedNowRow() + cards + ap + "</div>" +
     (more ? '<button type="button" class="ax-button ax-button-weak axs-more" onclick="mySched()" aria-label="나의 일정 ' + more + '개 더 보기">일정 더보기 +' + more + "</button>" : "");
@@ -8146,6 +8152,53 @@ function fcfsGotOpen(again) {
 }
 /* 홈 나의 일정 맨 위 한 줄 · 수령 전(got)만 · 받음 · 취소 · 마감이면 없음 · [정렬 분, onclick, 뱃지, 제목, 보조 줄, 뱃지 상태] */
 function fcfsGotRow() { var ln = fcfsLeftN(); return fcfsReady(fcfsMy()) ? [-3, "fcfsGotOpen(true)", "참여상", "선착순 참여상", fcfsAt("1F 주차장 체크인존") + (ln ? " · 남은 " + ln : ""), "act"] : null; }   /* v5.98 ready 만 · 소진(out)이면 사라진다 */
+/* ════════════════ 261008 럭키드로우 당첨 알림 · 본인 확인 (사용자 261008 「슬롯 릴로 하고 당첨자 폰 알림도 넣자」) ════════════════
+   서버 sync my.lucky = { id, rk, prize, no, ack, at } | null(S "lucky") · 소켓 개인 사건 lucky · 알림(태그 lucky:<id>)을 받으면 곧바로 sync
+   당첨 시트 = 공통 바텀 시트 · 등수 · 경품(이름 · 사진 = PRIZES.draw) · 행운권 번호 · 큰 주 버튼 「확인」 → 서버 draw_ack(본인 세션) → 「확인 완료」 + 수령 안내
+   확인 전이면 이 앱을 연 동안 한 번 저절로 뜬다(LUCKY.shown) · 홈 나의 일정 맨 위 한 줄(확인 전 = 주황 뱃지 + 점) · 확인 뒤에는 저절로 뜨지 않는다
+   7등 랜덤 굿즈(my.lk7 w) = 확인 단추 없이 안내만 한 번(noti_seen.lk7w) · 무대 확인 없음 · 행랑 발송
+   수령 안내 문구 = 지금 앱 문구(「당첨되면 경품은 따로 전달」) 그대로 · 바뀌면 LUCKY_GET 한 곳 */
+var LUCKY = { shown: {} }, LUCKY_GET = "경품은 나중에 따로 전달해요";
+function luckyMy() { var x = S.get("lucky", null); return x && typeof x === "object" && x.id ? x : null; }
+function luckyPrize(x) { var hit = null; (PRIZES.draw.list || []).forEach(function (p) { if (!hit && x && x.rk && p.rk === x.rk) hit = p; }); return hit; }
+function luckyTitle(x) { return "럭키드로우 " + (x && x.rk ? x.rk + " " : "") + "당첨"; }
+function luckyBody(x) {
+  var p = luckyPrize(x), nm = p ? p.nm : String(x.prize || "");
+  return '<div class="axs-fcg axs-lkw">' + (p && p.img ? '<img src="' + PRIZE_DIR + p.img + '.webp" alt="" width="240" height="240" decoding="async" onerror="this.remove()">' : "") +
+    (x.rk ? '<p class="rk">' + esc(x.rk) + "</p>" : "") + (nm ? '<p class="t">' + esc(nm) + "</p>" : "") + (x.no ? '<p class="s">행운권 번호 ' + esc(x.no) + "</p>" : "") + "</div>";
+}
+function luckySpec() {
+  var x = luckyMy(); if (!x) return null;
+  if (x.ack) return { id: "lucky", title: "확인 완료", lead: "무대 화면에 표시됐어요" + (x.at ? " · " + esc(x.at) : "") + "<br>" + esc(LUCKY_GET), body: luckyBody(x), go: "sheetClose()", goLbl: "닫기" };
+  return { id: "lucky", title: "럭키드로우 당첨", lead: "지금 17F 무대 화면을 봐 주세요<br>확인을 누르면 무대 화면에 표시돼요", body: luckyBody(x), go: "luckyAck()", goLbl: "확인", goBusy: "확인하는 중" };
+}
+function luckyOpen(k) { var sp = k === "lk7" ? lk7WinSpec() : luckySpec(); if (!sp) return; if (k !== "lk7") LUCKY.shown[luckyMy().id] = 1; sheetOpen(sp); }   /* 당첨 시트 · 7등 안내가 여는 곳 하나 */
+function luckyAck() {
+  if (SHEET.busy) return;
+  var x = luckyMy(), u = S.get("user", {}) || {};
+  if (!x) { sheetClose(true); return; }
+  var done = function (at) { S.set("lucky", Object.assign({}, x, { ack: 1, at: at || "" })); if (el("axsSheet")) luckyOpen(); stampBuzz([60, 40, 60]); if (App.current === "home") App.render(); };
+  if (!BE.on || !u.empId) { var d0 = appNow(true); return done(d0.getHours() + ":" + ("0" + d0.getMinutes()).slice(-2)); }   /* 데모 · 서버 없음 */
+  sheetBusy(true);
+  beCall({ action: "draw_ack", emp: u.empId, id: x.id }, function (res) {
+    if (res && res.ok) { sheetBusy(false); return done(res.at); }
+    if (res && res.reason === "notwin") { sheetFail({ t: "당첨 기록이 바뀌었어요", b: "무대 안내를 따라 주세요" }); beSync(); return; }
+    if (res && res.reason === "ses") { sheetFail({ t: "비밀번호를 한 번 더 입력해 주세요", b: "본인 확인 뒤 다시 눌러 주세요" }); return; }
+    sheetFail({ t: "확인되지 않았어요", b: "잠시 뒤 다시 눌러 주세요" });
+  }, function () { sheetFail({ t: "서버에 연결되지 않았어요", b: "잠시 뒤 다시 눌러 주세요" }); });
+}
+/* 홈 나의 일정 맨 위 한 줄 · [정렬 분, onclick, 뱃지, 제목, 보조 줄, 뱃지 상태, 장소, 끝, 점] */
+function luckyRow() {
+  var x = luckyMy(); if (!x) return null;
+  return [-4, "luckyOpen()", "당첨", "럭키드로우" + (x.rk ? " " + x.rk : ""), x.ack ? "확인 완료 · " + LUCKY_GET.replace("해요", "") : "눌러서 확인해 주세요", "act", undefined, undefined, x.ack ? 0 : 1];
+}
+/* 7등 랜덤 굿즈 당첨 안내(확인 단추 없음 · 한 번) */
+function lk7WinSpec() {
+  var p = PRIZES.lk7.list[0];
+  return { id: "lk7win", title: "럭키드로우 당첨", lead: "행사 뒤 행랑으로 보내 드려요",
+    body: '<div class="axs-fcg axs-lkw"><img src="' + PRIZE_DIR + p.img + '.webp" alt="" width="600" height="600" decoding="async" onerror="this.remove()"><p class="rk">7등</p><p class="t">' + esc(p.nm) + '</p><p class="s">' + esc(p.sub || "") + "</p></div>",
+    go: "sheetClose()", goLbl: "확인" };
+}
 function fcfsInfoOpen() {
   var x = fxGet() || {};
   modalOpen('<p class="muted" style="font-size:calc(14.5px * var(--fs));line-height:1.7">스탬프 6개를 모으고<br>' + esc(fcfsAt("1F 주차장 체크인존")) + "에 먼저 온 " + (x.cap || 210) + "명</p>" +   /* v5.98 받기 선착순 */
@@ -9102,6 +9155,11 @@ function checkMyState(base) {
     seen.fcfs = "got"; changed = true;
     if (!base) notice({ key: "fcfs:got", first: true, run: function () { fcfsGotOpen(); } });   /* v5.97 (사용자 261006 밤) 팝업 대신 수령 안내 시트 · 스탬프 연출 뒤 · 쌓인 행운권 상자보다 먼저(first) */
   }
+  /* 261008 럭키드로우 당첨 · 확인 전이면 이 앱을 연 동안 한 번(첫 동기화여도 · 무대가 기다린다) · 7등 = 기기당 한 번 안내 */
+  var lw = luckyMy();
+  if (lw && !lw.ack && !LUCKY.shown[lw.id]) { LUCKY.shown[lw.id] = 1; notice({ key: "lucky:" + lw.id, title: luckyTitle(lw), urgent: true, run: function () { luckyOpen(); } }); }
+  var l7w = S.get("lk7", null);
+  if (l7w && l7w.ph === "done" && l7w.w && seen.lk7w !== 1) { seen.lk7w = 1; changed = true; notice({ key: "lucky:lk7", run: function () { luckyOpen("lk7"); } }); }
   if (changed) S.set("noti_seen", seen);
 }
 /* 폴링 1회 = 월 + 내 상담·커피챗 상태 + 공지 (v3.50 Outro 문항 기능 폐지 · 서버 응답의 옛 문항 필드는 읽지 않는다) */
@@ -9213,6 +9271,11 @@ function beSync(after) {
       var fc9 = res.my.fcfs && typeof res.my.fcfs === "object" ? res.my.fcfs : null, lk9 = res.my.lk7 && typeof res.my.lk7 === "object" ? res.my.lk7 : null;
       if (JSON.stringify(fc9) !== JSON.stringify(S.get("fcfs", null))) S.set("fcfs", fc9);
       if (JSON.stringify(lk9) !== JSON.stringify(S.get("lk7", null))) S.set("lk7", lk9);
+      if ("lucky" in res.my) {   /* 261008 럭키드로우 당첨 · 서버가 정본(null = 당첨 없음 · 취소 · 부재) · 옛 서버는 필드가 없어 그대로 */
+        var lw9 = res.my.lucky && typeof res.my.lucky === "object" && res.my.lucky.id ? res.my.lucky : null;
+        if (JSON.stringify(lw9) !== JSON.stringify(S.get("lucky", null))) S.set("lucky", lw9);
+        if (!lw9 && SHEET.spec && SHEET.spec.id === "lucky") sheetClose(true);
+      }
       var kt9 = res.my.kit && typeof res.my.kit === "object" ? res.my.kit : null;   /* 261006 키트 사이즈 · 키트명단 사번만(없으면 null = 홈 카드 · 화면 · 설정 줄 없음) · 261008 스태프 의류 명단 사번도(pool staff) · 신청번호 no */
       if (JSON.stringify(kt9) !== JSON.stringify(S.get("kit", null))) S.set("kit", kt9);
       ckqIn(res.my.ckq || null);   /* 261007 체크인 번호표 · 오늘 번호가 있을 때만(없으면 카드 없음) */
@@ -9402,6 +9465,7 @@ WS.h.ops = function (m) {   /* v4.76 스태프 폰 ops 방 · 혼잡 카드 곧�
 };
 WS.h.tv = function (m) { if (WS.role === "tv") tvWsPull(false, m.k); };
 WS.h.scan = function (m) { scanTellIn(m); };
+WS.h.lucky = function () { if (WS.role === "p" && BE.on) { if (POLL.t) { clearTimeout(POLL.t); POLL.t = null; } pollTick(); } };   /* 261008 럭키드로우 당첨 · 취소 · 7등 = 곧바로 sync(시트 · 홈 줄) */
 WS.h.ckq = function (m) { if (WS.role === "p") ckqIn(m.q || null); };   /* 261007 내 번호 · 앞에 몇 명 · 호출(진동) · 수령 */   /* v5.98 개인 사건 scan · 스태프 폰 스캔(서버 scanTell_) */
 /* v5.98 선착순 참여상 소진 순간 · 서버가 참가자 방에 한 번(소켓만 · 푸시 없음) · 6개 · 아직 안 받은(ready) 사람에게만 한 줄 · 화면은 sync 로 */
 WS.h.fcfsout = function () {
@@ -9767,7 +9831,7 @@ function pushGoRun() { if (!PUSHGO) return; var g = PUSHGO; PUSHGO = null; pushG
 function pushIn(d) {
   if (!d || document.visibilityState !== "visible") return;
   var tag = String(d.tag || "");
-  if (/^(photo|cchat|dap):/.test(tag) || /^N\d+$/.test(tag)) { if (typeof wsSyncSoon === "function") wsSyncSoon(800); return; }
+  if (/^(photo|cchat|dap|lucky7?):/.test(tag) || /^N\d+$/.test(tag)) { if (typeof wsSyncSoon === "function") wsSyncSoon(800); return; }
   if (/^scan:/.test(tag)) { scanTellIn({ sk: tag.slice(5), s: tag.slice(5).split(".")[0], tt: d.t, b: d.b }); return; }   /* v5.98 소켓으로 먼저 받았으면 건너뛴다 */   /* v4.78 dap: 승인은 앱 안 「과제상담 승인 완료」 한 곳 */
   if (!d.t) return;
   notice({ key: "push:" + (tag || d.j || d.t), title: String(d.t), body: String(d.b || ""), go: d.go && d.go !== "home" ? d.go : "", urgent: !!d.u });
