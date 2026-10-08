@@ -456,7 +456,7 @@
   /* ═══════════ 평면 지도 · 도면 좌표 그대로(위 = 북쪽, 아래 = 정문) ═══════════ */
   function zoneRect(z) {
     var xs = [], zs = [];
-    z.rows.forEach(function (r) { var n = r.pages.length; [0, n].forEach(function (k) { var x = r.a[0] + r.r[0] * k, zz = r.a[1] + r.r[1] * k; xs.push(x, x + r.n[0] * 1.8); zs.push(zz, zz + r.n[1] * 1.8); }); });
+    z.rows.forEach(function (r) { var n = r.pages.length || r.len || 0; [0, n].forEach(function (k) { var x = r.a[0] + r.r[0] * k, zz = r.a[1] + r.r[1] * k; xs.push(x, x + r.n[0] * 1.8); zs.push(zz, zz + r.n[1] * 1.8); }); });
     return [Math.min.apply(0, xs), Math.max.apply(0, xs), Math.min.apply(0, zs), Math.max.apply(0, zs)];
   }
   function mapSvg() {
@@ -484,7 +484,7 @@
       o += '<g class="zone' + (on ? ' on' : '') + '" data-z="' + z.id + '" role="button" tabindex="0" aria-label="' + esc(z.name + ' · ' + ztext(z).kor) + '">';
       if (z.area) o += '<rect class="f" x="' + X(z.area[0]) + '" y="' + Y(z.area[3]) + '" width="' + (z.area[1] - z.area[0]) * s + '" height="' + (z.area[3] - z.area[2]) * s + '" rx="3" style="opacity:.55"/>';
       o += '<rect class="f" x="' + X(b[0]) + '" y="' + Y(b[3]) + '" width="' + w + '" height="' + h + '" rx="3"/>';
-      z.rows.forEach(function (r) { var n = r.pages.length; o += '<line x1="' + X(r.a[0]) + '" y1="' + Y(r.a[1]) + '" x2="' + X(r.a[0] + r.r[0] * n) + '" y2="' + Y(r.a[1] + r.r[1] * n) + '" stroke="#FF7F32" stroke-width="3"/>'; });
+      z.rows.forEach(function (r) { var n = r.pages.length || r.len || 0; o += '<line x1="' + X(r.a[0]) + '" y1="' + Y(r.a[1]) + '" x2="' + X(r.a[0] + r.r[0] * n) + '" y2="' + Y(r.a[1] + r.r[1] * n) + '" stroke="#FF7F32" stroke-width="3"/>'; });
       var mp = z.map || [0, 0], vert = h > w * 1.6 && w < 30, lx = mp[0] < 0 ? X(b[0]) - lw / 2 - 3 : vert ? X(b[1]) + lw / 2 + 2 : tx; ty = mp[1] > 0 ? Y(b[3]) - 10 : ty;
       o += '<rect x="' + (lx - lw / 2) + '" y="' + (ty - 7) + '" width="' + lw + '" height="14" rx="2" fill="' + (z.signPg ? '#FF7F32' : '#FFFFFF') + '" stroke="#FF7F32" stroke-width="1.2"/>' +
         '<text x="' + lx + '" y="' + (ty + 3) + '" text-anchor="middle"' + (z.signPg ? '' : ' style="fill:#A63D00"') + '>' + esc(z.name) + '</text></g>';

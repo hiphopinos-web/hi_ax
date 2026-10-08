@@ -34,11 +34,11 @@ function qzPieces(k) { return k.kind === "order" ? k.pairs.map(function (p) { re
 /* 판 표기 · 힌트 코드(OX_BANK h · QZ_KEYQ h) → [줄, 판 제목] · 구역은 코드 앞 마디(FLOOR1 id) · 판 번호는 쓰지 않는다(현장에 인쇄되지 않음 · 사용자 261001)
    정본 = 「기억력 문제 은행 v3.json」 hint_codes(검사 141절이 대조) · 판 제목은 현장 판에 인쇄된 영문 그대로 */
 var QZ_PANEL = {
-  "vision.cover": ["", "AX Festival 2026"], "vision.metowe": ["", "ME to WE :"], "vision.dbc": ["", "Data Business Company"],
+  "vision.cover": ["", "AX Festival 2026"], "vision.metowe": ["", "AX Festival 2026"], "vision.dbc": ["", "Data Business Company"],   /* 261008 1층 수정본 · 옛 판 3(ME to WE :)이 판 2(AX Festival 2026)에 합쳐져 두 코드가 같은 판 */
   "vision.2026": ["", "AX Roadmap 2026"], "vision.2027": ["", "2027"], "vision.2028": ["", "2028"],
   "lab.dap": ["", "DAP"], "lab.history": ["", "History"], "lab.project": ["", "Project"], "lab.idea": ["", "아이디어 QR"],
   "action.intro": ["", "AX in Action"], "action.sales": ["", "Sales AX"], "action.consult": ["", "AI 컨설팅 도우미"], "action.claims": ["", "Claims AX"],
-  "lounge.intro": ["", "AX Lounge"], "lounge.steps": ["", "3단계"],
+  /* 261008 1층 수정본 · AX 라운지 판 · 간판 삭제(데스크만) = lounge.intro · lounge.steps 힌트 걷음(문항은 「AX 상식」 칩으로 유지 · 구현 계획 결정 6) */
   "play.hq.hidi": ["HiDI-Q", "HiDI"], "play.hq.intro": ["HiDI-Q", "Introduce"], "play.hq.tips": ["HiDI-Q", "Tips"], "play.hq.feedback": ["HiDI-Q", "Feedback"],
   "play.hh.helper": ["Hi-Helper", "Hi-Helper"], "play.hh.intro": ["Hi-Helper", "Introduce"], "play.hh.tips": ["Hi-Helper", "Tips"], "play.hh.check": ["Hi-Helper", "Check Point."], "play.hh.feedback": ["Hi-Helper", "Feedback"],
   "event.photo": ["", "AI 포토부스"], "event.roulette": ["", "룰렛 이벤트"], "event.typing": ["", "타자왕 게임"], "event.typingking": ["", "AX 타자왕"]
@@ -58,7 +58,7 @@ function qzItem(id) {
 function qzZone(z) { return z ? zoneById(z) : null; }
 /* 구역 칩 · K1 axs-sign 그대로(오렌지 면 + 흰 굵은 글자 · 사용자 확정 261002) · 판 근거가 없으면 회색 「AX 상식」 */
 function qzChip(it, big) {
-  var zz = qzZone(it.z);
+  var zz = it.h ? qzZone(it.z) : null;   /* 261008 힌트 판이 없는 문항(A · 라운지 F74) = 「AX 상식」 · 구역 z 는 출제 섞기용으로 남는다 */
   if (!zz) return '<span class="qz-gen">' + QZ_GEN + "</span>";
   return zoneSign(zz.sign, big ? "lg" : "");
 }

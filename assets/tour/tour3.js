@@ -12,7 +12,7 @@
  * 3D 를 못 그리면 평면 지도 + 구역 목록(시트는 같다). */
 (function () {
   'use strict';
-  var T = window.THREE, D = window.TOUR_DATA, BASE = (function () { var s = document.currentScript && document.currentScript.src; return s ? s.replace(/[^\/]*$/, '') : 'assets/tour/'; })(), LABVER = 'v552a', ROOT = BASE.replace(/assets\/tour\/$/, '');
+  var T = window.THREE, D = window.TOUR_DATA, BASE = (function () { var s = document.currentScript && document.currentScript.src; return s ? s.replace(/[^\/]*$/, '') : 'assets/tour/'; })(), LABVER = 'v665a', ROOT = BASE.replace(/assets\/tour\/$/, '');
   var Q = new URLSearchParams(window.AXT3_Q || '');   /* 시험판(tour-lab)만 주소 값을 넘긴다 · 앱은 비어 있음 */
   var RM = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);   /* 기본 = 기기 설정 · 처음 안내 · 도움말의 「움직임 줄이기」로 바꾸면 이 기기에 기억(아래 start) */
   function $(id) { return document.getElementById('t3-' + id); }   /* 모든 id 는 t3- 접두(앱 id 와 겹치지 않게) */
@@ -48,7 +48,7 @@
     { id: 'typing', zone: 'event', spot: 'typing', name: 'AX 타자왕', x: 3.3, z: 2.5, look: [0.55, 2.47], say: '당신의 프롬프팅 속도를 보여\u00A0주세요', go: '' },   /* v5.79 (사용자 261006) 프롬프트(입력한 글) → 프롬프팅(쓰는 행위 · 속도를 재는 대상) · 「보여 주세요」 띄어 씀(앱 「눌러 주세요」와 같게 · 말풍선 232px 두 줄이 「속도를 / 보여 주세요」로 끊기게 붙는 빈칸 u00A0) · v5.64 (사용자 261005 「프롬프트 실력보다는 속도」 · 원문 「보셔주세요」는 「보여주세요」로) 옛 「타자왕 1~3위 경품 · 17:00 마감」 */
     { id: 'event', zone: 'event', name: '포토부스', x: 5.3, z: 7.35, look: [0.55, 7.35], noGuide: true },   /* v5.58 촬영 기계(가운데 칸 앞 · 도면 3.6, 7.35) 뒤에서 벽 쪽 단체 사진을 봄 */
     { id: 'roulette', zone: 'event', spot: 'roulette', name: '룰렛 이벤트', x: 3.4, z: 10.1, look: [0.55, 10.15], say: '스탬프 3개면 룰렛을 돌려요', go: '', hand: true },
-    { id: 'lounge', zone: 'lounge', x: 8.7, z: 8.3 }
+    { id: 'lounge', zone: 'lounge', x: 6.6, z: 9.1, look: [5.6, 11.8] }   /* 261008 수정본 11쪽 · AX 라운지 = 미팅룸 날개 입구 가벽 앞 데스크(5.6, 11.81) · 데스크 앞 오른쪽 2.9m(룰렛 자리 3.0m 밖 · 가까우면 「룰렛 이벤트 앞」으로 읽힌다) · 옛 = 북쪽 벽 앞 판 줄 앞(8.7, 8.3) */
   ];
   /* 18F 커피챗 · 체크인 존은 시험판에서 뺀다(사용자 261003) · 코드는 SHOW_CAFE 로 보존 */
   var SHOW_CAFE = false;
@@ -56,7 +56,7 @@
   function zoneCenter(z) {
     if (!z || !z.rows.length) return null;
     var sx = 0, sz = 0, n = 0;
-    z.rows.forEach(function (r) { var k = r.pages.length; sx += (r.a[0] + r.r[0] * k / 2) * k; sz += (r.a[1] + r.r[1] * k / 2) * k; n += k; });
+    z.rows.forEach(function (r) { var k = D.rowLen(r); sx += (r.a[0] + r.r[0] * k / 2) * k; sz += (r.a[1] + r.r[1] * k / 2) * k; n += k; });   /* 261008 판 없는 줄 = 데스크 폭(len) */
     return [sx / n, sz / n];
   }
   STOPS.forEach(function (s) {
@@ -632,7 +632,7 @@
    * 윗면 = 책상 윗면 삼각형 가운데 화소 밝기 상위 15% 자리 · 옆면 = 옆면 삼각형의 같은 자리 · 네 책상이 같은 흰색이 되고 윗면 · 옆면 밝기 차이(모서리)는 남는다 */
   function fixDesks(root) {
     var regs = [];
-    D.ZONES.forEach(function (z) { if (z.id !== 'play' && z.id !== 'lounge') return; z.rows.forEach(function (r) { regs.push({ a: r.a, r: r.r, n: r.n, L: r.pages.length }); }); });   /* 책상이 있는 구역 = PLAY(HiDI-Q · Hi-Helper 4개씩) · LOUNGE(카운터 1) */
+    D.ZONES.forEach(function (z) { if (z.id !== 'play' && z.id !== 'lounge') return; z.rows.forEach(function (r) { regs.push({ a: r.a, r: r.r, n: r.n, L: D.rowLen(r) }); }); });   /* 책상이 있는 구역 = PLAY(HiDI-Q · Hi-Helper 4개씩) · LOUNGE(카운터 1) */
     function inDesk(x, z) {
       for (var i = 0; i < regs.length; i++) { var R = regs[i], dx = x - R.a[0], dz = z - R.a[1], al = dx * R.r[0] + dz * R.r[1], dp = dx * R.n[0] + dz * R.n[1]; if (al > -0.2 && al < R.L + 0.2 && dp > 0.15 && dp < 2.1) return true; }
       return false;
@@ -1335,6 +1335,91 @@
     if (n) { pa.needsUpdate = true; o.geometry.computeBoundingSphere(); o.geometry.computeBoundingBox(); }
     return n;
   }
+  /* ═══════════ 261008 1층 부스 기획안 수정본 반영(사용자 261008 「1층을 재구성해줘」 · 구현 계획 결정 5 = 안 R · 모형을 다시 굽지 않고 받은 뒤 고친다) ═══════════
+   * 정본 = 「[현대해상] 1층 부스 기획안_수정본_261008.pdf」 · 숫자 = tour-data · tour-scene LAY(원천 = 디자인 시안/가상 1층/v2/build/layout.py)
+   * ① 없어진 판 · 다른 층 배너 노드 지움 = 판 3(판 2에 합침) · 19 · 20 · 21(AX 라운지 간판 · 판) · 43 키노트(17F) · 44 세션 강의장(10F) · 45 층별(17F) · 누르기 목록 · 판 면 표에서도 뺀다
+   * ② AX VISION 6 → 5장 = 몸체에서 판 3 칸(도면 z 4.6 ~ 5.6)을 잘라 내고 북쪽 끝(판 2 · TV · 간판 · 옆판)을 1m 남쪽으로 당긴다 · 판 4 ~ 7 은 제자리(줄 z 0.6 ~ 5.6)
+   * ③ AX 라운지 = 판 · 간판 · 바닥 판 없이 데스크(0.92 x 0.52)만 남겨 미팅룸 날개 입구 가벽 앞(5.6, 11.81)으로 옮긴다 · 옛 자리 바닥 빛은 옆 바닥 한 점으로 다시 칠한다
+   * ④ AX LAB 55인치 TV = AX in Action TV(판 15 앞 · 받침 포함)를 같은 재질 · 구운 빛 그대로 판 9 앞(x + 6.63)에 하나 더 · 화면은 buildTvs 가 찾아 모션을 튼다
+   * ⑤ Welcome 천막 묶음(천막 · 현수막 40 · 엑스배너 47 · 출입구 안내 41) = 동쪽 출입문 정면 북쪽(38.2, 10.5)으로 · 모형에서는 여전히 숨김(hideCheckin · 사용자 261003)
+   * 옮긴 물체의 바닥 그림자는 옛 자리 기준(새 자리는 그림자 없음 · 몇 % 밝기 차) · 다시 굽기(안 B)는 별도 작업 */
+  var REFIT = { DROP: [3, 19, 20, 21, 43, 44, 45], VIS: { x0: 30.5, x1: 32.6, z0: 4.6, z1: 5.6, dz: -1.0 }, LDESK: { x0: 8.15, x1: 9.2, z0: 9.6, z1: 10.2, to: [5.6, 11.81], from: [8.67, 9.9] },
+    LOLD: { x0: 6.84, x1: 10.05, z0: 8.95, z1: 11.46, sh: 3.2 }, VOLD: { x0: 30.6, x1: 32.57, z0: 5.66, z1: 6.85, lit: [30.0, 7.6] }, TV: { x0: 22.3, x1: 24.2, z0: 0.62, z1: 2.5, dx: 6.63 }, CK: [-4.4, -1.0] };
+  function inLobby(o) { while (o) { if (o === S.lobby) return true; o = o.parent; } return false; }
+  /* 메시 꼭짓점 중 도면 (x, z) 가 sel 을 만족하는 것만 도면 dx · dz 만큼 옮긴다 · 양자화(정수) 위치는 먼저 실수로 */
+  function shiftWhere(o, sel, dx, dz) {
+    if (!o || !o.geometry) return 0;
+    o.updateMatrixWorld(true); var geo = o.geometry; geo.setAttribute('position', f32Pos(geo.attributes.position));
+    var pa = geo.attributes.position, m = o.matrixWorld, inv = m.clone().invert(), v = new T.Vector3(), n = 0;
+    for (var i = 0; i < pa.count; i++) { v.fromBufferAttribute(pa, i).applyMatrix4(m); var x = v.x + 16, z = 6 - v.z; if (!sel(x, z, v.y)) continue; v.x += dx; v.z -= dz; v.applyMatrix4(inv); pa.setXYZ(i, v.x, v.y, v.z); n++; }
+    if (n) { pa.needsUpdate = true; geo.computeBoundingSphere(); geo.computeBoundingBox(); }
+    return n;
+  }
+  /* 노드를 도면 dx · dz 만큼(판 면 가운데 c 도 같이) */
+  function shiftNode(o, dx, dz) {
+    if (!o) return 0;
+    o.position.x += dx; o.position.z -= dz; o.updateMatrix(); o.updateMatrixWorld(true);
+    o.traverse(function (q) { if (q.userData && q.userData.c && q.userData.face) { q.userData.c = q.userData.c.clone(); q.userData.c.x += dx; q.userData.c.z -= dz; } });
+    return 1;
+  }
+  /* 비운 자리 빛 = 옆 자리(도면 dx · dz 만큼 떨어진 같은 높이)의 구운 빛을 옮겨 칠한다 · 벽 높이 따라 바뀌는 밝기 그대로 · 옆 자리에 면이 없으면 그 꼭짓점은 그대로 */
+  function relightShift(o, R, dx, dz) {
+    if (!o || !o.geometry || !o.geometry.attributes.uv1) return 0;
+    o.updateMatrixWorld(true); var old = { geometry: o.geometry, matrixWorld: o.matrixWorld.clone() }, hit = regionCut(o, R, [0, 0]); if (!hit) return 0;
+    var geo = o.geometry, pa = geo.attributes.position, u1 = geo.attributes.uv1, m = o.matrixWorld, v = new T.Vector3(), n = 0, e = 1e-4;
+    for (var i = 0; i < pa.count; i++) { v.fromBufferAttribute(pa, i).applyMatrix4(m); var x = v.x + 16, z = 6 - v.z; if (x < R.x0 - e || x > R.x1 + e || z < R.z0 - e || z > R.z1 + e) continue; var u = attrAt(old, 'uv1', x + dx, z + dz, v.y); if (u) { u1.setXY(i, u[0], u[1]); n++; } }
+    u1.needsUpdate = true; return n;
+  }
+  function refit1F() {
+    var R = { drop: 0, vis: 0, visMv: 0, lounge: 0, lmv: 0, tv: 0, lit: 0, ck: 0 }, L = S.lobby, t0 = performance.now(); L.updateMatrixWorld(true);
+    /* ① */
+    REFIT.DROP.forEach(function (pg) { var o = L.getObjectByName('panel_' + pg); if (o && o.parent) { o.parent.remove(o); R.drop++; } delete S.faces[pg]; });
+    for (var i = S.picks.length - 1; i >= 0; i--) if (!inLobby(S.picks[i]) && !(S.cafe && (function (o) { while (o) { if (o === S.cafe) return true; o = o.parent; } return false; })(S.picks[i]))) S.picks.splice(i, 1);
+    /* ② */
+    var V = REFIT.VIS, vb = L.getObjectByName('zone_vision_vision_body'), leds = L.getObjectByName('leds');
+    var inV = function (x, z) { return x > V.x0 && x < V.x1 && z > (V.z0 + V.z1) / 2; };
+    [vb, leds].forEach(function (o) { if (!o) return; R.vis += regionCut(o, { x0: V.x0, x1: V.x1, z0: V.z0, z1: V.z1 }, null); R.visMv += shiftWhere(o, inV, 0, V.dz); });
+    ['panel_1', 'panel_2'].forEach(function (nm) { R.visMv += shiftNode(L.getObjectByName(nm), 0, V.dz); });
+    /* ③ */
+    var Dk = REFIT.LDESK, lb = L.getObjectByName('zone_lounge_lounge_body'), ddx = Dk.to[0] - Dk.from[0], ddz = Dk.to[1] - Dk.from[1];
+    var inDk = function (p) { return p[0] > Dk.x0 && p[0] < Dk.x1 && p[1] > Dk.z0 && p[1] < Dk.z1; };
+    if (lb) { R.lounge = regionCut(lb, null, null, function (tri) { return !tri.every(function (V2) { return inDk(V2.p); }); }); R.lmv = shiftWhere(lb, function () { return true; }, ddx, ddz); }
+    var Lo = REFIT.LOLD; if (leds) R.lounge += regionCut(leds, { x0: Lo.x0, x1: Lo.x1, z0: Lo.z0, z1: Lo.z1 }, null);
+    /* 바닥 빛 · 비운 자리 = 옆 바닥 한 점 */
+    var floor = L.getObjectByName('floor'), sn = L.getObjectByName('side_n');
+    if (floor) { R.lit += relightShift(floor, { x0: Lo.x0, x1: Lo.x1, z0: Lo.z0, z1: Lo.z1 }, Lo.sh, 0); var Vo = REFIT.VOLD, u = attrAt(floor, 'uv1', Vo.lit[0], Vo.lit[1], 0); if (u) R.lit += regionCut(floor, { x0: Vo.x0, x1: Vo.x1, z0: Vo.z0, z1: Vo.z1 }, u); }
+    if (sn) sn.traverse(function (o) { if (o.isMesh && o.geometry.attributes.uv1) R.wall = (R.wall || 0) + relightShift(o, { x0: Lo.x0, x1: Lo.x1, z0: 11.3, z1: 11.6 }, Lo.sh, 0); });   /* 옛 라운지 부스 그림자가 북쪽 대리석 벽에 구워져 있다 */
+    /* ④ */
+    var ab = L.getObjectByName('zone_action_action_body'), lg = L.getObjectByName('zone_lab');
+    if (ab && lg) {
+      var Tv = REFIT.TV, geo = ab.geometry, keys = Object.keys(geo.attributes), A = {}, idx = geo.index, n = idx ? idx.count : geo.attributes.position.count, m = ab.matrixWorld, nm3 = new T.Matrix3().getNormalMatrix(m), v = new T.Vector3(), out = {}, cnt = 0;
+      keys.forEach(function (k) { A[k] = f32Arr(geo.attributes[k]); out[k] = []; });
+      for (var t = 0; t < n; t += 3) {
+        var ids = [0, 1, 2].map(function (q) { return idx ? idx.getX(t + q) : t + q; }), P = ids.map(function (j) { v.set(A.position[j * 3], A.position[j * 3 + 1], A.position[j * 3 + 2]).applyMatrix4(m); return [v.x, v.y, v.z]; });
+        if (!P.every(function (p) { var x = p[0] + 16, z = 6 - p[2]; return x > Tv.x0 && x < Tv.x1 && z > Tv.z0 && z < Tv.z1; })) continue;
+        ids.forEach(function (j, q) {
+          keys.forEach(function (k) {
+            var s = geo.attributes[k].itemSize;
+            if (k === 'position') out[k].push(P[q][0] + Tv.dx, P[q][1], P[q][2]);
+            else if (k === 'normal') { v.set(A.normal[j * 3], A.normal[j * 3 + 1], A.normal[j * 3 + 2]).applyMatrix3(nm3).normalize(); out[k].push(v.x, v.y, v.z); }
+            else for (var c = 0; c < s; c++) out[k].push(A[k][j * s + c]);
+          });
+        });
+        cnt++;
+      }
+      if (cnt) {
+        var g2 = new T.BufferGeometry(); keys.forEach(function (k) { g2.setAttribute(k, new T.BufferAttribute(new Float32Array(out[k]), geo.attributes[k].itemSize)); }); g2.setIndex(Array.from({ length: cnt * 3 }, function (x, i) { return i; })); g2.computeBoundingSphere(); g2.computeBoundingBox();   /* 색인 있음(occBuild 가 index 를 읽는다) */
+        var tvm = new T.Mesh(g2, ab.material); tvm.name = 'zone_lab_tv'; tvm.userData = { pg: 0, zone: 'lab' }; tvm.matrixAutoUpdate = false;
+        tvm.matrix.copy(lg.matrixWorld).invert(); lg.add(tvm); tvm.updateMatrixWorld(true);   /* 꼭짓점 = 월드 좌표 */
+        S.picks.push(tvm); R.tv = cnt;
+      }
+    }
+    /* ⑤ */
+    var ck = L.getObjectByName('checkin'); if (ck) R.ck += shiftNode(ck, REFIT.CK[0], REFIT.CK[1]);
+    var p41 = L.getObjectByName('panel_41'); if (p41) R.ck += shiftNode(p41, REFIT.CK[0], REFIT.CK[1]);
+    L.updateMatrixWorld(true);
+    R.ms = Math.round(performance.now() - t0); G.refit = R;   /* 진단 · 고친 수 · 걸린 시간 */
+  }
   function remodel() {
     trueColors(S.lobby); cutKiosk();   /* v5.58 판 · 포스터 참 색 · 포토부스 옛 기계(판 36 앞) 지움 */
     var t0 = performance.now(), R = { eh: 0, floor: 0, wing: 0 }, sideN = S.lobby.getObjectByName('side_n'), sideE = S.lobby.getObjectByName('side_e') || S.lobby;
@@ -1727,7 +1812,7 @@
   function load() {
     $('load').hidden = false; G.loadK = 0; G.loadUnk = false; veilProg(0);
     S.load(BASE + 'lobby.glb?v=' + LABVER, function (k) { loadProg(k); }, function () {
-      fixCoplanar(S.lobby); fixLightmaps(S.lobby); fixDesks(S.lobby); remodel(); buildBust(); buildGrid(S.lobby); patchPillars(S.lobby); buildDoor();
+      refit1F(); fixCoplanar(S.lobby); fixLightmaps(S.lobby); fixDesks(S.lobby); remodel(); buildBust(); buildGrid(S.lobby); patchPillars(S.lobby); buildDoor();   /* 261008 1층 수정본(refit1F) = 다른 손질보다 먼저 */
       var st = STOPS[0], f = nearestFree(st.x, st.z); flood(f[0], f[1]);
       STOPS.forEach(function (s) { var q = nearestFree(s.x, s.z); if (q) { s.x = q[0]; s.z = q[1]; } });
       buildGuides(); buildRooms(); hideCheckin(); buildTypingTv(); buildLaptops(); buildTvs();   /* v5.51 오락기 3대 없앰(사용자 261004) */
@@ -2410,7 +2495,7 @@
         a.fromBufferAttribute(P, ix[3 * t]).applyMatrix4(m.matrixWorld); b.fromBufferAttribute(P, ix[3 * t + 1]).applyMatrix4(m.matrixWorld); c.fromBufferAttribute(P, ix[3 * t + 2]).applyMatrix4(m.matrixWorld);
         if (Math.max(a.y, b.y, c.y) < 0.08) continue;   /* 바닥 표시 · 받침판은 그대로 */
         var x = (a.x + b.x + c.x) / 3 + 16, zz = 6 - (a.z + b.z + c.z) / 3, fr = 0, sc = 1e9;
-        z.rows.forEach(function (r) { var f = (x - r.a[0]) * r.n[0] + (zz - r.a[1]) * r.n[1], L = (x - r.a[0]) * r.r[0] + (zz - r.a[1]) * r.r[1], s = Math.abs(f) + Math.max(0, -L, L - r.pages.length); if (s < sc) { sc = s; fr = f; } });
+        z.rows.forEach(function (r) { var f = (x - r.a[0]) * r.n[0] + (zz - r.a[1]) * r.n[1], L = (x - r.a[0]) * r.r[0] + (zz - r.a[1]) * r.r[1], s = Math.abs(f) + Math.max(0, -L, L - D.rowLen(r)); if (s < sc) { sc = s; fr = f; } });
         if (fr < 0.2) continue;   /* 판 · 판 틀 · 간판 = 판 줄 위 */
         tris.push(t);
         for (var k = 0; k < 3; k++) { var v = ix[3 * t + k]; if (par[v] == null) par[v] = v; }
@@ -2501,7 +2586,7 @@
     });
     if (best) return best;
     var gd = G.talk;
-    if (gd && gd.go && !gd.stamp && gd.spot !== 'typing' && !$('gbub').hidden) {   /* 말풍선이 화면에 떠 있을 때만(스태프가 카메라 뒤면 없음) */ var z = D.Z(gd.zone); if (z && z.rows.length) { var pg = firstPg(z); return { kind: 'zone', z: z, pg: pg, f: S.faces[pg] || null }; } }
+    if (gd && gd.go && !gd.stamp && gd.spot !== 'typing' && !$('gbub').hidden) {   /* 말풍선이 화면에 떠 있을 때만(스태프가 카메라 뒤면 없음) */ var z = D.Z(gd.zone); if (z && z.rows.length && (D.viewPages(z).length || zoneGoable(z))) { var pg = firstPg(z); return { kind: 'zone', z: z, pg: pg, f: (pg && S.faces[pg]) || null }; } }   /* 261008 판 없는 구역 = 호스트가 구역 상세를 열 수 있을 때만 */
     return null;
   }
   function lookFrameMesh() {
@@ -2658,7 +2743,7 @@
     var a = f.userData.c, b = lf.userData.c; return Math.hypot(a.x - b.x, a.z - b.z) < 6 ? f : lf;
   }
   /* 판 보기 데이터(새 조판 · tour-boards.js · .css) · 둘러보기를 처음 열 때 한 번 받는다(약 42KB) · 받기 전에 열면 옛 판 그림 */
-  var BDVER = 'v560';   /* v5.60 tour-boards.css 뿌리 규칙 범위 */
+  var BDVER = 'v665';   /* v5.60 tour-boards.css 뿌리 규칙 범위 */
   function loadBoards() {
     if (window.TOUR_BOARDS || G.bdLoading) return; G.bdLoading = true;
     var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = BASE + 'tour-boards.css?v=' + BDVER; document.head.appendChild(l);
@@ -2739,13 +2824,18 @@
   function firstPg(z) {
     var p = G.pos, best = null, bd = 1e9;
     z.rows.forEach(function (r) {
+      if (!r.pages.length) return;   /* 261008 판 없는 줄(AX 라운지 데스크) */
       var n = r.pages.length, mx = r.a[0] + r.r[0] * n / 2, mz = r.a[1] + r.r[1] * n / 2, q = toThree(mx, mz), d = Math.hypot(q.x - p.x, q.z - p.z);
       if (d < bd) { bd = d; best = r.pages[0]; }
     });
     return best;
   }
+  /* 261008 (1층 수정본 · AX 라운지 판 · 간판 삭제) 판 없는 구역 = 앱 구역 상세(호스트 zoneGo · 둘러보기를 닫고 열며 「3D로 돌아가기」로 이 자리) · 시험판(호스트 없음) = 할 일 없음 */
+  function zoneGoable(z) { var h = HOST(); return !!(z && h && h.zoneGo && !D.viewPages(z).length); }
+  function zoneOut(z) { if (!zoneGoable(z) || G.anim || G.sheetOpen || G.sheetFx) return; var h = HOST(); try { h.zoneGo(z.id); } catch (e) {} }
   function enterPanel(z, pg) {
     if (G.tilt || G.tiltTo) { tiltHome(true); var cw = camWant(); G.camPos.copy(cw.pos); G.look.copy(cw.look); camera.position.copy(G.camPos); camera.lookAt(G.look); }   /* v5.65 판 보기 진입 = 정면 눈높이에서 */
+    if (z && !D.viewPages(z).length) { zoneOut(z); return; }   /* 261008 판 없는 구역(AX 라운지 = 데스크만) = 앱 구역 상세로 */
     if (pg && D.NOVIEW.indexOf(pg) >= 0) pg = null;   /* v5.58 판 보기에 없는 판(15 등)을 누르면 그 구역 첫 판 */
     if (!pg) pg = firstPg(z);
     var ps = D.viewPages(z), pk = pickFace(z, pg);
@@ -2833,7 +2923,7 @@
     var T0 = { x: 1.5, z: 2.5, w: 0.6, l: 1.3, h: 0.74 };
     var g = new T.Group(); g.position.copy(toThree(T0.x, T0.z)); g.name = 'typingDesk';
     var tp = new T.Mesh(new T.BoxGeometry(T0.w, 0.03, T0.l), top); tp.position.y = T0.h - 0.015; g.add(tp);
-    [[-1, -1], [-1, 1], [1, -1], [1, 1]].forEach(function (q) { var l = new T.Mesh(new T.CylinderGeometry(0.018, 0.018, T0.h - 0.03, 8), leg); l.position.set(q[0] * (T0.w / 2 - 0.05), (T0.h - 0.03) / 2, q[1] * (T0.l / 2 - 0.06)); g.add(l); });
+    var bd = new T.Mesh(new T.BoxGeometry(T0.w - 0.04, T0.h - 0.03, T0.l - 0.04), top); bd.position.y = (T0.h - 0.03) / 2; g.add(bd);   /* 261008 수정본 9쪽 · 타자왕 앞 = 인포메이션 데스크(막힌 상자 · 옛 = 다리 넷 탁자) */
     S.lobby.add(g);
     [-0.33, 0.33].forEach(function (dz) {
       var lp = new T.Group(); lp.position.set(0.04, T0.h, dz); g.add(lp);
@@ -3505,7 +3595,7 @@
       if (!z.rows.length) return;
       var b = zoneRect(z);
       o += '<rect class="mz" data-z="' + z.id + '" x="' + mmX(b[0]) + '" y="' + mmY(b[3]) + '" width="' + ((b[1] - b[0]) * MM.k).toFixed(1) + '" height="' + ((b[3] - b[2]) * MM.k).toFixed(1) + '" rx="1.5"/>';
-      z.rows.forEach(function (r) { var n = r.pages.length; o += '<line x1="' + mmX(r.a[0]) + '" y1="' + mmY(r.a[1]) + '" x2="' + mmX(r.a[0] + r.r[0] * n) + '" y2="' + mmY(r.a[1] + r.r[1] * n) + '" stroke="#FF7F32" stroke-width="2"/>'; });
+      z.rows.forEach(function (r) { var n = D.rowLen(r); o += '<line x1="' + mmX(r.a[0]) + '" y1="' + mmY(r.a[1]) + '" x2="' + mmX(r.a[0] + r.r[0] * n) + '" y2="' + mmY(r.a[1] + r.r[1] * n) + '" stroke="#FF7F32" stroke-width="2"/>'; });
     });
     o += '<circle cx="' + mmX(B.revolve) + '" cy="' + mmY(0) + '" r="3" fill="#4E5968"/><circle cx="' + mmX(32.57) + '" cy="' + mmY(8.4) + '" r="3" fill="#4E5968"/><rect x="' + mmX(17.0) + '" y="' + mmY(11.7) + '" width="' + (2.8 * MM.k).toFixed(1) + '" height="3" fill="#4E5968"/>';
     o += '<rect x="' + mmX(WW.x1 - WW.w) + '" y="' + mmY(WW.z + 0.15) + '" width="' + (WW.w * MM.k).toFixed(1) + '" height="2" fill="#191F28"/>';   /* v5.45 가벽 */
@@ -3537,7 +3627,7 @@
     D.ZONES.forEach(function (z) {
       if (z.id === 'cafe') { if (!SHOW_CAFE) return; var dg = Math.hypot(p[0] - 18.4, p[1] - 10.4); if (dg < 2.6 && dg < bd) { bd = dg; best = z; } return; }
       z.rows.forEach(function (r) {
-        var n = r.pages.length, ax = r.a[0], az = r.a[1], bx = ax + r.r[0] * n, bz = az + r.r[1] * n, vx = bx - ax, vz = bz - az, t = clamp(((p[0] - ax) * vx + (p[1] - az) * vz) / (vx * vx + vz * vz), 0, 1);
+        var n = D.rowLen(r), ax = r.a[0], az = r.a[1], bx = ax + r.r[0] * n, bz = az + r.r[1] * n, vx = bx - ax, vz = bz - az, t = clamp(((p[0] - ax) * vx + (p[1] - az) * vz) / (vx * vx + vz * vz), 0, 1);
         var qx = ax + vx * t, qz = az + vz * t, d = Math.hypot(p[0] - qx, p[1] - qz), front = (p[0] - qx) * r.n[0] + (p[1] - qz) * r.n[1];
         if (front > 0 && d < 4.2 && d < bd) { bd = d; best = z; }
       });
@@ -3552,8 +3642,8 @@
     if (z && z.id === 'event') cta.hidden = true;   /* EVENT 는 크게 보기 없음(사용자 261003) · 돋보기 「경품 보기」 · 「타자왕 광고 보기」만 */
     else if (z && G.scn === 'lobby') {
       var n = D.viewPages(z).length;   /* v5.58 판 보기 장 수(NOVIEW 빼고) */
-      cta.innerHTML = z.id === 'cafe' ? '18F 커피챗 보기' : esc(z.name) + ' 판 크게 보기 <span class="n">' + n + '장</span>';
-      cta.hidden = false;
+      cta.innerHTML = z.id === 'cafe' ? '18F 커피챗 보기' : !n ? esc(z.name) + ' 자세히 보기' : esc(z.name) + ' 판 크게 보기 <span class="n">' + n + '장</span>';   /* 261008 판 없는 구역(AX 라운지) = 앱 구역 상세 */
+      cta.hidden = z.id !== 'cafe' && !n && !zoneGoable(z);
     } else cta.hidden = true;
     var s = STOPS[G.stop], w = $('where');
     if (G.scn === 'cafe' || G.scn === 'elev') cta.hidden = true;
@@ -4413,7 +4503,7 @@
   /* ═══════════ 구역 칸(작은 지도) ═══════════ */
   function zoneRect(z) {
     var xs = [], zs = [];
-    z.rows.forEach(function (r) { var n = r.pages.length; [0, n].forEach(function (k) { var x = r.a[0] + r.r[0] * k, zz = r.a[1] + r.r[1] * k; xs.push(x, x + r.n[0] * 1.8); zs.push(zz, zz + r.n[1] * 1.8); }); });
+    z.rows.forEach(function (r) { var n = D.rowLen(r); [0, n].forEach(function (k) { var x = r.a[0] + r.r[0] * k, zz = r.a[1] + r.r[1] * k; xs.push(x, x + r.n[0] * 1.8); zs.push(zz, zz + r.n[1] * 1.8); }); });
     return [Math.min.apply(0, xs), Math.max.apply(0, xs), Math.min.apply(0, zs), Math.max.apply(0, zs)];
   }
   /* 3D 를 못 그리는 기기 · 평면 지도 · 목록 대신 짧은 안내 한 줄(사용자 261003 「평면 지도 · 목록은 없애고 3D 만」) */
@@ -4994,5 +5084,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v6.25', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v6.65', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();

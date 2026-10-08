@@ -60,6 +60,12 @@
 .bd-lead { font-size: var(--LEAD); line-height: 1.62; font-weight: 500; letter-spacing: -0.01em; text-wrap: pretty; }
 .bd-lead + .bd-lead { margin-top: calc(var(--LEAD) * 1.1); }
 .k-C .bd-lead { font-weight: 600; }
+.k-C .bd-mw { margin-top: calc(var(--G2) * 0.5); }   /* 261008 합친 판 2(수정본 4쪽) · 옛 판 3 머리 = 오른쪽 블록 */
+.bd.wall .bd-mw { padding-left: calc(var(--u) * 40); } .bd.view .bd-mw { padding-left: 34%; }
+.bd-mt { display: block; font-size: calc(var(--D1) * 0.7); line-height: 1.15; font-weight: 700; letter-spacing: -0.02em; }
+.bd-ms { display: block; font-size: var(--D2); line-height: 1.36; font-weight: 600; letter-spacing: -0.01em; margin-top: calc(var(--D2) * 0.6); }
+.wall .bd-mt { white-space: nowrap; } .bd.view .bd-ms .bd-ln { display: inline-block; }   /* 부제는 인쇄 줄 덩어리로 끊는다 */
+.bd-mw + .bd-lead { margin-top: var(--G3); }
 .bd-p { font-size: var(--B); line-height: 1.6; font-weight: 400; text-wrap: pretty; }
 .wall .bd-p { font-weight: 500; }
 .bd-h4 { font-size: var(--H); line-height: 1.35; font-weight: 700; letter-spacing: -0.015em; text-wrap: balance; }

@@ -78,7 +78,7 @@ var OX_BANK = [
   { id: "F68", c: 4, lv: 2, q: "질문은 한꺼번에 여러 개 묻는 게 좋다", a: "X", e: "질문은 하나씩 나누어 한다.", g: "tipq", rv: 1, z: "play", h: "play.hq.tips" },
   { id: "F71", c: 4, lv: 2, q: "태아보험 설계는 출산예정일만 넣으면 된다", a: "O", e: "임신 주수별 필수 담보를 담아 설계한다.", g: "hhf", rv: 1, z: "play", h: "play.hh.intro" },
   { id: "F72", c: 4, lv: 3, q: "Hi-Helper는 신상품도 바로 추천에 반영한다", a: "X", e: "신상품과 신담보는 반영까지 시간이 걸린다.", g: "hhn", rv: 1, z: "play", h: "play.hh.check" },
-  { id: "F74", c: 4, lv: 1, q: "AX 라운지는 업무 고민을 이야기하는 곳이다", a: "O", e: "바꾸고 싶은 업무와 반복되는 불편을 이야기한다.", g: "lg", rv: 1, z: "lounge", h: "lounge.intro" },
+  { id: "F74", c: 4, lv: 1, q: "AX 라운지는 업무 고민을 이야기하는 곳이다", a: "O", e: "바꾸고 싶은 업무와 반복되는 불편을 이야기한다.", g: "lg", rv: 1, z: "lounge", h: "" },   /* 261008 1층 수정본 · AX 라운지 판(20 · 21) 삭제 = 힌트 판 없음 → 「AX 상식」 칩(구현 계획 결정 6 · 문항 유지) */
   { id: "F83", c: 4, lv: 1, q: "in Action 앱은 외부 업체가 만들어 줬다", a: "X", e: "현장 구성원이 AI와 데이터로 직접 만들었다.", g: "ia", rv: 1, z: "action", h: "action.intro" },
   { id: "F84", c: 4, lv: 2, q: "AI컨설팅 도우미는 판매 화법을 알려 준다", a: "O", e: "상품의 강점을 판매 화법으로 제공하는 앱이다.", g: "ap", rv: 1, z: "action", h: "action.consult" },
   { id: "F85", c: 4, lv: 2, q: "Hi-Helper는 추천 설계안을 하나만 준다", a: "X", e: "추천 설계안 TOP1~3을 비교해 볼 수 있다.", g: "hhr", rv: 1, z: "play", h: "play.hh.tips" }
