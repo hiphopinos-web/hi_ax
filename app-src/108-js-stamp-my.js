@@ -584,7 +584,7 @@ function ppDrawOpen() {
   }
   modalOpen('<p class="muted" style="font-size:calc(14.5px * var(--fs));line-height:1.7">스탬프 4개 1장 · 5개 2장 · 6개 3장 · 자동 발급<br>지금 <b style="color:var(--hi)">' + t + '장</b></p>' +
     tickets +
-    '<p class="muted" style="margin-top:8px;font-size:calc(13.5px * var(--fs));line-height:1.65">' + (lkCond() ? "17:00 Outro 현장 추첨 · 16:40부터 17F 입구 QR 체크인" : "17:00 Outro 현장 추첨 · 당첨자 발표만, 경품은 나중에 전달") + '</p>' +   /* v5.90 행운권_참석조건(sync lkcond) */   /* v4.79 무대 추첨 · v4.83 사용자 표시 용어 「행운권」 · v5.04 옛 「행운권 추첨 결과는 행사 후 개별 안내」 줄 삭제(사후 추첨 없음) */
+    '<p class="muted" style="margin-top:8px;font-size:calc(13.5px * var(--fs));line-height:1.65">' + (lkCond() ? "17:00 Outro 현장 추첨 · 16:40부터 17F 입구 QR 체크인" : "17:00 Outro 현장 추첨 · 경품은 따로 전달") + '</p>' +   /* v5.90 행운권_참석조건(sync lkcond) */   /* v4.79 무대 추첨 · v4.83 사용자 표시 용어 「행운권」 · v5.04 옛 「행운권 추첨 결과는 행사 후 개별 안내」 줄 삭제(사후 추첨 없음) */
     prizeModalHtml("draw") +   /* v5.04 1~6등 10명 · 사진 · 이름 · 인원 */
     '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "행운권");
 }
