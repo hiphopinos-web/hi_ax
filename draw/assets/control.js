@@ -55,7 +55,7 @@ window.AXDRAW_CONTROL = function () {
     '<label>체크인한 분만</label><input id="f-chk" type="checkbox">' +
     '<label>체크인 화면 쓰기</label><input id="f-ckui" type="checkbox" title="끄면(기본 · 261006) 체크인 QR · 인원 없이 행운권 번호 전체에서 추첨">' +
     '<label>통에 보이는 공 상한</label><input id="f-bmax" type="number" min="100" max="4000" title="행운권이 더 많으면 무작위 대표 공만 · 당첨은 행운권 전체에서">' +
-    '<label>이름 표시</label><select id="f-name"><option value="mask">가운데 가림 (홍*동)</option><option value="none">번호만</option></select>' +
+    '<label>이름 표시</label><select id="f-name"><option value="real">실명 (당첨자만 서버에서)</option><option value="mask">가운데 가림 (홍*동)</option><option value="none">번호만</option></select>' +
     '<label>부서 표시</label><input id="f-dept" type="checkbox">' +
     '<label>체크인 티커 이름</label><input id="f-tick" type="checkbox">' +
     '<label>섞기 박자음</label><input id="f-beat" type="checkbox">' +

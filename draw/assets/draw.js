@@ -56,8 +56,9 @@
     onePerPerson: true,      /* 1인 1회 당첨 · 당첨 즉시 그 사람의 나머지 공을 뺀다 */
     absentRemove: true,      /* 재추첨(부재) 때 그 사람의 공을 뺀다 */
     checkinOnly: true,       /* 체크인한 사람만 대상 · 끄면 응모권 보유자 전원 */
-    nameMode: "mask",        /* mask(홍*동) | none(번호만) */
-    showDept: false,
+    nameMode: "real",        /* real(실명 · draw_who · 사용자 261008 「실명으로 가자」) | mask(홍*동) | none(번호만) */
+    showDept: true,          /* 부서 = 명부부서 부서 · 없으면 부문(사용자 261008) */
+    nameV: "261008r",        /* 저장값의 판이 다르면(옛 「가림」) 이름 · 부서 설정을 위 기본으로 한 번 되돌린다(드럼 판 stage.js 와 같은 키) */
     tickerNames: true,       /* 체크인 티커에 가린 이름 */
     beat: true,
     intro: true,             /* 첫 Space 에 실사 인트로 1회(261001 확정) · 건너뛰기 = Space */
@@ -70,6 +71,7 @@
   var CFG = load(LS_CFG, null);
   if (CFG && CFG.rounds && CFG.roundsV !== DEF.roundsV) { delete CFG.rounds; delete CFG.roundsV; }
   CFG = Object.assign(JSON.parse(JSON.stringify(DEF)), CFG || {});
+  if (CFG.nameV !== DEF.nameV) { CFG.nameMode = DEF.nameMode; CFG.showDept = DEF.showDept; CFG.nameV = DEF.nameV; save(LS_CFG, CFG); }   /* 261008 가림 → 실명 */
   if (REC || BENCH) CFG = JSON.parse(JSON.stringify(DEF));
   if (REC) { CFG.rounds = [{ name: "ROUND 01", prize: "경품 A", count: 2 }, { name: "FINAL", prize: "경품 C", count: 1 }]; CFG.demoRate = 20; CFG.ckUI = true; }   /* 쇼릴 대본 전용(옛 체크인 대본 그대로) */
   if (QPAL) CFG.pal = QPAL;
@@ -215,7 +217,45 @@
       var rs = rounds(); ST.round = 0;
       while (ST.round < rs.length - 1 && roundWins(ST.round).length >= rs[ST.round].count) ST.round++;
       persist(); toast("서버 추첨기록 " + list.length + "건을 이어받았습니다", true);
+      whoFetch();
     });
+  }
+  /* 261008 실명 · 부서 · draw_who = 이번에 뽑힌 사람만(pk 12개까지 · 관리코드) · 드럼 판(stage.js)과 같은 규칙
+   *   명단(draw_pool)은 그대로 가린 이름 · 실명은 당첨 기록에만(fn · fd) · 실패 = 가린 이름 + draw_pool 부서 · 1.5초씩 늘려 다시(10초 상한) · 옛 서버 · 권한 없음 = 그만 */
+  var WHO = { busy: false, next: 0, fail: 0, off: false, miss: {} };
+  function whoWant() { return ST.results.filter(function (r) { return r.st === "win" && r.pk && !r.fn && !WHO.miss[r.pk]; }); }
+  function whoFetch() {
+    if (CFG.nameMode !== "real") return;
+    var want = whoWant(); if (!want.length) return;
+    if (CFG.mode !== "server") {                      /* 데모 = 명단의 가짜 이름 그대로 */
+      var ch = false;
+      want.forEach(function (r) { var pp = ST.pool && ST.pool.people[r.pk]; if (pp && (pp.fn || pp.nm)) { r.fn = pp.fn || pp.nm; r.fd = pp.fd || pp.dp || ""; ch = true; } else WHO.miss[r.pk] = 1; });
+      if (ch) { persist(); whoPaint(); }
+      return;
+    }
+    if (WHO.busy || WHO.off || Date.now() < WHO.next) return;
+    var pks = []; want.forEach(function (r) { if (pks.length < 12 && pks.indexOf(r.pk) < 0) pks.push(r.pk); });
+    WHO.busy = true;
+    jsonp("draw_who", { pk: pks.join(",") }, function (res) {
+      WHO.busy = false;
+      if (res && res.ok) {
+        var m = {}, ch = false;
+        (res.rows || []).forEach(function (x) { if (x && x.pk && x.nm) m[x.pk] = x; });
+        pks.forEach(function (pk) { if (!m[pk]) WHO.miss[pk] = 1; });
+        ST.results.forEach(function (r) { var x = m[r.pk]; if (x && !r.fn) { r.fn = String(x.nm).slice(0, 30); r.fd = String(x.dp || "").slice(0, 60); ch = true; } });
+        WHO.fail = 0; WHO.next = 0;
+        if (ch) { persist(); whoPaint(); }
+        if (whoWant().length) whoFetch();
+        return;
+      }
+      if (res && (res.err === "unknown action" || res.reason === "auth")) { WHO.off = true; return; }
+      WHO.fail++; WHO.next = Date.now() + Math.min(10000, 1500 * WHO.fail);
+    });
+  }
+  function whoPaint() {
+    if (SC === "reveal" && WIN.r) uiWho(WIN.r);
+    else if (SC === "board") uiBoard();
+    if (SC === "mix" || SC === "tension" || SC === "exit") { var L = $("mList"); if (L) L._h = ""; uiMix(); }
   }
   /* 당첨 기록 전송 · 새 액션 draw_log · 없거나 끊기면 로컬 큐에 두고 다시 보낸다(화면 진행은 막지 않는다) */
   function serverLog(r) {
@@ -1120,6 +1160,7 @@
     if (MIXSKIP && !ST.results.length) { res.mskip = 1; res.mixed = MIXSKIPAT; }
     if (bp) res.big = 1;                              /* 대표 공 모드로 뽑힘(로컬 기록) */   /* 첫 추첨 · 최소 섞기를 건너뛰었다(로컬 기록) */
     ST.results.push(res); ST.pending = res.id; ST.drawing = 0; if (CFG.onePerPerson) ST.out[res.pk] = "win"; persist(); serverLog(res);
+    whoFetch();                                       /* 261008 실명 · 부서 · 공이 떨어지는 동안 받아 둔다 */
     WIN.i = i; WIN.r = res; WIN.z = 0; WIN.w = 0;
     /* 떨어지는 공의 월드 위치 · 속도(카메라가 따라간다) */
     WIN.xw = bx[i]; WIN.yw = by[i]; WIN.vxw = (bx[i] - bpx[i]) / PH.h * 0.5 + 40; WIN.vyw = Math.max(150, (by[i] - bpy[i]) / PH.h);
@@ -1669,7 +1710,7 @@
     qrShow();
     var rows = ST.closed ? "" : ARR.lastPk.slice(0, 2).map(function (pk) {
       var p = ST.pool.people[pk]; if (!p) return "";
-      var nm = CFG.tickerNames && CFG.nameMode === "mask" && p.nm ? '<b>' + esc(mask(p.nm)) + "</b>" : "";
+      var nm = CFG.tickerNames && CFG.nameMode !== "none" && p.nm ? '<b>' + esc(mask(p.nm)) + "</b>" : "";   /* 체크인 티커 = 가린 이름 그대로(당첨자가 아니다) */
       return '<div class="trow">' + nm + p.nos.map(function (n) { return '<span class="chip">' + n + "</span>"; }).join("") + "</div>";
     }).join("");
     set("ticker", rows);
@@ -1697,9 +1738,19 @@
     fitMList();
   }
   /* 당첨자 한 줄 · 이름(가림)과 부서를 따로 둔다(부서는 이름 아래 · 결과판 7명 이상이면 이름 옆) */
+  /* 261008 이름 · 부서 · real = draw_who 실명(없으면 가린 이름) · mask = 가린 이름 · none = 번호 · 부서 = draw_who 부서(없으면 draw_pool 부문) */
+  function nmOf(w) {
+    if (!w || CFG.nameMode === "none") return "";
+    if (CFG.nameMode === "real" && w.fn) return String(w.fn);
+    return w.nm ? mask(w.nm) : "";
+  }
+  function dpOf(w) {
+    if (!w || CFG.nameMode === "none" || !CFG.showDept) return "";
+    return String((CFG.nameMode === "real" && w.fn ? w.fd : w.dp) || "").replace(/\s+/g, " ").trim();
+  }
   function whoHtml(w) {
-    var named = CFG.nameMode === "mask" && w.nm, dp = named && CFG.showDept && w.dp ? String(w.dp).trim() : "";
-    return '<span class="who"><span class="nm fit">' + esc(named ? mask(w.nm) : "응모 번호 " + w.no) + "</span>" + (dp ? '<span class="dp fit">' + esc(dp) + "</span>" : "") + "</span>";
+    var nm = nmOf(w), dp = nm ? dpOf(w) : "";
+    return '<span class="who"><span class="nm fit">' + esc(nm || "응모 번호 " + w.no) + "</span>" + (dp ? '<span class="dp fit">' + esc(dp) + "</span>" : "") + "</span>";
   }
   function uiMix() {
     var r = curRound(), wins = roundWins(ST.round, true), n = wins.length;
@@ -1714,17 +1765,22 @@
   function fitMList() {
     var L = $("mList"); if (!L) return;
     var a = L.querySelectorAll(".wrow"), k, hasDp = !!L.querySelector(".dp");   /* 부서가 있으면 줄을 조금 낮게(한 라운드 3명이 접히지 않게) */
-    for (k = 0; k < a.length; k++) { a[k].style.display = ""; var nm = a[k].querySelector(".nm"), dp = a[k].querySelector(".dp"); fitText(nm, hasDp ? 38 : 42, 28, 1); if (dp) fitText(dp, 24, 20, 2); }
+    for (k = 0; k < a.length; k++) { a[k].style.display = ""; var nm = a[k].querySelector(".nm"), dp = a[k].querySelector(".dp"); fitText(nm, hasDp ? 38 : 42, 28, 1); if (dp) fitText(dp, 24, 20, 1); }   /* 261008 부서 한 줄 · 넘치면 말줄임 */
     var more = L.querySelector(".wmore"); if (more) more.remove();
     if (L.scrollHeight <= L.clientHeight + 1 || a.length < 2) return;
     more = document.createElement("div"); more.className = "wmore"; L.insertBefore(more, L.firstChild);
     for (k = 0; k < a.length - 1 && L.scrollHeight > L.clientHeight + 1; k++) { a[k].style.display = "none"; more.textContent = "앞의 " + (k + 1) + "명 · 결과판에서"; }
   }
+  /* 이름 · 부서 줄만(실명이 늦게 오면 이것만 다시) · 이름 132 · 부서 60(1920×1080 · 객석 뒤) · 길면 줄여 맞춤 → 두 줄 */
+  function uiWho(r) {
+    var nm = nmOf(r), dp = nm ? dpOf(r) : "";
+    set("rName", nm ? esc(nm) : "앱의 응모 번호를 확인해 주세요"); fitText($("rName"), nm ? 132 : 72, nm ? 88 : 48, 2);
+    set("rDept", dp ? esc(dp) : ""); fitText($("rDept"), 60, 40, 2);
+  }
   function uiReveal(r) {
-    var ri = r.round, rr = rounds()[ri], named = CFG.nameMode === "mask" && r.nm;
+    var ri = r.round, rr = rounds()[ri];
     set("rEye", esc(rr.name) + " · " + r.slot + " / " + rr.count); fitText($("rEye"), 44, 30, 1);
-    set("rName", named ? esc(mask(r.nm)) : "앱의 응모 번호를 확인해 주세요"); fitText($("rName"), named ? 118 : 72, named ? 76 : 48, 2);
-    set("rDept", named && CFG.showDept && r.dp ? esc(String(r.dp).trim()) : ""); fitText($("rDept"), 44, 34, 2);
+    uiWho(r);
     set("rPz", esc(rr.prize)); picInto($("rPic"), $("rImg"), rr); fitText($("rPz"), 54, 38, 2);
     fade($("rWho"), 0, 0); fade($("rPrize"), 0, 0); fade($("rAbs"), 0, 0);
     fade($("rWho"), 1, 0.35, 0.95); fade($("rPrize"), 1, 0.35, 1.05);
@@ -1780,6 +1836,7 @@
   var tickN = 0;
   function uiTick() {
     if ((tickN++ % 6) !== 0) return;
+    if (WHO.fail && !WHO.busy) whoFetch();            /* 261008 실명 받기 실패 뒤 다시 */
     if (SC === "idle") uiIdleCount();
     else if (SC === "checkin" || SC === "closed") uiPool();
     uiHelp();
@@ -1826,6 +1883,7 @@
       if (m.cfg.mode || m.cfg.key != null || m.cfg.server != null || m.cfg.appBase != null) { qrCode(); remoteBoot(); }   /* 체크인 QR 코드를 다시 받는다 · 원격 연결 */
       document.body.classList.toggle("demo", CFG.mode === "demo");
       if (GL && m.cfg.pal) GL.setPalette(CFG.pal);
+      if (m.cfg.nameMode != null || m.cfg.showDept != null) { whoFetch(); whoPaint(); }
       uiScene();
     }
     if (m.type === "hello") pushCtl();

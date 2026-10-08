@@ -1,9 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════════════════
  * AX Festival 2026 · 17F 럭키드로우 무대 화면 · 드럼 판 (stage.html 전용 · 261008)
- *   사용자 결정 261008: ① 드럼 데모(drum.html · drum.js) 연출을 운영 무대에 그대로 ② 무대 표기 = 행운권 번호 + 가린 이름(부서 · 사번 없음)
+ *   사용자 결정 261008: ① 드럼 데모(drum.html · drum.js) 연출을 운영 무대에 그대로 ② 무대 표기 = 행운권 번호 + 실명 + 부서 크게(같은 날 「이름 가림」 대체 · 사번 없음)
  *     ③ 통 안의 공 = 대표 120개 · 당첨은 행운권 전체에서 · 화면 숫자는 「행운권 N장」 ④ 한 번 뽑으면 그 등수 남은 인원 K 명을 한꺼번에 · 3명까지 한 줄 · 4명부터 두 줄
  *   흐름 · 서버 계약은 옛 화면(assets/draw.js · index.html?classic=1)과 같다(이 파일은 그 코드를 옮겨 오고 연출만 바꿨다)
  *     서버 = draw_pool(가린 이름 · pk) · draw_log(당첨 · 부재 · 취소) · draw_state(예비 노트북 복원 · ack) · draw_cfg · draw_stats · fin_state · draw_scr(상태 보고) · draw_acks(확인 · 소켓이 끊겼을 때)
+ *       · draw_who(261008 · 이번에 뽑힌 사람만 실명 · 부서 · 문이 열릴 때 부르고 공개 순간 그린다 · 실패하면 가린 이름 · 행운권 전체 실명 목록은 받지 않는다)
  *     원격 = 소켓 wss …/ws?r=draw(명령 draw · 확인 drawack) · 콘솔 「추첨 › 진행」 큰 버튼 = 이 화면 Space(nextCmd 와 같은 표)
  *     장면 이름(idle · intro · checkin · closed · card · mix · tension · exit · reveal · board · end · fin)과 명령 이름은 옛 화면 그대로(콘솔이 그 이름으로 버튼을 켠다)
  *   당첨 결정 = 공이 출구로 나오기 시작하는 순간(exit) 행운권 전체(draw_pool · 이미 당첨 · 부재로 빠진 분 제외 · 1인 1회)에서 암호 난수로 K 장 · 바로 이 기기에 저장
@@ -41,8 +42,9 @@
       { name: "1등", prize: "아이패드", count: 1 }
     ],
     minMix: [[0, 30], [5, 20], [10, 10]], onePerPerson: true, absentRemove: true, checkinOnly: true,
-    nameMode: "mask",        /* mask(홍*동) | none(번호만) · 무대 표기 = 행운권 번호 + 가린 이름(사용자 261008) */
-    showDept: false,         /* 부서 표시 없음(사용자 261008) */
+    nameMode: "real",        /* real(실명 · draw_who) | mask(홍*동) | none(번호만) · 무대 표기 = 행운권 번호 + 실명 + 부서(사용자 261008 「실명으로 가자」) */
+    showDept: true,          /* 부서 = 명부부서 부서 · 없으면 부문(사용자 261008 「부서명 사람 이름 둘 다」) */
+    nameV: "261008r",        /* 이 값이 다르면(옛 저장 「가림」) 이름 · 부서 설정을 위 기본으로 한 번 되돌린다 */
     tickerNames: true, beat: true, intro: true, pal: 1, server: "",
     ckUI: false,             /* 이 화면은 체크인 없음만 · 체크인 화면이 필요하면 옛 화면(?classic=1&ck=1) */
     ballMax: 1000, roundsV: "261002"
@@ -52,6 +54,7 @@
   var CFG = load(LS_CFG, null);
   if (CFG && CFG.rounds && CFG.roundsV !== DEF.roundsV) { delete CFG.rounds; delete CFG.roundsV; }
   CFG = Object.assign(JSON.parse(JSON.stringify(DEF)), CFG || {});
+  if (CFG.nameV !== DEF.nameV) { CFG.nameMode = DEF.nameMode; CFG.showDept = DEF.showDept; CFG.nameV = DEF.nameV; save(LS_CFG, CFG); }   /* 261008 가림 → 실명 */
   if (+Q.get("demo") > 0) CFG.demoT = Math.min(9000, +Q.get("demo"));   /* 시험용 · ?demo=5000 = 데모 행운권 5,000장 */
   if (Q.get("remote") === "1") CFG.mode = Q.get("mode") === "demo" ? "demo" : "server";   /* 콘솔이 여는 원격 화면(../draw/?remote=1) = 서버 모드 · 모의 시험은 &mode=demo */
   function NOCK() { return true; }
@@ -81,7 +84,7 @@
   function cryptoShuffle(a) { var u = cryptoUnits(a.length); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(u[i] * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
 
   /* ─────────────── 추첨 상태 · 옛 화면과 같은 모양(+ batch · ack) ───────────────
-   * results[] = { id, round, slot, no, pk, nm(가린 이름), dp, prize, rname, at, st, pool, big, q(서버에 아직 안 보냄) }
+   * results[] = { id, round, slot, no, pk, nm(가린 이름), dp(draw_pool 부문), fn · fd(draw_who 실명 · 부서 · 당첨자만), prize, rname, at, st, pool, big, q(서버에 아직 안 보냄) }
    * batch = 지금 공개 중인 한 번의 뽑기(기록 id 목록) · pending = 그 마지막 id(옛 화면 · 콘솔 호환) · ack[id] = 확인 시각 HH:MM */
   var ST = load(LS_ST, null);
   if (!ST || ST.v !== 1) ST = { v: 1, seed: Math.floor(Math.random() * 1e9), scene: "idle", pool: null, arrived: [], closed: false, round: 0, results: [], out: {}, src: CFG.mode };
@@ -92,6 +95,7 @@
   var SUR = "김이박최정강조윤장임한오서신권황안송류홍전고문양손배백허유남심노하곽성차주우구민진나지엄원천방공현함변염여추도소석선설마길연위표명기반왕금옥육인맹제모탁국어은편용".split("");
   var GIV = "민서준우지현수아은도윤하예진서연주원시영태경가채유호재성다온나혜인소희동건규빈승환정미선지훈석".split("");
   var DEPT = ["경영지원", "디지털전략", "장기보험", "자동차보험", "일반보험", "리스크관리", "재무", "인사총무", "영업기획", "보상서비스"];
+  var DEPT2 = ["노사문화파트", "신성장파트", "데이터사이언스파트", "자동차보험 보상기획파트", "기업보험 해외영업 지원파트", "광화문지점", "디지털고객경험혁신파트", "장기보험상품개발파트"];   /* 데모 부서(긴 이름 포함 · 가짜) */
   function demoPool(n, seed, maxT) {
     var r = mulberry(seed), people = {}, order = [], used = {}, tot = 0;
     if (maxT) n = maxT;
@@ -102,7 +106,7 @@
       if (maxT) k = Math.min(k, maxT - tot); tot += k;
       while (nos.length < k) { var no = 1 + Math.floor(r() * 9999); if (used[no]) continue; used[no] = 1; nos.push(pad4(no)); }
       var pk = "d" + i;
-      people[pk] = { nm: mask(nm), dp: DEPT[Math.floor(r() * DEPT.length)], nos: nos };   /* 데모도 서버처럼 가린 이름만 */
+      people[pk] = { nm: mask(nm), dp: DEPT[Math.floor(r() * DEPT.length)], nos: nos, fn: nm, fd: DEPT2[Math.floor(r() * DEPT2.length)] };   /* 데모도 서버처럼 명단은 가린 이름 · 실명 · 부서(fn · fd)는 draw_who 대신 당첨 뒤 꺼낸다 */
       order.push(pk);
     }
     return { people: people, order: order, kind: "demo" };
@@ -169,7 +173,46 @@
       var rs = rounds(); ST.round = 0;
       while (ST.round < rs.length - 1 && roundWins(ST.round).length >= rs[ST.round].count) ST.round++;
       persist(); toast("서버 추첨기록 " + list.length + "건을 이어받았습니다", true);
+      whoFetch();
     });
+  }
+  /* 실명 · 부서(사용자 261008 「실명으로 가자」) · draw_who = 이번에 뽑힌 사람만(pk 12개까지 · 관리코드) · 받으면 그 당첨 기록에 fn · fd 를 붙이고 칸을 다시 그린다
+   *   행운권 전체 명단(draw_pool)은 그대로 가린 이름 · 실명은 당첨자만 이 기기에 남는다(상태 보고 draw_scr 는 계속 가린 이름)
+   *   실패 · 끊김 = 가린 이름 + draw_pool 부서로 그리고 1.5 · 3 · 4.5초 … 뒤 다시(10초 상한) · 옛 서버(draw_who 없음) · 권한 없음 = 다시 묻지 않는다 */
+  var WHO = { busy: false, next: 0, fail: 0, off: false, miss: {} };
+  function whoWant() { return ST.results.filter(function (r) { return r.st === "win" && r.pk && !r.fn && !WHO.miss[r.pk]; }); }
+  function whoFetch() {
+    if (CFG.nameMode !== "real") return;
+    var want = whoWant(); if (!want.length) return;
+    if (CFG.mode !== "server") {
+      var ch = false;
+      want.forEach(function (r) { var pp = ST.pool && ST.pool.people[r.pk]; if (pp && pp.fn) { r.fn = pp.fn; r.fd = pp.fd || pp.dp || ""; ch = true; } else WHO.miss[r.pk] = 1; });
+      if (ch) { persist(); whoPaint(); }
+      return;
+    }
+    if (WHO.busy || WHO.off || Date.now() < WHO.next) return;
+    var pks = []; want.forEach(function (r) { if (pks.length < 12 && pks.indexOf(r.pk) < 0) pks.push(r.pk); });
+    WHO.busy = true;
+    jsonp("draw_who", { pk: pks.join(",") }, function (res) {
+      WHO.busy = false;
+      if (res && res.ok) {
+        var m = {}, ch = false;
+        (res.rows || []).forEach(function (x) { if (x && x.pk && x.nm) m[x.pk] = x; });
+        pks.forEach(function (pk) { if (!m[pk]) WHO.miss[pk] = 1; });
+        ST.results.forEach(function (r) { var x = m[r.pk]; if (x && !r.fn) { r.fn = String(x.nm).slice(0, 30); r.fd = String(x.dp || "").slice(0, 60); ch = true; } });
+        WHO.fail = 0; WHO.next = 0;
+        if (ch) { persist(); whoPaint(); }
+        if (whoWant().length) whoFetch();
+        return;
+      }
+      if (res && (res.err === "unknown action" || res.reason === "auth")) { WHO.off = true; return; }
+      WHO.fail++; WHO.next = Date.now() + Math.min(10000, 1500 * WHO.fail);
+    });
+  }
+  /* 실명이 늦게 오면 · 보고 있는 화면만 다시 그린다(공개 칸 · 결과판) */
+  function whoPaint() {
+    if ((SC === "reveal" || SC === "exit") && WB.length) for (var j = 0; j < WB.length; j++) fillCell(j);   /* exit = 번호 릴이 도는 중(칸은 이미 있다) */
+    else if (SC === "board") uiBoard();
   }
   /* 당첨 기록 전송 · draw_log · 끊기면 로컬 큐에 두고 다시 보낸다(화면 진행은 막지 않는다) */
   function serverLog(r) {
@@ -885,6 +928,7 @@
       if (CFG.onePerPerson) ST.out[res.pk] = "win";
     });
     ST.batch = ids; ST.pending = ids[ids.length - 1]; ST.drawing = 0; persist();
+    whoFetch();                                       /* 261008 실명 · 부서 · 번호 릴이 도는 동안 받아 둔다 */
     layout(ids.length);
     WB = ids.map(function (id, j) { return { id: id, no: resById(id).no, i: -1, ph: "wait", t0: 0, cell: j }; });
     GATE.tgt = 1; GATE.t0 = T; SFX.play("hatch", true, 1); SFX.play("lock");
@@ -896,12 +940,12 @@
     var cols = K <= 3 ? K : Math.ceil(K / 2), rows = K <= 3 ? 1 : 2;
     var pw = K > 1 ? PANW + 28 : PANW, ph = K > 1 ? PANH + 28 : PANH;
     var s = Math.min(1, (1800 / cols - (K > 1 ? 70 : 50)) / pw, rows === 1 ? 1 : 230 / ph);
-    var ys = rows === 1 ? [560] : [450, 770], cells = [];
+    var ys = rows === 1 ? [K === 1 ? 540 : 560] : [415, 788], cells = [];   /* 261008 이름 + 부서 두 줄 자리 · 두 줄 배치 = 위 415 · 아래 788 · 가운데 가로 선 660 */
     for (var j = 0; j < K; j++) {
       var row = rows === 1 ? 0 : (j < cols ? 0 : 1), inRow = rows === 1 ? K : (row ? K - cols : cols), col = row ? j - cols : j;
       cells.push({ x: 960 + (col - (inRow - 1) / 2) * (1800 / cols), y: ys[row] });
     }
-    LAY = { K: K, cols: cols, rows: rows, s: s, cells: cells, br: clamp(260 * s, 110, 250), ph: ph };
+    LAY = { K: K, cols: cols, rows: rows, s: s, cells: cells, br: clamp(260 * s, 110, 250), ph: ph, ym: 660, cw: Math.round(Math.min(1440, 1800 / cols - 48)) };
   }
   function grpY() { return LAY.rows === 1 ? 560 : 608; }
   var YB = 0;
@@ -1111,10 +1155,10 @@
   }
   function drawDividers() {
     if (!REEL.on || LAY.K < 2) return;
-    var al = clamp((T - REEL.t0 + 0.25) / 0.45, 0, 1) * 0.42, segs = [], y0 = 320, y1 = LAY.rows === 1 ? 860 : 900;
+    var al = clamp((T - REEL.t0 + 0.25) / 0.45, 0, 1) * 0.42, segs = [], y0 = 320, y1 = LAY.rows === 1 ? 980 : 1020;
     if (LAY.rows === 1) for (var j = 1; j < LAY.K; j++) { var x = (LAY.cells[j - 1].x + LAY.cells[j].x) / 2; segs.push([x, y0, x, y1]); }
     else {                                             /* 두 줄 · 줄마다 그 줄의 칸 사이에만 세로 선(5 · 6명은 위 셋 · 아래 둘이나 셋) · 가운데 가로 선 하나 */
-      var ym = (LAY.cells[0].y + LAY.cells[LAY.K - 1].y) / 2 + 22;
+      var ym = LAY.ym;                                 /* 위 줄 이름 · 부서 아래와 아래 줄 번호 칸 위 사이 */
       for (var j2 = 1; j2 < LAY.K; j2++) { var a = LAY.cells[j2 - 1], b = LAY.cells[j2]; if (a.y !== b.y) continue; var xm = (a.x + b.x) / 2; segs.push(a.y < ym ? [xm, y0, xm, ym - 26] : [xm, ym + 26, xm, y1]); }
       segs.push([180, ym, 1740, ym]);
     }
@@ -1275,9 +1319,19 @@
     } else el.classList.add("ell");
   }
   function refitAll() { var a = document.querySelectorAll(".fit"); for (var k = 0; k < a.length; k++) if (a[k]._fit) fitText(a[k], a[k]._fit[0], a[k]._fit[1], a[k]._fit[2]); }
+  /* 이름 · 부서 · real = draw_who 실명(없으면 가린 이름) · mask = 가린 이름 · none = 비움 · 부서 = draw_who 부서(없으면 draw_pool 부문) */
+  function nmOf(w) {
+    if (!w || CFG.nameMode === "none") return "";
+    if (CFG.nameMode === "real" && w.fn) return String(w.fn);
+    return w.nm ? mask(w.nm) : "";
+  }
+  function dpOf(w) {
+    if (!w || CFG.nameMode === "none" || !CFG.showDept) return "";
+    return String((CFG.nameMode === "real" && w.fn ? w.fd : w.dp) || "").replace(/\s+/g, " ").trim();
+  }
   function whoHtml(w) {
-    var named = CFG.nameMode === "mask" && w.nm;
-    return '<span class="who"><span class="nm fit">' + esc(named ? mask(w.nm) : "") + "</span></span>";
+    var dp = dpOf(w);
+    return '<span class="who"><span class="nm fit">' + esc(nmOf(w)) + "</span>" + (dp ? '<span class="dp">' + esc(dp) + "</span>" : "") + "</span>";
   }
   /* 섞기 · 오른쪽 단 · 등수 · 경품 · 이번 등수 당첨 번호 · 「행운권 N장 전체에서 추첨」 · 대표 공 · 내 번호 자리 */
   function uiSide() {
@@ -1297,13 +1351,29 @@
     picInto($("vPic"), $("vImg"), r);
     $("vLab").style.top = (LAY.rows === 1 ? 262 : 250) + "px";
     var cls = LAY.rows > 1 ? " row" : K === 1 ? "" : K === 2 ? " m" : " s", h = "";
+    var ok = '<span class="ok"><span class="ck"></span><b>확인 완료</b></span>';
     for (var j = 0; j < K; j++) {
-      var c = LAY.cells[j], x = resById(WB[j].id), nm = CFG.nameMode === "mask" && x && x.nm ? mask(x.nm) : "";
-      var top = c.y + LAY.ph * LAY.s / 2 + (LAY.rows > 1 ? 10 : 30);
-      h += '<div class="wc' + cls + '" id="wc' + j + '" style="left:' + c.x + "px;top:" + top + 'px"><span class="nm">' + esc(nm) + '</span><span class="ok"><span class="ck"></span><b>확인 완료</b></span></div>';
+      var c = LAY.cells[j], top = c.y + LAY.ph * LAY.s / 2 + (LAY.rows > 1 ? 8 : 26);
+      h += '<div class="wc' + cls + '" id="wc' + j + '" style="left:' + c.x + "px;top:" + top + "px;width:" + LAY.cw + 'px">' +
+        (LAY.rows > 1 ? '<span class="l1"><span class="nmw"><span class="nm fit"></span>' + ok + '</span></span><span class="dp fit"></span>' : '<span class="nm fit"></span><span class="dp fit"></span>' + ok) + "</div>";
     }
     $("vCells").innerHTML = h;
+    for (var q = 0; q < K; q++) fillCell(q);
     fade($("vPrize"), 0, 0); fade($("rv"), 1, 0.4); fade($("vPrize"), 1, 0.5);
+  }
+  /* 칸 하나 · 이름 · 부서 글자 맞춤(1920×1080 논리 크기 · 객석 뒤에서 읽히게)
+   *   1명 = 이름 120 · 부서 56 / 2명 = 104 · 50 / 3명 = 100 · 44 / 두 줄 배치(4명부터) = 58 · 36
+   *   긴 이름 = 줄여 맞춤(최소 70%) · 긴 부서 = 줄여 맞춤(최소 70%) → 한 줄 배치는 두 줄까지 · 두 줄 배치는 한 줄 말줄임 */
+  var WCF = { "": [120, 56], m: [104, 50], s: [100, 44], row: [58, 36] };
+  function fillCell(j) {
+    var el = document.getElementById("wc" + j); if (!el || !WB[j]) return;
+    var x = resById(WB[j].id), k = LAY.rows > 1 ? "row" : LAY.K === 1 ? "" : LAY.K === 2 ? "m" : "s", f = WCF[k];
+    var nm = el.querySelector(".nm"), dp = el.querySelector(".dp"), a = nmOf(x), b = dpOf(x);
+    if (nm.textContent !== a) nm.textContent = a;
+    if (dp.textContent !== b) dp.textContent = b;
+    dp.style.display = b ? "" : "none";
+    fitText(nm, f[0], Math.round(f[0] * 0.7), 1);
+    if (b) fitText(dp, f[1], Math.round(f[1] * 0.7), k === "row" ? 1 : 2);
   }
   function uiNames(delay) {
     for (var j = 0; j < WB.length; j++) {
@@ -1353,12 +1423,14 @@
     L.style.setProperty("--rows", Math.max(5, n));
     var fs = Math.min(44, 508 / Math.max(5, n) * 0.46), two = n <= 5 ? 2 : 1;
     L.querySelectorAll(".nm").forEach(function (e) { fitText(e, fs, fs * 0.72, 1); });
+    L.querySelectorAll(".dp").forEach(function (e) { e.style.fontSize = Math.round(fs * 0.68) + "px"; });   /* 부서 = 이름 옆 한 줄 · 넘치면 말줄임(CSS) */
     L.querySelectorAll(".pz").forEach(function (e) { fitText(e, fs * 0.78, fs * 0.5, two); });
   }
   var tickN = 0;
   function uiTick() {
     if ((tickN++ % 6) !== 0) return;
     if (SC === "idle" || SC === "checkin" || SC === "closed") uiPool();
+    if (WHO.fail && !WHO.busy) whoFetch();            /* 261008 실명 받기 실패 뒤 다시 */
     uiHelp();
     if (document.body.classList.contains("hud-on")) set("hud", Math.round(FPS.v) + " fps · 단계 " + QL.tier + " · 공 " + liveCount() + "/" + NB + " · " + vw + "×" + vh + " · 물리 " + PH.ms.toFixed(1) + "ms · 그리기 " + RD.ms.toFixed(1) + "ms");
   }
@@ -1396,6 +1468,7 @@
       if (m.cfg.key != null) { try { sessionStorage.setItem("axfDraw.key", m.cfg.key); } catch (e) {} delete CFG.key; }
       if (m.cfg.mode || m.cfg.key != null || m.cfg.server != null) remoteBoot();
       document.body.classList.toggle("demo", CFG.mode === "demo");
+      if (m.cfg.nameMode != null || m.cfg.showDept != null) { whoFetch(); whoPaint(); }
       uiScene();
     }
     if (m.type === "hello") pushCtl();
@@ -1712,7 +1785,7 @@
       perf: function (reset) { var o = { tier: QL.tier, qlog: QL.log.slice(), fps: Math.round(FPS.v), long: PERF.long, worstMs: Math.round(PERF.worst * 1000), px: vw + "x" + vh, sc: {} };
         for (var k in PERF.sc) { var p = PERF.sc[k]; o.sc[k] = { avg: +(p.n / Math.max(1e-6, p.t)).toFixed(1), min1s: p.min1 === 999 ? null : +p.min1.toFixed(1), worstMs: Math.round(p.worst * 1000), sec: +p.t.toFixed(1) }; }
         if (reset) { PERF.sc = {}; PERF.long = 0; PERF.worst = 0; } return o; },
-      info: function () { return { K: LAY.K, rows: LAY.rows, s: +LAY.s.toFixed(3), digitPx: Math.round(DIGH * LAY.s), balls: liveCount(), nb: NB, ph: EXP.ph, tickets: bigTickets().length, batch: (ST.batch || []).slice(), ack: Object.assign({}, ST.ack), ws: WSD.st, queue: SRV.queue.length, log: SRV.logStatus || "", status: SRV.status, tier: QL.tier }; },
+      info: function () { return { K: LAY.K, rows: LAY.rows, s: +LAY.s.toFixed(3), digitPx: Math.round(DIGH * LAY.s), balls: liveCount(), nb: NB, ph: EXP.ph, tickets: bigTickets().length, batch: (ST.batch || []).slice(), ack: Object.assign({}, ST.ack), ws: WSD.st, queue: SRV.queue.length, log: SRV.logStatus || "", status: SRV.status, tier: QL.tier, who: { busy: WHO.busy, fail: WHO.fail, off: WHO.off, got: ST.results.filter(function (r) { return !!r.fn; }).length } }; },
       ackTest: function (id, at) { setAck(id, at || "17:05"); return !!ST.ack[id]; },   /* 시험용 · 소켓 drawack 한 건을 흉내 */
       tier: function (t) { FORCEQ = -1; applyTier(t, "시험"); return QL.tier; },
       srv: function () { return { ws: WSD.st, wsGive: WSD.give, based: CMD.based, seq: cmdSeqOf("srv"), close: SRV.closeStatus || "", status: SRV.status, log: SRV.logStatus || "", queue: SRV.queue.length, state: SRV.stateStatus || "" }; },

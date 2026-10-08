@@ -8,7 +8,7 @@
 <!-- 17F 대강당 Closing Speech 경품 추첨 무대 화면 · 드럼 판(261008 사용자 결정 「드럼 데모 이대로 운영 무대에 이식」)
      흐름 · 서버 계약 · 콘솔 원격 진행(draw_cmd · draw_scr · draw_log · draw_state · draw_acks)은 옛 화면(index.html?classic=1 · assets/draw.js)과 같다 · 연출만 드럼
      통 = 투명 구 + 날개 3장 · 대표 공 120개(당첨은 행운권 전체에서 암호 난수) · 한 번 뽑으면 그 등수 남은 인원을 한꺼번에 · 3명까지 한 줄 · 4명부터 두 줄
-     무대 표기 = 행운권 번호 + 가린 이름(홍*동) · 부서 · 사번 없음 · 당첨자가 앱에서 확인하면 그 칸에 「확인 완료」만 덧붙인다(기다리지 않는다)
+     무대 표기 = 행운권 번호 + 실명 + 부서 크게(사용자 261008 · draw_who 가 뽑힌 사람만 · 실패하면 가린 이름) · 사번 없음 · 당첨자가 앱에서 확인하면 그 칸에 「확인 완료」만 덧붙인다(기다리지 않는다)
      옛 화면으로 = 주소에 ?classic=1 (또는 이 화면에서 K 두 번) · 같은 브라우저 기록(당첨 · 등수)을 그대로 이어받는다 -->
 <link rel="icon" href="../icons/icon-192.png">
 <style>
@@ -92,22 +92,24 @@
   #sRule { font-size: 26px; line-height: 1.45; font-weight: 500; color: var(--sub); margin-top: 18px; }
   #sRule b { font-weight: 700; color: var(--txt); font-variant-numeric: tabular-nums; }
 
-  /* 당첨 공개 · 번호 릴은 캔버스 · 경품 줄 · 칸마다 가린 이름 · 확인 완료(오면 덧붙임) */
+  /* 당첨 공개 · 번호 릴은 캔버스 · 경품 줄 · 칸마다 실명 + 부서(261008) · 확인 완료(오면 덧붙임) · 글자 크기는 stage.js fillCell(WCF) */
   #rv { position: absolute; inset: 0; opacity: 0; }
   #vPrize { position: absolute; left: 160px; right: 160px; top: 118px; display: flex; align-items: center; justify-content: center; gap: 26px; opacity: 0; }
   #vPic { width: 110px; height: 110px; flex: none; border-radius: 50%; background: #fff; overflow: hidden; display: none; align-items: center; justify-content: center; box-shadow: 0 0 0 6px rgba(255,255,255,.3); }
   #vPic.on { display: flex; }
   #vTxt { font-size: 52px; line-height: 1.2; font-weight: 700; color: #fff; min-width: 0; }
   #vLab { position: absolute; left: 0; right: 0; top: 262px; text-align: center; font-size: 30px; font-weight: 500; color: rgba(255,255,255,.82); }
-  .wc { position: absolute; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; white-space: nowrap; opacity: 0; color: #fff; }
-  .wc .nm { font-size: 64px; line-height: 1.15; font-weight: 700; letter-spacing: 0.04em; }
-  .wc .ok { display: flex; align-items: center; gap: 12px; margin-top: 10px; font-size: 32px; font-weight: 700; opacity: 0; }
+  .wc { position: absolute; transform: translateX(-50%); display: flex; flex-direction: column; align-items: stretch; text-align: center; white-space: nowrap; opacity: 0; color: #fff; }
+  .wc .nm { font-size: 120px; line-height: 1.12; font-weight: 800; letter-spacing: 0.02em; }
+  .wc .dp { font-size: 56px; line-height: 1.22; font-weight: 600; color: rgba(255,255,255,.92); margin-top: 2px; }
+  .wc .ok { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 10px; font-size: 32px; font-weight: 700; opacity: 0; }
   .wc .ck { display: inline-block; width: 42px; height: 42px; border-radius: 50%; background: #fff; position: relative; flex: none; }
   .wc .ck::after { content: ""; position: absolute; left: 34%; top: 16%; width: 22%; height: 46%; border: solid var(--o); border-width: 0 5px 5px 0; transform: rotate(45deg); }
   .wc.m .nm { font-size: 54px; } .wc.m .ok { font-size: 28px; } .wc.m .ck { width: 36px; height: 36px; }
   .wc.s .nm { font-size: 44px; } .wc.s .ok { font-size: 26px; } .wc.s .ck { width: 32px; height: 32px; }
-  .wc.row { flex-direction: row; gap: 20px; }   /* 두 줄 배치 · 이름 옆에 확인 */
-  .wc.row .nm { font-size: 36px; } .wc.row .ok { margin-top: 0; font-size: 24px; gap: 8px; } .wc.row .ck { width: 28px; height: 28px; }
+  .wc .l1 { display: block; text-align: center; min-width: 0; }   /* 두 줄 배치 · 이름은 칸 가운데 · 확인은 이름 오른쪽에 붙는다(자리를 차지하지 않아 이름이 밀리지 않는다) · 부서는 아래 */
+  .wc .nmw { position: relative; display: inline-block; vertical-align: top; max-width: calc(100% - 300px); }
+  .wc.row .ok { position: absolute; left: calc(100% + 14px); top: 50%; transform: translateY(-50%); margin-top: 0; font-size: 24px; gap: 8px; white-space: nowrap; } .wc.row .ck { width: 28px; height: 28px; }
   .wc.row .ck::after { border-width: 0 4px 4px 0; }
 
   /* 등수 카드 · 통 자리(600, 560) 원에 상품 사진 · 사진 = ../assets/prize/ (앱 경품 사진 파일 그대로 참조) */
@@ -125,7 +127,9 @@
           font-size: calc(min(44px, 508px / max(5, var(--rows)) * .46)); font-weight: 600; color: var(--txt); overflow: hidden; }
   .brow .no { color: var(--o); font-variant-numeric: tabular-nums; }
   .who { display: block; min-width: 0; }
-  .brow .nm { line-height: 1.12; }
+  .brow .who { display: flex; align-items: baseline; gap: .5em; }   /* 261008 이름 옆 부서 한 줄 · 넘치면 말줄임 */
+  .brow .nm { line-height: 1.12; flex: 0 1 auto; }
+  .brow .dp { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--sub); font-weight: 500; }
   .brow .pz { color: var(--sub); font-weight: 500; line-height: 1.2; max-width: 200px; text-align: right; }
 
   /* 완주 경품 추첨 숫자 발표(설정 완주추첨_사용 ON 일 때만) · 통을 그리지 않는다 */
