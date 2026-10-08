@@ -922,6 +922,10 @@ textarea.in.p10-ta{min-height:144px;font-variant-numeric:tabular-nums}
 .ks-ph li.on{background:var(--navy);border-color:var(--navy);color:#fff}
 .ks-ph li.on span{color:#fff;opacity:.85}
 .ks-tb tr.sum td{border-top:1px solid var(--line3)}
+/* 261008 스태프 의류 명단 한 사람씩(ks1-) · 찾기 결과 표 */
+.ks1-h{margin:20px 0 4px;padding-top:16px;border-top:1px solid var(--line);font-size:var(--fs-s);font-weight:700;color:var(--tx)}
+.ks1-tb td{vertical-align:middle}
+.ks1-tb td.nm{white-space:normal;min-width:88px}
 @media (max-width:720px){ .ks-ph{grid-template-columns:repeat(2,minmax(0,1fr))} }
 .pz-tb td{vertical-align:top}
 .pz-tb td:nth-child(3){white-space:nowrap}
@@ -8127,11 +8131,14 @@ NEED.kitsz=function(){ return [{k:"kss",a:"kit_size_state"}].concat(supOk()?[{k:
 SP_ACT.kit_size_auto=1; SP_ACT.kit_size_list=1; SP_ACT.kit_staff_preview=1; SP_ACT.kit_staff_apply=1;
 CTL_ACT.kit_staff_apply=["pp",function(p){ return "스태프 의류 명단 적용 · "+(p.mode==="add"?"추가":"교체"); }];
 CTL_ACT.kit_size_auto=["pp",function(p){ return "키트 사이즈 자동 배정"; }];
+SP_ACT.kit_staff_find=1; SP_ACT.kit_staff_add=1; SP_ACT.kit_staff_remove=1;   /* 261008 스태프 의류 명단 한 사람씩 */
+CTL_ACT.kit_staff_add=["pp",function(p){ return "스태프 의류 명단 한 명 추가 · "+(p.emp||""); }]; CTL_ACT.kit_staff_remove=["pp",function(p){ return "스태프 의류 명단 한 명 빼기 · "+(p.emp||""); }];
 HV_VIEW.viewKitSize=function(){ return viewKitSize(); };
 CFG_NOTE["키트사이즈_수량"]="형식 = 사이즈와 수량을 붙이고 띄어 씀 · 예 「SS50 L105 2XL45 3XL20」 · 네 사이즈(SS · L · 2XL · 3XL) · 형식이 틀리면 기본값";
 CFG_NOTE["키트사이즈_열림"]="형식 「2026-10-16 09:00」 · 이 시각부터 앱에서 고름 · 비우면 바로 열림";
 CFG_NOTE["키트사이즈_마감"]="형식 「2026-10-21 18:00」 · 이 시각까지 자유롭게 바꿈 · 뒤에 사람·권한 › 키트 플리스 사이즈에서 자동 배정";
 CFG_NOTE["키트사이즈_변경마감"]="형식 「2026-10-23 18:00」 · 마감 뒤 이 시각까지 남는 사이즈로만 바꿈 · 비우면 경계 없음(마감과 함께 끝)";
+CFG_NOTE["스태프의류_열림"]="형식 「2026-10-12 09:00」 · 스태프 풀만 이 시각부터 앱에서 고름(사전 신청은 키트사이즈_열림) · 비우면 바로 열림 · 마감 · 변경마감은 두 풀 공통";
 CFG_NOTE["스태프의류_수량"]="형식 = 「SS10 L25 2XL10 3XL5」 · 스태프 풀(사전 신청과 따로) · 네 사이즈 · 형식이 틀리면 기본값";
 var KS_CFG=["키트사이즈_수량","스태프의류_수량","키트사이즈_열림","키트사이즈_마감","키트사이즈_변경마감"];
 var KS_PH=[["before","열림 전"],["open","고르는 중"],["chg","변경 마감 전"],["end","마감"]];
@@ -8235,8 +8242,8 @@ function kslRows(){
 function kslTbHtml(){
   var rs=kslRows(), show=rs.slice(0,KSL_MAX);
   return show.map(function(r){ return '<tr><td class="n">'+(r.no?'<b>'+esc(r.no)+'</b>':'<span class="cap">-</span>')+'</td><td>'+tag(KSL_POOL[r.pool]||r.pool,r.pool==="staff"?"off":"")+'</td><td class="n">'+esc(r.emp)+'</td><td>'+esc(r.name||"-")+'</td><td>'+esc(r.dept||"-")+'</td>'+
-    '<td>'+(r.sz?'<b>'+esc(r.sz)+'</b>':tag("안 고름","warn"))+'</td><td class="n">'+esc(r.at?short(r.at):"-")+'</td><td>'+esc(r.how?KSL_HOW[r.how]||r.how:"-")+'</td><td class="n tdr">'+ksN(r.cn||0)+'</td><td class="n">'+esc(r.got?short(r.got):r.pool==="staff"?"":"-")+'</td></tr>'; }).join("")+
-    (!rs.length?emptyRow(10,KSL.q?"찾는 사람이 없습니다.":"대상이 없습니다."):"")+(rs.length>KSL_MAX?'<tr><td colspan="10"><p class="cap">앞 '+KSL_MAX+'명만 보입니다(전체 '+rs.length+'명) · 검색으로 좁히거나 엑셀로 내려받습니다.</p></td></tr>':"");
+    '<td>'+(r.sz?'<b>'+esc(r.sz)+'</b>':tag("안 고름","warn"))+'</td><td class="n">'+esc(r.at?short(r.at):"-")+'</td><td>'+esc(r.how?KSL_HOW[r.how]||r.how:"-")+'</td><td class="n tdr">'+ksN(r.cn||0)+'</td><td class="n">'+esc(r.got?short(r.got):r.pool==="staff"?"":"-")+'</td><td>'+(r.pool==="staff"&&supOk()?'<button class="btn sm" onclick="kst1DelAsk(\''+jq(r.emp)+'\')"'+(KS1.busy?" disabled":"")+'>빼기</button>':'')+'</td></tr>'; }).join("")+
+    (!rs.length?emptyRow(11,KSL.q?"찾는 사람이 없습니다.":"대상이 없습니다."):"")+(rs.length>KSL_MAX?'<tr><td colspan="11"><p class="cap">앞 '+KSL_MAX+'명만 보입니다(전체 '+rs.length+'명) · 검색으로 좁히거나 엑셀로 내려받습니다.</p></td></tr>':"");
 }
 function kslCnt(){ var d=ST.data.ksl||{}, all=(d.rows||[]).length, rs=kslRows(); return (rs.length===all?"":rs.length+" / ")+all+"명"; }
 function kslQ(v){ KSL.q=v; var t=el("ksl_tb"); if(t) t.innerHTML=kslTbHtml(); var c=el("ksl_cnt"); if(c) c.textContent=kslCnt(); }
@@ -8251,7 +8258,7 @@ function ksListCard(){
   var seg='<span class="seg">'+[["all","전체"],["kit","사전 신청"],["staff","스태프"]].map(function(x){ return '<button class="'+(KSL.pool===x[0]?"on":"")+'" onclick="kslPool(\''+x[0]+'\')">'+x[1]+'</button>'; }).join("")+'</span>';
   var tools='<div class="toolbar">'+seg+'<input class="in" style="max-width:240px" placeholder="신청번호 · 사번 · 이름" value="'+esc(KSL.q)+'" oninput="kslQ(this.value)"><span class="cnt" id="ksl_cnt">'+kslCnt()+'</span><span class="sp"></span>'+
     '<button class="btn sm" onclick="kslXlsx()">엑셀(.xlsx) 내려받기</button><button class="btn sm" onclick="kslCsv()">CSV</button><button class="btn sm" onclick="reload([\'ksl\'])">새로 고침</button></div>';
-  var tb='<div class="wrap scrolly mt12" style="max-height:520px"><table class="tb"><tr><th>신청번호</th><th>대상</th><th>사번</th><th>이름</th><th>부서</th><th>사이즈</th><th>신청 시각</th><th>구분</th><th class="tdr">변경</th><th>키트 수령</th></tr><tbody id="ksl_tb">'+kslTbHtml()+'</tbody></table></div>';
+  var tb='<div class="wrap scrolly mt12" style="max-height:520px"><table class="tb"><tr><th>신청번호</th><th>대상</th><th>사번</th><th>이름</th><th>부서</th><th>사이즈</th><th>신청 시각</th><th>구분</th><th class="tdr">변경</th><th>키트 수령</th><th></th></tr><tbody id="ksl_tb">'+kslTbHtml()+'</tbody></table></div>';
   return card("신청 목록","받은 시각 "+esc(short(d.t||""))+(d.hum?" · 라운지 초과(가습기) "+ksN(d.hum)+"명은 목록 밖":""),tools+tb+'<p class="cap mt8">신청번호 = 처음 정할 때 한 번 · 사이즈를 바꿔도 같은 번호 · 변경 = 처음 정한 뒤 바꾼 횟수 · 엑셀은 화면 검색과 상관없이 전체를 내려받습니다.</p>');
 }
 /* 내보내기 열 · 신청번호 · 대상 · 사번 · 이름 · 부서 · 사이즈 · 신청 시각(+ 구분 · 변경 횟수) */
@@ -8312,7 +8319,7 @@ function kstOkEmps(){ var pv=KST.pv; if(!pv) return []; return (pv.rows||[]).fil
 function ksStCard(d){
   var st=d.st;
   if(!st) return card("스태프 의류 명단","",'<p class="cap">서버 갱신 뒤 올릴 수 있습니다.</p>');
-  var head=imp([["지금 명단",ksN(st.elig+(st.dup||0))+"명"],["옷 대상",ksN(st.elig)+"명","chg"],["사전 신청과 겹침",ksN(st.dup||0)+"명",st.dup?"loss":""],["스태프 재고",KS_SZ.map(function(z){ return esc(z)+" "+ksN((st.qty||{})[z]); }).join(" · ")]])+
+  var head=imp([["지금 명단",ksN(st.elig+(st.dup||0))+"명"],["옷 대상",ksN(st.elig)+"명","chg"],["사전 신청과 겹침",ksN(st.dup||0)+"명",st.dup?"loss":""],["스태프 재고",KS_SZ.map(function(z){ return esc(z)+" "+ksN((st.qty||{})[z]); }).join(" · ")]].concat(st.ph?[["스태프 고르기 열림",(st.open?esc(short(st.open)):"바로")+" · "+esc(st.ph==="before"?"열림 전":st.ph==="open"?"고르는 중":st.ph==="chg"?"변경 마감 전":"마감"),st.ph==="open"?"chg":""]]:[]))+
     '<div class="toolbar mt8"><span class="cap">재고는 운영 설정 「스태프의류_수량」</span><span class="sp"></span><button class="btn sm" onclick="ksGoCfg()">재고 바꾸기</button></div>';
   if(!supOn()) return card("스태프 의류 명단","사번만 · 명부 대조",head+'<div class="note mt8">명단 올리기는 슈퍼관리자만 합니다.</div>');
   if(!supOk()) return card("스태프 의류 명단","사번만 · 명부 대조",head+pzSupBox("명단 올리기",""));
@@ -8320,7 +8327,7 @@ function ksStCard(d){
   var up=KST.src==="file"?'<label class="p10-drop"><input type="file" accept=".xlsx,.csv,.tsv,.txt" onchange="kstFile(this)"><b>'+(KST.busy==="read"?'<span class="spin"></span>읽는 중':"엑셀(.xlsx) · CSV 파일 고르기")+'</b><span class="cap">줄마다 첫 사번 칸만 읽습니다 · 5MB</span></label>':
     '<textarea class="in p10-ta" rows="5" placeholder="옷을 받는 스태프 사번을 한 줄에 하나씩" oninput="KST.paste=this.value">'+esc(KST.paste)+'</textarea><div class="toolbar mt8"><button class="btn pri" onclick="kstPasteGo()">읽기</button></div>';
   var got=KST.emps?'<div class="toolbar mt8"><span class="cnt"><b>'+esc(KST.name)+'</b> · 사번 '+KST.emps.length+'명'+(KST.bad?" · 같은 사번 "+KST.bad+"줄 뺌":"")+'</span><span class="sp"></span><button class="btn sm" onclick="KST.emps=null;KST.pv=null;KST.paste=\'\';KST.name=\'\';render()">지우고 다시</button></div>':"";
-  var body=head+'<div class="dz-h">명단 올리기</div>'+(KST.err?'<div class="bands">'+band("bad",esc(KST.err))+'</div>':"")+'<div class="toolbar">'+seg+'</div>'+up+got;
+  var body=head+kst1Html()+'<div class="dz-h">명단 올리기</div>'+(KST.err?'<div class="bands">'+band("bad",esc(KST.err))+'</div>':"")+'<div class="toolbar">'+seg+'</div>'+up+got;
   if(KST.emps){
     var pv=KST.pv;
     if(!pv) body+=KST.busy==="pv"?'<p class="cap mt8"><span class="spin"></span>서버 명부 · 지금 명단과 대조하는 중</p>':'<div class="toolbar mt8"><button class="btn" onclick="kstPreview(true)">다시 대조</button></div>';
@@ -8346,6 +8353,81 @@ function kstApplyAsk(){
         else { dlgForce(); if(r&&r.reason==="state") KST.pv=null; toast("실패: "+ksWhy(r)); render(); } },function(e){ KST.busy=""; dlgForce(); toast("실패: "+ksWhy(e)); render(); }); } });
 }
 (function(){ var r0=render; render=function(){ r0(); if(ST.nav==="p_kit"&&KST.emps&&!KST.pv&&!KST.busy&&ksSrv()==="new") setTimeout(function(){ kstPreview(); },0); }; })();
+/* ══ 261008 스태프 의류 명단 한 사람씩(사용자 261008 「admin에서 스태프 명단을 내가 따로 추가할 수 있게」) · kit_staff_find · kit_staff_add · kit_staff_remove(슈퍼관리자 + 본인 확인) ══
+ * 찾기 = 명부(사번 · 이름 일부 · 두 글자부터 · 20명까지) · 동명이인 = 부문 · 사번으로 가른다 · 이미 스태프 명단 = 표시만(추가 단추 없음) · 사전 신청 명단 = 넣어도 사전 신청 쪽 하나만
+ * 추가 = 확인 창 한 번(확인 글자 없음) · 빼기 = 신청 목록 스태프 줄 · 고른 사이즈가 있으면 경고 · 신청번호는 그대로(다시 넣으면 같은 번호 · 사이즈는 다시 고름) · 그 사람 몫 재고가 돌아온다
+ * 처리한 줄만 목록(ksl)에서 바꾸고 숫자(kss)만 다시 받는다 · 빼기 뒤 토스트 「되돌리기」 = 다시 넣기 */
+var KS1={ q:"", rows:null, more:0, seq:0, tm:0, busy:"", err:"" };
+function kst1Why(r){ r=r||{}; return ({ have:"이미 스태프 의류 명단에 있습니다", noros:"명부에 없는 사번입니다", none:"이미 명단에 없습니다", param:"사번 · 이름을 확인합니다" })[r.reason]||ksWhy(r); }
+function kst1Html(){
+  return '<div class="ks1-h">한 명씩 추가</div><div class="toolbar"><input class="in w-m" id="ks1_q" type="search" autocomplete="off" spellcheck="false" placeholder="사번 또는 이름" value="'+esc(KS1.q)+'" oninput="kst1Q(this.value)">'+
+    '<span class="cap">명부에서 찾습니다 · 빼기는 아래 신청 목록의 스태프 줄에서</span></div><div id="ks1_res">'+kst1ResHtml()+'</div>';
+}
+function kst1Tag(x){
+  var pk=x.sz||x.no?' <span class="cap">'+esc([x.sz,x.no].filter(Boolean).join(" · "))+'</span>':'';
+  if(x.st==="staff") return tag(x.kit?"명단에 있음 · 사전 신청 쪽":"명단에 있음","ok")+(x.kit?"":pk);
+  if(x.kit) return tag("사전 신청 명단","warn")+pk;
+  return '<span class="cap">없음</span>';
+}
+function kst1ResHtml(){
+  var q=KS1.q.replace(/\s/g,"");
+  if(!q) return "";
+  if(q.length<2) return '<p class="cap mt8">두 글자 이상 넣습니다.</p>';
+  if(KS1.err) return '<div class="bands mt8">'+band("bad","찾지 못했습니다("+esc(KS1.err)+").",'<button class="btn sm" onclick="kst1Find()">다시 시도</button>')+'</div>';
+  if(!KS1.rows) return '<p class="cap mt8"><span class="spin"></span>명부에서 찾는 중</p>';
+  if(!KS1.rows.length) return '<p class="cap mt8">명부에 없습니다. 사번 · 이름을 확인합니다.</p>';
+  var nm={}; KS1.rows.forEach(function(x){ nm[x.name]=(nm[x.name]||0)+1; });
+  return '<div class="wrap mt8"><table class="tb ks1-tb"><tr><th>사람</th><th class="tdr" style="text-align:right">지금</th></tr>'+KS1.rows.map(function(x){   /* 옆 칸이 좁아 두 칸 · 부문 · 사번은 이름 아래 */
+    return '<tr><td class="nm"><b>'+esc(x.name||"-")+'</b>'+(nm[x.name]>1?' '+tag("동명이인","off"):'')+'<div class="cap n">'+esc(x.dept||"-")+' · '+esc(x.emp)+'</div></td>'+
+      '<td class="tdr">'+kst1Tag(x)+(x.st==="staff"?'':' <button class="btn sm pri" onclick="kst1AddAsk(\''+jq(x.emp)+'\')"'+(KS1.busy?" disabled":"")+'>추가</button>')+'</td></tr>'; }).join("")+'</table></div>'+
+    (KS1.more?'<p class="cap mt8">'+KS1.rows.length+'명까지 보입니다(그 밖 '+ksN(KS1.more)+'명) · 더 길게 넣어 좁힙니다.</p>':'');
+}
+function kst1Paint(){ var d=el("ks1_res"); if(d) d.innerHTML=kst1ResHtml(); }
+function kst1Q(v){
+  KS1.q=String(v||""); KS1.err=""; KS1.rows=null; KS1.more=0; KS1.seq++; clearTimeout(KS1.tm);
+  if(KS1.q.replace(/\s/g,"").length>=2) KS1.tm=setTimeout(kst1Find,300);
+  kst1Paint();
+}
+function kst1Find(){
+  var q=KS1.q.replace(/\s/g,""), s=++KS1.seq; if(q.length<2) return;
+  KS1.err=""; KS1.rows=null; kst1Paint();
+  call("kit_staff_find",{ q:q },function(r){ if(s!==KS1.seq) return; if(r&&r.ok){ KS1.rows=r.rows||[]; KS1.more=Number(r.more)||0; } else KS1.err=kst1Why(r); kst1Paint(); },
+    function(e){ if(s!==KS1.seq) return; KS1.err=kst1Why(e); kst1Paint(); });
+}
+function kst1Hit(emp){ var k=normE(emp); return (KS1.rows||[]).filter(function(x){ return normE(x.emp)===k; })[0]||null; }
+/* 목록(ksl) 한 줄만 · 넣기 = 서버가 준 줄 · 빼기 = 지움 · 숫자(kss)는 다시 받는다 */
+function kst1RowSet(emp, row){
+  var d=ST.data.ksl, k=normE(emp);
+  if(d&&d.rows){ d.rows=d.rows.filter(function(r){ return !(r.pool==="staff"&&normE(r.emp)===k); }); if(row) d.rows.push(row); kslQ(KSL.q); }
+  delete _cache[sig_("kit_size_state",{})]; reload(["kss"]);
+}
+function kst1AddAsk(emp){
+  var x=kst1Hit(emp); if(!x||KS1.busy) return;
+  dialog({ t:"스태프 의류 명단에 넣을까요?", who:esc(x.name||"-")+"<span>"+esc(x.dept||"-")+" · "+esc(x.emp)+"</span>",
+    s:x.kit?"이 사람은 사전 신청 명단에도 있어 <b>사전 신청 쪽에서 고릅니다</b>(스태프 재고를 쓰지 않음).":"넣으면 이 사번의 앱 홈에 「기념품 옷 사이즈 선택하기」가 보이고 스태프 재고에서 고릅니다.",
+    ok:"추가", onOk:function(){ kst1Add(x.emp, x.name, false); } });
+}
+function kst1Add(emp, name, undo){
+  KS1.busy="add"; kst1Paint();
+  callPost("kit_staff_add",{ emp:emp },function(r){ KS1.busy=""; dlgForce();
+    var x=kst1Hit(emp);
+    if(r&&r.ok){ if(x) x.st="staff"; kst1RowSet(emp, r.row||null); kst1Paint(); toast((name||emp)+(undo?" · 다시 넣었습니다(신청번호 그대로 · 사이즈는 다시 고름)":r.kit?" · 넣었습니다(사전 신청 쪽에서 고름)":" · 스태프 의류 명단에 넣었습니다")); }
+    else { if(r&&r.reason==="have"&&x) x.st="staff"; kst1Paint(); toast("실패: "+kst1Why(r)); } },
+    function(e){ KS1.busy=""; dlgForce(); kst1Paint(); toast("실패: "+kst1Why(e)); });
+}
+function kst1DelAsk(emp){
+  var k=normE(emp), r=((ST.data.ksl||{}).rows||[]).filter(function(x){ return x.pool==="staff"&&normE(x.emp)===k; })[0];
+  if(!r||KS1.busy) return;
+  dialog({ t:"스태프 의류 명단에서 뺄까요?", who:esc(r.name||"-")+"<span>"+esc(r.dept||"-")+" · "+esc(r.emp)+"</span>", danger:true, wide:true,
+    x:imp([["고른 사이즈",r.sz?esc(r.sz):"아직 안 고름",r.sz?"loss":""],["신청번호",r.no?esc(r.no)+" · 그대로 둠(다시 넣으면 같은 번호)":"없음"],["스태프 재고",r.sz?esc(r.sz)+" 1벌이 돌아옴":"변화 없음",r.sz?"chg":""]]),
+    s:(r.sz?"<b>이미 사이즈를 고른 사람이에요.</b> 고른 사이즈 · 신청번호가 있어요. ":"")+"빼면 이 사번의 앱에서 옷 고르기가 사라집니다."+(r.sz?" 다시 넣어도 사이즈는 다시 골라야 합니다.":""), ok:"빼기",
+    onOk:function(){ KS1.busy="del"; kslQ(KSL.q);
+      callPost("kit_staff_remove",{ emp:r.emp },function(res){ KS1.busy=""; dlgForce();
+        if(res&&(res.ok||res.reason==="none")){ var x=kst1Hit(r.emp); if(x) x.st=""; kst1RowSet(r.emp, null); kst1Paint();
+          if(res.ok) toast((r.name||r.emp)+" · 뺐습니다"+(res.sz?" · "+res.sz+" 재고로 돌아감":"")+(res.no?" · "+res.no+" 보존":""),{ undo:function(){ kst1Add(r.emp, r.name, true); } }); else toast("이미 명단에 없습니다"); }
+        else { kslQ(KSL.q); toast("실패: "+kst1Why(res)); } },
+        function(e){ KS1.busy=""; dlgForce(); kslQ(KSL.q); toast("실패: "+kst1Why(e)); }); } });
+}
 /* 새로 고침 · 새 항목(아이디어왕 · 라운지 명단)에 있었으면 그 자리로(위 복원은 이 항목이 생기기 전에 돈다) */
 try{ (function(){ var v=sessionStorage.getItem("axf_hv_nav")||"", id=v.split(":")[0]; if(ST.nav==="hq"&&(id==="e_idea"||id==="p_lng"||id==="p_kit")&&NAVBY[id]){ ST.nav=id; ST.part[id]=0; } })(); }catch(e){}
 /* ══════════════════ 261006 쉬운 화면 5개 + 「관리자 도구」(사용자 결정 261006 「권장대로」 · 디자인 시안/콘솔 최소화/기획.md) ══════════════════
