@@ -474,9 +474,17 @@ function raffleNumsHtml(n) {
   var t = raffleTickets(Math.min(REWARD_CAP, n));
   if (!t) return "";
   var nums = raffleNums(), chips = "", op = rfxOpened(t);
-  for (var i = 0; i < RAFFLE_MAX; i++) chips += i >= t ? '<span class="gap"></span>' : i >= op ? '<button type="button" class="tkt new" onclick="event.stopPropagation(); rfxReopen()">새 번호<br>확인</button>' :   /* v4.44 상자를 열기 전에는 번호를 먼저 보여 주지 않는다 */
-    i < nums.length ? '<span class="tkt">' + esc(nums[i]) + "</span>" : '<span class="tkt wait">발급 중</span>';
+  for (var i = 0; i < RAFFLE_MAX; i++) chips += i >= t ? '<span class="gap"></span>' : i >= op ? tktHtml("new", "새 번호<br>확인", "event.stopPropagation(); rfxReopen()") :   /* v4.44 상자를 열기 전에는 번호를 먼저 보여 주지 않는다 */
+    i < nums.length ? tktHtml("no", nums[i]) : tktHtml("wait", "발급 중");
   return '<div class="rnum"><p class="lb">내 행운권 번호</p><div class="tkts">' + chips + "</div></div>";
+}
+/* 261009 (사용자 「행운권 모양 테두리에 번호도 점 문자로 · 은색 비슷한 회색톤」 · 시안 ④ 메인 선택) 행운권 번호 칩 = 티켓 한 모양(레일 · 나의 보상 · 추첨 안내 팝업 같은 칩)
+   모양 = 양옆 반원 홈 + 왼쪽 절취선 · 번호 = 은회색 무광 면(canvas) · 회색 테두리(divider-strong) · 주황 절취선 · 먹색 점 글자(DotGlyph 14px · 읽는 이름 = 번호)
+   열기 전 「새 번호 확인」 = 같은 티켓의 주황 면(누를 것) · 「발급 중」 = 같은 티켓의 회색 면 · 색은 토큰만(CSS .tkt.tk) · 상자 연출(rfx) 끝 화면은 그대로(흰 상자 위 brandText 점) */
+function tktHtml(k, v, tap) {
+  if (k === "new") return '<button type="button" class="tkt tk new" onclick="' + tap + '"><span class="tk-t">' + v + "</span></button>";
+  if (k === "wait") return '<span class="tkt tk wait"><span class="tk-t">' + v + "</span></span>";
+  return '<span class="tkt tk">' + DotGlyph.svg(String(v), { h: 14, label: String(v) }) + "</span>";
 }
 /* 룰렛 쿠폰 모달 · 내 QR + 사용 여부 (사용 여부는 서버 my.roulette 가 정본, sync 가 roulette_used 로 받아쓴다) */
 function ppRouletteOpen() {
@@ -556,7 +564,7 @@ function rfxOpen() {
   roll();
 }
 /* v5.10 행운권 번호 = 점 글자(design.md A-5 5-20) · 하나 30px · 여러 개 24px · 멈출 때만 점이 차례로 켜지고 읽는 이름 = 번호(aria-live) · 굴러가는 동안은 읽지 않음 · 동작 줄이기 = 켜진 모양
-   번호 칩(내 보상 · 레일 · 추첨 안내)은 읽고 옮겨 적는 값이라 글자 그대로 둔다 */
+   번호 칩(레일 · 나의 보상 · 추첨 안내)도 261009부터 점 글자 티켓(tktHtml · 14px · 움직임 없음 · 읽는 이름 = 번호) · 이 상자 연출은 그대로 */
 function rfxDot(x, multi, land) {
   return DotGlyph.svg(String(x), land ? { h: multi ? 24 : 30, label: String(x), anim: !rgReduced(), step: 22 } : { h: multi ? 24 : 30, hidden: true });
 }
@@ -578,7 +586,7 @@ function ppDrawOpen() {
     var nums = raffleNums().slice(0, t), op = rfxOpened(t);
     var chips = "";
     for (var i = 0; i < t; i++) {
-      chips += i >= op ? '<button type="button" class="tkt new" onclick="modalClose(); rfxReopen()">새 번호 확인</button>' : i < nums.length ? '<span class="tkt">' + esc(nums[i]) + "</span>" : '<span class="tkt wait">발급 중</span>';
+      chips += i >= op ? tktHtml("new", "새 번호 확인", "modalClose(); rfxReopen()") : i < nums.length ? tktHtml("no", nums[i]) : tktHtml("wait", "발급 중");   /* 261009 레일과 같은 티켓 칩(tktHtml) */
     }
     tickets = '<div class="tkts">' + chips + "</div>";
   }
