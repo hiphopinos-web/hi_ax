@@ -603,7 +603,7 @@ function progDetail(s) {
     D.need = needBoxHtml("받으려면", "현장 추첨 받으려면", pzNeedRows("draw"));   /* 261008 받으려면 상자 = 경품 시트 행운권 추첨 구역과 같은 줄(참석 조건 lkcond 따라) · 옛 회색 세 줄(lc 「16:40부터 대강당 입구 추첨 QR로 체크인해요 · 체크인한 사람의 행운권 번호 중에서 뽑아요」 / 「행운권 번호 전체에서 뽑아요 · 당첨되면 경품은 따로 전달해요」 · 「행운권은 스탬프 4개부터 생겨요」) */
     D.help = din || !lc ? "" : dwin ? "현장에서만 체크인할 수 있어요" : evPhase() === "after" || (evPhase() === "live" && hmD >= t2m("17:25")) ? "추첨 체크인 마감" : "16:40부터 체크인할 수 있어요";   /* 261005 최종 QA · 행사가 끝난 뒤에도 「16:40부터」가 남던 것 */
     D.btn = lc && !din && dwin ? progBtn("추첨 QR 스캔", "qrScanOpen()") : timeBtn;
-    D.pics = prizeGoHtml("draw");   /* v5.20 (사용자 261003 후킹 권장 2) 경품 입구 한 줄 · 행운권 구역으로 */
+    /* 261008 (사용자 「이 위치도 중복인 것 같아서 빼자」) 경품 보기 입구 뺌 · 받으려면 상자에 행운권 줄이 이미 있다 */
     return D;
   }
   if (s.kind === "open") {
@@ -623,7 +623,7 @@ function progDetail(s) {
     if (ap) attDetailFill(D, ap, timeBtn);   /* v5.68 입장 QR · 끝 QR 두 줄 · 지금 입장 수 · 창이 끝나면 시간표(261005 최종 QA 규칙 그대로) */
     else { D.help = ""; D.btn = timeBtn; }
     if (ap && par) D.need = needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "입장 · 끝 QR 한 번씩", "끝 QR은 화면에 떠요"], ["stamp", "입장 1개 + 끝 1개 = 스탬프 2개", "AWS · MS 합쳐 2개까지"]]);   /* 261008 (사용자 「참여 전 확인 아래 부분을 받으려면 부분처럼」) 옛 회색 세 줄 「입장할 때 QR 한 번, 끝날 때 화면의 QR 한 번 찍어요 / 입장 1개 + 끝 1개 = 스탬프 2개 / AWS · MS 합쳐 2개까지」 · 시간 · 규칙 강조 없음 */
-    if (par) D.pics = prizeGoHtml();   /* v5.20 오후 파트너 강연 · 경품 입구 한 줄 */
+    /* 261008 (사용자 「굳이 있어야 될까?」) 오후 파트너 강연 경품 보기 입구 뺌 */
     return D;
   }
   if (s.kind === "info") {
