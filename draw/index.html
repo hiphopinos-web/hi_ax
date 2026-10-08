@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lucky Draw · AX Festival 2026</title>
 <meta name="robots" content="noindex">
+<script>/* 261008 무대 기본 = 드럼 판(stage.html · 사용자 결정) · 이 파일은 옛 화면(유리 통 · assets/draw.js)으로 남긴다 · 주소에 ?classic=1 이면 여기 그대로
+   같은 브라우저 저장(axfDraw.state.v1)을 두 화면이 함께 써서 바꿔도 당첨 · 등수가 이어진다 · 조작 창(#control)은 연 화면을 따른다 */
+(function () { var q = location.search; if (!/[?&]classic=1(&|$)/.test(q)) location.replace("stage.html" + q + location.hash); })();</script>
 <!-- 17F 대강당 Outro 경품 추첨 송출 화면 · 16:9 · 운영자 노트북에서 전체 화면(F) · 조작 창(P)
      모든 자산이 이 폴더 안에 있다(서체 · 홍보부 모션 엔진 · 워드마크 · three.js 로컬 번들 · 소리는 합성) · v3 유리 통이 돌다가 서면 6시 틈으로 공 하나가 떨어진다(물리 결정) · v3.1 틈에 미닫이 문(섞는 동안 닫힘 · 정지 뒤 열림) · 이름 · 부서 글자 맞춤 · 공은 입체(WebGL2) · 체크인 QR(qrgen.js · 로컬) · 인터넷이 끊겨도 데모·추첨이 돈다 -->
 <link rel="icon" href="../icons/icon-192.png">

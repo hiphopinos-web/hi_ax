@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lucky Draw · AX Festival 2026</title>
+<meta name="robots" content="noindex">
+<!-- 17F 대강당 Closing Speech 경품 추첨 무대 화면 · 드럼 판(261008 사용자 결정 「드럼 데모 이대로 운영 무대에 이식」)
+     흐름 · 서버 계약 · 콘솔 원격 진행(draw_cmd · draw_scr · draw_log · draw_state · draw_acks)은 옛 화면(index.html?classic=1 · assets/draw.js)과 같다 · 연출만 드럼
+     통 = 투명 구 + 날개 3장 · 대표 공 120개(당첨은 행운권 전체에서 암호 난수) · 한 번 뽑으면 그 등수 남은 인원을 한꺼번에 · 3명까지 한 줄 · 4명부터 두 줄
+     무대 표기 = 행운권 번호 + 가린 이름(홍*동) · 부서 · 사번 없음 · 당첨자가 앱에서 확인하면 그 칸에 「확인 완료」만 덧붙인다(기다리지 않는다)
+     옛 화면으로 = 주소에 ?classic=1 (또는 이 화면에서 K 두 번) · 같은 브라우저 기록(당첨 · 등수)을 그대로 이어받는다 -->
+<link rel="icon" href="../icons/icon-192.png">
+<style>
+  @font-face { font-family: "AXP"; src: url("assets/PretendardVariable.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+  :root {
+    --o: #FF7E31; --hi: #FF963E; --pu: #E6CCFF; --o50: #FFB284; --o25: #FFD8C1;
+    --ink: #000; --txt: rgba(255,255,255,.88); --sub: rgba(255,255,255,.6); --faint: rgba(255,255,255,.34);
+    --brand: var(--o);
+    --f: "AXP", "Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; cursor: none; }
+  body { font-family: var(--f); color: var(--txt); word-break: keep-all; -webkit-font-smoothing: antialiased; }
+  body.st-orange { --brand: #fff; --txt: #fff; --sub: rgba(255,255,255,.86); --faint: rgba(255,255,255,.6); }
+  #cv { position: fixed; left: 0; top: 0; display: block; }
+  .vid { position: fixed; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; opacity: 0; pointer-events: none; object-fit: cover; }
+  body.ctl .vid { display: none; }
+  /* 1920×1080 논리 무대 · JS 가 화면에 맞춰 배율만 준다 · 글자는 제자리 · 투명도로만 나타난다(design.md §4 원칙 1) */
+  #frame { position: fixed; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; pointer-events: none; }
+  .tab { font-variant-numeric: tabular-nums; }
+  .fit { display: block; min-width: 0; overflow-wrap: anywhere; }
+  .fit.ell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fit.cl2 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; white-space: normal; }
+
+  /* 균형 그리드 · 바깥 여백 120 · 왼쪽 = 통(중심 600, 560 · 반지름 352) · 오른쪽 정보 단 x 1104 ~ 1800 · 세로 기준선 236 · 944 */
+  #lock { position: absolute; left: 120px; top: 64px; right: 120px; display: flex; justify-content: space-between; align-items: flex-start; }
+  #wm { width: 190px; color: var(--brand); }
+  #wm svg { display: block; width: 100%; height: auto; }
+  #slg { font-size: 30px; font-weight: 500; color: var(--brand); letter-spacing: -0.01em; }
+  .panel { position: absolute; left: 1104px; top: 0; width: 696px; height: 1080px; opacity: 0; }
+  .full { position: absolute; inset: 0; opacity: 0; }
+  .col { position: absolute; left: 0; right: 0; top: 236px; height: 708px; display: flex; flex-direction: column; }
+  .mid { position: absolute; left: 0; right: 0; top: 560px; transform: translateY(-50%); }
+  .eye { font-size: 42px; line-height: 1.2; font-weight: 500; color: var(--brand); letter-spacing: -0.005em; }
+  .title { font-size: 92px; line-height: 1.18; font-weight: 600; color: var(--brand); letter-spacing: -0.01em; }
+  .meta { font-size: 38px; line-height: 1.5; font-weight: 500; color: var(--sub); }
+
+  /* 원격 · 대형 화면에 운영 흔적 없음 · 처음 한 번 관리코드(노트북에서 전체 화면 전에) */
+  body.remote #hud, body.remote #toast { display: none !important; }
+  body.remote #help .loc { display: none; }
+  #keyBox { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 420px; max-width: calc(100% - 32px); background: #141414; border: 1px solid rgba(255,255,255,.16); border-radius: 16px; padding: 24px; display: none; cursor: auto; z-index: 20; font-family: var(--f); color: #fff; }
+  body.needkey #keyBox { display: block; } body.needkey { cursor: auto; }
+  #keyBox h2 { font-size: 20px; font-weight: 600; margin-bottom: 6px; } #keyBox p { font-size: 14px; color: rgba(255,255,255,.6); margin-bottom: 14px; line-height: 1.5; }
+  #keyBox input { width: 100%; height: 44px; border-radius: 10px; border: 1px solid rgba(255,255,255,.2); background: #000; color: #fff; padding: 0 12px; font-size: 16px; }
+  #keyBox button { margin-top: 12px; width: 100%; height: 44px; border: 0; border-radius: 10px; background: var(--o); color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; }
+  #keyBox .err { color: var(--o25); font-size: 13px; margin-top: 8px; min-height: 18px; }
+
+  /* 대기 · 추첨 준비 · 준비 끝 = 「행운권 번호 전체에서 추첨」 한 장 */
+  #pPool .title { font-size: 96px; margin-top: 6px; }
+  .o-cap { font-size: 40px; line-height: 1.3; font-weight: 700; color: var(--txt); margin-top: 34px; }
+  .o-st { display: flex; gap: 64px; margin-top: 30px; }
+  .o-st .lab { font-size: 28px; line-height: 1.3; font-weight: 500; color: var(--sub); }
+  .o-st .num { display: flex; align-items: baseline; gap: 8px; color: var(--o); }
+  .o-st .num span { font-size: 96px; line-height: 1.05; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .o-st .num em { font-style: normal; font-size: 34px; font-weight: 600; }
+  .o-note { font-size: 28px; line-height: 1.45; font-weight: 500; color: var(--sub); margin-top: 26px; min-height: 41px; }
+  .o-note.load::after { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--o); margin-left: 14px; vertical-align: middle; animation: oDot 1s ease-in-out infinite; }
+  @keyframes oDot { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+  /* 7등 랜덤 굿즈 한 줄 · 무대에서 뽑지 않는다 */
+  .lk7 { display: flex; align-items: center; gap: 26px; }
+  .lk7 .pics { display: flex; flex: none; padding-left: 6px; }
+  .lk7 .pics span { display: flex; width: 66px; height: 66px; border-radius: 50%; background: #fff; overflow: hidden; margin-left: -6px; box-shadow: 0 0 0 4px #000; align-items: center; justify-content: center; }
+  .lk7 .pics img { flex: none; width: 62%; height: 62%; object-fit: contain; }
+  .lk7 b { display: block; font-size: 28px; line-height: 1.3; font-weight: 700; color: var(--txt); white-space: nowrap; }
+  .lk7 em { display: block; font-style: normal; font-size: 24px; line-height: 1.35; font-weight: 500; color: var(--sub); margin-top: 2px; }
+  #oLk7 { margin-top: auto; }
+  #eLk7 { position: absolute; left: 0; right: 0; top: 860px; }
+
+  /* 섞기 · 오른쪽 단 · 등수 · 경품 · 이번 등수 당첨 번호 · 행운권 장수 */
+  #side { position: absolute; left: 1104px; top: 236px; width: 696px; height: 708px; display: flex; flex-direction: column; opacity: 0; }
+  .sh { display: flex; align-items: center; gap: 28px; }
+  #sPic { width: 150px; height: 150px; flex: none; border-radius: 50%; background: #fff; overflow: hidden; display: none; align-items: center; justify-content: center; box-shadow: 0 0 0 6px rgba(255,255,255,.16); }
+  #sPic.on { display: flex; }
+  #sEye { font-size: 64px; line-height: 1.1; font-weight: 700; color: var(--o); letter-spacing: -0.01em; }
+  #sCnt { font-size: 32px; line-height: 1.3; font-weight: 600; color: var(--sub); margin-top: 6px; }
+  #sTitle { font-size: 76px; line-height: 1.18; font-weight: 700; color: #fff; letter-spacing: -0.015em; margin-top: 36px; }
+  #sWon { margin-top: auto; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.14); }
+  #sWon .lab { font-size: 28px; font-weight: 500; color: var(--sub); }
+  #sNos { display: flex; flex-wrap: wrap; gap: 8px 30px; margin-top: 10px; min-height: 66px; font-size: 56px; line-height: 1.15; font-weight: 700; color: var(--o); font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+  #sNos .dim { color: rgba(255,255,255,.22); }
+  #sRule { font-size: 26px; line-height: 1.45; font-weight: 500; color: var(--sub); margin-top: 18px; }
+  #sRule b { font-weight: 700; color: var(--txt); font-variant-numeric: tabular-nums; }
+
+  /* 당첨 공개 · 번호 릴은 캔버스 · 경품 줄 · 칸마다 가린 이름 · 확인 완료(오면 덧붙임) */
+  #rv { position: absolute; inset: 0; opacity: 0; }
+  #vPrize { position: absolute; left: 160px; right: 160px; top: 118px; display: flex; align-items: center; justify-content: center; gap: 26px; opacity: 0; }
+  #vPic { width: 110px; height: 110px; flex: none; border-radius: 50%; background: #fff; overflow: hidden; display: none; align-items: center; justify-content: center; box-shadow: 0 0 0 6px rgba(255,255,255,.3); }
+  #vPic.on { display: flex; }
+  #vTxt { font-size: 52px; line-height: 1.2; font-weight: 700; color: #fff; min-width: 0; }
+  #vLab { position: absolute; left: 0; right: 0; top: 262px; text-align: center; font-size: 30px; font-weight: 500; color: rgba(255,255,255,.82); }
+  .wc { position: absolute; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; white-space: nowrap; opacity: 0; color: #fff; }
+  .wc .nm { font-size: 64px; line-height: 1.15; font-weight: 700; letter-spacing: 0.04em; }
+  .wc .ok { display: flex; align-items: center; gap: 12px; margin-top: 10px; font-size: 32px; font-weight: 700; opacity: 0; }
+  .wc .ck { display: inline-block; width: 42px; height: 42px; border-radius: 50%; background: #fff; position: relative; flex: none; }
+  .wc .ck::after { content: ""; position: absolute; left: 34%; top: 16%; width: 22%; height: 46%; border: solid var(--o); border-width: 0 5px 5px 0; transform: rotate(45deg); }
+  .wc.m .nm { font-size: 54px; } .wc.m .ok { font-size: 28px; } .wc.m .ck { width: 36px; height: 36px; }
+  .wc.s .nm { font-size: 44px; } .wc.s .ok { font-size: 26px; } .wc.s .ck { width: 32px; height: 32px; }
+  .wc.row { flex-direction: row; gap: 20px; }   /* 두 줄 배치 · 이름 옆에 확인 */
+  .wc.row .nm { font-size: 36px; } .wc.row .ok { margin-top: 0; font-size: 24px; gap: 8px; } .wc.row .ck { width: 28px; height: 28px; }
+  .wc.row .ck::after { border-width: 0 4px 4px 0; }
+
+  /* 등수 카드 · 통 자리(600, 560) 원에 상품 사진 · 사진 = ../assets/prize/ (앱 경품 사진 파일 그대로 참조) */
+  #kPic { position: absolute; left: -804px; top: 260px; width: 600px; height: 600px; border-radius: 50%; overflow: hidden; background: #fff; opacity: 0; box-shadow: 0 0 0 10px rgba(255,255,255,.28); display: flex; align-items: center; justify-content: center; }
+  #kPic img, #sPic img, #vPic img { flex: none; width: 62%; height: 62%; object-fit: contain; }
+  #kPic.in { animation: kpIn .7s cubic-bezier(.2,.7,.2,1) .2s both; }
+  @keyframes kpIn { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: scale(1); } }
+  #pCard .eye { color: #fff; }
+  #pCard .title { font-size: 150px; color: #fff; margin-top: 12px; }
+  #pCard .meta { color: #fff; font-size: 48px; font-weight: 600; margin-top: 30px; }
+
+  #pBoard .title { margin-top: 8px; }
+  #bList { margin-top: 40px; flex: 1; --rows: 5; }
+  .brow { display: grid; grid-template-columns: 150px minmax(0, 1fr) minmax(0, max-content); column-gap: 20px; align-items: center; height: calc(508px / max(5, var(--rows))); max-height: 104px; border-top: 1px solid rgba(255,255,255,.12);
+          font-size: calc(min(44px, 508px / max(5, var(--rows)) * .46)); font-weight: 600; color: var(--txt); overflow: hidden; }
+  .brow .no { color: var(--o); font-variant-numeric: tabular-nums; }
+  .who { display: block; min-width: 0; }
+  .brow .nm { line-height: 1.12; }
+  .brow .pz { color: var(--sub); font-weight: 500; line-height: 1.2; max-width: 200px; text-align: right; }
+
+  /* 완주 경품 추첨 숫자 발표(설정 완주추첨_사용 ON 일 때만) · 통을 그리지 않는다 */
+  #pFin .fin-in { position: absolute; left: 160px; right: 160px; top: 540px; transform: translateY(-50%); text-align: center; }
+  #pFin .title { font-size: 96px; margin-top: 10px; }
+  .fin-big { font-size: 240px; line-height: 1.05; font-weight: 700; color: var(--o); letter-spacing: -0.03em; margin-top: 30px; white-space: nowrap; }
+  .fin-big.all { font-size: 168px; }
+  .fin-big em { font-style: normal; font-size: 96px; font-weight: 600; margin-left: 14px; letter-spacing: 0; }
+  #pFin .meta { margin-top: 28px; font-size: 48px; color: var(--txt); font-weight: 600; }
+  .fin-note { margin-top: 16px; font-size: 36px; line-height: 1.4; color: var(--sub); font-weight: 500; }
+  #pEnd .title { font-size: 128px; font-weight: 500; margin-top: 14px; }
+  #pEnd .meta { font-size: 50px; color: var(--o); font-weight: 600; margin-top: 30px; }
+
+  #demoMark { position: absolute; left: 120px; bottom: 44px; font-size: 22px; font-weight: 600; color: var(--faint); display: none; letter-spacing: .02em; }
+  body.demo #demoMark { display: block; }
+  #toast { position: absolute; right: 120px; bottom: 40px; font-size: 24px; font-weight: 600; color: var(--faint); opacity: 0; }
+  #toast.soft { color: var(--sub); }
+  #mixSkip { position: absolute; right: 28px; bottom: 18px; font-size: 15px; font-weight: 500; color: rgba(255,255,255,.34); opacity: 0; pointer-events: none; letter-spacing: .02em; }
+  #kTip { position: absolute; right: 28px; bottom: 40px; font-size: 18px; font-weight: 500; color: rgba(255,255,255,.5); opacity: 0; pointer-events: none; transition: opacity .2s; }
+  #hud { position: absolute; left: 120px; bottom: 80px; font-size: 22px; color: #9f9; font-family: Consolas, monospace; display: none; }
+  body.hud-on #hud { display: block; }
+
+  /* 진행자 키 안내 · H 로 켜고 끈다 */
+  #help { position: absolute; right: 40px; bottom: 40px; width: 600px; background: rgba(12,12,12,.92); border: 1px solid rgba(255,255,255,.14); border-radius: 20px; padding: 22px 26px; display: none; color: #fff; }
+  body.help-on #help { display: block; }
+  #help h2 { font-size: 22px; font-weight: 600; color: rgba(255,255,255,.6); margin-bottom: 8px; display: flex; justify-content: space-between; }
+  #help .hn { font-size: 30px; font-weight: 700; color: var(--o); line-height: 1.3; }
+  #help .hn span { font-size: 20px; font-weight: 600; color: rgba(255,255,255,.6); margin-right: 10px; }
+  #help .hs { font-size: 18px; color: rgba(255,255,255,.55); margin: 4px 0 12px; }
+  #help table { width: 100%; border-collapse: collapse; font-size: 19px; }
+  #help td { padding: 6px 0; border-top: 1px solid rgba(255,255,255,.1); vertical-align: top; }
+  #help td:first-child { width: 190px; color: var(--hi); font-weight: 600; }
+  #help p { margin-top: 10px; font-size: 16px; line-height: 1.5; color: rgba(255,255,255,.55); }
+
+  /* 조작 창 모드 (#control) · 운영자 노트북 화면 */
+  body.ctl { cursor: auto; overflow: auto; background: #F2F4F6; color: #191F28; }
+</style>
+</head>
+<body>
+<form id="keyBox" autocomplete="off"><h2>추첨 화면 연결</h2><p>관리코드를 넣으면 관리 콘솔 「추첨 › 진행」의 명령을 받습니다. 넣은 다음 F 로 전체 화면.</p><input id="keyIn" type="password" aria-label="관리코드" placeholder="관리코드"><button type="submit">연결</button><p class="err" id="keyErr"></p></form>
+<canvas id="cv"></canvas>
+<video id="vIntro" class="vid" src="assets/intro.mp4" muted playsinline preload="auto"></video>
+<div id="frame">
+  <div id="lock"><div id="wm"></div><div id="slg">ME to WE</div></div>
+
+  <section id="pPool" class="panel"><div class="col">
+    <p class="eye" id="oEye">Lucky Draw</p>
+    <h1 class="title" id="oTitle">경품 추첨</h1>
+    <p class="o-cap">행운권 번호 전체에서 추첨</p>
+    <div class="o-st">
+      <div><p class="lab">행운권 보유</p><p class="num"><span id="oPeo">0</span><em>명</em></p></div>
+      <div><p class="lab">행운권</p><p class="num"><span id="oTk">0</span><em>장</em></p></div>
+    </div>
+    <p class="o-note" id="oNote"></p>
+    <div class="lk7" id="oLk7"></div>
+  </div></section>
+
+  <section id="side">
+    <div class="sh"><span id="sPic"><img id="sImg" alt="" decoding="async"></span><div><p id="sEye"></p><p id="sCnt"></p></div></div>
+    <h2 id="sTitle" class="fit"></h2>
+    <div id="sWon"><p class="lab">당첨 번호</p><p id="sNos"></p><p id="sRule"></p></div>
+  </section>
+
+  <section id="rv">
+    <div id="vPrize"><span id="vPic"><img id="vImg" alt="" decoding="async"></span><p id="vTxt" class="fit"></p></div>
+    <p id="vLab">행운권 번호</p>
+    <div id="vCells"></div>
+  </section>
+
+  <section id="pCard" class="panel"><div id="kPic"><img id="kImg" alt="" decoding="async"></div><div class="mid">
+    <p class="eye fit" id="kEye"></p>
+    <h2 class="title fit" id="kTitle"></h2>
+    <p class="meta" id="kMeta"></p>
+  </div></section>
+
+  <section id="pBoard" class="panel"><div class="col">
+    <p class="eye">Winners.</p>
+    <h2 class="title">오늘의 당첨</h2>
+    <div id="bList"></div>
+  </div></section>
+
+  <section id="pFin" class="full"><div class="fin-in">
+    <p class="eye">서버 추첨</p>
+    <h2 class="title">완주 경품 추첨 결과</h2>
+    <p class="fin-big" id="fBig"></p>
+    <p class="meta" id="fMeta"></p>
+    <p class="fin-note" id="fNote"></p>
+  </div></section>
+
+  <section id="pEnd" class="panel"><div class="mid">
+    <p class="eye">Thank you.</p>
+    <h2 class="title">ME to WE :</h2>
+    <p class="meta">나의 경험을 우리의 가능성으로</p>
+  </div><div class="lk7" id="eLk7"></div></section>
+
+  <div id="demoMark">DEMO · 가짜 행운권</div>
+  <div id="toast"></div>
+  <div id="mixSkip"></div>
+  <div id="kTip"></div>
+  <div id="hud"></div>
+
+  <div id="help">
+    <h2><span>진행자 키 안내</span><span>H 숨기기</span></h2>
+    <p class="hn"><span>Space</span><b id="hNext"></b></p>
+    <p class="hs" id="hNow"></p>
+    <table>
+      <tr><td>Space · → · PageDown</td><td>다음 (위에 적힌 동작)</td></tr>
+      <tr><td>R 두 번</td><td>부재 · 다시 뽑기 (당첨 공개 중 · 사회자 판단일 때만)</td></tr>
+      <tr><td>U 두 번</td><td>마지막 당첨 취소</td></tr>
+      <tr><td>E 두 번 · I 두 번</td><td>끝 화면 · 대기 화면</td></tr>
+      <tr><td>K 두 번</td><td>옛 화면(유리 통)으로 · 기록은 이어진다</td></tr>
+      <tr><td>F · M</td><td>전체 화면 · 소리</td></tr>
+      <tr><td>P · H · G</td><td>조작 창 · 이 안내 · 프레임 수</td></tr>
+      <tr class="loc"><td>1 ~ 9 · V</td><td>등수 바로 가기 · 인트로 (원격 화면에서는 안 씀)</td></tr>
+    </table>
+    <p id="hOrder">순서: 추첨 준비(공 넣기 · 다 넣으면 저절로 준비 끝) → 6등 추첨 시작 → 섞기 시작 → 뽑기(그 등수 인원을 한꺼번에) → 확정 → … → 1등 → 결과판 → 끝 화면. 콘솔 「추첨 › 진행」의 큰 버튼과 같은 순서라 어느 쪽으로 눌러도 됩니다.</p>
+  </div>
+</div>
+<script src="../assets/server.js"></script>
+<script src="assets/axf_engine.js"></script>
+<script src="assets/wordmark.js"></script>
+<script src="assets/sfx.js"></script>
+<script src="assets/stage.js"></script>
+<script src="assets/control.js"></script>
+</body>
+</html>
