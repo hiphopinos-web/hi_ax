@@ -1056,7 +1056,7 @@ function rosKpis(){
   var c=function(f,l,v,s,cls,click){ return kpiCell({ l:l, v:n0(v), u:"명", s:s, on:u.filt===f&&!click, cls:cls, click:click||"rosFilt('"+f+"')", qa:"ros.k."+(f||"all") }); };
   if(u.kind==="gate") return c("","명단 전체",st.n,st.at?"마지막 변경 "+short(st.at):"")+c("acct","앱에 가입함",st.acct,pct(st.acct,st.n)+"% · 오늘 접속 "+n0(st.today))+c("noacct","아직 가입 안 함",st.n-st.acct,pct(st.n-st.acct,st.n)+"%")+
     c("deny","들어오지 못한 사람",st.wait,"거부 기록 "+n0(st.deny)+"명 · 누르면 보기",st.wait?"warn":"","rosMode('deny')");
-  if(u.kind==="staff") return c("","스태프 전체",st.n,"폰 권한 ∪ 옷 명단")+c("app","폰 권한",st.app,st.appSet?"앱 스태프 명단 저장됨":"명단 저장 전 · 모두 스태프 아님")+c("wear","옷 명단",st.wear,"사이즈 고름 "+n0(st.sz)+"명")+c("scan","최근 30분 스캔",st.scan30,"지금 현장에서 찍는 사람");
+  if(u.kind==="staff") return c("","스태프 전체",st.n,"폰 권한 ∪ 옷 명단")+c("app","폰 권한",st.app,st.appSet?"앱 스태프 명단 저장됨":"명단 저장 전 · 관리코드를 알면 누구나(옛 방식)",st.appSet?"":"warn")+c("wear","옷 명단",st.wear,"사이즈 고름 "+n0(st.sz)+"명")+c("scan","최근 30분 스캔",st.scan30,"지금 현장에서 찍는 사람");
   if(u.kind==="test") return c("","시험 사번",st.n,"상한 "+n0(st.max)+"명")+c("fixed","고정",st.fixed,"서버에 정해 둔 사번")+c("acct","앱 가입",st.acct,"")+c("today","오늘 접속",st.today,"");
   if(u.kind==="lounge") return c("","라운지 사전 신청",st.n,"등록 순")+c("kit","키트",st.kit,"수량 "+n0(st.q)+"개 안")+c("hum","가습기(초과)",st.hum,"수량을 넘은 순서",st.hum?"warn":"")+c("got","받음",st.got,"체크인존 지급");
   if(u.kind==="kit") return c("","옷 대상",st.n,"스태프 "+n0(st.staff)+"명 포함")+c("sz","사이즈 고름",st.sz,"자동 배정 "+n0(st.auto)+"명")+c("none","아직 안 고름",st.none,"",st.none?"warn":"")+c("got","받음",st.got,"사전 신청 키트");
@@ -2801,7 +2801,7 @@ var SCHK={ notice:"공지", outro:"Closing Speech", crowd_notify:"혼잡 만료 
 var SCH_TAG={ "대기":"warn","실행중":"pri","완료":"ok","취소":"","지남":"bad","오류":"bad" };
 var SCH_PRE=[{ n:"Closing Speech 10분 전", kind:"outro", t:"Closing Speech 10분 전", b:"17F 대강당 · 17:00 시작", at:"16:50", tgt:"all" },{ n:"경품 추첨 시작", kind:"outro", t:"경품 추첨 시작", b:"17F 대강당", at:"", tgt:"tickets" }];
 function scSt(){ return S.ui.sc||(S.ui.sc={ k:"outro", d:"2026-10-26", hm:"", ti:"", b:"", push:false, tgt:"all", pv:null, seq:0 }); }
-function scLeft(ms){ var s=Math.max(0,Math.round((ms-Date.now())/1000)); return s>=60?Math.floor(s/60)+"분 "+("0"+(s%60)).slice(-2)+"초":s+"초"; }
+function scLeft(ms){ var s=Math.max(0,Math.round((ms-Date.now())/1000)); if(s>=86400) return Math.floor(s/86400)+"일 "+Math.floor(s%86400/3600)+"시간"; if(s>=3600) return Math.floor(s/3600)+"시간 "+Math.floor(s%3600/60)+"분"; return s>=60?Math.floor(s/60)+"분 "+("0"+(s%60)).slice(-2)+"초":s+"초"; }
 VIEWS.sched={
   need:function(){ return [{ k:"sched", a:"sched_list", ttl:30000 },{ k:"pst", a:"push_stats", ttl:60000 }]; },
   mount:function(){ var u=scSt(), pOk=!!pushSt();
