@@ -279,12 +279,12 @@ var FLOOR1 = [
   { id: "action", grp: "see", sign: "AX in Action", kor: "AI 업무 사례를 보는 곳", fact: "동료가 만든 앱 3개", st: "",
     stm: "동료가 AI로 만든 현장 앱을 보는 곳", todo: ["현장 인터뷰 영상을 봐요"],
     cases: [["강북이 - 개인 맞춤형 시상 어플리케이션", "영업 사례 · 강북조직파트 김동건 전임"], ["AI컨설팅 도우미 - 판매 화법 어플리케이션", "영업 사례 · 안양AM지점 이은정 지점장"], ["하이핑거 - 보상 업무 지원 어플리케이션", "보상 사례 · 울산대인보상센터 이승철 대리"]] },   /* v5.60 판 16 ~ 18 한 컷(말풍선 · 인용 · 기능 칩) 대신 앱 이름 + 만든 사람(소속 · 이름 · 직급은 판 글자 그대로 · 사용자 「실명 남긴다」) */
-  { id: "lounge", grp: "do", sign: "AX LOUNGE", hdr: "AX 라운지", kor: "DAP 과제를 1:1로 상담하는 곳", fact: "", st: "",   /* v5.94 (사용자 결정 261006) 라운지 상담은 스탬프 없음 */
+  { id: "lounge", grp: "do", sign: "AX LOUNGE", hdr: "AX 라운지", kor: "내년 DAP 과제 후보를 1:1로 상담하는 곳", fact: "", st: "",   /* v5.94 (사용자 결정 261006) 라운지 상담은 스탬프 없음 */
     stm: "내년 DAP(데이터 분석 프로젝트) 과제를 상담해요",
     lead: "내년 DAP(데이터 분석 프로젝트) 과제를 상담해요",   /* v5.70 시트 「하는 일」 첫 줄 = DAP 풀이(v5.69 시트화로 부제 stm 이 빠지며 함께 사라졌다 · v5.65 사용자 확정 문구) */
     todo: ["데이터사이언스파트와 업무 고민을 나눠요", "앱에서 30분 상담을 신청해요"],
     gd: ["아직 막연하다면 커피챗에서 가볍게 나눠요", "18F AX 커피챗 보기", "cchat"],
-    chk: [["진행", "업무 설명 → 병목 → 개선방안 · 30분"], ["신청", "신청 후 승인되면 앱에서 알려 드려요"], ["기록", "상담 내용은 기록되어 행사 후 정리해 공유돼요"], ["사은품", "상담을 마치면 커피 · 쿠키 · 노트 · 볼펜"]] },   /* v5.65 (사용자 261005 「커피챗과 라운지는 권장대로」 · 정본 디자인 시안/라운지 커피챗 통일/설계안.md) 커피챗과 같은 틀 · 서로 안내(gd) · 참여 전 확인(chk) 패널 · 커피 · 간식 사진은 패널 안에만 */
+    chk: [["진행", "업무 설명 → 병목 → 개선방안 · 30분"], ["신청", "사전 신청자 우선 · 남은 시간은 누구나 신청\n승인되면 앱에서 알려 드려요"], ["기록", "상담 내용은 기록되어 행사 후 정리해 공유돼요"], ["사은품", "상담을 마치면 커피 · 쿠키 · 노트 · 볼펜"]] },   /* v5.65 (사용자 261005 「커피챗과 라운지는 권장대로」 · 정본 디자인 시안/라운지 커피챗 통일/설계안.md) 커피챗과 같은 틀 · 서로 안내(gd) · 참여 전 확인(chk) 패널 · 커피 · 간식 사진은 패널 안에만 */
   { id: "play", grp: "do", sign: "AX PLAY", kor: "AI를 직접 써 보는 곳", fact: "HiDI-Q · Hi-Helper", st: "p2",
     stm: "HiDI-Q와 Hi-Helper를 직접 써 보는 곳", todo: ["노트북에서 HiDI-Q, Hi-Helper를 써 봐요", "스태프에게 내 QR을 보여 주면 적립"], btn: ["체험 안내", "App.go('booth')"] },   /* v5.60 기능 목록 판 한 컷 2장 삭제(판 · 모형에 있다) */
   { id: "event", grp: "do", sign: "EVENT", kor: "사진 · 룰렛 · 타자왕이 있는 곳", fact: "", st: "",
@@ -313,7 +313,7 @@ function zoneExHtml(z) {
 /* v5.65 18F = AX 커피챗 하나(「라운지」 표기 없음) · 1F AX LOUNGE 와 같은 구역 상세(zone_d) 틀 · 한 줄 = 질문 3줄(q) · 시간은 매칭 후 앱에서 안내(운영 시간 확정 문서 없음)
    상태 · 주 버튼 = zoneLive cchat(옛 프로그램 탭 18F 줄 ccSub · 옛 상세 progDetail 신청 전 분기를 옮겼다) · 신청한 뒤 「내 신청」 = 프로그램 상세(sess_d · 매칭 · 취소) */
 var FLOOR18 = [
-  { id: "cchat", grp: "", sign: "AX COFFEE CHAT", hdr: "AX 커피챗", kor: "비슷한 고민을 나누는 곳", fact: "", st: "",   /* v5.94 (사용자 결정 261006) 커피챗은 스탬프 없음 */
+  { id: "cchat", grp: "", sign: "AX COFFEE CHAT", hdr: "AX 커피챗", kor: "비슷한 고민을 여럿이 모여 나누는 곳", fact: "", st: "",   /* v5.94 (사용자 결정 261006) 커피챗은 스탬프 없음 */
     q: ["내 업무에 AI를 쓸 수 있을까?", "나와 비슷한 고민을 하는 사람이 있을까?", "어떻게 시작하지?"],
     todo: ["멘토와 한 테이블에서 아이디어를 나눠요", "아이디어 한 줄을 내고 커피챗 희망을 남겨요"],
     gd: ["키우고 싶은 업무를 1:1로 상담해요", "1F AX 라운지 보기", "lounge"],
@@ -364,17 +364,18 @@ function applyCardHtml(o) {
     '<div class="bt">' + progBtn(esc(o.btn[0]), o.btn[1], "", "", !!o.btn[3]) +
     '<button type="button" class="ax-link axs-plain" onclick="' + o.more + '">자세히 보기</button></div></section>';
 }
+var APPLY_GIFT = "커피 · 쿠키 · 노트 · 볼펜";   /* 261008 신청하기 두 카드 사은품 줄 한 문구(라운지 = 앞에 「상담 후」) */
 function applyCchatHtml() {
   var s = cchatState(); if (!s) return "";
   var z = zoneById("cchat"), L = zoneLive(z), c = S.get("cchat", null), mt = !!(c && c.status === "matched");
-  var kv = [["지금", s.mine ? s.t : ideaMineN() ? "아이디어 제출 완료 · 희망 가능" : "아이디어 한 줄 쓰고 희망"], ["시간", mt && c.round ? "10월 26일 " + c.round : CCHAT_HOURS + " · 선정되면 안내"], ["사은품", "커피 · 쿠키 · 노트 · 볼펜"]];   /* v5.90 · v6.07 희망 → 선정 · 13:00~16:00 */
+  var kv = [["지금", s.mine ? s.t : ideaMineN() ? "아이디어 제출 완료 · 희망 가능" : "아이디어 한 줄 쓰고 희망"], ["시간", mt && c.round ? "10월 26일 " + c.round : CCHAT_HOURS + " · 선정되면 안내"], ["방식", "소규모 · 20분"], ["신청", "희망한 분 중 선정"], ["사은품", APPLY_GIFT]];   /* 261008 (사용자 「라운지도 같은 형태」) 두 카드 사실 표 = 지금 · 시간 · 방식 · 신청 · 사은품 같은 순서 · 같은 줄 수 */   /* v5.90 · v6.07 희망 → 선정 · 13:00~16:00 */
   return applyCardHtml({ k: "cchat", nm: "AX 커피챗", fl: 18, mine: s.mine, chip: s.chip, kor: z.kor, kv: kv, extra: treatHtml(), btn: L.btn, more: "cchatGo()" });
 }
 function applyLoungeHtml() {
   var s = loungeState(); if (!s) return "";
   var z = zoneById("lounge"), L = zoneLive(z);
   var btn = s.mine ? ["내 신청", "progOpen('dap')"] : ["시간 고르기", "progOpen('dap')"];
-  return applyCardHtml({ k: "lounge", nm: "AX 라운지", fl: 1, mine: s.mine, kor: z.kor, kv: [["지금", s.t], ["시간", L.tm + " · 1:1 30분"], ["사은품", "커피 · 쿠키 · 노트 · 볼펜"]], btn: btn, more: "zoneOpen('lounge')" });
+  return applyCardHtml({ k: "lounge", nm: "AX 라운지", fl: 1, mine: s.mine, kor: z.kor, kv: [["지금", s.mine ? s.t : s.t + " · 누구나 신청"], ["시간", L.tm], ["방식", "1:1 · 30분"], ["신청", "사전 신청자 우선"], ["사은품", "상담 후 " + APPLY_GIFT]], extra: treatHtml(), btn: btn, more: "zoneOpen('lounge')" });   /* 261008 사용자 「ax라운지도 같은 형태 · 되도록 사전 신청자 중심」 · 사은품 사진 줄 = 커피챗과 같은 treatHtml · 상담 완료 조건 유지(260918 예외) */
 }
 /* 10F 실습형 세션 줄 = 사전 신청자(10F 명단 · tenMine)와 테스트 사번(testMode · 310555 · 데모)에게만 · 일반 직원에게는 없다(사용자 261006) */
 function applyTenShow() { return !!tenMine() || testMode(); }

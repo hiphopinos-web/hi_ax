@@ -1662,7 +1662,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-apc .hd { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ax-space-8); }
   .axs-apc .hd .fl { display: flex; flex: none; color: var(--ax-color-brand); }
   .axs-apc .hd h3 { margin: 0; }
-  .axs-apc .k { margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
+  .axs-apc .k { margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; text-wrap: balance; }   /* 261008 큰글씨에서 한 줄 소개 마지막 줄 한 낱말(「곳」) 막기 */
   .axs-apc .axs-kv { grid-template-columns: 76px minmax(0, 1fr); row-gap: var(--ax-space-8); }
   .axs-apc .axs-kv dd { word-break: keep-all; }
   .axs-apc .bt { display: flex; flex-direction: column; align-items: stretch; gap: var(--ax-space-4); }
