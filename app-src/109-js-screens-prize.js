@@ -174,7 +174,7 @@ var PRIZES = {
 var TREATS = [
   { nm: "커피", sub: "콜드브루 · 디카페인", img: "cc_coffee_v2", img2: "cc_decaf_v2" },
   { nm: "쿠키", sub: "광화문 달곰 베이크샵", ico: "cookie" },
-  { nm: "노트", sub: "", ico: "note" },
+  { nm: "노트", sub: "", img: "cc_note" },   /* 261008 사용자 사진(ME to WE 도트 · AX Festival 2026 블랙 노트) · 옛 아이콘 칸(ico note) 대체 */
   { nm: "볼펜", sub: "", img: "rl5_pen_v2", fit: 1 }   /* v6.07 (사용자 261007 「볼펜은 룰렛의 볼펜과 같은 거야」) 룰렛 5등 사진 · fit = 자르지 않는다(사선 볼펜) */
 ];
 var TREAT_ICO = {
