@@ -179,3 +179,6 @@
 /* v5.69 구역 상세 시트(#axsDet · zoneSheet cls axs-pan) · 사실 표 열 = 구역 상세 카드와 같다 · 질문 3줄은 제목 바로 아래 */
 #axsDet .axs-pan .axs-kv { grid-template-columns: 56px minmax(0, 1fr); row-gap: var(--ax-space-8); }
 #axsDet .axs-pan .axs-xq { margin-top: calc(var(--ax-space-4) * -1); }
+/* 261008 비어 보이는 상세 다듬기(사용자 「(가)로 가자」 · 높이 규칙 그대로) · 구역 시트 상태 한 줄(자유 관람 · 스탬프 없음 · 운영 시각 · 스탬프 3개면 룰렛 1회)을 제목 묶음에 붙인다(간격 20 → 8 · 떠 있던 회색 줄 + 검정 줄 = 한 덩어리 뒤 줄 하나) · 하는 일 줄 = 마지막 줄 한 낱말 막기 */
+#axsDet .axs-pan .axs-dlead + .cr { margin-top: calc(var(--ax-space-12) * -1); }
+#axsDet .axs-pan .axs-todo p { text-wrap: pretty; }

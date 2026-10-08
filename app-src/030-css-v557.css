@@ -138,6 +138,10 @@
   #axsDet .axs-pzgo { margin-top: 0; }
   #axsDet .axs-pz-cv { margin: 0 calc(var(--ax-space-24) * -1); padding-top: var(--ax-space-24); }
   #axsDet .axs-pz-cv .now { margin-top: 0; }
+  /* 261008 비어 보이는 상세 다듬기(사용자 「(가)로 가자」 · 높이 규칙 93% · 60% 문턱은 그대로 · 새 내용 · 새 색 없음)
+     상세 제목 = 줄 길이 고르게(큰글씨 「… 보는 / 곳」 처럼 마지막 줄 한 낱말 막기) · 설명 줄 = 마지막 줄 한 낱말 막기(지원 안 하는 브라우저는 지금 그대로) · 구역 시트 몫은 판 문법 절(020) */
+  #axsDet .axs-dltt { text-wrap: balance; }
+  #axsDet .axs-dp, #axsDet .axs-ddot li { text-wrap: pretty; }
   @keyframes detUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
   @keyframes detDim { from { opacity: 0; } to { opacity: 1; } }
   @keyframes detSw { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
