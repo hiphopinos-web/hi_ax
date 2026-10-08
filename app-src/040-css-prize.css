@@ -291,5 +291,4 @@
   .axs-kitkv dt { flex: none; font: var(--ax-type-t7); color: var(--ax-color-body); }
   .axs-kitkv dd { margin: 0; min-width: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); text-align: right; word-break: keep-all; }
   .axs-kitnote { margin: 0 var(--ax-space-4); word-break: keep-all; }
-  .axs-kitgd + .axs-kitnote { margin-top: 4px; }   /* 261008 고르는 기준 한 줄 아래 간격 */
   .axs-kitmsg { margin: 0; padding: var(--ax-space-12) var(--ax-space-16); border-radius: var(--ax-radius-12); background: var(--ax-color-errorSoft); color: var(--ax-color-ink); font: var(--ax-type-t6-strong); word-break: keep-all; }

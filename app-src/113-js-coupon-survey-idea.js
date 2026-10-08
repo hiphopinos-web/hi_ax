@@ -472,7 +472,7 @@ function kitTblHtml() {
 function kitFoldsHtml() {
   var fo = KIT.fo || {};
   var ul = function (a) { return '<ul class="axs-kitul">' + a.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>"; };
-  return kitFoldHtml("kitFoInfo", "상품 정보", !!fo.info, "kitFold('info')", kitKvHtml(KIT_INFO) + '<p class="ax-meta">g/㎡는 1제곱미터당 몇 그램인지 나타내는 단위예요. 숫자가 클수록 더 두껍고 무거워요</p>') +
+  return kitFoldHtml("kitFoInfo", "상품 정보", !!fo.info, "kitFold('info')", kitKvHtml(KIT_INFO))   /* 261008 사용자 「g/㎡ 설명 줄 없애 줘」 */ +
     kitTblHtml() +
     kitFoldHtml("kitFoWash", "세탁 방법", !!fo.wash, "kitFold('wash')", ul(KIT_WASH)) +
     kitFoldHtml("kitFoNote", "주의사항", !!fo.note, "kitFold('note')", ul(KIT_NOTE));
@@ -506,11 +506,10 @@ function kitSheet() {
   var msg = (k.test ? '<p class="ax-meta axs-kitnote axs-kittest">테스트 계정 미리 보기 · 서버에 저장하지 않아요</p>' : "") + (KIT.msg ? '<p class="axs-kitmsg" role="alert">' + esc(KIT.msg) + "</p>" : "");   /* 261008 테스트 사번 미리 보기 표시 */
   if (k.sz && !KIT.edit) return { name: nm, body: msg + kitDoneHtml(k), foot: kitCanSet(k) ? progBtn("사이즈 변경", "kitEdit(1)", "ax-button-weak") : "" };
   var ph = k.ph, note = ph === "before" ? esc(kitWhen(k.open)) + "부터 신청할 수 있어요" : ph === "end" ? "신청 기간이 끝났어요" + (kitStaff(k) ? "" : " · 사이즈는 체크인존에서 남은 것으로 드려요") :
-    ph === "open" ? "먼저 신청한 순서대로 품절돼요 · 신청하지 않으면 남은 사이즈로 배정돼요" : esc(kitWhen(k.chg)) + "까지 남은 사이즈로만 바꿀 수 있어요";
+    ph === "open" ? "" : esc(kitWhen(k.chg)) + "까지 남은 사이즈로만 바꿀 수 있어요";   /* 261008 사용자 「고르는 기준 · 품절 순서 안내 없어도 될 것 같아」 · 열림 중에는 안내 줄 없음 */
   var chips = '<section class="axs-kitsz"><div class="axs-kitszh"><h3 class="ax-type-t5-strong">사이즈</h3>' + (ph === "open" ? '<span class="ax-meta">마감 ' + esc(kitWhen(k.close)) + "</span>" : "") + "</div>" +
     '<div class="axs-kitcs" role="radiogroup" aria-label="사이즈">' + KIT_SIZES.map(function (x) { return kitChipHtml(x, k); }).join("") + "</div>" +
-    '<p class="ax-meta axs-kitnote axs-kitgd">평소 90 이하 A · 95~100 B · 105 B(딱 맞게) 또는 C(넉넉하게) · 110~115 C · 120 D</p>' +   /* 261008 고르는 기준 */
-    '<p class="ax-meta axs-kitnote">' + note + "</p></section>";
+    (note ? '<p class="ax-meta axs-kitnote">' + note + "</p>" : "") + "</section>";
   var body = msg + kitProdHtml(k) + (ph === "end" ? '<p class="ax-meta axs-kitnote">' + note + "</p>" : chips) + kitFoldsHtml() + kitKvHtml([["수령", esc(kitGetTxt(k))]]);
   var foot = "";
   if (kitCanSet(k)) {
