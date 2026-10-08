@@ -5876,19 +5876,19 @@ function qrToday(it){ if(it.today==null) return '<span class="cap">집계 없음
  * 분류(261001 사용자): 1 앱 · 2 아이디어 한 줄 · 3 계단실 36 · 4 강의장 출석(강연별 · 같은 출석 코드 + &p=강연 id) · 보관(접힘 · d17 은 추첨 화면이 띄움).
  * 내려받기 = 라벨 카드 PNG(2000px 이상) · 강의장 출석은 「QR만」 PNG 도 · 계단 36장은 ZIP 한 번(무압축 · 바깥 라이브러리 없음). 새 CSS 는 qv- 로 시작한다. */
 var QV_BASE="https://hiphopinos-web.github.io/hi_ax/", QV_PX=2048, QV_CACHE={};
-var QV_LEC_SUB={ key:"Intro 포함 · 09:30~10:20", road:"현대해상 AX 로드맵 · 10:30~11:00", l1:"Agentic AI 시대의 일하는 방식 변화", l2:"AI와 친해지기" };   /* qr_variants.json 옛 att_<id> 4장(구분 없음 · 보관) 와 같은 문구 */
+var QV_LEC_SUB={ key:"Opening Speech 포함 · 09:30~10:20", road:"현대해상 AX 로드맵 · 10:30~11:00", l1:"Agentic AI 시대 일하는 방식의 변화", l2:"AI와 친해지기" };   /* qr_variants.json 옛 att_<id> 4장(구분 없음 · 보관) 와 같은 문구 */
 /* v5.68 (사용자 확정 261005) 강의장 출석 16장 = 강의 4 × 입장 · 끝 × 현장 · 유튜브 송출 · 문구 정본 = QR코드/qr_variants.json(att_<id>_<in|out>[_yt]) 그대로
  * [id, 강의 id, 구분, 송출, 라벨, 부제] · 현장 = att_list code(a17) · 송출 = rcode(a17r) · 주소 #s=<코드>&p=<강의>&k=<in|out>
  * 라벨 시각은 인쇄물에 박힌다 · 설정 출석_입장창 · 출석_끝창을 바꾸면 qr_variants.json 과 이 표를 함께 고친다 */
 var QV_ATT=[
-  ["att_key_in","key","in",0,"기조연설 · 입장 QR","17F 입장 · 09:00~09:45 출석 · Intro 포함"],
-  ["att_key_in_yt","key","in",1,"기조연설 · 입장 QR · 유튜브 송출","17F 입장 · 09:00~09:45 출석 · Intro 포함"],
-  ["att_key_out","key","out",0,"기조연설 · 끝 QR","17F 끝 · 10:10~10:30 출석"],
-  ["att_key_out_yt","key","out",1,"기조연설 · 끝 QR · 유튜브 송출","17F 끝 · 10:10~10:30 출석"],
-  ["att_road_in","road","in",0,"내부 강연 · 입장 QR","17F 입장 · 10:00~10:45 출석 · 현대해상 AX 로드맵"],
-  ["att_road_in_yt","road","in",1,"내부 강연 · 입장 QR · 유튜브 송출","17F 입장 · 10:00~10:45 출석 · 현대해상 AX 로드맵"],
-  ["att_road_out","road","out",0,"내부 강연 · 끝 QR","17F 끝 · 10:50~11:10 출석"],
-  ["att_road_out_yt","road","out",1,"내부 강연 · 끝 QR · 유튜브 송출","17F 끝 · 10:50~11:10 출석"],
+  ["att_key_in","key","in",0,"Keynote 09:40 · 입장 QR","17F 입장 · 09:00~09:45 출석 · Opening Speech 포함"],
+  ["att_key_in_yt","key","in",1,"Keynote 09:40 · 입장 QR · 유튜브 송출","17F 입장 · 09:00~09:45 출석 · Opening Speech 포함"],
+  ["att_key_out","key","out",0,"Keynote 09:40 · 끝 QR","17F 끝 · 10:10~10:30 출석"],
+  ["att_key_out_yt","key","out",1,"Keynote 09:40 · 끝 QR · 유튜브 송출","17F 끝 · 10:10~10:30 출석"],
+  ["att_road_in","road","in",0,"Keynote 10:30 · 입장 QR","17F 입장 · 10:00~10:45 출석 · 현대해상 AX 로드맵"],
+  ["att_road_in_yt","road","in",1,"Keynote 10:30 · 입장 QR · 유튜브 송출","17F 입장 · 10:00~10:45 출석 · 현대해상 AX 로드맵"],
+  ["att_road_out","road","out",0,"Keynote 10:30 · 끝 QR","17F 끝 · 10:50~11:10 출석"],
+  ["att_road_out_yt","road","out",1,"Keynote 10:30 · 끝 QR · 유튜브 송출","17F 끝 · 10:50~11:10 출석"],
   ["att_l1_in","l1","in",0,"파트너사 강연 · AWS · 입장 QR","17F 입장 출석"],
   ["att_l1_in_yt","l1","in",1,"파트너사 강연 · AWS · 입장 QR · 유튜브 송출","17F 입장 출석"],
   ["att_l1_out","l1","out",0,"파트너사 강연 · AWS · 끝 QR","17F 끝 출석"],
