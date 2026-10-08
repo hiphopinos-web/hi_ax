@@ -214,11 +214,11 @@ function crowdStripHtml() {
   if (!cnShow() && !cnTest()) return "";
   var n = cnGet() || {}, st = cnStaff(), tv = cnTest(), sv = tv ? cnRand() : null, dot = String(n.dot || ""), cells = CN_K.map(function (t) { var x = cnCell(t[0], sv); x.k = t[0]; x.nm = t[1]; return x; });
   var ats = cells.filter(function (x) { return x.at > 0; }).map(function (x) { return x.at; }), oldest = ats.length ? Math.min.apply(null, ats) : 0;
-  var right = st ? '<span class="cn-st">눌러서 제보</span>' : oldest ? '<span class="cn-t">' + crowdHm(oldest) + " 기준</span>" : "";
+  var tvp = tv ? "시험값 · " : "", right = st ? '<span class="cn-st">' + tvp + "눌러서 제보</span>" : oldest ? '<span class="cn-t">' + tvp + crowdHm(oldest) + " 기준</span>" : tv ? '<span class="cn-t">시험값</span>' : "";   /* 261008 시험값 표시 = 섹션 머리 오른쪽 한 곳(칸마다 달면 360 에서 이름이 잘린다) */
   return '<div class="sect"><b>지금 현장</b>' + right + "</div>" +
     '<div class="cstrip2 cn4">' + cells.map(function (x) {
       var fm = /^(\d+)F (.+)$/.exec(x.nm), al = fm ? fm[1] + "층 " + fm[2] : x.nm;   /* 261008 층 표기 = 점문자(flFloor · 읽는 이름 「1층」) · 글자는 그대로 */
-      var inner = '<p class="nm">' + (fm ? flFloor(fm[1]) : "") + '<span class="cn-nm">' + (fm ? fm[2] : x.nm) + '</span></p><p class="st"><i class="lamp" aria-hidden="true"></i><span>' + x.st + "</span></p>" + (x.sub ? '<p class="sb">' + esc(x.sub) + "</p>" : "") + (st && dot.indexOf(x.k) >= 0 ? '<i class="cn-dot" aria-hidden="true"></i>' : "") + (tv ? '<i class="cn-tv">시험값</i>' : "");
+      var inner = '<p class="nm">' + (fm ? flFloor(fm[1]) : "") + '<span class="cn-nm">' + (fm ? fm[2] : x.nm) + "</span></p>" + '<p class="st"><i class="lamp" aria-hidden="true"></i><span class="cn-w">' + x.st + "</span>" + (x.sub && x.k !== "h" ? '<span class="sb">' + esc(x.sub.replace(/^대기 /, "")) + "</span>" : "") + "</p>" + (st && dot.indexOf(x.k) >= 0 ? '<i class="cn-dot" aria-hidden="true"></i>' : "");
       return st ? '<button type="button" class="cc' + x.cls + '" onclick="cnSheet(\'' + x.k + '\')" aria-label="' + al + " · " + x.st + (x.sub ? " · " + esc(x.sub) : "") + ' · 제보">' + inner + "</button>"
         : '<div class="cc' + x.cls + '">' + inner + "</div>";
     }).join("") + "</div>";
