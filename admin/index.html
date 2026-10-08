@@ -924,6 +924,20 @@ textarea.in.p10-ta{min-height:144px;font-variant-numeric:tabular-nums}
 .ks-tb tr.sum td{border-top:1px solid var(--line3)}
 /* 261008 스태프 의류 명단 한 사람씩(ks1-) · 찾기 결과 표 */
 .ks1-h{margin:20px 0 4px;padding-top:16px;border-top:1px solid var(--line);font-size:var(--fs-s);font-weight:700;color:var(--tx)}
+/* 261008 앱 접속 범위 카드(오늘 띠 아래) · 버튼 넷 = 지금 범위만 네이비 테두리 · 숫자 tabular */
+.og-card>.card{margin-top:0;margin-bottom:16px}
+.og-now{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px 12px}
+.og-now>b{font-size:var(--fs-h2);font-weight:700;color:var(--navy)}
+.og-sc{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}
+.og-sc button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--sf);text-align:left;color:var(--tx)}
+.og-sc button:hover{border-color:var(--tx3)}
+.og-sc button.on{border:2px solid var(--navy);padding:11px;background:var(--navy05)}
+.og-sc button b{font-size:var(--fs-b);font-weight:700}
+.og-sc button.on b{color:var(--navy)}
+.og-sc button .n{font-size:var(--fs-s);font-weight:600;font-variant-numeric:tabular-nums;color:var(--tx2)}
+.og-sc button small{font-size:var(--fs-c);color:var(--tx3);line-height:1.4}
+.og-list{margin-top:16px}
+@media (max-width:720px){.og-sc{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .ks1-tb td{vertical-align:middle}
 .ks1-tb td.nm{white-space:normal;min-width:88px}
 @media (max-width:720px){ .ks-ph{grid-template-columns:repeat(2,minmax(0,1fr))} }
@@ -6699,7 +6713,7 @@ hvScrHtml=function(k){
 /* 261008 단계별 오픈(서버 cfg_list og { ph, t1, t2 }) · 본부 머리 오른쪽 한 줄 「지금 오픈 단계: 테스트 기간 / 1차 / 전체」 · 옛 서버(og 없음) = 아무것도 안 그림 · 바꾸는 곳 = 시스템 › 운영 설정 */
 var OG_STAGE={ test:"테스트 기간", first:"1차 · 사전 신청자 · 스태프", all:"전체", off:"문 꺼짐 · 누구나" };
 function ogStageHtml(){ var o=((ST.data.cfgl||{}).og)||null; if(!o||!OG_STAGE[o.ph]) return "";
-  var nx=o.ph==="test"&&o.t1?" · 1차 "+short(o.t1):o.ph==="first"&&o.t2?" · 전체 "+short(o.t2):"";
+  var nx=o.sc&&o.sc!=="자동"?" · 직접 정함":o.ph==="test"&&o.t1?" · 1차 "+short(o.t1):o.ph==="first"&&o.t2?" · 전체 "+short(o.t2):"";   /* 261008 오픈_범위 수동 = 날짜 안내 대신 */
   return ' <span class="cap">지금 오픈 단계 <b>'+esc(OG_STAGE[o.ph])+'</b>'+esc(nx)+'</span>'; }
 CFG_NOTE["오픈_문"]="OFF = 1차 기간에도 명단 없이 누구나 · 지금 단계는 오늘 · 본부 화면 띠에";
 CFG_NOTE["오픈_1차"]="형식 「2026-10-19 00:00」 · 이 시각 전 = 테스트 기간(누구나) · 허용 명단 = 10F 사전 신청 · 키트명단(라운지 포함) · 스태프 의류 · 관리 명단(앱 · 콘솔) · 테스트 사번";
@@ -8624,7 +8638,7 @@ function viewToday(){
   var A=appBase(), rows=[["추첨 화면 · 원격","17F 큰 화면 · 코드는 그 화면에서",dcScreenUrl()],["ME to WE 스탬프 월","1F 스탠바이미",A+"wall/"],["타자왕 부스 TV","1F 세로 TV",A+"#tv=type&fix=site"],["타자왕 TV 순환","1F 가로 TV",A+"#tv=type"],["타자왕 셀프 노트북","코드는 그 화면에서",A+"#self"]].concat(ckScreens());
   var scr='<div id="ezScr">'+card("화면 열기","TV · 큰 화면에 띄우는 주소 · 주소에는 코드가 없습니다",'<div class="wrap"><table class="tb hv-scr"><tr><th>화면</th><th class="hide-m">어디에</th><th></th></tr>'+rows.map(function(r){
     return '<tr><td><b>'+esc(r[0])+'</b></td><td class="cap hide-m">'+esc(r[1])+'</td><td><div class="acts"><button class="btn sm pri" onclick="hvOpen(\''+esc(r[2])+'\')">열기</button><button class="btn sm" onclick="hvCopy(\''+esc(r[2])+'\')">복사</button></div></td></tr>'; }).join("")+'</table></div>')+'</div>';
-  return ezStrip()+ph+'<div class="grid g75"><div>'+ck+card("지금 할 일", on.length?on.length+"가지 대기":"대기 없음", todoH)+'</div><div>'+urg+scr+'</div></div>'+
+  return ezStrip()+(typeof ogScHtml==="function"?ogScHtml():"")+ph+'<div class="grid g75"><div>'+ck+card("지금 할 일", on.length?on.length+"가지 대기":"대기 없음", todoH)+'</div><div>'+urg+scr+'</div></div>'+
     '<p class="ez-chat">설정 변경은 채팅으로 요청합니다 · 예: 「푸시 시간 21시까지로 늘려줘」 「텀블러 재고 55개로 맞춰줘」</p>';
 }
 /* 1분마다 ① 을 다시 그린다(시간대 칸이 저절로 넘어가게 · 입력 중이면 쉰다) */
@@ -8774,6 +8788,239 @@ CFG_NOTE["선착순_지급시작"]="형식 「10:30」(24시간 시:분) · 행�
 (function(){ var p=navPart(); ST.tab=p.tab; if(p.sub) ST.subs[p.tab]=p.sub; })();   /* v5.14 새로 고침해도 보던 메뉴 그대로 */
 renderTabs();
 if(authed()){ el("lock").style.display="none"; ST.busy=true; render(); bootTok(function(){ ST.busy=false; if(authed()){ load(); render(); opsBoot(); schPull(true); if(typeof raceTab==="function") raceTab(ST.tab==="race"); } }); } else lock();   /* v4.85 사번 + 사람 토큰 */   /* v4.75 실시간 연결(ops) · 예약 목록 · 2분 전 배너 */
+/* ══ 261008 앱 접속 범위 · 접속 허용 명단(사용자 261008 「지금은 클로즈 베타 · 내가 정한 사람만 · admin 에서 범위를 쉽게 바꾸는 버튼」) ══
+ * 서버 og_scope_state(읽기) · og_scope_set · og_gate_preview · og_gate_apply · og_gate_find(이름 | 부문) · og_gate_add · og_gate_remove(슈퍼관리자 + 본인 확인)
+ * 자리 = ① 오늘 띠 바로 아래 카드 하나 · 범위 버튼 넷(클로즈 베타 · 사전 신청자까지 · 전체 · 자동) · 누르면 확인 창(바꾼 뒤 들어올 수 있는 사람 수) · 즉시 적용
+ * 명단 = 접힘 「접속 허용 명단 N명」 · 이름 찾기 · 부문 찾기(체크 상자 · 모두 선택) · 붙여 넣기 · 파일(교체 | 추가 · 명부 대조) · 목록에서 한 명씩 빼기(되돌리기) · 부문 단위 빼기
+ * 처리한 줄만 목록에서 바꾸고 숫자(cnt)만 다시 받는다 · 사번 · 이름은 이 화면 메모리에만 */
+OG_STAGE.beta="클로즈 베타";
+var OG_SCS=[["클로즈베타","클로즈 베타","beta","접속 허용 명단 · 스태프 · 테스트 사번"],["사전신청","사전 신청자까지","first","클로즈 베타 + 10F · 키트 · 라운지 사전 신청자"],["전체","전체","all","명부에 있는 누구나"],["자동","자동(날짜대로)","auto","1차 · 2차 오픈 날짜를 따른다"]];
+var OG_GATE_W="접속허용명단";
+var OGX={ tab:"name", memo:"", open:false, q:"", rows:null, more:0, seq:0, tm:0, err:"", dq:"", depts:null, dmore:0, dsel:-1, drows:null, dmoreN:0, dg:0, chk:{}, derr:"", busy:"", lq:"", paste:"", emps:null, name:"", bad:0, mode:"add", pv:null, pvKey:"", pvErr:"" };
+SP_ACT.og_scope_state=1; SP_ACT.og_scope_set=1; SP_ACT.og_gate_preview=1; SP_ACT.og_gate_apply=1; SP_ACT.og_gate_find=1; SP_ACT.og_gate_add=1; SP_ACT.og_gate_remove=1;
+CTL_ACT.og_scope_set=["pp",function(p){ return "앱 접속 범위 · "+(p.sc||""); }];
+CTL_ACT.og_gate_apply=["pp",function(p){ return "접속 허용 명단 올리기 · "+(p.mode==="add"?"추가":"교체"); }];
+CTL_ACT.og_gate_add=["pp",function(p){ return "접속 허용 명단 추가"; }]; CTL_ACT.og_gate_remove=["pp",function(p){ return "접속 허용 명단 빼기"; }];
+(function(){ var f=NEED.ztoday; NEED.ztoday=function(){ var o=f(); return supOn()&&supOk()?o.concat([{k:"ogs",a:"og_scope_state"}]):o; }; })();
+function ogWhy(r){ r=r||{}; return ({ have:"이미 명단에 있습니다", noros:"명부에 없는 사번입니다", none:"이미 명단에 없습니다", param:"사번 · 이름을 확인합니다", rows:"사번이 너무 많습니다", word:"확인 문구가 맞지 않습니다", state:"그 사이 명단이 바뀌었습니다. 다시 대조합니다", post:"요청 방식이 맞지 않습니다. 콘솔을 새로 고칩니다", spin:"본인 확인(PIN)이 필요합니다", super:"슈퍼관리자만 할 수 있습니다", range:"범위 값이 맞지 않습니다" })[r.reason]||(hvUnknown(r)?"서버 갱신 뒤 쓸 수 있습니다":why(r)); }
+function ogScOf(sc){ for(var i=0;i<OG_SCS.length;i++) if(OG_SCS[i][0]===sc) return OG_SCS[i]; return OG_SCS[3]; }
+function ogN(v){ return v==null?"-":Number(v).toLocaleString(); }
+function ogPin(){
+  return '<div class="supg"><p class="muted" style="margin:0">범위를 바꾸고 명단을 보려면 참가자 앱에 로그인할 때 쓰는 <b>PIN 4자리</b>를 넣습니다.</p>'+
+    '<div class="row"><input class="in pin" id="supPin" type="password" inputmode="numeric" autocomplete="off" maxlength="4" aria-label="앱 PIN 4자리" oninput="supPinIn(this)" onkeydown="if(event.key===\'Enter\')supGo()"'+(SUPV.busy?" disabled":"")+'>'+
+    '<button class="btn pri" onclick="supGo()"'+(SUPV.busy?" disabled":"")+'>'+(SUPV.busy?'<span class="spin" style="border-color:rgba(255,255,255,.4);border-top-color:#fff"></span>확인 중':"확인")+'</button></div>'+
+    '<div class="admh bad" role="alert">'+esc(SUPV.err)+'</div><p class="cap" style="margin:0">확인하면 30분 동안 씁니다.</p></div>';
+}
+/* 오늘 띠 아래 카드 · 슈퍼관리자만 */
+function ogScHtml(){
+  if(!supOn()) return "";
+  var og=((ST.data.cfgl||{}).og)||null, d=ST.data.ogs;
+  var now0=og&&og.sc?ogScOf(og.sc)[1]:og&&OG_STAGE[og.ph]?OG_STAGE[og.ph]:"";
+  if(!supOk()) return '<div class="og-card">'+card("앱 접속 범위",now0?"지금 <b>"+esc(now0)+"</b>":"",ogPin())+'</div>';
+  if(!d) return '<div class="og-card">'+card("앱 접속 범위","",skel())+'</div>';
+  if(!d.ok) return '<div class="og-card">'+card("앱 접속 범위","",'<div class="bands">'+band("warn",esc(ogWhy(d)),'<button class="btn sm" onclick="ogReload()">다시 시도</button>')+'</div>')+'</div>';
+  var cur=ogScOf(d.sc), c=d.cnt||{}, autoTx=d.dph==="first"?"지금 날짜로는 사전 신청자까지":d.dph==="test"?"지금 날짜로는 테스트 기간(누구나)":"지금 날짜로는 전체";
+  var btns='<div class="og-sc" role="group" aria-label="앱 접속 범위">'+OG_SCS.map(function(x){ var on=x[0]===d.sc;
+    return '<button type="button" class="'+(on?"on":"")+'" aria-pressed="'+on+'" onclick="ogScAsk(\''+x[0]+'\')"'+(OGX.busy==="sc"?" disabled":"")+'><b>'+esc(x[1])+'</b><span class="n">'+ogN(c[x[2]])+'명</span><small>'+esc(x[0]==="자동"?autoTx:x[3])+'</small></button>'; }).join("")+'</div>';
+  var top='<div class="og-now"><span class="cap">지금</span><b>'+esc(cur[1])+'</b><span class="cap">들어올 수 있는 사람 약 <b class="n">'+ogN(c[cur[2]])+'</b>명'+(d.sc==="자동"?" · "+esc(autoTx):"")+'</span></div>'+
+    (d.on?'':'<div class="bands mt8">'+band("warn","운영 설정 「오픈_문」이 OFF 라 범위와 관계없이 누구나 들어옵니다.")+'</div>');
+  var g=d.gate||{ n:0, rows:[] };
+  var list='<details class="memo og-list"'+(OGX.open?" open":"")+' ontoggle="OGX.open=this.open"><summary>접속 허용 명단 <b class="n">'+ogN(g.n)+'</b>명 · 이름 · 부문 찾기 · 붙여 넣기</summary><div class="mb">'+ogGateHtml(g)+'</div></details>';
+  return '<div class="og-card">'+card("앱 접속 범위","누르면 확인 창 한 번 · 바로 적용 · 범위 밖 사람은 「10월 21일(수)부터 열려요」 화면",top+btns+list)+'</div>';
+}
+function ogReload(){ delete _cache[sig_("og_scope_state",{})]; delete _cache[sig_("cfg_list",{})]; reload(["ogs","cfgl"]); }
+function ogScAsk(sc){
+  var d=ST.data.ogs; if(!d||!d.ok||OGX.busy) return;
+  if(sc===d.sc){ toast("이미 「"+ogScOf(sc)[1]+"」입니다"); return; }
+  var a=ogScOf(d.sc), b=ogScOf(sc), c=d.cnt||{}, nb=c[b[2]], na=c[a[2]];
+  dialog({ t:"앱 접속 범위를 「"+b[1]+"」로 바꿀까요?", who:esc(b[1])+"<span>들어올 수 있는 사람 약 "+ogN(nb)+"명</span>",
+    x:imp([["지금",esc(a[1])+" · 약 "+ogN(na)+"명"],["바꾼 뒤",esc(b[1])+" · 약 "+ogN(nb)+"명","chg"]]),
+    s:"누르는 즉시 적용됩니다. 범위 밖 사람은 로그인하거나 이미 열어 둔 앱을 다시 볼 때 「AX PASSPORT는 "+esc(d.t2?ogDay(d.t2):"곧")+" 열려요」 화면을 봅니다."+(sc==="자동"?" 자동은 1차 · 2차 오픈 날짜를 따릅니다.":""),
+    ok:"바꾸기", danger:nb!=null&&na!=null&&nb<na, onOk:function(){ ogScSet(sc, d.sc); } });
+}
+function ogDay(t){ var m=String(t||"").match(/^(\d{4})-(\d{2})-(\d{2})/); if(!m) return ""; var w="일월화수목금토".charAt(new Date(+m[1],+m[2]-1,+m[3]).getDay()); return Number(m[2])+"월 "+Number(m[3])+"일("+w+")부터"; }
+function ogScSet(sc, was){
+  OGX.busy="sc";
+  callPost("og_scope_set",{ sc:sc },function(r){ OGX.busy=""; dlgForce();
+    if(r&&r.ok){ var d=ST.data.ogs; if(d){ d.sc=r.sc; d.ph=r.ph; } var o=(ST.data.cfgl||{}).og; if(o){ o.sc=r.sc; o.ph=r.ph; } render(); ogReload();
+      toast("앱 접속 범위 · 「"+ogScOf(r.sc)[1]+"」로 바꿨습니다",was?{ undo:function(){ ogScSet(was, ""); } }:{}); }
+    else { render(); toast("실패: "+ogWhy(r)); } },
+    function(e){ OGX.busy=""; dlgForce(); render(); toast("실패: "+ogWhy(e)); });
+}
+/* ── 접속 허용 명단 ── */
+function ogInTag(x){
+  if(x.st==="gate") return tag("명단에 있음","ok");
+  if(x.in==="beta") return tag("스태프 · 테스트 쪽으로 들어옴","off");
+  if(x.in==="first") return tag("사전 신청자","off");
+  return "";
+}
+function ogGateHtml(g){
+  var seg='<span class="seg"><button class="'+(OGX.tab==="name"?"on":"")+'" onclick="ogTab(\'name\')">이름 찾기</button><button class="'+(OGX.tab==="dept"?"on":"")+'" onclick="ogTab(\'dept\')">부문 찾기</button><button class="'+(OGX.tab==="paste"?"on":"")+'" onclick="ogTab(\'paste\')">붙여 넣기 · 파일</button></span>';
+  var memo='<input class="in w-m" type="text" maxlength="40" placeholder="메모(선택) · 예: 홍보부 베타" value="'+esc(OGX.memo)+'" oninput="OGX.memo=this.value" aria-label="넣을 때 남길 메모">';
+  var body=OGX.tab==="name"?'<div class="toolbar mt8"><input class="in w-m" id="og_q" type="search" autocomplete="off" spellcheck="false" placeholder="이름 또는 사번(두 글자부터)" value="'+esc(OGX.q)+'" oninput="ogQ(this.value)"></div><div id="og_res">'+ogResHtml()+'</div>':
+    OGX.tab==="dept"?'<div class="toolbar mt8"><input class="in w-m" id="og_dq" type="search" autocomplete="off" spellcheck="false" placeholder="부문 이름 일부(두 글자부터)" value="'+esc(OGX.dq)+'" oninput="ogDq(this.value)"><span class="cap">명부의 「부문」 칸에서 찾습니다</span></div><div id="og_dres">'+ogDresHtml()+'</div>':ogPasteHtml(g);
+  return '<div class="toolbar">'+seg+'<span class="sp"></span>'+memo+'</div>'+body+'<div class="ks1-h">지금 명단 '+ogN(g.n)+'명</div>'+ogListHtml(g);
+}
+function ogTab(t){ OGX.tab=t; render(); setTimeout(function(){ var i=el(t==="name"?"og_q":t==="dept"?"og_dq":""); if(i) i.focus(); },0); }
+function ogQ(v){ OGX.q=String(v||""); OGX.err=""; OGX.rows=null; OGX.more=0; OGX.seq++; clearTimeout(OGX.tm); if(OGX.q.replace(/\s/g,"").length>=2) OGX.tm=setTimeout(ogFind,300); ogPaint("og_res", ogResHtml); }
+function ogPaint(id, fn){ var d=el(id); if(d) d.innerHTML=fn(); }
+function ogFind(){
+  var q=OGX.q.replace(/\s/g,""), s=++OGX.seq; if(q.length<2) return;
+  call("og_gate_find",{ by:"name", q:q },function(r){ if(s!==OGX.seq) return; if(r&&r.ok){ OGX.rows=r.rows||[]; OGX.more=Number(r.more)||0; } else OGX.err=ogWhy(r); ogPaint("og_res", ogResHtml); },
+    function(e){ if(s!==OGX.seq) return; OGX.err=ogWhy(e); ogPaint("og_res", ogResHtml); });
+}
+function ogResHtml(){
+  var q=OGX.q.replace(/\s/g,"");
+  if(!q) return "";
+  if(q.length<2) return '<p class="cap mt8">두 글자 이상 넣습니다.</p>';
+  if(OGX.err) return '<div class="bands mt8">'+band("bad","찾지 못했습니다("+esc(OGX.err)+").",'<button class="btn sm" onclick="ogFind()">다시 시도</button>')+'</div>';
+  if(!OGX.rows) return '<p class="cap mt8"><span class="spin"></span>명부에서 찾는 중</p>';
+  if(!OGX.rows.length) return '<p class="cap mt8">명부에 없습니다. 이름 · 사번을 확인합니다.</p>';
+  var nm={}; OGX.rows.forEach(function(x){ nm[x.name]=(nm[x.name]||0)+1; });
+  return '<div class="wrap mt8"><table class="tb ks1-tb"><tr><th>사람</th><th class="tdr" style="text-align:right">지금</th></tr>'+OGX.rows.map(function(x){
+    return '<tr><td class="nm"><b>'+esc(x.name||"-")+'</b>'+(nm[x.name]>1?' '+tag("동명이인","off"):'')+'<div class="cap n">'+esc(x.dept||"-")+' · '+esc(x.emp)+'</div></td>'+
+      '<td class="tdr">'+ogInTag(x)+(x.st==="gate"?'':' <button class="btn sm pri" onclick="ogAdd([\''+jq(x.emp)+'\'])"'+(OGX.busy?" disabled":"")+'>추가</button>')+'</td></tr>'; }).join("")+'</table></div>'+
+    (OGX.more?'<p class="cap mt8">'+OGX.rows.length+'명까지 보입니다(그 밖 '+ogN(OGX.more)+'명) · 더 길게 넣어 좁힙니다.</p>':'');
+}
+/* 부문 찾기 · 부문 목록 → 하나 고르면 그 부문 사람 전부(체크 상자) */
+function ogDq(v){ OGX.dq=String(v||""); OGX.derr=""; OGX.depts=null; OGX.dsel=-1; OGX.drows=null; OGX.chk={}; OGX.seq++; clearTimeout(OGX.tm); if(OGX.dq.replace(/\s/g,"").length>=2) OGX.tm=setTimeout(ogDfind,300); ogPaint("og_dres", ogDresHtml); }
+function ogDfind(){
+  var q=OGX.dq.replace(/\s/g,""), s=++OGX.seq; if(q.length<2) return;
+  call("og_gate_find",{ by:"dept", q:q },function(r){ if(s!==OGX.seq) return; if(r&&r.ok){ OGX.depts=r.depts||[]; OGX.dmore=Number(r.more)||0; if(OGX.depts.length===1) ogDpick(0); } else OGX.derr=ogWhy(r); ogPaint("og_dres", ogDresHtml); },
+    function(e){ if(s!==OGX.seq) return; OGX.derr=ogWhy(e); ogPaint("og_dres", ogDresHtml); });
+}
+function ogDpick(i){
+  var dp=(OGX.depts||[])[i]; if(!dp) return; var s=++OGX.seq;
+  OGX.dsel=i; OGX.drows=null; OGX.chk={}; OGX.derr=""; ogPaint("og_dres", ogDresHtml);
+  call("og_gate_find",{ by:"dept", dept:dp.dept },function(r){ if(s!==OGX.seq) return; if(r&&r.ok){ OGX.drows=r.rows||[]; OGX.dmoreN=Number(r.more)||0; OGX.dg=Number(r.g)||0; } else OGX.derr=ogWhy(r); ogPaint("og_dres", ogDresHtml); },
+    function(e){ if(s!==OGX.seq) return; OGX.derr=ogWhy(e); ogPaint("og_dres", ogDresHtml); });
+}
+function ogDcan(){ return (OGX.drows||[]).filter(function(x){ return x.st!=="gate"; }); }
+function ogDchk(emp, on){ if(on) OGX.chk[emp]=1; else delete OGX.chk[emp]; ogPaint("og_dres", ogDresHtml); }
+function ogDall(on){ OGX.chk={}; if(on) ogDcan().forEach(function(x){ OGX.chk[x.emp]=1; }); ogPaint("og_dres", ogDresHtml); }
+function ogDresHtml(){
+  var q=OGX.dq.replace(/\s/g,"");
+  if(!q) return "";
+  if(q.length<2) return '<p class="cap mt8">두 글자 이상 넣습니다.</p>';
+  if(OGX.derr) return '<div class="bands mt8">'+band("bad","찾지 못했습니다("+esc(OGX.derr)+").",'<button class="btn sm" onclick="ogDfind()">다시 시도</button>')+'</div>';
+  if(!OGX.depts) return '<p class="cap mt8"><span class="spin"></span>부문을 찾는 중</p>';
+  if(!OGX.depts.length) return '<p class="cap mt8">그런 부문이 명부에 없습니다.</p>';
+  var h='<div class="chips mt8" style="margin-bottom:0">'+OGX.depts.map(function(d,i){ return '<button type="button" class="fchip'+(i===OGX.dsel?" on":"")+'" onclick="ogDpick('+i+')">'+esc(d.dept)+' <span class="cnt">'+ogN(d.n)+'명'+(d.g?' · 명단 '+ogN(d.g):'')+'</span></button>'; }).join("")+'</div>'+(OGX.dmore?'<p class="cap mt8">그 밖 '+ogN(OGX.dmore)+'개 부문 · 더 길게 넣어 좁힙니다.</p>':'');
+  if(OGX.dsel<0) return h+'<p class="cap mt8">부문을 고르면 그 부문 사람이 모두 보입니다.</p>';
+  if(!OGX.drows) return h+'<p class="cap mt8"><span class="spin"></span>부문 사람을 불러오는 중</p>';
+  var can=ogDcan(), sel=can.filter(function(x){ return OGX.chk[x.emp]; }), all=can.length&&sel.length===can.length, dp=OGX.depts[OGX.dsel]||{}, inG=(OGX.drows||[]).filter(function(x){ return x.st==="gate"; }).length;
+  h+='<div class="toolbar mt8"><label class="cap" style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="ck" '+(all?"checked ":"")+(can.length?"":"disabled ")+'onchange="ogDall(this.checked)">모두 선택('+ogN(can.length)+'명)</label><span class="sp"></span>'+
+    (inG?'<button class="btn sm danger" onclick="ogDdelAsk()"'+(OGX.busy?" disabled":"")+'>이 부문 명단에서 빼기('+ogN(inG)+'명)</button>':'')+
+    '<button class="btn sm pri" onclick="ogDaddGo()"'+(!sel.length||OGX.busy?" disabled":"")+'>선택한 '+ogN(sel.length)+'명 추가</button></div>';
+  h+='<div class="wrap scrolly mt8" style="max-height:320px"><table class="tb"><tr><th style="width:36px"></th><th>이름</th><th class="tdr" style="text-align:right">지금</th></tr>'+(OGX.drows||[]).map(function(x){
+    var dis=x.st==="gate";
+    return '<tr><td>'+(dis?'':'<input type="checkbox" class="ck" '+(OGX.chk[x.emp]?"checked ":"")+'onchange="ogDchk(\''+jq(x.emp)+'\',this.checked)" aria-label="'+esc(x.name)+' 고르기">')+'</td><td><b>'+esc(x.name||"-")+'</b> <span class="cap n">'+esc(x.emp)+'</span></td><td class="tdr">'+ogInTag(x)+'</td></tr>'; }).join("")+'</table></div>'+
+    (OGX.dmoreN?'<p class="cap mt8">'+esc(dp.dept||"")+' · 500명까지 보입니다(그 밖 '+ogN(OGX.dmoreN)+'명).</p>':'');
+  return h;
+}
+function ogDaddGo(){ var sel=ogDcan().filter(function(x){ return OGX.chk[x.emp]; }).map(function(x){ return x.emp; }); if(sel.length) ogAdd(sel); }
+function ogDdelAsk(){
+  var dp=OGX.depts&&OGX.depts[OGX.dsel]; if(!dp||OGX.busy) return;
+  var em=(OGX.drows||[]).filter(function(x){ return x.st==="gate"; }).map(function(x){ return x.emp; }); if(!em.length) return;
+  dialog({ t:"이 부문 사람을 접속 허용 명단에서 뺄까요?", who:esc(dp.dept)+"<span>명단에 있는 "+em.length+"명</span>", danger:true,
+    s:"빼면 지금 범위가 「클로즈 베타」일 때 이 사람들은 앱에 들어오지 못합니다(스태프 · 테스트 사번은 그대로). 이미 열어 둔 앱도 다음 동기화 때 막힙니다.", ok:em.length+"명 빼기",
+    onOk:function(){ ogDel(em, true); } });
+}
+/* 넣기 · 빼기 · 처리한 줄만 바꾸고 숫자는 다시 받는다 */
+function ogMark(emps, on){
+  var m={}; emps.forEach(function(e){ m[normE(e)]=1; });
+  [OGX.rows||[], OGX.drows||[]].forEach(function(L){ L.forEach(function(x){ if(m[normE(x.emp)]) x.st=on?"gate":""; }); });
+  if(!on) OGX.chk={}; else emps.forEach(function(e){ delete OGX.chk[e]; });
+}
+function ogAfter(){ delete _cache[sig_("og_scope_state",{})]; reload(["ogs"]); }
+function ogAdd(emps, memo, undo){
+  if(OGX.busy) return; OGX.busy="add"; ogPaint("og_res", ogResHtml); ogPaint("og_dres", ogDresHtml);
+  var one=emps.length===1, p=one?{ emp:emps[0] }:{ emps:emps.join(";") }, mm=memo!=null?memo:String(OGX.memo||"").trim(); if(mm) p.memo=mm;
+  callPost("og_gate_add",p,function(r){ OGX.busy="";
+    if(r&&r.ok){ var d=ST.data.ogs; if(d&&d.gate){ d.gate.rows=(d.gate.rows||[]).concat(r.rows||[]); d.gate.n=r.n; }
+      ogMark((r.rows||[]).map(function(x){ return x.emp; }), true); render(); ogAfter();
+      toast(undo?"다시 넣었습니다":(one?((r.row&&r.row.name)||emps[0])+" · 접속 허용 명단에 넣었습니다":r.add+"명 넣었습니다"+(r.have?" · 이미 있음 "+r.have:"")+(r.noros?" · 명부에 없음 "+r.noros:""))); }
+    else { if(r&&r.reason==="have") ogMark(emps, true); render(); toast("실패: "+ogWhy(r)); } },
+    function(e){ OGX.busy=""; render(); toast("실패: "+ogWhy(e)); });
+}
+function ogDelAsk(emp){
+  var d=ST.data.ogs, k=normE(emp), r=((d&&d.gate&&d.gate.rows)||[]).filter(function(x){ return normE(x.emp)===k; })[0]; if(!r||OGX.busy) return;
+  dialog({ t:"접속 허용 명단에서 뺄까요?", who:esc(r.name||"-")+"<span>"+esc(r.dept||"-")+" · "+esc(r.emp)+"</span>", danger:true,
+    s:"빼면 지금 범위가 「클로즈 베타」일 때 이 사람은 앱에 들어오지 못합니다(스태프 · 테스트 사번이면 그대로). 뺀 뒤 7초 동안 되돌리기가 뜹니다.", ok:"빼기",
+    onOk:function(){ ogDel([r.emp], false, r); } });
+}
+function ogDel(emps, dept, row){
+  OGX.busy="del";
+  callPost("og_gate_remove",emps.length===1?{ emp:emps[0] }:{ emps:emps.join(";") },function(r){ OGX.busy=""; dlgForce();
+    if(r&&(r.ok||r.reason==="none")){ var d=ST.data.ogs, m={}; emps.forEach(function(e){ m[normE(e)]=1; });
+      if(d&&d.gate){ d.gate.rows=(d.gate.rows||[]).filter(function(x){ return !m[normE(x.emp)]; }); if(r.n!=null) d.gate.n=r.n; else d.gate.n=d.gate.rows.length; }
+      ogMark(emps, false); render(); ogAfter();
+      if(!r.ok){ toast("이미 명단에 없습니다"); return; }
+      var gone=r.gone||[];
+      toast((row?(row.name||row.emp):r.del+"명")+" · 뺐습니다",{ undo:function(){ if(gone.length===1) ogAdd([gone[0].emp], gone[0].memo||"", true); else ogAdd(gone.map(function(x){ return x.emp; }), "", true); } }); }
+    else { render(); toast("실패: "+ogWhy(r)); } },
+    function(e){ OGX.busy=""; dlgForce(); render(); toast("실패: "+ogWhy(e)); });
+}
+function ogListHtml(g){
+  var rows=g.rows||[]; if(!rows.length) return '<p class="cap">아직 아무도 없습니다. 위에서 이름 · 부문으로 찾거나 사번을 붙여 넣습니다.</p>';
+  return '<div class="toolbar"><input class="in w-m" type="search" placeholder="명단 안에서 찾기" value="'+esc(OGX.lq)+'" oninput="OGX.lq=this.value;ogPaint(\'og_list\',ogListBody)"></div><div id="og_list">'+ogListBody()+'</div>';
+}
+function ogListBody(){
+  var d=ST.data.ogs, rows=((d&&d.gate&&d.gate.rows)||[]).slice().reverse(), q=String(OGX.lq||"").replace(/\s/g,"").toUpperCase();
+  if(q) rows=rows.filter(function(x){ return (String(x.name)+String(x.emp)+String(x.dept)+String(x.memo)).replace(/\s/g,"").toUpperCase().indexOf(q)>=0; });
+  var n=rows.length; rows=rows.slice(0,300);
+  return '<div class="wrap scrolly mt8" style="max-height:320px"><table class="tb"><tr><th>사람</th><th class="hide-m">메모</th><th class="hide-m">넣은 시각</th><th></th></tr>'+(rows.length?rows.map(function(x){
+    return '<tr><td><b>'+esc(x.name||"-")+'</b><div class="cap n">'+esc(x.dept||"-")+' · '+esc(x.emp)+'</div></td><td class="cap hide-m">'+esc(x.memo||"")+'</td><td class="n cap hide-m">'+esc(short(x.at))+'</td><td class="tdr"><button class="btn sm" onclick="ogDelAsk(\''+jq(x.emp)+'\')"'+(OGX.busy?" disabled":"")+'>빼기</button></td></tr>'; }).join(""):emptyRow(4,"찾는 사람이 명단에 없습니다."))+'</table></div>'+
+    (n>300?'<p class="cap mt8">300명까지 보입니다(그 밖 '+ogN(n-300)+'명) · 위 칸으로 좁힙니다.</p>':'');
+}
+/* 붙여 넣기 · 파일 · 명부 대조 미리보기 → 교체 | 추가 */
+function ogPasteHtml(g){
+  var up='<textarea class="in p10-ta mt8" rows="4" placeholder="사번을 한 줄에 하나씩(엑셀에서 사번 칸을 복사해 붙여 넣어도 됩니다)" oninput="OGX.paste=this.value">'+esc(OGX.paste)+'</textarea>'+
+    '<div class="toolbar mt8"><button class="btn pri" onclick="ogPasteGo()">읽기</button><label class="btn"><input type="file" accept=".xlsx,.csv,.tsv,.txt" style="display:none" onchange="ogFile(this)">엑셀 · CSV 파일</label><span class="cap">줄마다 첫 사번 칸만 읽습니다</span></div>';
+  if(OGX.pvErr) up+='<div class="bands mt8">'+band("bad",esc(OGX.pvErr))+'</div>';
+  if(!OGX.emps) return up;
+  var h=up+'<div class="toolbar mt8"><span class="cnt"><b>'+esc(OGX.name)+'</b> · 사번 '+OGX.emps.length+'명'+(OGX.bad?" · 같은 사번 "+OGX.bad+"줄 뺌":"")+'</span><span class="sp"></span><button class="btn sm" onclick="ogPasteClear()">지우고 다시</button></div>';
+  var pv=OGX.pv;
+  if(!pv) return h+(OGX.busy==="pv"?'<p class="cap mt8"><span class="spin"></span>명부 · 지금 명단과 대조하는 중</p>':'<div class="toolbar mt8"><button class="btn" onclick="ogPreview(true)">다시 대조</button></div>');
+  var c={ ok:0, noros:0, dup:0 }, D=pv.diff||{}, ok=ogOkEmps(); (pv.rows||[]).forEach(function(x){ c[x.st]=(c[x.st]||0)+1; });
+  return h+'<div class="toolbar mt8"><span class="seg"><button class="'+(OGX.mode==="add"?"on":"")+'" onclick="ogMode(\'add\')">추가 · 지금 명단 뒤에</button><button class="'+(OGX.mode==="replace"?"on":"")+'" onclick="ogMode(\'replace\')">교체 · 이 명단이 전체</button></span></div>'+
+    (c.noros?'<div class="bands mt8">'+band("warn","명부에 없는 사번 <b>"+c.noros+"명</b>은 빼고 넣습니다.")+'</div>':"")+
+    imp([["적용 뒤 명단",ogN(pv.n)+"명","chg"],["새로 들어감",ogN(D.add)+"명"],["빠짐",ogN(D.del)+"명",D.del?"loss":""],["그대로",ogN(D.keep)+"명"]])+
+    '<div class="toolbar mt8"><span class="cnt">넣는 사람 <b>'+ok.length+'</b>명 · '+(OGX.mode==="add"?"추가":"교체")+'</span><span class="sp"></span><button class="btn pri" onclick="ogApplyAsk()"'+(!ok.length&&OGX.mode==="add"||OGX.busy?" disabled":"")+'>'+LOCK_SVG+' 명단 적용</button></div>';
+}
+function ogGrid(rows, nm){
+  var out=[], seen={}, bad=0;
+  (rows||[]).forEach(function(r){ (r||[]).some(function(c){ var e=normE(String(c==null?"":c)).replace(/\.0+$/,""); if(/^[0-9A-Z]{3,12}$/.test(e)&&/\d/.test(e)){ if(seen[e]) bad++; else { seen[e]=1; out.push(e); } return true; } return false; }); });
+  OGX.name=nm; OGX.emps=out; OGX.bad=bad; OGX.pvErr=out.length?"":"사번을 찾지 못했습니다"; OGX.pv=null; OGX.pvKey=""; if(!out.length) OGX.emps=null; render(); ogPreview();
+}
+function ogPasteGo(){ var t=String(OGX.paste||""); if(!t.trim()){ toast("붙여 넣은 내용이 없습니다"); return; } ogGrid(p10Csv(t), "붙여넣기"); }
+function ogPasteClear(){ OGX.emps=null; OGX.pv=null; OGX.pvKey=""; OGX.paste=""; OGX.name=""; OGX.pvErr=""; render(); }
+function ogFile(inp){
+  var f=inp&&inp.files&&inp.files[0]; if(!f) return; inp.value="";
+  if(f.size>5*1024*1024){ OGX.pvErr="파일이 5MB 를 넘습니다"; render(); return; }
+  var x=/\.xlsx$/i.test(String(f.name||"")); OGX.busy="read"; render();
+  f.arrayBuffer().then(function(buf){ return x?p10Xlsx(buf):p10Csv(p10Text(buf)); }).then(function(g){ OGX.busy=""; ogGrid(g, f.name); }).catch(function(){ OGX.busy=""; OGX.pvErr="파일을 읽지 못했습니다. CSV 로 저장해 올리거나 붙여 넣습니다"; render(); });
+}
+function ogMode(m){ OGX.mode=m; OGX.pv=null; OGX.pvKey=""; render(); ogPreview(); }
+function ogOkEmps(){ var pv=OGX.pv; if(!pv) return []; return (pv.rows||[]).filter(function(x){ return x.st==="ok"; }).map(function(x){ return x.emp; }); }
+function ogPreview(force){
+  if(!OGX.emps||!OGX.emps.length) return;
+  var key=OGX.mode+"|"+OGX.emps.join(";"); if(!force&&OGX.pvKey===key&&OGX.pv) return;
+  OGX.pvKey=key; OGX.busy="pv"; render();
+  callPost("og_gate_preview",{ rows:OGX.emps.join(";"), mode:OGX.mode },function(r){ if(OGX.pvKey!==key) return; OGX.busy=""; if(r&&r.ok) OGX.pv=r; else { OGX.pv=null; toast("서버 대조 실패: "+ogWhy(r)); } render(); },
+    function(e){ if(OGX.pvKey!==key) return; OGX.busy=""; OGX.pv=null; toast("서버 대조 실패: "+ogWhy(e)); render(); });
+}
+function ogApplyAsk(){
+  var pv=OGX.pv, ok=ogOkEmps(); if(!pv) return;
+  hvL3Go({ t:"접속 허용 명단을 적용할까요?", who:(OGX.mode==="add"?"추가":"교체")+"<span>"+esc(OGX.name)+" · 적용 뒤 "+pv.n+"명</span>",
+    rows:[["적용 뒤 명단",pv.n+"명","chg"],["빠짐",((pv.diff||{}).del||0)+"명",(pv.diff||{}).del?"loss":""]],
+    s:"시트 「접속허용」이 바뀝니다. 지금 범위가 「클로즈 베타」면 이 명단 · 스태프 · 테스트 사번만 앱에 들어옵니다."+((pv.diff||{}).del?" 빠지는 사람은 다음 동기화 때 막힙니다.":""), ok:"적용", word:OG_GATE_W,
+    run:function(fin){ OGX.busy="apply";
+      var p={ rows:ok.join(";"), mode:OGX.mode, sig:pv.sig||"", confirm:OG_GATE_W }, mm=String(OGX.memo||"").trim(); if(mm) p.memo=mm;
+      callPost("og_gate_apply",p,function(r){ OGX.busy="";
+        if(r&&r.ok){ OGX.pv=null; OGX.pvKey=""; OGX.emps=null; OGX.paste=""; delete _cache[sig_("og_scope_state",{})]; reload(["ogs"]); fin("명단을 적용했습니다", imp([["지금 접속 허용 명단",(r.n!=null?r.n:"-")+"명"]])); }
+        else { dlgForce(); if(r&&r.reason==="state"){ OGX.pv=null; ogPreview(true); } toast("실패: "+ogWhy(r)); render(); } },function(e){ OGX.busy=""; dlgForce(); toast("실패: "+ogWhy(e)); render(); }); } });
+}
 </script>
 </body>
 </html>
