@@ -285,6 +285,13 @@ table.tb{width:100%;border-collapse:collapse;table-layout:fixed}
 .scope button b{font-size:var(--fs-b)}
 .scope button .n{font-size:var(--fs-h1);font-weight:700}
 .scope button small{font-size:var(--fs-c);color:var(--tx3);line-height:1.4}
+/* 261009 행사 종료 · 범위 넷 아래 따로 한 줄(빨간 테두리) · 지금 종료면 채움 */
+.scope.end{grid-template-columns:minmax(0,1fr)}
+.scope.end button{flex-direction:row;align-items:center;gap:12px;border-color:var(--bad-bd);color:var(--bad)}
+.scope.end button:hover{border-color:var(--bad)}
+.scope.end button.on{border:2px solid var(--bad);background:var(--bad-bg)}
+.scope.end button small{color:var(--bad)}
+.scope.end button .n{margin-left:auto;font-size:var(--fs-b)}
 
 /* 알림 보내기 */
 .form{max-width:var(--w-form)}
@@ -441,7 +448,7 @@ details.inc[open]{border-color:var(--navy1)}
   </div>
 </div>
 <header class="top">
-  <div class="tb1"><div class="brand"><b>AXF CONTROL</b><span id="envTag">운영 관리</span></div><span class="sp"></span>
+  <div class="tb1"><div class="brand"><b>AXF CONTROL</b><span id="envTag">운영 관리</span></div><button class="tag bad" id="endTag" type="button" style="display:none" data-qa="top.ended" title="참가자 앱이 모두 닫혀 있습니다 · 설정 › 앱 오픈" onclick="go('s_open')">행사 종료 중</button><span class="sp"></span>
     <span class="live" id="stamp"><i class="dot"></i><span class="tx">·</span></span>
     <button class="hbtn" data-qa="top.refresh" onclick="refresh()">새로고침</button>
     <div class="acct-w"><button class="hbtn" id="acctBtn" type="button" aria-haspopup="menu" aria-expanded="false" data-qa="top.acct" onclick="acctMenu()"><span id="roleTag">관리자</span></button>
@@ -764,7 +771,7 @@ var NAV=[
   { id:"n_sched", m:"nt", n:"예약", r:"정해진 시각에 서버가 스스로 내는 공지 · 푸시입니다. 지금 실행 · +5분 · 취소.", view:"sched" },
   { id:"r_log", m:"lg", n:"활동 기록", r:"콘솔과 스태프 폰에서 한 일이 한 곳에 쌓입니다. 되돌릴 수 있는 일은 줄에서 바로 되돌립니다.", view:"log" },
   { id:"r_num", m:"lg", n:"숫자", r:"가입 · 스탬프 · 룰렛 · 행운권 · 현장 흐름 숫자입니다. 이름 · 부문 통계 없음.", view:"num" },
-  { id:"s_open", m:"sg", n:"앱 오픈", sup:1, r:"누가 앱에 들어올지 한 번에 바꿉니다. 클로즈 베타 · 사전 신청자까지 · 전체 · 자동.", view:"open" },
+  { id:"s_open", m:"sg", n:"앱 오픈", sup:1, r:"누가 앱에 들어올지 한 번에 바꿉니다. 클로즈 베타 · 사전 신청자까지 · 전체 · 자동 · 행사 종료.", view:"open" },
   { id:"s_qr", m:"sg", n:"현장 QR", r:"현장에 붙는 QR 그림(서버 코드로 이 화면에서 그림) · 설치 점검입니다.", view:"qr" },
   { id:"s_srv", m:"sg", n:"서버", r:"서버 주소 · 연결 · 백업 상태 · 읽기 전용 스위치입니다.", legacy:["s_state",0] },
   { id:"s_adv", m:"sg", n:"고급 · 보관", r:"운영 설정 표(기본값과 다른 것부터)와 평소에 만질 일이 없는 지난 화면입니다.", view:"adv" }
@@ -807,7 +814,7 @@ function menuBadge(m){ if(m==="pp") return pwWait(); if(m==="td") return todayBa
 function pwWait(){ var d=S.data.pwc; return d&&d.ok?Number(d.waiting)||0:0; }
 
 /* 갱신 · need = [{ k(데이터 이름), a(액션), p(값), ttl(밀리초), sup(본인 확인 뒤에만) }] */
-var COMMON_NEED=[{ k:"pwc", a:"pw_req_count", ttl:60000 }];
+var COMMON_NEED=[{ k:"pwc", a:"pw_req_count", ttl:60000 },{ k:"nb", a:"now_board", ttl:60000 }];   /* 261009 now_board = 머리 「행사 종료 중」(og) · 진행판 · 숫자 화면과 같은 칸(nb) */
 function needs(){ var it=navCur(), V=VIEWS[it.view]||VIEWS.legacy, a=V.need?V.need(it):[]; return a.concat(COMMON_NEED); }
 function load(force){
   if(!authed()||document.hidden) return;
@@ -822,6 +829,7 @@ function load(force){
       S.busy[n.k]=0; S.at[n.k]=Date.now();
       if(e){ S.err[n.k]=e; } else { S.data[n.k]=r; S.err[n.k]=null; }
       if(n.k==="nb"&&r&&r.t) S.srvAt={ t:r.t, at:Date.now(), rtt:Date.now()-t0 };
+      if(!e) ogEndSeen(n.k, r);
       stampTick(); paint();
     });
   });
@@ -1586,8 +1594,13 @@ function sendHist(){
  * 단추 넷 = 클로즈 베타 · 사전 신청자까지 · 전체 · 자동(날짜대로) · 누르면 확인 창(바꾼 뒤 들어올 수 있는 사람 수) · 응답으로 바뀐 값을 확인한 뒤에만 다음 단추를 연다(261008 14:25 사고 교훈)
  * 「자동」 전환은 운영 설정 변경이라 사용자가 직접 누른다(최종 설계안) · 여기서는 「다음 바뀌는 시각 · 대상 N명」 미리 보기만 */
 var OG_SCS=[["클로즈베타","클로즈 베타","beta","접속 허용 명단 · 스태프 · 시험 사번"],["사전신청","사전 신청자까지","first","클로즈 베타 + 10F · 키트 · 라운지 사전 신청자"],["전체","전체","all","명부에 있는 누구나"],["자동","자동(날짜대로)","auto","1차 · 2차 오픈 날짜를 따름"]];
-var OG_PH={ test:"테스트 기간(누구나)", beta:"클로즈 베타", first:"사전 신청자까지", all:"전체" };
-function ogScOf(sc){ for(var i=0;i<OG_SCS.length;i++) if(OG_SCS[i][0]===sc) return OG_SCS[i]; return OG_SCS[3]; }
+/* 261009 행사 종료(사용자 261009 「오픈 범위에 행사종료 · 아무도 못 들어오고」) · 범위 넷과 따로 한 줄 · 수동만(자동은 종료로 가지 않는다) · 서버 오픈_범위 = 종료 · ph end */
+var OG_END=["종료","행사 종료","end","참가자 앱이 모두 닫힘 · 콘솔은 그대로"];
+var OG_PH={ test:"테스트 기간(누구나)", beta:"클로즈 베타", first:"사전 신청자까지", all:"전체", end:"행사 종료" };
+function ogScOf(sc){ if(sc===OG_END[0]) return OG_END; for(var i=0;i<OG_SCS.length;i++) if(OG_SCS[i][0]===sc) return OG_SCS[i]; return OG_SCS[3]; }
+/* 머리 「행사 종료 중」 · now_board · cfg_list(og) · og_scope_state(ph) 중 받은 것으로 · 바꾼 직후는 og_scope_set 응답 */
+function ogEndSeen(k, r){ if(!r||!r.ok) return; var ph=k==="ogs"?r.ph:r.og?r.og.ph:null; if(ph==null) return; S.ogEnd=ph==="end"; ogEndTop(); }
+function ogEndTop(){ var t=el("endTag"); if(t) t.style.display=S.ogEnd?"":"none"; }
 function ogDay(t){ var m=String(t||"").match(/^(\d{4})-(\d{2})-(\d{2})(?: (\d{2}:\d{2}))?/); if(!m) return ""; var w="일월화수목금토".charAt(new Date(+m[1],+m[2]-1,+m[3]).getDay()); return Number(m[2])+"월 "+Number(m[3])+"일("+w+")"+(m[4]?" "+m[4]:""); }
 VIEWS.open={
   need:function(){ return [{ k:"ogs", a:"og_scope_state", ttl:30000, sup:1 }]; },
@@ -1601,12 +1614,15 @@ VIEWS.open={
     if(!d.ok){ box.innerHTML=loadErr(d,"ogs"); return; }
     var cur=ogScOf(d.sc), c=d.cnt||{}, busy=S.ui.ogBusy;
     var autoTx=d.dph==="first"?"지금 날짜로는 사전 신청자까지":d.dph==="test"?"지금 날짜로는 테스트 기간(누구나)":"지금 날짜로는 전체";
-    var h='<div class="card pad"><div class="fx"><span class="cap">지금</span><b style="font-size:var(--fs-h2)">'+esc(cur[1])+'</b><span class="cap">들어올 수 있는 사람 약 <b class="n">'+n0(c[cur[2]])+'</b>명'+(d.sc==="자동"?" · "+esc(autoTx):"")+'</span></div>'+
-      (d.on?'':band("warn","운영 설정 「단계별 오픈 문」이 OFF 라 범위와 관계없이 명부면 누구나 들어옵니다."))+
+    var ended=d.sc===OG_END[0];
+    var h='<div class="card pad"><div class="fx"><span class="cap">지금</span><b style="font-size:var(--fs-h2)'+(ended?';color:var(--bad)':'')+'">'+esc(cur[1])+'</b><span class="cap">'+(ended?'참가자 앱이 모두 닫혀 있습니다 · 콘솔은 그대로':'들어올 수 있는 사람 약 <b class="n">'+n0(c[cur[2]])+'</b>명'+(d.sc==="자동"?" · "+esc(autoTx):""))+'</span></div>'+
+      (ended?band("bad","<b>행사 종료 중</b> · 로그인 · 열어 둔 앱 · 스태프 폰 모두 「AX Festival 2026이 종료되었습니다」 화면입니다. 다시 열려면 아래 범위 단추 하나를 누릅니다."):"")+
+      (d.on||ended?'':band("warn","운영 설정 「단계별 오픈 문」이 OFF 라 범위와 관계없이 명부면 누구나 들어옵니다."))+
       '<div class="scope mt12">'+OG_SCS.map(function(x){ var on=x[0]===d.sc; return '<button type="button" class="'+(on?"on":"")+'" aria-pressed="'+on+'" data-qa="open.sc.'+x[2]+'" onclick="ogScAsk(\''+x[0]+'\')"'+(busy?" disabled":"")+'><b>'+esc(x[1])+'</b><span class="n">'+n0(c[x[2]])+'명</span><small>'+esc(x[0]==="자동"?autoTx:x[3])+'</small></button>'; }).join("")+'</div>'+
+      '<div class="scope end mt8"><button type="button" class="'+(ended?"on":"")+'" aria-pressed="'+ended+'" data-qa="open.sc.end" onclick="ogScAsk(\''+OG_END[0]+'\')"'+(busy?" disabled":"")+'><b>'+esc(OG_END[1])+'</b><small>'+esc(OG_END[3])+'</small><span class="n">0명</span></button></div>'+
       '<h5 class="h5">자동이면</h5><ul class="mini"><li><span class="t">1차</span><span>'+esc(ogDay(d.t1)||"-")+'부터 사전 신청자까지 · 약 '+n0(c.first)+'명</span></li><li><span class="t">2차</span><span>'+esc(ogDay(d.t2)||"-")+'부터 전체 · 약 '+n0(c.all)+'명</span></li></ul>'+
-      '<p class="cap mt8">지금 단계 '+esc(OG_PH[d.ph]||d.ph)+' · 범위 밖 사람은 「AX PASSPORT는 '+esc(ogDay(d.t2)||"곧")+'부터 열려요」 화면을 봅니다. 접속 허용 명단 '+n0((d.gate||{}).n)+'명 · 넣고 빼기는 <button class="lnk" data-qa="open.gate" onclick="go(\'p_list\',\'gate\')">사람 › 명단</button></p></div>'+
-      memo('<p><b>10/19(월) 1차 오픈</b> · 「사전 신청자까지」 또는 「자동」을 누릅니다. 자동은 위 날짜를 따르고, 수동 범위는 날짜보다 우선합니다.</p><p><b>문 여닫기 순서</b> · 문을 닫는 쪽(범위 좁히기)이 성공한 것을 확인한 뒤에만 다른 문을 엽니다. 이 화면은 응답으로 바뀐 값을 확인하기 전에는 다음 단추를 잠급니다.</p>');
+      '<p class="cap mt8">지금 단계 '+esc(OG_PH[d.ph]||d.ph)+' · '+(ended?'참가자는 「AX Festival 2026이 종료되었습니다」 화면을 봅니다.':'범위 밖 사람은 「AX PASSPORT는 '+esc(ogDay(d.t2)||"곧")+'부터 열려요」 화면을 봅니다.')+' 접속 허용 명단 '+n0((d.gate||{}).n)+'명 · 넣고 빼기는 <button class="lnk" data-qa="open.gate" onclick="go(\'p_list\',\'gate\')">사람 › 명단</button></p></div>'+
+      memo('<p><b>10/19(월) 1차 오픈</b> · 「사전 신청자까지」 또는 「자동」을 누릅니다. 자동은 위 날짜를 따르고, 수동 범위는 날짜보다 우선합니다.</p><p><b>문 여닫기 순서</b> · 문을 닫는 쪽(범위 좁히기)이 성공한 것을 확인한 뒤에만 다른 문을 엽니다. 이 화면은 응답으로 바뀐 값을 확인하기 전에는 다음 단추를 잠급니다.</p><p><b>행사 종료</b> · 누르면 참가자 앱(로그인 · 열어 둔 앱 · 스태프 폰)이 모두 「AX Festival 2026이 종료되었습니다」 화면이 됩니다. 콘솔 · 무대 · TV · 셀프 노트북은 그대로라 정리 · 내보내기 · 경품 발송을 이어 합니다. 자동은 종료로 가지 않습니다. 되돌리려면 범위 단추 하나를 누릅니다.</p>');
     box.innerHTML=h;
   }
 };
@@ -1614,6 +1630,10 @@ function ogScAsk(sc){
   var d=S.data.ogs; if(!d||!d.ok||S.ui.ogBusy) return;
   if(sc===d.sc){ toast("이미 「"+ogScOf(sc)[1]+"」입니다"); return; }
   var a=ogScOf(d.sc), b=ogScOf(sc), c=d.cnt||{}, nb=c[b[2]], na=c[a[2]];
+  if(sc===OG_END[0]){ dialog({ t:"행사를 종료할까요?", who:esc(b[1])+"<span>참가자 앱이 모두 닫힙니다</span>",
+    x:imp([["지금",esc(a[1])+" · 약 "+n0(na)+"명"],["바꾼 뒤","행사 종료 · 0명","chg"]]),
+    s:"참가자 앱이 모두 닫힙니다(로그인 · 열어 둔 앱 · 스태프 폰). 콘솔은 계속 쓸 수 있어요. 되돌리려면 범위 단추 하나를 누릅니다.", ok:"행사 종료", danger:true,
+    onOk:function(){ ogScSet(sc, d.sc, true); } }); return; }
   dialog({ t:"앱 접속 범위를 「"+b[1]+"」로 바꿀까요?", who:esc(b[1])+"<span>들어올 수 있는 사람 약 "+n0(nb)+"명</span>",
     x:imp([["지금",esc(a[1])+" · 약 "+n0(na)+"명"],["바꾼 뒤",esc(b[1])+" · 약 "+n0(nb)+"명","chg"]]),
     s:"누르는 즉시 적용됩니다."+(sc==="자동"?" 자동은 1차 · 2차 오픈 날짜를 따릅니다.":""), ok:"바꾸기", danger:nb!=null&&na!=null&&nb>na,
@@ -1622,7 +1642,7 @@ function ogScAsk(sc){
 function ogScSet(sc, was, inDlg){
   S.ui.ogBusy=1; paint();
   callPost("og_scope_set",{ sc:sc },function(r){ S.ui.ogBusy=0; if(inDlg) dlgForce();
-    if(r&&r.ok&&r.sc===sc){ var d=S.data.ogs; if(d){ d.sc=r.sc; d.ph=r.ph; } changed(["og_scope_state","now_board","act_log"]); S.at.ogs=0; load(true); paint();
+    if(r&&r.ok&&r.sc===sc){ var d=S.data.ogs; if(d){ d.sc=r.sc; d.ph=r.ph; } S.ogEnd=r.ph==="end"; ogEndTop(); changed(["og_scope_state","now_board","act_log"]); S.at.ogs=0; load(true); paint();
       toast("앱 접속 범위 · 「"+ogScOf(r.sc)[1]+"」로 바꿨습니다(서버 확인)", was?{ undo:function(){ ogScSet(was, "", false); } }:{}); }
     else { paint(); toast("바뀌지 않았습니다 · "+why(r)+" · 지금 값을 다시 받습니다"); S.at.ogs=0; load(true); } },
     function(e){ S.ui.ogBusy=0; if(inDlg) dlgForce(); paint(); toast("바뀌었는지 모릅니다 · "+why(e)+" · 다시 받아 확인합니다"); S.at.ogs=0; load(true); });
@@ -1740,10 +1760,10 @@ VIEWS.today={
     if(!b.ok){ el("tdS").innerHTML=loadErr(b,"nb"); return; }
     var n=boardNow(), v=sigVals(), og=b.og||{};
     var push=b.push||{};
-    el("tdS").innerHTML='<span class="fx" style="gap:6px"><i class="dot '+(S.err.nb?"bad":"ok")+'"></i><b>서버 연결</b></span>'+tag(envName(),envName()==="운영"?"pri":"")+tag("앱 "+(og.sc&&og.sc!=="자동"?ogScOf(og.sc)[1]:"자동 · "+(OG_PH[og.ph]||og.ph||"")),og.ph==="all"?"ok":"")+
+    el("tdS").innerHTML='<span class="fx" style="gap:6px"><i class="dot '+(S.err.nb?"bad":"ok")+'"></i><b>서버 연결</b></span>'+tag(envName(),envName()==="운영"?"pri":"")+(og.ph==="end"?tag("행사 종료 중","bad"):tag("앱 "+(og.sc&&og.sc!=="자동"?ogScOf(og.sc)[1]:"자동 · "+(OG_PH[og.ph]||og.ph||"")),og.ph==="all"?"ok":""))+
       (push.on?tag(push.manual===0?"공지 푸시 잠금":"푸시 켜짐",push.manual===0?"warn":"ok"):tag("푸시 정지","bad"))+(b.ro?tag("읽기 전용 켜짐","warn"):"")+(b.ses?tag("세션필수 켜짐","off"):"")+(n&&n.reh?tag("리허설 보기","warn"):"")+
       '<span class="sp"></span><label class="fx cap" style="gap:4px"><input type="checkbox" data-qa="today.reh" '+(ssGet("axf_c2_reh","")==="1"?"checked":"")+' onchange="ssSet(\'axf_c2_reh\',this.checked?\'1\':\'\');paint()">오늘을 행사일처럼 보기</label><span class="cap n">서버 시각 '+esc(n?n.day.slice(5).replace("-","/")+" "+n.hm:"-")+'</span>';
-    el("tdD").innerHTML=dayBand(n);
+    el("tdD").innerHTML=(og.ph==="end"?band("bad","<b>행사 종료 중</b> · 참가자 앱이 모두 닫혀 있습니다. 콘솔 · 무대 · TV · 셀프 노트북은 그대로입니다.",'<button class="btn sm" data-qa="today.ended" onclick="go(\'s_open\')">앱 오픈</button>'):"")+dayBand(n);   /* 261009 행사 종료 */
     el("tdG").innerHTML=sigHtml(v, b);
     el("tdN").innerHTML=nowTodo(n);
     el("tdX").innerHTML=nextTodo(n);

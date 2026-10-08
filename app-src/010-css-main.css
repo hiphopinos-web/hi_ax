@@ -1266,6 +1266,20 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #ogGate .ax-description { margin: 0; color: var(--ax-color-body); word-break: keep-all; }
   #ogGate .ax-description span { white-space: nowrap; }   /* 큰 글씨 · 좁은 폭 = 가운뎃점에서 줄바꿈 */
   #ogGate .og-out { position: absolute; left: 50%; bottom: calc(var(--ax-space-24) + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); border: 0; background: transparent; padding: 0 var(--ax-space-16); cursor: pointer; color: var(--ax-color-muted); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+  /* 261009 행사 종료 · 종료 안내 한 화면(endShow) · 「열려요」 화면 문법 그대로 · 모든 화면 위(장면 390 · 도장 팝 400 위) · 챗봇 원본(BOT_SVG) + 안테나 전파(합성 · 원본 path 그대로) · 단추 없음 */
+  #endGate { position: fixed; inset: 0; z-index: 420; display: flex; align-items: center; justify-content: center; padding: var(--ax-page-inset); padding-bottom: calc(var(--ax-space-64) + env(safe-area-inset-bottom, 0px)); background: var(--ax-color-canvas); text-align: center; }
+  #endGate .og-in { display: flex; flex-direction: column; align-items: center; gap: var(--ax-space-16); max-width: 360px; }
+  #endGate .end-bot { display: block; width: 104px; height: 104px; margin-bottom: var(--ax-space-4); animation: endIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  #endGate svg { width: 104px; height: 104px; display: block; animation: axsFloat 3.2s ease-in-out 0.6s infinite; }
+  #endGate .eye { transform-box: fill-box; transform-origin: center; animation: axsBlink 4.6s linear infinite; }
+  #endGate .ant path { fill: none; stroke: var(--ax-color-brand); stroke-width: 4; stroke-linecap: round; opacity: 0; animation: axsWave 1.6s ease-out infinite; }
+  #endGate .ant path:nth-child(2) { animation-delay: 0.18s; }
+  #endGate .ant path:nth-child(3) { animation-delay: 0.36s; }
+  #endGate h1 { margin: 0; color: var(--ax-color-ink); word-break: keep-all; animation: endIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both; }
+  #endGate h1 span { display: block; }   /* 「AX Festival 2026이」 · 「종료되었습니다」 늘 두 줄 */
+  #endGate .ax-description { margin: 0; color: var(--ax-color-body); word-break: keep-all; animation: endIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both; }
+  @keyframes endIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { #endGate .end-bot, #endGate svg, #endGate .eye, #endGate .ant path, #endGate h1, #endGate .ax-description { animation: none; } #endGate .ant path { opacity: 0.3; } }
   #axsWait { position: fixed; inset: 0; z-index: 130; display: flex; align-items: center; justify-content: center; padding: var(--ax-page-inset); background: var(--ax-color-canvas); }
   /* 비밀번호 찾기 화면 · 입력 56 / 주 버튼 56 모양만 A01 에 맞춘다(재방문 #quick 은 v4.94 수면형 .axs-lf) */
   #pwlost input { min-height: var(--ax-button-height); border: 1px solid var(--ax-color-divider); border-radius: var(--ax-radius-12); background: var(--ax-color-inset); color: var(--ax-color-ink); }
