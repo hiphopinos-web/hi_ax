@@ -515,12 +515,12 @@ function stpRowHtml(s, i, st, full) {
   var test = !testMode() ? "" : got ? '<button type="button" class="axs-stpx" onclick="testStampUndo(\'' + s.id + '\')">테스트 · 완료 취소</button>' : '<button type="button" class="axs-stpx" onclick="testStamp(\'' + s.id + '\')">테스트 · 완료 처리</button>';
   /* v4.95 행동이 있는 줄은 줄 전체를 눌러도 같은 행동(안의 버튼 · 타일은 그 버튼만) · 키보드는 오른쪽 버튼 */
   var tap = a[1] ? ' onclick="if (!event.target.closest(\'button\')) { ' + a[1].replace(/"/g, "&quot;") + '; }"' : "";
-  /* v5.68 프로그램 참여 = 2개 · 제목 옆 「×2」 · 17F 한쪽만(p3h) = 번호 칸 반 채움 「1/2」 */
+  /* v5.68 프로그램 참여 = 2개 · 17F 한쪽만(p3h) = 번호 칸 반 채움 「1/2」 · v6.56 (사용자 261008 「더블 스탬프인 것이 명확히 이해되지 않아」) 제목 옆 「×2」 → O100 알약 「● ● 스탬프 2개」(받은 만큼 점이 찬다 · 0 · 1 · 2) + 받기 전 둘째 보조 줄 「입장 QR 1개 + 끝 QR 1개」 */
   var half = !!s.x2 && !got && st.indexOf(STAMP_HALF) >= 0;
   return '<div class="axs-stp' + (got ? " done" : half ? " half" : full ? " off" : "") + (tap ? " tap" : "") + '" data-stp="' + s.id + '"' + tap + ">" +
     '<span class="axs-stpn" aria-hidden="true">' + (got ? CHECK_SVG : half ? "1/2" : i + 1) + "</span>" +
-    '<div class="axs-stpb"><p class="ax-card-title">' + esc(s.title) + (s.x2 ? '<span class="axs-x2" aria-label="스탬프 2개">×2</span>' : "") + (got ? '<span class="ax-sr-only"> · 완료</span>' : half ? '<span class="ax-sr-only"> · 2개 중 1개</span>' : "") + "</p>" +
-    stpLineHtml(mode, esc(meta)) +
+    '<div class="axs-stpb"><p class="ax-card-title' + (s.x2 ? " axs-stpt2" : "") + '">' + esc(s.title) + (s.x2 ? '<span class="axs-x2"><i class="d' + (got || half ? " on" : "") + '" aria-hidden="true"></i><i class="d' + (got ? " on" : "") + '" aria-hidden="true"></i>스탬프 2개</span>' : "") + (got ? '<span class="ax-sr-only"> · 완료</span>' : half ? '<span class="ax-sr-only"> · 2개 중 1개</span>' : "") + "</p>" +
+    stpLineHtml(mode, esc(meta)) + (s.id === "p3" && !got ? '<p class="axs-stpm"><span>입장 QR 1개 + 끝 QR 1개</span></p>' : "") +
     tiles + test + "</div>" +
     (a[0] ? (a[1] ? '<button type="button" class="axs-stpa" onclick="' + a[1] + '">' + esc(a[0]) + "</button>" : '<span class="axs-stpa ' + (got ? "ok" : "off") + '">' + esc(a[0]) + "</span>") : "") +
     "</div>";

@@ -1911,7 +1911,12 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-stp.done .axs-stpn { border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
   .axs-stpn svg { width: 20px; height: 20px; display: block; }
   /* v5.68 프로그램 참여 = 스탬프 2개 · 제목 옆 「×2」 알약 · 17F 한쪽만(p3h) = 번호 칸 아래 절반 주황 「1/2」 */
-  .axs-x2 { display: inline-block; margin-left: var(--ax-space-8); padding: 0 var(--ax-space-8); border-radius: var(--ax-radius-999); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-caption); font-weight: 700; line-height: 20px; vertical-align: 2px; }
+  .axs-x2 { display: inline-flex; align-items: center; gap: var(--ax-space-4); margin-left: var(--ax-space-8); padding: 1px var(--ax-space-8); border-radius: var(--ax-radius-999); background: var(--ax-color-brand); color: var(--ax-color-ink); font: var(--ax-type-caption); font-weight: 800; line-height: 1.35; vertical-align: 2px; white-space: nowrap; }
+  .axs-x2 .d { flex: none; box-sizing: border-box; width: 9px; height: 9px; border-radius: var(--ax-radius-999); border: 1.5px solid var(--ax-color-ink); }
+  .axs-x2 .d.on { background: var(--ax-color-ink); }
+  .axs-stpb .axs-stpt2 { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ax-space-4) var(--ax-space-8); }   /* 좁은 폭 · 큰 글씨에서 알약이 제목 아래로 내려가도 들여쓰기 없이 */
+  .axs-stpt2 .axs-x2 { margin-left: 0; vertical-align: baseline; }
+  .axs-x2 .d + .d { margin-right: var(--ax-space-4); }   /* v6.56 알약 = 도장 칸 두 개(받은 만큼 찬 점) + 「스탬프 2개」 */
   .axs-stp.half .axs-stpn { border-color: var(--ax-color-brand); background: linear-gradient(to top, var(--ax-color-brand) 50%, var(--ax-color-inset) 50%); color: var(--ax-color-ink); font: var(--ax-type-caption); font-weight: 700; }
   .axs-stpb { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--ax-space-4); }
   .axs-stpb .ax-card-title { margin: 0; }
