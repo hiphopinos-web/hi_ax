@@ -726,7 +726,13 @@
   .cstrip2 button.cc { display: block; width: 100%; border: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; }
   /* 261008 지금 현장 2×2 · 칸 = 이름 · 상태 · 짧은 말 · 색 사다리(여유 흰 면 → 보통 brandSoft → 붐빔 brand 28% → 거의 만석 · 혼잡 errorSoft → 만석 error 면 + 흰 글자) · 새 토큰 없음 */
   .cstrip2.cn4 .cc { position: relative; min-width: 0; padding: 10px 14px; }
-  .cstrip2.cn4 .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cstrip2.cn4 .nm { display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; }
+  .cstrip2.cn4 .nm .cn-nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .cstrip2.cn4 .nm .dg { width: auto; height: 0.8em; color: var(--ax-color-brand); }   /* 261008 층 표기 점문자 · 글자 높이의 0.8 · 큰 글씨에서도 같이 커짐 · 주황 O100(프로그램 탭 층 표기와 같은 문법) */
+  .cstrip2.cn4 .cc.busy .nm .dg { color: var(--ax-color-brandText); }
+  .cstrip2.cn4 .cc.full .nm .dg { color: var(--ax-color-inverse); }
+  .cstrip2.cn4 .cn-tv { position: absolute; right: 10px; bottom: 6px; font: var(--ax-type-caption); font-size: 10px; font-style: normal; line-height: 1; color: var(--ax-color-muted); }   /* 261008 테스트 사번 무작위 시험값 표시 */
+  .cstrip2.cn4 .cc.full .cn-tv { color: var(--ax-color-inverse); opacity: 0.8; }
   .cstrip2.cn4 .st { margin: 2px 0 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
   .cstrip2.cn4 .sb { margin: 0; color: var(--ax-color-body); overflow: hidden; text-overflow: ellipsis; }
   .cstrip2.cn4 .cc.none .st { font: var(--ax-type-t7); color: var(--ax-color-muted); }

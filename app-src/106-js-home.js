@@ -183,6 +183,7 @@ var CN_HLV = ["", "여유", "보통", "붐빔", "거의 만석", "만석"];
 var CN_HCLS = ["", " ok", " pred", " busy", " jam", " full"];
 function cnGet() { var c = crowdGet(); return c && c.n && typeof c.n === "object" ? c.n : null; }
 function cnShow() { var n = cnGet(); return !(n && n.on === 0); }   /* 261008 (사용자 「시간 조건 해제 · 혼잡도 전부」) 날짜 조건 없음 · 언제나 보인다 · 서버 혼잡_표시 OFF(n.on 0)만 숨김 */
+function cnTest() { return typeof testEmp === "function" && testEmp() === true; }   /* 261008 테스트 사번 = 네 칸을 무작위 시험값으로(아래 cnRand) */
 function cnStaff() { return typeof staffBtn === "function" && staffBtn() === true; }
 function cnSub(k, x) {
   if (k === "h") return crowdHm(x.at) + " 기준";
@@ -192,21 +193,33 @@ function cnSub(k, x) {
   return r > 15 ? "15분 이상" : "약 " + r + "분";
 }
 /* 칸 하나 · { cls, st, sub, at } · 값 없음 = 「정보 없음」 */
-function cnCell(k) {
-  var n = cnGet(), x = n && n[k] && typeof n[k] === "object" ? n[k] : null;
+function cnCell(k, src) {
+  var n = src || cnGet(), x = n && n[k] && typeof n[k] === "object" ? n[k] : null;
   if (!x) return { cls: " none", st: "정보 없음", sub: "", at: 0 };
   if (k === "h") { var lv = Math.max(1, Math.min(5, Number(x.lv) || 1)); return { cls: CN_HCLS[lv], st: CN_HLV[lv], sub: cnSub(k, x), at: Number(x.at) || 0 }; }
   return { cls: x.lv === "jam" ? " jam" : x.lv === "mid" ? " pred" : " ok", st: x.lv === "jam" ? "혼잡" : x.lv === "mid" ? "보통" : "여유", sub: cnSub(k, x), at: Number(x.at) || 0 };
 }
+/* 261008 (사용자 「테스트 사번에서는 혼잡도를 랜덤으로 좀 보여 주면 좋겠어」) 테스트 사번(testEmp)만 네 칸을 서버 값 대신 무작위 시험값으로 · 서버에 아무것도 보내지 않는다 · 앱을 열 때마다 새로 뽑고 같은 1분 안에서는 그대로 · 일반 참가자 · 스태프는 서버 값 그대로 */
+var CN_RND = { b: -1, n: null };
+function cnRand() {
+  var now = Date.now(), b = Math.floor(now / 60000);
+  if (CN_RND.n && CN_RND.b === b) return CN_RND.n;
+  var rn = function (a, z) { return a + Math.floor(Math.random() * (z - a + 1)); }, pk = function () { return ["ok", "mid", "jam"][rn(0, 2)]; }, ag = function () { return now - rn(0, 3) * 60000; };
+  var q = function () { var lv = pk(); return { lv: lv, m: lv === "ok" ? rn(0, 2) : lv === "mid" ? rn(3, 10) : rn(11, 22), at: ag() }; };
+  var la = pk(), n = { on: 1, r: q(), p: q(), a: { lv: la, q: la === "ok" ? 0 : 1, m: la === "ok" ? 0 : la === "mid" ? rn(1, 3) : rn(4, 8), at: ag() }, h: { lv: rn(1, 5), at: ag() } };
+  CN_RND = { b: b, n: n };
+  return n;
+}
 function crowdStripHtml() {
-  if (!cnShow()) return "";
-  var n = cnGet() || {}, st = cnStaff(), dot = String(n.dot || ""), cells = CN_K.map(function (t) { var x = cnCell(t[0]); x.k = t[0]; x.nm = t[1]; return x; });
+  if (!cnShow() && !cnTest()) return "";
+  var n = cnGet() || {}, st = cnStaff(), tv = cnTest(), sv = tv ? cnRand() : null, dot = String(n.dot || ""), cells = CN_K.map(function (t) { var x = cnCell(t[0], sv); x.k = t[0]; x.nm = t[1]; return x; });
   var ats = cells.filter(function (x) { return x.at > 0; }).map(function (x) { return x.at; }), oldest = ats.length ? Math.min.apply(null, ats) : 0;
   var right = st ? '<span class="cn-st">눌러서 제보</span>' : oldest ? '<span class="cn-t">' + crowdHm(oldest) + " 기준</span>" : "";
   return '<div class="sect"><b>지금 현장</b>' + right + "</div>" +
     '<div class="cstrip2 cn4">' + cells.map(function (x) {
-      var inner = '<p class="nm">' + x.nm + '</p><p class="st">' + x.st + "</p>" + (x.sub ? '<p class="sb">' + esc(x.sub) + "</p>" : "") + (st && dot.indexOf(x.k) >= 0 ? '<i class="cn-dot" aria-hidden="true"></i>' : "");
-      return st ? '<button type="button" class="cc' + x.cls + '" onclick="cnSheet(\'' + x.k + '\')" aria-label="' + x.nm + " · " + x.st + (x.sub ? " · " + esc(x.sub) : "") + ' · 제보">' + inner + "</button>"
+      var fm = /^(\d+)F (.+)$/.exec(x.nm), al = fm ? fm[1] + "층 " + fm[2] : x.nm;   /* 261008 층 표기 = 점문자(flFloor · 읽는 이름 「1층」) · 글자는 그대로 */
+      var inner = '<p class="nm">' + (fm ? flFloor(fm[1]) : "") + '<span class="cn-nm">' + (fm ? fm[2] : x.nm) + '</span></p><p class="st">' + x.st + "</p>" + (x.sub ? '<p class="sb">' + esc(x.sub) + "</p>" : "") + (st && dot.indexOf(x.k) >= 0 ? '<i class="cn-dot" aria-hidden="true"></i>' : "") + (tv ? '<i class="cn-tv">시험값</i>' : "");
+      return st ? '<button type="button" class="cc' + x.cls + '" onclick="cnSheet(\'' + x.k + '\')" aria-label="' + al + " · " + x.st + (x.sub ? " · " + esc(x.sub) : "") + ' · 제보">' + inner + "</button>"
         : '<div class="cc' + x.cls + '">' + inner + "</div>";
     }).join("") + "</div>";
 }
