@@ -40,7 +40,7 @@ function checkMyState(base) {
     seen.fcfs = "got"; changed = true;
     if (!base) notice({ key: "fcfs:got", first: true, run: function () { fcfsGotOpen(); } });   /* v5.97 (사용자 261006 밤) 팝업 대신 수령 안내 시트 · 스탬프 연출 뒤 · 쌓인 행운권 상자보다 먼저(first) */
   }
-  /* 261008 럭키드로우 당첨 · 확인 전이면 이 앱을 연 동안 한 번(첫 동기화여도 · 무대가 기다린다) · 7등 = 기기당 한 번 안내 */
+  /* 261008 럭키드로우 당첨 · 확인 전이면 이 앱을 연 동안 한 번(첫 동기화여도) · 7등 = 기기당 한 번 안내 */
   var lw = luckyMy();
   if (lw && !lw.ack && !LUCKY.shown[lw.id]) { LUCKY.shown[lw.id] = 1; notice({ key: "lucky:" + lw.id, title: luckyTitle(lw), urgent: true, run: function () { luckyOpen(); } }); }
   var l7w = S.get("lk7", null);

@@ -382,8 +382,8 @@ function fcfsGotRow() { var ln = fcfsLeftN(); return fcfsReady(fcfsMy()) ? [-3, 
    서버 sync my.lucky = { id, rk, prize, no, ack, at } | null(S "lucky") · 소켓 개인 사건 lucky · 알림(태그 lucky:<id>)을 받으면 곧바로 sync
    당첨 시트 = 공통 바텀 시트 · 등수 · 경품(이름 · 사진 = PRIZES.draw) · 행운권 번호 · 큰 주 버튼 「확인」 → 서버 draw_ack(본인 세션) → 「확인 완료」 + 수령 안내
    확인 전이면 이 앱을 연 동안 한 번 저절로 뜬다(LUCKY.shown) · 홈 나의 일정 맨 위 한 줄(확인 전 = 주황 뱃지 + 점) · 확인 뒤에는 저절로 뜨지 않는다
-   7등 랜덤 굿즈(my.lk7 w) = 확인 단추 없이 안내만 한 번(noti_seen.lk7w) · 무대 확인 없음 · 행랑 발송
-   수령 안내 문구 = 지금 앱 문구(「당첨되면 경품은 따로 전달」) 그대로 · 바뀌면 LUCKY_GET 한 곳 */
+   7등 랜덤 굿즈(my.lk7 w) = 확인 단추 없이 안내만 한 번(noti_seen.lk7w) · 확인 없음 · 행랑 발송
+   시트 문구는 현장 여부와 무관(사용자 261008 · 무대 · 17F 문구 없음) · 수령 안내 문구 = 지금 앱 문구(「당첨되면 경품은 따로 전달」) 그대로 · 바뀌면 LUCKY_GET 한 곳 */
 var LUCKY = { shown: {} }, LUCKY_GET = "경품은 나중에 따로 전달해요";
 function luckyMy() { var x = S.get("lucky", null); return x && typeof x === "object" && x.id ? x : null; }
 function luckyPrize(x) { var hit = null; (PRIZES.draw.list || []).forEach(function (p) { if (!hit && x && x.rk && p.rk === x.rk) hit = p; }); return hit; }
@@ -395,8 +395,8 @@ function luckyBody(x) {
 }
 function luckySpec() {
   var x = luckyMy(); if (!x) return null;
-  if (x.ack) return { id: "lucky", title: "확인 완료", lead: "무대 화면에 표시됐어요" + (x.at ? " · " + esc(x.at) : "") + "<br>" + esc(LUCKY_GET), body: luckyBody(x), go: "sheetClose()", goLbl: "닫기" };
-  return { id: "lucky", title: "럭키드로우 당첨", lead: "지금 17F 무대 화면을 봐 주세요<br>확인을 누르면 무대 화면에 표시돼요", body: luckyBody(x), go: "luckyAck()", goLbl: "확인", goBusy: "확인하는 중" };
+  if (x.ack) return { id: "lucky", title: "확인 완료", lead: esc(LUCKY_GET), body: luckyBody(x), go: "sheetClose()", goLbl: "닫기" };
+  return { id: "lucky", title: "럭키드로우 당첨", lead: esc(LUCKY_GET), body: luckyBody(x), go: "luckyAck()", goLbl: "확인", goBusy: "확인하는 중" };
 }
 function luckyOpen(k) { var sp = k === "lk7" ? lk7WinSpec() : luckySpec(); if (!sp) return; if (k !== "lk7") LUCKY.shown[luckyMy().id] = 1; sheetOpen(sp); }   /* 당첨 시트 · 7등 안내가 여는 곳 하나 */
 function luckyAck() {
@@ -408,7 +408,7 @@ function luckyAck() {
   sheetBusy(true);
   beCall({ action: "draw_ack", emp: u.empId, id: x.id }, function (res) {
     if (res && res.ok) { sheetBusy(false); return done(res.at); }
-    if (res && res.reason === "notwin") { sheetFail({ t: "당첨 기록이 바뀌었어요", b: "무대 안내를 따라 주세요" }); beSync(); return; }
+    if (res && res.reason === "notwin") { sheetFail({ t: "당첨 기록이 바뀌었어요", b: "잠시 뒤 다시 확인해 주세요" }); beSync(); return; }
     if (res && res.reason === "ses") { sheetFail({ t: "비밀번호를 한 번 더 입력해 주세요", b: "본인 확인 뒤 다시 눌러 주세요" }); return; }
     sheetFail({ t: "확인되지 않았어요", b: "잠시 뒤 다시 눌러 주세요" });
   }, function () { sheetFail({ t: "서버에 연결되지 않았어요", b: "잠시 뒤 다시 눌러 주세요" }); });
