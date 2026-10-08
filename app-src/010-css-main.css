@@ -1287,6 +1287,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-who { display: flex; align-items: center; gap: var(--ax-space-16); }
   .axs-av.spk { position: relative; overflow: hidden; width: 72px; height: 72px; }   /* v5.20 17F 연사 · 사진이 오면 이니셜 위에 덮는다 */
   .axs-av.spk img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .axs-av.spk.logo { background: var(--ax-color-surface); color: transparent; box-shadow: inset 0 0 0 1px var(--ax-color-divider); }   /* v6.60 AWS · MS 로고 = 흰 바탕 + 얇은 테두리 · 글자는 숨김(로고가 안 뜨면 .logo 를 떼서 글자로) */
+  .axs-av.spk.logo img { object-fit: contain; }
   .axs-av { flex: none; width: 56px; height: 56px; border-radius: var(--ax-radius-16); background: var(--ax-color-ink); color: var(--ax-color-inverse); display: grid; place-items: center; font: var(--ax-type-t7); }
   .axs-kv { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: var(--ax-space-16); margin: 0; }
   .axs-kv dt { font: var(--ax-type-t6); color: var(--ax-color-muted); }

@@ -543,14 +543,16 @@ function progState(s) {
 function progBtn(lbl, on, cls, id, dis) {
   return '<button type="button" class="ax-button' + (cls ? " " + cls : "") + '"' + (id ? ' id="' + id + '"' : "") + (dis ? " disabled" : ' onclick="' + on + '"') + ">" + lbl + "</button>";
 }
-/* v5.20 (사용자 261003 후킹 권장 4) 17F 연사 사진 · assets/speaker/<세션 id>.webp(정사각 · 240px 이상) 파일만 넣으면 이니셜 자리에 사진이 덮인다
-   id = intro(CEO) · key(CTO) · road(디지털전략본부장) · l1(AWS) · l2(MS) · outro(CSO) · 파일이 없으면 img 를 지우고 이니셜 그대로(이 세션 동안 다시 묻지 않는다) */
+/* v5.20 (사용자 261003 후킹 권장 4) 17F 연사 칸(spk = 큰 둥근 사각) · id = intro · key · road · l1 · l2 · outro
+   v6.60 (사용자 261008) 그림 = SPK_IMG 에 있는 것만 · Opening Speech · Closing Speech = 연사 사진 · AWS · MS 강연 = 회사 로고(원형 그대로 · 흰 바탕 · 여백만 · .logo)
+   Keynote 둘 · 10F 강사 = 글자 그대로 · 그림이 안 뜨면 img 를 지우고 글자 그대로(이 세션 동안 다시 묻지 않는다) */
 function spkAv(w) { var n = String(w || "").split(" ")[0]; return n && n.length <= 4 ? n : "AX"; }   /* 261008 연사 칸 = 「이름 직함」(네임택 PDF) · 원 안 = 이름 */
-var SPK_DIR = "assets/speaker/", SPK_IDS = ["intro", "key", "road", "l1", "l2", "outro"], SPK_NA = {};
+var SPK_DIR = "assets/speaker/", SPK_IDS = ["intro", "key", "road", "l1", "l2", "outro"], SPK_NA = {},
+  SPK_IMG = { intro: "sp_intro.webp", outro: "sp_outro.webp", l1: "logo_aws.svg", l2: "logo_ms.svg" }, SPK_LOGO = { l1: 1, l2: 1 };
 function spkAvHtml(id, av) {
-  var sp = SPK_IDS.indexOf(id) >= 0, on = sp && !SPK_NA[id];
-  return '<span class="axs-av' + (sp ? " spk" : "") + '" aria-hidden="true">' + esc(av) +
-    (on ? '<img src="' + SPK_DIR + id + '.webp" alt="" width="240" height="240" loading="lazy" decoding="async" onerror="SPK_NA[\'' + id + '\']=1;this.remove()">' : "") + "</span>";
+  var sp = SPK_IDS.indexOf(id) >= 0, f = sp && SPK_IMG[id], on = !!f && !SPK_NA[id], lg = on && !!SPK_LOGO[id];
+  return '<span class="axs-av' + (sp ? " spk" : "") + (lg ? " logo" : "") + '" aria-hidden="true">' + esc(av) +
+    (on ? '<img src="' + SPK_DIR + f + '" alt="" width="240" height="240" loading="lazy" decoding="async" onerror="SPK_NA[\'' + id + '\']=1;this.parentNode.classList.remove(\'logo\');this.remove()">' : "") + "</span>";
 }
 /* v5.60 10F 세션 안내 · 소제목 「하는 일」(1F 구역 상세와 같은 ink 굵게 + 얇은 구분선) · 주황 점 글머리 · 이름이 있으면 굵게 + 설명 아래 줄
    「준비할 것」은 사전 신청자(sessMine)에게만 · 한 줄 소개는 SESS_INTRO_ON 일 때만 · 다 비면 "" (블록 자체를 그리지 않는다) */
