@@ -180,7 +180,7 @@ function crowdCell(k) {
    옛 「혼잡 제보」 3칸(1F 로비 · 엘리베이터 · 17F 입장 QR 수) · 「계단 이용」 연결 · 「풀리면 알림」은 진입만 뺐다(crowdCell · crowdWatchHtml 코드는 남김 · 되살리기 = hi_ax git v6.29) */
 var CN_K = [["r", "1F 룰렛"], ["p", "1F 포토부스"], ["a", "1F AX PLAY"], ["h", "17F 대강당"]];
 var CN_HLV = ["", "여유", "보통", "붐빔", "거의 만석", "만석"];
-var CN_HCLS = ["", " ok", " ok", " busy", " jam", " full"];   /* 261008 신호등 색 · 여유 · 보통 = 초록 · 붐빔 = 노랑 · 거의 만석 · 만석 = 빨강(만석은 굵게 + 점 둘레 한 겹) */
+var CN_HCLS = ["", " ok", " ok ok2", " busy", " jam", " full"];   /* 261008 신호등 색 · 여유 = 초록 빈 점 · 보통 = 초록 반쯤 · 붐빔 = 호박 반쯤 · 거의 만석 · 만석 = 빨강 꽉 찬 점(만석은 글자 굵게) · v6.48 색은 점에만 */
 function cnGet() { var c = crowdGet(); return c && c.n && typeof c.n === "object" ? c.n : null; }
 function cnShow() { var n = cnGet(); return !(n && n.on === 0); }   /* 261008 (사용자 「시간 조건 해제 · 혼잡도 전부」) 날짜 조건 없음 · 언제나 보인다 · 서버 혼잡_표시 OFF(n.on 0)만 숨김 */
 function cnTest() { return typeof testEmp === "function" && testEmp() === true; }   /* 261008 테스트 사번 = 네 칸을 무작위 시험값으로(아래 cnRand) */
@@ -218,7 +218,7 @@ function crowdStripHtml() {
   return '<div class="sect"><b>지금 현장</b>' + right + "</div>" +
     '<div class="cstrip2 cn4">' + cells.map(function (x) {
       var fm = /^(\d+)F (.+)$/.exec(x.nm), al = fm ? fm[1] + "층 " + fm[2] : x.nm;   /* 261008 층 표기 = 점문자(flFloor · 읽는 이름 「1층」) · 글자는 그대로 */
-      var inner = '<p class="nm">' + (fm ? flFloor(fm[1]) : "") + '<span class="cn-nm">' + (fm ? fm[2] : x.nm) + "</span></p>" + '<p class="st"><i class="lamp" aria-hidden="true"></i><span class="cn-w">' + x.st + "</span>" + (x.sub && x.k !== "h" ? '<span class="sb">' + esc(x.sub.replace(/^대기 /, "")) + "</span>" : "") + "</p>" + (st && dot.indexOf(x.k) >= 0 ? '<i class="cn-dot" aria-hidden="true"></i>' : "");
+      var one = x.k !== "h" && x.sub, inner = '<p class="nm">' + (fm ? flFloor(fm[1]) : "") + '<span class="cn-nm">' + (fm ? fm[2] : x.nm) + "</span></p>" + '<p class="st"><i class="lamp" aria-hidden="true"></i><span class="cn-w' + (one ? " cn-sr" : "") + '">' + x.st + "</span>" + (one ? '<span class="sb">' + esc(x.sub.replace(/^대기 /, "")) + "</span>" : "") + "</p>" + (st && dot.indexOf(x.k) >= 0 ? '<i class="cn-dot" aria-hidden="true"></i>' : "");   /* v6.48 2줄 = 점 + 한 마디: 1F 세 칸은 대기 시간만 보이고 상태 단어는 읽어 주기만(cn-sr) · 17F · 정보 없음은 상태 단어만 */
       return st ? '<button type="button" class="cc' + x.cls + '" onclick="cnSheet(\'' + x.k + '\')" aria-label="' + al + " · " + x.st + (x.sub ? " · " + esc(x.sub) : "") + ' · 제보">' + inner + "</button>"
         : '<div class="cc' + x.cls + '">' + inner + "</div>";
     }).join("") + "</div>";
