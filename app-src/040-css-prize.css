@@ -283,6 +283,10 @@
   .axs-kitok { display: flex; flex-direction: column; align-items: center; gap: var(--ax-space-8); text-align: center; }
   .axs-kitok .ok { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--ax-color-successSoft); color: var(--ax-color-success); }
   .axs-kitok .ok svg { width: 24px; height: 24px; }
+  .axs-kitget { margin: var(--ax-space-12) var(--ax-space-4) 0; padding: 14px 16px; border-radius: 14px; background: var(--ax-color-brandSoft); text-align: left; }   /* 261008 받는 방법 상자 */
+  .axs-kitget .h { margin: 0 0 4px; font-size: 13px; font-weight: 700; color: var(--ax-color-brandText, inherit); }
+  .axs-kitget .m { margin: 0; font-size: 16px; font-weight: 700; word-break: keep-all; }
+  .axs-kitget .s { margin: 4px 0 0; font-size: 14px; word-break: keep-all; }
   .axs-kitok h2, .axs-kitok h3, .axs-kitok p { margin: 0; word-break: keep-all; }
   .axs-kitkv { margin: 0; display: flex; flex-direction: column; }
   .axs-kitkv div { display: flex; justify-content: space-between; align-items: baseline; gap: var(--ax-space-12); padding: var(--ax-space-12) 0; border-top: 1px solid var(--ax-color-divider); }

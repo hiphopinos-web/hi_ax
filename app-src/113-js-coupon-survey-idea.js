@@ -174,7 +174,7 @@ var STAMP_SYNC = { warm: false };
    st hum = 라운지 사전 신청 등록 순이 수량(29)을 넘은 사람 · 사이즈 없이 가습기 안내(담담하게)
    문구 = 「기념품」 · 「사이즈」만(「사은품」 · 「선물」 · 가격 없음) · 알림 허용은 정한 직후 한 번(가치 순간 · pushAsk kit) */
 var KIT = { sel: "", edit: false, busy: false, msg: "", tbl: false, fo: {} };
-var KIT_SIZES = ["SS", "L", "2XL", "3XL"], KIT_ITEM = "플리스 재킷", KIT_NAME = "AX Festival 2026 플리스 재킷", KIT_GET = "10/26(월) 08:00부터 · 1F 주차장 체크인존", KIT_GET_ST = "따로 안내해 드려요", KIT_LOW = 5;
+var KIT_SIZES = ["SS", "L", "2XL", "3XL"], KIT_ITEM = "플리스 재킷", KIT_NAME = "AX Festival 2026 플리스 재킷", KIT_GET = "10/26(월) 08:00부터 · 1F 주차장 체크인존", KIT_GET_ST = "행사 전에 미리 전달해 드려요", KIT_LOW = 5;
 /* 261008 실측 사이즈표(사용자 261008 「이 제품 · 글리머 리플렉트 플리스 자켓」 · 제조사 상세 이미지의 표 · 단위 cm · 옛 추천 사이즈표(가슴둘레 · 키 · 몸무게 예시) 폐기) · [사이즈, 총장, 가슴너비, 어깨너비, 소매기장]
    제조사 표 = SS · S · M · L · LL(XL) · 3L(2XL) · 4L · 5L · 우리 사이즈 넷만 · 대응(사용자 261008 ① 「제조사 표기대로」 · 사용자가 보낸 전체 사이즈표) = SS = SS · L = L · 2XL = 제조사 3L · 3XL = 제조사 4L · 값 없는 줄 = 「확인 중」(지금은 없음) */
 /* 261008 고르는 기준 한 줄(사용자 261008 「고르는 기준 한 줄 신청 화면에 넣어줘」) · 옷 가슴 둘레(몸통폭 × 2) − 겉옷 여유 15~20cm = 맞는 몸 가슴둘레 · 국내 남성 호수 · 사이즈 칩 아래 · 문구는 kitSheet 안에 바로(검사 샌드박스가 KIT_* 변수를 골라 싣기 때문) */
@@ -486,10 +486,13 @@ function kitProdHtml(k) {
 }
 /* 신청 완료 · 신청번호 · 사이즈 · 변경 기한 · 수령 */
 function kitDoneHtml(k) {
+  /* 261008 받는 방법 상자(사용자 「중요한 정보이니 신청 완료 시 수령 방법 안내를 따로 주자」) · 체크 바로 아래 · 스태프 = 행사 전 미리 전달(사용자 결정) · 사전 신청 = 당일 체크인존 · 검사 샌드박스 때문에 함수로 빼지 않는다 */
+  var st0 = kitStaff(k), gm = st0 ? "행사 전에 미리 전달해 드려요" : "10/26(월) 08:00부터 · 1F 주차장 체크인존", gs = st0 ? "" : "내 QR을 보여 주면 바로 드려요";
+  var gb = '<section class="axs-kitget"><p class="h">받는 방법</p><p class="m">' + esc(gm) + "</p>" + (gs ? '<p class="s">' + esc(gs) + "</p>" : "") + "</section>";
   var chg = k.ph === "open" ? kitWhen(k.close) + "까지 변경 가능" : k.ph === "chg" ? kitWhen(k.chg) + "까지 · 남은 사이즈만" : "마감";
   return '<section class="axs-kitok"><span class="ok" aria-hidden="true">' + CHECK_SVG + "</span>" +
     '<h3 class="ax-type-t3">' + kitRo(k.sz) + (k.how === "auto" ? " 배정됐어요" : " 신청 완료") + "</h3>" +
-    (k.no ? '<p class="axs-kitno">신청번호 <b>' + esc(k.no) + "</b></p>" : "") + "</section>" + kitImgHtml(0) +
+    (k.no ? '<p class="axs-kitno">신청번호 <b>' + esc(k.no) + "</b></p>" : "") + "</section>" + gb + kitImgHtml(0) +
     (KIT_SIZES.indexOf(k.sz) >= 0 ? '<button type="button" class="axs-kitvl" onclick="kitView(\'' + k.sz + '\', 0)">착용 사진 보기</button>' : "") +   /* 261008 신청한 사이즈부터 보는 전체 화면(보기만) */
     '<section class="axs-kitsum">' + kitImgHtml(1) + '<div class="tx"><b>' + KIT_NAME + '</b><span>사이즈 ' + esc(kitLbl(k.sz)) + (kitStaff(k) ? "" : " · 에코백 포함") + "</span></div></section>" +
     kitKvHtml([["신청번호", k.no ? "<b>" + esc(k.no) + "</b>" : "확인 중"], ["사이즈", esc(kitLbl(k.sz))], ["변경", esc(chg)], ["수령", esc(kitGetTxt(k))]]) +
