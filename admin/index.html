@@ -1129,14 +1129,14 @@ var TABS = [
   { id:"qr", n:"QR", d:"현장에 붙는 QR 전부입니다. 무엇을 인쇄해 어디에 붙이고, 지금 찍히고 있는지 한곳에서 봅니다." },
   { id:"apply", n:"신청", d:"상담 승인 · 커피챗 선정 · 담당 명단을 처리합니다. 17F 강연은 자유 참석이라 신청이 없습니다(v4.26)." },
   { id:"att", n:"출석(17F · 10F)", d:"17F 강연의 QR 출석 인원 · 출석률 · 시간대별 입장 흐름입니다. 스탬프를 주는 곳은 17F 오후 AWS · MS 현장 입장 · 끝뿐이고 나머지 출석은 기록만 남습니다(261006). 부문 통계는 두지 않습니다." },
-  { id:"draw", n:"추첨", d:"Outro 현장 추첨을 이 콘솔에서 진행합니다. 대형 스크린의 추첨 화면에 명령을 보내고, 체크인 인원 · 당첨 기록 · 추첨 코드와 선착순 참여상 · 7등 랜덤 굿즈를 다룹니다." },
+  { id:"draw", n:"추첨", d:"Closing Speech 현장 추첨을 이 콘솔에서 진행합니다. 대형 스크린의 추첨 화면에 명령을 보내고, 체크인 인원 · 당첨 기록 · 추첨 코드와 선착순 참여상 · 7등 랜덤 굿즈를 다룹니다." },
   { id:"visit", n:"접속", d:"앱을 연 사람 수와 들어온 경로(홈 화면 앱 · 브라우저 · 카카오톡 등) · 시간대별 흐름 · 로그인 전 이탈입니다. 부문 통계는 두지 않습니다." },
   { id:"idea", n:"아이디어", d:"참가자가 낸 아이디어 한 줄을 봅니다. 18F 커피챗 선정 때 분야별로 묶어 봅니다." },
   { id:"survey", n:"설문", d:"오늘 한 판 설문 집계입니다. 답은 이름 없이 저장되어 사람 단위 조회는 없습니다." },
   { id:"typing", n:"게임", d:"AX 올림픽 점수 계수와 당일 잠금 · 게임별 전원 점수 · 1F 현장 타자왕전과 닉네임을 관리합니다." },
   { id:"race", n:"타자왕전", d:"1F 현장 단어 소나기 대전(1~4명)을 열고 시작하고 큰 화면에 띄웁니다. 선수 노트북은 좌석 링크로 이 판에만 참가합니다." },
   { id:"notice", n:"공지·푸시", d:"참가자에게 보낼 글을 쓰고, 받는 사람과 경로(앱 안 공지 · 웹 푸시)를 골라 미리 본 뒤 보냅니다. 테스트 발송과 보낸 기록도 여기 있습니다." },
-  { id:"sched", n:"예약", d:"정해진 시각에 서버가 공지 · Outro 안내를 스스로 냅니다. 관람 시간표(가상 데이터)와 혼잡 만료 알림 자리도 여기서 봅니다." },
+  { id:"sched", n:"예약", d:"정해진 시각에 서버가 공지 · Closing Speech 안내를 스스로 냅니다. 관람 시간표(가상 데이터)와 혼잡 만료 알림 자리도 여기서 봅니다." },
   { id:"push", n:"알림", d:"웹 푸시 구독 현황 · 발송 설정(잠금 · 정지 · 시간) · 그룹 명단 · 자동 알림까지 모든 발송 이력입니다. 보내기는 「공지·푸시」 메뉴에서 합니다. 부문 통계는 두지 않습니다." },
   { id:"adm", n:"권한", d:"콘솔과 앱 스태프 화면에 들어올 사번 명단, 공용 코드를 관리합니다. 슈퍼관리자에게만 보이고 머리의 「슈퍼관리자 · 권한」으로 엽니다." }   /* v4.85 (261001) */
 ];
@@ -1174,8 +1174,8 @@ function stSync(){
 /* 백엔드 SESS_META · SESS_CAP 과 같은 id */
 var SESS_NAME = {
   /* v4.26 (260924) 17F 네 프로그램은 전부 자유 참석 · 신청이 없다 · 이름은 옛 신청 기록 표시용으로만 남긴다 · 출석은 출석(17F) 메뉴 */
-  key:"17F 기조연설 (자유 참석)", road:"17F 내부 강연 (자유 참석)", l1:"17F AWS 강연 (자유 참석)", l2:"17F MS 강연 (자유 참석)",
-  fld:"세션 A · 영업·보상 현장", ta:"세션 B · 통계 현황 리포팅", tb:"세션 C · 외부자료 리서치", aws:"세션 D · 바이브 코딩 (AWS)", ms1:"세션 E · 1회차 13:30 (MS)", ms2:"세션 E · 2회차 15:00 (MS)",
+  key:"17F Keynote 09:40 (자유 참석)", road:"17F Keynote 10:30 (자유 참석)", l1:"17F AWS 강연 (자유 참석)", l2:"17F MS 강연 (자유 참석)",
+  fld:"세션 A · 영업·보상 현장", ta:"세션 B · 통계 현황", tb:"세션 C · 외부자료 리서치", aws:"세션 D · 바이브 코딩 실습", ms1:"세션 E · 1회차 13:30", ms2:"세션 E · 2회차 15:00",
   photo:"AI 포토부스", kring:"키링 DIY (260917 폐기)"
 };
 /* 상담 상태 · 시트 드롭다운과 같은 목록 */
@@ -1725,10 +1725,10 @@ var GUIDE={
   visit:[["접속자","그날 앱을 연 사람 수입니다. 로그인한 사람은 사번 하나로, 끝까지 로그인하지 않은 기기는 기기 하나를 한 명으로 셉니다."],["경로","홈 화면 앱 · 브라우저 · 카카오톡 · 네이버 · 인앱 기타입니다. 한 사람이 두 경로로 들어오면 두 줄에 모두 셉니다."],["이탈","앱을 열고 로그인하지 않은 기기 수입니다. 아이폰은 홈 화면 앱이 사파리와 로그인을 따로 쓰므로 홈 화면 앱 줄의 이탈을 봅니다."],["테스트","테스트 계정과 그 기기의 기록은 기본으로 빠집니다. 리허설이 끝나면 「테스트 기록 지우기」를 누릅니다."]],
   idea:[["목록","최신 아이디어가 위에 옵니다. 테스트 계정은 빠져 있고 「테스트 계정 포함」으로 볼 수 있습니다."],["분야별 묶음","18F 커피챗 선정 때 씁니다. 같은 분야에서 커피챗을 희망한 사람이 위에 옵니다."],["CSV","지금 걸러 보는 목록 그대로 내려받습니다."]],
   survey:[["집계","문항마다 선택 비율 · 점수 분포 · 한 줄 답을 봅니다."],["이름 없음","답은 사번 없이 저장됩니다. 사람 단위 조회는 없습니다."]],
-  typing:[["AX 올림픽 · 점수 계수","종목별 계수를 고치면 미리보기에 예시 기록의 점수가 바로 보입니다. <b>저장</b>하면 규칙판(rev)이 1 오르고 이미 낸 기록까지 전원 점수가 새 계수로 다시 계산됩니다."],["당일 잠금","리허설 재보정을 마친 뒤 10/26 아침에 <b>당일 잠금 켜기</b>를 누릅니다. 잠긴 동안에는 저장이 거부되고, 해제는 언제든 됩니다."],["게임별 통계","미니 게임 세 종목 전원 점수 · 최고 점수 중앙 · 만점 도달 · CSV 입니다. 행의 대표 기록을 누르면 점수 구성이 펼쳐집니다. 부문 통계는 두지 않습니다."],["O/X 문항","AX 퀴즈 문항별 정답률 · O 선택 비율 · 평균 시간입니다. 답이 틀린 문항은 체크한 뒤 <b>선택 문항 끄기</b>로 출제에서 뺍니다. 규칙 잠금과 별개라 당일에도 됩니다."],["타자왕전 · 닉네임","Outro 호명용 상위 5와 부적절한 닉네임 숨김·초기화입니다."]],
+  typing:[["AX 올림픽 · 점수 계수","종목별 계수를 고치면 미리보기에 예시 기록의 점수가 바로 보입니다. <b>저장</b>하면 규칙판(rev)이 1 오르고 이미 낸 기록까지 전원 점수가 새 계수로 다시 계산됩니다."],["당일 잠금","리허설 재보정을 마친 뒤 10/26 아침에 <b>당일 잠금 켜기</b>를 누릅니다. 잠긴 동안에는 저장이 거부되고, 해제는 언제든 됩니다."],["게임별 통계","미니 게임 세 종목 전원 점수 · 최고 점수 중앙 · 만점 도달 · CSV 입니다. 행의 대표 기록을 누르면 점수 구성이 펼쳐집니다. 부문 통계는 두지 않습니다."],["O/X 문항","AX 퀴즈 문항별 정답률 · O 선택 비율 · 평균 시간입니다. 답이 틀린 문항은 체크한 뒤 <b>선택 문항 끄기</b>로 출제에서 뺍니다. 규칙 잠금과 별개라 당일에도 됩니다."],["타자왕전 · 닉네임","Closing Speech 호명용 상위 5와 부적절한 닉네임 숨김·초기화입니다."]],
   race:[["준비","아침에 <b>좌석 링크</b>를 선수 노트북마다 한 번 엽니다. 관리코드는 필요 없고, 진행자가 연 판에만 참가됩니다."],["판 열기","좌석 수(1~4)를 고르고 <b>판 열기</b>를 누르면 선수 노트북에 이름 입력이 나옵니다. 한 명만 앉아도 <b>시작</b>할 수 있습니다."],["큰 화면","<b>큰 화면 열기</b>는 전체 화면 대전 화면입니다. 1명이면 카드 한 장과 오늘 1등, 2명이면 2분할, 3~4명이면 4분할입니다. 마우스를 움직이면 아래 오른쪽에 진행 버튼이 나옵니다(N 판 열기 · S 시작 · E 지금 끝내기 · R 결과와 시상)."],["기록","시간 제한은 없고 목숨을 다 잃으면 끝납니다. 모두 끝나면 결과가 「타자대전」 시트에 한 번 기록됩니다. <b>오늘 기록</b>에서 점수 순위와 CSV 를 봅니다. 판 길이는 설정 시트의 타자대전_목숨과 타자대전_상한초로 조절합니다."]],
   notice:[["① 내용","제목 · 본문을 넣습니다. 오른쪽 미리보기가 입력하는 대로 바뀝니다. 문구 프리셋 · 정정 프리셋 · 앱 공지 문구 버튼이 칸을 채웁니다."],["② 받는 사람","<b>전체</b> · <b>사람 고르기</b> · 신청자 묶음 · 저장한 그룹 중 하나를 고릅니다. 사람 고르기는 이름 · 부서 · 사번 일부로 찾아 칩으로 쌓고, 사번 여러 개를 붙여넣으면 칩으로 바뀝니다. 칩마다 푸시가 켜졌는지 보입니다."],["③ 경로","<b>앱 안 공지</b>는 모든 참가자의 앱 홈 카드 · 공지 목록, <b>웹 푸시</b>는 알림을 켠 기기의 잠금 화면, <b>둘 다</b>는 두 곳 모두입니다. 앱 안 공지는 사람을 고를 수 없어 받는 사람이 전체일 때만 됩니다."],["④ 보내기","보내기 전에 <b>테스트로 보내기</b>로 내 폰에서 먼저 봅니다. 보내기를 누르면 확인 창이 한 번 더 뜨고, 전체이거나 300명 이상이면 인원 숫자를 직접 넣습니다. 푸시가 막히면(정지 · 시간 밖 · 5분 안 같은 제목 · 하루 상한) 공지도 나가지 않습니다. 이미 나간 푸시는 회수되지 않습니다."],["중지 · 기록","송출 중인 앱 공지는 맨 위 줄에서 중지합니다. 푸시가 나간 건은 아래 보낸 기록에 남습니다."]],
-  sched:[["예약 만들기","종류 · 날짜 · 시각 · 제목을 넣고 <b>예약 만들기</b>를 누릅니다. 「Outro 10분 전」 · 「경품 추첨 시작」 버튼이 문구를 채웁니다(추첨 시각은 직접 넣습니다). <b>푸시도 보내기</b>를 켜면 그 시각에 푸시도 나갑니다(「경품 추첨 시작」은 행운권 보유자가 기본)."],["2분 전","실행 2분 전부터 모든 메뉴 위에 배너가 뜹니다. 진행이 밀리면 <b>+5분</b>, 하지 않을 거면 <b>취소</b>를 누릅니다."],["지금 실행","목록의 <b>지금 실행</b>은 시각을 기다리지 않고 바로 냅니다."],["관람 시간표","확정 전까지 <b>가상 데이터</b>입니다. 표를 고치고 저장할 수 있고, 발송 스위치는 표가 확정될 때까지 꺼 둡니다(켜면 관람 시간 푸시가 나갑니다)."]],
+  sched:[["예약 만들기","종류 · 날짜 · 시각 · 제목을 넣고 <b>예약 만들기</b>를 누릅니다. 「Closing Speech 10분 전」 · 「경품 추첨 시작」 버튼이 문구를 채웁니다(추첨 시각은 직접 넣습니다). <b>푸시도 보내기</b>를 켜면 그 시각에 푸시도 나갑니다(「경품 추첨 시작」은 행운권 보유자가 기본)."],["2분 전","실행 2분 전부터 모든 메뉴 위에 배너가 뜹니다. 진행이 밀리면 <b>+5분</b>, 하지 않을 거면 <b>취소</b>를 누릅니다."],["지금 실행","목록의 <b>지금 실행</b>은 시각을 기다리지 않고 바로 냅니다."],["관람 시간표","확정 전까지 <b>가상 데이터</b>입니다. 표를 고치고 저장할 수 있고, 발송 스위치는 표가 확정될 때까지 꺼 둡니다(켜면 관람 시간 푸시가 나갑니다)."]],
   push:[["보내기","공지 · 푸시 보내기와 테스트 발송은 <b>공지·푸시</b> 메뉴 한 곳에서 합니다."],["발송 설정","오발송이면 먼저 1단계 수동 발송 잠금, 자동 알림까지 문제면 2단계 전체 정지입니다. 보낼 수 있는 시간 · 날짜 · 상한도 여기서 바꿉니다."],["그룹","10F 세션 신청자처럼 앱이 모르는 명단을 올리면 공지·푸시 메뉴의 「저장한 그룹」으로 고를 수 있습니다."],["이력","자동 알림(커피챗 · AX 라운지 · 혼잡 해소)까지 모든 발송이 한 줄씩 남습니다(편집 불가)."]],
   adm:[["본인 확인","들어갈 때 슈퍼관리자 본인의 앱 PIN 4자리를 한 번 더 넣습니다. 30분 동안 쓰고, 새로 고침하거나 잠그면 다시 묻습니다."],["명단","콘솔 명단과 앱 스태프 명단은 따로입니다. 사번을 쉼표로 여러 명 넣을 수 있고, 이름은 계정 시트에서 찾습니다."],["처음 저장","명단을 처음 저장하는 순간부터 그 명단대로 들어옵니다. 저장 전에는 콘솔은 슈퍼관리자만, 앱은 코드만 맞으면 들어옵니다."],["빼기","빼는 즉시 그 사람의 로그인이 끊깁니다. 7초 안에 되돌리기로 다시 넣을 수 있습니다. 슈퍼관리자는 뺄 수 없습니다."],["공용 코드","새 코드를 두 번 넣어 바꿉니다. 바꾸면 그 코드를 쓰던 스태프 폰 · 셀프 노트북 · 추첨 화면 · 다른 콘솔이 새 코드를 다시 넣습니다."]],
   photo:[["호출","<b>다음 번호 호출</b>을 누르면 맨 앞 번호의 앱에 「지금 입장하세요」가 뜹니다."],["건너뛰기 · 완료","호출 후 10분 안에 오지 않으면 건너뛰기, 도착하면 완료입니다."]],
@@ -2827,7 +2827,7 @@ function attWipe(){
     onOk:function(){ call("att_wipe",{},function(r){ dlgForce(); if(r&&r.ok){ toast("테스트 출석 "+r.removed+"건 지움"); ATTV.data=null; ATTV.test=false; reload(["att"]); } else toast("실패: "+why(r)); },
       function(){ dlgForce(); toast("서버 응답 없음"); }); } });
 }
-var ATT_SHORT={ key:"기조", road:"내부", l1:"AWS", l2:"MS" };
+var ATT_SHORT={ key:"Keynote 09:40", road:"Keynote 10:30", l1:"AWS", l2:"MS" };   /* 261008 네임택 PDF 표기 */
 function attNew(d){ var p=(d&&d.progs)||[]; return !!(p.length&&("in" in p[0])); }
 /* 서버가 hallNow 에 더하는 정확한 현장 입장 수 필드 이름(관리자 응답 전용 · 이름이 바뀌면 여기 한 곳만 고친다) */
 var HALL_EXACT_KEY="x";
@@ -2916,8 +2916,8 @@ function viewAtt(){
       card("시간대별 입장 흐름",(d.bucket||10)+"분 단위 · 처음 출석한 시각 기준", flowT)+'</div>';
     h+=att10Card(d);
     h+=memo('<p><b>10F 실습 세션</b> · 끝 QR 은 게시하지 않습니다(261006). 옛 끝 QR 출석 기록만 남아 있고, 사전 신청 명단에 있는 사람의 기록이어도 스탬프는 없습니다. 명단 밖이거나 다른 세션 신청자는 안내만 봅니다. 출석률 = 명단 중 출석 ÷ 명단. 세션 E 1 · 2회차는 같은 세션으로 봅니다. 코드는 17F 와 따로이고(codes.json a10), 바꾸기는 통제 › 위험 구역입니다.</p>'+
-      '<p><b>QR</b> · 인쇄해 쓰는 것은 오후 AWS · MS 입장 QR · 끝 QR 4장입니다(기조연설 · 내부 강연 · 유튜브 송출 QR 은 게시하지 않음). 입장 = 시작 '+W.i[0]+'분 전 ~ 시작 '+W.i[1]+'분 뒤, 끝 = 끝 '+W.o[0]+'분 전 ~ 끝 '+W.o[1]+'분 뒤(설정 출석_입장창 · 출석_끝창). 시간은 서버가 다시 봅니다. 이 창은 인쇄된 QR 과 연동되어 잠겨 있고(확정 261005), 바꾸기는 설정 › 운영 설정에서 슈퍼관리자만 합니다.</p>'+
-      '<p><b>스탬프</b> · 스탬프 = 17F 오후 AWS · MS 현장 입장 · 끝만(입장 1개 + 끝 1개, 한쪽만 찍으면 1개 · 명단에 1/2). 그 밖의 출석 QR(기조연설 · 내부 강연 · 유튜브 송출 · 10F 끝)은 게시하지 않음. 서버는 기록만 남기고 스탬프는 주지 않습니다.</p>'+
+      '<p><b>QR</b> · 인쇄해 쓰는 것은 오후 AWS · MS 입장 QR · 끝 QR 4장입니다(오전 Keynote 2회 · 유튜브 송출 QR 은 게시하지 않음). 입장 = 시작 '+W.i[0]+'분 전 ~ 시작 '+W.i[1]+'분 뒤, 끝 = 끝 '+W.o[0]+'분 전 ~ 끝 '+W.o[1]+'분 뒤(설정 출석_입장창 · 출석_끝창). 시간은 서버가 다시 봅니다. 이 창은 인쇄된 QR 과 연동되어 잠겨 있고(확정 261005), 바꾸기는 설정 › 운영 설정에서 슈퍼관리자만 합니다.</p>'+
+      '<p><b>스탬프</b> · 스탬프 = 17F 오후 AWS · MS 현장 입장 · 끝만(입장 1개 + 끝 1개, 한쪽만 찍으면 1개 · 명단에 1/2). 그 밖의 출석 QR(오전 Keynote 2회 · 유튜브 송출 · 10F 끝)은 게시하지 않음. 서버는 기록만 남기고 스탬프는 주지 않습니다.</p>'+
       '<p><b>대강당</b> = 지금 강의의 현장 입장 ÷ 좌석(설정 대강당_좌석). 앱 홈 혼잡 칸과 같은 값이고 10명 단위로 보입니다. 송출 · 끝 QR 은 세지 않습니다. 송출은 송출_켬 에 든 강의만 받습니다.</p>'+
       '<p>부문별 집계는 두지 않습니다. 이 화면의 숫자에는 사번 · 이름이 없습니다.</p>');
     return h;
@@ -3124,7 +3124,7 @@ function finDrawCard(d){
     (need?'<div class="note warn mt12">행운권 추첨이 끝나지 않았습니다. 지금 진행하면 남은 행운권 당첨자가 제외되지 않습니다.</div>':'')+
     '<div class="fn-go"><button class="btn danger fill" onclick="finDrawAsk()"'+(ready&&!FINV.busy?"":" disabled")+'>'+(FINV.busy==="fin_draw"?'<span class="spin" style="border-color:rgba(255,255,255,.4);border-top-color:#fff"></span>추첨 중':"완주 경품 추첨 실행")+'</button>'+
     '<span class="cap">'+(d.ph!=="lock"?"대상을 먼저 확정합니다":d.stale?"대상을 다시 확정합니다":"한 번만 실행됩니다 · 결과는 앱 내 보상에 바로 반영")+'</span></div>';
-  return card("완주 경품 추첨","서버가 한 번에 뽑습니다 · Outro 끝(약 17:20)",body);
+  return card("완주 경품 추첨","서버가 한 번에 뽑습니다 · Closing Speech 끝(약 17:20)",body);
 }
 function finDrawAsk(){
   var d=ST.data.fin||{}, p=finPlan(d), lw=d.lucky||{}, need=(lw.wins||0)<(lw.need||10)&&(d.cfg||{}).dedupe;
@@ -3250,7 +3250,7 @@ function finResetAsk(){
 }
 function finMemo(){
   return memo('<p><b>대상</b> · '+'17:00 서버 시각까지 스탬프 6개인 사람입니다. 6개째의 서버 기록 시각이 17:00 이전이어야 하고, 17:00 뒤에 취소된 스탬프는 빠집니다. 체크인 조건은 없고 테스트 사번은 늘 빠집니다. 경계 이의는 「수동 포함」(사유 필수)으로 처리합니다.</p>'+
-    '<p><b>순서</b> · 17:00 마감 → 부스 실물을 세어 룰렛 잔여 저장 → 대상 확정 → Outro 행운권 10명 → 완주 경품 추첨(Outro 끝 약 17:20) → 대형 화면 발표 · 알림 → 17:40 배송 CSV → 10/27 09:00 교체 마감.</p>'+
+    '<p><b>순서</b> · 17:00 마감 → 부스 실물을 세어 룰렛 잔여 저장 → 대상 확정 → Closing Speech 행운권 10명 → 완주 경품 추첨(Closing Speech 끝 약 17:20) → 대형 화면 발표 · 알림 → 17:40 배송 CSV → 10/27 09:00 교체 마감.</p>'+
     '<p><b>추첨</b> · 서버가 추첨 순간 시드를 만들고 사번마다 해시 순위를 매깁니다. 가습기를 먼저 고정하고, 남는 자리는 룰렛 잔여 중 해시 순위로 고릅니다. 상품은 당첨자에게 무작위로 짝짓습니다. 대상이 상품보다 적으면 전원 받고 남은 상품은 보관입니다. 시드 · 풀 해시는 운영로그와 이 화면에 남고, 「재현 검증」이 같은 결과를 다시 계산합니다. 한 번만 실행됩니다.</p>'+
     '<p><b>행운권</b> · 무대 행운권 1~6등 당첨자는 완주 경품 추첨에서 뺍니다. 행운권 추첨이 끝나기 전에 실행하면 확인 칸을 체크해야 하고, 그때까지의 당첨자만 빠집니다.</p>'+
     '<p><b>발표</b> · 앱은 다음 동기화(30초 안)에 내 보상에 결과를 보여 줍니다. 대형 화면은 숫자만 보여 주고 「서버 추첨」이라고 적습니다. 알림은 그룹 「'+FIN_GROUP+'」(추첨할 때 서버가 만든다)으로 보내고, 잠금 화면 문구에 당첨 여부 · 이름을 쓰지 않습니다.</p>'+
@@ -3608,9 +3608,9 @@ function viewTypeNick(){
     '<div class="fld"><label for="selfWin">타자왕 마감</label><div class="row nw"><input class="in w-m" id="selfWin" value="'+esc((tr.win||[]).join(",").replace(/~/g,"-"))+'"><button class="btn" onclick="selfWinSave()">저장</button></div><span class="cap">운영 시간 · 끝 = 마감 · 예 09:00-17:00</span></div>'+   /* v5.03 결선 없음 · 17:00 마감(서버 키 타자_결선 그대로) */
     '<div class="fld fw"><label>노트북 주소</label><div class="row nw"><input class="in grow" readonly value="'+esc(selfLink())+'"><button class="btn" onclick="selfLinkCopy()">주소 복사</button></div></div></div>'+
     memo('<p>켜는 법 · ① 노트북 크롬에서 위 주소를 엽니다 ② 관리코드를 넣고 효과음(기본 켜짐)을 고른 뒤 「셀프 모드 켜기」 ③ 이후 화면은 참가자 전용입니다(새로 고침·재부팅해도 유지) ④ 끄기·효과음 = 화면 왼쪽 아래 「관리」 → 관리코드.</p>'+
-      '<p>참가자는 ① 노트북 화면의 QR 을 폰으로 찍고(게임 닉네임이 없으면 정한 뒤) ② 노트북에서 SPACE 로 시작해 ③ 떨어지는 단어를 입력합니다(사번 입력 없음). 시작하는 순간 1회로 셉니다(중간에 그만둬도 돌려주지 않음). 테스트 사번(310555)은 기록을 남기지 않습니다. 「타자왕 마감」은 운영 시간이고 끝 시각이 마감입니다(기본 09:00-17:00 · 결선 없음 · 1~3위는 Outro 시상).</p>'+
+      '<p>참가자는 ① 노트북 화면의 QR 을 폰으로 찍고(게임 닉네임이 없으면 정한 뒤) ② 노트북에서 SPACE 로 시작해 ③ 떨어지는 단어를 입력합니다(사번 입력 없음). 시작하는 순간 1회로 셉니다(중간에 그만둬도 돌려주지 않음). 테스트 사번(310555)은 기록을 남기지 않습니다. 「타자왕 마감」은 운영 시간이고 끝 시각이 마감입니다(기본 09:00-17:00 · 결선 없음 · 1~3위는 Closing Speech 시상).</p>'+
       ''));   /* v5.14 토너먼트(타자왕전 판) 안내는 지웠다 · 대전 · 결선 없음(261002) */
-  h+=card("1F 타자왕 상위 5","Outro 1~3위 시상 · 타자왕 운영 "+esc((tr.win||[]).join(" · ")),
+  h+=card("1F 타자왕 상위 5","Closing Speech 1~3위 시상 · 타자왕 운영 "+esc((tr.win||[]).join(" · ")),
     '<div class="wrap"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">점수</th><th class="tdr">정확도</th><th>기록 시각</th></tr>'+
     ((tr.top||[]).length?tr.top.map(function(r){ return '<tr><td class="n"><b>'+r.rank+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name)+'</td><td class="n">'+esc(r.emp)+'</td><td class="n tdr">'+Number(r.score||0).toLocaleString()+'점</td><td class="n tdr">'+r.acc+'%</td><td class="n cap">'+esc(short(r.ts))+'</td></tr>'; }).join(""):emptyRow(7,"아직 현장 기록이 없습니다."))+'</table></div>'+
     memo('<p>AX 단어 소나기 · 1F 현장 셀프 모드 · 1인 '+tries+'회 중 최고 점수 · 점수 높은 순(v5.12 · 단어 + 보너스 스테이지 + 목숨 보너스) · 동점은 정확도, 그다음 먼저 기록한 쪽.</p>'));
@@ -3692,12 +3692,12 @@ function viewOly(){
       
       '<p>리허설 뒤 게임별 통계의 최고 점수 중앙값을 보고 재보정한 다음, <b>10/26 당일 아침에 잠급니다.</b> 잠긴 동안에는 저장이 거부되고 해제만 됩니다.</p>');
   var h=card("점수 계수","규칙판 rev "+S.rev+" · 종목 상한 "+n0(S.cap)+" · 만점 "+n0(oev.length*S.cap),body,head);
-  h+=card("종합 상위 10","Outro 호명용 (1~3위) · "+onm+" 모두 한 판 이상 · 동점은 "+onm+"을 먼저 마친 쪽 · 명예 시상(경품 없음)",'<div class="wrap"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">총점</th><th>'+onm+' 완료 시각</th></tr>'+
+  h+=card("종합 상위 10","Closing Speech 호명용 (1~3위) · "+onm+" 모두 한 판 이상 · 동점은 "+onm+"을 먼저 마친 쪽 · 명예 시상(경품 없음)",'<div class="wrap"><table class="tb"><tr><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">총점</th><th>'+onm+' 완료 시각</th></tr>'+
     ((d.overall||[]).length?d.overall.map(function(r){ return '<tr><td class="n"><b>'+r.rank+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name)+'</td><td class="n">'+esc(r.emp)+'</td><td class="n tdr"><b>'+n0(r.total)+'점</b></td><td class="n cap">'+esc(short(r.doneAt))+'</td></tr>'; }).join(""):emptyRow(6,"아직 "+onm+"을 다 한 사람이 없습니다."))+'</table></div>');
   var per=d.perEvent||{}, prow=[];
   oev.forEach(function(g){ (per[g]||[]).forEach(function(r,i){ prow.push('<tr'+(i?'':' class="olytop"')+'><td>'+(i?'':'<b>'+esc(GST_NAME[g])+'</b>')+'</td><td class="n"><b>'+r.rank+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name)+'</td><td class="n">'+esc(r.emp)+'</td><td class="n tdr"><b>'+n0(r.score)+'점</b></td><td class="n">'+esc(r.key||"")+'</td></tr>'); });
     if(!(per[g]||[]).length) prow.push('<tr class="olytop"><td><b>'+esc(GST_NAME[g])+'</b></td><td colspan="6" class="cap">아직 기록이 없습니다</td></tr>'); });
-  h+=card("종목별 1~3위","Outro 호명용 · 동점은 먼저 달성한 쪽 · 기록 칸은 「테트리스 41줄」처럼 말할 대표 기록",'<div class="wrap"><table class="tb"><tr><th>종목</th><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">점수</th><th>대표 기록</th></tr>'+prow.join("")+'</table></div>');
+  h+=card("종목별 1~3위","Closing Speech 호명용 · 동점은 먼저 달성한 쪽 · 기록 칸은 「테트리스 41줄」처럼 말할 대표 기록",'<div class="wrap"><table class="tb"><tr><th>종목</th><th>순위</th><th>닉네임</th><th>이름</th><th>사번</th><th class="tdr">점수</th><th>대표 기록</th></tr>'+prow.join("")+'</table></div>');
   return h;
 }
 /* ── v4.11 O/X 퀴즈 문항 (ox_stats · ox_off) ──────────
@@ -4044,7 +4044,7 @@ function nsSend(){
 }
 /* 앱 공지(· 푸시)가 나갔으면 입력을 비운다(그 사이 입력을 바꿨으면 그대로 둔다) */
 function nsDone(t, b){ if(PF.t.trim()===t&&PF.b.trim()===b){ PF.t=""; PF.b=""; PF.pv=null; PF.sil=null; PF.long=false; } if(ST.tab==="notice") render(); }
-var NS_KN={ notice:"공지 + 푸시", outro:"Outro + 푸시", manual:"푸시", test:"테스트" };
+var NS_KN={ notice:"공지 + 푸시", outro:"Closing Speech + 푸시", manual:"푸시", test:"테스트" };
 function nsNoteHist(){
   var d=ST.data.nhist; if(!d||!d.ok||!(d.rows||[]).length) return "";
   return '<div class="wrap mb12" style="margin-bottom:12px"><table class="tb"><tr><th>시각</th><th>경로</th><th>내용</th><th>받는 사람</th><th>상태</th><th>보낸 사람</th></tr>'+(d.rows||[]).map(function(r){
@@ -4364,7 +4364,7 @@ function olyLock(on){
 }
 /* 앱 NOTICE_TEMPLATES 와 같은 목록 */
 var NOTICE_TPL=[
-  ["곧 오늘 한 판 설문","17:00 Outro 전에 앱 홈에서 오늘 한 판 설문(60초)에 참여해 주세요. 제출하면 스탬프 1개!"],
+  ["곧 오늘 한 판 설문","17:00 Closing Speech 전에 앱 홈에서 오늘 한 판 설문(60초)에 참여해 주세요. 제출하면 스탬프 1개!"],
   ["1F 전시, 지금 한산해요","6구역을 둘러보세요. 줄 없이 바로 볼 수 있어요."]
 ];
 function noticeSendGo(t,b,spec,raw){   /* v5.14 spec = 특정인 앱 공지(서버 2단계 · nto) · raw = 입력 그대로의 본문(입력 비우기 대조) */
@@ -4420,10 +4420,10 @@ function noticeStopC(id){
    2분 전 배너 = 모든 메뉴 위에 「17:00 경품 추첨 시작 · 1분 40초 뒤」 + [+5분] [취소] · 새 화면을 열지 않은 운영자도 본다.
    목록은 60초마다(소켓이 붙어 있으면 5분 · 서버가 알리면 곧바로) 새로 받는다. 옛 서버(sched_list 없음)는 한 줄 안내.
    실시간 연결(ops 방) = 서버가 ws 를 주면 콘솔이 스태프 토큰으로 붙는다 · 포토부스 줄이 바뀌면 포토부스 · 대시보드를 새로 받는다 · 예약이 바뀌면 목록을 새로 받는다. */
-var SCHK={ notice:"공지", outro:"Outro", crowd_notify:"혼잡 만료 알림", visit_slot:"관람 시간 알림", cchat_remind:"커피챗 10분 전", dap_remind:"AX 라운지 10분 전" };   /* v4.78 D1 AX 라운지 10분 전 = 서버가 승인된 상담 시간마다 잡는다 */   /* v4.77 커피챗 10분 전 = 서버가 매칭 회차마다 잡는다(매칭 · 변경 · 취소 때 다시 맞춘다) */
+var SCHK={ notice:"공지", outro:"Closing Speech", crowd_notify:"혼잡 만료 알림", visit_slot:"관람 시간 알림", cchat_remind:"커피챗 10분 전", dap_remind:"AX 라운지 10분 전" };   /* v4.78 D1 AX 라운지 10분 전 = 서버가 승인된 상담 시간마다 잡는다 */   /* v4.77 커피챗 10분 전 = 서버가 매칭 회차마다 잡는다(매칭 · 변경 · 취소 때 다시 맞춘다) */
 var SCH_TAG={ "대기":"warn","실행중":"pri","완료":"ok","취소":"off","지남":"bad","오류":"bad" };
 var SCH_PRE=[
-  { n:"Outro 10분 전", kind:"outro", t:"Outro 10분 전", b:"17F 대강당 · 17:00 시작", at:"16:50", tgt:"all" },   /* v4.78 A18 1F 에서 17F 까지 엘리베이터 대기 */
+  { n:"Closing Speech 10분 전", kind:"outro", t:"Closing Speech 10분 전", b:"17F 대강당 · 17:00 시작", at:"16:50", tgt:"all" },   /* v4.78 A18 1F 에서 17F 까지 엘리베이터 대기 */
   { n:"경품 추첨 시작", kind:"outro", t:"경품 추첨 시작", b:"17F 대강당", at:"", tgt:"tickets" }   /* v4.76 푸시 대상 기본 = 행운권 보유자 */
 ];
 var SCHP={ t:null, off:false, at:0 };
@@ -4447,7 +4447,7 @@ function viewSched(){
   /* v4.76 입력은 SC 에 둔다 · 목록을 60초마다 새로 받아 다시 그려도 치던 글자가 남는다(예전에는 지워졌다) */
   var pOk=!!pushSt(), pOn=pOk&&SC.push;
   var mk='<div class="row" style="gap:8px;flex-wrap:wrap;align-items:flex-end">'+
-    '<label class="fld">종류<select class="in" id="scK" onchange="SC.k=this.value"><option value="outro"'+(SC.k==="outro"?" selected":"")+'>Outro</option><option value="notice"'+(SC.k==="notice"?" selected":"")+'>공지</option></select></label>'+
+    '<label class="fld">종류<select class="in" id="scK" onchange="SC.k=this.value"><option value="outro"'+(SC.k==="outro"?" selected":"")+'>Closing Speech</option><option value="notice"'+(SC.k==="notice"?" selected":"")+'>공지</option></select></label>'+
     '<label class="fld">날짜<input class="in w-s" id="scD" value="'+esc(scDay())+'" placeholder="2026-10-26" oninput="SC.d=this.value"></label>'+
     '<label class="fld">시각<input class="in w-s" id="scT" placeholder="17:00" inputmode="numeric" value="'+esc(SC.hm)+'" oninput="SC.hm=this.value"></label></div>'+
     '<label class="fld mt12"><span>제목'+(pOn?' '+ccHtml("scti",SC.ti.length,"t"):'')+'</span><input class="in w-f" id="scTi" maxlength="40" placeholder="예: 경품 추첨 시작" value="'+esc(SC.ti)+'" oninput="pxIn(\'sc\',\'ti\',this.value)"></label>'+
@@ -4460,9 +4460,9 @@ function viewSched(){
   }
   mk+='<div class="row mt12">'+SCH_PRE.map(function(p,i){ return '<button class="btn sm ghost" onclick="schPre('+i+')">'+esc(p.n)+'</button>'; }).join("")+'<span style="flex:1"></span><button class="btn pri" onclick="schAdd()">예약 만들기</button></div>'+
     '<p class="cap mt8">그 시각에 서버가 앱 공지(LED 띠 · 홈 카드)를 냅니다. 2분 전부터 모든 메뉴 위에 배너가 뜨고 거기서 +5분 · 취소를 누를 수 있습니다. 3분 넘게 늦으면 보내지 않고 「지남」으로 남깁니다.</p>';
-  var mkH='<div class="grid g2">'+card("예약 만들기",pOk?"공지 · Outro · 푸시":"공지 · Outro",mk)+viewVslot(d.vslot)+'</div>';
+  var mkH='<div class="grid g2">'+card("예약 만들기",pOk?"공지 · Closing Speech · 푸시":"공지 · Closing Speech",mk)+viewVslot(d.vslot)+'</div>';
   h+=ezIn()?prepFold(mkH,"예약 만들기 · 관람 시간표","sched"):mkH;   /* 261007 당일 화면 = 예약 목록(지금 실행 · +5분 · 취소)만 앞에 */
-  h+=memo('<p><b>실행 장치</b> · 서버 1분 틱 + 예약한 시각의 일회성 트리거 + 5분 안전망. 서버가 잠시 멈췄다 살아나면 공지 · Outro 는 3분, 혼잡 만료 알림은 30분, 관람 시간 알림은 슬롯 시작까지만 늦게 실행하고 그 뒤는 「지남」으로 남깁니다(몰아서 보내지 않습니다).</p>'+
+  h+=memo('<p><b>실행 장치</b> · 서버 1분 틱 + 예약한 시각의 일회성 트리거 + 5분 안전망. 서버가 잠시 멈췄다 살아나면 공지 · Closing Speech 는 3분, 혼잡 만료 알림은 30분, 관람 시간 알림은 슬롯 시작까지만 늦게 실행하고 그 뒤는 「지남」으로 남깁니다(몰아서 보내지 않습니다).</p>'+
     '<p><b>혼잡 만료 알림</b>은 스태프가 혼잡을 제보하면 끝 시각으로 서버가 스스로 잡고, 재확인하면 미루고, 해소하면 취소합니다. 그때 「풀리면 알림」을 켠 사람에게 「제보가 끝났어요」 푸시가 갑니다(켠 사람이 없으면 결과에 「발송 없음」).</p>'+
     '<p><b>관람 시간 알림</b>은 관람 시간표의 발송 스위치를 켤 때만 슬롯마다 시작 10분 전으로 잡힙니다. 관람 시간 알림을 켜고 그 슬롯 층을 근무 층으로 고른 사람에게 푸시가 갑니다.</p>');
   return h;
@@ -5858,7 +5858,7 @@ function qrItems(){
   if(al&&al.ok&&al.code10) out.push({ id:"a10", grp:"att", name:"10F 실습 세션 · 끝 · 게시하지 않음", place:"게시하지 않음(261006) · 출석 기록만 · 스탬프 없음", time:"세션마다 끝 창", data:base+"#s="+al.code10, code:al.code10, file:"QR코드/4_강의장 출석/att10_*_out.png", st:"retired", today:qs.att10?qs.att10.today:null, note:qs.att10?"":(qs.ok?"서버 갱신 뒤 집계":""), last:qs.att10?qs.att10.last:"" });   /* v5.71 · qr_stats att10 = 17F att 와 따로 센다 */
   if(al&&al.ok&&al.rcode) out.push({ id:"a17r", grp:"att", name:"17F 출석 · 유튜브 송출 · 게시하지 않음", place:"게시하지 않음(261006) · 송출 화면 · 스탬프 없음", time:"송출 켠 강의 "+((al.ron||[]).length)+"개", data:base+"#s="+al.rcode, code:al.rcode, file:"QR코드/4_강의장 출석/att_*_yt.png", st:"retired", today:null });   /* v5.68 · 오늘 스캔은 현장과 합쳐 a17 줄에 */
   var dq=ST.data.dstat;   /* v4.79 추첨 체크인 · 오늘 스캔 대신 체크인 인원 */
-  if(dq&&dq.ok&&dq.code) out.push({ id:"d17", grp:"draw", name:"Outro 경품 추첨 체크인", place:"17F 대강당 입구", time:String(dq.win||"").replace("-"," ~ ")+(dq.day?"":" · 매일(시험)"), data:base+"#s="+dq.code, code:dq.code, file:qrFile("d17"), st:"on", today:dq.in||0, note:"체크인 누적" });
+  if(dq&&dq.ok&&dq.code) out.push({ id:"d17", grp:"draw", name:"Closing Speech 경품 추첨 체크인", place:"17F 대강당 입구", time:String(dq.win||"").replace("-"," ~ ")+(dq.day?"":" · 매일(시험)"), data:base+"#s="+dq.code, code:dq.code, file:qrFile("d17"), st:"on", today:dq.in||0, note:"체크인 누적" });
   ((ST.data.stair||{}).rows||[]).forEach(function(r){ var id=qrStId(r.fl,r.r), x=byId[id]||{};
     out.push({ id:id, grp:"stair", name:r.name, place:r.fl+"F 비상계단 "+r.r+" 방화문 앞", data:base+"#s="+r.code+"&fl="+r.fl+"&r="+r.r, code:r.code, file:qrFile(id), st:r.on?"on":"off", today:x.today==null?null:x.today, n:x.n, mis:x.mis, last:x.last||"" }); });
   if(QR_OLD_ON) out.push({ id:"roulette", grp:"sign", name:"룰렛 데스크 안내판", place:"1F 룰렛 데스크", data:base, file:qrFile("roulette"), st:"fixed", today:null, note:"앱 링크 QR · 적립 QR 아님" });
@@ -5930,7 +5930,7 @@ function qvItems(){
   if(al&&al.ok&&al.code) (al.progs||[]).forEach(function(p){   /* v5.68 옛 강연별 4장(입장 · 끝 구분 없음) · 서버가 창으로 고른다 · 보관 */
     out.push({ id:"att_"+p.id, grp:"keep", small:true, label:p.n, sub:"17F 출석 · "+(QV_LEC_SUB[p.id]||(p.s+"~"+p.e)), data:B+"#s="+al.code+"&p="+p.id, why:"옛 강연별 QR(입장 · 끝 구분 없음) · 16장으로 대신" }); });
   boothRows().forEach(function(r){ if(QV_KEEP[r.id]) out.push({ id:r.id, grp:"keep", label:QV_KEEP[r.id][0], sub:QV_KEEP[r.id][1], data:B+"#s="+r.code, why:r.id==="p2"?"스태프 인증용 · 게시하지 않음":"부스 적립 QR · 쓰지 않음(보관)", off:!r.on }); });
-  if(dq&&dq.ok&&dq.code) out.push({ id:"d17", grp:"keep", label:"Outro 경품 추첨", sub:"QR을 찍으면 추첨 체크인", note:"16:40부터 17:25까지 · 1인 1회", acc:"17F", data:B+"#s="+dq.code, why:"추첨 화면이 띄움 · 인쇄하지 않음", draw:true });
+  if(dq&&dq.ok&&dq.code) out.push({ id:"d17", grp:"keep", label:"Closing Speech 경품 추첨", sub:"QR을 찍으면 추첨 체크인", note:"16:40부터 17:25까지 · 1인 1회", acc:"17F", data:B+"#s="+dq.code, why:"추첨 화면이 띄움 · 인쇄하지 않음", draw:true });
   out.push({ id:"roulette", grp:"keep", label:"룰렛", sub:"스탬프 3개 · 앱 룰렛 쿠폰의 QR 제시", data:B, why:"앱 링크 · 쓰지 않음(보관)" });
   out.push({ id:"photo", grp:"keep", label:"AI 포토부스", sub:"앱에서 대기 번호 받기", data:B, why:"앱 링크 · 쓰지 않음(보관)" });
   return out;
@@ -6008,10 +6008,10 @@ function viewQrImg(){
   h+=card("4 · 강의장 출석 · 17F 오후 AWS · MS","스탬프를 주는 QR = 입장 · 끝 "+lec.length+"장(PPT) · "+esc(attWinTxt(al0)),
     lec.length?grid(lec):'<div class="empty">17F 출석 코드(att_list)를 받는 중입니다.</div>',
     '<button class="btn sm pri" onclick="qvZipLec()"'+(lec.length?'':' disabled')+'>'+lec.length+'장 ZIP</button>');   /* 261006 현장 4장만 · 옛 12장 · 10F 6장은 아래 접힘 */
-  h+='<details class="qv-sec"><summary>게시하지 않음(261006) · 보관 QR '+keep.length+'장 (기조연설 · 내부 강연 · 유튜브 송출 · 10F 끝 · 17F 입구 고르기 · 부스 · 추첨 · 안내판)</summary>'+grid(keep)+'</details>';
+  h+='<details class="qv-sec"><summary>게시하지 않음(261006) · 보관 QR '+keep.length+'장 (오전 Keynote 2회 · 유튜브 송출 · 10F 끝 · 17F 입구 고르기 · 부스 · 추첨 · 안내판)</summary>'+grid(keep)+'</details>';
   h+=memo('<p>그림은 이 화면이 서버 코드로 바로 그립니다. 그림 파일은 공개 저장소에 올리지 않습니다(코드가 공개되면 현장에 오지 않고도 적립됩니다). 내려받은 파일도 공유 드라이브 · 메신저에 올리지 않습니다.</p>'+
     '<p>규칙은 <code>QR코드/qr_mother.py</code> 와 같습니다: 일반 QR · 오류 정정 Q · 흰 바탕 · 검정 정사각 · 여백 4칸. 내려받기는 '+QV_PX+'px 기준(실제 폭은 모듈 크기에 맞춰 2,000px 남짓)입니다. 같은 그림이 <code>QR코드/</code> 의 분류 폴더(1_앱 · 2_아이디어 한줄 · 3_계단실 · 4_강의장 출석)에 있습니다.</p>'+
-    '<p>강의장 출석 QR 은 출석 코드(a17)에 강의 id(l1 AWS · l2 MS)와 구분(k=in 입장 · out 끝)을 붙인 4장만 씁니다(스탬프 = 이 4장). 라벨 문구는 <code>QR코드/qr_variants.json</code> 그대로이고, 현장 코드를 바꾸면 4장을 다시 받습니다. 기조연설 · 내부 강연 · 유튜브 송출(a17r) · 10F 끝(a10) QR 은 게시하지 않아(261006) 접힘에만 두었고 인쇄하지 않습니다. 추첨 체크인 QR(d17)은 추첨 화면이 직접 띄웁니다.</p>');
+    '<p>강의장 출석 QR 은 출석 코드(a17)에 강의 id(l1 AWS · l2 MS)와 구분(k=in 입장 · out 끝)을 붙인 4장만 씁니다(스탬프 = 이 4장). 라벨 문구는 <code>QR코드/qr_variants.json</code> 그대로이고, 현장 코드를 바꾸면 4장을 다시 받습니다. 오전 Keynote 2회 · 유튜브 송출(a17r) · 10F 끝(a10) QR 은 게시하지 않아(261006) 접힘에만 두었고 인쇄하지 않습니다. 추첨 체크인 QR(d17)은 추첨 화면이 직접 띄웁니다.</p>');
   return h;
 }
 function viewQr(){
@@ -6142,7 +6142,7 @@ var NAV=[
   { id:"f_ck", m:"ev", g:"현장 처리", n:"체크인존", r:"1F 체크인존 창구 A~D 번호표 · 대기 · 다음 번호 부르기입니다.", parts:[P("ck","","","viewCk")] },
   { id:"f_crowd", m:"ev", g:"현장 처리", n:"지금 현장", r:"참가자 홈 「지금 현장」 혼잡 값 · 대리 제보 · 리허설 보정입니다.", parts:[P("crowd","","","viewCrowdTab")] },
   { id:"f_ros", m:"ev", g:"현장 처리", n:"프로그램 명단", r:"프로그램별 참가자 명단과 입장 · 노쇼 표시입니다.", parts:[P("apply","roster")] },
-  { id:"e_draw", m:"ev", g:"추첨 · 경품", n:"럭키드로우 · 선착순 · 7등", el:"draw", r:"Outro 무대 진행 · 선착순 참여상 지급 · 7등 랜덤 굿즈입니다.", parts:[P("draw","run","진행"),P("draw","stat","현황"),P("draw","set","설정"),P("draw","fcfs","선착순 참여상"),P("draw","lk7","7등 랜덤 굿즈"),P("draw","fin","완주 경품 추첨",null,{ hide:function(){ return !(FIN_LEGACY_SHOW&&finOn()); } })] },
+  { id:"e_draw", m:"ev", g:"추첨 · 경품", n:"럭키드로우 · 선착순 · 7등", el:"draw", r:"Closing Speech 무대 진행 · 선착순 참여상 지급 · 7등 랜덤 굿즈입니다.", parts:[P("draw","run","진행"),P("draw","stat","현황"),P("draw","set","설정"),P("draw","fcfs","선착순 참여상"),P("draw","lk7","7등 랜덤 굿즈"),P("draw","fin","완주 경품 추첨",null,{ hide:function(){ return !(FIN_LEGACY_SHOW&&finOn()); } })] },
   { id:"e_inv", m:"ev", g:"추첨 · 경품", n:"경품 · 재고", el:"inv", r:"룰렛 · 체크인 · 선착순 경품의 남은 수입니다.", parts:[P("inv","","","viewInv")] },
   { id:"e_roul", m:"ev", g:"추첨 · 경품", n:"룰렛", el:"roul", r:"룰렛 경품이 떨어지면 앱에 「모두 소진」을 켭니다.", parts:[P("stamp","ops","","viewElEmpty")] },
   { id:"e_idea", m:"ev", g:"추첨 · 경품", n:"아이디어왕", el:"ideak", r:"아이디어 한 줄 시상 후보를 고릅니다.", parts:[P("ideak","","","viewIdeak")] },
@@ -6344,7 +6344,7 @@ function elSt(k){
   else if(k==="draw"){ var dr=ST.data.draw||ST.data.dstat||{}, fn=ST.data.fin||{};
     o.p=!dr.ok?["열어 보면 표시","off"]:dr.closed?["체크인 마감","off"]:dr.code?["체크인 받는 중","ok"]:["코드 없음","warn"];
     o.nums=[["추첨 체크인",dr.ok?(dr.in||0)+"명":"-"],["통 안의 공",dr.ok?(dr.balls||0)+"개":"-"],["완주 경품 추첨",fn.ok?(FIN_PH[fn.ph]||["-"])[0]:"-"]];
-    o.m=dr.ok?"체크인 "+(dr.in||0)+" · 공 "+(dr.balls||0):"Outro 추첨"; }
+    o.m=dr.ok?"체크인 "+(dr.in||0)+" · 공 "+(dr.balls||0):"Closing Speech 추첨"; }
   else if(k==="roul"){ var sp=(ST.data.stamp||{}).rows||[], el3=sp.filter(function(r){ return r.n>=3; }).length, used=sp.filter(function(r){ return r.roulette; }).length, out=!!sy.rouletteOut;
     o.p=out?["소진 안내 켜짐","warn"]:["운영 중","ok"];
     o.nums=[["자격",el3+"명"],["사용",used+"명"],["남음",Math.max(0,el3-used)+"명"]];
@@ -6396,7 +6396,7 @@ function hvCtl(k){
       '<p class="cap mt8">켜고 끄는 버튼은 아래 세부 작업에 있습니다. 문항 끄기는 당일 잠금과 따로 됩니다.</p>';
   } else if(k==="type"){
     b+='<div class="row"><button class="btn" onclick="navSel(\'e_type\',0)">도전 횟수 · 운영 시간 · 닉네임 숨김</button></div>'+
-      '<p class="cap mt8">1F 셀프 노트북 기록 중 점수 높은 1~3위를 Outro 에서 시상합니다(17:00 마감).</p>';
+      '<p class="cap mt8">1F 셀프 노트북 기록 중 점수 높은 1~3위를 Closing Speech 에서 시상합니다(17:00 마감).</p>';
   } else if(k==="draw"){
     var dr=ST.data.draw||{};
     b+='<div class="row"><button class="btn pri" onclick="navSel(\'e_draw\',0)">원격 진행</button>'+(dr.ok&&("closed" in dr)?'<button class="btn'+(dr.closed?'':' danger')+'" onclick="drawCloseSet('+(dr.closed?0:1)+')">'+(dr.closed?"체크인 다시 열기":"체크인 마감")+'</button>':'')+'<button class="btn" onclick="navSel(\'e_draw\',3)">선착순 참여상</button><button class="btn" onclick="navSel(\'e_draw\',4)">7등 랜덤 굿즈</button></div>'+
@@ -7029,7 +7029,7 @@ GUIDE.e_app=GUIDE.e_game=GUIDE.e_type=GUIDE.e_draw=GUIDE.e_roul=GUIDE.e_sign=GUI
 GUIDE.s_danger=[["등급","L1 = 되돌리기 알림 · L2 = 대상 · 인원 확인 창 · L3 = 슈퍼관리자 PIN → 미리 세기 → 확인 문구 → 결과 창(책갈피 · 되돌리기 명령)입니다."],["접힘","모든 줄이 접혀 있습니다. 눌러야 버튼이 보입니다."],["행사일","10/26 에는 전체 초기화를 열지 않습니다. 서버도 받지 않습니다."]];
 GUIDE.stamp=[["사람 찾기","왼쪽 칸에 사번이나 이름을 넣고 한 사람을 고릅니다."],["8칸 확인","획득한 칸은 네이비, 획득 경로(현장 QR · 담당자 부여 · 앱 자동)가 칸 안에 보입니다. 프로그램 참여(06)는 2개로 세고(×2) 17F 오후 AWS · MS 강연 입장 · 끝으로만 적립됩니다. 한쪽만 찍었으면 「1/2」입니다."],["부여","담당자 부여는 AX PLAY(04) · 프로그램 참여(06 · 2개) · 계단(07)입니다(서버 grantIds). 최초 로그인 · AX 퀴즈 · 미니 게임 · 아이디어 · 설문은 앱 안의 행동이라 부여하지 않습니다."],["취소","취소 범위는 서버 설정 「스탬프취소_범위」가 정합니다. 확인 창에서 보상 변화를 먼저 보여 주고, 룰렛을 이미 돌렸거나 발급된 행운권이 줄어드는 취소는 서버가 거부합니다."],["되돌리기","처리 직후 알림의 <b>되돌리기</b>로 바로 원래대로 돌릴 수 있습니다. 모든 부여 · 취소는 참여 기록에 행으로 남습니다(지우지 않음)."]];
 GUIDE.typing=[["게임별 통계","미니 게임 세 종목(AX 팡 · ME to WE 점프 · 테트리스) 전원 점수 · 최고 점수 중앙 · 만점 도달 · CSV 입니다. AX 퀴즈는 한 판 완주만 보고 순위가 없어 카드가 없습니다."],["재보정","1,000점에서 크게 벗어난 종목은 행사 › AX 퀴즈·게임 › 점수 계수에서 고칩니다."]];   /* v5.14 현재 기획으로 다시 씀(옛 다섯 종목 · O/X 문항 · 타자왕전 안내 삭제) */
-GUIDE.e_type=[["1F 셀프","1F 노트북에서 참가자가 ① 화면의 QR 을 폰으로 찍고 ② SPACE 로 시작해 ③ 떨어지는 단어를 입력하며 도전합니다. 도전 횟수와 운영 시간(끝 = 17:00 마감)을 바꿉니다."],["상위 5","점수 높은 순입니다. Outro 에서 1~3위를 시상합니다."],["화면","부스 세로 TV · 가로 TV 순환 · 셀프 노트북 주소입니다."]];
+GUIDE.e_type=[["1F 셀프","1F 노트북에서 참가자가 ① 화면의 QR 을 폰으로 찍고 ② SPACE 로 시작해 ③ 떨어지는 단어를 입력하며 도전합니다. 도전 횟수와 운영 시간(끝 = 17:00 마감)을 바꿉니다."],["상위 5","점수 높은 순입니다. Closing Speech 에서 1~3위를 시상합니다."],["화면","부스 세로 TV · 가로 TV 순환 · 셀프 노트북 주소입니다."]];
 /* ══════════════════ v5.72 (사용자 결정 261005 「권장대로」) 사람 › 10F 사전 신청 명단 ══════════════════
  * 명단(사번 · 세션, 엑셀 .xlsx · CSV 또는 붙여넣기)을 받아 서버가 시트 「강의신청」(10F 끝 QR 자격)과 「키트명단」(체크인 존 키트)에 한 번에 쓴다.
  * 서버 명세 = 디자인 시안/10F 명단 넣기/서버_명세.md · 액션 pre10_state · pre10_preview · pre10_apply · pre10_undo(모두 슈퍼관리자 + 본인 확인 sp)
@@ -7934,12 +7934,12 @@ function outroSteps(){
   var ik=ST.data.ik, ok=ik&&ik.ok, cut=ok?ik.cut:"", N=[1,2,3].map(ikNames), tr=ST.data.tres||{}, top=tr.top||[];
   var idea="아이디어왕 시상입니다. "+ikHour(cut)+"까지 접수된 아이디어 중 1등 "+(N[0].join(", ")||"○○○님")+", 2등 "+(N[1].join(", ")||"○○○님")+", 3등 "+(N[2].join(", ")||"○○○님")+"입니다. 상품은 AI 구독권이고 따로 전달해 드립니다.";
   var typ="1F 타자왕 시상입니다. 1위 "+(top[0]?(top[0].nick||"○○○")+"님":"○○○님")+", 2위 "+(top[1]?(top[1].nick||"○○○")+"님":"○○○님")+", 3위 "+(top[2]?(top[2].nick||"○○○")+"님":"○○○님")+" 앞으로 나와 주세요.";
-  var L=[["마무리 연설","오늘 AX Festival 2026 을 마무리하는 말씀을 듣겠습니다."],["DAP 시상","DAP 우수 성과자 시상을 진행하겠습니다."],["아이디어왕 시상",idea],["1F 타자왕 시상",typ],["행운권 현장 추첨 · 1~6등 10명",lkMc()]];
+  var L=[["Closing Speech","오늘 AX Festival 2026 을 마무리하는 말씀을 듣겠습니다."],["DAP 시상","DAP 우수 성과자 시상을 진행하겠습니다."],["아이디어왕 시상",idea],["1F 타자왕 시상",typ],["행운권 현장 추첨 · 1~6등 10명",lkMc()]];
   return L;
 }
 function dcOutroCard(){
   var L=outroSteps(), ik=ST.data.ik;
-  return card("Outro 순서(안) · 사회자 멘트","17:00 · 이름은 이 화면에만 · 사회자가 읽습니다",'<ol class="pz-outro">'+L.map(function(x){ return '<li><b>'+esc(x[0])+'</b><p class="dc-mc">'+esc(x[1])+'</p></li>'; }).join("")+'</ol>'+
+  return card("Closing Speech 순서(안) · 사회자 멘트","17:00 · 이름은 이 화면에만 · 사회자가 읽습니다",'<ol class="pz-outro">'+L.map(function(x){ return '<li><b>'+esc(x[0])+'</b><p class="dc-mc">'+esc(x[1])+'</p></li>'; }).join("")+'</ol>'+
     (ik&&ik.ok?'':'<p class="cap mt8">아이디어왕 선정은 행사 › 아이디어왕에서 합니다'+(ik&&hvUnknown(ik)?"(서버 갱신 뒤)":"")+'.</p>'));
 }
 (function(){ var _db=dcBody; dcBody=function(d){ var h=_db(d); return DRAW_TALK_SHOW&&("cmd" in (d||{}))?h+dcOutroCard():h; }; })();   /* 261007 멘트 숨김(DRAW_TALK_SHOW) */
@@ -7952,7 +7952,7 @@ function drawSetX(d){
   var a=card("행운권 참석조건",v==null?"서버 갱신 뒤":"지금 "+(off?"OFF":"ON"),
     '<div class="row">'+(v==null?tag("서버 갱신 뒤","off"):off?tag("OFF · 번호 전체가 풀","pri"):tag("ON · 17F 입구 체크인한 사람만","warn"))+cfgBtn("행운권_참석조건")+'</div>'+
     '<p class="cap mt8">OFF = 모든 행운권 번호가 무대 추첨 풀입니다(당첨자 발표만 · 경품은 나중에 전달). ON = 17F 입구 추첨 QR 로 체크인한 사람의 번호만 풀입니다. 바꾸면 추첨 화면이 다음 풀부터 따릅니다.</p>');
-  var o=card("Outro 순서(안)","무대 순서",'<ol class="pz-outro sm">'+outroSteps().map(function(x){ return '<li><b>'+esc(x[0])+'</b></li>'; }).join("")+'</ol>');
+  var o=card("Closing Speech 순서(안)","무대 순서",'<ol class="pz-outro sm">'+outroSteps().map(function(x){ return '<li><b>'+esc(x[0])+'</b></li>'; }).join("")+'</ol>');
   return '<div class="grid g2">'+a+o+'</div>';
 }
 
@@ -8058,7 +8058,7 @@ HV_VIEW.viewIdeak=function(){ return viewIdeak(); };
 (function(){ var _hc=hvCtl; hvCtl=function(k){ if(k!=="ideak") return _hc(k);
   return '<div class="row"><span class="cap">아이디어 마감 <b class="n">'+esc(cfgVal("아이디어_마감")==null?"서버 갱신 뒤":cfgVal("아이디어_마감")||"없음")+'</b></span>'+cfgBtn("아이디어_마감","마감 바꾸기")+'</div>'+
     '<div class="row mt12"><span class="cap">사전 오픈 <b>'+esc(cfgVal("아이디어_사전오픈")==null?"-":cfgVal("아이디어_사전오픈"))+'</b> · 마감 뒤 제출 <b>'+esc(cfgVal("아이디어_마감후")==null?"-":cfgVal("아이디어_마감후"))+'</b></span>'+cfgBtn("아이디어_사전오픈","사전 오픈")+cfgBtn("아이디어_마감후","마감 뒤 제출")+'</div>'; }; })();
-(function(){ var _hs=hvScrHtml; hvScrHtml=function(k){ if(k!=="ideak") return _hs(k); return '<p class="cap">띄우는 화면이 없습니다. Outro 발표는 사회자가 「추첨 › 진행」 아래 멘트로 읽습니다.</p>'; }; })();
+(function(){ var _hs=hvScrHtml; hvScrHtml=function(k){ if(k!=="ideak") return _hs(k); return '<p class="cap">띄우는 화면이 없습니다. Closing Speech 발표는 사회자가 「추첨 › 진행」 아래 멘트로 읽습니다.</p>'; }; })();
 function ikPrz(d){ return d&&d.prz&&d.prz.length?d.prz:IK_PRZ; }
 function ikPickOf(emp){ var d=ST.data.ik, ps=d&&d.ok&&d.picks||[]; for(var i=0;i<ps.length;i++) if(normE(ps[i].emp)===normE(emp)) return ps[i]; return null; }
 function viewIdeak(){
@@ -8102,7 +8102,7 @@ function ikPickAsk(emp){
     x:'<label class="fld mt12">등수<select class="in w-f" id="ikRk" onchange="dlgGate()"><option value="">고르세요</option>'+opts+'</select></label>'+
       '<label class="fld mt8">선정 사유(필수)<input class="in w-f" id="ikWhy" maxlength="80" oninput="dlgGate()" placeholder="예: 보상 서류 자동 분류 · 바로 적용 가능"></label>'+
       (r.late?'<label class="row mt12" style="gap:8px"><input type="checkbox" class="ck" id="ikAck" onchange="dlgGate()"><span>마감 뒤 접수입니다. 그래도 선정합니다.</span></label>':''),
-    s:"Outro 에서 사회자가 이름을 읽습니다. 운영로그에 남고 「선정 취소」로 되돌립니다.", ok:"선정", focus:"ikRk",
+    s:"Closing Speech 에서 사회자가 이름을 읽습니다. 운영로그에 남고 「선정 취소」로 되돌립니다.", ok:"선정", focus:"ikRk",
     gate:function(){ var k=el("ikRk"), w=el("ikWhy"), a=el("ikAck"); return !!(k&&k.value)&&String((w||{}).value||"").trim().length>=2&&(!r.late||!!(a&&a.checked)); },
     onOk:function(){ var rk=el("ikRk").value, w=String(el("ikWhy").value).trim();
       pzCall("ideaking_pick",{ emp:normE(emp), rk:rk, why:w, ack:r.late?"1":"" },["ik"],function(x){ if(x.ok){ if(x.picks&&ST.data.ik) ST.data.ik.picks=x.picks; render(); toast(rk+"등으로 선정했습니다 · "+(r.name||emp),{ undo:function(){ ikUnpickGo(emp); } }); } else toast("실패: "+(x.reason==="max"?rk+"등 자리가 다 찼습니다. 먼저 한 명을 선정 취소합니다":pzWhy(x)),{ ms:5000 }); }); } });
@@ -8147,11 +8147,11 @@ function ikCfgCard(){
 function ikMemo(){
   return memo('<p><b>후보</b> · AX 라운지 사전 신청자 · 당일 라운지 신청자 · 18F 커피챗 참석자 중 아이디어가 있는 사람입니다. 같은 사람이 여러 경로면 가장 이른 경로 하나로 셉니다. 경로 밖의 앱 아이디어는 후보에 없습니다.</p>'+
     '<p><b>마감</b> · 기본 16:00. 마감 뒤 제출은 설정 「아이디어_마감후」가 받음이면 스탬프는 인정하고 후보 줄에 「마감 뒤 접수」로 표시합니다. 선정하려면 확인 칸을 체크합니다.</p>'+
-    '<p><b>선정</b> · 1등 1명(AI 구독권 6개월) · 2등 1명(3개월) · 3등 3명(1개월), 모두 5명입니다. 자리가 차면 서버가 더 받지 않습니다. 16:00~17:00 심사 뒤 Outro 에서 사회자가 이름을 읽습니다(「추첨 › 진행」 아래 멘트).</p>'+
+    '<p><b>선정</b> · 1등 1명(AI 구독권 6개월) · 2등 1명(3개월) · 3등 3명(1개월), 모두 5명입니다. 자리가 차면 서버가 더 받지 않습니다. 16:00~17:00 심사 뒤 Closing Speech 에서 사회자가 이름을 읽습니다(「추첨 › 진행」 아래 멘트).</p>'+
     '<p><b>한 줄 기록</b> · 상담 · 커피챗에서 나온 아이디어를 담당자가 대신 적는 칸입니다. 스탬프는 주지 않습니다.</p>'+
     '<p><b>개인정보</b> · 이름과 아이디어 본문은 이 화면과 CSV(슈퍼관리자)에만 있습니다. 부문 · 소속별 집계는 두지 않습니다.</p>');
 }
-GUIDE.e_idea=[["후보","경로 세 칸(라운지 사전 · 라운지 당일 · 커피챗)을 눌러 봅니다. 긴 아이디어는 「전체 보기」로 펼칩니다."],["선정","후보 줄의 「선정」에서 등수와 사유를 넣습니다. 자리가 차면 서버가 막습니다."],["한 줄 기록","라운지 상담 · 커피챗 중 나온 아이디어를 담당자가 적습니다."],["Outro","선정한 이름은 「추첨 › 진행」 아래 사회자 멘트에 들어갑니다."]];
+GUIDE.e_idea=[["후보","경로 세 칸(라운지 사전 · 라운지 당일 · 커피챗)을 눌러 봅니다. 긴 아이디어는 「전체 보기」로 펼칩니다."],["선정","후보 줄의 「선정」에서 등수와 사유를 넣습니다. 자리가 차면 서버가 막습니다."],["한 줄 기록","라운지 상담 · 커피챗 중 나온 아이디어를 담당자가 적습니다."],["Closing Speech","선정한 이름은 「추첨 › 진행」 아래 사회자 멘트에 들어갑니다."]];
 
 /* ══ B6 · 사람 › 라운지 사전 신청 명단 (lng_pre_* · 슈퍼관리자 + 본인 확인) ══ */
 var LP={ src:"paste", paste:"", name:"", emps:null, bad:0, mode:"replace", pv:null, pvKey:"", pvBad:"", busy:"", err:"", res:null };
@@ -8580,7 +8580,7 @@ function ezNow(){
   return { d:m[1], m:Math.min((+m[2])*60+(+m[3])+add, 24*60-1) };
 }
 function ezHm(m){ return ("0"+Math.floor(m/60)).slice(-2)+":"+("0"+(m%60)).slice(-2); }
-var EZ_SLOT=[{ n:"오픈 전", w:"~09:30" },{ n:"운영 중", w:"09:30~17:00" },{ n:"마감 · Outro", w:"17:00~17:30" },{ n:"행사 후", w:"17:30~" }];
+var EZ_SLOT=[{ n:"오픈 전", w:"~09:30" },{ n:"운영 중", w:"09:30~17:00" },{ n:"마감 · Closing Speech", w:"17:00~17:30" },{ n:"행사 후", w:"17:30~" }];
 function ezSlot(){ var w=ezNow(); if(w.d<EVENT_DAY) return { i:0, pre:1, w:w }; if(w.d>EVENT_DAY) return { i:3, w:w }; return { i:w.m<570?0:w.m<1020?1:w.m<1050?2:3, w:w }; }
 function ezPeek(i){ ST.ezPeek=ST.ezPeek===i?null:i; render(); }
 /* 손으로 하는 줄의 체크 · 이 브라우저 · 그날만 */
@@ -8605,7 +8605,7 @@ function ezItems(i){
      [null,"스태프 폰 관리자 모드 로그인 확인","QR 스캔 · 혼잡 제보를 쓰는 폰",null,"","staff"],
      [ck?ckPhase(ck)!=="off":null,"체크인 번호표 켜짐",ck?(ckPhase(ck)==="pre"?"개시 전 · "+ck.cfg.open+"부터 번호를 줍니다":"1F 체크인존 번호표 · 창구 A~D"):"번호표 상태를 받지 못했습니다 · 서버 갱신 전이면 보이지 않습니다",go("f_ck",0),"보기","ckon"],
      [null,"체크인 창구 태블릿 4대 · TV 켜기","창구 화면 A~D 와 체크인 TV 주소는 행사 › 화면 열기 · 사이니지",scr,"주소 보기","ckscr"],
-     [null,"17F 오후 AWS · MS 입장 · 끝 QR 4장 붙임 확인","스탬프를 주는 출석 QR 은 이 4장뿐 · 기조연설 · 내부 강연은 출석 기록만 · 10F 출석 QR 은 쓰지 않음",null,"","att4"]],
+     [null,"17F 오후 AWS · MS 입장 · 끝 QR 4장 붙임 확인","스탬프를 주는 출석 QR 은 이 4장뿐 · 오전 Keynote 2회은 출석 기록만 · 10F 출석 QR 은 쓰지 않음",null,"","att4"]],
     [[wait?false:true,"대기 건 처리 · 상담 · 커피챗 · PIN 분실",wait?wait+"건 대기":"대기 없음",go("f_resv",0),"처리하러 가기",""],
      [hot?false:true,"혼잡 제보 · 카메라 확인 요청",hot?hot+"곳":"없음",go("f_crowd",0),"보기",""],
      [low==null?null:!low.length,"재고 경고",low==null?"재고를 받지 못했습니다":low.length?low.slice(0,3).map(function(x){ return x.n+" "+invN(x.left); }).join(" · ")+(low.length>3?" 외 "+(low.length-3):""):"곧 바닥인 품목 없음",go("e_inv",0),"재고 보기",""],
@@ -8696,7 +8696,7 @@ function viewEzType(){
   return card("1F 타자왕 1~3위","점수 높은 순 · 사람마다 최고 기록 하나"+(win?" · 운영 "+esc(win):" · 17:00 마감"),
     '<div class="wrap"><table class="tb ez-top3"><tr><th>순위</th><th>닉네임</th><th>이름</th><th class="hide-m">사번</th><th class="tdr">점수</th><th class="hide-m">기록 시각</th></tr>'+
     (top.length?top.map(function(r){ return '<tr><td class="n"><b>'+esc(r.rank)+'</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name||"")+'</td><td class="n hide-m">'+esc(r.emp||"")+'</td><td class="n tdr">'+Number(r.score||0).toLocaleString()+'점</td><td class="n cap hide-m">'+esc(short(r.ts))+'</td></tr>'; }).join(""):emptyRow(6,"아직 현장 기록이 없습니다."))+'</table></div>'+
-    '<p class="cap mt8">Outro 에서 사회자가 닉네임으로 부릅니다. 부적절한 닉네임은 <a class="lnk" href="#" onclick="navSel(\'p_who\',0);return false">사람 찾기</a>에서 숨깁니다.</p>',
+    '<p class="cap mt8">Closing Speech 에서 사회자가 닉네임으로 부릅니다. 부적절한 닉네임은 <a class="lnk" href="#" onclick="navSel(\'p_who\',0);return false">사람 찾기</a>에서 숨깁니다.</p>',
     '<button class="btn sm" onclick="reload([\'tres\'])">새로고침</button>');
 }
 /* ══════════════════ 261007 체크인존 번호표 · ② 행사 › 체크인존 ══════════════════

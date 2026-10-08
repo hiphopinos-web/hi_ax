@@ -198,7 +198,7 @@ function tybHtml(r) {
     (TYB_REST.on && TYB_REST.nm ? '<p class="tyb-pzn">4~10위 · ' + esc(TYB_REST.nm) + "</p>" : "") +
     '<p class="tyb-ft" id="tybFt">' + tybFtHtml(r) + "</p></section>";
 }
-function tybFtHtml(r) { return "1인 " + ((r && r.tries) || 3) + "회 · 최고 " + (r && r.unit !== "pts" ? "기록" : "점수") + " · 동점은 정확도<br>17:00 마감 · 1~3위 Outro 시상"; }
+function tybFtHtml(r) { return "1인 " + ((r && r.tries) || 3) + "회 · 최고 " + (r && r.unit !== "pts" ? "기록" : "점수") + " · 동점은 정확도<br>17:00 마감 · 1~3위 Closing Speech 시상"; }
 /* 받은 순위를 판에 · 줄은 data-k(닉네임 + 같은 이름 몇 번째)로 이어 붙여 옮긴다 · 처음 그린 판(TYB.keys 없음)은 표시만 */
 function tybApply(r) {
   var host = el("tybIn"); if (!host || !r) return;
@@ -374,7 +374,7 @@ function tsfSetupHtml() {
     '<p class="ax-meta" id="tsfSetMsg">' + esc(TSF.msg) + "</p></section>" +
     '<button type="button" class="ax-button" onclick="tsfEnable()">셀프 모드 켜기</button>' +
     '<button type="button" class="ax-button ax-button-weak" onclick="App.go(\'wall_type\')">1F TV 순위판 열기</button>' +
-    (S.get("admin_authed", false) ? '<button type="button" class="ax-button ax-button-weak" onclick="App.go(\'type_award\')">Outro 시상 화면</button>' : "") + "</div>";
+    (S.get("admin_authed", false) ? '<button type="button" class="ax-button ax-button-weak" onclick="App.go(\'type_award\')">Closing Speech 시상 화면</button>' : "") + "</div>";
 }
 /* 관리코드를 서버에 물어 맞으면 이 기기에 둔다(화면에는 다시 나오지 않는다) · 효과음 선택은 이 누름 안에서 소리 길을 연다 · 카메라 권한도 이 누름에서 묻는다 */
 function tsfEnable() {
@@ -840,7 +840,7 @@ function tsfLeftHtml() {
       '<section class="tsf-p tsf-rule">' + (ph === "nick" ? "<p>Enter 저장</p><p>Esc 처음으로</p>" : '<p class="tsf-hint go">SPACE 시작</p><p>Tab 닉네임 바꾸기</p><p>Esc 처음으로</p>') + "</section>";
   }
   /* 261007(사용자 「오른쪽 순위표 10등까지 · 일부 정보는 왼쪽으로」) 오른쪽 점수 설명을 왼쪽으로 · 방법 · 점수 두 묶음 · 엔터 없이 한 줄 */
-  var rule = '<section class="tsf-p tsf-rule"><p class="tsf-rh">방법</p><p>맞게 치면 엔터 없이 터져요</p><p>목숨 ' + RAIN_LIVES + "개를 다 잃으면 끝</p><p>1인 " + tsfLimit() + "회 · 최고 점수로 순위</p><p>17:00 마감 · 1~3위 Outro 시상</p></section>" +
+  var rule = '<section class="tsf-p tsf-rule"><p class="tsf-rh">방법</p><p>맞게 치면 엔터 없이 터져요</p><p>목숨 ' + RAIN_LIVES + "개를 다 잃으면 끝</p><p>1인 " + tsfLimit() + "회 · 최고 점수로 순위</p><p>17:00 마감 · 1~3위 Closing Speech 시상</p></section>" +
     '<section class="tsf-p tsf-rule"><p class="tsf-rh">점수</p><p>글자 × 10 × 콤보(최대 3배)</p><p>구름이 비면 보너스 스테이지</p><p>빠르고 정확할수록 보너스</p><p>180초 버티면 목숨 × ' + RAIN_LIFE_BONUS + "</p></section>";   /* 줄마다 한 줄에 들어가게 짧게(1920 · 1366 · 24 · 16px) */
   if (ph === "result" && !tsfClosed()) return '<section class="tsf-p"><p class="tsf-k">다음 도전자</p><p class="tsf-go">SPACE = 새 QR</p><p class="tsf-hint" id="tsfCount">' + Math.round(TSF_RES_MS / 1000) + "초 뒤 처음 화면</p></section>";   /* 261007 처음 화면 = 광고 · SPACE = 곧바로 QR */
   return rule;
@@ -865,7 +865,7 @@ var TSF_HOOK = "당신의 <em>프롬프팅 속도</em>를 보여 주세요";   /
 function tsfGuideHtml() {
   var cl = tsfClosed(), ce = TSF.cam.err;
   if (cl) return '<div class="tsf-gd"><p class="tsf-chip">' + (cl.next ? "준비 중" : "오늘 마감") + '</p><p class="tsf-h">' + (cl.next ? "<span><em>" + esc(cl.next) + "</em>에</span><span>" + (cl.first ? "시작해요" : "다시 열려요") + "</span>" : "<span>오늘 도전은</span><span>끝났어요</span>") + "</p>" +
-    '<p class="tsf-gs">' + (cl.next ? "1인 " + tsfLimit() + "회 · 최고 점수로 순위" : "1~3위는 17:00 Outro에서 시상") + "</p></div>";
+    '<p class="tsf-gs">' + (cl.next ? "1인 " + tsfLimit() + "회 · 최고 점수로 순위" : "1~3위는 17:00 Closing Speech에서 시상") + "</p></div>";
   if (!TSF_CAM) return '<div class="tsf-gd tsf-gq"><p class="tsf-hk">' + TSF_HOOK + '</p><div class="tsf-lqr tsf-qbig" id="tsfLqr"></div>' +
     '<div class="tsf-tm" id="tsfTm" role="presentation"><i style="width:' + tsfWakePct() + '%"></i></div>' +   /* 261007 남은 시간 막대(60초 · 키 · 누름 = 다시 가득) */
     '<p class="tsf-h"><span>폰 카메라로 찍어 주세요</span></p><p class="tsf-gs s">앱이 있으면 앱의 QR 버튼으로</p><p class="tsf-lh" id="tsfLh" role="status" hidden>폰에서 로그인하는 중</p>' + tsfStepsHtml(true) + "</div>";
@@ -877,7 +877,7 @@ function tsfGuideHtml() {
 }
 function tsfStepsHtml(q) {   /* q = 261006 새 진입(QR 찍기 · 규칙은 왼쪽 판) */
   return '<div class="tsf-steps"><p><b>1</b><span>' + (q ? "QR 찍기" : "QR을 노트북에") + '</span></p><p><b>2</b><span><kbd class="tsf-key">SPACE</kbd>로 시작</span></p><p><b>3</b><span>떨어지는 단어 입력</span></p></div>' +
-    (q ? "" : '<p class="tsf-foot">1인 ' + tsfLimit() + "회 · 최고 점수로 순위 · 17:00 마감 · 1~3위 Outro 시상</p>");
+    (q ? "" : '<p class="tsf-foot">1인 ' + tsfLimit() + "회 · 최고 점수로 순위 · 17:00 마감 · 1~3위 Closing Speech 시상</p>");
 }
 /* 가운데 판 위 DOM · 대기 안내(attract) · 닉네임 칸(nick) · 결과(result) · 나머지는 캔버스(tsfPrevDraw) */
 /* 261007 광고(ph "ad") · QR 없음 · 카드 넷이 7초씩 돈다 · 맨 아래 「키보드를 눌러 시작」(늘 · 크게) · 시간 밖이면 그 줄 = 시간 안내 · 카드만 갈아 끼운다(tsfAdTick)
@@ -889,7 +889,7 @@ function tsfAdCard(k) {
     var li = (typeof PRIZES !== "undefined" && PRIZES.type && PRIZES.type.list) || [];
     return '<p class="tsf-adk">1~3위 경품</p><div class="tsf-adp">' + li.map(function (x) {
       return '<figure><span class="ph"><img src="' + PRIZE_DIR + x.img + '.webp" alt="" loading="eager" decoding="async"></span><figcaption><b>' + esc(x.rk) + "</b>" + esc(x.nm) + "<small>" + esc(x.sub || "") + "</small></figcaption></figure>";
-    }).join("") + '</div><p class="tsf-ads">17:00 마감 · 1~3위 Outro 시상</p>';
+    }).join("") + '</div><p class="tsf-ads">17:00 마감 · 1~3위 Closing Speech 시상</p>';
   }
   if (k === "top") {
     var t = (TSF.top && TSF.top.top) || [], a = t[0];
@@ -1302,7 +1302,7 @@ function hsHtml() {
     (r && !top.length ? '<p class="hs-empty">첫 기록을 기다리고 있어요</p>' : "") +
     '<div class="hs-list">' + rows + "</div>" +
     '<div class="hs-foot">' + (u ? '<img class="hs-bot" src="' + u + '" alt="">' : '<span class="hs-bot">' + BOT_SVG + "</span>") +
-    "<p>1인 " + tries + "회 · 최고 점수 1개로 순위<br>17:00 마감 · 1~3위 Outro 시상</p></div>" +
+    "<p>1인 " + tries + "회 · 최고 점수 1개로 순위<br>17:00 마감 · 1~3위 Closing Speech 시상</p></div>" +
     '<p class="hs-prz">1등 기계식 키보드 · 2등 마우스 · 3등 기계식 키보드</p></div></div>';   /* v5.09 (261003 사용자 확정) 새 경품 짧은 이름 · v5.06 바닥 경품 한 줄 · 가격 없음 · v5.05 결선 없음 · 1~3위 */
 }
 

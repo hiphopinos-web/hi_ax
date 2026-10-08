@@ -187,7 +187,7 @@ function scanResHtml() {
   if (o.st === "draw") {   /* v4.79 추첨 체크인 완료 · 행운권 번호(공) 수 · 0장이면 한 줄 · v5.97 「응모」 → 「행운권」(감사 하1) */
     var dn = (o.nos || []).slice(0, 3);
     h = '<div class="axs-res-bot">' + bot + "</div>" +
-      '<span class="axs-chip ok axs-self">' + (o.dup ? "이미 체크인 · " + esc(o.at) : "17F 대강당 · Outro") + "</span>" +
+      '<span class="axs-chip ok axs-self">' + (o.dup ? "이미 체크인 · " + esc(o.at) : "17F 대강당 · Closing Speech") + "</span>" +
       '<h1 class="ax-title">추첨 체크인<br>완료</h1>' +
       '<section class="axs-res-card"><p class="ax-type-t7 axs-bt">행운권 번호</p><p class="axs-res-n">' + (o.n ? o.n + "개" : "없음") + "</p>" +
       '<p class="ax-description">' + (dn.length ? dn.map(esc).join(" · ") : "행운권이 없어요 · 스탬프 4개부터") + "</p></section>" +
@@ -316,9 +316,9 @@ function drawByCode(code) {
    v5.94 (사용자 결정 261006) 스탬프는 오후 파트너 강연(AWS l1 · MS l2) 현장 입장 · 끝만 · 오전 강연 · 유튜브 송출 출석은 기록 · 대강당 혼잡도만(서버 nost 1)
    k 가 없는 QR(옛 입구 QR · 고르기 시트)은 서버가 그 시각에 열린 창으로 고른다 · 내 출석 기록 att_mine = { id: 입장 시각, "id.out": 끝 시각 } */
 var ATT_17F = { lead: 30, win: { i: [30, 180], o: [120, 30] }, progs: [
-  { id: "key", nm: "기조연설", sub: "Intro 포함", s: "09:30", e: "10:20" },
-  { id: "road", nm: "내부 강연", sub: "현대해상 AX 로드맵", s: "10:30", e: "11:00" },
-  { id: "l1", nm: "파트너사 강연 · AWS", sub: "Agentic AI 시대의 일하는 방식 변화", s: "13:30", e: "14:50" },   /* 261007 사용자 확정 · 휴식 14:50~15:10 */
+  { id: "key", nm: "Keynote", sub: "Opening Speech 포함", s: "09:30", e: "10:20" },
+  { id: "road", nm: "Keynote", sub: "현대해상 AX 로드맵", s: "10:30", e: "11:00" },
+  { id: "l1", nm: "파트너사 강연 · AWS", sub: "Agentic AI 시대 일하는 방식의 변화", s: "13:30", e: "14:50" },   /* 261007 사용자 확정 · 휴식 14:50~15:10 */
   { id: "l2", nm: "파트너사 강연 · MS", sub: "AI와 친해지기", s: "15:10", e: "16:40" }
 ] };
 var ATT = { code: "", sel: "", res: null, fix: "", k: "" };

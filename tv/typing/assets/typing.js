@@ -463,7 +463,7 @@
     void stage.offsetWidth;
     POOL.forEach(function (e) { e.style.transition = ""; });
     var done = closed() && !OPEN;
-    $("hs-you").textContent = done ? "1~3위 Outro 시상" : "다음 이름은 당신";
+    $("hs-you").textContent = done ? "Closing Speech 시상" : "다음 이름은 당신";
     $("hs-end").textContent = done ? "기록 마감 · 17F 대강당" : CLOSE_TXT + " 마감";
     $("hs-you").classList.remove("in");
     RV.fm = -1; if (ENG) { RG.parts = []; RG.pops = []; RG.big = true; }

@@ -524,7 +524,7 @@ function rfxHtml(o) {
   return '<div class="rfx" id="rfx" data-t="' + t + '">' +
     '<div class="rfx-say"><span class="rfx-bot">' + BOT_SVG.replace("</svg>", BOT_WAVE + "</svg>") + '</span><p class="rfx-b" id="rfxSay">' + say + "</p></div>" +
     '<button type="button" class="rfx-stage" onclick="rfxOpen()" aria-label="보물상자 열기">' + RFX_BACK + '<span class="rfx-num" id="rfxNum" aria-live="polite"></span>' + RFX_FRONT + "</button>" +
-    '<p class="rfx-cap" id="rfxCap">' + esc(o.body || "행운권 발급 · 17:00 Outro 추첨") + "</p>" +
+    '<p class="rfx-cap" id="rfxCap">' + esc(o.body || "행운권 발급 · 17:00 Closing Speech 추첨") + "</p>" +
     '<div id="rfxBtns">' + (first ? '<button class="btn mint" style="margin-top:14px" onclick="rfxOpen()">상자 열기</button><button class="btn line" style="margin-top:8px" onclick="modalClose()">나중에 보기</button>' : "") + "</div></div>";
 }
 /* 레일 · 추첨 안내의 「새 번호 확인」 · 아직 안 연 응모권 상자를 다시 연다(열면 바로 꺼낸다) */
@@ -565,7 +565,7 @@ function rfxLand(nums, late) {   /* nums = 번호 배열(없으면 null) · late
   var nm = el("rfxNum"); nm.classList.remove("roll"); nm.innerHTML = nums ? nums.map(function (x) { return "<b>" + rfxDot(x, nums.length > 1, true) + "</b>"; }).join("") : "발급 중"; nm.classList.toggle("wait", !nums);
   if (late) { nm.classList.remove("land"); void nm.offsetWidth; nm.classList.add("land"); }
   el("rfxSay").innerHTML = nums ? (nums.length > 1 ? "번호 " + nums.length + "개가 나왔어요! 행운을 빌어요" : "행운을 빌어요!") + "<br>" + drawWhenTxt() + fcfsPopLine() : "번호가 아직 발급 중이에요<br>곧 나의 보상에 나타나요";   /* v4.79 무대 추첨 = 추첨 QR 체크인한 사람만 · v5.04 6개째는 참여상 한 줄(별도 팝업 없음) */
-  el("rfxCap").textContent = nums ? "내 행운권 번호 · 17:00 Outro 추첨" : "행운권은 이미 발급됐어요 · 17:00 Outro 추첨";   /* v5.04 옛 「결과는 행사 후 개별 안내」(260909 사후 추첨 안) 폐기 */
+  el("rfxCap").textContent = nums ? "내 행운권 번호 · 17:00 Closing Speech 추첨" : "행운권은 이미 발급됐어요 · 17:00 Closing Speech 추첨";   /* v5.04 옛 「결과는 행사 후 개별 안내」(260909 사후 추첨 안) 폐기 */
   el("rfxBtns").innerHTML = '<button class="btn mint" style="margin-top:14px" onclick="modalClose()">확인</button><button class="btn line" style="margin-top:8px" onclick="noticeGo(\'rewards\',\'raffle\')">나의 보상에서 보기</button>';
   if (nums && typeof stampBuzz === "function") stampBuzz(30);
   App.render();   /* 레일의 「새 번호 확인」 칩을 번호로 바꾼다 */
@@ -584,7 +584,7 @@ function ppDrawOpen() {
   }
   modalOpen('<p class="muted" style="font-size:calc(14.5px * var(--fs));line-height:1.7">스탬프 4개 1장 · 5개 2장 · 6개 3장 · 자동 발급<br>지금 <b style="color:var(--hi)">' + t + '장</b></p>' +
     tickets +
-    '<p class="muted" style="margin-top:8px;font-size:calc(13.5px * var(--fs));line-height:1.65">' + (lkCond() ? "17:00 Outro 현장 추첨 · 16:40부터 17F 입구 QR 체크인" : "17:00 Outro 현장 추첨 · 경품은 따로 전달") + '</p>' +   /* v5.90 행운권_참석조건(sync lkcond) */   /* v4.79 무대 추첨 · v4.83 사용자 표시 용어 「행운권」 · v5.04 옛 「행운권 추첨 결과는 행사 후 개별 안내」 줄 삭제(사후 추첨 없음) */
+    '<p class="muted" style="margin-top:8px;font-size:calc(13.5px * var(--fs));line-height:1.65">' + (lkCond() ? "17:00 Closing Speech 현장 추첨 · 16:40부터 17F 입구 QR 체크인" : "17:00 Closing Speech 현장 추첨 · 경품은 따로 전달") + '</p>' +   /* v5.90 행운권_참석조건(sync lkcond) */   /* v4.79 무대 추첨 · v4.83 사용자 표시 용어 「행운권」 · v5.04 옛 「행운권 추첨 결과는 행사 후 개별 안내」 줄 삭제(사후 추첨 없음) */
     prizeModalHtml("draw") +   /* v5.04 1~6등 10명 · 사진 · 이름 · 인원 */
     '<button class="btn line" style="margin-top:12px" onclick="modalClose()">닫기</button>', "행운권");
 }

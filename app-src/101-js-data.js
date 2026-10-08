@@ -149,21 +149,21 @@ function stampCount() { return Math.min(STAMP_DENOM, stampGot()); }
 function raffleTickets(n) { return Math.max(0, Math.min(RAFFLE_MAX, Math.min(REWARD_CAP, n) - 3)); }
 var TIMELINE = [
   /* v3.29 공식 공지 붙임1·2(260917) 기준 · 순서 = 시작 시각순 · NOW_INDEX(데모 1 = 기조연설) 가 이 순서를 가리킨다 */
-  { time: "09:30", end: "09:40", title: "Intro · 개회", short: "CEO · AX 선포 및 Festival 개최 안내", place: "17F 대강당", desc: "CEO · AX 선포 및 Festival 개최 안내", tag: "자유 참석" },
-  { time: "09:40", end: "10:20", title: "기조연설", short: "CTO · AI 환경 · 전략", place: "17F 대강당", desc: "CTO · AI 환경 · 전략", tag: "자유 참석" },
-  { time: "10:30", end: "11:00", title: "내부 강연 · AX 로드맵", short: "디지털전략본부장 · 현대해상 AX 로드맵", place: "17F 대강당", desc: "디지털전략본부장 · 현대해상 AX 로드맵", tag: "자유 참석" },
+  { time: "09:30", end: "09:40", title: "Opening Speech", pid: "intro", short: "이석현 대표이사", place: "17F 대강당", desc: "이석현 대표이사 · AX 선포 및 Festival 개최 안내", tag: "자유 참석" },   /* 261008 표기 정본 = 네임택 발주 PDF(사용자 「PDF와 똑같이」) · 제목이 겹치는 줄(Keynote 2개)이 있어 상세 id 는 pid 로 잇는다 */
+  { time: "09:40", end: "10:20", title: "Keynote", pid: "key", short: "김택수 기술지원부문장", place: "17F 대강당", desc: "김택수 기술지원부문장 · AI 환경 · 전략", tag: "자유 참석" },
+  { time: "10:30", end: "11:00", title: "Keynote", pid: "road", short: "김성재 디지털전략본부장", place: "17F 대강당", desc: "김성재 디지털전략본부장 · 현대해상 AX 로드맵", tag: "자유 참석" },
   { time: "11:00", end: "13:30", title: "점심 · 자유 관람", short: "1F 부스 6구역 관람", place: "1F 로비", desc: "1F 부스 6구역 관람", tag: "휴식" },
   /* always=1 (v3.18): 기간이 길어서가 아니라 「그 시간 안에 아무 때나 들르는」 참여 방식이라 상시 묶음.
      10F 오후 세션(내내 참석)·점심(시간대 구분 역할)은 시간표 유지 */
   { time: "", end: "", title: "AX 커피챗", short: "13:00~16:00 · 선정되면 앱에서 안내", place: "18F", desc: "13:00~16:00 · 선정되면 앱에서 안내", tag: "희망자 중 선정", always: 1 },   /* v6.07 (사용자 261007) 희망 → 선정 · 운영 13:00~16:00 */
-  { time: "13:30", end: "14:50", title: "파트너사 강연 · AWS", short: "Agentic AI 시대의 일하는 방식 변화 · 구태훈 박사(AWS)", place: "17F 대강당", desc: "입장 · 끝 QR로 출석", tag: "자유 참석", par: 1 },
+  { time: "13:30", end: "14:50", title: "Agentic AI 시대 일하는 방식의 변화", pid: "l1", short: "AWS 구태훈", place: "17F 대강당", desc: "입장 · 끝 QR로 출석", tag: "자유 참석", par: 1 },
   { time: "14:50", end: "15:10", title: "휴식", short: "", place: "17F 대강당", desc: "", tag: "휴식", brk: 1 },   /* 261007 (사용자 확정 「AWS 13:30~14:50 · 휴식 14:50~15:10 · MS 15:10~16:40」) 시간표 17F 작은 줄(progFlowBrk) · 스탬프 · 출석 없음 · 홈 「지금」 = 휴식 · 다음 MS */
   { off: 1, time: "13:30", end: "16:30", title: "10F 실습형 세션 A~E", short: "사전 신청자 참여 · 5개 세션 중 1개", place: "10F", desc: "사전 신청자 참여 · 세션별 장소는 프로그램 탭", tag: "사전 신청자 참여", par: 1 },
-  { time: "15:10", end: "16:40", title: "파트너사 강연 · MS", short: "AI와 친해지기 · MS", place: "17F 대강당", desc: "입장 · 끝 QR로 출석", tag: "자유 참석", par: 1 },
+  { time: "15:10", end: "16:40", title: "AI와 친해지기", pid: "l2", short: "Microsoft 김한결, 이나경", place: "17F 대강당", desc: "입장 · 끝 QR로 출석", tag: "자유 참석", par: 1 },
   /* v3.50 사회자 순서 (사용자 확정 260917) · Outro 문항 기능 폐지 · 설문 참여 안내 → 17:00 Outro */
   /* v3.63 (사용자 확정 260918) 「일단 빼자」 · 항목은 남기고 off 로 일정 탭에서만 감춘다 (설문 기능·송출 화면·홈/스탬프 입구는 그대로) */
   { off: 1, time: "16:45", end: "17:00", title: "설문 참여 안내", short: "오늘 한 판 설문 안내", place: "17F 대강당", desc: "60초 설문 · 스탬프 1개", tag: "자유 참석" },
-  { time: "17:00", end: "17:30", title: "마무리 연설", short: "CSO · 일하는 방식 마무리 연설 · DAP 시상 · 현장 추첨", place: "17F 대강당", desc: "CSO · 일하는 방식 마무리 연설 · DAP 시상 · 현장 추첨", tag: "" }   /* v4.79 무대 추첨 = 추첨 QR 체크인한 사람 · v4.99 줄은 제목 · 시간 · 장소만 · 체크인 안내는 Outro 상세(STAGE.outro) */
+  { time: "17:00", end: "17:30", title: "Closing Speech", pid: "outro", short: "정경선 CSO", place: "17F 대강당", desc: "정경선 CSO · DAP 시상 · 현장 추첨", tag: "" }   /* v4.79 무대 추첨 = 추첨 QR 체크인한 사람 · v4.99 줄은 제목 · 시간 · 장소만 · 체크인 안내는 Outro 상세(STAGE.outro) */
 ];
 /* v4.91 (사용자 261001 「A~E 사전 신청 세션이 여기에 있을 이유가 있을까」 · main 결정) 10F 실습형 세션 A~E 줄은 「전체」 시간표 · 홈 「진행 중」 · 다음 일정에서 숨긴다
    현장참여자는 신청도 입장도 못 해 「나도 갈 수 있나」 혼동만 준다 · 사전신청자에게 필요한 것은 내 세션 하나(3묶음: 명단 업로드 → 나의 일정에 내 세션 카드 · tenMineCard)
@@ -214,35 +214,35 @@ function nowIdx() {
 var TIME_TBD = "세부 시간은 바뀔 수 있어요";   /* v5.60 W9 말투 · 261007 오후 파트너 강연 시각 확정(AWS 13:30~14:50 · MS 15:10~16:40)으로 쓰는 곳 없음 · 다시 잠정 시각이 생기면 desc 에 넣는다 */
 var SESS_INTRO_ON = 0;   /* v5.60 10F 세션 B · C 한 줄 소개(intro) 켜기 · 끄기 */
 var SESSIONS = [
-  { id: "key", fl: 17, zone: "hall", kind: "open", ttl: "기조연설", sub: "AI 환경 · 전략", who: "CTO", tm: "09:40~10:20", cap: 235, seed: 187,
+  { id: "key", fl: 17, zone: "hall", kind: "open", ttl: "Keynote", sub: "AI 환경 · 전략", who: "김택수 기술지원부문장", tm: "09:40~10:20", cap: 235, seed: 187,
     desc: "" },
-  { id: "road", fl: 17, zone: "hall", kind: "open", ttl: "내부 강연", sub: "현대해상 AX 로드맵", who: "디지털전략본부장", tm: "10:30~11:00", cap: 235, seed: 120,
+  { id: "road", fl: 17, zone: "hall", kind: "open", ttl: "Keynote", sub: "현대해상 AX 로드맵", who: "김성재 디지털전략본부장", tm: "10:30~11:00", cap: 235, seed: 120,
     desc: "" },
-  { id: "l1", fl: 17, zone: "hall", kind: "open", ttl: "파트너사 강연 · AWS", sub: "Agentic AI 시대의 일하는 방식 변화", who: "구태훈 박사 (AWS)", tm: "13:30~14:50", cap: 235, seed: 141,
+  { id: "l1", fl: 17, zone: "hall", kind: "open", ttl: "파트너사 강연 · AWS", sub: "Agentic AI 시대 일하는 방식의 변화", who: "AWS 구태훈", tm: "13:30~14:50", cap: 235, seed: 141,
     desc: "" },
-  { id: "l2", fl: 17, zone: "hall", kind: "open", ttl: "파트너사 강연 · MS", sub: "AI와 친해지기", who: "MS", tm: "15:10~16:40", cap: 235, seed: 96,
+  { id: "l2", fl: 17, zone: "hall", kind: "open", ttl: "파트너사 강연 · MS", sub: "AI와 친해지기", who: "Microsoft 김한결, 이나경", tm: "15:10~16:40", cap: 235, seed: 96,
     desc: "" },
-  { id: "fld", fl: 10, zone: "conf", kind: "info", ttl: "세션 A", sub: "영업 및 보상 현장 우수 사례 강연 및 실습", who: "김동건 전임 · 이은정 지점장 · 이승철 대리", tm: "13:30~16:40", cap: 63, seed: 50,
+  { id: "fld", fl: 10, zone: "conf", kind: "info", ttl: "세션 A", sub: "영업 및 보상 현장 우수 사례", who: "김동건 전임, 이은정 지점장, 이승철 대리", tm: "13:30~16:40", cap: 63, seed: 50,
     capNote: "63명",   /* v5.81 정원 62 → 63(사용자 261006) */
     todo: [{ desc: "동료 활용 사례 공유 및 AI활용 교안 제공" }, { name: "실습 주제 예시 · 3개 중 하나", desc: "원하는 주제 선택 및 개발 실습 진행", sub: ["시책비 자동 계산 프로그램", "영업 캘린더 · 상품별 화법 도구", "보상 실무자용 개인 agent (사고약도 · 면부책 검색 · 위변조 검증)"] }],   /* v6.20 실습 주제 3개(붙임2 커리큘럼 안 · 사용자 261007 「이것만 넣자」) · 「예시」 = 바뀔 수 있음 */
     prep: [{ desc: "노트북은 1인 1대 배정돼요" }] },
-  { id: "ta", fl: 10, zone: "h01", kind: "info", ttl: "세션 B", sub: "“내 데이터”로 만드는 통계 현황 리포팅 실습", who: "임경덕", tm: "13:30~16:30", cap: 32, seed: 24,
+  { id: "ta", fl: 10, zone: "h01", kind: "info", ttl: "세션 B", sub: "“내 데이터”로 만드는 통계 현황", who: "임경덕 강사", tm: "13:30~16:30", cap: 32, seed: 24,
     capNote: "최대 32명",
     intro: "실제 업무 정기 데이터로 분석, 리포트 자동화, 대시보드 개발까지 실습합니다.",
     todo: [{ name: "데이터 분석", desc: "실제 업무 정기 데이터의 AI 활용 분석(기초, 증감, 예측모델)" }, { name: "리포트 자동화", desc: "분석 결과 리포트 개발 반복 작업 자동화 코드 작성" }, { name: "대시보드 개발", desc: "데이터 삽입 → 실시간 결과 반영 HTML앱 개발" }],
     prep: [{ desc: "본인 업무 데이터를 사전에 제출해요" }, { desc: "노트북은 1인 1대 배정돼요" }] },
-  { id: "tb", fl: 10, zone: "h06", kind: "info", ttl: "세션 C", sub: "“내가 보는 자료”로 만드는 외부자료 리서치 자동화 실습", who: "권혜영", tm: "13:30~16:30", cap: 28, seed: 15,
+  { id: "tb", fl: 10, zone: "h06", kind: "info", ttl: "세션 C", sub: "“내가 보는 자료”로 만드는 외부자료 리서치 자동화", who: "권혜영 강사", tm: "13:30~16:30", cap: 28, seed: 15,
     capNote: "28명",   /* v5.05 (261002 사용자 결정) 정원 20 → 28 */
     intro: "외부자료 리서치, 요약 및 정리, 자동 알림 시스템 개발까지 실습합니다.",
     todo: [{ name: "외부자료 리서치", desc: "최신 갱신 외부자료 검색 및 수집(법령, 뉴스, 공시 등)" }, { name: "요약 및 정리", desc: "수집된 자료 자동 정리(중복 또는 예전 자료 제외 등)" }, { name: "자동 알림 시스템 개발", desc: "주기적인 새정보 업데이트 알림 봇 개발" }],
     prep: [{ desc: "본인이 검색하고 활용하는 웹사이트를 사전에 조사해요" }, { desc: "노트북은 1인 1대 배정돼요" }] },
-  { id: "aws", fl: 10, zone: "h08", kind: "info", ttl: "세션 D", sub: "Claude Code를 활용한 바이브 코딩 실습 (AWS)", who: "조재구 (AWS)", tm: "13:30~16:30", cap: 28, seed: 16,
+  { id: "aws", fl: 10, zone: "h08", kind: "info", ttl: "세션 D", sub: "바이브 코딩 실습", who: "AWS 조재구 강사", tm: "13:30~16:30", cap: 28, seed: 16,
     capNote: "28명",   /* v5.87 정원 20 → 28(사용자 261006 · 사전 신청 명단 28명) */
     todo: [{ desc: "AI를 활용한 업무 적용 실습" }], prep: [] },   /* v5.60 남는 내용이 제목뿐 · 블록을 안 그렸다 → v6.20 한 줄(사용자 261007) */
-  { id: "ms1", fl: 10, zone: "h07", kind: "info", ttl: "세션 E · 1회차", sub: "MS Copilot을 활용한 문서 작성 실습 (MS)", who: "김진우 (MS)", tm: "13:30~15:00", cap: 20, seed: 12,
+  { id: "ms1", fl: 10, zone: "h07", kind: "info", ttl: "세션 E · 1회차", sub: "MS Copilot을 활용한 문서 작성", who: "Microsoft 김진우 강사", tm: "13:30~15:00", cap: 20, seed: 12,
     capNote: "20명",
     todo: [{ desc: "초급 과정 · Chat, Word, PPT, Agent Builder, Copilot Studio" }], prep: [] },
-  { id: "ms2", fl: 10, zone: "h07", kind: "info", ttl: "세션 E · 2회차", sub: "MS Copilot을 활용한 문서 작성 실습 (MS)", who: "김진우 (MS)", tm: "15:00~16:30", cap: 20, seed: 9,
+  { id: "ms2", fl: 10, zone: "h07", kind: "info", ttl: "세션 E · 2회차", sub: "MS Copilot을 활용한 문서 작성", who: "Microsoft 김진우 강사", tm: "15:00~16:30", cap: 20, seed: 9,
     capNote: "20명",
     todo: [{ desc: "초급 과정 · Chat, Word, PPT, Agent Builder, Copilot Studio" }], prep: [] },
   /* v5.64 AI 포토부스 프로그램 상세(photo · kind queue) 삭제 · v5.05 포토부스 대기 폐지 뒤 들어가는 길이 없는 빈 상세였다(정리 기록.md) */

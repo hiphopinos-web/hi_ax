@@ -281,7 +281,7 @@ function checkRewards() {
     if (S.get("raffle_opened", null) === null) S.set("raffle_opened", S.get("raffle_seen", 0));   /* v4.44 이 버전 전에 이미 안내한 응모권은 연 것으로 친다 */
     S.set("raffle_seen", t);
     if (BE.on && !testEmp() && raffleNums().length < t) beSync();   /* v4.43 새 번호를 미리 받아 둔다 · 스탬프 연출이 도는 동안 도착해 상자를 열면 바로 보인다 */
-    notice({ key: "rw:raffle", raffle: t, title: rfxTitle(t), body: "행운권 발급 · 17:00 Outro 추첨", go: "rewards", focus: "raffle", goLbl: "나의 보상에서 보기" });   /* v4.42 raffle = 보물상자 팝업(rfxHtml) */
+    notice({ key: "rw:raffle", raffle: t, title: rfxTitle(t), body: "행운권 발급 · 17:00 Closing Speech 추첨", go: "rewards", focus: "raffle", goLbl: "나의 보상에서 보기" });   /* v4.42 raffle = 보물상자 팝업(rfxHtml) */
   }
 }
 /* 261007 (사용자 결정 「재로그인 반복 팝업 고침」 · 분석 P1 · P4) 첫 동기화 기준선 · 이 기기에서 처음 받은 서버 목록 = 이미 알린 것
@@ -538,8 +538,8 @@ function cchatPrefHtml(where) {
   return '<div class="ax-stack-tight"><p class="ax-type-t6-strong">가능한 시간대 <span class="ax-meta">선택 · 여러 개 고를 수 있어요</span></p><div class="axs-slots axs-multi axs-cpref' + (where === "sheet" ? "" : " axs-cpref-pg") + '" role="group" aria-label="가능한 시간대 · 선택 · 여러 개">' +
     CCHAT_PREF.map(function (x) { return '<button type="button" class="axs-slot' + (x[0] === "any" ? " axs-none" : "") + '" aria-pressed="' + (a.indexOf(x[0]) >= 0) + '" onclick="cchatPrefToggle(\'' + x[0] + "','" + where + "')\">" + x[1] + "</button>"; }).join("") + "</div></div>";
 }
-var IDEA_AWARD_TXT = "심사 결과는 Outro에서 발표해요";   /* v6.07 제출 완료 화면 한 줄 · 입력 화면은 시상 묶음(ideaPrizeHtml)이 말한다 */
-var IDEA_HOOK_TXT = "우수 아이디어는 심사 후 Outro에서 시상해요";
+var IDEA_AWARD_TXT = "심사 결과는 Closing Speech에서 발표해요";   /* v6.07 제출 완료 화면 한 줄 · 입력 화면은 시상 묶음(ideaPrizeHtml)이 말한다 */
+var IDEA_HOOK_TXT = "우수 아이디어는 심사 후 Closing Speech에서 시상해요";
 /* v5.00 (사용자 261002 「아이디어 한 줄을 내면 '사이니지 점 하나가 켜졌다'는 메시지 · 이런 요소를 걷어 달라 · 넣을지 아직 고민」)
    참가자 화면에서 ME to WE 월 · 사이니지와 잇는 문구 · 연출을 끈다(지우지 않음 · true 한 줄로 되살린다)
    끄는 곳 = 아이디어 제출 직후 토스트 「오늘 n번째 아이디어! ME to WE 월에 점 하나가 켜졌어요.」(submitIdea) · 제출 완료 화면은 「아이디어를 제출했어요」 + 커피챗 + 다음 행동만

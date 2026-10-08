@@ -130,12 +130,12 @@ var PROG_CAT = { key: "강연", road: "강연", l1: "강연", l2: "강연", fld:
 /* 1F 전시·체험존 = 자유 입장 상세(P02-free) 하나로만 목록에 둔다 · 부스·퀴즈·포토부스 적립과 대기는 체험·나의 참여 몫 */
 var EXPO = { id: "expo", fl: 1, zone: "expo", kind: "open", ttl: "1F 부스", sub: "AX VISION · AX LAB · AX in Action · AX PLAY · AX 라운지 · EVENT", who: "", tm: "", desc: "" };
 /* 시간표 행 → 상세 (# = 프로그램 목록 분류) */
-var TL_PROG = { "Intro · 개회": "intro", "마무리 연설": "outro", "기조연설": "key", "내부 강연 · AX 로드맵": "road", "점심 · 자유 관람": "#1F", "파트너사 강연 · AWS": "l1", "파트너사 강연 · MS": "l2", "10F 실습형 세션 A~E": "#실습" };
+var TL_PROG = { "점심 · 자유 관람": "#1F", "10F 실습형 세션 A~E": "#실습" };   /* 261008 17F 줄은 TIMELINE pid 로 잇는다(네임택 PDF 표기 · 제목 「Keynote」 두 줄) */
 /* v4.99 (사용자 261002 「Outro 설명이 너무 많다 · 기조연설처럼 한 장으로」) 17F Intro · Outro = 상세 한 장(sess_d · kind stage) · 시간표 줄은 제목 · 시간 · 장소만
    출석 · 스탬프 대상이 아니다(Intro 출석은 기조연설 QR 에 포함 · ATT_17F key 09:30) · SESSIONS 목록 · PROG_CAT 에 넣지 않는다 */
 var STAGE = {
-  intro: { id: "intro", fl: 17, zone: "hall", kind: "stage", ttl: "Intro", sub: "AX 선포 및 Festival 개최 안내", who: "CEO", tm: "09:30~09:40", desc: "" },
-  outro: { id: "outro", fl: 17, zone: "hall", kind: "stage", ttl: "Outro", sub: "마무리 연설", who: "CSO", tm: "17:00~17:30", desc: "" }
+  intro: { id: "intro", fl: 17, zone: "hall", kind: "stage", ttl: "Opening Speech", sub: "AX 선포 및 Festival 개최 안내", who: "이석현 대표이사", tm: "09:30~09:40", desc: "" },
+  outro: { id: "outro", fl: 17, zone: "hall", kind: "stage", ttl: "Closing Speech", sub: "DAP 시상 · 현장 추첨", who: "정경선 CSO", tm: "17:00~17:30", desc: "" }
 };
 function progById(id) { return id === "expo" ? EXPO : id === "intro" || id === "outro" ? STAGE[id] : sessById(id); }
 function progTm(tm) { return String(tm || "").replace("~", "–"); }
@@ -188,7 +188,7 @@ function progSegHtml() {
    개인 일정: 10F 사전 신청 세션(tenMine)만 그 시간과 조금이라도 겹치는 자유 참석 줄을 빼고 그 자리에 둔다(v5.22 사용자 261003) · 승인된 AX LOUNGE 상담(myResv approved 이후) · 매칭된 커피챗(cchat matched)은 강연을 지우지 않고 시작 시각 순서대로 노드 · 카드를 끼운다
    구획 제목(오전 · 점심 · 오후) · 「자유 참석」 딱지 · 「진행 중」 칩 · 맨 위 지금 시각 줄은 없다(사용자 261003) · 내 것 = 칩 하나(틴트 없음) · 강조 = 진행 중 카드 하나에 주황 테두리
    왼쪽 시각 · 가운데 점 노드(지남 O50 작은 점 · 지금 O100 큰 점 하나 · 앞 = 속 빈 점) · 노드와 노드 사이는 끊김 없는 점선 레일(지난 구간 O50 · 지금 구간은 흐른 만큼 O100 · 남은 구간 회색) · 오른쪽 카드(층 점 글자 + 장소 + ~끝) */
-var FL_SUB = { intro: "CEO · AX 선포 · 개최 안내", key: "CTO · AI 환경 · 전략", road: "디지털전략본부장 · 현대해상 AX 로드맵", l1: "Agentic AI 시대의 일하는 방식 변화", l2: "AI와 친해지기", outro: "CSO · DAP 시상 · 현장 추첨" };
+var FL_SUB = { intro: "이석현 대표이사", key: "김택수 기술지원부문장", road: "김성재 디지털전략본부장", l1: "AWS 구태훈", l2: "Microsoft 김한결, 이나경", outro: "정경선 CSO" };   /* 261008 네임택 PDF 연사 칸 그대로 */
 var FL_DAP_OK = ["approved", "checked", "done"];   /* 상담은 승인된 예약부터 시간표에 들어간다(승인 대기는 나의 일정에만) */
 function progTimeHtml() { return '<div class="axs-fl" id="progFlow">' + progFlowHtml() + "</div>"; }
 /* 층 표시 = 점 글자(design.md A-5 5-20 · 12px · 읽는 이름 「17층」) */
@@ -197,7 +197,7 @@ function progFlowItems(onlyFl) {
   var pub = [], mine = [];
   TIMELINE.forEach(function (t) {
     if (t.always || t.off || !t.time) return;
-    var pid = TL_PROG[t.title] || "", pm = /^(\d+)F\s*(.*)$/.exec(t.place || "") || ["", "", t.place || ""];
+    var pid = t.pid || TL_PROG[t.title] || "", pm = /^(\d+)F\s*(.*)$/.exec(t.place || "") || ["", "", t.place || ""];
     if (t.brk) { var bm = /^(\d+)F/.exec(t.place || ""); pub.push({ k: "brk", brk: 1, pid: "", a: t2m(t.time), b: t2m(t.end), t0: t.time, t1: t.end, ttl: t.title, sub: "", fl: bm ? +bm[1] : 0, pl: "" }); return; }   /* 261007 휴식 줄(progFlowBrk) */
     pub.push({ k: pid || t.title, pid: pid, a: t2m(t.time), b: t2m(t.end), t0: t.time, t1: t.end, ttl: t.title, sub: FL_SUB[pid] || "", fl: +pm[1] || 0, pl: pm[2],
       go: pid === "#1F" ? "progAlwaysGo()" : pid && pid.charAt(0) !== "#" ? "progOpen('" + pid + "')" : "", chip: attUi(pid) && attMineAt(pid) ? "출석" : "", lec: !!attUi(pid) });
@@ -545,6 +545,7 @@ function progBtn(lbl, on, cls, id, dis) {
 }
 /* v5.20 (사용자 261003 후킹 권장 4) 17F 연사 사진 · assets/speaker/<세션 id>.webp(정사각 · 240px 이상) 파일만 넣으면 이니셜 자리에 사진이 덮인다
    id = intro(CEO) · key(CTO) · road(디지털전략본부장) · l1(AWS) · l2(MS) · outro(CSO) · 파일이 없으면 img 를 지우고 이니셜 그대로(이 세션 동안 다시 묻지 않는다) */
+function spkAv(w) { var n = String(w || "").split(" ")[0]; return n && n.length <= 4 ? n : "AX"; }   /* 261008 연사 칸 = 「이름 직함」(네임택 PDF) · 원 안 = 이름 */
 var SPK_DIR = "assets/speaker/", SPK_IDS = ["intro", "key", "road", "l1", "l2", "outro"], SPK_NA = {};
 function spkAvHtml(id, av) {
   var sp = SPK_IDS.indexOf(id) >= 0, on = sp && !SPK_NA[id];
@@ -585,17 +586,17 @@ function progDetail(s) {
     D.kv = [["일시", day + progTm(s.tm)], ["장소", pl], ["참여 방법", "신청 없이 자유 참석"]];
     if (s.id === "intro") {
       var ko = attProg("key");
-      D.who = s.who; D.av = s.who; D.whoSub = "개회 인사";
-      if (attUi("key")) { attDetailFill(D, ko, timeBtn); D.secB = "Intro는 기조연설과 한 묶음이에요.<br>입장할 때 QR을 한 번, 기조연설이 끝날 때 화면의 QR을 한 번 찍어요."; }   /* v5.68 Intro 는 기조연설 출석과 한 묶음(입장 · 끝 QR 이 같다) */
+      D.who = s.who; D.av = spkAv(s.who); D.whoSub = "개회 인사";
+      if (attUi("key")) { attDetailFill(D, ko, timeBtn); D.secB = "Opening Speech는 첫 Keynote와 한 묶음이에요.<br>입장할 때 QR을 한 번, Keynote가 끝날 때 화면의 QR을 한 번 찍어요."; }   /* v5.68 Intro 는 기조연설 출석과 한 묶음(입장 · 끝 QR 이 같다) */
       else { D.st = "자유 참석"; D.stc = "ok"; D.btn = timeBtn; }   /* v5.96 (사용자 결정 261006 밤) 오전 출석 표시 끔(ATT_UI_PROGS) · 입장 · 끝 QR 줄 · 참여 전 확인 칸 · 출석 QR 스캔 단추 없음 */
       return D;
     }
     var din = !!S.get("draw_in", false), hmD = hmNow(), dwin = evPhase() === "live" && hmD >= t2m("16:40") && hmD < t2m("17:25");   /* 창 = drawCardHtml 과 같은 서버 기본 창 */
     var lc = lkCond();   /* v5.92 (사용자 261006 「럭키드로우에서 체크인 요소는 일단은 없애 놓자 · 행운권 중에서 추첨」) 참석 조건 OFF(서버 lkcond) = 체크인 줄 · 추첨 QR 단추 · 체크인 안내 없음 */
-    D.who = s.who; D.av = s.who; D.whoSub = "일하는 방식";
+    D.who = s.who; D.av = spkAv(s.who); D.whoSub = "";
     D.st = lc && din ? "추첨 체크인 완료" : "자유 참석"; D.stc = "ok";
     if (lc) D.kv.push(["체크인", din ? "추첨 체크인 완료" : "16:40–17:25 · 입구 QR"]);   /* 375px 한 줄 · 추첨 QR 은 아래 「현장 추첨」 */
-    D.extra = '<section class="axs-dsec"><h3>진행</h3><ul class="axs-ddot"><li>CSO 마무리 연설 · 일하는 방식</li><li>DAP 우수 성과자 시상</li><li>현장 추첨</li></ul></section>';   /* v5.69 시트 = 「하는 일」과 같은 점 목록 */
+    D.extra = '<section class="axs-dsec"><h3>진행</h3><ul class="axs-ddot"><li>Closing Speech · 정경선 CSO</li><li>DAP 우수 성과자 시상</li><li>현장 추첨</li></ul></section>';   /* v5.69 시트 = 「하는 일」과 같은 점 목록 */
     D.secT = "현장 추첨";
     D.secB = lc ? "16:40부터 대강당 입구 추첨 QR로 체크인해요.<br>체크인한 사람의 행운권 번호 중에서 뽑아요.<br>행운권은 스탬프 4개부터 생겨요." : "행운권 번호 전체에서 뽑아요.<br>당첨되면 경품은 따로 전달해요.<br>행운권은 스탬프 4개부터 생겨요.";
     D.help = din || !lc ? "" : dwin ? "현장에서만 체크인할 수 있어요" : evPhase() === "after" || (evPhase() === "live" && hmD >= t2m("17:25")) ? "추첨 체크인 마감" : "16:40부터 체크인할 수 있어요";   /* 261005 최종 QA · 행사가 끝난 뒤에도 「16:40부터」가 남던 것 */
@@ -606,10 +607,10 @@ function progDetail(s) {
   if (s.kind === "open") {
     /* v4.26 (사용자 확정 260924) 17F 네 프로그램 = 자유 입장 + 대강당 입구 QR 출석 · 파트너사 강연(l1 · l2)도 키노트와 같은 모양 */
     var ap = attUi(s.id), par = s.id === "l1" || s.id === "l2",   /* v5.96 출석 표시 = ATT_UI_PROGS(오후 AWS · MS)만 */ org = par ? s.ttl.split(" · ")[1] || "" : "", at = ap ? attMineAt(s.id) : "";
-    D.cat = s.id === "expo" ? "전시·체험" : s.id === "key" ? "기조연설" : par ? "파트너사 강연" : "내부 강연";
-    D.title = s.id === "road" || par ? s.sub : s.ttl;
-    if (par) { D.org = org; D.who = s.who; D.av = org || "AX"; D.whoSub = org + " · 파트너사 강연"; }
-    else if (s.who) { D.who = s.who; D.av = s.who.length <= 4 ? s.who : "AX"; D.whoSub = s.id === "road" ? "내부 강연" : s.sub; }
+    D.cat = s.id === "expo" ? "전시·체험" : par ? "파트너사 강연" : "Keynote";
+    D.title = s.id === "road" || s.id === "key" || par ? s.sub : s.ttl;
+    if (par) { D.org = s.id === "l2" ? "Microsoft" : org; D.who = s.who; D.av = org || "AX"; D.whoSub = "파트너사 강연"; }
+    else if (s.who) { D.who = s.who; D.av = spkAv(s.who); D.whoSub = s.sub; }
     D.st = at ? "출석 완료" : s.id === "expo" ? "자유 입장" : "자유 참석"; D.stc = "ok";
     D.kv = [["일시", s.id === "expo" ? "10월 26일 · 행사 시간 중" : day + progTm(s.tm)], ["장소", pl], ["참여 방법", s.id === "expo" ? "신청 없이 자유 관람" : "신청 없이 자유 참석"]];
     D.secB = s.id === "expo" ? "1F 로비 6구역 · AX VISION · AX LAB · AX in Action · AX PLAY · AX 라운지 · EVENT" :
@@ -624,7 +625,7 @@ function progDetail(s) {
   if (s.kind === "info") {
     var mi = sessMine(s.id), ax = att10X(s), ao = mi ? attMineK(s.id, "out") : "", tn = attNow(), kw = attKWin(ax, "out"), wo = mi && !ao && (evPhase() === "live" || !!attTm()) && tn >= kw.a && tn <= kw.b;
     D.cat = "실습형 세션 · " + s.ttl; D.title = s.sub;
-    D.kv = [["일시", day + progTm(s.tm)], ["장소", pl]].concat(s.who ? [["강사", s.who.split(" · ").map(function (n) { return n.replace(/ /g, "\u00a0"); }).join(" · ")]] : [], [["정원", s.capNote || ""], ["참여 방법", "사전 신청자 참여"]]);   /* v5.60 T1 (design.md §7 배제로 읽히는 말) · v6.22 줄 이름 「강사」 · 이름 단위로만 줄이 꺾임(이름 안 공백 = 붙임 공백) · v6.21 진행 = 강사 · 발표자 실명 · 소속(261007 운영진 메신저 · 실명은 남기는 원칙 261004) */
+    D.kv = [["일시", day + progTm(s.tm)], ["장소", pl]].concat(s.who ? [["강사", s.who.split(", ").map(function (n) { return n.replace(/ /g, "\u00a0"); }).join(", ")]] : [], [["정원", s.capNote || ""], ["참여 방법", "사전 신청자 참여"]]);   /* v5.60 T1 (design.md §7 배제로 읽히는 말) · v6.22 줄 이름 「강사」 · 이름 단위로만 줄이 꺾임(이름 안 공백 = 붙임 공백) · v6.21 진행 = 강사 · 발표자 실명 · 소속(261007 운영진 메신저 · 실명은 남기는 원칙 261004) */
     if (mi && ATT10_UI) D.kv.push(["끝 QR", ao ? ao + " 출석" : attWinLbl(ax, "out")]);   /* v5.71 10F 끝 QR(신청자만) · 출석하면 시각 */
     if (ao && ATT10_UI) { D.st = "출석 완료"; D.stc = "ok"; }   /* v5.96 10F 끝 QR 표시 끔 */
     D.sg = sessGuideHtml(s, !!mi);   /* v5.60 세션 안내 = (한 줄 소개) → 하는 일 → 준비할 것(신청자만) · 셋 다 없으면 블록 없음 */
@@ -700,7 +701,7 @@ function progDetail(s) {
    상담 시간 고르기(신청 전 상담)는 detIs 가 전체 화면(Views.sess_d)으로 둔다 · 경로 줄 없음(시트는 새 단계가 아니다 · design.md 5-8) */
 /* v5.79 (사용자 261006 「제목 표시줄 다이어트」) 시트 머리 = 짧은 이름 한 줄 · 10F 세션은 ttl(세션 A · 세션 E · 1회차) · 긴 정식 제목 = 본문 첫 줄 큰 제목
    분류 칩은 이름과 겹치는 말을 뺀다(「실습형 세션 · 세션 A」 → 「실습형 세션」 · 「기조연설」 = 이름이면 칩 없음) · 제목이 이름과 같으면 부제(sub)를 제목으로 · 사람 줄 보조가 이름 · 제목과 같으면 뺀다 */
-var SESS_NM = { intro: "Intro", outro: "Outro", key: "기조연설", road: "내부 강연", l1: "AWS 강연", l2: "MS 강연", expo: "1F 부스", dap: "AX 라운지", cchat: "AX 커피챗" };
+var SESS_NM = { intro: "Opening Speech", outro: "Closing Speech", key: "Keynote", road: "Keynote", l1: "AWS 강연", l2: "MS 강연", expo: "1F 부스", dap: "AX 라운지", cchat: "AX 커피챗" };
 function sessSheet() {
   var s = progById(PROG.sid);
   if (!s) return { name: "프로그램", title: "프로그램을 찾을 수 없어요", fit: 1, body: botHtml("목록에서 다시 골라 주세요"), foot: progBtn("프로그램 보기", "App.tab('guide')", "ax-button-weak") };   /* v5.79 짧은 안내 = 내용만큼(fit) */
