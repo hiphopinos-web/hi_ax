@@ -76,6 +76,7 @@ function beSync(after) {
     if (res && res.ok && typeof pushCfg === "function") pushCfg(res.push);   /* v4.76 웹 푸시 공개키(새 서버 · 비밀값 있는 Worker 만 · 없으면 알림 항목이 뜨지 않는다) */
     if (after) after(!!(res && res.ok));
     if (!res || !res.ok) return;
+    if (genCheck(res.gen)) setTimeout(function () { App.render(); }, 0);   /* 261008 데이터 세대 · 오픈 전 초기화 뒤 이 기기의 시험 흔적을 한 번 비우고 아래에서 서버 정본으로 다시 채운다 · 대기열 재전송(scanQFlush 등)보다 먼저 */
     if (stampVerSet(res.stv === 2 ? 2 : 1)) setTimeout(function () { App.render(); }, 0);   /* v4.83 스탬프 체계 판 · 새 서버 stv 2 = 새 8종 · 없으면 옛 서버(옛 8종) · 스탬프 목록 맞추기(stampSync)보다 먼저 */
     if (u.empId && res.sesNeed === 1) SES.need = true;   /* v4.68 세션필수 ON 인데 토큰이 없거나 지난 토큰(PIN 초기화) · 서버가 개인 부분(my)을 빼고 보냈다 · 이 기기 기록은 그대로 둔다 */
     if (u.empId && (res.ses === 1 && !u.ses || SES.need)) setTimeout(sesAsk, 600);   /* v4.67 세션필수 ON · 토큰 없는 로그인(옛 앱)이면 비밀번호 한 번 더 */
