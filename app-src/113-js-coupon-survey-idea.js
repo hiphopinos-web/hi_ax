@@ -203,8 +203,10 @@ function kitWhen(c) {
   if (!m) return "";
   return Number(m[2]) + "/" + Number(m[3]) + "(" + "일월화수목금토".charAt(new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getDay()) + ") " + m[4];
 }
-function kitRo(z) { return z + (z === "M" ? "으로" : "로"); }   /* 에스에스로 · 엘로 · 투엑스엘로 · 쓰리엑스엘로(옛 M = 엠으로) */
-function kitGa(z) { return z + (/S$/.test(z) ? "가" : "이"); }   /* 에스에스가 · 엘이 · 투엑스엘이 · 쓰리엑스엘이 */
+/* 261008 v6.47 화면에 보이는 사이즈 글자(사용자 「SS 이런 사이즈가 생소해서 · A B C D 이렇게 바꾸자」) · 서버 · 저장 · 설정 · 콘솔 · 발주 = SS · L · 2XL · 3XL 그대로 · 화면에 내보내는 곳은 모두 이 함수 하나를 거친다 · 창구 A = SS · B = L · C = 2XL · D = 3XL 과 같은 글자 */
+function kitLbl(z) { var m = { SS: "A", L: "B", "2XL": "C", "3XL": "D" }; return m[z] || (z == null ? "" : String(z)); }
+function kitRo(z) { return kitLbl(z) + "로"; }   /* 에이로 · 비로 · 씨로 · 디로 */
+function kitGa(z) { var l = kitLbl(z); return l + (/^[ABCD]$/.test(l) || /S$/.test(l) ? "가" : "이"); }   /* 에이가 · 비가 · 씨가 · 디가(모두 모음 끝) */
 function kitCanSet(k) { return !!k && k.st === "pick" && (k.ph === "open" || k.ph === "chg"); }
 function kitSeenKey(k) { return k ? k.st + ":" + k.ph + ":" + (k.sz || "") : ""; }
 /* 받는 곳 한 줄 · 사전 신청 = 체크인존(에코백과 함께) · 스태프 = 따로 안내 */
@@ -230,7 +232,7 @@ function ckqCardHtml() {
   if (!q) return "";
   if (q.st === "done") {
     if (S.get("ckq_seen", "") === q.no) return "";
-    var k = S.get("kit", null), sz = k && k.sz ? " " + k.sz : "", ck = S.get("stamps", []).indexOf(STAMP_CK) >= 0, ru = typeof ckGuideOn === "function" && ckGuideOn();
+    var k = S.get("kit", null), sz = k && k.sz ? " " + kitLbl(k.sz) : "", ck = S.get("stamps", []).indexOf(STAMP_CK) >= 0, ru = typeof ckGuideOn === "function" && ckGuideOn();
     return '<section class="axs-ckq done" aria-live="polite"><button type="button" class="axs-ckq-x" onclick="ckqHide()" aria-label="닫기">' + X_SVG + "</button>" +
       '<span class="ok" aria-hidden="true">' + CHECK_SVG + '</span><p class="h">수령 완료</p><p class="s">' + esc(KIT_ITEM + sz + " + 에코백") + "</p>" +
       (ck ? '<div class="rw"><span>사전등록 체크인</span><i class="dots" aria-label="스탬프 3개"><b></b><b></b><b></b></i></div>' : "") +
@@ -262,14 +264,14 @@ function kitCardHtml() {
 function kitMyRowHtml() {
   var k = kitMy();
   if (!k) return "";
-  var t = k.st === "hum" ? "사전 신청 키트 · 가습기" : k.sz ? "기념품 옷 " + k.sz + (k.no ? " · " + k.no : "") : "기념품 옷 사이즈 선택하기", d = k.st === "hum" ? "1F 주차장 체크인존" : k.sz ? kitGetTxt(k) : "마감 " + kitWhen(k.close);
+  var t = k.st === "hum" ? "사전 신청 키트 · 가습기" : k.sz ? "기념품 옷 " + kitLbl(k.sz) + (k.no ? " · " + k.no : "") : "기념품 옷 사이즈 선택하기", d = k.st === "hum" ? "1F 주차장 체크인존" : k.sz ? kitGetTxt(k) : "마감 " + kitWhen(k.close);
   return '<div class="axs-list">' + axDest(esc(t), esc(d), lnkChev(k.st === "pick" && !k.sz && kitCanSet(k) ? "선택" : "보기"), "kitOpen()") + "</div>";
 }
 function kitFsRow() {
   var b = el("fsKit"), k = kitMy(), st = el("fsKitSt");
   if (!b) return;
   b.hidden = !k;
-  if (st) st.textContent = !k ? "" : k.st === "hum" ? "가습기" : k.sz || "선택 전";
+  if (st) st.textContent = !k ? "" : k.st === "hum" ? "가습기" : k.sz ? kitLbl(k.sz) : "선택 전";
 }
 function kitOpen() {
   var k = kitMy();
@@ -292,7 +294,7 @@ function kitPick(z) {
 var KIT_FIT = { SS: "158cm · 50kg", L: "175cm · 70kg", "2XL": "180cm · 85kg", "3XL": "183cm · 100kg" };
 var KVW = { on: false, pick: false, list: [], i: 0, el: null, dirty: false, pre: {} };
 function kvSeg(t) { return t.split(" · ").map(function (x) { return '<span class="kv-sg">' + x + "</span>"; }).join(" · "); }   /* 줄은 「 · 」 자리에서만 꺾인다(「착용」 한 낱말만 떨어지지 않게) */
-function kvCap(z) { return "모델 " + KIT_FIT[z] + " · " + z + " 착용"; }
+function kvCap(z) { return "모델 " + KIT_FIT[z] + " · " + kitLbl(z) + " 착용"; }
 function kvMeas(z) { var r = KIT_TBL.filter(function (x) { return x[0] === z; })[0]; return r && r.length > 4 ? "총장 " + r[1] + " · 가슴 " + r[2] + " · 어깨 " + r[3] + " · 소매 " + r[4] + "cm" : ""; }
 /* 넘겨 볼 사이즈 · 고르는 화면 = 칩을 누를 수 있는 것(품절 아님 · 지금 내 사이즈는 품절이어도 포함) · 보기만 = 4개 모두 */
 function kvList(pick, k) {
@@ -333,7 +335,7 @@ function kvPaint(anim) {
   var z = KVW.list[KVW.i], k = kitMy() || {}, tr = w.querySelector(".kv-tr"), b = w.querySelector(".kv-go");
   tr.classList.toggle("anim", !!anim && !w.classList.contains("rm"));
   tr.style.transform = "translate3d(" + (-KVW.i * 100) + "%, 0, 0)";
-  w.querySelector(".kv-hd").innerHTML = '<b class="kv-z">' + z + '</b><span class="kv-tx"><span class="kv-m">' + kvSeg(kvCap(z)) + '</span><span class="kv-ms">' + kvSeg(kvMeas(z)) + "</span></span>";
+  w.querySelector(".kv-hd").innerHTML = '<b class="kv-z">' + kitLbl(z) + '</b><span class="kv-tx"><span class="kv-m">' + kvSeg(kvCap(z)) + '</span><span class="kv-ms">' + kvSeg(kvMeas(z)) + "</span></span>";
   [].forEach.call(w.querySelectorAll(".kv-dots i"), function (d) { d.classList.toggle("on", d.getAttribute("data-z") === z); });
   if (b) { var mine = k.sz === z; b.disabled = mine || KIT.busy; b.textContent = mine ? "지금 사이즈" : k.sz ? "사이즈 변경" : "이 사이즈로 신청"; }
   if (KVW.pick && KIT.sel !== z) { KIT.sel = z; KIT.msg = ""; KVW.dirty = true; }   /* 넘기면 선택도 그 사이즈(시트는 닫을 때 다시 그림) */
@@ -444,9 +446,9 @@ function kitSend() {
 function kitChipHtml(z, k) {
   var n = k.left && k.left[z] != null ? Number(k.left[z]) : 0, mine = k.sz === z, out = n <= 0 && !mine, low = !out && !mine && n <= KIT_LOW;
   var can = !KIT.busy && !out && kitCanSet(k), on = KIT.sel === z;
-  var st = out ? "품절" : n + "개 남음", lb = z + " · " + (out ? "품절" : (low ? "품절 임박 · " : "") + n + "개 남음") + (mine ? " · 지금 사이즈" : "");
+  var st = out ? "품절" : n + "개 남음", lb = kitLbl(z) + " · " + (out ? "품절" : (low ? "품절 임박 · " : "") + n + "개 남음") + (mine ? " · 지금 사이즈" : "");
   return '<button type="button" class="axs-kitc' + (on ? " on" : "") + (out ? " out" : "") + (low ? " low" : "") + (mine ? " me" : "") + '" role="radio" aria-checked="' + on + '" aria-label="' + lb + '"' + (can ? ' onclick="kitPick(\'' + z + '\')"' : " disabled") + ">" +
-    '<span class="z" aria-hidden="true">' + z + "</span>" + (low ? '<span class="lw" aria-hidden="true">품절 임박</span>' : "") + '<span class="n" aria-hidden="true">' + st + "</span>" +
+    '<span class="z" aria-hidden="true">' + kitLbl(z) + "</span>" + (low ? '<span class="lw" aria-hidden="true">품절 임박</span>' : "") + '<span class="n" aria-hidden="true">' + st + "</span>" +
     (mine ? '<span class="me" aria-hidden="true">지금</span>' : "") + "</button>";
 }
 function kitKvHtml(rows) {
@@ -463,7 +465,7 @@ function kitFoldHtml(id, title, open, onclick, inner) {
 /* 실측 사이즈표 · 접힘(KIT.tbl) · 표 위 「단위 cm · 재는 위치에 따라 오차」 · 값이 없는 줄 = 네 칸을 합친 「확인 중」 */
 function kitTblHtml() {
   var tb = '<p class="ax-meta">단위 cm · 재는 위치에 따라 오차가 있을 수 있어요</p><table><thead><tr><th scope="col">사이즈</th><th scope="col">총장</th><th scope="col">가슴너비</th><th scope="col">어깨너비</th><th scope="col">소매기장</th></tr></thead><tbody>' +
-    KIT_TBL.map(function (r) { return '<tr><th scope="row">' + r[0] + "</th>" + (r.length > 1 ? "<td>" + r.slice(1).join("</td><td>") + "</td>" : '<td colspan="4" class="tbd">확인 중</td>') + "</tr>"; }).join("") + "</tbody></table>";
+    KIT_TBL.map(function (r) { return '<tr><th scope="row">' + kitLbl(r[0]) + "</th>" + (r.length > 1 ? "<td>" + r.slice(1).join("</td><td>") + "</td>" : '<td colspan="4" class="tbd">확인 중</td>') + "</tr>"; }).join("") + "</tbody></table>";
   return kitFoldHtml("kitTb", "실측 사이즈표", !!KIT.tbl, "kitTbl()", tb);
 }
 /* 상품 정보(소재 · 원단 · 색상 · 디테일 · 제조국 · 값 줄) · 세탁 방법 · 주의사항(점 목록) · 순서 = 상품 정보 → 실측 사이즈표 → 세탁 방법 → 주의사항 */
@@ -489,8 +491,8 @@ function kitDoneHtml(k) {
     '<h3 class="ax-type-t3">' + kitRo(k.sz) + (k.how === "auto" ? " 배정됐어요" : " 신청 완료") + "</h3>" +
     (k.no ? '<p class="axs-kitno">신청번호 <b>' + esc(k.no) + "</b></p>" : "") + "</section>" + kitImgHtml(0) +
     (KIT_SIZES.indexOf(k.sz) >= 0 ? '<button type="button" class="axs-kitvl" onclick="kitView(\'' + k.sz + '\', 0)">착용 사진 보기</button>' : "") +   /* 261008 신청한 사이즈부터 보는 전체 화면(보기만) */
-    '<section class="axs-kitsum">' + kitImgHtml(1) + '<div class="tx"><b>' + KIT_NAME + '</b><span>사이즈 ' + esc(k.sz) + (kitStaff(k) ? "" : " · 에코백 포함") + "</span></div></section>" +
-    kitKvHtml([["신청번호", k.no ? "<b>" + esc(k.no) + "</b>" : "확인 중"], ["사이즈", esc(k.sz)], ["변경", esc(chg)], ["수령", esc(kitGetTxt(k))]]) +
+    '<section class="axs-kitsum">' + kitImgHtml(1) + '<div class="tx"><b>' + KIT_NAME + '</b><span>사이즈 ' + esc(kitLbl(k.sz)) + (kitStaff(k) ? "" : " · 에코백 포함") + "</span></div></section>" +
+    kitKvHtml([["신청번호", k.no ? "<b>" + esc(k.no) + "</b>" : "확인 중"], ["사이즈", esc(kitLbl(k.sz))], ["변경", esc(chg)], ["수령", esc(kitGetTxt(k))]]) +
     '<p class="ax-meta axs-kitnote">교환할 때 신청번호를 알려 주세요</p>';
 }
 /* 상품 시트(detPaint · 라우트 kit) */
@@ -507,7 +509,7 @@ function kitSheet() {
     ph === "open" ? "먼저 신청한 순서대로 품절돼요 · 신청하지 않으면 남은 사이즈로 배정돼요" : esc(kitWhen(k.chg)) + "까지 남은 사이즈로만 바꿀 수 있어요";
   var chips = '<section class="axs-kitsz"><div class="axs-kitszh"><h3 class="ax-type-t5-strong">사이즈</h3>' + (ph === "open" ? '<span class="ax-meta">마감 ' + esc(kitWhen(k.close)) + "</span>" : "") + "</div>" +
     '<div class="axs-kitcs" role="radiogroup" aria-label="사이즈">' + KIT_SIZES.map(function (x) { return kitChipHtml(x, k); }).join("") + "</div>" +
-    '<p class="ax-meta axs-kitnote axs-kitgd">평소 90 이하 SS · 95~100 L · 105 L(딱 맞게) 또는 2XL(넉넉하게) · 110~115 2XL · 120 3XL</p>' +   /* 261008 고르는 기준 */
+    '<p class="ax-meta axs-kitnote axs-kitgd">평소 90 이하 A · 95~100 B · 105 B(딱 맞게) 또는 C(넉넉하게) · 110~115 C · 120 D</p>' +   /* 261008 고르는 기준 */
     '<p class="ax-meta axs-kitnote">' + note + "</p></section>";
   var body = msg + kitProdHtml(k) + (ph === "end" ? '<p class="ax-meta axs-kitnote">' + note + "</p>" : chips) + kitFoldsHtml() + kitKvHtml([["수령", esc(kitGetTxt(k))]]);
   var foot = "";
