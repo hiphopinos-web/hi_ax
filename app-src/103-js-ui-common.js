@@ -55,7 +55,6 @@ function fsRowState() {
   var on = S.get("game_sound", null) === true;
   if (st) st.textContent = on ? "켜짐" : "꺼짐";
   if (ss) { ss.setAttribute("aria-checked", String(on)); ss.classList.toggle("on", on); }
-  if (typeof nxFsState === "function") nxFsState();   /* 261007 다음 할 일 카드 줄 */
 }
 function fsSndToggle() { if (typeof sndToggle === "function") sndToggle(false); fsRowState(); }   /* 게임 안 스피커와 같은 값(game_sound) */
 /* ── 261007 시각 바꿔 보기(사용자 「테스트 계정에서는 시간의 흐름을 볼 수 있게 시간을 조정해서 각 시간마다 홈이 어떻게 보이는지」) ──

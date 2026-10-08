@@ -89,11 +89,9 @@ function tourBotHtml() {
   return '<span class="ico tbot" style="--td:-' + (Date.now() % 9000) + 'ms">' + BOT_SVG.replace("</svg>", BOT_WAVE + TOUR_BOT_SM + "</svg>") + "</span>";
 }
 function tourHomeHtml() {   /* 당일 · 종료 뒤 · 나의 일정 아래(둘러보기를 한 번 연 뒤) */
-  var nh = typeof nxTourHero === "function" ? nxTourHero() : null; if (nh !== null) return tourOn() && !nh ? tourLineHtml() : "";   /* 261007 「다음 할 일」 카드가 켜진 당일 = 다 본 뒤(tour_done)이거나 시각 창 카드가 그 자리를 쓰면 여기(nxTourHero) */
   return tourOn() && !tourHeroOn() ? tourLineHtml() : "";
 }
 function tourHeroHtml() {   /* 행사 전 · 광고판 바로 아래 · v5.83 첫 방문(tour_seen 없음)은 당일에도 */
-  var nh = typeof nxTourHero === "function" ? nxTourHero() : null; if (nh !== null) return tourOn() && nh ? tourLineHtml() : "";   /* 261007 「다음 할 일」 카드와 한 자리 교대 · 다 보기 전에는 둘러보기 카드 */
   return tourOn() && tourHeroOn() ? tourLineHtml() : "";
 }
 function tourHeroOn() { return evPhase() === "before" || !S.get("tour_seen", false); }

@@ -173,7 +173,7 @@ function crowdCell(k) {
    「계단 이용」 + 셰브론 = 엘리베이터 칸이 혼잡(제보)이고 설정 혼잡_계단 ON(총무 피난계단 승인 뒤 · sync crowd.st)일 때만 · 칸을 누르면 계단 스탬프 화면(stairOpen) · OFF 면 누를 수 없는 표시 그대로 */
 /* ════════════════ 261008 홈 「지금 현장」 2×2 (사용자 결정 261008 · 기획 `디자인 시안/혼잡도 재설계 261008/기획안.md`) ════════════════
    칸 = 1F 룰렛 · 1F 포토부스 · 1F AX PLAY · 17F 대강당 · 원천 = 서버 sync crowd.n(스태프 한 번 누름 + 룰렛 스캔 기록 + 17F 오후 강연 입장 QR 하한 · 카메라 없음)
-   자리 = 홈 스탬프 블록 바로 아래 · 행사 당일(nxDay · 테스트 계정은 「시각 바꿔 보기」)만 · 서버 혼잡_표시 OFF(n.on 0) = 섹션 통째로 숨김 · 옛 서버(n 없음) = 네 칸 「정보 없음」
+   자리 = 홈 스탬프 블록 바로 아래 · 날짜 조건 없음(261008 사용자 「시간 조건 해제」 · 옛 「행사 당일만」 폐기) · 서버 혼잡_표시 OFF(n.on 0) = 섹션 통째로 숨김 · 옛 서버(n 없음) = 네 칸 「정보 없음」
    칸 = 이름 · 상태 단어 · 짧은 말 · 값이 없으면 「정보 없음」(여유로 단정하지 않는다) · 17F 는 5단계(여유 · 보통 · 붐빔 · 거의 만석 · 만석) + 「14:32 기준」 · 남은 좌석 숫자는 쓰지 않는다
    색 = 여유 흰 면 · 보통 brandSoft · 붐빔 brand 28% · 거의 만석 · 혼잡 errorSoft · 만석 error 면 + 흰 글자 · 상태 단어를 늘 함께(색만으로 전하지 않는다)
    일반 참가자는 칸을 눌러도 아무 일 없음(div) · 앱 스태프 명단 사번(staffBtn)만 칸이 단추 → 입력 시트(cnSheet · 111) · 섹션 제목 오른쪽 「눌러서 제보」 · 서버가 알린 점(n.dot)
@@ -182,7 +182,7 @@ var CN_K = [["r", "1F 룰렛"], ["p", "1F 포토부스"], ["a", "1F AX PLAY"], [
 var CN_HLV = ["", "여유", "보통", "붐빔", "거의 만석", "만석"];
 var CN_HCLS = ["", " ok", " pred", " busy", " jam", " full"];
 function cnGet() { var c = crowdGet(); return c && c.n && typeof c.n === "object" ? c.n : null; }
-function cnShow() { var n = cnGet(); return nxDay() && !(n && n.on === 0); }
+function cnShow() { var n = cnGet(); return !(n && n.on === 0); }   /* 261008 (사용자 「시간 조건 해제 · 혼잡도 전부」) 날짜 조건 없음 · 언제나 보인다 · 서버 혼잡_표시 OFF(n.on 0)만 숨김 */
 function cnStaff() { return typeof staffBtn === "function" && staffBtn() === true; }
 function cnSub(k, x) {
   if (k === "h") return crowdHm(x.at) + " 기준";
@@ -212,77 +212,8 @@ function crowdStripHtml() {
 }
 function cnHomeHtml() { var h = crowdStripHtml(); return h ? '<section class="axs-sec axs-cn">' + h + "</section>" : ""; }
 
-/* ════════════════ 261007 홈 「다음 할 일」 카드 (사용자 261007 결정 (나) 「홈 막지 않는 카드 한 장」 · 기획 `디자인 시안/재로그인 · 다음 할 일/분석.md` 5장) ════════════════
-   자리 = 광고판 바로 아래 · 「행사 둘러보기」 카드와 한 자리를 교대한다(한 번에 한 장 · Views.home 의 tourHeroHtml() 바로 뒤 · 새 자리 없음)
-   막지 않는다(시트 · 팝업 줄 밖의 정적 카드 · 재로그인해도 같은 상태면 같은 카드) · 묻지 않는다 · 자동 이동 없음 · 누르면 그 활동 화면
-   언제 = 행사 당일(10/26 · 18:00 전 · 앱 「지금」 appNow 한 곳 · 테스트 계정은 「시각 바꿔 보기」 tt)만 · 그 밖의 날 · 스탬프 6개(선착순 참여상 줄이 맡는다) = 없음
-   고르는 순서(위에서 처음 맞는 것 하나 · nxPick)
-     ① 급한 내 것 · 체크인 번호 카드(ckqCardHtml)가 홈 맨 위에 있으면 없음 · 커피챗 선정 10분 전 ~ 시작 5분 = 카드
-     ② 사전등록 체크인 → 룰렛(ckGuideOn) = 없음(홈 줄 ckGuideRow 가 맡는다) · ③ 6개 = 없음
-     ④ 시각 창 · 오후 강연 카드(시작 30분 전 ~ 15분 뒤 · 강연 시각 기준 · 출석 QR 창 설정과 무관(261008) · 10F 명단은 내 세션과 겹치는 강연 제외 · 프로그램 참여 2칸이면 없음) → 아이디어 마감 1시간 전 → 설문(14:30~ · 16:40~17:10 은 나의 일정 줄이 맡는다)
-     ⑤ 둘러보기를 다 보기 전 = 없음(「행사 둘러보기」 카드가 그 자리 · nxTourHero) · ⑥ 다 본 뒤 = 아직 안 받은 짧은 스탬프(퀴즈 → 아이디어 → 미니 게임 → AX PLAY → 계단)
-   「다 봤다」(tour_done · 기기 키) = 한 번 열어 1층 구역 멈춤 자리 8곳 중 6곳(70%) 이상 들르거나 3분(엘리베이터 권유와 같은 기준 · 분석 결정 5) · 다 본 뒤 둘러보기 카드는 나의 일정 아래로
-   끄기 = 카드 × → 그날 끔(nx_off = 그날 날짜 · 기기 키) · 설정 「앱」 「다음 할 일 카드」 줄로 다시 켬(줄에서 끄면 nx_off = all) · 꺼져 있으면 둘러보기 카드 자리는 옛 규칙(tour_seen)
-   문구 = 행동 · 조건만(코칭 어조 · 「추천」 없음 · 이모지 없음) · 칩 = 상태 이름 하나 · 보조 줄 = 소요 시간 · 방법 · 장소 중 있는 것만 */
-var NX_DAY = [2026, 9, 26], NX_TOUR_MS = 180000, NX_TOUR_Z = 6, NX_CC = [10, 5];
-var NXT = { on: 0, ms: 0 };
+/* 261007 홈 「다음 할 일」 카드(v6.13 · nxPick · nxCardHtml · nxTourHero · nxTourTick · 설정 줄 「다음 할 일 카드」)는 261008 사용자 결정 「둘러보기 고정 · 다음 할 일 삭제」로 걷었다(홈 = v6.13 이전 순서 · 되살리기 = hi_ax git v6.32)
+   남긴 것 = 행사 당일 판정 헬퍼(NX_DAY · nxDate · nxDay · 앱 「지금」 appNow 한 곳 · 테스트 계정은 「시각 바꿔 보기」) · 기기 키 tour_done · nx_off 는 지우기 목록(STORE_DEVICE)에만 남는다 */
+var NX_DAY = [2026, 9, 26];
 function nxDate() { var dn = appNow(true); return dn.getFullYear() + "-" + (dn.getMonth() + 1) + "-" + dn.getDate(); }
 function nxDay() { var dn = appNow(true); return dn.getFullYear() === NX_DAY[0] && dn.getMonth() === NX_DAY[1] && dn.getDate() === NX_DAY[2] && dn < EV_END; }
-function nxOff() { var o = S.get("nx_off", ""); return o === "all" || o === nxDate(); }
-function nxOn() { return !!((S.get("user", null) || {}).empId) && nxDay() && !nxOff(); }
-function nxTourDone() { return !tourOn() || !!S.get("tour_done", false); }
-function nxGot(id) { return S.get("stamps", []).indexOf(id) >= 0; }
-/* 둘러보기 카드가 광고판 아래 자리를 쓰는가 · null = 이 카드가 꺼져 있음(옛 규칙 tourHeroOn) */
-function nxTourHero() { return nxOn() ? !nxTourDone() && !nxPick() : null; }
-function nxPick() {
-  if (!nxOn() || stampCount() >= STAMP_DENOM) return null;
-  if (typeof ckqCardHtml === "function" && ckqCardHtml()) return null;   /* ① 체크인 번호 카드(홈 맨 위)가 급한 것 */
-  var hm = hmNow(), c = S.get("cchat", null);
-  if (c && c.status === "matched" && c.round) {
-    var r = t2m(c.round);
-    if (hm >= r - NX_CC[0] && hm < r + NX_CC[1]) return { id: "cc", chip: "곧 시작", t: "AX 커피챗 " + hhmm(c.round), s: "18F" + (c.table ? " · TABLE " + c.table : ""), a: "보기", go: "App.go('ev_cchat')" };
-  }
-  if (typeof ckGuideOn === "function" && ckGuideOn()) return null;   /* ② 홈 줄 「체크인 → 룰렛 → 강의장」 */
-  var tm = tenMine(), tp = tm ? tm.tm.split("~").map(function (x) { return t2m(x); }) : null;
-  if (progUnits() < 2) for (var i = 0; i < MYFL_LEC.length; i++) {   /* ④ 오후 강연 입장 창 */
-    var s = sessById(MYFL_LEC[i]); if (!s) continue;
-    var iv = s.tm.split("~").map(function (x) { return t2m(x); });
-    if (tp && iv[0] < tp[1] && iv[1] > tp[0]) continue;   /* 내 10F 세션 시간 */
-    if (hm >= iv[0] - 30 && hm < iv[0] + 15) return { id: "lec:" + s.id, chip: hm < iv[0] ? "곧 시작" : "진행 중", t: hm2(iv[0]) + " " + SESS_NM[s.id], s: "17F 대강당 · 입장 QR과 끝 QR", a: "보기", go: "progOpen('" + s.id + "')" };
-  }
-  var ip = S.get("idea_pub", null) || {}, cut = t2m(ip.cut || "16:00");
-  if (!nxGot("p5") && !ideaGateOff() && !ip.late && hm >= cut - 60 && hm < cut) return { id: "p5c", chip: hm2(cut) + " 마감", t: "아이디어 한 줄", s: "스탬프 1개 · 폰으로", a: "쓰기", go: "App.go('ideas')" };
-  if (!surveyDone() && !surveyLock() && !(hm >= t2m("16:40") && hm < t2m("17:10"))) return { id: "sv", chip: "다음 할 일", t: "오늘 한 판 설문", s: "60초 · 스탬프 1개", a: "설문 시작", go: "App.go('survey')" };
-  if (!nxTourDone()) return null;   /* ⑤ 둘러보기 카드가 그 자리 */
-  var L = [
-    ["qz", "AX 퀴즈 한 판", "5문제 · 약 2분 · 폰으로", "시작", "App.go('quiz')"],
-    ["p5", "아이디어 한 줄", "스탬프 1개 · 폰으로", "쓰기", "App.go('ideas')"],
-    ["p4", "미니 게임 3종", "팡 · 점프 · 테트리스 · 종목마다 한 판", "게임 보기", "App.go('games')"],
-    ["p2", "AX PLAY", "1F 하이디큐 · 하이헬퍼 체험 · 스태프 인증", "내 QR", "qrPanelOpen('mine')"],
-    ["st", "계단 이용", "한 개 층만 오르내려도 돼요", "안내", "stairOpen()"]
-  ];
-  for (var j = 0; j < L.length; j++) {
-    if (nxGot(L[j][0]) || (L[j][0] === "p5" && ideaGateOff())) continue;
-    return { id: L[j][0], chip: "다음 할 일", t: L[j][1], s: L[j][2], a: L[j][3], go: L[j][4] };
-  }
-  return null;
-}
-function nxCardHtml() {
-  var p = nxPick(); if (!p) return "";
-  return '<section class="axs-sec axs-nxh" data-nx="' + esc(p.id) + '"><button type="button" class="ax-destination axs-dest" onclick="' + p.go + '">' +
-    '<span class="axs-tx"><span class="axs-chiprow"><span class="axs-chip">' + esc(p.chip) + "</span></span>" +
-    '<span class="ax-card-title">' + esc(p.t) + '</span><span class="ax-meta">' + esc(p.s) + "</span></span>" +
-    '<span class="ax-destination-action">' + esc(p.a) + "</span></button>" +
-    '<button type="button" class="axs-x axs-nxh-x" onclick="nxOffToday()" aria-label="다음 할 일 카드 오늘 끄기">' + X_SVG + "</button></section>";
-}
-function nxOffToday() { S.set("nx_off", nxDate()); toast("다음 할 일 카드를 오늘 껐어요 · 설정에서 다시 켜요"); }
-function nxFsToggle() { if (nxOff()) S.set("nx_off", ""); else S.set("nx_off", "all"); fsRowState(); }
-function nxFsState() { var b = el("fsNx"), st = el("fsNxSt"), on = !nxOff(); if (st) st.textContent = on ? "켜짐" : "꺼짐"; if (b) { b.setAttribute("aria-checked", String(on)); b.classList.toggle("on", on); } }
-/* 둘러보기를 「다 봤다」 · 1초마다(가려진 동안은 세지 않음) · 열린 동안 머문 시간과 들른 구역 수(tlogZ · 둘러보기 접속 기록과 같은 값) */
-function nxTourTick() {
-  if (document.hidden || S.get("tour_done", false)) return;
-  if (!(window.AXTour && AXTour.isOpen())) { NXT.on = 0; NXT.ms = 0; return; }
-  if (!NXT.on) { NXT.on = 1; NXT.ms = 0; } else NXT.ms += 1000;
-  if (NXT.ms >= NX_TOUR_MS || (typeof tlogZ === "function" && tlogZ() >= NX_TOUR_Z)) S.set("tour_done", true);
-}
-setInterval(nxTourTick, 1000);

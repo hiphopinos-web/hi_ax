@@ -175,9 +175,22 @@ var STAMP_SYNC = { warm: false };
    문구 = 「기념품」 · 「사이즈」만(「사은품」 · 「선물」 · 가격 없음) · 알림 허용은 정한 직후 한 번(가치 순간 · pushAsk kit) */
 var KIT = { sel: "", edit: false, busy: false, msg: "", tbl: false };
 var KIT_SIZES = ["SS", "L", "2XL", "3XL"], KIT_ITEM = "플리스 재킷", KIT_NAME = "AX Festival 2026 플리스 재킷", KIT_GET = "10/26(월) 08:00부터 · 1F 주차장 체크인존", KIT_GET_ST = "따로 안내해 드려요", KIT_LOW = 5;
-/* 추천 사이즈표 · 예시(일반 의류 기준 · 실제 치수와 다를 수 있다 · 사용자 261008 「예시로 하나」) · [사이즈, 가슴둘레 cm, 키 cm, 몸무게 kg] */
-var KIT_TBL = [["SS", "~95", "~165", "~60"], ["L", "95~105", "165~178", "60~78"], ["2XL", "105~115", "178~185", "78~95"], ["3XL", "115~", "185~", "95~"]];
-function kitMy() { var k = S.get("kit", null); return k && typeof k === "object" && (k.st === "pick" || k.st === "hum") ? k : null; }
+/* 261008 실측 사이즈표(사용자 261008 「이 제품 · 글리머 리플렉트 플리스 자켓」 · 제조사 상세 이미지의 표 · 단위 cm · 옛 추천 사이즈표(가슴둘레 · 키 · 몸무게 예시) 폐기) · [사이즈, 총장, 가슴너비, 어깨너비, 소매기장]
+   제조사 표 = S · M · L · LL(XL) · 3L(2XL) · 우리 사이즈 넷만 · S 자리에 SS(실측 확인 중 · 사용자 261008) · L = L · 2XL = 3L(2XL) · 3XL = 제조사 표에 없음(확인 중) · 값 없는 줄 = 「확인 중」 */
+var KIT_TBL = [["SS"], ["L", "72", "59", "50", "63"], ["2XL", "78", "66", "54", "65"], ["3XL"]];
+var KIT_IMG = "assets/kit/fleece.webp";   /* 261008 상품 사진(제조사 대표 사진 앞모습 · 4:3 · 800px) */
+/* 261008 테스트 사번 미리 보기(사용자 261008) · 테스트 계정(testEmp)이 명단에 없으면 이 기기에서만 보이는 신청 화면 · 서버 재고 · 신청번호를 쓰지 않는다(dry) · 고른 사이즈 = 기기 키 kit_t · 「테스트」 표시
+   기간 = 운영 설정과 같은 값(열림 10/08 09:00 · 마감 10/21 18:00 · 변경 마감 10/23 18:00) · 앱 「지금」(appNow · 「시각 바꿔 보기」)으로 판정 · 남은 수 = 기본 수량 · 명단에 있으면 서버 my.kit 그대로(일반 참가자 규칙) */
+var KIT_T = { open: "2026-10-08 09:00", close: "2026-10-21 18:00", chg: "2026-10-23 18:00", qty: { SS: 50, L: 105, "2XL": 45, "3XL": 20 } };
+function kitTestOn() { return typeof testEmp === "function" && testEmp(); }
+function kitTestAt(c) { var m = /^(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/.exec(c); return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]); }
+function kitTest() {
+  var t = S.get("kit_t", null) || {}, sz = KIT_SIZES.indexOf(t.sz) >= 0 ? t.sz : "", d = appNow(true), left = {};
+  var ph = d < kitTestAt(KIT_T.open) ? "before" : d < kitTestAt(KIT_T.close) ? "open" : d < kitTestAt(KIT_T.chg) ? "chg" : "end";
+  KIT_SIZES.forEach(function (z) { left[z] = KIT_T.qty[z] - (z === sz ? 1 : 0); });
+  return { st: "pick", ph: ph, open: KIT_T.open, close: KIT_T.close, chg: KIT_T.chg, sz: sz, how: sz ? "pick" : "", left: left, pool: "kit", no: sz ? "테스트" : "", test: 1 };
+}
+function kitMy() { var k = S.get("kit", null); return k && typeof k === "object" && (k.st === "pick" || k.st === "hum") ? k : typeof kitTestOn === "function" && kitTestOn() ? kitTest() : null; }   /* 261008 명단에 없는 테스트 사번 = 미리 보기(kitTest) */
 function kitStaff(k) { return !!k && k.pool === "staff"; }
 /* 「2026-10-21 18:00」 → 「10/21(수) 18:00」 */
 function kitWhen(c) {
@@ -236,7 +249,7 @@ function kitCardHtml() {
   else if (k.st === "hum" && (k.ph === "open" || k.ph === "chg") && !seen) { t = "AX 라운지 사전 신청 키트 안내"; m = "1F 주차장 체크인존에서 가습기로 드려요"; }
   if (!t) return "";
   return '<button type="button" class="ax-destination axs-dest axs-kitcard" onclick="kitOpen()">' +
-    '<span class="axs-tx"><span class="axs-chiprow"><span class="axs-chip">기념품</span></span>' +
+    '<span class="axs-tx"><span class="axs-chiprow"><span class="axs-chip">' + (k.test ? "테스트" : "기념품") + "</span></span>" +
     '<span class="ax-card-title">' + esc(t) + '</span><span class="ax-meta">' + esc(m) + "</span></span>" +
     '<span class="ax-destination-action">' + a + "</span></button>";
 }
@@ -266,6 +279,10 @@ function kitTbl() { KIT.tbl = !KIT.tbl; App.render(); }
 function kitTop() { var bd = document.querySelector("#axsDet .axs-dbody"); if (bd) bd.scrollTop = 0; }
 function kitSend() {
   var k = kitMy(), u = S.get("user", {}) || {}, z = KIT.sel;
+  if (k && k.test && z && !KIT.busy && kitCanSet(k)) {   /* 261008 테스트 사번 미리 보기 · 서버에 보내지 않는다(이 기기만) */
+    S.put("kit_t", { sz: z, at: Date.now() }); KIT.sel = ""; KIT.edit = false; KIT.msg = "";
+    S.put("kit_seen", kitSeenKey(kitMy())); App.render(); kitTop(); toast("테스트 · 이 기기에만 저장했어요"); return;
+  }
   if (!k || !z || KIT.busy || !BE.on || !u.empId) return;
   KIT.busy = true; App.render();
   beCall({ action: "kit_size_set", emp: u.empId, size: z }, function (res) {
@@ -297,13 +314,13 @@ function kitChipHtml(z, k) {
 function kitKvHtml(rows) {
   return '<dl class="axs-kitkv">' + rows.map(function (r) { return "<div><dt>" + r[0] + "</dt><dd>" + r[1] + "</dd></div>"; }).join("") + "</dl>";
 }
-/* 상품 이미지 자리 · 사진이 아직 없다(사용자 261008 「예시 칸만」) · 큰 칸(상품 화면) · 작은 칸(완료 요약) */
-function kitImgHtml(sm) { return '<div class="axs-kitimg' + (sm ? " sm" : "") + '" role="img" aria-label="상품 이미지 자리"><span>상품 이미지</span></div>'; }
-/* 추천 사이즈표 · 접힘(KIT.tbl) · 표 위 「예시 · 실제 치수와 다를 수 있어요」 */
+/* 상품 사진 · 261008 제조사 대표 사진(앞모습 · 「샘플」 딱지 없음 · 옛 회색 「상품 이미지」 예시 칸 대체) · 큰 칸(상품 화면) · 작은 칸(완료 요약) */
+function kitImgHtml(sm) { return '<div class="axs-kitimg has' + (sm ? " sm" : "") + '"><img src="' + KIT_IMG + '" alt="' + (sm ? "" : KIT_ITEM + " 앞모습") + '" width="800" height="600" decoding="async"></div>'; }
+/* 실측 사이즈표 · 접힘(KIT.tbl) · 표 위 「단위 cm · SS · 3XL 실측은 확인 중이에요」 · 값이 없는 줄 = 네 칸을 합친 「확인 중」 */
 function kitTblHtml() {
-  var tb = KIT.tbl ? '<div class="axs-kittb" id="kitTb"><p class="ax-meta">예시 · 실제 치수와 다를 수 있어요</p><table><thead><tr><th scope="col">사이즈</th><th scope="col">가슴둘레(cm)</th><th scope="col">키(cm)</th><th scope="col">몸무게(kg)</th></tr></thead><tbody>' +
-    KIT_TBL.map(function (r) { return '<tr><th scope="row">' + r[0] + "</th><td>" + r[1] + "</td><td>" + r[2] + "</td><td>" + r[3] + "</td></tr>"; }).join("") + "</tbody></table></div>" : "";
-  return '<section class="axs-kittbl"><button type="button" class="axs-kittog" aria-expanded="' + KIT.tbl + '"' + (KIT.tbl ? ' aria-controls="kitTb"' : "") + ' onclick="kitTbl()"><span>추천 사이즈표</span>' + CHEV_SVG + "</button>" + tb + "</section>";
+  var tb = KIT.tbl ? '<div class="axs-kittb" id="kitTb"><p class="ax-meta">단위 cm · SS · 3XL 실측은 확인 중이에요</p><table><thead><tr><th scope="col">사이즈</th><th scope="col">총장</th><th scope="col">가슴너비</th><th scope="col">어깨너비</th><th scope="col">소매기장</th></tr></thead><tbody>' +
+    KIT_TBL.map(function (r) { return '<tr><th scope="row">' + r[0] + "</th>" + (r.length > 1 ? "<td>" + r.slice(1).join("</td><td>") + "</td>" : '<td colspan="4" class="tbd">확인 중</td>') + "</tr>"; }).join("") + "</tbody></table></div>" : "";
+  return '<section class="axs-kittbl"><button type="button" class="axs-kittog" aria-expanded="' + KIT.tbl + '"' + (KIT.tbl ? ' aria-controls="kitTb"' : "") + ' onclick="kitTbl()"><span>실측 사이즈표</span>' + CHEV_SVG + "</button>" + tb + "</section>";
 }
 /* 상품 머리(이미지 · 상품명 · 한 줄 설명) */
 function kitProdHtml(k) {
@@ -328,7 +345,7 @@ function kitSheet() {
     return { name: "사전 신청 키트", fit: 1, body: '<section class="axs-kithd"><h3 class="ax-type-t3">AX 라운지 사전 신청 키트는 ' + (Number(k.q) || 29) + "명까지예요</h3>" +
       '<p class="ax-description">1F 주차장 체크인존에서 가습기로 드려요</p></section>' + kitKvHtml([["수령", esc(KIT_GET)]]) };
   }
-  var msg = KIT.msg ? '<p class="axs-kitmsg" role="alert">' + esc(KIT.msg) + "</p>" : "";
+  var msg = (k.test ? '<p class="ax-meta axs-kitnote axs-kittest">테스트 계정 미리 보기 · 서버에 저장하지 않아요</p>' : "") + (KIT.msg ? '<p class="axs-kitmsg" role="alert">' + esc(KIT.msg) + "</p>" : "");   /* 261008 테스트 사번 미리 보기 표시 */
   if (k.sz && !KIT.edit) return { name: nm, body: msg + kitDoneHtml(k), foot: kitCanSet(k) ? progBtn("사이즈 변경", "kitEdit(1)", "ax-button-weak") : "" };
   var ph = k.ph, note = ph === "before" ? esc(kitWhen(k.open)) + "부터 신청할 수 있어요" : ph === "end" ? "신청 기간이 끝났어요" + (kitStaff(k) ? "" : " · 사이즈는 체크인존에서 남은 것으로 드려요") :
     ph === "open" ? "먼저 신청한 순서대로 품절돼요 · 신청하지 않으면 남은 사이즈로 배정돼요" : esc(kitWhen(k.chg)) + "까지 남은 사이즈로만 바꿀 수 있어요";
