@@ -479,12 +479,12 @@ function raffleNumsHtml(n) {
   return '<div class="rnum"><p class="lb">내 행운권 번호</p><div class="tkts">' + chips + "</div></div>";
 }
 /* 261009 (사용자 「행운권 모양 테두리에 번호도 점 문자로 · 은색 비슷한 회색톤」 · 시안 ④ 메인 선택) 행운권 번호 칩 = 티켓 한 모양(레일 · 나의 보상 · 추첨 안내 팝업 같은 칩)
-   모양 = 양옆 반원 홈 + 왼쪽 절취선 · 번호 = 은회색 무광 면(canvas) · 회색 테두리(divider-strong) · 주황 절취선 · 먹색 점 글자(DotGlyph 14px · 읽는 이름 = 번호)
+   모양 = 양옆 반원 홈 + 왼쪽 절취선 · 번호 = 은회색 무광 면(canvas) · 회색 테두리(divider-strong) · 어두운 회색 절취선(muted) · 먹색 점 글자(DotGlyph 12px · 읽는 이름 = 번호) · 추첨 체크인 결과 화면 번호 줄도 같은 칩
    열기 전 「새 번호 확인」 = 같은 티켓의 주황 면(누를 것) · 「발급 중」 = 같은 티켓의 회색 면 · 색은 토큰만(CSS .tkt.tk) · 상자 연출(rfx) 끝 화면은 그대로(흰 상자 위 brandText 점) */
 function tktHtml(k, v, tap) {
   if (k === "new") return '<button type="button" class="tkt tk new" onclick="' + tap + '"><span class="tk-t">' + v + "</span></button>";
   if (k === "wait") return '<span class="tkt tk wait"><span class="tk-t">' + v + "</span></span>";
-  return '<span class="tkt tk">' + DotGlyph.svg(String(v), { h: 14, label: String(v) }) + "</span>";
+  return '<span class="tkt tk">' + DotGlyph.svg(String(v), { h: 12, label: String(v) }) + "</span>";
 }
 /* 룰렛 쿠폰 모달 · 내 QR + 사용 여부 (사용 여부는 서버 my.roulette 가 정본, sync 가 roulette_used 로 받아쓴다) */
 function ppRouletteOpen() {
@@ -564,7 +564,7 @@ function rfxOpen() {
   roll();
 }
 /* v5.10 행운권 번호 = 점 글자(design.md A-5 5-20) · 하나 30px · 여러 개 24px · 멈출 때만 점이 차례로 켜지고 읽는 이름 = 번호(aria-live) · 굴러가는 동안은 읽지 않음 · 동작 줄이기 = 켜진 모양
-   번호 칩(레일 · 나의 보상 · 추첨 안내)도 261009부터 점 글자 티켓(tktHtml · 14px · 움직임 없음 · 읽는 이름 = 번호) · 이 상자 연출은 그대로 */
+   번호 칩(레일 · 나의 보상 · 추첨 안내)도 261009부터 점 글자 티켓(tktHtml · 12px · 움직임 없음 · 읽는 이름 = 번호) · 이 상자 연출은 그대로 */
 function rfxDot(x, multi, land) {
   return DotGlyph.svg(String(x), land ? { h: multi ? 24 : 30, label: String(x), anim: !rgReduced(), step: 22 } : { h: multi ? 24 : 30, hidden: true });
 }

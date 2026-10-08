@@ -190,7 +190,7 @@ function scanResHtml() {
       '<span class="axs-chip ok axs-self">' + (o.dup ? "이미 체크인 · " + esc(o.at) : "17F 대강당 · Closing Speech") + "</span>" +
       '<h1 class="ax-title">추첨 체크인<br>완료</h1>' +
       '<section class="axs-res-card"><p class="ax-type-t7 axs-bt">행운권 번호</p><p class="axs-res-n">' + (o.n ? o.n + "개" : "없음") + "</p>" +
-      '<p class="ax-description">' + (dn.length ? dn.map(esc).join(" · ") : "행운권이 없어요 · 스탬프 4개부터") + "</p></section>" +
+      (dn.length ? '<div class="tkts">' + dn.map(function (x) { return tktHtml("no", x); }).join("") + "</div>" : '<p class="ax-description">행운권이 없어요 · 스탬프 4개부터</p>') + "</section>" +   /* 261009 (사용자 「체크인 화면 번호도 티켓으로」) 번호 = 레일과 같은 티켓 칩(tktHtml) · 0장은 한 줄 그대로 */
       (o.test ? '<p class="ax-meta">테스트 계정</p>' : "");
     return { body: h, btn: ax2Btn("확인", "srAct('exp')") };
   }
