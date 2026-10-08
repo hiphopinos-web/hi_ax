@@ -342,12 +342,16 @@ function attWinLbl(x, k) { var w = attKWin(x, k || "in"); return hm2(w.a) + "–
 function attShut(x) { var ph = evPhase(); return !!x && (ph === "after" || (ph === "live" && attNow() > attKWin(x, "out").b)); }
 function attTm() { var o = testMode() ? ttGet() : null; return o ? hm2(o.m) : ""; }   /* 261007 옛 att_tm → 시험 시각 tt 하나(ttGet · 테스트 모드만) */
 function attNow() { return hmNow(); }
+/* 261008 (사용자 「17층 출석체크는 지금도 되도록 · 이상한 데이터는 행사 전 초기화」) 행사일(10/26) 전이면 시간 창 없이 늘 열림 · 서버 attPreDay_ 와 같은 규칙
+   appNow 기준 · 테스트 계정 시각 바꿔 보기 = 10/26 이면 행사일 규칙 · 10/25 이면 행사 전 */
+function attPre() { return appNow(true) < new Date(2026, 9, 26); }
+function attOpenK(x, k, t) { var w = attKWin(x, k); return attPre() || (t >= w.a && t <= w.b); }
 /* 지금 창 · open = 입장이나 끝 창이 열린 id · sel = 미리 고를 것(그 창에서 아직 안 찍은 것 중 진행 중 우선, 없으면 곧 시작할 것) · next = 다음에 열리는 강의 */
 function attWin(t) {
   var open = [], sel = "", selK = 99999, next = null, nextA = 99999, mine = attMine();
   attUiProgs().forEach(function (x) {   /* v5.96 고르기 · 다음 출석 = 앱이 안내하는 강연만 */
     var wi = attKWin(x, "in"), wo = attKWin(x, "out"), s0 = t2m(x.s);
-    var inO = t >= wi.a && t <= wi.b, outO = t >= wo.a && t <= wo.b;
+    var inO = attOpenK(x, "in", t), outO = attOpenK(x, "out", t);   /* 261008 행사일 전 = 늘 열림 */
     if (inO || outO) {
       open.push(x.id);
       var k = (t >= s0 ? 0 : 10000) + s0;
@@ -370,7 +374,7 @@ function attByCode(code, fixId, k) {
 }
 function attRowHtml(x, t, mine) {
   var wi = attKWin(x, "in"), wo = attKWin(x, "out"), s0 = t2m(x.s), ai = mine[x.id], ao = mine[x.id + ".out"];
-  var can = (t >= wi.a && t <= wi.b && !ai) || (t >= wo.a && t <= wo.b && !ao), on = can && ATT.sel === x.id;
+  var can = (attOpenK(x, "in", t) && !ai) || (attOpenK(x, "out", t) && !ao), on = can && ATT.sel === x.id;   /* 261008 행사일 전 = 늘 열림 */
   var st = ai && ao ? "입장 · 끝 출석" : can ? (t >= s0 ? "진행 중" : x.s + " 시작") : ai ? "입장 " + ai : ao ? "끝 " + ao : t > wo.b ? "종료" : x.s + " 시작";
   return '<button type="button" class="axs-att" role="radio" aria-checked="' + on + '"' + (can ? ' onclick="attPick(\'' + x.id + '\')"' : " disabled") + ">" +
     '<span class="rd" aria-hidden="true"></span><span class="nm">' + esc(x.nm) + "</span>" +   /* 한 줄 · 큰글씨 360×640 에서도 시트 안 스크롤 없게(design.md A 5-7) · 시각은 상태 칸과 강연 상세 */
@@ -411,14 +415,14 @@ function attGo() {
   sheetBusy(true);
   var p = { action: "att_claim", emp: u.empId, code: ATT.code, prog: x.id }, tm = attTm();
   if (ATT.k) p.k = ATT.k;   /* v5.68 입장 · 끝 QR · 없으면 서버가 시각으로 고른다 */
-  if (tm && testEmp()) p.tm = tm;
+  if (tm && testEmp() && !attPre()) p.tm = tm;   /* 261008 시험 시각이 행사 전(10/25)이면 tm 을 보내지 않는다(서버도 행사 전 규칙 · 창 없음) */
   beCall(p, attDone, function () { sheetFail({ t: "연결이 불안정해 출석하지 못했어요", b: "출석은 아직 되지 않았어요. 다시 시도해 주세요." }); });
 }
 /* 데모(서버 없음) · 서버와 같은 규칙(입장 · 끝 창 · 같은 구분 1회 · 17F 몫 = 입장 1 + 끝 1)
    v5.94 (사용자 결정 261006) 17F 몫 = 오후 파트너 강연(P3_PM · AWS · MS) 행만 · 오전 강연은 출석만(스탬프 없음 · 서버 「프로그램스탬프_범위」 기본 오후강연) */
 function attLocal(x) {
   var t = attNow(), wo = attKWin(x, "out"), k = ATT.k || (t >= wo.a && t <= wo.b ? "out" : "in"), kw = attKWin(x, k), at = attMineK(x.id, k);
-  if (!at && (t < kw.a || t > kw.b)) return attDone({ ok: false, reason: "window", k: k, open: hm2(kw.a) + "~" + hm2(kw.b) });
+  if (!at && !attPre() && (t < kw.a || t > kw.b)) return attDone({ ok: false, reason: "window", k: k, open: hm2(kw.a) + "~" + hm2(kw.b) });
   var pm = P3_PM.indexOf(x.id) >= 0, m = attMine(), isPm = function (q) { return P3_PM.indexOf(q.replace(/\.out$/, "")) >= 0; };
   var hasI = Object.keys(m).some(function (q) { return isPm(q) && !/\.out$/.test(q); }) || (pm && k === "in"), hasO = Object.keys(m).some(function (q) { return isPm(q) && /\.out$/.test(q); }) || (pm && k === "out");
   var pg = (hasI ? 1 : 0) + (hasO ? 1 : 0);
@@ -452,15 +456,16 @@ function attStamp(res) {
   if (st.dry) {
     var s0 = S.get("stamps", []);
     if (s0.indexOf("p3") >= 0 || s0.indexOf(id) >= 0) return 0;
-    ppSeenAdd(id); s0.push(id); S.set("stamps", s0);
-  } else {
-    if (st.dup || !st.add) { if (st.stamps) stampSync(st.stamps); return 0; }
-    ppSeenAdd(id);
-    if (st.stamps) stampSync(st.stamps);
+    s0.push(id); S.set("stamps", s0);
   }
+  else if (st.dup || !st.add) { if (st.stamps) stampSync(st.stamps); return 0; }   /* 이미 받음 · 기록만 = 팝 없음 */
+  /* 261008 (사용자 「파트너사 강의에 출석체크를 하면 스탬프 박히는 효과가 없어」) 새로 받은 순간(테스트 dry 포함) = 다른 적립처럼 가운데 도장 팝 한 번(결과 시트 위 · #spop z 400)
+     p3h = 「프로그램 참여 1 / 2」 · p3 = 「프로그램 참여 ×2」 · stampOverlay 가 pp_seen 에 먼저 적어 뒤의 동기화(stampSync)가 같은 팝을 또 띄우지 않는다(옛 ppSeenAdd 만 = 팝 없이 봤음 처리) */
+  var pop = stampOverlay(id);
+  if (!st.dry && st.stamps) stampSync(st.stamps);
   PP.just.p3 = hm2(hmNow());
   checkRewards();
-  stampBuzz(25);
+  if (!pop) stampBuzz(25);
   return Math.min(STAMP_DENOM, stampCount());
 }
 /* ═══ v5.71 (사용자 확정 261005 「권장대로 10층 끝 QR 진행해」) 10F 실습 세션 끝 QR ═══
