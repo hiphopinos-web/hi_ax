@@ -49,6 +49,8 @@ function checkMyState(base) {
 }
 /* 폴링 1회 = 월 + 내 상담·커피챗 상태 + 공지 (v3.50 Outro 문항 기능 폐지 · 서버 응답의 옛 문항 필드는 읽지 않는다) */
 /* v4.57 폴링 예약 · 화면이 가려져 있으면 예약하지 않는다(보이면 visibilitychange 가 곧바로 한 번) */
+var BE_JIT_SHOW_MS = 1500;   /* 261008 화면이 다시 보일 때 첫 sync 무작위 상한(ms) */
+function beJitShow() { return Math.floor(Math.random() * BE_JIT_SHOW_MS); }
 function pollNext(ms) {
   if (POLL.t) { clearTimeout(POLL.t); POLL.t = null; }
   if (!BE.on || document.hidden) return;
@@ -58,14 +60,14 @@ function pollTick() {
   POLL.t = null;
   if (document.hidden) return;
   beSync(function (ok) {
-    if (ok) { POLL.fails = 0; POLL.ms = wsPollMs(); pollNext(POLL.ms); }   /* v4.75 소켓이 붙어 있으면 ws.p 초(기본 120) · 끊기면 평소(30초) */
+    if (ok) { POLL.fails = 0; POLL.ms = wsPollMs(); pollNext(POLL.ms + beJit()); }   /* v4.75 소켓이 붙어 있으면 ws.p 초(기본 120) · 끊기면 평소(30초) · 261008 성공해도 0~5초 무작위를 더한다(서버가 잠깐 밀리면 폰들이 같은 순간에 몰려 더 밀리던 되먹임을 끊는다 · 17:00 3,000명 시험 p95 4.3초 → 0.22초 · 상한 BE_JIT_MS 5초 + 서버가 응답 poll 에 더하는 지터는 poll 30~120 범위 안) */
     else { POLL.fails++; POLL.ms = Math.min(BE_POLL_MAX, POLL.ms * 2); pollNext(POLL.ms + beJit()); }
   });
 }
 document.addEventListener("visibilitychange", function () {
   if (!BE.on) return;
   if (document.hidden) { if (POLL.t) { clearTimeout(POLL.t); POLL.t = null; } return; }
-  pollNext(0);   /* 다시 보이면 곧바로 한 번 */
+  pollNext(beJitShow());   /* 다시 보이면 곧바로 한 번 · 261008 0~1.5초 무작위 뒤(여러 폰이 같은 순간 화면을 켜도 한 점에 몰리지 않게 · 손에는 눈에 띄지 않는 길이) */
 });
 function beSync(after) {
   if (!BE.on) return;
@@ -288,7 +290,7 @@ function wsOpen(role, u) {
     if (WS.ws !== ws) return;
     var wasOk = WS.st === "ok", code = e && e.code;
     WS.ws = null; WS.st = "off"; wsTimers(false);
-    if (wasOk) pollNext(POLL.base);   /* 끊기면 곧바로 평소 폴링으로 */
+    if (wasOk) pollNext(POLL.base + beJit());   /* 끊기면 곧바로 평소 폴링으로 · 261008 0~5초 무작위(재배포로 한꺼번에 끊겨도 같은 순간에 몰리지 않게) */
     if (code === 4000 || WS.no || !WS.cfg) return;
     if (code === 4002) { WS.cfg = null; pollNext(beJit()); return; }   /* 조각이 바뀌었다 · sync 가 새 값을 준다 */
     if (wasOk) { WS.t = setTimeout(wsRetry, Math.random() * 10000); return; }   /* 열린 뒤 끊김(재배포 1006 등) · 실패로 세지 않는다 */
@@ -306,7 +308,7 @@ function wsUp(m) {
   var re = WS.hadOk;
   WS.st = "ok"; WS.okAt = Date.now(); WS.pongAt = Date.now(); WS.fails = 0; WS.hadOk = true;
   wsTimers(true);
-  if (re && WS.role !== "tv") wsSyncSoon(3000); else pollNext(wsPollMs());   /* 다시 붙었으면 그사이 놓친 것을 sync 1회로 · 처음이면 폴링만 늦춘다 */
+  if (re && WS.role !== "tv") wsSyncSoon(3000); else pollNext(wsPollMs() + beJit());   /* 다시 붙었으면 그사이 놓친 것을 sync 1회로 · 처음이면 폴링만 늦춘다 */
   if (WS.role === "tv") tvWsPull(true);
 }
 function wsTimers(on) {
