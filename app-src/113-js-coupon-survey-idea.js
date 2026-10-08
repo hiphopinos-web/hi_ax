@@ -177,6 +177,7 @@ var KIT = { sel: "", edit: false, busy: false, msg: "", tbl: false, fo: {} };
 var KIT_SIZES = ["SS", "L", "2XL", "3XL"], KIT_ITEM = "플리스 재킷", KIT_NAME = "AX Festival 2026 플리스 재킷", KIT_GET = "10/26(월) 08:00부터 · 1F 주차장 체크인존", KIT_GET_ST = "따로 안내해 드려요", KIT_LOW = 5;
 /* 261008 실측 사이즈표(사용자 261008 「이 제품 · 글리머 리플렉트 플리스 자켓」 · 제조사 상세 이미지의 표 · 단위 cm · 옛 추천 사이즈표(가슴둘레 · 키 · 몸무게 예시) 폐기) · [사이즈, 총장, 가슴너비, 어깨너비, 소매기장]
    제조사 표 = SS · S · M · L · LL(XL) · 3L(2XL) · 4L · 5L · 우리 사이즈 넷만 · 대응(사용자 261008 ① 「제조사 표기대로」 · 사용자가 보낸 전체 사이즈표) = SS = SS · L = L · 2XL = 제조사 3L · 3XL = 제조사 4L · 값 없는 줄 = 「확인 중」(지금은 없음) */
+/* 261008 고르는 기준 한 줄(사용자 261008 「고르는 기준 한 줄 신청 화면에 넣어줘」) · 옷 가슴 둘레(몸통폭 × 2) − 겉옷 여유 15~20cm = 맞는 몸 가슴둘레 · 국내 남성 호수 · 사이즈 칩 아래 · 문구는 kitSheet 안에 바로(검사 샌드박스가 KIT_* 변수를 골라 싣기 때문) */
 var KIT_TBL = [["SS", "63", "50", "44", "60"], ["L", "72", "59", "50", "63"], ["2XL", "78", "66", "54", "65"], ["3XL", "80", "70", "56", "66"]];
 /* 261008 상품 정보 · 세탁 방법 · 주의사항(사용자 261008 「제조사 상세 페이지 내용을 그대로」 · 접힘 3칸) · 제조사 상세 이미지의 사실 정보만(홍보 문단 · 가격 · 판매처 · 상표 없음) · 세탁 · 주의 = 상세 문구 그대로(띄어쓰기만 앱 기준) */
 var KIT_INFO = [["소재", "폴리에스터 100%"], ["원단", "265g/㎡ 플리스 · 부드럽고 따뜻해요"], ["계절", "가을부터 봄까지 데일리로 입어요"], ["색상", "블랙"], ["디테일", "앞 지퍼 · 왼가슴 수납 포켓 · 양옆 주머니 · 뒷목 반사 소재"], ["제조국", "미얀마, 중국"]];
@@ -370,6 +371,7 @@ function kitSheet() {
     ph === "open" ? "먼저 신청한 순서대로 품절돼요 · 신청하지 않으면 남은 사이즈로 배정돼요" : esc(kitWhen(k.chg)) + "까지 남은 사이즈로만 바꿀 수 있어요";
   var chips = '<section class="axs-kitsz"><div class="axs-kitszh"><h3 class="ax-type-t5-strong">사이즈</h3>' + (ph === "open" ? '<span class="ax-meta">마감 ' + esc(kitWhen(k.close)) + "</span>" : "") + "</div>" +
     '<div class="axs-kitcs" role="radiogroup" aria-label="사이즈">' + KIT_SIZES.map(function (x) { return kitChipHtml(x, k); }).join("") + "</div>" +
+    '<p class="ax-meta axs-kitnote axs-kitgd">평소 90 이하 SS · 95~100 L · 105 L(딱 맞게) 또는 2XL(넉넉하게) · 110~115 2XL · 120 3XL</p>' +   /* 261008 고르는 기준 */
     '<p class="ax-meta axs-kitnote">' + note + "</p></section>";
   var body = msg + kitProdHtml(k) + (ph === "end" ? '<p class="ax-meta axs-kitnote">' + note + "</p>" : chips) + kitFoldsHtml() + kitKvHtml([["수령", esc(kitGetTxt(k))]]);
   var foot = "";
