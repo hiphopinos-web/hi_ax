@@ -386,7 +386,8 @@ try { history.replaceState({ axf: 0 }, ""); navRepush(); } catch (e) {}
 window.addEventListener("popstate", function () {
   var app = el("app");
   if (!app || app.hidden) { navRepush(); return; }                       /* 입장 전 화면은 그대로 유지 */
-  if (window.AXTour && AXTour.isOpen()) { AXTour.back(); navRepush(); return; }   /* v5.11 1층 둘러보기 · 뒤로 = 한 층씩(판 보기 → 시트 → 둘러보기) */
+  if (window.AXTour && AXTour.isOpen()) { AXTour.back(); navRepush(); return; }
+  if (typeof KVW === "object" && KVW.on) { kitViewClose(); navRepush(); return; }   /* 261008 착용 사진 전체 화면 · 뒤로 = 닫고 시트(고른 칩 그대로) */   /* v5.11 1층 둘러보기 · 뒤로 = 한 층씩(판 보기 → 시트 → 둘러보기) */
   /* v4.18 바텀 시트가 열려 있으면 뒤로 = 시트 닫기 (통신 중에는 닫지 않고 그대로 둔다) */
   if (el("axsSheet")) { if (!SHEET.busy) sheetClose(); navRepush(); return; }
   if (el("modal")) { if (typeof qrScanClose === "function" && el("qrVideo")) qrScanClose(); else modalClose(); navRepush(); return; }
@@ -486,7 +487,6 @@ function detPaint(dv, base) {
   DET.cur = snap;
   document.documentElement.classList.add("det-lock");
   detOv();
-  if (dv === "kit" && typeof kitFit === "function") kitFit();   /* 261008 플리스 시트 사진 칸 높이 맞춤 */
   if (first) { try { pan.focus({ preventScroll: true }); } catch (e) {} }
 }
 function detMake() {

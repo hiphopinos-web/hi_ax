@@ -276,41 +276,141 @@ function kitOpen() {
   if (!k) return;
   KIT.sel = ""; KIT.edit = false; KIT.msg = ""; KIT.tbl = false; KIT.fo = {};
   S.put("kit_seen", kitSeenKey(k));
-  KIT_SIZES.forEach(function (z) { try { new Image().src = "assets/kit/fit_" + z + ".webp"; } catch (e) {} });   /* 261008 착용 사진 4장(65KB)을 미리 받아 칩을 누르면 바로 바뀐다 */
+  KIT_SIZES.forEach(function (z) { try { var im = new Image(); im.src = "assets/kit/fit_" + z + ".webp"; KVW.pre[z] = im; } catch (e) {} });   /* 261008 착용 사진 4장(65KB)을 미리 받아 칩을 누르면 전체 화면 보기가 바로 뜬다 */
   App.go("kit");
-  setTimeout(function () { if (App.current === "kit") kitFit(); }, 500);   /* 글꼴이 늦게 바뀐 뒤 한 번 더 */
 }
 function kitPick(z) {
   if (KIT.busy) return;
   KIT.sel = z; KIT.msg = ""; App.render();
-  /* 261008 칩을 누른 뒤 사진 윗부분(머리)이 시트 머리 밑으로 가려진 채 멈추지 않게(사용자 실기기 캡처 · 안드로이드 412폭) · 사진 칸 맨 위가 본문 맨 위보다 위로 지나가 있으면 사진 맨 위가 보이게 다시 올린다(제목 + 사진 + 캡션이 한 화면에 들어가면 제목부터 · 아니면 사진 맨 위부터) · 사진 맨 위가 이미 보이면 스크롤하지 않는다 */
-  try {
-    var bd = document.querySelector("#axsDet .axs-dbody"), fg = bd && bd.querySelector(".axs-kitfig"), bx = fg && fg.querySelector(".axs-kitimg");
-    if (bx) {
-      var br = bd.getBoundingClientRect(), xr = bx.getBoundingClientRect(), fr = fg.getBoundingClientRect(), pr = bd.querySelector(".axs-kitprod"), pt = pr ? pr.getBoundingClientRect().top : xr.top;
-      if (xr.top < br.top) {
-        var tg = fr.bottom - pt <= bd.clientHeight - 4 ? pt : xr.top - 8;
-        bd.scrollTo({ top: Math.max(0, bd.scrollTop + tg - br.top), behavior: window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
-      }
+  kitView(z, 1);   /* 261008 칩을 누르면 그 사이즈 착용 사진 전체 화면 보기(사용자 「화면 꽉 차게 · 사이즈 선택 시 사진으로 날아가서」) · 선택은 그대로 · 닫으면 시트 */
+}
+/* ═══ 261008 착용 사진 전체 화면 보기(사용자 261008 실기기 캡처 「화면 꽉 차게 보여 줘야 · 사이즈 선택 시 사진으로 날아가서」) ═══
+   사이즈 칩을 누르면(선택은 그대로) 그 사이즈 착용 사진이 화면을 채운다 · 사진 높이 = 보기 칸 높이(머리부터 발끝 · 폭이 넘치면 양옆 배경만 잘림) · 바탕 = 사진 스튜디오 회색 실측 · 사진 양옆 가장자리는 흐려 이음매가 안 보이게
+   아래 판 = 큰 사이즈 글자(주황) · 「모델 키 · 몸무게 · 사이즈 착용」 · 실측 한 줄 · 주 버튼(고르는 화면만 · 같은 신청 흐름 kitSend · 완료 화면은 시트에서)
+   좌우로 밀기 = 이웃 사이즈(고르는 화면 = 선택도 그 사이즈 · 품절은 건너뜀) · 점 4개 · 닫기 = 오른쪽 위 X · 아래로 끌기 · 뒤로 가기 · 사진 탭 · Esc → 시트(고른 칩 그대로)
+   여는 전환 = 가운데에서 커짐 0.22초(움직임 줄이기 = 즉시) · 사진은 시트를 열 때 미리 받고(kitOpen) 첫 장은 decode 뒤 보인다(깜빡임 없음) */
+var KIT_FIT = { SS: "158cm · 50kg", L: "175cm · 70kg", "2XL": "180cm · 85kg", "3XL": "183cm · 100kg" };
+var KVW = { on: false, pick: false, list: [], i: 0, el: null, dirty: false, pre: {} };
+function kvSeg(t) { return t.split(" · ").map(function (x) { return '<span class="kv-sg">' + x + "</span>"; }).join(" · "); }   /* 줄은 「 · 」 자리에서만 꺾인다(「착용」 한 낱말만 떨어지지 않게) */
+function kvCap(z) { return "모델 " + KIT_FIT[z] + " · " + z + " 착용"; }
+function kvMeas(z) { var r = KIT_TBL.filter(function (x) { return x[0] === z; })[0]; return r && r.length > 4 ? "총장 " + r[1] + " · 가슴 " + r[2] + " · 어깨 " + r[3] + " · 소매 " + r[4] + "cm" : ""; }
+/* 넘겨 볼 사이즈 · 고르는 화면 = 칩을 누를 수 있는 것(품절 아님 · 지금 내 사이즈는 품절이어도 포함) · 보기만 = 4개 모두 */
+function kvList(pick, k) {
+  return KIT_SIZES.filter(function (z) { if (!pick) return !!KIT_FIT[z]; var n = k.left && k.left[z] != null ? Number(k.left[z]) : 0; return !!KIT_FIT[z] && (k.sz === z || n > 0); });
+}
+function kitView(z, pick) {
+  if (KVW.on) return;
+  var k = kitMy();
+  if (!k) return;
+  pick = !!pick && kitCanSet(k);
+  var list = kvList(pick, k), i = list.indexOf(z);
+  if (!list.length) return;
+  if (i < 0) i = Math.max(0, list.indexOf(k.sz));
+  KVW.on = true; KVW.pick = pick; KVW.list = list; KVW.i = i; KVW.dirty = false; KVW.from = document.activeElement;
+  var w = document.createElement("div");
+  w.id = "kitView"; w.className = lgxRM() ? "rm" : "";
+  w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", "착용 사진"); w.tabIndex = -1;
+  w.innerHTML = '<div class="kv-st"><div class="kv-tr">' + list.map(function (x) { return '<div class="kv-sl"><img src="assets/kit/fit_' + x + '.webp" alt="' + kvCap(x) + '" width="680" height="1024" draggable="false"></div>'; }).join("") + "</div>" +
+    '<button type="button" class="kv-x" aria-label="닫기">' + X_SVG + "</button></div>" +
+    '<div class="kv-pn"><div class="kv-dots" aria-hidden="true">' + KIT_SIZES.map(function (x) { return '<i data-z="' + x + '"' + (list.indexOf(x) < 0 ? ' class="out"' : "") + "></i>"; }).join("") + "</div>" +   /* 점 = 아래 판 맨 위(사진 위에 두면 작은 화면에서 신발에 묻힌다) */
+    '<div class="kv-hd" aria-live="polite"></div>' + (pick ? '<button type="button" class="ax-button kv-go"></button>' : "") + "</div>";
+  document.body.appendChild(w);
+  KVW.el = w;
+  /* 아래 판 높이 고정 · 사이즈마다 글줄 수가 달라 넘길 때 사진 높이가 출렁이지 않게 가장 높은 것에 맞춘다 */
+  var hd = w.querySelector(".kv-hd"), mh = 0, sel0 = KIT.sel, msg0 = KIT.msg;
+  list.forEach(function (x, j) { KVW.i = j; kvPaint(false); mh = Math.max(mh, hd.offsetHeight); });
+  hd.style.minHeight = mh + "px"; KVW.i = i; KVW.dirty = false; KIT.sel = sel0; KIT.msg = msg0;
+  kvPaint(false);
+  kvWire(w);
+  var im = w.querySelectorAll(".kv-sl img")[i], shown = false;
+  var show = function () { if (shown || KVW.el !== w) return; shown = true; requestAnimationFrame(function () { w.classList.add("in"); try { w.querySelector(".kv-x").focus({ preventScroll: true }); } catch (e) {} }); };
+  try { if (im && im.decode) im.decode().then(show, show); else show(); } catch (e) { show(); }
+  setTimeout(show, 260);   /* 늦어도 0.26초 안에는 뜬다 */
+}
+function kvPaint(anim) {
+  var w = KVW.el;
+  if (!w) return;
+  var z = KVW.list[KVW.i], k = kitMy() || {}, tr = w.querySelector(".kv-tr"), b = w.querySelector(".kv-go");
+  tr.classList.toggle("anim", !!anim && !w.classList.contains("rm"));
+  tr.style.transform = "translate3d(" + (-KVW.i * 100) + "%, 0, 0)";
+  w.querySelector(".kv-hd").innerHTML = '<b class="kv-z">' + z + '</b><span class="kv-tx"><span class="kv-m">' + kvSeg(kvCap(z)) + '</span><span class="kv-ms">' + kvSeg(kvMeas(z)) + "</span></span>";
+  [].forEach.call(w.querySelectorAll(".kv-dots i"), function (d) { d.classList.toggle("on", d.getAttribute("data-z") === z); });
+  if (b) { var mine = k.sz === z; b.disabled = mine || KIT.busy; b.textContent = mine ? "지금 사이즈" : k.sz ? "사이즈 변경" : "이 사이즈로 신청"; }
+  if (KVW.pick && KIT.sel !== z) { KIT.sel = z; KIT.msg = ""; KVW.dirty = true; }   /* 넘기면 선택도 그 사이즈(시트는 닫을 때 다시 그림) */
+}
+function kvGo(d) {
+  if (!KVW.on) return;
+  KVW.i = Math.max(0, Math.min(KVW.list.length - 1, KVW.i + d));
+  kvPaint(true);
+}
+function kvSend() {
+  var k = kitMy();
+  if (!KVW.pick || !k || KIT.busy || !KIT.sel || KIT.sel === k.sz) return;
+  kitViewClose();
+  kitSend();   /* 같은 신청 흐름 · 완료 화면은 시트에서 */
+}
+function kitViewClose(drag) {
+  var w = KVW.el;
+  if (!w || !KVW.on) return;
+  KVW.on = false; KVW.el = null;
+  var fin = function () { if (w.parentNode) w.parentNode.removeChild(w); };
+  if (w.classList.contains("rm")) fin();
+  else { w.classList.remove("drag"); w.classList.add("out"); if (drag) w.style.transform = "translate3d(0, 100%, 0)"; w.style.opacity = "0"; setTimeout(fin, 240); }
+  if (KVW.dirty && App.current === "kit") App.render();
+  KVW.dirty = false;
+  try { var f = document.querySelector("#axsDet .axs-kitc.on") || document.querySelector("#axsDet .axs-kitvl") || KVW.from; if (f && f.focus) f.focus({ preventScroll: true }); } catch (e) {}
+}
+/* 손가락 · 가로 = 넘기기(끝에서는 고무줄) · 세로 아래 = 끌어 닫기 · 거의 안 움직인 짧은 탭 = 닫기 */
+function kvWire(w) {
+  var st = w.querySelector(".kv-st"), tr = w.querySelector(".kv-tr"), go = w.querySelector(".kv-go"), g = null;
+  w.querySelector(".kv-x").addEventListener("click", function () { kitViewClose(); });
+  if (go) go.addEventListener("click", kvSend);
+  w.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); kitViewClose(); return; }
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); kvGo(e.key === "ArrowRight" ? 1 : -1); return; }
+    if (e.key !== "Tab") return;
+    var b = [].slice.call(w.querySelectorAll("button:not([disabled])")), i = b.indexOf(document.activeElement);
+    e.preventDefault();
+    if (b.length) b[(i + (e.shiftKey ? -1 : 1) + b.length) % b.length].focus();
+  });
+  st.addEventListener("pointerdown", function (e) {
+    if (g || e.button > 0 || !KVW.on || (e.target.closest && e.target.closest(".kv-x"))) return;
+    KVW.tap = false;
+    g = { id: e.pointerId, x: e.clientX, y: e.clientY, t: Date.now(), ax: "", dx: 0, dy: 0, W: st.clientWidth || 1 };
+    try { st.setPointerCapture(e.pointerId); } catch (x) {}
+  });
+  st.addEventListener("pointermove", function (e) {
+    if (!g || e.pointerId !== g.id) return;
+    g.dx = e.clientX - g.x; g.dy = e.clientY - g.y;
+    if (!g.ax && Math.abs(g.dx) + Math.abs(g.dy) > 10) g.ax = Math.abs(g.dx) > Math.abs(g.dy) ? "x" : g.dy > 0 ? "y" : "n";
+    if (g.ax === "x") {
+      var d = g.dx;
+      if ((KVW.i === 0 && d > 0) || (KVW.i === KVW.list.length - 1 && d < 0)) d *= 0.3;
+      tr.classList.remove("anim");
+      tr.style.transform = "translate3d(calc(" + (-KVW.i * 100) + "% + " + Math.round(d) + "px), 0, 0)";
+    } else if (g.ax === "y") {
+      var y = Math.max(0, g.dy);
+      w.classList.add("drag");
+      w.style.transform = "translate3d(0, " + Math.round(y) + "px, 0)";
+      w.style.opacity = String(Math.max(0.4, 1 - y / 700));
     }
-  } catch (e) {}
+  });
+  var end = function (e, cancel) {
+    if (!g || e.pointerId !== g.id) return;
+    var t = Math.max(1, Date.now() - g.t), ax = g.ax, dx = g.dx, dy = g.dy, W = g.W;
+    g = null;
+    if (ax === "x") { kvGo(!cancel && (Math.abs(dx) > W * 0.2 || Math.abs(dx) / t > 0.45) ? (dx < 0 ? 1 : -1) : 0); return; }
+    if (ax === "y") {
+      if (!cancel && (dy > 120 || (dy > 40 && dy / t > 0.6))) { kitViewClose(true); return; }
+      w.classList.remove("drag"); w.style.transform = ""; w.style.opacity = "";
+      return;
+    }
+    KVW.tap = !ax && !cancel && t < 400;   /* 닫기는 이어 오는 click 에서(먼저 닫으면 그 click 이 아래 시트의 칩에 떨어져 다시 열린다) */
+  };
+  st.addEventListener("click", function (e) { if (KVW.tap && !(e.target.closest && e.target.closest(".kv-x"))) { KVW.tap = false; kitViewClose(); } });
+  st.addEventListener("pointerup", function (e) { end(e, false); });
+  st.addEventListener("pointercancel", function (e) { end(e, true); });
 }
-/* 261008 사진 칸 높이 맞춤(사용자 실기기 캡처) · 사이즈 칩이 있는 화면에서 「제목 + 사진 + 캡션 + 칩 줄」이 본문 높이에 들어가도록 사진 칸 높이를 CSS 변수 --kit-ph 로 줄인다(폭이 허용하는 정사각이 상한 · 180px 하한 · 사진은 contain 이라 작아질 뿐 잘리지 않는다) · 시트를 그릴 때마다(detPaint) 같은 값으로 다시 잡아 칩을 눌러도 높이가 바뀌지 않는다 */
-function kitFit() {
-  try {
-    var bd = document.querySelector("#axsDet .axs-dbody"); if (!bd) return;
-    var y = bd.scrollTop;
-    bd.style.removeProperty("--kit-ph");
-    var bx = bd.querySelector(".axs-kitfig .axs-kitimg"), cs = bd.querySelector(".axs-kitcs"), f = bd.firstElementChild;
-    if (!bx || !cs || !f || !bd.clientHeight) return;
-    var h = bx.getBoundingClientRect().height, w = bx.getBoundingClientRect().width;
-    var av = bd.clientHeight - (cs.getBoundingClientRect().bottom - f.getBoundingClientRect().top - h) - 12;
-    if (av < w) bd.style.setProperty("--kit-ph", Math.round(Math.max(180, av)) + "px");
-    bd.scrollTop = y;
-  } catch (e) {}
-}
-var KIT_RZ = 0;
-window.addEventListener("resize", function () { clearTimeout(KIT_RZ); KIT_RZ = setTimeout(function () { if (App.current === "kit") kitFit(); }, 150); });
 function kitEdit(on) { KIT.edit = !!on; KIT.sel = ""; KIT.msg = ""; App.render(); kitTop(); }
 function kitTbl() { KIT.tbl = !KIT.tbl; App.render(); }
 function kitFold(k) { KIT.fo = KIT.fo || {}; KIT.fo[k] = !KIT.fo[k]; App.render(); }   /* 261008 상품 정보 · 세탁 방법 · 주의사항 접힘 */
@@ -353,15 +453,8 @@ function kitKvHtml(rows) {
   return '<dl class="axs-kitkv">' + rows.map(function (r) { return "<div><dt>" + r[0] + "</dt><dd>" + r[1] + "</dd></div>"; }).join("") + "</dl>";
 }
 /* 상품 사진 · 261008 제조사 대표 사진(앞모습 · 「샘플」 딱지 없음 · 옛 회색 「상품 이미지」 예시 칸 대체) · 큰 칸(상품 화면) · 작은 칸(완료 요약)
-   261008 사이즈별 착용 사진(사용자 「얼굴 넣은 것으로 앱에 반영해줘」) · 큰 칸 = z(고른 사이즈 · 없으면 신청한 사이즈)가 있으면 그 착용 사진 + 아래 캡션 「모델 175cm · 70kg · L 착용」 · 없으면 상품 사진 · 칸은 늘 정사각(높이 고정 · 사진 비율이 달라도 레이아웃이 안 움직임) · hint = 사이즈 칩이 있는 화면의 고르기 전 빈 캡션 줄(261008 사용자 「안내 한 줄은 빼줘」 · 글자 없이 높이만 남겨 칩을 눌러도 레이아웃이 안 움직임) · 데이터는 지역 값(검사 샌드박스가 KIT_* 변수를 골라 싣기 때문) */
-function kitImgHtml(sm, z, hint) {
-  var FIT = { SS: "158cm · 50kg", L: "175cm · 70kg", "2XL": "180cm · 85kg", "3XL": "183cm · 100kg" }, fit = !sm && z && FIT[z] ? FIT[z] : "";
-  var cap = fit ? "모델 " + fit + " · " + z + " 착용" : "";
-  var img = fit ? '<img src="assets/kit/fit_' + z + '.webp" alt="' + cap + '" width="680" height="1024" decoding="sync">' : '<img src="' + KIT_IMG + '" alt="' + (sm ? "" : KIT_ITEM + " 앞모습") + '" width="800" height="600" decoding="async">';
-  var box = '<div class="axs-kitimg has' + (sm ? " sm" : "") + (fit ? " fit" : "") + '">' + img + "</div>";
-  if (sm) return box;
-  return '<div class="axs-kitfig">' + box + (cap ? '<p class="ax-meta axs-kitcap">' + cap + "</p>" : hint ? '<p class="ax-meta axs-kitcap" aria-hidden="true"></p>' : "") + "</div>";
-}
+   261008 v6.44 시트 맨 위는 늘 상품 사진(가로로 꽉 차는 4:3 · 착용 사진은 전체 화면 보기 kitView 에서만 · v6.41 ~ v6.43 의 칸 안 착용 사진 · 캡션 · 칸 높이 맞춤은 걷어 냄) */
+function kitImgHtml(sm) { return '<div class="axs-kitimg has' + (sm ? " sm" : "") + '"><img src="' + KIT_IMG + '" alt="' + (sm ? "" : KIT_ITEM + " 앞모습") + '" width="800" height="600" decoding="async"></div>'; }
 /* 접힘 한 칸(사이즈표와 같은 문법) · 제목 줄 = 버튼(aria-expanded) · 펼치면 아래에 내용 */
 function kitFoldHtml(id, title, open, onclick, inner) {
   return '<section class="axs-kittbl"><button type="button" class="axs-kittog" aria-expanded="' + open + '"' + (open ? ' aria-controls="' + id + '"' : "") + ' onclick="' + onclick + '"><span>' + title + "</span>" + CHEV_SVG + "</button>" +
@@ -387,14 +480,15 @@ function kitProdHtml(k) {
   /* 261008 제목 묶음이 사진보다 위(사용자 「제목 줄을 항상 최상단」) */
   return '<section class="axs-kitprod"><p class="axs-kitbr">AX Festival 2026</p><h3 class="ax-type-t3">' + KIT_ITEM + "</h3>" +
     '<p class="ax-description">' + (kitStaff(k) ? "스태프용 행사 기념 플리스예요 · 부드럽고 따뜻한 폴리에스터" : "행사 기념 플리스 · 에코백과 함께 드려요") + "</p></section>" +
-    kitImgHtml(0, KIT.sel || k.sz || "", k.ph === "open" || k.ph === "chg");
+    kitImgHtml(0);
 }
 /* 신청 완료 · 신청번호 · 사이즈 · 변경 기한 · 수령 */
 function kitDoneHtml(k) {
   var chg = k.ph === "open" ? kitWhen(k.close) + "까지 변경 가능" : k.ph === "chg" ? kitWhen(k.chg) + "까지 · 남은 사이즈만" : "마감";
   return '<section class="axs-kitok"><span class="ok" aria-hidden="true">' + CHECK_SVG + "</span>" +
     '<h3 class="ax-type-t3">' + kitRo(k.sz) + (k.how === "auto" ? " 배정됐어요" : " 신청 완료") + "</h3>" +
-    (k.no ? '<p class="axs-kitno">신청번호 <b>' + esc(k.no) + "</b></p>" : "") + "</section>" + kitImgHtml(0, k.sz) +
+    (k.no ? '<p class="axs-kitno">신청번호 <b>' + esc(k.no) + "</b></p>" : "") + "</section>" + kitImgHtml(0) +
+    (KIT_SIZES.indexOf(k.sz) >= 0 ? '<button type="button" class="axs-kitvl" onclick="kitView(\'' + k.sz + '\', 0)">착용 사진 보기</button>' : "") +   /* 261008 신청한 사이즈부터 보는 전체 화면(보기만) */
     '<section class="axs-kitsum">' + kitImgHtml(1) + '<div class="tx"><b>' + KIT_NAME + '</b><span>사이즈 ' + esc(k.sz) + (kitStaff(k) ? "" : " · 에코백 포함") + "</span></div></section>" +
     kitKvHtml([["신청번호", k.no ? "<b>" + esc(k.no) + "</b>" : "확인 중"], ["사이즈", esc(k.sz)], ["변경", esc(chg)], ["수령", esc(kitGetTxt(k))]]) +
     '<p class="ax-meta axs-kitnote">교환할 때 신청번호를 알려 주세요</p>';

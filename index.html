@@ -2705,14 +2705,32 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-kitimg { display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 4 / 3; border-radius: var(--ax-radius-20); background: var(--ax-color-canvas); color: var(--ax-color-muted); font: var(--ax-type-t6-strong); text-align: center; word-break: keep-all; }
   .axs-kitimg.has { flex: none; overflow: hidden; padding: 0; }   /* 261008 상품 사진 · 칸을 꽉 채움(사진 바탕 회색 그대로) */
   .axs-kitimg.has img { display: block; width: 100%; height: 100%; object-fit: cover; }
-  /* 261008 사이즈별 착용 사진 · 큰 칸(.axs-kitfig 안)은 늘 정사각(상품 사진 4:3 은 가운데를 잘라 채움 · 착용 사진 2:3 은 contain) · 높이가 같아 칩을 눌러도 아래가 안 움직임 · 연회색 바탕 = 사진 스튜디오 배경(위 어둡고 아래 밝음)과 맞춘 토큰 혼합 그라데이션(위 14% · 아래 6%) · 앞 줄은 color-mix 미지원 기기용 */
-  .axs-kitfig { display: flex; flex-direction: column; gap: var(--ax-space-8); }
-  .axs-kitfig > .axs-kitimg { aspect-ratio: 1 / 1; }
-  #axsDet .axs-dbody .axs-kitfig > .axs-kitimg { max-height: var(--kit-ph, none); }   /* 261008 키 작은 화면 = kitFit 이 높이를 줄인다(폭은 그대로 · 사진 contain) */
-  .axs-kitimg.fit { background: var(--ax-color-divider); background: linear-gradient(180deg, color-mix(in srgb, var(--ax-color-ink) 14%, var(--ax-color-canvas)), color-mix(in srgb, var(--ax-color-ink) 6%, var(--ax-color-canvas))); }
-  .axs-kitimg.fit img { object-fit: contain; }
-  .axs-kitcap { margin: 0; min-height: 1.5em; text-align: center; word-break: keep-all; }
   .axs-kitsum .axs-kitimg.has.sm { padding: 0; }
+  /* 261008 v6.44 착용 사진 전체 화면 보기(kitView) · 시트(60) · 짧은 확인 시트(70) 위 · 팝업(96) 아래 · 바탕 = 착용 사진 스튜디오 배경 실측 회색(사진의 일부라 테마와 무관하게 고정 · 위 205 → 바닥 230) · 사진 높이 = 보기 칸 높이(머리부터 발끝) · 양옆 가장자리 흐림 · 노치 · 홈 막대 안전 영역 */
+  #kitView { position: fixed; inset: 0; z-index: 80; display: flex; flex-direction: column; background: rgb(206, 207, 210); background: linear-gradient(180deg, rgb(205, 206, 209) 0%, rgb(208, 208, 211) 60%, rgb(224, 224, 227) 88%, rgb(230, 230, 233) 100%); opacity: 0; transform: scale(0.94); transition: opacity 0.2s ease-out, transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1); touch-action: none; overscroll-behavior: contain; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+  #kitView.in { opacity: 1; transform: none; }
+  #kitView.drag, #kitView.rm, #kitView.rm .kv-tr { transition: none; }
+  #kitView.out { pointer-events: none; transform: scale(0.96); }
+  #kitView .kv-st { position: relative; flex: 1 1 auto; min-height: 0; padding-top: env(safe-area-inset-top, 0px); overflow: hidden; touch-action: none; }
+  #kitView .kv-tr { display: flex; height: 100%; will-change: transform; }
+  #kitView .kv-tr.anim { transition: transform 0.26s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  #kitView .kv-sl { display: flex; justify-content: center; flex: 0 0 100%; height: 100%; overflow: hidden; }
+  #kitView .kv-sl img { display: block; flex: none; width: auto; height: 100%; max-width: none; pointer-events: none; -webkit-mask-image: linear-gradient(90deg, transparent, black 7%, black 93%, transparent); mask-image: linear-gradient(90deg, transparent, black 7%, black 93%, transparent); }
+  #kitView .kv-x { position: absolute; top: calc(env(safe-area-inset-top, 0px) + var(--ax-space-8)); right: var(--ax-space-8); display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.8); color: rgb(25, 31, 40); cursor: pointer; }
+  #kitView .kv-x svg { width: 24px; height: 24px; }
+  #kitView .kv-dots { display: flex; justify-content: center; gap: var(--ax-space-8); margin-top: calc(-1 * var(--ax-space-4)); pointer-events: none; }
+  #kitView .kv-dots i { width: 8px; height: 8px; border-radius: 4px; background: var(--axs-divider-strong); transition: width 0.2s ease, background-color 0.2s ease; }
+  #kitView .kv-dots i.on { width: 20px; background: var(--ax-color-brand); }
+  #kitView .kv-dots i.out { background: transparent; box-shadow: inset 0 0 0 1px var(--axs-divider-strong); }   /* 품절 = 빈 점(넘겨지지 않음) */
+  #kitView .kv-pn { position: relative; flex: none; display: flex; flex-direction: column; gap: var(--ax-space-12); margin-top: calc(-1 * var(--ax-radius-20)); padding: var(--ax-space-16) var(--ax-space-20) calc(var(--ax-space-16) + env(safe-area-inset-bottom, 0px)); border-radius: var(--ax-radius-20) var(--ax-radius-20) 0 0; background: var(--ax-color-surface); }
+  #kitView .kv-hd { display: flex; align-items: center; gap: var(--ax-space-16); min-height: 48px; }
+  #kitView .kv-z { flex: none; font: 800 calc(32px * var(--fs, 1))/1.1 var(--ax-font); letter-spacing: -0.02em; color: var(--ax-color-brand); }
+  #kitView .kv-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; word-break: keep-all; }
+  #kitView .kv-m { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  #kitView .kv-ms { font: var(--ax-type-t7); color: var(--ax-color-body); }
+  #kitView .kv-tx .kv-sg { white-space: nowrap; }
+  #kitView .kv-go { width: 100%; }
+  .axs-kitvl { align-self: center; min-height: 44px; margin-top: calc(-1 * var(--ax-space-12)); padding: 0 var(--ax-space-12); border: 0; background: none; color: var(--ax-color-brandText); font: var(--ax-type-t6-strong); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }   /* 완료 화면 「착용 사진 보기」 글자 링크 */
   .axs-kitimg.sm { flex: none; width: 64px; height: 64px; aspect-ratio: auto; border-radius: var(--ax-radius-12); padding: var(--ax-space-4); font: var(--ax-type-caption); }
   .axs-kitprod { display: flex; flex-direction: column; gap: var(--ax-space-4); }
   .axs-kitprod h3, .axs-kitprod p { margin: 0; word-break: keep-all; }
@@ -4039,7 +4057,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v6.43";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 · v6.43 = 261008 플리스 시트 손보기(제목 묶음 AX Festival 2026 · 플리스 재킷 · 한 줄 설명이 사진 위 · 「에코백과 함께 드려요」 · 신청 완료 화면도 제목이 사진 위 · 처음 화면 사진 아래 안내 한 줄 삭제(빈 캡션 줄로 높이 유지) · 사이즈 칩을 누른 뒤 사진 머리가 시트 머리 밑에 가려진 채 멈추지 않게 스크롤 목표를 다시 잡고 키 작은 화면은 사진 칸 높이를 줄여 사진 + 캡션 + 칩 줄이 한 화면에 · kitFit · --kit-ph · 사용자 261008) · v6.42 = 261008 데이터 세대 청소(오픈 전 초기화 · 서버 sync gen 이 이 기기 값과 다르면 신원 키만 남기고 시험 흔적 · 못 보낸 대기열 · 시험 공지를 한 번 비움 · 처음 받는 기기는 저장만 · genCheck) · v6.41 = 261008 플리스 시트 사이즈별 착용 사진(assets/kit/fit_SS · L · 2XL · 3XL .webp · 사이즈 칩을 누르면 맨 위 사진 교체 + 캡션 「모델 175cm · 70kg · L 착용」 · 신청한 사이즈 사진 · 큰 칸 1:1 고정) · v6.40 = 261008 플리스 시트 사이즈 칩 아래 고르는 기준 한 줄(axs-kitgd · 평소 90 이하 SS · 95~100 L · 105 L 또는 2XL · 110~115 2XL · 120 3XL) · v6.39 = 261008 단계별 오픈 로그인 문(사용자 오픈 계획 · 1차 10/19 사전 신청자 · 스태프 · 2차 10/21 전 구성원) · 서버 reason notopen = 로그인 화면 · 홈 위 「AX PASSPORT는 10월 21일(수)부터 열려요」 한 화면(날짜 = 서버 open · ogShow · beCall 한 곳) · 이 기기 og = 다시 열면 그 화면을 깔고 서버에 다시 묻기(ogCheck) · 열리면 걷힘 · 「다른 사번으로 입장」 · v6.38 = 261008 플리스 시트 · 사이즈 대응 고침(제조사 LL = 우리 2XL 75 62 52 64 · 3L = 3XL 78 66 54 65 · SS만 실측 확인 중 · 사용자 「LL은 2XL · 3L은 3XL」) + 접힘 4칸 상품 정보 · 실측 사이즈표 · 세탁 방법 · 주의사항(제조사 상세 이미지의 사실 정보만 · 사용자 「상품 정보 세탁방법 주의사항」) · v6.37 = 261008 플리스 상품 사진 = 홍보부 원본(후리스자켓.png · 블랙 · 가슴 ME to WE · 4:3 800px) · v6.36 = 261008 럭키드로우 당첨 문구를 현장에 없는 사람 기준으로(사용자 「17층 화면을 봐 주세요 같은 문구는 현장에 없는 사람에게 무의미」 · 당첨 시트 = 「경품은 나중에 따로 전달해요」 한 줄 · 확인 완료 시트도 무대 문구 없이 · 푸시 「럭키드로우에 당첨됐어요 / 앱에서 확인해 주세요」 · 콘솔 폰 확인 칸 「대기」 → 「미확인」) · v6.35 = 261008 홈 「다음 할 일」 카드 삭제(사용자 「둘러보기 고정 · 다음 할 일 삭제」 · 홈 = v6.13 이전 순서) · 「지금 현장」 날짜 조건 해제 · 플리스 상품 사진 · 실측 사이즈표(SS · 3XL 확인 중) · 테스트 사번 미리 보기 · v6.34 = 261008 17F AWS · MS 출석 QR 행사일(10/26) 전에는 시간 창 없이 늘 출석(사용자 「지금도 되도록 · 이상한 데이터는 행사 전 초기화」 · attPre · 고르기 시트 · 데모 · 시험 시각 10/25 = tm 안 보냄 · 서버 attPreDay_) · 출석으로 새로 받은 스탬프 = 가운데 도장 팝(사용자 「파트너사 강의에 출석체크를 하면 스탬프 박히는 효과가 없어」 · p3h 1 / 2 · p3 ×2 · 이미 받음 · 기록만 = 팝 없음 · attStamp stampOverlay) · v6.33 = 261008 럭키드로우 당첨자 폰 알림(사용자 261008 「당첨자 폰 알림도 넣자」 · 서버 draw_log win → 소켓 lucky · 푸시 「럭키드로우 당첨 · 지금 17F 무대 화면을 봐 주세요」 · sync my.lucky) · 당첨 시트(공통 바텀 시트 · 등수 큰 주황 글자 · 경품 사진 · 이름 · 행운권 번호 · 주 버튼 「확인」 → draw_ack 본인 세션 → 「확인 완료 · 무대 화면에 표시됐어요」 + 「경품은 나중에 따로 전달해요」) · 홈 나의 일정 맨 위 「럭키드로우 N등 당첨」 한 줄(확인 전 주황 점) · 7등 랜덤 굿즈 = 확인 단추 없는 안내 시트 한 번 · 콘솔 추첨 기록 「폰 확인」 칸 · 검사 §293 · v6.32 = 261008 홈 「지금 현장」 2×2(1F 룰렛 · 1F 포토부스 · 1F AX PLAY · 17F 대강당 5단계 · 스탬프 블록 바로 아래 · 행사 당일만 · 스탬프 블록 여백 줄임) · 스태프 입력 시트(누르면 저장 · 5초 되돌리기 · 자동으로 · 시간 재기) · 스캔 화면 「줄」 · 옛 로비 · 엘리베이터 · 17F 입장 수 칸 · 풀리면 알림 · 혼잡 제보 탭 진입 뺌 · v6.31 = 261008 기념품 옷 사이즈 선택(사용자 261008 「쇼핑몰 문법 · 재고 · 고유번호 · 스태프 포함」 · 홈 카드 「기념품 옷 사이즈 선택하기」 → 「L로 신청 완료 · 신청번호 K-012 · 마감 전 변경 가능」 · 상품 시트 = 공통 바텀 시트(라우트 kit · 상품 이미지 예시 칸 · 사이즈 칩 n개 남음 · 품절 임박 · 품절 · 추천 사이즈표 예시 접힘 · 아래 고정 「이 사이즈로 신청」 | 「사이즈 변경」 · 완료 = 신청번호) · 스태프 의류 명단 사번(pool staff · 수령 따로 안내) · 창구 결과 띠에 신청번호 · 서버 ks* §288) · v6.30 = 261008 17F AWS · MS 출석 QR 시간 안내 걷기(사용자 「우리 쪽에서 통제하지 말자」 · 상세 입장 · 끝 QR 줄 · 고르기 시트 · 시간 밖 안내에서 QR 창 시각 삭제 · 앱 기본 창 넓게 · 홈 카드는 강연 시각 기준) · v6.29 = 261008 경품 시트 등수 묶음(글 + 사진) 사이 옅은 회색 헤어라인 1px(사용자 「상품마다 옅고 얇은 회색선 · 균형을 보고 판단」 · 카드 테두리 · 블록 선 안은 채택 안 함) · v6.28 = 261008 7등 발송 표기 「사내 우편 발송」 → 「행랑 발송」(앱 · 추첨 무대 · 콘솔) · v6.27 = 261008 AX 올림픽 순위 바닥 문구(명예 순위 · 경품 없음 · 종합 호명) 삭제 · v6.26 = 261007 행운권 7등 랜덤 굿즈 수량 「수량 추후 공개」(60 고정 삭제) + 긴 상세 시트(경품 · 세션 · 구역 · 부스 · 전시) 높이 = 화면의 약 92%(위 끝 8%) + 경품 시트 등수 묶음 사이 간격 · v6.25 = 261007 행사 둘러보기 조작 A(사용자 「권장대로 진행해 줘」) · 달리기 · 좌로 · 우로 돌기 단추 삭제 · 점프 원 72px 오른쪽 아래 엄지 자리 · 첫 구역 도착 뒤 끌기 안내 1회 「화면을 좌우로 밀면 돌아봐요」 · 밀기 문턱 8 → 12px · PC 키 ↑ ↓ 걷기 · Space 점프 · ← → 돌기 · 둘러보기 v6.25 · v6.24 = 261007 10F 세션 상세 줄 이름 「진행」 → 「강사」(사용자 「강사가 맞을 것 같고」) · 세션 B · C 값 「임경덕」 · 「권혜영」(줄 이름과 겹치지 않게) · 값은 이름 단위로만 줄이 꺾임 · v6.23 = 261007 타자왕 보너스 스테이지(친 글자 뭉개짐 고침 · 짝짓기 rgBnsAlign · 「문장을 먼저 읽어 두세요」 32 · 3 · 2 · 1 · GO 팡 rgBnsPop) · 엔터 없이 안내(입력칸 · READY · 대기 왼쪽 · 보너스) · 노트북 대기 오른쪽 순위 TOP 10 · 점수 설명 왼쪽으로 · v6.22 = 261007 PC 휴대폰 틀에서 행사 둘러보기 = 틀을 걷고 창 전체(000-head tourNow · opsSet · 닫으면 틀로 · 스크롤 그대로 · 포커스를 틀 안으로 넘겨 클릭 없이 W A S D) · PC 아래 가운데 키 안내 한 줄(tpcKeys · 6초 뒤 옅게) · v6.21 = 261007 10F 실습 장소 · 진행 · 세션 E 회차 시간(운영진 메신저 · A 컨퍼런스룸 · B 01 HEART · C 06 HEART · D 08 HEART · E 07 HEART · E 13:30~15:00 / 15:00~16:30 · 상세 사실 표 「진행」 줄) · v6.20 = 261007 10F 세션 상세 보강(세션 A 실습 주제 예시 3개 · 세션 D 「AI를 활용한 업무 적용 실습」 · 세션 E 두 회차 「초급 과정 · Chat, Word, PPT, Agent Builder, Copilot Studio」 · 붙임2) · v6.19 = 261007 타자왕 노트북 대기 = 광고 순환(후킹 · 1~3위 경품 · 지금 1위 · 참여 방법 7초씩 · 맨 아래 「키보드를 눌러 시작」 · QR · 토큰 없음) · 아무 키 · 누름 = 새 QR(깨운 키 삼킴 · 남은 시간 막대) · 떠 있는 동안 토큰 그대로(서버 물음 연장 · 3분 상한) · 60초 아무도 안 붙으면 광고 + 서버 토큰 지움 · 폰 「노트북 키보드를 누르면 새 QR이 나와요」 · v6.18 = 261007 타자왕 노트북 접속 QR 나이 상한(30초 교체 · 화면 QR 45초까지만 · 못 받으면 「QR을 새로 받는 중」 · 물음 6초 버림 · 창이 다시 보이면 곧바로 · 바꾸기 전 한 번 더 묻기 · 폰은 로그인해 있어도 앱이 뜨자마자 토큰 붙잡기 5분) · v6.17 = 261007 둘러보기 v6.17 눌러서 가기 오작동 고침(누른 그 동전 · 계단 동전 둘 · 동전 언저리 누름 · 스태프 말풍선이 동전을 덮지 않음 · 연타 카드 한 번 · 조그 = 자동 걷기 끝 · 연출 중 화면 누름 무시 · TOUR.ver v617) · v6.16 = 261007 플리스 사이즈 4종(SS · L · 2XL · 3XL · 옛 S · M · XL 폐기 · 사이즈 고르기 4칸 · 조사 SS가) · 창구 띠 세 글자 사이즈 한 줄(l3 56px) · v6.15 = 261007 17F 오후 파트너 강연 시각 확정(AWS 13:30~14:50 · 휴식 14:50~15:10 시간표 줄 · MS 15:10~16:40) · v6.14 = 261007 PC 넓은 창 = 휴대폰 틀(000-head 틀 스크립트 · 앱은 틀 안 iframe 에서 휴대폰 폭 그대로 · 휴대폰 · 좁은 창 · TV · #self · cap 은 그대로 · ?frame=0 끔) · v6.13 = 261007 홈 「다음 할 일」 카드(광고판 아래 · 둘러보기 카드와 한 자리 교대 · 행사 당일만 · × 그날 끔 · 설정 줄 · nxPick) · 재로그인 반복 팝업 고침(첫 동기화 기준선 rwBaseline · checkMyState base) · 로그인 직후 10초 자동 안내 1개(NB · nbGate) · 커피챗 하루 끝도 appNow · v6.12 = 261007 체크인존 번호표(접수 · 창구 A~E 자리 · 사이즈 아주 크게 · 「B-023 · 홍*동 → B 창구」 · 다른 창구 · 명단 밖 = E 창구 안내) · 홈 맨 위 내 번호 카드(대기 · 곧 차례 · 호출 진동 · 놓친 번호 · 수령 완료) · 체크인 TV 대기판 · 창구 화면(태블릿) · 선착순 10:30부터 문구 · v6.11 = 261007 점프 시간 제한 없앰 · 30초부터 더 어렵게 · AX 상식 30문장 다시 씀 · 홈 나의 일정 카드 너비 · Outro 안내 · v6.10 = 261007 테스트 도구(시각 바꿔 보기 tt · appNow · 헤더 띠 · 내 10F 세션 test_ten · 310555 기본 A) · 공지 = 아래에서 올라오는 시트(ntcOpen · 홈 공지 카드 폐기 · 기기당 1번 · 기준선 ntc_base) · 내 QR = QR + 이름 · 사번만 · 재로그인 = 오프닝 없이 바로 홈 · 저장된 로그인 = 로그인 화면 비침 · 전환 없이 홈 · v6.09 = 261007 행사 둘러보기 접속 기록(서버 tour_log · 열 때 1번 · 닫을 때 1번 · 10분 안 다시 열기 = 같은 방문 · 3D · 2D 대체 모두 AXTour.isOpen · 가려지면 sendBeacon · tlog*) · v6.08 = 261007 아이디어 한 줄 보강(시상 묶음 · 50자 ~ 3,000자 · 자동 저장 · 커피챗 희망 → 선정 13:00~16:00 · 볼펜 사진) · v6.07 = 261007 9월 시험 때 이미 최초 로그인 스탬프를 받은 사람도 이 기기 · 이 사번으로 한 번 「최초 로그인」 도장 팝(연출만 · 기기 키 lgfx_261007 · lgfxRun) · v6.06 = 261007 나의 일정 후속(10F 명단 · 내 세션과 겹치지 않는 오후 강연 = 자유 참석 카드 · MYFL_LEC · 홈 = 신청 카드만 axs-myfl-h · 진행 중 칩 「진행 중」 + 고리) · v6.05 = 261007 테트리스 시간 제한 없앰(5분 끝내기 · 「5분 완주」 · surv 300초 멈춤 삭제 · 게임 오버까지 · 결과 「버틴 시간」 = 실제 시간 · 시작 화면 「시간 제한 없음」 · 서버 OLY_TT_SURV_MAX) · v6.04 = 261007 10F 명단 나의 일정 = 시간표와 같은 하루 흐름(myFlowItems · 신청 주황 테두리 + 칩) · v6.03 = 261007 테트리스 5분 완주 판 surv 30000 상한(서버 range 거절 버그) · v6.02 = 261007 점프 게임 바닥 = 붉은 벽돌(jpBrickCv · 무늬 한 장 반복) · v6.01 = 261007 둘러보기 v5.99(손가락 안내 = 들어올 때마다 + 6초 서 있으면 다시 · 방문당 3번 · 직접 눌러 걸어가 본 기기는 끝 · 첫 안내 둘째 줄 「다음 구역」 저절로 걷기 · 흉상 얼굴 주름 부드럽게) · v6.00 = 261006 밤 스태프 판정 = 로그인만으로(앱 스태프 명단 사번 = 가운데 단추 「스캔」 · 처음 누를 때만 코드 한 번 · 명단에서 빠지면 「내 QR」 · 서버 staff) · 스캔 자리에서 10F 세션 입장 숨김(SCAN_10F_UI) · v5.99 = 261006 키트 사이즈 사전 선택(키트명단 사번만 · 홈 카드 · 사전 신청 키트 화면 · 설정 · 나의 보상 줄 · 라운지 등록 순 초과 = 가습기 안내 · 서버 ks* · §250) · v5.98 = 261006 스태프 폰 연속 스캔(관리자 모드 폰 = 가운데 단추 「스캔」 · 자리 칩 · 톱니 · 결과 띠 1.5초 · 화면 꺼짐 막기) · 스캔 순간 참가자 알림(소켓 · 푸시) · 선착순 참여상 = 받기 선착순(남은 N · 「자격」 말 없음) · v5.97 = 261006 스탬프 감사 후속(AX PLAY 부스 코드 = 「스태프에게 내 QR을 보여 주세요」 · 「응모」 → 「행운권」 · 「선착순 참여상」 표기) · v5.95 = 261006 프로그램 참여 스탬프 = 17F 오후 AWS · MS 강연만(오전 강연 · 송출 · 10F · 커피챗 · 라운지 스탬프 문구 삭제) · 사전등록 체크인 3개 → 룰렛 → 강의장 안내 시트 · 홈 한 줄 · 스태프 키트 결과 「룰렛 부스로 안내해 주세요」 · v5.94 = 261006 타자왕 노트북 진입 = 화면 QR 하나(카메라 끔 · 큰 접속 QR · 후킹 「당신의 프롬프팅 속도를 보여 주세요」 · 로그인 전 토큰 붙잡기 5분 · 폰 「노트북 화면의 QR을 찍어 주세요」) · v5.93 = 261006 둘러보기 눌러서 가기(바닥 · 판 · 동전 · 포토부스 · 룰렛 · 엘리베이터 · 스태프 = 걸어가서 바로 · 첫 손가락 안내 · 숨 쉬는 테두리) · 설치 안내(「설치 중」 시트 · 설정 줄 = 바로 설치 창) · v5.92 = 7등 랜덤 굿즈 · 체크인 없는 추첨 */
+var APP_VER = "v6.44";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 · v6.44 = 261008 플리스 착용 사진 전체 화면 보기(사용자 「화면 꽉 차게 · 사이즈 선택 시 사진으로 날아가서」 · 사이즈 칩을 누르면 그 사이즈 착용 사진이 화면을 채움 · 큰 사이즈 글자 · 모델 키 · 몸무게 · 실측 한 줄 · 좌우로 밀면 이웃 사이즈(선택도 바뀜 · 품절 건너뜀) · 점 4개 · 닫기 = X · 아래로 끌기 · 뒤로 · 사진 탭 · 안에서 바로 신청 · 시트 맨 위는 다시 상품 사진만 · 완료 화면 「착용 사진 보기」 · kitView · kitFit · --kit-ph · 칸 안 착용 사진 걷어 냄) · v6.43 = 261008 플리스 시트 손보기(제목 묶음 AX Festival 2026 · 플리스 재킷 · 한 줄 설명이 사진 위 · 「에코백과 함께 드려요」 · 신청 완료 화면도 제목이 사진 위 · 처음 화면 사진 아래 안내 한 줄 삭제(빈 캡션 줄로 높이 유지) · 사이즈 칩을 누른 뒤 사진 머리가 시트 머리 밑에 가려진 채 멈추지 않게 스크롤 목표를 다시 잡고 키 작은 화면은 사진 칸 높이를 줄여 사진 + 캡션 + 칩 줄이 한 화면에 · kitFit · --kit-ph · 사용자 261008) · v6.42 = 261008 데이터 세대 청소(오픈 전 초기화 · 서버 sync gen 이 이 기기 값과 다르면 신원 키만 남기고 시험 흔적 · 못 보낸 대기열 · 시험 공지를 한 번 비움 · 처음 받는 기기는 저장만 · genCheck) · v6.41 = 261008 플리스 시트 사이즈별 착용 사진(assets/kit/fit_SS · L · 2XL · 3XL .webp · 사이즈 칩을 누르면 맨 위 사진 교체 + 캡션 「모델 175cm · 70kg · L 착용」 · 신청한 사이즈 사진 · 큰 칸 1:1 고정) · v6.40 = 261008 플리스 시트 사이즈 칩 아래 고르는 기준 한 줄(axs-kitgd · 평소 90 이하 SS · 95~100 L · 105 L 또는 2XL · 110~115 2XL · 120 3XL) · v6.39 = 261008 단계별 오픈 로그인 문(사용자 오픈 계획 · 1차 10/19 사전 신청자 · 스태프 · 2차 10/21 전 구성원) · 서버 reason notopen = 로그인 화면 · 홈 위 「AX PASSPORT는 10월 21일(수)부터 열려요」 한 화면(날짜 = 서버 open · ogShow · beCall 한 곳) · 이 기기 og = 다시 열면 그 화면을 깔고 서버에 다시 묻기(ogCheck) · 열리면 걷힘 · 「다른 사번으로 입장」 · v6.38 = 261008 플리스 시트 · 사이즈 대응 고침(제조사 LL = 우리 2XL 75 62 52 64 · 3L = 3XL 78 66 54 65 · SS만 실측 확인 중 · 사용자 「LL은 2XL · 3L은 3XL」) + 접힘 4칸 상품 정보 · 실측 사이즈표 · 세탁 방법 · 주의사항(제조사 상세 이미지의 사실 정보만 · 사용자 「상품 정보 세탁방법 주의사항」) · v6.37 = 261008 플리스 상품 사진 = 홍보부 원본(후리스자켓.png · 블랙 · 가슴 ME to WE · 4:3 800px) · v6.36 = 261008 럭키드로우 당첨 문구를 현장에 없는 사람 기준으로(사용자 「17층 화면을 봐 주세요 같은 문구는 현장에 없는 사람에게 무의미」 · 당첨 시트 = 「경품은 나중에 따로 전달해요」 한 줄 · 확인 완료 시트도 무대 문구 없이 · 푸시 「럭키드로우에 당첨됐어요 / 앱에서 확인해 주세요」 · 콘솔 폰 확인 칸 「대기」 → 「미확인」) · v6.35 = 261008 홈 「다음 할 일」 카드 삭제(사용자 「둘러보기 고정 · 다음 할 일 삭제」 · 홈 = v6.13 이전 순서) · 「지금 현장」 날짜 조건 해제 · 플리스 상품 사진 · 실측 사이즈표(SS · 3XL 확인 중) · 테스트 사번 미리 보기 · v6.34 = 261008 17F AWS · MS 출석 QR 행사일(10/26) 전에는 시간 창 없이 늘 출석(사용자 「지금도 되도록 · 이상한 데이터는 행사 전 초기화」 · attPre · 고르기 시트 · 데모 · 시험 시각 10/25 = tm 안 보냄 · 서버 attPreDay_) · 출석으로 새로 받은 스탬프 = 가운데 도장 팝(사용자 「파트너사 강의에 출석체크를 하면 스탬프 박히는 효과가 없어」 · p3h 1 / 2 · p3 ×2 · 이미 받음 · 기록만 = 팝 없음 · attStamp stampOverlay) · v6.33 = 261008 럭키드로우 당첨자 폰 알림(사용자 261008 「당첨자 폰 알림도 넣자」 · 서버 draw_log win → 소켓 lucky · 푸시 「럭키드로우 당첨 · 지금 17F 무대 화면을 봐 주세요」 · sync my.lucky) · 당첨 시트(공통 바텀 시트 · 등수 큰 주황 글자 · 경품 사진 · 이름 · 행운권 번호 · 주 버튼 「확인」 → draw_ack 본인 세션 → 「확인 완료 · 무대 화면에 표시됐어요」 + 「경품은 나중에 따로 전달해요」) · 홈 나의 일정 맨 위 「럭키드로우 N등 당첨」 한 줄(확인 전 주황 점) · 7등 랜덤 굿즈 = 확인 단추 없는 안내 시트 한 번 · 콘솔 추첨 기록 「폰 확인」 칸 · 검사 §293 · v6.32 = 261008 홈 「지금 현장」 2×2(1F 룰렛 · 1F 포토부스 · 1F AX PLAY · 17F 대강당 5단계 · 스탬프 블록 바로 아래 · 행사 당일만 · 스탬프 블록 여백 줄임) · 스태프 입력 시트(누르면 저장 · 5초 되돌리기 · 자동으로 · 시간 재기) · 스캔 화면 「줄」 · 옛 로비 · 엘리베이터 · 17F 입장 수 칸 · 풀리면 알림 · 혼잡 제보 탭 진입 뺌 · v6.31 = 261008 기념품 옷 사이즈 선택(사용자 261008 「쇼핑몰 문법 · 재고 · 고유번호 · 스태프 포함」 · 홈 카드 「기념품 옷 사이즈 선택하기」 → 「L로 신청 완료 · 신청번호 K-012 · 마감 전 변경 가능」 · 상품 시트 = 공통 바텀 시트(라우트 kit · 상품 이미지 예시 칸 · 사이즈 칩 n개 남음 · 품절 임박 · 품절 · 추천 사이즈표 예시 접힘 · 아래 고정 「이 사이즈로 신청」 | 「사이즈 변경」 · 완료 = 신청번호) · 스태프 의류 명단 사번(pool staff · 수령 따로 안내) · 창구 결과 띠에 신청번호 · 서버 ks* §288) · v6.30 = 261008 17F AWS · MS 출석 QR 시간 안내 걷기(사용자 「우리 쪽에서 통제하지 말자」 · 상세 입장 · 끝 QR 줄 · 고르기 시트 · 시간 밖 안내에서 QR 창 시각 삭제 · 앱 기본 창 넓게 · 홈 카드는 강연 시각 기준) · v6.29 = 261008 경품 시트 등수 묶음(글 + 사진) 사이 옅은 회색 헤어라인 1px(사용자 「상품마다 옅고 얇은 회색선 · 균형을 보고 판단」 · 카드 테두리 · 블록 선 안은 채택 안 함) · v6.28 = 261008 7등 발송 표기 「사내 우편 발송」 → 「행랑 발송」(앱 · 추첨 무대 · 콘솔) · v6.27 = 261008 AX 올림픽 순위 바닥 문구(명예 순위 · 경품 없음 · 종합 호명) 삭제 · v6.26 = 261007 행운권 7등 랜덤 굿즈 수량 「수량 추후 공개」(60 고정 삭제) + 긴 상세 시트(경품 · 세션 · 구역 · 부스 · 전시) 높이 = 화면의 약 92%(위 끝 8%) + 경품 시트 등수 묶음 사이 간격 · v6.25 = 261007 행사 둘러보기 조작 A(사용자 「권장대로 진행해 줘」) · 달리기 · 좌로 · 우로 돌기 단추 삭제 · 점프 원 72px 오른쪽 아래 엄지 자리 · 첫 구역 도착 뒤 끌기 안내 1회 「화면을 좌우로 밀면 돌아봐요」 · 밀기 문턱 8 → 12px · PC 키 ↑ ↓ 걷기 · Space 점프 · ← → 돌기 · 둘러보기 v6.25 · v6.24 = 261007 10F 세션 상세 줄 이름 「진행」 → 「강사」(사용자 「강사가 맞을 것 같고」) · 세션 B · C 값 「임경덕」 · 「권혜영」(줄 이름과 겹치지 않게) · 값은 이름 단위로만 줄이 꺾임 · v6.23 = 261007 타자왕 보너스 스테이지(친 글자 뭉개짐 고침 · 짝짓기 rgBnsAlign · 「문장을 먼저 읽어 두세요」 32 · 3 · 2 · 1 · GO 팡 rgBnsPop) · 엔터 없이 안내(입력칸 · READY · 대기 왼쪽 · 보너스) · 노트북 대기 오른쪽 순위 TOP 10 · 점수 설명 왼쪽으로 · v6.22 = 261007 PC 휴대폰 틀에서 행사 둘러보기 = 틀을 걷고 창 전체(000-head tourNow · opsSet · 닫으면 틀로 · 스크롤 그대로 · 포커스를 틀 안으로 넘겨 클릭 없이 W A S D) · PC 아래 가운데 키 안내 한 줄(tpcKeys · 6초 뒤 옅게) · v6.21 = 261007 10F 실습 장소 · 진행 · 세션 E 회차 시간(운영진 메신저 · A 컨퍼런스룸 · B 01 HEART · C 06 HEART · D 08 HEART · E 07 HEART · E 13:30~15:00 / 15:00~16:30 · 상세 사실 표 「진행」 줄) · v6.20 = 261007 10F 세션 상세 보강(세션 A 실습 주제 예시 3개 · 세션 D 「AI를 활용한 업무 적용 실습」 · 세션 E 두 회차 「초급 과정 · Chat, Word, PPT, Agent Builder, Copilot Studio」 · 붙임2) · v6.19 = 261007 타자왕 노트북 대기 = 광고 순환(후킹 · 1~3위 경품 · 지금 1위 · 참여 방법 7초씩 · 맨 아래 「키보드를 눌러 시작」 · QR · 토큰 없음) · 아무 키 · 누름 = 새 QR(깨운 키 삼킴 · 남은 시간 막대) · 떠 있는 동안 토큰 그대로(서버 물음 연장 · 3분 상한) · 60초 아무도 안 붙으면 광고 + 서버 토큰 지움 · 폰 「노트북 키보드를 누르면 새 QR이 나와요」 · v6.18 = 261007 타자왕 노트북 접속 QR 나이 상한(30초 교체 · 화면 QR 45초까지만 · 못 받으면 「QR을 새로 받는 중」 · 물음 6초 버림 · 창이 다시 보이면 곧바로 · 바꾸기 전 한 번 더 묻기 · 폰은 로그인해 있어도 앱이 뜨자마자 토큰 붙잡기 5분) · v6.17 = 261007 둘러보기 v6.17 눌러서 가기 오작동 고침(누른 그 동전 · 계단 동전 둘 · 동전 언저리 누름 · 스태프 말풍선이 동전을 덮지 않음 · 연타 카드 한 번 · 조그 = 자동 걷기 끝 · 연출 중 화면 누름 무시 · TOUR.ver v617) · v6.16 = 261007 플리스 사이즈 4종(SS · L · 2XL · 3XL · 옛 S · M · XL 폐기 · 사이즈 고르기 4칸 · 조사 SS가) · 창구 띠 세 글자 사이즈 한 줄(l3 56px) · v6.15 = 261007 17F 오후 파트너 강연 시각 확정(AWS 13:30~14:50 · 휴식 14:50~15:10 시간표 줄 · MS 15:10~16:40) · v6.14 = 261007 PC 넓은 창 = 휴대폰 틀(000-head 틀 스크립트 · 앱은 틀 안 iframe 에서 휴대폰 폭 그대로 · 휴대폰 · 좁은 창 · TV · #self · cap 은 그대로 · ?frame=0 끔) · v6.13 = 261007 홈 「다음 할 일」 카드(광고판 아래 · 둘러보기 카드와 한 자리 교대 · 행사 당일만 · × 그날 끔 · 설정 줄 · nxPick) · 재로그인 반복 팝업 고침(첫 동기화 기준선 rwBaseline · checkMyState base) · 로그인 직후 10초 자동 안내 1개(NB · nbGate) · 커피챗 하루 끝도 appNow · v6.12 = 261007 체크인존 번호표(접수 · 창구 A~E 자리 · 사이즈 아주 크게 · 「B-023 · 홍*동 → B 창구」 · 다른 창구 · 명단 밖 = E 창구 안내) · 홈 맨 위 내 번호 카드(대기 · 곧 차례 · 호출 진동 · 놓친 번호 · 수령 완료) · 체크인 TV 대기판 · 창구 화면(태블릿) · 선착순 10:30부터 문구 · v6.11 = 261007 점프 시간 제한 없앰 · 30초부터 더 어렵게 · AX 상식 30문장 다시 씀 · 홈 나의 일정 카드 너비 · Outro 안내 · v6.10 = 261007 테스트 도구(시각 바꿔 보기 tt · appNow · 헤더 띠 · 내 10F 세션 test_ten · 310555 기본 A) · 공지 = 아래에서 올라오는 시트(ntcOpen · 홈 공지 카드 폐기 · 기기당 1번 · 기준선 ntc_base) · 내 QR = QR + 이름 · 사번만 · 재로그인 = 오프닝 없이 바로 홈 · 저장된 로그인 = 로그인 화면 비침 · 전환 없이 홈 · v6.09 = 261007 행사 둘러보기 접속 기록(서버 tour_log · 열 때 1번 · 닫을 때 1번 · 10분 안 다시 열기 = 같은 방문 · 3D · 2D 대체 모두 AXTour.isOpen · 가려지면 sendBeacon · tlog*) · v6.08 = 261007 아이디어 한 줄 보강(시상 묶음 · 50자 ~ 3,000자 · 자동 저장 · 커피챗 희망 → 선정 13:00~16:00 · 볼펜 사진) · v6.07 = 261007 9월 시험 때 이미 최초 로그인 스탬프를 받은 사람도 이 기기 · 이 사번으로 한 번 「최초 로그인」 도장 팝(연출만 · 기기 키 lgfx_261007 · lgfxRun) · v6.06 = 261007 나의 일정 후속(10F 명단 · 내 세션과 겹치지 않는 오후 강연 = 자유 참석 카드 · MYFL_LEC · 홈 = 신청 카드만 axs-myfl-h · 진행 중 칩 「진행 중」 + 고리) · v6.05 = 261007 테트리스 시간 제한 없앰(5분 끝내기 · 「5분 완주」 · surv 300초 멈춤 삭제 · 게임 오버까지 · 결과 「버틴 시간」 = 실제 시간 · 시작 화면 「시간 제한 없음」 · 서버 OLY_TT_SURV_MAX) · v6.04 = 261007 10F 명단 나의 일정 = 시간표와 같은 하루 흐름(myFlowItems · 신청 주황 테두리 + 칩) · v6.03 = 261007 테트리스 5분 완주 판 surv 30000 상한(서버 range 거절 버그) · v6.02 = 261007 점프 게임 바닥 = 붉은 벽돌(jpBrickCv · 무늬 한 장 반복) · v6.01 = 261007 둘러보기 v5.99(손가락 안내 = 들어올 때마다 + 6초 서 있으면 다시 · 방문당 3번 · 직접 눌러 걸어가 본 기기는 끝 · 첫 안내 둘째 줄 「다음 구역」 저절로 걷기 · 흉상 얼굴 주름 부드럽게) · v6.00 = 261006 밤 스태프 판정 = 로그인만으로(앱 스태프 명단 사번 = 가운데 단추 「스캔」 · 처음 누를 때만 코드 한 번 · 명단에서 빠지면 「내 QR」 · 서버 staff) · 스캔 자리에서 10F 세션 입장 숨김(SCAN_10F_UI) · v5.99 = 261006 키트 사이즈 사전 선택(키트명단 사번만 · 홈 카드 · 사전 신청 키트 화면 · 설정 · 나의 보상 줄 · 라운지 등록 순 초과 = 가습기 안내 · 서버 ks* · §250) · v5.98 = 261006 스태프 폰 연속 스캔(관리자 모드 폰 = 가운데 단추 「스캔」 · 자리 칩 · 톱니 · 결과 띠 1.5초 · 화면 꺼짐 막기) · 스캔 순간 참가자 알림(소켓 · 푸시) · 선착순 참여상 = 받기 선착순(남은 N · 「자격」 말 없음) · v5.97 = 261006 스탬프 감사 후속(AX PLAY 부스 코드 = 「스태프에게 내 QR을 보여 주세요」 · 「응모」 → 「행운권」 · 「선착순 참여상」 표기) · v5.95 = 261006 프로그램 참여 스탬프 = 17F 오후 AWS · MS 강연만(오전 강연 · 송출 · 10F · 커피챗 · 라운지 스탬프 문구 삭제) · 사전등록 체크인 3개 → 룰렛 → 강의장 안내 시트 · 홈 한 줄 · 스태프 키트 결과 「룰렛 부스로 안내해 주세요」 · v5.94 = 261006 타자왕 노트북 진입 = 화면 QR 하나(카메라 끔 · 큰 접속 QR · 후킹 「당신의 프롬프팅 속도를 보여 주세요」 · 로그인 전 토큰 붙잡기 5분 · 폰 「노트북 화면의 QR을 찍어 주세요」) · v5.93 = 261006 둘러보기 눌러서 가기(바닥 · 판 · 동전 · 포토부스 · 룰렛 · 엘리베이터 · 스태프 = 걸어가서 바로 · 첫 손가락 안내 · 숨 쉬는 테두리) · 설치 안내(「설치 중」 시트 · 설정 줄 = 바로 설치 창) · v5.92 = 7등 랜덤 굿즈 · 체크인 없는 추첨 */
 var A2HS = { deferred: null, open: false, pending: false };   /* v5.91 pending = 이 탭에서 크롬 설치 창 「설치」를 눌렀다(설치 중 · 다시 설치 막기) */
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -5444,7 +5462,8 @@ try { history.replaceState({ axf: 0 }, ""); navRepush(); } catch (e) {}
 window.addEventListener("popstate", function () {
   var app = el("app");
   if (!app || app.hidden) { navRepush(); return; }                       /* 입장 전 화면은 그대로 유지 */
-  if (window.AXTour && AXTour.isOpen()) { AXTour.back(); navRepush(); return; }   /* v5.11 1층 둘러보기 · 뒤로 = 한 층씩(판 보기 → 시트 → 둘러보기) */
+  if (window.AXTour && AXTour.isOpen()) { AXTour.back(); navRepush(); return; }
+  if (typeof KVW === "object" && KVW.on) { kitViewClose(); navRepush(); return; }   /* 261008 착용 사진 전체 화면 · 뒤로 = 닫고 시트(고른 칩 그대로) */   /* v5.11 1층 둘러보기 · 뒤로 = 한 층씩(판 보기 → 시트 → 둘러보기) */
   /* v4.18 바텀 시트가 열려 있으면 뒤로 = 시트 닫기 (통신 중에는 닫지 않고 그대로 둔다) */
   if (el("axsSheet")) { if (!SHEET.busy) sheetClose(); navRepush(); return; }
   if (el("modal")) { if (typeof qrScanClose === "function" && el("qrVideo")) qrScanClose(); else modalClose(); navRepush(); return; }
@@ -5544,7 +5563,6 @@ function detPaint(dv, base) {
   DET.cur = snap;
   document.documentElement.classList.add("det-lock");
   detOv();
-  if (dv === "kit" && typeof kitFit === "function") kitFit();   /* 261008 플리스 시트 사진 칸 높이 맞춤 */
   if (first) { try { pan.focus({ preventScroll: true }); } catch (e) {} }
 }
 function detMake() {
@@ -10175,41 +10193,141 @@ function kitOpen() {
   if (!k) return;
   KIT.sel = ""; KIT.edit = false; KIT.msg = ""; KIT.tbl = false; KIT.fo = {};
   S.put("kit_seen", kitSeenKey(k));
-  KIT_SIZES.forEach(function (z) { try { new Image().src = "assets/kit/fit_" + z + ".webp"; } catch (e) {} });   /* 261008 착용 사진 4장(65KB)을 미리 받아 칩을 누르면 바로 바뀐다 */
+  KIT_SIZES.forEach(function (z) { try { var im = new Image(); im.src = "assets/kit/fit_" + z + ".webp"; KVW.pre[z] = im; } catch (e) {} });   /* 261008 착용 사진 4장(65KB)을 미리 받아 칩을 누르면 전체 화면 보기가 바로 뜬다 */
   App.go("kit");
-  setTimeout(function () { if (App.current === "kit") kitFit(); }, 500);   /* 글꼴이 늦게 바뀐 뒤 한 번 더 */
 }
 function kitPick(z) {
   if (KIT.busy) return;
   KIT.sel = z; KIT.msg = ""; App.render();
-  /* 261008 칩을 누른 뒤 사진 윗부분(머리)이 시트 머리 밑으로 가려진 채 멈추지 않게(사용자 실기기 캡처 · 안드로이드 412폭) · 사진 칸 맨 위가 본문 맨 위보다 위로 지나가 있으면 사진 맨 위가 보이게 다시 올린다(제목 + 사진 + 캡션이 한 화면에 들어가면 제목부터 · 아니면 사진 맨 위부터) · 사진 맨 위가 이미 보이면 스크롤하지 않는다 */
-  try {
-    var bd = document.querySelector("#axsDet .axs-dbody"), fg = bd && bd.querySelector(".axs-kitfig"), bx = fg && fg.querySelector(".axs-kitimg");
-    if (bx) {
-      var br = bd.getBoundingClientRect(), xr = bx.getBoundingClientRect(), fr = fg.getBoundingClientRect(), pr = bd.querySelector(".axs-kitprod"), pt = pr ? pr.getBoundingClientRect().top : xr.top;
-      if (xr.top < br.top) {
-        var tg = fr.bottom - pt <= bd.clientHeight - 4 ? pt : xr.top - 8;
-        bd.scrollTo({ top: Math.max(0, bd.scrollTop + tg - br.top), behavior: window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
-      }
+  kitView(z, 1);   /* 261008 칩을 누르면 그 사이즈 착용 사진 전체 화면 보기(사용자 「화면 꽉 차게 · 사이즈 선택 시 사진으로 날아가서」) · 선택은 그대로 · 닫으면 시트 */
+}
+/* ═══ 261008 착용 사진 전체 화면 보기(사용자 261008 실기기 캡처 「화면 꽉 차게 보여 줘야 · 사이즈 선택 시 사진으로 날아가서」) ═══
+   사이즈 칩을 누르면(선택은 그대로) 그 사이즈 착용 사진이 화면을 채운다 · 사진 높이 = 보기 칸 높이(머리부터 발끝 · 폭이 넘치면 양옆 배경만 잘림) · 바탕 = 사진 스튜디오 회색 실측 · 사진 양옆 가장자리는 흐려 이음매가 안 보이게
+   아래 판 = 큰 사이즈 글자(주황) · 「모델 키 · 몸무게 · 사이즈 착용」 · 실측 한 줄 · 주 버튼(고르는 화면만 · 같은 신청 흐름 kitSend · 완료 화면은 시트에서)
+   좌우로 밀기 = 이웃 사이즈(고르는 화면 = 선택도 그 사이즈 · 품절은 건너뜀) · 점 4개 · 닫기 = 오른쪽 위 X · 아래로 끌기 · 뒤로 가기 · 사진 탭 · Esc → 시트(고른 칩 그대로)
+   여는 전환 = 가운데에서 커짐 0.22초(움직임 줄이기 = 즉시) · 사진은 시트를 열 때 미리 받고(kitOpen) 첫 장은 decode 뒤 보인다(깜빡임 없음) */
+var KIT_FIT = { SS: "158cm · 50kg", L: "175cm · 70kg", "2XL": "180cm · 85kg", "3XL": "183cm · 100kg" };
+var KVW = { on: false, pick: false, list: [], i: 0, el: null, dirty: false, pre: {} };
+function kvSeg(t) { return t.split(" · ").map(function (x) { return '<span class="kv-sg">' + x + "</span>"; }).join(" · "); }   /* 줄은 「 · 」 자리에서만 꺾인다(「착용」 한 낱말만 떨어지지 않게) */
+function kvCap(z) { return "모델 " + KIT_FIT[z] + " · " + z + " 착용"; }
+function kvMeas(z) { var r = KIT_TBL.filter(function (x) { return x[0] === z; })[0]; return r && r.length > 4 ? "총장 " + r[1] + " · 가슴 " + r[2] + " · 어깨 " + r[3] + " · 소매 " + r[4] + "cm" : ""; }
+/* 넘겨 볼 사이즈 · 고르는 화면 = 칩을 누를 수 있는 것(품절 아님 · 지금 내 사이즈는 품절이어도 포함) · 보기만 = 4개 모두 */
+function kvList(pick, k) {
+  return KIT_SIZES.filter(function (z) { if (!pick) return !!KIT_FIT[z]; var n = k.left && k.left[z] != null ? Number(k.left[z]) : 0; return !!KIT_FIT[z] && (k.sz === z || n > 0); });
+}
+function kitView(z, pick) {
+  if (KVW.on) return;
+  var k = kitMy();
+  if (!k) return;
+  pick = !!pick && kitCanSet(k);
+  var list = kvList(pick, k), i = list.indexOf(z);
+  if (!list.length) return;
+  if (i < 0) i = Math.max(0, list.indexOf(k.sz));
+  KVW.on = true; KVW.pick = pick; KVW.list = list; KVW.i = i; KVW.dirty = false; KVW.from = document.activeElement;
+  var w = document.createElement("div");
+  w.id = "kitView"; w.className = lgxRM() ? "rm" : "";
+  w.setAttribute("role", "dialog"); w.setAttribute("aria-modal", "true"); w.setAttribute("aria-label", "착용 사진"); w.tabIndex = -1;
+  w.innerHTML = '<div class="kv-st"><div class="kv-tr">' + list.map(function (x) { return '<div class="kv-sl"><img src="assets/kit/fit_' + x + '.webp" alt="' + kvCap(x) + '" width="680" height="1024" draggable="false"></div>'; }).join("") + "</div>" +
+    '<button type="button" class="kv-x" aria-label="닫기">' + X_SVG + "</button></div>" +
+    '<div class="kv-pn"><div class="kv-dots" aria-hidden="true">' + KIT_SIZES.map(function (x) { return '<i data-z="' + x + '"' + (list.indexOf(x) < 0 ? ' class="out"' : "") + "></i>"; }).join("") + "</div>" +   /* 점 = 아래 판 맨 위(사진 위에 두면 작은 화면에서 신발에 묻힌다) */
+    '<div class="kv-hd" aria-live="polite"></div>' + (pick ? '<button type="button" class="ax-button kv-go"></button>' : "") + "</div>";
+  document.body.appendChild(w);
+  KVW.el = w;
+  /* 아래 판 높이 고정 · 사이즈마다 글줄 수가 달라 넘길 때 사진 높이가 출렁이지 않게 가장 높은 것에 맞춘다 */
+  var hd = w.querySelector(".kv-hd"), mh = 0, sel0 = KIT.sel, msg0 = KIT.msg;
+  list.forEach(function (x, j) { KVW.i = j; kvPaint(false); mh = Math.max(mh, hd.offsetHeight); });
+  hd.style.minHeight = mh + "px"; KVW.i = i; KVW.dirty = false; KIT.sel = sel0; KIT.msg = msg0;
+  kvPaint(false);
+  kvWire(w);
+  var im = w.querySelectorAll(".kv-sl img")[i], shown = false;
+  var show = function () { if (shown || KVW.el !== w) return; shown = true; requestAnimationFrame(function () { w.classList.add("in"); try { w.querySelector(".kv-x").focus({ preventScroll: true }); } catch (e) {} }); };
+  try { if (im && im.decode) im.decode().then(show, show); else show(); } catch (e) { show(); }
+  setTimeout(show, 260);   /* 늦어도 0.26초 안에는 뜬다 */
+}
+function kvPaint(anim) {
+  var w = KVW.el;
+  if (!w) return;
+  var z = KVW.list[KVW.i], k = kitMy() || {}, tr = w.querySelector(".kv-tr"), b = w.querySelector(".kv-go");
+  tr.classList.toggle("anim", !!anim && !w.classList.contains("rm"));
+  tr.style.transform = "translate3d(" + (-KVW.i * 100) + "%, 0, 0)";
+  w.querySelector(".kv-hd").innerHTML = '<b class="kv-z">' + z + '</b><span class="kv-tx"><span class="kv-m">' + kvSeg(kvCap(z)) + '</span><span class="kv-ms">' + kvSeg(kvMeas(z)) + "</span></span>";
+  [].forEach.call(w.querySelectorAll(".kv-dots i"), function (d) { d.classList.toggle("on", d.getAttribute("data-z") === z); });
+  if (b) { var mine = k.sz === z; b.disabled = mine || KIT.busy; b.textContent = mine ? "지금 사이즈" : k.sz ? "사이즈 변경" : "이 사이즈로 신청"; }
+  if (KVW.pick && KIT.sel !== z) { KIT.sel = z; KIT.msg = ""; KVW.dirty = true; }   /* 넘기면 선택도 그 사이즈(시트는 닫을 때 다시 그림) */
+}
+function kvGo(d) {
+  if (!KVW.on) return;
+  KVW.i = Math.max(0, Math.min(KVW.list.length - 1, KVW.i + d));
+  kvPaint(true);
+}
+function kvSend() {
+  var k = kitMy();
+  if (!KVW.pick || !k || KIT.busy || !KIT.sel || KIT.sel === k.sz) return;
+  kitViewClose();
+  kitSend();   /* 같은 신청 흐름 · 완료 화면은 시트에서 */
+}
+function kitViewClose(drag) {
+  var w = KVW.el;
+  if (!w || !KVW.on) return;
+  KVW.on = false; KVW.el = null;
+  var fin = function () { if (w.parentNode) w.parentNode.removeChild(w); };
+  if (w.classList.contains("rm")) fin();
+  else { w.classList.remove("drag"); w.classList.add("out"); if (drag) w.style.transform = "translate3d(0, 100%, 0)"; w.style.opacity = "0"; setTimeout(fin, 240); }
+  if (KVW.dirty && App.current === "kit") App.render();
+  KVW.dirty = false;
+  try { var f = document.querySelector("#axsDet .axs-kitc.on") || document.querySelector("#axsDet .axs-kitvl") || KVW.from; if (f && f.focus) f.focus({ preventScroll: true }); } catch (e) {}
+}
+/* 손가락 · 가로 = 넘기기(끝에서는 고무줄) · 세로 아래 = 끌어 닫기 · 거의 안 움직인 짧은 탭 = 닫기 */
+function kvWire(w) {
+  var st = w.querySelector(".kv-st"), tr = w.querySelector(".kv-tr"), go = w.querySelector(".kv-go"), g = null;
+  w.querySelector(".kv-x").addEventListener("click", function () { kitViewClose(); });
+  if (go) go.addEventListener("click", kvSend);
+  w.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); kitViewClose(); return; }
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); kvGo(e.key === "ArrowRight" ? 1 : -1); return; }
+    if (e.key !== "Tab") return;
+    var b = [].slice.call(w.querySelectorAll("button:not([disabled])")), i = b.indexOf(document.activeElement);
+    e.preventDefault();
+    if (b.length) b[(i + (e.shiftKey ? -1 : 1) + b.length) % b.length].focus();
+  });
+  st.addEventListener("pointerdown", function (e) {
+    if (g || e.button > 0 || !KVW.on || (e.target.closest && e.target.closest(".kv-x"))) return;
+    KVW.tap = false;
+    g = { id: e.pointerId, x: e.clientX, y: e.clientY, t: Date.now(), ax: "", dx: 0, dy: 0, W: st.clientWidth || 1 };
+    try { st.setPointerCapture(e.pointerId); } catch (x) {}
+  });
+  st.addEventListener("pointermove", function (e) {
+    if (!g || e.pointerId !== g.id) return;
+    g.dx = e.clientX - g.x; g.dy = e.clientY - g.y;
+    if (!g.ax && Math.abs(g.dx) + Math.abs(g.dy) > 10) g.ax = Math.abs(g.dx) > Math.abs(g.dy) ? "x" : g.dy > 0 ? "y" : "n";
+    if (g.ax === "x") {
+      var d = g.dx;
+      if ((KVW.i === 0 && d > 0) || (KVW.i === KVW.list.length - 1 && d < 0)) d *= 0.3;
+      tr.classList.remove("anim");
+      tr.style.transform = "translate3d(calc(" + (-KVW.i * 100) + "% + " + Math.round(d) + "px), 0, 0)";
+    } else if (g.ax === "y") {
+      var y = Math.max(0, g.dy);
+      w.classList.add("drag");
+      w.style.transform = "translate3d(0, " + Math.round(y) + "px, 0)";
+      w.style.opacity = String(Math.max(0.4, 1 - y / 700));
     }
-  } catch (e) {}
+  });
+  var end = function (e, cancel) {
+    if (!g || e.pointerId !== g.id) return;
+    var t = Math.max(1, Date.now() - g.t), ax = g.ax, dx = g.dx, dy = g.dy, W = g.W;
+    g = null;
+    if (ax === "x") { kvGo(!cancel && (Math.abs(dx) > W * 0.2 || Math.abs(dx) / t > 0.45) ? (dx < 0 ? 1 : -1) : 0); return; }
+    if (ax === "y") {
+      if (!cancel && (dy > 120 || (dy > 40 && dy / t > 0.6))) { kitViewClose(true); return; }
+      w.classList.remove("drag"); w.style.transform = ""; w.style.opacity = "";
+      return;
+    }
+    KVW.tap = !ax && !cancel && t < 400;   /* 닫기는 이어 오는 click 에서(먼저 닫으면 그 click 이 아래 시트의 칩에 떨어져 다시 열린다) */
+  };
+  st.addEventListener("click", function (e) { if (KVW.tap && !(e.target.closest && e.target.closest(".kv-x"))) { KVW.tap = false; kitViewClose(); } });
+  st.addEventListener("pointerup", function (e) { end(e, false); });
+  st.addEventListener("pointercancel", function (e) { end(e, true); });
 }
-/* 261008 사진 칸 높이 맞춤(사용자 실기기 캡처) · 사이즈 칩이 있는 화면에서 「제목 + 사진 + 캡션 + 칩 줄」이 본문 높이에 들어가도록 사진 칸 높이를 CSS 변수 --kit-ph 로 줄인다(폭이 허용하는 정사각이 상한 · 180px 하한 · 사진은 contain 이라 작아질 뿐 잘리지 않는다) · 시트를 그릴 때마다(detPaint) 같은 값으로 다시 잡아 칩을 눌러도 높이가 바뀌지 않는다 */
-function kitFit() {
-  try {
-    var bd = document.querySelector("#axsDet .axs-dbody"); if (!bd) return;
-    var y = bd.scrollTop;
-    bd.style.removeProperty("--kit-ph");
-    var bx = bd.querySelector(".axs-kitfig .axs-kitimg"), cs = bd.querySelector(".axs-kitcs"), f = bd.firstElementChild;
-    if (!bx || !cs || !f || !bd.clientHeight) return;
-    var h = bx.getBoundingClientRect().height, w = bx.getBoundingClientRect().width;
-    var av = bd.clientHeight - (cs.getBoundingClientRect().bottom - f.getBoundingClientRect().top - h) - 12;
-    if (av < w) bd.style.setProperty("--kit-ph", Math.round(Math.max(180, av)) + "px");
-    bd.scrollTop = y;
-  } catch (e) {}
-}
-var KIT_RZ = 0;
-window.addEventListener("resize", function () { clearTimeout(KIT_RZ); KIT_RZ = setTimeout(function () { if (App.current === "kit") kitFit(); }, 150); });
 function kitEdit(on) { KIT.edit = !!on; KIT.sel = ""; KIT.msg = ""; App.render(); kitTop(); }
 function kitTbl() { KIT.tbl = !KIT.tbl; App.render(); }
 function kitFold(k) { KIT.fo = KIT.fo || {}; KIT.fo[k] = !KIT.fo[k]; App.render(); }   /* 261008 상품 정보 · 세탁 방법 · 주의사항 접힘 */
@@ -10252,15 +10370,8 @@ function kitKvHtml(rows) {
   return '<dl class="axs-kitkv">' + rows.map(function (r) { return "<div><dt>" + r[0] + "</dt><dd>" + r[1] + "</dd></div>"; }).join("") + "</dl>";
 }
 /* 상품 사진 · 261008 제조사 대표 사진(앞모습 · 「샘플」 딱지 없음 · 옛 회색 「상품 이미지」 예시 칸 대체) · 큰 칸(상품 화면) · 작은 칸(완료 요약)
-   261008 사이즈별 착용 사진(사용자 「얼굴 넣은 것으로 앱에 반영해줘」) · 큰 칸 = z(고른 사이즈 · 없으면 신청한 사이즈)가 있으면 그 착용 사진 + 아래 캡션 「모델 175cm · 70kg · L 착용」 · 없으면 상품 사진 · 칸은 늘 정사각(높이 고정 · 사진 비율이 달라도 레이아웃이 안 움직임) · hint = 사이즈 칩이 있는 화면의 고르기 전 빈 캡션 줄(261008 사용자 「안내 한 줄은 빼줘」 · 글자 없이 높이만 남겨 칩을 눌러도 레이아웃이 안 움직임) · 데이터는 지역 값(검사 샌드박스가 KIT_* 변수를 골라 싣기 때문) */
-function kitImgHtml(sm, z, hint) {
-  var FIT = { SS: "158cm · 50kg", L: "175cm · 70kg", "2XL": "180cm · 85kg", "3XL": "183cm · 100kg" }, fit = !sm && z && FIT[z] ? FIT[z] : "";
-  var cap = fit ? "모델 " + fit + " · " + z + " 착용" : "";
-  var img = fit ? '<img src="assets/kit/fit_' + z + '.webp" alt="' + cap + '" width="680" height="1024" decoding="sync">' : '<img src="' + KIT_IMG + '" alt="' + (sm ? "" : KIT_ITEM + " 앞모습") + '" width="800" height="600" decoding="async">';
-  var box = '<div class="axs-kitimg has' + (sm ? " sm" : "") + (fit ? " fit" : "") + '">' + img + "</div>";
-  if (sm) return box;
-  return '<div class="axs-kitfig">' + box + (cap ? '<p class="ax-meta axs-kitcap">' + cap + "</p>" : hint ? '<p class="ax-meta axs-kitcap" aria-hidden="true"></p>' : "") + "</div>";
-}
+   261008 v6.44 시트 맨 위는 늘 상품 사진(가로로 꽉 차는 4:3 · 착용 사진은 전체 화면 보기 kitView 에서만 · v6.41 ~ v6.43 의 칸 안 착용 사진 · 캡션 · 칸 높이 맞춤은 걷어 냄) */
+function kitImgHtml(sm) { return '<div class="axs-kitimg has' + (sm ? " sm" : "") + '"><img src="' + KIT_IMG + '" alt="' + (sm ? "" : KIT_ITEM + " 앞모습") + '" width="800" height="600" decoding="async"></div>'; }
 /* 접힘 한 칸(사이즈표와 같은 문법) · 제목 줄 = 버튼(aria-expanded) · 펼치면 아래에 내용 */
 function kitFoldHtml(id, title, open, onclick, inner) {
   return '<section class="axs-kittbl"><button type="button" class="axs-kittog" aria-expanded="' + open + '"' + (open ? ' aria-controls="' + id + '"' : "") + ' onclick="' + onclick + '"><span>' + title + "</span>" + CHEV_SVG + "</button>" +
@@ -10286,14 +10397,15 @@ function kitProdHtml(k) {
   /* 261008 제목 묶음이 사진보다 위(사용자 「제목 줄을 항상 최상단」) */
   return '<section class="axs-kitprod"><p class="axs-kitbr">AX Festival 2026</p><h3 class="ax-type-t3">' + KIT_ITEM + "</h3>" +
     '<p class="ax-description">' + (kitStaff(k) ? "스태프용 행사 기념 플리스예요 · 부드럽고 따뜻한 폴리에스터" : "행사 기념 플리스 · 에코백과 함께 드려요") + "</p></section>" +
-    kitImgHtml(0, KIT.sel || k.sz || "", k.ph === "open" || k.ph === "chg");
+    kitImgHtml(0);
 }
 /* 신청 완료 · 신청번호 · 사이즈 · 변경 기한 · 수령 */
 function kitDoneHtml(k) {
   var chg = k.ph === "open" ? kitWhen(k.close) + "까지 변경 가능" : k.ph === "chg" ? kitWhen(k.chg) + "까지 · 남은 사이즈만" : "마감";
   return '<section class="axs-kitok"><span class="ok" aria-hidden="true">' + CHECK_SVG + "</span>" +
     '<h3 class="ax-type-t3">' + kitRo(k.sz) + (k.how === "auto" ? " 배정됐어요" : " 신청 완료") + "</h3>" +
-    (k.no ? '<p class="axs-kitno">신청번호 <b>' + esc(k.no) + "</b></p>" : "") + "</section>" + kitImgHtml(0, k.sz) +
+    (k.no ? '<p class="axs-kitno">신청번호 <b>' + esc(k.no) + "</b></p>" : "") + "</section>" + kitImgHtml(0) +
+    (KIT_SIZES.indexOf(k.sz) >= 0 ? '<button type="button" class="axs-kitvl" onclick="kitView(\'' + k.sz + '\', 0)">착용 사진 보기</button>' : "") +   /* 261008 신청한 사이즈부터 보는 전체 화면(보기만) */
     '<section class="axs-kitsum">' + kitImgHtml(1) + '<div class="tx"><b>' + KIT_NAME + '</b><span>사이즈 ' + esc(k.sz) + (kitStaff(k) ? "" : " · 에코백 포함") + "</span></div></section>" +
     kitKvHtml([["신청번호", k.no ? "<b>" + esc(k.no) + "</b>" : "확인 중"], ["사이즈", esc(k.sz)], ["변경", esc(chg)], ["수령", esc(kitGetTxt(k))]]) +
     '<p class="ax-meta axs-kitnote">교환할 때 신청번호를 알려 주세요</p>';

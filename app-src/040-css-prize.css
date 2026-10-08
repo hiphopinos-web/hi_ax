@@ -206,14 +206,32 @@
   .axs-kitimg { display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 4 / 3; border-radius: var(--ax-radius-20); background: var(--ax-color-canvas); color: var(--ax-color-muted); font: var(--ax-type-t6-strong); text-align: center; word-break: keep-all; }
   .axs-kitimg.has { flex: none; overflow: hidden; padding: 0; }   /* 261008 상품 사진 · 칸을 꽉 채움(사진 바탕 회색 그대로) */
   .axs-kitimg.has img { display: block; width: 100%; height: 100%; object-fit: cover; }
-  /* 261008 사이즈별 착용 사진 · 큰 칸(.axs-kitfig 안)은 늘 정사각(상품 사진 4:3 은 가운데를 잘라 채움 · 착용 사진 2:3 은 contain) · 높이가 같아 칩을 눌러도 아래가 안 움직임 · 연회색 바탕 = 사진 스튜디오 배경(위 어둡고 아래 밝음)과 맞춘 토큰 혼합 그라데이션(위 14% · 아래 6%) · 앞 줄은 color-mix 미지원 기기용 */
-  .axs-kitfig { display: flex; flex-direction: column; gap: var(--ax-space-8); }
-  .axs-kitfig > .axs-kitimg { aspect-ratio: 1 / 1; }
-  #axsDet .axs-dbody .axs-kitfig > .axs-kitimg { max-height: var(--kit-ph, none); }   /* 261008 키 작은 화면 = kitFit 이 높이를 줄인다(폭은 그대로 · 사진 contain) */
-  .axs-kitimg.fit { background: var(--ax-color-divider); background: linear-gradient(180deg, color-mix(in srgb, var(--ax-color-ink) 14%, var(--ax-color-canvas)), color-mix(in srgb, var(--ax-color-ink) 6%, var(--ax-color-canvas))); }
-  .axs-kitimg.fit img { object-fit: contain; }
-  .axs-kitcap { margin: 0; min-height: 1.5em; text-align: center; word-break: keep-all; }
   .axs-kitsum .axs-kitimg.has.sm { padding: 0; }
+  /* 261008 v6.44 착용 사진 전체 화면 보기(kitView) · 시트(60) · 짧은 확인 시트(70) 위 · 팝업(96) 아래 · 바탕 = 착용 사진 스튜디오 배경 실측 회색(사진의 일부라 테마와 무관하게 고정 · 위 205 → 바닥 230) · 사진 높이 = 보기 칸 높이(머리부터 발끝) · 양옆 가장자리 흐림 · 노치 · 홈 막대 안전 영역 */
+  #kitView { position: fixed; inset: 0; z-index: 80; display: flex; flex-direction: column; background: rgb(206, 207, 210); background: linear-gradient(180deg, rgb(205, 206, 209) 0%, rgb(208, 208, 211) 60%, rgb(224, 224, 227) 88%, rgb(230, 230, 233) 100%); opacity: 0; transform: scale(0.94); transition: opacity 0.2s ease-out, transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1); touch-action: none; overscroll-behavior: contain; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+  #kitView.in { opacity: 1; transform: none; }
+  #kitView.drag, #kitView.rm, #kitView.rm .kv-tr { transition: none; }
+  #kitView.out { pointer-events: none; transform: scale(0.96); }
+  #kitView .kv-st { position: relative; flex: 1 1 auto; min-height: 0; padding-top: env(safe-area-inset-top, 0px); overflow: hidden; touch-action: none; }
+  #kitView .kv-tr { display: flex; height: 100%; will-change: transform; }
+  #kitView .kv-tr.anim { transition: transform 0.26s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  #kitView .kv-sl { display: flex; justify-content: center; flex: 0 0 100%; height: 100%; overflow: hidden; }
+  #kitView .kv-sl img { display: block; flex: none; width: auto; height: 100%; max-width: none; pointer-events: none; -webkit-mask-image: linear-gradient(90deg, transparent, black 7%, black 93%, transparent); mask-image: linear-gradient(90deg, transparent, black 7%, black 93%, transparent); }
+  #kitView .kv-x { position: absolute; top: calc(env(safe-area-inset-top, 0px) + var(--ax-space-8)); right: var(--ax-space-8); display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.8); color: rgb(25, 31, 40); cursor: pointer; }
+  #kitView .kv-x svg { width: 24px; height: 24px; }
+  #kitView .kv-dots { display: flex; justify-content: center; gap: var(--ax-space-8); margin-top: calc(-1 * var(--ax-space-4)); pointer-events: none; }
+  #kitView .kv-dots i { width: 8px; height: 8px; border-radius: 4px; background: var(--axs-divider-strong); transition: width 0.2s ease, background-color 0.2s ease; }
+  #kitView .kv-dots i.on { width: 20px; background: var(--ax-color-brand); }
+  #kitView .kv-dots i.out { background: transparent; box-shadow: inset 0 0 0 1px var(--axs-divider-strong); }   /* 품절 = 빈 점(넘겨지지 않음) */
+  #kitView .kv-pn { position: relative; flex: none; display: flex; flex-direction: column; gap: var(--ax-space-12); margin-top: calc(-1 * var(--ax-radius-20)); padding: var(--ax-space-16) var(--ax-space-20) calc(var(--ax-space-16) + env(safe-area-inset-bottom, 0px)); border-radius: var(--ax-radius-20) var(--ax-radius-20) 0 0; background: var(--ax-color-surface); }
+  #kitView .kv-hd { display: flex; align-items: center; gap: var(--ax-space-16); min-height: 48px; }
+  #kitView .kv-z { flex: none; font: 800 calc(32px * var(--fs, 1))/1.1 var(--ax-font); letter-spacing: -0.02em; color: var(--ax-color-brand); }
+  #kitView .kv-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; word-break: keep-all; }
+  #kitView .kv-m { font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
+  #kitView .kv-ms { font: var(--ax-type-t7); color: var(--ax-color-body); }
+  #kitView .kv-tx .kv-sg { white-space: nowrap; }
+  #kitView .kv-go { width: 100%; }
+  .axs-kitvl { align-self: center; min-height: 44px; margin-top: calc(-1 * var(--ax-space-12)); padding: 0 var(--ax-space-12); border: 0; background: none; color: var(--ax-color-brandText); font: var(--ax-type-t6-strong); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }   /* 완료 화면 「착용 사진 보기」 글자 링크 */
   .axs-kitimg.sm { flex: none; width: 64px; height: 64px; aspect-ratio: auto; border-radius: var(--ax-radius-12); padding: var(--ax-space-4); font: var(--ax-type-caption); }
   .axs-kitprod { display: flex; flex-direction: column; gap: var(--ax-space-4); }
   .axs-kitprod h3, .axs-kitprod p { margin: 0; word-break: keep-all; }
