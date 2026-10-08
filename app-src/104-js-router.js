@@ -486,6 +486,7 @@ function detPaint(dv, base) {
   DET.cur = snap;
   document.documentElement.classList.add("det-lock");
   detOv();
+  if (dv === "kit" && typeof kitFit === "function") kitFit();   /* 261008 플리스 시트 사진 칸 높이 맞춤 */
   if (first) { try { pan.focus({ preventScroll: true }); } catch (e) {} }
 }
 function detMake() {
