@@ -2853,6 +2853,11 @@ function attDay(v){ attOpt("day", v||""); }
  * 이 화면은 보기와 설정만: 체크인 인원 · 통 안의 공 · 당첨 기록 · 추첨 코드 · 체크인 시간 · 날짜(draw_stats · draw_cfg).
  * 당첨 기록에는 실명이 있다(상품 전달용 · 이 화면만 · 송출 화면은 가린 이름) · 부문 통계는 두지 않는다 · 새 CSS 는 dw- 로 시작한다. */
 var DRAW_WHY={ code:"코드는 AXD + 6자입니다(QR코드/codes.json 의 d17)", win:"시간 형식은 16:40-17:25 입니다(시작 < 끝)", day:"날짜 형식은 2026-10-26 입니다(비우면 매일)" };
+/* 261008 당첨자 폰 확인(서버 draw_stats recs ack · 살아 있는 당첨 줄만) · 확인 완료 HH:MM | 대기 */
+/* 무대 진행 오른쪽 · 살아 있는 당첨 줄마다 번호 · 등수 칸 · 실명 · 폰 확인(최근 12줄) · 당첨이 없으면 칸 없음 */
+function drawAckCard(d){ var w=((d&&d.recs)||[]).filter(function(r){ return r.st==="win"&&r.live; }).slice(0,12); if(!w.length) return ""; var n=w.filter(function(r){ return !!r.ack; }).length;
+  return card("당첨자 폰 확인", "확인 "+n+" / "+w.length+" · 앱 「확인」을 누르면 바뀝니다", '<div class="wrap"><table class="tb"><tr><th>번호</th><th>경품</th><th>이름</th><th>폰 확인</th></tr>'+w.map(function(r){ return '<tr><td class="n"><span class="dw-no">'+esc(r.no||"-")+'</span></td><td>'+esc(r.prize||"")+'</td><td>'+esc(r.name||r.nm||"")+'</td><td>'+drawAckTag(r)+'</td></tr>'; }).join("")+'</table></div>'); }
+function drawAckTag(r){ if(r.st!=="win"||!r.live) return '<span class="cap">-</span>'; return r.ack?tag("확인 완료 "+r.ack,"ok"):tag("대기","warn"); }
 function drawRecTag(r){
   if(r.st==="win") return r.live?tag("당첨","ok"):tag("당첨 · 취소됨","off");
   if(r.st==="absent") return r.live?tag("부재","warn"):tag("부재 · 취소됨","off");
@@ -2875,9 +2880,9 @@ function viewDraw(){
     kpi("당첨",d.wins||0,"명","부재 "+(d.absent||0)+" · 취소 뺀 수")+
   '</div>';
   var recs=d.recs||[];
-  var tb='<div class="wrap"><table class="tb"><tr><th>시각</th><th>회차 · 칸</th><th>번호</th><th>이름</th><th>경품</th><th>상태</th></tr>'+
-    recs.map(function(r){ return '<tr><td class="n cap">'+esc(short(r.t))+'</td><td class="n">'+esc(r.round||"-")+(r.slot?" · "+esc(r.slot):"")+'</td><td class="n"><span class="dw-no">'+esc(r.no||"-")+'</span></td><td>'+esc(r.name||r.nm||"")+(r.dept?' <span class="cap">'+esc(r.dept)+'</span>':'')+'</td><td>'+esc(r.prize||"")+'</td><td>'+drawRecTag(r)+'</td></tr>'; }).join("")+
-    (!recs.length?emptyRow(6,"아직 추첨 기록이 없습니다."):"")+'</table></div>'+(d.total>recs.length?'<p class="cap mt8">최근 '+recs.length+'줄 · 전체 '+d.total+'줄(시트 「추첨기록」)</p>':'');
+  var tb='<div class="wrap"><table class="tb"><tr><th>시각</th><th>회차 · 칸</th><th>번호</th><th>이름</th><th>경품</th><th>상태</th><th>폰 확인</th></tr>'+
+    recs.map(function(r){ return '<tr><td class="n cap">'+esc(short(r.t))+'</td><td class="n">'+esc(r.round||"-")+(r.slot?" · "+esc(r.slot):"")+'</td><td class="n"><span class="dw-no">'+esc(r.no||"-")+'</span></td><td>'+esc(r.name||r.nm||"")+(r.dept?' <span class="cap">'+esc(r.dept)+'</span>':'')+'</td><td>'+esc(r.prize||"")+'</td><td>'+drawRecTag(r)+'</td><td>'+drawAckTag(r)+'</td></tr>'; }).join("")+
+    (!recs.length?emptyRow(7,"아직 추첨 기록이 없습니다."):"")+'</table></div>'+(d.total>recs.length?'<p class="cap mt8">최근 '+recs.length+'줄 · 전체 '+d.total+'줄(시트 「추첨기록」)</p>':'');
   var set='<div class="dw-set">'+
     '<label class="cap">추첨 코드(인쇄물과 같아야 함)<br><input id="dwCode" class="in dw-code" value="'+esc(d.code||"")+'" placeholder="AXD + 6자" autocomplete="off" spellcheck="false"></label>'+
     '<label class="cap">체크인 시간<br><input id="dwWin" class="in w-m" value="'+esc(d.win||"")+'" placeholder="16:40-17:25"></label>'+
@@ -3228,6 +3233,7 @@ function dcOpen(){
     if(m.t==="ok"){ DC.st="ok"; DC.fails=0; DC.pongAt=Date.now(); dcPing(true); dcPaint(); return; }
     if(m.t==="no"){ DC.give=true; return; }
     if(m.t==="drawscr"&&m.s){ var s={}; for(var k in m.s) s[k]=m.s[k]; s.sid=m.sid||"main"; s.age=0; DC.scr=s; DC.scrAt=Date.now(); dcPaint(); return; }
+    if(m.t==="drawack"&&m.id){ var dd=ST.data.draw; ((dd&&dd.recs)||[]).forEach(function(r){ if(r.id===m.id&&r.st==="win") r.ack=m.at||""; }); dcPaint(); return; }   /* 261008 당첨자 폰 확인(서버 draw_ack) · 다음 폴링을 기다리지 않는다 */
     if(m.t==="draw"&&m.seq){ DC.cmd={ seq:m.seq, cmd:m.cmd, arg:m.arg||"", at:m.at }; if(DC.sent&&DC.sent.seq===m.seq) DC.sent.ws=Date.now(); dcPaint(); } };
   ws.onclose=function(e){ if(DC.ws!==ws) return; var was=DC.st==="ok"; DC.ws=null; DC.st="off"; dcPing(false); dcPaint();
     if(e&&(e.code===4000||e.code===4001)||DC.give||!DC.on) return;
@@ -3395,9 +3401,9 @@ function dcBody(d){
   if(last&&last.id) rec=((d.recs||[]).filter(function(r){ return r.id===last.id; })[0])||null;
   var won=last?'<div class="dc-win"><div class="dc-no">'+esc(last.no)+'</div><div><div class="dc-nm">'+esc(last.nm||"")+'</div><div class="cap">'+esc((last.round||"")+(last.slot?" · "+last.slot:""))+'</div></div>'+
       (last.st&&last.st!=="win"?tag(last.st==="absent"?"부재":last.st==="undo"||last.st==="undone"?"취소":last.st,"off"):tag("당첨","ok"))+'</div>'+
-    imp([["경품", esc(last.prize||(rec&&rec.prize)||"-")],["실명", rec?esc(rec.name||"-"):'<span class="cap">기록 확인 중</span>'],["부서", rec?esc(rec.dept||"-"):'<span class="cap">-</span>']])
+    imp([["경품", esc(last.prize||(rec&&rec.prize)||"-")],["폰 확인", rec?drawAckTag(rec):'<span class="cap">-</span>'],["실명", rec?esc(rec.name||"-"):'<span class="cap">기록 확인 중</span>'],["부서", rec?esc(rec.dept||"-"):'<span class="cap">-</span>']])
     :'<div class="empty">아직 당첨 공개가 없습니다.</div>';
-  var right=card("방금 당첨", "실명 · 부서는 이 화면만", won)+
+  var right=card("방금 당첨", "실명 · 부서는 이 화면만", won)+drawAckCard(d)+
     (!DRAW_TALK_SHOW?"":card("사회자 멘트", s?esc(DC_SCN[sc]||sc):"장면 모름", '<p class="dc-mc">'+esc(s?dcMc(s):DC_MC.idle)+'</p>'));
   var attW=drawAttOn(d)?'<div class="note warn dc-att">무대 화면 조작 창(P)에서 『체크인 화면 쓰기』를 함께 켜야 체크인을 받을 수 있어요</div>':"";   /* 261006 설정 행운권_참석조건 ON · 무대 화면은 기본으로 체크인 UI 가 꺼져 있다 */
   return head+rej+attW+'<div class="grid g75"><div>'+main+more+'</div><div>'+right+'</div></div>';
