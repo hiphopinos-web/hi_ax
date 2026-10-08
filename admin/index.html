@@ -939,6 +939,9 @@ textarea.in.p10-ta{min-height:144px;font-variant-numeric:tabular-nums}
 .og-sc button small{font-size:var(--fs-c);color:var(--tx3);line-height:1.4}
 .og-list{margin-top:16px}
 @media (max-width:720px){.og-sc{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* 261008 들어오지 못한 사람 · 폰 폭에서는 마지막 시도 칸을 이름 아래 한 줄로 */
+.og-dnm{display:none}
+@media (max-width:720px){.og-dnm{display:block}}
 .ks1-tb td{vertical-align:middle}
 .ks1-tb td.nm{white-space:normal;min-width:88px}
 @media (max-width:720px){ .ks-ph{grid-template-columns:repeat(2,minmax(0,1fr))} }
@@ -8935,9 +8938,11 @@ function ogDdelAsk(){
 function ogMark(emps, on){
   var m={}; emps.forEach(function(e){ m[normE(e)]=1; });
   [OGX.rows||[], OGX.drows||[]].forEach(function(L){ L.forEach(function(x){ if(m[normE(x.emp)]) x.st=on?"gate":""; }); });
+  if(on) ogDnOpen(m);   /* 261008 들어오지 못한 사람 · 넣은 줄만 바꾼다 */
   if(!on) OGX.chk={}; else emps.forEach(function(e){ delete OGX.chk[e]; });
 }
 function ogAfter(){ delete _cache[sig_("og_scope_state",{})]; reload(["ogs"]); }
+function ogAfterDel(){ delete _cache[sig_("og_deny_list",{})]; reload(["ogd"]); }   /* 261008 뺀 사람이 다시 막히는지는 서버 판정 */
 function ogAdd(emps, memo, undo){
   if(OGX.busy) return; OGX.busy="add"; ogPaint("og_res", ogResHtml); ogPaint("og_dres", ogDresHtml);
   var one=emps.length===1, p=one?{ emp:emps[0] }:{ emps:emps.join(";") }, mm=memo!=null?memo:String(OGX.memo||"").trim(); if(mm) p.memo=mm;
@@ -8959,7 +8964,7 @@ function ogDel(emps, dept, row){
   callPost("og_gate_remove",emps.length===1?{ emp:emps[0] }:{ emps:emps.join(";") },function(r){ OGX.busy=""; dlgForce();
     if(r&&(r.ok||r.reason==="none")){ var d=ST.data.ogs, m={}; emps.forEach(function(e){ m[normE(e)]=1; });
       if(d&&d.gate){ d.gate.rows=(d.gate.rows||[]).filter(function(x){ return !m[normE(x.emp)]; }); if(r.n!=null) d.gate.n=r.n; else d.gate.n=d.gate.rows.length; }
-      ogMark(emps, false); render(); ogAfter();
+      ogMark(emps, false); render(); ogAfter(); ogAfterDel();
       if(!r.ok){ toast("이미 명단에 없습니다"); return; }
       var gone=r.gone||[];
       toast((row?(row.name||row.emp):r.del+"명")+" · 뺐습니다",{ undo:function(){ if(gone.length===1) ogAdd([gone[0].emp], gone[0].memo||"", true); else ogAdd(gone.map(function(x){ return x.emp; }), "", true); } }); }
@@ -9026,15 +9031,69 @@ function ogApplyAsk(){
         if(r&&r.ok){ OGX.pv=null; OGX.pvKey=""; OGX.emps=null; OGX.paste=""; delete _cache[sig_("og_scope_state",{})]; reload(["ogs"]); fin("명단을 적용했습니다", imp([["지금 접속 허용 명단",(r.n!=null?r.n:"-")+"명"]])); }
         else { dlgForce(); if(r&&r.reason==="state"){ OGX.pv=null; ogPreview(true); } toast("실패: "+ogWhy(r)); render(); } },function(e){ OGX.busy=""; dlgForce(); toast("실패: "+ogWhy(e)); render(); }); } });
 }
+/* ══ 261008 들어오지 못한 사람(사용자 261008 「명단에 없어서 거부된 로그인도 확인 · 거부된 로그인 기록 콘솔에서 볼 수 있게」) ══
+ * 서버 og_deny_list(읽기 · 마지막 시도 최근 순 500줄 · 줄마다 open = 지금 판정으로 들어올 수 있음) · og_deny_clear(POST · 확인 문구 접속거부기록) · 둘 다 슈퍼관리자 + 본인 확인(sp)
+ * 자리 = 사람 › 접속 허용 명단 아래 카드 하나(줄마다 [명단에 추가] · 여러 명 고르기) · 통제 › 앱 접속 범위 = 「들어오지 못한 사람 N명」 한 줄 + 보기
+ * 서버는 문(notopen)에 막힌 사람만 사번당 한 줄로 남긴다(명부 밖 · PIN 틀림은 없음 · 같은 사람은 1분에 한 번만 센다) · 사번 · 이름은 이 화면 메모리에만 */
+var OG_DL_W="접속거부기록", OGD={ chk:{}, q:"", busy:"" };
+SP_ACT.og_deny_list=1; SP_ACT.og_deny_clear=1;
+CTL_ACT.og_deny_clear=["pp",function(p){ return "접속 거부 기록 비우기"; }];
+SUBNEED["ogate:"]=function(){ return supOk()?[{k:"ogd",a:"og_deny_list"}]:[]; };   /* 사람 › 접속 허용 명단 */
+SUBNEED["ogscope:"]=function(){ return supOk()?[{k:"ogd",a:"og_deny_list"}]:[]; };   /* 통제 › 앱 접속 범위 · 한 줄 */
+function ogDnWhy(r){ return hvUnknown(r)?"서버 갱신 뒤 보입니다":ogWhy(r); }
+function ogDnWait(){ var d=ST.data.ogd; return d&&d.ok?(d.rows||[]).filter(function(x){ return !x.open; }):[]; }
+function ogDnOpen(m){ var d=ST.data.ogd; if(!d||!d.ok) return; var k=0; (d.rows||[]).forEach(function(x){ if(!m[normE(x.emp)]) return; if(!x.open){ x.open=1; k++; } delete OGD.chk[x.emp]; }); if(k&&d.wait!=null) d.wait=Math.max(0,d.wait-k); ogPaint("og_deny", ogDnCard); }
+function ogDnLine(){
+  var d=ST.data.ogd; if(!d||!d.ok) return "";
+  return '<div class="bands mt12">'+band(d.wait?"warn":"",'들어오지 못한 사람 <b class="n">'+ogN(d.wait)+'</b>명'+(d.n>d.wait?' · 그 뒤 들어올 수 있게 된 사람 '+ogN(d.n-d.wait)+'명':''),'<button class="btn sm" onclick="go(\'p_gate\')">보기</button>')+'</div>';
+}
+function ogDnCard(){
+  var d=ST.data.ogd, rt='<button class="btn sm" onclick="ogDnReload()">새로고침</button>';
+  if(!d) return card("들어오지 못한 사람","",skel());
+  if(!d.ok) return card("들어오지 못한 사람","",'<div class="bands">'+band(hvUnknown(d)?"":"warn",esc(ogDnWhy(d)),hvUnknown(d)?"":'<button class="btn sm" onclick="ogDnReload()">다시 시도</button>')+'</div>');
+  var sub="막힌 사람 <b class=\"n\">"+ogN(d.n)+"</b>명 · 지금도 막힘 <b class=\"n\">"+ogN(d.wait)+"</b>명";
+  if(!(d.rows||[]).length) return card("들어오지 못한 사람",sub,emptyLine("아직 없어요"),rt);
+  var can=ogDnWait(), sel=can.filter(function(x){ return OGD.chk[x.emp]; }), all=can.length&&sel.length===can.length;
+  var bar='<div class="toolbar"><label class="cap" style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="ck" '+(all?"checked ":"")+(can.length?"":"disabled ")+'onchange="ogDnAll(this.checked)">모두 선택('+ogN(can.length)+'명)</label>'+
+    '<input class="in w-m" type="search" placeholder="이름 · 부서 · 사번으로 좁히기" value="'+esc(OGD.q)+'" oninput="OGD.q=this.value;ogPaint(\'og_dnl\',ogDnBody)" aria-label="들어오지 못한 사람 안에서 찾기">'+
+    '<span class="sp"></span><button class="btn sm pri" onclick="ogDnAddSel()"'+(!sel.length||OGX.busy?" disabled":"")+'>선택한 '+ogN(sel.length)+'명 명단에 추가</button></div>';
+  return card("들어오지 못한 사람",sub,bar+'<div id="og_dnl">'+ogDnBody()+'</div><p class="cap mt8">명단에 없어 로그인 · 앱 열기가 막힌 사람만 남습니다. 명부에 없는 사번 · PIN 틀림은 남지 않고, 같은 사람은 1분에 한 번만 셉니다. 10/18 오픈 전 초기화 때 비웁니다.</p>',
+    rt+' <button class="btn sm danger" onclick="ogDnClearAsk()"'+(OGD.busy?" disabled":"")+'>비우기</button>');
+}
+function ogDnBody(){
+  var d=ST.data.ogd, rows=(d&&d.rows)||[], q=String(OGD.q||"").replace(/\s/g,"").toUpperCase();
+  if(q) rows=rows.filter(function(x){ return (String(x.name)+String(x.emp)+String(x.dept)).replace(/\s/g,"").toUpperCase().indexOf(q)>=0; });
+  return '<div class="wrap scrolly mt8" style="max-height:420px"><table class="tb"><tr><th style="width:36px"></th><th>사람</th><th class="hide-m">마지막 시도 · 횟수</th><th class="tdr" style="text-align:right">지금</th></tr>'+(rows.length?rows.map(function(x){
+    var op=!!x.open;
+    return '<tr><td>'+(op?'':'<input type="checkbox" class="ck" '+(OGD.chk[x.emp]?"checked ":"")+'onchange="ogDnChk(\''+jq(x.emp)+'\',this.checked)" aria-label="'+esc(x.name||x.emp)+' 고르기">')+'</td>'+
+      '<td><b>'+esc(x.name||"-")+'</b><div class="cap n">'+esc(x.dept||"-")+' · '+esc(x.emp)+'</div><div class="cap n og-dnm">'+esc(short(x.last))+' · '+ogN(x.n)+'회'+(x.via==="app"?' · 열어 둔 앱':'')+'</div></td>'+
+      '<td class="n cap hide-m" style="white-space:nowrap">'+esc(short(x.last))+'<div>'+ogN(x.n)+'회'+(x.via==="app"?' · 열어 둔 앱':'')+'</div></td>'+
+      '<td class="tdr">'+(op?tag("지금은 들어올 수 있음","ok"):'<button class="btn sm pri" onclick="ogAdd([\''+jq(x.emp)+'\'])"'+(OGX.busy?" disabled":"")+'>명단에 추가</button>')+'</td></tr>'; }).join(""):emptyRow(4,"찾는 사람이 없습니다."))+'</table></div>'+
+    (d&&d.more?'<p class="cap mt8">최근 '+ogN(rows.length)+'명까지 보입니다(그 밖 '+ogN(d.more)+'명).</p>':'');
+}
+function ogDnChk(emp, on){ if(on) OGD.chk[emp]=1; else delete OGD.chk[emp]; ogPaint("og_deny", ogDnCard); }
+function ogDnAll(on){ OGD.chk={}; if(on) ogDnWait().forEach(function(x){ OGD.chk[x.emp]=1; }); ogPaint("og_deny", ogDnCard); }
+function ogDnAddSel(){ var sel=ogDnWait().filter(function(x){ return OGD.chk[x.emp]; }).map(function(x){ return x.emp; }); if(sel.length) ogAdd(sel); }
+function ogDnReload(){ delete _cache[sig_("og_deny_list",{})]; reload(["ogd"]); }
+function ogDnClearAsk(){
+  var d=ST.data.ogd; if(!d||!d.ok||OGD.busy) return;
+  hvL3Go({ t:"들어오지 못한 사람 기록을 비울까요?", who:"접속 거부 기록<span>"+ogN(d.n)+"명 · 지금도 막힘 "+ogN(d.wait)+"명</span>",
+    rows:[["지울 줄",ogN(d.n)+"명","loss"],["접속 허용 명단","그대로"]],
+    s:"시트 「접속거부」를 비웁니다. 되돌릴 수 없습니다. 명단 · 범위는 바뀌지 않고, 그 뒤 다시 막히는 사람은 새로 남습니다.", ok:"비우기", word:OG_DL_W,
+    run:function(fin){ OGD.busy="clr";
+      callPost("og_deny_clear",{ confirm:OG_DL_W },function(r){ OGD.busy="";
+        if(r&&r.ok){ var dd=ST.data.ogd; if(dd){ dd.rows=[]; dd.n=0; dd.wait=0; dd.more=0; } OGD.chk={}; render(); fin("기록을 비웠습니다", imp([["지운 사람",ogN(r.del)+"명"]])); }
+        else { dlgForce(); toast("실패: "+ogDnWhy(r)); render(); } },function(e){ OGD.busy=""; dlgForce(); toast("실패: "+ogDnWhy(e)); render(); }); } });
+}
 /* ══ 261008 콘솔 정리 · 나눈 화면 · 통제 › 앱 접속 범위 · 사람 › 접속 허용 명단 · 사람 › 스태프 의류 명단 ══ */
-function viewOgScope(){ var h=ogScHtml(); return h||card("앱 접속 범위","",emptyLine("슈퍼관리자만 엽니다.")); }
+function viewOgScope(){ var h=ogScHtml(); return h?h+ogDnLine():card("앱 접속 범위","",emptyLine("슈퍼관리자만 엽니다.")); }
 function viewOgGate(){
   var d=ST.data.ogs, rd=ST.data.rds;
   if(!d) return card("접속 허용 명단","",skel());
   if(!d.ok) return card("접속 허용 명단","",'<div class="bands">'+band("warn",esc(ogWhy(d)),'<button class="btn sm" onclick="ogReload()">다시 시도</button>')+'</div>');
   var g=d.gate||{ n:0, rows:[] }, rdOk=rd&&rd.ok;
   var note=rdOk&&!rd.n?'<div class="bands">'+band("warn","부서 정보가 아직 없어 부서 찾기는 <b>부문</b>으로 찾습니다. 설정 › 명부 부서에서 전직원현황을 올리면 부서 · 팀으로 찾습니다.")+'</div>':'';
-  return note+card("접속 허용 명단","지금 <b class=\"n\">"+ogN(g.n)+"</b>명"+(rdOk&&rd.n?" · 부서 정보 "+ogN(rd.n)+"명("+esc(rd.at||"")+")":""),ogGateHtml(g),'<button class="btn sm" onclick="ogReload()">새로고침</button>');
+  return note+card("접속 허용 명단","지금 <b class=\"n\">"+ogN(g.n)+"</b>명"+(rdOk&&rd.n?" · 부서 정보 "+ogN(rd.n)+"명("+esc(rd.at||"")+")":""),ogGateHtml(g),'<button class="btn sm" onclick="ogReload()">새로고침</button>')+'<div id="og_deny">'+ogDnCard()+'</div>';
 }
 function viewKitStaff(){
   var d=ST.data.kss, srv=ksSrv();
