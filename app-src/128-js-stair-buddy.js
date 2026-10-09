@@ -19,17 +19,20 @@ var STB_CUTE = ["힘내요!", "화이팅!", "한 칸만 더!", "잘하고 있어
 /* 계단 말 · 숫자 · 의학 효과 없이 */
 var STB_GOOD = ["계단은 가까이 있는 좋은 운동이에요", "따로 시간 내지 않아도 하는 운동이에요", "천천히 걸어도 좋은 운동이 돼요", "계단을 쓰면 엘리베이터가 덜 붐벼요", "엘리베이터 기다리는 시간도 아껴요", "걷다 보면 생각이 정리되기도 해요"];
 var STB_THANKS = "엘리베이터가 붐벼 불편하시죠?\n계단에 함께해 주셔서 감사해요";   /* 사용자 문장 · 말풍선 두 줄에 맞춤(4차 글자 22px · 「오늘」 덜어 한 줄에) · 한 출발에 한 번 */
-var STB_PROG_Q = "오늘 프로그램 참여해 보셨어요?";
-var STB_MILE = [[3, "벌써 3분째 같이 걷고 있어요"], [5, "5분째 함께예요\n도착하면 QR을 꼭 찍어요"]];
-var STB_ARRIVE = "도착하면 아래 버튼으로 QR을 찍어요";
-var STB_FIXLINE = "출발 30분이 지나면\n도착 층을 직접 골라요";
+var STB_PROG_Q = "오늘 프로그램 참여해 보셨어요?";   /* 5차 · 프로그램 말의 머리(꼬리표 줄) · 내용 = 제안 한 줄 */
+/* 5차(사용자 261009 「AX 상식 / 내용 두 줄로 배치」) 행사 말 = 머리(작은 주황 꼬리표 한 줄) + 내용(큰 글씨 2줄 안) · 응원 · 엘리베이터 감사 · 첫 인사 = 머리 없이 */
+var STB_HEAD = { fact: "AX 상식", good: "계단 이야기", mile: "함께 걷는 중", arrive: "도착 안내", congr: "스탬프" };
+var STB_MILE = [[3, "벌써 3분째예요"], [5, "5분째예요\n도착하면 QR을 꼭 찍어요"]];
+var STB_ARRIVE = "아래 버튼으로 QR을 찍어요";
+function stbFixLine() { var fl = Number((STR.res || {}).fl); return (fl ? fl + "F " : "") + "출발 30분이 지나면\n도착 층을 직접 골라요"; }   /* 출발 층은 이 안내 안에서만 */
 /* [출처 id, 말] · 말이 비면 JP_FACTS 의 그 글 그대로 */
 var STB_FACTS = [
   ["jp01"], ["A02", "AI가 자신 있게 말해도 틀릴 수 있어요. 따로 확인해요"], ["jp07"], ["A05", "읽을 사람을 알려 주면 AI가 맞춤 답을 줘요"],
   ["jp02"], ["A28", "AI가 없는 출처를 지어낼 때도 있어요"], ["jp08"], ["A26", "역할을 정해 주면 AI 답의 관점이 맞춰져요"],
   ["jp03"], ["jp05"], ["jp06"], ["A29", "AI 요약은 중요한 내용을 빼먹을 수 있어요"], ["jp09"], ["A30", "「이 자료만 보고 답해 줘」처럼 범위를 정해 줘요"],
   ["jp15"], ["jp16"], ["F02", "AX는 AI Transformation의 약자예요"], ["jp17"], ["F50", "결과물은 A4 1장처럼 형태를 구체적으로 알려 줘요"],
-  ["jp19"], ["F22", "지금의 DAP는 나만의 Agent의 첫걸음이에요"], ["jp22"], ["jp29"]
+  ["jp19"], ["F22", "지금의 DAP는 나만의 Agent의 첫걸음이에요"], ["jp22"], ["jp29"],
+  ["jp11"], ["jp20"], ["jp27"], ["jp13"], ["jp28"], ["jp21"], ["jp30"], ["jp10"]   /* 5차 · 상식 비중을 올려 8개 더(점프 AX 상식 그 글 그대로) */
 ];
 var STB = null, STBWL = { l: null, req: false };
 function stbRm() { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } }
@@ -59,26 +62,27 @@ function stbEnsure(since) {
   var cute = STB_CUTE.slice(1);
   shuf(cute);
   STB = { leg: since, loop: 0, ph: "climb", hop: 0, line: { t: STB_HELLO, m: "smile" }, n: 0, done: false, t: 0, tType: 0,
-    cute: [STB_CUTE[0]].concat(cute), ci: 0, ev: 0, fi: Math.floor(Math.random() * STB_FACTS.length), fn: 0, gi: 0, used: {}, thx: false, congr: false, mile: {}, save: false, rest: false, log: [] };
+    cute: [STB_CUTE[0]].concat(cute), ci: 0, ev: 0, alog: [], fi: Math.floor(Math.random() * STB_FACTS.length), fn: 0, gi: 0, used: {}, thx: false, congr: false, mile: {}, save: false, rest: false, log: [] };
   if (stbRm()) { STB.n = STB.line.t.length; STB.done = true; }
   return STB;
 }
-/* 짝수 고리의 행사 말 · j = 짝수 고리 차례(0부터) · 프로그램 → 상식 → 감사 → 계단 → (상식 · 프로그램 · 상식 · 계단) 되풀이 */
+/* 짝수 고리의 행사 말 · j = 짝수 고리 차례(0부터) · 5차 상식 2 : 그 밖 1 = 프로그램 → 상식 · 상식 → 감사 → 상식 · 상식 → 계단 → (상식 · 상식 · 프로그램 · 상식 · 상식 · 계단) 되풀이 */
+var STB_EV0 = ["p", "f", "f", "t", "f", "f", "b"], STB_EV = ["f", "f", "p", "f", "f", "b"];
 function stbEventLine(b, j) {
-  var cat = j === 0 ? "p" : j === 1 ? "f" : j === 2 ? "t" : j === 3 ? "b" : ["f", "p", "f", "b"][(j - 4) % 4];
+  var cat = j < STB_EV0.length ? STB_EV0[j] : STB_EV[(j - STB_EV0.length) % STB_EV.length];
   if (cat === "t") { if (!b.thx) { b.thx = true; return { t: STB_THANKS, m: "smile", k: "thanks" }; } cat = "f"; }
   if (cat === "p") {
-    if (stampCount() >= STAMP_DENOM) { if (!b.congr) { b.congr = true; return { t: stbCongr(), m: "smile", k: "congr" }; } cat = "f"; }
+    if (stampCount() >= STAMP_DENOM) { if (!b.congr) { b.congr = true; return { t: stbCongr(), tag: STB_HEAD.congr, m: "smile", k: "congr" }; } cat = "f"; }
     else {
       var sg = stbSugs().filter(function (x) { return !b.used[x[0]]; })[0];
-      if (sg) { b.used[sg[0]] = 1; return { t: STB_PROG_Q + "\n" + sg[1], m: "smile", k: "prog:" + sg[0] }; }
+      if (sg) { b.used[sg[0]] = 1; return { t: sg[1], tag: STB_PROG_Q, m: "smile", k: "prog:" + sg[0] }; }
       cat = "f";
     }
   }
-  if (cat === "b" && b.gi < STB_GOOD.length) return { t: STB_GOOD[b.gi++], tag: "계단", m: "smile", k: "good" };
+  if (cat === "b" && b.gi < STB_GOOD.length) return { t: STB_GOOD[b.gi++], tag: STB_HEAD.good, m: "smile", k: "good" };
   var fs = "", i;
   for (i = 0; i < STB_FACTS.length && !fs; i++) fs = stbFactText(STB_FACTS[(b.fi + b.fn++) % STB_FACTS.length]);
-  return { t: fs || STB_CUTE[0], tag: fs ? "AX 상식" : "", m: fs ? "wave" : "smile", k: "fact" };
+  return { t: fs || STB_CUTE[0], tag: fs ? STB_HEAD.fact : "", m: fs ? "wave" : "smile", k: "fact" };
 }
 function stbCuteLine(b) {
   if (b.ci >= b.cute.length) {   /* 한 바퀴를 다 쓰면 다시 섞기 · 첫 말이 직전 말과 같지 않게 */
@@ -91,8 +95,8 @@ function stbCuteLine(b) {
 /* 고리 끝에 할 말 · 이정표(3분 · 5분 한 번씩)가 먼저 · 홀수 고리 = 응원(절약 중이면 도착 안내) · 짝수 고리 = 행사 말 */
 function stbPick(b) {
   var age = stbAge(), i, ln;
-  for (i = 0; i < STB_MILE.length && !ln && !b.save; i++) if (age >= STB_MILE[i][0] * 60000 && !b.mile[STB_MILE[i][0]]) { b.mile[STB_MILE[i][0]] = 1; ln = { t: STB_MILE[i][1], m: "smile", k: "mile" }; }   /* 한 번에 하나 · 절약 중에는 도착 안내가 대신 */
-  if (!ln) ln = b.loop % 2 ? (b.save ? { t: STB_ARRIVE, m: "smile", k: "arrive" } : stbCuteLine(b)) : stbEventLine(b, b.ev++);
+  for (i = 0; i < STB_MILE.length && !ln && !b.save; i++) if (age >= STB_MILE[i][0] * 60000 && !b.mile[STB_MILE[i][0]]) { b.mile[STB_MILE[i][0]] = 1; ln = { t: STB_MILE[i][1], tag: STB_HEAD.mile, m: "smile", k: "mile" }; }   /* 한 번에 하나 · 절약 중에는 도착 안내가 대신 */
+  if (!ln) ln = b.loop % 2 ? (b.save ? { t: STB_ARRIVE, tag: STB_HEAD.arrive, m: "smile", k: "arrive" } : stbCuteLine(b)) : stbEventLine(b, b.ev++);
   if (b.log.length < 400) b.log.push([Math.round(age / 1000), b.loop, ln.k, ln.t]);
   return ln;
 }
@@ -134,35 +138,34 @@ function stbBotHtml(b) {
 function stbHtml(o, s, since) {
   var b = stbEnsure(since), down = stbDown(), ln = b.line || { t: "" };
   if (!b.rest && stbAge() >= STB_REST_MS) stbRestLine(b);
-  return '<div class="ax-stack-tight stb-where"><h1 class="ax-title">' + esc(o.fl) + "F · " + esc(o.route || stairRoute(o.r)) + "</h1>" +
-    '<p class="ax-meta" id="stElapsed">시작 ' + esc(o.at || (s.leg && s.leg.at) || "") + " · " + stairElapsed(since) + "</p></div>" +
+  return '<h1 class="stb-sr">계단 동행 · ' + esc(o.fl) + "F 출발 · 도착 층 방화문 앞 QR 스캔</h1>" +   /* 5차(사용자 「상단 정보는 크게 필요 없다」) 층 · 경로 · 시작 시각 줄 걷음 · 화면 읽기용 제목 하나만 */
     '<button type="button" class="stb-bub" id="stbBub" aria-label="다음 말 보기" onclick="stbSkip()">' +   /* 말풍선 = 단추(누르면 다 보이기 · 다음으로) · 읽어 주기는 아래 stbSr 한 줄 */
       '<span class="stb-tx" aria-hidden="true">' + (ln.tag ? '<span class="stb-tag" id="stbTag">' + ln.tag + "</span>" : '<span class="stb-tag" id="stbTag" hidden></span>') +
-      '<span id="stbTx">' + esc(ln.t.slice(0, b.n)) + '</span><i class="stb-more' + (b.done ? " on" : "") + '" id="stbMore"></i></span></button>' +
+      '<span id="stbTx">' + esc(ln.t.slice(0, b.n)) + '</span></span><i class="stb-more' + (b.done ? " on" : "") + '" id="stbMore"></i></button>' +
     '<p class="stb-sr" id="stbSr" aria-live="polite">' + esc((ln.tag ? ln.tag + " · " : "") + ln.t) + "</p>" +
     '<div class="stb-stage' + (down ? " down" : "") + (stbRm() || b.save || b.rest ? " still" : "") + (STB3.st === 2 ? " is3d" : "") + '" id="stbStage">' +
       '<div class="stb-flip">' + stbStairSvg(down) + stbBotHtml(b) + "</div>" +
       '<span class="stb-cnt" id="stbCnt" aria-hidden="true" style="top:' + stbBotBox().ct.toFixed(2) + '%"></span></div>' +
-    '<p class="axs-safe stb-safe">' + STAIR_SAFE + "</p>" +
-    '<p class="ax-meta stb-cap">도착 층 방화문 앞 QR 스캔 · ' + ((s.goal || 1) > 1 ? "누적 " + (s.total || 0) + " / " + s.goal + "개 층" : (s.total || 0) >= 1 ? "오늘 " + s.total + "개 층 이동" : "한 개 층만 이동해도 적립") + "</p>";
+    '<p class="stb-safe">' + STAIR_SAFE + ((s.goal || 1) > 1 ? " · 누적 " + (s.total || 0) + " / " + s.goal + "개 층" : "") + "</p>";   /* 5차 · 안전 한 줄만 작게(누적은 목표가 2개 층 이상일 때만) */
 }
 /* 무대 크기 · 아래 고정 단추 위에 다 보이게(키 작은 화면 · 큰 글씨) · 그린 직후 한 번(같은 일 안이라 화면이 튀지 않는다) · 폭 200px 아래로는 줄이지 않는다 */
-function stbCongr() { return "스탬프 " + STAMP_DENOM + "개를 다 모았어요\n축하해요!"; }
+function stbCongr() { return STAMP_DENOM + "개를 다 모았어요\n축하해요!"; }
 /* 이 출발에 나올 수 있는 말 전부(말풍선 높이 미리 재기) */
 function stbPool() {
-  var L = [["", STB_HELLO], ["", STB_THANKS], ["", STB_ARRIVE], ["", STB_FIXLINE], ["", stbCongr()]];
+  var L = [["", STB_HELLO], ["", STB_THANKS], [STB_HEAD.arrive, STB_ARRIVE], [STB_HEAD.arrive, stbFixLine()], [STB_HEAD.congr, stbCongr()]];
   STB_CUTE.forEach(function (t) { L.push(["", t]); });
-  STB_GOOD.forEach(function (t) { L.push(["계단", t]); });
-  stbSugs().forEach(function (x) { L.push(["", STB_PROG_Q + "\n" + x[1]]); });
-  STB_MILE.forEach(function (m) { L.push(["", m[1]]); });
-  STB_FACTS.forEach(function (f) { var t = stbFactText(f); if (t) L.push(["AX 상식", t]); });
+  STB_GOOD.forEach(function (t) { L.push([STB_HEAD.good, t]); });
+  stbSugs().forEach(function (x) { L.push([STB_PROG_Q, x[1]]); });
+  STB_MILE.forEach(function (m) { L.push([STB_HEAD.mile, m[1]]); });
+  STB_FACTS.forEach(function (f) { var t = stbFactText(f); if (t) L.push([STB_HEAD.fact, t]); });
   return L;
 }
-/* 4차(사용자 261009 「글자 폰트를 더 크게」) · 말풍선 글자 = 22px(옛 17px · 1.3배 · 굵기 700)부터 · 나올 말 전부가 2줄에 들면 그 크기
-   좁은 폭이면 21 · 20 · 19px 로 한 단계씩(가장 긴 말도 2줄 · 안 되면 줄 수가 가장 적은 큰 크기) · 말풍선 높이 = 가장 긴 말 줄 수로 미리 잡는다(말이 바뀌어도 무대 · 단추가 밀리지 않게)
-   폭이 같으면 다시 재지 않는다 · 글자 크기는 px(큰 글씨 설정에서도 22px · 옛 큰 글씨 21px 보다 크다) */
-var STB_FITK = { k: "", fs: 22, n: 2 };
-var STB_FS = [22, 21, 20, 19];
+/* 4 · 5차(사용자 261009 「글자 폰트를 더 크게」 · 「더 올릴 수 있을 것 같다」) · 말풍선 내용 글자 = 26px(옛 17px · 1.5배 · 굵기 700)부터 · 나올 말 전부의 내용이 2줄에 들면 그 크기
+   좁은 폭이면 25 · 24 · 23 · 22px 로 한 단계씩(가장 긴 말도 2줄 · 안 되면 줄 수가 가장 적은 큰 크기) · 말풍선 높이 = 머리 줄 + 가장 긴 내용 줄 수로 미리 잡는다(말이 바뀌어도 무대 · 단추가 밀리지 않게)
+   줄 수 = 내용 글(#stbTx)의 줄 상자 수 · 폭이 같으면 다시 재지 않는다 · 글자 크기는 px(큰 글씨 설정에서도 같다) */
+function stbLines(e) { var r = e.getClientRects(), seen = {}, n = 0, i, k; for (i = 0; i < r.length; i++) { if (r[i].width < 1) continue; k = Math.round(r[i].top); if (!seen[k]) { seen[k] = 1; n++; } } return n; }   /* 줄 수 = 글자가 있는 줄 상자의 높이 자리 수 */
+var STB_FITK = { k: "", fs: 26, n: 2 };
+var STB_FS = [26, 25, 24, 23, 22];
 function stbBubFit() {
   var box = document.querySelector(".stb-tx"), tx = el("stbTx"), tg = el("stbTag"); if (!box || !tx || !tg) return;
   var k = box.clientWidth + "/" + stbSugs().length;
@@ -173,21 +176,25 @@ function stbBubFit() {
       if (best && best.n <= 2) return;
       var lh = Math.round(fs * 1.41), mx = 1;
       box.style.fontSize = fs + "px"; box.style.lineHeight = lh + "px";
-      pool.forEach(function (x) { tg.hidden = !x[0]; tg.textContent = x[0]; tx.textContent = x[1]; mx = Math.max(mx, Math.round(box.getBoundingClientRect().height / lh)); });
+      pool.forEach(function (x) { tg.hidden = !x[0]; tg.textContent = x[0]; tx.textContent = x[1]; mx = Math.max(mx, stbLines(tx)); });
       if (!best || mx < best.n) best = { fs: fs, n: mx };
     });
+    tg.hidden = false; tg.textContent = STB_HEAD.fact; var th = tg.getBoundingClientRect().height + 6;   /* 머리 줄 높이(아래 6px 띄움) */
     tx.textContent = keep[0]; tg.textContent = keep[1]; tg.hidden = keep[2];
-    STB_FITK = { k: k, fs: best.fs, n: Math.max(2, best.n) };
+    STB_FITK = { k: k, fs: best.fs, n: Math.max(2, best.n), th: th };
   }
   var l2 = Math.round(STB_FITK.fs * 1.41);
-  box.style.fontSize = STB_FITK.fs + "px"; box.style.lineHeight = l2 + "px"; box.style.minHeight = STB_FITK.n * l2 + "px";
+  box.style.fontSize = STB_FITK.fs + "px"; box.style.lineHeight = l2 + "px"; box.style.minHeight = Math.round(STB_FITK.th + STB_FITK.n * l2) + "px";
 }
 function stbFit() {
   var g = el("stbStage"), go = el("stbGo"); if (!g || !go) return;
   stbBubFit();
+  var bub = el("stbBub"); if (bub) bub.style.marginTop = "";
   g.style.maxWidth = "";
   var top = g.getBoundingClientRect().top + (window.scrollY || 0), avail = go.getBoundingClientRect().top - 12 - top;
   if (avail > 0 && avail * 6 / 5 < g.clientWidth) g.style.maxWidth = Math.max(200, Math.floor(avail * 6 / 5)) + "px";
+  var spare = avail - g.getBoundingClientRect().height;   /* 5차 · 남는 자리 절반을 말풍선 위에 · 말풍선과 무대가 화면 가운데로 */
+  if (bub && spare > 16) bub.style.marginTop = Math.min(96, Math.floor(spare / 2)) + "px";
 }
 /* ── 3D · 한 번 만들어 두고(STB3) 무대가 다시 그려지면 캔버스를 옮겨 붙인다(WebGL 문맥 하나) ── */
 var STB3 = { st: 0, r: null, sc: null, cam: null, flow: null, bot: null, body: null, eyes: [], smiles: [], waves: [], sweat: null, shadow: null, nose: [], mOn: null, mOff: null,
@@ -271,10 +278,12 @@ function stb3Off(code) {
   var cv = STB3.r && STB3.r.domElement; if (cv && cv.parentNode) cv.parentNode.removeChild(cv);
   try { if (STB3.r) { STB3.r.dispose(); if (code === -2) STB3.r.forceContextLoss(); } } catch (e) {}
 }
-function stb3Attach() {
-  var g = el("stbStage"); if (!g || STB3.st !== 2) return;
-  var cv = STB3.r.domElement; if (cv.parentNode !== g) g.insertBefore(cv, g.firstChild);
+function stb3Attach(g0) {
+  var g = g0 || el("stbStage"); if (!g || STB3.st !== 2) return;
+  var v = STB_V, cv = STB3.r.domElement; if (cv.parentNode !== g) g.insertBefore(cv, g.firstChild);
   var w = g.clientWidth, h = g.clientHeight; if (w && h) STB3.r.setSize(w, h, false);
+  STB3.cam.position.set(0, v.cy, v.cz); STB3.cam.lookAt(0, v.ty, v.tz);   /* 도착 장면이 당겨 둔 카메라를 제자리로 */
+  if (g0) return;
   g.classList.add("is3d");
   stb3Sync();
 }
@@ -282,43 +291,66 @@ function stb3Attach() {
 function stb3Sync() {
   var b = STB; if (STB3.st !== 2 || !b) return;
   var down = stbDown(), still = stbRm() || b.save || b.rest;
-  STB3.dir = down ? -1 : 1; STB3.hop = null; STB3.turn = null; STB3.sw = null;
+  STB3.dir = down ? -1 : 1; STB3.hop = null; STB3.turn = null; STB3.sw = null; STB3.act = null; STB3.wink = false;
   STB3.face = still || down || b.ph === "talk"; STB3.mood = STB3.face ? (b.line && b.line.m) || "" : "";
   STB3.nose.forEach(function (n) { n.material = (down ? n.userData.k >= 0 : n.userData.k <= 0) ? STB3.mOn : STB3.mOff; });
   stb3Kick();
 }
 function stb3Still() { return !STB || stbRm() || STB.save || STB.rest; }
-function stb3Hop() { if (STB3.st !== 2 || stb3Still()) return; STB3.hop = { t0: performance.now() }; stb3Kick(); }
-function stb3Face(on, sweat) {
+/* o = { big: 크게 폴짝(한 칸 그대로 · 높이만) · sway: 몸 기울기 방향(리듬 타기) } */
+function stb3Hop(o) { if (STB3.st !== 2 || stb3Still()) return; o = o || {}; STB3.hop = { t0: performance.now(), big: !!o.big, sway: o.sway || 0 }; stb3Kick(); }
+function stb3Face(on, sweat, spin) {
   if (STB3.st !== 2) return;
   if (stb3Still() || STB3.dir < 0) on = true;   /* 내려가기 = 늘 앞모습 */
-  if (STB3.face !== on && !stb3Still()) STB3.turn = { t0: performance.now(), to: on };
+  if (STB3.face !== on && !stb3Still()) STB3.turn = { t0: performance.now(), to: on, spin: !!spin && on, d: spin && on ? 640 : 360 };
   STB3.face = on; if (!on) STB3.mood = "";
   if (sweat && !stb3Still()) STB3.sw = { t0: performance.now() };
   stb3Kick();
 }
+/* 동작 · nod 끄덕(아하) · bounce 신나서 통통 · stretch 기지개 · lean 기울여 가리키기 · bow 꾸벅 · wiggle 몸 흔들어 인사 · look 두리번 · breath 숨 고르기 · wipe 땀 닦기 · cheer 도착 축하(폴짝 + 한 바퀴)
+   계단에서 따라 하면 위험한 것(뛰기 · 두 칸 · 넘어짐 · 미끄러짐)은 없다 · 폴짝도 한 칸 그대로 */
+var STB_ACT_MS = { nod: 900, bounce: 1000, stretch: 1100, lean: 1100, bow: 1000, wiggle: 1100, look: 900, breath: 700, wipe: 900, cheer: 1100 };
+var STB_ACT_OF = { fact: "nod", cute: "bounce", good: "stretch", prog: "lean", thanks: "bow", mile: "wiggle", arrive: "wiggle", congr: "wiggle" };   /* 상식 = 아하 끄덕(+ 안테나 전파) · 응원 = 통통 · 계단 이야기 = 기지개 · 프로그램 = 기울여 가리키기 · 감사 = 꾸벅 · 그 밖 = 몸 흔들어 인사 */
+function stb3Act(n, ms) { if (STB3.st !== 2 || (stb3Still() && n !== "cheer")) return; STB3.act = { n: n, t0: performance.now(), d: ms || STB_ACT_MS[n] || 900 }; stb3Kick(); }
 function stb3Mood(m) { if (STB3.st !== 2) return; STB3.mood = m || ""; stb3Kick(); }
 function stb3Halt() { if (STB3.raf) { cancelAnimationFrame(STB3.raf); STB3.raf = 0; } STB3.last = 0; }
-function stb3Kick() { if (STB3.st === 2 && !STB3.raf && !document.hidden) STB3.raf = requestAnimationFrame(stb3Frame); }
+function stb3Kick() { if (STB3.st === 2 && !STB3.raf && !document.hidden && !SA.d) STB3.raf = requestAnimationFrame(stb3Frame); }
 function stbEaseIO(k) { return k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; }
 function stbKey(k, ks) { for (var i = 1; i < ks.length; i++) if (k <= ks[i][0]) { var a = ks[i - 1], c = ks[i], u = (k - a[0]) / (c[0] - a[0]); return a[1] + (c[1] - a[1]) * u; } return ks[ks.length - 1][1]; }
 /* 그 시각의 자세 · 움직이는 중 = 1 · 전파만 = 2 · 멈춤 = 0 */
 function stb3Pose(now) {
-  var v = STB_V, busy = 0, k, off = 0, lift = 0, sy = 1, fa = STB3.face ? 1 : 0, hp = STB3.hop, tn = STB3.turn, sw = STB3.sw;
-  if (hp) {   /* 점프 0.5초 · 웅크림 → 솟음(늘어남) → 착지(눌림) · 그동안 계단이 한 칸 흐른다 */
+  var v = STB_V, busy = 0, k, off = 0, lift = 0, sy = 1, rz = 0, rx = 0, ry = 0, px = 0, fa = STB3.face ? 1 : 0, hp = STB3.hop, tn = STB3.turn, sw = STB3.sw, a = STB3.act, spin = 0;
+  if (hp) {   /* 점프 0.5초 · 웅크림 → 솟음(늘어남) → 착지(눌림) · 그동안 계단이 한 칸 흐른다 · 폴짝 = 더 높이(한 칸 그대로) · 리듬 = 몸을 좌우로 */
     k = (now - hp.t0) / 500;
     if (k >= 1) STB3.hop = null;
-    else { busy = 1; off = stbEaseIO(Math.min(1, Math.max(0, (k - 0.15) / 0.7))); lift = Math.sin(Math.PI * Math.min(1, Math.max(0, (k - 0.12) / 0.76))) * 0.3; sy = stbKey(k, [[0, 1], [0.18, 0.9], [0.55, 1.05], [0.85, 0.94], [1, 1]]); }
+    else { busy = 1; off = stbEaseIO(Math.min(1, Math.max(0, (k - 0.15) / 0.7))); lift = Math.sin(Math.PI * Math.min(1, Math.max(0, (k - 0.12) / 0.76))) * (hp.big ? 0.5 : 0.3); sy = stbKey(k, [[0, 1], [0.18, hp.big ? 0.84 : 0.9], [0.55, hp.big ? 1.1 : 1.05], [0.85, 0.94], [1, 1]]); rz = hp.sway * 0.16 * Math.sin(Math.PI * k); }
+  }
+  if (a) {
+    k = (now - a.t0) / a.d;
+    if (k >= 1) STB3.act = null;
+    else {
+      busy = 1; var s = Math.sin(Math.PI * k);
+      if (a.n === "nod") rx = Math.sin(k * Math.PI * 4) * 0.2 * (1 - k * 0.5);
+      else if (a.n === "bounce") lift += Math.abs(Math.sin(k * Math.PI * 3)) * 0.13;
+      else if (a.n === "stretch") { sy *= 1 + 0.18 * stbKey(k, [[0, 0], [0.35, 1], [0.7, 1], [1, 0]]); rz += Math.sin(k * Math.PI * 2) * 0.05; }
+      else if (a.n === "lean") { rz -= 0.26 * stbKey(k, [[0, 0], [0.3, 1], [0.75, 1], [1, 0]]); px = 0.07 * s; }
+      else if (a.n === "bow") rx = 0.5 * stbKey(k, [[0, 0], [0.3, 1], [0.55, 1], [1, 0]]);
+      else if (a.n === "wiggle") rz += Math.sin(k * Math.PI * 4) * 0.16 * s;
+      else if (a.n === "look") ry = Math.sin(k * Math.PI * 2) * 0.75;
+      else if (a.n === "breath") { sy *= 1 - 0.16 * stbKey(k, [[0, 0], [0.5, 1], [0.75, 0], [1, 0]]); lift += k > 0.6 ? Math.sin(Math.PI * (k - 0.6) / 0.4) * 0.12 : 0; }
+      else if (a.n === "wipe") rz += Math.sin(k * Math.PI * 6) * 0.08 * s;
+      else if (a.n === "cheer") { lift += Math.sin(Math.PI * Math.min(1, k / 0.75)) * 0.55; spin = k < 0.75 ? Math.PI * 2 * stbEaseIO(k / 0.75) : 0; sy *= stbKey(k, [[0, 1], [0.1, 0.85], [0.35, 1.1], [0.75, 0.9], [0.85, 1.05], [1, 1]]); }
+    }
   }
   STB3.flow.position.set(0, -off * v.rise * STB3.dir, off * v.run * STB3.dir);
-  STB3.bot.position.y = lift; STB3.body.scale.set(1 / Math.sqrt(sy), sy, 1 / Math.sqrt(sy));
+  STB3.bot.position.set(px, lift, v.bz); STB3.body.scale.set(1 / Math.sqrt(sy), sy, 1 / Math.sqrt(sy)); STB3.body.rotation.set(rx, 0, rz);
   var ss = 1 - Math.min(0.5, lift * 1.4); STB3.shadow.scale.set(ss, ss, 1);
-  if (tn) { k = (now - tn.t0) / 360; if (k >= 1) STB3.turn = null; else { busy = 1; fa = tn.to ? stbEaseIO(k) : 1 - stbEaseIO(k); } }   /* 돌아서기 0.36초 · 둘러보기 엘리베이터 돌아보기와 같은 축 */
-  STB3.bot.rotation.y = Math.PI * (1 - fa);
+  if (tn) { k = (now - tn.t0) / tn.d; if (k >= 1) STB3.turn = null; else { busy = 1; fa = tn.to ? stbEaseIO(k) : 1 - stbEaseIO(k); if (tn.spin) spin += Math.PI * 2 * stbEaseIO(k); } }   /* 돌아서기 0.36초 · 한 바퀴 돌며 돌아서기 0.64초 */
+  STB3.bot.rotation.y = Math.PI * (1 - fa) + ry + spin;
   var smile = fa > 0.8 && STB3.mood === "smile";
-  STB3.eyes.forEach(function (o) { o.visible = !smile; }); STB3.smiles.forEach(function (o) { o.visible = smile; });
-  var wv = fa > 0.8 && STB3.mood === "wave" && !stb3Still(), tt = (now / 1000) % 1.6;
-  STB3.waves.forEach(function (sp, i) { var q = (tt * 0.9 - i * 0.16) / 0.62, o = wv && q >= 0 && q <= 1; sp.material.opacity = o ? 1 - q : 0; var s = 0.24 + (o ? q : 0) * 0.6; sp.scale.set(s, s, 1); sp.position.y = 1.0 + (o ? q : 0) * 0.12; });
+  STB3.eyes.forEach(function (o, i) { o.visible = !(smile || (STB3.wink && i === 0)); }); STB3.smiles.forEach(function (o, i) { o.visible = smile && !(STB3.wink && i === 1) || (STB3.wink && i === 0); });   /* 찡끗 = 왼눈만 반달 */
+  var wv = fa > 0.8 && STB3.mood === "wave" && (!stb3Still() || SA.d), tt = (now / 1000) % 1.6;
+  STB3.waves.forEach(function (sp, i) { var q = (tt * 0.9 - i * 0.16) / 0.62, o = wv && q >= 0 && q <= 1; sp.material.opacity = o ? 1 - q : 0; var s2 = 0.24 + (o ? q : 0) * 0.6; sp.scale.set(s2, s2, 1); sp.position.y = 1.0 + (o ? q : 0) * 0.12; });
   if (wv && !busy) busy = 2;
   STB3.sweat.visible = false;
   if (sw) {   /* 돌아선 뒤 0.2초 · 머리 오른쪽 위에서 돔을 따라 1.3초 쪼르륵 */
@@ -380,53 +412,77 @@ function stbLoop() {
   var b = STB; if (!b) return;
   if (!b.rest && stbAge() >= STB_REST_MS) { stbRest(); return; }
   if (!b.save && stbAge() >= STB_SAVE_MS) { b.save = true; var g = el("stbStage"); if (g) g.classList.add("still"); }   /* 8분 = 절약 · 그림 멈춤 */
-  b.loop++; b.ph = "climb"; b.hop = 0;
+  b.loop++; b.ph = "climb"; b.hop = 0; b.sty = stbStyle(b);
   var go = el("stbGo"); if (go && stbAge() >= STB_NUDGE_MS) go.classList.add("nudge");   /* 출발 20초 뒤 = 도착 단추 숨 쉬기 */
   var bot = el("stbBot"); if (bot) bot.classList.toggle("face", b.save || stbRm() || stbDown());   /* 오를 때 = 뒷모습 · 정지 그림 · 내려가기 = 앞모습 */
   if (b.save || stbRm()) { stb3Sync(); stbNext(stbFace, b.save ? 6000 : 3000); return; }
+  if (b.sty === "breath") { stb3Act("breath"); stbBotAct("breath"); stbNext(stbHop, 120 + STB_ACT_MS.breath); return; }   /* 숨 고르기(낮췄다 퐁) 뒤 오르기 */
   stbNext(stbHop, 120);
 }
+/* 5차(사용자 261009 「오를 때 더 다양한 행동 · 지금은 단조롭다」) 오르는 묶음 · 콩콩(기본 두 몫) · 콩콩 폴짝(셋째만 높이 · 한 칸 그대로) · 리듬 타기(몸 좌우) · 두리번(셋째 뒤) · 숨 고르기(첫 점프 전)
+   주머니에서 하나씩 꺼낸다 · 직전 고리와 같은 묶음은 건너뛴다 · 다 쓰면 다시 섞는다 */
+var STB_STY = ["hop", "big", "sway", "look", "breath", "hop"];
+function stbStyle(b) {
+  if (!b.sbag || !b.sbag.length) b.sbag = shuf(STB_STY.slice());
+  var i = 0; while (i < b.sbag.length && b.sbag[i] === b.lastSty) i++;
+  if (i >= b.sbag.length) { b.sbag = b.sbag.concat(shuf(STB_STY.slice())); while (b.sbag[i] === b.lastSty) i++; }   /* 남은 것이 직전과 같은 것뿐이면 새로 섞어 붙인다 */
+  var s = b.sbag.splice(i, 1)[0];
+  b.lastSty = s; return s;
+}
+/* 평면 그림 대체본 동작 이름(CSS data-act) · 3D 와 같은 이름 */
+function stbBotAct(n) { var bot = el("stbBot"); if (!bot) return; delete bot.dataset.act; if (n && !stbRm()) { void bot.offsetWidth; bot.dataset.act = n; } }
 function stbHop() {
   var b = STB; if (!b) return;
   b.hop++;
   var bot = el("stbBot"), cn = el("stbCnt"), ab = b.hop % 2 ? "a" : "b";
-  if (bot) { delete bot.dataset.t; bot.dataset.h = ab; }   /* 점프와 돌기는 같은 칸(.stb-hop)을 움직인다 · 하나만 */
+  var big = b.sty === "big" && b.hop === 3, sway = b.sty === "sway" ? (b.hop % 2 ? 1 : -1) : 0;
+  if (bot) { delete bot.dataset.t; delete bot.dataset.act; bot.dataset.h = big ? "big" + ab : sway ? "s" + ab : ab; }   /* 점프와 돌기는 같은 칸(.stb-hop)을 움직인다 · 하나만 */
   if (cn) { cn.textContent = STB_COUNT[b.hop - 1] || ""; cn.dataset.h = ab; }
-  stb3Hop();
+  stb3Hop({ big: big, sway: sway });
+  if (b.sty === "look" && b.hop === 3) { stbNext(function () { stb3Act("look"); stbBotAct("look"); stbNext(stbHop, STB_ACT_MS.look); }, STB_HOP_MS); return; }   /* 두리번 */
   if (b.hop < STB_HOPS) stbNext(stbHop, STB_HOP_MS); else stbNext(stbFace, STB_HOP_MS + 150);
 }
 /* 앞으로 돌아섬 → 땀 쪼르륵 → 한마디 + 눈웃음 → 다 말하면 기다렸다 다시 돌아섬 */
 function stbFace() {
   var b = STB; if (!b) return;
   b.ph = "talk";
-  var bot = el("stbBot"), still = b.save || stbRm();
-  stb3Face(true, !still); stb3Mood("");
-  if (bot && !still && !stbDown()) { delete bot.dataset.h; bot.dataset.t = bot.dataset.t === "a" ? "b" : "a"; setTimeout(function () { var e = el("stbBot"); if (e && STB === b && b.ph === "talk") e.classList.add("face"); }, STB_TURN_MS / 2); }
+  var bot = el("stbBot"), still = b.save || stbRm(), spin = !still && !stbDown() && b.loop % 3 === 0;   /* 세 고리에 한 번 = 한 바퀴 돌며 돌아섬 */
+  b.turn = spin ? "spin" : "turn";
+  stb3Face(true, !still, spin); stb3Mood("");
+  if (!still && b.loop % 2 === 0) { stb3Act("wipe"); b.turn += "+wipe"; }   /* 짝수 고리 = 땀 닦기(몸 털기) */
+  if (bot && !still && !stbDown()) { delete bot.dataset.h; delete bot.dataset.act; bot.dataset.t = bot.dataset.t === "a" ? "b" : "a"; setTimeout(function () { var e = el("stbBot"); if (e && STB === b && b.ph === "talk") e.classList.add("face"); }, STB_TURN_MS / 2); }
   if (bot && !still) { bot.dataset.s = bot.dataset.s === "a" ? "b" : "a"; bot.dataset.m = ""; }
   b.said = false;
-  stbNext(stbSpeak, still ? 0 : STB_TURN_MS + 420);
+  stbNext(stbSpeak, still ? 0 : (spin ? 640 : STB_TURN_MS) + 420);
 }
 function stbSpeak() {
   var b = STB; if (!b) return;
   var ln = stbPick(b);
   b.said = true;
+  var act = STB_ACT_OF[String(ln.k).split(":")[0]] || "wiggle";   /* 말과 동작 짝 */
+  if (ln.k === "cute") act = (b.cuteN = (b.cuteN || 0) + 1) % 2 ? "bounce" : "wiggle";   /* 응원 = 통통 · 몸 흔들기 번갈아(한 동작이 몰리지 않게) */
+  if (act === b.lastAct) act = act === "bounce" ? "wiggle" : "bounce";   /* 직전과 같은 동작 없음 */
+  b.lastAct = act;
+  if (!stbRm() && !b.save) { stb3Act(act); stbBotAct(act); }
+  if (b.alog && b.alog.length < 400) b.alog.push([Math.round(stbAge() / 1000), b.loop, b.sty || "", b.turn || "", act]);
   stbSay(ln, function () { stbNext(stbBack, stbHoldMs(ln)); });
 }
 function stbBack() {
   var b = STB; if (!b) return;
   var bot = el("stbBot");
+  if (bot) delete bot.dataset.act;
   if (bot && !b.save && !stbRm() && !stbDown()) { stb3Face(false); bot.dataset.t = bot.dataset.t === "a" ? "b" : "a"; setTimeout(function () { var e = el("stbBot"); if (e && STB === b) e.classList.remove("face"); }, STB_TURN_MS / 2); stbNext(stbLoop, STB_TURN_MS + 80); return; }
   stbLoop();
 }
 /* 15분 = 쉼 · 말 멈춤 · 도착 안내 한 줄 고정(20분부터 30분 보정 안내) · 화면 켜 두기 놓음 · 다음 바뀔 때 한 번만 깨운다 */
 function stbRestLine(b) {
   b.rest = true; b.save = true; b.ph = "rest";
-  b.line = { t: stbAge() >= STB_FIX_MS ? STB_FIXLINE : STB_ARRIVE, m: "smile", k: "rest" }; b.n = b.line.t.length; b.done = true;
+  b.line = { t: stbAge() >= STB_FIX_MS ? stbFixLine() : STB_ARRIVE, tag: STB_HEAD.arrive, m: "smile", k: "rest" }; b.n = b.line.t.length; b.done = true;
 }
 function stbRest() {
   var b = STB; if (!b) return;
   stbStop(); stbRestLine(b); stbPaintLine(); stbWake(false);
-  var sr = el("stbSr"); if (sr) sr.textContent = b.line.t;
+  var sr = el("stbSr"); if (sr) sr.textContent = b.line.tag + " · " + b.line.t;
   var g = el("stbStage"); if (g) g.classList.add("still");
   var bot = el("stbBot"); if (bot) bot.classList.add("face");
   stb3Sync();
@@ -480,3 +536,129 @@ document.addEventListener("visibilitychange", function () {
   if (document.hidden) { stbStop(); stbWake(false); stb3Halt(); var g = el("stbStage"); if (g) g.classList.add("hold"); return; }
   if (typeof App !== "undefined" && App.current === "stair" && STR.mode === "start") { var g2 = el("stbStage"); if (g2) g2.classList.remove("hold"); stbMount(); }
 });
+/* ═══ 5차 · 도착 장면 (사용자 261009 「종료를 누르면 고생했다는 전환 효과를 귀염뽀짝하게 전체 화면으로 · 스탬프가 알아서 팡 · QR 하나로 끝 · 마지막은 응원이나 다른 프로그램 제안 · 아웃은 엘리베이터 닫히듯 찡끗」) ═══
+   도착 QR 판정이 end 로 오면(stairDone · 처음 스캔만) 곧바로 전체 화면 장면 하나 · 누를 단추 없음 · 아무 곳이나 누르면 나감으로 건너뜀 · 약 5.5초
+   들어옴 = 1층 둘러보기 엘리베이터 아이리스(검은 막이 챗봇 얼굴에서 열림) · 챗봇(계단과 같은 3D 모델 · 빛) 폴짝 + 한 바퀴 · 꽃가루 · 「고생했어요!」 + 「7F → 9F 계단 완료」
+   스탬프 팡 = 기존 도장(stampMarkHtml · stampDrop · 잉크 링 · inkSplash · 진동)을 장면 안에서 · 「스탬프 N / 6」 + 다음 보상 한 줄 · 따로 뜨는 팝업 · 「확인」 없음
+   안 붙는 경우 = 팡 없이 사실 한 줄(이미 받음 · 6개를 다 모음 · 누적이 목표 아래 · 대기열 = 곧 들어와요) · 실패(같은 층 · 30분 지나 고르기 · 서버 실패)는 장면 없이 지금 안내
+   마무리 말풍선 = 6개 미만이면 다음 참여 제안(stbSugs 첫째) · 6개면 「오늘도 힘내세요!」
+   나감 = 아이리스가 얼굴 크기까지 줄었다 멈춤(찡끗 · 왼눈 반달) → 톡 닫힘 → 스탬프 탭(방금 받은 계단 줄로 · expStamp) → 검은 막 걷힘
+   보상 알림(룰렛 · 행운권 · 선착순)은 적립 순간 줄에 서 있다가(noticeBusy = 계단 화면) 스탬프 탭으로 간 뒤 지금 방식대로 뜬다
+   동작 줄이기 = 아이리스 · 움직임 없이 정지 장면 + 도장 + 말 · 3초 뒤 넘어감 · 3D 를 못 그리면 원본 BOT_SVG */
+var SA = { d: null, t: [], raf: 0, go: null, out: false, rm: false, ir: null, done: false, log: [] };
+function stbArrInfo(res, q) {
+  var st = res && res.stamp, pop = false, line = "", hint = "", n = Math.min(STAMP_DENOM, stampCount());
+  if (q) line = "스탬프는 곧 들어와요";
+  else if (st && st.id === "st" && !st.dup && !st.revoked && !st.kept) {
+    if (stampGot() > STAMP_DENOM) line = "스탬프 " + STAMP_DENOM + "개를 다 모았어요";
+    else { pop = true; line = "스탬프 " + n + " / " + STAMP_DENOM; hint = srGoalLine(n); }
+  }
+  else if (st && st.dup) line = "스탬프는 이미 받았어요";
+  else if (res && (res.goal || 1) > 1) line = "누적 " + (res.total || 0) + " / " + res.goal + "개 층";
+  var sg = stampCount() >= STAMP_DENOM ? null : stbSugs()[0];
+  return { pop: pop, line: line, hint: hint, tag: sg ? "다음 참여" : "", say: sg ? sg[1] : "오늘도 힘내세요!" };
+}
+function stbArrive(res, q) {
+  if (SA.d) return;
+  var from = q ? q.from : res && res.from && res.from.fl, to = q ? q.to : res && res.to && res.to.fl, f = stbArrInfo(res, q), rm = stbRm(), i, conf = "";
+  for (i = 0; i < 14; i++) conf += '<i style="left:' + (6 + i * 6.6).toFixed(1) + "%;animation-delay:" + (0.25 + (i % 5) * 0.09).toFixed(2) + 's"></i>';
+  var d = document.createElement("div");
+  d.id = "stbArr"; d.className = "stb-arr" + (rm ? " rm" : ""); d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "계단 도착");
+  d.innerHTML = '<div class="sa-in">' +
+      '<p class="sa-big">고생했어요!</p><p class="sa-sub">' + esc(from) + "F → " + esc(to) + "F 계단 완료</p>" +
+      '<div class="sa-wrap"><div class="sa-stage" id="saStage">' + (STB3.st === 2 ? "" : '<span class="sa-bot"><span class="stb-hop">' + BOT_SVG.replace("</svg>", BOT_WAVE + TOUR_BOT_SM + "</svg>") + "</span></span>") + "</div>" +
+        (rm ? "" : '<span class="sa-conf" aria-hidden="true">' + conf + "</span>") + '<span class="sa-mk" id="saMk"></span></div>' +
+      (f.line ? '<p class="sa-st' + (f.pop ? " pop" : "") + '">' + esc(f.line) + (f.hint ? "<span>" + esc(f.hint) + "</span>" : "") + "</p>" : "") +
+      '<div class="sa-bub">' + (f.tag ? '<span class="stb-tag">' + f.tag + "</span>" : "") + '<span class="sa-tx">' + esc(f.say) + "</span></div>" +
+      (q ? "" : '<button type="button" class="sa-re" onclick="stbArrRe(event)">종료가 아니라 새로 시작이에요</button>') +
+    '</div><canvas class="sa-iris" id="saIris" aria-hidden="true"></canvas>' +
+    '<p class="stb-sr" aria-live="polite">고생했어요 · ' + esc(from) + "F에서 " + esc(to) + "F 계단 완료 · " + esc(f.line) + " · " + esc(f.say) + "</p>";
+  document.body.appendChild(d);
+  SA.d = d; SA.t = []; SA.out = false; SA.rm = rm; SA.done = false; SA.go = function () { expStamp("st"); }; SA.log = [["in", 0]]; SA.t0 = performance.now(); SA.f = f;
+  stbLeave();
+  var at = function (fn, ms) { SA.t.push(setTimeout(fn, ms)); };
+  d.addEventListener("click", function () { stbArrOut(); });
+  var stg = el("saStage");
+  if (STB3.st === 2) {   /* 계단과 같은 3D 장면을 당겨 쓴다 · 앞모습 · 모든 칸 앞 띠 주황(다 올랐다) */
+    stb3Attach(stg); STB3.cam.position.set(0, 0.92, 2.25); STB3.cam.lookAt(0, 0.5, -0.8);
+    STB3.hop = null; STB3.turn = null; STB3.sw = null; STB3.act = null; STB3.wink = false; STB3.face = true; STB3.mood = "smile"; STB3.flow.position.set(0, 0, 0);
+    STB3.nose.forEach(function (n) { n.material = STB3.mOn; });
+  }
+  if (rm) {   /* 동작 줄이기 · 멈춘 한 장 · 도장 바로 · 3초 뒤 */
+    if (f.pop) { el("saMk").innerHTML = stampMarkHtml(false, 104); stampBuzz(25); }
+    if (STB3.st === 2) { stb3Pose(performance.now()); STB3.r.render(STB3.sc, STB3.cam); }
+    stbArrDraw(performance.now());
+    at(stbArrOut, 3000);
+    return;
+  }
+  SA.ir = { k: "in", t0: performance.now(), d: 1100 };
+  at(function () { if (STB3.st === 2) stb3Act("cheer"); SA.log.push(["cheer", 150]); }, 150);
+  if (f.pop) at(function () { var mk = el("saMk"); if (!mk) return; mk.innerHTML = stampMarkHtml(true, 104); inkSplash(mk.querySelector(".stampmk"), 10, 1.4); SA.log.push(["stamp", 1300]); at(function () { stampBuzz([25, 40, 70]); }, 420); }, 1300);
+  at(function () { if (STB3.st === 2) { STB3.mood = "wave"; } SA.log.push(["say", 2300]); }, 2300);
+  at(function () { if (STB3.st === 2) STB3.mood = "smile"; }, 3700);
+  at(stbArrOut, 4300);
+  stbArrTick();
+}
+/* 종료가 아니라 새로 시작 · 장면을 닫고 계단 화면의 재분류로(누르지 않아도 되는 작은 글 링크) */
+function stbArrRe(e) { if (e) e.stopPropagation(); stbArrEnd(true); stairReclassOpen(); }
+function stbArrOut() {
+  if (!SA.d || SA.out) return;
+  SA.out = true; SA.t.forEach(clearTimeout); SA.t = []; SA.log.push(["out", Math.round(performance.now() - SA.t0)]);
+  if (SA.rm) { SA.d.classList.add("fade"); SA.t.push(setTimeout(function () { stbArrEnd(); }, 220)); return; }
+  SA.ir = { k: "out", t0: performance.now(), d: 1350 };
+  stbArrTick();
+}
+/* 끝 · 검은 막 아래에서 스탬프 탭으로 간 뒤 막을 걷는다 */
+function stbArrEnd(stay) {
+  if (!SA.d || SA.done) return;
+  SA.done = true; SA.t.forEach(clearTimeout); SA.t = []; if (SA.raf) { cancelAnimationFrame(SA.raf); SA.raf = 0; }
+  var d = SA.d; STB3.wink = false;
+  var cv = STB3.r && STB3.r.domElement; if (cv && cv.parentNode && cv.parentNode.id === "saStage") cv.parentNode.removeChild(cv);
+  if (!stay && SA.go) SA.go();
+  SA.log.push(["end", Math.round(performance.now() - SA.t0)]);
+  d.classList.add("gone");
+  setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); if (SA.d === d) SA.d = null; }, SA.rm || stay ? 0 : 260);
+}
+/* 얼굴 자리(창 기준) · 3D = 카메라 투영 · 평면 그림 = 챗봇 그림 머리 */
+function stbArrFace() {
+  var g = el("saStage"); if (!g) return { x: innerWidth / 2, y: innerHeight / 2, r: 40 };
+  var r = g.getBoundingClientRect();
+  if (STB3.st === 2 && window.THREE) {
+    var T = window.THREE, V = new T.Vector3(0, 0.52 * 0.95 + STB3.bot.position.y, STB_V.bz), V2 = new T.Vector3(0.36 * 0.95, 0.52 * 0.95 + STB3.bot.position.y, STB_V.bz);
+    STB3.cam.updateMatrixWorld(); V.project(STB3.cam); V2.project(STB3.cam);
+    var x = r.left + (V.x + 1) / 2 * r.width, y = r.top + (1 - V.y) / 2 * r.height, x2 = r.left + (V2.x + 1) / 2 * r.width;
+    return { x: x, y: y, r: Math.max(24, Math.abs(x2 - x)) };
+  }
+  var b = g.querySelector(".sa-bot"), q = b ? b.getBoundingClientRect() : r;
+  return { x: q.left + q.width / 2, y: q.top + q.height * 0.5, r: Math.max(24, q.width * 0.3) };
+}
+function stbArrDraw(now) {
+  var cv = el("saIris"), ir = SA.ir; if (!cv) return;
+  var W = innerWidth, H = innerHeight, dp = Math.min(2, window.devicePixelRatio || 1);
+  if (cv.width !== Math.round(W * dp) || cv.height !== Math.round(H * dp)) { cv.width = Math.round(W * dp); cv.height = Math.round(H * dp); }
+  var c = cv.getContext("2d"); c.setTransform(dp, 0, 0, dp, 0, 0); c.clearRect(0, 0, W, H);
+  if (!ir) return;
+  var t = now - ir.t0, f = stbArrFace(), R0 = Math.max(Math.hypot(f.x, f.y), Math.hypot(W - f.x, f.y), Math.hypot(f.x, H - f.y), Math.hypot(W - f.x, H - f.y)) + 2, Rf = f.r * 1.25, r;
+  if (ir.k === "out") r = t < 800 ? Rf + (R0 - Rf) * (1 - stbEaseIO(t / 800)) : t < 1150 ? Rf : Rf * (1 - Math.pow(Math.min(1, (t - 1150) / (ir.d - 1150)), 2));   /* 둘러보기 엘리베이터 닫힘과 같은 박자 */
+  else r = t < 120 ? 0 : t < 340 ? Rf * (1 - Math.pow(1 - (t - 120) / 220, 3)) : t < 480 ? Rf : Rf + (R0 - Rf) * stbEaseIO(Math.min(1, (t - 480) / (ir.d - 480)));
+  if (ir.k === "in" && t >= ir.d) { SA.ir = null; return; }
+  c.fillStyle = "#000000"; c.fillRect(0, 0, W, H);
+  if (r > 0.5) { c.globalCompositeOperation = "destination-out"; c.beginPath(); c.arc(f.x, f.y, r, 0, Math.PI * 2); c.fill(); c.globalCompositeOperation = "source-over"; }
+}
+function stbArrTick() {
+  if (SA.raf || !SA.d || SA.done) return;
+  SA.raf = requestAnimationFrame(function (now) {
+    SA.raf = 0; if (!SA.d || SA.done) return;
+    if (SA.ir && SA.ir.k === "out") { var t = now - SA.ir.t0; STB3.wink = t > 780; if (t > 780) STB3.mood = ""; if (t >= SA.ir.d) { stbArrDraw(now); stbArrEnd(); return; } }   /* 얼굴 크기에서 멈춘 동안 찡끗 */
+    if (STB3.st === 2 && STB3.r && STB3.r.domElement.parentNode && STB3.r.domElement.parentNode.id === "saStage") { stb3Pose(now); STB3.r.render(STB3.sc, STB3.cam); }
+    stbArrDraw(now);
+    stbArrTick();
+  });
+}
+/* 대기열(연결 없음 · 서버 붐빔)로 저장된 도착 스캔 · 진행 중 출발이 있고 다른 층이면 같은 장면(「스탬프는 곧 들어와요」) · 아니면 지금 안내 */
+function stbArriveQ(it) {
+  var s = stairState(), fl = Number(it && it.fl);
+  if (!s.leg || !fl || fl === Number(s.leg.fl) || SA.d) return false;
+  stbArrive(null, { from: s.leg.fl, to: fl });
+  return true;
+}

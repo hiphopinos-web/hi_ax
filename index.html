@@ -2845,19 +2845,16 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
      말풍선(둥근 흰 면 · 꼬리 · 새 말이면 톡 · 다 쓰면 ▼ · 줄바꿈 글자 그대로) · 무대 = 정면 계단 6:5 · 3D 캔버스(.stb-cv · 그림은 JS 가 그린다)가 있으면(.is3d) 평면 그림을 숨긴다
      평면 그림(받는 동안 · 못 그리는 기기) = 같은 시점 정면 계단(디딤판 · 챌판 · 앞 띠) + 원본 BOT_SVG(자리는 JS 가 3D 카메라 계산으로 넣는다) · 뒷모습(눈 숨김)으로 콩콩 · 돌아서면 땀 · 눈웃음
      움직임 = transform · opacity 만 · 화면이 가려지면 멈춤(.hold) · 동작 줄이기 · 8분 절약 · 15분 쉼 = 정지 그림(.still) · 색 = 토큰만 */
-  .stb-where { padding-right: 64px; }
-  .stb-where .ax-title { font: var(--ax-type-t2); }
-  .stb-where .ax-meta, .stb-cap { font: var(--ax-type-t6); }   /* 4차(사용자 261009 「글자 폰트를 더 크게」) 보조 글자 13 → 15px */
-  .stb-safe { font: var(--ax-type-t5-strong); }   /* 안전 한 줄 15 → 17px */
+  .stb-safe { margin: var(--ax-space-8) 0 0; text-align: center; font: var(--ax-type-t6); color: var(--ax-color-muted); }   /* 5차 · 위 정보 줄을 걷고 안전 한 줄만 무대 아래 작게 */
   .stb-bub { display: block; width: 100%; border: 0; text-align: left; font: inherit; color: inherit; position: relative; margin-top: var(--ax-space-4); padding: var(--ax-space-16); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); box-shadow: var(--ax-card-shadow); cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .stb-bub::after { content: ""; position: absolute; left: 40px; bottom: -9px; border: 10px solid transparent; border-bottom: 0; border-top-color: var(--ax-color-surface); }
   .stb-bub:focus-visible { outline: var(--ax-focus-width) solid var(--ax-color-brand); outline-offset: 2px; }
-  .stb-tx { display: block; margin: 0; min-height: 62px; font: var(--ax-type-t3); font-size: 22px; line-height: 31px; color: var(--ax-color-ink); word-break: keep-all; overflow-wrap: anywhere; white-space: pre-line; }
+  .stb-tx { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; margin: 0; min-height: 80px; font: var(--ax-type-t3); font-size: 26px; line-height: 37px; color: var(--ax-color-ink); word-break: keep-all; overflow-wrap: anywhere; white-space: pre-line; }
   .stb-bub.pop { animation: stbPop 0.22s cubic-bezier(0.3, 0.7, 0.4, 1); }
   @keyframes stbPop { from { transform: scale(0.94); } to { transform: none; } }
-  .stb-tag { display: inline-block; margin-right: var(--ax-space-8); padding: 0 var(--ax-space-8); border-radius: var(--ax-radius-8); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t6-strong); font-size: 15px; line-height: 26px; vertical-align: 2px; }
+  .stb-tag { display: table; margin: 0 0 6px; padding: 0 var(--ax-space-8); border-radius: var(--ax-radius-8); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t6-strong); font-size: 15px; line-height: 26px; }   /* 5차 · 머리 = 첫 줄 작은 주황 꼬리표 · 내용은 다음 줄부터 */
   .stb-tag[hidden] { display: none; }
-  .stb-more { display: inline-block; width: 0; height: 0; margin-left: 6px; border: 6px solid transparent; border-bottom: 0; border-top-color: var(--ax-color-brand); opacity: 0; vertical-align: middle; }
+  .stb-more { position: absolute; right: 16px; bottom: 6px; width: 0; height: 0; border: 6px solid transparent; border-bottom: 0; border-top-color: var(--ax-color-brand); opacity: 0; vertical-align: middle; }
   .stb-more.on { opacity: 1; animation: stbMore 0.9s ease-in-out infinite; }
   @keyframes stbMore { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
   .stb-sr { margin: 0; position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -2904,7 +2901,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   @keyframes stbCntB { 0% { opacity: 0; transform: translateX(-50%) scale(0.6); } 25% { opacity: 1; transform: translateX(-50%) scale(1.1); } 70% { opacity: 1; transform: translateX(-50%); } 100% { opacity: 0; transform: translateX(-50%); } }
   .stb-stage.still .stb-hop, .stb-stage.still .stb-bot .sw, .stb-stage.still .stb-cnt { animation: none !important; }
   .stb-stage.hold, .stb-stage.hold * { animation-play-state: paused !important; }
-  .stb-cap { text-align: center; }
   .stb-foot .stb-go { position: relative; min-height: 64px; gap: var(--ax-space-8); font: var(--ax-type-t4); }
   .stb-go svg { width: 28px; height: 28px; flex: none; }
   .stb-go.nudge::after { content: ""; position: absolute; inset: -4px; border: 3px solid var(--ax-color-brand); border-radius: 20px; opacity: 0; pointer-events: none; animation: stbRing 1.8s ease-out infinite; }
@@ -2912,6 +2908,66 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   @media (prefers-reduced-motion: reduce) {
     .stb-bub.pop, .stb-more.on, .stb-hop, .stb-cnt, .stb-bot .sw, .stb-bot .eye, .stb-bot .ant path, .stb-go.nudge::after { animation: none !important; }
     .stb-bot.face[data-m="wave"] .ant path { opacity: 0.35; }
+  }
+  /* 5차 · 오르는 동작 묶음(평면 그림 대체본 · 3D 와 같은 이름) · 콩콩 폴짝(높이만) · 리듬 타기 · 동작 = 통통 · 꾸벅 · 기지개 · 끄덕 · 기울이기 · 흔들기 · 두리번 · 숨 고르기 */
+  .stb-bot[data-h="biga"] .stb-hop { animation: stbHopBigA 0.5s cubic-bezier(0.3, 0.7, 0.4, 1); }
+  .stb-bot[data-h="bigb"] .stb-hop { animation: stbHopBigB 0.5s cubic-bezier(0.3, 0.7, 0.4, 1); }
+  @keyframes stbHopBigA { 0%, 100% { transform: none; } 18% { transform: scale(1.12, 0.84); } 55% { transform: translateY(-40%) scale(0.94, 1.08); } 85% { transform: scale(1.06, 0.94); } }
+  @keyframes stbHopBigB { 0%, 100% { transform: none; } 18% { transform: scale(1.12, 0.84); } 55% { transform: translateY(-40%) scale(0.94, 1.08); } 85% { transform: scale(1.06, 0.94); } }
+  .stb-bot[data-h="sa"] .stb-hop { animation: stbHopSA 0.5s cubic-bezier(0.3, 0.7, 0.4, 1); }
+  .stb-bot[data-h="sb"] .stb-hop { animation: stbHopSB 0.5s cubic-bezier(0.3, 0.7, 0.4, 1); }
+  @keyframes stbHopSA { 0%, 100% { transform: none; } 18% { transform: scale(1.08, 0.9); } 55% { transform: translateY(-24%) rotate(9deg); } 85% { transform: scale(1.06, 0.94); } }
+  @keyframes stbHopSB { 0%, 100% { transform: none; } 18% { transform: scale(1.08, 0.9); } 55% { transform: translateY(-24%) rotate(-9deg); } 85% { transform: scale(1.06, 0.94); } }
+  .stb-bot[data-act="bounce"] .stb-hop { animation: stbActBounce 1s ease-in-out; }
+  .stb-bot[data-act="bow"] .stb-hop { animation: stbActBow 1s ease-in-out; }
+  .stb-bot[data-act="stretch"] .stb-hop { animation: stbActStretch 1.1s ease-in-out; }
+  .stb-bot[data-act="nod"] .stb-hop { animation: stbActNod 0.9s ease-in-out; }
+  .stb-bot[data-act="lean"] .stb-hop { animation: stbActLean 1.1s ease-in-out; }
+  .stb-bot[data-act="wiggle"] .stb-hop, .stb-bot[data-act="wipe"] .stb-hop { animation: stbActWiggle 1.1s ease-in-out; }
+  .stb-bot[data-act="look"] .stb-hop { animation: stbActLook 0.9s ease-in-out; }
+  .stb-bot[data-act="breath"] .stb-hop { animation: stbActBreath 0.7s ease-in-out; }
+  @keyframes stbActBounce { 0%, 33%, 66%, 100% { transform: none; } 16%, 50%, 83% { transform: translateY(-10%); } }
+  @keyframes stbActBow { 0%, 100% { transform: none; } 30%, 55% { transform: translateY(6%) scale(1.04, 0.84); } }
+  @keyframes stbActStretch { 0%, 100% { transform: none; } 35%, 70% { transform: scale(0.9, 1.16); } }
+  @keyframes stbActNod { 0%, 50%, 100% { transform: none; } 25%, 75% { transform: translateY(3%) scale(1, 0.94); } }
+  @keyframes stbActLean { 0%, 100% { transform: none; } 30%, 75% { transform: translateX(5%) rotate(-12deg); } }
+  @keyframes stbActWiggle { 0%, 50%, 100% { transform: none; } 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
+  @keyframes stbActLook { 0%, 100% { transform: none; } 25% { transform: translateX(-5%) rotate(-5deg); } 75% { transform: translateX(5%) rotate(5deg); } }
+  @keyframes stbActBreath { 0%, 100% { transform: none; } 50% { transform: scale(1.1, 0.84); } 75% { transform: translateY(-8%); } }
+  /* ═══ 5차 · 도착 장면(#stbArr · 128 stbArrive) · 전체 화면 · 바탕 = 앱 바탕 · 큰 한 줄 주황 글 · 3D 무대(계단과 같은 캔버스) · 꽃가루 · 도장 팡(기존 stampDrop · 잉크 링) · 말풍선 · 아이리스 = 검은 막(캔버스) ═══ */
+  .stb-arr { position: fixed; inset: 0; z-index: 420; display: flex; align-items: center; justify-content: center; background-color: var(--ax-color-canvas); overflow: hidden; touch-action: none; }
+  .stb-arr.gone, .stb-arr.fade { opacity: 0; transition: opacity 0.22s ease-out; pointer-events: none; }
+  .sa-in { width: 100%; max-width: 430px; padding: var(--ax-space-24) var(--ax-space-16); display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .sa-big { margin: 0; font: var(--ax-type-t1); font-size: 40px; line-height: 52px; color: var(--ax-color-brandText); animation: saPop 0.5s cubic-bezier(0.3, 1.5, 0.5, 1) 0.45s both; }
+  .sa-sub { margin: var(--ax-space-4) 0 0; font: var(--ax-type-t5-strong); color: var(--ax-color-body); animation: saUp 0.3s ease-out 0.6s both; }
+  .sa-wrap { position: relative; width: 100%; max-width: 360px; margin-top: var(--ax-space-16); }
+  .sa-stage { position: relative; width: 100%; aspect-ratio: 6 / 5; border-radius: var(--ax-radius-24); overflow: hidden; background-color: var(--ax-color-inset); }
+  .sa-bot { position: absolute; left: 30%; top: 16%; width: 40%; aspect-ratio: 1 / 1; }
+  .sa-bot .stb-hop { display: block; width: 100%; height: 100%; transform-origin: 50% 78%; animation: saCheer 1.1s ease-in-out 0.15s both; }
+  .sa-bot .stb-hop svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .sa-bot .sm { opacity: 1; } .sa-bot .sm path { fill: none; stroke: var(--ax-color-ink); stroke-width: 4.4; stroke-linecap: round; } .sa-bot .eye { opacity: 0; }
+  .sa-bot .ant path { fill: none; stroke: var(--ax-color-brand); stroke-width: 4; stroke-linecap: round; opacity: 0; }
+  @keyframes saCheer { 0%, 100% { transform: none; } 12% { transform: scale(1.12, 0.84); } 40% { transform: translateY(-30%) scale(0.94, 1.1); } 62% { transform: scale(1.08, 0.9); } 80% { transform: translateY(-10%); } }
+  .sa-conf { position: absolute; left: 0; right: 0; top: 0; height: 0; pointer-events: none; }
+  .sa-conf i { position: absolute; top: 0; width: 8px; height: 12px; border-radius: 2px; background-color: var(--ax-color-brand); opacity: 0; animation: saConf 1.7s ease-in both; }
+  .sa-conf i:nth-child(3n) { background-color: var(--ax-color-brandText); border-radius: 50%; width: 9px; height: 9px; }
+  .sa-conf i:nth-child(3n+1) { background-color: var(--ax-color-brandSoft); }
+  .sa-conf i:nth-child(even) { animation-duration: 2s; }
+  @keyframes saConf { 0% { opacity: 0; transform: translateY(-12px) rotate(0deg); } 12% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: translateY(250px) rotate(540deg); } }
+  .sa-mk { position: absolute; right: -6px; top: -16px; width: 104px; height: 104px; pointer-events: none; }
+  .sa-mk .stampmk { animation: stampDrop 0.5s cubic-bezier(0.3, 0.9, 0.4, 1) 0.12s both; }
+  .sa-st { margin: var(--ax-space-16) 0 0; font: var(--ax-type-t3); color: var(--ax-color-ink); animation: saUp 0.3s ease-out 0.9s both; }
+  .sa-st.pop { animation-delay: 1.6s; }
+  .sa-st span { display: block; margin-top: 2px; font: var(--ax-type-t6); color: var(--ax-color-muted); }
+  .sa-bub { margin-top: var(--ax-space-16); padding: var(--ax-space-16) var(--ax-space-20); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); box-shadow: var(--ax-card-shadow); display: flex; flex-direction: column; align-items: center; animation: saPop 0.4s cubic-bezier(0.3, 1.5, 0.5, 1) 2.3s both; }
+  .sa-tx { font: var(--ax-type-t3); font-size: 24px; line-height: 34px; color: var(--ax-color-ink); word-break: keep-all; }
+  .sa-re { margin-top: var(--ax-space-8); padding: var(--ax-space-8); border: 0; background: none; color: var(--ax-color-muted); font: var(--ax-type-t7); text-decoration: underline; animation: saUp 0.3s ease-out 2.6s both; }
+  .sa-iris { position: fixed; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+  @keyframes saPop { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: none; } }
+  @keyframes saUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .stb-arr.rm *, .stb-arr.rm .stampmk { animation: none !important; }
+  @media (prefers-reduced-motion: reduce) {
+    .stb-bot[data-act] .stb-hop, .stb-bot[data-h] .stb-hop, .stb-arr * { animation: none !important; }
   }
 </style>
 <style id="rtCss">
@@ -4185,7 +4241,7 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v6.78";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 · v6.78 = 261009 스태프 관리 요청 전부 POST 폼 본문(admCall · 계약 10절) · v6.77 = 261009 이벤트 수신기 누수 고침(사용자 「이벤트 점검」 · 화면 변경 없음 · beCall 이 끝난 호출마다 window 에 빈 함수를 남겨 떼어진 script · onload · onerror 수신기를 붙잡던 것 · 폴링 한 번에 +1 script · +2 수신기 · 응답이 오면 이름 지움 · 타임아웃만 밖의 BE_NOOP · 검사 348절) · v6.76 = 261009 계단 동행 4차 글자 크게(사용자 「글자 폰트를 더 크게」 · 말풍선 17px 600 → 22px 700(1.3배) · 좁으면 21 · 20 · 19px 한 단계씩 · 나올 말 전부 2줄 안 · 말풍선 높이 미리 잡아 무대 · 단추 안 밀림 · 점프 숫자 20 → 26px · 보조 글자 13 → 15px · 안전 줄 15 → 17px · 꼬리표 13 → 15px · 감사 말 「오늘」 덜기 · 미니 게임 제안 「N종목도 있어요」) · v6.75 = 261009 계단 동행 3차(사용자 「계단은 대각선이 아니라 정면 · 챗봇 크게 · 1층 모형의 챗봇 형태와 디자인 스타일」 · 정면 계단(아래에서 올려다봄 · 멀수록 좁은 디딤판) · 1층 둘러보기 buildBot 그대로의 3D 챗봇 · 같은 재질 · 빛 · 배경 · 손잡이 = 엘리베이터 로즈골드 · three.min.js 는 둘러보기와 같은 주소로 이 화면에서 처음 받음(모형 glb 안 받음) · 받는 동안 · 못 그리는 기기 · 느린 기기 = 같은 시점 평면 그림 · 움직일 때만 그림 · 해상도 1.5배까지 · 무대 6:5 · 아래 단추 위에 다 보이게 · 18F = 앞모습으로 내려옴 · 땀방울 3D · 검사 346절) · v6.74 = 261009 계단 동행 2차(사용자 「준비 운동은 거창하다 · 다섯 번 오르고 돌아서 땀 · 힘내요 · 눈웃음 · 5분 켜 두는 사람」 · 준비 운동 · 아이리스 걷음 · 대각선 계단이 점프마다 한 칸 흘러 내려옴 · 챗봇 제자리 · 콩콩 5번(하나~다섯) → 돌아서 땀 → 한마디 + 눈웃음 → 다시 돌아섬 · 홀수 고리 응원 12 · 짝수 고리 행사 말(AX 상식 23 · 프로그램 제안 · 계단 말 6 · 엘리베이터 감사 1번) · 5분 안 행사 말 겹침 없음 · 3분 · 5분 이정표 · 8분 절약 · 15분 쉼(화면 켜 두기 놓음) · 20분부터 직접 고르기 안내 · 18F 출발 = 뒤집어 내려가기 · 검사 346절) · v6.73 = 261009 동작 모션 통일(사용자 「점심 · 자유 관람 → 상시 운영처럼 앱 전체에 같은 동작」 · 공용 토큰 --ax-motion-* + AXM · 시트 셋 열림 · 닫힘 · 세그먼트 · 스크롤 이동 · 토스트 · 펼침) · v6.72 = 261009 「 · 」로 이은 글 줄바꿈(사용자 「어차피 두 줄이 될 거라면 · 자리에서 다음 줄로」 · segHtml 조각 <ax-seg> inline-block · 레일 6개 캡션 · 정보 줄 dd · 시트 제목 · 상세 머리 · 받으려면 상자 · 보상 카드 · 스탬프 카드 보조 줄 · 키트 · 퀴즈 · 미니 게임 순위 · 토스트) · v6.71 = 261009 운영자 요청 사번 필수(기타만 선택) · v6.70 = 261009 스태프 폰 「운영자에게 요청」 시트 · 룰렛 소진 알림 단추 · 박스 링크 숨김 · v6.69 = 261009 계단 동행(사용자 「계단실 QR을 찍으면 챗봇이 계단을 오르고 응원 · 화면을 닫지 않게 · 1층 엘리베이터 동물의 숲 감성」 · 출발 QR 뒤 진행 화면 = 준비 운동 3줄 → 아이리스 → 1초 한 칸 · 7칸 한 층 걷기 고리 · 말풍선 한 자씩 · 응원 · AX 상식(점프 상식 · AX 퀴즈 해설 출처 id) · 다음 참여 제안(스탬프 · 시각) · 도착 안내 · 아래 고정 큰 「도착 층 QR 찍기」 · 20초 뒤 숨 쉬는 고리 · Wake Lock · 떠났다 와도 이어서 · 동작 줄이기 = 그림 + 말풍선 · 18F 출발 = 내려가는 그림 · 옛 도트 계단 걷음 · 새 조각 128-js-stair-buddy.js · 042-css-stairbud.css · 검사 346절) · v6.68 = 261009 행운권 티켓 칩 다듬기(사용자 「체크인 화면 번호도 티켓으로 · 글자 크기가 너무 커 · 균형감 · 절취선은 주황보다 어두운 회색」 · 점 글자 14 → 12px(최소 크기) · 절취선 brand → muted · 새 번호 확인 절취선 onBrand 25% · 추첨 체크인 결과 화면 번호 줄 = 같은 티켓 칩 · 검사 342절) · v6.67 = 261009 행운권 번호 칩 = 티켓(사용자 「행운권 모양 테두리에 번호도 점 문자로 · 은색 비슷한 회색톤」 · 시안 ④ · 양옆 반원 홈 · 왼쪽 주황 절취선 · 은회색 무광 면 · 먹색 점 글자 14px · 레일 · 나의 보상 · 추첨 안내 팝업 같은 칩 tktHtml · 새 번호 확인 = 주황 티켓 · 발급 중 = 회색 티켓 · 상자 연출 그대로 · 검사 342절) · v6.66 =261009 행사 종료 안내 화면(사용자 「오픈 범위에 행사종료 · 아무도 못 들어오고 · 챗봇이 나와서 안내」 · 서버 오픈_범위 종료 = reason ended · 로그인 · 홈 대신 챗봇 원본 + 안테나 전파 · 「AX Festival 2026이 종료되었습니다」 · 「내년에 다시 만나요」 · 단추 없음 · beCall 한 곳 endSeen · 기기 키 og_end = 다시 열면 먼저 · 범위를 되돌리면 다음 sync 에 걷힘 · #self · #tv= 기기 화면 제외) · v6.65 = 261008 1층 부스 기획안 수정본(사용자 「1층을 재구성해줘」 · 둘러보기 AX VISION 판 5장 · AX 라운지 데스크만 · Welcome 자리 · AX LAB TV · 타자왕 데스크 · 1F 엑스배너 · 라운지 퀴즈 · 점프 힌트 걷음 · TOUR.ver v665) · v6.64 = 261008 신청하기 칸 커피챗 · AX 라운지 같은 형태(사용자 「ax라운지도 같은 형태 · 사전 신청자 중심」 · 두 카드 사실 표 지금 · 시간 · 방식 · 신청 · 사은품 · 라운지도 사은품 사진 줄 · 한 줄 소개 「내년 DAP 과제 후보를 1:1로 상담하는 곳」 · 「비슷한 고민을 여럿이 모여 나누는 곳」 · 라운지 「사전 신청자 우선」 · 「남은 시간 N개 · 누구나 신청」) · v6.63 = 261008 비어 보이는 상세 다듬기(사용자 「(가)로 가자」 · 시트 높이 93% · 60% 문턱 그대로 · 구역 상세 상태 한 줄을 제목 묶음에 붙임 · 상세 제목 줄 길이 고르게 · 하는 일 · 설명 줄 마지막 한 낱말 막기 · 주 버튼은 이미 아래 고정 칸) · v6.62 = 261008 폴링 지터(부하 재시험 권장 1 · 화면 변경 없음 · 동기화 성공 뒤 다음 폴링에도 0~5초 무작위 더함 · 화면이 다시 보일 때 첫 sync 0~1.5초 무작위 · 소켓 붙은 120초 폴링 · 소켓 끊김 뒤 평소 폴링도 같은 지터 · 검사 321절) · v6.61 = 261008 프로그램 상세 「경품 보기」 입구 뺌(사용자 「굳이 있어야 될까?」 · 「이 위치도 중복인 것 같아서 빼자」 · AWS · MS 강연 · Closing Speech 상세 · 홈 · 스탬프 탭 레일 · 경품 탭 · 둘러보기 · 타자왕 경품 칸은 그대로) · v6.60 = 261008 연사 그림(사용자 「AWS 와 MS의 로고 · 이석현 정경선 사진」 · 17F Opening Speech · Closing Speech = 사진 · AWS · MS 강연 = 로고(흰 바탕 · 원형 그대로) · assets/speaker/ · Keynote · 10F 는 글자 그대로 · 안 뜨면 글자) · v6.59 = 261008 「받으려면」 상자 공용(사용자 「참여 전 확인 아래 부분을 받으려면 부분처럼 · 정돈되지 않은 부분들도」 · AWS · MS 강연 상세 · Closing Speech 현장 추첨 · AX PLAY 체험 · 룰렛 1회권 · 행운권 · 선착순 참여상 팝업 · 기념품 옷 받는 방법) · v6.58 = 261008 표기 정본 = 네임택 발주 PDF(사용자 「PDF와 똑같이」 · 17F Opening Speech · Keynote 둘 · AWS · MS 강연 제목 · Closing Speech · 연사 실명 · 직함 · 10F 세션 제목 · 강사 · 옛 Intro · 기조연설 · 내부 강연 · 마무리 연설 · Outro 화면 글자 대체 · 시간표 17F 줄은 TIMELINE pid) · v6.57 = 261008 행운권 경품 문구 「경품은 따로 전달」 통일 · 스태프 플리스 받는 방법 「따로 전달해 드려요」 · v6.56 = 261008 스탬프 탭 「프로그램 참여」 줄 더블 스탬프 표시(사용자 「더블 스탬프인 것이 명확히 이해되지 않아」 · 제목 옆 「×2」 글자 → O100 알약 「● ● 스탬프 2개」(받은 만큼 점이 찬다 0 · 1 · 2) · 받기 전 둘째 보조 줄 「입장 QR 1개 + 끝 QR 1개」 · 도장 팝 제목 「×2」 · 1 / 2 그대로) · v6.55 = 261008 설명 문구 한 줄(사용자 「어설프게 두 줄로 넘어가는 것들 · 워싱 · 간소화 · 한 줄」 · 커피챗 「멘토와 한 테이블에서 아이디어를 나눠요」 · 「키우고 싶은 업무를 1:1로 상담해요」 · 라운지 · 신청하기 칸 「지금」 · AX PLAY 안내 · 미니 게임 종합 · 행운권 · 선착순 받으려면 줄 · 메신저 알림 안내 · 기본 공지 · 390 폭 한 줄) · v6.54 = 261008 쿠키 사진 = 원본 전체(자르지 않음 · 사용자) · v6.53 = 261008 커피챗 · 상담 지급품 쿠키 = 휘낭시에 사진(assets/prize/cc_cookie.webp) · 부제 「휘낭시에 · 쿠키」 · v6.52 = 261008 플리스 신청 완료 「받는 방법」 상자(스태프 = 행사 전에 미리 전달 · 사전 신청 = 10/26 08:00 1F 주차장 체크인존 · 내 QR) · v6.51 = 261008 홈 「지금 현장」 차분하게(사용자 「색감이 너무 쨍해서 어지러워 · 텍스트도 간소화」 · 색은 상태 점 하나에만 · 점 9px 바깥 고리 없음 · 모양도 다르게 여유 빈 고리 / 보통 반쯤 / 혼잡 꽉 찬 점 · 이름 body 회색 · 둘째 줄 muted 회색 · 층 점문자 muted · 1F 세 칸은 대기 시간만(상태 단어는 읽어 주기만) · 17F · 정보 없음은 상태 단어만 · 만석만 글자 굵게) · v6.50 = v6.50 = 261008 플리스 시트 문구 걷기(고르는 기준 한 줄 · 「먼저 신청한 순서대로 품절돼요」 · g/㎡ 설명 줄) · v6.49 = 261008 커피챗 · 상담 지급품 노트 = 사진(assets/prize/cc_note.webp · 아이콘 대체) · v6.48 = 261008 플리스 사이즈 화면 표기 SS · L · 2XL · 3XL → A · B · C · D(사용자 「SS 이런 사이즈가 생소해서 · A B C D 이렇게 바꾸자」 · 화면 글자만 · kitLbl 한 함수 · 서버 · 저장 · 설정 · 콘솔 · 발주 값은 그대로 · 창구 A = SS · B = L · C = 2XL · D = 3XL 와 같은 글자 · 창구 스캔 띠 · 창구 태블릿 desk 는 A 크게 + 작게 실제 (SS)) · v6.47 = 261008 홈 「지금 현장」 두 줄 칸(사용자 「세 줄 → 한 줄이나 두 줄」 · 이름 줄 + 상태 줄 · 점 + 상태 단어 + 「· 짧은 말」 같은 줄 · 17F 「HH:MM 기준」 줄 삭제(섹션 머리 오른쪽에 있음) · 「대기」 접두만 뺌(읽는 이름은 그대로) · 말이 안 들어가면 말줄임 없이 둘째 줄 · 시험값 = 이름 줄 오른쪽 끝 · 칸 높이 85 → 67px) · v6.46 = 261008 홈 「지금 현장」 칸 신호등 색(칸 면 = 흰 면 + 테두리 하나 · 상태 = 점 + 글자 색 · 초록 success · 노랑 --cn-mid · 빨강 error · 17F 여유 · 보통 초록 · 붐빔 노랑 · 거의 만석 · 만석 빨강 · 만석 굵게 + 겹 고리 · 정보 없음 회색 점 · 사용자 「초록 노랑 붉은 신호등」) · v6.45 = 261008 홈 「지금 현장」 층 표기 1F · 17F 점문자(flFloor · 읽는 이름 「1층」) + 테스트 사번만 네 칸 무작위 시험값(cnRand · 앱 열 때마다 · 서버 값보다 우선 · 서버에 안 보냄 · 칸 구석 「시험값」) · v6.44 = 261008 플리스 착용 사진 전체 화면 보기(사용자 「화면 꽉 차게 · 사이즈 선택 시 사진으로 날아가서」 · 사이즈 칩을 누르면 그 사이즈 착용 사진이 화면을 채움 · 큰 사이즈 글자 · 모델 키 · 몸무게 · 실측 한 줄 · 좌우로 밀면 이웃 사이즈(선택도 바뀜 · 품절 건너뜀) · 점 4개 · 닫기 = X · 아래로 끌기 · 뒤로 · 사진 탭 · 안에서 바로 신청 · 시트 맨 위는 다시 상품 사진만 · 완료 화면 「착용 사진 보기」 · kitView · kitFit · --kit-ph · 칸 안 착용 사진 걷어 냄) · v6.43 = 261008 플리스 시트 손보기(제목 묶음 AX Festival 2026 · 플리스 재킷 · 한 줄 설명이 사진 위 · 「에코백과 함께 드려요」 · 신청 완료 화면도 제목이 사진 위 · 처음 화면 사진 아래 안내 한 줄 삭제(빈 캡션 줄로 높이 유지) · 사이즈 칩을 누른 뒤 사진 머리가 시트 머리 밑에 가려진 채 멈추지 않게 스크롤 목표를 다시 잡고 키 작은 화면은 사진 칸 높이를 줄여 사진 + 캡션 + 칩 줄이 한 화면에 · kitFit · --kit-ph · 사용자 261008) · v6.42 = 261008 데이터 세대 청소(오픈 전 초기화 · 서버 sync gen 이 이 기기 값과 다르면 신원 키만 남기고 시험 흔적 · 못 보낸 대기열 · 시험 공지를 한 번 비움 · 처음 받는 기기는 저장만 · genCheck) · v6.41 = 261008 플리스 시트 사이즈별 착용 사진(assets/kit/fit_SS · L · 2XL · 3XL .webp · 사이즈 칩을 누르면 맨 위 사진 교체 + 캡션 「모델 175cm · 70kg · L 착용」 · 신청한 사이즈 사진 · 큰 칸 1:1 고정) · v6.40 = 261008 플리스 시트 사이즈 칩 아래 고르는 기준 한 줄(axs-kitgd · 평소 90 이하 SS · 95~100 L · 105 L 또는 2XL · 110~115 2XL · 120 3XL) · v6.39 = 261008 단계별 오픈 로그인 문(사용자 오픈 계획 · 1차 10/19 사전 신청자 · 스태프 · 2차 10/21 전 구성원) · 서버 reason notopen = 로그인 화면 · 홈 위 「AX PASSPORT는 10월 21일(수)부터 열려요」 한 화면(날짜 = 서버 open · ogShow · beCall 한 곳) · 이 기기 og = 다시 열면 그 화면을 깔고 서버에 다시 묻기(ogCheck) · 열리면 걷힘 · 「다른 사번으로 입장」 · v6.38 = 261008 플리스 시트 · 사이즈 대응 고침(제조사 LL = 우리 2XL 75 62 52 64 · 3L = 3XL 78 66 54 65 · SS만 실측 확인 중 · 사용자 「LL은 2XL · 3L은 3XL」) + 접힘 4칸 상품 정보 · 실측 사이즈표 · 세탁 방법 · 주의사항(제조사 상세 이미지의 사실 정보만 · 사용자 「상품 정보 세탁방법 주의사항」) · v6.37 = 261008 플리스 상품 사진 = 홍보부 원본(후리스자켓.png · 블랙 · 가슴 ME to WE · 4:3 800px) · v6.36 = 261008 럭키드로우 당첨 문구를 현장에 없는 사람 기준으로(사용자 「17층 화면을 봐 주세요 같은 문구는 현장에 없는 사람에게 무의미」 · 당첨 시트 = 「경품은 나중에 따로 전달해요」 한 줄 · 확인 완료 시트도 무대 문구 없이 · 푸시 「럭키드로우에 당첨됐어요 / 앱에서 확인해 주세요」 · 콘솔 폰 확인 칸 「대기」 → 「미확인」) · v6.35 = 261008 홈 「다음 할 일」 카드 삭제(사용자 「둘러보기 고정 · 다음 할 일 삭제」 · 홈 = v6.13 이전 순서) · 「지금 현장」 날짜 조건 해제 · 플리스 상품 사진 · 실측 사이즈표(SS · 3XL 확인 중) · 테스트 사번 미리 보기 · v6.34 = 261008 17F AWS · MS 출석 QR 행사일(10/26) 전에는 시간 창 없이 늘 출석(사용자 「지금도 되도록 · 이상한 데이터는 행사 전 초기화」 · attPre · 고르기 시트 · 데모 · 시험 시각 10/25 = tm 안 보냄 · 서버 attPreDay_) · 출석으로 새로 받은 스탬프 = 가운데 도장 팝(사용자 「파트너사 강의에 출석체크를 하면 스탬프 박히는 효과가 없어」 · p3h 1 / 2 · p3 ×2 · 이미 받음 · 기록만 = 팝 없음 · attStamp stampOverlay) · v6.33 = 261008 럭키드로우 당첨자 폰 알림(사용자 261008 「당첨자 폰 알림도 넣자」 · 서버 draw_log win → 소켓 lucky · 푸시 「럭키드로우 당첨 · 지금 17F 무대 화면을 봐 주세요」 · sync my.lucky) · 당첨 시트(공통 바텀 시트 · 등수 큰 주황 글자 · 경품 사진 · 이름 · 행운권 번호 · 주 버튼 「확인」 → draw_ack 본인 세션 → 「확인 완료 · 무대 화면에 표시됐어요」 + 「경품은 나중에 따로 전달해요」) · 홈 나의 일정 맨 위 「럭키드로우 N등 당첨」 한 줄(확인 전 주황 점) · 7등 랜덤 굿즈 = 확인 단추 없는 안내 시트 한 번 · 콘솔 추첨 기록 「폰 확인」 칸 · 검사 §293 · v6.32 = 261008 홈 「지금 현장」 2×2(1F 룰렛 · 1F 포토부스 · 1F AX PLAY · 17F 대강당 5단계 · 스탬프 블록 바로 아래 · 행사 당일만 · 스탬프 블록 여백 줄임) · 스태프 입력 시트(누르면 저장 · 5초 되돌리기 · 자동으로 · 시간 재기) · 스캔 화면 「줄」 · 옛 로비 · 엘리베이터 · 17F 입장 수 칸 · 풀리면 알림 · 혼잡 제보 탭 진입 뺌 · v6.31 = 261008 기념품 옷 사이즈 선택(사용자 261008 「쇼핑몰 문법 · 재고 · 고유번호 · 스태프 포함」 · 홈 카드 「기념품 옷 사이즈 선택하기」 → 「L로 신청 완료 · 신청번호 K-012 · 마감 전 변경 가능」 · 상품 시트 = 공통 바텀 시트(라우트 kit · 상품 이미지 예시 칸 · 사이즈 칩 n개 남음 · 품절 임박 · 품절 · 추천 사이즈표 예시 접힘 · 아래 고정 「이 사이즈로 신청」 | 「사이즈 변경」 · 완료 = 신청번호) · 스태프 의류 명단 사번(pool staff · 수령 따로 안내) · 창구 결과 띠에 신청번호 · 서버 ks* §288) · v6.30 = 261008 17F AWS · MS 출석 QR 시간 안내 걷기(사용자 「우리 쪽에서 통제하지 말자」 · 상세 입장 · 끝 QR 줄 · 고르기 시트 · 시간 밖 안내에서 QR 창 시각 삭제 · 앱 기본 창 넓게 · 홈 카드는 강연 시각 기준) · v6.29 = 261008 경품 시트 등수 묶음(글 + 사진) 사이 옅은 회색 헤어라인 1px(사용자 「상품마다 옅고 얇은 회색선 · 균형을 보고 판단」 · 카드 테두리 · 블록 선 안은 채택 안 함) · v6.28 = 261008 7등 발송 표기 「사내 우편 발송」 → 「행랑 발송」(앱 · 추첨 무대 · 콘솔) · v6.27 = 261008 AX 올림픽 순위 바닥 문구(명예 순위 · 경품 없음 · 종합 호명) 삭제 · v6.26 = 261007 행운권 7등 랜덤 굿즈 수량 「수량 추후 공개」(60 고정 삭제) + 긴 상세 시트(경품 · 세션 · 구역 · 부스 · 전시) 높이 = 화면의 약 92%(위 끝 8%) + 경품 시트 등수 묶음 사이 간격 · v6.25 = 261007 행사 둘러보기 조작 A(사용자 「권장대로 진행해 줘」) · 달리기 · 좌로 · 우로 돌기 단추 삭제 · 점프 원 72px 오른쪽 아래 엄지 자리 · 첫 구역 도착 뒤 끌기 안내 1회 「화면을 좌우로 밀면 돌아봐요」 · 밀기 문턱 8 → 12px · PC 키 ↑ ↓ 걷기 · Space 점프 · ← → 돌기 · 둘러보기 v6.25 · v6.24 = 261007 10F 세션 상세 줄 이름 「진행」 → 「강사」(사용자 「강사가 맞을 것 같고」) · 세션 B · C 값 「임경덕」 · 「권혜영」(줄 이름과 겹치지 않게) · 값은 이름 단위로만 줄이 꺾임 · v6.23 = 261007 타자왕 보너스 스테이지(친 글자 뭉개짐 고침 · 짝짓기 rgBnsAlign · 「문장을 먼저 읽어 두세요」 32 · 3 · 2 · 1 · GO 팡 rgBnsPop) · 엔터 없이 안내(입력칸 · READY · 대기 왼쪽 · 보너스) · 노트북 대기 오른쪽 순위 TOP 10 · 점수 설명 왼쪽으로 · v6.22 = 261007 PC 휴대폰 틀에서 행사 둘러보기 = 틀을 걷고 창 전체(000-head tourNow · opsSet · 닫으면 틀로 · 스크롤 그대로 · 포커스를 틀 안으로 넘겨 클릭 없이 W A S D) · PC 아래 가운데 키 안내 한 줄(tpcKeys · 6초 뒤 옅게) · v6.21 = 261007 10F 실습 장소 · 진행 · 세션 E 회차 시간(운영진 메신저 · A 컨퍼런스룸 · B 01 HEART · C 06 HEART · D 08 HEART · E 07 HEART · E 13:30~15:00 / 15:00~16:30 · 상세 사실 표 「진행」 줄) · v6.20 = 261007 10F 세션 상세 보강(세션 A 실습 주제 예시 3개 · 세션 D 「AI를 활용한 업무 적용 실습」 · 세션 E 두 회차 「초급 과정 · Chat, Word, PPT, Agent Builder, Copilot Studio」 · 붙임2) · v6.19 = 261007 타자왕 노트북 대기 = 광고 순환(후킹 · 1~3위 경품 · 지금 1위 · 참여 방법 7초씩 · 맨 아래 「키보드를 눌러 시작」 · QR · 토큰 없음) · 아무 키 · 누름 = 새 QR(깨운 키 삼킴 · 남은 시간 막대) · 떠 있는 동안 토큰 그대로(서버 물음 연장 · 3분 상한) · 60초 아무도 안 붙으면 광고 + 서버 토큰 지움 · 폰 「노트북 키보드를 누르면 새 QR이 나와요」 · v6.18 = 261007 타자왕 노트북 접속 QR 나이 상한(30초 교체 · 화면 QR 45초까지만 · 못 받으면 「QR을 새로 받는 중」 · 물음 6초 버림 · 창이 다시 보이면 곧바로 · 바꾸기 전 한 번 더 묻기 · 폰은 로그인해 있어도 앱이 뜨자마자 토큰 붙잡기 5분) · v6.17 = 261007 둘러보기 v6.17 눌러서 가기 오작동 고침(누른 그 동전 · 계단 동전 둘 · 동전 언저리 누름 · 스태프 말풍선이 동전을 덮지 않음 · 연타 카드 한 번 · 조그 = 자동 걷기 끝 · 연출 중 화면 누름 무시 · TOUR.ver v617) · v6.16 = 261007 플리스 사이즈 4종(SS · L · 2XL · 3XL · 옛 S · M · XL 폐기 · 사이즈 고르기 4칸 · 조사 SS가) · 창구 띠 세 글자 사이즈 한 줄(l3 56px) · v6.15 = 261007 17F 오후 파트너 강연 시각 확정(AWS 13:30~14:50 · 휴식 14:50~15:10 시간표 줄 · MS 15:10~16:40) · v6.14 = 261007 PC 넓은 창 = 휴대폰 틀(000-head 틀 스크립트 · 앱은 틀 안 iframe 에서 휴대폰 폭 그대로 · 휴대폰 · 좁은 창 · TV · #self · cap 은 그대로 · ?frame=0 끔) · v6.13 = 261007 홈 「다음 할 일」 카드(광고판 아래 · 둘러보기 카드와 한 자리 교대 · 행사 당일만 · × 그날 끔 · 설정 줄 · nxPick) · 재로그인 반복 팝업 고침(첫 동기화 기준선 rwBaseline · checkMyState base) · 로그인 직후 10초 자동 안내 1개(NB · nbGate) · 커피챗 하루 끝도 appNow · v6.12 = 261007 체크인존 번호표(접수 · 창구 A~E 자리 · 사이즈 아주 크게 · 「B-023 · 홍*동 → B 창구」 · 다른 창구 · 명단 밖 = E 창구 안내) · 홈 맨 위 내 번호 카드(대기 · 곧 차례 · 호출 진동 · 놓친 번호 · 수령 완료) · 체크인 TV 대기판 · 창구 화면(태블릿) · 선착순 10:30부터 문구 · v6.11 = 261007 점프 시간 제한 없앰 · 30초부터 더 어렵게 · AX 상식 30문장 다시 씀 · 홈 나의 일정 카드 너비 · Outro 안내 · v6.10 = 261007 테스트 도구(시각 바꿔 보기 tt · appNow · 헤더 띠 · 내 10F 세션 test_ten · 310555 기본 A) · 공지 = 아래에서 올라오는 시트(ntcOpen · 홈 공지 카드 폐기 · 기기당 1번 · 기준선 ntc_base) · 내 QR = QR + 이름 · 사번만 · 재로그인 = 오프닝 없이 바로 홈 · 저장된 로그인 = 로그인 화면 비침 · 전환 없이 홈 · v6.09 = 261007 행사 둘러보기 접속 기록(서버 tour_log · 열 때 1번 · 닫을 때 1번 · 10분 안 다시 열기 = 같은 방문 · 3D · 2D 대체 모두 AXTour.isOpen · 가려지면 sendBeacon · tlog*) · v6.08 = 261007 아이디어 한 줄 보강(시상 묶음 · 50자 ~ 3,000자 · 자동 저장 · 커피챗 희망 → 선정 13:00~16:00 · 볼펜 사진) · v6.07 = 261007 9월 시험 때 이미 최초 로그인 스탬프를 받은 사람도 이 기기 · 이 사번으로 한 번 「최초 로그인」 도장 팝(연출만 · 기기 키 lgfx_261007 · lgfxRun) · v6.06 = 261007 나의 일정 후속(10F 명단 · 내 세션과 겹치지 않는 오후 강연 = 자유 참석 카드 · MYFL_LEC · 홈 = 신청 카드만 axs-myfl-h · 진행 중 칩 「진행 중」 + 고리) · v6.05 = 261007 테트리스 시간 제한 없앰(5분 끝내기 · 「5분 완주」 · surv 300초 멈춤 삭제 · 게임 오버까지 · 결과 「버틴 시간」 = 실제 시간 · 시작 화면 「시간 제한 없음」 · 서버 OLY_TT_SURV_MAX) · v6.04 = 261007 10F 명단 나의 일정 = 시간표와 같은 하루 흐름(myFlowItems · 신청 주황 테두리 + 칩) · v6.03 = 261007 테트리스 5분 완주 판 surv 30000 상한(서버 range 거절 버그) · v6.02 = 261007 점프 게임 바닥 = 붉은 벽돌(jpBrickCv · 무늬 한 장 반복) · v6.01 = 261007 둘러보기 v5.99(손가락 안내 = 들어올 때마다 + 6초 서 있으면 다시 · 방문당 3번 · 직접 눌러 걸어가 본 기기는 끝 · 첫 안내 둘째 줄 「다음 구역」 저절로 걷기 · 흉상 얼굴 주름 부드럽게) · v6.00 = 261006 밤 스태프 판정 = 로그인만으로(앱 스태프 명단 사번 = 가운데 단추 「스캔」 · 처음 누를 때만 코드 한 번 · 명단에서 빠지면 「내 QR」 · 서버 staff) · 스캔 자리에서 10F 세션 입장 숨김(SCAN_10F_UI) · v5.99 = 261006 키트 사이즈 사전 선택(키트명단 사번만 · 홈 카드 · 사전 신청 키트 화면 · 설정 · 나의 보상 줄 · 라운지 등록 순 초과 = 가습기 안내 · 서버 ks* · §250) · v5.98 = 261006 스태프 폰 연속 스캔(관리자 모드 폰 = 가운데 단추 「스캔」 · 자리 칩 · 톱니 · 결과 띠 1.5초 · 화면 꺼짐 막기) · 스캔 순간 참가자 알림(소켓 · 푸시) · 선착순 참여상 = 받기 선착순(남은 N · 「자격」 말 없음) · v5.97 = 261006 스탬프 감사 후속(AX PLAY 부스 코드 = 「스태프에게 내 QR을 보여 주세요」 · 「응모」 → 「행운권」 · 「선착순 참여상」 표기) · v5.95 = 261006 프로그램 참여 스탬프 = 17F 오후 AWS · MS 강연만(오전 강연 · 송출 · 10F · 커피챗 · 라운지 스탬프 문구 삭제) · 사전등록 체크인 3개 → 룰렛 → 강의장 안내 시트 · 홈 한 줄 · 스태프 키트 결과 「룰렛 부스로 안내해 주세요」 · v5.94 = 261006 타자왕 노트북 진입 = 화면 QR 하나(카메라 끔 · 큰 접속 QR · 후킹 「당신의 프롬프팅 속도를 보여 주세요」 · 로그인 전 토큰 붙잡기 5분 · 폰 「노트북 화면의 QR을 찍어 주세요」) · v5.93 = 261006 둘러보기 눌러서 가기(바닥 · 판 · 동전 · 포토부스 · 룰렛 · 엘리베이터 · 스태프 = 걸어가서 바로 · 첫 손가락 안내 · 숨 쉬는 테두리) · 설치 안내(「설치 중」 시트 · 설정 줄 = 바로 설치 창) · v5.92 = 7등 랜덤 굿즈 · 체크인 없는 추첨 */
+var APP_VER = "v6.79";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 · v6.79 = 261009 계단 동행 5차(위 정보 줄 걷어냄 · 말풍선 26px 두 줄(머리표 + 본문) · AX 상식 2 : 그 밖 1 · 상식 31개 · 오르는 동작 묶음과 말 짝 동작 · 도착 QR 뒤 전체 화면 도착 장면(고생했어요 · 도장 팡 · 찡끗 아이리스 → 스탬프 탭)) · v6.78 = 261009 스태프 관리 요청 전부 POST 폼 본문(admCall · 계약 10절) · v6.77 = 261009 이벤트 수신기 누수 고침(사용자 「이벤트 점검」 · 화면 변경 없음 · beCall 이 끝난 호출마다 window 에 빈 함수를 남겨 떼어진 script · onload · onerror 수신기를 붙잡던 것 · 폴링 한 번에 +1 script · +2 수신기 · 응답이 오면 이름 지움 · 타임아웃만 밖의 BE_NOOP · 검사 348절) · v6.76 = 261009 계단 동행 4차 글자 크게(사용자 「글자 폰트를 더 크게」 · 말풍선 17px 600 → 22px 700(1.3배) · 좁으면 21 · 20 · 19px 한 단계씩 · 나올 말 전부 2줄 안 · 말풍선 높이 미리 잡아 무대 · 단추 안 밀림 · 점프 숫자 20 → 26px · 보조 글자 13 → 15px · 안전 줄 15 → 17px · 꼬리표 13 → 15px · 감사 말 「오늘」 덜기 · 미니 게임 제안 「N종목도 있어요」) · v6.75 = 261009 계단 동행 3차(사용자 「계단은 대각선이 아니라 정면 · 챗봇 크게 · 1층 모형의 챗봇 형태와 디자인 스타일」 · 정면 계단(아래에서 올려다봄 · 멀수록 좁은 디딤판) · 1층 둘러보기 buildBot 그대로의 3D 챗봇 · 같은 재질 · 빛 · 배경 · 손잡이 = 엘리베이터 로즈골드 · three.min.js 는 둘러보기와 같은 주소로 이 화면에서 처음 받음(모형 glb 안 받음) · 받는 동안 · 못 그리는 기기 · 느린 기기 = 같은 시점 평면 그림 · 움직일 때만 그림 · 해상도 1.5배까지 · 무대 6:5 · 아래 단추 위에 다 보이게 · 18F = 앞모습으로 내려옴 · 땀방울 3D · 검사 346절) · v6.74 = 261009 계단 동행 2차(사용자 「준비 운동은 거창하다 · 다섯 번 오르고 돌아서 땀 · 힘내요 · 눈웃음 · 5분 켜 두는 사람」 · 준비 운동 · 아이리스 걷음 · 대각선 계단이 점프마다 한 칸 흘러 내려옴 · 챗봇 제자리 · 콩콩 5번(하나~다섯) → 돌아서 땀 → 한마디 + 눈웃음 → 다시 돌아섬 · 홀수 고리 응원 12 · 짝수 고리 행사 말(AX 상식 23 · 프로그램 제안 · 계단 말 6 · 엘리베이터 감사 1번) · 5분 안 행사 말 겹침 없음 · 3분 · 5분 이정표 · 8분 절약 · 15분 쉼(화면 켜 두기 놓음) · 20분부터 직접 고르기 안내 · 18F 출발 = 뒤집어 내려가기 · 검사 346절) · v6.73 = 261009 동작 모션 통일(사용자 「점심 · 자유 관람 → 상시 운영처럼 앱 전체에 같은 동작」 · 공용 토큰 --ax-motion-* + AXM · 시트 셋 열림 · 닫힘 · 세그먼트 · 스크롤 이동 · 토스트 · 펼침) · v6.72 = 261009 「 · 」로 이은 글 줄바꿈(사용자 「어차피 두 줄이 될 거라면 · 자리에서 다음 줄로」 · segHtml 조각 <ax-seg> inline-block · 레일 6개 캡션 · 정보 줄 dd · 시트 제목 · 상세 머리 · 받으려면 상자 · 보상 카드 · 스탬프 카드 보조 줄 · 키트 · 퀴즈 · 미니 게임 순위 · 토스트) · v6.71 = 261009 운영자 요청 사번 필수(기타만 선택) · v6.70 = 261009 스태프 폰 「운영자에게 요청」 시트 · 룰렛 소진 알림 단추 · 박스 링크 숨김 · v6.69 = 261009 계단 동행(사용자 「계단실 QR을 찍으면 챗봇이 계단을 오르고 응원 · 화면을 닫지 않게 · 1층 엘리베이터 동물의 숲 감성」 · 출발 QR 뒤 진행 화면 = 준비 운동 3줄 → 아이리스 → 1초 한 칸 · 7칸 한 층 걷기 고리 · 말풍선 한 자씩 · 응원 · AX 상식(점프 상식 · AX 퀴즈 해설 출처 id) · 다음 참여 제안(스탬프 · 시각) · 도착 안내 · 아래 고정 큰 「도착 층 QR 찍기」 · 20초 뒤 숨 쉬는 고리 · Wake Lock · 떠났다 와도 이어서 · 동작 줄이기 = 그림 + 말풍선 · 18F 출발 = 내려가는 그림 · 옛 도트 계단 걷음 · 새 조각 128-js-stair-buddy.js · 042-css-stairbud.css · 검사 346절) · v6.68 = 261009 행운권 티켓 칩 다듬기(사용자 「체크인 화면 번호도 티켓으로 · 글자 크기가 너무 커 · 균형감 · 절취선은 주황보다 어두운 회색」 · 점 글자 14 → 12px(최소 크기) · 절취선 brand → muted · 새 번호 확인 절취선 onBrand 25% · 추첨 체크인 결과 화면 번호 줄 = 같은 티켓 칩 · 검사 342절) · v6.67 = 261009 행운권 번호 칩 = 티켓(사용자 「행운권 모양 테두리에 번호도 점 문자로 · 은색 비슷한 회색톤」 · 시안 ④ · 양옆 반원 홈 · 왼쪽 주황 절취선 · 은회색 무광 면 · 먹색 점 글자 14px · 레일 · 나의 보상 · 추첨 안내 팝업 같은 칩 tktHtml · 새 번호 확인 = 주황 티켓 · 발급 중 = 회색 티켓 · 상자 연출 그대로 · 검사 342절) · v6.66 =261009 행사 종료 안내 화면(사용자 「오픈 범위에 행사종료 · 아무도 못 들어오고 · 챗봇이 나와서 안내」 · 서버 오픈_범위 종료 = reason ended · 로그인 · 홈 대신 챗봇 원본 + 안테나 전파 · 「AX Festival 2026이 종료되었습니다」 · 「내년에 다시 만나요」 · 단추 없음 · beCall 한 곳 endSeen · 기기 키 og_end = 다시 열면 먼저 · 범위를 되돌리면 다음 sync 에 걷힘 · #self · #tv= 기기 화면 제외) · v6.65 = 261008 1층 부스 기획안 수정본(사용자 「1층을 재구성해줘」 · 둘러보기 AX VISION 판 5장 · AX 라운지 데스크만 · Welcome 자리 · AX LAB TV · 타자왕 데스크 · 1F 엑스배너 · 라운지 퀴즈 · 점프 힌트 걷음 · TOUR.ver v665) · v6.64 = 261008 신청하기 칸 커피챗 · AX 라운지 같은 형태(사용자 「ax라운지도 같은 형태 · 사전 신청자 중심」 · 두 카드 사실 표 지금 · 시간 · 방식 · 신청 · 사은품 · 라운지도 사은품 사진 줄 · 한 줄 소개 「내년 DAP 과제 후보를 1:1로 상담하는 곳」 · 「비슷한 고민을 여럿이 모여 나누는 곳」 · 라운지 「사전 신청자 우선」 · 「남은 시간 N개 · 누구나 신청」) · v6.63 = 261008 비어 보이는 상세 다듬기(사용자 「(가)로 가자」 · 시트 높이 93% · 60% 문턱 그대로 · 구역 상세 상태 한 줄을 제목 묶음에 붙임 · 상세 제목 줄 길이 고르게 · 하는 일 · 설명 줄 마지막 한 낱말 막기 · 주 버튼은 이미 아래 고정 칸) · v6.62 = 261008 폴링 지터(부하 재시험 권장 1 · 화면 변경 없음 · 동기화 성공 뒤 다음 폴링에도 0~5초 무작위 더함 · 화면이 다시 보일 때 첫 sync 0~1.5초 무작위 · 소켓 붙은 120초 폴링 · 소켓 끊김 뒤 평소 폴링도 같은 지터 · 검사 321절) · v6.61 = 261008 프로그램 상세 「경품 보기」 입구 뺌(사용자 「굳이 있어야 될까?」 · 「이 위치도 중복인 것 같아서 빼자」 · AWS · MS 강연 · Closing Speech 상세 · 홈 · 스탬프 탭 레일 · 경품 탭 · 둘러보기 · 타자왕 경품 칸은 그대로) · v6.60 = 261008 연사 그림(사용자 「AWS 와 MS의 로고 · 이석현 정경선 사진」 · 17F Opening Speech · Closing Speech = 사진 · AWS · MS 강연 = 로고(흰 바탕 · 원형 그대로) · assets/speaker/ · Keynote · 10F 는 글자 그대로 · 안 뜨면 글자) · v6.59 = 261008 「받으려면」 상자 공용(사용자 「참여 전 확인 아래 부분을 받으려면 부분처럼 · 정돈되지 않은 부분들도」 · AWS · MS 강연 상세 · Closing Speech 현장 추첨 · AX PLAY 체험 · 룰렛 1회권 · 행운권 · 선착순 참여상 팝업 · 기념품 옷 받는 방법) · v6.58 = 261008 표기 정본 = 네임택 발주 PDF(사용자 「PDF와 똑같이」 · 17F Opening Speech · Keynote 둘 · AWS · MS 강연 제목 · Closing Speech · 연사 실명 · 직함 · 10F 세션 제목 · 강사 · 옛 Intro · 기조연설 · 내부 강연 · 마무리 연설 · Outro 화면 글자 대체 · 시간표 17F 줄은 TIMELINE pid) · v6.57 = 261008 행운권 경품 문구 「경품은 따로 전달」 통일 · 스태프 플리스 받는 방법 「따로 전달해 드려요」 · v6.56 = 261008 스탬프 탭 「프로그램 참여」 줄 더블 스탬프 표시(사용자 「더블 스탬프인 것이 명확히 이해되지 않아」 · 제목 옆 「×2」 글자 → O100 알약 「● ● 스탬프 2개」(받은 만큼 점이 찬다 0 · 1 · 2) · 받기 전 둘째 보조 줄 「입장 QR 1개 + 끝 QR 1개」 · 도장 팝 제목 「×2」 · 1 / 2 그대로) · v6.55 = 261008 설명 문구 한 줄(사용자 「어설프게 두 줄로 넘어가는 것들 · 워싱 · 간소화 · 한 줄」 · 커피챗 「멘토와 한 테이블에서 아이디어를 나눠요」 · 「키우고 싶은 업무를 1:1로 상담해요」 · 라운지 · 신청하기 칸 「지금」 · AX PLAY 안내 · 미니 게임 종합 · 행운권 · 선착순 받으려면 줄 · 메신저 알림 안내 · 기본 공지 · 390 폭 한 줄) · v6.54 = 261008 쿠키 사진 = 원본 전체(자르지 않음 · 사용자) · v6.53 = 261008 커피챗 · 상담 지급품 쿠키 = 휘낭시에 사진(assets/prize/cc_cookie.webp) · 부제 「휘낭시에 · 쿠키」 · v6.52 = 261008 플리스 신청 완료 「받는 방법」 상자(스태프 = 행사 전에 미리 전달 · 사전 신청 = 10/26 08:00 1F 주차장 체크인존 · 내 QR) · v6.51 = 261008 홈 「지금 현장」 차분하게(사용자 「색감이 너무 쨍해서 어지러워 · 텍스트도 간소화」 · 색은 상태 점 하나에만 · 점 9px 바깥 고리 없음 · 모양도 다르게 여유 빈 고리 / 보통 반쯤 / 혼잡 꽉 찬 점 · 이름 body 회색 · 둘째 줄 muted 회색 · 층 점문자 muted · 1F 세 칸은 대기 시간만(상태 단어는 읽어 주기만) · 17F · 정보 없음은 상태 단어만 · 만석만 글자 굵게) · v6.50 = v6.50 = 261008 플리스 시트 문구 걷기(고르는 기준 한 줄 · 「먼저 신청한 순서대로 품절돼요」 · g/㎡ 설명 줄) · v6.49 = 261008 커피챗 · 상담 지급품 노트 = 사진(assets/prize/cc_note.webp · 아이콘 대체) · v6.48 = 261008 플리스 사이즈 화면 표기 SS · L · 2XL · 3XL → A · B · C · D(사용자 「SS 이런 사이즈가 생소해서 · A B C D 이렇게 바꾸자」 · 화면 글자만 · kitLbl 한 함수 · 서버 · 저장 · 설정 · 콘솔 · 발주 값은 그대로 · 창구 A = SS · B = L · C = 2XL · D = 3XL 와 같은 글자 · 창구 스캔 띠 · 창구 태블릿 desk 는 A 크게 + 작게 실제 (SS)) · v6.47 = 261008 홈 「지금 현장」 두 줄 칸(사용자 「세 줄 → 한 줄이나 두 줄」 · 이름 줄 + 상태 줄 · 점 + 상태 단어 + 「· 짧은 말」 같은 줄 · 17F 「HH:MM 기준」 줄 삭제(섹션 머리 오른쪽에 있음) · 「대기」 접두만 뺌(읽는 이름은 그대로) · 말이 안 들어가면 말줄임 없이 둘째 줄 · 시험값 = 이름 줄 오른쪽 끝 · 칸 높이 85 → 67px) · v6.46 = 261008 홈 「지금 현장」 칸 신호등 색(칸 면 = 흰 면 + 테두리 하나 · 상태 = 점 + 글자 색 · 초록 success · 노랑 --cn-mid · 빨강 error · 17F 여유 · 보통 초록 · 붐빔 노랑 · 거의 만석 · 만석 빨강 · 만석 굵게 + 겹 고리 · 정보 없음 회색 점 · 사용자 「초록 노랑 붉은 신호등」) · v6.45 = 261008 홈 「지금 현장」 층 표기 1F · 17F 점문자(flFloor · 읽는 이름 「1층」) + 테스트 사번만 네 칸 무작위 시험값(cnRand · 앱 열 때마다 · 서버 값보다 우선 · 서버에 안 보냄 · 칸 구석 「시험값」) · v6.44 = 261008 플리스 착용 사진 전체 화면 보기(사용자 「화면 꽉 차게 · 사이즈 선택 시 사진으로 날아가서」 · 사이즈 칩을 누르면 그 사이즈 착용 사진이 화면을 채움 · 큰 사이즈 글자 · 모델 키 · 몸무게 · 실측 한 줄 · 좌우로 밀면 이웃 사이즈(선택도 바뀜 · 품절 건너뜀) · 점 4개 · 닫기 = X · 아래로 끌기 · 뒤로 · 사진 탭 · 안에서 바로 신청 · 시트 맨 위는 다시 상품 사진만 · 완료 화면 「착용 사진 보기」 · kitView · kitFit · --kit-ph · 칸 안 착용 사진 걷어 냄) · v6.43 = 261008 플리스 시트 손보기(제목 묶음 AX Festival 2026 · 플리스 재킷 · 한 줄 설명이 사진 위 · 「에코백과 함께 드려요」 · 신청 완료 화면도 제목이 사진 위 · 처음 화면 사진 아래 안내 한 줄 삭제(빈 캡션 줄로 높이 유지) · 사이즈 칩을 누른 뒤 사진 머리가 시트 머리 밑에 가려진 채 멈추지 않게 스크롤 목표를 다시 잡고 키 작은 화면은 사진 칸 높이를 줄여 사진 + 캡션 + 칩 줄이 한 화면에 · kitFit · --kit-ph · 사용자 261008) · v6.42 = 261008 데이터 세대 청소(오픈 전 초기화 · 서버 sync gen 이 이 기기 값과 다르면 신원 키만 남기고 시험 흔적 · 못 보낸 대기열 · 시험 공지를 한 번 비움 · 처음 받는 기기는 저장만 · genCheck) · v6.41 = 261008 플리스 시트 사이즈별 착용 사진(assets/kit/fit_SS · L · 2XL · 3XL .webp · 사이즈 칩을 누르면 맨 위 사진 교체 + 캡션 「모델 175cm · 70kg · L 착용」 · 신청한 사이즈 사진 · 큰 칸 1:1 고정) · v6.40 = 261008 플리스 시트 사이즈 칩 아래 고르는 기준 한 줄(axs-kitgd · 평소 90 이하 SS · 95~100 L · 105 L 또는 2XL · 110~115 2XL · 120 3XL) · v6.39 = 261008 단계별 오픈 로그인 문(사용자 오픈 계획 · 1차 10/19 사전 신청자 · 스태프 · 2차 10/21 전 구성원) · 서버 reason notopen = 로그인 화면 · 홈 위 「AX PASSPORT는 10월 21일(수)부터 열려요」 한 화면(날짜 = 서버 open · ogShow · beCall 한 곳) · 이 기기 og = 다시 열면 그 화면을 깔고 서버에 다시 묻기(ogCheck) · 열리면 걷힘 · 「다른 사번으로 입장」 · v6.38 = 261008 플리스 시트 · 사이즈 대응 고침(제조사 LL = 우리 2XL 75 62 52 64 · 3L = 3XL 78 66 54 65 · SS만 실측 확인 중 · 사용자 「LL은 2XL · 3L은 3XL」) + 접힘 4칸 상품 정보 · 실측 사이즈표 · 세탁 방법 · 주의사항(제조사 상세 이미지의 사실 정보만 · 사용자 「상품 정보 세탁방법 주의사항」) · v6.37 = 261008 플리스 상품 사진 = 홍보부 원본(후리스자켓.png · 블랙 · 가슴 ME to WE · 4:3 800px) · v6.36 = 261008 럭키드로우 당첨 문구를 현장에 없는 사람 기준으로(사용자 「17층 화면을 봐 주세요 같은 문구는 현장에 없는 사람에게 무의미」 · 당첨 시트 = 「경품은 나중에 따로 전달해요」 한 줄 · 확인 완료 시트도 무대 문구 없이 · 푸시 「럭키드로우에 당첨됐어요 / 앱에서 확인해 주세요」 · 콘솔 폰 확인 칸 「대기」 → 「미확인」) · v6.35 = 261008 홈 「다음 할 일」 카드 삭제(사용자 「둘러보기 고정 · 다음 할 일 삭제」 · 홈 = v6.13 이전 순서) · 「지금 현장」 날짜 조건 해제 · 플리스 상품 사진 · 실측 사이즈표(SS · 3XL 확인 중) · 테스트 사번 미리 보기 · v6.34 = 261008 17F AWS · MS 출석 QR 행사일(10/26) 전에는 시간 창 없이 늘 출석(사용자 「지금도 되도록 · 이상한 데이터는 행사 전 초기화」 · attPre · 고르기 시트 · 데모 · 시험 시각 10/25 = tm 안 보냄 · 서버 attPreDay_) · 출석으로 새로 받은 스탬프 = 가운데 도장 팝(사용자 「파트너사 강의에 출석체크를 하면 스탬프 박히는 효과가 없어」 · p3h 1 / 2 · p3 ×2 · 이미 받음 · 기록만 = 팝 없음 · attStamp stampOverlay) · v6.33 = 261008 럭키드로우 당첨자 폰 알림(사용자 261008 「당첨자 폰 알림도 넣자」 · 서버 draw_log win → 소켓 lucky · 푸시 「럭키드로우 당첨 · 지금 17F 무대 화면을 봐 주세요」 · sync my.lucky) · 당첨 시트(공통 바텀 시트 · 등수 큰 주황 글자 · 경품 사진 · 이름 · 행운권 번호 · 주 버튼 「확인」 → draw_ack 본인 세션 → 「확인 완료 · 무대 화면에 표시됐어요」 + 「경품은 나중에 따로 전달해요」) · 홈 나의 일정 맨 위 「럭키드로우 N등 당첨」 한 줄(확인 전 주황 점) · 7등 랜덤 굿즈 = 확인 단추 없는 안내 시트 한 번 · 콘솔 추첨 기록 「폰 확인」 칸 · 검사 §293 · v6.32 = 261008 홈 「지금 현장」 2×2(1F 룰렛 · 1F 포토부스 · 1F AX PLAY · 17F 대강당 5단계 · 스탬프 블록 바로 아래 · 행사 당일만 · 스탬프 블록 여백 줄임) · 스태프 입력 시트(누르면 저장 · 5초 되돌리기 · 자동으로 · 시간 재기) · 스캔 화면 「줄」 · 옛 로비 · 엘리베이터 · 17F 입장 수 칸 · 풀리면 알림 · 혼잡 제보 탭 진입 뺌 · v6.31 = 261008 기념품 옷 사이즈 선택(사용자 261008 「쇼핑몰 문법 · 재고 · 고유번호 · 스태프 포함」 · 홈 카드 「기념품 옷 사이즈 선택하기」 → 「L로 신청 완료 · 신청번호 K-012 · 마감 전 변경 가능」 · 상품 시트 = 공통 바텀 시트(라우트 kit · 상품 이미지 예시 칸 · 사이즈 칩 n개 남음 · 품절 임박 · 품절 · 추천 사이즈표 예시 접힘 · 아래 고정 「이 사이즈로 신청」 | 「사이즈 변경」 · 완료 = 신청번호) · 스태프 의류 명단 사번(pool staff · 수령 따로 안내) · 창구 결과 띠에 신청번호 · 서버 ks* §288) · v6.30 = 261008 17F AWS · MS 출석 QR 시간 안내 걷기(사용자 「우리 쪽에서 통제하지 말자」 · 상세 입장 · 끝 QR 줄 · 고르기 시트 · 시간 밖 안내에서 QR 창 시각 삭제 · 앱 기본 창 넓게 · 홈 카드는 강연 시각 기준) · v6.29 = 261008 경품 시트 등수 묶음(글 + 사진) 사이 옅은 회색 헤어라인 1px(사용자 「상품마다 옅고 얇은 회색선 · 균형을 보고 판단」 · 카드 테두리 · 블록 선 안은 채택 안 함) · v6.28 = 261008 7등 발송 표기 「사내 우편 발송」 → 「행랑 발송」(앱 · 추첨 무대 · 콘솔) · v6.27 = 261008 AX 올림픽 순위 바닥 문구(명예 순위 · 경품 없음 · 종합 호명) 삭제 · v6.26 = 261007 행운권 7등 랜덤 굿즈 수량 「수량 추후 공개」(60 고정 삭제) + 긴 상세 시트(경품 · 세션 · 구역 · 부스 · 전시) 높이 = 화면의 약 92%(위 끝 8%) + 경품 시트 등수 묶음 사이 간격 · v6.25 = 261007 행사 둘러보기 조작 A(사용자 「권장대로 진행해 줘」) · 달리기 · 좌로 · 우로 돌기 단추 삭제 · 점프 원 72px 오른쪽 아래 엄지 자리 · 첫 구역 도착 뒤 끌기 안내 1회 「화면을 좌우로 밀면 돌아봐요」 · 밀기 문턱 8 → 12px · PC 키 ↑ ↓ 걷기 · Space 점프 · ← → 돌기 · 둘러보기 v6.25 · v6.24 = 261007 10F 세션 상세 줄 이름 「진행」 → 「강사」(사용자 「강사가 맞을 것 같고」) · 세션 B · C 값 「임경덕」 · 「권혜영」(줄 이름과 겹치지 않게) · 값은 이름 단위로만 줄이 꺾임 · v6.23 = 261007 타자왕 보너스 스테이지(친 글자 뭉개짐 고침 · 짝짓기 rgBnsAlign · 「문장을 먼저 읽어 두세요」 32 · 3 · 2 · 1 · GO 팡 rgBnsPop) · 엔터 없이 안내(입력칸 · READY · 대기 왼쪽 · 보너스) · 노트북 대기 오른쪽 순위 TOP 10 · 점수 설명 왼쪽으로 · v6.22 = 261007 PC 휴대폰 틀에서 행사 둘러보기 = 틀을 걷고 창 전체(000-head tourNow · opsSet · 닫으면 틀로 · 스크롤 그대로 · 포커스를 틀 안으로 넘겨 클릭 없이 W A S D) · PC 아래 가운데 키 안내 한 줄(tpcKeys · 6초 뒤 옅게) · v6.21 = 261007 10F 실습 장소 · 진행 · 세션 E 회차 시간(운영진 메신저 · A 컨퍼런스룸 · B 01 HEART · C 06 HEART · D 08 HEART · E 07 HEART · E 13:30~15:00 / 15:00~16:30 · 상세 사실 표 「진행」 줄) · v6.20 = 261007 10F 세션 상세 보강(세션 A 실습 주제 예시 3개 · 세션 D 「AI를 활용한 업무 적용 실습」 · 세션 E 두 회차 「초급 과정 · Chat, Word, PPT, Agent Builder, Copilot Studio」 · 붙임2) · v6.19 = 261007 타자왕 노트북 대기 = 광고 순환(후킹 · 1~3위 경품 · 지금 1위 · 참여 방법 7초씩 · 맨 아래 「키보드를 눌러 시작」 · QR · 토큰 없음) · 아무 키 · 누름 = 새 QR(깨운 키 삼킴 · 남은 시간 막대) · 떠 있는 동안 토큰 그대로(서버 물음 연장 · 3분 상한) · 60초 아무도 안 붙으면 광고 + 서버 토큰 지움 · 폰 「노트북 키보드를 누르면 새 QR이 나와요」 · v6.18 = 261007 타자왕 노트북 접속 QR 나이 상한(30초 교체 · 화면 QR 45초까지만 · 못 받으면 「QR을 새로 받는 중」 · 물음 6초 버림 · 창이 다시 보이면 곧바로 · 바꾸기 전 한 번 더 묻기 · 폰은 로그인해 있어도 앱이 뜨자마자 토큰 붙잡기 5분) · v6.17 = 261007 둘러보기 v6.17 눌러서 가기 오작동 고침(누른 그 동전 · 계단 동전 둘 · 동전 언저리 누름 · 스태프 말풍선이 동전을 덮지 않음 · 연타 카드 한 번 · 조그 = 자동 걷기 끝 · 연출 중 화면 누름 무시 · TOUR.ver v617) · v6.16 = 261007 플리스 사이즈 4종(SS · L · 2XL · 3XL · 옛 S · M · XL 폐기 · 사이즈 고르기 4칸 · 조사 SS가) · 창구 띠 세 글자 사이즈 한 줄(l3 56px) · v6.15 = 261007 17F 오후 파트너 강연 시각 확정(AWS 13:30~14:50 · 휴식 14:50~15:10 시간표 줄 · MS 15:10~16:40) · v6.14 = 261007 PC 넓은 창 = 휴대폰 틀(000-head 틀 스크립트 · 앱은 틀 안 iframe 에서 휴대폰 폭 그대로 · 휴대폰 · 좁은 창 · TV · #self · cap 은 그대로 · ?frame=0 끔) · v6.13 = 261007 홈 「다음 할 일」 카드(광고판 아래 · 둘러보기 카드와 한 자리 교대 · 행사 당일만 · × 그날 끔 · 설정 줄 · nxPick) · 재로그인 반복 팝업 고침(첫 동기화 기준선 rwBaseline · checkMyState base) · 로그인 직후 10초 자동 안내 1개(NB · nbGate) · 커피챗 하루 끝도 appNow · v6.12 = 261007 체크인존 번호표(접수 · 창구 A~E 자리 · 사이즈 아주 크게 · 「B-023 · 홍*동 → B 창구」 · 다른 창구 · 명단 밖 = E 창구 안내) · 홈 맨 위 내 번호 카드(대기 · 곧 차례 · 호출 진동 · 놓친 번호 · 수령 완료) · 체크인 TV 대기판 · 창구 화면(태블릿) · 선착순 10:30부터 문구 · v6.11 = 261007 점프 시간 제한 없앰 · 30초부터 더 어렵게 · AX 상식 30문장 다시 씀 · 홈 나의 일정 카드 너비 · Outro 안내 · v6.10 = 261007 테스트 도구(시각 바꿔 보기 tt · appNow · 헤더 띠 · 내 10F 세션 test_ten · 310555 기본 A) · 공지 = 아래에서 올라오는 시트(ntcOpen · 홈 공지 카드 폐기 · 기기당 1번 · 기준선 ntc_base) · 내 QR = QR + 이름 · 사번만 · 재로그인 = 오프닝 없이 바로 홈 · 저장된 로그인 = 로그인 화면 비침 · 전환 없이 홈 · v6.09 = 261007 행사 둘러보기 접속 기록(서버 tour_log · 열 때 1번 · 닫을 때 1번 · 10분 안 다시 열기 = 같은 방문 · 3D · 2D 대체 모두 AXTour.isOpen · 가려지면 sendBeacon · tlog*) · v6.08 = 261007 아이디어 한 줄 보강(시상 묶음 · 50자 ~ 3,000자 · 자동 저장 · 커피챗 희망 → 선정 13:00~16:00 · 볼펜 사진) · v6.07 = 261007 9월 시험 때 이미 최초 로그인 스탬프를 받은 사람도 이 기기 · 이 사번으로 한 번 「최초 로그인」 도장 팝(연출만 · 기기 키 lgfx_261007 · lgfxRun) · v6.06 = 261007 나의 일정 후속(10F 명단 · 내 세션과 겹치지 않는 오후 강연 = 자유 참석 카드 · MYFL_LEC · 홈 = 신청 카드만 axs-myfl-h · 진행 중 칩 「진행 중」 + 고리) · v6.05 = 261007 테트리스 시간 제한 없앰(5분 끝내기 · 「5분 완주」 · surv 300초 멈춤 삭제 · 게임 오버까지 · 결과 「버틴 시간」 = 실제 시간 · 시작 화면 「시간 제한 없음」 · 서버 OLY_TT_SURV_MAX) · v6.04 = 261007 10F 명단 나의 일정 = 시간표와 같은 하루 흐름(myFlowItems · 신청 주황 테두리 + 칩) · v6.03 = 261007 테트리스 5분 완주 판 surv 30000 상한(서버 range 거절 버그) · v6.02 = 261007 점프 게임 바닥 = 붉은 벽돌(jpBrickCv · 무늬 한 장 반복) · v6.01 = 261007 둘러보기 v5.99(손가락 안내 = 들어올 때마다 + 6초 서 있으면 다시 · 방문당 3번 · 직접 눌러 걸어가 본 기기는 끝 · 첫 안내 둘째 줄 「다음 구역」 저절로 걷기 · 흉상 얼굴 주름 부드럽게) · v6.00 = 261006 밤 스태프 판정 = 로그인만으로(앱 스태프 명단 사번 = 가운데 단추 「스캔」 · 처음 누를 때만 코드 한 번 · 명단에서 빠지면 「내 QR」 · 서버 staff) · 스캔 자리에서 10F 세션 입장 숨김(SCAN_10F_UI) · v5.99 = 261006 키트 사이즈 사전 선택(키트명단 사번만 · 홈 카드 · 사전 신청 키트 화면 · 설정 · 나의 보상 줄 · 라운지 등록 순 초과 = 가습기 안내 · 서버 ks* · §250) · v5.98 = 261006 스태프 폰 연속 스캔(관리자 모드 폰 = 가운데 단추 「스캔」 · 자리 칩 · 톱니 · 결과 띠 1.5초 · 화면 꺼짐 막기) · 스캔 순간 참가자 알림(소켓 · 푸시) · 선착순 참여상 = 받기 선착순(남은 N · 「자격」 말 없음) · v5.97 = 261006 스탬프 감사 후속(AX PLAY 부스 코드 = 「스태프에게 내 QR을 보여 주세요」 · 「응모」 → 「행운권」 · 「선착순 참여상」 표기) · v5.95 = 261006 프로그램 참여 스탬프 = 17F 오후 AWS · MS 강연만(오전 강연 · 송출 · 10F · 커피챗 · 라운지 스탬프 문구 삭제) · 사전등록 체크인 3개 → 룰렛 → 강의장 안내 시트 · 홈 한 줄 · 스태프 키트 결과 「룰렛 부스로 안내해 주세요」 · v5.94 = 261006 타자왕 노트북 진입 = 화면 QR 하나(카메라 끔 · 큰 접속 QR · 후킹 「당신의 프롬프팅 속도를 보여 주세요」 · 로그인 전 토큰 붙잡기 5분 · 폰 「노트북 화면의 QR을 찍어 주세요」) · v5.93 = 261006 둘러보기 눌러서 가기(바닥 · 판 · 동전 · 포토부스 · 룰렛 · 엘리베이터 · 스태프 = 걸어가서 바로 · 첫 손가락 안내 · 숨 쉬는 테두리) · 설치 안내(「설치 중」 시트 · 설정 줄 = 바로 설치 창) · v5.92 = 7등 랜덤 굿즈 · 체크인 없는 추첨 */
 var A2HS = { deferred: null, open: false, pending: false };   /* v5.91 pending = 이 탭에서 크롬 설치 창 「설치」를 눌렀다(설치 중 · 다시 설치 막기) */
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
@@ -11431,6 +11487,7 @@ function scanQAdd(it) {
   var q = scanQList(), up = String(it.code).toUpperCase(), stair = scanQKind(it) === "stair";
   if (stair || !q.some(function (x) { return scanQKind(x) === "stamp" && String(x.code).toUpperCase() === up; })) q.push(it);
   S.set("scan_q", q.slice(-30));
+  if (stair && typeof stbArriveQ === "function" && stbArriveQ(it)) return;   /* 261009 계단 동행 5차 · 진행 중 출발의 도착이면 도착 장면(「스탬프는 곧 들어와요」) */
   srShow({ st: "saved", stair: stair });
 }
 function scanQNote() {
@@ -11527,6 +11584,7 @@ function stairDone(res, sc, late, act) {
   STR.res = res; STR.pick = null;
   STR.mode = act === "stair_fix" ? "ask" : res.leg === "dup" ? "start" : res.leg;
   if (App.current === "stair") App.render(); else App.go("stair");
+  if (STR.mode === "end" && act === "stair_scan" && typeof stbArrive === "function") stbArrive(res);   /* 261009 계단 동행 5차 · 도착 장면(128) · 누를 단추 없이 스탬프 탭으로 */
 }
 /* 체험 › 계단 이용 · 진행 중이면 진행 화면, 아니면 안내(E02) */
 function stairOpen() {
@@ -11586,7 +11644,8 @@ function stairHtml() {
   if (m === "start") {   /* 261009 계단 동행(사용자 「챗봇이 같이 계단을 오른다」) · 본문 = 128-js-stair-buddy.js stbHtml · 아래 고정 = 큰 「도착 층 QR 찍기」 하나(stbFoot) */
     var since = o.since || (s.leg && s.leg.since) || Date.now();
     return { body:
-      stampTagHtml("st") + '<div class="axs-chiprow"><span class="axs-chip">진행 중</span>' + (o.leg === "dup" ? '<span class="axs-chip off">이미 시작함</span>' : "") + (o.reclass ? '<span class="axs-chip off">새로 시작으로 바꿈</span>' : "") + "</div>" +
+      /* 261009 계단 동행 5차(사용자 「상단 정보는 크게 필요 없다」) 도장 · 「진행 중」 칩 걷음 · 다시 찍음 · 새 출발로 바꿈만 작은 한 줄 */
+      (o.leg === "dup" ? '<p class="ax-meta">출발 QR을 이미 찍었어요</p>' : "") + (o.reclass ? '<p class="ax-meta">새 출발로 바꿨어요</p>' : "") +
       (o.reclass && o.stamp && o.stamp.revoked ? '<p class="ax-meta">' + (goal > 1 ? "누적이 " + goal + "개 층 아래라" : "이동한 층이 없어") + " 계단 스탬프가 취소됐어요</p>" : "") +
       stbHtml(o, s, since),
       btn: stbFoot(since) };
@@ -11594,6 +11653,7 @@ function stairHtml() {
   if (m === "end") {
     var got = o.stamp && !o.stamp.dup && o.stamp.id === "st";
     return { body:
+      stampTagHtml("st") +   /* 261009 계단 동행 5차 · 진행 화면 도장을 걷어 종료 화면(도착 장면 뒤)에 둔다 */
       (got ? '<div class="axs-res-bot">' + BOT_SVG + "</div>" : "") +
       '<div class="axs-chiprow"><span class="axs-chip ok">종료</span>' + (got ? '<span class="axs-chip ok">계단 스탬프 적립</span>' : "") + "</div>" +
       '<h1 class="ax-title">' + o.from.fl + "F → " + o.to.fl + "F</h1>" +
@@ -19056,17 +19116,20 @@ var STB_CUTE = ["힘내요!", "화이팅!", "한 칸만 더!", "잘하고 있어
 /* 계단 말 · 숫자 · 의학 효과 없이 */
 var STB_GOOD = ["계단은 가까이 있는 좋은 운동이에요", "따로 시간 내지 않아도 하는 운동이에요", "천천히 걸어도 좋은 운동이 돼요", "계단을 쓰면 엘리베이터가 덜 붐벼요", "엘리베이터 기다리는 시간도 아껴요", "걷다 보면 생각이 정리되기도 해요"];
 var STB_THANKS = "엘리베이터가 붐벼 불편하시죠?\n계단에 함께해 주셔서 감사해요";   /* 사용자 문장 · 말풍선 두 줄에 맞춤(4차 글자 22px · 「오늘」 덜어 한 줄에) · 한 출발에 한 번 */
-var STB_PROG_Q = "오늘 프로그램 참여해 보셨어요?";
-var STB_MILE = [[3, "벌써 3분째 같이 걷고 있어요"], [5, "5분째 함께예요\n도착하면 QR을 꼭 찍어요"]];
-var STB_ARRIVE = "도착하면 아래 버튼으로 QR을 찍어요";
-var STB_FIXLINE = "출발 30분이 지나면\n도착 층을 직접 골라요";
+var STB_PROG_Q = "오늘 프로그램 참여해 보셨어요?";   /* 5차 · 프로그램 말의 머리(꼬리표 줄) · 내용 = 제안 한 줄 */
+/* 5차(사용자 261009 「AX 상식 / 내용 두 줄로 배치」) 행사 말 = 머리(작은 주황 꼬리표 한 줄) + 내용(큰 글씨 2줄 안) · 응원 · 엘리베이터 감사 · 첫 인사 = 머리 없이 */
+var STB_HEAD = { fact: "AX 상식", good: "계단 이야기", mile: "함께 걷는 중", arrive: "도착 안내", congr: "스탬프" };
+var STB_MILE = [[3, "벌써 3분째예요"], [5, "5분째예요\n도착하면 QR을 꼭 찍어요"]];
+var STB_ARRIVE = "아래 버튼으로 QR을 찍어요";
+function stbFixLine() { var fl = Number((STR.res || {}).fl); return (fl ? fl + "F " : "") + "출발 30분이 지나면\n도착 층을 직접 골라요"; }   /* 출발 층은 이 안내 안에서만 */
 /* [출처 id, 말] · 말이 비면 JP_FACTS 의 그 글 그대로 */
 var STB_FACTS = [
   ["jp01"], ["A02", "AI가 자신 있게 말해도 틀릴 수 있어요. 따로 확인해요"], ["jp07"], ["A05", "읽을 사람을 알려 주면 AI가 맞춤 답을 줘요"],
   ["jp02"], ["A28", "AI가 없는 출처를 지어낼 때도 있어요"], ["jp08"], ["A26", "역할을 정해 주면 AI 답의 관점이 맞춰져요"],
   ["jp03"], ["jp05"], ["jp06"], ["A29", "AI 요약은 중요한 내용을 빼먹을 수 있어요"], ["jp09"], ["A30", "「이 자료만 보고 답해 줘」처럼 범위를 정해 줘요"],
   ["jp15"], ["jp16"], ["F02", "AX는 AI Transformation의 약자예요"], ["jp17"], ["F50", "결과물은 A4 1장처럼 형태를 구체적으로 알려 줘요"],
-  ["jp19"], ["F22", "지금의 DAP는 나만의 Agent의 첫걸음이에요"], ["jp22"], ["jp29"]
+  ["jp19"], ["F22", "지금의 DAP는 나만의 Agent의 첫걸음이에요"], ["jp22"], ["jp29"],
+  ["jp11"], ["jp20"], ["jp27"], ["jp13"], ["jp28"], ["jp21"], ["jp30"], ["jp10"]   /* 5차 · 상식 비중을 올려 8개 더(점프 AX 상식 그 글 그대로) */
 ];
 var STB = null, STBWL = { l: null, req: false };
 function stbRm() { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } }
@@ -19096,26 +19159,27 @@ function stbEnsure(since) {
   var cute = STB_CUTE.slice(1);
   shuf(cute);
   STB = { leg: since, loop: 0, ph: "climb", hop: 0, line: { t: STB_HELLO, m: "smile" }, n: 0, done: false, t: 0, tType: 0,
-    cute: [STB_CUTE[0]].concat(cute), ci: 0, ev: 0, fi: Math.floor(Math.random() * STB_FACTS.length), fn: 0, gi: 0, used: {}, thx: false, congr: false, mile: {}, save: false, rest: false, log: [] };
+    cute: [STB_CUTE[0]].concat(cute), ci: 0, ev: 0, alog: [], fi: Math.floor(Math.random() * STB_FACTS.length), fn: 0, gi: 0, used: {}, thx: false, congr: false, mile: {}, save: false, rest: false, log: [] };
   if (stbRm()) { STB.n = STB.line.t.length; STB.done = true; }
   return STB;
 }
-/* 짝수 고리의 행사 말 · j = 짝수 고리 차례(0부터) · 프로그램 → 상식 → 감사 → 계단 → (상식 · 프로그램 · 상식 · 계단) 되풀이 */
+/* 짝수 고리의 행사 말 · j = 짝수 고리 차례(0부터) · 5차 상식 2 : 그 밖 1 = 프로그램 → 상식 · 상식 → 감사 → 상식 · 상식 → 계단 → (상식 · 상식 · 프로그램 · 상식 · 상식 · 계단) 되풀이 */
+var STB_EV0 = ["p", "f", "f", "t", "f", "f", "b"], STB_EV = ["f", "f", "p", "f", "f", "b"];
 function stbEventLine(b, j) {
-  var cat = j === 0 ? "p" : j === 1 ? "f" : j === 2 ? "t" : j === 3 ? "b" : ["f", "p", "f", "b"][(j - 4) % 4];
+  var cat = j < STB_EV0.length ? STB_EV0[j] : STB_EV[(j - STB_EV0.length) % STB_EV.length];
   if (cat === "t") { if (!b.thx) { b.thx = true; return { t: STB_THANKS, m: "smile", k: "thanks" }; } cat = "f"; }
   if (cat === "p") {
-    if (stampCount() >= STAMP_DENOM) { if (!b.congr) { b.congr = true; return { t: stbCongr(), m: "smile", k: "congr" }; } cat = "f"; }
+    if (stampCount() >= STAMP_DENOM) { if (!b.congr) { b.congr = true; return { t: stbCongr(), tag: STB_HEAD.congr, m: "smile", k: "congr" }; } cat = "f"; }
     else {
       var sg = stbSugs().filter(function (x) { return !b.used[x[0]]; })[0];
-      if (sg) { b.used[sg[0]] = 1; return { t: STB_PROG_Q + "\n" + sg[1], m: "smile", k: "prog:" + sg[0] }; }
+      if (sg) { b.used[sg[0]] = 1; return { t: sg[1], tag: STB_PROG_Q, m: "smile", k: "prog:" + sg[0] }; }
       cat = "f";
     }
   }
-  if (cat === "b" && b.gi < STB_GOOD.length) return { t: STB_GOOD[b.gi++], tag: "계단", m: "smile", k: "good" };
+  if (cat === "b" && b.gi < STB_GOOD.length) return { t: STB_GOOD[b.gi++], tag: STB_HEAD.good, m: "smile", k: "good" };
   var fs = "", i;
   for (i = 0; i < STB_FACTS.length && !fs; i++) fs = stbFactText(STB_FACTS[(b.fi + b.fn++) % STB_FACTS.length]);
-  return { t: fs || STB_CUTE[0], tag: fs ? "AX 상식" : "", m: fs ? "wave" : "smile", k: "fact" };
+  return { t: fs || STB_CUTE[0], tag: fs ? STB_HEAD.fact : "", m: fs ? "wave" : "smile", k: "fact" };
 }
 function stbCuteLine(b) {
   if (b.ci >= b.cute.length) {   /* 한 바퀴를 다 쓰면 다시 섞기 · 첫 말이 직전 말과 같지 않게 */
@@ -19128,8 +19192,8 @@ function stbCuteLine(b) {
 /* 고리 끝에 할 말 · 이정표(3분 · 5분 한 번씩)가 먼저 · 홀수 고리 = 응원(절약 중이면 도착 안내) · 짝수 고리 = 행사 말 */
 function stbPick(b) {
   var age = stbAge(), i, ln;
-  for (i = 0; i < STB_MILE.length && !ln && !b.save; i++) if (age >= STB_MILE[i][0] * 60000 && !b.mile[STB_MILE[i][0]]) { b.mile[STB_MILE[i][0]] = 1; ln = { t: STB_MILE[i][1], m: "smile", k: "mile" }; }   /* 한 번에 하나 · 절약 중에는 도착 안내가 대신 */
-  if (!ln) ln = b.loop % 2 ? (b.save ? { t: STB_ARRIVE, m: "smile", k: "arrive" } : stbCuteLine(b)) : stbEventLine(b, b.ev++);
+  for (i = 0; i < STB_MILE.length && !ln && !b.save; i++) if (age >= STB_MILE[i][0] * 60000 && !b.mile[STB_MILE[i][0]]) { b.mile[STB_MILE[i][0]] = 1; ln = { t: STB_MILE[i][1], tag: STB_HEAD.mile, m: "smile", k: "mile" }; }   /* 한 번에 하나 · 절약 중에는 도착 안내가 대신 */
+  if (!ln) ln = b.loop % 2 ? (b.save ? { t: STB_ARRIVE, tag: STB_HEAD.arrive, m: "smile", k: "arrive" } : stbCuteLine(b)) : stbEventLine(b, b.ev++);
   if (b.log.length < 400) b.log.push([Math.round(age / 1000), b.loop, ln.k, ln.t]);
   return ln;
 }
@@ -19171,35 +19235,34 @@ function stbBotHtml(b) {
 function stbHtml(o, s, since) {
   var b = stbEnsure(since), down = stbDown(), ln = b.line || { t: "" };
   if (!b.rest && stbAge() >= STB_REST_MS) stbRestLine(b);
-  return '<div class="ax-stack-tight stb-where"><h1 class="ax-title">' + esc(o.fl) + "F · " + esc(o.route || stairRoute(o.r)) + "</h1>" +
-    '<p class="ax-meta" id="stElapsed">시작 ' + esc(o.at || (s.leg && s.leg.at) || "") + " · " + stairElapsed(since) + "</p></div>" +
+  return '<h1 class="stb-sr">계단 동행 · ' + esc(o.fl) + "F 출발 · 도착 층 방화문 앞 QR 스캔</h1>" +   /* 5차(사용자 「상단 정보는 크게 필요 없다」) 층 · 경로 · 시작 시각 줄 걷음 · 화면 읽기용 제목 하나만 */
     '<button type="button" class="stb-bub" id="stbBub" aria-label="다음 말 보기" onclick="stbSkip()">' +   /* 말풍선 = 단추(누르면 다 보이기 · 다음으로) · 읽어 주기는 아래 stbSr 한 줄 */
       '<span class="stb-tx" aria-hidden="true">' + (ln.tag ? '<span class="stb-tag" id="stbTag">' + ln.tag + "</span>" : '<span class="stb-tag" id="stbTag" hidden></span>') +
-      '<span id="stbTx">' + esc(ln.t.slice(0, b.n)) + '</span><i class="stb-more' + (b.done ? " on" : "") + '" id="stbMore"></i></span></button>' +
+      '<span id="stbTx">' + esc(ln.t.slice(0, b.n)) + '</span></span><i class="stb-more' + (b.done ? " on" : "") + '" id="stbMore"></i></button>' +
     '<p class="stb-sr" id="stbSr" aria-live="polite">' + esc((ln.tag ? ln.tag + " · " : "") + ln.t) + "</p>" +
     '<div class="stb-stage' + (down ? " down" : "") + (stbRm() || b.save || b.rest ? " still" : "") + (STB3.st === 2 ? " is3d" : "") + '" id="stbStage">' +
       '<div class="stb-flip">' + stbStairSvg(down) + stbBotHtml(b) + "</div>" +
       '<span class="stb-cnt" id="stbCnt" aria-hidden="true" style="top:' + stbBotBox().ct.toFixed(2) + '%"></span></div>' +
-    '<p class="axs-safe stb-safe">' + STAIR_SAFE + "</p>" +
-    '<p class="ax-meta stb-cap">도착 층 방화문 앞 QR 스캔 · ' + ((s.goal || 1) > 1 ? "누적 " + (s.total || 0) + " / " + s.goal + "개 층" : (s.total || 0) >= 1 ? "오늘 " + s.total + "개 층 이동" : "한 개 층만 이동해도 적립") + "</p>";
+    '<p class="stb-safe">' + STAIR_SAFE + ((s.goal || 1) > 1 ? " · 누적 " + (s.total || 0) + " / " + s.goal + "개 층" : "") + "</p>";   /* 5차 · 안전 한 줄만 작게(누적은 목표가 2개 층 이상일 때만) */
 }
 /* 무대 크기 · 아래 고정 단추 위에 다 보이게(키 작은 화면 · 큰 글씨) · 그린 직후 한 번(같은 일 안이라 화면이 튀지 않는다) · 폭 200px 아래로는 줄이지 않는다 */
-function stbCongr() { return "스탬프 " + STAMP_DENOM + "개를 다 모았어요\n축하해요!"; }
+function stbCongr() { return STAMP_DENOM + "개를 다 모았어요\n축하해요!"; }
 /* 이 출발에 나올 수 있는 말 전부(말풍선 높이 미리 재기) */
 function stbPool() {
-  var L = [["", STB_HELLO], ["", STB_THANKS], ["", STB_ARRIVE], ["", STB_FIXLINE], ["", stbCongr()]];
+  var L = [["", STB_HELLO], ["", STB_THANKS], [STB_HEAD.arrive, STB_ARRIVE], [STB_HEAD.arrive, stbFixLine()], [STB_HEAD.congr, stbCongr()]];
   STB_CUTE.forEach(function (t) { L.push(["", t]); });
-  STB_GOOD.forEach(function (t) { L.push(["계단", t]); });
-  stbSugs().forEach(function (x) { L.push(["", STB_PROG_Q + "\n" + x[1]]); });
-  STB_MILE.forEach(function (m) { L.push(["", m[1]]); });
-  STB_FACTS.forEach(function (f) { var t = stbFactText(f); if (t) L.push(["AX 상식", t]); });
+  STB_GOOD.forEach(function (t) { L.push([STB_HEAD.good, t]); });
+  stbSugs().forEach(function (x) { L.push([STB_PROG_Q, x[1]]); });
+  STB_MILE.forEach(function (m) { L.push([STB_HEAD.mile, m[1]]); });
+  STB_FACTS.forEach(function (f) { var t = stbFactText(f); if (t) L.push([STB_HEAD.fact, t]); });
   return L;
 }
-/* 4차(사용자 261009 「글자 폰트를 더 크게」) · 말풍선 글자 = 22px(옛 17px · 1.3배 · 굵기 700)부터 · 나올 말 전부가 2줄에 들면 그 크기
-   좁은 폭이면 21 · 20 · 19px 로 한 단계씩(가장 긴 말도 2줄 · 안 되면 줄 수가 가장 적은 큰 크기) · 말풍선 높이 = 가장 긴 말 줄 수로 미리 잡는다(말이 바뀌어도 무대 · 단추가 밀리지 않게)
-   폭이 같으면 다시 재지 않는다 · 글자 크기는 px(큰 글씨 설정에서도 22px · 옛 큰 글씨 21px 보다 크다) */
-var STB_FITK = { k: "", fs: 22, n: 2 };
-var STB_FS = [22, 21, 20, 19];
+/* 4 · 5차(사용자 261009 「글자 폰트를 더 크게」 · 「더 올릴 수 있을 것 같다」) · 말풍선 내용 글자 = 26px(옛 17px · 1.5배 · 굵기 700)부터 · 나올 말 전부의 내용이 2줄에 들면 그 크기
+   좁은 폭이면 25 · 24 · 23 · 22px 로 한 단계씩(가장 긴 말도 2줄 · 안 되면 줄 수가 가장 적은 큰 크기) · 말풍선 높이 = 머리 줄 + 가장 긴 내용 줄 수로 미리 잡는다(말이 바뀌어도 무대 · 단추가 밀리지 않게)
+   줄 수 = 내용 글(#stbTx)의 줄 상자 수 · 폭이 같으면 다시 재지 않는다 · 글자 크기는 px(큰 글씨 설정에서도 같다) */
+function stbLines(e) { var r = e.getClientRects(), seen = {}, n = 0, i, k; for (i = 0; i < r.length; i++) { if (r[i].width < 1) continue; k = Math.round(r[i].top); if (!seen[k]) { seen[k] = 1; n++; } } return n; }   /* 줄 수 = 글자가 있는 줄 상자의 높이 자리 수 */
+var STB_FITK = { k: "", fs: 26, n: 2 };
+var STB_FS = [26, 25, 24, 23, 22];
 function stbBubFit() {
   var box = document.querySelector(".stb-tx"), tx = el("stbTx"), tg = el("stbTag"); if (!box || !tx || !tg) return;
   var k = box.clientWidth + "/" + stbSugs().length;
@@ -19210,21 +19273,25 @@ function stbBubFit() {
       if (best && best.n <= 2) return;
       var lh = Math.round(fs * 1.41), mx = 1;
       box.style.fontSize = fs + "px"; box.style.lineHeight = lh + "px";
-      pool.forEach(function (x) { tg.hidden = !x[0]; tg.textContent = x[0]; tx.textContent = x[1]; mx = Math.max(mx, Math.round(box.getBoundingClientRect().height / lh)); });
+      pool.forEach(function (x) { tg.hidden = !x[0]; tg.textContent = x[0]; tx.textContent = x[1]; mx = Math.max(mx, stbLines(tx)); });
       if (!best || mx < best.n) best = { fs: fs, n: mx };
     });
+    tg.hidden = false; tg.textContent = STB_HEAD.fact; var th = tg.getBoundingClientRect().height + 6;   /* 머리 줄 높이(아래 6px 띄움) */
     tx.textContent = keep[0]; tg.textContent = keep[1]; tg.hidden = keep[2];
-    STB_FITK = { k: k, fs: best.fs, n: Math.max(2, best.n) };
+    STB_FITK = { k: k, fs: best.fs, n: Math.max(2, best.n), th: th };
   }
   var l2 = Math.round(STB_FITK.fs * 1.41);
-  box.style.fontSize = STB_FITK.fs + "px"; box.style.lineHeight = l2 + "px"; box.style.minHeight = STB_FITK.n * l2 + "px";
+  box.style.fontSize = STB_FITK.fs + "px"; box.style.lineHeight = l2 + "px"; box.style.minHeight = Math.round(STB_FITK.th + STB_FITK.n * l2) + "px";
 }
 function stbFit() {
   var g = el("stbStage"), go = el("stbGo"); if (!g || !go) return;
   stbBubFit();
+  var bub = el("stbBub"); if (bub) bub.style.marginTop = "";
   g.style.maxWidth = "";
   var top = g.getBoundingClientRect().top + (window.scrollY || 0), avail = go.getBoundingClientRect().top - 12 - top;
   if (avail > 0 && avail * 6 / 5 < g.clientWidth) g.style.maxWidth = Math.max(200, Math.floor(avail * 6 / 5)) + "px";
+  var spare = avail - g.getBoundingClientRect().height;   /* 5차 · 남는 자리 절반을 말풍선 위에 · 말풍선과 무대가 화면 가운데로 */
+  if (bub && spare > 16) bub.style.marginTop = Math.min(96, Math.floor(spare / 2)) + "px";
 }
 /* ── 3D · 한 번 만들어 두고(STB3) 무대가 다시 그려지면 캔버스를 옮겨 붙인다(WebGL 문맥 하나) ── */
 var STB3 = { st: 0, r: null, sc: null, cam: null, flow: null, bot: null, body: null, eyes: [], smiles: [], waves: [], sweat: null, shadow: null, nose: [], mOn: null, mOff: null,
@@ -19308,10 +19375,12 @@ function stb3Off(code) {
   var cv = STB3.r && STB3.r.domElement; if (cv && cv.parentNode) cv.parentNode.removeChild(cv);
   try { if (STB3.r) { STB3.r.dispose(); if (code === -2) STB3.r.forceContextLoss(); } } catch (e) {}
 }
-function stb3Attach() {
-  var g = el("stbStage"); if (!g || STB3.st !== 2) return;
-  var cv = STB3.r.domElement; if (cv.parentNode !== g) g.insertBefore(cv, g.firstChild);
+function stb3Attach(g0) {
+  var g = g0 || el("stbStage"); if (!g || STB3.st !== 2) return;
+  var v = STB_V, cv = STB3.r.domElement; if (cv.parentNode !== g) g.insertBefore(cv, g.firstChild);
   var w = g.clientWidth, h = g.clientHeight; if (w && h) STB3.r.setSize(w, h, false);
+  STB3.cam.position.set(0, v.cy, v.cz); STB3.cam.lookAt(0, v.ty, v.tz);   /* 도착 장면이 당겨 둔 카메라를 제자리로 */
+  if (g0) return;
   g.classList.add("is3d");
   stb3Sync();
 }
@@ -19319,43 +19388,66 @@ function stb3Attach() {
 function stb3Sync() {
   var b = STB; if (STB3.st !== 2 || !b) return;
   var down = stbDown(), still = stbRm() || b.save || b.rest;
-  STB3.dir = down ? -1 : 1; STB3.hop = null; STB3.turn = null; STB3.sw = null;
+  STB3.dir = down ? -1 : 1; STB3.hop = null; STB3.turn = null; STB3.sw = null; STB3.act = null; STB3.wink = false;
   STB3.face = still || down || b.ph === "talk"; STB3.mood = STB3.face ? (b.line && b.line.m) || "" : "";
   STB3.nose.forEach(function (n) { n.material = (down ? n.userData.k >= 0 : n.userData.k <= 0) ? STB3.mOn : STB3.mOff; });
   stb3Kick();
 }
 function stb3Still() { return !STB || stbRm() || STB.save || STB.rest; }
-function stb3Hop() { if (STB3.st !== 2 || stb3Still()) return; STB3.hop = { t0: performance.now() }; stb3Kick(); }
-function stb3Face(on, sweat) {
+/* o = { big: 크게 폴짝(한 칸 그대로 · 높이만) · sway: 몸 기울기 방향(리듬 타기) } */
+function stb3Hop(o) { if (STB3.st !== 2 || stb3Still()) return; o = o || {}; STB3.hop = { t0: performance.now(), big: !!o.big, sway: o.sway || 0 }; stb3Kick(); }
+function stb3Face(on, sweat, spin) {
   if (STB3.st !== 2) return;
   if (stb3Still() || STB3.dir < 0) on = true;   /* 내려가기 = 늘 앞모습 */
-  if (STB3.face !== on && !stb3Still()) STB3.turn = { t0: performance.now(), to: on };
+  if (STB3.face !== on && !stb3Still()) STB3.turn = { t0: performance.now(), to: on, spin: !!spin && on, d: spin && on ? 640 : 360 };
   STB3.face = on; if (!on) STB3.mood = "";
   if (sweat && !stb3Still()) STB3.sw = { t0: performance.now() };
   stb3Kick();
 }
+/* 동작 · nod 끄덕(아하) · bounce 신나서 통통 · stretch 기지개 · lean 기울여 가리키기 · bow 꾸벅 · wiggle 몸 흔들어 인사 · look 두리번 · breath 숨 고르기 · wipe 땀 닦기 · cheer 도착 축하(폴짝 + 한 바퀴)
+   계단에서 따라 하면 위험한 것(뛰기 · 두 칸 · 넘어짐 · 미끄러짐)은 없다 · 폴짝도 한 칸 그대로 */
+var STB_ACT_MS = { nod: 900, bounce: 1000, stretch: 1100, lean: 1100, bow: 1000, wiggle: 1100, look: 900, breath: 700, wipe: 900, cheer: 1100 };
+var STB_ACT_OF = { fact: "nod", cute: "bounce", good: "stretch", prog: "lean", thanks: "bow", mile: "wiggle", arrive: "wiggle", congr: "wiggle" };   /* 상식 = 아하 끄덕(+ 안테나 전파) · 응원 = 통통 · 계단 이야기 = 기지개 · 프로그램 = 기울여 가리키기 · 감사 = 꾸벅 · 그 밖 = 몸 흔들어 인사 */
+function stb3Act(n, ms) { if (STB3.st !== 2 || (stb3Still() && n !== "cheer")) return; STB3.act = { n: n, t0: performance.now(), d: ms || STB_ACT_MS[n] || 900 }; stb3Kick(); }
 function stb3Mood(m) { if (STB3.st !== 2) return; STB3.mood = m || ""; stb3Kick(); }
 function stb3Halt() { if (STB3.raf) { cancelAnimationFrame(STB3.raf); STB3.raf = 0; } STB3.last = 0; }
-function stb3Kick() { if (STB3.st === 2 && !STB3.raf && !document.hidden) STB3.raf = requestAnimationFrame(stb3Frame); }
+function stb3Kick() { if (STB3.st === 2 && !STB3.raf && !document.hidden && !SA.d) STB3.raf = requestAnimationFrame(stb3Frame); }
 function stbEaseIO(k) { return k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; }
 function stbKey(k, ks) { for (var i = 1; i < ks.length; i++) if (k <= ks[i][0]) { var a = ks[i - 1], c = ks[i], u = (k - a[0]) / (c[0] - a[0]); return a[1] + (c[1] - a[1]) * u; } return ks[ks.length - 1][1]; }
 /* 그 시각의 자세 · 움직이는 중 = 1 · 전파만 = 2 · 멈춤 = 0 */
 function stb3Pose(now) {
-  var v = STB_V, busy = 0, k, off = 0, lift = 0, sy = 1, fa = STB3.face ? 1 : 0, hp = STB3.hop, tn = STB3.turn, sw = STB3.sw;
-  if (hp) {   /* 점프 0.5초 · 웅크림 → 솟음(늘어남) → 착지(눌림) · 그동안 계단이 한 칸 흐른다 */
+  var v = STB_V, busy = 0, k, off = 0, lift = 0, sy = 1, rz = 0, rx = 0, ry = 0, px = 0, fa = STB3.face ? 1 : 0, hp = STB3.hop, tn = STB3.turn, sw = STB3.sw, a = STB3.act, spin = 0;
+  if (hp) {   /* 점프 0.5초 · 웅크림 → 솟음(늘어남) → 착지(눌림) · 그동안 계단이 한 칸 흐른다 · 폴짝 = 더 높이(한 칸 그대로) · 리듬 = 몸을 좌우로 */
     k = (now - hp.t0) / 500;
     if (k >= 1) STB3.hop = null;
-    else { busy = 1; off = stbEaseIO(Math.min(1, Math.max(0, (k - 0.15) / 0.7))); lift = Math.sin(Math.PI * Math.min(1, Math.max(0, (k - 0.12) / 0.76))) * 0.3; sy = stbKey(k, [[0, 1], [0.18, 0.9], [0.55, 1.05], [0.85, 0.94], [1, 1]]); }
+    else { busy = 1; off = stbEaseIO(Math.min(1, Math.max(0, (k - 0.15) / 0.7))); lift = Math.sin(Math.PI * Math.min(1, Math.max(0, (k - 0.12) / 0.76))) * (hp.big ? 0.5 : 0.3); sy = stbKey(k, [[0, 1], [0.18, hp.big ? 0.84 : 0.9], [0.55, hp.big ? 1.1 : 1.05], [0.85, 0.94], [1, 1]]); rz = hp.sway * 0.16 * Math.sin(Math.PI * k); }
+  }
+  if (a) {
+    k = (now - a.t0) / a.d;
+    if (k >= 1) STB3.act = null;
+    else {
+      busy = 1; var s = Math.sin(Math.PI * k);
+      if (a.n === "nod") rx = Math.sin(k * Math.PI * 4) * 0.2 * (1 - k * 0.5);
+      else if (a.n === "bounce") lift += Math.abs(Math.sin(k * Math.PI * 3)) * 0.13;
+      else if (a.n === "stretch") { sy *= 1 + 0.18 * stbKey(k, [[0, 0], [0.35, 1], [0.7, 1], [1, 0]]); rz += Math.sin(k * Math.PI * 2) * 0.05; }
+      else if (a.n === "lean") { rz -= 0.26 * stbKey(k, [[0, 0], [0.3, 1], [0.75, 1], [1, 0]]); px = 0.07 * s; }
+      else if (a.n === "bow") rx = 0.5 * stbKey(k, [[0, 0], [0.3, 1], [0.55, 1], [1, 0]]);
+      else if (a.n === "wiggle") rz += Math.sin(k * Math.PI * 4) * 0.16 * s;
+      else if (a.n === "look") ry = Math.sin(k * Math.PI * 2) * 0.75;
+      else if (a.n === "breath") { sy *= 1 - 0.16 * stbKey(k, [[0, 0], [0.5, 1], [0.75, 0], [1, 0]]); lift += k > 0.6 ? Math.sin(Math.PI * (k - 0.6) / 0.4) * 0.12 : 0; }
+      else if (a.n === "wipe") rz += Math.sin(k * Math.PI * 6) * 0.08 * s;
+      else if (a.n === "cheer") { lift += Math.sin(Math.PI * Math.min(1, k / 0.75)) * 0.55; spin = k < 0.75 ? Math.PI * 2 * stbEaseIO(k / 0.75) : 0; sy *= stbKey(k, [[0, 1], [0.1, 0.85], [0.35, 1.1], [0.75, 0.9], [0.85, 1.05], [1, 1]]); }
+    }
   }
   STB3.flow.position.set(0, -off * v.rise * STB3.dir, off * v.run * STB3.dir);
-  STB3.bot.position.y = lift; STB3.body.scale.set(1 / Math.sqrt(sy), sy, 1 / Math.sqrt(sy));
+  STB3.bot.position.set(px, lift, v.bz); STB3.body.scale.set(1 / Math.sqrt(sy), sy, 1 / Math.sqrt(sy)); STB3.body.rotation.set(rx, 0, rz);
   var ss = 1 - Math.min(0.5, lift * 1.4); STB3.shadow.scale.set(ss, ss, 1);
-  if (tn) { k = (now - tn.t0) / 360; if (k >= 1) STB3.turn = null; else { busy = 1; fa = tn.to ? stbEaseIO(k) : 1 - stbEaseIO(k); } }   /* 돌아서기 0.36초 · 둘러보기 엘리베이터 돌아보기와 같은 축 */
-  STB3.bot.rotation.y = Math.PI * (1 - fa);
+  if (tn) { k = (now - tn.t0) / tn.d; if (k >= 1) STB3.turn = null; else { busy = 1; fa = tn.to ? stbEaseIO(k) : 1 - stbEaseIO(k); if (tn.spin) spin += Math.PI * 2 * stbEaseIO(k); } }   /* 돌아서기 0.36초 · 한 바퀴 돌며 돌아서기 0.64초 */
+  STB3.bot.rotation.y = Math.PI * (1 - fa) + ry + spin;
   var smile = fa > 0.8 && STB3.mood === "smile";
-  STB3.eyes.forEach(function (o) { o.visible = !smile; }); STB3.smiles.forEach(function (o) { o.visible = smile; });
-  var wv = fa > 0.8 && STB3.mood === "wave" && !stb3Still(), tt = (now / 1000) % 1.6;
-  STB3.waves.forEach(function (sp, i) { var q = (tt * 0.9 - i * 0.16) / 0.62, o = wv && q >= 0 && q <= 1; sp.material.opacity = o ? 1 - q : 0; var s = 0.24 + (o ? q : 0) * 0.6; sp.scale.set(s, s, 1); sp.position.y = 1.0 + (o ? q : 0) * 0.12; });
+  STB3.eyes.forEach(function (o, i) { o.visible = !(smile || (STB3.wink && i === 0)); }); STB3.smiles.forEach(function (o, i) { o.visible = smile && !(STB3.wink && i === 1) || (STB3.wink && i === 0); });   /* 찡끗 = 왼눈만 반달 */
+  var wv = fa > 0.8 && STB3.mood === "wave" && (!stb3Still() || SA.d), tt = (now / 1000) % 1.6;
+  STB3.waves.forEach(function (sp, i) { var q = (tt * 0.9 - i * 0.16) / 0.62, o = wv && q >= 0 && q <= 1; sp.material.opacity = o ? 1 - q : 0; var s2 = 0.24 + (o ? q : 0) * 0.6; sp.scale.set(s2, s2, 1); sp.position.y = 1.0 + (o ? q : 0) * 0.12; });
   if (wv && !busy) busy = 2;
   STB3.sweat.visible = false;
   if (sw) {   /* 돌아선 뒤 0.2초 · 머리 오른쪽 위에서 돔을 따라 1.3초 쪼르륵 */
@@ -19417,53 +19509,77 @@ function stbLoop() {
   var b = STB; if (!b) return;
   if (!b.rest && stbAge() >= STB_REST_MS) { stbRest(); return; }
   if (!b.save && stbAge() >= STB_SAVE_MS) { b.save = true; var g = el("stbStage"); if (g) g.classList.add("still"); }   /* 8분 = 절약 · 그림 멈춤 */
-  b.loop++; b.ph = "climb"; b.hop = 0;
+  b.loop++; b.ph = "climb"; b.hop = 0; b.sty = stbStyle(b);
   var go = el("stbGo"); if (go && stbAge() >= STB_NUDGE_MS) go.classList.add("nudge");   /* 출발 20초 뒤 = 도착 단추 숨 쉬기 */
   var bot = el("stbBot"); if (bot) bot.classList.toggle("face", b.save || stbRm() || stbDown());   /* 오를 때 = 뒷모습 · 정지 그림 · 내려가기 = 앞모습 */
   if (b.save || stbRm()) { stb3Sync(); stbNext(stbFace, b.save ? 6000 : 3000); return; }
+  if (b.sty === "breath") { stb3Act("breath"); stbBotAct("breath"); stbNext(stbHop, 120 + STB_ACT_MS.breath); return; }   /* 숨 고르기(낮췄다 퐁) 뒤 오르기 */
   stbNext(stbHop, 120);
 }
+/* 5차(사용자 261009 「오를 때 더 다양한 행동 · 지금은 단조롭다」) 오르는 묶음 · 콩콩(기본 두 몫) · 콩콩 폴짝(셋째만 높이 · 한 칸 그대로) · 리듬 타기(몸 좌우) · 두리번(셋째 뒤) · 숨 고르기(첫 점프 전)
+   주머니에서 하나씩 꺼낸다 · 직전 고리와 같은 묶음은 건너뛴다 · 다 쓰면 다시 섞는다 */
+var STB_STY = ["hop", "big", "sway", "look", "breath", "hop"];
+function stbStyle(b) {
+  if (!b.sbag || !b.sbag.length) b.sbag = shuf(STB_STY.slice());
+  var i = 0; while (i < b.sbag.length && b.sbag[i] === b.lastSty) i++;
+  if (i >= b.sbag.length) { b.sbag = b.sbag.concat(shuf(STB_STY.slice())); while (b.sbag[i] === b.lastSty) i++; }   /* 남은 것이 직전과 같은 것뿐이면 새로 섞어 붙인다 */
+  var s = b.sbag.splice(i, 1)[0];
+  b.lastSty = s; return s;
+}
+/* 평면 그림 대체본 동작 이름(CSS data-act) · 3D 와 같은 이름 */
+function stbBotAct(n) { var bot = el("stbBot"); if (!bot) return; delete bot.dataset.act; if (n && !stbRm()) { void bot.offsetWidth; bot.dataset.act = n; } }
 function stbHop() {
   var b = STB; if (!b) return;
   b.hop++;
   var bot = el("stbBot"), cn = el("stbCnt"), ab = b.hop % 2 ? "a" : "b";
-  if (bot) { delete bot.dataset.t; bot.dataset.h = ab; }   /* 점프와 돌기는 같은 칸(.stb-hop)을 움직인다 · 하나만 */
+  var big = b.sty === "big" && b.hop === 3, sway = b.sty === "sway" ? (b.hop % 2 ? 1 : -1) : 0;
+  if (bot) { delete bot.dataset.t; delete bot.dataset.act; bot.dataset.h = big ? "big" + ab : sway ? "s" + ab : ab; }   /* 점프와 돌기는 같은 칸(.stb-hop)을 움직인다 · 하나만 */
   if (cn) { cn.textContent = STB_COUNT[b.hop - 1] || ""; cn.dataset.h = ab; }
-  stb3Hop();
+  stb3Hop({ big: big, sway: sway });
+  if (b.sty === "look" && b.hop === 3) { stbNext(function () { stb3Act("look"); stbBotAct("look"); stbNext(stbHop, STB_ACT_MS.look); }, STB_HOP_MS); return; }   /* 두리번 */
   if (b.hop < STB_HOPS) stbNext(stbHop, STB_HOP_MS); else stbNext(stbFace, STB_HOP_MS + 150);
 }
 /* 앞으로 돌아섬 → 땀 쪼르륵 → 한마디 + 눈웃음 → 다 말하면 기다렸다 다시 돌아섬 */
 function stbFace() {
   var b = STB; if (!b) return;
   b.ph = "talk";
-  var bot = el("stbBot"), still = b.save || stbRm();
-  stb3Face(true, !still); stb3Mood("");
-  if (bot && !still && !stbDown()) { delete bot.dataset.h; bot.dataset.t = bot.dataset.t === "a" ? "b" : "a"; setTimeout(function () { var e = el("stbBot"); if (e && STB === b && b.ph === "talk") e.classList.add("face"); }, STB_TURN_MS / 2); }
+  var bot = el("stbBot"), still = b.save || stbRm(), spin = !still && !stbDown() && b.loop % 3 === 0;   /* 세 고리에 한 번 = 한 바퀴 돌며 돌아섬 */
+  b.turn = spin ? "spin" : "turn";
+  stb3Face(true, !still, spin); stb3Mood("");
+  if (!still && b.loop % 2 === 0) { stb3Act("wipe"); b.turn += "+wipe"; }   /* 짝수 고리 = 땀 닦기(몸 털기) */
+  if (bot && !still && !stbDown()) { delete bot.dataset.h; delete bot.dataset.act; bot.dataset.t = bot.dataset.t === "a" ? "b" : "a"; setTimeout(function () { var e = el("stbBot"); if (e && STB === b && b.ph === "talk") e.classList.add("face"); }, STB_TURN_MS / 2); }
   if (bot && !still) { bot.dataset.s = bot.dataset.s === "a" ? "b" : "a"; bot.dataset.m = ""; }
   b.said = false;
-  stbNext(stbSpeak, still ? 0 : STB_TURN_MS + 420);
+  stbNext(stbSpeak, still ? 0 : (spin ? 640 : STB_TURN_MS) + 420);
 }
 function stbSpeak() {
   var b = STB; if (!b) return;
   var ln = stbPick(b);
   b.said = true;
+  var act = STB_ACT_OF[String(ln.k).split(":")[0]] || "wiggle";   /* 말과 동작 짝 */
+  if (ln.k === "cute") act = (b.cuteN = (b.cuteN || 0) + 1) % 2 ? "bounce" : "wiggle";   /* 응원 = 통통 · 몸 흔들기 번갈아(한 동작이 몰리지 않게) */
+  if (act === b.lastAct) act = act === "bounce" ? "wiggle" : "bounce";   /* 직전과 같은 동작 없음 */
+  b.lastAct = act;
+  if (!stbRm() && !b.save) { stb3Act(act); stbBotAct(act); }
+  if (b.alog && b.alog.length < 400) b.alog.push([Math.round(stbAge() / 1000), b.loop, b.sty || "", b.turn || "", act]);
   stbSay(ln, function () { stbNext(stbBack, stbHoldMs(ln)); });
 }
 function stbBack() {
   var b = STB; if (!b) return;
   var bot = el("stbBot");
+  if (bot) delete bot.dataset.act;
   if (bot && !b.save && !stbRm() && !stbDown()) { stb3Face(false); bot.dataset.t = bot.dataset.t === "a" ? "b" : "a"; setTimeout(function () { var e = el("stbBot"); if (e && STB === b) e.classList.remove("face"); }, STB_TURN_MS / 2); stbNext(stbLoop, STB_TURN_MS + 80); return; }
   stbLoop();
 }
 /* 15분 = 쉼 · 말 멈춤 · 도착 안내 한 줄 고정(20분부터 30분 보정 안내) · 화면 켜 두기 놓음 · 다음 바뀔 때 한 번만 깨운다 */
 function stbRestLine(b) {
   b.rest = true; b.save = true; b.ph = "rest";
-  b.line = { t: stbAge() >= STB_FIX_MS ? STB_FIXLINE : STB_ARRIVE, m: "smile", k: "rest" }; b.n = b.line.t.length; b.done = true;
+  b.line = { t: stbAge() >= STB_FIX_MS ? stbFixLine() : STB_ARRIVE, tag: STB_HEAD.arrive, m: "smile", k: "rest" }; b.n = b.line.t.length; b.done = true;
 }
 function stbRest() {
   var b = STB; if (!b) return;
   stbStop(); stbRestLine(b); stbPaintLine(); stbWake(false);
-  var sr = el("stbSr"); if (sr) sr.textContent = b.line.t;
+  var sr = el("stbSr"); if (sr) sr.textContent = b.line.tag + " · " + b.line.t;
   var g = el("stbStage"); if (g) g.classList.add("still");
   var bot = el("stbBot"); if (bot) bot.classList.add("face");
   stb3Sync();
@@ -19517,6 +19633,132 @@ document.addEventListener("visibilitychange", function () {
   if (document.hidden) { stbStop(); stbWake(false); stb3Halt(); var g = el("stbStage"); if (g) g.classList.add("hold"); return; }
   if (typeof App !== "undefined" && App.current === "stair" && STR.mode === "start") { var g2 = el("stbStage"); if (g2) g2.classList.remove("hold"); stbMount(); }
 });
+/* ═══ 5차 · 도착 장면 (사용자 261009 「종료를 누르면 고생했다는 전환 효과를 귀염뽀짝하게 전체 화면으로 · 스탬프가 알아서 팡 · QR 하나로 끝 · 마지막은 응원이나 다른 프로그램 제안 · 아웃은 엘리베이터 닫히듯 찡끗」) ═══
+   도착 QR 판정이 end 로 오면(stairDone · 처음 스캔만) 곧바로 전체 화면 장면 하나 · 누를 단추 없음 · 아무 곳이나 누르면 나감으로 건너뜀 · 약 5.5초
+   들어옴 = 1층 둘러보기 엘리베이터 아이리스(검은 막이 챗봇 얼굴에서 열림) · 챗봇(계단과 같은 3D 모델 · 빛) 폴짝 + 한 바퀴 · 꽃가루 · 「고생했어요!」 + 「7F → 9F 계단 완료」
+   스탬프 팡 = 기존 도장(stampMarkHtml · stampDrop · 잉크 링 · inkSplash · 진동)을 장면 안에서 · 「스탬프 N / 6」 + 다음 보상 한 줄 · 따로 뜨는 팝업 · 「확인」 없음
+   안 붙는 경우 = 팡 없이 사실 한 줄(이미 받음 · 6개를 다 모음 · 누적이 목표 아래 · 대기열 = 곧 들어와요) · 실패(같은 층 · 30분 지나 고르기 · 서버 실패)는 장면 없이 지금 안내
+   마무리 말풍선 = 6개 미만이면 다음 참여 제안(stbSugs 첫째) · 6개면 「오늘도 힘내세요!」
+   나감 = 아이리스가 얼굴 크기까지 줄었다 멈춤(찡끗 · 왼눈 반달) → 톡 닫힘 → 스탬프 탭(방금 받은 계단 줄로 · expStamp) → 검은 막 걷힘
+   보상 알림(룰렛 · 행운권 · 선착순)은 적립 순간 줄에 서 있다가(noticeBusy = 계단 화면) 스탬프 탭으로 간 뒤 지금 방식대로 뜬다
+   동작 줄이기 = 아이리스 · 움직임 없이 정지 장면 + 도장 + 말 · 3초 뒤 넘어감 · 3D 를 못 그리면 원본 BOT_SVG */
+var SA = { d: null, t: [], raf: 0, go: null, out: false, rm: false, ir: null, done: false, log: [] };
+function stbArrInfo(res, q) {
+  var st = res && res.stamp, pop = false, line = "", hint = "", n = Math.min(STAMP_DENOM, stampCount());
+  if (q) line = "스탬프는 곧 들어와요";
+  else if (st && st.id === "st" && !st.dup && !st.revoked && !st.kept) {
+    if (stampGot() > STAMP_DENOM) line = "스탬프 " + STAMP_DENOM + "개를 다 모았어요";
+    else { pop = true; line = "스탬프 " + n + " / " + STAMP_DENOM; hint = srGoalLine(n); }
+  }
+  else if (st && st.dup) line = "스탬프는 이미 받았어요";
+  else if (res && (res.goal || 1) > 1) line = "누적 " + (res.total || 0) + " / " + res.goal + "개 층";
+  var sg = stampCount() >= STAMP_DENOM ? null : stbSugs()[0];
+  return { pop: pop, line: line, hint: hint, tag: sg ? "다음 참여" : "", say: sg ? sg[1] : "오늘도 힘내세요!" };
+}
+function stbArrive(res, q) {
+  if (SA.d) return;
+  var from = q ? q.from : res && res.from && res.from.fl, to = q ? q.to : res && res.to && res.to.fl, f = stbArrInfo(res, q), rm = stbRm(), i, conf = "";
+  for (i = 0; i < 14; i++) conf += '<i style="left:' + (6 + i * 6.6).toFixed(1) + "%;animation-delay:" + (0.25 + (i % 5) * 0.09).toFixed(2) + 's"></i>';
+  var d = document.createElement("div");
+  d.id = "stbArr"; d.className = "stb-arr" + (rm ? " rm" : ""); d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "계단 도착");
+  d.innerHTML = '<div class="sa-in">' +
+      '<p class="sa-big">고생했어요!</p><p class="sa-sub">' + esc(from) + "F → " + esc(to) + "F 계단 완료</p>" +
+      '<div class="sa-wrap"><div class="sa-stage" id="saStage">' + (STB3.st === 2 ? "" : '<span class="sa-bot"><span class="stb-hop">' + BOT_SVG.replace("</svg>", BOT_WAVE + TOUR_BOT_SM + "</svg>") + "</span></span>") + "</div>" +
+        (rm ? "" : '<span class="sa-conf" aria-hidden="true">' + conf + "</span>") + '<span class="sa-mk" id="saMk"></span></div>' +
+      (f.line ? '<p class="sa-st' + (f.pop ? " pop" : "") + '">' + esc(f.line) + (f.hint ? "<span>" + esc(f.hint) + "</span>" : "") + "</p>" : "") +
+      '<div class="sa-bub">' + (f.tag ? '<span class="stb-tag">' + f.tag + "</span>" : "") + '<span class="sa-tx">' + esc(f.say) + "</span></div>" +
+      (q ? "" : '<button type="button" class="sa-re" onclick="stbArrRe(event)">종료가 아니라 새로 시작이에요</button>') +
+    '</div><canvas class="sa-iris" id="saIris" aria-hidden="true"></canvas>' +
+    '<p class="stb-sr" aria-live="polite">고생했어요 · ' + esc(from) + "F에서 " + esc(to) + "F 계단 완료 · " + esc(f.line) + " · " + esc(f.say) + "</p>";
+  document.body.appendChild(d);
+  SA.d = d; SA.t = []; SA.out = false; SA.rm = rm; SA.done = false; SA.go = function () { expStamp("st"); }; SA.log = [["in", 0]]; SA.t0 = performance.now(); SA.f = f;
+  stbLeave();
+  var at = function (fn, ms) { SA.t.push(setTimeout(fn, ms)); };
+  d.addEventListener("click", function () { stbArrOut(); });
+  var stg = el("saStage");
+  if (STB3.st === 2) {   /* 계단과 같은 3D 장면을 당겨 쓴다 · 앞모습 · 모든 칸 앞 띠 주황(다 올랐다) */
+    stb3Attach(stg); STB3.cam.position.set(0, 0.92, 2.25); STB3.cam.lookAt(0, 0.5, -0.8);
+    STB3.hop = null; STB3.turn = null; STB3.sw = null; STB3.act = null; STB3.wink = false; STB3.face = true; STB3.mood = "smile"; STB3.flow.position.set(0, 0, 0);
+    STB3.nose.forEach(function (n) { n.material = STB3.mOn; });
+  }
+  if (rm) {   /* 동작 줄이기 · 멈춘 한 장 · 도장 바로 · 3초 뒤 */
+    if (f.pop) { el("saMk").innerHTML = stampMarkHtml(false, 104); stampBuzz(25); }
+    if (STB3.st === 2) { stb3Pose(performance.now()); STB3.r.render(STB3.sc, STB3.cam); }
+    stbArrDraw(performance.now());
+    at(stbArrOut, 3000);
+    return;
+  }
+  SA.ir = { k: "in", t0: performance.now(), d: 1100 };
+  at(function () { if (STB3.st === 2) stb3Act("cheer"); SA.log.push(["cheer", 150]); }, 150);
+  if (f.pop) at(function () { var mk = el("saMk"); if (!mk) return; mk.innerHTML = stampMarkHtml(true, 104); inkSplash(mk.querySelector(".stampmk"), 10, 1.4); SA.log.push(["stamp", 1300]); at(function () { stampBuzz([25, 40, 70]); }, 420); }, 1300);
+  at(function () { if (STB3.st === 2) { STB3.mood = "wave"; } SA.log.push(["say", 2300]); }, 2300);
+  at(function () { if (STB3.st === 2) STB3.mood = "smile"; }, 3700);
+  at(stbArrOut, 4300);
+  stbArrTick();
+}
+/* 종료가 아니라 새로 시작 · 장면을 닫고 계단 화면의 재분류로(누르지 않아도 되는 작은 글 링크) */
+function stbArrRe(e) { if (e) e.stopPropagation(); stbArrEnd(true); stairReclassOpen(); }
+function stbArrOut() {
+  if (!SA.d || SA.out) return;
+  SA.out = true; SA.t.forEach(clearTimeout); SA.t = []; SA.log.push(["out", Math.round(performance.now() - SA.t0)]);
+  if (SA.rm) { SA.d.classList.add("fade"); SA.t.push(setTimeout(function () { stbArrEnd(); }, 220)); return; }
+  SA.ir = { k: "out", t0: performance.now(), d: 1350 };
+  stbArrTick();
+}
+/* 끝 · 검은 막 아래에서 스탬프 탭으로 간 뒤 막을 걷는다 */
+function stbArrEnd(stay) {
+  if (!SA.d || SA.done) return;
+  SA.done = true; SA.t.forEach(clearTimeout); SA.t = []; if (SA.raf) { cancelAnimationFrame(SA.raf); SA.raf = 0; }
+  var d = SA.d; STB3.wink = false;
+  var cv = STB3.r && STB3.r.domElement; if (cv && cv.parentNode && cv.parentNode.id === "saStage") cv.parentNode.removeChild(cv);
+  if (!stay && SA.go) SA.go();
+  SA.log.push(["end", Math.round(performance.now() - SA.t0)]);
+  d.classList.add("gone");
+  setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); if (SA.d === d) SA.d = null; }, SA.rm || stay ? 0 : 260);
+}
+/* 얼굴 자리(창 기준) · 3D = 카메라 투영 · 평면 그림 = 챗봇 그림 머리 */
+function stbArrFace() {
+  var g = el("saStage"); if (!g) return { x: innerWidth / 2, y: innerHeight / 2, r: 40 };
+  var r = g.getBoundingClientRect();
+  if (STB3.st === 2 && window.THREE) {
+    var T = window.THREE, V = new T.Vector3(0, 0.52 * 0.95 + STB3.bot.position.y, STB_V.bz), V2 = new T.Vector3(0.36 * 0.95, 0.52 * 0.95 + STB3.bot.position.y, STB_V.bz);
+    STB3.cam.updateMatrixWorld(); V.project(STB3.cam); V2.project(STB3.cam);
+    var x = r.left + (V.x + 1) / 2 * r.width, y = r.top + (1 - V.y) / 2 * r.height, x2 = r.left + (V2.x + 1) / 2 * r.width;
+    return { x: x, y: y, r: Math.max(24, Math.abs(x2 - x)) };
+  }
+  var b = g.querySelector(".sa-bot"), q = b ? b.getBoundingClientRect() : r;
+  return { x: q.left + q.width / 2, y: q.top + q.height * 0.5, r: Math.max(24, q.width * 0.3) };
+}
+function stbArrDraw(now) {
+  var cv = el("saIris"), ir = SA.ir; if (!cv) return;
+  var W = innerWidth, H = innerHeight, dp = Math.min(2, window.devicePixelRatio || 1);
+  if (cv.width !== Math.round(W * dp) || cv.height !== Math.round(H * dp)) { cv.width = Math.round(W * dp); cv.height = Math.round(H * dp); }
+  var c = cv.getContext("2d"); c.setTransform(dp, 0, 0, dp, 0, 0); c.clearRect(0, 0, W, H);
+  if (!ir) return;
+  var t = now - ir.t0, f = stbArrFace(), R0 = Math.max(Math.hypot(f.x, f.y), Math.hypot(W - f.x, f.y), Math.hypot(f.x, H - f.y), Math.hypot(W - f.x, H - f.y)) + 2, Rf = f.r * 1.25, r;
+  if (ir.k === "out") r = t < 800 ? Rf + (R0 - Rf) * (1 - stbEaseIO(t / 800)) : t < 1150 ? Rf : Rf * (1 - Math.pow(Math.min(1, (t - 1150) / (ir.d - 1150)), 2));   /* 둘러보기 엘리베이터 닫힘과 같은 박자 */
+  else r = t < 120 ? 0 : t < 340 ? Rf * (1 - Math.pow(1 - (t - 120) / 220, 3)) : t < 480 ? Rf : Rf + (R0 - Rf) * stbEaseIO(Math.min(1, (t - 480) / (ir.d - 480)));
+  if (ir.k === "in" && t >= ir.d) { SA.ir = null; return; }
+  c.fillStyle = "#000000"; c.fillRect(0, 0, W, H);
+  if (r > 0.5) { c.globalCompositeOperation = "destination-out"; c.beginPath(); c.arc(f.x, f.y, r, 0, Math.PI * 2); c.fill(); c.globalCompositeOperation = "source-over"; }
+}
+function stbArrTick() {
+  if (SA.raf || !SA.d || SA.done) return;
+  SA.raf = requestAnimationFrame(function (now) {
+    SA.raf = 0; if (!SA.d || SA.done) return;
+    if (SA.ir && SA.ir.k === "out") { var t = now - SA.ir.t0; STB3.wink = t > 780; if (t > 780) STB3.mood = ""; if (t >= SA.ir.d) { stbArrDraw(now); stbArrEnd(); return; } }   /* 얼굴 크기에서 멈춘 동안 찡끗 */
+    if (STB3.st === 2 && STB3.r && STB3.r.domElement.parentNode && STB3.r.domElement.parentNode.id === "saStage") { stb3Pose(now); STB3.r.render(STB3.sc, STB3.cam); }
+    stbArrDraw(now);
+    stbArrTick();
+  });
+}
+/* 대기열(연결 없음 · 서버 붐빔)로 저장된 도착 스캔 · 진행 중 출발이 있고 다른 층이면 같은 장면(「스탬프는 곧 들어와요」) · 아니면 지금 안내 */
+function stbArriveQ(it) {
+  var s = stairState(), fl = Number(it && it.fl);
+  if (!s.leg || !fl || fl === Number(s.leg.fl) || SA.d) return false;
+  stbArrive(null, { from: s.leg.fl, to: fl });
+  return true;
+}
 </script>
 </body>
 </html>

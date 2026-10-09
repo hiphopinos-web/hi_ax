@@ -544,6 +544,7 @@ function scanQAdd(it) {
   var q = scanQList(), up = String(it.code).toUpperCase(), stair = scanQKind(it) === "stair";
   if (stair || !q.some(function (x) { return scanQKind(x) === "stamp" && String(x.code).toUpperCase() === up; })) q.push(it);
   S.set("scan_q", q.slice(-30));
+  if (stair && typeof stbArriveQ === "function" && stbArriveQ(it)) return;   /* 261009 계단 동행 5차 · 진행 중 출발의 도착이면 도착 장면(「스탬프는 곧 들어와요」) */
   srShow({ st: "saved", stair: stair });
 }
 function scanQNote() {
@@ -640,6 +641,7 @@ function stairDone(res, sc, late, act) {
   STR.res = res; STR.pick = null;
   STR.mode = act === "stair_fix" ? "ask" : res.leg === "dup" ? "start" : res.leg;
   if (App.current === "stair") App.render(); else App.go("stair");
+  if (STR.mode === "end" && act === "stair_scan" && typeof stbArrive === "function") stbArrive(res);   /* 261009 계단 동행 5차 · 도착 장면(128) · 누를 단추 없이 스탬프 탭으로 */
 }
 /* 체험 › 계단 이용 · 진행 중이면 진행 화면, 아니면 안내(E02) */
 function stairOpen() {
@@ -699,7 +701,8 @@ function stairHtml() {
   if (m === "start") {   /* 261009 계단 동행(사용자 「챗봇이 같이 계단을 오른다」) · 본문 = 128-js-stair-buddy.js stbHtml · 아래 고정 = 큰 「도착 층 QR 찍기」 하나(stbFoot) */
     var since = o.since || (s.leg && s.leg.since) || Date.now();
     return { body:
-      stampTagHtml("st") + '<div class="axs-chiprow"><span class="axs-chip">진행 중</span>' + (o.leg === "dup" ? '<span class="axs-chip off">이미 시작함</span>' : "") + (o.reclass ? '<span class="axs-chip off">새로 시작으로 바꿈</span>' : "") + "</div>" +
+      /* 261009 계단 동행 5차(사용자 「상단 정보는 크게 필요 없다」) 도장 · 「진행 중」 칩 걷음 · 다시 찍음 · 새 출발로 바꿈만 작은 한 줄 */
+      (o.leg === "dup" ? '<p class="ax-meta">출발 QR을 이미 찍었어요</p>' : "") + (o.reclass ? '<p class="ax-meta">새 출발로 바꿨어요</p>' : "") +
       (o.reclass && o.stamp && o.stamp.revoked ? '<p class="ax-meta">' + (goal > 1 ? "누적이 " + goal + "개 층 아래라" : "이동한 층이 없어") + " 계단 스탬프가 취소됐어요</p>" : "") +
       stbHtml(o, s, since),
       btn: stbFoot(since) };
@@ -707,6 +710,7 @@ function stairHtml() {
   if (m === "end") {
     var got = o.stamp && !o.stamp.dup && o.stamp.id === "st";
     return { body:
+      stampTagHtml("st") +   /* 261009 계단 동행 5차 · 진행 화면 도장을 걷어 종료 화면(도착 장면 뒤)에 둔다 */
       (got ? '<div class="axs-res-bot">' + BOT_SVG + "</div>" : "") +
       '<div class="axs-chiprow"><span class="axs-chip ok">종료</span>' + (got ? '<span class="axs-chip ok">계단 스탬프 적립</span>' : "") + "</div>" +
       '<h1 class="ax-title">' + o.from.fl + "F → " + o.to.fl + "F</h1>" +
