@@ -22,7 +22,7 @@
   --brand:#FF7E31;
   --fs-kpi:28px; --fs-h1:22px; --fs-h2:16px; --fs-b:14px; --fs-nav:13px; --fs-c:12px;
   --r:12px; --r-s:8px; --r-xs:6px;
-  --w-shell:1440px; --w-lnb:232px; --w-panel:340px; --w-form:720px; --hdr-h:88px;
+  --w-shell:1560px; --w-lnb:204px; --w-panel:340px; --w-form:720px; --hdr-h:88px;
   --sh-lg:0 12px 28px rgba(8,24,74,.14),0 4px 8px rgba(8,24,74,.06);
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -74,10 +74,11 @@ nav.tabs button.on::after{content:"";position:absolute;left:8px;right:8px;bottom
 
 /* 셸 · 왼쪽 메뉴 232 + 본문 */
 .shell{max-width:calc(var(--w-shell) + 48px);margin:0 auto;padding:20px 24px 96px;display:flex;gap:16px;align-items:flex-start}
-aside.lnb{width:var(--w-lnb);flex:none;background:var(--sf);border:1px solid var(--line);border-radius:var(--r);padding:12px;position:sticky;top:calc(var(--hdr-h) + 12px)}
-aside.lnb h3{font-size:var(--fs-h2);line-height:1.4;padding:4px 8px 8px}
-aside.lnb h4{font-size:var(--fs-c);color:var(--tx3);font-weight:600;padding:10px 8px 4px}
-aside.lnb button{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:7px 8px;border-radius:var(--r-s);font-size:var(--fs-nav);color:var(--tx2);text-align:left;line-height:1.35}
+aside.lnb{width:var(--w-lnb);flex:none;background:var(--sf);border:1px solid var(--line);border-radius:var(--r);padding:8px;position:sticky;top:calc(var(--hdr-h) + 12px)}
+aside.lnb h3{font-size:var(--fs-h2);line-height:1.4;padding:4px 8px 6px}
+aside.lnb h4{font-size:11px;color:var(--tx3);font-weight:700;letter-spacing:.06em;padding:2px 8px 4px;pointer-events:none;user-select:none}
+aside.lnb .gsep{height:1px;background:var(--line);margin:8px 8px 8px}
+aside.lnb button{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:7px 8px 7px 12px;border-radius:var(--r-s);font-size:var(--fs-b);color:var(--tx2);text-align:left;line-height:1.35}
 aside.lnb button:hover{background:var(--soft);color:var(--tx)}
 aside.lnb button.on{background:var(--navy05);color:var(--navy);font-weight:700}
 aside.lnb .lk{font-size:11px;color:var(--tx3);font-weight:500}
@@ -426,7 +427,7 @@ header.top :focus-visible,.bar.bulk :focus-visible{outline-color:#fff}
 @media(max-width:1100px){
   .shell{flex-direction:column;gap:12px}
   aside.lnb{position:static;width:100%;display:flex;gap:4px;overflow-x:auto;padding:4px;scrollbar-width:none}
-  aside.lnb h3,aside.lnb h4{display:none}
+  aside.lnb h3,aside.lnb h4,aside.lnb .gsep{display:none}
   aside.lnb button{width:auto;flex-shrink:0;white-space:nowrap}
   .panel,.panel.wide{width:100%;position:static}
   .work{flex-direction:column}
@@ -722,7 +723,7 @@ document.addEventListener("click",function(e){ var w=el("acctM"); if(w&&!w.hidde
 /* 슈퍼관리자 본인 확인 · 앱 PIN 4자리 → 기기에서 해시만 만들어 POST(adm_pin) · PIN · 해시는 저장하지 않는다
  * PIN 정책(최종 설계안): 로그인 직후 한 번 묻는다(건너뛸 수 있다) · 수명(서버 「슈퍼확인_분」) 동안 다시 묻지 않는다 · 거절(spin)되면 그 자리에서 받고 같은 요청을 다시 */
 var SUPV={ sp:"", until:0, busy:false, wait:[] };
-var SP_ACT={ adm_roster:1, adm_roster_set:1, adm_code_set:1, acct_pwreset:1, pw_req_done:1, usr_reset_all:1, fin_export:1, ro_set:1, stamp_rotate:1, stair_rotate:1, att_rotate:1, att_wipe:1, visit_wipe:1, game_wipe:1,
+var SP_ACT={ test_reset:1, adm_roster:1, adm_roster_set:1, adm_code_set:1, acct_pwreset:1, pw_req_done:1, usr_reset_all:1, fin_export:1, ro_set:1, stamp_rotate:1, stair_rotate:1, att_rotate:1, att_wipe:1, visit_wipe:1, game_wipe:1,
   og_scope_state:1, og_scope_set:1, og_gate_preview:1, og_gate_apply:1, og_gate_find:1, og_gate_add:1, og_gate_remove:1, og_deny_list:1, og_deny_clear:1,
   roll_list:1, roll_apply:1, roll_undo:1, pre10_state:1, pre10_row_list:1, pre10_row_set:1, pre10_row_del:1, pre10_preview:1, pre10_apply:1, pre10_undo:1,
   kit_size_list:1, kit_staff_find:1, kit_staff_add:1, kit_staff_remove:1, test_set:1, pre10_bulk:1, cfg_set:1, rosdept_state:1, lk7_export:1, fcfs_export:1, ideaking_export:1 };
@@ -827,8 +828,11 @@ function render(){
   var it=navCur(), m=MENUBY[it.m], last=lsGet("axf_c2_last",{}); last[it.m]=it.id; lsSet("axf_c2_last",last);
   renderTabs();
   var items=NAV.filter(function(x){ return x.m===it.m; }), g="";
+  /* 261009 분류 제목 = 항목 둘 이상 · 항목 이름과 안 겹칠 때만 */
+  var gN={}; items.forEach(function(x){ if(x.g) (gN[x.g]=gN[x.g]||[]).push(x.n); });
+  var gShow=function(k){ return gN[k].length>1&&gN[k].indexOf(k)<0; };
   el("shell").className="shell"+(items.length<2?" solo":"");
-  el("lnb").innerHTML='<h3>'+esc(m.n)+'</h3>'+items.map(function(x){ var h=x.g&&x.g!==g?'<h4>'+esc(x.g)+'</h4>':""; g=x.g||g; var b=navBadge(x.id);
+  el("lnb").innerHTML='<h3>'+esc(m.n)+'</h3>'+items.map(function(x){ var h=x.g&&x.g!==g?(g?'<div class="gsep" aria-hidden="true"></div>':'')+(gShow(x.g)?'<h4>'+esc(x.g)+'</h4>':''):""; g=x.g||g; var b=navBadge(x.id);
     return h+'<button class="'+(x.id===it.id?"on":"")+'"'+(x.id===it.id?' aria-current="page"':'')+' data-qa="nav.'+x.id+'" onclick="go(\''+x.id+'\')">'+esc(x.n)+(b?'<span class="badge">'+b+'</span>':x.legacy?'<span class="lk">옛 화면</span>':x.sup?'<span class="lk">슈퍼</span>':'')+'</button>'; }).join("");
   var V=VIEWS[it.view]||VIEWS.legacy;
   el("view").innerHTML=head(it)+'<div id="vbErr"></div><div id="vb"></div>';
@@ -1485,7 +1489,8 @@ function pcHtml(d){
   var half=!!by.p3h&&!by.p3, n=d.n!=null?d.n:Math.min(6,st.filter(function(x){ return STAMP8.some(function(s){ return s[0]===x.id; }); }).length+(by.p3?1:0)+(half?1:0));
   var h='<div class="ph2"><div style="min-width:0"><h2 id="pcH" tabindex="-1">'+esc(d.name||e)+'</h2><div class="cap">'+esc(d.dept||"")+' · <span class="n">'+esc(e)+'</span></div><div class="fx mt8">'+
     (d.test||L.test?tag("시험"):"")+(d.sup?tag("슈퍼관리자","pri"):"")+(L.staffApp?tag("스태프","pri"):"")+(d.acct?"":tag("가입 전"))+(d.stale?tag("다시 받는 중"):"")+'</div></div><button class="x" aria-label="카드 닫기" data-qa="who.x" onclick="whoPick(\'\')">×</button></div><div class="bd">';
-  h+='<div class="acts" style="margin-top:0">'+(d.acct?'<button class="btn" data-qa="pc.push" onclick="pcPush(\''+J+'\')">이 사람에게 푸시</button><button class="btn" data-qa="who.pinreset" onclick="pinResetAsk(\''+J+'\')"'+(d.pw===0||d.pw===false?" disabled":"")+'>PIN 초기화</button>':'')+'<button class="btn ghost" data-qa="pc.reload" onclick="whoInfo(\''+J+'\',true);whoPanel()">새로 받기</button></div>';
+  var rsLock=sup&&pcResetLock(d);
+  h+='<div class="acts" style="margin-top:0">'+(d.acct?'<button class="btn" data-qa="pc.push" onclick="pcPush(\''+J+'\')">이 사람에게 푸시</button><button class="btn" data-qa="who.pinreset" onclick="pinResetAsk(\''+J+'\')"'+(d.pw===0||d.pw===false?" disabled":"")+'>PIN 초기화</button>':'')+(sup?'<button class="btn danger" data-qa="pc.reset" onclick="pcResetAsk(\''+J+'\')"'+(rsLock?' disabled title="'+RS_DAY+'"':'')+'>초기화</button>':'')+'<button class="btn ghost" data-qa="pc.reload" onclick="whoInfo(\''+J+'\',true);whoPanel()">새로 받기</button></div>'+(rsLock?'<p class="cap mt8" data-qa="pc.reset.lock">'+RS_DAY+'</p>':'');
   /* 접속 */
   h+='<div class="pcs mt12"><h3>접속</h3><div class="row2">'+(d.acct?'가입 <b class="n">'+esc(short(d.joined))+'</b> · 최근 <b class="n">'+esc(short(d.last)||"-")+'</b>':'아직 가입 안 함(명부만)')+(v?' · 오늘 <b class="n">'+n0(v.today)+'</b>회':'')+' · PIN '+(d.pw==null?"-":d.pw?"있음":"초기화 대기")+'</div>'+
     (v&&(v.rows||[]).length?'<div class="chips mt8" aria-label="최근 방문">'+v.rows.map(function(x){ return '<span class="pchip"><span class="n">'+esc(short(x.t).slice(-5))+'</span> '+esc(VIS_ENTRY[x.entry]||"직접")+'</span>'; }).join("")+'</div><p class="cap mt8">최근 방문 '+v.rows.length+'건 · 시각과 들어온 길만'+(v.from?' · '+esc(short(v.from))+' 부터 읽음':'')+'</p>':'')+'</div>';
@@ -1561,6 +1566,26 @@ function stRevokeGo(emp, id, inDlg, quiet){
   call("stamp_revoke",{ emp:emp, id:id },function(r){ if(inDlg) dlgForce();
     if(r&&r.ok){ whoAfter(emp); toast((quiet?"되돌렸습니다 · ":"취소했습니다 · ")+emp+" · "+stName(id), quiet||GRANT_IDS.indexOf(id)<0?{}:{ undo:function(){ stGrantGo(emp, id, false, true); } }); }
     else toast("취소 실패 · "+why(r)); },function(e){ if(inDlg) dlgForce(); toast("취소 실패 · "+why(e)); });
+}
+/* 261009 한 사람 처음 상태로(test_reset · L3) · 실사번은 행사 전만 */
+var RS_DAY="행사일에는 실제 사번을 초기화할 수 없습니다", RS_LBL={ log:"스탬프 · 룰렛", raffle:"응모권", game:"게임", type:"타자", race:"대전", nick:"닉네임", att:"출석", visit:"접속", drawin:"추첨 체크인", ideas:"아이디어", stairlog:"계단", stairleg:"계단 구간", resv:"상담", cchat:"커피챗", pwreq:"PIN 분실 요청", mark:"담당 표시", pin:"PIN" };
+function kstDay(){ return new Date(Date.now()+9*3600000).toISOString().slice(0,10); }
+function pcResetLock(d){ return !(d.test||(d.lists&&d.lists.test))&&kstDay()===EVENT_DAY; }
+function pcResetAsk(emp){
+  var d=whoInfo(emp)||{};
+  if(pcResetLock(d)){ toast(RS_DAY); return; }
+  supNeed(function(){
+    call("test_reset",{ emp:emp, dry:"1" },function(r){
+      if(!(r&&r.ok)){ toast(r&&r.reason==="eventday"?RS_DAY:"초기화 확인 실패 · "+why(r)); return; }
+      var pl=r.plan||{}, rows=Object.keys(RS_LBL).filter(function(k){ return pl[k]; }).map(function(k){ return [RS_LBL[k], k==="pin"?"있음 · 비움":n0(pl[k])+"줄"]; });
+      dialog({ t:"이 사람을 처음 상태로 돌릴까요?", who:esc(r.name||pcName(emp))+'<span>사번 '+esc(emp)+(r.test?" · 테스트 사번":" · 실제 사번")+'</span>',
+        s:(rows.length?"아래 기록을 지웁니다. 로그인해 둔 폰은 끊깁니다.":"지울 기록이 없습니다.")+" <b>되돌릴 수 없습니다.</b>", x:rows.length?imp(rows):"",
+        ok:r.word||"처음상태", danger:true, x2:1,
+        onOk:function(){ call("test_reset",{ emp:emp, confirm:r.word||"처음상태" },function(x){ dlgForce();
+          if(x&&x.ok){ var n=0; Object.keys(x.done||{}).forEach(function(k){ n+=Number(x.done[k])||0; }); toast("처음 상태로 돌렸습니다 · "+(r.name||emp)+" · "+n0(n)+"건"); whoAfter(emp); }
+          else toast(x&&x.reason==="eventday"?RS_DAY:"초기화 실패 · "+why(x)); },function(e){ dlgForce(); toast("초기화 실패 · "+why(e)); }); } });
+    },function(e){ toast("초기화 확인 실패 · "+why(e)); });
+  });
 }
 function pinResetAsk(emp, row){
   dialog({ t:"PIN 을 초기화할까요?", who:esc(pcName(emp))+'<span>사번 '+esc(emp)+'</span>', s:"본인 확인(신분증 · 얼굴)을 먼저 합니다. 초기화하면 그 사람이 다음 로그인에서 넣는 4자리가 새 PIN 이 되고, 이미 로그인해 둔 다른 폰은 끊깁니다. <b>되돌릴 수 없습니다.</b>", ok:"초기화", danger:true,
