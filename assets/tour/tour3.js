@@ -48,7 +48,7 @@
     { id: 'typing', zone: 'event', spot: 'typing', name: 'AX 타자왕', x: 3.3, z: 2.5, look: [0.55, 2.47], say: '당신의 프롬프팅 속도를 보여\u00A0주세요', go: '' },   /* v5.79 (사용자 261006) 프롬프트(입력한 글) → 프롬프팅(쓰는 행위 · 속도를 재는 대상) · 「보여 주세요」 띄어 씀(앱 「눌러 주세요」와 같게 · 말풍선 232px 두 줄이 「속도를 / 보여 주세요」로 끊기게 붙는 빈칸 u00A0) · v5.64 (사용자 261005 「프롬프트 실력보다는 속도」 · 원문 「보셔주세요」는 「보여주세요」로) 옛 「타자왕 1~3위 경품 · 17:00 마감」 */
     { id: 'event', zone: 'event', name: '포토부스', x: 5.3, z: 7.35, look: [0.55, 7.35], noGuide: true },   /* v5.58 촬영 기계(가운데 칸 앞 · 도면 3.6, 7.35) 뒤에서 벽 쪽 단체 사진을 봄 */
     { id: 'roulette', zone: 'event', spot: 'roulette', name: '룰렛 이벤트', x: 3.4, z: 10.1, look: [0.55, 10.15], say: '스탬프 3개면 룰렛을 돌려요', go: '', hand: true },
-    { id: 'lounge', zone: 'lounge', x: 6.6, z: 9.1, look: [5.6, 11.8] }   /* 261008 수정본 11쪽 · AX 라운지 = 미팅룸 날개 입구 가벽 앞 데스크(5.6, 11.81) · 데스크 앞 오른쪽 2.9m(룰렛 자리 3.0m 밖 · 가까우면 「룰렛 이벤트 앞」으로 읽힌다) · 옛 = 북쪽 벽 앞 판 줄 앞(8.7, 8.3) */
+    { id: 'lounge', zone: 'lounge', x: 6.6, z: 9.1, look: [5.6, 12.18] }   /* 261008 수정본 11쪽 · AX 라운지 = 미팅룸 날개 입구 가벽 앞 데스크(5.6, 11.81) · 데스크 앞 오른쪽 2.9m(룰렛 자리 3.0m 밖 · 가까우면 「룰렛 이벤트 앞」으로 읽힌다) · 옛 = 북쪽 벽 앞 판 줄 앞(8.7, 8.3) */
   ];
   /* 18F 커피챗 · 체크인 존은 시험판에서 뺀다(사용자 261003) · 코드는 SHOW_CAFE 로 보존 */
   var SHOW_CAFE = false;
@@ -74,6 +74,10 @@
     cafe: { th: 0.55, ph: 1.12, r: 11.5 }, sheetOpen: false
   };
   window.__lab = window.__tour3 = G;
+  /* v6.83 (접근성 C-4) 그리기 쉼 · 닫혀 있을 때(늘)와 동작 줄이기에서 바뀐 것 없이 30장이 지나면 rAF 를 멈춘다(옛 = 닫힌 뒤에도 · 줄이기에서도 초당 60~120번 돌았다)
+   *   깨우기 = G.need 를 true 로 두는 모든 곳(아래 setter) · 손가락 · 마우스 · 키 · 휠 · 창 크기(boot) · open */
+  (function () { var nd = G.need; Object.defineProperty(G, 'need', { configurable: true, enumerable: true, get: function () { return nd; }, set: function (v) { nd = v; if (v && G.zzz) loopWake(); } }); })();
+  function loopWake() { if (!G.zzz) return; G.zzz = false; G.idleN = 0; G.last = 0; requestAnimationFrame(loop); }
   G.r3 = function () { return { renderer: renderer, scene: scene, camera: camera, S: S }; };   /* 시험용(깊이 16비트 흉내 · 깜빡임 세기) */
 
   /* ═══════════ 3D 준비 ═══════════ */
@@ -724,8 +728,7 @@
       var rail = new T.Mesh(new T.BoxGeometry(0.04, 0.05, L), ink); rail.position.set(0, 0.06, L / 2 + 0.05); w.add(rail);
       var bar = new T.Mesh(new T.BoxGeometry(0.1, 0.035, L * 0.55), ink); bar.position.set(0, 1.0, L * 0.6); w.add(bar);
     }
-    /* 안쪽 바닥 매트(로비 쪽 · 문턱 바로 안) */
-    var mt = new T.Mesh(new T.PlaneGeometry(2.4, 0.9), mat), mp = toThree(17.3, 1.5 + R + 0.55); mt.rotation.x = -Math.PI / 2; mt.position.set(mp.x - c.x, 0.02, mp.z - c.z);   /* v5.40 바닥에서 2cm(16비트 깊이) */ g.add(mt);
+    /* v6.83 (사용자 261009 「요기 매트 치우자」) 정문 안쪽 바닥 매트(2.4 x 0.9 · 도면 17.3, 1.5 + R + 0.55 · 충돌 · 미니맵 없음) 지움 · 동쪽 문 D 안쪽 매트(md)는 그대로 */
     g.traverse(function (o) { o.userData = { door: true }; });
     S.lobby.add(g); if (host !== S.lobby) { S.lobby.updateMatrixWorld(true); host.attach(g); }
     G.door = 0; g.traverse(function (o) { if (o.isMesh) G.door++; });
@@ -845,7 +848,7 @@
    * 사진 = 기계 렌즈 자리의 보조 카메라가 그 순간 한 장만 그린다(렌더 투 텍스처 320 x 240 · 층 5 = 친구 · 배경 판 · 부스 틀 · 바닥 매트만) · 기계가 보일 때만 · 5.5초에 한 번 · 움직임 줄이기 = 처음 한 장 그대로
    * 걷기 = 친구들 자리(판 앞 띠) · 기계는 막힘 · 기계 뒤(로비 쪽)에서 사진을 본다 */
   var PB = { g: null, bots: [], cam: null, rt: null, at: [3.6, 7.35], next: 0, t0: -9e9, shot: false, n: 0, flash: null, white: [], sphere: null, nrm: null };
-  var PB_FR = [[1.4, 6.55, 0xFFC56E, 0xFF7F32, 0xE5671E], [1.05, 7.1, 0xFFE0B8, 0xF2935A, 0xD9622B], [1.05, 7.62, 0xFFB98A, 0xE5671E, 0xC45318], [1.4, 8.17, 0xFFD9A0, 0xFF9450, 0xE5671E]];
+  var PB_FR = [[1.4, 6.55, 0xFFC56E, 0xFF7F32, 0xE5671E], [1.05, 7.1, 0xFFE0B8, 0xFF7F32, 0xE5671E], [1.05, 7.62, 0xFFB98A, 0xFF7F32, 0xE5671E], [1.4, 8.17, 0xFFD9A0, 0xFF7F32, 0xE5671E]];   /* v6.83 (사용자 261009 「네 번째 캐릭터 발판 색 다르다」) 발판(아래 띠) · 발 = 내 캐릭터와 같은 FF7F32 · E5671E(옛 = F2935A · E5671E · FF9450 섞임) · 몸(머리) 색만 다르다 */
   var PB_MS = 5500;
   function pbCard() {   /* 인화지 = 흰 판 + 아래 「AX Festival 2026」(주황 · 행사명 표기 그대로) */
     var c = document.createElement('canvas'); c.width = 256; c.height = 236; var g = c.getContext('2d');
@@ -958,7 +961,11 @@
       b.hidden = false; b.classList.add('pri'); b.classList.remove('walk', 'on3d'); var st0 = b.style; st0.left = st0.top = st0.right = st0.bottom = st0.transform = '';
       var sr = $('stage').getBoundingClientRect(), jl = $('bJump').getBoundingClientRect().left - sr.left;   /* 가운데 · 단 점프 단추와 띄움(빛 테 포함) · 261007 달리기 단추 없음 */
       st0.left = Math.round(Math.max(b.offsetWidth / 2 + 12, Math.min(sr.width / 2, jl - 20 - b.offsetWidth / 2))) + 'px';
+      st0.bottom = 'auto';
     }
+    var sH = $('stage').clientHeight, bh0 = b.offsetHeight || 52, hy = _ia.set(G.pos.x, 1.1, G.pos.z).project(camera), headT = (1 - hy.y) / 2 * sH;   /* v6.83 (사용자 261009 「사진 찍기 팝업 위치 너무 낮아 · 중간 정도」) 세로 = 3D 보기 가운데 · 캐릭터 머리(안테나 공) 위 16px 보다 아래로 내려가지 않게 · 시점이 따라오는 동안에도 맞춤(2px 넘게 바뀔 때만) */
+    var tp = Math.round(Math.max(12, Math.min(sH / 2 - bh0 / 2, headT - 16 - bh0)));
+    if (Math.abs((parseFloat(b.style.top) || 0) - tp) > 2) b.style.top = tp + 'px';
     if (!PH.popped && !RM) { PH.popped = true; b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }   /* v5.84 처음 뜰 때 통통 두 번 */
     return;
     var walk = G.moveV > 0.2 || G.mode === 'auto' || !!G.air;   /* 옛 v5.67 기계 위에 뜨는 알약(아래는 쓰지 않음 · 되돌리기용) */
@@ -1343,7 +1350,7 @@
    * ④ AX LAB 55인치 TV = AX in Action TV(판 15 앞 · 받침 포함)를 같은 재질 · 구운 빛 그대로 판 9 앞(x + 6.63)에 하나 더 · 화면은 buildTvs 가 찾아 모션을 튼다
    * ⑤ Welcome 천막 묶음(천막 · 현수막 40 · 엑스배너 47 · 출입구 안내 41) = 동쪽 출입문 정면 북쪽(38.2, 10.5)으로 · 모형에서는 여전히 숨김(hideCheckin · 사용자 261003)
    * 옮긴 물체의 바닥 그림자는 옛 자리 기준(새 자리는 그림자 없음 · 몇 % 밝기 차) · 다시 굽기(안 B)는 별도 작업 */
-  var REFIT = { DROP: [3, 19, 20, 21, 43, 44, 45], VIS: { x0: 30.5, x1: 32.6, z0: 4.6, z1: 5.6, dz: -1.0 }, LDESK: { x0: 8.15, x1: 9.2, z0: 9.6, z1: 10.2, to: [5.6, 11.81], from: [8.67, 9.9] },
+  var REFIT = { DROP: [3, 19, 20, 21, 43, 44, 45], VIS: { x0: 30.5, x1: 32.6, z0: 4.6, z1: 5.6, dz: -1.0 }, LDESK: { x0: 8.15, x1: 9.2, z0: 9.6, z1: 10.2, to: [5.6, 12.175], from: [8.67, 9.9] },   /* v6.83 (사용자 261009 「여기 책상 벽에 붙여줘」) to z 11.81 → 12.175 = 데스크 뒷면(12.435)이 가벽 앞면(WW.z - t/2 = 12.44)에 닿게(5mm · 면 겹침 없음) · 데스크 z 11.915 ~ 12.435 */
     LOLD: { x0: 6.84, x1: 10.05, z0: 8.95, z1: 11.46, sh: 3.2 }, VOLD: { x0: 30.6, x1: 32.57, z0: 5.66, z1: 6.85, lit: [30.0, 7.6] }, TV: { x0: 22.3, x1: 24.2, z0: 0.62, z1: 2.5, dx: 6.63 }, CK: [-4.4, -1.0] };
   function inLobby(o) { while (o) { if (o === S.lobby) return true; o = o.parent; } return false; }
   /* 메시 꼭짓점 중 도면 (x, z) 가 sel 을 만족하는 것만 도면 dx · dz 만큼 옮긴다 · 양자화(정수) 위치는 먼저 실수로 */
@@ -3740,7 +3747,7 @@
       var pts = [new T.Vector2(0.335, 0.24)]; for (var i = 0; i <= 14; i++) { var a = i / 14 * Math.PI / 2; pts.push(new T.Vector2(Math.max(0.0001, Math.cos(a) * 0.335), 0.43 + Math.sin(a) * 0.36)); }
       CRIT_GEO = { head: new T.LatheGeometry(pts, 24), band: new T.CylinderGeometry(0.355, 0.33, 0.2, 24), bot: new T.SphereGeometry(0.33, 18, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), st: new T.CylinderGeometry(0.02, 0.02, 0.13, 6), ball: new T.SphereGeometry(0.075, 12, 10), eye: new T.SphereGeometry(0.046, 10, 8), foot: new T.SphereGeometry(0.085, 10, 8) };
     }
-    var C = CRIT_GEO, mH = lam(cHead), mB = lam(cBand), mF = lam(cFoot), ink = new T.MeshBasicMaterial({ color: 0x282320 });
+    var C = CRIT_GEO, mH = lam(cHead), mB = lam(cBand), mF = lam(cFoot), ink = new T.MeshBasicMaterial({ color: 0x282320 });   /* lam = 같은 색이면 같은 재질 하나(발판 색이 같으면 재질도 같다) */
     var g = new T.Group(), body = new T.Group(); g.add(body);
     body.add(new T.Mesh(C.head, mH)); var b = new T.Mesh(C.band, mB); b.position.y = 0.14; body.add(b);
     var b0 = new T.Mesh(C.bot, mB); b0.scale.y = 0.25; b0.position.y = 0.04; body.add(b0);
@@ -4329,8 +4336,10 @@
     var cr = $('ctl').getBoundingClientRect(); if (cr.height) $('stage').style.setProperty('--lookB', Math.round(r.bottom - cr.top + 10) + 'px');   /* v5.54 자세히 보기 = 조작부 위 10px */
   }
   function loop(now) {
+    if (G.idleN > 30 && (!G.open || RM)) { G.zzz = true; G.idleN = 0; motIdle(); return; }   /* v6.83 쉼 · 깨우면 loopWake 가 다시 부른다 */
     requestAnimationFrame(loop);
     var dt = Math.min(0.05, G.last ? (now - G.last) / 1000 : 0.016); G.last = now;
+    if (!G.open) G.idleN = (G.idleN || 0) + 1; else if (!G.ok || G.cover || G.mapMode || G.hold) G.idleN = 0;   /* v6.83 닫힘 = 쉼 쪽으로 · 열린 채 멈춤(판 보기 등) = 쉬지 않음 */
     if (!G.ok || !G.open || G.cover || G.mapMode || G.hold) { motIdle(); return; }   /* v5.53 모션 화면 멈춤 · v5.51 판 보기(화면 전체)만 멈춘다 · 스탬프 카드 · 설정 · 큰 지도는 뒤에서 계속 그린다 */
     var busy = false, w0 = performance.now();
     G.clock += dt;
@@ -4352,8 +4361,8 @@
     if (G.bench) { G.pos.x += Math.sin(now * 0.001) * dt * 1.5; busy = true; }
     if (G.loaded && G.scn === 'lobby' && fireStep(dt)) busy = true;   /* 261006 방화문 열고 닫힘 */
     if (G.loaded && (G.scn === 'lobby' || G.scn === 'elev') && tvStep(now)) busy = true;   /* v5.55 엘리베이터 광고 화면도(로비 화면은 로비가 숨어 멈춤) */   /* v5.40 TV 화면 · 초당 10장 · 보이는 것만 */
-    if (!busy && !G.need && !G.showFps) return;
-    G.need = false;
+    if (!busy && !G.need && !G.showFps) { G.idleN = (G.idleN || 0) + 1; return; }
+    G.idleN = 0; G.need = false;
     S.frame(camera, G.scn, G.scn === 'lobby' && !G.anim && !!G.camIn); if (G.ceil) G.ceil.visible = false; renderer.render(scene, camera); placePins(); mini(); placeBubble(); placeShot(now); placeLook(now); placeMags(); placeBlocks(); placeCheer(); declutter();
     var wm = performance.now() - w0; G.workMs = G.workMs == null ? wm : G.workMs * 0.95 + wm * 0.05; G.workMax = Math.max(G.workMax || 0, wm);
     if (!$('dest').hidden && G.destAt) { _p.copy(G.destAt).project(camera); $('dest').style.left = ((_p.x + 1) / 2 * $('stage').clientWidth).toFixed(1) + 'px'; $('dest').style.top = ((1 - _p.y) / 2 * $('stage').clientHeight).toFixed(1) + 'px'; }
@@ -4870,6 +4879,7 @@
     updateUi(true);
     load();
     requestAnimationFrame(loop);
+    ['pointerdown', 'pointermove', 'touchstart', 'keydown', 'wheel', 'resize'].forEach(function (t) { window.addEventListener(t, loopWake, { capture: true, passive: true }); });   /* v6.83 쉬던 그리기 깨우기(쉬지 않을 때는 바로 돌아간다) */
   }
   /* 시험 · 녹화용 손잡이(앱에는 없음) */
   G.api = { scene: function () { return S; }, proj: function (x, y, z) { _p.set(x, y, z).project(camera); var r = $('stage').getBoundingClientRect(); return [r.left + (_p.x + 1) / 2 * r.width, r.top + (1 - _p.y) / 2 * r.height, _p.z]; },   /* v5.51 확인용 · 3D 점 → 화면 좌표(실제 톡 확인) */ shotCamKeep: function (x, y, z, lx, ly, lz, face) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); if (face) { guides.forEach(function (g) { g.m.rotation.y = Math.atan2(camera.position.x - g.m.position.x, camera.position.z - g.m.position.z); }); bot.rotation.y = Math.atan2(camera.position.x - bot.position.x, camera.position.z - bot.position.z); } S.frame(camera, 'lobby'); if (G.ceil) G.ceil.visible = false; renderer.render(scene, camera); G.hold = true; }, shotCam: function (x, y, z, lx, ly, lz, inside) { camera.position.set(x - 16, y, 6 - z); camera.lookAt(lx - 16, ly, 6 - lz); var bv = bot.visible; bot.visible = false; S.frame(camera, 'lobby', !!inside); renderer.render(scene, camera); bot.visible = bv; G.hold = true; }, guides: function () { return guides.map(function (g) { return [g.zone, g.at, +g.h.toFixed(2)]; }); }, enter: function (zid, pg) { enterPanel(D.Z(zid), pg || null); }, pose: function (x, z, yaw, h) { G.pos.copy(toThree(x, z)); G.mode = 'free'; G.path = null; G.yaw = yaw; G.h = h == null ? yaw + Math.PI : h; G.yo = 0; G.need = true; }, goStop: goStop, openSheet: function (zid, i) { openSheet(D.Z(zid), i || 0); }, closeSheet: closeSheet, setPage: function (k) { setPage(k); }, tap: tap, walkTo: walkTo, plan: function () { return planOf(G.pos); }, cam: function () { return planOf(camera.position).concat([camera.position.y]); }, toCafe: toCafe, back: backTo1F, free: free, hw: function (x, z) { var c = gi(x, z); return c < 0 ? -1 : hw[c] * 0.05; }, move: moveStep, attrAt: attrAt, round: function () { return ROUND.slice(); }, slow: function (f) { DIVE_FX = f || 1; }, occ: function () { var A = OCCA; return A ? { pg: A.face.userData.pg, ent: A.ent.length, tris: A.ent.reduce(function (n, e) { return n + e.gh.geometry.drawRange.count / 3; }, 0), tvs: A.tvs.length, alpha: A.alpha, hid: A.dyn.filter(function (o) { return o.userData.occ; }).length } : null; }, look: function () { return LOOK.key; },   /* v5.54 확인용 */ sqLog: function (on) { if (on) G.sqLog = []; return G.sqLog; }, wd: function (x, z) { var c = gi(x, z); return c < 0 ? -1 : wd[c]; }, gate: function () { return { GZ: GZ, BR: BR, SQ: SQ }; },   xf: function () { return XF ? { b: XF.b, fr: XF.fr, M: XF.M } : null; }, faceQuad: function () { var f = G.lastFace || (XF && XF.face); return f ? xfQuad(f) : null; },   /* v5.56 확인용 */ camLog: function (on) { G.camLog = on ? [] : null; }, camStep: function (dt) { stepCam(dt || 0); S.frame(camera, 'lobby', G.scn === 'lobby' && !G.anim && !!G.camIn); return { cam: planOf(camera.position).concat([camera.position.y]), k: G.boomK, fp: !!G.fp, inside: !!G.camIn, cut: S.cut(), stub: !!(S.lobby.getObjectByName('coreStub') || {}).visible, ray: camRay(camera.position.x, camera.position.y, camera.position.z) }; }, cocc: function (x, z, y) { var c = gi(x, z); return !cocc || c < 0 ? -1 : (cocc[c] >>> Math.floor(y / COCC_H)) & 1; },   /* v5.73 확인용 */ tvs: function () { return TVS.map(function (v) { var m = v.mot; return { kind: v.kind, w: v.w, h: v.h, at: planOf(v.c).map(function (q) { return +q.toFixed(2); }), on: v.on, n: v.n, mot: m ? { ord: m.ord.join(' '), k: m.k, cur: m.cur, loops: m.loops, show: m.show, paused: m.el.paused, t: +m.el.currentTime.toFixed(2), rs: m.el.readyState, blocked: m.blocked } : null }; }); }, mot: function () { return { on: MOT.on, n: MOT.n, got: MOT.got, fps: MOT_FPS, files: Object.keys(MOT.blob) }; }, elev: function () { toElev(); }, pb: function () { return { n: PB.n, on: PB.on, cut: G.kioskCut, relit: G.kioskRelit, trueN: G.trueN, posterHi: G.posterHi, gate: G.gateGlass }; },   /* v5.58 확인용 */ ph: function () { var p = planOf(G.pos); return { on: PH.on, ph: PH.ph, n: PH.n, ms: PH.ms, size: PH.size, snd: PH.snd, near: PH.near, keep: PH.keep > performance.now(), pola: !$('pola').hidden, pos: [+p[0].toFixed(2), +p[1].toFixed(2)], h: +G.h.toFixed(3), free: free(p[0], p[1]), log: PH.log }; }, phStart: function () { if (phNear()) phStart(); return PH.on; }, aim: function () { return { aim: AIM.b ? AIM.b.id : null, demo: !!AIM.demo, demoN: G.aimDemoN || 0, tipN: G.aimTipN || 0, tip: !!($('jtip') && !$('jtip').hidden), cls: $('bJump').className, blk: BLOCKS.map(function (b) { return { id: b.id, at: b.at.map(function (q) { return +q.toFixed(2); }), got: b.got, prox: +b.prox.toFixed(2), lit: +b.lit.toFixed(2) }; }) }; },   /* v5.67 확인용 */ iris: function () { return { seq: EV.seq ? EV.seq.ph[EV.seq.i][0] : null, cur: IR.cur, log: IR.log, dings: IR.dings }; }, face: function () { return irFace(); }, dingAt: dingAt, mus: function () { return { want: MUS.want, on: musOn(), ctx: MUS.ctx ? MUS.ctx.state : null }; }, visit: function (ago) { if (ago) VIS.t0 -= ago; return { age: Math.round(performance.now() - VIS.t0), seen: Object.keys(VIS.seen || {}), bub: Object.keys(VIS.bub), cheerN: VIS.cheerN, etipN: G.etipN || 0, etip: !$('etip').hidden, go: G.etipGo || null, ring: PB.ring ? +PB.ring.material.opacity.toFixed(2) : null, shot: !$('shot').hidden, shotCls: $('shot').className }; } };   /* v5.84 확인용 */   /* v5.55 확인용 */
@@ -5019,7 +5029,7 @@
     if (renderer) resize();
   }
   function open(o) {
-    OPTS = o || {};
+    OPTS = o || {}; loopWake();   /* v6.83 닫혀 쉬던 그리기를 깨운다 */
     if (!OPTS.restore) visitReset();   /* v5.84 새 방문 · 말풍선 · 방향점 · 「더 힘내세요!」 횟수 · 들른 구역 */
     clearInterval(ETIP.iv); ETIP.iv = setInterval(etipTick, 1000);   /* v5.84 엘리베이터 권유 살핌(열려 있는 동안 1초마다 · 가벼움) */
     clearInterval(G.hintIv); G.idleAt = performance.now(); G.hintIv = setInterval(hintTick, 500);   /* v5.99 6초 서 있으면 손가락 안내 */
@@ -5084,5 +5094,5 @@
     if (!$('help').hidden) { hideHelp(); return; }
     close();
   }
-  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v6.65', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
+  window.AXTour = { open: open, close: close, back: back, isOpen: function () { return !!(ROOTEL && G.open); }, pose: function () { return G.loaded && G.scn === 'lobby' ? poseGet() : G.loaded && G.scn === 'elev' ? { elev: 1 } : null; }, ver: 'v6.83', v3: true };   /* v5.65 엘리베이터 안 = { elev } */
 })();

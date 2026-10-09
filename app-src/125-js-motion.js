@@ -196,7 +196,7 @@ function xitMix(hex, k) {
 function xitionRun(switchNow) {
   var rm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (rm || document.getElementById("xition") || (/cap|demo/.test(location.hash) && !/xt/.test(location.hash))) { switchNow(); return; }
-  var ov = document.createElement("div"); ov.id = "xition";
+  var ov = document.createElement("div"); ov.id = "xition"; ov.setAttribute("aria-hidden", "true");
   var cv = document.createElement("canvas"); ov.appendChild(cv); document.body.appendChild(ov);
   var dpr = Math.min(2, window.devicePixelRatio || 1), W = Math.floor(window.innerWidth * dpr), H = Math.floor(window.innerHeight * dpr);
   cv.width = W; cv.height = H;

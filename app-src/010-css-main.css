@@ -18,6 +18,9 @@
     --acc2: var(--ax-color-brandText);  /* 밝은 면 위 오렌지 글자 */
     --dim: var(--ax-color-inset); --dimln: var(--ax-color-divider);   /* 지나감·잠김 */
     --axs-divider-strong: #CBD0D6;      /* 앱 전용 토큰(가이드에 없음, 260922 사용자 요청) · divider #E5E8EB 와 disabled #B0B8C1 의 중간값 · 헤더 하단선처럼 흰 면 위에서 더 또렷해야 할 때만 쓴다 */
+    --ax-color-muted: #66707D;          /* v6.83 (사용자 261009 접근성 결정) 보조 회색 #6B7684 → #66707D · 회색 canvas 위 4.56 · inset 위 4.81 · 연주황 위 4.55(4.5 통과) · tokens.css(잠긴 원본)는 두고 여기서 덮는다 */
+    --axs-dot: 0.5333em; --axs-dot-gap: 0.6667em; --axs-dot-top: 0.55em;   /* v6.83 목록 점 한 부품(「하는 일」 주황 점 · 보조 줄 목록 무채색 점) · 글자 크기 비례(15px 글자 = 점 8 · 간격 10) */
+    --axs-field-line: #808A96;          /* v6.83 (사용자 261009) 입력칸 테두리 · divider #E5E8EB 는 회색 바탕 위 1.12 라 경계가 안 보였다 · 3.18:1 */
     --hi: var(--ax-color-ink);          /* 제목·주요 텍스트 */
     --tx: var(--ax-color-body); --muted: var(--ax-color-muted); --faint: var(--ax-color-muted);
     --fs: 1;                            /* 글자 크기 배율 (설정에서 1 / 1.12 / 1.25) */
@@ -202,7 +205,7 @@
   .btn.line { background: transparent; color: var(--hi); border: 1px solid var(--line); }
   .btn.gray { background: #F1E7E1; color: #A39A95; }
   .btn:disabled { background: #F1E7E1; color: #A39A95; cursor: default; }
-  .input { width: 100%; border-radius: 12px; border: 1px solid var(--line); padding: 12px 13px; font-size: calc(16.5px * var(--fs)); outline: none; background: var(--white); color: var(--tx); }
+  .input { width: 100%; border-radius: 12px; border: 1px solid var(--axs-field-line); padding: 12px 13px; font-size: calc(16.5px * var(--fs)); outline: none; background: var(--white); color: var(--tx); }
   .input:focus { border-color: var(--mint); }
   .input::placeholder { color: var(--faint); }
   .row { display: flex; gap: 8px; align-items: center; }
@@ -244,7 +247,7 @@
   .tok.mine { background: var(--tint2); }
   /* v3.17 두 줄 변형 · 시작(크게) + 종료(작게, 같은 상태 색의 옅은 톤) · 두 줄이라 라운드 사각으로 */
   .tok.two { flex-direction: column; padding: 8px 10px 6px; border-radius: 13px; }
-  .tok.two small { display: block; margin-top: 2px; font-size: calc(11px * var(--fs)); font-weight: 700; opacity: 0.62; letter-spacing: 0; }
+  .tok.two small { display: block; margin-top: 2px; font-size: calc(11px * var(--fs)); font-weight: 700; letter-spacing: 0; }   /* v6.83 투명도 0.62 걷음(정보 글자 · 2.81 → 5.78) */
   .tok.act small { color: rgba(255,255,255,0.75); opacity: 1; }
   /* ══ 공용 행 카드 .rc (v3.22 사용자 지시 · 스탬프 카드 기준으로 전 화면 통일) ══
      스탬프 카드·일정 행·홈 나의 일정·프로그램 행이 전부 rcHtml() 하나로 그린다. 높이·라운드·좌우 패딩·좌측 슬롯 폭 고정.
@@ -388,7 +391,7 @@
   .coupon.used .qrbox { opacity: 0.25; }
   .tag-btn { border: 1px solid var(--line); cursor: pointer; border-radius: 10px; background: var(--white); color: var(--muted); padding: 7px 12px; font-size: calc(14.5px * var(--fs)); font-weight: 700; }
   .tag-btn.on { background: var(--mint); color: var(--ax-color-onBrand); border-color: var(--mint); }
-  #toast { position: fixed; left: 50%; bottom: 104px; transform: translateX(-50%) translateY(var(--ax-motion-rise)); z-index: 90; background: var(--hi); color: #fff; font-size: calc(14.5px * var(--fs)); font-weight: 700; padding: 12px 20px; border-radius: 12px; opacity: 0; pointer-events: none; transition: opacity var(--ax-motion-out) var(--ax-motion-ease-fade), transform var(--ax-motion-out) var(--ax-motion-ease-fade); max-width: 88%; text-align: center; }
+  #toast { position: fixed; left: 50%; bottom: 104px; transform: translateX(-50%) translateY(var(--ax-motion-rise)); z-index: 90; background: var(--hi); color: #fff; font-size: calc(14.5px * var(--fs)); font-weight: 700; padding: 12px 20px; border-radius: 12px; opacity: 0; pointer-events: none; transition: opacity var(--ax-motion-out) var(--ax-motion-ease-fade), transform var(--ax-motion-out) var(--ax-motion-ease-fade); box-sizing: border-box; width: max-content; max-width: calc(100% - 32px); text-align: center; }   /* v6.83 (묶음 17) 폭 = 글 길이(max-content) · 화면 양옆 16px 까지(옛 max-width 88% 만 = left 50% 에서 남은 폭으로 줄어 긴 글이 3~4줄) */
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); transition-duration: var(--ax-motion-in); }   /* 261009 모션 통일 · 나타남 = 떠오름(6px · 0.3초) · 사라짐 = 흐려짐 0.18초 */
   @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
 
@@ -444,7 +447,7 @@
   .rg-form { display: flex; gap: 8px; margin-top: 10px; }
   /* v3.36c 휴대폰 전체화면 플레이 */
   html.rg-lock, html.rg-lock body { overflow: hidden; overscroll-behavior: none; }
-  #rgPlay { position: fixed; left: 0; right: 0; top: 0; height: 100vh; height: 100dvh; z-index: 300; display: flex; flex-direction: column; background: #FFEBE0; touch-action: manipulation; overscroll-behavior: none; }   /* v4.10 100% → 100dvh(사용자 제보 260922) · position:fixed 에서 100%는 뷰포트 전체(100vh)로 계산돼 모바일 주소창이 떠 있으면 아래 고정 조작 안내(.gs-foot)가 화면 밖으로 밀렸다 */
+  #rgPlay { position: fixed; left: 0; right: 0; top: 0; height: 100vh; height: 100dvh; z-index: 300; display: flex; flex-direction: column; background: #FFEBE0; touch-action: pan-x pan-y; overscroll-behavior: none; }   /* v6.83 manipulation → pan-x pan-y(게임 중 두 손가락 확대 막음 · iOS 는 viewport 잠금을 안 따른다) */   /* v4.10 100% → 100dvh(사용자 제보 260922) · position:fixed 에서 100%는 뷰포트 전체(100vh)로 계산돼 모바일 주소창이 떠 있으면 아래 고정 조작 안내(.gs-foot)가 화면 밖으로 밀렸다 */
   #rgPlay .rgp-top { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; }
   #rgPlay .rgp-t { font-weight: 800; font-size: 14px; color: #000; }
   #rgPlay .rgp-x { border: 2px solid #000; background: #fff; border-radius: 999px; padding: 4px 12px; font-weight: 800; font-size: 13px; }
@@ -726,7 +729,9 @@
   .cstrip2.cn4 .cc { position: relative; min-width: 0; padding: 10px 12px; background: var(--ax-color-surface); box-shadow: inset 0 0 0 1px var(--ax-color-divider); }
   .cstrip2.cn4 .nm { display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; color: var(--ax-color-body); }
   .cstrip2.cn4 .nm .cn-nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  .cstrip2.cn4 .nm .dg { width: auto; height: 0.8em; color: var(--ax-color-muted); }   /* 층 표기 점문자 · 글자 높이의 0.8 · 큰 글씨에서도 같이 커짐 · 무채색 muted(v6.48 · 그 전 주황) */
+  .cstrip2.cn4 .nm .dg { width: auto; height: 0.8em; color: var(--ax-color-muted); }
+  .cstrip2.cn4 .nm .pl { flex: none; display: flex; align-items: center; gap: var(--ax-space-4); margin-left: auto; font: var(--ax-type-t7); color: var(--ax-color-muted); }   /* v6.83 (묶음 8) 층 = 나의 일정 장소 줄(.rc .pl)과 같은 값 · 이름 줄 오른쪽 끝 */
+  .cstrip2.cn4 .nm .pl .axs-pin { flex: none; width: 14px; height: 14px; }   /* 층 표기 점문자 · 글자 높이의 0.8 · 큰 글씨에서도 같이 커짐 · 무채색 muted(v6.48 · 그 전 주황) */
   .cstrip2.cn4 .pr { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 3px 0 0; --lamp: var(--ax-color-muted); }   /* 261009 둘째 줄 = 상태 알약 하나 + 대기 글자(알약은 한 덩어리 · 대기 글자는 알약 단위로만 아래로) */
   .cstrip2.cn4 .pill { display: inline-flex; align-items: center; gap: 5px; box-sizing: border-box; height: 1.375rem; padding: 0 9px 0 8px; border-radius: var(--ax-radius-999); font: 600 0.8125rem/1 var(--ax-font); color: var(--ax-color-ink); white-space: nowrap; background: var(--ax-color-surface); box-shadow: inset 0 0 0 1px var(--ax-color-divider); background: color-mix(in srgb, var(--lamp) 13%, var(--ax-color-surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lamp) 38%, var(--ax-color-surface)); }   /* 알약 면 = 상태 색 13% 틴트 + 38% 테두리(color-mix 못 쓰는 기기 = 흰 면 + 회색 테두리) */
   .cstrip2.cn4 .pill .lamp { flex: none; box-sizing: border-box; width: 0.5625rem; height: 0.5625rem; border-radius: var(--ax-radius-999); background: var(--lamp); }   /* 알약 안 점 · 혼잡 이상 = 꽉 찬 점 */
@@ -746,6 +751,8 @@
   /* 261008 홈 스탬프 블록 여백만 줄인다(내용 · 보상 단계 · 6칸 그대로 · 사용자 「스탬프가 첫 화면에 · 필요하면 조정」) */
   #view[data-v="home"] .axs-railgo { gap: var(--ax-space-4); margin-top: calc(var(--ax-space-8) * -1); }
   #view[data-v="home"] .axs-railgo .sect span { min-height: 32px; }
+  #view[data-v="home"] .axs-railgo .sect span[role="button"] { position: relative; }
+  #view[data-v="home"] .axs-railgo .sect span[role="button"]::after { content: ""; position: absolute; inset: -6px -8px; }   /* v6.83 (접근성 B-3) 「바로가기」 눌림 32 → 44 · 투명 */
   #view[data-v="home"] .axs-railgo .rail { padding: var(--ax-space-12) var(--ax-space-20); }
   #view[data-v="home"] .axs-railgo .axs-pzgo { min-height: 44px; margin-top: var(--ax-space-8); padding-top: var(--ax-space-4); padding-bottom: var(--ax-space-4); }
   /* 261008 지금 현장 스태프 입력 시트 · 저장됨 · 재는 중 띠 · 스캔 화면 「줄」 */
@@ -831,6 +838,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* v3.44c 마커 = 아이콘(3 룰렛 · 4~6 응모권) · 필요한 개수는 마커 위 작은 숫자 · 상태는 색으로만: 잠김 회색 · 다음 목표 옅은 주황 링 + 은은한 맥박(화면에 하나) · 도달 O100 채움 흰 아이콘 */
   .rail .mk { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 30px; height: 30px; border-radius: 999px; border: 2px solid var(--dimln); background: var(--dim); color: #B9B2AC; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
   .rail .mk svg { width: 17px; height: 17px; display: block; }
+  .rail .mk::after { content: ""; position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); }   /* v6.83 (접근성 B-3) 보상 막대 마커 눌림 30 → 44(투명 · 겉모양 그대로 · 이웃과 겹치는 몇 px 는 뒤 마커 몫) */
   .rail .mk .no { position: absolute; left: 50%; bottom: calc(100% + 3px); transform: translateX(-50%); font-family: var(--disp); font-size: calc(10.5px * var(--fs)); font-weight: 800; line-height: 1; color: var(--faint); white-space: nowrap; pointer-events: none; }
   .rail .mk.next { background: var(--white); border-color: #FFB284; color: #FFA46E; animation: railNext 2.2s ease-in-out infinite; }
   .rail .mk.next .no { color: var(--acc2); }
@@ -875,7 +883,11 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .rail .cap { margin-top: 7px; font-size: calc(12px * var(--fs)); font-weight: 700; color: var(--faint); line-height: 1.5; }
   /* v6.69 segHtml 조각 · 한 덩어리로 다음 줄에 넘어가고 · 한 줄보다 길면 그 안에서 꺾인다 (사용자 261009) */
   ax-seg { display: inline-block; max-width: 100%; text-indent: 0; }
+  ax-seg + ax-seg::before { content: "\00B7\00A0"; content: "\00B7\00A0" / ""; }   /* v6.83 조각 사이 점 = CSS(읽는 글에 점 없음) · 한 줄 「A · B」 */
   .segflow > ax-seg { display: inline; }   /* 조각으로 꺾으면 줄이 늘어나는 글 = 보통 흐름(segFit) */
+  /* v6.83 (사용자 261009 묶음 13 · 보충 2) 두 줄 이상 = 목록 모양 · 점 = 「하는 일」 목록과 같은 둥근 점 부품(값 = :root --axs-dot · --axs-dot-gap · --axs-dot-top 한 곳 · 글자 크기 비례) · 색 = 그 줄 글자색(무채색) · 꺾이면 점 뒤 글자 시작에 맞춰 들여쓰기 · 줄 간격 그대로 */
+  .seglist > ax-seg { position: relative; display: block; padding-left: calc(var(--axs-dot) + var(--axs-dot-gap)); }
+  .seglist > ax-seg::before, .seglist > ax-seg + ax-seg::before { content: ""; position: absolute; left: 0; top: var(--axs-dot-top); width: var(--axs-dot); height: var(--axs-dot); border-radius: 50%; background: currentColor; }
   /* 섹션 제목 (카드 바깥) */
   .sect { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 9px 2px 6px; }
   .sect b { font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); }
@@ -1133,9 +1145,17 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #topbar .axs-crumb li { display: flex; align-items: center; flex: none; min-width: 0; }
   #topbar .axs-crumb li:last-child { flex: 0 1 auto; overflow: hidden; }
   #topbar .axs-crumb li.gone { display: none; }
-  #topbar .axs-crumb .sep { padding: 0 var(--ax-space-4); color: var(--ax-color-muted); }
+  #topbar .axs-crumb .sep { padding: 0 var(--ax-space-4); color: var(--ax-color-muted); pointer-events: none; }
   #topbar .axs-crumb button { min-height: 32px; padding: 0; border: 0; background: none; font: inherit; color: var(--ax-color-body); cursor: pointer; text-decoration: underline; text-decoration-color: var(--ax-color-divider); text-underline-offset: 3px; }
   #topbar .axs-crumb b { display: block; overflow: hidden; text-overflow: ellipsis; color: var(--ax-color-ink); font-weight: 700; }
+  /* v6.83 (접근성 B-3) 경로 줄 단추 눌림 = 높이 44 · 폭 44 이상(「홈」 12 → 44) · 투명 확장(padding + 같은 크기 음수 margin)이라 글자 자리 · 줄 높이 그대로
+     줄(nav) 위아래 4px 여백을 목록(ol) 안쪽으로 옮겨 단추가 위아래로 44 · 첫 단추는 왼쪽 여백(24px) 쪽으로 20px · 모든 단추는 오른쪽 「›」 자리로 14px(› 는 누름 통과) */
+  #topbar .axs-crumb { padding-top: 0; padding-bottom: 0; }
+  #topbar .axs-crumb ol { margin: -2px 0 -2px -20px; padding: 6px 0 6px 20px; }
+  #topbar .axs-crumb button { min-height: 44px; margin: -6px -14px -6px 0; padding: 6px 14px 6px 0; text-decoration-skip-ink: auto; }
+  #topbar .axs-crumb li:first-child button { margin-left: -20px; padding-left: 20px; }
+  #topbar .axs-crumb li { pointer-events: none; }   /* 뒤 칸(li)이 앞 단추의 오른쪽 확장을 덮지 않게 · 단추만 누름 */
+  #topbar .axs-crumb li button { pointer-events: auto; }
   #topbar .axs-htitle { flex: 1; min-width: 0; font: var(--ax-type-t5-strong); color: var(--ax-color-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #topbar .axs-hgr { padding-bottom: var(--ax-space-8); }
   #topbar .axs-hgr .ax-meta { display: block; }
@@ -1312,7 +1332,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   @media (prefers-reduced-motion: reduce) { #endGate .end-bot, #endGate svg, #endGate .eye, #endGate .ant path, #endGate h1, #endGate .ax-description { animation: none; } #endGate .ant path { opacity: 0.3; } }
   #axsWait { position: fixed; inset: 0; z-index: 130; display: flex; align-items: center; justify-content: center; padding: var(--ax-page-inset); background: var(--ax-color-canvas); }
   /* 비밀번호 찾기 화면 · 입력 56 / 주 버튼 56 모양만 A01 에 맞춘다(재방문 #quick 은 v4.94 수면형 .axs-lf) */
-  #pwlost input { min-height: var(--ax-button-height); border: 1px solid var(--ax-color-divider); border-radius: var(--ax-radius-12); background: var(--ax-color-inset); color: var(--ax-color-ink); }
+  #pwlost input { min-height: var(--ax-button-height); border: 1px solid var(--axs-field-line); border-radius: var(--ax-radius-12); background: var(--ax-color-inset); color: var(--ax-color-ink); }
   #pwlost input:focus { border-color: var(--ax-color-ink); }
   #pwlost .q-go { min-height: var(--ax-button-height); border-radius: var(--ax-radius-16); background: var(--ax-color-brand); color: var(--ax-color-onBrand); font: var(--ax-type-t5-strong); }
   #pwlost .q-eyebrow { color: var(--ax-color-brandText); }
@@ -1448,6 +1468,10 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-seg button[aria-pressed="true"] { background: var(--ax-color-surface); color: var(--ax-color-ink); }
   .axs-seg button small { display: block; font: var(--ax-type-caption); color: var(--ax-color-muted); }
   .axs-seg button small.need { color: var(--ax-color-error); }
+  /* v6.83 (접근성 C-1) 선택 칸 = 흰 면만으로는 트랙과 1.23:1 · 굵은 글자 + 1px 테두리(입력칸 선 색 · 3.18:1)를 겹쳐 색 말고도 보이게 · 겉 크기는 그대로(안쪽 그림자) */
+  .axs-seg button[aria-selected="true"], .axs-seg button[aria-pressed="true"], #topbar .axs-fs button[aria-pressed="true"] { font-weight: 700; box-shadow: inset 0 0 0 1px var(--axs-field-line); }
+  .axs-seg.sw-r button[aria-selected="true"] { box-shadow: none; }
+  .axs-seg.sw-r::before { box-shadow: inset 0 0 0 1px var(--axs-field-line); }
   .axs-scam { position: relative; border-radius: var(--ax-radius-16); overflow: hidden; background: var(--ax-color-ink); }
   .axs-scam video { display: block; width: 100%; max-height: 40vh; object-fit: cover; }
   .axs-slog { display: flex; flex-direction: column; padding: var(--ax-space-4) var(--ax-space-16); }
@@ -1826,7 +1850,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* v4.10 min-height 0 · #view 공통 규칙의 min-height 는 헤더 64px 고정값 기준이라, 경로 줄로 헤더가 실제로 더 커지면(약 106px) 그 차만큼 뷰가 과하게 늘어나 있지도 않은 스크롤이 생겼다. 게임 화면은 내용만큼만 차지해도 된다(#frame 배경이 어차피 100dvh 를 채운다) */
   #view[data-v^="game_"] { padding: var(--ax-space-24) var(--ax-page-inset) calc(var(--ax-space-16) + env(safe-area-inset-bottom)); min-height: 0; }
   .oly-sum-n { margin: var(--ax-space-4) 0 0; font: var(--ax-type-t2); color: var(--ax-color-ink); font-variant-numeric: tabular-nums; }
-  .oly-sum-n small { font: var(--ax-type-t6); color: var(--ax-color-muted); }
+  .oly-sum-n small { font: var(--ax-type-t6); color: var(--ax-color-muted); opacity: 1; }   /* v6.83 옛 .oly-sum small 투명도 0.7 이 겹쳐 2.67 이던 것 */
   .oly-sum-r { margin: 0; text-align: right; }
   .oly-rank-go { margin-top: var(--ax-space-12); }
   /* 순위판 · 종합 포디움 2-1-3 · 종목별 · 월계수 A안 최소 48 */
@@ -1883,6 +1907,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-form { gap: var(--ax-space-24); padding-top: var(--ax-space-8); }
   .axs-ta { width: 100%; min-height: 120px; padding: var(--ax-space-16); resize: none; font: var(--ax-type-t5); line-height: 1.5; }
   .axs-ta.axs-grow { min-height: 132px; max-height: min(40vh, 360px); overflow-y: auto; }   /* v5.39 아이디어 3,000자(사용자 261003) · 쓰면 높이가 늘고(ideaFit) 최대 높이 안에서 스크롤 · 설문 칸(.axs-ta)은 그대로 */
+  .ax-field { border-color: var(--axs-field-line); }   /* v6.83 (사용자 261009) 입력칸 경계 = --axs-field-line · 오류(aria-invalid) 빨강은 components.css 쪽이 더 구체적이라 그대로 */
+  #axsDet .axs-dbody.axs-fit, #axsSheet .ax-sheet.axs-fit, #modal .mcard.axs-fit { overflow-y: hidden !important; }   /* v6.83 (묶음 7) 글이 다 들어가는 시트 = 끌어도 스크롤 없음(sheetFit) */
   .axs-imtx { white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere; }   /* v5.39 내가 낸 아이디어 · 줄바꿈 그대로 · 긴 글은 접기(ideaMineTxt) */
   .axs-imtx .ax-link { display: flex; align-items: center; min-height: var(--ax-touch-size); white-space: nowrap; }   /* 펼치기 · 접기 = 글 아래 한 줄 */
   .axs-cnt { display: flex; justify-content: space-between; gap: var(--ax-space-8); }
@@ -1905,10 +1931,10 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-att:disabled .rd { border-color: var(--ax-color-divider); background: transparent; }
   .axs-attok { display: flex; flex-direction: column; gap: var(--ax-space-4); }
   .axs-attt { display: flex; align-items: center; justify-content: space-between; gap: var(--ax-space-8); font: var(--ax-type-t7); color: var(--ax-color-body); }
-  .axs-attt input { min-height: var(--ax-touch-size); padding: 0 var(--ax-space-8); border: 1px solid var(--ax-color-divider); border-radius: var(--ax-radius-12); background: var(--ax-color-surface); color: var(--ax-color-ink); font: var(--ax-type-t6); }
+  .axs-attt input { min-height: var(--ax-touch-size); padding: 0 var(--ax-space-8); border: 1px solid var(--axs-field-line); border-radius: var(--ax-radius-12); background: var(--ax-color-surface); color: var(--ax-color-ink); font: var(--ax-type-t6); }
   .axs-svin { display: flex; flex-direction: column; gap: var(--ax-space-12); }
   .axs-svin .row { display: flex; gap: var(--ax-space-8); }
-  .axs-svin input[type=range] { width: 100%; accent-color: var(--ax-color-brand); }
+  .axs-svin input[type=range] { display: block; width: 100%; height: 44px; margin: 0; accent-color: var(--ax-color-brand); cursor: pointer; }   /* v6.83 (접근성 A-4) 눌림 높이 16 → 44 · 손잡이 · 막대 모양은 그대로(가운데) */
   /* 포토부스 대기 번호 · 검정 호출 면 폐지 → 주황 면 + 짙은 글자 */
   /* v4.18 위계(사용자 결정 260923) · 줄어드는 앞 팀 수와 예상 시각이 주인공, 고정 번호는 아래 한 줄로 받친다 */
   /* 비밀번호 찾기 · 전체 화면 */
@@ -1928,13 +1954,14 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #pwlost { position: fixed; overflow-y: auto; }   /* 화면 높이에 맞춘다 · 앱 면이 길어도 아래 버튼이 화면 안에 */
   #pwlost h1 { color: var(--ax-color-ink); }
   /* 아래 고정 바의 꺼진 주 버튼 · canvas 바탕 위에서도 자리가 보이게 흰 면 + disabled 글자 */
-  .axs-fix.ax-bottom .ax-button:disabled { background: var(--ax-color-surface); color: var(--ax-color-disabled); }
+  .axs-fix.ax-bottom .ax-button:disabled { background: var(--ax-color-divider); color: var(--ax-color-muted); }   /* v6.83 (접근성 C-2) 흰 면 + 연회색 글자는 단추로 안 보였다 · 회색 면 + 보조 글자 */
   /* ═══ v4.84 (261001 앱 개편 2묶음) 홈 다음 스탬프 · 스탬프 탭 한 목록 · 프로그램 탭 메뉴 · 10F 세션 줄 · 1F 부스 6구역 (토큰만 · hex 없음) ═══ */
   #view[data-v="exp"] .axs-sec { display: flex; flex-direction: column; gap: var(--ax-space-12); }
   #view[data-v="exp"] .sect { margin: 0; align-items: center; }
   #view[data-v="exp"] .sect b { font: var(--ax-type-t4); color: var(--ax-color-ink); }   /* v5.66 (디자인 감사 261005 D4) 옛 15.5px 800 · 12.5px 700 → 토큰(홈 .sect 와 같은 제목 크기) */
   #view[data-v="exp"] .sect span { font: var(--ax-type-t7); color: var(--ax-color-muted); cursor: default; }
   #view[data-v="exp"] .lnk.sub { margin: 0 var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-muted); cursor: pointer; }
+  #view[data-v="exp"] .axs-stfgo { display: flex; align-items: center; width: fit-content; min-height: 44px; margin: -12px var(--ax-space-4); padding: 0; border: 0; background: none; text-align: left; }   /* v6.83 (접근성 B-3 · B-6) 「담당자 적립」 p → button · 눌림 높이 20 → 44 · 위아래 -12px 로 글자 자리 그대로 */
   #view[data-v="exp"] .nt { margin: 0 var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-body); }
   .axs-nx { gap: var(--ax-space-16); }
   .axs-nx-c { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ax-space-4) var(--ax-space-12); margin: 0; font: var(--ax-type-t7); color: var(--ax-color-muted); }
@@ -1948,12 +1975,12 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-stp.done .axs-stpn { border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
   .axs-stpn svg { width: 20px; height: 20px; display: block; }
   /* v5.68 프로그램 참여 = 스탬프 2개 · 제목 옆 「×2」 알약 · 17F 한쪽만(p3h) = 번호 칸 아래 절반 주황 「1/2」 */
-  .axs-x2 { display: inline-flex; align-items: center; gap: var(--ax-space-4); margin-left: var(--ax-space-8); padding: 1px var(--ax-space-8); border-radius: var(--ax-radius-999); background: var(--ax-color-brand); color: var(--ax-color-ink); font: var(--ax-type-caption); font-weight: 800; line-height: 1.35; vertical-align: 2px; white-space: nowrap; }
-  .axs-x2 .d { flex: none; box-sizing: border-box; width: 9px; height: 9px; border-radius: var(--ax-radius-999); border: 1.5px solid var(--ax-color-ink); }
-  .axs-x2 .d.on { background: var(--ax-color-ink); }
+  /* v6.83 (사용자 261009 묶음 12 「스탬프 픽토그램 × 2」) 주황 알약(점 둘 + 「스탬프 2개」 · v6.56) → 하단 탭 스탬프 그림(#nav-stamp 그대로) + 「×2」 · 면 없음 · 무채색(받은 줄 = muted) · 한 덩어리(좁으면 통째로 다음 줄) */
+  .axs-x2 { display: inline-flex; align-items: center; gap: 2px; margin-left: var(--ax-space-8); color: var(--ax-color-body); font: var(--ax-type-t7); font-weight: 700; line-height: 1; vertical-align: middle; white-space: nowrap; }
+  .axs-x2 .axs-x2i { flex: none; width: 1.15em; height: 1.15em; }
+  .axs-stp.done .axs-x2 { color: var(--ax-color-muted); }
   .axs-stpb .axs-stpt2 { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ax-space-4) var(--ax-space-8); }   /* 좁은 폭 · 큰 글씨에서 알약이 제목 아래로 내려가도 들여쓰기 없이 */
   .axs-stpt2 .axs-x2 { margin-left: 0; vertical-align: baseline; }
-  .axs-x2 .d + .d { margin-right: var(--ax-space-4); }   /* v6.56 알약 = 도장 칸 두 개(받은 만큼 찬 점) + 「스탬프 2개」 */
   .axs-stp.half .axs-stpn { border-color: var(--ax-color-brand); background: linear-gradient(to top, var(--ax-color-brand) 50%, var(--ax-color-inset) 50%); color: var(--ax-color-ink); font: var(--ax-type-caption); font-weight: 700; }
   .axs-stpb { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--ax-space-4); }
   .axs-stpb .ax-card-title { margin: 0; }
@@ -1961,6 +1988,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-stpm > span:not(.axs-stpc) { min-width: 0; }
   .axs-stpc { flex: none; display: inline-flex; align-items: center; min-height: 22px; padding: 0 var(--ax-space-8); border-radius: var(--ax-radius-8); background: var(--ax-color-canvas); color: var(--ax-color-body); font: var(--ax-type-caption); white-space: nowrap; }
   .axs-stp.tap { cursor: pointer; }
+  .axs-stpc { min-width: calc(3em + var(--ax-space-16)); justify-content: center; }   /* v6.83 (디자인 D-8) 받는 법 알약 최소 폭 통일(자동 · 현장 · 폰으로 = 같은 폭 · 글자 가운데) */
   .axs-stpc.staff { background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); }
   .axs-stpa { flex: 0 0 auto; align-self: center; min-width: var(--ax-touch-size); min-height: var(--ax-touch-size); padding: 0 var(--ax-space-4); border: 0; background: transparent; color: var(--ax-color-brandText); font: var(--ax-type-t6-strong); display: inline-flex; align-items: center; justify-content: flex-end; cursor: pointer; }
   span.axs-stpa { cursor: default; }
@@ -2046,7 +2074,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .rc.axs-tourbig .ls .ico.tbot { width: 52px; height: 52px; background: var(--ax-color-surface); }
   .rc.axs-tourbig .ls .ico.tbot svg { width: 58px; height: 58px; left: -3px; top: 1px; }
   .rc.axs-tourbig .tt { font: var(--ax-type-t5-strong); font-weight: 800; }
-  .rc.axs-tourbig .sb { color: var(--ax-color-body); }
+  .rc.axs-tourbig .sb { font: var(--ax-type-t7); color: var(--ax-color-body); }
   /* v5.64 (사용자 261005 「홈화면도 이것과 통일」) 홈 줄 규칙(#view[data-v="home"] .rc · 흰 면 · 테 없음 · 회색 설명)이 카드를 덮지 않게 · 같은 카드 한 벌(tourCardHtml) */
   #view[data-v="home"] .rc.axs-tourbig { background: var(--ax-color-brandSoft); border: 1px solid color-mix(in srgb, var(--ax-color-brand) 30%, var(--ax-color-surface)); --rc-px: 15px; }
   #view[data-v="home"] .rc.axs-tourbig .ls .ico.tbot { background: var(--ax-color-surface); }

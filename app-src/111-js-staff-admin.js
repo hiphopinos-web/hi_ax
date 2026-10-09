@@ -251,7 +251,7 @@ function sscSheetBody() {
   return '<div class="axs-stiles ssc-picks">' + one.join("") + "</div>" + (ten.length ? '<h3 class="ax-meta ssc-h">10F 세션 입장</h3><div class="axs-stiles ssc-picks">' + ten.join("") + "</div>" : "") +
     '<div class="ssc-opts"><button type="button" class="ssc-opt" aria-pressed="' + snd + '" onclick="sscSnd()"><span>스캔 소리</span><b>' + (snd ? "켬" : "끔") + "</b></button>" +
     '<button type="button" class="ssc-opt" onclick="sheetClose(true); sscMine()"><span>내 QR 보여주기</span>' + CHEV_SVG + "</button>" +
-    '<button type="button" class="ssc-opt" onclick="sheetClose(true); App.go(\'admin\')"><span>관리자 모드</span>' + CHEV_SVG + "</button></div>";
+    (admRole() === "admin" ? '<button type="button" class="ssc-opt" onclick="sheetClose(true); App.go(\'admin\')"><span>관리자 모드</span>' + CHEV_SVG + "</button>" : "") + "</div>";   /* v6.83 (묶음 18 · QA/스태프 코드 계약_261009.md 5절) 관리자 모드 = 관리코드(role admin)로 연 폰만 · 스태프 코드(role staff)는 연속 스캔까지 */
 }
 function sscSheet() { sheetOpen({ id: "sscspot", title: "어디서 찍나요?", lead: "고른 자리는 이 폰에 기억해요", body: sscSheetBody(), go: "sheetClose()", goLbl: "닫기" }); }
 function sscPick(id, sub) {

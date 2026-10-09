@@ -39,8 +39,8 @@
   .axs-pan .axs-dot::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--ax-color-brand); }
   .axs-pan .axs-todo { display: flex; flex-direction: column; gap: 10px; }
   .axs-pan .axs-todo h3 { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
-  .axs-pan .axs-todo p { display: flex; gap: 10px; margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); }
-  .axs-pan .axs-todo p::before { content: ""; flex: none; width: 8px; height: 8px; margin-top: 0.55em; border-radius: 50%; background: var(--ax-color-brand); }
+  .axs-pan .axs-todo p { display: flex; gap: var(--axs-dot-gap); margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); }   /* v6.83 점 값 = :root --axs-dot 한 곳(보조 줄 목록 .seglist 와 같은 부품 · 15px 글자에서 8px 점 · 10px 간격 그대로) */
+  .axs-pan .axs-todo p::before { content: ""; flex: none; width: var(--axs-dot); height: var(--axs-dot); margin-top: var(--axs-dot-top); border-radius: 50%; background: var(--ax-color-brand); }
   /* ── 공통 부품 K 끝 · 아래는 상시 운영 · 구역 상세 화면 조각(같은 경계 .axs-pan) ── */
   .axs-pan .axs-zsec { display: flex; flex-direction: column; gap: var(--ax-space-8); }
   .axs-pan .axs-zr { display: flex; align-items: center; gap: var(--ax-space-12); width: 100%; padding: var(--ax-space-16); border: 0; border-radius: var(--ax-radius-20); background: var(--ax-color-surface); color: var(--ax-color-ink); font-family: inherit; text-align: left; cursor: pointer; }
@@ -171,13 +171,14 @@
 .axs-pan .axs-xchk .axs-kv { grid-template-columns: 56px minmax(0, 1fr); row-gap: var(--ax-space-12); }
 .axs-pan .axs-xchk .axs-treat { margin-top: var(--ax-space-4); }
 .axs-pan .axs-xgd { display: flex; flex-direction: column; gap: var(--ax-space-4); }
-.axs-pan .axs-xgd .ax-link { min-height: 36px; }
+.axs-pan .axs-xgd .ax-link { min-height: 44px; margin: -4px 0; }   /* v6.83 (접근성 B-3) 눌림 높이 36 → 44 · 위아래 -4px 로 자리 · 모양 그대로 */
 .axs-pan .axs-xq { display: flex; flex-direction: column; gap: 2px; margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
 .axs-pan .axs-zdt.axs-sthost > .axs-xq { padding-right: 64px; }
 .axs-pan .axs-zdt > .axs-sign + .axs-xq { margin-top: calc(var(--ax-space-8) * -1); }
 @media (prefers-reduced-motion: reduce) { .axs-pan .axs-xtog svg { transition: none; } }
 /* v5.69 구역 상세 시트(#axsDet · zoneSheet cls axs-pan) · 사실 표 열 = 구역 상세 카드와 같다 · 질문 3줄은 제목 바로 아래 */
 #axsDet .axs-pan .axs-kv { grid-template-columns: 56px minmax(0, 1fr); row-gap: var(--ax-space-8); }
+#axsDet .axs-dsh.axs-pan .axs-dbody { gap: var(--ax-space-16); }   /* v6.83 (사용자 261009 묶음 11) 구역 상세 시트 = 선 · 섹션 간격 한 단계 작게(20 → 16 · 같은 종류 간격 같은 값) · 일반 글씨 360 · 390 한 화면 */
 #axsDet .axs-pan .axs-xq { margin-top: calc(var(--ax-space-4) * -1); }
 /* 261008 비어 보이는 상세 다듬기(사용자 「(가)로 가자」 · 높이 규칙 그대로) · 구역 시트 상태 한 줄(자유 관람 · 스탬프 없음 · 운영 시각 · 스탬프 3개면 룰렛 1회)을 제목 묶음에 붙인다(간격 20 → 8 · 떠 있던 회색 줄 + 검정 줄 = 한 덩어리 뒤 줄 하나) · 하는 일 줄 = 마지막 줄 한 낱말 막기 */
 #axsDet .axs-pan .axs-dlead + .cr { margin-top: calc(var(--ax-space-12) * -1); }

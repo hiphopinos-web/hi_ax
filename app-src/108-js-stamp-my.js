@@ -33,7 +33,7 @@ function rcHtml(o) {
   /* v4.09 (사용자 피드백 260922 「장소와 › 가 붙어 보기 불편」) · 장소 = 제목 아래 한 줄(위치 아이콘 + T7 muted) ·
      이동 표시 = 행 오른쪽 끝 셰브론(24 영역 · 세로 가운데) · 누르는 곳은 행 전체(.rh) · 옛 오른쪽 위 장소 칩(v3.44)은 폐지 */
   return '<div class="rc' + (o.place ? " hp" : "") + (o.cls || "") + '">' +
-    '<div class="rh"' + (o.onclick ? ' onclick="' + o.onclick + '"' : "") + ">" +
+    '<div class="rh"' + (o.onclick ? ' onclick="' + o.onclick + '"' + (/<(button|a)\b/.test(o.right || "") ? "" : ' role="button" tabindex="0"' + (o.chev === "svg" ? ' aria-expanded="' + !!o.open + '"' : "")) : "") + ">" +   /* v6.83 (접근성 B-6) 누르는 줄 = Tab · Enter · Space(안에 단추가 있으면 그 단추로) · 모양 그대로 */
     '<span class="ls">' + (o.left || "") + "</span>" +
     '<span class="bd">' + rcTitle(o) + (o.sub ? '<span class="sb">' + o.sub + "</span>" : "") + (o.place ? '<span class="pl">' + PIN_SVG + "<span>" + esc(o.place) + "</span></span>" : "") + "</span>" +
     (o.right ? '<span class="rt">' + o.right + "</span>" : "") + chev + "</div>" +

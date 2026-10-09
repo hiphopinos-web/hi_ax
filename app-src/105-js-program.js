@@ -138,7 +138,7 @@ var STAGE = {
   outro: { id: "outro", fl: 17, zone: "hall", kind: "stage", ttl: "Closing Speech", sub: "DAP 시상 · 현장 추첨", who: "정경선 CSO", tm: "17:00~17:30", desc: "" }
 };
 function progById(id) { return id === "expo" ? EXPO : id === "intro" || id === "outro" ? STAGE[id] : sessById(id); }
-function progTm(tm) { return String(tm || "").replace("~", "–"); }
+function progTm(tm) { return String(tm || "").replace(/\s*[~–-]\s*/, "~"); }   /* v6.83 (디자인 D-3 · 사용자 261009) 시간 범위 = 네임택 PDF 그대로 「09:30~09:40」(붙여 쓴 물결) */
 /* v4.13 프로그램 탭 두 층(사용자 결정 260922 · design.md A-5 5-10) · 1층 = 보기 [목록 | 시간표] · 2층 = 분류 칩(두 보기 공통) */
 /* ═══ v4.15 시간표 보기 재설계 (사용자 결정 260922 · design.md A-5 5-10) ═══
    목록과 모양이 달라야 한다: 어제(v4.03 이전 · v3.5 일정 탭 계열) 구조를 되살리고 AX-TDS 토큰만 맞춘다.
@@ -269,6 +269,7 @@ function progFlowScroll() {
 /* TBD (사용자 261002) 동선 1 Welcome · 사전등록자 체크인존(건물 밖 동쪽 텐트 · 엑스배너 QR) · 이름 확인 + 사전 기념품 전달
    보류한 설계 쟁점: 체크인 = QR 을 찍는 행위(로그인과 별개 · 미리 로그인한 사람도 잡히게) · 사원증 대조 · 체크인과 수령을 따로 기록(중복 수령) · 스태프 사번 조회 대체 경로
    필요한 것: 사번 → 물품 명단(서버에만 · 앱 코드에 넣지 않는다) · 서버 액션(체크인 · 물품 조회 · 수령) · 결정 전까지 Welcome 은 구역 목록에 넣지 않는다 */
+var APPLY_GIFT = "커피 · 쿠키 · 노트 · 볼펜";   /* 261008 신청하기 두 카드 사은품 줄 한 문구(라운지 = 앞에 「상담 후」) */
 var FLOOR1 = [
   { id: "vision", grp: "see", sign: "AX VISION", kor: "회사가 가는 방향을 보는 곳", fact: "AX 로드맵 · 영상", st: "",
     stm: "회사가 어디로 가는지 보는 곳", todo: ["AX 로드맵 2026~2028을 봐요", "키비주얼 영상을 봐요"] },
@@ -280,9 +281,10 @@ var FLOOR1 = [
   { id: "lounge", grp: "do", sign: "AX LOUNGE", hdr: "AX 라운지", kor: "내년 DAP 과제 후보를 1:1로 상담하는 곳", fact: "", st: "",   /* v5.94 (사용자 결정 261006) 라운지 상담은 스탬프 없음 */
     stm: "내년 DAP(데이터 분석 프로젝트) 과제를 상담해요",
     lead: "내년 DAP(데이터 분석 프로젝트) 과제를 상담해요",   /* v5.70 시트 「하는 일」 첫 줄 = DAP 풀이(v5.69 시트화로 부제 stm 이 빠지며 함께 사라졌다 · v5.65 사용자 확정 문구) */
-    todo: ["데이터사이언스파트와 업무 고민을 나눠요", "앱에서 30분 상담을 신청해요"],
-    gd: ["아직 막연하다면 커피챗에서 가볍게 나눠요", "18F AX 커피챗 보기", "cchat"],
-    chk: [["진행", "업무 설명 → 병목 → 개선방안 · 30분"], ["신청", "사전 신청자 우선 · 남은 시간은 누구나 신청\n승인되면 앱에서 알려 드려요"], ["기록", "상담 내용은 기록되어 행사 후 정리해 공유돼요"], ["사은품", "상담을 마치면 커피 · 쿠키 · 노트 · 볼펜"]] },   /* v5.65 (사용자 261005 「커피챗과 라운지는 권장대로」 · 정본 디자인 시안/라운지 커피챗 통일/설계안.md) 커피챗과 같은 틀 · 서로 안내(gd) · 참여 전 확인(chk) 패널 · 커피 · 간식 사진은 패널 안에만 */
+    todo: ["데이터사이언스파트와 업무 고민을 나눠요"],   /* v6.83 (사용자 261009 묶음 11) 「앱에서 30분 상담을 신청해요」 덜기 = 아래 주 버튼 「상담 신청」 · 참여 전 확인 「30분」과 겹침 */
+    gd: ["아직 막연하다면 커피챗에서 가볍게 나눠요", "18F AX 커피챗 보기", "cchat"], gl: "가볍게 나누려면 18F AX 커피챗",   /* v6.83 (묶음 11) 시트 서로 안내 = 한 줄 링크(gl) · gd 두 문구는 옛 페이지 · 되살릴 때 쓴다 */
+    gift: "상담 후 ",   /* 사은품 표 값 = gift + APPLY_GIFT · v6.83 (사용자 261009 묶음 16) 사실 표 = 지금 · 시간 · 장소 · 사은품 · 옛 「참여 전 확인」 접힘 표(진행 · 신청 · 기록 · 사은품)는 아래 상자(need) · 사은품 표로 나눴다 */
+    need: ["상담 받으려면", [["time", "시간 골라 신청", "사전 신청자 우선 · 남은 시간은 누구나 신청"], ["stamp", "승인되면 앱에서 안내", ""], ["talk", "업무 설명 → 병목 → 개선방안", "1:1 · 30분"], ["doc", "상담 내용은 기록 · 행사 후 정리해 공유", ""]]] },   /* v5.65 (사용자 261005 「커피챗과 라운지는 권장대로」 · 정본 디자인 시안/라운지 커피챗 통일/설계안.md) 커피챗과 같은 틀 · 서로 안내(gd) · 참여 전 확인(chk) 패널 · 커피 · 간식 사진은 패널 안에만 */
   { id: "play", grp: "do", sign: "AX PLAY", kor: "AI를 직접 써 보는 곳", fact: "HiDI-Q · Hi-Helper", st: "p2",
     stm: "HiDI-Q와 Hi-Helper를 직접 써 보는 곳", todo: ["노트북에서 HiDI-Q, Hi-Helper를 써 봐요", "스태프에게 내 QR을 보여 주면 적립"], btn: ["체험 안내", "App.go('booth')"] },   /* v5.60 기능 목록 판 한 컷 2장 삭제(판 · 모형에 있다) */
   { id: "event", grp: "do", sign: "EVENT", kor: "사진 · 룰렛 · 타자왕이 있는 곳", fact: "", st: "",
@@ -313,9 +315,10 @@ function zoneExHtml(z) {
 var FLOOR18 = [
   { id: "cchat", grp: "", sign: "AX COFFEE CHAT", hdr: "AX 커피챗", kor: "비슷한 고민을 여럿이 모여 나누는 곳", fact: "", st: "",   /* v5.94 (사용자 결정 261006) 커피챗은 스탬프 없음 */
     q: ["내 업무에 AI를 쓸 수 있을까?", "나와 비슷한 고민을 하는 사람이 있을까?", "어떻게 시작하지?"],
-    todo: ["멘토와 한 테이블에서 아이디어를 나눠요", "아이디어 한 줄을 내고 커피챗 희망을 남겨요"],
-    gd: ["키우고 싶은 업무를 1:1로 상담해요", "1F AX 라운지 보기", "lounge"],
-    chk: [["진행", "주제 소개 → 고민 나누기 → 다음 한 걸음"], ["시간", CCHAT_HOURS + " · 고른 시간대에 맞춰 정해요"], ["선정", "희망한 분 중 선정해요"], ["알림", "선정되면 하이웍스 · 앱 알림으로 알려 드려요"]]   /* v6.07 (사용자 261007) 옛 정원 30명 → 희망자 중 선정 · 운영 13:00~16:00 */   /* v5.97 (사용자 261006 밤) 두 문장 = 두 줄(마침표 없이 · 표 값의 \n = 줄바꿈) */ }
+    todo: ["멘토와 한 테이블에서 아이디어를 나눠요"],   /* v6.83 (사용자 261009 묶음 11) 「아이디어 한 줄을 내고 커피챗 희망을 남겨요」 덜기 = 사실 표 「지금 · 아이디어 한 줄 쓰고 희망」 · 주 버튼과 같은 말 */
+    gd: ["키우고 싶은 업무를 1:1로 상담해요", "1F AX 라운지 보기", "lounge"], gl: "1:1 상담은 1F AX 라운지",
+    gift: "",   /* 사은품 표 값 = gift + APPLY_GIFT · v6.83 (사용자 261009 묶음 16 · 보충 2) 사실 표 = 지금 · 시간 · 장소 · 사은품만 · 진행 · 선정 · 알림 · 방식 = 「참여 전 확인」 상자(17F 강연 「스탬프 받으려면」과 같은 부품 needBoxHtml) · 옛 접힘 표 chk(진행 · 시간 · 선정 · 알림) 삭제 */
+    need: ["참여하려면", [["idea", "아이디어 한 줄 쓰고 희망", "고른 시간대에 맞춰 정해요"], ["stamp", "희망한 분 중 선정", "하이웍스 · 앱 알림으로 안내"], ["talk", "주제 소개 → 고민 나누기 → 다음 한 걸음", "소규모 · 20분"]]] }
 ];
 function zoneById(id) { return FLOOR1.concat(FLOOR18).filter(function (z) { return z.id === id; })[0] || null; }
 function zoneOpen(id) { PROG.zone = id; PROG.zchk = false; App.go("zone_d"); }
@@ -359,21 +362,20 @@ function applyCardHtml(o) {
     '<div class="hd"><span class="fl">' + flFloor(o.fl) + '</span><h3 class="ax-card-title">' + esc(o.nm) + "</h3>" + (o.mine ? '<span class="axs-chip">' + esc(o.chip || "신청함") + "</span>" : "") + "</div>" +
     '<p class="k">' + esc(o.kor) + "</p>" +
     '<dl class="axs-kv">' + o.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" + (o.extra || "") +
-    '<div class="bt">' + progBtn(esc(o.btn[0]), o.btn[1], "", "", !!o.btn[3]) +
+    '<div class="bt">' + progBtn(esc(o.btn[0]), o.btn[1], o.weak ? "ax-button-weak" : "", "", !!o.btn[3]) +   /* v6.83 (디자인 D-1) 한 화면 주황 주 버튼 하나 · 커피챗 주 버튼이 살아 있으면 라운지는 약한 버튼 */
     '<button type="button" class="ax-link axs-plain" onclick="' + o.more + '">자세히 보기</button></div></section>';
 }
-var APPLY_GIFT = "커피 · 쿠키 · 노트 · 볼펜";   /* 261008 신청하기 두 카드 사은품 줄 한 문구(라운지 = 앞에 「상담 후」) */
 function applyCchatHtml() {
   var s = cchatState(); if (!s) return "";
   var z = zoneById("cchat"), L = zoneLive(z), c = S.get("cchat", null), mt = !!(c && c.status === "matched");
-  var kv = [["지금", s.mine ? s.t : ideaMineN() ? "아이디어 제출 완료 · 희망 가능" : "아이디어 한 줄 쓰고 희망"], ["시간", mt && c.round ? "10월 26일 " + c.round : CCHAT_HOURS + " · 선정되면 안내"], ["방식", "소규모 · 20분"], ["신청", "희망한 분 중 선정"], ["사은품", APPLY_GIFT]];   /* 261008 (사용자 「라운지도 같은 형태」) 두 카드 사실 표 = 지금 · 시간 · 방식 · 신청 · 사은품 같은 순서 · 같은 줄 수 */   /* v5.90 · v6.07 희망 → 선정 · 13:00~16:00 */
-  return applyCardHtml({ k: "cchat", nm: "AX 커피챗", fl: 18, mine: s.mine, chip: s.chip, kor: z.kor, kv: kv, extra: treatHtml(), btn: L.btn, more: "cchatGo()" });
+  var kv = [["지금", s.mine ? s.t : ideaMineN() ? "아이디어 제출 완료 · 희망 가능" : "아이디어 한 줄 쓰고 희망"], ["시간", mt && c.round ? "10월 26일 " + c.round : CCHAT_HOURS + " · 선정되면 안내"], ["사은품", APPLY_GIFT]];   /* v6.83 (사용자 261009 묶음 16) 카드 = 고르고 바로 신청하는 곳 · 사실 표 3줄(지금 · 시간 · 사은품) · 방식 · 신청 · 사은품 사진은 구역 상세 시트로 */   /* 261008 (사용자 「라운지도 같은 형태」) 두 카드 사실 표 = 지금 · 시간 · 방식 · 신청 · 사은품 같은 순서 · 같은 줄 수 */   /* v5.90 · v6.07 희망 → 선정 · 13:00~16:00 */
+  return applyCardHtml({ k: "cchat", nm: "AX 커피챗", fl: 18, mine: s.mine, chip: s.chip, kor: z.kor, kv: kv, btn: L.btn, more: "cchatGo()" });
 }
-function applyLoungeHtml() {
+function applyLoungeHtml(weak) {
   var s = loungeState(); if (!s) return "";
   var z = zoneById("lounge"), L = zoneLive(z);
   var btn = s.mine ? ["내 신청", "progOpen('dap')"] : ["시간 고르기", "progOpen('dap')"];
-  return applyCardHtml({ k: "lounge", nm: "AX 라운지", fl: 1, mine: s.mine, kor: z.kor, kv: [["지금", s.mine ? s.t : s.t + " · 누구나 신청"], ["시간", L.tm], ["방식", "1:1 · 30분"], ["신청", "사전 신청자 우선"], ["사은품", "상담 후 " + APPLY_GIFT]], extra: treatHtml(), btn: btn, more: "zoneOpen('lounge')" });   /* 261008 사용자 「ax라운지도 같은 형태 · 되도록 사전 신청자 중심」 · 사은품 사진 줄 = 커피챗과 같은 treatHtml · 상담 완료 조건 유지(260918 예외) */
+  return applyCardHtml({ k: "lounge", nm: "AX 라운지", fl: 1, mine: s.mine, kor: z.kor, kv: [["지금", s.mine ? s.t : s.t + " · 누구나 신청"], ["시간", L.tm], ["사은품", "상담 후 " + APPLY_GIFT]], btn: btn, weak: !!weak,   /* v6.83 (묶음 16) 사은품 사진 = 구역 상세 시트 한 곳 */ more: "zoneOpen('lounge')" });   /* 261008 사용자 「ax라운지도 같은 형태 · 되도록 사전 신청자 중심」 · 상담 완료 조건 유지(260918 예외) */
 }
 /* 10F 실습형 세션 줄 = 사전 신청자(10F 명단 · tenMine)와 테스트 사번(testMode · 310555 · 데모)에게만 · 일반 직원에게는 없다(사용자 261006) */
 function applyTenShow() { return !!tenMine() || testMode(); }
@@ -382,10 +384,12 @@ function applyTenHtml() {
   return '<div class="axs-rows">' + rcHtml({ cls: "", onclick: "progTenGo()", link: true, left: rcIcon(App.ICONS.guide), title: "10F 실습형 세션", sub: "사전 신청자 참여" }).replace('<div class="rc', '<div data-apply="ten" class="rc') + "</div>";
 }
 function progApplyTabHtml() {
-  var h = applyCchatHtml() + applyLoungeHtml();
+  var cs = cchatState(), cOn = !!cs && !((zoneLive(zoneById("cchat")) || {}).btn || [])[3];   /* v6.83 커피챗 주 버튼이 눌리는 상태면 라운지 버튼은 약하게 */
+  var h = applyCchatHtml() + applyLoungeHtml(cOn);
   return '<div class="axs-apply" aria-label="신청하기">' + (h || '<p class="ax-description axs-apnone">지금 신청할 수 있는 프로그램이 없어요</p>') + applyTenHtml() + "</div>";
 }
-/* v5.65 「참여 전 확인」 펼침 = 같은 화면 패널(시트 아님 · 설계안 결정 1) · 다시 그리지 않고 패널만 연다 · 닫는다 */
+/* v5.65 「참여 전 확인」 펼침 = 같은 화면 패널(시트 아님 · 설계안 결정 1) · 다시 그리지 않고 패널만 연다 · 닫는다
+   v6.83 (사용자 261009 묶음 16 「참여 전 확인을 눌러서 추가 정보가 나올 필요 없음」) 부르는 곳 없음(구역 상세 = 펼친 상자) · 되살릴 때 쓴다 */
 function zoneChkToggle(b) {
   var p = el("zChk"); if (!p) return;
   var on = p.hidden; p.hidden = !on; PROG.zchk = on; b.setAttribute("aria-expanded", String(on));
@@ -437,6 +441,7 @@ function zoneLive(z) {
     var ino = !att && !c && !cl && !ov && !ideaMineN();   /* v5.82 아이디어 0건 · 희망 전 = 한 흐름 「아이디어 쓰고 희망하기」(제출하면 희망 묶음이 이어진다) */
     var cnow = att ? "참석 완료" : mt ? "선정" + (c.table ? " · TABLE " + c.table : "") : ov ? "오늘 커피챗은 끝났어요" : c ? "희망 접수" : cl ? "희망 접수 마감" : ino ? "아이디어 한 줄 쓰고 희망" : "아이디어 제출 완료 · 희망 가능";
     o.tm = mt && c.round ? "10월 26일 " + c.round : CCHAT_HOURS + " · 선정되면 안내";
+    o.tm0 = mt && c.round ? o.tm : CCHAT_HOURS;   /* v6.83 (묶음 16) 시트 사실 표 시간 = 운영 시간만(선정 · 알림 = 참여 전 확인 상자) */
     o.fact = mt && c.round ? cnow.replace("선정", "선정 · " + c.round) : ino ? "아이디어 한 줄 쓰고 희망" : cnow;
     o.chip = att ? ["완료", "ok"] : mt ? ["선정", ""] : ov ? ["끝", "off"] : c ? ["희망함", ""] : cl ? ["마감", "off"] : null;
     o.kv = [["지금", cnow], ["장소", "18F"]];
@@ -473,18 +478,24 @@ function progAlwaysHtml() {
    v4.99 스탬프 도장 = 카드 오른쪽 위(강연 상세 sess_d 와 같은 axs-sthost · stampTagHtml) */
 /* v5.65 AX LOUNGE · AX 커피챗 = 같은 부품(설계안 2절) · 간판 → 한 줄(커피챗 = 질문 3줄) → 시간 → 하는 일 → 지금 · 장소 → 서로 안내(카드 맨 아래 · 약한 링크) → 주 버튼 → 「참여 전 확인」 약한 버튼 → (펼침) 확인 표 + 커피 · 간식 사진 2장
    펼침 상태 PROG.zchk(구역에 새로 들어오면 접힘) · 사은품 줄은 LOUNGE 에만(260918 예외) · 둘러보기 엘리베이터에서 왔으면 떠 있는 「3D로 돌아가기」(v5.67 · 옛 v5.65 맨 아래 버튼 없앰) */
+/* v6.83 (사용자 261009 묶음 16) 라운지 · 커피챗 구역 상세 본문 한 곳(시트 zoneSheet · 페이지 zonePairHtml 공용 · 모든 입구 = 같은 내용)
+   순서 = (커피챗 질문 3줄) → 사실 표(지금 · 시간 · 장소 · 사은품 글) → 구분선 → 사은품 사진(treatHtml) → 하는 일 → 「참여 전 확인」 상자(17F 강연과 같은 부품 · 펼친 채) → 서로 안내 한 줄 링크
+   「참여 전 확인」 접힘(옛 axs-xtog · zChk) 없음 · 지금 값이 상자 첫 줄과 같으면(아이디어 한 줄 쓰고 희망) 사실 표에서 지금 줄을 뺀다(같은 말 두 번 없음) */
+function zoneGdBody(z, L) {
+  var nd = z.need || ["", []], first = nd[1][0] ? nd[1][0][1] : "";
+  var rows = (L.kv && L.kv[0] && L.kv[0][1] !== first ? [L.kv[0]] : []).concat([["시간", L.tm0 || L.tm]], (L.kv || []).slice(1), z.gift != null ? [["사은품", z.gift + APPLY_GIFT]] : []);
+  return (z.q ? '<p class="axs-xq">' + z.q.map(function (t) { return "<span>" + esc(t) + "</span>"; }).join("") + "</p>" : "") +
+    '<dl class="axs-kv">' + rows.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" + (z.gift != null ? treatHtml() : "") +
+    '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + (z.lead ? [z.lead] : []).concat(z.todo).map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" +
+    (nd[1].length ? chkBoxSec(nd[0], nd[1]) : "") +
+    (z.gd ? '<div class="axs-xgd"><button type="button" class="ax-link axs-plain axs-self" onclick="zoneOpen(\'' + z.gd[2] + '\')">' + lnkChev(esc(z.gl || z.gd[1])) + "</button></div>" : "");
+}
+/* 「참여 전 확인」 + 받으려면 상자 = 17F 강연 시트(sessSheet)와 같은 마크업(axs-dsec · needBoxHtml) */
+function chkBoxSec(k, rows) { return '<section class="axs-dsec"><h3>참여 전 확인</h3>' + needBoxHtml(k, k, rows) + "</section>"; }
 function zonePairHtml(z, L) {
-  var head = z.q ? '<p class="axs-xq">' + z.q.map(function (t) { return "<span>" + esc(t) + "</span>"; }).join("") + "</p>" : '<p class="axs-bar stm">' + esc(z.stm) + "</p>";
-  var b = L.btn || ["", ""], open = !!PROG.zchk;
-  var chk = '<section class="axs-zdt axs-xchk" id="zChk" aria-label="참여 전 확인"' + (open ? "" : " hidden") + '><dl class="axs-kv">' + z.chk.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]).split("\n").map(segHtml).join("<br>") + "</dd>"; }).join("") + "</dl>" + treatHtml() + "</section>";
-  return '<div class="ax-stack axs-pan"><div class="axs-zdt axs-sthost">' + zoneStampHtml(z) + zoneSign(z.sign, "lg") + head +
-    '<div class="cr"><span class="axs-pt">' + esc(L.tm || "") + "</span></div>" +
-    '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + z.todo.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" +
-    '<hr class="axs-rule"><dl class="axs-kv">' + L.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" +
-    '<hr class="axs-rule"><div class="axs-xgd"><p class="axs-bar stm">' + esc(z.gd[0]) + '</p><button type="button" class="ax-link axs-plain axs-self" onclick="zoneOpen(\'' + z.gd[2] + '\')">' + esc(z.gd[1]) + "</button></div></div>" +
-    '<div class="axs-xbtns">' + progBtn(esc(b[0]), b[1], "", b[2] || "", !!b[3]) +
-    '<button type="button" class="ax-button ax-button-weak axs-xtog" aria-expanded="' + open + '" aria-controls="zChk" onclick="zoneChkToggle(this)">참여 전 확인' + CHEV_SVG + "</button>" +
-    "</div>" + chk + tourFloorBackHtml() + "</div>";
+  var b = L.btn || ["", ""];
+  return '<div class="ax-stack axs-pan"><div class="axs-zdt axs-sthost">' + zoneStampHtml(z) + zoneSign(z.sign, "lg") + zoneGdBody(z, L) + "</div>" +
+    '<div class="axs-xbtns">' + progBtn(esc(b[0]), b[1], "", b[2] || "", !!b[3]) + "</div>" + tourFloorBackHtml() + "</div>";
 }
 function zoneDetailHtml() {
   var z = zoneById(PROG.zone) || FLOOR1[0], L = zoneLive(z), pill = zoneStampHtml(z), ev = z.id === "event", seal = pill && !ev;
@@ -504,14 +515,11 @@ function zoneSheet() {
   var z = zoneById(PROG.zone) || FLOOR1[0], L = zoneLive(z), pill = zoneStampHtml(z), ev = z.id === "event", seal = pill && !ev;
   var meta = ev ? pill : L.tm ? '<span class="axs-pt">' + esc(L.tm) + "</span>" : seal ? "" : '<span class="axs-pt">자유 관람 · 스탬프 없음</span>';
   var kv = L.kv ? '<dl class="axs-kv">' + L.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" : "";
-  var open = !!PROG.zchk, b = L.btn;
-  var body = (z.q ? '<p class="axs-xq">' + z.q.map(function (t) { return "<span>" + esc(t) + "</span>"; }).join("") + "</p>" : "") +
+  var b = L.btn;
+  var body = z.gd ? zoneGdBody(z, L) :   /* v6.83 (묶음 16) 라운지 · 커피챗 = 공용 본문(사실 표 → 사진 → 하는 일 → 참여 전 확인 상자 · 접힘 없음) */
     (meta ? '<div class="cr">' + meta + "</div>" : "") +
     '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + (z.lead ? [z.lead] : []).concat(z.todo).map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" + zoneCaseHtml(z) + zoneExHtml(z) +
     (kv ? '<hr class="axs-rule">' + kv : "") +
-    (z.gd ? '<hr class="axs-rule"><div class="axs-xgd"><p class="axs-bar stm">' + esc(z.gd[0]) + '</p><button type="button" class="ax-link axs-plain axs-self" onclick="zoneOpen(\'' + z.gd[2] + '\')">' + esc(z.gd[1]) + "</button></div>" : "") +
-    (z.chk ? '<button type="button" class="ax-button ax-button-weak axs-xtog" aria-expanded="' + open + '" aria-controls="zChk" onclick="zoneChkToggle(this)">참여 전 확인' + CHEV_SVG + "</button>" +
-      '<section class="axs-xchk" id="zChk" aria-label="참여 전 확인"' + (open ? "" : " hidden") + '><dl class="axs-kv">' + z.chk.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]).split("\n").map(segHtml).join("<br>") + "</dd>"; }).join("") + "</dl>" + treatHtml() + "</section>" : "") +
     (ev && EV_TYP_PROMO ? typPromoHtml("go") : "") + zonePicHtml(z);   /* v5.96 (사용자 261006 밤 「여기에 타자왕 광고는 없애줘」) EVENT 구역 상세 = 홍보 칸 없음 · 스위치 EV_TYP_PROMO */
   return { cls: "axs-pan", name: zoneSign(z.sign, "lg"), chips: zoneChip(L.chip), title: esc(z.kor), seal: seal ? pill : "", body: body,   /* v5.79 머리 이름 = 구역 간판 하나(현장 부스 사인과 같은 글자 · 한국어 이름을 따로 두지 않는다) · 상태 칩 · 한국어 한 줄 · 도장 = 본문 첫 줄 */
     foot: b ? progBtn(esc(b[0]), b[1], "", b[2] || "", !!b[3]) : "" };
@@ -551,8 +559,9 @@ var SPK_DIR = "assets/speaker/", SPK_IDS = ["intro", "key", "road", "l1", "l2", 
   SPK_IMG = { intro: "sp_intro.webp", outro: "sp_outro.webp", l1: "logo_aws.svg", l2: "logo_ms.svg" }, SPK_LOGO = { l1: 1, l2: 1 };
 function spkAvHtml(id, av) {
   var sp = SPK_IDS.indexOf(id) >= 0, f = sp && SPK_IMG[id], on = !!f && !SPK_NA[id], lg = on && !!SPK_LOGO[id];
+  if (!on) return "";   /* v6.83 (디자인 D-7 · 전역 3절 「사람 목록에 장식 아바타 금지」) 그림이 없으면 칸 없이 이름 줄만(이름이 칸 안 · 옆 줄에 두 번 나오던 것) · 그림이 안 뜨면 칸째 지운다 */
   return '<span class="axs-av' + (sp ? " spk" : "") + (lg ? " logo" : "") + '" aria-hidden="true">' + esc(av) +
-    (on ? '<img src="' + SPK_DIR + f + '" alt="" width="240" height="240" loading="lazy" decoding="async" onerror="SPK_NA[\'' + id + '\']=1;this.parentNode.classList.remove(\'logo\');this.remove()">' : "") + "</span>";
+    (on ? '<img src="' + SPK_DIR + f + '" alt="" width="240" height="240" loading="lazy" decoding="async" onerror="SPK_NA[\'' + id + '\']=1;this.parentNode.remove()">' : "") + "</span>";
 }
 /* v5.60 10F 세션 안내 · 소제목 「하는 일」(1F 구역 상세와 같은 ink 굵게 + 얇은 구분선) · 주황 점 글머리 · 이름이 있으면 굵게 + 설명 아래 줄
    「준비할 것」은 사전 신청자(sessMine)에게만 · 한 줄 소개는 SESS_INTRO_ON 일 때만 · 다 비면 "" (블록 자체를 그리지 않는다) */
@@ -569,7 +578,7 @@ function sessGuideHtml(s, mine) {
 function attStLbl(id) { var ai = attMineK(id, "in"), ao = attMineK(id, "out"); return ai && ao ? "출석 완료" : ai ? "입장 출석" : ao ? "끝 출석" : ""; }
 function attDetailFill(D, ap, timeBtn) {
   var ai = attMineK(ap.id, "in"), ao = attMineK(ap.id, "out"), shut = attShut(ap);   /* 261008 「지금 · 입장 약 N명」 줄 삭제(입장 QR 수 · 지금 현장 2×2 가 맡는다) */
-  D.st = attStLbl(ap.id) || "자유 참석"; D.stc = "ok";
+  D.st = attStLbl(ap.id) || "자유 참석"; D.stc = attStLbl(ap.id) ? "ok" : "off";   /* v6.83 (디자인 D-4) 「자유 참석」 = 회색 칩(나의 일정과 같은 색 · 초록은 출석한 뒤만) */
   if (ai || ao) { D.kv.push(["입장 QR", ai ? ai + " 출석" : "아직"]); D.kv.push(["끝 QR", ao ? ao + " 출석" : "아직"]); }   /* 261008 (사용자 「통제하지 말자」) QR 시간 창 표기 없음 */
   else D.kv.push(["출석 QR", "강연 중 화면의 QR"]);
   D.help = ai && ao ? "" : shut ? "출석 시간이 지났어요" : "";
@@ -590,13 +599,13 @@ function progDetail(s) {
       var ko = attProg("key");
       D.who = s.who; D.av = spkAv(s.who); D.whoSub = "개회 인사";
       if (attUi("key")) { attDetailFill(D, ko, timeBtn); D.secB = "Opening Speech는 첫 Keynote와 한 묶음이에요.<br>입장할 때 QR을 한 번, Keynote가 끝날 때 화면의 QR을 한 번 찍어요."; }   /* v5.68 Intro 는 기조연설 출석과 한 묶음(입장 · 끝 QR 이 같다) */
-      else { D.st = "자유 참석"; D.stc = "ok"; D.btn = timeBtn; }   /* v5.96 (사용자 결정 261006 밤) 오전 출석 표시 끔(ATT_UI_PROGS) · 입장 · 끝 QR 줄 · 참여 전 확인 칸 · 출석 QR 스캔 단추 없음 */
+      else { D.st = "자유 참석"; D.stc = "off"; D.btn = timeBtn; }   /* v5.96 (사용자 결정 261006 밤) 오전 출석 표시 끔(ATT_UI_PROGS) · 입장 · 끝 QR 줄 · 참여 전 확인 칸 · 출석 QR 스캔 단추 없음 */
       return D;
     }
     var din = !!S.get("draw_in", false), hmD = hmNow(), dwin = evPhase() === "live" && hmD >= t2m("16:40") && hmD < t2m("17:25");   /* 창 = drawCardHtml 과 같은 서버 기본 창 */
     var lc = lkCond();   /* v5.92 (사용자 261006 「럭키드로우에서 체크인 요소는 일단은 없애 놓자 · 행운권 중에서 추첨」) 참석 조건 OFF(서버 lkcond) = 체크인 줄 · 추첨 QR 단추 · 체크인 안내 없음 */
     D.who = s.who; D.av = spkAv(s.who); D.whoSub = "";
-    D.st = lc && din ? "추첨 체크인 완료" : "자유 참석"; D.stc = "ok";
+    D.st = lc && din ? "추첨 체크인 완료" : "자유 참석"; D.stc = lc && din ? "ok" : "off";
     if (lc) D.kv.push(["체크인", din ? "추첨 체크인 완료" : "16:40–17:25 · 입구 QR"]);   /* 375px 한 줄 · 추첨 QR 은 아래 「현장 추첨」 */
     D.extra = '<section class="axs-dsec"><h3>진행</h3><ul class="axs-ddot"><li>Closing Speech · 정경선 CSO</li><li>DAP 우수 성과자 시상</li><li>현장 추첨</li></ul></section>';   /* v5.69 시트 = 「하는 일」과 같은 점 목록 */
     D.secT = "현장 추첨";
@@ -613,7 +622,7 @@ function progDetail(s) {
     D.title = s.id === "road" || s.id === "key" || par ? s.sub : s.ttl;
     if (par) { D.org = s.id === "l2" ? "Microsoft" : org; D.who = s.who; D.av = org || "AX"; D.whoSub = "파트너사 강연"; }
     else if (s.who) { D.who = s.who; D.av = spkAv(s.who); D.whoSub = s.sub; }
-    D.st = at ? "출석 완료" : s.id === "expo" ? "자유 입장" : "자유 참석"; D.stc = "ok";
+    D.st = at ? "출석 완료" : s.id === "expo" ? "자유 입장" : "자유 참석"; D.stc = at ? "ok" : "off";
     D.kv = [["일시", s.id === "expo" ? "10월 26일 · 행사 시간 중" : day + progTm(s.tm)], ["장소", pl], ["참여 방법", s.id === "expo" ? "신청 없이 자유 관람" : "신청 없이 자유 참석"]];
     D.secB = s.id === "expo" ? segHtml("1F 로비 6구역 · AX VISION · AX LAB · AX in Action · AX PLAY · AX 라운지 · EVENT") :
       ap && par ? (s.desc ? esc(s.desc) : "") :   /* 261008 오후 AWS · MS = 아래 받으려면 상자(D.need) */
@@ -622,7 +631,7 @@ function progDetail(s) {
     if (s.id === "expo") D.link = '<button type="button" class="ax-link axs-plain axs-self" onclick="App.go(\'floor1\')">1F 부스 6구역 보기</button>';
     if (ap) attDetailFill(D, ap, timeBtn);   /* v5.68 입장 QR · 끝 QR 두 줄 · 지금 입장 수 · 창이 끝나면 시간표(261005 최종 QA 규칙 그대로) */
     else { D.help = ""; D.btn = timeBtn; }
-    if (ap && par) D.need = needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "입장 · 끝 QR 한 번씩", "끝 QR은 화면에 떠요"], ["stamp", "입장 1개 + 끝 1개 = 스탬프 2개", "AWS · MS 합쳐 2개까지"]]);   /* 261008 (사용자 「참여 전 확인 아래 부분을 받으려면 부분처럼」) 옛 회색 세 줄 「입장할 때 QR 한 번, 끝날 때 화면의 QR 한 번 찍어요 / 입장 1개 + 끝 1개 = 스탬프 2개 / AWS · MS 합쳐 2개까지」 · 시간 · 규칙 강조 없음 */
+    if (ap && par) D.need = needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "입장 · 끝 QR 한 번씩", ""], ["stamp", "입장 1개 + 끝 1개 = 스탬프 2개", "AWS · MS 합쳐 2개까지"]]);   /* 261008 (사용자 「참여 전 확인 아래 부분을 받으려면 부분처럼」) 옛 회색 세 줄 「입장할 때 QR 한 번, 끝날 때 화면의 QR 한 번 찍어요 / 입장 1개 + 끝 1개 = 스탬프 2개 / AWS · MS 합쳐 2개까지」 · 시간 · 규칙 강조 없음 */
     /* 261008 (사용자 「굳이 있어야 될까?」) 오후 파트너 강연 경품 보기 입구 뺌 */
     return D;
   }
@@ -658,12 +667,12 @@ function progDetail(s) {
     var conf = resvConf(), slots = resvSlots(), lunchM = t2m(conf.lunch);
     var cell = function (t) { var off = resvTaken(t); return '<button type="button" class="axs-slot" aria-pressed="' + (DAPSEL === t) + '"' + (off ? ' disabled aria-label="' + t + ' 마감"' : ' onclick="dapPick(\'' + t + '\')"') + ">" + t + "</button>"; };
     D.st = resvRemain() > 0 ? "신청 가능" : "마감"; D.stc = resvRemain() > 0 ? "ok" : "off";
-    D.kv = [["일시", conf.start + "–" + conf.end + " 중 30분"], ["장소", pl], ["참여 방법", "신청 후 승인"]];   /* v4.95 375px 한 줄(행사일은 하루뿐 · 시간 고르기는 아래 칸이 보여 준다) */
+    D.kv = [["일시", conf.start + "~" + conf.end + " 중 30분"], ["장소", pl], ["참여 방법", "신청 후 승인"]];   /* v4.95 375px 한 줄(행사일은 하루뿐 · 시간 고르기는 아래 칸이 보여 준다) */
     D.extra = (r && r.status === "noshow" ? '<div class="axs-err" role="status"><b>이전 신청은 참석 처리되지 않았어요</b><span>아래에서 다시 신청할 수 있어요.</span></div>' :
         r && r.status === "canceled" ? '<div class="axs-err" role="status"><b>이전 신청이 취소됐어요</b><span>아래에서 다시 신청할 수 있어요.</span></div>' : "") +
       '<section class="ax-stack-tight axs-gap12"><div class="ax-row"><h2 class="ax-section-title">상담 시간 선택</h2><span class="ax-meta">남은 시간 ' + resvRemain() + "개</span></div>" +
       '<div class="axs-slots" role="group" aria-label="상담 시간">' + slots.filter(function (t) { return t2m(t) < lunchM; }).map(cell).join("") +
-      '<p class="ax-meta axs-lunch">점심시간 ' + conf.lunch + "–" + conf.lunchEnd + "</p>" + slots.filter(function (t) { return t2m(t) >= lunchM; }).map(cell).join("") + "</div></section>";
+      '<p class="ax-meta axs-lunch">점심시간 ' + conf.lunch + "~" + conf.lunchEnd + "</p>" + slots.filter(function (t) { return t2m(t) >= lunchM; }).map(cell).join("") + "</div></section>";
     D.sg = "";   /* v5.65 신청 화면 확인 블록 · 사진 삭제(같은 글이 구역 상세 「참여 전 확인」에 있다 · 설계안 결정 6) */
     D.help = DAPSEL ? "선택한 시간 " + DAPSEL + " · 1F AX 라운지" : "상담 시간을 먼저 골라 주세요";
     D.btn = DAPSEL ? progBtn("이 시간으로 신청하기", "progApply(\'dap\')") : progBtn("이 시간으로 신청하기", "", "", "", true);
@@ -968,7 +977,7 @@ function myFlowCard(o, hmN, isF, h) {
   if (o.brk) return progFlowBrk(o, hmN);
   var past = hmN >= o.b, chip = o.mine ? '<span class="axs-chip mc">' + (isF ? "진행 중" : "신청") + "</span>" : '<span class="axs-chip off mc">자유 참석</span>';
   return '<button type="button" class="fc' + (o.mine ? " mine" : "") + (past ? " past" : "") + (isF ? " focus" : "") + '"' + (o.go ? ' onclick="' + o.go + '"' : " disabled") + ' data-fl="' + esc(o.k) + '"' + (o.my ? ' data-my="' + esc(o.my) + '"' : "") + ">" +
-    '<span class="mt">' + (o.fl ? flFloor(o.fl) : "") + '<span class="pl">' + esc(o.pl) + '</span><span class="e">' + (h ? o.t0 + " ~ " : "~") + o.t1 + "</span>" + chip + "</span>" +
+    '<span class="mt">' + (o.fl ? flFloor(o.fl) : "") + '<span class="pl">' + esc(o.pl) + '</span><span class="e">' + (h ? o.t0 + "~" : "~") + o.t1 + "</span>" + chip + "</span>" +
     '<span class="t">' + (isF ? '<span class="ax-sr-only">진행 중 </span>' : "") + '<span class="tt">' + esc(o.ttl) + "</span></span>" +
     (o.sub ? '<span class="s">' + segHtml(esc(o.sub)) + "</span>" : "") + (past || !o.go ? "" : '<span class="chv">' + CHEV_SVG + "</span>") + "</button>";
 }

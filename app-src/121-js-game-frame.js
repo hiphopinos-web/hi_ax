@@ -227,7 +227,7 @@ function gsOverlayOpen(o) {
   d.id = "rgPlay";
   d.className = (o.flat ? "flat " : "") + (o.cls || "") + " rt";   /* v4.23 레트로 경계 */
   d.innerHTML = '<div class="rgp-top">' + (o.top || '<span class="rgp-t">' + esc(o.title) + '</span><span class="row" style="gap:6px;align-items:center">' + sndBtnHtml(false) + '<button class="rgp-x" type="button" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">일시정지</button></span>') + "</div>" +
-    '<div class="rgp-mid' + (o.noGesture ? " nogest" : "") + (o.fill ? " fill" : "") + '" id="gsMid"><canvas id="' + o.canvasId + '" width="' + o.cw + '" height="' + o.ch + '"></canvas>' +
+    '<div class="rgp-mid' + (o.noGesture ? " nogest" : "") + (o.fill ? " fill" : "") + '" id="gsMid"><canvas id="' + o.canvasId + '" width="' + o.cw + '" height="' + o.ch + '" role="img" aria-label="' + esc(o.title || "게임 화면") + '"></canvas>' +
     (o.tip ? '<div class="gs-tip" id="gsTip">' + gsSayHtml(esc(o.tip)) + "</div>" : "") +
     '<div class="rgp-pause" id="rgPause" hidden><p>일시정지</p><small id="rgPauseLeft"></small>' + gsHowHtml(o.key, true, "rgPauseHow", true) + '<button class="ax-button rt-btn" type="button" onclick="gsResume()">계속하기</button><button class="ax-button ax-button-weak rt-btn weak" type="button" onclick="gsQuit()">그만하기</button>' +
     (GS_HOW[o.key] ? '<button class="ax-button ax-button-weak rt-btn weak" type="button" id="rgPauseHowTg" aria-expanded="false" aria-controls="rgPauseHow" onclick="gsPauseHow()">설명 보기</button>' : "") + "</div></div>" +   /* v5.41 일시정지에서 설명 다시 보기 · 펼친 설명은 제목 바로 아래 */
@@ -411,9 +411,9 @@ function gsStartHtml(key, o) {
    게임을 시작하면(gsBegin) 멈춘다 · 시작 화면이 사라지면(다시 그리기 · 결과 화면) 다음 틱에 스스로 멈춘다 */
 var GSP = { key: "", fn: null, box: null, io: null, vis: false, raf: 0, t: 0, last: 0 };
 var GSP_DEMO = {
-  pang: { html: function () { return '<canvas id="pgPrev" width="180" height="174"></canvas>'; }, draw: function (t) { pgPreview(t); }, still: 0.5 },
-  jump: { html: function () { return '<canvas id="jpPrev" class="px" width="180" height="120"></canvas>'; }, draw: function (t) { jpPreview(t); }, still: 1.77 },
-  tetris: { html: function () { return '<canvas id="ttPrev" width="120" height="120"></canvas>'; }, draw: function (t) { ttPreview(t); }, still: 0.9 },
+  pang: { html: function () { return '<canvas id="pgPrev" width="180" height="174" aria-hidden="true"></canvas>'; }, draw: function (t) { pgPreview(t); }, still: 0.5 },
+  jump: { html: function () { return '<canvas id="jpPrev" class="px" width="180" height="120" aria-hidden="true"></canvas>'; }, draw: function (t) { jpPreview(t); }, still: 1.77 },
+  tetris: { html: function () { return '<canvas id="ttPrev" width="120" height="120" aria-hidden="true"></canvas>'; }, draw: function (t) { ttPreview(t); }, still: 0.9 },
 };
 function gspK() { return Math.min(3, window.devicePixelRatio || 1) * 2; }   /* 캔버스 해상도 배수 · 칸 그림을 선명하게(도트 점프 제외) */
 function gspStop() {

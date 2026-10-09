@@ -144,22 +144,47 @@ function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").
 /* v6.69 (사용자 261009 「· 로 이은 문장이 어차피 두 줄이 될 거라면 · 자리에서 다음 줄로」) 「 · 」로 이은 글(HTML 글자 · 태그 안에 「 · 」가 없을 것)을 조각으로 나눈다
    조각 = <ax-seg> (CSS inline-block · 앱의 「… span」 규칙이 닿지 않는 전용 태그) · 한 줄에 다 들어가면 그대로 한 줄 · 넘치면 조각 경계에서만 꺾고 점은 둘째 줄 머리(「· 」 뒤는 nbsp) · 조각 하나가 한 줄보다 길면 그 안에서 꺾인다
    쓰지 않는 곳 = 본문 문단 · 표 · 버튼 이름 · 한 줄 말줄임(nowrap) 칸 */
+/* v6.83 (사용자 261009 묶음 13 「나뉜 줄 모두 「· 」로 시작하는 목록 모양」) 조각 사이 점 「· 」는 글자가 아니라 CSS 가 그린다(읽는 글 = 점 없이 문장 그대로)
+   한 줄에 다 들어가면 「A · B」 그대로 · 두 줄 이상이면 목록(.seglist) = 조각마다 줄 머리 「· 」(그 줄 글자색 · 무채색) + 꺾이면 점 뒤 글자 시작에 맞춘 들여쓰기
+   같은 묶음은 같은 형식(묶음 = 같은 목록 칸 안 같은 클래스의 보조 줄 · 하나라도 나뉘면 묶음 전부 목록)
+   목록으로 만들지 않는 곳 = 짧은 속성 나열(사실 표 값 dd · 메타 줄 .ax-meta) · 그곳은 v6.69 그대로(꺾이면 「· 」 자리에서 · 줄이 늘면 보통 흐름 .segflow) */
 function segHtml(h) {
   var p = String(h == null ? "" : h).split(" · ");
-  return p.length < 2 ? p[0] : p.map(function (s, i) { return "<ax-seg>" + (i ? "·&nbsp;" : "") + s + "</ax-seg>"; }).join(" ");
+  return p.length < 2 ? p[0] : p.map(function (s) { return "<ax-seg>" + s + "</ax-seg>"; }).join(" ");
 }
-/* 조각 자리에서 꺾기는 줄 수가 늘지 않을 때만(「어차피 두 줄이 될 거라면」) · 그린 뒤 글 하나를 두 번 잰다(조각 · 보통 흐름) · 조각이 더 높으면 그 글은 보통 흐름(.segflow)
-   다시 재는 때 = 화면 조각이 새로 붙거나 · 숨김 · 클래스가 바뀌거나 · 창 폭이 바뀔 때(폭 · 글 길이가 같으면 다시 재지 않는다) */
+var SEG_GRP = ".axs-sec, section, .axs-rows, .axs-stps, .axs-pz, ul, ol, .ax-stack";   /* 묶음 칸 · 이 안에서 같은 클래스의 보조 줄끼리 형식을 맞춘다 */
+function segAttr(p) { var cs = getComputedStyle(p); return p.tagName === "DD" || p.classList.contains("ax-meta") || !!p.closest(".axs-kv, .axs-stpm, .axs-pzgo") || cs.whiteSpace === "nowrap" || cs.textAlign === "center"; }   /* 가운데 맞춤 글(토스트 · 팝업 제목)도 목록 대신 「 · 」 자리에서 꺾기(머리 점이 왼쪽 끝에 떨어져 보이지 않게) */   /* 짧은 속성 나열 = 사실 표 값 · 메타 줄 · 스탬프 줄 받는 법 옆 짧은 말 · 경품 이름 나열 */
+function segSig(p) { return p.tagName + "." + [].filter.call(p.classList, function (c) { return c !== "seglist" && c !== "segflow"; }).sort().join("."); }
 function segFit() {
   var ps = [];
   document.querySelectorAll("ax-seg").forEach(function (s) { var p = s.parentElement; if (p && ps.indexOf(p) < 0) ps.push(p); });
+  var G = [], gOf = function (p) {
+    var root = p.parentElement && p.parentElement.closest(SEG_GRP) || p.parentElement, sig = segSig(p);
+    for (var i = 0; i < G.length; i++) if (G[i].root === root && G[i].sig === sig) return G[i];
+    var g = { root: root, sig: sig, ps: [], k: "" }; G.push(g); return g;
+  };
   ps.forEach(function (p) {
-    var w = p.clientWidth, k = w + ":" + p.textContent.length;
-    if (!w || p._segK === k) return;
-    p._segK = k;
-    p.classList.remove("segflow"); var h1 = p.getBoundingClientRect().height;
-    p.classList.add("segflow"); var h0 = p.getBoundingClientRect().height;
-    if (h1 <= h0 + 1) p.classList.remove("segflow");
+    var w = p.clientWidth; if (!w) return;
+    if (segAttr(p)) {   /* 속성 나열 = v6.69 그대로 */
+      if (p.classList.contains("seglist")) p.classList.remove("seglist");   /* 없는 클래스를 지워도 class 변경으로 잡혀(MutationObserver) 매 프레임 다시 재던 것 막음 */
+      var k0 = "a" + w + ":" + p.textContent.length; if (p._segK === k0) return; p._segK = k0;
+      p.classList.remove("segflow"); var h1 = p.getBoundingClientRect().height;
+      p.classList.add("segflow"); var h0 = p.getBoundingClientRect().height;
+      if (h1 <= h0 + 1) p.classList.remove("segflow");
+      return;
+    }
+    var g = gOf(p); g.ps.push(p); g.k += w + ":" + p.textContent.length + "|";
+  });
+  G.forEach(function (g) {
+    if (g.ps.every(function (p) { return p._segK === g.k; })) return;   /* 폭 · 글 · 묶음이 같으면 다시 재지 않는다(재는 동안 클래스를 바꿔도 되풀이되지 않게) */
+    var wrap = g.ps.some(function (p) {
+      p.classList.remove("seglist", "segflow");
+      var sg = p.querySelectorAll(":scope > ax-seg"); if (!sg.length) return false;
+      var a = sg[0].getBoundingClientRect(), z = sg[sg.length - 1].getBoundingClientRect(), cs = getComputedStyle(p);
+      var lh = parseFloat(cs.lineHeight) || (parseFloat(cs.fontSize) || 14) * 1.45;
+      return z.bottom - a.top > lh * 1.5;
+    });
+    g.ps.forEach(function (p) { p.classList.toggle("seglist", wrap); p._segK = g.k; });
   });
 }
 (function () {
@@ -173,7 +198,7 @@ function el(id) { var n = document.getElementById(id); return n && n.classList.c
 function toast(msg) {
   var t = el("toast");
   t.innerHTML = segHtml(esc(msg)); t.classList.add("show");   /* v6.69 두 줄이면 「 · 」 자리에서(줄바꿈 글자는 #toast pre-line 그대로) */
-  clearTimeout(toast._h); toast._h = setTimeout(function () { t.classList.remove("show"); }, 2400);
+  clearTimeout(toast._h); toast._h = setTimeout(function () { t.classList.remove("show"); }, Math.min(6000, Math.max(2400, String(msg).length * 110)));   /* v6.83 (접근성 B-4) 긴 알림(오류 안내 등)은 읽을 시간만큼 · 22자까지 2.4초 · 최대 6초 */
 }
 /* ═══ 261009 동작 모션 통일 · 공용 함수 한 곳(규격 = 디자인 시안/모션 통일 261009/규격.md · CSS 토큰 = 010 「동작 모션 통일」 절 · 숫자는 그 토큰과 같게) ═══
    기준 = v5.73 시간표 점심 줄 → 상시 운영(손잡이 0.25초 · 흐려짐 0.18초 · 6px 떠오름 0.3초 · 부드러운 스크롤)

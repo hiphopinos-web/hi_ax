@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AX Festival 2026 · ME to WE</title>
 <!-- 홈 화면에 추가 = 아이콘 한 번으로 실행 (설치·스토어 없음) -->
 <link rel="manifest" href="manifest.json">
@@ -167,6 +167,9 @@
     --acc2: var(--ax-color-brandText);  /* 밝은 면 위 오렌지 글자 */
     --dim: var(--ax-color-inset); --dimln: var(--ax-color-divider);   /* 지나감·잠김 */
     --axs-divider-strong: #CBD0D6;      /* 앱 전용 토큰(가이드에 없음, 260922 사용자 요청) · divider #E5E8EB 와 disabled #B0B8C1 의 중간값 · 헤더 하단선처럼 흰 면 위에서 더 또렷해야 할 때만 쓴다 */
+    --ax-color-muted: #66707D;          /* v6.83 (사용자 261009 접근성 결정) 보조 회색 #6B7684 → #66707D · 회색 canvas 위 4.56 · inset 위 4.81 · 연주황 위 4.55(4.5 통과) · tokens.css(잠긴 원본)는 두고 여기서 덮는다 */
+    --axs-dot: 0.5333em; --axs-dot-gap: 0.6667em; --axs-dot-top: 0.55em;   /* v6.83 목록 점 한 부품(「하는 일」 주황 점 · 보조 줄 목록 무채색 점) · 글자 크기 비례(15px 글자 = 점 8 · 간격 10) */
+    --axs-field-line: #808A96;          /* v6.83 (사용자 261009) 입력칸 테두리 · divider #E5E8EB 는 회색 바탕 위 1.12 라 경계가 안 보였다 · 3.18:1 */
     --hi: var(--ax-color-ink);          /* 제목·주요 텍스트 */
     --tx: var(--ax-color-body); --muted: var(--ax-color-muted); --faint: var(--ax-color-muted);
     --fs: 1;                            /* 글자 크기 배율 (설정에서 1 / 1.12 / 1.25) */
@@ -351,7 +354,7 @@
   .btn.line { background: transparent; color: var(--hi); border: 1px solid var(--line); }
   .btn.gray { background: #F1E7E1; color: #A39A95; }
   .btn:disabled { background: #F1E7E1; color: #A39A95; cursor: default; }
-  .input { width: 100%; border-radius: 12px; border: 1px solid var(--line); padding: 12px 13px; font-size: calc(16.5px * var(--fs)); outline: none; background: var(--white); color: var(--tx); }
+  .input { width: 100%; border-radius: 12px; border: 1px solid var(--axs-field-line); padding: 12px 13px; font-size: calc(16.5px * var(--fs)); outline: none; background: var(--white); color: var(--tx); }
   .input:focus { border-color: var(--mint); }
   .input::placeholder { color: var(--faint); }
   .row { display: flex; gap: 8px; align-items: center; }
@@ -393,7 +396,7 @@
   .tok.mine { background: var(--tint2); }
   /* v3.17 두 줄 변형 · 시작(크게) + 종료(작게, 같은 상태 색의 옅은 톤) · 두 줄이라 라운드 사각으로 */
   .tok.two { flex-direction: column; padding: 8px 10px 6px; border-radius: 13px; }
-  .tok.two small { display: block; margin-top: 2px; font-size: calc(11px * var(--fs)); font-weight: 700; opacity: 0.62; letter-spacing: 0; }
+  .tok.two small { display: block; margin-top: 2px; font-size: calc(11px * var(--fs)); font-weight: 700; letter-spacing: 0; }   /* v6.83 투명도 0.62 걷음(정보 글자 · 2.81 → 5.78) */
   .tok.act small { color: rgba(255,255,255,0.75); opacity: 1; }
   /* ══ 공용 행 카드 .rc (v3.22 사용자 지시 · 스탬프 카드 기준으로 전 화면 통일) ══
      스탬프 카드·일정 행·홈 나의 일정·프로그램 행이 전부 rcHtml() 하나로 그린다. 높이·라운드·좌우 패딩·좌측 슬롯 폭 고정.
@@ -537,7 +540,7 @@
   .coupon.used .qrbox { opacity: 0.25; }
   .tag-btn { border: 1px solid var(--line); cursor: pointer; border-radius: 10px; background: var(--white); color: var(--muted); padding: 7px 12px; font-size: calc(14.5px * var(--fs)); font-weight: 700; }
   .tag-btn.on { background: var(--mint); color: var(--ax-color-onBrand); border-color: var(--mint); }
-  #toast { position: fixed; left: 50%; bottom: 104px; transform: translateX(-50%) translateY(var(--ax-motion-rise)); z-index: 90; background: var(--hi); color: #fff; font-size: calc(14.5px * var(--fs)); font-weight: 700; padding: 12px 20px; border-radius: 12px; opacity: 0; pointer-events: none; transition: opacity var(--ax-motion-out) var(--ax-motion-ease-fade), transform var(--ax-motion-out) var(--ax-motion-ease-fade); max-width: 88%; text-align: center; }
+  #toast { position: fixed; left: 50%; bottom: 104px; transform: translateX(-50%) translateY(var(--ax-motion-rise)); z-index: 90; background: var(--hi); color: #fff; font-size: calc(14.5px * var(--fs)); font-weight: 700; padding: 12px 20px; border-radius: 12px; opacity: 0; pointer-events: none; transition: opacity var(--ax-motion-out) var(--ax-motion-ease-fade), transform var(--ax-motion-out) var(--ax-motion-ease-fade); box-sizing: border-box; width: max-content; max-width: calc(100% - 32px); text-align: center; }   /* v6.83 (묶음 17) 폭 = 글 길이(max-content) · 화면 양옆 16px 까지(옛 max-width 88% 만 = left 50% 에서 남은 폭으로 줄어 긴 글이 3~4줄) */
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); transition-duration: var(--ax-motion-in); }   /* 261009 모션 통일 · 나타남 = 떠오름(6px · 0.3초) · 사라짐 = 흐려짐 0.18초 */
   @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
 
@@ -593,7 +596,7 @@
   .rg-form { display: flex; gap: 8px; margin-top: 10px; }
   /* v3.36c 휴대폰 전체화면 플레이 */
   html.rg-lock, html.rg-lock body { overflow: hidden; overscroll-behavior: none; }
-  #rgPlay { position: fixed; left: 0; right: 0; top: 0; height: 100vh; height: 100dvh; z-index: 300; display: flex; flex-direction: column; background: #FFEBE0; touch-action: manipulation; overscroll-behavior: none; }   /* v4.10 100% → 100dvh(사용자 제보 260922) · position:fixed 에서 100%는 뷰포트 전체(100vh)로 계산돼 모바일 주소창이 떠 있으면 아래 고정 조작 안내(.gs-foot)가 화면 밖으로 밀렸다 */
+  #rgPlay { position: fixed; left: 0; right: 0; top: 0; height: 100vh; height: 100dvh; z-index: 300; display: flex; flex-direction: column; background: #FFEBE0; touch-action: pan-x pan-y; overscroll-behavior: none; }   /* v6.83 manipulation → pan-x pan-y(게임 중 두 손가락 확대 막음 · iOS 는 viewport 잠금을 안 따른다) */   /* v4.10 100% → 100dvh(사용자 제보 260922) · position:fixed 에서 100%는 뷰포트 전체(100vh)로 계산돼 모바일 주소창이 떠 있으면 아래 고정 조작 안내(.gs-foot)가 화면 밖으로 밀렸다 */
   #rgPlay .rgp-top { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; }
   #rgPlay .rgp-t { font-weight: 800; font-size: 14px; color: #000; }
   #rgPlay .rgp-x { border: 2px solid #000; background: #fff; border-radius: 999px; padding: 4px 12px; font-weight: 800; font-size: 13px; }
@@ -875,7 +878,9 @@
   .cstrip2.cn4 .cc { position: relative; min-width: 0; padding: 10px 12px; background: var(--ax-color-surface); box-shadow: inset 0 0 0 1px var(--ax-color-divider); }
   .cstrip2.cn4 .nm { display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; color: var(--ax-color-body); }
   .cstrip2.cn4 .nm .cn-nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  .cstrip2.cn4 .nm .dg { width: auto; height: 0.8em; color: var(--ax-color-muted); }   /* 층 표기 점문자 · 글자 높이의 0.8 · 큰 글씨에서도 같이 커짐 · 무채색 muted(v6.48 · 그 전 주황) */
+  .cstrip2.cn4 .nm .dg { width: auto; height: 0.8em; color: var(--ax-color-muted); }
+  .cstrip2.cn4 .nm .pl { flex: none; display: flex; align-items: center; gap: var(--ax-space-4); margin-left: auto; font: var(--ax-type-t7); color: var(--ax-color-muted); }   /* v6.83 (묶음 8) 층 = 나의 일정 장소 줄(.rc .pl)과 같은 값 · 이름 줄 오른쪽 끝 */
+  .cstrip2.cn4 .nm .pl .axs-pin { flex: none; width: 14px; height: 14px; }   /* 층 표기 점문자 · 글자 높이의 0.8 · 큰 글씨에서도 같이 커짐 · 무채색 muted(v6.48 · 그 전 주황) */
   .cstrip2.cn4 .pr { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 3px 0 0; --lamp: var(--ax-color-muted); }   /* 261009 둘째 줄 = 상태 알약 하나 + 대기 글자(알약은 한 덩어리 · 대기 글자는 알약 단위로만 아래로) */
   .cstrip2.cn4 .pill { display: inline-flex; align-items: center; gap: 5px; box-sizing: border-box; height: 1.375rem; padding: 0 9px 0 8px; border-radius: var(--ax-radius-999); font: 600 0.8125rem/1 var(--ax-font); color: var(--ax-color-ink); white-space: nowrap; background: var(--ax-color-surface); box-shadow: inset 0 0 0 1px var(--ax-color-divider); background: color-mix(in srgb, var(--lamp) 13%, var(--ax-color-surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lamp) 38%, var(--ax-color-surface)); }   /* 알약 면 = 상태 색 13% 틴트 + 38% 테두리(color-mix 못 쓰는 기기 = 흰 면 + 회색 테두리) */
   .cstrip2.cn4 .pill .lamp { flex: none; box-sizing: border-box; width: 0.5625rem; height: 0.5625rem; border-radius: var(--ax-radius-999); background: var(--lamp); }   /* 알약 안 점 · 혼잡 이상 = 꽉 찬 점 */
@@ -895,6 +900,8 @@
   /* 261008 홈 스탬프 블록 여백만 줄인다(내용 · 보상 단계 · 6칸 그대로 · 사용자 「스탬프가 첫 화면에 · 필요하면 조정」) */
   #view[data-v="home"] .axs-railgo { gap: var(--ax-space-4); margin-top: calc(var(--ax-space-8) * -1); }
   #view[data-v="home"] .axs-railgo .sect span { min-height: 32px; }
+  #view[data-v="home"] .axs-railgo .sect span[role="button"] { position: relative; }
+  #view[data-v="home"] .axs-railgo .sect span[role="button"]::after { content: ""; position: absolute; inset: -6px -8px; }   /* v6.83 (접근성 B-3) 「바로가기」 눌림 32 → 44 · 투명 */
   #view[data-v="home"] .axs-railgo .rail { padding: var(--ax-space-12) var(--ax-space-20); }
   #view[data-v="home"] .axs-railgo .axs-pzgo { min-height: 44px; margin-top: var(--ax-space-8); padding-top: var(--ax-space-4); padding-bottom: var(--ax-space-4); }
   /* 261008 지금 현장 스태프 입력 시트 · 저장됨 · 재는 중 띠 · 스캔 화면 「줄」 */
@@ -980,6 +987,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* v3.44c 마커 = 아이콘(3 룰렛 · 4~6 응모권) · 필요한 개수는 마커 위 작은 숫자 · 상태는 색으로만: 잠김 회색 · 다음 목표 옅은 주황 링 + 은은한 맥박(화면에 하나) · 도달 O100 채움 흰 아이콘 */
   .rail .mk { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 30px; height: 30px; border-radius: 999px; border: 2px solid var(--dimln); background: var(--dim); color: #B9B2AC; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
   .rail .mk svg { width: 17px; height: 17px; display: block; }
+  .rail .mk::after { content: ""; position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); }   /* v6.83 (접근성 B-3) 보상 막대 마커 눌림 30 → 44(투명 · 겉모양 그대로 · 이웃과 겹치는 몇 px 는 뒤 마커 몫) */
   .rail .mk .no { position: absolute; left: 50%; bottom: calc(100% + 3px); transform: translateX(-50%); font-family: var(--disp); font-size: calc(10.5px * var(--fs)); font-weight: 800; line-height: 1; color: var(--faint); white-space: nowrap; pointer-events: none; }
   .rail .mk.next { background: var(--white); border-color: #FFB284; color: #FFA46E; animation: railNext 2.2s ease-in-out infinite; }
   .rail .mk.next .no { color: var(--acc2); }
@@ -1024,7 +1032,11 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .rail .cap { margin-top: 7px; font-size: calc(12px * var(--fs)); font-weight: 700; color: var(--faint); line-height: 1.5; }
   /* v6.69 segHtml 조각 · 한 덩어리로 다음 줄에 넘어가고 · 한 줄보다 길면 그 안에서 꺾인다 (사용자 261009) */
   ax-seg { display: inline-block; max-width: 100%; text-indent: 0; }
+  ax-seg + ax-seg::before { content: "\00B7\00A0"; content: "\00B7\00A0" / ""; }   /* v6.83 조각 사이 점 = CSS(읽는 글에 점 없음) · 한 줄 「A · B」 */
   .segflow > ax-seg { display: inline; }   /* 조각으로 꺾으면 줄이 늘어나는 글 = 보통 흐름(segFit) */
+  /* v6.83 (사용자 261009 묶음 13 · 보충 2) 두 줄 이상 = 목록 모양 · 점 = 「하는 일」 목록과 같은 둥근 점 부품(값 = :root --axs-dot · --axs-dot-gap · --axs-dot-top 한 곳 · 글자 크기 비례) · 색 = 그 줄 글자색(무채색) · 꺾이면 점 뒤 글자 시작에 맞춰 들여쓰기 · 줄 간격 그대로 */
+  .seglist > ax-seg { position: relative; display: block; padding-left: calc(var(--axs-dot) + var(--axs-dot-gap)); }
+  .seglist > ax-seg::before, .seglist > ax-seg + ax-seg::before { content: ""; position: absolute; left: 0; top: var(--axs-dot-top); width: var(--axs-dot); height: var(--axs-dot); border-radius: 50%; background: currentColor; }
   /* 섹션 제목 (카드 바깥) */
   .sect { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 9px 2px 6px; }
   .sect b { font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); }
@@ -1282,9 +1294,17 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #topbar .axs-crumb li { display: flex; align-items: center; flex: none; min-width: 0; }
   #topbar .axs-crumb li:last-child { flex: 0 1 auto; overflow: hidden; }
   #topbar .axs-crumb li.gone { display: none; }
-  #topbar .axs-crumb .sep { padding: 0 var(--ax-space-4); color: var(--ax-color-muted); }
+  #topbar .axs-crumb .sep { padding: 0 var(--ax-space-4); color: var(--ax-color-muted); pointer-events: none; }
   #topbar .axs-crumb button { min-height: 32px; padding: 0; border: 0; background: none; font: inherit; color: var(--ax-color-body); cursor: pointer; text-decoration: underline; text-decoration-color: var(--ax-color-divider); text-underline-offset: 3px; }
   #topbar .axs-crumb b { display: block; overflow: hidden; text-overflow: ellipsis; color: var(--ax-color-ink); font-weight: 700; }
+  /* v6.83 (접근성 B-3) 경로 줄 단추 눌림 = 높이 44 · 폭 44 이상(「홈」 12 → 44) · 투명 확장(padding + 같은 크기 음수 margin)이라 글자 자리 · 줄 높이 그대로
+     줄(nav) 위아래 4px 여백을 목록(ol) 안쪽으로 옮겨 단추가 위아래로 44 · 첫 단추는 왼쪽 여백(24px) 쪽으로 20px · 모든 단추는 오른쪽 「›」 자리로 14px(› 는 누름 통과) */
+  #topbar .axs-crumb { padding-top: 0; padding-bottom: 0; }
+  #topbar .axs-crumb ol { margin: -2px 0 -2px -20px; padding: 6px 0 6px 20px; }
+  #topbar .axs-crumb button { min-height: 44px; margin: -6px -14px -6px 0; padding: 6px 14px 6px 0; text-decoration-skip-ink: auto; }
+  #topbar .axs-crumb li:first-child button { margin-left: -20px; padding-left: 20px; }
+  #topbar .axs-crumb li { pointer-events: none; }   /* 뒤 칸(li)이 앞 단추의 오른쪽 확장을 덮지 않게 · 단추만 누름 */
+  #topbar .axs-crumb li button { pointer-events: auto; }
   #topbar .axs-htitle { flex: 1; min-width: 0; font: var(--ax-type-t5-strong); color: var(--ax-color-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #topbar .axs-hgr { padding-bottom: var(--ax-space-8); }
   #topbar .axs-hgr .ax-meta { display: block; }
@@ -1461,7 +1481,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   @media (prefers-reduced-motion: reduce) { #endGate .end-bot, #endGate svg, #endGate .eye, #endGate .ant path, #endGate h1, #endGate .ax-description { animation: none; } #endGate .ant path { opacity: 0.3; } }
   #axsWait { position: fixed; inset: 0; z-index: 130; display: flex; align-items: center; justify-content: center; padding: var(--ax-page-inset); background: var(--ax-color-canvas); }
   /* 비밀번호 찾기 화면 · 입력 56 / 주 버튼 56 모양만 A01 에 맞춘다(재방문 #quick 은 v4.94 수면형 .axs-lf) */
-  #pwlost input { min-height: var(--ax-button-height); border: 1px solid var(--ax-color-divider); border-radius: var(--ax-radius-12); background: var(--ax-color-inset); color: var(--ax-color-ink); }
+  #pwlost input { min-height: var(--ax-button-height); border: 1px solid var(--axs-field-line); border-radius: var(--ax-radius-12); background: var(--ax-color-inset); color: var(--ax-color-ink); }
   #pwlost input:focus { border-color: var(--ax-color-ink); }
   #pwlost .q-go { min-height: var(--ax-button-height); border-radius: var(--ax-radius-16); background: var(--ax-color-brand); color: var(--ax-color-onBrand); font: var(--ax-type-t5-strong); }
   #pwlost .q-eyebrow { color: var(--ax-color-brandText); }
@@ -1597,6 +1617,10 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-seg button[aria-pressed="true"] { background: var(--ax-color-surface); color: var(--ax-color-ink); }
   .axs-seg button small { display: block; font: var(--ax-type-caption); color: var(--ax-color-muted); }
   .axs-seg button small.need { color: var(--ax-color-error); }
+  /* v6.83 (접근성 C-1) 선택 칸 = 흰 면만으로는 트랙과 1.23:1 · 굵은 글자 + 1px 테두리(입력칸 선 색 · 3.18:1)를 겹쳐 색 말고도 보이게 · 겉 크기는 그대로(안쪽 그림자) */
+  .axs-seg button[aria-selected="true"], .axs-seg button[aria-pressed="true"], #topbar .axs-fs button[aria-pressed="true"] { font-weight: 700; box-shadow: inset 0 0 0 1px var(--axs-field-line); }
+  .axs-seg.sw-r button[aria-selected="true"] { box-shadow: none; }
+  .axs-seg.sw-r::before { box-shadow: inset 0 0 0 1px var(--axs-field-line); }
   .axs-scam { position: relative; border-radius: var(--ax-radius-16); overflow: hidden; background: var(--ax-color-ink); }
   .axs-scam video { display: block; width: 100%; max-height: 40vh; object-fit: cover; }
   .axs-slog { display: flex; flex-direction: column; padding: var(--ax-space-4) var(--ax-space-16); }
@@ -1975,7 +1999,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* v4.10 min-height 0 · #view 공통 규칙의 min-height 는 헤더 64px 고정값 기준이라, 경로 줄로 헤더가 실제로 더 커지면(약 106px) 그 차만큼 뷰가 과하게 늘어나 있지도 않은 스크롤이 생겼다. 게임 화면은 내용만큼만 차지해도 된다(#frame 배경이 어차피 100dvh 를 채운다) */
   #view[data-v^="game_"] { padding: var(--ax-space-24) var(--ax-page-inset) calc(var(--ax-space-16) + env(safe-area-inset-bottom)); min-height: 0; }
   .oly-sum-n { margin: var(--ax-space-4) 0 0; font: var(--ax-type-t2); color: var(--ax-color-ink); font-variant-numeric: tabular-nums; }
-  .oly-sum-n small { font: var(--ax-type-t6); color: var(--ax-color-muted); }
+  .oly-sum-n small { font: var(--ax-type-t6); color: var(--ax-color-muted); opacity: 1; }   /* v6.83 옛 .oly-sum small 투명도 0.7 이 겹쳐 2.67 이던 것 */
   .oly-sum-r { margin: 0; text-align: right; }
   .oly-rank-go { margin-top: var(--ax-space-12); }
   /* 순위판 · 종합 포디움 2-1-3 · 종목별 · 월계수 A안 최소 48 */
@@ -2032,6 +2056,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-form { gap: var(--ax-space-24); padding-top: var(--ax-space-8); }
   .axs-ta { width: 100%; min-height: 120px; padding: var(--ax-space-16); resize: none; font: var(--ax-type-t5); line-height: 1.5; }
   .axs-ta.axs-grow { min-height: 132px; max-height: min(40vh, 360px); overflow-y: auto; }   /* v5.39 아이디어 3,000자(사용자 261003) · 쓰면 높이가 늘고(ideaFit) 최대 높이 안에서 스크롤 · 설문 칸(.axs-ta)은 그대로 */
+  .ax-field { border-color: var(--axs-field-line); }   /* v6.83 (사용자 261009) 입력칸 경계 = --axs-field-line · 오류(aria-invalid) 빨강은 components.css 쪽이 더 구체적이라 그대로 */
+  #axsDet .axs-dbody.axs-fit, #axsSheet .ax-sheet.axs-fit, #modal .mcard.axs-fit { overflow-y: hidden !important; }   /* v6.83 (묶음 7) 글이 다 들어가는 시트 = 끌어도 스크롤 없음(sheetFit) */
   .axs-imtx { white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere; }   /* v5.39 내가 낸 아이디어 · 줄바꿈 그대로 · 긴 글은 접기(ideaMineTxt) */
   .axs-imtx .ax-link { display: flex; align-items: center; min-height: var(--ax-touch-size); white-space: nowrap; }   /* 펼치기 · 접기 = 글 아래 한 줄 */
   .axs-cnt { display: flex; justify-content: space-between; gap: var(--ax-space-8); }
@@ -2054,10 +2080,10 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-att:disabled .rd { border-color: var(--ax-color-divider); background: transparent; }
   .axs-attok { display: flex; flex-direction: column; gap: var(--ax-space-4); }
   .axs-attt { display: flex; align-items: center; justify-content: space-between; gap: var(--ax-space-8); font: var(--ax-type-t7); color: var(--ax-color-body); }
-  .axs-attt input { min-height: var(--ax-touch-size); padding: 0 var(--ax-space-8); border: 1px solid var(--ax-color-divider); border-radius: var(--ax-radius-12); background: var(--ax-color-surface); color: var(--ax-color-ink); font: var(--ax-type-t6); }
+  .axs-attt input { min-height: var(--ax-touch-size); padding: 0 var(--ax-space-8); border: 1px solid var(--axs-field-line); border-radius: var(--ax-radius-12); background: var(--ax-color-surface); color: var(--ax-color-ink); font: var(--ax-type-t6); }
   .axs-svin { display: flex; flex-direction: column; gap: var(--ax-space-12); }
   .axs-svin .row { display: flex; gap: var(--ax-space-8); }
-  .axs-svin input[type=range] { width: 100%; accent-color: var(--ax-color-brand); }
+  .axs-svin input[type=range] { display: block; width: 100%; height: 44px; margin: 0; accent-color: var(--ax-color-brand); cursor: pointer; }   /* v6.83 (접근성 A-4) 눌림 높이 16 → 44 · 손잡이 · 막대 모양은 그대로(가운데) */
   /* 포토부스 대기 번호 · 검정 호출 면 폐지 → 주황 면 + 짙은 글자 */
   /* v4.18 위계(사용자 결정 260923) · 줄어드는 앞 팀 수와 예상 시각이 주인공, 고정 번호는 아래 한 줄로 받친다 */
   /* 비밀번호 찾기 · 전체 화면 */
@@ -2077,13 +2103,14 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   #pwlost { position: fixed; overflow-y: auto; }   /* 화면 높이에 맞춘다 · 앱 면이 길어도 아래 버튼이 화면 안에 */
   #pwlost h1 { color: var(--ax-color-ink); }
   /* 아래 고정 바의 꺼진 주 버튼 · canvas 바탕 위에서도 자리가 보이게 흰 면 + disabled 글자 */
-  .axs-fix.ax-bottom .ax-button:disabled { background: var(--ax-color-surface); color: var(--ax-color-disabled); }
+  .axs-fix.ax-bottom .ax-button:disabled { background: var(--ax-color-divider); color: var(--ax-color-muted); }   /* v6.83 (접근성 C-2) 흰 면 + 연회색 글자는 단추로 안 보였다 · 회색 면 + 보조 글자 */
   /* ═══ v4.84 (261001 앱 개편 2묶음) 홈 다음 스탬프 · 스탬프 탭 한 목록 · 프로그램 탭 메뉴 · 10F 세션 줄 · 1F 부스 6구역 (토큰만 · hex 없음) ═══ */
   #view[data-v="exp"] .axs-sec { display: flex; flex-direction: column; gap: var(--ax-space-12); }
   #view[data-v="exp"] .sect { margin: 0; align-items: center; }
   #view[data-v="exp"] .sect b { font: var(--ax-type-t4); color: var(--ax-color-ink); }   /* v5.66 (디자인 감사 261005 D4) 옛 15.5px 800 · 12.5px 700 → 토큰(홈 .sect 와 같은 제목 크기) */
   #view[data-v="exp"] .sect span { font: var(--ax-type-t7); color: var(--ax-color-muted); cursor: default; }
   #view[data-v="exp"] .lnk.sub { margin: 0 var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-muted); cursor: pointer; }
+  #view[data-v="exp"] .axs-stfgo { display: flex; align-items: center; width: fit-content; min-height: 44px; margin: -12px var(--ax-space-4); padding: 0; border: 0; background: none; text-align: left; }   /* v6.83 (접근성 B-3 · B-6) 「담당자 적립」 p → button · 눌림 높이 20 → 44 · 위아래 -12px 로 글자 자리 그대로 */
   #view[data-v="exp"] .nt { margin: 0 var(--ax-space-4); font: var(--ax-type-t7); color: var(--ax-color-body); }
   .axs-nx { gap: var(--ax-space-16); }
   .axs-nx-c { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ax-space-4) var(--ax-space-12); margin: 0; font: var(--ax-type-t7); color: var(--ax-color-muted); }
@@ -2097,12 +2124,12 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-stp.done .axs-stpn { border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
   .axs-stpn svg { width: 20px; height: 20px; display: block; }
   /* v5.68 프로그램 참여 = 스탬프 2개 · 제목 옆 「×2」 알약 · 17F 한쪽만(p3h) = 번호 칸 아래 절반 주황 「1/2」 */
-  .axs-x2 { display: inline-flex; align-items: center; gap: var(--ax-space-4); margin-left: var(--ax-space-8); padding: 1px var(--ax-space-8); border-radius: var(--ax-radius-999); background: var(--ax-color-brand); color: var(--ax-color-ink); font: var(--ax-type-caption); font-weight: 800; line-height: 1.35; vertical-align: 2px; white-space: nowrap; }
-  .axs-x2 .d { flex: none; box-sizing: border-box; width: 9px; height: 9px; border-radius: var(--ax-radius-999); border: 1.5px solid var(--ax-color-ink); }
-  .axs-x2 .d.on { background: var(--ax-color-ink); }
+  /* v6.83 (사용자 261009 묶음 12 「스탬프 픽토그램 × 2」) 주황 알약(점 둘 + 「스탬프 2개」 · v6.56) → 하단 탭 스탬프 그림(#nav-stamp 그대로) + 「×2」 · 면 없음 · 무채색(받은 줄 = muted) · 한 덩어리(좁으면 통째로 다음 줄) */
+  .axs-x2 { display: inline-flex; align-items: center; gap: 2px; margin-left: var(--ax-space-8); color: var(--ax-color-body); font: var(--ax-type-t7); font-weight: 700; line-height: 1; vertical-align: middle; white-space: nowrap; }
+  .axs-x2 .axs-x2i { flex: none; width: 1.15em; height: 1.15em; }
+  .axs-stp.done .axs-x2 { color: var(--ax-color-muted); }
   .axs-stpb .axs-stpt2 { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ax-space-4) var(--ax-space-8); }   /* 좁은 폭 · 큰 글씨에서 알약이 제목 아래로 내려가도 들여쓰기 없이 */
   .axs-stpt2 .axs-x2 { margin-left: 0; vertical-align: baseline; }
-  .axs-x2 .d + .d { margin-right: var(--ax-space-4); }   /* v6.56 알약 = 도장 칸 두 개(받은 만큼 찬 점) + 「스탬프 2개」 */
   .axs-stp.half .axs-stpn { border-color: var(--ax-color-brand); background: linear-gradient(to top, var(--ax-color-brand) 50%, var(--ax-color-inset) 50%); color: var(--ax-color-ink); font: var(--ax-type-caption); font-weight: 700; }
   .axs-stpb { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--ax-space-4); }
   .axs-stpb .ax-card-title { margin: 0; }
@@ -2110,6 +2137,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-stpm > span:not(.axs-stpc) { min-width: 0; }
   .axs-stpc { flex: none; display: inline-flex; align-items: center; min-height: 22px; padding: 0 var(--ax-space-8); border-radius: var(--ax-radius-8); background: var(--ax-color-canvas); color: var(--ax-color-body); font: var(--ax-type-caption); white-space: nowrap; }
   .axs-stp.tap { cursor: pointer; }
+  .axs-stpc { min-width: calc(3em + var(--ax-space-16)); justify-content: center; }   /* v6.83 (디자인 D-8) 받는 법 알약 최소 폭 통일(자동 · 현장 · 폰으로 = 같은 폭 · 글자 가운데) */
   .axs-stpc.staff { background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); }
   .axs-stpa { flex: 0 0 auto; align-self: center; min-width: var(--ax-touch-size); min-height: var(--ax-touch-size); padding: 0 var(--ax-space-4); border: 0; background: transparent; color: var(--ax-color-brandText); font: var(--ax-type-t6-strong); display: inline-flex; align-items: center; justify-content: flex-end; cursor: pointer; }
   span.axs-stpa { cursor: default; }
@@ -2195,7 +2223,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .rc.axs-tourbig .ls .ico.tbot { width: 52px; height: 52px; background: var(--ax-color-surface); }
   .rc.axs-tourbig .ls .ico.tbot svg { width: 58px; height: 58px; left: -3px; top: 1px; }
   .rc.axs-tourbig .tt { font: var(--ax-type-t5-strong); font-weight: 800; }
-  .rc.axs-tourbig .sb { color: var(--ax-color-body); }
+  .rc.axs-tourbig .sb { font: var(--ax-type-t7); color: var(--ax-color-body); }
   /* v5.64 (사용자 261005 「홈화면도 이것과 통일」) 홈 줄 규칙(#view[data-v="home"] .rc · 흰 면 · 테 없음 · 회색 설명)이 카드를 덮지 않게 · 같은 카드 한 벌(tourCardHtml) */
   #view[data-v="home"] .rc.axs-tourbig { background: var(--ax-color-brandSoft); border: 1px solid color-mix(in srgb, var(--ax-color-brand) 30%, var(--ax-color-surface)); --rc-px: 15px; }
   #view[data-v="home"] .rc.axs-tourbig .ls .ico.tbot { background: var(--ax-color-surface); }
@@ -2249,8 +2277,8 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pan .axs-dot::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--ax-color-brand); }
   .axs-pan .axs-todo { display: flex; flex-direction: column; gap: 10px; }
   .axs-pan .axs-todo h3 { margin: 0; font: var(--ax-type-t6-strong); color: var(--ax-color-ink); }
-  .axs-pan .axs-todo p { display: flex; gap: 10px; margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); }
-  .axs-pan .axs-todo p::before { content: ""; flex: none; width: 8px; height: 8px; margin-top: 0.55em; border-radius: 50%; background: var(--ax-color-brand); }
+  .axs-pan .axs-todo p { display: flex; gap: var(--axs-dot-gap); margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); }   /* v6.83 점 값 = :root --axs-dot 한 곳(보조 줄 목록 .seglist 와 같은 부품 · 15px 글자에서 8px 점 · 10px 간격 그대로) */
+  .axs-pan .axs-todo p::before { content: ""; flex: none; width: var(--axs-dot); height: var(--axs-dot); margin-top: var(--axs-dot-top); border-radius: 50%; background: var(--ax-color-brand); }
   /* ── 공통 부품 K 끝 · 아래는 상시 운영 · 구역 상세 화면 조각(같은 경계 .axs-pan) ── */
   .axs-pan .axs-zsec { display: flex; flex-direction: column; gap: var(--ax-space-8); }
   .axs-pan .axs-zr { display: flex; align-items: center; gap: var(--ax-space-12); width: 100%; padding: var(--ax-space-16); border: 0; border-radius: var(--ax-radius-20); background: var(--ax-color-surface); color: var(--ax-color-ink); font-family: inherit; text-align: left; cursor: pointer; }
@@ -2381,13 +2409,14 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
 .axs-pan .axs-xchk .axs-kv { grid-template-columns: 56px minmax(0, 1fr); row-gap: var(--ax-space-12); }
 .axs-pan .axs-xchk .axs-treat { margin-top: var(--ax-space-4); }
 .axs-pan .axs-xgd { display: flex; flex-direction: column; gap: var(--ax-space-4); }
-.axs-pan .axs-xgd .ax-link { min-height: 36px; }
+.axs-pan .axs-xgd .ax-link { min-height: 44px; margin: -4px 0; }   /* v6.83 (접근성 B-3) 눌림 높이 36 → 44 · 위아래 -4px 로 자리 · 모양 그대로 */
 .axs-pan .axs-xq { display: flex; flex-direction: column; gap: 2px; margin: 0; font: var(--ax-type-t6); color: var(--ax-color-body); word-break: keep-all; }
 .axs-pan .axs-zdt.axs-sthost > .axs-xq { padding-right: 64px; }
 .axs-pan .axs-zdt > .axs-sign + .axs-xq { margin-top: calc(var(--ax-space-8) * -1); }
 @media (prefers-reduced-motion: reduce) { .axs-pan .axs-xtog svg { transition: none; } }
 /* v5.69 구역 상세 시트(#axsDet · zoneSheet cls axs-pan) · 사실 표 열 = 구역 상세 카드와 같다 · 질문 3줄은 제목 바로 아래 */
 #axsDet .axs-pan .axs-kv { grid-template-columns: 56px minmax(0, 1fr); row-gap: var(--ax-space-8); }
+#axsDet .axs-dsh.axs-pan .axs-dbody { gap: var(--ax-space-16); }   /* v6.83 (사용자 261009 묶음 11) 구역 상세 시트 = 선 · 섹션 간격 한 단계 작게(20 → 16 · 같은 종류 간격 같은 값) · 일반 글씨 360 · 390 한 화면 */
 #axsDet .axs-pan .axs-xq { margin-top: calc(var(--ax-space-4) * -1); }
 /* 261008 비어 보이는 상세 다듬기(사용자 「(가)로 가자」 · 높이 규칙 그대로) · 구역 시트 상태 한 줄(자유 관람 · 스탬프 없음 · 운영 시각 · 스탬프 3개면 룰렛 1회)을 제목 묶음에 붙인다(간격 20 → 8 · 떠 있던 회색 줄 + 검정 줄 = 한 덩어리 뒤 줄 하나) · 하는 일 줄 = 마지막 줄 한 낱말 막기 */
 #axsDet .axs-pan .axs-dlead + .cr { margin-top: calc(var(--ax-space-12) * -1); }
@@ -2664,6 +2693,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pz-need .i { display: block; flex: none; width: 24px; height: 24px; color: var(--ax-color-brand); }
   .axs-pz-need .i svg { display: block; width: 100%; height: 100%; }
   .axs-pz-need .x { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .axs-pz-need li:has(> .x > b:only-child) { align-items: center; }   /* v6.83 보조 줄 없는 항목 = 아이콘과 제목 세로 가운데 */
   .axs-pz-need b { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); word-break: keep-all; text-wrap: pretty; }   /* 261008 큰글씨에서 마지막 줄에 한 낱말만 남지 않게(지원 안 하는 브라우저는 그대로) */
   .axs-pz-need .x > span { font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
   #modal .axs-pz-need { margin-top: var(--ax-space-12); }   /* 261008 팝업(룰렛 1회권 · 행운권 · 선착순 참여상) · 위 상태 칩 · 행운권 번호와 붙지 않게 */
@@ -2674,7 +2704,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pz-ph .smp { position: absolute; right: var(--ax-space-12); top: var(--ax-space-12); padding: 2px 8px; border-radius: var(--ax-radius-999); background: rgba(255, 255, 255, 0.92); box-shadow: 0 0 0 1px rgba(25, 31, 40, 0.08); color: var(--ax-color-body); font-size: 11px; font-weight: 600; line-height: 16px; }   /* v5.33 오른쪽 위 · 어두운 사진 위에서도 읽히게 흰 바탕 */
   .axs-pz-c .tx { display: flex; align-items: baseline; gap: var(--ax-space-12); padding: var(--ax-space-16) var(--ax-space-20) var(--ax-space-4); }   /* v5.33 등수 · 이름 · 수량 = 카드 맨 위(사진 위 · 사용자 261003 「스크롤하면 1등이 좌상단이어야」) */
   .axs-pz-c > .axs-pz-ph { margin-top: auto; }   /* v5.33 2열에서 이름이 두 줄이어도 사진 아래 끝이 맞는다 */
-  .axs-pz-c .rk { flex: none; font: var(--ax-type-t3); color: var(--ax-color-brand); }
+  .axs-pz-c .rk { flex: none; font: var(--ax-type-t3); color: var(--ax-color-brandText); }   /* v6.83 (사용자 261009) 등수 큰 글자 주황 2.52 → brandText 6.39 */
   .axs-pz-c b { flex: 1 1 auto; min-width: 0; font: var(--ax-type-t4); font-weight: 700; color: var(--ax-color-ink); word-break: keep-all; }
   .axs-pz-c b small { display: block; margin-top: 2px; font: var(--ax-type-t7); font-weight: 600; color: var(--ax-color-muted); }   /* v5.35 제품명 = 경품명 아래 작은 회색 줄(타자왕) */
   .axs-pz-c .q { flex: none; font: var(--ax-type-t6-strong); color: var(--ax-color-muted); }
@@ -2721,7 +2751,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   /* 261008 럭키드로우 당첨 시트 · 등수 = 큰 주황 글자(브랜드 한 곳) · 경품 사진 · 이름 · 행운권 번호 · 홈 줄 확인 전 점 */
   .axs-lkw { padding: var(--ax-space-8) 0 var(--ax-space-4); }
   .axs-lkw img { width: min(56vw, 220px); }
-  .axs-lkw .rk { margin: 0 0 var(--ax-space-4); font-size: calc(40px * var(--fs)); line-height: 1.1; font-weight: 800; color: var(--ax-color-brand); letter-spacing: -0.02em; }
+  .axs-lkw .rk { margin: 0 0 var(--ax-space-4); font-size: calc(40px * var(--fs)); line-height: 1.1; font-weight: 800; color: var(--ax-color-brandText); letter-spacing: -0.02em; }   /* v6.83 등수 큰 글자 = brandText */
   .axs-ndot { display: inline-block; width: 8px; height: 8px; margin-left: 6px; border-radius: 50%; background: var(--ax-color-brand); vertical-align: middle; }
   /* v5.18 스탬프와 별개 구역(1F 타자왕) · 위 구역들과 얇은 선으로 나눈다 · 순위 보기 버튼(블록 맨 아래) · v5.74 알약 · 아래 설명 줄은 「받으려면」 박스로 옮겼다 */
   .axs-pz-sec.sep { margin-top: var(--ax-space-48); padding-top: var(--ax-space-32); border-top: 1px solid var(--ax-color-divider); }
@@ -2743,7 +2773,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-pzgo .th img:first-child { margin-left: 0; }
   .axs-pzgo .tx { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; }
   .axs-pzgo .tx b { font: var(--ax-type-t6-strong); color: var(--ax-color-brandText); }
-  .axs-pzgo .tx span { font: var(--ax-type-caption); color: var(--ax-color-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .axs-pzgo .tx > span { font: var(--ax-type-caption); color: var(--ax-color-body); }   /* v6.83 (접근성 B-8) 말줄임 대신 두 줄 허용 · 꺾이면 「 · 」 자리에서(segHtml) */
   .axs-pzgo .axs-chev { flex: none; width: 20px; height: 20px; color: var(--ax-color-brandText); }
   /* 모달 안 경품 한 줄 · 대표 사진 + 요약 + 「경품 보기」 (옛 목록 대신) */
   .axs-pzm { display: flex; align-items: center; gap: var(--ax-space-12); width: 100%; padding: 0; border: 0; background: none; color: inherit; font-family: inherit; text-align: left; cursor: pointer; }
@@ -3507,7 +3537,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   <!-- ═══════ 앱 셸 ═══════ -->
   <div id="app" hidden>
     <header id="topbar" class="ax-header"></header>
-    <div id="view"></div>
+    <main id="view"></main>
     <nav id="tabbar" class="ax-nav" aria-label="주 메뉴"></nav>
     <!-- 하단 메뉴 아이콘(v5.75 · 사용자 261006 「선택 표시 세 겹」) · 24 격자 · 실제 그림 20 · 선 2 · 둥근 끝 · 탭마다 선(nav-*) / 채움(nav-*-f) 짝 · id = 탭 뜻 · currentColor · 채움 안쪽 뚫림 = 메뉴 면색(--ax-color-surface) · 가운데 QR = 둥근 모서리 그림(qr-corners) · 단일파일 데모에서도 보이게 본문에 둔다 -->
     <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="nav-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -3591,7 +3621,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   </div>
   </div>
 
-  <div id="toast"></div>
+  <div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 </div>
 
 <!-- qrcode-generator 1.4.4 · QR 인코더 (MIT, Kazuhiko Arase · http://www.d-project.com/)
@@ -3614,7 +3644,7 @@ var qrcode=(function(){var P=function(x,w){var g=236,l=17,n=x,s=O[w],t=null,r=0,
 /* ════════════════ 데이터 (정본 260710 + 260803 + v16 + 18F) ════════════════ */
 var FESTIVAL = {
   name: "AX Festival 2026",
-  date: "2026. 10. 26 (월)", timeRange: "09:30 – 17:30", place: "광화문 본사",
+  date: "2026. 10. 26 (월)", timeRange: "09:30~17:30", place: "광화문 본사",
   floors: "1F · 10F · 17F · 18F",
   mockOnline: 1842, mockIdeas: 214, mockGamePlayers: 1260,
   mockStamp3: 61, mockWave: 1128, mockWe: 0
@@ -4243,12 +4273,18 @@ function pwLostSend() {
  * ① 안드로이드 크롬: beforeinstallprompt 를 붙잡아 두었다가 버튼 한 번에 네이티브 설치창
  * ② iOS / 그 외: 입장 직후 하단 시트로 단계 안내 (공유 → 홈 화면에 추가)
  * ③ 카카오톡 등 인앱 브라우저: 홈 추가가 불가능하므로 기본 브라우저로 탈출 유도 */
-var APP_VER = "v6.82";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 · v6.82 = 261009 계단 동행 6차(사용자 「일부러 띄운 이유가 있어? 계단 모형을 더 늘려도」 · 말풍선 = 경로 줄 바로 아래 · 무대 = 도착 단추 바로 위까지 · 좌우 16px · 말풍선 줄 수 재기 고침(글자 크기 맞춤이 다시 동작 · 높이 고정)) · v6.81 = 261009 홈 「지금 현장」 점 → 상태 알약(사용자 「점 하나 → 알약 같은 것으로 더 잘 보이게」 · 권장 A · 둘째 줄 = 옅은 상태 색 면 알약 하나(점 + 「여유 · 보통 · 혼잡」 · 17F 5단계) + 1F 세 칸만 옆에 대기 글자 · 1F 상태 단어 다시 보임 · 기준 시각은 섹션 머리 한 곳 · 흰 면 전환 .neut · 데이터 · 계산 · 입력 그대로) · v6.80 = 261009 태블릿 가로 · 세로 보기 허용(사용자 「탭에서 세로 보기 · 가로 보기가 막혀 있는데 가능하도록」 · manifest orientation portrait → any(폰도 함께 풀림 · 기기 회전 잠금을 따른다) · 계단 동행 화면을 돌리면 말풍선 글자 · 무대 자리 · 3D 캔버스 해상도 다시 맞춤) · v6.79 = 261009 계단 동행 5차(위 정보 줄 걷어냄 · 말풍선 26px 두 줄(머리표 + 본문) · AX 상식 2 : 그 밖 1 · 상식 31개 · 오르는 동작 묶음과 말 짝 동작 · 도착 QR 뒤 전체 화면 도착 장면(고생했어요 · 도장 팡 · 찡끗 아이리스 → 스탬프 탭)) · v6.78 = 261009 스태프 관리 요청 전부 POST 폼 본문(admCall · 계약 10절) · v6.77 = 261009 이벤트 수신기 누수 고침(사용자 「이벤트 점검」 · 화면 변경 없음 · beCall 이 끝난 호출마다 window 에 빈 함수를 남겨 떼어진 script · onload · onerror 수신기를 붙잡던 것 · 폴링 한 번에 +1 script · +2 수신기 · 응답이 오면 이름 지움 · 타임아웃만 밖의 BE_NOOP · 검사 348절) · v6.76 = 261009 계단 동행 4차 글자 크게(사용자 「글자 폰트를 더 크게」 · 말풍선 17px 600 → 22px 700(1.3배) · 좁으면 21 · 20 · 19px 한 단계씩 · 나올 말 전부 2줄 안 · 말풍선 높이 미리 잡아 무대 · 단추 안 밀림 · 점프 숫자 20 → 26px · 보조 글자 13 → 15px · 안전 줄 15 → 17px · 꼬리표 13 → 15px · 감사 말 「오늘」 덜기 · 미니 게임 제안 「N종목도 있어요」) · v6.75 = 261009 계단 동행 3차(사용자 「계단은 대각선이 아니라 정면 · 챗봇 크게 · 1층 모형의 챗봇 형태와 디자인 스타일」 · 정면 계단(아래에서 올려다봄 · 멀수록 좁은 디딤판) · 1층 둘러보기 buildBot 그대로의 3D 챗봇 · 같은 재질 · 빛 · 배경 · 손잡이 = 엘리베이터 로즈골드 · three.min.js 는 둘러보기와 같은 주소로 이 화면에서 처음 받음(모형 glb 안 받음) · 받는 동안 · 못 그리는 기기 · 느린 기기 = 같은 시점 평면 그림 · 움직일 때만 그림 · 해상도 1.5배까지 · 무대 6:5 · 아래 단추 위에 다 보이게 · 18F = 앞모습으로 내려옴 · 땀방울 3D · 검사 346절) · v6.74 = 261009 계단 동행 2차(사용자 「준비 운동은 거창하다 · 다섯 번 오르고 돌아서 땀 · 힘내요 · 눈웃음 · 5분 켜 두는 사람」 · 준비 운동 · 아이리스 걷음 · 대각선 계단이 점프마다 한 칸 흘러 내려옴 · 챗봇 제자리 · 콩콩 5번(하나~다섯) → 돌아서 땀 → 한마디 + 눈웃음 → 다시 돌아섬 · 홀수 고리 응원 12 · 짝수 고리 행사 말(AX 상식 23 · 프로그램 제안 · 계단 말 6 · 엘리베이터 감사 1번) · 5분 안 행사 말 겹침 없음 · 3분 · 5분 이정표 · 8분 절약 · 15분 쉼(화면 켜 두기 놓음) · 20분부터 직접 고르기 안내 · 18F 출발 = 뒤집어 내려가기 · 검사 346절) · v6.73 = 261009 동작 모션 통일(사용자 「점심 · 자유 관람 → 상시 운영처럼 앱 전체에 같은 동작」 · 공용 토큰 --ax-motion-* + AXM · 시트 셋 열림 · 닫힘 · 세그먼트 · 스크롤 이동 · 토스트 · 펼침) · v6.72 = 261009 「 · 」로 이은 글 줄바꿈(사용자 「어차피 두 줄이 될 거라면 · 자리에서 다음 줄로」 · segHtml 조각 <ax-seg> inline-block · 레일 6개 캡션 · 정보 줄 dd · 시트 제목 · 상세 머리 · 받으려면 상자 · 보상 카드 · 스탬프 카드 보조 줄 · 키트 · 퀴즈 · 미니 게임 순위 · 토스트) · v6.71 = 261009 운영자 요청 사번 필수(기타만 선택) · v6.70 = 261009 스태프 폰 「운영자에게 요청」 시트 · 룰렛 소진 알림 단추 · 박스 링크 숨김 · v6.69 = 261009 계단 동행(사용자 「계단실 QR을 찍으면 챗봇이 계단을 오르고 응원 · 화면을 닫지 않게 · 1층 엘리베이터 동물의 숲 감성」 · 출발 QR 뒤 진행 화면 = 준비 운동 3줄 → 아이리스 → 1초 한 칸 · 7칸 한 층 걷기 고리 · 말풍선 한 자씩 · 응원 · AX 상식(점프 상식 · AX 퀴즈 해설 출처 id) · 다음 참여 제안(스탬프 · 시각) · 도착 안내 · 아래 고정 큰 「도착 층 QR 찍기」 · 20초 뒤 숨 쉬는 고리 · Wake Lock · 떠났다 와도 이어서 · 동작 줄이기 = 그림 + 말풍선 · 18F 출발 = 내려가는 그림 · 옛 도트 계단 걷음 · 새 조각 128-js-stair-buddy.js · 042-css-stairbud.css · 검사 346절) · v6.68 = 261009 행운권 티켓 칩 다듬기(사용자 「체크인 화면 번호도 티켓으로 · 글자 크기가 너무 커 · 균형감 · 절취선은 주황보다 어두운 회색」 · 점 글자 14 → 12px(최소 크기) · 절취선 brand → muted · 새 번호 확인 절취선 onBrand 25% · 추첨 체크인 결과 화면 번호 줄 = 같은 티켓 칩 · 검사 342절) · v6.67 = 261009 행운권 번호 칩 = 티켓(사용자 「행운권 모양 테두리에 번호도 점 문자로 · 은색 비슷한 회색톤」 · 시안 ④ · 양옆 반원 홈 · 왼쪽 주황 절취선 · 은회색 무광 면 · 먹색 점 글자 14px · 레일 · 나의 보상 · 추첨 안내 팝업 같은 칩 tktHtml · 새 번호 확인 = 주황 티켓 · 발급 중 = 회색 티켓 · 상자 연출 그대로 · 검사 342절) · v6.66 =261009 행사 종료 안내 화면(사용자 「오픈 범위에 행사종료 · 아무도 못 들어오고 · 챗봇이 나와서 안내」 · 서버 오픈_범위 종료 = reason ended · 로그인 · 홈 대신 챗봇 원본 + 안테나 전파 · 「AX Festival 2026이 종료되었습니다」 · 「내년에 다시 만나요」 · 단추 없음 · beCall 한 곳 endSeen · 기기 키 og_end = 다시 열면 먼저 · 범위를 되돌리면 다음 sync 에 걷힘 · #self · #tv= 기기 화면 제외) · v6.65 = 261008 1층 부스 기획안 수정본(사용자 「1층을 재구성해줘」 · 둘러보기 AX VISION 판 5장 · AX 라운지 데스크만 · Welcome 자리 · AX LAB TV · 타자왕 데스크 · 1F 엑스배너 · 라운지 퀴즈 · 점프 힌트 걷음 · TOUR.ver v665) · v6.64 = 261008 신청하기 칸 커피챗 · AX 라운지 같은 형태(사용자 「ax라운지도 같은 형태 · 사전 신청자 중심」 · 두 카드 사실 표 지금 · 시간 · 방식 · 신청 · 사은품 · 라운지도 사은품 사진 줄 · 한 줄 소개 「내년 DAP 과제 후보를 1:1로 상담하는 곳」 · 「비슷한 고민을 여럿이 모여 나누는 곳」 · 라운지 「사전 신청자 우선」 · 「남은 시간 N개 · 누구나 신청」) · v6.63 = 261008 비어 보이는 상세 다듬기(사용자 「(가)로 가자」 · 시트 높이 93% · 60% 문턱 그대로 · 구역 상세 상태 한 줄을 제목 묶음에 붙임 · 상세 제목 줄 길이 고르게 · 하는 일 · 설명 줄 마지막 한 낱말 막기 · 주 버튼은 이미 아래 고정 칸) · v6.62 = 261008 폴링 지터(부하 재시험 권장 1 · 화면 변경 없음 · 동기화 성공 뒤 다음 폴링에도 0~5초 무작위 더함 · 화면이 다시 보일 때 첫 sync 0~1.5초 무작위 · 소켓 붙은 120초 폴링 · 소켓 끊김 뒤 평소 폴링도 같은 지터 · 검사 321절) · v6.61 = 261008 프로그램 상세 「경품 보기」 입구 뺌(사용자 「굳이 있어야 될까?」 · 「이 위치도 중복인 것 같아서 빼자」 · AWS · MS 강연 · Closing Speech 상세 · 홈 · 스탬프 탭 레일 · 경품 탭 · 둘러보기 · 타자왕 경품 칸은 그대로) · v6.60 = 261008 연사 그림(사용자 「AWS 와 MS의 로고 · 이석현 정경선 사진」 · 17F Opening Speech · Closing Speech = 사진 · AWS · MS 강연 = 로고(흰 바탕 · 원형 그대로) · assets/speaker/ · Keynote · 10F 는 글자 그대로 · 안 뜨면 글자) · v6.59 = 261008 「받으려면」 상자 공용(사용자 「참여 전 확인 아래 부분을 받으려면 부분처럼 · 정돈되지 않은 부분들도」 · AWS · MS 강연 상세 · Closing Speech 현장 추첨 · AX PLAY 체험 · 룰렛 1회권 · 행운권 · 선착순 참여상 팝업 · 기념품 옷 받는 방법) · v6.58 = 261008 표기 정본 = 네임택 발주 PDF(사용자 「PDF와 똑같이」 · 17F Opening Speech · Keynote 둘 · AWS · MS 강연 제목 · Closing Speech · 연사 실명 · 직함 · 10F 세션 제목 · 강사 · 옛 Intro · 기조연설 · 내부 강연 · 마무리 연설 · Outro 화면 글자 대체 · 시간표 17F 줄은 TIMELINE pid) · v6.57 = 261008 행운권 경품 문구 「경품은 따로 전달」 통일 · 스태프 플리스 받는 방법 「따로 전달해 드려요」 · v6.56 = 261008 스탬프 탭 「프로그램 참여」 줄 더블 스탬프 표시(사용자 「더블 스탬프인 것이 명확히 이해되지 않아」 · 제목 옆 「×2」 글자 → O100 알약 「● ● 스탬프 2개」(받은 만큼 점이 찬다 0 · 1 · 2) · 받기 전 둘째 보조 줄 「입장 QR 1개 + 끝 QR 1개」 · 도장 팝 제목 「×2」 · 1 / 2 그대로) · v6.55 = 261008 설명 문구 한 줄(사용자 「어설프게 두 줄로 넘어가는 것들 · 워싱 · 간소화 · 한 줄」 · 커피챗 「멘토와 한 테이블에서 아이디어를 나눠요」 · 「키우고 싶은 업무를 1:1로 상담해요」 · 라운지 · 신청하기 칸 「지금」 · AX PLAY 안내 · 미니 게임 종합 · 행운권 · 선착순 받으려면 줄 · 메신저 알림 안내 · 기본 공지 · 390 폭 한 줄) · v6.54 = 261008 쿠키 사진 = 원본 전체(자르지 않음 · 사용자) · v6.53 = 261008 커피챗 · 상담 지급품 쿠키 = 휘낭시에 사진(assets/prize/cc_cookie.webp) · 부제 「휘낭시에 · 쿠키」 · v6.52 = 261008 플리스 신청 완료 「받는 방법」 상자(스태프 = 행사 전에 미리 전달 · 사전 신청 = 10/26 08:00 1F 주차장 체크인존 · 내 QR) · v6.51 = 261008 홈 「지금 현장」 차분하게(사용자 「색감이 너무 쨍해서 어지러워 · 텍스트도 간소화」 · 색은 상태 점 하나에만 · 점 9px 바깥 고리 없음 · 모양도 다르게 여유 빈 고리 / 보통 반쯤 / 혼잡 꽉 찬 점 · 이름 body 회색 · 둘째 줄 muted 회색 · 층 점문자 muted · 1F 세 칸은 대기 시간만(상태 단어는 읽어 주기만) · 17F · 정보 없음은 상태 단어만 · 만석만 글자 굵게) · v6.50 = v6.50 = 261008 플리스 시트 문구 걷기(고르는 기준 한 줄 · 「먼저 신청한 순서대로 품절돼요」 · g/㎡ 설명 줄) · v6.49 = 261008 커피챗 · 상담 지급품 노트 = 사진(assets/prize/cc_note.webp · 아이콘 대체) · v6.48 = 261008 플리스 사이즈 화면 표기 SS · L · 2XL · 3XL → A · B · C · D(사용자 「SS 이런 사이즈가 생소해서 · A B C D 이렇게 바꾸자」 · 화면 글자만 · kitLbl 한 함수 · 서버 · 저장 · 설정 · 콘솔 · 발주 값은 그대로 · 창구 A = SS · B = L · C = 2XL · D = 3XL 와 같은 글자 · 창구 스캔 띠 · 창구 태블릿 desk 는 A 크게 + 작게 실제 (SS)) · v6.47 = 261008 홈 「지금 현장」 두 줄 칸(사용자 「세 줄 → 한 줄이나 두 줄」 · 이름 줄 + 상태 줄 · 점 + 상태 단어 + 「· 짧은 말」 같은 줄 · 17F 「HH:MM 기준」 줄 삭제(섹션 머리 오른쪽에 있음) · 「대기」 접두만 뺌(읽는 이름은 그대로) · 말이 안 들어가면 말줄임 없이 둘째 줄 · 시험값 = 이름 줄 오른쪽 끝 · 칸 높이 85 → 67px) · v6.46 = 261008 홈 「지금 현장」 칸 신호등 색(칸 면 = 흰 면 + 테두리 하나 · 상태 = 점 + 글자 색 · 초록 success · 노랑 --cn-mid · 빨강 error · 17F 여유 · 보통 초록 · 붐빔 노랑 · 거의 만석 · 만석 빨강 · 만석 굵게 + 겹 고리 · 정보 없음 회색 점 · 사용자 「초록 노랑 붉은 신호등」) · v6.45 = 261008 홈 「지금 현장」 층 표기 1F · 17F 점문자(flFloor · 읽는 이름 「1층」) + 테스트 사번만 네 칸 무작위 시험값(cnRand · 앱 열 때마다 · 서버 값보다 우선 · 서버에 안 보냄 · 칸 구석 「시험값」) · v6.44 = 261008 플리스 착용 사진 전체 화면 보기(사용자 「화면 꽉 차게 · 사이즈 선택 시 사진으로 날아가서」 · 사이즈 칩을 누르면 그 사이즈 착용 사진이 화면을 채움 · 큰 사이즈 글자 · 모델 키 · 몸무게 · 실측 한 줄 · 좌우로 밀면 이웃 사이즈(선택도 바뀜 · 품절 건너뜀) · 점 4개 · 닫기 = X · 아래로 끌기 · 뒤로 · 사진 탭 · 안에서 바로 신청 · 시트 맨 위는 다시 상품 사진만 · 완료 화면 「착용 사진 보기」 · kitView · kitFit · --kit-ph · 칸 안 착용 사진 걷어 냄) · v6.43 = 261008 플리스 시트 손보기(제목 묶음 AX Festival 2026 · 플리스 재킷 · 한 줄 설명이 사진 위 · 「에코백과 함께 드려요」 · 신청 완료 화면도 제목이 사진 위 · 처음 화면 사진 아래 안내 한 줄 삭제(빈 캡션 줄로 높이 유지) · 사이즈 칩을 누른 뒤 사진 머리가 시트 머리 밑에 가려진 채 멈추지 않게 스크롤 목표를 다시 잡고 키 작은 화면은 사진 칸 높이를 줄여 사진 + 캡션 + 칩 줄이 한 화면에 · kitFit · --kit-ph · 사용자 261008) · v6.42 = 261008 데이터 세대 청소(오픈 전 초기화 · 서버 sync gen 이 이 기기 값과 다르면 신원 키만 남기고 시험 흔적 · 못 보낸 대기열 · 시험 공지를 한 번 비움 · 처음 받는 기기는 저장만 · genCheck) · v6.41 = 261008 플리스 시트 사이즈별 착용 사진(assets/kit/fit_SS · L · 2XL · 3XL .webp · 사이즈 칩을 누르면 맨 위 사진 교체 + 캡션 「모델 175cm · 70kg · L 착용」 · 신청한 사이즈 사진 · 큰 칸 1:1 고정) · v6.40 = 261008 플리스 시트 사이즈 칩 아래 고르는 기준 한 줄(axs-kitgd · 평소 90 이하 SS · 95~100 L · 105 L 또는 2XL · 110~115 2XL · 120 3XL) · v6.39 = 261008 단계별 오픈 로그인 문(사용자 오픈 계획 · 1차 10/19 사전 신청자 · 스태프 · 2차 10/21 전 구성원) · 서버 reason notopen = 로그인 화면 · 홈 위 「AX PASSPORT는 10월 21일(수)부터 열려요」 한 화면(날짜 = 서버 open · ogShow · beCall 한 곳) · 이 기기 og = 다시 열면 그 화면을 깔고 서버에 다시 묻기(ogCheck) · 열리면 걷힘 · 「다른 사번으로 입장」 · v6.38 = 261008 플리스 시트 · 사이즈 대응 고침(제조사 LL = 우리 2XL 75 62 52 64 · 3L = 3XL 78 66 54 65 · SS만 실측 확인 중 · 사용자 「LL은 2XL · 3L은 3XL」) + 접힘 4칸 상품 정보 · 실측 사이즈표 · 세탁 방법 · 주의사항(제조사 상세 이미지의 사실 정보만 · 사용자 「상품 정보 세탁방법 주의사항」) · v6.37 = 261008 플리스 상품 사진 = 홍보부 원본(후리스자켓.png · 블랙 · 가슴 ME to WE · 4:3 800px) · v6.36 = 261008 럭키드로우 당첨 문구를 현장에 없는 사람 기준으로(사용자 「17층 화면을 봐 주세요 같은 문구는 현장에 없는 사람에게 무의미」 · 당첨 시트 = 「경품은 나중에 따로 전달해요」 한 줄 · 확인 완료 시트도 무대 문구 없이 · 푸시 「럭키드로우에 당첨됐어요 / 앱에서 확인해 주세요」 · 콘솔 폰 확인 칸 「대기」 → 「미확인」) · v6.35 = 261008 홈 「다음 할 일」 카드 삭제(사용자 「둘러보기 고정 · 다음 할 일 삭제」 · 홈 = v6.13 이전 순서) · 「지금 현장」 날짜 조건 해제 · 플리스 상품 사진 · 실측 사이즈표(SS · 3XL 확인 중) · 테스트 사번 미리 보기 · v6.34 = 261008 17F AWS · MS 출석 QR 행사일(10/26) 전에는 시간 창 없이 늘 출석(사용자 「지금도 되도록 · 이상한 데이터는 행사 전 초기화」 · attPre · 고르기 시트 · 데모 · 시험 시각 10/25 = tm 안 보냄 · 서버 attPreDay_) · 출석으로 새로 받은 스탬프 = 가운데 도장 팝(사용자 「파트너사 강의에 출석체크를 하면 스탬프 박히는 효과가 없어」 · p3h 1 / 2 · p3 ×2 · 이미 받음 · 기록만 = 팝 없음 · attStamp stampOverlay) · v6.33 = 261008 럭키드로우 당첨자 폰 알림(사용자 261008 「당첨자 폰 알림도 넣자」 · 서버 draw_log win → 소켓 lucky · 푸시 「럭키드로우 당첨 · 지금 17F 무대 화면을 봐 주세요」 · sync my.lucky) · 당첨 시트(공통 바텀 시트 · 등수 큰 주황 글자 · 경품 사진 · 이름 · 행운권 번호 · 주 버튼 「확인」 → draw_ack 본인 세션 → 「확인 완료 · 무대 화면에 표시됐어요」 + 「경품은 나중에 따로 전달해요」) · 홈 나의 일정 맨 위 「럭키드로우 N등 당첨」 한 줄(확인 전 주황 점) · 7등 랜덤 굿즈 = 확인 단추 없는 안내 시트 한 번 · 콘솔 추첨 기록 「폰 확인」 칸 · 검사 §293 · v6.32 = 261008 홈 「지금 현장」 2×2(1F 룰렛 · 1F 포토부스 · 1F AX PLAY · 17F 대강당 5단계 · 스탬프 블록 바로 아래 · 행사 당일만 · 스탬프 블록 여백 줄임) · 스태프 입력 시트(누르면 저장 · 5초 되돌리기 · 자동으로 · 시간 재기) · 스캔 화면 「줄」 · 옛 로비 · 엘리베이터 · 17F 입장 수 칸 · 풀리면 알림 · 혼잡 제보 탭 진입 뺌 · v6.31 = 261008 기념품 옷 사이즈 선택(사용자 261008 「쇼핑몰 문법 · 재고 · 고유번호 · 스태프 포함」 · 홈 카드 「기념품 옷 사이즈 선택하기」 → 「L로 신청 완료 · 신청번호 K-012 · 마감 전 변경 가능」 · 상품 시트 = 공통 바텀 시트(라우트 kit · 상품 이미지 예시 칸 · 사이즈 칩 n개 남음 · 품절 임박 · 품절 · 추천 사이즈표 예시 접힘 · 아래 고정 「이 사이즈로 신청」 | 「사이즈 변경」 · 완료 = 신청번호) · 스태프 의류 명단 사번(pool staff · 수령 따로 안내) · 창구 결과 띠에 신청번호 · 서버 ks* §288) · v6.30 = 261008 17F AWS · MS 출석 QR 시간 안내 걷기(사용자 「우리 쪽에서 통제하지 말자」 · 상세 입장 · 끝 QR 줄 · 고르기 시트 · 시간 밖 안내에서 QR 창 시각 삭제 · 앱 기본 창 넓게 · 홈 카드는 강연 시각 기준) · v6.29 = 261008 경품 시트 등수 묶음(글 + 사진) 사이 옅은 회색 헤어라인 1px(사용자 「상품마다 옅고 얇은 회색선 · 균형을 보고 판단」 · 카드 테두리 · 블록 선 안은 채택 안 함) · v6.28 = 261008 7등 발송 표기 「사내 우편 발송」 → 「행랑 발송」(앱 · 추첨 무대 · 콘솔) · v6.27 = 261008 AX 올림픽 순위 바닥 문구(명예 순위 · 경품 없음 · 종합 호명) 삭제 · v6.26 = 261007 행운권 7등 랜덤 굿즈 수량 「수량 추후 공개」(60 고정 삭제) + 긴 상세 시트(경품 · 세션 · 구역 · 부스 · 전시) 높이 = 화면의 약 92%(위 끝 8%) + 경품 시트 등수 묶음 사이 간격 · v6.25 = 261007 행사 둘러보기 조작 A(사용자 「권장대로 진행해 줘」) · 달리기 · 좌로 · 우로 돌기 단추 삭제 · 점프 원 72px 오른쪽 아래 엄지 자리 · 첫 구역 도착 뒤 끌기 안내 1회 「화면을 좌우로 밀면 돌아봐요」 · 밀기 문턱 8 → 12px · PC 키 ↑ ↓ 걷기 · Space 점프 · ← → 돌기 · 둘러보기 v6.25 · v6.24 = 261007 10F 세션 상세 줄 이름 「진행」 → 「강사」(사용자 「강사가 맞을 것 같고」) · 세션 B · C 값 「임경덕」 · 「권혜영」(줄 이름과 겹치지 않게) · 값은 이름 단위로만 줄이 꺾임 · v6.23 = 261007 타자왕 보너스 스테이지(친 글자 뭉개짐 고침 · 짝짓기 rgBnsAlign · 「문장을 먼저 읽어 두세요」 32 · 3 · 2 · 1 · GO 팡 rgBnsPop) · 엔터 없이 안내(입력칸 · READY · 대기 왼쪽 · 보너스) · 노트북 대기 오른쪽 순위 TOP 10 · 점수 설명 왼쪽으로 · v6.22 = 261007 PC 휴대폰 틀에서 행사 둘러보기 = 틀을 걷고 창 전체(000-head tourNow · opsSet · 닫으면 틀로 · 스크롤 그대로 · 포커스를 틀 안으로 넘겨 클릭 없이 W A S D) · PC 아래 가운데 키 안내 한 줄(tpcKeys · 6초 뒤 옅게) · v6.21 = 261007 10F 실습 장소 · 진행 · 세션 E 회차 시간(운영진 메신저 · A 컨퍼런스룸 · B 01 HEART · C 06 HEART · D 08 HEART · E 07 HEART · E 13:30~15:00 / 15:00~16:30 · 상세 사실 표 「진행」 줄) · v6.20 = 261007 10F 세션 상세 보강(세션 A 실습 주제 예시 3개 · 세션 D 「AI를 활용한 업무 적용 실습」 · 세션 E 두 회차 「초급 과정 · Chat, Word, PPT, Agent Builder, Copilot Studio」 · 붙임2) · v6.19 = 261007 타자왕 노트북 대기 = 광고 순환(후킹 · 1~3위 경품 · 지금 1위 · 참여 방법 7초씩 · 맨 아래 「키보드를 눌러 시작」 · QR · 토큰 없음) · 아무 키 · 누름 = 새 QR(깨운 키 삼킴 · 남은 시간 막대) · 떠 있는 동안 토큰 그대로(서버 물음 연장 · 3분 상한) · 60초 아무도 안 붙으면 광고 + 서버 토큰 지움 · 폰 「노트북 키보드를 누르면 새 QR이 나와요」 · v6.18 = 261007 타자왕 노트북 접속 QR 나이 상한(30초 교체 · 화면 QR 45초까지만 · 못 받으면 「QR을 새로 받는 중」 · 물음 6초 버림 · 창이 다시 보이면 곧바로 · 바꾸기 전 한 번 더 묻기 · 폰은 로그인해 있어도 앱이 뜨자마자 토큰 붙잡기 5분) · v6.17 = 261007 둘러보기 v6.17 눌러서 가기 오작동 고침(누른 그 동전 · 계단 동전 둘 · 동전 언저리 누름 · 스태프 말풍선이 동전을 덮지 않음 · 연타 카드 한 번 · 조그 = 자동 걷기 끝 · 연출 중 화면 누름 무시 · TOUR.ver v617) · v6.16 = 261007 플리스 사이즈 4종(SS · L · 2XL · 3XL · 옛 S · M · XL 폐기 · 사이즈 고르기 4칸 · 조사 SS가) · 창구 띠 세 글자 사이즈 한 줄(l3 56px) · v6.15 = 261007 17F 오후 파트너 강연 시각 확정(AWS 13:30~14:50 · 휴식 14:50~15:10 시간표 줄 · MS 15:10~16:40) · v6.14 = 261007 PC 넓은 창 = 휴대폰 틀(000-head 틀 스크립트 · 앱은 틀 안 iframe 에서 휴대폰 폭 그대로 · 휴대폰 · 좁은 창 · TV · #self · cap 은 그대로 · ?frame=0 끔) · v6.13 = 261007 홈 「다음 할 일」 카드(광고판 아래 · 둘러보기 카드와 한 자리 교대 · 행사 당일만 · × 그날 끔 · 설정 줄 · nxPick) · 재로그인 반복 팝업 고침(첫 동기화 기준선 rwBaseline · checkMyState base) · 로그인 직후 10초 자동 안내 1개(NB · nbGate) · 커피챗 하루 끝도 appNow · v6.12 = 261007 체크인존 번호표(접수 · 창구 A~E 자리 · 사이즈 아주 크게 · 「B-023 · 홍*동 → B 창구」 · 다른 창구 · 명단 밖 = E 창구 안내) · 홈 맨 위 내 번호 카드(대기 · 곧 차례 · 호출 진동 · 놓친 번호 · 수령 완료) · 체크인 TV 대기판 · 창구 화면(태블릿) · 선착순 10:30부터 문구 · v6.11 = 261007 점프 시간 제한 없앰 · 30초부터 더 어렵게 · AX 상식 30문장 다시 씀 · 홈 나의 일정 카드 너비 · Outro 안내 · v6.10 = 261007 테스트 도구(시각 바꿔 보기 tt · appNow · 헤더 띠 · 내 10F 세션 test_ten · 310555 기본 A) · 공지 = 아래에서 올라오는 시트(ntcOpen · 홈 공지 카드 폐기 · 기기당 1번 · 기준선 ntc_base) · 내 QR = QR + 이름 · 사번만 · 재로그인 = 오프닝 없이 바로 홈 · 저장된 로그인 = 로그인 화면 비침 · 전환 없이 홈 · v6.09 = 261007 행사 둘러보기 접속 기록(서버 tour_log · 열 때 1번 · 닫을 때 1번 · 10분 안 다시 열기 = 같은 방문 · 3D · 2D 대체 모두 AXTour.isOpen · 가려지면 sendBeacon · tlog*) · v6.08 = 261007 아이디어 한 줄 보강(시상 묶음 · 50자 ~ 3,000자 · 자동 저장 · 커피챗 희망 → 선정 13:00~16:00 · 볼펜 사진) · v6.07 = 261007 9월 시험 때 이미 최초 로그인 스탬프를 받은 사람도 이 기기 · 이 사번으로 한 번 「최초 로그인」 도장 팝(연출만 · 기기 키 lgfx_261007 · lgfxRun) · v6.06 = 261007 나의 일정 후속(10F 명단 · 내 세션과 겹치지 않는 오후 강연 = 자유 참석 카드 · MYFL_LEC · 홈 = 신청 카드만 axs-myfl-h · 진행 중 칩 「진행 중」 + 고리) · v6.05 = 261007 테트리스 시간 제한 없앰(5분 끝내기 · 「5분 완주」 · surv 300초 멈춤 삭제 · 게임 오버까지 · 결과 「버틴 시간」 = 실제 시간 · 시작 화면 「시간 제한 없음」 · 서버 OLY_TT_SURV_MAX) · v6.04 = 261007 10F 명단 나의 일정 = 시간표와 같은 하루 흐름(myFlowItems · 신청 주황 테두리 + 칩) · v6.03 = 261007 테트리스 5분 완주 판 surv 30000 상한(서버 range 거절 버그) · v6.02 = 261007 점프 게임 바닥 = 붉은 벽돌(jpBrickCv · 무늬 한 장 반복) · v6.01 = 261007 둘러보기 v5.99(손가락 안내 = 들어올 때마다 + 6초 서 있으면 다시 · 방문당 3번 · 직접 눌러 걸어가 본 기기는 끝 · 첫 안내 둘째 줄 「다음 구역」 저절로 걷기 · 흉상 얼굴 주름 부드럽게) · v6.00 = 261006 밤 스태프 판정 = 로그인만으로(앱 스태프 명단 사번 = 가운데 단추 「스캔」 · 처음 누를 때만 코드 한 번 · 명단에서 빠지면 「내 QR」 · 서버 staff) · 스캔 자리에서 10F 세션 입장 숨김(SCAN_10F_UI) · v5.99 = 261006 키트 사이즈 사전 선택(키트명단 사번만 · 홈 카드 · 사전 신청 키트 화면 · 설정 · 나의 보상 줄 · 라운지 등록 순 초과 = 가습기 안내 · 서버 ks* · §250) · v5.98 = 261006 스태프 폰 연속 스캔(관리자 모드 폰 = 가운데 단추 「스캔」 · 자리 칩 · 톱니 · 결과 띠 1.5초 · 화면 꺼짐 막기) · 스캔 순간 참가자 알림(소켓 · 푸시) · 선착순 참여상 = 받기 선착순(남은 N · 「자격」 말 없음) · v5.97 = 261006 스탬프 감사 후속(AX PLAY 부스 코드 = 「스태프에게 내 QR을 보여 주세요」 · 「응모」 → 「행운권」 · 「선착순 참여상」 표기) · v5.95 = 261006 프로그램 참여 스탬프 = 17F 오후 AWS · MS 강연만(오전 강연 · 송출 · 10F · 커피챗 · 라운지 스탬프 문구 삭제) · 사전등록 체크인 3개 → 룰렛 → 강의장 안내 시트 · 홈 한 줄 · 스태프 키트 결과 「룰렛 부스로 안내해 주세요」 · v5.94 = 261006 타자왕 노트북 진입 = 화면 QR 하나(카메라 끔 · 큰 접속 QR · 후킹 「당신의 프롬프팅 속도를 보여 주세요」 · 로그인 전 토큰 붙잡기 5분 · 폰 「노트북 화면의 QR을 찍어 주세요」) · v5.93 = 261006 둘러보기 눌러서 가기(바닥 · 판 · 동전 · 포토부스 · 룰렛 · 엘리베이터 · 스태프 = 걸어가서 바로 · 첫 손가락 안내 · 숨 쉬는 테두리) · 설치 안내(「설치 중」 시트 · 설정 줄 = 바로 설치 창) · v5.92 = 7등 랜덤 굿즈 · 체크인 없는 추첨 */
+var APP_VER = "v6.83";   /* 설정 시트 맨 아래 작은 글씨 · 앱을 고칠 때 같이 올린다 · v6.83 = 261009 접근성 · 일관성(QA/앱 접근성 · 디자인 비평_261009.md · 사용자 결정 「결정 이력」 261009) · 보조 회색 한 단 진하게 · 입력칸 테두리 진하게 · 경품 등수 brandText · 흐린 정보 글자 투명도 걷음 · 선택 칸 굵게 + 테두리 · 비활성 제출 회색 면 · 설문 막대 이름 + 높이 44 · 알림 role=status · 화면 이름 h1 · 본문 main · 장식 캔버스 숨김 · 눌림 44(보상 마커 · 경로 줄 · 바로가기 · 라운지 보기 · 담당자 적립) · 누르는 줄 키보드(role=button · Enter · Space) · 시간 범위 09:30~09:40 · 라운지 약한 버튼 · 자유 참석 회색 칩 · 스탬프 오른쪽 = 행동 말만 · 연사 글자 칸 없앰 · 경품 이름 두 줄 · 핀치 확대 = 일반 화면만(게임 · 둘러보기 · 카메라 잠금) · 둘러보기 그리기 쉼(닫힘 · 동작 줄이기) · v6.82 = 261009 계단 동행 6차(사용자 「일부러 띄운 이유가 있어? 계단 모형을 더 늘려도」 · 말풍선 = 경로 줄 바로 아래 · 무대 = 도착 단추 바로 위까지 · 좌우 16px · 말풍선 줄 수 재기 고침(글자 크기 맞춤이 다시 동작 · 높이 고정)) · v6.81 = 261009 홈 「지금 현장」 점 → 상태 알약(사용자 「점 하나 → 알약 같은 것으로 더 잘 보이게」 · 권장 A · 둘째 줄 = 옅은 상태 색 면 알약 하나(점 + 「여유 · 보통 · 혼잡」 · 17F 5단계) + 1F 세 칸만 옆에 대기 글자 · 1F 상태 단어 다시 보임 · 기준 시각은 섹션 머리 한 곳 · 흰 면 전환 .neut · 데이터 · 계산 · 입력 그대로) · v6.80 = 261009 태블릿 가로 · 세로 보기 허용(사용자 「탭에서 세로 보기 · 가로 보기가 막혀 있는데 가능하도록」 · manifest orientation portrait → any(폰도 함께 풀림 · 기기 회전 잠금을 따른다) · 계단 동행 화면을 돌리면 말풍선 글자 · 무대 자리 · 3D 캔버스 해상도 다시 맞춤) · v6.79 = 261009 계단 동행 5차(위 정보 줄 걷어냄 · 말풍선 26px 두 줄(머리표 + 본문) · AX 상식 2 : 그 밖 1 · 상식 31개 · 오르는 동작 묶음과 말 짝 동작 · 도착 QR 뒤 전체 화면 도착 장면(고생했어요 · 도장 팡 · 찡끗 아이리스 → 스탬프 탭)) · v6.78 = 261009 스태프 관리 요청 전부 POST 폼 본문(admCall · 계약 10절) · v6.77 = 261009 이벤트 수신기 누수 고침(사용자 「이벤트 점검」 · 화면 변경 없음 · beCall 이 끝난 호출마다 window 에 빈 함수를 남겨 떼어진 script · onload · onerror 수신기를 붙잡던 것 · 폴링 한 번에 +1 script · +2 수신기 · 응답이 오면 이름 지움 · 타임아웃만 밖의 BE_NOOP · 검사 348절) · v6.76 = 261009 계단 동행 4차 글자 크게(사용자 「글자 폰트를 더 크게」 · 말풍선 17px 600 → 22px 700(1.3배) · 좁으면 21 · 20 · 19px 한 단계씩 · 나올 말 전부 2줄 안 · 말풍선 높이 미리 잡아 무대 · 단추 안 밀림 · 점프 숫자 20 → 26px · 보조 글자 13 → 15px · 안전 줄 15 → 17px · 꼬리표 13 → 15px · 감사 말 「오늘」 덜기 · 미니 게임 제안 「N종목도 있어요」) · v6.75 = 261009 계단 동행 3차(사용자 「계단은 대각선이 아니라 정면 · 챗봇 크게 · 1층 모형의 챗봇 형태와 디자인 스타일」 · 정면 계단(아래에서 올려다봄 · 멀수록 좁은 디딤판) · 1층 둘러보기 buildBot 그대로의 3D 챗봇 · 같은 재질 · 빛 · 배경 · 손잡이 = 엘리베이터 로즈골드 · three.min.js 는 둘러보기와 같은 주소로 이 화면에서 처음 받음(모형 glb 안 받음) · 받는 동안 · 못 그리는 기기 · 느린 기기 = 같은 시점 평면 그림 · 움직일 때만 그림 · 해상도 1.5배까지 · 무대 6:5 · 아래 단추 위에 다 보이게 · 18F = 앞모습으로 내려옴 · 땀방울 3D · 검사 346절) · v6.74 = 261009 계단 동행 2차(사용자 「준비 운동은 거창하다 · 다섯 번 오르고 돌아서 땀 · 힘내요 · 눈웃음 · 5분 켜 두는 사람」 · 준비 운동 · 아이리스 걷음 · 대각선 계단이 점프마다 한 칸 흘러 내려옴 · 챗봇 제자리 · 콩콩 5번(하나~다섯) → 돌아서 땀 → 한마디 + 눈웃음 → 다시 돌아섬 · 홀수 고리 응원 12 · 짝수 고리 행사 말(AX 상식 23 · 프로그램 제안 · 계단 말 6 · 엘리베이터 감사 1번) · 5분 안 행사 말 겹침 없음 · 3분 · 5분 이정표 · 8분 절약 · 15분 쉼(화면 켜 두기 놓음) · 20분부터 직접 고르기 안내 · 18F 출발 = 뒤집어 내려가기 · 검사 346절) · v6.73 = 261009 동작 모션 통일(사용자 「점심 · 자유 관람 → 상시 운영처럼 앱 전체에 같은 동작」 · 공용 토큰 --ax-motion-* + AXM · 시트 셋 열림 · 닫힘 · 세그먼트 · 스크롤 이동 · 토스트 · 펼침) · v6.72 = 261009 「 · 」로 이은 글 줄바꿈(사용자 「어차피 두 줄이 될 거라면 · 자리에서 다음 줄로」 · segHtml 조각 <ax-seg> inline-block · 레일 6개 캡션 · 정보 줄 dd · 시트 제목 · 상세 머리 · 받으려면 상자 · 보상 카드 · 스탬프 카드 보조 줄 · 키트 · 퀴즈 · 미니 게임 순위 · 토스트) · v6.71 = 261009 운영자 요청 사번 필수(기타만 선택) · v6.70 = 261009 스태프 폰 「운영자에게 요청」 시트 · 룰렛 소진 알림 단추 · 박스 링크 숨김 · v6.69 = 261009 계단 동행(사용자 「계단실 QR을 찍으면 챗봇이 계단을 오르고 응원 · 화면을 닫지 않게 · 1층 엘리베이터 동물의 숲 감성」 · 출발 QR 뒤 진행 화면 = 준비 운동 3줄 → 아이리스 → 1초 한 칸 · 7칸 한 층 걷기 고리 · 말풍선 한 자씩 · 응원 · AX 상식(점프 상식 · AX 퀴즈 해설 출처 id) · 다음 참여 제안(스탬프 · 시각) · 도착 안내 · 아래 고정 큰 「도착 층 QR 찍기」 · 20초 뒤 숨 쉬는 고리 · Wake Lock · 떠났다 와도 이어서 · 동작 줄이기 = 그림 + 말풍선 · 18F 출발 = 내려가는 그림 · 옛 도트 계단 걷음 · 새 조각 128-js-stair-buddy.js · 042-css-stairbud.css · 검사 346절) · v6.68 = 261009 행운권 티켓 칩 다듬기(사용자 「체크인 화면 번호도 티켓으로 · 글자 크기가 너무 커 · 균형감 · 절취선은 주황보다 어두운 회색」 · 점 글자 14 → 12px(최소 크기) · 절취선 brand → muted · 새 번호 확인 절취선 onBrand 25% · 추첨 체크인 결과 화면 번호 줄 = 같은 티켓 칩 · 검사 342절) · v6.67 = 261009 행운권 번호 칩 = 티켓(사용자 「행운권 모양 테두리에 번호도 점 문자로 · 은색 비슷한 회색톤」 · 시안 ④ · 양옆 반원 홈 · 왼쪽 주황 절취선 · 은회색 무광 면 · 먹색 점 글자 14px · 레일 · 나의 보상 · 추첨 안내 팝업 같은 칩 tktHtml · 새 번호 확인 = 주황 티켓 · 발급 중 = 회색 티켓 · 상자 연출 그대로 · 검사 342절) · v6.66 =261009 행사 종료 안내 화면(사용자 「오픈 범위에 행사종료 · 아무도 못 들어오고 · 챗봇이 나와서 안내」 · 서버 오픈_범위 종료 = reason ended · 로그인 · 홈 대신 챗봇 원본 + 안테나 전파 · 「AX Festival 2026이 종료되었습니다」 · 「내년에 다시 만나요」 · 단추 없음 · beCall 한 곳 endSeen · 기기 키 og_end = 다시 열면 먼저 · 범위를 되돌리면 다음 sync 에 걷힘 · #self · #tv= 기기 화면 제외) · v6.65 = 261008 1층 부스 기획안 수정본(사용자 「1층을 재구성해줘」 · 둘러보기 AX VISION 판 5장 · AX 라운지 데스크만 · Welcome 자리 · AX LAB TV · 타자왕 데스크 · 1F 엑스배너 · 라운지 퀴즈 · 점프 힌트 걷음 · TOUR.ver v665) · v6.64 = 261008 신청하기 칸 커피챗 · AX 라운지 같은 형태(사용자 「ax라운지도 같은 형태 · 사전 신청자 중심」 · 두 카드 사실 표 지금 · 시간 · 방식 · 신청 · 사은품 · 라운지도 사은품 사진 줄 · 한 줄 소개 「내년 DAP 과제 후보를 1:1로 상담하는 곳」 · 「비슷한 고민을 여럿이 모여 나누는 곳」 · 라운지 「사전 신청자 우선」 · 「남은 시간 N개 · 누구나 신청」) · v6.63 = 261008 비어 보이는 상세 다듬기(사용자 「(가)로 가자」 · 시트 높이 93% · 60% 문턱 그대로 · 구역 상세 상태 한 줄을 제목 묶음에 붙임 · 상세 제목 줄 길이 고르게 · 하는 일 · 설명 줄 마지막 한 낱말 막기 · 주 버튼은 이미 아래 고정 칸) · v6.62 = 261008 폴링 지터(부하 재시험 권장 1 · 화면 변경 없음 · 동기화 성공 뒤 다음 폴링에도 0~5초 무작위 더함 · 화면이 다시 보일 때 첫 sync 0~1.5초 무작위 · 소켓 붙은 120초 폴링 · 소켓 끊김 뒤 평소 폴링도 같은 지터 · 검사 321절) · v6.61 = 261008 프로그램 상세 「경품 보기」 입구 뺌(사용자 「굳이 있어야 될까?」 · 「이 위치도 중복인 것 같아서 빼자」 · AWS · MS 강연 · Closing Speech 상세 · 홈 · 스탬프 탭 레일 · 경품 탭 · 둘러보기 · 타자왕 경품 칸은 그대로) · v6.60 = 261008 연사 그림(사용자 「AWS 와 MS의 로고 · 이석현 정경선 사진」 · 17F Opening Speech · Closing Speech = 사진 · AWS · MS 강연 = 로고(흰 바탕 · 원형 그대로) · assets/speaker/ · Keynote · 10F 는 글자 그대로 · 안 뜨면 글자) · v6.59 = 261008 「받으려면」 상자 공용(사용자 「참여 전 확인 아래 부분을 받으려면 부분처럼 · 정돈되지 않은 부분들도」 · AWS · MS 강연 상세 · Closing Speech 현장 추첨 · AX PLAY 체험 · 룰렛 1회권 · 행운권 · 선착순 참여상 팝업 · 기념품 옷 받는 방법) · v6.58 = 261008 표기 정본 = 네임택 발주 PDF(사용자 「PDF와 똑같이」 · 17F Opening Speech · Keynote 둘 · AWS · MS 강연 제목 · Closing Speech · 연사 실명 · 직함 · 10F 세션 제목 · 강사 · 옛 Intro · 기조연설 · 내부 강연 · 마무리 연설 · Outro 화면 글자 대체 · 시간표 17F 줄은 TIMELINE pid) · v6.57 = 261008 행운권 경품 문구 「경품은 따로 전달」 통일 · 스태프 플리스 받는 방법 「따로 전달해 드려요」 · v6.56 = 261008 스탬프 탭 「프로그램 참여」 줄 더블 스탬프 표시(사용자 「더블 스탬프인 것이 명확히 이해되지 않아」 · 제목 옆 「×2」 글자 → O100 알약 「● ● 스탬프 2개」(받은 만큼 점이 찬다 0 · 1 · 2) · 받기 전 둘째 보조 줄 「입장 QR 1개 + 끝 QR 1개」 · 도장 팝 제목 「×2」 · 1 / 2 그대로) · v6.55 = 261008 설명 문구 한 줄(사용자 「어설프게 두 줄로 넘어가는 것들 · 워싱 · 간소화 · 한 줄」 · 커피챗 「멘토와 한 테이블에서 아이디어를 나눠요」 · 「키우고 싶은 업무를 1:1로 상담해요」 · 라운지 · 신청하기 칸 「지금」 · AX PLAY 안내 · 미니 게임 종합 · 행운권 · 선착순 받으려면 줄 · 메신저 알림 안내 · 기본 공지 · 390 폭 한 줄) · v6.54 = 261008 쿠키 사진 = 원본 전체(자르지 않음 · 사용자) · v6.53 = 261008 커피챗 · 상담 지급품 쿠키 = 휘낭시에 사진(assets/prize/cc_cookie.webp) · 부제 「휘낭시에 · 쿠키」 · v6.52 = 261008 플리스 신청 완료 「받는 방법」 상자(스태프 = 행사 전에 미리 전달 · 사전 신청 = 10/26 08:00 1F 주차장 체크인존 · 내 QR) · v6.51 = 261008 홈 「지금 현장」 차분하게(사용자 「색감이 너무 쨍해서 어지러워 · 텍스트도 간소화」 · 색은 상태 점 하나에만 · 점 9px 바깥 고리 없음 · 모양도 다르게 여유 빈 고리 / 보통 반쯤 / 혼잡 꽉 찬 점 · 이름 body 회색 · 둘째 줄 muted 회색 · 층 점문자 muted · 1F 세 칸은 대기 시간만(상태 단어는 읽어 주기만) · 17F · 정보 없음은 상태 단어만 · 만석만 글자 굵게) · v6.50 = v6.50 = 261008 플리스 시트 문구 걷기(고르는 기준 한 줄 · 「먼저 신청한 순서대로 품절돼요」 · g/㎡ 설명 줄) · v6.49 = 261008 커피챗 · 상담 지급품 노트 = 사진(assets/prize/cc_note.webp · 아이콘 대체) · v6.48 = 261008 플리스 사이즈 화면 표기 SS · L · 2XL · 3XL → A · B · C · D(사용자 「SS 이런 사이즈가 생소해서 · A B C D 이렇게 바꾸자」 · 화면 글자만 · kitLbl 한 함수 · 서버 · 저장 · 설정 · 콘솔 · 발주 값은 그대로 · 창구 A = SS · B = L · C = 2XL · D = 3XL 와 같은 글자 · 창구 스캔 띠 · 창구 태블릿 desk 는 A 크게 + 작게 실제 (SS)) · v6.47 = 261008 홈 「지금 현장」 두 줄 칸(사용자 「세 줄 → 한 줄이나 두 줄」 · 이름 줄 + 상태 줄 · 점 + 상태 단어 + 「· 짧은 말」 같은 줄 · 17F 「HH:MM 기준」 줄 삭제(섹션 머리 오른쪽에 있음) · 「대기」 접두만 뺌(읽는 이름은 그대로) · 말이 안 들어가면 말줄임 없이 둘째 줄 · 시험값 = 이름 줄 오른쪽 끝 · 칸 높이 85 → 67px) · v6.46 = 261008 홈 「지금 현장」 칸 신호등 색(칸 면 = 흰 면 + 테두리 하나 · 상태 = 점 + 글자 색 · 초록 success · 노랑 --cn-mid · 빨강 error · 17F 여유 · 보통 초록 · 붐빔 노랑 · 거의 만석 · 만석 빨강 · 만석 굵게 + 겹 고리 · 정보 없음 회색 점 · 사용자 「초록 노랑 붉은 신호등」) · v6.45 = 261008 홈 「지금 현장」 층 표기 1F · 17F 점문자(flFloor · 읽는 이름 「1층」) + 테스트 사번만 네 칸 무작위 시험값(cnRand · 앱 열 때마다 · 서버 값보다 우선 · 서버에 안 보냄 · 칸 구석 「시험값」) · v6.44 = 261008 플리스 착용 사진 전체 화면 보기(사용자 「화면 꽉 차게 · 사이즈 선택 시 사진으로 날아가서」 · 사이즈 칩을 누르면 그 사이즈 착용 사진이 화면을 채움 · 큰 사이즈 글자 · 모델 키 · 몸무게 · 실측 한 줄 · 좌우로 밀면 이웃 사이즈(선택도 바뀜 · 품절 건너뜀) · 점 4개 · 닫기 = X · 아래로 끌기 · 뒤로 · 사진 탭 · 안에서 바로 신청 · 시트 맨 위는 다시 상품 사진만 · 완료 화면 「착용 사진 보기」 · kitView · kitFit · --kit-ph · 칸 안 착용 사진 걷어 냄) · v6.43 = 261008 플리스 시트 손보기(제목 묶음 AX Festival 2026 · 플리스 재킷 · 한 줄 설명이 사진 위 · 「에코백과 함께 드려요」 · 신청 완료 화면도 제목이 사진 위 · 처음 화면 사진 아래 안내 한 줄 삭제(빈 캡션 줄로 높이 유지) · 사이즈 칩을 누른 뒤 사진 머리가 시트 머리 밑에 가려진 채 멈추지 않게 스크롤 목표를 다시 잡고 키 작은 화면은 사진 칸 높이를 줄여 사진 + 캡션 + 칩 줄이 한 화면에 · kitFit · --kit-ph · 사용자 261008) · v6.42 = 261008 데이터 세대 청소(오픈 전 초기화 · 서버 sync gen 이 이 기기 값과 다르면 신원 키만 남기고 시험 흔적 · 못 보낸 대기열 · 시험 공지를 한 번 비움 · 처음 받는 기기는 저장만 · genCheck) · v6.41 = 261008 플리스 시트 사이즈별 착용 사진(assets/kit/fit_SS · L · 2XL · 3XL .webp · 사이즈 칩을 누르면 맨 위 사진 교체 + 캡션 「모델 175cm · 70kg · L 착용」 · 신청한 사이즈 사진 · 큰 칸 1:1 고정) · v6.40 = 261008 플리스 시트 사이즈 칩 아래 고르는 기준 한 줄(axs-kitgd · 평소 90 이하 SS · 95~100 L · 105 L 또는 2XL · 110~115 2XL · 120 3XL) · v6.39 = 261008 단계별 오픈 로그인 문(사용자 오픈 계획 · 1차 10/19 사전 신청자 · 스태프 · 2차 10/21 전 구성원) · 서버 reason notopen = 로그인 화면 · 홈 위 「AX PASSPORT는 10월 21일(수)부터 열려요」 한 화면(날짜 = 서버 open · ogShow · beCall 한 곳) · 이 기기 og = 다시 열면 그 화면을 깔고 서버에 다시 묻기(ogCheck) · 열리면 걷힘 · 「다른 사번으로 입장」 · v6.38 = 261008 플리스 시트 · 사이즈 대응 고침(제조사 LL = 우리 2XL 75 62 52 64 · 3L = 3XL 78 66 54 65 · SS만 실측 확인 중 · 사용자 「LL은 2XL · 3L은 3XL」) + 접힘 4칸 상품 정보 · 실측 사이즈표 · 세탁 방법 · 주의사항(제조사 상세 이미지의 사실 정보만 · 사용자 「상품 정보 세탁방법 주의사항」) · v6.37 = 261008 플리스 상품 사진 = 홍보부 원본(후리스자켓.png · 블랙 · 가슴 ME to WE · 4:3 800px) · v6.36 = 261008 럭키드로우 당첨 문구를 현장에 없는 사람 기준으로(사용자 「17층 화면을 봐 주세요 같은 문구는 현장에 없는 사람에게 무의미」 · 당첨 시트 = 「경품은 나중에 따로 전달해요」 한 줄 · 확인 완료 시트도 무대 문구 없이 · 푸시 「럭키드로우에 당첨됐어요 / 앱에서 확인해 주세요」 · 콘솔 폰 확인 칸 「대기」 → 「미확인」) · v6.35 = 261008 홈 「다음 할 일」 카드 삭제(사용자 「둘러보기 고정 · 다음 할 일 삭제」 · 홈 = v6.13 이전 순서) · 「지금 현장」 날짜 조건 해제 · 플리스 상품 사진 · 실측 사이즈표(SS · 3XL 확인 중) · 테스트 사번 미리 보기 · v6.34 = 261008 17F AWS · MS 출석 QR 행사일(10/26) 전에는 시간 창 없이 늘 출석(사용자 「지금도 되도록 · 이상한 데이터는 행사 전 초기화」 · attPre · 고르기 시트 · 데모 · 시험 시각 10/25 = tm 안 보냄 · 서버 attPreDay_) · 출석으로 새로 받은 스탬프 = 가운데 도장 팝(사용자 「파트너사 강의에 출석체크를 하면 스탬프 박히는 효과가 없어」 · p3h 1 / 2 · p3 ×2 · 이미 받음 · 기록만 = 팝 없음 · attStamp stampOverlay) · v6.33 = 261008 럭키드로우 당첨자 폰 알림(사용자 261008 「당첨자 폰 알림도 넣자」 · 서버 draw_log win → 소켓 lucky · 푸시 「럭키드로우 당첨 · 지금 17F 무대 화면을 봐 주세요」 · sync my.lucky) · 당첨 시트(공통 바텀 시트 · 등수 큰 주황 글자 · 경품 사진 · 이름 · 행운권 번호 · 주 버튼 「확인」 → draw_ack 본인 세션 → 「확인 완료 · 무대 화면에 표시됐어요」 + 「경품은 나중에 따로 전달해요」) · 홈 나의 일정 맨 위 「럭키드로우 N등 당첨」 한 줄(확인 전 주황 점) · 7등 랜덤 굿즈 = 확인 단추 없는 안내 시트 한 번 · 콘솔 추첨 기록 「폰 확인」 칸 · 검사 §293 · v6.32 = 261008 홈 「지금 현장」 2×2(1F 룰렛 · 1F 포토부스 · 1F AX PLAY · 17F 대강당 5단계 · 스탬프 블록 바로 아래 · 행사 당일만 · 스탬프 블록 여백 줄임) · 스태프 입력 시트(누르면 저장 · 5초 되돌리기 · 자동으로 · 시간 재기) · 스캔 화면 「줄」 · 옛 로비 · 엘리베이터 · 17F 입장 수 칸 · 풀리면 알림 · 혼잡 제보 탭 진입 뺌 · v6.31 = 261008 기념품 옷 사이즈 선택(사용자 261008 「쇼핑몰 문법 · 재고 · 고유번호 · 스태프 포함」 · 홈 카드 「기념품 옷 사이즈 선택하기」 → 「L로 신청 완료 · 신청번호 K-012 · 마감 전 변경 가능」 · 상품 시트 = 공통 바텀 시트(라우트 kit · 상품 이미지 예시 칸 · 사이즈 칩 n개 남음 · 품절 임박 · 품절 · 추천 사이즈표 예시 접힘 · 아래 고정 「이 사이즈로 신청」 | 「사이즈 변경」 · 완료 = 신청번호) · 스태프 의류 명단 사번(pool staff · 수령 따로 안내) · 창구 결과 띠에 신청번호 · 서버 ks* §288) · v6.30 = 261008 17F AWS · MS 출석 QR 시간 안내 걷기(사용자 「우리 쪽에서 통제하지 말자」 · 상세 입장 · 끝 QR 줄 · 고르기 시트 · 시간 밖 안내에서 QR 창 시각 삭제 · 앱 기본 창 넓게 · 홈 카드는 강연 시각 기준) · v6.29 = 261008 경품 시트 등수 묶음(글 + 사진) 사이 옅은 회색 헤어라인 1px(사용자 「상품마다 옅고 얇은 회색선 · 균형을 보고 판단」 · 카드 테두리 · 블록 선 안은 채택 안 함) · v6.28 = 261008 7등 발송 표기 「사내 우편 발송」 → 「행랑 발송」(앱 · 추첨 무대 · 콘솔) · v6.27 = 261008 AX 올림픽 순위 바닥 문구(명예 순위 · 경품 없음 · 종합 호명) 삭제 · v6.26 = 261007 행운권 7등 랜덤 굿즈 수량 「수량 추후 공개」(60 고정 삭제) + 긴 상세 시트(경품 · 세션 · 구역 · 부스 · 전시) 높이 = 화면의 약 92%(위 끝 8%) + 경품 시트 등수 묶음 사이 간격 · v6.25 = 261007 행사 둘러보기 조작 A(사용자 「권장대로 진행해 줘」) · 달리기 · 좌로 · 우로 돌기 단추 삭제 · 점프 원 72px 오른쪽 아래 엄지 자리 · 첫 구역 도착 뒤 끌기 안내 1회 「화면을 좌우로 밀면 돌아봐요」 · 밀기 문턱 8 → 12px · PC 키 ↑ ↓ 걷기 · Space 점프 · ← → 돌기 · 둘러보기 v6.25 · v6.24 = 261007 10F 세션 상세 줄 이름 「진행」 → 「강사」(사용자 「강사가 맞을 것 같고」) · 세션 B · C 값 「임경덕」 · 「권혜영」(줄 이름과 겹치지 않게) · 값은 이름 단위로만 줄이 꺾임 · v6.23 = 261007 타자왕 보너스 스테이지(친 글자 뭉개짐 고침 · 짝짓기 rgBnsAlign · 「문장을 먼저 읽어 두세요」 32 · 3 · 2 · 1 · GO 팡 rgBnsPop) · 엔터 없이 안내(입력칸 · READY · 대기 왼쪽 · 보너스) · 노트북 대기 오른쪽 순위 TOP 10 · 점수 설명 왼쪽으로 · v6.22 = 261007 PC 휴대폰 틀에서 행사 둘러보기 = 틀을 걷고 창 전체(000-head tourNow · opsSet · 닫으면 틀로 · 스크롤 그대로 · 포커스를 틀 안으로 넘겨 클릭 없이 W A S D) · PC 아래 가운데 키 안내 한 줄(tpcKeys · 6초 뒤 옅게) · v6.21 = 261007 10F 실습 장소 · 진행 · 세션 E 회차 시간(운영진 메신저 · A 컨퍼런스룸 · B 01 HEART · C 06 HEART · D 08 HEART · E 07 HEART · E 13:30~15:00 / 15:00~16:30 · 상세 사실 표 「진행」 줄) · v6.20 = 261007 10F 세션 상세 보강(세션 A 실습 주제 예시 3개 · 세션 D 「AI를 활용한 업무 적용 실습」 · 세션 E 두 회차 「초급 과정 · Chat, Word, PPT, Agent Builder, Copilot Studio」 · 붙임2) · v6.19 = 261007 타자왕 노트북 대기 = 광고 순환(후킹 · 1~3위 경품 · 지금 1위 · 참여 방법 7초씩 · 맨 아래 「키보드를 눌러 시작」 · QR · 토큰 없음) · 아무 키 · 누름 = 새 QR(깨운 키 삼킴 · 남은 시간 막대) · 떠 있는 동안 토큰 그대로(서버 물음 연장 · 3분 상한) · 60초 아무도 안 붙으면 광고 + 서버 토큰 지움 · 폰 「노트북 키보드를 누르면 새 QR이 나와요」 · v6.18 = 261007 타자왕 노트북 접속 QR 나이 상한(30초 교체 · 화면 QR 45초까지만 · 못 받으면 「QR을 새로 받는 중」 · 물음 6초 버림 · 창이 다시 보이면 곧바로 · 바꾸기 전 한 번 더 묻기 · 폰은 로그인해 있어도 앱이 뜨자마자 토큰 붙잡기 5분) · v6.17 = 261007 둘러보기 v6.17 눌러서 가기 오작동 고침(누른 그 동전 · 계단 동전 둘 · 동전 언저리 누름 · 스태프 말풍선이 동전을 덮지 않음 · 연타 카드 한 번 · 조그 = 자동 걷기 끝 · 연출 중 화면 누름 무시 · TOUR.ver v617) · v6.16 = 261007 플리스 사이즈 4종(SS · L · 2XL · 3XL · 옛 S · M · XL 폐기 · 사이즈 고르기 4칸 · 조사 SS가) · 창구 띠 세 글자 사이즈 한 줄(l3 56px) · v6.15 = 261007 17F 오후 파트너 강연 시각 확정(AWS 13:30~14:50 · 휴식 14:50~15:10 시간표 줄 · MS 15:10~16:40) · v6.14 = 261007 PC 넓은 창 = 휴대폰 틀(000-head 틀 스크립트 · 앱은 틀 안 iframe 에서 휴대폰 폭 그대로 · 휴대폰 · 좁은 창 · TV · #self · cap 은 그대로 · ?frame=0 끔) · v6.13 = 261007 홈 「다음 할 일」 카드(광고판 아래 · 둘러보기 카드와 한 자리 교대 · 행사 당일만 · × 그날 끔 · 설정 줄 · nxPick) · 재로그인 반복 팝업 고침(첫 동기화 기준선 rwBaseline · checkMyState base) · 로그인 직후 10초 자동 안내 1개(NB · nbGate) · 커피챗 하루 끝도 appNow · v6.12 = 261007 체크인존 번호표(접수 · 창구 A~E 자리 · 사이즈 아주 크게 · 「B-023 · 홍*동 → B 창구」 · 다른 창구 · 명단 밖 = E 창구 안내) · 홈 맨 위 내 번호 카드(대기 · 곧 차례 · 호출 진동 · 놓친 번호 · 수령 완료) · 체크인 TV 대기판 · 창구 화면(태블릿) · 선착순 10:30부터 문구 · v6.11 = 261007 점프 시간 제한 없앰 · 30초부터 더 어렵게 · AX 상식 30문장 다시 씀 · 홈 나의 일정 카드 너비 · Outro 안내 · v6.10 = 261007 테스트 도구(시각 바꿔 보기 tt · appNow · 헤더 띠 · 내 10F 세션 test_ten · 310555 기본 A) · 공지 = 아래에서 올라오는 시트(ntcOpen · 홈 공지 카드 폐기 · 기기당 1번 · 기준선 ntc_base) · 내 QR = QR + 이름 · 사번만 · 재로그인 = 오프닝 없이 바로 홈 · 저장된 로그인 = 로그인 화면 비침 · 전환 없이 홈 · v6.09 = 261007 행사 둘러보기 접속 기록(서버 tour_log · 열 때 1번 · 닫을 때 1번 · 10분 안 다시 열기 = 같은 방문 · 3D · 2D 대체 모두 AXTour.isOpen · 가려지면 sendBeacon · tlog*) · v6.08 = 261007 아이디어 한 줄 보강(시상 묶음 · 50자 ~ 3,000자 · 자동 저장 · 커피챗 희망 → 선정 13:00~16:00 · 볼펜 사진) · v6.07 = 261007 9월 시험 때 이미 최초 로그인 스탬프를 받은 사람도 이 기기 · 이 사번으로 한 번 「최초 로그인」 도장 팝(연출만 · 기기 키 lgfx_261007 · lgfxRun) · v6.06 = 261007 나의 일정 후속(10F 명단 · 내 세션과 겹치지 않는 오후 강연 = 자유 참석 카드 · MYFL_LEC · 홈 = 신청 카드만 axs-myfl-h · 진행 중 칩 「진행 중」 + 고리) · v6.05 = 261007 테트리스 시간 제한 없앰(5분 끝내기 · 「5분 완주」 · surv 300초 멈춤 삭제 · 게임 오버까지 · 결과 「버틴 시간」 = 실제 시간 · 시작 화면 「시간 제한 없음」 · 서버 OLY_TT_SURV_MAX) · v6.04 = 261007 10F 명단 나의 일정 = 시간표와 같은 하루 흐름(myFlowItems · 신청 주황 테두리 + 칩) · v6.03 = 261007 테트리스 5분 완주 판 surv 30000 상한(서버 range 거절 버그) · v6.02 = 261007 점프 게임 바닥 = 붉은 벽돌(jpBrickCv · 무늬 한 장 반복) · v6.01 = 261007 둘러보기 v5.99(손가락 안내 = 들어올 때마다 + 6초 서 있으면 다시 · 방문당 3번 · 직접 눌러 걸어가 본 기기는 끝 · 첫 안내 둘째 줄 「다음 구역」 저절로 걷기 · 흉상 얼굴 주름 부드럽게) · v6.00 = 261006 밤 스태프 판정 = 로그인만으로(앱 스태프 명단 사번 = 가운데 단추 「스캔」 · 처음 누를 때만 코드 한 번 · 명단에서 빠지면 「내 QR」 · 서버 staff) · 스캔 자리에서 10F 세션 입장 숨김(SCAN_10F_UI) · v5.99 = 261006 키트 사이즈 사전 선택(키트명단 사번만 · 홈 카드 · 사전 신청 키트 화면 · 설정 · 나의 보상 줄 · 라운지 등록 순 초과 = 가습기 안내 · 서버 ks* · §250) · v5.98 = 261006 스태프 폰 연속 스캔(관리자 모드 폰 = 가운데 단추 「스캔」 · 자리 칩 · 톱니 · 결과 띠 1.5초 · 화면 꺼짐 막기) · 스캔 순간 참가자 알림(소켓 · 푸시) · 선착순 참여상 = 받기 선착순(남은 N · 「자격」 말 없음) · v5.97 = 261006 스탬프 감사 후속(AX PLAY 부스 코드 = 「스태프에게 내 QR을 보여 주세요」 · 「응모」 → 「행운권」 · 「선착순 참여상」 표기) · v5.95 = 261006 프로그램 참여 스탬프 = 17F 오후 AWS · MS 강연만(오전 강연 · 송출 · 10F · 커피챗 · 라운지 스탬프 문구 삭제) · 사전등록 체크인 3개 → 룰렛 → 강의장 안내 시트 · 홈 한 줄 · 스태프 키트 결과 「룰렛 부스로 안내해 주세요」 · v5.94 = 261006 타자왕 노트북 진입 = 화면 QR 하나(카메라 끔 · 큰 접속 QR · 후킹 「당신의 프롬프팅 속도를 보여 주세요」 · 로그인 전 토큰 붙잡기 5분 · 폰 「노트북 화면의 QR을 찍어 주세요」) · v5.93 = 261006 둘러보기 눌러서 가기(바닥 · 판 · 동전 · 포토부스 · 룰렛 · 엘리베이터 · 스태프 = 걸어가서 바로 · 첫 손가락 안내 · 숨 쉬는 테두리) · 설치 안내(「설치 중」 시트 · 설정 줄 = 바로 설치 창) · v5.92 = 7등 랜덤 굿즈 · 체크인 없는 추첨 */
 var A2HS = { deferred: null, open: false, pending: false };   /* v5.91 pending = 이 탭에서 크롬 설치 창 「설치」를 눌렀다(설치 중 · 다시 설치 막기) */
 /* v5.36 키보드로 조작 중일 때만 html[data-kbd] (포커스 고리 규칙 · 위 CSS) */
 (function () { var h = document.documentElement; function off() { h.removeAttribute("data-kbd"); }
   document.addEventListener("keydown", function (e) { if (e.key !== "Shift" && e.key !== "Control" && e.key !== "Alt" && e.key !== "Meta") h.setAttribute("data-kbd", "1"); }, true);
-  ["pointerdown", "touchstart", "mousedown"].forEach(function (t) { document.addEventListener(t, off, true); }); })();
+  ["pointerdown", "touchstart", "mousedown"].forEach(function (t) { document.addEventListener(t, off, true); });
+  /* v6.83 (접근성 B-6) role="button" 으로 만든 눌리는 카드 · 글자 = Enter · Space 로 누른다(진짜 button 은 브라우저가 한다) */
+  document.addEventListener("keydown", function (e) {
+    var t = e.target; if (!t || t.nodeType !== 1 || (e.key !== "Enter" && e.key !== " ") || e.isComposing) return;
+    if (t.getAttribute("role") !== "button" || /^(BUTTON|A|INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+    e.preventDefault(); t.click();
+  }); })();
 window.addEventListener("beforeinstallprompt", function (e) {
   e.preventDefault();                 // 크롬 기본 미니바 대신 우리가 원할 때 띄운다
   A2HS.deferred = e;
@@ -4787,22 +4823,47 @@ function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").
 /* v6.69 (사용자 261009 「· 로 이은 문장이 어차피 두 줄이 될 거라면 · 자리에서 다음 줄로」) 「 · 」로 이은 글(HTML 글자 · 태그 안에 「 · 」가 없을 것)을 조각으로 나눈다
    조각 = <ax-seg> (CSS inline-block · 앱의 「… span」 규칙이 닿지 않는 전용 태그) · 한 줄에 다 들어가면 그대로 한 줄 · 넘치면 조각 경계에서만 꺾고 점은 둘째 줄 머리(「· 」 뒤는 nbsp) · 조각 하나가 한 줄보다 길면 그 안에서 꺾인다
    쓰지 않는 곳 = 본문 문단 · 표 · 버튼 이름 · 한 줄 말줄임(nowrap) 칸 */
+/* v6.83 (사용자 261009 묶음 13 「나뉜 줄 모두 「· 」로 시작하는 목록 모양」) 조각 사이 점 「· 」는 글자가 아니라 CSS 가 그린다(읽는 글 = 점 없이 문장 그대로)
+   한 줄에 다 들어가면 「A · B」 그대로 · 두 줄 이상이면 목록(.seglist) = 조각마다 줄 머리 「· 」(그 줄 글자색 · 무채색) + 꺾이면 점 뒤 글자 시작에 맞춘 들여쓰기
+   같은 묶음은 같은 형식(묶음 = 같은 목록 칸 안 같은 클래스의 보조 줄 · 하나라도 나뉘면 묶음 전부 목록)
+   목록으로 만들지 않는 곳 = 짧은 속성 나열(사실 표 값 dd · 메타 줄 .ax-meta) · 그곳은 v6.69 그대로(꺾이면 「· 」 자리에서 · 줄이 늘면 보통 흐름 .segflow) */
 function segHtml(h) {
   var p = String(h == null ? "" : h).split(" · ");
-  return p.length < 2 ? p[0] : p.map(function (s, i) { return "<ax-seg>" + (i ? "·&nbsp;" : "") + s + "</ax-seg>"; }).join(" ");
+  return p.length < 2 ? p[0] : p.map(function (s) { return "<ax-seg>" + s + "</ax-seg>"; }).join(" ");
 }
-/* 조각 자리에서 꺾기는 줄 수가 늘지 않을 때만(「어차피 두 줄이 될 거라면」) · 그린 뒤 글 하나를 두 번 잰다(조각 · 보통 흐름) · 조각이 더 높으면 그 글은 보통 흐름(.segflow)
-   다시 재는 때 = 화면 조각이 새로 붙거나 · 숨김 · 클래스가 바뀌거나 · 창 폭이 바뀔 때(폭 · 글 길이가 같으면 다시 재지 않는다) */
+var SEG_GRP = ".axs-sec, section, .axs-rows, .axs-stps, .axs-pz, ul, ol, .ax-stack";   /* 묶음 칸 · 이 안에서 같은 클래스의 보조 줄끼리 형식을 맞춘다 */
+function segAttr(p) { var cs = getComputedStyle(p); return p.tagName === "DD" || p.classList.contains("ax-meta") || !!p.closest(".axs-kv, .axs-stpm, .axs-pzgo") || cs.whiteSpace === "nowrap" || cs.textAlign === "center"; }   /* 가운데 맞춤 글(토스트 · 팝업 제목)도 목록 대신 「 · 」 자리에서 꺾기(머리 점이 왼쪽 끝에 떨어져 보이지 않게) */   /* 짧은 속성 나열 = 사실 표 값 · 메타 줄 · 스탬프 줄 받는 법 옆 짧은 말 · 경품 이름 나열 */
+function segSig(p) { return p.tagName + "." + [].filter.call(p.classList, function (c) { return c !== "seglist" && c !== "segflow"; }).sort().join("."); }
 function segFit() {
   var ps = [];
   document.querySelectorAll("ax-seg").forEach(function (s) { var p = s.parentElement; if (p && ps.indexOf(p) < 0) ps.push(p); });
+  var G = [], gOf = function (p) {
+    var root = p.parentElement && p.parentElement.closest(SEG_GRP) || p.parentElement, sig = segSig(p);
+    for (var i = 0; i < G.length; i++) if (G[i].root === root && G[i].sig === sig) return G[i];
+    var g = { root: root, sig: sig, ps: [], k: "" }; G.push(g); return g;
+  };
   ps.forEach(function (p) {
-    var w = p.clientWidth, k = w + ":" + p.textContent.length;
-    if (!w || p._segK === k) return;
-    p._segK = k;
-    p.classList.remove("segflow"); var h1 = p.getBoundingClientRect().height;
-    p.classList.add("segflow"); var h0 = p.getBoundingClientRect().height;
-    if (h1 <= h0 + 1) p.classList.remove("segflow");
+    var w = p.clientWidth; if (!w) return;
+    if (segAttr(p)) {   /* 속성 나열 = v6.69 그대로 */
+      if (p.classList.contains("seglist")) p.classList.remove("seglist");   /* 없는 클래스를 지워도 class 변경으로 잡혀(MutationObserver) 매 프레임 다시 재던 것 막음 */
+      var k0 = "a" + w + ":" + p.textContent.length; if (p._segK === k0) return; p._segK = k0;
+      p.classList.remove("segflow"); var h1 = p.getBoundingClientRect().height;
+      p.classList.add("segflow"); var h0 = p.getBoundingClientRect().height;
+      if (h1 <= h0 + 1) p.classList.remove("segflow");
+      return;
+    }
+    var g = gOf(p); g.ps.push(p); g.k += w + ":" + p.textContent.length + "|";
+  });
+  G.forEach(function (g) {
+    if (g.ps.every(function (p) { return p._segK === g.k; })) return;   /* 폭 · 글 · 묶음이 같으면 다시 재지 않는다(재는 동안 클래스를 바꿔도 되풀이되지 않게) */
+    var wrap = g.ps.some(function (p) {
+      p.classList.remove("seglist", "segflow");
+      var sg = p.querySelectorAll(":scope > ax-seg"); if (!sg.length) return false;
+      var a = sg[0].getBoundingClientRect(), z = sg[sg.length - 1].getBoundingClientRect(), cs = getComputedStyle(p);
+      var lh = parseFloat(cs.lineHeight) || (parseFloat(cs.fontSize) || 14) * 1.45;
+      return z.bottom - a.top > lh * 1.5;
+    });
+    g.ps.forEach(function (p) { p.classList.toggle("seglist", wrap); p._segK = g.k; });
   });
 }
 (function () {
@@ -4816,7 +4877,7 @@ function el(id) { var n = document.getElementById(id); return n && n.classList.c
 function toast(msg) {
   var t = el("toast");
   t.innerHTML = segHtml(esc(msg)); t.classList.add("show");   /* v6.69 두 줄이면 「 · 」 자리에서(줄바꿈 글자는 #toast pre-line 그대로) */
-  clearTimeout(toast._h); toast._h = setTimeout(function () { t.classList.remove("show"); }, 2400);
+  clearTimeout(toast._h); toast._h = setTimeout(function () { t.classList.remove("show"); }, Math.min(6000, Math.max(2400, String(msg).length * 110)));   /* v6.83 (접근성 B-4) 긴 알림(오류 안내 등)은 읽을 시간만큼 · 22자까지 2.4초 · 최대 6초 */
 }
 /* ═══ 261009 동작 모션 통일 · 공용 함수 한 곳(규격 = 디자인 시안/모션 통일 261009/규격.md · CSS 토큰 = 010 「동작 모션 통일」 절 · 숫자는 그 토큰과 같게) ═══
    기준 = v5.73 시간표 점심 줄 → 상시 운영(손잡이 0.25초 · 흐려짐 0.18초 · 6px 떠오름 0.3초 · 부드러운 스크롤)
@@ -5636,11 +5697,11 @@ var App = {
         gear + "</div>" +
         (v === "home"
           ? '<div class="axs-hgr"><span class="ax-meta">' + FESTIVAL.name + " · " + FESTIVAL.date.replace(/^2026\.\s*/, "") + " · " + FESTIVAL.place + "</span>" +   /* v5.10 헤더가 앱 이름이 되어 행사명은 홈 첫 줄에(시간은 프로그램 탭) */
-            '<p class="axs-hbig">' + (hu.name ? esc(hu.name) + "님, " : "") + "오늘 <b>하루의 코스</b></p></div>"
-          : '<p class="axs-hroot">' + esc(this.title(v)) + "</p>");
+            '<h1 class="axs-hbig">' + (hu.name ? esc(hu.name) + "님, " : "") + "오늘 <b>하루의 코스</b></h1></div>"
+          : '<h1 class="axs-hroot">' + esc(this.title(v)) + "</h1>");   /* v6.83 (접근성 B-5) 화면 이름 = 제목 태그(모양은 그대로) */
     } else {
       tb.innerHTML = '<div class="axs-hrow"><button type="button" class="axs-back" onclick="App.back()" aria-label="뒤로">' + BACK_SVG + "</button>" +
-        '<span class="axs-htitle">' + esc(this.title(v)) + "</span>" +
+        '<h1 class="axs-htitle">' + esc(this.title(v)) + "</h1>" +
         gear + "</div>" +   /* v4.15 관리자 잠금은 관리자 화면 맨 아래 「관리자 모드 끝내기」 */
         this.crumbHtml(v);   /* v4.09 경로 줄 · 헤더 구분선 바로 아래 */
     }
@@ -5692,6 +5753,7 @@ var App = {
     typPromoMount();   /* v5.31 타자왕 홍보 칸 · 화면에 보일 때 src */
     updateLed();
     if (typeof trfSync === "function") trfSync();   /* v5.67 둘러보기 복귀 떠 있는 단추 */
+    zoomSync();   /* v6.83 QR 스캔(카메라) 탭에 들어가고 나올 때 */
   }
 };
 /* v4.09 경로 줄 한 줄 맞춤 · 넘치면 가운데 단계를 앞에서부터 「…」 하나로 접는다 · 첫 단계와 지금 위치는 늘 보인다(지금 위치가 길면 말줄임) · 가로 스크롤 없음 */
@@ -5704,9 +5766,9 @@ function crumbFit() {
     [].forEach.call(ol.children, function (x) {
       if (x.classList.contains("gone")) return;
       var bb = x.querySelector("b"), sp = x.querySelector(".sep");
-      w += bb ? bb.scrollWidth + (sp ? sp.offsetWidth : 0) : x.scrollWidth;
+      w += bb ? bb.scrollWidth + (sp ? sp.offsetWidth : 0) : x.offsetWidth;   /* v6.83 단추 눌림 확장(오른쪽 14px)이 scrollWidth 에 잡히지 않게 자리 폭(offsetWidth) */
     });
-    return w > ol.clientWidth + 1;
+    return w > ol.clientWidth - (parseFloat(getComputedStyle(ol).paddingLeft) || 0) + 1;   /* v6.83 ol 왼쪽 20px = 「홈」 눌림 자리(글자 자리 아님) */
   };
   if (li.length < 3 || !need()) return;
   var dot = document.createElement("li");
@@ -5916,9 +5978,44 @@ function detMake() {
 }
 /* 아래 고정 칸 위 구분선 = 본문이 그 아래로 더 있을 때만 · v5.74 머리 아래 구분선 = 본문이 머리 밑으로 스크롤됐을 때만(사용자 261006 캡처 「시트 머리 아래 깨진 그림 띠」 = 경품 사진 아래 끝이 선 없이 머리에 잘려 보였다) */
 /* v6.25 시트 위 끝 = CSS 변수 --ax-sheet-top 한 곳(옛 v5.89 detTop · 앱 머리 실측은 폐기) */
+/* v6.83 (사용자 261009 묶음 7 「내용이 다 보이는데 끌면 조금씩 스크롤」) 시트 세 곳(#axsDet 본문 · #axsSheet · #modal 카드) 공통
+   본문 글(아래 여백 padding-bottom 은 빼고)이 칸 안에 다 들어가면 .axs-fit = 스크롤 없음(overflow-y hidden) · 넘칠 때만 스크롤 · 끌어 닫기(sheetDrag)는 그대로
+   다시 재는 때 = 시트가 붙고 떨어질 때 · 시트 안 글 · 칸이 바뀔 때(접기 · 펼치기 포함) · 그림을 다 받았을 때 · 창 크기 · 글자 크기가 바뀔 때 */
+var SHEET_SC = "#axsDet .axs-dbody, #axsSheet .ax-sheet, #modal .mcard";
+function sheetFit() {
+  [].forEach.call(document.querySelectorAll(SHEET_SC), function (sc) {
+    var cs = getComputedStyle(sc), on = sc.classList.contains("axs-fit");
+    if (!on && !/(auto|scroll)/.test(cs.overflowY)) return;   /* 스크롤 칸이 아닌 카드는 건드리지 않는다(바깥으로 나온 장식이 잘리지 않게) */
+    var fit = sc.scrollHeight - (parseFloat(cs.paddingBottom) || 0) <= sc.clientHeight + 1;
+    if (fit !== on) sc.classList.toggle("axs-fit", fit);
+    if (fit && sc.scrollTop) sc.scrollTop = 0;
+  });
+  if (typeof detOv === "function") detOv();
+}
+(function () {
+  if (typeof MutationObserver !== "function") return;
+  var raf = 0, kick = function () { if (raf) return; raf = requestAnimationFrame(function () { raf = 0; sheetFit(); }); };
+  var inner = new MutationObserver(kick), seen = [];
+  var scan = function () {
+    var roots = [].slice.call(document.querySelectorAll("#axsDet, #axsSheet, #modal"));
+    if (roots.length !== seen.length || roots.some(function (r, i) { return r !== seen[i]; })) {
+      inner.disconnect(); seen = roots;
+      roots.forEach(function (r) { inner.observe(r, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["hidden", "open", "aria-expanded"] }); });
+    }
+    if (roots.length) kick();
+  };
+  var go = function () {
+    var outer = new MutationObserver(scan), f = document.getElementById("frame");
+    outer.observe(document.body, { childList: true }); if (f) outer.observe(f, { childList: true });
+    window.addEventListener("resize", kick);
+    document.addEventListener("load", function (e) { var t = e.target; if (t && t.tagName === "IMG" && t.closest && t.closest("#axsDet, #axsSheet, #modal")) kick(); }, true);
+    scan();
+  };
+  if (document.body) go(); else document.addEventListener("DOMContentLoaded", go);
+})();
 function detOv() {
   var bd = document.querySelector("#axsDet .axs-dbody"), ft = document.querySelector("#axsDet .axs-dft"), hd = document.querySelector("#axsDet .axs-dhd");
-  if (bd && ft) ft.classList.toggle("ov", bd.scrollHeight - bd.clientHeight - bd.scrollTop > 2);
+  if (bd && ft) ft.classList.toggle("ov", !bd.classList.contains("axs-fit") && bd.scrollHeight - bd.clientHeight - bd.scrollTop > 2);   /* v6.83 다 들어가는 시트(axs-fit) = 아래 선 없음 */
   if (bd && hd) hd.classList.toggle("ov", bd.scrollTop > 2);
 }
 /* 사라지기 · 같은 목록으로 닫히면 아래로 · 다른 화면으로 가면 바로(새 화면이 그 자리에 그려진다) · 끌어서 닫았으면 이미 내려가 있다
@@ -5986,6 +6083,25 @@ function sheetDrag(box, getPan, o) {
   });
 }
 
+/* v6.83 (사용자 261009 접근성 결정 「핀치 확대 = 일반 화면만」) 두 손가락 확대
+   기본 viewport 는 확대 허용(000-head · maximum-scale 없음) · 게임(#rgPlay) · 1층 둘러보기(html.t3-lock) · QR 스캔 카메라 탭에서만 maximum-scale=1 · user-scalable=no 로 잠그고 나오면 되돌린다
+   iOS 는 viewport 잠금을 따르지 않아 게임 · 둘러보기 · 카메라 화면의 touch-action(pan-x pan-y · none)이 같은 몫을 한다 · 큰글씨 단계(일반 · 큰글씨)는 그대로 */
+var ZOOM_VP = { free: "width=device-width, initial-scale=1, viewport-fit=cover", lock: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" };
+function zoomLocked() {
+  return !!(document.getElementById("rgPlay") || document.documentElement.classList.contains("t3-lock") ||
+    (typeof App === "object" && App.current === "scan_q" && typeof SCQ === "object" && SCQ.tab === "scan") || (typeof App === "object" && App.current === "sscan"));
+}
+function zoomSync() {
+  var m = document.querySelector('meta[name="viewport"]'); if (!m) return;
+  var want = zoomLocked() ? ZOOM_VP.lock : ZOOM_VP.free;
+  if (m.getAttribute("content") !== want) m.setAttribute("content", want);
+}
+(function () {
+  if (typeof MutationObserver !== "function") return;
+  var mo = new MutationObserver(function () { zoomSync(); });
+  var go = function () { mo.observe(document.body, { childList: true }); mo.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] }); zoomSync(); };   /* 게임 = body 에 붙고 떨어짐 · 둘러보기 = html.t3-lock */
+  if (document.body) go(); else document.addEventListener("DOMContentLoaded", go);
+})();
 /* ═══ 프로그램 신청 기록 · link(기존 시스템) · 옛 seat(17F 좌석 신청)은 v4.26 에서 걷어냈다 ═══ */
 function sessById(id) { return SESSIONS.filter(function (s) { return s.id === id; })[0]; }
 function sessMy() { return S.get("sess_my", {}); }
@@ -6126,7 +6242,7 @@ var STAGE = {
   outro: { id: "outro", fl: 17, zone: "hall", kind: "stage", ttl: "Closing Speech", sub: "DAP 시상 · 현장 추첨", who: "정경선 CSO", tm: "17:00~17:30", desc: "" }
 };
 function progById(id) { return id === "expo" ? EXPO : id === "intro" || id === "outro" ? STAGE[id] : sessById(id); }
-function progTm(tm) { return String(tm || "").replace("~", "–"); }
+function progTm(tm) { return String(tm || "").replace(/\s*[~–-]\s*/, "~"); }   /* v6.83 (디자인 D-3 · 사용자 261009) 시간 범위 = 네임택 PDF 그대로 「09:30~09:40」(붙여 쓴 물결) */
 /* v4.13 프로그램 탭 두 층(사용자 결정 260922 · design.md A-5 5-10) · 1층 = 보기 [목록 | 시간표] · 2층 = 분류 칩(두 보기 공통) */
 /* ═══ v4.15 시간표 보기 재설계 (사용자 결정 260922 · design.md A-5 5-10) ═══
    목록과 모양이 달라야 한다: 어제(v4.03 이전 · v3.5 일정 탭 계열) 구조를 되살리고 AX-TDS 토큰만 맞춘다.
@@ -6257,6 +6373,7 @@ function progFlowScroll() {
 /* TBD (사용자 261002) 동선 1 Welcome · 사전등록자 체크인존(건물 밖 동쪽 텐트 · 엑스배너 QR) · 이름 확인 + 사전 기념품 전달
    보류한 설계 쟁점: 체크인 = QR 을 찍는 행위(로그인과 별개 · 미리 로그인한 사람도 잡히게) · 사원증 대조 · 체크인과 수령을 따로 기록(중복 수령) · 스태프 사번 조회 대체 경로
    필요한 것: 사번 → 물품 명단(서버에만 · 앱 코드에 넣지 않는다) · 서버 액션(체크인 · 물품 조회 · 수령) · 결정 전까지 Welcome 은 구역 목록에 넣지 않는다 */
+var APPLY_GIFT = "커피 · 쿠키 · 노트 · 볼펜";   /* 261008 신청하기 두 카드 사은품 줄 한 문구(라운지 = 앞에 「상담 후」) */
 var FLOOR1 = [
   { id: "vision", grp: "see", sign: "AX VISION", kor: "회사가 가는 방향을 보는 곳", fact: "AX 로드맵 · 영상", st: "",
     stm: "회사가 어디로 가는지 보는 곳", todo: ["AX 로드맵 2026~2028을 봐요", "키비주얼 영상을 봐요"] },
@@ -6268,9 +6385,10 @@ var FLOOR1 = [
   { id: "lounge", grp: "do", sign: "AX LOUNGE", hdr: "AX 라운지", kor: "내년 DAP 과제 후보를 1:1로 상담하는 곳", fact: "", st: "",   /* v5.94 (사용자 결정 261006) 라운지 상담은 스탬프 없음 */
     stm: "내년 DAP(데이터 분석 프로젝트) 과제를 상담해요",
     lead: "내년 DAP(데이터 분석 프로젝트) 과제를 상담해요",   /* v5.70 시트 「하는 일」 첫 줄 = DAP 풀이(v5.69 시트화로 부제 stm 이 빠지며 함께 사라졌다 · v5.65 사용자 확정 문구) */
-    todo: ["데이터사이언스파트와 업무 고민을 나눠요", "앱에서 30분 상담을 신청해요"],
-    gd: ["아직 막연하다면 커피챗에서 가볍게 나눠요", "18F AX 커피챗 보기", "cchat"],
-    chk: [["진행", "업무 설명 → 병목 → 개선방안 · 30분"], ["신청", "사전 신청자 우선 · 남은 시간은 누구나 신청\n승인되면 앱에서 알려 드려요"], ["기록", "상담 내용은 기록되어 행사 후 정리해 공유돼요"], ["사은품", "상담을 마치면 커피 · 쿠키 · 노트 · 볼펜"]] },   /* v5.65 (사용자 261005 「커피챗과 라운지는 권장대로」 · 정본 디자인 시안/라운지 커피챗 통일/설계안.md) 커피챗과 같은 틀 · 서로 안내(gd) · 참여 전 확인(chk) 패널 · 커피 · 간식 사진은 패널 안에만 */
+    todo: ["데이터사이언스파트와 업무 고민을 나눠요"],   /* v6.83 (사용자 261009 묶음 11) 「앱에서 30분 상담을 신청해요」 덜기 = 아래 주 버튼 「상담 신청」 · 참여 전 확인 「30분」과 겹침 */
+    gd: ["아직 막연하다면 커피챗에서 가볍게 나눠요", "18F AX 커피챗 보기", "cchat"], gl: "가볍게 나누려면 18F AX 커피챗",   /* v6.83 (묶음 11) 시트 서로 안내 = 한 줄 링크(gl) · gd 두 문구는 옛 페이지 · 되살릴 때 쓴다 */
+    gift: "상담 후 ",   /* 사은품 표 값 = gift + APPLY_GIFT · v6.83 (사용자 261009 묶음 16) 사실 표 = 지금 · 시간 · 장소 · 사은품 · 옛 「참여 전 확인」 접힘 표(진행 · 신청 · 기록 · 사은품)는 아래 상자(need) · 사은품 표로 나눴다 */
+    need: ["상담 받으려면", [["time", "시간 골라 신청", "사전 신청자 우선 · 남은 시간은 누구나 신청"], ["stamp", "승인되면 앱에서 안내", ""], ["talk", "업무 설명 → 병목 → 개선방안", "1:1 · 30분"], ["doc", "상담 내용은 기록 · 행사 후 정리해 공유", ""]]] },   /* v5.65 (사용자 261005 「커피챗과 라운지는 권장대로」 · 정본 디자인 시안/라운지 커피챗 통일/설계안.md) 커피챗과 같은 틀 · 서로 안내(gd) · 참여 전 확인(chk) 패널 · 커피 · 간식 사진은 패널 안에만 */
   { id: "play", grp: "do", sign: "AX PLAY", kor: "AI를 직접 써 보는 곳", fact: "HiDI-Q · Hi-Helper", st: "p2",
     stm: "HiDI-Q와 Hi-Helper를 직접 써 보는 곳", todo: ["노트북에서 HiDI-Q, Hi-Helper를 써 봐요", "스태프에게 내 QR을 보여 주면 적립"], btn: ["체험 안내", "App.go('booth')"] },   /* v5.60 기능 목록 판 한 컷 2장 삭제(판 · 모형에 있다) */
   { id: "event", grp: "do", sign: "EVENT", kor: "사진 · 룰렛 · 타자왕이 있는 곳", fact: "", st: "",
@@ -6301,9 +6419,10 @@ function zoneExHtml(z) {
 var FLOOR18 = [
   { id: "cchat", grp: "", sign: "AX COFFEE CHAT", hdr: "AX 커피챗", kor: "비슷한 고민을 여럿이 모여 나누는 곳", fact: "", st: "",   /* v5.94 (사용자 결정 261006) 커피챗은 스탬프 없음 */
     q: ["내 업무에 AI를 쓸 수 있을까?", "나와 비슷한 고민을 하는 사람이 있을까?", "어떻게 시작하지?"],
-    todo: ["멘토와 한 테이블에서 아이디어를 나눠요", "아이디어 한 줄을 내고 커피챗 희망을 남겨요"],
-    gd: ["키우고 싶은 업무를 1:1로 상담해요", "1F AX 라운지 보기", "lounge"],
-    chk: [["진행", "주제 소개 → 고민 나누기 → 다음 한 걸음"], ["시간", CCHAT_HOURS + " · 고른 시간대에 맞춰 정해요"], ["선정", "희망한 분 중 선정해요"], ["알림", "선정되면 하이웍스 · 앱 알림으로 알려 드려요"]]   /* v6.07 (사용자 261007) 옛 정원 30명 → 희망자 중 선정 · 운영 13:00~16:00 */   /* v5.97 (사용자 261006 밤) 두 문장 = 두 줄(마침표 없이 · 표 값의 \n = 줄바꿈) */ }
+    todo: ["멘토와 한 테이블에서 아이디어를 나눠요"],   /* v6.83 (사용자 261009 묶음 11) 「아이디어 한 줄을 내고 커피챗 희망을 남겨요」 덜기 = 사실 표 「지금 · 아이디어 한 줄 쓰고 희망」 · 주 버튼과 같은 말 */
+    gd: ["키우고 싶은 업무를 1:1로 상담해요", "1F AX 라운지 보기", "lounge"], gl: "1:1 상담은 1F AX 라운지",
+    gift: "",   /* 사은품 표 값 = gift + APPLY_GIFT · v6.83 (사용자 261009 묶음 16 · 보충 2) 사실 표 = 지금 · 시간 · 장소 · 사은품만 · 진행 · 선정 · 알림 · 방식 = 「참여 전 확인」 상자(17F 강연 「스탬프 받으려면」과 같은 부품 needBoxHtml) · 옛 접힘 표 chk(진행 · 시간 · 선정 · 알림) 삭제 */
+    need: ["참여하려면", [["idea", "아이디어 한 줄 쓰고 희망", "고른 시간대에 맞춰 정해요"], ["stamp", "희망한 분 중 선정", "하이웍스 · 앱 알림으로 안내"], ["talk", "주제 소개 → 고민 나누기 → 다음 한 걸음", "소규모 · 20분"]]] }
 ];
 function zoneById(id) { return FLOOR1.concat(FLOOR18).filter(function (z) { return z.id === id; })[0] || null; }
 function zoneOpen(id) { PROG.zone = id; PROG.zchk = false; App.go("zone_d"); }
@@ -6347,21 +6466,20 @@ function applyCardHtml(o) {
     '<div class="hd"><span class="fl">' + flFloor(o.fl) + '</span><h3 class="ax-card-title">' + esc(o.nm) + "</h3>" + (o.mine ? '<span class="axs-chip">' + esc(o.chip || "신청함") + "</span>" : "") + "</div>" +
     '<p class="k">' + esc(o.kor) + "</p>" +
     '<dl class="axs-kv">' + o.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" + (o.extra || "") +
-    '<div class="bt">' + progBtn(esc(o.btn[0]), o.btn[1], "", "", !!o.btn[3]) +
+    '<div class="bt">' + progBtn(esc(o.btn[0]), o.btn[1], o.weak ? "ax-button-weak" : "", "", !!o.btn[3]) +   /* v6.83 (디자인 D-1) 한 화면 주황 주 버튼 하나 · 커피챗 주 버튼이 살아 있으면 라운지는 약한 버튼 */
     '<button type="button" class="ax-link axs-plain" onclick="' + o.more + '">자세히 보기</button></div></section>';
 }
-var APPLY_GIFT = "커피 · 쿠키 · 노트 · 볼펜";   /* 261008 신청하기 두 카드 사은품 줄 한 문구(라운지 = 앞에 「상담 후」) */
 function applyCchatHtml() {
   var s = cchatState(); if (!s) return "";
   var z = zoneById("cchat"), L = zoneLive(z), c = S.get("cchat", null), mt = !!(c && c.status === "matched");
-  var kv = [["지금", s.mine ? s.t : ideaMineN() ? "아이디어 제출 완료 · 희망 가능" : "아이디어 한 줄 쓰고 희망"], ["시간", mt && c.round ? "10월 26일 " + c.round : CCHAT_HOURS + " · 선정되면 안내"], ["방식", "소규모 · 20분"], ["신청", "희망한 분 중 선정"], ["사은품", APPLY_GIFT]];   /* 261008 (사용자 「라운지도 같은 형태」) 두 카드 사실 표 = 지금 · 시간 · 방식 · 신청 · 사은품 같은 순서 · 같은 줄 수 */   /* v5.90 · v6.07 희망 → 선정 · 13:00~16:00 */
-  return applyCardHtml({ k: "cchat", nm: "AX 커피챗", fl: 18, mine: s.mine, chip: s.chip, kor: z.kor, kv: kv, extra: treatHtml(), btn: L.btn, more: "cchatGo()" });
+  var kv = [["지금", s.mine ? s.t : ideaMineN() ? "아이디어 제출 완료 · 희망 가능" : "아이디어 한 줄 쓰고 희망"], ["시간", mt && c.round ? "10월 26일 " + c.round : CCHAT_HOURS + " · 선정되면 안내"], ["사은품", APPLY_GIFT]];   /* v6.83 (사용자 261009 묶음 16) 카드 = 고르고 바로 신청하는 곳 · 사실 표 3줄(지금 · 시간 · 사은품) · 방식 · 신청 · 사은품 사진은 구역 상세 시트로 */   /* 261008 (사용자 「라운지도 같은 형태」) 두 카드 사실 표 = 지금 · 시간 · 방식 · 신청 · 사은품 같은 순서 · 같은 줄 수 */   /* v5.90 · v6.07 희망 → 선정 · 13:00~16:00 */
+  return applyCardHtml({ k: "cchat", nm: "AX 커피챗", fl: 18, mine: s.mine, chip: s.chip, kor: z.kor, kv: kv, btn: L.btn, more: "cchatGo()" });
 }
-function applyLoungeHtml() {
+function applyLoungeHtml(weak) {
   var s = loungeState(); if (!s) return "";
   var z = zoneById("lounge"), L = zoneLive(z);
   var btn = s.mine ? ["내 신청", "progOpen('dap')"] : ["시간 고르기", "progOpen('dap')"];
-  return applyCardHtml({ k: "lounge", nm: "AX 라운지", fl: 1, mine: s.mine, kor: z.kor, kv: [["지금", s.mine ? s.t : s.t + " · 누구나 신청"], ["시간", L.tm], ["방식", "1:1 · 30분"], ["신청", "사전 신청자 우선"], ["사은품", "상담 후 " + APPLY_GIFT]], extra: treatHtml(), btn: btn, more: "zoneOpen('lounge')" });   /* 261008 사용자 「ax라운지도 같은 형태 · 되도록 사전 신청자 중심」 · 사은품 사진 줄 = 커피챗과 같은 treatHtml · 상담 완료 조건 유지(260918 예외) */
+  return applyCardHtml({ k: "lounge", nm: "AX 라운지", fl: 1, mine: s.mine, kor: z.kor, kv: [["지금", s.mine ? s.t : s.t + " · 누구나 신청"], ["시간", L.tm], ["사은품", "상담 후 " + APPLY_GIFT]], btn: btn, weak: !!weak,   /* v6.83 (묶음 16) 사은품 사진 = 구역 상세 시트 한 곳 */ more: "zoneOpen('lounge')" });   /* 261008 사용자 「ax라운지도 같은 형태 · 되도록 사전 신청자 중심」 · 상담 완료 조건 유지(260918 예외) */
 }
 /* 10F 실습형 세션 줄 = 사전 신청자(10F 명단 · tenMine)와 테스트 사번(testMode · 310555 · 데모)에게만 · 일반 직원에게는 없다(사용자 261006) */
 function applyTenShow() { return !!tenMine() || testMode(); }
@@ -6370,10 +6488,12 @@ function applyTenHtml() {
   return '<div class="axs-rows">' + rcHtml({ cls: "", onclick: "progTenGo()", link: true, left: rcIcon(App.ICONS.guide), title: "10F 실습형 세션", sub: "사전 신청자 참여" }).replace('<div class="rc', '<div data-apply="ten" class="rc') + "</div>";
 }
 function progApplyTabHtml() {
-  var h = applyCchatHtml() + applyLoungeHtml();
+  var cs = cchatState(), cOn = !!cs && !((zoneLive(zoneById("cchat")) || {}).btn || [])[3];   /* v6.83 커피챗 주 버튼이 눌리는 상태면 라운지 버튼은 약하게 */
+  var h = applyCchatHtml() + applyLoungeHtml(cOn);
   return '<div class="axs-apply" aria-label="신청하기">' + (h || '<p class="ax-description axs-apnone">지금 신청할 수 있는 프로그램이 없어요</p>') + applyTenHtml() + "</div>";
 }
-/* v5.65 「참여 전 확인」 펼침 = 같은 화면 패널(시트 아님 · 설계안 결정 1) · 다시 그리지 않고 패널만 연다 · 닫는다 */
+/* v5.65 「참여 전 확인」 펼침 = 같은 화면 패널(시트 아님 · 설계안 결정 1) · 다시 그리지 않고 패널만 연다 · 닫는다
+   v6.83 (사용자 261009 묶음 16 「참여 전 확인을 눌러서 추가 정보가 나올 필요 없음」) 부르는 곳 없음(구역 상세 = 펼친 상자) · 되살릴 때 쓴다 */
 function zoneChkToggle(b) {
   var p = el("zChk"); if (!p) return;
   var on = p.hidden; p.hidden = !on; PROG.zchk = on; b.setAttribute("aria-expanded", String(on));
@@ -6425,6 +6545,7 @@ function zoneLive(z) {
     var ino = !att && !c && !cl && !ov && !ideaMineN();   /* v5.82 아이디어 0건 · 희망 전 = 한 흐름 「아이디어 쓰고 희망하기」(제출하면 희망 묶음이 이어진다) */
     var cnow = att ? "참석 완료" : mt ? "선정" + (c.table ? " · TABLE " + c.table : "") : ov ? "오늘 커피챗은 끝났어요" : c ? "희망 접수" : cl ? "희망 접수 마감" : ino ? "아이디어 한 줄 쓰고 희망" : "아이디어 제출 완료 · 희망 가능";
     o.tm = mt && c.round ? "10월 26일 " + c.round : CCHAT_HOURS + " · 선정되면 안내";
+    o.tm0 = mt && c.round ? o.tm : CCHAT_HOURS;   /* v6.83 (묶음 16) 시트 사실 표 시간 = 운영 시간만(선정 · 알림 = 참여 전 확인 상자) */
     o.fact = mt && c.round ? cnow.replace("선정", "선정 · " + c.round) : ino ? "아이디어 한 줄 쓰고 희망" : cnow;
     o.chip = att ? ["완료", "ok"] : mt ? ["선정", ""] : ov ? ["끝", "off"] : c ? ["희망함", ""] : cl ? ["마감", "off"] : null;
     o.kv = [["지금", cnow], ["장소", "18F"]];
@@ -6461,18 +6582,24 @@ function progAlwaysHtml() {
    v4.99 스탬프 도장 = 카드 오른쪽 위(강연 상세 sess_d 와 같은 axs-sthost · stampTagHtml) */
 /* v5.65 AX LOUNGE · AX 커피챗 = 같은 부품(설계안 2절) · 간판 → 한 줄(커피챗 = 질문 3줄) → 시간 → 하는 일 → 지금 · 장소 → 서로 안내(카드 맨 아래 · 약한 링크) → 주 버튼 → 「참여 전 확인」 약한 버튼 → (펼침) 확인 표 + 커피 · 간식 사진 2장
    펼침 상태 PROG.zchk(구역에 새로 들어오면 접힘) · 사은품 줄은 LOUNGE 에만(260918 예외) · 둘러보기 엘리베이터에서 왔으면 떠 있는 「3D로 돌아가기」(v5.67 · 옛 v5.65 맨 아래 버튼 없앰) */
+/* v6.83 (사용자 261009 묶음 16) 라운지 · 커피챗 구역 상세 본문 한 곳(시트 zoneSheet · 페이지 zonePairHtml 공용 · 모든 입구 = 같은 내용)
+   순서 = (커피챗 질문 3줄) → 사실 표(지금 · 시간 · 장소 · 사은품 글) → 구분선 → 사은품 사진(treatHtml) → 하는 일 → 「참여 전 확인」 상자(17F 강연과 같은 부품 · 펼친 채) → 서로 안내 한 줄 링크
+   「참여 전 확인」 접힘(옛 axs-xtog · zChk) 없음 · 지금 값이 상자 첫 줄과 같으면(아이디어 한 줄 쓰고 희망) 사실 표에서 지금 줄을 뺀다(같은 말 두 번 없음) */
+function zoneGdBody(z, L) {
+  var nd = z.need || ["", []], first = nd[1][0] ? nd[1][0][1] : "";
+  var rows = (L.kv && L.kv[0] && L.kv[0][1] !== first ? [L.kv[0]] : []).concat([["시간", L.tm0 || L.tm]], (L.kv || []).slice(1), z.gift != null ? [["사은품", z.gift + APPLY_GIFT]] : []);
+  return (z.q ? '<p class="axs-xq">' + z.q.map(function (t) { return "<span>" + esc(t) + "</span>"; }).join("") + "</p>" : "") +
+    '<dl class="axs-kv">' + rows.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" + (z.gift != null ? treatHtml() : "") +
+    '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + (z.lead ? [z.lead] : []).concat(z.todo).map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" +
+    (nd[1].length ? chkBoxSec(nd[0], nd[1]) : "") +
+    (z.gd ? '<div class="axs-xgd"><button type="button" class="ax-link axs-plain axs-self" onclick="zoneOpen(\'' + z.gd[2] + '\')">' + lnkChev(esc(z.gl || z.gd[1])) + "</button></div>" : "");
+}
+/* 「참여 전 확인」 + 받으려면 상자 = 17F 강연 시트(sessSheet)와 같은 마크업(axs-dsec · needBoxHtml) */
+function chkBoxSec(k, rows) { return '<section class="axs-dsec"><h3>참여 전 확인</h3>' + needBoxHtml(k, k, rows) + "</section>"; }
 function zonePairHtml(z, L) {
-  var head = z.q ? '<p class="axs-xq">' + z.q.map(function (t) { return "<span>" + esc(t) + "</span>"; }).join("") + "</p>" : '<p class="axs-bar stm">' + esc(z.stm) + "</p>";
-  var b = L.btn || ["", ""], open = !!PROG.zchk;
-  var chk = '<section class="axs-zdt axs-xchk" id="zChk" aria-label="참여 전 확인"' + (open ? "" : " hidden") + '><dl class="axs-kv">' + z.chk.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]).split("\n").map(segHtml).join("<br>") + "</dd>"; }).join("") + "</dl>" + treatHtml() + "</section>";
-  return '<div class="ax-stack axs-pan"><div class="axs-zdt axs-sthost">' + zoneStampHtml(z) + zoneSign(z.sign, "lg") + head +
-    '<div class="cr"><span class="axs-pt">' + esc(L.tm || "") + "</span></div>" +
-    '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + z.todo.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" +
-    '<hr class="axs-rule"><dl class="axs-kv">' + L.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" +
-    '<hr class="axs-rule"><div class="axs-xgd"><p class="axs-bar stm">' + esc(z.gd[0]) + '</p><button type="button" class="ax-link axs-plain axs-self" onclick="zoneOpen(\'' + z.gd[2] + '\')">' + esc(z.gd[1]) + "</button></div></div>" +
-    '<div class="axs-xbtns">' + progBtn(esc(b[0]), b[1], "", b[2] || "", !!b[3]) +
-    '<button type="button" class="ax-button ax-button-weak axs-xtog" aria-expanded="' + open + '" aria-controls="zChk" onclick="zoneChkToggle(this)">참여 전 확인' + CHEV_SVG + "</button>" +
-    "</div>" + chk + tourFloorBackHtml() + "</div>";
+  var b = L.btn || ["", ""];
+  return '<div class="ax-stack axs-pan"><div class="axs-zdt axs-sthost">' + zoneStampHtml(z) + zoneSign(z.sign, "lg") + zoneGdBody(z, L) + "</div>" +
+    '<div class="axs-xbtns">' + progBtn(esc(b[0]), b[1], "", b[2] || "", !!b[3]) + "</div>" + tourFloorBackHtml() + "</div>";
 }
 function zoneDetailHtml() {
   var z = zoneById(PROG.zone) || FLOOR1[0], L = zoneLive(z), pill = zoneStampHtml(z), ev = z.id === "event", seal = pill && !ev;
@@ -6492,14 +6619,11 @@ function zoneSheet() {
   var z = zoneById(PROG.zone) || FLOOR1[0], L = zoneLive(z), pill = zoneStampHtml(z), ev = z.id === "event", seal = pill && !ev;
   var meta = ev ? pill : L.tm ? '<span class="axs-pt">' + esc(L.tm) + "</span>" : seal ? "" : '<span class="axs-pt">자유 관람 · 스탬프 없음</span>';
   var kv = L.kv ? '<dl class="axs-kv">' + L.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" : "";
-  var open = !!PROG.zchk, b = L.btn;
-  var body = (z.q ? '<p class="axs-xq">' + z.q.map(function (t) { return "<span>" + esc(t) + "</span>"; }).join("") + "</p>" : "") +
+  var b = L.btn;
+  var body = z.gd ? zoneGdBody(z, L) :   /* v6.83 (묶음 16) 라운지 · 커피챗 = 공용 본문(사실 표 → 사진 → 하는 일 → 참여 전 확인 상자 · 접힘 없음) */
     (meta ? '<div class="cr">' + meta + "</div>" : "") +
     '<hr class="axs-rule"><div class="axs-todo"><h3>하는 일</h3>' + (z.lead ? [z.lead] : []).concat(z.todo).map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") + "</div>" + zoneCaseHtml(z) + zoneExHtml(z) +
     (kv ? '<hr class="axs-rule">' + kv : "") +
-    (z.gd ? '<hr class="axs-rule"><div class="axs-xgd"><p class="axs-bar stm">' + esc(z.gd[0]) + '</p><button type="button" class="ax-link axs-plain axs-self" onclick="zoneOpen(\'' + z.gd[2] + '\')">' + esc(z.gd[1]) + "</button></div>" : "") +
-    (z.chk ? '<button type="button" class="ax-button ax-button-weak axs-xtog" aria-expanded="' + open + '" aria-controls="zChk" onclick="zoneChkToggle(this)">참여 전 확인' + CHEV_SVG + "</button>" +
-      '<section class="axs-xchk" id="zChk" aria-label="참여 전 확인"' + (open ? "" : " hidden") + '><dl class="axs-kv">' + z.chk.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]).split("\n").map(segHtml).join("<br>") + "</dd>"; }).join("") + "</dl>" + treatHtml() + "</section>" : "") +
     (ev && EV_TYP_PROMO ? typPromoHtml("go") : "") + zonePicHtml(z);   /* v5.96 (사용자 261006 밤 「여기에 타자왕 광고는 없애줘」) EVENT 구역 상세 = 홍보 칸 없음 · 스위치 EV_TYP_PROMO */
   return { cls: "axs-pan", name: zoneSign(z.sign, "lg"), chips: zoneChip(L.chip), title: esc(z.kor), seal: seal ? pill : "", body: body,   /* v5.79 머리 이름 = 구역 간판 하나(현장 부스 사인과 같은 글자 · 한국어 이름을 따로 두지 않는다) · 상태 칩 · 한국어 한 줄 · 도장 = 본문 첫 줄 */
     foot: b ? progBtn(esc(b[0]), b[1], "", b[2] || "", !!b[3]) : "" };
@@ -6539,8 +6663,9 @@ var SPK_DIR = "assets/speaker/", SPK_IDS = ["intro", "key", "road", "l1", "l2", 
   SPK_IMG = { intro: "sp_intro.webp", outro: "sp_outro.webp", l1: "logo_aws.svg", l2: "logo_ms.svg" }, SPK_LOGO = { l1: 1, l2: 1 };
 function spkAvHtml(id, av) {
   var sp = SPK_IDS.indexOf(id) >= 0, f = sp && SPK_IMG[id], on = !!f && !SPK_NA[id], lg = on && !!SPK_LOGO[id];
+  if (!on) return "";   /* v6.83 (디자인 D-7 · 전역 3절 「사람 목록에 장식 아바타 금지」) 그림이 없으면 칸 없이 이름 줄만(이름이 칸 안 · 옆 줄에 두 번 나오던 것) · 그림이 안 뜨면 칸째 지운다 */
   return '<span class="axs-av' + (sp ? " spk" : "") + (lg ? " logo" : "") + '" aria-hidden="true">' + esc(av) +
-    (on ? '<img src="' + SPK_DIR + f + '" alt="" width="240" height="240" loading="lazy" decoding="async" onerror="SPK_NA[\'' + id + '\']=1;this.parentNode.classList.remove(\'logo\');this.remove()">' : "") + "</span>";
+    (on ? '<img src="' + SPK_DIR + f + '" alt="" width="240" height="240" loading="lazy" decoding="async" onerror="SPK_NA[\'' + id + '\']=1;this.parentNode.remove()">' : "") + "</span>";
 }
 /* v5.60 10F 세션 안내 · 소제목 「하는 일」(1F 구역 상세와 같은 ink 굵게 + 얇은 구분선) · 주황 점 글머리 · 이름이 있으면 굵게 + 설명 아래 줄
    「준비할 것」은 사전 신청자(sessMine)에게만 · 한 줄 소개는 SESS_INTRO_ON 일 때만 · 다 비면 "" (블록 자체를 그리지 않는다) */
@@ -6557,7 +6682,7 @@ function sessGuideHtml(s, mine) {
 function attStLbl(id) { var ai = attMineK(id, "in"), ao = attMineK(id, "out"); return ai && ao ? "출석 완료" : ai ? "입장 출석" : ao ? "끝 출석" : ""; }
 function attDetailFill(D, ap, timeBtn) {
   var ai = attMineK(ap.id, "in"), ao = attMineK(ap.id, "out"), shut = attShut(ap);   /* 261008 「지금 · 입장 약 N명」 줄 삭제(입장 QR 수 · 지금 현장 2×2 가 맡는다) */
-  D.st = attStLbl(ap.id) || "자유 참석"; D.stc = "ok";
+  D.st = attStLbl(ap.id) || "자유 참석"; D.stc = attStLbl(ap.id) ? "ok" : "off";   /* v6.83 (디자인 D-4) 「자유 참석」 = 회색 칩(나의 일정과 같은 색 · 초록은 출석한 뒤만) */
   if (ai || ao) { D.kv.push(["입장 QR", ai ? ai + " 출석" : "아직"]); D.kv.push(["끝 QR", ao ? ao + " 출석" : "아직"]); }   /* 261008 (사용자 「통제하지 말자」) QR 시간 창 표기 없음 */
   else D.kv.push(["출석 QR", "강연 중 화면의 QR"]);
   D.help = ai && ao ? "" : shut ? "출석 시간이 지났어요" : "";
@@ -6578,13 +6703,13 @@ function progDetail(s) {
       var ko = attProg("key");
       D.who = s.who; D.av = spkAv(s.who); D.whoSub = "개회 인사";
       if (attUi("key")) { attDetailFill(D, ko, timeBtn); D.secB = "Opening Speech는 첫 Keynote와 한 묶음이에요.<br>입장할 때 QR을 한 번, Keynote가 끝날 때 화면의 QR을 한 번 찍어요."; }   /* v5.68 Intro 는 기조연설 출석과 한 묶음(입장 · 끝 QR 이 같다) */
-      else { D.st = "자유 참석"; D.stc = "ok"; D.btn = timeBtn; }   /* v5.96 (사용자 결정 261006 밤) 오전 출석 표시 끔(ATT_UI_PROGS) · 입장 · 끝 QR 줄 · 참여 전 확인 칸 · 출석 QR 스캔 단추 없음 */
+      else { D.st = "자유 참석"; D.stc = "off"; D.btn = timeBtn; }   /* v5.96 (사용자 결정 261006 밤) 오전 출석 표시 끔(ATT_UI_PROGS) · 입장 · 끝 QR 줄 · 참여 전 확인 칸 · 출석 QR 스캔 단추 없음 */
       return D;
     }
     var din = !!S.get("draw_in", false), hmD = hmNow(), dwin = evPhase() === "live" && hmD >= t2m("16:40") && hmD < t2m("17:25");   /* 창 = drawCardHtml 과 같은 서버 기본 창 */
     var lc = lkCond();   /* v5.92 (사용자 261006 「럭키드로우에서 체크인 요소는 일단은 없애 놓자 · 행운권 중에서 추첨」) 참석 조건 OFF(서버 lkcond) = 체크인 줄 · 추첨 QR 단추 · 체크인 안내 없음 */
     D.who = s.who; D.av = spkAv(s.who); D.whoSub = "";
-    D.st = lc && din ? "추첨 체크인 완료" : "자유 참석"; D.stc = "ok";
+    D.st = lc && din ? "추첨 체크인 완료" : "자유 참석"; D.stc = lc && din ? "ok" : "off";
     if (lc) D.kv.push(["체크인", din ? "추첨 체크인 완료" : "16:40–17:25 · 입구 QR"]);   /* 375px 한 줄 · 추첨 QR 은 아래 「현장 추첨」 */
     D.extra = '<section class="axs-dsec"><h3>진행</h3><ul class="axs-ddot"><li>Closing Speech · 정경선 CSO</li><li>DAP 우수 성과자 시상</li><li>현장 추첨</li></ul></section>';   /* v5.69 시트 = 「하는 일」과 같은 점 목록 */
     D.secT = "현장 추첨";
@@ -6601,7 +6726,7 @@ function progDetail(s) {
     D.title = s.id === "road" || s.id === "key" || par ? s.sub : s.ttl;
     if (par) { D.org = s.id === "l2" ? "Microsoft" : org; D.who = s.who; D.av = org || "AX"; D.whoSub = "파트너사 강연"; }
     else if (s.who) { D.who = s.who; D.av = spkAv(s.who); D.whoSub = s.sub; }
-    D.st = at ? "출석 완료" : s.id === "expo" ? "자유 입장" : "자유 참석"; D.stc = "ok";
+    D.st = at ? "출석 완료" : s.id === "expo" ? "자유 입장" : "자유 참석"; D.stc = at ? "ok" : "off";
     D.kv = [["일시", s.id === "expo" ? "10월 26일 · 행사 시간 중" : day + progTm(s.tm)], ["장소", pl], ["참여 방법", s.id === "expo" ? "신청 없이 자유 관람" : "신청 없이 자유 참석"]];
     D.secB = s.id === "expo" ? segHtml("1F 로비 6구역 · AX VISION · AX LAB · AX in Action · AX PLAY · AX 라운지 · EVENT") :
       ap && par ? (s.desc ? esc(s.desc) : "") :   /* 261008 오후 AWS · MS = 아래 받으려면 상자(D.need) */
@@ -6610,7 +6735,7 @@ function progDetail(s) {
     if (s.id === "expo") D.link = '<button type="button" class="ax-link axs-plain axs-self" onclick="App.go(\'floor1\')">1F 부스 6구역 보기</button>';
     if (ap) attDetailFill(D, ap, timeBtn);   /* v5.68 입장 QR · 끝 QR 두 줄 · 지금 입장 수 · 창이 끝나면 시간표(261005 최종 QA 규칙 그대로) */
     else { D.help = ""; D.btn = timeBtn; }
-    if (ap && par) D.need = needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "입장 · 끝 QR 한 번씩", "끝 QR은 화면에 떠요"], ["stamp", "입장 1개 + 끝 1개 = 스탬프 2개", "AWS · MS 합쳐 2개까지"]]);   /* 261008 (사용자 「참여 전 확인 아래 부분을 받으려면 부분처럼」) 옛 회색 세 줄 「입장할 때 QR 한 번, 끝날 때 화면의 QR 한 번 찍어요 / 입장 1개 + 끝 1개 = 스탬프 2개 / AWS · MS 합쳐 2개까지」 · 시간 · 규칙 강조 없음 */
+    if (ap && par) D.need = needBoxHtml("스탬프 받으려면", "스탬프 받으려면", [["qr", "입장 · 끝 QR 한 번씩", ""], ["stamp", "입장 1개 + 끝 1개 = 스탬프 2개", "AWS · MS 합쳐 2개까지"]]);   /* 261008 (사용자 「참여 전 확인 아래 부분을 받으려면 부분처럼」) 옛 회색 세 줄 「입장할 때 QR 한 번, 끝날 때 화면의 QR 한 번 찍어요 / 입장 1개 + 끝 1개 = 스탬프 2개 / AWS · MS 합쳐 2개까지」 · 시간 · 규칙 강조 없음 */
     /* 261008 (사용자 「굳이 있어야 될까?」) 오후 파트너 강연 경품 보기 입구 뺌 */
     return D;
   }
@@ -6646,12 +6771,12 @@ function progDetail(s) {
     var conf = resvConf(), slots = resvSlots(), lunchM = t2m(conf.lunch);
     var cell = function (t) { var off = resvTaken(t); return '<button type="button" class="axs-slot" aria-pressed="' + (DAPSEL === t) + '"' + (off ? ' disabled aria-label="' + t + ' 마감"' : ' onclick="dapPick(\'' + t + '\')"') + ">" + t + "</button>"; };
     D.st = resvRemain() > 0 ? "신청 가능" : "마감"; D.stc = resvRemain() > 0 ? "ok" : "off";
-    D.kv = [["일시", conf.start + "–" + conf.end + " 중 30분"], ["장소", pl], ["참여 방법", "신청 후 승인"]];   /* v4.95 375px 한 줄(행사일은 하루뿐 · 시간 고르기는 아래 칸이 보여 준다) */
+    D.kv = [["일시", conf.start + "~" + conf.end + " 중 30분"], ["장소", pl], ["참여 방법", "신청 후 승인"]];   /* v4.95 375px 한 줄(행사일은 하루뿐 · 시간 고르기는 아래 칸이 보여 준다) */
     D.extra = (r && r.status === "noshow" ? '<div class="axs-err" role="status"><b>이전 신청은 참석 처리되지 않았어요</b><span>아래에서 다시 신청할 수 있어요.</span></div>' :
         r && r.status === "canceled" ? '<div class="axs-err" role="status"><b>이전 신청이 취소됐어요</b><span>아래에서 다시 신청할 수 있어요.</span></div>' : "") +
       '<section class="ax-stack-tight axs-gap12"><div class="ax-row"><h2 class="ax-section-title">상담 시간 선택</h2><span class="ax-meta">남은 시간 ' + resvRemain() + "개</span></div>" +
       '<div class="axs-slots" role="group" aria-label="상담 시간">' + slots.filter(function (t) { return t2m(t) < lunchM; }).map(cell).join("") +
-      '<p class="ax-meta axs-lunch">점심시간 ' + conf.lunch + "–" + conf.lunchEnd + "</p>" + slots.filter(function (t) { return t2m(t) >= lunchM; }).map(cell).join("") + "</div></section>";
+      '<p class="ax-meta axs-lunch">점심시간 ' + conf.lunch + "~" + conf.lunchEnd + "</p>" + slots.filter(function (t) { return t2m(t) >= lunchM; }).map(cell).join("") + "</div></section>";
     D.sg = "";   /* v5.65 신청 화면 확인 블록 · 사진 삭제(같은 글이 구역 상세 「참여 전 확인」에 있다 · 설계안 결정 6) */
     D.help = DAPSEL ? "선택한 시간 " + DAPSEL + " · 1F AX 라운지" : "상담 시간을 먼저 골라 주세요";
     D.btn = DAPSEL ? progBtn("이 시간으로 신청하기", "progApply(\'dap\')") : progBtn("이 시간으로 신청하기", "", "", "", true);
@@ -6956,7 +7081,7 @@ function myFlowCard(o, hmN, isF, h) {
   if (o.brk) return progFlowBrk(o, hmN);
   var past = hmN >= o.b, chip = o.mine ? '<span class="axs-chip mc">' + (isF ? "진행 중" : "신청") + "</span>" : '<span class="axs-chip off mc">자유 참석</span>';
   return '<button type="button" class="fc' + (o.mine ? " mine" : "") + (past ? " past" : "") + (isF ? " focus" : "") + '"' + (o.go ? ' onclick="' + o.go + '"' : " disabled") + ' data-fl="' + esc(o.k) + '"' + (o.my ? ' data-my="' + esc(o.my) + '"' : "") + ">" +
-    '<span class="mt">' + (o.fl ? flFloor(o.fl) : "") + '<span class="pl">' + esc(o.pl) + '</span><span class="e">' + (h ? o.t0 + " ~ " : "~") + o.t1 + "</span>" + chip + "</span>" +
+    '<span class="mt">' + (o.fl ? flFloor(o.fl) : "") + '<span class="pl">' + esc(o.pl) + '</span><span class="e">' + (h ? o.t0 + "~" : "~") + o.t1 + "</span>" + chip + "</span>" +
     '<span class="t">' + (isF ? '<span class="ax-sr-only">진행 중 </span>' : "") + '<span class="tt">' + esc(o.ttl) + "</span></span>" +
     (o.sub ? '<span class="s">' + segHtml(esc(o.sub)) + "</span>" : "") + (past || !o.go ? "" : '<span class="chv">' + CHEV_SVG + "</span>") + "</button>";
 }
@@ -7078,7 +7203,7 @@ function billboardHtml() {
     '<p class="bmw">' + chars + "</p>" +
     '<p class="bko" style="animation-delay:' + d + '"><span>나의 경험을</span><span>우리의 가능성으로</span></p>' +
     "</div>" +
-    '<canvas data-axf="loop" data-axf-seq="' + sq + '" data-axf-zoom="0.95" data-axf-start="me"' + stage + "></canvas></div>";
+    '<canvas aria-hidden="true" data-axf="loop" data-axf-seq="' + sq + '" data-axf-zoom="0.95" data-axf-start="me"' + stage + "></canvas></div>";
 }
 
 
@@ -7232,9 +7357,10 @@ function crowdStripHtml() {
   var tvp = tv ? "시험값 · " : "", right = st ? '<span class="cn-st">' + tvp + "눌러서 제보</span>" : oldest ? '<span class="cn-t">' + tvp + crowdHm(oldest) + " 기준</span>" : tv ? '<span class="cn-t">시험값</span>' : "";   /* 261008 시험값 표시 = 섹션 머리 오른쪽 한 곳(칸마다 달면 360 에서 이름이 잘린다) */
   return '<div class="sect"><b>지금 현장</b>' + right + "</div>" +
     '<div class="cstrip2 cn4">' + cells.map(function (x) {
-      var fm = /^(\d+)F (.+)$/.exec(x.nm), al = fm ? fm[1] + "층 " + fm[2] : x.nm;   /* 261008 층 표기 = 점문자(flFloor · 읽는 이름 「1층」) · 글자는 그대로 */
-      var one = x.k !== "h" && x.sub, inner = '<p class="nm">' + (fm ? flFloor(fm[1]) : "") + '<span class="cn-nm">' + (fm ? fm[2] : x.nm) + "</span></p>" + '<p class="pr"><span class="pill"><i class="lamp" aria-hidden="true"></i>' + x.st + "</span>" + (one ? '<span class="tx">' + esc(x.sub.replace(/^대기 /, "")) + "</span>" : "") + "</p>" + (st && dot.indexOf(x.k) >= 0 ? '<i class="cn-dot" aria-hidden="true"></i>' : "");   /* 261009 v6.81 둘째 줄 = 상태 알약(점 + 상태 단어) + 1F 세 칸만 옆에 대기 글자 · 17F · 정보 없음은 알약만(기준 시각은 섹션 머리 한 곳) */
-      return st ? '<button type="button" class="cc' + x.cls + '" onclick="cnSheet(\'' + x.k + '\')" aria-label="' + al + " · " + x.st + (x.sub ? " · " + esc(x.sub) : "") + ' · 제보">' + inner + "</button>"
+      var fm = /^(\d+)F (.+)$/.exec(x.nm), al = fm ? fm[1] + "층 " + fm[2] : x.nm;   /* 읽는 이름 「1층 룰렛」 */
+      /* v6.83 (사용자 261009 묶음 8 · 권장안) 층 = 홈 「나의 일정」 장소 줄과 같은 형식(위치 핀 PIN_SVG + 「1F」 · .pl 같은 값) · 이름 줄 오른쪽 끝 · 점 글자 층 표기(261008)는 이 칸에서 뺐다 · 칸 높이 그대로 */
+      var one = x.k !== "h" && x.sub, inner = '<p class="nm"><span class="ax-sr-only">' + al + ", </span>" + '<span class="cn-nm" aria-hidden="true">' + (fm ? fm[2] : x.nm) + "</span>" + (fm ? '<span class="pl" aria-hidden="true">' + PIN_SVG + "<span>" + fm[1] + "F</span></span>" : "") + "</p>" + '<p class="pr"><span class="pill"><i class="lamp" aria-hidden="true"></i>' + x.st + "</span>" + (one ? '<span class="tx">' + esc(x.sub.replace(/^대기 /, "")) + "</span>" : "") + "</p>" + (st && dot.indexOf(x.k) >= 0 ? '<i class="cn-dot" aria-hidden="true"></i>' : "");   /* 261009 v6.81 둘째 줄 = 상태 알약(점 + 상태 단어) + 1F 세 칸만 옆에 대기 글자 · 17F · 정보 없음은 알약만(기준 시각은 섹션 머리 한 곳) */
+      return st ? '<button type="button" class="cc' + x.cls + '" onclick="cnSheet(\'' + x.k + '\')" aria-label="' + al + ", " + x.st + (x.sub ? " · " + esc(x.sub) : "") + ' · 제보">' + inner + "</button>"
         : '<div class="cc' + x.cls + '">' + inner + "</div>";
     }).join("") + "</div>";
 }
@@ -7251,7 +7377,7 @@ function nxDay() { var dn = appNow(true); return dn.getFullYear() === NX_DAY[0] 
 /* v5.37 (사용자 261003 「이것들이 수정되면 정식 앱에 올리자」) 둘러보기 v3 = 시험 페이지와 같은 공용 모듈(tour3.js · tour3.css · 캐릭터 걷기 · 40도 시점 · 왼손 패드 · 오른손 십자 · 작은 지도 · 스태프 챗봇 · 판 보기 · 돋보기 2개 · 움직임 줄이기 · 입장 암전)
    같은 약속 AXTour.open/close/back/isOpen · 옛 v2(tour.js · tour.css · 자동 둘러보기 · 평면 지도 · 구역 시트)로 되돌리려면 아래 목록의 tour3 두 개를 tour.css · tour.js 로 바꾸면 된다(파일은 그대로 둠) */
 /* v5.38 (사용자 261003) 둘러보기 손질 · 캐릭터 겹침(스태프 원 충돌) · 늘 카메라 쪽을 봄 · 조그 패드 · 안내데스크 깜빡임(겹친 면) · 정문 회전문 또렷하게 · 로비 음악(Web Audio 합성 · 「음악 없이」 · 위쪽 스피커 버튼) · 파일 이름 그대로 · 캐시 깨기 ver v538 */
-var TOUR = { ver: "v665", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
+var TOUR = { ver: "v683", busy: false, files: ["tour3.css", "three.min.js", "GLTFLoader.js", "meshopt_decoder.js", "tour-data.js", "tour-scene.js", "tour3.js"] };   /* v5.19 GLB 모형(구운 빛) · 모형 lobby.glb(약 0.7MB)는 tour.js 가 3D 를 그릴 때 받는다 */
 try { localStorage.removeItem('axfT3Diag'); } catch (e) {} window.AXT3_DIAG = /[?&]t3diag=1(?:&|$)/.test(location.search);   /* v5.47 진단은 주소에 ?t3diag=1 이 있는 그 페이지에서만 · 기억하지 않는다 · 옛 기기 기억은 지운다(사용자 261004) */   /* v5.44 둘러보기 실기기 진단(주소 ?t3diag=1 · 이 기기에 기억 · ?t3diag=0 이면 끔) · 화면 왼쪽 위에 GPU · 깊이 비트 · highp · DPR · fps */
 /* 켜기 스위치 · v5.28 true = 전체 공개(사용자 261003 「1층 3D 전체 공개」) · false 로 두면 입구 3곳 · 판 퀴즈 힌트 링크 · 열기가 모두 숨는다 */
 var TOUR_ON = true;
@@ -7273,9 +7399,9 @@ function tourOpen(o) {
   if (window.AXTour) { tpcKeys(); AXTour.open(o); tpcShell(); return; }
   if (TOUR.busy) return;
   TOUR.busy = true; tpcShell();
-  var left = TOUR.files.length, bad = false, q = "?v=" + TOUR.ver;
+  var fl = TOUR.files.filter(function (f) { return !(f === "three.min.js" && window.THREE); }), left = fl.length, bad = false, q = "?v=" + TOUR.ver;   /* v6.83 계단 동행이 three.js 를 먼저 받았으면 다시 실행하지 않는다(같은 파일 · 두 번 실행 경고) */
   /* v5.64 (사용자 261005 「가운데랑 하단에 두 개 떠」) 앱 하단 「여는 중」 알림 삭제 · 안내는 둘러보기 자체 불러오기 화면 하나 */
-  TOUR.files.forEach(function (f) {
+  fl.forEach(function (f) {
     var n = /\.css$/.test(f) ? document.createElement("link") : document.createElement("script");
     if (n.tagName === "LINK") { n.rel = "stylesheet"; n.href = "assets/tour/" + f + q; } else { n.src = "assets/tour/" + f + q; n.async = false; }   /* 스크립트는 붙인 순서대로 실행 */
     n.onload = function () { if (--left === 0 && !bad) { TOUR.busy = false; if (window.AXTour) { tpcKeys(); AXTour.open(o); } tpcShell(); } };
@@ -7602,7 +7728,7 @@ function rcHtml(o) {
   /* v4.09 (사용자 피드백 260922 「장소와 › 가 붙어 보기 불편」) · 장소 = 제목 아래 한 줄(위치 아이콘 + T7 muted) ·
      이동 표시 = 행 오른쪽 끝 셰브론(24 영역 · 세로 가운데) · 누르는 곳은 행 전체(.rh) · 옛 오른쪽 위 장소 칩(v3.44)은 폐지 */
   return '<div class="rc' + (o.place ? " hp" : "") + (o.cls || "") + '">' +
-    '<div class="rh"' + (o.onclick ? ' onclick="' + o.onclick + '"' : "") + ">" +
+    '<div class="rh"' + (o.onclick ? ' onclick="' + o.onclick + '"' + (/<(button|a)\b/.test(o.right || "") ? "" : ' role="button" tabindex="0"' + (o.chev === "svg" ? ' aria-expanded="' + !!o.open + '"' : "")) : "") + ">" +   /* v6.83 (접근성 B-6) 누르는 줄 = Tab · Enter · Space(안에 단추가 있으면 그 단추로) · 모양 그대로 */
     '<span class="ls">' + (o.left || "") + "</span>" +
     '<span class="bd">' + rcTitle(o) + (o.sub ? '<span class="sb">' + o.sub + "</span>" : "") + (o.place ? '<span class="pl">' + PIN_SVG + "<span>" + esc(o.place) + "</span></span>" : "") + "</span>" +
     (o.right ? '<span class="rt">' + o.right + "</span>" : "") + chev + "</div>" +
@@ -8386,13 +8512,14 @@ var PZ_ICO = {
   qr: SICO + '<path d="M4 8.5V5.5A1.5 1.5 0 0 1 5.5 4h3M15.5 4h3A1.5 1.5 0 0 1 20 5.5v3M20 15.5v3a1.5 1.5 0 0 1-1.5 1.5h-3M8.5 20h-3A1.5 1.5 0 0 1 4 18.5v-3"/><path d="M8.5 8.5h2.5v2.5H8.5zM13 8.5h2.5v2.5H13zM8.5 13h2.5v2.5H8.5zM13.5 13.5h2v2h-2z"/></svg>',
   box: SICO + '<path d="M3.5 7.5 12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5 12 11.5l8.5-4M12 11.5v9"/></svg>',
   key: SICO + '<rect x="2.5" y="6.5" width="19" height="11" rx="2"/><path d="M6 10h.01M9 10h.01M12 10h.01M15 10h.01M18 10h.01M7.5 14h9"/></svg>',
-  cup: SICO + '<path d="M7.5 4h9v5a4.5 4.5 0 0 1-9 0z"/><path d="M7.5 6H4.5a3 3 0 0 0 3 4M16.5 6h3a3 3 0 0 1-3 4M12 13.5V17M8.5 20h7M9.5 17h5"/></svg>'
+  cup: SICO + '<path d="M7.5 4h9v5a4.5 4.5 0 0 1-9 0z"/><path d="M7.5 6H4.5a3 3 0 0 0 3 4M16.5 6h3a3 3 0 0 1-3 4M12 13.5V17M8.5 20h7M9.5 17h5"/></svg>',
+  idea: STAMP_ICONS.p5, talk: STAMP_ICONS.qz, doc: STAMP_ICONS.sv, time: App.ICONS.guide_time   /* v6.83 (묶음 16) 구역 상세 「참여 전 확인」 상자 · 이미 있는 그림(아이디어 전구 · 말풍선 · 문서 · 시계) 그대로 */
 };
 /* v5.90 (261006 경품 기획 변경 · 계약.md 5절) 행운권 받으려면 줄2 = 참석 조건(sync lkcond) 따라 · 7등 · 선착순 참여상 · 아이디어왕 구역 · 서버 필드가 없으면(on) 구역을 그리지 않는다 */
 var PZ_SEC = [
   { k: "draw", en: "LUCKY DRAW", t: "행운권 추첨", need: function () { return [["stamp", "스탬프 4개부터 행운권", "6개면 3장"], lkCond() ? ["qr", "Closing Speech 참석 · 17F 입구 QR 체크인", "16:40부터 · 17:00 현장 추첨"] : ["cup", "17F Closing Speech 현장 추첨", "17:00 · 경품은 따로 전달"]]; } },
   { k: "lk7", en: "7TH PRIZE", t: "행운권 7등 · 랜덤 굿즈", on: function () { return !!S.get("lk7", null); }, need: function () { return [["stamp", "스탬프 4개 이상(행운권 보유)", "1~6등 당첨자는 제외"], ["box", "행사 뒤 추첨", "룰렛 남은 경품에서 무작위 · 행랑 발송"]]; } },   /* v5.92 정말 랜덤(사용자 261006) */
-  { k: "fin", en: "FIRST COME", t: "선착순 참여상", on: function () { return !!fxGet(); }, need: function () { var x = fxGet() || {}; var st = fcfsStartHm(); return [["stamp", "스탬프 6개를 모으고", ""], ["box", "1F 주차장 체크인존 선착순 " + (x.cap || 210) + "명", (st ? st + "부터 · " : "") + "E 창구"]]; }   /* v5.98 받기 선착순 */, qt: function () { return fcfsQtyTxt(); } },   /* v5.97 (사용자 261006 밤) 남은 수량은 상품 제목 오른쪽 한 곳(fcfsQtyTxt) · 상자 줄 삭제 · 「당일 못 받으면 발송」 줄 삭제(「선착순인데 당일 못 받는 건 말이 안 되잖아」) */
+  { k: "fin", en: "FIRST COME", t: "선착순 참여상", on: function () { return !!fxGet(); }, need: function () { var x = fxGet() || {}; var st = fcfsStartHm(); return [["stamp", "스탬프 6개를 모으고", ""], ["box", "1F 주차장 체크인존 선착순 " + (x.cap || 210) + "명", st ? st + "부터" : ""]]; }   /* v6.83 「E 창구」 뺌(사용자 261009) */   /* v5.98 받기 선착순 */, qt: function () { return fcfsQtyTxt(); } },   /* v5.97 (사용자 261006 밤) 남은 수량은 상품 제목 오른쪽 한 곳(fcfsQtyTxt) · 상자 줄 삭제 · 「당일 못 받으면 발송」 줄 삭제(「선착순인데 당일 못 받는 건 말이 안 되잖아」) */
   { k: "roulette", en: "ROULETTE", t: "룰렛", need: function () { return [["stamp", "스탬프 3개면 룰렛 1회", "1인 1회"], ["qr", "1F EVENT 룰렛 부스에서 내 QR 제시", S.get("rcut", "") ? "룰렛 " + S.get("rcut", "") + " 마감" : ""]]; } },
   { k: "idea", en: "IDEA KING", t: "아이디어왕", r3: 1, on: function () { return !!S.get("idea_pub", null); }, need: function () { var ip = S.get("idea_pub", null) || {}; return [["stamp", (ip.cut || "16:00") + "까지 아이디어 한 줄", "AX 라운지 · 커피챗 · 앱 어느 경로든"], ["cup", "Closing Speech에서 시상", ideaKingN() + "명 · AI 구독권"]]; } },
   { k: "type", en: "TYPING KING", t: "1F 타자왕 1~3위", sep: 1, need: [["key", "1F 현장 기록 1~3위", "17:00 마감 · 스탬프와 별개"], ["cup", "Closing Speech 시상 참석", ""]], go: ["실시간 순위 보기", "typeSiteRankGo()"] }   /* v5.18 맨 아래 · 선으로 나눔 · 순위판 입구 = 블록 맨 아래(v5.73) · v5.97 Outro 시상 보조 줄 삭제(사용자 261006 밤 「투머치」) */
@@ -8422,7 +8549,7 @@ function prizeJump(k) {
 function prizeGoHtml(k) {
   var th = PZ_THUMB.map(function (n) { return '<img src="' + PRIZE_DIR + "t_" + n + '.webp" alt="" width="96" height="96" loading="lazy" decoding="async" onerror="this.remove()">'; }).join("");
   return '<button type="button" class="axs-pzgo" onclick="event.stopPropagation(); prizeGo(' + (k ? "'" + k + "'" : "") + ')"><span class="th" aria-hidden="true">' + th + "</span>" +
-    '<span class="tx"><b>경품 보기</b><span>아이패드 · 가습기 · 텀블러</span></span>' + CHEV_SVG + "</button>";
+    '<span class="tx"><b>경품 보기</b><span>' + segHtml("아이패드 · 가습기 · 텀블러") + "</span></span>" + CHEV_SVG + "</button>";
 }
 function pzCard(p, unit, cls, qt) {
   var im = function (n) { return '<img src="' + PRIZE_DIR + n + '.webp" alt="" width="600" height="600" loading="lazy" decoding="async" onerror="this.remove()">'; };
@@ -8531,10 +8658,10 @@ function fcfsRailTxt() {
 function fcfsRailHtml() { var t = fcfsRailTxt(), f = fcfsMy(); return t == null ? "" : '<span class="fx6' + (f && (f.st === "ready" || f.st === "got") && t !== "마감" ? " got" : "") + '"><span class="k">선착순</span>' + (t ? "<b>" + t + "</b>" : "") + "</span>"; }
 /* 6개 다 모은 캡션 뒤 · 스탬프 탭(두 줄이 상태를 말한다) = 받을 곳만 */
 /* 261007 (사용자 「가습기 선착순 교환은 체크인이 마무리되는 10시 30분부터 열자 · 혼선 없도록」) 지급 시작 시각(서버 my.fcfs start · fx start · 옛 서버 = 없음 · 문구 그대로) · pre = 그날 시작 전
-   fcfsAt = 받는 곳 글 「1F 주차장 체크인존」 → 「10:30부터 1F 주차장 체크인존(E 창구)」(첫 한 곳) */
+   fcfsAt = 받는 곳 글 「1F 주차장 체크인존」 → 「10:30부터 1F 주차장 체크인존」(첫 한 곳 · v6.83 사용자 261009 「(E 창구) 이 부분 삭제」 · 창구 이름은 스태프 화면에만) */
 function fcfsStartHm() { var f = fcfsMy(), x = fxGet(); return String((f && f.start) || (x && x.start) || ""); }
 function fcfsPre() { var f = fcfsMy(); return !!(f && f.pre); }
-function fcfsAt(t) { var st = fcfsStartHm(); return st ? String(t).replace("1F 주차장 체크인존", st + "부터 1F 주차장 체크인존(E 창구)") : t; }
+function fcfsAt(t) { var st = fcfsStartHm(); return st ? String(t).replace("1F 주차장 체크인존", st + "부터 1F 주차장 체크인존") : t; }
 function fcfsAtL(L) { return L.map(function (r) { return [r[0], fcfsAt(r[1]), r[2]]; }); }
 function fcfsCapWhere() { return fcfsReady(fcfsMy()) ? fcfsAt(" · 1F 주차장 체크인존에서 수령") : ""; }
 /* 6번째 스탬프 상자 팝업 한 줄 */
@@ -8615,8 +8742,8 @@ function roulCut() {
 }
 function ideaKingN() { var ip = S.get("idea_pub", null), n = 0; ((ip && ip.prz) || []).forEach(function (x) { n += +x.n || 0; }); return n || 5; }
 /* 커피 · 간식 사진 2장 · 18F 커피챗 상세 · DAP 과제상담 상세 */
-function treatHtml(sm) {   /* v6.07 sm = 한 줄 4칸(커피챗 희망 묶음) */
-  return '<div class="axs-treat' + (sm ? " sm" : "") + '">' + TREATS.map(function (t) {
+function treatHtml(sm) {   /* v6.07 sm = 한 줄 4칸(커피챗 희망 묶음) · v6.83 (사용자 261009 묶음 10) 큰 사진 칸 = 사실 표 아래 옅은 구분선(axs-hr) 다음에 */
+  return (sm ? "" : '<div class="axs-hr"></div>') + '<div class="axs-treat' + (sm ? " sm" : "") + '">' + TREATS.map(function (t) {
     return "<figure>" + prizePhHtml(t, 360) + "<figcaption><b>" + esc(t.nm) + "</b><span>" + esc(t.sub) + "</span></figcaption></figure>";
   }).join("") + "</div>";
 }
@@ -8679,7 +8806,7 @@ function stpAct(s, got) {
   if (s.id === "p2") return ["내 QR", "qrPanelOpen('mine')"];
   if (s.id === "p5") return ["쓰기", "App.go('ideas')"];
   if (s.id === "p3") return ["보기", "homeSched()"];
-  if (s.id === "st") return [stairState().leg ? "진행 중" : "안내", "stairOpen()"];
+  if (s.id === "st") return [stairState().leg ? "이어 하기" : "안내", "stairOpen()"];   /* v6.83 (디자인 D-5) 오른쪽 = 행동 말(진행 중은 보조 줄이 말한다) */
   if (s.id === "sv") return surveyLock() === "time" ? [SURVEY.open, ""] : ["시작", "App.go('survey')"];
   return [s.cta ? "보기" : "", s.tap || ""];
 }
@@ -8691,12 +8818,14 @@ function stpRowHtml(s, i, st, full) {
   var tap = a[1] ? ' onclick="if (!event.target.closest(\'button\')) { ' + a[1].replace(/"/g, "&quot;") + '; }"' : "";
   /* v5.68 프로그램 참여 = 2개 · 17F 한쪽만(p3h) = 번호 칸 반 채움 「1/2」 · v6.56 (사용자 261008 「더블 스탬프인 것이 명확히 이해되지 않아」) 제목 옆 「×2」 → O100 알약 「● ● 스탬프 2개」(받은 만큼 점이 찬다 · 0 · 1 · 2) + 받기 전 둘째 보조 줄 「입장 QR 1개 + 끝 QR 1개」 */
   var half = !!s.x2 && !got && st.indexOf(STAMP_HALF) >= 0;
+  /* v6.83 (디자인 D-5) 오른쪽 = 누르는 행동 말만(같은 색 · 굵기) · 행동이 아닌 글은 오른쪽에 두지 않는다 · 완료 = 번호 칸 체크 · 자동 = 「자동」 칩 · 열리는 시각(14:30 · 10/26부터) = 둘째 줄 칩(보조 줄에 이미 있으면 생략) */
+  var stat = a[0] && !a[1] && a[0] !== "완료" && a[0] !== "자동" && String(meta).indexOf(a[0]) < 0 ? a[0] : "";
   return '<div class="axs-stp' + (got ? " done" : half ? " half" : full ? " off" : "") + (tap ? " tap" : "") + '" data-stp="' + s.id + '"' + tap + ">" +
     '<span class="axs-stpn" aria-hidden="true">' + (got ? CHECK_SVG : half ? "1/2" : i + 1) + "</span>" +
-    '<div class="axs-stpb"><p class="ax-card-title' + (s.x2 ? " axs-stpt2" : "") + '">' + esc(s.title) + (s.x2 ? '<span class="axs-x2"><i class="d' + (got || half ? " on" : "") + '" aria-hidden="true"></i><i class="d' + (got ? " on" : "") + '" aria-hidden="true"></i>스탬프 2개</span>' : "") + (got ? '<span class="ax-sr-only"> · 완료</span>' : half ? '<span class="ax-sr-only"> · 2개 중 1개</span>' : "") + "</p>" +
-    stpLineHtml(mode, esc(meta)) + (s.id === "p3" && !got ? '<p class="axs-stpm"><span>입장 QR 1개 + 끝 QR 1개</span></p>' : "") +
+    '<div class="axs-stpb"><p class="ax-card-title' + (s.x2 ? " axs-stpt2" : "") + '">' + esc(s.title) + (s.x2 ? '<span class="axs-x2" role="img" aria-label="스탬프 2개"><svg class="axs-x2i" aria-hidden="true"><use href="#nav-stamp"/></svg><span aria-hidden="true">\u00d72</span></span>' : "") + (got ? '<span class="ax-sr-only"> · 완료</span>' : half ? '<span class="ax-sr-only"> · 2개 중 1개</span>' : "") + "</p>" +
+    stpLineHtml(mode, esc(meta)) + (stat ? '<p class="axs-stpm"><span class="axs-stpc">' + esc(stat) + "</span></p>" : "") + (s.id === "p3" && !got ? '<p class="axs-stpm"><span>입장 QR 1개 + 끝 QR 1개</span></p>' : "") +
     tiles + test + "</div>" +
-    (a[0] ? (a[1] ? '<button type="button" class="axs-stpa" onclick="' + a[1] + '">' + esc(a[0]) + "</button>" : '<span class="axs-stpa ' + (got ? "ok" : "off") + '">' + esc(a[0]) + "</span>") : "") +
+    (a[0] && a[1] ? '<button type="button" class="axs-stpa" onclick="' + a[1] + '">' + esc(a[0]) + "</button>" : "") +
     "</div>";
 }
 /* 구경하고 겨루기 · 1F 타자왕 현장 순위(type_rank · v5.29 현장 순위판 하나) · 실시간 화면은 4묶음(type_live) */
@@ -8769,7 +8898,7 @@ var Views = {
       '<section class="axs-sec">' + railHtml(n, glow, null, false) + "</section>" +
       '<section class="axs-sec"><div class="sect"><b>스탬프 ' + STAMPS.length + "종</b><span>" + (full ? STAMP_DENOM + "개 모두 모았어요" : STAMP_DENOM + "개까지 인정") + "</span></div>" +
       '<div class="axs-stps">' + STAMPS.map(function (s, i) { return stpRowHtml(s, i, st, full); }).join("") + "</div>" +
-      scanQNote() + '<p class="lnk sub" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</p></section></div>";   /* v4.91 1F 타자왕(스탬프 아님)은 프로그램 탭 「상시 운영」로 옮겼다 */
+      scanQNote() + '<button type="button" class="lnk sub axs-stfgo" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</button></section></div>";   /* v6.83 (접근성 B-3 · B-6) p → button · 눌림 높이 44 · 키보드 */   /* v4.91 1F 타자왕(스탬프 아님)은 프로그램 탭 「상시 운영」로 옮겼다 */
   },
   /* v4.84 옛 「현장에서 / 앱에서」 체험 화면은 지웠다 · 아래 exp_g(체험 안내) · 스캔 · 결과 · 계단은 그대로 */
 
@@ -9075,9 +9204,10 @@ var Views = {
      인증 뒤 3개만: 스캔(스탬프 · 입장 · 포토부스 체크 한 화면) · 존 혼잡도 · 내 담당 명단(보기 · 입장 처리 · 노쇼 표시).
      포토부스 호출 · 예약 · 커피챗 매칭 · 신청 현황 · 긴급 공지 · 대시보드 · 타자왕전 · 부스 QR 인쇄 · Wall QR 퀴즈 편집 · 아이디어 열람은 AXF CONTROL(콘솔) 몫. */
   admin: function () {
-    if (!S.get("admin_authed", false)) {
+    var stf = S.get("admin_authed", false) && admRole() === "staff";   /* v6.83 (묶음 18) 스태프 코드로 연 폰 = 관리자 모드는 관리코드로 */
+    if (!S.get("admin_authed", false) || stf) {
       return '<div class="ax-stack">' +
-        '<section class="ax-card ax-stack-tight axs-gap12"><h2 class="ax-section-title">운영 담당자 코드</h2>' +
+        '<section class="ax-card ax-stack-tight axs-gap12"><h2 class="ax-section-title">' + (stf ? "관리코드 필요" : "운영 담당자 코드") + "</h2>" + (stf ? '<p class="ax-meta">스태프 코드로는 연속 스캔을 써요 · 관리자 모드는 관리코드로 열려요</p>' : "") +
         '<label class="ax-sr-only" for="adminCode">운영 담당자 코드</label>' +
         '<input id="adminCode" class="ax-field" inputmode="numeric" pattern="[0-9]*" enterkeyhint="go" autocomplete="off" placeholder="코드를 입력해 주세요" onkeydown="onEnter(event, tryAdmin)" onfocus="kbFocus(this)">' +
         '<p class="ax-meta">운영 담당자만 들어올 수 있어요</p></section>' +
@@ -9343,7 +9473,7 @@ function sscSheetBody() {
   return '<div class="axs-stiles ssc-picks">' + one.join("") + "</div>" + (ten.length ? '<h3 class="ax-meta ssc-h">10F 세션 입장</h3><div class="axs-stiles ssc-picks">' + ten.join("") + "</div>" : "") +
     '<div class="ssc-opts"><button type="button" class="ssc-opt" aria-pressed="' + snd + '" onclick="sscSnd()"><span>스캔 소리</span><b>' + (snd ? "켬" : "끔") + "</b></button>" +
     '<button type="button" class="ssc-opt" onclick="sheetClose(true); sscMine()"><span>내 QR 보여주기</span>' + CHEV_SVG + "</button>" +
-    '<button type="button" class="ssc-opt" onclick="sheetClose(true); App.go(\'admin\')"><span>관리자 모드</span>' + CHEV_SVG + "</button></div>";
+    (admRole() === "admin" ? '<button type="button" class="ssc-opt" onclick="sheetClose(true); App.go(\'admin\')"><span>관리자 모드</span>' + CHEV_SVG + "</button>" : "") + "</div>";   /* v6.83 (묶음 18 · QA/스태프 코드 계약_261009.md 5절) 관리자 모드 = 관리코드(role admin)로 연 폰만 · 스태프 코드(role staff)는 연속 스캔까지 */
 }
 function sscSheet() { sheetOpen({ id: "sscspot", title: "어디서 찍나요?", lead: "고른 자리는 이 폰에 기억해요", body: sscSheetBody(), go: "sheetClose()", goLbl: "닫기" }); }
 function sscPick(id, sub) {
@@ -10493,7 +10623,7 @@ function svInputHtml(q, v) {
     var mid = Math.round((q.min + q.max) / 2), nv = v == null ? mid : v;
     if (v == null) setTimeout(function () { svSet(id, mid, false); }, 0);
     return '<p class="disp" style="margin-top:12px;text-align:center;font-size:34px;color:var(--acc2)"><span id="svScale_' + id + '">' + nv + '</span><small style="font-size:15px;color:var(--faint)"> / ' + q.max + "</small></p>" +
-      '<input type="range" min="' + q.min + '" max="' + q.max + '" step="1" value="' + nv + '" style="width:100%;accent-color:#FF7E31" oninput="svSet(\'' + id + '\', +this.value, false); var o=el(\'svScale_' + id + '\'); if (o) o.textContent=this.value">' +
+      '<input type="range" class="axs-range" aria-label="' + esc(q.q) + " " + q.min + "에서 " + q.max + '" aria-describedby="svScale_' + id + '" min="' + q.min + '" max="' + q.max + '" step="1" value="' + nv + '" oninput="svSet(\'' + id + '\', +this.value, false); var o=el(\'svScale_' + id + '\'); if (o) o.textContent=this.value">' +
       '<div class="row" style="justify-content:space-between"><span class="muted" style="font-size:calc(12px * var(--fs))">' + q.min + " · " + esc(q.left || "") + '</span><span class="muted" style="font-size:calc(12px * var(--fs))">' + q.max + " · " + esc(q.right || "") + "</span></div>";
   }
   if (q.type === "text") return '<textarea id="svText_' + id + '" class="ax-field axs-ta" rows="3" maxlength="' + (q.max || 200) + '" placeholder="' + esc(q.ph || "") + '" onfocus="kbFocus(this)" oninput="svSet(\'' + id + '\', this.value, false)">' + esc(v || "") + "</textarea>";
@@ -11282,7 +11412,7 @@ function attMineK(id, k) { return attMine()[k === "out" ? id + ".out" : id] || "
 function attW() { var w = S.get("att_w", null); return w && w.i && w.o && w.i.length === 2 && w.o.length === 2 ? w : ATT_17F.win; }
 function attKWin(x, k) { var w = attW(); return k === "out" ? { a: t2m(x.e) - w.o[0], b: t2m(x.e) + w.o[1] } : { a: t2m(x.s) - w.i[0], b: t2m(x.s) + w.i[1] }; }
 function attFrom(x) { return attKWin(x, "in").a; }
-function attWinLbl(x, k) { var w = attKWin(x, k || "in"); return hm2(w.a) + "–" + hm2(w.b); }
+function attWinLbl(x, k) { var w = attKWin(x, k || "in"); return hm2(w.a) + "~" + hm2(w.b); }
 /* 그 강의의 출석 창이 모두 끝났는가(행사 뒤 = 늘 끝) */
 function attShut(x) { var ph = evPhase(); return !!x && (ph === "after" || (ph === "live" && attNow() > attKWin(x, "out").b)); }
 function attTm() { var o = testMode() ? ttGet() : null; return o ? hm2(o.m) : ""; }   /* 261007 옛 att_tm → 시험 시각 tt 하나(ttGet · 테스트 모드만) */
@@ -11378,7 +11508,7 @@ function attDone(res) {
     var why = res && res.reason, x = attProg(ATT.sel), kk = (res && res.k) || ATT.k;
     if (why === "nocode") { sheetClose(true); srShow({ st: "fail", why: "nocode" }); return; }
     if (why === "roff") { sheetFail({ t: "지금은 쓰지 않는 QR이에요", b: "다시 스캔해 주세요." }); return; }   /* v5.96 송출 출석 안내 없음 */   /* v5.68 송출 QR · 서버 설정 송출_켬 밖 */
-    if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: x ? x.nm + " · " + x.s + "–" + x.e : "" }); return; }
+    if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: x ? x.nm + " · " + x.s + "~" + x.e : "" }); return; }
     sheetFail({ t: "출석하지 못했어요", b: "다시 시도해 주세요." });
     return;
   }
@@ -11463,7 +11593,7 @@ function att10Done(res) {
     if (why === "nocode") { sheetClose(true); srShow({ st: "fail", why: "nocode" }); return; }
     if (why === "notpre") { ATT10.info = { t: "사전 신청자 출석 QR이에요", l: "<b>" + esc(s.ttl) + "</b><br>17F 강연 · 1F 전시 · 18F 커피챗은 누구나 참여해요" }; att10Repaint(); return; }   /* design.md §7 · 오류 말투 없이 갈 수 있는 곳 한 줄 */
     if (why === "other") { ATT10.info = { t: "신청한 세션의 QR을 찍어 주세요", l: "신청한 세션 · <b>" + esc(res.preName || "") + "</b>" }; att10Repaint(); return; }
-    if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: s.ttl + (ATT10_UI ? " · 끝 QR " : " · ") + String(res.open || "").replace("~", "–") }); return; }
+    if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: s.ttl + (ATT10_UI ? " · 끝 QR " : " · ") + String(res.open || "") }); return; }
     sheetFail({ t: "출석하지 못했어요", b: "다시 시도해 주세요." });
     return;
   }
@@ -12137,6 +12267,7 @@ function scanDone(emp, sp, res) {
                 why === "spare0" ? "여유 키트 없음 · 룰렛 굿즈로 대체" :
                 /unknown action/i.test(err) ? "서버 갱신 전 · 기록되지 않음" :
                 why === "auth" ? "관리코드가 맞지 않아요 · 관리자 모드를 다시 열어 주세요" :
+                why === "console" ? "이 처리는 콘솔에서 해요 · 운영 본부에 알려 주세요" :   /* v6.83 (묶음 18) 스태프 코드 허용 목록 밖 · 코드는 지우지 않는다 */
                   "처리하지 못했어요" + (why || err ? " (" + (why || err.slice(0, 40)) + ")" : "");
     scanLog(emp, nm + msg, false, true);
     var big = scanBig(why, sp, res, err);
@@ -12653,7 +12784,7 @@ function submitIdea() {
   if (WALL_ON) setTimeout(function () { toast("오늘 " + (nth + 1).toLocaleString() + "번째 아이디어! ME to WE 월에 점 하나가 켜졌어요."); }, 100);   /* v5.00 월 문구는 WALL_ON 일 때만 · 제출 완료는 다음 화면이 알린다 */
 }
 function tryAdmin() {
-  admVerify(el("adminCode").value, function () { S.set("admin_authed", true); App.render(); });
+  admVerify(el("adminCode").value, function (role) { S.set("admin_authed", true); if (role === "staff") toast("관리자 모드는 관리코드로 열려요 · 스캔은 아래 가운데 「스캔」"); App.render(); });   /* v6.83 (묶음 18) 스태프 코드 = 연속 스캔 · 관리자 모드 화면은 관리코드만 */
 }
 
 /* ════════════════ 게임 공통 ════════════════ */
@@ -15914,7 +16045,7 @@ function gsOverlayOpen(o) {
   d.id = "rgPlay";
   d.className = (o.flat ? "flat " : "") + (o.cls || "") + " rt";   /* v4.23 레트로 경계 */
   d.innerHTML = '<div class="rgp-top">' + (o.top || '<span class="rgp-t">' + esc(o.title) + '</span><span class="row" style="gap:6px;align-items:center">' + sndBtnHtml(false) + '<button class="rgp-x" type="button" onpointerdown="event.preventDefault()" onclick="gsPauseToggle()">일시정지</button></span>') + "</div>" +
-    '<div class="rgp-mid' + (o.noGesture ? " nogest" : "") + (o.fill ? " fill" : "") + '" id="gsMid"><canvas id="' + o.canvasId + '" width="' + o.cw + '" height="' + o.ch + '"></canvas>' +
+    '<div class="rgp-mid' + (o.noGesture ? " nogest" : "") + (o.fill ? " fill" : "") + '" id="gsMid"><canvas id="' + o.canvasId + '" width="' + o.cw + '" height="' + o.ch + '" role="img" aria-label="' + esc(o.title || "게임 화면") + '"></canvas>' +
     (o.tip ? '<div class="gs-tip" id="gsTip">' + gsSayHtml(esc(o.tip)) + "</div>" : "") +
     '<div class="rgp-pause" id="rgPause" hidden><p>일시정지</p><small id="rgPauseLeft"></small>' + gsHowHtml(o.key, true, "rgPauseHow", true) + '<button class="ax-button rt-btn" type="button" onclick="gsResume()">계속하기</button><button class="ax-button ax-button-weak rt-btn weak" type="button" onclick="gsQuit()">그만하기</button>' +
     (GS_HOW[o.key] ? '<button class="ax-button ax-button-weak rt-btn weak" type="button" id="rgPauseHowTg" aria-expanded="false" aria-controls="rgPauseHow" onclick="gsPauseHow()">설명 보기</button>' : "") + "</div></div>" +   /* v5.41 일시정지에서 설명 다시 보기 · 펼친 설명은 제목 바로 아래 */
@@ -16098,9 +16229,9 @@ function gsStartHtml(key, o) {
    게임을 시작하면(gsBegin) 멈춘다 · 시작 화면이 사라지면(다시 그리기 · 결과 화면) 다음 틱에 스스로 멈춘다 */
 var GSP = { key: "", fn: null, box: null, io: null, vis: false, raf: 0, t: 0, last: 0 };
 var GSP_DEMO = {
-  pang: { html: function () { return '<canvas id="pgPrev" width="180" height="174"></canvas>'; }, draw: function (t) { pgPreview(t); }, still: 0.5 },
-  jump: { html: function () { return '<canvas id="jpPrev" class="px" width="180" height="120"></canvas>'; }, draw: function (t) { jpPreview(t); }, still: 1.77 },
-  tetris: { html: function () { return '<canvas id="ttPrev" width="120" height="120"></canvas>'; }, draw: function (t) { ttPreview(t); }, still: 0.9 },
+  pang: { html: function () { return '<canvas id="pgPrev" width="180" height="174" aria-hidden="true"></canvas>'; }, draw: function (t) { pgPreview(t); }, still: 0.5 },
+  jump: { html: function () { return '<canvas id="jpPrev" class="px" width="180" height="120" aria-hidden="true"></canvas>'; }, draw: function (t) { jpPreview(t); }, still: 1.77 },
+  tetris: { html: function () { return '<canvas id="ttPrev" width="120" height="120" aria-hidden="true"></canvas>'; }, draw: function (t) { ttPreview(t); }, still: 0.9 },
 };
 function gspK() { return Math.min(3, window.devicePixelRatio || 1) * 2; }   /* 캔버스 해상도 배수 · 칸 그림을 선명하게(도트 점프 제외) */
 function gspStop() {
@@ -17731,7 +17862,7 @@ function xitMix(hex, k) {
 function xitionRun(switchNow) {
   var rm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (rm || document.getElementById("xition") || (/cap|demo/.test(location.hash) && !/xt/.test(location.hash))) { switchNow(); return; }
-  var ov = document.createElement("div"); ov.id = "xition";
+  var ov = document.createElement("div"); ov.id = "xition"; ov.setAttribute("aria-hidden", "true");
   var cv = document.createElement("canvas"); ov.appendChild(cv); document.body.appendChild(ov);
   var dpr = Math.min(2, window.devicePixelRatio || 1), W = Math.floor(window.innerWidth * dpr), H = Math.floor(window.innerHeight * dpr);
   cv.width = W; cv.height = H;

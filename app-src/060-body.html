@@ -70,7 +70,7 @@
   <!-- ═══════ 앱 셸 ═══════ -->
   <div id="app" hidden>
     <header id="topbar" class="ax-header"></header>
-    <div id="view"></div>
+    <main id="view"></main>
     <nav id="tabbar" class="ax-nav" aria-label="주 메뉴"></nav>
     <!-- 하단 메뉴 아이콘(v5.75 · 사용자 261006 「선택 표시 세 겹」) · 24 격자 · 실제 그림 20 · 선 2 · 둥근 끝 · 탭마다 선(nav-*) / 채움(nav-*-f) 짝 · id = 탭 뜻 · currentColor · 채움 안쪽 뚫림 = 메뉴 면색(--ax-color-surface) · 가운데 QR = 둥근 모서리 그림(qr-corners) · 단일파일 데모에서도 보이게 본문에 둔다 -->
     <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="nav-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -154,7 +154,7 @@
   </div>
   </div>
 
-  <div id="toast"></div>
+  <div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 </div>
 
 <!-- qrcode-generator 1.4.4 · QR 인코더 (MIT, Kazuhiko Arase · http://www.d-project.com/)

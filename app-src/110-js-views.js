@@ -65,7 +65,7 @@ var Views = {
       '<section class="axs-sec">' + railHtml(n, glow, null, false) + "</section>" +
       '<section class="axs-sec"><div class="sect"><b>스탬프 ' + STAMPS.length + "종</b><span>" + (full ? STAMP_DENOM + "개 모두 모았어요" : STAMP_DENOM + "개까지 인정") + "</span></div>" +
       '<div class="axs-stps">' + STAMPS.map(function (s, i) { return stpRowHtml(s, i, st, full); }).join("") + "</div>" +
-      scanQNote() + '<p class="lnk sub" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</p></section></div>";   /* v4.91 1F 타자왕(스탬프 아님)은 프로그램 탭 「상시 운영」로 옮겼다 */
+      scanQNote() + '<button type="button" class="lnk sub axs-stfgo" onclick="staffStampOpen()">' + lnkChev("담당자 적립") + "</button></section></div>";   /* v6.83 (접근성 B-3 · B-6) p → button · 눌림 높이 44 · 키보드 */   /* v4.91 1F 타자왕(스탬프 아님)은 프로그램 탭 「상시 운영」로 옮겼다 */
   },
   /* v4.84 옛 「현장에서 / 앱에서」 체험 화면은 지웠다 · 아래 exp_g(체험 안내) · 스캔 · 결과 · 계단은 그대로 */
 
@@ -371,9 +371,10 @@ var Views = {
      인증 뒤 3개만: 스캔(스탬프 · 입장 · 포토부스 체크 한 화면) · 존 혼잡도 · 내 담당 명단(보기 · 입장 처리 · 노쇼 표시).
      포토부스 호출 · 예약 · 커피챗 매칭 · 신청 현황 · 긴급 공지 · 대시보드 · 타자왕전 · 부스 QR 인쇄 · Wall QR 퀴즈 편집 · 아이디어 열람은 AXF CONTROL(콘솔) 몫. */
   admin: function () {
-    if (!S.get("admin_authed", false)) {
+    var stf = S.get("admin_authed", false) && admRole() === "staff";   /* v6.83 (묶음 18) 스태프 코드로 연 폰 = 관리자 모드는 관리코드로 */
+    if (!S.get("admin_authed", false) || stf) {
       return '<div class="ax-stack">' +
-        '<section class="ax-card ax-stack-tight axs-gap12"><h2 class="ax-section-title">운영 담당자 코드</h2>' +
+        '<section class="ax-card ax-stack-tight axs-gap12"><h2 class="ax-section-title">' + (stf ? "관리코드 필요" : "운영 담당자 코드") + "</h2>" + (stf ? '<p class="ax-meta">스태프 코드로는 연속 스캔을 써요 · 관리자 모드는 관리코드로 열려요</p>' : "") +
         '<label class="ax-sr-only" for="adminCode">운영 담당자 코드</label>' +
         '<input id="adminCode" class="ax-field" inputmode="numeric" pattern="[0-9]*" enterkeyhint="go" autocomplete="off" placeholder="코드를 입력해 주세요" onkeydown="onEnter(event, tryAdmin)" onfocus="kbFocus(this)">' +
         '<p class="ax-meta">운영 담당자만 들어올 수 있어요</p></section>' +

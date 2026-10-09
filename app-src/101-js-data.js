@@ -1,7 +1,7 @@
 /* ════════════════ 데이터 (정본 260710 + 260803 + v16 + 18F) ════════════════ */
 var FESTIVAL = {
   name: "AX Festival 2026",
-  date: "2026. 10. 26 (월)", timeRange: "09:30 – 17:30", place: "광화문 본사",
+  date: "2026. 10. 26 (월)", timeRange: "09:30~17:30", place: "광화문 본사",
   floors: "1F · 10F · 17F · 18F",
   mockOnline: 1842, mockIdeas: 214, mockGamePlayers: 1260,
   mockStamp3: 61, mockWave: 1128, mockWe: 0

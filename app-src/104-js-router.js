@@ -237,11 +237,11 @@ var App = {
         gear + "</div>" +
         (v === "home"
           ? '<div class="axs-hgr"><span class="ax-meta">' + FESTIVAL.name + " · " + FESTIVAL.date.replace(/^2026\.\s*/, "") + " · " + FESTIVAL.place + "</span>" +   /* v5.10 헤더가 앱 이름이 되어 행사명은 홈 첫 줄에(시간은 프로그램 탭) */
-            '<p class="axs-hbig">' + (hu.name ? esc(hu.name) + "님, " : "") + "오늘 <b>하루의 코스</b></p></div>"
-          : '<p class="axs-hroot">' + esc(this.title(v)) + "</p>");
+            '<h1 class="axs-hbig">' + (hu.name ? esc(hu.name) + "님, " : "") + "오늘 <b>하루의 코스</b></h1></div>"
+          : '<h1 class="axs-hroot">' + esc(this.title(v)) + "</h1>");   /* v6.83 (접근성 B-5) 화면 이름 = 제목 태그(모양은 그대로) */
     } else {
       tb.innerHTML = '<div class="axs-hrow"><button type="button" class="axs-back" onclick="App.back()" aria-label="뒤로">' + BACK_SVG + "</button>" +
-        '<span class="axs-htitle">' + esc(this.title(v)) + "</span>" +
+        '<h1 class="axs-htitle">' + esc(this.title(v)) + "</h1>" +
         gear + "</div>" +   /* v4.15 관리자 잠금은 관리자 화면 맨 아래 「관리자 모드 끝내기」 */
         this.crumbHtml(v);   /* v4.09 경로 줄 · 헤더 구분선 바로 아래 */
     }
@@ -293,6 +293,7 @@ var App = {
     typPromoMount();   /* v5.31 타자왕 홍보 칸 · 화면에 보일 때 src */
     updateLed();
     if (typeof trfSync === "function") trfSync();   /* v5.67 둘러보기 복귀 떠 있는 단추 */
+    zoomSync();   /* v6.83 QR 스캔(카메라) 탭에 들어가고 나올 때 */
   }
 };
 /* v4.09 경로 줄 한 줄 맞춤 · 넘치면 가운데 단계를 앞에서부터 「…」 하나로 접는다 · 첫 단계와 지금 위치는 늘 보인다(지금 위치가 길면 말줄임) · 가로 스크롤 없음 */
@@ -305,9 +306,9 @@ function crumbFit() {
     [].forEach.call(ol.children, function (x) {
       if (x.classList.contains("gone")) return;
       var bb = x.querySelector("b"), sp = x.querySelector(".sep");
-      w += bb ? bb.scrollWidth + (sp ? sp.offsetWidth : 0) : x.scrollWidth;
+      w += bb ? bb.scrollWidth + (sp ? sp.offsetWidth : 0) : x.offsetWidth;   /* v6.83 단추 눌림 확장(오른쪽 14px)이 scrollWidth 에 잡히지 않게 자리 폭(offsetWidth) */
     });
-    return w > ol.clientWidth + 1;
+    return w > ol.clientWidth - (parseFloat(getComputedStyle(ol).paddingLeft) || 0) + 1;   /* v6.83 ol 왼쪽 20px = 「홈」 눌림 자리(글자 자리 아님) */
   };
   if (li.length < 3 || !need()) return;
   var dot = document.createElement("li");
@@ -517,9 +518,44 @@ function detMake() {
 }
 /* 아래 고정 칸 위 구분선 = 본문이 그 아래로 더 있을 때만 · v5.74 머리 아래 구분선 = 본문이 머리 밑으로 스크롤됐을 때만(사용자 261006 캡처 「시트 머리 아래 깨진 그림 띠」 = 경품 사진 아래 끝이 선 없이 머리에 잘려 보였다) */
 /* v6.25 시트 위 끝 = CSS 변수 --ax-sheet-top 한 곳(옛 v5.89 detTop · 앱 머리 실측은 폐기) */
+/* v6.83 (사용자 261009 묶음 7 「내용이 다 보이는데 끌면 조금씩 스크롤」) 시트 세 곳(#axsDet 본문 · #axsSheet · #modal 카드) 공통
+   본문 글(아래 여백 padding-bottom 은 빼고)이 칸 안에 다 들어가면 .axs-fit = 스크롤 없음(overflow-y hidden) · 넘칠 때만 스크롤 · 끌어 닫기(sheetDrag)는 그대로
+   다시 재는 때 = 시트가 붙고 떨어질 때 · 시트 안 글 · 칸이 바뀔 때(접기 · 펼치기 포함) · 그림을 다 받았을 때 · 창 크기 · 글자 크기가 바뀔 때 */
+var SHEET_SC = "#axsDet .axs-dbody, #axsSheet .ax-sheet, #modal .mcard";
+function sheetFit() {
+  [].forEach.call(document.querySelectorAll(SHEET_SC), function (sc) {
+    var cs = getComputedStyle(sc), on = sc.classList.contains("axs-fit");
+    if (!on && !/(auto|scroll)/.test(cs.overflowY)) return;   /* 스크롤 칸이 아닌 카드는 건드리지 않는다(바깥으로 나온 장식이 잘리지 않게) */
+    var fit = sc.scrollHeight - (parseFloat(cs.paddingBottom) || 0) <= sc.clientHeight + 1;
+    if (fit !== on) sc.classList.toggle("axs-fit", fit);
+    if (fit && sc.scrollTop) sc.scrollTop = 0;
+  });
+  if (typeof detOv === "function") detOv();
+}
+(function () {
+  if (typeof MutationObserver !== "function") return;
+  var raf = 0, kick = function () { if (raf) return; raf = requestAnimationFrame(function () { raf = 0; sheetFit(); }); };
+  var inner = new MutationObserver(kick), seen = [];
+  var scan = function () {
+    var roots = [].slice.call(document.querySelectorAll("#axsDet, #axsSheet, #modal"));
+    if (roots.length !== seen.length || roots.some(function (r, i) { return r !== seen[i]; })) {
+      inner.disconnect(); seen = roots;
+      roots.forEach(function (r) { inner.observe(r, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["hidden", "open", "aria-expanded"] }); });
+    }
+    if (roots.length) kick();
+  };
+  var go = function () {
+    var outer = new MutationObserver(scan), f = document.getElementById("frame");
+    outer.observe(document.body, { childList: true }); if (f) outer.observe(f, { childList: true });
+    window.addEventListener("resize", kick);
+    document.addEventListener("load", function (e) { var t = e.target; if (t && t.tagName === "IMG" && t.closest && t.closest("#axsDet, #axsSheet, #modal")) kick(); }, true);
+    scan();
+  };
+  if (document.body) go(); else document.addEventListener("DOMContentLoaded", go);
+})();
 function detOv() {
   var bd = document.querySelector("#axsDet .axs-dbody"), ft = document.querySelector("#axsDet .axs-dft"), hd = document.querySelector("#axsDet .axs-dhd");
-  if (bd && ft) ft.classList.toggle("ov", bd.scrollHeight - bd.clientHeight - bd.scrollTop > 2);
+  if (bd && ft) ft.classList.toggle("ov", !bd.classList.contains("axs-fit") && bd.scrollHeight - bd.clientHeight - bd.scrollTop > 2);   /* v6.83 다 들어가는 시트(axs-fit) = 아래 선 없음 */
   if (bd && hd) hd.classList.toggle("ov", bd.scrollTop > 2);
 }
 /* 사라지기 · 같은 목록으로 닫히면 아래로 · 다른 화면으로 가면 바로(새 화면이 그 자리에 그려진다) · 끌어서 닫았으면 이미 내려가 있다
@@ -587,3 +623,22 @@ function sheetDrag(box, getPan, o) {
   });
 }
 
+/* v6.83 (사용자 261009 접근성 결정 「핀치 확대 = 일반 화면만」) 두 손가락 확대
+   기본 viewport 는 확대 허용(000-head · maximum-scale 없음) · 게임(#rgPlay) · 1층 둘러보기(html.t3-lock) · QR 스캔 카메라 탭에서만 maximum-scale=1 · user-scalable=no 로 잠그고 나오면 되돌린다
+   iOS 는 viewport 잠금을 따르지 않아 게임 · 둘러보기 · 카메라 화면의 touch-action(pan-x pan-y · none)이 같은 몫을 한다 · 큰글씨 단계(일반 · 큰글씨)는 그대로 */
+var ZOOM_VP = { free: "width=device-width, initial-scale=1, viewport-fit=cover", lock: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" };
+function zoomLocked() {
+  return !!(document.getElementById("rgPlay") || document.documentElement.classList.contains("t3-lock") ||
+    (typeof App === "object" && App.current === "scan_q" && typeof SCQ === "object" && SCQ.tab === "scan") || (typeof App === "object" && App.current === "sscan"));
+}
+function zoomSync() {
+  var m = document.querySelector('meta[name="viewport"]'); if (!m) return;
+  var want = zoomLocked() ? ZOOM_VP.lock : ZOOM_VP.free;
+  if (m.getAttribute("content") !== want) m.setAttribute("content", want);
+}
+(function () {
+  if (typeof MutationObserver !== "function") return;
+  var mo = new MutationObserver(function () { zoomSync(); });
+  var go = function () { mo.observe(document.body, { childList: true }); mo.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] }); zoomSync(); };   /* 게임 = body 에 붙고 떨어짐 · 둘러보기 = html.t3-lock */
+  if (document.body) go(); else document.addEventListener("DOMContentLoaded", go);
+})();

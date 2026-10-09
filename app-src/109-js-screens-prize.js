@@ -219,13 +219,14 @@ var PZ_ICO = {
   qr: SICO + '<path d="M4 8.5V5.5A1.5 1.5 0 0 1 5.5 4h3M15.5 4h3A1.5 1.5 0 0 1 20 5.5v3M20 15.5v3a1.5 1.5 0 0 1-1.5 1.5h-3M8.5 20h-3A1.5 1.5 0 0 1 4 18.5v-3"/><path d="M8.5 8.5h2.5v2.5H8.5zM13 8.5h2.5v2.5H13zM8.5 13h2.5v2.5H8.5zM13.5 13.5h2v2h-2z"/></svg>',
   box: SICO + '<path d="M3.5 7.5 12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5 12 11.5l8.5-4M12 11.5v9"/></svg>',
   key: SICO + '<rect x="2.5" y="6.5" width="19" height="11" rx="2"/><path d="M6 10h.01M9 10h.01M12 10h.01M15 10h.01M18 10h.01M7.5 14h9"/></svg>',
-  cup: SICO + '<path d="M7.5 4h9v5a4.5 4.5 0 0 1-9 0z"/><path d="M7.5 6H4.5a3 3 0 0 0 3 4M16.5 6h3a3 3 0 0 1-3 4M12 13.5V17M8.5 20h7M9.5 17h5"/></svg>'
+  cup: SICO + '<path d="M7.5 4h9v5a4.5 4.5 0 0 1-9 0z"/><path d="M7.5 6H4.5a3 3 0 0 0 3 4M16.5 6h3a3 3 0 0 1-3 4M12 13.5V17M8.5 20h7M9.5 17h5"/></svg>',
+  idea: STAMP_ICONS.p5, talk: STAMP_ICONS.qz, doc: STAMP_ICONS.sv, time: App.ICONS.guide_time   /* v6.83 (묶음 16) 구역 상세 「참여 전 확인」 상자 · 이미 있는 그림(아이디어 전구 · 말풍선 · 문서 · 시계) 그대로 */
 };
 /* v5.90 (261006 경품 기획 변경 · 계약.md 5절) 행운권 받으려면 줄2 = 참석 조건(sync lkcond) 따라 · 7등 · 선착순 참여상 · 아이디어왕 구역 · 서버 필드가 없으면(on) 구역을 그리지 않는다 */
 var PZ_SEC = [
   { k: "draw", en: "LUCKY DRAW", t: "행운권 추첨", need: function () { return [["stamp", "스탬프 4개부터 행운권", "6개면 3장"], lkCond() ? ["qr", "Closing Speech 참석 · 17F 입구 QR 체크인", "16:40부터 · 17:00 현장 추첨"] : ["cup", "17F Closing Speech 현장 추첨", "17:00 · 경품은 따로 전달"]]; } },
   { k: "lk7", en: "7TH PRIZE", t: "행운권 7등 · 랜덤 굿즈", on: function () { return !!S.get("lk7", null); }, need: function () { return [["stamp", "스탬프 4개 이상(행운권 보유)", "1~6등 당첨자는 제외"], ["box", "행사 뒤 추첨", "룰렛 남은 경품에서 무작위 · 행랑 발송"]]; } },   /* v5.92 정말 랜덤(사용자 261006) */
-  { k: "fin", en: "FIRST COME", t: "선착순 참여상", on: function () { return !!fxGet(); }, need: function () { var x = fxGet() || {}; var st = fcfsStartHm(); return [["stamp", "스탬프 6개를 모으고", ""], ["box", "1F 주차장 체크인존 선착순 " + (x.cap || 210) + "명", (st ? st + "부터 · " : "") + "E 창구"]]; }   /* v5.98 받기 선착순 */, qt: function () { return fcfsQtyTxt(); } },   /* v5.97 (사용자 261006 밤) 남은 수량은 상품 제목 오른쪽 한 곳(fcfsQtyTxt) · 상자 줄 삭제 · 「당일 못 받으면 발송」 줄 삭제(「선착순인데 당일 못 받는 건 말이 안 되잖아」) */
+  { k: "fin", en: "FIRST COME", t: "선착순 참여상", on: function () { return !!fxGet(); }, need: function () { var x = fxGet() || {}; var st = fcfsStartHm(); return [["stamp", "스탬프 6개를 모으고", ""], ["box", "1F 주차장 체크인존 선착순 " + (x.cap || 210) + "명", st ? st + "부터" : ""]]; }   /* v6.83 「E 창구」 뺌(사용자 261009) */   /* v5.98 받기 선착순 */, qt: function () { return fcfsQtyTxt(); } },   /* v5.97 (사용자 261006 밤) 남은 수량은 상품 제목 오른쪽 한 곳(fcfsQtyTxt) · 상자 줄 삭제 · 「당일 못 받으면 발송」 줄 삭제(「선착순인데 당일 못 받는 건 말이 안 되잖아」) */
   { k: "roulette", en: "ROULETTE", t: "룰렛", need: function () { return [["stamp", "스탬프 3개면 룰렛 1회", "1인 1회"], ["qr", "1F EVENT 룰렛 부스에서 내 QR 제시", S.get("rcut", "") ? "룰렛 " + S.get("rcut", "") + " 마감" : ""]]; } },
   { k: "idea", en: "IDEA KING", t: "아이디어왕", r3: 1, on: function () { return !!S.get("idea_pub", null); }, need: function () { var ip = S.get("idea_pub", null) || {}; return [["stamp", (ip.cut || "16:00") + "까지 아이디어 한 줄", "AX 라운지 · 커피챗 · 앱 어느 경로든"], ["cup", "Closing Speech에서 시상", ideaKingN() + "명 · AI 구독권"]]; } },
   { k: "type", en: "TYPING KING", t: "1F 타자왕 1~3위", sep: 1, need: [["key", "1F 현장 기록 1~3위", "17:00 마감 · 스탬프와 별개"], ["cup", "Closing Speech 시상 참석", ""]], go: ["실시간 순위 보기", "typeSiteRankGo()"] }   /* v5.18 맨 아래 · 선으로 나눔 · 순위판 입구 = 블록 맨 아래(v5.73) · v5.97 Outro 시상 보조 줄 삭제(사용자 261006 밤 「투머치」) */
@@ -255,7 +256,7 @@ function prizeJump(k) {
 function prizeGoHtml(k) {
   var th = PZ_THUMB.map(function (n) { return '<img src="' + PRIZE_DIR + "t_" + n + '.webp" alt="" width="96" height="96" loading="lazy" decoding="async" onerror="this.remove()">'; }).join("");
   return '<button type="button" class="axs-pzgo" onclick="event.stopPropagation(); prizeGo(' + (k ? "'" + k + "'" : "") + ')"><span class="th" aria-hidden="true">' + th + "</span>" +
-    '<span class="tx"><b>경품 보기</b><span>아이패드 · 가습기 · 텀블러</span></span>' + CHEV_SVG + "</button>";
+    '<span class="tx"><b>경품 보기</b><span>' + segHtml("아이패드 · 가습기 · 텀블러") + "</span></span>" + CHEV_SVG + "</button>";
 }
 function pzCard(p, unit, cls, qt) {
   var im = function (n) { return '<img src="' + PRIZE_DIR + n + '.webp" alt="" width="600" height="600" loading="lazy" decoding="async" onerror="this.remove()">'; };
@@ -364,10 +365,10 @@ function fcfsRailTxt() {
 function fcfsRailHtml() { var t = fcfsRailTxt(), f = fcfsMy(); return t == null ? "" : '<span class="fx6' + (f && (f.st === "ready" || f.st === "got") && t !== "마감" ? " got" : "") + '"><span class="k">선착순</span>' + (t ? "<b>" + t + "</b>" : "") + "</span>"; }
 /* 6개 다 모은 캡션 뒤 · 스탬프 탭(두 줄이 상태를 말한다) = 받을 곳만 */
 /* 261007 (사용자 「가습기 선착순 교환은 체크인이 마무리되는 10시 30분부터 열자 · 혼선 없도록」) 지급 시작 시각(서버 my.fcfs start · fx start · 옛 서버 = 없음 · 문구 그대로) · pre = 그날 시작 전
-   fcfsAt = 받는 곳 글 「1F 주차장 체크인존」 → 「10:30부터 1F 주차장 체크인존(E 창구)」(첫 한 곳) */
+   fcfsAt = 받는 곳 글 「1F 주차장 체크인존」 → 「10:30부터 1F 주차장 체크인존」(첫 한 곳 · v6.83 사용자 261009 「(E 창구) 이 부분 삭제」 · 창구 이름은 스태프 화면에만) */
 function fcfsStartHm() { var f = fcfsMy(), x = fxGet(); return String((f && f.start) || (x && x.start) || ""); }
 function fcfsPre() { var f = fcfsMy(); return !!(f && f.pre); }
-function fcfsAt(t) { var st = fcfsStartHm(); return st ? String(t).replace("1F 주차장 체크인존", st + "부터 1F 주차장 체크인존(E 창구)") : t; }
+function fcfsAt(t) { var st = fcfsStartHm(); return st ? String(t).replace("1F 주차장 체크인존", st + "부터 1F 주차장 체크인존") : t; }
 function fcfsAtL(L) { return L.map(function (r) { return [r[0], fcfsAt(r[1]), r[2]]; }); }
 function fcfsCapWhere() { return fcfsReady(fcfsMy()) ? fcfsAt(" · 1F 주차장 체크인존에서 수령") : ""; }
 /* 6번째 스탬프 상자 팝업 한 줄 */
@@ -448,8 +449,8 @@ function roulCut() {
 }
 function ideaKingN() { var ip = S.get("idea_pub", null), n = 0; ((ip && ip.prz) || []).forEach(function (x) { n += +x.n || 0; }); return n || 5; }
 /* 커피 · 간식 사진 2장 · 18F 커피챗 상세 · DAP 과제상담 상세 */
-function treatHtml(sm) {   /* v6.07 sm = 한 줄 4칸(커피챗 희망 묶음) */
-  return '<div class="axs-treat' + (sm ? " sm" : "") + '">' + TREATS.map(function (t) {
+function treatHtml(sm) {   /* v6.07 sm = 한 줄 4칸(커피챗 희망 묶음) · v6.83 (사용자 261009 묶음 10) 큰 사진 칸 = 사실 표 아래 옅은 구분선(axs-hr) 다음에 */
+  return (sm ? "" : '<div class="axs-hr"></div>') + '<div class="axs-treat' + (sm ? " sm" : "") + '">' + TREATS.map(function (t) {
     return "<figure>" + prizePhHtml(t, 360) + "<figcaption><b>" + esc(t.nm) + "</b><span>" + esc(t.sub) + "</span></figcaption></figure>";
   }).join("") + "</div>";
 }
@@ -512,7 +513,7 @@ function stpAct(s, got) {
   if (s.id === "p2") return ["내 QR", "qrPanelOpen('mine')"];
   if (s.id === "p5") return ["쓰기", "App.go('ideas')"];
   if (s.id === "p3") return ["보기", "homeSched()"];
-  if (s.id === "st") return [stairState().leg ? "진행 중" : "안내", "stairOpen()"];
+  if (s.id === "st") return [stairState().leg ? "이어 하기" : "안내", "stairOpen()"];   /* v6.83 (디자인 D-5) 오른쪽 = 행동 말(진행 중은 보조 줄이 말한다) */
   if (s.id === "sv") return surveyLock() === "time" ? [SURVEY.open, ""] : ["시작", "App.go('survey')"];
   return [s.cta ? "보기" : "", s.tap || ""];
 }
@@ -524,12 +525,14 @@ function stpRowHtml(s, i, st, full) {
   var tap = a[1] ? ' onclick="if (!event.target.closest(\'button\')) { ' + a[1].replace(/"/g, "&quot;") + '; }"' : "";
   /* v5.68 프로그램 참여 = 2개 · 17F 한쪽만(p3h) = 번호 칸 반 채움 「1/2」 · v6.56 (사용자 261008 「더블 스탬프인 것이 명확히 이해되지 않아」) 제목 옆 「×2」 → O100 알약 「● ● 스탬프 2개」(받은 만큼 점이 찬다 · 0 · 1 · 2) + 받기 전 둘째 보조 줄 「입장 QR 1개 + 끝 QR 1개」 */
   var half = !!s.x2 && !got && st.indexOf(STAMP_HALF) >= 0;
+  /* v6.83 (디자인 D-5) 오른쪽 = 누르는 행동 말만(같은 색 · 굵기) · 행동이 아닌 글은 오른쪽에 두지 않는다 · 완료 = 번호 칸 체크 · 자동 = 「자동」 칩 · 열리는 시각(14:30 · 10/26부터) = 둘째 줄 칩(보조 줄에 이미 있으면 생략) */
+  var stat = a[0] && !a[1] && a[0] !== "완료" && a[0] !== "자동" && String(meta).indexOf(a[0]) < 0 ? a[0] : "";
   return '<div class="axs-stp' + (got ? " done" : half ? " half" : full ? " off" : "") + (tap ? " tap" : "") + '" data-stp="' + s.id + '"' + tap + ">" +
     '<span class="axs-stpn" aria-hidden="true">' + (got ? CHECK_SVG : half ? "1/2" : i + 1) + "</span>" +
-    '<div class="axs-stpb"><p class="ax-card-title' + (s.x2 ? " axs-stpt2" : "") + '">' + esc(s.title) + (s.x2 ? '<span class="axs-x2"><i class="d' + (got || half ? " on" : "") + '" aria-hidden="true"></i><i class="d' + (got ? " on" : "") + '" aria-hidden="true"></i>스탬프 2개</span>' : "") + (got ? '<span class="ax-sr-only"> · 완료</span>' : half ? '<span class="ax-sr-only"> · 2개 중 1개</span>' : "") + "</p>" +
-    stpLineHtml(mode, esc(meta)) + (s.id === "p3" && !got ? '<p class="axs-stpm"><span>입장 QR 1개 + 끝 QR 1개</span></p>' : "") +
+    '<div class="axs-stpb"><p class="ax-card-title' + (s.x2 ? " axs-stpt2" : "") + '">' + esc(s.title) + (s.x2 ? '<span class="axs-x2" role="img" aria-label="스탬프 2개"><svg class="axs-x2i" aria-hidden="true"><use href="#nav-stamp"/></svg><span aria-hidden="true">\u00d72</span></span>' : "") + (got ? '<span class="ax-sr-only"> · 완료</span>' : half ? '<span class="ax-sr-only"> · 2개 중 1개</span>' : "") + "</p>" +
+    stpLineHtml(mode, esc(meta)) + (stat ? '<p class="axs-stpm"><span class="axs-stpc">' + esc(stat) + "</span></p>" : "") + (s.id === "p3" && !got ? '<p class="axs-stpm"><span>입장 QR 1개 + 끝 QR 1개</span></p>' : "") +
     tiles + test + "</div>" +
-    (a[0] ? (a[1] ? '<button type="button" class="axs-stpa" onclick="' + a[1] + '">' + esc(a[0]) + "</button>" : '<span class="axs-stpa ' + (got ? "ok" : "off") + '">' + esc(a[0]) + "</span>") : "") +
+    (a[0] && a[1] ? '<button type="button" class="axs-stpa" onclick="' + a[1] + '">' + esc(a[0]) + "</button>" : "") +
     "</div>";
 }
 /* 구경하고 겨루기 · 1F 타자왕 현장 순위(type_rank · v5.29 현장 순위판 하나) · 실시간 화면은 4묶음(type_live) */

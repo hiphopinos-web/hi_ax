@@ -337,7 +337,7 @@ function attMineK(id, k) { return attMine()[k === "out" ? id + ".out" : id] || "
 function attW() { var w = S.get("att_w", null); return w && w.i && w.o && w.i.length === 2 && w.o.length === 2 ? w : ATT_17F.win; }
 function attKWin(x, k) { var w = attW(); return k === "out" ? { a: t2m(x.e) - w.o[0], b: t2m(x.e) + w.o[1] } : { a: t2m(x.s) - w.i[0], b: t2m(x.s) + w.i[1] }; }
 function attFrom(x) { return attKWin(x, "in").a; }
-function attWinLbl(x, k) { var w = attKWin(x, k || "in"); return hm2(w.a) + "–" + hm2(w.b); }
+function attWinLbl(x, k) { var w = attKWin(x, k || "in"); return hm2(w.a) + "~" + hm2(w.b); }
 /* 그 강의의 출석 창이 모두 끝났는가(행사 뒤 = 늘 끝) */
 function attShut(x) { var ph = evPhase(); return !!x && (ph === "after" || (ph === "live" && attNow() > attKWin(x, "out").b)); }
 function attTm() { var o = testMode() ? ttGet() : null; return o ? hm2(o.m) : ""; }   /* 261007 옛 att_tm → 시험 시각 tt 하나(ttGet · 테스트 모드만) */
@@ -433,7 +433,7 @@ function attDone(res) {
     var why = res && res.reason, x = attProg(ATT.sel), kk = (res && res.k) || ATT.k;
     if (why === "nocode") { sheetClose(true); srShow({ st: "fail", why: "nocode" }); return; }
     if (why === "roff") { sheetFail({ t: "지금은 쓰지 않는 QR이에요", b: "다시 스캔해 주세요." }); return; }   /* v5.96 송출 출석 안내 없음 */   /* v5.68 송출 QR · 서버 설정 송출_켬 밖 */
-    if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: x ? x.nm + " · " + x.s + "–" + x.e : "" }); return; }
+    if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: x ? x.nm + " · " + x.s + "~" + x.e : "" }); return; }
     sheetFail({ t: "출석하지 못했어요", b: "다시 시도해 주세요." });
     return;
   }
@@ -518,7 +518,7 @@ function att10Done(res) {
     if (why === "nocode") { sheetClose(true); srShow({ st: "fail", why: "nocode" }); return; }
     if (why === "notpre") { ATT10.info = { t: "사전 신청자 출석 QR이에요", l: "<b>" + esc(s.ttl) + "</b><br>17F 강연 · 1F 전시 · 18F 커피챗은 누구나 참여해요" }; att10Repaint(); return; }   /* design.md §7 · 오류 말투 없이 갈 수 있는 곳 한 줄 */
     if (why === "other") { ATT10.info = { t: "신청한 세션의 QR을 찍어 주세요", l: "신청한 세션 · <b>" + esc(res.preName || "") + "</b>" }; att10Repaint(); return; }
-    if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: s.ttl + (ATT10_UI ? " · 끝 QR " : " · ") + String(res.open || "").replace("~", "–") }); return; }
+    if (why === "window") { sheetFail({ t: "출석 시간이 아니에요", b: s.ttl + (ATT10_UI ? " · 끝 QR " : " · ") + String(res.open || "") }); return; }
     sheetFail({ t: "출석하지 못했어요", b: "다시 시도해 주세요." });
     return;
   }
@@ -1192,6 +1192,7 @@ function scanDone(emp, sp, res) {
                 why === "spare0" ? "여유 키트 없음 · 룰렛 굿즈로 대체" :
                 /unknown action/i.test(err) ? "서버 갱신 전 · 기록되지 않음" :
                 why === "auth" ? "관리코드가 맞지 않아요 · 관리자 모드를 다시 열어 주세요" :
+                why === "console" ? "이 처리는 콘솔에서 해요 · 운영 본부에 알려 주세요" :   /* v6.83 (묶음 18) 스태프 코드 허용 목록 밖 · 코드는 지우지 않는다 */
                   "처리하지 못했어요" + (why || err ? " (" + (why || err.slice(0, 40)) + ")" : "");
     scanLog(emp, nm + msg, false, true);
     var big = scanBig(why, sp, res, err);
@@ -1708,6 +1709,6 @@ function submitIdea() {
   if (WALL_ON) setTimeout(function () { toast("오늘 " + (nth + 1).toLocaleString() + "번째 아이디어! ME to WE 월에 점 하나가 켜졌어요."); }, 100);   /* v5.00 월 문구는 WALL_ON 일 때만 · 제출 완료는 다음 화면이 알린다 */
 }
 function tryAdmin() {
-  admVerify(el("adminCode").value, function () { S.set("admin_authed", true); App.render(); });
+  admVerify(el("adminCode").value, function (role) { S.set("admin_authed", true); if (role === "staff") toast("관리자 모드는 관리코드로 열려요 · 스캔은 아래 가운데 「스캔」"); App.render(); });   /* v6.83 (묶음 18) 스태프 코드 = 연속 스캔 · 관리자 모드 화면은 관리코드만 */
 }
 

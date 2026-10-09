@@ -63,7 +63,7 @@ function billboardHtml() {
     '<p class="bmw">' + chars + "</p>" +
     '<p class="bko" style="animation-delay:' + d + '"><span>나의 경험을</span><span>우리의 가능성으로</span></p>' +
     "</div>" +
-    '<canvas data-axf="loop" data-axf-seq="' + sq + '" data-axf-zoom="0.95" data-axf-start="me"' + stage + "></canvas></div>";
+    '<canvas aria-hidden="true" data-axf="loop" data-axf-seq="' + sq + '" data-axf-zoom="0.95" data-axf-start="me"' + stage + "></canvas></div>";
 }
 
 
@@ -217,9 +217,10 @@ function crowdStripHtml() {
   var tvp = tv ? "시험값 · " : "", right = st ? '<span class="cn-st">' + tvp + "눌러서 제보</span>" : oldest ? '<span class="cn-t">' + tvp + crowdHm(oldest) + " 기준</span>" : tv ? '<span class="cn-t">시험값</span>' : "";   /* 261008 시험값 표시 = 섹션 머리 오른쪽 한 곳(칸마다 달면 360 에서 이름이 잘린다) */
   return '<div class="sect"><b>지금 현장</b>' + right + "</div>" +
     '<div class="cstrip2 cn4">' + cells.map(function (x) {
-      var fm = /^(\d+)F (.+)$/.exec(x.nm), al = fm ? fm[1] + "층 " + fm[2] : x.nm;   /* 261008 층 표기 = 점문자(flFloor · 읽는 이름 「1층」) · 글자는 그대로 */
-      var one = x.k !== "h" && x.sub, inner = '<p class="nm">' + (fm ? flFloor(fm[1]) : "") + '<span class="cn-nm">' + (fm ? fm[2] : x.nm) + "</span></p>" + '<p class="pr"><span class="pill"><i class="lamp" aria-hidden="true"></i>' + x.st + "</span>" + (one ? '<span class="tx">' + esc(x.sub.replace(/^대기 /, "")) + "</span>" : "") + "</p>" + (st && dot.indexOf(x.k) >= 0 ? '<i class="cn-dot" aria-hidden="true"></i>' : "");   /* 261009 v6.81 둘째 줄 = 상태 알약(점 + 상태 단어) + 1F 세 칸만 옆에 대기 글자 · 17F · 정보 없음은 알약만(기준 시각은 섹션 머리 한 곳) */
-      return st ? '<button type="button" class="cc' + x.cls + '" onclick="cnSheet(\'' + x.k + '\')" aria-label="' + al + " · " + x.st + (x.sub ? " · " + esc(x.sub) : "") + ' · 제보">' + inner + "</button>"
+      var fm = /^(\d+)F (.+)$/.exec(x.nm), al = fm ? fm[1] + "층 " + fm[2] : x.nm;   /* 읽는 이름 「1층 룰렛」 */
+      /* v6.83 (사용자 261009 묶음 8 · 권장안) 층 = 홈 「나의 일정」 장소 줄과 같은 형식(위치 핀 PIN_SVG + 「1F」 · .pl 같은 값) · 이름 줄 오른쪽 끝 · 점 글자 층 표기(261008)는 이 칸에서 뺐다 · 칸 높이 그대로 */
+      var one = x.k !== "h" && x.sub, inner = '<p class="nm"><span class="ax-sr-only">' + al + ", </span>" + '<span class="cn-nm" aria-hidden="true">' + (fm ? fm[2] : x.nm) + "</span>" + (fm ? '<span class="pl" aria-hidden="true">' + PIN_SVG + "<span>" + fm[1] + "F</span></span>" : "") + "</p>" + '<p class="pr"><span class="pill"><i class="lamp" aria-hidden="true"></i>' + x.st + "</span>" + (one ? '<span class="tx">' + esc(x.sub.replace(/^대기 /, "")) + "</span>" : "") + "</p>" + (st && dot.indexOf(x.k) >= 0 ? '<i class="cn-dot" aria-hidden="true"></i>' : "");   /* 261009 v6.81 둘째 줄 = 상태 알약(점 + 상태 단어) + 1F 세 칸만 옆에 대기 글자 · 17F · 정보 없음은 알약만(기준 시각은 섹션 머리 한 곳) */
+      return st ? '<button type="button" class="cc' + x.cls + '" onclick="cnSheet(\'' + x.k + '\')" aria-label="' + al + ", " + x.st + (x.sub ? " · " + esc(x.sub) : "") + ' · 제보">' + inner + "</button>"
         : '<div class="cc' + x.cls + '">' + inner + "</div>";
     }).join("") + "</div>";
 }

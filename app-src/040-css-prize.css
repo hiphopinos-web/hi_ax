@@ -116,6 +116,7 @@
   .axs-pz-need .i { display: block; flex: none; width: 24px; height: 24px; color: var(--ax-color-brand); }
   .axs-pz-need .i svg { display: block; width: 100%; height: 100%; }
   .axs-pz-need .x { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .axs-pz-need li:has(> .x > b:only-child) { align-items: center; }   /* v6.83 보조 줄 없는 항목 = 아이콘과 제목 세로 가운데 */
   .axs-pz-need b { font: var(--ax-type-t5-strong); color: var(--ax-color-ink); word-break: keep-all; text-wrap: pretty; }   /* 261008 큰글씨에서 마지막 줄에 한 낱말만 남지 않게(지원 안 하는 브라우저는 그대로) */
   .axs-pz-need .x > span { font: var(--ax-type-t7); color: var(--ax-color-body); word-break: keep-all; }
   #modal .axs-pz-need { margin-top: var(--ax-space-12); }   /* 261008 팝업(룰렛 1회권 · 행운권 · 선착순 참여상) · 위 상태 칩 · 행운권 번호와 붙지 않게 */
@@ -126,7 +127,7 @@
   .axs-pz-ph .smp { position: absolute; right: var(--ax-space-12); top: var(--ax-space-12); padding: 2px 8px; border-radius: var(--ax-radius-999); background: rgba(255, 255, 255, 0.92); box-shadow: 0 0 0 1px rgba(25, 31, 40, 0.08); color: var(--ax-color-body); font-size: 11px; font-weight: 600; line-height: 16px; }   /* v5.33 오른쪽 위 · 어두운 사진 위에서도 읽히게 흰 바탕 */
   .axs-pz-c .tx { display: flex; align-items: baseline; gap: var(--ax-space-12); padding: var(--ax-space-16) var(--ax-space-20) var(--ax-space-4); }   /* v5.33 등수 · 이름 · 수량 = 카드 맨 위(사진 위 · 사용자 261003 「스크롤하면 1등이 좌상단이어야」) */
   .axs-pz-c > .axs-pz-ph { margin-top: auto; }   /* v5.33 2열에서 이름이 두 줄이어도 사진 아래 끝이 맞는다 */
-  .axs-pz-c .rk { flex: none; font: var(--ax-type-t3); color: var(--ax-color-brand); }
+  .axs-pz-c .rk { flex: none; font: var(--ax-type-t3); color: var(--ax-color-brandText); }   /* v6.83 (사용자 261009) 등수 큰 글자 주황 2.52 → brandText 6.39 */
   .axs-pz-c b { flex: 1 1 auto; min-width: 0; font: var(--ax-type-t4); font-weight: 700; color: var(--ax-color-ink); word-break: keep-all; }
   .axs-pz-c b small { display: block; margin-top: 2px; font: var(--ax-type-t7); font-weight: 600; color: var(--ax-color-muted); }   /* v5.35 제품명 = 경품명 아래 작은 회색 줄(타자왕) */
   .axs-pz-c .q { flex: none; font: var(--ax-type-t6-strong); color: var(--ax-color-muted); }
@@ -173,7 +174,7 @@
   /* 261008 럭키드로우 당첨 시트 · 등수 = 큰 주황 글자(브랜드 한 곳) · 경품 사진 · 이름 · 행운권 번호 · 홈 줄 확인 전 점 */
   .axs-lkw { padding: var(--ax-space-8) 0 var(--ax-space-4); }
   .axs-lkw img { width: min(56vw, 220px); }
-  .axs-lkw .rk { margin: 0 0 var(--ax-space-4); font-size: calc(40px * var(--fs)); line-height: 1.1; font-weight: 800; color: var(--ax-color-brand); letter-spacing: -0.02em; }
+  .axs-lkw .rk { margin: 0 0 var(--ax-space-4); font-size: calc(40px * var(--fs)); line-height: 1.1; font-weight: 800; color: var(--ax-color-brandText); letter-spacing: -0.02em; }   /* v6.83 등수 큰 글자 = brandText */
   .axs-ndot { display: inline-block; width: 8px; height: 8px; margin-left: 6px; border-radius: 50%; background: var(--ax-color-brand); vertical-align: middle; }
   /* v5.18 스탬프와 별개 구역(1F 타자왕) · 위 구역들과 얇은 선으로 나눈다 · 순위 보기 버튼(블록 맨 아래) · v5.74 알약 · 아래 설명 줄은 「받으려면」 박스로 옮겼다 */
   .axs-pz-sec.sep { margin-top: var(--ax-space-48); padding-top: var(--ax-space-32); border-top: 1px solid var(--ax-color-divider); }
@@ -195,7 +196,7 @@
   .axs-pzgo .th img:first-child { margin-left: 0; }
   .axs-pzgo .tx { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; }
   .axs-pzgo .tx b { font: var(--ax-type-t6-strong); color: var(--ax-color-brandText); }
-  .axs-pzgo .tx span { font: var(--ax-type-caption); color: var(--ax-color-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .axs-pzgo .tx > span { font: var(--ax-type-caption); color: var(--ax-color-body); }   /* v6.83 (접근성 B-8) 말줄임 대신 두 줄 허용 · 꺾이면 「 · 」 자리에서(segHtml) */
   .axs-pzgo .axs-chev { flex: none; width: 20px; height: 20px; color: var(--ax-color-brandText); }
   /* 모달 안 경품 한 줄 · 대표 사진 + 요약 + 「경품 보기」 (옛 목록 대신) */
   .axs-pzm { display: flex; align-items: center; gap: var(--ax-space-12); width: 100%; padding: 0; border: 0; background: none; color: inherit; font-family: inherit; text-align: left; cursor: pointer; }
