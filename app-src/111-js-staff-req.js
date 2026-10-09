@@ -78,7 +78,7 @@ function sreqGo() {
   if (!SRQ.rid) SRQ.rid = "sq" + Date.now().toString(36) + uid();
   var kl = sreqKl(SRQ.k), q = { action: "sreq_add", kind: SRQ.k, emp: emp, note: note, spot: sp ? sscSpotLb(sp).slice(0, 30) : "", rid: SRQ.rid };
   SRQ.busy = true; SRQ.err = ""; sreqRepaint();
-  beCall(admA(q), function (res) {
+  admCall(admA(q), function (res) {
     SRQ.busy = false;
     if (res && res.reason === "auth") { sheetClose(true); admAuthLost(); return; }
     if (res && res.reason === "ended") { sheetClose(true); return; }   /* 행사 종료 · beCall 이 종료 화면 */
@@ -98,7 +98,7 @@ function sreqOut(on) {
   if (SRQ.outBusy) return;
   if (!BE.on) { SRQ.outErr = "서버에 연결되지 않아 바꿀 수 없어요"; sreqRepaint(); return; }
   SRQ.outBusy = true; SRQ.outErr = ""; sreqRepaint();
-  beCall(admA({ action: "roulette_out", on: on ? 1 : 0 }), function (res) {
+  admCall(admA({ action: "roulette_out", on: on ? 1 : 0 }), function (res) {
     SRQ.outBusy = false;
     if (res && res.reason === "auth") { sheetClose(true); admAuthLost(); return; }
     if (res && res.reason === "ended") { sheetClose(true); return; }

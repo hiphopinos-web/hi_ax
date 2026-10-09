@@ -9039,6 +9039,26 @@ var Views = {
 /* v4.71 (260930 사용자 결정) 폰 관리자 모드 = 「QR 스캔」 · 「혼잡 제보」 두 개만 · 크고 쉽게.
  * 옛 「혼잡도」(층 · 존 3단 · admZoneHtml)와 「담당 명단」(admListHtml)은 코드를 두고 진입만 뺐다(명단 · 노쇼 표시는 콘솔 신청 › 담당 명단).
  * 등급코드(role grade)로 들어오면 혼잡 제보만 보인다(서버도 다른 액션을 auth 로 막는다). */
+/* 261009 스태프 관리 요청 = POST 폼 본문(API 계약 확정 10절 · 사용자 261009 「스태프 폰도 POST로」) · tok · key · sp 가 주소(Worker 로그 · 기록 · 프록시)에 남지 않게
+ *   주소 = GAS_URL 그대로(쿼리 없음 · callback 없음) · 본문 = URLSearchParams(단순 요청 · 사전 요청 없음) · 응답 = r.json() · 응답 뒤 처리는 beCall 과 같다(서버 시계 · 종료 · 오픈 단계 · moved 한 번 다시)
+ *   15초 = 실패(fail "timeout") · 네트워크 = "network" · JSON 아님 = "bad" · 참가자 일반 요청(beCall · JSONP)은 그대로 */
+function admCall(params, done, fail, again) {
+  if (!GAS_URL || typeof fetch !== "function" || typeof URLSearchParams !== "function") { if (fail) fail("offline"); return; }
+  var body = new URLSearchParams(), settled = false, ctl = typeof AbortController === "function" ? new AbortController() : null;
+  for (var k in params) if (Object.prototype.hasOwnProperty.call(params, k) && params[k] != null) body.append(k, String(params[k]));
+  var end = function (why) { if (settled) return; settled = true; clearTimeout(timer); if (fail) fail(why); };
+  var timer = setTimeout(function () { try { if (ctl) ctl.abort(); } catch (e) {} end("timeout"); }, 15000);
+  fetch(GAS_URL, { method: "POST", body: body, cache: "no-store", signal: ctl ? ctl.signal : undefined }).then(function (r) {
+    return r.json().then(function (res) {
+      if (settled) return; settled = true; clearTimeout(timer);
+      if (res && typeof sesSeen === "function") sesSeen(res, params);
+      if (res && typeof endSeen === "function") endSeen(res, params);
+      if (res && res.reason === "notopen" && typeof ogShow === "function") ogShow(res.open, params);
+      if (res && res.moved && beMoved(res) && res.reason === "moved" && !again) { admCall(params, done, fail, 1); return; }
+      if (done) done(res);
+    }, function () { end("bad"); });
+  }, function () { end("network"); });
+}
 var ADM_TABS = [["scan", "QR 스캔"]];   /* 261008 「혼잡 제보」 탭 진입 뺌(admCrowdHtml 코드는 남김) · 지금 현장 제보 = 홈 칸 · 스캔 화면 「줄」(cnSheet) */
 function admTab(t) { scanStop(); S.set("adm_tab", t); App.render(); window.scrollTo(0, 0); }
 function admHtml() {
@@ -9320,7 +9340,7 @@ function crowdSend(t, a) {
   if (!BE.on) { toast("서버에 연결되지 않아 기록되지 않아요"); return; }
   if (CRW.busy) return;
   CRW.busy = t; App.render();
-  beCall(admA({ action: "crowd_set", tgt: t, act: a }), function (res) {
+  admCall(admA({ action: "crowd_set", tgt: t, act: a }), function (res) {
     CRW.busy = "";
     if (res && res.reason === "auth") { admAuthLost(); return; }
     if (!res || !res.ok) {
@@ -9385,7 +9405,7 @@ function cnValTxt(k, v) { return k === "h" ? CN_HLV[v] : (k === "a" ? "기다림
 function cnCall(q, ok) {
   if (CNS.busy) return;
   CNS.busy = true; cnRepaint();
-  beCall(admA(q), function (res) {
+  admCall(admA(q), function (res) {
     CNS.busy = false;
     if (res && res.reason === "auth") { sheetClose(true); admAuthLost(); return; }
     if (!res || !res.ok) {
@@ -9535,7 +9555,7 @@ function sreqGo() {
   if (!SRQ.rid) SRQ.rid = "sq" + Date.now().toString(36) + uid();
   var kl = sreqKl(SRQ.k), q = { action: "sreq_add", kind: SRQ.k, emp: emp, note: note, spot: sp ? sscSpotLb(sp).slice(0, 30) : "", rid: SRQ.rid };
   SRQ.busy = true; SRQ.err = ""; sreqRepaint();
-  beCall(admA(q), function (res) {
+  admCall(admA(q), function (res) {
     SRQ.busy = false;
     if (res && res.reason === "auth") { sheetClose(true); admAuthLost(); return; }
     if (res && res.reason === "ended") { sheetClose(true); return; }   /* 행사 종료 · beCall 이 종료 화면 */
@@ -9555,7 +9575,7 @@ function sreqOut(on) {
   if (SRQ.outBusy) return;
   if (!BE.on) { SRQ.outErr = "서버에 연결되지 않아 바꿀 수 없어요"; sreqRepaint(); return; }
   SRQ.outBusy = true; SRQ.outErr = ""; sreqRepaint();
-  beCall(admA({ action: "roulette_out", on: on ? 1 : 0 }), function (res) {
+  admCall(admA({ action: "roulette_out", on: on ? 1 : 0 }), function (res) {
     SRQ.outBusy = false;
     if (res && res.reason === "auth") { sheetClose(true); admAuthLost(); return; }
     if (res && res.reason === "ended") { sheetClose(true); return; }
