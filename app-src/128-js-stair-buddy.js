@@ -662,3 +662,20 @@ function stbArriveQ(it) {
   stbArrive(null, { from: s.leg.fl, to: fl });
   return true;
 }
+/* 261009 가로 · 세로 보기(사용자 「탭에서 세로 보기 · 가로 보기」 · manifest orientation any) · 화면을 돌리면 무대 크기가 CSS(vh)로 바뀐다
+   말풍선 글자 · 무대 자리 · 3D 캔버스 해상도를 새 크기로 다시 맞춘다(돌리기 전 크기 그림을 늘려 흐려지지 않게 · 도착 장면 무대도 같은 캔버스) */
+(function () {
+  var q = 0;
+  function go() {
+    q = 0;
+    if (typeof App === "undefined" || App.current !== "stair") return;
+    if (STR.mode === "start" && el("stbStage") && !SA.d) stbFit();
+    var cv = STB3.st === 2 && STB3.r && STB3.r.domElement, g = cv && cv.parentNode;
+    if (!cv || !cv.isConnected || !g) return;
+    var w = g.clientWidth, h = g.clientHeight; if (!w || !h) return;
+    STB3.r.setSize(w, h, false);
+    if (!STB3.raf) STB3.r.render(STB3.sc, STB3.cam);   /* 멈춰 있는 동안(쉼 · 동작 줄이기)도 한 장 다시 */
+  }
+  if (typeof window === "undefined" || !window.addEventListener) return;
+  window.addEventListener("resize", function () { if (!q) { q = 1; requestAnimationFrame(go); } });
+})();
