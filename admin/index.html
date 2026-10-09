@@ -619,41 +619,23 @@ function imp(rows){ return '<div class="imp">'+rows.map(function(r){ return '<di
 /* ══ 2. 서버 호출 ══ */
 var NET=[];
 function netRec(ok, ms){ NET.push({ t:Date.now(), ok:ok?1:0, ms:ms }); if(NET.length>400) NET.splice(0, NET.length-400); }
-var _cbN=0;
-function call(action, params, done, fail, again){
-  var name="__axf"+(++_cbN), sc=document.createElement("script"), q=[], t0=Date.now(), p0={};
-  params=params||{}; for(var k0 in params) p0[k0]=params[k0];
-  params.action=action; params.callback=name; params._=Date.now();
-  if(!("aemp" in params)&&aemp()) params.aemp=aemp();
-  if(!("tok" in params)&&tok()) params.tok=tok();
-  supAttach(action, params);
-  for(var k in params) if(params[k]!=null) q.push(encodeURIComponent(k)+"="+encodeURIComponent(params[k]));
-  var timer=setTimeout(function(){ cleanup(); window[name]=function(){}; netRec(0, Date.now()-t0); fail&&fail({ok:false,reason:"timeout"}); },15000);
-  function cleanup(){ clearTimeout(timer); try{delete window[name];}catch(e){window[name]=undefined;} if(sc.parentNode) sc.parentNode.removeChild(sc); }
-  window[name]=function(res){ cleanup(); netRec(!(res&&res.ok===false&&(res.reason==="busy"||res.err)), Date.now()-t0);
-    if(res&&res.moved&&beMoved(res)&&res.reason==="moved"&&!again){ call(action, p0, done, fail, 1); return; }
-    if(authGate(res, action)) return;
-    if(spinGate(res, action, function(){ call(action, p0, done, fail, again); }, function(){ done&&done(res); })) return;
-    if(lockedGate(res, fail, action)) return;
-    done&&done(res); };
-  sc.onerror=function(){ cleanup(); netRec(0, Date.now()-t0); fail&&fail({ok:false,reason:"network"}); };
-  sc.src=BE+"?"+q.join("&");
-  document.head.appendChild(sc);
-}
-function callPost(action, params, done, fail, again){
-  var body=new URLSearchParams(), t0=Date.now(), p0={}; params=params||{}; for(var k0 in params) p0[k0]=params[k0];
+/* 261009 관리 요청은 모두 POST /exec · 폼 본문(URLSearchParams) · 쿼리 없음 · callback 없음(API 계약 확정 10절) · 주소에 tok · sp · key 가 남지 않는다 */
+function call(action, params, done, fail, again){ beSend(call, 15000, action, params, done, fail, again); }
+function callPost(action, params, done, fail, again){ beSend(callPost, 25000, action, params, done, fail, again); }
+function beSend(me, ms, action, params, done, fail, again){
+  var body=new URLSearchParams(), t0=Date.now(), p0={}, to=0; params=params||{}; for(var k0 in params) p0[k0]=params[k0];
   params.action=action; if(!("aemp" in params)&&aemp()) params.aemp=aemp(); if(!("tok" in params)&&tok()) params.tok=tok(); supAttach(action, params);
   for(var k in params) if(params[k]!=null) body.append(k, params[k]);
-  var ctl=window.AbortController?new AbortController():null, timer=setTimeout(function(){ if(ctl) ctl.abort(); },25000);
-  fetch(BE,{ method:"POST", body:body, redirect:"follow", signal:ctl?ctl.signal:undefined }).then(function(r){ return r.text(); }).then(function(t){
-    clearTimeout(timer); var res=null; try{ res=JSON.parse(t); }catch(e){ res={ ok:false, reason:"network" }; }
+  var ctl=window.AbortController?new AbortController():null, timer=setTimeout(function(){ to=1; if(ctl) ctl.abort(); else { netRec(0, Date.now()-t0); fail&&fail({ ok:false, reason:"timeout" }); } },ms);
+  fetch(BE,{ method:"POST", body:body, redirect:"follow", cache:"no-store", signal:ctl?ctl.signal:undefined }).then(function(r){ return r.text(); }).then(function(t){
+    if(to&&!ctl) return; clearTimeout(timer); var res=null; try{ res=JSON.parse(t); }catch(e){ res={ ok:false, reason:"network" }; }
     netRec(!(res&&res.ok===false&&(res.reason==="busy"||res.err)), Date.now()-t0);
-    if(res&&res.moved&&beMoved(res)&&res.reason==="moved"&&!again){ callPost(action, p0, done, fail, 1); return; }
+    if(res&&res.moved&&beMoved(res)&&res.reason==="moved"&&!again){ me(action, p0, done, fail, 1); return; }
     if(authGate(res, action)) return;
-    if(spinGate(res, action, function(){ callPost(action, p0, done, fail, again); }, function(){ done&&done(res); })) return;
+    if(spinGate(res, action, function(){ me(action, p0, done, fail, again); }, function(){ done&&done(res); })) return;
     if(lockedGate(res, fail, action)) return;
     done&&done(res);
-  }).catch(function(){ clearTimeout(timer); netRec(0, Date.now()-t0); fail&&fail({ ok:false, reason:"network" }); });
+  }).catch(function(){ if(to&&!ctl) return; clearTimeout(timer); netRec(0, Date.now()-t0); fail&&fail({ ok:false, reason:to?"timeout":"network" }); });
 }
 function authGate(res, action){
   if(action==="admin_check"||!(res&&res.ok===false&&res.reason==="auth")) return false;
@@ -839,7 +821,7 @@ function go(id, sub){
   render(); load(false); window.scrollTo(0,0);
   if(nv) setTimeout(function(){ var h=document.querySelector("#view h1"); if(h&&!el("view").contains(document.activeElement)&&document.activeElement!==el("gsQ")){ h.setAttribute("tabindex","-1"); h.focus({ preventScroll:true }); } },0);
 }
-function navHash(push){ var h="#"+S.nav+(S.sub[S.nav]?"/"+encodeURIComponent(S.sub[S.nav]):""); if(location.hash===h) return; try{ history[push?"pushState":"replaceState"](null,"",h); }catch(e){} }
+function navHash(push){ var sb=S.sub[S.nav]?hashSub(S.nav, encodeURIComponent(S.sub[S.nav])):"", h="#"+S.nav+(sb?"/"+encodeURIComponent(sb):""); if(location.hash===h) return; try{ history[push?"pushState":"replaceState"](null,"",h); }catch(e){} }
 function goMenu(m){ var last=lsGet("axf_c2_last",{})[m]; var it=last&&NAVBY[last]&&NAVBY[last].m===m?last:NAV.filter(function(x){ return x.m===m; })[0].id; go(it); }
 function render(){
   var it=navCur(), m=MENUBY[it.m], last=lsGet("axf_c2_last",{}); last[it.m]=it.id; lsSet("axf_c2_last",last);
@@ -1442,12 +1424,14 @@ VIEWS.who={
     if(!d){ el("whoT").innerHTML=skel(); whoPanel(); return; }
     if(unknownSrv(d)){ el("whoT").innerHTML=srvMissing("한 사람 찾기"); whoPanel(); return; }
     if(!d.ok){ el("whoT").innerHTML=loadErr(d,"apage"); whoPanel(); return; }
-    var c=d.cnt||{}, fh=[["","전체 가입",c.all],["today","오늘 접속",c.today],["nolog","접속 없음",c.nolog],["pw0","PIN 대기",c.pw0]].map(function(x){ return '<button class="chip'+(u.f===x[0]?" on":"")+'" aria-pressed="'+(u.f===x[0])+'" data-qa="who.f.'+(x[0]||"all")+'" onclick="whoF(\''+x[0]+'\')">'+esc(x[1])+' <span class="c">'+n0(x[2])+'</span></button>'; }).join("");
+    var c=d.cnt||{}, st3=c.st3!=null;
+    if(u.f==="st3"&&!st3){ u.f=""; setTimeout(function(){ load(false); },0); }
+    var fh=[["","전체 가입",c.all],["today","오늘 접속",c.today],["nolog","접속 없음",c.nolog],["pw0","PIN 대기",c.pw0]].concat(st3?[["st3","스탬프 3개 이상",c.st3]]:[]).map(function(x){ return '<button class="chip'+(u.f===x[0]?" on":"")+'" aria-pressed="'+(u.f===x[0])+'" data-qa="who.f.'+(x[0]||"all")+'" onclick="whoF(\''+x[0]+'\')">'+esc(x[1])+' <span class="c">'+n0(x[2])+'</span></button>'; }).join("");
     var f=el("whoF"); if(f._h!==fh){ f._h=fh; f.innerHTML=fh; }
     var rows=(d.rows||[]).concat(u.more);
     if(u.enter&&!S.busy.apage){ u.enter=0; if(rows.length){ whoPick(rows[0].emp, 1); return; } }
     scrKeep(el("whoT"), rows.length?rows.map(function(r){ var cur=u.cur===r.emp;
-      return '<button type="button" class="pr'+(cur?" cur":"")+'"'+(cur?' aria-current="true"':'')+' data-qa="who.row" data-e="'+esc(r.emp)+'" onclick="whoPick(\''+jq(r.emp)+'\',0)"><span><b>'+esc(r.name||"(이름 없음)")+(r.test?' '+tag("시험"):'')+'</b><span class="d">'+esc(r.dept||"")+'</span></span><span class="n">'+esc(r.emp)+'</span><span class="n cap hm">'+esc(r.acct?(short(r.last)||"접속 없음"):"가입 전")+'</span><span class="hm">'+(!r.acct?tag("명부만"):r.pw?tag("PIN 있음","ok"):tag("PIN 대기","warn"))+'</span></button>'; }).join(""):
+      return '<button type="button" class="pr'+(cur?" cur":"")+'"'+(cur?' aria-current="true"':'')+' data-qa="who.row" data-e="'+esc(r.emp)+'" onclick="whoPick(\''+jq(r.emp)+'\',0)"><span><b>'+esc(r.name||"(이름 없음)")+(r.test?' '+tag("시험"):'')+'</b><span class="d">'+esc(r.dept||"")+(r.acct&&r.n!=null?' · 스탬프 <b class="n">'+n0(r.n)+'</b>':'')+'</span></span><span class="n">'+esc(r.emp)+'</span><span class="n cap hm">'+esc(r.acct?(short(r.last)||"접속 없음"):"가입 전")+'</span><span class="hm">'+(!r.acct?tag("명부만"):r.pw?tag("PIN 있음","ok"):tag("PIN 대기","warn"))+'</span></button>'; }).join(""):
       '<div class="empty"><b>'+(u.q?"찾는 사람이 없습니다":"가입한 사람이 없습니다")+'</b>'+(u.q?"사번 · 이름을 다시 확인합니다.":"")+'</div>');
     el("whoFt").innerHTML='<span class="n">'+n0(d.total)+'명 중 '+rows.length+'명</span><span class="sp"></span>'+(d.total>rows.length?'<button class="btn sm" data-qa="who.more" onclick="whoMore()">50명 더</button>':'');
     whoPanel();
@@ -3161,13 +3145,16 @@ function cfgPaint(){ var b=el("cfgT"); if(!b) return; var h=cfgTable(), i=h.inde
 /* ══ 13. 시작 ══ */
 (function(){
   el("envTag").textContent="운영 관리 · "+envName();
-  var h=String(location.hash||"").replace(/^#/,"").split("/"), nv=h[0]&&NAVBY[h[0]]?h[0]:ssGet("axf_c2_nav","");
-  if(h[0]&&NAVBY[h[0]]&&h[1]) S.sub[h[0]]=decodeURIComponent(h[1]);
+  var h=String(location.hash||"").replace(/^#/,"").split("/"), nv=h[0]&&NAVBY[h[0]]?h[0]:ssGet("axf_c2_nav",""), sb=hashSub(h[0], h[1]);
+  if(h[0]&&NAVBY[h[0]]&&sb) S.sub[h[0]]=sb;
   S.nav=NAVBY[nv]?nv:NAV0;
+  if(location.search||(h[1]&&!sb)){ try{ history.replaceState(null,"",location.pathname+(NAVBY[h[0]]?"#"+h[0]+(sb?"/"+encodeURIComponent(sb):""):"")); }catch(e){} }
 })();
 function start(){ render(); load(true); }
 /* 주소 · 뒤로 가기 · 앞으로 가기 · 손으로 고친 해시(#p_who/사번 = 그 사람 카드) */
-function hashGo(){ var h=String(location.hash||"").replace(/^#/,"").split("/"), id=h[0], sub=h[1]?decodeURIComponent(h[1]):"";
+/* 주소에 남는 값 = 메뉴 · 서브탭 id · 사번만(이름 · 찾는 말 · 토큰은 받지도 쓰지도 않는다) */
+function hashSub(id, v){ try{ v=v?decodeURIComponent(v):""; }catch(e){ v=""; } return id==="p_who"?(/^[0-9A-Za-z]{3,12}$/.test(v)?v:""):(/^[a-z0-9_]{1,24}$/.test(v)?v:""); }
+function hashGo(){ var h=String(location.hash||"").replace(/^#/,"").split("/"), id=h[0], sub=hashSub(id, h[1]);
   if(!id||!NAVBY[id]) return;
   if(id==="p_who"){ var u=whoSt(); if(u.cur!==sub){ u.cur=sub; S.sub.p_who=sub; } }
   else if(sub) S.sub[id]=sub;
