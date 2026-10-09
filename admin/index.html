@@ -400,6 +400,7 @@ details.inc[open]{border-color:var(--navy1)}
 /* 261009 콘솔 재구성 · 포커스 · 머리 상태 띠 · 전역 검색 · 실패 알림(사라지지 않음) · 찾기 줄 · 한 사람 카드 */
 html{scroll-padding-top:calc(var(--hdr-h) + 12px)}
 :focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+[tabindex="-1"]:focus{outline:none}
 header.top :focus-visible,.bar.bulk :focus-visible{outline-color:#fff}
 .hst{display:flex;gap:6px;align-items:center;min-width:0;overflow:hidden}
 .hst button{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:2px 10px;font-size:var(--fs-c);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.22);white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -2323,17 +2324,17 @@ function ccClose(on){
   dialog({ t:"커피챗 희망 접수를 다시 열까요?", s:"참가자 앱의 희망 버튼이 다시 켜집니다.", ok:"다시 열기", onOk:function(){ pzCall("notice_clear",{ id:id },["sync"],function(r){ toast(r&&r.ok?"다시 열었습니다":"실패 · "+why(r)); }); } });
 }
 /* ══ 17. 현장 › 럭키드로우 (draw_stats · draw_cmd · draw_cfg · 소켓 방 draw) ══ */
-var DC_SCN={ idle:"대기", checkin:"추첨 준비 · 공 넣는 중", closed:"추첨 준비 끝", card:"라운드 카드", mix:"섞는 중", tension:"감속 · 배출 대기", exit:"배출", reveal:"당첨 공개", board:"결과판", end:"끝 화면", intro:"인트로", fin:"완주 경품 추첨 발표" };
-var DC_BTN=[ { c:"checkin", n:"추첨 준비 · 공 넣기" }, { c:"round", n:"라운드 시작" }, { c:"mix", n:"섞기" }, { c:"draw", n:"추첨" }, { c:"confirm", n:"확정" },
+var DC_SCN={ idle:"대기", checkin:"추첨 준비 · 공 넣는 중", closed:"추첨 준비 끝", card:"등수 카드", mix:"부저 화면", spin:"부저 · 회전", tension:"감속 · 배출 대기", exit:"배출", reveal:"당첨 공개", board:"결과판", end:"끝 화면", intro:"인트로", fin:"완주 경품 추첨 발표" };
+var DC_BTN=[ { c:"checkin", n:"추첨 준비 · 공 넣기" }, { c:"round", n:"라운드 시작" }, { c:"mix", n:"부저 화면" }, { c:"draw", n:"부저" }, { c:"confirm", n:"확정" },
   { c:"absent", n:"부재 · 다시 뽑기", two:1 }, { c:"undo", n:"마지막 취소", two:1 }, { c:"board", n:"결과판" }, { c:"end", n:"끝 화면", two:1 }, { c:"idle", n:"대기 화면" } ];
 var DC_SUB=[ { c:"intro", n:"인트로 영상" }, { c:"close", n:"체크인 마감 · 시험용", two:1 }, { c:"fin", n:"완주 경품 추첨 발표" }, { c:"reset_screen", n:"화면 초기화", two:1 } ];
-var DC_MAP={ idle:["checkin","intro","board","end","fin"], intro:["idle","checkin"], checkin:["close","idle"], closed:["round","idle","fin"], card:["mix","undo","board","idle"], mix:["draw"], tension:[], exit:[],
+var DC_MAP={ idle:["checkin","intro","board","end","fin"], intro:["idle","checkin"], checkin:["close","idle"], closed:["round","idle","fin"], card:["mix","undo","board","idle"], mix:["draw"], spin:[], tension:[], exit:[],
   reveal:["confirm","absent","undo"], board:["round","undo","end","idle","fin"], end:["idle","fin"], fin:["end","idle","fin"] };
 var DC_NAME={}; DC_BTN.concat(DC_SUB).forEach(function(b){ DC_NAME[b.c]=b.n; });
 var DC_WHY={ busy:"연출 중이었습니다", scene:"지금 장면에서는 받지 않습니다", drawing:"뽑는 중이었습니다", same:"이미 그 화면입니다", done:"인트로는 이미 틀었습니다", notclosed:"체크인 마감 전입니다",
   round:"없는 등수입니다", loading:"공을 넣는 중이었습니다", full:"이 등수 인원이 다 찼습니다", empty:"통에 공이 없습니다", none:"취소할 당첨이 없습니다", id:"다른 당첨이었습니다(화면이 먼저 넘어감)", arg:"완주 경품 추첨 숫자가 없습니다", stale:"30초 넘게 늦게 도착해 실행하지 않았습니다", unknown:"화면이 모르는 명령입니다", error:"화면 오류" };
 var DC_KEYS=[["Space · → · PageDown","다음 · 큰 단추와 같다"],["R 두 번","부재 · 다시 뽑기"],["U 두 번","마지막 당첨 취소"],["E 두 번","끝 화면"],["F · M · H","전체 화면 · 소리 · 키 안내"]];
-var DC_STEPS=[["추첨 준비",["idle","intro","checkin"]],["행운권 6등 → 1등",["closed","card","mix","tension","exit","reveal"]],["결과판",["board"]],["완주 경품 추첨",["fin"]],["끝",["end"]]];
+var DC_STEPS=[["추첨 준비",["idle","intro","checkin"]],["행운권 6등 → 1등",["closed","card","mix","spin","tension","exit","reveal"]],["결과판",["board"]],["완주 경품 추첨",["fin"]],["끝",["end"]]];
 var DRAW_SCR_GONE=120;
 var DC={ on:false, ws:null, st:"off", t:null, fails:0, give:false, ping:null, pongAt:0, poll:null, scr:null, scrAt:0, cmd:null, sent:null, busy:"", arm:null, rejOff:0, sig:"", more:false };
 var DRAW_WHY={ code:"코드는 AXD + 6자입니다(QR코드/codes.json 의 d17)", win:"시간 형식은 16:40-17:25 입니다(시작 < 끝)", day:"날짜 형식은 2026-10-26 입니다(비우면 매일)" };
@@ -2441,8 +2442,7 @@ function dcSend(c, arg, rid, tries){
 function dcRejOff(seq){ DC.rejOff=seq; dcPaint(true); }
 function dcScreenUrl(){ try{ return new URL("../draw/?remote=1", location.href).href; }catch(e){ return "../draw/?remote=1"; } }
 function dcOpenScreen(){ window.open(dcScreenUrl(),"axf_draw"); }
-function dcMixLeft(s){ if(!s||s.scene!=="mix") return "-"; if(s.need_s!=null&&isFinite(Number(s.need_s))) return Math.max(0,Math.ceil(Number(s.need_s)))+"초"; return Array.isArray(s.ready)&&s.ready.indexOf("draw")>=0?"0초":"-"; }
-function dcWhy(w){ w=String(w||""); var m=/^mixing:(\d+)/.exec(w); return m?"섞는 중이었습니다 · "+m[1]+"초 남음":DC_WHY[w]||w||"이유 없음"; }
+function dcWhy(w){ w=String(w||""); return DC_WHY[w]||w||"이유 없음"; }
 /* 큰 단추 = 화면 draw.js nextCmd 와 같은 표 · 키보드와 콘솔을 섞어 눌러도 늦게 온 쪽은 화면이 거절한다 */
 function dcNext(s){
   if(!s) return { c:"", n:"화면 보고 없음", sub:"추첨 화면을 먼저 엽니다(위 「추첨 화면 열기」)" };
@@ -2452,12 +2452,11 @@ function dcNext(s){
     case "intro": return { c:"", n:"인트로 재생 중", sub:"끝나면 공이 들어갑니다 · 화면 Space = 건너뛰기" };
     case "checkin": return { c:"", n:"공을 넣는 중 · 다 넣으면 준비 끝", sub:"약 10초 · 끝나면 첫 등수 추첨 단추가 나옵니다" };
     case "closed": return { c:"round", n:R+" 추첨 시작", sub:"추첨 준비 끝 · 등수 · 경품 카드가 나옵니다" };
-    case "card": return { c:"mix", n:"섞기 시작", sub:"공을 섞습니다 · 첫 추첨은 최소 섞기 뒤" };
+    case "card": return { c:"mix", n:"부저 화면", sub:"3.2초 뒤 저절로 넘어갑니다" };
     case "mix":
-      if(s.need_s!=null&&Number(s.need_s)>0) return { c:"", n:"섞는 중 · "+Math.ceil(Number(s.need_s))+"초 뒤 뽑기", sub:"화면 Space = 섞기 건너뛰기" };
       if(Array.isArray(s.ready)&&s.ready.indexOf("draw")<0) return { c:"", n:"공을 넣는 중", sub:"잠시 뒤 뽑기가 켜집니다" };
-      return { c:"draw", n:R+" 뽑기", sub:"통이 서고 공 하나가 나옵니다" };
-    case "tension": case "exit": return { c:"", n:"뽑는 중", sub:"공이 나오면 당첨 공개" };
+      return { c:"draw", n:"부저 · "+R+" 뽑기", sub:"부저는 무대 노트북 Space" };
+    case "spin": case "tension": case "exit": return { c:"", n:"뽑는 중", sub:"공이 나오면 당첨 공개" };
     case "reveal": return { c:"confirm", n:"확정", arg:(s.last&&s.last.id)||"", sub:"당첨자가 나오면 확정 · 안 계시면 오른쪽 「부재 · 다시 뽑기」" };
     case "board": return finOn()?{ c:"fin", n:"완주 경품 추첨 발표", sub:"완주 경품 추첨 결과(숫자)" }:{ c:"end", n:"끝 화면", two:1, sub:"ME to WE 마무리 화면 · 7등 랜덤 굿즈는 행사 뒤 추첨" };
     case "fin": return { c:"end", n:"끝 화면", sub:"ME to WE 마무리 화면" };
@@ -2495,7 +2494,7 @@ function dcBody(d){
   var kp='<div class="card kpis k3">'+(aOff?kpiCell({ l:"추첨 풀", v:pl?n0(pl.n):"-", u:"명", s:pl?"공 "+n0(pl.balls)+"개 · 행운권 번호 전체":"체크인 "+n0(d.in)+"명" }):kpiCell({ l:"추첨 체크인", v:n0(d.in), u:"명", s:(d.closed?"마감 · ":"")+"행운권 있음 "+n0(d.withT)+" · 없음 "+n0(d.zero) }))+
     kpiCell({ l:"통 안의 공", v:n0(s?s.pool:d.balls), u:"개", s:"당첨 확률은 공 단위" })+kpiCell({ l:"당첨", v:n0(d.wins), u:"명", s:"부재 "+n0(d.absent)+" · 취소 뺀 수" })+'</div>';
   var main='<div class="card pad">'+dcSteps(s)+now+'<div class="dc-gorow">'+go+abs+'</div><p class="cap mt8">'+esc(nx.sub||"")+'</p></div>';
-  var stat='<div class="dc-stat">'+[["지금 화면", s?(DC_SCN[sc]||sc||"-"):"보고 없음"],["체크인", (s?s.checked:(d.in||0))+"명"+(d.closed?" · 마감":"")],["통 안의 공", (s?s.pool:(d.balls||0))+"개"],["등수 · 칸", s&&s.round?s.round+(s.slot?" · "+s.slot:""):"-"],["섞기 남은", dcMixLeft(s)]].map(function(x){ return '<div><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>'; }).join("")+'</div>';
+  var stat='<div class="dc-stat">'+[["지금 화면", s?(DC_SCN[sc]||sc||"-"):"보고 없음"],["체크인", (s?s.checked:(d.in||0))+"명"+(d.closed?" · 마감":"")],["통 안의 공", (s?s.pool:(d.balls||0))+"개"],["등수 · 칸", s&&s.round?s.round+(s.slot?" · "+s.slot:""):"-"]].map(function(x){ return '<div><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>'; }).join("")+'</div>';
   var btn=function(b){ var ok2=dcReady(b.c), a=DC.arm&&DC.arm.c===b.c, bz=DC.busy===b.c; return '<button class="dc-b sm'+(a?" arm":"")+'" data-qa="draw.cmd.'+b.c+'"'+(ok2&&!DC.busy?'':' disabled')+' onclick="dcPress(\''+b.c+'\')"><span>'+(bz?'<span class="spin"></span>보내는 중':a?'한 번 더 누르면 '+esc(b.n):esc(b.n))+'</span>'+(b.two?'<em>'+(a?"3초 안에":"두 번")+'</em>':'')+'</button>'; };
   var more='<details class="memo"'+(DC.more?" open":"")+' ontoggle="DC.more=this.open"><summary>세부 명령 · 화면 상태 · 키 안내</summary><div class="mb">'+stat+'<div class="dc-pad">'+DC_BTN.concat(DC_SUB.filter(function(b){ return b.c!=="fin"||finOn(); })).map(btn).join("")+'</div>'+
     '<p class="cap mt12">'+(DC.cmd?"마지막 명령 #"+DC.cmd.seq+" "+esc(DC_NAME[DC.cmd.cmd]||DC.cmd.cmd)+(DC.sent&&DC.sent.seq===DC.cmd.seq?" · 서버 "+DC.sent.ms+"ms"+(DC.sent.again?" · 재전송(한 번만 처리)":""):""):"보낸 명령 없음")+(s&&s.ver?" · 화면 "+esc(s.ver):"")+' · 화면이 지금 받는 명령만 켜집니다</p>'+
