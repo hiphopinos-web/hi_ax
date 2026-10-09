@@ -18,7 +18,7 @@ var STB_HELLO = "같이 가요! 화면은 켠 채로 두세요";
 var STB_CUTE = ["힘내요!", "화이팅!", "한 칸만 더!", "잘하고 있어요", "같이 가요!", "거의 다 왔어요", "멋져요!", "한 걸음씩 차근차근", "뛰지 말고 천천히", "숨 고르고 가요", "벌써 이만큼 왔어요", "오늘도 최고예요"];
 /* 계단 말 · 숫자 · 의학 효과 없이 */
 var STB_GOOD = ["계단은 가까이 있는 좋은 운동이에요", "따로 시간 내지 않아도 하는 운동이에요", "천천히 걸어도 좋은 운동이 돼요", "계단을 쓰면 엘리베이터가 덜 붐벼요", "엘리베이터 기다리는 시간도 아껴요", "걷다 보면 생각이 정리되기도 해요"];
-var STB_THANKS = "오늘 엘리베이터가 붐벼 불편하시죠?\n계단에 함께해 주셔서 감사해요";   /* 사용자 문장 · 말풍선 두 줄에 맞춤 · 한 출발에 한 번 */
+var STB_THANKS = "엘리베이터가 붐벼 불편하시죠?\n계단에 함께해 주셔서 감사해요";   /* 사용자 문장 · 말풍선 두 줄에 맞춤(4차 글자 22px · 「오늘」 덜어 한 줄에) · 한 출발에 한 번 */
 var STB_PROG_Q = "오늘 프로그램 참여해 보셨어요?";
 var STB_MILE = [[3, "벌써 3분째 같이 걷고 있어요"], [5, "5분째 함께예요\n도착하면 QR을 꼭 찍어요"]];
 var STB_ARRIVE = "도착하면 아래 버튼으로 QR을 찍어요";
@@ -47,7 +47,7 @@ function stbSugs() {
   if (ph === "live" && progUnits() < 2 && hm >= 780 && hm < 1000) out.push(["p3", "17F 오후 강연, 스탬프 2개예요"]);   /* 13:00~16:40 · AWS 13:30 · MS 15:10 */
   if (ph === "live" && !has("p2") && hm >= 570 && hm < 990) out.push(["p2", "1F AX PLAY도 체험해 봐요"]);   /* 09:30~16:30 */
   if (!has("qz")) out.push(["qz", "AX 퀴즈 5문제도 있어요"]);
-  if (!has("p4")) out.push(["p4", "미니 게임 " + Math.max(1, MG_NEED - mgDone()) + "종목, 한 판씩 어때요?"]);
+  if (!has("p4")) out.push(["p4", "미니 게임 " + Math.max(1, MG_NEED - mgDone()) + "종목도 있어요"]);   /* 4차 · 한 줄에 */
   if (!has("p5")) out.push(["p5", "아이디어 한 줄도 남겨 봐요"]);
   return out;
 }
@@ -68,7 +68,7 @@ function stbEventLine(b, j) {
   var cat = j === 0 ? "p" : j === 1 ? "f" : j === 2 ? "t" : j === 3 ? "b" : ["f", "p", "f", "b"][(j - 4) % 4];
   if (cat === "t") { if (!b.thx) { b.thx = true; return { t: STB_THANKS, m: "smile", k: "thanks" }; } cat = "f"; }
   if (cat === "p") {
-    if (stampCount() >= STAMP_DENOM) { if (!b.congr) { b.congr = true; return { t: "스탬프 " + STAMP_DENOM + "개를 다 모았어요\n축하해요!", m: "smile", k: "congr" }; } cat = "f"; }
+    if (stampCount() >= STAMP_DENOM) { if (!b.congr) { b.congr = true; return { t: stbCongr(), m: "smile", k: "congr" }; } cat = "f"; }
     else {
       var sg = stbSugs().filter(function (x) { return !b.used[x[0]]; })[0];
       if (sg) { b.used[sg[0]] = 1; return { t: STB_PROG_Q + "\n" + sg[1], m: "smile", k: "prog:" + sg[0] }; }
@@ -143,12 +143,48 @@ function stbHtml(o, s, since) {
     '<div class="stb-stage' + (down ? " down" : "") + (stbRm() || b.save || b.rest ? " still" : "") + (STB3.st === 2 ? " is3d" : "") + '" id="stbStage">' +
       '<div class="stb-flip">' + stbStairSvg(down) + stbBotHtml(b) + "</div>" +
       '<span class="stb-cnt" id="stbCnt" aria-hidden="true" style="top:' + stbBotBox().ct.toFixed(2) + '%"></span></div>' +
-    '<p class="axs-safe">' + STAIR_SAFE + "</p>" +
+    '<p class="axs-safe stb-safe">' + STAIR_SAFE + "</p>" +
     '<p class="ax-meta stb-cap">도착 층 방화문 앞 QR 스캔 · ' + ((s.goal || 1) > 1 ? "누적 " + (s.total || 0) + " / " + s.goal + "개 층" : (s.total || 0) >= 1 ? "오늘 " + s.total + "개 층 이동" : "한 개 층만 이동해도 적립") + "</p>";
 }
 /* 무대 크기 · 아래 고정 단추 위에 다 보이게(키 작은 화면 · 큰 글씨) · 그린 직후 한 번(같은 일 안이라 화면이 튀지 않는다) · 폭 200px 아래로는 줄이지 않는다 */
+function stbCongr() { return "스탬프 " + STAMP_DENOM + "개를 다 모았어요\n축하해요!"; }
+/* 이 출발에 나올 수 있는 말 전부(말풍선 높이 미리 재기) */
+function stbPool() {
+  var L = [["", STB_HELLO], ["", STB_THANKS], ["", STB_ARRIVE], ["", STB_FIXLINE], ["", stbCongr()]];
+  STB_CUTE.forEach(function (t) { L.push(["", t]); });
+  STB_GOOD.forEach(function (t) { L.push(["계단", t]); });
+  stbSugs().forEach(function (x) { L.push(["", STB_PROG_Q + "\n" + x[1]]); });
+  STB_MILE.forEach(function (m) { L.push(["", m[1]]); });
+  STB_FACTS.forEach(function (f) { var t = stbFactText(f); if (t) L.push(["AX 상식", t]); });
+  return L;
+}
+/* 4차(사용자 261009 「글자 폰트를 더 크게」) · 말풍선 글자 = 22px(옛 17px · 1.3배 · 굵기 700)부터 · 나올 말 전부가 2줄에 들면 그 크기
+   좁은 폭이면 21 · 20 · 19px 로 한 단계씩(가장 긴 말도 2줄 · 안 되면 줄 수가 가장 적은 큰 크기) · 말풍선 높이 = 가장 긴 말 줄 수로 미리 잡는다(말이 바뀌어도 무대 · 단추가 밀리지 않게)
+   폭이 같으면 다시 재지 않는다 · 글자 크기는 px(큰 글씨 설정에서도 22px · 옛 큰 글씨 21px 보다 크다) */
+var STB_FITK = { k: "", fs: 22, n: 2 };
+var STB_FS = [22, 21, 20, 19];
+function stbBubFit() {
+  var box = document.querySelector(".stb-tx"), tx = el("stbTx"), tg = el("stbTag"); if (!box || !tx || !tg) return;
+  var k = box.clientWidth + "/" + stbSugs().length;
+  if (STB_FITK.k !== k) {
+    var keep = [tx.textContent, tg.textContent, tg.hidden], pool = stbPool(), best = null;
+    box.style.minHeight = "0px";
+    STB_FS.forEach(function (fs) {
+      if (best && best.n <= 2) return;
+      var lh = Math.round(fs * 1.41), mx = 1;
+      box.style.fontSize = fs + "px"; box.style.lineHeight = lh + "px";
+      pool.forEach(function (x) { tg.hidden = !x[0]; tg.textContent = x[0]; tx.textContent = x[1]; mx = Math.max(mx, Math.round(box.getBoundingClientRect().height / lh)); });
+      if (!best || mx < best.n) best = { fs: fs, n: mx };
+    });
+    tx.textContent = keep[0]; tg.textContent = keep[1]; tg.hidden = keep[2];
+    STB_FITK = { k: k, fs: best.fs, n: Math.max(2, best.n) };
+  }
+  var l2 = Math.round(STB_FITK.fs * 1.41);
+  box.style.fontSize = STB_FITK.fs + "px"; box.style.lineHeight = l2 + "px"; box.style.minHeight = STB_FITK.n * l2 + "px";
+}
 function stbFit() {
   var g = el("stbStage"), go = el("stbGo"); if (!g || !go) return;
+  stbBubFit();
   g.style.maxWidth = "";
   var top = g.getBoundingClientRect().top + (window.scrollY || 0), avail = go.getBoundingClientRect().top - 12 - top;
   if (avail > 0 && avail * 6 / 5 < g.clientWidth) g.style.maxWidth = Math.max(200, Math.floor(avail * 6 / 5)) + "px";

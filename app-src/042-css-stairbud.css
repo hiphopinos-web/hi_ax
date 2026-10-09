@@ -4,13 +4,15 @@
      움직임 = transform · opacity 만 · 화면이 가려지면 멈춤(.hold) · 동작 줄이기 · 8분 절약 · 15분 쉼 = 정지 그림(.still) · 색 = 토큰만 */
   .stb-where { padding-right: 64px; }
   .stb-where .ax-title { font: var(--ax-type-t2); }
-  .stb-bub { display: block; width: 100%; border: 0; text-align: left; font: inherit; color: inherit; position: relative; margin-top: var(--ax-space-4); padding: var(--ax-space-16) var(--ax-space-20); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); box-shadow: var(--ax-card-shadow); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .stb-where .ax-meta, .stb-cap { font: var(--ax-type-t6); }   /* 4차(사용자 261009 「글자 폰트를 더 크게」) 보조 글자 13 → 15px */
+  .stb-safe { font: var(--ax-type-t5-strong); }   /* 안전 한 줄 15 → 17px */
+  .stb-bub { display: block; width: 100%; border: 0; text-align: left; font: inherit; color: inherit; position: relative; margin-top: var(--ax-space-4); padding: var(--ax-space-16); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); box-shadow: var(--ax-card-shadow); cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .stb-bub::after { content: ""; position: absolute; left: 40px; bottom: -9px; border: 10px solid transparent; border-bottom: 0; border-top-color: var(--ax-color-surface); }
   .stb-bub:focus-visible { outline: var(--ax-focus-width) solid var(--ax-color-brand); outline-offset: 2px; }
-  .stb-tx { display: block; margin: 0; min-height: calc(2 * 1.59375rem); font: var(--ax-type-t5-strong); color: var(--ax-color-ink); word-break: keep-all; overflow-wrap: anywhere; white-space: pre-line; }
+  .stb-tx { display: block; margin: 0; min-height: 62px; font: var(--ax-type-t3); font-size: 22px; line-height: 31px; color: var(--ax-color-ink); word-break: keep-all; overflow-wrap: anywhere; white-space: pre-line; }
   .stb-bub.pop { animation: stbPop 0.22s cubic-bezier(0.3, 0.7, 0.4, 1); }
   @keyframes stbPop { from { transform: scale(0.94); } to { transform: none; } }
-  .stb-tag { display: inline-block; margin-right: var(--ax-space-8); padding: 0 var(--ax-space-8); border-radius: var(--ax-radius-8); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t7); line-height: 1.5rem; vertical-align: 1px; }
+  .stb-tag { display: inline-block; margin-right: var(--ax-space-8); padding: 0 var(--ax-space-8); border-radius: var(--ax-radius-8); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t6-strong); font-size: 15px; line-height: 26px; vertical-align: 2px; }
   .stb-tag[hidden] { display: none; }
   .stb-more { display: inline-block; width: 0; height: 0; margin-left: 6px; border: 6px solid transparent; border-bottom: 0; border-top-color: var(--ax-color-brand); opacity: 0; vertical-align: middle; }
   .stb-more.on { opacity: 1; animation: stbMore 0.9s ease-in-out infinite; }
@@ -52,7 +54,7 @@
   .stb-bot[data-s="b"] .sw { animation: stbSweatB 1.3s ease-in 0.2s; }
   @keyframes stbSweatA { 0% { opacity: 0; transform: none; } 15% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(26px); } }
   @keyframes stbSweatB { 0% { opacity: 0; transform: none; } 15% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(26px); } }
-  .stb-cnt { position: absolute; left: 50%; top: 8%; transform: translateX(-50%); font: var(--ax-type-t4); font-weight: 700; color: var(--ax-color-brandText); opacity: 0; pointer-events: none; }
+  .stb-cnt { position: absolute; left: 50%; top: 8%; transform: translateX(-50%); font: var(--ax-type-t2); color: var(--ax-color-brandText); opacity: 0; pointer-events: none; }
   .stb-cnt[data-h="a"] { animation: stbCntA 0.6s ease-out; }
   .stb-cnt[data-h="b"] { animation: stbCntB 0.6s ease-out; }
   @keyframes stbCntA { 0% { opacity: 0; transform: translateX(-50%) scale(0.6); } 25% { opacity: 1; transform: translateX(-50%) scale(1.1); } 70% { opacity: 1; transform: translateX(-50%); } 100% { opacity: 0; transform: translateX(-50%); } }
