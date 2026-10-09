@@ -1974,6 +1974,15 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-stpn { flex: 0 0 auto; width: 40px; height: 40px; border-radius: var(--ax-radius-999); border: 1.5px solid var(--ax-color-divider); background: var(--ax-color-inset); color: var(--ax-color-muted); display: grid; place-items: center; font: var(--ax-type-t6-strong); }
   .axs-stp.done .axs-stpn { border-color: var(--ax-color-brand); background: var(--ax-color-brand); color: var(--ax-color-onBrand); }
   .axs-stpn svg { width: 20px; height: 20px; display: block; }
+  /* v6.88 (시안 A1) 번호 칸 = 도장 · 40px 칸 그대로 · 받기 전 = 브랜드 옅은 톤 0.55(꺼진 회색 아님) · 받으면 진한 씰 · 2개짜리 = 28px 두 개 겹침 */
+  .axs-stpn.axs-stpk, .axs-stp.done .axs-stpn.axs-stpk { border: 0; background: none; color: var(--ax-color-brand); }
+  .axs-stpk svg { display: block; width: 100%; height: 100%; }
+  .axs-stpk1 { display: block; width: 40px; height: 40px; opacity: 0.55; }
+  .axs-stpk1.on { opacity: 1; }
+  .axs-stpk2 { display: flex; align-items: center; width: 40px; height: 40px; }
+  .axs-stpk2 > span { display: block; flex: none; width: 28px; height: 28px; opacity: 0.55; }
+  .axs-stpk2 > span + span { margin-left: -16px; margin-top: 12px; }
+  .axs-stpk2 > span.on { opacity: 1; position: relative; z-index: 1; }
   /* v5.68 프로그램 참여 = 스탬프 2개 · 제목 옆 「×2」 알약 · 17F 한쪽만(p3h) = 번호 칸 아래 절반 주황 「1/2」 */
   /* v6.83 (사용자 261009 묶음 12 「스탬프 픽토그램 × 2」) 주황 알약(점 둘 + 「스탬프 2개」 · v6.56) → 하단 탭 스탬프 그림(#nav-stamp 그대로) + 「×2」 · 면 없음 · 무채색(받은 줄 = muted) · 한 덩어리(좁으면 통째로 다음 줄) */
   /* v6.86 2개짜리 줄 오른쪽 끝 둥근 도장 두 개(stpSealHtml) · 46px 두 개 10px 겹침 · 세로 가운데 · 찍힌 도장이 위 · 둘째는 살짝 더 기울여 찍은 느낌 · 360 큰 글씨 = 38px 한 단계 */
