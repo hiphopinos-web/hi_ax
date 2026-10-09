@@ -1,7 +1,7 @@
 /* ════════ 261009 스태프 폰 「운영자에게 요청」 시트 (콘솔 재구성 설계안 W4 · 사용자 261009) ════════
  * 진입 = 스캔 화면 맨 아래 「운영자에게 요청」(연속 스캐너 sscHtml · 관리자 모드 스캔 admScanHtml 의 옛 「재고 · 박스 열기」 자리)
  *   이 폰에서 코드를 아직 안 넣었으면 처음 한 번만(sscCodeAsk · 이어서 이 시트) · 인증은 admA 그대로(스태프 토큰 · 사번)
- * 시트 = 종류 5(QR · 수동 지급 · 스탬프 확인 · 사이즈 교환 · 기타) + 사번(선택) + 메모(선택 40자 · 기타는 메모 필수) + 「요청 보내기」
+ * 시트 = 종류 5(QR · 수동 지급 · 스탬프 확인 · 사이즈 교환 · 기타) + 사번(기타만 선택 · 나머지 넷은 필수) + 메모(선택 40자 · 기타는 메모 필수) + 「요청 보내기」
  *   sreq_add { kind, emp, note, spot(지금 고른 자리), rid(같은 내용 다시 보내기 = 서버 10분 멱등) } → { ok, id, open } · dup = 이미 받음(성공)
  *   내용을 바꾸면 rid 를 새로 만든다(실패 뒤 고쳐 보낸 요청이 앞 요청으로 묻히지 않게) · 자동 재전송 없음
  * 룰렛 자리일 때만 아래에 「룰렛 경품 소진 알림」 켜기 · 끄기(roulette_out on 1|0) · 켤 때만 한 번 더 묻는다(모든 참가자 앱에 보인다) */
@@ -11,7 +11,8 @@ function sreqLnk() { return '<button type="button" class="ax-button ax-button-we
 function sreqSp() { return scanSpot(SCAN.spot) || null; }
 function sreqRl() { var sp = sreqSp(); return !!sp && sp.kind === "roulette"; }
 function sreqKl(k) { var x = SRQ_K.filter(function (r) { return r[0] === k; })[0]; return x ? x[1] : ""; }
-function sreqReady() { return !!sreqKl(SRQ.k) && (SRQ.k !== "other" || !!String(SRQ.note || "").trim()); }
+function sreqEmpNeed() { return SRQ.k !== "other"; }   /* 261009 사번 = 기타만 선택 · 나머지 넷은 필수(운영자가 사람을 찾아야 처리) */
+function sreqReady() { return !!sreqKl(SRQ.k) && (sreqEmpNeed() ? !!String(SRQ.emp || "").replace(/\s/g, "") : !!String(SRQ.note || "").trim()); }
 function sreqOpen() {
   if (!BE.on) { toast("서버에 연결되지 않아 보낼 수 없어요"); return; }
   if (!cnAuthed()) { SSC_CK.then = function () { sreqOpen(); }; sscCodeAsk(); return; }
@@ -26,7 +27,7 @@ function sreqBody() {
     return '<button type="button" class="axs-stile ssc-pick' + (on ? " on" : "") + '" aria-pressed="' + on + '"' + dis + ' onclick="sreqKind(\'' + r[0] + '\')"><b>' + esc(r[1]) + "</b></button>";
   }).join("") + "</div>";
   var f = '<div class="ax-stack-tight axs-gap12">' +
-    '<label class="ax-meta" for="sreqEmp">사번 · 선택</label>' +
+    '<label class="ax-meta" for="sreqEmp">' + (sreqEmpNeed() ? "사번" : "사번 · 선택") + "</label>" +
     '<input id="sreqEmp" class="ax-field" inputmode="numeric" pattern="[0-9]*" maxlength="12" enterkeyhint="next" autocomplete="off" placeholder="참가자 사번" value="' + esc(SRQ.emp) + '"' + dis +
       ' onfocus="kbFocus(this)" oninput="numOnly(this, event); sreqIn(\'emp\', this.value)" data-imeend="num">' +
     '<label class="ax-meta" for="sreqNote">메모 · ' + (SRQ.k === "other" ? "필수" : "선택") + ' · 40자</label>' +
