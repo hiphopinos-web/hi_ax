@@ -671,17 +671,7 @@ function stairElapsed(since) {
   return h ? h + "시간 " + (m % 60) + "분" : m ? m + "분 " + (s % 60) + "초" : s + "초";
 }
 function stairSec(sec) { sec = Math.max(0, sec || 0); var m = Math.floor(sec / 60); return m ? m + "분 " + (sec % 60) + "초" : sec + "초"; }
-/* 도트 계단 · 10초에 한 칸 · 12칸이면 비우고 반복 · 시작 시각 기준이라 화면을 껐다 켜도 이어진다 · 챗봇이 맨 위 칸에 선다 */
-function stairDotsHtml(since) {
-  var k = Math.floor(Math.max(0, Date.now() - (since || Date.now())) / 10000) % 12 + 1, d = "", x, y, SZ = 10;
-  for (x = 0; x < 12; x++) for (y = 0; y <= x; y++)
-    d += '<circle cx="' + (x * SZ + 5) + '" cy="' + (115 - y * SZ) + '" r="3.4" class="' + (x < k ? "on" : "") + '"/>';
-  /* 상자 120 × 160 · 도트는 아래 120 · 챗봇(폭 32%)이 그 칸 맨 위 도트에 선다 */
-  var bx = (k - 1) * SZ - 14, by = 114 - (k - 1) * SZ;
-  STR.k = k;
-  return '<div class="axs-stairs" aria-hidden="true"><svg viewBox="0 0 120 120">' + d + "</svg>" +
-    '<span class="axs-stbot" style="left:' + (bx / 120 * 100).toFixed(1) + "%;top:" + (by / 160 * 100).toFixed(1) + '%">' + BOT_SVG + "</span></div>";
-}
+/* 261009 옛 도트 계단(10초에 한 칸 · stairDotsHtml)은 계단 동행 무대(128-js-stair-buddy.js · stbHtml)로 바뀌었다 */
 /* v4.92 (261001 사용자 확정) 목표 = 서버 goal(기본 1 · 한 개 층만 오르내려도 적립) · 1이면 막대 없이 한 줄 · 옛 서버(10)면 누적 막대 */
 function stairLine(s) { var g = s.goal || 1, t = s.total || 0; return g > 1 ? "방화문 QR · 누적 " + t + " / " + g + "개 층" : t >= g ? "방화문 QR · " + t + "개 층 이동" : "방화문 QR · 한 개 층 이상"; }
 function stairGauge(total, goal) {
@@ -706,17 +696,13 @@ function stairPickBtn() {
 function stairHtml() {
   var o = STR.res || {}, s = stairState(), goal = s.goal || 1, m = STR.mode;
   if (m === "load" || (STR.busy && m !== "fix" && m !== "reclass")) return { body: botHtml("확인하는 중", { wait: 1 }), btn: "" };
-  if (m === "start") {
+  if (m === "start") {   /* 261009 계단 동행(사용자 「챗봇이 같이 계단을 오른다」) · 본문 = 128-js-stair-buddy.js stbHtml · 아래 고정 = 큰 「도착 층 QR 찍기」 하나(stbFoot) */
     var since = o.since || (s.leg && s.leg.since) || Date.now();
     return { body:
       stampTagHtml("st") + '<div class="axs-chiprow"><span class="axs-chip">진행 중</span>' + (o.leg === "dup" ? '<span class="axs-chip off">이미 시작함</span>' : "") + (o.reclass ? '<span class="axs-chip off">새로 시작으로 바꿈</span>' : "") + "</div>" +
       (o.reclass && o.stamp && o.stamp.revoked ? '<p class="ax-meta">' + (goal > 1 ? "누적이 " + goal + "개 층 아래라" : "이동한 층이 없어") + " 계단 스탬프가 취소됐어요</p>" : "") +
-      '<div class="axs-strow"><div class="ax-stack-tight"><h1 class="ax-title">계단 이용 시작</h1>' +
-      '<p class="axs-st-big">' + o.fl + "F · " + esc(o.route || stairRoute(o.r)) + "</p></div>" + stairDotsHtml(since) + "</div>" +
-      '<p class="axs-safe">' + STAIR_SAFE + "</p>" +
-      '<section class="ax-card axs-gap12"><p class="ax-type-t5-strong">도착 층 방화문 앞 QR 스캔</p>' + stairGauge(s.total || o.total || 0, goal) + "</section>" +
-      '<p class="ax-meta" id="stElapsed">시작 ' + esc(o.at || (s.leg && s.leg.at) || "") + " · " + stairElapsed(since) + "</p>",
-      btn: ax2Btn("도착 층 QR 스캔", "scanOpen('st')", "확인", "App.tab('exp')") };
+      stbHtml(o, s, since),
+      btn: stbFoot(since) };
   }
   if (m === "end") {
     var got = o.stamp && !o.stamp.dup && o.stamp.id === "st";
@@ -761,15 +747,13 @@ function stairHtml() {
   }
   return { body: botHtml("진행 중인 계단 이용이 없어요"), btn: ax2Btn("계단 안내", "expGuide('st')") };
 }
-/* 진행 화면이 떠 있는 동안 1초마다 경과·도트만 갈아 끼운다(재렌더 없음) */
+/* 진행 화면이 떠 있는 동안 1초마다 경과 시간만 갈아 끼운다(재렌더 없음 · 261009 걷는 그림은 계단 동행 stbMount) */
 function stairTickOn() {
   if (STR.tick) return;
   STR.tick = setInterval(function () {
     if (App.current !== "stair" || STR.mode !== "start") { clearInterval(STR.tick); STR.tick = null; return; }
     var o = STR.res || {}, s = stairState(), since = o.since || (s.leg && s.leg.since) || Date.now();
     var e = el("stElapsed"); if (e) e.textContent = "시작 " + (o.at || (s.leg && s.leg.at) || "") + " · " + stairElapsed(since);
-    var d = document.querySelector("#view .axs-stairs"), k = Math.floor(Math.max(0, Date.now() - since) / 10000) % 12 + 1;
-    if (d && k !== STR.k && !matchMedia("(prefers-reduced-motion: reduce)").matches) d.outerHTML = stairDotsHtml(since);   /* 칸이 바뀔 때만 · 떠 있기 모션이 끊기지 않게 */
   }, 1000);
 }
 

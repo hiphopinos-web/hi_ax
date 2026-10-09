@@ -1,0 +1,57 @@
+  /* ═══════ 계단 동행 (사용자 261009 · 128-js-stair-buddy.js · 출발 QR 뒤 진행 화면 stair) ═══════
+     말풍선(둥근 흰 면 · 꼬리 · 새 말이면 톡 · 다 쓰면 ▼) · 무대(흰 면 + 옅은 격자 점 · 계단 점은 제자리에서 켜지기만) · 챗봇 원본 + 눈웃음 · 안테나 전파
+     움직임 = transform · opacity 만 · 화면이 가려지면 멈춤(.hold) · 동작 줄이기 = 정지 그림 + 말풍선 · 색 = 토큰만 */
+  .stb-where { padding-right: 64px; }
+  .stb-where .ax-title { font: var(--ax-type-t2); }
+  .stb-bub { display: block; width: 100%; border: 0; text-align: left; font: inherit; color: inherit; position: relative; margin-top: var(--ax-space-4); padding: var(--ax-space-16) var(--ax-space-20); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); box-shadow: var(--ax-card-shadow); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .stb-bub::after { content: ""; position: absolute; left: 40px; bottom: -9px; border: 10px solid transparent; border-bottom: 0; border-top-color: var(--ax-color-surface); }
+  .stb-bub:focus-visible { outline: var(--ax-focus-width) solid var(--ax-color-brand); outline-offset: 2px; }
+  .stb-bub.pop { animation: stbPop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes stbPop { from { transform: scale(0.94); } to { transform: none; } }
+  .stb-tx { display: block; margin: 0; min-height: calc(2 * 1.59375rem); font: var(--ax-type-t5-strong); color: var(--ax-color-ink); word-break: keep-all; overflow-wrap: anywhere; }
+  .stb-tag { display: inline-block; margin-right: var(--ax-space-8); padding: 0 var(--ax-space-8); border-radius: var(--ax-radius-8); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t7); line-height: 1.5rem; vertical-align: 1px; }
+  .stb-tag[hidden] { display: none; }
+  .stb-more { display: inline-block; width: 0; height: 0; margin-left: 6px; border: 6px solid transparent; border-bottom: 0; border-top-color: var(--ax-color-brand); opacity: 0; vertical-align: middle; }
+  .stb-more.on { opacity: 1; animation: stbMore 0.9s ease-in-out infinite; }
+  @keyframes stbMore { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+  .stb-sr { margin: 0; position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .stb-stage { position: relative; width: 100%; max-width: calc(36vh * 320 / 220); margin: var(--ax-space-8) auto 0; aspect-ratio: 320 / 220; border-radius: var(--ax-radius-24); overflow: hidden; background-color: var(--ax-color-surface); background-image: radial-gradient(circle, var(--ax-color-canvas) 1.4px, transparent 1.8px); background-size: 16px 16px; background-position: 8px 8px; }
+  @media (max-height: 760px) { .stb-stage { max-width: calc(26vh * 320 / 220); } }   /* 키 작은 화면 · 무대를 줄여 말풍선 · 무대 · 단추가 한 화면에 */
+  .stb-flip { position: absolute; inset: 0; }
+  .stb-stage.down .stb-flip { transform: scaleX(-1); }
+  .stb-st { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .stb-st circle { fill: var(--ax-color-divider); transition: fill 0.3s, opacity 0.3s; }
+  .stb-st circle.t { fill: var(--ax-color-disabled); }
+  .stb-st g.on circle { fill: var(--ax-color-brand); opacity: 0.32; }
+  .stb-st g.on circle.t { opacity: 1; }
+  /* 챗봇 = 무대 폭 26%(83.2 / 320) · 몸 아래 끝(원본 y 156.2 / 200 = 78%)이 칸 i 디딤판 위 · 한 칸 = 오른쪽 32 · 위 16(봇 폭의 38.46% · 19.23%) */
+  .stb-bot { position: absolute; left: 0; top: 60.2%; width: 26%; aspect-ratio: 1 / 1; transform: translate(calc(var(--k) * 38.46%), calc(var(--k) * -19.23%)); transition: transform 0.5s cubic-bezier(0.3, 0.7, 0.4, 1); will-change: transform; }
+  .stb-hop { display: block; width: 100%; height: 100%; transform-origin: 50% 78%; }
+  .stb-hop svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .stb-bot[data-h="a"] .stb-hop { animation: stbHopA 0.5s cubic-bezier(0.3, 0.7, 0.4, 1); }
+  .stb-bot[data-h="b"] .stb-hop { animation: stbHopB 0.5s cubic-bezier(0.3, 0.7, 0.4, 1); }
+  @keyframes stbHopA { 0%, 100% { transform: none; } 18% { transform: scale(1.08, 0.9); } 55% { transform: translateY(-22%) scale(0.96, 1.05); } 85% { transform: scale(1.06, 0.94); } }
+  @keyframes stbHopB { 0%, 100% { transform: none; } 18% { transform: scale(1.08, 0.9); } 55% { transform: translateY(-22%) scale(0.96, 1.05); } 85% { transform: scale(1.06, 0.94); } }
+  .stb-stage[data-sc="warm"] .stb-hop { animation: stbWarm 1.6s ease-in-out infinite; animation-delay: var(--wd, 0s); }
+  @keyframes stbWarm { 0%, 30%, 60%, 100% { transform: none; } 15% { transform: rotate(-11deg); } 45% { transform: rotate(11deg); } 72% { transform: scale(1.08, 0.86); } 86% { transform: translateY(-14%) scale(0.96, 1.05); } }
+  .stb-bot .eye { transform-box: fill-box; transform-origin: center; animation: axsBlink 4.6s linear infinite; }
+  .stb-bot .sm { opacity: 0; }
+  .stb-bot .sm path { fill: none; stroke: var(--ax-color-ink); stroke-width: 4.4; stroke-linecap: round; }
+  .stb-bot[data-m="smile"] .sm { opacity: 1; }
+  .stb-bot[data-m="smile"] .eye { opacity: 0; animation: none; }
+  .stb-bot .ant path { fill: none; stroke: var(--ax-color-brand); stroke-width: 4; stroke-linecap: round; opacity: 0; }
+  .stb-bot[data-m="wave"] .ant path { animation: axsWave 1.6s ease-out infinite; }
+  .stb-bot[data-m="wave"] .ant path:nth-child(2) { animation-delay: 0.18s; }
+  .stb-bot[data-m="wave"] .ant path:nth-child(3) { animation-delay: 0.36s; }
+  .stb-iris { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; color: var(--ax-color-ink); }
+  .stb-stage.hold, .stb-stage.hold * { animation-play-state: paused !important; }
+  .stb-cap { text-align: center; }
+  .stb-foot .stb-go { position: relative; min-height: 64px; gap: var(--ax-space-8); font: var(--ax-type-t4); }
+  .stb-go svg { width: 28px; height: 28px; flex: none; }
+  .stb-go.nudge::after { content: ""; position: absolute; inset: -4px; border: 3px solid var(--ax-color-brand); border-radius: 20px; opacity: 0; pointer-events: none; animation: stbRing 1.8s ease-out infinite; }
+  @keyframes stbRing { 0% { opacity: 0.7; transform: scale(0.98); } 100% { opacity: 0; transform: scale(1.04, 1.22); } }
+  @media (prefers-reduced-motion: reduce) {
+    .stb-bub.pop, .stb-more.on, .stb-hop, .stb-stage[data-sc="warm"] .stb-hop, .stb-bot .eye, .stb-bot[data-m="wave"] .ant path, .stb-go.nudge::after { animation: none !important; }
+    .stb-bot, .stb-st circle { transition: none; }
+    .stb-bot[data-m="wave"] .ant path { opacity: 0.35; }
+  }

@@ -164,6 +164,7 @@ var App = {
     if (v === "ideas" && this.current !== "ideas") IDEA.step = null;   /* v4.07 다시 들어오면 입력 폼부터 */
     if (this.current === "guide" && v !== "guide") PROG.scroll = window.scrollY;   /* 목록 스크롤 보존 (뒤로 오면 되돌린다) */   /* v4.01 AI 사생대회 폐기 · 배너·해시(#demo=art 등)·뒤로가기를 포함한 모든 진입을 홈으로 돌린다 */
     if (this.current === "scan_q" && v !== "scan_q") { qrCamStop(); qrMineOff(); qrWakeOff(true); SCQ.paused = false; }
+    if (this.current === "stair" && v !== "stair" && typeof stbLeave === "function") stbLeave();   /* 261009 계단 동행 · 떠나면 걷기 · 말 · 화면 켜 두기를 멈춘다(상태는 남아 다시 오면 이어서) */
     if (this.current === "sscan" && v !== "sscan") sscLeave();   /* v5.98 스태프 스캔을 떠나면 카메라 · 화면 꺼짐 막기를 끈다 */   /* v4.06 Q02 를 떠나면 카메라를 끈다 · v5.23 내 QR 동기화도 */
       if (this.current === "game_tetris" && v !== "game_tetris") ttStop();
     if (this.current === "game_pang" && v !== "game_pang") pgStop();
@@ -283,6 +284,7 @@ var App = {
     if (aeId) { var aeN = el(aeId); if (aeN) { try { aeN.focus({ preventScroll: true }); if (aeSel) aeN.setSelectionRange(aeSel[0], aeSel[1]); } catch (e) {} } }   /* 다시 그려도 입력 중인 칸과 커서를 되돌린다 */
     if (v === "scan_q") { if (SCQ.tab === "scan") setTimeout(scanQStart, 80); else if (!QRM.timer) qrMineOn(); }   /* v5.23 카메라는 스캔 탭에서만 · 내 QR 탭은 6초 동기화 */
     if (v === "stair" && STR.mode === "start") stairTickOn();
+    if (v === "stair" && typeof stbMount === "function") stbMount();   /* 261009 계단 동행 · 진행 중이면 이어 돌리기 · 아니면 멈춤 */
     if (v === "sscan") setTimeout(sscMount, 0);   /* v5.98 새 video 에 카메라를 다시 붙이거나 켠다 */
     detPaint(dv, v);
     if (v !== "ideas" && typeof IDEA !== "undefined") IDEA.cc = false;   /* v5.83 커피챗에서 온 아이디어 쓰기 표시는 그 화면 안에서만 */
