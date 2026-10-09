@@ -33,16 +33,16 @@ function sreqBody() {
     '<label class="ax-meta" for="sreqNote">메모 · ' + (SRQ.k === "other" ? "필수" : "선택") + ' · 40자</label>' +
     '<input id="sreqNote" class="ax-field" maxlength="40" enterkeyhint="send" autocomplete="off" placeholder="예: 3번 창구 · 카메라가 안 켜져요" value="' + esc(SRQ.note) + '"' + dis +
       ' onfocus="kbFocus(this)" oninput="sreqIn(\'note\', this.value)" onkeydown="onEnter(event, sreqGo)"></div>';
-  var err = SRQ.err ? '<div class="axs-err" role="alert"><b>' + esc(SRQ.err) + "</b></div>" : "";
+  var err = SRQ.err ? '<div class="axs-err" role="alert"><b>' + segHtml(esc(SRQ.err)) + "</b></div>" : "";
   var go = '<button type="button" class="ax-button" id="sreqGo" onclick="sreqGo()"' + (SRQ.busy ? ' disabled aria-busy="true"' : sreqReady() ? "" : " disabled") + ">" + (SRQ.busy ? "보내는 중" : "요청 보내기") + "</button>";
   return '<div class="ax-stack">' + kinds + f + err + go + "</div>" + (sreqRl() ? sreqOutHtml() : "");
 }
 /* 룰렛 자리 · 소진 알림 · 상태는 sync(rouletteOut)와 같은 roulette_out */
 function sreqOutHtml() {
   var out = !!S.get("roulette_out", false), dis = SRQ.outBusy ? " disabled" : "";
-  var err = SRQ.outErr ? '<div class="axs-err" role="alert"><b>' + esc(SRQ.outErr) + "</b></div>" : "";
+  var err = SRQ.outErr ? '<div class="axs-err" role="alert"><b>' + segHtml(esc(SRQ.outErr)) + "</b></div>" : "";
   if (SRQ.outAsk) {
-    return '<div class="ssc-opts ax-stack-tight axs-gap12" id="sreqOut"><p class="ax-body">모든 참가자 앱에 룰렛 소진이 보여요 · 찍어도 차감하지 않아요</p>' + err +
+    return '<div class="ssc-opts ax-stack-tight axs-gap12" id="sreqOut"><p class="ax-body">' + segHtml("모든 참가자 앱에 룰렛 소진이 보여요 · 찍어도 차감하지 않아요") + "</p>" + err +
       '<button type="button" class="ax-button axs-btn-danger"' + dis + ' onclick="sreqOut(1)">' + (SRQ.outBusy ? "켜는 중" : "소진 알림 켜기") + "</button>" +
       '<button type="button" class="ax-button ax-button-weak"' + dis + ' onclick="SRQ.outAsk = false; SRQ.outErr = \'\'; sreqRepaint()">그만두기</button></div>';
   }

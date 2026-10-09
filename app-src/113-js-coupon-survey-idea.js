@@ -452,7 +452,7 @@ function kitChipHtml(z, k) {
     (mine ? '<span class="me" aria-hidden="true">지금</span>' : "") + "</button>";
 }
 function kitKvHtml(rows) {
-  return '<dl class="axs-kitkv">' + rows.map(function (r) { return "<div><dt>" + r[0] + "</dt><dd>" + r[1] + "</dd></div>"; }).join("") + "</dl>";
+  return '<dl class="axs-kitkv">' + rows.map(function (r) { return "<div><dt>" + r[0] + "</dt><dd>" + segHtml(r[1]) + "</dd></div>"; }).join("") + "</dl>";
 }
 /* 상품 사진 · 261008 제조사 대표 사진(앞모습 · 「샘플」 딱지 없음 · 옛 회색 「상품 이미지」 예시 칸 대체) · 큰 칸(상품 화면) · 작은 칸(완료 요약)
    261008 v6.44 시트 맨 위는 늘 상품 사진(가로로 꽉 차는 4:3 · 착용 사진은 전체 화면 보기 kitView 에서만 · v6.41 ~ v6.43 의 칸 안 착용 사진 · 캡션 · 칸 높이 맞춤은 걷어 냄) */
@@ -506,14 +506,14 @@ function kitSheet() {
     return { name: "사전 신청 키트", fit: 1, body: '<section class="axs-kithd"><h3 class="ax-type-t3">AX 라운지 사전 신청 키트는 ' + (Number(k.q) || 29) + "명까지예요</h3>" +
       '<p class="ax-description">1F 주차장 체크인존에서 가습기로 드려요</p></section>' + kitKvHtml([["수령", esc(KIT_GET)]]) };
   }
-  var msg = (k.test ? '<p class="ax-meta axs-kitnote axs-kittest">테스트 계정 미리 보기 · 서버에 저장하지 않아요</p>' : "") + (KIT.msg ? '<p class="axs-kitmsg" role="alert">' + esc(KIT.msg) + "</p>" : "");   /* 261008 테스트 사번 미리 보기 표시 */
+  var msg = (k.test ? '<p class="ax-meta axs-kitnote axs-kittest">' + segHtml("테스트 계정 미리 보기 · 서버에 저장하지 않아요") + "</p>" : "") + (KIT.msg ? '<p class="axs-kitmsg" role="alert">' + esc(KIT.msg) + "</p>" : "");   /* 261008 테스트 사번 미리 보기 표시 */
   if (k.sz && !KIT.edit) return { name: nm, body: msg + kitDoneHtml(k), foot: kitCanSet(k) ? progBtn("사이즈 변경", "kitEdit(1)", "ax-button-weak") : "" };
   var ph = k.ph, note = ph === "before" ? esc(kitWhen(k.open)) + "부터 신청할 수 있어요" : ph === "end" ? "신청 기간이 끝났어요" + (kitStaff(k) ? "" : " · 사이즈는 체크인존에서 남은 것으로 드려요") :
     ph === "open" ? "" : esc(kitWhen(k.chg)) + "까지 남은 사이즈로만 바꿀 수 있어요";   /* 261008 사용자 「고르는 기준 · 품절 순서 안내 없어도 될 것 같아」 · 열림 중에는 안내 줄 없음 */
   var chips = '<section class="axs-kitsz"><div class="axs-kitszh"><h3 class="ax-type-t5-strong">사이즈</h3>' + (ph === "open" ? '<span class="ax-meta">마감 ' + esc(kitWhen(k.close)) + "</span>" : "") + "</div>" +
     '<div class="axs-kitcs" role="radiogroup" aria-label="사이즈">' + KIT_SIZES.map(function (x) { return kitChipHtml(x, k); }).join("") + "</div>" +
-    (note ? '<p class="ax-meta axs-kitnote">' + note + "</p>" : "") + "</section>";
-  var body = msg + kitProdHtml(k) + (ph === "end" ? '<p class="ax-meta axs-kitnote">' + note + "</p>" : chips) + kitFoldsHtml() + kitKvHtml([["수령", esc(kitGetTxt(k))]]);
+    (note ? '<p class="ax-meta axs-kitnote">' + segHtml(note) + "</p>" : "") + "</section>";
+  var body = msg + kitProdHtml(k) + (ph === "end" ? '<p class="ax-meta axs-kitnote">' + segHtml(note) + "</p>" : chips) + kitFoldsHtml() + kitKvHtml([["수령", esc(kitGetTxt(k))]]);
   var foot = "";
   if (kitCanSet(k)) {
     var z = KIT.sel, go = !!z && z !== k.sz, lb = KIT.busy ? "신청하는 중" : k.sz ? "사이즈 변경" : "이 사이즈로 신청";

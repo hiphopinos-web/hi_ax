@@ -266,7 +266,7 @@ var Views = {
       '<div class="axs-chiprow"><span class="axs-chip cat">' + esc(d.cat) + "</span>" + (d.st ? '<span class="axs-chip ' + d.stc + '">' + esc(d.st) + "</span>" : "") + "</div>" +
       '<h1 class="ax-title">' + esc(d.title) + "</h1>" +
       (d.who ? '<div class="axs-who">' + spkAvHtml(s.id, d.av) + '<span class="axs-tx"><span class="ax-card-title">' + esc(d.who) + '</span>' + (d.whoSub ? '<span class="ax-description">' + esc(d.whoSub) + "</span>" : "") + "</span></div>" : "") +
-      '<dl class="ax-inset axs-kv">' + d.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl></section>" +
+      '<dl class="ax-inset axs-kv">' + d.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl></section>" +
       (d.extra || "") + (d.after || "") +
       ('sg' in d ? d.sg : '<section class="ax-stack-tight axs-gap12"><h2 class="ax-section-title">' + esc(d.secT) + '</h2>' + (d.secB ? '<p class="ax-body">' + d.secB + "</p>" : "") + (d.need || "") + (d.pics || "") + (d.link || "") + "</section>") +   /* v5.60 10F 세션은 sessGuideHtml */
       "</div>" +
@@ -283,7 +283,7 @@ var Views = {
       '<div class="axs-chiprow"><span class="axs-chip">신청 확인</span></div>' +
       '<div class="ax-stack-tight"><h1 class="ax-title">이 프로그램에<br>참여할까요?</h1><p class="ax-description">시간과 장소를 한 번 더 확인해 주세요</p></div>' +
       '<section class="ax-card"><div class="ax-stack-tight"><p class="axs-cat">' + esc(d.cat + (d.org ? " · " + d.org : "")) + '</p><h2 class="ax-section-title">' + esc(d.title) + "</h2></div>" +
-      '<div class="axs-hr"></div><dl class="axs-kv">' + kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl></section>" +
+      '<div class="axs-hr"></div><dl class="axs-kv">' + kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl></section>" +
       (e ? '<div class="axs-err" role="alert"><b>' + esc(e.t) + "</b>" + (e.b ? "<span>" + esc(e.b) + "</span>" : "") + "</div>" :
         '<p class="ax-description">신청 후에는 나의 일정에서 확인할 수 있어요.</p>') +
       "</div>" +

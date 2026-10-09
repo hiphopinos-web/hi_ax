@@ -801,7 +801,7 @@ function boothSheet() {
 function expGuideParts(id) {
   var g = EXP_GUIDE[id], s = stairState();
   var steps = g.steps.map(function (x, i) {
-    return '<li><span class="axs-no">0' + (i + 1) + '</span><span class="axs-tx"><b class="ax-type-t5-strong">' + x[0] + '</b><span class="ax-meta">' + esc(x[1]) + "</span></span></li>";
+    return '<li><span class="axs-no">0' + (i + 1) + '</span><span class="axs-tx"><b class="ax-type-t5-strong">' + x[0] + '</b><span class="ax-meta">' + segHtml(esc(x[1])) + "</span></span></li>";
   }).join("");
   var prog = "";
   if (id === "st" && ((s.goal || 1) > 1 || (s.total || 0) >= 1 || s.leg)) {
@@ -814,7 +814,7 @@ function expGuideParts(id) {
 function expGuideHtml() {
   var id = EXPG.id, g = EXP_GUIDE[id], s = stairState();
   var steps = g.steps.map(function (x, i) {
-    return '<li><span class="axs-no">0' + (i + 1) + '</span><span class="axs-tx"><b class="ax-type-t5-strong">' + x[0] + '</b><span class="ax-meta">' + esc(x[1]) + "</span></span></li>";
+    return '<li><span class="axs-no">0' + (i + 1) + '</span><span class="axs-tx"><b class="ax-type-t5-strong">' + x[0] + '</b><span class="ax-meta">' + segHtml(esc(x[1])) + "</span></span></li>";
   }).join("");
   var prog = "";
   if (id === "st" && ((s.goal || 1) > 1 || (s.total || 0) >= 1 || s.leg)) {   /* 261005 최종 QA · 아직 안 한 사람(목표 1 · 0개 층)에게는 「한 개 층만 이동해도 적립」만 든 카드가 설명 줄을 한 번 더 말했다 · 이동 기록이 있을 때만 */

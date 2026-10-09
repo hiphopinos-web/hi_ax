@@ -875,6 +875,9 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .rail .lbls span.next { color: var(--muted); }
   .rail .lbls span.on { color: var(--acc2); }
   .rail .cap { margin-top: 7px; font-size: calc(12px * var(--fs)); font-weight: 700; color: var(--faint); line-height: 1.5; }
+  /* v6.69 segHtml 조각 · 한 덩어리로 다음 줄에 넘어가고 · 한 줄보다 길면 그 안에서 꺾인다 (사용자 261009) */
+  ax-seg { display: inline-block; max-width: 100%; text-indent: 0; }
+  .segflow > ax-seg { display: inline; }   /* 조각으로 꺾으면 줄이 늘어나는 글 = 보통 흐름(segFit) */
   /* 섹션 제목 (카드 바깥) */
   .sect { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 9px 2px 6px; }
   .sect b { font-size: calc(15.5px * var(--fs)); font-weight: 800; color: var(--hi); }

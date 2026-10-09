@@ -107,7 +107,7 @@ function myRewardHtml() {
     var tt = '<div class="ax-stack-tight"><h2 class="ax-section-title">' + x.nm + "</h2>" + (big ? '<p class="axs-big">' + big + "</p>" : "") + "</div>";
     return '<section class="ax-card" data-rw="' + x.k + '"><span class="axs-chip axs-self' + (x.off ? " off" : x.cc != null ? x.cc : " ok") + '">' + x.chip + "</span>" +
       (x.pic ? '<div class="axs-rwhd">' + prizePhHtml(x.pic) + tt + "</div>" : tt) +   /* v5.04 참여상 당첨 = 상품 사진 */
-      '<div class="axs-hr"></div><p class="ax-description">' + why + "</p>" +
+      '<div class="axs-hr"></div><p class="ax-description">' + segHtml(why) + "</p>" +
       (x.go ? '<button type="button" class="ax-button ax-button-weak" onclick="' + x.go + '">' + (x.btn || "사용 방법 보기") + "</button>" : "") + "</section>";
   }).join("");
   return '<section class="axs-sec axs-myrw">' + railHtml(n, false, null, false) + "</section>" + goal + kitMyRowHtml() +   /* 261006 키트 사이즈 · 명단 사번만 */
@@ -236,7 +236,7 @@ var PZ_SEC = [
    k = 위 작은 라벨(주황) · aria = 읽어 주기 이름 · rows = [아이콘(PZ_ICO), 굵은 한 줄(할 일), 옅은 한 줄(덧붙임 · 없으면 빈 값)] */
 function needBoxHtml(k, aria, rows) {
   return '<div class="axs-pz-need" role="group" aria-label="' + esc(aria) + '"><p class="k" aria-hidden="true">' + esc(k) + "</p><ul>" + rows.map(function (r) {
-    return '<li><span class="i" aria-hidden="true">' + (PZ_ICO[r[0]] || "") + '</span><span class="x"><b>' + esc(r[1]) + "</b>" + (r[2] ? "<span>" + esc(r[2]) + "</span>" : "") + "</span></li>";
+    return '<li><span class="i" aria-hidden="true">' + (PZ_ICO[r[0]] || "") + '</span><span class="x"><b>' + segHtml(esc(r[1])) + "</b>" + (r[2] ? "<span>" + segHtml(esc(r[2])) + "</span>" : "") + "</span></li>";
   }).join("") + "</ul></div>";
 }
 /* 경품 시트 구역의 받으려면 줄 그대로(강연 상세 · 팝업이 같은 줄을 쓴다 · 문구가 한 곳) */
@@ -487,7 +487,7 @@ function stpTilesHtml(keys) {
    칩은 줄지 않고(flex none) 글만 칩 옆 칸에서 줄바꿈한다(칩 혼자 한 줄에 남지 않게 · 제목 줄은 건드리지 않는다) · 375px 일반에서 한 줄이 되게 글을 줄였다 */
 function stpLineHtml(mode, meta) {
   if (!mode && !meta) return "";
-  return '<p class="axs-stpm">' + (mode ? '<span class="axs-stpc' + (mode === "스태프 인증" ? " staff" : "") + '">' + esc(mode) + "</span>" : "") + (meta ? "<span>" + meta + "</span>" : "") + "</p>";
+  return '<p class="axs-stpm">' + (mode ? '<span class="axs-stpc' + (mode === "스태프 인증" ? " staff" : "") + '">' + esc(mode) + "</span>" : "") + (meta ? "<span>" + segHtml(meta) + "</span>" : "") + "</p>";
 }
 /* 행 한 줄 설명 · 화면에 없는 장소 · 시간 · 조건만(문구 다이어트) · v4.95 375px 한 줄(종목 이름은 아래 타일 · 장소는 행동 화면에) */
 function stpMeta(s, got) {

@@ -365,7 +365,7 @@ function qzHubHtml() {
   var chip = r ? '<span class="axs-chip">이어 풀기 ' + a + " / " + N + "</span>" : done ? '<span class="axs-chip ok">완주 · 내 최고 ' + best[0] + " / " + best[1] + "</span>" : '<span class="axs-chip off">시작 전</span>';
   var seg = r ? '<div class="qz-seg" aria-hidden="true">' + r.q.map(function (id, k) { return "<i" + (r.a[k] != null ? ' class="on"' : "") + "></i>"; }).join("") + "</div>" : "";
   return '<div class="ax-stack axs-pan qz">' +
-    '<section class="qz-card qz-hub"><div class="qz-top"><div class="ax-stack-tight"><h2 class="ax-section-title">AX 퀴즈</h2><p class="ax-meta">1층 부스 내용 ' + N + "문제 · 모두 답하면 완주</p></div>" +
+    '<section class="qz-card qz-hub"><div class="qz-top"><div class="ax-stack-tight"><h2 class="ax-section-title">AX 퀴즈</h2><p class="ax-meta">' + segHtml("1층 부스 내용 " + N + "문제 · 모두 답하면 완주") + "</p></div>" +
     (stampV2() ? '<span class="qz-smkr">' + stampMkHtml("qz", "AX 퀴즈") + "</span>" : "") + "</div>" + '<p class="qz-stl">' + chip + "</p>" + seg +
     '<button type="button" class="ax-button" onclick="qzStart(' + (r ? "false" : "true") + ')">' + (r ? "이어 풀기" : done ? "한 판 더" : "AX 퀴즈 시작") + "</button></section>" +
     '<p class="ax-meta">순위 없음 · 시간 제한 없음 · 힌트는 1층 판에</p></div>';
@@ -449,7 +449,7 @@ function olyRankHtml() {
     if (mv && me.sv && mv.rank > list.length) rows += '<div class="oly-gap"></div>' + olyRowHtml({ rank: mv.rank, name: nick + " (나)" }, olyFmt(mv.best), "", false, true);
     h += '<section class="ax-card oly-card"><div class="ax-stack-tight"><h2 class="ax-section-title">' + esc(ev.name) + '</h2><p class="ax-description">' + esc(olyRuleLine(evk)) + "</p></div>" +
       '<div class="oly-list">' + (list.length ? rows : '<p class="ax-description">아직 기록이 없어요</p>') + "</div>" +
-      (mv ? (olyEvPos(evk, mv) ? '<p class="oly-pos">' + esc(olyEvPos(evk, mv)) + "</p>" : "")
+      (mv ? (olyEvPos(evk, mv) ? '<p class="oly-pos">' + segHtml(esc(olyEvPos(evk, mv))) + "</p>" : "")
         : '<p class="oly-pos">한 판 하면 순위에 올라가요</p><button type="button" class="ax-button" onclick="App.go(\'' + ev.view + '\')">' + esc(ev.name) + " 한 판</button>") + "</section>";
   } else {
     var ov = b.overall || [], isMe = function (x) { return x.me || (me.sv && me.rank && x.rank === me.rank); };
@@ -457,9 +457,9 @@ function olyRankHtml() {
     var rest = ov.slice(3).map(function (x) { return olyRowHtml(x, olyFmt(x.total), "", false, isMe(x)); }).join("");
     if (me.sv && me.rank > ov.length) rest += '<div class="oly-gap"></div>' + olyRowHtml({ rank: me.rank, name: nick + " (나)" }, olyFmt(me.total), "", false, true);
     var op = olyOverallPos(me);
-    h += '<section class="ax-card oly-card"><div class="ax-stack-tight"><h2 class="ax-section-title">종합 순위</h2><p class="ax-description">' + olyOvEvents().length + "종목 최고점 합계" + (at ? " · " + at + " 기준" : "") + " · " + olyFmt(olyMax()) + "점 만점</p></div>" +
+    h += '<section class="ax-card oly-card"><div class="ax-stack-tight"><h2 class="ax-section-title">종합 순위</h2><p class="ax-description">' + segHtml(olyOvEvents().length + "종목 최고점 합계" + (at ? " · " + at + " 기준" : "") + " · " + olyFmt(olyMax()) + "점 만점") + "</p></div>" +
       (ov.length ? olyPodiumHtml(top) + '<div class="oly-list">' + rest + "</div>" : '<p class="ax-description">아직 ' + (OVE.length === 3 ? "세" : "다섯") + " 종목을 모두 한 사람이 없어요</p>") +
-      '<p class="oly-pos">' + (op ? esc(op) : me.done ? "내 총점 " + olyFmt(me.total) : "한 판 하면 순위에 올라가요") + "</p></section>";
+      '<p class="oly-pos">' + (op ? segHtml(esc(op)) : me.done ? "내 총점 " + olyFmt(me.total) : "한 판 하면 순위에 올라가요") + "</p></section>";
   }
   return h + '</div>';   /* v6.27 바닥 문구(명예 순위 · 경품 없음 · 종합 호명) 삭제(사용자 261008 · 올림픽 시상 없음 261006) */
 }

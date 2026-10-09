@@ -141,11 +141,38 @@ if (LS_OK) window.addEventListener("storage", function (e) {
 if (!S.get("notices_wipe1", false)) { S.put("notices", []); S.put("notices_wipe1", true); }
 function uid() { return Math.random().toString(36).slice(2, 10); }
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+/* v6.69 (사용자 261009 「· 로 이은 문장이 어차피 두 줄이 될 거라면 · 자리에서 다음 줄로」) 「 · 」로 이은 글(HTML 글자 · 태그 안에 「 · 」가 없을 것)을 조각으로 나눈다
+   조각 = <ax-seg> (CSS inline-block · 앱의 「… span」 규칙이 닿지 않는 전용 태그) · 한 줄에 다 들어가면 그대로 한 줄 · 넘치면 조각 경계에서만 꺾고 점은 둘째 줄 머리(「· 」 뒤는 nbsp) · 조각 하나가 한 줄보다 길면 그 안에서 꺾인다
+   쓰지 않는 곳 = 본문 문단 · 표 · 버튼 이름 · 한 줄 말줄임(nowrap) 칸 */
+function segHtml(h) {
+  var p = String(h == null ? "" : h).split(" · ");
+  return p.length < 2 ? p[0] : p.map(function (s, i) { return "<ax-seg>" + (i ? "·&nbsp;" : "") + s + "</ax-seg>"; }).join(" ");
+}
+/* 조각 자리에서 꺾기는 줄 수가 늘지 않을 때만(「어차피 두 줄이 될 거라면」) · 그린 뒤 글 하나를 두 번 잰다(조각 · 보통 흐름) · 조각이 더 높으면 그 글은 보통 흐름(.segflow)
+   다시 재는 때 = 화면 조각이 새로 붙거나 · 숨김 · 클래스가 바뀌거나 · 창 폭이 바뀔 때(폭 · 글 길이가 같으면 다시 재지 않는다) */
+function segFit() {
+  var ps = [];
+  document.querySelectorAll("ax-seg").forEach(function (s) { var p = s.parentElement; if (p && ps.indexOf(p) < 0) ps.push(p); });
+  ps.forEach(function (p) {
+    var w = p.clientWidth, k = w + ":" + p.textContent.length;
+    if (!w || p._segK === k) return;
+    p._segK = k;
+    p.classList.remove("segflow"); var h1 = p.getBoundingClientRect().height;
+    p.classList.add("segflow"); var h0 = p.getBoundingClientRect().height;
+    if (h1 <= h0 + 1) p.classList.remove("segflow");
+  });
+}
+(function () {
+  if (typeof MutationObserver !== "function" || typeof document === "undefined" || !document.documentElement) return;
+  var q = 0, go = function () { if (q) return; q = 1; requestAnimationFrame(function () { q = 0; segFit(); }); };
+  new MutationObserver(go).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden", "class"] });
+  window.addEventListener("resize", go);
+})();
 function fmtTime(ts) { return new Date(ts).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }); }
 function el(id) { return document.getElementById(id); }
 function toast(msg) {
   var t = el("toast");
-  t.textContent = msg; t.classList.add("show");
+  t.innerHTML = segHtml(esc(msg)); t.classList.add("show");   /* v6.69 두 줄이면 「 · 」 자리에서(줄바꿈 글자는 #toast pre-line 그대로) */
   clearTimeout(toast._h); toast._h = setTimeout(function () { t.classList.remove("show"); }, 2400);
 }
 /* v5.77 밤샘 QA(261006) · 두 번 누름이 바뀐 화면의 다른 단추를 누르던 것 막기

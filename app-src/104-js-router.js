@@ -476,8 +476,8 @@ function detPaint(dv, base) {
      칩 · 긴 정식 제목 · 도장 = 본문 첫 줄(axs-dlead · 본문과 함께 스크롤) · 이름과 같은 제목은 다시 쓰지 않는다 · 옛 머리 = [칩 줄 | 닫기] → [제목 | 도장] */
   var xb = '<button type="button" class="axs-x" onclick="detClose()" aria-label="닫기">' + X_SVG + "</button>", nm = sp.name || sp.title || "", lt = sp.title && sp.title !== nm ? sp.title : "";
   var hd = '<div class="axs-dtop"><h2 class="ax-type-t4 axs-dname" id="axsDetT">' + nm + "</h2>" + xb + "</div>";
-  var ld = sp.chips || lt || sp.seal ? '<div class="axs-dlead"><div class="axs-dlx">' + (sp.chips ? '<div class="axs-chiprow axs-dchips">' + sp.chips + "</div>" : "") + (lt ? '<p class="ax-type-t2 axs-dltt">' + lt + "</p>" : "") + "</div>" + (sp.seal || "") + "</div>" : "";
-  var fo = (sp.help ? '<p class="ax-meta">' + esc(sp.help) + "</p>" : "") + (sp.foot || "");
+  var ld = sp.chips || lt || sp.seal ? '<div class="axs-dlead"><div class="axs-dlx">' + (sp.chips ? '<div class="axs-chiprow axs-dchips">' + sp.chips + "</div>" : "") + (lt ? '<p class="ax-type-t2 axs-dltt">' + segHtml(lt) + "</p>" : "") + "</div>" + (sp.seal || "") + "</div>" : "";
+  var fo = (sp.help ? '<p class="ax-meta">' + segHtml(esc(sp.help)) + "</p>" : "") + (sp.foot || "");
   var put = function (n, k, h) { if (!same || DET.last[k] !== h) { n.innerHTML = h; DET.last[k] = h; } };
   put(pan.querySelector(".axs-dhx"), "hd", hd);
   put(bd, "bd", ld + (sp.body || ""));
