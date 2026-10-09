@@ -104,25 +104,27 @@
   };
   /* 롤 · 5차 = 스네어 롤 루프(「따르르」 타격이 분명 · 음을 낮춰 몸통 있게) + 밑에 낮은 울림 루프(팀파니 결 · 0.45) · 크기와 밝기를 함께 올린다 */
   var RV = 0.55, LO = 0.45;
-  function gOf(v) { return RV * (0.07 + 0.93 * v * v); }
+  /* 6차 · 사용자 「롤이 70% 쯤 왔을 때 볼륨이 적당」 → 끝(v 1)을 5차의 70% 지점 크기(약 -5.4dB)로 · 시작은 그대로 작게 */
+  function gOf(v) { return RV * (0.07 + 0.47 * Math.pow(v, 1.5)); }
+  var SG = 0.56;   /* 쾅 · 차임 · 박수도 같은 만큼(-5dB) 줄여 롤과의 상대 크기는 5차 그대로 */
   function fOf(v) { return 1800 + 9000 * v * v; }   /* 작을 때도 스네어 타격은 들리게(1.8kHz 위부터) */
   function lvAt(r, t) { if (t >= r.t1) return r.b; if (t <= r.t0) return r.a; return r.a + (r.b - r.a) * (t - r.t0) / (r.t1 - r.t0); }
-  P.rollOn = function (when, v) {
+  P.rollOn = function (when, v, top) {
     this.rollOff(when, 0.05);
     var b = SND.buf.roll; if (!b) return;
     var t = this.t(when), c = this.ctx, s = c.createBufferSource(), lp = c.createBiquadFilter(), g = c.createGain();
     s.buffer = b; s.loop = true; lp.type = "lowpass"; lp.Q.value = 0.4;
     lp.frequency.setValueAtTime(fOf(v), t);
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gOf(v), t + 0.12);
+    top = top || 1; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gOf(v) * top, t + 0.12);
     s.connect(lp); lp.connect(g); g.connect(this.master); s.start(t, Math.random() * (b.duration - 0.1));
     var lo = null, bl = SND.buf.rollLo;
     if (bl) { lo = c.createBufferSource(); var gl = c.createGain(); lo.buffer = bl; lo.loop = true; gl.gain.value = LO; lo.connect(gl); gl.connect(lp); lo.start(t, Math.random() * (bl.duration - 0.1)); }
-    this._roll = { s: s, lo: lo, g: g, lp: lp, a: v, b: v, t0: t, t1: t + 0.12 };
+    this._roll = { s: s, lo: lo, g: g, lp: lp, a: v, b: v, t0: t, t1: t + 0.12, top: top };
   };
   P.rollLv = function (when, v, dur) {
     var r = this._roll; if (!r) return;
     var t = this.t(when), cur = lvAt(r, t), t1 = t + Math.max(0.05, dur || 0.05);
-    hold(r.g.gain, t); r.g.gain.setValueAtTime(gOf(cur), t); r.g.gain.exponentialRampToValueAtTime(gOf(v), t1);
+    hold(r.g.gain, t); r.g.gain.setValueAtTime(gOf(cur) * r.top, t); r.g.gain.exponentialRampToValueAtTime(gOf(v) * r.top, t1);
     hold(r.lp.frequency, t); r.lp.frequency.setValueAtTime(fOf(cur), t); r.lp.frequency.exponentialRampToValueAtTime(fOf(v), t1);
     r.a = cur; r.b = v; r.t0 = t; r.t1 = t1;
   };
@@ -135,15 +137,15 @@
   /* 쾅 · 원음 · 트레일러 드럼 히트 + 크래시 · 1등은 낮은 울림 한 겹 더 */
   P.boomS = function (when, size) {
     var t = this.t(when), L = size === "l", M = size === "m";
-    this.smp(t, "boom", L ? 1 : M ? 0.88 : 0.75);
-    this.smp(t + 0.004, "crash", L ? 0.7 : M ? 0.58 : 0.48);
-    if (L) this.smp(t, "deep", 0.85);
+    this.smp(t, "boom", SG * (L ? 1.19 : M ? 0.88 : 0.75));
+    this.smp(t + 0.004, "crash", SG * (L ? 0.83 : M ? 0.58 : 0.48));
+    if (L) this.smp(t, "deep", SG * 1.0);
   };
   /* 당첨 소리 · 반짝이는 차임 꼬리 + 박수(등수가 높을수록 크고 길게 · 환호) */
   P.cheer = function (when, size) {
     var t = this.t(when), L = size === "l", M = size === "m";
-    this.smp(t, "chime", L ? 0.6 : M ? 0.5 : 0.38);
-    this._cheer = this.smp(t + 0.12, L ? "clapL" : M ? "clapM" : "clapS", L ? 0.72 : M ? 0.58 : 0.42);
+    this.smp(t, "chime", SG * (L ? 0.71 : M ? 0.5 : 0.38));
+    this._cheer = this.smp(t + 0.12, L ? "clapL" : M ? "clapM" : "clapS", SG * (L ? 0.86 : M ? 0.58 : 0.42));
   };
   /* 다음 등수로 넘어갈 때 박수가 남아 있으면 부드럽게 줄인다 */
   P.hush = function (when, tc) {
@@ -171,9 +173,9 @@
     if (!SFX.rt) return;
     try { SFX.rt[name].apply(SFX.rt, [SFX.rt.ctx.currentTime].concat(args)); } catch (e) {}
   }
-  ROLL.start = function (v) {
-    var n = now(); ROLL.on = true; ROLL.s = SND.ok; ROLL.next = n + 0.06; ROLL.h = 0; ROLL.a = ROLL.b = v; ROLL.t0 = ROLL.t1 = n;
-    if (ROLL.s) ctl("rollOn", [v]);
+  ROLL.start = function (v, top) {
+    var n = now(); ROLL.on = true; ROLL.top = top || 1; ROLL.s = SND.ok; ROLL.next = n + 0.06; ROLL.h = 0; ROLL.a = ROLL.b = v; ROLL.t0 = ROLL.t1 = n;
+    if (ROLL.s) ctl("rollOn", [v, ROLL.top]);
   };
   ROLL.to = function (v, dur) {
     if (!ROLL.on) return;
@@ -195,7 +197,7 @@
     var n = now(), guard = 0;
     if (ROLL.next < n - 0.25 || ROLL.next > n + 1) ROLL.next = n + 0.02;   /* 시계가 바뀌었거나(첫 키 뒤 오디오 시작) 화면이 오래 멈췄다 */
     while (ROLL.next < n + 0.05 && guard++ < 8) {
-      var l = lv(ROLL.next), v = (0.07 + 0.42 * Math.pow(l, 1.4)) * (ROLL.h ? 0.86 : 1) * (0.9 + 0.2 * Math.random());
+      var l = lv(ROLL.next), v = (0.07 + 0.24 * Math.pow(l, 1.5)) * (ROLL.top || 1) * (ROLL.h ? 0.86 : 1) * (0.92 + 0.16 * Math.random());   /* 6차 · 합성도 끝 크기를 70% 지점으로 */
       SFX.at(ROLL.next - n, "snr", Math.round(v * 1000) / 1000, ROLL.h);
       ROLL.h = 1 - ROLL.h;
       ROLL.next += (0.94 + 0.12 * Math.random()) / (10 + 6 * l);           /* 합성 대체 · 초당 10 타 → 16 타(덜 촘촘하게) */

@@ -38,17 +38,18 @@
   /* ─────────────── 부저 데모 261009 · 등수별 길이(초) ───────────────
    *   hold = 최고 속도 유지 · dec = 감속 길이 창(출구가 6시에 서도록 이 안에서 고른다) · rock = 선 뒤 정적
    *   fin = 마지막 칸 끝자리: dd 감속 · st [이동, 쉼] 한 칸씩 · pause 한 칸 앞 멈칫(0 = 없음) · M 0 보통 / 1 멈칫 / 2 멈칫 + 넘칠 듯 되돌아옴
-   *   5차(사용자 261009 「넘어갈 듯 말 듯 되돌아오는 동작은 이상하다」): 모든 등수 M 0 · 긴장감은 끝자리 감속 길이(한 칸씩 · 쉼이 점점 길어짐)로만 · 1등이 가장 길다
+   *   5차(사용자 261009 「넘어갈 듯 말 듯 되돌아오는 동작은 이상하다」): 멈칫 · 넘칠 듯 없앰
+   *   6차(사용자 261009 「일의 자리 한 칸씩 넘어가는 연출이 작위적」): fin = { fs } 하나 · 일의 자리도 다른 자리처럼 계속 돌다가 마찰처럼 부드럽게 감속해 선다(fs 초 · 다른 자리 0.45초의 2 ~ 4배) · 튐 · 되돌아옴 없음 · 1등이 가장 길다
    *   fan = 팡파르 s · m · l · fanL = 팡파르 길이(그 뒤 공개 루프) */
   var WFAST = clamp(+Q.get("wfast") || 7.2, 3, 9), OXC = 360, CARD_AUTO = 3.2, SPINUP = 1.0;
   var BIGK = 1.14, BIGY = 105;   /* 4차 · 부저 화면 · 회전 · 감속에서 통을 1.14배(지름 약 760 → 870px · 화면 높이 70 → 81%) */
   var RKP = {
-    6: { hold: 1.0, dec: [2.6, 3.4], rock: 0.7, fin: { dd: 0.6, st: [[0.12, 0.1], [0.14, 0.16]], pause: 0, M: 0 }, fan: "s", fanL: 1.3 },
-    5: { hold: 1.3, dec: [2.8, 3.6], rock: 0.75, fin: { dd: 0.7, st: [[0.12, 0.12], [0.14, 0.18]], pause: 0, M: 0 }, fan: "s", fanL: 1.3 },
-    4: { hold: 1.6, dec: [3.0, 3.9], rock: 0.8, fin: { dd: 0.8, st: [[0.12, 0.12], [0.14, 0.18], [0.17, 0.26]], pause: 0, M: 0 }, fan: "s", fanL: 1.3 },
-    3: { hold: 2.2, dec: [3.4, 4.4], rock: 0.9, fin: { dd: 0.9, st: [[0.12, 0.14], [0.15, 0.22], [0.18, 0.3], [0.22, 0.42], [0.27, 0]], pause: 0, M: 0 }, fan: "m", fanL: 3.0 },
-    2: { hold: 2.8, dec: [3.6, 4.8], rock: 1.0, fin: { dd: 1.0, st: [[0.12, 0.14], [0.15, 0.22], [0.18, 0.32], [0.22, 0.46], [0.27, 0.6], [0.33, 0]], pause: 0, M: 0 }, fan: "m", fanL: 3.0 },
-    1: { hold: 4.0, dec: [4.4, 5.8], rock: 1.3, fin: { dd: 1.1, st: [[0.12, 0.14], [0.15, 0.22], [0.18, 0.32], [0.22, 0.46], [0.27, 0.62], [0.33, 0.8], [0.42, 0]], pause: 0, M: 0 }, fan: "l", fanL: 5.4 }
+    6: { hold: 1.0, dec: [2.6, 3.4], rock: 0.7, fin: { fs: 0.9 }, fan: "s", fanL: 1.3 },
+    5: { hold: 1.3, dec: [2.8, 3.6], rock: 0.75, fin: { fs: 0.95 }, fan: "s", fanL: 1.3 },
+    4: { hold: 1.6, dec: [3.0, 3.9], rock: 0.8, fin: { fs: 1.0 }, fan: "s", fanL: 1.3 },
+    3: { hold: 2.2, dec: [3.4, 4.4], rock: 0.9, fin: { fs: 1.25 }, fan: "m", fanL: 3.0 },
+    2: { hold: 2.8, dec: [3.6, 4.8], rock: 1.0, fin: { fs: 1.5 }, fan: "m", fanL: 3.0 },
+    1: { hold: 4.0, dec: [4.4, 5.8], rock: 1.3, fin: { fs: 1.8 }, fan: "l", fanL: 5.4 }
   };
   function RK() { var r = curRound(), n = parseInt(r && r.name, 10); if (!(n >= 1 && n <= 6)) n = clamp(rounds().length - ST.round, 1, 6); return RKP[n]; }
 
@@ -1015,7 +1016,7 @@
     if (!bigTickets().length) return "empty";
     var P = RK();
     BZ.press = T; SHK.t0 = T; SHK.amp = 8;
-    ROLL.press(); ROLL.start(0.16); ROLL.to(0.32, SPINUP + P.hold);   /* 4차 · 짧은 쿵 → 낮은 롤이 작게 시작 */
+    ROLL.press(); ROLL.start(0.16, P.fan === "l" ? 1.19 : 1); ROLL.to(0.32, SPINUP + P.hold);   /* 6차 · 1등만 롤 +1.5dB */   /* 4차 · 짧은 쿵 → 낮은 롤이 작게 시작 */
     clearTimeout(bzTipT); fade($("mixSkip"), 0, 0.2);
     burstBuzzer();
     DRM.mode = "spin"; DRAW.k = left; DRAW.stopT = -1; DRAW.t0 = T; SPIN.t0 = T; SPIN.hold = P.hold;
@@ -1133,47 +1134,26 @@
       if (lb.ph === "set") { EXP.ph = "open"; REEL.on = true; REEL.t0 = T + 0.25; planReels(); uiRevealPrep(); ROLL.to(1, 0.25 + REEL.cells[REEL.cells.length - 1].stops[3]); }   /* 진짜 멈출 때 가장 크다 · 멈칫 동안에도 롤은 이어진다 */
     }
   }
-  /* 번호 릴(부저 데모) · 칸 j 는 0.4j 초씩 늦게(4명부터 0.3j) · 앞 세 자리는 빠르게 차례로 · 끝자리는 마지막 칸만 등수별로 천천히(planFinal)
-   *   멈칫 = 한 칸 앞에서 선 것처럼 쉬었다가 넘어간다 · 넘칠 듯 = 맞는 숫자를 지나 다음 숫자 반쯤까지 갔다가 되돌아온다 · 확정 소리 · 오렌지 · 이름은 진짜 멈춘 뒤에만 */
+  /* 번호 릴(부저 데모) · 칸 j 는 0.4j 초씩 늦게(4명부터 0.3j) · 앞 세 자리는 빠르게 차례로 · 끝자리는 마지막 칸만 등수별로 더 길게 감속(RKP fin.fs · 6차)
+   *   감속은 연속 회전에서 부드럽게(튐 · 멈칫 · 되돌아옴 없음) · 확정 소리 · 오렌지 · 이름은 진짜 멈춘 뒤에만 */
   var EXOX = 0, EXK = 1, EXOY = 0;
   function planReels() {
     var K = WB.length, F = RK().fin, gap = K > 3 ? 0.3 : 0.4;
-    REEL.rollD = 2;
     REEL.cells = WB.map(function (b, j) {
       var d = String(b.no).replace(/\D/g, "").slice(-4); d = ("0000" + d).slice(-4).split("").map(Number);
       var o = j * gap, fin = j === K - 1;
-      var c = { digits: d, stops: [0.8 + o, 1.15 + o, 1.5 + o, 2.0 + o], slow: [0.45, 0.45, 0.45, 0.5], spd: [13, 14, 15, 16], pos: [0, 0, 0, 0], done: [0, 0, 0, 0], last: [-1, -1, -1, -1], fin: fin, fake: -1 };
-      for (var k = 0; k < 4; k++) { var ts = c.stops[k] - c.slow[k]; c.pos[k] = d[k] - c.spd[k] * ts - c.spd[k] * c.slow[k] / 3; }
-      if (fin) planFinal(c, d[3], 1.6 + o, F);
+      var c = { digits: d, stops: [0.8 + o, 1.15 + o, 1.5 + o, 2.0 + o], slow: [0.45, 0.45, 0.45, 0.5], ep: [3, 3, 3, 3], spd: [13, 14, 15, 16], pos: [0, 0, 0, 0], done: [0, 0, 0, 0], last: [-1, -1, -1, -1], fin: fin, fake: -1 };
+      if (fin) { c.slow[3] = F.fs; c.stops[3] = 1.6 + o + F.fs; c.ep[3] = 2; }   /* 6차 · 마지막 칸 일의 자리 = 같은 속도로 돌다 fs 초 동안 마찰 감속(2차 곡선)으로 선다 */
+      for (var k = 0; k < 4; k++) { var ts = c.stops[k] - c.slow[k]; c.pos[k] = d[k] - c.spd[k] * ts - c.spd[k] * c.slow[k] / c.ep[k]; }
       return c;
     });
   }
-  function planFinal(c, dg, tS, F) {
-    var v = c.spd[3], up = F.M >= 1 ? 1 : 0, A = dg - F.st.length - up, Dd = v * F.dd / 3, kf = [], t = tS, p = A - Dd;
-    c.pos[3] = p - v * tS; kf.push({ t: t, p: p });
-    function add(dur, dp, e) { t += dur; p += dp; kf.push({ t: t, p: p, e: e }); }
-    add(F.dd, Dd, "o3");                                                      /* 속도를 이어받아 감속 */
-    F.st.forEach(function (x, i) { var lastS = i === F.st.length - 1; add(x[0], 1, lastS && !F.M ? "o3" : "ob"); if (!lastS) add(x[1], 0, "h"); });   /* 한 칸씩 · 간격이 벌어진다 · 5차 · 마지막 한 칸은 튀지 않고 부드럽게 선다 */
-    if (up) { c.fake = t; add(F.pause, 0.12, "cr"); add(0.14, 0.88, "ob"); }  /* 멈칫 · 한 칸 앞에서 쉬다가 조금 밀려 넘어간다 */
-    if (F.M >= 2) { add(0.55, 0.44, "io"); add(0.42, 0, "tr"); add(0.38, -0.44, "bo"); }   /* 넘칠 듯 · 다음 숫자 반쯤 → 떨다가 → 되돌아와 선다 */
-    c.kf = kf; c.stops[3] = t; c.slow[3] = t - tS;
-    REEL.rollD = Math.max(0.5, (up ? c.fake : t) - 0.05);                     /* 스네어 롤은 멈칫 순간(없으면 확정 순간) 끊긴다 */
-  }
-  function bounceOut(u) { var n = 7.5625, d = 2.75; if (u < 1 / d) return n * u * u; if (u < 2 / d) { u -= 1.5 / d; return n * u * u + 0.75; } if (u < 2.5 / d) { u -= 2.25 / d; return n * u * u + 0.9375; } u -= 2.625 / d; return n * u * u + 0.984375; }
-  function EZ(e, u) { switch (e) { case "o3": return EO(u); case "ob": return EOB(u); case "io": return EIO(u); case "cr": return u * u; case "bo": return bounceOut(u); } return u; }
-  function kfPos(c, t) {
-    var kf = c.kf; if (t <= kf[0].t) return c.pos[3] + c.spd[3] * t;
-    for (var i = 1; i < kf.length; i++) if (t < kf[i].t) { var a = kf[i - 1], b = kf[i], u = (t - a.t) / (b.t - a.t); return a.p + (b.p - a.p) * EZ(b.e, u) + (b.e === "tr" ? Math.sin((t - a.t) * 40) * 0.02 : 0); }
-    return kf[kf.length - 1].p;
-  }
+  /* 자리 위치 · 같은 속도로 돌다가 감속 창(slow) 동안 ease-out(ep 3 = 3차 · 2 = 마찰 같은 2차)으로 속도가 0 이 되며 정확히 그 숫자에 선다 · 6차 · 선 뒤 흔들림 없음 */
   function reelPos(c, k, t) {
-    if (k === 3 && c.kf) return kfPos(c, t);
-    var stop = c.stops[k], spd = c.spd[k], slowL = c.slow[k], ts = stop - slowL;
+    var stop = c.stops[k], spd = c.spd[k], slowL = c.slow[k], ts = stop - slowL, ep = c.ep ? c.ep[k] : 3;
     if (t < ts) return c.pos[k] + spd * t;
-    var pS = c.pos[k] + spd * ts, A = spd * slowL / 3, want = pS + A, u = clamp((t - ts) / slowL, 0, 1);
-    var p = pS + A * (1 - Math.pow(1 - u, 3));
-    if (u >= 1) { var ov = t - stop; p = want + (ov < 0.35 ? Math.sin(ov / 0.35 * Math.PI) * 0.06 * Math.exp(-ov * 6) : 0); }
-    return p;
+    var pS = c.pos[k] + spd * ts, A = spd * slowL / ep, u = clamp((t - ts) / slowL, 0, 1);
+    return pS + A * (1 - Math.pow(1 - u, ep));
   }
   function stepReels() {
     if (!REEL.on || SC !== "exit") return;

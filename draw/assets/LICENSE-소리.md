@@ -9,8 +9,8 @@
 
 | 넣은 이름 | 원래 이름 (Mixkit 번호) |
 |---|---|
-| roll | Drum Roll (566) · 앞 3초 스네어 롤을 낮춰 루프 |
-| rollLo | Atmospheric prelude drum roll (569) |
+| roll | Drum Roll (566) · 앞 3초 스네어 롤을 낮춰, 무작위 조각을 이어 16초 긴 롤로 |
+| rollLo | Atmospheric prelude drum roll (569) · 같은 방식 16초 |
 | boom | Cinematic mystery trailer drum hit (546) |
 | crash | Drum Roll (566) · 끝의 심벌만 사용 |
 | deep | Deep cinematic subtle drum impact (549) |
