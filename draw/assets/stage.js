@@ -731,8 +731,18 @@
       qx[i] += qvx[i] * dt; qy[i] += qvy[i] * dt;
     }
   }
+  /* 5차 · 숫자 칸은 비운다(색종이 · 점 팡 · 고리가 번호 위를 지나가지 않는다 · 모든 등수) */
+  var DZ = [];
+  function digitZones() {
+    DZ.length = 0;
+    if (!REEL.on || !REEL.cells || !LAY.cells || (SC !== "exit" && SC !== "reveal")) return;
+    var s = LAY.s, hw = (PANW / 2 + 24) * s, ht = (CELLH / 2 + 50) * s;
+    for (var j = 0; j < REEL.cells.length && j < LAY.cells.length; j++) { var L = LAY.cells[j]; DZ.push(L.x - hw, L.y - ht, L.x + hw, L.y + ht); }
+  }
+  function inDZ(x, y, r) { for (var z = 0; z < DZ.length; z += 4) if (x + r > DZ[z] && x - r < DZ[z + 2] && y + r > DZ[z + 1] && y - r < DZ[z + 3]) return true; return false; }
   function drawParticles() {
     if (!pn) return;
+    digitZones();
     cx.setTransform(vs, 0, 0, vs, vox, voy);
     for (var c = 0; c < PCOL.length; c++) {
       cx.fillStyle = PCOL[c]; cx.beginPath();
@@ -740,6 +750,7 @@
         if (qcol[i] !== c) continue;
         var u = qlife[i] / qmax[i], r = qsz[i] * (u < 0.7 ? 1 : 1 - (u - 0.7) / 0.3);
         if (r < 0.3) continue;
+        if (DZ.length && inDZ(qx[i], qy[i], r)) continue;
         cx.moveTo(qx[i] + r, qy[i]); cx.arc(qx[i], qy[i], r, 0, 6.2832);
       }
       cx.fill();
@@ -1063,7 +1074,7 @@
     EXP.ph = "out"; scene("exit"); lock(99);
   }
   /* 칸 배치 · 3명까지 한 줄 · 4명부터 두 줄 · s = 1명 기준 대비 배율(drum.js 그대로) */
-  var CELLW = 232, CELLH = 330, DSTEP = 15, DOTR = 6.3, GAPX = 28, PANW = 4 * 232 + 3 * 28, PANH = 330 + 52;
+  var CELLW = 232, CELLH = 330, DSTEP = 15, DOTR = 7.0, GAPX = 28, PANW = 4 * 232 + 3 * 28, PANH = 330 + 52;
   function layout(K) {
     var cols = K <= 3 ? K : Math.ceil(K / 2), rows = K <= 3 ? 1 : 2;
     var pw = K > 1 ? PANW + 28 : PANW, ph = K > 1 ? PANH + 28 : PANH;
@@ -1270,7 +1281,7 @@
     var g = c.getContext("2d", { willReadFrequently: true });
     DIG = []; var y0 = 1e9, y1 = -1e9;
     for (var d = 0; d < 10; d++) {
-      g.clearRect(0, 0, w, h); g.fillStyle = "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.font = "800 400px " + FONT; g.fillText(String(d), w / 2, h / 2 + 16);
+      g.clearRect(0, 0, w, h); g.fillStyle = "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.font = "900 400px " + FONT;   /* 5차 · 굵기 800 → 900(획마다 점이 한 줄 더) */ g.fillText(String(d), w / 2, h / 2 + 16);
       var px = g.getImageData(0, 0, w, h).data, pts = [];
       for (var y = DSTEP / 2; y < h; y += DSTEP) for (var x = DSTEP / 2; x < w; x += DSTEP) if (px[(Math.floor(y) * w + Math.floor(x)) * 4 + 3] > 110) { pts.push(x - w / 2, y - h / 2); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
       DIG.push(pts);
@@ -1292,9 +1303,9 @@
         var p = reelPos(c, k, t), base = Math.floor(p), fr = p - base, sp = c.done[k] || t > c.stops[k] + 0.4 ? 0 : Math.abs(reelPos(c, k, t + 0.016) - p) / 0.016;
         var cxk = reelCellX(k);
         cx.save(); cx.beginPath(); cx.rect(cxk - CELLW / 2, top, CELLW, bot - top); cx.clip();
-        var blur = stOK && sp > 4 ? clamp(sp * 0.9, 0, 18) : 0;   /* 돌 때만 위아래 흐림 · 멈추면 한 글자 또렷하게 */
-        if (sp === 0 && fr < 0.001) drawDigitSolid(((base % 10) + 10) % 10, cxk, 0, appear);   /* 선 칸 · 한 숫자만 */
-        else for (var jj = -1; jj <= 1; jj++) { var dgj = ((base + jj) % 10 + 10) % 10, oyj = -(jj - fr) * (CELLH + 30); drawDigitSolid(dgj, cxk, oyj, appear); if (blur) { drawDigitSolid(dgj, cxk, oyj - blur, appear * 0.3); drawDigitSolid(dgj, cxk, oyj + blur, appear * 0.3); } }
+        var stretch = stOK ? clamp(sp * 0.45, 0, 6) : 0;   /* 돌 때만 점이 위아래로 늘어난다(잔상) · 멈추면 둥근 점 그대로 */
+        if (sp === 0 && fr < 0.001) drawDigitDots(DIG[((base % 10) + 10) % 10], cxk, 0, 0, top, bot);   /* 선 칸 · 한 숫자만 */
+        else for (var jj = -1; jj <= 1; jj++) drawDigitDots(DIG[((base + jj) % 10 + 10) % 10], cxk, -(jj - fr) * (CELLH + 30), stretch, top, bot);
         cx.restore();
       }
     });
@@ -1313,15 +1324,8 @@
     segs.forEach(function (sg) { var L = Math.hypot(sg[2] - sg[0], sg[3] - sg[1]), n = Math.floor(L / 18); for (var q = 0; q <= n; q++) { var x2 = sg[0] + (sg[2] - sg[0]) * q / n, y2 = sg[1] + (sg[3] - sg[1]) * q / n; cx.moveTo(x2 + 3, y2); cx.arc(x2, y2, 3, 0, 6.2832); } });
     cx.fill(); cx.globalAlpha = 1;
   }
-  /* 5차 · 꽉 찬 흰 숫자(#FFFFFF · 굵기 900) · 칸 폭(232)에 넘치지 않게 가장 넓은 숫자로 크기를 한 번 정한다 */
-  var DFS = 0;
-  function drawDigitSolid(d, x, y, a) {
-    if (!DFS) { cx.font = "900 400px " + FONT; var mw = 0; for (var q = 0; q < 10; q++) mw = Math.max(mw, cx.measureText(String(q)).width); DFS = Math.round(400 * Math.min(1, (CELLW - 8) / Math.max(1, mw))); }
-    cx.globalAlpha = a; cx.fillStyle = "#FFFFFF"; cx.font = "900 " + DFS + "px " + FONT; cx.textAlign = "center"; cx.textBaseline = "middle";
-    cx.fillText(String(d), x, y + 16);
-  }
   function drawDigitDots(pts, ox, oy, st, top, bot) {
-    cx.fillStyle = "#fff"; cx.beginPath();
+    cx.fillStyle = "#FFFFFF"; cx.beginPath();
     var r = DOTR;
     for (var q = 0; q < pts.length; q += 2) {
       var x = ox + pts[q], y = oy + pts[q + 1];
