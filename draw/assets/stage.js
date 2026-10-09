@@ -40,6 +40,7 @@
    *   fin = 마지막 칸 끝자리: dd 감속 · st [이동, 쉼] 한 칸씩 · pause 한 칸 앞 멈칫(0 = 없음) · M 0 보통 / 1 멈칫 / 2 멈칫 + 넘칠 듯 되돌아옴
    *   fan = 팡파르 s · m · l · fanL = 팡파르 길이(그 뒤 공개 루프) */
   var WFAST = clamp(+Q.get("wfast") || 7.2, 3, 9), OXC = 360, CARD_AUTO = 3.2, SPINUP = 1.0;
+  var BIGK = 1.14, BIGY = 105;   /* 4차 · 부저 화면 · 회전 · 감속에서 통을 1.14배(지름 약 760 → 870px · 화면 높이 70 → 81%) */
   var RKP = {
     6: { hold: 1.0, dec: [2.6, 3.4], rock: 0.7, fin: { dd: 0.6, st: [[0.12, 0.1], [0.14, 0.16]], pause: 0, M: 0 }, fan: "s", fanL: 1.3 },
     5: { hold: 1.3, dec: [2.8, 3.6], rock: 0.75, fin: { dd: 0.7, st: [[0.12, 0.12], [0.14, 0.18]], pause: 0, M: 0 }, fan: "s", fanL: 1.3 },
@@ -571,32 +572,33 @@
   }
 
   /* ─────────────── 부저 데모 · 가운데 큰 버튼(순수 연출 · 실제 클릭 없음) · 속도 줄 · 흔들림 ───────────────
-   *   부저 = 통 앞 가운데(960, 610) · 오렌지 돔 + 검은 받침 + 도는 점 고리 · 돔 위 글자 = 등수(「1등」) + PUSH
-   *   누르면: 돔이 0.06초에 내려가고 · 흰 번쩍 · 고리 세 겹이 퍼지고 · 점이 튄다 · 0.3초 뒤 통 가운데(축)로 빨려 들어간다 · 통이 빨라진다 */
+   *   부저 = 오른쪽 아래 구석(1650, 832 · 반지름 96 · 3차) · 오렌지 돔 + 검은 받침 + 도는 점 고리 · 돔 위 글자 = 등수(「1등」) + PUSH
+   *   누르면(4차): 돔이 0.06초에 내려가고 · 그 자리에서 빛이 번지며 부풀어 흩어진다(작은 고리 · 점) · 0.4초 안에 사라진다 · 통 쪽으로 가지 않는다 · 통이 빨라진다 */
   var BZ = { t0: -9, press: -1, x: 1650, y: 832, R: 96 }, SHK = { t0: -9, amp: 0 }, SPIN = { t0: 0, hold: 1 }, CONF = { until: 0 };
   function uiRk() { var r = curRound(); set("rkN", esc(r.name)); set("rkP", esc(r.prize)); fitText($("rkP"), 46, 30, 1); set("rkC", r.count + "명"); }
   function shakeXY() { var u = T - SHK.t0; if (u > 0.6 || u < 0) return [0, 0]; var a = SHK.amp * Math.exp(-u * 7); return [Math.sin(u * 91) * a, Math.cos(u * 73) * a * 0.7]; }
   function burstBuzzer() {
-    var n = Math.round(240 * TQ().pm);
-    for (var k = 0; k < n; k++) { var a = rng() * 6.2832, sp = 700 + rng() * 1700; spark(BZ.x + Math.cos(a) * BZ.R * 1.2, BZ.y + Math.sin(a) * BZ.R * 1.2, Math.cos(a) * sp, Math.sin(a) * sp, 0.6 + rng() * 0.7, 2.5 + rng() * 5, rng() < 0.55 ? 0 : 3, 0, 2.6); }
+    var n = Math.round(90 * TQ().pm);                 /* 4차 · 부저 자리에서만 작게 흩어진다 */
+    for (var k = 0; k < n; k++) { var a = rng() * 6.2832, sp = 260 + rng() * 520; spark(BZ.x + Math.cos(a) * BZ.R * 1.1, BZ.y + Math.sin(a) * BZ.R * 1.1, Math.cos(a) * sp, Math.sin(a) * sp, 0.3 + rng() * 0.35, 2 + rng() * 4, rng() < 0.55 ? 0 : 3, 0, 3.2); }
   }
   function stepBuzzer(dt) {                            /* 1등 공개 · 양옆에서만 흰 점이 내린다(가운데 이름 · 부서는 가리지 않는다) */
     if (CONF.until > T && SC === "reveal" && rng() < 0.7) { var L = rng() < 0.5, x = L ? 40 + rng() * 380 : 1500 + rng() * 380; spark(x, -20, (rng() - 0.5) * 80, 150 + rng() * 200, 6, 3 + rng() * 4, 3, 40, 0.3); }
   }
   function drawBuzzer() {
     var vis = SC === "mix" && !NEXTCARD, pr = BZ.press >= 0 ? T - BZ.press : -1;
-    if (!vis && !(pr >= 0 && pr < 1.4)) return;
-    if (vis && pr >= 1.4) pr = -1;
+    if (!vis && !(pr >= 0 && pr < 0.5)) return;
+    if (vis && pr >= 0.5) pr = -1;
     var sh = shakeXY(), x = BZ.x + sh[0], y = BZ.y + sh[1];
     cx.setTransform(vs, 0, 0, vs, vox, voy);
     var ap = vis && pr < 0 ? EOB(clamp((T - BZ.t0) / 0.45, 0, 1)) : 1, al = vis && pr < 0 ? clamp((T - BZ.t0) / 0.2, 0, 1) : 1;
-    var gone = pr >= 0 ? EIO(clamp((pr - 0.3) / 0.5, 0, 1)) : 0, sc = Math.max(0.02, ap * (1 - gone * 0.94));
-    al *= 1 - gone; x += (960 - x) * gone; y += (DY + 98 - y) * gone;
-    if (pr >= 0 && pr < 0.22) { cx.globalAlpha = 0.2 * (1 - pr / 0.22); cx.fillStyle = "#fff"; cx.fillRect(-vox / vs, -voy / vs, vw / vs, vh / vs); }
+    /* 4차 · 눌림 0.06초 → 그 자리에서 부풀며 흩어져 0.4초 안에 사라진다(통 쪽으로 가지 않는다) */
+    var gone = pr >= 0 ? EO(clamp((pr - 0.07) / 0.33, 0, 1)) : 0, sc = Math.max(0.02, ap * (1 + gone * 0.3));
+    al *= 1 - gone;
+    if (pr >= 0 && pr < 0.3) { var gl = cx.createRadialGradient(BZ.x, BZ.y, 0, BZ.x, BZ.y, BZ.R * 2.6); gl.addColorStop(0, "rgba(255,255,255,0.55)"); gl.addColorStop(0.45, "rgba(255,178,132,0.28)"); gl.addColorStop(1, "rgba(255,126,49,0)"); cx.globalAlpha = 1 - pr / 0.3; cx.fillStyle = gl; cx.beginPath(); cx.arc(BZ.x, BZ.y, BZ.R * 2.6, 0, 6.2832); cx.fill(); }
     if (pr >= 0) for (var q = 0; q < 3; q++) {         /* 충격 고리 세 겹 */
-      var u = (pr - q * 0.09) / 0.95; if (u <= 0 || u >= 1) continue;
-      cx.globalAlpha = (1 - u) * 0.85; cx.strokeStyle = q === 1 ? C.o : "#fff"; cx.lineWidth = 14 * (1 - u) + 1;
-      cx.beginPath(); cx.arc(BZ.x, BZ.y, BZ.R * 1.24 + EO(u) * 1250, 0, 6.2832); cx.stroke();
+      var u = (pr - q * 0.04) / 0.34; if (u <= 0 || u >= 1) continue;
+      cx.globalAlpha = (1 - u) * 0.8; cx.strokeStyle = q === 1 ? C.o : "#fff"; cx.lineWidth = 8 * (1 - u) + 1;
+      cx.beginPath(); cx.arc(BZ.x, BZ.y, BZ.R * 1.24 + EO(u) * BZ.R * 1.6, 0, 6.2832); cx.stroke();
     }
     if (al <= 0.01) { cx.globalAlpha = 1; return; }
     cx.globalAlpha = al;
@@ -695,6 +697,7 @@
   }
   /* 등수 카드 · 오렌지 스테이지 + 흰 점 고리(홍보부 02 Circle 원본) 왼쪽에 잘려 걸린다 */
   var CARDC = null;
+  var CARD_CX = 600, CARD_CY = 560, CARD_RR = 410;
   function drawCardObject() {
     if (!window.AXF_DATA) return;
     var a = clamp(sT() / 0.5, 0, 1);
@@ -704,8 +707,8 @@
       for (var i = 0; i < n; i++) { var q = axfSample(K.A, K.D, i, 0, 0); pts.push(q); sx += q[0]; sy += q[1]; }
       sx /= n; sy /= n; CARDC = { x: sx, y: sy, r: Math.hypot(pts[0][0] - sx, pts[0][1] - sy) };
     }
-    var s = 470 / CARDC.r;
-    window.axfDraw(cx, "circle", axfF() * 0.6, { x: 420 - CARDC.x * s, y: DY - CARDC.y * s, s: s }, [C.w, "#FFE3D2", C.o25], a);
+    var s = CARD_RR / CARDC.r;                         /* 4차 · 사진 원(#kPic 중심 600, 560 · 반지름 300)과 같은 중심 · 점 원 반지름 410 */
+    window.axfDraw(cx, "circle", axfF() * 0.6, { x: CARD_CX - CARDC.x * s, y: CARD_CY - CARDC.y * s, s: s }, [C.w, "#FFE3D2", C.o25], a);
   }
 
   /* ─────────────── 점 입자 · 팡 · 고리 ─────────────── */
@@ -785,7 +788,7 @@
   var LAY = { K: 1, cols: 1, rows: 1, s: 1, cells: [], br: 250, ph: 382 };
   var REEL = { on: false, t0: 0, cells: [] };
   var EXGAP = 0.5;
-  function scene(s) { if (s !== "spin" && s !== "tension" && s !== "exit") ROLL.stop(); SC = s; sceneT0 = T; ST.scene = s === "restore" ? ST.scene : s; document.body.dataset.scene = s; persist(); uiScene(); scrPush(true); }
+  function scene(s) { if (s !== "spin" && s !== "tension" && s !== "exit") ROLL.stop(); if (s !== "reveal") ROLL.hush(); SC = s; sceneT0 = T; ST.scene = s === "restore" ? ST.scene : s; document.body.dataset.scene = s; persist(); uiScene(); scrPush(true); }
   function sT() { return T - sceneT0; }
   function rounds() { return CFG.rounds && CFG.rounds.length ? CFG.rounds : DEF.rounds; }
   function curRound() { return rounds()[Math.min(ST.round, rounds().length - 1)]; }
@@ -957,7 +960,7 @@
   function playIntro(thenCheckin) {
     if (!vidStart("intro")) { if (thenCheckin) startCheckin(); return; }
     ST.introDone = true; INTRO_NEXT = !!thenCheckin; persist();
-    scene("intro"); lock(1); ROLL.start(0.1); ROLL.to(0.8, 3.8); later(3.9, function () { if (SC === "intro") ROLL.end("m"); });
+    scene("intro"); lock(1);                         /* 4차 · 인트로는 소리 없음 */
   }
   function introDone() {
     if (INTRO_NEXT) { INTRO_NEXT = false; scene("idle"); startCheckin(); }
@@ -999,8 +1002,8 @@
     if (left <= 0) return "full";
     if (!bigTickets().length) return "empty";
     var P = RK();
-    BZ.press = T; SHK.t0 = T; SHK.amp = 16;
-    SFX.play("bzHit"); ROLL.start(0.16); ROLL.to(0.32, SPINUP + P.hold);   /* 3차 · 쿵 → 스네어 롤이 작게 시작 */
+    BZ.press = T; SHK.t0 = T; SHK.amp = 8;
+    ROLL.press(); ROLL.start(0.16); ROLL.to(0.32, SPINUP + P.hold);   /* 4차 · 짧은 쿵 → 낮은 롤이 작게 시작 */
     clearTimeout(bzTipT); fade($("mixSkip"), 0, 0.2);
     burstBuzzer();
     DRM.mode = "spin"; DRAW.k = left; DRAW.stopT = -1; DRAW.t0 = T; SPIN.t0 = T; SPIN.hold = P.hold;
@@ -1055,7 +1058,7 @@
     whoFetch();                                       /* 261008 실명 · 부서 · 번호 릴이 도는 동안 받아 둔다 */
     layout(ids.length);
     WB = ids.map(function (id, j) { return { id: id, no: resById(id).no, i: -1, ph: "wait", t0: 0, cell: j }; });
-    EXOX = CAMD.ox; GATE.tgt = 1; GATE.t0 = T; ROLL.to(0.68, 2.2);
+    EXOX = CAMD.ox; EXK = CAMD.k; EXOY = CAMD.oy; GATE.tgt = 1; GATE.t0 = T; ROLL.to(0.68, 2.2);
     EXP.ph = "out"; scene("exit"); lock(99);
   }
   /* 칸 배치 · 3명까지 한 줄 · 4명부터 두 줄 · s = 1명 기준 대비 배율(drum.js 그대로) */
@@ -1099,7 +1102,7 @@
         py_[j] = Math.min(YB, RW + 6 + 0.5 * G * t2 * t2); if (py_[j] >= YB) py_[j] = YB - hb; ba_[j] += dt * 6;
         if (t2 > 0.5 || (k < last && WB[k + 1].ph === "drop")) {
           b.ph = "fly"; b.t0 = T;
-          prj(0, py_[j], 0); b.fx0 = PRJ.x + CAMD.ox; b.fy0 = PRJ.y + CAMD.oy; b.fr0 = RB * PRJ.s; b.a0 = ba_[j]; b.X = b.fx0; b.Y = b.fy0; b.Rr = b.fr0; b.ang = b.a0;
+          prj(0, py_[j], 0); b.fx0 = DX + CAMD.k * (PRJ.x - DX) + CAMD.ox; b.fy0 = DY + RW + CAMD.k * (PRJ.y - DY - RW) + CAMD.oy; b.fr0 = RB * PRJ.s * CAMD.k; b.a0 = ba_[j]; b.X = b.fx0; b.Y = b.fy0; b.Rr = b.fr0; b.ang = b.a0;
           if (k === 0) fade($("side"), 0, 0.3);
           if (k === last) { GATE.tgt = 0; EXP.ph = "fly"; }
         }
@@ -1114,13 +1117,13 @@
     }
     if (EXP.ph === "fly") {
       var lb = WB[last], uu = clamp((T - lb.t0) / 1.15, 0, 1), ee = EIO(uu);
-      CAMD.k = 1 + 0.5 * ee; CAMD.oy = -560 * ee; CAMD.ox = EXOX > 100 ? EXOX : -120 * ee; CAMD.a = 1 - EO(uu * 2.2);
+      CAMD.k = EXK + (1.5 - EXK) * ee; CAMD.oy = EXOY + (-560 - EXOY) * ee; CAMD.ox = EXOX > 100 ? EXOX : -120 * ee; CAMD.a = 1 - EO(uu * 2.2);
       if (lb.ph === "set") { EXP.ph = "open"; REEL.on = true; REEL.t0 = T + 0.25; planReels(); uiRevealPrep(); ROLL.to(1, 0.25 + REEL.cells[REEL.cells.length - 1].stops[3]); }   /* 진짜 멈출 때 가장 크다 · 멈칫 동안에도 롤은 이어진다 */
     }
   }
   /* 번호 릴(부저 데모) · 칸 j 는 0.4j 초씩 늦게(4명부터 0.3j) · 앞 세 자리는 빠르게 차례로 · 끝자리는 마지막 칸만 등수별로 천천히(planFinal)
    *   멈칫 = 한 칸 앞에서 선 것처럼 쉬었다가 넘어간다 · 넘칠 듯 = 맞는 숫자를 지나 다음 숫자 반쯤까지 갔다가 되돌아온다 · 확정 소리 · 오렌지 · 이름은 진짜 멈춘 뒤에만 */
-  var EXOX = 0;
+  var EXOX = 0, EXK = 1, EXOY = 0;
   function planReels() {
     var K = WB.length, F = RK().fin, gap = K > 3 ? 0.3 : 0.4;
     REEL.rollD = 2;
@@ -1256,8 +1259,7 @@
     }
     for (var j = 0; j < NB; j++) live_[j] = 0;
     CAMD.a = 0;
-    scene("end"); lock(1.5); ROLL.start(0.12); ROLL.to(0.9, 2.2);
-    later(2.3, function () { if (SC === "end") ROLL.end("l"); });
+    scene("end"); lock(1.5);                         /* 4차 · 끝 화면은 소리 없음 */
   }
 
   /* ─────────────── 공개 그림 · 캡슐 · 릴 · 등분 선(drum.js 그대로) ─────────────── */
@@ -1847,8 +1849,8 @@
     ROLL.tick(); stepBuzzer(dt); autoStep();
     if (SC === "exit") { stepExit(dt); stepReels(); }
     if (SC === "mix" && ST.closed && DRM.mode === "spin" && LOAD.q <= 0 && !NEXTCARD) MIXT += dt;
-    var ct = camTarget(), oxT = (SC === "mix" && !NEXTCARD) || SC === "spin" || SC === "tension" ? OXC : 0;
-    if (ct != null && SC !== "exit") { var kk = Math.min(1, dt * (SC === "spin" ? 6 : 3)); CAMD.a += (ct - CAMD.a) * kk; CAMD.k += (1 - CAMD.k) * kk; CAMD.ox += (oxT - CAMD.ox) * Math.min(1, dt * 2.4); CAMD.oy += (0 - CAMD.oy) * kk; }
+    var ct = camTarget(), big = (SC === "mix" && !NEXTCARD) || SC === "spin" || SC === "tension", oxT = big ? OXC : 0, kT = big ? BIGK : 1, oyT = big ? BIGY : 0;
+    if (ct != null && SC !== "exit") { var kk = Math.min(1, dt * (SC === "spin" ? 6 : 3)), km = Math.min(1, dt * 2.4); CAMD.a += (ct - CAMD.a) * kk; CAMD.k += (kT - CAMD.k) * km; CAMD.ox += (oxT - CAMD.ox) * km; CAMD.oy += (oyT - CAMD.oy) * km; }
     ME.idleA += ((SC === "idle" || SC === "intro" ? 1 : 0) - ME.idleA) * Math.min(1, dt * 3);
     if (NEXTCARD && T >= NEXTCARD) { NEXTCARD = 0; goCard(); }
     stepParticles(dt);

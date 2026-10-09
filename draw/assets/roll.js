@@ -1,9 +1,9 @@
-/* AX Festival 2026 럭키드로우 · 드럼롤 (261009 3차 · stage.html 전용 · 옛 화면 index.html 은 쓰지 않는다)
- *   소리는 셋뿐: 부저 「쿵」 · 스네어 드럼롤 「두구두구」 · 진짜 멈출 때 「쾅」(베이스 드럼 + 크래시 심벌)
- *   멜로디 · 화음 · 음높이가 바뀌는 소리 없음 · 기다리는 동안은 소리 없음 · 공 소리 없음
- *   WebAudio 로 직접 합성한다 · 녹음 · 샘플 · 외부 음원 파일 없음(라이선스 문제 없음 · 인터넷 없이 그대로 난다)
- *   롤 셈여림: 부저 뒤 작게 시작 → 감속 · 배출 · 번호 릴을 따라 부풀고 → 끝자리 멈칫 동안에도 이어지다 → 진짜 멈추는 순간 끊기고 쾅
- *   쾅 크기: s = 6 ~ 4등 · m = 3 · 2등 · l = 1등(크래시 두 겹 · 긴 울림 · 큰북 한 겹 더)
+/* AX Festival 2026 럭키드로우 · 무대 소리 (261009 4차 · stage.html 전용 · 옛 화면 index.html 은 쓰지 않는다)
+ *   원음(snd.js · Mixkit 무료 효과음을 자르고 섞은 것) 이 먼저 · 못 풀면 아래 합성음으로 대신한다
+ *   부저 = 짧은 쿵 · 회전 → 감속 → 공 → 번호 = 낮고 굵은 롤(팀파니 · 큰북 결) 하나가 작게 시작해 점점 커진다(크레센도)
+ *   진짜 멈춘 순간 롤이 끊기고 묵직한 쾅(트레일러 드럼 히트 + 크래시 심벌) → 0.3초 뒤 당첨 소리(반짝이는 차임 + 박수 · 환호)
+ *   크기: s = 6 ~ 4등 · m = 3 · 2등(환호 섞인 박수) · l = 1등(낮은 울림 한 겹 더 · 강당 박수 + 환호 10초)
+ *   인트로 · 끝 화면 · 기다리는 동안은 소리 없음 · 공 소리 없음 · 멜로디 없음
  *   소리는 진행 조건이 아니다 · M(소리 끄기)이거나 소리가 안 나와도 화면은 똑같이 간다 */
 (function () {
   var P = window.Sfx.prototype;
@@ -20,13 +20,13 @@
     var t = this.t(when), c = this.ctx; v = v == null ? 0.5 : v; h = h ? 1 : 0;
     var br = Math.min(1, 0.45 + v);
     var n = this.nz(t, 0.2), hp = c.createBiquadFilter(), pk = c.createBiquadFilter(), g = c.createGain();
-    hp.type = "highpass"; hp.frequency.value = 1400 + 250 * h;
-    pk.type = "peaking"; pk.frequency.value = 4000 + 1200 * br; pk.Q.value = 0.9; pk.gain.value = 2 + 5 * br;
+    hp.type = "highpass"; hp.frequency.value = 800 + 150 * h;
+    pk.type = "peaking"; pk.frequency.value = 2400 + 800 * br; pk.Q.value = 0.9; pk.gain.value = 2 + 5 * br;
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5 * v, t + 0.0015);
     g.gain.exponentialRampToValueAtTime(0.15 * v, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.19);
     n.connect(hp); hp.connect(pk); pk.connect(g); this.out(g, 0.1);
-    var o = this.osc("sine", 192 - 7 * h, t, 0.09), g2 = c.createGain();
-    o.frequency.exponentialRampToValueAtTime(160, t + 0.06);
+    var o = this.osc("sine", 150 - 6 * h, t, 0.09), g2 = c.createGain();
+    o.frequency.exponentialRampToValueAtTime(122, t + 0.06);
     this.env(g2, t, 0.001, 0.34 * v, 0.07); o.connect(g2); this.out(g2, 0.04);
     var o2 = this.osc("sine", 330, t, 0.05), g3 = c.createGain();
     this.env(g3, t, 0.001, 0.1 * v, 0.035); o2.connect(g3); this.out(g3, 0);
@@ -76,8 +76,82 @@
     if (L) { this.kik(t, 0.75, 1.9, 62); this.crash(t + 0.018, 0.2, 4.0, 1.13); }
   };
 
-  /* ─────────── 롤 예약 · 실시간은 오디오 시계, 녹화는 화면 시계 · 0.05초 앞까지만 예약(멈출 때 바로 끊긴다) ─────────── */
-  var ROLL = window.ROLL = { on: false, next: 0, h: 0, a: 0, b: 0, t0: 0, t1: 0 };
+  /* ─────────── 원음(snd.js) · 페이지를 열 때 한 번 푼다 · AudioBuffer 는 실시간 · 녹화 굽기 양쪽에서 같이 쓴다 ─────────── */
+  var SND = window.SND = { buf: {}, ok: false };
+  (function () {
+    var src = window.AXF_SND, OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if (!src || !OAC) return;
+    var ac; try { ac = new OAC(2, 1, 44100); } catch (e) { return; }
+    var keys = Object.keys(src), left = keys.length;
+    function fin() { if (--left <= 0) SND.ok = !!(SND.buf.roll && SND.buf.boom); }
+    keys.forEach(function (k) {
+      try {
+        var bin = atob(src[k]), u = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+        var pr = ac.decodeAudioData(u.buffer, function (b) { SND.buf[k] = b; fin(); }, function () { fin(); });
+        if (pr && pr.catch) pr.catch(function () {});
+      } catch (e) { fin(); }
+    });
+  })();
+  function hold(prm, t) { if (prm.cancelAndHoldAtTime) prm.cancelAndHoldAtTime(t); else prm.cancelScheduledValues(t); }
+  /* 원음 한 번 · 돌려준 {s, g} 로 나중에 줄일 수 있다 */
+  P.smp = function (when, name, v, off, dur) {
+    var b = SND.buf[name]; if (!b) return null;
+    var t = this.t(when), c = this.ctx, s = c.createBufferSource(), g = c.createGain();
+    s.buffer = b; g.gain.value = v == null ? 1 : v; s.connect(g); g.connect(this.master);
+    if (dur) s.start(t, off || 0, dur); else s.start(t, off || 0);
+    return { s: s, g: g };
+  };
+  /* 롤 · 낮은 롤 루프 하나 · 크기(gain)와 밝기(lowpass)를 함께 올린다 · 작을 때는 둔하고 낮게, 클수록 열린다 */
+  var RV = 0.55;
+  function gOf(v) { return RV * (0.07 + 0.93 * v * v); }
+  function fOf(v) { return 420 + 6500 * v * v; }
+  function lvAt(r, t) { if (t >= r.t1) return r.b; if (t <= r.t0) return r.a; return r.a + (r.b - r.a) * (t - r.t0) / (r.t1 - r.t0); }
+  P.rollOn = function (when, v) {
+    this.rollOff(when, 0.05);
+    var b = SND.buf.roll; if (!b) return;
+    var t = this.t(when), c = this.ctx, s = c.createBufferSource(), lp = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = b; s.loop = true; lp.type = "lowpass"; lp.Q.value = 0.4;
+    lp.frequency.setValueAtTime(fOf(v), t);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gOf(v), t + 0.12);
+    s.connect(lp); lp.connect(g); g.connect(this.master); s.start(t, Math.random() * (b.duration - 0.1));
+    this._roll = { s: s, g: g, lp: lp, a: v, b: v, t0: t, t1: t + 0.12 };
+  };
+  P.rollLv = function (when, v, dur) {
+    var r = this._roll; if (!r) return;
+    var t = this.t(when), cur = lvAt(r, t), t1 = t + Math.max(0.05, dur || 0.05);
+    hold(r.g.gain, t); r.g.gain.setValueAtTime(gOf(cur), t); r.g.gain.exponentialRampToValueAtTime(gOf(v), t1);
+    hold(r.lp.frequency, t); r.lp.frequency.setValueAtTime(fOf(cur), t); r.lp.frequency.exponentialRampToValueAtTime(fOf(v), t1);
+    r.a = cur; r.b = v; r.t0 = t; r.t1 = t1;
+  };
+  P.rollOff = function (when, fo) {
+    var r = this._roll; if (!r) return; this._roll = null;
+    var t = this.t(when); fo = fo || 0.03;
+    hold(r.g.gain, t); r.g.gain.setTargetAtTime(0, t, fo / 3);
+    try { r.s.stop(t + fo + 0.05); } catch (e) {}
+  };
+  /* 쾅 · 원음 · 트레일러 드럼 히트 + 크래시 · 1등은 낮은 울림 한 겹 더 */
+  P.boomS = function (when, size) {
+    var t = this.t(when), L = size === "l", M = size === "m";
+    this.smp(t, "boom", L ? 1 : M ? 0.88 : 0.75);
+    this.smp(t + 0.004, "crash", L ? 0.7 : M ? 0.58 : 0.48);
+    if (L) this.smp(t, "deep", 0.85);
+  };
+  /* 당첨 소리 · 반짝이는 차임 꼬리 + 박수(등수가 높을수록 크고 길게 · 환호) */
+  P.cheer = function (when, size) {
+    var t = this.t(when), L = size === "l", M = size === "m";
+    this.smp(t, "chime", L ? 0.6 : M ? 0.5 : 0.38);
+    this._cheer = this.smp(t + 0.12, L ? "clapL" : M ? "clapM" : "clapS", L ? 0.72 : M ? 0.58 : 0.42);
+  };
+  /* 다음 등수로 넘어갈 때 박수가 남아 있으면 부드럽게 줄인다 */
+  P.hush = function (when, tc) {
+    var h = this._cheer; if (!h) return; this._cheer = null;
+    var t = this.t(when); hold(h.g.gain, t); h.g.gain.setTargetAtTime(0, t, tc || 0.35);
+  };
+  P.bzHitS = function (when) { if (!this.smp(when, "hit", 0.8)) this.bzHit(when); };
+
+  /* ─────────── 롤 진행 · 원음이면 이벤트(rollOn · rollLv · rollOff · 쾅) · 아니면 합성 롤 예약(0.05초 앞까지만) ─────────── */
+  var ROLL = window.ROLL = { on: false, s: false, next: 0, h: 0, a: 0, b: 0, t0: 0, t1: 0 };
   function now() {
     if (window.SFX && SFX.log) return SFX.clock();
     if (window.SFX && SFX.rt) return SFX.rt.ctx.currentTime;
@@ -88,22 +162,41 @@
     if (t <= ROLL.t0) return ROLL.a;
     return ROLL.a + (ROLL.b - ROLL.a) * (t - ROLL.t0) / (ROLL.t1 - ROLL.t0);
   }
-  /* 시작 · v = 셈여림(0 ~ 1) */
-  ROLL.start = function (v) { var n = now(); ROLL.on = true; ROLL.next = n + 0.06; ROLL.h = 0; ROLL.a = ROLL.b = v; ROLL.t0 = ROLL.t1 = n; };
-  /* 지금 셈여림에서 dur 초 동안 v 까지 */
-  ROLL.to = function (v, dur) { var n = now(); ROLL.a = lv(n); ROLL.b = v; ROLL.t0 = n; ROLL.t1 = n + Math.max(0.05, dur); };
-  ROLL.stop = function () { ROLL.on = false; };
-  /* 끊고 쾅 */
-  ROLL.end = function (size) { ROLL.on = false; if (window.SFX) SFX.at(0, "boom", size || "s"); };
+  /* 롤 제어는 소리 끔(M)이어도 보낸다(켜진 채 남지 않게) · 소리 크기는 M 이 마스터에서 막는다 */
+  function ctl(name, args) {
+    if (!window.SFX) return;
+    if (SFX.log) { SFX.log.push([SFX.clock(), name, args]); return; }
+    if (!SFX.rt) return;
+    try { SFX.rt[name].apply(SFX.rt, [SFX.rt.ctx.currentTime].concat(args)); } catch (e) {}
+  }
+  ROLL.start = function (v) {
+    var n = now(); ROLL.on = true; ROLL.s = SND.ok; ROLL.next = n + 0.06; ROLL.h = 0; ROLL.a = ROLL.b = v; ROLL.t0 = ROLL.t1 = n;
+    if (ROLL.s) ctl("rollOn", [v]);
+  };
+  ROLL.to = function (v, dur) {
+    if (!ROLL.on) return;
+    var n = now(); ROLL.a = lv(n); ROLL.b = v; ROLL.t0 = n; ROLL.t1 = n + Math.max(0.05, dur);
+    if (ROLL.s) ctl("rollLv", [v, dur]);
+  };
+  ROLL.stop = function () { if (!ROLL.on) return; ROLL.on = false; if (ROLL.s) ctl("rollOff", [0.3]); };
+  /* 끊고 쾅 → 당첨 소리 */
+  ROLL.end = function (size) {
+    var was = ROLL.on; ROLL.on = false; size = size || "s";
+    if (ROLL.s && was) ctl("rollOff", [0.02]);
+    if (!window.SFX) return;
+    if (SND.ok) { SFX.at(0, "boomS", size); SFX.at(0.3, "cheer", size); } else SFX.at(0, "boom", size);
+  };
+  ROLL.hush = function () { ctl("hush", [0.35]); };
+  ROLL.press = function () { if (window.SFX) SFX.play(SND.ok ? "bzHitS" : "bzHit"); };
   ROLL.tick = function () {
-    if (!ROLL.on || !window.SFX) return;
+    if (!ROLL.on || ROLL.s || !window.SFX) return;
     var n = now(), guard = 0;
     if (ROLL.next < n - 0.25 || ROLL.next > n + 1) ROLL.next = n + 0.02;   /* 시계가 바뀌었거나(첫 키 뒤 오디오 시작) 화면이 오래 멈췄다 */
     while (ROLL.next < n + 0.05 && guard++ < 8) {
       var l = lv(ROLL.next), v = (0.07 + 0.42 * Math.pow(l, 1.4)) * (ROLL.h ? 0.86 : 1) * (0.9 + 0.2 * Math.random());
       SFX.at(ROLL.next - n, "snr", Math.round(v * 1000) / 1000, ROLL.h);
       ROLL.h = 1 - ROLL.h;
-      ROLL.next += (0.94 + 0.12 * Math.random()) / (15 + 9 * l);           /* 초당 15 타 → 크게 칠수록 24 타 */
+      ROLL.next += (0.94 + 0.12 * Math.random()) / (10 + 6 * l);           /* 합성 대체 · 초당 10 타 → 16 타(덜 촘촘하게) */
     }
   };
 })();
