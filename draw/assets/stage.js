@@ -1,7 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════════════
  * 261009 부저 연출(사용자 결정 · 디자인 시안/럭키드로우 고도화 261009/기획.md · 바뀐 곳 = 그 폴더 tools/patch_js.py --public)
- *   부저 화면(장면 mix · 가운데 큰 버튼 · 순수 연출) → Space(무대 노트북 · 콘솔 「다음」과 같은 표) = 부저 → 빠른 회전(새 장면 spin · 7.2 rad/s) → 감속(tension) → 번호 릴 끝자리 등수별(RKP)
- *   첫 추첨 최소 섞기 없음(당첨은 행운권 전체에서 암호 난수라 섞은 시간과 무관) · 카드 3.2초 뒤 저절로 부저 화면 · 합성 음악 music.js(N = 음악만 끄기)
+ *   부저 화면(장면 mix · 오른쪽 아래 버튼 · 순수 연출) → Space(무대 노트북 · 콘솔 「다음」과 같은 표) = 부저 → 빠른 회전(새 장면 spin · 7.2 rad/s) → 감속(tension) → 번호 릴 끝자리 등수별(RKP)
+ *   첫 추첨 최소 섞기 없음(당첨은 행운권 전체에서 암호 난수라 섞은 시간과 무관) · 카드 3.2초 뒤 저절로 부저 화면
+ *   3차(사용자 261009 피드백): 음악 · 멜로디 전부 뺌 · 소리 = 부저 쿵 · 스네어 드럼롤 · 진짜 멈출 때 쾅(roll.js) · 공 소리 없음 · 기다리는 동안 무음
+ *     부저 = 오른쪽 아래 구석 작게(통을 가리지 않는다) · 진행자 키 안내는 오른쪽 아래 아주 작게 4초 · N 키 없앰(M = 소리 전체)
  *   당첨을 정하는 곳(startExit · pickBatch) · 서버 계약 · 원격 명령 이름은 그대로
  * AX Festival 2026 · 17F 럭키드로우 무대 화면 · 드럼 판 (stage.html 전용 · 261008)
  *   사용자 결정 261008: ① 드럼 데모(drum.html · drum.js) 연출을 운영 무대에 그대로 ② 무대 표기 = 행운권 번호 + 실명 + 부서 크게(같은 날 「이름 가림」 대체 · 사번 없음)
@@ -571,7 +573,7 @@
   /* ─────────────── 부저 데모 · 가운데 큰 버튼(순수 연출 · 실제 클릭 없음) · 속도 줄 · 흔들림 ───────────────
    *   부저 = 통 앞 가운데(960, 610) · 오렌지 돔 + 검은 받침 + 도는 점 고리 · 돔 위 글자 = 등수(「1등」) + PUSH
    *   누르면: 돔이 0.06초에 내려가고 · 흰 번쩍 · 고리 세 겹이 퍼지고 · 점이 튄다 · 0.3초 뒤 통 가운데(축)로 빨려 들어간다 · 통이 빨라진다 */
-  var BZ = { t0: -9, press: -1, x: 960, y: 610, R: 176 }, SHK = { t0: -9, amp: 0 }, SPIN = { t0: 0, hold: 1 }, CONF = { until: 0 };
+  var BZ = { t0: -9, press: -1, x: 1650, y: 832, R: 96 }, SHK = { t0: -9, amp: 0 }, SPIN = { t0: 0, hold: 1 }, CONF = { until: 0 };
   function uiRk() { var r = curRound(); set("rkN", esc(r.name)); set("rkP", esc(r.prize)); fitText($("rkP"), 46, 30, 1); set("rkC", r.count + "명"); }
   function shakeXY() { var u = T - SHK.t0; if (u > 0.6 || u < 0) return [0, 0]; var a = SHK.amp * Math.exp(-u * 7); return [Math.sin(u * 91) * a, Math.cos(u * 73) * a * 0.7]; }
   function burstBuzzer() {
@@ -589,7 +591,7 @@
     cx.setTransform(vs, 0, 0, vs, vox, voy);
     var ap = vis && pr < 0 ? EOB(clamp((T - BZ.t0) / 0.45, 0, 1)) : 1, al = vis && pr < 0 ? clamp((T - BZ.t0) / 0.2, 0, 1) : 1;
     var gone = pr >= 0 ? EIO(clamp((pr - 0.3) / 0.5, 0, 1)) : 0, sc = Math.max(0.02, ap * (1 - gone * 0.94));
-    al *= 1 - gone; y += (DY + 98 - y) * gone;
+    al *= 1 - gone; x += (960 - x) * gone; y += (DY + 98 - y) * gone;
     if (pr >= 0 && pr < 0.22) { cx.globalAlpha = 0.2 * (1 - pr / 0.22); cx.fillStyle = "#fff"; cx.fillRect(-vox / vs, -voy / vs, vw / vs, vh / vs); }
     if (pr >= 0) for (var q = 0; q < 3; q++) {         /* 충격 고리 세 겹 */
       var u = (pr - q * 0.09) / 0.95; if (u <= 0 || u >= 1) continue;
@@ -602,7 +604,7 @@
     if (pr < 0) for (var h = 0; h < 2; h++) {           /* 기다림 · 숨 쉬는 고리 */
       var w = ((T - BZ.t0) / 1.7 + h * 0.5) % 1;
       cx.strokeStyle = "rgba(255,126,49," + (0.55 * (1 - w)).toFixed(3) + ")"; cx.lineWidth = 7 * (1 - w) + 1;
-      cx.beginPath(); cx.arc(x, y, H + 14 + w * 130 * sc, 0, 6.2832); cx.stroke();
+      cx.beginPath(); cx.arc(x, y, H + 10 + w * 70 * sc, 0, 6.2832); cx.stroke();
     }
     cx.fillStyle = "#0b0b0b"; cx.beginPath(); cx.arc(x, y, H, 0, 6.2832); cx.fill();
     cx.lineWidth = 4 * sc; cx.strokeStyle = "rgba(255,255,255,0.85)"; cx.stroke();
@@ -623,7 +625,7 @@
     var nm = String(curRound().name || "");
     cx.fillStyle = "#fff"; cx.textAlign = "center"; cx.textBaseline = "middle";
     cx.font = "800 " + Math.round(R * 0.6) + "px " + FONT; cx.fillText(nm, x, ty - R * 0.08);
-    cx.font = "700 " + Math.round(R * 0.15) + "px " + FONT; cx.globalAlpha = al * 0.88;
+    cx.font = "700 " + Math.max(16, Math.round(R * 0.17)) + "px " + FONT; cx.globalAlpha = al * 0.88;
     if ("letterSpacing" in cx) { cx.letterSpacing = Math.round(R * 0.05) + "px"; cx.fillText("PUSH", x + R * 0.025, ty + R * 0.42); cx.letterSpacing = "0px"; } else cx.fillText("P U S H", x, ty + R * 0.42);
     cx.globalAlpha = 1;
   }
@@ -783,7 +785,7 @@
   var LAY = { K: 1, cols: 1, rows: 1, s: 1, cells: [], br: 250, ph: 382 };
   var REEL = { on: false, t0: 0, cells: [] };
   var EXGAP = 0.5;
-  function scene(s) { SC = s; sceneT0 = T; ST.scene = s === "restore" ? ST.scene : s; document.body.dataset.scene = s; persist(); uiScene(); scrPush(true); }
+  function scene(s) { if (s !== "spin" && s !== "tension" && s !== "exit") ROLL.stop(); SC = s; sceneT0 = T; ST.scene = s === "restore" ? ST.scene : s; document.body.dataset.scene = s; persist(); uiScene(); scrPush(true); }
   function sT() { return T - sceneT0; }
   function rounds() { return CFG.rounds && CFG.rounds.length ? CFG.rounds : DEF.rounds; }
   function curRound() { return rounds()[Math.min(ST.round, rounds().length - 1)]; }
@@ -815,7 +817,6 @@
     if (LOAD.q <= 0 || T < LOAD.t) return;
     if (NIN >= NB) { LOAD.q = 0; return; }
     spawnBall(NIN++); LOAD.q--; LOAD.t = T + 0.022; LOAD.lastT = T;
-    if (NIN % 3 === 0) SFX.play("drop", rng());
   }
   /* 추첨 대상 행운권 전체(넣은 사람 · 당첨 · 부재로 빠진 분 제외 · 이미 당첨된 번호 제외) */
   function bigTickets() {
@@ -864,7 +865,6 @@
       case "help": document.body.classList.toggle("help-on"); uiHelp(); return;
       case "hud": document.body.classList.toggle("hud-on"); return;
       case "ctl": openControl(); return;
-      case "music": SFX.ensure(); toast(MUSIC.toggle() ? "음악 켬" : "음악 끔", true); return;
       case "auto": if (CFG.mode !== "demo") return; AUTO.on = !AUTO.on; toast(AUTO.on ? "자동 진행 켬" : "자동 진행 끔", true); return;
     }
     SFX.ensure();
@@ -957,7 +957,7 @@
   function playIntro(thenCheckin) {
     if (!vidStart("intro")) { if (thenCheckin) startCheckin(); return; }
     ST.introDone = true; INTRO_NEXT = !!thenCheckin; persist();
-    scene("intro"); lock(1); SFX.play("riser", 3.6); later(3.9, function () { SFX.play("hit"); });
+    scene("intro"); lock(1); ROLL.start(0.1); ROLL.to(0.8, 3.8); later(3.9, function () { if (SC === "intro") ROLL.end("m"); });
   }
   function introDone() {
     if (INTRO_NEXT) { INTRO_NEXT = false; scene("idle"); startCheckin(); }
@@ -973,7 +973,6 @@
     scatterSymbol();
     if (!ST.ckAt) { ST.ckAt = Date.now(); persist(); }
     DRM.mode = "spin"; DRM.tgt = WSLOW; scene("checkin"); lock(0.6);
-    SFX.play("whoosh", 0.9);
     if (SRV.polling) { clearInterval(SRV.polling); SRV.polling = null; }
     nockQueue();
     if (CFG.mode === "server" && SRV.hasPool) serverLoad(function () {});   /* 그사이 생긴 번호까지 한 번 더 · 그 뒤로는 읽지 않는다 */
@@ -984,11 +983,10 @@
     ST.ckMin = ST.ckAt ? (Date.now() - ST.ckAt) / 60000 : 0;
     ST.closed = true; if (SRV.polling) { clearInterval(SRV.polling); SRV.polling = null; }
     if (CFG.mode === "server") jsonp("draw_cfg", { closed: 1 }, function (res) { SRV.closeStatus = res && res.ok ? (res.closed ? "서버 체크인 닫힘" : "서버가 닫기를 아직 모름 · 화면만 마감") : "서버 닫기 실패 · 화면만 마감"; pushCtl(); });
-    scene("closed"); lock(0.8); SFX.play("stamp");
+    scene("closed"); lock(0.8);
   }
   function goCard() {
-    MUSIC.set("wait");
-    stageTo("orange", DX, DY, 0.7); scene("card"); lock(0.8); SFX.play("whoosh", 0.8); later(0.35, function () { SFX.play("bell", 784, 0.12); SFX.play("bell", 1175, 0.08); });
+    stageTo("orange", DX, DY, 0.7); scene("card"); lock(0.8);
   }
   function goMix() {   /* 부저 화면 · 통이 가운데에서 천천히 돌고 그 앞에 부저 */
     stageTo("black", 960, 540, 0.6); DRM.mode = "spin"; if (CAMD.a < 0.1) CAMD.ox = OXC; scene("mix"); lock(0.45);
@@ -1002,7 +1000,8 @@
     if (!bigTickets().length) return "empty";
     var P = RK();
     BZ.press = T; SHK.t0 = T; SHK.amp = 16;
-    SFX.play("buzzer"); MUSIC.set("spin"); SFX.play("riser", SPINUP + P.hold + 0.3);
+    SFX.play("bzHit"); ROLL.start(0.16); ROLL.to(0.32, SPINUP + P.hold);   /* 3차 · 쿵 → 스네어 롤이 작게 시작 */
+    clearTimeout(bzTipT); fade($("mixSkip"), 0, 0.2);
     burstBuzzer();
     DRM.mode = "spin"; DRAW.k = left; DRAW.stopT = -1; DRAW.t0 = T; SPIN.t0 = T; SPIN.hold = P.hold;
     ST.drawing = 1; persist();
@@ -1016,7 +1015,7 @@
     if (!ok) { kp = 1.6; m = 0; while ((need + m * 6.2832) * (kp + 1) / w0 < lo) m++; D = (need + m * 6.2832) * (kp + 1) / w0; }
     SLOW.kp = kp; SLOW.t0 = T; SLOW.D = D; SLOW.th0 = DRM.th; SLOW.w0 = w0; SLOW.trav = need + m * 6.2832; SLOW.heart = T + D * 0.55;
     DRM.mode = "slow";
-    MUSIC.set(""); MUSIC.hit(0, "mDown", 1.3); MUSIC.hit(0.15, "mDrone", Math.max(0.6, D - 0.15));
+    ROLL.to(0.55, D);                                 /* 감속을 따라 롤이 부푼다 */
     scene("tension"); lock(99);
   }
   function stepDrum(dt) {
@@ -1027,7 +1026,7 @@
       var u = clamp((T - SLOW.t0) / SLOW.D, 0, 1), kp = SLOW.kp;
       DRM.th = SLOW.th0 + SLOW.trav * (1 - Math.pow(1 - u, kp + 1));
       DRM.w = SLOW.w0 * Math.pow(1 - u, kp);
-      if (u >= 1) { DRM.mode = "rock"; DRM.r0 = T; DRM.base = DRM.th; DRM.w = 0; SFX.play("stamp"); DRAW.stopT = T; }
+      if (u >= 1) { DRM.mode = "rock"; DRM.r0 = T; DRM.base = DRM.th; DRM.w = 0; DRAW.stopT = T; }
     } else if (DRM.mode === "rock") {
       var t = T - DRM.r0, nth = DRM.base + 0.045 * Math.exp(-t * 4.5) * Math.sin(t * 13);
       DRM.w = (nth - DRM.th) / Math.max(dt, 1e-3); DRM.th = nth;
@@ -1036,13 +1035,8 @@
     var tk = Math.floor(DRM.th / (6.2832 / NPEG));
     if (tk !== PAWL.last) {
       PAWL.last = tk; PAWL.k = 1;
-      if (DRM.mode === "slow") SFX.play("clack", 0.75);
-      else if (DRM.mode === "spin" && Math.abs(DRM.w) > 0.3 && T - PAWL.snd > 0.09 && CAMD.a > 0.3) { PAWL.snd = T; SFX.play("clack", 0.18); }
     }
     PAWL.k = Math.max(0, PAWL.k - dt * 9);
-    var lv = Math.round(clamp(Math.abs(DRM.w) / WMIX, 0, 1) * (CAMD.a > 0.5 ? 1 : 0.3) * 20) / 20;
-    if (lv !== PAWL.air) { PAWL.air = lv; SFX.play("air", lv); }
-    if (DRM.mode === "slow" && T >= SLOW.heart) { SFX.play("heart"); SLOW.heart = T + Math.max(0.5, 0.9 - (T - SLOW.t0) * 0.05); }
   }
   /* 문이 열리는 순간 · 이번 등수 남은 인원 K 명을 행운권 전체에서 한꺼번에 정하고 이 기기에 저장(서버 기록은 공개 순간) */
   function startExit() {
@@ -1061,7 +1055,7 @@
     whoFetch();                                       /* 261008 실명 · 부서 · 번호 릴이 도는 동안 받아 둔다 */
     layout(ids.length);
     WB = ids.map(function (id, j) { return { id: id, no: resById(id).no, i: -1, ph: "wait", t0: 0, cell: j }; });
-    EXOX = CAMD.ox; GATE.tgt = 1; GATE.t0 = T; SFX.play("hatch", true, 1); SFX.play("lock");
+    EXOX = CAMD.ox; GATE.tgt = 1; GATE.t0 = T; ROLL.to(0.68, 2.2);
     EXP.ph = "out"; scene("exit"); lock(99);
   }
   /* 칸 배치 · 3명까지 한 줄 · 4명부터 두 줄 · s = 1명 기준 대비 배율(drum.js 그대로) */
@@ -1099,15 +1093,15 @@
       if (b.ph === "inside") {
         var e = EIO((T - b.t0) / 0.42);
         px_[j] = b.sx * (1 - e); py_[j] = b.sy + (RW + 6 - b.sy) * e; pz_[j] = b.sz * (1 - e); ba_[j] += dt * 9;
-        if (T - b.t0 >= 0.42) { b.ph = "drop"; b.t0 = T; SFX.play("drop", 0.3); }
+        if (T - b.t0 >= 0.42) { b.ph = "drop"; b.t0 = T; }
       } else if (b.ph === "drop") {
         var t2 = T - b.t0, hb = Math.abs(Math.sin(Math.min(t2, 0.5) / 0.5 * Math.PI)) * 26 * Math.max(0, 1 - t2 / 0.5);
         py_[j] = Math.min(YB, RW + 6 + 0.5 * G * t2 * t2); if (py_[j] >= YB) py_[j] = YB - hb; ba_[j] += dt * 6;
         if (t2 > 0.5 || (k < last && WB[k + 1].ph === "drop")) {
-          b.ph = "fly"; b.t0 = T; SFX.play("roll", 0.8); SFX.play("whoosh", 0.9);
+          b.ph = "fly"; b.t0 = T;
           prj(0, py_[j], 0); b.fx0 = PRJ.x + CAMD.ox; b.fy0 = PRJ.y + CAMD.oy; b.fr0 = RB * PRJ.s; b.a0 = ba_[j]; b.X = b.fx0; b.Y = b.fy0; b.Rr = b.fr0; b.ang = b.a0;
           if (k === 0) fade($("side"), 0, 0.3);
-          if (k === last) { GATE.tgt = 0; SFX.play("hatch", false, 0.6); EXP.ph = "fly"; }
+          if (k === last) { GATE.tgt = 0; EXP.ph = "fly"; }
         }
       } else if (b.ph === "fly") {
         var u = clamp((T - b.t0) / 1.15, 0, 1), e2 = EIO(u), c = LAY.cells[b.cell];
@@ -1121,7 +1115,7 @@
     if (EXP.ph === "fly") {
       var lb = WB[last], uu = clamp((T - lb.t0) / 1.15, 0, 1), ee = EIO(uu);
       CAMD.k = 1 + 0.5 * ee; CAMD.oy = -560 * ee; CAMD.ox = EXOX > 100 ? EXOX : -120 * ee; CAMD.a = 1 - EO(uu * 2.2);
-      if (lb.ph === "set") { EXP.ph = "open"; REEL.on = true; REEL.t0 = T + 0.25; planReels(); uiRevealPrep(); SFX.play("hatch", true, 0.9); SFX.play("whoosh", 0.5); MUSIC.hit(0.25, "mRoll", REEL.rollD, 0.03, 0.26, 12, 28); }
+      if (lb.ph === "set") { EXP.ph = "open"; REEL.on = true; REEL.t0 = T + 0.25; planReels(); uiRevealPrep(); ROLL.to(1, 0.25 + REEL.cells[REEL.cells.length - 1].stops[3]); }   /* 진짜 멈출 때 가장 크다 · 멈칫 동안에도 롤은 이어진다 */
     }
   }
   /* 번호 릴(부저 데모) · 칸 j 는 0.4j 초씩 늦게(4명부터 0.3j) · 앞 세 자리는 빠르게 차례로 · 끝자리는 마지막 칸만 등수별로 천천히(planFinal)
@@ -1170,16 +1164,12 @@
     if (!REEL.on || SC !== "exit") return;
     var t = T - REEL.t0;
     REEL.cells.forEach(function (c, j) {
-      if (c.fake > 0 && !c.fakeHit && t >= c.fake) { c.fakeHit = 1; SFX.play("heart"); }   /* 멈칫 · 롤이 끊기고 심장 한 번 */
       for (var k = 0; k < 4; k++) {
         var cell = Math.floor(reelPos(c, k, Math.max(0, t)) + 0.5);
-        if (t > 0 && cell !== c.last[k]) { if (c.last[k] >= 0 && t > c.stops[k] - c.slow[k] && (k === 3 || REEL.cells.length === 1)) SFX.play("tick", c.fin && k === 3 ? clamp((t - (c.stops[3] - c.slow[3])) / c.slow[3], 0, 1) : 0.4); c.last[k] = cell; }
+        if (t > 0 && cell !== c.last[k]) { c.last[k] = cell; }
         if (!c.done[k] && t >= c.stops[k]) {
           c.done[k] = 1;
-          if (c.fin && k === 3) reveal();
-          else if (k === 3) { SFX.play("bell", [523.25, 659.25, 783.99, 880][j % 4], 0.16); SFX.play("stamp"); }
-          else if (REEL.cells.length === 1) SFX.play("bell", [523.25, 659.25, 783.99][k], 0.12);
-          else SFX.play("stamp");
+          if (c.fin && k === 3) reveal();               /* 3차 · 칸 · 자리마다 멈추는 소리 없음 · 롤이 이어지다 마지막 칸에서 쾅 */
         }
       }
     });
@@ -1189,10 +1179,9 @@
   function reveal() {
     EXP.ph = "done";
     stageTo("orange", 960, grpY(), 0.6);
-    SFX.play("hit");
     burst(960, grpY());
     sendBatch();
-    var P = RK(); MUSIC.set(""); MUSIC.hit(0.04, "fanfare", P.fan); later(P.fanL, function () { if (SC === "reveal") MUSIC.set("party"); });
+    var P = RK(); ROLL.end(P.fan);                    /* 롤이 끊기고 쾅 한 번 · 뒤는 조용히(크래시 울림만) */
     if (P.fan !== "s") later(0.35, function () { ring(960, grpY(), 56, 1000, 7, 1.3, 140); });
     if (P.fan === "l") { CONF.until = T + 6; later(0.9, function () { ring(960, grpY(), 64, 1300, 8, 1.4, 160); }); }
     scene("reveal"); lock(1.2);
@@ -1212,12 +1201,11 @@
     DRM.mode = "spin"; DRM.w = 0.5; DRM.tgt = WMIX;
   }
   function confirmWin() {
-    MUSIC.set(""); CONF.until = 0;
+    CONF.until = 0;
     var ri = ST.round, need = curRound().count;
     sendBatch();
     endReveal();
     ST.batch = []; ST.pending = null;
-    SFX.play("whoosh", 0.6);
     lock(0.9);
     var done = roundWins(ri).length >= need;
     if (!done) scene("mix");
@@ -1232,7 +1220,7 @@
     r.st = "absent"; if (CFG.absentRemove) ST.out[r.pk] = "absent"; else delete ST.out[r.pk];
     serverLog(Object.assign({}, r, { st: "absent" }));
     endReveal(); ST.batch = []; ST.pending = null; persist();
-    SFX.play("stamp"); toast("부재 · " + r.no + " · 다시 뽑습니다", true);
+    toast("부재 · " + r.no + " · 다시 뽑습니다", true);
     scene("mix"); lock(1.2);
   }
   function undoLast() {
@@ -1253,7 +1241,6 @@
   }
   function MEsetIdle() { ME.from = null; }
   function goEnd() {
-    MUSIC.set("");
     if (SC === "reveal") { sendBatch(); endReveal(); ST.batch = []; ST.pending = null; }
     stageTo("black");
     var from = [], K = window.AXF_DATA ? AXF_DATA.me : null;
@@ -1269,8 +1256,8 @@
     }
     for (var j = 0; j < NB; j++) live_[j] = 0;
     CAMD.a = 0;
-    scene("end"); lock(1.5); SFX.play("whoosh", 1.2); SFX.play("riser", 2.2);
-    later(2.3, function () { SFX.play("finale"); });
+    scene("end"); lock(1.5); ROLL.start(0.12); ROLL.to(0.9, 2.2);
+    later(2.3, function () { if (SC === "end") ROLL.end("l"); });
   }
 
   /* ─────────────── 공개 그림 · 캡슐 · 릴 · 등분 선(drum.js 그대로) ─────────────── */
@@ -1390,7 +1377,7 @@
       var j = ST.batch.indexOf(id), el = document.getElementById("wc" + j);
       if (el) { var ok = el.querySelector(".ok"); fade(ok, 1, 0.35); }
       var c = LAY.cells[j], sc = LAY.s;
-      if (c) { ring(c.x, c.y, Math.round(48 * Math.max(0.5, TQ().pm)), 700 * sc + 200, 8, 1.0, 140 * sc + 40); SFX.play("bell", 1046.5 + j * 120, 0.14); SFX.play("bell", 1318.5 + j * 120, 0.1); }
+      if (c) { ring(c.x, c.y, Math.round(48 * Math.max(0.5, TQ().pm)), 700 * sc + 200, 8, 1.0, 140 * sc + 40); }
     }
   }
   function ackPoll() {
@@ -1439,7 +1426,7 @@
     });
     if (on === "pPool") uiPool();
     if (s === "mix" || s === "spin" || s === "tension") uiSide();
-    if (s === "mix") { BZ.t0 = T; BZ.press = -1; uiRk(); MUSIC.set(NEXTCARD ? "" : "wait"); }
+    if (s === "mix") { BZ.t0 = T; BZ.press = -1; uiRk(); if (!NEXTCARD) bzTip(); }
     fade($("rk"), (s === "mix" && !NEXTCARD) || s === "spin" || s === "tension" ? 1 : 0, 0.3);
     if (s === "card") uiCard();
     if (s === "board") uiBoard();
@@ -1551,7 +1538,7 @@
     var hm = ("0" + m[3]).slice(-4), md = m[4] ? ("0" + m[4]).slice(-4) : "";
     return { w: +m[1], n: +m[2], cut: hm.slice(0, 2) + ":" + hm.slice(2), ship: md ? +md.slice(0, 2) + "/" + +md.slice(2) : "" };
   }
-  function goFin() { if (SC === "reveal") { sendBatch(); endReveal(); ST.batch = []; ST.pending = null; } stageTo("black"); scene("fin"); lock(0.8); SFX.play("whoosh", 0.8); }
+  function goFin() { if (SC === "reveal") { sendBatch(); endReveal(); ST.batch = []; ST.pending = null; } stageTo("black"); scene("fin"); lock(0.8); }
   function uiFin() {
     var f = ST.fin || { w: 0, n: 0, cut: "17:00", ship: "" }, all = f.n > 0 && f.w >= f.n;
     set("fBig", (all ? "대상 전원 " : "") + '<span class="tab">' + nf(all ? f.n : f.w) + "</span><em>명</em>"); $("fBig").classList.toggle("all", all);
@@ -1602,6 +1589,13 @@
     var el = $("kTip"); if (!el) return;
     el.textContent = msg || ""; el.style.opacity = msg ? "1" : "0";
     clearTimeout(kTipT); if (msg) kTipT = setTimeout(function () { el.style.opacity = "0"; }, 2600);
+  }
+  /* 3차 · 진행자 키 안내 · 부저 화면에서 오른쪽 아래 아주 작게 4초만 · 화면 가운데에는 글자를 띄우지 않는다 */
+  var bzTipT = null;
+  function bzTip() {
+    var el = $("mixSkip"); if (!el) return;
+    el.textContent = "Space · 부저"; fade(el, 1, 0.3);
+    clearTimeout(bzTipT); bzTipT = setTimeout(function () { fade(el, 0, 0.6); }, 4000);
   }
   function uiHelp() {
     if (!document.body.classList.contains("help-on")) return;
@@ -1828,7 +1822,7 @@
     if (e.repeat) return;
     var map = { " ": "next", Enter: "next", PageDown: "next", ArrowRight: "next", r: "redraw", R: "redraw", u: "undo", U: "undo",
       e: "end", E: "end", i: "idle", I: "idle", m: "mute", M: "mute", f: "fs", F: "fs", h: "help", H: "help", "?": "help", g: "hud", G: "hud", p: "ctl", P: "ctl",
-      v: "intro", V: "intro", k: "classic", K: "classic", n: "music", N: "music", a: "auto", A: "auto" };
+      v: "intro", V: "intro", k: "classic", K: "classic", a: "auto", A: "auto" };
     if (map[k]) { e.preventDefault(); act(map[k]); return; }
     if (/^[1-9]$/.test(k)) act("round", +k - 1);
   }
@@ -1846,12 +1840,11 @@
     var t0 = performance.now(), phs = TQ().phs, h = dt / phs;
     for (var s = 0; s < phs; s++) physStep(h);
     PH.ms = PH.ms * 0.9 + (performance.now() - t0) * 0.1;
-    if (HITS > 0 && T - lastHitT > 0.05 && CAMD.a > 0.5) { lastHitT = T; SFX.play("clack", clamp(HITS / 40, 0.15, 0.6)); }
     HITS = 0;
     if (SC === "tension" && DRAW.stopT >= 0 && T - DRAW.stopT > RK().rock) startExit();
     if (SC === "spin" && T - SPIN.t0 >= SPINUP + SPIN.hold) beginDecel();
     if (SC === "card" && sT() >= CARD_AUTO && !NEXTCARD && T >= busyUntil) goMix();
-    MUSIC.tick(); stepBuzzer(dt); autoStep();
+    ROLL.tick(); stepBuzzer(dt); autoStep();
     if (SC === "exit") { stepExit(dt); stepReels(); }
     if (SC === "mix" && ST.closed && DRM.mode === "spin" && LOAD.q <= 0 && !NEXTCARD) MIXT += dt;
     var ct = camTarget(), oxT = (SC === "mix" && !NEXTCARD) || SC === "spin" || SC === "tension" ? OXC : 0;
