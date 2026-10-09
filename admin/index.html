@@ -225,8 +225,7 @@ table.tb{width:100%;border-collapse:collapse;table-layout:fixed}
 .st8 .c.got{background:var(--navy05);border-color:var(--navy1)}
 .st8 .c .no{color:var(--tx3);font-variant-numeric:tabular-nums}
 .st8 .c b{font-size:var(--fs-c);line-height:1.3}
-.st8 .c button{margin-top:auto;align-self:flex-start;font-size:11px;font-weight:700;color:var(--navy);text-decoration:underline;text-underline-offset:2px}
-.st8 .c button.rv{color:var(--bad)}
+.st8 .c .btn{margin-top:auto;height:32px}
 
 /* 진행판 */
 .stline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 16px;margin-bottom:12px}
@@ -398,12 +397,37 @@ details.inc[open]{border-color:var(--navy1)}
 .dc-win{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .dc-no{font-size:var(--fs-kpi);font-weight:700;color:var(--navy);letter-spacing:.04em;border:1px solid var(--navy1);background:var(--navy05);border-radius:var(--r-s);padding:4px 16px}
 .dc-nm{font-size:var(--fs-h1);font-weight:700}
+/* 261009 콘솔 재구성 · 포커스 · 머리 상태 띠 · 전역 검색 · 실패 알림(사라지지 않음) · 찾기 줄 · 한 사람 카드 */
+html{scroll-padding-top:calc(var(--hdr-h) + 12px)}
+:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+header.top :focus-visible,.bar.bulk :focus-visible{outline-color:#fff}
+.hst{display:flex;gap:6px;align-items:center;min-width:0;overflow:hidden}
+.hst button{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:2px 10px;font-size:var(--fs-c);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.22);white-space:nowrap;font-variant-numeric:tabular-nums}
+.hst button.w{background:var(--brand);border-color:var(--brand);color:#fff}
+.gsw{position:relative}
+.gsw input{width:240px;height:28px;border-radius:99px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;padding:0 12px;font-size:var(--fs-c)}
+.gsw input::placeholder{color:rgba(255,255,255,.6)}
+.gsr{position:absolute;right:0;top:calc(100% + 6px);width:340px;max-height:60vh;overflow:auto;background:var(--sf);color:var(--tx);border:1px solid var(--line);border-radius:var(--r-s);box-shadow:var(--sh-lg);padding:4px;z-index:45}
+.gsr button{display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;padding:8px 10px;border-radius:6px;font-size:var(--fs-nav)}
+.gsr button.on,.gsr button:hover{background:var(--navy05)}
+.gsr .cap{margin-left:auto}
+#terr{position:fixed;right:16px;bottom:16px;z-index:85;display:flex;flex-direction:column;gap:8px;width:min(420px,calc(100vw - 32px))}
+.terr{display:flex;gap:10px;align-items:flex-start;background:var(--bad-bg);border:1px solid var(--bad);border-left-width:4px;color:var(--bad);border-radius:var(--r-s);padding:10px 12px;font-size:var(--fs-nav);box-shadow:var(--sh-lg)}
+.terr span{flex:1}.terr small{display:block;color:var(--tx2);margin-top:2px}.terr button{font-weight:700;min-height:28px;padding:0 6px}
+.plist{max-height:640px;overflow:auto}
+.pr{display:grid;grid-template-columns:minmax(0,1fr) 84px 96px 92px;gap:8px;align-items:center;width:100%;text-align:left;padding:8px 12px;border-bottom:1px solid var(--line2);min-height:48px}
+.pr:hover{background:var(--soft)}.pr.cur{background:var(--navy05);box-shadow:inset 3px 0 0 var(--navy)}
+.pr b{display:block}.pr .d{font-size:var(--fs-c);color:var(--tx3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.panel.wide{width:520px}
+.pcs{border-top:1px solid var(--line2);padding:10px 0}
+.pcs>h3{font-size:var(--fs-c);color:var(--tx3);font-weight:600;margin-bottom:6px;display:flex;gap:8px;align-items:center}
+.pcs .row2{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:var(--fs-nav);padding:3px 0}
 @media(max-width:1100px){
   .shell{flex-direction:column;gap:12px}
   aside.lnb{position:static;width:100%;display:flex;gap:4px;overflow-x:auto;padding:4px;scrollbar-width:none}
   aside.lnb h3,aside.lnb h4{display:none}
   aside.lnb button{width:auto;flex-shrink:0;white-space:nowrap}
-  .panel{width:100%;position:static}
+  .panel,.panel.wide{width:100%;position:static}
   .work{flex-direction:column}
   .g75,.g2{grid-template-columns:minmax(0,1fr)}
   .ckg{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -432,6 +456,8 @@ details.inc[open]{border-color:var(--navy1)}
   .tb td{white-space:normal;height:auto;padding:8px 10px}
   .tb th{padding:0 10px}
   .scope{grid-template-columns:minmax(0,1fr)}
+  .hst{display:none}.gsw input{width:150px}.gsr{width:calc(100vw - 32px)}
+  .pr{grid-template-columns:minmax(0,1fr) 80px}.pr .hm{display:none}
 }
 </style>
 </head>
@@ -448,7 +474,8 @@ details.inc[open]{border-color:var(--navy1)}
   </div>
 </div>
 <header class="top">
-  <div class="tb1"><div class="brand"><b>AXF CONTROL</b><span id="envTag">운영 관리</span></div><button class="tag bad" id="endTag" type="button" style="display:none" data-qa="top.ended" title="참가자 앱이 모두 닫혀 있습니다 · 설정 › 앱 오픈" onclick="go('s_open')">행사 종료 중</button><span class="sp"></span>
+  <div class="tb1"><div class="brand"><b>AXF CONTROL</b><span id="envTag">운영 관리</span></div><button class="tag bad" id="endTag" type="button" style="display:none" data-qa="top.ended" title="참가자 앱이 모두 닫혀 있습니다 · 설정 › 앱 오픈" onclick="go('s_open')">행사 종료 중</button><span class="hst" id="hst" aria-label="지금 상태"></span><span class="sp"></span>
+    <div class="gsw"><input id="gsQ" type="search" autocomplete="off" aria-label="사번 · 이름 전역 검색(/)" placeholder="사번 · 이름 찾기  /" role="combobox" aria-expanded="false" aria-controls="gsR"><div class="gsr" id="gsR" role="listbox" hidden></div></div>
     <span class="live" id="stamp"><i class="dot"></i><span class="tx">·</span></span>
     <button class="hbtn" data-qa="top.refresh" onclick="refresh()">새로고침</button>
     <div class="acct-w"><button class="hbtn" id="acctBtn" type="button" aria-haspopup="menu" aria-expanded="false" data-qa="top.acct" onclick="acctMenu()"><span id="roleTag">관리자</span></button>
@@ -457,7 +484,8 @@ details.inc[open]{border-color:var(--navy1)}
   <nav class="tabs" id="tabs" aria-label="메뉴"></nav>
 </header>
 <div class="shell" id="shell"><aside class="lnb" id="lnb" aria-label="메뉴 안 항목"></aside><main id="view"></main></div>
-<div id="toast"><span class="tt" id="toastT"></span><button id="toastU" style="display:none" data-qa="toast.undo">되돌리기</button><span class="ln" id="toastL"></span></div>
+<div id="toast" role="status" aria-live="polite"><span class="tt" id="toastT"></span><button id="toastU" style="display:none" data-qa="toast.undo">되돌리기</button><span class="ln" id="toastL"></span></div>
+<div id="terr" aria-live="assertive"></div>
 <div id="dlg" class="overlay" role="dialog" aria-modal="true" aria-labelledby="dlgT">
   <div class="ocard" id="dlgCard">
     <div class="ot" id="dlgT"></div>
@@ -470,10 +498,7 @@ details.inc[open]{border-color:var(--navy1)}
 <script src="../assets/server.js"></script>
 <script src="qrcode.js"></script>
 <script>
-/* ══════════════════ 0. 설정 ══════════════════
- * 서버 주소는 ../assets/server.js 의 AXF_SERVER 한 곳(앱과 같은 파일) · 못 읽었으면 옛 GAS 기본값(읽기 전용 잠금 · moved 로 새 주소를 알려 준다)
- * 관리코드는 파일에 두지 않는다. 이 탭에는 사번(aemp)과 사람 토큰(tok)만 둔다(sessionStorage · 옛 콘솔과 같은 키라 새 탭에서 옛 콘솔을 열면 다시 로그인하지 않는다).
- * 슈퍼관리자 본인 확인 토큰(sp)은 이 화면 메모리에만 둔다(새로 고침 · 잠금 = 다시 묻는다). */
+/* ══ 0. 설정 ══ */
 var BE_DEFAULT = "https://script.google.com/macros/s/AKfycbwjCaSSUnQ7W1lrM8T426Cn_LgKs_UhI0Qi5XRVk-_eF-oD55-Wwjsot0DkPJCX9JqMBA/exec";
 function beUrlOk(u){ return typeof u==="string" && /^https:\/\/([a-z0-9-]+\.[a-z0-9-]+\.workers\.dev|script\.google\.com\/macros\/s\/[\w-]{20,})\/exec$/.test(u); }
 var BE = beUrlOk(typeof AXF_SERVER==="string"?AXF_SERVER:"") ? AXF_SERVER : BE_DEFAULT;
@@ -487,7 +512,7 @@ var LIST_MAX = 2000;     /* 명단 한 번에 받는 줄 상한(roll_list) */
 var ACCT_PAGE_N = 50;    /* 한 사람 찾기 결과 한 번에 50명(acct_page) */
 var LEGACY_URL = "legacy.html";
 
-/* ══════════════════ 1. 공통 ══════════════════ */
+/* ══ 1. 공통 ══ */
 function loungeName(s){ return String(s).replace(/1F AX LOUNGE 상담/g,"1F AX 라운지").replace(/AX LOUNGE 상담/g,"AX 라운지").replace(/AX LOUNGE/g,"AX 라운지"); }
 function esc(s){ return loungeName(String(s==null?"":s)).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
 /* onclick 안에 넣는 문자열 · 사번 · ID 는 영숫자라 그 밖의 글자는 버린다 */
@@ -521,31 +546,49 @@ function why(r){
 
 /* ── 알림 · o.undo 가 있으면 되돌리기 단추 + 줄어드는 막대(7초) ── */
 function toast(m, o){
-  o=o||{}; var t=el("toast"), u=el("toastU"), ln=el("toastL"), ms=o.ms||(o.undo?UNDO_MS:2600);
+  o=o||{}; var txt=o.html?String(m).replace(/<[^>]+>/g,""):String(m);
+  /* 261009 실패는 사라지지 않고(닫기 단추) 다른 색 · 성공 알림 한 칸과 따로 쌓인다 */
+  if(o.bad||(!o.undo&&!o.ok&&TOAST_BAD.test(txt))) return toastErr(txt);
+  var t=el("toast"), u=el("toastU"), ln=el("toastL"), ms=o.ms||(o.undo?UNDO_MS:2600);
   el("toastT").innerHTML=o.html?m:esc(m); t.className="on";
   if(o.undo){ u.style.display=""; u.textContent=o.undoLbl||"되돌리기"; u.onclick=function(){ u.style.display="none"; t.className=""; o.undo(); }; } else { u.style.display="none"; u.onclick=null; }
   ln.style.transition="none"; ln.style.width=o.undo?"100%":"0"; void ln.offsetWidth;
   if(o.undo){ ln.style.transition="width "+ms+"ms linear"; ln.style.width="0"; }
   clearTimeout(t._t); t._t=setTimeout(function(){ t.className=""; u.style.display="none"; }, ms);
 }
-/* ── 확인 창 · 되돌릴 수 없는 일 · 20명 이상 · 부수 효과가 큰 일에만(L2) · onOk 가 없으면 안내 한 장 ── */
-var DLG={ onOk:null, gate:null };
+var TOAST_BAD=/실패|못했습니다|하지 못|지 못했|못 보냄|않았습니다|연결할 수 없|응답이 늦|응답 없음|모릅니다|바쁩니다|잠겼습니다|맞지 않|없는 사번|POST 를 요구/;
+function toastErr(txt){
+  var box=el("terr"), d=document.createElement("div"); d.className="terr"; d.setAttribute("role","alert");
+  d.innerHTML='<span>'+esc(txt)+'<small>처리됐는지는 기록 › 활동 기록에서 확인합니다 · '+esc(new Date().toTimeString().slice(0,5))+'</small></span><button type="button" aria-label="이 알림 닫기" data-qa="terr.x">닫기</button>';
+  d.lastChild.onclick=function(){ d.remove(); };
+  box.appendChild(d); while(box.children.length>4) box.removeChild(box.firstChild);
+  el("toast").className="";
+}
+/* ── 확인 창 · 되돌릴 수 없는 일 · 20명 이상 · 부수 효과가 큰 일에만(L2) · onOk 가 없으면 안내 한 장
+ * 261009 · 열면 「닫기」에 포커스(입력이 있으면 그 칸) · Tab 은 창 안에서만 돈다 · 닫으면 연 자리로 포커스가 돌아간다 · 입력이 있으면 바깥을 눌러도 닫히지 않는다 ── */
+var DLG={ onOk:null, gate:null, ret:null };
 function dlgGate(){ var ok=el("dlgOk"), off=!!(DLG.gate&&!DLG.gate()); ok.classList.toggle("gated",off); ok.setAttribute("aria-disabled",off?"true":"false"); return !off; }
+function typeBox(w){ return '<label class="fld mt12">확인 · 「'+esc(w)+'」을 그대로 입력<input class="in" id="dlgW" autocomplete="off" data-w="'+esc(w)+'" oninput="dlgGate()"></label>'; }
+function typeOk(){ var i=el("dlgW"); return !!i&&i.value.trim()===i.getAttribute("data-w"); }
 function dialog(o){
-  DLG.onOk=o.onOk||null; DLG.gate=o.gate||null;
+  if(o.x2){ o.x=(o.x||"")+typeBox(o.ok); o.gate=typeOk; o.focus="dlgW"; }
+  var was=el("dlg").className.indexOf("on")>=0;
+  DLG.onOk=o.onOk||null; DLG.gate=o.gate||null; if(!was) DLG.ret=document.activeElement;
   el("dlgT").textContent=o.t||""; el("dlgS").innerHTML=o.s||"";
   el("dlgWho").innerHTML=o.who||""; el("dlgWho").style.display=o.who?"":"none";
   el("dlgX").innerHTML=o.x||"";
   el("dlgCard").className="ocard"+(o.wide?" wide":"");
   var ok=el("dlgOk"); ok.textContent=o.ok||"확인"; ok.disabled=false; ok.className="btn "+(o.danger?"danger fill":"pri");
   el("dlgCancel").style.display=o.onOk?"":"none";
-  el("dlg").className="overlay on";
+  el("dlg").className="overlay on"; dlgInert(true);
   dlgGate();
-  setTimeout(function(){ var f=o.focus&&el(o.focus); (f||ok).focus(); },30);
+  setTimeout(function(){ var f=o.focus&&el(o.focus); (f||(o.onOk?el("dlgCancel"):ok)).focus(); },30);
 }
+function dlgInert(on){ ["shell"].forEach(function(i){ var e=el(i); if(e){ e.inert=on; if(on) e.setAttribute("aria-hidden","true"); else e.removeAttribute("aria-hidden"); } }); var h=document.querySelector("header.top"); if(h) h.inert=on; }
 function dlgBusy(){ return el("dlgOk").disabled; }
 /* 처리 중에는 닫히지 않는다 · onOk 안에서 닫을 때는 dlgForce() */
-function dlgClose(){ if(dlgBusy()) return; el("dlg").className="overlay"; DLG.onOk=null; if(SUPV.wait&&!SUPV.sp){ var w=SUPV.wait; SUPV.wait=[]; w.forEach(function(f){ f(false); }); } }
+function dlgClose(){ if(dlgBusy()) return; var wasOn=el("dlg").className.indexOf("on")>=0; el("dlg").className="overlay"; dlgInert(false); DLG.onOk=null; if(SUPV.wait&&!SUPV.sp){ var w=SUPV.wait; SUPV.wait=[]; w.forEach(function(f){ f(false); }); }
+  var r=DLG.ret; DLG.ret=null; if(wasOn&&r&&r.focus&&document.body.contains(r)) setTimeout(function(){ if(el("dlg").className.indexOf("on")<0) r.focus(); },0); }
 function dlgForce(){ el("dlgOk").disabled=false; dlgClose(); }
 function dlgGo(){
   if(!DLG.onOk){ dlgClose(); return; }
@@ -553,18 +596,26 @@ function dlgGo(){
   var ok=el("dlgOk"); ok.disabled=true; ok.innerHTML='<span class="spin" style="border-color:rgba(255,255,255,.4);border-top-color:#fff"></span>처리 중';
   var fn=DLG.onOk; DLG.onOk=null; fn();
 }
-el("dlg").addEventListener("click",function(e){ if(e.target===el("dlg")) dlgClose(); });
+el("dlg").addEventListener("click",function(e){ if(e.target===el("dlg")&&!el("dlgX").querySelector("input,textarea,select")) dlgClose(); });
+el("dlg").addEventListener("keydown",function(e){
+  if(e.key==="Tab"){ var f=[].filter.call(el("dlgCard").querySelectorAll("button,input,select,textarea,[tabindex]"),function(x){ return !x.disabled&&x.offsetParent!==null&&x.tabIndex>=0; }); if(!f.length) return; var i=f.indexOf(document.activeElement);
+    if(e.shiftKey&&i<=0){ e.preventDefault(); f[f.length-1].focus(); } else if(!e.shiftKey&&i===f.length-1){ e.preventDefault(); f[0].focus(); } }
+  else if(e.key==="Enter"&&e.target.tagName==="INPUT"&&!e.target.hasAttribute("onkeydown")&&!e.isComposing){ e.preventDefault(); dlgGo(); }
+});
 document.addEventListener("keydown",function(e){
-  if(e.key!=="Escape") return;
-  if(el("dlg").className.indexOf("on")>=0) { dlgClose(); return; }
-  if(typeof escHook==="function") escHook();
+  if(e.key==="Escape"){
+    if(el("dlg").className.indexOf("on")>=0) { dlgClose(); return; }
+    if(!el("gsR").hidden){ gsHide(); return; }
+    if(typeof escHook==="function") escHook(); return;
+  }
+  var t=e.target, tg=t&&t.tagName;
+  /* 줄 · 선택 칸 · 칩을 키보드로(261009 가이드라인 2) · Enter · Space = 누르기 */
+  if((e.key==="Enter"||e.key===" ")&&t&&t.matches&&t.matches('tr.row,[role="checkbox"],.cbx,.bx.hand')){ e.preventDefault(); t.click(); return; }
+  if(e.key==="/"&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!(tg==="INPUT"||tg==="TEXTAREA"||tg==="SELECT"||(t&&t.isContentEditable))&&el("dlg").className.indexOf("on")<0&&authed()){ e.preventDefault(); el("gsQ").focus(); el("gsQ").select(); }
 });
 function imp(rows){ return '<div class="imp">'+rows.map(function(r){ return '<div class="'+(r[2]||"")+'"><span>'+esc(r[0])+'</span><b>'+r[1]+'</b></div>'; }).join("")+'</div>'; }
 
-/* ══════════════════ 2. 서버 호출 ══════════════════
- * 읽기 = JSONP GET(call · 15초) · 쓰기와 코드 · PIN · 명단 = fetch POST(callPost · 25초)
- * 모든 응답을 한 곳에서 거른다: auth = 잠금 화면 · spin = 본인 확인 창을 띄우고 같은 요청을 한 번 다시 · locked = 데이터로 쓰지 않는다
- * NET = 최근 요청 결과 고리(진행판 오류율 · 서버 지연에 쓴다 · 이 콘솔의 요청만) */
+/* ══ 2. 서버 호출 ══ */
 var NET=[];
 function netRec(ok, ms){ NET.push({ t:Date.now(), ok:ok?1:0, ms:ms }); if(NET.length>400) NET.splice(0, NET.length-400); }
 var _cbN=0;
@@ -650,11 +701,13 @@ function runOps(items, onEach, onDone){
   next();
 }
 /* 다른 탭(같은 브라우저)에 「바뀜」을 알린다 · 받은 탭은 그 액션 캐시만 버린다 */
-var BC=null; try{ BC=new BroadcastChannel("axf_c2"); BC.onmessage=function(e){ var d=e&&e.data||{}; (d.drop||[]).forEach(cacheDrop); if(typeof wake==="function") wake(); }; }catch(e){}
-function changed(acts){ acts.forEach(cacheDrop); try{ BC&&BC.postMessage({ drop:acts }); }catch(e){} }
+var BC=null; try{ BC=new BroadcastChannel("axf_c2"); BC.onmessage=function(e){ var d=e&&e.data||{}; (d.drop||[]).forEach(cacheDrop); pcStale(); if(typeof wake==="function") wake(); }; }catch(e){}
+function changed(acts){ acts.forEach(cacheDrop); pcStale(); try{ BC&&BC.postMessage({ drop:acts }); }catch(e){} }
+/* 무엇이든 바뀌면 한 사람 카드는 오래된 것으로(다음 그리기에서 새로 받는다 · 옛 카드는 그동안 그대로 보임) */
+function pcStale(){ if(typeof WHO==="undefined") return; for(var k in WHO.info) WHO.info[k]._at=0; }
 
-/* ══════════════════ 3. 잠금 · 로그인 · 슈퍼관리자 본인 확인 ══════════════════ */
-var S={ me:null, nav:"", sub:{}, data:{}, at:{}, err:{}, busy:{}, sel:{}, ui:{} };
+/* ══ 3. 잠금 · 로그인 · 슈퍼관리자 본인 확인 ══ */
+var S={ me:null, nav:"", sub:{}, data:{}, at:{}, err:{}, busy:{}, sel:{}, ui:{}, sig:{} };
 function lock(msg){ setTok(""); S.me=null; supDrop(); el("lock").style.display="flex"; el("lockErr").textContent=msg||""; setTimeout(function(){ el(aemp()?"key":"aemp").focus(); },30); if(aemp()) el("aemp").value=aemp(); meTag(); }
 function unlock(){
   var e=normE(el("aemp").value), v=el("key").value.trim();
@@ -736,37 +789,33 @@ function legacyOpen(id, part){
   var w=window.open(LEGACY_URL, "_blank");
   if(!w) location.href=LEGACY_URL;
 }
-/* ══════════════════ 4. 메뉴 · 화면 틀 · 갱신 ══════════════════
- * 최상위 6개(A 안 · 최종 설계안 1절): 오늘 · 사람 · 현장 · 알림 · 기록 · 설정 · 메뉴 안 항목은 왼쪽 메뉴(소제목 g)
- * 화면 = 머리(묶음 › 소제목 · 이름 · 왜 여기) → 한눈에(현황 띠) → 행동(막대 + 오른쪽 한 칸) → 기록(활동 기록 미니)
- * 아직 새 틀로 옮기지 않은 화면(10/23 범위)은 옛 콘솔의 그 항목을 연다(legacy 칸 · 이행 중 임시 · 끝나면 설정 › 고급 › 보관에만 남긴다)
- * 갱신 = 화면마다 필요한 액션 + 수명(need) · 5초마다 수명이 지난 것만 부른다 · 화면이 가려지면 쉰다 · 다른 화면으로 가면 그 화면 갱신은 멈춘다 */
+/* ══ 4. 메뉴 · 화면 틀 · 갱신 ══ */
 var MENUS=[
-  { id:"td", n:"오늘", d:"시간표를 따라 지금 할 일 · 이상 신호 · 숫자를 한 화면에 봅니다." },
-  { id:"pp", n:"사람", d:"한 사람을 찾아 고치고, 명단에 사람을 넣고 뺍니다." },
-  { id:"fd", n:"현장", d:"행사장에서 돌아가는 일입니다. 신청 처리 · 체크인존 · 추첨 · 시상 · 화면." },
+  { id:"pp", n:"사람", d:"한 사람을 찾아 접속 · 스탬프 · 신청을 보고 대신 처리합니다. 명단에 사람을 넣고 뺍니다." },
+  { id:"td", n:"현장", d:"지금 할 일 · 스태프 요청 · 신청 처리 · 체크인존 · 추첨 · 시상 · 화면입니다." },
   { id:"nt", n:"알림", d:"참가자에게 앱 공지 · 푸시를 보내고 예약합니다." },
   { id:"lg", n:"기록", d:"콘솔과 스태프 폰에서 한 일 · 숫자를 봅니다." },
   { id:"sg", n:"설정", d:"앱 접속 범위 · 현장 QR · 서버 · 고급 설정입니다." }
 ];
 var MENU_IC=(function(){ var s=function(d){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'; };
-  return { td:s('<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>'), pp:s('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"/><path d="M18 14.6A6.5 6.5 0 0 1 21.5 20"/>'),
-    fd:s('<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/>'), nt:s('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>'),
+  return { pp:s('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"/><path d="M18 14.6A6.5 6.5 0 0 1 21.5 20"/>'),
+    td:s('<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/>'), nt:s('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>'),
     lg:s('<path d="M4 20V11M10 20V5M16 20v-6M21 20H3"/>'), sg:s('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/>') }; })();
-/* 항목 · legacy = 옛 콘솔 [항목 id, 세부 번호](아직 새 틀이 아닌 화면) · sup = 슈퍼관리자 본인 확인이 필요한 화면 */
+/* 항목 · legacy = 옛 콘솔 [항목 id, 세부 번호](아직 새 틀이 아닌 화면) · sup = 슈퍼관리자 본인 확인이 필요한 화면 · tri = 「지금」 세 칸(서브탭 칩) */
 var NAV=[
-  { id:"today", m:"td", n:"진행판", r:"시간표를 따라 지금 할 일 · 이상 신호 · 숫자를 한 화면에 봅니다. 쓰기 단추는 없고, 누르면 그 일을 하는 화면으로 갑니다.", view:"today" },
-  { id:"t_inc", m:"td", n:"장애 대응", r:"증상 → 바로 할 일 → 대체 수단 → 복구 확인. 이상 신호를 누르면 해당 줄이 열립니다.", view:"inc" },
-  { id:"p_who", m:"pp", g:"한 사람", n:"한 사람 찾기", r:"사번 · 이름으로 한 사람을 찾아 스탬프 · 룰렛 · PIN 을 고치고 그 사람 기록을 봅니다.", view:"who" },
-  { id:"p_pw", m:"pp", g:"한 사람", n:"PIN 분실 요청", r:"참가자가 앱에서 보낸 PIN 분실 요청입니다. 본인 확인 뒤 초기화하고 처리 표시합니다.", view:"pw" },
-  { id:"p_list", m:"pp", g:"명단", n:"명단", sup:1, r:"사람을 넣고 빼는 일은 모두 이 한 틀에서 합니다. 종류만 고릅니다.", view:"roster" },
-  { id:"f_apply", m:"fd", g:"현장 처리", n:"신청 처리", r:"AX 라운지 상담 · 커피챗 선정입니다. 다음 행동 단추 하나로 처리하고, 승인 · 선정은 알림이 나갑니다.", view:"apply" },
-  { id:"f_ck", m:"fd", g:"현장 처리", n:"체크인존", r:"1F 체크인존 번호표 · 창구별 대기 · 다음 번호 · 창구 E 사이즈 교환입니다.", view:"ck" },
-  { id:"f_crowd", m:"fd", g:"현장 처리", n:"지금 현장", r:"참가자 홈 「지금 현장」 2×2 값 · 대리 제보 · 리허설 보정입니다.", view:"crowd" },
-  { id:"f_fcfs", m:"fd", g:"추첨 · 시상", n:"룰렛과 선착순", r:"룰렛 사용과 자격 · 소진 안내 · 17:00 잔여 · 선착순 참여상 지급입니다.", view:"fcfs" },
-  { id:"f_draw", m:"fd", g:"추첨 · 시상", n:"럭키드로우", r:"Closing Speech 행운권 무대 추첨을 큰 단추 하나로 진행합니다. 추첨 화면 Space 와 같습니다.", view:"draw" },
-  { id:"f_award", m:"fd", g:"추첨 · 시상", n:"시상", r:"7등 랜덤 굿즈 · 아이디어왕 · 타자왕 1~3위입니다.", view:"award" },
-  { id:"f_sign", m:"fd", g:"화면", n:"화면 열기", r:"TV · 큰 화면 · 창구 태블릿에 띄우는 주소입니다. 주소에는 코드가 없습니다.", view:"sign" },
+  { id:"p_who", m:"pp", n:"찾기", r:"사번 · 이름으로 한 사람을 찾습니다. 카드에서 접속 · 스탬프 · 신청을 보고 바로 대신 처리합니다.", view:"who" },
+  { id:"p_list", m:"pp", n:"명단", sup:1, r:"접속 허용 · 스태프 · 10F 사전 신청 · 시험 사번에 사람을 넣고 뺍니다.", view:"roster" },
+  { id:"p_pw", m:"pp", n:"PIN 분실", r:"참가자가 앱에서 보낸 PIN 분실 요청입니다. 본인 확인 뒤 초기화하고 처리 표시합니다.", view:"pw" },
+  { id:"today", m:"td", g:"지금", n:"지금", tri:1, r:"이상 신호 · 스태프 요청 · 지금 할 일입니다. 누르면 그 일을 하는 화면으로 갑니다.", view:"today" },
+  { id:"t_req", m:"td", g:"지금", n:"요청함", tri:1, r:"스태프 폰 「운영자에게 요청」입니다. 사람을 열어 대신 처리한 뒤 처리 · 안내 · 거절로 닫습니다.", view:"req" },
+  { id:"t_inc", m:"td", g:"지금", n:"장애 대응", tri:1, r:"증상 → 바로 할 일 → 대체 수단 → 복구 확인. 이상 신호를 누르면 해당 줄이 열립니다.", view:"inc" },
+  { id:"f_apply", m:"td", g:"현장 처리", n:"신청 처리", r:"AX 라운지 상담 · 커피챗 선정입니다. 다음 행동 단추 하나로 처리하고, 승인 · 선정은 알림이 나갑니다.", view:"apply" },
+  { id:"f_ck", m:"td", g:"현장 처리", n:"체크인존", r:"1F 체크인존 번호표 · 창구별 대기 · 다음 번호입니다.", view:"ck" },
+  { id:"f_crowd", m:"td", g:"현장 처리", n:"지금 현장", r:"참가자 홈 「지금 현장」 2×2 값 · 대리 제보 · 리허설 보정입니다.", view:"crowd" },
+  { id:"f_fcfs", m:"td", g:"추첨 · 시상", n:"룰렛 · 선착순", r:"룰렛 사용과 자격 · 소진 안내 · 선착순 참여상 숫자입니다. 한 사람 처리는 사람 › 찾기 카드에서 합니다.", view:"fcfs" },
+  { id:"f_draw", m:"td", g:"추첨 · 시상", n:"럭키드로우", r:"Closing Speech 행운권 무대 추첨을 큰 단추 하나로 진행합니다. 추첨 화면 Space 와 같습니다.", view:"draw" },
+  { id:"f_award", m:"td", g:"추첨 · 시상", n:"시상", r:"7등 랜덤 굿즈(17:00 룰렛 잔여) · 아이디어왕 · 타자왕 1~3위입니다.", view:"award" },
+  { id:"f_sign", m:"td", g:"화면", n:"화면 열기", r:"TV · 큰 화면 · 창구 태블릿에 띄우는 주소입니다. 주소에는 코드가 없습니다.", view:"sign" },
   { id:"n_send", m:"nt", n:"보내기", r:"받는 사람 · 제목 · 내용 · 푸시도 보내기. 전체급 발송은 인원 확인과 10초 보류가 붙습니다.", view:"send" },
   { id:"n_sched", m:"nt", n:"예약", r:"정해진 시각에 서버가 스스로 내는 공지 · 푸시입니다. 지금 실행 · +5분 · 취소.", view:"sched" },
   { id:"r_log", m:"lg", n:"활동 기록", r:"콘솔과 스태프 폰에서 한 일이 한 곳에 쌓입니다. 되돌릴 수 있는 일은 줄에서 바로 되돌립니다.", view:"log" },
@@ -774,18 +823,22 @@ var NAV=[
   { id:"s_open", m:"sg", n:"앱 오픈", sup:1, r:"누가 앱에 들어올지 한 번에 바꿉니다. 클로즈 베타 · 사전 신청자까지 · 전체 · 자동 · 행사 종료.", view:"open" },
   { id:"s_qr", m:"sg", n:"현장 QR", r:"현장에 붙는 QR 그림(서버 코드로 이 화면에서 그림) · 설치 점검입니다.", view:"qr" },
   { id:"s_srv", m:"sg", n:"서버", r:"서버 주소 · 연결 · 백업 상태 · 읽기 전용 스위치입니다.", legacy:["s_state",0] },
-  { id:"s_adv", m:"sg", n:"고급 · 보관", r:"운영 설정 표(기본값과 다른 것부터)와 평소에 만질 일이 없는 지난 화면입니다.", view:"adv" }
+  { id:"s_adv", m:"sg", n:"고급", r:"운영 설정 표 · 재고와 사이즈 교환 · 시험 데이터 · 옛 화면입니다. 평소에 만질 일이 없습니다.", view:"adv" }
 ];
 var NAVBY={}; NAV.forEach(function(it){ NAVBY[it.id]=it; });
 var MENUBY={}; MENUS.forEach(function(m){ MENUBY[m.id]=m; });
-function navCur(){ return NAVBY[S.nav]||NAV[0]; }
+var NAV0="p_who";
+function navCur(){ return NAVBY[S.nav]||NAVBY[NAV0]; }
+/* 261009 · 메뉴를 옮겨도 화면 상태(S.ui · 쓰던 알림 초안 · 붙여 넣은 사번 · 거르기)는 남긴다 · 메뉴를 바꾸면 주소 기록이 쌓여 뒤로 가기가 콘솔 안에서 돈다 */
 function go(id, sub){
-  if(!NAVBY[id]) id="today";
+  if(!NAVBY[id]) id=NAV0;
   if(sub!=null) S.sub[id]=sub;
-  if(S.nav!==id){ S.nav=id; S.ui={}; }
-  ssSet("axf_c2_nav", id); try{ history.replaceState(null,"","#"+id+(S.sub[id]?"/"+S.sub[id]:"")); }catch(e){}
+  var nv=S.nav!==id; S.nav=id;
+  ssSet("axf_c2_nav", id); navHash(nv);
   render(); load(false); window.scrollTo(0,0);
+  if(nv) setTimeout(function(){ var h=document.querySelector("#view h1"); if(h&&!el("view").contains(document.activeElement)&&document.activeElement!==el("gsQ")){ h.setAttribute("tabindex","-1"); h.focus({ preventScroll:true }); } },0);
 }
+function navHash(push){ var h="#"+S.nav+(S.sub[S.nav]?"/"+encodeURIComponent(S.sub[S.nav]):""); if(location.hash===h) return; try{ history[push?"pushState":"replaceState"](null,"",h); }catch(e){} }
 function goMenu(m){ var last=lsGet("axf_c2_last",{})[m]; var it=last&&NAVBY[last]&&NAVBY[last].m===m?last:NAV.filter(function(x){ return x.m===m; })[0].id; go(it); }
 function render(){
   var it=navCur(), m=MENUBY[it.m], last=lsGet("axf_c2_last",{}); last[it.m]=it.id; lsSet("axf_c2_last",last);
@@ -793,7 +846,7 @@ function render(){
   var items=NAV.filter(function(x){ return x.m===it.m; }), g="";
   el("shell").className="shell"+(items.length<2?" solo":"");
   el("lnb").innerHTML='<h3>'+esc(m.n)+'</h3>'+items.map(function(x){ var h=x.g&&x.g!==g?'<h4>'+esc(x.g)+'</h4>':""; g=x.g||g; var b=navBadge(x.id);
-    return h+'<button class="'+(x.id===it.id?"on":"")+'" data-qa="nav.'+x.id+'" onclick="go(\''+x.id+'\')">'+esc(x.n)+(b?'<span class="badge">'+b+'</span>':x.legacy?'<span class="lk">옛 화면</span>':x.sup?'<span class="lk">슈퍼</span>':'')+'</button>'; }).join("");
+    return h+'<button class="'+(x.id===it.id?"on":"")+'"'+(x.id===it.id?' aria-current="page"':'')+' data-qa="nav.'+x.id+'" onclick="go(\''+x.id+'\')">'+esc(x.n)+(b?'<span class="badge">'+b+'</span>':x.legacy?'<span class="lk">옛 화면</span>':x.sup?'<span class="lk">슈퍼</span>':'')+'</button>'; }).join("");
   var V=VIEWS[it.view]||VIEWS.legacy;
   el("view").innerHTML=head(it)+'<div id="vbErr"></div><div id="vb"></div>';
   V.mount(it);
@@ -801,32 +854,57 @@ function render(){
 }
 function head(it){
   var m=MENUBY[it.m], V=VIEWS[it.view]||VIEWS.legacy;
-  return '<div class="ph"><div>'+(m.n!==it.n||it.g?'<div class="crumb">'+esc(m.n)+(it.g?' › '+esc(it.g):'')+'</div>':'')+'<h1>'+esc(it.n)+'</h1><p>'+esc(it.r)+'</p></div><div class="r" id="phR">'+(V.right?V.right(it):"")+'</div></div>';
+  var tri=it.tri?'<div class="chips" style="margin:-4px 0 14px" role="tablist" aria-label="지금" id="triT"></div>':"";
+  return '<div class="ph"><div>'+(m.n!==it.n||it.g?'<div class="crumb">'+esc(m.n)+(it.g&&it.g!==it.n?' › '+esc(it.g):'')+'</div>':'')+'<h1>'+esc(it.n)+'</h1><p>'+esc(it.r)+'</p></div><div class="r" id="phR">'+(V.right?V.right(it):"")+'</div></div>'+tri;
 }
-function paint(){ var it=navCur(), V=VIEWS[it.view]||VIEWS.legacy, eb=el("vbErr"); if(!el("vb")) return; try{ V.paint&&V.paint(it); if(eb) eb.innerHTML=""; }catch(e){ if(window.console) console.error("paint "+it.id+" · "+(e&&e.stack||e)); if(eb) eb.innerHTML='<div class="band bad">화면 일부를 그리지 못했습니다 · '+esc(String(e&&e.message||e))+' · 새로고침</div>'; } renderTabs(); }
+function triPaint(){ var e=el("triT"), it=navCur(); if(!e) return; var h=NAV.filter(function(x){ return x.tri; }).map(function(x){ var b=navBadge(x.id); return '<button class="chip'+(x.id===it.id?" on":"")+'" role="tab" aria-selected="'+(x.id===it.id)+'" data-qa="tri.'+x.id+'" onclick="go(\''+x.id+'\')">'+esc(x.n)+(b?' <span class="c">'+b+'</span>':'')+'</button>'; }).join(""); if(e._h!==h){ e._h=h; e.innerHTML=h; } }
+/* 다시 그린 뒤 포커스가 사라졌으면 같은 data-qa 단추로 돌려 놓는다(칩 · 숫자 칸을 키보드로 누를 때) */
+function focKey(a){ if(!a||a===document.body||!a.getAttribute) return null; if(a.id) return { id:a.id }; var q=a.getAttribute("data-qa"); if(!q) return null; var all=document.querySelectorAll('[data-qa="'+q+'"]'); return { q:q, l:a.getAttribute("aria-label")||"", i:[].indexOf.call(all,a) }; }
+function focBack(k){ if(!k) return; var n=null; if(k.id) n=el(k.id); else { var all=document.querySelectorAll('[data-qa="'+k.q+'"]'); if(k.l) n=[].filter.call(all,function(x){ return x.getAttribute("aria-label")===k.l; })[0]; if(!n) n=all[Math.max(0,Math.min(k.i,all.length-1))]; } if(n&&n.focus) n.focus({ preventScroll:true }); }
+function keepFocus(fn){ var a=document.activeElement, k=focKey(a); fn(); if(k&&!document.body.contains(a)) focBack(k); }
+/* 표를 다시 그려도 스크롤 상자 위치를 지킨다(261009 가이드라인 6) */
+function listPut(box, key, bar, rest){ var B=box.querySelector(":scope>.lb"), R=box.querySelector(":scope>.lr"); if(!B||!R){ box.innerHTML='<div class="lb"></div><div class="lr"></div>'; B=box.firstChild; R=box.lastChild; } if(B._k!==key||key.charAt(0)==="b"){ B._k=key; B.innerHTML=bar; } scrKeep(R, rest); }
+function scrKeep(box, html){ var s=box.querySelector(".scrl,.plist"), t=s?s.scrollTop:0; box.innerHTML=html; var s2=box.querySelector(".scrl,.plist"); if(s2&&t) s2.scrollTop=t; }
+function paint(){ keepFocus(function(){ var it=navCur(), V=VIEWS[it.view]||VIEWS.legacy, eb=el("vbErr"); if(!el("vb")) return; try{ V.paint&&V.paint(it); if(eb) eb.innerHTML=""; }catch(e){ if(window.console) console.error("paint "+it.id+" · "+(e&&e.stack||e)); if(eb) eb.innerHTML='<div class="band bad">화면 일부를 그리지 못했습니다 · '+esc(String(e&&e.message||e))+' · 새로고침</div>'; } renderTabs(); triPaint(); hstPaint(); }); }
+var _tabsH="";
 function renderTabs(){
   var cur=navCur().m;
-  el("tabs").innerHTML=MENUS.map(function(m){ var b=menuBadge(m.id); return '<button class="'+(cur===m.id?"on":"")+'"'+(cur===m.id?' aria-current="page"':'')+' data-qa="menu.'+m.id+'" onclick="goMenu(\''+m.id+'\')" title="'+esc(m.d)+'">'+(MENU_IC[m.id]||"")+esc(m.n)+(b?'<span class="badge">'+b+'</span>':'')+'</button>'; }).join("");
+  var h=MENUS.map(function(m){ var b=menuBadge(m.id); return '<button class="'+(cur===m.id?"on":"")+'"'+(cur===m.id?' aria-current="page"':'')+' data-qa="menu.'+m.id+'" onclick="goMenu(\''+m.id+'\')" title="'+esc(m.d)+'">'+(MENU_IC[m.id]||"")+esc(m.n)+(b?'<span class="badge">'+b+'</span>':'')+'</button>'; }).join("");
+  if(h!==_tabsH){ _tabsH=h; el("tabs").innerHTML=h; }
 }
 /* 배지 · 오렌지 = 기다리는 일 숫자만 */
-function navBadge(id){ if(id==="p_pw") return pwWait(); return 0; }
-function menuBadge(m){ if(m==="pp") return pwWait(); if(m==="td") return todayBadge(); return 0; }
+function navBadge(id){ if(id==="p_pw") return pwWait(); if(id==="t_req") return reqOpen(); return 0; }
+function menuBadge(m){ if(m==="pp") return pwWait(); if(m==="td") return reqOpen(); return 0; }
 function pwWait(){ var d=S.data.pwc; return d&&d.ok?Number(d.waiting)||0:0; }
+function reqOpen(){ var l=S.data.sreq, b=S.data.nb; if(l&&l.ok&&l.cnt&&(!b||!b.ok||(S.at.sreq||0)>=(S.at.nb||0))) return Number(l.cnt.open)||0; return b&&b.ok&&b.sreq?Number(b.sreq.open)||0:0; }
+/* 머리 상태 띠 · [서버 · 환경] [이상 N] [요청 N] [늦은 일 N] · 누르면 그 화면 */
+var _hstH="";
+function hstPaint(){
+  var b=S.data.nb, ok=b&&b.ok, bad=ok?sigBad():0, rq=reqOpen(), late=ok?lateCount():0, er=!!S.err.nb;
+  var h='<button type="button" data-qa="hst.srv" onclick="go(\'today\')" title="서버 연결 · '+esc(envName())+'"><i class="dot '+(er?"bad":ok?"ok":"")+'"></i>'+esc(envName())+'</button>'+
+    (ok?'<button type="button" class="'+(bad?"w":"")+'" data-qa="hst.sig" onclick="go(\'today\')">이상 '+bad+'</button>':'')+
+    '<button type="button" class="'+(rq?"w":"")+'" data-qa="hst.req" onclick="go(\'t_req\')">요청 '+rq+'</button>'+
+    (ok&&late?'<button type="button" class="w" data-qa="hst.late" onclick="go(\'today\')">늦은 일 '+late+'</button>':'');
+  if(h!==_hstH){ _hstH=h; var e=el("hst"); if(e) e.innerHTML=h; }
+}
 
-/* 갱신 · need = [{ k(데이터 이름), a(액션), p(값), ttl(밀리초), sup(본인 확인 뒤에만) }] */
-var COMMON_NEED=[{ k:"pwc", a:"pw_req_count", ttl:60000 },{ k:"nb", a:"now_board", ttl:60000 }];   /* 261009 now_board = 머리 「행사 종료 중」(og) · 진행판 · 숫자 화면과 같은 칸(nb) */
+/* 갱신 · need = [{ k(데이터 이름), a(액션), p(값), ttl(밀리초), sup(본인 확인 뒤에만) }]
+ * 261009 · 조건(p)이 바뀌면 수명과 관계없이 바로 다시 받는다(검색어 · 거르기가 60초 막히던 일 · 가이드라인 1) · 늦게 온 옛 조건 응답은 버린다 */
+var COMMON_NEED=[{ k:"pwc", a:"pw_req_count", ttl:60000 },{ k:"nb", a:"now_board", ttl:60000 }];   /* 261009 now_board = 머리 「행사 종료 중」(og) · 상태 띠 · 진행판 · 숫자 화면과 같은 칸(nb) */
 function needs(){ var it=navCur(), V=VIEWS[it.view]||VIEWS.legacy, a=V.need?V.need(it):[]; return a.concat(COMMON_NEED); }
 function load(force){
   if(!authed()||document.hidden) return;
   needs().forEach(function(n){
     if(n.sup&&!supOk()) return;
-    var age=Date.now()-(S.at[n.k]||0);
-    if(!force&&age<n.ttl) return;
-    if(S.busy[n.k]) return;
-    S.busy[n.k]=1; stampTick();
+    var sg=sig_(n.a,n.p), chg=S.sig[n.k]!==sg, age=Date.now()-(S.at[n.k]||0);
+    if(!force&&!chg&&age<n.ttl) return;
+    if(S.busy[n.k]===sg) return;
+    S.busy[n.k]=sg; S.sig[n.k]=sg; stampTick();
     var t0=Date.now();
-    fetchC(n.a, n.p||{}, force?0:Math.max(1000,n.ttl-500), !!force, function(r,e){
-      S.busy[n.k]=0; S.at[n.k]=Date.now();
+    fetchC(n.a, n.p||{}, force||chg?0:Math.max(1000,n.ttl-500), !!(force||chg), function(r,e){
+      if(S.busy[n.k]===sg) S.busy[n.k]=0;
+      if(S.sig[n.k]!==sg){ stampTick(); return; }
+      S.at[n.k]=Date.now();
       if(e){ S.err[n.k]=e; } else { S.data[n.k]=r; S.err[n.k]=null; }
       if(n.k==="nb"&&r&&r.t) S.srvAt={ t:r.t, at:Date.now(), rtt:Date.now()-t0 };
       if(!e) ogEndSeen(n.k, r);
@@ -868,10 +946,7 @@ VIEWS.legacy={
     el("vb").innerHTML=card("", "", '<div class="empty"><b>이 화면은 옛 콘솔에서 엽니다</b><p class="mt8">새 틀로 옮기는 중입니다(10/23 까지). 옛 콘솔의 같은 화면이 새 탭으로 열리고, 로그인은 이어집니다.</p><div class="mt16"><button class="btn pri" data-qa="legacy.open.'+it.id+'" onclick="legacyOpen(\''+it.legacy[0]+'\','+(it.legacy[1]||0)+')">옛 콘솔에서 「'+esc(it.n)+'」 열기</button></div></div>', "", "pad");
   }
 };
-/* ══════════════════ 5. 기록 › 활동 기록 (B 패턴 ② · 서버 act_log) ══════════════════
- * 한 줄 = 시각 | 누가(이름 + 콘솔 · 스태프 폰 · 서버) | [동사] 한 일 · 누구에게 | 지금(되돌리기 · 되돌릴 수 없음 · 되돌림 · 실패)
- * 묶음(명단 넣기 · 빼기 여러 명)은 한 줄로 · 줄을 누르면 오른쪽 한 칸에 대상 · 결과 · 되돌리기 미리 보기
- * 스캔 줄은 기본 숨김(건수만) · 「스캔」 칩으로 연다 · 같은 부품의 미니를 한 사람 · 명단 상세에 쓴다(actMini) */
+/* ══ 5. 기록 › 활동 기록 (B 패턴 ② · 서버 act_log) ══ */
 var VERB_CLS={ "넣음":"up","부여":"up","지급":"up","입장":"up","승인":"up","접수":"up","로그인":"nav","뺌":"dn","취소":"dn","지움":"dn","노쇼":"dn","사용":"use","보냄":"nav","바꿈":"nav","되돌림":"nav" };
 var ACT_CAT=[["","전체"],["p","사람"],["r","명단"],["s","스탬프 · 경품"],["n","알림"],["c","설정 · 통제"],["x","스캔"]];
 var BYK_N={ "콘솔":"콘솔", "스태프":"스태프 폰", "기기":"코드 기기", "서버":"서버 자동" };
@@ -903,7 +978,7 @@ VIEWS.log={
     var u=this.st();
     el("vb").innerHTML='<div id="lgChk"></div><div class="card kpis" id="lgK"></div><div class="work"><div class="card list"><div class="bar" style="flex-direction:column;align-items:stretch;gap:10px"><div class="chips" id="lgCat"></div>'+
       '<div class="fx"><span class="seg"><button data-qa="log.day.today" class="'+(u.day==="today"?"on":"")+'" onclick="actDay(\'today\')">오늘</button><button data-qa="log.day.all" class="'+(u.day==="all"?"on":"")+'" onclick="actDay(\'all\')">모든 날</button></span><span class="sp"></span>'+
-      '<select class="in" id="lgBy" data-qa="log.by" onchange="actBy(this.value)" style="width:180px"><option value="">누가: 모두</option></select><input class="in" id="lgQ" data-qa="log.q" placeholder="사람 이름 · 사번" value="'+esc(u.q)+'" oninput="actQ(this.value)" style="width:200px"></div></div>'+
+      '<select class="in" id="lgBy" data-qa="log.by" aria-label="누가 한 일만" onchange="actBy(this.value)" style="width:180px"><option value="">누가: 모두</option></select><input class="in" id="lgQ" data-qa="log.q" type="search" aria-label="활동 기록을 사람 이름 · 사번으로 거르기" placeholder="사람 이름 · 사번" value="'+esc(u.q)+'" oninput="actQ(this.value)" style="width:200px"></div></div>'+
       '<div class="scrl" id="lgT"></div><div class="foot" id="lgF"></div></div><div class="card panel" id="lgP"></div></div>';
   },
   paint:function(){
@@ -921,7 +996,7 @@ VIEWS.log={
     el("lgCat").innerHTML=ACT_CAT.map(function(c){ var n=c[0]?cnt[c[0]]:(cnt.all||0)-(cnt.x||0); return '<button class="chip'+(u.cat===c[0]?" on":"")+'" data-qa="log.cat.'+(c[0]||"all")+'" onclick="actCat(\''+c[0]+'\')">'+esc(c[1])+' <span class="c">'+n0(n||0)+'</span></button>'; }).join("");
     var bs=el("lgBy"); if(bs&&document.activeElement!==bs) bs.innerHTML='<option value="">누가: 모두</option>'+(d.who||[]).filter(function(w){ return w.by; }).map(function(w){ return '<option value="'+esc(w.by)+'"'+(u.by===w.by?" selected":"")+'>'+esc((w.name||w.by)+" · "+(BYK_N[w.byK]||"")+" "+w.n+"건"+(w.bad?" · 실패 "+w.bad:""))+'</option>'; }).join("");
     el("lgT").innerHTML='<table class="tb"><colgroup><col style="width:84px"><col style="width:120px"><col><col style="width:110px"></colgroup><thead><tr><th>시각</th><th>누가</th><th>한 일 · 누구에게</th><th class="r">지금</th></tr></thead><tbody>'+
-      (rows.length?rows.map(function(r){ return '<tr class="row'+(r.ref===u.cur?" cur":"")+(/^x:/.test(r.res||"")?" fail":"")+(ck[r.ref]?" chkme":"")+'" data-qa="log.row" onclick="actPick(\''+jq(r.ref)+'\')"><td class="n cap">'+esc(u.day==="all"?short(r.t):String(r.t).slice(11,19))+'</td><td class="nm">'+actWhoHtml(r)+'</td><td class="wrap">'+actWhat(r)+(r.nb>1?' <span class="cap">외 '+(r.nb-1)+'줄</span>':'')+'</td><td class="r">'+actNow(r)+'</td></tr>'; }).join(""):'<tr><td colspan="4"><div class="empty"><b>기록이 없습니다</b>거르기를 풀거나 「모든 날」을 봅니다.</div></td></tr>')+'</tbody></table>';
+      (rows.length?rows.map(function(r){ return '<tr tabindex="0" class="row'+(r.ref===u.cur?" cur":"")+(/^x:/.test(r.res||"")?" fail":"")+(ck[r.ref]?" chkme":"")+'" data-qa="log.row" onclick="actPick(\''+jq(r.ref)+'\')"><td class="n cap">'+esc(u.day==="all"?short(r.t):String(r.t).slice(11,19))+'</td><td class="nm">'+actWhoHtml(r)+'</td><td class="wrap">'+actWhat(r)+(r.nb>1?' <span class="cap">외 '+(r.nb-1)+'줄</span>':'')+'</td><td class="r">'+actNow(r)+'</td></tr>'; }).join(""):'<tr><td colspan="4"><div class="empty"><b>기록이 없습니다</b>거르기를 풀거나 「모든 날」을 봅니다.</div></td></tr>')+'</tbody></table>';
     el("lgF").innerHTML='<span>'+n0(rows.length)+'줄 보임</span><span class="sp"></span>'+((u.more.length?u.mnext:d.next)?'<button class="btn sm" data-qa="log.more" onclick="actMore()">더 보기</button>':'<span>끝</span>');
     actPanel();
   }
@@ -935,7 +1010,7 @@ function actMore(){
   var p=VIEWS.log.need()[0].p, q={}; for(var k in p) q[k]=p[k]; q.before=nx;
   call("act_log", q, function(r){ if(r&&r.ok){ u.more=u.more.concat(r.rows||[]); u.mnext=r.next||""; paint(); } else toast("더 받지 못했습니다 · "+why(r)); }, function(e){ toast(why(e)); });
 }
-function actRow(ref){ var u=VIEWS.log.st(); return (u.rows||[]).filter(function(r){ return r.ref===ref; })[0]; }
+function actRow(ref){ var u=VIEWS.log.st(), r=(u.rows||[]).filter(function(x){ return x.ref===ref; })[0]; if(r) return r; for(var k in WHO.info){ var tl=WHO.info[k].tl||[]; for(var i=0;i<tl.length;i++) if(tl[i].ref===ref){ tl[i].emp=tl[i].emp||WHO.info[k].emp; tl[i].name=tl[i].name||WHO.info[k].name; return tl[i]; } } }
 function actPick(ref){ var u=VIEWS.log.st(); u.cur=u.cur===ref?"":ref; paint(); }
 function actPanel(){
   var u=VIEWS.log.st(), p=el("lgP"), r=u.cur&&actRow(u.cur);
@@ -976,9 +1051,7 @@ function actUndoAsk(ref){
 function actCsv(){
   var u=VIEWS.log.st(), rows=u.rows||[];
   if(!rows.length){ toast("내려받을 줄이 없습니다"); return; }
-  var q=function(v){ v=String(v==null?"":v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
-  var csv="\ufeff"+["시각","누가","처리자 사번","구분","동사","내용","대상 사번","대상 이름","결과"].join(",")+"\n"+rows.map(function(r){ return [r.t,r.byName,r.by,BYK_N[r.byK]||"",r.verb,r.x,r.emp,r.name,r.res].map(q).join(","); }).join("\n");
-  var a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"})); a.download="활동기록_"+(u.day==="all"?"전체":(((S.data.alog||{}).day)||"오늘"))+".csv"; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },500);
+  csvSave("활동기록_"+(u.day==="all"?"전체":(((S.data.alog||{}).day)||"오늘"))+".csv", ["시각","누가","처리자 사번","구분","동사","내용","대상 사번","대상 이름","결과"], rows.map(function(r){ return [r.t,r.byName,r.by,BYK_N[r.byK]||"",r.verb,r.x,r.emp,r.name,r.res]; }));
 }
 /* 같은 부품 미니 · 한 사람 · 명단 상세의 「최근 기록」(사번으로 거른 20줄) */
 var ACTM={};
@@ -1007,11 +1080,7 @@ function rlUndoAsk(emp){
           else toast("취소 실패 · "+why(x)); },function(){ dlgForce(); toast("서버 응답 없음"); }); } });
   },function(e){ toast(why(e)); });
 }
-/* ══════════════════ 6. 사람 › 명단 (B 패턴 ① hvRoster · 서버 roll_stat · roll_list · roll_apply · roll_undo) ══════════════════
- * 종류 = 접속 허용(gate) · 스태프(staff = 폰 권한 + 옷 명단 · 화면에서만 합침) · 10F 사전 신청(pre10 · 묶음 넣기 pre10_bulk) · 시험 사번(test) · 라운지 사전 신청(lounge · 보기) · 옷 신청(kit · 보기)
- * 라운지 명단 통째 올리기 · 옷 자동 배정 · 엑셀 · 관리자 명단(콘솔)은 옛 콘솔(설정 › 고급 · 보관)
- * 한눈에 = 현황 띠(숫자를 누르면 거르기) · 행동 = 왼쪽 선택 칸(3상태 · Shift 범위) → 일괄 막대 · 넣기는 오른쪽 한 칸(미리 보기 3줄이 확인을 대신)
- * 빼기 = 바로 실행 + 7초 되돌리기(UNDO_MS) · 20명 이상(BULK_CONFIRM_N) 또는 미리 보기 영향 수 1 이상이면 확인 창 · 처리한 줄만 고친다 */
+/* ══ 6. 사람 › 명단 (B 패턴 ① hvRoster · 서버 roll_stat · roll_list · roll_apply · roll_undo) ══ */
 var ROS_KINDS=[["gate","접속 허용","클로즈 베타 때 앱에 들어올 사람입니다. 범위 스위치는 설정 › 앱 오픈."],["staff","스태프","폰 권한(앱 스태프 모드) + 스태프 옷 명단을 사번으로 한 줄에 봅니다. 서버는 두 명단 그대로입니다."],["pre10","10F 사전 신청","10F 실습 세션 신청자입니다. 빼면 키트 · 끝 QR 자격이 같이 움직입니다."],
   ["test","시험 사번","집계 · 순위 · 추첨에서 빠지는 사번입니다. 고정 사번은 뺄 수 없습니다."],["lounge","라운지 사전 신청","AX 라운지 사전 신청자(등록 순)입니다. 수량 안은 키트, 넘으면 가습기입니다. 보기만 합니다."],["kit","옷 신청","기념품 옷 대상(사전 신청 · 스태프) 한 사람 한 줄입니다. 사이즈 · 받음을 봅니다. 보기만 합니다."]];
 var ROS_OTHER=[["p_lng","라운지 명단 통째 올리기"],["p_kit","옷 자동 배정 · 엑셀"],["p_ros","관리자 명단(콘솔)"]];
@@ -1033,18 +1102,19 @@ function rosShown(){
   return rosRows().filter(function(r){ return rosMatch(r,u.filt)&&(!q||(r.emp+"|"+(r.name||"")+"|"+(r.dept||"")+"|"+(r.memo||"")).replace(/\s+/g,"").toUpperCase().indexOf(q)>=0); });
 }
 function rosLocked(r){ var u=rosSt(); if(ROS_RO[u.kind]) return "보기만 하는 명단"; if(u.kind==="staff"&&r.sup) return "슈퍼관리자"; if(u.kind==="test"&&r.fixed) return "고정 시험 사번"; return ""; }
+function rosSync(){ var u=rosSt(), k=S.sub.p_list; if(k&&k!==u.kind&&ROS_KINDS.some(function(x){ return x[0]===k; })){ u.kind=k; u.filt=""; u.chk={}; u.cur=""; u.mode=""; u.show=ROS_SHOW; var b=el("rsL"); if(b) b.innerHTML=""; } }
 VIEWS.roster={
-  need:function(){ var u=rosSt(); return [{ k:"rstat", a:"roll_stat", ttl:60000 },{ k:"rl_"+u.kind, a:"roll_list", p:{ list:u.kind }, ttl:60000, sup:1 }]; },
+  need:function(){ rosSync(); var u=rosSt(); return [{ k:"rstat", a:"roll_stat", ttl:60000 },{ k:"rl_"+u.kind, a:"roll_list", p:{ list:u.kind }, ttl:60000, sup:1 }]; },
   right:function(){ var u=rosSt(); return ROS_RO[u.kind]?'<button class="btn" data-qa="ros.legacy" onclick="legacyOpen(\''+(u.kind==="lounge"?"p_lng":"p_kit")+'\',0)">'+(u.kind==="lounge"?"명단 통째 올리기 ›":"자동 배정 · 엑셀 ›")+'</button>':'<button class="btn pri" data-qa="ros.add" onclick="rosMode(\'add\')">+ 사람 넣기</button>'; },
   mount:function(){
-    var u=rosSt(), k=ROS_KINDS.filter(function(x){ return x[0]===u.kind; })[0];
-    el("vb").innerHTML='<div class="fx" style="margin-bottom:6px"><span class="seg" id="rsKind"></span><span class="sp"></span><span class="cap">그 밖 명단 · '+ROS_OTHER.map(function(x){ return '<button class="lnk" data-qa="ros.other.'+x[0]+'" onclick="legacyOpen(\''+x[0]+'\',0)">'+esc(x[1])+'</button>'; }).join(" · ")+' (옛 콘솔)</span></div>'+
+    rosSync(); var u=rosSt(), k=ROS_KINDS.filter(function(x){ return x[0]===u.kind; })[0];
+    el("vb").innerHTML='<div class="fx" style="margin-bottom:6px"><span class="seg" id="rsKind"></span><span class="sp"></span><span class="cap">라운지 사전 신청 · 옷 신청 명단은 설정 › 고급 › 재고 · 그 밖 · '+ROS_OTHER.map(function(x){ return '<button class="lnk" data-qa="ros.other.'+x[0]+'" onclick="legacyOpen(\''+x[0]+'\',0)">'+esc(x[1])+'</button>'; }).join(" · ")+' (옛 콘솔)</span></div>'+
       '<p class="cap" style="margin:0 0 10px">'+esc(k[1])+': '+esc(k[2])+'</p><div id="rsGate"></div><div class="card kpis" id="rsK"></div>'+
       '<div class="work"><div class="card list" id="rsL"></div><div class="card panel" id="rsP"></div></div>';
   },
   paint:function(){
     var u=rosSt();
-    el("rsKind").innerHTML=ROS_KINDS.map(function(x){ var st=(S.data.rstat||{})[x[0]]; return '<button class="'+(u.kind===x[0]?"on":"")+'" data-qa="ros.kind.'+x[0]+'" onclick="rosKind(\''+x[0]+'\')">'+esc(x[1])+(st?' <span class="c">'+n0(st.n)+'</span>':'')+'</button>'; }).join("");
+    el("rsKind").innerHTML=ROS_KINDS.filter(function(x){ return !ROS_RO[x[0]]||x[0]===u.kind; }).map(function(x){ var st=(S.data.rstat||{})[x[0]]; return '<button class="'+(u.kind===x[0]?"on":"")+'" data-qa="ros.kind.'+x[0]+'" onclick="rosKind(\''+x[0]+'\')">'+esc(x[1])+(st?' <span class="c">'+n0(st.n)+'</span>':'')+'</button>'; }).join("");
     var stt=S.data.rstat;
     if(stt&&unknownSrv(stt)){ el("rsGate").innerHTML=srvMissing("명단 표"); el("rsK").innerHTML=""; el("rsL").innerHTML=""; el("rsP").innerHTML=""; return; }
     el("rsK").innerHTML=rosKpis();
@@ -1098,16 +1168,15 @@ function rosList(){
   if(nsel){
     var main=u.kind==="staff"?"폰 권한 빼기":"명단에서 빼기";
     bar='<div class="bar bulk"><span class="cnt"><b>'+nsel+'명</b> 선택됨</span><button class="btn hot" data-qa="ros.bulk.del" onclick="rosDelAsk()">'+(nsel>=BULK_CONFIRM_N?nsel+"명 ":"")+esc(main)+'</button>'+(u.kind==="staff"?'<button class="btn" data-qa="ros.bulk.wear" onclick="rosDelAsk(\'staff_wear\')">옷 명단에서 빼기</button>':'')+'<span class="sp"></span><button class="btn ghost" data-qa="ros.bulk.clear" onclick="rosClear()">선택 해제 (Esc)</button></div>';
-  } else bar='<div class="bar"><input class="in" id="rsQ" data-qa="ros.q" placeholder="이름 · 사번 · 부서" value="'+esc(u.q)+'" oninput="rosQ(this.value)"><span class="sp"></span><span class="cap">'+(u.filt?'거름 · <button class="lnk" onclick="rosFilt(\'\')">풀기</button> · ':'')+'행을 누르면 자세히</span></div>';
+  } else bar='<div class="bar"><input class="in" id="rsQ" data-qa="ros.q" type="search" aria-label="명단에서 이름 · 사번 · 부서로 거르기" placeholder="이름 · 사번 · 부서" value="'+esc(u.q)+'" oninput="rosQ(this.value)"><span class="sp"></span><span class="cap">'+(u.filt?'거름 · <button class="lnk" onclick="rosFilt(\'\')">풀기</button> · ':'')+'행을 누르면 자세히</span></div>';
   var banner=nsel&&hdr==="on"&&shown.length<all.length&&!u.filt&&!u.q?"":"";
   if(nsel&&selIn===vis.length&&shown.length>vis.length) banner='<div class="banner">이 화면의 '+vis.length+'명이 선택됐습니다.<button data-qa="ros.selall" onclick="rosSelAll()">조건에 맞는 '+n0(shown.length)+'명 모두 선택</button></div>';
-  var keep=document.activeElement&&document.activeElement.id==="rsQ";
-  box.innerHTML=bar+banner+'<div class="scrl"><table class="tb"><colgroup><col style="width:44px">'+rosCols().map(function(c){ return '<col'+(c[1]?' style="width:'+c[1]+'"':'')+'>'; }).join("")+'</colgroup><thead><tr><th class="ck"><span class="cbx '+hdr+'" role="checkbox" aria-checked="'+(hdr==="on")+'" data-qa="ros.chk.all" onclick="rosHdr()"></span></th>'+rosCols().map(function(c){ return '<th>'+esc(c[0])+'</th>'; }).join("")+'</tr></thead><tbody>'+
+  var rest=banner+'<div class="scrl"><table class="tb"><colgroup><col style="width:44px">'+rosCols().map(function(c){ return '<col'+(c[1]?' style="width:'+c[1]+'"':'')+'>'; }).join("")+'</colgroup><thead><tr><th class="ck"><span class="cbx '+hdr+'" role="checkbox" tabindex="0" aria-label="모두 고르기" aria-checked="'+(hdr==="on")+'" data-qa="ros.chk.all" onclick="rosHdr()"></span></th>'+rosCols().map(function(c){ return '<th>'+esc(c[0])+'</th>'; }).join("")+'</tr></thead><tbody>'+
     (vis.length?vis.map(function(r){ var lk=rosLocked(r), on=!!u.chk[r.emp];
-      return '<tr class="row'+(on?" chk":"")+(u.cur===r.emp&&u.mode==="one"?" cur":"")+(u.fresh[r.emp]?" new":"")+(lk?" locked":"")+'" data-qa="ros.row" onclick="rosPick(\''+jq(r.emp)+'\',event)"><td class="ck" onclick="event.stopPropagation();rosChk(\''+jq(r.emp)+'\',event)"><span class="cbx '+(lk?"off":on?"on":"")+'" role="checkbox" aria-checked="'+on+'" data-qa="ros.chk"'+(lk?' title="'+esc(lk)+' · 서버가 막습니다"':'')+'></span></td><td class="nm"><b>'+esc(r.name||"(이름 없음)")+'</b><div>'+esc(r.dept||"")+(u.kind!=="gate"?' · '+esc(r.emp):'')+'</div></td>'+rosCells(r)+'</tr>'; }).join(""):
-      '<tr><td colspan="5"><div class="empty"><b>'+(all.length?"조건에 맞는 사람이 없습니다":"명단이 비어 있습니다")+'</b>'+(all.length?'<button class="btn mt8" onclick="rosFilt(\'\');rosQ(\'\');var i=el(\'rsQ\');if(i)i.value=\'\'">조건 지우기</button>':'<button class="btn pri mt8" onclick="rosMode(\'add\')">사람 넣기</button>')+'</div></td></tr>')+'</tbody></table></div>'+
+      return '<tr tabindex="0" class="row'+(on?" chk":"")+(u.cur===r.emp&&u.mode==="one"?" cur":"")+(u.fresh[r.emp]?" new":"")+(lk?" locked":"")+'" data-qa="ros.row" onclick="rosPick(\''+jq(r.emp)+'\',event)"><td class="ck" onclick="event.stopPropagation();rosChk(\''+jq(r.emp)+'\',event)"><span class="cbx '+(lk?"off":on?"on":"")+'" role="checkbox" tabindex="'+(lk?-1:0)+'" aria-label="'+esc(r.name||r.emp)+' 고르기" aria-checked="'+on+'" data-qa="ros.chk"'+(lk?' title="'+esc(lk)+' · 서버가 막습니다"':'')+'></span></td><td class="nm"><b>'+esc(r.name||"(이름 없음)")+'</b><div>'+esc(r.dept||"")+(u.kind!=="gate"?' · '+esc(r.emp):'')+'</div></td>'+rosCells(r)+'</tr>'; }).join(""):
+      '<tr><td colspan="5"><div class="empty"><b>'+(all.length?"조건에 맞는 사람이 없습니다":"명단이 비어 있습니다")+'</b>'+(all.length?'<button class="btn mt8" onclick="var i=el(\'rsQ\');if(i)i.value=\'\';rosFilt(\'\');rosQ(\'\')">조건 지우기</button>':'<button class="btn pri mt8" onclick="rosMode(\'add\')">사람 넣기</button>')+'</div></td></tr>')+'</tbody></table></div>'+
     '<div class="foot"><span class="n">'+n0(all.length)+'명 중 '+n0(shown.length)+'명'+(shown.length>vis.length?' · 위 '+vis.length+'명 보임':'')+'</span><span class="sp"></span>'+(shown.length>vis.length?'<button class="btn sm" data-qa="ros.more" onclick="rosSt().show+=500;rosList()">더 보기</button>':'')+'</div>';
-  if(keep){ var i=el("rsQ"); if(i){ i.focus(); var L=i.value.length; try{ i.setSelectionRange(L,L); }catch(e){} } }
+  listPut(box, nsel?"b":"q|"+u.kind+"|"+u.filt, bar, rest);
 }
 function rosChk(emp, ev){
   var u=rosSt(), r=rosRows().filter(function(x){ return x.emp===emp; })[0]; if(!r||rosLocked(r)) return;
@@ -1254,7 +1323,7 @@ function rosDelAsk(list, emps){
       s:"빼도 7초 안 알림 · 기록 › 활동 기록에서 그날 안에 되돌릴 수 있습니다.", ok:n+"명 빼기", danger:true, onOk:function(){ go(true); } });
   },function(e){ el("toast").className=""; toast(why(e)); });
 }
-function rosDelGo(list, emps, inDlg){
+function rosDelGo(list, emps, inDlg, done){
   var u=rosSt();
   callPost("roll_apply",{ list:list, op:"del", emps:emps.join(","), rid:"r"+Date.now().toString(36)+Math.random().toString(36).slice(2,6) },function(r){
     if(inDlg) dlgForce();
@@ -1263,7 +1332,7 @@ function rosDelGo(list, emps, inDlg){
     var d=rosData(); if(d&&d.rows&&(list==="gate"||u.kind!=="staff")) d.rows=d.rows.filter(function(x){ return gone.indexOf(x.emp)<0; });
     if(u.cur&&gone.indexOf(u.cur)>=0&&list!=="staff_wear"&&list!=="staff_app"){ u.cur=""; u.mode=""; }
     if(!Object.keys(u.chk).length&&u.mode==="sel") u.mode="";
-    rosList(); rosPanel(); rosAfter();
+    rosList(); rosPanel(); rosAfter(); done&&done();
     toast(gone.length+"명을 "+rosLbl(list)+"에서 뺐습니다", r.batch?{ undo:function(){ rollUndo(r.batch, gone.length, list, "del", rosAfter, true); } }:{});
   },function(e){ if(inDlg) dlgForce(); toast(why(e)); });
 }
@@ -1338,6 +1407,9 @@ function p10DelAsk(emps){
 }
 /* ── 들어오지 못한 사람(og_deny_list) · 고르면 접속 허용 명단에 넣기 ── */
 function rosDenyLoad(){ var u=rosSt(); u.deny=null; call("og_deny_list",{},function(r){ u.deny=r||{ ok:false }; rosPanel(); },function(e){ u.deny=e||{ ok:false }; rosPanel(); }); }
+function rosDenyAll(){ var d=rosSt().deny, rows=((d&&d.rows)||[]).filter(function(x){ return x.open; }).slice(0,500); if(!rows.length) return;
+  dialog({ t:"접속 허용 명단에 "+rows.length+"명을 넣을까요?", who:esc(rows.slice(0,5).map(function(x){ return x.name||x.emp; }).join(", "))+(rows.length>5?" 외 "+(rows.length-5)+"명":"")+"<span>들어오지 못한 사람 전부</span>", s:"넣으면 클로즈 베타 동안 바로 로그인할 수 있습니다. 7초 안 알림 · 활동 기록에서 그날 안에 되돌립니다.", ok:rows.length+"명 넣기",
+    onOk:function(){ dlgForce(); rosAddGo("gate", rows.map(function(x){ return x.emp; }), rosDenyLoad); } }); }
 function rosDenyHtml(){
   var u=rosSt(), d=u.deny;
   if(u.kind!=="gate") return '<p class="cap">접속 허용 명단에서만 봅니다.</p>';
@@ -1346,104 +1418,199 @@ function rosDenyHtml(){
   var rows=(d.rows||[]).filter(function(x){ return x.open; });
   if(!rows.length) return '<p class="cap">지금도 막혀 있는 사람이 없습니다(기록 '+n0(d.n)+'명).</p>';
   return '<p class="cap">지금도 막혀 있는 '+rows.length+'명 · 마지막 시도 순</p><ul class="mini">'+rows.slice(0,100).map(function(x){ return '<li><span style="flex:1;min-width:0"><b>'+esc(x.name||x.emp)+'</b><div class="cap">'+esc(x.dept||"")+' · '+esc(x.emp)+' · '+esc(short(x.last))+' · '+x.n+'번</div></span><button class="btn sm pri" data-qa="ros.deny.add" onclick="rosAddGo(\'gate\',[\''+jq(x.emp)+'\'],rosDenyLoad)">넣기</button></li>'; }).join("")+'</ul>'+
-    (rows.length>1?'<div class="acts"><button class="btn pri" data-qa="ros.deny.addall" onclick="rosAddGo(\'gate\','+JSON.stringify(rows.slice(0,500).map(function(x){ return x.emp; })).replace(/"/g,"&quot;")+',rosDenyLoad)">'+Math.min(500,rows.length)+'명 모두 넣기</button></div>':'');
+    (rows.length>1?'<div class="acts"><button class="btn pri" data-qa="ros.deny.addall" onclick="rosDenyAll()">'+Math.min(500,rows.length)+'명 모두 넣기</button></div>':'');
 }
-/* ══════════════════ 7. 사람 › 한 사람 찾기 (acct_page · usr_info · stamp_grant · stamp_revoke · roulette_undo · acct_pwreset) ══════════════════
- * 왼쪽 = 찾기 결과(한 번 50명 · 칩 2개: PIN 초기화 대기 · 가입만 하고 접속 없음) · 오른쪽 = 사람 카드(스탬프 8칸 · 룰렛 · PIN · 최근 기록)
- * 4,000줄 가입 계정 표는 없다(최종 설계안) · 찾는 말이 없으면 최근 가입 순 50명 */
+/* ══ 7. 사람 › 찾기 + 한 사람 카드 (acct_page · person_card · 옛 서버면 usr_info) ══ */
 var STAMP8=[["lg","01","최초 로그인"],["qz","02","AX 퀴즈"],["p4","03","미니 게임"],["p2","04","AX PLAY"],["p5","05","아이디어"],["p3","06","프로그램 참여"],["st","07","계단 이용"],["sv","08","오늘 한 판 설문"]];
 var GRANT_IDS=["p2","p3","st"];   /* 담당자 부여 = 현장 QR 셋(서버 REVOKE_FIELD_IDS 와 같음) · 앱 자동 · 설문은 앱에서만 */
-var WHO={ info:{}, busy:{} };
-function whoSt(){ return S.ui.who||(S.ui.who={ q:"", f:"", off:0, cur:S.sub.p_who||"", more:[] }); }
-function whoOpen(emp){ S.ui={}; S.sub.p_who=normE(emp); S.nav=""; go("p_who"); var u=whoSt(); u.cur=normE(emp); u.q=normE(emp); paint(); load(true); }
+var VIS_ENTRY={ qr:"QR", push:"푸시", direct:"직접" }, PC_SRC={ "본인":"본인", "콘솔":"콘솔", "스태프":"스태프" };
+var WHO={ info:{}, busy:{}, old:0 };
+function whoSt(){ return S.ui.who||(S.ui.who={ q:ssGet("axf_c2_whoq",""), f:"", sort:"last", cur:S.sub.p_who||"", more:[], enter:0, kb:0 }); }
+function whoOpen(emp){ var u=whoSt(), e=normE(emp); u.cur=e; u.q=e; u.f=""; u.more=[]; S.sub.p_who=e; ssSet("axf_c2_whoq",e); var i=el("whoQ"); if(i) i.value=e; if(S.nav==="p_who"){ navHash(false); paint(); load(false); } else go("p_who"); }
 VIEWS.who={
-  need:function(){ var u=whoSt(), p={ n:ACCT_PAGE_N }; if(u.q) p.q=u.q; if(u.f) p.f=u.f; return [{ k:"apage", a:"acct_page", p:p, ttl:60000 }]; },
+  need:function(){ var u=whoSt(), p={ n:ACCT_PAGE_N, sort:u.sort }; if(u.q) p.q=u.q; if(u.f) p.f=u.f; return [{ k:"apage", a:"acct_page", p:p, ttl:60000 }]; },
   mount:function(){
     var u=whoSt();
-    el("vb").innerHTML='<div class="work"><div class="card list"><div class="bar"><input class="in" id="whoQ" data-qa="who.q" type="search" autocomplete="off" placeholder="사번 · 이름 · 부서" value="'+esc(u.q)+'" oninput="whoQ(this.value)" style="width:260px"><span class="sp"></span><span class="chips" id="whoF"></span></div><div class="scrl" id="whoT"></div><div class="foot" id="whoFt"></div></div><div class="card panel" id="whoP"></div></div>';
-    setTimeout(function(){ var i=el("whoQ"); if(i&&!u.cur) i.focus(); },30);
+    el("vb").innerHTML='<div class="work"><div class="card list"><div class="bar"><input class="in" id="whoQ" data-qa="who.q" type="search" autocomplete="off" aria-label="사번 · 이름 · 부서로 찾기" placeholder="사번 · 이름 · 부서 · Enter = 첫 사람" value="'+esc(u.q)+'" oninput="whoQ(this.value)" onkeydown="whoKey(event)" style="width:250px"><select class="in" id="whoS" data-qa="who.sort" aria-label="정렬" onchange="whoSort(this.value)"><option value="last">최근 접속순</option><option value="joined">가입순</option></select><span class="chips" id="whoF"></span></div>'+
+      '<div class="plist" id="whoT" onkeydown="whoRowKey(event)"></div><div class="foot" id="whoFt"></div></div><div class="card panel wide" id="whoP"></div></div>';
+    el("whoS").value=u.sort;
+    setTimeout(function(){ var i=el("whoQ"); if(i&&!u.cur&&document.activeElement!==el("gsQ")) i.focus(); },30);
   },
   paint:function(){
     var u=whoSt(), d=S.data.apage;
     if(!d){ el("whoT").innerHTML=skel(); whoPanel(); return; }
     if(unknownSrv(d)){ el("whoT").innerHTML=srvMissing("한 사람 찾기"); whoPanel(); return; }
-    if(!d.ok){ el("whoT").innerHTML=loadErr(d,"apage"); return; }
-    var c=d.cnt||{};
-    el("whoF").innerHTML=[["","전체 가입",c.all],["pw0","PIN 초기화 대기",c.pw0],["nolog","가입만 하고 접속 없음",c.nolog]].map(function(x){ return '<button class="chip'+(u.f===x[0]?" on":"")+'" data-qa="who.f.'+(x[0]||"all")+'" onclick="whoF(\''+x[0]+'\')">'+esc(x[1])+' <span class="c">'+n0(x[2])+'</span></button>'; }).join("");
+    if(!d.ok){ el("whoT").innerHTML=loadErr(d,"apage"); whoPanel(); return; }
+    var c=d.cnt||{}, fh=[["","전체 가입",c.all],["today","오늘 접속",c.today],["nolog","접속 없음",c.nolog],["pw0","PIN 대기",c.pw0]].map(function(x){ return '<button class="chip'+(u.f===x[0]?" on":"")+'" aria-pressed="'+(u.f===x[0])+'" data-qa="who.f.'+(x[0]||"all")+'" onclick="whoF(\''+x[0]+'\')">'+esc(x[1])+' <span class="c">'+n0(x[2])+'</span></button>'; }).join("");
+    var f=el("whoF"); if(f._h!==fh){ f._h=fh; f.innerHTML=fh; }
     var rows=(d.rows||[]).concat(u.more);
-    el("whoT").innerHTML='<table class="tb"><colgroup><col><col style="width:96px"><col style="width:110px" class="hm"><col style="width:96px"></colgroup><thead><tr><th>사람</th><th>사번</th><th class="hm">최근 접속</th><th>PIN</th></tr></thead><tbody>'+
-      (rows.length?rows.map(function(r){ return '<tr class="row'+(u.cur===r.emp?" cur":"")+'" data-qa="who.row" onclick="whoPick(\''+jq(r.emp)+'\')"><td class="nm"><b>'+esc(r.name||"(이름 없음)")+'</b>'+(r.test?' '+tag("시험","off"):'')+'<div>'+esc(r.dept||"")+'</div></td><td class="n">'+esc(r.emp)+'</td><td class="n cap hm">'+esc(r.acct?(short(r.last)||"접속 없음"):"가입 전")+'</td><td>'+(!r.acct?tag("명부만"):r.pw?tag("있음","ok"):tag("초기화 대기","warn"))+'</td></tr>'; }).join(""):
-        '<tr><td colspan="4"><div class="empty"><b>'+(u.q?"찾는 사람이 없습니다":"가입한 사람이 없습니다")+'</b>'+(u.q?"사번 · 이름을 다시 확인합니다.":"")+'</div></td></tr>')+'</tbody></table>';
+    if(u.enter&&!S.busy.apage){ u.enter=0; if(rows.length){ whoPick(rows[0].emp, 1); return; } }
+    scrKeep(el("whoT"), rows.length?rows.map(function(r){ var cur=u.cur===r.emp;
+      return '<button type="button" class="pr'+(cur?" cur":"")+'"'+(cur?' aria-current="true"':'')+' data-qa="who.row" data-e="'+esc(r.emp)+'" onclick="whoPick(\''+jq(r.emp)+'\',0)"><span><b>'+esc(r.name||"(이름 없음)")+(r.test?' '+tag("시험"):'')+'</b><span class="d">'+esc(r.dept||"")+'</span></span><span class="n">'+esc(r.emp)+'</span><span class="n cap hm">'+esc(r.acct?(short(r.last)||"접속 없음"):"가입 전")+'</span><span class="hm">'+(!r.acct?tag("명부만"):r.pw?tag("PIN 있음","ok"):tag("PIN 대기","warn"))+'</span></button>'; }).join(""):
+      '<div class="empty"><b>'+(u.q?"찾는 사람이 없습니다":"가입한 사람이 없습니다")+'</b>'+(u.q?"사번 · 이름을 다시 확인합니다.":"")+'</div>');
     el("whoFt").innerHTML='<span class="n">'+n0(d.total)+'명 중 '+rows.length+'명</span><span class="sp"></span>'+(d.total>rows.length?'<button class="btn sm" data-qa="who.more" onclick="whoMore()">50명 더</button>':'');
     whoPanel();
   }
 };
 var _whoQ=0;
-function whoQ(v){ var u=whoSt(); clearTimeout(_whoQ); _whoQ=setTimeout(function(){ u.q=String(v||"").trim(); u.more=[]; S.data.apage=null; paint(); load(false); },350); }
-function whoF(f){ var u=whoSt(); u.f=u.f===f?"":f; u.more=[]; S.data.apage=null; paint(); load(false); }
-function whoMore(){ var u=whoSt(), p=VIEWS.who.need()[0].p, q={}; for(var k in p) q[k]=p[k]; q.off=(S.data.apage.rows||[]).length+u.more.length; call("acct_page",q,function(r){ if(r&&r.ok){ u.more=u.more.concat(r.rows||[]); paint(); } else toast(why(r)); },function(e){ toast(why(e)); }); }
-function whoPick(emp){ var u=whoSt(); u.cur=u.cur===emp?"":emp; S.sub.p_who=u.cur; paint(); }
-function whoInfo(emp, force){
-  var k=normE(emp); if(!force&&WHO.info[k]&&Date.now()-WHO.info[k].at<30000) return WHO.info[k];
-  if(WHO.busy[k]) return WHO.info[k]||null;
-  WHO.busy[k]=1;
-  call("usr_info",{ emp:k },function(r){ WHO.busy[k]=0; WHO.info[k]=r||{ ok:false }; WHO.info[k].at=Date.now(); whoPanel(); },function(e){ WHO.busy[k]=0; WHO.info[k]=e||{ ok:false }; WHO.info[k].at=Date.now(); whoPanel(); });
-  return WHO.info[k]||null;
+function whoQ(v){ var u=whoSt(); clearTimeout(_whoQ); _whoQ=setTimeout(function(){ whoQGo(v); },250); }
+function whoQGo(v){ var u=whoSt(); clearTimeout(_whoQ); _whoQ=0; v=String(v==null?(el("whoQ")||{}).value||"":v).trim(); if(v===u.q&&S.data.apage) return; u.q=v; u.more=[]; ssSet("axf_c2_whoq",v); S.data.apage=null; paint(); load(false); }
+function whoKey(e){
+  if(e.isComposing) return;
+  if(e.key==="Enter"){ e.preventDefault(); var u=whoSt(); u.enter=1; whoQGo(e.target.value); if(S.data.apage&&!S.busy.apage) paint(); }
+  else if(e.key==="ArrowDown"){ var f=document.querySelector("#whoT .pr"); if(f){ e.preventDefault(); f.focus(); } }
 }
+function whoRowKey(e){
+  var t=e.target; if(!t.classList||!t.classList.contains("pr")) return;
+  if(e.key==="ArrowDown"||e.key==="ArrowUp"){ e.preventDefault(); var n=e.key==="ArrowDown"?t.nextElementSibling:t.previousElementSibling; if(n&&n.classList.contains("pr")) n.focus(); else if(e.key==="ArrowUp") el("whoQ").focus(); }
+  else if(e.key==="Enter"||e.key===" "){ e.preventDefault(); whoPick(t.getAttribute("data-e"), 1); }
+}
+function whoF(f){ var u=whoSt(); u.f=u.f===f?"":f; u.more=[]; S.data.apage=null; paint(); load(false); }
+function whoSort(v){ var u=whoSt(); u.sort=v==="joined"?"joined":"last"; u.more=[]; S.data.apage=null; paint(); load(false); }
+function whoMore(){ var u=whoSt(), p=VIEWS.who.need()[0].p, q={}; for(var k in p) q[k]=p[k]; q.off=(S.data.apage.rows||[]).length+u.more.length; call("acct_page",q,function(r){ if(r&&r.ok){ u.more=u.more.concat(r.rows||[]); paint(); } else toast("더 받지 못했습니다 · "+why(r)); },function(e){ toast("더 받지 못했습니다 · "+why(e)); }); }
+function whoPick(emp, kb){ var u=whoSt(); u.cur=u.cur===emp&&!kb?"":emp; if(kb) u.kb=1; S.sub.p_who=u.cur; navHash(false); paint(); }
+/* 카드 데이터 · 20초 · 다른 곳에서 바뀌면(changed) 오래된 표시만 하고 새로 받는 동안 옛 카드를 그대로 보인다 */
+function whoInfo(emp, force){
+  var k=normE(emp), c=WHO.info[k];
+  if(!force&&c&&Date.now()-c._at<20000) return c;
+  if(WHO.busy[k]) return c||null;
+  WHO.busy[k]=1;
+  var fin=function(r){ WHO.busy[k]=0; r=r||{ ok:false }; r._at=Date.now(); WHO.info[k]=r; whoPanel(); };
+  if(WHO.old) call("usr_info",{ emp:k },function(r){ if(r) r.old=1; fin(r); },fin);
+  else call("person_card",{ emp:k, vn:10, tn:60 },function(r){ if(unknownSrv(r)){ WHO.old=1; WHO.busy[k]=0; whoInfo(k,true); return; } fin(r); },fin);
+  return c||null;
+}
+function pcName(emp){ var d=WHO.info[normE(emp)]; return d&&d.name||emp; }
+function pcStamps(d){ return (d.stamps||[]).map(function(x){ return typeof x==="string"?{ id:x }:x; }); }
 function whoPanel(){
   var u=whoSt(), p=el("whoP"); if(!p) return;
-  if(!u.cur){ p.innerHTML='<div class="ph2"><div><h2>사람을 고르면 여기</h2><div class="cap">스탬프 · 룰렛 · PIN · 그 사람 기록</div></div></div><div class="bd"><p class="cap">사번이나 이름을 넣으면 명부에서 아직 가입하지 않은 사람도 함께 나옵니다.</p></div>'; return; }
+  if(!u.cur){ p.innerHTML='<div class="ph2"><div><h2>사람을 고르면 여기</h2><div class="cap">접속 · 스탬프 · 선착순 · 신청 · 명단 · 시간순</div></div></div><div class="bd"><p class="cap">사번이나 이름을 넣으면 명부에서 아직 가입하지 않은 사람도 함께 나옵니다. 어느 화면에서든 <b>/</b> 를 누르면 머리의 찾기 칸으로 갑니다.</p></div>'; return; }
   var d=whoInfo(u.cur);
   if(!d){ p.innerHTML='<div class="bd">'+skel()+'</div>'; return; }
-  if(!d.ok){ p.innerHTML='<div class="ph2"><div><h2>'+esc(u.cur)+'</h2></div><button class="x" onclick="whoPick(\'\')">×</button></div><div class="bd">'+band("bad",esc(d.reason==="notfound"?"명부에도 계정에도 없는 사번입니다":why(d)))+'</div>'; return; }
-  var mine=d.stamps||[], half=mine.indexOf("p3h")>=0&&mine.indexOf("p3")<0, n=mine.filter(function(x){ return STAMP8.some(function(s){ return s[0]===x; }); }).length+(mine.indexOf("p3")>=0?1:0)+(half?1:0);
-  var cells=STAMP8.map(function(s){ var got=mine.indexOf(s[0])>=0||(s[0]==="p3"&&half), act="";
-    if(got) act='<button class="rv" data-qa="who.st.rv" onclick="stRevokeAsk(\''+jq(d.emp)+'\',\''+(s[0]==="p3"&&half?"p3h":s[0])+'\')">취소</button>';
-    else if(GRANT_IDS.indexOf(s[0])>=0&&d.acct) act='<button data-qa="who.st.grant" onclick="stGrantAsk(\''+jq(d.emp)+'\',\''+s[0]+'\')">부여</button>';
-    return '<div class="c'+(got?" got":"")+'"><span class="no">'+s[1]+(s[0]==="p3"?" · 2개":"")+'</span><b>'+esc(s[2])+'</b><span class="cap">'+(got?(s[0]==="p3"&&half?"1개(한쪽)":"받음"):"-")+'</span>'+act+'</div>'; }).join("");
-  var h='<div class="ph2"><div><h2>'+esc(d.name||d.emp)+'</h2><div class="cap">'+esc(d.dept||"")+' · '+esc(d.emp)+(d.sup?" · 슈퍼관리자":"")+'</div></div><button class="x" aria-label="닫기" data-qa="who.x" onclick="whoPick(\'\')">×</button></div><div class="bd">'+
-    '<dl class="kv"><dt>앱</dt><dd>'+(d.acct?"가입 "+esc(short(d.joined))+" · 최근 "+esc(short(d.last)||"-"):"아직 가입 안 함(명부만)")+'</dd><dt>PIN</dt><dd>'+(d.pw==null?"-":d.pw?"있음":"초기화 대기(다음 로그인에 새 PIN)")+'</dd><dt>스탬프</dt><dd><b class="n">'+Math.min(6,n)+'</b>개 / 6 · 행운권 '+(d.tickets||0)+'장</dd><dt>룰렛</dt><dd>'+(d.roulette?"사용함 ":"안 씀")+(d.roulette?'<button class="lnk" data-qa="who.rundo" onclick="rlUndoAsk(\''+jq(d.emp)+'\')">사용 취소 …</button>':'')+'</dd>'+(d.nick?'<dt>닉네임</dt><dd>'+esc(d.nick.nick)+(d.nick.hidden?" · 숨김":"")+'</dd>':'')+'</dl>'+
-    '<div class="st8">'+cells+'</div>'+
-    (d.acct?'<div class="acts"><button class="btn" data-qa="who.pinreset" onclick="pinResetAsk(\''+jq(d.emp)+'\')"'+(d.pw===false?" disabled":"")+'>PIN 초기화</button><button class="btn ghost" data-qa="who.legacy" onclick="legacyOpen(\'p_who\',1)">닉네임 · 게임 기록(옛 화면)</button></div>':'')+
-    '<h5>이 사람 최근 기록</h5>'+actMini(d.emp,"whoMini")+'</div>';
-  p.innerHTML=h;
+  if(!d.ok){ p.innerHTML='<div class="ph2"><div><h2>'+esc(u.cur)+'</h2></div><button class="x" aria-label="카드 닫기" data-qa="who.x" onclick="whoPick(\'\')">×</button></div><div class="bd">'+band("bad",esc(d.reason==="notfound"?"명부에도 계정에도 없는 사번입니다":why(d)),'<button class="btn sm" data-qa="who.retry" onclick="whoInfo(\''+jq(u.cur)+'\',true)">다시</button>')+'</div>'; return; }
+  if(document.activeElement&&document.activeElement.id==="pcP10") return;
+  var keep=p.contains(document.activeElement)?focKey(document.activeElement):null;
+  scrKeep(p, pcHtml(d));
+  if(u.kb){ u.kb=0; var h=el("pcH"); if(h) h.focus(); }
+  else if(keep) focBack(keep);
 }
-function whoAfter(emp){ delete WHO.info[normE(emp)]; delete ACTM[normE(emp)]; changed(["usr_info","act_log","now_board","acct_page"]); S.at.apage=0; whoPanel(); load(false); }
+function pcHtml(d){
+  var e=d.emp, J=jq(e), sup=!!(S.me&&S.me.sup), L=d.lists||{}, v=d.visit||null;
+  var st=pcStamps(d), by={}; st.forEach(function(x){ by[x.id]=x; });
+  var half=!!by.p3h&&!by.p3, n=d.n!=null?d.n:Math.min(6,st.filter(function(x){ return STAMP8.some(function(s){ return s[0]===x.id; }); }).length+(by.p3?1:0)+(half?1:0));
+  var h='<div class="ph2"><div style="min-width:0"><h2 id="pcH" tabindex="-1">'+esc(d.name||e)+'</h2><div class="cap">'+esc(d.dept||"")+' · <span class="n">'+esc(e)+'</span></div><div class="fx mt8">'+
+    (d.test||L.test?tag("시험"):"")+(d.sup?tag("슈퍼관리자","pri"):"")+(L.staffApp?tag("스태프","pri"):"")+(d.acct?"":tag("가입 전"))+(d.stale?tag("다시 받는 중"):"")+'</div></div><button class="x" aria-label="카드 닫기" data-qa="who.x" onclick="whoPick(\'\')">×</button></div><div class="bd">';
+  h+='<div class="acts" style="margin-top:0">'+(d.acct?'<button class="btn" data-qa="pc.push" onclick="pcPush(\''+J+'\')">이 사람에게 푸시</button><button class="btn" data-qa="who.pinreset" onclick="pinResetAsk(\''+J+'\')"'+(d.pw===0||d.pw===false?" disabled":"")+'>PIN 초기화</button>':'')+'<button class="btn ghost" data-qa="pc.reload" onclick="whoInfo(\''+J+'\',true);whoPanel()">새로 받기</button></div>';
+  /* 접속 */
+  h+='<div class="pcs mt12"><h3>접속</h3><div class="row2">'+(d.acct?'가입 <b class="n">'+esc(short(d.joined))+'</b> · 최근 <b class="n">'+esc(short(d.last)||"-")+'</b>':'아직 가입 안 함(명부만)')+(v?' · 오늘 <b class="n">'+n0(v.today)+'</b>회':'')+' · PIN '+(d.pw==null?"-":d.pw?"있음":"초기화 대기")+'</div>'+
+    (v&&(v.rows||[]).length?'<div class="chips mt8" aria-label="최근 방문">'+v.rows.map(function(x){ return '<span class="pchip"><span class="n">'+esc(short(x.t).slice(-5))+'</span> '+esc(VIS_ENTRY[x.entry]||"직접")+'</span>'; }).join("")+'</div><p class="cap mt8">최근 방문 '+v.rows.length+'건 · 시각과 들어온 길만'+(v.from?' · '+esc(short(v.from))+' 부터 읽음':'')+'</p>':'')+'</div>';
+  /* 스탬프 */
+  var cells=STAMP8.map(function(s){ var x=by[s[0]]||(s[0]==="p3"&&half?by.p3h:null), got=!!x, id=s[0]==="p3"&&half?"p3h":s[0], nm=s[1]+" "+s[2], act="";
+    if(got) act='<button class="btn sm danger" data-qa="who.st.rv" aria-label="'+esc(nm)+' 스탬프 취소" onclick="stRevokeAsk(\''+J+'\',\''+id+'\')">취소</button>';
+    else if(GRANT_IDS.indexOf(s[0])>=0&&d.acct) act='<button class="btn sm" data-qa="who.st.grant" aria-label="'+esc(nm)+' 스탬프 부여" onclick="stGrantAsk(\''+J+'\',\''+s[0]+'\')">부여</button>';
+    var sub=got?(x.at?esc(short(x.at).slice(-5)):"받음")+(x.src&&x.src!=="본인"?" · "+esc(x.byName||x.src):x.src?" · 본인":"")+(s[0]==="p3"&&half?" · 한쪽":""):"-";
+    return '<div class="c'+(got?" got":"")+'"><span class="no">'+s[1]+(s[0]==="p3"?" · 2개":"")+'</span><b>'+esc(s[2])+'</b><span class="cap">'+sub+'</span>'+act+'</div>'; }).join("");
+  var rl=d.roulette, ru=rl&&typeof rl==="object"?rl.used:rl, fx=d.fcfs;
+  h+='<div class="pcs"><h3>스탬프 <b class="n" style="color:var(--tx);font-size:var(--fs-b)">'+Math.min(6,n)+' / 6</b> · 행운권 '+n0(d.tickets||0)+'장</h3><div class="st8">'+cells+'</div>'+
+    '<div class="row2 mt8"><span>룰렛 '+(ru?"사용"+(rl.at?" "+esc(short(rl.at).slice(-5)):"")+(rl.gn?" · "+esc(rl.gn):""):"안 씀")+'</span>'+(ru?'<button class="btn sm" data-qa="who.rundo" onclick="rlUndoAsk(\''+J+'\')">사용 취소 …</button>':'')+'</div>'+
+    (d.old?'':'<div class="row2"><span>선착순 '+(!fx?"기록 없음":fx.st==="done"?"수령 "+esc(short(fx.gotAt).slice(-5))+(fx.gotBy?" · "+esc(fx.gotBy):""):fx.st==="void"?"자격 취소됨":fx.st==="full"?"대기 마감":"수령 전")+(fx&&fx.rk?" · "+esc(fx.rk)+"번":"")+'</span>'+
+      (fx&&fx.st==="done"?'<button class="btn sm" data-qa="pc.fx.undo" onclick="fxUndoAsk(\''+J+'\')">수령 되돌리기</button>':fx&&fx.st==="void"?'':'<button class="btn sm" data-qa="pc.fx.add" onclick="fxAddAsk(\''+J+'\')">수동 지급</button>'+(fx&&fx.st!=="done"?'<button class="btn sm" data-qa="pc.fx.void" onclick="fxVoidAsk(\''+J+'\')">자격 취소</button>':''))+'</div>')+'</div>';
+  if(d.old) return h+'<div class="pcs">'+band("warn","이 서버는 아직 한 사람 카드(person_card)를 모릅니다. 접속 · 신청 · 명단 · 시간순은 서버 배포 뒤 보입니다.")+'<h3>이 사람 최근 기록</h3>'+actMini(e,"whoMini")+'</div></div>';
+  /* 신청 · 세션 · 키트 */
+  var ap=[];
+  (d.resv||[]).forEach(function(r){ ap.push('<div class="row2"><span>AX 라운지 상담 <b class="n">'+esc(hhmm(r.slot))+'</b> '+tag(r.st,RESV_TAG[r.st])+(r.memo?' <span class="cap">'+esc(r.memo)+'</span>':'')+'</span><button class="btn sm ghost" data-qa="pc.resv" onclick="apOpen(\'resv\',\''+J+'\')">신청 처리 ›</button></div>'); });
+  if(d.cchat) ap.push('<div class="row2"><span>커피챗 '+tag(ccLbl(d.cchat.st),CC_TAG[d.cchat.st])+(d.cchat.round?' <b class="n">'+esc(hhmm(d.cchat.round))+'</b> · '+esc(d.cchat.table||"-"):'')+'</span><button class="btn sm ghost" data-qa="pc.cc" onclick="apOpen(\'cc\',\''+J+'\')">신청 처리 ›</button></div>');
+  if(d.ck) ap.push('<div class="row2"><span>번호표 <b class="n">'+esc(d.ck.no)+'</b> '+tag(({ wait:"대기", call:"호출 중", done:"건넴" })[d.ck.st]||d.ck.st, d.ck.st==="call"?"pri":"")+'</span>'+(d.ck.st!=="done"?'<button class="btn sm" data-qa="pc.ck.void" onclick="ckVoidAsk(\''+jq(d.ck.w||String(d.ck.no).charAt(0))+'\',\''+jq(d.ck.no)+'\')">번호표 무효</button>':'')+'</div>');
+  if(d.p10) ap.push('<div class="row2"><span>10F '+esc(SESS10[d.p10.sid]||d.p10.sid)+(d.p10.role?" · 운영진":"")+' · 키트 '+(d.p10.kit?"받음":"아직")+(d.p10.att?" · 끝 QR":"")+'</span>'+(sup?'<select class="in" id="pcP10" data-qa="pc.p10.sid" aria-label="바꿀 세션" style="width:140px;height:32px">'+Object.keys(SESS10).map(function(k){ return '<option value="'+k+'"'+(k===d.p10.sid?" selected":"")+'>'+esc(SESS10[k])+'</option>'; }).join("")+'</select><button class="btn sm" data-qa="pc.p10.move" onclick="pcP10Move(\''+J+'\')">세션 바꾸기</button>':'')+'</div>');
+  if(d.kit) ap.push('<div class="row2"><span>'+(d.kit.pool==="staff"?"스태프 옷":"사전 신청 키트")+(d.kit.no?' <span class="n">'+esc(d.kit.no)+'</span>':'')+' · 사이즈 '+(d.kit.sz?esc(ksLbl(d.kit.sz))+(d.kit.how==="auto"?"(자동)":"")+(d.kit.at?" "+esc(short(d.kit.at).slice(-5)):""):"아직")+' · '+(d.kit.got?"수령 "+esc(short(d.kit.got).slice(-5)):"수령 전")+'</span></div>');
+  if(d.lounge) ap.push('<div class="row2"><span>라운지 사전 신청 '+esc(d.lounge.rk)+'번째 · '+(d.lounge.kit?"키트":"가습기")+' · '+(d.lounge.got?"받음 "+esc(short(d.lounge.got).slice(-5)):"받기 전")+'</span></div>');
+  h+='<div class="pcs"><h3>신청 · 세션 · 키트</h3>'+(ap.length?ap.join(""):'<p class="cap">신청 · 세션 · 키트 기록이 없습니다.</p>')+'</div>';
+  /* 명단 */
+  h+='<div class="pcs"><h3>명단'+(sup?'':' · 넣고 빼기는 슈퍼관리자')+'</h3>'+[["gate","접속 허용"],["staffApp","스태프 폰 권한","staff_app"],["staffWear","스태프 옷","staff_wear"],["test","시험 사번"]].map(function(x){ var on=!!L[x[0]], lk=x[2]||x[0];
+    return '<div class="row2"><span style="min-width:120px">'+esc(x[1])+'</span>'+(on?tag("들어 있음","ok"):tag("없음"))+(sup&&!(d.sup&&lk==="staff_app")?'<button class="btn sm'+(on?" danger":"")+'" data-qa="pc.roll.'+lk+'" onclick="pcRoll(\''+lk+'\',\''+(on?"del":"add")+'\',\''+J+'\')">'+(on?"빼기":"넣기")+'</button>':'')+'</div>'; }).join("")+'</div>';
+  /* 시간순 */
+  var tl=d.tl||[];
+  h+='<div class="pcs"><h3>시간순 · '+tl.length+'줄'+(d.push?' · 알림 기기 '+n0(d.push.subs)+'대':'')+(d.usr&&d.usr.nick?' · 닉네임 '+esc(d.usr.nick.nick):'')+'</h3>'+(tl.length?'<ul class="mini">'+tl.map(function(r){ return '<li><span class="t">'+esc(short(r.t).slice(-5))+'</span><span style="flex:1;min-width:0">'+verb(r.verb)+esc(r.x)+(r.byName||r.by?' <span class="cap">· '+esc(r.byName||r.by)+'</span>':'')+'</span>'+(r.undo?actNow(r):'')+'</li>'; }).join("")+'</ul>':'<p class="cap">기록이 없습니다.</p>')+
+    (d.trunc?'<p class="cap mt8">'+esc(short(d.tlFrom))+' 앞은 이 카드에서 못 봅니다(기록 › 활동 기록).</p>':'')+'</div>';
+  return h+'</div>';
+}
+function whoAfter(emp){ var k=normE(emp); if(WHO.info[k]) WHO.info[k]._at=0; delete ACTM[k]; changed(["usr_info","act_log","now_board","acct_page"]); S.at.apage=0; whoPanel(); load(false); }
+function pcAfter(emp){ whoAfter(emp); }
+function pcPush(emp){ var u=sendSt(), a=sendEmps().list; if(a.indexOf(emp)<0) a.push(emp); u.tgt="emps"; u.emps=a.join("\n"); u.pv=null; sendSave(); go("n_send"); }
+function apOpen(kind, emp){ var u=apSt(); u.kind=kind; u.f="all"; u.q=emp; u.chk={}; u.cur=kind==="cc"?normE(emp):""; S.sub.f_apply=kind; var b=el("apBar"); if(b) b._k=""; go("f_apply"); }
+function pcRoll(list, op, emp){
+  supNeed(function(){
+    var lbl=list==="gate"?"접속 허용 명단":list==="staff_app"?"스태프 폰 권한":list==="staff_wear"?"스태프 옷 명단":"시험 사번";
+    if(op==="add") return rosAddGo(list, [emp], function(){ pcAfter(emp); });
+    dialog({ t:lbl+"에서 뺄까요?", who:esc(pcName(emp))+"<span>사번 "+esc(emp)+" · "+esc(lbl)+"</span>", s:(list==="gate"?"클로즈 베타 동안 다음 쓰기부터 앱이 거절합니다. ":list==="staff_app"?"그 폰의 스태프 화면이 다음 요청부터 멈춥니다. ":list==="staff_wear"?"고른 사이즈가 풀립니다. ":"")+"7초 안 알림 · 기록 › 활동 기록에서 그날 안에 되돌립니다.", ok:"빼기", danger:true,
+      onOk:function(){ rosDelGo(list, [emp], true, function(){ pcAfter(emp); }); } });
+  });
+}
+function pcP10Move(emp){
+  var d=WHO.info[normE(emp)]||{}, cur=(d.p10||{}).sid, to=(el("pcP10")||{}).value; if(!to) return;
+  if(to===cur){ toast("지금 세션과 같습니다"); return; }
+  supNeed(function(){ dialog({ t:"세션을 바꿀까요?", who:esc(d.name||emp)+"<span>"+esc(SESS10[cur]||cur)+" → "+esc(SESS10[to]||to)+"</span>", s:"앱 「내 세션」이 새 세션으로 바로 바뀝니다.", ok:"바꾸기",
+    onOk:function(){ callPost("pre10_row_set",{ emp:emp, sid:to, from:cur, confirm:P10_RWORD },function(x){ dlgForce(); if(x&&x.ok){ toast("세션을 바꿨습니다 · "+(d.name||emp)); changed(["roll_list","roll_stat"]); pcAfter(emp); } else toast("바꾸지 못했습니다 · "+why(x)); },function(e){ dlgForce(); toast("바꾸지 못했습니다 · "+why(e)); }); } }); });
+}
 function stName(id){ var s=STAMP8.filter(function(x){ return x[0]===id; })[0]; return id==="p3h"?"06 프로그램 참여(한쪽)":s?s[1]+" "+s[2]:id; }
 function stGrantAsk(emp, id){
-  var d=WHO.info[normE(emp)]||{};
-  dialog({ t:"스탬프를 부여할까요?", who:esc(d.name||emp)+'<span>사번 '+esc(emp)+' · '+esc(stName(id))+(id==="p3"?" · 2개":"")+'</span>', s:"참여 기록에 <b>「담당자 부여」</b>로 남습니다. 참가자 앱에는 다음 동기화에 반영됩니다.", ok:"부여",
+  dialog({ t:"스탬프를 부여할까요?", who:esc(pcName(emp))+'<span>사번 '+esc(emp)+' · '+esc(stName(id))+(id==="p3"?" · 2개":"")+'</span>', s:"참여 기록에 <b>「담당자 부여」</b>로 남습니다. 참가자 앱에는 다음 동기화에 반영됩니다.", ok:"부여",
     onOk:function(){ stGrantGo(emp, id, true); } });
 }
 function stGrantGo(emp, id, inDlg, quiet){
   call("stamp_grant",{ emp:emp, id:id },function(r){ if(inDlg) dlgForce();
     if(r&&r.ok){ if(r.dup){ toast("이미 있는 스탬프입니다 · "+stName(id)); whoAfter(emp); return; } whoAfter(emp); toast((quiet?"되돌렸습니다 · ":"부여했습니다 · ")+(r.who||emp)+" · "+stName(id), quiet?{}:{ undo:function(){ stRevokeGo(emp, id, false, true); } }); }
-    else toast("부여 실패 · "+(r&&r.reason==="noid"?"부여할 수 없는 항목입니다":why(r))); },function(e){ if(inDlg) dlgForce(); toast(why(e)); });
+    else toast("부여 실패 · "+(r&&r.reason==="noid"?"부여할 수 없는 항목입니다":why(r))); },function(e){ if(inDlg) dlgForce(); toast("부여 실패 · "+why(e)); });
 }
 /* 취소 · dry 로 서버 판정과 영향을 받아 확인 창 · 룰렛 · 행운권이 걸리면 막는다 */
 function stRevokeAsk(emp, id){
-  var d=WHO.info[normE(emp)]||{};
   call("stamp_revoke",{ emp:emp, id:id, dry:1 },function(x){
     x=x||{};
-    var who=esc(d.name||emp)+'<span>사번 '+esc(emp)+' · '+esc(stName(id))+'</span>';
+    var who=esc(pcName(emp))+'<span>사번 '+esc(emp)+' · '+esc(stName(id))+'</span>';
     if(!x.ok){ dialog({ t:"취소할 수 없습니다", who:who, s:x.reason==="roulette"?"이 사람은 <b>룰렛을 이미 돌렸습니다</b>. 룰렛 타일로 잘못 찍었으면 룰렛 「사용 취소」를 먼저 합니다.":x.reason==="tickets"?"<b>행운권 번호가 이미 "+x.tickets+"장 발급</b>되어 취소를 막습니다.":x.reason==="nostamp"?"서버 기록에 이 스탬프가 없습니다.":x.reason==="noid"?"지금 취소 범위에 들어 있지 않은 항목입니다.":esc(why(x)), ok:"확인" }); if(x.reason==="nostamp") whoAfter(emp); return; }
     dialog({ t:"스탬프를 취소할까요?", who:who, x:imp([["개수",(x.n!=null?x.n:"-")+" → "+(x.nAfter!=null?x.nAfter:"-"),"chg"],["행운권 번호",(x.tickets||0)+"장(그대로)"],["룰렛",x.roulette?"사용함":"안 씀"]]),
       s:"기록을 지우지 않고 참여 기록에 <b>「담당자 취소」</b> 줄을 남깁니다. 같은 행동으로 다시 받을 수 있습니다.", ok:"취소 처리", danger:true, onOk:function(){ stRevokeGo(emp, id, true); } });
-  },function(e){ toast(why(e)); });
+  },function(e){ toast("확인 실패 · "+why(e)); });
 }
 function stRevokeGo(emp, id, inDlg, quiet){
   call("stamp_revoke",{ emp:emp, id:id },function(r){ if(inDlg) dlgForce();
     if(r&&r.ok){ whoAfter(emp); toast((quiet?"되돌렸습니다 · ":"취소했습니다 · ")+emp+" · "+stName(id), quiet||GRANT_IDS.indexOf(id)<0?{}:{ undo:function(){ stGrantGo(emp, id, false, true); } }); }
-    else toast("취소 실패 · "+why(r)); },function(e){ if(inDlg) dlgForce(); toast(why(e)); });
+    else toast("취소 실패 · "+why(r)); },function(e){ if(inDlg) dlgForce(); toast("취소 실패 · "+why(e)); });
 }
 function pinResetAsk(emp, row){
-  var d=WHO.info[normE(emp)]||{};
-  dialog({ t:"PIN 을 초기화할까요?", who:esc(d.name||emp)+'<span>사번 '+esc(emp)+'</span>', s:"본인 확인(신분증 · 얼굴)을 먼저 합니다. 초기화하면 그 사람이 다음 로그인에서 넣는 4자리가 새 PIN 이 되고, 이미 로그인해 둔 다른 폰은 끊깁니다. <b>되돌릴 수 없습니다.</b>", ok:"초기화", danger:true,
+  dialog({ t:"PIN 을 초기화할까요?", who:esc(pcName(emp))+'<span>사번 '+esc(emp)+'</span>', s:"본인 확인(신분증 · 얼굴)을 먼저 합니다. 초기화하면 그 사람이 다음 로그인에서 넣는 4자리가 새 PIN 이 되고, 이미 로그인해 둔 다른 폰은 끊깁니다. <b>되돌릴 수 없습니다.</b>", ok:"초기화", danger:true,
     onOk:function(){ var a=row?"pw_req_done":"acct_pwreset", p=row?{ row:row, by:"콘솔 "+((S.me&&S.me.emp)||aemp()) }:{ emp:emp };
-      call(a,p,function(r){ dlgForce(); if(r&&r.ok){ toast("PIN 을 초기화했습니다 · "+(r.name||emp)+(r.already?" · 이미 초기화 상태":"")); whoAfter(emp); changed(["pw_req_list","pw_req_count"]); S.at.pwl=0; S.at.pwc=0; load(true); } else toast("초기화 실패 · "+why(r)); },function(e){ dlgForce(); toast(why(e)); }); } });
+      call(a,p,function(r){ dlgForce(); if(r&&r.ok){ toast("PIN 을 초기화했습니다 · "+(r.name||emp)+(r.already?" · 이미 초기화 상태":"")); whoAfter(emp); changed(["pw_req_list","pw_req_count"]); S.at.pwl=0; S.at.pwc=0; load(true); } else toast("초기화 실패 · "+why(r)); },function(e){ dlgForce(); toast("초기화 실패 · "+why(e)); }); } });
 }
 
-/* ══════════════════ 8. 사람 › PIN 분실 요청 (pw_req_list · pw_req_done · pw_req_cancel) ══════════════════ */
+/* ── 머리 전역 검색(/) · acct_page 한 번(사람 10명) · 결과 1명이면 Enter 로 바로 카드 · 여럿이면 ↑↓ Enter ── */
+var GS={ q:"", rows:[], i:0, seq:0, t:0 };
+function gsShow(on){ var r=el("gsR"); r.hidden=!on; el("gsQ").setAttribute("aria-expanded", on?"true":"false"); }
+function gsHide(){ gsShow(false); }
+function gsPaint(){
+  var r=el("gsR"), q=GS.q;
+  if(!q){ gsShow(false); return; }
+  r.innerHTML=GS.busy&&!GS.rows.length?'<p class="cap" style="padding:8px 10px"><span class="spin"></span>찾는 중</p>':GS.rows.length?GS.rows.map(function(x,i){ return '<button type="button" role="option" id="gsO'+i+'" aria-selected="'+(i===GS.i)+'" class="'+(i===GS.i?"on":"")+'" data-qa="gs.row" onmousedown="event.preventDefault()" onclick="gsGo('+i+')"><b>'+esc(x.name||"-")+'</b><span class="cap">'+esc(x.dept||"")+'</span><span class="cap n">'+esc(x.emp)+(x.acct?"":" · 가입 전")+'</span></button>'; }).join(""):'<p class="cap" style="padding:8px 10px">찾는 사람이 없습니다</p>';
+  el("gsQ").setAttribute("aria-activedescendant", GS.rows.length?"gsO"+GS.i:"");
+  gsShow(true);
+}
+function gsFind(){
+  var q=GS.q, s=++GS.seq; if(!q){ gsPaint(); return; }
+  GS.busy=1; gsPaint();
+  call("acct_page",{ q:q, n:10 },function(r){ if(s!==GS.seq) return; GS.busy=0; GS.rows=r&&r.ok?r.rows||[]:[]; GS.i=0; gsPaint(); if(GS.enter){ GS.enter=0; if(GS.rows.length===1) gsGo(0); } },function(e){ if(s!==GS.seq) return; GS.busy=0; GS.rows=[]; gsPaint(); toast("찾지 못했습니다 · "+why(e)); });
+}
+function gsGo(i){ var x=GS.rows[i]; if(!x) return; gsHide(); el("gsQ").value=""; GS.q=""; GS.rows=[]; var u=whoSt(); u.kb=1; whoOpen(x.emp); }
+el("gsQ").addEventListener("input",function(){ GS.q=this.value.replace(/\s+/g,""); GS.rows=[]; clearTimeout(GS.t); GS.t=setTimeout(gsFind,250); if(!GS.q) gsPaint(); });
+el("gsQ").addEventListener("keydown",function(e){
+  if(e.isComposing) return;
+  if(e.key==="ArrowDown"||e.key==="ArrowUp"){ if(!GS.rows.length) return; e.preventDefault(); GS.i=(GS.i+(e.key==="ArrowDown"?1:GS.rows.length-1))%GS.rows.length; gsPaint(); var o=el("gsO"+GS.i); if(o) o.scrollIntoView({ block:"nearest" }); }
+  else if(e.key==="Enter"){ e.preventDefault(); if(GS.rows.length&&!GS.busy) gsGo(GS.i); else { GS.enter=1; clearTimeout(GS.t); GS.q=this.value.replace(/\s+/g,""); gsFind(); } }
+  else if(e.key==="Escape"){ e.stopPropagation(); this.value=""; GS.q=""; gsHide(); this.blur(); }
+});
+el("gsQ").addEventListener("blur",function(){ setTimeout(gsHide,150); });
+el("gsQ").addEventListener("focus",function(){ if(GS.q&&GS.rows.length) gsPaint(); });
+
+/* ══ 8. 사람 › PIN 분실 요청 (pw_req_list · pw_req_done · pw_req_cancel) ══ */
 VIEWS.pw={
   need:function(){ return [{ k:"pwl", a:"pw_req_list", ttl:30000 }]; },
   mount:function(){ el("vb").innerHTML='<div class="card kpis k3" id="pwK"></div><div class="card list" id="pwL"></div>'+memo('<p>요청은 앱 로그인 화면 「PIN 을 잊었어요」에서 사번 · 이름으로 들어옵니다. 명부에 없는 짝은 시트에 남지 않습니다.</p><p>처리 순서: 데스크에서 본인 확인(사원증) → 「초기화하고 처리」 → 그 사람이 앱에서 새 PIN 4자리를 정합니다. 잘못 보낸 요청은 「잘못된 요청」으로 닫습니다.</p>'); },
@@ -1463,35 +1630,41 @@ function pwCancelAsk(row, emp){
   dialog({ t:"잘못된 요청으로 닫을까요?", s:"PIN 은 그대로 두고 요청만 닫습니다.", who:esc(emp), ok:"닫기 처리",
     onOk:function(){ call("pw_req_cancel",{ row:row, by:"콘솔 "+((S.me&&S.me.emp)||aemp()) },function(r){ dlgForce(); if(r&&r.ok){ toast("요청을 닫았습니다"); changed(["pw_req_list","pw_req_count","act_log"]); S.at.pwl=0; S.at.pwc=0; load(true); } else toast(why(r)); },function(e){ dlgForce(); toast(why(e)); }); } });
 }
-/* ══════════════════ 9. 알림 › 보내기 (최소 폼 · A 안 7절) ══════════════════
- * 입력 넷 = 받는 사람(전체 · AX 라운지 신청자 · 커피챗 희망자) · 제목 · 내용 · 푸시도 보내기(기본 켬)
- * 보낸 사람 = 「AX Festival」 고정 · 누르면 공지 목록 · 처리자 = 로그인 사번(서버) · 사람 고르기 · 그룹 · 조건은 옛 콘솔(서버 기능은 그대로)
- * 오발송 방패(고정 동작) = 미리 세기 → 전체급이면 인원 숫자 직접 넣기 → 보류 10초 동안 취소 · 멈춤 = 정상 / 공지 푸시 잠금 / 전체 정지 한 줄 */
-var SEND_TGT=[["all","전체"],["dap","AX 라운지 신청자"],["cchat","커피챗 희망자"]];
+/* ══ 9. 알림 › 보내기 (최소 폼 · A 안 7절) ══ */
+var SEND_TGT=[["all","전체"],["dap","AX 라운지 신청자"],["cchat","커피챗 희망자"],["emps","사번 직접"],["staff","스태프 명단"],["stamps","스탬프 개수"]];
 var SEND_PRESET=[["오발송 정정","앞서 보낸 알림은 잘못 보냈습니다. 확인하지 않아도 됩니다."],["시간 변경","○○ 시간이 ○○:○○ 으로 바뀌었습니다."],["장소 변경","○○ 장소가 ○○ 으로 바뀌었습니다."],["상황 종료","앞서 안내한 상황이 끝났습니다. 평소대로 이용하세요."]];
 var PUSH_MAX={ t:40, b:120 }, PUSH_REC={ t:20, b:40 }, SEND_FROM="AX Festival";
-function sendSt(){ return S.ui.send||(S.ui.send={ tgt:"all", t:"", b:"", push:true, pv:null, pvKey:"", seq:0 }); }
+function sendSt(){ if(S.ui.send) return S.ui.send; var g={}; try{ g=JSON.parse(ssGet("axf_c2_send","{}"))||{}; }catch(e){} return (S.ui.send={ tgt:g.tgt||"all", t:g.t||"", b:g.b||"", push:g.push!==false, emps:g.emps||"", smin:g.smin!=null?g.smin:3, smax:g.smax!=null?g.smax:6, pv:null, seq:0 }); }
+function sendSave(){ var u=sendSt(); ssSet("axf_c2_send", JSON.stringify({ tgt:u.tgt, t:u.t, b:u.b, push:u.push, emps:u.emps, smin:u.smin, smax:u.smax })); }
+function sendEmps(){ var u=sendSt(), out=[], bad=[]; String(u.emps||"").split(/[\s,]+/).forEach(function(x){ if(!x) return; var e=normE(x); if(!/^[0-9A-Z]{3,12}$/.test(e)||/^[A-Z]+$/.test(e)) bad.push(x); else if(out.indexOf(e)<0) out.push(e); }); return { list:out, bad:bad }; }
+function sendStaff(){ var d=S.data.rl_staff; return d&&d.ok?(d.rows||[]).filter(function(r){ return r.app||r.sup; }).map(function(r){ return r.emp; }):null; }
+var HOLD=null;
 function pushSt(){ var d=S.data.pst; return d&&d.ok&&d.rt?d:null; }
-function sendSpec(){ var u=sendSt(); return u.tgt==="all"?{ all:1 }:u.tgt==="dap"?{ group:"dap" }:{ group:"cchat" }; }
+function sendSpec(){ var u=sendSt(), L;
+  if(u.tgt==="all") return { all:1 }; if(u.tgt==="dap") return { group:"dap" }; if(u.tgt==="cchat") return { group:"cchat" };
+  if(u.tgt==="stamps") return { stamps:{ min:Number(u.smin), max:Number(u.smax) } };
+  L=u.tgt==="emps"?sendEmps().list:sendStaff(); return L&&L.length&&L.length<=50?{ emps:L }:null; }
+function sendTgtN(){ var u=sendSt(), sp=sendSpec(); return u.tgt==="emps"||u.tgt==="staff"?(sp?sp.emps.length+"명("+(u.tgt==="staff"?"스태프 명단":"사번 직접")+")":"사번 확인"):u.tgt==="stamps"?"스탬프 "+u.smin+"~"+u.smax+"개":SEND_TGT.filter(function(x){ return x[0]===u.tgt; })[0][1]; }
 function sendPushText(){ var u=sendSt(), t=u.t.trim(), b=u.b.trim(), st=pushSt()||{}; return st.ntgt?{ t:SEND_FROM, b:t+(b?"\n"+b:"") }:{ t:t, b:b }; }
 VIEWS.send={
-  need:function(){ return [{ k:"pst", a:"push_stats", ttl:30000 },{ k:"noti", a:"sync", p:{ emp:"" }, ttl:30000 },{ k:"phist", a:"push_hist", p:{ n:30 }, ttl:60000 },{ k:"nhist", a:"notice_hist", p:{ n:30 }, ttl:60000 }]; },
+  need:function(){ var a=[{ k:"pst", a:"push_stats", ttl:30000 },{ k:"noti", a:"sync", p:{ emp:"" }, ttl:30000 },{ k:"phist", a:"push_hist", p:{ n:30 }, ttl:HOLD?5000:60000 },{ k:"nhist", a:"notice_hist", p:{ n:30 }, ttl:60000 }]; if(sendSt().tgt==="staff") a.push({ k:"rl_staff", a:"roll_list", p:{ list:"staff" }, ttl:60000, sup:1 }); return a; },
   mount:function(){
     var u=sendSt();
-    el("vb").innerHTML='<div id="sdStop"></div><div id="sdCur"></div><div class="grid g75"><div class="card"><div class="ch"><h2>보낼 말</h2><span class="cap">앱 안 공지 + 푸시</span></div><div class="cb0 form">'+
-      '<div class="f"><div class="fl">받는 사람</div><div class="chips" id="sdTgt"></div></div>'+
-      '<div class="f"><div class="fl">제목 <span class="cc" id="ccT"></span></div><input class="in" style="width:100%" id="sdT" data-qa="send.t" maxlength="40" placeholder="예: 17:00 Closing Speech 곧 시작" value="'+esc(u.t)+'" oninput="sendIn(\'t\',this.value)"></div>'+
-      '<div class="f"><div class="fl">내용 <span class="cc" id="ccB"></span></div><textarea class="in" id="sdB" data-qa="send.b" rows="3" maxlength="120" placeholder="잠금 화면에 그대로 보입니다. 이름 · 부문 · 행운권 수 · 경품을 쓰지 않습니다." oninput="sendIn(\'b\',this.value)">'+esc(u.b)+'</textarea></div>'+
+    el("vb").innerHTML='<div id="sdHold"></div><div id="sdStop"></div><div id="sdCur"></div><div class="grid g75"><div class="card"><div class="ch"><h2>보낼 말</h2><span class="cap">앱 안 공지 + 푸시</span></div><div class="cb0 form">'+
+      '<div class="f"><div class="fl" id="sdTgtL">받는 사람</div><div class="chips" id="sdTgt" role="radiogroup" aria-labelledby="sdTgtL"></div><div id="sdTx"></div></div>'+
+      '<div class="f"><label class="fl" for="sdT">제목 <span class="cc" id="ccT"></span></label><input class="in" style="width:100%" id="sdT" data-qa="send.t" maxlength="40" placeholder="예: 17:00 Closing Speech 곧 시작" value="'+esc(u.t)+'" oninput="sendIn(\'t\',this.value)"></div>'+
+      '<div class="f"><label class="fl" for="sdB">내용 <span class="cc" id="ccB"></span></label><textarea class="in" id="sdB" data-qa="send.b" rows="3" maxlength="120" placeholder="잠금 화면에 그대로 보입니다. 이름 · 부문 · 행운권 수 · 경품을 쓰지 않습니다." oninput="sendIn(\'b\',this.value)">'+esc(u.b)+'</textarea></div>'+
       '<div class="f"><div class="fl">문구</div><div class="chips">'+SEND_PRESET.map(function(x,i){ return '<button class="chip" data-qa="send.preset" onclick="sendPreset('+i+')">'+esc(x[0])+'</button>'; }).join("")+'</div></div>'+
-      '<label class="fx f" style="font-size:var(--fs-nav);font-weight:600"><input type="checkbox" id="sdP" data-qa="send.push" '+(u.push?"checked":"")+' onchange="sendSt().push=this.checked;sendSt().pv=null;sendPv()"> 푸시도 보내기(끄면 앱 안 공지만)</label>'+
+      '<label class="fx f" style="font-size:var(--fs-nav);font-weight:600"><input type="checkbox" id="sdP" data-qa="send.push" '+(u.push?"checked":"")+' onchange="sendSt().push=this.checked;sendSt().pv=null;sendSave();sendPv()"> 푸시도 보내기(끄면 앱 안 공지만)</label>'+
       '<div id="sdPv" class="cap"></div><div class="acts"><button class="btn pri" id="sdGo" data-qa="send.go" onclick="sendAsk()">보내기</button><button class="btn" data-qa="send.test" onclick="sendTest()">나에게 테스트</button></div></div></div>'+
-      '<div><div class="card" id="sdSub"></div>'+memo('<p><b>도달</b> · 알림을 켠 기기에만 갑니다. 아이폰은 홈 화면 앱에서만 받습니다. 못 받는 사람에게는 앱 안 공지가 정본입니다.</p><p><b>안전</b> · 화재 · 대피 같은 안전 통지는 사내 방송이 정본입니다. 이미 나간 푸시는 회수되지 않습니다.</p><p><b>사람 고르기 · 그룹 · 조건 · 소리 없이 · 유효 시간</b> · 옛 콘솔 「공지 · 푸시 보내기」에서 합니다.</p>')+'</div></div>'+
+      '<div><div class="card" id="sdSub"></div>'+memo('<p><b>도달</b> · 알림을 켠 기기에만 갑니다. 아이폰은 홈 화면 앱에서만 받습니다. 못 받는 사람에게는 앱 안 공지가 정본입니다.</p><p><b>안전</b> · 화재 · 대피 같은 안전 통지는 사내 방송이 정본입니다. 이미 나간 푸시는 회수되지 않습니다.</p><p><b>사번 직접 · 스태프 명단</b> · 한 번에 50명까지(서버 상한). 한 사람 카드의 「이 사람에게 푸시」가 사번을 여기에 더합니다. 그룹 · 부서 · 층 · 소리 없이 · 유효 시간은 옛 콘솔 「공지 · 푸시 보내기」에서 합니다.</p>')+'</div></div>'+
       '<div class="card mt16"><div class="ch"><h2>보낸 기록</h2><span class="cap">공지 · 푸시 · 시험 · 최근 30건</span></div><div id="sdHist"></div></div>';
     sendCnt();
   },
   paint:function(){
     var u=sendSt(), st=pushSt(), d=S.data.pst;
-    el("sdTgt").innerHTML=SEND_TGT.map(function(x){ return '<button class="chip'+(u.tgt===x[0]?" on":"")+'" data-qa="send.tgt.'+x[0]+'" onclick="sendTgt(\''+x[0]+'\')">'+esc(x[1])+'</button>'; }).join("");
+    el("sdTgt").innerHTML=SEND_TGT.map(function(x){ return '<button class="chip'+(u.tgt===x[0]?" on":"")+'" role="radio" aria-checked="'+(u.tgt===x[0])+'" data-qa="send.tgt.'+x[0]+'" onclick="sendTgt(\''+x[0]+'\')">'+esc(x[1])+'</button>'; }).join("");
+    sendTx(); holdPaint();
     el("sdStop").innerHTML=sendStopHtml();
     var nt=(S.data.noti||{}).notice;
     el("sdCur").innerHTML=nt&&nt.title?band("pri",'지금 앱에 떠 있는 공지 · <b>'+esc(nt.title)+'</b>','<button class="btn sm danger" data-qa="send.stopnotice" onclick="noticeStop(\''+jq(nt.id)+'\')">공지 중지</button>'):"";
@@ -1502,8 +1675,22 @@ VIEWS.send={
   }
 };
 function sendCnt(){ var u=sendSt(), c=function(id,n,k){ var e=el(id); if(!e) return; e.textContent=n+" / "+PUSH_REC[k]+(n>PUSH_REC[k]?" · 잠금 화면에서 잘림":""); e.className="cc"+(n>=PUSH_MAX[k]?" max":n>PUSH_REC[k]?" over":""); }; c("ccT",u.t.length,"t"); c("ccB",u.b.length,"b"); }
-function sendIn(k, v){ var u=sendSt(); u[k]=v; u.pv=null; sendCnt(); clearTimeout(u._q); u._q=setTimeout(sendPv,500); }
-function sendTgt(t){ var u=sendSt(); u.tgt=t; u.pv=null; paint(); sendPv(); }
+function sendIn(k, v){ var u=sendSt(); u[k]=v; u.pv=null; sendSave(); if(k==="t"||k==="b") sendCnt(); else sendTxN(); clearTimeout(u._q); u._q=setTimeout(sendPv,500); }
+function sendTgt(t){ var u=sendSt(); u.tgt=t; u.pv=null; sendSave(); var x=el("sdTx"); if(x) x._k=""; paint(); load(false); sendPv(); }
+/* 받는 사람 칸 아래 · 사번 직접(붙여 넣기) · 스태프 명단(슈퍼 · 폰 권한) · 스탬프 개수 · 고를 때만 다시 그린다(한글 · 붙여 넣기 끊김 없음) */
+function sendTx(){
+  var u=sendSt(), x=el("sdTx"); if(!x) return;
+  var k=u.tgt+(u.tgt==="staff"?"|"+supOk()+"|"+!!S.data.rl_staff:"");
+  if(x._k!==k){ x._k=k; var o=function(v){ return [0,1,2,3,4,5,6].map(function(i){ return '<option'+(String(i)===String(v)?" selected":"")+'>'+i+'</option>'; }).join(""); };
+    x.innerHTML=u.tgt==="emps"?'<textarea class="in mt8" id="sdE" rows="3" data-qa="send.emps" aria-label="받는 사번(줄마다 · 최대 50명)" placeholder="사번을 줄마다 · 쉼표로 · 최대 50명" oninput="sendIn(\'emps\',this.value)">'+esc(u.emps)+'</textarea><p class="cap mt8" id="sdEN"></p>':
+      u.tgt==="staff"?(!(S.me&&S.me.sup)?'<p class="cap mt8">스태프 명단은 슈퍼관리자만 봅니다.</p>':!supOk()?'<p class="cap mt8">명단을 읽으려면 본인 확인(PIN)을 합니다. <button class="lnk" data-qa="send.pin" onclick="supNeed(function(){ load(true); })">PIN 넣기</button></p>':'<p class="cap mt8" id="sdEN"></p>'):
+      u.tgt==="stamps"?'<div class="fx mt8"><label class="fld">스탬프 몇 개부터<select class="in" data-qa="send.smin" onchange="sendIn(\'smin\',this.value)">'+o(u.smin)+'</select></label><label class="fld">몇 개까지<select class="in" data-qa="send.smax" onchange="sendIn(\'smax\',this.value)">'+o(u.smax)+'</select></label></div><p class="cap mt8">알림을 켠 사람 중 지금 스탬프가 이 범위인 사람(앱 공지는 해당 사람에게만).</p>':""; }
+  sendTxN();
+}
+function sendTxN(){ var u=sendSt(), n=el("sdEN"); if(!n) return; if(u.tgt==="emps"){ var E=sendEmps(); n.innerHTML='<b class="n">'+E.list.length+'</b>명'+(E.list.length>50?' · <span style="color:var(--bad)">50명을 넘습니다 · 나눠 보냅니다</span>':'')+(E.bad.length?' · 사번이 아닌 칸 '+E.bad.length+'개는 뺍니다':''); } else if(u.tgt==="staff"){ var L=sendStaff(); n.innerHTML=L?'폰 권한 스태프 <b class="n">'+L.length+'</b>명'+(L.length>50?' · <span style="color:var(--bad)">50명을 넘어 한 번에 못 보냅니다 · 사번 직접으로 나눕니다</span>':''):'<span class="spin"></span>명단을 받는 중'; } }
+/* 보류 중 푸시 · 맨 위 띠(남은 초 · 취소) · 메뉴를 옮겨도 남는다 */
+function holdPaint(){ var b=el("sdHold"); if(!b) return; var left=HOLD?Math.ceil((HOLD.until-Date.now())/1000):0; if(left<=0){ if(HOLD&&left<=0) HOLD=null; b.innerHTML=""; return; } b.innerHTML=band("warn",'<b>푸시 보류 중 · <span class="n">'+left+'</span>초 뒤 나감</b> · '+esc(HOLD.t),'<button class="btn sm danger" data-qa="send.hold.x" onclick="holdCancel(\''+jq(HOLD.id)+'\')">푸시 취소</button>'); }
+setInterval(function(){ if(HOLD) holdPaint(); },1000);
 function sendPreset(i){ var u=sendSt(), x=SEND_PRESET[i]; u.t=x[0]; u.b=x[1]; el("sdT").value=u.t; el("sdB").value=u.b; u.pv=null; sendCnt(); sendPv(); }
 function sendPv(){
   var u=sendSt(), box=el("sdPv"), st=pushSt(); if(!box) return;
@@ -1524,10 +1711,11 @@ function pushWhy(r){ r=r||{};
 function pushBlockMsg(v, b){ return ({ off:"전체 정지 중이라 보낼 수 없습니다", time:"보낼 수 있는 시간("+(v.time||"")+") 밖입니다", dup:"같은 제목 · 같은 대상으로 5분 안에 보냈습니다", allmax:"전체급 발송 하루 상한(오늘 "+(v.allToday||0)+"회)입니다", manual:"수동 발송 잠금 중입니다", date:"오늘은 발송 허용 날짜가 아닙니다" }[b])||b; }
 function sendBy(){ return "콘솔 "+((S.me&&S.me.emp)||aemp()); }
 function sendAsk(){
-  var u=sendSt(), t=u.t.trim(), b=u.b.trim(), tgtN=SEND_TGT.filter(function(x){ return x[0]===u.tgt; })[0][1];
+  var u=sendSt(), t=u.t.trim(), b=u.b.trim(), tgtN=sendTgtN();
   if(!t){ toast("제목을 넣습니다"); el("sdT").focus(); return; }
   if(/○○/.test(t+b)){ toast("○○ 칸을 채웁니다"); return; }
   var spec=sendSpec(), grp=u.tgt!=="all";
+  if(!spec){ toast("받는 사람을 확인합니다 · 사번 1~50명"); var e=el("sdE"); if(e) e.focus(); return; }
   if(!u.push||!pushSt()){
     dialog({ t:"보낼까요?", who:esc(tgtN)+" · 앱 안 공지<span>"+esc(t)+"</span>", s:grp?"고른 사람들의 앱에만 공지가 뜹니다.":"앱을 여는 모든 사람의 홈 · 공지 목록에 뜹니다.", ok:"보내기",
       onOk:function(){ call("notice_set",grp?{ title:t, body:b, nto:1, spec:JSON.stringify(spec), by:sendBy() }:{ title:t, body:b, by:sendBy() },function(r){ dlgForce(); if(r&&r.ok){ toast("보냈습니다 · "+t); sendDone(); } else toast("보내지 못했습니다 · "+pushWhy(r)); },function(e){ dlgForce(); toast(why(e)); }); } });
@@ -1549,7 +1737,7 @@ function sendAsk(){
 function sendGo(t, b, spec, grp, cnt, force, tx){
   call("notice_set",{ title:t, body:b, push:1, spec:JSON.stringify(spec), cnt:cnt, force:force?1:null, by:sendBy(), nto:grp?1:null, pt:tx.t!==t?tx.t:null, pb:tx.t!==t?tx.b:null },function(r){
     dlgForce();
-    if(r&&r.ok){ var p=r.push||{}; toast("보냈습니다 · "+t+(p.reason?" · 푸시 못 보냄("+pushWhy(p)+")":" · 푸시 "+n0(p.reach||0)+"명"+(p.hold?" · "+p.hold+"초 뒤 나감":"")), p.hold&&p.id?{ ms:p.hold*1000, undo:function(){ holdCancel(p.id); }, undoLbl:"푸시 취소" }:{}); sendDone(); return; }
+    if(r&&r.ok){ var p=r.push||{}; if(p.hold&&p.id){ HOLD={ id:p.id, until:Date.now()+p.hold*1000, t:t }; holdPaint(); } toast("보냈습니다 · "+t+(p.reason?" · 푸시 못 보냄("+pushWhy(p)+")":" · 푸시 "+n0(p.reach||0)+"명"+(p.hold?" · "+p.hold+"초 뒤 나감":"")), p.hold&&p.id?{ ms:p.hold*1000, undo:function(){ holdCancel(p.id); }, undoLbl:"푸시 취소" }:{}); sendDone(); return; }
     if(r&&r.reason==="push"){ var x=r.push||{};
       if(x.reason==="recent") return dialog({ t:"10분 안에 전체급 발송이 있었습니다", s:"공지도 아직 나가지 않았습니다. "+x.recent+"분 전에 전체급 발송이 나갔습니다. 같은 사람들이 또 받습니다. 그래도 보낼까요?", ok:"그래도 보내기", danger:true, onOk:function(){ sendGo(t, b, spec, grp, cnt, 1, tx); } });
       if(x.reason==="confirm"){ toast("그 사이 인원이 바뀌었습니다 · 다시 셉니다"); return sendAsk(); }
@@ -1557,8 +1745,8 @@ function sendGo(t, b, spec, grp, cnt, force, tx){
     toast("보내지 못했습니다 · "+pushWhy(r));
   },function(e){ dlgForce(); toast(why(e)); });
 }
-function holdCancel(id){ call("push_cancel",{ id:id, by:sendBy() },function(r){ if(r&&r.ok) toast("푸시를 취소했습니다 · 앱 안 공지는 남아 있습니다(공지 중지로 내립니다)"); else toast(r&&r.reason==="run"?"이미 나가기 시작해 취소할 수 없습니다":"취소 실패 · "+pushWhy(r)); changed(["push_hist","push_stats"]); S.at.phist=0; load(true); },function(e){ toast(why(e)); }); }
-function sendDone(){ var u=sendSt(); u.t=""; u.b=""; u.pv=null; var a=el("sdT"), c=el("sdB"); if(a) a.value=""; if(c) c.value=""; sendCnt(); changed(["push_hist","notice_hist","push_stats","sync","act_log"]); S.at.phist=0; S.at.nhist=0; S.at.noti=0; S.at.pst=0; load(true); }
+function holdCancel(id){ call("push_cancel",{ id:id, by:sendBy() },function(r){ if(HOLD&&HOLD.id===id){ HOLD=null; holdPaint(); } if(r&&r.ok) toast("푸시를 취소했습니다 · 앱 안 공지는 남아 있습니다(공지 중지로 내립니다)"); else toast(r&&r.reason==="run"?"이미 나가기 시작해 취소할 수 없습니다":"취소 실패 · "+pushWhy(r)); changed(["push_hist","push_stats"]); S.at.phist=0; load(true); },function(e){ toast(why(e)); }); }
+function sendDone(){ var u=sendSt(); u.t=""; u.b=""; u.pv=null; sendSave(); var a=el("sdT"), c=el("sdB"); if(a) a.value=""; if(c) c.value=""; sendCnt(); changed(["push_hist","notice_hist","push_stats","sync","act_log"]); S.at.phist=0; S.at.nhist=0; S.at.noti=0; S.at.pst=0; load(true); }
 function sendTest(){
   var u=sendSt(), tx=sendPushText(), me=(S.me&&S.me.emp)||aemp();
   if(!u.t.trim()){ toast("제목을 넣습니다"); return; }
@@ -1584,15 +1772,13 @@ function sendHist(){
   var box=el("sdHist"); if(!box) return;
   var ph=S.data.phist, nh=S.data.nhist, rows=[];
   ((nh&&nh.ok&&nh.rows)||[]).forEach(function(r){ rows.push({ t:r.at, k:r.push?"공지 + 푸시":"앱 공지", to:r.to?r.to+"명 · "+(r.desc||""):(r.desc||"전체"), title:r.title, res:(r.off?"중지됨":"")+(r.push?" 푸시 "+n0(r.reach)+"명":""), by:r.by }); });
-  ((ph&&ph.ok&&ph.rows)||[]).forEach(function(j){ if(j.kind==="notice") return; rows.push({ t:j.made, k:j.kind==="test"?"시험":(j.kname||j.kind), to:j.desc, title:j.title, res:(j.st||"")+" · 성공 "+n0(j.ok)+(j.fail?" · 실패 "+j.fail:""), by:j.by, bad:j.fail }); });
+  ((ph&&ph.ok&&ph.rows)||[]).forEach(function(j){ if(j.st==="대기") rows.push({ t:j.made, k:"보류 중", to:j.desc, title:j.title, res:"보류 · 곧 나감", by:j.by, hold:j.id }); if(j.kind==="notice") return; rows.push({ t:j.made, k:j.kind==="test"?"시험":(j.kname||j.kind), to:j.desc, title:j.title, res:(j.st||"")+" · 성공 "+n0(j.ok)+(j.fail?" · 실패 "+j.fail:""), by:j.by, bad:j.fail }); });
   rows.sort(function(a,b){ return String(a.t)<String(b.t)?1:-1; });
   box.innerHTML='<table class="tb"><colgroup><col style="width:100px"><col style="width:100px"><col><col style="width:150px" class="hm"><col style="width:120px" class="hm"></colgroup><thead><tr><th>시각</th><th>종류</th><th>제목 · 대상</th><th class="hm">결과</th><th class="hm">보낸 이</th></tr></thead><tbody>'+
-    (rows.length?rows.slice(0,40).map(function(r){ return '<tr'+(r.bad?' class="row fail"':'')+'><td class="n cap">'+esc(short(r.t))+'</td><td>'+esc(r.k)+'</td><td class="nm"><b>'+esc(r.title)+'</b><div>'+esc(r.to||"")+'</div></td><td class="cap hm">'+esc(r.res)+'</td><td class="cap hm">'+esc(r.by||"")+'</td></tr>'; }).join(""):'<tr><td colspan="5"><div class="empty">아직 보낸 알림이 없습니다.</div></td></tr>')+'</tbody></table>';
+    (rows.length?rows.slice(0,40).map(function(r){ return '<tr'+(r.bad?' class="row fail"':'')+'><td class="n cap">'+esc(short(r.t))+'</td><td>'+esc(r.k)+'</td><td class="nm"><b>'+esc(r.title)+'</b><div>'+esc(r.to||"")+'</div></td><td class="cap hm">'+(r.hold?'<button class="btn sm danger" data-qa="send.hist.hold" onclick="holdCancel(\''+jq(r.hold)+'\')">푸시 취소</button>':esc(r.res))+'</td><td class="cap hm">'+esc(r.by||"")+'</td></tr>'; }).join(""):'<tr><td colspan="5"><div class="empty">아직 보낸 알림이 없습니다.</div></td></tr>')+'</tbody></table>';
 }
 
-/* ══════════════════ 10. 설정 › 앱 오픈 (og_scope_state · og_scope_set · 슈퍼관리자 + 본인 확인) ══════════════════
- * 단추 넷 = 클로즈 베타 · 사전 신청자까지 · 전체 · 자동(날짜대로) · 누르면 확인 창(바꾼 뒤 들어올 수 있는 사람 수) · 응답으로 바뀐 값을 확인한 뒤에만 다음 단추를 연다(261008 14:25 사고 교훈)
- * 「자동」 전환은 운영 설정 변경이라 사용자가 직접 누른다(최종 설계안) · 여기서는 「다음 바뀌는 시각 · 대상 N명」 미리 보기만 */
+/* ══ 10. 설정 › 앱 오픈 (og_scope_state · og_scope_set · 슈퍼관리자 + 본인 확인) ══ */
 var OG_SCS=[["클로즈베타","클로즈 베타","beta","접속 허용 명단 · 스태프 · 시험 사번"],["사전신청","사전 신청자까지","first","클로즈 베타 + 10F · 키트 · 라운지 사전 신청자"],["전체","전체","all","명부에 있는 누구나"],["자동","자동(날짜대로)","auto","1차 · 2차 오픈 날짜를 따름"]];
 /* 261009 행사 종료(사용자 261009 「오픈 범위에 행사종료 · 아무도 못 들어오고」) · 범위 넷과 따로 한 줄 · 수동만(자동은 종료로 가지 않는다) · 서버 오픈_범위 = 종료 · ph end */
 var OG_END=["종료","행사 종료","end","참가자 앱이 모두 닫힘 · 콘솔은 그대로"];
@@ -1632,7 +1818,7 @@ function ogScAsk(sc){
   var a=ogScOf(d.sc), b=ogScOf(sc), c=d.cnt||{}, nb=c[b[2]], na=c[a[2]];
   if(sc===OG_END[0]){ dialog({ t:"행사를 종료할까요?", who:esc(b[1])+"<span>참가자 앱이 모두 닫힙니다</span>",
     x:imp([["지금",esc(a[1])+" · 약 "+n0(na)+"명"],["바꾼 뒤","행사 종료 · 0명","chg"]]),
-    s:"참가자 앱이 모두 닫힙니다(로그인 · 열어 둔 앱 · 스태프 폰). 콘솔은 계속 쓸 수 있어요. 되돌리려면 범위 단추 하나를 누릅니다.", ok:"행사 종료", danger:true,
+    s:"참가자 앱이 모두 닫힙니다(로그인 · 열어 둔 앱 · 스태프 폰). 콘솔은 계속 쓸 수 있어요. 되돌리려면 범위 단추 하나를 누릅니다.", ok:"행사 종료", danger:true, x2:1,
     onOk:function(){ ogScSet(sc, d.sc, true); } }); return; }
   dialog({ t:"앱 접속 범위를 「"+b[1]+"」로 바꿀까요?", who:esc(b[1])+"<span>들어올 수 있는 사람 약 "+n0(nb)+"명</span>",
     x:imp([["지금",esc(a[1])+" · 약 "+n0(na)+"명"],["바꾼 뒤",esc(b[1])+" · 약 "+n0(nb)+"명","chg"]]),
@@ -1648,7 +1834,7 @@ function ogScSet(sc, was, inDlg){
     function(e){ S.ui.ogBusy=0; if(inDlg) dlgForce(); paint(); toast("바뀌었는지 모릅니다 · "+why(e)+" · 다시 받아 확인합니다"); S.at.ogs=0; load(true); });
 }
 
-/* ══════════════════ 11. 설정 › 고급 · 보관 · 옛 콘솔 항목 목록(최종 설계안 · 옛 콘솔 링크는 여기 한 곳) ══════════════════ */
+/* ══ 11. 설정 › 고급 · 보관 · 옛 콘솔 항목 목록(최종 설계안 · 옛 콘솔 링크는 여기 한 곳) ══ */
 var ADV=[
   ["값","공용 코드(관리코드 · 등급코드)","p_code",0],["값","명부 부서 올리기","s_rd",0],
   ["명단","관리자 명단(콘솔 · 앱 스태프)","p_ros",0],["명단","라운지 명단 통째 올리기","p_lng",0],["명단","기념품 옷 자동 배정 · 엑셀","p_kit",0],["명단","10F 명단 올리기(파일 통째)","p_pre10",0],
@@ -1658,19 +1844,22 @@ var ADV=[
   ["숫자","접속","r_visit",0],["숫자","출석(17F)","r_att",0],["숫자","스탬프 현황","r_stamp",0],["숫자","게임별 통계","r_game",0],["숫자","설문","r_survey",0],["숫자","참가자 본인 확인","r_ses",0],
   ["위험","위험 구역 · 초기화","s_danger",0],["보관","지난 기능 보관(클로즈 베타 QR 등)","s_arch",0]
 ];
+function advSub(){ var v=S.sub.s_adv; return ["cfg","inv","test","old"].indexOf(v)>=0?v:"cfg"; }
 VIEWS.adv={
+  need:function(){ var s=advSub(); return s==="cfg"?[{ k:"cfgl", a:"cfg_list", ttl:60000 }]:s==="inv"?[{ k:"inv", a:"inv_state", ttl:60000 },{ k:"kss", a:"kit_size_state", ttl:60000 },{ k:"fx", a:"fcfs_state", ttl:30000 }]:[]; },
   mount:function(){
+    var sb=advSub(), top='<div class="fx" style="margin-bottom:12px">'+subSeg("s_adv",[["cfg","운영 설정"],["inv","재고 · 교환"],["test","시험 데이터"],["old","옛 화면"]],sb)+'</div>';
+    if(sb==="cfg"){ el("vb").innerHTML=top+'<div class="card"><div class="ch"><h2>운영 설정</h2><span class="cap">기본값과 다른 것부터 · 바꾸면 활동 기록에 남습니다</span></div><div id="cfgT">'+skel()+'</div></div>'; return; }
+    if(sb==="inv"){ el("vb").innerHTML=top+'<div class="grid g75"><div class="card" id="ckSw"></div><div class="card" id="ckSz"></div></div><div id="fxSet"></div><div class="card pad mt16"><b>보기만 하는 명단</b><div class="chips mt8"><button class="chip" data-qa="adv.ros.lounge" onclick="go(\'p_list\',\'lounge\')">라운지 사전 신청 ›</button><button class="chip" data-qa="adv.ros.kit" onclick="go(\'p_list\',\'kit\')">옷 신청 ›</button></div></div>'; return; }
+    if(sb==="test"){ el("vb").innerHTML=top+'<div class="card pad">'+band("warn","행사 전 시험 데이터만 지웁니다. 행사일(10/26)에는 서버가 받지 않습니다. 확인 창에서 단추 글자를 그대로 입력합니다.")+'<div class="acts"><button class="btn danger" data-qa="adv.fx.reset" onclick="fxResetAsk()">선착순 시험 데이터 비우기</button><button class="btn danger" data-qa="adv.lk.reset" onclick="lkResetAsk()">7등 시험 데이터 비우기</button></div></div>'; return; }
     var g="", h='<div class="card pad"><p class="muted">평소에 만질 일이 없는 화면입니다. 누르면 옛 콘솔의 그 자리가 새 탭으로 열리고 로그인은 이어집니다(슈퍼관리자 화면은 옛 콘솔에서 PIN 을 한 번 더 넣습니다). 옛 콘솔은 10/26 까지 그대로 둡니다.</p>';
     ADV.forEach(function(x){ if(x[0]!==g){ h+=(g?'</div>':'')+'<h5 class="h5">'+esc(x[0])+'</h5><div class="chips">'; g=x[0]; } h+='<button class="chip" data-qa="adv.'+x[2]+'" onclick="legacyOpen(\''+x[2]+'\','+x[3]+')">'+esc(x[1])+' ›</button>'; });
     h+='</div><div class="acts"><button class="btn" data-qa="adv.legacy" onclick="legacyOpen(\'\')">옛 콘솔 첫 화면 열기</button></div></div>';
-    el("vb").innerHTML=h;
-  }
+    el("vb").innerHTML=top+h;
+  },
+  paint:function(){ var sb=advSub(); if(sb==="cfg"){ cfgPaint(); } else if(sb==="inv"){ ckSwapPaint(); ckSizePaint(); fxSetPaint(); } }
 };
-/* ══════════════════ 12. 오늘 › 진행판 (디자인 시안/콘솔 당일 진행판 261008/기획안.md · 서버 now_board) ══════════════════
- * 상태 줄 → 오늘 하루 띠 → 이상 신호 4칸 + 그 밖 → (지금 할 일 + 다음 할 일 | 핵심 숫자) → 오늘 전체 일정
- * 쓰기 단추 없음 · 줄을 누르면 그 일을 하는 화면으로 간다 · 자동 줄은 서버 값으로 스스로 체크 · 손 줄은 이 브라우저에 그날만 저장
- * 행사일(10/26)이 아니면 「행사 전 미리 보기」 · 「오늘을 행사일처럼 보기」(리허설)를 켜면 오늘 날짜의 시각으로 지금 · 늦음을 계산(쓰기 없음)
- * 기준값(BOARD_LIM)은 초안이다 · 10/24 리허설과 hi-load 값으로 고친다 */
+/* ══ 12. 오늘 › 진행판 (디자인 시안/콘솔 당일 진행판 261008/기획안.md · 서버 now_board) ══ */
 var BOARD_LIM={ errW:1, errB:5, qW:12, qB:25, latW:1000, latB:2500, pushW:3, pushB:10 };
 var DAYPLAN=[
   { t:"07:30", n:"준비", rows:[
@@ -1748,11 +1937,11 @@ function sigVals(){
     push:{ v:td.fail||0, pct:pf, lvl:(b.push||{}).err||pf>=BOARD_LIM.pushB?"bad":td.fail||pf>=BOARD_LIM.pushW?"warn":"ok" } };
 }
 function sigLvl(k){ return sigVals()[k].lvl; }
-function todayBadge(){ if(!S.data.nb) return 0; var v=sigVals(), n=0; ["err","q","lat","push"].forEach(function(k){ if(v[k].lvl!=="ok") n++; }); return n+lateCount(); }
+function sigBad(){ if(!S.data.nb) return 0; var v=sigVals(), n=0; ["err","q","lat","push"].forEach(function(k){ if(v[k].lvl!=="ok") n++; }); return n; }
 VIEWS.today={
-  need:function(){ return [{ k:"nb", a:"now_board", ttl:30000 }]; },
+  need:function(){ return [{ k:"nb", a:"now_board", ttl:30000 },{ k:"sreq", a:"sreq_list", p:{ st:"open", n:100 }, ttl:15000 }]; },
   right:function(){ return '<button class="btn" data-qa="today.send" onclick="go(\'n_send\')">긴급 공지 쓰기</button>'; },
-  mount:function(){ if(!PING.length) pingNow(); el("vb").innerHTML='<div class="card stline" id="tdS"></div><div class="card pad" id="tdD" style="margin-bottom:12px"></div><div class="card pad" id="tdG" style="margin-bottom:12px"></div><div class="grid g75"><div><div class="card pad" id="tdN"></div><div class="card pad mt16" id="tdX"></div></div><div class="card pad" id="tdK"></div></div><div class="card pad mt16" id="tdA"></div>'; },
+  mount:function(){ if(!PING.length) pingNow(); el("vb").innerHTML='<div class="card stline" id="tdS"></div><div class="card pad" id="tdD" style="margin-bottom:12px"></div><div class="card pad" id="tdG" style="margin-bottom:12px"></div><div class="card pad" id="tdR" style="margin-bottom:12px"></div><div class="grid g75"><div><div class="card pad" id="tdN"></div><div class="card pad mt16" id="tdX"></div></div><div class="card pad" id="tdK"></div></div><div class="card pad mt16" id="tdA"></div>'; },
   paint:function(){
     var b=S.data.nb;
     if(!b){ el("tdS").innerHTML='<span class="spin"></span>숫자를 받는 중'; return; }
@@ -1765,6 +1954,8 @@ VIEWS.today={
       '<span class="sp"></span><label class="fx cap" style="gap:4px"><input type="checkbox" data-qa="today.reh" '+(ssGet("axf_c2_reh","")==="1"?"checked":"")+' onchange="ssSet(\'axf_c2_reh\',this.checked?\'1\':\'\');paint()">오늘을 행사일처럼 보기</label><span class="cap n">서버 시각 '+esc(n?n.day.slice(5).replace("-","/")+" "+n.hm:"-")+'</span>';
     el("tdD").innerHTML=(og.ph==="end"?band("bad","<b>행사 종료 중</b> · 참가자 앱이 모두 닫혀 있습니다. 콘솔 · 무대 · TV · 셀프 노트북은 그대로입니다.",'<button class="btn sm" data-qa="today.ended" onclick="go(\'s_open\')">앱 오픈</button>'):"")+dayBand(n);   /* 261009 행사 종료 */
     el("tdG").innerHTML=sigHtml(v, b);
+    var rq=S.data.sreq, ro=rqRows(true);
+    el("tdR").innerHTML='<div class="fx"><b style="font-size:var(--fs-h2)">스태프 요청</b>'+(ro.length?tag(ro.length+"건 열림","or"):tag("0건"))+'<span class="sp"></span><button class="btn sm" data-qa="today.req" onclick="go(\'t_req\')">요청함 전체 ›</button></div>'+(rq&&unknownSrv(rq)?'<p class="cap mt8">서버 배포 뒤 보입니다.</p>':rqList(ro.slice(0,5),"열린 요청이 없습니다."));
     el("tdN").innerHTML=nowTodo(n);
     el("tdX").innerHTML=nextTodo(n);
     el("tdK").innerHTML=numsHtml(b);
@@ -1795,7 +1986,7 @@ var SIG_HELP={ err:"이 콘솔의 요청이 실패합니다. 1) 휴대폰 테더
 function sigHelp(k){ go("t_inc", SIG_INC[k]||""); }
 function todoRow(r, si){
   var s=rowState(r,si), hand=!r.auto, go1=r.go?'<button class="btn sm" data-qa="today.go" onclick="go(\''+r.go+'\')">'+esc((NAVBY[r.go]||{}).n||"가기")+' ›</button>':'';
-  return '<li class="'+(s.late?"late":"")+'"><span class="bx '+(s.st==="ok"?"ok":"")+(hand?" hand":"")+'"'+(hand?' role="checkbox" aria-checked="'+(s.st==="ok")+'" data-qa="today.ck" onclick="handCk(\''+r.id+'\')"':'')+'></span><span class="tx"><b>'+esc(r.x)+'</b><span>'+(hand?"손 체크":"자동 확인")+(r.sub?" · "+esc(r.sub):"")+(s.late?" · "+esc(DAYPLAN[si].t)+" 부터 · 늦음":"")+'</span></span>'+go1+'</li>';
+  return '<li class="'+(s.late?"late":"")+'"><span class="bx '+(s.st==="ok"?"ok":"")+(hand?" hand":"")+'"'+(hand?' role="checkbox" tabindex="0" aria-label="'+esc(r.x)+' 완료 표시" aria-checked="'+(s.st==="ok")+'" data-qa="today.ck" onclick="handCk(\''+r.id+'\')"':'')+'></span><span class="tx"><b>'+esc(r.x)+'</b><span>'+(hand?"손 체크":"자동 확인")+(r.sub?" · "+esc(r.sub):"")+(s.late?" · "+esc(DAYPLAN[si].t)+" 부터 · 늦음":"")+'</span></span>'+go1+'</li>';
 }
 function handCk(id){ var k=ckKey(), m=lsGet(k,{}), was=!!m[id]; if(was) delete m[id]; else m[id]=1; lsSet(k,m); paint(); if(!was) toast("완료로 표시했습니다",{ undo:function(){ var m2=lsGet(k,{}); delete m2[id]; lsSet(k,m2); paint(); } }); }
 function nowTodo(n){
@@ -1836,7 +2027,7 @@ function numsHtml(b){
     '<div class="k w2"><div class="l">스탬프 문턱별 인원 · 6개 = 선착순 · 4~6개 = 행운권 · 3개 = 룰렛</div><div class="stk">'+seg.map(function(x){ return '<i style="width:'+(x[0]/tot*100)+'%;background:'+x[2]+'" title="'+esc(x[1])+'"></i>'; }).join("")+'</div><div class="cap n">'+seg.map(function(x){ return esc(x[1])+" <b>"+n0(x[0])+"</b>"; }).join(" · ")+'</div></div>'+
     k("알림 구독",n0(ps.subs),"대","오늘 발송 "+n0(td.jobs)+" · 실패 "+n0(td.fail),"n_send",true)+'</div>';
 }
-/* ══════════════════ 14. 현장 공통 ══════════════════ */
+/* ══ 14. 현장 공통 ══ */
 var PZ_WHY={ shrink:"이미 지급한 수보다 작게 줄일 수 없습니다", out:"남은 수량이 없습니다(소진)", full:"수량이 다 찼습니다. 설정에서 수량을 올린 뒤 넣습니다", got:"이미 수령한 사람입니다. 수령 되돌리기를 먼저 합니다", notgot:"수령 기록이 없습니다",
   noelig:"스탬프 6개가 안 됩니다", closed:"마감 시각이 지났습니다", "void":"이미 취소된 자격입니다", off:"서버 설정에서 꺼져 있습니다", why:"사유를 적습니다", eventday:"행사일에는 할 수 없습니다",
   drawn:"이미 추첨했습니다. 바꿀 수 없습니다", done:"이미 추첨했습니다", early:"마감 시각 전에는 확정할 수 없습니다", nolock:"먼저 대상을 확정합니다", stale:"확정 뒤 바뀌었습니다. 대상을 다시 확정합니다",
@@ -1858,9 +2049,7 @@ function ksLbl(z){ z=String(z==null?"":z); return KS_AB[z]?KS_AB[z]+" ("+z+")":z
 function stepsHtml(list, cur, ends, lf){ lf=lf||function(x){ return x; }; var i0=list.indexOf(cur);
   return '<div class="steps">'+list.map(function(s,i){ return (i?'<i>›</i>':'')+'<span class="'+(s===cur?"cur":i0>i?"done":"")+'">'+esc(lf(s))+'</span>'; }).join("")+(ends.indexOf(cur)>=0?'<i></i><span class="cur end">'+esc(lf(cur))+'</span>':'')+'</div>'; }
 
-/* ══════════════════ 15. 현장 › 체크인존 (ck_state · ck_next · ck_void · inv_swap · inv_undo · kit_size_state) ══════════════════
- * 창구 A~D 카드(발급 · 완료 · 대기 · 평균 처리 · 지금 호출 · 다음 번호 · 번호표 무효) · 사이즈별 남음(자동 집계 · 입력 없음) · 창구 E 교환 기록 · 화면 열기
- * 갱신 15초(이 화면이 열려 있을 때만) · 처리 뒤 그 창구 숫자만 다시 받는다 */
+/* ══ 15. 현장 › 체크인존 (ck_state · ck_next · ck_void · inv_swap · inv_undo · kit_size_state) ══ */
 var CK_TV="https://hiphopinos-web.github.io/hi_ax/tv/checkin/", CK_WINS=["A","B","C","D"];
 function ckDesk(w){ return CK_TV+"desk.html?w="+w; }
 function ckScreens(){ return [["체크인 TV 대기판","1F 체크인존 TV · 호출 번호",CK_TV]].concat(CK_WINS.map(function(w){ return ["창구 화면 "+w,"창구 "+w+" 태블릿 · 찍는 사람과 나눠 주는 사람이 함께 봄",ckDesk(w)]; })); }
@@ -1870,8 +2059,8 @@ function ckSizes(d, w){ var m=(d.cfg&&d.cfg.map)||{}, out=[]; KS_SZ.forEach(func
 function ckAvg(s){ var v=Number(s)||0; return v>0?(Math.round(v/6)/10)+"분":"-"; }
 var CKSW={ emp:"", from:"", to:"", memo:"" };
 VIEWS.ck={
-  need:function(){ return [{ k:"ck", a:"ck_state", ttl:15000 },{ k:"inv", a:"inv_state", ttl:60000 },{ k:"kss", a:"kit_size_state", ttl:60000 }]; },
-  mount:function(){ el("vb").innerHTML='<div id="ckBand"></div><div class="card kpis" id="ckK"></div><div class="ckg" id="ckW"></div><div class="grid g75 mt16"><div class="card" id="ckSw"></div><div class="card" id="ckSz"></div></div>'+card("화면 열기","TV · 창구 태블릿 · 주소에는 코드가 없습니다",scrRows(ckScreens()),"","mt16")+
+  need:function(){ return [{ k:"ck", a:"ck_state", ttl:15000 },{ k:"kss", a:"kit_size_state", ttl:60000 }]; },
+  mount:function(){ el("vb").innerHTML='<div id="ckBand"></div><div class="card kpis" id="ckK"></div><div class="ckg" id="ckW"></div><details class="memo"><summary>사이즈별 남음(자동 집계) · 사이즈 교환 기록은 설정 › 고급 › 재고</summary><div class="mb" id="ckSz"></div></details>'+card("화면 열기","TV · 창구 태블릿 · 주소에는 코드가 없습니다",scrRows(ckScreens()),"","mt16")+
     memo('<p><b>번호 흐름</b> · 접수 스태프가 참가자 QR 을 찍으면 사이즈에 맞는 창구 번호표(예 B-007)가 나옵니다. 창구 화면에서 「건넴」을 누르면 그 창구의 다음 번호가 저절로 호출됩니다.</p><p><b>다음 번호 부르기</b> · 비상용입니다. 호출 중인 사람을 건너뛰고 다음 번호를 부릅니다. 건너뛴 사람은 돌아와 창구에서 QR 을 찍으면 그대로 지급합니다.</p><p><b>사이즈 남음</b> · 신청 · 지급 기록에서 저절로 셉니다. 사람이 수량을 맞추지 않습니다.</p>'); },
   paint:function(){
     var d=S.data.ck;
@@ -1888,7 +2077,7 @@ VIEWS.ck={
         '<div class="ckn"><div><span>발급</span><b class="n">'+n0(s.issued)+'</b></div><div><span>완료</span><b class="n">'+n0(s.done)+'</b></div><div><span>대기</span><b class="n">'+n0(wait)+'</b></div><div><span>평균</span><b class="n">'+(Number(s.done)?ckAvg(s.avg):"-")+'</b></div></div>'+
         '<div class="ckc"><span class="cap">지금 호출</span>'+(cur?'<b class="n">'+esc(cur.no)+'</b> <span class="cap">'+esc(cur.nm||"")+'</span>':'<span class="cap">없음</span>')+'</div>'+
         '<div class="acts"><button class="btn sm pri" data-qa="ck.next" onclick="ckNextAsk(\''+w+'\')"'+(wait?'':' disabled')+'>다음 번호 부르기</button><button class="btn sm" data-qa="ck.void" onclick="ckVoidAsk(\''+w+'\')"'+(wait||cur?'':' disabled')+'>번호표 무효</button><button class="btn sm ghost" data-qa="ck.desk" onclick="openUrl(\''+esc(ckDesk(w))+'\')">창구 화면</button></div></div>'; }).join("");
-    ckSwapPaint(); ckSizePaint();
+    ckSizePaint();
   }
 };
 function ckNextAsk(w){
@@ -1898,14 +2087,14 @@ function ckNextAsk(w){
     s:(cur?"<b>지금 호출 중인 사람을 건너뜁니다.</b> ":"")+"TV · 그 사람 폰에 알림이 갑니다. 건너뛴 사람은 돌아와 창구에서 QR 을 찍으면 지급합니다.", ok:"다음 번호 부르기",
     onOk:function(){ pzCall("ck_next",{ w:w },["ck_state"],function(r){ if(r&&r.ok) toast(r.called?"창구 "+w+" · "+r.called.no+" 호출했습니다":"창구 "+w+" · 부를 대기 번호가 없습니다"); else toast("실패 · "+pzWhy(r)); }); } });
 }
-function ckVoidAsk(w){
-  var d=ckOk(); if(!d) return;
-  var cur=(((d.board||{}).w||{})[w]||{}).cur;
+function ckVoidAsk(w, no0){
+  var d=ckOk(); if(!d&&!no0) return;
+  var cur=d?(((d.board||{}).w||{})[w]||{}).cur:null; if(no0) cur={ no:no0 };
   dialog({ t:"번호표를 무효로 할까요?", x:'<label class="fld mt12">번호(예 '+w+'-007)<input class="in" id="ckVoidNo" value="'+esc(cur?cur.no:w+"-")+'" autocomplete="off" oninput="dlgGate()"></label><label class="fld mt8">사유(선택)<input class="in" style="width:100%" id="ckVoidWhy" maxlength="40" autocomplete="off"></label>',
     s:"안 올 사람의 번호를 TV · 그 사람 폰에서 내립니다. 호출 중이던 번호면 그 창구의 다음 번호를 부릅니다. 나중에 오면 다시 접수하거나 창구에서 QR 을 찍으면 지급합니다.", ok:"무효로", danger:true, focus:"ckVoidNo",
     gate:function(){ return /^[A-Da-d]-\d{3}$/.test(String((el("ckVoidNo")||{}).value||"").trim()); },
     onOk:function(){ var no=String(el("ckVoidNo").value).trim().toUpperCase(), wy=String((el("ckVoidWhy")||{}).value||"").trim();
-      pzCall("ck_void",{ no:no, why:wy },["ck_state"],function(r){ if(r&&r.ok) toast(r.no+" 무효"+(r.called?" · 다음 "+r.called.no+" 호출":"")); else toast("실패 · "+(r&&r.reason==="state"?"이미 끝났거나 무효인 번호입니다":r&&r.reason==="notfound"?"오늘 그 번호가 없습니다":pzWhy(r))); }); } });
+      pzCall("ck_void",{ no:no, why:wy },["ck_state"],function(r){ if(no0&&r&&r.ok) whoAfter(whoSt().cur); if(r&&r.ok) toast(r.no+" 무효"+(r.called?" · 다음 "+r.called.no+" 호출":"")); else toast("실패 · "+(r&&r.reason==="state"?"이미 끝났거나 무효인 번호입니다":r&&r.reason==="notfound"?"오늘 그 번호가 없습니다":pzWhy(r))); }); } });
 }
 function ckSizePaint(){
   var box=el("ckSz"), d=S.data.kss; if(!box) return;
@@ -1941,10 +2130,7 @@ function invUndoAsk(rid){
     onOk:function(){ pzCall("inv_undo",{ rid:rid },["inv_state"],function(r){ toast(r&&r.ok?"되돌렸습니다":"실패 · "+why(r)); }); } });
 }
 
-/* ══════════════════ 16. 현장 › 신청 처리 (B 패턴 mode:'state' · AX 라운지 상담 resv_set · 커피챗 cchat_set · cchat_status) ══════════════════
- * 종류 칸(상담 · 커피챗) → 상태 흐름 칩(건수 · 누르면 거르기) → 왼쪽 선택 칸 → 일괄 막대 · 줄마다 「다음 행동」 주 단추 · 줄을 누르면 오른쪽 한 칸(단계 · 행동 · 메모 · 이 사람 기록)
- * 승인 · 선정은 알림(푸시)이 나가므로 확인 창 · 노쇼 · 취소는 확인 창 + 7초 되돌리기 · 체크인 · 참석 · 완료는 바로
- * from(이 화면이 본 상태)을 보내 두 곳에서 동시에 바꾸면 서버가 state 로 거절 · 그 줄만 새 상태로 고친다 · 프로그램 명단 입장 · 노쇼 표시는 고급 · 보관(옛 화면) */
+/* ══ 16. 현장 › 신청 처리 (B 패턴 mode:'state' · AX 라운지 상담 resv_set · 커피챗 cchat_set · cchat_status) ══ */
 var RESV_NEXT={ "신청":"승인", "승인":"체크인", "체크인":"완료" }, RESV_SIDE={ "신청":["취소"], "승인":["노쇼","취소"] }, RESV_UNDO={ "승인":1, "노쇼":1, "취소":1 };
 var RESV_TAG={ "신청":"warn","승인":"","체크인":"pri","완료":"ok","노쇼":"bad","취소":"" };
 var CC_TAG={ "대기":"warn","매칭":"","참석":"pri","완료":"ok","취소":"" }, CC_LBL={ "대기":"희망", "매칭":"선정" };
@@ -2005,18 +2191,17 @@ function apList(){
       bar='<div class="bar bulk"><span class="cnt"><b>'+sel.length+'명</b> 선택</span><select class="in" style="width:150px;height:30px" data-qa="ap.bulk.round" onchange="apSt().bulk.round=this.value">'+ccRdOpts(u.bulk.round,[])+'</select><input class="in" style="width:96px;height:30px" placeholder="테이블" data-qa="ap.bulk.table" value="'+esc(u.bulk.table)+'" oninput="apSt().bulk.table=this.value"><button class="btn hot" data-qa="ap.bulk.match" '+(canM?"":"disabled ")+'onclick="ccMatch(Object.keys(apSt().chk),true)">같은 자리로 선정 '+canM+'</button><button class="btn" data-qa="ap.bulk.cancel" onclick="ccDo(Object.keys(apSt().chk),\'취소\')">취소</button><span class="sp"></span><button class="btn ghost" onclick="apSt().chk={};apList();apPanel()">선택 해제</button></div>'; }
     else { var canA=sel.filter(function(r){ return r.status==="신청"; }).length;
       bar='<div class="bar bulk"><span class="cnt"><b>'+sel.length+'건</b> 선택</span><button class="btn hot" data-qa="ap.bulk.ok" '+(canA?"":"disabled ")+'onclick="resvDo(Object.keys(apSt().chk),\'승인\')">일괄 승인 '+canA+'</button><button class="btn" data-qa="ap.bulk.cancel" onclick="resvDo(Object.keys(apSt().chk),\'취소\')">일괄 취소</button><span class="sp"></span><button class="btn ghost" onclick="apSt().chk={};apList();apPanel()">선택 해제</button></div>'; }
-  } else bar='<div class="bar"><input class="in" id="apQ" data-qa="ap.q" placeholder="'+(k==="cc"?"사번 · 이름 · 태그 · 테이블":"사번 · 이름 · 메모")+'" value="'+esc(u.q)+'" oninput="apQ(this.value)"><span class="chips">'+AP_FLOW[k].filter(function(x){ return x[0]==="todo"||x[0]==="all"; }).map(function(x){ return '<button class="chip'+(u.f===x[0]?" on":"")+'" data-qa="ap.f.'+x[0]+'" onclick="apF(\''+x[0]+'\')">'+esc(x[1])+'</button>'; }).join("")+'</span><span class="sp"></span><span class="cap">'+shown.length+'줄</span></div>';
-  var keep=document.activeElement&&document.activeElement.id==="apQ";
+  } else bar='<div class="bar"><input class="in" id="apQ" data-qa="ap.q" type="search" aria-label="신청에서 거르기" placeholder="'+(k==="cc"?"사번 · 이름 · 태그 · 테이블":"사번 · 이름 · 메모")+'" value="'+esc(u.q)+'" oninput="apQ(this.value)"><span class="chips">'+AP_FLOW[k].filter(function(x){ return x[0]==="todo"||x[0]==="all"; }).map(function(x){ return '<button class="chip'+(u.f===x[0]?" on":"")+'" data-qa="ap.f.'+x[0]+'" onclick="apF(\''+x[0]+'\')">'+esc(x[1])+'</button>'; }).join("")+'</span><span class="sp"></span><span class="cap" id="apN"></span></div>';
   var head=k==="cc"?'<th>사람</th><th class="hm">관심 · 희망</th><th>상태</th><th>회차 · 테이블</th><th class="r">다음 행동</th>':'<th>슬롯</th><th>사람</th><th>상태</th><th class="hm">메모</th><th class="r">다음 행동</th>';
   var cols=k==="cc"?'<col><col class="hm" style="width:140px"><col style="width:84px"><col style="width:96px"><col style="width:104px">':'<col style="width:64px"><col><col style="width:96px"><col class="hm" style="width:120px"><col style="width:104px">';
-  box.innerHTML=bar+'<div class="scrl"><table class="tb"><colgroup><col style="width:44px">'+cols+'</colgroup><thead><tr><th class="ck"><span class="cbx '+(all?"on":some?"mid":"")+'" data-qa="ap.chk.all" onclick="apHdr()"></span></th>'+head+'</tr></thead><tbody>'+
+  var rest='<div class="scrl"><table class="tb"><colgroup><col style="width:44px">'+cols+'</colgroup><thead><tr><th class="ck"><span class="cbx '+(all?"on":some?"mid":"")+'" role="checkbox" tabindex="0" aria-checked="'+!!all+'" aria-label="모두 고르기" data-qa="ap.chk.all" onclick="apHdr()"></span></th>'+head+'</tr></thead><tbody>'+
     (shown.length?shown.map(function(r){ var key=apKey(k,r), on=!!u.chk[key], dim=r.status==="취소"&&u.f==="todo";
       var main=k==="cc"?apCcAct(r):apResvAct(r);
       var mid=k==="cc"?'<td class="nm"><b>'+esc(r.name)+'</b><div>'+esc(r.dept||"")+' · '+esc(r.emp)+'</div></td><td class="cap hm wrap">'+esc(r.tag||"-")+(r.pref?'<div>'+esc(r.pref)+'</div>':'')+'</td><td>'+cxTag(r,"cc")+'</td><td class="n">'+(r.round||r.table?'<b>'+esc(hhmm(r.round)||"-")+'</b> · '+esc(r.table||"-"):'<span class="cap">-</span>')+'</td>'
         :'<td class="n"><b>'+esc(hhmm(r.slot))+'</b></td><td class="nm"><b>'+esc(r.name)+'</b><div>'+esc(r.dept||"")+' · '+esc(r.emp)+'</div></td><td>'+cxTag(r,"resv")+'</td><td class="cap hm">'+esc(r.memo||"")+'</td>';
-      return '<tr class="row'+(on?" chk":"")+(u.cur===key?" cur":"")+(dim?" locked":"")+'" data-qa="ap.row" onclick="apPick(\''+jq(key)+'\')"><td class="ck" onclick="event.stopPropagation();apChk(\''+jq(key)+'\')"><span class="cbx '+(on?"on":"")+'" data-qa="ap.chk"></span></td>'+mid+'<td class="r" onclick="event.stopPropagation()">'+main+'</td></tr>'; }).join(""):
+      return '<tr tabindex="0" class="row'+(on?" chk":"")+(u.cur===key?" cur":"")+(dim?" locked":"")+'" data-qa="ap.row" onclick="apPick(\''+jq(key)+'\')"><td class="ck" onclick="event.stopPropagation();apChk(\''+jq(key)+'\')"><span class="cbx '+(on?"on":"")+'" role="checkbox" tabindex="0" aria-checked="'+on+'" aria-label="'+esc(r.name)+' 고르기" data-qa="ap.chk"></span></td>'+mid+'<td class="r" onclick="event.stopPropagation()">'+main+'</td></tr>'; }).join(""):
       '<tr><td colspan="6"><div class="empty"><b>'+(u.f==="todo"?"처리할 것이 없습니다":"해당하는 줄이 없습니다")+'</b></div></td></tr>')+'</tbody></table></div>';
-  if(keep){ var i=el("apQ"); if(i){ i.focus(); var L=i.value.length; try{ i.setSelectionRange(L,L); }catch(e){} } }
+  listPut(box, sel.length?"b":"q|"+k+"|"+u.f, bar, rest); var nn=el("apN"); if(nn) nn.textContent=shown.length+"줄";
 }
 function apResvAct(r){ var nx=RESV_NEXT[r.status]; return nx?'<button class="btn sm pri" data-qa="ap.next" onclick="resvDo([\''+jq(r.id)+'\'],\''+nx+'\')">'+esc(nx)+'</button>':'<span class="cap">끝</span>'; }
 function apCcAct(r){ var e=jq(normE(r.emp));
@@ -2137,11 +2322,7 @@ function ccClose(on){
   if(!id){ toast("마감 신호를 찾지 못했습니다"); return; }
   dialog({ t:"커피챗 희망 접수를 다시 열까요?", s:"참가자 앱의 희망 버튼이 다시 켜집니다.", ok:"다시 열기", onOk:function(){ pzCall("notice_clear",{ id:id },["sync"],function(r){ toast(r&&r.ok?"다시 열었습니다":"실패 · "+why(r)); }); } });
 }
-/* ══════════════════ 17. 현장 › 럭키드로우 (draw_stats · draw_cmd · draw_cfg · 소켓 방 draw) ══════════════════
- * 대형 스크린에는 추첨 화면(../draw/?remote=1 · 무대 = 번호 + 실명 + 부서 · draw_who 는 화면이 직접 부른다)만 띄우고, 사회자 옆 노트북 한 대에서 큰 단추로 진행한다.
- * 큰 단추 = 추첨 화면 Space 와 같은 동작 · 지금 장면에서 화면이 받는 명령만 켜진다 · 부재 · 마지막 취소 · 끝 화면 · 화면 초기화는 3초 안에 두 번
- * 보내기 = draw_cmd(cmd · arg · rid) · 시간 초과면 같은 rid 로 한 번 더(서버가 같은 seq 를 돌려준다) · 당첨은 화면이 정하고 기록한다 · 이 콘솔은 결과를 바꾸지 않는다
- * 화면 상태 = 소켓 drawscr + draw_stats 의 scr(연결 2초 · 붙으면 5초) · 이 화면을 떠나면 소켓 · 폴링을 끈다 · 진행 판의 이름은 화면과 같은 가린 이름 · 실명 · 부서는 「방금 당첨」 칸만(상품 전달용) */
+/* ══ 17. 현장 › 럭키드로우 (draw_stats · draw_cmd · draw_cfg · 소켓 방 draw) ══ */
 var DC_SCN={ idle:"대기", checkin:"추첨 준비 · 공 넣는 중", closed:"추첨 준비 끝", card:"라운드 카드", mix:"섞는 중", tension:"감속 · 배출 대기", exit:"배출", reveal:"당첨 공개", board:"결과판", end:"끝 화면", intro:"인트로", fin:"완주 경품 추첨 발표" };
 var DC_BTN=[ { c:"checkin", n:"추첨 준비 · 공 넣기" }, { c:"round", n:"라운드 시작" }, { c:"mix", n:"섞기" }, { c:"draw", n:"추첨" }, { c:"confirm", n:"확정" },
   { c:"absent", n:"부재 · 다시 뽑기", two:1 }, { c:"undo", n:"마지막 취소", two:1 }, { c:"board", n:"결과판" }, { c:"end", n:"끝 화면", two:1 }, { c:"idle", n:"대기 화면" } ];
@@ -2163,7 +2344,7 @@ function drawAttOff(d){ d=d||{}; return d.att!=null&&String(d.att).toUpperCase()
 function drawAckTag(r){ if(r.st!=="win"||!r.live) return '<span class="cap">-</span>'; return r.ack?tag("확인 완료 "+r.ack,"ok"):tag("미확인","warn"); }
 function drawRecTag(r){ if(r.st==="win") return r.live?tag("당첨","ok"):tag("당첨 · 취소됨"); if(r.st==="absent") return r.live?tag("부재","warn"):tag("부재 · 취소됨"); return tag("취소"); }
 function subSeg(navId, list, cur){ return '<span class="seg">'+list.map(function(x){ return '<button class="'+(cur===x[0]?"on":"")+'" data-qa="sub.'+navId+'.'+x[0]+'" onclick="subGo(\''+navId+'\',\''+x[0]+'\')">'+esc(x[1])+(x[2]?' <span class="badge">'+x[2]+'</span>':'')+'</button>'; }).join("")+'</span>'; }
-function subGo(navId, v){ if(S.sub[navId]===v) return; S.sub[navId]=v; S.ui={}; try{ history.replaceState(null,"","#"+navId+"/"+v); }catch(e){} render(); load(false); }
+function subGo(navId, v){ if(S.sub[navId]===v) return; S.sub[navId]=v; try{ history.replaceState(null,"","#"+navId+"/"+v); }catch(e){} render(); load(false); }
 
 VIEWS.draw={
   need:function(){ var s=drawSub(), a=[{ k:"fin", a:"fin_state", ttl:60000 }]; if(s!=="run") a.push({ k:"draw", a:"draw_stats", ttl:15000 }); if(s==="set") a.push({ k:"cfgl", a:"cfg_list", ttl:60000 }); return a; },
@@ -2363,8 +2544,7 @@ function drawCfgSave(){
     onOk:function(){ pzCall("draw_cfg",p,["draw_stats"],function(r){ toast(r&&r.ok?"추첨 설정을 저장했습니다":"실패 · "+(DRAW_WHY[r&&r.reason]||why(r))); }); } });
 }
 
-/* ══ 운영 설정 한 값 바꾸기 · cfg_list 의 한 줄(형 · 범위 · 수준) · 고급 표 · 럭키드로우 · 룰렛과 선착순이 함께 쓴다 ══
- * 수준 3 = 슈퍼관리자 + 본인 확인(서버가 spin 으로 거절하면 확인 창 뒤 같은 요청을 다시) · 읽기 전용(ro) 은 단추 없음 */
+/* ══ 운영 설정 한 값 바꾸기 · cfg_list 의 한 줄(형 · 범위 · 수준) · 고급 표 · 럭키드로우 · 룰렛과 선착순이 함께 쓴다 ══ */
 function cfgRowOf(k){ var d=S.data.cfgl; return d&&d.ok?(d.rows||[]).filter(function(r){ return r.k===k; })[0]||null:null; }
 var CFG_TY={ onoff:"켜고 끄기", num:"숫자", hm:"시각", enum:"고르기", text:"글자" };
 function cfgShow(r, v){ v=v==null?r.v:v; return r.t==="text"&&!v?"(비어 있음)":v; }
@@ -2381,18 +2561,12 @@ function cfgEditAsk(k, after){
     onOk:function(){ var v=String(el("cfgV").value).trim(); pzCall("cfg_set",{ k:r.k, v:v },["cfg_list","draw_stats","fcfs_state","sync"],function(x){ if(x&&x.ok){ r.v=x.v; toast(r.k+" · "+x.was+" → "+x.v); after&&after(x); } else toast("실패 · "+(x&&x.reason==="range"?"범위를 벗어납니다"+(x.lo!=null?"("+x.lo+" ~ "+x.hi+")":""):why(x))); }); } });
 }
 function cfgPick(b){ var s=el("cfgSeg"); [].forEach.call(s.querySelectorAll("button"),function(x){ x.classList.toggle("on",x===b); }); el("cfgV").value=b.getAttribute("data-v"); dlgGate(); }
-/* ══════════════════ 18. 현장 › 룰렛과 선착순 (now_board · cfg_list · roulette_out · fcfs_* · lk7_rem) ══════════════════
- * 룰렛 = 사용 N / 자격 M(스탬프 3개 이상 · 테스트 사번 제외 · now_board) · 소진 안내 켜고 끄기 · 17:00 실물 잔여 다섯 숫자(lk7_rem · 7등 확정 전 필수)
- * 재고 장부 화면은 두지 않는다(룰렛 품목별 차감 · 입고 표는 고급 · 보관의 옛 화면) · 선착순 참여상 = 수령순(1F 체크인존에서 먼저 받는 순서)
- * 줄 처리(수령 되돌리기 · 자격 취소 · 수동 지급)는 사유 필수 확인 창 · 처리한 줄만 고치고 위 숫자만 다시 받는다 */
+/* ══ 18. 현장 › 룰렛과 선착순 (now_board · cfg_list · roulette_out · fcfs_* · lk7_rem) ══ */
 var LK_ROUL=[["r1","1등 텀블러"],["r2","2등 커피 + 키캡 키링"],["r3","3등 컵받침"],["r4","4등 판스티커"],["r5","5등 볼펜"]];
-var FX={ q:"", st:"", page:1, m:{ emp:"", why:"" }, cfg:null };
-var FX_VIA={ app:"앱", staff:"스태프", console:"콘솔", manual:"수동" };
+var FX={ cfg:null };
 var LK={ rem:null, cfg:null, vo:{ emp:"", why:"" }, ver:null };
 function fxByGive(d){ d=d||{}; return d.mode==="수령순"||(!d.mode&&(d.cfg||{}).mode==="수령순"); }
 function fxOff(v){ return v===false||v===0||String(v).toUpperCase()==="OFF"; }
-function fxStTag(r){ var s=String(r.st||""); if(s==="취소"||s==="void") return tag("취소"); if(fxByGive(S.data.fx)) return r.got?tag("지급","ok"):tag("수령 전"); if(s==="대기마감"||s==="wait"||s==="full") return tag("대기마감","warn"); return r.got?tag("수령","ok"):tag("자격","pri"); }
-function fxListP(){ var p={ page:String(FX.page||1) }; if(FX.q) p.q=FX.q; if(FX.st) p.st=FX.st; return p; }
 function lkRemDone(d){ return !!(d&&(d.rem||(d.stock&&d.stock.src==="rem"))); }
 function lkRemVals(d){ if(LK.rem) return LK.rem; var q={}, o={}; if(d&&d.rem&&d.rem.q) q=d.rem.q; else if(d&&d.stock&&d.stock.src==="rem") (d.stock.parts||[]).forEach(function(x){ q[x.id]=x.left; }); LK_ROUL.forEach(function(x){ o[x[0]]=q[x[0]]==null?"":String(q[x[0]]); }); return o; }
 function lkLeft(d){ var q={}, sk=(d&&d.stock)||{}; (sk.parts||[]).forEach(function(x){ q[x.id]=Number(x.left)||0; }); if(d&&d.rem&&d.rem.q) Object.keys(d.rem.q).forEach(function(k){ q[k]=Number(d.rem.q[k])||0; }); return q; }
@@ -2400,25 +2574,25 @@ function lkTotal(d){ var q=lkLeft(d), t=0; LK_ROUL.forEach(function(x){ t+=q[x[0
 function lkQty(d){ return Number(d.qty!=null?d.qty:(d.cfg||{}).qty)||0; }
 
 VIEWS.fcfs={
-  need:function(){ return [{ k:"nb", a:"now_board", ttl:20000 },{ k:"fx", a:"fcfs_state", ttl:15000 },{ k:"fxl", a:"fcfs_list", p:fxListP(), ttl:20000 },{ k:"lk", a:"lk7_state", ttl:30000 },{ k:"cfgl", a:"cfg_list", ttl:60000 }]; },
-  mount:function(){ el("vb").innerHTML='<div class="grid g2"><div class="card" id="rlC"></div><div class="card" id="rlRem"></div></div><div class="card kpis k5 mt16" id="fxK"></div><div class="work"><div class="card list" id="fxL"></div><div class="card panel" id="fxP"></div></div><div id="fxSet"></div>'+
-    memo('<p><b>룰렛</b> · 스탬프 3개면 1F EVENT 부스에서 한 번 돌립니다. 「사용」은 부스 스태프 폰이 참가자 QR 을 찍은 수, 「자격」은 지금 3개 이상인 사람 수입니다(테스트 사번 제외 · 20초마다).</p><p><b>소진 안내</b> · 경품이 다 떨어지면 켭니다. 참가자 앱 룰렛 칸에 「오늘 준비한 룰렛이 모두 소진되었습니다」가 뜨고 부스 스캔도 차감하지 않습니다.</p><p><b>17:00 잔여</b> · 룰렛 마감 직후 부스 실물을 품목별로 세어 다섯 숫자를 넣습니다. 이 숫자가 있어야 시상 › 7등 대상 확정이 켜집니다.</p><p><b>선착순 참여상</b> · 스탬프 6개를 모은 사람이 1F 체크인존에 먼저 와서 받는 순서입니다. 체크인존 스태프 폰이 QR 을 찍는 순간 서버가 6개 · 남은 수 · 시각을 보고 줄을 씁니다. 스캔이 안 되면 「수동 지급」(사유 필수).</p>'); },
-  paint:function(){ rlPaint(); lkRemPaint("rlRem"); fxPaint(); }
+  need:function(){ return [{ k:"nb", a:"now_board", ttl:20000 },{ k:"fx", a:"fcfs_state", ttl:15000 },{ k:"cfgl", a:"cfg_list", ttl:60000 }]; },
+  mount:function(){ el("vb").innerHTML='<div class="grid g2"><div class="card" id="rlC"></div><div class="card" id="fxC"><div class="ch"><h2>선착순 참여상</h2><span class="cap">스탬프 6개 · 1F 체크인존에서 받는 순서</span></div><div class="cb0"><div class="kpis k3" id="fxK" style="margin:0;border:0"></div><p class="cap mt8">한 사람의 수동 지급 · 수령 되돌리기 · 자격 취소는 <button class="lnk" data-qa="fx.who" onclick="go(\'p_who\')">사람 › 찾기</button> 카드에서 합니다(어디서든 <b>/</b>). 수량 · 마감 설정은 설정 › 고급 › 재고.</p></div></div></div>'+
+    memo('<p><b>룰렛</b> · 스탬프 3개면 1F EVENT 부스에서 한 번 돌립니다. 「사용」은 부스 스태프 폰이 참가자 QR 을 찍은 수, 「자격」은 지금 3개 이상인 사람 수입니다(테스트 사번 제외 · 20초마다).</p><p><b>소진 안내</b> · 경품이 다 떨어지면 부스 스태프 폰에서 켭니다(콘솔에서도 켜고 끔). 참가자 앱 룰렛 칸에 「오늘 준비한 룰렛이 모두 소진되었습니다」가 뜨고 부스 스캔도 차감하지 않습니다.</p><p><b>17:00 잔여</b> · 룰렛 마감 직후 실물 다섯 숫자는 현장 › 시상 › 7등에서 넣습니다.</p><p><b>선착순 참여상</b> · 체크인존 스태프 폰이 QR 을 찍는 순간 서버가 6개 · 남은 수 · 시각을 보고 줄을 씁니다. 스캔이 안 되면 그 사람 카드에서 「수동 지급」(사유 필수).</p>'); },
+  paint:function(){ rlPaint(); fxPaint(); }
 };
 /* ── 룰렛 ── */
-function rlOut(){ var r=cfgRowOf("룰렛_소진"); return r?String(r.v).toUpperCase()==="ON":null; }
+function rlOut(){ var r=cfgRowOf("룰렛_소진"); if(r) return String(r.v).toUpperCase()==="ON"; var b=S.data.nb; return b&&b.ok&&b.rout!=null?!!b.rout:null; }
 function rlPaint(){
   var box=el("rlC"); if(!box) return;
-  var nb=S.data.nb, st=nb&&nb.ok?nb.st||{}:null, out=rlOut();
+  var nb=S.data.nb, st=nb&&nb.ok?nb.st||{}:null, out=rlOut(), rb=nb&&nb.ok&&nb.routBy||null;
   var v=st?'<b class="n" style="font-size:var(--fs-kpi)">'+n0(st.used)+'</b><span class="cap"> 사용 / </span><b class="n" style="font-size:var(--fs-h1)">'+n0(st.elig)+'</b><span class="cap"> 자격</span>':nb&&!nb.ok?'<span class="cap">'+esc(unknownSrv(nb)?"서버 배포 뒤":why(nb))+'</span>':skel();
   box.innerHTML='<div class="ch"><h2>룰렛</h2><span class="cap">1F EVENT 부스 · 스탬프 3개 = 1회</span></div><div class="cb0"><div>'+v+'</div>'+(st?'<p class="cap mt8">아직 안 돌린 사람 약 '+n0(Math.max(0,(st.elig||0)-(st.used||0)))+'명 · 20초마다</p>':'')+
-    '<div class="fx mt12">'+(out==null?tag("소진 안내 · 확인 중"):out?tag("소진 안내 켜짐","warn"):tag("소진 안내 꺼짐"))+(out==null?'':'<button class="btn sm'+(out?'':' danger')+'" data-qa="rl.out" onclick="rlOutAsk('+(out?0:1)+')">'+(out?"소진 안내 끄기":"소진 안내 켜기")+'</button>')+'</div></div>';
+    '<div class="fx mt12">'+(out==null?tag("소진 안내 · 확인 중"):out?tag("소진 안내 켜짐","warn"):tag("소진 안내 꺼짐"))+(rb&&rb.at?'<span class="cap">'+(rb.on?"켬":"끔")+' · '+esc((BYK_N[rb.byK]||"")+" "+(rb.byName||rb.by||""))+' · '+esc(short(rb.at).slice(-5))+'</span>':'')+(out==null?'':'<button class="btn sm'+(out?'':' danger')+'" data-qa="rl.out" onclick="rlOutAsk('+(out?0:1)+')">'+(out?"소진 안내 끄기":"소진 안내 켜기")+'</button>')+'</div></div>';
 }
 function rlOutAsk(on){
   dialog({ t:on?"룰렛 소진 안내를 켤까요?":"룰렛 소진 안내를 끌까요?", s:on?"참가자 앱 룰렛 칸에 <b>「오늘 준비한 룰렛이 모두 소진되었습니다」</b>가 뜨고, 부스 스캔도 1회를 차감하지 않습니다(다음 동기화).":"참가자 앱에서 소진 안내가 사라지고 룰렛을 다시 돌립니다.", ok:on?"켜기":"끄기", danger:!!on,
     onOk:function(){ pzCall("roulette_out",{ on:on?"1":"0" },["cfg_list","sync"],function(r){ if(r&&r.ok){ var c=cfgRowOf("룰렛_소진"); if(c) c.v=r.out?"ON":"OFF"; rlPaint(); toast(r.out?"소진 안내를 켰습니다":"소진 안내를 껐습니다"); } else toast("실패 · "+why(r)); }); } });
 }
-/* ── 17:00 실물 잔여 다섯 숫자 · 룰렛과 선착순 · 시상 › 7등 두 곳 같은 칸 ── */
+/* ── 17:00 실물 잔여 다섯 숫자 · 시상 › 7등 한 곳(261009 재구성 · 룰렛 카드에서는 뺐다) ── */
 function lkRemPaint(id){
   var box=el(id); if(!box) return;
   if(document.activeElement&&/^lkR_/.test(document.activeElement.id||"")&&box.contains(document.activeElement)) return;
@@ -2439,54 +2613,20 @@ function lkRemSave(){
   dialog({ t:"17:00 룰렛 잔여를 저장할까요?", x:imp(rows), s:"서버가 입고 − 룰렛 사용과 대조해 차이가 크면 알려 줍니다(막지 않음). 7등 추첨 전까지 다시 고칠 수 있습니다.", ok:"저장",
     onOk:function(){ pzCall("lk7_rem",p,["lk7_state"],function(r){ if(r&&r.ok){ LK.rem=null; toast(r.warn?"저장했습니다 · 예상("+n0(r.expect)+")과 차이가 큽니다":"룰렛 잔여를 저장했습니다",{ ms:r.warn?5000:2600 }); } else toast("실패 · "+pzWhy(r)); }); } });
 }
-/* ── 선착순 참여상 ── */
+/* ── 선착순 참여상 · 숫자만(줄 표 · 찾기 · 쪽 넘김은 261009 재구성으로 뺐다 · 한 사람 처리는 찾기 카드) ── */
 function fxPaint(){
   var d=S.data.fx, k=el("fxK"); if(!k) return;
-  if(!d){ k.innerHTML=kpiCell({ l:"선착순 참여상", v:"-", s:"불러오는 중" }); return; }
-  if(!d.ok){ k.className="mt16"; k.innerHTML=unknownSrv(d)?srvMissing("선착순 참여상"):loadErr(d,"fx"); return; }
-  k.className="card kpis k5 mt16";
+  if(!d){ k.innerHTML=skel(); return; }
+  if(!d.ok){ k.innerHTML=unknownSrv(d)?srvMissing("선착순 참여상"):loadErr(d,"fx"); return; }
   var c=d.cfg||{}, bg=fxByGive(d), cut=d.cut!=null?d.cut:c.cut;
-  k.innerHTML=kpiCell({ l:"수량", v:n0(d.cap), u:"개", s:(fxOff(d.on)?"꺼짐 · ":"")+(bg?"받는 순서":"6개째 순번") })+kpiCell({ l:bg?"지급":"발급", v:n0(d.issued), u:"개", s:(d.edge&&d.edge.first?"첫 "+esc(d.edge.first.slice(0,5))+" · 마지막 "+esc((d.edge.last||"").slice(0,5)):"아직 없음") })+
-    kpiCell({ l:"남음", v:n0(d.left), u:"개", cls:Number(d.left)<=0?"bad":Number(d.left)<=Number(c.low||30)?"warn":"", s:"앱 표시 "+esc(d.show||c.show||"-") })+kpiCell({ l:"지급 마감", v:cut?esc(String(cut).slice(11,16)):"없음", s:(c.start?"시작 "+esc(c.start)+" · ":"")+(cut?"이 시각 뒤 거절":"소진까지") })+
-    kpiCell({ l:"취소", v:n0(d.voided), u:"명", s:bg?"이 사람에게는 주지 않음":"대기마감 "+n0(d.waiting) });
-  if(fxOff(d.on)&&!el("fxOffB")) k.insertAdjacentHTML("beforebegin",'<div id="fxOffB">'+band("warn","<b>선착순 참여상이 꺼져 있습니다</b>(설정 「선착순_사용」 OFF) · 앱에도 보이지 않습니다.")+'</div>');
-  fxList(); fxPanel(); fxSetPaint();
+  k.innerHTML=kpiCell({ l:bg?"지급":"발급", v:n0(d.issued), u:"/ "+n0(d.cap), s:(fxOff(d.on)?"꺼짐 · ":"")+(d.edge&&d.edge.first?"첫 "+esc(d.edge.first.slice(0,5))+" · 마지막 "+esc((d.edge.last||"").slice(0,5)):"아직 없음") })+
+    kpiCell({ l:"남음", v:n0(d.left), u:"개", cls:Number(d.left)<=0?"bad":Number(d.left)<=Number(c.low||30)?"warn":"", s:"앱 표시 "+esc(d.show||c.show||"-") })+
+    kpiCell({ l:"지급 마감", v:cut?esc(String(cut).slice(11,16)):"없음", s:"취소 "+n0(d.voided)+"명"+(c.start?" · 시작 "+esc(c.start):"") });
+  if(fxOff(d.on)&&!el("fxOffB")) k.insertAdjacentHTML("afterend",'<div id="fxOffB">'+band("warn","<b>선착순 참여상이 꺼져 있습니다</b>(설정 「선착순_사용」 OFF) · 앱에도 보이지 않습니다.")+'</div>');
 }
-function fxList(){
-  var box=el("fxL"); if(!box) return;
-  var L=S.data.fxl, bg=fxByGive(S.data.fx), rows=L&&L.ok?L.rows||[]:[];
-  var keep=document.activeElement&&document.activeElement.id==="fxQ";
-  var sts=bg?[["","전체"],["수령","지급"],["미수령","수령 전"],["취소","취소"]]:[["","전체"],["정상","자격"],["미수령","미수령"],["수령","수령"],["취소","취소"],["대기마감","대기마감"]];
-  var n=L&&L.ok?Number(L.n)||rows.length:0, pg=FX.page||1, more=L&&L.ok&&n>pg*(Number(L.size)||Math.max(rows.length,1))&&rows.length>0;
-  var bar='<div class="bar"><input class="in" id="fxQ" inputmode="numeric" data-qa="fx.q" placeholder="사번 일부 · Enter" value="'+esc(FX.qIn!=null?FX.qIn:FX.q)+'" oninput="FX.qIn=this.value" onkeydown="if(event.key===\'Enter\')fxFind()"><span class="chips">'+sts.map(function(x){ return '<button class="chip'+(FX.st===x[0]?" on":"")+'" data-qa="fx.st" onclick="fxSt(\''+jq(x[0])+'\')">'+esc(x[1])+'</button>'; }).join("")+'</span><span class="sp"></span><span class="cap">'+n0(n)+'줄</span></div>';
-  var tb=!L?skel():unknownSrv(L)?'<p class="cap" style="padding:16px">서버 배포 뒤</p>':!L.ok?loadErr(L,"fxl"):
-    '<div class="scrl"><table class="tb"><colgroup><col style="width:60px"><col><col style="width:90px"><col class="hm" style="width:70px"><col style="width:110px"></colgroup><thead><tr><th class="r">'+(bg?"번호":"순번")+'</th><th>사람</th><th>상태</th><th class="hm">경로</th><th>'+(bg?"지급":"수령")+'</th></tr></thead><tbody>'+
-    (rows.length?rows.map(function(r){ var e=normE(r.emp); return '<tr class="row'+(FX.cur===e?" cur":"")+'" data-qa="fx.row" onclick="fxPick(\''+jq(e)+'\')"><td class="n r"><b>'+esc(r.rk)+'</b></td><td class="nm"><b>'+esc(r.name||"-")+'</b><div>'+esc(r.dept||"")+' · '+esc(r.emp)+'</div></td><td>'+fxStTag(r)+'</td><td class="cap hm">'+esc(FX_VIA[r.via]||r.via||"")+'</td><td class="n cap">'+(r.got?esc(String(r.gotAt||"").slice(11,16))+(r.gotBy?" · "+esc(r.gotBy):""):"-")+'</td></tr>'; }).join(""):
-      '<tr><td colspan="5"><div class="empty"><b>'+(FX.q||FX.st?"찾는 줄이 없습니다":bg?"아직 지급한 사람이 없습니다":"아직 6개를 채운 사람이 없습니다")+'</b></div></td></tr>')+'</tbody></table></div>'+
-    (pg>1||more?'<div class="bar"><button class="btn sm" data-qa="fx.prev" onclick="fxPage(-1)"'+(pg>1?"":" disabled")+'>앞</button><span class="cap">'+pg+'쪽</span><button class="btn sm" data-qa="fx.next" onclick="fxPage(1)"'+(more?"":" disabled")+'>다음</button></div>':'');
-  box.innerHTML=bar+tb;
-  if(keep){ var i=el("fxQ"); if(i){ i.focus(); var Ln=i.value.length; try{ i.setSelectionRange(Ln,Ln); }catch(e){} } }
-}
-function fxReload(){ S.at.fxl=0; S.data.fxl=null; fxList(); load(false); }
-function fxFind(){ FX.q=String(FX.qIn!=null?FX.qIn:"").replace(/\s/g,""); FX.page=1; fxReload(); }
-function fxSt(v){ FX.st=FX.st===v?"":v; FX.page=1; fxReload(); }
-function fxPage(n){ FX.page=Math.max(1,(FX.page||1)+n); fxReload(); }
-function fxRow(emp){ var L=S.data.fxl, rs=L&&L.ok&&L.rows||[]; for(var i=0;i<rs.length;i++) if(normE(rs[i].emp)===normE(emp)) return rs[i]; return null; }
-function fxPick(e){ FX.cur=FX.cur===e?"":e; fxList(); fxPanel(); }
-function fxPatch(emp, o){ var r=fxRow(emp); if(r) for(var k in o) r[k]=o[k]; fxList(); fxPanel(); }
-function fxPanel(){
-  var p=el("fxP"); if(!p) return;
-  var bg=fxByGive(S.data.fx), r=FX.cur&&fxRow(FX.cur);
-  if(document.activeElement&&/^fxM/.test(document.activeElement.id||"")&&p.contains(document.activeElement)) return;
-  var man='<h5>'+(bg?"수동 지급":"수동 포함")+' · 사번으로</h5><div class="fx"><input class="in" id="fxME" style="width:110px" inputmode="numeric" placeholder="사번" data-qa="fx.m.emp" value="'+esc(FX.m.emp)+'" oninput="FX.m.emp=this.value"><input class="in" id="fxMW" style="flex:1;min-width:140px" maxlength="60" placeholder="사유(필수) · 예: 스캔 장애" data-qa="fx.m.why" value="'+esc(FX.m.why)+'" oninput="FX.m.why=this.value"></div>'+
-    '<div class="acts" style="margin-top:8px"><button class="btn pri" data-qa="fx.m.add" onclick="fxAddAsk()">'+(bg?"수동 지급":"수동 포함")+'</button><button class="btn" data-qa="fx.m.void" onclick="fxManGo(\'void\')">자격 취소</button><button class="btn" data-qa="fx.m.undo" onclick="fxManGo(\'undo\')">수령 되돌리기</button></div><p class="cap mt8">'+(bg?"스캔이 안 될 때 실물을 건넨 뒤 누릅니다.":"남은 수량 안에서만 포함합니다.")+'</p>';
-  if(!r){ p.innerHTML='<div class="ph2"><div><h2>줄을 누르면 자세히</h2><div class="cap">수령 되돌리기 · 자격 취소</div></div></div><div class="bd">'+man+'</div>'; return; }
-  var e=normE(r.emp), st=String(r.st||""), live=!(st==="취소"||st==="void"||st==="대기마감"||st==="wait"||st==="full");
-  p.innerHTML='<div class="ph2"><div><h2>'+esc(r.name||"-")+'</h2><div class="cap">'+esc(r.dept||"")+' · '+esc(r.emp)+'</div></div><button class="x" aria-label="닫기" data-qa="fx.x" onclick="fxPick(\'\')">×</button></div><div class="bd">'+
-    '<div class="fx">'+fxStTag(r)+'<b class="n">'+(bg?"":"순번 ")+esc(r.rk)+(bg?"번":"")+'</b></div>'+imp([["경로",esc(FX_VIA[r.via]||r.via||"-")],[bg?"지급":"수령",r.got?esc(short(r.gotAt))+(r.gotBy?" · "+esc(r.gotBy):""):"-"],["메모",esc(r.memo||"-")]])+
-    '<div class="acts">'+(r.got?'<button class="btn danger" data-qa="fx.undo" onclick="fxUndoAsk(\''+jq(e)+'\')">수령 되돌리기</button>':'')+(live&&!r.got?'<button class="btn danger" data-qa="fx.void" onclick="fxVoidAsk(\''+jq(e)+'\')">자격 취소</button>':'')+'<button class="btn ghost" onclick="whoOpen(\''+jq(e)+'\')">한 사람 화면</button></div>'+man+'<h5>이 사람 최근 기록</h5>'+actMini(e,"fxMini")+'</div>';
-}
-function fxManGo(k){ var e=normE(FX.m.emp); if(!/^[0-9A-Z]{3,12}$/.test(e)){ toast("사번을 확인합니다"); return; } if(k==="void") fxVoidAsk(e, FX.m.why); else fxUndoAsk(e, FX.m.why); }
+/* 카드에서 부르는 선착순 처리 · 이름 · 번호는 한 사람 카드 데이터에서 */
+function fxRow(emp){ var d=WHO.info[normE(emp)]; return d&&d.ok?{ name:d.name, rk:d.fcfs&&d.fcfs.rk, gotAt:d.fcfs&&d.fcfs.gotAt }:null; }
+function fxPatch(emp){ whoAfter(emp); }
 function fxVoidAsk(emp, w0){
   emp=normE(emp);
   call("fcfs_void",{ emp:emp, dry:"1" },function(r){
@@ -2505,15 +2645,14 @@ function fxUndoAsk(emp, w0){
     onOk:function(){ var w=String(el("fxWhy").value).trim(); pzCall("fcfs_undo",{ emp:emp, why:w },["fcfs_state"],function(x){ if(x.ok){ fxPatch(emp,{ got:0, gotAt:"", gotBy:"" }); toast("수령 기록을 지웠습니다 · "+emp); } else toast("실패 · "+pzWhy(x)); }); } });
   if(w0&&el("fxWhy")){ el("fxWhy").value=w0; dlgGate(); }
 }
-function fxAddAsk(){
-  var e=normE(FX.m.emp), w=String(FX.m.why||"").trim(), d=S.data.fx||{}, bg=fxByGive(d);
+function fxAddAsk(emp){
+  var e=normE(emp||""), d=S.data.fx||{}, bg=d.ok?fxByGive(d):true, nm=pcName(e);
   if(!/^[0-9A-Z]{3,12}$/.test(e)){ toast("사번을 확인합니다"); return; }
-  if(w.length<2){ toast("사유를 적습니다"); var f=el("fxMW"); if(f) f.focus(); return; }
-  dialog({ t:bg?"선착순 참여상을 수동 지급할까요?":"선착순 자격에 넣을까요?", who:esc(e)+"<span>"+esc(w)+"</span>", x:imp([["남은 수량",n0(d.left)+"개",Number(d.left)>0?"chg":"loss"],["기록",bg?"지급 시각 = 지금 · 메모 「수동 지급 · 사유」":"맨 뒤 순번"]]),
-    s:bg?"실물을 건넨 뒤 누릅니다. 스탬프 수는 보지 않습니다. 남은 수량이 하나 줄고 활동 기록에 남습니다.":"6개 판정과 관계없이 자격을 줍니다.", ok:bg?"수동 지급":"포함",
-    onOk:function(){ pzCall("fcfs_add",{ emp:e, why:w },["fcfs_state","fcfs_list"],function(r){
-      if(r.ok){ FX.m={ emp:"", why:"" }; fxPanel(); toast((bg?"수동 지급했습니다 · ":"포함했습니다 · ")+e+(r.rk?" · "+r.rk+"번":"")); }
-      else if(r.reason==="full") dialog({ t:"남은 수량이 없습니다", s:"선착순 참여상이 모두 나갔습니다. 더 주려면 아래 설정에서 수량을 올립니다.", ok:"확인" });
+  dialog({ t:bg?"선착순 참여상을 수동 지급할까요?":"선착순 자격에 넣을까요?", who:esc(nm)+"<span>사번 "+esc(e)+"</span>", x:(d.ok?imp([["남은 수량",n0(d.left)+"개",Number(d.left)>0?"chg":"loss"],["기록",bg?"지급 시각 = 지금 · 메모 「수동 지급 · 사유」":"맨 뒤 순번"]]):"")+whyBox("fxWhy","예: 스캔 장애"),
+    s:(bg?"실물을 건넨 뒤 누릅니다. 스탬프 수는 보지 않습니다. 남은 수량이 하나 줄고 활동 기록에 남습니다.":"6개 판정과 관계없이 자격을 줍니다.")+" 사유를 적습니다.", ok:bg?"수동 지급":"포함", focus:"fxWhy", gate:function(){ return whyOk("fxWhy"); },
+    onOk:function(){ var w=String(el("fxWhy").value).trim(); pzCall("fcfs_add",{ emp:e, why:w },["fcfs_state","fcfs_list"],function(r){
+      if(r.ok){ whoAfter(e); toast((bg?"수동 지급했습니다 · ":"포함했습니다 · ")+nm+(r.rk?" · "+r.rk+"번":"")); }
+      else if(r.reason==="full") dialog({ t:"남은 수량이 없습니다", s:"선착순 참여상이 모두 나갔습니다. 더 주려면 설정 › 고급 › 재고에서 수량을 올립니다.", ok:"확인" });
       else if(r.reason==="dup") dialog({ t:"이미 받은 사람입니다", s:"사번 "+esc(e)+(r.rk?" · "+esc(r.rk)+"번":"")+"으로 기록이 있습니다. 잘못 찍은 기록이면 「수령 되돌리기」를 먼저 합니다.", ok:"확인" });
       else toast("실패 · "+pzWhy(r)); }); } });
 }
@@ -2529,7 +2668,7 @@ function fxSetPaint(){
   var open=box.querySelector("details")&&box.querySelector("details").open;
   box.innerHTML='<details class="memo"'+(open?" open":"")+'><summary>선착순 설정 · 수량 '+n0(d.cap)+' · '+(bg?"수령순":"달성순")+' · 마감 '+esc(String(v.cut||"").slice(11,16)||"없음")+'</summary><div class="mb"><div class="fx">'+sel("on","사용",[["ON","켬"],["OFF","끔"]])+(v.mode?sel("mode","방식",[["수령순","수령순(받는 순서)"],["달성순","달성순(6개째 순번)"]]):"")+inp("cap","수량","90px")+inp("cut",(bg?"지급 마감":"마감")+"(비우면 소진까지)","170px","2026-10-26 17:00")+
     sel("incCk","체크인 3개",[["ON","포함"],["OFF","빼고 판정"]])+sel("show","남은 수량 앱 표시",[["ALL","늘"],["LOW","임박 때만"],["OFF","마감 여부만"]])+inp("low","임박 기준","70px")+'</div>'+
-    '<div class="fx mt12"><button class="btn" data-qa="fx.cfg.save" onclick="fxCfgSave()">설정 저장</button><span class="cap">'+(bg?"이미 지급한 수("+n0(mn)+") 아래로는 서버가 받지 않습니다.":"자격 수("+n0(mn)+") 아래로는 서버가 받지 않습니다.")+'</span><span class="sp"></span><button class="btn sm ghost" data-qa="fx.reset" onclick="fxResetAsk()">시험 데이터 비우기</button></div></div></details>';
+    '<div class="fx mt12"><button class="btn" data-qa="fx.cfg.save" onclick="fxCfgSave()">설정 저장</button><span class="cap">'+(bg?"이미 지급한 수("+n0(mn)+") 아래로는 서버가 받지 않습니다.":"자격 수("+n0(mn)+") 아래로는 서버가 받지 않습니다.")+'</span></div></div></details>';
 }
 function fxCfgSave(){
   var d=S.data.fx||{}, v=fxCfgVals(d); FX.cfg=null; var o=fxCfgVals(d); FX.cfg=v;
@@ -2542,14 +2681,11 @@ function fxCfgSave(){
     onOk:function(){ pzCall("fcfs_cfg",p,["fcfs_state","fcfs_list"],function(r){ if(r.ok){ FX.cfg=null; toast("저장했습니다"); } else toast("실패 · "+pzWhy(r)); }); } });
 }
 function fxResetAsk(){
-  dialog({ t:"선착순 시험 데이터를 비울까요?", s:"선착순 순번 · 수령 기록을 지웁니다. 설정은 남습니다. 행사일(10/26)에는 서버가 받지 않습니다. <b>되돌릴 수 없습니다.</b>", ok:"비우기", danger:true,
+  dialog({ t:"선착순 시험 데이터를 비울까요?", s:"선착순 순번 · 수령 기록을 지웁니다. 설정은 남습니다. 행사일(10/26)에는 서버가 받지 않습니다. <b>되돌릴 수 없습니다.</b>", ok:"비우기", danger:true, x2:1,
     onOk:function(){ pzCall("fcfs_reset",{ confirm:"RESET" },["fcfs_state","fcfs_list"],function(r){ toast(r.ok?"비웠습니다 · "+(r.cleared||0)+"줄":"실패 · "+pzWhy(r)); }); } });
 }
 
-/* ══════════════════ 19. 현장 › 시상 (7등 랜덤 굿즈 lk7_* · 아이디어왕 ideaking_* · 타자왕 type_result) ══════════════════
- * 7등 = 마감 → 17:00 룰렛 잔여(필수 · 콘솔이 막는다) → 대상 확정 → 추첨(행사 뒤 · 한 번) → 재현 검증 → 교체 · CSV(슈퍼관리자)
- * 아이디어왕 = 후보(경로 셋) → 등수 · 사유로 선정(7초 되돌리기) · 타자왕 = 1F 현장 1~3위(읽기 · 사회자 호명)
- * 이름은 이 화면과 CSV 에만 · 부문 · 소속별 집계는 두지 않는다 */
+/* ══ 19. 현장 › 시상 (7등 랜덤 굿즈 lk7_* · 아이디어왕 ideaking_* · 타자왕 type_result) ══ */
 var LK_PH={ open:["마감 전",""], wait:["마감 · 확정 전","warn"], lock:["대상 확정","pri"], drawn:["추첨 완료","ok"] };
 var IK={ ch:"lounge_pre", late:0, open:{} };
 var IK_CH={ lounge_pre:"AX 라운지 사전 신청", lounge_day:"AX 라운지 당일", chat:"18F 커피챗", app:"앱" };
@@ -2590,7 +2726,7 @@ function lkPaint(b){
       '<p class="cap mt8">'+(d.ph==="open"?esc(String(d.cut||"").slice(0,16))+" 뒤에 확정합니다":!rem?"17:00 룰렛 잔여 다섯 숫자를 먼저 저장합니다":d.ph==="lock"&&d.lock?"확정 "+esc(short(d.lock.at||""))+" · "+n0(d.lock.n)+"명":"확정하면 대상이 기록에 남습니다")+'</p>')+'</div>';
   }
   var cv=LK.cfg||{ qty:String((d.cfg||{}).qty!=null?d.cfg.qty:d.qty||""), cut:String((d.cfg||{}).cut||d.cut||"") }, off=d.ph==="drawn"?" disabled":"";
-  h+='<details class="memo mt16"><summary>7등 설정 · 당첨 '+esc(cv.qty||"-")+'명 · 기준 '+esc(String(cv.cut).slice(11,16)||"-")+'</summary><div class="mb"><div class="fx"><label class="fld">당첨 수<input class="in n" id="lkCq" style="width:90px" value="'+esc(cv.qty)+'" oninput="lkCfgIn(\'qty\',this.value)"'+off+'></label><label class="fld">풀 기준 시각<input class="in n" id="lkCc" style="width:170px" value="'+esc(cv.cut)+'" placeholder="2026-10-26 17:00" oninput="lkCfgIn(\'cut\',this.value)"'+off+'></label><button class="btn" style="align-self:flex-end" data-qa="lk.cfg.save" onclick="lkCfgSave()"'+off+'>설정 저장</button><span class="sp"></span><button class="btn sm ghost" style="align-self:flex-end" data-qa="lk.reset" onclick="lkResetAsk()">시험 데이터 비우기</button></div></div></details>';
+  h+='<details class="memo mt16"><summary>7등 설정 · 당첨 '+esc(cv.qty||"-")+'명 · 기준 '+esc(String(cv.cut).slice(11,16)||"-")+'</summary><div class="mb"><div class="fx"><label class="fld">당첨 수<input class="in n" id="lkCq" style="width:90px" value="'+esc(cv.qty)+'" oninput="lkCfgIn(\'qty\',this.value)"'+off+'></label><label class="fld">풀 기준 시각<input class="in n" id="lkCc" style="width:170px" value="'+esc(cv.cut)+'" placeholder="2026-10-26 17:00" oninput="lkCfgIn(\'cut\',this.value)"'+off+'></label><button class="btn" style="align-self:flex-end" data-qa="lk.cfg.save" onclick="lkCfgSave()"'+off+'>설정 저장</button></div></div></details>';
   b.innerHTML=h; lkRemPaint("lkRem2");
 }
 function lkCfgIn(k, v){ var d=S.data.lk||{}; if(!LK.cfg) LK.cfg={ qty:String((d.cfg||{}).qty!=null?d.cfg.qty:d.qty||""), cut:String((d.cfg||{}).cut||d.cut||"") }; LK.cfg[k]=v; }
@@ -2626,7 +2762,7 @@ function lkVoidAsk(){
   },function(e2){ toast(why(e2)); });
 }
 function lkResetAsk(){
-  dialog({ t:"7등 시험 데이터를 비울까요?", s:"확정 · 추첨 결과 · 잔여 입력을 지웁니다. 설정은 남습니다. 행사일(10/26)에는 서버가 받지 않습니다. <b>되돌릴 수 없습니다.</b>", ok:"비우기", danger:true,
+  dialog({ t:"7등 시험 데이터를 비울까요?", s:"확정 · 추첨 결과 · 잔여 입력을 지웁니다. 설정은 남습니다. 행사일(10/26)에는 서버가 받지 않습니다. <b>되돌릴 수 없습니다.</b>", ok:"비우기", danger:true, x2:1,
     onOk:function(){ pzCall("lk7_reset",{ confirm:"RESET" },["lk7_state"],function(r){ if(r.ok){ LK.ver=null; LK.rem=null; } toast(r.ok?"비웠습니다":"실패 · "+pzWhy(r)); }); } });
 }
 /* CSV · 이름이 들어가 슈퍼관리자 본인 확인 뒤(서버가 spin 이면 확인 창 → 같은 요청을 다시) */
@@ -2689,9 +2825,7 @@ function tyPaint(b){
     (top.length?top.map(function(r){ return '<tr><td><b class="n">'+r.rank+'위</b></td><td><b>'+esc(r.nick||"-")+'</b></td><td>'+esc(r.name||"-")+' <span class="cap">'+esc(r.emp||"")+'</span></td><td class="n r"><b>'+n0(r.score)+'</b></td><td class="n r hm">'+esc(r.acc!=null?r.acc+"%":"-")+'</td><td class="n cap hm">'+esc(short(r.ts))+'</td></tr>'; }).join(""):'<tr><td colspan="6"><div class="empty"><b>아직 기록이 없습니다</b></div></td></tr>')+'</tbody></table>'+
     '<p class="cap mt8">집계 시간 '+esc((d.win||[]).join(" · ")||"-")+'</p>');
 }
-/* ══════════════════ 20. 오늘 › 장애 대응 (디자인 시안/콘솔 당일 진행판 261008/장애 대응표.md · 9줄 + 스태프 폰 멈춤) ══════════════════
- * 증상 → 바로 할 일 → 대체 수단 → 복구 확인 · 줄마다 이동 단추(새 자리) · 이상 신호 칸을 누르면 그 줄이 열린다 · 쓰기 단추 없음(대응은 이동한 화면에서)
- * 원칙 4 · 안전 상황은 사내 방송이 정본(앱 · 푸시로 안내하지 않음) · 10/25 18:00 동결 뒤에는 설정 값 · 스위치만 */
+/* ══ 20. 오늘 › 장애 대응 (디자인 시안/콘솔 당일 진행판 261008/장애 대응표.md · 9줄 + 스태프 폰 멈춤) ══ */
 var INC=[
   { k:"srv", t:"서버 · 앱이 안 열림 · 느림 · 저장 실패", sym:"이상 신호 「서버 지연」 빨강(2.5초 이상) · 「오류율」 빨강(5% 이상) · 현장에서 「앱이 안 열려요」 여러 건",
     act:["콘솔 새로고침 · 휴대폰 테더링으로도 열어 콘솔 회선인지 서버인지 가른다","Cloudflare 대시보드 Workers › hi 에서 오류 · 요청 그래프를 본다","과부하(바쁨)가 이어지면 설정 「폴링초」를 30에서 90으로(설정 › 고급)","푸시가 같이 나가고 있으면 알림 › 보내기에서 「공지 푸시 잠금」","쓰기를 멈춰야 하면 읽기 전용 스위치(슈퍼관리자 · 본인 확인 · 쓰기가 모두 멈춤)"],
@@ -2741,9 +2875,45 @@ VIEWS.inc={
   }
 };
 
-/* ══════════════════ 21. 현장 › 지금 현장 (crowd_now · crowd_rep · crowd_now_set) ══════════════════
- * 참가자 홈 「지금 현장」 2×2(1F 룰렛 · 1F 포토부스 · 1F AX PLAY · 17F 대강당) · 지금 값 · 대리 제보(되돌리기 2분) · 리허설 중앙값 적용 · 사전값 · 기준
- * 옛 혼잡 제보(로비 · 엘리베이터) 카드는 옛 콘솔(고급 · 보관) · 카메라 칸은 261009 AX magic 폐기로 지움 */
+/* ══ 20b. 현장 › 지금 › 요청함 (sreq_list · sreq_done · 스태프 폰 「운영자에게 요청」) ══ */
+var SREQ_K={ qr:"QR이 안 돼요", pay:"수동 지급 부탁", stamp:"스탬프 확인 부탁", swap:"사이즈 교환", out:"룰렛 경품 소진", other:"기타" };
+function rqSt(){ return S.ui.rq||(S.ui.rq={ st:"open" }); }
+function agoMin(t){ var b=S.srvAt?Date.parse(String(S.srvAt.t).replace(" ","T")+"+09:00")+(Date.now()-S.srvAt.at):Date.now(); return Math.round((b-Date.parse(String(t).replace(" ","T")+"+09:00"))/60000); }
+function ago(t){ var m=agoMin(t); return isNaN(m)?short(t):m<1?"방금":m<60?m+"분 전":Math.floor(m/60)+"시간 "+(m%60)+"분 전"; }
+function rqRows(open){ var d=S.data.sreq; return d&&d.ok?(d.rows||[]).filter(function(r){ return !open||r.st==="open"; }):[]; }
+function rqRow(r){
+  var o=r.st==="open", J=jq(r.id);
+  return '<li class="'+(o&&agoMin(r.t)>=10?"late":"")+'"><span class="tx"><b>'+esc(SREQ_K[r.kind]||r.kind)+(r.emp?' · <span class="n">'+esc(r.emp)+'</span> '+esc(r.name||""):'')+'</b><span>'+esc(ago(r.t))+' · '+esc(r.byName||r.by||"기기")+(r.spot?' · '+esc(r.spot):'')+(r.note?' · 「'+esc(r.note)+'」':'')+(o?'':' · '+esc(r.res)+' '+esc(short(r.doneAt).slice(-5))+' '+esc(r.doneByName||r.doneBy||"")+(r.memo?' · '+esc(r.memo):''))+'</span></span>'+
+    (r.emp?'<button class="btn sm" data-qa="rq.who" onclick="whoOpen(\''+jq(r.emp)+'\')">사람 열기</button>':'')+
+    (o?'<button class="btn sm pri" data-qa="rq.done" onclick="rqDone(\''+J+'\',\'처리\')">처리</button><button class="btn sm" data-qa="rq.info" onclick="rqDone(\''+J+'\',\'안내\')">안내</button><button class="btn sm ghost" data-qa="rq.no" onclick="rqDone(\''+J+'\',\'거절\')">거절</button>':tag(r.res||"끝",r.res==="거절"?"":"ok"))+'</li>';
+}
+function rqList(rows, empty){ return rows.length?'<ul class="todo">'+rows.map(rqRow).join("")+'</ul>':'<p class="cap mt8">'+empty+'</p>'; }
+VIEWS.req={
+  need:function(){ return [{ k:"sreq", a:"sreq_list", p:{ st:rqSt().st, n:100 }, ttl:15000 }]; },
+  mount:function(){ el("vb").innerHTML='<div class="card pad"><div class="fx"><span class="chips" id="rqF"></span><span class="sp"></span><span class="cap">15초마다 · 열린 것 오래된 순</span></div><div id="rqL"></div></div>'+memo('<p>스태프 폰 스캔 화면 맨 아래 「운영자에게 요청」에서 들어옵니다. 사번이 있으면 「사람 열기」로 카드를 열어 대신 처리합니다(스탬프 부여 · 수동 지급 · 번호표 무효 · 명단).</p><p><b>처리</b> = 콘솔에서 대신 했음 · <b>안내</b> = 현장에서 말로 풀었음(현물 지급 뒤 등) · <b>거절</b> = 할 수 없음(메모로 이유). 닫으면 요청한 폰에 결과가 보이지는 않습니다.</p>'); },
+  paint:function(){
+    var u=rqSt(), d=S.data.sreq, f=el("rqF"), b=el("rqL"); if(!b) return;
+    var c=d&&d.ok?d.cnt||{}:{};
+    f.innerHTML=[["open","열린 것",c.open],["all","전체",(c.open||0)+(c.done||0)]].map(function(x){ return '<button class="chip'+(u.st===x[0]?" on":"")+'" aria-pressed="'+(u.st===x[0])+'" data-qa="rq.f.'+x[0]+'" onclick="rqF(\''+x[0]+'\')">'+esc(x[1])+' <span class="c">'+n0(x[2]||0)+'</span></button>'; }).join("");
+    if(!d){ b.innerHTML=skel(); return; }
+    if(unknownSrv(d)){ b.innerHTML=band("warn","이 서버는 아직 요청함(sreq_list)을 모릅니다. 서버 배포 뒤 씁니다."); return; }
+    if(!d.ok){ b.innerHTML=loadErr(d,"sreq"); return; }
+    scrKeep(b, rqList(rqRows(u.st==="open"), u.st==="open"?"열린 요청이 없습니다.":"요청이 없습니다."));
+  }
+};
+function rqF(v){ rqSt().st=v; paint(); load(false); }
+function rqDone(id, res){
+  var r=rqRows().filter(function(x){ return x.id===id; })[0]||{}, go=function(memo, inDlg){
+    call("sreq_done",{ id:id, res:res, memo:memo||"" },function(x){ if(inDlg) dlgForce();
+      if(x&&x.ok){ r.st="done"; r.res=res; r.doneAt=(S.srvAt&&S.srvAt.t)||""; r.doneByName=(S.me&&S.me.name)||aemp(); r.memo=memo||""; var d=S.data.sreq; if(d&&d.cnt){ d.cnt.open=Math.max(0,(d.cnt.open||0)-1); d.cnt.done=(d.cnt.done||0)+1; } S.at.sreq=Date.now(); changed(["sreq_list","act_log"]); paint(); toast("요청을 닫았습니다 · "+res+" · "+(SREQ_K[r.kind]||"")); }
+      else if(x&&x.reason==="already"){ toast("이미 닫힌 요청입니다 · "+(x.res||"")+" · "+(x.doneBy||"")); S.at.sreq=0; load(true); }
+      else toast("요청을 닫지 못했습니다 · "+why(x)); },function(e){ if(inDlg) dlgForce(); toast("요청을 닫지 못했습니다 · "+why(e)); }); };
+  if(res!=="거절") return go("", false);
+  dialog({ t:"요청을 거절로 닫을까요?", who:esc(SREQ_K[r.kind]||"")+(r.emp?" · "+esc(r.emp):"")+"<span>"+esc(r.byName||r.by||"")+(r.note?" · "+esc(r.note):"")+"</span>", x:'<label class="fld mt12">이유(선택 · 30자)<input class="in" style="width:100%" id="rqMemo" maxlength="30" autocomplete="off"></label>', ok:"거절로 닫기", focus:"rqMemo",
+    onOk:function(){ go(String((el("rqMemo")||{}).value||"").trim(), true); } });
+}
+
+/* ══ 21. 현장 › 지금 현장 (crowd_now · crowd_rep · crowd_now_set) ══ */
 var CN_NMS={ r:"1F 룰렛", p:"1F 포토부스", a:"1F AX PLAY", h:"17F 대강당" }, CN_VSA={ r:[0,5,10,15,20], p:[0,5,10,15,20], a:[0,2,4,6,8], h:[1,2,3,4,5] };
 var CN_HLVA=["","여유","보통","붐빔","거의 만석","만석"], CN_SRC={ base:"사전값 사용", cal:"재기 반영", auto:"스캔 자동" };
 function cnHm(t){ var m=String(t||"").match(/(\d{2}):(\d{2})/); return m?m[1]+":"+m[2]:"-"; }
@@ -2799,7 +2969,7 @@ function cnApply(k){
 }
 function cnUnapply(k){ call("crowd_now_set",{ op:"unapply", tgt:k },function(x){ if(x&&x.ok){ toast(CN_NMS[k]+" · 이전 사전값으로"); cnAfter(x); } else toast("실패 · "+why(x)); },function(e){ toast(why(e)); }); }
 
-/* ══════════════════ 22. 현장 › 화면 열기 · TV · 큰 화면 · 창구 태블릿 주소(코드 없음) ══════════════════ */
+/* ══ 22. 현장 › 화면 열기 · TV · 큰 화면 · 창구 태블릿 주소(코드 없음) ══ */
 var APP_URL="https://hiphopinos-web.github.io/hi_ax/";
 function appBase(){ try{ var p=location.pathname.replace(/admin\/[^\/]*$/,""); return location.origin+p; }catch(e){ return APP_URL; } }
 VIEWS.sign={
@@ -2814,9 +2984,7 @@ VIEWS.sign={
   }
 };
 
-/* ══════════════════ 23. 알림 › 예약 (sched_list · sched_add · sched_edit · push_preview) ══════════════════
- * 정해진 시각에 서버가 앱 공지(+ 푸시)를 낸다 · 목록 = 지금 실행 · +5분 · 취소(확인 창) · 만들기 = 종류 · 날짜 · 시각 · 제목 · 내용 · 푸시(전체 구독자 · 행운권 보유자)
- * 3분 넘게 늦으면 보내지 않고 「지남」 · 실행할 때 대상을 다시 센다 · 관람 시간표는 화면에서 뺐다(서버 유지 · 최종 설계안) */
+/* ══ 23. 알림 › 예약 (sched_list · sched_add · sched_edit · push_preview) ══ */
 var SCHK={ notice:"공지", outro:"Closing Speech", crowd_notify:"혼잡 만료 알림", visit_slot:"관람 시간 알림", cchat_remind:"커피챗 10분 전", dap_remind:"AX 라운지 10분 전" };
 var SCH_TAG={ "대기":"warn","실행중":"pri","완료":"ok","취소":"","지남":"bad","오류":"bad" };
 var SCH_PRE=[{ n:"Closing Speech 10분 전", kind:"outro", t:"Closing Speech 10분 전", b:"17F 대강당 · 17:00 시작", at:"16:50", tgt:"all" },{ n:"경품 추첨 시작", kind:"outro", t:"경품 추첨 시작", b:"17F 대강당", at:"", tgt:"tickets" }];
@@ -2870,7 +3038,7 @@ function scEdit(id, op){
   dialog({ t:op==="cancel"?"예약을 취소할까요?":"지금 실행할까요?", who:"<b>"+esc(nm)+"</b>", s:op==="cancel"?"이 예약은 실행되지 않습니다. 되돌리기는 없습니다(다시 만들면 됩니다).":"예약한 시각을 기다리지 않고 지금 모든 참가자 앱에 공지를 냅니다"+(r.push?"(푸시 포함)":"")+".", ok:op==="cancel"?"예약 취소":"지금 실행", danger:true, onOk:go });
 }
 
-/* ══════════════════ 24. 기록 › 숫자 (now_board 한 번 · 이름 없음 · 부문 통계 없음) ══════════════════ */
+/* ══ 24. 기록 › 숫자 (now_board 한 번 · 이름 없음 · 부문 통계 없음) ══ */
 VIEWS.num={
   need:function(){ return [{ k:"nb", a:"now_board", ttl:30000 }]; },
   mount:function(){ el("vb").innerHTML='<div id="nmB"></div>'+memo('<p>숫자는 진행판과 같은 서버 집계(20초 캐시)입니다. 테스트 사번은 빠집니다. 부문 통계는 두지 않습니다. 시간대별 접속 · 17F 출석 흐름 · 스탬프 현황 표 · 설문 답은 설정 › 고급 · 보관의 옛 화면에서 봅니다.</p>'); },
@@ -2888,10 +3056,7 @@ VIEWS.num={
   }
 };
 
-/* ══════════════════ 25. 설정 › 현장 QR (att_list · stair_list · stair_stats · qr_stats · qrcode.js) ══════════════════
- * QR 그림 = 서버 코드로 이 화면에서 그린다(그림 파일은 공개 저장소에 올리지 않는다) · 규칙 = QR코드/qr_mother.py(일반 QR · ECC Q · 흰 바탕 · 검정 정사각 · 여백 4칸)
- * 1 앱 · 2 아이디어 한 줄 · 3 계단실 36장(ZIP) · 4 강의장 출석(17F 오후 AWS · MS 입장 · 끝 4장 · ZIP) · 게시하지 않는 보관 QR · codes.json 은 옛 콘솔(고급 · 보관)
- * 설치 점검 = 계단 36곳 스캔 없음 · 주소 불일치 · 17F 출석 오늘 스캔 */
+/* ══ 25. 설정 › 현장 QR (att_list · stair_list · stair_stats · qr_stats · qrcode.js) ══ */
 var QV_BASE="https://hiphopinos-web.github.io/hi_ax/", QV_PX=2048, QV_CACHE={};
 var QV_LEC=[["att_l1_in","l1","in","파트너사 강연 · AWS · 입장 QR","17F 입장 출석"],["att_l1_out","l1","out","파트너사 강연 · AWS · 끝 QR","17F 끝 출석"],["att_l2_in","l2","in","파트너사 강연 · MS · 입장 QR","17F 입장 출석"],["att_l2_out","l2","out","파트너사 강연 · MS · 끝 QR","17F 끝 출석"]];
 function qrSub(){ return S.sub.s_qr==="check"?"check":"img"; }
@@ -2977,9 +3142,7 @@ function qrCheck(b){
     '<p class="cap mt8">「스캔 없음」 = 누적으로 한 번도 찍히지 않은 지점(안 붙었거나 아직 아무도 안 옴) · 「불일치」 = 붙은 자리가 틀렸을 가능성 · 두 경우 다 인쇄물 위치를 현장에서 확인합니다. 60초마다.</p>';
 }
 
-/* ══════════════════ 26. 설정 › 고급 · 운영 설정 표(cfg_list · cfg_set) ══════════════════
- * 기본값과 다른 것부터 · 죽은 키 6개는 화면에서 뺀다(시트에는 남김 · 최종 설계안 판정표) · 화면 스위치가 따로 있는 키는 그 화면 이름을 함께 · 읽기 전용(ro)은 단추 없음
- * 수준 3(슈퍼관리자 + 본인 확인) 키는 서버가 spin 으로 거절하면 확인 창 뒤 같은 요청을 다시 */
+/* ══ 26. 설정 › 고급 · 운영 설정 표(cfg_list · cfg_set) ══ */
 var CFG_DEAD={ "타자대전_목숨":1, "타자대전_상한초":1, "혼잡_포토초":1, "베타_폼":1, "완주추첨_사용":1, "키트_초과대체":1 };
 var CFG_HOME={ "오픈_범위":"설정 › 앱 오픈", "읽기전용":"설정 › 서버", "폴링초":"설정 › 서버", "푸시":"알림 › 보내기", "푸시_수동":"알림 › 보내기", "룰렛_소진":"현장 › 룰렛과 선착순", "체크인_번호표":"현장 › 체크인존" };
 function cfgSt(){ return S.ui.cfg||(S.ui.cfg={ q:"", all:false }); }
@@ -2991,25 +3154,27 @@ function cfgTable(){
   var q=u.q.replace(/\s+/g,"").toLowerCase(), rows=(d.rows||[]).filter(function(r){ return !CFG_DEAD[r.k]; });
   var dif=rows.filter(cfgDiff), shown=rows.filter(function(r){ return (u.all||cfgDiff(r)||q)&&(!q||(r.k+"|"+(r.n||"")+"|"+(r.d||"")).replace(/\s+/g,"").toLowerCase().indexOf(q)>=0); });
   shown.sort(function(a,b){ return (cfgDiff(b)?1:0)-(cfgDiff(a)?1:0); });
-  return '<div class="bar"><input class="in" id="cfgQ" data-qa="cfg.q" placeholder="설정 이름 · 설명" value="'+esc(u.q)+'" oninput="cfgSt().q=this.value;cfgPaint()"><span class="seg"><button class="'+(!u.all?"on":"")+'" data-qa="cfg.dif" onclick="cfgSt().all=false;cfgPaint()">기본값과 다른 것 '+dif.length+'</button><button class="'+(u.all?"on":"")+'" data-qa="cfg.all" onclick="cfgSt().all=true;cfgPaint()">전체 '+rows.length+'</button></span><span class="sp"></span><span class="cap">죽은 키 '+Object.keys(CFG_DEAD).length+'개 숨김</span></div>'+
+  return '<div class="bar"><input class="in" id="cfgQ" data-qa="cfg.q" type="search" aria-label="설정 이름 · 설명으로 거르기" placeholder="설정 이름 · 설명" value="'+esc(u.q)+'" oninput="cfgSt().q=this.value;cfgPaint()"><span class="seg"><button class="'+(!u.all?"on":"")+'" data-qa="cfg.dif" onclick="cfgSt().all=false;cfgPaint()">기본값과 다른 것 '+dif.length+'</button><button class="'+(u.all?"on":"")+'" data-qa="cfg.all" onclick="cfgSt().all=true;cfgPaint()">전체 '+rows.length+'</button></span><span class="sp"></span><span class="cap">죽은 키 '+Object.keys(CFG_DEAD).length+'개 숨김</span></div>'+
     '<div class="scrl"><table class="tb"><colgroup><col><col style="width:150px"><col class="hm" style="width:120px"><col class="hm" style="width:140px"><col style="width:90px"></colgroup><thead><tr><th>설정</th><th>지금</th><th class="hm">기본값</th><th class="hm">마지막 변경</th><th class="r"></th></tr></thead><tbody>'+
     (shown.length?shown.map(function(r){ var df=cfgDiff(r); return '<tr><td class="wrap"><b>'+esc(r.n||r.k)+'</b>'+(r.lv>=3?' '+tag("슈퍼"):"")+'<div class="cap">'+esc(r.k)+(r.d?" · "+esc(r.d):"")+(CFG_HOME[r.k]?" · 화면 스위치 "+esc(CFG_HOME[r.k]):"")+'</div></td><td class="n wrap">'+(df?'<b style="color:var(--navy)">'+esc(cfgShow(r))+'</b>':esc(cfgShow(r)))+'</td><td class="n cap hm wrap">'+esc(r.def===""?"(비어 있음)":r.def)+'</td><td class="cap hm">'+esc(r.by?short(r.at)+" · "+r.by:"-")+'</td><td class="r">'+(r.ro?'<span class="cap">읽기만</span>':'<button class="btn sm" data-qa="cfg.edit" onclick="cfgEditAsk(\''+jq(r.k)+'\',cfgPaint)">바꾸기</button>')+'</td></tr>'; }).join(""):'<tr><td colspan="5"><div class="empty"><b>'+(u.all||q?"맞는 설정이 없습니다":"기본값과 다른 설정이 없습니다")+'</b></div></td></tr>')+'</tbody></table></div>';
 }
-function cfgPaint(){ var b=el("cfgT"); if(!b) return; var keep=document.activeElement&&document.activeElement.id==="cfgQ"; b.innerHTML=cfgTable(); if(keep){ var i=el("cfgQ"); if(i){ i.focus(); var L=i.value.length; try{ i.setSelectionRange(L,L); }catch(e){} } } }
-(function(){ var M0=VIEWS.adv.mount;
-  VIEWS.adv.need=function(){ return [{ k:"cfgl", a:"cfg_list", ttl:60000 }]; };
-  VIEWS.adv.mount=function(){ M0(); el("vb").insertAdjacentHTML("afterbegin",'<div class="card" style="margin-bottom:16px"><div class="ch"><h2>운영 설정</h2><span class="cap">기본값과 다른 것부터 · 바꾸면 활동 기록에 남습니다</span></div><div id="cfgT">'+skel()+'</div></div>'); };
-  VIEWS.adv.paint=function(){ if(document.activeElement&&document.activeElement.id==="cfgQ") return; cfgPaint(); };
-})();
-/* ══════════════════ 13. 시작 ══════════════════ */
+function cfgPaint(){ var b=el("cfgT"); if(!b) return; var h=cfgTable(), i=h.indexOf('<div class="scrl">'), sc=b.querySelector(".scrl"); if(document.activeElement&&document.activeElement.id==="cfgQ"&&i>0&&sc){ var w=document.createElement("div"); w.innerHTML=h.slice(i); var t=sc.scrollTop; sc.replaceWith(w.firstChild); var s2=b.querySelector(".scrl"); if(s2) s2.scrollTop=t; } else scrKeep(b, h); }
+/* ══ 13. 시작 ══ */
 (function(){
   el("envTag").textContent="운영 관리 · "+envName();
   var h=String(location.hash||"").replace(/^#/,"").split("/"), nv=h[0]&&NAVBY[h[0]]?h[0]:ssGet("axf_c2_nav","");
   if(h[0]&&NAVBY[h[0]]&&h[1]) S.sub[h[0]]=decodeURIComponent(h[1]);
-  S.nav=NAVBY[nv]?nv:"today";
+  S.nav=NAVBY[nv]?nv:NAV0;
 })();
 function start(){ render(); load(true); }
-window.addEventListener("hashchange",function(){ var h=String(location.hash||"").replace(/^#/,"").split("/"); if(h[0]&&NAVBY[h[0]]&&h[0]!==S.nav){ if(h[1]) S.sub[h[0]]=decodeURIComponent(h[1]); go(h[0]); } });
+/* 주소 · 뒤로 가기 · 앞으로 가기 · 손으로 고친 해시(#p_who/사번 = 그 사람 카드) */
+function hashGo(){ var h=String(location.hash||"").replace(/^#/,"").split("/"), id=h[0], sub=h[1]?decodeURIComponent(h[1]):"";
+  if(!id||!NAVBY[id]) return;
+  if(id==="p_who"){ var u=whoSt(); if(u.cur!==sub){ u.cur=sub; S.sub.p_who=sub; } }
+  else if(sub) S.sub[id]=sub;
+  if(id!==S.nav){ S.nav=id; ssSet("axf_c2_nav", id); render(); load(false); } else paint(); }
+window.addEventListener("hashchange",hashGo);
+window.addEventListener("popstate",hashGo);
 if(authed()){ el("lock").style.display="none"; render(); bootTok(function(){ if(authed()){ meTag(); start(); } }); } else lock();
 </script>
 </body>
