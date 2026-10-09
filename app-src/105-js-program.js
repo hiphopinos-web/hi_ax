@@ -362,7 +362,7 @@ function applyCardHtml(o) {
     '<div class="hd"><span class="fl">' + flFloor(o.fl) + '</span><h3 class="ax-card-title">' + esc(o.nm) + "</h3>" + (o.mine ? '<span class="axs-chip">' + esc(o.chip || "신청함") + "</span>" : "") + "</div>" +
     '<p class="k">' + esc(o.kor) + "</p>" +
     '<dl class="axs-kv">' + o.kv.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + segHtml(esc(r[1])) + "</dd>"; }).join("") + "</dl>" + (o.extra || "") +
-    '<div class="bt">' + progBtn(esc(o.btn[0]), o.btn[1], o.weak ? "ax-button-weak" : "", "", !!o.btn[3]) +   /* v6.83 (디자인 D-1) 한 화면 주황 주 버튼 하나 · 커피챗 주 버튼이 살아 있으면 라운지는 약한 버튼 */
+    '<div class="bt">' + progBtn(esc(o.btn[0]), o.btn[1], "", "", !!o.btn[3]) +   /* v6.84 (사용자 261009 「라운지 시간 고르기도 주황으로」) 카드마다 자기 주 버튼 하나 = 같은 주황 주 버튼(옛 v6.83 D-1 라운지 약한 버튼 되돌림) · 꺼짐(마감)만 disabled */
     '<button type="button" class="ax-link axs-plain" onclick="' + o.more + '">자세히 보기</button></div></section>';
 }
 function applyCchatHtml() {
@@ -371,11 +371,11 @@ function applyCchatHtml() {
   var kv = [["지금", s.mine ? s.t : ideaMineN() ? "아이디어 제출 완료 · 희망 가능" : "아이디어 한 줄 쓰고 희망"], ["시간", mt && c.round ? "10월 26일 " + c.round : CCHAT_HOURS + " · 선정되면 안내"], ["사은품", APPLY_GIFT]];   /* v6.83 (사용자 261009 묶음 16) 카드 = 고르고 바로 신청하는 곳 · 사실 표 3줄(지금 · 시간 · 사은품) · 방식 · 신청 · 사은품 사진은 구역 상세 시트로 */   /* 261008 (사용자 「라운지도 같은 형태」) 두 카드 사실 표 = 지금 · 시간 · 방식 · 신청 · 사은품 같은 순서 · 같은 줄 수 */   /* v5.90 · v6.07 희망 → 선정 · 13:00~16:00 */
   return applyCardHtml({ k: "cchat", nm: "AX 커피챗", fl: 18, mine: s.mine, chip: s.chip, kor: z.kor, kv: kv, btn: L.btn, more: "cchatGo()" });
 }
-function applyLoungeHtml(weak) {
+function applyLoungeHtml() {
   var s = loungeState(); if (!s) return "";
   var z = zoneById("lounge"), L = zoneLive(z);
   var btn = s.mine ? ["내 신청", "progOpen('dap')"] : ["시간 고르기", "progOpen('dap')"];
-  return applyCardHtml({ k: "lounge", nm: "AX 라운지", fl: 1, mine: s.mine, kor: z.kor, kv: [["지금", s.mine ? s.t : s.t + " · 누구나 신청"], ["시간", L.tm], ["사은품", "상담 후 " + APPLY_GIFT]], btn: btn, weak: !!weak,   /* v6.83 (묶음 16) 사은품 사진 = 구역 상세 시트 한 곳 */ more: "zoneOpen('lounge')" });   /* 261008 사용자 「ax라운지도 같은 형태 · 되도록 사전 신청자 중심」 · 상담 완료 조건 유지(260918 예외) */
+  return applyCardHtml({ k: "lounge", nm: "AX 라운지", fl: 1, mine: s.mine, kor: z.kor, kv: [["지금", s.mine ? s.t : s.t + " · 누구나 신청"], ["시간", L.tm], ["사은품", "상담 후 " + APPLY_GIFT]], btn: btn,   /* v6.83 (묶음 16) 사은품 사진 = 구역 상세 시트 한 곳 */ more: "zoneOpen('lounge')" });   /* 261008 사용자 「ax라운지도 같은 형태 · 되도록 사전 신청자 중심」 · 상담 완료 조건 유지(260918 예외) */
 }
 /* 10F 실습형 세션 줄 = 사전 신청자(10F 명단 · tenMine)와 테스트 사번(testMode · 310555 · 데모)에게만 · 일반 직원에게는 없다(사용자 261006) */
 function applyTenShow() { return !!tenMine() || testMode(); }
@@ -384,8 +384,7 @@ function applyTenHtml() {
   return '<div class="axs-rows">' + rcHtml({ cls: "", onclick: "progTenGo()", link: true, left: rcIcon(App.ICONS.guide), title: "10F 실습형 세션", sub: "사전 신청자 참여" }).replace('<div class="rc', '<div data-apply="ten" class="rc') + "</div>";
 }
 function progApplyTabHtml() {
-  var cs = cchatState(), cOn = !!cs && !((zoneLive(zoneById("cchat")) || {}).btn || [])[3];   /* v6.83 커피챗 주 버튼이 눌리는 상태면 라운지 버튼은 약하게 */
-  var h = applyCchatHtml() + applyLoungeHtml(cOn);
+  var h = applyCchatHtml() + applyLoungeHtml();
   return '<div class="axs-apply" aria-label="신청하기">' + (h || '<p class="ax-description axs-apnone">지금 신청할 수 있는 프로그램이 없어요</p>') + applyTenHtml() + "</div>";
 }
 /* v5.65 「참여 전 확인」 펼침 = 같은 화면 패널(시트 아님 · 설계안 결정 1) · 다시 그리지 않고 패널만 연다 · 닫는다
