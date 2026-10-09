@@ -93,7 +93,7 @@ function homeSched() { PROG.mode = "time"; PROG.cat = "all"; PROG.tt = "all"; PR
 function mySched() { SCHED.tab = "mine"; App.go("guide_time"); }
 /* v5.65 나의 참여 갈래 · 처음(MY.seg 빈 값) = 일정이 있으면 나의 일정 · 없으면 나의 보상 · 누르면 이 방문 동안 기억 */
 function myTabSeg() { return MY.seg === "sched" || MY.seg === "rw" ? MY.seg : myAgendaItems().length ? "sched" : "rw"; }
-function mySeg(g) { MY.seg = g === "rw" ? "rw" : "sched"; App.render(); window.scrollTo(0, 0); }
+function mySeg(g, b) { var go = function () { MY.seg = g === "rw" ? "rw" : "sched"; App.render(); }; if (b) { AXM.seg(b, go, { top: true, ok: function () { return App.current === "my"; } }); return; } go(); window.scrollTo(0, 0); }   /* 261009 b = 누른 칸 · 기준 모션(동작 모션 통일) */
 /* v5.65 (사용자 261005 「내 보상은 경품과 스탬프 내보상 이거 세개는 유사」) 나의 보상 = 한 흐름 · 같은 숫자 · 같은 설명을 두 번 쓰지 않는다
    ① 스탬프 보상 레일(홈 · 스탬프 탭과 같은 railHtml · n / 6 · 3 룰렛 · 4 · 5 · 6 행운권 · 내 행운권 번호 · 경품 보기 입구 하나)
    ② 다음 보상까지 한 줄(스탬프 탭으로 · 6개를 다 모으면 없음 · 레일 「6개 모두 모았어요」와 겹치지 않게)
@@ -250,8 +250,7 @@ var PZ_THUMB = ["ld1_ipad", "fin_humidifier_v2", "rl1_tumbler_v2"];   /* 입구 
 function prizeGo(k) { PROG.anchor = k ? "pz-" + k : ""; PZ.t = Date.now(); App.go("prizes"); }
 function prizeJump(k) {
   var a = el("pz-" + k); if (!a) return;
-  var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  a.scrollIntoView({ block: "start", behavior: calm ? "auto" : "smooth" });
+  AXM.scrollTo(a, { block: "start" });   /* 261009 부드럽게 + 도착 떠오름(동작 모션 통일 · 움직임 줄이기 = 바로) */
 }
 function prizeGoHtml(k) {
   var th = PZ_THUMB.map(function (n) { return '<img src="' + PRIZE_DIR + "t_" + n + '.webp" alt="" width="96" height="96" loading="lazy" decoding="async" onerror="this.remove()">'; }).join("");
@@ -471,7 +470,7 @@ function expStamp(id) {
   App.tab("exp");
   setTimeout(function () {
     var r = document.querySelector('#view [data-stp="' + id + '"]');
-    if (r) r.scrollIntoView({ block: "center" });
+    if (r) AXM.scrollTo(r, { block: "center" });   /* 261009 부드럽게 + 도착 떠오름 */
   }, 60);
 }
 var CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2 8.8-9.4"/></svg>';

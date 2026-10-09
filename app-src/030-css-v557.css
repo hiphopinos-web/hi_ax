@@ -93,10 +93,7 @@
   #modal .mcard.axs-tall, #axsSheet .ax-sheet.axs-tall { height: calc(100% - var(--ax-sheet-top)); }
   #axsDet { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
   #axsDet::before { content: ""; position: absolute; inset: 0; background: rgba(25, 31, 40, 0.4); background: color-mix(in srgb, var(--ax-color-ink) 40%, transparent); opacity: var(--dd, 1); pointer-events: none; }
-  #axsDet.in::before { animation: detDim 0.28s ease-out; }
-  #axsDet.in .axs-dsh { animation: detUp 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
-  #axsDet.out { pointer-events: none; }
-  #axsDet.out::before { opacity: 0; transition: opacity 0.22s ease-in; }
+  /* 261009 열림 · 닫힘 · 시트 안 내용 바뀜 = 동작 모션 통일 절(010 · .ax-mo-open · .ax-mo-close · .ax-mo-rise) · 옛 detUp 0.28 · detSw · .out 은 걷었다 */
   #axsDet .axs-dsh { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 0; width: 100%; max-width: var(--ax-app-max); height: calc(100% - var(--ax-sheet-top)); max-height: calc(100% - var(--ax-sheet-top)); padding: 0; overflow: hidden; outline: none; color: var(--ax-color-ink); will-change: transform; }
   #axsDet .axs-dsh.axs-dfit { height: auto; }
   #axsDet .axs-dhd { position: relative; z-index: 1; flex: none; padding: var(--ax-space-12) var(--ax-space-24) var(--ax-space-8); touch-action: none; cursor: grab; box-shadow: 0 1px 0 transparent; transition: box-shadow 0.15s; }
@@ -113,7 +110,6 @@
   #axsDet .axs-dlead .axs-stag { position: static; margin: 0 -2px -8px 0; }   /* 위로 빼면 본문(스크롤 칸) 위 끝에 잘린다 */
   #axsDet .axs-dbody { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: var(--ax-space-20); padding: 0 var(--ax-space-24) var(--ax-space-32); }
   #axsDet .axs-dsh:has(.axs-dft[hidden]) .axs-dbody { padding-bottom: max(var(--ax-space-32), calc(env(safe-area-inset-bottom) + var(--ax-space-16))); }
-  #axsDet .axs-dbody.sw { animation: detSw 0.22s ease-out; }
   #axsDet .axs-dft { flex: none; display: flex; flex-direction: column; gap: var(--ax-space-8); padding: var(--ax-space-12) var(--ax-space-24) max(var(--ax-space-16), env(safe-area-inset-bottom)); background: var(--ax-color-surface); box-shadow: 0 -1px 0 transparent; transition: box-shadow 0.15s; }
   #axsDet .axs-dft.ov { box-shadow: 0 -1px 0 var(--ax-color-divider); }
   #axsDet .axs-dft[hidden] { display: none; }
@@ -142,12 +138,8 @@
      상세 제목 = 줄 길이 고르게(큰글씨 「… 보는 / 곳」 처럼 마지막 줄 한 낱말 막기) · 설명 줄 = 마지막 줄 한 낱말 막기(지원 안 하는 브라우저는 지금 그대로) · 구역 시트 몫은 판 문법 절(020) */
   #axsDet .axs-dltt { text-wrap: balance; }
   #axsDet .axs-dp, #axsDet .axs-ddot li { text-wrap: pretty; }
-  @keyframes detUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-  @keyframes detDim { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes detSw { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-  @media (prefers-reduced-motion: reduce) { #axsDet.in::before, #axsDet.in .axs-dsh, #axsDet .axs-dbody.sw { animation: none; } #axsDet .axs-dft { transition: none; } }
-  /* 끌어 닫기(sheetDrag) · 짧은 확인 시트 · 팝업도 같은 손 · 손을 따라 뒷배경이 옅어진다 */
-  #axsSheet.drag, #modal.drag { background: color-mix(in srgb, var(--ax-color-ink) calc(40% * var(--dd, 1)), transparent); }
+  @media (prefers-reduced-motion: reduce) { #axsDet .axs-dft { transition: none; } }
+  /* 끌어 닫기(sheetDrag) · 짧은 확인 시트 · 팝업도 같은 손 · 손을 따라 뒷배경이 옅어진다(261009 세 시트 모두 ::before 층 opacity = --dd) */
   #axsSheet .axs-grab, #axsSheet .axs-mhead, #modal .axs-mhead { touch-action: none; }
   /* v5.94 (사용자 결정 261006) 사전등록 체크인 안내 · 체크인 3개 → 룰렛 → 강의장 · 번호 원(O100) + 굵은 한 줄 + 옅은 한 줄 */
   #axsSheet .axs-ckg { list-style: none; margin: var(--ax-space-16) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--ax-space-12); counter-reset: ckg; }

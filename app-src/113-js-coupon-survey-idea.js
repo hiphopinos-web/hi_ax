@@ -414,8 +414,8 @@ function kvWire(w) {
   st.addEventListener("pointercancel", function (e) { end(e, true); });
 }
 function kitEdit(on) { KIT.edit = !!on; KIT.sel = ""; KIT.msg = ""; App.render(); kitTop(); }
-function kitTbl() { KIT.tbl = !KIT.tbl; App.render(); }
-function kitFold(k) { KIT.fo = KIT.fo || {}; KIT.fo[k] = !KIT.fo[k]; App.render(); }   /* 261008 상품 정보 · 세탁 방법 · 주의사항 접힘 */
+function kitTbl() { KIT.tbl = !KIT.tbl; App.render(); if (KIT.tbl) AXM.rise(el("kitTb")); }   /* 261009 펼친 표 떠오름(동작 모션 통일) */
+function kitFold(k) { KIT.fo = KIT.fo || {}; KIT.fo[k] = !KIT.fo[k]; App.render(); if (KIT.fo[k]) AXM.rise(el({ info: "kitFoInfo", wash: "kitFoWash", note: "kitFoNote" }[k])); }   /* 261008 상품 정보 · 세탁 방법 · 주의사항 접힘 */
 function kitTop() { var bd = document.querySelector("#axsDet .axs-dbody"); if (bd) bd.scrollTop = 0; }
 function kitSend() {
   var k = kitMy(), u = S.get("user", {}) || {}, z = KIT.sel;

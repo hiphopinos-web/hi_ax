@@ -169,12 +169,87 @@ function segFit() {
   window.addEventListener("resize", go);
 })();
 function fmtTime(ts) { return new Date(ts).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }); }
-function el(id) { return document.getElementById(id); }
+function el(id) { var n = document.getElementById(id); return n && n.classList.contains("ax-mo-close") ? null : n; }   /* 261009 닫히는 중(0.18초)인 시트 · 팝업은 없는 것으로(열림 확인 · 다시 그리기가 닫던 것을 되살리지 않게 · AXM.close) */
 function toast(msg) {
   var t = el("toast");
   t.innerHTML = segHtml(esc(msg)); t.classList.add("show");   /* v6.69 두 줄이면 「 · 」 자리에서(줄바꿈 글자는 #toast pre-line 그대로) */
   clearTimeout(toast._h); toast._h = setTimeout(function () { t.classList.remove("show"); }, 2400);
 }
+/* ═══ 261009 동작 모션 통일 · 공용 함수 한 곳(규격 = 디자인 시안/모션 통일 261009/규격.md · CSS 토큰 = 010 「동작 모션 통일」 절 · 숫자는 그 토큰과 같게) ═══
+   기준 = v5.73 시간표 점심 줄 → 상시 운영(손잡이 0.25초 · 흐려짐 0.18초 · 6px 떠오름 0.3초 · 부드러운 스크롤)
+   open · close = 시트 셋(#axsSheet · #modal · #axsDet) · 닫는 동안 id 는 남고 .ax-mo-close(누름 통과 · 다시 닫기 = 무시) · 같은 종류를 다시 열면 live 가 닫던 것을 바로 치운다(같은 id 둘 없음)
+   rise = 바뀐 내용 · 도착한 곳 · 펼친 내용 떠오름 · scrollTo = 부드러운 스크롤 + 멈추면 도착한 곳 떠오름 · seg = 세그먼트 칸 바꾸기(기준 모션 그대로 · 어느 칸으로든)
+   움직임 줄이기(prefers-reduced-motion) = 전부 바로(지금 규칙 그대로) · 끌어서 닫은 시트(data-drop)는 이미 내려가 있어 바로 치운다 */
+var AXM = {
+  IN: 300, OUT: 180, MOVE: 250,
+  rm: function () { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); },
+  open: function (w) {
+    if (!w || AXM.rm()) return;
+    clearTimeout(w._mo); w.classList.add("ax-mo-open");
+    w._mo = setTimeout(function () { w.classList.remove("ax-mo-open"); }, AXM.IN + 80);
+  },
+  close: function (w) {
+    if (!w || w.classList.contains("ax-mo-close")) return;
+    clearTimeout(w._mo);
+    if (AXM.rm() || w.dataset.drop || !w.isConnected) { w.remove(); return; }
+    var p = w.firstElementChild; if (p && p.style) p.style.transition = "";   /* 끌다 놓아 제자리로 온 패널의 인라인 전환이 닫힘 곡선을 가리지 않게 */
+    w.classList.remove("ax-mo-open"); void w.offsetWidth; w.classList.add("ax-mo-close");
+    w._mo = setTimeout(function () { w.remove(); }, AXM.OUT + 40);
+  },
+  live: function (id) { var w = document.getElementById(id); while (w && w.classList.contains("ax-mo-close")) { clearTimeout(w._mo); w.remove(); w = document.getElementById(id); } return w; },   /* 닫던 것을 바로 치우고 남은 것(열린 것)을 준다 · 새로 만들기 전에 부른다 */
+  rise: function (n) {
+    if (!n || !n.classList || AXM.rm()) return;
+    clearTimeout(n._mr); n.classList.remove("ax-mo-rise"); void n.offsetWidth; n.classList.add("ax-mo-rise");
+    n._mr = setTimeout(function () { n.classList.remove("ax-mo-rise"); }, AXM.IN + 80);
+  },
+  /* 스크롤이 멈출 때까지(대상 위치가 4프레임 같음 · 최대 1초) 기다렸다가 cb */
+  settle: function (n, cb) {
+    var last = null, same = 0, t0 = Date.now();
+    (function chk() {
+      var y = n && n.isConnected ? Math.round(n.getBoundingClientRect().top) : Math.round(window.scrollY);
+      if (y === last) same++; else { same = 0; last = y; }
+      if (same >= 4 || Date.now() - t0 > 1000) cb(); else requestAnimationFrame(chk);
+    })();
+  },
+  /* t = 요소(scrollIntoView) 또는 숫자(창 맨 위에서 거리) · o.block · o.need = [위, 아래] 여백 안에 이미 보이면 스크롤하지 않음 · o.rise = 떠오를 요소(기본 = t · false = 없음) · o.then */
+  scrollTo: function (t, o) {
+    o = o || {};
+    var n = t && t.nodeType === 1 ? t : null, hit = o.rise === false ? null : o.rise || n, rm = AXM.rm();
+    var done = function () { if (hit) AXM.rise(hit); if (o.then) o.then(); };
+    if (n) {
+      var r = n.getBoundingClientRect();
+      if (o.need && r.top >= o.need[0] && r.bottom <= window.innerHeight - o.need[1]) { done(); return; }
+      n.scrollIntoView({ block: o.block || "start", behavior: rm ? "auto" : "smooth" });
+    } else window.scrollTo({ top: +t || 0, behavior: rm ? "auto" : "smooth" });
+    if (rm) { done(); return; }
+    AXM.settle(n || hit, done);
+  },
+  /* 세그먼트 칸 바꾸기 · b = 누른 칸 · apply = 상태 바꾸고 다시 그리기 · o.top = 맨 위로(부드럽게) · o.ok = 0.25초 뒤에도 그 화면인지
+     손잡이가 누른 칸으로 미끄러지고 아래 내용이 흐려짐 → 0.25초에 다시 그림 → 새 내용 떠오름 · 바꾸는 중 같은 칸 = 무시 · 다른 칸 = 바로 그 칸 */
+  segP: null,
+  seg: function (b, apply, o) {
+    o = o || {};
+    var sg = b && b.closest ? b.closest(".axs-seg") : null, bs = sg ? [].slice.call(sg.querySelectorAll('[role="tab"]')) : [], to = bs.indexOf(b), from = -1, after = [];
+    bs.forEach(function (x, i) { if (x.getAttribute("aria-selected") === "true") from = i; });
+    for (var n = sg && sg.nextElementSibling; n; n = n.nextElementSibling) after.push(n);
+    var now = function () { if (o.top) window.scrollTo(0, 0); apply(); };
+    if (AXM.segP) { if (AXM.segP.b === b) return; clearTimeout(AXM.segP.t); AXM.segP = null; now(); return; }
+    if (!sg || to < 0 || from < 0 || to === from || !after.length || AXM.rm()) { now(); return; }
+    var lbl = sg.getAttribute("aria-label") || "";
+    sg.style.setProperty("--sf", String(from)); sg.style.setProperty("--st", String(to)); sg.style.setProperty("--sn", String(bs.length));
+    b.classList.add("sw-to"); sg.classList.add("sw-r");
+    after.forEach(function (x) { x.classList.add("sw-out"); });
+    if (o.top && window.scrollY > 0) window.scrollTo({ top: 0, behavior: "smooth" });
+    AXM.segP = { b: b, t: setTimeout(function () {
+      AXM.segP = null;
+      if (o.ok && !o.ok()) return;
+      apply();
+      var s2 = lbl ? document.querySelector('#view .axs-seg[aria-label="' + lbl + '"]') : null;
+      for (var m = s2 && s2.nextElementSibling; m; m = m.nextElementSibling) AXM.rise(m);
+      if (o.top && window.scrollY > 0 && window.scrollY < 4) window.scrollTo(0, 0);
+    }, AXM.MOVE) };
+  }
+};
 /* v5.77 밤샘 QA(261006) · 두 번 누름이 바뀐 화면의 다른 단추를 누르던 것 막기
    실측(0.15~0.25초 간격 두 번 누름) · 설문 「다음」 → 같은 자리 「이전」(1단계로 되돌아가 앞으로 못 감) · AX 퀴즈 시작 → 첫 문제 답이 저절로 눌림 · 상세 시트 「닫기」 → 뒤 목록의 다른 항목이 열림
    규칙 = 사람 손 누름(isTrusted · 키보드 누름 detail 0 은 제외)이 0.4초 안에 같은 자리(30px)에 또 오고, 첫 누름이 누른 것이 사라졌거나(다시 그림) 그 자리 맨 위가 아니면(시트 · 팝업이 덮음) 둘째를 버린다
@@ -283,13 +358,12 @@ function focusTarget(f) {
 function focusPulse(f) {
   var t = focusTarget(f);
   if (!t) return;
-  var r = t.getBoundingClientRect();
-  if (r.top < 60 || r.bottom > innerHeight - 90) t.scrollIntoView({ block: "center" });
   var cls = t.classList.contains("rc") ? "sp-settle" : "sp-bounce";
-  setTimeout(function () {
+  /* 261009 화면 밖이면 부드럽게(동작 모션 통일 · 움직임 줄이기 = 바로) · 도착 강조 = 지금처럼 튀어 오름(스탬프 문법) */
+  AXM.scrollTo(t, { block: "center", need: [60, 90], rise: false, then: function () { setTimeout(function () {
     t.classList.remove(cls); void t.offsetWidth; t.classList.add(cls);
     setTimeout(function () { t.classList.remove(cls); }, 600);
-  }, 180);
+  }, 120); } });
 }
 
 /* ── 보상·커피챗 ── (커피 나눔 바·잔량 표시는 260917 폐기) */
@@ -444,17 +518,18 @@ function sheetTall(card, was) {
   return card.classList.contains("axs-tall");
 }
 function modalOpen(html, title) {
-  modalClose();
+  modalClose(true);   /* 261009 떠 있던 팝업(닫는 중 포함)은 바로 치우고 새 팝업이 올라온다 */
   var d = document.createElement("div");
   d.id = "modal";
   d.innerHTML = '<div class="mcard" role="dialog" aria-modal="true"' + (title ? ' aria-labelledby="mTitle"' : "") + ">" + modalHeadHtml(title) + '<div class="axs-mbody">' + html + "</div></div>";
   d.addEventListener("click", function (e) { if (e.target === d) modalClose(); });
   el("frame").appendChild(d);
+  AXM.open(d);   /* 261009 동작 모션 통일 · 아래에서 올라옴 */
   sheetTall(d.querySelector(".mcard"));
   sheetDrag(d, function () { return d.querySelector(".mcard"); }, { close: function () { if (el("modal") === d) modalClose(); } });   /* v5.69 끌어 닫기 = 상세 시트와 같은 손(뒷배경 탭과 같은 닫기) */
 }
-function modalClose() {
-  STAFFK = ""; STAFFE = ""; STAFFT = "";   /* 담당자 코드 · 사번 · 토큰을 화면과 함께 버린다 */ var m = el("modal"); if (m) m.remove();
+function modalClose(now) {
+  STAFFK = ""; STAFFE = ""; STAFFT = "";   /* 담당자 코드 · 사번 · 토큰을 화면과 함께 버린다 */ var m = document.getElementById("modal"); if (m) { if (now === true) m.remove(); else AXM.close(m); }   /* 261009 닫힘 = 0.18초 아래로(now = 바로 · 새 팝업으로 바꿀 때) */
   if (typeof QRM !== "undefined" && QRM.timer && !(App.current === "scan_q" && SCQ.tab === "mine")) { qrMineOff(); QRM.msg = ""; }   /* v4.06 내 QR 동기화(v4.71 6초)는 패널이 열려 있는 동안만 · v5.23 내 QR 탭 위에 뜬 다른 창이 닫혀도 계속 */
   if (NOTICE.cur) NOTICE.cur = null;   /* v3.53 팝업이든 다른 모달이든 닫히면 다음 팝업 */
   if (NOTICE.q.length) { clearTimeout(NOTICE.t); NOTICE.t = setTimeout(noticePump, 250); }

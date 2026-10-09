@@ -118,7 +118,7 @@ var TOUR_HOST = {
     return [];
   },
   crowd: function () { return null; },   /* 261008 로비 · 엘리베이터 칸 삭제 · 둘러보기 구역 시트에 혼잡 줄 없음(crowdCell 은 남김) */
-  crowdGo: function () { App.tab("home"); setTimeout(function () { var c = document.querySelector(".cstrip2"); if (c) c.scrollIntoView({ block: "center" }); }, 120); },
+  crowdGo: function () { App.tab("home"); setTimeout(function () { var c = document.querySelector(".cstrip2"); if (c) AXM.scrollTo(c, { block: "center" }); }, 120); },   /* 261009 부드럽게 + 도착 떠오름(동작 모션 통일) */
   /* v5.49 (사용자 261004) 1층 둘러보기 스탬프 블록 · 이름 · 받는 법 · 버튼 문구 = 스탬프 표(STAMPS) 그대로 · got = 이미 받음 · stampGo = 둘러보기를 닫고 그 활동 화면으로 */
   /* v5.64 (사용자 261005 「계단이용 스탬프를 점프하면 · 권장 문구」) 계단 블록 카드 설명 줄 = 사용자 문구 그대로(스탬프 탭 설명은 그대로) */
   stamp: function (id) {

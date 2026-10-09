@@ -38,8 +38,8 @@ var Views = {
     var g = myTabSeg();
     return '<div class="ax-stack">' +   /* v4.06 탭 첫 화면 큰 제목 삭제(사용자 결정 260922 · 화면 이름은 헤더) */
       '<div class="axs-seg" role="tablist" aria-label="나의 참여 보기">' +
-      '<button type="button" role="tab" aria-selected="' + (g === "sched") + '" onclick="mySeg(\'sched\')">나의 일정</button>' +
-      '<button type="button" role="tab" aria-selected="' + (g === "rw") + '" onclick="mySeg(\'rw\')">나의 보상</button></div>' +
+      '<button type="button" role="tab" aria-selected="' + (g === "sched") + '" onclick="mySeg(\'sched\', this)">나의 일정</button>' +
+      '<button type="button" role="tab" aria-selected="' + (g === "rw") + '" onclick="mySeg(\'rw\', this)">나의 보상</button></div>' +
       (g === "sched" ? myAgendaHtml() : myRewardHtml()) + "</div>";
   },
 

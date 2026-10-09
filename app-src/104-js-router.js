@@ -211,7 +211,7 @@ var App = {
     else if (dPrev && v === dBase0) window.scrollTo(0, DET.yb === v ? DET.y : 0);
     else window.scrollTo(0, v === "guide" && isBack ? PROG.scroll || 0 : 0);
     if (dNow) PROG.anchor = "";
-    else if (PROG.anchor) { var an = el(PROG.anchor); PROG.anchor = ""; if (an) an.scrollIntoView({ block: "start" }); }   /* v4.93 별칭 진입 · 그 자리로(scroll-margin-top = 헤더 높이) */
+    else if (PROG.anchor) { var an = el(PROG.anchor); PROG.anchor = ""; if (an) AXM.scrollTo(an, { block: "start" }); }   /* v4.93 별칭 진입 · 그 자리로(scroll-margin-top = 헤더 높이) */
     else if (v === "guide" && !isBack && PROG.seg !== "always") progFlowScroll();   /* v5.21 시간표에 들어오면 진행 중 카드가 보이게 */
     if (typeof checkMyState === "function") setTimeout(checkMyState, 80);
   },
@@ -484,7 +484,7 @@ function detPaint(dv, base) {
   put(ft, "ft", fo);
   ft.hidden = !fo;
   bd.scrollTop = y;
-  if (!same && !first && !lgxRM()) { bd.classList.remove("sw"); void bd.offsetWidth; bd.classList.add("sw"); }   /* 시트에서 시트로 = 본문만 살짝 바뀜 */
+  if (!same && !first) AXM.rise(bd);   /* 시트에서 시트로 = 본문만 살짝 바뀜 · 261009 기준 떠오름(동작 모션 통일 · 옛 detSw 8px 0.22초) */
   if (PROG.anchor) { var an = el(PROG.anchor); if (an && bd.contains(an)) bd.scrollTop = Math.max(0, an.getBoundingClientRect().top - bd.getBoundingClientRect().top + bd.scrollTop - 8); }
   DET.cur = snap;
   document.documentElement.classList.add("det-lock");
@@ -492,6 +492,7 @@ function detPaint(dv, base) {
   if (first) { try { pan.focus({ preventScroll: true }); } catch (e) {} }
 }
 function detMake() {
+  AXM.live("axsDet");   /* 261009 닫는 중이던 시트는 바로 치운다(같은 id 둘 없음) */
   var w = document.createElement("div"); w.id = "axsDet";
   w.innerHTML = '<div class="ax-sheet axs-dsh" role="dialog" aria-modal="true" aria-labelledby="axsDetT" tabindex="-1">' +
     '<div class="axs-dhd"><span class="axs-grab" aria-hidden="true"></span><div class="axs-dhx"></div></div>' +
@@ -511,7 +512,7 @@ function detMake() {
   bd.addEventListener("scroll", detOv, { passive: true });
   el("frame").appendChild(w);
   sheetDrag(w, function () { return w.firstChild; }, { scroller: function () { return bd; }, close: detClose });
-  if (!lgxRM()) w.classList.add("in");
+  AXM.open(w);   /* 261009 동작 모션 통일 · 아래에서 올라옴(옛 .in detUp 0.28초) */
   return w;
 }
 /* 아래 고정 칸 위 구분선 = 본문이 그 아래로 더 있을 때만 · v5.74 머리 아래 구분선 = 본문이 머리 밑으로 스크롤됐을 때만(사용자 261006 캡처 「시트 머리 아래 깨진 그림 띠」 = 경품 사진 아래 끝이 선 없이 머리에 잘려 보였다) */
@@ -521,14 +522,11 @@ function detOv() {
   if (bd && ft) ft.classList.toggle("ov", bd.scrollHeight - bd.clientHeight - bd.scrollTop > 2);
   if (bd && hd) hd.classList.toggle("ov", bd.scrollTop > 2);
 }
-/* 사라지기 · 같은 목록으로 닫히면 아래로 0.22초 · 다른 화면으로 가면 바로(새 화면이 그 자리에 그려진다) · 끌어서 닫았으면 이미 내려가 있다 */
+/* 사라지기 · 같은 목록으로 닫히면 아래로 · 다른 화면으로 가면 바로(새 화면이 그 자리에 그려진다) · 끌어서 닫았으면 이미 내려가 있다
+   261009 닫힘 = 공용 AXM.close(0.18초 · 동작 모션 통일) · 옛 방식은 id 를 먼저 떼어 #axsDet 모양 규칙이 풀려 실제로는 한 프레임에 사라졌다 */
 function detGone(w, toBase) {
-  w.removeAttribute("id");
-  var pan = w.firstChild;
-  if (!toBase || lgxRM() || w.dataset.drop) { w.remove(); return; }
-  w.classList.remove("in"); w.classList.add("out");
-  if (pan) { pan.style.transition = "transform 0.22s cubic-bezier(0.4, 0, 1, 1)"; pan.style.transform = "translateY(105%)"; }
-  setTimeout(function () { w.remove(); }, 230);
+  if (!toBase || w.dataset.drop) { w.remove(); return; }
+  AXM.close(w);
 }
 /* 끌어 닫기 · 시트 셋(#axsDet · #axsSheet · #modal) 공통 · 머리(손잡이 · 제목 줄)는 어디서나 · 본문은 맨 위에서 아래로 끌 때만(그 밖에는 본문 스크롤)
    멀리(높이 30% 또는 160px) 또는 빠르게 끌면 닫힘 · 아니면 제자리 · 손을 따라 뒷배경이 옅어진다 · 움직임 줄이기 = 끌기는 그대로 · 되돌아가는 움직임 없음 */

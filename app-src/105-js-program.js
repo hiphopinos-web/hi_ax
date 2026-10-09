@@ -149,24 +149,22 @@ function progTm(tm) { return String(tm || "").replace("~", "–"); }
 /* v4.93 (261001 사용자 확정 · IA 검토 A1) 탭 맨 위 = [시간표 | 상시 운영] · 옛 [전체 | 나의 일정](progTT)은 걷었다(나의 일정 = 나의 참여 맨 위 한 곳) */
 /* v5.85 (사용자 261006) 세 칸 [시간표 | 상시 운영 | 신청하기] · PROG.seg = time · always · apply · 처음은 시간표 */
 function progSegOf(g) { return g === "always" || g === "apply" ? g : "time"; }
-function progSeg(g) { PROG.seg = progSegOf(g); PROG.scroll = 0; App.render(); window.scrollTo(0, 0); if (PROG.seg === "time") progFlowScroll(); }
+function progSeg(g, b) {   /* 261009 b = 누른 칸 · 기준 모션(AXM.seg)으로 칸 바꾸기 · b 없이 부르면(다른 화면에서) 바로 */
+  var go = function () { PROG.seg = progSegOf(g); PROG.scroll = 0; App.render(); if (PROG.seg === "time") progFlowScroll(); };
+  if (b) { AXM.seg(b, go, { top: true, ok: function () { return App.current === "guide"; } }); return; }
+  window.scrollTo(0, 0); go();
+}
 /* 프로그램 › 신청하기 칸으로(홈 나의 일정 커피챗 줄 · 신청한 프로그램 없음 줄) */
 function progApplyGo() { PROG.seg = "apply"; PROG.scroll = 0; PROG.anchor = ""; App.tab("guide"); window.scrollTo(0, 0); }
 /* v5.73 (사용자 261005 「점심 자유 관람을 눌렀을 때 갑자기 상시 운영 탭으로 날아가는데 좀 더 부드럽게 · 상단의 시간표와 상시운영이 보이는 곳까지 · 지금은 한 칸 밑 위치」)
    시간표에서 누르면 = 세그먼트 손잡이가 「상시 운영」으로 미끄러지고(0.25초) 아래 내용이 흐려졌다 바뀌어 다시 나타남 · 스크롤 = 맨 위(세그먼트가 보이고 바로 아래 1F 로비 머리) 부드럽게
-   다른 화면(나의 일정 빈 상태 · 상시 운영 보기 버튼)에서 = 프로그램 탭 맨 위(세그먼트) · 움직임 줄이기 = 바로 · 옛 v4.93 = 1F 로비 머리로(세그먼트가 화면 밖) */
-var PROG_SW = 0;
+   다른 화면(나의 일정 빈 상태 · 상시 운영 보기 버튼)에서 = 프로그램 탭 맨 위(세그먼트) · 움직임 줄이기 = 바로 · 옛 v4.93 = 1F 로비 머리로(세그먼트가 화면 밖)
+   261009 이 움직임이 앱 전체 기준 모션(동작 모션 통일) · 몸통은 공용 AXM.seg 로 옮겼다(세그먼트 칸을 직접 눌러도 같은 움직임) */
 function progAlwaysGo() {
-  var sg = App.current === "guide" && PROG.seg === "time" && !detShown() ? document.querySelector("#view .axs-seg") : null, bd = sg && sg.nextElementSibling;   /* v5.85 미끄러짐은 시간표 → 상시 운영(첫 칸 → 둘째 칸)만 */
-  if (!sg || !bd || rgReduced()) { PROG.seg = "always"; PROG.scroll = 0; PROG.anchor = ""; App.tab("guide"); window.scrollTo(0, 0); return; }
-  clearTimeout(PROG_SW); sg.classList.add("sw-r"); bd.classList.add("sw-out");   /* v5.85 시간표 맨 위 신청 줄(v5.82)은 신청하기 칸으로 옮겼다 */
-  window.scrollTo({ top: 0, behavior: "smooth" });
-  PROG_SW = setTimeout(function () {
-    PROG_SW = 0; if (App.current !== "guide") return;
-    PROG.seg = "always"; PROG.scroll = 0; PROG.anchor = ""; App.from = {}; App.render();
-    var b2 = document.querySelector("#view .axs-seg + *"); if (b2) { b2.classList.add("sw-in"); setTimeout(function () { b2.classList.remove("sw-in"); }, 320); }
-    if (window.scrollY > 0 && window.scrollY < 4) window.scrollTo(0, 0);
-  }, 250);
+  var sg = App.current === "guide" && PROG.seg === "time" && !detShown() ? document.querySelector("#view .axs-seg") : null, b = sg && sg.querySelectorAll('[role="tab"]')[1];
+  var fin = function () { PROG.seg = "always"; PROG.scroll = 0; PROG.anchor = ""; };
+  if (!b) { fin(); App.tab("guide"); window.scrollTo(0, 0); return; }
+  AXM.seg(b, function () { fin(); App.from = {}; App.render(); }, { top: true, ok: function () { return App.current === "guide"; } });
 }   /* 점심 줄 · 나의 일정 빈 상태 · 옛 「신청할 수 있는 프로그램 보기」 */
 /* v4.91 (사용자 261001 「아코디언을 펼치고 가는 것보다 자세히 보기로 한 번에」) 줄을 누르면 바로 그 상세로 · 이동 표시 = 오른쪽 셰브론(CHEV_SVG)
    갈 곳이 없는 줄은 누를 수 없고, 펼침에만 있던 한 줄(누가 · 무엇)을 제목 아래에 둔다 · v4.99 Intro · Outro 도 상세 한 장으로 간다(TL_PROG intro · outro) */
@@ -178,9 +176,9 @@ function progTTRow(k, o) {
 function progSegHtml() {
   var g = progSegOf(PROG.seg), dot = applyOpenN() > 0;
   return '<div class="axs-seg axs-seg3" role="tablist" aria-label="프로그램 보기">' +
-    '<button type="button" role="tab" aria-selected="' + (g === "time") + '" onclick="progSeg(\'time\')">시간표</button>' +
-    '<button type="button" role="tab" aria-selected="' + (g === "always") + '" onclick="progSeg(\'always\')">상시 운영</button>' +
-    '<button type="button" role="tab" aria-selected="' + (g === "apply") + '" onclick="progSeg(\'apply\')" data-seg="apply">신청<wbr>하기' +
+    '<button type="button" role="tab" aria-selected="' + (g === "time") + '" onclick="progSeg(\'time\', this)">시간표</button>' +
+    '<button type="button" role="tab" aria-selected="' + (g === "always") + '" onclick="progSeg(\'always\', this)">상시 운영</button>' +
+    '<button type="button" role="tab" aria-selected="' + (g === "apply") + '" onclick="progSeg(\'apply\', this)" data-seg="apply">신청<wbr>하기' +
     (dot ? '<i class="axs-sdot" aria-hidden="true"></i><span class="ax-sr-only"> · 신청 가능</span>' : "") + "</button></div>";
 }
 /* ═══ v5.21 시간표 = 점 노드 흐름 한 줄(사용자 261003 · 정본 「디자인 시안/프로그램 탭 개편/시간표 흐름/설계.md」 안 A · design.md A-5 5-10) ═══
@@ -392,8 +390,9 @@ function zoneChkToggle(b) {
   var p = el("zChk"); if (!p) return;
   var on = p.hidden; p.hidden = !on; PROG.zchk = on; b.setAttribute("aria-expanded", String(on));
   if (DET.cur) DET.cur.zchk = on;
-  if (on && p.closest("#axsDet")) { p.scrollIntoView({ block: "nearest", behavior: lgxRM() ? "auto" : "smooth" }); detOv(); return; }   /* v5.69 시트 = 시트 본문 안에서 펼친 표가 보이게 */
-  if (on) { var r = p.getBoundingClientRect(), tb = el("tabbar"), lim = window.innerHeight - (tb && tb.style.display !== "none" ? tb.offsetHeight : 0); if (r.top > lim - 120) p.scrollIntoView({ block: "nearest" }); }
+  if (on) AXM.rise(p);   /* 261009 펼친 내용 떠오름(동작 모션 통일) */
+  if (on && p.closest("#axsDet")) { p.scrollIntoView({ block: "nearest", behavior: AXM.rm() ? "auto" : "smooth" }); detOv(); return; }   /* v5.69 시트 = 시트 본문 안에서 펼친 표가 보이게 */
+  if (on) { var r = p.getBoundingClientRect(), tb = el("tabbar"), lim = window.innerHeight - (tb && tb.style.display !== "none" ? tb.offsetHeight : 0); if (r.top > lim - 120) p.scrollIntoView({ block: "nearest", behavior: AXM.rm() ? "auto" : "smooth" }); }
 }
 /* ── 구역 간판 칩 · v5.10 부스 원본 사인 글자(점 글자 DotGlyph · design.md A-5 5-20) · 줄 24 · 점 12px · 상세(lg) 26 · 점 14px
    옛 Neo둥근모 근사와 그림 교체 지점 ZONE_SIGN_IMG 는 폐기(이 .ai 가 그 원본이다) · 읽는 이름은 칩(role img)이 준다 · 「AX in Action」은 대문자로 그린다 ── */
@@ -801,9 +800,9 @@ function sheetFail(err) { botWait(false); SHEET.busy = false; SHEET.err = typeof
 function sheetPaint(first) {
   var sp = SHEET.spec;
   if (!sp) return;
-  var w = el("axsSheet");
+  var w = AXM.live("axsSheet");   /* 261009 닫는 중이던 시트는 바로 치우고 새로 */
   if (!w) {
-    w = document.createElement("div"); w.id = "axsSheet";
+    w = document.createElement("div"); w.id = "axsSheet"; AXM.open(w);   /* 261009 동작 모션 통일 · 아래에서 올라옴(지금까지는 움직임 없이 떴다) */
     w.addEventListener("click", function (e) { if (e.target === w && !SHEET.busy) sheetClose(); });
     w.addEventListener("keydown", sheetKey);
     el("frame").appendChild(w);
@@ -842,7 +841,7 @@ function sheetKey(e) {
   else if (!e.shiftKey && i === b.length - 1) { e.preventDefault(); b[0].focus(); }
 }
 function sheetClose(silent) {
-  var w = el("axsSheet"); if (w) w.remove();
+  var w = el("axsSheet"); if (w) AXM.close(w);   /* 261009 닫힘 = 0.18초 아래로 · 끌어서 닫았으면 바로 */
   if (SHEET.busy) botWait(false);   /* v4.36 확정 응답으로 닫힐 때 덮개도 걷는다 */
   var oc = SHEET.spec && SHEET.spec.onClose;   /* v5.46 어떻게 닫든(버튼 · 뒷배경 · Esc · 뒤로) 한 번 */
   SHEET.busy = false; SHEET.err = null; SHEET.spec = null; SHEET.tall = false;

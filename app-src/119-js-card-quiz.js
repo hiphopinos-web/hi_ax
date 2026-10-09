@@ -428,13 +428,15 @@ function olyRowHtml(x, val, sub, big, me) {
   return '<div class="oly-row' + (big ? " big" : "") + (me ? " me" : "") + '"><span class="no">' + (lw || x.rank) + '</span><span class="nm">' + esc(x.name) +
     (sub ? "<small>" + esc(sub) + "</small>" : "") + '</span><span class="sc">' + val + "</span></div>";
 }
+/* 261009 순위 구분 칸 바꾸기 = 기준 모션(동작 모션 통일 · AXM.seg) */
+function olyTab(k, b) { AXM.seg(b, function () { S.set("oly_tab", k); App.render(); }, { ok: function () { return App.current === "oly_rank"; } }); }
 /* 순위판 화면 (oly_rank) · 종합 = 포디움 2-1-3 + 4~10위 + 내 줄 · 종목별 = 1~3위 72px 행 + 4~10위 + 내 줄 */
 function olyRankHtml() {
   olyPull();
   var b = OLY.board, tab = S.get("oly_tab", "all") === "event" ? "event" : "all", evk = S.get("oly_ev", OLY_EVENTS[0].key), me = olyMe(), nick = typeNick() || "나", OVE = olyOvEvents();
   if (!OVE.some(function (e) { return e.key === evk; })) evk = OVE[0].key;   /* v4.83 퀴즈 종목은 순위판 칩이 없다 */
   var seg = '<div class="axs-seg" role="tablist" aria-label="순위 구분">' + [["all", "종합"], ["event", "종목별"]].map(function (t) {
-    return '<button type="button" role="tab" aria-selected="' + (tab === t[0]) + '" onclick="S.set(\'oly_tab\', \'' + t[0] + '\'); App.render()">' + t[1] + "</button>";
+    return '<button type="button" role="tab" aria-selected="' + (tab === t[0]) + '" onclick="olyTab(\'' + t[0] + '\', this)">' + t[1] + "</button>";
   }).join("") + "</div>";
   var h = '<div class="ax-stack oly-rk">' + seg;   /* v4.16 항상 실서버 값 · 가짜 닉네임 안내 삭제 */
   if (!b || !b.overall) return h + botHtml("순위를 불러오는 중이에요", { wait: 1 }) + "</div>";
