@@ -1,6 +1,6 @@
 /* AX Festival 2026 럭키드로우 · 무대 소리 (261009 4차 · stage.html 전용 · 옛 화면 index.html 은 쓰지 않는다)
  *   원음(snd.js · Mixkit 무료 효과음을 자르고 섞은 것) 이 먼저 · 못 풀면 아래 합성음으로 대신한다
- *   부저 = 짧은 쿵 · 회전 → 감속 → 공 → 번호 = 낮고 굵은 롤(팀파니 · 큰북 결) 하나가 작게 시작해 점점 커진다(크레센도)
+ *   부저 = 짧은 쿵 · 회전 → 감속 → 공 → 번호 = 스네어 롤(몸통 있는 중저음 · 5차) + 밑에 낮은 울림이 작게 시작해 점점 커진다(크레센도)
  *   진짜 멈춘 순간 롤이 끊기고 묵직한 쾅(트레일러 드럼 히트 + 크래시 심벌) → 0.3초 뒤 당첨 소리(반짝이는 차임 + 박수 · 환호)
  *   크기: s = 6 ~ 4등 · m = 3 · 2등(환호 섞인 박수) · l = 1등(낮은 울림 한 겹 더 · 강당 박수 + 환호 10초)
  *   인트로 · 끝 화면 · 기다리는 동안은 소리 없음 · 공 소리 없음 · 멜로디 없음
@@ -102,10 +102,10 @@
     if (dur) s.start(t, off || 0, dur); else s.start(t, off || 0);
     return { s: s, g: g };
   };
-  /* 롤 · 낮은 롤 루프 하나 · 크기(gain)와 밝기(lowpass)를 함께 올린다 · 작을 때는 둔하고 낮게, 클수록 열린다 */
-  var RV = 0.55;
+  /* 롤 · 5차 = 스네어 롤 루프(「따르르」 타격이 분명 · 음을 낮춰 몸통 있게) + 밑에 낮은 울림 루프(팀파니 결 · 0.45) · 크기와 밝기를 함께 올린다 */
+  var RV = 0.55, LO = 0.45;
   function gOf(v) { return RV * (0.07 + 0.93 * v * v); }
-  function fOf(v) { return 420 + 6500 * v * v; }
+  function fOf(v) { return 1800 + 9000 * v * v; }   /* 작을 때도 스네어 타격은 들리게(1.8kHz 위부터) */
   function lvAt(r, t) { if (t >= r.t1) return r.b; if (t <= r.t0) return r.a; return r.a + (r.b - r.a) * (t - r.t0) / (r.t1 - r.t0); }
   P.rollOn = function (when, v) {
     this.rollOff(when, 0.05);
@@ -115,7 +115,9 @@
     lp.frequency.setValueAtTime(fOf(v), t);
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gOf(v), t + 0.12);
     s.connect(lp); lp.connect(g); g.connect(this.master); s.start(t, Math.random() * (b.duration - 0.1));
-    this._roll = { s: s, g: g, lp: lp, a: v, b: v, t0: t, t1: t + 0.12 };
+    var lo = null, bl = SND.buf.rollLo;
+    if (bl) { lo = c.createBufferSource(); var gl = c.createGain(); lo.buffer = bl; lo.loop = true; gl.gain.value = LO; lo.connect(gl); gl.connect(lp); lo.start(t, Math.random() * (bl.duration - 0.1)); }
+    this._roll = { s: s, lo: lo, g: g, lp: lp, a: v, b: v, t0: t, t1: t + 0.12 };
   };
   P.rollLv = function (when, v, dur) {
     var r = this._roll; if (!r) return;
@@ -128,7 +130,7 @@
     var r = this._roll; if (!r) return; this._roll = null;
     var t = this.t(when); fo = fo || 0.03;
     hold(r.g.gain, t); r.g.gain.setTargetAtTime(0, t, fo / 3);
-    try { r.s.stop(t + fo + 0.05); } catch (e) {}
+    try { r.s.stop(t + fo + 0.05); if (r.lo) r.lo.stop(t + fo + 0.05); } catch (e) {}
   };
   /* 쾅 · 원음 · 트레일러 드럼 히트 + 크래시 · 1등은 낮은 울림 한 겹 더 */
   P.boomS = function (when, size) {

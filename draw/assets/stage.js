@@ -38,6 +38,7 @@
   /* ─────────────── 부저 데모 261009 · 등수별 길이(초) ───────────────
    *   hold = 최고 속도 유지 · dec = 감속 길이 창(출구가 6시에 서도록 이 안에서 고른다) · rock = 선 뒤 정적
    *   fin = 마지막 칸 끝자리: dd 감속 · st [이동, 쉼] 한 칸씩 · pause 한 칸 앞 멈칫(0 = 없음) · M 0 보통 / 1 멈칫 / 2 멈칫 + 넘칠 듯 되돌아옴
+   *   5차(사용자 261009 「넘어갈 듯 말 듯 되돌아오는 동작은 이상하다」): 모든 등수 M 0 · 긴장감은 끝자리 감속 길이(한 칸씩 · 쉼이 점점 길어짐)로만 · 1등이 가장 길다
    *   fan = 팡파르 s · m · l · fanL = 팡파르 길이(그 뒤 공개 루프) */
   var WFAST = clamp(+Q.get("wfast") || 7.2, 3, 9), OXC = 360, CARD_AUTO = 3.2, SPINUP = 1.0;
   var BIGK = 1.14, BIGY = 105;   /* 4차 · 부저 화면 · 회전 · 감속에서 통을 1.14배(지름 약 760 → 870px · 화면 높이 70 → 81%) */
@@ -45,9 +46,9 @@
     6: { hold: 1.0, dec: [2.6, 3.4], rock: 0.7, fin: { dd: 0.6, st: [[0.12, 0.1], [0.14, 0.16]], pause: 0, M: 0 }, fan: "s", fanL: 1.3 },
     5: { hold: 1.3, dec: [2.8, 3.6], rock: 0.75, fin: { dd: 0.7, st: [[0.12, 0.12], [0.14, 0.18]], pause: 0, M: 0 }, fan: "s", fanL: 1.3 },
     4: { hold: 1.6, dec: [3.0, 3.9], rock: 0.8, fin: { dd: 0.8, st: [[0.12, 0.12], [0.14, 0.18], [0.17, 0.26]], pause: 0, M: 0 }, fan: "s", fanL: 1.3 },
-    3: { hold: 2.2, dec: [3.4, 4.4], rock: 0.9, fin: { dd: 0.9, st: [[0.12, 0.14], [0.15, 0.22], [0.18, 0.3]], pause: 0.8, M: 1 }, fan: "m", fanL: 3.0 },
-    2: { hold: 2.8, dec: [3.6, 4.8], rock: 1.0, fin: { dd: 0.9, st: [[0.12, 0.14], [0.15, 0.22], [0.18, 0.32]], pause: 0.95, M: 1 }, fan: "m", fanL: 3.0 },
-    1: { hold: 4.0, dec: [4.4, 5.8], rock: 1.3, fin: { dd: 1.0, st: [[0.12, 0.14], [0.15, 0.2], [0.18, 0.3], [0.21, 0.42]], pause: 1.1, M: 2 }, fan: "l", fanL: 5.4 }
+    3: { hold: 2.2, dec: [3.4, 4.4], rock: 0.9, fin: { dd: 0.9, st: [[0.12, 0.14], [0.15, 0.22], [0.18, 0.3], [0.22, 0.42], [0.27, 0]], pause: 0, M: 0 }, fan: "m", fanL: 3.0 },
+    2: { hold: 2.8, dec: [3.6, 4.8], rock: 1.0, fin: { dd: 1.0, st: [[0.12, 0.14], [0.15, 0.22], [0.18, 0.32], [0.22, 0.46], [0.27, 0.6], [0.33, 0]], pause: 0, M: 0 }, fan: "m", fanL: 3.0 },
+    1: { hold: 4.0, dec: [4.4, 5.8], rock: 1.3, fin: { dd: 1.1, st: [[0.12, 0.14], [0.15, 0.22], [0.18, 0.32], [0.22, 0.46], [0.27, 0.62], [0.33, 0.8], [0.42, 0]], pause: 0, M: 0 }, fan: "l", fanL: 5.4 }
   };
   function RK() { var r = curRound(), n = parseInt(r && r.name, 10); if (!(n >= 1 && n <= 6)) n = clamp(rounds().length - ST.round, 1, 6); return RKP[n]; }
 
@@ -1141,7 +1142,7 @@
     c.pos[3] = p - v * tS; kf.push({ t: t, p: p });
     function add(dur, dp, e) { t += dur; p += dp; kf.push({ t: t, p: p, e: e }); }
     add(F.dd, Dd, "o3");                                                      /* 속도를 이어받아 감속 */
-    F.st.forEach(function (x, i) { add(x[0], 1, "ob"); if (i < F.st.length - 1) add(x[1], 0, "h"); });   /* 한 칸씩 · 간격이 벌어진다 */
+    F.st.forEach(function (x, i) { var lastS = i === F.st.length - 1; add(x[0], 1, lastS && !F.M ? "o3" : "ob"); if (!lastS) add(x[1], 0, "h"); });   /* 한 칸씩 · 간격이 벌어진다 · 5차 · 마지막 한 칸은 튀지 않고 부드럽게 선다 */
     if (up) { c.fake = t; add(F.pause, 0.12, "cr"); add(0.14, 0.88, "ob"); }  /* 멈칫 · 한 칸 앞에서 쉬다가 조금 밀려 넘어간다 */
     if (F.M >= 2) { add(0.55, 0.44, "io"); add(0.42, 0, "tr"); add(0.38, -0.44, "bo"); }   /* 넘칠 듯 · 다음 숫자 반쯤 → 떨다가 → 되돌아와 선다 */
     c.kf = kf; c.stops[3] = t; c.slow[3] = t - tS;
@@ -1286,19 +1287,15 @@
     REEL.cells.forEach(function (c, j) {
       var L = LAY.cells[j];
       cx.setTransform(vs * s, 0, 0, vs * s, vox + vs * L.x, voy + vs * L.y);
-      cx.fillStyle = STG.base === "orange" && !STG.to ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)";
-      if (REEL.cells.length > 1) { rr(-PANW / 2 - 14, top - 14, PANW + 28, bot - top + 28, 30); cx.fill(); }
-      else for (k = 0; k < 4; k++) { rr(reelCellX(k) - CELLW / 2, top, CELLW, bot - top, 22); cx.fill(); }
+      /* 5차 · 칸 배경 · 밑 막대 없음(사용자 「숫자 밑 하얀 선이 이상하다」) */
       for (k = 0; k < 4; k++) {
         var p = reelPos(c, k, t), base = Math.floor(p), fr = p - base, sp = c.done[k] || t > c.stops[k] + 0.4 ? 0 : Math.abs(reelPos(c, k, t + 0.016) - p) / 0.016;
         var cxk = reelCellX(k);
         cx.save(); cx.beginPath(); cx.rect(cxk - CELLW / 2, top, CELLW, bot - top); cx.clip();
-        var stretch = stOK ? clamp(sp * 0.45, 0, 6) : 0;
-        if (sp === 0 && fr < 0.001) drawDigitDots(DIG[((base % 10) + 10) % 10], cxk, 0, 0, top, bot);   /* 선 칸 · 한 숫자만 */
-        else for (var jj = -1; jj <= 1; jj++) drawDigitDots(DIG[((base + jj) % 10 + 10) % 10], cxk, -(jj - fr) * (CELLH + 30), stretch, top, bot);
+        var blur = stOK && sp > 4 ? clamp(sp * 0.9, 0, 18) : 0;   /* 돌 때만 위아래 흐림 · 멈추면 한 글자 또렷하게 */
+        if (sp === 0 && fr < 0.001) drawDigitSolid(((base % 10) + 10) % 10, cxk, 0, appear);   /* 선 칸 · 한 숫자만 */
+        else for (var jj = -1; jj <= 1; jj++) { var dgj = ((base + jj) % 10 + 10) % 10, oyj = -(jj - fr) * (CELLH + 30); drawDigitSolid(dgj, cxk, oyj, appear); if (blur) { drawDigitSolid(dgj, cxk, oyj - blur, appear * 0.3); drawDigitSolid(dgj, cxk, oyj + blur, appear * 0.3); } }
         cx.restore();
-        var lk = c.done[k], bw = CELLW * 0.46;
-        cx.fillStyle = lk ? "rgba(255,255,255,0.95)" : "rgba(255,255,255," + (0.2 + 0.16 * Math.sin(T * 10)).toFixed(3) + ")"; rr(cxk - bw / 2, bot + 4, bw, 8, 4); cx.fill();
       }
     });
     cx.globalAlpha = 1;
@@ -1315,6 +1312,13 @@
     cx.setTransform(vs, 0, 0, vs, vox, voy); cx.globalAlpha = al; cx.fillStyle = "#fff"; cx.beginPath();
     segs.forEach(function (sg) { var L = Math.hypot(sg[2] - sg[0], sg[3] - sg[1]), n = Math.floor(L / 18); for (var q = 0; q <= n; q++) { var x2 = sg[0] + (sg[2] - sg[0]) * q / n, y2 = sg[1] + (sg[3] - sg[1]) * q / n; cx.moveTo(x2 + 3, y2); cx.arc(x2, y2, 3, 0, 6.2832); } });
     cx.fill(); cx.globalAlpha = 1;
+  }
+  /* 5차 · 꽉 찬 흰 숫자(#FFFFFF · 굵기 900) · 칸 폭(232)에 넘치지 않게 가장 넓은 숫자로 크기를 한 번 정한다 */
+  var DFS = 0;
+  function drawDigitSolid(d, x, y, a) {
+    if (!DFS) { cx.font = "900 400px " + FONT; var mw = 0; for (var q = 0; q < 10; q++) mw = Math.max(mw, cx.measureText(String(q)).width); DFS = Math.round(400 * Math.min(1, (CELLW - 8) / Math.max(1, mw))); }
+    cx.globalAlpha = a; cx.fillStyle = "#FFFFFF"; cx.font = "900 " + DFS + "px " + FONT; cx.textAlign = "center"; cx.textBaseline = "middle";
+    cx.fillText(String(d), x, y + 16);
   }
   function drawDigitDots(pts, ox, oy, st, top, bot) {
     cx.fillStyle = "#fff"; cx.beginPath();
