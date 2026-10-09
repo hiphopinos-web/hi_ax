@@ -524,33 +524,26 @@ function stpRowHtml(s, i, st, full) {
   /* v4.95 행동이 있는 줄은 줄 전체를 눌러도 같은 행동(안의 버튼 · 타일은 그 버튼만) · 키보드는 오른쪽 버튼 */
   var tap = a[1] ? ' onclick="if (!event.target.closest(\'button\')) { ' + a[1].replace(/"/g, "&quot;") + '; }"' : "";
   /* v5.68 프로그램 참여 = 2개 · 17F 한쪽만(p3h) = 번호 칸 반 채움 「1/2」 · v6.56 (사용자 261008 「더블 스탬프인 것이 명확히 이해되지 않아」) 제목 옆 「×2」 → O100 알약 「● ● 스탬프 2개」(받은 만큼 점이 찬다 · 0 · 1 · 2) + 받기 전 둘째 보조 줄 「입장 QR 1개 + 끝 QR 1개」 */
-  var half = !!s.x2 && !got && st.indexOf(STAMP_HALF) >= 0, seal = s.x2 ? stpSealHtml(got ? 2 : half ? 1 : 0, a[1]) : "";
+  var half = !!s.x2 && !got && st.indexOf(STAMP_HALF) >= 0;
   /* v6.83 (디자인 D-5) 오른쪽 = 누르는 행동 말만(같은 색 · 굵기) · 행동이 아닌 글은 오른쪽에 두지 않는다 · 완료 = 번호 칸 체크 · 자동 = 「자동」 칩 · 열리는 시각(14:30 · 10/26부터) = 둘째 줄 칩(보조 줄에 이미 있으면 생략) */
   var stat = a[0] && !a[1] && a[0] !== "완료" && a[0] !== "자동" && String(meta).indexOf(a[0]) < 0 ? a[0] : "";
-  return '<div class="axs-stp' + (got ? " done" : full && !half ? " off" : "") + (seal ? " axs-stp2r" : "") + (tap ? " tap" : "") + '" data-stp="' + s.id + '"' + tap + ">" +
+  return '<div class="axs-stp' + (got ? " done" : full && !half ? " off" : "") + (tap ? " tap" : "") + '" data-stp="' + s.id + '"' + tap + ">" +
     stpCellHtml(s, i, got, half) +   /* v6.88 (사용자 261009 「권장대로」 시안 A1) 번호 칸 = 도장(받기 전 번호가 든 옅은 자리 · 받으면 찍힌 씰 · 체크 원 대체) */
     '<div class="axs-stpb"><p class="ax-card-title">' + esc(s.title) + "</p>" +   /* v6.86 2개짜리(프로그램 참여) = 제목 옆 「×2」 대신 줄 오른쪽 둥근 도장(stpSealHtml)이 받은 수를 읽어 준다 */
     stpLineHtml(mode, esc(meta)) + (stat ? '<p class="axs-stpm"><span class="axs-stpc">' + esc(stat) + "</span></p>" : "") + (s.id === "p3" && !got ? '<p class="axs-stpm"><span>입장 QR 1개 + 끝 QR 1개</span></p>' : "") +
     tiles + test + "</div>" +
-    (a[0] && a[1] && !seal ? '<button type="button" class="axs-stpa" onclick="' + a[1] + '">' + esc(a[0]) + "</button>" : "") + seal +
+    (a[0] && a[1] ? '<button type="button" class="axs-stpa" onclick="' + a[1] + '">' + esc(a[0]) + "</button>" : "") +
     "</div>";
 }
-/* v6.86 (사용자 261009 「스탬프를 두 개나 주는 활동이라는 유인」) 2개짜리 줄(프로그램 참여) 오른쪽 끝 = 둥근 도장 두 개 나란히(살짝 겹침) · 받기 전부터 「도장 2개」가 보인다
-   부품 = 프로그램 상세 시트와 같은 씰(stampSealSvg) 작게 두 번 · 찍힘 = 진한 씰(기울임 그대로) · 찍힐 자리 = 같은 그림 브랜드 옅은 톤(꺼진 회색 아님)
-   n = 받은 수(0 · 1 · 2) · 첫 도장부터 찍힌다 · act = 줄 행동(있으면 도장 묶음이 그 버튼 · 「보기」 글 대신) · ×2 알약 · 스탬프 그림 ×2 · 「· 완료」 글 없음 · 왼쪽 번호 칸 반 채움 「1/2」(v5.68)은 걷었다 */
 /* v6.88 (사용자 261009 「권장대로」 · 시안 A1) 스탬프 8종 줄 왼쪽 번호 칸 = 도장 · 오른쪽 폭 · 줄 높이 · 줄바꿈 그대로(40px 칸 그대로)
    받기 전 = 같은 씰(stampSealSvg)에 가운데 번호 · 브랜드 옅은 톤 · 받으면 = 찍힌 씰(「완료」 · 기울임 그대로) · 2개짜리(프로그램 참여) = 작은 씰 두 개 겹침(받은 만큼 찍힘) · 읽는 글 「n번 스탬프, 받음 / 아직」
-   클래스 axs-stpn 은 남긴다(도장 팝이 날아와 앉는 자리 · spTarget) */
+   클래스 axs-stpn 은 남긴다(도장 팝이 날아와 앉는 자리 · spTarget)
+   v6.89 (사용자 261009 「우측 스탬프 두 개 지우자」) 2개짜리 줄 오른쪽 46px 도장 두 개(v6.86 · 시안 A2 방향)를 걷었다 · 왼쪽 칸 작은 씰 두 개가 「도장 2개」 · 오른쪽 = 다른 줄과 같은 행동 글 · 읽는 글 「스탬프 2개 받는 활동, 2개 중 n개 받음」은 왼쪽 칸 */
 function stpCellHtml(s, i, got, half) {
-  var lb = (i + 1) + "번 스탬프, " + (got ? "받음" : "아직"), k = function (on, mid, ms) { return on ? stampSealSvg(40) : stampSealSvg(40, "currentColor", mid, ms); };
+  var lb = s.x2 ? "스탬프 2개 받는 활동, 2개 중 " + (got ? 2 : half ? 1 : 0) + "개 받음" : (i + 1) + "번 스탬프, " + (got ? "받음" : "아직"), k = function (on, mid, ms) { return on ? stampSealSvg(40) : stampSealSvg(40, "currentColor", mid, ms); };
   var inner = !s.x2 ? '<span class="axs-stpk1' + (got ? " on" : "") + '">' + k(got, String(i + 1), 34) + "</span>" :
     '<span class="axs-stpk2"><span' + (got || half ? ' class="on"' : "") + ">" + k(got || half, "") + "</span><span" + (got ? ' class="on"' : "") + ">" + k(got, "") + "</span></span>";
   return '<span class="axs-stpn axs-stpk" role="img" aria-label="' + lb + '">' + inner + "</span>";
-}
-function stpSealHtml(n, act) {
-  var one = function (on) { return '<span class="axs-dblk' + (on ? " on" : "") + '">' + (on ? stampSealSvg(STAG_SZ) : stampSealSvg(STAG_SZ, "currentColor", "스탬프", 17)) + "</span>"; };
-  var lb = "스탬프 2개 받는 활동, 2개 중 " + n + "개 받음", inner = one(n >= 1) + one(n >= 2);
-  return act ? '<button type="button" class="axs-dbl" onclick="' + act + '" aria-label="' + lb + '">' + inner + "</button>" : '<span class="axs-dbl" role="img" aria-label="' + lb + '">' + inner + "</span>";
 }
 /* 구경하고 겨루기 · 1F 타자왕 현장 순위(type_rank · v5.29 현장 순위판 하나) · 실시간 화면은 4묶음(type_live) */
 function typeSiteRankGo() { App.go("type_rank"); }   /* v5.29 탭 없음(현장 순위판 하나) */

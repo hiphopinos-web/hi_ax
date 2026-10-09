@@ -1985,15 +1985,6 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-stpk2 > span.on { opacity: 1; position: relative; z-index: 1; }
   /* v5.68 프로그램 참여 = 스탬프 2개 · 제목 옆 「×2」 알약 · 17F 한쪽만(p3h) = 번호 칸 아래 절반 주황 「1/2」 */
   /* v6.83 (사용자 261009 묶음 12 「스탬프 픽토그램 × 2」) 주황 알약(점 둘 + 「스탬프 2개」 · v6.56) → 하단 탭 스탬프 그림(#nav-stamp 그대로) + 「×2」 · 면 없음 · 무채색(받은 줄 = muted) · 한 덩어리(좁으면 통째로 다음 줄) */
-  /* v6.86 2개짜리 줄 오른쪽 끝 둥근 도장 두 개(stpSealHtml) · 46px 두 개 10px 겹침 · 세로 가운데 · 찍힌 도장이 위 · 둘째는 살짝 더 기울여 찍은 느낌 · 360 큰 글씨 = 38px 한 단계 */
-  .axs-dbl { flex: none; align-self: center; display: flex; align-items: center; margin: 0; padding: 0; border: 0; background: transparent; color: var(--ax-color-brand); font: inherit; }
-  button.axs-dbl { min-height: var(--ax-touch-size); cursor: pointer; }
-  .axs-dblk { position: relative; display: block; width: 46px; height: 46px; opacity: 0.45; }
-  .axs-dblk + .axs-dblk { margin-left: -10px; transform: rotate(8deg); }
-  .axs-dblk.on { opacity: 1; z-index: 1; }
-  .axs-dblk svg { display: block; width: 100%; height: 100%; }
-  @media (max-width: 374px) { .fs-big .axs-dblk { width: 38px; height: 38px; } .fs-big .axs-dblk + .axs-dblk { margin-left: -8px; } }
-  @media (max-width: 374px) { .fs-big .axs-stp2r .axs-stpm { flex-direction: column-reverse; align-items: flex-start; gap: var(--ax-space-4); } }   /* v6.87 (사용자 261009 권장안) 360 큰 글씨 · 도장 두 개 줄 = 받는 법 칩을 보조 글 아래로(글이 칩 옆 좁은 칸에서 세 줄로 꺾이지 않게) */
   .axs-stpb { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--ax-space-4); }
   .axs-stpb .ax-card-title { margin: 0; }
   .axs-stpm { display: flex; flex-wrap: nowrap; align-items: baseline; gap: var(--ax-space-8); margin: 0; font: var(--ax-type-t7); color: var(--ax-color-muted); }   /* v4.95 칩 = 보조 줄 맨 앞 고정 · 글은 칩 옆 칸에서만 줄바꿈 */
