@@ -419,7 +419,7 @@ function admVerify(v, done, keep, staffEmp, fail) {   /* v6.00 fail = 틀림 · 
   var u = S.get("user", {}) || {}, q = { action: "admin_check", key: v };
   if (keep === false) { if (staffEmp) { q.aemp = String(staffEmp); q.asc = "a"; } }
   else if (u.empId) { q.aemp = String(u.empId); q.asc = "a"; if (u.ses) q.ases = String(u.ses); }   /* v4.86 로그인 안 한 폰은 예전처럼 코드만(기기) */
-  beCall(q, function (res) {
+  admCall(q, function (res) {
     if (!(res && res.ok) && fail) fail();
     if (res && res.ok) {
       if (keep !== false) {

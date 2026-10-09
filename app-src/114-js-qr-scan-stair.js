@@ -1156,7 +1156,7 @@ function scanHit(raw) {
   if (sp.win) params.win = sp.win;   /* 261007 창구 A ~ E · 서버가 사이즈 창구를 본다 */
   scanLog(emp, "처리 중", null);
   scanShow("wait", emp, "확인하는 중", sp.will || sp.nm);
-  beCall(params, function (res) { scanDone(emp, sp, res); },
+  admCall(params, function (res) { scanDone(emp, sp, res); },
     function () { scanLog(emp, "서버 응답 없음 · 다시 찍어 주세요", false, true); scanShow("bad", emp, "서버 응답 없음", "다시 찍어 주세요"); SCAN.last = ""; SCAN.lastE = ""; });
 }
 function scanDone(emp, sp, res) {
@@ -1232,7 +1232,7 @@ function invRoulStart(emp) {
   INVS.id = SCAN.res.t; INVS.emp = emp; INVS.left = null; INVS.g = ""; INVS.gt = 0; INVS.busy = false; INVS.off = false; INVS.msg = "";
   invPaint();
   var id = INVS.id;
-  beCall(admA({ action: "inv_left" }), function (r) {
+  admCall(admA({ action: "inv_left" }), function (r) {
     if (INVS.id !== id) return;
     if (invOld(r)) INVS.off = true; else if (r && r.ok && r.r) INVS.left = r.r;
     if (invMine()) invPaint();
@@ -1242,7 +1242,7 @@ function invRoulPick(g) {
   if (INVS.busy || !INVS.emp || !invMine()) return;
   INVS.busy = true; INVS.msg = ""; invPaint();
   var id = INVS.id;
-  beCall(admA({ action: "inv_roulette", emp: INVS.emp, g: String(g) }), function (r) {
+  admCall(admA({ action: "inv_roulette", emp: INVS.emp, g: String(g) }), function (r) {
     if (INVS.id !== id) return;
     INVS.busy = false;
     if (invAuth(r)) return;
@@ -1258,7 +1258,7 @@ function invRoulUndo() {
   if (INVS.busy || !INVS.g || !invMine()) return;
   INVS.busy = true; invPaint();
   var id = INVS.id;
-  beCall(admA({ action: "inv_roulette", emp: INVS.emp, undo: "1" }), function (r) {
+  admCall(admA({ action: "inv_roulette", emp: INVS.emp, undo: "1" }), function (r) {
     if (INVS.id !== id) return;
     INVS.busy = false;
     if (invAuth(r)) return;
@@ -1277,7 +1277,7 @@ function invKitGive() {
   if (INVS.busy || !invMine()) return;
   INVS.busy = true; INVS.msg = ""; invPaint();
   var id = INVS.id, emp = INVS.emp;
-  beCall(admA({ action: "inv_kit", emp: emp, give: "1" }), function (r) {
+  admCall(admA({ action: "inv_kit", emp: emp, give: "1" }), function (r) {
     if (INVS.id !== id) return;
     INVS.busy = false;
     if (invAuth(r)) return;
@@ -1299,7 +1299,7 @@ function invKitUndo() {
   if (INVS.busy || !INVS.rid || !invMine()) return;
   INVS.busy = true; invPaint();
   var id = INVS.id;
-  beCall(admA({ action: "inv_undo", rid: INVS.rid }), function (r) {
+  admCall(admA({ action: "inv_undo", rid: INVS.rid }), function (r) {
     if (INVS.id !== id) return;
     INVS.busy = false;
     if (invAuth(r)) return;
@@ -1395,7 +1395,7 @@ function invBoxOpen() {
   INVS.box = null; INVS.bmsg = ""; INVS.blast = null; INVS.bbusy = false;
   sheetOpen({ id: "invbox", title: "재고 · 박스 열기", lead: "박스를 열 때마다 눌러 주세요", body: invBoxBody(), go: "sheetClose()", goLbl: "닫기" });
   if (!BE.on) { INVS.box = []; INVS.bmsg = "서버에 연결되지 않았어요"; invBoxPaint(); return; }
-  beCall(admA({ action: "inv_left" }), function (r) {
+  admCall(admA({ action: "inv_left" }), function (r) {
     if (invAuth(r)) { sheetClose(true); return; }
     INVS.box = invOld(r) ? "old" : r && r.ok && r.box ? r.box : [];
     if (r && !r.ok && !invOld(r)) INVS.bmsg = "불러오지 못했어요 · 닫고 다시 열어 주세요";
@@ -1405,7 +1405,7 @@ function invBoxOpen() {
 function invBoxGo(id) {
   if (INVS.bbusy) return;
   INVS.bbusy = true; INVS.bmsg = ""; invBoxPaint();
-  beCall(admA({ action: "inv_box", id: id }), function (r) {
+  admCall(admA({ action: "inv_box", id: id }), function (r) {
     INVS.bbusy = false;
     if (invAuth(r)) { sheetClose(true); return; }
     if (r && r.ok) {
@@ -1419,7 +1419,7 @@ function invBoxUndo() {
   if (INVS.bbusy || !INVS.blast) return;
   INVS.bbusy = true; invBoxPaint();
   var last = INVS.blast;
-  beCall(admA({ action: "inv_undo", rid: last.rid }), function (r) {
+  admCall(admA({ action: "inv_undo", rid: last.rid }), function (r) {
     INVS.bbusy = false;
     if (invAuth(r)) { sheetClose(true); return; }
     if (r && r.ok) { INVS.blast = null; INVS.bmsg = "취소했어요"; (INVS.box || []).forEach(function (b) { if (b.id === r.id && r.left != null) b.left = r.left; }); }
@@ -1503,7 +1503,7 @@ function staffStampGive(id) {
   modalClose();                       /* STAFFK 는 여기서 비워지므로 위에서 미리 복사해 둔다 */
   var q = { action: "stamp_grant", emp: u.empId || "", id: id, nt: "0" };   /* v5.98 nt 0 = 참가자 알림 없음(이 폰이 바로 그린다) */
   if (se && st) { q.tok = st; q.aemp = se; } else q.key = key;   /* v4.86 사람 토큰이 있으면 코드는 보내지 않는다 */
-  beCall(q,
+  admCall(q,
     function (res) {
       if (!res || !res.ok) {
         toast(res && res.reason === "auth" ? (se ? "명단에 없는 사번이거나 코드가 맞지 않아요" : "담당자 코드가 올바르지 않습니다.") :

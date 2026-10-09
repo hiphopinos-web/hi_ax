@@ -384,7 +384,7 @@ function tsfEnable() {
   if (!BE.on) { say("서버에 연결할 수 없어요"); return; }
   if (snd) sfxUnlock();
   say("확인 중");
-  beCall({ action: "type_self_cfg", key: k }, function (r) {
+  admCall({ action: "type_self_cfg", key: k }, function (r) {
     if (!r || !r.ok) { say(r && r.reason === "auth" ? "관리코드가 맞지 않아요" : r && r.reason === "locked" ? admLockedMsg(r) : "확인하지 못했어요 · 다시 눌러 주세요"); return; }
     TSF.cfg = r; TSF.cfgT = Date.now();
     S.set("site_sound", snd); S.set("self_key", k); S.set("self_tok", r.tok || ""); S.set("self_on", true);
@@ -395,7 +395,7 @@ function tsfEnable() {
 function tsfCfgPull() {
   if (!BE.on || Date.now() - TSF.cfgT < 600000) return;
   TSF.cfgT = Date.now();
-  beCall({ action: "type_self_cfg", key: tsfKey(), tok: tsfTok() }, function (r) { if (r && r.ok) { TSF.cfg = r; tsfPaint(); } }, function () { TSF.cfgT = Date.now() - 540000; });
+  admCall({ action: "type_self_cfg", key: tsfKey(), tok: tsfTok() }, function (r) { if (r && r.ok) { TSF.cfg = r; tsfPaint(); } }, function () { TSF.cfgT = Date.now() - 540000; });
 }
 function tsfKstMin() { var d = new Date(Date.now() + (typeof sesOff === "function" ? sesOff() : 0) + 9 * 3600000); return d.getUTCHours() * 60 + d.getUTCMinutes(); }
 /* 시간 밖이면 { next: "HH:MM"(다음 시작 · 없으면 빈 글) · first(오늘 아직 한 번도 안 열렸다) } · 안이거나 모르면 null(서버가 다시 본다) */
@@ -713,7 +713,7 @@ function tsfQr(raw) {
   tsfCheckQr(raw);
 }
 function tsfCheckQr(raw) {
-  beCall({ action: "type_self_check", key: tsfKey(), tok: tsfTok(), qr: raw }, function (r) {
+  admCall({ action: "type_self_check", key: tsfKey(), tok: tsfTok(), qr: raw }, function (r) {
     if (TSF.ph !== "check") { TSF.busy = false; return; }
     if (r && r.reason === "busy" && TSF.retry < 3) { TSF.retry++; setTimeout(function () { if (TSF.ph === "check") tsfCheckQr(raw); }, 1200); return; }
     tsfCheckRes(r, "cam");
@@ -766,7 +766,7 @@ function tsfLinkLive(now) {
 function tsfLinkBack() { return [2000, 4000, 8000, 15000][Math.min(3, Math.max(0, TSF.lk.fail - 1))]; }
 function tsfLinkNew() {
   var L = TSF.lk, g = ++L.gen, sent = Date.now(); L.busy = true; L.sent = sent;
-  beCall({ action: "type_link_new", key: tsfKey(), tok: tsfTok(), dev: tsfDev() }, function (r) {
+  admCall({ action: "type_link_new", key: tsfKey(), tok: tsfTok(), dev: tsfDev() }, function (r) {
     if (g !== L.gen) return;
     L.busy = false;
     if (!r || !r.ok || !r.tok) { L.fail++; L.retryAt = Date.now() + tsfLinkBack(); tsfLinkPaint(); return; }
@@ -777,7 +777,7 @@ function tsfLinkNew() {
 }
 function tsfLinkPoll() {
   var L = TSF.lk, tk = L.tok, g = ++L.gen, sent = Date.now(); L.busy = true; L.pollAt = L.sent = sent;
-  beCall({ action: "type_link_poll", key: tsfKey(), tok: tsfTok(), dev: tsfDev() }, function (r) {
+  admCall({ action: "type_link_poll", key: tsfKey(), tok: tsfTok(), dev: tsfDev() }, function (r) {
     if (g !== L.gen) return;
     L.busy = false;
     if (!r || !r.ok) return;
@@ -790,7 +790,7 @@ function tsfLinkPoll() {
 function tsfLinkDrop() {
   var L = TSF.lk; L.hold = false; if (!L.tok && !L.srv && !L.busy) return;
   L.tok = ""; L.url = ""; L.gen++; L.busy = false; L.srv = false; tsfDbg("link", "");
-  if (BE.on) beCall({ action: "type_link_new", key: tsfKey(), tok: tsfTok(), dev: tsfDev(), off: 1 }, function () {}, function () {});
+  if (BE.on) admCall({ action: "type_link_new", key: tsfKey(), tok: tsfTok(), dev: tsfDev(), off: 1 }, function () {}, function () {});
 }
 /* 261007 칸에 지금 있어야 할 것 · 살아 있는 토큰(45초 안)이면 그 토큰 · 아니면 안내 글(실패 2번 이상 · 처음 · 새로 받는 중) · 시계마다 칸과 대조해 다르면 다시 그린다 */
 function tsfLinkKey() {
@@ -1123,7 +1123,7 @@ function tsfNickSave() {
   if (bad) { tsfNm(v ? "한글·영문·숫자 2~8자만 쓸 수 있어요" : "닉네임을 입력해 주세요", true); sfx("rgmiss"); tsfNickFocus(); return; }   /* 규칙은 typeNickValid 그대로 · 문구만 한 줄로 */
   if (v === i.nick || i.test) { TSF.nick = v; tsfPh("ready"); sfx("click"); return; }
   TSF.busy = true; tsfNm("저장 중", false);
-  beCall({ action: "type_nick_set", emp: emp, nick: v, key: tsfKey(), tok: tsfTok() }, function (r) {   /* v4.67 셀프 노트북은 참가자 토큰이 없다 · 관리코드 · 스태프 토큰으로 서버 세션필수를 통과 */
+  admCall({ action: "type_nick_set", emp: emp, nick: v, key: tsfKey(), tok: tsfTok() }, function (r) {   /* v4.67 셀프 노트북은 참가자 토큰이 없다 · 관리코드 · 스태프 토큰으로 서버 세션필수를 통과 */
     TSF.busy = false;
     if (TSF.ph !== "nick" || TSF.emp !== emp) return;
     if (r && r.ok) { TSF.nick = r.nick; i.nick = r.nick; tsfPh("ready"); sfx("click"); return; }
@@ -1135,7 +1135,7 @@ function tsfGo() {
   if (TSF.ph !== "ready" || !TSF.info || TSF.busy) return;
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   TSF.ph = "play"; TSF.res = null; TSF.sub = null; TSF.send = ""; TSF.ticket = ""; tsfDbg("ph", "play"); tsfLinkDrop(); tsfScanShow(false);
-  beCall({ action: "type_self_start", key: tsfKey(), tok: tsfTok(), emp: TSF.emp, dev: tsfDev() }, function (r) {
+  admCall({ action: "type_self_start", key: tsfKey(), tok: tsfTok(), emp: TSF.emp, dev: tsfDev() }, function (r) {
     if (r && r.ok) { TSF.ticket = r.ticket || ""; return; }
     if (r && ["limit", "unknown", "window", "auth", "param", "locked", "dup"].indexOf(r.reason) >= 0) {
       if (RG.on && RG.mode === "site") rgStop();
@@ -1156,7 +1156,7 @@ function tsfSend() {
   var r = TSF.res; if (!r) return;
   TSF.send = "sending"; TSF.why = "";
   var paint = function () { if (App.current === "type_site" && TSF.ph === "result") tsfPaint(); };
-  beCall({ action: "type_self_submit", key: tsfKey(), tok: tsfTok(), emp: TSF.emp, ticket: TSF.ticket, score: r.score, hits: r.hits, combo: r.combo, acc: r.acc }, function (x) {
+  admCall({ action: "type_self_submit", key: tsfKey(), tok: tsfTok(), emp: TSF.emp, ticket: TSF.ticket, score: r.score, hits: r.hits, combo: r.combo, acc: r.acc }, function (x) {
     if (x && x.ok) { TSF.send = "ok"; TSF.sub = x; if (x.top) { TSF.top = { ok: true, top: x.top, me: x.me, tries: x.limit }; TSF.topT = Date.now(); } if (x.pb) setTimeout(function () { sfx("best"); }, 250); }   /* v4.50(260925) 테스트 사번도 실제로 저장되어 dry 가 없다 */
     else { TSF.send = "fail"; TSF.why = (x && x.reason) || ""; }
     TSF.resAt = performance.now(); paint();
@@ -1318,7 +1318,7 @@ function olyAwardPull(force) {
   if (!BE.on) return;   /* v4.16 서버 없는 로컬 미리보기 · 가짜 예시 이름 대신 빈 상태("불러오는 중") */
   if (!force && Date.now() - OLYAW.t < 20000) return;
   OLYAW.t = Date.now();
-  beCall(admA({ action: "oly_result" }), function (r) {
+  admCall(admA({ action: "oly_result" }), function (r) {
     if (r && r.ok) { OLYAW.data = r; if (App.current === "type_award") App.render(); }
     else toast(r && r.reason === "auth" ? "관리자 모드에서 코드를 먼저 입력해 주세요" : r && r.reason === "locked" ? admLockedMsg(r) : "결과를 불러오지 못했습니다");   /* v4.65 이 화면은 앱 관리자 모드 코드를 쓴다(콘솔 아님) · 토큰 · 잠금 문구 */
   }, function () { toast("서버 응답 없음"); });
@@ -1357,7 +1357,7 @@ function tyAwardPull(force) {
   if (!BE.on) return;   /* v4.16 서버 없는 로컬 미리보기 · 가짜 예시 이름 대신 빈 상태("불러오는 중") */
   if (!force && Date.now() - TYAW.t < 20000) return;
   TYAW.t = Date.now();
-  beCall(admA({ action: "type_result" }), function (r) {
+  admCall(admA({ action: "type_result" }), function (r) {
     if (r && r.ok) { TYAW.data = r; if (App.current === "type_award") App.render(); }
     else toast(r && r.reason === "auth" ? "관리자 모드에서 코드를 먼저 입력해 주세요" : r && r.reason === "locked" ? admLockedMsg(r) : "결과를 불러오지 못했습니다");   /* v4.65 */
   }, function () { toast("서버 응답 없음"); });
