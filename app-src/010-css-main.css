@@ -1984,6 +1984,7 @@ button.axs-pset { width: 100%; border: 0; background: none; text-align: left; cu
   .axs-dblk.on { opacity: 1; z-index: 1; }
   .axs-dblk svg { display: block; width: 100%; height: 100%; }
   @media (max-width: 374px) { .fs-big .axs-dblk { width: 38px; height: 38px; } .fs-big .axs-dblk + .axs-dblk { margin-left: -8px; } }
+  @media (max-width: 374px) { .fs-big .axs-stp2r .axs-stpm { flex-direction: column-reverse; align-items: flex-start; gap: var(--ax-space-4); } }   /* v6.87 (사용자 261009 권장안) 360 큰 글씨 · 도장 두 개 줄 = 받는 법 칩을 보조 글 아래로(글이 칩 옆 좁은 칸에서 세 줄로 꺾이지 않게) */
   .axs-stpb { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--ax-space-4); }
   .axs-stpb .ax-card-title { margin: 0; }
   .axs-stpm { display: flex; flex-wrap: nowrap; align-items: baseline; gap: var(--ax-space-8); margin: 0; font: var(--ax-type-t7); color: var(--ax-color-muted); }   /* v4.95 칩 = 보조 줄 맨 앞 고정 · 글은 칩 옆 칸에서만 줄바꿈 */

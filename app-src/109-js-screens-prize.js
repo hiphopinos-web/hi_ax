@@ -527,7 +527,7 @@ function stpRowHtml(s, i, st, full) {
   var half = !!s.x2 && !got && st.indexOf(STAMP_HALF) >= 0, seal = s.x2 ? stpSealHtml(got ? 2 : half ? 1 : 0, a[1]) : "";
   /* v6.83 (디자인 D-5) 오른쪽 = 누르는 행동 말만(같은 색 · 굵기) · 행동이 아닌 글은 오른쪽에 두지 않는다 · 완료 = 번호 칸 체크 · 자동 = 「자동」 칩 · 열리는 시각(14:30 · 10/26부터) = 둘째 줄 칩(보조 줄에 이미 있으면 생략) */
   var stat = a[0] && !a[1] && a[0] !== "완료" && a[0] !== "자동" && String(meta).indexOf(a[0]) < 0 ? a[0] : "";
-  return '<div class="axs-stp' + (got ? " done" : full && !half ? " off" : "") + (tap ? " tap" : "") + '" data-stp="' + s.id + '"' + tap + ">" +
+  return '<div class="axs-stp' + (got ? " done" : full && !half ? " off" : "") + (seal ? " axs-stp2r" : "") + (tap ? " tap" : "") + '" data-stp="' + s.id + '"' + tap + ">" +
     '<span class="axs-stpn" aria-hidden="true">' + (got ? CHECK_SVG : i + 1) + "</span>" +
     '<div class="axs-stpb"><p class="ax-card-title">' + esc(s.title) + (s.x2 ? "" : got ? '<span class="ax-sr-only"> · 완료</span>' : "") + "</p>" +   /* v6.86 2개짜리(프로그램 참여) = 제목 옆 「×2」 대신 줄 오른쪽 둥근 도장(stpSealHtml)이 받은 수를 읽어 준다 */
     stpLineHtml(mode, esc(meta)) + (stat ? '<p class="axs-stpm"><span class="axs-stpc">' + esc(stat) + "</span></p>" : "") + (s.id === "p3" && !got ? '<p class="axs-stpm"><span>입장 QR 1개 + 끝 QR 1개</span></p>' : "") +
