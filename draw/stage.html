@@ -164,6 +164,14 @@
   #help td:first-child { width: 190px; color: var(--hi); font-weight: 600; }
   #help p { margin-top: 10px; font-size: 16px; line-height: 1.5; color: rgba(255,255,255,.55); }
 
+
+  /* 부저 데모 · 상단 가운데 등수 줄 · 부저 · 회전 · 감속 동안만 */
+  #rk { position: absolute; left: 400px; right: 400px; top: 58px; display: flex; align-items: baseline; justify-content: center; gap: 22px; opacity: 0; white-space: nowrap; }
+  #rk b { font-size: 56px; line-height: 1.15; font-weight: 800; color: var(--o); letter-spacing: -0.01em; flex: none; }
+  #rk span { font-size: 46px; line-height: 1.15; font-weight: 700; color: #fff; min-width: 0; }
+  #rk em { font-style: normal; font-size: 34px; font-weight: 600; color: var(--sub); flex: none; }
+  #help tr.bz td { color: #fff; }
+
   /* 조작 창 모드 (#control) · 운영자 노트북 화면 */
   body.ctl { cursor: auto; overflow: auto; background: #F2F4F6; color: #191F28; }
 </style>
@@ -186,6 +194,8 @@
     <p class="o-note" id="oNote"></p>
     <div class="lk7" id="oLk7"></div>
   </div></section>
+
+  <div id="rk"><b id="rkN"></b><span id="rkP" class="fit ell"></span><em id="rkC"></em></div>
 
   <section id="side">
     <div class="sh"><span id="sPic"><img id="sImg" alt="" decoding="async"></span><div><p id="sEye"></p><p id="sCnt"></p></div></div>
@@ -236,7 +246,9 @@
     <p class="hn"><span>Space</span><b id="hNext"></b></p>
     <p class="hs" id="hNow"></p>
     <table>
-      <tr><td>Space · → · PageDown</td><td>다음 (위에 적힌 동작)</td></tr>
+      <tr class="bz"><td>Space · → · PageDown</td><td>다음 (위에 적힌 동작) · 부저 화면에서는 부저</td></tr>
+      <tr><td>N</td><td>음악만 끄기 · 켜기 (효과음은 남는다)</td></tr>
+      <tr><td>A</td><td>(데모) 자동 진행 켜기 · 끄기</td></tr>
       <tr><td>R 두 번</td><td>부재 · 다시 뽑기 (당첨 공개 중 · 사회자 판단일 때만)</td></tr>
       <tr><td>U 두 번</td><td>마지막 당첨 취소</td></tr>
       <tr><td>E 두 번 · I 두 번</td><td>끝 화면 · 대기 화면</td></tr>
@@ -245,13 +257,14 @@
       <tr><td>P · H · G</td><td>조작 창 · 이 안내 · 프레임 수</td></tr>
       <tr class="loc"><td>1 ~ 9 · V</td><td>등수 바로 가기 · 인트로 (원격 화면에서는 안 씀)</td></tr>
     </table>
-    <p id="hOrder">순서: 추첨 준비(공 넣기 · 다 넣으면 저절로 준비 끝) → 6등 추첨 시작 → 섞기 시작 → 뽑기(그 등수 인원을 한꺼번에) → 확정 → … → 1등 → 결과판 → 끝 화면. 콘솔 「추첨 › 진행」의 큰 버튼과 같은 순서라 어느 쪽으로 눌러도 됩니다.</p>
+    <p id="hOrder">순서(부저 데모): 추첨 준비 → 6등 추첨 시작 → 등수 카드(3초 뒤 저절로 부저 화면) → <b>부저 = Space</b>(통이 빠르게 돈다 → 감속 → 번호 릴 → 공개) → 확정 = Space → … → 1등 → 결과판 → 끝 화면. 한 등수에 Space 두 번(부저 · 확정).</p>
   </div>
 </div>
 <script src="../assets/server.js"></script>
 <script src="assets/axf_engine.js"></script>
 <script src="assets/wordmark.js"></script>
 <script src="assets/sfx.js"></script>
+<script src="assets/music.js"></script>
 <script src="assets/stage.js"></script>
 <script src="assets/control.js"></script>
 </body>

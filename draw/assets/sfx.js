@@ -194,6 +194,13 @@
     if (!SFX.on || !SFX.rt || SFX.rt.ctx.state !== "running") return;
     try { SFX.rt[name].apply(SFX.rt, [null].concat(args)); } catch (e) {}
   };
+  /* 261009 부저 음악 · d 초 뒤에 친다(음악 박자 · 화면 시계 기준 앞당겨 예약) · 녹화 모드에서는 시계 + d 로 기록 */
+  SFX.at = function (d, name) {
+    var args = Array.prototype.slice.call(arguments, 2);
+    if (SFX.log) { SFX.log.push([SFX.clock() + Math.max(0, d), name, args]); return; }
+    if (!SFX.on || !SFX.rt || SFX.rt.ctx.state !== "running") return;
+    try { SFX.rt[name].apply(SFX.rt, [SFX.rt.ctx.currentTime + Math.max(0, d)].concat(args)); } catch (e) {}
+  };
   SFX.mute = function (m) { SFX.on = !m; if (SFX.rt) SFX.rt.master.gain.setTargetAtTime(m ? 0 : 0.9, SFX.rt.ctx.currentTime, 0.05); };
   /* 쇼릴 음원 굽기 · log 를 오프라인 컨텍스트에 다시 친다 → Float32 스테레오 */
   SFX.render = function (log, dur) {
