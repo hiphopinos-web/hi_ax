@@ -218,7 +218,7 @@ function crowdStripHtml() {
   return '<div class="sect"><b>지금 현장</b>' + right + "</div>" +
     '<div class="cstrip2 cn4">' + cells.map(function (x) {
       var fm = /^(\d+)F (.+)$/.exec(x.nm), al = fm ? fm[1] + "층 " + fm[2] : x.nm;   /* 261008 층 표기 = 점문자(flFloor · 읽는 이름 「1층」) · 글자는 그대로 */
-      var one = x.k !== "h" && x.sub, inner = '<p class="nm">' + (fm ? flFloor(fm[1]) : "") + '<span class="cn-nm">' + (fm ? fm[2] : x.nm) + "</span></p>" + '<p class="st"><i class="lamp" aria-hidden="true"></i><span class="cn-w' + (one ? " cn-sr" : "") + '">' + x.st + "</span>" + (one ? '<span class="sb">' + esc(x.sub.replace(/^대기 /, "")) + "</span>" : "") + "</p>" + (st && dot.indexOf(x.k) >= 0 ? '<i class="cn-dot" aria-hidden="true"></i>' : "");   /* v6.48 2줄 = 점 + 한 마디: 1F 세 칸은 대기 시간만 보이고 상태 단어는 읽어 주기만(cn-sr) · 17F · 정보 없음은 상태 단어만 */
+      var one = x.k !== "h" && x.sub, inner = '<p class="nm">' + (fm ? flFloor(fm[1]) : "") + '<span class="cn-nm">' + (fm ? fm[2] : x.nm) + "</span></p>" + '<p class="pr"><span class="pill"><i class="lamp" aria-hidden="true"></i>' + x.st + "</span>" + (one ? '<span class="tx">' + esc(x.sub.replace(/^대기 /, "")) + "</span>" : "") + "</p>" + (st && dot.indexOf(x.k) >= 0 ? '<i class="cn-dot" aria-hidden="true"></i>' : "");   /* 261009 v6.81 둘째 줄 = 상태 알약(점 + 상태 단어) + 1F 세 칸만 옆에 대기 글자 · 17F · 정보 없음은 알약만(기준 시각은 섹션 머리 한 곳) */
       return st ? '<button type="button" class="cc' + x.cls + '" onclick="cnSheet(\'' + x.k + '\')" aria-label="' + al + " · " + x.st + (x.sub ? " · " + esc(x.sub) : "") + ' · 제보">' + inner + "</button>"
         : '<div class="cc' + x.cls + '">' + inner + "</div>";
     }).join("") + "</div>";
