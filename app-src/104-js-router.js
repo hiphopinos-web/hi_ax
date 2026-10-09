@@ -211,7 +211,7 @@ var App = {
     else if (dPrev && v === dBase0) window.scrollTo(0, DET.yb === v ? DET.y : 0);
     else window.scrollTo(0, v === "guide" && isBack ? PROG.scroll || 0 : 0);
     if (dNow) PROG.anchor = "";
-    else if (PROG.anchor) { var an = el(PROG.anchor); PROG.anchor = ""; if (an) AXM.scrollTo(an, { block: "start" }); }   /* v4.93 별칭 진입 · 그 자리로(scroll-margin-top = 헤더 높이) */
+    else if (PROG.anchor) { var an = el(PROG.anchor); PROG.anchor = ""; if (an) AXM.scrollTo(an, { block: "start", rise: AXM.navJust() ? false : null }); }   /* v4.93 별칭 진입 · 그 자리로(scroll-margin-top = 헤더 높이) */
     else if (v === "guide" && !isBack && PROG.seg !== "always") progFlowScroll();   /* v5.21 시간표에 들어오면 진행 중 카드가 보이게 */
     if (typeof checkMyState === "function") setTimeout(checkMyState, 80);
   },
@@ -278,6 +278,7 @@ var App = {
     if (v === "scan_q" && QRS.stream) qrCamStop();   /* v4.06 video 요소를 다시 그리므로 카메라를 새로 붙인다 */
     var ae = document.activeElement, aeId = ae && ae.id && el("view").contains(ae) && /^(INPUT|TEXTAREA)$/.test(ae.tagName) ? ae.id : "", aeSel = aeId ? [ae.selectionStart, ae.selectionEnd] : null;
     el("view").innerHTML = Views[v]();
+    AXM.nav(el("view"), v + (v === "guide" ? ":" + PROG.seg : v === "my" ? ":" + MY.seg : ""), !!dv || rtView(v) || /^game_/.test(v) || SIGNAGE.indexOf(v) >= 0 || ["admin", "scan_q", "sscan", "type_site", "quiz_play"].indexOf(v) >= 0);   /* v6.85 화면 이동 = 본문 떠오름(AXM.nav) · 하단 메뉴 · 헤더는 그대로 */
     /* v4.08 아래 고정 버튼(axs-fix)이 있는 화면 = 결정·제출 화면 · 하단 메뉴를 숨기고 버튼 높이만큼 비운다 */
     var fixB = !!el("view").querySelector(".axs-fix.ax-bottom");
     if (fixB) { el("view").dataset.fix = "1"; nav.style.display = "none"; } else delete el("view").dataset.fix;

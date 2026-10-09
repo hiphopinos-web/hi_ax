@@ -251,6 +251,23 @@ var AXM = {
   },
   /* 세그먼트 칸 바꾸기 · b = 누른 칸 · apply = 상태 바꾸고 다시 그리기 · o.top = 맨 위로(부드럽게) · o.ok = 0.25초 뒤에도 그 화면인지
      손잡이가 누른 칸으로 미끄러지고 아래 내용이 흐려짐 → 0.25초에 다시 그림 → 새 내용 떠오름 · 바꾸는 중 같은 칸 = 무시 · 다른 칸 = 바로 그 칸 */
+  /* v6.85 (사용자 261009 「모든 화면 이동에」 · 옛 「하단 탭 · 화면 이동은 움직임 없음」 = 이력) 화면 이동 = 새 화면 본문(#view 바로 아래 칸들)이 들어옴(6px 떠오름 0.3초)
+     k = 화면 열쇠(화면 + 프로그램 · 나의 참여 칸) · 열쇠가 바뀐 그리기만 움직인다(같은 화면 동기화 · 다시 그리기 · 같은 탭 다시 누름 = 그대로)
+     떠오르는 0.3초 안에 같은 화면을 다시 그리면 새 칸이 남은 시간부터 이어 간다(깜빡임 없음) · skip = 시트 · 게임 · 카메라 · 사이니지 · 첫 그리기 · 세그먼트 칸 바꾸기(AXM.seg 가 따로 떠오름) */
+  navK: null, navT: 0, navSkip: false,
+  nav: function (vw, k, skip) {
+    var was = AXM.navK; AXM.navK = k;
+    if (!vw || skip || AXM.navSkip || AXM.rm()) { AXM.navT = 0; return; }
+    var kids = [].slice.call(vw.children);
+    if (was !== null && was !== k) { AXM.navT = Date.now(); kids.forEach(AXM.rise); return; }
+    var e = AXM.navT ? Date.now() - AXM.navT : 1e9;
+    if (e >= AXM.IN) return;
+    kids.forEach(function (n) {
+      clearTimeout(n._mr); n.style.animationDelay = -e + "ms"; n.classList.add("ax-mo-rise");
+      n._mr = setTimeout(function () { n.classList.remove("ax-mo-rise"); n.style.animationDelay = ""; }, AXM.IN - e + 80);
+    });
+  },
+  navJust: function () { return !!AXM.navT && Date.now() - AXM.navT < 1000; },   /* 방금 화면 이동으로 떠올랐다 = 도착 칸 스크롤은 다시 떠오르지 않는다(한 번만) */
   segP: null,
   seg: function (b, apply, o) {
     o = o || {};
@@ -268,7 +285,7 @@ var AXM = {
     AXM.segP = { b: b, t: setTimeout(function () {
       AXM.segP = null;
       if (o.ok && !o.ok()) return;
-      apply();
+      AXM.navSkip = true; try { apply(); } finally { AXM.navSkip = false; }   /* v6.85 칸 바꾸기는 아래 떠오름만(화면 이동 떠오름과 겹치지 않음) */
       var s2 = lbl ? document.querySelector('#view .axs-seg[aria-label="' + lbl + '"]') : null;
       for (var m = s2 && s2.nextElementSibling; m; m = m.nextElementSibling) AXM.rise(m);
       if (o.top && window.scrollY > 0 && window.scrollY < 4) window.scrollTo(0, 0);

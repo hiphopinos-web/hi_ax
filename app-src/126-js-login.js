@@ -599,6 +599,7 @@ function lgxLayout(cur) {
   var bot = H - shH - 12, avail = bot - top - lkH - 20, lockOff = avail / 1214 < 0.085;
   if (lockOff) avail = bot - top - 8;
   var sf = Math.max(0.08, Math.min((fw - 96) / 1000, avail / 1214)), grpH = 1214 * sf + (lockOff ? 0 : 20 + lkH), gTop = top + Math.max(0, (bot - top - grpH) / 2);
+  sfH = sf; gTopH = gTop;   /* v6.85 (사용자 261009 「로고가 크게 그려졌다가 한 번 줄어드는 게 뚝딱 거리는 느낌」) 로고는 처음 안착부터 마지막 크기 · 자리(S) · 옛 머묾 H(화면 가운데 크게) → 시트가 올라올 때 0.45초 줄어듦은 없앴다(kS = 1 · 건너뛰기 · 동작 줄이기도 같은 크기) */
   var L = cur.L = { W: W, H: H, dpr: dpr, cx: cxm, x0: x0, fw: fw, sm: sm, yh: yh, air: H * 0.09, sf: sfH, dM: 38 * sm, dF: 38 * sfH,
     gTopH: gTopH, gTopS: gTop, kS: sf / sfH, lockTopH: gTopH + 1214 * sfH + 20, lockTopS: gTop + 1214 * sf + 20, lockOff: lockOff };
   sf = sfH; gTop = gTopH;
