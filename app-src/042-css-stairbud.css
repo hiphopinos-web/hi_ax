@@ -2,21 +2,22 @@
      말풍선(둥근 흰 면 · 꼬리 · 새 말이면 톡 · 다 쓰면 ▼ · 줄바꿈 글자 그대로) · 무대 = 정면 계단 6:5 · 3D 캔버스(.stb-cv · 그림은 JS 가 그린다)가 있으면(.is3d) 평면 그림을 숨긴다
      평면 그림(받는 동안 · 못 그리는 기기) = 같은 시점 정면 계단(디딤판 · 챌판 · 앞 띠) + 원본 BOT_SVG(자리는 JS 가 3D 카메라 계산으로 넣는다) · 뒷모습(눈 숨김)으로 콩콩 · 돌아서면 땀 · 눈웃음
      움직임 = transform · opacity 만 · 화면이 가려지면 멈춤(.hold) · 동작 줄이기 · 8분 절약 · 15분 쉼 = 정지 그림(.still) · 색 = 토큰만 */
-  .stb-safe { margin: var(--ax-space-8) 0 0; text-align: center; font: var(--ax-type-t6); color: var(--ax-color-muted); }   /* 5차 · 위 정보 줄을 걷고 안전 한 줄만 무대 아래 작게 */
-  .stb-bub { display: block; width: 100%; border: 0; text-align: left; font: inherit; color: inherit; position: relative; margin-top: var(--ax-space-4); padding: var(--ax-space-16); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); box-shadow: var(--ax-card-shadow); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .stb-safe { margin: -12px 0 0; text-align: center; font: var(--ax-type-t6); color: var(--ax-color-muted); }   /* 5차 · 위 정보 줄을 걷고 안전 한 줄만 무대 아래 작게 */
+  .stb-bub { display: block; width: 100%; border: 0; text-align: left; font: inherit; color: inherit; position: relative; margin-top: -10px; padding: var(--ax-space-16); border-radius: var(--ax-radius-24); background: var(--ax-color-surface); box-shadow: var(--ax-card-shadow); cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .stb-bub::after { content: ""; position: absolute; left: 40px; bottom: -9px; border: 10px solid transparent; border-bottom: 0; border-top-color: var(--ax-color-surface); }
   .stb-bub:focus-visible { outline: var(--ax-focus-width) solid var(--ax-color-brand); outline-offset: 2px; }
   .stb-tx { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; margin: 0; min-height: 80px; font: var(--ax-type-t3); font-size: 26px; line-height: 37px; color: var(--ax-color-ink); word-break: keep-all; overflow-wrap: anywhere; white-space: pre-line; }
   .stb-bub.pop { animation: stbPop 0.22s cubic-bezier(0.3, 0.7, 0.4, 1); }
   @keyframes stbPop { from { transform: scale(0.94); } to { transform: none; } }
-  .stb-tag { display: table; margin: 0 0 6px; padding: 0 var(--ax-space-8); border-radius: var(--ax-radius-8); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t6-strong); font-size: 15px; line-height: 26px; }   /* 5차 · 머리 = 첫 줄 작은 주황 꼬리표 · 내용은 다음 줄부터 */
+  .stb-tag { display: table; margin: 0 0 4px; padding: 0 var(--ax-space-8); border-radius: var(--ax-radius-8); background: var(--ax-color-brandSoft); color: var(--ax-color-brandText); font: var(--ax-type-t6-strong); font-size: 15px; line-height: 24px; }   /* 5차 · 머리 = 첫 줄 작은 주황 꼬리표 · 내용은 다음 줄부터 */
   .stb-tag[hidden] { display: none; }
   .stb-more { position: absolute; right: 16px; bottom: 6px; width: 0; height: 0; border: 6px solid transparent; border-bottom: 0; border-top-color: var(--ax-color-brand); opacity: 0; vertical-align: middle; }
   .stb-more.on { opacity: 1; animation: stbMore 0.9s ease-in-out infinite; }
   @keyframes stbMore { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
   .stb-sr { margin: 0; position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .stb-stage { position: relative; width: 100%; max-width: calc(38vh * 6 / 5); margin: var(--ax-space-8) auto 0; aspect-ratio: 6 / 5; border-radius: var(--ax-radius-24); overflow: hidden; background-color: var(--ax-color-inset); }
-  @media (max-height: 760px) { .stb-stage { max-width: calc(30vh * 6 / 5); } }   /* 키 작은 화면 · 무대를 줄여 말풍선 · 무대 · 단추가 한 화면에 */
+  .stb-stage { position: relative; width: calc(100% + 16px); margin: -4px -8px 0; aspect-ratio: 6 / 5; border-radius: var(--ax-radius-24); overflow: hidden; background-color: var(--ax-color-inset); }
+  /* 6차 · 무대 = 좌우 8px 더 넓게(화면 끝에서 16px) · 높이는 JS(stbFit)가 도착 단추 바로 위까지 · 6:5 는 JS 전 첫 그림만
+     세로 간격(보기 묶음 gap 24 를 줄인다) = 경로 줄 → 말풍선 14 · 말풍선 꼬리 → 무대 약 11 · 무대 → 안전 한 줄 12 */
   .stb-cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .stb-flip { position: absolute; inset: 0; }
   .stb-stage.is3d .stb-flip { display: none; }   /* 3D 가 그리면 평면 그림은 쉰다(애니메이션도 멈춤) */

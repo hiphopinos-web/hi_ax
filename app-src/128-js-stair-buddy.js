@@ -163,7 +163,7 @@ function stbPool() {
 /* 4 · 5차(사용자 261009 「글자 폰트를 더 크게」 · 「더 올릴 수 있을 것 같다」) · 말풍선 내용 글자 = 26px(옛 17px · 1.5배 · 굵기 700)부터 · 나올 말 전부의 내용이 2줄에 들면 그 크기
    좁은 폭이면 25 · 24 · 23 · 22px 로 한 단계씩(가장 긴 말도 2줄 · 안 되면 줄 수가 가장 적은 큰 크기) · 말풍선 높이 = 머리 줄 + 가장 긴 내용 줄 수로 미리 잡는다(말이 바뀌어도 무대 · 단추가 밀리지 않게)
    줄 수 = 내용 글(#stbTx)의 줄 상자 수 · 폭이 같으면 다시 재지 않는다 · 글자 크기는 px(큰 글씨 설정에서도 같다) */
-function stbLines(e) { var r = e.getClientRects(), seen = {}, n = 0, i, k; for (i = 0; i < r.length; i++) { if (r[i].width < 1) continue; k = Math.round(r[i].top); if (!seen[k]) { seen[k] = 1; n++; } } return n; }   /* 줄 수 = 글자가 있는 줄 상자의 높이 자리 수 */
+function stbLines(e) { var g = document.createRange(); g.selectNodeContents(e); var r = g.getClientRects(), seen = {}, n = 0, i, k;   /* 6차 · 글 범위(Range)의 줄 상자 · #stbTx 는 flex 안에서 블록이 되어 요소 상자로는 한 칸만 나온다 */ for (i = 0; i < r.length; i++) { if (r[i].width < 1) continue; k = Math.round(r[i].top); if (!seen[k]) { seen[k] = 1; n++; } } return n; }   /* 줄 수 = 글자가 있는 줄 상자의 높이 자리 수 */
 var STB_FITK = { k: "", fs: 26, n: 2 };
 var STB_FS = [26, 25, 24, 23, 22];
 function stbBubFit() {
@@ -179,22 +179,34 @@ function stbBubFit() {
       pool.forEach(function (x) { tg.hidden = !x[0]; tg.textContent = x[0]; tx.textContent = x[1]; mx = Math.max(mx, stbLines(tx)); });
       if (!best || mx < best.n) best = { fs: fs, n: mx };
     });
-    tg.hidden = false; tg.textContent = STB_HEAD.fact; var th = tg.getBoundingClientRect().height + 6;   /* 머리 줄 높이(아래 6px 띄움) */
+    tg.hidden = false; tg.textContent = STB_HEAD.fact; var th = tg.getBoundingClientRect().height + 4;   /* 머리 줄 높이(아래 4px 띄움) */
     tx.textContent = keep[0]; tg.textContent = keep[1]; tg.hidden = keep[2];
     STB_FITK = { k: k, fs: best.fs, n: Math.max(2, best.n), th: th };
   }
   var l2 = Math.round(STB_FITK.fs * 1.41);
   box.style.fontSize = STB_FITK.fs + "px"; box.style.lineHeight = l2 + "px"; box.style.minHeight = Math.round(STB_FITK.th + STB_FITK.n * l2) + "px";
 }
+/* 6차(사용자 261009 「일부러 띄운 이유가 있어? 계단 모형을 더 늘려도」) · 말풍선은 경로 줄 바로 아래 · 남는 높이는 전부 무대(아래 안전 한 줄 · 도착 단추 바로 위까지)
+   무대 높이 = 남는 자리(200px 아래로 줄이지 않고 · 폭의 1.5배 위로 키우지 않는다) · 아주 넓은 화면(태블릿 가로)은 폭을 높이의 1.6배까지만 · 세로 시야각은 그대로라 챗봇은 무대 높이와 같이 커진다 */
 function stbFit() {
   var g = el("stbStage"), go = el("stbGo"); if (!g || !go) return;
   stbBubFit();
-  var bub = el("stbBub"); if (bub) bub.style.marginTop = "";
-  g.style.maxWidth = "";
-  var top = g.getBoundingClientRect().top + (window.scrollY || 0), avail = go.getBoundingClientRect().top - 12 - top;
-  if (avail > 0 && avail * 6 / 5 < g.clientWidth) g.style.maxWidth = Math.max(200, Math.floor(avail * 6 / 5)) + "px";
-  var spare = avail - g.getBoundingClientRect().height;   /* 5차 · 남는 자리 절반을 말풍선 위에 · 말풍선과 무대가 화면 가운데로 */
-  if (bub && spare > 16) bub.style.marginTop = Math.min(96, Math.floor(spare / 2)) + "px";
+  g.style.height = ""; g.style.maxWidth = ""; g.style.aspectRatio = ""; g.style.marginLeft = g.style.marginRight = "";
+  var sf = document.querySelector(".stb-safe"), sh = sf ? sf.getBoundingClientRect().height + 8 : 0;
+  var top = g.getBoundingClientRect().top + (window.scrollY || 0), avail = go.getBoundingClientRect().top - 12 - sh - top;
+  var w = g.clientWidth, h = Math.round(Math.max(200, Math.min(avail, w * 1.5)));
+  if (w > h * 1.6) { w = Math.round(h * 1.6); g.style.maxWidth = w + "px"; g.style.marginLeft = g.style.marginRight = "auto"; }
+  g.style.aspectRatio = "auto"; g.style.height = h + "px";
+  if (sf) { var over = Math.round(sf.getBoundingClientRect().bottom - (go.getBoundingClientRect().top - 12)); if (over > 0 && h > 200) { h = Math.max(200, h - over); g.style.height = h + "px"; } }   /* 안전 한 줄까지 단추 위 12px 안 */
+  stbAspect(g.clientWidth, h);
+}
+/* 무대 비율이 바뀌면 평면 그림(계단 · 챗봇 자리 · 숫자)을 같은 카메라 계산으로 다시 · 높이 250 칸 기준 폭만 바꾼다 */
+function stbAspect(w, h) {
+  var W = Math.round(250 * w / h); if (!(W > 0) || Math.abs(W - STB_V.W) < 2) return;
+  STB_V.W = W;
+  var st = document.querySelector("#stbStage .stb-st"); if (st) st.outerHTML = stbStairSvg(stbDown());
+  var x = stbBotBox(), bot = el("stbBot"); if (bot) { bot.style.left = x.l.toFixed(2) + "%"; bot.style.top = x.t.toFixed(2) + "%"; bot.style.width = x.w.toFixed(2) + "%"; }
+  var c = el("stbCnt"); if (c) c.style.top = x.ct.toFixed(2) + "%";
 }
 /* ── 3D · 한 번 만들어 두고(STB3) 무대가 다시 그려지면 캔버스를 옮겨 붙인다(WebGL 문맥 하나) ── */
 var STB3 = { st: 0, r: null, sc: null, cam: null, flow: null, bot: null, body: null, eyes: [], smiles: [], waves: [], sweat: null, shadow: null, nose: [], mOn: null, mOff: null,
@@ -278,10 +290,12 @@ function stb3Off(code) {
   var cv = STB3.r && STB3.r.domElement; if (cv && cv.parentNode) cv.parentNode.removeChild(cv);
   try { if (STB3.r) { STB3.r.dispose(); if (code === -2) STB3.r.forceContextLoss(); } } catch (e) {}
 }
+/* 캔버스 크기 · 카메라 비율 = 무대(진행 화면 · 도착 장면) 그대로 · 세로 시야각 고정 */
+function stb3Size(g) { var w = g.clientWidth, h = g.clientHeight; if (!w || !h) return; STB3.r.setSize(w, h, false); STB3.cam.aspect = w / h; STB3.cam.updateProjectionMatrix(); }
 function stb3Attach(g0) {
   var g = g0 || el("stbStage"); if (!g || STB3.st !== 2) return;
   var v = STB_V, cv = STB3.r.domElement; if (cv.parentNode !== g) g.insertBefore(cv, g.firstChild);
-  var w = g.clientWidth, h = g.clientHeight; if (w && h) STB3.r.setSize(w, h, false);
+  stb3Size(g);
   STB3.cam.position.set(0, v.cy, v.cz); STB3.cam.lookAt(0, v.ty, v.tz);   /* 도착 장면이 당겨 둔 카메라를 제자리로 */
   if (g0) return;
   g.classList.add("is3d");
@@ -672,8 +686,8 @@ function stbArriveQ(it) {
     if (STR.mode === "start" && el("stbStage") && !SA.d) stbFit();
     var cv = STB3.st === 2 && STB3.r && STB3.r.domElement, g = cv && cv.parentNode;
     if (!cv || !cv.isConnected || !g) return;
-    var w = g.clientWidth, h = g.clientHeight; if (!w || !h) return;
-    STB3.r.setSize(w, h, false);
+    if (!g.clientWidth || !g.clientHeight) return;
+    stb3Size(g);
     if (!STB3.raf) STB3.r.render(STB3.sc, STB3.cam);   /* 멈춰 있는 동안(쉼 · 동작 줄이기)도 한 장 다시 */
   }
   if (typeof window === "undefined" || !window.addEventListener) return;
