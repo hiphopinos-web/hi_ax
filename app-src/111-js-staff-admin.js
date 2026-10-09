@@ -39,7 +39,7 @@ function scanChoose(id) {
   if (qrScanSupported() && BE.on) scanStart();   /* 고르면 곧바로 찍는다(목적을 고른 손짓 = 카메라 허용 손짓) */
 }
 function scanRepick() { scanStop(); SCAN.pick = true; SCAN.sub = ""; App.render(); window.scrollTo(0, 0); }
-var INV_LNK = '<button type="button" class="ax-link axs-plain axs-invlk" onclick="invBoxOpen()">재고 · 박스 열기</button>';   /* v5.34 스캔 화면 맨 아래 작은 링크(타일 · 탭 아님) */
+var INV_LNK = "";   /* v5.34 스캔 화면 맨 아래 「재고 · 박스 열기」 작은 링크 → 261009 숨김(콘솔 재구성 설계안 4절 · invBoxOpen 코드는 남김) · 그 자리 = 「운영자에게 요청」(sreqLnk · 111-js-staff-req.js) */
 function admScanHtml() {
   var sp = scanSpot(SCAN.spot), log = '<section class="ax-stack-tight axs-gap12"><h2 class="ax-meta">최근 스캔</h2><div class="ax-card axs-slog" id="scanLog">' + scanLogHtml() + "</div></section>";
   if (!sp || SCAN.pick) {
@@ -49,7 +49,7 @@ function admScanHtml() {
     }
     return '<h2 class="ax-section-title">무엇을 찍나요?</h2><div class="axs-stiles">' +
       scanTileIds().map(function (id) {   /* v5.05 포토부스 대기 폐지 · 정리 #7 타일 목록에서 뺐다 · v6.00 10F 세션 타일은 SCAN_10F_UI 일 때만 */ return id === "sess" ? (!SCAN_10F_UI ? "" : '<button type="button" class="axs-stile" onclick="scanChoose(\'sess\')"><b>10F 세션 입장</b><span>A~E 고르기</span></button>') : scanTileHtml(scanSpot(id)); }).join("") + "</div>" +
-      (sp ? '<button type="button" class="ax-button ax-button-weak" onclick="SCAN.pick = false; App.render()">' + esc(sp.lb || sp.nm) + " 그대로 찍기</button>" : "") + log + INV_LNK;
+      (sp ? '<button type="button" class="ax-button ax-button-weak" onclick="SCAN.pick = false; App.render()">' + esc(sp.lb || sp.nm) + " 그대로 찍기</button>" : "") + log + INV_LNK + sreqLnk();
   }
   var w = scanWhat(sp), out = sp.kind === "roulette" && S.get("roulette_out", false);
   var will = '<section class="axs-will' + (out ? " bad" : "") + '"><div class="axs-srow"><p class="axs-will-k">지금 찍으면</p>' +
@@ -58,7 +58,7 @@ function admScanHtml() {
   var cam = SCAN.on
     ? '<div class="axs-scam"><video id="qrVideo" playsinline muted></video></div><button type="button" class="ax-button ax-button-weak" onclick="scanStop(); App.render()">스캔 멈추기</button>'
     : '<button type="button" class="ax-button axs-camgo" onclick="scanStart()">카메라 켜고 찍기</button>';
-  return will + cam + '<div id="scanRes">' + scanBigHtml() + "</div>" + log + INV_LNK;
+  return will + cam + '<div id="scanRes">' + scanBigHtml() + "</div>" + log + INV_LNK + sreqLnk();
 }
 /* 찍은 결과 한 장 · tone = ok(성공) | dup(이미 · 할 일 없음) | bad(실패) | wait(확인하는 중 · 붐빔) */
 function scanBigHtml() {
@@ -178,7 +178,7 @@ function sscHtml() {
       (SSC.camErr ? '<button type="button" class="ax-button ssc-camgo" onclick="sscCamGo()">카메라 켜기</button>' : "") + "</div>";
   var log = '<details class="ssc-log"><summary>최근 스캔</summary><div id="scanLog">' + scanLogHtml() + "</div></details>";
   return '<div class="ssc">' + top + warn + will + cam + '<div class="ssc-bot"><div id="scanRes">' + scanBigHtml() + "</div>" +
-    '<div class="ssc-acts"><button type="button" class="ax-button ax-button-weak" onclick="sscMine()">내 QR</button></div>' + log + "</div></div>";
+    '<div class="ssc-acts"><button type="button" class="ax-button ax-button-weak" onclick="sscMine()">내 QR</button>' + sreqLnk() + "</div>" + log + "</div></div>";
 }
 /* 그린 뒤 · 카메라를 새 video 에 다시 붙이거나 켠다(App.render 가 video 를 새로 만든다) */
 function sscMount() {
@@ -231,7 +231,7 @@ function sscSheetBody() {
   return '<div class="axs-stiles ssc-picks">' + one.join("") + "</div>" + (ten.length ? '<h3 class="ax-meta ssc-h">10F 세션 입장</h3><div class="axs-stiles ssc-picks">' + ten.join("") + "</div>" : "") +
     '<div class="ssc-opts"><button type="button" class="ssc-opt" aria-pressed="' + snd + '" onclick="sscSnd()"><span>스캔 소리</span><b>' + (snd ? "켬" : "끔") + "</b></button>" +
     '<button type="button" class="ssc-opt" onclick="sheetClose(true); sscMine()"><span>내 QR 보여주기</span>' + CHEV_SVG + "</button>" +
-    '<button type="button" class="ssc-opt" onclick="sheetClose(true); App.go(\'admin\')"><span>관리자 모드 · 혼잡 제보 · 재고</span>' + CHEV_SVG + "</button></div>";
+    '<button type="button" class="ssc-opt" onclick="sheetClose(true); App.go(\'admin\')"><span>관리자 모드</span>' + CHEV_SVG + "</button></div>";
 }
 function sscSheet() { sheetOpen({ id: "sscspot", title: "어디서 찍나요?", lead: "고른 자리는 이 폰에 기억해요", body: sscSheetBody(), go: "sheetClose()", goLbl: "닫기" }); }
 function sscPick(id, sub) {
