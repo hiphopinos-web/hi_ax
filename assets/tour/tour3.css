@@ -457,9 +457,6 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .spb.pop { animation: spbPop .42s cubic-bezier(.3, .7, .4, 1) 2; }
 #axTour3 .spb:active { transform: scale(.96); }
 @keyframes spbPop { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } }
-#axTour3 .spz { display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 16px 0 12px; border-radius: 999px; background: rgba(255, 255, 255, .92); box-shadow: inset 0 0 0 1.5px rgba(255, 127, 50, .6), 0 4px 14px rgba(25, 31, 40, .14); color: var(--ink); font-size: 15px; line-height: 22px; font-weight: 700; white-space: nowrap; }
-#axTour3 .spz svg { color: var(--brand); }
-#axTour3 .spz:active { transform: scale(.96); }
 /* 장면 = 판만 가운데 · 뒷배경 짙은 글자색 40% · 열림 300ms(흐려짐 + 6px 떠오름 · ease) · 닫힘 180ms 흐려짐(mobile-popup-motion 장면 규격) */
 #axTour3 .spov { position: fixed; inset: 0; z-index: 52; max-width: 520px; margin: 0 auto; display: flex; align-items: center; justify-content: center; background: rgba(25, 31, 40, .4); overscroll-behavior: contain; touch-action: none; -webkit-tap-highlight-color: transparent; }
 #axTour3 .spov:focus { outline: none; }
@@ -481,17 +478,40 @@ html.t3-lock, html.t3-lock body { overflow: hidden; overscroll-behavior: none; }
 #axTour3 .spfx b { position: absolute; left: -60px; top: -60px; width: 120px; height: 120px; border-radius: 50%; box-shadow: inset 0 0 0 5px #FFFFFF; opacity: 0; animation: spRing .55s ease-out both; }
 #axTour3 .spfx i { position: absolute; left: -5px; top: -7px; width: 10px; height: 14px; border-radius: 2px; background: var(--c); opacity: 0; animation: spBurst .9s cubic-bezier(.2, .8, .3, 1) var(--d, 0s) both; }
 #axTour3 .spfx i.r { top: -5px; height: 10px; border-radius: 50%; }
+#axTour3 .spst.gone { opacity: 0; transition: opacity .18s cubic-bezier(.4, 0, 1, 1); }
 #axTour3 .spm { margin: 0; min-height: 76px; padding: 12px 20px; border-radius: 16px; background: rgba(25, 31, 40, .86); color: #FFFFFF; text-align: center; opacity: 0; }
 #axTour3 .spm span { display: block; white-space: nowrap; }
 #axTour3 .spm span:first-child { font-size: 19px; line-height: 28px; font-weight: 800; }
 #axTour3 .spm span + span { font-size: 16px; line-height: 24px; font-weight: 600; }
 #axTour3 .spov.done .spm { opacity: 1; animation: spRise .3s ease both; }
+#axTour3 .spm { min-height: 0; }
+/* v6.95 하얀 점 폭죽(캔버스) · 경품 카드(한 화면 · 큰 글씨 = 앱 --fs 배율) */
+#axTour3 .spcv { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; }
+#axTour3 .spc { position: relative; width: min(400px, calc(100% - 32px)); max-height: calc(100% - 32px); overflow: auto; overscroll-behavior: contain; padding: 20px 16px 16px; border-radius: 24px; background: var(--surface); color: var(--ink); text-align: left; box-shadow: 0 16px 40px rgba(25, 31, 40, .3); --f: var(--fs, 1); }
+#axTour3 .spc.in { animation: spRise .3s ease both; }
+#axTour3 .spck { display: inline-block; margin: 0; padding: 3px 12px; border-radius: 999px; background: var(--brandSoft); color: var(--brandText); font-size: calc(13px * var(--f)); line-height: 1.5; font-weight: 700; }
+#axTour3 .spc .spct { margin: 8px 0 0; font-size: calc(21px * var(--f)); line-height: 1.35; font-weight: 800; }
+#axTour3 .spcl { list-style: none; margin: 12px 0 0; padding: 0; }
+#axTour3 .spcl li { display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 6px 8px; border-radius: 14px; }
+#axTour3 .spcl li + li { margin-top: 2px; }
+#axTour3 .spcl li.top { background: var(--brandSoft); box-shadow: inset 0 0 0 1.5px var(--o25); }   /* 1등 줄만 옅은 면 + 테 */
+#axTour3 .spcl .ph { flex: none; display: flex; width: 44px; height: 44px; border-radius: 10px; overflow: hidden; background: var(--canvas); }
+#axTour3 .spcl .ph img { display: block; width: 100%; height: 100%; object-fit: cover; }
+#axTour3 .spcl .ph.two img { width: 50%; }
+#axTour3 .spcl .rk { flex: none; min-width: 2.1em; font-size: calc(16px * var(--f)); line-height: 1.4; font-weight: 800; }
+#axTour3 .spcl .tx { flex: 1; min-width: 0; display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 0 8px; }   /* 이름 | 수량 · 좁으면 수량이 아랫줄 */
+#axTour3 .spcl .nm { min-width: 0; font-size: calc(16px * var(--f)); line-height: 1.4; font-weight: 600; word-break: keep-all; }
+#axTour3 .spcl .q { flex: none; margin-left: auto; font-size: calc(15px * var(--f)); line-height: 1.4; color: var(--body); font-variant-numeric: tabular-nums; white-space: nowrap; }
+#axTour3 .spcn { margin: 12px 0 0; font-size: calc(15px * var(--f)); line-height: 1.5; color: var(--body); }
+#axTour3 .spc .spcx { display: block; width: 100%; height: 56px; margin-top: 16px; font-size: calc(18px * var(--f)); }
+#axTour3 .spcg { display: block; width: 100%; min-height: 48px; margin-top: 4px; border: 0; border-radius: 14px; background: none; color: var(--body); font-size: calc(16px * var(--f)); font-weight: 600; cursor: pointer; }
+#axTour3 .spcg:active { background: var(--canvas); }
 @keyframes spFade { from { opacity: 0; } }
 @keyframes spRise { from { opacity: 0; transform: translateY(6px); } }
 @keyframes spWin { 0% { opacity: 0; } 20% { opacity: 1; } 45% { opacity: .3; } 70% { opacity: 1; } 85% { opacity: .55; } 100% { opacity: 1; } }
 @keyframes spHit { 0% { transform: scale(1); } 40% { transform: scale(1.05); } 100% { transform: scale(1); } }
 @keyframes spRing { 0% { opacity: .9; transform: scale(.4); } 100% { opacity: 0; transform: scale(2.6); } }
 @keyframes spBurst { 0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(.6); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(1); } }
-#axTour3.rm .spb.pop, #axTour3.rm .spb::after, #axTour3.rm .spov.in, #axTour3.rm .spov.in .spst, #axTour3.rm .spwh.hit, #axTour3.rm .spwh.win .sphl, #axTour3.rm .spov.done .spm { animation: none; }
+#axTour3.rm .spb.pop, #axTour3.rm .spb::after, #axTour3.rm .spov.in, #axTour3.rm .spov.in .spst, #axTour3.rm .spwh.hit, #axTour3.rm .spwh.win .sphl, #axTour3.rm .spov.done .spm, #axTour3.rm .spc.in { animation: none; }
 #axTour3.rm .spov.out { transition: none; }
-@media (prefers-reduced-motion: reduce) { #axTour3 .spb.pop, #axTour3 .spb::after, #axTour3 .spov.in, #axTour3 .spov.in .spst, #axTour3 .spwh.hit, #axTour3 .spwh.win .sphl, #axTour3 .spov.done .spm, #axTour3 .spfx b, #axTour3 .spfx i { animation: none; } #axTour3 .spov.out { transition: none; } }
+@media (prefers-reduced-motion: reduce) { #axTour3 .spb.pop, #axTour3 .spb::after, #axTour3 .spov.in, #axTour3 .spov.in .spst, #axTour3 .spwh.hit, #axTour3 .spwh.win .sphl, #axTour3 .spov.done .spm, #axTour3 .spc.in, #axTour3 .spfx b, #axTour3 .spfx i { animation: none; } #axTour3 .spov.out { transition: none; } }

@@ -190,6 +190,11 @@ function prizePhHtml(p, w) {
     (PRIZE_SAMPLE && p.s !== 0 ? '<span class="smp">샘플</span>' : "") + "</span>";
 }
 /* 모달 아래 경품 한 줄(룰렛 1회권 · 행운권 · 참여상 안내) · v5.08 옛 목록 대신 대표 사진 + 요약 + 「경품 보기」(포스터 그 구역으로) */
+/* v6.95 룰렛 아래 안내 줄 · 한 곳(둘러보기 경품 카드 · TOUR_HOST.roulette) · 상태별 문구는 사용자 결정 대기(261011) · 지금은 네 상태 모두 같은 한 줄
+ *   상태 = rouletteState(): lt3(스탬프 3개 미만) · ready(3개 이상 · 아직 안 씀) · used(사용 완료) · out(룰렛 소진) · 문구를 바꿀 때는 ROUL_NEXT 만 고친다 */
+var ROUL_NEXT = { lt3: "1층에서 룰렛을 체험하세요.", ready: "1층에서 룰렛을 체험하세요.", used: "1층에서 룰렛을 체험하세요.", out: "1층에서 룰렛을 체험하세요." };
+function rouletteState() { return S.get("roulette_used", false) ? "used" : S.get("roulette_out", false) ? "out" : stampCount() >= 3 ? "ready" : "lt3"; }
+function rouletteNextLine() { return ROUL_NEXT[rouletteState()] || ROUL_NEXT.lt3; }
 function prizeModalHtml(kind) {
   var g = PRIZES[kind]; if (!g) return "";
   var p = g.list[0], sum = (p.rk ? p.rk + " " : "") + p.nm + (g.list.length > 1 ? " 외 " + (g.list.length - 1) + "종" : " " + (p.qt || p.q.toLocaleString() + g.unit));
